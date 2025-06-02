@@ -9,13 +9,14 @@ obRender:	equ 1					; bitfield for x/y flip, display mode
 obGfx:		equ 2					; palette line & VRAM setting (2 bytes)
 obMap:		equ 4					; mappings address (4 bytes)
 obX:		equ 8					; x-axis position (2-4 bytes)
-obScreenY:	equ $A					; y-axis position for screen-fixed items (2 bytes)
+obScreenX:	equ $A					; x-axis position for screen-fixed items (2 bytes)
 obY:		equ $C					; y-axis position (2-4 bytes)
+obScreenY:	equ $E					; y-axis position for screen-fixed items (2 bytes)
 obVelX:		equ $10					; x-axis velocity (2 bytes)
 obVelY:		equ $12					; y-axis velocity (2 bytes)
 obInertia:	equ $14					; potential speed (2 bytes)
-obHeight:	equ $16					; height/2
-obWidth:	equ $17					; width/2
+obHeight:	equ $16					; height/2; y_radius
+obWidth:	equ $17					; width/2 ; x_radius
 obPriority:	equ $18					; sprite stack priority -- 0 is front
 obActWid:	equ $19					; action width
 obFrame:	equ $1A					; current frame displayed
@@ -32,6 +33,7 @@ obRoutine:	equ $24					; routine number
 ob2ndRout:	equ $25					; secondary routine number
 obAngle:	equ $26					; angle
 obSubtype:	equ $28					; object subtype
+obControl:	equ $2A					; 0 for normal, 1 for hanging or for resting on a flipper, $81 for going through CNZ/OOZ/MTZ tubes or stopped in CNZ cages or stoppers or flying if Tails
 obSolid:	equ ob2ndRout				; solid status flag
 
 obTopSolidBit:	equ $3E					; bit to check for top solidity (either $C or $E)
@@ -281,8 +283,8 @@ GameModeID_SpecialStage =	id(GameMode_SpecialStage) ; $10
 GameModeID_ContinueScreen:	equ $14			; $14 ; referenced despite it not existing
 GameModeID_S1Ending:		equ $18			; $18 ; referenced despite it not existing
 GameModeID_S1Credits:		equ $1C			; $1C ; referenced despite it not existing
-GameModeID_S1End: 			equ	GameModeID_S1Credits	; $1C ; referenced despite it not existing
-GameModeID_End: 			equ	GameModeID_SpecialStage	; $10
+GameModeID_S1End: 		equ	GameModeID_S1Credits	; $1C ; referenced despite it not existing
+GameModeID_End: 		equ	GameModeID_SpecialStage	; $10
 GameModeFlag_TitleCard:		equ 7			; flag bit
 GameModeID_TitleCard:		equ 1<<GameModeFlag_TitleCard ; $80 ; flag mask
 
@@ -1320,7 +1322,7 @@ ArtTile_Art_Flowers2:		equ $396
 ArtTile_Art_Flowers3:		equ $398
 ArtTile_Art_Flowers4:		equ $39A
 ArtTile_HTZ:			equ ArtTile_Level+$1FC
-ArtTile_EHZ_Shield:			equ $560
+ArtTile_EHZ_Shield:		equ $560
 
 ; Unknown
 ArtTile_Art_UnkZone_1:		equ $480

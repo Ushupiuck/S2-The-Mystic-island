@@ -36,7 +36,7 @@ Obj3A_Init:
 		move.w	(a2),obX(a1)
 		move.w	(a2)+,objoff_32(a1)
 		move.w	(a2)+,objoff_30(a1)
-		move.w	(a2)+,obScreenY(a1)
+		move.w	(a2)+,obScreenX(a1)
 		move.b	(a2)+,obRoutine(a1)
 		move.b	(a2)+,d0
 		cmpi.b	#6,d0

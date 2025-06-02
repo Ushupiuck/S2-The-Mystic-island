@@ -17,7 +17,7 @@ Obj0F_Index:	dc.w Obj0F_Init-Obj0F_Index
 Obj0F_Init:
 		addq.b	#2,obRoutine(a0)
 		move.w	#$90,obX(a0)
-		move.w	#$90,obScreenY(a0)
+		move.w	#$90,obScreenX(a0)
 		move.l	#Map_Obj0F,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Monitor,0,0),obGfx(a0)
 		bsr.w	Adjust2PArtPointer

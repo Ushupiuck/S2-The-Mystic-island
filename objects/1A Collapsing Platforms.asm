@@ -1,78 +1,94 @@
 Obj1A:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	Obj1A_Index(pc,d0.w),d1
-		jmp	Obj1A_Index(pc,d1.w)
+		move.w	Ledge_Index(pc,d0.w),d1
+		jmp	Ledge_Index(pc,d1.w)
 ; ---------------------------------------------------------------------------
-Obj1A_Index:	dc.w loc_8C58-Obj1A_Index
-		dc.w loc_8CCA-Obj1A_Index
-		dc.w loc_8D02-Obj1A_Index
+Ledge_Index:	dc.w Ledge_Main-Ledge_Index
+		dc.w Ledge_Touch-Ledge_Index
+;		dc.w Ledge_Collapse-Ledge_Index
+		dc.w Ledge_Display-Ledge_Index
+;		dc.w Ledge_WalkOff-Ledge_Index
+
+collapsing_platform_delay_pointer = objoff_34
+ledge_timedelay = objoff_38		; time between touching the ledge and it collapsing
+ledge_collapse_flag = objoff_3A		; collapse flag
+collapsing_platform_slope_pointer = objoff_3C
+
 ; ---------------------------------------------------------------------------
 
-loc_8C58:
+Ledge_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj1A,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Level,2,0),obGfx(a0)
 		bsr.w	Adjust2PArtPointer
 		ori.b	#4,obRender(a0)
 		move.b	#4,obPriority(a0)
-		move.b	#7,objoff_38(a0)
+		move.b	#7,ledge_timedelay(a0) ; set time delay for collapse
 		move.b	obSubtype(a0),obFrame(a0)
 		cmpi.b	#id_HPZ,(Current_Zone).w
-		bne.s	loc_8CB0
+		bne.s	+
 		move.l	#Map_Obj1A_HPZ,obMap(a0)
 		move.w	#$434A,obGfx(a0)
 		bsr.w	Adjust2PArtPointer
 		move.b	#$30,obActWid(a0)
-		move.l	#Obj1A_Conf_HPZ,objoff_3C(a0)
-		bra.s	loc_8CCA
-; ---------------------------------------------------------------------------
-
-loc_8CB0:
-		move.l	#Obj1A_Conf,objoff_3C(a0)
+		move.l	#Obj1A_Conf_HPZ,collapsing_platform_slope_pointer(a0)
+		bra.s	Ledge_Touch
+; ===========================================================================
+;+
+;		cmpi.b	#oil_ocean_zone,(Current_Zone).w
+;		bne.s	+
+;		move.l	#Obj1F_MapUnc_110C6,mappings(a0)
+;		move.w	#make_art_tile(ArtTile_ArtNem_OOZPlatform,3,0),art_tile(a0)
+;		move.b	#$40,width_pixels(a0)
+;		move.l	#Obj1A_OOZ_SlopeData,collapsing_platform_slope_pointer(a0)
+;		bra.s	Obj1A_Main
+; ===========================================================================
++
+		move.l	#Obj1A_Conf,collapsing_platform_slope_pointer(a0)
 		move.b	#$34,obActWid(a0)
 		move.b	#$38,obHeight(a0)
 		bset	#4,obRender(a0)
 
-loc_8CCA:
-		tst.b	objoff_3A(a0)
-		beq.s	loc_8CDC
-		tst.b	objoff_38(a0)
-		beq.w	loc_8E58
-		subq.b	#1,objoff_38(a0)
+Ledge_Touch:	; Routine 2
+		tst.b	ledge_collapse_flag(a0)	; is ledge collapsing?
+		beq.s	loc_8CDC	; if not, branch
+		tst.b	ledge_timedelay(a0)	; has time reached zero?
+		beq.w	Ledge_Fragment	; if yes, branch
+		subq.b	#1,ledge_timedelay(a0) ; subtract 1 from time
 
-loc_8CDC:
+loc_8CDC:	; Ledge_Collapse?
 		move.b	obStatus(a0),d0
 		andi.b	#$18,d0
-		beq.s	sub_8CEC
-		move.b	#1,objoff_3A(a0)
+		beq.s	Ledge_WalkOff
+		move.b	#1,ledge_collapse_flag(a0)	; set collapse flag
 
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_8CEC:
+Ledge_WalkOff:	; Routine $A
 		moveq	#0,d1
 		move.b	obActWid(a0),d1
-		movea.l	objoff_3C(a0),a2
+		movea.l	collapsing_platform_slope_pointer(a0),a2	; This is now stored in it's own custom constant
 		move.w	obX(a0),d4
 		bsr.w	sub_F7DC
 		bra.w	MarkObjGone
-; End of function sub_8CEC
+; End of function Ledge_WalkOff
 
 ; ---------------------------------------------------------------------------
 
-loc_8D02:
-		tst.b	objoff_38(a0)
-		beq.s	loc_8D46
-		tst.b	objoff_3A(a0)
-		bne.s	loc_8D16
-		subq.b	#1,objoff_38(a0)
+Ledge_Display:	; Routine 6
+		tst.b	ledge_timedelay(a0)	; has time delay reached zero?
+		beq.s	Ledge_TimeZero	; if yes, branch
+		tst.b	ledge_collapse_flag(a0)	; is ledge collapsing?
+		bne.s	loc_8D16	; if yes, branch
+		subq.b	#1,ledge_timedelay(a0) ; subtract 1 from time
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
 loc_8D16:
-		bsr.w	sub_8CEC
-		subq.b	#1,objoff_38(a0)
+		bsr.w	Ledge_WalkOff
+		subq.b	#1,ledge_timedelay(a0)
 		bne.s	locret_8D44
 		lea	(v_player).w,a1
 		bsr.s	sub_8D2A
@@ -94,7 +110,7 @@ locret_8D44:
 
 ; ---------------------------------------------------------------------------
 
-loc_8D46:
+Ledge_TimeZero:
 		bsr.w	ObjectMoveAndFall
 		tst.b	obRender(a0)
 		bpl.w	DeleteObject

@@ -80,7 +80,7 @@ loc_A8A6:
 		addq.b	#2,obRoutine(a0)
 		move.b	#0,obColType(a0)
 		move.b	#1,obPriority(a0)
-		bsr.w	sub_A8DE
+		bsr.w	CollectRing
 		lea	(v_objstate).w,a2
 		moveq	#0,d0
 		move.b	obRespawnNo(a0),d0
@@ -99,7 +99,7 @@ loc_A8DA:
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_A8DE:
+CollectRing:
 		addq.w	#1,(v_rings).w
 		ori.b	#1,(f_ringcount).w
 		move.w	#sfx_Ring,d0
@@ -119,7 +119,7 @@ loc_A90C:
 
 loc_A918:
 		jmp	(PlaySound_Special).l
-; End of function sub_A8DE
+; End of function CollectRing
 
 ; ---------------------------------------------------------------------------
 ;----------------------------------------------------
@@ -235,7 +235,7 @@ loc_AA4C:
 		addq.b	#2,obRoutine(a0)
 		move.b	#0,obColType(a0)
 		move.b	#1,obPriority(a0)
-		bsr.w	sub_A8DE
+		bsr.w	CollectRing
 
 loc_AA60:
 		lea	(Ani_Obj25).l,a1

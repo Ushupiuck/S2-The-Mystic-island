@@ -41,7 +41,7 @@ Obj34_Loop:
 		move.w	(a3),obX(a1)
 		move.w	(a3)+,objoff_32(a1)
 		move.w	(a3)+,objoff_30(a1)
-		move.w	(a2)+,obScreenY(a1)
+		move.w	(a2)+,obScreenX(a1)
 		move.b	(a2)+,obRoutine(a1)
 		move.b	(a2)+,d0
 		bne.s	Obj34_ActNumber

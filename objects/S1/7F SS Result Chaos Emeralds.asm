@@ -1,37 +1,36 @@
-;----------------------------------------------------
+; ---------------------------------------------------------------------------
 ; Sonic	1 Object 7F - leftover Sonic 1 SS emeralds
-;----------------------------------------------------
+; ---------------------------------------------------------------------------
 
 S1Obj7F:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	S1Obj7F_Index(pc,d0.w),d1
-		jmp	S1Obj7F_Index(pc,d1.w)
-; ---------------------------------------------------------------------------
-S1Obj7F_Index:	dc.w loc_BF4C-S1Obj7F_Index
-		dc.w loc_BFA6-S1Obj7F_Index
-word_BF40:	dc.w $110
-		dc.w $128
-		dc.w $F8
-		dc.w $140
-		dc.w $E0
-		dc.w $158
-; ---------------------------------------------------------------------------
+		move.w	SSRC_Index(pc,d0.w),d1
+		jmp	SSRC_Index(pc,d1.w)
+; ===========================================================================
+SSRC_Index:	dc.w SSRC_Main-SSRC_Index
+		dc.w SSRC_Flash-SSRC_Index
 
-loc_BF4C:
+; ---------------------------------------------------------------------------
+; X-axis positions for chaos emeralds
+; ---------------------------------------------------------------------------
+SSRC_PosData:	dc.w $110, $128, $F8, $140, $E0, $158
+; ===========================================================================
+
+SSRC_Main:	; Routine 0
 		movea.l	a0,a1
-		lea	word_BF40(pc),a2
+		lea	(SSRC_PosData).l,a2
 		moveq	#0,d2
 		moveq	#0,d1
-		move.b	(v_emeralds).w,d1
-		subq.b	#1,d1
-		bcs.w	DeleteObject
+		move.b	(v_emeralds).w,d1 ; d1 is number of emeralds
+		subq.b	#1,d1		; subtract 1 from d1
+		bcs.w	DeleteObject	; if you have 0	emeralds, branch
 
-loc_BF60:
+SSRC_Loop:
 		_move.b	#id_Obj7F,obID(a1)
-		move.w	(a2)+,obX(a1)
-		move.w	#$F0,obScreenY(a1)
-		lea	(v_emldlist).w,a3
+		move.w	(a2)+,obX(a1)	; set x-position
+		move.w	#$F0,obScreenX(a1) ; set x-position
+		lea	(v_emldlist).w,a3 ; check which emeralds you have
 		move.b	(a3,d2.w),d3
 		move.b	d3,obFrame(a1)
 		move.b	d3,obAnim(a1)
@@ -39,17 +38,16 @@ loc_BF60:
 		addq.b	#2,obRoutine(a1)
 		move.l	#Map_S1Obj7F,obMap(a1)
 		move.w	#make_art_tile(ArtTile_SS_Results_Emeralds,0,1),obGfx(a1)
-		bsr.w	Adjust2PArtPointer2
 		move.b	#0,obRender(a1)
-		lea	object_size(a1),a1
-		dbf	d1,loc_BF60
+		lea	object_size(a1),a1	; next object
+		dbf	d1,SSRC_Loop	; loop for d1 number of	emeralds
 
-loc_BFA6:
+SSRC_Flash:	; Routine 2
 		move.b	obFrame(a0),d0
-		move.b	#6,obFrame(a0)
+		move.b	#6,obFrame(a0)	; load 6th frame (blank)
 		cmpi.b	#6,d0
-		bne.s	loc_BFBC
-		move.b	obAnim(a0),obFrame(a0)
+		bne.s	SSRC_Display
+		move.b	obAnim(a0),obFrame(a0) ; load visible frame
 
-loc_BFBC:
+SSRC_Display:
 		bra.w	DisplaySprite

@@ -1,159 +1,160 @@
-;----------------------------------------------------
+; ---------------------------------------------------------------------------
 ; Sonic	1 Object 7E - leftover S1 Special Stage	results
-;----------------------------------------------------
+; ---------------------------------------------------------------------------
 
 S1Obj7E:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	S1Obj7E_Index(pc,d0.w),d1
-		jmp	S1Obj7E_Index(pc,d1.w)
-; ---------------------------------------------------------------------------
-S1Obj7E_Index:	dc.w loc_BDA6-S1Obj7E_Index
-		dc.w loc_BE1E-S1Obj7E_Index
-		dc.w loc_BE5C-S1Obj7E_Index
-		dc.w loc_BE6A-S1Obj7E_Index
-		dc.w loc_BE5C-S1Obj7E_Index
-		dc.w loc_BEC4-S1Obj7E_Index
-		dc.w loc_BE5C-S1Obj7E_Index
-		dc.w loc_BECE-S1Obj7E_Index
-		dc.w loc_BE5C-S1Obj7E_Index
-		dc.w loc_BEC4-S1Obj7E_Index
-		dc.w loc_BEF2-S1Obj7E_Index
-; ---------------------------------------------------------------------------
+		move.w	SSR_Index(pc,d0.w),d1
+		jmp	SSR_Index(pc,d1.w)
+; ===========================================================================
+SSR_Index:	dc.w SSR_ChkPLC-SSR_Index
+		dc.w SSR_Move-SSR_Index
+		dc.w SSR_Wait-SSR_Index
+		dc.w SSR_RingBonus-SSR_Index
+		dc.w SSR_Wait-SSR_Index
+		dc.w SSR_Exit-SSR_Index
+		dc.w SSR_Wait-SSR_Index
+		dc.w SSR_Continue-SSR_Index
+		dc.w SSR_Wait-SSR_Index
+		dc.w SSR_Exit-SSR_Index
+		dc.w loc_BEF2-SSR_Index
 
-loc_BDA6:
-		tst.l	(v_plc_buffer).w
-		beq.s	loc_BDAE
+ssr_mainX = objoff_30	; position for card to display on
+; ===========================================================================
+
+SSR_ChkPLC:	; Routine 0
+		tst.l	(v_plc_buffer).w ; are the pattern load cues empty?
+		beq.s	SSR_Main	; if yes, branch
 		rts
-; ---------------------------------------------------------------------------
+; ===========================================================================
 
-loc_BDAE:
+SSR_Main:
 		movea.l	a0,a1
-		lea	(S1Obj7E_Conf).l,a2
+		lea	(SSR_Config).l,a2
 		moveq	#3,d1
-		cmpi.w	#50,(v_rings).w
-		bcs.s	loc_BDC2
-		addq.w	#1,d1
+		cmpi.w	#50,(v_rings).w	; do you have 50 or more rings?
+		bcs.s	SSR_Loop	; if no, branch
+		addq.w	#1,d1		; if yes, add 1	to d1 (number of sprites)
 
-loc_BDC2:
+SSR_Loop:
 		_move.b	#id_Obj7E,obID(a1)
-		move.w	(a2)+,obX(a1)
-		move.w	(a2)+,objoff_30(a1)
-		move.w	(a2)+,obScreenY(a1)
+		move.w	(a2)+,obX(a1)	; load start x-position
+		move.w	(a2)+,ssr_mainX(a1) ; load main x-position
+		move.w	(a2)+,obScreenX(a1) ; load x-position
 		move.b	(a2)+,obRoutine(a1)
 		move.b	(a2)+,obFrame(a1)
 		move.l	#Map_S1Obj7E,obMap(a1)
 		move.w	#make_art_tile(ArtTile_Title_Card,0,1),obGfx(a1)
-		bsr.w	Adjust2PArtPointer2
 		move.b	#0,obRender(a1)
 		lea	object_size(a1),a1
-		dbf	d1,loc_BDC2
+		dbf	d1,SSR_Loop	; repeat sequence 3 or 4 times
 		moveq	#7,d0
 		move.b	(v_emeralds).w,d1
 		beq.s	loc_BE1A
 		moveq	#0,d0
-		cmpi.b	#6,d1
-		bne.s	loc_BE1A
-		moveq	#8,d0
+		cmpi.b	#6,d1		; do you have all chaos	emeralds?
+		bne.s	loc_BE1A	; if not, branch
+		moveq	#8,d0		; load "Sonic got them all" text
 		move.w	#$18,obX(a0)
-		move.w	#$118,objoff_30(a0)
+		move.w	#$118,ssr_mainX(a0) ; change position of text
 
 loc_BE1A:
 		move.b	d0,obFrame(a0)
 
-loc_BE1E:
-		moveq	#$10,d1
-		move.w	objoff_30(a0),d0
-		cmp.w	obX(a0),d0
-		beq.s	loc_BE44
+SSR_Move:	; Routine 2
+		moveq	#$10,d1		; set horizontal speed
+		move.w	ssr_mainX(a0),d0
+		cmp.w	obX(a0),d0	; has item reached its target position?
+		beq.s	loc_BE44	; if it has, branch
 		bge.s	loc_BE2E
 		neg.w	d1
 
 loc_BE2E:
-		add.w	d1,obX(a0)
+		add.w	d1,obX(a0)	; change item's position
 
 loc_BE32:
 		move.w	obX(a0),d0
 		bmi.s	locret_BE42
-		cmpi.w	#$200,d0
-		bcc.s	locret_BE42
+		cmpi.w	#$200,d0	; has item moved beyond	$200 on	x-axis?
+		bcc.s	locret_BE42	; if yes, branch
 		bra.w	DisplaySprite
-; ---------------------------------------------------------------------------
+; ===========================================================================
 
 locret_BE42:
 		rts
-; ---------------------------------------------------------------------------
+; ===========================================================================
 
 loc_BE44:
 		cmpi.b	#2,obFrame(a0)
 		bne.s	loc_BE32
 		addq.b	#2,obRoutine(a0)
-		move.w	#180,obTimeFrame(a0)
-		move.b	#id_Obj7F,(v_ssresemeralds).w
+		move.w	#180,obTimeFrame(a0) ; set time delay to 3 seconds
+		move.b	#id_Obj7F,(v_ssresemeralds).w ; load chaos emerald object
 
-loc_BE5C:
+SSR_Wait:
 		subq.w	#1,obTimeFrame(a0)
-		bne.s	loc_BE66
+		bne.s	SSR_Display
 		addq.b	#2,obRoutine(a0)
 
-loc_BE66:
+SSR_Display:
 		bra.w	DisplaySprite
-; ---------------------------------------------------------------------------
+; ===========================================================================
 
-loc_BE6A:
+SSR_RingBonus:	; Routine 6
 		bsr.w	DisplaySprite
-		move.b	#1,(f_endactbonus).w
-		tst.w	(v_ringbonus).w
-		beq.s	loc_BE9C
-		subi.w	#10,(v_ringbonus).w
-		moveq	#10,d0
+		move.b	#1,(f_endactbonus).w ; set ring bonus update flag
+		tst.w	(v_ringbonus).w	; is ring bonus	= zero?
+		beq.s	loc_BE9C	; if yes, branch
+		subi.w	#10,(v_ringbonus).w ; subtract 10 from ring bonus
+		moveq	#10,d0		; add 10 to score
 		jsr	(AddPoints).l
 		move.b	(Vint_runcount+3).w,d0
 		andi.b	#3,d0
 		bne.s	locret_BEC2
 		move.w	#sfx_Switch,d0
-		jmp	(PlaySound_Special).l
-; ---------------------------------------------------------------------------
+		jmp	(PlaySound_Special).l	; play "blip" sound
+; ===========================================================================
 
 loc_BE9C:
 		move.w	#sfx_Cash,d0
-		jsr	(PlaySound_Special).l
+		jsr	(PlaySound_Special).l	; play "ker-ching" sound
 		addq.b	#2,obRoutine(a0)
-		move.w	#180,obTimeFrame(a0)
-		cmpi.w	#50,(v_rings).w
-		bcs.s	locret_BEC2
-		move.w	#60,obTimeFrame(a0)
-		addq.b	#4,obRoutine(a0)
+		move.w	#180,obTimeFrame(a0) ; set time delay to 3 seconds
+		cmpi.w	#50,(v_rings).w	; do you have at least 50 rings?
+		bcs.s	locret_BEC2	; if not, branch
+		move.w	#60,obTimeFrame(a0) ; set time delay to 1 second
+		addq.b	#4,obRoutine(a0) ; goto "SSR_Continue" routine
 
 locret_BEC2:
 		rts
-; ---------------------------------------------------------------------------
+; ===========================================================================
 
-loc_BEC4:
-		move.w	#1,(Level_Inactive_flag).w
+SSR_Exit:
+		move.w	#1,(Level_Inactive_flag).w ; restart level
 		bra.w	DisplaySprite
-; ---------------------------------------------------------------------------
+; ===========================================================================
 
-loc_BECE:
+SSR_Continue:	; Routine $E
 		move.b	#4,(v_ssrescontinue+obFrame).w
 		move.b	#$14,(v_ssrescontinue+obRoutine).w
 		move.w	#sfx_Continue,d0
-		jsr	(PlaySound_Special).l
+		jsr	(PlaySound_Special).l	; play continues jingle
 		addq.b	#2,obRoutine(a0)
-		move.w	#360,obTimeFrame(a0)
+		move.w	#360,obTimeFrame(a0) ; set time delay to 6 seconds
 		bra.w	DisplaySprite
-; ---------------------------------------------------------------------------
+; ===========================================================================
 
-loc_BEF2:
+loc_BEF2:	; Routine $14
 		move.b	(Vint_runcount+3).w,d0
 		andi.b	#$F,d0
-		bne.s	loc_BF02
+		bne.s	SSR_Display2
 		bchg	#0,obFrame(a0)
 
-loc_BF02:
+SSR_Display2:
 		bra.w	DisplaySprite
-; ---------------------------------------------------------------------------
-S1Obj7E_Conf:	dc.w $20, $120,	$C4	; start	x-pos, main x-pos, y-pos
+; ===========================================================================
+SSR_Config:	dc.w $20, $120,	$C4	; start	x-pos, main x-pos, y-pos
 		dc.b 2,	0		; rountine number, frame number
 		dc.w $320, $120, $118
 		dc.b 2,	1
