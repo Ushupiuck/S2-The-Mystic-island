@@ -13,7 +13,7 @@ Obj25_Index:	dc.w loc_A81C-Obj25_Index
 		dc.w loc_A88A-Obj25_Index
 		dc.w loc_A8A6-Obj25_Index
 		dc.w loc_A8CC-Obj25_Index
-		dc.w loc_A8DA-Obj25_Index
+		dc.w loc_AA6E-Obj25_Index ; small optimization to remove a jmpto; since Obj25 & 37 are technically the same
 ; ---------------------------------------------------------------------------
 ; Distances between rings (format: horizontal, vertical)
 ; ---------------------------------------------------------------------------
@@ -72,7 +72,7 @@ loc_A832:
 
 loc_A88A:
 		move.b	(v_ani1_frame).w,obFrame(a0)
-		out_of_range.s	loc_A8DA,objoff_32(a0)
+		out_of_range.w	DeleteObject,objoff_32(a0)
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
@@ -92,9 +92,6 @@ loc_A8CC:
 		bsr.w	AnimateSprite
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
-
-loc_A8DA:
-		bra.w	DeleteObject
 
 ; =============== S U B	R O U T	I N E =======================================
 

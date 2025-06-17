@@ -57,7 +57,7 @@ loc_BAFE:
 		andi.b	#btnABC,d0
 		bne.s	loc_BB1E
 		btst	#0,obFrame(a0)
-		bne.s	loc_BB42
+		bne.w	DisplaySprite
 		tst.w	obTimeFrame(a0)
 		beq.s	loc_BB1E
 		subq.w	#1,obTimeFrame(a0)
@@ -69,14 +69,13 @@ loc_BB1E:
 		bne.s	loc_BB38
 		move.b	#GameModeID_ContinueScreen,(v_gamemode).w
 		tst.b	(v_continues).w
-		bne.s	loc_BB42
+		bne.w	DisplaySprite
 		move.b	#GameModeID_SegaScreen,(v_gamemode).w
-		bra.s	loc_BB42
+		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
 loc_BB38:
 		clr.l	(v_lamp_time).w
 		move.w	#1,(Level_Inactive_flag).w
-
-loc_BB42:
+;loc_BB42:
 		bra.w	DisplaySprite

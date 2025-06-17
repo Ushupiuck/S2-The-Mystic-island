@@ -124,8 +124,7 @@ loc_ECFA:
 ; ===========================================================================
 ; loc_ED00:
 Obj42_Move:
-		bsr.w	ObjectMove
-		rts
+		bra.w	ObjectMove
 ; ===========================================================================
 ; Green Newtron that fires a missile
 ; loc_ED06:

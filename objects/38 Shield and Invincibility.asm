@@ -27,8 +27,7 @@ Obj38_Init:
 		move.w	#make_art_tile(ArtTile_EHZ_Shield,0,0),obGfx(a0)
 
 loc_12406:
-		bsr.w	Adjust2PArtPointer
-		rts
+		bra.w	Adjust2PArtPointer
 ; ===========================================================================
 
 loc_1240C:

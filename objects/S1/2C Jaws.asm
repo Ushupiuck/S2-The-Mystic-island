@@ -19,7 +19,6 @@ Jaws_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj2C,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Jaws,1,0),obGfx(a0)
-		bsr.w	Adjust2PArtPointer
 		ori.b	#4,obRender(a0)
 		move.b	#$A,obColType(a0)
 		move.b	#4,obPriority(a0)

@@ -38,7 +38,6 @@ Obj0A_Init:
 
 loc_11ECC:
 		move.b	d0,obAnim(a0)
-		bsr.w	Adjust2PArtPointer
 		move.w	obX(a0),objoff_30(a0)
 		move.w	#-$88,obVelY(a0)
 
@@ -74,12 +73,8 @@ loc_11F14:
 		bsr.s	Obj0A_ShowNumber
 		jsr	(ObjectMove).l
 		tst.b	obRender(a0)
-		bpl.s	loc_11F48
+		bpl.s	Obj0A_Delete
 		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-loc_11F48:
-		jmp	(DeleteObject).l
 ; ---------------------------------------------------------------------------
 
 Obj0A_Display:
@@ -95,7 +90,7 @@ Obj0A_Delete:
 
 Obj0A_AirLeft:
 		cmpi.w	#$C,(v_air).w
-		bhi.s	loc_11F9A
+		bhi.s	Obj0A_Delete
 		subq.w	#1,objoff_38(a0)
 		bne.s	loc_11F82
 		move.b	#$E,obRoutine(a0)
@@ -107,12 +102,8 @@ loc_11F82:
 		lea	(Ani_Obj0A).l,a1
 		jsr	(AnimateSprite).l
 		tst.b	obRender(a0)
-		bpl.s	loc_11F9A
+		bpl.s	Obj0A_Delete
 		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-loc_11F9A:
-		jmp	(DeleteObject).l
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -201,7 +192,7 @@ loc_12166:
 
 loc_12170:
 		subq.w	#1,(v_air).w
-		bhs.w	loc_121FA
+		bhs.w	loc_1220C
 		bsr.w	ResumeMusic
 		move.b	#$81,(f_playerctrl).w
 		move.w	#sfx_Drown,d0
@@ -236,11 +227,6 @@ loc_121E4:
 		jsr	(ObjectMove).l
 		addi.w	#$10,obVelY(a0)
 		movea.l	(sp)+,a0
-		bra.s	loc_121FC
-; ---------------------------------------------------------------------------
-
-loc_121FA:
-		bra.s	loc_1220C
 ; ---------------------------------------------------------------------------
 
 loc_121FC:

@@ -45,4 +45,4 @@ loc_15540:
 		move.b	(a1,d1.w),obFrame(a0)
 		addq.b	#1,obAniFrame(a0)
 		andi.b	#$3F,obAniFrame(a0)
-		bra.w	loc_15868
+		jmp	(DisplaySprite).l

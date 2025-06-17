@@ -124,22 +124,20 @@ loc_9C4A:
 		tst.b	(v_bossstatus).w
 		bne.s	loc_9CAA
 		bsr.w	FindFreeObj
-		bne.s	loc_9CA6
+		bne.s	+
 		_move.b	#id_Obj29,obID(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.w	objoff_3E(a0),d0
 		lsr.w	#1,d0
 		move.b	d0,obFrame(a1)
-
-loc_9CA6:
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
 loc_9CAA:
 		move.b	#$12,obRoutine(a0)
 		clr.w	obVelX(a0)
-		bra.w	DisplaySprite
+/		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
 loc_9CB8:
@@ -147,10 +145,10 @@ loc_9CB8:
 		bpl.w	DeleteObject
 		bsr.w	ObjectMoveAndFall
 		tst.w	obVelY(a0)
-		bmi.s	loc_9D0E
+		bmi.s	-
 		jsr	(ObjHitFloor).l
 		tst.w	d1
-		bpl.s	loc_9D0E
+		bpl.s	-
 		add.w	d1,obY(a0)
 		move.w	objoff_32(a0),obVelX(a0)
 		move.w	objoff_34(a0),obVelY(a0)
@@ -160,13 +158,11 @@ loc_9CB8:
 		addq.b	#4,d0
 		move.b	d0,obRoutine(a0)
 		tst.b	(v_bossstatus).w
-		beq.s	loc_9D0E
+		beq.s	-
 		btst	#4,(Vint_runcount+3).w
-		beq.s	loc_9D0E
+		beq.s	-
 		neg.w	obVelX(a0)
 		bchg	#0,obRender(a0)
-
-loc_9D0E:
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
@@ -219,19 +215,17 @@ loc_9DA0:
 		bne.s	loc_9DB2
 		tst.b	obRender(a0)
 		bpl.w	DeleteObject
-		bra.w	DisplaySprite
+-		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
 loc_9DB2:
 		move.w	obX(a0),d0
 		sub.w	(v_player+obX).w,d0
-		bcs.s	loc_9DCA
+		bcs.s	-
 		subi.w	#$180,d0
-		bpl.s	loc_9DCA
+		bpl.s	-
 		tst.b	obRender(a0)
 		bpl.w	DeleteObject
-
-loc_9DCA:
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
@@ -239,30 +233,24 @@ loc_9DCE:
 		tst.b	obRender(a0)
 		bpl.w	DeleteObject
 		subq.w	#1,objoff_36(a0)
-		bne.w	loc_9DEA
+		bne.s	-
 		move.b	#2,obRoutine(a0)
 		move.b	#3,obPriority(a0)
-
-loc_9DEA:
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
 loc_9DEE:
 		bsr.w	sub_9F92
-		bcc.s	loc_9E0A
+		bcc.w	loc_9DB2
 		move.w	objoff_32(a0),obVelX(a0)
 		move.w	objoff_34(a0),obVelY(a0)
 		move.b	#$E,obRoutine(a0)
 		bra.w	loc_9D4E
 ; ---------------------------------------------------------------------------
 
-loc_9E0A:
-		bra.w	loc_9DB2
-; ---------------------------------------------------------------------------
-
 loc_9E0E:
 		bsr.w	sub_9F92
-		bpl.s	loc_9E44
+		bpl.w	loc_9DB2
 		clr.w	obVelX(a0)
 		clr.w	objoff_32(a0)
 		bsr.w	ObjectMove
@@ -270,18 +258,16 @@ loc_9E0E:
 		bsr.w	sub_9F52
 		bsr.w	sub_9F7A
 		subq.b	#1,obTimeFrame(a0)
-		bpl.s	loc_9E44
+		bpl.w	loc_9DB2
 		move.b	#1,obTimeFrame(a0)
 		addq.b	#1,obFrame(a0)
 		andi.b	#1,obFrame(a0)
-
-loc_9E44:
 		bra.w	loc_9DB2
 ; ---------------------------------------------------------------------------
 
 loc_9E48:
 		bsr.w	sub_9F92
-		bpl.s	loc_9E9E
+		bpl.w	loc_9DB2
 		move.w	objoff_32(a0),obVelX(a0)
 		move.w	objoff_34(a0),obVelY(a0)
 		move.b	#4,obRoutine(a0)
@@ -292,11 +278,11 @@ loc_9E64:
 		bsr.w	ObjectMoveAndFall
 		move.b	#1,obFrame(a0)
 		tst.w	obVelY(a0)
-		bmi.s	loc_9E9E
+		bmi.w	loc_9DB2
 		move.b	#0,obFrame(a0)
 		jsr	(ObjHitFloor).l
 		tst.w	d1
-		bpl.s	loc_9E9E
+		bpl.w	loc_9DB2
 		not.b	objoff_29(a0)
 		bne.s	loc_9E94
 		neg.w	obVelX(a0)
@@ -305,47 +291,41 @@ loc_9E64:
 loc_9E94:
 		add.w	d1,obY(a0)
 		move.w	objoff_34(a0),obVelY(a0)
-
-loc_9E9E:
 		bra.w	loc_9DB2
 ; ---------------------------------------------------------------------------
 
 loc_9EA2:
 		bsr.w	sub_9F92
-		bpl.s	loc_9EBC
+		bpl.w	loc_9DB2
 		clr.w	obVelX(a0)
 		clr.w	objoff_32(a0)
 		bsr.w	ObjectMoveAndFall
 		bsr.w	sub_9F52
 		bsr.w	sub_9F7A
-
-loc_9EBC:
 		bra.w	loc_9DB2
 ; ---------------------------------------------------------------------------
 
 loc_9EC0:
 		bsr.w	sub_9F92
-		bpl.s	loc_9EFA
+		bpl.w	loc_9DB2
 		bsr.w	ObjectMoveAndFall
 		move.b	#1,obFrame(a0)
 		tst.w	obVelY(a0)
-		bmi.s	loc_9EFA
+		bmi.w	loc_9DB2
 		move.b	#0,obFrame(a0)
 		jsr	(ObjHitFloor).l
 		tst.w	d1
-		bpl.s	loc_9EFA
+		bpl.w	loc_9DB2
 		neg.w	obVelX(a0)
 		bchg	#0,obRender(a0)
 		add.w	d1,obY(a0)
 		move.w	objoff_34(a0),obVelY(a0)
-
-loc_9EFA:
 		bra.w	loc_9DB2
 ; ---------------------------------------------------------------------------
 
 loc_9EFE:
 		bsr.w	sub_9F92
-		bpl.s	loc_9F4E
+		bpl.w	loc_9DB2
 		bsr.w	ObjectMove
 		addi.w	#$18,obVelY(a0)
 		tst.w	obVelY(a0)
@@ -364,12 +344,10 @@ loc_9F2E:
 
 loc_9F38:
 		subq.b	#1,obTimeFrame(a0)
-		bpl.s	loc_9F4E
+		bpl.w	loc_9DB2
 		move.b	#1,obTimeFrame(a0)
 		addq.b	#1,obFrame(a0)
 		andi.b	#1,obFrame(a0)
-
-loc_9F4E:
 		bra.w	loc_9DB2
 
 ; =============== S U B	R O U T	I N E =======================================

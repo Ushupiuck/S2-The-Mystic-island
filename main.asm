@@ -522,7 +522,7 @@ Vint_SwitchTbl:
 Vint_Lag_ptr:		dc.w Vint_Lag-Vint_SwitchTbl
 Vint_SEGA_ptr:		dc.w Vint_SEGA-Vint_SwitchTbl
 Vint_Title_ptr:		dc.w Vint_Title-Vint_SwitchTbl
-Vint_Unused6_ptr:	dc.w Vint_Unused6-Vint_SwitchTbl
+Vint_Unused6_ptr:	dc.w Do_ControllerPal-Vint_SwitchTbl
 Vint_Level_ptr:		dc.w Vint_Level-Vint_SwitchTbl
 Vint_S1SS_ptr:		dc.w Vint_S1SS-Vint_SwitchTbl
 Vint_TitleCard_ptr:	dc.w Vint_TitleCard-Vint_SwitchTbl
@@ -613,10 +613,6 @@ Vint_Title:
 
 .end:
 		rts
-; ===========================================================================
-; loc_CD2: VintSub6:
-Vint_Unused6:
-		bra.w	Do_ControllerPal
 ; ===========================================================================
 ; loc_CD8: VintSub10:
 Vint_Pause:
@@ -934,24 +930,24 @@ VDP_ClrCRAM:
 ; ===========================================================================
 VDPSetupArray:
 		dc.w $8004				; H-INT disabled
-		dc.w $8100+%00110100	; Mega Drive display, DMA enabled, V-INT enabled
-		dc.w $8200+(vram_fg>>10)		; PNT A base: $C000
+		dc.w $8134			; Mega Drive display, DMA enabled, V-INT enabled
+		dc.w $8200+(vram_fg>>10)	; PNT A base: $C000
 		dc.w $8300+(vram_window>>10)	; PNT W base: $A000
-		dc.w $8400+(vram_bg>>13)		; PNT B base: $E000
+		dc.w $8400+(vram_bg>>13)	; PNT B base: $E000
 		dc.w $8500+(vram_sprites>>9)	; Sprite attribute table base: $F800
 		dc.w $8600
-		dc.w $8700				; Background palette/color: 0/0
+		dc.w $8700			; Background palette/color: 0/0
 		dc.w $8800
 		dc.w $8900
-		dc.w $8A00				; H-INT every scanline
-		dc.w $8B00				; EXT-INT off, V scroll by screen, H scroll by screen
-		dc.w $8C00+%10000001	; H res 40 cells, no interlace, S/H disabled
+		dc.w $8A00			; H-INT every scanline
+		dc.w $8B00			; EXT-INT off, V scroll by screen, H scroll by screen
+		dc.w $8C81			; H res 40 cells, no interlace, S/H disabled
 		dc.w $8D00+(vram_hscroll>>10)
 		dc.w $8E00
-		dc.w $8F02				; VRAM pointer increment: $0002
-		dc.w $9000+%0001		; Scroll table size: 64x32
-		dc.w $9100				; Disable window
-		dc.w $9200				; Disable window
+		dc.w $8F02			; VRAM pointer increment: $0002
+		dc.w $9001			; Scroll table size: 64x32
+		dc.w $9100			; Disable window
+		dc.w $9200			; Disable window
 VDPSetupArray_End:
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
@@ -1088,31 +1084,30 @@ PlaneMapToVRAM_H40_TileLoop:
 
 ; PLCLoad:
 LoadPLC:
-		movem.l	a1-a2,-(sp)
-		lea	(ArtLoadCues).l,a1
-		add.w	d0,d0
+		movem.l	a1-a2,-(sp)		; Save registers
+		lea	(ArtLoadCues).l,a1	; Prepare PLC list index
+		add.w	d0,d0			; Get pointer to PLC list
 		move.w	(a1,d0.w),d0
 		lea	(a1,d0.w),a1
-		lea	(v_plc_buffer).w,a2
+		lea	(v_plc_buffer).w,a2	; Prepare PLC buffer
 
-loc_1688:
-		tst.l	(a2)
-		beq.s	loc_1690
-		addq.w	#6,a2
-		bra.s	loc_1688
-; ---------------------------------------------------------------------------
+.Loop:
+		tst.l	(a2)			; Is this PLC entry free?
+		beq.s	.FoundFree		; If so, branch
+		addq.w	#6,a2			; Check next entry
+		bra.s	.Loop
 
-loc_1690:
-		move.w	(a1)+,d0
-		bmi.s	loc_169C
+.FoundFree:
+		move.w	(a1)+,d0			; Get number of PLC entries
+		bmi.s	.End				; If it's 0 (or less), branch
 
-loc_1694:
-		move.l	(a1)+,(a2)+
-		move.w	(a1)+,(a2)+
-		dbf	d0,loc_1694
+.Load:
+		move.l	(a1)+,(a2)+			; Copy art pointer
+		move.w	(a1)+,(a2)+			; Copy VRAM location
+		dbf	d0,.Load			; Loop until all entries are queued
 
-loc_169C:
-		movem.l	(sp)+,a1-a2
+.End:
+		movem.l	(sp)+,a1-a2			; Restore registers
 		rts
 ; End of function LoadPLC
 
@@ -1130,23 +1125,23 @@ loc_169C:
 ;         (or if you change the size of v_plc_buffer, the limit becomes (v_plc_buffer_Only_End-v_plc_buffer)/6)
 
 NewPLC:
-		movem.l	a1-a2,-(sp)
-		lea	(ArtLoadCues).l,a1
+		movem.l	a1-a2,-(sp)		; Save registers
+		lea	(ArtLoadCues).l,a1	; Prepare PLC list index
 		add.w	d0,d0
 		move.w	(a1,d0.w),d0
 		lea	(a1,d0.w),a1
-		bsr.s	ClearPLC
-		lea	(v_plc_buffer).w,a2
-		move.w	(a1)+,d0
-		bmi.s	loc_16C8
+		bsr.s	ClearPLC		; Clear PLCs
+		lea	(v_plc_buffer).w,a2	; Prepare PLC buffer
+		move.w	(a1)+,d0		; Get number of PLC entries
+		bmi.s	.End			; If it's 0 (or less), branch
 
-loc_16C0:
-		move.l	(a1)+,(a2)+
-		move.w	(a1)+,(a2)+
-		dbf	d0,loc_16C0
+.Load:
+		move.l	(a1)+,(a2)+		; Copy art pointer
+		move.w	(a1)+,(a2)+		; Copy VRAM location
+		dbf	d0,.Load		; Loop until all entries are queued
 
-loc_16C8:
-		movem.l	(sp)+,a1-a2
+.End:
+		movem.l	(sp)+,a1-a2		; Restore registers
 		rts
 ; End of function NewPLC
 
@@ -1159,9 +1154,9 @@ ClearPLC:
 		lea	(v_plc_buffer).w,a2
 		moveq	#bytesToLcnt(v_plc_buffer_end-v_plc_buffer),d0
 
-loc_16D4:
+.Clear:
 		clr.l	(a2)+
-		dbf	d0,loc_16D4
+		dbf	d0,.Clear
 		rts
 ; End of function ClearPLC
 
@@ -1213,12 +1208,14 @@ locret_1730:
 
 ; sub_1732:
 ProcessDPLC:
-		tst.w	(v_plc_patternsleft).w
-		beq.w	locret_17CA
+		tst.w	(v_plc_patternsleft).w		; Is there anything to decompress?
+		beq.w	ProcessDPLC_Done		; If not, branch
+
+ProcessDPLC_Large:
 		move.w	#9,(v_plc_framepatternsleft).w
-		moveq	#0,d0
+		moveq	#0,d0				; Get VRAM address
 		move.w	(v_plc_buffer+4).w,d0
-		addi.w	#$120,(v_plc_buffer+4).w
+		addi.w	#9*$20,(v_plc_buffer+4).w	; Advance VRAM address
 		bra.s	ProcessDPLC_Main
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
@@ -1226,22 +1223,24 @@ ProcessDPLC:
 
 ; loc_174E:
 ProcessDPLC2:
-		tst.w	(v_plc_patternsleft).w
-		beq.s	locret_17CA
+		tst.w	(v_plc_patternsleft).w		; Is there anything to decompress?
+		beq.s	ProcessDPLC_Done		; If not, branch
+		tst.b	(f_lockscreen).w		; Is the screen locked?
+		bne.s	ProcessDPLC_Large		; If so, go with the large batch instead
 		move.w	#3,(v_plc_framepatternsleft).w
-		moveq	#0,d0
+		moveq	#0,d0				; Get VRAM address
 		move.w	(v_plc_buffer+4).w,d0
-		addi.w	#$60,(v_plc_buffer+4).w
+		addi.w	#3*$20,(v_plc_buffer+4).w	; Advance VRAM address
 ; loc_1766:
 ProcessDPLC_Main:
-		lea	(vdp_control_port).l,a4
+		lea	(vdp_control_port).l,a4		; Set VDP write command
 		lsl.l	#2,d0
 		lsr.w	#2,d0
 		ori.w	#$4000,d0
 		swap	d0
 		move.l	d0,(a4)
-		subq.w	#4,a4
-		movea.l	(v_plc_buffer).w,a0
+		subq.w	#4,a4				; Prepare data port
+		movea.l	(v_plc_buffer).w,a0		; Get decompression registers
 		movea.l	(v_plc_ptrnemcode).w,a3
 		move.l	(v_plc_repeatcount).w,d0
 		move.l	(v_plc_paletteindex).w,d1
@@ -1250,13 +1249,13 @@ ProcessDPLC_Main:
 		move.l	(v_plc_shiftvalue).w,d6
 		lea	(v_ngfx_buffer).w,a1
 
-loc_179A:
-		movea.w	#8,a5
+.Decomp:
+		movea.w	#8,a5				; Store decompressed tile in VRAM
 		bsr.w	NemPCD_NewRow
-		subq.w	#1,(v_plc_patternsleft).w
-		beq.s	ProcessDPLC_Pop
-		subq.w	#1,(v_plc_framepatternsleft).w
-		bne.s	loc_179A
+		subq.w	#1,(v_plc_patternsleft).w	; Decrement total tile count
+		beq.s	ProcessDPLC_Pop			; If this art is finished being decompressed, branch
+		subq.w	#1,(v_plc_framepatternsleft).w	; Decrement number of tiles left to decompress in this batch
+		bne.s	.Decomp				; If we are not done, branch
 		move.l	a0,(v_plc_buffer).w
 		move.l	a3,(v_plc_ptrnemcode).w
 		move.l	d0,(v_plc_repeatcount).w
@@ -1265,7 +1264,7 @@ loc_179A:
 		move.l	d5,(v_plc_dataword).w
 		move.l	d6,(v_plc_shiftvalue).w
 
-locret_17CA:
+ProcessDPLC_Done:
 		rts
 ; ===========================================================================
 ; pop one request off the buffer so that the next one can be filled
@@ -1302,7 +1301,7 @@ QuickPLC:
 		lea	(a1,d0.w),a1
 		move.w	(a1)+,d1
 
-loc_17EE:
+.Load:
 		movea.l	(a1)+,a0
 		moveq	#0,d0
 		move.w	(a1)+,d0
@@ -1312,7 +1311,7 @@ loc_17EE:
 		swap	d0
 		move.l	d0,(vdp_control_port).l
 		bsr.w	NemDec
-		dbf	d1,loc_17EE
+		dbf	d1,.Load
 		rts
 ; End of function QuickPLC
 
@@ -2099,11 +2098,11 @@ SegaScreen:
 		bsr.w	ClearPLC
 		bsr.w	Pal_FadeToBlack
 		lea	(vdp_control_port).l,a6
-		move.w	#$8004,(a6)
-		move.w	#$8230,(a6)
-		move.w	#$8407,(a6)
-		move.w	#$8700,(a6)
-		move.w	#$8B00,(a6)
+		move.w	#$8004,(a6)	; use 8-colour mode
+		move.w	#$8200+(vram_fg>>10),(a6) ; set foreground nametable address
+		move.w	#$8400+(vram_bg>>13),(a6) ; set background nametable address
+		move.w	#$8700,(a6)	; set background colour (palette entry 0)
+		move.w	#$8B00,(a6)	; full-screen vertical scrolling
 		move.w	#$8C81,(a6)
 		clr.b	(f_wtr_state).w
 		move	#$2700,sr
@@ -2121,10 +2120,10 @@ SegaScreen:
 		copyTilemap	v_start,vram_bg+$510,24,8
 		copyTilemap	v_start+$180,vram_fg,40,28
 		tst.b	(v_megadrive).w			; is console Japanese?
-		bmi.s	loc_316A			; if not, branch
+		bmi.s	.loadpal			; if not, branch
 		copyTilemap	v_start+$A40,vram_fg+$53A,3,2 ; hide "TM" with a white rectangle
 
-loc_316A:
+.loadpal:
 		moveq	#palid_SegaBG,d0
 		bsr.w	PalLoad2
 		move.w	#-$A,(v_pcyc_num).w
@@ -2140,7 +2139,6 @@ Sega_WaitPalette:
 		bsr.w	WaitForVint
 		bsr.w	PalCycle_Sega
 		bne.s	Sega_WaitPalette
-
 		move.b	#sfx_Sega,d0
 		bsr.w	PlaySound_Special
 		move.b	#VintID_PCM,(v_vbla_routine).w
@@ -2158,8 +2156,6 @@ Sega_WaitEnd:
 Sega_GoToTitleScreen:
 		move.b	#GameModeID_TitleScreen,(v_gamemode).w
 		rts
-; ===========================================================================
-		align 4
 ; ===========================================================================
 
 TitleScreen:
@@ -2977,7 +2973,7 @@ Level_LoadObj:
 		jsr	(RingsManager).l
 		jsr	(ExecuteObjects).l
 		jsr	(BuildSprites).l
-		bsr.w	j_AniArt_Load
+		jsr	(AniArt_Load).l
 		moveq	#0,d0
 		tst.b	(v_lastlamp).w
 		bne.s	Level_SkipClr
@@ -3093,7 +3089,7 @@ Level_DoScroll:
 Level_SkipScroll:
 		bsr.w	ChangeWaterSurfacePos
 		jsr	(RingsManager).l
-		bsr.w	j_AniArt_Load
+		jsr	(AniArt_Load).l
 		bsr.w	PalCycle_Load
 		bsr.w	RunPLC_RAM
 		bsr.w	OscillateNumDo
@@ -3298,11 +3294,6 @@ Demo_S1GHZ:	binclude	"demodata/S1/Intro - GHZ.bin"
 Demo_S1SS:	binclude	"demodata/S1/Intro - Special Stage.bin"
 		even
 ; ---------------------------------------------------------------------------
-
-j_AniArt_Load:
-		jmp	(AniArt_Load).l
-; ---------------------------------------------------------------------------
-		align 4
 
 ; ===========================================================================
 ; Sonic 1 Special Stage; crashes due to bad PLCs and missing pointers, but
@@ -9348,7 +9339,7 @@ RememberState:
 ; ---------------------------------------------------------------------------
 
 loc_CE64:
-		out_of_range.w	loc_CE7C
+		out_of_range.s	loc_CE7C
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
@@ -9371,7 +9362,7 @@ MarkObjGone2:
 ; ---------------------------------------------------------------------------
 
 loc_CE9A:
-		out_of_range.w	loc_CEB0
+		out_of_range.s	loc_CEB0
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -9390,7 +9381,7 @@ loc_CEC2:
 MarkObjGone_P1:
 		tst.w	(Two_player_mode).w
 		bne.s	MarkObjGone_P2
-		out_of_range.w	loc_CEE4
+		out_of_range.s	loc_CEE4
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
@@ -9427,11 +9418,8 @@ loc_CF24:
 		lea	(v_objstate).w,a2
 		moveq	#0,d0
 		move.b	obRespawnNo(a0),d0
-		beq.s	loc_CF36
+		beq.s	DeleteObject
 		bclr	#7,2(a2,d0.w)
-
-loc_CF36:
-		bra.w	DeleteObject			; useless branch...
 
 ; ---------------------------------------------------------------------------
 ; Subroutine to delete an object
@@ -9447,9 +9435,8 @@ DeleteObject2:
 		moveq	#0,d1
 		moveq	#bytesToLcnt(object_size),d0	; we want to clear up to the next object
 		; delete the object by setting all of its bytes to 0
-loc_CF40:
-		move.l	d1,(a1)+
-		dbf	d0,loc_CF40
+-		move.l	d1,(a1)+
+		dbf	d0,-
 		rts
 ; End of function DeleteObject
 
@@ -18545,7 +18532,7 @@ Obj0C_Main:
 loc_1436E:
 		addq.b	#1,objoff_3D(a0)
 		move.b	d1,d0
-		bsr.w	j_CalcSine
+		jsr	(CalcSine).l
 		addi.w	#8,d0
 		asr.w	#6,d0
 		subi.w	#$10,d0
@@ -18564,7 +18551,7 @@ loc_1439C:
 		addq.b	#1,objoff_3C(a0)
 
 loc_143A0:
-		bsr.w	j_CalcSine
+		jsr	(CalcSine).l
 		addi.w	#8,d1
 		asr.w	#4,d1
 		add.w	objoff_3A(a0),d1
@@ -18582,15 +18569,9 @@ Map_Obj0C:	dc.w word_143C8-Map_Obj0C
 word_143C8:	dc.w 1
 		dc.w $F80D,    0,    0,$FFF0
 		even
-; ---------------------------------------------------------------------------
-
-j_CalcSine:
-		jmp	(CalcSine).l
-; ---------------------------------------------------------------------------
-		align 4
-;----------------------------------------------------
+;----------------------------------------------------------------------------
 ; Object 12 - Master Emerald from HPZ
-;----------------------------------------------------
+;----------------------------------------------------------------------------
 
 Obj12:
 		moveq	#0,d0
@@ -19195,19 +19176,19 @@ loc_14F10:
 loc_14F30:
 		tst.w	obVelY(a0)
 		bpl.s	loc_14F4E
-		bsr.w	j_ObjectMoveAndFall
+		jsr	(ObjectMoveAndFall).l
 		move.w	objoff_34(a0),d0
 		subi.w	#$2F,d0
 		cmp.w	obY(a0),d0
 		bgt.s	locret_14F4C
-		bra.w	j_ObjectMoveAndFall
+		jmp	(ObjectMoveAndFall).l
 
 locret_14F4C:
 		rts
 ; ---------------------------------------------------------------------------
 
 loc_14F4E:
-		bsr.w	j_ObjectMoveAndFall
+		jsr	(ObjectMoveAndFall).l
 		movea.l	objoff_3C(a0),a1
 		lea	(word_14FF4).l,a2
 		moveq	#0,d0
@@ -19294,16 +19275,10 @@ Map_obj14:	binclude	"mappings/sprite/obj14_a.bin"
 ; -------------------------------------------------------------------------------
 Map_obj14b:	binclude	"mappings/sprite/obj14_b.bin"
 		even
-; ---------------------------------------------------------------------------
-
-j_ObjectMoveAndFall:
-		jmp	(ObjectMoveAndFall).l
-; ---------------------------------------------------------------------------
-		align 4
-;----------------------------------------------------
+;--------------------------------------------------------------------------------
 ; Object 16 - the HTZ platform that goes down diagonally
 ; and stops after a while (in the final, it falls)
-;----------------------------------------------------
+;--------------------------------------------------------------------------------
 
 Obj16:
 		moveq	#0,d0
@@ -19336,8 +19311,8 @@ Obj16_Main:
 		move.w	(sp)+,d4
 		bsr.w	sub_F78A
 		move.w	objoff_30(a0),d0
-		out_of_range.w	j_DeleteObject
-		bra.w	loc_152A4
+		out_of_range2	DeleteObject
+		jmp	(DisplaySprite).l
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -19377,7 +19352,7 @@ locret_151BE:
 ; ---------------------------------------------------------------------------
 
 Obj16_Move:
-		bsr.w	j_ObjectMove_0
+		jsr	(ObjectMove).l
 		subq.w	#1,objoff_34(a0)
 		bne.s	locret_151CE
 		addq.b	#1,obSubtype(a0)
@@ -19392,22 +19367,8 @@ Obj16_NoMove:
 Map_Obj16:	include	"mappings/sprite/obj16.asm"
 		even
 ; ---------------------------------------------------------------------------
-
-loc_152A4:
-		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-j_DeleteObject:
-		jmp	(DeleteObject).l
-; ---------------------------------------------------------------------------
-
-j_ObjectMove_0:
-		jmp	(ObjectMove).l
-; ---------------------------------------------------------------------------
-		align 4
-;----------------------------------------------------
 ; Object 19 - CPZ platforms moving side	to side
-;----------------------------------------------------
+;----------------------------------------------------------------------------
 
 Obj19:
 		moveq	#0,d0
@@ -19451,8 +19412,8 @@ Obj19_Main:
 		move.w	#$10,d3
 		move.w	(sp)+,d4
 		bsr.w	sub_F78A
-		out_of_range.w	j_DeleteObject_1,objoff_30(a0)
-		bra.w	loc_154C0
+		out_of_range2	DeleteObject,objoff_30(a0)
+		jmp	(DisplaySprite).l
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -19542,7 +19503,7 @@ loc_153E6:
 ; ---------------------------------------------------------------------------
 
 loc_153EC:
-		bsr.w	j_ObjectMove_1
+		jsr	(ObjectMove).l
 		addi.w	#$18,obVelY(a0)
 		bsr.w	ObjHitFloor
 		tst.w	d1
@@ -19562,7 +19523,7 @@ loc_1540E:
 
 loc_15418:
 		addq.l	#6,sp
-		out_of_range.w	j_DeleteObject_1,objoff_30(a0)
+		out_of_range2	DeleteObject,objoff_30(a0)
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -19631,20 +19592,6 @@ word_154AE:	dc.w 2
 		dc.w $F00F, $800, $800,	   0		; 4
 		even
 ; ---------------------------------------------------------------------------
-
-loc_154C0:
-		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-j_DeleteObject_1:
-		jmp	(DeleteObject).l
-; ---------------------------------------------------------------------------
-
-j_ObjectMove_1:
-		jmp	(ObjectMove).l
-; ---------------------------------------------------------------------------
-		align 4
-
 		include	"objects/04 Water Surface.asm"
 ; ---------------------------------------------------------------------------
 Obj04_FrameData:dc.b   0,  1,  0,  1,  0,  1,  0,  1,  0,  1,  0,  1,  0,  1,  0,  1
@@ -19721,7 +19668,7 @@ Obj49_Init:
 Obj49_Main:
 		tst.w	(Two_player_mode).w
 		bne.s	loc_156F6
-		out_of_range.w	j_DeleteObject_2
+		out_of_range2	DeleteObject
 
 loc_156F6:
 		move.w	obX(a0),d1
@@ -19737,7 +19684,7 @@ loc_156F6:
 		bhs.s	loc_15728
 		move.b	#1,obFrame(a0)
 		add.b	d3,obFrame(a0)
-		bra.w	loc_15868
+		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 loc_15728:
@@ -19750,7 +19697,7 @@ loc_15728:
 
 loc_1573A:
 		add.b	d3,obFrame(a0)
-		bra.w	loc_15868
+		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 Map_Obj49:	dc.w word_1574E-Map_Obj49
 		dc.w word_15760-Map_Obj49
@@ -19799,18 +19746,8 @@ word_15816:	dc.w $A
 		dc.w $400F,    8,    4,	   0		; 36
 		even
 ; ---------------------------------------------------------------------------
-
-loc_15868:
-		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-j_DeleteObject_2:
-		jmp	(DeleteObject).l
-; ---------------------------------------------------------------------------
-		align 4
-;----------------------------------------------------
 ; Object 4D - Stegway badnik
-;----------------------------------------------------
+;----------------------------------------------------------------------------
 
 Obj4D:
 		moveq	#0,d0
@@ -19831,7 +19768,7 @@ Obj4D_Init:
 		move.b	#$18,obActWid(a0)
 		move.b	#$10,obHeight(a0)
 		move.b	#$18,obWidth(a0)
-		bsr.w	j_ObjectMoveAndFall_0
+		jsr	(ObjectMoveAndFall).l
 		jsr	(ObjHitFloor).l
 		tst.w	d1
 		bpl.s	locret_158DC
@@ -19849,8 +19786,8 @@ Obj4D_Main:
 		move.w	Obj4D_SubIndex(pc,d0.w),d1
 		jsr	Obj4D_SubIndex(pc,d1.w)
 		lea	(Ani_Obj4D).l,a1
-		bsr.w	j_AnimateSprite_0
-		bra.w	loc_15B38
+		jsr	(AnimateSprite).l
+		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
 Obj4D_SubIndex:	dc.w loc_158FE-Obj4D_SubIndex
 		dc.w loc_15922-Obj4D_SubIndex
@@ -19872,7 +19809,7 @@ locret_15920:
 
 loc_15922:
 		bsr.w	sub_1596C
-		bsr.w	j_ObjectMoveAndFall_0
+		jsr	(ObjectMoveAndFall).l
 		jsr	(ObjHitFloor).l
 		cmpi.w	#-8,d1
 		blt.s	loc_15948
@@ -19999,21 +19936,9 @@ word_15B14:	dc.w 4
 		dc.w	 9,  $28,  $14,	   0		; 8
 		dc.w $FB01,  $30,  $18,	 $1A		; 12
 		even
-loc_15B38:
-		jmp	(MarkObjGone).l
-; ---------------------------------------------------------------------------
-
-j_AnimateSprite_0:
-		jmp	(AnimateSprite).l
-; ---------------------------------------------------------------------------
-
-j_ObjectMoveAndFall_0:
-		jmp	(ObjectMoveAndFall).l
-; ---------------------------------------------------------------------------
-		align 4
-;----------------------------------------------------
+;----------------------------------------------------------------------------
 ; Object 52 - Piranha badnik
-;----------------------------------------------------
+;----------------------------------------------------------------------------
 
 Obj52:
 		moveq	#0,d0
@@ -20071,24 +19996,24 @@ loc_15BE4:
 
 loc_15C06:
 		lea	(Ani_Obj52).l,a1
-		bsr.w	j_AnimateSprite_1
-		bsr.w	j_ObjectMove_2
+		jsr	(AnimateSprite).l
+		jsr	(ObjectMove).l
 		tst.w	objoff_3A(a0)
-		bgt.w	loc_15D90
+		bgt.s	+
 		cmpi.w	#-1,objoff_3A(a0)
-		beq.w	loc_15D90
+		beq.s	+
 		move.l	#-$48000,objoff_36(a0)
 		addq.b	#2,obRoutine(a0)
 		move.w	#-1,objoff_3A(a0)
 		move.b	#2,obAnim(a0)
 		move.w	#1,objoff_3E(a0)
-		bra.w	loc_15D90
++		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
 
 loc_15C48:
 		move.w	#$390,(v_waterpos1).w
 		lea	(Ani_Obj52).l,a1
-		bsr.w	j_AnimateSprite_1
+		jsr	(AnimateSprite).l
 		move.w	objoff_3E(a0),d0
 		sub.w	d0,objoff_30(a0)
 		bsr.w	sub_15CF8
@@ -20096,17 +20021,17 @@ loc_15C48:
 		bpl.s	loc_15CA0
 		move.w	obY(a0),d0
 		cmp.w	(v_waterpos1).w,d0
-		bgt.w	loc_15D90
+		bgt.s	+
 		move.b	#3,obAnim(a0)
 		bclr	#6,obStatus(a0)
 		tst.b	objoff_2A(a0)
-		bne.w	loc_15D90
+		bne.s	+
 		move.w	obVelX(a0),d0
 		asl.w	#1,d0
 		move.w	d0,obVelX(a0)
 		addq.w	#1,objoff_3E(a0)
 		st	objoff_2A(a0)
-		bra.w	loc_15D90
++		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
 
 loc_15CA0:
@@ -20114,7 +20039,7 @@ loc_15CA0:
 		cmp.w	(v_waterpos1).w,d0
 		bgt.s	loc_15CB4
 		move.b	#1,obAnim(a0)
-		bra.w	loc_15D90
+		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
 
 loc_15CB4:
@@ -20129,15 +20054,15 @@ loc_15CB4:
 loc_15CCE:
 		move.w	objoff_34(a0),d0
 		cmp.w	obY(a0),d0
-		bgt.w	loc_15D90
+		bgt.s	+
 		subq.b	#2,obRoutine(a0)
 		tst.b	objoff_2A(a0)
-		beq.w	loc_15D90
+		beq.s	+
 		move.w	obVelX(a0),d0
 		asr.w	#1,d0
 		move.w	d0,obVelX(a0)
 		sf	objoff_2A(a0)
-		bra.w	loc_15D90
++		jmp	(MarkObjGone).l
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -20190,18 +20115,6 @@ word_15D7A:	dc.w 1
 word_15D84:	dc.w 1
 		dc.w $F00F,  $30,  $18,$FFF0		; 0
 		even
-loc_15D90:
-		jmp	(MarkObjGone).l
-; ---------------------------------------------------------------------------
-
-j_AnimateSprite_1:
-		jmp	(AnimateSprite).l
-; ---------------------------------------------------------------------------
-
-j_ObjectMove_2:
-		jmp	(ObjectMove).l
-		align 4
-
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Object 4F - Redz (dinosaur badnik) from HPZ
@@ -20227,7 +20140,7 @@ Obj4F_Init:
 		move.b	#$10,obHeight(a0)
 		move.b	#6,obWidth(a0)
 		move.b	#$C,obColType(a0)
-		bsr.w	j_ObjectMoveAndFall_1
+		jsr	(ObjectMoveAndFall).l
 		jsr	(ObjHitFloor).l
 		tst.w	d1
 		bpl.s	locret_15E0C
@@ -20248,9 +20161,9 @@ Obj4F_Main:
 		move.w	Obj4F_SubIndex(pc,d0.w),d1
 		jsr	Obj4F_SubIndex(pc,d1.w)
 		lea	(Ani_obj4F).l,a1
-		bsr.w	j_AnimateSprite_2
-		out_of_range.w	loc_15E3E
-		bra.w	loc_15EE8
+		jsr	(AnimateSprite).l
+		out_of_range.s	loc_15E3E
+		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 loc_15E3E:
@@ -20261,7 +20174,7 @@ loc_15E3E:
 		bclr	#7,2(a2,d0.w)
 
 loc_15E50:
-		bra.w	JmpTo_DeleteObject
+		jmp	(DeleteObject).l
 ; ===========================================================================
 Obj4F_SubIndex:	dc.w Obj4F_MoveLeft-Obj4F_SubIndex
 		dc.w Obj4F_ChkFloor-Obj4F_SubIndex
@@ -20282,7 +20195,7 @@ locret_15E7A:
 ; ===========================================================================
 ; loc_15E7C:
 Obj4F_ChkFloor:
-		bsr.w	j_ObjectMove_3
+		jsr	(ObjectMove).l
 		jsr	(ObjHitFloor).l
 		cmpi.w	#-8,d1
 		blt.s	Obj4F_StopMoving
@@ -20301,7 +20214,7 @@ Obj4F_StopMoving:
 ; ===========================================================================
 
 Obj4F_Delete:
-		bra.w	JmpTo_DeleteObject
+		jmp	(DeleteObject).l
 ; ===========================================================================
 ; animation script
 Ani_obj4F:	dc.w byte_15EB8-Ani_obj4F
@@ -20314,29 +20227,8 @@ byte_15EBB:	dc.b   9,  0,  1,  2,  1,$FF,  0
 Map_obj4F:	binclude	"mappings/sprite/obj4F.bin"
 		even
 ; ---------------------------------------------------------------------------
-loc_15EE8:
-		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-JmpTo_DeleteObject:
-		jmp	(DeleteObject).l
-; ---------------------------------------------------------------------------
-
-j_AnimateSprite_2:
-		jmp	(AnimateSprite).l
-; ---------------------------------------------------------------------------
-
-j_ObjectMoveAndFall_1:
-		jmp	(ObjectMoveAndFall).l
-; ---------------------------------------------------------------------------
-
-j_ObjectMove_3:
-		jmp	(ObjectMove).l
-; ---------------------------------------------------------------------------
-		align 4
-;----------------------------------------------------
 ; Object 50 - Aquis badnik from HPZ
-;----------------------------------------------------
+;----------------------------------------------------------------------------
 
 Obj50:
 		moveq	#0,d0
@@ -20373,7 +20265,7 @@ Obj50_Init:
 		move.w	d0,objoff_32(a0)
 		move.w	d0,objoff_34(a0)
 		move.w	obY(a0),objoff_2A(a0)
-		bsr.w	j_FindFreeObj
+		jsr	(FindFreeObj).l
 		bne.s	loc_15FDA
 		_move.b	#id_Obj50,obID(a1)
 		move.b	#4,obRoutine(a1)
@@ -20393,14 +20285,14 @@ Obj50_Init:
 
 loc_15FDA:
 		lea	(Ani_Obj50).l,a1
-		bsr.w	j_AnimateSprite_3
+		jsr	(AnimateSprite).l
 		move.w	#$39C,(v_waterpos1).w
 		moveq	#0,d0
 		move.b	ob2ndRout(a0),d0
 		move.w	Obj50_SubIndex(pc,d0.w),d1
 		jsr	Obj50_SubIndex(pc,d1.w)
 		bsr.w	sub_161D8
-		bra.w	loc_1677A
+		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
 Obj50_SubIndex:	dc.w loc_16046-Obj50_SubIndex
 		dc.w loc_16058-Obj50_SubIndex
@@ -20410,39 +20302,39 @@ Obj50_SubIndex:	dc.w loc_16046-Obj50_SubIndex
 loc_16006:
 		movea.l	objoff_36(a0),a1
 		tst.b	obID(a1)
-		beq.w	loc_1676E
+		beq.w	loc_1639A
 		cmpi.b	#id_Obj50,obID(a1)
-		bne.w	loc_1676E
+		bne.w	loc_1639A
 		btst	#7,obStatus(a1)
-		bne.w	loc_1676E
+		bne.w	loc_1639A
 		lea	(Ani_Obj50).l,a1
-		bsr.w	j_AnimateSprite_3
-		bra.w	loc_16768
+		jsr	(AnimateSprite).l
+		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 loc_16030:
 		bsr.w	loc_162FC
-		bsr.w	j_ObjectMove_4
+		jsr	(ObjectMove).l
 		lea	(Ani_Obj50).l,a1
-		bsr.w	j_AnimateSprite_3
-		bra.w	loc_1677A
+		jsr	(AnimateSprite).l
+		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
 
 loc_16046:
-		bsr.w	j_ObjectMove_4
+		jsr	(ObjectMove).l
 		bsr.w	sub_162DE
 		bsr.w	sub_16184
 		bra.w	sub_1611C
 ; ---------------------------------------------------------------------------
 
 loc_16058:
-		bsr.w	j_ObjectMove_4
+		jsr	(ObjectMove).l
 		bsr.w	sub_162DE
 		bra.w	sub_161A6
 ; ---------------------------------------------------------------------------
 
 loc_16066:
-		bsr.w	j_ObjectMoveAndFall_2
+		jsr	(ObjectMoveAndFall).l
 		bsr.w	sub_162DE
 		bsr.w	sub_16078
 		bra.w	sub_160F4
@@ -20462,7 +20354,7 @@ locret_16084:
 
 loc_16086:
 		st	objoff_2D(a0)
-		bsr.w	j_FindFreeObj
+		jsr	(FindFreeObj).l
 		bne.s	locret_160F2
 		_move.b	#id_Obj50,obID(a1)
 		move.b	#6,obRoutine(a1)
@@ -20628,11 +20520,11 @@ loc_16208:
 ; ---------------------------------------------------------------------------
 
 Obj50_Routine08:
-		bsr.w	j_ObjectMoveAndFall_2
+		jsr	(ObjectMoveAndFall).l
 		bsr.w	sub_16228
 		lea	(Ani_Obj50).l,a1
-		bsr.w	j_AnimateSprite_3
-		bra.w	loc_1677A
+		jsr	(AnimateSprite).l
+		jmp	(MarkObjGone).l
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -20649,7 +20541,7 @@ sub_16228:
 
 loc_16242:
 		subi.b	#1,obColProp(a0)
-		beq.w	loc_1676E
+		beq.w	loc_1639A
 		rts
 ; End of function sub_16228
 
@@ -20660,7 +20552,7 @@ Obj50_Routine0A:
 		tst.b	ob2ndRout(a0)
 		beq.s	locret_1628E
 		subi.w	#1,objoff_2C(a0)
-		beq.w	loc_1676E
+		beq.w	loc_1639A
 		move.w	(v_player+obX).w,obX(a0)
 		move.w	(v_player+obY).w,obY(a0)
 		addi.w	#$C,obY(a0)
@@ -20676,8 +20568,8 @@ locret_1628E:
 
 loc_16290:
 		lea	(Ani_Obj50).l,a1
-		bsr.w	j_AnimateSprite_3
-		bra.w	loc_16768
+		jsr	(AnimateSprite).l
+		jmp	(DisplaySprite).l
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -20725,7 +20617,7 @@ loc_162FC:
 		moveq	#2,d3
 
 loc_16306:
-		bsr.w	j_FindFreeObj
+		jsr	(FindFreeObj).l
 		bne.s	loc_16378
 		_move.b	obID(a0),obID(a1)
 		move.b	#8,obRoutine(a1)
@@ -20757,7 +20649,7 @@ loc_16372:
 
 loc_16378:
 		dbf	d3,loc_16306
-		bsr.w	j_FindFreeObj
+		jsr	(FindFreeObj).l
 		bne.s	loc_1639A
 		_move.b	obID(a0),obID(a1)
 		move.b	#$A,obRoutine(a1)
@@ -20765,7 +20657,7 @@ loc_16378:
 		move.w	#make_art_tile(ArtTile_Aquis_Child,1,0),obGfx(a1)
 
 loc_1639A:
-		bra.w	loc_1676E
+		jmp	(DeleteObject).l
 ; ---------------------------------------------------------------------------
 
 locret_1639E:
@@ -20892,13 +20784,13 @@ loc_1653E:
 
 loc_1659C:
 		lea	Ani_Obj50(pc),a1
-		bsr.w	j_AnimateSprite_3
+		jsr	(AnimateSprite).l
 		move.w	#$39C,(v_waterpos1).w
 		moveq	#0,d0
 		move.b	ob2ndRout(a0),d0
 		move.w	off_165BC(pc,d0.w),d1
 		jsr	off_165BC(pc,d1.w)
-		bra.w	loc_1677A
+		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
 off_165BC:	dc.w loc_165D4-off_165BC
 		dc.w loc_165EA-off_165BC
@@ -20906,14 +20798,14 @@ off_165BC:	dc.w loc_165D4-off_165BC
 
 loc_165C0:
 		bsr.w	loc_162FC
-		bsr.w	j_ObjectMove_4
+		jsr	(ObjectMove).l
 		lea	Ani_Obj50(pc),a1
-		bsr.w	j_AnimateSprite_3
-		bra.w	loc_1677A
+		jsr	(AnimateSprite).l
+		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
 
 loc_165D4:
-		bsr.w	j_ObjectMove_4
+		jsr	(ObjectMove).l
 		bsr.w	sub_162DE
 		bsr.w	loc_16626
 		bsr.w	loc_16708
@@ -20921,7 +20813,7 @@ loc_165D4:
 ; ---------------------------------------------------------------------------
 
 loc_165EA:
-		bsr.w	j_ObjectMove_4
+		jsr	(ObjectMove).l
 		bsr.w	sub_162DE
 		bsr.w	loc_16626
 		bsr.w	loc_16708
@@ -20998,7 +20890,7 @@ locret_1669C:
 ; ---------------------------------------------------------------------------
 
 loc_1669E:
-		bsr.w	j_FindFreeObj
+		jsr	(FindFreeObj).l
 		bne.s	locret_16706
 		_move.b	#id_Obj51,obID(a1)
 		move.b	#4,obRoutine(a1)
@@ -21073,35 +20965,6 @@ locret_16766:
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_16768:
-		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-loc_1676E:
-		jmp	(DeleteObject).l
-; ---------------------------------------------------------------------------
-
-j_FindFreeObj:
-		jmp	(FindFreeObj).l
-; ---------------------------------------------------------------------------
-
-loc_1677A:
-		jmp	(MarkObjGone).l
-; ---------------------------------------------------------------------------
-
-j_AnimateSprite_3:
-		jmp	(AnimateSprite).l
-; ---------------------------------------------------------------------------
-
-j_ObjectMoveAndFall_2:
-		jmp	(ObjectMoveAndFall).l
-; ---------------------------------------------------------------------------
-
-j_ObjectMove_4:
-		jmp	(ObjectMove).l
-
-		align 4
-
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Object 4B - Buzzer from EHZ
@@ -21120,16 +20983,16 @@ Obj4B_Index:	dc.w Obj4B_Init-Obj4B_Index
 ; ===========================================================================
 ; loc_167AA:
 Obj4B_Projectile:
-		bsr.w	j_ObjectMove_5
+		jsr	(ObjectMove).l
 		lea	(Ani_obj4B).l,a1
-		bsr.w	j_AnimateSprite_4
-		bra.w	loc_16A8C
+		jsr	(AnimateSprite).l
+		jmp	(MarkObjGone_P1).l
 ; ===========================================================================
 ; loc_167BC:
 Obj4B_Flame:
 		movea.l	objoff_2A(a0),a1
 		tst.b	(a1)
-		beq.w	loc_16A74
+		beq.w	loc_17854
 		tst.w	objoff_30(a1)
 		bmi.s	loc_167CE
 		rts
@@ -21141,8 +21004,8 @@ loc_167CE:
 		move.b	obStatus(a1),obStatus(a0)
 		move.b	obRender(a1),obRender(a0)
 		lea	(Ani_obj4B).l,a1
-		bsr.w	j_AnimateSprite_4
-		bra.w	loc_16A8C
+		jsr	(AnimateSprite).l
+		jmp	(MarkObjGone_P1).l
 ; ===========================================================================
 
 Obj4B_Init:
@@ -21159,7 +21022,7 @@ Obj4B_Init:
 		addq.b	#2,obRoutine(a0)		; => Obj4B_Main
 
 		; load exhaust flame object
-		bsr.w	j_FindNextFreeObj_0
+		jsr	(FindNextFreeObj).l
 		bne.s	locret_1689E
 
 		_move.b	#id_Obj4B,obID(a1)			; load obj4B
@@ -21191,8 +21054,8 @@ Obj4B_Main:
 		move.w	Obj4B_Main_Index(pc,d0.w),d1
 		jsr	Obj4B_Main_Index(pc,d1.w)
 		lea	(Ani_obj4B).l,a1
-		bsr.w	j_AnimateSprite_4
-		bra.w	loc_16A8C
+		jsr	(AnimateSprite).l
+		jmp	(MarkObjGone_P1).l
 ; ===========================================================================
 Obj4B_Main_Index:	dc.w Obj4B_Roaming-Obj4B_Main_Index
 			dc.w Obj4B_Shooting-Obj4B_Main_Index
@@ -21207,7 +21070,7 @@ Obj4B_Roaming:
 		tst.w	d0
 		bpl.s	locret_168E4
 		subq.w	#1,objoff_2E(a0)
-		bgt.w	j_ObjectMove_5
+		jgt	(ObjectMove).l
 		move.w	#30,objoff_30(a0)
 
 locret_168E4:
@@ -21324,22 +21187,6 @@ byte_169ED:	dc.b   9,  1,  1,  1,  1,  1,$FD,  0,  0
 ; ---------------------------------------------------------------------------
 Map_obj4B:	binclude	"mappings/sprite/obj4B.bin"
 		even
-loc_16A74:
-		jmp	(DeleteObject).l
-
-j_FindNextFreeObj_0:
-		jmp	(FindNextFreeObj).l
-
-j_AnimateSprite_4:
-		jmp	(AnimateSprite).l
-
-loc_16A8C:
-		jmp	(MarkObjGone_P1).l
-
-j_ObjectMove_5:
-		jmp	(ObjectMove).l
-		align 4
-
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Object 4A - Octus badnik
@@ -21364,16 +21211,16 @@ loc_16AB6:
 ; ---------------------------------------------------------------------------
 
 loc_16AC0:
-		bsr.w	j_ObjectMoveAndFall_3
+		jsr	(ObjectMoveAndFall).l
 		lea	(Ani_Obj4A).l,a1
-		bsr.w	j_AnimateSprite_5
-		bra.w	loc_16D3C
+		jsr	(AnimateSprite).l
+		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
 
 loc_16AD2:
 		subq.w	#1,objoff_2C(a0)
-		beq.w	loc_16D36
-		bra.w	loc_16D30
+		beq.w	loc_17854
+		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 loc_16ADE:
@@ -21385,7 +21232,7 @@ loc_16ADE:
 		move.b	#$10,obActWid(a0)
 		move.b	#$10,obHeight(a0)
 		move.b	#8,obWidth(a0)
-		bsr.w	j_ObjectMoveAndFall_3
+		jsr	(ObjectMoveAndFall).l
 		jsr	(ObjHitFloor).l
 		tst.w	d1
 		bpl.s	loc_16B3C
@@ -21408,8 +21255,8 @@ loc_16B44:
 		move.w	Obj4A_SubIndex(pc,d0.w),d1
 		jsr	Obj4A_SubIndex(pc,d1.w)
 		lea	(Ani_Obj4A).l,a1
-		bsr.w	j_AnimateSprite_5
-		bra.w	loc_16D3C
+		jsr	(AnimateSprite).l
+		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
 Obj4A_SubIndex:	dc.w Obj4A_Init-Obj4A_SubIndex
 		dc.w Obj4A_Main-Obj4A_SubIndex
@@ -21501,7 +21348,7 @@ loc_16C7C:
 
 loc_16C8A:
 		add.w	d0,obX(a0)
-		bra.w	loc_16D3C
+		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
 Ani_Obj4A:	dc.w byte_16C98-Ani_Obj4A
 		dc.w byte_16C9B-Ani_Obj4A
@@ -21540,31 +21387,9 @@ word_16D1C:	dc.w 1
 word_16D26:	dc.w 1
 		dc.w $F201,  $38,  $1C,$FFF0		; 0
 		even
-; ---------------------------------------------------------------------------
-
-loc_16D30:
-		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-loc_16D36:
-		jmp	(DeleteObject).l
-; ---------------------------------------------------------------------------
-
-loc_16D3C:
-		jmp	(MarkObjGone).l
-; ---------------------------------------------------------------------------
-
-j_AnimateSprite_5:
-		jmp	(AnimateSprite).l
-; ---------------------------------------------------------------------------
-
-j_ObjectMoveAndFall_3:
-		jmp	(ObjectMoveAndFall).l
-; ---------------------------------------------------------------------------
-		align 4
-;----------------------------------------------------
+;----------------------------------------------------------------------------
 ; Object 4C - BBat badnik from HPZ
-;----------------------------------------------------
+;----------------------------------------------------------------------------
 
 Obj4C:
 		moveq	#0,d0
@@ -21598,8 +21423,8 @@ loc_16DA2:
 		jsr	Obj4C_SubIndex(pc,d1.w)
 		bsr.w	sub_16DC8
 		lea	(Ani_Obj4C).l,a1
-		bsr.w	j_AnimateSprite_6
-		bra.w	loc_171C4
+		jsr	(AnimateSprite).l
+		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
 Obj4C_SubIndex:	dc.w loc_16F2E-Obj4C_SubIndex
 		dc.w loc_16F66-Obj4C_SubIndex
@@ -21644,10 +21469,10 @@ loc_16E10:
 		bsr.w	sub_16F0E
 		bsr.w	sub_16EB0
 		bsr.w	sub_16E30
-		bsr.w	j_ObjectMove_8
+		jsr	(ObjectMove).l
 		lea	(Ani_Obj4C).l,a1
-		bsr.w	j_AnimateSprite_6
-		bra.w	loc_171C4
+		jsr	(AnimateSprite).l
+		jmp	(MarkObjGone).l
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -21904,22 +21729,9 @@ word_171A8:	dc.w 3
 		dc.w $F805, $828, $814,$FFEC		; 4
 		dc.w $F805, $824, $812,	   4		; 8
 		even
-
-loc_171C4:
-		jmp	(MarkObjGone).l
-; ---------------------------------------------------------------------------
-
-j_AnimateSprite_6:
-		jmp	(AnimateSprite).l
-; ---------------------------------------------------------------------------
-
-j_ObjectMove_8:
-		jmp	(ObjectMove).l
-; ---------------------------------------------------------------------------
-		align 4
-;----------------------------------------------------
+;----------------------------------------------------------------------------
 ; Object 4E - Gator badnik from HPZ
-;----------------------------------------------------
+;----------------------------------------------------------------------------
 
 Obj4E:
 		moveq	#0,d0
@@ -21940,7 +21752,7 @@ Obj4E_Init:
 		move.b	#$10,obActWid(a0)
 		move.b	#$10,obHeight(a0)
 		move.b	#8,obWidth(a0)
-		bsr.w	j_ObjectMoveAndFall_4
+		jsr	(ObjectMoveAndFall).l
 		jsr	(ObjHitFloor).l
 		tst.w	d1
 		bpl.s	locret_17238
@@ -21958,8 +21770,8 @@ Obj4E_Main:
 		move.w	Obj4E_SubIndex(pc,d0.w),d1
 		jsr	Obj4E_SubIndex(pc,d1.w)
 		lea	(Ani_Obj4E).l,a1
-		bsr.w	j_AnimateSprite_7
-		bra.w	loc_174B8
+		jsr	(AnimateSprite).l
+		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
 Obj4E_SubIndex:	dc.w loc_1725A-Obj4E_SubIndex
 		dc.w loc_1727E-Obj4E_SubIndex
@@ -21981,7 +21793,7 @@ locret_1727C:
 
 loc_1727E:
 		bsr.w	sub_172B6
-		bsr.w	j_ObjectMove_6
+		jsr	(ObjectMove).l
 		jsr	(ObjHitFloor).l
 		cmpi.w	#-8,d1
 		blt.s	loc_1729E
@@ -22111,22 +21923,6 @@ word_17496:	dc.w 4
 		dc.w	 5,  $28,  $14,	  $C		; 12
 		even
 ; ---------------------------------------------------------------------------
-
-loc_174B8:
-		jmp	(MarkObjGone).l
-; ---------------------------------------------------------------------------
-
-j_AnimateSprite_7:
-		jmp	(AnimateSprite).l
-; ---------------------------------------------------------------------------
-
-j_ObjectMoveAndFall_4:
-		jmp	(ObjectMoveAndFall).l
-; ---------------------------------------------------------------------------
-
-j_ObjectMove_6:
-		jmp	(ObjectMove).l
-
 		include	"objects/53 Masher.asm"
 ; ===========================================================================
 ; animation script
@@ -22142,17 +21938,6 @@ byte_1757A:	dc.b   7,  0,$FF
 ; ---------------------------------------------------------------------------
 Map_obj53:	binclude	"mappings/sprite/obj53.bin"
 		even
-; ===========================================================================
-
-loc_175B8:
-		jmp	(MarkObjGone).l
-
-j_AnimateSprite:
-		jmp	(AnimateSprite).l
-
-j_ObjectMove:
-		jmp	(ObjectMove).l
-
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Object 54 - Snail badnik from	EHZ
@@ -22181,7 +21966,7 @@ Obj54_Init:
 		move.b	#$10,obActWid(a0)
 		move.b	#$10,obHeight(a0)
 		move.b	#$E,obWidth(a0)
-		bsr.w	j_FindNextFreeObj_1
+		jsr	(FindNextFreeObj).l
 		bne.s	loc_17670
 		_move.b	#id_Obj54,obID(a1)
 		move.b	#6,obRoutine(a1)
@@ -22211,7 +21996,7 @@ loc_17682:
 ; loc_17688:
 Obj54_Move:
 		bsr.w	sub_176D0
-		bsr.w	j_ObjectMove_7
+		jsr	(ObjectMove).l
 		jsr	(ObjHitFloor).l
 		cmpi.w	#-8,d1
 		blt.s	Obj54_Display
@@ -22219,8 +22004,8 @@ Obj54_Move:
 		bge.s	Obj54_Display
 		add.w	d1,obY(a0)
 		lea	(Ani_Obj54).l,a1
-		bsr.w	j_AnimateSprite_8
-		bra.w	loc_1786C
+		jsr	(AnimateSprite).l
+		jmp	(MarkObjGone_P1).l
 ; ===========================================================================
 ; loc_176B4:
 Obj54_Display:
@@ -22228,8 +22013,8 @@ Obj54_Display:
 		move.w	#$14,objoff_30(a0)
 		st	objoff_34(a0)
 		lea	(Ani_Obj54).l,a1
-		bsr.w	j_AnimateSprite_8
-		bra.w	loc_1786C
+		jsr	(AnimateSprite).l
+		jmp	(MarkObjGone_P1).l
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -22270,7 +22055,7 @@ locret_17712:
 
 
 sub_17714:
-		bsr.w	j_FindNextFreeObj_1
+		jsr	(FindNextFreeObj).l
 		bne.s	locret_17770
 		_move.b	#id_Obj54,obID(a1)
 		move.b	#8,obRoutine(a1)
@@ -22311,15 +22096,15 @@ loc_17772:
 loc_177A2:
 		add.w	d0,obX(a0)
 		lea	(Ani_obj4B).l,a1
-		bsr.w	j_AnimateSprite_8
-		bra.w	loc_1786C
+		jsr	(AnimateSprite).l
+		jmp	(MarkObjGone_P1).l
 ; ---------------------------------------------------------------------------
 
 loc_177B4:
 		subi.w	#1,objoff_30(a0)
-		bpl.w	loc_1786C
+		bpl.s	+
 		neg.w	obVelX(a0)
-		bsr.w	j_ObjectMoveAndFall_5
+		jsr	(ObjectMoveAndFall).l
 		move.w	obVelX(a0),d0
 		asr.w	#2,d0
 		move.w	d0,obVelX(a0)
@@ -22328,7 +22113,7 @@ loc_177B4:
 		subq.b	#2,obRoutine(a0)
 		sf	objoff_34(a0)
 		sf	objoff_35(a0)
-		bra.w	loc_1786C
++		jmp	(MarkObjGone_P1).l
 ; ---------------------------------------------------------------------------
 
 loc_177EC:
@@ -22339,7 +22124,7 @@ loc_177EC:
 		move.w	obY(a1),obY(a0)
 		move.b	obStatus(a1),obStatus(a0)
 		move.b	obRender(a1),obRender(a0)
-		bra.w	loc_1786C
+		jmp	(MarkObjGone_P1).l
 ; ---------------------------------------------------------------------------
 Ani_Obj54:	dc.w byte_17818-Ani_Obj54
 		dc.w byte_1781C-Ani_Obj54
@@ -22354,30 +22139,9 @@ Map_obj54:	binclude	"mappings/sprite/obj54.bin"
 
 loc_17854:
 		jmp	(DeleteObject).l
-; ---------------------------------------------------------------------------
-
-j_FindNextFreeObj_1:
-		jmp	(FindNextFreeObj).l
-; ---------------------------------------------------------------------------
-
-j_AnimateSprite_8:
-		jmp	(AnimateSprite).l
-; ---------------------------------------------------------------------------
-
-loc_1786C:
-		jmp	(MarkObjGone_P1).l
-; ---------------------------------------------------------------------------
-
-j_ObjectMoveAndFall_5:
-		jmp	(ObjectMoveAndFall).l
-; ---------------------------------------------------------------------------
-
-j_ObjectMove_7:
-		jmp	(ObjectMove).l
-; ---------------------------------------------------------------------------
-;----------------------------------------------------
+;----------------------------------------------------------------------------
 ; Object 57 - sub object of the	EHZ boss
-;----------------------------------------------------
+;----------------------------------------------------------------------------
 
 Obj57:
 		moveq	#0,d0
@@ -22398,13 +22162,13 @@ loc_1789E:
 		cmpi.w	#$29D0,obX(a0)
 		ble.s	loc_178B6
 		subi.w	#1,obX(a0)
-		bra.w	loc_181A8
+		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 loc_178B6:
 		move.w	#$29D0,obX(a0)
 		addq.b	#2,ob2ndRout(a0)
-		bra.w	loc_181A8
+		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 loc_178C4:
@@ -22421,24 +22185,24 @@ loc_178D6:
 		cmpi.w	#$41E,obY(a0)
 		bge.s	loc_178E8
 		addi.w	#1,obY(a0)
-		bra.w	loc_181A8
+		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 loc_178E8:
 		addq.b	#2,objoff_2C(a0)
 		bset	#0,objoff_2D(a0)
 		move.w	#$3C,objoff_2A(a0)
-		bra.w	loc_181A8
+		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 loc_178FC:
 		subi.w	#1,objoff_2A(a0)
-		bpl.w	loc_181A8
+		bpl.s	+
 		move.w	#-$200,obVelX(a0)
 		addq.b	#2,ob2ndRout(a0)
 		move.b	#$F,obColType(a0)
 		bset	#1,objoff_2D(a0)
-		bra.w	loc_181A8
++		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 loc_17920:
@@ -22455,7 +22219,7 @@ loc_17920:
 		asl.l	#8,d0
 		add.l	d0,d2
 		move.l	d2,obX(a0)
-		bra.w	loc_181A8
+		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 loc_17952:
@@ -22473,10 +22237,10 @@ loc_17952:
 loc_1797C:
 		addq.w	#1,obY(a0)
 		subq.w	#1,objoff_2A(a0)
-		bpl.w	loc_181A8
+		bpl.s	+
 		addq.b	#2,ob2ndRout(a0)
 		move.b	#0,objoff_2C(a0)
-		bra.w	loc_181A8
++		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 loc_17996:
@@ -22484,7 +22248,7 @@ loc_17996:
 		move.b	objoff_2C(a0),d0
 		move.w	off_179A8(pc,d0.w),d1
 		jsr	off_179A8(pc,d1.w)
-		bra.w	loc_181A8
+-		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 off_179A8:	dc.w loc_179AE-off_179A8
 		dc.w loc_17A22-off_179A8
@@ -22493,8 +22257,8 @@ off_179A8:	dc.w loc_179AE-off_179A8
 
 loc_179AE:
 		bclr	#0,objoff_2D(a0)
-		bsr.w	j_FindNextFreeObj
-		bne.w	loc_181A8
+		jsr	(FindNextFreeObj).l
+		bne.s	-
 		_move.b	#id_Obj58,obID(a1)
 		move.l	a0,objoff_34(a1)
 		move.l	#Map_Obj58,obMap(a1)
@@ -22537,7 +22301,7 @@ loc_17A3C:
 		tst.b	(Boss_defeated_flag).w
 		bne.s	locret_17A68
 		move.b	#1,(Boss_defeated_flag).w
-		bra.w	loc_181AE
+		jmp	(DeleteObject).l
 ; ---------------------------------------------------------------------------
 
 locret_17A68:
@@ -22626,11 +22390,11 @@ off_17AFC:	dc.w loc_17B2A-off_17AFC
 loc_17B06:
 		subi.w	#1,obY(a0)
 		subi.w	#1,objoff_2A(a0)
-		bpl.w	loc_181A8
+		bpl.s	+
 		move.b	#0,obRoutine(a0)
 		lea	(Ani_Obj58).l,a1
-		bsr.w	j_AnimateSprite_9
-		bra.w	loc_181A8
+		jsr	(AnimateSprite).l
++		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 loc_17B2A:
@@ -22646,7 +22410,7 @@ off_17B38:	dc.w loc_17B3C-off_17B38
 loc_17B3C:
 		movea.l	objoff_34(a0),a1
 		cmpi.b	#id_Obj55,obID(a1)
-		bne.w	loc_181AE
+		bne.w	Obj58_Delete
 		btst	#0,objoff_2D(a1)
 		beq.s	loc_17B60
 		move.b	#1,obAnim(a0)
@@ -22659,31 +22423,31 @@ loc_17B60:
 		move.b	obStatus(a1),obStatus(a0)
 		move.b	obRender(a1),obRender(a0)
 		lea	(Ani_Obj58).l,a1
-		bsr.w	j_AnimateSprite_9
-		bra.w	loc_181A8
+		jsr	(AnimateSprite).l
+		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 loc_17B86:
 		subi.w	#1,objoff_2A(a0)
 		bpl.s	loc_17BA2
 		cmpi.w	#-$10,objoff_2A(a0)
-		ble.w	loc_181AE
+		ble.w	Obj58_Delete
 		addi.w	#1,obY(a0)
-		bra.w	loc_181A8
+		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 loc_17BA2:
 		lea	(Ani_Obj58).l,a1
-		bsr.w	j_AnimateSprite_9
-		bra.w	loc_181A8
+		jsr	(AnimateSprite).l
+		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 loc_17BB0:
 		movea.l	objoff_34(a0),a1
 		cmpi.b	#id_Obj55,obID(a1)
-		bne.w	loc_181AE
+		bne.w	Obj58_Delete
 		btst	#1,objoff_2D(a1)
-		beq.w	loc_181A8
+		beq.s	+
 		btst	#2,objoff_2D(a1)
 		bne.w	loc_17BF2
 		move.w	obX(a1),obX(a0)
@@ -22691,13 +22455,13 @@ loc_17BB0:
 		addi.w	#8,obY(a0)
 		move.b	obStatus(a1),obStatus(a0)
 		move.b	obRender(a1),obRender(a0)
-		bra.w	loc_181A8
++		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 loc_17BF2:
 		move.b	#8,obFrame(a0)
 		move.b	#0,obPriority(a0)
-		bra.w	loc_181A8
+		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 loc_17C02:
@@ -22715,17 +22479,17 @@ off_17C10:	dc.w loc_17C18-off_17C10
 loc_17C18:
 		movea.l	objoff_34(a0),a1
 		cmpi.b	#id_Obj55,obID(a1)
-		bne.w	loc_181AE
+		bne.w	Obj58_Delete
 		btst	#1,objoff_2D(a1)
-		beq.w	loc_181A8
+		beq.s	+
 		addq.b	#2,ob2ndRout(a0)
-		bra.w	loc_181A8
++		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 loc_17C36:
 		movea.l	objoff_34(a0),a1
 		cmpi.b	#id_Obj55,obID(a1)
-		bne.w	loc_181AE
+		bne.w	Obj58_Delete
 		move.b	obStatus(a1),obStatus(a0)
 		move.b	obRender(a1),obRender(a0)
 		tst.b	obStatus(a0)
@@ -22734,7 +22498,7 @@ loc_17C36:
 
 loc_17C58:
 		bsr.w	sub_17A6A
-		bsr.w	j_ObjectMoveAndFall_6
+		jsr	(ObjectMoveAndFall).l
 		jsr	(ObjHitFloor).l
 		tst.w	d1
 		bpl.s	loc_17C6E
@@ -22750,26 +22514,26 @@ loc_17C6E:
 
 loc_17C88:
 		lea	(Ani_Obj58a).l,a1
-		bsr.w	j_AnimateSprite_9
-		bra.w	loc_181A8
+		jsr	(AnimateSprite).l
+		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 loc_17C96:
 		subi.w	#1,objoff_2A(a0)
-		bpl.w	loc_181A8
+		bpl.w	+
 		addq.b	#2,ob2ndRout(a0)
 		move.w	#$A,objoff_2A(a0)
 		move.w	#-$300,obVelY(a0)
 		cmpi.b	#1,obPriority(a0)
-		beq.w	loc_181A8
+		beq.s	+
 		neg.w	obVelX(a0)
-		bra.w	loc_181A8
+/		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 loc_17CC2:
 		subq.w	#1,objoff_2A(a0)
-		bpl.w	loc_181A8
-		bsr.w	j_ObjectMoveAndFall_6
+		bpl.s	-
+		jsr	(ObjectMoveAndFall).l
 		bsr.w	ObjHitFloor
 		tst.w	d1
 		bpl.s	loc_17CE0
@@ -22777,18 +22541,18 @@ loc_17CC2:
 		add.w	d1,obY(a0)
 
 loc_17CE0:
-		bra.w	loc_181B4
+		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
 
 loc_17CE4:
 		movea.l	objoff_34(a0),a1
 		cmpi.b	#id_Obj55,obID(a1)
-		bne.w	loc_181AE
+		bne.w	Obj58_Delete
 		btst	#3,objoff_2D(a1)
 		bne.s	loc_17D4A
 		bsr.w	sub_17D6A
 		btst	#1,objoff_2D(a1)
-		beq.w	loc_181A8
+		beq.s	+
 		move.b	#$8B,obColType(a0)
 		move.w	obX(a1),obX(a0)
 		move.w	obY(a1),obY(a0)
@@ -22803,8 +22567,8 @@ loc_17CE4:
 loc_17D38:
 		add.w	d0,obX(a0)
 		lea	(Ani_Obj58a).l,a1
-		bsr.w	j_AnimateSprite_9
-		bra.w	loc_181A8
+		jsr	(AnimateSprite).l
++		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 loc_17D4A:
@@ -22816,8 +22580,8 @@ loc_17D4A:
 loc_17D58:
 		add.w	d0,obX(a0)
 		lea	(Ani_Obj58a).l,a1
-		bsr.w	j_AnimateSprite_9
-		bra.w	loc_181A8
+		jsr	(AnimateSprite).l
+		jmp	(DisplaySprite).l
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -22978,6 +22742,9 @@ loc_17F98:
 locret_17FF8:
 		rts
 ; ---------------------------------------------------------------------------
+Obj58_Delete:
+		jmp	(DeleteObject).l
+; ---------------------------------------------------------------------------
 Ani_Obj58:	dc.w byte_18000-Ani_Obj58
 		dc.w byte_18004-Ani_Obj58
 		dc.w byte_1801A-Ani_Obj58
@@ -23065,30 +22832,6 @@ word_1818E:	dc.w 3
 		dc.w $F00F,$8010,$8008,$FFF0		; 4
 		dc.w $F00F,$8020,$8010,	 $10		; 8
 		even
-; ---------------------------------------------------------------------------
-
-loc_181A8:
-		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-loc_181AE:
-		jmp	(DeleteObject).l
-; ---------------------------------------------------------------------------
-
-loc_181B4:
-		jmp	(MarkObjGone).l
-; ---------------------------------------------------------------------------
-
-j_FindNextFreeObj:
-		jmp	(FindNextFreeObj).l
-; ---------------------------------------------------------------------------
-
-j_AnimateSprite_9:
-		jmp	(AnimateSprite).l
-; ---------------------------------------------------------------------------
-
-j_ObjectMoveAndFall_6:
-		jmp	(ObjectMoveAndFall).l
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Object 55 - EHZ boss
@@ -23233,7 +22976,7 @@ loc_183B0:
 
 loc_183BA:
 		cmpi.b	#$FF,obFrame(a0)
-		bne.w	loc_185D4
+		bne.w	loc_18452
 		rts
 ; ===========================================================================
 
@@ -23268,14 +23011,14 @@ loc_18410:
 		move.b	#0,obFrame(a0)
 		movea.l	objoff_34(a0),a1
 		move.b	(a1),d0
-		beq.w	loc_185DA
+		beq.w	Obj56_Delete
 		move.w	obX(a1),obX(a0)
 		move.w	obY(a1),obY(a0)
 		addi.w	#4,obY(a0)
 		subi.w	#$28,obX(a0)
 
 loc_18452:
-		bra.w	loc_185D4
+		jmp	(DisplaySprite).l
 ; ===========================================================================
 
 Obj56:
@@ -23307,10 +23050,14 @@ Obj56_Animate:
 		move.b	#7,obTimeFrame(a0)
 		addq.b	#1,obFrame(a0)
 		cmpi.b	#7,obFrame(a0)
-		beq.w	loc_185DA
+		beq.s	Obj56_Delete
 
 loc_184BA:
-		bra.w	loc_185D4
+		jmp	(DisplaySprite).l
+; ---------------------------------------------------------------------------
+
+Obj56_Delete:
+		jmp	(DeleteObject).l
 ; ---------------------------------------------------------------------------
 Map_Obj55a:	dc.w word_184C2-Map_Obj55a
 		dc.w word_184CC-Map_Obj55a
@@ -23376,14 +23123,6 @@ word_185B0:	dc.w 4
 		dc.w $E805,  $24,  $12,	 $10		; 8
 		dc.w $D805,  $20,  $10,	   2		; 12
 		even
-; ---------------------------------------------------------------------------
-
-loc_185D4:
-		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-loc_185DA:
-		jmp	(DeleteObject).l
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Object 8A - "SONIC TEAM PRESENTS" screen and credits
@@ -23392,42 +23131,28 @@ loc_185DA:
 Obj8A:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	Obj8A_Index(pc,d0.w),d1
-		jmp	Obj8A_Index(pc,d1.w)
+		move.w	Cred_Index(pc,d0.w),d1
+		jmp	Cred_Index(pc,d1.w)
 ; ===========================================================================
-; off_185EE:
-Obj8A_Index:	dc.w Obj8A_Init-Obj8A_Index
-		dc.w Obj8A_Display-Obj8A_Index
+Cred_Index:	dc.w Obj8A_Init-Cred_Index
+		dc.w Obj8A_Display-Cred_Index
 ; ===========================================================================
-; loc_185F2:
+
 Obj8A_Init:
 		addq.b	#2,obRoutine(a0)
 		move.w	#$120,obX(a0)
 		move.w	#$F0,obScreenX(a0)
 		move.l	#Map_obj8A,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Credits_Font,0,0),obGfx(a0)
-		jsr	(Adjust2PArtPointer).l
-
-; Obj8A_Credits:
 		move.w	(v_creditsnum).w,d0		; load credits index number
 		move.b	d0,obFrame(a0)			; display appropriate credits
 		move.b	#0,obRender(a0)
 		move.b	#0,obPriority(a0)
 
-		cmpi.b	#GameModeID_TitleScreen,(v_gamemode).w ; is this the title screen?
-		bne.s	Obj8A_Display			; if not, branch
-
-; Obj8A_SonicTeam:
-		move.w	#make_art_tile(ArtTile_Sonic_Team_Font,0,0),obGfx(a0)
-		jsr	(Adjust2PArtPointer).l
-		move.b	#$A,obFrame(a0)
-		tst.b	(f_creditscheat).w		; is the Sonic 1 hidden credits cheat activated?
-		beq.s	Obj8A_Display			; if not, branch
-		cmpi.b	#btnABC+btnDn,(v_jpadhold1).w		; has the player pressed A+B+C+Down?
-		bne.s	Obj8A_Display			; if not, branch
-		move.w	#cWhite,(v_palette+$C0).w	; 3rd palette, 1st entry = white
-		move.w	#cCyan,(v_palette+$C2).w	; 2nd palette, 1st entry = cyan
-		jmp	(DeleteObject).l
+		cmpi.b	#GameModeID_TitleScreen,(v_gamemode).w	; but if this is the title screen...
+		bne.s	Obj8A_Display
+		move.w	#make_art_tile(ArtTile_Sonic_Team_Font,0,0),obGfx(a0)	; we change the VRAM adress
+		move.b	#$A,obFrame(a0)			; & manually display "SONIC TEAM PRESENTS"
 ; ===========================================================================
 ; loc_18660:
 Obj8A_Display:
@@ -23606,21 +23331,16 @@ word_194C6:	dc.w 2
 		dc.w $1804,  $1C,   $E,	   0
 		dc.w	$B,  $1E,   $F,	 $10
 ; ---------------------------------------------------------------------------
-;----------------------------------------------------
 ; Object 3E - prison capsule
-;----------------------------------------------------
+;----------------------------------------------------------------------------
 
 Obj3E:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	Obj3E_Index(pc,d0.w),d1
 		jsr	Obj3E_Index(pc,d1.w)
-		out_of_range.s	loc_1950A
+		out_of_range2	DeleteObject
 		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-loc_1950A:
-		jmp	(DeleteObject).l
 ; ---------------------------------------------------------------------------
 Obj3E_Index:	dc.w Obj3E_Init-Obj3E_Index
 		dc.w Obj3E_BodyMain-Obj3E_Index
@@ -23639,7 +23359,6 @@ Obj3E_Var:	dc.b   2,$20,  4,  0
 Obj3E_Init:
 		move.l	#Map_Obj3E,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Prison_Capsule,0,0),obGfx(a0)
-		jsr	(Adjust2PArtPointer).l
 		move.b	#4,obRender(a0)
 		move.w	obY(a0),objoff_30(a0)
 		moveq	#0,d0
@@ -23860,14 +23579,7 @@ TouchResponse:
 		move.b	obHeight(a0),d5
 		subq.b	#3,d5
 		sub.w	d5,d3
-	if FixBugs
 		cmpi.b	#AniIDSonAni_Duck,obAnim(a0)
-	else
-		; Bug: This does not check either player's ducking frame!
-		; Sonic's ducking frame is $80, and Tails's frame is $5B.
-		; However, this does work for Sonic 1's mapping frames.
-		cmpi.b	#$39,obFrame(a0)
-	endif
 		bne.s	loc_19812
 		addi.w	#$C,d3
 		moveq	#$A,d5
@@ -26704,23 +26416,16 @@ RingPos_CPZ1:	binclude	"level/rings/CPZ_1.bin"
 		even
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Modified Type 1b 68000 Sound Driver
-; Same as Sonic 1's, down to its location in the ROM
-; ---------------------------------------------------------------------------
-		include	"s1.sounddriver.asm"
-; ---------------------------------------------------------------------------
 ; Primary object assets (players and common objects)
 ; ---------------------------------------------------------------------------
 ; This must be aligned to a bank in order to avoid issues with the DMA.
 ; But because all of the art is placed after the sound driver which already aligns
 ; with the bank, this fixes itself. Uncomment the line below if you want to ensure DMA safety.
-	align $8000
+	align $20
 Art_Sonic:	binclude	"art/uncompressed/Sonic's art.bin"
-		even
+Art_Tails:	binclude	"art/uncompressed/Tails' art.bin"
 Map_Sonic:	include		"mappings/sprite/Sonic.asm"
 SonicDynPLC:	include		"mappings/spriteDPLC/Sonic.asm"
-Art_Tails:	binclude	"art/uncompressed/Tails' art.bin"
-		even
 Map_Tails:	include		"mappings/sprite/Tails.asm"
 TailsDynPLC:	include		"mappings/spriteDPLC/Tails.asm"
 Nem_Shield:	binclude	"art/nemesis/Shield.nem"
@@ -27000,5 +26705,10 @@ Nem_CreditText:	binclude	"art/nemesis/S1/Ending - Credits.nem"
 		even
 Nem_EndStH:	binclude	"art/nemesis/S1/Ending - StH Logo.nem"
 		even
-		cnop	-1,2<<lastbit(*-1)
+; ---------------------------------------------------------------------------
+; Modified Type 1b 68000 Sound Driver
+; Same as Sonic 1's, down to its location in the ROM
+; ---------------------------------------------------------------------------
+		include	"s1.sounddriver.asm"
+;		cnop	-1,2<<lastbit(*-1)
 		even

@@ -2,7 +2,61 @@
 ; I run the main 68k RAM addresses through this function
 ; to let them work in both 16-bit and 32-bit addressing modes.
 ramaddr function x,-(-x)&$FFFFFFFF
+; ---------------------------------------------------------------------------
+; calculates initial loop counter value for a dbf loop
+; that writes n bytes total at 4 bytes per iteration
+bytesToLcnt function n,n>>2-1
 
+; calculates initial loop counter value for a dbf loop
+; that writes n bytes total at 2 bytes per iteration
+bytesToWcnt function n,n>>1-1
+
+; calculates initial loop counter value for a dbf loop
+; that writes n bytes total at x bytes per iteration
+bytesToXcnt function n,x,n/x-1
+; ---------------------------------------------------------------------------
+; macros for defining animated PLC script lists
+zoneanimstart macro {INTLABEL}
+__LABEL__ label *
+zoneanimcount := 0
+zoneanimcur := "__LABEL__"
+	dc.w zoneanimcount___LABEL__	; Number of scripts for a zone (-1)
+    endm
+
+zoneanimend macro
+zoneanimcount_{"\{zoneanimcur}"} = zoneanimcount-1
+    endm
+
+zoneanimdeclanonid := 0
+
+zoneanimdecl macro duration,artaddr,vramaddr,numentries,numvramtiles
+zoneanimdeclanonid := zoneanimdeclanonid + 1
+start:
+	dc.l (duration&$FF)<<24|artaddr
+	dc.w tiles_to_bytes(vramaddr)
+	dc.b numentries, numvramtiles
+zoneanimcount := zoneanimcount + 1
+    endm
+; ---------------------------------------------------------------------------
+; macros to convert from tile index to art tiles, block mapping or VRAM address.
+make_art_tile function addr,pal,pri,((pri&1)<<15)|((pal&3)<<13)|(addr&tile_mask)
+make_art_tile_2p function addr,pal,pri,((pri&1)<<15)|((pal&3)<<13)|((addr&tile_mask)>>1)
+make_block_tile function addr,flx,fly,pal,pri,((pri&1)<<15)|((pal&3)<<13)|((fly&1)<<12)|((flx&1)<<11)|(addr&tile_mask)
+make_block_tile_2p function addr,flx,fly,pal,pri,((pri&1)<<15)|((pal&3)<<13)|((fly&1)<<12)|((flx&1)<<11)|((addr&tile_mask)>>1)
+tiles_to_bytes function addr,((addr&$7FF)<<5)
+make_block_tile_pair function addr,flx,fly,pal,pri,((make_block_tile(addr,flx,fly,pal,pri)<<16)|make_block_tile(addr,flx,fly,pal,pri))
+make_block_tile_pair_2p function addr,flx,fly,pal,pri,((make_block_tile_2p(addr,flx,fly,pal,pri)<<16)|make_block_tile_2p(addr,flx,fly,pal,pri))
+; ---------------------------------------------------------------------------
+; function to calculate the location of a tile in plane mappings
+planeLoc function width,col,line,(((width * line) + col) * 2)
+; ---------------------------------------------------------------------------
+; some variables and functions to help define those constants (redefined before a new set of IDs)
+offset :=	0					; this is the start of the pointer table
+ptrsize :=	1					; this is the size of a pointer (should be 1 if the ID is a multiple of the actual size)
+idstart :=	0					; value to add to all IDs
+
+; function using these variables
+id function ptr,((ptr-offset)/ptrsize+idstart)
 ; ---------------------------------------------------------------------------
 ; Set a VRAM address via the VDP control port.
 ; input: 16-bit VRAM address, control port (default is (vdp_control_port).l)
@@ -64,42 +118,11 @@ fillVRAM:	macro byte,start,end
 		move.w	#$8F02,(a5) ; Set increment back to 2, since the VDP usually operates on words
 		endm
 
-; calculates initial loop counter value for a dbf loop
-; that writes n bytes total at 4 bytes per iteration
-bytesToLcnt function n,n>>2-1
+; ---------------------------------------------------------------------------
+; Fill portion of RAM with 0
+; input: start, end
+; ---------------------------------------------------------------------------
 
-; calculates initial loop counter value for a dbf loop
-; that writes n bytes total at 2 bytes per iteration
-bytesToWcnt function n,n>>1-1
-
-; calculates initial loop counter value for a dbf loop
-; that writes n bytes total at x bytes per iteration
-bytesToXcnt function n,x,n/x-1
-
-; macros for defining animated PLC script lists
-zoneanimstart macro {INTLABEL}
-__LABEL__ label *
-zoneanimcount := 0
-zoneanimcur := "__LABEL__"
-	dc.w zoneanimcount___LABEL__	; Number of scripts for a zone (-1)
-    endm
-
-zoneanimend macro
-zoneanimcount_{"\{zoneanimcur}"} = zoneanimcount-1
-    endm
-
-zoneanimdeclanonid := 0
-
-zoneanimdecl macro duration,artaddr,vramaddr,numentries,numvramtiles
-zoneanimdeclanonid := zoneanimdeclanonid + 1
-start:
-	dc.l (duration&$FF)<<24|artaddr
-	dc.w tiles_to_bytes(vramaddr)
-	dc.b numentries, numvramtiles
-zoneanimcount := zoneanimcount + 1
-    endm
-
-; fills a region of 68k RAM with 0
 clearRAM macro startaddr,endaddr
 	if startaddr>endaddr
 		fatal "Starting address of clearRAM \{startaddr} is after ending address \{endaddr}."
@@ -181,7 +204,91 @@ enable_ints:	macro
 		endm
 
 ; ---------------------------------------------------------------------------
-; check if object moves out of range (Sonic 1)
+; long conditional jumps
+; ---------------------------------------------------------------------------
+
+jhi:		macro loc
+		bls.s	.nojump
+		jmp	loc
+.nojump:
+		endm
+
+jcc:		macro loc
+		bcs.s	.nojump
+		jmp	loc
+.nojump:
+		endm
+
+jhs:		macro loc
+		jcc	loc
+		endm
+
+jls:		macro loc
+		bhi.s	.nojump
+		jmp	loc
+.nojump:
+		endm
+
+jcs:		macro loc
+		bcc.s	.nojump
+		jmp	loc
+.nojump:
+		endm
+
+jlo:		macro loc
+		jcs	loc
+		endm
+
+jeq:		macro loc
+		bne.s	.nojump
+		jmp	loc
+.nojump:
+		endm
+
+jne:		macro loc
+		beq.s	.nojump
+		jmp	loc
+.nojump:
+		endm
+
+jgt:		macro loc
+		ble.s	.nojump
+		jmp	loc
+.nojump:
+		endm
+
+jge:		macro loc
+		blt.s	.nojump
+		jmp	loc
+.nojump:
+		endm
+
+jle:		macro loc
+		bgt.s	.nojump
+		jmp	loc
+.nojump:
+		endm
+
+jlt:		macro loc
+		bge.s	.nojump
+		jmp	loc
+.nojump:
+		endm
+
+jpl:		macro loc
+		bmi.s	.nojump
+		jmp	loc
+.nojump:
+		endm
+
+jmi:		macro loc
+		bpl.s	.nojump
+		jmp	loc
+.nojump:
+		endm
+
+; ---------------------------------------------------------------------------
+; check if object moves out of range (Sonic 1, deprecated)
 ; input: location to jump to if out of range, x-axis pos (obX(a0) by default)
 ; ---------------------------------------------------------------------------
 
@@ -197,7 +304,7 @@ out_of_range_s1:	macro exit,specpos
 		andi.w	#-$80,d1
 		sub.w	d1,d0		; approx distance between object and screen
 		cmpi.w	#128+320+192,d0
-		bhi.ATTRIBUTE	exit
+		jhi	exit
 		endm
 
 ; ---------------------------------------------------------------------------
@@ -218,6 +325,23 @@ out_of_range:	macro exit,specpos
 		endm
 
 ; ---------------------------------------------------------------------------
+; Identical to the above, except using jhi. Exists since not all uses of
+; out_of_range are long jumps, and for those cases, jhi takes more cycles
+; ---------------------------------------------------------------------------
+
+out_of_range2:	macro exit,specpos
+		if ("specpos"<>"")
+		move.w	specpos,d0		; get object position (if specified as not obX)
+		else
+		move.w	obX(a0),d0	; get object position
+		endif
+		andi.w	#-$80,d0	; round down to nearest $80
+		sub.w	(Camera_X_pos_coarse).w,d0		; approx distance between object and screen
+		cmpi.w	#128+320+192,d0
+		jhi	(exit).l
+		endm
+
+; ---------------------------------------------------------------------------
 ; Copy a tilemap from 68K (ROM/RAM) to the VRAM without using DMA
 ; input: source, destination, width [cells], height [cells]
 ; ---------------------------------------------------------------------------
@@ -229,23 +353,3 @@ copyTilemap:	macro source,destination,width,height
 		moveq	#height-1,d2
 		bsr.w	PlaneMapToVRAM_H40
 		endm
-
-; macros to convert from tile index to art tiles, block mapping or VRAM address.
-make_art_tile function addr,pal,pri,((pri&1)<<15)|((pal&3)<<13)|(addr&tile_mask)
-make_art_tile_2p function addr,pal,pri,((pri&1)<<15)|((pal&3)<<13)|((addr&tile_mask)>>1)
-make_block_tile function addr,flx,fly,pal,pri,((pri&1)<<15)|((pal&3)<<13)|((fly&1)<<12)|((flx&1)<<11)|(addr&tile_mask)
-make_block_tile_2p function addr,flx,fly,pal,pri,((pri&1)<<15)|((pal&3)<<13)|((fly&1)<<12)|((flx&1)<<11)|((addr&tile_mask)>>1)
-tiles_to_bytes function addr,((addr&$7FF)<<5)
-make_block_tile_pair function addr,flx,fly,pal,pri,((make_block_tile(addr,flx,fly,pal,pri)<<16)|make_block_tile(addr,flx,fly,pal,pri))
-make_block_tile_pair_2p function addr,flx,fly,pal,pri,((make_block_tile_2p(addr,flx,fly,pal,pri)<<16)|make_block_tile_2p(addr,flx,fly,pal,pri))
-
-; function to calculate the location of a tile in plane mappings
-planeLoc function width,col,line,(((width * line) + col) * 2)
-
-; some variables and functions to help define those constants (redefined before a new set of IDs)
-offset :=	0					; this is the start of the pointer table
-ptrsize :=	1					; this is the size of a pointer (should be 1 if the ID is a multiple of the actual size)
-idstart :=	0					; value to add to all IDs
-
-; function using these variables
-id function ptr,((ptr-offset)/ptrsize+idstart)

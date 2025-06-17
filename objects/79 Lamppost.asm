@@ -57,7 +57,7 @@ Obj79_Main:
 		move.b	obRespawnNo(a0),d0
 		bset	#0,2(a2,d0.w)
 		move.b	#4,obRoutine(a0)
-		bra.w	locret_135CA
+		rts
 ; ---------------------------------------------------------------------------
 
 Obj79_HitLamp:

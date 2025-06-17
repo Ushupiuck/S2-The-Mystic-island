@@ -7,7 +7,7 @@ Obj53:
 		move.b	obRoutine(a0),d0
 		move.w	Obj53_Index(pc,d0.w),d1
 		jsr	Obj53_Index(pc,d1.w)
-		bra.w	loc_175B8
+		jmp	(MarkObjGone).l
 ; ===========================================================================
 Obj53_Index:	dc.w Obj53_Init-Obj53_Index
 		dc.w Obj53_Main-Obj53_Index
@@ -27,8 +27,8 @@ Obj53_Init:
 
 Obj53_Main:
 		lea	(Ani_obj53).l,a1
-		bsr.w	j_AnimateSprite
-		bsr.w	j_ObjectMove
+		jsr	(AnimateSprite).l
+		jsr	(ObjectMove).l
 		addi.w	#$18,obVelY(a0)
 		move.w	objoff_30(a0),d0
 		cmp.w	obY(a0),d0

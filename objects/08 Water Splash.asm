@@ -20,7 +20,6 @@ Obj08_Init:
 		move.b	#1,obPriority(a0)
 		move.b	#$10,obActWid(a0)
 		move.w	#make_art_tile(ArtTile_LZ_Splash,2,0),obGfx(a0)
-		bsr.w	Adjust2PArtPointer
 		move.w	(v_player+obX).w,obX(a0)
 
 Obj08_Display:
