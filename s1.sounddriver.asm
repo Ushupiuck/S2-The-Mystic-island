@@ -1,7 +1,5 @@
 ; ---------------------------------------------------------------------------
 ; Modified SMPS 68k Type 1b sound driver
-; The source code to a similar version of the driver can be found here:
-; https://hiddenpalace.org/News/Sega_of_Japan_Sound_Documents_and_Source_Code
 ; ---------------------------------------------------------------------------
 ; Constants
 SMPS_TRACK_COUNT = (SMPS_RAM.v_track_ram_end-SMPS_RAM.v_track_ram)/SMPS_Track.len
@@ -194,7 +192,6 @@ UpdateMusic:
 ; loc_71BE6:
 .bgmfmnext:
 		dbf	d7,.bgmfmloop
-
 		moveq	#SMPS_MUSIC_PSG_TRACK_COUNT-1,d7	; 3 PSG tracks
 ; loc_71BEC:
 .bgmpsgloop:
@@ -205,7 +202,6 @@ UpdateMusic:
 ; loc_71BF8:
 .bgmpsgnext:
 		dbf	d7,.bgmpsgloop
-
 		move.b	#$80,SMPS_RAM.f_voice_selector(a6)	; Now at SFX tracks
 		moveq	#SMPS_SFX_FM_TRACK_COUNT-1,d7		; 3 FM tracks (SFX)
 ; loc_71C04:
@@ -217,7 +213,6 @@ UpdateMusic:
 ; loc_71C10:
 .sfxfmnext:
 		dbf	d7,.sfxfmloop
-
 		moveq	#SMPS_SFX_PSG_TRACK_COUNT-1,d7	; 3 PSG tracks (SFX)
 ; loc_71C16:
 .sfxpsgloop:
@@ -228,7 +223,6 @@ UpdateMusic:
 ; loc_71C22:
 .sfxpsgnext:
 		dbf	d7,.sfxpsgloop
-
 		move.b	#$40,SMPS_RAM.f_voice_selector(a6)	; Now at special SFX tracks
 		adda.w	#SMPS_Track.len,a5
 		tst.b	SMPS_Track.PlaybackControl(a5)		; Is track playing?
@@ -254,7 +248,6 @@ DACUpdateTrack:
 		subq.b	#1,SMPS_Track.DurationTimeout(a5)	; Has DAC sample timeout expired?
 		bne.s	.locret					; Return if not
 		move.b	#$80,SMPS_RAM.f_updating_dac(a6)	; Set flag to indicate this is the DAC
-;DACDoNext:
 		movea.l	SMPS_Track.DataPointer(a5),a4		; DAC track data pointer
 ; loc_71C5E:
 .sampleloop:
