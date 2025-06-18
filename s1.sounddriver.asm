@@ -305,7 +305,6 @@ DACUpdateTrack:
 		move.b	#$83,(z80_ram+zDAC_Sample).l	; Use timpani
 		rts
 ; End of function DACUpdateTrack
-
 ; ===========================================================================
 ; Note: this only defines rates for samples $88-$8D, meaning $8E-$8F are invalid.
 ; Also, $8C-$8D are so slow you may want to skip them.
