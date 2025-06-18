@@ -24406,12 +24406,12 @@ SS_AniGlassData:dc.b $4B, $4C, $4D, $4E, $4B, $4C, $4D, $4E, 0, 0
 ; Special stage	layout pointers
 ; ---------------------------------------------------------------------------
 S1SS_LayoutIndex:
-		dc.l S1SS_1
-		dc.l S1SS_2
-		dc.l S1SS_3
-		dc.l S1SS_4
-		dc.l S1SS_5
-		dc.l S1SS_6
+		dc.l SS_1
+		dc.l SS_2
+		dc.l SS_3
+		dc.l SS_4
+		dc.l SS_5
+		dc.l SS_6
 		even
 
 ; ---------------------------------------------------------------------------
@@ -25811,9 +25811,7 @@ Art_LivesNums:	binclude	"art/uncompressed/Lives Counter Numbers.bin"
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; When debug mode is currently in use, you can actually find the original
-; source code for it within the leftovers at $50A9C, which includes the
-; code that has been commented out below
+; When debug mode is currently in use
 ; ---------------------------------------------------------------------------
 
 DebugMode:
@@ -25837,19 +25835,13 @@ Debug_Init:	; Routine 0
 		andi.w	#$3FF,(Camera_BG_Y_pos).w
 		move.b	#0,obFrame(a0)
 		move.b	#0,obAnim(a0)
-		; The 'in air' bit is left as whatever it was when Sonic entered
-		; Debug Mode. This affects the camera's vertical deadzone.
-		; Since 'Debug_ExitDebugMode' explicitly sets the 'in air' bit, it can
-		; be assumed that having it cleared here was intended.
-		bclr #1,(v_player+obStatus).w
-
+		bclr #1,(v_player+obStatus).w	; clear 'in air' bit
 		cmpi.b	#GameModeID_SpecialStage,(v_gamemode).w ; is this the Special Stage?
 		bne.s	.islevel			; if not, branch
-
-		move.b	#7-1,(Current_Zone).w		; sets the debug object list and resets Special Stage rotation
-		move.w	#0,(v_ssrotate).w ; stop special stage rotating
-		move.w	#0,(v_ssangle).w ; make	special	stage "upright"
-		moveq	#6,d0		; force zone 6's debug object list (was the ending in S1)
+		move.b	#7-1,(Current_Zone).w		; set the debug object list and reset Special Stage rotation
+		move.w	#0,(v_ssrotate).w	; stop special stage rotation
+		move.w	#0,(v_ssangle).w	; make special stage "upright"
+		moveq	#6,d0			; force zone 6's (S1 ending) debug object list
 		bra.s	.selectlist
 ; ===========================================================================
 
@@ -26025,10 +26017,10 @@ Debug_ExitDebugMode:
 		move.l	#Map_Sonic,(v_player+obMap).w
 		move.w	#make_art_tile(ArtTile_Sonic,0,0),(v_player+obGfx).w
 		tst.w	(Two_player_mode).w
-		beq.s	loc_1BC98
+		beq.s	.not2P
 		move.w	#make_art_tile_2p(ArtTile_Sonic,0,0),(v_player+obGfx).w
 
-loc_1BC98:
+.not2P:
 		bsr.s	Debug_ResetPlayerStats
 		move.b	#$13,obHeight(a1)	; y_radius
 		move.b	#9,obWidth(a1)		; x_radius
@@ -26087,12 +26079,309 @@ LoadDebugObjectSprite:
 ; ===========================================================================
 
 		include	"_inc/DebugList.asm"
-
-; ---------------------------------------------------------------------------
 		include	"_inc/LevelHeaders.asm"
 		include	"_inc/Pattern Load Cues.asm"
 ; ---------------------------------------------------------------------------
 
+Nem_SegaLogo:	binclude	"art/nemesis/S1/Sega Logo (JP1).nem"
+		even
+Eni_SegaLogo:	binclude	"tilemaps/S1/Sega Logo (JP1).eni"
+		even
+Eni_TitleMap:	binclude	"tilemaps/Title Emblem.eni"
+		even
+Eni_TitleBg1:	binclude	"tilemaps/Title Background - 1.eni"
+		even
+Eni_TitleBg2:	binclude	"tilemaps/Title Background - 2.eni"
+		even
+Nem_Title:	binclude	"art/nemesis/8x8 - Title.nem"
+		even
+Nem_TitleSonicTails:
+		binclude	"art/nemesis/Title Sonic and Tails.nem"
+		even
+; ---------------------------------------------------------------------------
+; Uncompressed graphics	- Sonic
+; ---------------------------------------------------------------------------
+		align $20
+Art_Sonic:	binclude	"art/uncompressed/Sonic's art.bin"
+Art_Tails:	binclude	"art/uncompressed/Tails' art.bin"
+Art_SplashDust:	binclude	"art/uncompressed/Dust and water splash.bin"
+Map_Sonic:	include		"mappings/sprite/Sonic.asm"
+SonicDynPLC:	include		"mappings/spriteDPLC/Sonic.asm"
+Map_Tails:	include		"mappings/sprite/Tails.asm"
+TailsDynPLC:	include		"mappings/spriteDPLC/Tails.asm"
+
+; ---------------------------------------------------------------------------
+; Green Hill Zone stage assets
+; ---------------------------------------------------------------------------
+Nem_Stalk:	binclude	"art/nemesis/S1/GHZ Flower Stalk.nem"
+		even
+Nem_Swing:	binclude	"art/nemesis/S1/GHZ Swinging Platform.nem"
+		even
+Nem_GHZ_Bridge:	binclude	"art/nemesis/S1/GHZ Bridge.nem"
+		even
+Nem_GHZ_Ball:	binclude	"art/nemesis/S1/GHZ Giant Ball.nem"
+		even
+Nem_GHZ_Spikes:	binclude	"art/nemesis/S1/GHZ Spiked Log.nem"
+		even
+Nem_GHZ_Rock:	binclude	"art/nemesis/S1/GHZ Purple Rock.nem"
+		even
+Nem_GHZ_BWall:	binclude	"art/nemesis/S1/GHZ Breakable Wall.nem"
+		even
+Nem_GHZ_SWall:	binclude	"art/nemesis/S1/GHZ Edge Wall.nem"
+		even
+Nem_GHZ_Block:	binclude	"art/nemesis/S1/Unused - GHZ Block.nem"
+		even
+; ---------------------------------------------------------------------------
+; Chemical Plant Zone stage assets
+; ---------------------------------------------------------------------------
+Nem_CPZ_FloatingPlatform:	binclude	"art/nemesis/CPZ Floating Platform.nem"
+		even
+; ---------------------------------------------------------------------------
+; Emerald Hill Zone stage assets
+; ---------------------------------------------------------------------------
+Nem_EHZ_Fireball:	binclude	"art/nemesis/Fireball 1.nem"
+		even
+Nem_BurningLog:	binclude	"art/nemesis/Burning Log.nem"
+		even
+Nem_EHZ_Waterfall:	binclude	"art/nemesis/Waterfall tiles.nem"
+		even
+Nem_HTZ_Fireball:	binclude	"art/nemesis/Fireball 2.nem"
+		even
+Nem_EHZ_Bridge:	binclude	"art/nemesis/EHZ bridge.nem"
+		even
+; ---------------------------------------------------------------------------
+; Hidden Palace Zone stage assets
+; ---------------------------------------------------------------------------
+Nem_HPZ_Bridge:	binclude	"art/nemesis/HPZ bridge.nem"
+		even
+Nem_HPZ_Waterfall:	binclude	"art/nemesis/HPZ waterfall.nem"
+		even
+Nem_HPZ_Emerald:	binclude	"art/nemesis/HPZ Emerald.nem"
+		even
+Nem_HPZ_Platform:	binclude	"art/nemesis/HPZ Platform.nem"
+		even
+Nem_HPZ_PulsingBall:	binclude	"art/nemesis/HPZ Pulsing Ball.nem"
+		even
+Nem_HPZ_Various:	binclude	"art/nemesis/HPZ Various.nem"
+		even
+; ---------------------------------------------------------------------------
+; Hill Top Zone stage assets
+; ---------------------------------------------------------------------------
+Nem_HTZ_Lift:	binclude	"art/nemesis/HTZ zip-line platform.nem"
+		even
+Nem_HTZ_AutomaticDoor:
+		binclude	"art/nemesis/HTZ Autodoor.nem"
+		even
+Nem_HTZ_Seesaw:	binclude	"art/nemesis/See-saw in HTZ.nem"
+		even
+; ---------------------------------------------------------------------------
+; Compressed graphics - enemies
+; ---------------------------------------------------------------------------
+Nem_Ballhog:	binclude	"art/nemesis/S1/Enemy Ball Hog.nem"
+		even
+Nem_Crabmeat:	binclude	"art/nemesis/S1/Enemy Crabmeat.nem"
+		even
+Nem_GHZBuzz:	binclude	"art/nemesis/S1/Enemy Buzz Bomber.nem"
+		even
+Nem_Explosion3:	binclude	"art/nemesis/S1/Unused - Explosion.nem"
+		even
+Nem_Burrobot:	binclude	"art/nemesis/S1/Enemy Burrobot.nem"
+		even
+Nem_Chopper:	binclude	"art/nemesis/S1/Enemy Chopper.nem"
+		even
+Nem_Jaws:	binclude	"art/nemesis/S1/Enemy Jaws.nem"
+		even
+Nem_Roller:	binclude	"art/nemesis/S1/Enemy Roller.nem"
+		even
+Nem_Motobug:	binclude	"art/nemesis/S1/Enemy Motobug.nem"
+		even
+Nem_Newtron:	binclude	"art/nemesis/S1/Enemy Newtron.nem"
+		even
+Nem_Yadrin:	binclude	"art/nemesis/S1/Enemy Yadrin.nem"
+		even
+Nem_Basaran:	binclude	"art/nemesis/S1/Enemy Basaran.nem"
+		even
+Nem_Splats:	binclude	"art/nemesis/S1/Enemy Splats.nem"
+		even
+Nem_Bomb:	binclude	"art/nemesis/S1/Enemy Bomb.nem"
+		even
+Nem_Orbinaut:	binclude	"art/nemesis/S1/Enemy Orbinaut.nem"
+		even
+Nem_Cater:	binclude	"art/nemesis/S1/Enemy Caterkiller.nem"
+		even
+Nem_Gator:	binclude	"art/nemesis/Gator.nem"
+		even
+Nem_Buzzer:	binclude	"art/nemesis/Buzzer.nem"
+		even
+Nem_BBat:	binclude	"art/nemesis/BBat.nem"
+		even
+Nem_Octus:	binclude	"art/nemesis/Octus.nem"
+		even
+Nem_Stegway:	binclude	"art/nemesis/Stegway.nem"
+		even
+Nem_Redz:	binclude	"art/nemesis/Redz.nem"
+		even
+Nem_BFish:	binclude	"art/nemesis/BFish.nem"
+		even
+Nem_Aquis:	binclude	"art/nemesis/Aquis.nem"
+		even
+Nem_UnusedBall:	binclude	"art/nemesis/Ball.nem"
+		even
+Nem_MBubbler:	binclude	"art/nemesis/Unused - Bubbler's Mother.nem"
+		even
+Nem_Bubbler:	binclude	"art/nemesis/Unused - Bubbler.nem"
+		even
+Nem_Snail:	binclude	"art/nemesis/Snail badnik from EHZ.nem"
+		even
+Nem_Crawl:	binclude	"art/nemesis/Crawl badnik.nem"
+		even
+Nem_Masher:	binclude	"art/nemesis/Masher.nem"
+		even
+; ---------------------------------------------------------------------------
+; Compressed graphics - various
+; ---------------------------------------------------------------------------
+Nem_TitleCard:	binclude	"art/nemesis/S1/Title Cards.nem"
+		even
+Nem_HUD:	binclude	"art/nemesis/HUD.nem"
+		even
+Nem_Lives:	binclude	"art/nemesis/Sonic lives counter.nem"
+		even
+Nem_Ring:	binclude	"art/nemesis/Ring.nem"
+		even
+Nem_Monitors:	binclude	"art/nemesis/Monitor and contents.nem"
+		even
+Nem_Explosion:	binclude	"art/nemesis/S1/Explosion.nem"
+		even
+Nem_Shield:	binclude	"art/nemesis/Shield.nem"
+		even
+Nem_Stars:	binclude	"art/nemesis/Stars.nem"
+		even
+Nem_Button:	binclude	"art/nemesis/Button.nem"
+		even
+Nem_Water:	binclude	"art/nemesis/Water Surface.nem"
+		even
+Nem_Points:	binclude	"art/nemesis/Numbers.nem"
+		even
+Nem_GameOver:	binclude	"art/nemesis/S1/Game Over.nem"
+		even
+Nem_VSpikes:	binclude	"art/nemesis/Spikes.nem"
+		even
+Nem_HSpring2:	binclude	"art/nemesis/Horizontal spring.nem"
+		even
+Nem_VSpring2:	binclude	"art/nemesis/Vertical spring.nem"
+		even
+Nem_DSpring:	binclude	"art/nemesis/Diagonal spring.nem"
+		even
+Nem_HSpring:	binclude	"art/nemesis/S1/Spring Horizontal.nem"
+		even
+Nem_VSpring:	binclude	"art/nemesis/S1/Spring Vertical.nem"
+		even
+Nem_Signpost:	binclude	"art/nemesis/Signpost.nem"
+		even
+Nem_Lamppost:	binclude	"art/nemesis/Lamppost.nem"
+		even
+Nem_BigFlash:	binclude	"art/nemesis/S1/Giant Ring Flash.nem"
+		even
+Nem_Bonus:	binclude	"art/nemesis/S1/Hidden Bonuses.nem"
+		even
+; ---------------------------------------------------------------------------
+; Compressed graphics - continue screen
+; ---------------------------------------------------------------------------
+Nem_ContSonic:	binclude	"art/nemesis/S1/Continue Screen Sonic.nem"
+		even
+Nem_MiniSonic:	binclude	"art/nemesis/S1/Continue Screen Stuff.nem"
+		even
+; ---------------------------------------------------------------------------
+; Compressed graphics - animals
+; ---------------------------------------------------------------------------
+Nem_Bunny:	binclude	"art/nemesis/S1/Animal Rabbit.nem"
+		even
+Nem_Chicken:	binclude	"art/nemesis/S1/Animal Chicken.nem"
+		even
+Nem_Penguin:	binclude	"art/nemesis/S1/Animal Penguin.nem"
+		even
+Nem_Seal:	binclude	"art/nemesis/S1/Animal Seal.nem"
+		even
+Nem_Pig:	binclude	"art/nemesis/S1/Animal Pig.nem"
+		even
+Nem_Flicky:	binclude	"art/nemesis/S1/Animal Flicky.nem"
+		even
+Nem_Squirrel:	binclude	"art/nemesis/S1/Animal Squirrel.nem"
+		even
+; ---------------------------------------------------------------------------
+; Compressed graphics - primary patterns and block mappings
+; ---------------------------------------------------------------------------
+Map16_EHZ:	binclude	"mappings/16x16/EHZ.unc"
+Map16_EHZ_End:
+		even
+Nem_EHZ:	binclude	"art/nemesis/8x8 - EHZ.nem"
+		even
+Map16_HTZ:	binclude	"mappings/16x16/HTZ.unc"
+Map16_HTZ_End:
+		even
+Nem_HTZ:	binclude	"art/nemesis/8x8 - HTZ.nem"
+		even
+Nem_HTZ_AniPlaceholders:	binclude	"art/nemesis/HTZ Ani Placeholders.nem"
+		even
+Map128_EHZ:	binclude	"mappings/128x128/EHZ_HTZ.unc"
+		even
+Map16_HPZ:	binclude	"mappings/16x16/HPZ.unc"
+Map16_HPZ_End:
+		even
+Nem_HPZ:	binclude	"art/nemesis/8x8 - HPZ.nem"
+		even
+Map128_HPZ:	binclude	"mappings/128x128/HPZ.unc"
+		even
+Map16_CPZ:	binclude	"mappings/16x16/CPZ.unc"
+Map16_CPZ_End:
+		even
+Nem_CPZ:	binclude	"art/nemesis/8x8 - CPZ.nem"
+		even
+Nem_CPZ_Buildings:	binclude	"art/nemesis/CPZ Buildings.nem"
+		even
+Map128_CPZ:	binclude	"mappings/128x128/CPZ.unc"
+		even
+Map16_GHZ:	binclude	"mappings/16x16/GHZ.unc"
+Map16_GHZ_End:
+		even
+Nem_GHZ:	binclude	"art/nemesis/8x8 - GHZ.nem"
+		even
+Nem_GHZ2:	binclude	"art/nemesis/8x8 - GHZ2.nem"
+		even
+Map128_GHZ:	binclude	"mappings/128x128/GHZ.kcc"
+		even
+; ---------------------------------------------------------------------------
+; Compressed graphics - bosses and ending sequence
+; ---------------------------------------------------------------------------
+Nem_EggPod:	binclude	"art/nemesis/Boss Ship.nem"
+		even
+Nem_Explosion2:	binclude	"art/nemesis/Large explosion.nem"
+		even
+Nem_EggPodJets:	binclude	"art/nemesis/Boss Ship Boost.nem"
+		even
+Nem_EHZ_Boss:	binclude	"art/nemesis/EHZ boss.nem"
+		even
+Nem_EggChopper:	binclude	"art/nemesis/Chopper blades for EHZ boss.nem"
+		even
+Nem_CPZ_Boss:	binclude	"art/nemesis/CPZ boss.nem"
+		even
+Nem_Smoke:	binclude	"art/nemesis/Smoke trail from CPZ boss.nem"
+		even
+Nem_EndEm:	binclude	"art/nemesis/S1/Ending - Emeralds.nem"
+		even
+Nem_EndSonic:	binclude	"art/nemesis/S1/Ending - Sonic.nem"
+		even
+Nem_TryAgain:	binclude	"art/nemesis/S1/Ending - Try Again.nem"
+		even
+Kos_EndFlowers:	binclude	"art/kosinski/S1/Flowers at Ending.kos"
+		even
+Nem_EndFlower:	binclude	"art/nemesis/S1/Ending - Flowers.nem"
+		even
+Nem_CreditText:	binclude	"art/nemesis/S1/Ending - Credits.nem"
+		even
+Nem_EndStH:	binclude	"art/nemesis/S1/Ending - StH Logo.nem"
+		even
+; ---------------------------------------------------------------------------
 AngleMap_GHZ:	binclude	"collision/S1/Angle Map.bin"
 AngleMap_GHZ_End:
 		even
@@ -26127,18 +26416,24 @@ ColP_HPZ:	binclude	"collision/HPZ primary 16x16 collision index.bin"
 		even
 ColS_HPZ:	binclude	"collision/HPZ secondary 16x16 collision index.bin"
 		even
-S1SS_1:	binclude	"sslayout/1.eni"
+; ---------------------------------------------------------------------------
+; Special Stage layouts
+; ---------------------------------------------------------------------------
+SS_1:		binclude	"sslayout/1.eni"
 		even
-S1SS_2:	binclude	"sslayout/2.eni"
+SS_2:		binclude	"sslayout/2.eni"
 		even
-S1SS_3:	binclude	"sslayout/3.eni"
+SS_3:		binclude	"sslayout/3.eni"
 		even
-S1SS_4:	binclude	"sslayout/4.eni"
+SS_4:		binclude	"sslayout/4.eni"
 		even
-S1SS_5:	binclude	"sslayout/5 (JP1).eni"
+SS_5:		binclude	"sslayout/5 (JP1).eni"
 		even
-S1SS_6:	binclude	"sslayout/6 (JP1).eni"
+SS_6:		binclude	"sslayout/6 (JP1).eni"
 		even
+; ---------------------------------------------------------------------------
+; Misc. animated tiles
+; ---------------------------------------------------------------------------
 Art_Flowers1:	binclude	"art/uncompressed/EHZ and HTZ flowers - 1.bin"
 		even
 Art_Flowers2:	binclude	"art/uncompressed/EHZ and HTZ flowers - 2.bin"
@@ -26169,7 +26464,6 @@ Art_UnkZone_7:	binclude	"art/uncompressed/Unknown Zone - 7.bin"
 		even
 Art_UnkZone_8:	binclude	"art/uncompressed/Unknown Zone - 8.bin"
 		even
-
 ; ---------------------------------------------------------------------------
 ; Level layouts, three entries per act (although the third one is unused)
 ; ---------------------------------------------------------------------------
@@ -26415,296 +26709,6 @@ RingPos_HTZ2:	binclude	"level/rings/HTZ_2.bin"
 RingPos_CPZ1:	binclude	"level/rings/CPZ_1.bin"
 		even
 ; ===========================================================================
-; ---------------------------------------------------------------------------
-; Primary object assets (players and common objects)
-; ---------------------------------------------------------------------------
-; This must be aligned to a bank in order to avoid issues with the DMA.
-; But because all of the art is placed after the sound driver which already aligns
-; with the bank, this fixes itself. Uncomment the line below if you want to ensure DMA safety.
-	align $20
-Art_Sonic:	binclude	"art/uncompressed/Sonic's art.bin"
-Art_Tails:	binclude	"art/uncompressed/Tails' art.bin"
-Map_Sonic:	include		"mappings/sprite/Sonic.asm"
-SonicDynPLC:	include		"mappings/spriteDPLC/Sonic.asm"
-Map_Tails:	include		"mappings/sprite/Tails.asm"
-TailsDynPLC:	include		"mappings/spriteDPLC/Tails.asm"
-Nem_Shield:	binclude	"art/nemesis/Shield.nem"
-		even
-Nem_Stars:	binclude	"art/nemesis/Stars.nem"
-		even
-Art_SplashDust:	binclude	"art/uncompressed/Dust and water splash.bin"
-		even
-; ---------------------------------------------------------------------------
-; Sega and title screen assets
-; ---------------------------------------------------------------------------
-Nem_SegaLogo:	binclude	"art/nemesis/S1/Sega Logo (JP1).nem"
-		even
-Eni_SegaLogo:	binclude	"tilemaps/S1/Sega Logo (JP1).eni"
-		even
-Eni_TitleMap:	binclude	"tilemaps/Title Emblem.eni"
-		even
-Eni_TitleBg1:	binclude	"tilemaps/Title Background - 1.eni"
-		even
-Eni_TitleBg2:	binclude	"tilemaps/Title Background - 2.eni"
-		even
-Nem_Title:	binclude	"art/nemesis/8x8 - Title.nem"
-		even
-Nem_TitleSonicTails:	binclude	"art/nemesis/Title Sonic and Tails.nem"
-		even
-; ---------------------------------------------------------------------------
-; Green Hill Zone stage assets
-; ---------------------------------------------------------------------------
-S1Nem_GHZFlowerBits:	binclude	"art/nemesis/S1/GHZ Flower Stalk.nem"
-		even
-Nem_SwingPlatform:	binclude	"art/nemesis/S1/GHZ Swinging Platform.nem"
-		even
-Nem_GHZ_Bridge:	binclude	"art/nemesis/S1/GHZ Bridge.nem"
-		even
-		binclude	"art/nemesis/S1/Unused - GHZ Block.nem"
-		even
-S1Nem_GHZRollingBall:	binclude	"art/nemesis/S1/GHZ Giant Ball.nem"
-		even
-S1Nem_GHZRollingSpikesLog:	binclude	"art/nemesis/S1/Unused - GHZ Log.nem"
-		even
-S1Nem_GHZLogSpikes:	binclude	"art/nemesis/S1/GHZ Spiked Log.nem"
-		even
-Nem_GHZ_Rock:	binclude	"art/nemesis/S1/GHZ Purple Rock.nem"
-		even
-S1Nem_GHZBreakableWall:	binclude	"art/nemesis/S1/GHZ Breakable Wall.nem"
-		even
-S1Nem_GHZWall:	binclude	"art/nemesis/S1/GHZ Edge Wall.nem"
-		even
-; ---------------------------------------------------------------------------
-; Emerald Hill Zone stage assets
-; ---------------------------------------------------------------------------
-Nem_EHZ_Fireball:	binclude	"art/nemesis/Fireball 1.nem"
-		even
-Nem_BurningLog:	binclude	"art/nemesis/Burning Log.nem"
-		even
-Nem_EHZ_Waterfall:	binclude	"art/nemesis/Waterfall tiles.nem"
-		even
-Nem_HTZ_Fireball:	binclude	"art/nemesis/Fireball 2.nem"
-		even
-Nem_EHZ_Bridge:	binclude	"art/nemesis/EHZ bridge.nem"
-		even
-; ---------------------------------------------------------------------------
-; Hill Top Zone stage assets
-; ---------------------------------------------------------------------------
-Nem_HTZ_Lift:	binclude	"art/nemesis/HTZ zip-line platform.nem"
-		even
-Nem_HTZ_AutomaticDoor:
-		binclude	"art/nemesis/HTZ Autodoor.nem"
-		even
-Nem_HTZ_Seesaw:	binclude	"art/nemesis/See-saw in HTZ.nem"
-		even
-; ---------------------------------------------------------------------------
-; Hidden Palace Zone stage assets
-; ---------------------------------------------------------------------------
-Nem_HPZ_Bridge:	binclude	"art/nemesis/HPZ bridge.nem"
-		even
-Nem_HPZ_Waterfall:	binclude	"art/nemesis/HPZ waterfall.nem"
-		even
-Nem_HPZ_Emerald:	binclude	"art/nemesis/HPZ Emerald.nem"
-		even
-Nem_HPZ_Platform:	binclude	"art/nemesis/HPZ Platform.nem"
-		even
-Nem_HPZ_PulsingBall:	binclude	"art/nemesis/HPZ Pulsing Ball.nem"
-		even
-Nem_HPZ_Various:	binclude	"art/nemesis/HPZ Various.nem"
-		even
-Nem_UnusedDust:	binclude	"art/nemesis/Unused - Dust.nem"
-		even
-; ---------------------------------------------------------------------------
-; Chemical Plant Zone stage assets
-; ---------------------------------------------------------------------------
-Nem_CPZ_FloatingPlatform:	binclude	"art/nemesis/CPZ Floating Platform.nem"
-		even
-; ---------------------------------------------------------------------------
-; Primary object assets (common objects)
-; ---------------------------------------------------------------------------
-Nem_WaterSurface:	binclude	"art/nemesis/Water Surface.nem"
-		even
-Nem_Button:	binclude	"art/nemesis/Button.nem"
-		even
-Nem_VSpring2:	binclude	"art/nemesis/Vertical spring.nem"
-		even
-Nem_HSpring2:	binclude	"art/nemesis/Horizontal spring.nem"
-		even
-Nem_DSpring:	binclude	"art/nemesis/Diagonal spring.nem"
-		even
-Nem_HUD:	binclude	"art/nemesis/HUD.nem"
-		even
-Nem_Lives:	binclude	"art/nemesis/Sonic lives counter.nem"
-		even
-Nem_Ring:	binclude	"art/nemesis/Ring.nem"
-		even
-Nem_Monitors:	binclude	"art/nemesis/Monitor and contents.nem"
-		even
-Nem_VSpikes:	binclude	"art/nemesis/Spikes.nem"
-		even
-Nem_Points:	binclude	"art/nemesis/Numbers.nem"
-		even
-Nem_Lamppost:	binclude	"art/nemesis/Lamppost.nem"
-		even
-Nem_Signpost:	binclude	"art/nemesis/Signpost.nem"
-		even
-Nem_Gator:	binclude	"art/nemesis/Gator.nem"
-		even
-Nem_Buzzer:	binclude	"art/nemesis/Buzzer.nem"
-		even
-Nem_BBat:	binclude	"art/nemesis/BBat.nem"
-		even
-Nem_Octus:	binclude	"art/nemesis/Octus.nem"
-		even
-Nem_Stegway:	binclude	"art/nemesis/Stegway.nem"
-		even
-Nem_Redz:	binclude	"art/nemesis/Redz.nem"
-		even
-Nem_BFish:	binclude	"art/nemesis/BFish.nem"
-		even
-Nem_Aquis:	binclude	"art/nemesis/Aquis.nem"
-		even
-Nem_RollingBall:	binclude	"art/nemesis/Ball.nem"
-		even
-Nem_MotherBubbler:	binclude	"art/nemesis/Unused - Bubbler's Mother.nem"
-		even
-Nem_Bubbler:	binclude	"art/nemesis/Unused - Bubbler.nem"
-		even
-Nem_Snail:	binclude	"art/nemesis/Snail badnik from EHZ.nem"
-		even
-Nem_Crawl:	binclude	"art/nemesis/Crawl badnik.nem"
-		even
-Nem_Masher:	binclude	"art/nemesis/Masher.nem"
-		even
-Nem_BossShip:	binclude	"art/nemesis/Boss Ship.nem"
-		even
-Nem_CPZ_ProtoBoss:	binclude	"art/nemesis/CPZ boss.nem"
-		even
-Nem_BigExplosion:	binclude	"art/nemesis/Large explosion.nem"
-		even
-Nem_BossShipBoost:	binclude	"art/nemesis/Boss Ship Boost.nem"
-		even
-Nem_Smoke:	binclude	"art/nemesis/Smoke trail from CPZ boss.nem"
-		even
-Nem_EHZ_Boss:	binclude	"art/nemesis/EHZ boss.nem"
-		even
-Nem_EHZ_Boss_Blades:	binclude	"art/nemesis/Chopper blades for EHZ boss.nem"
-		even
-Nem_Ballhog:	binclude	"art/nemesis/S1/Enemy Ball Hog.nem"
-		even
-Nem_Crabmeat:	binclude	"art/nemesis/S1/Enemy Crabmeat.nem"
-		even
-Nem_GHZBuzzbomber:	binclude	"art/nemesis/S1/Enemy Buzz Bomber.nem"
-		even
-Nem_UnkExplosion:	binclude	"art/nemesis/S1/Unused - Explosion.nem"
-		even
-Nem_Burrobot:	binclude	"art/nemesis/S1/Enemy Burrobot.nem"
-		even
-Nem_Chopper:	binclude	"art/nemesis/S1/Enemy Chopper.nem"
-		even
-Nem_Jaws:	binclude	"art/nemesis/S1/Enemy Jaws.nem"
-		even
-Nem_Roller:	binclude	"art/nemesis/S1/Enemy Roller.nem"
-		even
-Nem_Motobug:	binclude	"art/nemesis/S1/Enemy Motobug.nem"
-		even
-Nem_Newtron:	binclude	"art/nemesis/S1/Enemy Newtron.nem"
-		even
-Nem_Yadrin:	binclude	"art/nemesis/S1/Enemy Yadrin.nem"
-		even
-Nem_Basaran:	binclude	"art/nemesis/S1/Enemy Basaran.nem"
-		even
-Nem_Splats:	binclude	"art/nemesis/S1/Enemy Splats.nem"
-		even
-Nem_Bomb:	binclude	"art/nemesis/S1/Enemy Bomb.nem"
-		even
-Nem_Orbinaut:	binclude	"art/nemesis/S1/Enemy Orbinaut.nem"
-		even
-Nem_Caterkiller:	binclude	"art/nemesis/S1/Enemy Caterkiller.nem"
-		even
-Nem_TitleCard:	binclude	"art/nemesis/S1/Title Cards.nem"
-		even
-Nem_Explosion:	binclude	"art/nemesis/S1/Explosion.nem"
-		even
-Nem_GameOver:	binclude	"art/nemesis/S1/Game Over.nem"
-		even
-Nem_HSpring:	binclude	"art/nemesis/S1/Spring Horizontal.nem"
-		even
-Nem_VSpring:	binclude	"art/nemesis/S1/Spring Vertical.nem"
-		even
-Nem_BigFlash:	binclude	"art/nemesis/S1/Giant Ring Flash.nem"
-		even
-Nem_BonusPoints:	binclude	"art/nemesis/S1/Hidden Bonuses.nem"
-		even
-Nem_SonicContinue:	binclude	"art/nemesis/S1/Continue Screen Sonic.nem"
-		even
-Nem_MiniSonic:	binclude	"art/nemesis/S1/Continue Screen Stuff.nem"
-		even
-Nem_Bunny:	binclude	"art/nemesis/S1/Animal Rabbit.nem"
-		even
-Nem_Chicken:	binclude	"art/nemesis/S1/Animal Chicken.nem"
-		even
-Nem_Penguin:	binclude	"art/nemesis/S1/Animal Penguin.nem"
-		even
-Nem_Seal:	binclude	"art/nemesis/S1/Animal Seal.nem"
-		even
-Nem_Pig:	binclude	"art/nemesis/S1/Animal Pig.nem"
-		even
-Nem_Flicky:	binclude	"art/nemesis/S1/Animal Flicky.nem"
-		even
-Nem_Squirrel:	binclude	"art/nemesis/S1/Animal Squirrel.nem"
-		even
-Map16_EHZ:	binclude	"mappings/16x16/EHZ.unc"
-Map16_EHZ_End:
-		even
-Nem_EHZ:binclude	"art/nemesis/8x8 - EHZ.nem"
-		even
-Map16_HTZ:	binclude	"mappings/16x16/HTZ.unc"
-Map16_HTZ_End:
-		even
-Nem_HTZ:binclude	"art/nemesis/8x8 - HTZ.nem"
-		even
-Nem_HTZ_AniPlaceholders:	binclude	"art/nemesis/HTZ Ani Placeholders.nem"
-		even
-Map128_EHZ:	binclude	"mappings/128x128/EHZ_HTZ.unc"
-		even
-Map16_HPZ:	binclude	"mappings/16x16/HPZ.unc"
-Map16_HPZ_End:
-		even
-Nem_HPZ:binclude	"art/nemesis/8x8 - HPZ.nem"
-		even
-Map128_HPZ:	binclude	"mappings/128x128/HPZ.unc"
-		even
-Map16_CPZ:	binclude	"mappings/16x16/CPZ.unc"
-Map16_CPZ_End:
-		even
-Nem_CPZ:binclude	"art/nemesis/8x8 - CPZ.nem"
-		even
-Nem_CPZ_Buildings:	binclude	"art/nemesis/CPZ Buildings.nem"
-		even
-Map128_CPZ:	binclude	"mappings/128x128/CPZ.unc"
-		even
-Map16_GHZ:	binclude	"mappings/16x16/GHZ.unc"
-Map16_GHZ_End:
-		even
-Nem_GHZ:binclude	"art/nemesis/8x8 - GHZ.nem"
-		even
-Nem_GHZ2:	binclude	"art/nemesis/8x8 - GHZ2.nem"
-		even
-; Comparatively to the source compressors for KCC, this is one is better in size by 0.06%
-; Maybe this could be from slightly after KCC was finalized? Who knows!
-Map128_GHZ:	binclude	"mappings/128x128/GHZ.kcc"
-		even
-Nem_TryAgain:	binclude	"art/nemesis/S1/Ending - Try Again.nem"
-		even
-Kos_EndFlowers:	binclude	"art/kosinski/S1/Flowers at Ending.kos"
-		even
-Nem_EndFlower:	binclude	"art/nemesis/S1/Ending - Flowers.nem"
-		even
-Nem_CreditText:	binclude	"art/nemesis/S1/Ending - Credits.nem"
-		even
-Nem_EndStH:	binclude	"art/nemesis/S1/Ending - StH Logo.nem"
-		even
 ; ---------------------------------------------------------------------------
 ; Modified Type 1b 68000 Sound Driver
 ; Same as Sonic 1's, down to its location in the ROM

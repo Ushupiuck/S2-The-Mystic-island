@@ -110,7 +110,7 @@ PLC_GHZ:	dc.w ((PLC_GHZ_End-PLC_GHZ)/6)-1
 		plcm	Nem_HSpring, ArtTile_S1_Spring_Horizontal
 		plcm	Nem_VSpring, ArtTile_S1_Spring_Vertical
 		plcm	Nem_GHZ_Bridge, ArtTile_GHZ_Bridge
-		plcm	Nem_SwingPlatform, $4D0
+		plcm	Nem_Swing, $4D0
 		plcm	Nem_Motobug, ArtTile_Moto_Bug
 		plcm	Nem_GHZ_Rock, ArtTile_GHZ_Purple_Rock
 PLC_GHZ_End:
@@ -178,7 +178,7 @@ PLC_HPZ:	dc.w ((PLC_HPZ_End-PLC_HPZ)/6)-1
 		plcm	Nem_HPZ_PulsingBall, ArtTile_HPZ_Orb
 		plcm	Nem_HPZ_Various, $37C
 		plcm	Nem_HPZ_Emerald, ArtTile_HPZ_Emerald
-		plcm	Nem_WaterSurface, ArtTile_Water_Surface
+		plcm	Nem_Water, ArtTile_Water_Surface
 PLC_HPZ_End:
 ; --------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
@@ -189,12 +189,12 @@ PLC_HPZ2:	dc.w ((PLC_HPZ2_End-PLC_HPZ2)/6)-1
 		plcm	Nem_BBat, ArtTile_BBat
 PLC_HPZ2_End:
 		; unused PLR entries
-		plcm	Nem_Gator, ArtTile_Gator
-		plcm	Nem_Buzzer, ArtTile_Early_Buzzer
-		plcm	Nem_BBat, ArtTile_Early_BBat
-		plcm	Nem_Stegway, ArtTile_Stegway
-		plcm	Nem_Redz, ArtTile_Redz
-		plcm	Nem_BFish, ArtTile_BFish
+;		plcm	Nem_Gator, ArtTile_Gator
+;		plcm	Nem_Buzzer, ArtTile_Early_Buzzer
+;		plcm	Nem_BBat, ArtTile_Early_BBat
+;		plcm	Nem_Stegway, ArtTile_Stegway
+;		plcm	Nem_Redz, ArtTile_Redz
+;		plcm	Nem_BFish, ArtTile_BFish
 ; --------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Hill Top Zone primary
@@ -212,8 +212,8 @@ PLC_HTZ:	dc.w ((PLC_HTZ_End-PLC_HTZ)/6)-1
 		plcm	Nem_DSpring, ArtTile_Spring_Diagonal
 PLC_HTZ_End:
 		; unused PLR entries
-		plcm	Nem_VSpring2, ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2, ArtTile_Spring_Horizontal
+;		plcm	Nem_VSpring2, ArtTile_Spring_Vertical
+;		plcm	Nem_HSpring2, ArtTile_Spring_Horizontal
 ; --------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Hill Top Zone secondary
@@ -222,9 +222,9 @@ PLC_HTZ2:	dc.w ((PLC_HTZ2_End-PLC_HTZ2)/6)-1
 		plcm	Nem_HTZ_Lift, ArtTile_HtzZipline
 PLC_HTZ2_End:
 		; unused PLR entries
-		plcm	Nem_Buzzer, ArtTile_Buzzer
-		plcm	Nem_Snail, ArtTile_Snail
-		plcm	Nem_Masher, ArtTile_Masher
+;		plcm	Nem_Buzzer, ArtTile_Buzzer
+;		plcm	Nem_Snail, ArtTile_Snail
+;		plcm	Nem_Masher, ArtTile_Masher
 ; --------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Sonic 1 title card
@@ -237,24 +237,24 @@ PLC_S1TitleCard_End:
 ; End of zone bosses
 ; --------------------------------------------------------------------------------------
 PLC_Boss:	dc.w ((PLC_Boss_End-PLC_Boss)/6)-1
-		plcm	Nem_BossShip, ArtTile_ArtNem_Eggpod_1
+		plcm	Nem_EggPod, ArtTile_ArtNem_Eggpod_1
 		plcm	Nem_EHZ_Boss, ArtTile_ArtNem_EHZBoss
-		plcm	Nem_EHZ_Boss_Blades, ArtTile_ArtNem_EggChoppers
+		plcm	Nem_EggChopper, ArtTile_ArtNem_EggChoppers
 PLC_Boss_End:
 		; unused PLR entries
-		plcm	Nem_BossShip, ArtTile_Eggman
-		plcm	Nem_CPZ_ProtoBoss, $460
-		plcm	Nem_BossShipBoost, $4D0
-		plcm	Nem_Smoke, $4D8
-		plcm	Nem_EHZ_Boss, $4E8
-		plcm	Nem_EHZ_Boss_Blades, $568
+;		plcm	Nem_EggPod, ArtTile_Eggman
+;		plcm	Nem_CPZ_Boss, $460
+;		plcm	Nem_EggPodJets, $4D0
+;		plcm	Nem_Smoke, $4D8
+;		plcm	Nem_EHZ_Boss, $4E8
+;		plcm	Nem_EggChopper, $568
 ; --------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; End of level signpost
 ; --------------------------------------------------------------------------------------
 PLC_Signpost:	dc.w ((PLC_Signpost_End-PLC_Signpost)/6)-1
 		plcm	Nem_Signpost, ArtTile_Signpost
-		plcm	Nem_BonusPoints, ArtTile_Hidden_Points
+		plcm	Nem_Bonus, ArtTile_Hidden_Points
 		plcm	Nem_BigFlash, ArtTile_Giant_Ring_Flash
 PLC_Signpost_End:
 ; --------------------------------------------------------------------------------------
