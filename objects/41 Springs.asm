@@ -27,7 +27,7 @@ Obj41_Index:	dc.w Obj41_Init-Obj41_Index		; 0
 Obj41_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_obj41_GHZ,obMap(a0)
-		move.w	#make_art_tile(ArtTile_S1_Spring_Horizontal,0,0),obGfx(a0)
+		move.w	#make_art_tile(ArtTile_S1_Spring_Vertical,0,0),obGfx(a0)
 		tst.b	(Current_Zone).w
 		beq.s	loc_E22A
 		move.l	#Map_obj41,obMap(a0)
@@ -55,7 +55,7 @@ Obj41_Init_Horizontal:
 		move.b	#4,obRoutine(a0)
 		move.b	#2,obAnim(a0)
 		move.b	#3,obFrame(a0)
-		move.w	#make_art_tile(ArtTile_S1_Spring_Vertical,0,0),obGfx(a0)
+		move.w	#make_art_tile(ArtTile_S1_Spring_Horizontal,0,0),obGfx(a0)
 		tst.b	(Current_Zone).w
 		beq.s	loc_E27C
 		move.w	#make_art_tile(ArtTile_Spring_Horizontal,0,0),obGfx(a0)
