@@ -253,18 +253,26 @@ GameInit:
 	;	align	$36C
 MainGameLoop:
 		move.b	(v_gamemode).w,d0
-		andi.w	#GameModeID_S1End,d0	; limit to credits game mode (even though it doesn't exist)
+		andi.w	#$3C,d0	; limit Game Mode value to $3C max (change to a maximum of 7C to add more game modes)
 		movea.l	GameModeArray(pc,d0.w),a0; jump to apt location in ROM
 		jsr	(a0)
 		bra.s	MainGameLoop	; loop indefinitely
 ; ===========================================================================
-; loc_3A8:
+; ---------------------------------------------------------------------------
+; Main game mode array
+; ---------------------------------------------------------------------------
 GameModeArray:
 GameMode_SegaScreen:	dc.l	SegaScreen		; SEGA screen mode ($00)
 GameMode_TitleScreen:	dc.l	TitleScreen		; Title screen mode ($04)
 GameMode_Demo:		dc.l	Level			; Demo mode ($08)
 GameMode_Level:		dc.l	Level			; Zone play mode ($0C)
 GameMode_SpecialStage:	dc.l	SpecialStage		; Special Stage play mode ($10)
+; From here on, Placeholder entries. These are yet to be added/restored
+GameMode_Continue:	dc.l	Level			; Continue mode ($14)
+GameMode_Ending:	dc.l	Level			; End sequence mode ($18)
+GameMode_Credits:	dc.l	Level			; Credits ($1C)
+GameMode_Options:	dc.l	Level			; Options mode ($20)
+GameMode_SecretMenu:	dc.l	Level			; Level select mode ($24)
 ; ===========================================================================
 	;	align	$3FE
 BusError:
@@ -2332,13 +2340,13 @@ loc_353A:
 ; ---------------------------------------------------------------------------
 
 loc_354C:
-		move.b	#GameModeID_S1Ending,(v_gamemode).w
+		move.b	#GameModeID_Ending,(v_gamemode).w
 		move.w	#id_EndZ<<8,(Current_ZoneAndAct).w
 		rts
 ; ---------------------------------------------------------------------------
 
 loc_355A:
-		move.b	#GameModeID_S1Credits,(v_gamemode).w
+		move.b	#GameModeID_Credits,(v_gamemode).w
 		move.b	#bgm_Credits,d0
 		bsr.w	PlaySound_Special
 		move.w	#0,(v_creditsnum).w
@@ -3092,7 +3100,7 @@ Level_EndDemo:
 		move.b	#GameModeID_SegaScreen,(v_gamemode).w
 		tst.w	(f_demo).w
 		bpl.s	Level_FadeDemo
-		move.b	#GameModeID_S1Credits,(v_gamemode).w
+		move.b	#GameModeID_Credits,(v_gamemode).w
 
 Level_FadeDemo:
 		move.w	#60,(v_demolength).w

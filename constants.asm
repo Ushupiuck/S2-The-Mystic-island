@@ -275,16 +275,17 @@ VintID_TitleCard2 =	id(Vint_TitleCard2_ptr)	; $18
 offset :=	GameModeArray
 ptrsize :=	1
 idstart :=	0
+
 GameModeID_SegaScreen =		id(GameMode_SegaScreen)	; 0
 GameModeID_TitleScreen =	id(GameMode_TitleScreen) ; 4
 GameModeID_Demo =		id(GameMode_Demo)	; 8
 GameModeID_Level =		id(GameMode_Level)	; $C
 GameModeID_SpecialStage =	id(GameMode_SpecialStage) ; $10
-GameModeID_ContinueScreen:	equ $14			; $14 ; referenced despite it not existing
-GameModeID_S1Ending:		equ $18			; $18 ; referenced despite it not existing
-GameModeID_S1Credits:		equ $1C			; $1C ; referenced despite it not existing
-GameModeID_S1End: 		equ	GameModeID_S1Credits	; $1C ; referenced despite it not existing
-GameModeID_End: 		equ	GameModeID_SpecialStage	; $10
+GameModeID_ContinueScreen =	id(GameMode_Continue)	; $14 ; (TODO)
+GameModeID_Ending =		id(GameMode_Ending)	; $18 ; (TODO)
+GameModeID_Credits =		id(GameMode_Credits)	; $1C ; (TODO)
+GameModeID_Options =		id(GameMode_Options)	; $20 ; (TODO)
+GameModeID_LevelSelect =	id(GameMode_SecretMenu)	; $24 ; (TODO)
 GameModeFlag_TitleCard:		equ 7			; flag bit
 GameModeID_TitleCard:		equ 1<<GameModeFlag_TitleCard ; $80 ; flag mask
 
