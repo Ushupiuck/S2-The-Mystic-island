@@ -435,7 +435,7 @@ loc_4430:
 		andi.b	#$1F,d0
 		bne.s	locret_4454
 		move.w	#sfx_Waterfall,d0
-		jsr	(PlaySound_Special).l
+		jmp	(PlaySound_Special).l
 
 locret_4454:
 		rts
