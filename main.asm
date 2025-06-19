@@ -1,7 +1,9 @@
-; Disassembly originally created by drx
-; thanks to Hivebrain and Rika_Chou
-
+;  =========================================================================
+; |    Sonic 2 (Early prototype) Disassembly for Sega Mega Drive            |
+;  =========================================================================
+; Disassembly originally created by drx; thanks to Hivebrain and Rika_Chou
 ; Updated by Alex Field, Filter, and RepellantMold
+;  =========================================================================
 
 	CPU 68000
 
@@ -11,14 +13,15 @@ AddressSRAM	  = 3	; 0 = odd+even; 2 = even only; 3 = odd only
 
 FixBugs		  = 0	; change to 1 to enable bugfixes
 
-zeroOffsetOptimization = 0	; if 1, makes a handful of zero-offset instructions smaller
+zeroOffsetOptimization = 1	; if 1, makes a handful of zero-offset instructions smaller
 
 	include	"macrosetup.asm"
 	include	"macros.asm"
 	include	"constants.asm"
 
 StartOfRom:
-Vectors:	dc.l v_systemstack,EntryPoint,BusError,AddressError
+Vectors:
+		dc.l v_systemstack,EntryPoint,BusError,AddressError
 		dc.l IllegalInstr,ZeroDivide,ChkInstr,TrapvInstr
 		dc.l PrivilegeViol,Trace,Line1010Emu,Line1111Emu
 		dc.l ErrorExcept,ErrorExcept,ErrorExcept,ErrorExcept
@@ -226,47 +229,22 @@ PSGInitValues_End:
 ; ---------------------------------------------------------------------------
 
 GameProgram:
-		tst.w	(vdp_control_port).l
-		btst	#6,(HW_Expansion_Control).l
-		beq.s	ChecksumTest
-		cmpi.l	#'init',(v_init).w
-		beq.w	GameInit
-
-ChecksumTest:
-		movea.l	#ErrorTrap,a0			; start checking bytes after header ($200)
-		movea.l	#ROMEndLoc,a1			; stop at end of ROM (but not really since it's half of the ROM, leftover from Sonic 1)
-		move.l	(a1),d0
-		move.l	#$7FFFF,d0
-		moveq	#0,d1
-
-ChecksumLoop:
-		add.w	(a0)+,d1
-		cmp.l	a0,d0
-		bcc.s	ChecksumLoop
-		movea.l	#Checksum,a1			; read the checksum
-		cmp.w	(a1),d1					; compare correct checksum to one in ROM
-		nop								; and do absolutely nothing with it
-		nop
 		lea	(v_crossresetram).w,a6
 		moveq	#0,d7
 		move.w	#bytesToLcnt(v_end-v_crossresetram),d6
-
-loc_350:
-		move.l	d7,(a6)+
-		dbf	d6,loc_350
+-		move.l	d7,(a6)+
+		dbf	d6,-
 		move.b	(HW_Version).l,d0
 		andi.b	#$C0,d0
 		move.b	d0,(v_megadrive).w
-		move.l	#"init",(v_init).w
 
 GameInit:
 		lea	(v_start&$FFFFFF).l,a6
 		moveq	#0,d7
 		move.w	#bytesToLcnt(v_crossresetram-v_start),d6
+-		move.l	d7,(a6)+
+		dbf	d6,-
 
-GameClrRAM:
-		move.l	d7,(a6)+
-		dbf	d6,GameClrRAM
 		bsr.w	VDPSetupGame
 		bsr.w	SoundDriverLoad
 		bsr.w	JoypadInit
@@ -275,29 +253,17 @@ GameClrRAM:
 MainGameLoop:
 		move.b	(v_gamemode).w,d0
 		andi.w	#GameModeID_S1End,d0	; limit to credits game mode (even though it doesn't exist)
-		jsr	GameModeArray(pc,d0.w)
-		bra.s	MainGameLoop
+		movea.l	GameModeArray(pc,d0.w),a0; jump to apt location in ROM
+		jsr	(a0)
+		bra.s	MainGameLoop	; loop indefinitely
 ; ===========================================================================
 ; loc_3A8:
 GameModeArray:
-GameMode_SegaScreen:	bra.w	SegaScreen		; SEGA screen mode ($00)
-GameMode_TitleScreen:	bra.w	TitleScreen		; Title screen mode ($04)
-GameMode_Demo:		bra.w	Level			; Demo mode ($08)
-GameMode_Level:		bra.w	Level			; Zone play mode ($0C)
-GameMode_SpecialStage:	bra.w	SpecialStage		; Special Stage play mode ($10)
-; ===========================================================================
-; Leftover from Sonic 1, turns the screen red if the checksum check fails
-ChecksumError:
-		bsr.w	VDPSetupGame
-		move.l	#$C0000000,(vdp_control_port).l
-		moveq	#bytesToWcnt(palette_size),d7
-
-Checksum_Red:
-		move.w	#cRed,(vdp_data_port).l
-		dbf	d7,Checksum_Red
-
-ChecksumFailed_Loop:
-		bra.s	ChecksumFailed_Loop
+GameMode_SegaScreen:	dc.l	SegaScreen		; SEGA screen mode ($00)
+GameMode_TitleScreen:	dc.l	TitleScreen		; Title screen mode ($04)
+GameMode_Demo:		dc.l	Level			; Demo mode ($08)
+GameMode_Level:		dc.l	Level			; Zone play mode ($0C)
+GameMode_SpecialStage:	dc.l	SpecialStage		; Special Stage play mode ($10)
 ; ===========================================================================
 
 BusError:
@@ -1098,16 +1064,18 @@ LoadPLC:
 		bra.s	.Loop
 
 .FoundFree:
-		move.w	(a1)+,d0			; Get number of PLC entries
-		bmi.s	.End				; If it's 0 (or less), branch
+		move.w	(a1)+,d0		; Get number of PLC entries
+		bmi.s	.End			; If it's 0 (or less), branch
 
 .Load:
-		move.l	(a1)+,(a2)+			; Copy art pointer
-		move.w	(a1)+,(a2)+			; Copy VRAM location
-		dbf	d0,.Load			; Loop until all entries are queued
-
+		move.l	(a1)+,(a2)+		; Copy art pointer
+		move.w	(a1)+,(a2)+		; Copy VRAM location
+		dbf	d0,.Load		; Loop until all entries are queued
+	;	moveq	#0,d0
+	;	move.l	d0,(a2)+		; clear the last cue to avoid overcopying it
+	;	move.w	d0,(a2)+		;
 .End:
-		movem.l	(sp)+,a1-a2			; Restore registers
+		movem.l	(sp)+,a1-a2		; Restore registers
 		rts
 ; End of function LoadPLC
 
@@ -1139,6 +1107,9 @@ NewPLC:
 		move.l	(a1)+,(a2)+		; Copy art pointer
 		move.w	(a1)+,(a2)+		; Copy VRAM location
 		dbf	d0,.Load		; Loop until all entries are queued
+	;	moveq	#0,d0
+	;	move.l	d0,(a2)+		; clear the last cue to avoid overcopying it
+	;	move.w	d0,(a2)+		;
 
 .End:
 		movem.l	(sp)+,a1-a2		; Restore registers
@@ -2931,7 +2902,6 @@ Level_SkipTtlCard:
 		bsr.w	MainLevelLoadBlock
 		jsr	(LoadAnimatedBlocks).l
 		bsr.w	LoadTilesFromStart
-		jsr	(ApplySonic1Collision).l
 		bsr.w	LoadCollisionIndexes
 		bsr.w	WaterEffects
 		move.b	#id_Obj01,(v_player).w	; load Sonic object
@@ -2941,11 +2911,11 @@ Level_SkipTtlCard:
 
 Level_ChkDebug:
 		tst.w	(Two_player_mode).w
-		bne.s	LevelInit_LoadTails
-		cmpi.b	#id_EHZ,(Current_Zone).w	; is this EHZ?
-		beq.s	LevelInit_SkipTails	; if so, skip loading Tails object
+		beq.s	LevelInit_SkipTails
+;		cmpi.b	#id_EHZ,(Current_Zone).w	; is this EHZ?
+;		beq.s	LevelInit_SkipTails	; if so, skip loading Tails object
 
-LevelInit_LoadTails:
+LevelInit_LoadTails:	; Disabled until his AI &/or character selection is implemented
 		move.b	#id_Obj02,(v_player2).w	; load Tails object
 		move.w	(v_player+obX).w,(v_player2+obX).w	; copy player 1's x position to player 2
 		move.w	(v_player+obY).w,(v_player2+obY).w	; copy player 1's y position to player 2
@@ -3180,13 +3150,13 @@ loc_4616:
 ; Contains an array of pointers to the primary collision index data for each
 ; level. 1 pointer for each level, pointing the primary collision index.
 ; ---------------------------------------------------------------------------
-ColP_Index:	dc.l ColP_GHZ			; 0
+ColP_Index:	dc.l ColP_GHZ				; 0
 		dc.l ColP_CPZ				; 1
 		dc.l ColP_CPZ				; 2
 		dc.l ColP_EHZ				; 3
 		dc.l ColP_HPZ				; 4
 		dc.l ColP_EHZ				; 5
-		;dc.l ColP_GHZ				; pointer for Ending is missing by default.
+		dc.l ColP_GHZ				; pointer for Ending is missing by default.
 
 ; ---------------------------------------------------------------------------
 ; Pointers to secondary collision indexes
@@ -3195,13 +3165,13 @@ ColP_Index:	dc.l ColP_GHZ			; 0
 ; each level. 1 pointer for each level, pointing the secondary collision
 ; index.
 ; ---------------------------------------------------------------------------
-ColS_Index:	dc.l ColS_GHZ			; 0
+ColS_Index:	dc.l ColS_GHZ				; 0
 		dc.l ColS_CPZ				; 1
 		dc.l ColS_CPZ				; 2
 		dc.l ColS_EHZ				; 3
 		dc.l ColS_HPZ				; 4
 		dc.l ColS_EHZ				; 5
-		;dc.l ColS_GHZ				; pointer for Ending is missing by default.
+		dc.l ColS_GHZ				; pointer for Ending is missing by default.
 
 		include	"_inc/Oscillatory Routines.asm"
 
@@ -17409,54 +17379,6 @@ loc_13014:
 		rts
 ; End of function FindWall2
 
-; ---------------------------------------------------------------------------
-; This dummied out subroutine takes Green Hill Zone/the Sonic 1 collision
-; format and converts it to the format used in-game - UNLIKE Sonic 1/2 Final,
-; where this instead converts the collision from a bitmap-like format to the
-; one used in game (though both of these would require a cartridge that could
-; write data to itself, not standard carts).
-; ---------------------------------------------------------------------------
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
-; FloorLog_Unk: ConvertCollisionArray:
-ApplySonic1Collision:
-		rts
-; ---------------------------------------------------------------------------
-		lea	(ColArray1_GHZ).l,a1
-		tst.b	(Current_Zone).w
-		beq.s	loc_13038
-		lea	(ColArray1).l,a1
-
-loc_13038:
-		lea	(ColArray1).l,a2
-		move.w	#bytesToWcnt(ColArray1_End-ColArray1),d1
-
-loc_13042:
-		move.w	(a1)+,(a2)+
-		dbf	d1,loc_13042
-		lea	(ColArray2).l,a2
-		move.w	#bytesToWcnt(ColArray2_End-ColArray2),d1
-
-loc_13052:
-		move.w	(a1)+,(a2)+
-		dbf	d1,loc_13052
-		lea	(AngleMap_GHZ).l,a1
-		tst.b	(Current_Zone).w
-		beq.s	loc_1306A
-		lea	(AngleMap).l,a1
-
-loc_1306A:
-		lea	(AngleMap).l,a2
-		move.w	#bytesToWcnt(AngleMap_End-AngleMap),d1
-
-loc_13074:
-		move.w	(a1)+,(a2)+
-		dbf	d1,loc_13074
-		rts
-; End of function ApplySonic1Collision
-
-
 ; =============== S U B	R O U T	I N E =======================================
 
 ; Sonic_WalkSpeed:
@@ -26400,9 +26322,9 @@ ColArray1_End:
 ColArray2:	binclude	"collision/Collision array 2.bin"
 ColArray2_End:
 		even
-ColP_GHZ:	binclude	"collision/S1/GHZ1.bin"
+ColP_GHZ:	binclude	"collision/GHZ1_S2.bin"
 		even
-ColS_GHZ:	binclude	"collision/S1/GHZ2.bin"
+ColS_GHZ:	binclude	"collision/GHZ2_S2.bin"
 		even
 ColP_EHZ:	binclude	"collision/EHZ primary 16x16 collision index.bin"
 		even

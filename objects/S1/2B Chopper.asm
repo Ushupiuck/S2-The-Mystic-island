@@ -34,7 +34,7 @@ Chop_ChgSpeed:	; Routine 2
 		addi.w	#$18,obVelY(a0)	; reduce speed
 		move.w	chop_origY(a0),d0
 		cmp.w	obY(a0),d0	; has Chopper returned to its original position?
-		bhs.s	.chganimation	; if not, branch
+		bcc.s	.chganimation	; if not, branch
 		move.w	d0,obY(a0)
 		move.w	#-$700,obVelY(a0) ; set vertical speed
 
@@ -42,7 +42,7 @@ Chop_ChgSpeed:	; Routine 2
 		move.b	#1,obAnim(a0)	; use fast animation
 		subi.w	#$C0,d0
 		cmp.w	obY(a0),d0
-		bhs.s	.nochg
+		bcc.s	.nochg
 		move.b	#0,obAnim(a0)	; use slow animation
 		tst.w	obVelY(a0)	; is Chopper at	its highest point?
 		bmi.s	.nochg		; if not, branch

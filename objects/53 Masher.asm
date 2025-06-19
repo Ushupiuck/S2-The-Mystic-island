@@ -11,6 +11,7 @@ Obj53:
 ; ===========================================================================
 Obj53_Index:	dc.w Obj53_Init-Obj53_Index
 		dc.w Obj53_Main-Obj53_Index
+mash_origY = objoff_30
 ; ===========================================================================
 
 Obj53_Init:
@@ -22,29 +23,29 @@ Obj53_Init:
 		move.b	#4,obPriority(a0)
 		move.b	#9,obColType(a0)
 		move.b	#$10,obActWid(a0)
-		move.w	#-$400,obVelY(a0)
-		move.w	obY(a0),objoff_30(a0)
+		move.w	#-$400,obVelY(a0) ; set vertical speed
+		move.w	obY(a0),mash_origY(a0) ; save original position
 
 Obj53_Main:
 		lea	(Ani_obj53).l,a1
 		jsr	(AnimateSprite).l
 		jsr	(ObjectMove).l
-		addi.w	#$18,obVelY(a0)
-		move.w	objoff_30(a0),d0
-		cmp.w	obY(a0),d0
-		bcc.s	loc_17548
+		addi.w	#$18,obVelY(a0)	; reduce speed
+		move.w	chop_origY(a0),d0
+		cmp.w	obY(a0),d0	; has Chopper returned to its original position?
+		bcc.s	.chganimation	; if not, branch
 		move.w	d0,obY(a0)
-		move.w	#-$500,obVelY(a0)
+		move.w	#-$500,obVelY(a0) ; set vertical speed
 
-loc_17548:
-		move.b	#1,obAnim(a0)
+.chganimation:
+		move.b	#1,obAnim(a0)	; use fast animation
 		subi.w	#$C0,d0
 		cmp.w	obY(a0),d0
-		bcc.s	locret_1756A
-		move.b	#0,obAnim(a0)
-		tst.w	obVelY(a0)
-		bmi.s	locret_1756A
-		move.b	#2,obAnim(a0)
+		bcc.s	.nochg
+		move.b	#0,obAnim(a0)	; use slow animation
+		tst.w	obVelY(a0)	; is Chopper at	its highest point?
+		bmi.s	.nochg		; if not, branch
+		move.b	#2,obAnim(a0)	; use stationary animation
 
-locret_1756A:
+.nochg:
 		rts
