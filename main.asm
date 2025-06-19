@@ -249,7 +249,8 @@ GameInit:
 		bsr.w	SoundDriverLoad
 		bsr.w	JoypadInit
 		move.b	#GameModeID_SegaScreen,(v_gamemode).w
-
+;		bra.w	MainGameLoop
+	;	align	$36C
 MainGameLoop:
 		move.b	(v_gamemode).w,d0
 		andi.w	#GameModeID_S1End,d0	; limit to credits game mode (even though it doesn't exist)
@@ -265,7 +266,7 @@ GameMode_Demo:		dc.l	Level			; Demo mode ($08)
 GameMode_Level:		dc.l	Level			; Zone play mode ($0C)
 GameMode_SpecialStage:	dc.l	SpecialStage		; Special Stage play mode ($10)
 ; ===========================================================================
-
+	;	align	$3FE
 BusError:
 		move.b	#2,(v_errortype).w
 		bra.s	ErrorMsg_TwoAddresses
