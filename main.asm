@@ -26330,24 +26330,19 @@ Nem_CreditText:	binclude	"art/nemesis/S1/Ending - Credits.nem"
 Nem_EndStH:	binclude	"art/nemesis/S1/Ending - StH Logo.nem"
 		even
 ; ---------------------------------------------------------------------------
-AngleMap_GHZ:	binclude	"collision/S1/Angle Map.bin"
-AngleMap_GHZ_End:
+AngleMap_S1:	binclude	"collision/S1/Angle Map.bin"
 		even
+ColArray1_S1:	binclude	"collision/S1/Collision Array (Normal).bin"
+		even
+ColArray2_S1:	binclude	"collision/S1/Collision Array (Rotated).bin"
+		even
+; ---------------------------------------------------------------------------
 AngleMap:	binclude	"collision/Curve and resistance mapping.bin"
-		even
-AngleMap_End:
-ColArray1_GHZ:	binclude	"collision/S1/Collision Array (Normal).bin"
-ColArray1_GHZ_End:
-		even
-ColArray2_GHZ:	binclude	"collision/S1/Collision Array (Rotated).bin"
-ColArray2_GHZ_End:
-		even
+AngleMap_End:	even
 ColArray1:	binclude	"collision/Collision array 1.bin"
-ColArray1_End:
-		even
+ColArray1_End:	even
 ColArray2:	binclude	"collision/Collision array 2.bin"
-ColArray2_End:
-		even
+ColArray2_End:	even
 ColP_GHZ:	binclude	"collision/GHZ1_S2.bin"
 		even
 ColS_GHZ:	binclude	"collision/GHZ2_S2.bin"
