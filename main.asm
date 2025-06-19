@@ -2975,7 +2975,7 @@ Level_SkipClr:
 		movea.l	(a1,d0.w),a1
 		tst.w	(f_demo).w	; is this an ending demo?
 		bpl.s	Level_Demo	; if not, branch
-		lea	(Demo_S1EndIndex).l,a1		; garbage, leftover from Sonic 1's ending sequence demos
+		lea	(DemoEndDataPtr).l,a1		; garbage, leftover from Sonic 1's ending sequence demos
 		move.w	(v_creditsnum).w,d0
 		subq.w	#1,d0
 		lsl.w	#2,d0
@@ -3746,7 +3746,24 @@ byte_5709:	dc.b   8,  2,  4,$FF,  2,  3,  8,$FF,  4,  2,  2,  3,  8,$FD,  4,  2
 		dc.b   2,  3,  2,$FF
 		even
 ; ---------------------------------------------------------------------------
-
+; Ending sequence demos
+; ---------------------------------------------------------------------------
+Demo_EndGHZ1:	binclude	"demodata/Ending - GHZ1.bin"
+		even
+Demo_EndMZ:	binclude	"demodata/Ending - MZ.bin"
+		even
+Demo_EndSYZ:	binclude	"demodata/Ending - SYZ.bin"
+		even
+Demo_EndLZ:	binclude	"demodata/Ending - LZ.bin"
+		even
+Demo_EndSLZ:	binclude	"demodata/Ending - SLZ.bin"
+		even
+Demo_EndSBZ1:	binclude	"demodata/Ending - SBZ1.bin"
+		even
+Demo_EndSBZ2:	binclude	"demodata/Ending - SBZ2.bin"
+		even
+Demo_EndGHZ2:	binclude	"demodata/Ending - GHZ2.bin"
+		even
 ; =============== S U B	R O U T	I N E =======================================
 
 
