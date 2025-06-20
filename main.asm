@@ -26292,11 +26292,9 @@ Map128_CPZ:	binclude	"mappings/128x128/CPZ.unc"
 Map16_GHZ:	binclude	"mappings/16x16/GHZ.unc"
 Map16_GHZ_End:
 		even
-Nem_GHZ:	binclude	"art/nemesis/8x8 - GHZ.nem"
+Nem_GHZ:	binclude	"art/nemesis/8x8 - GHZ.nem"	; To be replaced
 		even
-Nem_GHZ2:	binclude	"art/nemesis/8x8 - GHZ2.nem"
-		even
-Map128_GHZ:	binclude	"mappings/128x128/GHZ.kcc"
+Map128_GHZ:	binclude	"mappings/128x128/GHZ.kcc"	; To be replaced
 		even
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - bosses and ending sequence
@@ -26343,9 +26341,9 @@ ColArray1:	binclude	"collision/Collision array 1.bin"
 ColArray1_End:	even
 ColArray2:	binclude	"collision/Collision array 2.bin"
 ColArray2_End:	even
-ColP_GHZ:	binclude	"collision/GHZ1_S2.bin"
+ColP_GHZ:	binclude	"collision/GHZ1_S2.bin"	; To be replaced
 		even
-ColS_GHZ:	binclude	"collision/GHZ2_S2.bin"
+ColS_GHZ:	binclude	"collision/GHZ2_S2.bin"	; To be replaced
 		even
 ColP_EHZ:	binclude	"collision/EHZ primary 16x16 collision index.bin"
 		even
