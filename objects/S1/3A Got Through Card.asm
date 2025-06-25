@@ -28,7 +28,7 @@ Obj3A_ChkPLC:
 ; loc_BB64:
 Obj3A_Config:
 		movea.l	a0,a1
-		lea	(Obj3A_Conf).l,a2
+		lea	(Got_Config).l,a2
 		moveq	#6,d1
 ; loc_BB6E:
 Obj3A_Init:
@@ -251,10 +251,26 @@ Obj3A_SBZ2:
 		beq.w	DeleteObject
 		rts
 ; ---------------------------------------------------------------------------
-Obj3A_Conf:	dc.w	 4, $124,  $BC,	$200
-		dc.w $FEE0, $120,  $D0,	$201
-		dc.w  $40C, $14C,  $D6,	$206
-		dc.w  $520, $120,  $EC,	$202
-		dc.w  $540, $120,  $FC,	$203
-		dc.w  $560, $120, $10C,	$204
-		dc.w  $20C, $14C,  $CC,	$205
+		;    x-start,	x-main,	y-main,
+		;				routine, frame number
+
+Got_Config:	dc.w 4,		$124,	$BC			; "SONIC HAS"
+		dc.b 				2,	0
+
+		dc.w -$120,	$120,	$D0			; "PASSED"
+		dc.b 				2,	1
+
+		dc.w $40C,	$14C,	$D6			; "ACT" 1/2/3
+		dc.b 				2,	6
+
+		dc.w $520,	$120,	$EC			; score
+		dc.b 				2,	2
+
+		dc.w $540,	$120,	$FC			; time bonus
+		dc.b 				2,	3
+
+		dc.w $560,	$120,	$10C			; ring bonus
+		dc.b 				2,	4
+
+		dc.w $20C,	$14C,	$CC			; oval
+		dc.b 				2,	5
