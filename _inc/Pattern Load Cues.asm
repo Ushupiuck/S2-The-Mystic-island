@@ -257,14 +257,28 @@ PLC_Signpost:	dc.w ((PLC_Signpost_End-PLC_Signpost)/6)-1
 		plcm	Nem_Bonus, ArtTile_Hidden_Points
 		plcm	Nem_BigFlash, ArtTile_Giant_Ring_Flash
 PLC_Signpost_End:
-; --------------------------------------------------------------------------------------
-; PATTERN LOAD REQUEST LIST
-; Sonic 1 Special Stage, although since it's blank, using it will crash the game
-; unless you replace the +$10 with a -1
-; --------------------------------------------------------------------------------------
-; PLC_Invalid:
+; ---------------------------------------------------------------------------
+; Pattern load cues - special stage
+; ---------------------------------------------------------------------------
 PLC_S1SpecialStage:
 		dc.w ((PLC_S1SpecialStage_End-PLC_S1SpecialStage)/6)-1
+		plcm	Nem_SSBgCloud,  ArtTile_SS_Background_Clouds ; bubble and cloud background
+		plcm	Nem_SSBgFish,   ArtTile_SS_Background_Fish   ; bird and fish background
+		plcm	Nem_SSWalls,    ArtTile_SS_Wall              ; walls
+		plcm	Nem_Bumper,     ArtTile_SS_Bumper            ; bumper
+		plcm	Nem_SSGOAL,     ArtTile_SS_Goal              ; GOAL block
+		plcm	Nem_SSUpDown,   ArtTile_SS_Up_Down           ; UP and DOWN blocks
+		plcm	Nem_SSRBlock,   ArtTile_SS_R_Block           ; R block
+		plcm	Nem_SS1UpBlock, ArtTile_SS_Extra_Life        ; 1UP block
+		plcm	Nem_SSEmStars,  ArtTile_SS_Emerald_Sparkle   ; emerald collection stars
+		plcm	Nem_SSRedWhite, ArtTile_SS_Red_White_Block   ; red and white block
+		plcm	Nem_SSGhost,    ArtTile_SS_Ghost_Block       ; ghost block
+		plcm	Nem_SSWBlock,   ArtTile_SS_W_Block           ; W block
+		plcm	Nem_SSGlass,    ArtTile_SS_Glass             ; glass block
+		plcm	Nem_SSEmerald,  ArtTile_SS_Emerald           ; emeralds
+;		plcm	Nem_SSZone1,    ArtTile_SS_Zone_1            ; ZONE 1 block
+;		plcm	Nem_SSZone2,    ArtTile_SS_Zone_2            ; ZONE 2 block
+;		plcm	Nem_SSZone3,    ArtTile_SS_Zone_3            ; ZONE 3 block
 PLC_S1SpecialStage_End:
 ; --------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST

@@ -3282,17 +3282,18 @@ SpecialStage:
 		move.w	#sfx_EnterSS,d0
 		bsr.w	PlaySound_Special
 		bsr.w	Pal_MakeFlash
-		move	#$2700,sr
+		disable_ints
 		lea	(vdp_control_port).l,a6
-		move.w	#$8B00+%0011,(a6)	; set horizontal scrolling single pixel rows mode
-		move.w	#$8000+%0100,(a6)
+		move.w	#$8B03,(a6)	; line scroll mode
+		move.w	#$8004,(a6)	; 8-colour mode
 		move.w	#$8A00+175,(v_hbla_hreg).w
 		move.w	#$9011,(a6)
 		move.w	(v_vdp_buffer1).w,d0
 		andi.b	#$BF,d0
 		move.w	d0,(vdp_control_port).l
+;		ResetDMAQueue	; TODO
 		bsr.w	ClearScreen
-		move	#$2300,sr
+		enable_ints
 		fillVRAM	0, ArtTile_SS_Plane_1*tile_size+plane_size_64x32, ArtTile_SS_Plane_5*tile_size
 		bsr.w	S1_SSBGLoad
 		moveq	#plcid_SpecialStage,d0
@@ -3304,16 +3305,16 @@ SpecialStage:
 		clr.b	(f_wtr_state).w
 		clr.w	(Level_Inactive_flag).w
 		moveq	#palid_Special,d0
-		bsr.w	PalLoad1
-		jsr	(S1SS_Load).l
+		bsr.w	PalLoad1	; load special stage palette
+		jsr	(S1SS_Load).l		; load SS layout data
 		move.l	#0,(Camera_X_pos).w
 		move.l	#0,(Camera_Y_pos).w
-		move.b	#id_Obj09,(v_player).w
+		move.b	#id_Obj09,(v_player).w ; load special stage Sonic object
 		bsr.w	PalCycle_S1SS
-		clr.w	(v_ssangle).w
-		move.w	#$40,(v_ssrotate).w
+		clr.w	(v_ssangle).w	; set stage angle to "upright"
+		move.w	#$40,(v_ssrotate).w ; set stage rotation speed
 		move.w	#bgm_SS,d0
-		bsr.w	PlaySound
+		bsr.w	PlaySound	; play special stage BG	music
 		move.w	#0,(Demo_button_index).w
 		lea	(Demo_Index).l,a1
 		moveq	#6,d0
@@ -3323,21 +3324,26 @@ SpecialStage:
 		subq.b	#1,(Demo_press_counter).w
 		clr.w	(v_rings).w
 		clr.b	(v_lifecount).w
+;		move.w	#100,(v_ring1uplimit).w	; TODO: IMPLEMENT reset ring 1-up flag
 		move.w	#0,(Debug_placement_mode).w
 		move.w	#60*30,(v_demolength).w
-		tst.b	(f_debugcheat).w
-		beq.s	loc_5158
-		btst	#bitA,(v_jpadhold1).w
-		beq.s	loc_5158
-		move.b	#1,(Debug_mode_flag).w
+		tst.b	(f_debugcheat).w ; has debug cheat been entered?
+		beq.s	SS_NoDebug	; if not, branch
+		btst	#bitA,(v_jpadhold1).w ; is A button pressed?
+		beq.s	SS_NoDebug	; if not, branch
+		move.b	#1,(Debug_mode_flag).w ; enable debug mode
 
-loc_5158:
+SS_NoDebug:
 		move.w	(v_vdp_buffer1).w,d0
 		ori.b	#$40,d0
 		move.w	d0,(vdp_control_port).l
 		bsr.w	Pal_MakeWhite
 
-loc_516A:
+; ---------------------------------------------------------------------------
+; Main Special Stage loop
+; ---------------------------------------------------------------------------
+
+SS_MainLoop:
 		bsr.w	PauseGame
 		move.b	#VintID_S1SS,(v_vbla_routine).w
 		bsr.w	WaitForVint
@@ -3347,27 +3353,27 @@ loc_516A:
 		jsr	(BuildSprites).l
 		jsr	(S1SS_ShowLayout).l
 		bsr.w	S1SS_BgAnimate
-		tst.w	(f_demo).w
-		beq.s	loc_51A6
-		tst.w	(v_demolength).w
-		beq.w	loc_52D4
+		tst.w	(f_demo).w	; is demo mode on?
+		beq.s	SS_ChkEnd	; if not, branch
+		tst.w	(v_demolength).w ; is there time left on the demo?
+		beq.w	SS_ToSegaScreen	; if not, branch
 
-loc_51A6:
-		cmpi.b	#GameModeID_SpecialStage,(v_gamemode).w
-		beq.w	loc_516A
-		tst.w	(f_demo).w
-		bne.w	loc_52DC
-		move.b	#GameModeID_Level,(v_gamemode).w
-		cmpi.w	#(id_SBZ<<8)+3,(Current_ZoneAndAct).w
-		blo.s	loc_51CA
-		clr.w	(Current_ZoneAndAct).w
+SS_ChkEnd:
+		cmpi.b	#GameModeID_SpecialStage,(v_gamemode).w ; is game mode $10 (special stage)?
+		beq.w	SS_MainLoop	; if yes, branch
+		tst.w	(f_demo).w	; is demo mode on?
+		bne.w	SS_ToLevel
+		move.b	#GameModeID_Level,(v_gamemode).w ; set screen mode to $0C (level)
+		cmpi.w	#(id_SBZ<<8)+3,(Current_ZoneAndAct).w ; is level number higher than FZ?
+		blo.s	SS_Finish	; if not, branch
+		clr.w	(Current_ZoneAndAct).w	; set to GHZ1
 
-loc_51CA:
-		move.w	#60,(v_demolength).w
+SS_Finish:
+		move.w	#60,(v_demolength).w ; set delay time to 1 second
 		move.w	#$3F,(v_pfade_start).w
 		clr.w	(PalChangeSpeed).w
 
-loc_51DA:
+SS_FinLoop:
 		move.b	#VintID_SSResults,(v_vbla_routine).w
 		bsr.w	WaitForVint
 		bsr.w	MoveSonicInDemo
@@ -3383,35 +3389,36 @@ loc_51DA:
 
 loc_5214:
 		tst.w	(v_demolength).w
-		bne.s	loc_51DA
-		move	#$2700,sr
+		bne.s	SS_FinLoop
+		disable_ints
 		lea	(vdp_control_port).l,a6
-		move.w	#$8200+(vram_fg>>10),(a6)
-		move.w	#$8400+(vram_bg>>13),(a6)
+		move.w	#$8200+(vram_fg>>10),(a6) ; set foreground nametable address
+		move.w	#$8400+(vram_bg>>13),(a6) ; set background nametable address
 		move.w	#$9001,(a6)
 		bsr.w	ClearScreen
 		locVRAM	ArtTile_Title_Card*tile_size
-		lea	(Nem_TitleCard).l,a0
+		lea	(Nem_TitleCard).l,a0	; load title card patterns
 		bsr.w	NemDec
 		jsr	(HUD_Base).l
-		move	#$2300,sr
+;		ResetDMAQueue	; TODO
+		enable_ints
 		moveq	#palid_SSResult,d0
-		bsr.w	PalLoad2
+		bsr.w	PalLoad2		; load results screen palette
 		moveq	#plcid_Main,d0
 		bsr.w	NewPLC
 		moveq	#plcid_SSResult,d0
-		bsr.w	LoadPLC
-		move.b	#1,(f_scorecount).w
-		move.b	#1,(f_endactbonus).w
+		bsr.w	LoadPLC			; load results screen patterns
+		move.b	#1,(f_scorecount).w	; update score counter
+		move.b	#1,(f_endactbonus).w	; update ring bonus counter
 		move.w	(v_rings).w,d0
-		mulu.w	#10,d0
-		move.w	d0,(v_ringbonus).w
+		mulu.w	#10,d0			; multiply rings by 10
+		move.w	d0,(v_ringbonus).w	; set rings bonus
 		move.w	#bgm_GotThrough,d0
-		jsr	(PlaySound_Special).l
-		clearRAM v_objspace,v_objend
-		move.b	#id_Obj7E,(v_endcard).w
+		jsr	(PlaySound_Special).l	; play end-of-level music
+		clearRAM v_objspace,v_objend	; clear object RAM
+		move.b	#id_Obj7E,(v_endcard).w	; load results screen object
 
-loc_529C:
+SS_NormalExit:
 		bsr.w	PauseGame
 		move.b	#VintID_TitleCard,(v_vbla_routine).w
 		bsr.w	WaitForVint
@@ -3419,31 +3426,33 @@ loc_529C:
 		jsr	(BuildSprites).l
 		bsr.w	RunPLC_RAM
 		tst.w	(Level_Inactive_flag).w
-		beq.s	loc_529C
+		beq.s	SS_NormalExit
 		tst.l	(v_plc_buffer).w
-		bne.s	loc_529C
+		bne.s	SS_NormalExit
 		move.w	#sfx_EnterSS,d0
 		bsr.w	PlaySound_Special
-		bsr.w	Pal_MakeFlash
-		rts
+		bra.w	Pal_MakeFlash
 ; ---------------------------------------------------------------------------
 
-loc_52D4:
+SS_ToSegaScreen:
 		move.b	#GameModeID_SegaScreen,(v_gamemode).w
 		rts
-; ---------------------------------------------------------------------------
 
-loc_52DC:
+SS_ToLevel:
 		cmpi.b	#GameModeID_Level,(v_gamemode).w
-		beq.s	loc_52D4
+		beq.s	SS_ToSegaScreen
 		rts
+
+; ---------------------------------------------------------------------------
+; Special stage	background loading subroutine
+; ---------------------------------------------------------------------------
 
 ; =============== S U B	R O U T	I N E =======================================
 
 
 S1_SSBGLoad:
 		lea	(v_ssbuffer1).l,a1
-		; Bug: The mappings for the birds and fish are not loaded here!
+		lea	(Eni_SSBg1).l,a0 ; load	mappings for the birds and fish
 		move.w	#make_art_tile(ArtTile_SS_Background_Fish,2,0),d0
 		bsr.w	EniDec
 		locVRAM	ArtTile_SS_Plane_1*tile_size+plane_size_64x32,d3
@@ -3492,14 +3501,21 @@ loc_5360:
 		adda.w	#$80,a2
 		dbf	d7,loc_5302
 		lea	(v_ssbuffer1).l,a1
-		; Bug: The mappings for the clouds are not loaded here!
+		lea	(Eni_SSBg2).l,a0 ; load	mappings for the clouds
 		move.w	#make_art_tile(ArtTile_SS_Background_Clouds,2,0),d0
 		bsr.w	EniDec
 		copyTilemap	v_ssbuffer1,ArtTile_SS_Plane_5*tile_size,64,32
-		copyTilemap	v_ssbuffer1,ArtTile_SS_Plane_5*tile_size+plane_size_64x32,64,64
-		rts
+;		copyTilemap	v_ssbuffer1,ArtTile_SS_Plane_5*tile_size+plane_size_64x32,64,64
+		lea	(v_ssbuffer1).l,a1
+		locVRAM	ArtTile_SS_Plane_5*tile_size+plane_size_64x32,d0
+		moveq	#64-1,d1
+		moveq	#64-1,d2
+		bra.w	PlaneMapToVRAM_H40
 ; End of function S1_SSBGLoad
 
+; ---------------------------------------------------------------------------
+; Palette cycling routine - special stage
+; ---------------------------------------------------------------------------
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -3657,6 +3673,10 @@ Pal_S1SSCyc1:	binclude	"palette/S1/Cycle - Special Stage 1.bin"
 Pal_S1SSCyc2:	binclude	"palette/S1/Cycle - Special Stage 2.bin"
 		even
 
+; ---------------------------------------------------------------------------
+; Subroutine to	make the special stage background animated
+; ---------------------------------------------------------------------------
+
 ; =============== S U B	R O U T	I N E =======================================
 
 
@@ -3749,10 +3769,11 @@ loc_56E2:
 ; End of function S1SS_BgAnimate
 
 ; ---------------------------------------------------------------------------
-byte_56F6:	dc.b   9,$28,$18,$10,$28,$18,$10,$30,$18,  8,$10
-byte_5701:	dc.b   6,$30,$30,$30,$28,$18,$18,$18
-byte_5709:	dc.b   8,  2,  4,$FF,  2,  3,  8,$FF,  4,  2,  2,  3,  8,$FD,  4,  2
-		dc.b   2,  3,  2,$FF
+byte_56F6:	dc.b 9,	$28, $18, $10, $28, $18, $10, $30, $18,	8, $10,	0
+		even
+byte_5701:	dc.b 6,	$30, $30, $30, $28, $18, $18, $18
+		even
+byte_5709:	dc.b 8,	2, 4, $FF, 2, 3, 8, $FF, 4, 2, 2, 3, 8,	$FD, 4,	2, 2, 3, 2, $FF
 		even
 ; ---------------------------------------------------------------------------
 ; Ending sequence demos
@@ -8591,201 +8612,14 @@ word_B8B6:	dc.w 2
 		include	"objects/S1/3A Got Through Card.asm"
 		include	"objects/S1/7E Special Stage Results.asm"
 		include	"objects/S1/7F SS Result Chaos Emeralds.asm"
+Map_Card:	include	"mappings/sprite/S1/obj34.asm"
+Map_Over:	include	"mappings/sprite/S1/obj39.asm"
+Map_Got:	include	"mappings/sprite/S1/obj3A.asm"
 ; ---------------------------------------------------------------------------
-Map_Obj34:	dc.w word_BFD8-Map_Obj34
-		dc.w word_C022-Map_Obj34
-		dc.w word_C06C-Map_Obj34
-		dc.w word_C09E-Map_Obj34
-		dc.w word_C0E8-Map_Obj34
-		dc.w word_C13A-Map_Obj34
-		dc.w word_C18C-Map_Obj34
-		dc.w word_C1AE-Map_Obj34
-		dc.w word_C1C0-Map_Obj34
-		dc.w word_C1D2-Map_Obj34
-		dc.w word_C1E4-Map_Obj34
-		dc.w word_C24E-Map_Obj34
-word_BFD8:	dc.w 9
-		dc.w $F805,  $18,   $C,$FFB4
-		dc.w $F805,  $3A,  $1D,$FFC4
-		dc.w $F805,  $10,    8,$FFD4
-		dc.w $F805,  $10,    8,$FFE4
-		dc.w $F805,  $2E,  $17,$FFF4
-		dc.w $F805,  $1C,   $E,	 $14
-		dc.w $F801,  $20,  $10,	 $24
-		dc.w $F805,  $26,  $13,	 $2C
-		dc.w $F805,  $26,  $13,	 $3C
-word_C022:	dc.w 9
-		dc.w $F805,  $26,  $13,$FFBC
-		dc.w $F805,    0,    0,$FFCC
-		dc.w $F805,    4,    2,$FFDC
-		dc.w $F805,  $4A,  $25,$FFEC
-		dc.w $F805,  $3A,  $1D,$FFFC
-		dc.w $F801,  $20,  $10,	  $C
-		dc.w $F805,  $2E,  $17,	 $14
-		dc.w $F805,  $42,  $21,	 $24
-		dc.w $F805,  $1C,   $E,	 $34
-word_C06C:	dc.w 6
-		dc.w $F805,  $2A,  $15,$FFCF
-		dc.w $F805,    0,    0,$FFE0
-		dc.w $F805,  $3A,  $1D,$FFF0
-		dc.w $F805,    4,    2,	   0
-		dc.w $F805,  $26,  $13,	 $10
-		dc.w $F805,  $10,    8,	 $20
-word_C09E:	dc.w 9
-		dc.w $F805,  $3E,  $1F,$FFB4
-		dc.w $F805,  $42,  $21,$FFC4
-		dc.w $F805,    0,    0,$FFD4
-		dc.w $F805,  $3A,  $1D,$FFE4
-		dc.w $F805,  $26,  $13,	   4
-		dc.w $F801,  $20,  $10,	 $14
-		dc.w $F805,  $18,   $C,	 $1C
-		dc.w $F805,  $1C,   $E,	 $2C
-		dc.w $F805,  $42,  $21,	 $3C
-word_C0E8:	dc.w $A
-		dc.w $F805,  $3E,  $1F,$FFAC
-		dc.w $F805,  $36,  $1B,$FFBC
-		dc.w $F805,  $3A,  $1D,$FFCC
-		dc.w $F801,  $20,  $10,$FFDC
-		dc.w $F805,  $2E,  $17,$FFE4
-		dc.w $F805,  $18,   $C,$FFF4
-		dc.w $F805,  $4A,  $25,	 $14
-		dc.w $F805,    0,    0,	 $24
-		dc.w $F805,  $3A,  $1D,	 $34
-		dc.w $F805,   $C,    6,	 $44
-word_C13A:	dc.w $A
-		dc.w $F805,  $3E,  $1F,$FFAC
-		dc.w $F805,    8,    4,$FFBC
-		dc.w $F805,  $3A,  $1D,$FFCC
-		dc.w $F805,    0,    0,$FFDC
-		dc.w $F805,  $36,  $1B,$FFEC
-		dc.w $F805,    4,    2,	  $C
-		dc.w $F805,  $3A,  $1D,	 $1C
-		dc.w $F805,    0,    0,	 $2C
-		dc.w $F801,  $20,  $10,	 $3C
-		dc.w $F805,  $2E,  $17,	 $44
-word_C18C:	dc.w 4
-		dc.w $F805,  $4E,  $27,$FFE0
-		dc.w $F805,  $32,  $19,$FFF0
-		dc.w $F805,  $2E,  $17,	   0
-		dc.w $F805,  $10,    8,	 $10
-word_C1AE:	dc.w 2
-		dc.w  $40C,  $53,  $29,$FFEC
-		dc.w $F402,  $57,  $2B,	  $C
-word_C1C0:	dc.w 2
-		dc.w  $40C,  $53,  $29,$FFEC
-		dc.w $F406,  $5A,  $2D,	   8
-word_C1D2:	dc.w 2
-		dc.w  $40C,  $53,  $29,$FFEC
-		dc.w $F406,  $60,  $30,	   8
-word_C1E4:	dc.w $D
-		dc.w $E40C,  $70,  $38,$FFF4
-		dc.w $E402,  $74,  $3A,	 $14
-		dc.w $EC04,  $77,  $3B,$FFEC
-		dc.w $F405,  $79,  $3C,$FFE4
-		dc.w $140C,$1870,$1838,$FFEC
-		dc.w  $402,$1874,$183A,$FFE4
-		dc.w  $C04,$1877,$183B,	   4
-		dc.w $FC05,$1879,$183C,	  $C
-		dc.w $EC08,  $7D,  $3E,$FFFC
-		dc.w $F40C,  $7C,  $3E,$FFF4
-		dc.w $FC08,  $7C,  $3E,$FFF4
-		dc.w  $40C,  $7C,  $3E,$FFEC
-		dc.w  $C08,  $7C,  $3E,$FFEC
-word_C24E:	dc.w 5
-		dc.w $F805,  $14,   $A,$FFDC
-		dc.w $F801,  $20,  $10,$FFEC
-		dc.w $F805,  $2E,  $17,$FFF4
-		dc.w $F805,    0,    0,	   4
-		dc.w $F805,  $26,  $13,	 $14
-Map_Obj39:	dc.w word_C280-Map_Obj39
-		dc.w word_C292-Map_Obj39
-		dc.w word_C2A4-Map_Obj39
-		dc.w word_C2B6-Map_Obj39
-word_C280:	dc.w 2
-		dc.w $F80D,    0,    0,$FFB8
-		dc.w $F80D,    8,    4,$FFD8
-word_C292:	dc.w 2
-		dc.w $F80D,  $14,   $A,	   8
-		dc.w $F80D,   $C,    6,	 $28
-word_C2A4:	dc.w 2
-		dc.w $F809,  $1C,   $E,$FFC4
-		dc.w $F80D,    8,    4,$FFDC
-word_C2B6:	dc.w 2
-		dc.w $F80D,  $14,   $A,	  $C
-		dc.w $F80D,   $C,    6,	 $2C
-Map_Obj3A:	dc.w word_C2DA-Map_Obj3A
-		dc.w word_C31C-Map_Obj3A
-		dc.w word_C34E-Map_Obj3A
-		dc.w word_C380-Map_Obj3A
-		dc.w word_C3BA-Map_Obj3A
-		dc.w word_C1E4-Map_Obj3A
-		dc.w word_C1AE-Map_Obj3A
-		dc.w word_C1C0-Map_Obj3A
-		dc.w word_C1D2-Map_Obj3A
-word_C2DA:	dc.w 8
-		dc.w $F805,  $3E,  $1F,$FFB8
-		dc.w $F805,  $32,  $19,$FFC8
-		dc.w $F805,  $2E,  $17,$FFD8
-		dc.w $F801,  $20,  $10,$FFE8
-		dc.w $F805,    8,    4,$FFF0
-		dc.w $F805,  $1C,   $E,	 $10
-		dc.w $F805,    0,    0,	 $20
-		dc.w $F805,  $3E,  $1F,	 $30
-word_C31C:	dc.w 6
-		dc.w $F805,  $36,  $1B,$FFD0
-		dc.w $F805,    0,    0,$FFE0
-		dc.w $F805,  $3E,  $1F,$FFF0
-		dc.w $F805,  $3E,  $1F,	   0
-		dc.w $F805,  $10,    8,	 $10
-		dc.w $F805,   $C,    6,	 $20
-word_C34E:	dc.w 6
-		dc.w $F80D, $14A,  $A5,$FFB0
-		dc.w $F801, $162,  $B1,$FFD0
-		dc.w $F809, $164,  $B2,	 $18
-		dc.w $F80D, $16A,  $B5,	 $30
-		dc.w $F704,  $6E,  $37,$FFCD
-		dc.w $FF04,$186E,$1837,$FFCD
-word_C380:	dc.w 7
-		dc.w $F80D, $15A,  $AD,$FFB0
-		dc.w $F80D,  $66,  $33,$FFD9
-		dc.w $F801, $14A,  $A5,$FFF9
-		dc.w $F704,  $6E,  $37,$FFF6
-		dc.w $FF04,$186E,$1837,$FFF6
-		dc.w $F80D,$FFF0,$FBF8,	 $28
-		dc.w $F801, $170,  $B8,	 $48
-word_C3BA:	dc.w 7
-		dc.w $F80D, $152,  $A9,$FFB0
-		dc.w $F80D,  $66,  $33,$FFD9
-		dc.w $F801, $14A,  $A5,$FFF9
-		dc.w $F704,  $6E,  $37,$FFF6
-		dc.w $FF04,$186E,$1837,$FFF6
-		dc.w $F80D,$FFF8,$FBFC,	 $28
-		dc.w $F801, $170,  $B8,	 $48
+; Sprite mappings - special stage results screen (7E) & Chaos Emeralds (7F)
 ; ---------------------------------------------------------------------------
-; Sprite mappings - special stage results screen
-; ---------------------------------------------------------------------------
-Map_S1Obj7E:	include	"mappings/sprite/S1/obj7E.asm"
-Map_S1Obj7F:	dc.w word_C624-Map_S1Obj7F
-		dc.w word_C62E-Map_S1Obj7F
-		dc.w word_C638-Map_S1Obj7F
-		dc.w word_C642-Map_S1Obj7F
-		dc.w word_C64C-Map_S1Obj7F
-		dc.w word_C656-Map_S1Obj7F
-		dc.w word_C660-Map_S1Obj7F
-word_C624:	dc.w 1
-		dc.w $F805,$2004,$2002,$FFF8
-word_C62E:	dc.w 1
-		dc.w $F805,    0,    0,$FFF8
-word_C638:	dc.w 1
-		dc.w $F805,$4004,$4002,$FFF8
-word_C642:	dc.w 1
-		dc.w $F805,$6004,$6002,$FFF8
-word_C64C:	dc.w 1
-		dc.w $F805,$2008,$2004,$FFF8
-word_C656:	dc.w 1
-		dc.w $F805,$200C,$2006,$FFF8
-word_C660:	dc.w 0
-		even
+Map_SSR:	include	"mappings/sprite/S1/obj7E.asm"
+Map_SSRC:	include	"mappings/sprite/S1/obj7F.asm"
 ; ---------------------------------------------------------------------------
 
 		include	"objects/36 Spikes.asm"
@@ -8797,7 +8631,8 @@ Map_Obj3B:	include	"mappings/sprite/S1/Purple Rock.asm"
 		include	"objects/S1/3C Smashable Wall.asm"
 		include	"objects/S1/sub SmashObject.asm"
 ; ---------------------------------------------------------------------------
-Obj3C_FragSpdRight:dc.w	 $400,-$500
+Obj3C_FragSpdRight:
+		dc.w  $400,-$500
 		dc.w  $600,-$100
 		dc.w  $600, $100
 		dc.w  $400, $500
@@ -8805,7 +8640,8 @@ Obj3C_FragSpdRight:dc.w	 $400,-$500
 		dc.w  $800,-$200
 		dc.w  $800, $200
 		dc.w  $600, $600
-Obj3C_FragSpdLeft:dc.w -$600,-$600
+Obj3C_FragSpdLeft:
+		dc.w -$600,-$600
 		dc.w -$800,-$200
 		dc.w -$800, $200
 		dc.w -$600, $600
@@ -8813,6 +8649,7 @@ Obj3C_FragSpdLeft:dc.w -$600,-$600
 		dc.w -$600,-$100
 		dc.w -$600, $100
 		dc.w -$400, $500
+; ---------------------------------------------------------------------------
 Map_Obj3C:	dc.w word_CA6C-Map_Obj3C
 		dc.w word_CAAE-Map_Obj3C
 		dc.w word_CAF0-Map_Obj3C
@@ -9039,8 +8876,8 @@ ptr_Obj7A:	dc.l ObjNull
 ptr_Obj7B:	dc.l ObjNull
 ptr_Obj7C:	dc.l ObjNull
 ptr_Obj7D:	dc.l Obj7D				; (S1) Hidden points at end of stage
-ptr_Obj7E:	dc.l S1Obj7E				; (S1) Special Stage Results (unreferenced, but can be found as S1Obj7E, also contains a leftover PLC pointer in mappings)
-ptr_Obj7F:	dc.l S1Obj7F				; (S1) SS Result Chaos Emeralds (unreferenced, but can be found as S1Obj7F)
+ptr_Obj7E:	dc.l Obj7E				; (S1) Special Stage Results (unreferenced, but can be found as S1Obj7E, also contains a leftover PLC pointer in mappings)
+ptr_Obj7F:	dc.l Obj7F				; (S1) SS Result Chaos Emeralds (unreferenced, but can be found as S1Obj7F)
 ptr_Obj80:	dc.l ObjNull				; Was originally Continue Screen Elements, but was completely stripped out
 ptr_Obj81:	dc.l ObjNull				; Was originally Continue Screen Sonic, but was completely stripped out
 ptr_Obj82:	dc.l ObjNull				; Was originally Eggman - Scrap Brain 2, but was completely stripped out
@@ -23911,9 +23748,11 @@ Touch_E1:
 		rts
 ; ---------------------------------------------------------------------------
 
-; =============== S U B	R O U T	I N E =======================================
+; ---------------------------------------------------------------------------
+; Subroutine to	show the special stage layout
+; ---------------------------------------------------------------------------
 
-; leftover from Sonic 1
+; =============== S U B	R O U T	I N E =======================================
 
 S1SS_ShowLayout:
 		bsr.w	SS_AniWallsRings
@@ -23981,6 +23820,12 @@ loc_19BF2:
 		divu.w	#$18,d0
 		adda.w	d0,a0
 		lea	(v_ssbuffer3).w,a4
+;		lea	(Sprite_Table).w,a2	; the following commented out code was added in S3&K
+;		moveq	#0,d5
+;		move.b	(v_spritecount).w,d5	; Sprites_drawn in S3&K
+;		move.w	d5,d0
+;		lsl.w	#3,d0
+;		adda.w	d0,a2
 		move.w	#$10-1,d7
 
 loc_19C3E:
@@ -23990,7 +23835,7 @@ loc_19C42:
 		moveq	#0,d0
 		move.b	(a0)+,d0
 		beq.s	loc_19C9A
-		cmpi.b	#$4E,d0
+		cmpi.b	#$4E,d0		; became $13 in S3&K
 		bhi.s	loc_19C9A
 		move.w	(a4),d3
 		addi.w	#$120,d3
@@ -24016,7 +23861,7 @@ loc_19C42:
 		move.b	(a1)+,d1
 		subq.b	#1,d1
 		bmi.s	loc_19C9A
-		jsr	(BuildSpr_Normal).l
+		bsr.s	BuildSpr_Special
 
 loc_19C9A:
 		addq.w	#4,a4
@@ -24028,12 +23873,40 @@ loc_19C9A:
 		beq.s	loc_19CBA
 		move.l	#0,(a2)
 		rts
-; ---------------------------------------------------------------------------
-
+; End of function S1SS_ShowLayout
 loc_19CBA:
 		move.b	#0,-5(a2)
 		rts
-; End of function S1SS_ShowLayout
+; ---------------------------------------------------------------------------
+
+BuildSpr_Special:
+		cmpi.b	#$50,d5		; check sprite limit
+		beq.s	.return
+		move.b	(a1)+,d0	; get y-offset
+		ext.w	d0
+		add.w	d2,d0		; add y-position
+		move.w	d0,(a2)+	; write to buffer
+		move.b	(a1)+,(a2)+	; write sprite size
+		addq.b	#1,d5		; increase sprite counter
+		addq.w	#1,a2
+		move.b	(a1)+,d0	; get art tile
+		lsl.w	#8,d0
+		move.b	(a1)+,d0
+		add.w	a3,d0		; add art tile offset
+		move.w	d0,(a2)+	; write to buffer
+		move.b	(a1)+,d0	; get x-offset
+		ext.w	d0
+		add.w	d3,d0		; add x-position
+		andi.w	#$1FF,d0	; keep within 512px
+		bne.s	.mask
+		addq.w	#1,d0		; avoid activating sprite masking
+
+.mask:
+		move.w	d0,(a2)+		; write to buffer
+		dbf	d1,BuildSpr_Special	; process next sprite piece
+
+.return:
+		rts
 
 ; ---------------------------------------------------------------------------
 ; Subroutine to	animate	walls and rings	in the special stage
@@ -24202,8 +24075,6 @@ loc_19F0C:
 
 loc_19F1A:
 		addq.w	#8,a0
-
-loc_19F1C:
 		dbf	d7,loc_19F0C
 		rts
 ; End of function SS_AniItems
@@ -24401,20 +24272,25 @@ S1SS_ChkEmldRepeat:
 		dbf	d1,S1SS_ChkEmldLoop
 
 S1SS_LoadData:
+		; Load player position data
 		lsl.w	#2,d0
 		lea	S1SS_StartLoc(pc,d0.w),a1
 		move.w	(a1)+,(v_player+obX).w
 		move.w	(a1)+,(v_player+obY).w
+		; Load layout data
 		movea.l	S1SS_LayoutIndex(pc,d0.w),a0
 		lea	(v_ssbuffer2).l,a1
 		move.w	#make_art_tile(ArtTile_SS_Background_Clouds,0,0),d0
 		jsr	(EniDec).l
+		; Clear everything from v_ssbuffer1 to v_ssbuffer2
 		lea	(v_ssbuffer1).l,a1
 		move.w	#bytesToLcnt(v_ssbuffer2-v_ssbuffer1),d0
 
 S1SS_ClrRAM3:
 		clr.l	(a1)+
 		dbf	d0,S1SS_ClrRAM3
+		; Copy $1000 of data from v_ssbuffer2 to v_ssblockbuffer,
+		; inserting $40 bytes of padding for every $40 bytes copied.
 		lea	(v_ssblockbuffer).l,a1
 		lea	(v_ssbuffer2).l,a0
 		moveq	#bytesToXcnt(v_ssblockbuffer_end-v_ssblockbuffer,$80),d1
@@ -26057,6 +25933,56 @@ Map_Sonic:	include		"mappings/sprite/Sonic.asm"
 SonicDynPLC:	include		"mappings/spriteDPLC/Sonic.asm"
 Map_Tails:	include		"mappings/sprite/Tails.asm"
 TailsDynPLC:	include		"mappings/spriteDPLC/Tails.asm"
+; ---------------------------------------------------------------------------
+; Compressed graphics - special stage
+; ---------------------------------------------------------------------------
+Nem_SSWalls:	binclude	"art/nemesis/S1/Special Walls.nem" ; special stage walls
+		even
+Nem_SSBgFish:	binclude	"art/nemesis/S1/Special Birds & Fish.nem" ; special stage birds and fish background
+		even
+Nem_SSBgCloud:	binclude	"art/nemesis/S1/Special Clouds.nem" ; special stage clouds background
+		even
+Nem_SSGOAL:	binclude	"art/nemesis/S1/Special GOAL.nem" ; special stage GOAL block
+		even
+Nem_SSRBlock:	binclude	"art/nemesis/S1/Special R.nem"	; special stage R block
+		even
+Nem_SS1UpBlock:	binclude	"art/nemesis/S1/Special 1UP.nem" ; special stage 1UP block
+		even
+Nem_SSEmStars:	binclude	"art/nemesis/S1/Special Emerald Twinkle.nem" ; special stage stars from a collected emerald
+		even
+Nem_SSRedWhite:	binclude	"art/nemesis/S1/Special Red-White.nem" ; special stage red/white block
+		even
+Nem_SSZone1:	binclude	"art/nemesis/S1/Special ZONE1.nem" ; special stage ZONE1 block
+		even
+Nem_SSZone2:	binclude	"art/nemesis/S1/Special ZONE2.nem" ; ZONE2 block
+		even
+Nem_SSZone3:	binclude	"art/nemesis/S1/Special ZONE3.nem" ; ZONE3 block
+		even
+Nem_SSZone4:	binclude	"art/nemesis/S1/Special ZONE4.nem" ; ZONE4 block
+		even
+Nem_SSZone5:	binclude	"art/nemesis/S1/Special ZONE5.nem" ; ZONE5 block
+		even
+Nem_SSZone6:	binclude	"art/nemesis/S1/Special ZONE6.nem" ; ZONE6 block
+		even
+Nem_SSUpDown:	binclude	"art/nemesis/S1/Special UP-DOWN.nem" ; special stage UP/DOWN block
+		even
+Nem_SSEmerald:	binclude	"art/nemesis/S1/Special Emeralds.nem" ; special stage chaos emeralds
+		even
+Nem_SSGhost:	binclude	"art/nemesis/S1/Special Ghost.nem" ; special stage ghost block
+		even
+Nem_SSWBlock:	binclude	"art/nemesis/S1/Special W.nem"	; special stage W block
+		even
+Nem_SSGlass:	binclude	"art/nemesis/S1/Special Glass.nem" ; special stage destroyable glass block
+		even
+Nem_Bumper:	binclude	"art/nemesis/S1/Special Bumper.nem"
+		even
+Nem_ResultEm:	binclude	"art/nemesis/S1/Special Result Emeralds.nem" ; chaos emeralds on special stage results screen
+		even
+Eni_SSBg1:	binclude	"tilemaps/S1/SS Background 1.eni" ; special stage background (mappings)
+		even
+Eni_SSBg2:	binclude	"tilemaps/S1/SS Background 2.eni" ; special stage background (mappings)
+		even
+Map_SSWalls:	include		"mappings/sprite/S1/SS Walls.asm"
 
 ; ---------------------------------------------------------------------------
 ; Green Hill Zone stage assets
@@ -26232,6 +26158,8 @@ Nem_BigFlash:	binclude	"art/nemesis/S1/Giant Ring Flash.nem"
 		even
 Nem_Bonus:	binclude	"art/nemesis/S1/Hidden Bonuses.nem"
 		even
+Nem_Warp:	binclude	"art/nemesis/S1/Unused - SStage Flash.nem" ; entry to special stage flash
+		even
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - continue screen
 ; ---------------------------------------------------------------------------
@@ -26285,7 +26213,7 @@ Map16_CPZ_End:
 		even
 Nem_CPZ:	binclude	"art/nemesis/8x8 - CPZ.nem"
 		even
-Nem_CPZ_Buildings:	binclude	"art/nemesis/CPZ Buildings.nem"
+Nem_CPZ_Buildings:		binclude	"art/nemesis/CPZ Buildings.nem"
 		even
 Map128_CPZ:	binclude	"mappings/128x128/CPZ.unc"
 		even

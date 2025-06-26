@@ -1,8 +1,8 @@
 ; ---------------------------------------------------------------------------
-; Sonic	1 Object 7F - leftover Sonic 1 SS emeralds
+; Object 7F - chaos emeralds from the special stage results screen
 ; ---------------------------------------------------------------------------
 
-S1Obj7F:
+Obj7F:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	SSRC_Index(pc,d0.w),d1
@@ -36,7 +36,7 @@ SSRC_Loop:
 		move.b	d3,obAnim(a1)
 		addq.b	#1,d2
 		addq.b	#2,obRoutine(a1)
-		move.l	#Map_S1Obj7F,obMap(a1)
+		move.l	#Map_SSRC,obMap(a1)
 		move.w	#make_art_tile(ArtTile_SS_Results_Emeralds,0,1),obGfx(a1)
 		move.b	#0,obRender(a1)
 		lea	object_size(a1),a1	; next object

@@ -3,14 +3,20 @@ Unused: 01, 02, 03, 08* 09
 * Technically complete, but it's tile/block/chunk data was stripped out last minute
 Mix and match beta layouts, potentially, like this one:
 
+; ---------------------------------------------------------------------------
 https://tcrf.net/Proto:Sonic_the_Hedgehog_2_(Genesis)/Simon_Wai_Prototype/Oil_Ocean_Zone
 https://tcrf.net/Proto:Sonic_the_Hedgehog_2_(Genesis)
+; ---------------------------------------------------------------------------
+
 TODO:
 Boss_MoveObject
 SSObjectMoveAndFall
 New Routine:
 Find_SonicTails
 LoadCollisionIndexes
+; ---------------------------------------------------------------------------
+Reimplement the following ram adress & code:
+;v_ring1uplimit:	ds.w	1	; awards an extra life every 100 rings (2 bytes)
 ; ---------------------------------------------------------------------------
 Handle_Onscreen_Water_Height
 
@@ -89,11 +95,11 @@ SSEntryRing_Display
 
 Slots_RenderLayout <----> SS_ShowLayout from Sonic 1
 
+Sprites_drawn <----> v_spritecount from Sonic 1
+
 sub_4B57C <----> Duplicate from FindFreeObj from Sonic 1, specifically for special stages
 Create_New_Sprite = FindFreeObj from Sonic 1
 Create_New_Sprite3 = FindNextFreeObj from Sonic 1.
-
-loc_1AF76 <---- Apparently it's "BuildSpr_Normal" from Sonic 1? It looks similar, at least
 
 loc_8160A <---- Super mappings in DDZ
 

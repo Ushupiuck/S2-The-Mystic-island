@@ -760,7 +760,8 @@ f_slidemode:		ds.b	1			; LZ water slide mode
 
 f_lockctrl:		ds.b	1
 f_bigring:		ds.b	1			; flag set when Sonic collects the giant ring
-			ds.b	2			; unused
+v_syz3door:		ds.b	1			; flag to move the blockade at SYZ act 3, unused
+			ds.b	1			; unused
 
 v_itembonus:		ds.w	1			; item bonus from broken enemies, blocks etc.
 v_timebonus:		ds.w	1			; time bonus at the end of an act

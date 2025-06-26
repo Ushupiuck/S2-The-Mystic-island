@@ -1,8 +1,8 @@
 ; ---------------------------------------------------------------------------
-; Sonic	1 Object 7E - leftover S1 Special Stage	results
+; Object 7E - special stage results screen
 ; ---------------------------------------------------------------------------
 
-S1Obj7E:
+Obj7E:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	SSR_Index(pc,d0.w),d1
@@ -44,7 +44,7 @@ SSR_Loop:
 		move.w	(a2)+,obScreenX(a1) ; load x-position
 		move.b	(a2)+,obRoutine(a1)
 		move.b	(a2)+,obFrame(a1)
-		move.l	#Map_S1Obj7E,obMap(a1)
+		move.l	#Map_SSR,obMap(a1)
 		move.w	#make_art_tile(ArtTile_Title_Card,0,1),obGfx(a1)
 		move.b	#0,obRender(a1)
 		lea	object_size(a1),a1
@@ -67,10 +67,10 @@ SSR_Move:	; Routine 2
 		move.w	ssr_mainX(a0),d0
 		cmp.w	obX(a0),d0	; has item reached its target position?
 		beq.s	loc_BE44	; if it has, branch
-		bge.s	loc_BE2E
+		bge.s	SSR_ChgPos
 		neg.w	d1
 
-loc_BE2E:
+SSR_ChgPos:
 		add.w	d1,obX(a0)	; change item's position
 
 loc_BE32:
@@ -92,8 +92,8 @@ loc_BE44:
 		move.w	#180,obTimeFrame(a0) ; set time delay to 3 seconds
 		move.b	#id_Obj7F,(v_ssresemeralds).w ; load chaos emerald object
 
-SSR_Wait:
-		subq.w	#1,obTimeFrame(a0)
+SSR_Wait:	; Routine 4, 8, $C, $10
+		subq.w	#1,obTimeFrame(a0) ; subtract 1 from time delay
 		bne.s	SSR_Display
 		addq.b	#2,obRoutine(a0)
 
@@ -130,7 +130,7 @@ locret_BEC2:
 		rts
 ; ===========================================================================
 
-SSR_Exit:
+SSR_Exit:	; Routine $A, $12
 		move.w	#1,(Level_Inactive_flag).w ; restart level
 		bra.w	DisplaySprite
 ; ===========================================================================
