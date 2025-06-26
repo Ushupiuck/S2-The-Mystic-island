@@ -55,7 +55,7 @@ ptr_PLC_EHZAnimals:	dc.w PLC_EHZAnimals-ArtLoadCues
 ptr_PLC_HPZAnimals:	dc.w PLC_HPZAnimals-ArtLoadCues
 ptr_PLC_HTZAnimals:	dc.w PLC_HTZAnimals-ArtLoadCues
 
-ptr_PLC_SSResult:	dc.w PLC_S1SpecialStage-ArtLoadCues
+ptr_PLC_SSResult:	dc.w PLC_GHZAnimals-ArtLoadCues
 ptr_PLC_Ending:		dc.w PLC_S1SpecialStage-ArtLoadCues
 ptr_PLC_TryAgain:	dc.w PLC_S1SpecialStage-ArtLoadCues
 ptr_PLC_EggmanSBZ2:	dc.w PLC_S1SpecialStage-ArtLoadCues
@@ -276,9 +276,9 @@ PLC_S1SpecialStage:
 		plcm	Nem_SSWBlock,   ArtTile_SS_W_Block           ; W block
 		plcm	Nem_SSGlass,    ArtTile_SS_Glass             ; glass block
 		plcm	Nem_SSEmerald,  ArtTile_SS_Emerald           ; emeralds
-;		plcm	Nem_SSZone1,    ArtTile_SS_Zone_1            ; ZONE 1 block
-;		plcm	Nem_SSZone2,    ArtTile_SS_Zone_2            ; ZONE 2 block
-;		plcm	Nem_SSZone3,    ArtTile_SS_Zone_3            ; ZONE 3 block
+		plcm	Nem_SSZone1,    ArtTile_SS_Zone_1            ; ZONE 1 block
+		plcm	Nem_SSZone2,    ArtTile_SS_Zone_2            ; ZONE 2 block
+		plcm	Nem_SSZone3,    ArtTile_SS_Zone_3            ; ZONE 3 block
 PLC_S1SpecialStage_End:
 ; --------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST

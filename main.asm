@@ -12,12 +12,16 @@ BackupSRAM	  = 1
 AddressSRAM	  = 3	; 0 = odd+even; 2 = even only; 3 = odd only
 
 FixBugs		  = 0	; change to 1 to enable bugfixes
+AdvancedHandler = 1
 
 zeroOffsetOptimization = 1	; if 1, makes a handful of zero-offset instructions smaller
 
 	include	"macrosetup.asm"
 	include	"macros.asm"
 	include	"constants.asm"
+ if AdvancedHandler	
+	include	"Debugger.asm"
+ endif
 
 StartOfRom:
 Vectors:
@@ -275,6 +279,7 @@ GameMode_Options:	dc.l	Level			; Options mode ($20)
 GameMode_SecretMenu:	dc.l	Level			; Level select mode ($24)
 ; ===========================================================================
 	;	align	$3FE
+ if AdvancedHandler=0	
 BusError:
 		move.b	#2,(v_errortype).w
 		bra.s	ErrorMsg_TwoAddresses
@@ -457,7 +462,7 @@ ErrorWaitForC:
 		bne.w	ErrorWaitForC	; if not, branch
 		rts
 ; End of function ErrorWaitForC
-
+ endif
 ; ---------------------------------------------------------------------------
 Art_Text:	binclude	"art/uncompressed/Level select and Debug Mode text.bin"
 Art_Text_End:	even
@@ -23757,156 +23762,141 @@ Touch_E1:
 S1SS_ShowLayout:
 		bsr.w	SS_AniWallsRings
 		bsr.w	SS_AniItems
-		move.w	d5,-(sp)
-		lea	(v_ssbuffer3).w,a1
-		move.b	(v_ssangle).w,d0
-		andi.b	#$FC,d0
-		jsr	(CalcSine).l
-		move.w	d0,d4
-		move.w	d1,d5
-		muls.w	#$18,d4
-		muls.w	#$18,d5
-		moveq	#0,d2
-		move.w	(Camera_RAM).w,d2
-		divu.w	#$18,d2
-		swap	d2
-		neg.w	d2
-		addi.w	#-$B4,d2
-		moveq	#0,d3
-		move.w	(Camera_Y_pos).w,d3
-		divu.w	#$18,d3
-		swap	d3
-		neg.w	d3
-		addi.w	#-$B4,d3
-		move.w	#$10-1,d7
-
-loc_19BD0:
-		movem.w	d0-d2,-(sp)
-		movem.w	d0-d1,-(sp)
-		neg.w	d0
-		muls.w	d2,d1
-		muls.w	d3,d0
-		move.l	d0,d6
-		add.l	d1,d6
-		movem.w	(sp)+,d0-d1
-		muls.w	d2,d0
-		muls.w	d3,d1
-		add.l	d0,d1
-		move.l	d6,d2
-		move.w	#$10-1,d6
-
-loc_19BF2:
-		move.l	d2,d0
-		asr.l	#8,d0
-		move.w	d0,(a1)+
-		move.l	d1,d0
-		asr.l	#8,d0
-		move.w	d0,(a1)+
-		add.l	d5,d2
-		add.l	d4,d1
-		dbf	d6,loc_19BF2
-		movem.w	(sp)+,d0-d2
-		addi.w	#$18,d3
-		dbf	d7,loc_19BD0
-		move.w	(sp)+,d5
-		lea	(v_ssbuffer1).l,a0
-		moveq	#0,d0
-		move.w	(Camera_Y_pos).w,d0
-		divu.w	#$18,d0
-		mulu.w	#$80,d0
-		adda.l	d0,a0
-		moveq	#0,d0
-		move.w	(Camera_RAM).w,d0
-		divu.w	#$18,d0
-		adda.w	d0,a0
-		lea	(v_ssbuffer3).w,a4
-;		lea	(Sprite_Table).w,a2	; the following commented out code was added in S3&K
-;		moveq	#0,d5
-;		move.b	(v_spritecount).w,d5	; Sprites_drawn in S3&K
-;		move.w	d5,d0
-;		lsl.w	#3,d0
-;		adda.w	d0,a2
-		move.w	#$10-1,d7
-
-loc_19C3E:
-		move.w	#$10-1,d6
-
-loc_19C42:
-		moveq	#0,d0
-		move.b	(a0)+,d0
-		beq.s	loc_19C9A
-		cmpi.b	#$4E,d0		; became $13 in S3&K
-		bhi.s	loc_19C9A
-		move.w	(a4),d3
-		addi.w	#$120,d3
-		cmpi.w	#$70,d3
-		blo.s	loc_19C9A
-		cmpi.w	#$1D0,d3
-		bhs.s	loc_19C9A
-		move.w	2(a4),d2
-		addi.w	#$F0,d2
-		cmpi.w	#$70,d2
-		blo.s	loc_19C9A
-		cmpi.w	#$170,d2
-		bhs.s	loc_19C9A
-		lea	(v_ssbuffer2).l,a5
-		lsl.w	#3,d0
-		lea	(a5,d0.w),a5
-		movea.l	(a5)+,a1
-		move.w	(a5)+,d1
-		add.w	d1,d1
-		adda.w	(a1,d1.w),a1
-		movea.w	(a5)+,a3
-		moveq	#0,d1
-		move.b	(a1)+,d1
-		subq.b	#1,d1
-		bmi.s	loc_19C9A
-		bsr.s	BuildSpr_Special
-
-loc_19C9A:
-		addq.w	#4,a4
-		dbf	d6,loc_19C42
-		lea	$70(a0),a0
-		dbf	d7,loc_19C3E
-		move.b	d5,(v_spritecount).w
-		cmpi.b	#$50,d5
-		beq.s	loc_19CBA
-		move.l	#0,(a2)
-		rts
+        move.w  d5, -(a7)
+        lea     (Level_Layout).w,a1
+        move.b  (SS_Rotate).w,d0
+;        andi.b  #$FC,d0
+        jsr     CalcSine        ; loc_320A
+        move.w  d0,d4
+        move.w  d1,d5
+        muls.w  #$18,d4
+        muls.w  #$18,d5
+        moveq	#0,d2
+        move.w  (Camera_X_pos).w,d2
+        divu.w  #$18,d2
+        swap  d2
+        neg   d2
+        addi.w  #$FF4C,d2
+        moveq	#0,d3
+        move.w  (Camera_Y_pos).w,d3
+        divu.w  #$18,d3
+        swap  d3
+        neg   d3
+        addi.w  #$FF4C,d3
+        move.w  #$F,d7
+loc_21558:        
+        movem.w d0-d2, -(a7)
+        movem.w d0/d1, -(a7)
+        neg.w   d0
+        muls.w  d2,d1
+        muls.w  d3,d0
+        move.l  d0,d6
+        add.l   d1,d6
+        movem.w (a7)+, d0/d1
+        muls.w  d2,d0
+        muls.w  d3,d1
+        add.l   d0,d1
+        move.l  d6,d2
+        move.w  #$F,d6
+loc_2157A:        
+        move.l  d2,d0
+        asr.l   #$8,d0
+        move.w  d0,(a1)+
+        move.l  d1,d0
+        asr.l   #$8,d0
+        move.w  d0,(a1)+
+        add.l   d5,d2
+        add.l   d4,d1
+        dbra    d6, loc_2157A
+        movem.w (a7)+, d0-d2
+        addi.w  #$18,d3
+        dbra    d7, loc_21558
+        move.w  (a7)+,d5
+        lea     (Chunk_Table).l,a0
+        moveq	#0,d0
+        move.w  (Camera_Y_pos).w,d0
+        divu.w  #$18,d0
+        mulu.w  #$80,d0
+        adda.l  d0,a0
+        moveq	#0,d0
+        move.w  (Camera_X_pos).w,d0
+        divu.w  #$18,d0
+        adda.w  d0,a0
+        lea     (Level_Layout).w,a4
+        move.w  #$F,d7
+loc_215C6:        
+        move.w  #$F,d6
+loc_215CA:        
+        moveq	#0,d0
+        move.b  (a0)+, d0
+        beq     loc_21622
+        cmpi.b  #$4E,d0
+        bhi.s   loc_21622
+        move.w  (a4),d3
+        addi.w  #$120,d3
+        cmpi.w  #$70,d3
+        bcs.s   loc_21622
+        cmpi.w  #$1D0,d3
+        bcc.s   loc_21622
+        move.w  $2(a4),d2
+        addi.w  #$F0,d2
+        cmpi.w  #$70,d2
+        bcs.s   loc_21622
+        cmpi.w  #$170,d2
+        bcc.s   loc_21622
+        lea     (Chunk_Table+$4000).l,a5
+        lsl.w   #$3,d0
+        lea     $00(a5,d0), a5
+        move.l  (a5)+, a1
+        move.w  (a5)+,d1
+        add.w   d1,d1
+        adda.w  $00(a1,d1), a1
+        move.w  (a5)+, a3
+        moveq	#0,d1
+        move.b  (a1)+,d1
+        subq.b  #$1,d1
+        bmi.s   loc_21622
+SS_Fix_Loop:
+        cmpi.b  #$50, D5
+        beq.s   SS_Fix_Exit
+        move.b  (A1)+, D0
+        ext.w   D0
+        add.w   D2, D0
+        move.w  D0, (A2)+
+        move.b  (A1)+, (A2)+
+        addq.b  #$01, D5
+        move.b  D5, (A2)+
+        move.b  (A1)+, D0
+        lsl.w   #$08, D0
+        move.b  (A1)+, D0
+        add.w   A3, D0
+        move.w  D0, (A2)+
+        move.b  (A1)+, D0
+        ext.w   D0
+        add.w   D3, D0
+        andi.w  #$01FF, D0
+        bne     SS_Fix_L001
+        addq.w  #$01, D0
+SS_Fix_L001:
+        move.w  D0, (A2)+
+        dbra    D1, SS_Fix_Loop 
+SS_Fix_Exit:
+loc_21622:
+        addq.w  #$4,a4
+        dbra    d6, loc_215CA
+        lea     $70(a0), a0
+        dbra    d7, loc_215C6
+        move.b  d5,(Sprite_count).w
+        cmpi.b  #$50,d5
+        beq.s   loc_21642
+        move.l  #$00000,(a2)
+        rts	
+loc_21642:
+        move.b  #$00,-5(a2)
+        rts		
 ; End of function S1SS_ShowLayout
-loc_19CBA:
-		move.b	#0,-5(a2)
-		rts
 ; ---------------------------------------------------------------------------
 
-BuildSpr_Special:
-		cmpi.b	#$50,d5		; check sprite limit
-		beq.s	.return
-		move.b	(a1)+,d0	; get y-offset
-		ext.w	d0
-		add.w	d2,d0		; add y-position
-		move.w	d0,(a2)+	; write to buffer
-		move.b	(a1)+,(a2)+	; write sprite size
-		addq.b	#1,d5		; increase sprite counter
-		addq.w	#1,a2
-		move.b	(a1)+,d0	; get art tile
-		lsl.w	#8,d0
-		move.b	(a1)+,d0
-		add.w	a3,d0		; add art tile offset
-		move.w	d0,(a2)+	; write to buffer
-		move.b	(a1)+,d0	; get x-offset
-		ext.w	d0
-		add.w	d3,d0		; add x-position
-		andi.w	#$1FF,d0	; keep within 512px
-		bne.s	.mask
-		addq.w	#1,d0		; avoid activating sprite masking
-
-.mask:
-		move.w	d0,(a2)+		; write to buffer
-		dbf	d1,BuildSpr_Special	; process next sprite piece
-
-.return:
-		rts
 
 ; ---------------------------------------------------------------------------
 ; Subroutine to	animate	walls and rings	in the special stage
@@ -26585,3 +26575,21 @@ RingPos_CPZ1:	binclude	"level/rings/CPZ_1.bin"
 		include	"s1.sounddriver.asm"
 ;		cnop	-1,2<<lastbit(*-1)
 		even
+
+ if AdvancedHandler	
+; ==============================================================
+; --------------------------------------------------------------
+; Debugging modules
+; --------------------------------------------------------------
+
+   include   "ErrorHandler.asm"
+
+; --------------------------------------------------------------
+; WARNING!
+;	DO NOT put any data from now on! DO NOT use ROM padding!
+;	Symbol data should be appended here after ROM is compiled
+;	by ConvSym utility, otherwise debugger modules won't be able
+;	to resolve symbol names.
+; --------------------------------------------------------------
+
+ endif		

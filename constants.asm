@@ -635,6 +635,7 @@ v_vbla_0e_counter:	ds.b	1			; tracks how many times vertical interrupts routine 
 			ds.b	1			; unused
 v_vbla_routine:		ds.b	1			; VBlank - routine counter
 			ds.b	1			; unused
+Sprite_count:
 v_spritecount:		ds.b	1			; number of sprites on-screen
 			ds.b	5			; unused
 v_pcyc_num:		ds.w	1			; palette cycling - current reference number
@@ -919,7 +920,9 @@ v_end:
 	dephase
 
 ; Special stage
+
 v_ssangle		= ramaddr($FFFFF780)
+SS_Rotate       = v_ssangle
 v_ssrotate		= ramaddr($FFFFF782)
 v_ssbuffer1		= v_128x128
 v_ssblockbuffer		= v_ssbuffer1+$1020		; ($2000 bytes)
