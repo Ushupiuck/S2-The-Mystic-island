@@ -1238,8 +1238,6 @@ ArtTile_Spring_Horizontal:	equ $470
 ArtTile_Spring_Vertical:	equ $45C
 ArtTile_Spring_Diagonal:	equ $43C
 
-ArtTile_S1_Ring:		equ $7B2
-
 ; Eggman
 ArtTile_Eggman:			equ $400
 ArtTile_Eggman_Weapons:		equ $46C
@@ -1312,6 +1310,7 @@ ArtTile_SS_Glass:		equ $5F0
 ArtTile_SS_Plane_5:		equ $600
 ArtTile_SS_Plane_6:		equ $700
 ArtTile_SS_Emerald:		equ $770
+ArtTile_SS_Rings:		equ $7B2
 ArtTile_SS_Zone_1:		equ $797
 ArtTile_SS_Zone_2:		equ $7A0
 ArtTile_SS_Zone_3:		equ $7A9

@@ -12,7 +12,7 @@ BackupSRAM	  = 1
 AddressSRAM	  = 3	; 0 = odd+even; 2 = even only; 3 = odd only
 
 FixBugs		  = 0	; change to 1 to enable bugfixes
-AdvancedHandler = 1
+AdvancedHandler	  = 1
 
 zeroOffsetOptimization = 1	; if 1, makes a handful of zero-offset instructions smaller
 
@@ -462,6 +462,8 @@ ErrorWaitForC:
 		bne.w	ErrorWaitForC	; if not, branch
 		rts
 ; End of function ErrorWaitForC
+ else
+		align	$594
  endif
 ; ---------------------------------------------------------------------------
 Art_Text:	binclude	"art/uncompressed/Level select and Debug Mode text.bin"
@@ -23763,11 +23765,10 @@ S1SS_ShowLayout:
 		bsr.w	SS_AniWallsRings
 		bsr.w	SS_AniItems
 ; Calculate x/y positions of each cell in a 16x16 grid when rotated
-		move.w	d5,-(sp)					; save sprite count to stack
+		move.w	d5,-(sp)			; save sprite count to stack	; S3&K removes this
 		lea	(v_ssbuffer3).w,a1		; address to write grid coords
 		move.b	(v_ssangle).w,d0
-		andi.b	#$FC,d0					; round down angle to nearest 4 (disable this line for smoother rotation)
-		jsr	(CalcSine).l				; convert to sine/cosine
+		jsr	(CalcSine).l			; convert to sine/cosine
 		move.w	d0,d4
 		move.w	d1,d5
 		muls.w	#$18,d4				; ss_block_width
@@ -23816,7 +23817,7 @@ S1SS_ShowLayout:
 		dbf	d7,.loop_gridrow			; repeat for all rows
 
 ; Populate the 16x16 grid with sprites based on the level layout
-		move.w	(sp)+,d5
+		move.w	(sp)+,d5	; S3&K removes this
 		lea	(v_ssbuffer1).l,a0
 		moveq	#0,d0
 		move.w	(Camera_Y_pos).w,d0			; get camera y pos
@@ -23846,7 +23847,7 @@ ssloop_sprite:
 		cmpi.b	#$4E,d0					; in S3K, since there's less blocks, this becomes $13
 		bhi.s	loc_19C9A				; ...or if above $4E (invalid)
 		move.w	(a4),d3					; get grid x pos
-		addi.w	#288,d3				
+		addi.w	#288,d3
 		cmpi.w	#112,d3
 		blo.s	loc_19C9A					; branch if off screen
 		cmpi.w	#464,d3
@@ -23870,32 +23871,33 @@ ssloop_sprite:
 		subq.b	#1,d1					; branch if 0
 		bmi.s	loc_19C9A			; build sprites from mappings
 
-SS_Fix_Loop:
-		cmpi.b	#$50,d5
-		beq.s	SS_Fix_Exit
-		move.b	(a1)+,d0
+BuildSpr_Special:
+		cmpi.b	#$50,d5		; check sprite limit
+		beq.s	loc_19C9A
+		move.b	(a1)+,d0	; get y-offset
 		ext.w	d0
-		add.w	d2,d0
-		move.w	d0,(a2)+
-		move.b	(a1)+,(a2)+
-		addq.b	#1,d5
-		move.b	d5,(a2)+
-		move.b	(a1)+,d0
+		add.w	d2,d0		; add y-position
+		move.w	d0,(a2)+	; write to buffer
+		move.b	(a1)+,(a2)+	; write sprite size
+		addq.b	#1,d5		; increase sprite counter
+;		addq.w	#1,a2		; set as sprite link (S3&K method)
+		move.b	d5,(a2)+	; set as sprite link
+		move.b	(a1)+,d0	; get art tile
 		lsl.w	#8,d0
 		move.b	(a1)+,d0
-		add.w	a3,d0
-		move.w	d0,(a2)+
-		move.b	(a1)+,d0
+		add.w	a3,d0		; add art tile offset
+		move.w	d0,(a2)+	; write to buffer
+		move.b	(a1)+,d0	; get x-offset
 		ext.w	d0
-		add.w	d3,d0
-		andi.w	#$1FF,d0
-		bne.s	SS_Fix_L001
+		add.w	d3,d0		; add x-position
+		andi.w	#$1FF,d0	; keep within 512px
+		bne.s	.writeX
 		addq.w	#1,d0
 
-SS_Fix_L001:
+.writeX:
 		move.w	d0,(a2)+
-		dbf	d1,SS_Fix_Loop
-SS_Fix_Exit:
+		dbf	d1,BuildSpr_Special
+
 loc_19C9A:
 		addq.w	#4,a4					; next sprite
 		dbf	d6,ssloop_sprite
@@ -23903,16 +23905,15 @@ loc_19C9A:
 		dbf	d7,ssloop_spriterow
 		move.b	d5,(v_spritecount).w
 		cmpi.b	#$50,d5			; max number of sprites ($50)
-		beq.s	loc_19CBA				; branch if at limit
+		beq.s	.spritelimit				; branch if at limit
 		move.l	#0,(a2)
 		rts
-		
+; ---------------------------------------------------------------------------
+
 .spritelimit:
 		move.b	#0,-5(a2)
 		rts
 ; End of function S1SS_ShowLayout
-; ---------------------------------------------------------------------------
-
 
 ; ---------------------------------------------------------------------------
 ; Subroutine to	animate	walls and rings	in the special stage
@@ -24333,10 +24334,13 @@ S1SS_MapIndex:
 		include	"_inc/Special Stage Mappings & VRAM Pointers.asm"
 S1SS_MapIndex_End:
 		even
+Map_SSWalls:	include	"mappings/sprite/S1/SS Walls.asm"
 Map_SS_R:	include	"mappings/sprite/S1/SS R Block.asm"
 Map_SS_Glass:	include	"mappings/sprite/S1/SS Glass Block.asm"
 Map_SS_Up:	include	"mappings/sprite/S1/SS UP Block.asm"
 Map_SS_Down:	include	"mappings/sprite/S1/SS DOWN Block.asm"
+Map_SS_Bump:	include	"mappings/sprite/S1/SS Bumper.asm"
+Map_SS_Ring:	include	"mappings/sprite/S1/SS Rings.asm"
 		include	"mappings/sprite/S1/SS Chaos Emeralds.asm"
 
 		include	"objects/S1/09 Sonic in Special Stage.asm"
@@ -25958,19 +25962,9 @@ Nem_SSEmStars:	binclude	"art/nemesis/S1/Special Emerald Twinkle.nem" ; special s
 		even
 Nem_SSRedWhite:	binclude	"art/nemesis/S1/Special Red-White.nem" ; special stage red/white block
 		even
-Nem_SSZone1:	binclude	"art/nemesis/S1/Special ZONE1.nem" ; special stage ZONE1 block
-		even
-Nem_SSZone2:	binclude	"art/nemesis/S1/Special ZONE2.nem" ; ZONE2 block
-		even
-Nem_SSZone3:	binclude	"art/nemesis/S1/Special ZONE3.nem" ; ZONE3 block
-		even
-Nem_SSZone4:	binclude	"art/nemesis/S1/Special ZONE4.nem" ; ZONE4 block
-		even
-Nem_SSZone5:	binclude	"art/nemesis/S1/Special ZONE5.nem" ; ZONE5 block
-		even
-Nem_SSZone6:	binclude	"art/nemesis/S1/Special ZONE6.nem" ; ZONE6 block
-		even
 Nem_SSUpDown:	binclude	"art/nemesis/S1/Special UP-DOWN.nem" ; special stage UP/DOWN block
+		even
+Nem_SSRings:	binclude	"art/nemesis/S1/Special Rings.nem" ; special stage rings
 		even
 Nem_SSEmerald:	binclude	"art/nemesis/S1/Special Emeralds.nem" ; special stage chaos emeralds
 		even
@@ -25988,8 +25982,6 @@ Eni_SSBg1:	binclude	"tilemaps/S1/SS Background 1.eni" ; special stage background
 		even
 Eni_SSBg2:	binclude	"tilemaps/S1/SS Background 2.eni" ; special stage background (mappings)
 		even
-Map_SSWalls:	include		"mappings/sprite/S1/SS Walls.asm"
-
 ; ---------------------------------------------------------------------------
 ; Green Hill Zone stage assets
 ; ---------------------------------------------------------------------------
