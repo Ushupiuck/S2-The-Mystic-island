@@ -1087,9 +1087,9 @@ LoadPLC:
 		move.l	(a1)+,(a2)+		; Copy art pointer
 		move.w	(a1)+,(a2)+		; Copy VRAM location
 		dbf	d0,.Load		; Loop until all entries are queued
-	;	moveq	#0,d0
-	;	move.l	d0,(a2)+		; clear the last cue to avoid overcopying it
-	;	move.w	d0,(a2)+		;
+		moveq	#0,d0
+		move.l	d0,(a2)+		; clear the last cue to avoid overcopying it
+		move.w	d0,(a2)+
 .End:
 		movem.l	(sp)+,a1-a2		; Restore registers
 		rts
@@ -1123,9 +1123,9 @@ NewPLC:
 		move.l	(a1)+,(a2)+		; Copy art pointer
 		move.w	(a1)+,(a2)+		; Copy VRAM location
 		dbf	d0,.Load		; Loop until all entries are queued
-	;	moveq	#0,d0
-	;	move.l	d0,(a2)+		; clear the last cue to avoid overcopying it
-	;	move.w	d0,(a2)+		;
+		moveq	#0,d0
+		move.l	d0,(a2)+		; clear the last cue to avoid overcopying it
+		move.w	d0,(a2)+
 
 .End:
 		movem.l	(sp)+,a1-a2		; Restore registers
@@ -1901,7 +1901,7 @@ Pal_SonicTails:	binclude	"palette/Sonic and Tails.bin"
 		even
 Pal_GHZ:	binclude	"palette/GHZ.bin"
 		even
-Pal_HPZWater:	binclude	"palette/HPZ Underwater.bin"
+Pal_LZ:		binclude	"palette/LZ.bin"
 		even
 Pal_CPZ:	binclude	"palette/CPZ.bin"
 		even
@@ -1911,17 +1911,21 @@ Pal_HPZ:	binclude	"palette/HPZ.bin"
 		even
 Pal_HTZ:	binclude	"palette/HTZ.bin"
 		even
-Pal_S1SpecialStage:	binclude	"palette/S1 Special Stage.bin"
-		even
 Pal_LZ4:	binclude	"palette/LZ4.bin"
+		even
+Pal_Special:	binclude	"palette/S1 Special Stage.bin"
 		even
 Pal_LZ4Water:	binclude	"palette/LZ4 Underwater.bin"
 		even
-Pal_LZSonicWater:	binclude	"palette/LZ Sonic Underwater.bin"
+Pal_HPZWater:	binclude	"palette/HPZ Underwater.bin"
 		even
-Pal_LZ4SonicWater:	binclude	"palette/LZ4 Sonic Underwater.bin"
+Pal_HPZSonWat:	binclude	"palette/HPZ Sonic Underwater.bin"
 		even
-Pal_S1SpeResults:	binclude	"palette/S1 Special Stage Results.bin"
+Pal_LZSonWater:	binclude	"palette/LZ Sonic Underwater.bin"
+		even
+Pal_SBZSonWat:	binclude	"palette/LZ4 Sonic Underwater.bin"
+		even
+Pal_SSResult:	binclude	"palette/S1 Special Stage Results.bin"
 		even
 Pal_S1Continue:	binclude	"palette/S1 Continue Screen.bin"
 		even

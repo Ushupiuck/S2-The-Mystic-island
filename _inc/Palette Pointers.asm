@@ -17,20 +17,20 @@ ptr_Pal_LevelSel:	palptr	Pal_LevelSel,v_palette,$20
 ptr_Pal_SonicTails:	palptr	Pal_SonicTails,v_palette,8
 Pal_Levels:
 ptr_Pal_GHZ:		palptr	Pal_GHZ,v_palette+$20,$18
-ptr_Pal_LZ:		palptr	Pal_CPZ,v_palette+$20,$18
+ptr_Pal_LZ:		palptr	Pal_LZ,v_palette+$20,$18
 ptr_Pal_CPZ:		palptr	Pal_CPZ,v_palette+$20,$18
 ptr_Pal_EHZ:		palptr	Pal_EHZ,v_palette+$20,$18
 ptr_Pal_HPZ:		palptr	Pal_HPZ,v_palette+$20,$18
 ptr_Pal_HTZ1:		palptr	Pal_HTZ,v_palette+$20,$18
-ptr_Pal_Special:	palptr	Pal_S1SpecialStage,v_palette,$20
-ptr_Pal_HPZWater:	palptr	Pal_HPZWater,v_palette,$20
+ptr_Pal_Special:	palptr	Pal_Special,v_palette,$20
+ptr_Pal_HPZWater:	palptr	Pal_HPZWater,v_palette,$20	; Level
 			; the following are leftover Sonic 1 entries
-ptr_Pal_SBZ3:		palptr	Pal_LZ4,v_palette+$20,$18
+ptr_Pal_SBZ3:		palptr	Pal_LZ4,v_palette+$20,$18	; Level
 ptr_Pal_SBZ3Water:	palptr	Pal_LZ4Water,v_palette,$20
 ptr_Pal_HTZ2:		palptr	Pal_HTZ,v_palette+$20,$18
-ptr_Pal_LZSonWater:	palptr	Pal_LZSonicWater,v_palette,8
-ptr_Pal_SBZ3SonWat:	palptr	Pal_LZ4SonicWater,v_palette,8
-ptr_Pal_SSResult:	palptr	Pal_S1SpeResults,v_palette,$20
+ptr_Pal_LZSonWater:	palptr	Pal_HPZSonWat,v_palette,8	; For sonic; S2SW onwards get rids of this in favor
+ptr_Pal_SBZ3SonWat:	palptr	Pal_SBZSonWat,v_palette,8 	; of full-level underwater palettes; will be replaced
+ptr_Pal_SSResult:	palptr	Pal_SSResult,v_palette,$20
 ptr_Pal_Continue:	palptr	Pal_S1Continue,v_palette,$10
 ptr_Pal_Ending:		palptr	Pal_S1Ending,v_palette,$20
 		
