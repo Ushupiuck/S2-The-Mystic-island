@@ -139,7 +139,7 @@ PSGInitLoop:
 		dbf	d5,PSGInitLoop
 		move.w	d0,(a2)
 		movem.l	(a6),d0-a6
-		move	#$2700,sr
+		disable_ints
 
 PortC_OK:
 		bra.s	GameProgram
@@ -339,7 +339,7 @@ ErrorExcept:
 ; ---------------------------------------------------------------------------
 
 ErrorMsg_TwoAddresses:
-		move	#$2700,sr
+		disable_ints
 		addq.w	#2,sp
 		move.l	(sp)+,(v_spbuffer).w
 		addq.w	#2,sp
@@ -353,7 +353,7 @@ ErrorMsg_TwoAddresses:
 ; ---------------------------------------------------------------------------
 
 ErrorMessage:
-		move	#$2700,sr
+		disable_ints
 		movem.l	d0-sp,(v_regbuffer).w
 		bsr.w	ShowErrorMsg
 		move.l	2(sp),d0
@@ -362,7 +362,7 @@ ErrorMessage:
 ErrorMsg_Wait:
 		bsr.w	ErrorWaitForC
 		movem.l	(v_regbuffer).w,d0-sp
-		move	#$2300,sr
+		enable_ints
 		rte
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -796,7 +796,7 @@ locret_1184:
 ; ---------------------------------------------------------------------------
 ; loc_1188:
 PalToCRAM:
-		move	#$2700,sr
+		disable_ints
 		move.w	#0,(f_hbla_pal).w
 		movem.l	a0-a1,-(sp)
 		lea	(vdp_data_port).l,a1
@@ -1937,7 +1937,7 @@ Pal_S1Ending:	binclude	"palette/S1 Ending.bin"
 
 ; DelayProgram:
 WaitForVint:
-		move	#$2300,sr
+		enable_ints
 
 loc_2C88:
 		tst.b	(v_vbla_routine).w
@@ -2092,7 +2092,7 @@ SegaScreen:
 		move.w	#$8B00,(a6)	; full-screen vertical scrolling
 		move.w	#$8C81,(a6)
 		clr.b	(f_wtr_state).w
-		move	#$2700,sr
+		disable_ints
 		move.w	(v_vdp_buffer1).w,d0
 		andi.b	#$BF,d0
 		move.w	d0,(vdp_control_port).l
@@ -2150,7 +2150,7 @@ TitleScreen:
 		bsr.w	PlaySound_Special
 		bsr.w	ClearPLC
 		bsr.w	Pal_FadeToBlack
-		move	#$2700,sr
+		disable_ints
 		bsr.w	SoundDriverLoad
 		lea	(vdp_control_port).l,a6
 		move.w	#$8000+%0100,(a6)
@@ -2171,7 +2171,7 @@ TitleScreen:
 		moveq	#palid_SonicTails,d0
 		bsr.w	PalLoad1
 		bsr.w	Pal_FadeFromBlack
-		move	#$2700,sr
+		disable_ints
 		locVRAM	ArtTile_Title_Foreground*tile_size
 		lea	(Nem_Title).l,a0
 		bsr.w	NemDec
@@ -2194,7 +2194,7 @@ loc_32C4:
 		move.w	#id_GHZ<<8,(Current_ZoneAndAct).w
 		move.w	#0,(v_pcyc_time).w
 		bsr.w	Pal_FadeToBlack
-		move	#$2700,sr
+		disable_ints
 		lea	(v_start).l,a1
 		lea	(Eni_TitleMap).l,a0
 		move.w	#make_art_tile(ArtTile_Title_Foreground,0,0),d0
@@ -2304,7 +2304,7 @@ Title_CheckLvlSel:
 		bsr.w	PalLoad2
 		clearRAM v_hscrolltablebuffer,v_hscrolltablebuffer_end
 		move.l	d0,(v_scrposy_vdp).w
-		move	#$2700,sr
+		disable_ints
 		lea	(vdp_data_port).l,a6
 		move.l	#$60000003,(vdp_control_port).l
 		move.w	#bytesToLcnt($1000),d1
@@ -2792,13 +2792,13 @@ Level_NoMusicFade:
 		bsr.w	Pal_FadeToBlack
 		tst.w	(f_demo).w	; are we on an ending demo?
 		bmi.s	loc_3BB6	; if so, branch
-		move	#$2700,sr
+		disable_ints
 		locVRAM	ArtTile_Title_Card*tile_size
 		lea	(Nem_TitleCard).l,a0
 		bsr.w	NemDec
 		bsr.w	ClearScreen
 		fillVRAM	0, vram_window, vram_window+plane_size_64x32 ; clear window namespace
-		move	#$2300,sr
+		enable_ints
 		moveq	#0,d0
 		move.b	(Current_Zone).w,d0
 		lsl.w	#4,d0
@@ -6662,9 +6662,9 @@ loc_7144:
 		move.w	d1,d4
 		moveq	#0,d5
 		moveq	#(512/16)-1,d6
-		move	#$2700,sr
+		disable_ints
 		bsr.w	DrawBlocks_LR_2
-		move	#$2300,sr
+		enable_ints
 		movem.l	(sp)+,d4-d6
 		addi.w	#16,d4
 		dbf	d6,loc_7144
@@ -6687,9 +6687,9 @@ loc_7174:
 		move.w	d1,d4
 		moveq	#0,d5
 		moveq	#(512/16)-1,d6
-		move	#$2700,sr
+		disable_ints
 		bsr.w	DrawBlocks_LR_2
-		move	#$2300,sr
+		enable_ints
 		movem.l	(sp)+,d4-d6
 		addi.w	#16,d4
 		dbf	d6,loc_7174
@@ -6765,9 +6765,9 @@ sub_7232:
 		movem.l	d4-d5,-(sp)
 		bsr.w	Calc_VRAM_Pos
 		movem.l	(sp)+,d4-d5
-		move	#$2700,sr
+		disable_ints
 		bsr.w	DrawBlocks_LR
-		move	#$2300,sr
+		enable_ints
 		rts
 ; ---------------------------------------------------------------------------
 
