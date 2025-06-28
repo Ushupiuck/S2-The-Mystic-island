@@ -55,7 +55,7 @@ ptr_PLC_EHZAnimals:	dc.w PLC_EHZAnimals-ArtLoadCues
 ptr_PLC_HPZAnimals:	dc.w PLC_HPZAnimals-ArtLoadCues
 ptr_PLC_HTZAnimals:	dc.w PLC_HTZAnimals-ArtLoadCues
 
-ptr_PLC_SSResult:	dc.w PLC_GHZAnimals-ArtLoadCues
+ptr_PLC_SSResult:	dc.w PLC_SSResult-ArtLoadCues
 ptr_PLC_Ending:		dc.w PLC_S1SpecialStage-ArtLoadCues
 ptr_PLC_TryAgain:	dc.w PLC_S1SpecialStage-ArtLoadCues
 ptr_PLC_EggmanSBZ2:	dc.w PLC_S1SpecialStage-ArtLoadCues
@@ -273,12 +273,12 @@ PLC_S1SpecialStage:
 		plcm	Nem_SSEmStars,  ArtTile_SS_Emerald_Sparkle   ; emerald collection stars
 		plcm	Nem_SSRedWhite, ArtTile_SS_Red_White_Block   ; red and white block
 		plcm	Nem_SSGhost,    ArtTile_SS_Ghost_Block       ; ghost block
-		plcm	Nem_SSWBlock,   ArtTile_SS_W_Block           ; W block
+	;	plcm	Nem_SSWBlock,   ArtTile_SS_W_Block           ; W block
 		plcm	Nem_SSGlass,    ArtTile_SS_Glass             ; glass block
 		plcm	Nem_SSEmerald,  ArtTile_SS_Emerald           ; emeralds
-		plcm	Nem_SSZone1,    ArtTile_SS_Zone_1            ; ZONE 1 block
-		plcm	Nem_SSZone2,    ArtTile_SS_Zone_2            ; ZONE 2 block
-		plcm	Nem_SSZone3,    ArtTile_SS_Zone_3            ; ZONE 3 block
+	;	plcm	Nem_SSZone1,    ArtTile_SS_Zone_1            ; ZONE 1 block
+	;	plcm	Nem_SSZone2,    ArtTile_SS_Zone_2            ; ZONE 2 block
+	;	plcm	Nem_SSZone3,    ArtTile_SS_Zone_3            ; ZONE 3 block
 PLC_S1SpecialStage_End:
 ; --------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
@@ -328,6 +328,13 @@ PLC_HTZAnimals:	dc.w ((PLC_HTZAnimals_End-PLC_HTZAnimals)/6)-1
 		plcm	Nem_Bunny, ArtTile_Animal_1
 		plcm	Nem_Chicken, ArtTile_Animal_2
 PLC_HTZAnimals_End:
+; ---------------------------------------------------------------------------
+; Pattern load cues - special stage results screen
+; ---------------------------------------------------------------------------
+PLC_SSResult:dc.w ((PLC_SpeStResultend-PLC_SSResult-2)/6)-1
+		plcm	Nem_ResultEm, ArtTile_SS_Results_Emeralds	; emeralds
+		plcm	Nem_MiniSonic, ArtTile_Mini_Sonic		; mini Sonic
+PLC_SpeStResultend:
 
 ; ---------------------------------------------------------------------------
 ; Pattern load cue IDs

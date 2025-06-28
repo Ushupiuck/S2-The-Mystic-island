@@ -23762,138 +23762,154 @@ Touch_E1:
 S1SS_ShowLayout:
 		bsr.w	SS_AniWallsRings
 		bsr.w	SS_AniItems
-        move.w  d5, -(a7)
-        lea     (Level_Layout).w,a1
-        move.b  (SS_Rotate).w,d0
-;        andi.b  #$FC,d0
-        jsr     CalcSine        ; loc_320A
-        move.w  d0,d4
-        move.w  d1,d5
-        muls.w  #$18,d4
-        muls.w  #$18,d5
-        moveq	#0,d2
-        move.w  (Camera_X_pos).w,d2
-        divu.w  #$18,d2
-        swap  d2
-        neg   d2
-        addi.w  #$FF4C,d2
-        moveq	#0,d3
-        move.w  (Camera_Y_pos).w,d3
-        divu.w  #$18,d3
-        swap  d3
-        neg   d3
-        addi.w  #$FF4C,d3
-        move.w  #$F,d7
-loc_21558:        
-        movem.w d0-d2, -(a7)
-        movem.w d0/d1, -(a7)
-        neg.w   d0
-        muls.w  d2,d1
-        muls.w  d3,d0
-        move.l  d0,d6
-        add.l   d1,d6
-        movem.w (a7)+, d0/d1
-        muls.w  d2,d0
-        muls.w  d3,d1
-        add.l   d0,d1
-        move.l  d6,d2
-        move.w  #$F,d6
-loc_2157A:        
-        move.l  d2,d0
-        asr.l   #$8,d0
-        move.w  d0,(a1)+
-        move.l  d1,d0
-        asr.l   #$8,d0
-        move.w  d0,(a1)+
-        add.l   d5,d2
-        add.l   d4,d1
-        dbra    d6, loc_2157A
-        movem.w (a7)+, d0-d2
-        addi.w  #$18,d3
-        dbra    d7, loc_21558
-        move.w  (a7)+,d5
-        lea     (Chunk_Table).l,a0
-        moveq	#0,d0
-        move.w  (Camera_Y_pos).w,d0
-        divu.w  #$18,d0
-        mulu.w  #$80,d0
-        adda.l  d0,a0
-        moveq	#0,d0
-        move.w  (Camera_X_pos).w,d0
-        divu.w  #$18,d0
-        adda.w  d0,a0
-        lea     (Level_Layout).w,a4
-        move.w  #$F,d7
-loc_215C6:        
-        move.w  #$F,d6
-loc_215CA:        
-        moveq	#0,d0
-        move.b  (a0)+, d0
-        beq     loc_21622
-        cmpi.b  #$4E,d0
-        bhi.s   loc_21622
-        move.w  (a4),d3
-        addi.w  #$120,d3
-        cmpi.w  #$70,d3
-        bcs.s   loc_21622
-        cmpi.w  #$1D0,d3
-        bcc.s   loc_21622
-        move.w  $2(a4),d2
-        addi.w  #$F0,d2
-        cmpi.w  #$70,d2
-        bcs.s   loc_21622
-        cmpi.w  #$170,d2
-        bcc.s   loc_21622
-        lea     (Chunk_Table+$4000).l,a5
-        lsl.w   #$3,d0
-        lea     $00(a5,d0), a5
-        move.l  (a5)+, a1
-        move.w  (a5)+,d1
-        add.w   d1,d1
-        adda.w  $00(a1,d1), a1
-        move.w  (a5)+, a3
-        moveq	#0,d1
-        move.b  (a1)+,d1
-        subq.b  #$1,d1
-        bmi.s   loc_21622
+; Calculate x/y positions of each cell in a 16x16 grid when rotated
+		move.w	d5,-(sp)					; save sprite count to stack
+		lea	(v_ssbuffer3).w,a1		; address to write grid coords
+		move.b	(v_ssangle).w,d0
+		andi.b	#$FC,d0					; round down angle to nearest 4 (disable this line for smoother rotation)
+		jsr	(CalcSine).l				; convert to sine/cosine
+		move.w	d0,d4
+		move.w	d1,d5
+		muls.w	#$18,d4				; ss_block_width
+		muls.w	#$18,d5				; ss_block_width
+		moveq	#0,d2
+		move.w	(Camera_X_pos).w,d2
+		divu.w	#$18,d2
+		swap	d2
+		neg.w	d2
+		addi.w	#-$B4,d2
+		moveq	#0,d3
+		move.w	(Camera_Y_pos).w,d3
+		divu.w	#$18,d3
+		swap	d3
+		neg.w	d3
+		addi.w	#-$B4,d3
+		move.w	#$10-1,d7			; grid is 16 cells high
+
+.loop_gridrow:
+		movem.w	d0-d2,-(sp)
+		movem.w	d0-d1,-(sp)
+		neg.w	d0
+		muls.w	d2,d1
+		muls.w	d3,d0
+		move.l	d0,d6
+		add.l	d1,d6
+		movem.w	(sp)+,d0/d1
+		muls.w	d2,d0
+		muls.w	d3,d1
+		add.l	d0,d1
+		move.l	d6,d2
+		move.w	#$10-1,d6			; grid is 16 cells wide
+
+.loop_gridcell:
+		move.l	d2,d0
+		asr.l	#8,d0
+		move.w	d0,(a1)+
+		move.l	d1,d0
+		asr.l	#8,d0
+		move.w	d0,(a1)+
+		add.l	d5,d2
+		add.l	d4,d1
+		dbf	d6,.loop_gridcell			; repeat for all cells in row
+		movem.w	(sp)+,d0-d2
+		addi.w	#$18,d3
+		dbf	d7,.loop_gridrow			; repeat for all rows
+
+; Populate the 16x16 grid with sprites based on the level layout
+		move.w	(sp)+,d5
+		lea	(v_ssbuffer1).l,a0
+		moveq	#0,d0
+		move.w	(Camera_Y_pos).w,d0			; get camera y pos
+		divu.w	#$18,d0			; divide by size of wall sprite (24 pixels)
+		mulu.w	#$80,d0				; multiply by width of level ($80)
+		adda.l	d0,a0					; jump to correct row in level
+		moveq	#0,d0
+		move.w	(Camera_X_pos).w,d0			; get camera x pos
+		divu.w	#$18,d0			; divide by size of wall sprite (24 pixels)
+		adda.w	d0,a0					; jump to correct block in level
+		lea	(v_ssbuffer3).w,a4		; transformation grid
+;		lea	(Sprite_Table).w,a2	; the following commented out code was added in S3&K
+;		moveq	#0,d5
+;		move.b	(v_spritecount).w,d5	; Sprites_drawn in S3&K
+;		move.w	d5,d0
+;		lsl.w	#3,d0
+;		adda.w	d0,a2
+		move.w	#$10-1,d7
+
+ssloop_spriterow:
+		move.w	#$10-1,d6
+
+ssloop_sprite:
+		moveq	#0,d0
+		move.b	(a0)+,d0				; get level block
+		beq.s	loc_19C9A				; skip if 0 (blank)
+		cmpi.b	#$4E,d0					; in S3K, since there's less blocks, this becomes $13
+		bhi.s	loc_19C9A				; ...or if above $4E (invalid)
+		move.w	(a4),d3					; get grid x pos
+		addi.w	#288,d3				
+		cmpi.w	#112,d3
+		blo.s	loc_19C9A					; branch if off screen
+		cmpi.w	#464,d3
+		bhs.s	loc_19C9A
+		move.w	2(a4),d2				; get grid y pos
+		addi.w	#240,d2
+		cmpi.w	#112,d2
+		blo.s	loc_19C9A
+		cmpi.w	#368,d2
+		bhs.s	loc_19C9A
+		lea	(v_ssbuffer2).l,a5
+		lsl.w	#3,d0
+		lea	(a5,d0.w),a5
+		movea.l	(a5)+,a1				; get mappings pointer
+		move.w	(a5)+,d1				; get frame id
+		add.w	d1,d1
+		adda.w	(a1,d1.w),a1				; apply frame id to mappings pointer
+		movea.w	(a5)+,a3				; get tile id
+		moveq	#0,d1
+		move.b	(a1)+,d1				; get number of sprite pieces from mappings
+		subq.b	#1,d1					; branch if 0
+		bmi.s	loc_19C9A			; build sprites from mappings
+
 SS_Fix_Loop:
-        cmpi.b  #$50, D5
-        beq.s   SS_Fix_Exit
-        move.b  (A1)+, D0
-        ext.w   D0
-        add.w   D2, D0
-        move.w  D0, (A2)+
-        move.b  (A1)+, (A2)+
-        addq.b  #$01, D5
-        move.b  D5, (A2)+
-        move.b  (A1)+, D0
-        lsl.w   #$08, D0
-        move.b  (A1)+, D0
-        add.w   A3, D0
-        move.w  D0, (A2)+
-        move.b  (A1)+, D0
-        ext.w   D0
-        add.w   D3, D0
-        andi.w  #$01FF, D0
-        bne     SS_Fix_L001
-        addq.w  #$01, D0
+		cmpi.b	#$50,d5
+		beq.s	SS_Fix_Exit
+		move.b	(a1)+,d0
+		ext.w	d0
+		add.w	d2,d0
+		move.w	d0,(a2)+
+		move.b	(a1)+,(a2)+
+		addq.b	#1,d5
+		move.b	d5,(a2)+
+		move.b	(a1)+,d0
+		lsl.w	#8,d0
+		move.b	(a1)+,d0
+		add.w	a3,d0
+		move.w	d0,(a2)+
+		move.b	(a1)+,d0
+		ext.w	d0
+		add.w	d3,d0
+		andi.w	#$1FF,d0
+		bne.s	SS_Fix_L001
+		addq.w	#1,d0
+
 SS_Fix_L001:
-        move.w  D0, (A2)+
-        dbra    D1, SS_Fix_Loop 
+		move.w	d0,(a2)+
+		dbf	d1,SS_Fix_Loop
 SS_Fix_Exit:
-loc_21622:
-        addq.w  #$4,a4
-        dbra    d6, loc_215CA
-        lea     $70(a0), a0
-        dbra    d7, loc_215C6
-        move.b  d5,(Sprite_count).w
-        cmpi.b  #$50,d5
-        beq.s   loc_21642
-        move.l  #$00000,(a2)
-        rts	
-loc_21642:
-        move.b  #$00,-5(a2)
-        rts		
+loc_19C9A:
+		addq.w	#4,a4					; next sprite
+		dbf	d6,ssloop_sprite
+		lea	$70(a0),a0				; next row
+		dbf	d7,ssloop_spriterow
+		move.b	d5,(v_spritecount).w
+		cmpi.b	#$50,d5			; max number of sprites ($50)
+		beq.s	loc_19CBA				; branch if at limit
+		move.l	#0,(a2)
+		rts
+		
+.spritelimit:
+		move.b	#0,-5(a2)
+		rts
 ; End of function S1SS_ShowLayout
 ; ---------------------------------------------------------------------------
 
@@ -24058,12 +24074,12 @@ SS_AniItems:
 loc_19F0C:
 		moveq	#0,d0
 		move.b	(a0),d0
-		beq.s	loc_19F1A
+		beq.s	.no_update
 		lsl.w	#2,d0
 		movea.l	S1SS_AniIndex-4(pc,d0.w),a1
 		jsr	(a1)
 
-loc_19F1A:
+.no_update:
 		addq.w	#8,a0
 		dbf	d7,loc_19F0C
 		rts

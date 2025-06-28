@@ -921,18 +921,27 @@ v_end:
 
 ; Special stage
 
-v_ssangle		= ramaddr($FFFFF780)
-SS_Rotate       = v_ssangle
-v_ssrotate		= ramaddr($FFFFF782)
 v_ssbuffer1		= v_128x128
 v_ssblockbuffer		= v_ssbuffer1+$1020		; ($2000 bytes)
-v_ssblockbuffer_end	= v_ssblockbuffer+$80*$40
+v_ssblockbuffer_end	= v_ssblockbuffer+$80*$40	; from here, $FE0 bytes free
 v_ssbuffer2		= v_128x128+$4000
 v_ssblocktypes		= v_ssbuffer2
-v_ssitembuffer		= v_ssbuffer2+$400		; ($100 bytes)
-v_ssitembuffer_end	= v_ssitembuffer+$100
+v_ssitembuffer		= v_ssbuffer2+$400		; ($1000 bytes)
+v_ssitembuffer_end	= v_ssitembuffer+$100		; actually extends all the way to $FFFF5000; from here, $3000 bytes free
 v_ssbuffer3		= v_128x128+$8000
 v_ssscroll_buffer	= v_ngfx_buffer+$100
+v_ssangle		= ramaddr($FFFFF780)
+v_ssrotate		= ramaddr($FFFFF782)
+
+;v_ss_layout:			equ $FF0000 ; special stage layout with space added to top and sides
+;v_ss_layout_start:		equ v_ss_layout+sizeof_ss_padding_top+ss_width_padding_left ; $FF1020
+;v_ss_enidec_buffer:		equ $FF0000 ; special stage background mappings are stored here before being moved to VRAM
+;v_ss_layout_buffer:		equ $FF4000 ; unprocessed special stage layout - overwritten later ($1000 bytes)
+;v_ss_sprite_info:		equ $FF4000 ; sprite info for each item type - mappings pointer (4 bytes); frame id (2 bytes); tile id (2 bytes) (total $278 bytes)
+;v_ss_sprite_update_list:	equ $FF4400 ; list of items currently being updated - 8 bytes each ($100 bytes)
+;v_ss_sprite_grid_plot:		equ $FF4500 ; x/y positions of cells in a 16x16 grid centered around Sonic, updates as it rotates ($400 bytes)
+;v_ss_bubble_x_pos:		equ $FF4900 ; x position of background bubbles
+;v_ss_cloud_x_pos:		equ $FF4A00 ; x position of background clouds - 4 bytes per block, 7 blocks ($1C bytes)
 
 ; Error handler
 	phase v_objstate
