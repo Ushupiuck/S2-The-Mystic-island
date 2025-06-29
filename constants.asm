@@ -635,14 +635,16 @@ v_vbla_0e_counter:	ds.b	1			; tracks how many times vertical interrupts routine 
 			ds.b	1			; unused
 v_vbla_routine:		ds.b	1			; VBlank - routine counter
 			ds.b	1			; unused
-Sprite_count:
 v_spritecount:		ds.b	1			; number of sprites on-screen
-			ds.b	5			; unused
+			ds.b	1			; unused
 v_pcyc_num:		ds.w	1			; palette cycling - current reference number
+v_pcyc_num2:		ds.w	1			; palette cycling - current reference number
+v_pcyc_num3:		ds.w	1			; palette cycling - current reference number
 v_pcyc_time:		ds.w	1			; palette cycling - time until the next change
+v_pcyc_time2:		ds.w	1			; palette cycling - time until the next change
+v_pcyc_time3:		ds.w	1			; palette cycling - time until the next change
 v_random:		ds.l	1			; pseudo random number buffer
 f_pause:		ds.w	1			; flag set to pause the game
-			ds.b	4			; unused
 v_vdp_buffer2:		ds.w	1			; VDP instruction buffer
 			ds.b	2			; unused
 f_hbla_pal:		ds.w	1			; flag set to change palette during HBlank (0000 = no; 0001 = change)
@@ -761,7 +763,7 @@ f_slidemode:		ds.b	1			; LZ water slide mode
 
 f_lockctrl:		ds.b	1
 f_bigring:		ds.b	1			; flag set when Sonic collects the giant ring
-v_syz3door:		ds.b	1			; flag to move the blockade at SYZ act 3, unused
+			ds.b	1			; v_syz3door; flag to move the blockade at SYZ act 3, unused
 			ds.b	1			; unused
 
 v_itembonus:		ds.w	1			; item bonus from broken enemies, blocks etc.
@@ -1118,11 +1120,11 @@ ArtTile_GHZ_Big_Flower_1:	equ ArtTile_Level+$35C
 ArtTile_GHZ_Small_Flower:	equ ArtTile_Level+$36C
 ArtTile_GHZ_Waterfall:		equ ArtTile_Level+$378
 ArtTile_GHZ_Flower_3:		equ ArtTile_Level+$380
-ArtTile_GHZ_Bridge:		equ $4C6
+ArtTile_GHZ_Bridge:		equ $4C6 ; $38E in S1
 ArtTile_GHZ_Big_Flower_2:	equ ArtTile_Level+$390
 ArtTile_GHZ_Spike_Pole:		equ $398
 ArtTile_GHZ_Giant_Ball:		equ $3AA
-ArtTile_GHZ_Purple_Rock:	equ $6C0
+ArtTile_GHZ_Purple_Rock:	equ $6C0 ; $3D0 in S1
 
 ; Marble Zone
 ArtTile_MZ_Block:		equ $2B8

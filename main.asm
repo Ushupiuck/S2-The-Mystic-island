@@ -11,8 +11,8 @@ EnableSRAM	  = 0	; change to 1 to enable SRAM
 BackupSRAM	  = 1
 AddressSRAM	  = 3	; 0 = odd+even; 2 = even only; 3 = odd only
 
-FixBugs		  = 0	; change to 1 to enable bugfixes
-AdvancedHandler	  = 1
+FixBugs		  = 1	; change to 1 to enable bugfixes
+AdvancedHandler	  = 0
 
 zeroOffsetOptimization = 1	; if 1, makes a handful of zero-offset instructions smaller
 
@@ -1308,15 +1308,13 @@ QuickPLC:
 
 		include	"_inc/PaletteCycle.asm"
 
-Pal_HTZCyc2:	binclude "palette/Hill Top Lava Delay.bin"
+Pal_HTZCyc1:	binclude "palette/Hill Top Lava.bin"
 		even
-Pal_S1TitleCyc:	binclude "palette/S1 Title Water.bin"
+Pal_HTZCyc2:	binclude "palette/Hill Top Lava Delay.bin"
 		even
 Pal_GHZCyc:	binclude "palette/GHZ Water.bin"
 		even
 Pal_EHZCyc:	binclude "palette/EHZ Water.bin"
-		even
-Pal_HTZCyc1:	binclude "palette/Hill Top Lava.bin"
 		even
 Pal_CPZCyc1:	binclude "palette/CPZ Cycle 1.bin"
 		even
@@ -1324,9 +1322,17 @@ Pal_CPZCyc2:	binclude "palette/CPZ Cycle 2.bin"
 		even
 Pal_CPZCyc3:	binclude "palette/CPZ Cycle 3.bin"
 		even
+Pal_MTZCyc1:	binclude "palette/MTZ Cycle 1.bin"
+		even
+Pal_MTZCyc2:	binclude "palette/MTZ Cycle 2.bin"
+		even
+Pal_MTZCyc3:	binclude "palette/MTZ Cycle 3.bin"
+		even
 Pal_HPZCyc1:	binclude "palette/HPZ Water Cycle.bin"
 		even
 Pal_HPZCyc2:	binclude "palette/HPZ Underwater Cycle.bin"
+		even
+Pal_WZCyc:	binclude "palette/WZ Cycle.bin"
 		even
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -2245,6 +2251,7 @@ TitleScreen_Loop:
 		jsr	(ExecuteObjects).l
 		bsr.w	Deform_TitleScreen
 		jsr	(BuildSprites).l
+	;	bsr.w	PalCycle_TitleScreen	; For reference, in case this is implemented
 		bsr.w	RunPLC_RAM
 		tst.b	(v_megadrive).w
 		bpl.s	Title_RegionJ

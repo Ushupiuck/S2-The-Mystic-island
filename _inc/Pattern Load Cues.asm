@@ -58,8 +58,8 @@ ptr_PLC_HTZAnimals:	dc.w PLC_HTZAnimals-ArtLoadCues
 ptr_PLC_SSResult:	dc.w PLC_SSResult-ArtLoadCues
 ptr_PLC_Ending:		dc.w PLC_S1SpecialStage-ArtLoadCues
 ptr_PLC_TryAgain:	dc.w PLC_S1SpecialStage-ArtLoadCues
-ptr_PLC_EggmanSBZ2:	dc.w PLC_S1SpecialStage-ArtLoadCues
-ptr_PLC_FZBoss:		dc.w PLC_S1SpecialStage-ArtLoadCues
+ptr_PLC_EggmanSBZ2:	dc.w PLC_Boss-ArtLoadCues		; Placeholder
+ptr_PLC_FZBoss:		dc.w PLC_Boss-ArtLoadCues		; Placeholder
 
 plcm:	macro gfx,vram
 	dc.l gfx
