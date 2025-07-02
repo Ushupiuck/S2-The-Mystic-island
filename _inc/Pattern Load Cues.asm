@@ -31,8 +31,8 @@ ptr_PLC_GameOver:	dc.w PLC_GameOver-ArtLoadCues
 PLC_Levels:
 ptr_PLC_GHZ:		dc.w PLC_GHZ-ArtLoadCues
 ptr_PLC_GHZ2:		dc.w PLC_GHZ2-ArtLoadCues
-ptr_PLC_LZ:		dc.w PLC_CPZ-ArtLoadCues
-ptr_PLC_LZ2:		dc.w PLC_CPZ2-ArtLoadCues
+ptr_PLC_LZ:		dc.w PLC_LZ-ArtLoadCues
+ptr_PLC_LZ2:		dc.w PLC_LZ2-ArtLoadCues
 ptr_PLC_CPZ:		dc.w PLC_CPZ-ArtLoadCues
 ptr_PLC_CPZ2:		dc.w PLC_CPZ2-ArtLoadCues
 ptr_PLC_EHZ:		dc.w PLC_EHZ-ArtLoadCues
@@ -142,6 +142,25 @@ PLC_CPZ2:	dc.w ((PLC_CPZ2_End-PLC_CPZ2)/6)-1
 PLC_CPZ2_End:
 ; --------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
+; Labyrinth Zone primary
+; --------------------------------------------------------------------------------------
+PLC_LZ:		dc.w ((PLC_CPZ_End-PLC_CPZ)/6)-1
+		plcm	Nem_CPZ, ArtTile_Level
+		plcm	Nem_CPZ_Buildings, ArtTile_CPZ_Buildings
+		plcm	Nem_CPZ_FloatingPlatform, ArtTile_CPZ_Platform
+PLC_LZ_End:
+; --------------------------------------------------------------------------------------
+; PATTERN LOAD REQUEST LIST
+; Labyrinth Zone secondary
+; --------------------------------------------------------------------------------------
+PLC_LZ2:	dc.w ((PLC_CPZ2_End-PLC_CPZ2)/6)-1
+		plcm	Nem_VSpikes, ArtTile_Spikes
+		plcm	Nem_DSpring, ArtTile_Spring_Diagonal
+		plcm	Nem_VSpring2, ArtTile_Spring_Vertical
+		plcm	Nem_HSpring2, ArtTile_Spring_Horizontal
+PLC_LZ2_End:
+; --------------------------------------------------------------------------------------
+; PATTERN LOAD REQUEST LIST
 ; Emerald Hill Zone primary
 ; --------------------------------------------------------------------------------------
 PLC_EHZ:	dc.w ((PLC_EHZ_End-PLC_EHZ)/6)-1
@@ -200,8 +219,7 @@ PLC_HPZ2_End:
 ; Hill Top Zone primary
 ; --------------------------------------------------------------------------------------
 PLC_HTZ:	dc.w ((PLC_HTZ_End-PLC_HTZ)/6)-1
-		plcm	Nem_EHZ, ArtTile_Level
-		plcm	Nem_HTZ, ArtTile_HTZ
+		plcm	Nem_HTZ, ArtTile_Level
 		plcm	Nem_HTZ_AniPlaceholders, ArtTile_HTZMountains
 		plcm	Nem_EHZ_Fireball, ArtTile_Fireball
 		plcm	Nem_HTZ_Fireball, ArtTile_HTZ_Fireball

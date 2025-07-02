@@ -410,17 +410,7 @@ v_endeggman	= v_objspace+object_size*2		; object variable space for Eggman after
 v_tryagain	= v_objspace+object_size*3		; object variable space for the "TRY AGAIN" text ($40 bytes)
 v_eggmanchaos	= v_objspace+object_size*32		; object variable space for the emeralds juggled by Eggman ($180 bytes)
 
-Primary_Collision:	ds.b	$600
-Primary_Collision_End:
-
-v_colladdr1:=		Primary_Collision
-v_colladdr1_end:=	Primary_Collision_End
-
-Secondary_Collision:	ds.b	$600
-Secondary_Collision_End:
-
-v_colladdr2:=		Secondary_Collision
-v_colladdr2_end:=	Secondary_Collision_End
+			ds.b	$C00
 
 VDP_Command_Buffer:	ds.w	7*$12			; stores 18 ($12) VDP commands to issue the next time ProcessDMAQueue is called
 VDP_Command_Buffer_Slot:	ds.l	1		; stores the address of the next open slot for a queued VDP command
@@ -685,18 +675,16 @@ Ring_start_addr:	ds.w	1
 Ring_end_addr:		ds.w	1
 Ring_start_addr_P2:	ds.w	1
 Ring_end_addr_P2:	ds.w	1
-			ds.b	6			; unused
 
 byte_F720:		ds.b	1
 byte_F721:		ds.b	1
-			ds.b	$E			; unused
 
 Water_flag:		ds.b	1
-			ds.b	$F			; unused
+			ds.b	1			; unused
 
 Demo_button_index_2P:	ds.w	1			; index into button press demo data, for player 2
 Demo_press_counter_2P:	ds.w	1			; frames remaining until next button press, for player 2
-			ds.b	$1C			; unused
+			ds.b	$3E			; unused
 
 Sonic_top_speed:	ds.w	1
 Sonic_acceleration:	ds.w	1
@@ -704,8 +692,8 @@ Sonic_deceleration:	ds.w	1
 Sonic_LastLoadedDPLC:	ds.b	1
 			ds.b	1			; $FFFFF767 ; seems unused
 Primary_Angle:		ds.b	1
-			ds.b	1			; $FFFFF769 ; seems unused
 Secondary_Angle:	ds.b	1
+			ds.b	1			; $FFFFF76A ; seems unused
 			ds.b	1			; $FFFFF76B ; seems unused
 
 Obj_placement_routine:	ds.b	1
@@ -737,20 +725,22 @@ Object_manager_2P_RAM_End:
 
 Demo_button_index:	ds.w	1			; index into button press demo data, for player 1
 Demo_press_counter:	ds.b	1			; frames remaining until next button press, for player 1
-			ds.b	1			; $FFFFF793 ; seems unused
+Current_Timezone:	ds.b	1			; byte; Whether we're in the present, past, or Good/Bad future
 PalChangeSpeed:		ds.w	1
 Collision_addr:		ds.l	1
+v_colladdr1:		ds.l	1
+v_colladdr2:		ds.l	1
 v_palss_num:		ds.w	1			; palette cycling in Special Stage - reference number
 v_palss_time:		ds.w	1			; palette cycling in Special Stage - time until next change
 v_palss_index:		ds.w	1			; palette cycling in Special Stage - index into palette cycle 2 (unused?)
 v_ssbganim:		ds.w	1			; Special Stage background animation
-			ds.b	5			; seems unused
+			ds.b	1			; seems unused
 Boss_defeated_flag:
 v_bossstatus:		ds.b	1
 			ds.b	2			; seems unused
 
 f_lockscreen:		ds.b	1
-			ds.b	$13			; unused
+			ds.b	$F			; unused
 
 v_gfxbigring:		ds.w	1			; settings for giant ring graphics loading
 			ds.b	7			; unused
@@ -890,10 +880,8 @@ v_timingvariables_end:
 v_levseldelay:		ds.w	1			; level select - time until change when up/down is held
 v_levselitem:		ds.w	1			; level select - item selected
 v_levselsound:		ds.w	1			; level select - sound selected
-			ds.b	$3A			; unused
-
 v_scorelife:		ds.l	1			; points required for an extra life (JP1 only)
-			ds.b	$1C			; unused
+			ds.b	$5A			; unused
 
 f_levselcheat:		ds.b	1			; level select cheat flag
 f_slomocheat:		ds.b	1			; slow motion & frame advance cheat flag
@@ -914,7 +902,6 @@ v_creditsnum:		ds.w	1			; credits index number
 v_megadrive:		ds.b	1			; Megadrive machine type
 			ds.b	1			; unused
 Debug_mode_flag:	ds.w	1
-v_init:			ds.l	1			; 'init' text string
 v_end:
     if * > 0	; Don't declare more space than the RAM can contain!
 	fatal "The RAM variable declarations are too large by $\{*} bytes."
@@ -1336,7 +1323,6 @@ ArtTile_Art_Flowers1:		equ $394
 ArtTile_Art_Flowers2:		equ $396
 ArtTile_Art_Flowers3:		equ $398
 ArtTile_Art_Flowers4:		equ $39A
-ArtTile_HTZ:			equ ArtTile_Level+$1FC
 ArtTile_EHZ_Shield:		equ $560
 
 ; Unknown
@@ -1396,7 +1382,7 @@ ArtTile_HTZ_Seesaw:		equ $3CE
 ArtTile_Sol:			equ $3DE
 ArtTile_HtzZipline:		equ $3E6
 ArtTile_HtzValveBarrier:	equ $426
-ArtTile_HTZMountains:	equ $500
+ArtTile_HTZMountains:		equ $500
 ArtTile_Spiker:			equ $520
 
 ; Unused

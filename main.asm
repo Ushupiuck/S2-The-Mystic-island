@@ -1304,7 +1304,7 @@ QuickPLC:
 
 		include "_inc/Enigma Decompression.asm"
 		include "_inc/Kosinski Decompression.asm"
-		include "_inc/Kid Chameleon Decompression.asm"
+		include "_inc/Twizzler Decompression.asm"
 
 		include	"_inc/PaletteCycle.asm"
 
@@ -1919,8 +1919,6 @@ Pal_HTZ:	binclude	"palette/HTZ.bin"
 		even
 Pal_LZ4:	binclude	"palette/LZ4.bin"
 		even
-Pal_Special:	binclude	"palette/S1 Special Stage.bin"
-		even
 Pal_LZ4Water:	binclude	"palette/LZ4 Underwater.bin"
 		even
 Pal_HPZWater:	binclude	"palette/HPZ Underwater.bin"
@@ -1931,11 +1929,13 @@ Pal_LZSonWater:	binclude	"palette/LZ Sonic Underwater.bin"
 		even
 Pal_SBZSonWat:	binclude	"palette/LZ4 Sonic Underwater.bin"
 		even
-Pal_SSResult:	binclude	"palette/S1 Special Stage Results.bin"
+Pal_Special:	binclude	"palette/Special Stage.bin"
 		even
-Pal_S1Continue:	binclude	"palette/S1 Continue Screen.bin"
+Pal_SSResult:	binclude	"palette/Special Stage Results.bin"
 		even
-Pal_S1Ending:	binclude	"palette/S1 Ending.bin"
+Pal_S1Continue:	binclude	"palette/Continue Screen.bin"
+		even
+Pal_S1Ending:	binclude	"palette/Ending.bin"
 		even
 
 ; ===========================================================================
@@ -1949,9 +1949,9 @@ Pal_S1Ending:	binclude	"palette/S1 Ending.bin"
 WaitForVint:
 		enable_ints
 
-loc_2C88:
+.wait:
 		tst.b	(v_vbla_routine).w
-		bne.s	loc_2C88
+		bne.s	.wait
 		rts
 ; End of function WaitForVint
 
@@ -2225,6 +2225,7 @@ loc_32C4:
 		move.b	#bgm_Title,d0
 		bsr.w	PlaySound_Special
 		move.b	#0,(Debug_mode_flag).w
+		move.b	#0,(Current_Timezone).w
 		move.w	#0,(Two_player_mode).w
 		move.w	#376,(v_demolength).w
 		clearRAM v_titletails,v_titletails+object_size
@@ -2665,118 +2666,6 @@ LevelSelect_Text:
 		binclude	"mappings/misc/Level select text.bin"
 		even
 ; ---------------------------------------------------------------------------
-
-; This appears to be potentially related to 16x16 data despite it using the
-; address for chunk RAM.
-UnknownSub_1:
-		lea	(v_start).l,a1
-		; This contains a size of block data that is 0x5D8 in size.
-		move.w	#bytesToWcnt($5D8),d2
-
-loc_3A3A:
-		move.w	(a1),d0
-		move.w	d0,d1
-		andi.w	#nontile_mask,d1
-		andi.w	#tile_mask,d0
-		lsr.w	#1,d0
-		or.w	d0,d1
-		move.w	d1,(a1)+
-		dbf	d2,loc_3A3A
-		rts
-; ---------------------------------------------------------------------------
-
-UnknownSub_2:
-		lea	(RAM_debug_start&$FFFFFF).l,a1
-		lea	(RAM_debug_start&$FFFFFF+$80).l,a2
-		lea	(v_start).l,a3
-		move.w	#bytesToWcnt($80),d1
-
-loc_3A68:
-		bsr.w	UnknownSub_4
-		bsr.w	UnknownSub_4
-		dbf	d1,loc_3A68
-		lea	(RAM_debug_start&$FFFFFF).l,a1
-		lea	(v_start&$FFFFFF).l,a2
-		move.w	#bytesToWcnt($80),d1
-
-loc_3A84:
-		move.w	#0,(a2)+
-		dbf	d1,loc_3A84
-		move.w	#bytesToWcnt($7F80),d1
-
-loc_3A90:
-		move.w	(a1)+,(a2)+
-		dbf	d1,loc_3A90
-		rts
-; ---------------------------------------------------------------------------
-
-UnknownSub_3:
-		lea	(RAM_debug_start&$FFFFFF).l,a1
-		lea	(v_start).l,a3
-		moveq	#bytesToLcnt($80),d0
-
-loc_3AA6:
-		move.l	(a1)+,(a3)+
-		dbf	d0,loc_3AA6
-		moveq	#0,d7
-		lea	(RAM_debug_start&$FFFFFF).l,a1
-		move.w	#$100-1,d5
-
-loc_3AB8:
-		lea	(v_start).l,a3
-		move.w	d7,d6
-
-loc_3AC0:
-		movem.l	a1-a3,-(sp)
-		move.w	#bytesToWcnt($80),d0
-
-loc_3AC8:
-		cmpm.w	(a1)+,(a3)+
-		bne.s	loc_3ADE
-		dbf	d0,loc_3AC8
-		movem.l	(sp)+,a1-a3
-		adda.w	#$80,a1
-		dbf	d5,loc_3AB8
-		bra.s	loc_3AF8
-; ---------------------------------------------------------------------------
-
-loc_3ADE:
-		movem.l	(sp)+,a1-a3
-		adda.w	#$80,a3
-		dbf	d6,loc_3AC0
-		moveq	#bytesToLcnt($80),d0
-
-loc_3AEC:
-		move.l	(a1)+,(a3)+
-		dbf	d0,loc_3AEC
-		addq.l	#1,d7
-		dbf	d5,loc_3AB8
-
-loc_3AF8:
-		bra.s	*
-
-; =============== S U B	R O U T	I N E =======================================
-
-
-UnknownSub_4:
-		moveq	#bytesToXcnt($280,$50),d0
-
-loc_3AFC:
-		move.l	(a3)+,(a1)+
-		move.l	(a3)+,(a1)+
-		move.l	(a3)+,(a1)+
-		move.l	(a3)+,(a1)+
-		move.l	(a3)+,(a2)+
-		move.l	(a3)+,(a2)+
-		move.l	(a3)+,(a2)+
-		move.l	(a3)+,(a2)+
-		dbf	d0,loc_3AFC
-		adda.w	#$80,a1
-		adda.w	#$80,a2
-		rts
-; End of function UnknownSub_4
-
-; ---------------------------------------------------------------------------
 MusicList:	dc.b bgm_GHZ
 		dc.b bgm_LZ
 		dc.b bgm_MZ
@@ -3150,55 +3039,162 @@ loc_400E:
 ; ColIndexLoad:
 LoadCollisionIndexes:
 		moveq	#0,d0
-		move.b	(Current_Zone).w,d0
-		lsl.w	#2,d0
-		move.l	#v_colladdr1,(Collision_addr).w
-		movea.l	ColP_Index(pc,d0.w),a1
-		lea	(v_colladdr1).w,a2
-		bsr.s	Col_Load
-		movea.l	ColS_Index(pc,d0.w),a1
-		lea	(v_colladdr2).w,a2
-
-Col_Load:
-		move.w	#bytesToWcnt(v_colladdr1_end-v_colladdr1),d1
-		moveq	#0,d2
-
-loc_4616:
-		move.b	(a1)+,d2	; move low byte of collision address to d2
-		move.w	d2,(a2)+	; and then move the high byte of d2 to collision RAM address
-		dbf	d1,loc_4616
+		move.w	(Current_ZoneAndAct).w,d0
+		ror.b	#2,d0
+		lsr.w	#4,d0		; d0 = Zone*4
+		moveq	#0,d1
+		move.b	(Current_Timezone).w,d1		; 0 = Present, 1 = Past, 2 = Good Future, 3 = Bad Future
+		lsl.w	#2,d1				; d1 *= 4 (pointer size)
+		lea	(TimeZoneTable).l,a1
+		movea.l	(a1,d1.w),a1			; a1 = pointer table for current timezone
+		adda.l	d0,a1
+		move.l	(a1),d0
+		move.l	d0,(v_colladdr1).w
+		addq.l	#1,d0
+		move.l	d0,(v_colladdr2).w
+		move.l	(v_colladdr1).w,(Collision_addr).w
 		rts
-; End of function Col_Load
+; End of function LoadCollisionIndexes
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Pointers to primary collision indexes
-
+; Array of Pointer tables, per timezone.
+; Time travel is yet to be added, so for now, all tables point to the same
+; Pointer.
+; ---------------------------------------------------------------------------
+TimeZoneTable:
+		dc.l ColPointers	; 0 - Present
+		dc.l PColPointers	; 1 - Past
+		dc.l GColPointers	; 2 - Good Future
+		dc.l BColPointers	; 3 - Bad Future
+; ---------------------------------------------------------------------------
+; Pointers to collision indexes
 ; Contains an array of pointers to the primary collision index data for each
-; level. 1 pointer for each level, pointing the primary collision index.
+; level. 1 pointer for act, pointing to an interleaved collision index.
 ; ---------------------------------------------------------------------------
-ColP_Index:	dc.l ColP_GHZ				; 0
-		dc.l ColP_CPZ				; 1
-		dc.l ColP_CPZ				; 2
-		dc.l ColP_EHZ				; 3
-		dc.l ColP_HPZ				; 4
-		dc.l ColP_EHZ				; 5
-		dc.l ColP_GHZ				; pointer for Ending is missing by default.
-
+ColPointers:
+		dc.l Col_GHZ1		; act 1
+		dc.l Col_GHZ2		; act 2
+		dc.l Col_GHZ3		; act 3
+		dc.l Col_GHZ4		; act 4
+		dc.l Col_LZ1		; labyrinth zone
+		dc.l Col_LZ2
+		dc.l Col_LZ3
+		dc.l Col_LZ4
+		dc.l Col_CPZ1		; chemical plant
+		dc.l Col_CPZ2
+		dc.l Col_CPZ3
+		dc.l Col_CPZ4
+		dc.l Col_EHZ1
+		dc.l Col_EHZ2
+		dc.l Col_EHZ3
+		dc.l Col_EHZ4
+		dc.l Col_HPZ1
+		dc.l Col_HPZ2
+		dc.l Col_HPZ3
+		dc.l Col_HPZ4
+		dc.l Col_HTZ1
+		dc.l Col_HTZ2
+		dc.l Col_HTZ3
+		dc.l Col_HTZ4
+		dc.l Col_GHZ1		; Good Ending
+		dc.l Col_GHZ2		; Bad Ending
 ; ---------------------------------------------------------------------------
-; Pointers to secondary collision indexes
-
-; Contains an array of pointers to the secondary collision index data for
-; each level. 1 pointer for each level, pointing the secondary collision
-; index.
+; Pointers to collision indexes
+; Contains an array of pointers to the primary collision index data for each
+; level. 1 pointer for act, pointing to an interleaved collision index.
 ; ---------------------------------------------------------------------------
-ColS_Index:	dc.l ColS_GHZ				; 0
-		dc.l ColS_CPZ				; 1
-		dc.l ColS_CPZ				; 2
-		dc.l ColS_EHZ				; 3
-		dc.l ColS_HPZ				; 4
-		dc.l ColS_EHZ				; 5
-		dc.l ColS_GHZ				; pointer for Ending is missing by default.
+PColPointers:
+		dc.l Col_GHZ1		; act 1
+		dc.l Col_GHZ2		; act 2
+		dc.l Col_GHZ3		; act 3
+		dc.l Col_GHZ4		; act 4
+		dc.l Col_LZ1		; labyrinth zone
+		dc.l Col_LZ2
+		dc.l Col_LZ3
+		dc.l Col_LZ4
+		dc.l Col_CPZ1		; chemical plant
+		dc.l Col_CPZ2
+		dc.l Col_CPZ3
+		dc.l Col_CPZ4
+		dc.l Col_EHZ1
+		dc.l Col_EHZ2
+		dc.l Col_EHZ3
+		dc.l Col_EHZ4
+		dc.l Col_HPZ1
+		dc.l Col_HPZ2
+		dc.l Col_HPZ3
+		dc.l Col_HPZ4
+		dc.l Col_HTZ1
+		dc.l Col_HTZ2
+		dc.l Col_HTZ3
+		dc.l Col_HTZ4
+		dc.l Col_GHZ1		; Good Ending
+		dc.l Col_GHZ2		; Bad Ending
+; ---------------------------------------------------------------------------
+; Pointers to collision indexes
+; Contains an array of pointers to the primary collision index data for each
+; level. 1 pointer for act, pointing to an interleaved collision index.
+; ---------------------------------------------------------------------------
+GColPointers:
+		dc.l Col_GHZ1		; act 1
+		dc.l Col_GHZ2		; act 2
+		dc.l Col_GHZ3		; act 3
+		dc.l Col_GHZ4		; act 4
+		dc.l Col_LZ1		; labyrinth zone
+		dc.l Col_LZ2
+		dc.l Col_LZ3
+		dc.l Col_LZ4
+		dc.l Col_CPZ1		; chemical plant
+		dc.l Col_CPZ2
+		dc.l Col_CPZ3
+		dc.l Col_CPZ4
+		dc.l Col_EHZ1
+		dc.l Col_EHZ2
+		dc.l Col_EHZ3
+		dc.l Col_EHZ4
+		dc.l Col_HPZ1
+		dc.l Col_HPZ2
+		dc.l Col_HPZ3
+		dc.l Col_HPZ4
+		dc.l Col_HTZ1
+		dc.l Col_HTZ2
+		dc.l Col_HTZ3
+		dc.l Col_HTZ4
+		dc.l Col_GHZ1		; Good Ending
+		dc.l Col_GHZ2		; Bad Ending
+; ---------------------------------------------------------------------------
+; Pointers to collision indexes
+; Contains an array of pointers to the primary collision index data for each
+; level. 1 pointer for act, pointing to an interleaved collision index.
+; ---------------------------------------------------------------------------
+BColPointers:
+		dc.l Col_GHZ1		; act 1
+		dc.l Col_GHZ2		; act 2
+		dc.l Col_GHZ3		; act 3
+		dc.l Col_GHZ4		; act 4
+		dc.l Col_LZ1		; labyrinth zone
+		dc.l Col_LZ2
+		dc.l Col_LZ3
+		dc.l Col_LZ4
+		dc.l Col_CPZ1		; chemical plant
+		dc.l Col_CPZ2
+		dc.l Col_CPZ3
+		dc.l Col_CPZ4
+		dc.l Col_EHZ1
+		dc.l Col_EHZ2
+		dc.l Col_EHZ3
+		dc.l Col_EHZ4
+		dc.l Col_HPZ1
+		dc.l Col_HPZ2
+		dc.l Col_HPZ3
+		dc.l Col_HPZ4
+		dc.l Col_HTZ1
+		dc.l Col_HTZ2
+		dc.l Col_HTZ3
+		dc.l Col_HTZ4
+		dc.l Col_GHZ1		; Good Ending
+		dc.l Col_GHZ2		; Bad Ending
 
 		include	"_inc/Oscillatory Routines.asm"
 
@@ -3230,7 +3226,7 @@ loc_476A:
 
 loc_4788:
 		tst.b	(v_ani3_time).w
-		beq.s	locret_47AA
+		beq.s	.return
 		moveq	#0,d0
 		move.b	(v_ani3_time).w,d0
 		add.w	(v_ani3_buf).w,d0
@@ -3239,8 +3235,7 @@ loc_4788:
 		andi.w	#3,d0
 		move.b	d0,(v_ani3_frame).w
 		subq.b	#1,(v_ani3_time).w
-
-locret_47AA:
+.return:
 		rts
 ; End of function ChangeRingFrame
 
@@ -6821,53 +6816,12 @@ MainLevelLoadBlock_Not2p:
 		move.w	d0,(a1)+
 		dbf	d2,MainLevelLoadBlock_ConvertLoop
 
-loc_72C2:
-		cmpi.b	#id_HTZ,(Current_Zone).w
-		bne.s	loc_72F4
-		lea	(v_16x16+$980).w,a1
-		lea	(Map16_HTZ).l,a0
-		move.w	#bytesToWcnt(Map16_HTZ_End-Map16_HTZ),d2
-
-loc_72D8:
-		move.w	(a0)+,d0
-		tst.w	(Two_player_mode).w
-		beq.s	loc_72EE
-		move.w	d0,d1
-		andi.w	#nontile_mask,d0
-		andi.w	#tile_mask,d1
-		lsr.w	#1,d1
-		or.w	d1,d0
-
-loc_72EE:
-		move.w	d0,(a1)+
-		dbf	d2,loc_72D8
-
-loc_72F4:
 		movea.l	(a2)+,a0
-		cmpi.b	#id_GHZ,(Current_Zone).w
-		beq.s	prepareKidC
-		cmpi.b	#id_EndZ,(Current_Zone).w
-		beq.s	prepareKidC
 		lea	(v_128x128).l,a1
 		move.w	#bytesToWcnt(v_128x128_end-v_128x128),d0
 -		move.w	(a0)+,(a1)+
 		dbf	d0,-
-		bra.w	notKidC
 
-prepareKidC:
-		move.l	a2,-(sp)
-		moveq	#0,d1
-		moveq	#0,d2
-		move.w	(a0)+,d0
-		lea	(a0,d0.w),a1
-		lea	(v_128x128).l,a2
-		lea	(v_128x128_end).w,a3
-.loop		bsr.w	KC_Dec
-		tst.w	d0
-		bmi.s	.loop
-		movea.l	(sp)+,a2
-
-notKidC:
 		bsr.w	LevelLayoutLoad
 		move.w	(a2)+,d0
 		move.w	(a2),d0
@@ -7017,11 +6971,6 @@ loc_7456:
 		rts
 ; End of function LevelLayoutLoad_GHZ
 
-; ---------------------------------------------------------------------------
-; restored unused function; should be functional
-; (ironically, still unused, tho)
-; ---------------------------------------------------------------------------
-		include	"_inc/LevelLayout_Convert.asm"
 ; =============== S U B	R O U T	I N E =======================================
 
 
@@ -7068,7 +7017,8 @@ loc_7586:
 ; End of function DynScreenResizeLoad
 
 ; ---------------------------------------------------------------------------
-DynResize_Index:dc.w DynResize_GHZ-DynResize_Index
+DynResize_Index:
+		dc.w DynResize_GHZ-DynResize_Index
 		dc.w DynResize_LZ-DynResize_Index
 		dc.w DynResize_CPZ-DynResize_Index
 		dc.w DynResize_EHZ-DynResize_Index
@@ -7084,7 +7034,8 @@ DynResize_GHZ:
 		move.w	DynResize_GHZ_Index(pc,d0.w),d0
 		jmp	DynResize_GHZ_Index(pc,d0.w)
 ; ---------------------------------------------------------------------------
-DynResize_GHZ_Index:dc.w DynResize_GHZ1-DynResize_GHZ_Index
+DynResize_GHZ_Index:
+		dc.w DynResize_GHZ1-DynResize_GHZ_Index
 		dc.w DynResize_GHZ2-DynResize_GHZ_Index
 		dc.w DynResize_GHZ3-DynResize_GHZ_Index
 ; ---------------------------------------------------------------------------
@@ -7121,7 +7072,8 @@ DynResize_GHZ3:
 		move.w	DynResize_GHZ3_Index(pc,d0.w),d0
 		jmp	DynResize_GHZ3_Index(pc,d0.w)
 ; ---------------------------------------------------------------------------
-DynResize_GHZ3_Index:dc.w DynResize_GHZ3_Main-DynResize_GHZ3_Index
+DynResize_GHZ3_Index:
+		dc.w DynResize_GHZ3_Main-DynResize_GHZ3_Index
 		dc.w DynResize_GHZ3_Boss-DynResize_GHZ3_Index
 		dc.w DynResize_GHZ3_End-DynResize_GHZ3_Index
 ; ---------------------------------------------------------------------------
@@ -7171,11 +7123,11 @@ loc_7672:
 
 loc_7692:
 		move.w	#bgm_Boss,d0
-		bsr.w	PlaySound
+		jsr	(PlaySound).l
 		move.b	#1,(f_lockscreen).w
 		addq.b	#2,(Dynamic_Resize_Routine).w
 		moveq	#plcid_Boss,d0
-		bra.w	LoadPLC
+		jmp	(LoadPLC).l
 ; ---------------------------------------------------------------------------
 
 locret_76AA:
@@ -7194,7 +7146,8 @@ DynResize_LZ:
 		move.w	DynResize_LZ_Index(pc,d0.w),d0
 		jmp	DynResize_LZ_Index(pc,d0.w)
 ; ---------------------------------------------------------------------------
-DynResize_LZ_Index:dc.w	DynResize_LZ_Null-DynResize_LZ_Index
+DynResize_LZ_Index:
+		dc.w DynResize_LZ_Null-DynResize_LZ_Index
 		dc.w DynResize_LZ_Null-DynResize_LZ_Index
 		dc.w DynResize_LZ3-DynResize_LZ_Index
 		dc.w DynResize_LZ4-DynResize_LZ_Index
@@ -7212,7 +7165,7 @@ DynResize_LZ3:
 		beq.s	loc_76EA
 		move.b	#7,(a1)
 		move.w	#sfx_Rumbling,d0
-		bsr.w	PlaySound_Special
+		jsr	(PlaySound_Special).l
 
 loc_76EA:
 		tst.b	(Dynamic_Resize_Routine).w
@@ -7227,11 +7180,11 @@ loc_76EA:
 
 loc_770C:
 		move.w	#bgm_Boss,d0
-		bsr.w	PlaySound
+		jsr	(PlaySound).l
 		move.b	#1,(f_lockscreen).w
 		addq.b	#2,(Dynamic_Resize_Routine).w
 		moveq	#plcid_Boss,d0
-		bra.w	LoadPLC
+		jmp	(LoadPLC).l
 ; ---------------------------------------------------------------------------
 
 locret_7724:
@@ -7256,29 +7209,14 @@ locret_774E:
 		rts
 ; ---------------------------------------------------------------------------
 
-DynResize_CPZ:
-		moveq	#0,d0
-		move.b	(Current_Act).w,d0
-		add.w	d0,d0
-		move.w	DynResize_CPZ_Index(pc,d0.w),d0
-		jmp	DynResize_CPZ_Index(pc,d0.w)
-; ---------------------------------------------------------------------------
-DynResize_CPZ_Index:dc.w DynResize_CPZ1-DynResize_CPZ_Index
-		dc.w DynResize_CPZ2-DynResize_CPZ_Index
-		dc.w DynResize_CPZ3-DynResize_CPZ_Index
-; ---------------------------------------------------------------------------
-
-DynResize_CPZ1:
-		rts
-; ---------------------------------------------------------------------------
-
 S1DynResize_MZ1:					; leftover from Sonic 1
 		moveq	#0,d0
 		move.b	(Dynamic_Resize_Routine).w,d0
 		move.w	off_7776(pc,d0.w),d0
 		jmp	off_7776(pc,d0.w)
 ; ---------------------------------------------------------------------------
-off_7776:	dc.w loc_777E-off_7776
+off_7776:
+		dc.w loc_777E-off_7776
 		dc.w loc_77AE-off_7776
 		dc.w loc_77F2-off_7776
 		dc.w loc_781C-off_7776
@@ -7372,10 +7310,6 @@ locret_786A:
 		rts
 ; ---------------------------------------------------------------------------
 
-DynResize_CPZ2:
-		rts
-; ---------------------------------------------------------------------------
-
 S1DynResize_MZ2:					; leftover from Sonic 1
 		move.w	#$520,(Camera_Max_Y_pos_target).w
 		cmpi.w	#$1700,(Camera_RAM).w
@@ -7383,6 +7317,27 @@ S1DynResize_MZ2:					; leftover from Sonic 1
 		move.w	#$200,(Camera_Max_Y_pos_target).w
 
 locret_7882:
+		rts
+; ---------------------------------------------------------------------------
+
+DynResize_CPZ:
+		moveq	#0,d0
+		move.b	(Current_Act).w,d0
+		add.w	d0,d0
+		move.w	DynResize_CPZ_Index(pc,d0.w),d0
+		jmp	DynResize_CPZ_Index(pc,d0.w)
+; ---------------------------------------------------------------------------
+DynResize_CPZ_Index:
+		dc.w DynResize_CPZ1-DynResize_CPZ_Index
+		dc.w DynResize_CPZ2-DynResize_CPZ_Index
+		dc.w DynResize_CPZ3-DynResize_CPZ_Index
+; ---------------------------------------------------------------------------
+
+DynResize_CPZ1:
+		rts
+; ---------------------------------------------------------------------------
+
+DynResize_CPZ2:
 		rts
 ; ===========================================================================
 
@@ -7392,7 +7347,8 @@ DynResize_CPZ3:
 		move.w	off_7892(pc,d0.w),d0
 		jmp	off_7892(pc,d0.w)
 ; ===========================================================================
-off_7892:	dc.w DynResize_CPZ3_BossCheck-off_7892
+off_7892:
+		dc.w DynResize_CPZ3_BossCheck-off_7892
 		dc.w DynResize_CPZ3_Null-off_7892
 ; ===========================================================================
 
@@ -7413,7 +7369,7 @@ DynResize_CPZ3_BossCheck:
 		move.w	#$680,obX(a1)
 		move.w	#$540,obY(a1)
 		moveq	#plcid_Boss,d0
-		bra.w	LoadPLC
+		jmp	(LoadPLC).l
 ; ===========================================================================
 
 DynResize_CPZ3_Null:
@@ -7428,9 +7384,10 @@ DynResize_EHZ:
 		move.w	off_78F0(pc,d0.w),d0
 		jmp	off_78F0(pc,d0.w)
 ; ---------------------------------------------------------------------------
-off_78F0:	dc.w DynResize_EHZ1-off_78F0
+off_78F0:
+		dc.w DynResize_EHZ1-off_78F0
 		dc.w DynResize_EHZ2-off_78F0
-		dc.w locret_7980-off_78F0
+		dc.w DynResize_EHZ3-off_78F0
 ; ---------------------------------------------------------------------------
 
 DynResize_EHZ1:
@@ -7443,7 +7400,8 @@ DynResize_EHZ2:
 		move.w	DynResize_EHZ2_Index(pc,d0.w),d0
 		jmp	DynResize_EHZ2_Index(pc,d0.w)
 ; ---------------------------------------------------------------------------
-DynResize_EHZ2_Index:dc.w DynResize_EHZ2_01-DynResize_EHZ2_Index
+DynResize_EHZ2_Index:
+		dc.w DynResize_EHZ2_01-DynResize_EHZ2_Index
 		dc.w DynResize_EHZ2_02-DynResize_EHZ2_Index
 		dc.w DynResize_EHZ2_03-DynResize_EHZ2_Index
 ; ---------------------------------------------------------------------------
@@ -7457,17 +7415,17 @@ DynResize_EHZ2_01:
 		addq.b	#2,(Dynamic_Resize_Routine).w
 		bsr.w	FindFreeObj
 		bne.s	loc_7946
-		move.b	#id_Obj55,obID(a1)	; load EHZ Boss object
+		_move.b	#id_Obj55,obID(a1)	; load EHZ Boss object
 		move.b	#$81,obSubtype(a1)
 		move.w	#$29D0,obX(a1)
 		move.w	#$426,obY(a1)
 
 loc_7946:
 		move.w	#bgm_Boss,d0
-		bsr.w	PlaySound
+		jsr	(PlaySound).l
 		move.b	#1,(f_lockscreen).w
 		moveq	#plcid_Boss,d0
-		bra.w	LoadPLC
+		jmp	(LoadPLC).l
 ; ---------------------------------------------------------------------------
 
 locret_795A:
@@ -7486,16 +7444,14 @@ locret_796E:
 
 DynResize_EHZ2_03:
 		tst.b	(Boss_defeated_flag).w
-		beq.s	DynResize_EHZ3
+		beq.s	locret_7980
 		move.b	#GameModeID_SegaScreen,(v_gamemode).w
 
-DynResize_EHZ3:
-		rts
-; ---------------------------------------------------------------------------
+locret_7980:
 		rts
 ; ---------------------------------------------------------------------------
 
-locret_7980:
+DynResize_EHZ3:
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -7505,7 +7461,8 @@ S1DynResize_SLZ3:					; leftover from Sonic 1
 		move.w	off_7990(pc,d0.w),d0
 		jmp	off_7990(pc,d0.w)
 ; ---------------------------------------------------------------------------
-off_7990:	dc.w loc_7996-off_7990
+off_7990:
+		dc.w loc_7996-off_7990
 		dc.w loc_79AA-off_7990
 		dc.w loc_79D6-off_7990
 ; ---------------------------------------------------------------------------
@@ -7525,15 +7482,15 @@ loc_79AA:
 		blo.s	locret_79D4
 		bsr.w	FindFreeObj
 		bne.s	loc_79BC
-		move.b	#id_Obj7A,obID(a1)	; load object 7A
+		_move.b	#id_Obj7A,obID(a1)	; load object 7A
 
 loc_79BC:
 		move.w	#bgm_Boss,d0
-		bsr.w	PlaySound
+		jsr	(PlaySound).l
 		move.b	#1,(f_lockscreen).w
 		addq.b	#2,(Dynamic_Resize_Routine).w
 		moveq	#plcid_Boss,d0
-		bra.w	LoadPLC
+		jmp	(LoadPLC).l
 ; ---------------------------------------------------------------------------
 
 locret_79D4:
@@ -7544,8 +7501,6 @@ loc_79D6:
 		move.w	(Camera_RAM).w,(Camera_Min_X_pos).w
 		rts
 ; ---------------------------------------------------------------------------
-		rts
-; ---------------------------------------------------------------------------
 
 DynResize_HPZ:
 		moveq	#0,d0
@@ -7554,7 +7509,8 @@ DynResize_HPZ:
 		move.w	DynResize_HPZ_Index(pc,d0.w),d0
 		jmp	DynResize_HPZ_Index(pc,d0.w)
 ; ---------------------------------------------------------------------------
-DynResize_HPZ_Index:dc.w DynResize_HPZ1-DynResize_HPZ_Index
+DynResize_HPZ_Index:
+		dc.w DynResize_HPZ1-DynResize_HPZ_Index
 		dc.w DynResize_HPZ2-DynResize_HPZ_Index
 		dc.w DynResize_HPZ3-DynResize_HPZ_Index
 ; ---------------------------------------------------------------------------
@@ -7582,7 +7538,8 @@ DynResize_HPZ3:
 		move.w	DynResize_HPZ3_Index(pc,d0.w),d0
 		jmp	DynResize_HPZ3_Index(pc,d0.w)
 ; ---------------------------------------------------------------------------
-DynResize_HPZ3_Index:dc.w loc_7A30-DynResize_HPZ3_Index
+DynResize_HPZ3_Index:
+		dc.w loc_7A30-DynResize_HPZ3_Index
 		dc.w loc_7A48-DynResize_HPZ3_Index
 		dc.w loc_7A7A-DynResize_HPZ3_Index
 ; ---------------------------------------------------------------------------
@@ -7592,7 +7549,7 @@ loc_7A30:
 		blo.s	locret_7A46
 		bsr.w	FindFreeObj
 		bne.s	locret_7A46
-		move.b	#id_Obj76,obID(a1)	; load object 76
+		_move.b	#id_Obj76,obID(a1)	; load object 76
 		addq.b	#2,(Dynamic_Resize_Routine).w
 
 locret_7A46:
@@ -7605,15 +7562,15 @@ loc_7A48:
 		move.w	#$4CC,(Camera_Max_Y_pos_target).w
 		bsr.w	FindFreeObj
 		bne.s	loc_7A64
-		move.b	#id_Obj75,obID(a1)	; load object 75
+		_move.b	#id_Obj75,obID(a1)	; load object 75
 		addq.b	#2,(Dynamic_Resize_Routine).w
 
 loc_7A64:
 		move.w	#bgm_Boss,d0
-		bsr.w	PlaySound
+		jsr	(PlaySound).l
 		move.b	#1,(f_lockscreen).w
 		moveq	#plcid_Boss,d0
-		bra.w	LoadPLC
+		jmp	(LoadPLC).l
 ; ---------------------------------------------------------------------------
 
 locret_7A78:
@@ -7632,7 +7589,8 @@ DynResize_HTZ:
 		move.w	DynResize_HTZ_Index(pc,d0.w),d0
 		jmp	DynResize_HTZ_Index(pc,d0.w)
 ; ---------------------------------------------------------------------------
-DynResize_HTZ_Index:dc.w DynResize_HTZ1-DynResize_HTZ_Index
+DynResize_HTZ_Index:
+		dc.w DynResize_HTZ1-DynResize_HTZ_Index
 		dc.w DynResize_HTZ2-DynResize_HTZ_Index
 		dc.w DynResize_HTZ3-DynResize_HTZ_Index
 ; ---------------------------------------------------------------------------
@@ -7656,7 +7614,8 @@ DynResize_HTZ2:
 		move.w	DynResize_HTZ2_Index(pc,d0.w),d0
 		jmp	DynResize_HTZ2_Index(pc,d0.w)
 ; ---------------------------------------------------------------------------
-DynResize_HTZ2_Index:dc.w loc_7AD2-DynResize_HTZ2_Index
+DynResize_HTZ2_Index:
+		dc.w loc_7AD2-DynResize_HTZ2_Index
 		dc.w loc_7AF4-DynResize_HTZ2_Index
 		dc.w loc_7B12-DynResize_HTZ2_Index
 		dc.w loc_7B30-DynResize_HTZ2_Index
@@ -7680,10 +7639,10 @@ loc_7AF4:
 		blo.s	locret_7B10
 		bsr.w	FindFreeObj
 		bne.s	locret_7B10
-		move.b	#id_Obj83,obID(a1)	; load object 83
+		_move.b	#id_Obj83,obID(a1)	; load object 83
 		addq.b	#2,(Dynamic_Resize_Routine).w
 		moveq	#plcid_EggmanSBZ2,d0
-		bra.w	LoadPLC
+		jmp	(LoadPLC).l
 ; ---------------------------------------------------------------------------
 
 locret_7B10:
@@ -7695,14 +7654,15 @@ loc_7B12:
 		blo.s	loc_7B2E
 		bsr.w	FindFreeObj
 		bne.s	loc_7B28
-		move.b	#id_Obj82,obID(a1)	; load object 82
+		_move.b	#id_Obj82,obID(a1)	; load object 82
 		addq.b	#2,(Dynamic_Resize_Routine).w
 
 loc_7B28:
 		move.b	#1,(f_lockscreen).w
 
 loc_7B2E:
-		bra.s	loc_7B3A
+		move.w	(Camera_RAM).w,(Camera_Min_X_pos).w
+		rts
 ; ---------------------------------------------------------------------------
 
 loc_7B30:
@@ -7722,7 +7682,8 @@ DynResize_HTZ3:
 		move.w	DynResize_HTZ3_Index(pc,d0.w),d0
 		jmp	DynResize_HTZ3_Index(pc,d0.w)
 ; ---------------------------------------------------------------------------
-DynResize_HTZ3_Index:dc.w loc_7B5A-DynResize_HTZ3_Index
+DynResize_HTZ3_Index:
+		dc.w loc_7B5A-DynResize_HTZ3_Index
 		dc.w loc_7B6E-DynResize_HTZ3_Index
 		dc.w loc_7B8C-DynResize_HTZ3_Index
 		dc.w locret_7B9A-DynResize_HTZ3_Index
@@ -7734,10 +7695,11 @@ loc_7B5A:
 		blo.s	loc_7B6C
 		addq.b	#2,(Dynamic_Resize_Routine).w
 		moveq	#plcid_FZBoss,d0
-		bsr.w	LoadPLC
+		jsr	(LoadPLC).l
 
 loc_7B6C:
-		bra.s	loc_7B3A
+		move.w	(Camera_RAM).w,(Camera_Min_X_pos).w
+		rts
 ; ---------------------------------------------------------------------------
 
 loc_7B6E:
@@ -7745,12 +7707,13 @@ loc_7B6E:
 		blo.s	loc_7B8A
 		bsr.w	FindFreeObj
 		bne.s	loc_7B8A
-		move.b	#id_Obj85,obID(a1)	; load object 85 (final boss object)
+		_move.b	#id_Obj85,obID(a1)	; load object 85 (final boss object)
 		addq.b	#2,(Dynamic_Resize_Routine).w
 		move.b	#1,(f_lockscreen).w
 
 loc_7B8A:
-		bra.s	loc_7B3A
+		move.w	(Camera_RAM).w,(Camera_Min_X_pos).w
+		rts
 ; ---------------------------------------------------------------------------
 
 loc_7B8C:
@@ -7759,7 +7722,8 @@ loc_7B8C:
 		addq.b	#2,(Dynamic_Resize_Routine).w
 
 loc_7B98:
-		bra.s	loc_7B3A
+		move.w	(Camera_RAM).w,(Camera_Min_X_pos).w
+		rts
 ; ---------------------------------------------------------------------------
 
 locret_7B9A:
@@ -7767,7 +7731,8 @@ locret_7B9A:
 ; ---------------------------------------------------------------------------
 
 loc_7B9C:
-		bra.s	loc_7B3A
+		move.w	(Camera_RAM).w,(Camera_Min_X_pos).w
+		rts
 ; ---------------------------------------------------------------------------
 
 DynResize_S1Ending:
@@ -13806,12 +13771,11 @@ locret_104FA:
 
 ; Sonic_Floor:
 Sonic_DoLevelCollision:
-		move.l	#v_colladdr1,(Collision_addr).w
+		move.l	(v_colladdr1).w,(Collision_addr).w
 		cmpi.b	#$C,obTopSolidBit(a0)
-		beq.s	loc_10514
-		move.l	#v_colladdr2,(Collision_addr).w
-
-loc_10514:
+		beq.s	+
+		move.l	(v_colladdr2).w,(Collision_addr).w
++
 		move.b	obLRBSolidBit(a0),d5
 		move.w	obVelX(a0),d1
 		move.w	obVelY(a0),d2
@@ -13826,18 +13790,16 @@ loc_10514:
 		beq.w	loc_106A2
 		bsr.w	Sonic_HitWall
 		tst.w	d1
-		bpl.s	loc_10558
+		bpl.s	+
 		sub.w	d1,obX(a0)
 		move.w	#0,obVelX(a0)
-
-loc_10558:
++
 		bsr.w	sub_132EE
 		tst.w	d1
-		bpl.s	loc_1056A
+		bpl.s	+
 		add.w	d1,obX(a0)
 		move.w	#0,obVelX(a0)
-
-loc_1056A:
++
 		bsr.w	loc_13146
 		tst.w	d1
 		bpl.s	locret_105E2
@@ -13845,11 +13807,10 @@ loc_1056A:
 		addq.b	#8,d2
 		neg.b	d2
 		cmp.b	d2,d1
-		bge.s	loc_10582
+		bge.s	+
 		cmp.b	d2,d0
 		blt.s	locret_105E2
-
-loc_10582:
++
 		add.w	d1,obY(a0)
 		move.b	d3,obAngle(a0)
 		bsr.w	Sonic_ResetOnFloor
@@ -16559,10 +16520,10 @@ Map_obj08:	include	"mappings/sprite/obj08.asm"
 
 ; Sonic_AnglePos:
 AnglePos:
-		move.l	#v_colladdr1,(Collision_addr).w
+		move.l	(v_colladdr1).w,(Collision_addr).w
 		cmpi.b	#$C,obTopSolidBit(a0)
 		beq.s	loc_12A14
-		move.l	#v_colladdr2,(Collision_addr).w
+		move.l	(v_colladdr2).w,(Collision_addr).w
 
 loc_12A14:
 		move.b	obTopSolidBit(a0),d5
@@ -16974,25 +16935,24 @@ loc_12DBE:
 loc_12DCC:
 		movea.l	(Collision_addr).w,a2
 		add.w	d0,d0
-		move.w	(a2,d0.w),d0
+		move.b	(a2,d0.w),d0
+		andi.w	#$FF,d0
 		beq.s	loc_12DBE
 		lea	(AngleMap).l,a2
 		move.b	(a2,d0.w),(a4)
 		lsl.w	#4,d0
 		move.w	d3,d1
 		btst	#$A,d4
-		beq.s	loc_12DF0
+		beq.s	+
 		not.w	d1
 		neg.b	(a4)
-
-loc_12DF0:
++
 		btst	#$B,d4
-		beq.s	loc_12E00
+		beq.s	+
 		addi.b	#$40,(a4)
 		neg.b	(a4)
 		subi.b	#$40,(a4)
-
-loc_12E00:
++
 		andi.w	#$F,d1
 		add.w	d0,d1
 		lea	(ColArray1).l,a2
@@ -17000,10 +16960,9 @@ loc_12E00:
 		ext.w	d0
 		eor.w	d6,d4
 		btst	#$B,d4
-		beq.s	loc_12E1C
+		beq.s	+
 		neg.w	d0
-
-loc_12E1C:
++
 		tst.w	d0
 		beq.s	loc_12DBE
 		bmi.s	loc_12E38
@@ -17055,7 +17014,8 @@ loc_12E64:
 loc_12E72:
 		movea.l	(Collision_addr).w,a2
 		add.w	d0,d0
-		move.w	(a2,d0.w),d0
+		move.b	(a2,d0.w),d0
+		andi.w	#$FF,d0
 		beq.s	loc_12E64
 		lea	(AngleMap).l,a2
 		move.b	(a2,d0.w),(a4)
@@ -17129,7 +17089,8 @@ loc_12EFA:
 loc_12F08:
 		movea.l	(Collision_addr).w,a2
 		add.w	d0,d0
-		move.w	(a2,d0.w),d0
+		move.b	(a2,d0.w),d0
+		andi.w	#$FF,d0
 		beq.s	loc_12EFA
 		lea	(AngleMap).l,a2
 		move.b	(a2,d0.w),(a4)
@@ -17210,7 +17171,8 @@ loc_12FA0:
 loc_12FAE:
 		movea.l	(Collision_addr).w,a2
 		add.w	d0,d0
-		move.w	(a2,d0.w),d0
+		move.b	(a2,d0.w),d0
+		andi.w	#$FF,d0
 		beq.s	loc_12FA0
 		lea	(AngleMap).l,a2
 		move.b	(a2,d0.w),(a4)
@@ -17264,10 +17226,10 @@ loc_13014:
 
 ; Sonic_WalkSpeed:
 CalcRoomInFront:
-		move.l	#v_colladdr1,(Collision_addr).w
+		move.l	(v_colladdr1).w,(Collision_addr).w
 		cmpi.b	#$C,obTopSolidBit(a0)
 		beq.s	loc_13094
-		move.l	#v_colladdr2,(Collision_addr).w
+		move.l	(v_colladdr2).w,(Collision_addr).w
 
 loc_13094:
 		move.b	obLRBSolidBit(a0),d5
@@ -17325,10 +17287,10 @@ loc_130F6:
 
 
 sub_13102:
-		move.l	#v_colladdr1,(Collision_addr).w
+		move.l	(v_colladdr1).w,(Collision_addr).w
 		cmpi.b	#$C,obTopSolidBit(a0)
 		beq.s	loc_1311A
-		move.l	#v_colladdr2,(Collision_addr).w
+		move.l	(v_colladdr2).w,(Collision_addr).w
 
 loc_1311A:
 		move.b	obLRBSolidBit(a0),d5
@@ -17344,10 +17306,10 @@ loc_1311A:
 		beq.w	loc_1328E
 
 loc_13146:
-		move.l	#v_colladdr1,(Collision_addr).w
+		move.l	(v_colladdr1).w,(Collision_addr).w
 		cmpi.b	#$C,obTopSolidBit(a0)
 		beq.s	loc_1315E
-		move.l	#v_colladdr2,(Collision_addr).w
+		move.l	(v_colladdr2).w,(Collision_addr).w
 
 loc_1315E:
 		move.b	obTopSolidBit(a0),d5
@@ -17429,10 +17391,10 @@ ChkFloorEdge:
 		move.b	obHeight(a0),d0
 		ext.w	d0
 		add.w	d0,d2
-		move.l	#v_colladdr1,(Collision_addr).w
+		move.l	(v_colladdr1).w,(Collision_addr).w
 		cmpi.b	#$C,obTopSolidBit(a0)
 		beq.s	loc_1322E
-		move.l	#v_colladdr2,(Collision_addr).w
+		move.l	(v_colladdr2).w,(Collision_addr).w
 
 loc_1322E:
 		lea	(Primary_Angle).w,a4
@@ -26196,42 +26158,48 @@ Nem_Squirrel:	binclude	"art/nemesis/S1/Animal Squirrel.nem"
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - primary patterns and block mappings
 ; ---------------------------------------------------------------------------
-Map16_EHZ:	binclude	"mappings/16x16/EHZ.unc"
-Map16_EHZ_End:
+Map16_GHZ:	binclude	"mappings/16x16/GHZ.unc"
 		even
-Nem_EHZ:	binclude	"art/nemesis/8x8 - EHZ.nem"
+Nem_GHZ:	binclude	"art/nemesis/level/8x8 - GHZ.nem"	; To be replaced
 		even
-Map16_HTZ:	binclude	"mappings/16x16/HTZ.unc"
-Map16_HTZ_End:
+Map128_GHZ:	binclude	"mappings/128x128/GHZ.unc"		; To be replaced
 		even
-Nem_HTZ:	binclude	"art/nemesis/8x8 - HTZ.nem"
+Map16_LZ:	binclude	"mappings/16x16/LZ.unc"
 		even
-Nem_HTZ_AniPlaceholders:	binclude	"art/nemesis/HTZ Ani Placeholders.nem"
+Nem_LZ:		binclude	"art/nemesis/level/8x8 - LZ.nem"
 		even
-Map128_EHZ:	binclude	"mappings/128x128/EHZ_HTZ.unc"
-		even
-Map16_HPZ:	binclude	"mappings/16x16/HPZ.unc"
-Map16_HPZ_End:
-		even
-Nem_HPZ:	binclude	"art/nemesis/8x8 - HPZ.nem"
-		even
-Map128_HPZ:	binclude	"mappings/128x128/HPZ.unc"
+Map128_LZ:	binclude	"mappings/128x128/LZ.unc"
 		even
 Map16_CPZ:	binclude	"mappings/16x16/CPZ.unc"
-Map16_CPZ_End:
 		even
-Nem_CPZ:	binclude	"art/nemesis/8x8 - CPZ.nem"
-		even
-Nem_CPZ_Buildings:		binclude	"art/nemesis/CPZ Buildings.nem"
+Nem_CPZ:	binclude	"art/nemesis/level/8x8 - CPZ.nem"
 		even
 Map128_CPZ:	binclude	"mappings/128x128/CPZ.unc"
 		even
-Map16_GHZ:	binclude	"mappings/16x16/GHZ.unc"
-Map16_GHZ_End:
+Map16_HPZ:	binclude	"mappings/16x16/HPZ.unc"
 		even
-Nem_GHZ:	binclude	"art/nemesis/8x8 - GHZ.nem"	; To be replaced
+Nem_HPZ:	binclude	"art/nemesis/level/8x8 - HPZ.nem"
 		even
-Map128_GHZ:	binclude	"mappings/128x128/GHZ.kcc"	; To be replaced
+Map128_HPZ:	binclude	"mappings/128x128/HPZ.unc"
+		even
+Map16_EHZ:	binclude	"mappings/16x16/EHZ.unc"
+		even
+Nem_EHZ:	binclude	"art/nemesis/level/8x8 - EHZ.nem"
+		even
+Map128_EHZ:	binclude	"mappings/128x128/EHZ.unc"
+		even
+Map16_HTZ:	binclude	"mappings/16x16/HTZ.unc"
+		even
+Nem_HTZ:	binclude	"art/nemesis/level/8x8 - HTZ.nem"
+		even
+Map128_HTZ:	binclude	"mappings/128x128/HTZ.unc"
+		even
+; ---------------------------------------------------------------------------
+; Compressed graphics - Level placeholders
+; ---------------------------------------------------------------------------
+Nem_CPZ_Buildings:		binclude	"art/nemesis/CPZ Buildings.nem"
+		even
+Nem_HTZ_AniPlaceholders:	binclude	"art/nemesis/HTZ Ani Placeholders.nem"
 		even
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - bosses and ending sequence
@@ -26273,26 +26241,58 @@ ColArray2_S1:	binclude	"collision/S1/Collision Array (Rotated).bin"
 		even
 ; ---------------------------------------------------------------------------
 AngleMap:	binclude	"collision/Curve and resistance mapping.bin"
-AngleMap_End:	even
+		even
 ColArray1:	binclude	"collision/Collision array 1.bin"
-ColArray1_End:	even
+		even
 ColArray2:	binclude	"collision/Collision array 2.bin"
-ColArray2_End:	even
-ColP_GHZ:	binclude	"collision/GHZ1_S2.bin"	; To be replaced
 		even
-ColS_GHZ:	binclude	"collision/GHZ2_S2.bin"	; To be replaced
+Col_GHZ1:	binclude	"collision/GHZ1.bin"	; To be replaced
 		even
-ColP_EHZ:	binclude	"collision/EHZ primary 16x16 collision index.bin"
+Col_GHZ2:	binclude	"collision/GHZ2.bin"	; To be replaced
 		even
-ColS_EHZ:	binclude	"collision/EHZ secondary 16x16 collision index.bin"
+Col_GHZ3:	binclude	"collision/GHZ3.bin"	; To be replaced
 		even
-ColP_CPZ:	binclude	"collision/CPZ primary 16x16 collision index.bin"
+Col_GHZ4:	binclude	"collision/GHZ4.bin"	; To be replaced
 		even
-ColS_CPZ:	binclude	"collision/CPZ secondary 16x16 collision index.bin"
+Col_LZ1:	binclude	"collision/LZ1.bin"
 		even
-ColP_HPZ:	binclude	"collision/HPZ primary 16x16 collision index.bin"
+Col_LZ2:	binclude	"collision/LZ2.bin"
 		even
-ColS_HPZ:	binclude	"collision/HPZ secondary 16x16 collision index.bin"
+Col_LZ3:	binclude	"collision/LZ3.bin"
+		even
+Col_LZ4:	binclude	"collision/LZ4.bin"
+		even
+Col_EHZ1:	binclude	"collision/EHZ1.bin"
+		even
+Col_EHZ2:	binclude	"collision/EHZ2.bin"
+		even
+Col_EHZ3:	binclude	"collision/EHZ3.bin"
+		even
+Col_EHZ4:	binclude	"collision/EHZ4.bin"
+		even
+Col_CPZ1:	binclude	"collision/CPZ1.bin"
+		even
+Col_CPZ2:	binclude	"collision/CPZ2.bin"
+		even
+Col_CPZ3:	binclude	"collision/CPZ3.bin"
+		even
+Col_CPZ4:	binclude	"collision/CPZ4.bin"
+		even
+Col_HPZ1:	binclude	"collision/HPZ1.bin"
+		even
+Col_HPZ2:	binclude	"collision/HPZ2.bin"
+		even
+Col_HPZ3:	binclude	"collision/HPZ3.bin"
+		even
+Col_HPZ4:	binclude	"collision/HPZ4.bin"
+		even
+Col_HTZ1:	binclude	"collision/HTZ1.bin"
+		even
+Col_HTZ2:	binclude	"collision/HTZ2.bin"
+		even
+Col_HTZ3:	binclude	"collision/HTZ3.bin"
+		even
+Col_HTZ4:	binclude	"collision/HTZ4.bin"
 		even
 ; ---------------------------------------------------------------------------
 ; Special Stage layouts
