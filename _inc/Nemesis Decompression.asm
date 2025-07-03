@@ -106,9 +106,8 @@ NemDec_InlineData:
 ; Subroutines to output decompressed entry
 ; Selected depending on current decompression mode
 ; ---------------------------------------------------------------------------
-
+; loc_1502
 NemPCD_WriteRowToVDP:
-loc_1502:
 	move.l	d4,(a4)			; write 8-pixel row
 	subq.w	#1,a5
 	move.w	a5,d4			; have all the 8-pixel rows been written?

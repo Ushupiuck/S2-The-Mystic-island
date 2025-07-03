@@ -279,7 +279,7 @@ GameMode_Options:	dc.l	Level			; Options mode ($20)
 GameMode_SecretMenu:	dc.l	Level			; Level select mode ($24)
 ; ===========================================================================
 	;	align	$3FE
- if AdvancedHandler=0	
+ if AdvancedHandler=0
 BusError:
 		move.b	#2,(v_errortype).w
 		bra.s	ErrorMsg_TwoAddresses
@@ -760,55 +760,22 @@ Do_ControllerPal:
 ; ===========================================================================
 ; Start of H-INT code
 H_Int:
-		tst.w	(f_hbla_pal).w
-		beq.w	locret_1184
-		tst.w	(Two_player_mode).w
-		beq.w	PalToCRAM
-		move.w	#0,(f_hbla_pal).w
-		move.l	a5,-(sp)
-		move.l	d0,-(sp)
-
-loc_110E:
-		move.w	(vdp_control_port).l,d0
-		andi.w	#%0100,d0
-		beq.s	loc_110E
-		move.w	(v_vdp_buffer1).w,d0
-		andi.b	#$BF,d0
-		move.w	d0,(vdp_control_port).l
-		move.w	#$8200+(vram_window>>10),(vdp_control_port).l
-		move.l	#$40000010,(vdp_control_port).l
-		move.l	(Camera_X_pos_copy).w,(vdp_data_port).l
-		writeVRAM	Sprite_Table_2P,vram_sprites
-
-loc_1166:
-		move.w	(vdp_control_port).l,d0
-		andi.w	#%0100,d0
-		beq.s	loc_1166
-		move.w	(v_vdp_buffer1).w,d0
-		ori.b	#$40,d0
-		move.w	d0,(vdp_control_port).l
-		move.l	(sp)+,d0
-		movea.l	(sp)+,a5
-
-locret_1184:
-		rte
-
-; ---------------------------------------------------------------------------
-; loc_1188:
-PalToCRAM:
 		disable_ints
+		tst.w	(f_hbla_pal).w
+		beq.s	H_Int_done
 		move.w	#0,(f_hbla_pal).w
 		movem.l	a0-a1,-(sp)
 		lea	(vdp_data_port).l,a1
+		move.w	#$8A00+224-1,4(a1)		; write %1101 %1111 to register 10 (interrupt every 224th line)
 		lea	(v_palette_water).w,a0		; load palette from RAM
 		move.l	#$C0000000,4(a1)		; set VDP to write to CRAM address $00
 	rept (v_palette_water_end-v_palette_water)/4
 		move.l	(a0)+,(a1)			; move palette to CRAM (all 64 colors at once)
 	endm
-		move.w	#$8A00+224-1,4(a1)		; write %1101 %1111 to register 10 (interrupt every 224th line)
 		movem.l	(sp)+,a0-a1
 		tst.b	(f_doupdatesinhblank).w
 		bne.s	Hint_SoundDriver
+H_Int_done:
 		rte
 ; ===========================================================================
 ; loc_11F8:
@@ -2336,11 +2303,6 @@ LevelSelect_Loop:
 		andi.b	#btnABC+btnStart,(v_jpadpress1).w
 		beq.s	LevelSelect_Loop
 		move.w	#0,(Two_player_mode).w	; disable 2P mode
-		btst	#bitB,(v_jpadhold1).w	; is button B held?
-		beq.s	loc_3516	; if not, branch
-		move.w	#1,(Two_player_mode).w	; enable 2P mode
-
-loc_3516:
 		move.w	(v_levselitem).w,d0
 		cmpi.w	#$14,d0
 		bne.s	loc_3570
@@ -2472,11 +2434,6 @@ RunDemo:
 loc_3694:
 		move.w	#1,(f_demo).w
 		move.b	#GameModeID_Demo,(v_gamemode).w
-		cmpi.w	#id_EHZ<<8,d0
-		bne.s	loc_36AC
-		move.w	#1,(Two_player_mode).w
-
-loc_36AC:
 		cmpi.w	#id_EndZ<<8,d0
 		bne.s	loc_36C0
 		move.b	#GameModeID_SpecialStage,(v_gamemode).w
@@ -2734,13 +2691,6 @@ loc_3BB6:
 		move.w	#$8000+%0100,(a6)
 		move.w	#$8700+(2<<4)+0,(a6)	; set background color to first slot of line 2
 		move.w	#$8A00+224-1,(v_hbla_hreg).w
-		tst.w	(Two_player_mode).w	; is two player mode enabled?
-		beq.s	.not2P			; if not, skip horizontal interrupts
-		move.w	#$8A00+(224/2-4)-1,(v_hbla_hreg).w
-		move.w	#$8000+%00010100,(a6)	; enable h-int
-		move.w	#$8C00+%10000111,(a6)	; set interlace double resolution mode
-
-.not2P:
 		move.w	(v_hbla_hreg).w,(a6)
 		move.l	#VDP_Command_Buffer,(VDP_Command_Buffer_Slot).w	; reset the DMA Queue
 		tst.b	(Water_flag).w
@@ -2794,7 +2744,7 @@ Level_PlayBgm:
 		nop
 		move.b	(a1,d0.w),d0
 		bsr.w	PlaySound
-		move.b	#id_Obj34,(v_titlecard).w
+		_move.b	#id_Obj34,(v_titlecard).w
 
 Level_TtlCardLoop:
 		move.b	#VintID_TitleCard,(v_vbla_routine).w
@@ -2815,29 +2765,26 @@ Level_SkipTtlCard:
 		bsr.w	LevelSizeLoad
 		bsr.w	DeformBGLayer
 		bset	#2,(Scroll_flags).w
+		bsr.w	LoadZoneTiles
 		bsr.w	MainLevelLoadBlock
 		jsr	(LoadAnimatedBlocks).l
 		bsr.w	LoadTilesFromStart
 		bsr.w	LoadCollisionIndexes
 		bsr.w	WaterEffects
-		move.b	#id_Obj01,(v_player).w	; load Sonic object
-		tst.w	(f_demo).w	; are we on an ending demo?
-		bmi.s	Level_ChkDebug	; if not, branch
-		move.b	#id_Obj21,(v_hud).w	; load HUD object
-
-Level_ChkDebug:
-		tst.w	(Two_player_mode).w
-		beq.s	LevelInit_SkipTails
-;		cmpi.b	#id_EHZ,(Current_Zone).w	; is this EHZ?
-;		beq.s	LevelInit_SkipTails	; if so, skip loading Tails object
+		_move.b	#id_Obj01,(v_player).w	; load Sonic object
+		tst.w	(f_demo).w		; are we on an ending demo?
+		bmi.s	LevelInit_LoadTails	; if not, branch
+		_move.b	#id_Obj21,(v_hud).w	; load HUD object
+;		cmpi.b	#id_EHZ,(Current_Zone).w; This is an example on how to skip
+;		beq.s	Level_ChkDebug		; the 2nd player, if neccesary
 
 LevelInit_LoadTails:	; Disabled until his AI &/or character selection is implemented
-		move.b	#id_Obj02,(v_player2).w	; load Tails object
-		move.w	(v_player+obX).w,(v_player2+obX).w	; copy player 1's x position to player 2
-		move.w	(v_player+obY).w,(v_player2+obY).w	; copy player 1's y position to player 2
-		subi.w	#32,(v_player2+obX).w	; set player 2's x position 32 pixels behind player 1's
+	;	_move.b	#id_Obj02,(v_player2).w	; load Tails object
+	;	move.w	(v_player+obX).w,(v_player2+obX).w	; copy player 1's x position to player 2
+	;	move.w	(v_player+obY).w,(v_player2+obY).w	; copy player 1's y position to player 2
+	;	subi.w	#32,(v_player2+obX).w	; set player 2's x position 32 pixels behind player 1's
 
-LevelInit_SkipTails:
+Level_ChkDebug:
 		tst.b	(f_debugcheat).w
 		beq.s	Level_ChkWater
 		btst	#bitA,(v_jpadhold1).w
@@ -2849,9 +2796,9 @@ Level_ChkWater:
 		move.w	#0,(v_jpadhold1).w
 		tst.b	(Water_flag).w
 		beq.s	Level_LoadObj
-		move.b	#id_Obj04,(v_watersurface1).w
+		_move.b	#id_Obj04,(v_watersurface1).w
 		move.w	#$60,(v_watersurface1+obX).w
-		move.b	#id_Obj04,(v_watersurface2).w
+		_move.b	#id_Obj04,(v_watersurface2).w
 		move.w	#$120,(v_watersurface2+obX).w
 
 Level_LoadObj:
@@ -4123,20 +4070,6 @@ loc_5AA4:
 		lea	(Verti_block_crossed_flag).w,a2
 		lea	(Camera_Y_pos_diff).w,a4
 		bsr.w	ScrollVertical
-		tst.w	(Two_player_mode).w
-		beq.s	loc_5B2A
-		lea	(v_player2).w,a0
-		lea	(Camera_X_pos_P2).w,a1
-		lea	(Horiz_block_crossed_flag_P2).w,a2
-		lea	(Scroll_flags_P2).w,a3
-		lea	(Camera_BG_Y_pos_diff).w,a4
-		lea	(Horiz_scroll_delay_val_P2).w,a5
-		lea	(Tails_Pos_Record_Buf_Dup).w,a6
-		bsr.w	ScrollHorizontal
-		lea	(Camera_Y_pos_P2).w,a1
-		lea	(Verti_block_crossed_flag_P2).w,a2
-		lea	(Camera_X_pos_diff_P2).w,a4
-		bsr.w	ScrollVertical
 
 loc_5B2A:
 		bsr.w	DynScreenResizeLoad
@@ -4160,87 +4093,80 @@ Deform_Index:	dc.w Deform_GHZ-Deform_Index
 ; ---------------------------------------------------------------------------
 
 Deform_GHZ:
-		tst.w	(Two_player_mode).w
-		bne.w	loc_5C5A
+	; block 3 - distant mountains
 		move.w	(Camera_X_pos_diff).w,d4
 		ext.l	d4
-		asl.l	#5,d4
-		move.l	d4,d1
-		asl.l	#1,d4
-		add.l	d1,d4
-		moveq	#0,d6
+		asl.l	#6,d4	; shaving some cycles off
+;		move.l	d4,d1
+;		asl.l	#1,d4
+;		add.l	d1,d4
+		moveq	#0,d6	; changes from 0 to 6 in Palmtree panic
 		bsr.w	ScrollBlock6
+	; block 2 - hills & waterfalls
 		move.w	(Camera_X_pos_diff).w,d4
 		ext.l	d4
 		asl.l	#7,d4
-		moveq	#0,d6
+		moveq	#0,d6	; changes from 0 to 4 in Palmtree panic
 		bsr.w	ScrollBlock5
+	; calculate Y position
 		lea	(v_hscrolltablebuffer).w,a1
 		move.w	(Camera_Y_pos).w,d0
 		andi.w	#$7FF,d0
 		lsr.w	#5,d0
 		neg.w	d0
 		addi.w	#$20,d0
-		bpl.s	loc_5B9A
+		bpl.s	.limitY
 		moveq	#0,d0
-
-loc_5B9A:
+.limitY:
 		move.w	d0,d4
 		move.w	d0,(v_bgscrposy_vdp).w
 		move.w	(Camera_RAM).w,d0
-		cmpi.b	#GameModeID_TitleScreen,(v_gamemode).w
-		bne.s	loc_5BAE
-		moveq	#0,d0
-
-loc_5BAE:
 		neg.w	d0
 		swap	d0
+	; auto-scroll clouds
 		lea	(v_bgscroll_buffer).w,a2
 		addi.l	#$10000,(a2)+
 		addi.l	#$C000,(a2)+
 		addi.l	#$8000,(a2)+
+	;	addi.l	#$4000,(a2)+	; Palmtree panic has 1 extra scroll layer
+	; calculate background scroll
 		move.w	(v_bgscroll_buffer).w,d0
 		add.w	(Camera_BG3_X_pos).w,d0
 		neg.w	d0
 		move.w	#32-1,d1
 		sub.w	d4,d1
-		blo.s	loc_5BE0
-
-loc_5BDA:
+		blo.s	.gotoCloud2
+.cloudLoop1:		; upper cloud (32px)
 		move.l	d0,(a1)+
-		dbf	d1,loc_5BDA
+		dbf	d1,.cloudLoop1
 
-loc_5BE0:
+.gotoCloud2:
 		move.w	(v_bgscroll_buffer+4).w,d0
 		add.w	(Camera_BG3_X_pos).w,d0
 		neg.w	d0
 		move.w	#16-1,d1
-
-loc_5BEE:
+.cloudLoop2:		; middle cloud (16px)
 		move.l	d0,(a1)+
-		dbf	d1,loc_5BEE
+		dbf	d1,.cloudLoop2
 		move.w	(v_bgscroll_buffer+8).w,d0
 		add.w	(Camera_BG3_X_pos).w,d0
 		neg.w	d0
 		move.w	#16-1,d1
-
-loc_5C02:
+.cloudLoop3:		; lower cloud (16px)
 		move.l	d0,(a1)+
-		dbf	d1,loc_5C02
+		dbf	d1,.cloudLoop3
 		move.w	#48-1,d1
 		move.w	(Camera_BG3_X_pos).w,d0
 		neg.w	d0
-
-loc_5C12:
+.mountainLoop:		; distant mountains (48px)
 		move.l	d0,(a1)+
-		dbf	d1,loc_5C12
+		dbf	d1,.mountainLoop
 		move.w	#40-1,d1
 		move.w	(Camera_BG2_X_pos).w,d0
 		neg.w	d0
-
-loc_5C22:
+.hillLoop:		; hills & waterfalls (40px)
 		move.l	d0,(a1)+
-		dbf	d1,loc_5C22
+		dbf	d1,.hillLoop
 		move.w	(Camera_BG2_X_pos).w,d0
 		move.w	(Camera_RAM).w,d2
 		sub.w	d0,d2
@@ -4253,224 +4179,14 @@ loc_5C22:
 		move.w	d0,d3
 		move.w	#72-1,d1
 		add.w	d4,d1
-
-loc_5C48:
+.waterLoop:		; water deformation
 		move.w	d3,d0
 		neg.w	d0
 		move.l	d0,(a1)+
 		swap	d3
 		add.l	d2,d3
 		swap	d3
-		dbf	d1,loc_5C48
-		rts
-; ---------------------------------------------------------------------------
-
-loc_5C5A:
-		move.w	(Camera_X_pos_diff).w,d4
-		ext.l	d4
-		asl.l	#5,d4
-		move.l	d4,d1
-		asl.l	#1,d4
-		add.l	d1,d4
-		moveq	#0,d6
-		bsr.w	ScrollBlock6
-		move.w	(Camera_X_pos_diff).w,d4
-		ext.l	d4
-		asl.l	#7,d4
-		moveq	#0,d6
-		bsr.w	ScrollBlock5
-		lea	(v_hscrolltablebuffer).w,a1
-		move.w	(Camera_Y_pos).w,d0
-		andi.w	#$7FF,d0
-		lsr.w	#5,d0
-		neg.w	d0
-		addi.w	#$20,d0
-		bpl.s	loc_5C94
-		moveq	#0,d0
-
-loc_5C94:
-		andi.w	#-2,d0
-		move.w	d0,d4
-		lsr.w	#1,d4
-		move.w	d0,(v_bgscrposy_vdp).w
-		andi.l	#$FFFEFFFE,(v_scrposy_vdp).w
-		move.w	(Camera_RAM).w,d0
-		cmpi.b	#GameModeID_TitleScreen,(v_gamemode).w
-		bne.s	loc_5CB6
-		moveq	#0,d0
-
-loc_5CB6:
-		neg.w	d0
-		swap	d0
-		lea	(v_bgscroll_buffer).w,a2
-		addi.l	#$10000,(a2)+
-		addi.l	#$C000,(a2)+
-		addi.l	#$8000,(a2)+
-		move.w	(v_bgscroll_buffer).w,d0
-		add.w	(Camera_BG3_X_pos).w,d0
-		neg.w	d0
-		move.w	#16-1,d1
-		sub.w	d4,d1
-		blo.s	loc_5CE8
-
-loc_5CE2:
-		move.l	d0,(a1)+
-		dbf	d1,loc_5CE2
-
-loc_5CE8:
-		move.w	(v_bgscroll_buffer+4).w,d0
-		add.w	(Camera_BG3_X_pos).w,d0
-		neg.w	d0
-		move.w	#8-1,d1
-
-loc_5CF6:
-		move.l	d0,(a1)+
-		dbf	d1,loc_5CF6
-		move.w	(v_bgscroll_buffer+8).w,d0
-		add.w	(Camera_BG3_X_pos).w,d0
-		neg.w	d0
-		move.w	#8-1,d1
-
-loc_5D0A:
-		move.l	d0,(a1)+
-		dbf	d1,loc_5D0A
-		move.w	#24-1,d1
-		move.w	(Camera_BG3_X_pos).w,d0
-		neg.w	d0
-
-loc_5D1A:
-		move.l	d0,(a1)+
-		dbf	d1,loc_5D1A
-		move.w	#24-1,d1
-		move.w	(Camera_BG2_X_pos).w,d0
-		neg.w	d0
-
-loc_5D2A:
-		move.l	d0,(a1)+
-		dbf	d1,loc_5D2A
-		move.w	(Camera_BG2_X_pos).w,d0
-		move.w	(Camera_RAM).w,d2
-		sub.w	d0,d2
-		ext.l	d2
-		asl.l	#8,d2
-		divs.w	#$68,d2
-		ext.l	d2
-		asl.l	#8,d2
-		add.l	d2,d2
-		moveq	#0,d3
-		move.w	d0,d3
-		move.w	#36-1,d1
-		add.w	d4,d1
-
-loc_5D52:
-		move.w	d3,d0
-		neg.w	d0
-		move.l	d0,(a1)+
-		swap	d3
-		add.l	d2,d3
-		swap	d3
-		dbf	d1,loc_5D52
-		move.w	(Camera_BG_Y_pos_diff).w,d4
-		ext.l	d4
-		asl.l	#5,d4
-		move.l	d4,d1
-		asl.l	#1,d4
-		add.l	d1,d4
-		add.l	d4,(Camera_BG3_X_pos_P2).w
-		move.w	(Camera_BG_Y_pos_diff).w,d4
-		ext.l	d4
-		asl.l	#7,d4
-		add.l	d4,(Camera_BG2_X_pos_P2).w
-		lea	(v_hscrolltablebuffer+$1C0).w,a1
-		move.w	(Camera_Y_pos_P2).w,d0
-		andi.w	#$7FF,d0
-		lsr.w	#5,d0
-		neg.w	d0
-		addi.w	#$20,d0
-		bpl.s	loc_5D98
-		moveq	#0,d0
-
-loc_5D98:
-		andi.w	#-2,d0
-		move.w	d0,d4
-		lsr.w	#1,d4
-		move.w	d0,(v_bg3scrposx_vdp).w
-		subi.w	#224,(v_bg3scrposx_vdp).w
-		move.w	(Camera_Y_pos_P2).w,(v_bg3scrposy_vdp).w
-		subi.w	#224,(v_bg3scrposy_vdp).w
-		andi.l	#$FFFEFFFE,(v_bg3scrposy_vdp).w
-		move.w	(Camera_X_pos_P2).w,d0
-		cmpi.b	#GameModeID_TitleScreen,(v_gamemode).w
-		bne.s	loc_5DCC
-		moveq	#0,d0
-
-loc_5DCC:
-		neg.w	d0
-		swap	d0
-		move.w	(v_bgscroll_buffer).w,d0
-		add.w	(Camera_BG3_X_pos_P2).w,d0
-		neg.w	d0
-		move.w	#16-1,d1
-		sub.w	d4,d1
-		blo.s	loc_5DE8
-
-loc_5DE2:
-		move.l	d0,(a1)+
-		dbf	d1,loc_5DE2
-
-loc_5DE8:
-		move.w	(v_bgscroll_buffer+4).w,d0
-		add.w	(Camera_BG3_X_pos_P2).w,d0
-		neg.w	d0
-		move.w	#8-1,d1
-
-loc_5DF6:
-		move.l	d0,(a1)+
-		dbf	d1,loc_5DF6
-		move.w	(v_bgscroll_buffer+8).w,d0
-		add.w	(Camera_BG3_X_pos_P2).w,d0
-		neg.w	d0
-		move.w	#8-1,d1
-
-loc_5E0A:
-		move.l	d0,(a1)+
-		dbf	d1,loc_5E0A
-		move.w	#24-1,d1
-		move.w	(Camera_BG3_X_pos_P2).w,d0
-		neg.w	d0
-
-loc_5E1A:
-		move.l	d0,(a1)+
-		dbf	d1,loc_5E1A
-		move.w	#24-1,d1
-		move.w	(Camera_BG2_X_pos_P2).w,d0
-		neg.w	d0
-
-loc_5E2A:
-		move.l	d0,(a1)+
-		dbf	d1,loc_5E2A
-		move.w	(Camera_BG2_X_pos_P2).w,d0
-		move.w	(Camera_X_pos_P2).w,d2
-		sub.w	d0,d2
-		ext.l	d2
-		asl.l	#8,d2
-		divs.w	#$68,d2
-		ext.l	d2
-		asl.l	#8,d2
-		add.l	d2,d2
-		moveq	#0,d3
-		move.w	d0,d3
-		move.w	#36-1,d1
-		add.w	d4,d1
-
-loc_5E52:
-		move.w	d3,d0
-		neg.w	d0
-		move.l	d0,(a1)+
-		swap	d3
-		add.l	d2,d3
-		swap	d3
-		dbf	d1,loc_5E52
+		dbf	d1,.waterLoop
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -4630,8 +4346,6 @@ loc_60B6:
 ; ---------------------------------------------------------------------------
 
 Deform_EHZ:
-		tst.w	(Two_player_mode).w
-		bne.w	loc_620E
 		move.w	(Camera_BG_Y_pos).w,(v_bgscrposy_vdp).w
 		lea	(v_hscrolltablebuffer).w,a1
 		move.w	(Camera_RAM).w,d0
@@ -4760,114 +4474,6 @@ Deform_EHZ_Data:dc.b   1,  2,  1,  3,  1,  2,  2,  1,  2,  3,  1,  2,  1,  2,  0
 		dc.b   2,  0,  3,  2,  2,  3,  2,  2,  1,  3,  0,  0,  1,  0,  1,  3
 		dc.b   1,  2,  1,  3,  1,  2,  2,  1,  2,  3,  1,  2,  1,  2,  0,  0
 		dc.b   2,  0,  3,  2,  2,  3,  2,  2,  1,  3,  0,  0,  1,  0,  1,  3
-; ---------------------------------------------------------------------------
-
-loc_620E:
-		move.b	(Vint_runcount+3).w,d1
-		andi.w	#7,d1
-		bne.s	loc_621C
-		subq.w	#1,(v_bgscroll_buffer).w
-
-loc_621C:
-		move.w	(Camera_BG_Y_pos).w,(v_bgscrposy_vdp).w
-		andi.l	#$FFFEFFFE,(v_scrposy_vdp).w
-		lea	(v_hscrolltablebuffer).w,a1
-		move.w	(Camera_RAM).w,d0
-		move.w	#$A,d1
-		bsr.s	sub_6264
-		moveq	#0,d0
-		move.w	d0,(v_bg3scrposx_vdp).w
-		subi.w	#224,(v_bg3scrposx_vdp).w
-		move.w	(Camera_Y_pos_P2).w,(v_bg3scrposy_vdp).w
-
-loc_624A:
-		subi.w	#224,(v_bg3scrposy_vdp).w
-		andi.l	#$FFFEFFFE,(v_bg3scrposy_vdp).w
-		lea	(v_hscrolltablebuffer+$1B0).w,a1
-		move.w	(Camera_X_pos_P2).w,d0
-		move.w	#15-1,d1
-
-; =============== S U B	R O U T	I N E =======================================
-
-
-sub_6264:
-		neg.w	d0
-		move.w	d0,d2
-		swap	d0
-		move.w	#0,d0
-
-loc_626E:
-		move.l	d0,(a1)+
-		dbf	d1,loc_626E
-		move.w	d2,d0
-		asr.w	#6,d0
-		move.w	#29-1,d1
-
-loc_627C:
-		move.l	d0,(a1)+
-		dbf	d1,loc_627C
-		move.w	d0,d3
-		move.w	(v_bgscroll_buffer).w,d1
-		andi.w	#$1F,d1
-		lea	Deform_EHZ_Data(pc),a2
-		lea	(a2,d1.w),a2
-		move.w	#11-1,d1
-
-loc_6298:
-		move.b	(a2)+,d0
-		ext.w	d0
-		add.w	d3,d0
-		move.l	d0,(a1)+
-		dbf	d1,loc_6298
-		move.w	#0,d0
-		move.w	#5-1,d1
-
-loc_62AC:
-		move.l	d0,(a1)+
-		dbf	d1,loc_62AC
-		move.w	d2,d0
-		asr.w	#4,d0
-		move.w	#8-1,d1
-
-loc_62BA:
-		move.l	d0,(a1)+
-		dbf	d1,loc_62BA
-		move.w	d2,d0
-		asr.w	#4,d0
-		move.w	d0,d1
-		asr.w	#1,d1
-		add.w	d1,d0
-		move.w	#8-1,d1
-
-loc_62CE:
-		move.l	d0,(a1)+
-		dbf	d1,loc_62CE
-		move.w	d2,d0
-		asr.w	#1,d0
-		move.w	d2,d1
-		asr.w	#3,d1
-		sub.w	d1,d0
-		ext.l	d0
-		asl.l	#4,d0
-		divs.w	#$30,d0
-		ext.l	d0
-		asl.l	#4,d0
-		asl.l	#8,d0
-		moveq	#0,d3
-		move.w	d2,d3
-		asr.w	#3,d3
-		move.w	#40-1,d1
-
-loc_62F6:
-		move.w	d2,(a1)+
-		move.w	d3,(a1)+
-		swap	d3
-		add.l	d0,d3
-		swap	d3
-		dbf	d1,loc_62F6
-		rts
-; End of function sub_6264
-
 ; ---------------------------------------------------------------------------
 
 Bg_Scroll_X:
@@ -5257,7 +4863,8 @@ loc_6598:
 		bhs.s	loc_6602
 		tst.b	(Camera_Max_Y_Pos_Changing).w
 		bne.s	loc_6614
-		bra.s	loc_65C4
+		clr.w	(a4)
+		rts
 ; ---------------------------------------------------------------------------
 
 loc_65B8:
@@ -5266,7 +4873,7 @@ loc_65B8:
 		tst.b	(Camera_Max_Y_Pos_Changing).w
 		bne.s	loc_6614
 
-loc_65C4:
+; loc_65C4:
 		clr.w	(a4)
 		rts
 ; ---------------------------------------------------------------------------
@@ -5513,7 +5120,7 @@ ScrollBlock4:
 		sub.l	d2,d0
 		bpl.s	loc_67B0
 		bset	d6,(Scroll_flags_BG).w
-		bra.s	locret_67B6
+		rts
 ; ---------------------------------------------------------------------------
 
 loc_67B0:
@@ -5543,7 +5150,7 @@ ScrollBlock5:
 		sub.l	d2,d0
 		bpl.s	loc_67E4
 		bset	d6,(Scroll_flags_BG2).w
-		bra.s	locret_67EA
+		rts
 ; ---------------------------------------------------------------------------
 
 loc_67E4:
@@ -5573,7 +5180,7 @@ ScrollBlock6:
 		sub.l	d2,d0
 		bpl.s	loc_6818
 		bset	d6,(Scroll_flags_BG3).w
-		bra.s	locret_681E
+		rts
 ; ---------------------------------------------------------------------------
 
 loc_6818:
@@ -5615,15 +5222,6 @@ LoadTilesAsYouMove:
 		lea	(Scroll_flags_BG3_copy).w,a2
 		lea	(Camera_BG3_copy).w,a3
 		bsr.w	DrawBGScrollBlock3
-		tst.w	(Two_player_mode).w
-		beq.s	loc_689E
-		lea	(Scroll_flags_copy_P2).w,a2
-		lea	(Camera_P2_copy).w,a3
-		lea	(v_lvllayout).w,a4
-		move.w	#$6000,d2
-		bsr.w	sub_694C
-
-loc_689E:
 		lea	(Scroll_flags_copy).w,a2
 		lea	(Camera_RAM_copy).w,a3
 		lea	(v_lvllayout).w,a4
@@ -6030,8 +5628,6 @@ word_6C78:	dc.w Camera_BG_copy
 ; ---------------------------------------------------------------------------
 
 loc_6C80:
-		tst.w	(Two_player_mode).w
-		bne.s	loc_6CC2
 		moveq	#16-1,d6
 		move.l	#$800000,d7
 
@@ -6054,31 +5650,6 @@ loc_6CB6:
 		dbf	d6,loc_6C8E
 		clr.b	(a2)
 		rts
-; ---------------------------------------------------------------------------
-
-loc_6CC2:
-		moveq	#((224+16+16)/16)-1,d6
-		move.l	#$800000,d7
-
-loc_6CCA:
-		moveq	#0,d0
-		move.b	(a0)+,d0
-		btst	d0,(a2)
-		beq.s	loc_6CF2
-		movea.w	word_6C78(pc,d0.w),a3
-		movem.l	d4-d5/a0,-(sp)
-		movem.l	d4-d5,-(sp)
-		bsr.w	GetBlockData
-		movem.l	(sp)+,d4-d5
-		bsr.w	Calc_VRAM_Pos
-		bsr.w	DrawBlock
-		movem.l	(sp)+,d4-d5/a0
-
-loc_6CF2:
-		addi.w	#16,d4
-		dbf	d6,loc_6CCA
-		clr.b	(a2)
-		rts
 ; End of function DrawBGScrollBlock3
 
 
@@ -6099,8 +5670,6 @@ DrawBlocks_TB_2:
 		move.l	#$800000,d7
 		move.l	d0,d1
 		bsr.w	sub_6E98
-		tst.w	(Two_player_mode).w
-		bne.s	loc_6D4E
 
 loc_6D18:
 		move.w	(a0),d3
@@ -6121,28 +5690,6 @@ loc_6D18:
 
 loc_6D48:
 		dbf	d6,loc_6D18
-		rts
-; ---------------------------------------------------------------------------
-
-loc_6D4E:
-		move.w	(a0),d3
-		andi.w	#$3FF,d3
-		lsl.w	#3,d3
-		lea	(v_16x16).w,a1
-		adda.w	d3,a1
-		move.l	d1,d0
-		bsr.w	DrawBlock
-		adda.w	#16,a0
-		addi.w	#$80,d1
-		andi.w	#$FFF,d1
-		addi.w	#16,d4
-		move.w	d4,d0
-		andi.w	#$70,d0
-		bne.s	loc_6D7E
-		bsr.w	sub_6E98
-
-loc_6D7E:
-		dbf	d6,loc_6D4E
 		rts
 ; End of function DrawBlocks_TB_2
 
@@ -6173,8 +5720,6 @@ DrawBlocks_LR_3:
 		add.w	4(a3),d4
 
 loc_6D94:
-		tst.w	(Two_player_mode).w
-		bne.s	loc_6E12
 		move.l	a2,-(sp)
 		move.w	d6,-(sp)
 		lea	(Block_cache).w,a2
@@ -6229,73 +5774,6 @@ loc_6DFA:
 loc_6E0A:
 		dbf	d6,loc_6DFA
 		movea.l	(sp)+,a2
-		rts
-; ---------------------------------------------------------------------------
-
-loc_6E12:
-		move.l	d0,d1
-		or.w	d2,d1
-		swap	d1
-		move.l	d1,(a5)
-		swap	d1
-		tst.b	d1
-		bmi.s	loc_6E5C
-		bsr.w	sub_6E98
-
-loc_6E24:
-		move.w	(a0),d3
-		andi.w	#$3FF,d3
-		lsl.w	#3,d3
-		lea	(v_16x16).w,a1
-		adda.w	d3,a1
-		bsr.w	sub_6F32
-		addq.w	#2,a0
-		addq.b	#4,d1
-		bpl.s	loc_6E46
-		andi.b	#$7F,d1
-		swap	d1
-		move.l	d1,(a5)
-		swap	d1
-
-loc_6E46:
-		addi.w	#$10,d5
-		move.w	d5,d0
-		andi.w	#$70,d0
-		bne.s	loc_6E56
-		bsr.w	sub_6E98
-
-loc_6E56:
-		dbf	d6,loc_6E24
-		rts
-; ---------------------------------------------------------------------------
-
-loc_6E5C:
-		bsr.w	sub_6E98
-
-loc_6E60:
-		move.w	(a0),d3
-		andi.w	#$3FF,d3
-		lsl.w	#3,d3
-		lea	(v_16x16).w,a1
-		adda.w	d3,a1
-		bsr.w	sub_6F32
-		addq.w	#2,a0
-		addq.b	#4,d1
-		bmi.s	loc_6E82
-		ori.b	#$80,d1
-		swap	d1
-		move.l	d1,(a5)
-		swap	d1
-
-loc_6E82:
-		addi.w	#$10,d5
-		move.w	d5,d0
-		andi.w	#$70,d0
-		bne.s	loc_6E92
-		bsr.w	sub_6E98
-
-loc_6E92:
-		dbf	d6,loc_6E60
 		rts
 ; End of function DrawBlocks_LR_3
 
@@ -6565,25 +6043,10 @@ Calc_VRAM_Pos:
 		add.w	(a3),d5
 
 Calc_VRAM_Pos_2:
-		tst.w	(Two_player_mode).w
-		bne.s	loc_70A6
 		add.w	4(a3),d4
 		andi.w	#$F0,d4
 		andi.w	#$1F0,d5
 		lsl.w	#4,d4
-		lsr.w	#2,d5
-		add.w	d5,d4
-		moveq	#3,d0
-		swap	d0
-		move.w	d4,d0
-		rts
-; ---------------------------------------------------------------------------
-
-loc_70A6:
-		add.w	4(a3),d4
-		andi.w	#$1F0,d4
-		andi.w	#$1F0,d5
-		lsl.w	#3,d4
 		lsr.w	#2,d5
 		add.w	d5,d4
 		moveq	#3,d0
@@ -6597,27 +6060,11 @@ loc_70A6:
 
 
 sub_70C0:
-		tst.w	(Two_player_mode).w
-		bne.s	loc_70E2
 		add.w	4(a3),d4
 		add.w	(a3),d5
 		andi.w	#$F0,d4
 		andi.w	#$1F0,d5
 		lsl.w	#4,d4
-		lsr.w	#2,d5
-		add.w	d5,d4
-		moveq	#2,d0
-		swap	d0
-		move.w	d4,d0
-		rts
-; ---------------------------------------------------------------------------
-
-loc_70E2:
-		add.w	4(a3),d4
-		add.w	(a3),d5
-		andi.w	#$1F0,d4
-		andi.w	#$1F0,d5
-		lsl.w	#3,d4
 		lsr.w	#2,d5
 		add.w	d5,d4
 		moveq	#2,d0
@@ -6633,14 +6080,6 @@ loc_70E2:
 LoadTilesFromStart:
 		lea	(vdp_control_port).l,a5
 		lea	(vdp_data_port).l,a6
-		tst.w	(Two_player_mode).w
-		beq.s	loc_711E
-		lea	(Camera_X_pos_P2).w,a3
-		lea	(v_lvllayout).w,a4
-		move.w	#$6000,d2
-		bsr.s	DrawChunks_2P
-
-loc_711E:
 		lea	(Camera_RAM).w,a3
 		lea	(v_lvllayout).w,a4
 		move.w	#$4000,d2
@@ -6677,30 +6116,6 @@ loc_7144:
 		rts
 ; End of function DrawChunks
 
-
-; =============== S U B	R O U T	I N E =======================================
-
-
-DrawChunks_2P:
-		moveq	#-16,d4
-		moveq	#((224+16+16)/16)-1,d6
-
-loc_7174:
-		movem.l	d4-d6,-(sp)
-		moveq	#0,d5
-		move.w	d4,d1
-		bsr.w	sub_70C0
-		move.w	d1,d4
-		moveq	#0,d5
-		moveq	#(512/16)-1,d6
-		disable_ints
-		bsr.w	DrawBlocks_LR_2
-		enable_ints
-		movem.l	(sp)+,d4-d6
-		addi.w	#16,d4
-		dbf	d6,loc_7174
-		rts
-; End of function LoadTilesFromStart_2P
 
 ; ---------------------------------------------------------------------------
 
@@ -6787,9 +6202,45 @@ loc_725A:
 ; End of function sub_7232
 
 
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+
+LoadZoneTiles:
+	moveq	#0,d0
+	move.b	(Current_Zone).w,d0
+	lsl.w	#4,d0
+	lea	(LevelArtPointers).l,a2
+	lea	(a2,d0.w),a2
+	move.l	(a2)+,d0
+	andi.l	#$FFFFFF,d0	; 8x8 tile pointer
+	movea.l	d0,a0
+	lea	(Chunk_Table).l,a1
+	bsr.w	KosPlusDec
+	move.w	a1,d3
+	move.w	d3,d7
+	andi.w	#$FFF,d3
+	lsr.w	#1,d3
+	rol.w	#4,d7
+	andi.w	#$F,d7
+-	move.w	d7,d2
+	lsl.w	#7,d2
+	lsl.w	#5,d2
+	move.l	#$FFFFFF,d1
+	move.w	d2,d1
+	jsr	(QueueDMATransfer).l
+	move.w	d7,-(sp)
+	move.b	#VintID_TitleCard,(v_vbla_routine).w
+	bsr.w	WaitForVint
+	bsr.w	RunPLC_RAM
+	move.w	(sp)+,d7
+	move.w	#$800,d3
+	dbf	d7,-
+
+	rts
+; End of function LoadZoneTiles
+
 ; =============== S U B	R O U T	I N E =======================================
 
-
+; LoadZoneBlockMaps
 MainLevelLoadBlock:
 		moveq	#0,d0
 		move.b	(Current_Zone).w,d0
@@ -6800,28 +6251,10 @@ MainLevelLoadBlock:
 		addq.l	#4,a2
 		movea.l	(a2)+,a0
 		lea	(v_16x16).w,a1
-		move.w	#bytesToWcnt(v_16x16_end-v_16x16),d2
-
-MainLevelLoadBlock_ConvertLoop:
-		move.w	(a0)+,d0
-		tst.w	(Two_player_mode).w
-		beq.s	MainLevelLoadBlock_Not2p
-		move.w	d0,d1
-		andi.w	#nontile_mask,d0
-		andi.w	#tile_mask,d1
-		lsr.w	#1,d1
-		or.w	d1,d0
-
-MainLevelLoadBlock_Not2p:
-		move.w	d0,(a1)+
-		dbf	d2,MainLevelLoadBlock_ConvertLoop
-
+		jsr	(KosPlusDec).l	; load block maps
 		movea.l	(a2)+,a0
 		lea	(v_128x128).l,a1
-		move.w	#bytesToWcnt(v_128x128_end-v_128x128),d0
--		move.w	(a0)+,(a1)+
-		dbf	d0,-
-
+		jsr	(TwizDec).l	; load block maps
 		bsr.w	LevelLayoutLoad
 		move.w	(a2)+,d0
 		move.w	(a2),d0
@@ -24260,8 +23693,7 @@ S1SS_LoadData:
 		; Load layout data
 		movea.l	S1SS_LayoutIndex(pc,d0.w),a0
 		lea	(v_ssbuffer2).l,a1
-		move.w	#make_art_tile(ArtTile_SS_Background_Clouds,0,0),d0
-		jsr	(EniDec).l
+		jsr	(TwizDec).l
 		; Clear everything from v_ssbuffer1 to v_ssbuffer2
 		lea	(v_ssbuffer1).l,a1
 		move.w	#bytesToLcnt(v_ssbuffer2-v_ssbuffer1),d0
@@ -25890,9 +25322,9 @@ LoadDebugObjectSprite:
 		include	"_inc/Pattern Load Cues.asm"
 ; ---------------------------------------------------------------------------
 
-Nem_SegaLogo:	binclude	"art/nemesis/S1/Sega Logo (JP1).nem"
+Nem_SegaLogo:	binclude	"art/nemesis/Sega Logo (JP1).nem"
 		even
-Eni_SegaLogo:	binclude	"tilemaps/S1/Sega Logo (JP1).eni"
+Eni_SegaLogo:	binclude	"tilemaps/Sega Logo (JP1).eni"
 		even
 Eni_TitleMap:	binclude	"tilemaps/Title Emblem.eni"
 		even
@@ -25951,9 +25383,9 @@ Nem_Bumper:	binclude	"art/nemesis/S1/Special Bumper.nem"
 		even
 Nem_ResultEm:	binclude	"art/nemesis/S1/Special Result Emeralds.nem" ; chaos emeralds on special stage results screen
 		even
-Eni_SSBg1:	binclude	"tilemaps/S1/SS Background 1.eni" ; special stage background (mappings)
+Eni_SSBg1:	binclude	"tilemaps/SS Background 1.eni" ; special stage background (mappings)
 		even
-Eni_SSBg2:	binclude	"tilemaps/S1/SS Background 2.eni" ; special stage background (mappings)
+Eni_SSBg2:	binclude	"tilemaps/SS Background 2.eni" ; special stage background (mappings)
 		even
 ; ---------------------------------------------------------------------------
 ; Green Hill Zone stage assets
@@ -26158,47 +25590,45 @@ Nem_Squirrel:	binclude	"art/nemesis/S1/Animal Squirrel.nem"
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - primary patterns and block mappings
 ; ---------------------------------------------------------------------------
-Map16_GHZ:	binclude	"mappings/16x16/GHZ.unc"
+Map16_GHZ:	binclude	"mappings/16x16/GHZ.kosp"
 		even
-Nem_GHZ:	binclude	"art/nemesis/level/8x8 - GHZ.nem"	; To be replaced
+Kosp_GHZ:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"		; To be replaced
 		even
-Map128_GHZ:	binclude	"mappings/128x128/GHZ.unc"		; To be replaced
+Map128_GHZ:	binclude	"mappings/128x128/GHZ.twiz"			; To be replaced
 		even
-Map16_LZ:	binclude	"mappings/16x16/LZ.unc"
+Map16_LZ:	binclude	"mappings/16x16/LZ.kosp"
 		even
-Nem_LZ:		binclude	"art/nemesis/level/8x8 - LZ.nem"
+Kosp_LZ:	binclude	"art/kosinski/level/8x8 - LZ.kosp"
 		even
-Map128_LZ:	binclude	"mappings/128x128/LZ.unc"
+Map128_LZ:	binclude	"mappings/128x128/LZ.twiz"
 		even
-Map16_CPZ:	binclude	"mappings/16x16/CPZ.unc"
+Map16_CPZ:	binclude	"mappings/16x16/CPZ.kosp"
 		even
-Nem_CPZ:	binclude	"art/nemesis/level/8x8 - CPZ.nem"
+Kosp_CPZ:	binclude	"art/kosinski/level/8x8 - CPZ.kosp"
 		even
-Map128_CPZ:	binclude	"mappings/128x128/CPZ.unc"
+Map128_CPZ:	binclude	"mappings/128x128/CPZ.twiz"
 		even
-Map16_HPZ:	binclude	"mappings/16x16/HPZ.unc"
+Map16_HPZ:	binclude	"mappings/16x16/HPZ.kosp"
 		even
-Nem_HPZ:	binclude	"art/nemesis/level/8x8 - HPZ.nem"
+Kosp_HPZ:	binclude	"art/kosinski/level/8x8 - HPZ.kosp"
 		even
-Map128_HPZ:	binclude	"mappings/128x128/HPZ.unc"
+Map128_HPZ:	binclude	"mappings/128x128/HPZ.twiz"
 		even
-Map16_EHZ:	binclude	"mappings/16x16/EHZ.unc"
+Map16_EHZ:	binclude	"mappings/16x16/EHZ.kosp"
 		even
-Nem_EHZ:	binclude	"art/nemesis/level/8x8 - EHZ.nem"
+Kosp_EHZ:	binclude	"art/kosinski/level/8x8 - EHZ.kosp"
 		even
-Map128_EHZ:	binclude	"mappings/128x128/EHZ.unc"
+Map128_EHZ:	binclude	"mappings/128x128/EHZ.twiz"
 		even
-Map16_HTZ:	binclude	"mappings/16x16/HTZ.unc"
+Map16_HTZ:	binclude	"mappings/16x16/HTZ.kosp"
 		even
-Nem_HTZ:	binclude	"art/nemesis/level/8x8 - HTZ.nem"
+Kosp_HTZ:	binclude	"art/kosinski/level/8x8 - HTZ.kosp"
 		even
-Map128_HTZ:	binclude	"mappings/128x128/HTZ.unc"
+Map128_HTZ:	binclude	"mappings/128x128/HTZ.twiz"
 		even
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - Level placeholders
 ; ---------------------------------------------------------------------------
-Nem_CPZ_Buildings:		binclude	"art/nemesis/CPZ Buildings.nem"
-		even
 Nem_HTZ_AniPlaceholders:	binclude	"art/nemesis/HTZ Ani Placeholders.nem"
 		even
 ; ---------------------------------------------------------------------------
@@ -26297,17 +25727,17 @@ Col_HTZ4:	binclude	"collision/HTZ4.bin"
 ; ---------------------------------------------------------------------------
 ; Special Stage layouts
 ; ---------------------------------------------------------------------------
-SS_1:		binclude	"sslayout/1.eni"
+SS_1:		binclude	"sslayout/1.twiz"
 		even
-SS_2:		binclude	"sslayout/2.eni"
+SS_2:		binclude	"sslayout/2.twiz"
 		even
-SS_3:		binclude	"sslayout/3.eni"
+SS_3:		binclude	"sslayout/3.twiz"
 		even
-SS_4:		binclude	"sslayout/4.eni"
+SS_4:		binclude	"sslayout/4.twiz"
 		even
-SS_5:		binclude	"sslayout/5 (JP1).eni"
+SS_5:		binclude	"sslayout/5.twiz"
 		even
-SS_6:		binclude	"sslayout/6 (JP1).eni"
+SS_6:		binclude	"sslayout/6.twiz"
 		even
 ; ---------------------------------------------------------------------------
 ; Misc. animated tiles
@@ -26592,10 +26022,10 @@ RingPos_CPZ1:	binclude	"level/rings/CPZ_1.bin"
 ; Same as Sonic 1's, down to its location in the ROM
 ; ---------------------------------------------------------------------------
 		include	"s1.sounddriver.asm"
-;		cnop	-1,2<<lastbit(*-1)
+		cnop	-1,2<<lastbit(*-1)
 		even
 
- if AdvancedHandler	
+ if AdvancedHandler
 ; ==============================================================
 ; --------------------------------------------------------------
 ; Debugging modules
@@ -26611,4 +26041,4 @@ RingPos_CPZ1:	binclude	"level/rings/CPZ_1.bin"
 ;	to resolve symbol names.
 ; --------------------------------------------------------------
 
- endif		
+ endif
