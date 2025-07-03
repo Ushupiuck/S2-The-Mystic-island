@@ -8582,12 +8582,6 @@ locret_CE58:
 
 MarkObjGone:
 RememberState:
-		tst.w	(Two_player_mode).w
-		beq.s	loc_CE64
-		bra.w	DisplaySprite
-; ---------------------------------------------------------------------------
-
-loc_CE64:
 		out_of_range.s	loc_CE7C
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
@@ -8605,12 +8599,6 @@ loc_CE8E:
 ; does nothing instead of calling DisplaySprite in the case of no deletion
 ; loc_CE92:
 MarkObjGone2:
-		tst.w	(Two_player_mode).w
-		beq.s	loc_CE9A
-		rts
-; ---------------------------------------------------------------------------
-
-loc_CE9A:
 		out_of_range.s	loc_CEB0
 		rts
 ; ---------------------------------------------------------------------------
@@ -8625,50 +8613,6 @@ loc_CEB0:
 loc_CEC2:
 		bra.w	DeleteObject
 ; ===========================================================================
-; first player in two player mode
-; loc_CEC6:
-MarkObjGone_P1:
-		tst.w	(Two_player_mode).w
-		bne.s	MarkObjGone_P2
-		out_of_range.s	loc_CEE4
-		bra.w	DisplaySprite
-; ---------------------------------------------------------------------------
-
-loc_CEE4:
-		lea	(v_objstate).w,a2
-		moveq	#0,d0
-		move.b	obRespawnNo(a0),d0
-		beq.s	loc_CEF6
-		bclr	#7,2(a2,d0.w)
-
-loc_CEF6:
-		bra.w	DeleteObject
-; ===========================================================================
-; second player in two player mode
-; loc_CEFA:
-MarkObjGone_P2:
-		move.w	obX(a0),d0
-		andi.w	#-$80,d0
-		move.w	d0,d1
-		sub.w	(Camera_X_pos_coarse).w,d0
-		cmpi.w	#128+320+192,d0
-		bhi.w	loc_CF14
-		bra.w	DisplaySprite
-; ---------------------------------------------------------------------------
-
-loc_CF14:
-		sub.w	(Camera_X_pos_coarse_P2).w,d1
-		cmpi.w	#128+320+192,d1
-		bhi.w	loc_CF24
-		bra.w	DisplaySprite
-; ---------------------------------------------------------------------------
-
-loc_CF24:
-		lea	(v_objstate).w,a2
-		moveq	#0,d0
-		move.b	obRespawnNo(a0),d0
-		beq.s	DeleteObject
-		bclr	#7,2(a2,d0.w)
 
 ; ---------------------------------------------------------------------------
 ; Subroutine to delete an object
@@ -9490,36 +9434,8 @@ loc_D664:
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
-; adjust art pointer of object at a0 for 2-player mode
-; ModifySpriteAttr_2P:
 Adjust2PArtPointer:
-		tst.w	(Two_player_mode).w
-		beq.s	locret_D684
-		move.w	obGfx(a0),d0
-		andi.w	#tile_mask,d0
-		lsr.w	#1,d0
-		andi.w	#nontile_mask,obGfx(a0)
-		add.w	d0,obGfx(a0)
-
-locret_D684:
-		rts
-; End of function Adjust2PArtPointer
-
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
-; adjust art pointer of object at a1 for 2-player mode
-; ModifyA1SpriteAttr_2P:
 Adjust2PArtPointer2:
-		tst.w	(Two_player_mode).w
-		beq.s	locret_D6BE
-		move.w	obGfx(a1),d0
-		andi.w	#tile_mask,d0
-		lsr.w	#1,d0
-		andi.w	#nontile_mask,obGfx(a1)
-		add.w	d0,obGfx(a1)
-
-locret_D6BE
 		rts
 ; End of function Adjust2PArtPointer2
 
@@ -11947,7 +11863,6 @@ Obj01_Init:
 		move.b	#9,obWidth(a0)
 		move.l	#Map_Sonic,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Sonic,0,0),obGfx(a0)
-		jsr	(Adjust2PArtPointer).l
 		move.b	#2,obPriority(a0)
 		move.b	#$18,obActWid(a0)
 		move.b	#4,obRender(a0)
@@ -13917,7 +13832,6 @@ Obj02_Init:
 		move.b	#9,obWidth(a0)
 		move.l	#Map_Tails,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Tails,0,0),obGfx(a0)
-		jsr	(Adjust2PArtPointer).l
 		move.b	#2,obPriority(a0)
 		move.b	#$18,obActWid(a0)
 		move.b	#$84,obRender(a0)
@@ -15779,7 +15693,6 @@ Obj05_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Tails,obMap(a0)
 		move.w	#make_art_tile(ArtTile_TailsTails,0,0),obGfx(a0)
-		jsr	(Adjust2PArtPointer).l
 		move.b	#2,obPriority(a0)
 		move.b	#$18,obActWid(a0)
 		move.b	#4,obRender(a0)
@@ -17143,7 +17056,6 @@ S1Obj47_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Bump,obMap(a0)
 		move.w	#make_art_tile(ArtTile_SYZ_Bumper,0,0),obGfx(a0)
-		jsr	(Adjust2PArtPointer).l
 		move.b	#4,obRender(a0)
 		move.b	#$10,obActWid(a0)
 		move.b	#1,obPriority(a0)
@@ -17595,7 +17507,6 @@ loc_141C8:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj0B,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Level,3,1),obGfx(a0)
-		jsr	(Adjust2PArtPointer).l
 		ori.b	#4,obRender(a0)
 		move.b	#$10,obActWid(a0)
 		move.b	#4,obPriority(a0)
@@ -17693,7 +17604,6 @@ Obj0C_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj0C,obMap(a0)
 		move.w	#make_art_tile($418,3,1),obGfx(a0)
-		jsr	(Adjust2PArtPointer).l
 		ori.b	#4,obRender(a0)
 		move.b	#$10,obActWid(a0)
 		move.b	#4,obPriority(a0)
@@ -17785,7 +17695,6 @@ Obj12_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj12,obMap(a0)
 		move.w	#make_art_tile(ArtTile_HPZ_Emerald,3,0),obGfx(a0)
-		jsr	(Adjust2PArtPointer).l
 		move.b	#4,obRender(a0)
 		move.b	#$20,obActWid(a0)
 		move.b	#4,obPriority(a0)
@@ -17824,7 +17733,6 @@ loc_1446C:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj13,obMap(a0)
 		move.w	#make_art_tile(ArtTile_HPZ_Waterfall,3,1),obGfx(a0)
-		jsr	(Adjust2PArtPointer).l
 		move.b	#4,obRender(a0)
 		move.b	#$10,obActWid(a0)
 		move.b	#1,obPriority(a0)
@@ -17855,7 +17763,6 @@ sub_144D4:
 		move.w	obY(a0),obY(a1)
 		move.l	#Map_Obj13,obMap(a1)
 		move.w	#make_art_tile(ArtTile_HPZ_Waterfall,3,1),obGfx(a1)
-		jsr	(Adjust2PArtPointer2).l
 		move.b	#4,obRender(a1)
 		move.b	#$10,obActWid(a1)
 		move.b	#1,obPriority(a1)
@@ -18152,7 +18059,6 @@ loc_14CD2:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_obj14,obMap(a0)
 		move.w	#make_art_tile(ArtTile_HTZ_Seesaw,0,0),obGfx(a0)
-		jsr	(Adjust2PArtPointer).l
 		ori.b	#4,obRender(a0)
 		move.b	#4,obPriority(a0)
 		move.b	#$30,obActWid(a0)
@@ -18299,7 +18205,6 @@ loc_14E3C:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_obj14b,obMap(a0)
 		move.w	#make_art_tile(ArtTile_HTZ_Seesaw,0,0),obGfx(a0)
-		jsr	(Adjust2PArtPointer).l
 		ori.b	#4,obRender(a0)
 		move.b	#4,obPriority(a0)
 		move.b	#$8B,obColType(a0)
@@ -18492,7 +18397,6 @@ Obj16_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj16,obMap(a0)
 		move.w	#make_art_tile(ArtTile_HtzZipline,2,0),obGfx(a0)
-		jsr	(Adjust2PArtPointer).l
 		ori.b	#4,obRender(a0)
 		move.b	#$20,obActWid(a0)
 		move.b	#0,obFrame(a0)
@@ -18588,7 +18492,6 @@ Obj19_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj19,obMap(a0)
 		move.w	#make_art_tile(ArtTile_CPZ_Platform,3,0),obGfx(a0)
-		jsr	(Adjust2PArtPointer).l
 		move.b	#4,obRender(a0)
 		moveq	#0,d0
 		move.b	obSubtype(a0),d0
@@ -18855,7 +18758,6 @@ Obj49_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj49,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Waterfall,1,0),obGfx(a0)
-		jsr	(Adjust2PArtPointer).l
 		move.b	#4,obRender(a0)
 		move.b	#$20,obActWid(a0)
 		move.w	obX(a0),objoff_30(a0)
@@ -18864,11 +18766,7 @@ Obj49_Init:
 		bset	#4,obRender(a0)
 
 Obj49_Main:
-		tst.w	(Two_player_mode).w
-		bne.s	loc_156F6
 		out_of_range2	DeleteObject
-
-loc_156F6:
 		move.w	obX(a0),d1
 		move.w	d1,d2
 		subi.w	#$40,d1
@@ -20184,7 +20082,7 @@ Obj4B_Projectile:
 		jsr	(ObjectMove).l
 		lea	(Ani_obj4B).l,a1
 		jsr	(AnimateSprite).l
-		jmp	(MarkObjGone_P1).l
+		jmp	(MarkObjGone).l
 ; ===========================================================================
 ; loc_167BC:
 Obj4B_Flame:
@@ -20203,13 +20101,12 @@ loc_167CE:
 		move.b	obRender(a1),obRender(a0)
 		lea	(Ani_obj4B).l,a1
 		jsr	(AnimateSprite).l
-		jmp	(MarkObjGone_P1).l
+		jmp	(MarkObjGone).l
 ; ===========================================================================
 
 Obj4B_Init:
 		move.l	#Map_obj4B,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Buzzer,0,0),obGfx(a0)
-		jsr	(Adjust2PArtPointer).l
 		ori.b	#4,obRender(a0)
 		move.b	#$A,obColType(a0)
 		move.b	#4,obPriority(a0)
@@ -20227,7 +20124,6 @@ Obj4B_Init:
 		move.b	#4,obRoutine(a1)		; => Obj4B_Flame
 		move.l	#Map_obj4B,obMap(a1)
 		move.w	#make_art_tile(ArtTile_Buzzer,0,0),obGfx(a1)
-		jsr	(Adjust2PArtPointer2).l
 		move.b	#4,obPriority(a1)
 		move.b	#$10,obActWid(a1)
 		move.b	obStatus(a0),obStatus(a1)
@@ -20253,7 +20149,7 @@ Obj4B_Main:
 		jsr	Obj4B_Main_Index(pc,d1.w)
 		lea	(Ani_obj4B).l,a1
 		jsr	(AnimateSprite).l
-		jmp	(MarkObjGone_P1).l
+		jmp	(MarkObjGone).l
 ; ===========================================================================
 Obj4B_Main_Index:	dc.w Obj4B_Roaming-Obj4B_Main_Index
 			dc.w Obj4B_Shooting-Obj4B_Main_Index
@@ -20348,7 +20244,6 @@ Obj4B_ShootProjectile:
 		move.b	#6,obRoutine(a1)		; => Obj4B_Projectile
 		move.l	#Map_obj4B,obMap(a1)
 		move.w	#make_art_tile(ArtTile_Buzzer,0,0),obGfx(a1)
-		jsr	(Adjust2PArtPointer2).l
 		move.b	#4,obPriority(a1)
 		move.b	#$98,obColType(a1)
 		move.b	#$10,obActWid(a1)
@@ -21157,7 +21052,6 @@ Obj54_Index:	dc.w Obj54_Init-Obj54_Index
 Obj54_Init:
 		move.l	#Map_obj54,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Snail,0,0),obGfx(a0)
-		jsr	(Adjust2PArtPointer).l
 		ori.b	#4,obRender(a0)
 		move.b	#$A,obColType(a0)
 		move.b	#4,obPriority(a0)
@@ -21170,7 +21064,6 @@ Obj54_Init:
 		move.b	#6,obRoutine(a1)
 		move.l	#Map_obj54,obMap(a1)
 		move.w	#make_art_tile(ArtTile_Snail,1,0),obGfx(a1)
-		jsr	(Adjust2PArtPointer2).l
 		move.b	#3,obPriority(a1)
 		move.b	#$10,obActWid(a1)
 		move.b	obStatus(a0),obStatus(a1)
@@ -21203,7 +21096,7 @@ Obj54_Move:
 		add.w	d1,obY(a0)
 		lea	(Ani_Obj54).l,a1
 		jsr	(AnimateSprite).l
-		jmp	(MarkObjGone_P1).l
+		jmp	(MarkObjGone).l
 ; ===========================================================================
 ; loc_176B4:
 Obj54_Display:
@@ -21212,7 +21105,7 @@ Obj54_Display:
 		st	objoff_34(a0)
 		lea	(Ani_Obj54).l,a1
 		jsr	(AnimateSprite).l
-		jmp	(MarkObjGone_P1).l
+		jmp	(MarkObjGone).l
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -21259,7 +21152,6 @@ sub_17714:
 		move.b	#8,obRoutine(a1)
 		move.l	#Map_obj4B,obMap(a1)
 		move.w	#make_art_tile(ArtTile_Buzzer,0,0),obGfx(a1)
-		jsr	(Adjust2PArtPointer2).l
 		move.b	#4,obPriority(a1)
 		move.b	#$10,obActWid(a1)
 		move.b	obStatus(a0),obStatus(a1)
@@ -21295,7 +21187,7 @@ loc_177A2:
 		add.w	d0,obX(a0)
 		lea	(Ani_obj4B).l,a1
 		jsr	(AnimateSprite).l
-		jmp	(MarkObjGone_P1).l
+		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
 
 loc_177B4:
@@ -21311,7 +21203,7 @@ loc_177B4:
 		subq.b	#2,obRoutine(a0)
 		sf	objoff_34(a0)
 		sf	objoff_35(a0)
-+		jmp	(MarkObjGone_P1).l
++		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
 
 loc_177EC:
@@ -21322,7 +21214,7 @@ loc_177EC:
 		move.w	obY(a1),obY(a0)
 		move.b	obStatus(a1),obStatus(a0)
 		move.b	obRender(a1),obRender(a0)
-		jmp	(MarkObjGone_P1).l
+		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
 Ani_Obj54:	dc.w byte_17818-Ani_Obj54
 		dc.w byte_1781C-Ani_Obj54
@@ -25312,7 +25204,7 @@ LoadDebugObjectSprite:
 		move.w	6(a2,d0.w),obGfx(a0)
 		move.b	5(a2,d0.w),obFrame(a0)
 		move.b	4(a2,d0.w),obSubtype(a0)	; this does... something with the object's subtype
-		jmp	(Adjust2PArtPointer).l
+		rts
 ; End of function Debug_ShowItem
 
 ; ===========================================================================
