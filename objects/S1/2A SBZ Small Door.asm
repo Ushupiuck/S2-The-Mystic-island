@@ -16,7 +16,6 @@ ADoor_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj2A,obMap(a0)
 		move.w	#make_art_tile(ArtTile_SBZ_Door,2,0),obGfx(a0)
-		bsr.w	Adjust2PArtPointer
 		ori.b	#4,obRender(a0)
 		move.b	#8,obActWid(a0)
 		move.b	#4,obPriority(a0)
