@@ -18,7 +18,6 @@ loc_C8DC:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj3C,obMap(a0)
 		move.w	#make_art_tile($590,2,0),obGfx(a0)
-		bsr.w	Adjust2PArtPointer
 		move.b	#4,obRender(a0)
 		move.b	#$10,obActWid(a0)
 		move.b	#4,obPriority(a0)
