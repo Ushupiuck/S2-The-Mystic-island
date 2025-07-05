@@ -35,7 +35,6 @@ loc_93F4:
 		lea	Obj1C_Conf(pc,d0.w),a1
 		move.l	(a1)+,obMap(a0)
 		move.w	(a1)+,obGfx(a0)
-		bsr.w	Adjust2PArtPointer
 		ori.b	#4,obRender(a0)
 		move.b	(a1)+,obFrame(a0)
 		move.b	(a1)+,obActWid(a0)
@@ -52,12 +51,6 @@ loc_93F4:
 ; ---------------------------------------------------------------------------
 
 loc_9442:
-		tst.w	(Two_player_mode).w
-		beq.s	loc_944C
-		bra.w	DisplaySprite
-; ---------------------------------------------------------------------------
-
-loc_944C:
 		out_of_range.w	DeleteObject
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
@@ -65,11 +58,5 @@ loc_944C:
 loc_9464:
 		lea	(Ani_Obj1C).l,a1
 		bsr.w	AnimateSprite
-		tst.w	(Two_player_mode).w
-		beq.s	loc_9478
-		bra.w	DisplaySprite
-; ---------------------------------------------------------------------------
-
-loc_9478:
 		out_of_range.w	DeleteObject
 		bra.w	DisplaySprite
