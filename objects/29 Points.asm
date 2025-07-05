@@ -15,8 +15,7 @@ Obj29_Index:	dc.w loc_9FB2-Obj29_Index
 loc_9FB2:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj29,obMap(a0)
-		move.w	#make_art_tile($4AC,0,0),obGfx(a0)
-		bsr.w	Adjust2PArtPointer
+		move.w	#make_art_tile($4AC,0,0),obGfx(a0)	; TODO Change
 		move.b	#4,obRender(a0)
 		move.b	#1,obPriority(a0)
 		move.b	#8,obActWid(a0)
