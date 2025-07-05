@@ -21,7 +21,6 @@ loc_821E:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj15,obMap(a0)
 		move.w	#make_art_tile($4D0,2,0),obGfx(a0)
-		bsr.w	Adjust2PArtPointer
 		move.b	#4,obRender(a0)
 		move.b	#3,obPriority(a0)
 		move.b	#$18,obActWid(a0)
@@ -32,7 +31,6 @@ loc_821E:
 		bne.s	loc_8284
 		move.l	#Map_Obj15_EHZ,obMap(a0)
 		move.w	#make_art_tile($3DC,2,0),obGfx(a0)
-		bsr.w	Adjust2PArtPointer
 		move.b	#$20,obActWid(a0)
 		move.b	#$10,obHeight(a0)
 		move.b	#$99,obColType(a0)
@@ -42,7 +40,6 @@ loc_8284:
 		bne.s	loc_82BE
 		move.l	#Map_Obj15_CPZ,obMap(a0)
 		move.w	#make_art_tile($418,1,0),obGfx(a0)
-		bsr.w	Adjust2PArtPointer
 		move.b	#$20,obActWid(a0)
 		move.b	#$10,obHeight(a0)
 		lea	obSubtype(a0),a2
@@ -105,7 +102,6 @@ loc_835C:
 		beq.s	loc_8388
 		move.l	#Map_Obj48,obMap(a0)
 		move.w	#make_art_tile($3AA,2,0),obGfx(a0)
-		bsr.w	Adjust2PArtPointer
 		move.b	#1,obFrame(a0)
 		move.b	#2,obPriority(a0)
 		move.b	#$81,obColType(a0)
