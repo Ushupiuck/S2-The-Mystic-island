@@ -23,7 +23,6 @@ Obj22_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_obj22,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Buzz_Bomber,0,0),obGfx(a0)
-		bsr.w	Adjust2PArtPointer
 		move.b	#4,obRender(a0)
 		move.b	#3,obPriority(a0)
 		move.b	#8,obColType(a0)
