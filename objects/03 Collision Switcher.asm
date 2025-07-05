@@ -20,7 +20,6 @@ Obj03_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj03,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Ring,1,0),obGfx(a0)
-		bsr.w	Adjust2PArtPointer
 		move.b	#4,obRender(a0)
 		move.b	#$10,obActWid(a0)
 		move.b	#5,obPriority(a0)
