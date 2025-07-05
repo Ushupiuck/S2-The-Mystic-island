@@ -22,7 +22,6 @@ loc_C682:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj36,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Spikes,1,0),obGfx(a0)
-		bsr.w	Adjust2PArtPointer
 		ori.b	#4,obRender(a0)
 		move.b	#4,obPriority(a0)
 		move.b	obSubtype(a0),d0
@@ -52,11 +51,12 @@ loc_C6EA:
 		move.w	obX(a0),d4
 		bsr.w	SolidObject
 		btst	#3,obStatus(a0)
-		bne.s	loc_C766
+		bne.s	+
 		swap	d6
 		andi.w	#3,d6
 		bne.s	loc_C736
-		bra.s	loc_C766
++		out_of_range.w	DeleteObject,objoff_30(a0)
+		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
 loc_C70C:
@@ -93,12 +93,6 @@ loc_C764:
 		movea.l	(sp)+,a0
 
 loc_C766:
-		tst.w	(Two_player_mode).w
-		beq.s	loc_C770
-		bra.w	DisplaySprite
-; ---------------------------------------------------------------------------
-
-loc_C770:
 		out_of_range.w	DeleteObject,objoff_30(a0)
 		bra.w	DisplaySprite
 
@@ -151,8 +145,7 @@ sub_C7C8:
 		tst.b	obRender(a0)
 		bpl.s	locret_C828
 		move.w	#sfx_SpikesMove,d0
-		jsr	(PlaySound_Special).l
-		bra.s	locret_C828
+		jmp	(PlaySound_Special).l
 ; ---------------------------------------------------------------------------
 
 loc_C7E6:
@@ -163,7 +156,7 @@ loc_C7E6:
 		move.w	#0,objoff_34(a0)
 		move.w	#0,objoff_36(a0)
 		move.w	#60,objoff_38(a0)
-		bra.s	locret_C828
+		rts
 ; ---------------------------------------------------------------------------
 
 loc_C808:
