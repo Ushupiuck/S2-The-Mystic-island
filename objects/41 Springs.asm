@@ -7,12 +7,6 @@ Obj41:
 		move.b	obRoutine(a0),d0
 		move.w	Obj41_Index(pc,d0.w),d1
 		jsr	Obj41_Index(pc,d1.w)
-		tst.w	(Two_player_mode).w
-		beq.s	loc_E1E0
-		bra.w	DisplaySprite
-; ---------------------------------------------------------------------------
-
-loc_E1E0:
 		out_of_range.w	DeleteObject
 		bra.w	DisplaySprite
 ; ===========================================================================
@@ -92,14 +86,14 @@ Obj41_Init_Common:
 		andi.w	#2,d0
 		move.w	Obj41_Strengths(pc,d0.w),$30(a0)
 		btst	#1,d0
-		beq.s	loc_E2F8
+		beq.s	.return
 		bset	#5,obGfx(a0)
 		tst.b	(Current_Zone).w
-		beq.s	loc_E2F8
+		beq.s	.return
 		move.l	#Map_obj41a,obMap(a0)
 
-loc_E2F8:
-		bra.w	Adjust2PArtPointer
+.return:
+		rts
 ; ===========================================================================
 ; word_E2FE:
 Obj41_Strengths:
