@@ -18,7 +18,6 @@ loc_AB50:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_S1Obj7C,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Giant_Ring_Flash,1,0),obGfx(a0)
-		bsr.w	Adjust2PArtPointer
 		ori.b	#4,obRender(a0)
 		move.b	#0,obPriority(a0)
 		move.b	#$20,obActWid(a0)
