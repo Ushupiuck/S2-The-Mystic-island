@@ -29,7 +29,6 @@ loc_124D4:
 		move.b	#1,obPriority(a0)
 		move.b	#$38,obActWid(a0)
 		move.w	#make_art_tile(ArtTile_Warp,0,0),obGfx(a0)
-		bsr.w	Adjust2PArtPointer
 		move.w	#60*2,obj4A_vanishtime(a0)	; set vanishing time to 2 seconds
 
 S1Obj4A_RmvSonic:
