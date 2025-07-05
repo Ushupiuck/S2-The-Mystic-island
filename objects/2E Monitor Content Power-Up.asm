@@ -16,7 +16,6 @@ Obj2E_Index:	dc.w loc_B04E-Obj2E_Index
 loc_B04E:
 		addq.b	#2,obRoutine(a0)
 		move.w	#make_art_tile(ArtTile_Monitor,0,0),obGfx(a0)
-		bsr.w	Adjust2PArtPointer
 		move.b	#$24,obRender(a0)
 		move.b	#3,obPriority(a0)
 		move.b	#8,obActWid(a0)
@@ -57,7 +56,8 @@ loc_B0AC:
 ; End of function sub_B098
 
 ; ---------------------------------------------------------------------------
-Monitor_Subroutines:dc.w Monitor_Null-Monitor_Subroutines
+Monitor_Subroutines:
+		dc.w Monitor_Null-Monitor_Subroutines
 		dc.w Monitor_SonicLife-Monitor_Subroutines
 		dc.w Monitor_TailsLife-Monitor_Subroutines
 		dc.w Monitor_Null-Monitor_Subroutines
@@ -73,14 +73,14 @@ Monitor_Null:
 		rts
 ; ---------------------------------------------------------------------------
 
-Monitor_SonicLife:
-		addq.b	#1,(v_lives).w
-		addq.b	#1,(f_lifecount).w
-		move.w	#bgm_ExtraLife,d0
-		jmp	(PlaySound).l
+Monitor_SonicLife:	; Now rarer and MUCH more valuable!
+		addq.b	#2,(v_lives).w
+		addq.b	#2,(f_lifecount).w
+		move.w	#bgm_ExtraLife,d0	; Potentially with an
+		jmp	(PlaySound).l	; Unique sound. TODO!
 ; ---------------------------------------------------------------------------
 
-Monitor_TailsLife:					; A complete copy of Monitor_SonicLife
+Monitor_TailsLife:	; 1up monitor
 		addq.b	#1,(v_lives).w
 		addq.b	#1,(f_lifecount).w
 		move.w	#bgm_ExtraLife,d0
