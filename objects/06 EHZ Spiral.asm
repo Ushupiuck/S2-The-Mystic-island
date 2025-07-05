@@ -7,12 +7,6 @@ Obj06:
 		move.b	obRoutine(a0),d0
 		move.w	Obj06_Index(pc,d0.w),d1
 		jsr	Obj06_Index(pc,d1.w)
-		tst.w	(Two_player_mode).w
-		beq.s	loc_14986
-		rts
-; ---------------------------------------------------------------------------
-
-loc_14986:
 		out_of_range.w	DeleteObject
 		rts
 ; ---------------------------------------------------------------------------
@@ -64,8 +58,7 @@ loc_149FE:
 		subi.w	#$10,d1
 		cmpi.w	#$30,d1
 		bcc.s	locret_14A54
-		bsr.w	RideObject_SetRide
-		rts
+		bra.w	RideObject_SetRide
 ; ---------------------------------------------------------------------------
 
 loc_14A16:
@@ -92,7 +85,7 @@ loc_14A3E:
 		subi.w	#$10,d1
 		cmpi.w	#$30,d1
 		bcc.s	locret_14A54
-		bsr.w	RideObject_SetRide
+		bra.w	RideObject_SetRide
 
 locret_14A54:
 		rts
