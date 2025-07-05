@@ -79,7 +79,6 @@ loc_9B92:
 		move.w	(a1,d0.w),obVelX(a0)
 		move.w	2(a1,d0.w),objoff_34(a0)
 		move.w	2(a1,d0.w),obVelY(a0)
-		bsr.w	Adjust2PArtPointer
 		move.b	#$C,obHeight(a0)
 		move.b	#4,obRender(a0)
 		bset	#0,obRender(a0)
@@ -112,7 +111,6 @@ loc_9C00:
 		move.w	#make_art_tile($592,0,0),obGfx(a0)
 
 loc_9C4A:
-		bsr.w	Adjust2PArtPointer
 		move.b	#$C,obHeight(a0)
 		move.b	#4,obRender(a0)
 		bset	#0,obRender(a0)
