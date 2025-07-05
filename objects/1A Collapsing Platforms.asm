@@ -4,11 +4,11 @@ Obj1A:
 		move.w	Ledge_Index(pc,d0.w),d1
 		jmp	Ledge_Index(pc,d1.w)
 ; ---------------------------------------------------------------------------
-Ledge_Index:	dc.w Ledge_Main-Ledge_Index
-		dc.w Ledge_Touch-Ledge_Index
-;		dc.w Ledge_Collapse-Ledge_Index
-		dc.w Ledge_Display-Ledge_Index
-;		dc.w Ledge_WalkOff-Ledge_Index
+Ledge_Index:	dc.w Ledge_Main-Ledge_Index	; 0
+		dc.w Ledge_Touch-Ledge_Index	; 2
+;		dc.w Ledge_Collapse-Ledge_Index	; 4
+		dc.w Ledge_Display-Ledge_Index	; 6
+;		dc.w Ledge_WalkOff-Ledge_Index	; 8
 
 collapsing_platform_delay_pointer = objoff_34
 ledge_timedelay = objoff_38		; time between touching the ledge and it collapsing
@@ -21,7 +21,6 @@ Ledge_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj1A,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Level,2,0),obGfx(a0)
-		bsr.w	Adjust2PArtPointer
 		ori.b	#4,obRender(a0)
 		move.b	#4,obPriority(a0)
 		move.b	#7,ledge_timedelay(a0) ; set time delay for collapse
@@ -30,7 +29,6 @@ Ledge_Main:	; Routine 0
 		bne.s	+
 		move.l	#Map_Obj1A_HPZ,obMap(a0)
 		move.w	#$434A,obGfx(a0)
-		bsr.w	Adjust2PArtPointer
 		move.b	#$30,obActWid(a0)
 		move.l	#Obj1A_Conf_HPZ,collapsing_platform_slope_pointer(a0)
 		bra.s	Ledge_Touch
@@ -42,7 +40,7 @@ Ledge_Main:	; Routine 0
 ;		move.w	#make_art_tile(ArtTile_ArtNem_OOZPlatform,3,0),art_tile(a0)
 ;		move.b	#$40,width_pixels(a0)
 ;		move.l	#Obj1A_OOZ_SlopeData,collapsing_platform_slope_pointer(a0)
-;		bra.s	Obj1A_Main
+;		bra.s	Ledge_Touch	; Obj1A_Main in S2 Final
 ; ===========================================================================
 +
 		move.l	#Obj1A_Conf,collapsing_platform_slope_pointer(a0)
@@ -65,8 +63,8 @@ loc_8CDC:	; Ledge_Collapse?
 
 ; =============== S U B	R O U T	I N E =======================================
 
-
-Ledge_WalkOff:	; Routine $A
+Ledge_Destroy:
+Ledge_WalkOff:	; Routine $A ; Misnomer now! See below.
 		moveq	#0,d1
 		move.b	obActWid(a0),d1
 		movea.l	collapsing_platform_slope_pointer(a0),a2	; This is now stored in it's own custom constant
@@ -79,15 +77,16 @@ Ledge_WalkOff:	; Routine $A
 
 Ledge_Display:	; Routine 6
 		tst.b	ledge_timedelay(a0)	; has time delay reached zero?
-		beq.s	Ledge_TimeZero	; if yes, branch
+		beq.s	Ledge_TimeZero		; if yes, branch
 		tst.b	ledge_collapse_flag(a0)	; is ledge collapsing?
-		bne.s	loc_8D16	; if yes, branch
+		bne.s	loc_8D16		; if yes, branch
 		subq.b	#1,ledge_timedelay(a0) ; subtract 1 from time
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
-loc_8D16:
-		bsr.w	Ledge_WalkOff
+loc_8D16:	; Actually "Ledge_WalkOff"! Due to how the subroitine evolved
+		; You'd support two players, the clode split into two. This,
+		bsr.w	Ledge_WalkOff	; and "Ledge_Destroy"
 		subq.b	#1,ledge_timedelay(a0)
 		bne.s	locret_8D44
 		lea	(v_player).w,a1
