@@ -23,7 +23,6 @@ Obj0D_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_obj0D,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Signpost,0,0),obGfx(a0)
-		bsr.w	Adjust2PArtPointer
 		move.b	#4,obRender(a0)
 		move.b	#$18,obActWid(a0)
 		move.b	#4,obPriority(a0)
@@ -76,7 +75,6 @@ Obj0D_Sparkle:
 		move.w	d0,obY(a1)
 		move.l	#Map_Ring,obMap(a1)
 		move.w	#make_art_tile(ArtTile_Ring,1,0),obGfx(a1)
-		bsr.w	Adjust2PArtPointer2
 		move.b	#4,obRender(a1)
 		move.b	#2,obPriority(a1)
 		move.b	#8,obActWid(a1)
@@ -130,7 +128,7 @@ Load_EndOfAct:
 		move.w	(Camera_Max_X_pos).w,(Camera_Min_X_pos).w
 		clr.b	(v_invinc).w
 		clr.b	(f_timecount).w
-		move.b	#id_Obj3A,(v_endcard).w
+		_move.b	#id_Obj3A,(v_endcard).w
 		moveq	#plcid_TitleCard,d0
 		jsr	(NewPLC).l
 		move.b	#1,(f_endactbonus).w
