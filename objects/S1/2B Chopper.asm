@@ -1,5 +1,5 @@
 ; ---------------------------------------------------------------------------
-; Object 2B - Chopper enemy (GHZ)
+; Object 2B - Chopper enemy (GHZ) (Deprecated; will be removed soon)
 ; ---------------------------------------------------------------------------
 
 Obj2B:
@@ -19,7 +19,6 @@ Chop_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj2B,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Chopper,0,0),obGfx(a0)
-		bsr.w	Adjust2PArtPointer
 		move.b	#4,obRender(a0)
 		move.b	#4,obPriority(a0)
 		move.b	#9,obColType(a0)
