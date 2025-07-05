@@ -17,7 +17,6 @@ Obj42_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_obj42,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Newtron,0,0),obGfx(a0)
-		bsr.w	Adjust2PArtPointer
 		move.b	#4,obRender(a0)
 		move.b	#4,obPriority(a0)
 		move.b	#$14,obActWid(a0)
@@ -56,7 +55,6 @@ loc_EC3E:
 		tst.b	obSubtype(a0)
 		beq.s	locret_EC6A
 		move.w	#make_art_tile(ArtTile_Newtron,1,0),obGfx(a0)
-		bsr.w	Adjust2PArtPointer
 		move.b	#8,ob2ndRout(a0)
 		move.b	#4,obAnim(a0)
 
