@@ -18,7 +18,6 @@ Obj40_Index:	dc.w Obj40_Init-Obj40_Index
 Obj40_Init:
 		move.l	#Map_obj40,obMap(a0)
 		move.w	#make_art_tile($4E0,0,0),obGfx(a0)
-		bsr.w	Adjust2PArtPointer
 		move.b	#4,obRender(a0)
 		move.b	#4,obPriority(a0)
 		move.b	#$14,obActWid(a0)
