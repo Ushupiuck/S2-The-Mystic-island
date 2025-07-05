@@ -17,7 +17,6 @@ S1Obj4B_Index:	dc.w loc_AA88-S1Obj4B_Index
 loc_AA88:
 		move.l	#Map_S1Obj4B,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Giant_Ring,1,0),obGfx(a0)
-		bsr.w	Adjust2PArtPointer
 		ori.b	#4,obRender(a0)
 		move.b	#$40,obActWid(a0)
 		tst.b	obRender(a0)
