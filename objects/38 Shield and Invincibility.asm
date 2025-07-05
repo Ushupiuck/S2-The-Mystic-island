@@ -20,21 +20,16 @@ Obj38_Init:
 		move.b	#1,obPriority(a0)
 		move.b	#$18,obActWid(a0)
 		tst.b	obAnim(a0)			; is this the shield?
-		bne.s	loc_1240C			; if not, branch
+		bne.s	loc_12406			; if not, branch
 		move.w	#make_art_tile(ArtTile_Shield,0,0),obGfx(a0)
-		cmpi.b	#id_EHZ,(Current_Zone).w		; is this Emerald Hill Zone?
+		cmpi.b	#id_EHZ,(Current_Zone).w	; is this Emerald Hill Zone?
 		bne.s	loc_12406			; if not, branch
 		move.w	#make_art_tile(ArtTile_EHZ_Shield,0,0),obGfx(a0)
 
 loc_12406:
-		bra.w	Adjust2PArtPointer
-; ===========================================================================
-
-loc_1240C:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Sonic,obMap(a0)	; apparently use Sonic's mappings?
 		move.w	#make_art_tile(ArtTile_Invincibility,0,0),obGfx(a0)
-		bsr.w	Adjust2PArtPointer
 		move.b	#2,obPriority(a0)
 		rts
 ; ===========================================================================
@@ -62,7 +57,7 @@ Obj38_Delete:
 
 Obj38_Stars:
 		tst.b	(v_invinc).w			; is Sonic invincible?
-		beq.s	Obj38_Delete2			; if not, branch
+		beq.s	Obj38_Delete			; if not, branch
 		move.w	(RecordPos_Unused).w,d0
 		move.b	obAnim(a0),d1
 		subq.b	#1,d1
@@ -82,7 +77,3 @@ Obj38_Stars:
 		move.b	(v_player+obFrame).w,obFrame(a0)
 		move.b	(v_player+obRender).w,obRender(a0)
 		jmp	(DisplaySprite).l
-; ===========================================================================
-; loc_124B2:
-Obj38_Delete2:
-		jmp	(DeleteObject).l
