@@ -1,6 +1,6 @@
 ; ---------------------------------------------------------------------------
 
-S1Obj_53:						; leftover object from Sonic 1
+S1Obj_53:	; leftover object from Sonic 1
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	S1Obj_53_Index(pc,d0.w),d1
