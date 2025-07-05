@@ -40,7 +40,6 @@ loc_7BFA:
 		move.w	#make_art_tile(ArtTile_HPZ_Bridge,3,0),obGfx(a0)
 
 loc_7C14:
-		bsr.w	Adjust2PArtPointer
 		move.b	#4,obRender(a0)
 		move.b	#$80,obActWid(a0)
 		move.w	obY(a0),d2
@@ -151,12 +150,6 @@ loc_7D0A:
 		bsr.w	sub_7DC0
 
 loc_7D22:
-		tst.w	(Two_player_mode).w
-		beq.s	loc_7D2A
-		rts
-; ---------------------------------------------------------------------------
-
-loc_7D2A:
 		out_of_range.s	loc_7D3E
 		rts
 ; ---------------------------------------------------------------------------
