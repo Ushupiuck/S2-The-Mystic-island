@@ -13,7 +13,6 @@ loc_8680:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj17,obMap(a0)
 		move.w	#make_art_tile($398,2,0),obGfx(a0)
-		bsr.w	Adjust2PArtPointer
 		move.b	#7,obStatus(a0)
 		move.b	#4,obRender(a0)
 		move.b	#3,obPriority(a0)
@@ -48,7 +47,6 @@ loc_86D4:
 		move.w	d3,obX(a1)
 		move.l	obMap(a0),obMap(a1)
 		move.w	#make_art_tile($398,2,0),obGfx(a1)
-		bsr.w	Adjust2PArtPointer2
 		move.b	#4,obRender(a1)
 		move.b	#3,obPriority(a1)
 		move.b	#8,obActWid(a1)
