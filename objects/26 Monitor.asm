@@ -21,7 +21,6 @@ loc_AE70:
 		move.b	#$E,obWidth(a0)
 		move.l	#Map_Obj26,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Monitor,0,0),obGfx(a0)
-		bsr.w	Adjust2PArtPointer
 		move.b	#4,obRender(a0)
 		move.b	#3,obPriority(a0)
 		move.b	#$F,obActWid(a0)
