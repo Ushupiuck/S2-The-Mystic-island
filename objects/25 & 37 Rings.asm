@@ -57,7 +57,6 @@ loc_A832:
 		move.w	d3,obY(a1)
 		move.l	#Map_Ring,obMap(a1)
 		move.w	#make_art_tile(ArtTile_Ring,1,0),obGfx(a1)
-		bsr.w	Adjust2PArtPointer2
 		move.b	#4,obRender(a1)
 		move.b	#2,obPriority(a1)
 		move.b	#$47,obColType(a1)
@@ -164,7 +163,6 @@ loc_A956:
 		move.w	obY(a0),obY(a1)
 		move.l	#Map_Ring,obMap(a1)
 		move.w	#make_art_tile(ArtTile_Ring,1,0),obGfx(a1)
-		bsr.w	Adjust2PArtPointer2
 		move.b	#4,obRender(a1)
 		move.b	#3,obPriority(a1)
 		move.b	#$47,obColType(a1)
