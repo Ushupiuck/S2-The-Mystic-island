@@ -1,3 +1,83 @@
+; -------------------------------------------------------------------------
+; Moving spring object
+; -------------------------------------------------------------------------
+
+ObjMovingSpring:
+		moveq	#0,d0
+		move.b	obRoutine(a0),d0
+		move.w	ObjMovingSpring_Index(pc,d0.w),d0
+		jsr	ObjMovingSpring_Index(pc,d0.w)
+		out_of_range.w	DeleteObject,objoff_36(a0)	; used for moving the spring
+		rts
+
+; -------------------------------------------------------------------------
+ObjMovingSpring_Index:
+		dc.w	ObjMovingSpring_Init-ObjMovingSpring_Index
+		dc.w	ObjMovingSpring_AlignToGround-ObjMovingSpring_Index
+		dc.w	ObjMovingSpring_Main-ObjMovingSpring_Index
+; -------------------------------------------------------------------------
+
+ObjMovingSpring_Init:
+		addq.b	#2,obRoutine(a0)
+		ori.b	#4,obRender(a0)
+		move.b	#4,obPriority(a0)
+		move.l	#MapSpr_MovingSpring,obMap(a0)	; TODO: Convert to Sonic 2's format
+		move.b	#8,obWidth(a0)
+		move.b	#7,obHeight(a0)
+		move.w	obX(a0),objoff_36(a0)
+		move.w	#$180,obVelX(a0)
+		jsr	(FindFreeObj).l
+		beq.s	.GenSpring
+		jmp	(DeleteObject).l
+
+; -------------------------------------------------------------------------
+
+.GenSpring:
+		move.b	#id_Obj41,obID(a1)	; spawn object 41
+		move.w	obX(a0),obX(a1)
+		move.w	obY(a0),obY(a1)
+		subi.w	#$10,obY(a1)
+		move.b	#$F0,objoff_39(a1)
+		move.w	a0,objoff_34(a1)
+		move.b	obSubtype(a0),obSubtype(a1)
+; End of function ObjMovingSpring_Init
+
+; -------------------------------------------------------------------------
+
+ObjMovingSpring_AlignToGround:
+		jsr	(ObjHitFloor).l
+		tst.w	d1
+		bpl.s	.Sink
+		add.w	d1,obY(a0)
+		move.w	obY(a0),objoff_32(a0)
+		addq.b	#2,obRoutine(a0)
+		rts
+
+; -------------------------------------------------------------------------
+
+.Sink:
+		addq.w	#1,obY(a0)
+		rts
+; End of function ObjMovingSpring_AlignToGround
+
+; -------------------------------------------------------------------------
+
+ObjMovingSpring_Main:
+		jsr	(ObjHitFloor).l
+		add.w	d1,obY(a0)
+		move.w	objoff_32(a0),d0
+		sub.w	obY(a0),d0
+		cmpi.w	#$C,d0
+		bcs.s	.NotEdge
+		neg.w	obVelX(a0)
+
+.NotEdge:
+		jsr	(ObjectMove).l
+		lea	(Ani_MovingSpring).l,a1
+		jsr	(AnimateSprite).l
+		jmp	(DisplaySprite).l
+
+
 ; ---------------------------------------------------------------------------
 ; Object 41 - springs
 ; ---------------------------------------------------------------------------
@@ -88,8 +168,8 @@ Obj41_Init_Common:
 		btst	#1,d0
 		beq.s	.return
 		bset	#5,obGfx(a0)
-		tst.b	(Current_Zone).w
-		beq.s	.return
+		tst.b	(Current_Zone).w	; don't bother loading diagonal spring mappings
+		beq.s	.return			; in green hill zone (art for it doesn't exist)
 		move.l	#Map_obj41a,obMap(a0)
 
 .return:
@@ -353,13 +433,13 @@ loc_E5DC:
 		cmp.w	d0,d4
 		bcs.w	locret_E604
 		cmp.w	d1,d4
-		bcc.w	locret_E604
+		bcc.s	locret_E604
 		move.w	obY(a1),d4
 		cmp.w	d2,d4
-		bcs.w	locret_E604
+		bcs.s	locret_E604
 		cmp.w	d3,d4
-		bcc.w	locret_E604
-		bsr.w	sub_E474
+		bcc.s	locret_E604
+		bra.w	sub_E474
 
 locret_E604:
 		rts

@@ -302,12 +302,12 @@ RAM_Start:
 
 Chunk_Table:		ds.w	64*$100			; 128x128 tile mappings ($8000 bytes)
 Chunk_Table_End:
-
 v_128x128:=	Chunk_Table
 v_128x128_end:=	Chunk_Table_End
 
 Level_Layout:		ds.b	$1000			; level layout buffer ($1000 bytes)
 Level_Layout_End:
+			ds.b	$1000			; free space
 
 v_lvllayout:=	Level_Layout
 v_lvllayout_end:=	Level_Layout_End
@@ -315,7 +315,6 @@ v_lvllayoutbg:=	Level_Layout+$80
 
 Block_Table:		ds.w	4*$300			; 16x16 tile mappings ($1800 bytes)
 Block_Table_End:
-
 v_16x16:=	Block_Table
 v_16x16_end:=	Block_Table_End
 
@@ -332,12 +331,25 @@ Object_Display_Lists_End:
 
 v_spritequeue:=	Object_Display_Lists
 v_spritequeue_end:=	Object_Display_Lists_End
+VDP_Command_Buffer:	ds.w	7*$12			; stores 18 ($12) VDP commands to issue the next time ProcessDMAQueue is called
+VDP_Command_Buffer_Slot:	ds.l	1		; stores the address of the next open slot for a queued VDP command
+
+v_hscrolltablebuffer:	ds.b	$380			; scrolling table data
+v_hscrolltablebuffer_end:
+			ds.b	$80			; would be unused, but data from v_hscrolltablebuffer can spill into here
+v_hscrolltablebuffer_end_padded:
+
+Sonic_Stat_Record_Buf:	ds.b	$100
+Sonic_Pos_Record_Buf:	ds.b	$100
+Tails_Pos_Record_Buf:	ds.b	$100
+Tails_Pos_Record_Buf_Dup:	ds.b	$100
+
+Ring_Positions:		ds.b	$600
+Ring_Positions_End:
+
 
 v_objspace:		ds.b	object_size*$80		; object variable space ($40 bytes per object)
 v_objspace_end:
-
-; 2P mode reserves 6 'blocks' of 12 RAM slots at the end.
-Dynamic_Object_RAM_2P_End = v_objspace_end - ($C * 6) * object_size
 
 ; Title screen objects
 v_titlesonic	= v_objspace+object_size*1		; object variable space for Sonic in the title screen ($40 bytes)
@@ -409,28 +421,6 @@ v_credits	= v_objspace+object_size*2		; object variable space for the credits te
 v_endeggman	= v_objspace+object_size*2		; object variable space for Eggman after the credits ($40 bytes)
 v_tryagain	= v_objspace+object_size*3		; object variable space for the "TRY AGAIN" text ($40 bytes)
 v_eggmanchaos	= v_objspace+object_size*32		; object variable space for the emeralds juggled by Eggman ($180 bytes)
-
-			ds.b	$C00
-
-VDP_Command_Buffer:	ds.w	7*$12			; stores 18 ($12) VDP commands to issue the next time ProcessDMAQueue is called
-VDP_Command_Buffer_Slot:	ds.l	1		; stores the address of the next open slot for a queued VDP command
-
-Sprite_Table_2P:	ds.b	$280			; 2 player sprite table
-Sprite_Table_2P_end:
-			ds.b	$80			; unused
-
-v_hscrolltablebuffer:	ds.b	$380			; scrolling table data
-v_hscrolltablebuffer_end:
-			ds.b	$80			; would be unused, but data from v_hscrolltablebuffer can spill into here
-v_hscrolltablebuffer_end_padded:
-
-Sonic_Stat_Record_Buf:	ds.b	$100
-Sonic_Pos_Record_Buf:	ds.b	$100
-Tails_Pos_Record_Buf:	ds.b	$100
-Tails_Pos_Record_Buf_Dup:	ds.b	$100
-
-Ring_Positions:		ds.b	$600
-Ring_Positions_End:
 
 Camera_RAM:
 
@@ -592,10 +582,8 @@ Camera_Boundaries_P2_End:
 Camera_RAM_End:
 
 Block_cache:		ds.w	512/16*2		; Width of plane in blocks, with each block getting two words.
-			ds.b	$80			; unused
 
 v_snddriver_ram:	SMPS_RAM			; sound driver state
-			ds.b	$40			; unused
 v_gamemode:		ds.b	1			; game mode (00=Sega; 04=Title; 08=Demo; 0C=Level; 10=SS; 14=Cont; 18=End; 1C=Credit; +8C=PreLevel)
 			ds.b	1			; unused
 v_jpadhold2:		ds.b	1			; joypad input - held, duplicate
@@ -792,7 +780,7 @@ v_objstate_end:
 			ds.b	$140			; stack
 v_systemstack:
 v_crossresetram:					; RAM beyond this point is only cleared on a cold-boot
-			ds.b	2			; unused
+			ds.b	$26			; unused
 Level_Inactive_flag:	ds.w	1			; (2 bytes)
 Timer_frames:		ds.w	1			; (2 bytes)
 Debug_object:		ds.w	1			; (2 bytes)
@@ -881,27 +869,20 @@ v_levseldelay:		ds.w	1			; level select - time until change when up/down is held
 v_levselitem:		ds.w	1			; level select - item selected
 v_levselsound:		ds.w	1			; level select - sound selected
 v_scorelife:		ds.l	1			; points required for an extra life (JP1 only)
-			ds.b	$5A			; unused
 
 f_levselcheat:		ds.b	1			; level select cheat flag
 f_slomocheat:		ds.b	1			; slow motion & frame advance cheat flag
+Debug_mode_flag:	ds.w	1
 f_debugcheat:		ds.b	1			; debug mode cheat flag
 f_creditscheat:		ds.b	1			; hidden credits & press start cheat flag
 v_title_dcount:		ds.w	1			; number of times the d-pad is pressed on title screen
 v_title_ccount:		ds.w	1			; number of times C is pressed on title screen
-Two_player_mode:	ds.w	1
-unk_FFE9	= Two_player_mode+1
-word_FFEA:		ds.w	1
-word_FFEC:		ds.w	1
-word_FFEE:		ds.w	1
 
 f_demo:			ds.w	1			; demo mode flag (0 = no; 1 = yes; $8001 = ending)
 v_demonum:		ds.w	1			; demo level number (not the same as the level number)
 v_creditsnum:		ds.w	1			; credits index number
-			ds.b	2			; unused
 v_megadrive:		ds.b	1			; Megadrive machine type
 			ds.b	1			; unused
-Debug_mode_flag:	ds.w	1
 v_end:
     if * > 0	; Don't declare more space than the RAM can contain!
 	fatal "The RAM variable declarations are too large by $\{*} bytes."

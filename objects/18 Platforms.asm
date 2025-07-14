@@ -38,7 +38,6 @@ loc_8866:
 		move.w	#make_art_tile(ArtTile_Level,2,0),obGfx(a0)
 
 loc_8874:
-		bsr.w	Adjust2PArtPointer
 		move.b	#4,obRender(a0)
 		move.b	#4,obPriority(a0)
 		move.w	obY(a0),$2C(a0)
@@ -79,12 +78,6 @@ loc_88E0:
 		bsr.w	sub_890C
 
 loc_88E8:
-		tst.w	(Two_player_mode).w
-		beq.s	loc_88F2
-		bra.w	DisplaySprite
-; ---------------------------------------------------------------------------
-
-loc_88F2:
 		out_of_range.w	DeleteObject,objoff_32(a0)
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
