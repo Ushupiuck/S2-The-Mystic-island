@@ -1,17 +1,25 @@
-	padding off					; we don't want AS padding out dc.b instructions
-	listing on					; Want listing file, but only the final code in expanded macros
-	page	0					; Don't want form feeds
-	supmode on					; we don't need warnings about privileged instructions
+	padding off		; we don't want AS padding out dc.b instructions
+	;listing off		; We don't need to generate anything for a listing file
+	listing on		; Want full listing file
+	;listing noskipped	; Want listing file, but only the non-skipped part of conditional assembly
+	;listing purecode	; Want listing file, but only the final code in expanded macros
+	page	0		; Don't want form feeds
+	supmode on		; we don't need warnings about privileged instructions
 
+
+paddingSoFar set 0
+
+; 128 = 80h = z80, 32988 = 80DCh = z80unDoC
 notZ80 function cpu,(cpu<>128)&&(cpu<>32988)
 
-; make org safer (impossible to overwrite previously assembled bytes)
+; make org safer (impossible to overwrite previously assembled bytes) and count padding
 ; and also make it work in Z80 code without creating a new segment
 org macro address
 	if notZ80(MOMCPU)
 		if address < *
 			error "too much stuff before org $\{address} ($\{(*-address)} bytes)"
-		else
+		elseif address > *
+paddingSoFar	set paddingSoFar + address - *
 			!org address
 		endif
 	else
@@ -68,7 +76,8 @@ align0 macro alignment
 even macro
 	if notZ80(MOMCPU)
 		if (*)&1
-			dc.b 0				;ds.b 1
+paddingSoFar		set paddingSoFar+1
+			dc.b 0 ;ds.b 1 
 		endif
 	else
 		if ($)&1
