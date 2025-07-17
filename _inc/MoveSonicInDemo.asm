@@ -15,7 +15,7 @@ MoveSonicInDemo:
 		move.b	#GameModeID_TitleScreen,(v_gamemode).w ; go to title screen
 
 .dontquit:
-		lea	(Demo_Index).l,a1
+		lea	Demo_Index(pc),a1
 		moveq	#0,d0
 		move.b	(Current_Zone).w,d0
 		cmpi.b	#GameModeID_SpecialStage,(v_gamemode).w ; is this a special stage?
@@ -27,7 +27,7 @@ MoveSonicInDemo:
 		movea.l	(a1,d0.w),a1	; fetch address for demo data
 		tst.w	(f_demo).w	; is this an ending sequence demo?
 		bpl.s	.notcredits	; if not, branch
-		lea	(DemoEndDataPtr).l,a1
+		lea	DemoEndDataPtr(pc),a1
 		move.w	(v_creditsnum).w,d0
 		subq.w	#1,d0
 		lsl.w	#2,d0
@@ -45,41 +45,21 @@ MoveSonicInDemo:
 		and.b	d1,d0
 		move.b	d0,(a0)+
 		subq.b	#1,(Demo_press_counter).w
-		bcc.s	.player2
+		bcc.s	.MimicSonic
 		move.b	3(a1),(Demo_press_counter).w
 		addq.w	#2,(Demo_button_index).w
 
-.player2:
-		cmpi.b	#3,(Current_Zone).w
-		bne.s	MimicSonic
-		lea	(Demo_EHZ_2P).l,a1
-		move.w	(Demo_button_index_2P).w,d0
-		adda.w	d0,a1
-		move.b	(a1),d0
-		lea	(v_2Pjpadhold1).w,a0
-		move.b	d0,d1
-		move.b	v_jpadhold2-v_jpadhold1(a0),d2
-		eor.b	d2,d0
-		move.b	d1,(a0)+
-		and.b	d1,d0
-		move.b	d0,(a0)+
-		subq.b	#1,(Demo_press_counter_2P).w
-		bcc.s	locret_4570
-		move.b	3(a1),(Demo_press_counter_2P).w
-		addq.w	#2,(Demo_button_index_2P).w
+.MimicSonic:
+		clr.w	(v_2Pjpadhold1).w
 
 locret_4570:
-		rts
-; ---------------------------------------------------------------------------
-
-MimicSonic:
-		move.w	#0,(v_2Pjpadhold1).w
 		rts
 ; End of function MoveSonicInDemo
 
 ; ---------------------------------------------------------------------------
-Demo_Index:	dc.l Demo_S1GHZ	; leftover demo	from Sonic 1 GHZ
-		dc.l Demo_S1GHZ	; leftover demo	from Sonic 1 GHZ
+Demo_Index:
+		dc.l Demo_S1GHZ	; unused, as Level_Demo overrides the first
+		dc.l Demo_S1GHZ	; Demo Index ID
 		dc.l Demo_CPZ
 		dc.l Demo_EHZ
 		dc.l Demo_HPZ
