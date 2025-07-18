@@ -70,7 +70,6 @@ plcm:	macro gfx,vram
 ; Standard 1 - loaded for every level
 ; --------------------------------------------------------------------------------------
 PLC_Main:	dc.w ((PLC_Main_End-PLC_Main)/6)-1
-		plcm	Nem_Lamppost, ArtTile_Lamppost
 		plcm	Nem_HUD, ArtTile_HUD
 		plcm	Nem_Lives, ArtTile_Lives_Counter
 		plcm	Nem_Ring, ArtTile_Ring
@@ -81,6 +80,7 @@ PLC_Main_End:
 ; Standard 2 - loaded for every level
 ; --------------------------------------------------------------------------------------
 PLC_Main2:	dc.w ((PLC_Main2_End-PLC_Main2)/6)-1
+		plcm	Nem_Lamppost, ArtTile_Lamppost
 		plcm	Nem_Monitors, ArtTile_Monitor
 		plcm	Nem_Shield, ArtTile_Shield
 		plcm	Nem_Stars, ArtTile_Invincibility
