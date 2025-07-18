@@ -3,6 +3,12 @@
 ; to let them work in both 16-bit and 32-bit addressing modes.
 ramaddr function x,-(-x)&$FFFFFFFF
 ; ---------------------------------------------------------------------------
+; makes a VDP address difference
+vdpCommDelta function addr,((addr&$3FFF)<<16)|((addr&$C000)>>14)
+
+; makes a VDP command
+vdpComm function addr,type,rwd,(((type&rwd)&3)<<30)|((addr&$3FFF)<<16)|(((type&rwd)&$FC)<<2)|((addr&$C000)>>14)
+
 ; calculates initial loop counter value for a dbf loop
 ; that writes n bytes total at 4 bytes per iteration
 bytesToLcnt function n,n>>2-1
@@ -14,6 +20,12 @@ bytesToWcnt function n,n>>1-1
 ; calculates initial loop counter value for a dbf loop
 ; that writes n bytes total at x bytes per iteration
 bytesToXcnt function n,x,n/x-1
+; ---------------------------------------------------------------------------
+; macros to convert from tile index to art tiles, block mapping or VRAM address.
+make_art_tile function addr,pal,pri,((pri&1)<<15)|((pal&3)<<13)|(addr&tile_mask)
+make_block_tile function addr,flx,fly,pal,pri,((pri&1)<<15)|((pal&3)<<13)|((fly&1)<<12)|((flx&1)<<11)|(addr&tile_mask)
+tiles_to_bytes function addr,((addr&$7FF)<<5)
+make_block_tile_pair function addr,flx,fly,pal,pri,((make_block_tile(addr,flx,fly,pal,pri)<<16)|make_block_tile(addr,flx,fly,pal,pri))
 ; ---------------------------------------------------------------------------
 ; macros for defining animated PLC script lists
 zoneanimstart macro {INTLABEL}
@@ -37,15 +49,6 @@ start:
 	dc.b numentries, numvramtiles
 zoneanimcount := zoneanimcount + 1
     endm
-; ---------------------------------------------------------------------------
-; macros to convert from tile index to art tiles, block mapping or VRAM address.
-make_art_tile function addr,pal,pri,((pri&1)<<15)|((pal&3)<<13)|(addr&tile_mask)
-make_art_tile_2p function addr,pal,pri,((pri&1)<<15)|((pal&3)<<13)|((addr&tile_mask)>>1)
-make_block_tile function addr,flx,fly,pal,pri,((pri&1)<<15)|((pal&3)<<13)|((fly&1)<<12)|((flx&1)<<11)|(addr&tile_mask)
-make_block_tile_2p function addr,flx,fly,pal,pri,((pri&1)<<15)|((pal&3)<<13)|((fly&1)<<12)|((flx&1)<<11)|((addr&tile_mask)>>1)
-tiles_to_bytes function addr,((addr&$7FF)<<5)
-make_block_tile_pair function addr,flx,fly,pal,pri,((make_block_tile(addr,flx,fly,pal,pri)<<16)|make_block_tile(addr,flx,fly,pal,pri))
-make_block_tile_pair_2p function addr,flx,fly,pal,pri,((make_block_tile_2p(addr,flx,fly,pal,pri)<<16)|make_block_tile_2p(addr,flx,fly,pal,pri))
 ; ---------------------------------------------------------------------------
 ; function to calculate the location of a tile in plane mappings
 planeLoc function width,col,line,(((width * line) + col) * 2)
