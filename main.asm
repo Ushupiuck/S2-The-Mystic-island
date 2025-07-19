@@ -3925,7 +3925,8 @@ loc_59B6:
 ; End of function BgScrollSpeed
 
 ; ---------------------------------------------------------------------------
-BgScroll_Index:	dc.w BgScroll_GHZ-BgScroll_Index
+BgScroll_Index:
+		dc.w BgScroll_GHZ-BgScroll_Index
 		dc.w BgScroll_LZ-BgScroll_Index
 		dc.w BgScroll_CPZ-BgScroll_Index
 		dc.w BgScroll_EHZ-BgScroll_Index
