@@ -3869,34 +3869,35 @@ loc_590A:
 ; End of function LevelSizeLoad
 
 ; ---------------------------------------------------------------------------
-StartLocArray:	dc.w   $50, $3B0			; GHZ1
-		dc.w   $50,  $FC			; GHZ2
-		dc.w   $50, $3B0			; GHZ3
-		dc.w   $80,  $A8			; GHZ4
-		dc.w   $60,  $6C			; LZ1
-		dc.w   $50,  $EC			; LZ2
-		dc.w   $50, $2EC			; LZ3
-		dc.w   $B80,   0			; LZ4
+StartLocArray:
+		binclude	"startpos/GHZ_1.bin"	; GHZ1
+		binclude	"startpos/GHZ_2.bin"	; GHZ2
+		binclude	"startpos/GHZ_3.bin"	; GHZ3
+		binclude	"startpos/GHZ_4.bin"	; GHZ4
+		binclude	"startpos/LZ_1.bin"	; LZ1
+		binclude	"startpos/LZ_2.bin"	; LZ2
+		binclude	"startpos/LZ_3.bin"	; LZ3
+		binclude	"startpos/LZ_4.bin"	; LZ4
 		binclude	"startpos/CPZ_1.bin"	; CPZ1
-		dc.w   $30, $266			; CPZ2
-		dc.w   $30, $166			; CPZ3
-		dc.w   $80,  $A8			; CPZ4
+		binclude	"startpos/CPZ_2.bin"	; CPZ2
+		binclude	"startpos/CPZ_3.bin"	; CPZ3
+		binclude	"startpos/CPZ_4.bin"	; CPZ4
 		binclude	"startpos/EHZ_1.bin"	; EHZ1
 		binclude	"startpos/EHZ_2.bin"	; EHZ2
-		dc.w   $40, $370			; EHZ3
-		dc.w   $80,  $A8			; EHZ4
+		binclude	"startpos/EHZ_3.bin"	; EHZ3
+		binclude	"startpos/EHZ_4.bin"	; EHZ4
 		binclude	"startpos/HPZ_1.bin"	; HPZ1
-		dc.w   $30, $1BD			; HPZ2
-		dc.w   $30,  $EC			; HPZ3
-		dc.w   $80,  $A8			; HPZ4
+		binclude	"startpos/HPZ_2.bin"	; HPZ2
+		binclude	"startpos/HPZ_3.bin"	; HPZ3
+		binclude	"startpos/HPZ_4.bin"	; HPZ4
 		binclude	"startpos/HTZ_1.bin"	; HTZ1
 		binclude	"startpos/HTZ_2.bin"	; HTZ2
-		dc.w $2140, $5AC			; HTZ3
-		dc.w   $80,  $A8			; HTZ4
-		dc.w  $620, $16B			; S1 Ending 1
-		dc.w  $EE0, $16C			; S1 Ending 2
-		dc.w   $80,  $A8			; S1 Ending 3
-		dc.w   $80,  $A8			; S1 Ending 4
+		binclude	"startpos/HTZ_3.bin"	; HTZ2
+		binclude	"startpos/HTZ_4.bin"	; HTZ4
+		binclude	"startpos/006_1.bin"	; S1 Ending 1
+		binclude	"startpos/006_2.bin"	; S1 Ending 2
+		binclude	"startpos/006_3.bin"	; S1 Ending 3
+		binclude	"startpos/006_4.bin"	; S1 Ending 4
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -4335,14 +4336,14 @@ Deform_EHZ:
 		swap	d0
 +		clr.w	d0
 		; Do 22 lines.
-		moveq	#22-1,d1
+		move.w	#22-1,d1
 -		move.l	d0,(a1)+
 		dbf	d1,-
 
 		move.w	d2,d0
 		asr.w	#6,d0
 		; Do 58 lines.
-		moveq	#58-1,d1
+		move.w	#58-1,d1
 -		move.l	d0,(a1)+
 		dbf	d1,-
 
@@ -4358,7 +4359,7 @@ Deform_EHZ:
 		lea	(Deform_EHZ_Data).l,a2
 		lea	(a2,d1.w),a2
 		; Do 21 lines.
-		moveq	#21-1,d1
+		move.w	#21-1,d1
 -		move.b	(a2)+,d0
 		ext.w	d0
 		add.w	d3,d0
@@ -4367,14 +4368,14 @@ Deform_EHZ:
 
 		clr.w	d0
 		; Do 11 lines.
-		moveq	#11-1,d1
+		move.w	#11-1,d1
 -		move.l	d0,(a1)+
 		dbf	d1,-
 
 		move.w	d2,d0
 		asr.w	#4,d0
 		; Do 16 lines.
-		moveq	#16-1,d1
+		move.w	#16-1,d1
 -		move.l	d0,(a1)+
 		dbf	d1,-
 
@@ -4384,7 +4385,7 @@ Deform_EHZ:
 		asr.w	#1,d1
 		add.w	d1,d0
 		; Do 16 lines.
-		moveq	#16-1,d1
+		move.w	#16-1,d1
 -		move.l	d0,(a1)+
 		dbf	d1,-
 
@@ -4404,7 +4405,7 @@ Deform_EHZ:
 		move.w	d2,d3
 		asr.w	#3,d3
 		; Do 15 lines.
-		moveq	#15-1,d1
+		move.w	#15-1,d1
 -		move.w	d4,(a1)+
 		move.w	d3,(a1)+
 		swap	d3
@@ -4412,7 +4413,7 @@ Deform_EHZ:
 		swap	d3
 		dbf	d1,-
 		; Do 18 lines.
-		moveq	#18/2-1,d1
+		move.w	#18/2-1,d1
 -		move.w	d4,(a1)+
 		move.w	d3,(a1)+
 		move.w	d4,(a1)+
@@ -4519,10 +4520,9 @@ Deform_HPZ:
 		move.w	d2,d0
 		asr.w	#1,d0
 		move.w	#8-1,d1
-
-loc_637E:
-		move.w	d0,(a1)+
+loc_637E:	move.w	d0,(a1)+
 		dbf	d1,loc_637E
+
 		move.w	d2,d0
 		asr.w	#3,d0
 		sub.w	d2,d0
@@ -4567,22 +4567,17 @@ loc_637E:
 		move.w	(Camera_BG_X_pos).w,d0
 		neg.w	d0
 		move.w	#26-1,d1
-
-loc_63E0:
-		move.w	d0,(a1)+
+loc_63E0:	move.w	d0,(a1)+
 		dbf	d1,loc_63E0
-
-		; Skip 7 line blocks which were done earlier.
-		adda.w	#7*2,a1
+		adda.w	#7*2,a1	; Skip 7 line blocks which were done earlier.
 
 		; Do 24 line blocks.
 		move.w	d2,d0
 		asr.w	#1,d0
 		moveq	#24-1,d1
-
-loc_63F2:
-		move.w	d0,(a1)+
+loc_63F2:	move.w	d0,(a1)+
 		dbf	d1,loc_63F2
+
 		lea	(v_bgscroll_buffer).w,a2
 		move.w	(Camera_BG_Y_pos).w,d0
 		move.w	d0,d2
