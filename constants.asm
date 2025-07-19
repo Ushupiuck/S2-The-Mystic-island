@@ -79,10 +79,10 @@ object_size:	equ 1<<object_size_bits
 
 ; ---------------------------------------------------------------------------
 ; when childsprites are activated (i.e. bit #6 of render_flags set)
-next_subspr	= 6
+next_subspr		= 6
 mainspr_mapframe	= $B
-mainspr_width	= $E
-mainspr_childsprites = $F	; amount of child sprites
+mainspr_width		= $E
+mainspr_childsprites	= $F	; amount of child sprites
 mainspr_height	= $14
 subspr_data	= $10
 sub2_x_pos	= subspr_data+next_subspr*0+0	;x_vel
@@ -125,15 +125,15 @@ id_EndZ:	equ 6
 id_SS:	equ 7
 
 ; Colours
-cBlack:	equ $000				; colour black
-cWhite:	equ $EEE				; colour white
-cBlue:	equ $E00				; colour blue
-cGreen:	equ $0E0				; colour green
-cRed:	equ $00E				; colour red
+cBlack:		equ $000				; colour black
+cWhite:		equ $EEE				; colour white
+cBlue:		equ $E00				; colour blue
+cGreen:		equ $0E0				; colour green
+cRed:		equ $00E				; colour red
 cYellow:	equ cGreen+cRed				; colour yellow
-cAqua:	equ cGreen+cBlue			; colour aqua
+cAqua:		equ cGreen+cBlue			; colour aqua
 cMagenta:	equ cBlue+cRed				; colour magenta
-cCyan:	equ $880				; colour cyan
+cCyan:		equ $880				; colour cyan
 ; ---------------------------------------------------------------------------
 ; Controller Buttons
 
@@ -155,7 +155,7 @@ btnB:	EQU	1<<bitB			; $10
 btnC:	EQU	1<<bitC			; $20
 btnA:	EQU	1<<bitA			; $40
 btnABC:	EQU	btnA|btnB|btnC		; $70
-btnStart:	EQU	1<<bitStart		; $80
+btnStart:	EQU	1<<bitStart	; $80
 ; ---------------------------------------------------------------------------
 ; Art tile stuff
 flip_x              =      (1<<11)
@@ -181,10 +181,10 @@ AniIDSonAni_Roll:		ds.b 1
 AniIDSonAni_Roll2:		ds.b 1
 AniIDSonAni_Push:		ds.b 1
 AniIDSonAni_Wait:		ds.b 1
-AniIDSonAni_Balance:	ds.b 1
+AniIDSonAni_Balance:		ds.b 1
 AniIDSonAni_LookUp:		ds.b 1
 AniIDSonAni_Duck:		ds.b 1
-AniIDSonAni_Spindash:	ds.b 1
+AniIDSonAni_Spindash:		ds.b 1
 AniIDSonAni_WallRecoil1:	ds.b 1
 AniIDSonAni_WallRecoil2:	ds.b 1
 AniIDSonAni_0C:			ds.b 1
@@ -193,14 +193,14 @@ AniIDSonAni_Float:		ds.b 1
 AniIDSonAni_Float2:		ds.b 1
 AniIDSonAni_Spring:		ds.b 1
 AniIDSonAni_Hang:		ds.b 1
-AniIDSonAni_Unused12:	ds.b 1
-AniIDSonAni_Unused13:	ds.b 1
-AniIDSonAni_Unused14:	ds.b 1
+AniIDSonAni_Unused12:		ds.b 1
+AniIDSonAni_Unused13:		ds.b 1
+AniIDSonAni_Unused14:		ds.b 1
 AniIDSonAni_Bubble:		ds.b 1
-AniIDSonAni_DeathBW:	ds.b 1
+AniIDSonAni_DeathBW:		ds.b 1
 AniIDSonAni_Drown:		ds.b 1
 AniIDSonAni_Death:		ds.b 1
-AniIDSonAni_Unused19:	ds.b 1
+AniIDSonAni_Unused19:		ds.b 1
 AniIDSonAni_Hurt:		ds.b 1
 AniIDSonAni_Slide:		ds.b 1
 AniIDSonAni_Blank:		ds.b 1
@@ -209,46 +209,46 @@ AniIDSonAni_1E:			ds.b 1
 	dephase
 	!org 0
 
-Size_of_SegaPCM:	equ $6978
+Size_of_SegaPCM:		equ $6978
 Size_of_DAC_driver_guess:	equ $1760
 
 ; VDP addressses
 vdp_data_port:		equ $C00000
 vdp_control_port:	equ $C00004
-vdp_counter:	equ $C00008
+vdp_counter:		equ $C00008
 
 psg_input:		equ $C00011
 
 ; Z80 addresses
-z80_ram:	equ $A00000			; start of Z80 RAM
+z80_ram:		equ $A00000			; start of Z80 RAM
 z80_dac_timpani_pitch:	equ z80_ram+zTimpani_Pitch
-z80_dac_status:	equ z80_ram+zDAC_Status
-z80_dac_sample:	equ z80_ram+zDAC_Sample
-z80_ram_end:	equ $A02000			; end of non-reserved Z80 RAM
-z80_version:	equ $A10001
+z80_dac_status:		equ z80_ram+zDAC_Status
+z80_dac_sample:		equ z80_ram+zDAC_Sample
+z80_ram_end:		equ $A02000			; end of non-reserved Z80 RAM
+z80_version:		equ $A10001
 z80_port_1_data:	equ $A10002
 z80_port_1_control:	equ $A10008
 z80_port_2_control:	equ $A1000A
 z80_expansion_control:	equ $A1000C
 z80_bus_request:	equ $A11100
-z80_reset:	equ $A11200
-ym2612_a0:	equ $A04000
-ym2612_d0:	equ $A04001
-ym2612_a1:	equ $A04002
-ym2612_d1:	equ $A04003
+z80_reset:		equ $A11200
+ym2612_a0:		equ $A04000
+ym2612_d0:		equ $A04001
+ym2612_a1:		equ $A04002
+ym2612_d1:		equ $A04003
 
-security_addr:	equ $A14000
+security_addr:		equ $A14000
 
 ; VRAM data
-vram_window:	equ $A000				; window namespace
-vram_fg:	equ $C000				; foreground namespace
-vram_bg:	equ $E000				; background namespace
-vram_sprites:	equ $F800				; sprite table
-vram_hscroll:	equ $FC00				; horizontal scroll table
-tile_size:	equ 8*8/2
+vram_window:		equ $A000			; window namespace
+vram_fg:		equ $C000			; foreground namespace
+vram_bg:		equ $E000			; background namespace
+vram_sprites:		equ $F800			; sprite table
+vram_hscroll:		equ $FC00			; horizontal scroll table
+tile_size:		equ 8*8/2
 plane_size_64x32:	equ 64*32*2
 
-palette_size:	equ $80
+palette_size:		equ $80
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -257,17 +257,17 @@ offset :=	Vint_SwitchTbl
 ptrsize :=	1
 idstart :=	0
 
-VintID_Lag =	id(Vint_Lag_ptr)	; 0
-VintID_SEGA =	id(Vint_SEGA_ptr)	; 2
-VintID_Title =	id(Vint_Title_ptr)	; 4
+VintID_Lag =		id(Vint_Lag_ptr)	; 0
+VintID_SEGA =		id(Vint_SEGA_ptr)	; 2
+VintID_Title =		id(Vint_Title_ptr)	; 4
 VintID_Unused6 =	id(Vint_Unused6_ptr)	; 6
-VintID_Level =	id(Vint_Level_ptr)	; 8
-VintID_S1SS =	id(Vint_S1SS_ptr)	; $A
+VintID_Level =		id(Vint_Level_ptr)	; 8
+VintID_S1SS =		id(Vint_S1SS_ptr)	; $A
 VintID_TitleCard =	id(Vint_TitleCard_ptr)	; $C
 VintID_UnusedE =	id(Vint_UnusedE_ptr)	; $E
-VintID_Pause =	id(Vint_Pause_ptr)	; $10
-VintID_Fade =	id(Vint_Fade_ptr)	; $12
-VintID_PCM =	id(Vint_PCM_ptr)	; $14
+VintID_Pause =		id(Vint_Pause_ptr)	; $10
+VintID_Fade =		id(Vint_Fade_ptr)	; $12
+VintID_PCM =		id(Vint_PCM_ptr)	; $14
 VintID_SSResults =	id(Vint_SSResults_ptr)	; $16
 VintID_TitleCard2 =	id(Vint_TitleCard2_ptr)	; $18
 
@@ -307,11 +307,11 @@ v_128x128_end:=	Chunk_Table_End
 
 Level_Layout:		ds.b	$1000			; level layout buffer ($1000 bytes)
 Level_Layout_End:
-			ds.b	$1000			; free space
 
 v_lvllayout:=	Level_Layout
 v_lvllayout_end:=	Level_Layout_End
 v_lvllayoutbg:=	Level_Layout+$80
+TwizBuffer:		ds.b	$1000			; $1000 bytes; also KosM buffer (when it gets added)
 
 Block_Table:		ds.w	4*$300			; 16x16 tile mappings ($1800 bytes)
 Block_Table_End:
@@ -351,29 +351,19 @@ Ring_Positions_End:
 v_objspace:		ds.b	object_size*$80		; object variable space ($40 bytes per object)
 v_objspace_end:
 
+; ---------------------------------------------------------------------------
 ; Title screen objects
 v_titlesonic	= v_objspace+object_size*1		; object variable space for Sonic in the title screen ($40 bytes)
 v_titletails	= v_objspace+object_size*2		; object variable space for the "SONIC TEAM PRESENTS" text ($40 bytes)
 v_pressstart	= v_objspace+object_size*2		; object variable space for the "PRESS START BUTTON" text ($40 bytes)
-v_titletm	= v_objspace+object_size*3		; object variable space for the trademark symbol ($40 bytes)
-v_ttlsonichide	= v_objspace+object_size*4		; object variable space for hiding part of Sonic ($40 bytes)
-
-; Level objects
+v_ttlsonichide	= v_objspace+object_size*3		; object variable space for hiding part of Sonic ($40 bytes)
+;		= v_objspace+object_size*4		; empty
+; ---------------------------------------------------------------------------
+; Reserved object slots
 v_player	= v_objspace+object_size*0		; object variable space for Sonic ($40 bytes)
 v_player2	= v_objspace+object_size*1		; object variable space for Tails ($40 bytes)
-v_player2tails	= v_objspace+object_size*7		; object variable space for Tails' Tails ($40 bytes)
-v_hud		= v_objspace+object_size*14		; object variable space for the HUD ($40 bytes)
-
-v_titlecard	= v_objspace+object_size*2		; object variable space for the title card ($100 bytes)
-v_ttlcardname	= v_titlecard+object_size*0		; object variable space for the title card zone name text ($40 bytes)
-v_ttlcardzone	= v_titlecard+object_size*1		; object variable space for the title card "ZONE" text ($40 bytes)
-v_ttlcardact	= v_titlecard+object_size*2		; object variable space for the title card act text ($40 bytes)
-v_ttlcardoval	= v_titlecard+object_size*3		; object variable space for the title card oval ($40 bytes)
-
-v_gameovertext1	= v_objspace+object_size*2		; object variable space for the "GAME"/"TIME" in "GAME OVER"/"TIME OVER" text ($40 bytes)
-v_gameovertext2	= v_objspace+object_size*3		; object variable space for the "OVER" in "GAME OVER"/"TIME OVER" text ($40 bytes)
-
 v_shieldobj	= v_objspace+object_size*6		; object variable space for the shield ($40 bytes)
+v_player2tails	= v_objspace+object_size*7		; object variable space for Tails' Tails ($40 bytes)
 v_starsobj1	= v_objspace+object_size*8		; object variable space for the invincibility stars #1 ($40 bytes)
 v_starsobj2	= v_objspace+object_size*9		; object variable space for the invincibility stars #2 ($40 bytes)
 v_starsobj3	= v_objspace+object_size*10		; object variable space for the invincibility stars #3 ($40 bytes)
@@ -382,7 +372,19 @@ v_starsobj4	= v_objspace+object_size*11		; object variable space for the invinci
 v_splash	= v_objspace+object_size*12		; object variable space for the water splash ($40 bytes)
 v_sonicbubbles	= v_objspace+object_size*13		; object variable space for the bubbles that come out of Sonic's mouth/drown countdown ($40 bytes)
 v_watersurface1	= v_objspace+object_size*30		; object variable space for the water surface #1 ($40 bytes)
-v_watersurface2	= v_objspace+object_size*31		; object variable space for the water surface #1 ($40 bytes)
+v_watersurface2	= v_objspace+object_size*31		; object variable space for the water surface #2 ($40 bytes)
+;		= v_objspace+object_size*14		; empty
+
+v_gameovertext1	= v_objspace+object_size*2		; object variable space for the "GAME"/"TIME" in "GAME OVER"/"TIME OVER" text ($40 bytes)
+v_gameovertext2	= v_objspace+object_size*3		; object variable space for the "OVER" in "GAME OVER"/"TIME OVER" text ($40 bytes)
+
+; ---------------------------------------------------------------------------
+; Start/End of level objects (Part of the above; used exclusively at the beginning/end of a level)
+v_titlecard	= v_objspace+object_size*2		; object variable space for the title card ($100 bytes)
+v_ttlcardname	= v_titlecard+object_size*0		; object variable space for the title card zone name text ($40 bytes)
+v_ttlcardzone	= v_titlecard+object_size*1		; object variable space for the title card "ZONE" text ($40 bytes)
+v_ttlcardact	= v_titlecard+object_size*2		; object variable space for the title card act text ($40 bytes)
+v_ttlcardoval	= v_titlecard+object_size*3		; object variable space for the title card oval ($40 bytes)
 
 v_endcard	= v_objspace+object_size*23		; object variable space for the level results card ($1C0 bytes)
 v_endcardsonic	= v_endcard+object_size*0		; object variable space for the level results card "SONIC HAS" text ($40 bytes)
@@ -392,7 +394,8 @@ v_endcardscore	= v_endcard+object_size*3		; object variable space for the level 
 v_endcardtime	= v_endcard+object_size*4		; object variable space for the level results card time bonus tally ($40 bytes)
 v_endcardring	= v_endcard+object_size*5		; object variable space for the level results card ring bonus tally ($40 bytes)
 v_endcardoval	= v_endcard+object_size*6		; object variable space for the level results card oval ($40 bytes)
-
+; ---------------------------------------------------------------------------
+; Dynamic slots -- for all other objects
 v_lvlobjspace	= v_objspace+object_size*32		; level object variable space ($1800 bytes)
 v_lvlobjend	= v_lvlobjspace+object_size*96
 v_objend	= v_lvlobjend
@@ -562,7 +565,7 @@ Deform_lock:		ds.b	1			; set to 1 to stop all deformation
 			ds.b	1			; $FFFFEEDD ; seems unused
 Camera_Max_Y_Pos_Changing:	ds.b	1
 Dynamic_Resize_Routine:	ds.b	1
-RecordPos_Unused:	ds.w	1			; $FFFFEEE0-$FFFFEEE1
+			ds.w	1			; $FFFFEEE0-$FFFFEEE1
 Camera_BG_X_offset:	ds.w	1			; Used to control background scrolling in X in WFZ ending and HTZ screen shake
 Camera_BG_Y_offset:	ds.w	1			; Used to control background scrolling in Y in WFZ ending and HTZ screen shake
 HTZ_Terrain_Delay:	ds.w	1			; During HTZ screen shake, this is a delay between rising and sinking terrain during which there is no shaking
@@ -609,10 +612,9 @@ v_pfade_start:		ds.b	1			; palette fading - start position in bytes
 v_pfade_size:		ds.b	1			; palette fading - number of colours
 
 v_misc_variables:
-v_vbla_0e_counter:	ds.b	1			; tracks how many times vertical interrupts routine 0E occured (pretty much unused because routine 0E is unused)
-			ds.b	1			; unused
+Lag_frame_count:	ds.w	1			; more specifically, the number of times V-int routine 0 has run. Reset at the end of a normal frame
 v_vbla_routine:		ds.b	1			; VBlank - routine counter
-			ds.b	1			; unused
+v_vbla_0e_counter:	ds.b	1			; tracks how many times vertical interrupts routine 0E occured (pretty much unused because routine 0E is unused)
 v_spritecount:		ds.b	1			; number of sprites on-screen
 			ds.b	1			; unused
 v_pcyc_num:		ds.w	1			; palette cycling - current reference number
@@ -655,7 +657,7 @@ Tails_control_counter:	ds.w	1
 Tails_respawn_counter:	ds.w	1
 word_F706:		ds.w	1
 Tails_CPU_routine:	ds.w	1
-			ds.b	6			; unused
+			ds.b	$44			; unused
 
 Rings_manager_routine:	ds.b	1
 Level_started_flag:	ds.b	1
@@ -664,15 +666,14 @@ Ring_end_addr:		ds.w	1
 Ring_start_addr_P2:	ds.w	1
 Ring_end_addr_P2:	ds.w	1
 
-byte_F720:		ds.b	1
-byte_F721:		ds.b	1
+Screen_redraw_flag:	ds.b	1			; if whole screen needs to redraw, such as when you destroy the hatch before the boss in WFZ
+Scroll_Timer:		ds.b	1			; unused
 
 Water_flag:		ds.b	1
 			ds.b	1			; unused
 
 Demo_button_index_2P:	ds.w	1			; index into button press demo data, for player 2
 Demo_press_counter_2P:	ds.w	1			; frames remaining until next button press, for player 2
-			ds.b	$3E			; unused
 
 Sonic_top_speed:	ds.w	1
 Sonic_acceleration:	ds.w	1
@@ -780,29 +781,28 @@ v_objstate_end:
 			ds.b	$140			; stack
 v_systemstack:
 v_crossresetram:					; RAM beyond this point is only cleared on a cold-boot
-			ds.b	$26			; unused
+			ds.b	$2E			; unused
 Level_Inactive_flag:	ds.w	1			; (2 bytes)
-Timer_frames:		ds.w	1			; (2 bytes)
-Debug_object:		ds.w	1			; (2 bytes)
-Debug_placement_mode:	ds.w	1			; (2 bytes)
+Timer_frames:		ds.w	1			; the number of frames which have elapsed since the level started
+Debug_object:		ds.b	1			; the current position in the debug mode object list
+			ds.b	1			; unused
+Debug_placement_mode:	ds.b	1
+			ds.b	1			; the whole word is tested, but the debug mode code uses only the low byte
 Debug_Accel_Timer:	ds.b	1			; (1 byte)
 Debug_Speed:		ds.b	1			; (1 byte)
 
-Vint_runcount:		ds.l	1			; (4 bytes)
+Vint_runcount:		ds.l	1			; the number of times V-int has run
 
-Current_ZoneAndAct:	= Current_Zone
-Current_Zone:
-v_zone:			ds.b	1			; (1 byte)
-Current_Act:
+Current_ZoneAndAct =	*
+Current_Zone:		ds.b	1			; (1 byte)
+Current_Act =		*
 v_act:			ds.b	1			; (1 byte)
 v_lives:		ds.b	1			; (1 byte)
 			ds.b	1			; unused
 v_air:			ds.w	1			; air remaining while underwater
-v_airbyte = v_air+1					; low byte for air
+v_airbyte =		v_air+1				; low byte for air
 v_lastspecial:		ds.b	1			; last special stage number
-			ds.b	1			; unused
 v_continues:		ds.b	1			; number of continues
-			ds.b	1			; unused
 f_timeover:		ds.b	1			; time over flag
 v_lifecount:		ds.b	1			; lives counter value (for actual number, see "v_lives")
 f_lifecount:		ds.b	1			; lives counter update flag
@@ -816,7 +816,6 @@ v_timemin = v_time+1					; time - minutes
 v_timesec = v_time+2					; time - seconds
 v_timecent = v_time+3					; time - centiseconds
 v_score:		ds.l	1			; score
-			ds.b	2			; unused
 v_shield:		ds.b	1			; shield status (00 = no; 01 = yes)
 v_invinc:		ds.b	1			; invinciblity status (00 = no; 01 = yes)
 v_shoes:		ds.b	1			; speed shoes status (00 = no; 01 = yes)
@@ -842,14 +841,12 @@ v_lamp_wtrpos:		ds.w	1			; water position at lamppost
 v_lamp_wtrrout:		ds.b	1			; water routine at lamppost
 v_lamp_wtrstat:		ds.b	1			; water state at lamppost
 v_lamp_lives:		ds.b	1			; lives counter at lamppost
-			ds.b	2			; unused
 v_emeralds:		ds.b	1			; number of chaos emeralds
 v_emldlist:		ds.b	6			; which individual emeralds you have (00 = no; 01 = yes)
 v_oscillate:		ds.w	1			; oscillation bitfield
 v_timingandscreenvariables:
 v_timingvariables:
 			ds.b	$40			; values which oscillate - for swinging platforms, et al
-			ds.b	$20			; unused
 v_ani0_time:		ds.b	1			; synchronised sprite animation 0 - time until next frame (used for synchronised animations)
 v_ani0_frame:		ds.b	1			; synchronised sprite animation 0 - current frame
 v_ani1_time:		ds.b	1			; synchronised sprite animation 1 - time until next frame
@@ -859,10 +856,9 @@ v_ani2_frame:		ds.b	1			; synchronised sprite animation 2 - current frame
 v_ani3_time:		ds.b	1			; synchronised sprite animation 3 - time until next frame
 v_ani3_frame:		ds.b	1			; synchronised sprite animation 3 - current frame
 v_ani3_buf:		ds.w	1			; synchronised sprite animation 3 - info buffer
-			ds.b	$26			; unused
 v_limittopdb:		ds.w	1			; level upper boundary, buffered for debug mode
 v_limitbtmdb:		ds.w	1			; level bottom boundary, buffered for debug mode
-			ds.b	$8C			; unused
+			ds.b	$D2			; unused
 v_timingvariables_end:
 
 v_levseldelay:		ds.w	1			; level select - time until change when up/down is held
@@ -874,15 +870,13 @@ f_levselcheat:		ds.b	1			; level select cheat flag
 f_slomocheat:		ds.b	1			; slow motion & frame advance cheat flag
 Debug_mode_flag:	ds.w	1
 f_debugcheat:		ds.b	1			; debug mode cheat flag
-f_creditscheat:		ds.b	1			; hidden credits & press start cheat flag
+v_megadrive:		ds.b	1			; Megadrive machine type
 v_title_dcount:		ds.w	1			; number of times the d-pad is pressed on title screen
 v_title_ccount:		ds.w	1			; number of times C is pressed on title screen
 
 f_demo:			ds.w	1			; demo mode flag (0 = no; 1 = yes; $8001 = ending)
 v_demonum:		ds.w	1			; demo level number (not the same as the level number)
 v_creditsnum:		ds.w	1			; credits index number
-v_megadrive:		ds.b	1			; Megadrive machine type
-			ds.b	1			; unused
 v_end:
     if * > 0	; Don't declare more space than the RAM can contain!
 	fatal "The RAM variable declarations are too large by $\{*} bytes."
@@ -1305,16 +1299,6 @@ ArtTile_Art_Flowers2:		equ $396
 ArtTile_Art_Flowers3:		equ $398
 ArtTile_Art_Flowers4:		equ $39A
 ArtTile_EHZ_Shield:		equ $560
-
-; Unknown
-ArtTile_Art_UnkZone_1:		equ $480
-ArtTile_Art_UnkZone_2:		equ $484
-ArtTile_Art_UnkZone_3:		equ $48C
-ArtTile_Art_UnkZone_4:		equ $48E
-ArtTile_Art_UnkZone_5:		equ $490
-ArtTile_Art_UnkZone_6:		equ $491
-ArtTile_Art_UnkZone_7:		equ $495
-ArtTile_Art_UnkZone_8:		equ $498
 
 ; CPZ
 ArtTile_CPZ_Buildings:		equ $3D0

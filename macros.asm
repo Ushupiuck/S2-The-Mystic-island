@@ -345,6 +345,18 @@ out_of_range2:	macro exit,specpos
 		endm
 
 ; ---------------------------------------------------------------------------
+; check if object moves out of range
+; input: location to jump to if out of range, x-axis pos pre-fed)
+; ---------------------------------------------------------------------------
+
+out_of_range3:	macro exit
+		andi.w	#-$80,d0	; round down to nearest $80
+		sub.w	(Camera_X_pos_coarse).w,d0		; approx distance between object and screen
+		cmpi.w	#128+320+192,d0
+		bhi.ATTRIBUTE	exit
+		endm
+
+; ---------------------------------------------------------------------------
 ; Copy a tilemap from 68K (ROM/RAM) to the VRAM without using DMA
 ; input: source, destination, width [cells], height [cells]
 ; ---------------------------------------------------------------------------

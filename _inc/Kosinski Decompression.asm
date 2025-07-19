@@ -160,7 +160,7 @@ KosDec_ByteMap:
 _KosPlus_LoopUnroll = 3
 
 _KosPlus_ReadBit macro
-	dbra	d2,.skip
+	dbf	d2,.skip
 	moveq	#7,d2						; We have 8 new bits, but will use one up below.
 	move.b	(a0)+,d0					; Get desc field low-byte.
 .skip:
@@ -256,7 +256,7 @@ KosPlusDec:
 	rept (1<<_KosPlus_LoopUnroll)
 		move.b	(a5)+,(a1)+
 	endm
-	dbra	d4,.largecopy
+	dbf	d4,.largecopy
 
 .mediumcopy:
 	rept 8

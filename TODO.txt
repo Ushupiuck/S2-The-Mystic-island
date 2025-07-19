@@ -12,25 +12,32 @@ TODO:
 Kos+ Compressed level layouts, alike Sonic 2/3. Preferably Twizzler if it turns out to be better, and it's glitch is related to large filesizes.
 Fix the constants back to what they should be after that derp many commits ago.
 Import S3&K mapping system (as it seems likely we only need a fragment of it to make it work), using the now empty labyrinth zone (01) as a test level
-Import the S3&K rings manager 
+Import the S3&K rings manager
 Add more level slots
-Free up a shared $1000 byte buffer for Moduled Twizzler & Moduled Kosinski
 Add Wood Zone, Marble Zone & Labyrinth (last one might be partly remixed with Chemical plant. feeling inspired)
 Metropolis zone.
 Port over Sonic 2 Special stages: Sonic 1 will be Bonus stages. Sonic 2's will be the ACTUAL Special stages.
 Fix HTZ scrolling to use a straight table, rather than a soup of chunk entries.
-Fuse HTZ and Scran brain into it's own level
+Fuse HTZ and Scrap brain into it's own level
 Improve Boss_MoveObject
 Improve SSObjectMoveAndFall (if it exists)
-New Routine:
-Find_SonicTails
-LoadCollisionIndexes < DONE
-; ---------------------------------------------------------------------------
+
+Research & Implement "Find_SonicTails" From S3&K into sonic 1
 Reimplement the following ram adress & code (allows for extra life past 200 rings):
 ;v_ring1uplimit:	ds.w	1	; awards an extra life every 100 rings (2 bytes)
+
+; ---------------------------------------------------------------------------
+Finished:
+LoadCollisionIndexes < DONE
+Free up a shared $1000 byte buffer for Moduled Twizzler & Moduled Kosinski
 ; ---------------------------------------------------------------------------
 MISC. SUBROUTINES
 ; ---------------------------------------------------------------------------
+DeformBgLayer <--------- Research this fucker from the sonic 3 proto. it still exists
+
+
+
+
 Handle_Onscreen_Water_Height
 
 LevelMusic_Playlist
@@ -47,6 +54,8 @@ Animate_Tiles
 
 HCZ1BGE_Normal
 Obj_HCZMiniboss
+
+SaveScreen: <---------- example implementations of KosArt_To_VDP
 
 ; ---------------------------------------------------------------------------
 ; Notes

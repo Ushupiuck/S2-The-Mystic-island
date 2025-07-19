@@ -17,7 +17,6 @@ TwizVRAM	= TwizHuffCopy+(TwizHuffCopyMax*$02)		; $4 bytes
 TwizSize	= TwizVRAM+$04					; $2 bytes
 ; ---------------------------------------------------------------------------
 TwizBufferSize	=	$1000
-TwizBuffer	= ramaddr ($FFFF9400)				; $1000 bytes
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Twizzler decompression
@@ -611,7 +610,7 @@ TDM_CopyDistC:	move.b	(a2)+,(a1)				; copy 06 bytes here
 
 TDM_CopyNoDistantCCC:
 		MAC_ReadBit					; load next bitfield bit to carry
-		bcc.w	TDM_CopyExtended				; if clear, branch for extended copy
+		bcc.w	TDM_CopyExtended			; if clear, branch for extended copy
 		moveq	#$00,d5					; clear d5
 		MAC_ReadBit					; load next bitfield bit to carry
 		addx.b	d5,d5					; load bit from carry
@@ -741,7 +740,7 @@ TDM_CopyList:	rts						; return
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Decompression loo, Section count, and final
+; Decompression loop, Section count, and final
 ; ---------------------------------------------------------------------------
 
 TDM_CopyStream:
@@ -1448,6 +1447,10 @@ TD_Flush:
 		subi.w	#TwizBuffer,d0				; get size of transfer
 		move.l	(TwizVRAM).w,d2				; load VRAM address
 		add.w	d0,(TwizVRAM+$02).w			; add size to VRAM address (for next frame)
+	;	move.l	a1,d1
+	;	move.w	d0,d3
+	;	bsr.w	QueueDMATransfer
+
 		lsr.w	#$01,d0					; divide by 2
 		move.l	#$93009400,d1				; prepare DMA Size register values
 		move.w	d0,-(sp)				; load upper byte
@@ -1474,6 +1477,7 @@ TD_Flush:
 
 TD_NoCopyBack:
 		movem.l	(sp)+,d2/a2				; restore register data
+	;	move.w	(sp)+,sr				; restore sr
 		rtr						; return and restore sr
 
 ; ===========================================================================

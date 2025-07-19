@@ -58,7 +58,7 @@ Obj38_Delete:
 Obj38_Stars:
 		tst.b	(v_invinc).w			; is Sonic invincible?
 		beq.s	Obj38_Delete			; if not, branch
-		move.w	(RecordPos_Unused).w,d0
+		move.w	(Sonic_Pos_Record_Index).w,d0
 		move.b	obAnim(a0),d1
 		subq.b	#1,d1
 		move.b	#$3F,d1

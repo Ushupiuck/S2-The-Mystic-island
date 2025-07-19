@@ -52,8 +52,8 @@ Debug_CPZ_End:
 
 Debug_EHZ:	dc.w (Debug_EHZ_End-Debug_EHZ-2)/8
 ;		mappings	object		subtype	frame	VRAM setting
-	dbug 	Map_Ring,	id_Obj25,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
-	dbug 	Map_Obj26,	id_Obj26,	0,	0,	make_art_tile(ArtTile_Monitor,0,0)
+	dbug 	Map_Ring,	id_Obj25,	1,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug 	Map_Obj26,	id_Obj26,	4,	5,	make_art_tile(ArtTile_Monitor,0,0)
 	dbug 	Map_Obj79,	id_Obj79,	1,	0,	make_art_tile(ArtTile_Lamppost,0,0)
 	dbug 	Map_Obj03,	id_Obj03,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
 	dbug 	Map_Obj49,	id_Obj49,	0,	0,	make_art_tile(ArtTile_Waterfall,1,0)
@@ -76,12 +76,9 @@ Debug_EHZ_End:
 	; unreferenced definitions
 	dbug 	Map_obj4F,	id_Obj4F,	0,	0,	make_art_tile(ArtTile_Redz,0,0)
 	dbug 	Map_Obj52,	id_Obj52,	0,	0,	make_art_tile(ArtTile_BFish,1,0)
-	dbug 	Map_Obj50,	id_Obj50,	0,	0,	make_art_tile(ArtTile_Aquis,1,0)
-	dbug 	Map_Obj50,	id_Obj51,	0,	0,	make_art_tile(ArtTile_Aquis,1,0)
 	dbug 	Map_Obj4D,	id_Obj4D,	0,	0,	make_art_tile(ArtTile_Stegway,1,0)
-	dbug 	Map_obj4B,	id_Obj4B,	0,	0,	make_art_tile(ArtTile_Early_Buzzer,0,0)
 	dbug 	Map_Obj4E,	id_Obj4E,	0,	0,	make_art_tile(ArtTile_Gator,1,0)
-	dbug 	Map_Obj4C,	id_Obj4C,	0,	0,	make_art_tile(ArtTile_Early_BBat,1,0)
+	dbug 	Map_Obj4C,	id_Obj4C,	0,	0,	make_art_tile(ArtTile_BBat,1,0)
 	dbug 	Map_Obj4A,	id_Obj4A,	0,	0,	make_art_tile(ArtTile_Octus,1,0)
 
 Debug_HTZ:	dc.w (Debug_HTZ_End-Debug_HTZ-2)/8
@@ -120,8 +117,8 @@ Debug_HPZ:	dc.w (Debug_HPZ_End-Debug_HPZ-2)/8
 	dbug 	Map_Obj50,	id_Obj50,	0,	0,	make_art_tile(ArtTile_Aquis,1,0)
 	dbug 	Map_Obj50,	id_Obj51,	0,	0,	make_art_tile(ArtTile_Aquis,1,0)
 	dbug 	Map_Obj4D,	id_Obj4D,	0,	0,	make_art_tile(ArtTile_Stegway,1,0)
-	dbug 	Map_obj4B,	id_Obj4B,	0,	0,	make_art_tile(ArtTile_Early_Buzzer,0,0)
+	dbug 	Map_obj4B,	id_Obj4B,	0,	0,	make_art_tile(ArtTile_Buzzer,0,0)
 	dbug 	Map_Obj4E,	id_Obj4E,	0,	0,	make_art_tile(ArtTile_Gator,1,0)
-	dbug 	Map_Obj4C,	id_Obj4C,	0,	0,	make_art_tile(ArtTile_Early_BBat,1,0)
+	dbug 	Map_Obj4C,	id_Obj4C,	0,	0,	make_art_tile(ArtTile_BBat,1,0)
 	dbug 	Map_Obj4A,	id_Obj4A,	0,	0,	make_art_tile(ArtTile_Octus,1,0)
 Debug_HPZ_End:
