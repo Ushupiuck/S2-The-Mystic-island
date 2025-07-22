@@ -311,12 +311,6 @@ Level_Layout_End:
 v_lvllayout:=	Level_Layout
 v_lvllayout_end:=	Level_Layout_End
 v_lvllayoutbg:=	Level_Layout+$80
-TwizBuffer:		ds.b	$1000			; $1000 bytes; also KosM buffer (when it gets added)
-
-Block_Table:		ds.w	4*$300			; 16x16 tile mappings ($1800 bytes)
-Block_Table_End:
-v_16x16:=	Block_Table
-v_16x16_end:=	Block_Table_End
 
 TempArray_LayerDef:	ds.b	$200			; background scroll buffer
 Decomp_Buffer:		ds.b	$200			; Nemesis graphics decompression buffer
@@ -424,9 +418,10 @@ v_credits	= v_objspace+object_size*2		; object variable space for the credits te
 v_endeggman	= v_objspace+object_size*2		; object variable space for Eggman after the credits ($40 bytes)
 v_tryagain	= v_objspace+object_size*3		; object variable space for the "TRY AGAIN" text ($40 bytes)
 v_eggmanchaos	= v_objspace+object_size*32		; object variable space for the emeralds juggled by Eggman ($180 bytes)
+			ds.b	$1800			; unused
 
+TwizBuffer:		ds.b	$1000			; $1000 bytes; also KosM buffer (when it gets added)
 Camera_RAM:
-
 Camera_Positions:
 Camera_X_pos:		ds.l	1
 Camera_Y_pos:		ds.l	1
@@ -595,9 +590,8 @@ v_jpadhold1:		ds.b	1			; joypad input - held
 v_jpadpress1:		ds.b	1			; joypad input - pressed
 v_2Pjpadhold1:		ds.b	1			; joypad input - held
 v_2Pjpadpress1:		ds.b	1			; joypad input - pressed
-			ds.b	4			; unused
 v_vdp_buffer1:		ds.w	1			; VDP instruction buffer
-			ds.b	6			; unused
+			ds.b	4			; used for the special stages; see below
 v_demolength:		ds.w	1			; the length of a demo in frames
 v_scrposy_vdp:		ds.w	1			; screen position y (VDP)
 v_bgscrposy_vdp:	ds.w	1			; background screen position y (VDP)
@@ -657,7 +651,6 @@ Tails_control_counter:	ds.w	1
 Tails_respawn_counter:	ds.w	1
 word_F706:		ds.w	1
 Tails_CPU_routine:	ds.w	1
-			ds.b	$44			; unused
 
 Rings_manager_routine:	ds.b	1
 Level_started_flag:	ds.b	1
@@ -679,9 +672,9 @@ Sonic_top_speed:	ds.w	1
 Sonic_acceleration:	ds.w	1
 Sonic_deceleration:	ds.w	1
 Sonic_LastLoadedDPLC:	ds.b	1
-			ds.b	1			; $FFFFF767 ; seems unused
 Primary_Angle:		ds.b	1
 Secondary_Angle:	ds.b	1
+			ds.b	1			; $FFFFF767 ; seems unused
 			ds.b	1			; $FFFFF76A ; seems unused
 			ds.b	1			; $FFFFF76B ; seems unused
 
@@ -776,12 +769,11 @@ v_palette:		ds.b	palette_size		; main palette
 v_palette_end:
 v_palette_fading:	ds.b	palette_size		; duplicate palette, used for transitions
 v_palette_fading_end:
-v_objstate:		ds.b	$C0			; object state list
 v_objstate_end:
 			ds.b	$140			; stack
 v_systemstack:
+
 v_crossresetram:					; RAM beyond this point is only cleared on a cold-boot
-			ds.b	$2E			; unused
 Level_Inactive_flag:	ds.w	1			; (2 bytes)
 Timer_frames:		ds.w	1			; the number of frames which have elapsed since the level started
 Debug_object:		ds.b	1			; the current position in the debug mode object list
@@ -858,7 +850,6 @@ v_ani3_frame:		ds.b	1			; synchronised sprite animation 3 - current frame
 v_ani3_buf:		ds.w	1			; synchronised sprite animation 3 - info buffer
 v_limittopdb:		ds.w	1			; level upper boundary, buffered for debug mode
 v_limitbtmdb:		ds.w	1			; level bottom boundary, buffered for debug mode
-			ds.b	$D2			; unused
 v_timingvariables_end:
 
 v_levseldelay:		ds.w	1			; level select - time until change when up/down is held
@@ -877,6 +868,9 @@ v_title_ccount:		ds.w	1			; number of times C is pressed on title screen
 f_demo:			ds.w	1			; demo mode flag (0 = no; 1 = yes; $8001 = ending)
 v_demonum:		ds.w	1			; demo level number (not the same as the level number)
 v_creditsnum:		ds.w	1			; credits index number
+v_16x16:		ds.l	$1			; 16x16 tile mappings, in ROM
+			ds.b	$146			; unused
+v_objstate:		ds.b	$C0			; object state list
 v_end:
     if * > 0	; Don't declare more space than the RAM can contain!
 	fatal "The RAM variable declarations are too large by $\{*} bytes."
@@ -894,8 +888,8 @@ v_ssitembuffer		= v_ssbuffer2+$400		; ($1000 bytes)
 v_ssitembuffer_end	= v_ssitembuffer+$100		; actually extends all the way to $FFFF5000; from here, $3000 bytes free
 v_ssbuffer3		= v_128x128+$8000
 v_ssscroll_buffer	= v_ngfx_buffer+$100
-v_ssangle		= ramaddr($FFFFF780)
-v_ssrotate		= ramaddr($FFFFF782)
+v_ssangle		= v_vdp_buffer1+2
+v_ssrotate		= v_vdp_buffer1+4
 
 ;v_ss_layout:			equ $FF0000 ; special stage layout with space added to top and sides
 ;v_ss_layout_start:		equ v_ss_layout+sizeof_ss_padding_top+ss_width_padding_left ; $FF1020

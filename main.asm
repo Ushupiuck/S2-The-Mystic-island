@@ -11,7 +11,7 @@ BackupSRAM	  = 1
 AddressSRAM	  = 3	; 0 = odd+even; 2 = even only; 3 = odd only
 
 FixBugs		  = 1	; change to 1 to enable bugfixes
-AdvancedHandler	  = 0
+AdvancedHandler	  = 1
 
 zeroOffsetOptimization = 1	; if 1, makes a handful of zero-offset instructions smaller
 
@@ -1946,12 +1946,18 @@ loc_2C9C:
 
 		; add the low word of the RNG to the high word of the RNG
 		; and set the low word of d0 to be the result
+
 		move.w	d1,d0
 		swap	d1
 		add.w	d1,d0
 		move.w	d0,d1
 		swap	d1
 
+;		move.w	d1,d0
+;		abcd	d0,d1
+;		addx.w	d1,d0
+;		move.w	d0,d1
+;		swap	d1
 		move.l	d1,(v_random).w
 		rts
 ; End of function RandomNumber
@@ -2660,8 +2666,8 @@ loc_3BB0:
 loc_3BB6:
 		clearRAM v_spritequeue,v_spritequeue_end
 		clearRAM v_objspace,v_objend
-		clearRAM v_misc_variables,v_misc_variables_end
 		clearRAM v_levelvariables,v_levelvariables_end
+		clearRAM v_misc_variables,v_misc_variables_end
 		clearRAM v_timingvariables,v_timingvariables_end
 		cmpi.b	#id_LZ,(Current_Zone).w	; are we on Labyrinth Zone?
 		seq.b	(Water_flag).w		; if so, set
@@ -3171,29 +3177,57 @@ loc_4788:
 ; End of function ChangeRingFrame
 
 
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+
+nosignpost macro actid
+	cmpi.w	#actid,(Current_ZoneAndAct).w
+	beq.ATTRIBUTE	+	; rts
+    endm
+
+; sub_4BD2:
+SetLevelEndType:
+;	move.w	#0,(Level_Has_Signpost).w	; set level type to non-signpost
+;	nosignpost.w $301	; emerald hill Act 2
+;	nosignpost.w $XYY	; metropolis Act 3
+;	nosignpost.w $XYY	; wing_fortress Act 1
+;	nosignpost.w $502	; hill top  Act 2
+;	nosignpost.w $XYY	; oil_ocean Act 2
+;	nosignpost.s $XYY	; mystic cave Act 2
+;	nosignpost.s $XYY	; casino night Act 2
+;	nosignpost.s $XYY	; chemical plant Act 2
+;	nosignpost.s $XYY	; death egg Act 1
+;	nosignpost.s $XYY	; aquatic ruin Act 2
+;	nosignpost.s $XYY	; sky chase Act 1
+;	move.w	#1,(Level_Has_Signpost).w	; set level type to signpost
++	rts
+; End of function SetLevelEndType
+
+
 ; =============== S U B	R O U T	I N E =======================================
 
 
 SignpostArtLoad:
 		tst.w	(Debug_placement_mode).w
-		bne.w	locret_47E2
-		cmpi.b	#1,(Current_Act).w
-		beq.s	locret_47E2
+		bne.w	.return
+		cmpi.w	#$301,(Current_ZoneAndAct).w
+		beq.s	.return
+		cmpi.b	#2,(Current_Act).w
+		beq.s	.return
 		move.w	(Camera_RAM).w,d0
 		move.w	(Camera_Max_X_pos).w,d1
 		subi.w	#$100,d1
 		cmp.w	d1,d0
-		blt.s	locret_47E2
+		blt.s	.return
 		tst.b	(f_timecount).w
-		beq.s	locret_47E2
+		beq.s	.return
 		cmp.w	(Camera_Min_X_pos).w,d1
-		beq.s	locret_47E2
+		beq.s	.return
 		move.w	d1,(Camera_Min_X_pos).w
 		moveq	#plcid_Signpost,d0
 		bra.w	NewPLC
 ; ---------------------------------------------------------------------------
 
-locret_47E2:
+.return:
 		rts
 ; End of function SignpostArtLoad
 
@@ -3243,7 +3277,7 @@ SpecialStage:
 		bsr.w	QuickPLC
 		clearRAM v_objspace,v_objend
 		clearRAM v_levelvariables,v_levelvariables_end
-		clearRAM v_timingvariables,v_timingvariables_end-$80
+		clearRAM v_timingvariables,v_timingvariables_end
 		clearRAM v_ngfx_buffer,v_ngfx_buffer_end
 		clr.b	(f_wtr_state).w
 		clr.w	(Level_Inactive_flag).w
@@ -3448,7 +3482,6 @@ loc_5360:
 		move.w	#make_art_tile(ArtTile_SS_Background_Clouds,2,0),d0
 		bsr.w	EniDec
 		copyTilemap	v_ssbuffer1,ArtTile_SS_Plane_5*tile_size,64,32
-;		copyTilemap	v_ssbuffer1,ArtTile_SS_Plane_5*tile_size+plane_size_64x32,64,64
 		lea	(v_ssbuffer1).l,a1
 		locVRAM	ArtTile_SS_Plane_5*tile_size+plane_size_64x32,d0
 		moveq	#64-1,d1
@@ -5655,7 +5688,8 @@ loc_6D18:
 		move.w	(a0),d3
 		andi.w	#$3FF,d3
 		lsl.w	#3,d3
-		lea	(v_16x16).w,a1
+	;	lea	(v_16x16).w,a1
+		movea.l	(v_16x16).l,a1
 		adda.w	d3,a1
 		move.l	d1,d0
 		bsr.w	sub_6F70
@@ -5715,7 +5749,8 @@ loc_6DB2:
 		move.w	(a0),d3
 		andi.w	#$3FF,d3
 		lsl.w	#3,d3
-		lea	(v_16x16).w,a1
+	;	lea	(v_16x16).w,a1
+		movea.l	(v_16x16).l,a1
 		adda.w	d3,a1
 		bsr.w	sub_6ED0
 		addq.w	#2,a0
@@ -5991,7 +6026,8 @@ DrawFlipXY:
 GetBlockData:
 		add.w	(a3),d5
 		add.w	4(a3),d4
-		lea	(v_16x16).w,a1
+	;	lea	(v_16x16).w,a1
+		movea.l	(v_16x16).l,a1
 		move.w	d4,d3
 		add.w	d3,d3
 		andi.w	#$F00,d3
@@ -6229,9 +6265,11 @@ MainLevelLoadBlock:
 		lea	(a2,d0.w),a2
 		move.l	a2,-(sp)
 		addq.l	#4,a2
-		movea.l	(a2)+,a0
-		lea	(v_16x16).w,a1
-		jsr	(KosPlusDec).l	; load block maps
+;		movea.l	(a2)+,a0
+;		lea	(v_16x16).w,a1
+;		jsr	(KosPlusDec).l	; load block maps
+		move.l	(a2)+,(v_16x16).l
+		andi.l	#$FFFFFF,(v_16x16).l
 		movea.l	(a2)+,a0
 		lea	(v_128x128).l,a1
 		jsr	(TwizDec).l	; load block maps
@@ -6274,115 +6312,19 @@ loc_735E:
 
 
 LevelLayoutLoad:
-		lea	(v_lvllayout).w,a3
-		move.w	#bytesToLcnt(v_lvllayout_end-v_lvllayout),d1
-		moveq	#0,d0
-
-loc_738E:
-		move.l	d0,(a3)+
-		dbf	d1,loc_738E			; fill $8000-$8FFF with 0
-
-		lea	(v_lvllayout).w,a3		; load foreground into RAM
-		moveq	#0,d1
-		bsr.w	LevelLayoutLoad2
-		lea	(v_lvllayoutbg).w,a3		; load background into RAM
-		moveq	#2,d1
-
-LevelLayoutLoad2:
-		tst.b	(Current_Zone).w		; test zone bit
-		beq.s	LevelLayoutLoad_GHZ		; if zero (GHZ), branch
-		move.w	(Current_ZoneAndAct).w,d0
-		lsl.b	#6,d0
-		lsr.w	#5,d0
-		move.w	d0,d2
-		add.w	d0,d0
-		add.w	d2,d0
-		add.w	d1,d0
-		lea	(Level_Index).l,a1
-		move.w	(a1,d0.w),d0
-		lea	(a1,d0.w),a1
-		moveq	#0,d1
-		move.w	d1,d2
-		move.b	(a1)+,d1			; load level width (in tiles)
-		move.b	(a1)+,d2			; load level height (in tiles)
-		move.l	d1,d5
-		addq.l	#1,d5
-		moveq	#0,d3
-		move.w	#$80,d3
-		divu.w	d5,d3
-		subq.w	#1,d3
-
-loc_73DE:
-		movea.l	a3,a0
-		move.w	d3,d4
-
-loc_73E2:
-		move.l	a1,-(sp)
-		move.w	d1,d0
-
-loc_73E6:
-		move.b	(a1)+,(a0)+
-		dbf	d0,loc_73E6
-		movea.l	(sp)+,a1
-		dbf	d4,loc_73E2
-		lea	(a1,d5.w),a1
-		lea	$80*2(a3),a3
-		dbf	d2,loc_73DE
-		rts
+	moveq	#0,d0
+	move.w	(Current_ZoneAndAct).w,d0
+	move.w	d0,d1
+	lsr.w	#5,d0
+	andi.w	#$FF,d1
+	lsl.w	#1,d1
+	add.w	d1,d0
+	lea	(Level_Index).l,a0
+	move.w	(a0,d0.w),d0
+	adda.l	d0,a0
+	lea	(v_lvllayout).w,a1
+	jmp	(KosPlusDec).l
 ; End of function LevelLayoutLoad
-
-; ===========================================================================
-; dynamically converts the Sonic 1 level layout into Sonic 2 Nick Arcade's,
-; read more about it here: https://forums.sonicretro.org/index.php?posts/993641/
-LevelLayoutLoad_GHZ:
-		move.w	(Current_ZoneAndAct).w,d0
-		lsl.b	#6,d0
-		lsr.w	#5,d0
-		move.w	d0,d2
-		add.w	d0,d0
-		add.w	d2,d0
-		add.w	d1,d0
-		lea	(Level_Index).l,a1
-		move.w	(a1,d0.w),d0
-		lea	(a1,d0.w),a1
-		moveq	#0,d1
-		move.w	d1,d2
-		move.b	(a1)+,d1			; load level width (in tiles)
-		move.b	(a1)+,d2			; load level height (in tiles)
-
-loc_7426:
-		move.w	d1,d0
-		movea.l	a3,a0
-
-loc_742A:
-		move.b	(a1)+,d3			; get chunk ID
-		subq.b	#1,d3				; subtract 1 from chunk ID
-		bhs.s	loc_7440			; if chunk is not $00, branch
-		moveq	#0,d3				; set 'air' chunk to $00
-		move.b	d3,(a0)+			; load first chunk
-		move.b	d3,(a0)+			; load second chunk
-		move.b	d3,$FE(a0)			; load third chunk
-		move.b	d3,$FF(a0)			; load fourth chunk
-		bra.s	loc_7456
-; ===========================================================================
-
-loc_7440:
-		lsl.b	#2,d3				; multiply chunk ID by 4
-		addq.b	#1,d3				; add 1 to chunk ID
-		move.b	d3,(a0)+			; load first chunk
-		addq.b	#1,d3				; add 1 to chunk ID
-		move.b	d3,(a0)+			; load second chunk
-		addq.b	#1,d3				; add 1 to chunk ID
-		move.b	d3,$FE(a0)			; load third chunk
-		addq.b	#1,d3				; add 1 to chunk ID
-		move.b	d3,$FF(a0)			; load fourth chunk
-
-loc_7456:
-		dbf	d0,loc_742A			; load 1 row
-		lea	$80*4(a3),a3			; do next row
-		dbf	d2,loc_7426			; repeat for number of rows
-		rts
-; End of function LevelLayoutLoad_GHZ
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -6392,11 +6334,11 @@ DynScreenResizeLoad:
 		move.b	(Current_Zone).w,d0
 		add.w	d0,d0
 		move.w	DynResize_Index(pc,d0.w),d0
-		jsr	DynResize_Index(pc,d0.w)
+		jsr	DynResize_Index(pc,d0.w) ; run level-specific events
 		moveq	#2,d1
 		move.w	(Camera_Max_Y_pos_target).w,d0
-		sub.w	(Camera_Max_Y_pos).w,d0
-		beq.s	locret_756A
+		sub.w	(Camera_Max_Y_pos).w,d0 ; has the lower level boundary changed recently?
+		beq.s	locret_756A	; if not, branch
 		bhs.s	loc_756C
 		neg.w	d1
 		move.w	(Camera_Y_pos).w,d0
@@ -6451,6 +6393,7 @@ DynResize_GHZ_Index:
 		dc.w DynResize_GHZ1-DynResize_GHZ_Index
 		dc.w DynResize_GHZ2-DynResize_GHZ_Index
 		dc.w DynResize_GHZ3-DynResize_GHZ_Index
+		dc.w DynResize_GHZ4-DynResize_GHZ_Index	; Filler
 ; ---------------------------------------------------------------------------
 
 DynResize_GHZ1:
@@ -6552,6 +6495,10 @@ DynResize_GHZ3_End:
 		rts
 ; ---------------------------------------------------------------------------
 
+DynResize_GHZ4:
+		rts
+; ---------------------------------------------------------------------------
+
 DynResize_LZ:
 		moveq	#0,d0
 		move.b	(Current_Act).w,d0
@@ -6560,13 +6507,17 @@ DynResize_LZ:
 		jmp	DynResize_LZ_Index(pc,d0.w)
 ; ---------------------------------------------------------------------------
 DynResize_LZ_Index:
-		dc.w DynResize_LZ_Null-DynResize_LZ_Index
-		dc.w DynResize_LZ_Null-DynResize_LZ_Index
+		dc.w DynResize_LZ1-DynResize_LZ_Index
+		dc.w DynResize_LZ2-DynResize_LZ_Index
 		dc.w DynResize_LZ3-DynResize_LZ_Index
 		dc.w DynResize_LZ4-DynResize_LZ_Index
 ; ---------------------------------------------------------------------------
 
-DynResize_LZ_Null:
+DynResize_LZ1:
+		rts
+; ---------------------------------------------------------------------------
+
+DynResize_LZ2:
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -6582,7 +6533,7 @@ DynResize_LZ3:
 
 loc_76EA:
 		tst.b	(Dynamic_Resize_Routine).w
-		bne.s	locret_7726
+		bne.s	locret_7724
 		cmpi.w	#$1CA0,(Camera_RAM).w
 		blo.s	locret_7724
 		cmpi.w	#$600,(Camera_Y_pos).w
@@ -6604,10 +6555,6 @@ locret_7724:
 		rts
 ; ---------------------------------------------------------------------------
 
-locret_7726:
-		rts
-; ---------------------------------------------------------------------------
-
 DynResize_LZ4:
 		cmpi.w	#$D00,(Camera_RAM).w
 		blo.s	locret_774E
@@ -6622,32 +6569,45 @@ locret_774E:
 		rts
 ; ---------------------------------------------------------------------------
 
-S1DynResize_MZ1:					; leftover from Sonic 1
+DynResize_MZ:
+		moveq	#0,d0
+		move.b	(Current_Act).w,d0
+		add.w	d0,d0
+		move.w	DynResize_MZ_Index(pc,d0.w),d0
+		jmp	DynResize_MZ_Index(pc,d0.w)
+; ---------------------------------------------------------------------------
+DynResize_MZ_Index:
+		dc.w DynResize_MZ1-DynResize_MZ_Index
+		dc.w DynResize_MZ2-DynResize_MZ_Index
+		dc.w DynResize_MZ3-DynResize_MZ_Index
+		dc.w DynResize_MZ4-DynResize_MZ_Index
+; ---------------------------------------------------------------------------
+
+DynResize_MZ1:					; leftover from Sonic 1
 		moveq	#0,d0
 		move.b	(Dynamic_Resize_Routine).w,d0
-		move.w	off_7776(pc,d0.w),d0
-		jmp	off_7776(pc,d0.w)
+		move.w	DynMZ1_Index(pc,d0.w),d0
+		jmp	DynMZ1_Index(pc,d0.w)
 ; ---------------------------------------------------------------------------
-off_7776:
-		dc.w loc_777E-off_7776
-		dc.w loc_77AE-off_7776
-		dc.w loc_77F2-off_7776
-		dc.w loc_781C-off_7776
+DynMZ1_Index:
+		dc.w loc_777E-DynMZ1_Index
+		dc.w loc_77AE-DynMZ1_Index
+		dc.w loc_77F2-DynMZ1_Index
+		dc.w loc_781C-DynMZ1_Index
 ; ---------------------------------------------------------------------------
 
 loc_777E:
 		move.w	#$1D0,(Camera_Max_Y_pos_target).w
 		cmpi.w	#$700,(Camera_RAM).w
-		blo.s	locret_77AC
+		blo.s	+
 		move.w	#$220,(Camera_Max_Y_pos_target).w
 		cmpi.w	#$D00,(Camera_RAM).w
-		blo.s	locret_77AC
+		blo.s	+
 		move.w	#$340,(Camera_Max_Y_pos_target).w
 		cmpi.w	#$340,(Camera_Y_pos).w
-		blo.s	locret_77AC
+		blo.s	+
 		addq.b	#2,(Dynamic_Resize_Routine).w
-
-locret_77AC:
++
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -6661,17 +6621,16 @@ loc_77AE:
 loc_77BC:
 		move.w	#0,(Camera_Min_Y_pos).w
 		cmpi.w	#$E00,(Camera_RAM).w
-		bhs.s	locret_77F0
+		bhs.s	+
 		move.w	#$340,(Camera_Min_Y_pos).w
 		move.w	#$340,(Camera_Max_Y_pos_target).w
 		cmpi.w	#$A90,(Camera_RAM).w
-		bhs.s	locret_77F0
+		bhs.s	+
 		move.w	#$500,(Camera_Max_Y_pos_target).w
 		cmpi.w	#$370,(Camera_Y_pos).w
-		blo.s	locret_77F0
+		blo.s	+
 		addq.b	#2,(Dynamic_Resize_Routine).w
-
-locret_77F0:
++
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -6684,13 +6643,12 @@ loc_77F2:
 
 loc_7800:
 		cmpi.w	#$500,(Camera_Y_pos).w
-		blo.s	locret_781A
+		blo.s	+
 		cmpi.w	#$B80,(Camera_RAM).w
-		blo.s	locret_781A
+		blo.s	+
 		move.w	#$500,(Camera_Min_Y_pos).w
 		addq.b	#2,(Dynamic_Resize_Routine).w
-
-locret_781A:
++
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -6723,13 +6681,57 @@ locret_786A:
 		rts
 ; ---------------------------------------------------------------------------
 
-S1DynResize_MZ2:					; leftover from Sonic 1
+DynResize_MZ2:					; leftover from Sonic 1
 		move.w	#$520,(Camera_Max_Y_pos_target).w
-		cmpi.w	#$1700,(Camera_RAM).w
-		blo.s	locret_7882
+		cmpi.w	#$1700,(Camera_X_pos).w
+		blo.s	+
 		move.w	#$200,(Camera_Max_Y_pos_target).w
++
+		rts
+; ---------------------------------------------------------------------------
 
-locret_7882:
+DynResize_MZ3:					; leftover from Sonic 1
+		moveq	#0,d0
+		move.b	(Dynamic_Resize_Routine).w,d0
+		move.w	DynMZ3_Index(pc,d0.w),d0
+		jmp	DynMZ3_Index(pc,d0.w)
+; ---------------------------------------------------------------------------
+DynMZ3_Index:
+		dc.w DynResize_MZ3Boss-DynMZ3_Index
+		dc.w DynResize_MZ3End-DynMZ3_Index
+; ---------------------------------------------------------------------------
+
+DynResize_MZ3Boss:
+		move.w	#$720,(Camera_Max_Y_pos_target).w
+		cmpi.w	#$1560,(Camera_X_pos).w
+		bcs.s	.return
+		move.w	#$210,(Camera_Max_Y_pos_target).w
+		cmpi.w	#$17F0,(Camera_X_pos).w
+		bcs.s	.return
+		bsr.w	FindFreeObj
+		bne.s	+
+		_move.b	#id_Obj55,obID(a1)			; load Obj55 (EHZ boss, Placeholder)
+		move.w	#$19F0,obX(a1)
+		move.w	#$22C,obY(a1)
++
+		move.w	#bgm_Boss,d0
+		jsr	(PlaySound).l	; play boss music
+		move.b	#1,(f_lockscreen).w ; lock screen
+		addq.b	#2,(Dynamic_Resize_Routine).w
+		moveq	#plcid_Boss,d0
+		jmp	(LoadPLC).l
+; ---------------------------------------------------------------------------
+
+.return:
+		rts
+; ---------------------------------------------------------------------------
+
+DynResize_MZ3End:
+		move.w	(Camera_RAM).w,(Camera_Min_X_pos).w
+		rts
+; ---------------------------------------------------------------------------
+
+DynResize_MZ4:
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -6744,6 +6746,7 @@ DynResize_CPZ_Index:
 		dc.w DynResize_CPZ1-DynResize_CPZ_Index
 		dc.w DynResize_CPZ2-DynResize_CPZ_Index
 		dc.w DynResize_CPZ3-DynResize_CPZ_Index
+		dc.w DynResize_CPZ4-DynResize_CPZ_Index
 ; ---------------------------------------------------------------------------
 
 DynResize_CPZ1:
@@ -6757,12 +6760,12 @@ DynResize_CPZ2:
 DynResize_CPZ3:
 		moveq	#0,d0
 		move.b	(Dynamic_Resize_Routine).w,d0
-		move.w	off_7892(pc,d0.w),d0
-		jmp	off_7892(pc,d0.w)
+		move.w	DynCPZ3_Index(pc,d0.w),d0
+		jmp	DynCPZ3_Index(pc,d0.w)
 ; ===========================================================================
-off_7892:
-		dc.w DynResize_CPZ3_BossCheck-off_7892
-		dc.w DynResize_CPZ3_Null-off_7892
+DynCPZ3_Index:
+		dc.w DynResize_CPZ3_BossCheck-DynCPZ3_Index
+		dc.w DynResize_CPZ3_Null-DynCPZ3_Index
 ; ===========================================================================
 
 DynResize_CPZ3_BossCheck:
@@ -6783,24 +6786,28 @@ DynResize_CPZ3_BossCheck:
 		move.w	#$540,obY(a1)
 		moveq	#plcid_Boss,d0
 		jmp	(LoadPLC).l
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
 DynResize_CPZ3_Null:
 		rts
+; ---------------------------------------------------------------------------
 
+DynResize_CPZ4:
+		rts
 ; ---------------------------------------------------------------------------
 
 DynResize_EHZ:
 		moveq	#0,d0
 		move.b	(Current_Act).w,d0
 		add.w	d0,d0
-		move.w	off_78F0(pc,d0.w),d0
-		jmp	off_78F0(pc,d0.w)
+		move.w	DynResize_EHZ_Index(pc,d0.w),d0
+		jmp	DynResize_EHZ_Index(pc,d0.w)
 ; ---------------------------------------------------------------------------
-off_78F0:
-		dc.w DynResize_EHZ1-off_78F0
-		dc.w DynResize_EHZ2-off_78F0
-		dc.w DynResize_EHZ3-off_78F0
+DynResize_EHZ_Index:
+		dc.w DynResize_EHZ1-DynResize_EHZ_Index
+		dc.w DynResize_EHZ2-DynResize_EHZ_Index
+		dc.w DynResize_EHZ3-DynResize_EHZ_Index
+		dc.w DynResize_EHZ4-DynResize_EHZ_Index
 ; ---------------------------------------------------------------------------
 
 DynResize_EHZ1:
@@ -6847,20 +6854,18 @@ locret_795A:
 
 DynResize_EHZ2_02:
 		cmpi.w	#$2880,(Camera_RAM).w
-		blo.s	locret_796E
+		blo.s	+
 		move.w	#$2880,(Camera_Min_X_pos).w
 		addq.b	#2,(Dynamic_Resize_Routine).w
-
-locret_796E:
++
 		rts
 ; ---------------------------------------------------------------------------
 
 DynResize_EHZ2_03:
 		tst.b	(Boss_defeated_flag).w
-		beq.s	locret_7980
+		beq.s	+
 		move.b	#GameModeID_SegaScreen,(v_gamemode).w
-
-locret_7980:
++
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -6868,25 +6873,50 @@ DynResize_EHZ3:
 		rts
 ; ---------------------------------------------------------------------------
 
-S1DynResize_SLZ3:					; leftover from Sonic 1
+DynResize_EHZ4:
+		rts
+; ---------------------------------------------------------------------------
+
+DynResize_SLZ:
+		moveq	#0,d0
+		move.b	(Current_Act).w,d0
+		add.w	d0,d0
+		move.w	DynResize_SLZ_Index(pc,d0.w),d0
+		jmp	DynResize_SLZ_Index(pc,d0.w)
+; ---------------------------------------------------------------------------
+DynResize_SLZ_Index:
+		dc.w DynResize_SLZ1-DynResize_SLZ_Index
+		dc.w DynResize_SLZ2-DynResize_SLZ_Index
+		dc.w DynResize_SLZ3-DynResize_SLZ_Index
+		dc.w DynResize_SLZ4-DynResize_SLZ_Index
+; ---------------------------------------------------------------------------
+
+DynResize_SLZ1:
+		rts
+; ---------------------------------------------------------------------------
+
+DynResize_SLZ2:
+		rts
+; ---------------------------------------------------------------------------
+
+DynResize_SLZ3:					; leftover from Sonic 1
 		moveq	#0,d0
 		move.b	(Dynamic_Resize_Routine).w,d0
-		move.w	off_7990(pc,d0.w),d0
-		jmp	off_7990(pc,d0.w)
+		move.w	DynSLZ3_Index(pc,d0.w),d0
+		jmp	DynSLZ3_Index(pc,d0.w)
 ; ---------------------------------------------------------------------------
-off_7990:
-		dc.w loc_7996-off_7990
-		dc.w loc_79AA-off_7990
-		dc.w loc_79D6-off_7990
+DynSLZ3_Index:
+		dc.w loc_7996-DynSLZ3_Index
+		dc.w loc_79AA-DynSLZ3_Index
+		dc.w loc_79D6-DynSLZ3_Index
 ; ---------------------------------------------------------------------------
 
 loc_7996:
 		cmpi.w	#$1E70,(Camera_RAM).w
-		blo.s	locret_79A8
+		blo.s	+
 		move.w	#$210,(Camera_Max_Y_pos_target).w
 		addq.b	#2,(Dynamic_Resize_Routine).w
-
-locret_79A8:
++
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -6915,7 +6945,11 @@ loc_79D6:
 		rts
 ; ---------------------------------------------------------------------------
 
-DynResize_HPZ:
+DynResize_SLZ4:
+		rts
+; ---------------------------------------------------------------------------
+
+DynResize_HPZ:	; Misnomer, this is Spring Yard's DynResize
 		moveq	#0,d0
 		move.b	(Current_Act).w,d0
 		add.w	d0,d0
@@ -6926,6 +6960,7 @@ DynResize_HPZ_Index:
 		dc.w DynResize_HPZ1-DynResize_HPZ_Index
 		dc.w DynResize_HPZ2-DynResize_HPZ_Index
 		dc.w DynResize_HPZ3-DynResize_HPZ_Index
+		dc.w DynResize_HPZ4-DynResize_HPZ_Index
 ; ---------------------------------------------------------------------------
 
 DynResize_HPZ1:
@@ -6952,12 +6987,12 @@ DynResize_HPZ3:
 		jmp	DynResize_HPZ3_Index(pc,d0.w)
 ; ---------------------------------------------------------------------------
 DynResize_HPZ3_Index:
-		dc.w loc_7A30-DynResize_HPZ3_Index
-		dc.w loc_7A48-DynResize_HPZ3_Index
-		dc.w loc_7A7A-DynResize_HPZ3_Index
+		dc.w DynResize_HPZ3_Main-DynResize_HPZ3_Index
+		dc.w DynResize_HPZ3_Boss-DynResize_HPZ3_Index
+		dc.w DynResize_HPZ3_End-DynResize_HPZ3_Index
 ; ---------------------------------------------------------------------------
 
-loc_7A30:
+DynResize_HPZ3_Main:
 		cmpi.w	#$2AC0,(Camera_RAM).w
 		blo.s	locret_7A46
 		bsr.w	FindFreeObj
@@ -6969,7 +7004,7 @@ locret_7A46:
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_7A48:
+DynResize_HPZ3_Boss:
 		cmpi.w	#$2C00,(Camera_RAM).w
 		blo.s	locret_7A78
 		move.w	#$4CC,(Camera_Max_Y_pos_target).w
@@ -6990,12 +7025,16 @@ locret_7A78:
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_7A7A:
+DynResize_HPZ3_End:
 		move.w	(Camera_RAM).w,(Camera_Min_X_pos).w
 		rts
 ; ---------------------------------------------------------------------------
 
-DynResize_HTZ:
+DynResize_HPZ4:
+		rts
+; ---------------------------------------------------------------------------
+
+DynResize_HTZ:	; Misnomer, this is Scrap brain's DynResize
 		moveq	#0,d0
 		move.b	(Current_Act).w,d0
 		add.w	d0,d0
@@ -7006,6 +7045,7 @@ DynResize_HTZ_Index:
 		dc.w DynResize_HTZ1-DynResize_HTZ_Index
 		dc.w DynResize_HTZ2-DynResize_HTZ_Index
 		dc.w DynResize_HTZ3-DynResize_HTZ_Index
+		dc.w DynResize_HTZ4-DynResize_HTZ_Index
 ; ---------------------------------------------------------------------------
 
 DynResize_HTZ1:
@@ -7052,10 +7092,10 @@ loc_7AF4:
 		blo.s	locret_7B10
 		bsr.w	FindFreeObj
 		bne.s	locret_7B10
-		_move.b	#id_Obj83,obID(a1)	; load object 83
+		_move.b	#id_Obj83,obID(a1) ; load object 83 (collapsing block object in S1)
 		addq.b	#2,(Dynamic_Resize_Routine).w
 		moveq	#plcid_EggmanSBZ2,d0
-		jmp	(LoadPLC).l
+		jmp	(LoadPLC).l		; load SBZ2 Eggman patterns
 ; ---------------------------------------------------------------------------
 
 locret_7B10:
@@ -7067,7 +7107,7 @@ loc_7B12:
 		blo.s	loc_7B2E
 		bsr.w	FindFreeObj
 		bne.s	loc_7B28
-		_move.b	#id_Obj82,obID(a1)	; load object 82
+		_move.b	#id_Obj82,obID(a1)	; load object 82 (SBZ Eggman in S1)
 		addq.b	#2,(Dynamic_Resize_Routine).w
 
 loc_7B28:
@@ -7096,14 +7136,14 @@ DynResize_HTZ3:
 		jmp	DynResize_HTZ3_Index(pc,d0.w)
 ; ---------------------------------------------------------------------------
 DynResize_HTZ3_Index:
-		dc.w loc_7B5A-DynResize_HTZ3_Index
-		dc.w loc_7B6E-DynResize_HTZ3_Index
-		dc.w loc_7B8C-DynResize_HTZ3_Index
-		dc.w locret_7B9A-DynResize_HTZ3_Index
-		dc.w loc_7B9C-DynResize_HTZ3_Index
+		dc.w DynResize_HTZ3_Main-DynResize_HTZ3_Index
+		dc.w DynResize_HTZ3_Boss-DynResize_HTZ3_Index
+		dc.w DynResize_HTZ3_End-DynResize_HTZ3_Index
+		dc.w DynResize_HTZ3_Null-DynResize_HTZ3_Index
+		dc.w DynResize_HTZ3_End2-DynResize_HTZ3_Index
 ; ---------------------------------------------------------------------------
 
-loc_7B5A:
+DynResize_HTZ3_Main:
 		cmpi.w	#$2148,(Camera_RAM).w
 		blo.s	loc_7B6C
 		addq.b	#2,(Dynamic_Resize_Routine).w
@@ -7115,7 +7155,7 @@ loc_7B6C:
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_7B6E:
+DynResize_HTZ3_Boss:
 		cmpi.w	#$2300,(Camera_RAM).w
 		blo.s	loc_7B8A
 		bsr.w	FindFreeObj
@@ -7129,7 +7169,7 @@ loc_7B8A:
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_7B8C:
+DynResize_HTZ3_End:
 		cmpi.w	#$2450,(Camera_RAM).w
 		blo.s	loc_7B98
 		addq.b	#2,(Dynamic_Resize_Routine).w
@@ -7139,12 +7179,16 @@ loc_7B98:
 		rts
 ; ---------------------------------------------------------------------------
 
-locret_7B9A:
+DynResize_HTZ3_Null:
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_7B9C:
+DynResize_HTZ3_End2:
 		move.w	(Camera_RAM).w,(Camera_Min_X_pos).w
+		rts
+; ---------------------------------------------------------------------------
+
+DynResize_HTZ4:
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -9484,8 +9528,13 @@ ObjectsManager_States:
 ObjectsManager_Init:
 		addq.b	#2,(Obj_placement_routine).w
 		move.w	(Current_ZoneAndAct).w,d0
-		lsl.b	#6,d0
-		lsr.w	#4,d0
+		move.w	d0,d1
+		lsr.w	#5,d0
+		andi.w	#$FF,d1
+		lsl.w	#1,d1
+		add.w	d1,d0
+;		lsl.b	#6,d0
+;		lsr.w	#4,d0
 		lea	(ObjPos_Index).l,a0
 		movea.l	a0,a1
 		adda.w	(a0,d0.w),a0
@@ -15096,8 +15145,15 @@ loc_12DCC:
 		move.b	(a2,d0.w),d0
 		andi.w	#$FF,d0
 		beq.s	loc_12DBE
+		cmpi.b	#6,(Current_Zone).w
+		beq.s	+
+		tst.b	(Current_Zone).w
+		beq.s	+
 		lea	(AngleMap).l,a2
-		move.b	(a2,d0.w),(a4)
+		bra.s	++
++
+		lea	(S1_AngleMap).l,a2
++		move.b	(a2,d0.w),(a4)
 		lsl.w	#4,d0
 		move.w	d3,d1
 		btst	#$A,d4
@@ -15113,8 +15169,15 @@ loc_12DCC:
 +
 		andi.w	#$F,d1
 		add.w	d0,d1
+		cmpi.b	#6,(Current_Zone).w
+		beq.s	+
+		tst.b	(Current_Zone).w
+		beq.s	+
 		lea	(ColArray1).l,a2
-		move.b	(a2,d1.w),d0
+		bra.s	++
++
+		lea	(S1_ColArray1).l,a2
++		move.b	(a2,d1.w),d0
 		ext.w	d0
 		eor.w	d6,d4
 		btst	#$B,d4
@@ -15122,7 +15185,7 @@ loc_12DCC:
 		neg.w	d0
 +
 		tst.w	d0
-		beq.s	loc_12DBE
+		beq.w	loc_12DBE
 		bmi.s	loc_12E38
 		cmpi.b	#$10,d0
 		beq.s	loc_12E44
@@ -15175,8 +15238,15 @@ loc_12E72:
 		move.b	(a2,d0.w),d0
 		andi.w	#$FF,d0
 		beq.s	loc_12E64
+		cmpi.b	#6,(Current_Zone).w
+		beq.s	+
+		tst.b	(Current_Zone).w
+		beq.s	+
 		lea	(AngleMap).l,a2
-		move.b	(a2,d0.w),(a4)
+		bra.s	++
++
+		lea	(S1_AngleMap).l,a2
++		move.b	(a2,d0.w),(a4)
 		lsl.w	#4,d0
 		move.w	d3,d1
 		btst	#$A,d4
@@ -15194,8 +15264,15 @@ loc_12E96:
 loc_12EA6:
 		andi.w	#$F,d1
 		add.w	d0,d1
+		cmpi.b	#6,(Current_Zone).w
+		beq.s	+
+		tst.b	(Current_Zone).w
+		beq.s	+
 		lea	(ColArray1).l,a2
-		move.b	(a2,d1.w),d0
+		bra.s	++
++
+		lea	(S1_ColArray1).l,a2
++		move.b	(a2,d1.w),d0
 		ext.w	d0
 		eor.w	d6,d4
 		btst	#$B,d4
@@ -15204,7 +15281,7 @@ loc_12EA6:
 
 loc_12EC2:
 		tst.w	d0
-		beq.s	loc_12E64
+		beq.w	loc_12E64
 		bmi.s	loc_12ED8
 		move.w	d2,d1
 		andi.w	#$F,d1
@@ -15250,8 +15327,15 @@ loc_12F08:
 		move.b	(a2,d0.w),d0
 		andi.w	#$FF,d0
 		beq.s	loc_12EFA
+		cmpi.b	#6,(Current_Zone).w
+		beq.s	+
+		tst.b	(Current_Zone).w
+		beq.s	+
 		lea	(AngleMap).l,a2
-		move.b	(a2,d0.w),(a4)
+		bra.s	++
++
+		lea	(S1_AngleMap).l,a2
++		move.b	(a2,d0.w),(a4)
 		lsl.w	#4,d0
 		move.w	d2,d1
 		btst	#$B,d4
@@ -15269,8 +15353,15 @@ loc_12F34:
 loc_12F3C:
 		andi.w	#$F,d1
 		add.w	d0,d1
+		cmpi.b	#6,(Current_Zone).w
+		beq.s	+
+		tst.b	(Current_Zone).w
+		beq.s	+
 		lea	(ColArray2).l,a2
-		move.b	(a2,d1.w),d0
+		bra.s	++
++
+		lea	(S1_ColArray2).l,a2
++		move.b	(a2,d1.w),d0
 		ext.w	d0
 		eor.w	d6,d4
 		btst	#$A,d4
@@ -15279,7 +15370,7 @@ loc_12F3C:
 
 loc_12F58:
 		tst.w	d0
-		beq.s	loc_12EFA
+		beq.w	loc_12EFA
 		bmi.s	loc_12F74
 		cmpi.b	#$10,d0
 		beq.s	loc_12F80
@@ -15332,8 +15423,15 @@ loc_12FAE:
 		move.b	(a2,d0.w),d0
 		andi.w	#$FF,d0
 		beq.s	loc_12FA0
+		cmpi.b	#6,(Current_Zone).w
+		beq.s	+
+		tst.b	(Current_Zone).w
+		beq.s	+
 		lea	(AngleMap).l,a2
-		move.b	(a2,d0.w),(a4)
+		bra.s	++
++
+		lea	(S1_AngleMap).l,a2
++		move.b	(a2,d0.w),(a4)
 		lsl.w	#4,d0
 		move.w	d2,d1
 		btst	#$B,d4
@@ -15351,8 +15449,15 @@ loc_12FDA:
 loc_12FE2:
 		andi.w	#$F,d1
 		add.w	d0,d1
+		cmpi.b	#6,(Current_Zone).w
+		beq.s	+
+		tst.b	(Current_Zone).w
+		beq.s	+
 		lea	(ColArray2).l,a2
-		move.b	(a2,d1.w),d0
+		bra.s	++
++
+		lea	(S1_ColArray2).l,a2
++		move.b	(a2,d1.w),d0
 		ext.w	d0
 		eor.w	d6,d4
 		btst	#$A,d4
@@ -15361,7 +15466,7 @@ loc_12FE2:
 
 loc_12FFE:
 		tst.w	d0
-		beq.s	loc_12FA0
+		beq.w	loc_12FA0
 		bmi.s	loc_13014
 		move.w	d3,d1
 		andi.w	#$F,d1
@@ -22665,7 +22770,8 @@ LoadAnimatedBlocks:
 		lea	AnimPatMaps(pc,d0.w),a0
 		tst.w	(a0)
 		beq.s	locret_1AD1A
-		lea	(v_16x16).w,a1
+;		lea	(v_16x16).w,a1
+		movea.l	(v_16x16).l,a1
 		adda.w	(a0)+,a1
 		move.w	(a0)+,d1
 ; loc_1AD14:
@@ -23550,7 +23656,7 @@ Debug_Init:	; Routine 0
 		move.w	(Camera_Min_Y_pos).w,(v_limittopdb).w
 		move.w	(Camera_Max_Y_pos_target).w,(v_limitbtmdb).w
 		move.w	#0,(Camera_Min_Y_pos).w
-	;	move.w	#$720,(Camera_Max_Y_pos_target).w	; Sonic 2 doesn't bothers
+		move.w	#$720,(Camera_Max_Y_pos_target).w	; Sonic 2 doesn't bothers
 		andi.w	#$7FF,(v_player+obY).w
 		andi.w	#$7FF,(Camera_Y_pos).w
 		andi.w	#$3FF,(Camera_BG_Y_pos).w
@@ -24065,37 +24171,42 @@ Nem_Squirrel:	binclude	"art/nemesis/S1/Animal Squirrel.nem"
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - primary patterns and block mappings
 ; ---------------------------------------------------------------------------
-Map16_GHZ:	binclude	"mappings/16x16/GHZ.kosp"
+Map16_GHZ:	binclude	"mappings/16x16/GHZ.unc"
 		even
-Kosp_GHZ:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"		; To be replaced
+Kosp_GHZ:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
 		even
-Map128_GHZ:	binclude	"mappings/128x128/GHZ.twiz"			; To be replaced
+Map128_GHZ:	binclude	"mappings/128x128/GHZ.twiz"
 		even
-Map16_LZ:	binclude	"mappings/16x16/LZ.kosp"
+
+Map16_LZ:	binclude	"mappings/16x16/LZ.unc"
 		even
 Kosp_LZ:	binclude	"art/kosinski/level/8x8 - LZ.kosp"
 		even
 Map128_LZ:	binclude	"mappings/128x128/LZ.twiz"
 		even
-Map16_CPZ:	binclude	"mappings/16x16/CPZ.kosp"
+
+Map16_CPZ:	binclude	"mappings/16x16/CPZ.unc"
 		even
 Kosp_CPZ:	binclude	"art/kosinski/level/8x8 - CPZ.kosp"
 		even
 Map128_CPZ:	binclude	"mappings/128x128/CPZ.twiz"
 		even
-Map16_HPZ:	binclude	"mappings/16x16/HPZ.kosp"
+
+Map16_HPZ:	binclude	"mappings/16x16/HPZ.unc"
 		even
 Kosp_HPZ:	binclude	"art/kosinski/level/8x8 - HPZ.kosp"
 		even
 Map128_HPZ:	binclude	"mappings/128x128/HPZ.twiz"
 		even
-Map16_EHZ:	binclude	"mappings/16x16/EHZ.kosp"
+
+Map16_EHZ:	binclude	"mappings/16x16/EHZ.unc"
 		even
 Kosp_EHZ:	binclude	"art/kosinski/level/8x8 - EHZ.kosp"
 		even
 Map128_EHZ:	binclude	"mappings/128x128/EHZ.twiz"
 		even
-Map16_HTZ:	binclude	"mappings/16x16/HTZ.kosp"
+
+Map16_HTZ:	binclude	"mappings/16x16/HTZ.unc"
 		even
 Kosp_HTZ:	binclude	"art/kosinski/level/8x8 - HTZ.kosp"
 		even
@@ -24138,11 +24249,11 @@ Nem_CreditText:	binclude	"art/nemesis/S1/Ending - Credits.nem"
 Nem_EndStH:	binclude	"art/nemesis/S1/Ending - StH Logo.nem"
 		even
 ; ---------------------------------------------------------------------------
-AngleMap_S1:	binclude	"collision/S1/Angle Map.bin"
+S1_AngleMap:	binclude	"collision/S1/Angle Map.bin"
 		even
-ColArray1_S1:	binclude	"collision/S1/Collision Array (Normal).bin"
+S1_ColArray1:	binclude	"collision/S1/Collision Array (Normal).bin"
 		even
-ColArray2_S1:	binclude	"collision/S1/Collision Array (Rotated).bin"
+S1_ColArray2:	binclude	"collision/S1/Collision Array (Rotated).bin"
 		even
 ; ---------------------------------------------------------------------------
 AngleMap:	binclude	"collision/Curve and resistance mapping.bin"
@@ -24389,148 +24500,129 @@ Art_HPZPulseOrb:	binclude	"art/uncompressed/Pulsing orb (HPZ).bin"
 ; Level layouts, three entries per act (although the third one is unused)
 ; ---------------------------------------------------------------------------
 Level_Index:
-		dc.w Level_GHZ1-Level_Index,Level_GHZBg-Level_Index,Level_Null-Level_Index
-		dc.w Level_GHZ2-Level_Index,Level_GHZBg-Level_Index,Level_Null-Level_Index
-		dc.w Level_GHZ3-Level_Index,Level_GHZBg-Level_Index,Level_Null-Level_Index
-		dc.w Level_GHZ4-Level_Index,Level_GHZBg-Level_Index,Level_Null-Level_Index
+		; Zone 00
+		dc.w Level_GHZ1-Level_Index
+		dc.w Level_GHZ2-Level_Index
+		dc.w Level_GHZ3-Level_Index
+		dc.w Level_GHZ4-Level_Index
 		; Zone 01 - Placeholder entries
-		dc.w Level_CPZ1-Level_Index,Level_CPZBg-Level_Index,Level_Null-Level_Index
-		dc.w Level_CPZ2-Level_Index,Level_CPZBg-Level_Index,Level_Null-Level_Index
-		dc.w Level_CPZ3-Level_Index,Level_CPZBg-Level_Index,Level_Null-Level_Index
-		dc.w Level_CPZ4-Level_Index,Level_CPZBg-Level_Index,Level_Null-Level_Index
+		dc.w Level_CPZ1-Level_Index
+		dc.w Level_CPZ2-Level_Index
+		dc.w Level_CPZ3-Level_Index
+		dc.w Level_CPZ4-Level_Index
 		; Zone 02
-		dc.w Level_CPZ1-Level_Index,Level_CPZBg-Level_Index,Level_Null-Level_Index
-		dc.w Level_CPZ2-Level_Index,Level_CPZBg-Level_Index,Level_Null-Level_Index
-		dc.w Level_CPZ3-Level_Index,Level_CPZBg-Level_Index,Level_Null-Level_Index
-		dc.w Level_CPZ4-Level_Index,Level_CPZBg-Level_Index,Level_Null-Level_Index
+		dc.w Level_CPZ1-Level_Index
+		dc.w Level_CPZ2-Level_Index
+		dc.w Level_CPZ3-Level_Index
+		dc.w Level_CPZ4-Level_Index
 		; Zone 03
-		dc.w Level_EHZ1-Level_Index,Level_EHZBg-Level_Index,Level_Null-Level_Index
-		dc.w Level_EHZ2-Level_Index,Level_EHZBg-Level_Index,Level_Null-Level_Index
-		dc.w Level_EHZ3-Level_Index,Level_EHZBg-Level_Index,Level_Null-Level_Index
-		dc.w Level_EHZ4-Level_Index,Level_EHZBg-Level_Index,Level_Null-Level_Index
+		dc.w Level_EHZ1-Level_Index
+		dc.w Level_EHZ2-Level_Index
+		dc.w Level_EHZ3-Level_Index
+		dc.w Level_EHZ4-Level_Index
 		; Zone 04
-		dc.w Level_HPZ1-Level_Index,Level_HPZBg-Level_Index,Level_Null-Level_Index
-		dc.w Level_HPZ2-Level_Index,Level_HPZBg-Level_Index,Level_Null-Level_Index
-		dc.w Level_HPZ3-Level_Index,Level_HPZBg-Level_Index,Level_Null-Level_Index
-		dc.w Level_HPZ4-Level_Index,Level_HPZBg-Level_Index,Level_Null-Level_Index
+		dc.w Level_HPZ1-Level_Index
+		dc.w Level_HPZ2-Level_Index
+		dc.w Level_HPZ3-Level_Index
+		dc.w Level_HPZ4-Level_Index
 		; Zone 05
-		dc.w Level_HTZ1-Level_Index,Level_HTZBg-Level_Index,Level_Null-Level_Index
-		dc.w Level_HTZ2-Level_Index,Level_HTZBg-Level_Index,Level_Null-Level_Index
-		dc.w Level_HTZ3-Level_Index,Level_HTZBg-Level_Index,Level_Null-Level_Index
-		dc.w Level_HTZ4-Level_Index,Level_HTZBg-Level_Index,Level_Null-Level_Index
+		dc.w Level_HTZ1-Level_Index
+		dc.w Level_HTZ2-Level_Index
+		dc.w Level_HTZ3-Level_Index
+		dc.w Level_HTZ4-Level_Index
 		; Zone 06 - Placeholder entries
-		dc.w Level_GHZ1-Level_Index,Level_GHZBg-Level_Index,Level_Null-Level_Index
-		dc.w Level_GHZ2-Level_Index,Level_GHZBg-Level_Index,Level_Null-Level_Index
-		dc.w Level_GHZ3-Level_Index,Level_GHZBg-Level_Index,Level_Null-Level_Index
-		dc.w Level_GHZ4-Level_Index,Level_GHZBg-Level_Index,Level_Null-Level_Index
+		dc.w Level_Ending-Level_Index
+		dc.w Level_Ending-Level_Index
+		dc.w Level_Null-Level_Index
+		dc.w Level_Null-Level_Index
 
-Level_GHZ1:	binclude	"level/layout/GHZ_1.bin"
+Level_GHZ1:	binclude	"level/layout/GHZ_1.kosp"
 		even
-Level_GHZ2:	binclude	"level/layout/GHZ_2.bin"
+Level_GHZ2:	binclude	"level/layout/GHZ_2.kosp"
 		even
-Level_GHZ3:	binclude	"level/layout/GHZ_3.bin"
+Level_GHZ3:	binclude	"level/layout/GHZ_3.kosp"
 		even
-Level_GHZ4:	binclude	"level/layout/GHZ_4.bin"
+Level_GHZ4:	binclude	"level/layout/GHZ_4.kosp"
 		even
-Level_GHZBg:	binclude	"level/layout/GHZ_BG.bin"
+Level_EHZ1:	binclude	"level/layout/EHZ_1.kosp"
 		even
-Level_EHZ1:	binclude	"level/layout/EHZ_1.bin"
+Level_EHZ2:	binclude	"level/layout/EHZ_2.kosp"
 		even
-Level_EHZ2:	binclude	"level/layout/EHZ_2.bin"
+Level_EHZ3:	binclude	"level/layout/EHZ_3.kosp"
 		even
-Level_EHZ3:	binclude	"level/layout/EHZ_3.bin"
+Level_EHZ4:	binclude	"level/layout/EHZ_4.kosp"
 		even
-Level_EHZ4:	binclude	"level/layout/EHZ_4.bin"
+Level_HTZ1:	binclude	"level/layout/HTZ_1.kosp"
 		even
-Level_EHZBg:	binclude	"level/layout/EHZ_BG.bin"
+Level_HTZ2:	binclude	"level/layout/HTZ_2.kosp"
 		even
-Level_HTZ1:	binclude	"level/layout/HTZ_1.bin"
+Level_HTZ3:	binclude	"level/layout/HTZ_3.kosp"
 		even
-Level_HTZ2:	binclude	"level/layout/HTZ_2.bin"
+Level_HTZ4:	binclude	"level/layout/HTZ_4.kosp"
 		even
-Level_HTZ3:	binclude	"level/layout/HTZ_3.bin"
+Level_CPZ1:	binclude	"level/layout/CPZ_1.kosp"
 		even
-Level_HTZ4:	binclude	"level/layout/HTZ_4.bin"
+Level_CPZ2:	binclude	"level/layout/CPZ_2.kosp"
 		even
-Level_HTZBg:	binclude	"level/layout/HTZ_BG.bin"
+Level_CPZ3:	binclude	"level/layout/CPZ_3.kosp"
 		even
-Level_CPZ1:	binclude	"level/layout/CPZ_1.bin"
+Level_CPZ4:	binclude	"level/layout/CPZ_4.kosp"
 		even
-Level_CPZ2:	binclude	"level/layout/CPZ_2.bin"
+Level_HPZ1:	binclude	"level/layout/HPZ_1.kosp"
 		even
-Level_CPZ3:	binclude	"level/layout/CPZ_3.bin"
+Level_HPZ2:	binclude	"level/layout/HPZ_2.kosp"
 		even
-Level_CPZ4:	binclude	"level/layout/CPZ_4.bin"
+Level_HPZ3:	binclude	"level/layout/HPZ_3.kosp"
 		even
-Level_CPZBg:	binclude	"level/layout/CPZ_BG.bin"
+Level_HPZ4:	binclude	"level/layout/HPZ_4.kosp"
 		even
-Level_HPZ1:	binclude	"level/layout/HPZ_1.bin"
-		even
-Level_HPZ2:	binclude	"level/layout/HPZ_2.bin"
-		even
-Level_HPZ3:	binclude	"level/layout/HPZ_3.bin"
-		even
-Level_HPZ4:	binclude	"level/layout/HPZ_4.bin"
-		even
-Level_HPZBg:	binclude	"level/layout/HPZ_BG.bin"
+Level_Ending:	binclude	"level/layout/Ending.kosp"
 		even
 Level_Null:	dc.l	0
 
 ; --------------------------------------------------------------------------------------
 ; Object layouts
 ; --------------------------------------------------------------------------------------
-
 ; Macro for marking the boundaries of an object layout file
 ObjectLayoutBoundary macro
 		dc.w	$FFFF,$0000,$0000
     endm
 
-
 ObjPos_Index:
-		dc.w ObjPos_GHZ1-ObjPos_Index,ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_GHZ2-ObjPos_Index,ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_GHZ3-ObjPos_Index,ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_GHZ1-ObjPos_Index,ObjPos_Null-ObjPos_Index
+		dc.w ObjPos_GHZ1-ObjPos_Index
+		dc.w ObjPos_GHZ2-ObjPos_Index
+		dc.w ObjPos_GHZ3-ObjPos_Index
+		dc.w ObjPos_GHZ4-ObjPos_Index
 
-		dc.w ObjPos_LZ1-ObjPos_Index,ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_LZ2-ObjPos_Index,ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_LZ3-ObjPos_Index,ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_LZ3-ObjPos_Index,ObjPos_Null-ObjPos_Index
+		dc.w ObjPos_LZ1-ObjPos_Index
+		dc.w ObjPos_LZ2-ObjPos_Index
+		dc.w ObjPos_LZ3-ObjPos_Index
+		dc.w ObjPos_LZ4-ObjPos_Index
 
-		dc.w ObjPos_CPZ1-ObjPos_Index,ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_CPZ2-ObjPos_Index,ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_CPZ3-ObjPos_Index,ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_CPZ1-ObjPos_Index,ObjPos_Null-ObjPos_Index
+		dc.w ObjPos_CPZ1-ObjPos_Index
+		dc.w ObjPos_CPZ2-ObjPos_Index
+		dc.w ObjPos_CPZ3-ObjPos_Index
+		dc.w ObjPos_CPZ4-ObjPos_Index
 
-		dc.w ObjPos_EHZ1-ObjPos_Index,ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_EHZ2-ObjPos_Index,ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_EHZ3-ObjPos_Index,ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_EHZ1-ObjPos_Index,ObjPos_Null-ObjPos_Index
+		dc.w ObjPos_EHZ1-ObjPos_Index
+		dc.w ObjPos_EHZ2-ObjPos_Index
+		dc.w ObjPos_EHZ3-ObjPos_Index
+		dc.w ObjPos_EHZ4-ObjPos_Index
 
-		dc.w ObjPos_HPZ1-ObjPos_Index,ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_HPZ2-ObjPos_Index,ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_HPZ3-ObjPos_Index,ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_HPZ1-ObjPos_Index,ObjPos_Null-ObjPos_Index
+		dc.w ObjPos_HPZ1-ObjPos_Index
+		dc.w ObjPos_HPZ2-ObjPos_Index
+		dc.w ObjPos_HPZ3-ObjPos_Index
+		dc.w ObjPos_HPZ4-ObjPos_Index
 
-		dc.w ObjPos_HTZ1-ObjPos_Index,ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_HTZ2-ObjPos_Index,ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_HTZ3-ObjPos_Index,ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_HTZ1-ObjPos_Index,ObjPos_Null-ObjPos_Index
+		dc.w ObjPos_HTZ1-ObjPos_Index
+		dc.w ObjPos_HTZ2-ObjPos_Index
+		dc.w ObjPos_HTZ3-ObjPos_Index
+		dc.w ObjPos_HTZ4-ObjPos_Index
 
-		dc.w ObjPos_Ending-ObjPos_Index,ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_Ending-ObjPos_Index,ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_Ending-ObjPos_Index,ObjPos_Null-ObjPos_Index
-		dc.w ObjPos_Ending-ObjPos_Index,ObjPos_Null-ObjPos_Index
-
-		; platform objects in LZ/SBZ (unused)
-		dc.w ObjPos_LZ1pf1-ObjPos_Index,ObjPos_LZ1pf2-ObjPos_Index
-		dc.w ObjPos_LZ2pf1-ObjPos_Index,ObjPos_LZ2pf2-ObjPos_Index
-		dc.w ObjPos_LZ3pf1-ObjPos_Index,ObjPos_LZ3pf2-ObjPos_Index
-		dc.w ObjPos_LZ1pf1-ObjPos_Index,ObjPos_LZ1pf2-ObjPos_Index
-		dc.w ObjPos_SBZ1pf1-ObjPos_Index,ObjPos_SBZ1pf2-ObjPos_Index
-		dc.w ObjPos_SBZ1pf3-ObjPos_Index,ObjPos_SBZ1pf4-ObjPos_Index
-		dc.w ObjPos_SBZ1pf5-ObjPos_Index,ObjPos_SBZ1pf6-ObjPos_Index
-		dc.w ObjPos_SBZ1pf1-ObjPos_Index,ObjPos_SBZ1pf2-ObjPos_Index
+		dc.w ObjPos_Ending-ObjPos_Index
+		dc.w ObjPos_Ending-ObjPos_Index
+		dc.w ObjPos_Ending-ObjPos_Index
+		dc.w ObjPos_Ending-ObjPos_Index
 
 		ObjectLayoutBoundary macro
 ObjPos_GHZ1:	binclude	"level/objects/GHZ_1.bin"
@@ -24539,12 +24631,63 @@ ObjPos_GHZ2:	binclude	"level/objects/GHZ_2.bin"
 		ObjectLayoutBoundary macro
 ObjPos_GHZ3:	binclude	"level/objects/GHZ_3.bin"
 		ObjectLayoutBoundary macro
+ObjPos_GHZ4:	binclude	"level/objects/GHZ_4.bin"
+		ObjectLayoutBoundary macro
 ObjPos_LZ1:
 		ObjectLayoutBoundary macro
 ObjPos_LZ2:
 		ObjectLayoutBoundary macro
 ObjPos_LZ3:
 		ObjectLayoutBoundary macro
+ObjPos_LZ4:
+		ObjectLayoutBoundary macro
+ObjPos_CPZ1:	binclude	"level/objects/CPZ_1.bin"
+		ObjectLayoutBoundary macro
+ObjPos_CPZ2:	binclude	"level/objects/CPZ_2.bin"
+		ObjectLayoutBoundary macro
+ObjPos_CPZ3:	binclude	"level/objects/CPZ_3.bin"
+		ObjectLayoutBoundary macro
+ObjPos_CPZ4:	binclude	"level/objects/CPZ_4.bin"
+		ObjectLayoutBoundary macro
+ObjPos_EHZ1:	binclude	"level/objects/EHZ_1.bin"
+		ObjectLayoutBoundary macro
+ObjPos_EHZ2:	binclude	"level/objects/EHZ_2.bin"
+		ObjectLayoutBoundary macro
+ObjPos_EHZ3:	binclude	"level/objects/EHZ_3.bin"
+		ObjectLayoutBoundary macro
+ObjPos_EHZ4:	binclude	"level/objects/EHZ_4.bin"
+		ObjectLayoutBoundary macro
+ObjPos_HPZ1:	binclude	"level/objects/HPZ_1.bin"
+		ObjectLayoutBoundary macro
+ObjPos_HPZ2:	binclude	"level/objects/HPZ_2.bin"
+		ObjectLayoutBoundary macro
+ObjPos_HPZ3:	binclude	"level/objects/HPZ_3.bin"
+		ObjectLayoutBoundary macro
+ObjPos_HPZ4:	binclude	"level/objects/HPZ_4.bin"
+		ObjectLayoutBoundary macro
+ObjPos_HTZ1:	binclude	"level/objects/HTZ_1.bin"
+		ObjectLayoutBoundary macro
+ObjPos_HTZ2:	binclude	"level/objects/HTZ_2.bin"
+		ObjectLayoutBoundary macro
+ObjPos_HTZ3:	binclude	"level/objects/HTZ_3.bin"
+		ObjectLayoutBoundary macro
+ObjPos_HTZ4:	binclude	"level/objects/HTZ_4.bin"
+		ObjectLayoutBoundary macro
+ObjPos_Ending:	binclude	"level/objects/S1/ending.bin"
+		ObjectLayoutBoundary macro
+ObjPos_Null:	ObjectLayoutBoundary macro
+		even
+; ---------------------------------------------------------------------------
+		; platform objects in LZ (unused)
+		dc.w ObjPos_LZ1pf1-ObjPos_Index,ObjPos_LZ1pf2-ObjPos_Index
+		dc.w ObjPos_LZ2pf1-ObjPos_Index,ObjPos_LZ2pf2-ObjPos_Index
+		dc.w ObjPos_LZ3pf1-ObjPos_Index,ObjPos_LZ3pf2-ObjPos_Index
+		dc.w ObjPos_LZ1pf1-ObjPos_Index,ObjPos_LZ1pf2-ObjPos_Index
+		; platform objects in SBZ (unused)
+		dc.w ObjPos_SBZ1pf1-ObjPos_Index,ObjPos_SBZ1pf2-ObjPos_Index
+		dc.w ObjPos_SBZ1pf3-ObjPos_Index,ObjPos_SBZ1pf4-ObjPos_Index
+		dc.w ObjPos_SBZ1pf5-ObjPos_Index,ObjPos_SBZ1pf6-ObjPos_Index
+		dc.w ObjPos_SBZ1pf1-ObjPos_Index,ObjPos_SBZ1pf2-ObjPos_Index
 ObjPos_LZ1pf1:	binclude	"level/objects/S1/lz1pf1.bin"
 		ObjectLayoutBoundary macro
 ObjPos_LZ1pf2:	binclude	"level/objects/S1/lz1pf2.bin"
@@ -24556,30 +24699,6 @@ ObjPos_LZ2pf2:	binclude	"level/objects/S1/lz2pf2.bin"
 ObjPos_LZ3pf1:	binclude	"level/objects/S1/lz3pf1.bin"
 		ObjectLayoutBoundary macro
 ObjPos_LZ3pf2:	binclude	"level/objects/S1/lz3pf2.bin"
-		ObjectLayoutBoundary macro
-ObjPos_CPZ1:	binclude	"level/objects/CPZ_1.bin"
-		ObjectLayoutBoundary macro
-ObjPos_CPZ2:
-		ObjectLayoutBoundary macro
-ObjPos_CPZ3:
-		ObjectLayoutBoundary macro
-ObjPos_EHZ1:	binclude	"level/objects/EHZ_1.bin"
-		ObjectLayoutBoundary macro
-ObjPos_EHZ2:	binclude	"level/objects/EHZ_2.bin"
-		ObjectLayoutBoundary macro
-ObjPos_EHZ3:
-		ObjectLayoutBoundary macro
-ObjPos_HPZ1:	binclude	"level/objects/HPZ_1.bin"
-		ObjectLayoutBoundary macro
-ObjPos_HPZ2:
-		ObjectLayoutBoundary macro
-ObjPos_HPZ3:
-		ObjectLayoutBoundary macro
-ObjPos_HTZ1:	binclude	"level/objects/HTZ_1.bin"
-		ObjectLayoutBoundary macro
-ObjPos_HTZ2:
-		ObjectLayoutBoundary macro
-ObjPos_HTZ3:	binclude	"level/objects/HTZ_3.bin"
 		ObjectLayoutBoundary macro
 ObjPos_SBZ1pf1:	binclude	"level/objects/S1/sbz1pf1.bin"
 		ObjectLayoutBoundary macro
@@ -24593,10 +24712,6 @@ ObjPos_SBZ1pf5:	binclude	"level/objects/S1/sbz1pf5.bin"
 		ObjectLayoutBoundary macro
 ObjPos_SBZ1pf6:	binclude	"level/objects/S1/sbz1pf6.bin"
 		ObjectLayoutBoundary macro
-ObjPos_Ending:	binclude	"level/objects/S1/ending.bin"
-		ObjectLayoutBoundary macro
-ObjPos_Null:	ObjectLayoutBoundary macro
-		even
 ; ---------------------------------------------------------------------------
 ; Ring layouts; one entry per act, four entries per zone
 ; ---------------------------------------------------------------------------

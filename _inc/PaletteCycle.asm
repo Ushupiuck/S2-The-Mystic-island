@@ -202,8 +202,8 @@ PalCycle_ARZ:
 ; ===========================================================================
 PalCycle_SBZ:
 ;		lea	(Pal_SBZCycList1).l,a2
-		tst.b	(v_act).w
-		beq.s	.is_act1
+;		tst.b	(v_act).w
+;		beq.s	.is_act1
 ;		lea	(Pal_SBZCycList2).l,a2
 
 .is_act1:
