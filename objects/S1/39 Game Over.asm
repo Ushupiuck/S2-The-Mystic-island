@@ -66,10 +66,16 @@ Over_Wait:	; Routine 4
 Over_ChgMode:
 		tst.b	(f_timeover).w	; is time over flag set?
 		bne.s	Over_ResetLvl	; if yes, branch
-		move.b	#GameModeID_ContinueScreen,(v_gamemode).w ; set mode to $14 (continue screen)
+	;	move.b	#GameModeID_ContinueScreen,(v_gamemode).w ; set mode to $14 (continue screen)
+		move.b	#GameModeID_SpecialStage,(v_gamemode).w ; set mode to $10 (special stage)
 		tst.b	(v_continues).w	; do you have any continues?
-		bne.w	DisplaySprite	; if yes, branch
+	;	bne.w	DisplaySprite	; if yes, branch
+		bne.w	.temp		; if yes, branch
 		move.b	#GameModeID_SegaScreen,(v_gamemode).w ; set mode to 0 (Sega screen)
+		bra.w	DisplaySprite
+.temp:
+		subq.b	#1,(v_continues).w	; Since the continue screen doesn't exists yet,
+		addq.b	#1,(v_lives).w		; We'll handle it here temporarily.
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
