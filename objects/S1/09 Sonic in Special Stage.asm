@@ -6,7 +6,7 @@ Obj09:
 		tst.w	(Debug_placement_mode).w	; is debug mode being used?
 		beq.s	Obj09_Normal			; if not, branch
 		bsr.w	S1SS_FixCamera
-		bra.w	DebugMode
+		jmp	(DebugMode).l
 ; ===========================================================================
 
 Obj09_Normal:
