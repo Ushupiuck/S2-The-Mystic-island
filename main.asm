@@ -11,14 +11,14 @@ BackupSRAM	  = 1
 AddressSRAM	  = 3	; 0 = odd+even; 2 = even only; 3 = odd only
 
 FixBugs		  = 1	; change to 1 to enable bugfixes
-AdvancedHandler	  = 1
+AdvancedHandler	  = 0
 
 zeroOffsetOptimization = 1	; if 1, makes a handful of zero-offset instructions smaller
 
 	include	"macrosetup.asm"
 	include	"macros.asm"
 	include	"constants.asm"
- if AdvancedHandler	
+ if AdvancedHandler
 	include	"Debugger.asm"
  endif
 
@@ -338,7 +338,7 @@ ErrorMsg_TwoAddresses:
 		move.l	(sp)+,(v_spbuffer).w
 		addq.w	#2,sp
 		movem.l	d0-sp,(v_regbuffer).w
-		bsr.w	ShowErrorMsg
+		bsr.s	ShowErrorMsg
 		move.l	2(sp),d0
 		bsr.w	ShowErrAddress
 		move.l	(v_spbuffer).w,d0
@@ -349,7 +349,7 @@ ErrorMsg_TwoAddresses:
 ErrorMessage:
 		disable_ints
 		movem.l	d0-sp,(v_regbuffer).w
-		bsr.w	ShowErrorMsg
+		bsr.s	ShowErrorMsg
 		move.l	2(sp),d0
 		bsr.w	ShowErrAddress
 
@@ -641,7 +641,7 @@ loc_D48:
 
 ; Demo_Time:
 Do_Updates:
-		bsr.w	LoadTilesAsYouMove
+		jsr	(LoadTilesAsYouMove).l
 		jsr	(HudUpdate).l
 		move.w	#0,(Lag_frame_count).w
 		bsr.w	ProcessDPLC2
@@ -696,7 +696,7 @@ loc_F08:
 		movem.l	d0-d7,(Camera_RAM_copy).w
 		movem.l	(Scroll_flags).w,d0-d1
 		movem.l	d0-d1,(Scroll_flags_copy).w
-		bsr.w	LoadTilesAsYouMove
+		jsr	(LoadTilesAsYouMove).l
 		jsr	(HudUpdate).l
 		bra.w	ProcessDPLC
 ; ===========================================================================
@@ -920,17 +920,17 @@ ClearScreen:
 
 ; loc_380
 SoundDriverLoad:
-		nop
+;		nop
 		stopZ80
 		resetZ80
 		lea	(DACDriver).l,a0
 		lea	(z80_ram).l,a1
 		bsr.w	KosDec
 		resetZ80a
-		nop
-		nop
-		nop
-		nop
+;		nop
+;		nop
+;		nop
+;		nop
 		resetZ80
 		startZ80
 		rts
@@ -1012,9 +1012,6 @@ PlaneMapToVRAM_H40_TileLoop:
 		dbf	d2,PlaneMapToVRAM_H40_LineLoop
 		rts
 ; End of function PlaneMapToVRAM_H40
-
-		include "_inc/DMA Queue.asm"
-		include "_inc/Nemesis Decompression.asm"
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 ; ---------------------------------------------------------------------------
@@ -1263,15 +1260,16 @@ QuickPLC:
 		ori.w	#$4000,d0
 		swap	d0
 		move.l	d0,(vdp_control_port).l
-		bsr.w	NemDec
+		bsr.s	NemDec
 		dbf	d1,.Load
 		rts
 ; End of function QuickPLC
 
+		include "_inc/Nemesis Decompression.asm"
 		include "_inc/Enigma Decompression.asm"
 		include "_inc/Kosinski Decompression.asm"
 		include "_inc/Twizzler Decompression.asm"
-
+		include "_inc/DMA Queue.asm"
 		include	"_inc/PaletteCycle.asm"
 
 Pal_HTZCyc1:	binclude "palette/Hill Top Lava.bin"
@@ -2129,37 +2127,48 @@ Sega_GoToTitleScreen:
 
 TitleScreen:
 		move.b	#bgm_Stop,d0
-		bsr.w	PlaySound_Special
+		bsr.w	PlaySound_Special ; stop music
 		bsr.w	ClearPLC
 		bsr.w	Pal_FadeToBlack
 		disable_ints
 		bsr.w	SoundDriverLoad
 		lea	(vdp_control_port).l,a6
-		move.w	#$8000+%0100,(a6)
-		move.w	#$8200+(vram_fg>>10),(a6)
-		move.w	#$8400+(vram_bg>>13),(a6)
-		move.w	#$9001,(a6)
-		move.w	#$9200,(a6)
+		move.w	#$8000+4,(a6)	; 8-colour mode
+		move.w	#$8200+(vram_fg>>10),(a6) ; set foreground nametable address
+		move.w	#$8400+(vram_bg>>13),(a6) ; set background nametable address
+		move.w	#$9001,(a6)	; 64-cell hscroll size
+		move.w	#$9200,(a6)	; window vertical position
 		move.w	#$8B03,(a6)
-		move.w	#$8720,(a6)
+		move.w	#$8720,(a6)	; set background colour (palette line 2, entry 0)
 		clr.b	(f_wtr_state).w
-		move.w	#$8C00+%10000001,(a6)
+		move.w	#$8C00+$81,(a6)	; H res 40 cells, no interlace, S/H disabled
 		bsr.w	ClearScreen
 		clearRAM v_spritequeue,v_spritequeue_end
 		clearRAM v_objspace,v_objend
 		clearRAM v_levelvariables,v_levelvariables_end
 		clearRAM Camera_RAM,Camera_RAM_End
 		clearRAM v_palette_fading,v_palette_fading+16*4*2
+
+		lea	(Twim_CreditTxt).l,a0 ; load alphabet
+		move.w	#$3180,d0
+		bsr.w	TwimDec
 		moveq	#palid_SonicTails,d0
 		bsr.w	PalLoad1
-		bsr.w	Pal_FadeFromBlack
+		_move.b	#id_Obj8A,(v_titletails).w ; load "SONIC TEAM PRESENTS" object
+		jsr	(ExecuteObjects).l
+		jsr	(BuildSprites).l
+        	bsr.w	Pal_FadeFromBlack
 		disable_ints
-		locVRAM	ArtTile_Title_Foreground*tile_size
-		lea	(Nem_Title).l,a0
-		bsr.w	NemDec
-		locVRAM	ArtTile_Title_Sonic_And_Tails*tile_size
-		lea	(Nem_TitleSonicTails).l,a0
-		bsr.w	NemDec
+		lea	(Twim_Title).l,a0
+		clr.w	d0
+		bsr.w	TwimDec
+	;	locVRAM	ArtTile_Title_Sonic_And_Tails*tile_size
+		lea	(Twim_TitleSonicTails).l,a0
+		move.w	#$4000,d0
+		bsr.w	TwimDec
+		lea	(Twim_PSB).l,a0
+		move.w	#$3D80,d0
+		bsr.w	TwimDec
 		lea	(vdp_data_port).l,a6
 		locVRAM	ArtTile_Level_Select_Font*tile_size,4(a6)
 		lea	(Art_Text).l,a5
@@ -2168,7 +2177,7 @@ TitleScreen:
 loc_32C4:
 		move.w	(a5)+,(a6)
 		dbf	d1,loc_32C4
-		nop
+
 		move.b	#0,(v_lastlamp).w
 		move.w	#0,(Debug_placement_mode).w
 		move.w	#0,(f_demo).w
@@ -2182,14 +2191,12 @@ loc_32C4:
 		bsr.w	EniDec
 		copyTilemap	v_start,vram_fg,40,28
 		lea	(v_start).l,a1
-		lea	(Eni_TitleBg1).l,a0
-		move.w	#make_art_tile(ArtTile_Title_Foreground,0,0),d0
-		bsr.w	EniDec
+		lea	(Twiz_TitleBg1).l,a0
+		bsr.w	TwizDec
 		copyTilemap	v_start,vram_bg,32,28
 		lea	(v_start).l,a1
-		lea	(Eni_TitleBg2).l,a0
-		move.w	#make_art_tile(ArtTile_Title_Foreground,0,0),d0
-		bsr.w	EniDec
+		lea	(Twiz_TitleBg2).l,a0
+		bsr.w	TwizDec
 		copyTilemap	v_start,vram_bg+64,32,28
 		moveq	#palid_Title,d0
 		bsr.w	PalLoad1
@@ -2198,10 +2205,12 @@ loc_32C4:
 	;	move.b	#0,(Debug_mode_flag).w
 		move.b	#0,(Current_Timezone).w
 		move.w	#376,(v_demolength).w
-		clearRAM v_titletails,v_titletails+object_size
-		move.b	#id_Obj0E,(v_titlesonic).w
-		move.b	#id_Obj0E,(v_titletails).w
+		clearRAM v_titlesonic,v_pressstart+object_size
+		_move.b	#id_Obj0E,(v_titlesonic).w
+		_move.b	#id_Obj0E,(v_titletails).w
+		_move.b	#id_Obj0F,(v_pressstart).w
 		move.b	#1,(v_titletails+obFrame).w
+	;	move.b	#3,(v_pressstart+obFrame).w
 		jsr	(ExecuteObjects).l
 		jsr	(BuildSprites).l
 		moveq	#plcid_Main,d0
@@ -2488,7 +2497,7 @@ loc_3726:
 
 loc_3736:
 		move.w	d0,(v_levselitem).w
-		bra.w	LevelSelect_TextLoad
+		bra.s	LevelSelect_TextLoad
 ; ---------------------------------------------------------------------------
 
 loc_3740:
@@ -2514,7 +2523,7 @@ loc_3762:
 
 loc_3772:
 		move.w	d0,(v_levselsound).w
-		bra.w	LevelSelect_TextLoad
+		bra.s	LevelSelect_TextLoad
 
 locret_377A:
 		rts
@@ -2567,9 +2576,9 @@ LevSel_DrawSnd:
 		addi.w	#$80,d0
 		move.b	d0,d2
 		lsr.b	#4,d0
-		bsr.w	LevSel_ChgSnd
+		bsr.s	LevSel_ChgSnd
 		move.b	d2,d0
-		bra.w	LevSel_ChgSnd
+		; falls through to LevSel_ChgSnd
 ; End of function LevelSelect_TextLoad
 
 
@@ -2731,11 +2740,10 @@ Level_BgmNotLZ4:
 		moveq	#6,d0
 
 Level_PlayBgm:
-		lea	MusicList(pc),a1
-		nop
+		lea	MusicList(pc),a1	; load music playlist
 		move.b	(a1,d0.w),d0
-		bsr.w	PlaySound
-		_move.b	#id_Obj34,(v_titlecard).w
+		bsr.w	PlaySound		; play music
+		_move.b	#id_Obj34,(v_titlecard).w	; load title card object
 
 Level_TtlCardLoop:
 		move.b	#VintID_TitleCard,(v_vbla_routine).w
@@ -2765,13 +2773,13 @@ Level_SkipTtlCard:
 		bsr.w	LoadCollisionIndexes
 		bsr.w	WaterEffects
 		_move.b	#id_Obj01,(v_player).w	; load Sonic object
-		tst.w	(f_demo).w		; are we on an ending demo?
-		bmi.s	LevelInit_LoadTails	; if not, branch
+	;	tst.w	(f_demo).w		; are we on an ending demo?
+	;	bmi.s	LevelInit_LoadTails	; if not, branch
 ;		_move.b	#id_Obj21,(v_hud).w	; load HUD object
 ;		cmpi.b	#id_EHZ,(Current_Zone).w; This is an example on how to skip
 ;		beq.s	Level_ChkDebug		; the 2nd player, if neccesary
 
-LevelInit_LoadTails:	; Disabled until his AI &/or character selection is implemented
+;LevelInit_LoadTails:	; Disabled until his AI &/or character selection is implemented
 	;	_move.b	#id_Obj02,(v_player2).w	; load Tails object
 	;	move.w	(v_player+obX).w,(v_player2+obX).w	; copy player 1's x position to player 2
 	;	move.w	(v_player+obY).w,(v_player2+obY).w	; copy player 1's y position to player 2
@@ -2879,11 +2887,11 @@ Level_DelayLoop:
 
 Level_ClrTitleCard:
 		moveq	#plcid_Explode,d0
-		jsr	(LoadPLC).l
+		bsr.w	LoadPLC
 		moveq	#0,d0
 		move.b	(Current_Zone).w,d0
 		addi.w	#plcid_GHZAnimals,d0
-		jsr	(LoadPLC).l
+		bsr.w	LoadPLC
 
 Level_StartGame:
 		bclr	#GameModeFlag_TitleCard,(v_gamemode).w
@@ -2977,6 +2985,11 @@ loc_400E:
 LoadCollisionIndexes:
 		moveq	#0,d0
 		move.w	(Current_ZoneAndAct).w,d0
+	;	move.w	d0,d1
+	;	lsr.w	#5,d0
+	;	andi.w	#$FF,d1
+	;	lsl.w	#1,d1
+	;	add.w	d1,d0
 		ror.b	#2,d0
 		lsr.w	#4,d0		; d0 = Zone*4
 		moveq	#0,d1
@@ -3282,8 +3295,8 @@ SpecialStage:
 		clr.b	(f_wtr_state).w
 		clr.w	(Level_Inactive_flag).w
 		moveq	#palid_Special,d0
-		bsr.w	PalLoad1	; load special stage palette
-		jsr	(S1SS_Load).l		; load SS layout data
+		bsr.w	PalLoad1		; load special stage palette
+		bsr.w	S1SS_Load		; load SS layout data
 		move.l	#0,(Camera_X_pos).w
 		move.l	#0,(Camera_Y_pos).w
 		move.b	#id_Obj09,(v_player).w ; load special stage Sonic object
@@ -3328,7 +3341,7 @@ SS_MainLoop:
 		move.w	(v_jpadhold1).w,(v_jpadhold2).w
 		jsr	(ExecuteObjects).l
 		jsr	(BuildSprites).l
-		jsr	(S1SS_ShowLayout).l
+		bsr.w	S1SS_ShowLayout
 		bsr.w	S1SS_BgAnimate
 		tst.w	(f_demo).w	; is demo mode on?
 		beq.s	SS_ChkEnd	; if not, branch
@@ -3357,7 +3370,7 @@ SS_FinLoop:
 		move.w	(v_jpadhold1).w,(v_jpadhold2).w
 		jsr	(ExecuteObjects).l
 		jsr	(BuildSprites).l
-		jsr	(S1SS_ShowLayout).l
+		bsr.w	S1SS_ShowLayout
 		bsr.w	S1SS_BgAnimate
 		subq.w	#1,(PalChangeSpeed).w
 		bpl.s	loc_5214
@@ -3393,7 +3406,7 @@ loc_5214:
 		move.w	#bgm_GotThrough,d0
 		jsr	(PlaySound_Special).l	; play end-of-level music
 		clearRAM v_objspace,v_objend	; clear object RAM
-		move.b	#id_Obj7E,(v_endcard).w	; load results screen object
+		_move.b	#id_Obj7E,(v_endcard).w	; load results screen object
 
 SS_NormalExit:
 		bsr.w	PauseGame
@@ -3602,7 +3615,6 @@ word_547A:
 		SSBGData  3,  0, ArtTile_SS_Plane_6,  6, TRUE , FALSE
 		SSBGData  3,  0, ArtTile_SS_Plane_6,  8, TRUE , FALSE
 
-
 		SSBGData  7,  8, ArtTile_SS_Plane_6,  0, FALSE, FALSE
 		SSBGData  7, 10, ArtTile_SS_Plane_6,  1, FALSE, FALSE
 		SSBGData -1, 12, ArtTile_SS_Plane_6,  2, FALSE, FALSE
@@ -3752,6 +3764,588 @@ byte_5701:	dc.b 6,	$30, $30, $30, $28, $18, $18, $18
 byte_5709:	dc.b 8,	2, 4, $FF, 2, 3, 8, $FF, 4, 2, 2, 3, 8,	$FD, 4,	2, 2, 3, 2, $FF
 		even
 ; ---------------------------------------------------------------------------
+; Subroutine to	show the special stage layout
+; ---------------------------------------------------------------------------
+
+; =============== S U B	R O U T	I N E =======================================
+
+S1SS_ShowLayout:
+		bsr.w	SS_AniWallsRings
+		bsr.w	SS_AniItems
+; Calculate x/y positions of each cell in a 16x16 grid when rotated
+		move.w	d5,-(sp)			; save sprite count to stack	; S3&K removes this
+		lea	(v_ssbuffer3).w,a1		; address to write grid coords
+		move.b	(v_ssangle).w,d0
+		jsr	(CalcSine).l			; convert to sine/cosine
+		move.w	d0,d4
+		move.w	d1,d5
+		muls.w	#$18,d4				; ss_block_width
+		muls.w	#$18,d5				; ss_block_width
+		moveq	#0,d2
+		move.w	(Camera_X_pos).w,d2
+		divu.w	#$18,d2
+		swap	d2
+		neg.w	d2
+		addi.w	#-$B4,d2
+		moveq	#0,d3
+		move.w	(Camera_Y_pos).w,d3
+		divu.w	#$18,d3
+		swap	d3
+		neg.w	d3
+		addi.w	#-$B4,d3
+		moveq	#$10-1,d7			; grid is 16 cells high
+
+.loop_gridrow:
+		movem.w	d0-d2,-(sp)
+		movem.w	d0-d1,-(sp)
+		neg.w	d0
+		muls.w	d2,d1
+		muls.w	d3,d0
+		move.l	d0,d6
+		add.l	d1,d6
+		movem.w	(sp)+,d0/d1
+		muls.w	d2,d0
+		muls.w	d3,d1
+		add.l	d0,d1
+		move.l	d6,d2
+		moveq	#$10-1,d6			; grid is 16 cells wide
+
+.loop_gridcell:
+		move.l	d2,d0
+		asr.l	#8,d0
+		move.w	d0,(a1)+
+		move.l	d1,d0
+		asr.l	#8,d0
+		move.w	d0,(a1)+
+		add.l	d5,d2
+		add.l	d4,d1
+		dbf	d6,.loop_gridcell		; repeat for all cells in row
+		movem.w	(sp)+,d0-d2
+		addi.w	#$18,d3
+		dbf	d7,.loop_gridrow		; repeat for all rows
+
+; Populate the 16x16 grid with sprites based on the level layout
+		move.w	(sp)+,d5		; S3&K removes this
+		lea	(v_ssbuffer1).l,a0
+		moveq	#0,d0
+		move.w	(Camera_Y_pos).w,d0		; get camera y pos
+		divu.w	#$18,d0				; divide by size of wall sprite (24 pixels)
+		mulu.w	#$80,d0				; multiply by width of level ($80)
+		adda.l	d0,a0				; jump to correct row in level
+		moveq	#0,d0
+		move.w	(Camera_X_pos).w,d0		; get camera x pos
+		divu.w	#$18,d0				; divide by size of wall sprite (24 pixels)
+		adda.w	d0,a0				; jump to correct block in level
+		lea	(v_ssbuffer3).w,a4		; transformation grid
+;		lea	(Sprite_Table).w,a2		; the following commented out code was added in S3&K
+;		moveq	#0,d5
+;		move.b	(v_spritecount).w,d5	; Sprites_drawn in S3&K
+;		move.w	d5,d0
+;		lsl.w	#3,d0
+;		adda.w	d0,a2
+		moveq	#$10-1,d7
+
+ssloop_spriterow:
+		moveq	#$10-1,d6
+
+ssloop_sprite:
+		moveq	#0,d0
+		move.b	(a0)+,d0			; get level block
+		beq.s	loc_19C9A			; skip if 0 (blank)
+		cmpi.b	#$4E,d0				; in S3K, since there's less blocks, this becomes $13
+		bhi.s	loc_19C9A			; ...or if above $4E (invalid)
+		move.w	(a4),d3				; get grid x pos
+		addi.w	#288,d3
+		cmpi.w	#112,d3
+		blo.s	loc_19C9A			; branch if off screen
+		cmpi.w	#464,d3
+		bhs.s	loc_19C9A
+		move.w	2(a4),d2			; get grid y pos
+		addi.w	#240,d2
+		cmpi.w	#112,d2
+		blo.s	loc_19C9A
+		cmpi.w	#368,d2
+		bhs.s	loc_19C9A
+		lea	(v_ssbuffer2).l,a5
+		lsl.w	#3,d0
+		lea	(a5,d0.w),a5
+		movea.l	(a5)+,a1			; get mappings pointer
+		move.w	(a5)+,d1			; get frame id
+		add.w	d1,d1
+		adda.w	(a1,d1.w),a1			; apply frame id to mappings pointer
+		movea.w	(a5)+,a3			; get tile id
+		moveq	#0,d1
+		move.b	(a1)+,d1			; get number of sprite pieces from mappings
+		subq.b	#1,d1				; branch if 0
+		bmi.s	loc_19C9A			; build sprites from mappings
+
+BuildSpr_Special:
+		cmpi.b	#$50,d5				; check sprite limit
+		beq.s	loc_19C9A
+		move.b	(a1)+,d0			; get y-offset
+		ext.w	d0
+		add.w	d2,d0				; add y-position
+		move.w	d0,(a2)+			; write to buffer
+		move.b	(a1)+,(a2)+			; write sprite size
+		addq.b	#1,d5				; increase sprite counter
+;		addq.w	#1,a2			; set as sprite link (S3&K method)
+		move.b	d5,(a2)+			; set as sprite link
+		move.b	(a1)+,d0			; get art tile
+		lsl.w	#8,d0
+		move.b	(a1)+,d0
+		add.w	a3,d0				; add art tile offset
+		move.w	d0,(a2)+			; write to buffer
+		move.b	(a1)+,d0			; get x-offset
+		ext.w	d0
+		add.w	d3,d0				; add x-position
+		andi.w	#$1FF,d0			; keep within 512px
+		bne.s	.writeX
+		addq.w	#1,d0
+
+.writeX:
+		move.w	d0,(a2)+
+		dbf	d1,BuildSpr_Special
+
+loc_19C9A:
+		addq.w	#4,a4				; next sprite
+		dbf	d6,ssloop_sprite
+		lea	$70(a0),a0			; next row
+		dbf	d7,ssloop_spriterow
+		move.b	d5,(v_spritecount).w
+		cmpi.b	#$50,d5				; max number of sprites ($50)
+		beq.s	.spritelimit			; branch if at limit
+		move.l	#0,(a2)
+		rts
+; ---------------------------------------------------------------------------
+
+.spritelimit:
+		move.b	#0,-5(a2)
+		rts
+; End of function S1SS_ShowLayout
+
+; ---------------------------------------------------------------------------
+; Subroutine to	animate	walls and rings	in the special stage
+; ---------------------------------------------------------------------------
+
+; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
+
+
+SS_AniWallsRings:
+		lea	(v_ssbuffer2+$C).l,a1
+		moveq	#0,d0
+		move.b	(v_ssangle).w,d0
+		lsr.b	#2,d0
+		andi.w	#$F,d0
+		moveq	#$23,d1
+
+-		move.w	d0,(a1)
+		addq.w	#8,a1
+		dbf	d1,-
+		lea	(v_ssbuffer2+5).l,a1
+		subq.b	#1,(v_ani1_time).w
+		bpl.s	loc_19CFA
+		move.b	#7,(v_ani1_time).w
+		addq.b	#1,(v_ani1_frame).w
+		andi.b	#3,(v_ani1_frame).w
+
+loc_19CFA:
+		move.b	(v_ani1_frame).w,$1D0(a1)
+		subq.b	#1,(v_ani2_time).w
+		bpl.s	loc_19D16
+		move.b	#7,(v_ani2_time).w
+		addq.b	#1,(v_ani2_frame).w
+		andi.b	#1,(v_ani2_frame).w
+
+loc_19D16:
+		move.b	(v_ani2_frame).w,d0
+		move.b	d0,$138(a1)
+		move.b	d0,$160(a1)
+		move.b	d0,$148(a1)
+		move.b	d0,$150(a1)
+		move.b	d0,$1D8(a1)
+		move.b	d0,$1E0(a1)
+		move.b	d0,$1E8(a1)
+		move.b	d0,$1F0(a1)
+		move.b	d0,$1F8(a1)
+		move.b	d0,$200(a1)
+		subq.b	#1,(v_ani3_time).w
+		bpl.s	loc_19D58
+		move.b	#4,(v_ani3_time).w
+		addq.b	#1,(v_ani3_frame).w
+		andi.b	#3,(v_ani3_frame).w
+
+loc_19D58:
+		move.b	(v_ani3_frame).w,d0
+		move.b	d0,$168(a1)
+		move.b	d0,$170(a1)
+		move.b	d0,$178(a1)
+		move.b	d0,$180(a1)
+		subq.b	#1,(v_ani0_time).w
+		bpl.s	loc_19D82
+		move.b	#7,(v_ani0_time).w
+		subq.b	#1,(v_ani0_frame).w
+		andi.b	#7,(v_ani0_frame).w
+
+loc_19D82:
+		lea	(v_ssbuffer2+$16).l,a1
+		lea	(S1SS_WaRiVramSet).l,a0
+		moveq	#0,d0
+		move.b	(v_ani0_frame).w,d0
+		add.w	d0,d0
+		lea	(a0,d0.w),a0
+		move.w	(a0),(a1)
+		move.w	2(a0),8(a1)
+		move.w	4(a0),$10(a1)
+		move.w	6(a0),$18(a1)
+		move.w	8(a0),$20(a1)
+		move.w	$A(a0),$28(a1)
+		move.w	$C(a0),$30(a1)
+		move.w	$E(a0),$38(a1)
+		adda.w	#$20,a0
+		adda.w	#$48,a1
+		move.w	(a0),(a1)
+		move.w	2(a0),8(a1)
+		move.w	4(a0),$10(a1)
+		move.w	6(a0),$18(a1)
+		move.w	8(a0),$20(a1)
+		move.w	$A(a0),$28(a1)
+		move.w	$C(a0),$30(a1)
+		move.w	$E(a0),$38(a1)
+		adda.w	#$20,a0
+		adda.w	#$48,a1
+		move.w	(a0),(a1)
+		move.w	2(a0),8(a1)
+		move.w	4(a0),$10(a1)
+		move.w	6(a0),$18(a1)
+		move.w	8(a0),$20(a1)
+		move.w	$A(a0),$28(a1)
+		move.w	$C(a0),$30(a1)
+		move.w	$E(a0),$38(a1)
+		adda.w	#$20,a0
+		adda.w	#$48,a1
+		move.w	(a0),(a1)
+		move.w	2(a0),8(a1)
+		move.w	4(a0),$10(a1)
+		move.w	6(a0),$18(a1)
+		move.w	8(a0),$20(a1)
+		move.w	$A(a0),$28(a1)
+		move.w	$C(a0),$30(a1)
+		move.w	$E(a0),$38(a1)
+		adda.w	#$20,a0
+		adda.w	#$48,a1
+		rts
+; End of function SS_AniWallsRings
+
+; ---------------------------------------------------------------------------
+S1SS_WaRiVramSet:
+		dc.w $0142, $6142, $0142, $0142, $0142, $0142, $0142, $6142
+		dc.w $0142, $6142, $0142, $0142, $0142, $0142, $0142, $6142
+		dc.w $2142, $0142, $2142, $2142, $2142, $2142, $2142, $0142
+		dc.w $2142, $0142, $2142, $2142, $2142, $2142, $2142, $0142
+		dc.w $4142, $2142, $4142, $4142, $4142, $4142, $4142, $2142
+		dc.w $4142, $2142, $4142, $4142, $4142, $4142, $4142, $2142
+		dc.w $6142, $4142, $6142, $6142, $6142, $6142, $6142, $4142
+		dc.w $6142, $4142, $6142, $6142, $6142, $6142, $6142, $4142
+		even
+; ---------------------------------------------------------------------------
+; Subroutine to	remove items when you collect them in the special stage
+; ---------------------------------------------------------------------------
+
+; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
+
+
+SS_RemoveCollectedItem:
+		lea	(v_ssitembuffer).l,a2
+		move.w	#(v_ssitembuffer_end-v_ssitembuffer)/8-1,d0
+
+loc_19EF6:
+		tst.b	(a2)
+		beq.s	locret_19F00
+		addq.w	#8,a2
+		dbf	d0,loc_19EF6
+
+locret_19F00:
+		rts
+; End of function SS_RemoveCollectedItem
+
+; ---------------------------------------------------------------------------
+; Subroutine to	animate	special	stage items when you touch them
+; ---------------------------------------------------------------------------
+
+; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
+
+
+SS_AniItems:
+		lea	(v_ssitembuffer).l,a0
+		move.w	#(v_ssitembuffer_end-v_ssitembuffer)/8-1,d7
+
+loc_19F0C:
+		moveq	#0,d0
+		move.b	(a0),d0
+		beq.s	.no_update
+		lsl.w	#2,d0
+		movea.l	S1SS_AniIndex-4(pc,d0.w),a1
+		jsr	(a1)
+
+.no_update:
+		addq.w	#8,a0
+		dbf	d7,loc_19F0C
+		rts
+; End of function SS_AniItems
+
+; ---------------------------------------------------------------------------
+S1SS_AniIndex:
+		dc.l SS_AniRingSparks
+		dc.l SS_AniBumper
+		dc.l SS_Ani1Up
+		dc.l SS_AniReverse
+		dc.l SS_AniEmeraldSparks
+		dc.l SS_AniGlassBlock
+; ---------------------------------------------------------------------------
+
+SS_AniRingSparks:
+		subq.b	#1,2(a0)
+		bpl.s	locret_19F62
+		move.b	#5,2(a0)
+		moveq	#0,d0
+		move.b	3(a0),d0
+		addq.b	#1,3(a0)
+		movea.l	4(a0),a1
+		move.b	SS_AniRingData(pc,d0.w),d0
+		move.b	d0,(a1)
+		bne.s	locret_19F62
+		clr.l	(a0)
+		clr.l	4(a0)
+
+locret_19F62:
+		rts
+; ---------------------------------------------------------------------------
+SS_AniRingData:	dc.b $42, $43, $44, $45, 0, 0
+; ---------------------------------------------------------------------------
+
+SS_AniBumper:
+		subq.b	#1,2(a0)
+		bpl.s	locret_19F98
+		move.b	#7,2(a0)
+		moveq	#0,d0
+		move.b	3(a0),d0
+		addq.b	#1,3(a0)
+		movea.l	4(a0),a1
+		move.b	SS_AniBumpData(pc,d0.w),d0
+		bne.s	loc_19F96
+		clr.l	(a0)
+		clr.l	4(a0)
+		move.b	#$25,(a1)
+		rts
+; ---------------------------------------------------------------------------
+
+loc_19F96:
+		move.b	d0,(a1)
+
+locret_19F98:
+		rts
+; ---------------------------------------------------------------------------
+SS_AniBumpData:	dc.b $32, $33, $32, $33, 0, 0
+; ---------------------------------------------------------------------------
+
+SS_Ani1Up:
+		subq.b	#1,2(a0)
+		bpl.s	locret_19FC8
+		move.b	#5,2(a0)
+		moveq	#0,d0
+		move.b	3(a0),d0
+		addq.b	#1,3(a0)
+		movea.l	4(a0),a1
+		move.b	SS_Ani1UpData(pc,d0.w),d0
+		move.b	d0,(a1)
+		bne.s	locret_19FC8
+		clr.l	(a0)
+		clr.l	4(a0)
+
+locret_19FC8:
+		rts
+; ---------------------------------------------------------------------------
+SS_Ani1UpData:	dc.b $46, $47, $48, $49, 0, 0
+; ---------------------------------------------------------------------------
+
+SS_AniReverse:
+		subq.b	#1,2(a0)
+		bpl.s	locret_19FFE
+		move.b	#7,2(a0)
+		moveq	#0,d0
+		move.b	3(a0),d0
+		addq.b	#1,3(a0)
+		movea.l	4(a0),a1
+		move.b	SS_AniRevData(pc,d0.w),d0
+		bne.s	loc_19FFC
+		clr.l	(a0)
+		clr.l	4(a0)
+		move.b	#$2B,(a1)
+		rts
+; ---------------------------------------------------------------------------
+
+loc_19FFC:
+		move.b	d0,(a1)
+
+locret_19FFE:
+		rts
+; ---------------------------------------------------------------------------
+SS_AniRevData:	dc.b $2B, $31, $2B, $31, 0, 0
+; ---------------------------------------------------------------------------
+
+SS_AniEmeraldSparks:
+		subq.b	#1,2(a0)
+		bpl.s	locret_1A03E
+		move.b	#5,2(a0)
+		moveq	#0,d0
+		move.b	3(a0),d0
+		addq.b	#1,3(a0)
+		movea.l	4(a0),a1
+		move.b	SS_AniEmerData(pc,d0.w),d0
+		move.b	d0,(a1)
+		bne.s	locret_1A03E
+		clr.l	(a0)
+		clr.l	4(a0)
+		move.b	#4,(v_objspace+obRoutine).w
+		move.w	#sfx_SSGoal,d0
+		jmp	(PlaySound_Special).l
+
+locret_1A03E:
+		rts
+; ---------------------------------------------------------------------------
+SS_AniEmerData:	dc.b $46, $47, $48, $49, 0, 0
+; ---------------------------------------------------------------------------
+
+SS_AniGlassBlock:
+		subq.b	#1,2(a0)
+		bpl.s	locret_1A072
+		move.b	#1,2(a0)
+		moveq	#0,d0
+		move.b	3(a0),d0
+		addq.b	#1,3(a0)
+		movea.l	4(a0),a1
+		move.b	SS_AniGlassData(pc,d0.w),d0
+		move.b	d0,(a1)
+		bne.s	locret_1A072
+		move.b	4(a0),(a1)
+		clr.l	(a0)
+		clr.l	4(a0)
+
+locret_1A072:
+		rts
+; ---------------------------------------------------------------------------
+SS_AniGlassData:dc.b $4B, $4C, $4D, $4E, $4B, $4C, $4D, $4E, 0, 0
+
+; ---------------------------------------------------------------------------
+; Special stage	layout pointers
+; ---------------------------------------------------------------------------
+S1SS_LayoutIndex:
+		dc.l SS_1
+		dc.l SS_2
+		dc.l SS_3
+		dc.l SS_4
+		dc.l SS_5
+		dc.l SS_6
+		even
+
+; ---------------------------------------------------------------------------
+; Special stage start locations
+; ---------------------------------------------------------------------------
+S1SS_StartLoc:	include	"_inc/Start Location Array - Special Stages.asm"
+
+; ---------------------------------------------------------------------------
+; Subroutine to	load special stage layout
+; ---------------------------------------------------------------------------
+
+; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
+
+
+S1SS_Load:
+		moveq	#0,d0
+		move.b	(v_lastspecial).w,d0	; load number of last special stage entered
+		addq.b	#1,(v_lastspecial).w
+		cmpi.b	#6,(v_lastspecial).w
+		blo.s	S1SS_ChkEmldNum
+		move.b	#0,(v_lastspecial).w	; reset if higher than 6
+
+S1SS_ChkEmldNum:
+		cmpi.b	#6,(v_emeralds).w	; do you have all emeralds?
+		beq.s	S1SS_LoadData		; if yes, branch
+		moveq	#0,d1
+		move.b	(v_emeralds).w,d1
+		subq.b	#1,d1
+		blo.s	S1SS_LoadData
+		lea	(v_emldlist).w,a3	; check which emeralds you have
+
+S1SS_ChkEmldLoop:
+		cmp.b	(a3,d1.w),d0
+		bne.s	S1SS_ChkEmldRepeat
+		bra.s	S1SS_Load
+; ---------------------------------------------------------------------------
+
+S1SS_ChkEmldRepeat:
+		dbf	d1,S1SS_ChkEmldLoop
+
+S1SS_LoadData:
+		; Load player position data
+		lsl.w	#2,d0
+		lea	S1SS_StartLoc(pc,d0.w),a1
+		move.w	(a1)+,(v_player+obX).w
+		move.w	(a1)+,(v_player+obY).w
+		; Load layout data
+		movea.l	S1SS_LayoutIndex(pc,d0.w),a0
+		lea	(v_ssbuffer2).l,a1
+		bsr.w	TwizDec
+		; Clear everything from v_ssbuffer1 to v_ssbuffer2
+		lea	(v_ssbuffer1).l,a1
+		move.w	#bytesToLcnt(v_ssbuffer2-v_ssbuffer1),d0
+
+S1SS_ClrRAM3:
+		clr.l	(a1)+
+		dbf	d0,S1SS_ClrRAM3
+		; Copy $1000 of data from v_ssbuffer2 to v_ssblockbuffer,
+		; inserting $40 bytes of padding for every $40 bytes copied.
+		lea	(v_ssblockbuffer).l,a1
+		lea	(v_ssbuffer2).l,a0
+		moveq	#bytesToXcnt(v_ssblockbuffer_end-v_ssblockbuffer,$80),d1
+-		moveq	#$40-1,d2
+-		move.b	(a0)+,(a1)+
+		dbf	d2,-
+		lea	$40(a1),a1
+		dbf	d1,--
+
+		lea	(v_ssblocktypes+8).l,a1
+		lea	(S1SS_MapIndex).l,a0
+		moveq	#bytesToXcnt(S1SS_MapIndex_End-S1SS_MapIndex,6),d1
+-		move.l	(a0)+,(a1)+
+		move.w	#0,(a1)+
+		move.b	-4(a0),-1(a1)
+		move.w	(a0)+,(a1)+
+		dbf	d1,-
+		lea	(v_ssitembuffer).l,a1
+		move.w	#bytesToLcnt(v_ssitembuffer_end-v_ssitembuffer),d1
+
+-		clr.l	(a1)+
+		dbf	d1,-
+		rts
+; End of function S1SS_Load
+
+; ---------------------------------------------------------------------------
+S1SS_MapIndex:
+		include	"_inc/Special Stage Mappings & VRAM Pointers.asm"
+S1SS_MapIndex_End:
+		even
+Map_SSWalls:	include	"mappings/sprite/S1/SS Walls.asm"
+Map_SS_R:	include	"mappings/sprite/S1/SS R Block.asm"
+Map_SS_Glass:	include	"mappings/sprite/S1/SS Glass Block.asm"
+Map_SS_Up:	include	"mappings/sprite/S1/SS UP Block.asm"
+Map_SS_Down:	include	"mappings/sprite/S1/SS DOWN Block.asm"
+Map_SS_Bump:	include	"mappings/sprite/S1/SS Bumper.asm"
+Map_SS_Ring:	include	"mappings/sprite/S1/SS Rings.asm"
+		include	"mappings/sprite/S1/SS Chaos Emeralds.asm"
+
+		include	"objects/S1/09 Sonic in Special Stage.asm"
+; ---------------------------------------------------------------------------
 ; Ending sequence demos
 ; ---------------------------------------------------------------------------
 Demo_EndGHZ1:	binclude	"demodata/Ending - GHZ1.bin"
@@ -3770,6 +4364,110 @@ Demo_EndSBZ2:	binclude	"demodata/Ending - SBZ2.bin"
 		even
 Demo_EndGHZ2:	binclude	"demodata/Ending - GHZ2.bin"
 		even
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+
+LoadZoneTiles:
+		moveq	#0,d0
+		move.b	(Current_Zone).w,d0
+		lsl.w	#4,d0
+		lea	(LevelArtPointers).l,a2
+		lea	(a2,d0.w),a2
+		move.l	(a2)+,d0
+		andi.l	#$FFFFFF,d0	; 8x8 tile pointer
+		movea.l	d0,a0
+		lea	(Chunk_Table).l,a1
+		bsr.w	KosPlusDec
+		move.w	a1,d3
+		move.w	d3,d7
+		andi.w	#$FFF,d3
+		lsr.w	#1,d3
+		rol.w	#4,d7
+		andi.w	#$F,d7
+-		move.w	d7,d2
+		lsl.w	#7,d2
+		lsl.w	#5,d2
+		move.l	#$FFFFFF,d1
+		move.w	d2,d1
+		bsr.w	QueueDMATransfer
+		move.w	d7,-(sp)
+		move.b	#VintID_TitleCard,(v_vbla_routine).w
+		bsr.w	WaitForVint
+		bsr.w	RunPLC_RAM
+		move.w	(sp)+,d7
+		move.w	#$800,d3
+		dbf	d7,-
+		rts
+; End of function LoadZoneTiles
+
+; =============== S U B	R O U T	I N E =======================================
+
+; LoadZoneBlockMaps
+MainLevelLoadBlock:
+		moveq	#0,d0
+		move.b	(Current_Zone).w,d0
+		lsl.w	#4,d0
+		lea	(LevelArtPointers).l,a2
+		lea	(a2,d0.w),a2
+		move.l	a2,-(sp)
+		addq.l	#4,a2
+		move.l	(a2)+,(v_16x16).l
+		andi.l	#$FFFFFF,(v_16x16).l	; load block maps
+		movea.l	(a2)+,a0
+		lea	(v_128x128).l,a1
+		bsr.w	TwizDec			; load chunk maps
+		bsr.s	LevelLayoutLoad
+		move.w	(a2)+,d0
+		move.w	(a2),d0
+		andi.w	#$FF,d0
+		cmpi.w	#id_LZ<<8+3,(Current_ZoneAndAct).w	; is this SBZ3 (LZ4)?
+		bne.s	.notSBZ		; if not, branch
+		moveq	#palid_SBZ3,d0	; use SBZ3 palette
+
+.notSBZ:
+		cmpi.w	#id_SBZ<<8+1,(Current_ZoneAndAct).w	; is this SBZ2?
+		beq.s	.isSBZorFZ	; if so, branch
+		cmpi.w	#id_SBZ<<8+2,(Current_ZoneAndAct).w	; is this FZ (SBZ3)?
+		bne.s	.normalpal	; skip ahead and continue as normal
+
+.isSBZorFZ:
+		moveq	#palid_HTZ2,d0
+
+.normalpal:
+		bsr.w	PalLoad1
+		movea.l	(sp)+,a2
+		addq.w	#4,a2
+		moveq	#0,d0
+		move.b	(a2),d0
+		beq.s	.skipPLC
+		bra.w	LoadPLC
+
+.skipPLC:
+		rts
+; End of function MainLevelLoadBlock
+
+; ===========================================================================
+; ---------------------------------------------------------------------------
+; Subroutine to load a level layout from RAM
+; ---------------------------------------------------------------------------
+
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+
+
+LevelLayoutLoad:
+		moveq	#0,d0
+		move.w	(Current_ZoneAndAct).w,d0
+		move.w	d0,d1
+		lsr.w	#5,d0
+		andi.w	#$FF,d1
+		lsl.w	#1,d1
+		add.w	d1,d0
+		lea	(Level_Index).l,a0
+		move.w	(a0,d0.w),d0
+		adda.l	d0,a0
+		lea	(v_lvllayout).w,a1
+		bra.w	KosPlusDec
+; End of function LevelLayoutLoad
+
 ; =============== S U B	R O U T	I N E =======================================
 
 
@@ -5632,7 +6330,7 @@ loc_6C62:
 		andi.w	#$7F0,d0
 		lsr.w	#4,d0
 		lea	(a0,d0.w),a0
-		bra.w	loc_6C80
+		bra.s	loc_6C80
 ; ---------------------------------------------------------------------------
 word_6C78:	dc.w Camera_BG_copy
 		dc.w Camera_BG_copy
@@ -5766,7 +6464,7 @@ loc_6DD4:
 		move.w	d5,d0
 		andi.w	#$70,d0
 		bne.s	loc_6DE4
-		bsr.w	sub_6E98
+		bsr.s	sub_6E98
 
 loc_6DE4:
 		dbf	d6,loc_6DB2
@@ -6217,114 +6915,6 @@ loc_725A:
 		bra.w	DrawBlocks_LR_3
 ; End of function sub_7232
 
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
-LoadZoneTiles:
-	moveq	#0,d0
-	move.b	(Current_Zone).w,d0
-	lsl.w	#4,d0
-	lea	(LevelArtPointers).l,a2
-	lea	(a2,d0.w),a2
-	move.l	(a2)+,d0
-	andi.l	#$FFFFFF,d0	; 8x8 tile pointer
-	movea.l	d0,a0
-	lea	(Chunk_Table).l,a1
-	bsr.w	KosPlusDec
-	move.w	a1,d3
-	move.w	d3,d7
-	andi.w	#$FFF,d3
-	lsr.w	#1,d3
-	rol.w	#4,d7
-	andi.w	#$F,d7
--	move.w	d7,d2
-	lsl.w	#7,d2
-	lsl.w	#5,d2
-	move.l	#$FFFFFF,d1
-	move.w	d2,d1
-	jsr	(QueueDMATransfer).l
-	move.w	d7,-(sp)
-	move.b	#VintID_TitleCard,(v_vbla_routine).w
-	bsr.w	WaitForVint
-	bsr.w	RunPLC_RAM
-	move.w	(sp)+,d7
-	move.w	#$800,d3
-	dbf	d7,-
-
-	rts
-; End of function LoadZoneTiles
-
-; =============== S U B	R O U T	I N E =======================================
-
-; LoadZoneBlockMaps
-MainLevelLoadBlock:
-		moveq	#0,d0
-		move.b	(Current_Zone).w,d0
-		lsl.w	#4,d0
-		lea	(LevelArtPointers).l,a2
-		lea	(a2,d0.w),a2
-		move.l	a2,-(sp)
-		addq.l	#4,a2
-;		movea.l	(a2)+,a0
-;		lea	(v_16x16).w,a1
-;		jsr	(KosPlusDec).l	; load block maps
-		move.l	(a2)+,(v_16x16).l
-		andi.l	#$FFFFFF,(v_16x16).l
-		movea.l	(a2)+,a0
-		lea	(v_128x128).l,a1
-		jsr	(TwizDec).l	; load block maps
-		bsr.w	LevelLayoutLoad
-		move.w	(a2)+,d0
-		move.w	(a2),d0
-		andi.w	#$FF,d0
-		cmpi.w	#id_LZ<<8+3,(Current_ZoneAndAct).w ; is this SBZ3 (LZ4)?
-		bne.s	loc_735E	; if not, branch
-		moveq	#palid_SBZ3,d0	; use SBZ3 palette
-
-loc_735E:
-		cmpi.w	#id_SBZ<<8+1,(Current_ZoneAndAct).w ; is this SBZ2?
-		beq.s	.isSBZorFZ	; if so, branch
-		cmpi.w	#id_SBZ<<8+2,(Current_ZoneAndAct).w ; is this FZ (SBZ3)?
-		bne.s	.normalpal	; skip ahead and continue as normal
-
-.isSBZorFZ:
-		moveq	#palid_HTZ2,d0
-
-.normalpal:
-		bsr.w	PalLoad1
-		movea.l	(sp)+,a2
-		addq.w	#4,a2
-		moveq	#0,d0
-		move.b	(a2),d0
-		beq.s	.skipPLC
-		bra.w	LoadPLC
-
-.skipPLC:
-		rts
-; End of function MainLevelLoadBlock
-
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; Subroutine to load a level layout from RAM
-; ---------------------------------------------------------------------------
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
-
-LevelLayoutLoad:
-	moveq	#0,d0
-	move.w	(Current_ZoneAndAct).w,d0
-	move.w	d0,d1
-	lsr.w	#5,d0
-	andi.w	#$FF,d1
-	lsl.w	#1,d1
-	add.w	d1,d0
-	lea	(Level_Index).l,a0
-	move.w	(a0,d0.w),d0
-	adda.l	d0,a0
-	lea	(v_lvllayout).w,a1
-	jmp	(KosPlusDec).l
-; End of function LevelLayoutLoad
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -7195,11 +7785,228 @@ DynResize_HTZ4:
 DynResize_S1Ending:
 		rts
 ; ---------------------------------------------------------------------------
+		include	"objects/25 & 37 Rings.asm"
+Ani_Obj25:	dc.w byte_ABEC-Ani_Obj25
+byte_ABEC:	dc.b   5,  4,  5,  6,  7,$FC
+		even
+; ===========================================================================
+; ---------------------------------------------------------------------------
+; sprite mappings
+; ---------------------------------------------------------------------------
+Map_Ring:	binclude	"mappings/sprite/obj37_a.bin"
+		even
+
+		include	"objects/26 Monitor.asm"
+		include	"objects/2E Monitor Content Power-Up.asm"
+
+; =============== S U B	R O U T	I N E =======================================
+
+
+Obj26_SolidSides:
+		lea	(v_player).w,a1
+		move.w	obX(a1),d0
+		sub.w	obX(a0),d0
+		add.w	d1,d0
+		bmi.s	loc_B20E
+		move.w	d1,d3
+		add.w	d3,d3
+		cmp.w	d3,d0
+		bhi.s	loc_B20E
+		move.b	obHeight(a1),d3
+		ext.w	d3
+		add.w	d3,d2
+		move.w	obY(a1),d3
+		sub.w	obY(a0),d3
+		add.w	d2,d3
+		bmi.s	loc_B20E
+		add.w	d2,d2
+		cmp.w	d2,d3
+		bhs.s	loc_B20E
+		tst.b	(f_playerctrl).w
+		bmi.s	loc_B20E
+		cmpi.b	#6,(v_player+obRoutine).w
+		bhs.s	loc_B20E
+		tst.w	(Debug_placement_mode).w
+		bne.s	loc_B20E
+		cmp.w	d0,d1
+		bhs.s	loc_B204
+		add.w	d1,d1
+		sub.w	d1,d0
+
+loc_B204:
+		cmpi.w	#$10,d3
+		blo.s	loc_B212
+
+loc_B20A:
+		moveq	#1,d1
+		rts
+; ---------------------------------------------------------------------------
+
+loc_B20E:
+		moveq	#0,d1
+		rts
+; ---------------------------------------------------------------------------
+
+loc_B212:
+		moveq	#0,d1
+		move.b	obActWid(a0),d1
+		addq.w	#4,d1
+		move.w	d1,d2
+		add.w	d2,d2
+		add.w	obX(a1),d1
+		sub.w	obX(a0),d1
+		bmi.s	loc_B20A
+		cmp.w	d2,d1
+		bhs.s	loc_B20A
+		moveq	#-1,d1
+		rts
+; End of function Obj26_SolidSides
+
+; ===========================================================================
+; animation script
+Ani_obj26:	dc.w byte_B246-Ani_obj26
+		dc.w byte_B24A-Ani_obj26
+		dc.w byte_B252-Ani_obj26
+		dc.w byte_B25A-Ani_obj26
+		dc.w byte_B262-Ani_obj26
+		dc.w byte_B26A-Ani_obj26
+		dc.w byte_B272-Ani_obj26
+		dc.w byte_B27A-Ani_obj26
+		dc.w byte_B282-Ani_obj26
+		dc.w byte_B28A-Ani_obj26
+		dc.w byte_B292-Ani_obj26
+byte_B246:	dc.b   1,  0,  1,$FF
+byte_B24A:	dc.b   1,  0,  2,  2,  1,  2,  2,$FF
+byte_B252:	dc.b   1,  0,  3,  3,  1,  3,  3,$FF
+byte_B25A:	dc.b   1,  0,  4,  4,  1,  4,  4,$FF
+byte_B262:	dc.b   1,  0,  5,  5,  1,  5,  5,$FF
+byte_B26A:	dc.b   1,  0,  6,  6,  1,  6,  6,$FF
+byte_B272:	dc.b   1,  0,  7,  7,  1,  7,  7,$FF
+byte_B27A:	dc.b   1,  0,  8,  8,  1,  8,  8,$FF
+byte_B282:	dc.b   1,  0,  9,  9,  1,  9,  9,$FF
+byte_B28A:	dc.b   1,  0, $A, $A,  1, $A, $A,$FF
+byte_B292:	dc.b   2,  0,  1, $B,$FE,  1
+		even
+
+; ---------------------------------------------------------------------------
+; sprite mappings
+; ---------------------------------------------------------------------------
+Map_Obj26:	include	"mappings/sprite/obj26.asm"
+; ---------------------------------------------------------------------------
+		include	"objects/28 Animals.asm"
+		include	"objects/29 Points.asm"
+; ---------------------------------------------------------------------------
+Map_Obj28a:
+		dc.w word_A006-Map_Obj28a
+		dc.w word_A010-Map_Obj28a
+		dc.w word_9FFC-Map_Obj28a
+word_9FFC:	dc.w 1
+		dc.w $F406,    0,    0,$FFF8
+word_A006:	dc.w 1
+		dc.w $F406,    6,    3,$FFF8
+word_A010:	dc.w 1
+		dc.w $F406,   $C,    6,$FFF8
+Map_Obj28:
+		dc.w word_A02A-Map_Obj28
+		dc.w word_A034-Map_Obj28
+		dc.w word_A020-Map_Obj28
+word_A020:	dc.w 1
+		dc.w $F406,    0,    0,$FFF8
+word_A02A:	dc.w 1
+		dc.w $FC05,    6,    3,$FFF8
+word_A034:	dc.w 1
+		dc.w $FC05,   $A,    5,$FFF8
+Map_Obj28b:
+		dc.w word_A04E-Map_Obj28b
+		dc.w word_A058-Map_Obj28b
+		dc.w word_A044-Map_Obj28b
+word_A044:	dc.w 1
+		dc.w $F406,    0,    0,$FFF8
+word_A04E:	dc.w 1
+		dc.w $FC09,    6,    3,$FFF4
+word_A058:	dc.w 1
+		dc.w $FC09,   $C,    6,$FFF4
+Map_Obj29:
+		dc.w word_A070-Map_Obj29
+		dc.w word_A07A-Map_Obj29
+		dc.w word_A084-Map_Obj29
+		dc.w word_A08E-Map_Obj29
+		dc.w word_A0A0-Map_Obj29
+		dc.w word_A0AA-Map_Obj29
+		dc.w word_A0BC-Map_Obj29
+word_A070:	dc.w 1
+		dc.w $F805,    2,    1,$FFF8
+word_A07A:	dc.w 1
+		dc.w $F805,    6,    3,$FFF8
+word_A084:	dc.w 1
+		dc.w $F805,   $A,    5,$FFF8
+word_A08E:	dc.w 2
+		dc.w $F801,    0,    0,$FFF8
+		dc.w $F805,   $E,    7,	   0
+word_A0A0:	dc.w 1
+		dc.w $F801,    0,    0,$FFFC
+word_A0AA:	dc.w 2
+		dc.w $F805,    2,    1,$FFF0
+		dc.w $F805,   $E,    7,	   0
+word_A0BC:	dc.w 2
+		dc.w $F805,   $A,    5,$FFF0
+		dc.w $F805,   $E,    7,	   0
+		even
+; ---------------------------------------------------------------------------
+		include	"objects/S1/24, 27 & 3F Explosions.asm"
+; ---------------------------------------------------------------------------
+Map_Obj24:
+		dc.w word_99F4-Map_Obj24
+		dc.w word_99FE-Map_Obj24
+		dc.w word_9A08-Map_Obj24
+		dc.w word_9A12-Map_Obj24
+word_99F4:	dc.w 1
+		dc.w $F40A,    0,    0,$FFF4
+word_99FE:	dc.w 1
+		dc.w $F40A,    9,    4,$FFF4
+word_9A08:	dc.w 1
+		dc.w $F40A,  $12,    9,$FFF4
+word_9A12:	dc.w 1
+		dc.w $F40A,  $1B,   $D,$FFF4
+Map_Obj27:
+		dc.w word_9A26-Map_Obj27
+		dc.w word_9A30-Map_Obj27
+		dc.w word_9A3A-Map_Obj27
+		dc.w word_9A44-Map_Obj27
+		dc.w word_9A66-Map_Obj27
+word_9A26:	dc.w 1
+		dc.w $F809,    0,    0,$FFF4
+word_9A30:	dc.w 1
+		dc.w $F00F,    6,    3,$FFF0
+word_9A3A:	dc.w 1
+		dc.w $F00F,  $16,   $B,$FFF0
+word_9A44:	dc.w 4
+		dc.w $EC0A,  $26,  $13,$FFEC
+		dc.w $EC05,  $2F,  $17,	   4
+		dc.w  $405,$182F,$1817,$FFEC
+		dc.w $FC0A,$1826,$1813,$FFFC
+word_9A66:	dc.w 4
+		dc.w $EC0A,  $33,  $19,$FFEC
+		dc.w $EC05,  $3C,  $1E,	   4
+		dc.w  $405,$183C,$181E,$FFEC
+		dc.w $FC0A,$1833,$1819,$FFFC
+Map_Obj3F:
+		dc.w word_9A26-Map_Obj3F
+		dc.w word_9A92-Map_Obj3F
+		dc.w word_9A9C-Map_Obj3F
+		dc.w word_9A44-Map_Obj3F
+		dc.w word_9A66-Map_Obj3F
+word_9A92:	dc.w 1
+		dc.w $F00F,  $40,  $20,$FFF0
+word_9A9C:	dc.w 1
+		dc.w $F00F,  $50,  $28,$FFF0
+		even
+; ---------------------------------------------------------------------------
 		include	"objects/11 Bridge.asm"
 ; ---------------------------------------------------------------------------
 ; Sprite mappings - GHZ bridge
 ; ---------------------------------------------------------------------------
-Map_obj11_GHZ:	include	"mappings/sprite/obj11_GHZ.asm"
+Map_obj11_GHZ:	include		"mappings/sprite/obj11_GHZ.asm"
 ; ---------------------------------------------------------------------------
 ; Sprite mappings - HPZ bridge
 ; ---------------------------------------------------------------------------
@@ -7212,6 +8019,7 @@ Map_obj11:	binclude	"mappings/sprite/obj11.bin"
 		even
 ; ===========================================================================
 
+; ---------------------------------------------------------------------------
 		include	"objects/15 Swinging Platforms.asm"
 ; ---------------------------------------------------------------------------
 Map_Obj15:	dc.w word_8534-Map_Obj15
@@ -7615,7 +8423,6 @@ word_964A:	dc.w 2
 ; ---------------------------------------------------------------------------
 		include	"objects/S1/1E Ball Hog.asm"
 		include	"objects/S1/20 Cannonball.asm"
-		include	"objects/S1/24, 27 & 3F Explosions.asm"
 ; ---------------------------------------------------------------------------
 Ani_S1Obj1E:	dc.w byte_996C-Ani_S1Obj1E
 byte_996C:	dc.b   9,  0,  0,  2,  2,  3,  2,  0
@@ -7644,105 +8451,6 @@ word_99D8:	dc.w 1
 		dc.w $F805,  $27,  $13,$FFF8
 word_99E2:	dc.w 1
 		dc.w $F805,  $2B,  $15,$FFF8
-Map_Obj24:	dc.w word_99F4-Map_Obj24
-		dc.w word_99FE-Map_Obj24
-		dc.w word_9A08-Map_Obj24
-		dc.w word_9A12-Map_Obj24
-word_99F4:	dc.w 1
-		dc.w $F40A,    0,    0,$FFF4
-word_99FE:	dc.w 1
-		dc.w $F40A,    9,    4,$FFF4
-word_9A08:	dc.w 1
-		dc.w $F40A,  $12,    9,$FFF4
-word_9A12:	dc.w 1
-		dc.w $F40A,  $1B,   $D,$FFF4
-Map_Obj27:	dc.w word_9A26-Map_Obj27
-		dc.w word_9A30-Map_Obj27
-		dc.w word_9A3A-Map_Obj27
-		dc.w word_9A44-Map_Obj27
-		dc.w word_9A66-Map_Obj27
-word_9A26:	dc.w 1
-		dc.w $F809,    0,    0,$FFF4
-word_9A30:	dc.w 1
-		dc.w $F00F,    6,    3,$FFF0
-word_9A3A:	dc.w 1
-		dc.w $F00F,  $16,   $B,$FFF0
-word_9A44:	dc.w 4
-		dc.w $EC0A,  $26,  $13,$FFEC
-		dc.w $EC05,  $2F,  $17,	   4
-		dc.w  $405,$182F,$1817,$FFEC
-		dc.w $FC0A,$1826,$1813,$FFFC
-word_9A66:	dc.w 4
-		dc.w $EC0A,  $33,  $19,$FFEC
-		dc.w $EC05,  $3C,  $1E,	   4
-		dc.w  $405,$183C,$181E,$FFEC
-		dc.w $FC0A,$1833,$1819,$FFFC
-Map_Obj3F:	dc.w word_9A26-Map_Obj3F
-		dc.w word_9A92-Map_Obj3F
-		dc.w word_9A9C-Map_Obj3F
-		dc.w word_9A44-Map_Obj3F
-		dc.w word_9A66-Map_Obj3F
-word_9A92:	dc.w 1
-		dc.w $F00F,  $40,  $20,$FFF0
-word_9A9C:	dc.w 1
-		dc.w $F00F,  $50,  $28,$FFF0
-		even
-; ---------------------------------------------------------------------------
-		include	"objects/28 Animals.asm"
-		include	"objects/29 Points.asm"
-; ---------------------------------------------------------------------------
-Map_Obj28a:	dc.w word_A006-Map_Obj28a
-		dc.w word_A010-Map_Obj28a
-		dc.w word_9FFC-Map_Obj28a
-word_9FFC:	dc.w 1
-		dc.w $F406,    0,    0,$FFF8
-word_A006:	dc.w 1
-		dc.w $F406,    6,    3,$FFF8
-word_A010:	dc.w 1
-		dc.w $F406,   $C,    6,$FFF8
-Map_Obj28:	dc.w word_A02A-Map_Obj28
-		dc.w word_A034-Map_Obj28
-		dc.w word_A020-Map_Obj28
-word_A020:	dc.w 1
-		dc.w $F406,    0,    0,$FFF8
-word_A02A:	dc.w 1
-		dc.w $FC05,    6,    3,$FFF8
-word_A034:	dc.w 1
-		dc.w $FC05,   $A,    5,$FFF8
-Map_Obj28b:	dc.w word_A04E-Map_Obj28b
-		dc.w word_A058-Map_Obj28b
-		dc.w word_A044-Map_Obj28b
-word_A044:	dc.w 1
-		dc.w $F406,    0,    0,$FFF8
-word_A04E:	dc.w 1
-		dc.w $FC09,    6,    3,$FFF4
-word_A058:	dc.w 1
-		dc.w $FC09,   $C,    6,$FFF4
-Map_Obj29:	dc.w word_A070-Map_Obj29
-		dc.w word_A07A-Map_Obj29
-		dc.w word_A084-Map_Obj29
-		dc.w word_A08E-Map_Obj29
-		dc.w word_A0A0-Map_Obj29
-		dc.w word_A0AA-Map_Obj29
-		dc.w word_A0BC-Map_Obj29
-word_A070:	dc.w 1
-		dc.w $F805,    2,    1,$FFF8
-word_A07A:	dc.w 1
-		dc.w $F805,    6,    3,$FFF8
-word_A084:	dc.w 1
-		dc.w $F805,   $A,    5,$FFF8
-word_A08E:	dc.w 2
-		dc.w $F801,    0,    0,$FFF8
-		dc.w $F805,   $E,    7,	   0
-word_A0A0:	dc.w 1
-		dc.w $F801,    0,    0,$FFFC
-word_A0AA:	dc.w 2
-		dc.w $F805,    2,    1,$FFF0
-		dc.w $F805,   $E,    7,	   0
-word_A0BC:	dc.w 2
-		dc.w $F805,   $A,    5,$FFF0
-		dc.w $F805,   $E,    7,	   0
-		even
 ; ===========================================================================
 		include	"objects/S1/1F Crabmeat.asm"
 ; ===========================================================================
@@ -7798,20 +8506,9 @@ Map_obj22:	binclude	"mappings/sprite/obj22.bin"
 Map_obj23:	binclude	"mappings/sprite/obj23.bin"
 		even
 ; ===========================================================================
-		include	"objects/25 & 37 Rings.asm"
 		include	"objects/S1/4B Giant Ring.asm"
 		include	"objects/S1/7C Ring Flash.asm"
 ; ---------------------------------------------------------------------------
-Ani_Obj25:	dc.w byte_ABEC-Ani_Obj25
-byte_ABEC:	dc.b   5,  4,  5,  6,  7,$FC
-		even
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; sprite mappings
-; ---------------------------------------------------------------------------
-Map_Ring:	binclude	"mappings/sprite/obj37_a.bin"
-		even
-
 Map_S1Obj4B:	dc.w word_AC5E-Map_S1Obj4B
 		dc.w word_ACB0-Map_S1Obj4B
 		dc.w word_ACF2-Map_S1Obj4B
@@ -7896,109 +8593,13 @@ word_AE34:	dc.w 4
 		dc.w	$F,$1844,$1822,	   0
 		even
 ; ---------------------------------------------------------------------------
-		include	"objects/26 Monitor.asm"
-		include	"objects/2E Monitor Content Power-Up.asm"
-
-; =============== S U B	R O U T	I N E =======================================
-
-
-Obj26_SolidSides:
-		lea	(v_player).w,a1
-		move.w	obX(a1),d0
-		sub.w	obX(a0),d0
-		add.w	d1,d0
-		bmi.s	loc_B20E
-		move.w	d1,d3
-		add.w	d3,d3
-		cmp.w	d3,d0
-		bhi.s	loc_B20E
-		move.b	obHeight(a1),d3
-		ext.w	d3
-		add.w	d3,d2
-		move.w	obY(a1),d3
-		sub.w	obY(a0),d3
-		add.w	d2,d3
-		bmi.s	loc_B20E
-		add.w	d2,d2
-		cmp.w	d2,d3
-		bhs.s	loc_B20E
-		tst.b	(f_playerctrl).w
-		bmi.s	loc_B20E
-		cmpi.b	#6,(v_player+obRoutine).w
-		bhs.s	loc_B20E
-		tst.w	(Debug_placement_mode).w
-		bne.s	loc_B20E
-		cmp.w	d0,d1
-		bhs.s	loc_B204
-		add.w	d1,d1
-		sub.w	d1,d0
-
-loc_B204:
-		cmpi.w	#$10,d3
-		blo.s	loc_B212
-
-loc_B20A:
-		moveq	#1,d1
-		rts
-; ---------------------------------------------------------------------------
-
-loc_B20E:
-		moveq	#0,d1
-		rts
-; ---------------------------------------------------------------------------
-
-loc_B212:
-		moveq	#0,d1
-		move.b	obActWid(a0),d1
-		addq.w	#4,d1
-		move.w	d1,d2
-		add.w	d2,d2
-		add.w	obX(a1),d1
-		sub.w	obX(a0),d1
-		bmi.s	loc_B20A
-		cmp.w	d2,d1
-		bhs.s	loc_B20A
-		moveq	#-1,d1
-		rts
-; End of function Obj26_SolidSides
-
-; ===========================================================================
-; animation script
-Ani_obj26:	dc.w byte_B246-Ani_obj26
-		dc.w byte_B24A-Ani_obj26
-		dc.w byte_B252-Ani_obj26
-		dc.w byte_B25A-Ani_obj26
-		dc.w byte_B262-Ani_obj26
-		dc.w byte_B26A-Ani_obj26
-		dc.w byte_B272-Ani_obj26
-		dc.w byte_B27A-Ani_obj26
-		dc.w byte_B282-Ani_obj26
-		dc.w byte_B28A-Ani_obj26
-		dc.w byte_B292-Ani_obj26
-byte_B246:	dc.b   1,  0,  1,$FF
-byte_B24A:	dc.b   1,  0,  2,  2,  1,  2,  2,$FF
-byte_B252:	dc.b   1,  0,  3,  3,  1,  3,  3,$FF
-byte_B25A:	dc.b   1,  0,  4,  4,  1,  4,  4,$FF
-byte_B262:	dc.b   1,  0,  5,  5,  1,  5,  5,$FF
-byte_B26A:	dc.b   1,  0,  6,  6,  1,  6,  6,$FF
-byte_B272:	dc.b   1,  0,  7,  7,  1,  7,  7,$FF
-byte_B27A:	dc.b   1,  0,  8,  8,  1,  8,  8,$FF
-byte_B282:	dc.b   1,  0,  9,  9,  1,  9,  9,$FF
-byte_B28A:	dc.b   1,  0, $A, $A,  1, $A, $A,$FF
-byte_B292:	dc.b   2,  0,  1, $B,$FE,  1
-		even
-
-; ---------------------------------------------------------------------------
-; sprite mappings
-; ---------------------------------------------------------------------------
-Map_Obj26:	include	"mappings/sprite/obj26.asm"
 		include	"objects/0E Title Sonic And Tails.asm"
 		include	"objects/0F Press Start.asm"
 		include	"objects/10.asm"
 
 Map_Obj0E:	binclude "mappings/sprite/obj0E.bin"
 		even
-Map_PSB:	binclude "mappings/sprite/press start button.bin"
+Map_PSB:	binclude "mappings/sprite/press start button new.bin"
 		even
 ; ---------------------------------------------------------------------------
 		include	"objects/S1/2B Chopper.asm"
@@ -8193,7 +8794,7 @@ ptr_Obj0B:	dc.l Obj0B				; (S1) Pole that breaks in LZ
 ptr_Obj0C:	dc.l Obj0C				; Strange floating/falling platform object from CPZ
 ptr_Obj0D:	dc.l Obj0D				; End of level signpost
 ptr_Obj0E:	dc.l Obj0E				; Sonic and Tails from the title screen
-ptr_Obj0F:	dc.l Obj0F				; Press Start Button (NOT YET IMPLEMENTED)
+ptr_Obj0F:	dc.l Obj0F				; Press Start Button
 ptr_Obj10:	dc.l ObjNull
 ptr_Obj11:	dc.l Obj11				; Bridges in GHZ, EHZ and HPZ
 ptr_Obj12:	dc.l Obj12				; Emerald from Hidden Palace Zone
@@ -8641,6 +9242,7 @@ AnimateSprite:
 		move.b	obAnim(a0),d0			; move animation number to d0
 		cmp.b	obPrevAni(a0),d0		; is animation set to change?
 		beq.s	Anim_Run			; if not, branch
+
 		move.b	d0,obPrevAni(a0)		; set previous animation to current one
 		move.b	#0,obAniFrame(a0)		; reset animation
 		move.b	#0,obTimeFrame(a0)		; reset frame duration
@@ -8654,7 +9256,8 @@ Anim_Run:
 		moveq	#0,d1
 		move.b	obAniFrame(a0),d1		; load current frame number
 		move.b	1(a1,d1.w),d0			; read sprite number from script
-		bmi.s	Anim_End_FF			; if animation is complete, branch
+		cmp.b	#$FA,d0				; MJ: is it a flag from FA to FF?
+		bhs.s	Anim_End_FF			; MJ: if so, branch to flag routines
 ; loc_CF80:
 Anim_Next:
 		move.b	d0,d1				; move animation number to current frame number
@@ -21935,594 +22538,6 @@ Touch_E1:
 		rts
 ; ---------------------------------------------------------------------------
 
-; ---------------------------------------------------------------------------
-; Subroutine to	show the special stage layout
-; ---------------------------------------------------------------------------
-
-; =============== S U B	R O U T	I N E =======================================
-
-S1SS_ShowLayout:
-		bsr.w	SS_AniWallsRings
-		bsr.w	SS_AniItems
-; Calculate x/y positions of each cell in a 16x16 grid when rotated
-		move.w	d5,-(sp)			; save sprite count to stack	; S3&K removes this
-		lea	(v_ssbuffer3).w,a1		; address to write grid coords
-		move.b	(v_ssangle).w,d0
-		jsr	(CalcSine).l			; convert to sine/cosine
-		move.w	d0,d4
-		move.w	d1,d5
-		muls.w	#$18,d4				; ss_block_width
-		muls.w	#$18,d5				; ss_block_width
-		moveq	#0,d2
-		move.w	(Camera_X_pos).w,d2
-		divu.w	#$18,d2
-		swap	d2
-		neg.w	d2
-		addi.w	#-$B4,d2
-		moveq	#0,d3
-		move.w	(Camera_Y_pos).w,d3
-		divu.w	#$18,d3
-		swap	d3
-		neg.w	d3
-		addi.w	#-$B4,d3
-		moveq	#$10-1,d7			; grid is 16 cells high
-
-.loop_gridrow:
-		movem.w	d0-d2,-(sp)
-		movem.w	d0-d1,-(sp)
-		neg.w	d0
-		muls.w	d2,d1
-		muls.w	d3,d0
-		move.l	d0,d6
-		add.l	d1,d6
-		movem.w	(sp)+,d0/d1
-		muls.w	d2,d0
-		muls.w	d3,d1
-		add.l	d0,d1
-		move.l	d6,d2
-		moveq	#$10-1,d6			; grid is 16 cells wide
-
-.loop_gridcell:
-		move.l	d2,d0
-		asr.l	#8,d0
-		move.w	d0,(a1)+
-		move.l	d1,d0
-		asr.l	#8,d0
-		move.w	d0,(a1)+
-		add.l	d5,d2
-		add.l	d4,d1
-		dbf	d6,.loop_gridcell			; repeat for all cells in row
-		movem.w	(sp)+,d0-d2
-		addi.w	#$18,d3
-		dbf	d7,.loop_gridrow			; repeat for all rows
-
-; Populate the 16x16 grid with sprites based on the level layout
-		move.w	(sp)+,d5	; S3&K removes this
-		lea	(v_ssbuffer1).l,a0
-		moveq	#0,d0
-		move.w	(Camera_Y_pos).w,d0			; get camera y pos
-		divu.w	#$18,d0			; divide by size of wall sprite (24 pixels)
-		mulu.w	#$80,d0				; multiply by width of level ($80)
-		adda.l	d0,a0					; jump to correct row in level
-		moveq	#0,d0
-		move.w	(Camera_X_pos).w,d0			; get camera x pos
-		divu.w	#$18,d0			; divide by size of wall sprite (24 pixels)
-		adda.w	d0,a0					; jump to correct block in level
-		lea	(v_ssbuffer3).w,a4		; transformation grid
-;		lea	(Sprite_Table).w,a2	; the following commented out code was added in S3&K
-;		moveq	#0,d5
-;		move.b	(v_spritecount).w,d5	; Sprites_drawn in S3&K
-;		move.w	d5,d0
-;		lsl.w	#3,d0
-;		adda.w	d0,a2
-		moveq	#$10-1,d7
-
-ssloop_spriterow:
-		moveq	#$10-1,d6
-
-ssloop_sprite:
-		moveq	#0,d0
-		move.b	(a0)+,d0				; get level block
-		beq.s	loc_19C9A				; skip if 0 (blank)
-		cmpi.b	#$4E,d0					; in S3K, since there's less blocks, this becomes $13
-		bhi.s	loc_19C9A				; ...or if above $4E (invalid)
-		move.w	(a4),d3					; get grid x pos
-		addi.w	#288,d3
-		cmpi.w	#112,d3
-		blo.s	loc_19C9A					; branch if off screen
-		cmpi.w	#464,d3
-		bhs.s	loc_19C9A
-		move.w	2(a4),d2				; get grid y pos
-		addi.w	#240,d2
-		cmpi.w	#112,d2
-		blo.s	loc_19C9A
-		cmpi.w	#368,d2
-		bhs.s	loc_19C9A
-		lea	(v_ssbuffer2).l,a5
-		lsl.w	#3,d0
-		lea	(a5,d0.w),a5
-		movea.l	(a5)+,a1				; get mappings pointer
-		move.w	(a5)+,d1				; get frame id
-		add.w	d1,d1
-		adda.w	(a1,d1.w),a1				; apply frame id to mappings pointer
-		movea.w	(a5)+,a3				; get tile id
-		moveq	#0,d1
-		move.b	(a1)+,d1				; get number of sprite pieces from mappings
-		subq.b	#1,d1					; branch if 0
-		bmi.s	loc_19C9A			; build sprites from mappings
-
-BuildSpr_Special:
-		cmpi.b	#$50,d5		; check sprite limit
-		beq.s	loc_19C9A
-		move.b	(a1)+,d0	; get y-offset
-		ext.w	d0
-		add.w	d2,d0		; add y-position
-		move.w	d0,(a2)+	; write to buffer
-		move.b	(a1)+,(a2)+	; write sprite size
-		addq.b	#1,d5		; increase sprite counter
-;		addq.w	#1,a2		; set as sprite link (S3&K method)
-		move.b	d5,(a2)+	; set as sprite link
-		move.b	(a1)+,d0	; get art tile
-		lsl.w	#8,d0
-		move.b	(a1)+,d0
-		add.w	a3,d0		; add art tile offset
-		move.w	d0,(a2)+	; write to buffer
-		move.b	(a1)+,d0	; get x-offset
-		ext.w	d0
-		add.w	d3,d0		; add x-position
-		andi.w	#$1FF,d0	; keep within 512px
-		bne.s	.writeX
-		addq.w	#1,d0
-
-.writeX:
-		move.w	d0,(a2)+
-		dbf	d1,BuildSpr_Special
-
-loc_19C9A:
-		addq.w	#4,a4					; next sprite
-		dbf	d6,ssloop_sprite
-		lea	$70(a0),a0				; next row
-		dbf	d7,ssloop_spriterow
-		move.b	d5,(v_spritecount).w
-		cmpi.b	#$50,d5			; max number of sprites ($50)
-		beq.s	.spritelimit				; branch if at limit
-		move.l	#0,(a2)
-		rts
-; ---------------------------------------------------------------------------
-
-.spritelimit:
-		move.b	#0,-5(a2)
-		rts
-; End of function S1SS_ShowLayout
-
-; ---------------------------------------------------------------------------
-; Subroutine to	animate	walls and rings	in the special stage
-; ---------------------------------------------------------------------------
-
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
-
-
-SS_AniWallsRings:
-		lea	(v_ssbuffer2+$C).l,a1
-		moveq	#0,d0
-		move.b	(v_ssangle).w,d0
-		lsr.b	#2,d0
-		andi.w	#$F,d0
-		moveq	#$23,d1
-
-loc_19CD6:
-		move.w	d0,(a1)
-		addq.w	#8,a1
-		dbf	d1,loc_19CD6
-		lea	(v_ssbuffer2+5).l,a1
-		subq.b	#1,(v_ani1_time).w
-		bpl.s	loc_19CFA
-		move.b	#7,(v_ani1_time).w
-		addq.b	#1,(v_ani1_frame).w
-		andi.b	#3,(v_ani1_frame).w
-
-loc_19CFA:
-		move.b	(v_ani1_frame).w,$1D0(a1)
-		subq.b	#1,(v_ani2_time).w
-		bpl.s	loc_19D16
-		move.b	#7,(v_ani2_time).w
-		addq.b	#1,(v_ani2_frame).w
-		andi.b	#1,(v_ani2_frame).w
-
-loc_19D16:
-		move.b	(v_ani2_frame).w,d0
-		move.b	d0,$138(a1)
-		move.b	d0,$160(a1)
-		move.b	d0,$148(a1)
-		move.b	d0,$150(a1)
-		move.b	d0,$1D8(a1)
-		move.b	d0,$1E0(a1)
-		move.b	d0,$1E8(a1)
-		move.b	d0,$1F0(a1)
-		move.b	d0,$1F8(a1)
-		move.b	d0,$200(a1)
-		subq.b	#1,(v_ani3_time).w
-		bpl.s	loc_19D58
-		move.b	#4,(v_ani3_time).w
-		addq.b	#1,(v_ani3_frame).w
-		andi.b	#3,(v_ani3_frame).w
-
-loc_19D58:
-		move.b	(v_ani3_frame).w,d0
-		move.b	d0,$168(a1)
-		move.b	d0,$170(a1)
-		move.b	d0,$178(a1)
-		move.b	d0,$180(a1)
-		subq.b	#1,(v_ani0_time).w
-		bpl.s	loc_19D82
-		move.b	#7,(v_ani0_time).w
-		subq.b	#1,(v_ani0_frame).w
-		andi.b	#7,(v_ani0_frame).w
-
-loc_19D82:
-		lea	(v_ssbuffer2+$16).l,a1
-		lea	(S1SS_WaRiVramSet).l,a0
-		moveq	#0,d0
-		move.b	(v_ani0_frame).w,d0
-		add.w	d0,d0
-		lea	(a0,d0.w),a0
-		move.w	(a0),(a1)
-		move.w	2(a0),8(a1)
-		move.w	4(a0),$10(a1)
-		move.w	6(a0),$18(a1)
-		move.w	8(a0),$20(a1)
-		move.w	$A(a0),$28(a1)
-		move.w	$C(a0),$30(a1)
-		move.w	$E(a0),$38(a1)
-		adda.w	#$20,a0
-		adda.w	#$48,a1
-		move.w	(a0),(a1)
-		move.w	2(a0),8(a1)
-		move.w	4(a0),$10(a1)
-		move.w	6(a0),$18(a1)
-		move.w	8(a0),$20(a1)
-		move.w	$A(a0),$28(a1)
-		move.w	$C(a0),$30(a1)
-		move.w	$E(a0),$38(a1)
-		adda.w	#$20,a0
-		adda.w	#$48,a1
-		move.w	(a0),(a1)
-		move.w	2(a0),8(a1)
-		move.w	4(a0),$10(a1)
-		move.w	6(a0),$18(a1)
-		move.w	8(a0),$20(a1)
-		move.w	$A(a0),$28(a1)
-		move.w	$C(a0),$30(a1)
-		move.w	$E(a0),$38(a1)
-		adda.w	#$20,a0
-		adda.w	#$48,a1
-		move.w	(a0),(a1)
-		move.w	2(a0),8(a1)
-		move.w	4(a0),$10(a1)
-		move.w	6(a0),$18(a1)
-		move.w	8(a0),$20(a1)
-		move.w	$A(a0),$28(a1)
-		move.w	$C(a0),$30(a1)
-		move.w	$E(a0),$38(a1)
-		adda.w	#$20,a0
-		adda.w	#$48,a1
-		rts
-; End of function SS_AniWallsRings
-
-; ---------------------------------------------------------------------------
-S1SS_WaRiVramSet:
-		dc.w $0142, $6142, $0142, $0142, $0142, $0142, $0142, $6142
-		dc.w $0142, $6142, $0142, $0142, $0142, $0142, $0142, $6142
-		dc.w $2142, $0142, $2142, $2142, $2142, $2142, $2142, $0142
-		dc.w $2142, $0142, $2142, $2142, $2142, $2142, $2142, $0142
-		dc.w $4142, $2142, $4142, $4142, $4142, $4142, $4142, $2142
-		dc.w $4142, $2142, $4142, $4142, $4142, $4142, $4142, $2142
-		dc.w $6142, $4142, $6142, $6142, $6142, $6142, $6142, $4142
-		dc.w $6142, $4142, $6142, $6142, $6142, $6142, $6142, $4142
-		even
-; ---------------------------------------------------------------------------
-; Subroutine to	remove items when you collect them in the special stage
-; ---------------------------------------------------------------------------
-
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
-
-
-SS_RemoveCollectedItem:
-		lea	(v_ssitembuffer).l,a2
-		move.w	#(v_ssitembuffer_end-v_ssitembuffer)/8-1,d0
-
-loc_19EF6:
-		tst.b	(a2)
-		beq.s	locret_19F00
-		addq.w	#8,a2
-		dbf	d0,loc_19EF6
-
-locret_19F00:
-		rts
-; End of function SS_RemoveCollectedItem
-
-; ---------------------------------------------------------------------------
-; Subroutine to	animate	special	stage items when you touch them
-; ---------------------------------------------------------------------------
-
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
-
-
-SS_AniItems:
-		lea	(v_ssitembuffer).l,a0
-		move.w	#(v_ssitembuffer_end-v_ssitembuffer)/8-1,d7
-
-loc_19F0C:
-		moveq	#0,d0
-		move.b	(a0),d0
-		beq.s	.no_update
-		lsl.w	#2,d0
-		movea.l	S1SS_AniIndex-4(pc,d0.w),a1
-		jsr	(a1)
-
-.no_update:
-		addq.w	#8,a0
-		dbf	d7,loc_19F0C
-		rts
-; End of function SS_AniItems
-
-; ---------------------------------------------------------------------------
-S1SS_AniIndex:	dc.l SS_AniRingSparks
-		dc.l SS_AniBumper
-		dc.l SS_Ani1Up
-		dc.l SS_AniReverse
-		dc.l SS_AniEmeraldSparks
-		dc.l SS_AniGlassBlock
-; ---------------------------------------------------------------------------
-
-SS_AniRingSparks:
-		subq.b	#1,2(a0)
-		bpl.s	locret_19F62
-		move.b	#5,2(a0)
-		moveq	#0,d0
-		move.b	3(a0),d0
-		addq.b	#1,3(a0)
-		movea.l	4(a0),a1
-		move.b	SS_AniRingData(pc,d0.w),d0
-		move.b	d0,(a1)
-		bne.s	locret_19F62
-		clr.l	(a0)
-		clr.l	4(a0)
-
-locret_19F62:
-		rts
-; ---------------------------------------------------------------------------
-SS_AniRingData:	dc.b $42, $43, $44, $45, 0, 0
-; ---------------------------------------------------------------------------
-
-SS_AniBumper:
-		subq.b	#1,2(a0)
-		bpl.s	locret_19F98
-		move.b	#7,2(a0)
-		moveq	#0,d0
-		move.b	3(a0),d0
-		addq.b	#1,3(a0)
-		movea.l	4(a0),a1
-		move.b	SS_AniBumpData(pc,d0.w),d0
-		bne.s	loc_19F96
-		clr.l	(a0)
-		clr.l	4(a0)
-		move.b	#$25,(a1)
-		rts
-; ---------------------------------------------------------------------------
-
-loc_19F96:
-		move.b	d0,(a1)
-
-locret_19F98:
-		rts
-; ---------------------------------------------------------------------------
-SS_AniBumpData:	dc.b $32, $33, $32, $33, 0, 0
-; ---------------------------------------------------------------------------
-
-SS_Ani1Up:
-		subq.b	#1,2(a0)
-		bpl.s	locret_19FC8
-		move.b	#5,2(a0)
-		moveq	#0,d0
-		move.b	3(a0),d0
-		addq.b	#1,3(a0)
-		movea.l	4(a0),a1
-		move.b	SS_Ani1UpData(pc,d0.w),d0
-		move.b	d0,(a1)
-		bne.s	locret_19FC8
-		clr.l	(a0)
-		clr.l	4(a0)
-
-locret_19FC8:
-		rts
-; ---------------------------------------------------------------------------
-SS_Ani1UpData:	dc.b $46, $47, $48, $49, 0, 0
-; ---------------------------------------------------------------------------
-
-SS_AniReverse:
-		subq.b	#1,2(a0)
-		bpl.s	locret_19FFE
-		move.b	#7,2(a0)
-		moveq	#0,d0
-		move.b	3(a0),d0
-		addq.b	#1,3(a0)
-		movea.l	4(a0),a1
-		move.b	SS_AniRevData(pc,d0.w),d0
-		bne.s	loc_19FFC
-		clr.l	(a0)
-		clr.l	4(a0)
-		move.b	#$2B,(a1)
-		rts
-; ---------------------------------------------------------------------------
-
-loc_19FFC:
-		move.b	d0,(a1)
-
-locret_19FFE:
-		rts
-; ---------------------------------------------------------------------------
-SS_AniRevData:	dc.b $2B, $31, $2B, $31, 0, 0
-; ---------------------------------------------------------------------------
-
-SS_AniEmeraldSparks:
-		subq.b	#1,2(a0)
-		bpl.s	locret_1A03E
-		move.b	#5,2(a0)
-		moveq	#0,d0
-		move.b	3(a0),d0
-		addq.b	#1,3(a0)
-		movea.l	4(a0),a1
-		move.b	SS_AniEmerData(pc,d0.w),d0
-		move.b	d0,(a1)
-		bne.s	locret_1A03E
-		clr.l	(a0)
-		clr.l	4(a0)
-		move.b	#4,(v_objspace+obRoutine).w
-		move.w	#sfx_SSGoal,d0
-		jmp	(PlaySound_Special).l
-
-locret_1A03E:
-		rts
-; ---------------------------------------------------------------------------
-SS_AniEmerData:	dc.b $46, $47, $48, $49, 0, 0
-; ---------------------------------------------------------------------------
-
-SS_AniGlassBlock:
-		subq.b	#1,2(a0)
-		bpl.s	locret_1A072
-		move.b	#1,2(a0)
-		moveq	#0,d0
-		move.b	3(a0),d0
-		addq.b	#1,3(a0)
-		movea.l	4(a0),a1
-		move.b	SS_AniGlassData(pc,d0.w),d0
-		move.b	d0,(a1)
-		bne.s	locret_1A072
-		move.b	4(a0),(a1)
-		clr.l	(a0)
-		clr.l	4(a0)
-
-locret_1A072:
-		rts
-; ---------------------------------------------------------------------------
-SS_AniGlassData:dc.b $4B, $4C, $4D, $4E, $4B, $4C, $4D, $4E, 0, 0
-
-; ---------------------------------------------------------------------------
-; Special stage	layout pointers
-; ---------------------------------------------------------------------------
-S1SS_LayoutIndex:
-		dc.l SS_1
-		dc.l SS_2
-		dc.l SS_3
-		dc.l SS_4
-		dc.l SS_5
-		dc.l SS_6
-		even
-
-; ---------------------------------------------------------------------------
-; Special stage start locations
-; ---------------------------------------------------------------------------
-S1SS_StartLoc:	include	"_inc/Start Location Array - Special Stages.asm"
-
-; ---------------------------------------------------------------------------
-; Subroutine to	load special stage layout
-; ---------------------------------------------------------------------------
-
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
-
-
-S1SS_Load:
-		moveq	#0,d0
-		move.b	(v_lastspecial).w,d0	; load number of last special stage entered
-		addq.b	#1,(v_lastspecial).w
-		cmpi.b	#6,(v_lastspecial).w
-		blo.s	S1SS_ChkEmldNum
-		move.b	#0,(v_lastspecial).w	; reset if higher than 6
-
-S1SS_ChkEmldNum:
-		cmpi.b	#6,(v_emeralds).w	; do you have all emeralds?
-		beq.s	S1SS_LoadData		; if yes, branch
-		moveq	#0,d1
-		move.b	(v_emeralds).w,d1
-		subq.b	#1,d1
-		blo.s	S1SS_LoadData
-		lea	(v_emldlist).w,a3	; check which emeralds you have
-
-S1SS_ChkEmldLoop:
-		cmp.b	(a3,d1.w),d0
-		bne.s	S1SS_ChkEmldRepeat
-		bra.s	S1SS_Load
-; ---------------------------------------------------------------------------
-
-S1SS_ChkEmldRepeat:
-		dbf	d1,S1SS_ChkEmldLoop
-
-S1SS_LoadData:
-		; Load player position data
-		lsl.w	#2,d0
-		lea	S1SS_StartLoc(pc,d0.w),a1
-		move.w	(a1)+,(v_player+obX).w
-		move.w	(a1)+,(v_player+obY).w
-		; Load layout data
-		movea.l	S1SS_LayoutIndex(pc,d0.w),a0
-		lea	(v_ssbuffer2).l,a1
-		jsr	(TwizDec).l
-		; Clear everything from v_ssbuffer1 to v_ssbuffer2
-		lea	(v_ssbuffer1).l,a1
-		move.w	#bytesToLcnt(v_ssbuffer2-v_ssbuffer1),d0
-
-S1SS_ClrRAM3:
-		clr.l	(a1)+
-		dbf	d0,S1SS_ClrRAM3
-		; Copy $1000 of data from v_ssbuffer2 to v_ssblockbuffer,
-		; inserting $40 bytes of padding for every $40 bytes copied.
-		lea	(v_ssblockbuffer).l,a1
-		lea	(v_ssbuffer2).l,a0
-		moveq	#bytesToXcnt(v_ssblockbuffer_end-v_ssblockbuffer,$80),d1
-
-loc_1A128:
-		moveq	#$40-1,d2
-
-loc_1A12A:
-		move.b	(a0)+,(a1)+
-		dbf	d2,loc_1A12A
-		lea	$40(a1),a1
-		dbf	d1,loc_1A128
-		lea	(v_ssblocktypes+8).l,a1
-		lea	(S1SS_MapIndex).l,a0
-		moveq	#bytesToXcnt(S1SS_MapIndex_End-S1SS_MapIndex,6),d1
-
-loc_1A146:
-		move.l	(a0)+,(a1)+
-		move.w	#0,(a1)+
-		move.b	-4(a0),-1(a1)
-		move.w	(a0)+,(a1)+
-		dbf	d1,loc_1A146
-		lea	(v_ssitembuffer).l,a1
-		move.w	#bytesToLcnt(v_ssitembuffer_end-v_ssitembuffer),d1
-
-loc_1A162:
-		clr.l	(a1)+
-		dbf	d1,loc_1A162
-		rts
-; End of function S1SS_Load
-
-; ---------------------------------------------------------------------------
-S1SS_MapIndex:
-		include	"_inc/Special Stage Mappings & VRAM Pointers.asm"
-S1SS_MapIndex_End:
-		even
-Map_SSWalls:	include	"mappings/sprite/S1/SS Walls.asm"
-Map_SS_R:	include	"mappings/sprite/S1/SS R Block.asm"
-Map_SS_Glass:	include	"mappings/sprite/S1/SS Glass Block.asm"
-Map_SS_Up:	include	"mappings/sprite/S1/SS UP Block.asm"
-Map_SS_Down:	include	"mappings/sprite/S1/SS DOWN Block.asm"
-Map_SS_Bump:	include	"mappings/sprite/S1/SS Bumper.asm"
-Map_SS_Ring:	include	"mappings/sprite/S1/SS Rings.asm"
-		include	"mappings/sprite/S1/SS Chaos Emeralds.asm"
-
-		include	"objects/S1/09 Sonic in Special Stage.asm"
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Subroutine to animate stage art
@@ -23902,10 +23917,12 @@ Debug_ResetPlayerStats:
 		include	"_inc/LevelHeaders.asm"
 		include	"_inc/Pattern Load Cues.asm"
 ; ---------------------------------------------------------------------------
-Nem_Title:	binclude	"art/nemesis/8x8 - Title.nem"
+Twim_Title:	binclude	"art/nemesis/8x8 - Title.twim"
 		even
-Nem_TitleSonicTails:
-		binclude	"art/nemesis/Title Sonic and Tails.nem"
+Twim_TitleSonicTails:
+		binclude	"art/nemesis/Title Sonic and Tails.twim"
+		even
+Twim_PSB:	binclude	"art/nemesis/Press Start Button.twim"
 		even
 Nem_SegaLogo:	binclude	"art/nemesis/Sega Logo (JP1).nem"
 		even
@@ -23913,9 +23930,9 @@ Eni_SegaLogo:	binclude	"tilemaps/Sega Logo (JP1).eni"
 		even
 Eni_TitleMap:	binclude	"tilemaps/Title Emblem.eni"
 		even
-Eni_TitleBg1:	binclude	"tilemaps/Title Background - 1.eni"
+Twiz_TitleBg1:	binclude	"tilemaps/Title Background - 1.twiz"
 		even
-Eni_TitleBg2:	binclude	"tilemaps/Title Background - 2.eni"
+Twiz_TitleBg2:	binclude	"tilemaps/Title Background - 2.twiz"
 		even
 ; ---------------------------------------------------------------------------
 ; Uncompressed graphics	- Sonic
@@ -24244,7 +24261,7 @@ Kos_EndFlowers:	binclude	"art/kosinski/S1/Flowers at Ending.kos"
 		even
 Nem_EndFlower:	binclude	"art/nemesis/S1/Ending - Flowers.nem"
 		even
-Nem_CreditText:	binclude	"art/nemesis/S1/Ending - Credits.nem"
+Twim_CreditTxt:	binclude	"art/nemesis/Ending - Credits.twim"
 		even
 Nem_EndStH:	binclude	"art/nemesis/S1/Ending - StH Logo.nem"
 		even

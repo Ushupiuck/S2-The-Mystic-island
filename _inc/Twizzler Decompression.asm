@@ -1447,10 +1447,6 @@ TD_Flush:
 		subi.w	#TwizBuffer,d0				; get size of transfer
 		move.l	(TwizVRAM).w,d2				; load VRAM address
 		add.w	d0,(TwizVRAM+$02).w			; add size to VRAM address (for next frame)
-	;	move.l	a1,d1
-	;	move.w	d0,d3
-	;	bsr.w	QueueDMATransfer
-
 		lsr.w	#$01,d0					; divide by 2
 		move.l	#$93009400,d1				; prepare DMA Size register values
 		move.w	d0,-(sp)				; load upper byte
@@ -1477,7 +1473,6 @@ TD_Flush:
 
 TD_NoCopyBack:
 		movem.l	(sp)+,d2/a2				; restore register data
-	;	move.w	(sp)+,sr				; restore sr
 		rtr						; return and restore sr
 
 ; ===========================================================================

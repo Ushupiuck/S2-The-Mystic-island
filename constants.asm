@@ -349,9 +349,9 @@ v_objspace_end:
 ; Title screen objects
 v_titlesonic	= v_objspace+object_size*1		; object variable space for Sonic in the title screen ($40 bytes)
 v_titletails	= v_objspace+object_size*2		; object variable space for the "SONIC TEAM PRESENTS" text ($40 bytes)
-v_pressstart	= v_objspace+object_size*2		; object variable space for the "PRESS START BUTTON" text ($40 bytes)
-v_ttlsonichide	= v_objspace+object_size*3		; object variable space for hiding part of Sonic ($40 bytes)
-;		= v_objspace+object_size*4		; empty
+v_pressstart	= v_objspace+object_size*3		; object variable space for the "PRESS START BUTTON" text ($40 bytes)
+v_ttlsonichide	= v_objspace+object_size*4		; object variable space for hiding part of Sonic ($40 bytes)
+v_sonicteam	= v_objspace+object_size*5		; empty
 ; ---------------------------------------------------------------------------
 ; Reserved object slots
 v_player	= v_objspace+object_size*0		; object variable space for Sonic ($40 bytes)
@@ -1218,11 +1218,10 @@ ArtTile_Signpost:		equ $680
 ArtTile_Sega_Tiles:		equ $000
 
 ; Title Screen
-ArtTile_Title_Japanese_Text:	equ $000
 ArtTile_Title_Foreground:	equ $000
+ArtTile_Title_Press_Start:	equ $1EC
 ArtTile_Title_Sonic_And_Tails:	equ $200
 ArtTile_Title_Sonic:		equ $300
-ArtTile_Title_Trademark:	equ $510
 ArtTile_Level_Select_Font:	equ $680
 
 ; Continue Screen
@@ -1280,7 +1279,7 @@ ArtTile_SS_Zone_6:		equ $7A9
 ArtTile_SS_Results_Emeralds:	equ $541
 
 ; Font
-ArtTile_Sonic_Team_Font:	equ $0A6
+ArtTile_Sonic_Team_Font:	equ $18C
 ArtTile_Credits_Font:		equ $5A0
 
 ; Error Handler
