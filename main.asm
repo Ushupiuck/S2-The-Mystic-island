@@ -2205,12 +2205,11 @@ loc_32C4:
 	;	move.b	#0,(Debug_mode_flag).w
 		move.b	#0,(Current_Timezone).w
 		move.w	#376,(v_demolength).w
-		clearRAM v_titlesonic,v_pressstart+object_size
+		clearRAM v_titlesonic,v_ttlsonichide+object_size
 		_move.b	#id_Obj0E,(v_titlesonic).w
 		_move.b	#id_Obj0E,(v_titletails).w
 		_move.b	#id_Obj0F,(v_pressstart).w
 		move.b	#1,(v_titletails+obFrame).w
-	;	move.b	#3,(v_pressstart+obFrame).w
 		jsr	(ExecuteObjects).l
 		jsr	(BuildSprites).l
 		moveq	#plcid_Main,d0
