@@ -19,3 +19,4 @@ s2built.debug.bin
 s2built.debug.prev.bin
 sound/dac/dpcm/generated/hashes.lua
 *.lst
+*.debug.lst
