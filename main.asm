@@ -21993,9 +21993,9 @@ locret_1957C:
 Obj3E_BodyMain:
 		cmpi.b	#2,(Boss_defeated_flag).w
 		beq.s	loc_1959C
-		move.w	#$2B,d1
-		move.w	#$18,d2
-		move.w	#$18,d3
+		moveq	#$2B,d1
+		moveq	#$18,d2
+		moveq	#$18,d3
 		move.w	obX(a0),d4
 		jmp	(SolidObject).l
 ; ---------------------------------------------------------------------------
