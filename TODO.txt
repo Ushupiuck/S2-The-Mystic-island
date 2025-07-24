@@ -10,7 +10,6 @@ https://tcrf.net/Proto:Sonic_the_Hedgehog_2_(Genesis)
 
 TODO:
 Kos+ Compressed level layouts, alike Sonic 2/3. Preferably Twizzler if it turns out to be better, and it's glitch is related to large filesizes.
-Fix the constants back to what they should be after that derp many commits ago.
 Import S3&K mapping system (as it seems likely we only need a fragment of it to make it work), using the now empty labyrinth zone (01) as a test level
 Import the S3&K rings manager
 Add more level slots
@@ -30,6 +29,7 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 Finished:
 LoadCollisionIndexes < DONE
 Free up a shared $1000 byte buffer for Moduled Twizzler & Moduled Kosinski
+Fix the constants back to what they should be after that derp many commits ago. < DONE
 ; ---------------------------------------------------------------------------
 MISC. SUBROUTINES
 ; ---------------------------------------------------------------------------

@@ -2056,7 +2056,7 @@ AngleData:	binclude "misc/angles.bin"
 		even
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Sega logo, exact same as Sonic 1's
+; Sega logo
 ; ---------------------------------------------------------------------------
 
 SegaScreen:
@@ -2651,9 +2651,10 @@ Level_NoMusicFade:
 		tst.w	(f_demo).w	; are we on an ending demo?
 		bmi.s	loc_3BB6	; if so, branch
 		disable_ints
-		locVRAM	ArtTile_Title_Card*tile_size
-		lea	(Nem_TitleCard).l,a0
-		bsr.w	NemDec
+	;	locVRAM	ArtTile_Title_Card*tile_size
+		lea	(Twim_TitleCard).l,a0	; load title card patterns
+		move.w	#$B000,d0
+		bsr.w	TwimDec
 		bsr.w	ClearScreen
 		fillVRAM	0, vram_window, vram_window+plane_size_64x32 ; clear window namespace
 		enable_ints
@@ -3385,9 +3386,10 @@ loc_5214:
 		move.w	#$8400+(vram_bg>>13),(a6) ; set background nametable address
 		move.w	#$9001,(a6)
 		bsr.w	ClearScreen
-		locVRAM	ArtTile_Title_Card*tile_size
-		lea	(Nem_TitleCard).l,a0	; load title card patterns
-		bsr.w	NemDec
+	;	locVRAM	ArtTile_Title_Card*tile_size
+		lea	(Twim_TitleCard).l,a0	; load title card patterns
+		move.w	#$B000,d0
+		bsr.w	TwimDec
 		jsr	(HUD_Base).l
 ;		ResetDMAQueue	; TODO
 		enable_ints
@@ -8452,6 +8454,7 @@ word_99E2:	dc.w 1
 		dc.w $F805,  $2B,  $15,$FFF8
 ; ===========================================================================
 		include	"objects/S1/1F Crabmeat.asm"
+		include	"objects/21.asm"
 ; ===========================================================================
 ; animation script
 Ani_obj1F:	dc.w byte_A30C-Ani_obj1F
@@ -9398,8 +9401,8 @@ BuildSprites_ObjLoop:
 ; ---------------------------------------------------------------------------
 
 BuildSprites_ScreenSpaceObj:
-		move.w	obScreenX(a0),d2
-		move.w	obX(a0),d3
+		move.w	obScreenY(a0),d2
+		move.w	obScreenX(a0),d3
 		bra.s	BuildSprites_DrawSprite
 ; ---------------------------------------------------------------------------
 
@@ -12975,8 +12978,8 @@ Sonic_GameOver:
 		subq.b	#1,(v_lives).w
 		bne.s	loc_10888
 		move.w	#0,objoff_3A(a0)
-		move.b	#id_Obj39,(v_gameovertext1).w
-		move.b	#id_Obj39,(v_gameovertext2).w
+		_move.b	#id_Obj39,(v_gameovertext1).w
+		_move.b	#id_Obj39,(v_gameovertext2).w
 		move.b	#1,(v_gameovertext2+obFrame).w
 		clr.b	(f_timeover).w
 
@@ -12992,8 +12995,8 @@ loc_10888:
 		tst.b	(f_timeover).w
 		beq.s	locret_108B4
 		move.w	#0,objoff_3A(a0)
-		move.b	#id_Obj39,(v_gameovertext1).w
-		move.b	#id_Obj39,(v_gameovertext2).w
+		_move.b	#id_Obj39,(v_gameovertext1).w
+		_move.b	#id_Obj39,(v_gameovertext2).w
 		move.b	#2,(v_gameovertext1+obFrame).w
 		move.b	#3,(v_gameovertext2+obFrame).w
 		bra.s	loc_10876
@@ -17790,8 +17793,8 @@ loc_14F10:
 		move.w	d1,obY(a0)
 		add.w	objoff_30(a0),d2
 		move.w	d2,obX(a0)
-		clr.w	obScreenY(a0)	; y_sub/obScreenY
-		clr.w	obScreenX(a0)	; x_sub/obScreenX
+		clr.w	obYSub(a0)	; y_sub/obYSub
+		clr.w	obXSub(a0)	; x_sub/obXSub
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -21750,7 +21753,7 @@ Cred_Index:	dc.w Obj8A_Init-Cred_Index
 Obj8A_Init:
 		addq.b	#2,obRoutine(a0)
 		move.w	#$120,obX(a0)
-		move.w	#$F0,obScreenX(a0)
+		move.w	#$F0,obScreenY(a0)
 		move.l	#Map_obj8A,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Credits_Font,0,0),obGfx(a0)
 		move.w	(v_creditsnum).w,d0		; load credits index number
@@ -22987,12 +22990,6 @@ APM_HPZ:	begin_animpat
 		dc.w make_block_tile(ArtTile_Art_HPZPulseOrb_3+$7,0,0,2,0),make_block_tile(ArtTile_Level+$0,0,0,0,0)
 APM_HPZ_End:
 
-	;	include	"objects/21 HUD.asm"
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; Sprite mappings - SCORE, TIME, RINGS
-; ---------------------------------------------------------------------------
-Map_obj21:	include	"mappings/sprite/obj21.asm"
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -23038,6 +23035,12 @@ BuildHUD:
 +
 		rts
 ; End of function BuildHUD
+
+; ===========================================================================
+; ---------------------------------------------------------------------------
+; Sprite mappings - SCORE, TIME, RINGS
+; ---------------------------------------------------------------------------
+Map_obj21:	include	"mappings/sprite/obj21.asm"
 
 ; ---------------------------------------------------------------------------
 ; Subroutine to add points to the score counter
@@ -23895,8 +23898,8 @@ stayindebug:
 Debug_ResetPlayerStats:
 		moveq	#0,d0
 		move.b	d0,obAnim(a1)
-		move.w	d0,obScreenX(a1)	; subpixel x
-		move.w	d0,obScreenY(a1)	; subpixel y
+		move.w	d0,obXSub(a1)	; x_sub
+		move.w	d0,obYSub(a1)	; y_sub
 		move.b	d0,obControl(a1)	; Not yet implemented in NA, but we'll clear it anyways in preparation for when it's actually ported
 		move.b	d0,spindash_flag(a1)
 		move.w	d0,obVelX(a1)
@@ -24114,7 +24117,7 @@ Nem_Masher:	binclude	"art/nemesis/Masher.nem"
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - various
 ; ---------------------------------------------------------------------------
-Nem_TitleCard:	binclude	"art/nemesis/S1/Title Cards.nem"
+Twim_TitleCard:	binclude	"art/nemesis/S1/Title Cards.twim"
 		even
 Nem_HUD:	binclude	"art/nemesis/HUD.nem"
 		even

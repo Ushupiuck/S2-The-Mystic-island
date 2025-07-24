@@ -44,7 +44,7 @@ Card_Loop:
 		move.w	(a3),obX(a1)	; load start x-position
 		move.w	(a3)+,card_finalX(a1) ; load finish x-position (same as start)
 		move.w	(a3)+,card_mainX(a1) ; load main x-position
-		move.w	(a2)+,obScreenX(a1)
+		move.w	(a2)+,obScreenY(a1)
 		move.b	(a2)+,obRoutine(a1)
 		move.b	(a2)+,d0
 		bne.s	Card_ActNumber

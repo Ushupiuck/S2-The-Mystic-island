@@ -8,7 +8,7 @@ Obj3A:
 		move.w	Got_Index(pc,d0.w),d1
 		jmp	Got_Index(pc,d1.w)
 ; ===========================================================================
-Got_Index:	dc.w Got_ChkPLC-Got_Index
+Got_Index:	dc.w Got_Main-Got_Index
 		dc.w Got_Move-Got_Index
 		dc.w Got_Wait-Got_Index
 		dc.w Got_TimeBonus-Got_Index
@@ -22,13 +22,7 @@ got_mainX = objoff_30		; position for card to display on
 got_finalX = objoff_32		; position for card to finish on
 ; ===========================================================================
 
-Got_ChkPLC:	; Routine 0
-		tst.l	(v_plc_buffer).w ; are the pattern load cues empty?
-		beq.s	Got_Main	; if yes, branch
-		rts
-; ---------------------------------------------------------------------------
-
-Got_Main:
+Got_Main:	; Routine 0
 		movea.l	a0,a1
 		lea	(Got_Config).l,a2
 		moveq	#6,d1
@@ -38,7 +32,7 @@ Got_Loop:
 		move.w	(a2),obX(a1)	; load start x-position
 		move.w	(a2)+,got_finalX(a1) ; load finish x-position (same as start)
 		move.w	(a2)+,got_mainX(a1) ; load main x-position
-		move.w	(a2)+,obScreenX(a1) ; load y-position
+		move.w	(a2)+,obScreenY(a1) ; load y-position
 		move.b	(a2)+,obRoutine(a1)
 		move.b	(a2)+,d0
 		cmpi.b	#6,d0
@@ -170,7 +164,7 @@ VBla_08A:
 ; ---------------------------------------------------------------------------
 ; Level	order array
 ; ---------------------------------------------------------------------------
-LevelOrder:
+LevelOrder:	; Don't be fooled: the 2nd byte is the act you're transitioning TO
 		; Green Hill Zone
 		dc.b id_GHZ, 1	; Act 1
 		dc.b id_GHZ, 2	; Act 2

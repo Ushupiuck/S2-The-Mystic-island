@@ -9,9 +9,9 @@ obRender:	equ 1					; bitfield for x/y flip, display mode
 obGfx:		equ 2					; palette line & VRAM setting (2 bytes)
 obMap:		equ 4					; mappings address (4 bytes)
 obX:		equ 8					; x-axis position (2-4 bytes)
-obScreenX:	equ $A					; x-axis position for screen-fixed items (2 bytes)
+obXSub:		equ $A					; for when exra presition is required (2 bytes)
 obY:		equ $C					; y-axis position (2-4 bytes)
-obScreenY:	equ $E					; y-axis position for screen-fixed items (2 bytes)
+obYSub:		equ $E					; for when exra presition is required (2 bytes)
 obVelX:		equ $10					; x-axis velocity (2 bytes)
 obVelY:		equ $12					; y-axis velocity (2 bytes)
 obInertia:	equ $14					; potential speed (2 bytes)
@@ -73,6 +73,11 @@ objoff_3C:	equ $3C
 objoff_3D:	equ $3D
 objoff_3E:	equ $3E
 objoff_3F:	equ $3F
+; ---------------------------------------------------------------------------
+; conventions followed by several objects but NOT Sonic/Tails:
+obScreenX =		obX ; and 1+x_pos ; x coordinate for objects using screen-space coordinate system (S2 x_pixel)
+obScreenY =		obXSub ; and 3+x_pos ; y coordinate for objects using screen-space coordinate system (S2 y_pixel)
+parent =		objoff_3E ; and $3F ; address of object that owns or spawned this one, if applicable
 
 object_size_bits:	equ 6
 object_size:	equ 1<<object_size_bits

@@ -34,14 +34,14 @@ SSR_Main:
 		lea	(SSR_Config).l,a2
 		moveq	#3,d1
 		cmpi.w	#50,(v_rings).w	; do you have 50 or more rings?
-		bcs.s	SSR_Loop	; if no, branch
+		bcs.s	SSR_Loop	; if not, branch
 		addq.w	#1,d1		; if yes, add 1	to d1 (number of sprites)
 
 SSR_Loop:
 		_move.b	#id_Obj7E,obID(a1)
-		move.w	(a2)+,obX(a1)	; load start x-position
-		move.w	(a2)+,ssr_mainX(a1) ; load main x-position
-		move.w	(a2)+,obScreenX(a1) ; load x-position
+		move.w	(a2)+,obX(a1)		; load start x-position
+		move.w	(a2)+,ssr_mainX(a1)	; load main x-position
+		move.w	(a2)+,obScreenY(a1)	; load y-position
 		move.b	(a2)+,obRoutine(a1)
 		move.b	(a2)+,obFrame(a1)
 		move.l	#Map_SSR,obMap(a1)
@@ -57,7 +57,7 @@ SSR_Loop:
 		bne.s	loc_BE1A	; if not, branch
 		moveq	#8,d0		; load "Sonic got them all" text
 		move.w	#$18,obX(a0)
-		move.w	#$118,ssr_mainX(a0) ; change position of text
+		move.w	#$118,ssr_mainX(a0)	; change position of text
 
 loc_BE1A:
 		move.b	d0,obFrame(a0)
@@ -90,7 +90,7 @@ loc_BE44:
 		bne.s	loc_BE32
 		addq.b	#2,obRoutine(a0)
 		move.w	#180,obTimeFrame(a0) ; set time delay to 3 seconds
-		move.b	#id_Obj7F,(v_ssresemeralds).w ; load chaos emerald object
+		_move.b	#id_Obj7F,(v_ssresemeralds).w ; load chaos emerald object
 
 SSR_Wait:	; Routine 4, 8, $C, $10
 		subq.w	#1,obTimeFrame(a0) ; subtract 1 from time delay

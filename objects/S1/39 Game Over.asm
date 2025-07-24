@@ -27,7 +27,7 @@ Over_Main:
 		move.w	#$1F0,obX(a0)	; set x-position for "OVER"
 
 Over_1stWord:
-		move.w	#$F0,obScreenX(a0)
+		move.w	#$F0,obScreenY(a0)
 		move.l	#Map_Over,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Game_Over,0,1),obGfx(a0)
 		move.b	#0,obRender(a0)
@@ -46,9 +46,9 @@ Over_UpdatePos:
 ; ---------------------------------------------------------------------------
 
 Over_SetWait:
-		move.w	#720,obTimeFrame(a0) ; set time delay to 12 seconds
+		move.w	#720,obTimeFrame(a0)	; set time delay to 12 seconds
 		addq.b	#2,obRoutine(a0)
-		bra.w	DisplaySprite	; KoH additional line to prevent blinking.
+		bra.w	DisplaySprite		; KoH additional line to prevent blinking.
 ; ---------------------------------------------------------------------------
 
 Over_Wait:	; Routine 4

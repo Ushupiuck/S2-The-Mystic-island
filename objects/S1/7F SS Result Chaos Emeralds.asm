@@ -10,11 +10,6 @@ Obj7F:
 ; ===========================================================================
 SSRC_Index:	dc.w SSRC_Main-SSRC_Index
 		dc.w SSRC_Flash-SSRC_Index
-
-; ---------------------------------------------------------------------------
-; X-axis positions for chaos emeralds
-; ---------------------------------------------------------------------------
-SSRC_PosData:	dc.w $110, $128, $F8, $140, $E0, $158
 ; ===========================================================================
 
 SSRC_Main:	; Routine 0
@@ -29,7 +24,7 @@ SSRC_Main:	; Routine 0
 SSRC_Loop:
 		_move.b	#id_Obj7F,obID(a1)
 		move.w	(a2)+,obX(a1)	; set x-position
-		move.w	#$F0,obScreenX(a1) ; set x-position
+		move.w	#$F0,obScreenY(a1) ; set y-position
 		lea	(v_emldlist).w,a3 ; check which emeralds you have
 		move.b	(a3,d2.w),d3
 		move.b	d3,obFrame(a1)
@@ -51,3 +46,7 @@ SSRC_Flash:	; Routine 2
 
 SSRC_Display:
 		bra.w	DisplaySprite
+; ---------------------------------------------------------------------------
+; X-axis positions for chaos emeralds
+; ---------------------------------------------------------------------------
+SSRC_PosData:	dc.w $110, $128, $F8, $140, $E0, $158 ;, $C8 (if a 7th emerald was added)

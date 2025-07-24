@@ -129,8 +129,11 @@ Load_EndOfAct:
 		clr.b	(v_invinc).w
 		clr.b	(f_timecount).w
 		_move.b	#id_Obj3A,(v_endcard).w
-		moveq	#plcid_TitleCard,d0
-		jsr	(NewPLC).l
+;		moveq	#plcid_TitleCard,d0
+;		jsr	(NewPLC).l
+		lea	(Twim_TitleCard).l,a0	; load title card patterns
+		move.w	#$B000,d0
+		jsr	(TwimDec).l
 		move.b	#1,(f_endactbonus).w
 		moveq	#0,d0
 		move.b	(v_timemin).w,d0

@@ -42,7 +42,6 @@ ptr_PLC_HPZ2:		dc.w PLC_HPZ2-ArtLoadCues
 ptr_PLC_HTZ:		dc.w PLC_HTZ-ArtLoadCues
 ptr_PLC_HTZ2:		dc.w PLC_HTZ2-ArtLoadCues
 
-ptr_PLC_TitleCard:	dc.w PLC_S1TitleCard-ArtLoadCues
 ptr_PLC_Boss:		dc.w PLC_Boss-ArtLoadCues
 ptr_PLC_Signpost:	dc.w PLC_Signpost-ArtLoadCues
 ptr_PLC_Warp:		dc.w PLC_S1SpecialStage-ArtLoadCues
@@ -73,13 +72,13 @@ PLC_Main:	dc.w ((PLC_Main_End-PLC_Main)/6)-1
 		plcm	Nem_HUD, ArtTile_HUD
 		plcm	Nem_Lives, ArtTile_Lives_Counter
 		plcm	Nem_Ring, ArtTile_Ring
-		plcm	Nem_Points, ArtTile_Points
 PLC_Main_End:
 ; --------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Standard 2 - loaded for every level
 ; --------------------------------------------------------------------------------------
 PLC_Main2:	dc.w ((PLC_Main2_End-PLC_Main2)/6)-1
+		plcm	Nem_Points, ArtTile_Points
 		plcm	Nem_Lamppost, ArtTile_Lamppost
 		plcm	Nem_Monitors, ArtTile_Monitor
 		plcm	Nem_Shield, ArtTile_Shield
@@ -237,13 +236,6 @@ PLC_HTZ2_End:
 ;		plcm	Nem_Masher, ArtTile_Masher
 ; --------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
-; Sonic 1 title card
-; --------------------------------------------------------------------------------------
-PLC_S1TitleCard:dc.w ((PLC_S1TitleCard_End-PLC_S1TitleCard)/6)-1
-		plcm	Nem_TitleCard, ArtTile_Title_Card
-PLC_S1TitleCard_End:
-; --------------------------------------------------------------------------------------
-; PATTERN LOAD REQUEST LIST
 ; End of zone bosses
 ; --------------------------------------------------------------------------------------
 PLC_Boss:	dc.w ((PLC_Boss_End-PLC_Boss)/6)-1
@@ -363,19 +355,18 @@ plcid_HPZ:		equ (ptr_PLC_HPZ-ArtLoadCues)/2		; $C
 plcid_HPZ2:		equ (ptr_PLC_HPZ2-ArtLoadCues)/2	; $D
 plcid_HTZ:		equ (ptr_PLC_HTZ-ArtLoadCues)/2		; $E
 plcid_HTZ2:		equ (ptr_PLC_HTZ2-ArtLoadCues)/2	; $F
-plcid_TitleCard:	equ (ptr_PLC_TitleCard-ArtLoadCues)/2	; $10
-plcid_Boss:		equ (ptr_PLC_Boss-ArtLoadCues)/2	; $11
-plcid_Signpost:		equ (ptr_PLC_Signpost-ArtLoadCues)/2	; $12
-plcid_Warp:		equ (ptr_PLC_Warp-ArtLoadCues)/2	; $13
-plcid_SpecialStage:	equ (ptr_PLC_SpecialStage-ArtLoadCues)/2; $14
-plcid_GHZAnimals:	equ (ptr_PLC_GHZAnimals-ArtLoadCues)/2	; $15
-plcid_LZAnimals:	equ (ptr_PLC_LZAnimals-ArtLoadCues)/2	; $16
-plcid_CPZAnimals:	equ (ptr_PLC_CPZAnimals-ArtLoadCues)/2	; $17
-plcid_EHZAnimals:	equ (ptr_PLC_EHZAnimals-ArtLoadCues)/2	; $18
-plcid_HPZAnimals:	equ (ptr_PLC_HPZAnimals-ArtLoadCues)/2	; $19
-plcid_HTZAnimals:	equ (ptr_PLC_HTZAnimals-ArtLoadCues)/2	; $1A
-plcid_SSResult:		equ (ptr_PLC_SSResult-ArtLoadCues)/2	; $1B
-plcid_Ending:		equ (ptr_PLC_Ending-ArtLoadCues)/2	; $1C
-plcid_TryAgain:		equ (ptr_PLC_TryAgain-ArtLoadCues)/2	; $1D
-plcid_EggmanSBZ2:	equ (ptr_PLC_EggmanSBZ2-ArtLoadCues)/2	; $1E
-plcid_FZBoss:		equ (ptr_PLC_FZBoss-ArtLoadCues)/2	; $1F
+plcid_Boss:		equ (ptr_PLC_Boss-ArtLoadCues)/2	; $10
+plcid_Signpost:		equ (ptr_PLC_Signpost-ArtLoadCues)/2	; $11
+plcid_Warp:		equ (ptr_PLC_Warp-ArtLoadCues)/2	; $12
+plcid_SpecialStage:	equ (ptr_PLC_SpecialStage-ArtLoadCues)/2; $13
+plcid_GHZAnimals:	equ (ptr_PLC_GHZAnimals-ArtLoadCues)/2	; $14
+plcid_LZAnimals:	equ (ptr_PLC_LZAnimals-ArtLoadCues)/2	; $15
+plcid_CPZAnimals:	equ (ptr_PLC_CPZAnimals-ArtLoadCues)/2	; $16
+plcid_EHZAnimals:	equ (ptr_PLC_EHZAnimals-ArtLoadCues)/2	; $17
+plcid_HPZAnimals:	equ (ptr_PLC_HPZAnimals-ArtLoadCues)/2	; $18
+plcid_HTZAnimals:	equ (ptr_PLC_HTZAnimals-ArtLoadCues)/2	; $19
+plcid_SSResult:		equ (ptr_PLC_SSResult-ArtLoadCues)/2	; $1A
+plcid_Ending:		equ (ptr_PLC_Ending-ArtLoadCues)/2	; $1B
+plcid_TryAgain:		equ (ptr_PLC_TryAgain-ArtLoadCues)/2	; $1C
+plcid_EggmanSBZ2:	equ (ptr_PLC_EggmanSBZ2-ArtLoadCues)/2	; $1D
+plcid_FZBoss:		equ (ptr_PLC_FZBoss-ArtLoadCues)/2	; $1E
