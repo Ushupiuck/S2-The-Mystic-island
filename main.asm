@@ -2162,10 +2162,9 @@ TitleScreen:
 		lea	(Twim_Title).l,a0
 		clr.w	d0
 		bsr.w	TwimDec
-		locVRAM	ArtTile_Title_Sonic_And_Tails*tile_size
-		lea	(Nem_TitleSonicTails).l,a0
-	;	move.w	#$4000,d0
-		bsr.w	NemDec
+		lea	(Twim_TitleSonicTails).l,a0
+		move.w	#$4000,d0
+		bsr.w	TwimDec
 		lea	(Twim_PSB).l,a0
 		move.w	#$3D80,d0
 		bsr.w	TwimDec
@@ -23921,8 +23920,8 @@ Debug_ResetPlayerStats:
 ; ---------------------------------------------------------------------------
 Twim_Title:	binclude	"art/nemesis/8x8 - Title.twim"
 		even
-Nem_TitleSonicTails:
-		binclude	"art/nemesis/Title Sonic and Tails.nem"
+Twim_TitleSonicTails:
+		binclude	"art/nemesis/Title Sonic and Tails.twim"
 		even
 Twim_PSB:	binclude	"art/nemesis/Press Start Button.twim"
 		even
