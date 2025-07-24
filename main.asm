@@ -11417,7 +11417,6 @@ locret_F9FA:
 ; ---------------------------------------------------------------------------
 
 Obj01:
-        illegal
 		tst.w	(Debug_placement_mode).w	; is debug mode being used?
 		beq.s	Obj01_Normal			; if not, branch
 		jmp	(DebugMode).l
