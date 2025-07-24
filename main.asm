@@ -23918,12 +23918,12 @@ Debug_ResetPlayerStats:
 		include	"_inc/LevelHeaders.asm"
 		include	"_inc/Pattern Load Cues.asm"
 ; ---------------------------------------------------------------------------
-Twim_Title:	binclude	"art/nemesis/8x8 - Title.twim"
+Twim_Title:	binclude	"art/twizzler/8x8 - Title.twim"
 		even
 Twim_TitleSonicTails:
-		binclude	"art/nemesis/Title Sonic and Tails.twim"
+		binclude	"art/twizzler/Title Sonic and Tails.twim"
 		even
-Twim_PSB:	binclude	"art/nemesis/Press Start Button.twim"
+Twim_PSB:	binclude	"art/twizzler/Press Start Button.twim"
 		even
 Nem_SegaLogo:	binclude	"art/nemesis/Sega Logo (JP1).nem"
 		even
@@ -24116,7 +24116,7 @@ Nem_Masher:	binclude	"art/nemesis/Masher.nem"
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - various
 ; ---------------------------------------------------------------------------
-Twim_TitleCard:	binclude	"art/nemesis/S1/Title Cards.twim"
+Twim_TitleCard:	binclude	"art/twizzler/Title Cards.twim"
 		even
 Nem_HUD:	binclude	"art/nemesis/HUD.nem"
 		even
@@ -24262,7 +24262,7 @@ Kos_EndFlowers:	binclude	"art/kosinski/S1/Flowers at Ending.kos"
 		even
 Nem_EndFlower:	binclude	"art/nemesis/S1/Ending - Flowers.nem"
 		even
-Twim_CreditTxt:	binclude	"art/nemesis/Ending - Credits.twim"
+Twim_CreditTxt:	binclude	"art/twizzler/Ending - Credits.twim"
 		even
 Nem_EndStH:	binclude	"art/nemesis/S1/Ending - StH Logo.nem"
 		even
