@@ -8,7 +8,7 @@ Obj7E:
 		move.w	SSR_Index(pc,d0.w),d1
 		jmp	SSR_Index(pc,d1.w)
 ; ===========================================================================
-SSR_Index:	dc.w SSR_ChkPLC-SSR_Index
+SSR_Index:	dc.w SSR_Main-SSR_Index
 		dc.w SSR_Move-SSR_Index
 		dc.w SSR_Wait-SSR_Index
 		dc.w SSR_RingBonus-SSR_Index
@@ -23,13 +23,7 @@ SSR_Index:	dc.w SSR_ChkPLC-SSR_Index
 ssr_mainX = objoff_30	; position for card to display on
 ; ===========================================================================
 
-SSR_ChkPLC:	; Routine 0
-		tst.l	(v_plc_buffer).w ; are the pattern load cues empty?
-		beq.s	SSR_Main	; if yes, branch
-		rts
-; ===========================================================================
-
-SSR_Main:
+SSR_Main:	; Routine 0
 		movea.l	a0,a1
 		lea	(SSR_Config).l,a2
 		moveq	#3,d1

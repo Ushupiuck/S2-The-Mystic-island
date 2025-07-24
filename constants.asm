@@ -882,7 +882,8 @@ f_demo:			ds.w	1			; demo mode flag (0 = no; 1 = yes; $8001 = ending)
 v_demonum:		ds.w	1			; demo level number (not the same as the level number)
 v_creditsnum:		ds.w	1			; credits index number
 v_16x16:		ds.l	$1			; 16x16 tile mappings, in ROM
-			ds.b	$146			; unused
+shadow_a0:		ds.l	$1			; shadow register
+			ds.b	$142			; unused
 v_objstate:		ds.b	$C0			; object state list
 v_end:
     if * > 0	; Don't declare more space than the RAM can contain!

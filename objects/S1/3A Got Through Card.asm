@@ -26,6 +26,11 @@ Got_Main:	; Routine 0
 		movea.l	a0,a1
 		lea	(Got_Config).l,a2
 		moveq	#6,d1
+		move.l	a0,(shadow_a0).w	; backup a0
+		lea	(Twim_TitleCard).l,a0	; load title card patterns
+		move.w	#$B000,d0
+		jsr	(TwimDec).l
+		move.l	(shadow_a0).w,a0	; restore a0
 
 Got_Loop:
 		_move.b	#id_Obj3A,obID(a1)

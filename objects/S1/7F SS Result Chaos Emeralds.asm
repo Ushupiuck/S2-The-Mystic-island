@@ -14,7 +14,7 @@ SSRC_Index:	dc.w SSRC_Main-SSRC_Index
 
 SSRC_Main:	; Routine 0
 		movea.l	a0,a1
-		lea	(SSRC_PosData).l,a2
+		lea	SSRC_PosData(pc),a2
 		moveq	#0,d2
 		moveq	#0,d1
 		move.b	(v_emeralds).w,d1 ; d1 is number of emeralds
