@@ -11,7 +11,7 @@ BackupSRAM	  = 1
 AddressSRAM	  = 3	; 0 = odd+even; 2 = even only; 3 = odd only
 
 FixBugs		  = 1	; change to 1 to enable bugfixes
-AdvancedHandler	  = 0
+AdvancedHandler	  = 1
 
 zeroOffsetOptimization = 1	; if 1, makes a handful of zero-offset instructions smaller
 
@@ -11417,6 +11417,7 @@ locret_F9FA:
 ; ---------------------------------------------------------------------------
 
 Obj01:
+        illegal
 		tst.w	(Debug_placement_mode).w	; is debug mode being used?
 		beq.s	Obj01_Normal			; if not, branch
 		jmp	(DebugMode).l
@@ -24965,7 +24966,7 @@ ObjectMoveAndFall_NormGravity:
 ; Debugging modules
 ; ---------------------------------------------------------------------------
 
-		align	$3FEF68			; Pad to 4MB
+	;	align	$3FEF68			; Pad to 4MB
    include   "ErrorHandler.asm"
 
 ; ---------------------------------------------------------------------------
