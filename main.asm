@@ -24965,7 +24965,7 @@ ObjectMoveAndFall_NormGravity:
 ; Debugging modules
 ; ---------------------------------------------------------------------------
 
-	;	align	$3FEF68			; Pad to 4MB
+   include   "SampleDebugger.asm"
    include   "ErrorHandler.asm"
 
 ; ---------------------------------------------------------------------------
