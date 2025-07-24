@@ -81,6 +81,7 @@ parent =		objoff_3E ; and $3F ; address of object that owns or spawned this one,
 
 object_size_bits:	equ 6
 object_size:	equ 1<<object_size_bits
+next_object =		object_size
 
 ; ---------------------------------------------------------------------------
 ; when childsprites are activated (i.e. bit #6 of render_flags set)
