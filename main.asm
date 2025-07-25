@@ -243,6 +243,8 @@ GameProgram:
 		andi.b	#$C0,d0
 		move.b	d0,(v_megadrive).w
 
+
+		bsr.w	InitDMAQueue
 		bsr.w	VDPSetupGame
 		bsr.w	SoundDriverLoad
 		bsr.w	JoypadInit
@@ -516,72 +518,67 @@ Vint_Lag:
 Vint_Lag_Main:
 		addq.w	#1,(Lag_frame_count).w
 		cmpi.b	#GameModeID_TitleCard|GameModeID_Demo,(v_gamemode).w	; pre-level Demo Mode?
-		beq.s	.islevel
+		beq.s	VInt_0_Level
 		cmpi.b	#GameModeID_TitleCard|GameModeID_Level,(v_gamemode).w	; pre-level Zone play Mode?
-		beq.s	.islevel
+		beq.s	VInt_0_Level
 		cmpi.b	#GameModeID_Demo,(v_gamemode).w
-		beq.s	.islevel
+		beq.s	VInt_0_Level
 		cmpi.b	#GameModeID_Level,(v_gamemode).w
 		bne.w	Vint_SoundDriver
 ; ===========================================================================
 
-.islevel:
+VInt_0_Level:
 		tst.b	(Water_flag).w
-		beq.w	Vint0_noWater
+		beq.w	Vint_SoundDriver
 		move.w	(vdp_control_port).l,d0
 		btst	#6,(v_megadrive).w
-		beq.s	loc_BBE
-		move.w	#14344/8-1,d0
-		dbf	d0,*
+		beq.s	+	; branch if it isn't a PAL system
 
-loc_BBE:
+		move.w	#14344/8-1,d0
+-		dbf	d0,-	; otherwise waste a bit of time here
++
 		move.w	#1,(f_hbla_pal).w
 		stopZ80
 		waitZ80
 		tst.b	(f_wtr_state).w
-		bne.s	loc_C02
+		bne.s	VInt_0_FullyUnderwater
 		writeCRAM	v_palette,0
-		bra.s	loc_C26
-; ---------------------------------------------------------------------------
+		bra.s	VInt_0_Water_Cont
 
-loc_C02:
+VInt_0_FullyUnderwater:
 		writeCRAM	v_palette_water,0
 
-loc_C26:
+VInt_0_Water_Cont:
 		move.w	(v_hbla_hreg).w,(a5)
-		move.w	#$8200+(vram_fg>>10),(vdp_control_port).l
+	;	move.w	#$8200+(vram_fg>>10),(vdp_control_port).l
 		startZ80
-		bra.w	Vint_SoundDriver
-; ---------------------------------------------------------------------------
-; loc_C3E:
-Vint0_noWater:
-		move.w	(vdp_control_port).l,d0
-		move.l	#$40000010,(vdp_control_port).l
-		move.l	(v_scrposy_vdp).w,(vdp_data_port).l
-		btst	#6,(v_megadrive).w
-		beq.s	loc_C66
-		move.w	#14344/8-1,d0
-		dbf	d0,*
-
-loc_C66:
-		move.w	#1,(f_hbla_pal).w
-		move.w	(v_hbla_hreg).w,(vdp_control_port).l
-		move.w	#$8200+(vram_fg>>10),(vdp_control_port).l
-		move.l	(v_bg3scrposy_vdp).w,(Camera_X_pos_copy).w
-		writeVRAM	Sprite_Table,vram_sprites
 		bra.w	Vint_SoundDriver
 ; ===========================================================================
 ; loc_CAA: VintSub2:
 Vint_SEGA:
 		bsr.w	Do_ControllerPal
-; loc_CAE: VintSub14:
-Vint_PCM:
 		tst.w	(v_demolength).w
 		beq.w	.end
 		subq.w	#1,(v_demolength).w
 
 .end:
 		rts
+; ===========================================================================
+; loc_CAE: VintSub14:
+Vint_PCM:
+		move.b	(Vint_runcount+3).w,d0
+		andi.w	#$F,d0
+		bne.s	+	; run the following code once every 16 frames
+
+		stopZ80
+		bsr.w	ReadJoypads
+		startZ80
++
+		tst.w	(v_demolength).w
+		beq.w	+
+		subq.w	#1,(v_demolength).w
++
+		jmp	(Set_Kos_Bookmark).l
 ; ===========================================================================
 ; loc_CBC: VintSub4:
 Vint_Title:
@@ -597,7 +594,7 @@ Vint_Title:
 ; loc_CD8: VintSub10:
 Vint_Pause:
 		cmpi.b	#GameModeID_SpecialStage,(v_gamemode).w
-		beq.w	Vint_S1SS
+		beq.w	Vint_S1SS		; If in a special stage, branch
 ; loc_CE2: VintSub8:
 Vint_Level:
 		stopZ80
@@ -605,10 +602,8 @@ Vint_Level:
 		bsr.w	ReadJoypads
 		tst.b	(f_wtr_state).w
 		bne.s	loc_D24
-
 		writeCRAM	v_palette,0
 		bra.s	loc_D48
-; ---------------------------------------------------------------------------
 
 loc_D24:
 		writeCRAM	v_palette_water,0
@@ -627,12 +622,16 @@ loc_D48:
 		movem.l	(Scroll_flags).w,d0-d3
 		movem.l	d0-d3,(Scroll_flags_copy).w
 		move.l	(v_bg3scrposy_vdp).w,(Camera_X_pos_copy).w
+		enable_ints
+		tst.b	(Water_flag).w
+		beq.w	+
 		cmpi.b	#92,(v_hbla_line).w
-		bcc.s	Do_Updates
+		bhs.s	+
 		move.b	#1,(f_doupdatesinhblank).w
-		addq.l	#4,sp
-		bra.w	VintRet
-
+		jmp	(Set_Kos_Bookmark).l
++
+		bsr.s	Do_Updates
+		jmp	(Set_Kos_Bookmark).l
 ; ---------------------------------------------------------------------------
 ; Subroutine to run a demo for an amount of time
 ; ---------------------------------------------------------------------------
@@ -670,7 +669,7 @@ Vint_S1SS:
 		subq.w	#1,(v_demolength).w
 
 .end:
-		rts
+		jmp	(Set_Kos_Bookmark).l
 ; ===========================================================================
 ; loc_EA2: VintSubC: VintSub18:
 Vint_TitleCard:
@@ -729,8 +728,7 @@ Vint_SSResults:
 		subq.w	#1,(v_demolength).w
 
 .end:
-		rts
-;		jmp	(Set_Kos_Bookmark).l
+		jmp	(Set_Kos_Bookmark).l
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
@@ -750,6 +748,7 @@ Do_ControllerPal:
 .waterbelow:
 		writeVRAM	Sprite_Table,vram_sprites
 		writeVRAM	v_hscrolltablebuffer,vram_hscroll
+		bsr.w	Process_DMA_Queue
 		startZ80
 		rts
 ; End of function Do_ControllerPal
@@ -1268,7 +1267,8 @@ QuickPLC:
 		include "_inc/Nemesis Decompression.asm"
 		include "_inc/Enigma Decompression.asm"
 		include "_inc/Kosinski Decompression.asm"
-		include "_inc/KosinskiPlus.asm"
+		include "_inc/Kosinski+ Decompression.asm"
+		include "_inc/Moduled Kosinski+ Decompression.asm"
 		include "_inc/Twizzler Decompression.asm"
 		include "_inc/DMA Queue.asm"
 		include	"_inc/PaletteCycle.asm"
@@ -2696,7 +2696,7 @@ loc_3BB6:
 		move.w	#$8700+(2<<4)+0,(a6)	; set background color to first slot of line 2
 		move.w	#$8A00+224-1,(v_hbla_hreg).w
 		move.w	(v_hbla_hreg).w,(a6)
-		move.l	#VDP_Command_Buffer,(VDP_Command_Buffer_Slot).w	; reset the DMA Queue
+		ResetDMAQueue
 		tst.b	(Water_flag).w
 		beq.s	LevelInit_NoWater
 		move.w	#$8000+$14,(a6)	; enable h-int
@@ -3285,7 +3285,7 @@ SpecialStage:
 		move.w	(v_vdp_buffer1).w,d0
 		andi.b	#$BF,d0
 		move.w	d0,(vdp_control_port).l
-;		ResetDMAQueue	; TODO
+		ResetDMAQueue
 		bsr.w	ClearScreen
 		enable_ints
 		fillVRAM	0, ArtTile_SS_Plane_1*tile_size+plane_size_64x32, ArtTile_SS_Plane_5*tile_size
@@ -3394,7 +3394,7 @@ loc_5214:
 		lea	(Nem_TitleCard).l,a0	; load title card patterns
 		bsr.w	NemDec
 		jsr	(HUD_Base).l
-;		ResetDMAQueue	; TODO
+		ResetDMAQueue	; TODO
 		enable_ints
 		moveq	#palid_SSResult,d0
 		bsr.w	PalLoad2		; load results screen palette
@@ -4392,7 +4392,7 @@ LoadZoneTiles:
 		lsl.w	#5,d2
 		move.l	#$FFFFFF,d1
 		move.w	d2,d1
-		bsr.w	QueueDMATransfer
+		jsr	(QueueDMATransfer).l
 		move.w	d7,-(sp)
 		move.b	#VintID_TitleCard,(v_vbla_routine).w
 		bsr.w	WaitForVint

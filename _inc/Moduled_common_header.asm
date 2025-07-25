@@ -190,7 +190,7 @@ Process_Kos_Module_Queue:
 	move.l	#Kos_decomp_buffer,d1
 	endif
 	move.w	sr,-(sp)						; Save current interrupt mask
-	disableInts								; Mask off interrupts
+	disable_ints								; Mask off interrupts
 	jsr	(QueueDMATransfer).w
 	move.w	(sp)+,sr						; Restore interrupts to previous state
 	tst.w	(Kos_modules_left).w
