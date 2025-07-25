@@ -16,7 +16,7 @@ TwizHuffCopy	= TwizHuffRet+(TwizHuffRetMax*$04)		; $18 bytes
 TwizVRAM	= TwizHuffCopy+(TwizHuffCopyMax*$02)		; $4 bytes
 TwizSize	= TwizVRAM+$04					; $2 bytes
 ; ---------------------------------------------------------------------------
-TwizBufferSize	=	$1000
+TwizBufferSize	=	$1000	; Also used as -$1000; used for a pre-buffer.
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Twizzler decompression

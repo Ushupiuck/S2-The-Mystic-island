@@ -320,6 +320,7 @@ v_128x128_end:=	Chunk_Table_End
 
 Level_Layout:		ds.b	$1000			; level layout buffer ($1000 bytes)
 Level_Layout_End:
+TwizBuffer:		ds.b	$1000			; $1000 bytes; also KosM buffer (when it gets added)
 
 v_lvllayout:=	Level_Layout
 v_lvllayout_end:=	Level_Layout_End
@@ -433,7 +434,6 @@ v_tryagain	= v_objspace+object_size*3		; object variable space for the "TRY AGAI
 v_eggmanchaos	= v_objspace+object_size*32		; object variable space for the emeralds juggled by Eggman ($180 bytes)
 			ds.b	$1000			; unused (will become part of the block table)
 			ds.b	$800			; unused
-TwizBuffer:		ds.b	$1000			; $1000 bytes; also KosM buffer (when it gets added)
 Camera_RAM:
 Camera_Positions:
 Camera_X_pos:		ds.l	1
@@ -1234,6 +1234,7 @@ ArtTile_Sega_Tiles:		equ $000
 ; Title Screen
 ArtTile_Title_Foreground:	equ $000
 ArtTile_Title_Press_Start:	equ $1EC
+ArtTile_SonicTeamPresents:	equ $18C
 ArtTile_Title_Sonic_And_Tails:	equ $200
 ArtTile_Title_Sonic:		equ $300
 ArtTile_Level_Select_Font:	equ $680

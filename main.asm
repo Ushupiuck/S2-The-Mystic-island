@@ -1268,6 +1268,7 @@ QuickPLC:
 		include "_inc/Nemesis Decompression.asm"
 		include "_inc/Enigma Decompression.asm"
 		include "_inc/Kosinski Decompression.asm"
+		include "_inc/KosinskiPlus.asm"
 		include "_inc/Twizzler Decompression.asm"
 		include "_inc/DMA Queue.asm"
 		include	"_inc/PaletteCycle.asm"
@@ -1901,7 +1902,6 @@ Pal_S1Continue:	binclude	"palette/Continue Screen.bin"
 		even
 Pal_S1Ending:	binclude	"palette/Ending.bin"
 		even
-
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Subroutine to perform vertical synchronization
@@ -2149,9 +2149,11 @@ TitleScreen:
 		clearRAM Camera_RAM,Camera_RAM_End
 		clearRAM v_palette_fading,v_palette_fading+16*4*2
 
-		lea	(Twim_CreditTxt).l,a0 ; load alphabet
-		move.w	#$3180,d0
-		bsr.w	TwimDec
+		locVRAM	ArtTile_SonicTeamPresents*tile_size
+		lea	(Nem_CreditTxt).l,a0 ; load alphabet ; To be changed (a1)
+	;	move.w	#$3180,d2
+		bsr.w	NemDec
+	;	bsr.w	Queue_Kos_Module
 		moveq	#palid_SonicTails,d0
 		bsr.w	PalLoad1
 		_move.b	#id_Obj8A,(v_titletails).w ; load "SONIC TEAM PRESENTS" object
@@ -2159,15 +2161,19 @@ TitleScreen:
 		jsr	(BuildSprites).l
         	bsr.w	Pal_FadeFromBlack
 		disable_ints
-		lea	(Twim_Title).l,a0
-		clr.w	d0
-		bsr.w	TwimDec
-		lea	(Twim_TitleSonicTails).l,a0
-		move.w	#$4000,d0
-		bsr.w	TwimDec
-		lea	(Twim_PSB).l,a0
-		move.w	#$3D80,d0
-		bsr.w	TwimDec
+		locVRAM	ArtTile_Title_Foreground*tile_size
+		lea	(Nem_Title).l,a0 ; To be changed (a1)
+	;	clr.w	d2
+		bsr.w	NemDec
+	;	bsr.w	Queue_Kos_Module
+		locVRAM	ArtTile_Title_Sonic_And_Tails*tile_size
+		lea	(Nem_TitleSonicTails).l,a0
+		bsr.w	NemDec
+		locVRAM	ArtTile_Title_Press_Start*tile_size
+		lea	(Nem_PSB).l,a0 ; To be changed (a1)
+	;	move.w	#$3D80,d2
+		bsr.w	NemDec
+	;	bsr.w	Queue_Kos_Module
 		lea	(vdp_data_port).l,a6
 		locVRAM	ArtTile_Level_Select_Font*tile_size,4(a6)
 		lea	(Art_Text).l,a5
@@ -2650,10 +2656,9 @@ Level_NoMusicFade:
 		tst.w	(f_demo).w	; are we on an ending demo?
 		bmi.s	loc_3BB6	; if so, branch
 		disable_ints
-	;	locVRAM	ArtTile_Title_Card*tile_size
-		lea	(Twim_TitleCard).l,a0	; load title card patterns
-		move.w	#$B000,d0
-		bsr.w	TwimDec
+		locVRAM	ArtTile_Title_Card*tile_size
+		lea	(Nem_TitleCard).l,a0	; load title card patterns
+		bsr.w	NemDec
 		bsr.w	ClearScreen
 		fillVRAM	0, vram_window, vram_window+plane_size_64x32 ; clear window namespace
 		enable_ints
@@ -3385,10 +3390,9 @@ loc_5214:
 		move.w	#$8400+(vram_bg>>13),(a6) ; set background nametable address
 		move.w	#$9001,(a6)
 		bsr.w	ClearScreen
-	;	locVRAM	ArtTile_Title_Card*tile_size
-		lea	(Twim_TitleCard).l,a0	; load title card patterns
-		move.w	#$B000,d0
-		bsr.w	TwimDec
+		locVRAM	ArtTile_Title_Card*tile_size
+		lea	(Nem_TitleCard).l,a0	; load title card patterns
+		bsr.w	NemDec
 		jsr	(HUD_Base).l
 ;		ResetDMAQueue	; TODO
 		enable_ints
@@ -23918,12 +23922,12 @@ Debug_ResetPlayerStats:
 		include	"_inc/LevelHeaders.asm"
 		include	"_inc/Pattern Load Cues.asm"
 ; ---------------------------------------------------------------------------
-Twim_Title:	binclude	"art/twizzler/8x8 - Title.twim"
+Nem_Title:	binclude	"art/kosinski/8x8 - Title.nem"
 		even
-Twim_TitleSonicTails:
-		binclude	"art/twizzler/Title Sonic and Tails.twim"
+Nem_TitleSonicTails:
+		binclude	"art/nemesis/Title Sonic and Tails.nem"
 		even
-Twim_PSB:	binclude	"art/twizzler/Press Start Button.twim"
+Nem_PSB:	binclude	"art/kosinski/Press Start Button.nem"
 		even
 Nem_SegaLogo:	binclude	"art/nemesis/Sega Logo (JP1).nem"
 		even
@@ -24116,7 +24120,7 @@ Nem_Masher:	binclude	"art/nemesis/Masher.nem"
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - various
 ; ---------------------------------------------------------------------------
-Twim_TitleCard:	binclude	"art/twizzler/Title Cards.twim"
+Nem_TitleCard:	binclude	"art/nemesis/Title Cards.nem"
 		even
 Nem_HUD:	binclude	"art/nemesis/HUD.nem"
 		even
@@ -24258,11 +24262,11 @@ Nem_EndSonic:	binclude	"art/nemesis/S1/Ending - Sonic.nem"
 		even
 Nem_TryAgain:	binclude	"art/nemesis/S1/Ending - Try Again.nem"
 		even
-Kos_EndFlowers:	binclude	"art/kosinski/S1/Flowers at Ending.kos"
+Kos_EndFlowers:	binclude	"art/kosinski/Flowers at Ending.kospm"
 		even
 Nem_EndFlower:	binclude	"art/nemesis/S1/Ending - Flowers.nem"
 		even
-Twim_CreditTxt:	binclude	"art/twizzler/Ending - Credits.twim"
+Nem_CreditTxt:	binclude	"art/kosinski/Ending - Credits.nem"
 		even
 Nem_EndStH:	binclude	"art/nemesis/S1/Ending - StH Logo.nem"
 		even
