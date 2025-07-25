@@ -924,7 +924,7 @@ SoundDriverLoad:
 		resetZ80
 		lea	(DACDriver).l,a0
 		lea	(z80_ram).l,a1
-		bsr.w	KosDec
+		bsr.w	KosPlusDec
 		resetZ80a
 ;		nop
 ;		nop
@@ -1266,7 +1266,6 @@ QuickPLC:
 
 		include "_inc/Nemesis Decompression.asm"
 		include "_inc/Enigma Decompression.asm"
-		include "_inc/Kosinski Decompression.asm"
 		include "_inc/Kosinski+ Decompression.asm"
 		include "_inc/Moduled Kosinski+ Decompression.asm"
 		include "_inc/Twizzler Decompression.asm"

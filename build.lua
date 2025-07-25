@@ -25,7 +25,7 @@ common.convert_pcm_files_in_directory("sound/dac/pcm")
 common.convert_dpcm_files_in_directory("sound/dac/dpcm")
 
 -- Build the ROM.
-local compression = improved_dac_driver_compression and "kosinski-optimised" or "kosinski"
+local compression = improved_dac_driver_compression and "kosinskiplus" or "kosinski"
 local message, abort = common.build_rom("main", "s2built", "", "-p=FF -z=0," .. compression .. ",Size_of_DAC_driver_guess,after", false, "https://github.com/sonicretro/s1disasm")
 
 if message then
@@ -38,6 +38,7 @@ end
 
 if advanced_error_handler then   
    -- Buld DEBUG ROM
+   compression = improved_dac_driver_compression and "kosinskiplus" or "kosinski"
    message, abort = common.build_rom("main", "s2built.debug", "-D __DEBUG__ -OLIST main.debug.lst", "-p=FF -z=0," .. compression .. ",Size_of_DAC_driver_guess,after", false, "https://github.com/sonicretro/s1disasm")
    
    if message then
