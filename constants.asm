@@ -320,7 +320,6 @@ v_128x128_end:=	Chunk_Table_End
 
 Level_Layout:		ds.b	$1000			; level layout buffer ($1000 bytes)
 Level_Layout_End:
-TwizBuffer:		ds.b	$1000			; $1000 bytes; also KosM buffer (when it gets added)
 
 v_lvllayout:=	Level_Layout
 v_lvllayout_end:=	Level_Layout_End
@@ -433,6 +432,7 @@ v_endeggman	= v_objspace+object_size*2		; object variable space for Eggman after
 v_tryagain	= v_objspace+object_size*3		; object variable space for the "TRY AGAIN" text ($40 bytes)
 v_eggmanchaos	= v_objspace+object_size*32		; object variable space for the emeralds juggled by Eggman ($180 bytes)
 			ds.b	$1000			; unused (will become part of the block table)
+			ds.b	$1000			; $1000 bytes; KosM buffer (when it gets added)
 			ds.b	$800			; unused
 Camera_RAM:
 Camera_Positions:

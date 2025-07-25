@@ -13,10 +13,6 @@ TwizHuffCopyMax	=	$0C
 ; ---------------------------------------------------------------------------
 TwizHuffRet	= v_ngfx_buffer					; $48 bytes
 TwizHuffCopy	= TwizHuffRet+(TwizHuffRetMax*$04)		; $18 bytes
-TwizVRAM	= TwizHuffCopy+(TwizHuffCopyMax*$02)		; $4 bytes
-TwizSize	= TwizVRAM+$04					; $2 bytes
-; ---------------------------------------------------------------------------
-TwizBufferSize	=	$1000	; Also used as -$1000; used for a pre-buffer.
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Twizzler decompression
@@ -31,47 +27,6 @@ TwizDec:
 		bsr.s	TD_Setup				; setup registers/huffman tables
 		bsr.w	TD_DecompTwiz				; decompress data
 		movem.l	(sp)+,d0-d5/d7-a3			; restore register data
-		rts						; return
-
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; Twizzler (Module) decompression
-; --- Inputs ----------------------------------------------------------------
-; a0.l = twizzler compress data address
-; d0.w = VRAM dump address
-; ---------------------------------------------------------------------------
-
-TwimDec:
-		movem.l	d0-d5/d7-a6,-(sp)			; store register data
-		lea	($C00000).l,a5				; load VDP data port
-		lea	$04(a5),a6				; load VDP control port
-		move.w	#$4020,(TwizVRAM).w			; prepare DMA bit & VRAM write mode bits
-		move.w	d0,(TwizVRAM+$02).w			; store VRAM address
-		moveq	#$00,d2					; reset field counter
-		bsr.s	TD_Setup				; setup registers/huffman tables
-		lea	(TwizBuffer).w,a1			; load buffer address
-		lea	-TwizBufferSize(a1),a4			; ''
-		moveq	#$00,d5					; clear remaining counter
-		move.w	d1,(TwizSize).w				; store total size
-		moveq	#$00,d1					; clear d1
-		bra.s	TDM_GetSize				; continue into loop
-
-TDM_FullBuffer:
-		bsr.w	TD_DecompTwim				; decompress data
-		bsr.w	TD_Flush				; flush data to VRAM
-		move.w	a1,d1					; load current buffer address
-		subi.w	#(TwizBuffer&$FFFF),d1			; subtract starting offset
-		andi.w	#$0001,d1				; get only odd/even bit
-		neg.w	d1					; reverse to negative
-
-TDM_GetSize:
-		add.w	#(TwizBufferSize&$FFFE),d1		; set buffer size
-		sub.w	d1,(TwizSize).w				; subtract from total size
-		bcc.s	TDM_FullBuffer				; if the total size is larger than the buffer, branch
-		add.w	(TwizSize).w,d1				; set size to remaining total
-		bsr.w	TD_DecompTwim				; decompress data
-		bsr.w	TD_Flush				; flush data to VRAM
-		movem.l	(sp)+,d0-d5/d7-a6			; restore register data
 		rts						; return
 
 ; ===========================================================================
@@ -440,10 +395,6 @@ TDM_Return:
 
 	; --- Main loop area ---
 
-TD_DecompTwim:
-		tst.w	d5					; is there any remaining data to copy?
-		beq.s	TDM_NextSection				; if not, branch
-		bsr.w	TDM_CopyRemain				; copy last remaining data before continuing
 
 TDM_NextSection:
 		MAC_ReadBit					; load next bitfield bit to carry
@@ -772,30 +723,6 @@ TDM_CopyReturnFix:
 		add.w	d1,d1					; multiply by size of "move.b  (a2)+,(a1)/move.b  (a1)+,(a4)+" instruction
 		add.w	d1,d1					; ''
 		jmp	TDM_CopyList(pc,d1.w)			; jump to correct start position based on copy size
-
-TDM_CopyRemain:
-		move.w	a2,d0					; get source buffer location
-		subi.w	#TwizBuffer&$FFFF,d0			; minus start of buffer
-		add.w	d5,d0					; add remaining copy amount
-		subi.w	#TwizBufferSize&$FFFF,d0		; is it larger than the buffer size (i.e. needs to wrap?)
-		bls.s	TDMCC_Single	; bls = bcs + beq	; if not, branch
-		sub.w	d0,d5					; get remaining size til the end of the buffer
-		sub.w	d5,d1					; subtract from buffer size
-		bls.s	TDM_CopyReturn	; bls = bcs + beq	; if there isn't enough space, branch
-		neg.w	d5					; reverse copy amount
-		add.w	d5,d5					; multiply by size of "move.b  (a2)+,(a1)/move.b  (a1)+,(a4)+" instruction
-		add.w	d5,d5					; ''
-		jsr	TDM_CopyList(pc,d5.w)			; jump to correct start position based on copy size
-		move.w	d0,d5					; get size for the start of the buffer
-		lea	(TwizBuffer).w,a2			; load buffer address
-
-TDMCC_Single:
-		sub.w	d5,d1					; subtract from buffer size
-		bls.s	TDM_CopyReturn	; bls = bcs + beq	; if there isn't enough space, branch
-		neg.w	d5					; reverse copy amount
-		add.w	d5,d5					; multiply by size of "move.b  (a2)+,(a1)/move.b  (a1)+,(a4)+" instruction
-		add.w	d5,d5					; ''
-		jmp	TDM_CopyList(pc,d5.w)			; jump to correct start position based on copy size
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -1432,47 +1359,5 @@ TD_L01_R00:	move.b	(a0)+,d3				; load bitfield
 		add.b	d3,d3					; load next bit to carry
 		addxs						; stack it onto d0
 		rts						; return
-
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; Subroutine to flush data to VRAM
-; ---------------------------------------------------------------------------
-
-TD_Flush:
-		move.w	sr,-(sp)				; store interrupt status
-		movem.l	d2/a2,-(sp)				; store register data
-		move.w	#$2700,sr				; disable interrupts
-		move.w	a1,d0					; load current buffer address
-		andi.w	#$FFFE,d0				; keep on even offset
-		subi.w	#TwizBuffer,d0				; get size of transfer
-		move.l	(TwizVRAM).w,d2				; load VRAM address
-		add.w	d0,(TwizVRAM+$02).w			; add size to VRAM address (for next frame)
-		lsr.w	#$01,d0					; divide by 2
-		move.l	#$93009400,d1				; prepare DMA Size register values
-		move.w	d0,-(sp)				; load upper byte
-		move.b	(sp),d1					; ''
-		addq.w	#$02,sp					; restore stack position
-		swap	d1					; load lower byte
-		move.b	d0,d1					; ''
-		move.l	d1,(a6)					; set DMA size
-		move.l	#$96009500|(((TwizBuffer>>$01)&$FF00)<<$08)|((TwizBuffer>>$01)&$FF),(a6)	; set DMA source
-		move.w	#$9700|(((TwizBuffer>>$01)&$7F0000)>>$10),(a6)					; ''
-		rol.l	#$02,d2					; send upper bits of address to upper word
-		ror.w	#$02,d2					; send rest back
-		move.w	d2,(a6)					; set DMA destination
-		swap	d2					; get other bits
-		move.w	d2,(a6)					; save to VDP (DMA starts here)
-		lea	(a1),a2					; copy to a2
-		lea	(TwizBuffer).w,a1			; reload start of buffer
-		lea	-TwizBufferSize(a1),a4			; ''
-		move.w	a2,d0					; reload current buffer address
-		lsr.b	#$01,d0					; shift odd/even bit into carry
-		bcc.s	TD_NoCopyBack				; if we're on an even offset, branch
-		move.b	(a2)+,(a1)				; copy odd byte back to beginning
-		move.b	(a1)+,(a4)+				; ''
-
-TD_NoCopyBack:
-		movem.l	(sp)+,d2/a2				; restore register data
-		rtr						; return and restore sr
 
 ; ===========================================================================
