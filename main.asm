@@ -517,6 +517,7 @@ Vint_Lag:
 
 Vint_Lag_Main:
 		addq.w	#1,(Lag_frame_count).w
+		; branch if a level or demo is running
 		cmpi.b	#GameModeID_TitleCard|GameModeID_Demo,(v_gamemode).w	; pre-level Demo Mode?
 		beq.s	VInt_0_Level
 		cmpi.b	#GameModeID_TitleCard|GameModeID_Level,(v_gamemode).w	; pre-level Zone play Mode?
@@ -601,14 +602,12 @@ Vint_Level:
 		waitZ80
 		bsr.w	ReadJoypads
 		tst.b	(f_wtr_state).w
-		bne.s	loc_D24
+		bne.s	+
 		writeCRAM	v_palette,0
-		bra.s	loc_D48
-
-loc_D24:
+		bra.s	++
++
 		writeCRAM	v_palette_water,0
-
-loc_D48:
++
 		move.w	(v_hbla_hreg).w,(a5)
 		move.w	#$8200+(vram_fg>>10),(vdp_control_port).l
 		writeVRAM	v_hscrolltablebuffer,vram_hscroll
@@ -622,13 +621,12 @@ loc_D48:
 		movem.l	(Scroll_flags).w,d0-d3
 		movem.l	d0-d3,(Scroll_flags_copy).w
 		move.l	(v_bg3scrposy_vdp).w,(Camera_X_pos_copy).w
-		enable_ints
-		tst.b	(Water_flag).w
-		beq.w	+
 		cmpi.b	#92,(v_hbla_line).w
-		bhs.s	+
+		bhs.s	Do_Updates
 		move.b	#1,(f_doupdatesinhblank).w
-		jmp	(Set_Kos_Bookmark).l
+		addq.l	#4,sp
+		bra.w	VintRet
+;		jmp	(Set_Kos_Bookmark).l
 +
 		bsr.s	Do_Updates
 		jmp	(Set_Kos_Bookmark).l
