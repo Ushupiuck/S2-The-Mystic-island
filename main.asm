@@ -181,7 +181,6 @@ VDPInitValues_End:
 
 Z80StartupCodeBegin:
 	; Z80 instructions (not the sound driver; that gets loaded later)
-    if (*)+$26 < $10000
     save
     CPU Z80 ; start assembling Z80 code
     phase 0 ; pretend we're at address 0
@@ -214,10 +213,6 @@ zStartupCodeEndLoc:
     dephase ; stop pretending
 	restore
     padding off ; unfortunately our flags got reset so we have to set them again...
-    else ; due to an address range limitation I could work around but don't think is worth doing so:
-	message "Warning: using pre-assembled Z80 startup code."
-	dc.w $AF01,$D91F,$1127,$0021,$2600,$F977,$EDB0,$DDE1,$FDE1,$ED47,$ED4F,$D1E1,$F108,$D9C1,$D1E1,$F1F9,$F3ED,$5636,$E9E9
-    endif
 Z80StartupCodeEnd:
 
 		dc.w $8104				; VDP display mode
@@ -468,22 +463,25 @@ Art_Text_End:	even
 ; vertical and horizontal interrupt handlers
 ; VERTICAL INTERRUPT HANDLER:
 V_Int:
-		movem.l	d0-a6,-(sp)
+		movem.l	d0-a6,-(sp)		; save all the registers to the stack
+		lea	(vdp_data_port).l,a6
+		lea	vdp_control_port-vdp_data_port(a6),a5
 		tst.b	(v_vbla_routine).w
 		beq.s	Vint_Lag_Main
--		move.w	(vdp_control_port).l,d0
-		andi.w	#8,d0
-		beq.s	-
-		move.l	#$40000010,(vdp_control_port).l
+.wait		moveq	#8,d0
+		and.w	vdp_control_port-vdp_control_port(a5),d0
+		beq.s	.wait
+		move.l	#vdpComm(0,VSRAM,WRITE),vdp_control_port-vdp_control_port(a5)
 		move.l	(v_scrposy_vdp).w,(vdp_data_port).l	; send screen y-axis pos. to VSRAM
-		btst	#6,(v_megadrive).w	; is Megadrive PAL?
-		beq.s	+			; if not, branch
-		move.w	#14344/8-1,d0
+		btst	#0,(vdp_control_port-vdp_control_port)+1(a5)
+		beq.s	+					; branch if it's not a PAL system
+		move.w	#$700,d0
 -		dbf	d0,- ; wait here in a loop doing nothing for a while...
-+		move.b	(v_vbla_routine).w,d0
-		move.b	#VintID_Lag,(v_vbla_routine).w
-		move.w	#1,(f_hbla_pal).w
-		andi.w	#$3E,d0
++
+		moveq	#$7E,d0
+		and.b	(v_vbla_routine).w,d0
+		clr.b	(v_vbla_routine).w
+		st	(f_hbla_pal).w
 		move.w	Vint_SwitchTbl(pc,d0.w),d0
 		jsr	Vint_SwitchTbl(pc,d0.w)
 ; loc_B5C:
@@ -491,6 +489,7 @@ Vint_SoundDriver:
 		jsr	(UpdateMusic).l
 ; loc_B62:
 VintRet:
+		bsr.w	RandomNumber
 		addq.l	#1,(Vint_runcount).w
 		movem.l	(sp)+,d0-a6
 		rte
@@ -538,7 +537,7 @@ VInt_0_Level:
 		move.w	#14344/8-1,d0
 -		dbf	d0,-	; otherwise waste a bit of time here
 +
-		move.w	#1,(f_hbla_pal).w
+		st.b	(f_hbla_pal).w
 		stopZ80
 		waitZ80
 		tst.b	(f_wtr_state).w
@@ -579,7 +578,7 @@ Vint_PCM:
 		beq.w	+
 		subq.w	#1,(v_demolength).w
 +
-		jmp	(Set_Kos_Bookmark).l
+		rts
 ; ===========================================================================
 ; loc_CBC: VintSub4:
 Vint_Title:
@@ -621,15 +620,17 @@ Vint_Level:
 		movem.l	(Scroll_flags).w,d0-d3
 		movem.l	d0-d3,(Scroll_flags_copy).w
 		move.l	(v_bg3scrposy_vdp).w,(Camera_X_pos_copy).w
+		enable_ints
+		tst.b	(Water_flag).w
+		beq.s	+
 		cmpi.b	#92,(v_hbla_line).w
-		bhs.s	Do_Updates
-		move.b	#1,(f_doupdatesinhblank).w
+		bhs.s	+
+		st.b	(f_doupdatesinhblank).w
 		addq.l	#4,sp
+;		bsr.w	Set_KosPlus_Bookmark
 		bra.w	VintRet
-;		jmp	(Set_Kos_Bookmark).l
 +
-		bsr.s	Do_Updates
-		jmp	(Set_Kos_Bookmark).l
+;		pea	(Set_KosPlus_Bookmark).w
 ; ---------------------------------------------------------------------------
 ; Subroutine to run a demo for an amount of time
 ; ---------------------------------------------------------------------------
@@ -640,7 +641,7 @@ Vint_Level:
 Do_Updates:
 		jsr	(LoadTilesAsYouMove).l
 		jsr	(HudUpdate).l
-		move.w	#0,(Lag_frame_count).w
+		clr.w	(Lag_frame_count).w
 		bsr.w	ProcessDPLC2
 		tst.w	(v_demolength).w
 		beq.w	.end
@@ -667,7 +668,7 @@ Vint_S1SS:
 		subq.w	#1,(v_demolength).w
 
 .end:
-		jmp	(Set_Kos_Bookmark).l
+		rts
 ; ===========================================================================
 ; loc_EA2: VintSubC: VintSub18:
 Vint_TitleCard:
@@ -675,15 +676,13 @@ Vint_TitleCard:
 		waitZ80
 		bsr.w	ReadJoypads
 		tst.b	(f_wtr_state).w
-		bne.s	loc_EE4
+		bne.s	+
 		writeCRAM	v_palette,0
-		bra.s	loc_F08
-; ---------------------------------------------------------------------------
+		bra.s	++
 
-loc_EE4:
++
 		writeCRAM	v_palette_water,0
-
-loc_F08:
++
 		move.w	(v_hbla_hreg).w,(a5)
 		writeVRAM	v_hscrolltablebuffer,vram_hscroll
 		writeVRAM	Sprite_Table,vram_sprites
@@ -726,7 +725,7 @@ Vint_SSResults:
 		subq.w	#1,(v_demolength).w
 
 .end:
-		jmp	(Set_Kos_Bookmark).l
+		rts
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
@@ -756,31 +755,28 @@ Do_ControllerPal:
 ; ===========================================================================
 ; Start of H-INT code
 H_Int:
-		tst.w	(f_hbla_pal).w
-		beq.s	H_Int_done
+		tst.b	(f_hbla_pal).w
+		beq.w	H_Int_done
 		disable_ints
-		move.w	#0,(f_hbla_pal).w
+		sf.b	(f_hbla_pal).w
 		movem.l	a0-a1,-(sp)
 		lea	(vdp_data_port).l,a1
+		move.w	#$8A00+224-1,4(a1)		; write %1101 %1111 to register 10 (interrupt every 224th line)
 		lea	(v_palette_water).w,a0		; load palette from RAM
 		move.l	#$C0000000,4(a1)		; set VDP to write to CRAM address $00
 	rept (v_palette_water_end-v_palette_water)/4
 		move.l	(a0)+,(a1)			; move palette to CRAM (all 64 colors at once)
 	endm
-		move.w	#$8A00+224-1,4(a1)		; write %1101 %1111 to register 10 (interrupt every 224th line)
 		movem.l	(sp)+,a0-a1
 		tst.b	(f_doupdatesinhblank).w
-		bne.s	Hint_SoundDriver
-H_Int_done:
-		rte
-; ===========================================================================
-; loc_11F8:
-Hint_SoundDriver:
+		beq.s	H_Int_done
 		clr.b	(f_doupdatesinhblank).w
 		movem.l	d0-a6,-(sp)
 		bsr.w	Do_Updates
 		jsr	(UpdateMusic).l
 		movem.l	(sp)+,d0-a6
+
+H_Int_done:
 		rte
 
 ; ===========================================================================
@@ -917,17 +913,17 @@ ClearScreen:
 
 ; loc_380
 SoundDriverLoad:
-;		nop
+		nop
 		stopZ80
 		resetZ80
 		lea	(DACDriver).l,a0
 		lea	(z80_ram).l,a1
 		bsr.w	KosPlusDec
 		resetZ80a
-;		nop
-;		nop
-;		nop
-;		nop
+		nop
+		nop
+		nop
+		nop
 		resetZ80
 		startZ80
 		rts
@@ -1263,11 +1259,10 @@ QuickPLC:
 ; End of function QuickPLC
 
 		include "_inc/Nemesis Decompression.asm"
-		include "_inc/Enigma Decompression.asm"
-		include "_inc/Kosinski+ Decompression.asm"
-		include "_inc/Moduled Kosinski+ Decompression.asm"
-		include "_inc/Twizzler Decompression.asm"
 		include "_inc/DMA Queue.asm"
+		include "_inc/Kosinski+ Decompression.asm"
+		include "_inc/Enigma Decompression.asm"
+		include "_inc/Twizzler Decompression.asm"
 		include	"_inc/PaletteCycle.asm"
 
 Pal_HTZCyc1:	binclude "palette/Hill Top Lava.bin"
@@ -2146,11 +2141,10 @@ TitleScreen:
 		clearRAM Camera_RAM,Camera_RAM_End
 		clearRAM v_palette_fading,v_palette_fading+16*4*2
 
-		locVRAM	ArtTile_SonicTeamPresents*tile_size
-		lea	(Nem_CreditTxt).l,a0 ; load alphabet ; To be changed (a1)
-	;	move.w	#$3180,d2
-		bsr.w	NemDec
-	;	bsr.w	Queue_Kos_Module
+		lea	(Kosp_CreditTxt).l,a0 ; load alphabet ; To be changed (a1)
+		lea	(RAM_Start).l,a1
+		move.w	#tiles_to_bytes(ArtTile_SonicTeamPresents),a2
+		bsr.w	KosPlusArt_To_VDP
 		moveq	#palid_SonicTails,d0
 		bsr.w	PalLoad1
 		_move.b	#id_Obj8A,(v_titletails).w ; load "SONIC TEAM PRESENTS" object
@@ -2158,19 +2152,13 @@ TitleScreen:
 		jsr	(BuildSprites).l
         	bsr.w	Pal_FadeFromBlack
 		disable_ints
-		locVRAM	ArtTile_Title_Foreground*tile_size
-		lea	(Nem_Title).l,a0 ; To be changed (a1)
-	;	clr.w	d2
-		bsr.w	NemDec
-	;	bsr.w	Queue_Kos_Module
+		lea	(Kosp_Title).l,a0
+		lea	(RAM_Start).l,a1
+		move.w	#tiles_to_bytes(ArtTile_Title_Foreground),a2
+		bsr.w	KosPlusArt_To_VDP
 		locVRAM	ArtTile_Title_Sonic_And_Tails*tile_size
 		lea	(Nem_TitleSonicTails).l,a0
 		bsr.w	NemDec
-		locVRAM	ArtTile_Title_Press_Start*tile_size
-		lea	(Nem_PSB).l,a0 ; To be changed (a1)
-	;	move.w	#$3D80,d2
-		bsr.w	NemDec
-	;	bsr.w	Queue_Kos_Module
 		lea	(vdp_data_port).l,a6
 		locVRAM	ArtTile_Level_Select_Font*tile_size,4(a6)
 		lea	(Art_Text).l,a5
@@ -2230,8 +2218,8 @@ TitleScreen_Loop:
 		move.b	#VintID_Title,(v_vbla_routine).w
 		bsr.w	WaitForVint
 		jsr	(ExecuteObjects).l
-		bsr.w	Deform_TitleScreen
 		jsr	(BuildSprites).l
+		bsr.w	Deform_TitleScreen
 	;	bsr.w	PalCycle_TitleScreen	; For reference, in case this is implemented
 		bsr.w	RunPLC_RAM
 		lea	(LvlSelCode).l,a0
@@ -21763,7 +21751,7 @@ Obj8A_Init:
 
 		cmpi.b	#GameModeID_TitleScreen,(v_gamemode).w	; but if this is the title screen...
 		bne.s	Obj8A_Display
-		move.w	#make_art_tile(ArtTile_Sonic_Team_Font,0,0),obGfx(a0)	; we change the VRAM adress
+		move.w	#make_art_tile(ArtTile_SonicTeamPresents,0,0),obGfx(a0)	; we change the VRAM adress
 		move.b	#$A,obFrame(a0)			; & manually display "SONIC TEAM PRESENTS"
 ; ===========================================================================
 ; loc_18660:
@@ -23919,12 +23907,9 @@ Debug_ResetPlayerStats:
 		include	"_inc/LevelHeaders.asm"
 		include	"_inc/Pattern Load Cues.asm"
 ; ---------------------------------------------------------------------------
-Nem_Title:	binclude	"art/kosinski/8x8 - Title.nem"
+Kosp_Title:	binclude	"art/kosinski/level/8x8 - Title.kosp"
 		even
-Nem_TitleSonicTails:
-		binclude	"art/nemesis/Title Sonic and Tails.nem"
-		even
-Nem_PSB:	binclude	"art/kosinski/Press Start Button.nem"
+Nem_TitleSonicTails:	binclude	"art/nemesis/Title Sonic and Tails.nem"
 		even
 Nem_SegaLogo:	binclude	"art/nemesis/Sega Logo (JP1).nem"
 		even
@@ -24259,11 +24244,11 @@ Nem_EndSonic:	binclude	"art/nemesis/S1/Ending - Sonic.nem"
 		even
 Nem_TryAgain:	binclude	"art/nemesis/S1/Ending - Try Again.nem"
 		even
-Kos_EndFlowers:	binclude	"art/kosinski/Flowers at Ending.kospm"
+Kosp_EndFlowers:	binclude	"art/kosinski/Flowers at Ending.kosp"
 		even
 Nem_EndFlower:	binclude	"art/nemesis/S1/Ending - Flowers.nem"
 		even
-Nem_CreditTxt:	binclude	"art/kosinski/Ending - Credits.nem"
+Kosp_CreditTxt:	binclude	"art/kosinski/Ending - Credits.kosp"
 		even
 Nem_EndStH:	binclude	"art/nemesis/S1/Ending - StH Logo.nem"
 		even

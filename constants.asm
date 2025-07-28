@@ -231,7 +231,6 @@ vdp_control_port:	equ $C00004
 vdp_counter:		equ $C00008
 
 psg_input:		equ $C00011
-
 ; Z80 addresses
 z80_ram:		equ $A00000			; start of Z80 RAM
 z80_dac_timpani_pitch:	equ z80_ram+zTimpani_Pitch
@@ -262,6 +261,7 @@ tile_size:		equ 8*8/2
 plane_size_64x32:	equ 64*32*2
 
 palette_size:		equ $80
+PLCKosPlusM_Count:	= 32
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -429,9 +429,8 @@ v_credits	= v_objspace+object_size*2		; object variable space for the credits te
 v_endeggman	= v_objspace+object_size*2		; object variable space for Eggman after the credits ($40 bytes)
 v_tryagain	= v_objspace+object_size*3		; object variable space for the "TRY AGAIN" text ($40 bytes)
 v_eggmanchaos	= v_objspace+object_size*32		; object variable space for the emeralds juggled by Eggman ($180 bytes)
-			ds.b	$1000			; unused (will become part of the block table)
-Kos_decomp_buffer:	ds.b	$1000			; $1000 bytes; KosM buffer (when it gets added)
-			ds.b	$800			; unused
+			ds.b	$1000			; unused (will become part of the object table)
+			ds.b	$1800			; $1800 bytes; unused
 
 VDP_Command_Buffer:	ds.w	7*$12			; stores 18 ($12) VDP commands to issue the next time ProcessDMAQueue is called
 VDP_Command_Buffer_Slot:	ds.w	1		; stores the address of the next open slot for a queued VDP command
@@ -625,7 +624,7 @@ Lag_frame_count:	ds.w	1			; more specifically, the number of times V-int routine
 v_vbla_routine:		ds.b	1			; VBlank - routine counter
 v_vbla_0e_counter:	ds.b	1			; tracks how many times vertical interrupts routine 0E occured (pretty much unused because routine 0E is unused)
 v_spritecount:		ds.b	1			; number of sprites on-screen
-			ds.b	1			; unused
+f_hbla_pal:		ds.b	1			; flag set to change palette during HBlank (0000 = no; 0001 = change)
 v_pcyc_num:		ds.w	1			; palette cycling - current reference number
 v_pcyc_num2:		ds.w	1			; palette cycling - current reference number
 v_pcyc_num3:		ds.w	1			; palette cycling - current reference number
@@ -635,8 +634,6 @@ v_pcyc_time3:		ds.w	1			; palette cycling - time until the next change
 v_random:		ds.l	1			; pseudo random number buffer
 f_pause:		ds.w	1			; flag set to pause the game
 v_vdp_buffer2:		ds.w	1			; VDP instruction buffer
-			ds.b	2			; unused
-f_hbla_pal:		ds.w	1			; flag set to change palette during HBlank (0000 = no; 0001 = change)
 v_waterpos1:		ds.w	1			; water height, actual
 v_waterpos2:		ds.w	1			; water height, ignoring sway
 v_waterpos3:		ds.w	1			; water height, next target
@@ -884,30 +881,17 @@ f_demo:			ds.w	1			; demo mode flag (0 = no; 1 = yes; $8001 = ending)
 v_demonum:		ds.w	1			; demo level number (not the same as the level number)
 v_creditsnum:		ds.w	1			; credits index number
 
-Kos_decomp_queue_count:		ds.w 1			; the number of pieces of data on the queue. Sign bit set indicates a decompression is in progress
-Kos_decomp_stored_Wregisters:	ds.w 10			; allows decompression to be spread over multiple frames
-Kos_decomp_stored_Lregisters:	ds.w 10			; allows decompression to be spread over multiple frames
-Kos_decomp_stored_SR:		ds.w 1
-Kos_decomp_bookmark:		ds.l 1			; the address within the Kosinski queue processor at which processing is to be resumed
-Kos_description_field:		ds.w 1			; used by the Kosinski queue processor the same way the stack is used by the normal Kosinski decompression routine
-Kos_decomp_queue:		ds.l 2*4		; 2 longwords per entry, first is source location and second is decompression location
-Kos_decomp_source =		Kos_decomp_queue	; long ; the compressed data location for the first entry in the queue
-Kos_decomp_destination =	Kos_decomp_queue+4	; long ; the decompression location for the first entry in the queue
-Kos_decomp_queue_End:
-Kos_modules_left:		ds.b 1			; the number of modules left to decompresses. Sign bit set indicates a module is being decompressed/has been decompressed
-				ds.b 1				; unused
-Kos_last_module_size:		ds.w 1			; the uncompressed size of the last module in words. All other modules are $800 words
-Kos_module_queue:		ds.w 3*4		; 6 bytes per entry, first longword is source location and next word is VRAM destination
-Kos_module_source =		Kos_module_queue	; long ; the compressed data location for the first module in the queue
-Kos_module_destination =	Kos_module_queue+4	; word ; the VRAM destination for the first module in the queue
-Kos_module_queue_End:
 v_16x16:		ds.l	$1			; 16x16 tile mappings, in ROM
-			ds.b	$DA			; unused
+			ds.b	$14C			; unused
 v_objstate:		ds.b	$C0			; object state list
 v_end:
-    if * > 0	; Don't declare more space than the RAM can contain!
-	fatal "The RAM variable declarations are too large by $\{*} bytes."
-    endif
+	if * > 0	; don't declare more space than the RAM can contain!
+		fatal "The RAM variable declarations are too large by $\{*} bytes."
+	endif
+
+	if MOMPASS=1
+		message "The current RAM available $\{0-*} bytes."
+	endif
 	dephase
 
 ; Special stage
@@ -1252,8 +1236,8 @@ ArtTile_Sega_Tiles:		equ $000
 
 ; Title Screen
 ArtTile_Title_Foreground:	equ $000
-ArtTile_Title_Press_Start:	equ $1EC
-ArtTile_SonicTeamPresents:	equ $18C
+ArtTile_Title_Press_Start:	equ $18C
+ArtTile_SonicTeamPresents:	equ $19A
 ArtTile_Title_Sonic_And_Tails:	equ $200
 ArtTile_Title_Sonic:		equ $300
 ArtTile_Level_Select_Font:	equ $680
@@ -1313,7 +1297,6 @@ ArtTile_SS_Zone_6:		equ $7A9
 ArtTile_SS_Results_Emeralds:	equ $541
 
 ; Font
-ArtTile_Sonic_Team_Font:	equ $18C
 ArtTile_Credits_Font:		equ $5A0
 
 ; Error Handler

@@ -1,25 +1,69 @@
 ; ---------------------------------------------------------------------------
-; I run the main 68k RAM addresses through this function
-; to let them work in both 16-bit and 32-bit addressing modes.
-ramaddr function x,-(-x)&$FFFFFFFF
-; ---------------------------------------------------------------------------
 ; makes a VDP address difference
 vdpCommDelta function addr,((addr&$3FFF)<<16)|((addr&$C000)>>14)
 
 ; makes a VDP command
 vdpComm function addr,type,rwd,(((type&rwd)&3)<<30)|((addr&$3FFF)<<16)|(((type&rwd)&$FC)<<2)|((addr&$C000)>>14)
 
-; calculates initial loop counter value for a dbf loop
-; that writes n bytes total at 4 bytes per iteration
-bytesToLcnt function n,n>>2-1
+; calc VDP address
+vdpCalc function loc,($40000000|vdpCommDelta(loc))
 
-; calculates initial loop counter value for a dbf loop
-; that writes n bytes total at 2 bytes per iteration
-bytesToWcnt function n,n>>1-1
+; sign-extends a 32-bit integer to 64-bit
+; all RAM addresses are run through this function to allow them to work in both 16-bit and 32-bit addressing modes
+ramaddr function x,-(-x)&$FFFFFFFF
+
+; function using these variables
+id function ptr,((ptr-offset)/ptrsize+idstart)
+
+; function to convert two separate nibble into a byte
+nibbles_to_byte function nibble1,nibble2,(((nibble1)<<4)&$F0)|((nibble2)&$FF)
+
+; function to convert two separate bytes into a word
+bytes_to_word function byte1,byte2,(((byte1)<<8)&$FF00)|((byte2)&$FF)
+
+; function to convert two separate word into a long
+words_to_long function word1,word2,(((word1)<<16)&$FFFF0000)|((word2)&$FFFF)
+
+; function to convert two separate bytes and word into a word
+bytes_word_to_long function byte1,byte2,word,((((byte1)<<24)&$FF000000)|(((byte2)<<16)&$FF0000)|((word)&$FFFF))
+
+; function to convert four separate bytes into a long
+bytes_to_long function byte1,byte2,byte3,byte4,(((byte1)<<24)&$FF000000)|(((byte2)<<16)&$FF0000)|(((byte3)<<8)&$FF00)|((byte4)&$FF)
 
 ; calculates initial loop counter value for a dbf loop
 ; that writes n bytes total at x bytes per iteration
 bytesToXcnt function n,x,n/x-1
+
+; calculates initial loop counter value for a dbf loop
+; that writes n bytes total at 4 bytes per iteration
+bytesToLcnt function n,bytesToXcnt(n,4)
+
+; calculates initial loop counter value for a dbf loop
+; that writes n bytes total at 2 bytes per iteration
+bytesToWcnt function n,bytesToXcnt(n,2)
+
+; calculates initial loop counter value for a normal loop
+; that writes n bytes total at x bytes per iteration
+bytesTo2Xcnt function n,x,n/x
+
+; calculates initial loop counter value for a normal loop
+; that writes n bytes total at 4 bytes per iteration
+bytesTo2Lcnt function n,bytesTo2Xcnt(n,4)
+
+; calculates initial loop counter value for a normal loop
+; that writes n bytes total at 2 bytes per iteration
+bytesTo2Wcnt function n,bytesTo2Xcnt(n,2)
+; ---------------------------------------------------------------------------
+
+; values for the type argument
+VRAM = %100001
+CRAM = %101011
+VSRAM = %100101
+
+; values for the rwd argument
+READ = %001100
+WRITE = %000111
+DMA = %100111
 ; ---------------------------------------------------------------------------
 ; macros to convert from tile index to art tiles, block mapping or VRAM address.
 make_art_tile function addr,pal,pri,((pri&1)<<15)|((pal&3)<<13)|(addr&tile_mask)
@@ -52,14 +96,36 @@ zoneanimcount := zoneanimcount + 1
 ; ---------------------------------------------------------------------------
 ; function to calculate the location of a tile in plane mappings
 planeLoc function width,col,line,(((width * line) + col) * 2)
+
+; function to calculate the location of a tile in plane mappings with a width of 40 cells
+planeLocH32 function col,line,(($40 * line) + (2 * col))
+
+; function to calculate the location of a tile in plane mappings with a width of 40 cells
+planeLocH28 function col,line,(($50 * line) + (2 * col))
+
+; function to calculate the location of a tile in plane mappings with a width of 64 cells
+planeLocH40 function col,line,(($80 * line) + (2 * col))
+
+; function to calculate the location of a tile in plane mappings with a width of 128 cells
+planeLocH80 function col,line,(($100 * line) + (2 * col))
+; ---------------------------------------------------------------------------
+
+_KosPlus_LoopUnroll := 3
+
+_KosPlus_ReadBit macro
+	dbf	d2,.skip
+	moveq	#7,d2								; We have 8 new bits, but will use one up below.
+	move.b	(a0)+,d0							; Get desc field low-byte.
+
+.skip
+	add.b	d0,d0								; Get a bit from the bitstream.
+    endm
 ; ---------------------------------------------------------------------------
 ; some variables and functions to help define those constants (redefined before a new set of IDs)
 offset :=	0					; this is the start of the pointer table
 ptrsize :=	1					; this is the size of a pointer (should be 1 if the ID is a multiple of the actual size)
 idstart :=	0					; value to add to all IDs
 
-; function using these variables
-id function ptr,((ptr-offset)/ptrsize+idstart)
 ; ---------------------------------------------------------------------------
 ; Set a VRAM address via the VDP control port.
 ; input: 16-bit VRAM address, control port (default is (vdp_control_port).l)
@@ -205,6 +271,23 @@ disable_ints:	macro
 enable_ints:	macro
 		move	#$2300,sr
 		endm
+
+; ---------------------------------------------------------------------------
+; disable interrupts
+; ---------------------------------------------------------------------------
+
+disableIntsSave macro
+	move.w	sr,-(sp)							; save current interrupt mask
+	disable_ints								; mask off interrupts
+    endm
+
+; ---------------------------------------------------------------------------
+; enable interrupts
+; ---------------------------------------------------------------------------
+
+enableIntsSave macro
+	move.w	(sp)+,sr							; restore interrupts to previous state
+    endm
 
 ; ---------------------------------------------------------------------------
 ; long conditional jumps

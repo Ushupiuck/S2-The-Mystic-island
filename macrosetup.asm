@@ -111,6 +111,16 @@ tracenum := (tracenum+1)
    endm
 tracenum := 0
 
+bit function nBits,1<<(nBits-1)
+setBit function nBits,1<<(nBits)
+signmask function val,nBits,-((-(val&bit(nBits)))&bit(nBits))
+signextend function val,nBits,(val+signmask(val,nBits))!signmask(val,nBits)
+signextendB function val,signextend(val,8)
+roundFloatToInteger function float,INT(float+0.5)
+min function a,b,b!((a!b)&(-(a<b)))
+max function a,b,a!((a!b)&(-(a<b)))
+chkop function op,ref,(substr(lowstring(op),0,strlen(ref))<>ref)
+
 _move	macro
 		!move.ATTRIBUTE ALLARGS
 	endm
