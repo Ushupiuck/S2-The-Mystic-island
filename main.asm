@@ -11,7 +11,7 @@ BackupSRAM	  = 1
 AddressSRAM	  = 3	; 0 = odd+even; 2 = even only; 3 = odd only
 
 FixBugs		  = 1	; change to 1 to enable bugfixes
-AdvancedHandler	  = 1
+AdvancedHandler	  = 0
 
 zeroOffsetOptimization = 1	; if 1, makes a handful of zero-offset instructions smaller
 
@@ -62,85 +62,6 @@ ROMEndLoc:	dc.l EndOfRom-1				; End address of ROM
 		dc.b "JUE             "			; Country code (region)
 EndOfHeader:
 
-; ---------------------------------------------------------------------------
-
-ErrorTrap:
-		nop
-		nop
-		bra.s	ErrorTrap
-; ---------------------------------------------------------------------------
-
-EntryPoint:
-		tst.l	(z80_port_1_control).l		; test Port A Ctrl
-		bne.s	PortA_OK
-		tst.w	(z80_expansion_control).l	; test Port C Ctrl
-
-PortA_OK:
-		bne.s	PortC_OK
-		lea	InitValues(pc),a5
-		movem.w	(a5)+,d5-d7
-		movem.l	(a5)+,a0-a4
-		move.b	z80_version-z80_bus_request(a1),d0			; get hardware version
-		andi.b	#$F,d0
-		beq.s	SkipSecurity
-		move.l	#"SEGA",security_addr-z80_bus_request(a1)
-
-SkipSecurity:
-		move.w	(a4),d0
-		moveq	#0,d0
-		movea.l	d0,a6
-		move.l	a6,usp
-		moveq	#VDPInitValues_End-VDPInitValues-1,d1
-
-VDPInitLoop:
-		move.b	(a5)+,d5
-		move.w	d5,(a4)
-		add.w	d7,d5
-		dbf	d1,VDPInitLoop
-		move.l	(a5)+,(a4)
-		move.w	d0,(a3)
-		move.w	d7,(a1)
-		move.w	d7,(a2)
-
-WaitForZ80:
-		btst	d0,(a1)
-		bne.s	WaitForZ80
-		moveq	#Z80StartupCodeEnd-Z80StartupCodeBegin-1,d2
-
-Z80InitLoop:
-		move.b	(a5)+,(a0)+
-		dbf	d2,Z80InitLoop
-		move.w	d0,(a2)
-		move.w	d0,(a1)
-		move.w	d7,(a2)
-
-ClearRAMLoop:
-		move.l	d0,-(a6)
-		dbf	d6,ClearRAMLoop
-		move.l	(a5)+,(a4)
-		move.l	(a5)+,(a4)
-		moveq	#bytesToLcnt($80),d3
-
-ClearCRAMLoop:
-		move.l	d0,(a3)
-		dbf	d3,ClearCRAMLoop
-		move.l	(a5)+,(a4)
-		moveq	#bytesToLcnt($50),d4
-
-ClearVSRAMLoop:
-		move.l	d0,(a3)
-		dbf	d4,ClearVSRAMLoop
-		moveq	#PSGInitValues_End-PSGInitValues-1,d5
-
-PSGInitLoop:
-		move.b	(a5)+,psg_input-vdp_data_port(a3)
-		dbf	d5,PSGInitLoop
-		move.w	d0,(a2)
-		movem.l	(a6),d0-a6
-		disable_ints
-
-PortC_OK:
-		bra.s	GameProgram
 ; ---------------------------------------------------------------------------
 InitValues:	dc.w $8000
 		dc.w bytesToLcnt($10000)
@@ -225,7 +146,82 @@ PSGInitValues:
 PSGInitValues_End:
 ; ---------------------------------------------------------------------------
 
-GameProgram:
+ErrorTrap:
+		nop
+		nop
+		bra.s	ErrorTrap
+; ---------------------------------------------------------------------------
+
+EntryPoint:
+		tst.l	(z80_port_1_control).l		; test Port A Ctrl
+		bne.s	PortA_OK
+		tst.w	(z80_expansion_control).l	; test Port C Ctrl
+
+PortA_OK:
+		bne.s	PortC_OK
+		lea	InitValues(pc),a5
+		movem.w	(a5)+,d5-d7
+		movem.l	(a5)+,a0-a4
+		move.b	z80_version-z80_bus_request(a1),d0			; get hardware version
+		andi.b	#$F,d0
+		beq.s	SkipSecurity
+		move.l	#"SEGA",security_addr-z80_bus_request(a1)
+
+SkipSecurity:
+		move.w	(a4),d0
+		moveq	#0,d0
+		movea.l	d0,a6
+		move.l	a6,usp
+		moveq	#VDPInitValues_End-VDPInitValues-1,d1
+
+VDPInitLoop:
+		move.b	(a5)+,d5
+		move.w	d5,(a4)
+		add.w	d7,d5
+		dbf	d1,VDPInitLoop
+		move.l	(a5)+,(a4)
+		move.w	d0,(a3)
+		move.w	d7,(a1)
+		move.w	d7,(a2)
+
+WaitForZ80:
+		btst	d0,(a1)
+		bne.s	WaitForZ80
+		moveq	#Z80StartupCodeEnd-Z80StartupCodeBegin-1,d2
+
+Z80InitLoop:
+		move.b	(a5)+,(a0)+
+		dbf	d2,Z80InitLoop
+		move.w	d0,(a2)
+		move.w	d0,(a1)
+		move.w	d7,(a2)
+
+ClearRAMLoop:
+		move.l	d0,-(a6)
+		dbf	d6,ClearRAMLoop
+		move.l	(a5)+,(a4)
+		move.l	(a5)+,(a4)
+		moveq	#bytesToLcnt($80),d3
+
+ClearCRAMLoop:
+		move.l	d0,(a3)
+		dbf	d3,ClearCRAMLoop
+		move.l	(a5)+,(a4)
+		moveq	#bytesToLcnt($50),d4
+
+ClearVSRAMLoop:
+		move.l	d0,(a3)
+		dbf	d4,ClearVSRAMLoop
+		moveq	#PSGInitValues_End-PSGInitValues-1,d5
+
+PSGInitLoop:
+		move.b	(a5)+,psg_input-vdp_data_port(a3)
+		dbf	d5,PSGInitLoop
+		move.w	d0,(a2)
+		movem.l	(a6),d0-a6
+		disable_ints
+
+PortC_OK:	; Fall through to GameProgram
 -		move.w	(vdp_control_port).l,d1
 		btst	#1,d1
 		bne.s	-	; wait till a DMA is completed
@@ -237,7 +233,6 @@ GameProgram:
 		move.b	(HW_Version).l,d0
 		andi.b	#$C0,d0
 		move.b	d0,(v_megadrive).w
-
 
 		bsr.w	InitDMAQueue
 		bsr.w	VDPSetupGame
@@ -3645,9 +3640,9 @@ word_54FA:
 		SSFGData ArtTile_SS_Plane_4, $100
 		even
 
-Pal_S1SSCyc1:	binclude	"palette/S1/Cycle - Special Stage 1.bin"
+Pal_S1SSCyc1:	binclude	"palette/Cycle - Special Stage 1.bin"
 		even
-Pal_S1SSCyc2:	binclude	"palette/S1/Cycle - Special Stage 2.bin"
+Pal_S1SSCyc2:	binclude	"palette/Cycle - Special Stage 2.bin"
 		even
 
 ; ---------------------------------------------------------------------------
@@ -4399,8 +4394,9 @@ MainLevelLoadBlock:
 		lea	(a2,d0.w),a2
 		move.l	a2,-(sp)
 		addq.l	#4,a2
-		move.l	(a2)+,(v_16x16).l
-		andi.l	#$FFFFFF,(v_16x16).l	; load block maps
+		movea.l	(a2)+,a0
+		lea	(v_16x16).w,a1
+		jsr	(KosPlusDec).l	; load block maps
 		movea.l	(a2)+,a0
 		lea	(v_128x128).l,a1
 		bsr.w	TwizDec			; load chunk maps
@@ -6375,8 +6371,7 @@ loc_6D18:
 		move.w	(a0),d3
 		andi.w	#$3FF,d3
 		lsl.w	#3,d3
-	;	lea	(v_16x16).w,a1
-		movea.l	(v_16x16).l,a1
+		lea	(v_16x16).w,a1
 		adda.w	d3,a1
 		move.l	d1,d0
 		bsr.w	sub_6F70
@@ -6436,8 +6431,7 @@ loc_6DB2:
 		move.w	(a0),d3
 		andi.w	#$3FF,d3
 		lsl.w	#3,d3
-	;	lea	(v_16x16).w,a1
-		movea.l	(v_16x16).l,a1
+		lea	(v_16x16).w,a1
 		adda.w	d3,a1
 		bsr.w	sub_6ED0
 		addq.w	#2,a0
@@ -6713,8 +6707,7 @@ DrawFlipXY:
 GetBlockData:
 		add.w	(a3),d5
 		add.w	4(a3),d4
-	;	lea	(v_16x16).w,a1
-		movea.l	(v_16x16).l,a1
+		lea	(v_16x16).w,a1
 		move.w	d4,d3
 		add.w	d3,d3
 		andi.w	#$F00,d3
@@ -22775,8 +22768,7 @@ LoadAnimatedBlocks:
 		lea	AnimPatMaps(pc,d0.w),a0
 		tst.w	(a0)
 		beq.s	locret_1AD1A
-;		lea	(v_16x16).w,a1
-		movea.l	(v_16x16).l,a1
+		lea	(v_16x16).w,a1
 		adda.w	(a0)+,a1
 		move.w	(a0)+,d1
 ; loc_1AD14:
@@ -23907,6 +23899,10 @@ Debug_ResetPlayerStats:
 		include	"_inc/LevelHeaders.asm"
 		include	"_inc/Pattern Load Cues.asm"
 ; ---------------------------------------------------------------------------
+; Modified Type 1b 68000 Sound Driver
+; ---------------------------------------------------------------------------
+		include	"s1.sounddriver.asm"
+; ---------------------------------------------------------------------------
 Kosp_Title:	binclude	"art/kosinski/level/8x8 - Title.kosp"
 		even
 Nem_TitleSonicTails:	binclude	"art/nemesis/Title Sonic and Tails.nem"
@@ -23990,8 +23986,6 @@ Nem_GHZ_Rock:	binclude	"art/nemesis/S1/GHZ Purple Rock.nem"
 Nem_GHZ_BWall:	binclude	"art/nemesis/S1/GHZ Breakable Wall.nem"
 		even
 Nem_GHZ_SWall:	binclude	"art/nemesis/S1/GHZ Edge Wall.nem"
-		even
-Nem_GHZ_Block:	binclude	"art/nemesis/S1/Unused - GHZ Block.nem"
 		even
 ; ---------------------------------------------------------------------------
 ; Chemical Plant Zone stage assets
@@ -24175,42 +24169,42 @@ Nem_Squirrel:	binclude	"art/nemesis/S1/Animal Squirrel.nem"
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - primary patterns and block mappings
 ; ---------------------------------------------------------------------------
-Map16_GHZ:	binclude	"mappings/16x16/GHZ.unc"
+Map16_GHZ:	binclude	"mappings/16x16/GHZ.kosp"
 		even
 Kosp_GHZ:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
 		even
 Map128_GHZ:	binclude	"mappings/128x128/GHZ.twiz"
 		even
 
-Map16_LZ:	binclude	"mappings/16x16/LZ.unc"
+Map16_LZ:	binclude	"mappings/16x16/LZ.kosp"
 		even
 Kosp_LZ:	binclude	"art/kosinski/level/8x8 - LZ.kosp"
 		even
 Map128_LZ:	binclude	"mappings/128x128/LZ.twiz"
 		even
 
-Map16_CPZ:	binclude	"mappings/16x16/CPZ.unc"
+Map16_CPZ:	binclude	"mappings/16x16/CPZ.kosp"
 		even
 Kosp_CPZ:	binclude	"art/kosinski/level/8x8 - CPZ.kosp"
 		even
 Map128_CPZ:	binclude	"mappings/128x128/CPZ.twiz"
 		even
 
-Map16_HPZ:	binclude	"mappings/16x16/HPZ.unc"
-		even
-Kosp_HPZ:	binclude	"art/kosinski/level/8x8 - HPZ.kosp"
-		even
-Map128_HPZ:	binclude	"mappings/128x128/HPZ.twiz"
-		even
-
-Map16_EHZ:	binclude	"mappings/16x16/EHZ.unc"
+Map16_EHZ:	binclude	"mappings/16x16/EHZ.kosp"
 		even
 Kosp_EHZ:	binclude	"art/kosinski/level/8x8 - EHZ.kosp"
 		even
 Map128_EHZ:	binclude	"mappings/128x128/EHZ.twiz"
 		even
 
-Map16_HTZ:	binclude	"mappings/16x16/HTZ.unc"
+Map16_HPZ:	binclude	"mappings/16x16/HPZ.kosp"
+		even
+Kosp_HPZ:	binclude	"art/kosinski/level/8x8 - HPZ.kosp"
+		even
+Map128_HPZ:	binclude	"mappings/128x128/HPZ.twiz"
+		even
+
+Map16_HTZ:	binclude	"mappings/16x16/HTZ.kosp"
 		even
 Kosp_HTZ:	binclude	"art/kosinski/level/8x8 - HTZ.kosp"
 		even
@@ -24510,10 +24504,10 @@ Level_Index:
 		dc.w Level_GHZ3-Level_Index
 		dc.w Level_GHZ4-Level_Index
 		; Zone 01 - Placeholder entries
-		dc.w Level_CPZ1-Level_Index
-		dc.w Level_CPZ2-Level_Index
-		dc.w Level_CPZ3-Level_Index
-		dc.w Level_CPZ4-Level_Index
+		dc.w Level_LZ1-Level_Index
+		dc.w Level_LZ2-Level_Index
+		dc.w Level_LZ3-Level_Index
+		dc.w Level_LZ4-Level_Index
 		; Zone 02
 		dc.w Level_CPZ1-Level_Index
 		dc.w Level_CPZ2-Level_Index
@@ -24548,21 +24542,13 @@ Level_GHZ3:	binclude	"level/layout/GHZ_3.kosp"
 		even
 Level_GHZ4:	binclude	"level/layout/GHZ_4.kosp"
 		even
-Level_EHZ1:	binclude	"level/layout/EHZ_1.kosp"
+Level_LZ1:	binclude	"level/layout/LZ_1.kosp"
 		even
-Level_EHZ2:	binclude	"level/layout/EHZ_2.kosp"
+Level_LZ2:	binclude	"level/layout/LZ_2.kosp"
 		even
-Level_EHZ3:	binclude	"level/layout/EHZ_3.kosp"
+Level_LZ3:	binclude	"level/layout/LZ_3.kosp"
 		even
-Level_EHZ4:	binclude	"level/layout/EHZ_4.kosp"
-		even
-Level_HTZ1:	binclude	"level/layout/HTZ_1.kosp"
-		even
-Level_HTZ2:	binclude	"level/layout/HTZ_2.kosp"
-		even
-Level_HTZ3:	binclude	"level/layout/HTZ_3.kosp"
-		even
-Level_HTZ4:	binclude	"level/layout/HTZ_4.kosp"
+Level_LZ4:	binclude	"level/layout/LZ_4.kosp"
 		even
 Level_CPZ1:	binclude	"level/layout/CPZ_1.kosp"
 		even
@@ -24572,6 +24558,14 @@ Level_CPZ3:	binclude	"level/layout/CPZ_3.kosp"
 		even
 Level_CPZ4:	binclude	"level/layout/CPZ_4.kosp"
 		even
+Level_EHZ1:	binclude	"level/layout/EHZ_1.kosp"
+		even
+Level_EHZ2:	binclude	"level/layout/EHZ_2.kosp"
+		even
+Level_EHZ3:	binclude	"level/layout/EHZ_3.kosp"
+		even
+Level_EHZ4:	binclude	"level/layout/EHZ_4.kosp"
+		even
 Level_HPZ1:	binclude	"level/layout/HPZ_1.kosp"
 		even
 Level_HPZ2:	binclude	"level/layout/HPZ_2.kosp"
@@ -24579,6 +24573,14 @@ Level_HPZ2:	binclude	"level/layout/HPZ_2.kosp"
 Level_HPZ3:	binclude	"level/layout/HPZ_3.kosp"
 		even
 Level_HPZ4:	binclude	"level/layout/HPZ_4.kosp"
+		even
+Level_HTZ1:	binclude	"level/layout/HTZ_1.kosp"
+		even
+Level_HTZ2:	binclude	"level/layout/HTZ_2.kosp"
+		even
+Level_HTZ3:	binclude	"level/layout/HTZ_3.kosp"
+		even
+Level_HTZ4:	binclude	"level/layout/HTZ_4.kosp"
 		even
 Level_Ending:	binclude	"level/layout/Ending.kosp"
 		even
@@ -24637,13 +24639,13 @@ ObjPos_GHZ3:	binclude	"level/objects/GHZ_3.bin"
 		ObjectLayoutBoundary macro
 ObjPos_GHZ4:	binclude	"level/objects/GHZ_4.bin"
 		ObjectLayoutBoundary macro
-ObjPos_LZ1:
+ObjPos_LZ1:	binclude	"level/objects/LZ_1.bin"
 		ObjectLayoutBoundary macro
-ObjPos_LZ2:
+ObjPos_LZ2:	binclude	"level/objects/LZ_2.bin"
 		ObjectLayoutBoundary macro
-ObjPos_LZ3:
+ObjPos_LZ3:	binclude	"level/objects/LZ_3.bin"
 		ObjectLayoutBoundary macro
-ObjPos_LZ4:
+ObjPos_LZ4:	binclude	"level/objects/LZ_4.bin"
 		ObjectLayoutBoundary macro
 ObjPos_CPZ1:	binclude	"level/objects/CPZ_1.bin"
 		ObjectLayoutBoundary macro
@@ -24799,11 +24801,7 @@ RingPos_HTZ3:	binclude	"level/rings/HTZ_3.bin"
 RingPos_HTZ4:	binclude	"level/rings/HTZ_4.bin"
 		even
 ; ===========================================================================
-; ---------------------------------------------------------------------------
-; Modified Type 1b 68000 Sound Driver
-; ---------------------------------------------------------------------------
-		include	"s1.sounddriver.asm"
-		align	$7DBDC
+	;	align	$7DBDC
 ; ---------------------------------------------------------------------------
 ; These subroutines are yet to be properly implemented
 ; ---------------------------------------------------------------------------
@@ -24961,7 +24959,7 @@ ObjectMoveAndFall_NormGravity:
 ;	to resolve symbol names.
 ; ---------------------------------------------------------------------------
  else
-		align	$3FFFFF			; Pad to 4MB
+	;	align	$3FFFFF			; Pad to 4MB
 		even
  endif
 EndOfRom:

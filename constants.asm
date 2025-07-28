@@ -324,6 +324,7 @@ Level_Layout_End:
 v_lvllayout:=	Level_Layout
 v_lvllayout_end:=	Level_Layout_End
 v_lvllayoutbg:=	Level_Layout+$80
+v_16x16:		ds.b	$1800			; $1800 bytes; unused
 
 TempArray_LayerDef:	ds.b	$200			; background scroll buffer
 Decomp_Buffer:		ds.b	$200			; Nemesis graphics decompression buffer
@@ -430,7 +431,6 @@ v_endeggman	= v_objspace+object_size*2		; object variable space for Eggman after
 v_tryagain	= v_objspace+object_size*3		; object variable space for the "TRY AGAIN" text ($40 bytes)
 v_eggmanchaos	= v_objspace+object_size*32		; object variable space for the emeralds juggled by Eggman ($180 bytes)
 			ds.b	$1000			; unused (will become part of the object table)
-			ds.b	$1800			; $1800 bytes; unused
 
 VDP_Command_Buffer:	ds.w	7*$12			; stores 18 ($12) VDP commands to issue the next time ProcessDMAQueue is called
 VDP_Command_Buffer_Slot:	ds.w	1		; stores the address of the next open slot for a queued VDP command
@@ -881,8 +881,7 @@ f_demo:			ds.w	1			; demo mode flag (0 = no; 1 = yes; $8001 = ending)
 v_demonum:		ds.w	1			; demo level number (not the same as the level number)
 v_creditsnum:		ds.w	1			; credits index number
 
-v_16x16:		ds.l	$1			; 16x16 tile mappings, in ROM
-			ds.b	$14C			; unused
+			ds.b	$150			; unused
 v_objstate:		ds.b	$C0			; object state list
 v_end:
 	if * > 0	; don't declare more space than the RAM can contain!
