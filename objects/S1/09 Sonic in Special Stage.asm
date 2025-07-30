@@ -34,7 +34,7 @@ Obj09_Main:	; Routine 0
 		bset	#1,obStatus(a0)
 
 Obj09_ChkDebug:	; Routine 2
-		tst.w	(Debug_mode_flag).w		; is debug mode	cheat enabled?
+		tst.b	(Debug_mode_flag).w		; is debug mode	cheat enabled?
 		beq.s	Obj09_NoDebug			; if not, branch
 		btst	#bitB,(v_jpadpress1).w		; is button B pressed?
 		beq.s	Obj09_NoDebug			; if not, branch

@@ -476,7 +476,7 @@ V_Int:
 		moveq	#$7E,d0
 		and.b	(v_vbla_routine).w,d0
 		clr.b	(v_vbla_routine).w
-		st	(f_hbla_pal).w
+		st.b	(f_hbla_pal).w
 		move.w	Vint_SwitchTbl(pc,d0.w),d0
 		jsr	Vint_SwitchTbl(pc,d0.w)
 ; loc_B5C:
@@ -494,11 +494,9 @@ Vint_SwitchTbl:
 Vint_Lag_ptr:		dc.w Vint_Lag-Vint_SwitchTbl
 Vint_SEGA_ptr:		dc.w Vint_SEGA-Vint_SwitchTbl
 Vint_Title_ptr:		dc.w Vint_Title-Vint_SwitchTbl
-Vint_Unused6_ptr:	dc.w Do_ControllerPal-Vint_SwitchTbl
 Vint_Level_ptr:		dc.w Vint_Level-Vint_SwitchTbl
 Vint_S1SS_ptr:		dc.w Vint_S1SS-Vint_SwitchTbl
 Vint_TitleCard_ptr:	dc.w Vint_TitleCard-Vint_SwitchTbl
-Vint_UnusedE_ptr:	dc.w Vint_UnusedE-Vint_SwitchTbl
 Vint_Pause_ptr:		dc.w Vint_Pause-Vint_SwitchTbl
 Vint_Fade_ptr:		dc.w Vint_Fade-Vint_SwitchTbl
 Vint_PCM_ptr:		dc.w Vint_PCM-Vint_SwitchTbl
@@ -692,13 +690,6 @@ Vint_TitleCard:
 	;	jsr	(LoadTilesAsYouMove).l
 		jsr	(HudUpdate).l
 		bra.w	ProcessDPLC
-; ===========================================================================
-; loc_F88: VintSubE:
-Vint_UnusedE:
-		bsr.w	Do_ControllerPal
-		addq.b	#1,(v_vbla_0e_counter).w
-		move.b	#VintID_UnusedE,(v_vbla_routine).w
-		rts
 ; ===========================================================================
 ; loc_F98: VintSub12:
 Vint_Fade:
@@ -11446,7 +11437,7 @@ loc_FA88:
 ; ---------------------------------------------------------------------------
 
 Obj01_Control:
-		tst.w	(Debug_mode_flag).w		; is debug cheat enabled?
+		tst.b	(Debug_mode_flag).w		; is debug cheat enabled?
 		beq.s	loc_FAB0			; if not, branch
 		btst	#bitB,(v_jpadpress1).w		; is button B pressed?
 		beq.s	loc_FAB0			; if not, branch
@@ -22422,7 +22413,7 @@ HurtSonic:
 		bne.s	HurtShield
 		tst.w	(v_rings).w
 		bne.s	.skip
-		tst.w	(Debug_mode_flag).w
+		tst.b	(Debug_mode_flag).w
 		bne.s	HurtShield
 		bra.w	KillSonic
 .skip:
@@ -23076,7 +23067,7 @@ locret_1B23C:
 HudUpdate:
 		nop
 		lea	(vdp_data_port).l,a6
-		tst.w	(Debug_mode_flag).w	; is debug mode on?
+		tst.b	(Debug_mode_flag).w	; is debug mode on?
 		bne.w	loc_1B330	; if yes, branch
 		tst.b	(f_scorecount).w	; does the score need updating?
 		beq.s	loc_1B266	; if not, branch

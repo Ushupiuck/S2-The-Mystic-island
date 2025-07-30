@@ -273,16 +273,14 @@ idstart :=	0
 VintID_Lag =		id(Vint_Lag_ptr)	; 0
 VintID_SEGA =		id(Vint_SEGA_ptr)	; 2
 VintID_Title =		id(Vint_Title_ptr)	; 4
-VintID_Unused6 =	id(Vint_Unused6_ptr)	; 6
-VintID_Level =		id(Vint_Level_ptr)	; 8
-VintID_S1SS =		id(Vint_S1SS_ptr)	; $A
-VintID_TitleCard =	id(Vint_TitleCard_ptr)	; $C
-VintID_UnusedE =	id(Vint_UnusedE_ptr)	; $E
-VintID_Pause =		id(Vint_Pause_ptr)	; $10
-VintID_Fade =		id(Vint_Fade_ptr)	; $12
-VintID_PCM =		id(Vint_PCM_ptr)	; $14
-VintID_SSResults =	id(Vint_SSResults_ptr)	; $16
-VintID_TitleCard2 =	id(Vint_TitleCard2_ptr)	; $18
+VintID_Level =		id(Vint_Level_ptr)	; 6
+VintID_S1SS =		id(Vint_S1SS_ptr)	; 8
+VintID_TitleCard =	id(Vint_TitleCard_ptr)	; $A
+VintID_Pause =		id(Vint_Pause_ptr)	; $C
+VintID_Fade =		id(Vint_Fade_ptr)	; $E
+VintID_PCM =		id(Vint_PCM_ptr)	; $10
+VintID_SSResults =	id(Vint_SSResults_ptr)	; $12
+VintID_TitleCard2 =	id(Vint_TitleCard2_ptr)	; $14
 
 ; Game modes
 offset :=	GameModeArray
@@ -622,9 +620,9 @@ v_pfade_size:		ds.b	1			; palette fading - number of colours
 v_misc_variables:
 Lag_frame_count:	ds.w	1			; more specifically, the number of times V-int routine 0 has run. Reset at the end of a normal frame
 v_vbla_routine:		ds.b	1			; VBlank - routine counter
-v_vbla_0e_counter:	ds.b	1			; tracks how many times vertical interrupts routine 0E occured (pretty much unused because routine 0E is unused)
 v_spritecount:		ds.b	1			; number of sprites on-screen
-f_hbla_pal:		ds.b	1			; flag set to change palette during HBlank (0000 = no; 0001 = change)
+			ds.b	1			; unused
+f_hbla_pal:		ds.b	1			; flag set to change palette during HBlank (00 = no; 01 = change)
 v_pcyc_num:		ds.w	1			; palette cycling - current reference number
 v_pcyc_num2:		ds.w	1			; palette cycling - current reference number
 v_pcyc_num3:		ds.w	1			; palette cycling - current reference number
@@ -781,7 +779,6 @@ v_palette:		ds.b	palette_size		; main palette
 v_palette_end:
 v_palette_fading:	ds.b	palette_size		; duplicate palette, used for transitions
 v_palette_fading_end:
-v_objstate_end:
 			ds.b	$140			; stack
 v_systemstack:
 
@@ -871,9 +868,10 @@ v_scorelife:		ds.l	1			; points required for an extra life (JP1 only)
 
 f_levselcheat:		ds.b	1			; level select cheat flag
 f_slomocheat:		ds.b	1			; slow motion & frame advance cheat flag
-Debug_mode_flag:	ds.w	1
+Debug_mode_flag:	ds.b	1
 f_debugcheat:		ds.b	1			; debug mode cheat flag
 v_megadrive:		ds.b	1			; Megadrive machine type
+			ds.b	1
 v_title_dcount:		ds.w	1			; number of times the d-pad is pressed on title screen
 v_title_ccount:		ds.w	1			; number of times C is pressed on title screen
 
@@ -883,6 +881,7 @@ v_creditsnum:		ds.w	1			; credits index number
 
 			ds.b	$150			; unused
 v_objstate:		ds.b	$C0			; object state list
+v_objstate_end:
 v_end:
 	if * > 0	; don't declare more space than the RAM can contain!
 		fatal "The RAM variable declarations are too large by $\{*} bytes."

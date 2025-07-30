@@ -7,7 +7,7 @@ Obj03:
 		move.b	obRoutine(a0),d0
 		move.w	Obj03_Index(pc,d0.w),d1
 		jsr	Obj03_Index(pc,d1.w)
-		tst.w	(Debug_mode_flag).w
+		tst.b	(Debug_mode_flag).w
 		beq.w	MarkObjGone2
 		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
@@ -120,7 +120,7 @@ loc_13F80:
 		bset	#7,obGfx(a1)
 
 loc_13F92:
-		tst.w	(Debug_mode_flag).w
+		tst.b	(Debug_mode_flag).w
 		beq.s	loc_13FA2
 		move.w	#sfx_Lamppost,d0
 		jsr	(PlaySound_Special).l
@@ -216,7 +216,7 @@ loc_14082:
 		bset	#7,obGfx(a1)
 
 loc_14094:
-		tst.w	(Debug_mode_flag).w
+		tst.b	(Debug_mode_flag).w
 		beq.s	loc_140A4
 		move.w	#sfx_Lamppost,d0
 		jsr	(PlaySound_Special).l
