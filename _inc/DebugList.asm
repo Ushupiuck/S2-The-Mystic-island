@@ -1,4 +1,5 @@
-DebugList:	dc.w Debug_GHZ-DebugList
+DebugList:
+		dc.w Debug_GHZ-DebugList
 		dc.w Debug_CPZ-DebugList
 		dc.w Debug_CPZ-DebugList
 		dc.w Debug_EHZ-DebugList
@@ -72,14 +73,6 @@ Debug_EHZ:	dc.w (Debug_EHZ_End-Debug_EHZ-2)/8
 	dbug 	Map_obj54,	id_Obj54,	0,	0,	make_art_tile(ArtTile_Snail,0,0)
 	dbug 	Map_obj53,	id_Obj53,	0,	0,	make_art_tile(ArtTile_Masher,0,0)
 Debug_EHZ_End:
-
-	; unreferenced definitions
-	dbug 	Map_obj4F,	id_Obj4F,	0,	0,	make_art_tile(ArtTile_Redz,0,0)
-	dbug 	Map_Obj52,	id_Obj52,	0,	0,	make_art_tile(ArtTile_BFish,1,0)
-	dbug 	Map_Obj4D,	id_Obj4D,	0,	0,	make_art_tile(ArtTile_Stegway,1,0)
-	dbug 	Map_Obj4E,	id_Obj4E,	0,	0,	make_art_tile(ArtTile_Gator,1,0)
-	dbug 	Map_Obj4C,	id_Obj4C,	0,	0,	make_art_tile(ArtTile_BBat,1,0)
-	dbug 	Map_Obj4A,	id_Obj4A,	0,	0,	make_art_tile(ArtTile_Octus,1,0)
 
 Debug_HTZ:	dc.w (Debug_HTZ_End-Debug_HTZ-2)/8
 ;		mappings	object		subtype	frame	VRAM setting

@@ -634,7 +634,8 @@ Vint_Level:
 
 ; Demo_Time:
 Do_Updates:
-		jsr	(LoadTilesAsYouMove).l
+		bsr.w	LoadTilesAsYouMove
+	;	jsr	(LoadTilesAsYouMove).l
 		jsr	(HudUpdate).l
 		clr.w	(Lag_frame_count).w
 		bsr.w	ProcessDPLC2
@@ -687,7 +688,8 @@ Vint_TitleCard:
 		movem.l	d0-d7,(Camera_RAM_copy).w
 		movem.l	(Scroll_flags).w,d0-d1
 		movem.l	d0-d1,(Scroll_flags_copy).w
-		jsr	(LoadTilesAsYouMove).l
+		bsr.w	LoadTilesAsYouMove
+	;	jsr	(LoadTilesAsYouMove).l
 		jsr	(HudUpdate).l
 		bra.w	ProcessDPLC
 ; ===========================================================================
@@ -712,7 +714,7 @@ Vint_SSResults:
 		writeCRAM	v_palette,0
 		writeVRAM	Sprite_Table,vram_sprites
 		writeVRAM	v_hscrolltablebuffer,vram_hscroll
-		jsr	(ProcessDMAQueue).l
+		bsr.w	ProcessDMAQueue
 		startZ80
 		bsr.w	ProcessDPLC
 		tst.w	(v_demolength).w
@@ -1257,7 +1259,6 @@ QuickPLC:
 		include "_inc/DMA Queue.asm"
 		include "_inc/Kosinski+ Decompression.asm"
 		include "_inc/Enigma Decompression.asm"
-		include "_inc/Twizzler Decompression.asm"
 		include	"_inc/PaletteCycle.asm"
 
 Pal_HTZCyc1:	binclude "palette/Hill Top Lava.bin"
@@ -2176,12 +2177,12 @@ loc_32C4:
 		bsr.w	EniDec
 		copyTilemap	v_start,vram_fg,40,28
 		lea	(v_start).l,a1
-		lea	(Twiz_TitleBg1).l,a0
-		bsr.w	TwizDec
+		lea	(Kosp_TitleBg1).l,a0
+		bsr.w	KosPlusDec
 		copyTilemap	v_start,vram_bg,32,28
 		lea	(v_start).l,a1
-		lea	(Twiz_TitleBg2).l,a0
-		bsr.w	TwizDec
+		lea	(Kosp_TitleBg2).l,a0
+		bsr.w	KosPlusDec
 		copyTilemap	v_start,vram_bg+64,32,28
 		moveq	#palid_Title,d0
 		bsr.w	PalLoad1
@@ -4279,7 +4280,7 @@ S1SS_LoadData:
 		; Load layout data
 		movea.l	S1SS_LayoutIndex(pc,d0.w),a0
 		lea	(v_ssbuffer2).l,a1
-		bsr.w	TwizDec
+		bsr.w	KosPlusDec
 		; Clear everything from v_ssbuffer1 to v_ssbuffer2
 		lea	(v_ssbuffer1).l,a1
 		move.w	#bytesToLcnt(v_ssbuffer2-v_ssbuffer1),d0
@@ -4396,10 +4397,10 @@ MainLevelLoadBlock:
 		addq.l	#4,a2
 		movea.l	(a2)+,a0
 		lea	(v_16x16).w,a1
-		jsr	(KosPlusDec).l	; load block maps
+		bsr.w	KosPlusDec	; load block maps
 		movea.l	(a2)+,a0
 		lea	(v_128x128).l,a1
-		bsr.w	TwizDec			; load chunk maps
+		bsr.w	KosPlusDec		; load chunk maps
 		bsr.s	LevelLayoutLoad
 		move.w	(a2)+,d0
 		move.w	(a2),d0
@@ -7141,172 +7142,6 @@ locret_774E:
 		rts
 ; ---------------------------------------------------------------------------
 
-DynResize_MZ:
-		moveq	#0,d0
-		move.b	(Current_Act).w,d0
-		add.w	d0,d0
-		move.w	DynResize_MZ_Index(pc,d0.w),d0
-		jmp	DynResize_MZ_Index(pc,d0.w)
-; ---------------------------------------------------------------------------
-DynResize_MZ_Index:
-		dc.w DynResize_MZ1-DynResize_MZ_Index
-		dc.w DynResize_MZ2-DynResize_MZ_Index
-		dc.w DynResize_MZ3-DynResize_MZ_Index
-		dc.w DynResize_MZ4-DynResize_MZ_Index
-; ---------------------------------------------------------------------------
-
-DynResize_MZ1:					; leftover from Sonic 1
-		moveq	#0,d0
-		move.b	(Dynamic_Resize_Routine).w,d0
-		move.w	DynMZ1_Index(pc,d0.w),d0
-		jmp	DynMZ1_Index(pc,d0.w)
-; ---------------------------------------------------------------------------
-DynMZ1_Index:
-		dc.w loc_777E-DynMZ1_Index
-		dc.w loc_77AE-DynMZ1_Index
-		dc.w loc_77F2-DynMZ1_Index
-		dc.w loc_781C-DynMZ1_Index
-; ---------------------------------------------------------------------------
-
-loc_777E:
-		move.w	#$1D0,(Camera_Max_Y_pos_target).w
-		cmpi.w	#$700,(Camera_RAM).w
-		blo.s	+
-		move.w	#$220,(Camera_Max_Y_pos_target).w
-		cmpi.w	#$D00,(Camera_RAM).w
-		blo.s	+
-		move.w	#$340,(Camera_Max_Y_pos_target).w
-		cmpi.w	#$340,(Camera_Y_pos).w
-		blo.s	+
-		addq.b	#2,(Dynamic_Resize_Routine).w
-+
-		rts
-; ---------------------------------------------------------------------------
-
-loc_77AE:
-		cmpi.w	#$340,(Camera_Y_pos).w
-		bhs.s	loc_77BC
-		subq.b	#2,(Dynamic_Resize_Routine).w
-		rts
-; ---------------------------------------------------------------------------
-
-loc_77BC:
-		move.w	#0,(Camera_Min_Y_pos).w
-		cmpi.w	#$E00,(Camera_RAM).w
-		bhs.s	+
-		move.w	#$340,(Camera_Min_Y_pos).w
-		move.w	#$340,(Camera_Max_Y_pos_target).w
-		cmpi.w	#$A90,(Camera_RAM).w
-		bhs.s	+
-		move.w	#$500,(Camera_Max_Y_pos_target).w
-		cmpi.w	#$370,(Camera_Y_pos).w
-		blo.s	+
-		addq.b	#2,(Dynamic_Resize_Routine).w
-+
-		rts
-; ---------------------------------------------------------------------------
-
-loc_77F2:
-		cmpi.w	#$370,(Camera_Y_pos).w
-		bhs.s	loc_7800
-		subq.b	#2,(Dynamic_Resize_Routine).w
-		rts
-; ---------------------------------------------------------------------------
-
-loc_7800:
-		cmpi.w	#$500,(Camera_Y_pos).w
-		blo.s	+
-		cmpi.w	#$B80,(Camera_RAM).w
-		blo.s	+
-		move.w	#$500,(Camera_Min_Y_pos).w
-		addq.b	#2,(Dynamic_Resize_Routine).w
-+
-		rts
-; ---------------------------------------------------------------------------
-
-loc_781C:
-		cmpi.w	#$B80,(Camera_RAM).w
-		bhs.s	loc_7832
-		cmpi.w	#$340,(Camera_Min_Y_pos).w
-		beq.s	locret_786A
-		subq.w	#2,(Camera_Min_Y_pos).w
-		rts
-; ---------------------------------------------------------------------------
-
-loc_7832:
-		cmpi.w	#$500,(Camera_Min_Y_pos).w
-		beq.s	loc_7848
-		cmpi.w	#$500,(Camera_Y_pos).w
-		blo.s	locret_786A
-		move.w	#$500,(Camera_Min_Y_pos).w
-
-loc_7848:
-		cmpi.w	#$E70,(Camera_RAM).w
-		blo.s	locret_786A
-		move.w	#0,(Camera_Min_Y_pos).w
-		move.w	#$500,(Camera_Max_Y_pos_target).w
-		cmpi.w	#$1430,(Camera_RAM).w
-		blo.s	locret_786A
-		move.w	#$210,(Camera_Max_Y_pos_target).w
-
-locret_786A:
-		rts
-; ---------------------------------------------------------------------------
-
-DynResize_MZ2:					; leftover from Sonic 1
-		move.w	#$520,(Camera_Max_Y_pos_target).w
-		cmpi.w	#$1700,(Camera_X_pos).w
-		blo.s	+
-		move.w	#$200,(Camera_Max_Y_pos_target).w
-+
-		rts
-; ---------------------------------------------------------------------------
-
-DynResize_MZ3:					; leftover from Sonic 1
-		moveq	#0,d0
-		move.b	(Dynamic_Resize_Routine).w,d0
-		move.w	DynMZ3_Index(pc,d0.w),d0
-		jmp	DynMZ3_Index(pc,d0.w)
-; ---------------------------------------------------------------------------
-DynMZ3_Index:
-		dc.w DynResize_MZ3Boss-DynMZ3_Index
-		dc.w DynResize_MZ3End-DynMZ3_Index
-; ---------------------------------------------------------------------------
-
-DynResize_MZ3Boss:
-		move.w	#$720,(Camera_Max_Y_pos_target).w
-		cmpi.w	#$1560,(Camera_X_pos).w
-		bcs.s	.return
-		move.w	#$210,(Camera_Max_Y_pos_target).w
-		cmpi.w	#$17F0,(Camera_X_pos).w
-		bcs.s	.return
-		bsr.w	FindFreeObj
-		bne.s	+
-		_move.b	#id_Obj55,obID(a1)			; load Obj55 (EHZ boss, Placeholder)
-		move.w	#$19F0,obX(a1)
-		move.w	#$22C,obY(a1)
-+
-		move.w	#bgm_Boss,d0
-		jsr	(PlaySound).l	; play boss music
-		move.b	#1,(f_lockscreen).w ; lock screen
-		addq.b	#2,(Dynamic_Resize_Routine).w
-		moveq	#plcid_Boss,d0
-		jmp	(LoadPLC).l
-; ---------------------------------------------------------------------------
-
-.return:
-		rts
-; ---------------------------------------------------------------------------
-
-DynResize_MZ3End:
-		move.w	(Camera_RAM).w,(Camera_Min_X_pos).w
-		rts
-; ---------------------------------------------------------------------------
-
-DynResize_MZ4:
-		rts
-; ---------------------------------------------------------------------------
-
 DynResize_CPZ:
 		moveq	#0,d0
 		move.b	(Current_Act).w,d0
@@ -7446,78 +7281,6 @@ DynResize_EHZ3:
 ; ---------------------------------------------------------------------------
 
 DynResize_EHZ4:
-		rts
-; ---------------------------------------------------------------------------
-
-DynResize_SLZ:
-		moveq	#0,d0
-		move.b	(Current_Act).w,d0
-		add.w	d0,d0
-		move.w	DynResize_SLZ_Index(pc,d0.w),d0
-		jmp	DynResize_SLZ_Index(pc,d0.w)
-; ---------------------------------------------------------------------------
-DynResize_SLZ_Index:
-		dc.w DynResize_SLZ1-DynResize_SLZ_Index
-		dc.w DynResize_SLZ2-DynResize_SLZ_Index
-		dc.w DynResize_SLZ3-DynResize_SLZ_Index
-		dc.w DynResize_SLZ4-DynResize_SLZ_Index
-; ---------------------------------------------------------------------------
-
-DynResize_SLZ1:
-		rts
-; ---------------------------------------------------------------------------
-
-DynResize_SLZ2:
-		rts
-; ---------------------------------------------------------------------------
-
-DynResize_SLZ3:					; leftover from Sonic 1
-		moveq	#0,d0
-		move.b	(Dynamic_Resize_Routine).w,d0
-		move.w	DynSLZ3_Index(pc,d0.w),d0
-		jmp	DynSLZ3_Index(pc,d0.w)
-; ---------------------------------------------------------------------------
-DynSLZ3_Index:
-		dc.w loc_7996-DynSLZ3_Index
-		dc.w loc_79AA-DynSLZ3_Index
-		dc.w loc_79D6-DynSLZ3_Index
-; ---------------------------------------------------------------------------
-
-loc_7996:
-		cmpi.w	#$1E70,(Camera_RAM).w
-		blo.s	+
-		move.w	#$210,(Camera_Max_Y_pos_target).w
-		addq.b	#2,(Dynamic_Resize_Routine).w
-+
-		rts
-; ---------------------------------------------------------------------------
-
-loc_79AA:
-		cmpi.w	#$2000,(Camera_RAM).w
-		blo.s	locret_79D4
-		bsr.w	FindFreeObj
-		bne.s	loc_79BC
-		_move.b	#id_Obj7A,obID(a1)	; load object 7A
-
-loc_79BC:
-		move.w	#bgm_Boss,d0
-		jsr	(PlaySound).l
-		move.b	#1,(f_lockscreen).w
-		addq.b	#2,(Dynamic_Resize_Routine).w
-		moveq	#plcid_Boss,d0
-		jmp	(LoadPLC).l
-; ---------------------------------------------------------------------------
-
-locret_79D4:
-		rts
-; ---------------------------------------------------------------------------
-
-loc_79D6:
-		move.w	(Camera_RAM).w,(Camera_Min_X_pos).w
-		rts
-; ---------------------------------------------------------------------------
-
-DynResize_SLZ4:
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -7765,6 +7528,244 @@ DynResize_HTZ4:
 ; ---------------------------------------------------------------------------
 
 DynResize_S1Ending:
+		rts
+; ---------------------------------------------------------------------------
+
+DynResize_MZ:
+		moveq	#0,d0
+		move.b	(Current_Act).w,d0
+		add.w	d0,d0
+		move.w	DynResize_MZ_Index(pc,d0.w),d0
+		jmp	DynResize_MZ_Index(pc,d0.w)
+; ---------------------------------------------------------------------------
+DynResize_MZ_Index:
+		dc.w DynResize_MZ1-DynResize_MZ_Index
+		dc.w DynResize_MZ2-DynResize_MZ_Index
+		dc.w DynResize_MZ3-DynResize_MZ_Index
+		dc.w DynResize_MZ4-DynResize_MZ_Index
+; ---------------------------------------------------------------------------
+
+DynResize_MZ1:					; leftover from Sonic 1
+		moveq	#0,d0
+		move.b	(Dynamic_Resize_Routine).w,d0
+		move.w	DynMZ1_Index(pc,d0.w),d0
+		jmp	DynMZ1_Index(pc,d0.w)
+; ---------------------------------------------------------------------------
+DynMZ1_Index:
+		dc.w loc_777E-DynMZ1_Index
+		dc.w loc_77AE-DynMZ1_Index
+		dc.w loc_77F2-DynMZ1_Index
+		dc.w loc_781C-DynMZ1_Index
+; ---------------------------------------------------------------------------
+
+loc_777E:
+		move.w	#$1D0,(Camera_Max_Y_pos_target).w
+		cmpi.w	#$700,(Camera_RAM).w
+		blo.s	+
+		move.w	#$220,(Camera_Max_Y_pos_target).w
+		cmpi.w	#$D00,(Camera_RAM).w
+		blo.s	+
+		move.w	#$340,(Camera_Max_Y_pos_target).w
+		cmpi.w	#$340,(Camera_Y_pos).w
+		blo.s	+
+		addq.b	#2,(Dynamic_Resize_Routine).w
++
+		rts
+; ---------------------------------------------------------------------------
+
+loc_77AE:
+		cmpi.w	#$340,(Camera_Y_pos).w
+		bhs.s	loc_77BC
+		subq.b	#2,(Dynamic_Resize_Routine).w
+		rts
+; ---------------------------------------------------------------------------
+
+loc_77BC:
+		move.w	#0,(Camera_Min_Y_pos).w
+		cmpi.w	#$E00,(Camera_RAM).w
+		bhs.s	+
+		move.w	#$340,(Camera_Min_Y_pos).w
+		move.w	#$340,(Camera_Max_Y_pos_target).w
+		cmpi.w	#$A90,(Camera_RAM).w
+		bhs.s	+
+		move.w	#$500,(Camera_Max_Y_pos_target).w
+		cmpi.w	#$370,(Camera_Y_pos).w
+		blo.s	+
+		addq.b	#2,(Dynamic_Resize_Routine).w
++
+		rts
+; ---------------------------------------------------------------------------
+
+loc_77F2:
+		cmpi.w	#$370,(Camera_Y_pos).w
+		bhs.s	loc_7800
+		subq.b	#2,(Dynamic_Resize_Routine).w
+		rts
+; ---------------------------------------------------------------------------
+
+loc_7800:
+		cmpi.w	#$500,(Camera_Y_pos).w
+		blo.s	+
+		cmpi.w	#$B80,(Camera_RAM).w
+		blo.s	+
+		move.w	#$500,(Camera_Min_Y_pos).w
+		addq.b	#2,(Dynamic_Resize_Routine).w
++
+		rts
+; ---------------------------------------------------------------------------
+
+loc_781C:
+		cmpi.w	#$B80,(Camera_RAM).w
+		bhs.s	loc_7832
+		cmpi.w	#$340,(Camera_Min_Y_pos).w
+		beq.s	locret_786A
+		subq.w	#2,(Camera_Min_Y_pos).w
+		rts
+; ---------------------------------------------------------------------------
+
+loc_7832:
+		cmpi.w	#$500,(Camera_Min_Y_pos).w
+		beq.s	loc_7848
+		cmpi.w	#$500,(Camera_Y_pos).w
+		blo.s	locret_786A
+		move.w	#$500,(Camera_Min_Y_pos).w
+
+loc_7848:
+		cmpi.w	#$E70,(Camera_RAM).w
+		blo.s	locret_786A
+		move.w	#0,(Camera_Min_Y_pos).w
+		move.w	#$500,(Camera_Max_Y_pos_target).w
+		cmpi.w	#$1430,(Camera_RAM).w
+		blo.s	locret_786A
+		move.w	#$210,(Camera_Max_Y_pos_target).w
+
+locret_786A:
+		rts
+; ---------------------------------------------------------------------------
+
+DynResize_MZ2:					; leftover from Sonic 1
+		move.w	#$520,(Camera_Max_Y_pos_target).w
+		cmpi.w	#$1700,(Camera_X_pos).w
+		blo.s	+
+		move.w	#$200,(Camera_Max_Y_pos_target).w
++
+		rts
+; ---------------------------------------------------------------------------
+
+DynResize_MZ3:					; leftover from Sonic 1
+		moveq	#0,d0
+		move.b	(Dynamic_Resize_Routine).w,d0
+		move.w	DynMZ3_Index(pc,d0.w),d0
+		jmp	DynMZ3_Index(pc,d0.w)
+; ---------------------------------------------------------------------------
+DynMZ3_Index:
+		dc.w DynResize_MZ3Boss-DynMZ3_Index
+		dc.w DynResize_MZ3End-DynMZ3_Index
+; ---------------------------------------------------------------------------
+
+DynResize_MZ3Boss:
+		move.w	#$720,(Camera_Max_Y_pos_target).w
+		cmpi.w	#$1560,(Camera_X_pos).w
+		bcs.s	.return
+		move.w	#$210,(Camera_Max_Y_pos_target).w
+		cmpi.w	#$17F0,(Camera_X_pos).w
+		bcs.s	.return
+		bsr.w	FindFreeObj
+		bne.s	+
+		_move.b	#id_Obj55,obID(a1)			; load Obj55 (EHZ boss, Placeholder)
+		move.w	#$19F0,obX(a1)
+		move.w	#$22C,obY(a1)
++
+		move.w	#bgm_Boss,d0
+		jsr	(PlaySound).l	; play boss music
+		move.b	#1,(f_lockscreen).w ; lock screen
+		addq.b	#2,(Dynamic_Resize_Routine).w
+		moveq	#plcid_Boss,d0
+		jmp	(LoadPLC).l
+; ---------------------------------------------------------------------------
+
+.return:
+		rts
+; ---------------------------------------------------------------------------
+
+DynResize_MZ3End:
+		move.w	(Camera_RAM).w,(Camera_Min_X_pos).w
+		rts
+; ---------------------------------------------------------------------------
+
+DynResize_MZ4:
+		rts
+; ---------------------------------------------------------------------------
+
+DynResize_SLZ:
+		moveq	#0,d0
+		move.b	(Current_Act).w,d0
+		add.w	d0,d0
+		move.w	DynResize_SLZ_Index(pc,d0.w),d0
+		jmp	DynResize_SLZ_Index(pc,d0.w)
+; ---------------------------------------------------------------------------
+DynResize_SLZ_Index:
+		dc.w DynResize_SLZ1-DynResize_SLZ_Index
+		dc.w DynResize_SLZ2-DynResize_SLZ_Index
+		dc.w DynResize_SLZ3-DynResize_SLZ_Index
+		dc.w DynResize_SLZ4-DynResize_SLZ_Index
+; ---------------------------------------------------------------------------
+
+DynResize_SLZ1:
+		rts
+; ---------------------------------------------------------------------------
+
+DynResize_SLZ2:
+		rts
+; ---------------------------------------------------------------------------
+
+DynResize_SLZ3:					; leftover from Sonic 1
+		moveq	#0,d0
+		move.b	(Dynamic_Resize_Routine).w,d0
+		move.w	DynSLZ3_Index(pc,d0.w),d0
+		jmp	DynSLZ3_Index(pc,d0.w)
+; ---------------------------------------------------------------------------
+DynSLZ3_Index:
+		dc.w loc_7996-DynSLZ3_Index
+		dc.w loc_79AA-DynSLZ3_Index
+		dc.w loc_79D6-DynSLZ3_Index
+; ---------------------------------------------------------------------------
+
+loc_7996:
+		cmpi.w	#$1E70,(Camera_RAM).w
+		blo.s	+
+		move.w	#$210,(Camera_Max_Y_pos_target).w
+		addq.b	#2,(Dynamic_Resize_Routine).w
++
+		rts
+; ---------------------------------------------------------------------------
+
+loc_79AA:
+		cmpi.w	#$2000,(Camera_RAM).w
+		blo.s	locret_79D4
+		bsr.w	FindFreeObj
+		bne.s	loc_79BC
+		_move.b	#id_Obj7A,obID(a1)	; load object 7A
+
+loc_79BC:
+		move.w	#bgm_Boss,d0
+		jsr	(PlaySound).l
+		move.b	#1,(f_lockscreen).w
+		addq.b	#2,(Dynamic_Resize_Routine).w
+		moveq	#plcid_Boss,d0
+		jmp	(LoadPLC).l
+; ---------------------------------------------------------------------------
+
+locret_79D4:
+		rts
+; ---------------------------------------------------------------------------
+
+loc_79D6:
+		move.w	(Camera_RAM).w,(Camera_Min_X_pos).w
+		rts
+; ---------------------------------------------------------------------------
+
+DynResize_SLZ4:
 		rts
 ; ---------------------------------------------------------------------------
 		include	"objects/25 & 37 Rings.asm"
@@ -15733,6 +15734,8 @@ loc_12DCC:
 		beq.s	loc_12DBE
 		cmpi.b	#6,(Current_Zone).w
 		beq.s	+
+		cmpi.b	#1,(Current_Zone).w
+		beq.s	+
 		tst.b	(Current_Zone).w
 		beq.s	+
 		lea	(AngleMap).l,a2
@@ -15756,6 +15759,8 @@ loc_12DCC:
 		andi.w	#$F,d1
 		add.w	d0,d1
 		cmpi.b	#6,(Current_Zone).w
+		beq.s	+
+		cmpi.b	#1,(Current_Zone).w
 		beq.s	+
 		tst.b	(Current_Zone).w
 		beq.s	+
@@ -15826,6 +15831,8 @@ loc_12E72:
 		beq.s	loc_12E64
 		cmpi.b	#6,(Current_Zone).w
 		beq.s	+
+		cmpi.b	#1,(Current_Zone).w
+		beq.s	+
 		tst.b	(Current_Zone).w
 		beq.s	+
 		lea	(AngleMap).l,a2
@@ -15851,6 +15858,8 @@ loc_12EA6:
 		andi.w	#$F,d1
 		add.w	d0,d1
 		cmpi.b	#6,(Current_Zone).w
+		beq.s	+
+		cmpi.b	#1,(Current_Zone).w
 		beq.s	+
 		tst.b	(Current_Zone).w
 		beq.s	+
@@ -15915,6 +15924,8 @@ loc_12F08:
 		beq.s	loc_12EFA
 		cmpi.b	#6,(Current_Zone).w
 		beq.s	+
+		cmpi.b	#1,(Current_Zone).w
+		beq.s	+
 		tst.b	(Current_Zone).w
 		beq.s	+
 		lea	(AngleMap).l,a2
@@ -15940,6 +15951,8 @@ loc_12F3C:
 		andi.w	#$F,d1
 		add.w	d0,d1
 		cmpi.b	#6,(Current_Zone).w
+		beq.s	+
+		cmpi.b	#1,(Current_Zone).w
 		beq.s	+
 		tst.b	(Current_Zone).w
 		beq.s	+
@@ -16011,6 +16024,8 @@ loc_12FAE:
 		beq.s	loc_12FA0
 		cmpi.b	#6,(Current_Zone).w
 		beq.s	+
+		cmpi.b	#1,(Current_Zone).w
+		beq.s	+
 		tst.b	(Current_Zone).w
 		beq.s	+
 		lea	(AngleMap).l,a2
@@ -16036,6 +16051,8 @@ loc_12FE2:
 		andi.w	#$F,d1
 		add.w	d0,d1
 		cmpi.b	#6,(Current_Zone).w
+		beq.s	+
+		cmpi.b	#1,(Current_Zone).w
 		beq.s	+
 		tst.b	(Current_Zone).w
 		beq.s	+
@@ -23913,9 +23930,9 @@ Eni_SegaLogo:	binclude	"tilemaps/Sega Logo (JP1).eni"
 		even
 Eni_TitleMap:	binclude	"tilemaps/Title Emblem.eni"
 		even
-Twiz_TitleBg1:	binclude	"tilemaps/Title Background - 1.twiz"
+Kosp_TitleBg1:	binclude	"tilemaps/Title Background - 1.kosp"
 		even
-Twiz_TitleBg2:	binclude	"tilemaps/Title Background - 2.twiz"
+Kosp_TitleBg2:	binclude	"tilemaps/Title Background - 2.kosp"
 		even
 ; ---------------------------------------------------------------------------
 ; Uncompressed graphics	- Sonic
@@ -24167,55 +24184,6 @@ Nem_Flicky:	binclude	"art/nemesis/S1/Animal Flicky.nem"
 Nem_Squirrel:	binclude	"art/nemesis/S1/Animal Squirrel.nem"
 		even
 ; ---------------------------------------------------------------------------
-; Compressed graphics - primary patterns and block mappings
-; ---------------------------------------------------------------------------
-Map16_GHZ:	binclude	"mappings/16x16/GHZ.kosp"
-		even
-Kosp_GHZ:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		even
-Map128_GHZ:	binclude	"mappings/128x128/GHZ.twiz"
-		even
-
-Map16_LZ:	binclude	"mappings/16x16/LZ.kosp"
-		even
-Kosp_LZ:	binclude	"art/kosinski/level/8x8 - LZ.kosp"
-		even
-Map128_LZ:	binclude	"mappings/128x128/LZ.twiz"
-		even
-
-Map16_CPZ:	binclude	"mappings/16x16/CPZ.kosp"
-		even
-Kosp_CPZ:	binclude	"art/kosinski/level/8x8 - CPZ.kosp"
-		even
-Map128_CPZ:	binclude	"mappings/128x128/CPZ.twiz"
-		even
-
-Map16_EHZ:	binclude	"mappings/16x16/EHZ.kosp"
-		even
-Kosp_EHZ:	binclude	"art/kosinski/level/8x8 - EHZ.kosp"
-		even
-Map128_EHZ:	binclude	"mappings/128x128/EHZ.twiz"
-		even
-
-Map16_HPZ:	binclude	"mappings/16x16/HPZ.kosp"
-		even
-Kosp_HPZ:	binclude	"art/kosinski/level/8x8 - HPZ.kosp"
-		even
-Map128_HPZ:	binclude	"mappings/128x128/HPZ.twiz"
-		even
-
-Map16_HTZ:	binclude	"mappings/16x16/HTZ.kosp"
-		even
-Kosp_HTZ:	binclude	"art/kosinski/level/8x8 - HTZ.kosp"
-		even
-Map128_HTZ:	binclude	"mappings/128x128/HTZ.twiz"
-		even
-; ---------------------------------------------------------------------------
-; Compressed graphics - Level placeholders
-; ---------------------------------------------------------------------------
-Nem_HTZ_AniPlaceholders:	binclude	"art/nemesis/HTZ Ani Placeholders.nem"
-		even
-; ---------------------------------------------------------------------------
 ; Compressed graphics - bosses and ending sequence
 ; ---------------------------------------------------------------------------
 Nem_EggPod:	binclude	"art/nemesis/Boss Ship.nem"
@@ -24245,6 +24213,70 @@ Nem_EndFlower:	binclude	"art/nemesis/S1/Ending - Flowers.nem"
 Kosp_CreditTxt:	binclude	"art/kosinski/Ending - Credits.kosp"
 		even
 Nem_EndStH:	binclude	"art/nemesis/S1/Ending - StH Logo.nem"
+		even
+; ---------------------------------------------------------------------------
+; Misc. animated tiles
+; ---------------------------------------------------------------------------
+Art_Flowers1:	binclude	"art/uncompressed/EHZ and HTZ flowers - 1.bin"
+		even
+Art_Flowers2:	binclude	"art/uncompressed/EHZ and HTZ flowers - 2.bin"
+		even
+Art_Flowers3:	binclude	"art/uncompressed/EHZ and HTZ flowers - 3.bin"
+		even
+Art_Flowers4:	binclude	"art/uncompressed/EHZ and HTZ flowers - 4.bin"
+		even
+Art_EHZPulseBall:	binclude	"art/uncompressed/Pulsing ball against checkered background (EHZ).bin"
+		even
+Art_HPZPulseOrb:	binclude	"art/uncompressed/Pulsing orb (HPZ).bin"
+		even
+; ---------------------------------------------------------------------------
+; Compressed graphics - Level placeholders
+; ---------------------------------------------------------------------------
+Nem_HTZ_AniPlaceholders:	binclude	"art/nemesis/HTZ Ani Placeholders.nem"
+		even
+; ---------------------------------------------------------------------------
+; Compressed graphics - primary patterns and block mappings
+; ---------------------------------------------------------------------------
+Kosp_GHZ:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+		even
+Map16_GHZ:	binclude	"mappings/16x16/GHZ.kosp"
+		even
+Map128_GHZ:	binclude	"mappings/128x128/GHZ.kosp"
+		even
+
+Kosp_LZ:	binclude	"art/kosinski/level/8x8 - LZ.kosp"
+		even
+Map16_LZ:	binclude	"mappings/16x16/LZ.kosp"
+		even
+Map128_LZ:	binclude	"mappings/128x128/LZ.kosp"
+		even
+
+Kosp_CPZ:	binclude	"art/kosinski/level/8x8 - CPZ.kosp"
+		even
+Map16_CPZ:	binclude	"mappings/16x16/CPZ.kosp"
+		even
+Map128_CPZ:	binclude	"mappings/128x128/CPZ.kosp"
+		even
+
+Kosp_EHZ:	binclude	"art/kosinski/level/8x8 - EHZ.kosp"
+		even
+Map16_EHZ:	binclude	"mappings/16x16/EHZ.kosp"
+		even
+Map128_EHZ:	binclude	"mappings/128x128/EHZ.kosp"
+		even
+
+Kosp_HPZ:	binclude	"art/kosinski/level/8x8 - HPZ.kosp"
+		even
+Map16_HPZ:	binclude	"mappings/16x16/HPZ.kosp"
+		even
+Map128_HPZ:	binclude	"mappings/128x128/HPZ.kosp"
+		even
+
+Kosp_HTZ:	binclude	"art/kosinski/level/8x8 - HTZ.kosp"
+		even
+Map16_HTZ:	binclude	"mappings/16x16/HTZ.kosp"
+		even
+Map128_HTZ:	binclude	"mappings/128x128/HTZ.kosp"
 		even
 ; ---------------------------------------------------------------------------
 S1_AngleMap:	binclude	"collision/S1/Angle Map.bin"
@@ -24467,32 +24499,17 @@ BCol_HTZ4:	binclude	"collision/bad future/HTZ4.bin"
 ; ---------------------------------------------------------------------------
 ; Special Stage layouts
 ; ---------------------------------------------------------------------------
-SS_1:		binclude	"sslayout/1.twiz"
+SS_1:		binclude	"sslayout/1.kosp"
 		even
-SS_2:		binclude	"sslayout/2.twiz"
+SS_2:		binclude	"sslayout/2.kosp"
 		even
-SS_3:		binclude	"sslayout/3.twiz"
+SS_3:		binclude	"sslayout/3.kosp"
 		even
-SS_4:		binclude	"sslayout/4.twiz"
+SS_4:		binclude	"sslayout/4.kosp"
 		even
-SS_5:		binclude	"sslayout/5.twiz"
+SS_5:		binclude	"sslayout/5.kosp"
 		even
-SS_6:		binclude	"sslayout/6.twiz"
-		even
-; ---------------------------------------------------------------------------
-; Misc. animated tiles
-; ---------------------------------------------------------------------------
-Art_Flowers1:	binclude	"art/uncompressed/EHZ and HTZ flowers - 1.bin"
-		even
-Art_Flowers2:	binclude	"art/uncompressed/EHZ and HTZ flowers - 2.bin"
-		even
-Art_Flowers3:	binclude	"art/uncompressed/EHZ and HTZ flowers - 3.bin"
-		even
-Art_Flowers4:	binclude	"art/uncompressed/EHZ and HTZ flowers - 4.bin"
-		even
-Art_EHZPulseBall:	binclude	"art/uncompressed/Pulsing ball against checkered background (EHZ).bin"
-		even
-Art_HPZPulseOrb:	binclude	"art/uncompressed/Pulsing orb (HPZ).bin"
+SS_6:		binclude	"sslayout/6.kosp"
 		even
 ; ---------------------------------------------------------------------------
 ; Level layouts, three entries per act (although the third one is unused)
