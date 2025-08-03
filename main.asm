@@ -1847,7 +1847,7 @@ Pal_Title:	binclude	"palette/Title Screen.bin"
 		even
 Pal_LevelSel:	binclude	"palette/Level Select.bin"
 		even
-Pal_SonicTails:	binclude	"palette/SonicandTails.bin"
+Pal_SonicTails:	binclude	"palette/Sonic and Tails.bin"
 		even
 Pal_GHZ:	binclude	"palette/GHZ.bin"
 		even
@@ -2751,7 +2751,6 @@ Level_SkipTtlCard:
 		_move.b	#id_Obj01,(v_player).w	; load Sonic object
 	;	tst.w	(f_demo).w		; are we on an ending demo?
 	;	bmi.s	LevelInit_LoadTails	; if not, branch
-;		_move.b	#id_Obj21,(v_hud).w	; load HUD object
 ;		cmpi.b	#id_EHZ,(Current_Zone).w; This is an example on how to skip
 ;		beq.s	Level_ChkDebug		; the 2nd player, if neccesary
 
