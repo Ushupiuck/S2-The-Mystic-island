@@ -1847,7 +1847,7 @@ Pal_Title:	binclude	"palette/Title Screen.bin"
 		even
 Pal_LevelSel:	binclude	"palette/Level Select.bin"
 		even
-Pal_SonicTails:	binclude	"palette/Sonic and Tails.bin"
+Pal_SonicTails:	binclude	"palette/SonicandTails.bin"
 		even
 Pal_GHZ:	binclude	"palette/GHZ.bin"
 		even
