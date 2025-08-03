@@ -2756,10 +2756,10 @@ Level_SkipTtlCard:
 ;		beq.s	Level_ChkDebug		; the 2nd player, if neccesary
 
 ;LevelInit_LoadTails:	; Disabled until his AI &/or character selection is implemented
-	;	_move.b	#id_Obj02,(v_player2).w	; load Tails object
-	;	move.w	(v_player+obX).w,(v_player2+obX).w	; copy player 1's x position to player 2
-	;	move.w	(v_player+obY).w,(v_player2+obY).w	; copy player 1's y position to player 2
-	;	subi.w	#32,(v_player2+obX).w	; set player 2's x position 32 pixels behind player 1's
+		_move.b	#id_Obj02,(v_player2).w	; load Tails object
+		move.w	(v_player+obX).w,(v_player2+obX).w	; copy player 1's x position to player 2
+		move.w	(v_player+obY).w,(v_player2+obY).w	; copy player 1's y position to player 2
+		subi.w	#32,(v_player2+obX).w	; set player 2's x position 32 pixels behind player 1's
 
 Level_ChkDebug:
 		tst.b	(f_debugcheat).w
@@ -2796,7 +2796,6 @@ Level_SkipClr:
 		move.b	d0,(v_shield).w
 		move.b	d0,(v_invinc).w
 		move.b	d0,(v_shoes).w
-		move.b	d0,(v_unused1).w
 		move.w	d0,(Debug_placement_mode).w
 		move.w	d0,(Level_Inactive_flag).w
 		move.w	d0,(Timer_frames).w
@@ -10561,23 +10560,16 @@ word_EC96:
 Map_obj41_GHZ:	binclude	"mappings/sprite/obj41_GHZ.bin"
 		even
 MapSpr_MovingSpring:
-.MovingSpring:
-		dc.w	unk_209C72-.MovingSpring
-		dc.w	unk_209C78-.MovingSpring
-unk_209C72:	; still in Sonic 1's format; TO BE CONVERTED
-		dc.b	  1
-		dc.b	$F8
-		dc.b	  5
-		dc.b	  0
-		dc.b	  0
-		dc.b	$F8
-unk_209C78:
-		dc.b	  1
-		dc.b	$F8
-		dc.b	  5
-		dc.b	  0
-		dc.b	  4
-		dc.b	$F8
+Map_MovingSpring:
+		dc.w	.frame1-Map_MovingSpring
+		dc.w	.frame2-Map_MovingSpring
+
+.frame1:
+		dc.w 1
+		dc.w $F805, 0, 0, $FFF8
+.frame2:
+		dc.w 1
+		dc.w $F805, 4, 2, $FFF8
 		even
 		include	"objects/S1/42 Newtron.asm"
 ; ===========================================================================
@@ -11401,7 +11393,8 @@ Obj01_Normal:
 		move.w	Obj01_Index(pc,d0.w),d1
 		jmp	Obj01_Index(pc,d1.w)
 ; ===========================================================================
-Obj01_Index:	dc.w Obj01_Init-Obj01_Index		; 0
+Obj01_Index:
+		dc.w Obj01_Init-Obj01_Index		; 0
 		dc.w Obj01_Control-Obj01_Index		; 2
 		dc.w Obj01_Hurt-Obj01_Index		; 4
 		dc.w Obj01_Dead-Obj01_Index		; 6
@@ -11413,24 +11406,38 @@ Obj01_Init:
 		move.b	#$13,obHeight(a0)		; this sets Sonic's collision height (2*pixels)
 		move.b	#9,obWidth(a0)
 		move.l	#Map_Sonic,obMap(a0)
-		move.w	#make_art_tile(ArtTile_Sonic,0,0),obGfx(a0)
 		move.b	#2,obPriority(a0)
 		move.b	#$18,obActWid(a0)
 		move.b	#4,obRender(a0)
 		move.w	#$600,(Sonic_top_speed).w	; set Sonic's top speed
 		move.w	#$C,(Sonic_acceleration).w	; set Sonic's acceleration
 		move.w	#$80,(Sonic_deceleration).w	; set Sonic's deceleration
+		tst.b	(v_lastlamp).w
+		bne.s	Obj01_Init_Continued
+		; only happens when not starting at a checkpoint:
+		move.w	#make_art_tile(ArtTile_Sonic,0,0),obGfx(a0)
 		move.b	#$C,obTopSolidBit(a0)
 		move.b	#$D,obLRBSolidBit(a0)
-		move.b	#0,objoff_2C(a0)
-		move.b	#4,objoff_2D(a0)
-		move.w	#0,(Sonic_Pos_Record_Index).w
-		move.w	#$40-1,d2
+		move.w	obX(a0),(v_lamp_xpos).w
+		move.w	obY(a0),(v_lamp_ypos).w
+		move.w	obGfx(a0),(v_lamp_mainchar).w
+		move.w	obTopSolidBit(a0),(v_lamp_solid).w
 
-loc_FA88:
-		bsr.w	Sonic_RecordPos
+Obj01_Init_Continued:
+		move.b	#0,objoff_2C(a0)		; flips_remaining
+		move.b	#4,objoff_2D(a0)		; flip_speed
+		move.b	#0,(Super_Sonic_flag).w
+		move.b	#30,(v_air).w			; v_air(a0)
+		subi.w	#$20,obX(a0)
+		addq.w	#4,obY(a0)
+		move.w	#0,(Sonic_Pos_Record_Index).w
+
+		move.w	#$40-1,d2
+-		bsr.w	Sonic_RecordPos
 		move.w	#0,(a1,d0.w)
-		dbf	d2,loc_FA88
+		dbf	d2,-
+		addi.w	#$20,obX(a0)
+		subq.w	#4,obY(a0)
 
 ; ---------------------------------------------------------------------------
 ; Normal state for Sonic
@@ -11571,9 +11578,11 @@ Sonic_RecordPos:
 		move.w	obX(a0),(a1)+
 		move.w	obY(a0),(a1)+
 		addq.b	#4,(Sonic_Pos_Record_Index+1).w
-
 		lea	(Sonic_Stat_Record_Buf).w,a1
-		move.w	(v_jpadhold1).w,(a1,d0.w)
+		lea	(a1,d0.w),a1
+		move.w	(v_jpadhold1).w,(a1)+
+		move.b	obStatus(a0),(a1)+
+		move.b	obGfx(a0),(a1)+
 		rts
 ; End of function Sonic_RecordPos
 
@@ -13536,7 +13545,7 @@ loc_10E40:
 
 RecordTailsMoves:
 		move.w	(Tails_Pos_Record_Index).w,d0
-		lea	(Tails_Pos_Record_Buf_Dup).w,a1
+		lea	(Tails_Pos_Record_Buf).w,a1
 		lea	(a1,d0.w),a1
 		move.w	obX(a0),(a1)+
 		move.w	obY(a0),(a1)+

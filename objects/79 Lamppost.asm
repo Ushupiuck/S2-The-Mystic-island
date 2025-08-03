@@ -99,10 +99,12 @@ Lamppost_StoreInfo:
 		move.b	(v_lastlamp).w,(v_lastlamp+1).w
 		move.w	obX(a0),(v_lamp_xpos).w
 		move.w	obY(a0),(v_lamp_ypos).w
+		move.w	(v_player+obGfx).w,(v_lamp_mainchar).w
+		move.w	(v_player+obTopSolidBit).w,(v_lamp_solid).w
 		move.w	(v_rings).w,(v_lamp_rings).w
 		move.b	(v_lifecount).w,(v_lamp_lives).w
 		move.l	(v_time).w,(v_lamp_time).w
-		move.b	(Dynamic_Resize_Routine).w,(v_lamp_dle).w
+	;	move.b	(Dynamic_Resize_Routine).w,(v_lamp_dle).w
 		move.w	(Camera_Max_Y_pos).w,(v_lamp_limitbtm).w
 		move.w	(Camera_RAM).w,(v_lamp_scrx).w
 		move.w	(Camera_Y_pos).w,(v_lamp_scry).w
@@ -133,7 +135,9 @@ Lamppost_LoadInfo:
 		move.l	(v_lamp_time).w,(v_time).w
 		move.b	#60-1,(v_timecent).w
 		subq.b	#1,(v_timesec).w
-		move.b	(v_lamp_dle).w,(Dynamic_Resize_Routine).w
+		move.w	(v_lamp_mainchar).w,(v_player+obGfx).w
+		move.w	(v_lamp_solid).w,(v_player+obTopSolidBit).w
+	;	move.b	(v_lamp_dle).w,(Dynamic_Resize_Routine).w
 		move.b	(v_lamp_wtrrout).w,(v_wtr_routine).w
 		move.w	(v_lamp_limitbtm).w,(Camera_Max_Y_pos).w
 		move.w	(v_lamp_limitbtm).w,(Camera_Max_Y_pos_target).w

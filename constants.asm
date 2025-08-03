@@ -40,6 +40,7 @@ obTopSolidBit:	equ $3E					; bit to check for top solidity (either $C or $E)
 obLRBSolidBit:	equ $3F					; bit to check for left/right/bottom solidity (either $D or $F)
 
 ; Object variables used by Sonic/Tails
+; v_air:	equ $28
 flashtime:	equ $30					; time between flashes after getting hit
 invtime:	equ $32					; time left for invincibility
 shoetime:	equ $34					; time left for speed shoes
@@ -47,6 +48,7 @@ stick_to_convex:	equ objoff_38
 spindash_flag:	equ $39					; 0 for normal, 1 for charging a spindash or forced rolling
 standonobject:	equ $3D					; object Sonic stands on
 
+; ---------------------------------------------------------------------------
 ; Miscellaneous object scratch-RAM
 objoff_25:	equ $25
 objoff_26:	equ $26
@@ -346,7 +348,6 @@ v_hscrolltablebuffer_end_padded:
 Sonic_Stat_Record_Buf:	ds.b	$100
 Sonic_Pos_Record_Buf:	ds.b	$100
 Tails_Pos_Record_Buf:	ds.b	$100
-Tails_Pos_Record_Buf_Dup:	ds.b	$100
 
 Ring_Positions:		ds.b	$600
 Ring_Positions_End:
@@ -429,6 +430,7 @@ v_endeggman	= v_objspace+object_size*2		; object variable space for Eggman after
 v_tryagain	= v_objspace+object_size*3		; object variable space for the "TRY AGAIN" text ($40 bytes)
 v_eggmanchaos	= v_objspace+object_size*32		; object variable space for the emeralds juggled by Eggman ($180 bytes)
 			ds.b	$1000			; unused (will become part of the object table)
+			ds.b	$100
 
 VDP_Command_Buffer:	ds.w	7*$12			; stores 18 ($12) VDP commands to issue the next time ProcessDMAQueue is called
 VDP_Command_Buffer_Slot:	ds.w	1		; stores the address of the next open slot for a queued VDP command
@@ -820,15 +822,17 @@ v_score:		ds.l	1			; score
 v_shield:		ds.b	1			; shield status (00 = no; 01 = yes)
 v_invinc:		ds.b	1			; invinciblity status (00 = no; 01 = yes)
 v_shoes:		ds.b	1			; speed shoes status (00 = no; 01 = yes)
-v_unused1:		ds.b	1			; an unused fourth player status (Goggles?)
+Super_Sonic_flag:	ds.b	1
 
 v_lastlamp:		ds.b	2			; number of the last lamppost you hit
 v_lamp_xpos:		ds.w	1			; x-axis for Sonic to respawn at lamppost
 v_lamp_ypos:		ds.w	1			; y-axis for Sonic to respawn at lamppost
 v_lamp_rings:		ds.w	1			; rings stored at lamppost
 v_lamp_time:		ds.l	1			; time stored at lamppost
-v_lamp_dle:		ds.b	1			; dynamic level event routine counter at lamppost
-			ds.b	1			; unused
+v_lamp_mainchar:	ds.w	1
+v_lamp_sidekick:	ds.w	1
+v_lamp_solid:		ds.w	1
+v_lamp_solid_sidekick:	ds.w	1
 v_lamp_limitbtm:	ds.w	1			; level bottom boundary at lamppost
 v_lamp_scrx:		ds.w	1			; x-axis screen at lamppost
 v_lamp_scry:		ds.w	1			; y-axis screen at lamppost
@@ -879,7 +883,7 @@ f_demo:			ds.w	1			; demo mode flag (0 = no; 1 = yes; $8001 = ending)
 v_demonum:		ds.w	1			; demo level number (not the same as the level number)
 v_creditsnum:		ds.w	1			; credits index number
 
-			ds.b	$150			; unused
+			ds.b	$14A			; unused
 v_objstate:		ds.b	$C0			; object state list
 v_objstate_end:
 v_end:
