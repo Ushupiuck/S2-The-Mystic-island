@@ -8785,7 +8785,7 @@ ptr_Obj1D:	dc.l ObjNull
 ptr_Obj1E:	dc.l ObjNull
 ptr_Obj1F:	dc.l Obj1F				; (S1) Crabmeat from GHZ
 ptr_Obj20:	dc.l ObjNull
-ptr_Obj21:	dc.l ObjNull				; Score/Rings/Time display (HUD)
+ptr_Obj21:	dc.l ObjNull
 ptr_Obj22:	dc.l Obj22				; (S1) Buzz Bomber from GHZ
 ptr_Obj23:	dc.l Obj23				; (S1) Buzz Bomber/Newtron missile
 ptr_Obj24:	dc.l Obj24				; (S1) Unused Buzz Bomber missile explosion
@@ -8877,9 +8877,9 @@ ptr_Obj79:	dc.l Obj79				; Checkpoint
 ptr_Obj7A:	dc.l ObjNull
 ptr_Obj7B:	dc.l ObjNull
 ptr_Obj7C:	dc.l ObjNull
-ptr_Obj7D:	dc.l Obj7D				; (S1) Hidden points at end of stage
-ptr_Obj7E:	dc.l Obj7E				; (S1) Special Stage Results (unreferenced, but can be found as S1Obj7E)
-ptr_Obj7F:	dc.l Obj7F				; (S1) SS Result Chaos Emeralds (unreferenced, but can be found as S1Obj7F)
+ptr_Obj7D:	dc.l Obj7D				; Hidden points at end of stage
+ptr_Obj7E:	dc.l Obj7E				; Special Stage Results
+ptr_Obj7F:	dc.l Obj7F				; SS Result Chaos Emeralds
 ptr_Obj80:	dc.l ObjNull				; Was originally Continue Screen Elements, but was completely stripped out
 ptr_Obj81:	dc.l ObjNull				; Was originally Continue Screen Sonic, but was completely stripped out
 ptr_Obj82:	dc.l ObjNull				; Was originally Eggman - Scrap Brain 2, but was completely stripped out
@@ -8890,7 +8890,7 @@ ptr_Obj86:	dc.l ObjNull				; Was originally FZ Plasma Ball Launcher, but was com
 ptr_Obj87:	dc.l ObjNull				; Was originally Ending Sequence Sonic, but was completely stripped out
 ptr_Obj88:	dc.l ObjNull				; Was originally Ending Sequence Emeralds, but was completely stripped out
 ptr_Obj89:	dc.l ObjNull				; Was originally Ending Sequence STH, but was completely stripped out
-ptr_Obj8A:	dc.l Obj8A				; (S1) "SONIC TEAM PRESENTS" screen and credits
+ptr_Obj8A:	dc.l Obj8A				; "SONIC TEAM PRESENTS" screen and credits
 ptr_Obj8B:	dc.l ObjNull				; Was originally Try Again & End Eggman, but was completely stripped out
 ptr_Obj8C:	dc.l ObjNull				; Was originally Try Again Emeralds, but was completely stripped out
 ptr_Obj8D:	dc.l ObjNull
@@ -9099,12 +9099,10 @@ DisplaySprite:
 		andi.w	#$380,d0
 		adda.w	d0,a1
 		cmpi.w	#$7E,(a1)
-		bhs.s	locret_CE20
+		bhs.s	locret_CE58
 		addq.w	#2,(a1)
 		adda.w	(a1),a1
 		move.w	a0,(a1)
-
-locret_CE20:
 		rts
 ; End of function DisplaySprite
 
@@ -9122,12 +9120,10 @@ DisplaySprite2:
 		andi.w	#$380,d0
 		adda.w	d0,a2
 		cmpi.w	#$7E,(a2)
-		bhs.s	locret_CE3E
+		bhs.s	locret_CE58
 		addq.w	#2,(a2)
 		adda.w	(a2),a2
 		move.w	a1,(a2)
-
-locret_CE3E:
 		rts
 ; End of function DisplaySprite2
 
