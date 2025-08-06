@@ -8576,7 +8576,7 @@ Map_PSB:	binclude "mappings/sprite/press start button.bin"
 		include	"objects/10.asm"
 
 ; ---------------------------------------------------------------------------
-		include	"objects/S1/2B Chopper.asm"
+		include	"objects/2B Chopper.asm"
 ; ---------------------------------------------------------------------------
 Ani_Obj2B:	dc.w byte_B7BA-Ani_Obj2B
 		dc.w byte_B7BE-Ani_Obj2B
@@ -8611,23 +8611,23 @@ word_B8B6:	dc.w 2
 		dc.w $F40E,   $C,    6,$FFF0
 		dc.w $F505,$101C,$100E,	 $10
 ; ---------------------------------------------------------------------------
-		include	"objects/S1/34 Title Cards.asm"
+		include	"objects/34 Title Cards.asm"
 		include	"objects/36 Spikes.asm"
 Map_Obj36:	include	"mappings/sprite/obj36.asm"
-		include	"objects/S1/39 Game Over.asm"
-		include	"objects/S1/3A Got Through Card.asm"
+		include	"objects/39 Game Over.asm"
+		include	"objects/3A Got Through Card.asm"
 		include	"objects/S1/3B Purple Rock.asm"
 Map_Obj3B:	include	"mappings/sprite/S1/Purple Rock.asm"
-		include	"objects/S1/7E Special Stage Results.asm"
-		include	"objects/S1/7F SS Result Chaos Emeralds.asm"
-Map_Card:	include	"mappings/sprite/S1/obj34.asm"
-Map_Over:	include	"mappings/sprite/S1/obj39.asm"
-Map_Got:	include	"mappings/sprite/S1/obj3A.asm"
+		include	"objects/7E Special Stage Results.asm"
+		include	"objects/7F SS Result Chaos Emeralds.asm"
+Map_Card:	include	"mappings/sprite/Title_Cards.asm"
+Map_Over:	include	"mappings/sprite/Game_Over.asm"
+Map_Got:	include	"mappings/sprite/Got_Through.asm"
 ; ---------------------------------------------------------------------------
 ; Sprite mappings - special stage results screen (7E) & Chaos Emeralds (7F)
 ; ---------------------------------------------------------------------------
-Map_SSR:	include	"mappings/sprite/S1/obj7E.asm"
-Map_SSRC:	include	"mappings/sprite/S1/obj7F.asm"
+Map_SSR:	include	"mappings/sprite/SSResults.asm"
+Map_SSRC:	include	"mappings/sprite/SSResults_Emeralds.asm"
 ; ---------------------------------------------------------------------------
 		include	"objects/S1/3C Smashable Wall.asm"
 		include	"objects/S1/sub SmashObject.asm"
