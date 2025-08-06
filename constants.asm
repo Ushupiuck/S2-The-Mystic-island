@@ -14,9 +14,9 @@ obY:		equ $C					; y-axis position (2-4 bytes)
 obYSub:		equ $E					; for when exra presition is required (2 bytes)
 obVelX:		equ $10					; x-axis velocity (2 bytes)
 obVelY:		equ $12					; y-axis velocity (2 bytes)
-obInertia:	equ $14					; potential speed (2 bytes)
+obInertia:	equ $20					; potential speed (2 bytes)
 obHeight:	equ $16					; height/2; y_radius
-obWidth:	equ $17					; width/2 ; x_radius
+obWidth:	equ $14					; width/2 ; x_radius
 obPriority:	equ $18					; sprite stack priority -- 0 is front
 obActWid:	equ $19					; action width
 obFrame:	equ $1A					; current frame displayed
