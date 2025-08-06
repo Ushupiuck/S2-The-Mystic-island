@@ -8567,13 +8567,14 @@ word_AE34:	dc.w 4
 		even
 ; ---------------------------------------------------------------------------
 		include	"objects/0E Title Sonic And Tails.asm"
-		include	"objects/0F Press Start.asm"
-		include	"objects/10.asm"
-
 Map_Obj0E:	binclude "mappings/sprite/obj0E.bin"
 		even
-Map_PSB:	binclude "mappings/sprite/press start button new.bin"
+
+		include	"objects/0F Press Start.asm"
+Map_PSB:	binclude "mappings/sprite/press start button.bin"
 		even
+		include	"objects/10.asm"
+
 ; ---------------------------------------------------------------------------
 		include	"objects/S1/2B Chopper.asm"
 ; ---------------------------------------------------------------------------
@@ -8584,13 +8585,11 @@ byte_B7BA:	dc.b   7,  0,  1,$FF
 byte_B7BE:	dc.b   3,  0,  1,$FF
 byte_B7C2:	dc.b   7,  0,$FF
 		even
-Map_Obj2B:	dc.w word_B7CA-Map_Obj2B
-		dc.w word_B7D4-Map_Obj2B
-word_B7CA:	dc.w 1
-		dc.w $F00F,    0,    0,$FFF0
-word_B7D4:	dc.w 1
-		dc.w $F00F,  $10,    8,$FFF0
+Map_Obj2B:	binclude	"mappings/sprite/obj2B.bin"	; Green hill
 		even
+Map_obj2B_1:	binclude	"mappings/sprite/obj2B_1.bin"	; Emerald hill
+		even
+
 ; ---------------------------------------------------------------------------
 		include	"objects/S1/2C Jaws.asm"
 ; ---------------------------------------------------------------------------
@@ -8753,150 +8752,276 @@ loc_CB74:
 ; This array contains the pointers to all the objects used in the game.
 ; ---------------------------------------------------------------------------
 Obj_Index:
-ptr_Obj01:	dc.l Obj01				; Sonic
-ptr_Obj02:	dc.l Obj02				; Tails
-ptr_Obj03:	dc.l Obj03				; Collision plane/layer switcher
-ptr_Obj04:	dc.l Obj04				; Surface of the water
-ptr_Obj05:	dc.l Obj05				; Tails' tails
-ptr_Obj06:	dc.l Obj06				; Twisting spiral pathway in EHZ
-ptr_Obj07:	dc.l ObjNull
-ptr_Obj08:	dc.l Obj08				; Water splash in HPZ
-ptr_Obj09:	dc.l Obj09				; (S1) Sonic in the Special Stage
-ptr_Obj0A:	dc.l Obj0A				; Small bubbles from Sonic's face while underwater
-ptr_Obj0B:	dc.l Obj0B				; (S1) Pole that breaks in LZ
-ptr_Obj0C:	dc.l Obj0C				; Strange floating/falling platform object from CPZ
-ptr_Obj0D:	dc.l Obj0D				; End of level signpost
-ptr_Obj0E:	dc.l Obj0E				; Sonic and Tails from the title screen
-ptr_Obj0F:	dc.l Obj0F				; Press Start Button
-ptr_Obj10:	dc.l ObjNull
-ptr_Obj11:	dc.l Obj11				; Bridges in GHZ, EHZ and HPZ
-ptr_Obj12:	dc.l Obj12				; Emerald from Hidden Palace Zone
-ptr_Obj13:	dc.l Obj13				; Waterfall from Hidden Palace Zone
-ptr_Obj14:	dc.l Obj14				; Seesaw from Hill Top Zone
-ptr_Obj15:	dc.l Obj15				; Swinging platforms in GHZ, CPZ and EHZ
-ptr_Obj16:	dc.l Obj16				; Diagonally moving lift from HTZ
-ptr_Obj17:	dc.l Obj17				; (S1) GHZ rotating log helix spikes
-ptr_Obj18:	dc.l Obj18				; Stationary/moving platforms from GHZ and EHZ
-ptr_Obj19:	dc.l Obj19				; Platform from CPZ
-ptr_Obj1A:	dc.l Obj1A				; Collapsing platform from GHZ and HPZ
-ptr_Obj1B:	dc.l ObjNull
-ptr_Obj1C:	dc.l Obj1C				; Stage decorations in GHZ, EHZ, HTZ and HPZ
-ptr_Obj1D:	dc.l ObjNull
-ptr_Obj1E:	dc.l ObjNull
-ptr_Obj1F:	dc.l Obj1F				; (S1) Crabmeat from GHZ
-ptr_Obj20:	dc.l ObjNull
-ptr_Obj21:	dc.l ObjNull
-ptr_Obj22:	dc.l Obj22				; (S1) Buzz Bomber from GHZ
-ptr_Obj23:	dc.l Obj23				; (S1) Buzz Bomber/Newtron missile
-ptr_Obj24:	dc.l Obj24				; (S1) Unused Buzz Bomber missile explosion
-ptr_Obj25:	dc.l Obj25				; A ring
-ptr_Obj26:	dc.l Obj26				; Monitor
-ptr_Obj27:	dc.l Obj27				; An explosion, giving off an animal and 100 points
-ptr_Obj28:	dc.l Obj28				; Animal and the 100 points from a badnik
-ptr_Obj29:	dc.l Obj29				; "100 points" text
-ptr_Obj2A:	dc.l Obj2A				; (S1) Small door from SBZ
-ptr_Obj2B:	dc.l Obj2B				; (S1) Chopper from GHZ
-ptr_Obj2C:	dc.l Obj2C				; (S1) Jaws from LZ
-ptr_Obj2D:	dc.l ObjNull
-ptr_Obj2E:	dc.l Obj2E				; Monitor contents (code for power-up behavior and rising image)
-ptr_Obj2F:	dc.l ObjNull
-ptr_Obj30:	dc.l ObjNull
-ptr_Obj31:	dc.l ObjNull
-ptr_Obj32:	dc.l ObjNull
-ptr_Obj33:	dc.l ObjNull
-ptr_Obj34:	dc.l Obj34				; (S1) Level title card
-ptr_Obj35:	dc.l ObjNull
-ptr_Obj36:	dc.l Obj36				; Vertical spikes
-ptr_Obj37:	dc.l Obj37				; Scattering rings (generated when Sonic or Tails are hurt and has rings)
-ptr_Obj38:	dc.l Obj38				; Shield
-ptr_Obj39:	dc.l Obj39				; Game Over/Time Over text
-ptr_Obj3A:	dc.l Obj3A				; (S1) End of level results screen
-ptr_Obj3B:	dc.l Obj3B				; (S1) Purple rock from GHZ
-ptr_Obj3C:	dc.l Obj3C				; (S1) Breakable wall
-ptr_Obj3D:	dc.l Obj3D				; (S1) GHZ boss
-ptr_Obj3E:	dc.l Obj3E				; Egg prison
-ptr_Obj3F:	dc.l Obj3F				; Boss explosion
-ptr_Obj40:	dc.l Obj40				; (S1) Motobug from GHZ
-ptr_Obj41:	dc.l Obj41				; Spring
-ptr_Obj42:	dc.l Obj42				; (S1) Newtron from GHZ
-ptr_Obj43:	dc.l ObjNull
-ptr_Obj44:	dc.l Obj44				; (S1) Breakable wall
-ptr_Obj45:	dc.l ObjNull
-ptr_Obj46:	dc.l ObjNull
-ptr_Obj47:	dc.l ObjNull
-ptr_Obj48:	dc.l Obj48				; (S1) Eggman's wrecking ball
-ptr_Obj49:	dc.l Obj49				; Waterfall sound effect
-ptr_Obj4A:	dc.l Obj4A				; Octus from HPZ
-ptr_Obj4B:	dc.l Obj4B				; Buzzer from EHZ
-ptr_Obj4C:	dc.l Obj4C				; BBat from HPZ
-ptr_Obj4D:	dc.l Obj4D				; Stego/Stegway from HPZ
-ptr_Obj4E:	dc.l Obj4E				; Gator from HPZ
-ptr_Obj4F:	dc.l Obj4F				; Redz (dinosaur badnik) from HPZ
-ptr_Obj50:	dc.l Obj50				; Seahorse/Aquis from HPZ
-ptr_Obj51:	dc.l Obj51				; Skyhorse from HPZ
-ptr_Obj52:	dc.l Obj52				; BFish from HPZ
-ptr_Obj53:	dc.l Obj53				; Masher from EHZ
-ptr_Obj54:	dc.l Obj54				; Snail badnik from EHZ
-ptr_Obj55:	dc.l Obj55				; EHZ boss
-ptr_Obj56:	dc.l Obj56				; EHZ boss part 2
-ptr_Obj57:	dc.l Obj57				; EHZ boss part 3
-ptr_Obj58:	dc.l Obj58				; EHZ boss part 4
-ptr_Obj59:	dc.l ObjNull
-ptr_Obj5A:	dc.l ObjNull
-ptr_Obj5B:	dc.l ObjNull
-ptr_Obj5C:	dc.l ObjNull
-ptr_Obj5D:	dc.l ObjNull
-ptr_Obj5E:	dc.l ObjNull
-ptr_Obj5F:	dc.l ObjNull
-ptr_Obj60:	dc.l ObjNull
-ptr_Obj61:	dc.l ObjNull
-ptr_Obj62:	dc.l ObjNull
-ptr_Obj63:	dc.l ObjNull
-ptr_Obj64:	dc.l ObjNull
-ptr_Obj65:	dc.l ObjNull
-ptr_Obj66:	dc.l ObjNull
-ptr_Obj67:	dc.l ObjNull
-ptr_Obj68:	dc.l ObjNull
-ptr_Obj69:	dc.l ObjNull
-ptr_Obj6A:	dc.l ObjNull
-ptr_Obj6B:	dc.l ObjNull
-ptr_Obj6C:	dc.l ObjNull
-ptr_Obj6D:	dc.l ObjNull
-ptr_Obj6E:	dc.l ObjNull
-ptr_Obj6F:	dc.l ObjNull
-ptr_Obj70:	dc.l ObjNull
-ptr_Obj71:	dc.l ObjNull
-ptr_Obj72:	dc.l ObjNull
-ptr_Obj73:	dc.l ObjNull
-ptr_Obj74:	dc.l ObjNull
-ptr_Obj75:	dc.l ObjNull
-ptr_Obj76:	dc.l ObjNull
-ptr_Obj77:	dc.l ObjNull
-ptr_Obj78:	dc.l ObjNull
-ptr_Obj79:	dc.l Obj79				; Checkpoint
-ptr_Obj7A:	dc.l ObjNull
-ptr_Obj7B:	dc.l ObjNull
-ptr_Obj7C:	dc.l ObjNull
-ptr_Obj7D:	dc.l Obj7D				; Hidden points at end of stage
-ptr_Obj7E:	dc.l Obj7E				; Special Stage Results
-ptr_Obj7F:	dc.l Obj7F				; SS Result Chaos Emeralds
-ptr_Obj80:	dc.l ObjNull				; Was originally Continue Screen Elements, but was completely stripped out
-ptr_Obj81:	dc.l ObjNull				; Was originally Continue Screen Sonic, but was completely stripped out
-ptr_Obj82:	dc.l ObjNull				; Was originally Eggman - Scrap Brain 2, but was completely stripped out
-ptr_Obj83:	dc.l ObjNull				; Was originally SBZ Eggman's Crumbling Floor, but was completely stripped out
-ptr_Obj84:	dc.l ObjNull				; Was originally FZ Eggman's Cylinders, but was completely stripped out
-ptr_Obj85:	dc.l ObjNull				; Was originally Boss - Final, but was completely stripped out
-ptr_Obj86:	dc.l ObjNull				; Was originally FZ Plasma Ball Launcher, but was completely stripped out
-ptr_Obj87:	dc.l ObjNull				; Was originally Ending Sequence Sonic, but was completely stripped out
-ptr_Obj88:	dc.l ObjNull				; Was originally Ending Sequence Emeralds, but was completely stripped out
-ptr_Obj89:	dc.l ObjNull				; Was originally Ending Sequence STH, but was completely stripped out
-ptr_Obj8A:	dc.l Obj8A				; "SONIC TEAM PRESENTS" screen and credits
-ptr_Obj8B:	dc.l ObjNull				; Was originally Try Again & End Eggman, but was completely stripped out
-ptr_Obj8C:	dc.l ObjNull				; Was originally Try Again Emeralds, but was completely stripped out
-ptr_Obj8D:	dc.l ObjNull
-ptr_Obj8E:	dc.l ObjNull
-ptr_Obj8F:	dc.l ObjNull
-ptr_Obj90:	dc.l ObjNull
+ptr_Obj01:		dc.l Obj01	; Sonic
+ptr_Obj02:		dc.l Obj02	; Tails
+ptr_Obj03:		dc.l Obj03	; Collision plane/layer switcher
+ptr_Obj04:		dc.l Obj04	; Surface of the water
+ptr_Obj05:		dc.l Obj05	; Tails' tails
+ptr_Obj06:		dc.l Obj06	; Twisting spiral pathway in EHZ
+ptr_Obj07:		dc.l ObjNull
+ptr_Obj08:		dc.l Obj08	; Water splash in HPZ
+ptr_Obj09:		dc.l Obj09	; (S1) Sonic in the Special Stage
+ptr_Obj0A:		dc.l Obj0A	; Small bubbles from Sonic's face while underwater
+ptr_Obj0B:		dc.l Obj0B	; (S1) Pole that breaks in LZ
+ptr_Obj0C:		dc.l Obj0C	; Strange floating/falling platform object from CPZ
+ptr_Obj0D:		dc.l Obj0D	; End of level signpost
+ptr_Obj0E:		dc.l Obj0E	; Sonic and Tails from the title screen
+ptr_Obj0F:		dc.l Obj0F	; Press Start Button
+
+ptr_Obj10:		dc.l ObjNull
+ptr_Obj11:		dc.l Obj11	; Bridges in GHZ, EHZ and HPZ
+ptr_Obj12:		dc.l Obj12	; Emerald from Hidden Palace Zone
+ptr_Obj13:		dc.l Obj13	; Waterfall from Hidden Palace Zone
+ptr_Obj14:		dc.l Obj14	; Seesaw from Hill Top Zone
+ptr_Obj15:		dc.l Obj15	; Swinging platforms in GHZ, CPZ and EHZ
+ptr_Obj16:		dc.l Obj16	; Diagonally moving lift from HTZ
+ptr_Obj17:		dc.l Obj17	; (S1) GHZ rotating log helix spikes
+ptr_Obj18:		dc.l Obj18	; Stationary/moving platforms from GHZ and EHZ
+ptr_Obj19:		dc.l Obj19	; Platform from CPZ
+ptr_Obj1A:		dc.l Obj1A	; Collapsing platform from GHZ and HPZ
+ptr_Obj1B:		dc.l ObjNull
+ptr_Obj1C:		dc.l Obj1C	; Stage decorations in GHZ, EHZ, HTZ and HPZ
+ptr_Obj1D:		dc.l ObjNull
+ptr_Obj1E:		dc.l ObjNull
+ptr_Obj1F:		dc.l Obj1F	; (S1) Crabmeat from GHZ
+
+ptr_Obj20:		dc.l ObjNull
+ptr_Obj21:		dc.l ObjNull
+ptr_Obj22:		dc.l Obj22	; (S1) Buzz Bomber from GHZ
+ptr_Obj23:		dc.l Obj23	; (S1) Buzz Bomber/Newtron missile
+ptr_Obj24:		dc.l Obj24	; (S1) Unused Buzz Bomber missile explosion
+ptr_Obj25:		dc.l Obj25	; A ring
+ptr_Obj26:		dc.l Obj26	; Monitor
+ptr_Obj27:		dc.l Obj27	; An explosion, giving off an animal and 100 points
+ptr_Obj28:		dc.l Obj28	; Animal and the 100 points from a badnik
+ptr_Obj29:		dc.l Obj29	; "100 points" text
+ptr_Obj2A:		dc.l Obj2A	; (S1) Small door from SBZ
+ptr_Obj2B:		dc.l Obj2B	; (S1) Chopper from GHZ
+ptr_Obj2C:		dc.l Obj2C	; (S1) Jaws from LZ
+ptr_Obj2D:		dc.l ObjNull
+ptr_Obj2E:		dc.l Obj2E	; Monitor contents (code for power-up behavior and rising image)
+ptr_Obj2F:		dc.l ObjNull
+
+ptr_Obj30:		dc.l ObjNull
+ptr_Obj31:		dc.l ObjNull
+ptr_Obj32:		dc.l ObjNull
+ptr_Obj33:		dc.l ObjNull
+ptr_Obj34:		dc.l Obj34	; (S1) Level title card
+ptr_Obj35:		dc.l ObjNull
+ptr_Obj36:		dc.l Obj36	; Vertical spikes
+ptr_Obj37:		dc.l Obj37	; Scattering rings (generated when Sonic or Tails are hurt and has rings)
+ptr_Obj38:		dc.l Obj38	; Shield
+ptr_Obj39:		dc.l Obj39	; Game Over/Time Over text
+ptr_Obj3A:		dc.l Obj3A	; (S1) End of level results screen
+ptr_Obj3B:		dc.l Obj3B	; (S1) Purple rock from GHZ
+ptr_Obj3C:		dc.l Obj3C	; (S1) Breakable wall
+ptr_Obj3D:		dc.l Obj3D	; (S1) GHZ boss
+ptr_Obj3E:		dc.l Obj3E	; Egg prison
+ptr_Obj3F:		dc.l Obj3F	; Boss explosion
+
+ptr_Obj40:		dc.l Obj40	; (S1) Motobug from GHZ
+ptr_Obj41:		dc.l Obj41	; Spring
+ptr_Obj42:		dc.l Obj42	; (S1) Newtron from GHZ
+ptr_Obj43:		dc.l ObjNull
+ptr_Obj44:		dc.l Obj44	; (S1) Breakable wall
+ptr_Obj45:		dc.l ObjNull
+ptr_Obj46:		dc.l ObjNull
+ptr_Obj47:		dc.l ObjNull
+ptr_Obj48:		dc.l Obj48	; (S1) Eggman's wrecking ball
+ptr_Obj49:		dc.l Obj49	; Waterfall sound effect
+ptr_Obj4A:		dc.l Obj4A	; Octus from HPZ
+ptr_Obj4B:		dc.l Obj4B	; Buzzer from EHZ
+ptr_Obj4C:		dc.l Obj4C	; BBat from HPZ
+ptr_Obj4D:		dc.l Obj4D	; Stego/Stegway from HPZ
+ptr_Obj4E:		dc.l Obj4E	; Gator from HPZ
+ptr_Obj4F:		dc.l Obj4F	; Redz (dinosaur badnik) from HPZ
+
+ptr_Obj50:		dc.l Obj50	; Seahorse/Aquis from HPZ
+ptr_Obj51:		dc.l Obj51	; Skyhorse from HPZ
+ptr_Obj52:		dc.l Obj52	; BFish from HPZ
+ptr_Obj53:		dc.l ObjNull
+ptr_Obj54:		dc.l Obj54	; Snail badnik from EHZ
+ptr_Obj55:		dc.l Obj55	; EHZ boss
+ptr_Obj56:		dc.l Obj56	; EHZ boss part 2
+ptr_Obj57:		dc.l Obj57	; EHZ boss part 3
+ptr_Obj58:		dc.l Obj58	; EHZ boss part 4
+ptr_Obj59:		dc.l ObjNull
+ptr_Obj5A:		dc.l ObjNull
+ptr_Obj5B:		dc.l ObjNull
+ptr_Obj5C:		dc.l ObjNull
+ptr_Obj5D:		dc.l ObjNull
+ptr_Obj5E:		dc.l ObjNull
+ptr_Obj5F:		dc.l ObjNull
+
+ptr_Obj60:		dc.l ObjNull
+ptr_Obj61:		dc.l ObjNull
+ptr_Obj62:		dc.l ObjNull
+ptr_Obj63:		dc.l ObjNull
+ptr_Obj64:		dc.l ObjNull
+ptr_Obj65:		dc.l ObjNull
+ptr_Obj66:		dc.l ObjNull
+ptr_Obj67:		dc.l ObjNull
+ptr_Obj68:		dc.l ObjNull
+ptr_Obj69:		dc.l ObjNull
+ptr_Obj6A:		dc.l ObjNull
+ptr_Obj6B:		dc.l ObjNull
+ptr_Obj6C:		dc.l ObjNull
+ptr_Obj6D:		dc.l ObjNull
+ptr_Obj6E:		dc.l ObjNull
+ptr_Obj6F:		dc.l ObjNull
+
+ptr_Obj70:		dc.l ObjNull
+ptr_Obj71:		dc.l ObjNull
+ptr_Obj72:		dc.l ObjNull
+ptr_Obj73:		dc.l ObjNull
+ptr_Obj74:		dc.l ObjNull
+ptr_Obj75:		dc.l ObjNull
+ptr_Obj76:		dc.l ObjNull
+ptr_Obj77:		dc.l ObjNull
+ptr_Obj78:		dc.l ObjNull
+ptr_Obj79:		dc.l Obj79	; Checkpoint
+ptr_Obj7A:		dc.l ObjNull
+ptr_Obj7B:		dc.l ObjNull
+ptr_Obj7C:		dc.l ObjNull
+ptr_Obj7D:		dc.l Obj7D	; Hidden points at end of stage
+ptr_Obj7E:		dc.l Obj7E	; Special Stage Results
+ptr_Obj7F:		dc.l Obj7F	; SS Result Chaos Emeralds
+
+ptr_Obj80:		dc.l ObjNull	; Was originally Continue Screen Elements, but was completely stripped out
+ptr_Obj81:		dc.l ObjNull	; Was originally Continue Screen Sonic, but was completely stripped out
+ptr_Obj82:		dc.l ObjNull	; Was originally Eggman - Scrap Brain 2, but was completely stripped out
+ptr_Obj83:		dc.l ObjNull	; Was originally SBZ Eggman's Crumbling Floor, but was completely stripped out
+ptr_Obj84:		dc.l ObjNull	; Was originally FZ Eggman's Cylinders, but was completely stripped out
+ptr_Obj85:		dc.l ObjNull	; Was originally Boss - Final, but was completely stripped out
+ptr_Obj86:		dc.l ObjNull	; Was originally FZ Plasma Ball Launcher, but was completely stripped out
+ptr_Obj87:		dc.l ObjNull	; Was originally Ending Sequence Sonic, but was completely stripped out
+ptr_Obj88:		dc.l ObjNull	; Was originally Ending Sequence Emeralds, but was completely stripped out
+ptr_Obj89:		dc.l ObjNull	; Was originally Ending Sequence STH, but was completely stripped out
+ptr_Obj8A:		dc.l Obj8A	; "SONIC TEAM PRESENTS" screen and credits
+ptr_Obj8B:		dc.l ObjNull	; Was originally Try Again & End Eggman, but was completely stripped out
+ptr_Obj8C:		dc.l ObjNull	; Was originally Try Again Emeralds, but was completely stripped out
+ptr_Obj8D:		dc.l ObjNull
+ptr_Obj8E:		dc.l ObjNull
+ptr_Obj8F:		dc.l ObjNull
+
+ptr_Obj90:		dc.l ObjNull
+ptr_Obj91:		dc.l ObjNull
+ptr_Obj92:		dc.l ObjNull
+ptr_Obj93:		dc.l ObjNull
+ptr_Obj94:		dc.l ObjNull
+ptr_Obj95:		dc.l ObjNull
+ptr_Obj96:		dc.l ObjNull
+ptr_Obj97:		dc.l ObjNull
+ptr_Obj98:		dc.l ObjNull
+ptr_Obj99:		dc.l ObjNull
+ptr_Obj9A:		dc.l ObjNull
+ptr_Obj9B:		dc.l ObjNull
+ptr_Obj9C:		dc.l ObjNull
+ptr_Obj9D:		dc.l ObjNull
+ptr_Obj9E:		dc.l ObjNull
+ptr_Obj9F:		dc.l ObjNull
+
+ptr_ObjA0:		dc.l ObjNull
+ptr_ObjA1:		dc.l ObjNull
+ptr_ObjA2:		dc.l ObjNull
+ptr_ObjA3:		dc.l ObjNull
+ptr_ObjA4:		dc.l ObjNull
+ptr_ObjA5:		dc.l ObjNull
+ptr_ObjA6:		dc.l ObjNull
+ptr_ObjA7:		dc.l ObjNull
+ptr_ObjA8:		dc.l ObjNull
+ptr_ObjA9:		dc.l ObjNull
+ptr_ObjAA:		dc.l ObjNull
+ptr_ObjAB:		dc.l ObjNull
+ptr_ObjAC:		dc.l ObjNull
+ptr_ObjAD:		dc.l ObjNull
+ptr_ObjAE:		dc.l ObjNull
+ptr_ObjAF:		dc.l ObjNull
+
+ptr_ObjB0:		dc.l ObjNull
+ptr_ObjB1:		dc.l ObjNull
+ptr_ObjB2:		dc.l ObjNull
+ptr_ObjB3:		dc.l ObjNull
+ptr_ObjB4:		dc.l ObjNull
+ptr_ObjB5:		dc.l ObjNull
+ptr_ObjB6:		dc.l ObjNull
+ptr_ObjB7:		dc.l ObjNull
+ptr_ObjB8:		dc.l ObjNull
+ptr_ObjB9:		dc.l ObjNull
+ptr_ObjBA:		dc.l ObjNull
+ptr_ObjBB:		dc.l ObjNull
+ptr_ObjBC:		dc.l ObjNull
+ptr_ObjBD:		dc.l ObjNull
+ptr_ObjBE:		dc.l ObjNull
+ptr_ObjBF:		dc.l ObjNull
+
+ptr_ObjC0:		dc.l ObjNull
+ptr_ObjC1:		dc.l ObjNull
+ptr_ObjC2:		dc.l ObjNull
+ptr_ObjC3:		dc.l ObjNull
+ptr_ObjC4:		dc.l ObjNull
+ptr_ObjC5:		dc.l ObjNull
+ptr_ObjC6:		dc.l ObjNull
+ptr_ObjC7:		dc.l ObjNull
+ptr_ObjC8:		dc.l ObjNull
+ptr_ObjC9:		dc.l ObjNull
+ptr_ObjCA:		dc.l ObjNull
+ptr_ObjCB:		dc.l ObjNull
+ptr_ObjCC:		dc.l ObjNull
+ptr_ObjCD:		dc.l ObjNull
+ptr_ObjCE:		dc.l ObjNull
+ptr_ObjCF:		dc.l ObjNull
+
+ptr_ObjD0:		dc.l ObjNull
+ptr_ObjD1:		dc.l ObjNull
+ptr_ObjD2:		dc.l ObjNull
+ptr_ObjD3:		dc.l ObjNull
+ptr_ObjD4:		dc.l ObjNull
+ptr_ObjD5:		dc.l ObjNull
+ptr_ObjD6:		dc.l ObjNull
+ptr_ObjD7:		dc.l ObjNull
+ptr_ObjD8:		dc.l ObjNull
+ptr_ObjD9:		dc.l ObjNull
+ptr_ObjDA:		dc.l ObjNull
+ptr_ObjDB:		dc.l ObjNull
+ptr_ObjDC:		dc.l ObjNull
+ptr_ObjDD:		dc.l ObjNull
+ptr_ObjDE:		dc.l ObjNull
+ptr_ObjDF:		dc.l ObjNull
+
+ptr_ObjE0:		dc.l ObjNull
+ptr_ObjE1:		dc.l ObjNull
+ptr_ObjE2:		dc.l ObjNull
+ptr_ObjE3:		dc.l ObjNull
+ptr_ObjE4:		dc.l ObjNull
+ptr_ObjE5:		dc.l ObjNull
+ptr_ObjE6:		dc.l ObjNull
+ptr_ObjE7:		dc.l ObjNull
+ptr_ObjE8:		dc.l ObjNull
+ptr_ObjE9:		dc.l ObjNull
+ptr_ObjEA:		dc.l ObjNull
+ptr_ObjEB:		dc.l ObjNull
+ptr_ObjEC:		dc.l ObjNull
+ptr_ObjED:		dc.l ObjNull
+ptr_ObjEE:		dc.l ObjNull
+ptr_ObjEF:		dc.l ObjNull
+
+ptr_ObjF0:		dc.l ObjNull
+ptr_ObjF1:		dc.l ObjNull
+ptr_ObjF2:		dc.l ObjNull
+ptr_ObjF3:		dc.l ObjNull
+ptr_ObjF4:		dc.l ObjNull
+ptr_ObjF5:		dc.l ObjNull
+ptr_ObjF6:		dc.l ObjNull
+ptr_ObjF7:		dc.l ObjNull
+ptr_ObjF8:		dc.l ObjNull
+ptr_ObjF9:		dc.l ObjNull
+ptr_ObjFA:		dc.l ObjNull
+ptr_ObjFB:		dc.l ObjNull
+ptr_ObjFC:		dc.l ObjNull
+ptr_ObjFD:		dc.l ObjNull
+ptr_ObjFE:		dc.l ObjNull
+ptr_ObjFF:		dc.l ObjNull
 
 id_Obj01:	equ ((ptr_Obj01-Obj_Index)/4)+1
 id_Obj02:	equ ((ptr_Obj02-Obj_Index)/4)+1
@@ -8913,6 +9038,7 @@ id_Obj0C:	equ ((ptr_Obj0C-Obj_Index)/4)+1
 id_Obj0D:	equ ((ptr_Obj0D-Obj_Index)/4)+1
 id_Obj0E:	equ ((ptr_Obj0E-Obj_Index)/4)+1
 id_Obj0F:	equ ((ptr_Obj0F-Obj_Index)/4)+1
+
 id_Obj10:	equ ((ptr_Obj10-Obj_Index)/4)+1
 id_Obj11:	equ ((ptr_Obj11-Obj_Index)/4)+1
 id_Obj12:	equ ((ptr_Obj12-Obj_Index)/4)+1
@@ -8929,6 +9055,7 @@ id_Obj1C:	equ ((ptr_Obj1C-Obj_Index)/4)+1
 id_Obj1D:	equ ((ptr_Obj1D-Obj_Index)/4)+1
 id_Obj1E:	equ ((ptr_Obj1E-Obj_Index)/4)+1
 id_Obj1F:	equ ((ptr_Obj1F-Obj_Index)/4)+1
+
 id_Obj20:	equ ((ptr_Obj20-Obj_Index)/4)+1
 id_Obj21:	equ ((ptr_Obj21-Obj_Index)/4)+1
 id_Obj22:	equ ((ptr_Obj22-Obj_Index)/4)+1
@@ -8945,6 +9072,7 @@ id_Obj2C:	equ ((ptr_Obj2C-Obj_Index)/4)+1
 id_Obj2D:	equ ((ptr_Obj2D-Obj_Index)/4)+1
 id_Obj2E:	equ ((ptr_Obj2E-Obj_Index)/4)+1
 id_Obj2F:	equ ((ptr_Obj2F-Obj_Index)/4)+1
+
 id_Obj30:	equ ((ptr_Obj30-Obj_Index)/4)+1
 id_Obj31:	equ ((ptr_Obj31-Obj_Index)/4)+1
 id_Obj32:	equ ((ptr_Obj32-Obj_Index)/4)+1
@@ -8961,6 +9089,7 @@ id_Obj3C:	equ ((ptr_Obj3C-Obj_Index)/4)+1
 id_Obj3D:	equ ((ptr_Obj3D-Obj_Index)/4)+1
 id_Obj3E:	equ ((ptr_Obj3E-Obj_Index)/4)+1
 id_Obj3F:	equ ((ptr_Obj3F-Obj_Index)/4)+1
+
 id_Obj40:	equ ((ptr_Obj40-Obj_Index)/4)+1
 id_Obj41:	equ ((ptr_Obj41-Obj_Index)/4)+1
 id_Obj42:	equ ((ptr_Obj42-Obj_Index)/4)+1
@@ -8977,6 +9106,7 @@ id_Obj4C:	equ ((ptr_Obj4C-Obj_Index)/4)+1
 id_Obj4D:	equ ((ptr_Obj4D-Obj_Index)/4)+1
 id_Obj4E:	equ ((ptr_Obj4E-Obj_Index)/4)+1
 id_Obj4F:	equ ((ptr_Obj4F-Obj_Index)/4)+1
+
 id_Obj50:	equ ((ptr_Obj50-Obj_Index)/4)+1
 id_Obj51:	equ ((ptr_Obj51-Obj_Index)/4)+1
 id_Obj52:	equ ((ptr_Obj52-Obj_Index)/4)+1
@@ -8993,6 +9123,7 @@ id_Obj5C:	equ ((ptr_Obj5C-Obj_Index)/4)+1
 id_Obj5D:	equ ((ptr_Obj5D-Obj_Index)/4)+1
 id_Obj5E:	equ ((ptr_Obj5E-Obj_Index)/4)+1
 id_Obj5F:	equ ((ptr_Obj5F-Obj_Index)/4)+1
+
 id_Obj60:	equ ((ptr_Obj60-Obj_Index)/4)+1
 id_Obj61:	equ ((ptr_Obj61-Obj_Index)/4)+1
 id_Obj62:	equ ((ptr_Obj62-Obj_Index)/4)+1
@@ -9009,6 +9140,7 @@ id_Obj6C:	equ ((ptr_Obj6C-Obj_Index)/4)+1
 id_Obj6D:	equ ((ptr_Obj6D-Obj_Index)/4)+1
 id_Obj6E:	equ ((ptr_Obj6E-Obj_Index)/4)+1
 id_Obj6F:	equ ((ptr_Obj6F-Obj_Index)/4)+1
+
 id_Obj70:	equ ((ptr_Obj70-Obj_Index)/4)+1
 id_Obj71:	equ ((ptr_Obj71-Obj_Index)/4)+1
 id_Obj72:	equ ((ptr_Obj72-Obj_Index)/4)+1
@@ -9025,6 +9157,7 @@ id_Obj7C:	equ ((ptr_Obj7C-Obj_Index)/4)+1
 id_Obj7D:	equ ((ptr_Obj7D-Obj_Index)/4)+1
 id_Obj7E:	equ ((ptr_Obj7E-Obj_Index)/4)+1
 id_Obj7F:	equ ((ptr_Obj7F-Obj_Index)/4)+1
+
 id_Obj80:	equ ((ptr_Obj80-Obj_Index)/4)+1
 id_Obj81:	equ ((ptr_Obj81-Obj_Index)/4)+1
 id_Obj82:	equ ((ptr_Obj82-Obj_Index)/4)+1
@@ -9041,7 +9174,125 @@ id_Obj8C:	equ ((ptr_Obj8C-Obj_Index)/4)+1
 id_Obj8D:	equ ((ptr_Obj8D-Obj_Index)/4)+1
 id_Obj8E:	equ ((ptr_Obj8E-Obj_Index)/4)+1
 id_Obj8F:	equ ((ptr_Obj8F-Obj_Index)/4)+1
+
 id_Obj90:	equ ((ptr_Obj90-Obj_Index)/4)+1
+id_Obj91:	equ ((ptr_Obj91-Obj_Index)/4)+1
+id_Obj92:	equ ((ptr_Obj92-Obj_Index)/4)+1
+id_Obj93:	equ ((ptr_Obj93-Obj_Index)/4)+1
+id_Obj94:	equ ((ptr_Obj94-Obj_Index)/4)+1
+id_Obj95:	equ ((ptr_Obj95-Obj_Index)/4)+1
+id_Obj96:	equ ((ptr_Obj96-Obj_Index)/4)+1
+id_Obj97:	equ ((ptr_Obj97-Obj_Index)/4)+1
+id_Obj98:	equ ((ptr_Obj98-Obj_Index)/4)+1
+id_Obj99:	equ ((ptr_Obj99-Obj_Index)/4)+1
+id_Obj9A:	equ ((ptr_Obj9A-Obj_Index)/4)+1
+id_Obj9B:	equ ((ptr_Obj9B-Obj_Index)/4)+1
+id_Obj9C:	equ ((ptr_Obj9C-Obj_Index)/4)+1
+id_Obj9D:	equ ((ptr_Obj9D-Obj_Index)/4)+1
+id_Obj9E:	equ ((ptr_Obj9E-Obj_Index)/4)+1
+id_Obj9F:	equ ((ptr_Obj9F-Obj_Index)/4)+1
+
+id_ObjA0:	equ ((ptr_ObjA0-Obj_Index)/4)+1
+id_ObjA1:	equ ((ptr_ObjA1-Obj_Index)/4)+1
+id_ObjA2:	equ ((ptr_ObjA2-Obj_Index)/4)+1
+id_ObjA3:	equ ((ptr_ObjA3-Obj_Index)/4)+1
+id_ObjA4:	equ ((ptr_ObjA4-Obj_Index)/4)+1
+id_ObjA5:	equ ((ptr_ObjA5-Obj_Index)/4)+1
+id_ObjA6:	equ ((ptr_ObjA6-Obj_Index)/4)+1
+id_ObjA7:	equ ((ptr_ObjA7-Obj_Index)/4)+1
+id_ObjA8:	equ ((ptr_ObjA8-Obj_Index)/4)+1
+id_ObjA9:	equ ((ptr_ObjA9-Obj_Index)/4)+1
+id_ObjAA:	equ ((ptr_ObjAA-Obj_Index)/4)+1
+id_ObjAB:	equ ((ptr_ObjAB-Obj_Index)/4)+1
+id_ObjAC:	equ ((ptr_ObjAC-Obj_Index)/4)+1
+id_ObjAD:	equ ((ptr_ObjAD-Obj_Index)/4)+1
+id_ObjAE:	equ ((ptr_ObjAE-Obj_Index)/4)+1
+id_ObjAF:	equ ((ptr_ObjAF-Obj_Index)/4)+1
+
+id_ObjB0:	equ ((ptr_ObjB0-Obj_Index)/4)+1
+id_ObjB1:	equ ((ptr_ObjB1-Obj_Index)/4)+1
+id_ObjB2:	equ ((ptr_ObjB2-Obj_Index)/4)+1
+id_ObjB3:	equ ((ptr_ObjB3-Obj_Index)/4)+1
+id_ObjB4:	equ ((ptr_ObjB4-Obj_Index)/4)+1
+id_ObjB5:	equ ((ptr_ObjB5-Obj_Index)/4)+1
+id_ObjB6:	equ ((ptr_ObjB6-Obj_Index)/4)+1
+id_ObjB7:	equ ((ptr_ObjB7-Obj_Index)/4)+1
+id_ObjB8:	equ ((ptr_ObjB8-Obj_Index)/4)+1
+id_ObjB9:	equ ((ptr_ObjB9-Obj_Index)/4)+1
+id_ObjBA:	equ ((ptr_ObjBA-Obj_Index)/4)+1
+id_ObjBB:	equ ((ptr_ObjBB-Obj_Index)/4)+1
+id_ObjBC:	equ ((ptr_ObjBC-Obj_Index)/4)+1
+id_ObjBD:	equ ((ptr_ObjBD-Obj_Index)/4)+1
+id_ObjBE:	equ ((ptr_ObjBE-Obj_Index)/4)+1
+id_ObjBF:	equ ((ptr_ObjBF-Obj_Index)/4)+1
+
+id_ObjC0:	equ ((ptr_ObjC0-Obj_Index)/4)+1
+id_ObjC1:	equ ((ptr_ObjC1-Obj_Index)/4)+1
+id_ObjC2:	equ ((ptr_ObjC2-Obj_Index)/4)+1
+id_ObjC3:	equ ((ptr_ObjC3-Obj_Index)/4)+1
+id_ObjC4:	equ ((ptr_ObjC4-Obj_Index)/4)+1
+id_ObjC5:	equ ((ptr_ObjC5-Obj_Index)/4)+1
+id_ObjC6:	equ ((ptr_ObjC6-Obj_Index)/4)+1
+id_ObjC7:	equ ((ptr_ObjC7-Obj_Index)/4)+1
+id_ObjC8:	equ ((ptr_ObjC8-Obj_Index)/4)+1
+id_ObjC9:	equ ((ptr_ObjC9-Obj_Index)/4)+1
+id_ObjCA:	equ ((ptr_ObjCA-Obj_Index)/4)+1
+id_ObjCB:	equ ((ptr_ObjCB-Obj_Index)/4)+1
+id_ObjCC:	equ ((ptr_ObjCC-Obj_Index)/4)+1
+id_ObjCD:	equ ((ptr_ObjCD-Obj_Index)/4)+1
+id_ObjCE:	equ ((ptr_ObjCE-Obj_Index)/4)+1
+id_ObjCF:	equ ((ptr_ObjCF-Obj_Index)/4)+1
+
+id_ObjD0:	equ ((ptr_ObjD0-Obj_Index)/4)+1
+id_ObjD1:	equ ((ptr_ObjD1-Obj_Index)/4)+1
+id_ObjD2:	equ ((ptr_ObjD2-Obj_Index)/4)+1
+id_ObjD3:	equ ((ptr_ObjD3-Obj_Index)/4)+1
+id_ObjD4:	equ ((ptr_ObjD4-Obj_Index)/4)+1
+id_ObjD5:	equ ((ptr_ObjD5-Obj_Index)/4)+1
+id_ObjD6:	equ ((ptr_ObjD6-Obj_Index)/4)+1
+id_ObjD7:	equ ((ptr_ObjD7-Obj_Index)/4)+1
+id_ObjD8:	equ ((ptr_ObjD8-Obj_Index)/4)+1
+id_ObjD9:	equ ((ptr_ObjD9-Obj_Index)/4)+1
+id_ObjDA:	equ ((ptr_ObjDA-Obj_Index)/4)+1
+id_ObjDB:	equ ((ptr_ObjDB-Obj_Index)/4)+1
+id_ObjDC:	equ ((ptr_ObjDC-Obj_Index)/4)+1
+id_ObjDD:	equ ((ptr_ObjDD-Obj_Index)/4)+1
+id_ObjDE:	equ ((ptr_ObjDE-Obj_Index)/4)+1
+id_ObjDF:	equ ((ptr_ObjDF-Obj_Index)/4)+1
+
+id_ObjE0:	equ ((ptr_ObjE0-Obj_Index)/4)+1
+id_ObjE1:	equ ((ptr_ObjE1-Obj_Index)/4)+1
+id_ObjE2:	equ ((ptr_ObjE2-Obj_Index)/4)+1
+id_ObjE3:	equ ((ptr_ObjE3-Obj_Index)/4)+1
+id_ObjE4:	equ ((ptr_ObjE4-Obj_Index)/4)+1
+id_ObjE5:	equ ((ptr_ObjE5-Obj_Index)/4)+1
+id_ObjE6:	equ ((ptr_ObjE6-Obj_Index)/4)+1
+id_ObjE7:	equ ((ptr_ObjE7-Obj_Index)/4)+1
+id_ObjE8:	equ ((ptr_ObjE8-Obj_Index)/4)+1
+id_ObjE9:	equ ((ptr_ObjE9-Obj_Index)/4)+1
+id_ObjEA:	equ ((ptr_ObjEA-Obj_Index)/4)+1
+id_ObjEB:	equ ((ptr_ObjEB-Obj_Index)/4)+1
+id_ObjEC:	equ ((ptr_ObjEC-Obj_Index)/4)+1
+id_ObjED:	equ ((ptr_ObjED-Obj_Index)/4)+1
+id_ObjEE:	equ ((ptr_ObjEE-Obj_Index)/4)+1
+id_ObjEF:	equ ((ptr_ObjEF-Obj_Index)/4)+1
+
+id_ObjF0:	equ ((ptr_ObjF0-Obj_Index)/4)+1
+id_ObjF1:	equ ((ptr_ObjF1-Obj_Index)/4)+1
+id_ObjF2:	equ ((ptr_ObjF2-Obj_Index)/4)+1
+id_ObjF3:	equ ((ptr_ObjF3-Obj_Index)/4)+1
+id_ObjF4:	equ ((ptr_ObjF4-Obj_Index)/4)+1
+id_ObjF5:	equ ((ptr_ObjF5-Obj_Index)/4)+1
+id_ObjF6:	equ ((ptr_ObjF6-Obj_Index)/4)+1
+id_ObjF7:	equ ((ptr_ObjF7-Obj_Index)/4)+1
+id_ObjF8:	equ ((ptr_ObjF8-Obj_Index)/4)+1
+id_ObjF9:	equ ((ptr_ObjF9-Obj_Index)/4)+1
+id_ObjFA:	equ ((ptr_ObjFA-Obj_Index)/4)+1
+id_ObjFB:	equ ((ptr_ObjFB-Obj_Index)/4)+1
+id_ObjFC:	equ ((ptr_ObjFC-Obj_Index)/4)+1
+id_ObjFD:	equ ((ptr_ObjFD-Obj_Index)/4)+1
+id_ObjFE:	equ ((ptr_ObjFE-Obj_Index)/4)+1
+id_ObjFF:	equ ((ptr_ObjFF-Obj_Index)/4)+1
 ; ---------------------------------------------------------------------------
 ; Subroutine to make an object move and fall downward increasingly fast
 ; This moves the object horizontally and vertically
@@ -15688,7 +15939,7 @@ Floor_ChkTile:
 		add.w	d1,d0		; d0 is relevant chunk ID now
 		moveq	#-1,d1
 		clr.w	d1		; d1 is now $FFFF0000 = Chunk_Table
-		lea	(Level_Layout).w,a1
+		lea	(v_lvllayout).w,a1
 		move.b	(a1,d0.w),d1	; move 128*128 chunk ID to d1
 		add.w	d1,d1
 		move.w	.table(pc,d1.w),d1
@@ -20551,21 +20802,7 @@ word_17496:	dc.w 4
 		dc.w	 5,  $28,  $14,	  $C		; 12
 		even
 ; ---------------------------------------------------------------------------
-		include	"objects/53 Masher.asm"
-; ===========================================================================
-; animation script
-Ani_obj53:	dc.w byte_17572-Ani_obj53
-		dc.w byte_17576-Ani_obj53
-		dc.w byte_1757A-Ani_obj53
-byte_17572:	dc.b   7,  0,  1,$FF
-byte_17576:	dc.b   3,  0,  1,$FF
-byte_1757A:	dc.b   7,  0,$FF
-		even
-; ---------------------------------------------------------------------------
-; Sprite mappings
-; ---------------------------------------------------------------------------
-Map_obj53:	binclude	"mappings/sprite/obj53.bin"
-		even
+		include	"objects/53.asm"
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Object 54 - Snail badnik from	EHZ

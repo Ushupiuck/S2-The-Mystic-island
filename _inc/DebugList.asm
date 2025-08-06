@@ -19,7 +19,7 @@ Debug_GHZ:	dc.w (Debug_GHZ_End-Debug_GHZ-2)/8
 	dbug 	Map_Obj26,	id_Obj26,	0,	0,	make_art_tile(ArtTile_Monitor,0,0)
 	dbug 	Map_obj1F,	id_Obj1F,	0,	0,	make_art_tile(ArtTile_Crabmeat,0,0)
 	dbug 	Map_obj22,	id_Obj22,	0,	0,	make_art_tile(ArtTile_Buzz_Bomber,0,0)
-	dbug 	Map_Obj2B,	id_Obj2B,	0,	0,	make_art_tile(ArtTile_Chopper,0,0)
+	dbug 	Map_Obj2B,	id_Obj2B,	7,	0,	make_art_tile(ArtTile_Chopper,0,0)
 	dbug 	Map_Obj36,	id_Obj36,	0,	0,	make_art_tile(ArtTile_Spikes_GHZ,0,0)
 	dbug 	Map_Obj18,	id_Obj18,	0,	0,	make_art_tile(ArtTile_Level,2,0)
 	dbug 	Map_Obj3B,	id_Obj3B,	0,	0,	make_art_tile(ArtTile_GHZ_Purple_Rock,3,0)
@@ -71,7 +71,8 @@ Debug_EHZ:	dc.w (Debug_EHZ_End-Debug_EHZ-2)/8
 	dbug 	Map_obj41,	id_Obj41,	$40,	$A,	make_art_tile(ArtTile_Spring_Diagonal,0,0)
 	dbug 	Map_obj4B,	id_Obj4B,	0,	0,	make_art_tile(ArtTile_Buzzer,0,0)
 	dbug 	Map_obj54,	id_Obj54,	0,	0,	make_art_tile(ArtTile_Snail,0,0)
-	dbug 	Map_obj53,	id_Obj53,	0,	0,	make_art_tile(ArtTile_Masher,0,0)
+	dbug 	Map_Obj2B,	id_Obj2B,	3,	0,	make_art_tile(ArtTile_Chopper,0,0)
+	dbug 	Map_Obj2B,	id_Obj2B,	4,	0,	make_art_tile(ArtTile_Chopper,0,0)
 Debug_EHZ_End:
 
 Debug_HTZ:	dc.w (Debug_HTZ_End-Debug_HTZ-2)/8
@@ -94,7 +95,6 @@ Debug_HTZ:	dc.w (Debug_HTZ_End-Debug_HTZ-2)/8
 	dbug 	Map_Obj16,	id_Obj1C,	5,	2,	make_art_tile(ArtTile_HtzZipline,2,0)
 	dbug 	Map_obj4B,	id_Obj4B,	0,	0,	make_art_tile(ArtTile_Buzzer,0,0)
 	dbug 	Map_obj54,	id_Obj54,	0,	0,	make_art_tile(ArtTile_Snail,0,0)
-	dbug 	Map_obj53,	id_Obj53,	0,	0,	make_art_tile(ArtTile_Masher,0,0)
 Debug_HTZ_End:
 
 Debug_HPZ:	dc.w (Debug_HPZ_End-Debug_HPZ-2)/8
