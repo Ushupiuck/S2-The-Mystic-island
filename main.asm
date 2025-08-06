@@ -15677,35 +15677,55 @@ loc_12D5C:
 
 
 Floor_ChkTile:
-		move.w	d2,d0
+		move.w	d2,d0		; y_pos
 		add.w	d0,d0
-		andi.w	#$F00,d0
-		move.w	d3,d1
-		lsr.w	#7,d1
+		andi.w	#$F00,d0	; rounded 2*y_pos
+		move.w	d3,d1		; x_pos
+		lsr.w	#3,d1
+		move.w	d1,d4
+		lsr.w	#4,d1		; x_pos/128 = x_of_chunk
 		andi.w	#$7F,d1
-		add.w	d1,d0
+		add.w	d1,d0		; d0 is relevant chunk ID now
 		moveq	#-1,d1
-		lea	(v_lvllayout).w,a1
-		move.b	(a1,d0.w),d1
-		andi.w	#$FF,d1
-		lsl.w	#7,d1
-		move.w	d2,d0
+		clr.w	d1		; d1 is now $FFFF0000 = Chunk_Table
+		lea	(Level_Layout).w,a1
+		move.b	(a1,d0.w),d1	; move 128*128 chunk ID to d1
+		add.w	d1,d1
+		move.w	.table(pc,d1.w),d1
+		move.w	d2,d0		; y_pos
 		andi.w	#$70,d0
 		add.w	d0,d1
-		move.w	d3,d0
-		lsr.w	#3,d0
-		andi.w	#$E,d0
-		add.w	d0,d1
-		movea.l	d1,a1
+		andi.w	#$E,d4		; x_pos/8
+		add.w	d4,d1
+		movea.l	d1,a1		; address of block ID
 		rts
 ; End of function Floor_ChkTile
+; ===========================================================================
+; precalculated values for Find_Tile
+; (Sonic 1 calculated it every time instead of using a table)
+.table:
+c := 0
+	rept 256
+		dc.w	c
+c := c+$80
+	endm
+; ===========================================================================
 
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
-; =============== S U B	R O U T	I N E =======================================
-
+; Scans vertically for up to 2 16x16 blocks to find solid ground or ceiling.
+; d2 = y_pos
+; d3 = x_pos
+; d5 = ($c,$d) or ($e,$f) - solidity type bit (L/R/B or top)
+; d6 = $0000 for no flip, $0800 for vertical flip
+; a3 = delta-y for next location to check if current one is empty
+; a4 = pointer to angle buffer
+; returns relevant block ID in (a1)
+; returns distance in d1
+; returns angle in (a4)
 
 FindFloor:
-		bsr.s	Floor_ChkTile
+		bsr.w	Floor_ChkTile
 		move.w	(a1),d0
 		move.w	d0,d4
 		andi.w	#$3FF,d0
