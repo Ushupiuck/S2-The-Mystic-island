@@ -10,14 +10,14 @@ Obj2C:
 ; ===========================================================================
 Jaws_Index:	dc.w Jaws_Main-Jaws_Index
 		dc.w Jaws_Turn-Jaws_Index
-
+; ===========================================================================
 jaws_timecount = objoff_30
 jaws_timedelay = objoff_32
 ; ===========================================================================
 
 Jaws_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
-		move.l	#Map_Obj2C,obMap(a0)
+		move.l	#Map_Jaws,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Jaws,1,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#$A,obColType(a0)
@@ -43,7 +43,10 @@ Jaws_Turn:	; Routine 2
 		move.b	#1,obPrevAni(a0) ; reset animation
 
 .animate:
-		lea	(Ani_Obj2C).l,a1
+		lea	Ani_Jaws(pc),a1
 		bsr.w	AnimateSprite
 		bsr.w	ObjectMove
 		bra.w	MarkObjGone
+; ---------------------------------------------------------------------------
+Ani_Jaws:	dc.b   0,  2,  7,  0,  1,  2,  3,$FF
+		even
