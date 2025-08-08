@@ -109,17 +109,6 @@ planeLocH40 function col,line,(($80 * line) + (2 * col))
 ; function to calculate the location of a tile in plane mappings with a width of 128 cells
 planeLocH80 function col,line,(($100 * line) + (2 * col))
 ; ---------------------------------------------------------------------------
-
-_KosPlus_LoopUnroll := 3
-
-_KosPlus_ReadBit macro
-	dbf	d2,.skip
-	moveq	#7,d2								; We have 8 new bits, but will use one up below.
-	move.b	(a0)+,d0							; Get desc field low-byte.
-
-.skip
-	add.b	d0,d0								; Get a bit from the bitstream.
-    endm
 ; ---------------------------------------------------------------------------
 ; some variables and functions to help define those constants (redefined before a new set of IDs)
 offset :=	0					; this is the start of the pointer table
