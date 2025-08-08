@@ -1086,6 +1086,7 @@ boss_fz_end:	equ boss_fz_x+$2B0
 ArtTile_GHZ_MZ_Swing:		equ $380
 ArtTile_MZ_SYZ_Caterkiller:	equ $4FF
 ArtTile_GHZ_SLZ_Smashable_Wall:	equ $50F
+ArtTile_Bumper:			equ $380
 
 ; Green Hill Zone
 ArtTile_GHZ_Flower_4:		equ ArtTile_Level+$340
@@ -1112,7 +1113,6 @@ ArtTile_MZ_Glass_Pillar:	equ $38E
 ArtTile_MZ_Lava:		equ $3A8
 
 ; Spring Yard Zone
-ArtTile_SYZ_Bumper:		equ $380
 ArtTile_SYZ_Big_Spikeball:	equ $396
 ArtTile_SYZ_Spikeball_Chain:	equ $3BA
 

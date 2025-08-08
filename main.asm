@@ -2626,13 +2626,11 @@ Level_NoMusicFade:
 		bsr.w	ClearPLC
 		bsr.w	Pal_FadeToBlack
 		tst.w	(f_demo).w	; are we on an ending demo?
-		bmi.s	loc_3BB6	; if so, branch
+		bmi.s	Level_ClrRam	; if so, branch
 		disable_ints
 		locVRAM	ArtTile_Title_Card*tile_size
 		lea	(Nem_TitleCard).l,a0	; load title card patterns
 		bsr.w	NemDec
-		bsr.w	ClearScreen
-		fillVRAM	0, vram_window, vram_window+plane_size_64x32 ; clear window namespace
 		enable_ints
 		moveq	#0,d0
 		move.b	(Current_Zone).w,d0
@@ -2648,7 +2646,7 @@ loc_3BB0:
 		moveq	#plcid_Main2,d0
 		bsr.w	LoadPLC
 
-loc_3BB6:
+Level_ClrRam:
 		clearRAM v_spritequeue,v_spritequeue_end
 		clearRAM v_objspace,v_objend
 		clearRAM v_levelvariables,v_levelvariables_end
@@ -2658,6 +2656,7 @@ loc_3BB6:
 		seq.b	(Water_flag).w		; if so, set
 		cmpi.b	#id_HPZ,(Current_Zone).w	; are we on Hidden Palace Zone?
 		seq.b	(Water_flag).w		; if so, set
+		bsr.w	ClearScreen
 		lea	(vdp_control_port).l,a6
 		move.w	#$8B00+3,(a6)	; set horizontal scrolling single pixel rows mode
 		move.w	#$8200+(vram_fg>>10),(a6)
@@ -8593,7 +8592,7 @@ Map_obj2B_1:	binclude	"mappings/sprite/obj2B_1.bin"	; Emerald hill
 ; ---------------------------------------------------------------------------
 		include	"objects/S1/2C Jaws.asm"
 ; ---------------------------------------------------------------------------
-Ani_Obj2C:	dc.b   0,  2,  7,  0,  1,  2,  3,$FF
+Map_Jaws:
 Map_Obj2C:	dc.w word_B880-Map_Obj2C
 		dc.w word_B892-Map_Obj2C
 		dc.w word_B8A4-Map_Obj2C
@@ -8610,6 +8609,7 @@ word_B8A4:	dc.w 2
 word_B8B6:	dc.w 2
 		dc.w $F40E,   $C,    6,$FFF0
 		dc.w $F505,$101C,$100E,	 $10
+		even
 ; ---------------------------------------------------------------------------
 		include	"objects/34 Title Cards.asm"
 		include	"objects/36 Spikes.asm"
@@ -8826,7 +8826,7 @@ ptr_Obj43:		dc.l ObjNull
 ptr_Obj44:		dc.l Obj44	; (S1) Breakable wall
 ptr_Obj45:		dc.l ObjNull
 ptr_Obj46:		dc.l ObjNull
-ptr_Obj47:		dc.l ObjNull
+ptr_Obj47:		dc.l Obj47
 ptr_Obj48:		dc.l Obj48	; (S1) Eggman's wrecking ball
 ptr_Obj49:		dc.l Obj49	; Waterfall sound effect
 ptr_Obj4A:		dc.l Obj4A	; Octus from HPZ
@@ -15740,7 +15740,6 @@ loc_12B90:
 ; End of function Sonic_Angle
 
 ; ---------------------------------------------------------------------------
-; START	OF FUNCTION CHUNK FOR AnglePos
 
 Sonic_WalkVertR:
 		move.w	obY(a0),d2
@@ -15922,7 +15921,6 @@ loc_12D5C:
 		bclr	#5,obStatus(a0)
 		move.b	#1,obPrevAni(a0)
 		rts
-; END OF FUNCTION CHUNK	FOR AnglePos
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -16761,7 +16759,6 @@ loc_13408:
 Sonic_HitWall:
 		move.w	obY(a0),d2
 		move.w	obX(a0),d3
-; End of function Sonic_HitWall
 
 loc_13478:
 		subi.w	#$A,d3
@@ -16772,11 +16769,19 @@ loc_13478:
 		bsr.w	FindWall
 		move.b	#$40,d2
 		bra.w	loc_131F6
+; End of function Sonic_HitWall
+
 ; ---------------------------------------------------------------------------
+; Subroutine to detect when an object hits a wall to its left
+; ---------------------------------------------------------------------------
+
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+
 
 ObjHitWallLeft:
 		add.w	obX(a0),d3
 		move.w	obY(a0),d2
+		eori.w	#$F,d3
 		lea	(Primary_Angle).w,a4
 		move.b	#0,(a4)
 		movea.w	#-$10,a3
@@ -16815,7 +16820,8 @@ word_1374E:	dc.w 4
 ; ---------------------------------------------------------------------------
 		include	"objects/S1/7D Hidden Bonuses.asm"
 ; ---------------------------------------------------------------------------
-Map_Obj7D:	dc.w word_13852-Map_Obj7D
+Map_Obj7D:
+		dc.w word_13852-Map_Obj7D
 		dc.w word_13854-Map_Obj7D
 		dc.w word_1385E-Map_Obj7D
 		dc.w word_13868-Map_Obj7D
@@ -16828,47 +16834,63 @@ word_13868:	dc.w 1
 		dc.w $F40E,  $18,   $C,$FFF0
 		even
 ; ---------------------------------------------------------------------------
-S1Obj47:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	S1Obj47_Index(pc,d0.w),d1
-		jmp	S1Obj47_Index(pc,d1.w)
+
 ; ---------------------------------------------------------------------------
-S1Obj47_Index:	dc.w S1Obj47_Init-S1Obj47_Index
-		dc.w S1Obj47_Main-S1Obj47_Index
+; Object 47 - pinball bumper (SYZ)
 ; ---------------------------------------------------------------------------
 
-S1Obj47_Init:
+Obj47:
+		moveq	#0,d0
+		move.b	obRoutine(a0),d0
+		move.w	Bump_Index(pc,d0.w),d1
+		jmp	Bump_Index(pc,d1.w)
+; ---------------------------------------------------------------------------
+Bump_Index:	dc.w Bump_Main-Bump_Index
+		dc.w Bump_Hit-Bump_Index
+; ---------------------------------------------------------------------------
+
+Bump_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
-		move.l	#Map_Bump,obMap(a0)
-		move.w	#make_art_tile(ArtTile_SYZ_Bumper,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.b	#$10,obActWid(a0)
 		move.b	#1,obPriority(a0)
 		move.b	#$D7,obColType(a0)
+		move.l	#Map_Bump,obMap(a0)
+		move.w	#make_art_tile(ArtTile_Bumper,0,0),obGfx(a0)
+		move.w	obX(a0),objoff_30(a0)	; setting these up for later!
+		move.w	obY(a0),objoff_32(a0)
 
-S1Obj47_Main:
+Bump_Hit:	; Routine 2
 		move.b	obColProp(a0),d0
-		beq.w	loc_13976
+		beq.s	+
 		lea	(v_player).w,a1
 		bclr	#0,obColProp(a0)
 		beq.s	loc_138CA
-		bsr.s	S1Obj47_Bump
+		bsr.s	Bumper_bump
 
 loc_138CA:
 		lea	(v_player2).w,a1
 		bclr	#1,obColProp(a0)
 		beq.s	loc_138D8
-		bsr.s	S1Obj47_Bump
+		bsr.s	Bumper_bump
 
 loc_138D8:
 		clr.b	obColProp(a0)
-		bra.w	loc_13976
++		lea	Ani_Bump(pc),a1
+		bsr.w	AnimateSprite
+		bra.w	MarkObjGone
+; ---------------------------------------------------------------------------
+Ani_Bump:	dc.w byte_13988-Ani_Bump
+		dc.w byte_1398B-Ani_Bump
+byte_13988:	dc.b  $F,  0,$FF
+byte_1398B:	dc.b   3,  1,  2,  1,  2,$FD,  0
+		even
+; ---------------------------------------------------------------------------
 
 ; =============== S U B	R O U T	I N E =======================================
 
 
-S1Obj47_Bump:
+Bumper_bump:
 		move.w	obX(a0),d1
 		move.w	obY(a0),d2
 		sub.w	obX(a1),d1
@@ -16877,26 +16899,26 @@ S1Obj47_Bump:
 		jsr	(CalcSine).l
 		muls.w	#-$700,d1
 		asr.l	#8,d1
-		move.w	d1,obVelX(a1)
+		move.w	d1,obVelX(a1)	; bounce Sonic away
 		muls.w	#-$700,d0
 		asr.l	#8,d0
-		move.w	d0,obVelY(a1)
+		move.w	d0,obVelY(a1)	; bounce Sonic away
 		bset	#1,obStatus(a1)
 		bclr	#4,obStatus(a1)
 		bclr	#5,obStatus(a1)
 		clr.b	objoff_3C(a1)
-		move.b	#1,obAnim(a0)
+		move.b	#1,obAnim(a0)	; use "hit" animation
 		move.w	#sfx_Bumper,d0
-		jsr	(PlaySound_Special).l
+		jsr	(PlaySound_Special).l	; play bumper sound
 		lea	(v_objstate).w,a2
 		moveq	#0,d0
 		move.b	obRespawnNo(a0),d0
-		beq.s	loc_1394E
+		beq.s	.addscore
 		cmpi.b	#$8A,2(a2,d0.w)
 		bhs.s	locret_13974
 		addq.b	#1,2(a2,d0.w)
 
-loc_1394E:
+.addscore:
 		moveq	#1,d0
 		jsr	(AddPoints).l
 		bsr.w	FindFreeObj
@@ -16911,17 +16933,6 @@ locret_13974:
 ; End of function S1Obj47_Bump
 
 ; ---------------------------------------------------------------------------
-
-loc_13976:
-		lea	(Ani_S1Obj47).l,a1
-		bsr.w	AnimateSprite
-		bra.w	MarkObjGone
-; ---------------------------------------------------------------------------
-Ani_S1Obj47:	dc.w byte_13988-Ani_S1Obj47
-		dc.w byte_1398B-Ani_S1Obj47
-byte_13988:	dc.b  $F,  0,$FF
-byte_1398B:	dc.b   3,  1,  2,  1,  2,$FD,  0
-		even
 Map_Bump:	dc.w word_13998-Map_Bump
 		dc.w word_139AA-Map_Bump
 		dc.w word_139BC-Map_Bump
@@ -24201,37 +24212,37 @@ TailsDynPLC:	include		"mappings/spriteDPLC/Tails.asm"
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - special stage
 ; ---------------------------------------------------------------------------
-Nem_SSWalls:	binclude	"art/nemesis/S1/Special Walls.nem" ; special stage walls
+Nem_SSWalls:	binclude	"art/nemesis/Special Walls.nem" ; special stage walls
 		even
-Nem_SSBgFish:	binclude	"art/nemesis/S1/Special Birds & Fish.nem" ; special stage birds and fish background
+Nem_SSBgFish:	binclude	"art/nemesis/Special Birds & Fish.nem" ; special stage birds and fish background
 		even
-Nem_SSBgCloud:	binclude	"art/nemesis/S1/Special Clouds.nem" ; special stage clouds background
+Nem_SSBgCloud:	binclude	"art/nemesis/Special Clouds.nem" ; special stage clouds background
 		even
-Nem_SSGOAL:	binclude	"art/nemesis/S1/Special GOAL.nem" ; special stage GOAL block
+Nem_SSGOAL:	binclude	"art/nemesis/Special GOAL.nem" ; special stage GOAL block
 		even
-Nem_SSRBlock:	binclude	"art/nemesis/S1/Special R.nem"	; special stage R block
+Nem_SSRBlock:	binclude	"art/nemesis/Special R.nem"	; special stage R block
 		even
-Nem_SS1UpBlock:	binclude	"art/nemesis/S1/Special 1UP.nem" ; special stage 1UP block
+Nem_SS1UpBlock:	binclude	"art/nemesis/Special 1UP.nem" ; special stage 1UP block
 		even
-Nem_SSEmStars:	binclude	"art/nemesis/S1/Special Emerald Twinkle.nem" ; special stage stars from a collected emerald
+Nem_SSEmStars:	binclude	"art/nemesis/Special Emerald Twinkle.nem" ; special stage stars from a collected emerald
 		even
-Nem_SSRedWhite:	binclude	"art/nemesis/S1/Special Red-White.nem" ; special stage red/white block
+Nem_SSRedWhite:	binclude	"art/nemesis/Special Red-White.nem" ; special stage red/white block
 		even
-Nem_SSUpDown:	binclude	"art/nemesis/S1/Special UP-DOWN.nem" ; special stage UP/DOWN block
+Nem_SSUpDown:	binclude	"art/nemesis/Special UP-DOWN.nem" ; special stage UP/DOWN block
 		even
-Nem_SSRings:	binclude	"art/nemesis/S1/Special Rings.nem" ; special stage rings
+Nem_SSRings:	binclude	"art/nemesis/Special Rings.nem" ; special stage rings
 		even
-Nem_SSEmerald:	binclude	"art/nemesis/S1/Special Emeralds.nem" ; special stage chaos emeralds
+Nem_SSEmerald:	binclude	"art/nemesis/Special Emeralds.nem" ; special stage chaos emeralds
 		even
-Nem_SSGhost:	binclude	"art/nemesis/S1/Special Ghost.nem" ; special stage ghost block
+Nem_SSGhost:	binclude	"art/nemesis/Special Ghost.nem" ; special stage ghost block
 		even
-Nem_SSWBlock:	binclude	"art/nemesis/S1/Special W.nem"	; special stage W block
+Nem_SSWBlock:	binclude	"art/nemesis/Special W.nem"	; special stage W block
 		even
-Nem_SSGlass:	binclude	"art/nemesis/S1/Special Glass.nem" ; special stage destroyable glass block
+Nem_SSGlass:	binclude	"art/nemesis/Special Glass.nem" ; special stage destroyable glass block
 		even
-Nem_Bumper:	binclude	"art/nemesis/S1/Special Bumper.nem"
+Nem_Bumper:	binclude	"art/nemesis/Bumper.nem"
 		even
-Nem_ResultEm:	binclude	"art/nemesis/S1/Special Result Emeralds.nem" ; chaos emeralds on special stage results screen
+Nem_ResultEm:	binclude	"art/nemesis/Special Result Emeralds.nem" ; chaos emeralds on special stage results screen
 		even
 Eni_SSBg1:	binclude	"tilemaps/SS Background 1.eni" ; special stage background (mappings)
 		even
