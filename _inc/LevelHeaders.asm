@@ -45,6 +45,20 @@ LevelArtPointers:
 		levartptrs plcid_HTZ, plcid_HTZ2, Kosp_HTZ, Map16_HTZ, Map128_HTZ, bgm_SBZ, palid_HTZ1   ; HTZ  ; HILL TOP ZONE
 		levartptrs 0,         0,          Kosp_GHZ, Map16_GHZ, Map128_GHZ, bgm_SBZ, palid_Ending ; LEV6 ; LEVEL 6 (UNUSED, SONIC 1 ENDING)
 
+; macro for declaring a "main level load block" (MLLB)
+levartptrsM macro plc1,plc2,palette,art1,art2,map16x161,map16x162,map128x1281,map128x1282
+	dc.l (plc1<<24)|art1
+	dc.l (plc2<<24)|art2
+	dc.l (palette<<24)|map16x161
+	dc.l (palette<<24)|map16x162
+	dc.l map128x1281
+	dc.l map128x1282
+    endm
+
+LevelArtPointersM:
+		levartptrsM plcid_GHZ, plcid_GHZ2, palid_GHZ, Kosp_GHZ, Kosp_GHZ, Map16_GHZ, Map16_GHZ, Map128_GHZ, Map128_GHZ    ; GHZ  ; GREEN HILL ZONE
+		levartptrsM plcid_GHZ, plcid_GHZ2, palid_GHZ, Kosp_GHZ, Kosp_GHZ, Map16_GHZ, Map16_GHZ, Map128_GHZ, Map128_GHZ    ; GHZ  ; GREEN HILL ZONE
+
 
 LoadEnemyArt:
          lea	off_2F7BE(pc),a6

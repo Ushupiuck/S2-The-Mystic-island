@@ -2632,6 +2632,7 @@ MusicList:	dc.b bgm_GHZ
 ; ---------------------------------------------------------------------------
 
 Level:
+        clr.b	(Artifical_Load_Time).w
 		bset	#GameModeFlag_TitleCard,(v_gamemode).w
 		tst.w	(f_demo).w	; are we on an ending demo?
 		bmi.s	Level_NoMusicFade	; if so, branch
@@ -2743,6 +2744,9 @@ Level_TtlCardLoop:
 		jsr	(ExecuteObjects).l
 		jsr	(BuildSprites).l
 		bsr.w	RunPLC_RAM
+		jsr     DelayTitleCards ; i need this routine
+	    tst.b   d0
+	    beq.s   Level_TtlCardLoop	
 		jsr     (Process_Kos_Module_Queue).l
 		move.w	(v_ttlcardact+obX).w,d0
 		cmp.w	(v_ttlcardact+objoff_30).w,d0
@@ -4360,6 +4364,10 @@ Demo_EndGHZ2:	binclude	"demodata/Ending - GHZ2.bin"
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 LoadZoneTiles:
+        cmpi.b  #id_GHZ,(Current_Zone).w
+		bne.s	.notGHZ
+		bra.w   GHZ_LoadTiles
+.notGHZ:		
 		moveq	#0,d0
 		move.b	(Current_Zone).w,d0
 		lsl.w	#4,d0
@@ -4373,6 +4381,7 @@ LoadZoneTiles:
 		move.w	a1,d3
 		move.w	d3,d7
 		andi.w	#$FFF,d3
+
 		lsr.w	#1,d3
 		rol.w	#4,d7
 		andi.w	#$F,d7
@@ -4391,7 +4400,40 @@ LoadZoneTiles:
 		dbf	d7,-
 		rts
 ; End of function LoadZoneTiles
+GHZ_LoadTiles:
+		move.w	(Current_Zone).w,d0
+loc_782A:
+		ror.b	#1,d0
+		lsr.w	#4,d0
+		andi.w	#$1F8,d0
+		move.w	d0,d1
+		add.w	d0,d0
+		add.w	d1,d0
+		lea	(LevelArtPointersM).l,a4
+		lea	(a4,d0.w),a4
+		move.l	(a4)+,d0
+		andi.l	#$FFFFFF,d0
+		move.l	d0,d7
+		movea.l	d0,a1
+		move.w	(a1),d4
+		move.w	#0,d2
+		jsr	(Queue_Kos_Module).l
+		move.l	(a4)+,d0
+		andi.l	#$FFFFFF,d0
+		cmp.l	d0,d7
+		beq.s	loc_7870
+		movea.l	d0,a1
+		move.w	d4,d2
+		jsr	(Queue_Kos_Module).l
 
+loc_7870:
+		move.b	#VintID_TitleCard,(v_vbla_routine).w
+		jsr	(Process_Kos_Queue).l
+		bsr.w	WaitForVint
+		jsr	(Process_Kos_Module_Queue).l
+		tst.b	(Kos_modules_left).w
+		bne.s	loc_7870
+		rts
 ; =============== S U B	R O U T	I N E =======================================
 
 ; LoadZoneBlockMaps
@@ -4440,6 +4482,49 @@ MainLevelLoadBlock:
 ; End of function MainLevelLoadBlock
 
 ; ===========================================================================
+; -----------------------------------------
+; DelayTitleCards
+; Add Artifical Loading Times
+; -----------------------------------------
+DelayTitleCards:
+	; Obtener el LevelID
+	moveq	#0,d0
+	move.b	(Current_Zone).w,d0
+	lea	ArtificialLoadTimeTable(pc),a0
+	move.b	(a0,d0.w),d1
+
+	move.b	(Artifical_Load_Time).w,d0
+	cmp.b	d1,d0
+	bcc.s	.done
+	addq.b	#1,(Artifical_Load_Time).w
+	moveq	#0,d0	
+	rts
+.done:
+	clr.b	(Artifical_Load_Time).w
+	moveq	#1,d0	
+	rts
+
+	
+
+ArtificialLoadTimeTable:
+	dc.b 0 ; $00 -
+	dc.b 0 ; $01 - 
+	dc.b 0 ; $02 - 
+	dc.b 0 ; $03 -
+	dc.b 0 ; $04 -
+	dc.b 0 ; $05 - 
+	dc.b 0 ; $06 -
+	dc.b 0 ; $07 -
+	dc.b 0 ; $08 -
+	dc.b 0 ; $09 -
+	dc.b 0 ; $0A -
+	dc.b 0 ; $0B -
+	dc.b 0 ; $0C -
+	dc.b 0 ; $0D -
+	dc.b 0 ; $0E -
+	dc.b 0 ; $0F -
+	dc.b 0 ; $10 -
+	even
 ; ---------------------------------------------------------------------------
 ; Subroutine to load a level layout from RAM
 ; ---------------------------------------------------------------------------
@@ -24521,7 +24606,7 @@ Nem_HTZ_AniPlaceholders:	binclude	"art/nemesis/HTZ Ani Placeholders.nem"
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - primary patterns and block mappings
 ; ---------------------------------------------------------------------------
-Kosp_GHZ:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+Kosp_GHZ:	binclude	"art/kosinski/level/8x8 - GHZ.kospm"
 		even
 Map16_GHZ:	binclude	"mappings/16x16/GHZ.kosp"
 		even
