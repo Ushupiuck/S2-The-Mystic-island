@@ -2744,10 +2744,10 @@ Level_TtlCardLoop:
 		jsr	(ExecuteObjects).l
 		jsr	(BuildSprites).l
 		bsr.w	RunPLC_RAM
-		jsr	DelayTitleCards ; i need this routine
-	tst.b	d0
-	beq.s	Level_TtlCardLoop
 		jsr     (Process_Kos_Module_Queue).l
+		jsr	DelayTitleCards ; i need this routine
+	    tst.b	d0
+	    beq.s	Level_TtlCardLoop
 		move.w	(v_ttlcardact+obX).w,d0
 		cmp.w	(v_ttlcardact+objoff_30).w,d0
 		bne.s	Level_TtlCardLoop
@@ -4401,37 +4401,34 @@ LoadZoneTiles:
 		rts
 ; End of function LoadZoneTiles
 GHZ_LoadTiles:
-		ror.b	#1,d0
-		lsr.w	#4,d0
-		andi.w	#$1F8,d0
-		move.w	d0,d1
-		add.w	d0,d0
-		add.w	d1,d0
-		lea	(LevelArtPointersM).l,a4
-		lea	(a4,d0.w),a4
-		move.l	(a4)+,d0
-		andi.l	#$FFFFFF,d0
-		move.l	d0,d7
-		movea.l	d0,a1
-		move.w	(a1),d4
-		move.w	#0,d2
-		jsr	(Queue_Kos_Module).l
-		move.l	(a4)+,d0
-		andi.l	#$FFFFFF,d0
-		cmp.l	d0,d7
-		beq.s	.loop
-		movea.l	d0,a1
-		move.w	d4,d2
-		jsr	(Queue_Kos_Module).l
+	moveq	#0,d0
+	move.b	(Current_Zone).w,d0
+	add.w	d0,d0
+	add.w	d0,d0
+	move.w	d0,d1
+	add.w	d0,d0
+	add.w	d1,d0
+	lea	(LevelArtPointers).l,a4
+	lea	(a4,d0.w),a4
+	move.l	(a4)+,d0
+	andi.l	#$FFFFFF,d0	; 8x8 tile pointer
+    move.l	d0,d7
+	movea.l	d0,a1
+	move.w	(a1),d4
+	move.w	#0,d2
+	jsr	(Queue_Kos_Module).l
 
-.loop:
-		move.b	#VintID_TitleCard,(v_vbla_routine).w
-		jsr	(Process_Kos_Queue).l
-		bsr.w	WaitForVint
-		jsr	(Process_Kos_Module_Queue).l
-		tst.b	(Kos_modules_left).w
-		bne.s	.loop
-		rts
+.ZoneTileVint:
+	move.b	#VintID_TitleCard,(v_vbla_routine).w
+	jsr	(Process_Kos_Queue).l
+    bsr.w	WaitForVint
+    bsr.w	RunPLC_RAM
+	jsr	(Process_Kos_Module_Queue).l
+	tst.b	(Kos_modules_left).w
+	bne.s	.ZoneTileVint
+
+	rts
+; End of function LoadZoneTiles
 ; =============== S U B	R O U T	I N E =======================================
 
 ; LoadZoneBlockMaps
