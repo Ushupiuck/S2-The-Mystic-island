@@ -1221,6 +1221,7 @@ ArtTile_Title_Card:		equ $580
 ArtTile_Animal_1:		equ $580
 ArtTile_Animal_2:		equ $592
 ArtTile_Explosion:		equ $5A0
+ArtTile_KosM_Explosion = ArtTile_Explosion
 ArtTile_Monitor:		equ $680
 ArtTile_HUD:			equ $6CA
 ArtTile_Sonic:			equ $780

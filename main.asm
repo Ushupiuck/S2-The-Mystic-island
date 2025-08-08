@@ -2739,9 +2739,11 @@ Level_PlayBgm:
 Level_TtlCardLoop:
 		move.b	#VintID_TitleCard,(v_vbla_routine).w
 		bsr.w	WaitForVint
+		jsr	(Process_Kos_Queue).l
 		jsr	(ExecuteObjects).l
 		jsr	(BuildSprites).l
 		bsr.w	RunPLC_RAM
+		jsr     (Process_Kos_Module_Queue).l
 		move.w	(v_ttlcardact+obX).w,d0
 		cmp.w	(v_ttlcardact+objoff_30).w,d0
 		bne.s	Level_TtlCardLoop
@@ -2891,6 +2893,7 @@ Level_StartGame:
 Level_MainLoop:
 		bsr.w	PauseGame
 		move.b	#VintID_Level,(v_vbla_routine).w
+		jsr	(Process_Kos_Queue).l
 		bsr.w	WaitForVint
 		addq.w	#1,(Timer_frames).w
 		bsr.w	MoveSonicInDemo
@@ -2912,6 +2915,7 @@ Level_SkipScroll:
 		jsr	(AniArt_Load).l
 		bsr.w	PalCycle_Load
 		bsr.w	RunPLC_RAM
+		jsr     (Process_Kos_Module_Queue).l
 		bsr.w	OscillateNumDo
 		bsr.w	ChangeRingFrame
 		bsr.w	SignpostArtLoad
@@ -24400,6 +24404,8 @@ Nem_Lives:	binclude	"art/nemesis/Sonic lives counter.nem"
 Nem_Ring:	binclude	"art/nemesis/Ring.nem"
 		even
 Nem_Monitors:	binclude	"art/nemesis/Monitor and contents.nem"
+		even
+ArtKosM_Explosion: binclude "art/kosinski/Explosion.kospm"
 		even
 Nem_Explosion:	binclude	"art/nemesis/S1/Explosion.nem"
 		even

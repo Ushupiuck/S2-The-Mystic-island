@@ -90,7 +90,7 @@ PLC_Main2_End:
 ; Explosion - loaded for every level AFTER the title card
 ; --------------------------------------------------------------------------------------
 PLC_Explode:	dc.w ((PLC_Explode_End-PLC_Explode)/6)-1
-		plcm	Nem_Explosion, ArtTile_Explosion
+	;	plcm	Nem_Explosion, ArtTile_Explosion
 PLC_Explode_End:
 ; --------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST

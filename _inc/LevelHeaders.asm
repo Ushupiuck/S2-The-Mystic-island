@@ -44,3 +44,103 @@ LevelArtPointers:
 		levartptrs plcid_HPZ, plcid_HPZ2, Kosp_HPZ, Map16_HPZ, Map128_HPZ, bgm_SYZ, palid_HPZ    ; HPZ  ; HIDDEN PALACE ZONE
 		levartptrs plcid_HTZ, plcid_HTZ2, Kosp_HTZ, Map16_HTZ, Map128_HTZ, bgm_SBZ, palid_HTZ1   ; HTZ  ; HILL TOP ZONE
 		levartptrs 0,         0,          Kosp_GHZ, Map16_GHZ, Map128_GHZ, bgm_SBZ, palid_Ending ; LEV6 ; LEVEL 6 (UNUSED, SONIC 1 ENDING)
+
+
+LoadEnemyArt:
+         lea	off_2F7BE(pc),a6
+; ---------------------------------------------------------------------------
+
+loc_2F79E:
+		move.w	(Current_ZoneAndAct).w,d0
+
+loc_2F7A2:
+		ror.b	#1,d0
+		lsr.w	#6,d0
+		adda.w	(a6,d0.w),a6
+		move.w	(a6)+,d6
+		bmi.s	locret_2F7BC
+
+loc_2F7AE:
+		movea.l	(a6)+,a1
+		move.w	(a6)+,d2
+		jsr	(Queue_Kos_Module).l
+		dbf	d6,loc_2F7AE
+
+locret_2F7BC:
+		rts
+; End of function LoadEnemyArt
+off_2F7BE:
+;=============================================================================
+        dc.w PLCKosM_Standard-off_2F7BE ; $00 Act 1
+		dc.w PLCKosM_Standard-off_2F7BE ; $00 Act 2
+;=============================================================================
+		dc.w PLCKosM_Standard-off_2F7BE ; $01 Act 1
+		dc.w PLCKosM_Standard-off_2F7BE ; $01 Act 2
+;=============================================================================
+		dc.w PLCKosM_Standard-off_2F7BE ; $02 Act 1
+		dc.w PLCKosM_Standard-off_2F7BE ; $02 Act 2
+;=============================================================================
+		dc.w PLCKosM_Standard-off_2F7BE ; $03 Act 1
+		dc.w PLCKosM_Standard-off_2F7BE ; $03 Act 2
+;=============================================================================
+		dc.w PLCKosM_Standard-off_2F7BE ; $04 Act 1
+		dc.w PLCKosM_Standard-off_2F7BE ; $04 Act 2
+;=============================================================================
+		dc.w PLCKosM_Standard-off_2F7BE ; $05 Act 1
+		dc.w PLCKosM_Standard-off_2F7BE ; $05 Act 2
+;=============================================================================
+		dc.w PLCKosM_Standard-off_2F7BE ; $06 Act 1
+		dc.w PLCKosM_Standard-off_2F7BE ; $06 Act 2
+;=============================================================================
+		dc.w PLCKosM_Standard-off_2F7BE ; $07 Act 1
+		dc.w PLCKosM_Standard-off_2F7BE ; $07 Act 2
+;=============================================================================
+		dc.w PLCKosM_Standard-off_2F7BE ; $08 Act 1
+		dc.w PLCKosM_Standard-off_2F7BE ; $08 Act 2
+;=============================================================================
+		dc.w PLCKosM_Standard-off_2F7BE ; $09 Act 1
+		dc.w PLCKosM_Standard-off_2F7BE ; $09 Act 2
+;=============================================================================
+		dc.w PLCKosM_Standard-off_2F7BE ; $0A Act 1
+		dc.w PLCKosM_Standard-off_2F7BE ; $0A Act 2
+;=============================================================================
+		dc.w PLCKosM_Standard-off_2F7BE ; $0B Act 1
+		dc.w PLCKosM_Standard-off_2F7BE ; $0B Act 2
+;=============================================================================
+		dc.w PLCKosM_Standard-off_2F7BE ; $0C Act 1
+		dc.w PLCKosM_Standard-off_2F7BE ; $0C Act 2
+;=============================================================================
+		dc.w PLCKosM_Standard-off_2F7BE ; $0D Act 1
+		dc.w PLCKosM_Standard-off_2F7BE ; $0D Act 2
+;=============================================================================
+		dc.w PLCKosM_Standard-off_2F7BE ; $0E Act 1
+		dc.w PLCKosM_Standard-off_2F7BE ; $0E Act 2
+;=============================================================================
+		dc.w PLCKosM_Standard-off_2F7BE ; $0F Act 1
+		dc.w PLCKosM_Standard-off_2F7BE ; $0F Act 2
+;=============================================================================
+		dc.w PLCKosM_Standard-off_2F7BE ; $10 Act 1
+		dc.w PLCKosM_Standard-off_2F7BE ; $10 Act 2
+;=============================================================================
+		dc.w PLCKosM_Standard-off_2F7BE ; $11 Act 1
+		dc.w PLCKosM_Standard-off_2F7BE ; $11 Act 2
+; ===========================================================================
+; macro for a pattern load request list header
+; must be on the same line as a label that has a corresponding _End label later
+plrKosMlistheader macro {INTLABEL}
+__LABEL__ label *
+	dc.w (((__LABEL___End - __LABEL__Plc) / 6) - 1)
+__LABEL__Plc:
+    endm
+
+; macro for a pattern load request
+plrKosMeq macro toVRAMaddr,fromROMaddr
+	dc.l	fromROMaddr
+	dc.w	tiles_to_bytes(toVRAMaddr)
+    endm
+
+
+
+PLCKosM_Standard:	plrKosMlistheader
+	plrKosMeq ArtTile_KosM_Explosion, ArtKosM_Explosion
+PLCKosM_Standard_End		
