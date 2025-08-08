@@ -4401,7 +4401,6 @@ LoadZoneTiles:
 		rts
 ; End of function LoadZoneTiles
 GHZ_LoadTiles:
-.loop:
 		ror.b	#1,d0
 		lsr.w	#4,d0
 		andi.w	#$1F8,d0
@@ -4425,13 +4424,13 @@ GHZ_LoadTiles:
 		move.w	d4,d2
 		jsr	(Queue_Kos_Module).l
 
-loc_7870:
+.loop:
 		move.b	#VintID_TitleCard,(v_vbla_routine).w
 		jsr	(Process_Kos_Queue).l
 		bsr.w	WaitForVint
 		jsr	(Process_Kos_Module_Queue).l
 		tst.b	(Kos_modules_left).w
-		bne.s	loc_7870
+		bne.s	.loop
 		rts
 ; =============== S U B	R O U T	I N E =======================================
 
