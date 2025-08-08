@@ -24504,9 +24504,9 @@ Art_Flowers3:	binclude	"art/uncompressed/EHZ and HTZ flowers - 3.bin"
 Art_Flowers4:	binclude	"art/uncompressed/EHZ and HTZ flowers - 4.bin"
 		even
 Art_EHZPulseBall:	binclude	"art/uncompressed/Pulsing ball against checkered background (EHZ).bin"
-		even
+			even
 Art_HPZPulseOrb:	binclude	"art/uncompressed/Pulsing orb (HPZ).bin"
-		even
+			even
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - Level placeholders
 ; ---------------------------------------------------------------------------
