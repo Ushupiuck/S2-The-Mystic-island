@@ -2744,9 +2744,9 @@ Level_TtlCardLoop:
 		jsr	(ExecuteObjects).l
 		jsr	(BuildSprites).l
 		bsr.w	RunPLC_RAM
-		jsr     DelayTitleCards ; i need this routine
-	    tst.b   d0
-	    beq.s   Level_TtlCardLoop	
+		jsr	DelayTitleCards ; i need this routine
+	tst.b	d0
+	beq.s	Level_TtlCardLoop
 		jsr     (Process_Kos_Module_Queue).l
 		move.w	(v_ttlcardact+obX).w,d0
 		cmp.w	(v_ttlcardact+objoff_30).w,d0
@@ -4364,12 +4364,12 @@ Demo_EndGHZ2:	binclude	"demodata/Ending - GHZ2.bin"
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 LoadZoneTiles:
-        cmpi.b  #id_GHZ,(Current_Zone).w
-		bne.s	.notGHZ
-		bra.w   GHZ_LoadTiles
-.notGHZ:		
 		moveq	#0,d0
 		move.b	(Current_Zone).w,d0
+	cmpi.b	#id_GHZ,(Current_Zone).w
+		bne.s	.notGHZ
+		bra.w   GHZ_LoadTiles
+.notGHZ:
 		lsl.w	#4,d0
 		lea	(LevelArtPointers).l,a2
 		lea	(a2,d0.w),a2
@@ -4401,8 +4401,7 @@ LoadZoneTiles:
 		rts
 ; End of function LoadZoneTiles
 GHZ_LoadTiles:
-		move.w	(Current_Zone).w,d0
-loc_782A:
+.loop:
 		ror.b	#1,d0
 		lsr.w	#4,d0
 		andi.w	#$1F8,d0
@@ -4421,7 +4420,7 @@ loc_782A:
 		move.l	(a4)+,d0
 		andi.l	#$FFFFFF,d0
 		cmp.l	d0,d7
-		beq.s	loc_7870
+		beq.s	.loop
 		movea.l	d0,a1
 		move.w	d4,d2
 		jsr	(Queue_Kos_Module).l
@@ -4497,19 +4496,19 @@ DelayTitleCards:
 	cmp.b	d1,d0
 	bcc.s	.done
 	addq.b	#1,(Artifical_Load_Time).w
-	moveq	#0,d0	
+	moveq	#0,d0
 	rts
 .done:
 	clr.b	(Artifical_Load_Time).w
-	moveq	#1,d0	
+	moveq	#1,d0
 	rts
 
-	
+
 
 ArtificialLoadTimeTable:
 	dc.b 0 ; $00 -
-	dc.b 0 ; $01 - 
-	dc.b 0 ; $02 - 
+	dc.b 0 ; $01 -
+	dc.b 0 ; $02 -
 	dc.b 0 ; $03 -
 	dc.b 0 ; $04 -
 	dc.b 0 ; $05 - 
