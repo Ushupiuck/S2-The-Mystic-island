@@ -24276,40 +24276,39 @@ Nem_CPZ_FloatingPlatform:	binclude	"art/nemesis/CPZ Floating Platform.nem"
 ; Emerald Hill Zone stage assets
 ; ---------------------------------------------------------------------------
 Nem_EHZ_Fireball:	binclude	"art/nemesis/Fireball 1.nem"
-		even
-Nem_BurningLog:	binclude	"art/nemesis/Burning Log.nem"
-		even
+			even
+Nem_BurningLog:		binclude	"art/nemesis/Burning Log.nem"
+			even
 Nem_EHZ_Waterfall:	binclude	"art/nemesis/Waterfall tiles.nem"
-		even
+			even
 Nem_HTZ_Fireball:	binclude	"art/nemesis/Fireball 2.nem"
-		even
-Nem_EHZ_Bridge:	binclude	"art/nemesis/EHZ bridge.nem"
-		even
+			even
+Nem_EHZ_Bridge:		binclude	"art/nemesis/EHZ bridge.nem"
+			even
 ; ---------------------------------------------------------------------------
 ; Hidden Palace Zone stage assets
 ; ---------------------------------------------------------------------------
-Nem_HPZ_Bridge:	binclude	"art/nemesis/HPZ bridge.nem"
-		even
+Nem_HPZ_Bridge:		binclude	"art/nemesis/HPZ bridge.nem"
+			even
 Nem_HPZ_Waterfall:	binclude	"art/nemesis/HPZ waterfall.nem"
-		even
+			even
 Nem_HPZ_Emerald:	binclude	"art/nemesis/HPZ Emerald.nem"
-		even
+			even
 Nem_HPZ_Platform:	binclude	"art/nemesis/HPZ Platform.nem"
-		even
+			even
 Nem_HPZ_PulsingBall:	binclude	"art/nemesis/HPZ Pulsing Ball.nem"
-		even
+			even
 Nem_HPZ_Various:	binclude	"art/nemesis/HPZ Various.nem"
-		even
+			even
 ; ---------------------------------------------------------------------------
 ; Hill Top Zone stage assets
 ; ---------------------------------------------------------------------------
-Nem_HTZ_Lift:	binclude	"art/nemesis/HTZ zip-line platform.nem"
-		even
-Nem_HTZ_AutomaticDoor:
-		binclude	"art/nemesis/HTZ Autodoor.nem"
-		even
-Nem_HTZ_Seesaw:	binclude	"art/nemesis/See-saw in HTZ.nem"
-		even
+Nem_HTZ_Lift:		binclude	"art/nemesis/HTZ zip-line platform.nem"
+			even
+Nem_HTZ_AutomaticDoor:	binclude	"art/nemesis/HTZ Autodoor.nem"
+			even
+Nem_HTZ_Seesaw:		binclude	"art/nemesis/See-saw in HTZ.nem"
+			even
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - enemies
 ; ---------------------------------------------------------------------------
@@ -24432,19 +24431,19 @@ Nem_MiniSonic:	binclude	"art/nemesis/S1/Continue Screen Stuff.nem"
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - animals
 ; ---------------------------------------------------------------------------
-Nem_Bunny:	binclude	"art/nemesis/S1/Animal Rabbit.nem"
+Nem_Bunny:	binclude	"art/nemesis/Animal Rabbit.nem"
 		even
-Nem_Chicken:	binclude	"art/nemesis/S1/Animal Chicken.nem"
+Nem_Chicken:	binclude	"art/nemesis/Animal Chicken.nem"
 		even
-Nem_Penguin:	binclude	"art/nemesis/S1/Animal Penguin.nem"
+Nem_Penguin:	binclude	"art/nemesis/Animal Penguin.nem"
 		even
-Nem_Seal:	binclude	"art/nemesis/S1/Animal Seal.nem"
+Nem_Seal:	binclude	"art/nemesis/Animal Seal.nem"
 		even
-Nem_Pig:	binclude	"art/nemesis/S1/Animal Pig.nem"
+Nem_Pig:	binclude	"art/nemesis/Animal Pig.nem"
 		even
-Nem_Flicky:	binclude	"art/nemesis/S1/Animal Flicky.nem"
+Nem_Flicky:	binclude	"art/nemesis/Animal Flicky.nem"
 		even
-Nem_Squirrel:	binclude	"art/nemesis/S1/Animal Squirrel.nem"
+Nem_Squirrel:	binclude	"art/nemesis/Animal Squirrel.nem"
 		even
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - bosses and ending sequence
