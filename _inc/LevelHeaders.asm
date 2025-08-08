@@ -58,6 +58,11 @@ levartptrsM macro plc1,plc2,palette,art1,art2,map16x161,map16x162,map128x1281,ma
 LevelArtPointersM:
 		levartptrsM plcid_GHZ, plcid_GHZ2, palid_GHZ, Kosp_GHZ, Kosp_GHZ, Map16_GHZ, Map16_GHZ, Map128_GHZ, Map128_GHZ    ; GHZ  ; GREEN HILL ZONE
 		levartptrsM plcid_GHZ, plcid_GHZ2, palid_GHZ, Kosp_GHZ, Kosp_GHZ, Map16_GHZ, Map16_GHZ, Map128_GHZ, Map128_GHZ    ; GHZ  ; GREEN HILL ZONE
+		levartptrsM plcid_GHZ, plcid_GHZ2, palid_GHZ, Kosp_GHZ, Kosp_GHZ, Map16_GHZ, Map16_GHZ, Map128_GHZ, Map128_GHZ    ; GHZ  ; GREEN HILL ZONE
+		levartptrsM plcid_GHZ, plcid_GHZ2, palid_GHZ, Kosp_GHZ, Kosp_GHZ, Map16_GHZ, Map16_GHZ, Map128_GHZ, Map128_GHZ    ; GHZ  ; GREEN HILL ZONE
+
+		levartptrsM plcid_GHZ, plcid_GHZ2, palid_GHZ, Kosp_GHZ, Kosp_GHZ, Map16_GHZ, Map16_GHZ, Map128_GHZ, Map128_GHZ    ; GHZ  ; GREEN HILL ZONE
+		levartptrsM plcid_GHZ, plcid_GHZ2, palid_GHZ, Kosp_GHZ, Kosp_GHZ, Map16_GHZ, Map16_GHZ, Map128_GHZ, Map128_GHZ    ; GHZ  ; GREEN HILL ZONE
 
 
 LoadEnemyArt:

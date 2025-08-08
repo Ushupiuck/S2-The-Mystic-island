@@ -686,7 +686,7 @@ Vint_TitleCard:
 		movem.l	d0-d7,(Camera_RAM_copy).w
 		movem.l	(Scroll_flags).w,d0-d1
 		movem.l	d0-d1,(Scroll_flags_copy).w
-		bsr.w	LoadTilesAsYouMove
+		bsr.w	LoadTilesAsYouMove_BGOnly
 	;	jsr	(LoadTilesAsYouMove).l
 		jsr	(HudUpdate).l
 		bra.w	ProcessDPLC
@@ -4365,48 +4365,13 @@ Demo_EndGHZ2:	binclude	"demodata/Ending - GHZ2.bin"
 
 LoadZoneTiles:
 		moveq	#0,d0
-		move.b	(Current_Zone).w,d0
-	cmpi.b	#id_GHZ,(Current_Zone).w
-		bne.s	.notGHZ
-		bra.w   GHZ_LoadTiles
-.notGHZ:
-		lsl.w	#4,d0
-		lea	(LevelArtPointers).l,a2
-		lea	(a2,d0.w),a2
-		move.l	(a2)+,d0
-		andi.l	#$FFFFFF,d0	; 8x8 tile pointer
-		movea.l	d0,a0
-		lea	(Chunk_Table).l,a1
-		bsr.w	KosPlusDec
-		move.w	a1,d3
-		move.w	d3,d7
-		andi.w	#$FFF,d3
-
-		lsr.w	#1,d3
-		rol.w	#4,d7
-		andi.w	#$F,d7
--		move.w	d7,d2
-		lsl.w	#7,d2
-		lsl.w	#5,d2
-		move.l	#$FFFFFF,d1
-		move.w	d2,d1
-		jsr	(QueueDMATransfer).l
-		move.w	d7,-(sp)
-		move.b	#VintID_TitleCard,(v_vbla_routine).w
-		bsr.w	WaitForVint
-		bsr.w	RunPLC_RAM
-		move.w	(sp)+,d7
-		move.w	#$800,d3
-		dbf	d7,-
-		rts
-; End of function LoadZoneTiles
-GHZ_LoadTiles:
-		ror.b	#1,d0
-		lsr.w	#4,d0
-		andi.w	#$1F8,d0
+		move.w	(Current_ZoneAndAct).w,d0
+		ror.b	#2,d0
+		lsr.w	#3,d0
 		move.w	d0,d1
 		add.w	d0,d0
 		add.w	d1,d0
+
 		lea	(LevelArtPointersM).l,a4
 		lea	(a4,d0.w),a4
 		move.l	(a4)+,d0
@@ -4428,10 +4393,13 @@ GHZ_LoadTiles:
 		move.b	#VintID_TitleCard,(v_vbla_routine).w
 		jsr	(Process_Kos_Queue).l
 		bsr.w	WaitForVint
+	;	bsr.w	RunPLC_RAM
 		jsr	(Process_Kos_Module_Queue).l
 		tst.b	(Kos_modules_left).w
 		bne.s	.loop
 		rts
+; End of function LoadZoneTiles
+
 ; =============== S U B	R O U T	I N E =======================================
 
 ; LoadZoneBlockMaps
@@ -5975,7 +5943,7 @@ locret_681E:
 
 ; ---------------------------------------------------------------------------
 ; Leftover Sonic 1 Routine
-; LoadTilesAsYouMove_BGOnly:
+LoadTilesAsYouMove_BGOnly:
 		lea	(vdp_control_port).l,a5
 		lea	(vdp_data_port).l,a6
 		lea	(Scroll_flags_BG).w,a2
