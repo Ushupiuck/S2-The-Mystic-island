@@ -11,7 +11,7 @@ BackupSRAM	  = 1
 AddressSRAM	  = 3	; 0 = odd+even; 2 = even only; 3 = odd only
 
 FixBugs		  = 1	; change to 1 to enable bugfixes
-AdvancedHandler	  = 0
+AdvancedHandler	  = 1
 
 zeroOffsetOptimization = 1	; if 1, makes a handful of zero-offset instructions smaller
 
@@ -2649,13 +2649,16 @@ Level_NoMusicFade:
 		lea	(Nem_TitleCard).l,a0	; load title card patterns
 		bsr.w	NemDec
 		enable_ints
+		moveq	#0,d1
+		move.b	(Current_Zone).w,d1
+		ror.b	#2,d1
+		lsr.w	#3,d1
+		move.w	d1,d0
+		add.w	d1,d1
+		add.w	d0,d1
+		lea	(LevelArtPointersM).l,a2
 		moveq	#0,d0
-		move.b	(Current_Zone).w,d0
-		lsl.w	#4,d0
-		lea	(LevelArtPointers).l,a2
-		lea	(a2,d0.w),a2
-		moveq	#0,d0
-		move.b	(a2),d0
+		move.b	(a2,d1.w),d0
 		beq.s	loc_3BB0
 		bsr.w	LoadPLC
 
@@ -2744,10 +2747,10 @@ Level_TtlCardLoop:
 		jsr	(ExecuteObjects).l
 		jsr	(BuildSprites).l
 		bsr.w	RunPLC_RAM
-		jsr	DelayTitleCards ; i need this routine
-	tst.b	d0
-	beq.s	Level_TtlCardLoop
 		jsr     (Process_Kos_Module_Queue).l
+		jsr	DelayTitleCards ; i need this routine
+	    tst.b	d0
+	    beq.s	Level_TtlCardLoop
 		move.w	(v_ttlcardact+obX).w,d0
 		cmp.w	(v_ttlcardact+objoff_30).w,d0
 		bne.s	Level_TtlCardLoop
@@ -4406,45 +4409,76 @@ LoadZoneTiles:
 MainLevelLoadBlock:
 		moveq	#0,d0
 		move.b	(Current_Zone).w,d0
-		lsl.w	#4,d0
-		lea	(LevelArtPointers).l,a2
+		ror.b	#2,d0
+		lsr.w	#3,d0
+		move.w	d0,d1
+		add.w	d0,d0
+		add.w	d1,d0
+		lea	(LevelArtPointersM).l,a2
 		lea	(a2,d0.w),a2
 		move.l	a2,-(sp)
-		addq.l	#4,a2
-		movea.l	(a2)+,a0
+	;	addq.l	#4,a2
+		addq.w	#8,a2
+		move.l	(a2)+,d0
+		andi.l	#$FFFFFF,d0
+		move.l	d0,d7
+		movea.l	d0,a0
 		lea	(v_16x16).w,a1
 		bsr.w	KosPlusDec	; load block maps
-		movea.l	(a2)+,a0
+		move.l	(a2)+,d0
+		andi.l	#$FFFFFF,d0
+		cmp.l	d0,d7
+		beq.s	loc_1C30E
+		movea.l	d0,a0
+		bsr.w	KosPlusDec	; load block maps
+
+loc_1C30E:
+		move.l	(a2)+,d0
+		andi.l	#$FFFFFF,d0
+		move.l	d0,d7
+		movea.l	d0,a0
 		lea	(v_128x128).l,a1
 		bsr.w	KosPlusDec		; load chunk maps
+		move.l	(a2)+,d0
+		andi.l	#$FFFFFF,d0
+		cmp.l	d0,d7
+		beq.s	loc_1C33A
+		movea.l	d0,a0
+		bsr.w	KosPlusDec	; load block maps
+loc_1C33A:
 		bsr.s	LevelLayoutLoad
-		move.w	(a2)+,d0
-		move.w	(a2),d0
-		andi.w	#$FF,d0
-		cmpi.w	#id_LZ<<8+3,(Current_ZoneAndAct).w	; is this SBZ3 (LZ4)?
-		bne.s	.notSBZ		; if not, branch
-		moveq	#palid_SBZ3,d0	; use SBZ3 palette
+;		move.w	(a2)+,d0
+;		move.w	(a2),d0
+;		andi.w	#$FF,d0
+;		cmpi.w	#id_LZ<<8+3,(Current_ZoneAndAct).w	; is this SBZ3 (LZ4)?
+;		bne.s	.notSBZ		; if not, branch
+;		moveq	#palid_SBZ3,d0	; use SBZ3 palette
 
-.notSBZ:
-		cmpi.w	#id_SBZ<<8+1,(Current_ZoneAndAct).w	; is this SBZ2?
-		beq.s	.isSBZorFZ	; if so, branch
-		cmpi.w	#id_SBZ<<8+2,(Current_ZoneAndAct).w	; is this FZ (SBZ3)?
-		bne.s	.normalpal	; skip ahead and continue as normal
+;.notSBZ:
+;		cmpi.w	#id_SBZ<<8+1,(Current_ZoneAndAct).w	; is this SBZ2?
+;		beq.s	.isSBZorFZ	; if so, branch
+;		cmpi.w	#id_SBZ<<8+2,(Current_ZoneAndAct).w	; is this FZ (SBZ3)?
+;		bne.s	.normalpal	; skip ahead and continue as normal
 
-.isSBZorFZ:
-		moveq	#palid_HTZ2,d0
+;.isSBZorFZ:
+;		moveq	#palid_HTZ2,d0
 
-.normalpal:
+;.normalpal:
 		bsr.w	PalLoad1
 		movea.l	(sp)+,a2
 		addq.w	#4,a2
 		moveq	#0,d0
 		move.b	(a2),d0
 		beq.s	.skipPLC
-		bra.w	LoadPLC
+		cmp.b	d0,d1
+		beq.s	.skipPLC
+		bsr.w	LoadPLC
 
 .skipPLC:
-		rts
+		addq.w	#4,a2
+		moveq	#0,d0
+		move.b	(a2),d0
+		jmp	(PalLoad1).l
 ; End of function MainLevelLoadBlock
 
 ; ===========================================================================
@@ -24579,35 +24613,35 @@ Map16_GHZ:	binclude	"mappings/16x16/GHZ.kosp"
 Map128_GHZ:	binclude	"mappings/128x128/GHZ.kosp"
 		even
 
-Kosp_LZ:	binclude	"art/kosinski/level/8x8 - LZ.kosp"
+Kosp_LZ:	binclude	"art/kosinski/level/8x8 - LZ.kospm"
 		even
 Map16_LZ:	binclude	"mappings/16x16/LZ.kosp"
 		even
 Map128_LZ:	binclude	"mappings/128x128/LZ.kosp"
 		even
 
-Kosp_CPZ:	binclude	"art/kosinski/level/8x8 - CPZ.kosp"
+Kosp_CPZ:	binclude	"art/kosinski/level/8x8 - CPZ.kospm"
 		even
 Map16_CPZ:	binclude	"mappings/16x16/CPZ.kosp"
 		even
 Map128_CPZ:	binclude	"mappings/128x128/CPZ.kosp"
 		even
 
-Kosp_EHZ:	binclude	"art/kosinski/level/8x8 - EHZ.kosp"
+Kosp_EHZ:	binclude	"art/kosinski/level/8x8 - EHZ.kospm"
 		even
 Map16_EHZ:	binclude	"mappings/16x16/EHZ.kosp"
 		even
 Map128_EHZ:	binclude	"mappings/128x128/EHZ.kosp"
 		even
 
-Kosp_HPZ:	binclude	"art/kosinski/level/8x8 - HPZ.kosp"
+Kosp_HPZ:	binclude	"art/kosinski/level/8x8 - HPZ.kospm"
 		even
 Map16_HPZ:	binclude	"mappings/16x16/HPZ.kosp"
 		even
 Map128_HPZ:	binclude	"mappings/128x128/HPZ.kosp"
 		even
 
-Kosp_HTZ:	binclude	"art/kosinski/level/8x8 - HTZ.kosp"
+Kosp_HTZ:	binclude	"art/kosinski/level/8x8 - HTZ.kospm"
 		even
 Map16_HTZ:	binclude	"mappings/16x16/HTZ.kosp"
 		even
