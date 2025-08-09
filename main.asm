@@ -2632,7 +2632,7 @@ MusicList:	dc.b bgm_GHZ
 ; ---------------------------------------------------------------------------
 
 Level:
-        clr.b	(Artifical_Load_Time).w
+	clr.b	(Artifical_Load_Time).w
 		bset	#GameModeFlag_TitleCard,(v_gamemode).w
 		tst.w	(f_demo).w	; are we on an ending demo?
 		bmi.s	Level_NoMusicFade	; if so, branch
@@ -2650,12 +2650,9 @@ Level_NoMusicFade:
 		bsr.w	NemDec
 		enable_ints
 		moveq	#0,d1
-		move.b	(Current_Zone).w,d1
+		move.w	(Current_Zone).w,d1
 		ror.b	#2,d1
 		lsr.w	#3,d1
-		move.w	d1,d0
-		add.w	d1,d1
-		add.w	d0,d1
 		lea	(LevelArtPointersM).l,a2
 		moveq	#0,d0
 		move.b	(a2,d1.w),d0
@@ -2749,8 +2746,8 @@ Level_TtlCardLoop:
 		bsr.w	RunPLC_RAM
 		jsr     (Process_Kos_Module_Queue).l
 		jsr	DelayTitleCards ; i need this routine
-	    tst.b	d0
-	    beq.s	Level_TtlCardLoop
+	tst.b	d0
+	beq.s	Level_TtlCardLoop
 		move.w	(v_ttlcardact+obX).w,d0
 		cmp.w	(v_ttlcardact+objoff_30).w,d0
 		bne.s	Level_TtlCardLoop
@@ -4365,123 +4362,140 @@ Demo_EndSBZ2:	binclude	"demodata/Ending - SBZ2.bin"
 Demo_EndGHZ2:	binclude	"demodata/Ending - GHZ2.bin"
 		even
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+; Load only art assets (Kos modules) from LevelArtPointersM
+; Each entry = 8 bytes: PLC+Art1, PLC+Art2
 
 LoadZoneTiles:
 		moveq	#0,d0
 		move.w	(Current_ZoneAndAct).w,d0
 		ror.b	#2,d0
 		lsr.w	#3,d0
-		move.w	d0,d1
-		add.w	d0,d0
-		add.w	d1,d0
-
 		lea	(LevelArtPointersM).l,a4
 		lea	(a4,d0.w),a4
+
+		; snag PLC entries & back 'em up!
+		moveq	#0,d5
+		moveq	#0,d6
+		move.b	(a4),d5		; plc1 = top byte of first long
+		move.b	4(a4),d6	; plc2 = top byte of second long
+		movem.w	d5/d6,-(sp)	; and now we package them nicely into the SP for future use
+
 		move.l	(a4)+,d0
 		andi.l	#$FFFFFF,d0
 		move.l	d0,d7
 		movea.l	d0,a1
 		move.w	(a1),d4
 		move.w	#0,d2
-		jsr	(Queue_Kos_Module).l
+		bsr.w	Queue_Kos_Module
+
 		move.l	(a4)+,d0
 		andi.l	#$FFFFFF,d0
 		cmp.l	d0,d7
 		beq.s	.loop
 		movea.l	d0,a1
 		move.w	d4,d2
-		jsr	(Queue_Kos_Module).l
+		bsr.w	Queue_Kos_Module
 
 .loop:
 		move.b	#VintID_TitleCard,(v_vbla_routine).w
-		jsr	(Process_Kos_Queue).l
+		bsr.w	Process_Kos_Queue
 		bsr.w	WaitForVint
-	;	bsr.w	RunPLC_RAM
-		jsr	(Process_Kos_Module_Queue).l
+		bsr.w	RunPLC_RAM
+		bsr.w	Process_Kos_Module_Queue
 		tst.b	(Kos_modules_left).w
 		bne.s	.loop
+
+		movem.w	(sp)+,d5/d6      ; d5=plc1, d6=plc2
+		moveq	#0,d0
+		move.b	d5,d0
+		beq.s	.chk_plc2
+		bsr.w	LoadPLC
+.chk_plc2:
+		moveq	#0,d0
+		move.b	d6,d0
+		beq.s	.done
+		cmp.b	d0,d5            ; skip if same as plc1
+		beq.s	.done
+		bra.w	LoadPLC
+.done:
 		rts
 ; End of function LoadZoneTiles
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 ; LoadZoneBlockMaps
 MainLevelLoadBlock:
 		moveq	#0,d0
-		move.b	(Current_Zone).w,d0
+		move.w	(Current_ZoneAndAct).w,d0
 		ror.b	#2,d0
-		lsr.w	#3,d0
-		move.w	d0,d1
-		add.w	d0,d0
-		add.w	d1,d0
-		lea	(LevelArtPointersM).l,a2
+		lsr.w	#3,d0		; d0 = 8 * (4*Z + A)
+		add.w	d0,d0		; d0 = 16 * (4*Z + A)
+		lea	(LevelBlockPointersM).l,a2
 		lea	(a2,d0.w),a2
-		move.l	a2,-(sp)
-	;	addq.l	#4,a2
-		addq.w	#8,a2
+		; primary 16x16
+		move.b	(a2),d6		; store & backup the palette pointer
+		move.w	d6,-(sp)
 		move.l	(a2)+,d0
 		andi.l	#$FFFFFF,d0
 		move.l	d0,d7
 		movea.l	d0,a0
-		lea	(v_16x16).w,a1
-		bsr.w	KosPlusDec	; load block maps
-		move.l	(a2)+,d0
-		andi.l	#$FFFFFF,d0
-		cmp.l	d0,d7
-		beq.s	loc_1C30E
-		movea.l	d0,a0
-		bsr.w	KosPlusDec	; load block maps
+		lea	(v_16x16).l,a1
+		bsr.w	KosPlusDec
 
-loc_1C30E:
+		; secondary 16x16
 		move.l	(a2)+,d0
 		andi.l	#$FFFFFF,d0
+		cmp.l	d0,d7		; are the last 16x16 packets identical?
+		beq.s	.skipSecondary16x16	; if so, don't bother
+		movea.l	d0,a0
+		lea	(v_16x16).l,a1
+		bsr.w	KosPlusDec
+.skipSecondary16x16:
+		; primary 128x128
+		move.l	(a2)+,d0
 		move.l	d0,d7
 		movea.l	d0,a0
 		lea	(v_128x128).l,a1
-		bsr.w	KosPlusDec		; load chunk maps
+		bsr.w	KosPlusDec
+		; secondary 128x128
 		move.l	(a2)+,d0
-		andi.l	#$FFFFFF,d0
-		cmp.l	d0,d7
-		beq.s	loc_1C33A
+		cmp.l	d0,d7		; are the last 128x128 packets identical?
+		beq.s	.skipSecondary128x128	; if so, don't bother
 		movea.l	d0,a0
-		bsr.w	KosPlusDec	; load block maps
-loc_1C33A:
+		lea	(v_128x128).l,a1
+		bsr.w	KosPlusDec
+.skipSecondary128x128:
+		; layout & palette
 		bsr.s	LevelLayoutLoad
-;		move.w	(a2)+,d0
-;		move.w	(a2),d0
-;		andi.w	#$FF,d0
-;		cmpi.w	#id_LZ<<8+3,(Current_ZoneAndAct).w	; is this SBZ3 (LZ4)?
-;		bne.s	.notSBZ		; if not, branch
-;		moveq	#palid_SBZ3,d0	; use SBZ3 palette
-
-;.notSBZ:
-;		cmpi.w	#id_SBZ<<8+1,(Current_ZoneAndAct).w	; is this SBZ2?
-;		beq.s	.isSBZorFZ	; if so, branch
-;		cmpi.w	#id_SBZ<<8+2,(Current_ZoneAndAct).w	; is this FZ (SBZ3)?
-;		bne.s	.normalpal	; skip ahead and continue as normal
-
-;.isSBZorFZ:
-;		moveq	#palid_HTZ2,d0
-
-;.normalpal:
-		bsr.w	PalLoad1
-		movea.l	(sp)+,a2
-		addq.w	#4,a2
 		moveq	#0,d0
-		move.b	(a2),d0
-		beq.s	.skipPLC
-		cmp.b	d0,d1
-		beq.s	.skipPLC
-		bsr.w	LoadPLC
-
-.skipPLC:
-		addq.w	#4,a2
-		moveq	#0,d0
-		move.b	(a2),d0
-		jmp	(PalLoad1).l
+		move.w	(sp)+,d6	; restore palette!
+		move.b	d6,d0
+		bra.w	PalLoad1
 ; End of function MainLevelLoadBlock
 
 ; ===========================================================================
+; ---------------------------------------------------------------------------
+; Subroutine to load a level layout from RAM
+; ---------------------------------------------------------------------------
+
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+
+LevelLayoutLoad:
+		moveq	#0,d0
+		move.w	(Current_ZoneAndAct).w,d0
+		move.w	d0,d1
+		lsr.w	#5,d0
+		andi.w	#$FF,d1
+		lsl.w	#1,d1
+		add.w	d1,d0
+		lea	(Level_Index).l,a0
+		move.w	(a0,d0.w),d0
+		adda.l	d0,a0
+		lea	(v_lvllayout).w,a1
+		bra.w	KosPlusDec
+
+; End of function LevelLayoutLoad
+
 ; -----------------------------------------
 ; DelayTitleCards
 ; Add Artifical Loading Times
@@ -4512,7 +4526,7 @@ ArtificialLoadTimeTable:
 	dc.b 0 ; $02 -
 	dc.b 0 ; $03 -
 	dc.b 0 ; $04 -
-	dc.b 0 ; $05 - 
+	dc.b 0 ; $05 -
 	dc.b 0 ; $06 -
 	dc.b 0 ; $07 -
 	dc.b 0 ; $08 -
@@ -4525,28 +4539,6 @@ ArtificialLoadTimeTable:
 	dc.b 0 ; $0F -
 	dc.b 0 ; $10 -
 	even
-; ---------------------------------------------------------------------------
-; Subroutine to load a level layout from RAM
-; ---------------------------------------------------------------------------
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
-
-LevelLayoutLoad:
-		moveq	#0,d0
-		move.w	(Current_ZoneAndAct).w,d0
-		move.w	d0,d1
-		lsr.w	#5,d0
-		andi.w	#$FF,d1
-		lsl.w	#1,d1
-		add.w	d1,d0
-		lea	(Level_Index).l,a0
-		move.w	(a0,d0.w),d0
-		adda.l	d0,a0
-		lea	(v_lvllayout).w,a1
-		bra.w	KosPlusDec
-; End of function LevelLayoutLoad
-
 ; =============== S U B	R O U T	I N E =======================================
 
 
