@@ -72,9 +72,9 @@ LevelArtPointersM:
 		levartptrsM 0,         0,          palid_GHZ, Kosp_GHZ, Kosp_GHZ, Map16_GHZ, Map16_GHZ, Map128_GHZ, Map128_GHZ    ; LV6  ; ACT 2
 		levartptrsM 0,         0,          palid_GHZ, Kosp_GHZ, Kosp_GHZ, Map16_GHZ, Map16_GHZ, Map128_GHZ, Map128_GHZ    ; LV6  ; ACT 3
 		levartptrsM 0,         0,          palid_GHZ, Kosp_GHZ, Kosp_GHZ, Map16_GHZ, Map16_GHZ, Map128_GHZ, Map128_GHZ    ; LL6  ; ACT 4
-
+		even
 LoadEnemyArt:
-         lea	off_2F7BE(pc),a6
+		lea	off_2F7BE(pc),a6
 ; ---------------------------------------------------------------------------
 
 loc_2F79E:
