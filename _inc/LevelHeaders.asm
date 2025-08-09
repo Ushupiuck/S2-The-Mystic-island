@@ -28,24 +28,6 @@
 ; ---------------------------------------------------------------------------
 
 ; macro for declaring a "main level load block" (MLLB)
-levartptrs macro plc1,plc2,art,map16x16,map128x128,music,palette
-	dc.l (plc1<<24)|art
-	dc.l (plc2<<24)|map16x16
-	dc.l map128x128
-	dc.b 0,music,palette,palette
-	endm
-
-; MainLoadBlocks:
-LevelArtPointers:
-		levartptrs plcid_GHZ, plcid_GHZ2, Kosp_GHZ, Map16_GHZ, Map128_GHZ, bgm_GHZ, palid_GHZ    ; GHZ  ; GREEN HILL ZONE
-		levartptrs plcid_LZ,  plcid_LZ2,  Kosp_LZ,  Map16_LZ,  Map128_LZ,  bgm_LZ,  palid_LZ     ; LZ   ; LABYRINTH ZONE
-		levartptrs plcid_CPZ, plcid_CPZ2, Kosp_CPZ, Map16_CPZ, Map128_CPZ, bgm_MZ,  palid_CPZ    ; CPZ  ; CHEMICAL PLANT ZONE
-		levartptrs plcid_EHZ, plcid_EHZ2, Kosp_EHZ, Map16_EHZ, Map128_EHZ, bgm_SLZ, palid_EHZ    ; EHZ  ; EMERALD HILL ZONE
-		levartptrs plcid_HPZ, plcid_HPZ2, Kosp_HPZ, Map16_HPZ, Map128_HPZ, bgm_SYZ, palid_HPZ    ; HPZ  ; HIDDEN PALACE ZONE
-		levartptrs plcid_HTZ, plcid_HTZ2, Kosp_HTZ, Map16_HTZ, Map128_HTZ, bgm_SBZ, palid_HTZ1   ; HTZ  ; HILL TOP ZONE
-		levartptrs 0,         0,          Kosp_GHZ, Map16_GHZ, Map128_GHZ, bgm_SBZ, palid_Ending ; LEV6 ; LEVEL 6 (UNUSED, SONIC 1 ENDING)
-
-; macro for declaring a "main level load block" (MLLB)
 levartptrsM macro plc1,plc2,palette,art1,art2,map16x161,map16x162,map128x1281,map128x1282
 	dc.l (plc1<<24)|art1
 	dc.l (plc2<<24)|art2
@@ -56,14 +38,40 @@ levartptrsM macro plc1,plc2,palette,art1,art2,map16x161,map16x162,map128x1281,ma
     endm
 
 LevelArtPointersM:
-		levartptrsM plcid_GHZ, plcid_GHZ2, palid_GHZ, Kosp_GHZ, Kosp_GHZ, Map16_GHZ, Map16_GHZ, Map128_GHZ, Map128_GHZ    ; GHZ  ; GREEN HILL ZONE
-		levartptrsM plcid_GHZ, plcid_GHZ2, palid_GHZ, Kosp_GHZ, Kosp_GHZ, Map16_GHZ, Map16_GHZ, Map128_GHZ, Map128_GHZ    ; GHZ  ; GREEN HILL ZONE
-		levartptrsM plcid_GHZ, plcid_GHZ2, palid_GHZ, Kosp_GHZ, Kosp_GHZ, Map16_GHZ, Map16_GHZ, Map128_GHZ, Map128_GHZ    ; GHZ  ; GREEN HILL ZONE
-		levartptrsM plcid_GHZ, plcid_GHZ2, palid_GHZ, Kosp_GHZ, Kosp_GHZ, Map16_GHZ, Map16_GHZ, Map128_GHZ, Map128_GHZ    ; GHZ  ; GREEN HILL ZONE
+		levartptrsM plcid_GHZ, plcid_GHZ2, palid_GHZ, Kosp_GHZ, Kosp_GHZ, Map16_GHZ, Map16_GHZ, Map128_GHZ, Map128_GHZ    ; GHZ  ; ACT 1
+		levartptrsM plcid_GHZ, plcid_GHZ2, palid_GHZ, Kosp_GHZ, Kosp_GHZ, Map16_GHZ, Map16_GHZ, Map128_GHZ, Map128_GHZ    ; GHZ  ; ACT 2
+		levartptrsM plcid_GHZ, plcid_GHZ2, palid_GHZ, Kosp_GHZ, Kosp_GHZ, Map16_GHZ, Map16_GHZ, Map128_GHZ, Map128_GHZ    ; GHZ  ; ACT 3
+		levartptrsM plcid_GHZ, plcid_GHZ2, palid_GHZ, Kosp_GHZ, Kosp_GHZ, Map16_GHZ, Map16_GHZ, Map128_GHZ, Map128_GHZ    ; GHZ  ; ACT 4
 
-		levartptrsM plcid_GHZ, plcid_GHZ2, palid_GHZ, Kosp_GHZ, Kosp_GHZ, Map16_GHZ, Map16_GHZ, Map128_GHZ, Map128_GHZ    ; GHZ  ; GREEN HILL ZONE
-		levartptrsM plcid_GHZ, plcid_GHZ2, palid_GHZ, Kosp_GHZ, Kosp_GHZ, Map16_GHZ, Map16_GHZ, Map128_GHZ, Map128_GHZ    ; GHZ  ; GREEN HILL ZONE
+		levartptrsM plcid_LZ,  plcid_LZ,   palid_LZ,  Kosp_LZ,  Kosp_LZ,  Map16_LZ,  Map16_LZ,  Map128_LZ,  Map128_LZ     ; LZ   ; ACT 1
+		levartptrsM plcid_LZ,  plcid_LZ,   palid_LZ,  Kosp_LZ,  Kosp_LZ,  Map16_LZ,  Map16_LZ,  Map128_LZ,  Map128_LZ     ; LZ   ; ACT 2
+		levartptrsM plcid_LZ,  plcid_LZ,   palid_LZ,  Kosp_LZ,  Kosp_LZ,  Map16_LZ,  Map16_LZ,  Map128_LZ,  Map128_LZ     ; LZ   ; ACT 3
+		levartptrsM plcid_LZ,  plcid_LZ,   palid_LZ,  Kosp_LZ,  Kosp_LZ,  Map16_LZ,  Map16_LZ,  Map128_LZ,  Map128_LZ     ; LZ   ; ACT 4
 
+		levartptrsM plcid_CPZ, plcid_CPZ,  palid_CPZ, Kosp_CPZ, Kosp_CPZ, Map16_CPZ, Map16_CPZ, Map128_CPZ, Map128_CPZ    ; CPZ  ; ACT 1
+		levartptrsM plcid_CPZ, plcid_CPZ,  palid_CPZ, Kosp_CPZ, Kosp_CPZ, Map16_CPZ, Map16_CPZ, Map128_CPZ, Map128_CPZ    ; CPZ  ; ACT 2
+		levartptrsM plcid_CPZ, plcid_CPZ,  palid_CPZ, Kosp_CPZ, Kosp_CPZ, Map16_CPZ, Map16_CPZ, Map128_CPZ, Map128_CPZ    ; CPZ  ; ACT 3
+		levartptrsM plcid_CPZ, plcid_CPZ,  palid_CPZ, Kosp_CPZ, Kosp_CPZ, Map16_CPZ, Map16_CPZ, Map128_CPZ, Map128_CPZ    ; CPZ  ; ACT 4
+
+		levartptrsM plcid_EHZ, plcid_EHZ,  palid_EHZ, Kosp_EHZ, Kosp_EHZ, Map16_EHZ, Map16_EHZ, Map128_EHZ, Map128_EHZ    ; EHZ  ; ACT 1
+		levartptrsM plcid_EHZ, plcid_EHZ,  palid_EHZ, Kosp_EHZ, Kosp_EHZ, Map16_EHZ, Map16_EHZ, Map128_EHZ, Map128_EHZ    ; EHZ  ; ACT 2
+		levartptrsM plcid_EHZ, plcid_EHZ,  palid_EHZ, Kosp_EHZ, Kosp_EHZ, Map16_EHZ, Map16_EHZ, Map128_EHZ, Map128_EHZ    ; EHZ  ; ACT 3
+		levartptrsM plcid_EHZ, plcid_EHZ,  palid_EHZ, Kosp_EHZ, Kosp_EHZ, Map16_EHZ, Map16_EHZ, Map128_EHZ, Map128_EHZ    ; EHZ  ; ACT 4
+
+		levartptrsM plcid_HPZ, plcid_HPZ,  palid_HPZ, Kosp_HPZ, Kosp_HPZ, Map16_HPZ, Map16_HPZ, Map128_HPZ, Map128_HPZ    ; HPZ  ; ACT 1
+		levartptrsM plcid_HPZ, plcid_HPZ,  palid_HPZ, Kosp_HPZ, Kosp_HPZ, Map16_HPZ, Map16_HPZ, Map128_HPZ, Map128_HPZ    ; HPZ  ; ACT 2
+		levartptrsM plcid_HPZ, plcid_HPZ,  palid_HPZ, Kosp_HPZ, Kosp_HPZ, Map16_HPZ, Map16_HPZ, Map128_HPZ, Map128_HPZ    ; HPZ  ; ACT 3
+		levartptrsM plcid_HPZ, plcid_HPZ,  palid_HPZ, Kosp_HPZ, Kosp_HPZ, Map16_HPZ, Map16_HPZ, Map128_HPZ, Map128_HPZ    ; HPZ  ; ACT 4
+
+		levartptrsM plcid_HTZ, plcid_HTZ,  palid_HTZ1, Kosp_HTZ, Kosp_HTZ, Map16_HTZ, Map16_HTZ, Map128_HTZ, Map128_HTZ    ; HTZ  ; ACT 1
+		levartptrsM plcid_HTZ, plcid_HTZ,  palid_HTZ1, Kosp_HTZ, Kosp_HTZ, Map16_HTZ, Map16_HTZ, Map128_HTZ, Map128_HTZ    ; HTZ  ; ACT 2
+		levartptrsM plcid_HTZ, plcid_HTZ,  palid_HTZ1, Kosp_HTZ, Kosp_HTZ, Map16_HTZ, Map16_HTZ, Map128_HTZ, Map128_HTZ    ; HTZ  ; ACT 3
+		levartptrsM plcid_HTZ, plcid_HTZ,  palid_HTZ1, Kosp_HTZ, Kosp_HTZ, Map16_HTZ, Map16_HTZ, Map128_HTZ, Map128_HTZ    ; HTZ  ; ACT 4
+
+		levartptrsM 0,         0,          palid_GHZ, Kosp_GHZ, Kosp_GHZ, Map16_GHZ, Map16_GHZ, Map128_GHZ, Map128_GHZ    ; LV6  ; ACT 1
+		levartptrsM 0,         0,          palid_GHZ, Kosp_GHZ, Kosp_GHZ, Map16_GHZ, Map16_GHZ, Map128_GHZ, Map128_GHZ    ; LV6  ; ACT 2
+		levartptrsM 0,         0,          palid_GHZ, Kosp_GHZ, Kosp_GHZ, Map16_GHZ, Map16_GHZ, Map128_GHZ, Map128_GHZ    ; LV6  ; ACT 3
+		levartptrsM 0,         0,          palid_GHZ, Kosp_GHZ, Kosp_GHZ, Map16_GHZ, Map16_GHZ, Map128_GHZ, Map128_GHZ    ; LL6  ; ACT 4
 
 LoadEnemyArt:
          lea	off_2F7BE(pc),a6
