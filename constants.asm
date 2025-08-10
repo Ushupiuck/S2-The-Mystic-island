@@ -430,8 +430,7 @@ v_endeggman	= v_objspace+object_size*2		; object variable space for Eggman after
 v_tryagain	= v_objspace+object_size*3		; object variable space for the "TRY AGAIN" text ($40 bytes)
 v_eggmanchaos	= v_objspace+object_size*32		; object variable space for the emeralds juggled by Eggman ($180 bytes)
 
-Kos_decomp_buffer:			ds.b	$1000			; unused (will become part of the object table)
-			ds.b	$100
+Kos_decomp_buffer:			ds.b	$1000	; Moduled Kosinski+ decompression buffer
 
 VDP_Command_Buffer:	ds.w	7*$12			; stores 18 ($12) VDP commands to issue the next time ProcessDMAQueue is called
 VDP_Command_Buffer_Slot:	ds.w	1		; stores the address of the next open slot for a queued VDP command
@@ -885,24 +884,24 @@ v_demonum:		ds.w	1			; demo level number (not the same as the level number)
 v_creditsnum:		ds.w	1			; credits index number
 
 Kos_decomp_queue_count		ds.w 1			; the number of pieces of data on the queue. Sign bit set indicates a decompression is in progress
-Kos_decomp_stored_registers	ds.w 20			; allows decompression to be spread over multiple frames
-Kos_decomp_stored_SR		ds.w 1
-Kos_decomp_bookmark		ds.l 1			; the address within the Kosinski queue processor at which processing is to be resumed
-Kos_description_field		ds.w 1			; used by the Kosinski queue processor the same way the stack is used by the normal Kosinski decompression routine
-Kos_decomp_queue		ds.l 2*4		; 2 longwords per entry, first is source location and second is decompression location
+Kos_decomp_stored_Wregisters:	ds.w 6
+Kos_decomp_stored_Lregisters:	ds.w 6
+Kos_decomp_stored_SR:		ds.w 1
+Kos_decomp_bookmark:		ds.l 1			; the address within the Kosinski queue processor at which processing is to be resumed
+Kos_description_field:		ds.w 1			; used by the Kosinski queue processor the same way the stack is used by the normal Kosinski decompression routine
+Kos_decomp_queue:		ds.l 2*4		; 2 longwords per entry, first is source location and second is decompression location
 Kos_decomp_source =		Kos_decomp_queue	; long ; the compressed data location for the first entry in the queue
 Kos_decomp_destination =	Kos_decomp_queue+4	; long ; the decompression location for the first entry in the queue
 Kos_decomp_queue_End:
 Kos_modules_left		ds.b 1			; the number of modules left to decompresses. Sign bit set indicates a module is being decompressed/has been decompressed
 			ds.b 1				; unused
 Kos_last_module_size		ds.w 1			; the uncompressed size of the last module in words. All other modules are $800 words
-Kos_module_queue		ds.w 3*4		; 6 bytes per entry, first longword is source location and next word is VRAM destination
+Kos_module_queue:		ds.w 3*6		; 6 bytes per entry, first longword is source location and next word is VRAM destination
 Kos_module_source =		Kos_module_queue	; long ; the compressed data location for the first module in the queue
 Kos_module_destination =	Kos_module_queue+4	; word ; the VRAM destination for the first module in the queue
 Kos_module_queue_End:
-Kos_decomp_stored_Wregisters: ds.w 1
-Kos_decomp_stored_Lregisters: ds.l 1
-			ds.b	$D6			; unused
+			ds.b	$100
+			ds.b	$E0			; unused
 v_objstate:		ds.b	$C0			; object state list
 v_objstate_end:
 v_end:
@@ -1119,7 +1118,7 @@ ArtTile_GHZ_Bridge:		equ $4C6 ; $38E in S1
 ArtTile_GHZ_Big_Flower_2:	equ ArtTile_Level+$390
 ArtTile_GHZ_Spike_Pole:		equ $398
 ArtTile_GHZ_Giant_Ball:		equ $3AA
-ArtTile_GHZ_Purple_Rock:	equ $6C0 ; $3D0 in S1
+ArtTile_GHZ_Purple_Rock:	equ $3D0 ; $3D0 in S1
 
 ; Marble Zone
 ArtTile_MZ_Block:		equ $2B8
@@ -1197,20 +1196,21 @@ ArtTile_FZ_Eggman_No_Vehicle:	equ $470
 ArtTile_Level:			equ $000
 ArtTile_Ball_Hog:		equ $302
 ArtTile_Bomb:			equ $400
-ArtTile_Crabmeat:		equ $400
 ArtTile_Missile_Disolve:	equ $41C ; Unused
 ArtTile_Spikes:			equ $434
 ArtTile_Spikes_GHZ:		equ ArtTile_Spikes+$6C
+
 ArtTile_Buzz_Bomber:		equ $444
+ArtTile_Crabmeat:		equ $400
 ArtTile_Chopper:		equ $470
+ArtTile_Moto_Bug:		equ $4E0
+ArtTile_Newtron:		equ $49B
+
 ArtTile_Yadrin:			equ $47B
 ArtTile_Lamppost:		equ $47C
 ArtTile_Jaws:			equ $486
-ArtTile_Newtron:		equ $49B
 ArtTile_Burrobot:		equ $4A6
 ArtTile_Basaran:		equ $4B8
-ArtTile_Roller:			equ $4B8
-ArtTile_Moto_Bug:		equ $4E0
 ArtTile_Button:			equ $50F
 ArtTile_S1_Spring_Horizontal:	equ $4A8
 ArtTile_S1_Spring_Vertical:	equ $4B8
@@ -1221,7 +1221,6 @@ ArtTile_Title_Card:		equ $580
 ArtTile_Animal_1:		equ $580
 ArtTile_Animal_2:		equ $592
 ArtTile_Explosion:		equ $5A0
-ArtTile_KosM_Explosion = ArtTile_Explosion
 ArtTile_Monitor:		equ $680
 ArtTile_HUD:			equ $6CA
 ArtTile_Sonic:			equ $780
@@ -1384,8 +1383,6 @@ ArtTile_Spiker:			equ $520
 
 ; Unused
 ArtTile_Gator:			equ $300
-ArtTile_Early_Buzzer:		equ $32C
-ArtTile_Early_BBat:		equ $350
 ArtTile_Stegway:		equ $3C4
 ArtTile_BFish:			equ $530
 ArtTile_Aquis:			equ $570

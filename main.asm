@@ -11,7 +11,7 @@ BackupSRAM	  = 1
 AddressSRAM	  = 3	; 0 = odd+even; 2 = even only; 3 = odd only
 
 FixBugs		  = 1	; change to 1 to enable bugfixes
-AdvancedHandler	  = 1
+AdvancedHandler	  = 0
 
 zeroOffsetOptimization = 1	; if 1, makes a handful of zero-offset instructions smaller
 
@@ -571,7 +571,7 @@ Vint_PCM:
 		beq.w	+
 		subq.w	#1,(v_demolength).w
 +
-		rts
+		bra.w	Set_Kos_Bookmark
 ; ===========================================================================
 ; loc_CBC: VintSub4:
 Vint_Title:
@@ -620,10 +620,10 @@ Vint_Level:
 		bhs.s	+
 		st.b	(f_doupdatesinhblank).w
 		addq.l	#4,sp
-;		bsr.w	Set_KosPlus_Bookmark
+		bsr.w	Set_Kos_Bookmark
 		bra.w	VintRet
 +
-;		pea	(Set_KosPlus_Bookmark).w
+		pea	(Set_Kos_Bookmark).w
 ; ---------------------------------------------------------------------------
 ; Subroutine to run a demo for an amount of time
 ; ---------------------------------------------------------------------------
@@ -662,7 +662,7 @@ Vint_S1SS:
 		subq.w	#1,(v_demolength).w
 
 .end:
-		rts
+		bra.w	Set_Kos_Bookmark
 ; ===========================================================================
 ; loc_EA2: VintSubC: VintSub18:
 Vint_TitleCard:
@@ -689,6 +689,7 @@ Vint_TitleCard:
 		bsr.w	LoadTilesAsYouMove_BGOnly
 	;	jsr	(LoadTilesAsYouMove).l
 		jsr	(HudUpdate).l
+		bsr.w	Set_Kos_Bookmark
 		bra.w	ProcessDPLC
 ; ===========================================================================
 ; loc_F98: VintSub12:
@@ -713,7 +714,7 @@ Vint_SSResults:
 		subq.w	#1,(v_demolength).w
 
 .end:
-		rts
+		bra.w	Set_Kos_Bookmark
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
@@ -893,6 +894,54 @@ ClearScreen:
 ; End of function ClearScreen
 
 ; ===========================================================================
+
+; ---------------------------------------------------------------------------
+; Subroutine to transfer a plane map to VRAM
+; ---------------------------------------------------------------------------
+
+; control register:
+;    CD1 CD0 A13 A12 A11 A10 A09 A08     (D31-D24)
+;    A07 A06 A05 A04 A03 A02 A01 A00     (D23-D16)
+;     ?   ?   ?   ?   ?   ?   ?   ?      (D15-D8)
+;    CD5 CD4 CD3 CD2  ?   ?  A15 A14     (D7-D0)
+;
+;	A00-A15 - address
+;	CD0-CD3 - code
+;	CD4 - 1 if VRAM copy DMA mode. 0 otherwise.
+;	CD5 - DMA operation
+;
+;	Bits CD3-CD0:
+;	0000 - VRAM read
+;	0001 - VRAM write
+;	0011 - CRAM write
+;	0100 - VSRAM read
+;	0101 - VSRAM write
+;	1000 - CRAM read
+;
+; d0 = control register
+; d1 = width
+; d2 = heigth
+; a1 = source address
+
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+
+; ShowVDPGraphics: PlaneMapToVRAM:
+PlaneMapToVRAM_H40:
+		lea	(vdp_data_port).l,a6
+		move.l	#$800000,d4
+
+PlaneMapToVRAM_H40_LineLoop:
+		move.l	d0,4(a6)
+		move.w	d1,d3
+
+PlaneMapToVRAM_H40_TileLoop:
+		move.w	(a1)+,(a6)
+		dbf	d3,PlaneMapToVRAM_H40_TileLoop
+		add.l	d4,d0
+		dbf	d2,PlaneMapToVRAM_H40_LineLoop
+		rts
+; End of function PlaneMapToVRAM_H40
+
 ; ---------------------------------------------------------------------------
 ; Subroutine to load the compressed DAC driver
 ; ---------------------------------------------------------------------------
@@ -947,53 +996,39 @@ PlaySound_Unk:
 
 		include	"_inc/PauseGame.asm"
 
-; ---------------------------------------------------------------------------
-; Subroutine to transfer a plane map to VRAM
-; ---------------------------------------------------------------------------
+; =============== S U B R O U T I N E =======================================
 
-; control register:
-;    CD1 CD0 A13 A12 A11 A10 A09 A08     (D31-D24)
-;    A07 A06 A05 A04 A03 A02 A01 A00     (D23-D16)
-;     ?   ?   ?   ?   ?   ?   ?   ?      (D15-D8)
-;    CD5 CD4 CD3 CD2  ?   ?  A15 A14     (D7-D0)
-;
-;	A00-A15 - address
-;	CD0-CD3 - code
-;	CD4 - 1 if VRAM copy DMA mode. 0 otherwise.
-;	CD5 - DMA operation
-;
-;	Bits CD3-CD0:
-;	0000 - VRAM read
-;	0001 - VRAM write
-;	0011 - CRAM write
-;	0100 - VSRAM read
-;	0101 - VSRAM write
-;	1000 - CRAM read
-;
-; d0 = control register
-; d1 = width
-; d2 = heigth
-; a1 = source address
 
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+LoadEnemyArt:
+		lea	(Offs_LoadEnemyArt).l,a6
+		; level specific checks go here.
+		; Sonic & knuckles default are provided as an example.
+	;	move.w	#$D00,d0	; Angel island intro skip
+	;	cmpi.b	#$16,(Current_zone).w
+	;	beq.s	loc_2F798
+	;	move.w	#$E00,d0	; Multiplayer start
+	;	cmpi.w	#$1700,(Current_zone_and_act).w
+	;	bne.s	loc_2F79E
 
-; ShowVDPGraphics: PlaneMapToVRAM:
-PlaneMapToVRAM_H40:
-		lea	(vdp_data_port).l,a6
-		move.l	#$800000,d4
+loc_2F79E:
+		move.w	(Current_ZoneAndAct).w,d0
 
-PlaneMapToVRAM_H40_LineLoop:
-		move.l	d0,4(a6)
-		move.w	d1,d3
+loc_2F7A2:
+		ror.b	#2,d0
+		lsr.w	#5,d0
+		adda.w	(a6,d0.w),a6
+		move.w	(a6)+,d6
+		bmi.s	.exit		; if there's nothing, we bail!
 
-PlaneMapToVRAM_H40_TileLoop:
-		move.w	(a1)+,(a6)
-		dbf	d3,PlaneMapToVRAM_H40_TileLoop
-		add.l	d4,d0
-		dbf	d2,PlaneMapToVRAM_H40_LineLoop
+.loop:
+		movea.l	(a6)+,a1
+		move.w	(a6)+,d2
+		bsr.w	Queue_Kos_Module	; Process 4 entries
+		dbf	d6,.loop	; loop until we're finished
+
+.exit:
 		rts
-; End of function PlaneMapToVRAM_H40
-
+; End of function LoadEnemyArt
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 ; ---------------------------------------------------------------------------
 ; Subroutine to load pattern load cues (aka to queue pattern load requests)
@@ -23347,7 +23382,6 @@ APM_HPZ:	begin_animpat
 		dc.w make_block_tile(ArtTile_Art_HPZPulseOrb_3+$7,0,0,2,0),make_block_tile(ArtTile_Level+$0,0,0,0,0)
 APM_HPZ_End:
 
-
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Subroutine to draw the HUD
@@ -24280,12 +24314,15 @@ Debug_ResetPlayerStats:
 ; ---------------------------------------------------------------------------
 		include	"s1.sounddriver.asm"
 ; ---------------------------------------------------------------------------
-Kosp_Title:	binclude	"art/kosinski/level/8x8 - Title.kosp"
-		even
+Nem_SegaLogo:		binclude	"art/nemesis/Sega Logo (JP1).nem"
+			even
+Kosp_Title:		binclude	"art/kosinski/8x8 - Title.kosp"
+			even
 Nem_TitleSonicTails:	binclude	"art/nemesis/Title Sonic and Tails.nem"
-		even
-Nem_SegaLogo:	binclude	"art/nemesis/Sega Logo (JP1).nem"
-		even
+			even
+; ---------------------------------------------------------------------------
+; Misc. compressed data - Tilemaps
+; ---------------------------------------------------------------------------
 Eni_SegaLogo:	binclude	"tilemaps/Sega Logo (JP1).eni"
 		even
 Eni_TitleMap:	binclude	"tilemaps/Title Emblem.eni"
@@ -24293,6 +24330,10 @@ Eni_TitleMap:	binclude	"tilemaps/Title Emblem.eni"
 Kosp_TitleBg1:	binclude	"tilemaps/Title Background - 1.kosp"
 		even
 Kosp_TitleBg2:	binclude	"tilemaps/Title Background - 2.kosp"
+		even
+Eni_SSBg1:	binclude	"tilemaps/SS Background 1.eni" ; special stage background (mappings)
+		even
+Eni_SSBg2:	binclude	"tilemaps/SS Background 2.eni" ; special stage background (mappings)
 		even
 ; ---------------------------------------------------------------------------
 ; Uncompressed graphics	- Sonic
@@ -24309,6 +24350,8 @@ TailsDynPLC:	include		"mappings/spriteDPLC/Tails.asm"
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - special stage
 ; ---------------------------------------------------------------------------
+Nem_Warp:	binclude	"art/nemesis/S1/Unused - SStage Flash.nem" ; entry to special stage flash
+		even
 Nem_SSWalls:	binclude	"art/nemesis/Special Walls.nem" ; special stage walls
 		even
 Nem_SSBgFish:	binclude	"art/nemesis/Special Birds & Fish.nem" ; special stage birds and fish background
@@ -24337,13 +24380,7 @@ Nem_SSWBlock:	binclude	"art/nemesis/Special W.nem"	; special stage W block
 		even
 Nem_SSGlass:	binclude	"art/nemesis/Special Glass.nem" ; special stage destroyable glass block
 		even
-Nem_Bumper:	binclude	"art/nemesis/Bumper.nem"
-		even
 Nem_ResultEm:	binclude	"art/nemesis/Special Result Emeralds.nem" ; chaos emeralds on special stage results screen
-		even
-Eni_SSBg1:	binclude	"tilemaps/SS Background 1.eni" ; special stage background (mappings)
-		even
-Eni_SSBg2:	binclude	"tilemaps/SS Background 2.eni" ; special stage background (mappings)
 		even
 ; ---------------------------------------------------------------------------
 ; Green Hill Zone stage assets
@@ -24372,13 +24409,7 @@ Nem_CPZ_FloatingPlatform:	binclude	"art/nemesis/CPZ Floating Platform.nem"
 ; ---------------------------------------------------------------------------
 ; Emerald Hill Zone stage assets
 ; ---------------------------------------------------------------------------
-Nem_EHZ_Fireball:	binclude	"art/nemesis/Fireball 1.nem"
-			even
-Nem_BurningLog:		binclude	"art/nemesis/Burning Log.nem"
-			even
 Nem_EHZ_Waterfall:	binclude	"art/nemesis/Waterfall tiles.nem"
-			even
-Nem_HTZ_Fireball:	binclude	"art/nemesis/Fireball 2.nem"
 			even
 Nem_EHZ_Bridge:		binclude	"art/nemesis/EHZ bridge.nem"
 			even
@@ -24400,6 +24431,10 @@ Nem_HPZ_Various:	binclude	"art/nemesis/HPZ Various.nem"
 ; ---------------------------------------------------------------------------
 ; Hill Top Zone stage assets
 ; ---------------------------------------------------------------------------
+Nem_EHZ_Fireball:	binclude	"art/nemesis/Fireball 1.nem"
+			even
+Nem_HTZ_Fireball:	binclude	"art/nemesis/Fireball 2.nem"
+			even
 Nem_HTZ_Lift:		binclude	"art/nemesis/HTZ zip-line platform.nem"
 			even
 Nem_HTZ_AutomaticDoor:	binclude	"art/nemesis/HTZ Autodoor.nem"
@@ -24409,72 +24444,72 @@ Nem_HTZ_Seesaw:		binclude	"art/nemesis/See-saw in HTZ.nem"
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - enemies
 ; ---------------------------------------------------------------------------
-Nem_Ballhog:	binclude	"art/nemesis/S1/Enemy Ball Hog.nem"
+Kospm_Ballhog:	binclude	"art/moduled kosinski/Enemy Ball Hog.kospm"
 		even
-Nem_Crabmeat:	binclude	"art/nemesis/S1/Enemy Crabmeat.nem"
+Kospm_Chopper:	binclude	"art/moduled kosinski/Enemy Chopper.kospm"
 		even
-Nem_GHZBuzz:	binclude	"art/nemesis/S1/Enemy Buzz Bomber.nem"
+Kospm_Motobug:	binclude	"art/moduled kosinski/Enemy Motobug.kospm"
 		even
-Nem_Explosion3:	binclude	"art/nemesis/S1/Unused - Explosion.nem"
+Kospm_Crabmeat:	binclude	"art/moduled kosinski/Enemy Crabmeat.kospm"
 		even
-Nem_Burrobot:	binclude	"art/nemesis/S1/Enemy Burrobot.nem"
+Kospm_Buzz:	binclude	"art/moduled kosinski/Enemy Buzz Bomber.kospm"
 		even
-Nem_Chopper:	binclude	"art/nemesis/S1/Enemy Chopper.nem"
+Kospm_Newtron:	binclude	"art/moduled kosinski/Enemy Newtron.kospm"
 		even
-Nem_Jaws:	binclude	"art/nemesis/S1/Enemy Jaws.nem"
+Kospm_Burrobot:	binclude	"art/moduled kosinski/Enemy Burrobot.kospm"
 		even
-Nem_Roller:	binclude	"art/nemesis/S1/Enemy Roller.nem"
+Kospm_Jaws:	binclude	"art/moduled kosinski/Enemy Jaws.kospm"
 		even
-Nem_Motobug:	binclude	"art/nemesis/S1/Enemy Motobug.nem"
+Kospm_Yadrin:	binclude	"art/moduled kosinski/Enemy Yadrin.kospm"
 		even
-Nem_Newtron:	binclude	"art/nemesis/S1/Enemy Newtron.nem"
+Kospm_Basaran:	binclude	"art/moduled kosinski/Enemy Basaran.kospm"
 		even
-Nem_Yadrin:	binclude	"art/nemesis/S1/Enemy Yadrin.nem"
+Kospm_Splats:	binclude	"art/moduled kosinski/Enemy Splats.kospm"
 		even
-Nem_Basaran:	binclude	"art/nemesis/S1/Enemy Basaran.nem"
+Kospm_Bomb:	binclude	"art/moduled kosinski/Enemy Bomb.kospm"
 		even
-Nem_Splats:	binclude	"art/nemesis/S1/Enemy Splats.nem"
+Kospm_Orbinaut:	binclude	"art/moduled kosinski/Enemy Orbinaut.kospm"
 		even
-Nem_Bomb:	binclude	"art/nemesis/S1/Enemy Bomb.nem"
+Kospm_Cater:	binclude	"art/moduled kosinski/Enemy Caterkiller.kospm"
 		even
-Nem_Orbinaut:	binclude	"art/nemesis/S1/Enemy Orbinaut.nem"
+Kospm_BBat:	binclude	"art/moduled kosinski/Enemy BBat.kospm"
 		even
-Nem_Cater:	binclude	"art/nemesis/S1/Enemy Caterkiller.nem"
+Kospm_Redz:	binclude	"art/moduled kosinski/Enemy Redz.kospm"
 		even
-Nem_Gator:	binclude	"art/nemesis/Gator.nem"
+Nem_Gator:	binclude	"art/nemesis/Enemy Gator.nem"
 		even
-Nem_Buzzer:	binclude	"art/nemesis/Buzzer.nem"
+Nem_Buzzer:	binclude	"art/nemesis/Enemy Buzzer.nem"
 		even
-Nem_BBat:	binclude	"art/nemesis/BBat.nem"
+Nem_Octus:	binclude	"art/nemesis/Enemy Octus.nem"
 		even
-Nem_Octus:	binclude	"art/nemesis/Octus.nem"
+Nem_Stegway:	binclude	"art/nemesis/Enemy Stegway.nem"
 		even
-Nem_Stegway:	binclude	"art/nemesis/Stegway.nem"
+Nem_BFish:	binclude	"art/nemesis/Enemy BFish.nem"
 		even
-Nem_Redz:	binclude	"art/nemesis/Redz.nem"
+Nem_Aquis:	binclude	"art/nemesis/Enemy Aquis.nem"
 		even
-Nem_BFish:	binclude	"art/nemesis/BFish.nem"
+Nem_MBubbler:	binclude	"art/nemesis/Enemy Bubbler's Mother.nem"
 		even
-Nem_Aquis:	binclude	"art/nemesis/Aquis.nem"
+Nem_Bubbler:	binclude	"art/nemesis/Enemy Bubbler.nem"
 		even
-Nem_UnusedBall:	binclude	"art/nemesis/Ball.nem"
+Nem_Snail:	binclude	"art/nemesis/Enemy Snail.nem"
 		even
-Nem_MBubbler:	binclude	"art/nemesis/Unused - Bubbler's Mother.nem"
+Nem_Crawl:	binclude	"art/nemesis/Enemy Crawl.nem"
 		even
-Nem_Bubbler:	binclude	"art/nemesis/Unused - Bubbler.nem"
-		even
-Nem_Snail:	binclude	"art/nemesis/Snail badnik from EHZ.nem"
-		even
-Nem_Crawl:	binclude	"art/nemesis/Crawl badnik.nem"
-		even
-Nem_Masher:	binclude	"art/nemesis/Masher.nem"
+Nem_Masher:	binclude	"art/nemesis/Enemy Masher.nem"
 		even
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - various
 ; ---------------------------------------------------------------------------
 Nem_TitleCard:	binclude	"art/nemesis/Title Cards.nem"
 		even
+Nem_GameOver:	binclude	"art/nemesis/Game Over.nem"
+		even
+Nem_Signpost:	binclude	"art/nemesis/Signpost.nem"
+		even
 Nem_HUD:	binclude	"art/nemesis/HUD.nem"
+		even
+Nem_Points:	binclude	"art/nemesis/Numbers.nem"
 		even
 Nem_Lives:	binclude	"art/nemesis/Sonic lives counter.nem"
 		even
@@ -24482,23 +24517,19 @@ Nem_Ring:	binclude	"art/nemesis/Ring.nem"
 		even
 Nem_Monitors:	binclude	"art/nemesis/Monitor and contents.nem"
 		even
-ArtKosM_Explosion: binclude "art/kosinski/Explosion.kospm"
+Nem_Explosion:	binclude	"art/nemesis/Explosion.nem"
 		even
-Nem_Explosion:	binclude	"art/nemesis/S1/Explosion.nem"
+Nem_Explosion3:	binclude	"art/nemesis/S1/Unused - Explosion.nem"
 		even
 Nem_Shield:	binclude	"art/nemesis/Shield.nem"
 		even
 Nem_Stars:	binclude	"art/nemesis/Stars.nem"
 		even
-Nem_Button:	binclude	"art/nemesis/Button.nem"
+Nem_Lamppost:	binclude	"art/nemesis/Lamppost.nem"
 		even
-Nem_Water:	binclude	"art/nemesis/Water Surface.nem"
+Nem_HSpring:	binclude	"art/nemesis/S1/Spring Horizontal.nem"
 		even
-Nem_Points:	binclude	"art/nemesis/Numbers.nem"
-		even
-Nem_GameOver:	binclude	"art/nemesis/S1/Game Over.nem"
-		even
-Nem_VSpikes:	binclude	"art/nemesis/Spikes.nem"
+Nem_VSpring:	binclude	"art/nemesis/S1/Spring Vertical.nem"
 		even
 Nem_HSpring2:	binclude	"art/nemesis/Horizontal spring.nem"
 		even
@@ -24506,19 +24537,17 @@ Nem_VSpring2:	binclude	"art/nemesis/Vertical spring.nem"
 		even
 Nem_DSpring:	binclude	"art/nemesis/Diagonal spring.nem"
 		even
-Nem_HSpring:	binclude	"art/nemesis/S1/Spring Horizontal.nem"
+Nem_Bumper:	binclude	"art/nemesis/Bumper.nem"
 		even
-Nem_VSpring:	binclude	"art/nemesis/S1/Spring Vertical.nem"
+Nem_VSpikes:	binclude	"art/nemesis/Spikes.nem"
 		even
-Nem_Signpost:	binclude	"art/nemesis/Signpost.nem"
+Nem_Button:	binclude	"art/nemesis/Button.nem"
 		even
-Nem_Lamppost:	binclude	"art/nemesis/Lamppost.nem"
+Nem_Water:	binclude	"art/nemesis/Water Surface.nem"
 		even
 Nem_BigFlash:	binclude	"art/nemesis/S1/Giant Ring Flash.nem"
 		even
 Nem_Bonus:	binclude	"art/nemesis/S1/Hidden Bonuses.nem"
-		even
-Nem_Warp:	binclude	"art/nemesis/S1/Unused - SStage Flash.nem" ; entry to special stage flash
 		even
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - continue screen
@@ -24568,7 +24597,7 @@ Nem_EndSonic:	binclude	"art/nemesis/S1/Ending - Sonic.nem"
 Nem_TryAgain:	binclude	"art/nemesis/S1/Ending - Try Again.nem"
 		even
 Kosp_EndFlowers:	binclude	"art/kosinski/Flowers at Ending.kosp"
-		even
+			even
 Nem_EndFlower:	binclude	"art/nemesis/S1/Ending - Flowers.nem"
 		even
 Kosp_CreditTxt:	binclude	"art/kosinski/Ending - Credits.kosp"
@@ -24598,42 +24627,42 @@ Nem_HTZ_AniPlaceholders:	binclude	"art/nemesis/HTZ Ani Placeholders.nem"
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - primary patterns and block mappings
 ; ---------------------------------------------------------------------------
-Kosp_GHZ:	binclude	"art/kosinski/level/8x8 - GHZ.kospm"
+Kosp_GHZ:	binclude	"art/moduled kosinski/level/8x8 - GHZ.kospm"
 		even
 Map16_GHZ:	binclude	"mappings/16x16/GHZ.kosp"
 		even
 Map128_GHZ:	binclude	"mappings/128x128/GHZ.kosp"
 		even
 
-Kosp_LZ:	binclude	"art/kosinski/level/8x8 - LZ.kospm"
+Kosp_LZ:	binclude	"art/moduled kosinski/level/8x8 - LZ.kospm"
 		even
 Map16_LZ:	binclude	"mappings/16x16/LZ.kosp"
 		even
 Map128_LZ:	binclude	"mappings/128x128/LZ.kosp"
 		even
 
-Kosp_CPZ:	binclude	"art/kosinski/level/8x8 - CPZ.kospm"
+Kosp_CPZ:	binclude	"art/moduled kosinski/level/8x8 - CPZ.kospm"
 		even
 Map16_CPZ:	binclude	"mappings/16x16/CPZ.kosp"
 		even
 Map128_CPZ:	binclude	"mappings/128x128/CPZ.kosp"
 		even
 
-Kosp_EHZ:	binclude	"art/kosinski/level/8x8 - EHZ.kospm"
+Kosp_EHZ:	binclude	"art/moduled kosinski/level/8x8 - EHZ.kospm"
 		even
 Map16_EHZ:	binclude	"mappings/16x16/EHZ.kosp"
 		even
 Map128_EHZ:	binclude	"mappings/128x128/EHZ.kosp"
 		even
 
-Kosp_HPZ:	binclude	"art/kosinski/level/8x8 - HPZ.kospm"
+Kosp_HPZ:	binclude	"art/moduled kosinski/level/8x8 - HPZ.kospm"
 		even
 Map16_HPZ:	binclude	"mappings/16x16/HPZ.kosp"
 		even
 Map128_HPZ:	binclude	"mappings/128x128/HPZ.kosp"
 		even
 
-Kosp_HTZ:	binclude	"art/kosinski/level/8x8 - HTZ.kospm"
+Kosp_HTZ:	binclude	"art/moduled kosinski/level/8x8 - HTZ.kospm"
 		even
 Map16_HTZ:	binclude	"mappings/16x16/HTZ.kosp"
 		even
@@ -24873,7 +24902,7 @@ SS_5:		binclude	"sslayout/5.kosp"
 SS_6:		binclude	"sslayout/6.kosp"
 		even
 ; ---------------------------------------------------------------------------
-; Level layouts, three entries per act (although the third one is unused)
+; Level layouts, four entries per act
 ; ---------------------------------------------------------------------------
 Level_Index:
 		; Zone 00

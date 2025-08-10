@@ -18,10 +18,10 @@
 ; process the first part before requesting the rest.
 ; ---------------------------------------------------------------------------
 
-;---------------------------------------------------------------------------------------
-; Table of pattern load request lists. Remember to use word-length data when adding lists
-; otherwise you'll break the array.
-;---------------------------------------------------------------------------------------
+;----------------------------------------------------------------------------
+; Table of pattern load request lists. Remember to use word-length data
+; When adding lists. Otherwise you'll break the array.
+;----------------------------------------------------------------------------
 ArtLoadCues:
 
 ptr_PLC_Main:		dc.w PLC_Main-ArtLoadCues
@@ -65,19 +65,19 @@ plcm:	macro gfx,vram
 	dc.l gfx
 	dc.w (vram<<5)
 	endm
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Standard 1 - loaded for every level
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 PLC_Main:	dc.w ((PLC_Main_End-PLC_Main)/6)-1
 		plcm	Nem_HUD, ArtTile_HUD
 		plcm	Nem_Lives, ArtTile_Lives_Counter
 		plcm	Nem_Ring, ArtTile_Ring
 PLC_Main_End:
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Standard 2 - loaded for every level
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 PLC_Main2:	dc.w ((PLC_Main2_End-PLC_Main2)/6)-1
 		plcm	Nem_Points, ArtTile_Points
 		plcm	Nem_Lamppost, ArtTile_Lamppost
@@ -85,79 +85,76 @@ PLC_Main2:	dc.w ((PLC_Main2_End-PLC_Main2)/6)-1
 		plcm	Nem_Shield, ArtTile_Shield
 		plcm	Nem_Stars, ArtTile_Invincibility
 PLC_Main2_End:
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Explosion - loaded for every level AFTER the title card
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 PLC_Explode:	dc.w ((PLC_Explode_End-PLC_Explode)/6)-1
-	;	plcm	Nem_Explosion, ArtTile_Explosion
+		plcm	Nem_Explosion, ArtTile_Explosion
 PLC_Explode_End:
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Game/Time over
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 PLC_GameOver:	dc.w ((PLC_GameOver_End-PLC_GameOver)/6)-1
 		plcm	Nem_GameOver, ArtTile_Game_Over
 PLC_GameOver_End:
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Green Hill Zone primary
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 PLC_GHZ:	dc.w ((PLC_GHZ_End-PLC_GHZ)/6)-1
-		plcm	Nem_Chopper, ArtTile_Chopper
+		plcm	Nem_GHZ_Bridge, ArtTile_GHZ_Bridge
+		plcm	Nem_Swing, $4D0
+		plcm	Nem_GHZ_Rock, ArtTile_GHZ_Purple_Rock
+PLC_GHZ_End:
+; ---------------------------------------------------------------------------
+; PATTERN LOAD REQUEST LIST
+; Green Hill Zone secondary
+; ---------------------------------------------------------------------------
+PLC_GHZ2:	dc.w ((PLC_GHZ2_End-PLC_GHZ2)/6)-1
 		plcm	Nem_VSpikes, ArtTile_Spikes_GHZ
 		plcm	Nem_HSpring, ArtTile_S1_Spring_Horizontal
 		plcm	Nem_VSpring, ArtTile_S1_Spring_Vertical
-		plcm	Nem_GHZ_Bridge, ArtTile_GHZ_Bridge
-		plcm	Nem_Swing, $4D0
-		plcm	Nem_Motobug, ArtTile_Moto_Bug
-		plcm	Nem_GHZ_Rock, ArtTile_GHZ_Purple_Rock
-PLC_GHZ_End:
-; --------------------------------------------------------------------------------------
-; PATTERN LOAD REQUEST LIST
-; Green Hill Zone secondary
-; --------------------------------------------------------------------------------------
-PLC_GHZ2:	dc.w ((PLC_GHZ2_End-PLC_GHZ2)/6)-1
-		plcm	Nem_Chopper, ArtTile_Chopper
 PLC_GHZ2_End:
-; --------------------------------------------------------------------------------------
-; PATTERN LOAD REQUEST LIST
-; Chemical Plant Zone primary
-; --------------------------------------------------------------------------------------
-PLC_CPZ:	dc.w ((PLC_CPZ_End-PLC_CPZ)/6)-1
-		plcm	Nem_CPZ_FloatingPlatform, ArtTile_CPZ_Platform
-PLC_CPZ_End:
-; --------------------------------------------------------------------------------------
-; PATTERN LOAD REQUEST LIST
-; Chemical Plant Zone secondary
-; --------------------------------------------------------------------------------------
-PLC_CPZ2:	dc.w ((PLC_CPZ2_End-PLC_CPZ2)/6)-1
-		plcm	Nem_VSpikes, ArtTile_Spikes
-		plcm	Nem_DSpring, ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2, ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2, ArtTile_Spring_Horizontal
-PLC_CPZ2_End:
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Labyrinth Zone primary
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 PLC_LZ:		dc.w ((PLC_CPZ_End-PLC_CPZ)/6)-1
 		plcm	Nem_CPZ_FloatingPlatform, ArtTile_CPZ_Platform
 PLC_LZ_End:
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Labyrinth Zone secondary
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 PLC_LZ2:	dc.w ((PLC_CPZ2_End-PLC_CPZ2)/6)-1
 		plcm	Nem_VSpikes, ArtTile_Spikes
 		plcm	Nem_DSpring, ArtTile_Spring_Diagonal
 		plcm	Nem_VSpring2, ArtTile_Spring_Vertical
 		plcm	Nem_HSpring2, ArtTile_Spring_Horizontal
 PLC_LZ2_End:
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
+; PATTERN LOAD REQUEST LIST
+; Chemical Plant Zone primary
+; ---------------------------------------------------------------------------
+PLC_CPZ:	dc.w ((PLC_CPZ_End-PLC_CPZ)/6)-1
+		plcm	Nem_CPZ_FloatingPlatform, ArtTile_CPZ_Platform
+PLC_CPZ_End:
+; ---------------------------------------------------------------------------
+; PATTERN LOAD REQUEST LIST
+; Chemical Plant Zone secondary
+; ---------------------------------------------------------------------------
+PLC_CPZ2:	dc.w ((PLC_CPZ2_End-PLC_CPZ2)/6)-1
+		plcm	Nem_VSpikes, ArtTile_Spikes
+		plcm	Nem_DSpring, ArtTile_Spring_Diagonal
+		plcm	Nem_VSpring2, ArtTile_Spring_Vertical
+		plcm	Nem_HSpring2, ArtTile_Spring_Horizontal
+PLC_CPZ2_End:
+; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Emerald Hill Zone primary
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 PLC_EHZ:	dc.w ((PLC_EHZ_End-PLC_EHZ)/6)-1
 		plcm	Nem_EHZ_Fireball, ArtTile_Fireball
 		plcm	Nem_EHZ_Waterfall, ArtTile_Waterfall
@@ -168,10 +165,10 @@ PLC_EHZ:	dc.w ((PLC_EHZ_End-PLC_EHZ)/6)-1
 		plcm	Nem_VSpring2, ArtTile_Spring_Vertical
 		plcm	Nem_HSpring2, ArtTile_Spring_Horizontal
 PLC_EHZ_End:
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Emerald Hill Zone secondary
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 PLC_EHZ2:	dc.w ((PLC_EHZ2_End-PLC_EHZ2)/6)-1
 		plcm	Nem_Shield, ArtTile_EHZ_Shield
 		plcm	Nem_Points, $4AC
@@ -179,36 +176,34 @@ PLC_EHZ2:	dc.w ((PLC_EHZ2_End-PLC_EHZ2)/6)-1
 		plcm	Nem_Snail, ArtTile_Snail
 		plcm	Nem_Masher, ArtTile_Masher
 PLC_EHZ2_End:
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Hidden Palace Zone primary
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 PLC_HPZ:	dc.w ((PLC_HPZ_End-PLC_HPZ)/6)-1
 		plcm	Nem_HPZ_Bridge, ArtTile_HPZ_Bridge
 		plcm	Nem_HPZ_Waterfall, ArtTile_HPZ_Waterfall
 		plcm	Nem_HPZ_Platform, ArtTile_HPZ_Platform
 		plcm	Nem_HPZ_PulsingBall, ArtTile_HPZ_Orb
-		plcm	Nem_HPZ_Various, $37C
-		plcm	Nem_HPZ_Emerald, ArtTile_HPZ_Emerald
 		plcm	Nem_Water, ArtTile_Water_Surface
 PLC_HPZ_End:
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Hidden Palace Zone secondary
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 PLC_HPZ2:	dc.w ((PLC_HPZ2_End-PLC_HPZ2)/6)-1
-		plcm	Nem_Redz, ArtTile_Redz
-		plcm	Nem_BBat, ArtTile_BBat
+		plcm	Nem_HPZ_Various, $37C
+		plcm	Nem_HPZ_Emerald, ArtTile_HPZ_Emerald
 PLC_HPZ2_End:
 		; unused PLR entries
 ;		plcm	Nem_Gator, ArtTile_Gator
 ;		plcm	Nem_Stegway, ArtTile_Stegway
 ;		plcm	Nem_Redz, ArtTile_Redz
 ;		plcm	Nem_BFish, ArtTile_BFish
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Hill Top Zone primary
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 PLC_HTZ:	dc.w ((PLC_HTZ_End-PLC_HTZ)/6)-1
 		plcm	Nem_HTZ_AniPlaceholders, ArtTile_HTZMountains
 		plcm	Nem_EHZ_Fireball, ArtTile_Fireball
@@ -221,10 +216,10 @@ PLC_HTZ:	dc.w ((PLC_HTZ_End-PLC_HTZ)/6)-1
 		plcm	Nem_VSpring2, ArtTile_Spring_Vertical
 		plcm	Nem_HSpring2, ArtTile_Spring_Horizontal
 PLC_HTZ_End:
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Hill Top Zone secondary
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 PLC_HTZ2:	dc.w ((PLC_HTZ2_End-PLC_HTZ2)/6)-1
 		plcm	Nem_HTZ_Lift, ArtTile_HtzZipline
 PLC_HTZ2_End:
@@ -232,17 +227,17 @@ PLC_HTZ2_End:
 ;		plcm	Nem_Buzzer, ArtTile_Buzzer
 ;		plcm	Nem_Snail, ArtTile_Snail
 ;		plcm	Nem_Masher, ArtTile_Masher
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Sonic 1 title card
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 PLC_S1TitleCard:dc.w ((PLC_S1TitleCard_End-PLC_S1TitleCard)/6)-1
 		plcm	Nem_TitleCard, ArtTile_Title_Card
 PLC_S1TitleCard_End:
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; End of zone bosses
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 PLC_Boss:	dc.w ((PLC_Boss_End-PLC_Boss)/6)-1
 		plcm	Nem_EggPod, ArtTile_ArtNem_Eggpod_1
 		plcm	Nem_EHZ_Boss, ArtTile_ArtNem_EHZBoss
@@ -252,10 +247,10 @@ PLC_Boss_End:
 ;		plcm	Nem_CPZ_Boss, $460
 ;		plcm	Nem_EggPodJets, $4D0
 ;		plcm	Nem_Smoke, $4D8
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; End of level signpost
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 PLC_Signpost:	dc.w ((PLC_Signpost_End-PLC_Signpost)/6)-1
 		plcm	Nem_Signpost, ArtTile_Signpost
 		plcm	Nem_Bonus, ArtTile_Hidden_Points
@@ -282,50 +277,50 @@ PLC_S1SpecialStage:
 		plcm	Nem_SSGlass,    ArtTile_SS_Glass		; glass block
 		plcm	Nem_SSEmerald,  ArtTile_SS_Emerald		; emeralds
 PLC_S1SpecialStage_End:
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Green Hill Zone animals
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 PLC_GHZAnimals:	dc.w ((PLC_GHZAnimals_End-PLC_GHZAnimals)/6)-1
 		plcm	Nem_Bunny, ArtTile_Animal_1
 		plcm	Nem_Flicky, ArtTile_Animal_2
 PLC_GHZAnimals_End:
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Labyrinth Zone animals
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 PLC_LZAnimals:	dc.w ((PLC_LZAnimals_End-PLC_LZAnimals)/6)-1
 		plcm	Nem_Penguin, ArtTile_Animal_1
 		plcm	Nem_Seal, ArtTile_Animal_2
 PLC_LZAnimals_End:
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Chemical Plant Zone animals
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 PLC_CPZAnimals:	dc.w ((PLC_CPZAnimals_End-PLC_CPZAnimals)/6)-1
 		plcm	Nem_Squirrel, ArtTile_Animal_1
 		plcm	Nem_Seal, ArtTile_Animal_2
 PLC_CPZAnimals_End:
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Emerald Hill Zone animals
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 PLC_EHZAnimals:	dc.w ((PLC_EHZAnimals_End-PLC_EHZAnimals)/6)-1
 		plcm	Nem_Pig, ArtTile_Animal_1
 		plcm	Nem_Flicky, ArtTile_Animal_2
 PLC_EHZAnimals_End:
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Hidden Palace Zone animals
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 PLC_HPZAnimals:	dc.w ((PLC_HPZAnimals_End-PLC_HPZAnimals)/6)-1
 		plcm	Nem_Pig, ArtTile_Animal_1
 		plcm	Nem_Chicken, ArtTile_Animal_2
 PLC_HPZAnimals_End:
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Hill Top Zone animals
-; --------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 PLC_HTZAnimals:	dc.w ((PLC_HTZAnimals_End-PLC_HTZAnimals)/6)-1
 		plcm	Nem_Bunny, ArtTile_Animal_1
 		plcm	Nem_Chicken, ArtTile_Animal_2
@@ -373,3 +368,169 @@ plcid_Ending:		equ (ptr_PLC_Ending-ArtLoadCues)/2	; $1C
 plcid_TryAgain:		equ (ptr_PLC_TryAgain-ArtLoadCues)/2	; $1D
 plcid_EggmanSBZ2:	equ (ptr_PLC_EggmanSBZ2-ArtLoadCues)/2	; $1E
 plcid_FZBoss:		equ (ptr_PLC_FZBoss-ArtLoadCues)/2	; $1F
+; ---------------------------------------------------------------------------
+Offs_LoadEnemyArt:
+		dc.w PLCKosM_GHZ-Offs_LoadEnemyArt ; $00 Act 1
+		dc.w PLCKosM_GHZ-Offs_LoadEnemyArt ; $00 Act 2
+		dc.w PLCKosM_GHZ-Offs_LoadEnemyArt ; $00 Act 3
+		dc.w PLCKosM_GHZ-Offs_LoadEnemyArt ; $00 Act 4
+; ---------------------------------------------------------------------------
+; LZ
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $01 Act 1
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $01 Act 2
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $01 Act 3
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $01 Act 4
+; ---------------------------------------------------------------------------
+; CPZ
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $02 Act 1
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $02 Act 2
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $02 Act 3
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $02 Act 4
+; ---------------------------------------------------------------------------
+; EHZ
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $03 Act 1
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $03 Act 2
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $03 Act 3
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $03 Act 4
+; ---------------------------------------------------------------------------
+; HPZ
+		dc.w PLCKosM_HPZ-Offs_LoadEnemyArt ; $04 Act 1
+		dc.w PLCKosM_HPZ-Offs_LoadEnemyArt ; $04 Act 2
+		dc.w PLCKosM_HPZ-Offs_LoadEnemyArt ; $04 Act 3
+		dc.w PLCKosM_HPZ-Offs_LoadEnemyArt ; $04 Act 4
+; ---------------------------------------------------------------------------
+; HTZ
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $05 Act 1
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $05 Act 2
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $05 Act 3
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $05 Act 4
+; ---------------------------------------------------------------------------
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $06 Act 1
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $06 Act 2
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $06 Act 3
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $06 Act 4
+; ---------------------------------------------------------------------------
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $07 Act 1
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $07 Act 2
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $07 Act 3
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $07 Act 4
+; ---------------------------------------------------------------------------
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $08 Act 1
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $08 Act 2
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $08 Act 3
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $08 Act 4
+; ---------------------------------------------------------------------------
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $09 Act 1
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $09 Act 2
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $09 Act 3
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $09 Act 4
+; ---------------------------------------------------------------------------
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $0A Act 1
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $0A Act 2
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $0A Act 3
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $0A Act 4
+; ---------------------------------------------------------------------------
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $0B Act 1
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $0B Act 2
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $0B Act 3
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $0B Act 4
+; ---------------------------------------------------------------------------
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $0C Act 1
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $0C Act 2
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $0C Act 3
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $0C Act 4
+; ---------------------------------------------------------------------------
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $0D Act 1
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $0D Act 2
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $0D Act 3
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $0D Act 4
+; ---------------------------------------------------------------------------
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $0E Act 1
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $0E Act 2
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $0E Act 3
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $0E Act 4
+; ---------------------------------------------------------------------------
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $0F Act 1
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $0F Act 2
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $0F Act 3
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $0F Act 4
+; ---------------------------------------------------------------------------
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $10 Act 1
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $10 Act 2
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $10 Act 3
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $10 Act 4
+; ---------------------------------------------------------------------------
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $11 Act 1
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $11 Act 2
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $11 Act 3
+		dc.w PLCKosM_Null-Offs_LoadEnemyArt ; $11 Act 4
+; ---------------------------------------------------------------------------
+; macro for a pattern load request list header
+; must be on the same line as a label that has a corresponding _End label later
+plrKosMlistheader macro {INTLABEL}
+__LABEL__ label *
+	dc.w (((__LABEL___End - __LABEL__Plc) / 6) - 1)
+__LABEL__Plc:
+    endm
+
+; macro for a pattern load request
+plreqKosM macro toVRAMaddr,fromROMaddr
+	dc.l	fromROMaddr
+	dc.w	tiles_to_bytes(toVRAMaddr)
+    endm
+
+
+PLCKosM_Null:	plrKosMlistheader
+	dc.w	$FFFF
+PLCKosM_Null_End
+
+; ---------------------------------------------------------------------------
+; KOSM PATTERN LOAD REQUEST LIST
+; Green Hill Zone
+; ---------------------------------------------------------------------------
+PLCKosM_GHZ:	plrKosMlistheader
+		plreqKosM	ArtTile_Buzz_Bomber, Kospm_Buzz
+		plreqKosM	ArtTile_Crabmeat, Kospm_Crabmeat
+		plreqKosM	ArtTile_Chopper, Kospm_Chopper
+		plreqKosM	ArtTile_Moto_Bug, Kospm_Motobug
+		plreqKosM	ArtTile_Newtron, Kospm_Newtron
+PLCKosM_GHZ_End
+; ---------------------------------------------------------------------------
+; KOSM PATTERN LOAD REQUEST LIST
+; LV01 Zone
+; ---------------------------------------------------------------------------
+
+; ---------------------------------------------------------------------------
+; KOSM PATTERN LOAD REQUEST LIST
+; Chemical Plant Zone
+; ---------------------------------------------------------------------------
+
+; ---------------------------------------------------------------------------
+; KOSM PATTERN LOAD REQUEST LIST
+; Emerald Hill Zone
+; ---------------------------------------------------------------------------
+
+; ---------------------------------------------------------------------------
+; KOSM PATTERN LOAD REQUEST LIST
+; Hidden Palace Zone
+; ---------------------------------------------------------------------------
+PLCKosM_HPZ:	plrKosMlistheader
+		plreqKosM	ArtTile_Redz, Kospm_Redz
+		plreqKosM	ArtTile_BBat, Kospm_BBat
+PLCKosM_HPZ_End
+
+; ---------------------------------------------------------------------------
+; KOSM PATTERN LOAD REQUEST LIST
+; Hill top Zone
+; ---------------------------------------------------------------------------
+
+; ---------------------------------------------------------------------------
+; KOSM PATTERN LOAD REQUEST LIST
+; LV06 Zone
+; ---------------------------------------------------------------------------
+
+; ---------------------------------------------------------------------------
+; KOSM PATTERN LOAD REQUEST LIST
+; LV07 Zone
+; ---------------------------------------------------------------------------
+

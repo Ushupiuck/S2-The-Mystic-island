@@ -32,11 +32,12 @@ Obj42_Main
 		bsr.w	AnimateSprite
 		bra.w	MarkObjGone
 ; ===========================================================================
-Obj42_Main_Index:	dc.w Obj42_ChkDistance-Obj42_Main_Index
-			dc.w Obj42_Type00-Obj42_Main_Index
-			dc.w Obj42_ChkFloor-Obj42_Main_Index
-			dc.w Obj42_Move-Obj42_Main_Index
-			dc.w Obj42_Type02-Obj42_Main_Index
+Obj42_Main_Index:
+		dc.w Obj42_ChkDistance-Obj42_Main_Index
+		dc.w Obj42_Type00-Obj42_Main_Index
+		dc.w Obj42_ChkFloor-Obj42_Main_Index
+		dc.w Obj42_Move-Obj42_Main_Index
+		dc.w Obj42_Type02-Obj42_Main_Index
 ; ===========================================================================
 ; loc_EC26:
 Obj42_ChkDistance:
