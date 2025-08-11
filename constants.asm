@@ -437,109 +437,103 @@ VDP_Command_Buffer_Slot:	ds.w	1		; stores the address of the next open slot for 
 
 Camera_RAM:
 Camera_Positions:
-Camera_X_pos:		ds.l	1
-Camera_Y_pos:		ds.l	1
-Camera_BG_X_pos:	ds.l	1			; only used sometimes as the layer deformation makes it sort of redundant
-Camera_BG_Y_pos:	ds.l	1
-Camera_BG2_X_pos:	ds.l	1			; used in CPZ
-Camera_BG2_Y_pos:	ds.l	1			; used in CPZ
-Camera_BG3_X_pos:	ds.l	1			; unused (only initialised at beginning of level)?
-Camera_BG3_Y_pos:	ds.l	1			; unused (only initialised at beginning of level)?
+Camera_X_pos:			ds.l	1
+Camera_Y_pos:			ds.l	1
+Camera_BG_X_pos:		ds.l	1	; only used sometimes as the layer deformation makes it sort of redundant
+Camera_BG_Y_pos:		ds.l	1
+Camera_BG2_X_pos:		ds.l	1	; used in CPZ
+Camera_BG2_Y_pos:		ds.l	1	; used in CPZ
+Camera_BG3_X_pos:		ds.l	1	; unused (only initialised at beginning of level)?
+Camera_BG3_Y_pos:		ds.l	1	; unused (only initialised at beginning of level)?
 Camera_Positions_End:
 
-v_screenposx:=		Camera_X_pos
-v_screenposy:=		Camera_Y_pos
-v_bgscreenposx:=	Camera_BG_X_pos
-v_bgscreenposy:=	Camera_BG_Y_pos
-v_bg2screenposx:=	Camera_BG2_X_pos
-v_bg2screenposy:=	Camera_BG2_Y_pos
-v_bg3screenposx:=	Camera_BG3_X_pos
-v_bg3screenposy:=	Camera_BG3_Y_pos
-
 Camera_Positions_P2:
-Camera_X_pos_P2:	ds.l	1
-Camera_Y_pos_P2:	ds.l	1
-Camera_BG_X_pos_P2:	ds.l	1			; only used sometimes as the layer deformation makes it sort of redundant
-Camera_BG_Y_pos_P2:	ds.l	1
-Camera_BG2_X_pos_P2:	ds.l	1			; unused (only initialised at beginning of level)?
-Camera_BG2_Y_pos_P2:	ds.l	1
-Camera_BG3_X_pos_P2:	ds.l	1			; unused (only initialised at beginning of level)?
-Camera_BG3_Y_pos_P2:	ds.l	1
+Camera_X_pos_P2:		ds.l	1
+Camera_Y_pos_P2:		ds.l	1
+Camera_BG_X_pos_P2:		ds.l	1	; only used sometimes as the layer deformation makes it sort of redundant
+Camera_BG_Y_pos_P2:		ds.l	1
+Camera_BG2_X_pos_P2:		ds.l	1	; unused (only initialised at beginning of level)?
+Camera_BG2_Y_pos_P2:		ds.l	1
+Camera_BG3_X_pos_P2:		ds.l	1	; unused (only initialised at beginning of level)?
+Camera_BG3_Y_pos_P2:		ds.l	1
 Camera_Positions_P2_End:
 
 Block_Crossed_Flags:
-Horiz_block_crossed_flag:	ds.b	1		; toggles between 0 and $10 when you cross a block boundary horizontally
-Verti_block_crossed_flag:	ds.b	1		; toggles between 0 and $10 when you cross a block boundary vertically
-Horiz_block_crossed_flag_BG:	ds.b	1		; toggles between 0 and $10 when background camera crosses a block boundary horizontally
-Verti_block_crossed_flag_BG:	ds.b	1		; toggles between 0 and $10 when background camera crosses a block boundary vertically
-Horiz_block_crossed_flag_BG2:	ds.b	1		; used in CPZ
-			ds.b	1			; $FFFFEE45 ; seems unused
+Horiz_block_crossed_flag:	ds.b	1	; toggles between 0 and $10 when you cross a block boundary horizontally
+Verti_block_crossed_flag:	ds.b	1	; toggles between 0 and $10 when you cross a block boundary vertically
+Horiz_block_crossed_flag_BG:	ds.b	1	; toggles between 0 and $10 when background camera crosses a block boundary horizontally
+Verti_block_crossed_flag_BG:	ds.b	1	; toggles between 0 and $10 when background camera crosses a block boundary vertically
+Horiz_block_crossed_flag_BG2:	ds.b	1	; used in CPZ
+				ds.b	1	; $FFFFEE45 ; seems unused
 Horiz_block_crossed_flag_BG3:	ds.b	1
-			ds.b	1			; $FFFFEE47 ; seems unused
+				ds.b	1	; $FFFFEE47 ; seems unused
 Block_Crossed_Flags_End:
 
 Block_Crossed_Flags_P2:
-Horiz_block_crossed_flag_P2:	ds.b	1		; toggles between 0 and $10 when you cross a block boundary horizontally
-Verti_block_crossed_flag_P2:	ds.b	1		; toggles between 0 and $10 when you cross a block boundary vertically
-			ds.b	6			; $FFFFEE4A-$FFFFEE4F ; seems unused
+Horiz_block_crossed_flag_P2:	ds.b	1	; toggles between 0 and $10 when you cross a block boundary horizontally
+Verti_block_crossed_flag_P2:	ds.b	1	; toggles between 0 and $10 when you cross a block boundary vertically
+				ds.b	6	; $FFFFEE4A-$FFFFEE4F ; seems unused
 Block_Crossed_Flags_P2_End:
 
 Scroll_Flags_All:
-Scroll_flags:		ds.w	1			; bitfield ; bit 0 = redraw top row, bit 1 = redraw bottom row, bit 2 = redraw left-most column, bit 3 = redraw right-most column
-Scroll_flags_BG:	ds.w	1			; bitfield ; bits 0-3 as above, bit 4 = redraw top row (except leftmost block), bit 5 = redraw bottom row (except leftmost block), bits 6-7 = as bits 0-1
-Scroll_flags_BG2:	ds.w	1			; bitfield ; essentially unused; bit 0 = redraw left-most column, bit 1 = redraw right-most column
-Scroll_flags_BG3:	ds.w	1			; bitfield ; for CPZ; bits 0-3 as Scroll_flags_BG but using Y-dependent BG camera; bits 4-5 = bits 2-3; bits 6-7 = bits 2-3
+Scroll_flags:			ds.w	1	; bitfield ; bit 0 = redraw top row, bit 1 = redraw bottom row, bit 2 = redraw left-most column, bit 3 = redraw right-most column
+Scroll_flags_BG:		ds.w	1	; bitfield ; bits 0-3 as above, bit 4 = redraw top row (except leftmost block), bit 5 = redraw bottom row (except leftmost block), bits 6-7 = as bits 0-1
+Scroll_flags_BG2:		ds.w	1	; bitfield ; essentially unused; bit 0 = redraw left-most column, bit 1 = redraw right-most column
+Scroll_flags_BG3:		ds.w	1	; bitfield ; for CPZ; bits 0-3 as Scroll_flags_BG but using Y-dependent BG camera; bits 4-5 = bits 2-3; bits 6-7 = bits 2-3
 Scroll_Flags_All_End:
 
 Scroll_Flags_All_P2:
-Scroll_flags_P2:	ds.w	1			; bitfield ; bit 0 = redraw top row, bit 1 = redraw bottom row, bit 2 = redraw left-most column, bit 3 = redraw right-most column
-Scroll_flags_BG_P2:	ds.w	1			; bitfield ; bits 0-3 as above, bit 4 = redraw top row (except leftmost block), bit 5 = redraw bottom row (except leftmost block), bits 6-7 = as bits 0-1
-Scroll_flags_BG2_P2:	ds.w	1			; bitfield ; essentially unused; bit 0 = redraw left-most column, bit 1 = redraw right-most column
-Scroll_flags_BG3_P2:	ds.w	1			; bitfield ; for CPZ; bits 0-3 as Scroll_flags_BG but using Y-dependent BG camera; bits 4-5 = bits 2-3; bits 6-7 = bits 2-3
+Scroll_flags_P2:		ds.w	1	; bitfield ; bit 0 = redraw top row, bit 1 = redraw bottom row, bit 2 = redraw left-most column, bit 3 = redraw right-most column
+Scroll_flags_BG_P2:		ds.w	1	; bitfield ; bits 0-3 as above, bit 4 = redraw top row (except leftmost block), bit 5 = redraw bottom row (except leftmost block), bits 6-7 = as bits 0-1
+Scroll_flags_BG2_P2:		ds.w	1	; bitfield ; essentially unused; bit 0 = redraw left-most column, bit 1 = redraw right-most column
+Scroll_flags_BG3_P2:		ds.w	1	; bitfield ; for CPZ; bits 0-3 as Scroll_flags_BG but using Y-dependent BG camera; bits 4-5 = bits 2-3; bits 6-7 = bits 2-3
 Scroll_Flags_All_P2_End:
 
 Camera_Positions_Copy:
-Camera_RAM_copy:	ds.l	2			; copied over every V-int
-Camera_BG_copy:		ds.l	2			; copied over every V-int
-Camera_BG2_copy:	ds.l	2			; copied over every V-int
-Camera_BG3_copy:	ds.l	2			; copied over every V-int
+Camera_RAM_copy:		ds.l	2	; copied over every V-int
+Camera_BG_copy:			ds.l	2	; copied over every V-int
+Camera_BG2_copy:		ds.l	2	; copied over every V-int
+Camera_BG3_copy:		ds.l	2	; copied over every V-int
 Camera_Positions_Copy_End:
 
 Camera_Positions_Copy_P2:
-Camera_P2_copy:		ds.l	8			; copied over every V-int
+Camera_P2_copy:			ds.l	8	; copied over every V-int
 Camera_Positions_Copy_P2_End:
 
 Scroll_Flags_Copy_All:
-Scroll_flags_copy:	ds.w	1			; copied over every V-int
-Scroll_flags_BG_copy:	ds.w	1			; copied over every V-int
-Scroll_flags_BG2_copy:	ds.w	1			; copied over every V-int
-Scroll_flags_BG3_copy:	ds.w	1			; copied over every V-int
+Scroll_flags_copy:		ds.w	1	; copied over every V-int
+Scroll_flags_BG_copy:		ds.w	1	; copied over every V-int
+Scroll_flags_BG2_copy:		ds.w	1	; copied over every V-int
+Scroll_flags_BG3_copy:		ds.w	1	; copied over every V-int
 Scroll_Flags_Copy_All_End:
 
 Scroll_Flags_Copy_All_P2:
-Scroll_flags_copy_P2:	ds.w	1			; copied over every V-int
-Scroll_flags_BG_copy_P2:	ds.w	1		; copied over every V-int
-Scroll_flags_BG2_copy_P2:	ds.w	1		; copied over every V-int
-Scroll_flags_BG3_copy_P2:	ds.w	1		; copied over every V-int
+Scroll_flags_copy_P2:		ds.w	1	; copied over every V-int
+Scroll_flags_BG_copy_P2:	ds.w	1	; copied over every V-int
+Scroll_flags_BG2_copy_P2:	ds.w	1	; copied over every V-int
+Scroll_flags_BG3_copy_P2:	ds.w	1	; copied over every V-int
 Scroll_Flags_Copy_All_P2_End:
 
 Camera_Difference:
-Camera_X_pos_diff:	ds.w	1			; (new X pos - old X pos) * 256
-Camera_Y_pos_diff:	ds.w	1			; (new Y pos - old Y pos) * 256
+Camera_X_pos_diff:		ds.w	1	; (new X pos - old X pos) * 256
+Camera_Y_pos_diff:		ds.w	1	; (new Y pos - old Y pos) * 256
 Camera_Difference_End:
 
-Camera_BG_X_pos_diff:	ds.w	1			; Effective camera change used in WFZ ending and HTZ screen shake
-Camera_BG_Y_pos_diff:	ds.w	1			; Effective camera change used in WFZ ending and HTZ screen shake
+Camera_BG_X_pos_diff:		ds.w	1	; Effective camera change used in WFZ ending and HTZ screen shake
+Camera_BG_Y_pos_diff:		ds.w	1	; Effective camera change used in WFZ ending and HTZ screen shake
 
 Camera_Difference_P2:
-Camera_X_pos_diff_P2:	ds.w	1			; (new X pos - old X pos) * 256
-Camera_Y_pos_diff_P2:	ds.w	1			; (new Y pos - old Y pos) * 256
+Camera_X_pos_diff_P2:		ds.w	1	; (new X pos - old X pos) * 256
+Camera_Y_pos_diff_P2:		ds.w	1	; (new Y pos - old Y pos) * 256
 Camera_Difference_P2_End:
-			ds.b	4			; $FFFFEEBC-$FFFFEEBF ; seems unused
 
-Camera_Min_X_pos_target:	ds.w	1		; unused, except on write in LevelSizeLoad...
-Camera_Max_X_pos_target:	ds.w	1		; unused
-Camera_Min_Y_pos_target:	ds.w	1		; same as above. The write being a long also overwrites the address below
+Screen_Shaking_Flag_HTZ:	ds.b	1	; activates screen shaking code in HTZ's layer deformation routine
+Screen_Shaking_Flag:		ds.b	1	; activates screen shaking code (if existent) in layer deformation routine
+Scroll_lock:			ds.b	1	; set to 1 to stop all scrolling for P1 -- for now, unused
+				ds.b	1	; unused. if this was multiplayer, it'd be a copy of the above for player 2
+Camera_Min_X_pos_target:	ds.w	1	; unused, except on write in LevelSizeLoad...
+Camera_Max_X_pos_target:	ds.w	1	; unused
+Camera_Min_Y_pos_target:	ds.w	1	; same as above. The write being a long also overwrites the address below
 Camera_Max_Y_pos_target:	ds.w	1
 
 Camera_Boundaries:
@@ -548,11 +542,6 @@ Camera_Max_X_pos:	ds.w	1
 Camera_Min_Y_pos:	ds.w	1
 Camera_Max_Y_pos:	ds.w	1
 Camera_Boundaries_End:
-
-v_limitleft2:=		Camera_Min_X_pos
-v_limitright2:=		Camera_Max_X_pos
-v_limittop2:=		Camera_Min_Y_pos
-v_limitbtm2:=		Camera_Max_Y_pos
 
 Camera_Delay:
 Horiz_scroll_delay_val:	ds.w	1			; if its value is a, where a != 0, X scrolling will be based on the player's X position a-1 frames ago
@@ -654,7 +643,6 @@ v_plc_dataword:		ds.l	1
 v_plc_shiftvalue:	ds.l	1
 v_plc_patternsleft:	ds.w	1
 v_plc_framepatternsleft:ds.w	1
-			ds.b	4			; unused
 v_plc_buffer_end:
 
 v_levelvariables:					; variables that are reset between levels
@@ -677,21 +665,14 @@ Scroll_Timer:		ds.b	1			; unused
 Water_flag:		ds.b	1
 			ds.b	1			; unused
 
-Demo_button_index_2P:	ds.w	1			; index into button press demo data, for player 2
-Demo_press_counter_2P:	ds.w	1			; frames remaining until next button press, for player 2
-
 Sonic_top_speed:	ds.w	1
 Sonic_acceleration:	ds.w	1
 Sonic_deceleration:	ds.w	1
 Sonic_LastLoadedDPLC:	ds.b	1
 Primary_Angle:		ds.b	1
 Secondary_Angle:	ds.b	1
-			ds.b	1			; $FFFFF767 ; seems unused
-			ds.b	1			; $FFFFF76A ; seems unused
-			ds.b	1			; $FFFFF76B ; seems unused
-
 Obj_placement_routine:	ds.b	1
-			ds.b	1			; $FFFFF76D ; seems unused
+
 Camera_X_pos_last:	ds.w	1			; Camera_X_pos_coarse from the previous frame
 Camera_X_pos_last_End:
 
@@ -731,13 +712,9 @@ v_ssbganim:		ds.w	1			; Special Stage background animation
 			ds.b	1			; seems unused
 Boss_defeated_flag:
 v_bossstatus:		ds.b	1
-			ds.b	2			; seems unused
-
-f_lockscreen:		ds.b	1
-			ds.b	$F			; unused
 
 v_gfxbigring:		ds.w	1			; settings for giant ring graphics loading
-			ds.b	7			; unused
+f_lockscreen:		ds.b	1
 
 f_wtunnelmode:		ds.b	1			; LZ water tunnel mode
 f_playerctrl:		ds.b	1			; Player control override flags (object ineraction, control enable)
@@ -849,6 +826,10 @@ v_lamp_lives:		ds.b	1			; lives counter at lamppost
 v_emeralds:		ds.b	1			; number of chaos emeralds
 v_emldlist:		ds.b	6			; which individual emeralds you have (00 = no; 01 = yes)
 v_oscillate:		ds.w	1			; oscillation bitfield
+
+v_objstate:		ds.b	$C0			; object state list
+v_objstate_end:
+
 v_timingandscreenvariables:
 v_timingvariables:
 			ds.b	$40			; values which oscillate - for swinging platforms, et al
@@ -900,10 +881,7 @@ Kos_module_queue:		ds.w 3*6		; 6 bytes per entry, first longword is source locat
 Kos_module_source =		Kos_module_queue	; long ; the compressed data location for the first module in the queue
 Kos_module_destination =	Kos_module_queue+4	; word ; the VRAM destination for the first module in the queue
 Kos_module_queue_End:
-			ds.b	$100
-			ds.b	$E0			; unused
-v_objstate:		ds.b	$C0			; object state list
-v_objstate_end:
+			ds.b	$204
 v_end:
 	if * > 0	; don't declare more space than the RAM can contain!
 		fatal "The RAM variable declarations are too large by $\{*} bytes."
@@ -913,6 +891,22 @@ v_end:
 		message "The current RAM available $\{0-*} bytes."
 	endif
 	dephase
+
+; Sonic 1 camera variables
+
+v_screenposx:=		Camera_X_pos
+v_screenposy:=		Camera_Y_pos
+v_bgscreenposx:=	Camera_BG_X_pos
+v_bgscreenposy:=	Camera_BG_Y_pos
+v_bg2screenposx:=	Camera_BG2_X_pos
+v_bg2screenposy:=	Camera_BG2_Y_pos
+v_bg3screenposx:=	Camera_BG3_X_pos
+v_bg3screenposy:=	Camera_BG3_Y_pos
+v_limitleft2:=		Camera_Min_X_pos
+v_limitright2:=		Camera_Max_X_pos
+v_limittop2:=		Camera_Min_Y_pos
+v_limitbtm2:=		Camera_Max_Y_pos
+
 
 ; Special stage
 

@@ -996,39 +996,6 @@ PlaySound_Unk:
 
 		include	"_inc/PauseGame.asm"
 
-; =============== S U B R O U T I N E =======================================
-
-
-LoadEnemyArt:
-		lea	(Offs_LoadEnemyArt).l,a6
-		; level specific checks go here.
-		; Sonic & knuckles default are provided as an example.
-	;	move.w	#$D00,d0	; Angel island intro skip
-	;	cmpi.b	#$16,(Current_zone).w
-	;	beq.s	loc_2F798
-	;	move.w	#$E00,d0	; Multiplayer start
-	;	cmpi.w	#$1700,(Current_zone_and_act).w
-	;	bne.s	loc_2F79E
-
-loc_2F79E:
-		move.w	(Current_ZoneAndAct).w,d0
-
-loc_2F7A2:
-		ror.b	#2,d0
-		lsr.w	#5,d0
-		adda.w	(a6,d0.w),a6
-		move.w	(a6)+,d6
-		bmi.s	.exit		; if there's nothing, we bail!
-
-.loop:
-		movea.l	(a6)+,a1
-		move.w	(a6)+,d2
-		bsr.w	Queue_Kos_Module	; Process 4 entries
-		dbf	d6,.loop	; loop until we're finished
-
-.exit:
-		rts
-; End of function LoadEnemyArt
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 ; ---------------------------------------------------------------------------
 ; Subroutine to load pattern load cues (aka to queue pattern load requests)
@@ -1282,7 +1249,6 @@ QuickPLC:
 ; End of function QuickPLC
 
 		include "_inc/Nemesis Decompression.asm"
-		include "_inc/DMA Queue.asm"
 
 KosPlusArt_To_VDP:
 		movea.l	a1,a3		; a1 will be changed by KosPlusDec, so we're backing it up to a3
@@ -1294,11 +1260,47 @@ KosPlusArt_To_VDP:
 		lsr.l	#1,d3		; divide size of decompressed art by two, d3 will be used in the DMA transfer as the Transfer Length (size/2)
 		move.w	a2,d2		; move VRAM address to d2, d2 will be used in the DMA transfer as the Destination Address
 		movea.l	a1,a3		; backup a1, this allows the same address to be used by multiple calls to KosPlusArt_To_VDP without constant redefining
-		jsr	(QueueDMATransfer).l	; transfer *Transfer Length* of data from *Source Address* to *Destination Address*
+		bsr.w	QueueDMATransfer	; transfer *Transfer Length* of data from *Source Address* to *Destination Address*
 		movea.l	a3,a1		; restore a1
 		rts
 
 		include "_inc/KosinskiPlus.asm"
+		include "_inc/DMA Queue.asm"
+
+; =============== S U B R O U T I N E =======================================
+
+
+LoadEnemyArt:
+		lea	(Offs_LoadEnemyArt).l,a6
+		; level specific checks go here.
+		; Sonic & knuckles default are provided as an example.
+	;	move.w	#$D00,d0	; Angel island intro skip
+	;	cmpi.b	#$16,(Current_zone).w
+	;	beq.s	loc_2F798
+	;	move.w	#$E00,d0	; Multiplayer start
+	;	cmpi.w	#$1700,(Current_zone_and_act).w
+	;	bne.s	loc_2F79E
+
+loc_2F79E:
+		move.w	(Current_ZoneAndAct).w,d0
+
+loc_2F7A2:
+		ror.b	#2,d0
+		lsr.w	#5,d0
+		adda.w	(a6,d0.w),a6
+		move.w	(a6)+,d6
+		bmi.s	.exit		; if there's nothing, we bail!
+
+.loop:
+		movea.l	(a6)+,a1
+		move.w	(a6)+,d2
+		bsr.s	Queue_Kos_Module	; Process 4 entries
+		dbf	d6,.loop	; loop until we're finished
+
+.exit:
+		rts
+; End of function LoadEnemyArt
+; ===========================================================================
 		include "_inc/KosinkiPlus_Moduled.asm"
 		include "_inc/Enigma Decompression.asm"
 		include	"_inc/PaletteCycle.asm"
@@ -2775,11 +2777,11 @@ Level_PlayBgm:
 Level_TtlCardLoop:
 		move.b	#VintID_TitleCard,(v_vbla_routine).w
 		bsr.w	WaitForVint
-		jsr	(Process_Kos_Queue).l
+		bsr.w	Process_Kos_Queue
 		jsr	(ExecuteObjects).l
 		jsr	(BuildSprites).l
 		bsr.w	RunPLC_RAM
-		jsr     (Process_Kos_Module_Queue).l
+		bsr.w	Process_Kos_Module_Queue
 		jsr	DelayTitleCards ; i need this routine
 	tst.b	d0
 	beq.s	Level_TtlCardLoop
@@ -2861,7 +2863,6 @@ Level_SkipClr:
 		move.w	#4,(Sonic_Pos_Record_Index).w
 		move.w	#0,(Sonic_Pos_Record_Buf).w
 		move.w	#0,(Demo_button_index).w
-		move.w	#0,(Demo_button_index_2P).w
 		lea	(Demo_Index).l,a1
 		moveq	#0,d0
 		move.b	(Current_Zone).w,d0
@@ -2932,7 +2933,7 @@ Level_StartGame:
 Level_MainLoop:
 		bsr.w	PauseGame
 		move.b	#VintID_Level,(v_vbla_routine).w
-		jsr	(Process_Kos_Queue).l
+		bsr.w	Process_Kos_Queue
 		bsr.w	WaitForVint
 		addq.w	#1,(Timer_frames).w
 		bsr.w	MoveSonicInDemo
@@ -3422,7 +3423,7 @@ loc_5214:
 		lea	(Nem_TitleCard).l,a0	; load title card patterns
 		bsr.w	NemDec
 		jsr	(HUD_Base).l
-		ResetDMAQueue	; TODO
+		ResetDMAQueue
 		enable_ints
 		moveq	#palid_SSResult,d0
 		bsr.w	PalLoad2		; load results screen palette
@@ -25208,7 +25209,7 @@ RingPos_HTZ3:	binclude	"level/rings/HTZ_3.bin"
 RingPos_HTZ4:	binclude	"level/rings/HTZ_4.bin"
 		even
 ; ===========================================================================
-	;	align	$7DBDC
+		align	$7DBDC
 ; ---------------------------------------------------------------------------
 ; These subroutines are yet to be properly implemented
 ; ---------------------------------------------------------------------------
@@ -25366,7 +25367,7 @@ ObjectMoveAndFall_NormGravity:
 ;	to resolve symbol names.
 ; ---------------------------------------------------------------------------
  else
-	;	align	$3FFFFF			; Pad to 4MB
+		align	$3FFFFF			; Pad to 4MB
 		even
  endif
 EndOfRom:

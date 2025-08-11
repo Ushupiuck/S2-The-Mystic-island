@@ -118,7 +118,7 @@ locret_1784A:
 
 loc_1784C:
 		moveq	#100,d0
-		bsr.w	AddPoints
+		jsr	(AddPoints).l
 		move.b	#8,ob2ndRout(a0)
 		move.w	#$B3,objoff_3C(a0)
 		rts
