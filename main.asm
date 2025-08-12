@@ -2187,7 +2187,7 @@ TitleScreen:
 		bsr.w	KosPlusArt_To_VDP
 		moveq	#palid_SonicTails,d0
 		bsr.w	PalLoad1
-		_move.b	#id_Obj8A,(v_titletails).w ; load "SONIC TEAM PRESENTS" object
+		_move.b	#id_Obj8A,(v_sonicteam).w ; load "SONIC TEAM PRESENTS" object
 		jsr	(ExecuteObjects).l
 		jsr	(BuildSprites).l
         	bsr.w	Pal_FadeFromBlack
@@ -2235,7 +2235,7 @@ loc_32C4:
 	;	move.b	#0,(Debug_mode_flag).w
 		move.b	#0,(Current_Timezone).w
 		move.w	#376,(v_demolength).w
-		clearRAM v_titlesonic,v_ttlsonichide+object_size
+		clearRAM v_sonicteam,v_sonicteam+object_size
 		_move.b	#id_Obj0E,(v_titlesonic).w
 		_move.b	#id_Obj0E,(v_titletails).w
 		_move.b	#id_Obj0F,(v_pressstart).w
@@ -2669,7 +2669,7 @@ MusicList:	dc.b bgm_GHZ
 ; ---------------------------------------------------------------------------
 
 Level:
-	clr.b	(Artifical_Load_Time).w
+		clr.b	(Artifical_Load_Time).w
 		bset	#GameModeFlag_TitleCard,(v_gamemode).w
 		tst.w	(f_demo).w	; are we on an ending demo?
 		bmi.s	Level_NoMusicFade	; if so, branch
@@ -2782,9 +2782,9 @@ Level_TtlCardLoop:
 		jsr	(BuildSprites).l
 		bsr.w	RunPLC_RAM
 		bsr.w	Process_Kos_Module_Queue
-		jsr	DelayTitleCards ; i need this routine
-	tst.b	d0
-	beq.s	Level_TtlCardLoop
+		bsr.w	DelayTitleCards ; i need this routine
+		tst.b	d0
+		beq.s	Level_TtlCardLoop
 		move.w	(v_ttlcardact+obX).w,d0
 		cmp.w	(v_ttlcardact+objoff_30).w,d0
 		bne.s	Level_TtlCardLoop
@@ -2813,10 +2813,10 @@ Level_SkipTtlCard:
 ;		beq.s	Level_ChkDebug		; the 2nd player, if neccesary
 
 ;LevelInit_LoadTails:	; Disabled until his AI &/or character selection is implemented
-		_move.b	#id_Obj02,(v_player2).w	; load Tails object
-		move.w	(v_player+obX).w,(v_player2+obX).w	; copy player 1's x position to player 2
-		move.w	(v_player+obY).w,(v_player2+obY).w	; copy player 1's y position to player 2
-		subi.w	#32,(v_player2+obX).w	; set player 2's x position 32 pixels behind player 1's
+	;	_move.b	#id_Obj02,(v_player2).w	; load Tails object
+	;	move.w	(v_player+obX).w,(v_player2+obX).w	; copy player 1's x position to player 2
+	;	move.w	(v_player+obY).w,(v_player2+obY).w	; copy player 1's y position to player 2
+	;	subi.w	#32,(v_player2+obX).w	; set player 2's x position 32 pixels behind player 1's
 
 Level_ChkDebug:
 		tst.b	(f_debugcheat).w
@@ -4427,7 +4427,7 @@ LoadZoneTiles:
 		move.l	(a4)+,d0
 		andi.l	#$FFFFFF,d0
 		cmp.l	d0,d7
-		beq.s	.loop
+		beq.s	.loop		; If the secondary 8x8 tileset is identical, skip over
 		movea.l	d0,a1
 		move.w	d4,d2
 		bsr.w	Queue_Kos_Module
@@ -4504,7 +4504,7 @@ MainLevelLoadBlock:
 		; layout & palette
 		bsr.s	LevelLayoutLoad
 		moveq	#0,d0
-		move.w	(sp)+,d6	; restore palette!
+		move.w	(sp)+,d6	; restore the palette pointer
 		move.b	d6,d0
 		bra.w	PalLoad1
 ; End of function MainLevelLoadBlock
@@ -4532,12 +4532,12 @@ LevelLayoutLoad:
 
 ; End of function LevelLayoutLoad
 
-; -----------------------------------------
+; ---------------------------------------------------------------------------
 ; DelayTitleCards
 ; Add Artifical Loading Times
-; -----------------------------------------
+; ---------------------------------------------------------------------------
 DelayTitleCards:
-	; Obtener el LevelID
+	; Get Level ID
 	moveq	#0,d0
 	move.b	(Current_Zone).w,d0
 	lea	ArtificialLoadTimeTable(pc),a0
@@ -4549,6 +4549,7 @@ DelayTitleCards:
 	addq.b	#1,(Artifical_Load_Time).w
 	moveq	#0,d0
 	rts
+
 .done:
 	clr.b	(Artifical_Load_Time).w
 	moveq	#1,d0
@@ -9436,15 +9437,12 @@ id_ObjFF:	equ ((ptr_ObjFF-Obj_Index)/4)+1
 
 ObjectFall:
 ObjectMoveAndFall:
-		move.w	obVelX(a0),d0	; load x speed
-		ext.l	d0
-		lsl.l	#8,d0		; shift velocity to line up with the middle 16 bits of the 32-bit position
-		add.l	d0,obX(a0)	; add x speed to x position	; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
-		move.w	obVelY(a0),d0	; load y speed
-		addi.w	#$38,obVelY(a0)	; increase vertical speed (apply gravity)
-		ext.l	d0
-		lsl.l	#8,d0		; shift velocity to line up with the middle 16 bits of the 32-bit position
-		add.l	d0,obY(a0)	; add old y speed to y position	; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
+		movem.w	obVelX(a0),d0/d2				; load xy speed
+		asl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		asl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,obX(a0)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
+		add.l	d2,obY(a0)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
+		addi.w	#$38,obVelY(a0)				; increase vertical speed (apply gravity)
 		rts
 ; End of function ObjectMoveAndFall
 
@@ -9458,14 +9456,11 @@ ObjectMoveAndFall:
 
 ObjectMove:
 SpeedToPos:
-		move.w	obVelX(a0),d0	; load horizontal speed
-		ext.l	d0
-		lsl.l	#8,d0		; shift velocity to line up with the middle 16 bits of the 32-bit position
-		add.l	d0,obX(a0)	; add to x-axis position	; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
-		move.w	obVelY(a0),d0	; load vertical speed
-		ext.l	d0
-		lsl.l	#8,d0		; shift velocity to line up with the middle 16 bits of the 32-bit position
-		add.l	d0,obY(a0)	; add to y-axis position	; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
+		movem.w	obVelX(a0),d0/d2				; load xy speed
+		asl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		asl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,obX(a0)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
+		add.l	d2,obY(a0)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
 		rts
 ; End of function ObjectMove
 

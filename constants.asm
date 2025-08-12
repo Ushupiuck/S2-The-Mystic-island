@@ -358,11 +358,11 @@ v_objspace_end:
 
 ; ---------------------------------------------------------------------------
 ; Title screen objects
-v_titlesonic	= v_objspace+object_size*1		; object variable space for Sonic in the title screen ($40 bytes)
-v_titletails	= v_objspace+object_size*2		; object variable space for the "SONIC TEAM PRESENTS" text ($40 bytes)
-v_pressstart	= v_objspace+object_size*3		; object variable space for the "PRESS START BUTTON" text ($40 bytes)
+v_sonicteam	= v_objspace+object_size*1		; object variable space for the "SONIC TEAM PRESENTS" text ($40 bytes)
+v_titlesonic	= v_objspace+object_size*2		; object variable space for Sonic in the title screen ($40 bytes)
+v_titletails	= v_objspace+object_size*3		; object variable space for Tails in the title screen ($40 bytes)
 v_ttlsonichide	= v_objspace+object_size*4		; object variable space for hiding part of Sonic ($40 bytes)
-v_sonicteam	= v_objspace+object_size*5		; empty
+v_pressstart	= v_objspace+object_size*5		; object variable space for the "PRESS START BUTTON" text ($40 bytes)
 ; ---------------------------------------------------------------------------
 ; Reserved object slots
 v_player	= v_objspace+object_size*0		; object variable space for Sonic ($40 bytes)
@@ -560,7 +560,7 @@ Camera_Y_pos_bias_P2:	ds.w	1			; for Tails
 Camera_Y_pos_bias_P2_End:
 
 Deform_lock:		ds.b	1			; set to 1 to stop all deformation
-Artifical_Load_Time:			ds.b	1			; $FFFFEEDD ; seems unused
+Artifical_Load_Time:	ds.b	1			; $FFFFEEDD ; seems unused
 Camera_Max_Y_Pos_Changing:	ds.b	1
 Dynamic_Resize_Routine:	ds.b	1
 			ds.w	1			; $FFFFEEE0-$FFFFEEE1
@@ -827,8 +827,6 @@ v_emeralds:		ds.b	1			; number of chaos emeralds
 v_emldlist:		ds.b	6			; which individual emeralds you have (00 = no; 01 = yes)
 v_oscillate:		ds.w	1			; oscillation bitfield
 
-v_objstate:		ds.b	$C0			; object state list
-v_objstate_end:
 
 v_timingandscreenvariables:
 v_timingvariables:
@@ -881,6 +879,8 @@ Kos_module_queue:		ds.w 3*6		; 6 bytes per entry, first longword is source locat
 Kos_module_source =		Kos_module_queue	; long ; the compressed data location for the first module in the queue
 Kos_module_destination =	Kos_module_queue+4	; word ; the VRAM destination for the first module in the queue
 Kos_module_queue_End:
+v_objstate:		ds.b	$C0			; object state list
+v_objstate_end:
 			ds.b	$204
 v_end:
 	if * > 0	; don't declare more space than the RAM can contain!
@@ -920,7 +920,7 @@ v_ssitembuffer_end	= v_ssitembuffer+$100		; actually extends all the way to $FFF
 v_ssbuffer3		= v_128x128+$8000
 v_ssscroll_buffer	= v_ngfx_buffer+$100
 v_ssangle		= v_vdp_buffer1+2
-v_ssrotate		= v_vdp_buffer1+4
+v_ssrotate		= v_ssangle+2
 
 ;v_ss_layout:			equ $FF0000 ; special stage layout with space added to top and sides
 ;v_ss_layout_start:		equ v_ss_layout+sizeof_ss_padding_top+ss_width_padding_left ; $FF1020
