@@ -127,7 +127,7 @@ Card_ChangeArt:
 		bne.s	Card_Delete
 		moveq	#plcid_Explode,d0
 		jsr	(LoadPLC).l	; load explosion patterns
-		jsr	(LoadEnemyArt).l
+		jsr	(LoadKosPLC).l
 		moveq	#0,d0
 		move.b	(Current_Zone).w,d0
 		addi.w	#plcid_GHZAnimals,d0

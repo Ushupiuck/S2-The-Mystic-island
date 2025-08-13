@@ -560,7 +560,7 @@ Camera_Y_pos_bias_P2:	ds.w	1			; for Tails
 Camera_Y_pos_bias_P2_End:
 
 Deform_lock:		ds.b	1			; set to 1 to stop all deformation
-Artifical_Load_Time:	ds.b	1			; $FFFFEEDD ; seems unused
+			ds.b	1			; $FFFFEEDD ; seems unused
 Camera_Max_Y_Pos_Changing:	ds.b	1
 Dynamic_Resize_Routine:	ds.b	1
 			ds.w	1			; $FFFFEEE0-$FFFFEEE1

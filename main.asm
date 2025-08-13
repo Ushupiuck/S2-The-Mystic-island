@@ -1270,8 +1270,8 @@ KosPlusArt_To_VDP:
 ; =============== S U B R O U T I N E =======================================
 
 
-LoadEnemyArt:
-		lea	(Offs_LoadEnemyArt).l,a6
+LoadKosPLC:
+		lea	(KosMLoadCues).l,a6
 		; level specific checks go here.
 		; Sonic & knuckles default are provided as an example.
 	;	move.w	#$D00,d0	; Angel island intro skip
@@ -2669,7 +2669,6 @@ MusicList:	dc.b bgm_GHZ
 ; ---------------------------------------------------------------------------
 
 Level:
-		clr.b	(Artifical_Load_Time).w
 		bset	#GameModeFlag_TitleCard,(v_gamemode).w
 		tst.w	(f_demo).w	; are we on an ending demo?
 		bmi.s	Level_NoMusicFade	; if so, branch
@@ -2687,10 +2686,13 @@ Level_NoMusicFade:
 		bsr.w	NemDec
 		enable_ints
 		moveq	#0,d1
-		move.w	(Current_Zone).w,d1
+		move.w	(Current_ZoneAndAct).w,d1
 		ror.b	#2,d1
 		lsr.w	#3,d1
-		lea	(LevelArtPointersM).l,a2
+		move.w	d1,d0
+		lsr.w	#1,d0
+		add.w	d0,d1
+		lea	(LevelArtPointers).l,a2
 		moveq	#0,d0
 		move.b	(a2,d1.w),d0
 		beq.s	loc_3BB0
@@ -2782,16 +2784,12 @@ Level_TtlCardLoop:
 		jsr	(BuildSprites).l
 		bsr.w	RunPLC_RAM
 		bsr.w	Process_Kos_Module_Queue
-		bsr.w	DelayTitleCards ; i need this routine
-		tst.b	d0
 		beq.s	Level_TtlCardLoop
 		move.w	(v_ttlcardact+obX).w,d0
 		cmp.w	(v_ttlcardact+objoff_30).w,d0
 		bne.s	Level_TtlCardLoop
 		tst.l	(v_plc_buffer).w
 		bne.s	Level_TtlCardLoop
-		move.b	#VintID_TitleCard,(v_vbla_routine).w
-		bsr.w	WaitForVint
 		jsr	(HUD_Base).l
 
 Level_SkipTtlCard:
@@ -2840,7 +2838,7 @@ Level_LoadObj:
 		jsr	(RingsManager).l
 		jsr	(ExecuteObjects).l
 		jsr	(BuildSprites).l
-		jsr	(AniArt_Load).l
+		jsr	(Animate_Tiles).l
 		moveq	#0,d0
 		tst.b	(v_lastlamp).w
 		bne.s	Level_SkipClr
@@ -2952,7 +2950,7 @@ Level_DoScroll:
 Level_SkipScroll:
 		bsr.w	ChangeWaterSurfacePos
 		jsr	(RingsManager).l
-		jsr	(AniArt_Load).l
+		jsr	(Animate_Tiles).l
 		bsr.w	PalCycle_Load
 		bsr.w	RunPLC_RAM
 		jsr     (Process_Kos_Module_Queue).l
@@ -4398,7 +4396,7 @@ Demo_EndSBZ2:	binclude	"demodata/Ending - SBZ2.bin"
 Demo_EndGHZ2:	binclude	"demodata/Ending - GHZ2.bin"
 		even
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-; Load only art assets (Kos modules) from LevelArtPointersM
+; Load only art assets (Kos modules) from LevelArtPointers
 ; Each entry = 8 bytes: PLC+Art1, PLC+Art2
 
 LoadZoneTiles:
@@ -4406,54 +4404,38 @@ LoadZoneTiles:
 		move.w	(Current_ZoneAndAct).w,d0
 		ror.b	#2,d0
 		lsr.w	#3,d0
-		lea	(LevelArtPointersM).l,a4
-		lea	(a4,d0.w),a4
+		move.w	d0,d1
+		lsr.w	#1,d1
+		add.w	d1,d0
+		lea	(LevelArtPointers).l,a2
+		lea	(a2,d0.w),a2
 
-		; snag PLC entries & back 'em up!
-		moveq	#0,d5
-		moveq	#0,d6
-		move.b	(a4),d5		; plc1 = top byte of first long
-		move.b	4(a4),d6	; plc2 = top byte of second long
-		movem.w	d5/d6,-(sp)	; and now we package them nicely into the SP for future use
+		move.l	(a2)+,d0
+		andi.l	#$FFFFFF,d0	; 8x8 tile pointer
+		movea.l	d0,a0
+		lea	(Chunk_Table).l,a1
+		bsr.w	KosPlusDec
+		move.w	a1,d3
+		move.w	d3,d7
+		andi.w	#$FFF,d3
 
-		move.l	(a4)+,d0
-		andi.l	#$FFFFFF,d0
-		move.l	d0,d7
-		movea.l	d0,a1
-		move.w	(a1),d4
-		move.w	#0,d2
-		bsr.w	Queue_Kos_Module
+		lsr.w	#1,d3
+		rol.w	#4,d7
+		andi.w	#$F,d7
 
-		move.l	(a4)+,d0
-		andi.l	#$FFFFFF,d0
-		cmp.l	d0,d7
-		beq.s	.loop		; If the secondary 8x8 tileset is identical, skip over
-		movea.l	d0,a1
-		move.w	d4,d2
-		bsr.w	Queue_Kos_Module
-
-.loop:
+-		move.w	d7,d2
+		lsl.w	#7,d2
+		lsl.w	#5,d2
+		move.l	#$FFFFFF,d1
+		move.w	d2,d1
+		jsr	(QueueDMATransfer).l
+		move.w	d7,-(sp)
 		move.b	#VintID_TitleCard,(v_vbla_routine).w
-		bsr.w	Process_Kos_Queue
 		bsr.w	WaitForVint
 		bsr.w	RunPLC_RAM
-		bsr.w	Process_Kos_Module_Queue
-		tst.b	(Kos_modules_left).w
-		bne.s	.loop
-
-		movem.w	(sp)+,d5/d6      ; d5=plc1, d6=plc2
-		moveq	#0,d0
-		move.b	d5,d0
-		beq.s	.chk_plc2
-		bsr.w	LoadPLC
-.chk_plc2:
-		moveq	#0,d0
-		move.b	d6,d0
-		beq.s	.done
-		cmp.b	d0,d5            ; skip if same as plc1
-		beq.s	.done
-		bra.w	LoadPLC
-.done:
+		move.w	(sp)+,d7
+		move.w	#$800,d3
+		dbf	d7,-
 		rts
 ; End of function LoadZoneTiles
 
@@ -4465,47 +4447,34 @@ MainLevelLoadBlock:
 		move.w	(Current_ZoneAndAct).w,d0
 		ror.b	#2,d0
 		lsr.w	#3,d0		; d0 = 8 * (4*Z + A)
-		add.w	d0,d0		; d0 = 16 * (4*Z + A)
-		lea	(LevelBlockPointersM).l,a2
+		move.w	d0,d1
+		lsr.w	#1,d1
+		add.w	d1,d0
+		lea	(LevelArtPointers).l,a2
 		lea	(a2,d0.w),a2
-		; primary 16x16
-		move.b	(a2),d6		; store & backup the palette pointer
-		move.w	d6,-(sp)
+		move.l	a2,-(sp)
+		addq.w	#4,a2
 		move.l	(a2)+,d0
-		andi.l	#$FFFFFF,d0
-		move.l	d0,d7
+		andi.l	#$FFFFFF,d0	; pointer to block mappings
 		movea.l	d0,a0
-		lea	(v_16x16).l,a1
-		bsr.w	KosPlusDec
-
-		; secondary 16x16
+		lea	(v_16x16).w,a1
+		bsr.w	KosPlusDec	; load block maps
 		move.l	(a2)+,d0
-		andi.l	#$FFFFFF,d0
-		cmp.l	d0,d7		; are the last 16x16 packets identical?
-		beq.s	.skipSecondary16x16	; if so, don't bother
-		movea.l	d0,a0
-		lea	(v_16x16).l,a1
-		bsr.w	KosPlusDec
-.skipSecondary16x16:
-		; primary 128x128
-		move.l	(a2)+,d0
-		move.l	d0,d7
+		andi.l	#$FFFFFF,d0	; pointer to chunk mappings
 		movea.l	d0,a0
 		lea	(v_128x128).l,a1
 		bsr.w	KosPlusDec
-		; secondary 128x128
-		move.l	(a2)+,d0
-		cmp.l	d0,d7		; are the last 128x128 packets identical?
-		beq.s	.skipSecondary128x128	; if so, don't bother
-		movea.l	d0,a0
-		lea	(v_128x128).l,a1
-		bsr.w	KosPlusDec
-.skipSecondary128x128:
-		; layout & palette
 		bsr.s	LevelLayoutLoad
+		movea.l	(sp)+,a2	; zone specific pointer in LevelArtPointers
+		addq.w	#4,a2
 		moveq	#0,d0
-		move.w	(sp)+,d6	; restore the palette pointer
-		move.b	d6,d0
+		move.b	(a2),d0	; PLC2 ID
+		beq.s	+
+		bsr.w	LoadPLC
++
+		addq.w	#4,a2
+		moveq	#0,d0
+		move.b	(a2),d0	; palette ID
 		bra.w	PalLoad1
 ; End of function MainLevelLoadBlock
 
@@ -4532,50 +4501,6 @@ LevelLayoutLoad:
 
 ; End of function LevelLayoutLoad
 
-; ---------------------------------------------------------------------------
-; DelayTitleCards
-; Add Artifical Loading Times
-; ---------------------------------------------------------------------------
-DelayTitleCards:
-	; Get Level ID
-	moveq	#0,d0
-	move.b	(Current_Zone).w,d0
-	lea	ArtificialLoadTimeTable(pc),a0
-	move.b	(a0,d0.w),d1
-
-	move.b	(Artifical_Load_Time).w,d0
-	cmp.b	d1,d0
-	bcc.s	.done
-	addq.b	#1,(Artifical_Load_Time).w
-	moveq	#0,d0
-	rts
-
-.done:
-	clr.b	(Artifical_Load_Time).w
-	moveq	#1,d0
-	rts
-
-
-
-ArtificialLoadTimeTable:
-	dc.b 0 ; $00 -
-	dc.b 0 ; $01 -
-	dc.b 0 ; $02 -
-	dc.b 0 ; $03 -
-	dc.b 0 ; $04 -
-	dc.b 0 ; $05 -
-	dc.b 0 ; $06 -
-	dc.b 0 ; $07 -
-	dc.b 0 ; $08 -
-	dc.b 0 ; $09 -
-	dc.b 0 ; $0A -
-	dc.b 0 ; $0B -
-	dc.b 0 ; $0C -
-	dc.b 0 ; $0D -
-	dc.b 0 ; $0E -
-	dc.b 0 ; $0F -
-	dc.b 0 ; $10 -
-	even
 ; =============== S U B	R O U T	I N E =======================================
 
 
@@ -22937,7 +22862,7 @@ Touch_E1:
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 ; DynamicArtCues:
-AniArt_Load:
+Animate_Tiles:
 		moveq	#0,d0
 		move.b	(Current_Zone).w,d0
 		add.w	d0,d0
@@ -22946,7 +22871,7 @@ AniArt_Load:
 		lea	DynArtCue_Index(pc,d1.w),a2
 		move.w	DynArtCue_Index(pc,d0.w),d0
 		jmp	DynArtCue_Index(pc,d0.w)
-; End of function AniArt_Load
+; End of function Animate_Tiles
 
 ; ---------------------------------------------------------------------------
 ; ZONE ANIMATION PROCEDURES AND SCRIPTS
@@ -24312,7 +24237,7 @@ Debug_ResetPlayerStats:
 ; ---------------------------------------------------------------------------
 Nem_SegaLogo:		binclude	"art/nemesis/Sega Logo (JP1).nem"
 			even
-Kosp_Title:		binclude	"art/kosinski/8x8 - Title.kosp"
+Kosp_Title:		binclude	"art/kosinski/level/8x8 - Title.kosp"
 			even
 Nem_TitleSonicTails:	binclude	"art/nemesis/Title Sonic and Tails.nem"
 			even
@@ -24623,42 +24548,42 @@ Nem_HTZ_AniPlaceholders:	binclude	"art/nemesis/HTZ Ani Placeholders.nem"
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - primary patterns and block mappings
 ; ---------------------------------------------------------------------------
-Kosp_GHZ:	binclude	"art/moduled kosinski/level/8x8 - GHZ.kospm"
+Kosp_GHZ:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
 		even
 Map16_GHZ:	binclude	"mappings/16x16/GHZ.kosp"
 		even
 Map128_GHZ:	binclude	"mappings/128x128/GHZ.kosp"
 		even
 
-Kosp_LZ:	binclude	"art/moduled kosinski/level/8x8 - LZ.kospm"
+Kosp_LZ:	binclude	"art/kosinski/level/8x8 - LZ.kosp"
 		even
 Map16_LZ:	binclude	"mappings/16x16/LZ.kosp"
 		even
 Map128_LZ:	binclude	"mappings/128x128/LZ.kosp"
 		even
 
-Kosp_CPZ:	binclude	"art/moduled kosinski/level/8x8 - CPZ.kospm"
+Kosp_CPZ:	binclude	"art/kosinski/level/8x8 - CPZ.kosp"
 		even
 Map16_CPZ:	binclude	"mappings/16x16/CPZ.kosp"
 		even
 Map128_CPZ:	binclude	"mappings/128x128/CPZ.kosp"
 		even
 
-Kosp_EHZ:	binclude	"art/moduled kosinski/level/8x8 - EHZ.kospm"
+Kosp_EHZ:	binclude	"art/kosinski/level/8x8 - EHZ.kosp"
 		even
 Map16_EHZ:	binclude	"mappings/16x16/EHZ.kosp"
 		even
 Map128_EHZ:	binclude	"mappings/128x128/EHZ.kosp"
 		even
 
-Kosp_HPZ:	binclude	"art/moduled kosinski/level/8x8 - HPZ.kospm"
+Kosp_HPZ:	binclude	"art/kosinski/level/8x8 - HPZ.kosp"
 		even
 Map16_HPZ:	binclude	"mappings/16x16/HPZ.kosp"
 		even
 Map128_HPZ:	binclude	"mappings/128x128/HPZ.kosp"
 		even
 
-Kosp_HTZ:	binclude	"art/moduled kosinski/level/8x8 - HTZ.kospm"
+Kosp_HTZ:	binclude	"art/kosinski/level/8x8 - HTZ.kosp"
 		even
 Map16_HTZ:	binclude	"mappings/16x16/HTZ.kosp"
 		even
