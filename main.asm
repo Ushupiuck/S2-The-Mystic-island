@@ -686,11 +686,10 @@ Vint_TitleCard:
 		movem.l	d0-d7,(Camera_RAM_copy).w
 		movem.l	(Scroll_flags).w,d0-d1
 		movem.l	d0-d1,(Scroll_flags_copy).w
-		bsr.w	LoadTilesAsYouMove_BGOnly
-	;	jsr	(LoadTilesAsYouMove).l
+		bsr.w	LoadTilesAsYouMove
 		jsr	(HudUpdate).l
-		bsr.w	Set_Kos_Bookmark
-		bra.w	ProcessDPLC
+		bsr.w	ProcessDPLC
+		bra.w	Set_Kos_Bookmark
 ; ===========================================================================
 ; loc_F98: VintSub12:
 Vint_Fade:
@@ -1209,11 +1208,9 @@ ProcessDPLC_Pop:
 loc_17D2:
 		move.l	6(a0),(a0)+
 		dbf	d0,loc_17D2
-
 	if (v_plc_buffer_only_end-v_plc_buffer-6)&2
 		move.w	6(a0),(a0)
 	endif
-
 		clr.l	(v_plc_buffer_only_end-6).w
 		rts
 ; End of function ProcessDPLC
@@ -1228,10 +1225,6 @@ loc_17D2:
 
 
 QuickPLC:
-		lea	(ArtLoadCues).l,a1
-		add.w	d0,d0
-		move.w	(a1,d0.w),d0
-		lea	(a1,d0.w),a1
 		move.w	(a1)+,d1
 
 .Load:
@@ -1250,7 +1243,7 @@ QuickPLC:
 
 		include "_inc/Nemesis Decompression.asm"
 
-KosPlusArt_To_VDP:
+KosPlusArt_To_VDP:	; commented out until I find a use for it
 		movea.l	a1,a3		; a1 will be changed by KosPlusDec, so we're backing it up to a3
 		bsr.s	KosPlusDec
 		move.l	a3,d1		; move the backed-up a1 to d1
@@ -1267,10 +1260,13 @@ KosPlusArt_To_VDP:
 		include "_inc/KosinskiPlus.asm"
 		include "_inc/DMA Queue.asm"
 
-; =============== S U B R O U T I N E =======================================
-
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+; ---------------------------------------------------------------------------
+; Subroutine to queue Moduled Kosinski PLC's per level
+; ---------------------------------------------------------------------------
 
 LoadKosPLC:
+	;	movem.l	a1-a6,-(sp)	; Save registers -- Optional
 		lea	(KosMLoadCues).l,a6
 		; level specific checks go here.
 		; Sonic & knuckles default are provided as an example.
@@ -1281,25 +1277,35 @@ LoadKosPLC:
 	;	cmpi.w	#$1700,(Current_zone_and_act).w
 	;	bne.s	loc_2F79E
 
-loc_2F79E:
+; loc_2F79E:
+		moveq	#0,d0
 		move.w	(Current_ZoneAndAct).w,d0
 
 loc_2F7A2:
 		ror.b	#2,d0
 		lsr.w	#5,d0
 		adda.w	(a6,d0.w),a6
+
+; ---------------------------------------------------------------------------
+; This is the part that processes the current table entry
+; can be called manually by loading the entry directly into a6
+; input:	lea	(PLCKosM_[ENTRY_NAME]).l,a6
+; ---------------------------------------------------------------------------
+QuickKosPLC:
 		move.w	(a6)+,d6
 		bmi.s	.exit		; if there's nothing, we bail!
 
-.loop:
-		movea.l	(a6)+,a1
+-		movea.l	(a6)+,a1
 		move.w	(a6)+,d2
 		bsr.s	Queue_Kos_Module	; Process 4 entries
-		dbf	d6,.loop	; loop until we're finished
+		dbf	d6,-	; loop until we're finished
 
 .exit:
+	;	movem.l	(sp)+,a1-a6	; Restore registers -- Optional
 		rts
-; End of function LoadEnemyArt
+; End of function LoadKosPLC
+; ---------------------------------------------------------------------------
+
 ; ===========================================================================
 		include "_inc/KosinkiPlus_Moduled.asm"
 		include "_inc/Enigma Decompression.asm"
@@ -2784,12 +2790,13 @@ Level_TtlCardLoop:
 		jsr	(BuildSprites).l
 		bsr.w	RunPLC_RAM
 		bsr.w	Process_Kos_Module_Queue
-		beq.s	Level_TtlCardLoop
 		move.w	(v_ttlcardact+obX).w,d0
 		cmp.w	(v_ttlcardact+objoff_30).w,d0
 		bne.s	Level_TtlCardLoop
 		tst.l	(v_plc_buffer).w
 		bne.s	Level_TtlCardLoop
+		move.b	#VintID_TitleCard,(v_vbla_routine).w
+		bsr.w	WaitForVint
 		jsr	(HUD_Base).l
 
 Level_SkipTtlCard:
@@ -2799,7 +2806,7 @@ Level_SkipTtlCard:
 		bsr.w	DeformBGLayer
 		bset	#2,(Scroll_flags).w
 		bsr.w	LoadZoneTiles
-		bsr.w	MainLevelLoadBlock
+	;	bsr.w	MainLevelLoadBlock
 		jsr	(LoadAnimatedBlocks).l
 		bsr.w	LoadTilesFromStart
 		bsr.w	LoadCollisionIndexes
@@ -3317,7 +3324,8 @@ SpecialStage:
 		enable_ints
 		fillVRAM	0, ArtTile_SS_Plane_1*tile_size+plane_size_64x32, ArtTile_SS_Plane_5*tile_size
 		bsr.w	S1_SSBGLoad
-		moveq	#plcid_SpecialStage,d0
+	;	moveq	#plcid_SpecialStage,d0
+		lea	(PLC_S1SpecialStage).l,a1
 		bsr.w	QuickPLC
 		clearRAM v_objspace,v_objend
 		clearRAM v_levelvariables,v_levelvariables_end
@@ -3336,13 +3344,6 @@ SpecialStage:
 		move.w	#$40,(v_ssrotate).w ; set stage rotation speed
 		move.w	#bgm_SS,d0
 		bsr.w	PlaySound	; play special stage BG	music
-		move.w	#0,(Demo_button_index).w
-		lea	(Demo_Index).l,a1
-		moveq	#6,d0
-		lsl.w	#2,d0
-		movea.l	(a1,d0.w),a1
-		move.b	1(a1),(Demo_press_counter).w
-		subq.b	#1,(Demo_press_counter).w
 		clr.w	(v_rings).w
 		clr.b	(v_lifecount).w
 ;		move.w	#100,(v_ring1uplimit).w	; TODO: IMPLEMENT reset ring 1-up flag
@@ -3368,22 +3369,13 @@ SS_MainLoop:
 		bsr.w	PauseGame
 		move.b	#VintID_S1SS,(v_vbla_routine).w
 		bsr.w	WaitForVint
-		bsr.w	MoveSonicInDemo
 		move.w	(v_jpadhold1).w,(v_jpadhold2).w
 		jsr	(ExecuteObjects).l
 		jsr	(BuildSprites).l
 		bsr.w	S1SS_ShowLayout
 		bsr.w	S1SS_BgAnimate
-		tst.w	(f_demo).w	; is demo mode on?
-		beq.s	SS_ChkEnd	; if not, branch
-		tst.w	(v_demolength).w ; is there time left on the demo?
-		beq.w	SS_ToSegaScreen	; if not, branch
-
-SS_ChkEnd:
 		cmpi.b	#GameModeID_SpecialStage,(v_gamemode).w ; is game mode $10 (special stage)?
 		beq.w	SS_MainLoop	; if yes, branch
-		tst.w	(f_demo).w	; is demo mode on?
-		bne.w	SS_ToLevel
 		move.b	#GameModeID_Level,(v_gamemode).w ; set screen mode to $0C (level)
 		cmpi.w	#(id_SBZ<<8)+3,(Current_ZoneAndAct).w ; is level number higher than FZ?
 		blo.s	SS_Finish	; if not, branch
@@ -3397,8 +3389,6 @@ SS_Finish:
 SS_FinLoop:
 		move.b	#VintID_SSResults,(v_vbla_routine).w
 		bsr.w	WaitForVint
-		bsr.w	MoveSonicInDemo
-		move.w	(v_jpadhold1).w,(v_jpadhold2).w
 		jsr	(ExecuteObjects).l
 		jsr	(BuildSprites).l
 		bsr.w	S1SS_ShowLayout
@@ -3429,6 +3419,8 @@ loc_5214:
 		bsr.w	NewPLC
 		moveq	#plcid_SSResult,d0
 		bsr.w	LoadPLC			; load results screen patterns
+		lea	(PLCKosM_SSResult).l,a6
+		bsr.w	QuickKosPLC
 		move.b	#1,(f_scorecount).w	; update score counter
 		move.b	#1,(f_endactbonus).w	; update ring bonus counter
 		move.w	(v_rings).w,d0
@@ -3443,9 +3435,11 @@ SS_NormalExit:
 		bsr.w	PauseGame
 		move.b	#VintID_TitleCard,(v_vbla_routine).w
 		bsr.w	WaitForVint
+		bsr.w	Process_Kos_Queue
 		jsr	(ExecuteObjects).l
 		jsr	(BuildSprites).l
 		bsr.w	RunPLC_RAM
+		bsr.w	Process_Kos_Module_Queue
 		tst.w	(Level_Inactive_flag).w
 		beq.s	SS_NormalExit
 		tst.l	(v_plc_buffer).w
@@ -3453,17 +3447,6 @@ SS_NormalExit:
 		move.w	#sfx_EnterSS,d0
 		bsr.w	PlaySound_Special
 		bra.w	Pal_MakeFlash
-; ---------------------------------------------------------------------------
-
-SS_ToSegaScreen:
-		move.b	#GameModeID_SegaScreen,(v_gamemode).w
-		rts
-
-SS_ToLevel:
-		cmpi.b	#GameModeID_Level,(v_gamemode).w
-		beq.s	SS_ToSegaScreen
-		rts
-
 ; ---------------------------------------------------------------------------
 ; Special stage	background loading subroutine
 ; ---------------------------------------------------------------------------
@@ -4436,7 +4419,7 @@ LoadZoneTiles:
 		move.w	(sp)+,d7
 		move.w	#$800,d3
 		dbf	d7,-
-		rts
+;		rts
 ; End of function LoadZoneTiles
 
 ; =============== S U B R O U T I N E =======================================
@@ -5928,20 +5911,6 @@ loc_6818:
 locret_681E:
 		rts
 ; End of function ScrollBlock6
-
-; ---------------------------------------------------------------------------
-; Leftover Sonic 1 Routine
-LoadTilesAsYouMove_BGOnly:
-		lea	(vdp_control_port).l,a5
-		lea	(vdp_data_port).l,a6
-		lea	(Scroll_flags_BG).w,a2
-		lea	(Camera_BG_X_pos).w,a3
-		lea	(v_lvllayoutbg).w,a4
-		move.w	#$6000,d2
-		bsr.w	DrawBGScrollBlock1
-		lea	(Scroll_flags_BG2).w,a2
-		lea	(Camera_BG2_X_pos).w,a3
-		bra.w	DrawBGScrollBlock2
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -22885,11 +22854,11 @@ Animate_Tiles:
 ; ---------------------------------------------------------------------------
 DynArtCue_Index:
 		dc.w Dynamic_NullGHZ-DynArtCue_Index	; GHZ
-		dc.w AnimCue_EHZ-DynArtCue_Index	; GHZ
+		dc.w Dynamic_Null-DynArtCue_Index	; GHZ
 		dc.w Dynamic_Null-DynArtCue_Index	; LZ
 		dc.w Dynamic_Null-DynArtCue_Index	; LZ
-		dc.w Dynamic_Null-DynArtCue_Index	; CPZ
-		dc.w Dynamic_Null-DynArtCue_Index	; CPZ
+		dc.w Dynamic_Normal-DynArtCue_Index	; CPZ
+		dc.w Animated_CPZ-DynArtCue_Index	; CPZ
 		dc.w Dynamic_Normal-DynArtCue_Index	; EHZ
 		dc.w AnimCue_EHZ-DynArtCue_Index	; EHZ
 		dc.w Dynamic_Normal-DynArtCue_Index	; HPZ
@@ -22928,15 +22897,10 @@ Dynamic_NullGHZ:
 
 Dynamic_Normal:
 		lea	(Anim_Counters).w,a3
-; loc_3FF30:
 ;.customCounters:
 		move.w	(a2)+,d6	; Get number of scripts in list
-		; S&K checks for empty lists, here
-		bpl.s	.listnotempty	; If there are any, continue
-		rts
-.listnotempty:
+		bmi.s	.exit		; If there's none, bail
 
-; loc_3FF32:
 .loop:
 		subq.b	#1,(a3)		; Tick down frame duration
 		bcc.s	.nextscript	; If frame isn't over, move on to next script
@@ -22987,6 +22951,7 @@ Dynamic_Normal:
 		lea	8(a2,d0.w),a2	; Advance to next script in list
 		addq.w	#2,a3		; Advance to next script's slot in a3 (usually Anim_Counters)
 		dbf	d6,.loop
+.exit:
 		rts
 ; ===========================================================================
 ; ZONE ANIMATION SCRIPTS
@@ -23051,8 +23016,23 @@ AnimCue_EHZ:	zoneanimstart
 		dc.b   4,  6
 		dc.b   4,  2
 		even
-
 		zoneanimend
+
+Animated_CPZ:	zoneanimstart
+		; Animated background section in CPZ and DEZ
+		zoneanimdecl 4, Art_CPZAnimBGPlates, ArtTile_ArtUnc_CPZAnimBack, 8, 2
+		dc.b   0
+		dc.b   2
+		dc.b   4
+		dc.b   6
+		dc.b   8
+		dc.b  $A
+		dc.b  $C
+		dc.b  $E
+		even
+	zoneanimend
+
+
 
 AnimCue_HPZ:	zoneanimstart
 		; Pulsing orb from HPZ
@@ -23082,7 +23062,6 @@ AnimCue_HPZ:	zoneanimstart
 		dc.b   8
 		dc.b $10
 		even
-
 		zoneanimend
 
 ; ===========================================================================
@@ -23121,8 +23100,7 @@ locret_1AD1A:
 AnimPatMaps:
 		dc.w APM_EHZ-AnimPatMaps	; GHZ
 		dc.w APM_None-AnimPatMaps	; LZ
-	;	dc.w APM_CPZ-AnimPatMaps	; CPZ
-		dc.w APM_None-AnimPatMaps	; CPZ
+		dc.w APM_CPZ-AnimPatMaps	; CPZ
 		dc.w APM_EHZ-AnimPatMaps	; EHZ
 		dc.w APM_HPZ-AnimPatMaps	; HPZ
 		dc.w APM_EHZ-AnimPatMaps	; HTZ
@@ -23197,19 +23175,10 @@ APM_None:
 		dc.w 0
 APM_None_End:
 
-;APM_CPZ:	begin_animpat
-	;	dc.w make_block_tile(ArtTile_CPZ_Buildings+$1,0,0,2,0),make_block_tile(ArtTile_CPZ_Buildings+$1,0,0,2,0)
-	;	dc.w make_block_tile(ArtTile_CPZ_Buildings+$1,0,0,2,0),make_block_tile(ArtTile_CPZ_Buildings+$1,0,0,2,0)
-
-	;	dc.w make_block_tile(ArtTile_CPZ_Buildings+$2,0,0,2,0),make_block_tile(ArtTile_CPZ_Buildings+$2,0,0,2,0)
-	;	dc.w make_block_tile(ArtTile_CPZ_Buildings+$3,0,0,2,0),make_block_tile(ArtTile_CPZ_Buildings+$3,0,0,2,0)
-
-	;	dc.w make_block_tile(ArtTile_CPZ_Buildings+$4,0,0,2,0),make_block_tile(ArtTile_CPZ_Buildings+$4,0,0,2,0)
-	;	dc.w make_block_tile(ArtTile_CPZ_Buildings+$5,0,0,2,0),make_block_tile(ArtTile_CPZ_Buildings+$5,0,0,2,0)
-
-	;	dc.w make_block_tile(ArtTile_CPZ_Buildings+$6,0,0,2,0),make_block_tile(ArtTile_CPZ_Buildings+$6,0,0,2,0)
-	;	dc.w make_block_tile(ArtTile_CPZ_Buildings+$7,0,0,2,0),make_block_tile(ArtTile_CPZ_Buildings+$7,0,0,2,0)
-;APM_CPZ_End:
+APM_CPZ:	begin_animpat
+		dc.w make_block_tile(ArtTile_ArtUnc_CPZAnimBack+$0,0,0,2,0),make_block_tile(ArtTile_ArtUnc_CPZAnimBack+$1,0,0,2,0)
+		dc.w make_block_tile(ArtTile_ArtUnc_CPZAnimBack+$0,0,0,2,0),make_block_tile(ArtTile_ArtUnc_CPZAnimBack+$1,0,0,2,0)
+APM_CPZ_End:
 
 APM_HPZ:	begin_animpat
 		dc.w make_block_tile(ArtTile_Art_HPZPulseOrb_1+$0,0,0,3,0),make_block_tile(ArtTile_Art_HPZPulseOrb_1+$1,0,0,3,0)
@@ -24473,10 +24442,11 @@ Nem_Bonus:	binclude	"art/nemesis/S1/Hidden Bonuses.nem"
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - continue screen
 ; ---------------------------------------------------------------------------
-Nem_ContSonic:	binclude	"art/nemesis/S1/Continue Screen Sonic.nem"
-		even
-Nem_MiniSonic:	binclude	"art/nemesis/S1/Continue Screen Stuff.nem"
-		even
+; These files are already even, so...
+Kospm_ContSonic:	binclude	"art/moduled kosinski/Continue Screen Sonic.kospm"
+Kospm_ContTails:	binclude	"art/moduled kosinski/Continue screen Tails.kospm"
+Kospm_MiniSonic:	binclude	"art/moduled kosinski/Mini Sonic Continue.kospm"
+Kospm_MiniTails:	binclude	"art/moduled kosinski/Mini Tails Continue.kospm"
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - animals
 ; ---------------------------------------------------------------------------
@@ -24528,18 +24498,13 @@ Nem_EndStH:	binclude	"art/nemesis/S1/Ending - StH Logo.nem"
 ; ---------------------------------------------------------------------------
 ; Misc. animated tiles
 ; ---------------------------------------------------------------------------
-Art_Flowers1:	binclude	"art/uncompressed/EHZ and HTZ flowers - 1.bin"
-		even
-Art_Flowers2:	binclude	"art/uncompressed/EHZ and HTZ flowers - 2.bin"
-		even
-Art_Flowers3:	binclude	"art/uncompressed/EHZ and HTZ flowers - 3.bin"
-		even
-Art_Flowers4:	binclude	"art/uncompressed/EHZ and HTZ flowers - 4.bin"
-		even
+Art_Flowers1:		binclude	"art/uncompressed/EHZ and HTZ flowers - 1.bin"
+Art_Flowers2:		binclude	"art/uncompressed/EHZ and HTZ flowers - 2.bin"
+Art_Flowers3:		binclude	"art/uncompressed/EHZ and HTZ flowers - 3.bin"
+Art_Flowers4:		binclude	"art/uncompressed/EHZ and HTZ flowers - 4.bin"
+Art_CPZAnimBGPlates:	binclude	"art/uncompressed/CPZ animated background section.bin"
 Art_EHZPulseBall:	binclude	"art/uncompressed/Pulsing ball against checkered background (EHZ).bin"
-			even
 Art_HPZPulseOrb:	binclude	"art/uncompressed/Pulsing orb (HPZ).bin"
-			even
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - Level placeholders
 ; ---------------------------------------------------------------------------
@@ -25129,7 +25094,127 @@ RingPos_HTZ3:	binclude	"level/rings/HTZ_3.bin"
 RingPos_HTZ4:	binclude	"level/rings/HTZ_4.bin"
 		even
 ; ===========================================================================
-		align	$7DBDC
+
+; =============== S U B R O U T I N E =======================================
+
+
+; AutoTunnel_GetPath:
+; 		move.b	subtype(a0),d0
+; 		bpl.s	loc_297D6
+; 		andi.w	#$1F,d0			; If negative, then the path is reversed
+; 		add.w	d0,d0
+; 		add.w	d0,d0
+; 		lea	(AutoTunnel_Data).l,a2
+; 		movea.l	(a2,d0.w),a2	; Get address of movement data
+; 		move.w	(a2)+,d0
+; 		subq.w	#4,d0
+; 		move.w	d0,4(a4)
+; 		lea	(a2,d0.w),a2
+; 		move.w	(a2)+,d4
+; 		move.w	d4,x_pos(a1)
+; 		move.w	(a2)+,d5
+; 		move.w	d5,y_pos(a1)		; Set absolute position of player
+; 		subq.w	#8,a2
+; 		bra.s	loc_2980C
+; ---------------------------------------------------------------------------
+; 
+; loc_297D6:
+; 		cmpi.b	#$10,d0
+; 		bne.s	loc_297E6
+; 		cmpi.w	#2,(Player_mode).w
+; 		bne.s	loc_297E6
+; 		moveq	#0,d0			; If playing as Tails, use path 0 when doing path $10
+; 
+; loc_297E6:
+; 		andi.w	#$1F,d0
+; 		add.w	d0,d0
+; 		add.w	d0,d0
+; 		lea	(AutoTunnel_Data).l,a2
+; 		movea.l	(a2,d0.w),a2
+; 		move.w	(a2)+,4(a4)
+; 		subq.w	#4,4(a4)
+; 		move.w	(a2)+,d4
+; 		move.w	d4,x_pos(a1)
+; 		move.w	(a2)+,d5
+; 		move.w	d5,y_pos(a1)		; Set absolute position of player
+; 
+; loc_2980C:
+; 		move.l	a2,6(a4)
+; 		move.w	(a2)+,d4
+; 		move.w	(a2)+,d5		; Get next position
+; 		move.w	#$1000,d2
+; 
+; AutoTunnel_CalcSpeed:
+; 		moveq	#0,d0
+; 		move.w	d2,d3
+; 		move.w	d4,d0
+; 		sub.w	x_pos(a1),d0
+; 		bge.s	loc_29828
+; 		neg.w	d0
+; 		neg.w	d2			; Change X velocity depending on direction of destination
+; 
+; loc_29828:
+; 		moveq	#0,d1
+; 		move.w	d5,d1
+; 		sub.w	$14(a1),d1
+; 		bge.s	loc_29836
+; 		neg.w	d1
+; 		neg.w	d3			; Change Y velocity depending on direction of destination
+; 
+; loc_29836:
+; 		cmp.w	d0,d1
+; 		blo.s	loc_29868
+; 		moveq	#0,d1			; If X distance is less than Y distance
+; 		move.w	d5,d1
+; 		sub.w	y_pos(a1),d1
+; 		swap	d1
+; 		divs.w	d3,d1
+; 		moveq	#0,d0
+; 		move.w	d4,d0
+; 		sub.w	x_pos(a1),d0
+; 		beq.s	loc_29854
+; 		swap	d0
+; 		divs.w	d1,d0
+; 
+; loc_29854:
+; 		move.w	d0,x_vel(a1)		; Calculate and set X velocity assuming a Y velocity of $10 pixels
+; 		move.w	d3,y_vel(a1)
+; 		tst.w	d1
+; 		bpl.s	loc_29862
+; 		neg.w	d1
+; 
+; loc_29862:
+; 		move.w	d1,2(a4)		; The quotient of the distance/speed produces a proper timer used for movement
+; 		rts
+; ---------------------------------------------------------------------------
+; 
+; loc_29868:
+; 		moveq	#0,d0			; If Y distance is less than X distance
+; 		move.w	d4,d0
+; 		sub.w	x_pos(a1),d0
+; 		swap	d0
+; 		divs.w	d2,d0
+; 		moveq	#0,d1
+; 		move.w	d5,d1
+; 		sub.w	y_pos(a1),d1
+; 		beq.s	loc_29882
+; 		swap	d1
+; 		divs.w	d0,d1
+; 
+; loc_29882:
+; 		move.w	d1,y_vel(a1)	; Calculate and set Y velocity assuming a X velocity of $10 pixels
+; 		move.w	d2,x_vel(a1)
+; 		tst.w	d0
+; 		bpl.s	loc_29890
+; 		neg.w	d0
+;
+; loc_29890:
+; 		move.w	d0,2(a4)	; See above
+; 		rts
+; End of function AutoTunnel_GetPath
+
+
+	;	align	$84A28
 ; ---------------------------------------------------------------------------
 ; These subroutines are yet to be properly implemented
 ; ---------------------------------------------------------------------------
@@ -25287,7 +25372,7 @@ ObjectMoveAndFall_NormGravity:
 ;	to resolve symbol names.
 ; ---------------------------------------------------------------------------
  else
-		align	$3FFFFF			; Pad to 4MB
+	;	align	$3FFFFF			; Pad to 4MB
 		even
  endif
 EndOfRom:

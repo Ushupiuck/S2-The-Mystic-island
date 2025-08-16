@@ -195,11 +195,6 @@ PLC_HPZ2:	dc.w ((PLC_HPZ2_End-PLC_HPZ2)/6)-1
 		plcm	Nem_HPZ_Various, $37C
 		plcm	Nem_HPZ_Emerald, ArtTile_HPZ_Emerald
 PLC_HPZ2_End:
-		; unused PLR entries
-;		plcm	Nem_Gator, ArtTile_Gator
-;		plcm	Nem_Stegway, ArtTile_Stegway
-;		plcm	Nem_Redz, ArtTile_Redz
-;		plcm	Nem_BFish, ArtTile_BFish
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Hill Top Zone primary
@@ -209,8 +204,6 @@ PLC_HTZ:	dc.w ((PLC_HTZ_End-PLC_HTZ)/6)-1
 		plcm	Nem_EHZ_Fireball, ArtTile_Fireball
 		plcm	Nem_HTZ_Fireball, ArtTile_HTZ_Fireball
 		plcm	Nem_HTZ_AutomaticDoor, ArtTile_HTZ_AutomaticDoor
-		plcm	Nem_EHZ_Bridge, ArtTile_EHZ_Bridge
-		plcm	Nem_HTZ_Seesaw, ArtTile_HTZ_Seesaw
 		plcm	Nem_VSpikes, ArtTile_Spikes
 		plcm	Nem_DSpring, ArtTile_Spring_Diagonal
 		plcm	Nem_VSpring2, ArtTile_Spring_Vertical
@@ -222,11 +215,9 @@ PLC_HTZ_End:
 ; ---------------------------------------------------------------------------
 PLC_HTZ2:	dc.w ((PLC_HTZ2_End-PLC_HTZ2)/6)-1
 		plcm	Nem_HTZ_Lift, ArtTile_HtzZipline
+		plcm	Nem_EHZ_Bridge, ArtTile_EHZ_Bridge
+		plcm	Nem_HTZ_Seesaw, ArtTile_HTZ_Seesaw
 PLC_HTZ2_End:
-		; unused PLR entries
-;		plcm	Nem_Buzzer, ArtTile_Buzzer
-;		plcm	Nem_Snail, ArtTile_Snail
-;		plcm	Nem_Masher, ArtTile_Masher
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Sonic 1 title card
@@ -243,10 +234,6 @@ PLC_Boss:	dc.w ((PLC_Boss_End-PLC_Boss)/6)-1
 		plcm	Nem_EHZ_Boss, ArtTile_ArtNem_EHZBoss
 		plcm	Nem_EggChopper, ArtTile_ArtNem_EggChoppers
 PLC_Boss_End:
-		; unused PLR entries
-;		plcm	Nem_CPZ_Boss, $460
-;		plcm	Nem_EggPodJets, $4D0
-;		plcm	Nem_Smoke, $4D8
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; End of level signpost
@@ -330,7 +317,6 @@ PLC_HTZAnimals_End:
 ; ---------------------------------------------------------------------------
 PLC_SSResult:dc.w ((PLC_SpeStResultend-PLC_SSResult-2)/6)-1
 		plcm	Nem_ResultEm, ArtTile_SS_Results_Emeralds	; emeralds
-		plcm	Nem_MiniSonic, ArtTile_Mini_Sonic		; mini Sonic
 PLC_SpeStResultend:
 
 ; ---------------------------------------------------------------------------
@@ -480,12 +466,13 @@ ptr_KPLC_3:	dc.w PLCKosM_Null-KosMLoadCues ; Boss 1
 ptr_KPLC_4:	dc.w PLCKosM_Null-KosMLoadCues ; Boss 2
 ptr_KPLC_5:	dc.w PLCKosM_Null-KosMLoadCues ; Boss 3
 ptr_KPLC_6:	dc.w PLCKosM_Null-KosMLoadCues ; Boss 4
-ptr_KPLC_7:	dc.w PLCKosM_Null-KosMLoadCues ; Level transition patchers
+ptr_KPLC_7:	dc.w PLCKosM_SSResult-KosMLoadCues ; Special stage results
 ptr_KPLC_8:	dc.w PLCKosM_Null-KosMLoadCues ; Level transition patchers
 ptr_KPLC_9:	dc.w PLCKosM_Null-KosMLoadCues ; Level transition patchers
 ptr_KPLC_10:	dc.w PLCKosM_Null-KosMLoadCues ; Level transition patchers
 ptr_KPLC_11:	dc.w PLCKosM_Null-KosMLoadCues ; Level transition patchers
 ptr_KPLC_12:	dc.w PLCKosM_Null-KosMLoadCues ; Level transition patchers
+ptr_KPLC_13:	dc.w PLCKosM_Null-KosMLoadCues ; Level transition patchers
 ; ---------------------------------------------------------------------------
 ; macro for a pattern load request list header
 ; must be on the same line as a label that has a corresponding _End label later
@@ -501,49 +488,44 @@ plreqKosM macro toVRAMaddr,fromROMaddr
 	dc.w	tiles_to_bytes(toVRAMaddr)
     endm
 
-
-PLCKosM_Null:	plrKosMlistheader
-	dc.w	$FFFF
-PLCKosM_Null_End
-
 ; ---------------------------------------------------------------------------
 ; KOSM PATTERN LOAD REQUEST LIST
 ; Green Hill Zone
 ; ---------------------------------------------------------------------------
 ; Act 1
 PLCKosM_GHZ1:	plrKosMlistheader
-		plreqKosM	ArtTile_Buzz_Bomber, Kospm_Buzz
-		plreqKosM	ArtTile_Crabmeat, Kospm_Crabmeat
-		plreqKosM	ArtTile_Chopper, Kospm_Chopper
-		plreqKosM	ArtTile_Moto_Bug, Kospm_Motobug
-		plreqKosM	ArtTile_Newtron, Kospm_Newtron
+	plreqKosM	ArtTile_Buzz_Bomber, Kospm_Buzz
+	plreqKosM	ArtTile_Crabmeat, Kospm_Crabmeat
+	plreqKosM	ArtTile_Chopper, Kospm_Chopper
+	plreqKosM	ArtTile_Moto_Bug, Kospm_Motobug
+	plreqKosM	ArtTile_Newtron, Kospm_Newtron
 PLCKosM_GHZ1_End
 ; ---------------------------------------------------------------------------
 ; Act 2
 PLCKosM_GHZ2:	plrKosMlistheader
-		plreqKosM	ArtTile_Buzz_Bomber, Kospm_Buzz
-		plreqKosM	ArtTile_Crabmeat, Kospm_Crabmeat
-		plreqKosM	ArtTile_Chopper, Kospm_Chopper
-		plreqKosM	ArtTile_Moto_Bug, Kospm_Motobug
-		plreqKosM	ArtTile_Newtron, Kospm_Newtron
+	plreqKosM	ArtTile_Buzz_Bomber, Kospm_Buzz
+	plreqKosM	ArtTile_Crabmeat, Kospm_Crabmeat
+	plreqKosM	ArtTile_Chopper, Kospm_Chopper
+	plreqKosM	ArtTile_Moto_Bug, Kospm_Motobug
+	plreqKosM	ArtTile_Newtron, Kospm_Newtron
 PLCKosM_GHZ2_End
 ; ---------------------------------------------------------------------------
 ; Act 3
 PLCKosM_GHZ3:	plrKosMlistheader
-		plreqKosM	ArtTile_Buzz_Bomber, Kospm_Buzz
-		plreqKosM	ArtTile_Crabmeat, Kospm_Crabmeat
-		plreqKosM	ArtTile_Chopper, Kospm_Chopper
-		plreqKosM	ArtTile_Moto_Bug, Kospm_Motobug
-		plreqKosM	ArtTile_Newtron, Kospm_Newtron
+	plreqKosM	ArtTile_Buzz_Bomber, Kospm_Buzz
+	plreqKosM	ArtTile_Crabmeat, Kospm_Crabmeat
+	plreqKosM	ArtTile_Chopper, Kospm_Chopper
+	plreqKosM	ArtTile_Moto_Bug, Kospm_Motobug
+	plreqKosM	ArtTile_Newtron, Kospm_Newtron
 PLCKosM_GHZ3_End
 ; ---------------------------------------------------------------------------
 ; Act 4
 PLCKosM_GHZ4:	plrKosMlistheader
-		plreqKosM	ArtTile_Buzz_Bomber, Kospm_Buzz
-		plreqKosM	ArtTile_Crabmeat, Kospm_Crabmeat
-		plreqKosM	ArtTile_Chopper, Kospm_Chopper
-		plreqKosM	ArtTile_Moto_Bug, Kospm_Motobug
-		plreqKosM	ArtTile_Newtron, Kospm_Newtron
+	plreqKosM	ArtTile_Buzz_Bomber, Kospm_Buzz
+	plreqKosM	ArtTile_Crabmeat, Kospm_Crabmeat
+	plreqKosM	ArtTile_Chopper, Kospm_Chopper
+	plreqKosM	ArtTile_Moto_Bug, Kospm_Motobug
+	plreqKosM	ArtTile_Newtron, Kospm_Newtron
 PLCKosM_GHZ4_End
 ; ---------------------------------------------------------------------------
 ; KOSM PATTERN LOAD REQUEST LIST
@@ -596,26 +578,26 @@ PLCKosM_GHZ4_End
 ; ---------------------------------------------------------------------------
 ; Act 1
 PLCKosM_HPZ1:	plrKosMlistheader
-		plreqKosM	ArtTile_Redz, Kospm_Redz
-		plreqKosM	ArtTile_BBat, Kospm_BBat
+	plreqKosM	ArtTile_Redz, Kospm_Redz
+	plreqKosM	ArtTile_BBat, Kospm_BBat
 PLCKosM_HPZ1_End
 ; ---------------------------------------------------------------------------
 ; Act 2
 PLCKosM_HPZ2:	plrKosMlistheader
-		plreqKosM	ArtTile_Redz, Kospm_Redz
-		plreqKosM	ArtTile_BBat, Kospm_BBat
+	plreqKosM	ArtTile_Redz, Kospm_Redz
+	plreqKosM	ArtTile_BBat, Kospm_BBat
 PLCKosM_HPZ2_End
 ; ---------------------------------------------------------------------------
 ; Act 3
 PLCKosM_HPZ3:	plrKosMlistheader
-		plreqKosM	ArtTile_Redz, Kospm_Redz
-		plreqKosM	ArtTile_BBat, Kospm_BBat
+	plreqKosM	ArtTile_Redz, Kospm_Redz
+	plreqKosM	ArtTile_BBat, Kospm_BBat
 PLCKosM_HPZ3_End
 ; ---------------------------------------------------------------------------
 ; Act 4
 PLCKosM_HPZ4:	plrKosMlistheader
-		plreqKosM	ArtTile_Redz, Kospm_Redz
-		plreqKosM	ArtTile_BBat, Kospm_BBat
+	plreqKosM	ArtTile_Redz, Kospm_Redz
+	plreqKosM	ArtTile_BBat, Kospm_BBat
 PLCKosM_HPZ4_End
 
 ; ---------------------------------------------------------------------------
@@ -821,7 +803,10 @@ PLCKosM_HPZ4_End
 
 ; ---------------------------------------------------------------------------
 ; 7
-
+PLCKosM_SSResult:	plrKosMlistheader
+	plreqKosM	ArtTile_Mini_Tails, Kospm_MiniTails		; mini Tails
+	plreqKosM	ArtTile_Mini_Sonic, Kospm_MiniSonic		; mini Sonic
+PLCKosM_SSResult_End
 ; ---------------------------------------------------------------------------
 ; 8
 
@@ -837,6 +822,14 @@ PLCKosM_HPZ4_End
 ; ---------------------------------------------------------------------------
 ; 12
 
+; ---------------------------------------------------------------------------
+; 13
+
+; ---------------------------------------------------------------------------
+; Filler/Null entry
+PLCKosM_Null:	plrKosMlistheader
+	dc.w	$FFFF
+PLCKosM_Null_End
 ; ---------------------------------------------------------------------------
 ; Moduled Kosinski Pattern IDs
 ; ---------------------------------------------------------------------------
@@ -884,51 +877,57 @@ mkplcid_DEZ1:		equ (ptr_KPLC_DEZ1-KosMLoadCues)/2		; $20
 mkplcid_DEZ2:		equ (ptr_KPLC_DEZ2-KosMLoadCues)/2		; $21
 mkplcid_DEZ3:		equ (ptr_KPLC_DEZ3-KosMLoadCues)/2		; $22
 mkplcid_DEZ4:		equ (ptr_KPLC_DEZ4-KosMLoadCues)/2		; $23
+
+mkplcid_SBZ1:		equ (ptr_KPLC_SBZ1-KosMLoadCues)/2		; $24
+mkplcid_SBZ2:		equ (ptr_KPLC_SBZ2-KosMLoadCues)/2		; $25
+mkplcid_SBZ3:		equ (ptr_KPLC_SBZ3-KosMLoadCues)/2		; $26
+mkplcid_SBZ4:		equ (ptr_KPLC_SBZ4-KosMLoadCues)/2		; $27
 ; From here on out, unused level slots
-mkplcid_L0AZ1:		equ (ptr_KPLC_L0AZ1-KosMLoadCues)/2		; $24
-mkplcid_L0AZ2:		equ (ptr_KPLC_L0AZ2-KosMLoadCues)/2		; $25
-mkplcid_L0AZ3:		equ (ptr_KPLC_L0AZ3-KosMLoadCues)/2		; $26
-mkplcid_L0AZ4:		equ (ptr_KPLC_L0AZ4-KosMLoadCues)/2		; $27
+mkplcid_L0AZ1:		equ (ptr_KPLC_L0AZ1-KosMLoadCues)/2		; $28
+mkplcid_L0AZ2:		equ (ptr_KPLC_L0AZ2-KosMLoadCues)/2		; $29
+mkplcid_L0AZ3:		equ (ptr_KPLC_L0AZ3-KosMLoadCues)/2		; $2A
+mkplcid_L0AZ4:		equ (ptr_KPLC_L0AZ4-KosMLoadCues)/2		; $2B
 
-mkplcid_L0BZ1:		equ (ptr_KPLC_L0BZ1-KosMLoadCues)/2		; $28
-mkplcid_L0BZ2:		equ (ptr_KPLC_L0BZ2-KosMLoadCues)/2		; $29
-mkplcid_L0BZ3:		equ (ptr_KPLC_L0BZ3-KosMLoadCues)/2		; $2A
-mkplcid_L0BZ4:		equ (ptr_KPLC_L0BZ4-KosMLoadCues)/2		; $2B
+mkplcid_L0BZ1:		equ (ptr_KPLC_L0BZ1-KosMLoadCues)/2		; $2C
+mkplcid_L0BZ2:		equ (ptr_KPLC_L0BZ2-KosMLoadCues)/2		; $2D
+mkplcid_L0BZ3:		equ (ptr_KPLC_L0BZ3-KosMLoadCues)/2		; $2E
+mkplcid_L0BZ4:		equ (ptr_KPLC_L0BZ4-KosMLoadCues)/2		; $2F
 
-mkplcid_L0CZ1:		equ (ptr_KPLC_L0CZ1-KosMLoadCues)/2		; $2C
-mkplcid_L0CZ2:		equ (ptr_KPLC_L0CZ2-KosMLoadCues)/2		; $2D
-mkplcid_L0CZ3:		equ (ptr_KPLC_L0CZ3-KosMLoadCues)/2		; $2E
-mkplcid_L0CZ4:		equ (ptr_KPLC_L0CZ4-KosMLoadCues)/2		; $2F
+mkplcid_L0CZ1:		equ (ptr_KPLC_L0CZ1-KosMLoadCues)/2		; $30
+mkplcid_L0CZ2:		equ (ptr_KPLC_L0CZ2-KosMLoadCues)/2		; $31
+mkplcid_L0CZ3:		equ (ptr_KPLC_L0CZ3-KosMLoadCues)/2		; $32
+mkplcid_L0CZ4:		equ (ptr_KPLC_L0CZ4-KosMLoadCues)/2		; $33
 
-mkplcid_L0DZ1:		equ (ptr_KPLC_L0DZ1-KosMLoadCues)/2		; $30
-mkplcid_L0DZ2:		equ (ptr_KPLC_L0DZ2-KosMLoadCues)/2		; $31
-mkplcid_L0DZ3:		equ (ptr_KPLC_L0DZ3-KosMLoadCues)/2		; $32
-mkplcid_L0DZ4:		equ (ptr_KPLC_L0DZ4-KosMLoadCues)/2		; $33
+mkplcid_L0DZ1:		equ (ptr_KPLC_L0DZ1-KosMLoadCues)/2		; $34
+mkplcid_L0DZ2:		equ (ptr_KPLC_L0DZ2-KosMLoadCues)/2		; $35
+mkplcid_L0DZ3:		equ (ptr_KPLC_L0DZ3-KosMLoadCues)/2		; $36
+mkplcid_L0DZ4:		equ (ptr_KPLC_L0DZ4-KosMLoadCues)/2		; $37
 
-mkplcid_L0EZ1:		equ (ptr_KPLC_L0EZ1-KosMLoadCues)/2		; $34
-mkplcid_L0EZ2:		equ (ptr_KPLC_L0EZ2-KosMLoadCues)/2		; $35
-mkplcid_L0EZ3:		equ (ptr_KPLC_L0EZ3-KosMLoadCues)/2		; $36
-mkplcid_L0EZ4:		equ (ptr_KPLC_L0EZ4-KosMLoadCues)/2		; $37
+mkplcid_L0EZ1:		equ (ptr_KPLC_L0EZ1-KosMLoadCues)/2		; $38
+mkplcid_L0EZ2:		equ (ptr_KPLC_L0EZ2-KosMLoadCues)/2		; $39
+mkplcid_L0EZ3:		equ (ptr_KPLC_L0EZ3-KosMLoadCues)/2		; $3A
+mkplcid_L0EZ4:		equ (ptr_KPLC_L0EZ4-KosMLoadCues)/2		; $3B
 
-mkplcid_L0FZ1:		equ (ptr_KPLC_L0FZ1-KosMLoadCues)/2		; $38
-mkplcid_L0FZ2:		equ (ptr_KPLC_L0FZ2-KosMLoadCues)/2		; $39
-mkplcid_L0FZ3:		equ (ptr_KPLC_L0FZ3-KosMLoadCues)/2		; $3A
-mkplcid_L0FZ4:		equ (ptr_KPLC_L0FZ4-KosMLoadCues)/2		; $3B
+mkplcid_L0FZ1:		equ (ptr_KPLC_L0FZ1-KosMLoadCues)/2		; $3C
+mkplcid_L0FZ2:		equ (ptr_KPLC_L0FZ2-KosMLoadCues)/2		; $3D
+mkplcid_L0FZ3:		equ (ptr_KPLC_L0FZ3-KosMLoadCues)/2		; $3E
+mkplcid_L0FZ4:		equ (ptr_KPLC_L0FZ4-KosMLoadCues)/2		; $3F
 
-mkplcid_L10Z1:		equ (ptr_KPLC_L10Z1-KosMLoadCues)/2		; $3C
-mkplcid_L10Z2:		equ (ptr_KPLC_L10Z2-KosMLoadCues)/2		; $3D
-mkplcid_L10Z3:		equ (ptr_KPLC_L10Z3-KosMLoadCues)/2		; $3E
-mkplcid_L10Z4:		equ (ptr_KPLC_L10Z4-KosMLoadCues)/2		; $3F
+mkplcid_L10Z1:		equ (ptr_KPLC_L10Z1-KosMLoadCues)/2		; $40
+mkplcid_L10Z2:		equ (ptr_KPLC_L10Z2-KosMLoadCues)/2		; $41
+mkplcid_L10Z3:		equ (ptr_KPLC_L10Z3-KosMLoadCues)/2		; $42
+mkplcid_L10Z4:		equ (ptr_KPLC_L10Z4-KosMLoadCues)/2		; $43
 ; end of unused level slots
-mkplcid_Misc1:		equ (ptr_KPLC_1-KosMLoadCues)/2			; $40
-mkplcid_Misc2:		equ (ptr_KPLC_2-KosMLoadCues)/2			; $41
-mkplcid_Misc3:		equ (ptr_KPLC_3-KosMLoadCues)/2			; $42
-mkplcid_Misc4:		equ (ptr_KPLC_4-KosMLoadCues)/2			; $43
-mkplcid_Misc5:		equ (ptr_KPLC_5-KosMLoadCues)/2			; $44
-mkplcid_Misc6:		equ (ptr_KPLC_6-KosMLoadCues)/2			; $45
-mkplcid_Misc7:		equ (ptr_KPLC_7-KosMLoadCues)/2			; $46
-mkplcid_Misc8:		equ (ptr_KPLC_8-KosMLoadCues)/2			; $47
-mkplcid_Misc9:		equ (ptr_KPLC_9-KosMLoadCues)/2			; $48
-mkplcid_Misc10:		equ (ptr_KPLC_10-KosMLoadCues)/2		; $49
-mkplcid_Misc11:		equ (ptr_KPLC_11-KosMLoadCues)/2		; $4A
-mkplcid_Misc12:		equ (ptr_KPLC_12-KosMLoadCues)/2		; $4B
+mkplcid_Misc1:		equ (ptr_KPLC_1-KosMLoadCues)/2			; $44
+mkplcid_Misc2:		equ (ptr_KPLC_2-KosMLoadCues)/2			; $45
+mkplcid_Misc3:		equ (ptr_KPLC_3-KosMLoadCues)/2			; $46
+mkplcid_Misc4:		equ (ptr_KPLC_4-KosMLoadCues)/2			; $47
+mkplcid_Misc5:		equ (ptr_KPLC_5-KosMLoadCues)/2			; $48
+mkplcid_Misc6:		equ (ptr_KPLC_6-KosMLoadCues)/2			; $49
+mkplcid_Misc7:		equ (ptr_KPLC_7-KosMLoadCues)/2			; $4A
+mkplcid_Misc8:		equ (ptr_KPLC_8-KosMLoadCues)/2			; $4B
+mkplcid_Misc9:		equ (ptr_KPLC_9-KosMLoadCues)/2			; $4C
+mkplcid_Misc10:		equ (ptr_KPLC_10-KosMLoadCues)/2		; $4D
+mkplcid_Misc11:		equ (ptr_KPLC_11-KosMLoadCues)/2		; $4E
+mkplcid_Misc12:		equ (ptr_KPLC_12-KosMLoadCues)/2		; $4F
+mkplcid_Misc13:		equ (ptr_KPLC_13-KosMLoadCues)/2		; $50

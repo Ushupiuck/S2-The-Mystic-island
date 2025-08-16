@@ -313,7 +313,7 @@ RAM_debug_end:
 v_start:
 RAM_Start:
 
-Chunk_Table:		ds.w	64*$100			; 128x128 tile mappings ($8000 bytes)
+Chunk_Table:		ds.w	$40*$100			; 128x128 tile mappings ($8000 bytes)
 Chunk_Table_End:
 v_128x128:=	Chunk_Table
 v_128x128_end:=	Chunk_Table_End
@@ -633,17 +633,34 @@ f_doupdatesinhblank:	ds.b	1			; defers performing various tasks to the Horizonta
 v_pal_buffer:		ds.b	$30			; palette data buffer (used for palette cycling)
 v_misc_variables_end:
 
-v_plc_buffer:		ds.b	6*16			; pattern load cues buffer (maximum $10 PLCs)
+v_plc_buffer:			ds.b	6*16		; pattern load cues buffer (maximum $10 PLCs)
 v_plc_buffer_only_end:
-v_plc_ptrnemcode:	ds.l	1			; pointer for nemesis decompression code ($1502 or $150C)
-v_plc_repeatcount:	ds.l	1
-v_plc_paletteindex:	ds.l	1
-v_plc_previousrow:	ds.l	1
-v_plc_dataword:		ds.l	1
-v_plc_shiftvalue:	ds.l	1
-v_plc_patternsleft:	ds.w	1
-v_plc_framepatternsleft:ds.w	1
+v_plc_ptrnemcode:		ds.l	1		; pointer for nemesis decompression code ($1502 or $150C)
+v_plc_repeatcount:		ds.l	1
+v_plc_paletteindex:		ds.l	1
+v_plc_previousrow:		ds.l	1
+v_plc_dataword:			ds.l	1
+v_plc_shiftvalue:		ds.l	1
+v_plc_patternsleft:		ds.w	1
+v_plc_framepatternsleft:	ds.w	1
 v_plc_buffer_end:
+
+Kos_decomp_queue_count:		ds.w 1			; the number of pieces of data on the queue. Sign bit set indicates a decompression is in progress
+Kos_decomp_stored_Wregisters:	ds.w 6
+Kos_decomp_stored_Lregisters:	ds.w 6
+Kos_decomp_stored_SR:		ds.w 1
+Kos_decomp_bookmark:		ds.l 1			; the address within the Kosinski queue processor at which processing is to be resumed
+Kos_description_field:		ds.w 1			; used by the Kosinski queue processor the same way the stack is used by the normal Kosinski decompression routine
+Kos_decomp_queue:		ds.l 2*4		; 2 longwords per entry, first is source location and second is decompression location
+Kos_decomp_source =		Kos_decomp_queue	; long ; the compressed data location for the first entry in the queue
+Kos_decomp_destination =	Kos_decomp_queue+4	; long ; the decompression location for the first entry in the queue
+Kos_decomp_queue_End:
+Kos_modules_left		ds.w 1			; the number of modules left to decompresses. Sign bit set indicates a module is being decompressed/has been decompressed
+Kos_last_module_size		ds.w 1			; the uncompressed size of the last module in words. All other modules are $800 words
+Kos_module_queue:		ds.w 3*6		; 6 bytes per entry, first longword is source location and next word is VRAM destination
+Kos_module_source =		Kos_module_queue	; long ; the compressed data location for the first module in the queue
+Kos_module_destination =	Kos_module_queue+4	; word ; the VRAM destination for the first module in the queue
+Kos_module_queue_End:
 
 v_levelvariables:					; variables that are reset between levels
 word_F700:		ds.w	1			; set to 0 in Tails_Control, otherwise unused
@@ -861,24 +878,7 @@ v_title_ccount:		ds.w	1			; number of times C is pressed on title screen
 f_demo:			ds.w	1			; demo mode flag (0 = no; 1 = yes; $8001 = ending)
 v_demonum:		ds.w	1			; demo level number (not the same as the level number)
 v_creditsnum:		ds.w	1			; credits index number
-
-Kos_decomp_queue_count		ds.w 1			; the number of pieces of data on the queue. Sign bit set indicates a decompression is in progress
-Kos_decomp_stored_Wregisters:	ds.w 6
-Kos_decomp_stored_Lregisters:	ds.w 6
-Kos_decomp_stored_SR:		ds.w 1
-Kos_decomp_bookmark:		ds.l 1			; the address within the Kosinski queue processor at which processing is to be resumed
-Kos_description_field:		ds.w 1			; used by the Kosinski queue processor the same way the stack is used by the normal Kosinski decompression routine
-Kos_decomp_queue:		ds.l 2*4		; 2 longwords per entry, first is source location and second is decompression location
-Kos_decomp_source =		Kos_decomp_queue	; long ; the compressed data location for the first entry in the queue
-Kos_decomp_destination =	Kos_decomp_queue+4	; long ; the decompression location for the first entry in the queue
-Kos_decomp_queue_End:
-Kos_modules_left		ds.b 1			; the number of modules left to decompresses. Sign bit set indicates a module is being decompressed/has been decompressed
-			ds.b 1				; unused
-Kos_last_module_size		ds.w 1			; the uncompressed size of the last module in words. All other modules are $800 words
-Kos_module_queue:		ds.w 3*6		; 6 bytes per entry, first longword is source location and next word is VRAM destination
-Kos_module_source =		Kos_module_queue	; long ; the compressed data location for the first module in the queue
-Kos_module_destination =	Kos_module_queue+4	; word ; the VRAM destination for the first module in the queue
-Kos_module_queue_End:
+ 
 v_objstate:		ds.b	$C0			; object state list
 v_objstate_end:
 			ds.b	$204
@@ -1115,6 +1115,8 @@ ArtTile_GHZ_Giant_Ball:		equ $3AA
 ArtTile_GHZ_Purple_Rock:	equ $3D0 ; $3D0 in S1
 
 ; Marble Zone
+ArtTile_ArtUnc_CPZAnimBack	equ $319 ; $370 in S2
+
 ArtTile_MZ_Block:		equ $2B8
 ArtTile_MZ_Animated_Magma:	equ ArtTile_Level+$2D2
 ArtTile_MZ_Animated_Lava:	equ ArtTile_Level+$2E2
@@ -1242,6 +1244,7 @@ ArtTile_Giant_Ring_Flash:	equ $462
 ArtTile_Prison_Capsule:		equ $49D
 ArtTile_Hidden_Points:		equ $4B6
 ArtTile_Warp:			equ $541
+ArtTile_Mini_Tails:		equ $535
 ArtTile_Mini_Sonic:		equ $551
 ArtTile_Bonuses:		equ $570
 ArtTile_Signpost:		equ $680

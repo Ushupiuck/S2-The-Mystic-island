@@ -62,10 +62,10 @@ LevelArtPointers:
 		levartptrs plcid_HPZ, plcid_HPZ2, palid_HPZ, Kosp_HPZ, Map16_HPZ, Map128_HPZ	; HPZ	; ACT 4
 
 		; HTZ
-		levartptrs plcid_HTZ, plcid_HPZ2, palid_HTZ1, Kosp_HTZ, Map16_HTZ, Map128_HTZ	; HTZ	; ACT 1
-		levartptrs plcid_HTZ, plcid_HPZ2, palid_HTZ1, Kosp_HTZ, Map16_HTZ, Map128_HTZ	; HTZ	; ACT 2
-		levartptrs plcid_HTZ, plcid_HPZ2, palid_HTZ1, Kosp_HTZ, Map16_HTZ, Map128_HTZ	; HTZ	; ACT 3
-		levartptrs plcid_HTZ, plcid_HPZ2, palid_HTZ1, Kosp_HTZ, Map16_HTZ, Map128_HTZ	; HTZ	; ACT 4
+		levartptrs plcid_HTZ, plcid_HTZ2, palid_HTZ1, Kosp_HTZ, Map16_HTZ, Map128_HTZ	; HTZ	; ACT 1
+		levartptrs plcid_HTZ, plcid_HTZ2, palid_HTZ1, Kosp_HTZ, Map16_HTZ, Map128_HTZ	; HTZ	; ACT 2
+		levartptrs plcid_HTZ, plcid_HTZ2, palid_HTZ1, Kosp_HTZ, Map16_HTZ, Map128_HTZ	; HTZ	; ACT 3
+		levartptrs plcid_HTZ, plcid_HTZ2, palid_HTZ1, Kosp_HTZ, Map16_HTZ, Map128_HTZ	; HTZ	; ACT 4
 
 		; LV6 placeholder
 		levartptrs 0,         0,          palid_GHZ, Kosp_GHZ, Map16_GHZ, Map128_GHZ	; LV6Z	; ACT 1
