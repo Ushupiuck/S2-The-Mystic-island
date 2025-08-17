@@ -54,8 +54,8 @@ Card_ActNumber:
 		cmpi.b	#7,d0
 		bne.s	Card_MakeSprite
 		add.b	(Current_Act).w,d0
-		cmpi.b	#3,(Current_Act).w
-		bne.s	Card_MakeSprite
+	;	cmpi.b	#3,(Current_Act).w
+	;	bne.s	Card_MakeSprite
 	;	subq.b	#1,d0
 
 Card_MakeSprite:
