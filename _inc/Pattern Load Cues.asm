@@ -404,13 +404,13 @@ ptr_KPLC_SMZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $07 Act 2
 ptr_KPLC_SMZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $07 Act 3
 ptr_KPLC_SMZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $07 Act 4
 ; ---------------------------------------------------------------------------
-; Death Egg Zone [TO BE ADDED]
+; Shocking Blizzard Zone [TO BE ADDED]
 ptr_KPLC_DEZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $08 Act 1
 ptr_KPLC_DEZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $08 Act 2
 ptr_KPLC_DEZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $08 Act 3
 ptr_KPLC_DEZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $08 Act 4
 ; ---------------------------------------------------------------------------
-; Shocking Blizzard Zone [TO BE ADDED]
+; Death Egg Zone [TO BE ADDED]
 ptr_KPLC_SBZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $09 Act 1
 ptr_KPLC_SBZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $09 Act 2
 ptr_KPLC_SBZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $09 Act 3
