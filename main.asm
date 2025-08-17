@@ -16,7 +16,7 @@ AdvancedHandler	  = 0
 zeroOffsetOptimization = 1	; if 1, makes a handful of zero-offset instructions smaller
 
 	include	"macrosetup.asm"
-	include	"macros.asm"
+	include	"s2.macros.asm"
 	include	"constants.asm"
  if AdvancedHandler
 	include	"Debugger.asm"
@@ -236,7 +236,7 @@ PortC_OK:	; Fall through to GameProgram
 
 		bsr.w	InitDMAQueue
 		bsr.w	VDPSetupGame
-		bsr.w	SoundDriverLoad
+		jsr	SoundDriverLoad
 		bsr.w	JoypadInit
 		move.b	#GameModeID_SegaScreen,(v_gamemode).w
 	;	bra.w	MainGameLoop
@@ -481,7 +481,7 @@ V_Int:
 		jsr	Vint_SwitchTbl(pc,d0.w)
 ; loc_B5C:
 Vint_SoundDriver:
-		jsr	(UpdateMusic).l
+;		jsr	(UpdateMusic).l
 ; loc_B62:
 VintRet:
 		bsr.w	RandomNumber
@@ -532,7 +532,7 @@ VInt_0_Level:
 +
 		st.b	(f_hbla_pal).w
 		stopZ80
-		waitZ80
+		; WAITZ80
 		tst.b	(f_wtr_state).w
 		bne.s	VInt_0_FullyUnderwater
 		writeCRAM	v_palette,0
@@ -591,7 +591,7 @@ Vint_Pause:
 ; loc_CE2: VintSub8:
 Vint_Level:
 		stopZ80
-		waitZ80
+		; WAITZ80
 		bsr.w	ReadJoypads
 		tst.b	(f_wtr_state).w
 		bne.s	+
@@ -649,7 +649,7 @@ Do_Updates:
 ; loc_E02: VintSubA:
 Vint_S1SS:
 		stopZ80
-		waitZ80
+		; WAITZ80
 		bsr.w	ReadJoypads
 		writeCRAM	v_palette,0
 		writeVRAM	Sprite_Table,vram_sprites
@@ -667,7 +667,7 @@ Vint_S1SS:
 ; loc_EA2: VintSubC: VintSub18:
 Vint_TitleCard:
 		stopZ80
-		waitZ80
+		; WAITZ80
 		bsr.w	ReadJoypads
 		tst.b	(f_wtr_state).w
 		bne.s	+
@@ -700,7 +700,7 @@ Vint_Fade:
 ; loc_FA4: VintSub16:
 Vint_SSResults:
 		stopZ80
-		waitZ80
+		; WAITZ80
 		bsr.w	ReadJoypads
 		writeCRAM	v_palette,0
 		writeVRAM	Sprite_Table,vram_sprites
@@ -720,7 +720,7 @@ Vint_SSResults:
 ; sub_103C:
 Do_ControllerPal:
 		stopZ80
-		waitZ80
+		; WAITZ80
 		bsr.w	ReadJoypads
 		tst.b	(f_wtr_state).w ; is water above top of screen?
 		bne.s	.waterabove	; if yes, branch
@@ -761,7 +761,7 @@ H_Int:
 		clr.b	(f_doupdatesinhblank).w
 		movem.l	d0-a6,-(sp)
 		bsr.w	Do_Updates
-		jsr	(UpdateMusic).l
+	;	jsr	(UpdateMusic).l
 		movem.l	(sp)+,d0-a6
 
 H_Int_done:
@@ -778,7 +778,7 @@ H_Int_done:
 
 JoypadInit:
 		stopZ80
-		waitZ80
+		; WAITZ80
 		moveq	#$40,d0
 		move.b	d0,(HW_Port_1_Control).l
 		move.b	d0,(HW_Port_2_Control).l
@@ -893,7 +893,20 @@ ClearScreen:
 ; End of function ClearScreen
 
 ; ===========================================================================
+; MM: this routine and the table below control what PCM sample plays on the Sega screen
+ChangeSegaSound:
+	stopZ80
+	move.b	d0, (Z80_RAM+zPCMSound).l
+	startZ80
+	rts
 
+SegaSndTblEntry	macro	offset, length, pitch
+	dc.b	pitch, (offset>>15)&$FF
+	dc.w	zROMWindow|(offset&$7FFF), length
+	endm
+
+SegaSndTbl:
+	SegaSndTblEntry	Snd_Sega, Snd_Sega_End-Snd_Sega, 10
 ; ---------------------------------------------------------------------------
 ; Subroutine to transfer a plane map to VRAM
 ; ---------------------------------------------------------------------------
@@ -941,56 +954,79 @@ PlaneMapToVRAM_H40_TileLoop:
 		rts
 ; End of function PlaneMapToVRAM_H40
 
-; ---------------------------------------------------------------------------
-; Subroutine to load the compressed DAC driver
-; ---------------------------------------------------------------------------
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
-; loc_380
-SoundDriverLoad:
-		nop
-		stopZ80
-		resetZ80
-		lea	(DACDriver).l,a0
-		lea	(z80_ram).l,a1
-		bsr.w	KosPlusDec
-		resetZ80a
-		nop
-		nop
-		nop
-		nop
-		resetZ80
-		startZ80
-		rts
-; End of function SoundDriverLoad
-
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 
-PlaySound:
-		move.b	d0,(v_snddriver_ram.v_soundqueue0).w
-		rts
-; End of function PlaySound
-
-
+; MM: these functions now write directly to Z80 RAM
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
-
+; If Music_to_play is clear, move d0 into Music_to_play,
+; else move d0 into Music_to_play_2.
+; sub_135E:
 PlaySound_Special:
-		move.b	d0,(v_snddriver_ram.v_soundqueue1).w
-		rts
-; End of function PlaySound_Special
+PlayMusic:
+	move.w	#$2700,sr
+	stopZ80
+	tst.b	(Z80_RAM+zAbsVar.QueueToPlay).l
+	bne.s	+
+	move.b	d0,(Z80_RAM+zAbsVar.QueueToPlay).l
+	startZ80
+	move.w	#$2300,sr
+	rts
++
+	move.b	d0,(Z80_RAM+zAbsVar.SFXToPlay).l
+	startZ80
+	move.w	#$2300,sr
+	rts
+; End of function PlayMusic
 
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+; play a sound in alternating speakers (as in the ring collection sound)
+; sub_1376:
+PlaySoundStereo:
+	move.w	#$2700,sr
+	stopZ80
+	move.b	d0,(Z80_RAM+zAbsVar.SFXStereoToPlay).l
+	startZ80
+	move.w	#$2300,sr
+	rts
+; End of function PlaySoundStereo
 
 
-PlaySound_Unk:
-		move.b	d0,(v_snddriver_ram.v_soundqueue2).w
-		rts
-; End of functions PlaySound_Unk
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+; play a sound if the source is onscreen
+; sub_137C:
+PlaySoundLocal:
+	tst.b	render_flags(a0)
+	bpl.s	+	; rts
+; sub_1370
+PlaySound:
+	move.w	#$2700,sr
+	stopZ80
+	move.b	d0,(Z80_RAM+zAbsVar.SFXUnknown).l
+	startZ80
+	move.w	#$2300,sr
++
+	rts
+; End of function PlaySoundLocal
+
+; MM: use these routines to pause/unpause sound
+PauseSoundDriver:
+	move.w	#$2700,sr
+	stopZ80
+	move.b	#$7F,(Z80_RAM+zAbsVar.StopMusic).l
+	startZ80
+	move.w	#$2300,sr
+	rts
+
+UnpauseSoundDriver:
+	move.w	#$2700,sr
+	stopZ80
+	move.b	#$80,(Z80_RAM+zAbsVar.StopMusic).l
+	startZ80
+	move.w	#$2300,sr
+	rts
 
 
 		include	"_inc/PauseGame.asm"
@@ -2144,6 +2180,8 @@ Sega_WaitPalette:
 		bsr.w	WaitForVint
 		bsr.w	PalCycle_Sega
 		bne.s	Sega_WaitPalette
+		moveq	#0,d0
+	    jsr	ChangeSegaSound
 		move.b	#sfx_Sega,d0
 		bsr.w	PlaySound_Special
 		move.b	#VintID_PCM,(v_vbla_routine).w
@@ -2169,7 +2207,7 @@ TitleScreen:
 		bsr.w	ClearPLC
 		bsr.w	Pal_FadeToBlack
 		disable_ints
-		bsr.w	SoundDriverLoad
+		jsr	SoundDriverLoad
 		lea	(vdp_control_port).l,a6
 		move.w	#$8000+4,(a6)	; 8-colour mode
 		move.w	#$8200+(vram_fg>>10),(a6) ; set foreground nametable address
@@ -2344,7 +2382,7 @@ LevelSelect_Loop:
 		cmpi.w	#$14,d0
 		bne.s	loc_3570
 		move.w	(v_levselsound).w,d0
-		addi.w	#$80,d0
+		addi.w	#0,d0
 		cmpi.w	#$9F,d0
 		beq.s	loc_354C
 		cmpi.w	#$9E,d0
@@ -2546,13 +2584,13 @@ loc_3740:
 		beq.s	loc_3762
 		subq.w	#1,d0
 		bhs.s	loc_3762
-		moveq	#$4F,d0
+		move.w	#$FF,d0
 
 loc_3762:
 		btst	#bitR,d1
 		beq.s	loc_3772
 		addq.w	#1,d0
-		cmpi.w	#$50,d0
+		cmpi.w	#$FF,d0
 		blo.s	loc_3772
 		moveq	#0,d0
 
@@ -2608,7 +2646,7 @@ loc_3794:
 LevSel_DrawSnd:
 		locVRAM	vram_bg+$C30		; sound test position on screen
 		move.w	(v_levselsound).w,d0
-		addi.w	#$80,d0
+		addi.w	#0,d0
 		move.b	d0,d2
 		lsr.b	#4,d0
 		bsr.s	LevSel_ChgSnd
@@ -24237,10 +24275,6 @@ Debug_ResetPlayerStats:
 		include	"_inc/LevelHeaders.asm"
 		include	"_inc/Pattern Load Cues.asm"
 ; ---------------------------------------------------------------------------
-; Modified Type 1b 68000 Sound Driver
-; ---------------------------------------------------------------------------
-		include	"s1.sounddriver.asm"
-; ---------------------------------------------------------------------------
 Nem_SegaLogo:		binclude	"art/nemesis/Sega Logo (JP1).nem"
 			even
 Kosp_Title:		binclude	"art/kosinski/level/8x8 - Title.kosp"
@@ -25919,6 +25953,143 @@ ObjectMoveAndFall_NormGravity:
 		add.l	d0,obY(a1)
 		rts
 ; End of function ObjectMoveAndFall_NormGravity
+; MM: sound driver stuff
+; ---------------------------------------------------------------------------
+; Subroutine to load the sound driver
+; ---------------------------------------------------------------------------
+; sub_EC000:
+SoundDriverLoad:
+	move.w	#$100,(Z80_Bus_Request).l	; stop the Z80
+	move.w	#$100,(Z80_Reset).l
+
+	lea	Snd_Driver(pc),a0
+	lea	(Z80_RAM).l,a1
+	jsr	(KosPlusDec).w
+	btst	#0,(VDP_control_port+1).l	; check video mode
+	sne	(Z80_RAM+zPalModeByte).l	; set if PAL
+
+	moveq	#0,d1
+	move.w	d1,(Z80_Reset).l
+	nop
+	nop
+	nop
+	nop
+	move.w	#$100,(Z80_Reset).l
+	move.w	d1,(Z80_Bus_Request).l	; start the Z80
+	rts
+; End of function SoundDriverLoad
+
+	include	"sound/_smps2asm_inc.asm"
+; ===========================================================================
+; ---------------------------------------------------------------------------
+; S2 sound driver (Sound driver compression (slightly modified Saxman))
+; ---------------------------------------------------------------------------
+; loc_EC0E8:
+Snd_Driver:
+	save
+	include "s2.sounddriver.asm" ; CPU Z80
+	restore
+	padding off
+	!org (Snd_Driver+Size_of_Snd_driver_guess) ; don't worry; I know what I'm doing
+
+
+; loc_ED04C:
+Snd_Driver_End:
+
+
+; ---------------------------------------------------------------------------
+; DAC samples
+; ---------------------------------------------------------------------------
+	include "dacbanks.gen.asm"
+
+; ---------------------------------------------------------------------------
+; Music pointers
+; ---------------------------------------------------------------------------
+musprop_uncompressed	= 1<<4	; $10
+musprop_nospeedup	= 1<<5	; $20
+musprop_palmode	= 1<<6		; $40
+musprop_1up	= 1<<7		; $80
+zmakePlaylistEntry macro addr,val
+	dc.b	addr/$8000	; bank
+	rom_ptr_z80	addr
+	if "val"<>""
+	dc.b	val
+	else
+	dc.b	0
+	endif
+	endm
+
+	include "musicbanks.gen.asm"
+
+zSoundIndexEntry macro pointer, priority
+	rom_ptr_z80	pointer
+	dc.b	priority
+	endm
+
+; ------------------------------------------------------------------------------
+; Sound effect bank
+; ------------------------------------------------------------------------------
+SndSFX1_Start:	startBank
+
+	include "sfxbank.gen.asm"
+
+	; something else for DAC sounds
+	; First byte selects one of the DAC samples.  The number that 
+	; follows it is a wait time between each nibble written to the DAC 
+	; (thus higher = slower)
+	;ensure1byteoffset 2*48
+; zbyte_124F:
+DACSample	macro	pPtr,pDelay,pFlags
+	dc.b	pPtr/$8000
+	;dc.w	z80_ptr(pPtr)
+	dc.b	(z80_ptr(pPtr)&$FF00)>>8
+	dc.b	z80_ptr(pPtr)&$FF
+	;dc.w	pPtr_End-pPtr
+	dc.b	(pPtr_End-pPtr)&$FF
+	dc.b	((pPtr_End-pPtr)&$FF00)>>8
+
+	; Lemme explain what's going on here: the Z80 is clocked at 3579545Hz.
+	; 1Hz means 1 cycle per second. So, we divide the clock by the playback speed
+	; we want. This gets us a kind of delta: the amount of cycles the Z80 needs to occupy
+	; itself before sending the next sample, to get the correct playback speed.
+	; Our way of controlling playback speed is through a 'djnz' instruction, so we need to
+	; get a djnz counter from this delta. First, we subtract the number of cycles the actual
+	; update loop takes - which, in the case of the PCM loop, is 70 - that will leave us
+	; with the cycles that really matter: these are the 'spare' cycles, ones that won't
+	; otherwise be used by the normal update loop. Instead, we artificially use them with
+	; the aforementioned djnz loop. To get the djnz loop counter, we divide our remaining
+	; cycles by the amount of cycles one djnz loop takes, which is 13. We also add 1,
+	; because 1 to a djnz instruction technically means 0 (and 0 means 255, so we obviously
+	; can't use that).
+	; We use '*2' in the DPCM converter a couple of times because the DPCM loop updates
+	; the sample twice (one for each nibble in a byte of sample data).
+	; An extra thing we do is perform rounding, to get more-accurate conversions, hence
+	; the '*10's and '+5'.
+	if pFlags&1
+		; PCM
+		dc.b	((((((3579545*10)/pDelay)-(70*10))/13)+5)/10)+1
+	else
+		; DPCM
+		dc.b	(((((((3579545*10)*2)/pDelay)-(176*10))/(13*2))+5)/10)+1
+	endif
+
+	dc.b	pFlags
+	endm
+
+	include "dacinfo.gen.asm"
+	include "musicinfo.gen.asm"
+
+	even
+
+	finishBank
+
+; -------------------------------------------------------------------------------
+; Sega Intro Sound
+; 8-bit unsigned raw audio at 16Khz
+; -------------------------------------------------------------------------------
+; loc_F1E8C:
+Snd_Sega:	BINCLUDE	"sound/PCM/SEGA.bin"
+Snd_Sega_End:
 
  if AdvancedHandler
 ; ===========================================================================
