@@ -58,14 +58,14 @@ locret_4570:
 
 ; ---------------------------------------------------------------------------
 Demo_Index:	; Demo Index ID
-		dc.l Demo_S1GHZ	; unused, as Level_Demo overrides the first
-		dc.l Demo_S1GHZ	; unused, as Level_Demo overrides the first
+		dc.l Demo_GHZ	; unused, as Level_Demo overrides the first
+		dc.l Demo_GHZ	; unused, as Level_Demo overrides the first
 		dc.l Demo_CPZ
 		dc.l Demo_EHZ
 		dc.l Demo_HPZ
 		dc.l Demo_HTZ
-		dc.l Demo_S1GHZ	; filler
-		dc.l Demo_S1GHZ	; filler
+		dc.l Demo_GHZ	; filler
+		dc.l Demo_GHZ	; filler
 DemoEndDataPtr:	dc.l Demo_EndGHZ1 ; leftover credit sequence demos
 		dc.l Demo_EndMZ
 		dc.l Demo_EndSYZ

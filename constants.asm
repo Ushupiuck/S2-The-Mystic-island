@@ -430,9 +430,9 @@ v_endeggman	= v_objspace+object_size*2		; object variable space for Eggman after
 v_tryagain	= v_objspace+object_size*3		; object variable space for the "TRY AGAIN" text ($40 bytes)
 v_eggmanchaos	= v_objspace+object_size*32		; object variable space for the emeralds juggled by Eggman ($180 bytes)
 
-Kos_decomp_buffer:			ds.b	$1000	; Moduled Kosinski+ decompression buffer
+Kos_decomp_buffer:		ds.b	$1000		; Moduled Kosinski+ decompression buffer
 
-VDP_Command_Buffer:	ds.w	7*$12			; stores 18 ($12) VDP commands to issue the next time ProcessDMAQueue is called
+VDP_Command_Buffer:		ds.w	7*$12		; stores 18 ($12) VDP commands to issue the next time ProcessDMAQueue is called
 VDP_Command_Buffer_Slot:	ds.w	1		; stores the address of the next open slot for a queued VDP command
 
 Camera_RAM:
@@ -645,19 +645,19 @@ v_plc_patternsleft:		ds.w	1
 v_plc_framepatternsleft:	ds.w	1
 v_plc_buffer_end:
 
-Kos_decomp_queue_count:		ds.w 1			; the number of pieces of data on the queue. Sign bit set indicates a decompression is in progress
-Kos_decomp_stored_Wregisters:	ds.w 6
-Kos_decomp_stored_Lregisters:	ds.w 6
-Kos_decomp_stored_SR:		ds.w 1
-Kos_decomp_bookmark:		ds.l 1			; the address within the Kosinski queue processor at which processing is to be resumed
-Kos_description_field:		ds.w 1			; used by the Kosinski queue processor the same way the stack is used by the normal Kosinski decompression routine
-Kos_decomp_queue:		ds.l 2*4		; 2 longwords per entry, first is source location and second is decompression location
+Kos_decomp_queue_count:		ds.w	1		; the number of pieces of data on the queue. Sign bit set indicates a decompression is in progress
+Kos_decomp_stored_Wregisters:	ds.w	6
+Kos_decomp_stored_Lregisters:	ds.w	6
+Kos_decomp_stored_SR:		ds.w	1
+Kos_decomp_bookmark:		ds.l	1		; the address within the Kosinski queue processor at which processing is to be resumed
+Kos_description_field:		ds.w	1		; used by the Kosinski queue processor the same way the stack is used by the normal Kosinski decompression routine
+Kos_decomp_queue:		ds.l	2*4		; 2 longwords per entry, first is source location and second is decompression location
 Kos_decomp_source =		Kos_decomp_queue	; long ; the compressed data location for the first entry in the queue
 Kos_decomp_destination =	Kos_decomp_queue+4	; long ; the decompression location for the first entry in the queue
 Kos_decomp_queue_End:
-Kos_modules_left		ds.w 1			; the number of modules left to decompresses. Sign bit set indicates a module is being decompressed/has been decompressed
-Kos_last_module_size		ds.w 1			; the uncompressed size of the last module in words. All other modules are $800 words
-Kos_module_queue:		ds.w 3*6		; 6 bytes per entry, first longword is source location and next word is VRAM destination
+Kos_modules_left		ds.w	1		; the number of modules left to decompresses. Sign bit set indicates a module is being decompressed/has been decompressed
+Kos_last_module_size		ds.w	1		; the uncompressed size of the last module in words. All other modules are $800 words
+Kos_module_queue:		ds.w	3*6		; 6 bytes per entry, first longword is source location and next word is VRAM destination
 Kos_module_source =		Kos_module_queue	; long ; the compressed data location for the first module in the queue
 Kos_module_destination =	Kos_module_queue+4	; word ; the VRAM destination for the first module in the queue
 Kos_module_queue_End:
@@ -790,6 +790,8 @@ Debug_Speed:		ds.b	1			; (1 byte)
 
 Vint_runcount:		ds.l	1			; the number of times V-int has run
 
+Player_mode		ds.w	1			; 0 = Sonic and Tails, 1 = Sonic alone, 2 = Tails alone, 3 = Knuckles alone
+Player_option		ds.w	1			; option selected on level select, data select screen or Sonic & Knuckles title screen
 Current_ZoneAndAct =	*
 Current_Zone:		ds.b	1			; (1 byte)
 Current_Act =		*
@@ -881,7 +883,7 @@ v_creditsnum:		ds.w	1			; credits index number
  
 v_objstate:		ds.b	$C0			; object state list
 v_objstate_end:
-			ds.b	$204
+			ds.b	$200
 v_end:
 	if * > 0	; don't declare more space than the RAM can contain!
 		fatal "The RAM variable declarations are too large by $\{*} bytes."

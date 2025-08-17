@@ -21,16 +21,16 @@ Card_CheckSBZ3:	; Routine 0
 		movea.l	a0,a1
 		moveq	#0,d0
 		move.b	(Current_Zone).w,d0
-		cmpi.w	#(id_LZ<<8)+3,(Current_ZoneAndAct).w ; check if level is SBZ 3
-		bne.s	Card_CheckFZ
-		moveq	#5,d0		; load title card number 5 (SBZ)
+	;	cmpi.w	#(id_LZ<<8)+3,(Current_ZoneAndAct).w ; check if level is SBZ 3
+	;	bne.s	Card_CheckFZ
+	;	moveq	#5,d0		; load title card number 5 (SBZ)
 
-Card_CheckFZ:
+; Card_CheckFZ:
 		move.w	d0,d2
-		cmpi.w	#(id_SBZ<<8)+2,(Current_ZoneAndAct).w ; check if level is FZ
-		bne.s	Card_LoadConfig
-		moveq	#6,d0		; load title card number 6 (FZ)
-		moveq	#$B,d2		; use "FINAL" mappings
+	;	cmpi.w	#(id_SBZ<<8)+2,(Current_ZoneAndAct).w ; check if level is FZ
+	;	bne.s	Card_LoadConfig
+	;	moveq	#6,d0		; load title card number 6 (FZ)
+	;	moveq	#$B,d2		; use "FINAL" mappings
 
 Card_LoadConfig:
 		lea	(Card_ConData).l,a3
@@ -56,7 +56,7 @@ Card_ActNumber:
 		add.b	(Current_Act).w,d0
 		cmpi.b	#3,(Current_Act).w
 		bne.s	Card_MakeSprite
-		subq.b	#1,d0
+	;	subq.b	#1,d0
 
 Card_MakeSprite:
 		move.b	d0,obFrame(a1)
