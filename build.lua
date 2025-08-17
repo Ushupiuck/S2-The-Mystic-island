@@ -8,7 +8,7 @@
 -- Having this set to false will use an inferior compression algorithm that
 -- results in an accurate ROM being produced.
 local improved_dac_driver_compression = true
-local advanced_error_handler = false
+local advanced_error_handler = true
 
 ---------------------
 -- End of settings --
@@ -21,8 +21,8 @@ local advanced_error_handler = false
 local common = require "build_tools.lua.common"
 
 -- Produce PCM and DPCM data.
-common.convert_pcm_files_in_directory("sound/dac/pcm")
-common.convert_dpcm_files_in_directory("sound/dac/dpcm")
+--common.convert_pcm_files_in_directory("sound/dac/pcm")
+--common.convert_dpcm_files_in_directory("sound/dac/dpcm")
 
 -- Build the ROM.
 local compression = improved_dac_driver_compression and "kosinskiplus" or "kosinski"

@@ -1,4 +1,9 @@
 ; ===========================================================================
+; size variables - you'll get an informational error if you need to change these...
+; they are all in units of bytes
+Size_of_DAC_samples =		$2F00
+Size_of_SEGA_sound =		$6174
+Size_of_Snd_driver_guess =	$F64 ; approximate post-compressed size of the Z80 sound driver
 ; ---------------------------------------------------------------------------
 ; Object Status Table offsets
 ; ---------------------------------------------------------------------------
@@ -118,6 +123,42 @@ sub9_x_pos	= subspr_data+next_subspr*7+0
 sub9_y_pos	= subspr_data+next_subspr*7+2
 sub9_mapframe	= subspr_data+next_subspr*7+5
 
+; ---------------------------------------------------------------------------
+; Object Status Table offsets S2 Nomemclature
+; ---------------------------------------------------------------------------
+; universally followed object conventions:
+id =			  0 ; object ID (if you change this, change insn1op and insn2op in s2.macrosetup.asm, if you still use them)
+render_flags =		  1 ; bitfield ; bit 7 = onscreen flag, bit 0 = x mirror, bit 1 = y mirror, bit 2 = coordinate system, bit 6 = render subobjects
+art_tile =		  2 ; and 3 ; start of sprite's art
+mappings =		  4 ; and 5 and 6 and 7
+x_pos =			  8 ; and 9 ... some objects use $A and $B as well when extra precision is required (see ObjectMove) ... for screen-space objects this is called x_pixel instead
+x_sub =			 $A ; and $B
+y_pos =			 $C ; and $D ... some objects use $E and $F as well when extra precision is required ... screen-space objects use y_pixel instead
+y_sub =			 $E ; and $F
+priority =		$18 ; 0 = front
+width_pixels =		$19
+mapping_frame =		$1A
+; ---------------------------------------------------------------------------
+; conventions followed by most objects:
+x_vel =			$10 ; and $11 ; horizontal velocity
+y_vel =			$12 ; and $13 ; vertical velocity
+y_radius =		$16 ; collision height / 2
+x_radius =		$17 ; collision width / 2
+anim_frame =		$1B
+anim =			$1C
+prev_anim =		$1D
+anim_frame_duration =	$1E
+status =		$22 ; note: exact meaning depends on the object... for sonic/tails: bit 0: leftfacing. bit 1: inair. bit 2: spinning. bit 3: onobject. bit 4: rolljumping. bit 5: pushing. bit 6: underwater.
+routine =		$24
+routine_secondary =	$25
+angle =			$26 ; angle about the z axis (360 degrees = 256)
+; ---------------------------------------------------------------------------
+; conventions followed by many objects but NOT sonic/tails:
+collision_flags =	$20
+collision_property =	$21
+respawn_index =		$23
+subtype =		$28
+; ---------------------------------------------------------------------------
 ; Levels
 id_GHZ:	equ 0
 id_LZ:	equ 1
@@ -230,22 +271,23 @@ PSG_Sample_Rate: equ Z80_Clock/16
 ; VDP addressses
 vdp_data_port:		equ $C00000
 vdp_control_port:	equ $C00004
+VDP_control_port = vdp_control_port
 vdp_counter:		equ $C00008
 
 psg_input:		equ $C00011
 ; Z80 addresses
-z80_ram:		equ $A00000			; start of Z80 RAM
-z80_dac_timpani_pitch:	equ z80_ram+zTimpani_Pitch
-z80_dac_status:		equ z80_ram+zDAC_Status
-z80_dac_sample:		equ z80_ram+zDAC_Sample
+Z80_RAM:		equ $A00000			; start of Z80 RAM
+z80_ram = Z80_RAM
 z80_ram_end:		equ $A02000			; end of non-reserved Z80 RAM
 z80_version:		equ $A10001
 z80_port_1_data:	equ $A10002
 z80_port_1_control:	equ $A10008
 z80_port_2_control:	equ $A1000A
 z80_expansion_control:	equ $A1000C
-z80_bus_request:	equ $A11100
-z80_reset:		equ $A11200
+Z80_Bus_Request:	equ $A11100
+z80_bus_request = Z80_Bus_Request
+Z80_Reset:		equ $A11200
+z80_reset = Z80_Reset
 ym2612_a0:		equ $A04000
 ym2612_d0:		equ $A04001
 ym2612_a1:		equ $A04002
@@ -302,8 +344,28 @@ GameModeID_LevelSelect =	id(GameMode_SecretMenu)	; $24 ; (TODO)
 GameModeFlag_TitleCard:		equ 7			; flag bit
 GameModeID_TitleCard:		equ 1<<GameModeFlag_TitleCard ; $80 ; flag mask
 
-; ---------------------------------------------------------------------------
-	include "s1.sounddriver.ram.asm"
+	include "musicids.gen.asm"
+
+	include "sfxids.gen.asm"
+
+SndID_ArrowFiring = SndID_LavaBall
+SndID_RingRight = SndID_Ring
+SndID_WingFortress = SndID_Helicopter
+SndID_Scatter = SndID_LaserFloor
+
+; Sound command IDs
+offset :=	zCommandIndex
+ptrsize :=	2
+idstart :=	$FA
+
+CmdID__First = idstart
+MusID_StopSFX =		id(CmdPtr_StopSFX)	; F8
+MusID_FadeOut =		id(CmdPtr_FadeOut)	; F9
+SndID_SegaSound =	id(CmdPtr_SegaSound)	; FA
+MusID_SpeedUp =		id(CmdPtr_SpeedUp)	; FB
+MusID_SlowDown =	id(CmdPtr_SlowDown)	; FC
+MusID_Stop =		id(CmdPtr_Stop)		; FD
+CmdID__End =		id(CmdPtr__End)		; FE
 
 ; Main RAM
 	phase	ramaddr($FFFE0000)
@@ -584,7 +646,8 @@ Camera_RAM_End:
 
 Block_cache:		ds.w	512/16*2		; Width of plane in blocks, with each block getting two words.
 
-v_snddriver_ram:	SMPS_RAM			; sound driver state
+S1_v_snddriver_ram:	ds.b $5C0 ; Leftover from Sonic 1
+
 v_gamemode:		ds.b	1			; game mode (00=Sega; 04=Title; 08=Demo; 0C=Level; 10=SS; 14=Cont; 18=End; 1C=Credit; +8C=PreLevel)
 			ds.b	1			; unused
 v_jpadhold2:		ds.b	1			; joypad input - held, duplicate
@@ -961,108 +1024,83 @@ HW_Expansion_RxData:		equ $A1001D
 HW_Expansion_SCtrl:		equ $A1001F
 
 ; Background music
-offset :=	MusicIndex
-ptrsize :=	4
-idstart :=	$81
+bgm_GHZ =	MusID_GHZ
+bgm_LZ =	MusID_CPZ
+bgm_MZ =	MusID_CPZ
+bgm_SLZ =	MusID_EHZ
+bgm_SYZ =	MusID_MCZ_2P
+bgm_SBZ =	MusID_HTZ
+bgm_Invincible =	MusID_Invincible
+bgm_ExtraLife =	MusID_ExtraLife
+bgm_SS =	MusID_SpecStage
+bgm_Title =	MusID_Title
+bgm_Ending =	MusID_Ending
+bgm_Boss =	MusID_Boss
+bgm_FZ =	MusID_HTZ
+bgm_GotThrough =	MusID_EndLevel
+bgm_GameOver =	MusID_GameOver
+bgm_Continue =	MusID_Continue
+bgm_Credits =	MusID_Credits
+bgm_Drowning =	MusID_Countdown
+bgm_Emerald =	MusID_Emerald
 
-bgm__First =	idstart
-bgm_GHZ =	id(ptr_mus81)
-bgm_LZ =	id(ptr_mus82)
-bgm_MZ =	id(ptr_mus83)
-bgm_SLZ =	id(ptr_mus84)
-bgm_SYZ =	id(ptr_mus85)
-bgm_SBZ =	id(ptr_mus86)
-bgm_Invincible =	id(ptr_mus87)
-bgm_ExtraLife =	id(ptr_mus88)
-bgm_SS =	id(ptr_mus89)
-bgm_Title =	id(ptr_mus8A)
-bgm_Ending =	id(ptr_mus8B)
-bgm_Boss =	id(ptr_mus8C)
-bgm_FZ =	id(ptr_mus8D)
-bgm_GotThrough =	id(ptr_mus8E)
-bgm_GameOver =	id(ptr_mus8F)
-bgm_Continue =	id(ptr_mus90)
-bgm_Credits =	id(ptr_mus91)
-bgm_Drowning =	id(ptr_mus92)
-bgm_Emerald =	id(ptr_mus93)
-bgm__Last =	id(ptr_musend)-1
-
-; Sound effects
-offset :=	SoundIndex
-ptrsize :=	4
-idstart :=	$A0
-
-sfx__First =	idstart
-sfx_Jump =	id(ptr_sndA0)
-sfx_Lamppost =	id(ptr_sndA1)
-sfx_A2 =	id(ptr_sndA2)
-sfx_Death =	id(ptr_sndA3)
-sfx_Skid =	id(ptr_sndA4)
-sfx_A5 =	id(ptr_sndA5)
-sfx_HitSpikes =	id(ptr_sndA6)
-sfx_Push =	id(ptr_sndA7)
-sfx_SSGoal =	id(ptr_sndA8)
-sfx_SSItem =	id(ptr_sndA9)
-sfx_Splash =	id(ptr_sndAA)
-sfx_AB =	id(ptr_sndAB)
-sfx_HitBoss =	id(ptr_sndAC)
-sfx_Bubble =	id(ptr_sndAD)
-sfx_Fireball =	id(ptr_sndAE)
-sfx_Shield =	id(ptr_sndAF)
-sfx_Saw =	id(ptr_sndB0)
-sfx_Electric =	id(ptr_sndB1)
-sfx_Drown =	id(ptr_sndB2)
-sfx_Flamethrower =	id(ptr_sndB3)
-sfx_Bumper =	id(ptr_sndB4)
-sfx_Ring =	id(ptr_sndB5)
-sfx_SpikesMove =	id(ptr_sndB6)
-sfx_Rumbling =	id(ptr_sndB7)
-sfx_B8 =	id(ptr_sndB8)
-sfx_Collapse =	id(ptr_sndB9)
-sfx_SSGlass =	id(ptr_sndBA)
-sfx_Door =	id(ptr_sndBB)
-sfx_Teleport =	id(ptr_sndBC)
-sfx_ChainStomp =	id(ptr_sndBD)
-sfx_Roll =	id(ptr_sndBE)
-sfx_Continue =	id(ptr_sndBF)
-sfx_Basaran =	id(ptr_sndC0)
-sfx_BreakItem =	id(ptr_sndC1)
-sfx_Warning =	id(ptr_sndC2)
-sfx_GiantRing =	id(ptr_sndC3)
-sfx_Bomb =	id(ptr_sndC4)
-sfx_Cash =	id(ptr_sndC5)
-sfx_RingLoss =	id(ptr_sndC6)
-sfx_ChainRise =	id(ptr_sndC7)
-sfx_Burning =	id(ptr_sndC8)
-sfx_Bonus =	id(ptr_sndC9)
-sfx_EnterSS =	id(ptr_sndCA)
-sfx_WallSmash =	id(ptr_sndCB)
-sfx_Spring =	id(ptr_sndCC)
-sfx_Switch =	id(ptr_sndCD)
-sfx_RingLeft =	id(ptr_sndCE)
-sfx_Signpost =	id(ptr_sndCF)
-sfx__Last =	id(ptr_sndend)-1
+sfx_Jump =	SndID_Jump
+sfx_Lamppost =	SndID_Checkpoint
+sfx_A2 =	SndID_Jump
+sfx_Death =	SndID_Hurt
+sfx_Skid =	SndID_Skidding
+sfx_A5 =	SndID_Skidding
+sfx_HitSpikes =	SndID_HurtBySpikes
+sfx_Push =	SndID_PushBlock
+sfx_SSGoal =	SndID_Bonus
+sfx_SSItem =	SndID_Bonus
+sfx_Splash =	SndID_Splash
+sfx_AB =	SndID_Splash
+sfx_HitBoss =	SndID_BossHit
+sfx_Bubble =	SndID_InhalingBubble
+sfx_Fireball =	SndID_FireBurn
+sfx_Shield =	SndID_Shield
+sfx_Saw =	SndID_LaserBeam
+sfx_Electric =	SndID_Zap
+sfx_Drown =	SndID_Drown
+sfx_Flamethrower =	SndID_FireBurn
+sfx_Bumper =	SndID_Bumper
+sfx_Ring =	SndID_Ring
+sfx_SpikesMove =	SndID_SpikesMove
+sfx_Rumbling =	SndID_Rumbling
+sfx_B8 =	SndID_Smash
+sfx_Collapse =	SndID_Smash
+sfx_SSGlass =	SndID_CasinoBonus
+sfx_Door =	SndID_DoorSlam
+sfx_Teleport =	SndID_SpindashRelease
+sfx_ChainStomp =	SndID_ChainRise
+sfx_Roll =	SndID_Roll
+sfx_Continue =	SndID_ContinueJingle
+sfx_Basaran =	SndID_SpindashRelease
+sfx_BreakItem =	SndID_Explosion
+sfx_Warning =	SndID_WaterWarning
+sfx_GiantRing =	SndID_EnterGiantRing
+sfx_Bomb =	SndID_BossExplosion
+sfx_Cash =	SndID_TallyEnd
+sfx_RingLoss =	SndID_RingSpill
+sfx_ChainRise =	SndID_ChainRise
+sfx_Burning =	SndID_FireBurn
+sfx_Bonus =	SndID_Bonus
+sfx_EnterSS =	SndID_SpecStageEntry
+sfx_WallSmash =	SndID_SlowSmash
+sfx_Spring =	SndID_Spring
+sfx_Switch =	SndID_Blip
+sfx_RingLeft =	SndID_RingLeft
+sfx_Signpost =	SndID_Signpost
 
 ; Special sound effects
-offset :=	SpecSoundIndex
-ptrsize :=	4
-idstart :=	$D0
+sfx_Waterfall =	$D0
 
-spec__First =	idstart
-sfx_Waterfall =	id(ptr_sndD0)
-spec__Last =	id(ptr_specend)-1
-
-offset :=	Sound_ExIndex
-ptrsize :=	4
-idstart :=	$E0
-
-flg__First =	idstart
-bgm_Fade =	id(ptr_flgE0)
-sfx_Sega =	id(ptr_flgE1)
-bgm_Speedup =	id(ptr_flgE2)
-bgm_Slowdown =	id(ptr_flgE3)
-bgm_Stop =	id(ptr_flgE4)
-flg__Last =	id(ptr_flgend)-1
+bgm_Fade =	MusID_FadeOut
+sfx_Sega =	SndID_SegaSound
+bgm_Speedup =	MusID_SpeedUp
+bgm_Slowdown =	MusID_SlowDown
+bgm_Stop =	MusID_Stop
 
 ; Boss locations
 ; The main values are based on where the camera boundaries mainly lie

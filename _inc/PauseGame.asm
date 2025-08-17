@@ -16,7 +16,7 @@ PauseGame:
 
 Pause_AlreadyPaused:
 		move.w	#1,(f_pause).w
-		move.b	#1,(v_snddriver_ram.f_pausemusic).w
+		jsr	PauseSoundDriver
 
 Pause_Loop:
 		move.b	#VintID_Pause,(v_vbla_routine).w
@@ -41,7 +41,7 @@ Pause_ChkStart:
 		beq.s	Pause_Loop
 ; loc_1464:
 Pause_Resume:
-		move.b	#$80,(v_snddriver_ram.f_pausemusic).w
+		jsr	UnpauseSoundDriver
 
 Unpause:
 		move.w	#0,(f_pause).w
@@ -52,6 +52,5 @@ Pause_DoNothing:
 ; loc_1472:
 Pause_SlowMo:
 		move.w	#1,(f_pause).w
-		move.b	#$80,(v_snddriver_ram.f_pausemusic).w
-		rts
+		jmp	UnpauseSoundDriver
 ; End of function PauseGame
