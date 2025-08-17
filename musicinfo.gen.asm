@@ -31,3 +31,4 @@ zMasterPlaylist:
 	zmakePlaylistEntry	Mus_Credits,musprop_uncompressed
 	zmakePlaylistEntry	Mus_Countdown,0|musprop_palmode|musprop_nospeedup
 	zmakePlaylistEntry	Mus_GHZ,0
+	zmakePlaylistEntry	Mus_SW_HPZ,0

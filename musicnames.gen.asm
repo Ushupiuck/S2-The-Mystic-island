@@ -32,6 +32,7 @@ SongNames:	offsetTable
 	offsetTableEntry.w	MusNam_Credits
 	offsetTableEntry.w	MusNam_Countdown
 	offsetTableEntry.w	MusNam_GHZ
+	offsetTableEntry.w	MusNam_SW_HPZ
 
 MusNam_Null:	dc.b 0,' '
 MusNam_2PResult:	songtext	"2P RESULT"
@@ -66,4 +67,5 @@ MusNam_Emerald:	songtext	"CHAOS EMERALD"
 MusNam_Credits:	songtext	"CREDITS"
 MusNam_Countdown:	songtext	"DROWNING"
 MusNam_GHZ:	songtext	"GREEN HILL"
+MusNam_SW_HPZ:	songtext	"HIDDEN PALACE B"
 	even

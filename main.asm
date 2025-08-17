@@ -2186,7 +2186,7 @@ Sega_WaitPalette:
 		bsr.w	PlaySound_Special
 		move.b	#VintID_PCM,(v_vbla_routine).w
 		bsr.w	WaitForVint
-		move.w	#30,(v_demolength).w
+		move.w	#100,(v_demolength).w
 
 Sega_WaitEnd:
 		move.b	#VintID_SEGA,(v_vbla_routine).w
