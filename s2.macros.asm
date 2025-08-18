@@ -208,18 +208,40 @@ clearRAM macro startaddr,endaddr
 	endif
 		endm
 
-; tells the Z80 to stop, and waits for it to finish stopping (acquire bus)
-stopZ80 macro
-	move.w	#$100,(Z80_Bus_Request).l ; stop the Z80
-.loop:	btst	#0,(Z80_Bus_Request).l
-	bne.s	.loop ; loop until it says it's stopped
-    endm
+; ---------------------------------------------------------------------------
+; tells the Z80 to stop
+; ---------------------------------------------------------------------------
 
-; tells the Z80 to start again
-startZ80 macro
-	move.w	#0,(Z80_Bus_Request).l    ; start the Z80
-    endm
+stopZ80:	macro
+		move.w	#$100,(Z80_Bus_Request).l ; stop the Z80
+		endm
+; ---------------------------------------------------------------------------
+; wait for Z80 to stop
+; ---------------------------------------------------------------------------
 
+waitZ80:	macro
+.wait:		btst	#0,(Z80_Bus_Request).l
+		bne.s	.wait ; loop until it says it's stopped
+		endm
+
+; ---------------------------------------------------------------------------
+; reset the Z80
+; ---------------------------------------------------------------------------
+resetZ80:	macro
+		move.w	#$100,(Z80_Reset).l
+		endm
+
+resetZ80a:	macro
+		move.w	#0,(Z80_Reset).l
+		endm
+; ---------------------------------------------------------------------------
+; start the Z80
+; ---------------------------------------------------------------------------
+startZ80:	macro
+		move.w	#0,(Z80_Bus_Request).l    ; start the Z80
+		endm
+
+; ---------------------------------------------------------------------------
 ; function to make a little-endian 16-bit pointer for the Z80 sound driver
 	ifndef kehmusic
 z80_ptr function x,(x)<<8&$FF00|(x)>>8&$7F|$80

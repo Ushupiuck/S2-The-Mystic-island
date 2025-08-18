@@ -2,7 +2,7 @@
 ; size variables - you'll get an informational error if you need to change these...
 ; they are all in units of bytes
 Size_of_DAC_samples =		$2F00
-Size_of_SEGA_sound =		$6174
+Size_of_SEGA_sound =		$6978
 Size_of_Snd_driver_guess =	$F64 ; approximate post-compressed size of the Z80 sound driver
 ; ---------------------------------------------------------------------------
 ; Object Status Table offsets
@@ -646,8 +646,6 @@ Camera_RAM_End:
 
 Block_cache:		ds.w	512/16*2		; Width of plane in blocks, with each block getting two words.
 
-S1_v_snddriver_ram:	ds.b $5C0 ; Leftover from Sonic 1
-
 v_gamemode:		ds.b	1			; game mode (00=Sega; 04=Title; 08=Demo; 0C=Level; 10=SS; 14=Cont; 18=End; 1C=Credit; +8C=PreLevel)
 			ds.b	1			; unused
 v_jpadhold2:		ds.b	1			; joypad input - held, duplicate
@@ -946,7 +944,7 @@ v_creditsnum:		ds.w	1			; credits index number
  
 v_objstate:		ds.b	$C0			; object state list
 v_objstate_end:
-			ds.b	$200
+			ds.b	$7C0
 v_end:
 	if * > 0	; don't declare more space than the RAM can contain!
 		fatal "The RAM variable declarations are too large by $\{*} bytes."
@@ -1024,83 +1022,83 @@ HW_Expansion_RxData:		equ $A1001D
 HW_Expansion_SCtrl:		equ $A1001F
 
 ; Background music
-bgm_GHZ =	MusID_GHZ
-bgm_LZ =	MusID_CPZ
-bgm_MZ =	MusID_CPZ
-bgm_SLZ =	MusID_EHZ
-bgm_SYZ =	MusID_SW_HPZ
-bgm_SBZ =	MusID_HTZ
+bgm_GHZ =		MusID_GHZ
+bgm_LZ =		MusID_CPZ
+bgm_MZ =		MusID_CPZ
+bgm_SLZ =		MusID_EHZ
+bgm_SYZ =		MusID_SW_HPZ
+bgm_SBZ =		MusID_HTZ
 bgm_Invincible =	MusID_Invincible
-bgm_ExtraLife =	MusID_ExtraLife
-bgm_SS =	MusID_SpecStage
-bgm_Title =	MusID_Title
-bgm_Ending =	MusID_Ending
-bgm_Boss =	MusID_Boss
-bgm_FZ =	MusID_HTZ
+bgm_ExtraLife =		MusID_ExtraLife
+bgm_SS =		MusID_SpecStage
+bgm_Title =		MusID_Title
+bgm_Ending =		MusID_Ending
+bgm_Boss =		MusID_Boss
+bgm_FZ =		MusID_HTZ
 bgm_GotThrough =	MusID_EndLevel
-bgm_GameOver =	MusID_GameOver
-bgm_Continue =	MusID_Continue
-bgm_Credits =	MusID_Credits
-bgm_Drowning =	MusID_Countdown
-bgm_Emerald =	MusID_Emerald
+bgm_GameOver =		MusID_GameOver
+bgm_Continue =		MusID_Continue
+bgm_Credits =		MusID_Credits
+bgm_Drowning =		MusID_Countdown
+bgm_Emerald =		MusID_Emerald
 
-sfx_Jump =	SndID_Jump
-sfx_Lamppost =	SndID_Checkpoint
-sfx_A2 =	SndID_Jump
-sfx_Death =	SndID_Hurt
-sfx_Skid =	SndID_Skidding
-sfx_A5 =	SndID_Skidding
-sfx_HitSpikes =	SndID_HurtBySpikes
-sfx_Push =	SndID_PushBlock
-sfx_SSGoal =	SndID_Bonus
-sfx_SSItem =	SndID_Bonus
-sfx_Splash =	SndID_Splash
-sfx_AB =	SndID_Splash
-sfx_HitBoss =	SndID_BossHit
-sfx_Bubble =	SndID_InhalingBubble
-sfx_Fireball =	SndID_FireBurn
-sfx_Shield =	SndID_Shield
-sfx_Saw =	SndID_LaserBeam
-sfx_Electric =	SndID_Zap
-sfx_Drown =	SndID_Drown
+sfx_Jump =		SndID_Jump
+sfx_Lamppost =		SndID_Checkpoint
+sfx_A2 =		SndID_Jump
+sfx_Death =		SndID_Hurt
+sfx_Skid =		SndID_Skidding
+sfx_A5 =		SndID_Skidding
+sfx_HitSpikes =		SndID_HurtBySpikes
+sfx_Push =		SndID_PushBlock
+sfx_SSGoal =		SndID_Bonus
+sfx_SSItem =		SndID_Bonus
+sfx_Splash =		SndID_Splash
+sfx_AB =		SndID_Splash
+sfx_HitBoss =		SndID_BossHit
+sfx_Bubble =		SndID_InhalingBubble
+sfx_Fireball =		SndID_FireBurn
+sfx_Shield =		SndID_Shield
+sfx_Saw =		SndID_LaserBeam
+sfx_Electric =		SndID_Zap
+sfx_Drown =		SndID_Drown
 sfx_Flamethrower =	SndID_FireBurn
-sfx_Bumper =	SndID_Bumper
-sfx_Ring =	SndID_Ring
+sfx_Bumper =		SndID_Bumper
+sfx_Ring =		SndID_Ring
 sfx_SpikesMove =	SndID_SpikesMove
-sfx_Rumbling =	SndID_Rumbling
-sfx_B8 =	SndID_Smash
-sfx_Collapse =	SndID_Smash
-sfx_SSGlass =	SndID_CasinoBonus
-sfx_Door =	SndID_DoorSlam
-sfx_Teleport =	SndID_SpindashRelease
+sfx_Rumbling =		SndID_Rumbling
+sfx_B8 =		SndID_Smash
+sfx_Collapse =		SndID_Smash
+sfx_SSGlass =		SndID_CasinoBonus
+sfx_Door =		SndID_DoorSlam
+sfx_Teleport =		SndID_SpindashRelease
 sfx_ChainStomp =	SndID_ChainRise
-sfx_Roll =	SndID_Roll
-sfx_Continue =	SndID_ContinueJingle
-sfx_Basaran =	SndID_SpindashRelease
-sfx_BreakItem =	SndID_Explosion
-sfx_Warning =	SndID_WaterWarning
-sfx_GiantRing =	SndID_EnterGiantRing
-sfx_Bomb =	SndID_BossExplosion
-sfx_Cash =	SndID_TallyEnd
-sfx_RingLoss =	SndID_RingSpill
-sfx_ChainRise =	SndID_ChainRise
-sfx_Burning =	SndID_FireBurn
-sfx_Bonus =	SndID_Bonus
-sfx_EnterSS =	SndID_SpecStageEntry
-sfx_WallSmash =	SndID_SlowSmash
-sfx_Spring =	SndID_Spring
-sfx_Switch =	SndID_Blip
-sfx_RingLeft =	SndID_RingLeft
-sfx_Signpost =	SndID_Signpost
+sfx_Roll =		SndID_Roll
+sfx_Continue =		SndID_ContinueJingle
+sfx_Basaran =		SndID_SpindashRelease
+sfx_BreakItem =		SndID_Explosion
+sfx_Warning =		SndID_WaterWarning
+sfx_GiantRing =		SndID_EnterGiantRing
+sfx_Bomb =		SndID_BossExplosion
+sfx_Cash =		SndID_TallyEnd
+sfx_RingLoss =		SndID_RingSpill
+sfx_ChainRise =		SndID_ChainRise
+sfx_Burning =		SndID_FireBurn
+sfx_Bonus =		SndID_Bonus
+sfx_EnterSS =		SndID_SpecStageEntry
+sfx_WallSmash =		SndID_SlowSmash
+sfx_Spring =		SndID_Spring
+sfx_Switch =		SndID_Blip
+sfx_RingLeft =		SndID_RingLeft
+sfx_Signpost =		SndID_Signpost
 
 ; Special sound effects
 sfx_Waterfall =	$D0
 
-bgm_Fade =	MusID_FadeOut
-sfx_Sega =	SndID_SegaSound
-bgm_Speedup =	MusID_SpeedUp
-bgm_Slowdown =	MusID_SlowDown
-bgm_Stop =	MusID_Stop
+bgm_Fade =		MusID_FadeOut
+sfx_Sega =		SndID_SegaSound
+bgm_Speedup =		MusID_SpeedUp
+bgm_Slowdown =		MusID_SlowDown
+bgm_Stop =		MusID_Stop
 
 ; Boss locations
 ; The main values are based on where the camera boundaries mainly lie
