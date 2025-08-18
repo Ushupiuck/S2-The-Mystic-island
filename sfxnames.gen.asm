@@ -77,12 +77,6 @@ SndNames:	offsetTable
 	offsetTableEntry.w	SndNam_LargeLaser
 	offsetTableEntry.w	SndNam_OilSlide
 	offsetTableEntry.w	SndNam_PushBlock
-	offsetTableEntry.w	DACSFXNam_SonicGoal
-	offsetTableEntry.w	DACSFXNam_SonicDead
-	offsetTableEntry.w	DACSFXNam_SonicDrown
-	offsetTableEntry.w	DACSFXNam_TailsGoal
-	offsetTableEntry.w	DACSFXNam_TailsDead
-	offsetTableEntry.w	DACSFXNam_TailsDrown
 
 SndNam_Jump:	songtext	"JUMP"
 SndNam_Checkpoint:	songtext	"CHECKPOINT"
@@ -162,10 +156,4 @@ SndNam_MechaSonicBuzz:	songtext	"MECHA SONIC BUZZ"
 SndNam_LargeLaser:	songtext	"LARGE LASER"
 SndNam_OilSlide:	songtext	"OIL SLIDE"
 SndNam_PushBlock:	songtext	"PUSH BLOCK"
-DACSFXNam_SonicGoal:	songtext	"SONIC GOAL"
-DACSFXNam_SonicDead:	songtext	"SONIC DEATH"
-DACSFXNam_SonicDrown:	songtext	"SONIC DROWNING"
-DACSFXNam_TailsGoal:	songtext	"TAILS GOAL"
-DACSFXNam_TailsDead:	songtext	"TAILS DEATH"
-DACSFXNam_TailsDrown:	songtext	"TAILS DROWNING"
 	even

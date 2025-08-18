@@ -16,9 +16,9 @@ SongNames:	offsetTable
 	offsetTableEntry.w	MusNam_EndBoss
 	offsetTableEntry.w	MusNam_Ending
 	offsetTableEntry.w	MusNam_Credits
-	offsetTableEntry.w	MusNam_SpecStage
 	offsetTableEntry.w	MusNam_Invincible
 	offsetTableEntry.w	MusNam_SuperSonic
+	offsetTableEntry.w	MusNam_SpecStage
 	offsetTableEntry.w	MusNam_Title
 	offsetTableEntry.w	MusNam_Options
 	offsetTableEntry.w	MusNam_GHZ
@@ -57,9 +57,9 @@ MusNam_Boss:	songtext	"BOSS"
 MusNam_EndBoss:	songtext	"FINAL BOSS"
 MusNam_Ending:	songtext	"ENDING"
 MusNam_Credits:	songtext	"CREDITS"
-MusNam_SpecStage:	songtext	"SPECIAL STAGE"
 MusNam_Invincible:	songtext	"INVINCIBILITY"
 MusNam_SuperSonic:	songtext	"SUPER SONIC"
+MusNam_SpecStage:	songtext	"SPECIAL STAGE"
 MusNam_Title:	songtext	"TITLE SCREEN"
 MusNam_Options:	songtext	"OPTIONS"
 MusNam_GHZ:	songtext	"GREEN HILL"

@@ -12,4 +12,4 @@ SndID__First = MusID__End
 	enum SndID_LaserBurst=SndID_DrawbridgeDown+1,SndID_LaserFloor,SndID_Teleport,SndID_Error,SndID_MechaSonicBuzz,SndID_LargeLaser,SndID_OilSlide
 	enum SndID_PushBlock=SndID_OilSlide+1,SndID__End
 DACSFXID__First = SndID__End
-	enum DACSFXID_SonicGoal=DACSFXID__First,DACSFXID_SonicDead,DACSFXID_SonicDrown,DACSFXID_TailsGoal,DACSFXID_TailsDead,DACSFXID_TailsDrown,DACSFXID__End
+	enum DACSFXID__End=DACSFXID__First

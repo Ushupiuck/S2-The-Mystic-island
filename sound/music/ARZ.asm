@@ -1,5 +1,5 @@
 ARZ_Header:
-	smpsHeaderStartSong 2
+	smpsHeaderStartSong 2, 1
 	smpsHeaderVoice     ARZ_Voices
 	smpsHeaderChan      $06, $03
 	smpsHeaderTempo     $01, $E0
@@ -294,7 +294,6 @@ ARZ_Loop08:
 	dc.b	$06, nA5, nRst, nG5, nA5, nRst, nG5, nRst, nA5, $0C, nG5, $06
 	dc.b	nA5, $12, nG5, $02, nF5, nE5, nD5, nC5, nB4
 	smpsPSGvoice        fTone_01
-	;smpsAlterVol        $FE
 	smpsPSGAlterVol     $FE
 	dc.b	nD5, $0C, nG5, $06, nBb4, $0C, nD5, nD5, $06, nRst, nF5, nRst
 	dc.b	nG4, nD5, $0C, nD5, $06, nRst, nC5, $0C, nF5, $06, nA4, $0C
@@ -308,7 +307,6 @@ ARZ_Loop08:
 	dc.b	nE5, $06, nA4, $0C, nBb4, nCs5, nE5, $06, nRst, nA4, nA4, $0C
 	dc.b	nA4, $06, nRst, nE5, nE5, nE5, nRst, $12, nE5, $06, nE5, nE5
 	dc.b	nRst, $2A
-	;smpsAlterVol        $02
 	smpsPSGAlterVol     $02
 	smpsJump            ARZ_Loop08
 
@@ -360,7 +358,7 @@ ARZ_Voices:
 	smpsVcDecayRate2    $00, $02, $02, $01
 	smpsVcDecayLevel    $02, $00, $00, $05
 	smpsVcReleaseRate   $08, $02, $02, $02
-	smpsVcTotalLevel    $00, $18, $22, $18
+	smpsVcTotalLevel    $80, $18, $22, $18
 
 ;	Voice $02
 ;	$3D
@@ -378,7 +376,7 @@ ARZ_Voices:
 	smpsVcDecayRate2    $00, $00, $00, $01
 	smpsVcDecayLevel    $01, $01, $01, $02
 	smpsVcReleaseRate   $08, $08, $08, $04
-	smpsVcTotalLevel    $02, $02, $02, $1C
+	smpsVcTotalLevel    $82, $82, $82, $1C
 
 ;	Voice $03
 ;	$32
@@ -396,7 +394,7 @@ ARZ_Voices:
 	smpsVcDecayRate2    $02, $02, $02, $02
 	smpsVcDecayLevel    $07, $01, $01, $01
 	smpsVcReleaseRate   $02, $01, $01, $01
-	smpsVcTotalLevel    $00, $26, $2D, $23
+	smpsVcTotalLevel    $80, $26, $2D, $23
 
 ;	Voice $04
 ;	$3A
@@ -432,5 +430,5 @@ ARZ_Voices:
 	smpsVcDecayRate2    $02, $02, $02, $02
 	smpsVcDecayLevel    $07, $01, $01, $01
 	smpsVcReleaseRate   $07, $01, $01, $01
-	smpsVcTotalLevel    $00, $26, $2D, $23
+	smpsVcTotalLevel    $80, $26, $2D, $23
 

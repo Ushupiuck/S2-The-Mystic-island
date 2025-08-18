@@ -15,9 +15,9 @@ zMasterPlaylist:
 	zmakePlaylistEntry	Mus_EndBoss,0
 	zmakePlaylistEntry	Mus_Ending,0
 	zmakePlaylistEntry	Mus_Credits,musprop_uncompressed
-	zmakePlaylistEntry	Mus_SpecStage,0
 	zmakePlaylistEntry	Mus_Invincible,0
 	zmakePlaylistEntry	Mus_SuperSonic,0
+	zmakePlaylistEntry	Mus_SpecStage,0
 	zmakePlaylistEntry	Mus_Title,0
 	zmakePlaylistEntry	Mus_Options,musprop_uncompressed
 	zmakePlaylistEntry	Mus_GHZ,0

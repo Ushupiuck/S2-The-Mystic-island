@@ -1,22 +1,22 @@
 zDACMasterPlaylist:
 
-	DACSample	SndDAC_Sample_1,8201,0 ; dKick
-	DACSample	SndDAC_Sample_2,23784,0 ; dSnare
-	DACSample	SndDAC_Sample_3,17127,0 ; dClap
-	DACSample	SndDAC_Sample_4,15232,0 ; dScratch
-	DACSample	SndDAC_Sample_5,7328,0 ; dTimpani
-	DACSample	SndDAC_Sample_6,13714,0 ; dHiTom
-	DACSample	SndDAC_Sample_7,7426,0 ; dVLowClap
-	DACSample	SndDAC_Sample_5,9635,0 ; dHiTimpani
-	DACSample	SndDAC_Sample_5,8720,0 ; dMidTimpani
-	DACSample	SndDAC_Sample_5,7138,0 ; dLowTimpani
-	DACSample	SndDAC_Sample_5,6957,0 ; dVLowTimpani
-	DACSample	SndDAC_Sample_6,22799,0 ; dMidTom
-	DACSample	SndDAC_Sample_6,18262,0 ; dLowTom
-	DACSample	SndDAC_Sample_6,15232,0 ; dFloorTom
-	DACSample	SndDAC_Sample_7,15232,0 ; dHiClap
-	DACSample	SndDAC_Sample_7,13064,0 ; dMidClap
-	DACSample	SndDAC_Sample_7,9806,0 ; dLowClap
+	DACSample	SndDAC_C5,8201,0 ; dKick
+	DACSample	SndDAC_C6,23784,0 ; dSnare
+	DACSample	SndDAC_C7,17127,0 ; dClap
+	DACSample	SndDAC_C8,15232,0 ; dScratch
+	DACSample	SndDAC_C9CC_CF,7328,0 ; dTimpani
+	DACSample	SndDAC_CAD0_D2,13714,0 ; dHiTom
+	DACSample	SndDAC_CBD3_D5,7426,0 ; dVLowClap
+	DACSample	SndDAC_C9CC_CF,9635,0 ; dHiTimpani
+	DACSample	SndDAC_C9CC_CF,8720,0 ; dMidTimpani
+	DACSample	SndDAC_C9CC_CF,7138,0 ; dLowTimpani
+	DACSample	SndDAC_C9CC_CF,6957,0 ; dVLowTimpani
+	DACSample	SndDAC_CAD0_D2,22799,0 ; dMidTom
+	DACSample	SndDAC_CAD0_D2,18262,0 ; dLowTom
+	DACSample	SndDAC_CAD0_D2,15232,0 ; dFloorTom
+	DACSample	SndDAC_CBD3_D5,15232,0 ; dHiClap
+	DACSample	SndDAC_CBD3_D5,13064,0 ; dMidClap
+	DACSample	SndDAC_CBD3_D5,9806,0 ; dLowClap
 	DACSample	SndDAC_81,19090,0 ; dSnareS3
 	DACSample	SndDAC_82_85,11274,0 ; dHighTom
 	DACSample	SndDAC_82_85,9050,0 ; dMidTomS3
@@ -55,9 +55,3 @@ zDACMasterPlaylist:
 	DACSample	SndDAC_BB,7998,0 ; dScratchS3
 	DACSample	SndDAC_BE,12279,0 ; dCrashingNoiseWoo
 	DACSample	SndDAC_C0,12852,0 ; dKickHey
-	DACSample	SndDAC_sonicgoal,22050,3 ; dSonicGoal
-	DACSample	SndDAC_sonicdead,22050,3 ; dSonicDead
-	DACSample	SndDAC_sonicdrown,22050,3 ; dSonicDrown
-	DACSample	SndDAC_tailsgoal,22050,3 ; dTailsGoal
-	DACSample	SndDAC_tailsdead,22050,3 ; dTailsDead
-	DACSample	SndDAC_tailsdrown,22050,3 ; dTailsDrown

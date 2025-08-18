@@ -1,5 +1,5 @@
 MCZ_2p_Header:
-	smpsHeaderStartSong 2
+	smpsHeaderStartSong 2, 1
 	smpsHeaderVoice     MCZ_2p_Voices
 	smpsHeaderChan      $06, $03
 	smpsHeaderTempo     $01, $EC
@@ -96,7 +96,6 @@ MCZ_2p_Jump07:
 	dc.b	nRst, $30, nRst, nRst, nRst, nRst, nRst, nRst, nRst
 	smpsCall            MCZ_2p_Call03
 	dc.b	$24, nB4, nD5, $18, smpsNoAttack, $30, smpsNoAttack, $30
-	;smpsAlterVol        $FE
 	smpsPSGAlterVol     $FE
 	dc.b	nG5, $24, nF5, nE5, $18, nF5, $24, nE5, nC5, $18, nC5, nD5
 	dc.b	$0C, nB4, $30, smpsNoAttack, $0C, smpsNoAttack, $30, smpsNoAttack, $24, nRst, $0C, nRst
@@ -104,7 +103,6 @@ MCZ_2p_Jump07:
 	dc.b	nG4, $18, nF4, nD4, $0C, nG4, $30, smpsNoAttack, $0C, smpsNoAttack, $30, smpsNoAttack
 	dc.b	$18, nRst, $18, nA4, $24, nC5, nE5, $18, nD5, $24, nB4, nG4
 	dc.b	$18, nG5, $30, smpsNoAttack, $30, smpsNoAttack, $30, smpsNoAttack, $0C, nRst, $24
-	;smpsAlterVol        $02
 	smpsPSGAlterVol     $02
 	smpsJump            MCZ_2p_Jump07
 
@@ -319,7 +317,7 @@ MCZ_2p_Voices:
 	smpsVcDecayRate2    $00, $00, $00, $00
 	smpsVcDecayLevel    $02, $02, $02, $01
 	smpsVcReleaseRate   $0F, $0F, $0F, $0F
-	smpsVcTotalLevel    $00, $17, $14, $10
+	smpsVcTotalLevel    $80, $97, $94, $10
 
 ;	Voice $04
 ;	$2C

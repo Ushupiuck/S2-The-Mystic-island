@@ -1,5 +1,5 @@
 HPZ_Header:
-	smpsHeaderStartSong 2
+	smpsHeaderStartSong 2, 1
 	smpsHeaderVoice     HPZ_Voices
 	smpsHeaderChan      $06, $03
 	smpsHeaderTempo     $02, $E0
@@ -108,16 +108,12 @@ HPZ_PSG3:
 	smpsNoteFill        $10
 
 HPZ_Loop05:
-	;smpsAlterVol        $FE
 	smpsPSGAlterVol     $FE
 	dc.b	nF4, $06
-	;smpsAlterVol        $02
 	smpsPSGAlterVol     $02
 	dc.b	nC5, nC5, nF4, nA4, nF4
-	;smpsAlterVol        $FE
 	smpsPSGAlterVol     $FE
 	dc.b	nB4
-	;smpsAlterVol        $02
 	smpsPSGAlterVol     $02
 	dc.b	nF4, nC5, nF4, nB4, nF4
 	smpsLoop            $01, $10, HPZ_Loop05
