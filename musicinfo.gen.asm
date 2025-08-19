@@ -1,37 +1,52 @@
 zMasterPlaylist:
+	zmakePlaylistEntry	Mus_Title,0
+	zmakePlaylistEntry	Mus_2PResult,0
+	zmakePlaylistEntry	Mus_Options,0
+	zmakePlaylistEntry	Mus_GHZ,0
 	zmakePlaylistEntry	Mus_EHZ,0
+	zmakePlaylistEntry	Mus_GRGZ1,musprop_uncompressed
+	zmakePlaylistEntry	Mus_GRGZ2,musprop_uncompressed
 	zmakePlaylistEntry	Mus_CPZ,0
+	zmakePlaylistEntry	Mus_GGZ1,musprop_uncompressed
+	zmakePlaylistEntry	Mus_GGZ2,0
 	zmakePlaylistEntry	Mus_ARZ,0
-	zmakePlaylistEntry	Mus_CNZ,0
+	zmakePlaylistEntry	Mus_RRZ1,musprop_uncompressed
+	zmakePlaylistEntry	Mus_RRZ2,musprop_uncompressed
+	zmakePlaylistEntry	Mus_ICZ1,0
+	zmakePlaylistEntry	Mus_ICZ2,0
+	zmakePlaylistEntry	Mus_DDZ1,musprop_uncompressed
+	zmakePlaylistEntry	Mus_DDZ2,musprop_uncompressed
 	zmakePlaylistEntry	Mus_HTZ,0
 	zmakePlaylistEntry	Mus_MCZ,0
 	zmakePlaylistEntry	Mus_HPZ,0
 	zmakePlaylistEntry	Mus_OOZ,0
 	zmakePlaylistEntry	Mus_MTZ,0
-	zmakePlaylistEntry	Mus_SCZ,0
-	zmakePlaylistEntry	Mus_WFZ,0
+	zmakePlaylistEntry	Mus_PPZ1,0
+	zmakePlaylistEntry	Mus_PPZ2,0
+	zmakePlaylistEntry	Mus_SBZ,0
+	zmakePlaylistEntry	Mus_LBZ1,musprop_uncompressed
+	zmakePlaylistEntry	Mus_LBZ2,musprop_uncompressed
 	zmakePlaylistEntry	Mus_DEZ,0
 	zmakePlaylistEntry	Mus_Boss,0
+	zmakePlaylistEntry	Mus_Boss2,0
+	zmakePlaylistEntry	Mus_Boss3,0
 	zmakePlaylistEntry	Mus_EndBoss,0
 	zmakePlaylistEntry	Mus_Ending,0
 	zmakePlaylistEntry	Mus_Credits,musprop_uncompressed
-	zmakePlaylistEntry	Mus_Invincible,0
-	zmakePlaylistEntry	Mus_SuperSonic,0
-	zmakePlaylistEntry	Mus_SpecStage,0
-	zmakePlaylistEntry	Mus_Title,0
-	zmakePlaylistEntry	Mus_Options,musprop_uncompressed
-	zmakePlaylistEntry	Mus_GHZ,0
-	zmakePlaylistEntry	Mus_SBZ,0
+	zmakePlaylistEntry	Mus_Credits2,musprop_uncompressed
 	zmakePlaylistEntry	Mus_Test_Electoria,0
 	zmakePlaylistEntry	Mus_Test_Evening_Star,0
 	zmakePlaylistEntry	Mus_Test_Hyper_Hyper,0
-	zmakePlaylistEntry	Mus_Test_Moonrise,0
 	zmakePlaylistEntry	Mus_Test_Walkin,0
-	zmakePlaylistEntry	Mus_2PResult,0
+	zmakePlaylistEntry	Mus_Test6,musprop_uncompressed
+	zmakePlaylistEntry	Mus_Test7,musprop_uncompressed
+	zmakePlaylistEntry	Mus_Invincible,0
+	zmakePlaylistEntry	Mus_SuperSonic,0
+	zmakePlaylistEntry	Mus_SpecStage,0
 	zmakePlaylistEntry	Mus_EHZ_2P,0
 	zmakePlaylistEntry	Mus_SW_HPZ,0
-	zmakePlaylistEntry	Mus_MCZ_2P,0
 	zmakePlaylistEntry	Mus_CNZ_2P,0
+	zmakePlaylistEntry	Mus_SCZ,0
 	zmakePlaylistEntry	Mus_EndLevel,0|musprop_nospeedup
 	zmakePlaylistEntry	Mus_GameOver,musprop_uncompressed|musprop_nospeedup
 	zmakePlaylistEntry	Mus_ExtraLife,0|musprop_1up|musprop_nospeedup

@@ -11872,6 +11872,7 @@ MusicList_Sonic:dc.b bgm_GHZ
 		dc.b bgm_SLZ
 		dc.b bgm_SYZ
 		dc.b bgm_SBZ
+		dc.b bgm_FZ
 		even
 
 ; ===========================================================================
@@ -12630,9 +12631,9 @@ loc_101C4:
 
 loc_101D4:
 		cmpi.w	#(id_SBZ<<8)+1,(Current_ZoneAndAct).w
-		bne.w	JmpTo_KillSonic
+		bne.w	KillCharacter
 		cmpi.w	#$2000,(v_player+obX).w
-		blo.w	JmpTo_KillSonic
+		blo.w	KillCharacter
 		clr.b	(v_lastlamp).w
 		move.w	#1,(Level_Inactive_flag).w
 		move.w	#(id_LZ<<8)+3,(Current_ZoneAndAct).w
@@ -13265,7 +13266,7 @@ Sonic_HurtStop:
 		move.w	(Camera_Max_Y_pos).w,d0
 		addi.w	#224,d0
 		cmp.w	obY(a0),d0
-		blo.w	JmpTo_KillSonic
+		blo.w	KillCharacter
 		bsr.w	Sonic_DoLevelCollision
 		btst	#1,obStatus(a0)
 		bne.s	locret_107E6
@@ -13697,11 +13698,8 @@ locret_10C34:
 ; End of function LoadSonicDynPLC
 
 ; ===========================================================================
-KillTails:
-JmpTo_KillSonic:					; JmpTo
+KillCharacter:
 		jmp	(KillSonic).l
-		align 4
-
 ; ===========================================================================
 ;----------------------------------------------------------------------------
 ; Object 02 - Tails
@@ -13762,8 +13760,7 @@ Obj02_ControlsLock:
 		jsr	(TouchResponse).l
 
 loc_10CFC:
-		bsr.w	LoadTailsDynPLC
-		rts
+		bra.w	LoadTailsDynPLC
 ; ===========================================================================
 Obj02_Modes:	dc.w Obj02_MdNormal-Obj02_Modes
 		dc.w Obj02_MdJump-Obj02_Modes
@@ -13777,6 +13774,7 @@ MusicList_Tails:dc.b bgm_GHZ
 		dc.b bgm_SLZ
 		dc.b bgm_SYZ
 		dc.b bgm_SBZ
+		dc.b bgm_FZ
 		even
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
@@ -14475,9 +14473,9 @@ loc_1133E:
 
 loc_1134E:
 		cmpi.w	#(id_SBZ<<8)+1,(Current_ZoneAndAct).w
-		bne.w	KillTails
+		bne.w	KillCharacter
 		cmpi.w	#$2000,obX(a0)
-		blo.w	KillTails
+		blo.w	KillCharacter
 		clr.b	(v_lastlamp).w
 		move.w	#1,(Level_Inactive_flag).w
 		move.w	#(id_LZ<<8)+3,(Current_ZoneAndAct).w
@@ -15100,7 +15098,7 @@ Tails_HurtStop:
 		move.w	(Camera_Max_Y_pos).w,d0
 		addi.w	#224,d0
 		cmp.w	obY(a0),d0
-		blo.w	KillTails
+		blo.w	KillCharacter
 		bsr.w	Tails_Floor
 		btst	#1,obStatus(a0)
 		bne.s	locret_1192A

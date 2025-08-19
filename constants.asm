@@ -1025,8 +1025,8 @@ HW_Expansion_SCtrl:		equ $A1001F
 bgm_GHZ =		MusID_GHZ
 bgm_LZ =		MusID_CPZ
 bgm_MZ =		MusID_CPZ
-bgm_SLZ =		MusID_EHZ
-bgm_SYZ =		MusID_SW_HPZ
+bgm_SLZ =		MusID_GRGZ1
+bgm_SYZ =		MusID_HPZ
 bgm_SBZ =		MusID_HTZ
 bgm_Invincible =	MusID_Invincible
 bgm_ExtraLife =		MusID_ExtraLife
