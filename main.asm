@@ -15,9 +15,9 @@ AdvancedHandler	  = 0
 
 zeroOffsetOptimization = 1	; if 1, makes a handful of zero-offset instructions smaller
 
-	include	"macrosetup.asm"
+	include	"s2.macrosetup.asm"
 	include	"s2.macros.asm"
-	include	"constants.asm"
+	include	"s2.constants.asm"
  if AdvancedHandler
 	include	"Debugger.asm"
  endif

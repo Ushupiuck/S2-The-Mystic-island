@@ -12,11 +12,11 @@ zMasterPlaylist:
 	zmakePlaylistEntry	Mus_ARZ,0
 	zmakePlaylistEntry	Mus_RRZ1,musprop_uncompressed
 	zmakePlaylistEntry	Mus_RRZ2,musprop_uncompressed
-	zmakePlaylistEntry	Mus_ICZ1,0
-	zmakePlaylistEntry	Mus_ICZ2,0
+	zmakePlaylistEntry	Mus_HTZ,0
 	zmakePlaylistEntry	Mus_DDZ1,musprop_uncompressed
 	zmakePlaylistEntry	Mus_DDZ2,musprop_uncompressed
-	zmakePlaylistEntry	Mus_HTZ,0
+	zmakePlaylistEntry	Mus_ICZ1,0
+	zmakePlaylistEntry	Mus_ICZ2,0
 	zmakePlaylistEntry	Mus_MCZ,0
 	zmakePlaylistEntry	Mus_HPZ,0
 	zmakePlaylistEntry	Mus_OOZ,0

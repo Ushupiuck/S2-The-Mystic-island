@@ -13,11 +13,11 @@ SongNames:	offsetTable
 	offsetTableEntry.w	MusNam_ARZ
 	offsetTableEntry.w	MusNam_RRZ1
 	offsetTableEntry.w	MusNam_RRZ2
-	offsetTableEntry.w	MusNam_ICZ1
-	offsetTableEntry.w	MusNam_ICZ2
+	offsetTableEntry.w	MusNam_HTZ
 	offsetTableEntry.w	MusNam_DDZ1
 	offsetTableEntry.w	MusNam_DDZ2
-	offsetTableEntry.w	MusNam_HTZ
+	offsetTableEntry.w	MusNam_ICZ1
+	offsetTableEntry.w	MusNam_ICZ2
 	offsetTableEntry.w	MusNam_MCZ
 	offsetTableEntry.w	MusNam_HPZ
 	offsetTableEntry.w	MusNam_OOZ
@@ -69,11 +69,11 @@ MusNam_GGZ2:	songtext	"GENE GADGET ACT 2"
 MusNam_ARZ:	songtext	"AQUATIC RUIN"
 MusNam_RRZ1:	songtext	"RUSTY RUIN ACT 1"
 MusNam_RRZ2:	songtext	"RUSTY RUIN ACT 2"
-MusNam_ICZ1:	songtext	"ICECAP ACT 1"
-MusNam_ICZ2:	songtext	"ICECAP ACT 2"
+MusNam_HTZ:	songtext	"HILL TOP"
 MusNam_DDZ1:	songtext	"DIAMOND DUST ACT 1"
 MusNam_DDZ2:	songtext	"DIAMOND DUST ACT 2"
-MusNam_HTZ:	songtext	"HILL TOP"
+MusNam_ICZ1:	songtext	"ICECAP ACT 1"
+MusNam_ICZ2:	songtext	"ICECAP ACT 2"
 MusNam_MCZ:	songtext	"MYSTIC CAVE"
 MusNam_HPZ:	songtext	"HIDDEN PALACE"
 MusNam_OOZ:	songtext	"OIL OCEAN"
