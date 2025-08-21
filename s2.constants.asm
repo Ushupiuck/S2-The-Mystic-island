@@ -1359,7 +1359,7 @@ ArtTile_Credits_Font:		equ $5A0
 ArtTile_Error_Handler_Font:	equ $7C0
 
 ; EHZ, HTZ
-ArtTile_Checkers:		equ ArtTile_Level+$158
+ArtTile_Checkers:		equ ArtTile_Level+$7D
 ArtTile_Art_Flowers1:		equ $394
 ArtTile_Art_Flowers2:		equ $396
 ArtTile_Art_Flowers3:		equ $398

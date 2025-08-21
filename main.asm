@@ -8232,8 +8232,7 @@ word_8B68:	dc.w $A
 ; ---------------------------------------------------------------------------
 ; Sprite mappings - EHZ platforms
 ; ---------------------------------------------------------------------------
-Map_obj18_EHZ:	binclude	"mappings/sprite/obj18_EHZ.bin"
-		even
+Map_obj18_EHZ:	include	"mappings/sprite/18 - EHZ platforms mappings.asm"
 ; ---------------------------------------------------------------------------
 		include	"objects/1A Collapsing Platforms.asm"
 		include	"objects/S1/53 Collapsing Floors.asm"
@@ -23254,11 +23253,11 @@ APM_EHZ:	begin_animpat
 		dc.w make_block_tile(ArtTile_Art_EHZPulseBall+$0,0,0,2,0),make_block_tile(ArtTile_Art_EHZPulseBall+$0,1,0,2,0)
 		dc.w make_block_tile(ArtTile_Art_EHZPulseBall+$1,0,0,2,0),make_block_tile(ArtTile_Art_EHZPulseBall+$1,1,0,2,0)
 
-		dc.w make_block_tile(ArtTile_Checkers+$0,0,0,2,0),make_block_tile(ArtTile_Art_EHZPulseBall+$0,0,0,2,0)
-		dc.w make_block_tile(ArtTile_Checkers+$1,0,0,2,0),make_block_tile(ArtTile_Art_EHZPulseBall+$1,0,0,2,0)
+		dc.w make_block_tile(ArtTile_Checkers+$0,1,0,2,0),make_block_tile(ArtTile_Art_EHZPulseBall+$0,0,0,2,0)
+		dc.w make_block_tile(ArtTile_Checkers+$0,0,0,2,0),make_block_tile(ArtTile_Art_EHZPulseBall+$1,0,0,2,0)
 
-		dc.w make_block_tile(ArtTile_Art_EHZPulseBall+$0,1,0,2,0),make_block_tile(ArtTile_Checkers+$0,1,0,2,0)
-		dc.w make_block_tile(ArtTile_Art_EHZPulseBall+$1,1,0,2,0),make_block_tile(ArtTile_Checkers+$1,1,0,2,0)
+		dc.w make_block_tile(ArtTile_Art_EHZPulseBall+$0,1,0,2,0),make_block_tile(ArtTile_Checkers+$0,0,0,2,0)
+		dc.w make_block_tile(ArtTile_Art_EHZPulseBall+$1,1,0,2,0),make_block_tile(ArtTile_Checkers+$0,1,0,2,0)
 
 		dc.w make_block_tile(ArtTile_Art_Flowers1+$0,0,0,3,0),make_block_tile(ArtTile_Art_Flowers1+$0,1,0,3,0)
 		dc.w make_block_tile(ArtTile_Art_Flowers1+$1,0,0,3,0),make_block_tile(ArtTile_Art_Flowers1+$1,1,0,3,0)
