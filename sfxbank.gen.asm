@@ -23,7 +23,9 @@ SoundIndex:
 	zSoundIndexEntry	Snd_Ring,$70
 	zSoundIndexEntry	Snd_SpikesMove,$70
 	zSoundIndexEntry	Snd_Rumbling,$70
+	zSoundIndexEntry	Snd_unknown,$70
 	zSoundIndexEntry	Snd_Smash,$70
+	zSoundIndexEntry	Snd_Glass,$70
 	zSoundIndexEntry	Snd_DoorSlam,$70
 	zSoundIndexEntry	Snd_SpindashRelease,$70
 	zSoundIndexEntry	Snd_Hammer,$70
@@ -76,7 +78,7 @@ SoundIndex:
 	zSoundIndexEntry	Snd_MechaSonicBuzz,$70
 	zSoundIndexEntry	Snd_LargeLaser,$70
 	zSoundIndexEntry	Snd_OilSlide,$6F
-	zSoundIndexEntry	Snd_PushBlock,$70
+	zSoundIndexEntry	Snd_Goal,$70
 
 Snd_Jump:	include "sound/SFX/Sound20.asm"
 Snd_Checkpoint:	include "sound/SFX/Sound21.asm"
@@ -102,7 +104,9 @@ Snd_Bumper:	include "sound/SFX/Sound34.asm"
 Snd_Ring:	include "sound/SFX/Sound35.asm"
 Snd_SpikesMove:	include "sound/SFX/Sound36.asm"
 Snd_Rumbling:	include "sound/SFX/Sound37.asm"
+Snd_unknown:	include "sound/SFX/Sound38.asm"
 Snd_Smash:	include "sound/SFX/Sound39.asm"
+Snd_Glass:	include "sound/SFX/Sound3A.asm"
 Snd_DoorSlam:	include "sound/SFX/Sound3B.asm"
 Snd_SpindashRelease:	include "sound/SFX/Sound3C.asm"
 Snd_Hammer:	include "sound/SFX/Sound3D.asm"
@@ -155,5 +159,5 @@ Snd_Error:	include "sound/SFX/Sound6D.asm"
 Snd_MechaSonicBuzz:	include "sound/SFX/Sound6E.asm"
 Snd_LargeLaser:	include "sound/SFX/Sound6F.asm"
 Snd_OilSlide:	include "sound/SFX/Sound70.asm"
-Snd_PushBlock:	include "sound/SFX/Sound_PushBlock.asm"
+Snd_Goal:	include "sound/SFX/SndA8 - SS Goal.asm"
 

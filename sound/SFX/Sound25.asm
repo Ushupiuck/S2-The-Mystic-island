@@ -1,33 +1,39 @@
-Sound25_BlockPush_Header:
-	smpsHeaderStartSong 2
-	smpsHeaderVoice     Sound25_BlockPush_Voices
+; Clears pushing sound flag in modified S2 driver
+smpsClearPush2 macro
+	dc.b	$ED
+	endm
+
+Push_Block_Header:
+	smpsHeaderStartSong 1
+	smpsHeaderVoice     Push_Block_Voices
 	smpsHeaderTempoSFX  $01
 	smpsHeaderChanSFX   $01
 
-	smpsHeaderSFXChannel cFM5, Sound25_BlockPush_FM5,	$00, $00
+	smpsHeaderSFXChannel cFM4, Push_Block_FM4,	$00, $06
 
-; FM5 Data
-Sound25_BlockPush_FM5:
+; FM4 Data
+Push_Block_FM4:
 	smpsSetvoice        $00
-	dc.b	nRst, $01, nBb0, $0A, nRst, $02
+	dc.b	nD1, $07, nRst, $02, nD1, $06, nRst, $10
+	smpsClearPush2
 	smpsStop
 
-Sound25_BlockPush_Voices:
+Push_Block_Voices:
 ;	Voice $00
 ;	$FA
-;	$21, $30, $10, $32, 	$2F, $1F, $2F, $2F, 	$05, $08, $09, $02
-;	$06, $0F, $06, $02, 	$1F, $2F, $4F, $2F, 	$0F, $1A, $0E, $80
+;	$21, $30, $10, $32, 	$1F, $1F, $1F, $1F, 	$05, $18, $09, $02
+;	$06, $0F, $06, $02, 	$1F, $2F, $4F, $2F, 	$0F, $0E, $0E, $80
 	smpsVcAlgorithm     $02
 	smpsVcFeedback      $07
 	smpsVcUnusedBits    $03
 	smpsVcDetune        $03, $01, $03, $02
 	smpsVcCoarseFreq    $02, $00, $00, $01
 	smpsVcRateScale     $00, $00, $00, $00
-	smpsVcAttackRate    $2F, $2F, $1F, $2F
+	smpsVcAttackRate    $1F, $1F, $1F, $1F
 	smpsVcAmpMod        $00, $00, $00, $00
-	smpsVcDecayRate1    $02, $09, $08, $05
+	smpsVcDecayRate1    $02, $09, $18, $05
 	smpsVcDecayRate2    $02, $06, $0F, $06
 	smpsVcDecayLevel    $02, $04, $02, $01
 	smpsVcReleaseRate   $0F, $0F, $0F, $0F
-	smpsVcTotalLevel    $00, $0E, $1A, $0F
+	smpsVcTotalLevel    $00, $0E, $0E, $0F
 

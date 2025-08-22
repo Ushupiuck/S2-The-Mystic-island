@@ -23,7 +23,9 @@ SndNames:	offsetTable
 	offsetTableEntry.w	SndNam_Ring
 	offsetTableEntry.w	SndNam_SpikesMove
 	offsetTableEntry.w	SndNam_Rumbling
+	offsetTableEntry.w	SndNam_unknown
 	offsetTableEntry.w	SndNam_Smash
+	offsetTableEntry.w	SndNam_Glass
 	offsetTableEntry.w	SndNam_DoorSlam
 	offsetTableEntry.w	SndNam_SpindashRelease
 	offsetTableEntry.w	SndNam_Hammer
@@ -76,7 +78,7 @@ SndNames:	offsetTable
 	offsetTableEntry.w	SndNam_MechaSonicBuzz
 	offsetTableEntry.w	SndNam_LargeLaser
 	offsetTableEntry.w	SndNam_OilSlide
-	offsetTableEntry.w	SndNam_PushBlock
+	offsetTableEntry.w	SndNam_Goal
 
 SndNam_Jump:	songtext	"JUMP"
 SndNam_Checkpoint:	songtext	"CHECKPOINT"
@@ -102,7 +104,9 @@ SndNam_Bumper:	songtext	"BUMPER"
 SndNam_Ring:	songtext	"RING"
 SndNam_SpikesMove:	songtext	"SPIKES MOVE"
 SndNam_Rumbling:	songtext	"RUMBLING"
+SndNam_unknown:	songtext	"UNKNOWN"
 SndNam_Smash:	songtext	"SMASH"
+SndNam_Glass:	songtext	"SPECIAL STAGE GLASS"
 SndNam_DoorSlam:	songtext	"DOOR SLAM"
 SndNam_SpindashRelease:	songtext	"SPINDASH RELEASE"
 SndNam_Hammer:	songtext	"HAMMER"
@@ -155,5 +159,5 @@ SndNam_Error:	songtext	"ERROR"
 SndNam_MechaSonicBuzz:	songtext	"MECHA SONIC BUZZ"
 SndNam_LargeLaser:	songtext	"LARGE LASER"
 SndNam_OilSlide:	songtext	"OIL SLIDE"
-SndNam_PushBlock:	songtext	"PUSH BLOCK"
+SndNam_Goal:	songtext	"GOAL"
 	even

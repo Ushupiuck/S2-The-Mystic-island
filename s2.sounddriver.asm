@@ -2047,7 +2047,7 @@ zPlaySound_Checks:
 	jr	z,zPlaySound_CheckRing			; if not, branch
 	cp	SndID_Gloop						; is this the bloop/gloop noise?
 	jr	z,zPlaySound_CheckGloop			; if not, branch
-	cp	SndID_PushBlock					; is this the pushing block noise?
+	cp	SndID_BlockPush					; is this the pushing block noise?
 	jr	z,zPlaySound_CheckPush			; if not, branch
 	cp	SndID_SpindashRev				; is this the spindash rev sound playing?
 	jr	z,zPlaySound_CheckSpindash		; if not, branch
