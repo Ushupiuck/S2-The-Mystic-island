@@ -277,17 +277,14 @@ vdp_counter:		equ $C00008
 psg_input:		equ $C00011
 ; Z80 addresses
 Z80_RAM:		equ $A00000			; start of Z80 RAM
-z80_ram = Z80_RAM
-z80_ram_end:		equ $A02000			; end of non-reserved Z80 RAM
-z80_version:		equ $A10001
-z80_port_1_data:	equ $A10002
-z80_port_1_control:	equ $A10008
-z80_port_2_control:	equ $A1000A
-z80_expansion_control:	equ $A1000C
+Z80_RAM_end:		equ $A02000			; end of non-reserved Z80 RAM
+Z80_version:		equ $A10001
+Z80_port_1_data:	equ $A10002
+Z80_port_1_control:	equ $A10008
+Z80_port_2_control:	equ $A1000A
+Z80_expansion_control:	equ $A1000C
 Z80_Bus_Request:	equ $A11100
-z80_bus_request = Z80_Bus_Request
 Z80_Reset:		equ $A11200
-z80_reset = Z80_Reset
 ym2612_a0:		equ $A04000
 ym2612_d0:		equ $A04001
 ym2612_a1:		equ $A04002

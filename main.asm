@@ -67,9 +67,9 @@ InitValues:	dc.w $8000
 		dc.w bytesToLcnt($10000)
 		dc.w $100
 
-		dc.l z80_ram				; Z80 RAM start	location
-		dc.l z80_bus_request			; Z80 bus request
-		dc.l z80_reset				; Z80 reset
+		dc.l Z80_RAM				; Z80 RAM start	location
+		dc.l Z80_Bus_Request			; Z80 bus request
+		dc.l Z80_Reset				; Z80 reset
 		dc.l vdp_data_port			; VDP data port
 		dc.l vdp_control_port			; VDP control port
 
@@ -106,7 +106,7 @@ Z80StartupCodeBegin:
     CPU Z80 ; start assembling Z80 code
     phase 0 ; pretend we're at address 0
 	xor	a	; clear a to 0
-	ld	bc,((z80_ram_end-z80_ram)-zStartupCodeEndLoc)-1 ; prepare to loop this many times
+	ld	bc,((Z80_RAM_end-Z80_RAM)-zStartupCodeEndLoc)-1 ; prepare to loop this many times
 	ld	de,zStartupCodeEndLoc+1	; initial destination address
 	ld	hl,zStartupCodeEndLoc	; initial source address
 	ld	sp,hl	; set the address the stack starts at
@@ -153,19 +153,19 @@ ErrorTrap:
 ; ---------------------------------------------------------------------------
 
 EntryPoint:
-		tst.l	(z80_port_1_control).l		; test Port A Ctrl
+		tst.l	(Z80_port_1_control).l		; test Port A Ctrl
 		bne.s	PortA_OK
-		tst.w	(z80_expansion_control).l	; test Port C Ctrl
+		tst.w	(Z80_expansion_control).l	; test Port C Ctrl
 
 PortA_OK:
 		bne.s	PortC_OK
 		lea	InitValues(pc),a5
 		movem.w	(a5)+,d5-d7
 		movem.l	(a5)+,a0-a4
-		move.b	z80_version-z80_bus_request(a1),d0			; get hardware version
+		move.b	Z80_version-Z80_Bus_Request(a1),d0			; get hardware version
 		andi.b	#$F,d0
 		beq.s	SkipSecurity
-		move.l	#"SEGA",security_addr-z80_bus_request(a1)
+		move.l	#"SEGA",security_addr-Z80_Bus_Request(a1)
 
 SkipSecurity:
 		move.w	(a4),d0
