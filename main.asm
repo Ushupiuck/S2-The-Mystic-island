@@ -9425,6 +9425,24 @@ id_ObjFD:	equ ((ptr_ObjFD-Obj_Index)/4)+1
 id_ObjFE:	equ ((ptr_ObjFE-Obj_Index)/4)+1
 id_ObjFF:	equ ((ptr_ObjFF-Obj_Index)/4)+1
 ; ---------------------------------------------------------------------------
+; Subroutine translating object speed to update object position
+; This moves the object horizontally and vertically
+; but does not apply gravity to it
+; ---------------------------------------------------------------------------
+
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+
+ObjectMove:
+SpeedToPos:
+		movem.w	obVelX(a0),d0/d2				; load xy speed
+		asl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		asl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,obX(a0)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
+		add.l	d2,obY(a0)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
+		rts
+; End of function ObjectMove
+
+; ---------------------------------------------------------------------------
 ; Subroutine to make an object move and fall downward increasingly fast
 ; This moves the object horizontally and vertically
 ; and also applies gravity to its speed
@@ -9443,23 +9461,37 @@ ObjectMoveAndFall:
 		rts
 ; End of function ObjectMoveAndFall
 
-; ---------------------------------------------------------------------------
-; Subroutine translating object speed to update object position
-; This moves the object horizontally and vertically
-; but does not apply gravity to it
-; ---------------------------------------------------------------------------
+; =============== S U B R O U T I N E =======================================
 
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
-ObjectMove:
-SpeedToPos:
-		movem.w	obVelX(a0),d0/d2				; load xy speed
+ObjectMoveAndFall_A1:
+		movem.w	obVelX(a1),d0/d2			; load xy speed
 		asl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
 		asl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
-		add.l	d0,obX(a0)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
-		add.l	d2,obY(a0)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
+		add.l	d0,obX(a1)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
+		add.l	d2,obY(a1)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
+		addi.w	#$38,obVelY(a1)				; increase vertical speed (apply gravity)
 		rts
-; End of function ObjectMove
+; End of function ObjectMoveAndFall_NormGravity
+
+; =============== S U B R O U T I N E =======================================
+
+
+ObjectMoveAndFall_LightGravity:
+		moveq	#$20,d1
+
+ObjectMoveAndFall_CustomGravity:
+		move.w	obVelX(a0),d0
+		ext.l	d0
+		lsl.l	#8,d0
+		add.l	d0,obX(a0)
+		move.w	obVelY(a0),d0
+		add.w	d1,obVelY(a0)
+		ext.l	d0
+		lsl.l	#8,d0
+		add.l	d0,obY(a0)
+		rts
+; End of function ObjectMoveAndFall_LightGravity
 
 ; ---------------------------------------------------------------------------
 ; Subroutine to display a sprite/object, when a0 is the object RAM
@@ -23180,7 +23212,7 @@ LoadAnimatedBlocks:
 		move.w	AnimPatMaps(pc,d0.w),d0
 		lea	AnimPatMaps(pc,d0.w),a0
 		tst.w	(a0)
-		beq.s	locret_1AD1A
+		beq.s	.return
 		lea	(v_16x16).w,a1
 		adda.w	(a0)+,a1
 		move.w	(a0)+,d1
@@ -23189,7 +23221,7 @@ LoadLevelBlocks:
 		move.w	(a0)+,(a1)+
 		dbf	d1,LoadLevelBlocks
 
-locret_1AD1A:
+.return:
 		rts
 ; End of function LoadAnimatedBlocks
 
@@ -23199,7 +23231,7 @@ locret_1AD1A:
 ; CPZ's final level slot
 ; Map16Delta_Index:
 AnimPatMaps:
-		dc.w APM_EHZ-AnimPatMaps	; GHZ
+		dc.w APM_None-AnimPatMaps	; GHZ
 		dc.w APM_None-AnimPatMaps	; LZ
 		dc.w APM_CPZ-AnimPatMaps	; CPZ
 		dc.w APM_EHZ-AnimPatMaps	; EHZ
@@ -23213,9 +23245,9 @@ AnimPatMaps:
 		dc.w APM_None-AnimPatMaps	; 0B
 		dc.w APM_None-AnimPatMaps	; 0C
 		dc.w APM_None-AnimPatMaps	; 0D
-	;	dc.w APM_CPZ-AnimPatMaps	; 0D
-		dc.w APM_None-AnimPatMaps	; 0E
+	;	dc.w APM_None-AnimPatMaps	; 0E
 		dc.w APM_None-AnimPatMaps	; 0F
+		dc.w APM_None-AnimPatMaps	; 10
 
 begin_animpat macro {INTLABEL}
 __LABEL__ label *
@@ -23226,30 +23258,6 @@ __LABEL___Blocks:
     endm
 
 APM_EHZ:	begin_animpat
-		dc.w make_block_tile(ArtTile_Art_EHZMountains+$2,0,0,2,0),make_block_tile(ArtTile_Art_EHZMountains+$4,0,0,2,0)
-		dc.w make_block_tile(ArtTile_Art_EHZMountains+$3,0,0,2,0),make_block_tile(ArtTile_Art_EHZMountains+$5,0,0,2,0)
-
-		dc.w make_block_tile(ArtTile_Art_EHZMountains+$6,0,0,2,0),make_block_tile(ArtTile_Art_EHZMountains+$8,0,0,2,0)
-		dc.w make_block_tile(ArtTile_Art_EHZMountains+$7,0,0,2,0),make_block_tile(ArtTile_Art_EHZMountains+$9,0,0,2,0)
-
-		dc.w make_block_tile(ArtTile_Art_EHZMountains+$A,0,0,2,0),make_block_tile(ArtTile_Art_EHZMountains+$C,0,0,2,0)
-		dc.w make_block_tile(ArtTile_Art_EHZMountains+$B,0,0,2,0),make_block_tile(ArtTile_Art_EHZMountains+$D,0,0,2,0)
-
-		dc.w make_block_tile(ArtTile_Art_EHZMountains+$E,0,0,2,0),make_block_tile(ArtTile_Art_EHZMountains+$10,0,0,2,0)
-		dc.w make_block_tile(ArtTile_Art_EHZMountains+$F,0,0,2,0),make_block_tile(ArtTile_Art_EHZMountains+$11,0,0,2,0)
-
-		dc.w make_block_tile(ArtTile_Art_EHZMountains+$12,0,0,2,0),make_block_tile(ArtTile_Art_EHZMountains+$14,0,0,2,0)
-		dc.w make_block_tile(ArtTile_Art_EHZMountains+$13,0,0,2,0),make_block_tile(ArtTile_Art_EHZMountains+$15,0,0,2,0)
-
-		dc.w make_block_tile(ArtTile_Art_EHZMountains+$16,0,0,2,0),make_block_tile(ArtTile_Art_EHZMountains+$18,0,0,2,0)
-		dc.w make_block_tile(ArtTile_Art_EHZMountains+$17,0,0,2,0),make_block_tile(ArtTile_Art_EHZMountains+$19,0,0,2,0)
-
-		dc.w make_block_tile(ArtTile_Art_EHZMountains+$1A,0,0,3,0),make_block_tile(ArtTile_Art_EHZMountains+$1C,0,0,3,0)
-		dc.w make_block_tile(ArtTile_Art_EHZMountains+$1B,0,0,3,0),make_block_tile(ArtTile_Art_EHZMountains+$1D,0,0,3,0)
-
-		dc.w make_block_tile(ArtTile_Art_EHZMountains+$1E,0,0,3,0),make_block_tile(ArtTile_Art_EHZMountains+$20,0,0,3,0)
-		dc.w make_block_tile(ArtTile_Art_EHZMountains+$1F,0,0,3,0),make_block_tile(ArtTile_Art_EHZMountains+$21,0,0,3,0)
-
 		dc.w make_block_tile(ArtTile_Art_EHZPulseBall+$0,0,0,2,0),make_block_tile(ArtTile_Art_EHZPulseBall+$0,1,0,2,0)
 		dc.w make_block_tile(ArtTile_Art_EHZPulseBall+$1,0,0,2,0),make_block_tile(ArtTile_Art_EHZPulseBall+$1,1,0,2,0)
 
@@ -23271,10 +23279,6 @@ APM_EHZ:	begin_animpat
 		dc.w make_block_tile(ArtTile_Art_Flowers4+$0,0,0,3,1),make_block_tile(ArtTile_Art_Flowers4+$0,1,0,3,1)
 		dc.w make_block_tile(ArtTile_Art_Flowers4+$1,0,0,3,1),make_block_tile(ArtTile_Art_Flowers4+$1,1,0,3,1)
 APM_EHZ_End:
-
-APM_None:
-		dc.w 0
-APM_None_End:
 
 APM_CPZ:	begin_animpat
 		dc.w make_block_tile(ArtTile_ArtUnc_CPZAnimBack+$0,0,0,2,0),make_block_tile(ArtTile_ArtUnc_CPZAnimBack+$1,0,0,2,0)
@@ -23372,6 +23376,10 @@ APM_HPZ:	begin_animpat
 		dc.w make_block_tile(ArtTile_Art_HPZPulseOrb_3+$5,0,0,2,0),make_block_tile(ArtTile_Level+$0,0,0,0,0)
 		dc.w make_block_tile(ArtTile_Art_HPZPulseOrb_3+$7,0,0,2,0),make_block_tile(ArtTile_Level+$0,0,0,0,0)
 APM_HPZ_End:
+
+APM_None:
+		dc.w 0
+APM_None_End:
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -24076,7 +24084,7 @@ Debug_Init:	; Routine 0
 		move.b	(Current_Zone).w,d0
 
 .selectlist:
-		lea	(DebugList).l,a2
+		lea	DebugList(pc),a2
 		add.w	d0,d0
 		adda.w	(a2,d0.w),a2
 		move.w	(a2)+,d6
@@ -24097,7 +24105,7 @@ Debug_Main:	; Routine 2
 		move.b	(Current_Zone).w,d0
 
 .isntlevel:
-		lea	(DebugList).l,a2
+		lea	DebugList(pc),a2
 		add.w	d0,d0
 		adda.w	(a2,d0.w),a2
 		move.w	(a2)+,d6
@@ -24295,8 +24303,125 @@ Debug_ResetPlayerStats:
 ; End of function Debug_ResetPlayerStats
 
 
-; ===========================================================================
+; =============== S U B R O U T I N E =======================================
 
+
+AutoTunnel_GetPath:	; In Sonic 2, this is found at loc_27310
+		move.b	obSubtype(a0),d0
+		bpl.s	loc_297D6
+		andi.w	#$1F,d0			; If negative, then the path is reversed
+		add.w	d0,d0
+		add.w	d0,d0
+		lea	(AutoTunnel_Data).l,a2	; in S2, this was a word table. It's now longwords
+		movea.l	(a2,d0.w),a2	; Get address of movement data
+		move.w	(a2)+,d0
+		subq.w	#4,d0
+		move.w	d0,4(a4)
+		lea	(a2,d0.w),a2
+		move.w	(a2)+,d4
+		move.w	d4,obX(a1)
+		move.w	(a2)+,d5
+		move.w	d5,obY(a1)		; Set absolute position of player
+		subq.w	#8,a2
+		bra.s	loc_2980C
+; ---------------------------------------------------------------------------
+
+loc_297D6:
+		cmpi.b	#$10,d0
+		bne.s	loc_297E6
+		cmpi.w	#2,(Player_mode).w
+		bne.s	loc_297E6
+		moveq	#0,d0			; If playing as Tails, use path 0 when doing path $10
+
+loc_297E6:
+		andi.w	#$1F,d0
+		add.w	d0,d0
+		add.w	d0,d0
+		lea	(AutoTunnel_Data).l,a2
+		movea.l	(a2,d0.w),a2
+		move.w	(a2)+,4(a4)
+		subq.w	#4,4(a4)
+		move.w	(a2)+,d4
+		move.w	d4,obX(a1)
+		move.w	(a2)+,d5
+		move.w	d5,obY(a1)		; Set absolute position of player
+
+loc_2980C:
+		move.l	a2,6(a4)
+		move.w	(a2)+,d4
+		move.w	(a2)+,d5		; Get next position
+		move.w	#$1000,d2
+
+AutoTunnel_CalcSpeed:
+		moveq	#0,d0
+		move.w	d2,d3
+		move.w	d4,d0
+		sub.w	obX(a1),d0
+		bge.s	loc_29828
+		neg.w	d0
+		neg.w	d2			; Change X velocity depending on direction of destination
+
+loc_29828:
+		moveq	#0,d1
+		move.w	d5,d1
+		sub.w	$14(a1),d1
+		bge.s	loc_29836
+		neg.w	d1
+		neg.w	d3			; Change Y velocity depending on direction of destination
+
+loc_29836:
+		cmp.w	d0,d1
+		blo.s	loc_29868
+		moveq	#0,d1			; If X distance is less than Y distance
+		move.w	d5,d1
+		sub.w	obY(a1),d1
+		swap	d1
+		divs.w	d3,d1
+		moveq	#0,d0
+		move.w	d4,d0
+		sub.w	obX(a1),d0
+		beq.s	loc_29854
+		swap	d0
+		divs.w	d1,d0
+
+loc_29854:
+		move.w	d0,obVelX(a1)		; Calculate and set X velocity assuming a Y velocity of $10 pixels
+		move.w	d3,obVelY(a1)
+		tst.w	d1
+		bpl.s	loc_29862
+		neg.w	d1
+
+loc_29862:
+		move.w	d1,2(a4)		; The quotient of the distance/speed produces a proper timer used for movement
+		rts
+; ---------------------------------------------------------------------------
+
+loc_29868:
+		moveq	#0,d0			; If Y distance is less than X distance
+		move.w	d4,d0
+		sub.w	obX(a1),d0
+		swap	d0
+		divs.w	d2,d0
+		moveq	#0,d1
+		move.w	d5,d1
+		sub.w	obY(a1),d1
+		beq.s	loc_29882
+		swap	d1
+		divs.w	d0,d1
+
+loc_29882:
+		move.w	d1,obVelY(a1)	; Calculate and set Y velocity assuming a X velocity of $10 pixels
+		move.w	d2,obVelX(a1)
+		tst.w	d0
+		bpl.s	loc_29890
+		neg.w	d0
+
+loc_29890:
+		move.w	d0,2(a4)	; See above
+		rts
+; End of function AutoTunnel_GetPath
+
+; ---------------------------------------------------------------------------
 		include	"_inc/DebugList.asm"
 		include	"_inc/LevelHeaders.asm"
 		include	"_inc/Pattern Load Cues.asm"
@@ -25091,7 +25216,6 @@ Level_HTZ4:	binclude	"level/layout/HTZ_4.kosp"
 Level_Ending:	binclude	"level/layout/Ending.kosp"
 		even
 Level_Null:	dc.l	0
-
 ; --------------------------------------------------------------------------------------
 ; Object layouts
 ; --------------------------------------------------------------------------------------
@@ -25225,207 +25349,6 @@ ObjPos_SBZ1pf5:	binclude	"level/objects/S1/sbz1pf5.bin"
 ObjPos_SBZ1pf6:	binclude	"level/objects/S1/sbz1pf6.bin"
 		ObjectLayoutBoundary
 ; ---------------------------------------------------------------------------
-; Ring layouts; one entry per act, four entries per zone
-; ---------------------------------------------------------------------------
-RingPos_Index:
-		dc.w RingPos_GHZ1-RingPos_Index
-		dc.w RingPos_GHZ2-RingPos_Index
-		dc.w RingPos_GHZ3-RingPos_Index
-		dc.w RingPos_GHZ4-RingPos_Index
-
-		dc.w RingPos_LZ1-RingPos_Index
-		dc.w RingPos_LZ2-RingPos_Index
-		dc.w RingPos_LZ3-RingPos_Index
-		dc.w RingPos_LZ4-RingPos_Index
-
-		dc.w RingPos_CPZ1-RingPos_Index
-		dc.w RingPos_CPZ2-RingPos_Index
-		dc.w RingPos_CPZ3-RingPos_Index
-		dc.w RingPos_CPZ1-RingPos_Index
-
-		dc.w RingPos_EHZ1-RingPos_Index
-		dc.w RingPos_EHZ2-RingPos_Index
-		dc.w RingPos_EHZ3-RingPos_Index
-		dc.w RingPos_EHZ4-RingPos_Index
-
-		dc.w RingPos_HPZ1-RingPos_Index
-		dc.w RingPos_HPZ2-RingPos_Index
-		dc.w RingPos_HPZ3-RingPos_Index
-		dc.w RingPos_HPZ4-RingPos_Index
-
-		dc.w RingPos_HTZ1-RingPos_Index
-		dc.w RingPos_HTZ2-RingPos_Index
-		dc.w RingPos_HTZ3-RingPos_Index
-		dc.w RingPos_HTZ4-RingPos_Index
-
-RingPos_GHZ1:	binclude	"level/rings/GHZ_1.bin"
-		even
-RingPos_GHZ2:	binclude	"level/rings/GHZ_2.bin"
-		even
-RingPos_GHZ3:	binclude	"level/rings/GHZ_3.bin"
-		even
-RingPos_GHZ4:	binclude	"level/rings/GHZ_4.bin"
-		even
-RingPos_LZ1:	binclude	"level/rings/LZ_1.bin"
-		even
-RingPos_LZ2:	binclude	"level/rings/LZ_2.bin"
-		even
-RingPos_LZ3:	binclude	"level/rings/LZ_3.bin"
-		even
-RingPos_LZ4:	binclude	"level/rings/LZ_4.bin"
-		even
-RingPos_CPZ1:	binclude	"level/rings/CPZ_1.bin"
-		even
-RingPos_CPZ2:	binclude	"level/rings/CPZ_2.bin"
-		even
-RingPos_CPZ3:	binclude	"level/rings/CPZ_3.bin"
-		even
-RingPos_CPZ4:	binclude	"level/rings/CPZ_4.bin"
-		even
-RingPos_EHZ1:	binclude	"level/rings/EHZ_1.bin"
-		even
-RingPos_EHZ2:	binclude	"level/rings/EHZ_2.bin"
-		even
-RingPos_EHZ3:	binclude	"level/rings/EHZ_3.bin"
-		even
-RingPos_EHZ4:	binclude	"level/rings/EHZ_4.bin"
-		even
-RingPos_HPZ1:	binclude	"level/rings/HPZ_1.bin"
-		even
-RingPos_HPZ2:	binclude	"level/rings/HPZ_2.bin"
-		even
-RingPos_HPZ3:	binclude	"level/rings/HPZ_3.bin"
-		even
-RingPos_HPZ4:	binclude	"level/rings/HPZ_4.bin"
-		even
-RingPos_HTZ1:	binclude	"level/rings/HTZ_1.bin"
-		even
-RingPos_HTZ2:	binclude	"level/rings/HTZ_2.bin"
-		even
-RingPos_HTZ3:	binclude	"level/rings/HTZ_3.bin"
-		even
-RingPos_HTZ4:	binclude	"level/rings/HTZ_4.bin"
-		even
-; =============== S U B R O U T I N E =======================================
-
-
-AutoTunnel_GetPath:	; In Sonic 2, this is found at loc_27310
-		move.b	obSubtype(a0),d0
-		bpl.s	loc_297D6
-		andi.w	#$1F,d0			; If negative, then the path is reversed
-		add.w	d0,d0
-		add.w	d0,d0
-		lea	(AutoTunnel_Data).l,a2	; in S2, this was a word table. It's now longwords
-		movea.l	(a2,d0.w),a2	; Get address of movement data
-		move.w	(a2)+,d0
-		subq.w	#4,d0
-		move.w	d0,4(a4)
-		lea	(a2,d0.w),a2
-		move.w	(a2)+,d4
-		move.w	d4,obX(a1)
-		move.w	(a2)+,d5
-		move.w	d5,obY(a1)		; Set absolute position of player
-		subq.w	#8,a2
-		bra.s	loc_2980C
-; ---------------------------------------------------------------------------
-
-loc_297D6:
-		cmpi.b	#$10,d0
-		bne.s	loc_297E6
-		cmpi.w	#2,(Player_mode).w
-		bne.s	loc_297E6
-		moveq	#0,d0			; If playing as Tails, use path 0 when doing path $10
-
-loc_297E6:
-		andi.w	#$1F,d0
-		add.w	d0,d0
-		add.w	d0,d0
-		lea	(AutoTunnel_Data).l,a2
-		movea.l	(a2,d0.w),a2
-		move.w	(a2)+,4(a4)
-		subq.w	#4,4(a4)
-		move.w	(a2)+,d4
-		move.w	d4,obX(a1)
-		move.w	(a2)+,d5
-		move.w	d5,obY(a1)		; Set absolute position of player
-
-loc_2980C:
-		move.l	a2,6(a4)
-		move.w	(a2)+,d4
-		move.w	(a2)+,d5		; Get next position
-		move.w	#$1000,d2
-
-AutoTunnel_CalcSpeed:
-		moveq	#0,d0
-		move.w	d2,d3
-		move.w	d4,d0
-		sub.w	obX(a1),d0
-		bge.s	loc_29828
-		neg.w	d0
-		neg.w	d2			; Change X velocity depending on direction of destination
-
-loc_29828:
-		moveq	#0,d1
-		move.w	d5,d1
-		sub.w	$14(a1),d1
-		bge.s	loc_29836
-		neg.w	d1
-		neg.w	d3			; Change Y velocity depending on direction of destination
-
-loc_29836:
-		cmp.w	d0,d1
-		blo.s	loc_29868
-		moveq	#0,d1			; If X distance is less than Y distance
-		move.w	d5,d1
-		sub.w	obY(a1),d1
-		swap	d1
-		divs.w	d3,d1
-		moveq	#0,d0
-		move.w	d4,d0
-		sub.w	obX(a1),d0
-		beq.s	loc_29854
-		swap	d0
-		divs.w	d1,d0
-
-loc_29854:
-		move.w	d0,obVelX(a1)		; Calculate and set X velocity assuming a Y velocity of $10 pixels
-		move.w	d3,obVelY(a1)
-		tst.w	d1
-		bpl.s	loc_29862
-		neg.w	d1
-
-loc_29862:
-		move.w	d1,2(a4)		; The quotient of the distance/speed produces a proper timer used for movement
-		rts
-; ---------------------------------------------------------------------------
-
-loc_29868:
-		moveq	#0,d0			; If Y distance is less than X distance
-		move.w	d4,d0
-		sub.w	obX(a1),d0
-		swap	d0
-		divs.w	d2,d0
-		moveq	#0,d1
-		move.w	d5,d1
-		sub.w	obY(a1),d1
-		beq.s	loc_29882
-		swap	d1
-		divs.w	d0,d1
-
-loc_29882:
-		move.w	d1,obVelY(a1)	; Calculate and set Y velocity assuming a X velocity of $10 pixels
-		move.w	d2,obVelX(a1)
-		tst.w	d0
-		bpl.s	loc_29890
-		neg.w	d0
-
-loc_29890:
-		move.w	d0,2(a4)	; See above
-		rts
-; End of function AutoTunnel_GetPath
-
-; ---------------------------------------------------------------------------
-
 AutoTunnel_Data:
 		dc.l AutoTunnel_00
 		dc.l AutoTunnel_01_02
@@ -25955,6 +25878,88 @@ AutoTunnel_19:
 		dc.w  $3BC8,  $1F0
 SpriteTerminator:
 		ObjectLayoutBoundary
+; ---------------------------------------------------------------------------
+; Ring layouts; one entry per act, four entries per zone
+; ---------------------------------------------------------------------------
+RingPos_Index:
+		dc.w RingPos_GHZ1-RingPos_Index
+		dc.w RingPos_GHZ2-RingPos_Index
+		dc.w RingPos_GHZ3-RingPos_Index
+		dc.w RingPos_GHZ4-RingPos_Index
+
+		dc.w RingPos_LZ1-RingPos_Index
+		dc.w RingPos_LZ2-RingPos_Index
+		dc.w RingPos_LZ3-RingPos_Index
+		dc.w RingPos_LZ4-RingPos_Index
+
+		dc.w RingPos_CPZ1-RingPos_Index
+		dc.w RingPos_CPZ2-RingPos_Index
+		dc.w RingPos_CPZ3-RingPos_Index
+		dc.w RingPos_CPZ1-RingPos_Index
+
+		dc.w RingPos_EHZ1-RingPos_Index
+		dc.w RingPos_EHZ2-RingPos_Index
+		dc.w RingPos_EHZ3-RingPos_Index
+		dc.w RingPos_EHZ4-RingPos_Index
+
+		dc.w RingPos_HPZ1-RingPos_Index
+		dc.w RingPos_HPZ2-RingPos_Index
+		dc.w RingPos_HPZ3-RingPos_Index
+		dc.w RingPos_HPZ4-RingPos_Index
+
+		dc.w RingPos_HTZ1-RingPos_Index
+		dc.w RingPos_HTZ2-RingPos_Index
+		dc.w RingPos_HTZ3-RingPos_Index
+		dc.w RingPos_HTZ4-RingPos_Index
+
+RingPos_GHZ1:	binclude	"level/rings/GHZ_1.bin"
+		even
+RingPos_GHZ2:	binclude	"level/rings/GHZ_2.bin"
+		even
+RingPos_GHZ3:	binclude	"level/rings/GHZ_3.bin"
+		even
+RingPos_GHZ4:	binclude	"level/rings/GHZ_4.bin"
+		even
+RingPos_LZ1:	binclude	"level/rings/LZ_1.bin"
+		even
+RingPos_LZ2:	binclude	"level/rings/LZ_2.bin"
+		even
+RingPos_LZ3:	binclude	"level/rings/LZ_3.bin"
+		even
+RingPos_LZ4:	binclude	"level/rings/LZ_4.bin"
+		even
+RingPos_CPZ1:	binclude	"level/rings/CPZ_1.bin"
+		even
+RingPos_CPZ2:	binclude	"level/rings/CPZ_2.bin"
+		even
+RingPos_CPZ3:	binclude	"level/rings/CPZ_3.bin"
+		even
+RingPos_CPZ4:	binclude	"level/rings/CPZ_4.bin"
+		even
+RingPos_EHZ1:	binclude	"level/rings/EHZ_1.bin"
+		even
+RingPos_EHZ2:	binclude	"level/rings/EHZ_2.bin"
+		even
+RingPos_EHZ3:	binclude	"level/rings/EHZ_3.bin"
+		even
+RingPos_EHZ4:	binclude	"level/rings/EHZ_4.bin"
+		even
+RingPos_HPZ1:	binclude	"level/rings/HPZ_1.bin"
+		even
+RingPos_HPZ2:	binclude	"level/rings/HPZ_2.bin"
+		even
+RingPos_HPZ3:	binclude	"level/rings/HPZ_3.bin"
+		even
+RingPos_HPZ4:	binclude	"level/rings/HPZ_4.bin"
+		even
+RingPos_HTZ1:	binclude	"level/rings/HTZ_1.bin"
+		even
+RingPos_HTZ2:	binclude	"level/rings/HTZ_2.bin"
+		even
+RingPos_HTZ3:	binclude	"level/rings/HTZ_3.bin"
+		even
+RingPos_HTZ4:	binclude	"level/rings/HTZ_4.bin"
+		even
 	;	align	$84A28
 ; ---------------------------------------------------------------------------
 ; These subroutines are yet to be properly implemented
@@ -26059,42 +26064,6 @@ Find_OtherObject:
 ; End of function Find_OtherObject
 
 
-; =============== S U B R O U T I N E =======================================
-
-
-ObjectMoveAndFall_LightGravity:
-		moveq	#$20,d1
-
-ObjectMoveAndFall_CustomGravity:
-		move.w	obVelX(a0),d0
-		ext.l	d0
-		lsl.l	#8,d0
-		add.l	d0,obX(a0)
-		move.w	obVelY(a0),d0
-		add.w	d1,obVelY(a0)
-		ext.l	d0
-		lsl.l	#8,d0
-		add.l	d0,obY(a0)
-		rts
-; End of function ObjectMoveAndFall_LightGravity
-
-
-; =============== S U B R O U T I N E =======================================
-
-
-ObjectMoveAndFall_NormGravity:
-		moveq	#$38,d1
-		move.w	obVelX(a1),d0
-		ext.l	d0
-		lsl.l	#8,d0
-		add.l	d0,obX(a1)
-		move.w	obVelY(a1),d0
-		add.w	d1,obVelY(a1)
-		ext.l	d0
-		lsl.l	#8,d0
-		add.l	d0,obY(a1)
-		rts
-; End of function ObjectMoveAndFall_NormGravity
 ; ---------------------------------------------------------------------------
 ; DAC samples
 ; ---------------------------------------------------------------------------
