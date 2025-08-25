@@ -69,7 +69,7 @@ Ledge_WalkOff:	; Routine $A ; Misnomer now! See below.
 		move.b	obActWid(a0),d1
 		movea.l	collapsing_platform_slope_pointer(a0),a2	; This is now stored in it's own custom constant
 		move.w	obX(a0),d4
-		bsr.w	sub_F7DC
+		bsr.w	SlopedPlatform
 		bra.w	MarkObjGone
 ; End of function Ledge_WalkOff
 

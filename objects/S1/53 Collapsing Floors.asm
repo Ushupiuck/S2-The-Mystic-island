@@ -6,7 +6,8 @@ S1Obj_53:	; leftover object from Sonic 1
 		move.w	S1Obj_53_Index(pc,d0.w),d1
 		jmp	S1Obj_53_Index(pc,d1.w)
 ; ---------------------------------------------------------------------------
-S1Obj_53_Index:	dc.w loc_8D6A-S1Obj_53_Index
+S1Obj_53_Index:
+		dc.w loc_8D6A-S1Obj_53_Index
 		dc.w loc_8DB4-S1Obj_53_Index
 		dc.w loc_8DEA-S1Obj_53_Index
 ; ---------------------------------------------------------------------------
@@ -14,16 +15,16 @@ S1Obj_53_Index:	dc.w loc_8D6A-S1Obj_53_Index
 loc_8D6A:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_S1Obj53,obMap(a0)
-		move.w	#make_art_tile($2B8,2,0),obGfx(a0)
+		move.w	#make_art_tile($2B8,2,0),obGfx(a0)	; we default to marble zone
 		cmpi.b	#id_SLZ,(Current_Zone).w
 		bne.s	loc_8D8E
-		move.w	#make_art_tile($4E0,2,0),obGfx(a0)
+		move.w	#make_art_tile($4E0,2,0),obGfx(a0)	; unless we're in Star light
 		addq.b	#2,obFrame(a0)
 
 loc_8D8E:
 		cmpi.b	#id_SBZ,(Current_Zone).w
 		bne.s	loc_8D9C
-		move.w	#make_art_tile($3F5,2,0),obGfx(a0)
+		move.w	#make_art_tile($3F5,2,0),obGfx(a0)	; or scrap brain
 
 loc_8D9C:
 		ori.b	#4,obRender(a0)
@@ -51,7 +52,7 @@ sub_8DD6:
 		move.w	#$20,d1
 		move.w	#8,d3
 		move.w	obX(a0),d4
-		bsr.w	sub_F78A
+		bsr.w	PlatformObject
 		bra.w	MarkObjGone
 ; End of function sub_8DD6
 

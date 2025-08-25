@@ -8239,10 +8239,10 @@ Map_obj18_EHZ:	include	"mappings/sprite/18 - EHZ platforms mappings.asm"
 ; ---------------------------------------------------------------------------
 
 Ledge_Fragment:
-		lea	(byte_8EF2).l,a4
+		lea	byte_8EF2(pc),a4
 		cmpi.b	#id_HPZ,(Current_Zone).w
 		bne.s	+
-		lea	(byte_8F0B).l,a4
+		lea	byte_8F0B(pc),a4
 +		addq.b	#2,obFrame(a0)
 
 loc_8E70:
@@ -8903,7 +8903,7 @@ ptr_Obj10:		dc.l ObjNull
 ptr_Obj11:		dc.l Obj11	; Bridges in GHZ, EHZ and HPZ
 ptr_Obj12:		dc.l Obj12	; Emerald from Hidden Palace Zone
 ptr_Obj13:		dc.l Obj13	; Waterfall from Hidden Palace Zone
-ptr_Obj14:		dc.l Obj14	; Seesaw from Hill Top Zone
+ptr_Obj14:		dc.l ObjNull
 ptr_Obj15:		dc.l Obj15	; Swinging platforms in GHZ, CPZ and EHZ
 ptr_Obj16:		dc.l Obj16	; Diagonally moving lift from HTZ
 ptr_Obj17:		dc.l Obj17	; (S1) GHZ rotating log helix spikes
@@ -8981,7 +8981,7 @@ ptr_Obj5A:		dc.l ObjNull
 ptr_Obj5B:		dc.l ObjNull
 ptr_Obj5C:		dc.l ObjNull
 ptr_Obj5D:		dc.l ObjNull
-ptr_Obj5E:		dc.l ObjNull
+ptr_Obj5E:		dc.l Obj5E	; Seesaw from Hill Top Zone
 ptr_Obj5F:		dc.l ObjNull
 
 ptr_Obj60:		dc.l ObjNull
@@ -9431,16 +9431,49 @@ id_ObjFF:	equ ((ptr_ObjFF-Obj_Index)/4)+1
 ; ---------------------------------------------------------------------------
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+; SpeedToPos:
 
 ObjectMove:
-SpeedToPos:
-		movem.w	obVelX(a0),d0/d2				; load xy speed
+		movem.w	obVelX(a0),d0/d2			; load xy speed
 		asl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
 		asl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
 		add.l	d0,obX(a0)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
 		add.l	d2,obY(a0)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
 		rts
 ; End of function ObjectMove
+
+; =============== S U B R O U T I N E =======================================
+
+ObjectMove_Parent:
+		movem.w	obVelX(a1),d0/d2			; load xy speed
+		asl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		asl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,obX(a1)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+obX(a0)
+		add.l	d2,obY(a1)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+obY(a0)
+		rts
+; End of function ObjectMove_Parent
+
+; =============== S U B R O U T I N E =======================================
+
+ObjectMove_Reserved:
+		movem.w	obVelX(a0),d0/d2			; load xy speed
+		asl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		asl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,objoff_30(a0)			; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+obX(a0)
+		add.l	d2,objoff_34(a0)			; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+obY(a0)
+		rts
+; End of function ObjectMove_Reserved
+
+; =============== S U B	R O U T	I N E =======================================
+; BossMove:
+ObjectMove_Reserved2:
+		movem.w	obVelX(a0),d0/d2			; load xy speed
+		asl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		asl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,objoff_30(a0)			; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+obX(a0)
+		add.l	d2,objoff_38(a0)			; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+obY(a0)
+		rts
+; End of function ObjectMove_Reserved2
 
 ; ---------------------------------------------------------------------------
 ; Subroutine to make an object move and fall downward increasingly fast
@@ -9449,10 +9482,10 @@ SpeedToPos:
 ; ---------------------------------------------------------------------------
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+; ObjectFall:
 
-ObjectFall:
 ObjectMoveAndFall:
-		movem.w	obVelX(a0),d0/d2				; load xy speed
+		movem.w	obVelX(a0),d0/d2			; load xy speed
 		asl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
 		asl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
 		add.l	d0,obX(a0)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
@@ -9463,35 +9496,45 @@ ObjectMoveAndFall:
 
 ; =============== S U B R O U T I N E =======================================
 
-
-ObjectMoveAndFall_A1:
-		movem.w	obVelX(a1),d0/d2			; load xy speed
-		asl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
-		asl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
-		add.l	d0,obX(a1)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
-		add.l	d2,obY(a1)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
-		addi.w	#$38,obVelY(a1)				; increase vertical speed (apply gravity)
-		rts
-; End of function ObjectMoveAndFall_NormGravity
-
-; =============== S U B R O U T I N E =======================================
-
-
 ObjectMoveAndFall_LightGravity:
 		moveq	#$20,d1
 
 ObjectMoveAndFall_CustomGravity:
-		move.w	obVelX(a0),d0
-		ext.l	d0
-		lsl.l	#8,d0
-		add.l	d0,obX(a0)
-		move.w	obVelY(a0),d0
-		add.w	d1,obVelY(a0)
-		ext.l	d0
-		lsl.l	#8,d0
-		add.l	d0,obY(a0)
+		movem.w	obVelX(a0),d0/d2			; load xy speed
+		asl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		asl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,obX(a0)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+obX(a0)
+		add.l	d2,obY(a0)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+obY(a0)
+		add.w	d1,obVelY(a0)				; increase vertical speed (apply gravity)
 		rts
 ; End of function ObjectMoveAndFall_LightGravity
+
+; =============== S U B R O U T I N E =======================================
+
+ObjectMoveAndFall_Parent:
+		moveq	#$38,d1
+
+ObjectMoveAndFall_Parent_CustomGravity:
+		movem.w	obVelX(a1),d0/d2				; load xy speed
+		asl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		asl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,obX(a1)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+obX(a0)
+		add.l	d2,obY(a1)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+obY(a0)
+		add.w	d1,obVelY(a1)				; increase vertical speed (apply gravity)
+		rts
+; End of function ObjectMoveAndFall_Parent
+
+; =============== S U B R O U T I N E =======================================
+
+ObjectMoveAndFall_Reserved:
+		movem.w	obVelX(a0),d0/d2				; load xy speed
+		asl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		asl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,objoff_30(a0)			; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+obX(a0)
+		add.l	d2,objoff_34(a0)			; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+obY(a0)
+		addi.w	#$38,obVelY(a0)				; increase vertical speed (apply gravity)
+		rts
+; End of function ObjectMoveAndFall_Reserved
 
 ; ---------------------------------------------------------------------------
 ; Subroutine to display a sprite/object, when a0 is the object RAM
@@ -11489,7 +11532,7 @@ locret_F788:
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_F78A:
+PlatformObject:
 		lea	(v_player).w,a1
 		moveq	#3,d6
 		movem.l	d1-d4,-(sp)
@@ -11497,33 +11540,27 @@ sub_F78A:
 		movem.l	(sp)+,d1-d4
 		lea	(v_player2).w,a1
 		addq.b	#1,d6
-; End of function sub_F78A
-
-
-; =============== S U B	R O U T	I N E =======================================
-
 
 sub_F7A0:
 		btst	d6,obStatus(a0)
-		beq.w	loc_F89E
+		beq.w	PlatformObject_cont
 		move.w	d1,d2
 		add.w	d2,d2
 		btst	#1,obStatus(a1)
-		bne.s	loc_F7C4
+		bne.s	+
 		move.w	obX(a1),d0
 		sub.w	obX(a0),d0
 		add.w	d1,d0
-		bmi.s	loc_F7C4
+		bmi.s	+
 		cmp.w	d2,d0
 		blo.s	loc_F7D2
-
-loc_F7C4:
++
 		bclr	#3,obStatus(a1)
+		bset	#1,status(a1)
 		bclr	d6,obStatus(a0)
 		moveq	#0,d4
 		rts
 ; ---------------------------------------------------------------------------
-
 loc_F7D2:
 		move.w	d4,d2
 		bsr.w	MvSonicOnPtfm
@@ -11535,7 +11572,7 @@ loc_F7D2:
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_F7DC:
+SlopedPlatform:
 		lea	(v_player).w,a1
 		moveq	#3,d6
 		movem.l	d1-d4,-(sp)
@@ -11543,7 +11580,7 @@ sub_F7DC:
 		movem.l	(sp)+,d1-d4
 		lea	(v_player2).w,a1
 		addq.b	#1,d6
-; End of function sub_F7DC
+; End of function SlopedPlatform
 
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -11639,7 +11676,7 @@ sub_F880:
 		bra.s	loc_F8BC
 ; ---------------------------------------------------------------------------
 
-loc_F89E:
+PlatformObject_cont:
 		tst.w	obVelY(a1)
 		bmi.w	locret_F966
 		move.w	obX(a1),d0
@@ -17142,7 +17179,7 @@ loc_13A32:
 		move.b	d0,obAngle(a0)
 
 S1Obj64_Animate:
-		lea	(Ani_S1Obj64).l,a1
+		lea	Ani_S1Obj64(pc),a1
 		jsr	(AnimateSprite).l
 		cmpi.b	#6,obFrame(a0)
 		bne.s	S1Obj64_ChkWater
@@ -17205,7 +17242,7 @@ loc_13B1A:
 ; ---------------------------------------------------------------------------
 
 S1Obj64_Display:
-		lea	(Ani_S1Obj64).l,a1
+		lea	Ani_S1Obj64(pc),a1
 		jsr	(AnimateSprite).l
 		tst.b	obRender(a0)
 		bpl.s	loc_13B38
@@ -17240,7 +17277,7 @@ loc_13B6A:
 		bhs.s	loc_13B6A
 		move.b	d0,objoff_34(a0)
 		andi.w	#$C,d1
-		lea	(S1Obj64_BblTypes).l,a1
+		lea	S1Obj64_BblTypes(pc),a1
 		adda.w	d1,a1
 		move.l	a1,objoff_3C(a0)
 		subq.b	#1,objoff_32(a0)
@@ -17299,7 +17336,7 @@ loc_13C28:
 		clr.w	objoff_36(a0)
 
 loc_13C44:
-		lea	(Ani_S1Obj64).l,a1
+		lea	Ani_S1Obj64(pc),a1
 		jsr	(AnimateSprite).l
 
 loc_13C50:
@@ -17309,7 +17346,8 @@ loc_13C50:
 		blo.w	DisplaySprite
 		rts
 ; ---------------------------------------------------------------------------
-S1Obj64_BblTypes:dc.b	0,  1,	0,  0,	0,  0,	1,  0,	0
+S1Obj64_BblTypes:
+		dc.b	0,  1,	0,  0,	0,  0,	1,  0,	0
 		dc.b   0,  0,  1,  0,  1,  0,  0,  1,  0
 		even
 
@@ -17495,7 +17533,7 @@ loc_14242:
 		bchg	#0,obAnim(a0)
 
 loc_14248:
-		lea	(off_1428A).l,a1
+		lea	off_1428A(pc),a1
 		jsr	(AnimateSprite).l
 
 loc_14254:
@@ -17505,7 +17543,7 @@ loc_14254:
 		move.b	obActWid(a0),d1
 		moveq	#$11,d3
 		move.w	obX(a0),d4
-		bsr.w	sub_F78A
+		bsr.w	PlatformObject
 		bra.w	MarkObjGone
 ; ---------------------------------------------------------------------------
 
@@ -17622,7 +17660,7 @@ loc_143B2:
 		move.b	obActWid(a0),d1
 		moveq	#9,d3
 		move.w	obX(a0),d4
-		bsr.w	sub_F78A
+		bsr.w	PlatformObject
 		bra.w	MarkObjGone
 ; ---------------------------------------------------------------------------
 Map_Obj0C:	dc.w word_143C8-Map_Obj0C
@@ -17987,146 +18025,135 @@ Obj06_PlayerDeltaYArray:dc.b  $20, $20,	$20, $20, $20, $20, $20, $20, $20, $20,	
 		dc.b  $1F, $1F,	$20, $20, $20, $20, $20, $20, $20, $20,	$20, $20, $20, $20, $20, $20 ; 384
 		dc.b  $20, $20,	$20, $20, $20, $20, $20, $20, $20, $20,	$20, $20, $20, $20, $20, $20 ; 400
 		even
-;----------------------------------------------------
-; Object 14 - HTZ see-saw
-;----------------------------------------------------
+; ---------------------------------------------------------------------------
+; Object 5E - HTZ see-saw
+; ---------------------------------------------------------------------------
 
-Obj14:
+Obj5E:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	Obj14_Index(pc,d0.w),d1
-		jsr	Obj14_Index(pc,d1.w)
+		move.w	Obj5E_Index(pc,d0.w),d1
+		jsr	Obj5E_Index(pc,d1.w)
 		out_of_range.w	DeleteObject,objoff_30(a0)
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
-Obj14_Index:	dc.w loc_14CD2-Obj14_Index
-		dc.w loc_14D40-Obj14_Index
-		dc.w locret_14DF2-Obj14_Index
-		dc.w loc_14E3C-Obj14_Index
-		dc.w loc_14E9C-Obj14_Index
-		dc.w loc_14F30-Obj14_Index
+Obj5E_Index:	dc.w See_Main-Obj5E_Index
+		dc.w See_Slope-Obj5E_Index
+		dc.w locret_14E3A-Obj5E_Index
+		dc.w See_Spikeball-Obj5E_Index
+		dc.w See_MoveSpike-Obj5E_Index
+		dc.w See_SpikeFall-Obj5E_Index
 ; ---------------------------------------------------------------------------
 
-loc_14CD2:
+See_Main:
 		addq.b	#2,obRoutine(a0)
-		move.l	#Map_obj14,obMap(a0)
+		move.l	#Map_obj5E,obMap(a0)
 		move.w	#make_art_tile(ArtTile_HTZ_Seesaw,0,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#4,obPriority(a0)
 		move.b	#$30,obActWid(a0)
 		move.w	obX(a0),objoff_30(a0)
-		tst.b	obSubtype(a0)
-		bne.s	loc_14D2C
+		tst.b	obSubtype(a0)	; is object type 00 ?
+		bne.s	.noball		; if not, branch
+
 		bsr.w	FindNextFreeObj
-		bne.s	loc_14D2C
-		_move.b	#id_Obj14,obID(a1)
-		addq.b	#6,obRoutine(a1)
+		bne.s	.noball
+		_move.b	#id_Obj5E,obID(a1)	; load spikeball object
+		addq.b	#6,obRoutine(a1)	; use See_Spikeball routine
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.b	obStatus(a0),obStatus(a1)
 		move.l	a0,objoff_3C(a1)
 
-loc_14D2C:
-		btst	#0,obStatus(a0)
-		beq.s	loc_14D3A
-		move.b	#2,obFrame(a0)
+.noball:
+		btst	#0,obStatus(a0)	; is seesaw flipped?
+		beq.s	.noflip		; if not, branch
+		move.b	#2,obFrame(a0)	; use different frame
 
-loc_14D3A:
+.noflip:
 		move.b	obFrame(a0),objoff_3A(a0)
 
-loc_14D40:
+See_Slope:
 		move.b	objoff_3A(a0),d1
-		btst	#3,obStatus(a0)
+		btst	#3,obStatus(a0) ; p1_standing_bit
 		beq.s	loc_14D9A
 		moveq	#2,d1
 		lea	(v_player).w,a1
 		move.w	obX(a0),d0
 		sub.w	obX(a1),d0
-		bhs.s	loc_14D60
+		bhs.s	+
 		neg.w	d0
 		moveq	#0,d1
-
-loc_14D60:
++
 		cmpi.w	#8,d0
-		bhs.s	loc_14D68
+		bhs.s	+
 		moveq	#1,d1
-
-loc_14D68:
-		btst	#4,obStatus(a0)
-		beq.s	loc_14DBE
++
+		btst	#4,obStatus(a0) ; p2_standing_bit
+		beq.s	See_Slope2
 		moveq	#2,d2
 		lea	(v_player2).w,a1
 		move.w	obX(a0),d0
 		sub.w	obX(a1),d0
-		bhs.s	loc_14D84
+		bhs.s	+
 		neg.w	d0
 		moveq	#0,d2
-
-loc_14D84:
++
 		cmpi.w	#8,d0
-		bhs.s	loc_14D8C
+		bhs.s	+
 		moveq	#1,d2
-
-loc_14D8C:
++
 		add.w	d2,d1
 		cmpi.w	#3,d1
-		bne.s	loc_14D96
+		bne.s	+
 		addq.w	#1,d1
-
-loc_14D96:
++
 		lsr.w	#1,d1
-		bra.s	loc_14DBE
+		bra.s	See_Slope2
 ; ---------------------------------------------------------------------------
 
 loc_14D9A:
-		btst	#4,obStatus(a0)
-		beq.s	loc_14DBE
+		btst	#4,obStatus(a0) ; p2_standing_bit
+		beq.s	loc_21A38
 		moveq	#2,d1
 		lea	(v_player2).w,a1
 		move.w	obX(a0),d0
 		sub.w	obX(a1),d0
-		bhs.s	loc_14DB6
+		bhs.s	+
 		neg.w	d0
 		moveq	#0,d1
-
-loc_14DB6:
++
 		cmpi.w	#8,d0
-		bhs.s	loc_14DBE
+		bhs.s	See_Slope2
 		moveq	#1,d1
+		bra.s	See_Slope2
+; ===========================================================================
+loc_21A38:
+		move.w	(v_player+obVelY).w,d0
+		move.w	(v_player2+obVelY).w,d2
+		cmp.w	d0,d2
+		blt.s	+
+		move.w	d2,d0
++
+		move.w	d0,objoff_38(a0)
 
-loc_14DBE:
+
+See_Slope2:
 		bsr.w	sub_14E10
-		lea	(byte_14FFE).l,a2
+		lea	byte_14FFE(pc),a2
 		btst	#0,obFrame(a0)
-		beq.s	loc_14DD6
-		lea	(byte_1502F).l,a2
-
-loc_14DD6:
-		lea	(v_player).w,a1
-		move.w	obVelY(a1),objoff_38(a0)
+		beq.s	+
+		lea	byte_1502F(pc),a2
++
+;		lea	(v_player).w,a1
+;		move.w	obVelY(a1),objoff_38(a0)
 		move.w	obX(a0),-(sp)
 		moveq	#0,d1
 		move.b	obActWid(a0),d1
 		moveq	#8,d3
 		move.w	(sp)+,d4
-		bra.w	sub_F7DC
+		bra.w	SlopedPlatform
 ; ---------------------------------------------------------------------------
-
-locret_14DF2:
-		rts
-; ---------------------------------------------------------------------------
-		moveq	#2,d1
-		lea	(v_player).w,a1
-		move.w	obX(a0),d0
-		sub.w	obX(a1),d0
-		bhs.s	loc_14E08
-		neg.w	d0
-		moveq	#0,d1
-
-loc_14E08:
-		cmpi.w	#8,d0
-		bhs.s	sub_14E10
-		moveq	#1,d1
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -18153,9 +18180,9 @@ locret_14E3A:
 
 ; ---------------------------------------------------------------------------
 
-loc_14E3C:
+See_Spikeball:
 		addq.b	#2,obRoutine(a0)
-		move.l	#Map_obj14b,obMap(a0)
+		move.l	#Map_obj5Eb,obMap(a0)
 		move.w	#make_art_tile(ArtTile_HTZ_Seesaw,0,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#4,obPriority(a0)
@@ -18167,11 +18194,11 @@ loc_14E3C:
 		move.w	obY(a0),objoff_34(a0)
 		move.b	#1,obFrame(a0)
 		btst	#0,obStatus(a0)
-		beq.s	loc_14E9C
+		beq.s	See_MoveSpike
 		subi.w	#$50,obX(a0)
 		move.b	#2,objoff_3A(a0)
 
-loc_14E9C:
+See_MoveSpike:
 		movea.l	objoff_3C(a0),a1
 		moveq	#0,d0
 		move.b	objoff_3A(a0),d0
@@ -18202,11 +18229,11 @@ loc_14ED6:
 
 loc_14EEC:
 		addq.b	#2,obRoutine(a0)
-		bra.s	loc_14F30
+		bra.s	See_SpikeFall
 ; ---------------------------------------------------------------------------
 
 loc_14EF2:
-		lea	(word_14FF4).l,a2
+		lea	word_14FF4(pc),a2
 		moveq	#0,d0
 		move.b	obFrame(a1),d0
 		move.w	#$28,d2
@@ -18228,7 +18255,7 @@ loc_14F10:
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_14F30:
+See_SpikeFall:
 		tst.w	obVelY(a0)
 		bpl.s	loc_14F4E
 		jsr	(ObjectMoveAndFall).l
@@ -18245,7 +18272,7 @@ locret_14F4C:
 loc_14F4E:
 		jsr	(ObjectMoveAndFall).l
 		movea.l	objoff_3C(a0),a1
-		lea	(word_14FF4).l,a2
+		lea	word_14FF4(pc),a2
 		moveq	#0,d0
 		move.b	obFrame(a1),d0
 		move.w	obX(a0),d1
@@ -18324,11 +18351,11 @@ byte_1502F:	dc.b	5,   5,	  5,   5,   5,	 5,   5	; 0
 ; -------------------------------------------------------------------------------
 ; sprite mappings
 ; -------------------------------------------------------------------------------
-Map_obj14:	binclude	"mappings/sprite/obj14_a.bin"
+Map_obj5E:	binclude	"mappings/sprite/obj5E_a.bin"
 ; -------------------------------------------------------------------------------
 ; sprite mappings
 ; -------------------------------------------------------------------------------
-Map_obj14b:	binclude	"mappings/sprite/obj14_b.bin"
+Map_obj5Eb:	binclude	"mappings/sprite/obj5E_b.bin"
 		even
 ;--------------------------------------------------------------------------------
 ; Object 16 - the HTZ platform that goes down diagonally
@@ -18363,7 +18390,7 @@ Obj16_Main:
 		move.b	obActWid(a0),d1
 		move.w	#-$28,d3
 		move.w	(sp)+,d4
-		bsr.w	sub_F78A
+		bsr.w	PlatformObject
 		move.w	objoff_30(a0),d0
 		out_of_range2	DeleteObject
 		jmp	(DisplaySprite).l
@@ -18464,7 +18491,7 @@ Obj19_Main:
 		move.b	obActWid(a0),d1
 		move.w	#$10,d3
 		move.w	(sp)+,d4
-		bsr.w	sub_F78A
+		bsr.w	PlatformObject
 		out_of_range2	DeleteObject,objoff_30(a0)
 		jmp	(DisplaySprite).l
 
@@ -18692,9 +18719,8 @@ word_1565E:	dc.w 6
 		dc.w $F80D,    8,    4,	 $40		; 20
 		even
 ; ---------------------------------------------------------------------------
-;----------------------------------------------------
 ; Object 49 - EHZ waterfalls
-;----------------------------------------------------
+; ---------------------------------------------------------------------------
 
 Obj49:
 		moveq	#0,d0
@@ -18833,7 +18859,7 @@ Obj4D_Main:
 		move.b	ob2ndRout(a0),d0
 		move.w	Obj4D_SubIndex(pc,d0.w),d1
 		jsr	Obj4D_SubIndex(pc,d1.w)
-		lea	(Ani_Obj4D).l,a1
+		lea	Ani_Obj4D(pc),a1
 		jsr	(AnimateSprite).l
 		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
@@ -18996,7 +19022,7 @@ Obj52:
 ; ---------------------------------------------------------------------------
 Obj52_Index:	dc.w Obj52_Init-Obj52_Index
 		dc.w Obj52_Main-Obj52_Index
-		dc.w loc_15C48-Obj52_Index
+		dc.w Obj52_Leap-Obj52_Index
 ; ---------------------------------------------------------------------------
 
 Obj52_Init:
@@ -19043,7 +19069,7 @@ loc_15BE4:
 		move.w	objoff_3C(a0),objoff_3A(a0)
 
 loc_15C06:
-		lea	(Ani_Obj52).l,a1
+		lea	Ani_Obj52(pc),a1
 		jsr	(AnimateSprite).l
 		jsr	(ObjectMove).l
 		tst.w	objoff_3A(a0)
@@ -19058,9 +19084,9 @@ loc_15C06:
 +		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
 
-loc_15C48:
+Obj52_Leap:
 		move.w	#$390,(v_waterpos1).w
-		lea	(Ani_Obj52).l,a1
+		lea	Ani_Obj52(pc),a1
 		jsr	(AnimateSprite).l
 		move.w	objoff_3E(a0),d0
 		sub.w	d0,objoff_30(a0)
@@ -19208,7 +19234,7 @@ Obj4F_Main:
 		move.b	ob2ndRout(a0),d0
 		move.w	Obj4F_SubIndex(pc,d0.w),d1
 		jsr	Obj4F_SubIndex(pc,d1.w)
-		lea	(Ani_obj4F).l,a1
+		lea	Ani_obj4F(pc),a1
 		jsr	(AnimateSprite).l
 		out_of_range.s	loc_15E3E
 		jmp	(DisplaySprite).l
@@ -19332,7 +19358,7 @@ Obj50_Init:
 		bset	#6,obStatus(a0)
 
 loc_15FDA:
-		lea	(Ani_Obj50).l,a1
+		lea	Ani_Obj50(pc),a1
 		jsr	(AnimateSprite).l
 		move.w	#$39C,(v_waterpos1).w
 		moveq	#0,d0
@@ -19570,7 +19596,7 @@ loc_16208:
 Obj50_Routine08:
 		jsr	(ObjectMoveAndFall).l
 		bsr.w	sub_16228
-		lea	(Ani_Obj50).l,a1
+		lea	Ani_Obj50(pc),a1
 		jsr	(AnimateSprite).l
 		jmp	(MarkObjGone).l
 
@@ -19615,7 +19641,7 @@ locret_1628E:
 ; ---------------------------------------------------------------------------
 
 loc_16290:
-		lea	(Ani_Obj50).l,a1
+		lea	Ani_Obj50(pc),a1
 		jsr	(AnimateSprite).l
 		jmp	(DisplaySprite).l
 
@@ -19791,9 +19817,8 @@ word_164FA:	dc.w 5
 		dc.w  $805,  $24,  $12,$FFF8		; 16
 		even
 ; ---------------------------------------------------------------------------
-;----------------------------------------------------
 ; Object 51 - Aquis badnik from HPZ
-;----------------------------------------------------
+; ---------------------------------------------------------------------------
 
 Obj51:
 		moveq	#0,d0
@@ -20032,7 +20057,7 @@ Obj4B_Index:	dc.w Obj4B_Init-Obj4B_Index
 ; loc_167AA:
 Obj4B_Projectile:
 		jsr	(ObjectMove).l
-		lea	(Ani_obj4B).l,a1
+		lea	Ani_obj4B(pc),a1
 		jsr	(AnimateSprite).l
 		jmp	(MarkObjGone).l
 ; ===========================================================================
@@ -20051,7 +20076,7 @@ loc_167CE:
 		move.w	obY(a1),obY(a0)
 		move.b	obStatus(a1),obStatus(a0)
 		move.b	obRender(a1),obRender(a0)
-		lea	(Ani_obj4B).l,a1
+		lea	Ani_obj4B(pc),a1
 		jsr	(AnimateSprite).l
 		jmp	(MarkObjGone).l
 ; ===========================================================================
@@ -20099,7 +20124,7 @@ Obj4B_Main:
 		move.b	ob2ndRout(a0),d0
 		move.w	Obj4B_Main_Index(pc,d0.w),d1
 		jsr	Obj4B_Main_Index(pc,d1.w)
-		lea	(Ani_obj4B).l,a1
+		lea	Ani_obj4B(pc),a1
 		jsr	(AnimateSprite).l
 		jmp	(MarkObjGone).l
 ; ===========================================================================
@@ -20234,7 +20259,7 @@ Map_obj4B:	binclude	"mappings/sprite/obj4B.bin"
 		even
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Object 4A - Octus badnik
+; Object 4A - Octus badnik - TODO
 ; ---------------------------------------------------------------------------
 
 Obj4A:
@@ -20257,7 +20282,7 @@ loc_16AB6:
 
 loc_16AC0:
 		jsr	(ObjectMoveAndFall).l
-		lea	(Ani_Obj4A).l,a1
+		lea	Ani_Obj4A(pc),a1
 		jsr	(AnimateSprite).l
 		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
@@ -20299,7 +20324,7 @@ loc_16B44:
 		move.b	ob2ndRout(a0),d0
 		move.w	Obj4A_SubIndex(pc,d0.w),d1
 		jsr	Obj4A_SubIndex(pc,d1.w)
-		lea	(Ani_Obj4A).l,a1
+		lea	Ani_Obj4A(pc),a1
 		jsr	(AnimateSprite).l
 		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
@@ -20467,7 +20492,7 @@ loc_16DA2:
 		move.w	Obj4C_SubIndex(pc,d0.w),d1
 		jsr	Obj4C_SubIndex(pc,d1.w)
 		bsr.w	sub_16DC8
-		lea	(Ani_Obj4C).l,a1
+		lea	Ani_Obj4C(pc),a1
 		jsr	(AnimateSprite).l
 		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
@@ -20515,7 +20540,7 @@ loc_16E10:
 		bsr.w	sub_16EB0
 		bsr.w	sub_16E30
 		jsr	(ObjectMove).l
-		lea	(Ani_Obj4C).l,a1
+		lea	Ani_Obj4C(pc),a1
 		jsr	(AnimateSprite).l
 		jmp	(MarkObjGone).l
 
@@ -20814,7 +20839,7 @@ Obj4E_Main:
 		move.b	ob2ndRout(a0),d0
 		move.w	Obj4E_SubIndex(pc,d0.w),d1
 		jsr	Obj4E_SubIndex(pc,d1.w)
-		lea	(Ani_Obj4E).l,a1
+		lea	Ani_Obj4E(pc),a1
 		jsr	(AnimateSprite).l
 		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
@@ -21032,7 +21057,7 @@ Obj54_Move:
 		cmpi.w	#$C,d1
 		bge.s	Obj54_Display
 		add.w	d1,obY(a0)
-		lea	(Ani_Obj54).l,a1
+		lea	Ani_Obj54(pc),a1
 		jsr	(AnimateSprite).l
 		jmp	(MarkObjGone).l
 ; ===========================================================================
@@ -21041,7 +21066,7 @@ Obj54_Display:
 		addq.b	#2,obRoutine(a0)
 		move.w	#$14,objoff_30(a0)
 		st	objoff_34(a0)
-		lea	(Ani_Obj54).l,a1
+		lea	Ani_Obj54(pc),a1
 		jsr	(AnimateSprite).l
 		jmp	(MarkObjGone).l
 
@@ -21398,9 +21423,8 @@ loc_17AD4:
 ; End of function sub_17A8C
 
 ; ---------------------------------------------------------------------------
-;----------------------------------------------------
 ; Object 58 - sub object of the	EHZ boss
-;----------------------------------------------------
+; ---------------------------------------------------------------------------
 
 Obj58:
 		moveq	#0,d0
@@ -21863,24 +21887,42 @@ word_1818E:	dc.w 3
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Object 55 - EHZ boss
+; the bottom part of the vehicle with the ability to fly is the parent object
 ; ---------------------------------------------------------------------------
 
-Obj55:
+Obj55:		; TODO - Replace with it's Final counterpart
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	Obj55_Index(pc,d0.w),d1
 		jmp	Obj55_Index(pc,d1.w)
 ; ===========================================================================
-Obj55_Index:	dc.w Obj55_Init-Obj55_Index
-		dc.w loc_18302-Obj55_Index
-		dc.w loc_18340-Obj55_Index
-		dc.w loc_18372-Obj55_Index
-		dc.w loc_18410-Obj55_Index
+Obj55_Index:
+		dc.w Obj55_Init-Obj55_Index	; 0 - Init
+		dc.w loc_18302-Obj55_Index	; 2 - Flying vehicle, bottom = main object
+		dc.w loc_18340-Obj55_Index	; 4 - Propeller normal
+		dc.w loc_18372-Obj55_Index	; 6 - Vehicle on ground
+		dc.w loc_18410-Obj55_Index	; 8 - Wheels
+	;	dc.w loc_2F7F4-Obj55_Index	; A - Spike
+	;	dc.w loc_2F52A-Obj55_Index	; C - Propeller after defeat
+	;	dc.w loc_2F8DA-Obj55_Index	; E - Flying vehicle, top
 ; ===========================================================================
+
+; #7,status(ax) set via collision response routine (Touch_Enemy_Part2)
+; 	when after a hit collision_property(ax) = hitcount has reached zero
+; objoff_2A(ax) used as timer (countdown)
+; objoff_2C(ax) tertiary rountine counter
+; #0,objoff_2D(ax) set when Robotnik is on ground
+; #1,objoff_2D(ax) set when Robotnik is active (moving back & forth)
+; #2,objoff_2D(ax) set when Robotnik is flying off after being defeated
+;	#3,objoff_2D(ax) flag to separate spike from vehicle
+; objoff_2E(ax)	y_position of wheels
+;	objoff_34(ax) parent object
+; objoff_3C(ax)	timer after defeat
+
 ; loc_181E4:
 Obj55_Init:
-		move.l	#Map_Obj55,obMap(a0)
-		move.w	#make_art_tile($400,1,0),obGfx(a0)
+		move.l	#Map_Obj55,obMap(a0)	; main object
+		move.w	#make_art_tile($400,1,0),obGfx(a0) ; vehicle with ability to fly, bottom part
 		ori.b	#4,obRender(a0)
 		move.b	#$20,obActWid(a0)
 		move.b	#3,obPriority(a0)
@@ -22192,56 +22234,7 @@ Obj8A_Display:
 Map_obj8A:	binclude	"mappings/sprite/obj8A.bin"
 		even
 ; ===========================================================================
-		include "objects/S1/3D Boss - Green Hill (part 1).asm"
-
-; =============== S U B	R O U T	I N E =======================================
-
-
-BossDefeated:
-		move.b	(Vint_runcount+3).w,d0
-		andi.b	#7,d0
-		bne.s	locret_18EA0
-		jsr	(FindFreeObj).l
-		bne.s	locret_18EA0
-		_move.b	#id_Obj3F,obID(a1)
-		move.w	obX(a0),obX(a1)
-		move.w	obY(a0),obY(a1)
-		jsr	(RandomNumber).l
-		move.w	d0,d1
-		moveq	#0,d1
-		move.b	d0,d1
-		lsr.b	#2,d1
-		subi.w	#$20,d1
-		add.w	d1,obX(a1)
-		lsr.w	#8,d0
-		lsr.b	#3,d0
-		add.w	d0,obY(a1)
-
-locret_18EA0:
-		rts
-; End of function BossDefeated
-
-
-; =============== S U B	R O U T	I N E =======================================
-
-
-BossMove:
-		move.l	objoff_30(a0),d2
-		move.l	objoff_38(a0),d3
-		move.w	obVelX(a0),d0
-		ext.l	d0
-		asl.l	#8,d0
-		add.l	d0,d2
-		move.w	obVelY(a0),d0
-		ext.l	d0
-		asl.l	#8,d0
-		add.l	d0,d3
-		move.l	d2,objoff_30(a0)
-		move.l	d3,objoff_38(a0)
-		rts
-; End of function BossMove
-
-		include "objects/S1/3D Boss - Green Hill (part 2).asm"
+		include "objects/S1/3D Boss - Green Hill.asm"
 		include "objects/S1/48 Eggman's Swinging Ball.asm"
 ; ---------------------------------------------------------------------------
 Ani_Eggman:	dc.w byte_192E0-Ani_Eggman
@@ -22358,6 +22351,34 @@ word_194B4:	dc.w 2
 word_194C6:	dc.w 2
 		dc.w $1804,  $1C,   $E,	   0
 		dc.w	$B,  $1E,   $F,	 $10
+
+; =============== S U B	R O U T	I N E =======================================
+
+
+BossDefeated:
+		move.b	(Vint_runcount+3).w,d0
+		andi.b	#7,d0
+		bne.s	locret_18EA0
+		jsr	(FindFreeObj).l
+		bne.s	locret_18EA0
+		_move.b	#id_Obj3F,obID(a1)
+		move.w	obX(a0),obX(a1)
+		move.w	obY(a0),obY(a1)
+		jsr	(RandomNumber).l
+		move.w	d0,d1
+		moveq	#0,d1
+		move.b	d0,d1
+		lsr.b	#2,d1
+		subi.w	#$20,d1
+		add.w	d1,obX(a1)
+		lsr.w	#8,d0
+		lsr.b	#3,d0
+		add.w	d0,obY(a1)
+
+locret_18EA0:
+		rts
+; End of function BossDefeated
+
 ; ---------------------------------------------------------------------------
 ; Object 3E - prison capsule
 ;----------------------------------------------------------------------------
@@ -22434,7 +22455,7 @@ Obj3E_Switched:
 		move.w	#8,d3
 		move.w	obX(a0),d4
 		jsr	(SolidObject).l
-		lea	(Ani_Obj3E).l,a1
+		lea	Ani_Obj3E(pc),a1
 		jsr	(AnimateSprite).l
 		move.w	objoff_30(a0),obY(a0)
 		move.b	obStatus(a0),d0
@@ -22544,15 +22565,11 @@ Obj3E_EndAct:
 
 loc_19714:
 		cmp.b	(a1),d1
-		beq.s	locret_1972A
+		beq.s	locret_19708
 		adda.w	d2,a1
 		dbf	d0,loc_19714
 		jsr	(Load_EndOfAct).l
 		jmp	(DeleteObject).l
-; ---------------------------------------------------------------------------
-
-locret_1972A:
-		rts
 ; ---------------------------------------------------------------------------
 Ani_Obj3E:	dc.w byte_19730-Ani_Obj3E
 		dc.w byte_19730-Ani_Obj3E
@@ -23217,9 +23234,9 @@ LoadAnimatedBlocks:
 		adda.w	(a0)+,a1
 		move.w	(a0)+,d1
 ; loc_1AD14:
-LoadLevelBlocks:
+.LoadLevelBlocks:
 		move.w	(a0)+,(a1)+
-		dbf	d1,LoadLevelBlocks
+		dbf	d1,.LoadLevelBlocks
 
 .return:
 		rts

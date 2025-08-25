@@ -35,7 +35,7 @@ S1Obj4A_RmvSonic:
 		move.w	(v_player+obX).w,obX(a0)
 		move.w	(v_player+obY).w,obY(a0)
 		move.b	(v_player+obStatus).w,obStatus(a0)
-		lea	(Ani_S1obj4A).l,a1
+		lea	Ani_S1obj4A(pc),a1
 		jsr	(AnimateSprite).l
 		cmpi.b	#2,obFrame(a0)
 		bne.s	loc_1253E

@@ -99,14 +99,14 @@ loc_19206:
 		addq.w	#1,objoff_32(a0)
 
 GBall_Display:
-		bsr.w	sub_19236
+		bsr.s	sub_19236
 		move.b	obAngle(a0),d0
 		jsr	(Swing_Move2).l
 		jmp	(DisplaySprite).l
 ; ===========================================================================
 
 GBall_Display2:	; Routine 4
-		bsr.w	sub_19236
+		bsr.s	sub_19236
 		jsr	(Obj48_Move).l
 		jmp	(DisplaySprite).l
 
@@ -157,13 +157,11 @@ GBall_Vanish:
 		move.b	d0,obFrame(a0)
 		movea.l	objoff_34(a0),a1
 		tst.b	obStatus(a1)
-		bpl.s	GBall_Display4
+		bpl.s	GBall_Display3
 		move.b	#0,obColType(a0)
 		bsr.w	BossDefeated
 		subq.b	#1,objoff_3C(a0)
-		bpl.s	GBall_Display4
+		bpl.s	GBall_Display3
 		move.b	#id_Obj3F,obID(a0)
 		move.b	#0,obRoutine(a0)
-
-GBall_Display4:
 		jmp	(DisplaySprite).l

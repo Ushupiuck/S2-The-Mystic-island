@@ -7,7 +7,7 @@ Obj0D:
 		move.b	obRoutine(a0),d0
 		move.w	Obj0D_Index(pc,d0.w),d1
 		jsr	Obj0D_Index(pc,d1.w)
-		lea	(Ani_obj0D).l,a1
+		lea	Ani_obj0D(pc),a1
 		bsr.w	AnimateSprite
 		out_of_range.w	DeleteObject
 		bra.w	DisplaySprite
@@ -16,7 +16,7 @@ Obj0D_Index:	dc.w Obj0D_Init-Obj0D_Index
 		dc.w Obj0D_Main-Obj0D_Index
 		dc.w Obj0D_Spin-Obj0D_Index
 		dc.w Obj0D_EndLevel-Obj0D_Index
-		dc.w locret_F18A-Obj0D_Index
+		dc.w locret_F15E-Obj0D_Index
 ; ===========================================================================
 ; loc_EFD6:
 Obj0D_Init:
@@ -166,6 +166,3 @@ TimeBonuses:	dc.w  5000, 5000, 1000,	 500
 		dc.w	50,   50,   50,	  50
 		dc.w	0
 ; ===========================================================================
-
-locret_F18A:
-		rts

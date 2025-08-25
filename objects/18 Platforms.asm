@@ -69,7 +69,7 @@ loc_88C4:
 		move.b	obActWid(a0),d1
 		moveq	#8,d3
 		move.w	(sp)+,d4
-		bsr.w	sub_F78A
+		bsr.w	PlatformObject
 		bra.s	loc_88E8
 ; ---------------------------------------------------------------------------
 
