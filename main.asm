@@ -1357,6 +1357,7 @@ loc_2F7A2:
 ; can be called manually by loading the entry directly into a6
 ; input:	lea	(PLCKosM_[ENTRY_NAME]).l,a6
 ; ---------------------------------------------------------------------------
+
 QuickKosPLC:
 		move.w	(a6)+,d6
 		bmi.s	.exit		; if there's nothing, we bail!
@@ -2048,18 +2049,11 @@ loc_2C9C:
 
 		; add the low word of the RNG to the high word of the RNG
 		; and set the low word of d0 to be the result
-
 		move.w	d1,d0
-		swap	d1
-		add.w	d1,d0
+		abcd	d0,d1
+		addx.w	d1,d0
 		move.w	d0,d1
 		swap	d1
-
-;		move.w	d1,d0
-;		abcd	d0,d1
-;		addx.w	d1,d0
-;		move.w	d0,d1
-;		swap	d1
 		move.l	d1,(v_random).w
 		rts
 ; End of function RandomNumber
