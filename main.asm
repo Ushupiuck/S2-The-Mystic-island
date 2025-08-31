@@ -479,10 +479,7 @@ V_Int:
 		st.b	(f_hbla_pal).w
 		move.w	Vint_SwitchTbl(pc,d0.w),d0
 		jsr	Vint_SwitchTbl(pc,d0.w)
-; loc_B5C:
-Vint_SoundDriver:
-;		jsr	(UpdateMusic).l
-; loc_B62:
+
 VintRet:
 		bsr.w	RandomNumber
 		addq.l	#1,(Vint_runcount).w
@@ -517,12 +514,12 @@ Vint_Lag_Main:
 		cmpi.b	#GameModeID_Demo,(v_gamemode).w
 		beq.s	VInt_0_Level
 		cmpi.b	#GameModeID_Level,(v_gamemode).w
-		bne.w	Vint_SoundDriver
+		bne.w	VintRet
 ; ===========================================================================
 
 VInt_0_Level:
 		tst.b	(Water_flag).w
-		beq.w	Vint_SoundDriver
+		beq.w	VintRet
 		move.w	(vdp_control_port).l,d0
 		btst	#6,(v_megadrive).w
 		beq.s	+	; branch if it isn't a PAL system
@@ -544,8 +541,11 @@ VInt_0_FullyUnderwater:
 VInt_0_Water_Cont:
 		move.w	(v_hbla_hreg).w,(a5)
 	;	move.w	#$8200+(vram_fg>>10),(vdp_control_port).l
-		startZ80
-		bra.w	Vint_SoundDriver
+		startZ80	; rather than always branching to "VintRet",
+		bsr.w	RandomNumber	; we'll optimize by copying it here.
+		addq.l	#1,(Vint_runcount).w
+		movem.l	(sp)+,d0-a6
+		rte
 ; ===========================================================================
 ; loc_CAA: VintSub2:
 Vint_SEGA:
@@ -620,8 +620,11 @@ Vint_Level:
 		bhs.s	+
 		st.b	(f_doupdatesinhblank).w
 		addq.l	#4,sp
-		bsr.w	Set_Kos_Bookmark
-		bra.w	VintRet
+		bsr.w	Set_Kos_Bookmark	; rather than always branching to "VintRet",
+		bsr.w	RandomNumber	; we'll optimize by copying it here.
+		addq.l	#1,(Vint_runcount).w
+		movem.l	(sp)+,d0-a6
+		rte
 +
 		pea	(Set_Kos_Bookmark).w
 ; ---------------------------------------------------------------------------
@@ -761,7 +764,6 @@ H_Int:
 		clr.b	(f_doupdatesinhblank).w
 		movem.l	d0-a6,-(sp)
 		bsr.w	Do_Updates
-	;	jsr	(UpdateMusic).l
 		movem.l	(sp)+,d0-a6
 
 H_Int_done:
