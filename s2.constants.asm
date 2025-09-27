@@ -268,13 +268,6 @@ Z80_Clock:       equ Master_Clock/15
 FM_Sample_Rate:  equ M68000_Clock/(6*6*4)
 PSG_Sample_Rate: equ Z80_Clock/16
 
-; VDP addressses
-vdp_data_port:		equ $C00000
-vdp_control_port:	equ $C00004
-VDP_control_port = vdp_control_port
-vdp_counter:		equ $C00008
-
-psg_input:		equ $C00011
 ; Z80 addresses
 Z80_RAM:		equ $A00000			; start of Z80 RAM
 Z80_RAM_end:		equ $A02000			; end of non-reserved Z80 RAM
@@ -291,6 +284,14 @@ ym2612_a1:		equ $A04002
 ym2612_d1:		equ $A04003
 
 security_addr:		equ $A14000
+
+; VDP addressses
+vdp_data_port:		equ $C00000
+vdp_control_port:	equ $C00004
+VDP_control_port = vdp_control_port
+vdp_counter:		equ $C00008
+
+psg_input:		equ $C00011
 
 ; VRAM data
 vram_window:		equ $A000			; window namespace
