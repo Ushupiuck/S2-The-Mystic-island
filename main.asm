@@ -4530,7 +4530,7 @@ LevelLayoutLoad:
 		move.w	d0,d1
 		lsr.w	#5,d0
 		andi.w	#$FF,d1
-		lsl.w	#1,d1
+		add.w	d1,d1
 		add.w	d1,d0
 		lea	(Level_Index).l,a0
 		move.w	(a0,d0.w),d0
@@ -10550,7 +10550,7 @@ ObjectsManager_Init:
 		move.w	d0,d1
 		lsr.w	#5,d0
 		andi.w	#$FF,d1
-		lsl.w	#1,d1
+		add.w	d1,d1
 		add.w	d1,d0
 ;		lsl.b	#6,d0
 ;		lsr.w	#4,d0

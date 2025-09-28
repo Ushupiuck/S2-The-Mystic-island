@@ -9,7 +9,8 @@ Obj_S1Obj7C:
 		move.w	Obj_S1Obj7C_Index(pc,d0.w),d1
 		jmp	Obj_S1Obj7C_Index(pc,d1.w)
 ; ---------------------------------------------------------------------------
-Obj_S1Obj7C_Index:dc.w loc_AB50-Obj_S1Obj7C_Index
+Obj_S1Obj7C_Index:
+		dc.w loc_AB50-Obj_S1Obj7C_Index
 		dc.w loc_AB7E-Obj_S1Obj7C_Index
 		dc.w loc_ABE6-Obj_S1Obj7C_Index
 ; ---------------------------------------------------------------------------
