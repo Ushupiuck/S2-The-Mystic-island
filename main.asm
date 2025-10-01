@@ -242,9 +242,9 @@ PortC_OK:	; Fall through to GameProgram
 	;	bra.w	MainGameLoop
 	;	align	$36C
 MainGameLoop:
-		move.b	(v_gamemode).w,d0
-		andi.w	#$3C,d0	; limit Game Mode value to $3C max (change to a maximum of 7C to add more game modes)
-		movea.l	GameModeArray(pc,d0.w),a0; jump to apt location in ROM
+		moveq	#$3C,d0		; limit Game Mode value to $3C max (change to a maximum of 7C to add more game modes)
+		and.b	(v_gamemode).w,d0
+		movea.l	GameModeArray(pc,d0.w),a0	; jump to apt location in ROM
 		jsr	(a0)
 		bra.s	MainGameLoop	; loop indefinitely
 ; ===========================================================================
@@ -467,7 +467,7 @@ V_Int:
 		and.w	vdp_control_port-vdp_control_port(a5),d0
 		beq.s	.wait
 		move.l	#vdpComm(0,VSRAM,WRITE),vdp_control_port-vdp_control_port(a5)
-		move.l	(v_scrposy_vdp).w,(vdp_data_port).l	; send screen y-axis pos. to VSRAM
+		move.l	(v_scrposy_vdp).w,vdp_data_port-vdp_data_port(a6)	; send screen y-axis pos. to VSRAM
 		btst	#0,(vdp_control_port-vdp_control_port)+1(a5)
 		beq.s	+					; branch if it's not a PAL system
 		move.w	#$700,d0
@@ -481,7 +481,6 @@ V_Int:
 		jsr	Vint_SwitchTbl(pc,d0.w)
 
 VintRet:
-		bsr.w	RandomNumber
 		addq.l	#1,(Vint_runcount).w
 		movem.l	(sp)+,d0-a6
 		rte
@@ -507,14 +506,12 @@ Vint_Lag:
 Vint_Lag_Main:
 		addq.w	#1,(Lag_frame_count).w
 		; branch if a level or demo is running
-		cmpi.b	#GameModeID_TitleCard|GameModeID_Demo,(v_gamemode).w	; pre-level Demo Mode?
-		beq.s	VInt_0_Level
-		cmpi.b	#GameModeID_TitleCard|GameModeID_Level,(v_gamemode).w	; pre-level Zone play Mode?
-		beq.s	VInt_0_Level
-		cmpi.b	#GameModeID_Demo,(v_gamemode).w
-		beq.s	VInt_0_Level
-		cmpi.b	#GameModeID_Level,(v_gamemode).w
-		bne.w	VintRet
+		moveq	#$3C,d0		; limit Game Mode value to $3C max (change to a maximum of 7C to add more game modes)
+		and.b	(v_gamemode).w,d0
+		cmpi.b	#GameModeID_Demo,d0		; Demo play Mode?
+		beq.s	VInt_0_Level			; return if not
+		cmpi.b	#GameModeID_Level,d0		; Zone play Mode?
+		bne.w	VintRet				; return if not
 ; ===========================================================================
 
 VInt_0_Level:
@@ -542,8 +539,7 @@ VInt_0_Water_Cont:
 		move.w	(v_hbla_hreg).w,(a5)
 	;	move.w	#$8200+(vram_fg>>10),(vdp_control_port).l
 		startZ80	; rather than always branching to "VintRet",
-		bsr.w	RandomNumber	; we'll optimize by copying it here.
-		addq.l	#1,(Vint_runcount).w
+		addq.l	#1,(Vint_runcount).w	; we'll optimize by copying it here.
 		movem.l	(sp)+,d0-a6
 		rte
 ; ===========================================================================
@@ -621,8 +617,7 @@ Vint_Level:
 		st.b	(f_doupdatesinhblank).w
 		addq.l	#4,sp
 		bsr.w	Set_Kos_Bookmark	; rather than always branching to "VintRet",
-		bsr.w	RandomNumber	; we'll optimize by copying it here.
-		addq.l	#1,(Vint_runcount).w
+		addq.l	#1,(Vint_runcount).w	; we'll optimize by copying it here.
 		movem.l	(sp)+,d0-a6
 		rte
 +
@@ -2083,7 +2078,6 @@ CalcSine:
 ; ===========================================================================
 Sine_Data:	binclude "misc/sinewave.bin"
 		even
-
 ; ---------------------------------------------------------------------------
 ; Subroutine to calculate arctangent of y/x
 ; d1 = input x
@@ -3005,6 +2999,7 @@ Level_MainLoop:
 		bsr.w	Process_Kos_Queue
 		bsr.w	WaitForVint
 		addq.w	#1,(Timer_frames).w
+		bsr.w	RandomNumber
 		bsr.w	MoveSonicInDemo
 		bsr.w	WaterEffects
 		jsr	(ExecuteObjects).l
