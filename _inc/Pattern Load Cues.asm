@@ -356,103 +356,103 @@ plcid_EggmanSBZ2:	equ (ptr_PLC_EggmanSBZ2-ArtLoadCues)/2	; $1E
 plcid_FZBoss:		equ (ptr_PLC_FZBoss-ArtLoadCues)/2	; $1F
 ; ---------------------------------------------------------------------------
 KosMLoadCues:
-; Green Hill Zone
-ptr_KPLC_GHZ1:	dc.w PLCKosM_GHZ1-KosMLoadCues  ; $00 Act 1
-ptr_KPLC_GHZ2:	dc.w PLCKosM_GHZ2-KosMLoadCues  ; $00 Act 2
-ptr_KPLC_GHZ3:	dc.w PLCKosM_GHZ3-KosMLoadCues  ; $00 Act 3
-ptr_KPLC_GHZ4:	dc.w PLCKosM_GHZ4-KosMLoadCues  ; $00 Act 4
+; Level Slot $00: Twilight Hill Zone  [WILL BE REPLACED] [GHZ]
+ptr_KPLC_THZ1:	dc.w PLCKosM_THZ1-KosMLoadCues  ; $00 Act 1
+ptr_KPLC_THZ2:	dc.w PLCKosM_THZ2-KosMLoadCues  ; $00 Act 2
+ptr_KPLC_THZ3:	dc.w PLCKosM_THZ3-KosMLoadCues  ; $00 Act 3
+ptr_KPLC_THZ4:	dc.w PLCKosM_THZ4-KosMLoadCues  ; $00 Act 4
 ; ---------------------------------------------------------------------------
-; Rustic Ruins Zone  [WILL BE REPLACED] [LZ]
+; Level Slot $01: Rustic Ruins Zone  [WILL BE REPLACED] [LZ]
 ptr_KPLC_RRZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $01 Act 1
 ptr_KPLC_RRZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $01 Act 2
 ptr_KPLC_RRZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $01 Act 3
 ptr_KPLC_RRZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $01 Act 4
 ; ---------------------------------------------------------------------------
-; Ancient Factory Zone [TO BE REMIXED] [CPZ]
+; Level Slot $02: Ancient Factory Zone [TO BE REMIXED] [CPZ]
 ptr_KPLC_AFZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $02 Act 1
 ptr_KPLC_AFZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $02 Act 2
 ptr_KPLC_AFZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $02 Act 3
 ptr_KPLC_AFZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $02 Act 4
 ; ---------------------------------------------------------------------------
-; Emerald Hill Zone
+; Level Slot $03: Emerald Hill Zone
 ptr_KPLC_EHZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $03 Act 1
 ptr_KPLC_EHZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $03 Act 2
 ptr_KPLC_EHZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $03 Act 3
 ptr_KPLC_EHZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $03 Act 4
 ; ---------------------------------------------------------------------------
-; Crystal Valley Zone [WILL BE REPLACED] [HPZ]
-ptr_KPLC_CVZ1:	dc.w PLCKosM_HPZ1-KosMLoadCues  ; $04 Act 1
-ptr_KPLC_CVZ2:	dc.w PLCKosM_HPZ2-KosMLoadCues  ; $04 Act 2
-ptr_KPLC_CVZ3:	dc.w PLCKosM_HPZ3-KosMLoadCues  ; $04 Act 3
-ptr_KPLC_CVZ4:	dc.w PLCKosM_HPZ4-KosMLoadCues  ; $04 Act 4
+; Level Slot $04: Crystal Valley Zone [WILL BE REPLACED] [HPZ]
+ptr_KPLC_CVZ1:	dc.w PLCKosM_CVZ1-KosMLoadCues  ; $04 Act 1
+ptr_KPLC_CVZ2:	dc.w PLCKosM_CVZ2-KosMLoadCues  ; $04 Act 2
+ptr_KPLC_CVZ3:	dc.w PLCKosM_CVZ3-KosMLoadCues  ; $04 Act 3
+ptr_KPLC_CVZ4:	dc.w PLCKosM_CVZ4-KosMLoadCues  ; $04 Act 4
 ; ---------------------------------------------------------------------------
-; Egg Mountain Zone [TO BE REMIXED] [HTZ]
+; Level Slot $05: Egg Mountain Zone [TO BE REMIXED] [HTZ]
 ptr_KPLC_EMZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $05 Act 1
 ptr_KPLC_EMZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $05 Act 2
 ptr_KPLC_EMZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $05 Act 3
 ptr_KPLC_EMZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $05 Act 4
 ; ---------------------------------------------------------------------------
-; Metropolis Zone [TO BE ADDED]
+; Level Slot $06: Metropolis Zone [TO BE ADDED]
 ptr_KPLC_MZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $06 Act 1
 ptr_KPLC_MZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $06 Act 2
 ptr_KPLC_MZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $06 Act 3
 ptr_KPLC_MZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $06 Act 4
 ; ---------------------------------------------------------------------------
-; Scrap Madness Zone [TO BE ADDED]
+; Level Slot $07: Shocking Blizzard Zone [TO BE ADDED]
+ptr_KPLC_SBZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $08 Act 1
+ptr_KPLC_SBZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $08 Act 2
+ptr_KPLC_SBZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $08 Act 3
+ptr_KPLC_SBZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $08 Act 4
+; ---------------------------------------------------------------------------
+; Level Slot $08: Scrap Madness Zone [TO BE ADDED]
 ptr_KPLC_SMZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $07 Act 1
 ptr_KPLC_SMZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $07 Act 2
 ptr_KPLC_SMZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $07 Act 3
 ptr_KPLC_SMZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $07 Act 4
 ; ---------------------------------------------------------------------------
-; Shocking Blizzard Zone [TO BE ADDED]
-ptr_KPLC_DEZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $08 Act 1
-ptr_KPLC_DEZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $08 Act 2
-ptr_KPLC_DEZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $08 Act 3
-ptr_KPLC_DEZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $08 Act 4
+; Level Slot $09: Death Egg Zone [TO BE ADDED]
+ptr_KPLC_DEZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $09 Act 1
+ptr_KPLC_DEZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $09 Act 2
+ptr_KPLC_DEZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $09 Act 3
+ptr_KPLC_DEZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $09 Act 4
 ; ---------------------------------------------------------------------------
-; Death Egg Zone [TO BE ADDED]
-ptr_KPLC_SBZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $09 Act 1
-ptr_KPLC_SBZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $09 Act 2
-ptr_KPLC_SBZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $09 Act 3
-ptr_KPLC_SBZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $09 Act 4
-; ---------------------------------------------------------------------------
-; Level Slot $A
+; Level Slot $0A: Empty
 ptr_KPLC_L0AZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $0A Act 1
 ptr_KPLC_L0AZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $0A Act 2
 ptr_KPLC_L0AZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $0A Act 3
 ptr_KPLC_L0AZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $0A Act 4
 ; ---------------------------------------------------------------------------
-; Level Slot $B
+; Level Slot $0B: Empty
 ptr_KPLC_L0BZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $0B Act 1
 ptr_KPLC_L0BZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $0B Act 2
 ptr_KPLC_L0BZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $0B Act 3
 ptr_KPLC_L0BZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $0B Act 4
 ; ---------------------------------------------------------------------------
-; Level Slot $C
+; Level Slot $0C: Empty
 ptr_KPLC_L0CZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $0C Act 1
 ptr_KPLC_L0CZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $0C Act 2
 ptr_KPLC_L0CZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $0C Act 3
 ptr_KPLC_L0CZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $0C Act 4
 ; ---------------------------------------------------------------------------
-; Level Slot $D
+; Level Slot $0D: Empty
 ptr_KPLC_L0DZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $0D Act 1
 ptr_KPLC_L0DZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $0D Act 2
 ptr_KPLC_L0DZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $0D Act 3
 ptr_KPLC_L0DZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $0D Act 4
 ; ---------------------------------------------------------------------------
-; Level Slot $E
+; Level Slot $0E: Empty
 ptr_KPLC_L0EZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $0E Act 1
 ptr_KPLC_L0EZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $0E Act 2
 ptr_KPLC_L0EZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $0E Act 3
 ptr_KPLC_L0EZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $0E Act 4
 ; ---------------------------------------------------------------------------
-; Level Slot $F
+; Level Slot $0F: Empty
 ptr_KPLC_L0FZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $0F Act 1
 ptr_KPLC_L0FZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $0F Act 2
 ptr_KPLC_L0FZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $0F Act 3
 ptr_KPLC_L0FZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $0F Act 4
 ; ---------------------------------------------------------------------------
-; Level Slot $10
+; Level Slot $10: Empty
 ptr_KPLC_L10Z1:	dc.w PLCKosM_Null-KosMLoadCues ; $10 Act 1
 ptr_KPLC_L10Z2:	dc.w PLCKosM_Null-KosMLoadCues ; $10 Act 2
 ptr_KPLC_L10Z3:	dc.w PLCKosM_Null-KosMLoadCues ; $10 Act 3
@@ -490,46 +490,46 @@ plreqKosM macro toVRAMaddr,fromROMaddr
 
 ; ---------------------------------------------------------------------------
 ; KOSM PATTERN LOAD REQUEST LIST
-; Green Hill Zone
+; LV00 - Twilight Hill Zone
 ; ---------------------------------------------------------------------------
 ; Act 1
-PLCKosM_GHZ1:	plrKosMlistheader
+PLCKosM_THZ1:	plrKosMlistheader
 	plreqKosM	ArtTile_Buzz_Bomber, Kospm_Buzz
 	plreqKosM	ArtTile_Crabmeat, Kospm_Crabmeat
 	plreqKosM	ArtTile_Chopper, Kospm_Chopper
 	plreqKosM	ArtTile_Moto_Bug, Kospm_Motobug
 	plreqKosM	ArtTile_Newtron, Kospm_Newtron
-PLCKosM_GHZ1_End
+PLCKosM_THZ1_End
 ; ---------------------------------------------------------------------------
 ; Act 2
-PLCKosM_GHZ2:	plrKosMlistheader
+PLCKosM_THZ2:	plrKosMlistheader
 	plreqKosM	ArtTile_Buzz_Bomber, Kospm_Buzz
 	plreqKosM	ArtTile_Crabmeat, Kospm_Crabmeat
 	plreqKosM	ArtTile_Chopper, Kospm_Chopper
 	plreqKosM	ArtTile_Moto_Bug, Kospm_Motobug
 	plreqKosM	ArtTile_Newtron, Kospm_Newtron
-PLCKosM_GHZ2_End
+PLCKosM_THZ2_End
 ; ---------------------------------------------------------------------------
 ; Act 3
-PLCKosM_GHZ3:	plrKosMlistheader
+PLCKosM_THZ3:	plrKosMlistheader
 	plreqKosM	ArtTile_Buzz_Bomber, Kospm_Buzz
 	plreqKosM	ArtTile_Crabmeat, Kospm_Crabmeat
 	plreqKosM	ArtTile_Chopper, Kospm_Chopper
 	plreqKosM	ArtTile_Moto_Bug, Kospm_Motobug
 	plreqKosM	ArtTile_Newtron, Kospm_Newtron
-PLCKosM_GHZ3_End
+PLCKosM_THZ3_End
 ; ---------------------------------------------------------------------------
 ; Act 4
-PLCKosM_GHZ4:	plrKosMlistheader
+PLCKosM_THZ4:	plrKosMlistheader
 	plreqKosM	ArtTile_Buzz_Bomber, Kospm_Buzz
 	plreqKosM	ArtTile_Crabmeat, Kospm_Crabmeat
 	plreqKosM	ArtTile_Chopper, Kospm_Chopper
 	plreqKosM	ArtTile_Moto_Bug, Kospm_Motobug
 	plreqKosM	ArtTile_Newtron, Kospm_Newtron
-PLCKosM_GHZ4_End
+PLCKosM_THZ4_End
 ; ---------------------------------------------------------------------------
 ; KOSM PATTERN LOAD REQUEST LIST
-; LV01 Zone
+; LV01 - Rustic Ruins Zone
 ; ---------------------------------------------------------------------------
 ; Act 1
 
@@ -544,7 +544,7 @@ PLCKosM_GHZ4_End
 
 ; ---------------------------------------------------------------------------
 ; KOSM PATTERN LOAD REQUEST LIST
-; Chemical Plant Zone
+; LV02 - Ancient Factory Zone
 ; ---------------------------------------------------------------------------
 ; Act 1
 
@@ -559,7 +559,7 @@ PLCKosM_GHZ4_End
 
 ; ---------------------------------------------------------------------------
 ; KOSM PATTERN LOAD REQUEST LIST
-; Emerald Hill Zone
+; LV03 - Emerald Hill Zone
 ; ---------------------------------------------------------------------------
 ; Act 1
 
@@ -574,35 +574,35 @@ PLCKosM_GHZ4_End
 
 ; ---------------------------------------------------------------------------
 ; KOSM PATTERN LOAD REQUEST LIST
-; Hidden Palace Zone
+; LV04 - Crystal Valley Zone
 ; ---------------------------------------------------------------------------
 ; Act 1
-PLCKosM_HPZ1:	plrKosMlistheader
+PLCKosM_CVZ1:	plrKosMlistheader
 	plreqKosM	ArtTile_Redz, Kospm_Redz
 	plreqKosM	ArtTile_BBat, Kospm_BBat
-PLCKosM_HPZ1_End
+PLCKosM_CVZ1_End
 ; ---------------------------------------------------------------------------
 ; Act 2
-PLCKosM_HPZ2:	plrKosMlistheader
+PLCKosM_CVZ2:	plrKosMlistheader
 	plreqKosM	ArtTile_Redz, Kospm_Redz
 	plreqKosM	ArtTile_BBat, Kospm_BBat
-PLCKosM_HPZ2_End
+PLCKosM_CVZ2_End
 ; ---------------------------------------------------------------------------
 ; Act 3
-PLCKosM_HPZ3:	plrKosMlistheader
+PLCKosM_CVZ3:	plrKosMlistheader
 	plreqKosM	ArtTile_Redz, Kospm_Redz
 	plreqKosM	ArtTile_BBat, Kospm_BBat
-PLCKosM_HPZ3_End
+PLCKosM_CVZ3_End
 ; ---------------------------------------------------------------------------
 ; Act 4
-PLCKosM_HPZ4:	plrKosMlistheader
+PLCKosM_CVZ4:	plrKosMlistheader
 	plreqKosM	ArtTile_Redz, Kospm_Redz
 	plreqKosM	ArtTile_BBat, Kospm_BBat
-PLCKosM_HPZ4_End
+PLCKosM_CVZ4_End
 
 ; ---------------------------------------------------------------------------
 ; KOSM PATTERN LOAD REQUEST LIST
-; Hill top Zone
+; LV05 - Egg Mountain Zone
 ; ---------------------------------------------------------------------------
 ; Act 1
 
@@ -617,7 +617,7 @@ PLCKosM_HPZ4_End
 
 ; ---------------------------------------------------------------------------
 ; KOSM PATTERN LOAD REQUEST LIST
-; LV06 Zone
+; LV06 - Metropolis Zone
 ; ---------------------------------------------------------------------------
 ; Act 1
 
@@ -632,7 +632,7 @@ PLCKosM_HPZ4_End
 
 ; ---------------------------------------------------------------------------
 ; KOSM PATTERN LOAD REQUEST LIST
-; LV07 Zone
+; LV07 - Shocking Blizzard Zone
 ; ---------------------------------------------------------------------------
 ; Act 1
 
@@ -647,7 +647,7 @@ PLCKosM_HPZ4_End
 
 ; ---------------------------------------------------------------------------
 ; KOSM PATTERN LOAD REQUEST LIST
-; LV08 Zone
+; LV08 - Scrap Madness Zone
 ; ---------------------------------------------------------------------------
 ; Act 1
 
@@ -662,7 +662,7 @@ PLCKosM_HPZ4_End
 
 ; ---------------------------------------------------------------------------
 ; KOSM PATTERN LOAD REQUEST LIST
-; LV09 Zone
+; LV09 - Death Egg Zone
 ; ---------------------------------------------------------------------------
 ; Act 1
 
@@ -833,10 +833,10 @@ PLCKosM_Null_End
 ; ---------------------------------------------------------------------------
 ; Moduled Kosinski Pattern IDs
 ; ---------------------------------------------------------------------------
-mkplcid_GHZ1:		equ (ptr_KPLC_GHZ1-KosMLoadCues)/2		; 0
-mkplcid_GHZ2:		equ (ptr_KPLC_GHZ2-KosMLoadCues)/2		; 1
-mkplcid_GHZ3:		equ (ptr_KPLC_GHZ3-KosMLoadCues)/2		; 2
-mkplcid_GHZ4:		equ (ptr_KPLC_GHZ4-KosMLoadCues)/2		; 3
+mkplcid_THZ1:		equ (ptr_KPLC_THZ1-KosMLoadCues)/2		; 0
+mkplcid_THZ2:		equ (ptr_KPLC_THZ2-KosMLoadCues)/2		; 1
+mkplcid_THZ3:		equ (ptr_KPLC_THZ3-KosMLoadCues)/2		; 2
+mkplcid_THZ4:		equ (ptr_KPLC_THZ4-KosMLoadCues)/2		; 3
 
 mkplcid_RRZ1:		equ (ptr_KPLC_RRZ1-KosMLoadCues)/2		; 4
 mkplcid_RRZ2:		equ (ptr_KPLC_RRZ2-KosMLoadCues)/2		; 5
@@ -868,20 +868,21 @@ mkplcid_MZ2:		equ (ptr_KPLC_MZ2-KosMLoadCues)/2		; $19
 mkplcid_MZ3:		equ (ptr_KPLC_MZ3-KosMLoadCues)/2		; $1A
 mkplcid_MZ4:		equ (ptr_KPLC_MZ4-KosMLoadCues)/2		; $1B
 
-mkplcid_SMZ1:		equ (ptr_KPLC_SMZ1-KosMLoadCues)/2		; $1C
-mkplcid_SMZ2:		equ (ptr_KPLC_SMZ2-KosMLoadCues)/2		; $1D
-mkplcid_SMZ3:		equ (ptr_KPLC_SMZ3-KosMLoadCues)/2		; $1E
-mkplcid_SMZ4:		equ (ptr_KPLC_SMZ4-KosMLoadCues)/2		; $1F
+mkplcid_SBZ1:		equ (ptr_KPLC_SBZ1-KosMLoadCues)/2		; $1C
+mkplcid_SBZ2:		equ (ptr_KPLC_SBZ2-KosMLoadCues)/2		; $1D
+mkplcid_SBZ3:		equ (ptr_KPLC_SBZ3-KosMLoadCues)/2		; $1E
+mkplcid_SBZ4:		equ (ptr_KPLC_SBZ4-KosMLoadCues)/2		; $1F
 
-mkplcid_DEZ1:		equ (ptr_KPLC_DEZ1-KosMLoadCues)/2		; $20
-mkplcid_DEZ2:		equ (ptr_KPLC_DEZ2-KosMLoadCues)/2		; $21
-mkplcid_DEZ3:		equ (ptr_KPLC_DEZ3-KosMLoadCues)/2		; $22
-mkplcid_DEZ4:		equ (ptr_KPLC_DEZ4-KosMLoadCues)/2		; $23
+mkplcid_SMZ1:		equ (ptr_KPLC_SMZ1-KosMLoadCues)/2		; $20
+mkplcid_SMZ2:		equ (ptr_KPLC_SMZ2-KosMLoadCues)/2		; $21
+mkplcid_SMZ3:		equ (ptr_KPLC_SMZ3-KosMLoadCues)/2		; $22
+mkplcid_SMZ4:		equ (ptr_KPLC_SMZ4-KosMLoadCues)/2		; $23
 
-mkplcid_SBZ1:		equ (ptr_KPLC_SBZ1-KosMLoadCues)/2		; $24
-mkplcid_SBZ2:		equ (ptr_KPLC_SBZ2-KosMLoadCues)/2		; $25
-mkplcid_SBZ3:		equ (ptr_KPLC_SBZ3-KosMLoadCues)/2		; $26
-mkplcid_SBZ4:		equ (ptr_KPLC_SBZ4-KosMLoadCues)/2		; $27
+mkplcid_DEZ1:		equ (ptr_KPLC_DEZ1-KosMLoadCues)/2		; $24
+mkplcid_DEZ2:		equ (ptr_KPLC_DEZ2-KosMLoadCues)/2		; $25
+mkplcid_DEZ3:		equ (ptr_KPLC_DEZ3-KosMLoadCues)/2		; $26
+mkplcid_DEZ4:		equ (ptr_KPLC_DEZ4-KosMLoadCues)/2		; $27
+
 ; From here on out, unused level slots
 mkplcid_L0AZ1:		equ (ptr_KPLC_L0AZ1-KosMLoadCues)/2		; $28
 mkplcid_L0AZ2:		equ (ptr_KPLC_L0AZ2-KosMLoadCues)/2		; $29
