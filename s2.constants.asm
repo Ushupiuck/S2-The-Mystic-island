@@ -827,7 +827,8 @@ v_levelvariables_end:
 
 Sprite_Table:		ds.b	$280			; Sprite attribute table buffer
 Sprite_Table_end:
-v_palette_water_fading = Sprite_Table_end-palette_size	; duplicate underwater palette, used for transitions ($80 bytes)
+v_palette_water_fading: ds.b	palette_size		; duplicate underwater palette, used for transitions ($80 bytes)
+v_palette_water_fading_end:
 v_palette_water:	ds.b	palette_size		; main underwater palette
 v_palette_water_end:
 v_palette:		ds.b	palette_size		; main palette
@@ -939,10 +940,10 @@ v_title_ccount:		ds.w	1			; number of times C is pressed on title screen
 f_demo:			ds.w	1			; demo mode flag (0 = no; 1 = yes; $8001 = ending)
 v_demonum:		ds.w	1			; demo level number (not the same as the level number)
 v_creditsnum:		ds.w	1			; credits index number
- 
+
 v_objstate:		ds.b	$C0			; object state list
 v_objstate_end:
-			ds.b	$7C0
+			ds.b	$740
 v_end:
 	if * > 0	; don't declare more space than the RAM can contain!
 		fatal "The RAM variable declarations are too large by $\{*} bytes."

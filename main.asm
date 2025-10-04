@@ -750,7 +750,7 @@ H_Int:
 		move.w	#$8A00+224-1,4(a1)		; write %1101 %1111 to register 10 (interrupt every 224th line)
 		lea	(v_palette_water).w,a0		; load palette from RAM
 		move.l	#$C0000000,4(a1)		; set VDP to write to CRAM address $00
-	rept (v_palette_water_end-v_palette_water)/4
+	rept (palette_size)/4
 		move.l	(a0)+,(a1)			; move palette to CRAM (all 64 colors at once)
 	endm
 		movem.l	(sp)+,a0-a1
@@ -1730,8 +1730,6 @@ loc_2346:
 		bsr.s	Pal_AddColor2
 		dbf	d0,loc_2346
 		moveq	#0,d0
-
-loc_234E:
 		lea	(v_palette_water).w,a0
 		move.b	(v_pfade_start).w,d0
 		adda.w	d0,a0
@@ -1892,7 +1890,7 @@ PalLoad1:
 		adda.w	d0,a1
 		movea.l	(a1)+,a2
 		movea.w	(a1)+,a3
-		adda.w	#v_palette_fading-v_palette,a3
+		adda.w	#palette_size,a3
 		move.w	(a1)+,d7
 
 .loop:
@@ -1929,7 +1927,7 @@ PalLoad3_Water:
 		adda.w	d0,a1
 		movea.l	(a1)+,a2
 		movea.w	(a1)+,a3
-		suba.w	#v_palette-v_palette_water,a3
+		suba.l	#palette_size,a3
 		move.w	(a1)+,d7
 
 .loop:
@@ -1948,7 +1946,7 @@ PalLoad4_Water:
 		adda.w	d0,a1
 		movea.l	(a1)+,a2
 		movea.w	(a1)+,a3
-		suba.w	#v_palette-v_palette_water_fading,a3
+		suba.l	#palette_size*2,a3
 		move.w	(a1)+,d7
 
 .loop:
@@ -2174,15 +2172,15 @@ SegaScreen:
 		locVRAM ArtTile_Sega_Tiles*tile_size
 		lea	(Nem_SegaLogo).l,a0
 		bsr.w	NemDec
-		lea	(v_start).l,a1
+		lea	(Chunk_Table).l,a1
 		lea	(Eni_SegaLogo).l,a0
 		move.w	#make_art_tile(ArtTile_Sega_Tiles,0,0),d0
 		bsr.w	EniDec
-		copyTilemap	v_start,vram_bg+$510,24,8
-		copyTilemap	v_start+$180,vram_fg,40,28
+		copyTilemap	Chunk_Table,vram_bg+$510,24,8
+		copyTilemap	Chunk_Table+$180,vram_fg,40,28
 		tst.b	(v_megadrive).w			; is console Japanese?
 		bmi.s	.loadpal			; if not, branch
-		copyTilemap	v_start+$A40,vram_fg+$53A,3,2 ; hide "TM" with a white rectangle
+		copyTilemap	Chunk_Table+$A40,vram_fg+$53A,3,2 ; hide "TM" with a white rectangle
 
 .loadpal:
 		moveq	#palid_SegaBG,d0
@@ -2242,10 +2240,10 @@ TitleScreen:
 		clearRAM v_objspace,v_objend
 		clearRAM v_levelvariables,v_levelvariables_end
 		clearRAM Camera_RAM,Camera_RAM_End
-		clearRAM v_palette_fading,v_palette_fading+16*4*2
+		clearRAM v_palette_fading,v_palette_fading_end
 
 		lea	(Kosp_CreditTxt).l,a0 ; load alphabet ; To be changed (a1)
-		lea	(RAM_Start).l,a1
+		lea	(Chunk_Table).l,a1
 		move.w	#tiles_to_bytes(ArtTile_SonicTeamPresents),a2
 		bsr.w	KosPlusArt_To_VDP
 		moveq	#palid_SonicTails,d0
@@ -2256,7 +2254,7 @@ TitleScreen:
         	bsr.w	Pal_FadeFromBlack
 		disable_ints
 		lea	(Kosp_Title).l,a0
-		lea	(RAM_Start).l,a1
+		lea	(Chunk_Table).l,a1
 		move.w	#tiles_to_bytes(ArtTile_Title_Foreground),a2
 		bsr.w	KosPlusArt_To_VDP
 		locVRAM	ArtTile_Title_Sonic_And_Tails*tile_size
@@ -2278,19 +2276,19 @@ loc_32C4:
 		move.w	#0,(v_pcyc_time).w
 		bsr.w	Pal_FadeToBlack
 		disable_ints
-		lea	(v_start).l,a1
+		lea	(Chunk_Table).l,a1
 		lea	(Eni_TitleMap).l,a0
 		move.w	#make_art_tile(ArtTile_Title_Foreground,0,0),d0
 		bsr.w	EniDec
-		copyTilemap	v_start,vram_fg,40,28
-		lea	(v_start).l,a1
+		copyTilemap	Chunk_Table,vram_fg,40,28
+		lea	(Chunk_Table).l,a1
 		lea	(Kosp_TitleBg1).l,a0
 		bsr.w	KosPlusDec
-		copyTilemap	v_start,vram_bg,32,28
-		lea	(v_start).l,a1
+		copyTilemap	Chunk_Table,vram_bg,32,28
+		lea	(Chunk_Table).l,a1
 		lea	(Kosp_TitleBg2).l,a0
 		bsr.w	KosPlusDec
-		copyTilemap	v_start,vram_bg+64,32,28
+		copyTilemap	Chunk_Table,vram_bg+64,32,28
 		moveq	#palid_Title,d0
 		bsr.w	PalLoad1
 		move.b	#bgm_Title,d0
@@ -2723,7 +2721,7 @@ MusicList:	dc.b bgm_GHZ
 		dc.b bgm_SLZ
 		dc.b bgm_SYZ
 		dc.b bgm_SBZ
-		dc.b bgm_FZ
+		dc.b MusID_MTZ
 		even
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -2771,10 +2769,16 @@ Level_ClrRam:
 		clearRAM v_levelvariables,v_levelvariables_end
 		clearRAM v_misc_variables,v_misc_variables_end
 		clearRAM v_timingvariables,v_timingvariables_end
-		cmpi.b	#id_LZ,(Current_Zone).w	; are we on Labyrinth Zone?
-		seq.b	(Water_flag).w		; if so, set
-		cmpi.b	#id_HPZ,(Current_Zone).w	; are we on Hidden Palace Zone?
-		seq.b	(Water_flag).w		; if so, set
+		; TODO switch for a proper water table
+		moveq	#0,d0
+		moveq	#0,d1
+		move.b	(Current_Zone).w,d0
+		cmpi.b	#id_LZ,d0	; are we on Labyrinth Zone?
+		seq.b	d1		; if so, set
+		cmpi.b	#id_HPZ,d0	; are we on Hidden Palace Zone?
+		seq.b	d0		; if so, set
+		or.b	d1,d0		; it's either one or the other
+		move.b	d0,(Water_flag).w
 		bsr.w	ClearScreen
 		lea	(vdp_control_port).l,a6
 		move.w	#$8B00+3,(a6)	; set horizontal scrolling single pixel rows mode
@@ -2824,14 +2828,14 @@ Level_GetBgm:
 		bmi.s	Level_SkipTtlCard	; if so, branch
 		moveq	#0,d0
 		move.b	(Current_Zone).w,d0
-		cmpi.w	#(id_LZ<<8)+3,(Current_ZoneAndAct).w
-		bne.s	Level_BgmNotLZ4
-		moveq	#5,d0
+;		cmpi.w	#(id_LZ<<8)+3,(Current_ZoneAndAct).w
+;		bne.s	Level_BgmNotLZ4
+;		moveq	#5,d0
 
-Level_BgmNotLZ4:
-		cmpi.w	#(id_SBZ<<8)+2,(Current_ZoneAndAct).w
-		bne.s	Level_PlayBgm
-		moveq	#6,d0
+;Level_BgmNotLZ4:
+;		cmpi.w	#(id_SBZ<<8)+2,(Current_ZoneAndAct).w
+;		bne.s	Level_PlayBgm
+;		moveq	#6,d0
 
 Level_PlayBgm:
 		lea	MusicList(pc),a1	; load music playlist
@@ -11931,7 +11935,7 @@ MusicList_Sonic:dc.b bgm_GHZ
 		dc.b bgm_SLZ
 		dc.b bgm_SYZ
 		dc.b bgm_SBZ
-		dc.b bgm_FZ
+		dc.b MusID_MTZ
 		even
 
 ; ===========================================================================
@@ -11963,11 +11967,11 @@ Obj01_ChkInvin:						; Checks if invincibility has expired and (should) disables
 		blo.s	Obj01_RmvInvin
 		moveq	#0,d0
 		move.b	(Current_Zone).w,d0
-		cmpi.w	#(id_LZ<<8)+3,(Current_ZoneAndAct).w	; Leftover check from Sonic 1 for SBZ3
-		bne.s	loc_FB66
-		moveq	#5,d0
+;		cmpi.w	#(id_LZ<<8)+3,(Current_ZoneAndAct).w	; Leftover check from Sonic 1 for SBZ3
+;		bne.s	loc_FB66
+;		moveq	#5,d0
 
-loc_FB66:
+;loc_FB66:
 		lea	MusicList_Sonic(pc),a1
 		move.b	(a1,d0.w),d0
 		jsr	(PlaySound).l
@@ -13833,7 +13837,7 @@ MusicList_Tails:dc.b bgm_GHZ
 		dc.b bgm_SLZ
 		dc.b bgm_SYZ
 		dc.b bgm_SBZ
-		dc.b bgm_FZ
+		dc.b MusID_MTZ
 		even
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
@@ -13864,11 +13868,11 @@ Obj02_ChkInvinc:
 		blo.s	Obj02_RmvInvin
 		moveq	#0,d0
 		move.b	(Current_Zone).w,d0
-		cmpi.w	#(id_LZ<<8)+3,(Current_ZoneAndAct).w
-		bne.s	loc_10D54
-		moveq	#5,d0
+;		cmpi.w	#(id_LZ<<8)+3,(Current_ZoneAndAct).w
+;		bne.s	loc_10D54
+;		moveq	#5,d0
 
-loc_10D54:
+;loc_10D54:
 		lea	MusicList_Tails(pc),a1
 		move.b	(a1,d0.w),d0
 		jsr	(PlaySound).l
