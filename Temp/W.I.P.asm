@@ -59,7 +59,7 @@ Load_Tiles_As_You_Move_2:
 ; Used by Mushroom hill act 2; Specifically, the boss arena
 		movem.l d5/a4/a5,-(sp)
 		lea	(Screen_Pos_Buffer_Y).w,a6
-		jsr	Get_Deform_Draw_Position_Vertical(PC)
+		jsr	Get_Deform_Draw_Position_Vertical(pc)
 		lea	(Screen_Pos_Rounded_Y).w,a5
 		jsr	Draw_Tile_Row_2(pc)
 		movem.l (sp)+,d5/a4/a6
