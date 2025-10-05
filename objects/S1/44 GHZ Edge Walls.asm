@@ -10,6 +10,7 @@ Obj44:
 ; ===========================================================================
 Edge_Index:	dc.w Edge_Main-Edge_Index
 		dc.w Edge_Solid-Edge_Index
+		dc.w Edge_Display-Edge_Index
 ; ===========================================================================
 
 Edge_Main:	; Routine 0
@@ -19,19 +20,19 @@ Edge_Main:	; Routine 0
 		ori.b	#4,obRender(a0)
 		move.b	#8,obActWid(a0)
 		move.b	#6,obPriority(a0)
-		move.b	obSubtype(a0),obFrame(a0) ; copy object type number to frame number
-		bclr	#4,obFrame(a0)	; clear	4th bit	(deduct	$10)
-		beq.s	Edge_Solid	; make object solid if 4th bit = 0
-		out_of_range.w	DeleteObject
-		bra.w	DisplaySprite	; don't make it solid if 4th bit = 1
+		move.b	obSubtype(a0),obFrame(a0)	; copy object type number to frame number
+		bclr	#4,obFrame(a0)		; clear	4th bit	(deduct	$10)
+		beq.s	Edge_Solid		; make object solid if 4th bit = 0
+		addq.b	#2,obRoutine(a0)
+		bra.w	MarkObjGone		; don't make it solid if 4th bit = 1
 ; ===========================================================================
 
 Edge_Solid:	; Routine 2
-		move.w	#$13,d1
-		move.w	#$28,d2
+		moveq	#(16/2)+$B,d1		; width: $13
+		moveq	#80/2,d2		; height: $28
 		move.w	d2,d3
 		addq.w	#1,d3
 		move.w	obX(a0),d4
 		bsr.w	SolidObject
-		out_of_range.w	DeleteObject
-		bra.w	DisplaySprite
+Edge_Display:	; Routine 4
+		bra.w	MarkObjGone

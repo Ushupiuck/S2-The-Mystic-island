@@ -44,9 +44,9 @@ Vectors:
 		dc.l ErrorTrap,ErrorTrap,ErrorTrap,ErrorTrap
 		dc.l ErrorTrap,ErrorTrap,ErrorTrap,ErrorTrap
 		dc.b "SEGA MEGA DRIVE "			; Console name
-		dc.b "(C)SEGA 2025.JUL"			; Copyright holder and release year
-		dc.b "SONIC THE             HEDGEHOG 2                " ; Domestic name
-		dc.b "SONIC THE             HEDGEHOG 2                " ; International name
+		dc.b "(C)SEGA 2025.OCT"			; Copyright holder and release year
+		dc.b "SONIC THE HEDGEHOG: EGGMAN ATTACKS              " ; Domestic name
+		dc.b "SONIC THE HEDGEHOG: EGGMAN ATTACKS              " ; International name
 		dc.b "GM 00004049-01"			; Version (leftover from Sonic 1)
 Checksum:	dc.w $0000				; Checksum (patched later if incorrect)
 		dc.b "J               "			; I/O support
@@ -63,77 +63,77 @@ ROMEndLoc:	dc.l EndOfRom-1				; End address of ROM
 EndOfHeader:
 
 ; ---------------------------------------------------------------------------
-InitValues:	dc.w $8000
-		dc.w bytesToLcnt($10000)
-		dc.w $100
+InitValues:	dc.w	$8000
+		dc.w	bytesToLcnt($10000)
+		dc.w	$100
 
-		dc.l Z80_RAM				; Z80 RAM start	location
-		dc.l Z80_Bus_Request			; Z80 bus request
-		dc.l Z80_Reset				; Z80 reset
-		dc.l vdp_data_port			; VDP data port
-		dc.l vdp_control_port			; VDP control port
+		dc.l	Z80_RAM			; Z80 RAM start	location
+		dc.l	Z80_Bus_Request		; Z80 bus request
+		dc.l	Z80_Reset		; Z80 reset
+		dc.l	vdp_data_port		; VDP data port
+		dc.l	vdp_control_port	; VDP control port
 
-VDPInitValues:						; values for VDP registers
-		dc.b 4			; VDP $80 - 8-colour mode
-		dc.b $14		; VDP $81 - Megadrive mode, DMA enable
-		dc.b ($C000>>10)	; VDP $82 - foreground nametable address
-		dc.b ($F000>>10)	; VDP $83 - window nametable address
-		dc.b ($E000>>13)	; VDP $84 - background nametable address
-		dc.b ($D800>>9)		; VDP $85 - sprite table address
-		dc.b 0			; VDP $86 - unused
-		dc.b 0			; VDP $87 - background colour
-		dc.b 0			; VDP $88 - unused
-		dc.b 0			; VDP $89 - unused
-		dc.b 255		; VDP $8A - HBlank register
-		dc.b 0			; VDP $8B - full screen scroll
-		dc.b $81		; VDP $8C - 40 cell display
-		dc.b ($DC00>>10)	; VDP $8D - hscroll table address
-		dc.b 0			; VDP $8E - unused
-		dc.b 1			; VDP $8F - VDP increment
-		dc.b 1			; VDP $90 - 64 cell hscroll size
-		dc.b 0			; VDP $91 - window h position
-		dc.b 0			; VDP $92 - window v position
-		dc.w $FFFF		; VDP $93/94 - DMA length
-		dc.w 0			; VDP $95/96 - DMA source
-		dc.b $80		; VDP $97 - DMA fill VRAM
+VDPInitValues:		; values for VDP registers
+		dc.b	4			; VDP $80 - 8-colour mode
+		dc.b	$14			; VDP $81 - Megadrive mode, DMA enable
+		dc.b	($C000>>10)		; VDP $82 - foreground nametable address
+		dc.b	($F000>>10)		; VDP $83 - window nametable address
+		dc.b	($E000>>13)		; VDP $84 - background nametable address
+		dc.b	($D800>>9)		; VDP $85 - sprite table address
+		dc.b	0			; VDP $86 - unused
+		dc.b	0			; VDP $87 - background colour
+		dc.b	0			; VDP $88 - unused
+		dc.b	0			; VDP $89 - unused
+		dc.b	255			; VDP $8A - HBlank register
+		dc.b	0			; VDP $8B - full screen scroll
+		dc.b	$81			; VDP $8C - 40 cell display
+		dc.b	($DC00>>10)		; VDP $8D - hscroll table address
+		dc.b	0			; VDP $8E - unused
+		dc.b	1			; VDP $8F - VDP increment
+		dc.b	1			; VDP $90 - 64 cell hscroll size
+		dc.b	0			; VDP $91 - window h position
+		dc.b	0			; VDP $92 - window v position
+		dc.w	$FFFF			; VDP $93/94 - DMA length
+		dc.w	0			; VDP $95/96 - DMA source
+		dc.b	$80			; VDP $97 - DMA fill VRAM
 VDPInitValues_End:
 
-		dc.l $40000080		; value	for VRAM fill
+		dc.l	$40000080		; value	for VRAM fill
 
 Z80StartupCodeBegin:
-	; Z80 instructions (not the sound driver; that gets loaded later)
+		; Z80 instructions (not the sound driver; that gets loaded later)
     save
-    CPU Z80 ; start assembling Z80 code
-    phase 0 ; pretend we're at address 0
-	xor	a	; clear a to 0
-	ld	bc,((Z80_RAM_end-Z80_RAM)-zStartupCodeEndLoc)-1 ; prepare to loop this many times
+    CPU Z80			; start assembling Z80 code
+    phase 0			; pretend we're at address 0
+	xor	a		; clear a to 0
+	ld	bc,((Z80_RAM_end-Z80_RAM)-zStartupCodeEndLoc)-1	; prepare to loop this many times
 	ld	de,zStartupCodeEndLoc+1	; initial destination address
 	ld	hl,zStartupCodeEndLoc	; initial source address
-	ld	sp,hl	; set the address the stack starts at
-	ld	(hl),a	; set first byte of the stack to 0
-	ldir		; loop to fill the stack (entire remaining available Z80 RAM) with 0
-	pop	ix	; clear ix
-	pop	iy	; clear iy
-	ld	i,a	; clear i
-	ld	r,a	; clear r
-	pop	de	; clear de
-	pop	hl	; clear hl
-	pop	af	; clear af
-	ex	af,af'	; swap af with af'
-	exx		; swap bc/de/hl with their shadow registers too
-	pop	bc	; clear bc
-	pop	de	; clear de
-	pop	hl	; clear hl
-	pop	af	; clear af
-	ld	sp,hl	; clear sp
-	di		; clear iff1 (for interrupt handler)
-	im	1	; interrupt handling mode = 1
-	ld	(hl),0E9h ; replace the first instruction with a jump to itself
-	jp	(hl)	  ; jump to the first instruction (to stay there forever)
+	ld	sp,hl		; set the address the stack starts at
+	ld	(hl),a		; set first byte of the stack to 0
+	ldir			; loop to fill the stack (entire remaining available Z80 RAM) with 0
+	pop	ix		; clear ix
+	pop	iy		; clear iy
+	ld	i,a		; clear i
+	ld	r,a		; clear r
+	pop	de		; clear de
+	pop	hl		; clear hl
+	pop	af		; clear af
+	ex	af,af'		; swap af with af'
+	exx			; swap bc/de/hl with their shadow registers too
+	pop	bc		; clear bc
+	pop	de		; clear de
+	pop	hl		; clear hl
+	pop	af		; clear af
+	ld	sp,hl		; clear sp
+	di			; clear iff1 (for interrupt handler)
+	im	1		; interrupt handling mode = 1
+	ld	(hl),0E9h	; replace the first instruction with a jump to itself
+	jp	(hl)		; jump to the first instruction (to stay there forever)
 zStartupCodeEndLoc:
-    dephase ; stop pretending
+    dephase	; stop pretending
 	restore
-    padding off ; unfortunately our flags got reset so we have to set them again...
+    padding off	; unfortunately our flags got reset so we have to set them again...
 Z80StartupCodeEnd:
 
 		dc.w $8104				; VDP display mode
@@ -162,7 +162,7 @@ PortA_OK:
 		lea	InitValues(pc),a5
 		movem.w	(a5)+,d5-d7
 		movem.l	(a5)+,a0-a4
-		move.b	Z80_version-Z80_Bus_Request(a1),d0			; get hardware version
+		move.b	Z80_version-Z80_Bus_Request(a1),d0		; get hardware version
 		andi.b	#$F,d0
 		beq.s	SkipSecurity
 		move.l	#"SEGA",security_addr-Z80_Bus_Request(a1)
@@ -358,7 +358,7 @@ ShowErrorMsg:
 		lea	(vdp_data_port).l,a6
 		locVRAM	ArtTile_Error_Handler_Font*tile_size
 		lea	(Art_Text).l,a0
-		move.w	#bytesToWcnt(Art_Text_End-Art_Text-tile_size),d1 ; strangely, this does not load the final tile
+		move.w	#bytesToWcnt(Art_Text_End-Art_Text),d1
 
 .loadgfx:
 		move.w	(a0)+,(a6)
@@ -443,17 +443,15 @@ ShowErrDigit_NoOverflow:
 
 ErrorWaitForC:
 		bsr.w	ReadJoypads
-;		cmpi.b	#btnC,(v_jpadpress1).w ; is button C pressed? temporarily commented out
-		cmpi.b	#btnC,(v_jpadhold1).w ; is button C held?
-		bne.w	ErrorWaitForC	; if not, branch
+;		cmpi.b	#btnC,(v_jpadpress1).w	; is button C pressed? temporarily commented out
+		cmpi.b	#btnC,(v_jpadhold1).w	; is button C held?
+		bne.w	ErrorWaitForC		; if not, branch
 		rts
 ; End of function ErrorWaitForC
  else
 		align	$594
  endif
 ; ---------------------------------------------------------------------------
-Art_Text:	binclude	"art/uncompressed/Level select and Debug Mode text.bin"
-Art_Text_End:	even
 ; ===========================================================================
 ; vertical and horizontal interrupt handlers
 ; VERTICAL INTERRUPT HANDLER:
@@ -471,7 +469,7 @@ V_Int:
 		btst	#0,(vdp_control_port-vdp_control_port)+1(a5)
 		beq.s	+					; branch if it's not a PAL system
 		move.w	#$700,d0
--		dbf	d0,- ; wait here in a loop doing nothing for a while...
+-		dbf	d0,-	; wait here doing nothing for a while...
 +
 		moveq	#$7E,d0
 		and.b	(v_vbla_routine).w,d0
@@ -547,11 +545,9 @@ VInt_0_Water_Cont:
 Vint_SEGA:
 		bsr.w	Do_ControllerPal
 		tst.w	(v_demolength).w
-		beq.w	.end
+		beq.w	Set_Kos_Bookmark
 		subq.w	#1,(v_demolength).w
-
-.end:
-		rts
+		bra.w	Set_Kos_Bookmark
 ; ===========================================================================
 ; loc_CAE: VintSub14:
 Vint_PCM:
@@ -564,9 +560,8 @@ Vint_PCM:
 		startZ80
 +
 		tst.w	(v_demolength).w
-		beq.w	+
+		beq.w	Set_Kos_Bookmark
 		subq.w	#1,(v_demolength).w
-+
 		bra.w	Set_Kos_Bookmark
 ; ===========================================================================
 ; loc_CBC: VintSub4:
@@ -574,11 +569,9 @@ Vint_Title:
 		bsr.w	Do_ControllerPal
 		bsr.w	ProcessDPLC
 		tst.w	(v_demolength).w
-		beq.w	.end
+		beq.w	Set_Kos_Bookmark
 		subq.w	#1,(v_demolength).w
-
-.end:
-		rts
+		bra.w	Set_Kos_Bookmark
 ; ===========================================================================
 ; loc_CD8: VintSub10:
 Vint_Pause:
@@ -611,17 +604,18 @@ Vint_Level:
 		move.l	(v_bg3scrposy_vdp).w,(Camera_X_pos_copy).w
 		enable_ints
 		tst.b	(Water_flag).w
-		beq.s	+
+		beq.s	Do_Updates
 		cmpi.b	#92,(v_hbla_line).w
-		bhs.s	+
+		bhs.s	Do_Updates
 		st.b	(f_doupdatesinhblank).w
-		addq.l	#4,sp
-		bsr.w	Set_Kos_Bookmark	; rather than always branching to "VintRet",
-		addq.l	#1,(Vint_runcount).w	; we'll optimize by copying it here.
-		movem.l	(sp)+,d0-a6
-		rte
-+
-		pea	(Set_Kos_Bookmark).w
+	;	addq.l	#4,sp
+	;	bsr.w	Set_Kos_Bookmark	; rather than always branching to "VintRet",
+	;	addq.l	#1,(Vint_runcount).w	; we'll optimize by copying it here.
+	;	movem.l	(sp)+,d0-a6
+	;	rte
+		bra.w	Set_Kos_Bookmark
+;+
+	;	pea	(Set_Kos_Bookmark).w
 ; ---------------------------------------------------------------------------
 ; Subroutine to run a demo for an amount of time
 ; ---------------------------------------------------------------------------
@@ -636,11 +630,9 @@ Do_Updates:
 		clr.w	(Lag_frame_count).w
 		bsr.w	ProcessDPLC2
 		tst.w	(v_demolength).w
-		beq.w	.end
+		beq.w	Set_Kos_Bookmark
 		subq.w	#1,(v_demolength).w
-
-.end:
-		rts
+		bra.w	Set_Kos_Bookmark
 ; End of function Do_Updates
 
 ; ===========================================================================
@@ -656,10 +648,8 @@ Vint_S1SS:
 		startZ80
 		bsr.w	PalCycle_S1SS
 		tst.w	(v_demolength).w
-		beq.w	.end
+		beq.w	Set_Kos_Bookmark
 		subq.w	#1,(v_demolength).w
-
-.end:
 		bra.w	Set_Kos_Bookmark
 ; ===========================================================================
 ; loc_EA2: VintSubC: VintSub18:
@@ -707,10 +697,8 @@ Vint_SSResults:
 		startZ80
 		bsr.w	ProcessDPLC
 		tst.w	(v_demolength).w
-		beq.w	.end
+		beq.w	Set_Kos_Bookmark
 		subq.w	#1,(v_demolength).w
-
-.end:
 		bra.w	Set_Kos_Bookmark
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
@@ -798,7 +786,7 @@ ReadJoypads:
 		addq.w	#2,a1				; do the second joypad
 
 Joypad_Read:
-		move.b	#0,(a1)
+		sf	(a1)
 		nop
 		nop
 		move.b	(a1),d0
@@ -1023,6 +1011,7 @@ PlaySound:
 ; MM: this routine and the table below control what PCM sample plays on the Sega screen
 ChangeSegaSound:
 		stopZ80
+		waitZ80
 		move.b	d0,(Z80_RAM+zPCMSound).l
 		startZ80
 		rts
@@ -2185,9 +2174,10 @@ SegaScreen:
 		moveq	#palid_SegaBG,d0
 		bsr.w	PalLoad2
 		move.w	#-$A,(v_pcyc_num).w
-		move.w	#0,(v_pcyc_time).w
-		move.w	#0,(v_pal_buffer+$12).w
-		move.w	#0,(v_pal_buffer+$10).w
+		moveq	#0,d0
+		move.w	d0,(v_pcyc_time).w
+		move.w	d0,(v_pal_buffer+$12).w
+		move.w	d0,(v_pal_buffer+$10).w
 		move.w	(v_vdp_buffer1).w,d0
 		ori.b	#$40,d0
 		move.w	d0,(vdp_control_port).l
@@ -2268,11 +2258,13 @@ loc_32C4:
 		move.w	(a5)+,(a6)
 		dbf	d1,loc_32C4
 
-		move.b	#0,(v_lastlamp).w
-		move.w	#0,(Debug_placement_mode).w
-		move.w	#0,(f_demo).w
-		move.w	#id_GHZ<<8,(Current_ZoneAndAct).w
-		move.w	#0,(v_pcyc_time).w
+		moveq	#0,d0
+		move.b	d0,(v_lastlamp).w
+		move.w	d0,(Debug_placement_mode).w
+		move.w	d0,(f_demo).w
+		move.w	d0,(v_pcyc_time).w
+		move.b	d0,(Current_Timezone).w
+	;	move.w	#id_GHZ<<8,(Current_ZoneAndAct).w
 		bsr.w	Pal_FadeToBlack
 		disable_ints
 		lea	(Chunk_Table).l,a1
@@ -2293,7 +2285,6 @@ loc_32C4:
 		move.b	#bgm_Title,d0
 		bsr.w	PlaySound_Special
 	;	move.b	#0,(Debug_mode_flag).w
-		move.b	#0,(Current_Timezone).w
 		move.w	#376,(v_demolength).w
 		clearRAM v_sonicteam,v_sonicteam+object_size
 		_move.b	#id_Obj0E,(v_titlesonic).w
@@ -2304,11 +2295,12 @@ loc_32C4:
 		jsr	(BuildSprites).l
 		moveq	#plcid_Main,d0
 		bsr.w	NewPLC
-		move.w	#0,(v_title_dcount).w
-		move.w	#0,(v_title_ccount).w
 		move.w	#id_EHZ<<8,(Current_ZoneAndAct).w
+		moveq	#0,d0
+		move.w	d0,(v_title_dcount).w
+		move.w	d0,(v_title_ccount).w
+		move.w	d0,(Sonic_Pos_Record_Buf).w
 		move.w	#4,(Sonic_Pos_Record_Index).w
-		move.w	#0,(Sonic_Pos_Record_Buf).w
 		move.w	(v_vdp_buffer1).w,d0
 		ori.b	#$40,d0
 		move.w	d0,(vdp_control_port).l
@@ -2354,7 +2346,7 @@ Title_Cheat_NoMatch:
 		beq.s	Title_Cheat_CountC
 		cmpi.w	#9,(v_title_dcount).w
 		beq.s	Title_Cheat_CountC
-		move.w	#0,(v_title_dcount).w
+		clr.w	(v_title_dcount).w
 
 Title_Cheat_CountC:
 		move.b	(v_jpadpress1).w,d0
@@ -2517,7 +2509,7 @@ RunDemo:
 		addq.w	#1,(v_demonum).w	; add 1 to demo number
 		cmpi.w	#4,(v_demonum).w	; is this the 4th demo?
 		blo.s	loc_3694		; if so, continue
-		move.w	#0,(v_demonum).w	; reset the demo counter & loop
+		clr.w	(v_demonum).w	; reset the demo counter & loop
 
 loc_3694:
 		move.w	#1,(f_demo).w		; activate Demo mode
@@ -2697,7 +2689,7 @@ LevSel_LineLoop:
 		moveq	#0,d0
 		move.b	(a1)+,d0	; get character
 		bpl.s	LevSel_CharOk	; branch if valid
-		move.w	#0,(a6)		; use blank character
+		clr.w	(a6)		; use blank character
 		dbf	d2,LevSel_LineLoop
 		rts
 
@@ -2865,7 +2857,7 @@ Level_SkipTtlCard:
 		bsr.w	LevelSizeLoad
 		bsr.w	DeformBGLayer
 		bset	#2,(Scroll_flags).w
-		bsr.w	LoadZoneTiles
+		bsr.w	LoadZone
 	;	bsr.w	MainLevelLoadBlock
 		jsr	(LoadAnimatedBlocks).l
 		bsr.w	LoadTilesFromStart
@@ -2891,8 +2883,8 @@ Level_ChkDebug:
 		move.b	#1,(Debug_mode_flag).w
 
 Level_ChkWater:
-		move.w	#0,(v_jpadhold2).w
-		move.w	#0,(v_jpadhold1).w
+		clr.w	(v_jpadhold2).w
+		clr.w	(v_jpadhold1).w
 		tst.b	(Water_flag).w
 		beq.s	Level_LoadObj
 		_move.b	#id_Obj04,(v_watersurface1).w
@@ -2926,10 +2918,10 @@ Level_SkipClr:
 		move.b	#1,(f_ringcount).w
 		move.b	#1,(f_timecount).w
 		move.w	#4,(Sonic_Pos_Record_Index).w
-		move.w	#0,(Sonic_Pos_Record_Buf).w
-		move.w	#0,(Demo_button_index).w
-		lea	(Demo_Index).l,a1
 		moveq	#0,d0
+		move.w	d0,(Sonic_Pos_Record_Buf).w
+		move.w	d0,(Demo_button_index).w
+		lea	(Demo_Index).l,a1
 		move.b	(Current_Zone).w,d0
 		lsl.w	#2,d0
 		movea.l	(a1,d0.w),a1
@@ -4436,7 +4428,7 @@ Map_SS_Ring:	include	"mappings/sprite/S1/SS Rings.asm"
 ; Load only art assets (Kos modules) from LevelArtPointers
 ; Each entry = 8 bytes: PLC+Art1, PLC+Art2
 
-LoadZoneTiles:
+LoadZone:
 		moveq	#0,d0
 		move.w	(Current_ZoneAndAct).w,d0
 		ror.b	#2,d0
@@ -4473,13 +4465,7 @@ LoadZoneTiles:
 		move.w	(sp)+,d7
 		move.w	#$800,d3
 		dbf	d7,-
-;		rts
-; End of function LoadZoneTiles
-
-; =============== S U B R O U T I N E =======================================
-
-; LoadZoneBlockMaps
-MainLevelLoadBlock:
+		; And now the 2nd half; blocks, chunks & layout!
 		moveq	#0,d0
 		move.w	(Current_ZoneAndAct).w,d0
 		ror.b	#2,d0
@@ -4513,7 +4499,7 @@ MainLevelLoadBlock:
 		moveq	#0,d0
 		move.b	(a2),d0	; palette ID
 		bra.w	PalLoad1
-; End of function MainLevelLoadBlock
+; End of function LoadZone
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -4864,7 +4850,7 @@ BgScroll_S1Ending:
 		clr.l	(a2)+
 		clr.l	(a2)+
 		clr.l	(a2)+
-		rts
+-		rts
 
 ; ---------------------------------------------------------------------------
 ; Background layer deformation subroutines
@@ -4875,7 +4861,7 @@ BgScroll_S1Ending:
 ; DeformLayers:
 DeformBGLayer:
 		tst.b	(Deform_lock).w
-		bne.s	+
+		bne.s	-
 		clr.w	(Scroll_flags).w
 		clr.w	(Scroll_flags_BG).w
 		clr.w	(Scroll_flags_BG2).w
@@ -4904,7 +4890,6 @@ DeformBGLayer:
 		add.w	d0,d0
 		move.w	Deform_Index(pc,d0.w),d0
 		jmp	Deform_Index(pc,d0.w)
-+		rts
 ; End of function DeformBGLayer
 
 ; ---------------------------------------------------------------------------
@@ -5108,51 +5093,8 @@ loc_6026:
 		move.l	d0,(a1)+
 		dbf	d1,loc_6026
 		rts
+
 ; ---------------------------------------------------------------------------
-
-Deform_Unk:						; unknown BG deform
-		move.w	(Camera_X_pos_diff).w,d4
-		ext.l	d4
-		asl.l	#5,d4
-		move.w	(Camera_Y_pos_diff).w,d5
-		ext.l	d5
-		asl.l	#6,d5
-		bsr.w	ScrollBlock1
-		move.w	(Camera_X_pos_diff).w,d4
-		ext.l	d4
-		asl.l	#7,d4
-		moveq	#4,d6
-		bsr.w	ScrollBlock5
-		move.w	(Camera_BG_Y_pos).w,(v_bgscrposy_vdp).w
-		move.b	(Scroll_flags_BG).w,d0
-		or.b	(Scroll_flags_BG2).w,d0
-		move.b	d0,(Scroll_flags_BG3).w
-		clr.b	(Scroll_flags_BG).w
-		clr.b	(Scroll_flags_BG2).w
-		lea	(v_bgscroll_buffer).w,a1
-		move.w	(Camera_BG_X_pos).w,d0
-		neg.w	d0
-		moveq	#19-1,d1
-
-loc_6078:
-		move.w	d0,(a1)+
-		dbf	d1,loc_6078
-		move.w	(Camera_BG2_X_pos).w,d0
-		neg.w	d0
-		moveq	#29-1,d1
-
-loc_6088:
-		move.w	d0,(a1)+
-		dbf	d1,loc_6088
-		lea	(v_bgscroll_buffer).w,a2
-		move.w	(Camera_BG_Y_pos).w,d0
-		andi.w	#$3F0,d0
-		lsr.w	#3,d0
-		lea	(a2,d0.w),a2
-		bra.w	Bg_Scroll_X
-
-; =============== S U B	R O U T	I N E =======================================
-
 
 Deform_TitleScreen:
 		move.w	(Camera_BG_Y_pos).w,(v_bgscrposy_vdp).w
@@ -6038,7 +5980,7 @@ LoadTilesAsYouMove:
 		; The FG's update function is inlined here
 		tst.b	(Screen_redraw_flag).w
 		beq.s	loc_68E6
-		move.b	#0,(Screen_redraw_flag).w
+		clr.b	(Screen_redraw_flag).w
 		moveq	#-16,d4
 		moveq	#((224+16+16)/16)-1,d6
 
@@ -9429,8 +9371,8 @@ id_ObjFF:	equ ((ptr_ObjFF-Obj_Index)/4)+1
 
 ObjectMove:
 		movem.w	obVelX(a0),d0/d2			; load xy speed
-		asl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
-		asl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
 		add.l	d0,obX(a0)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
 		add.l	d2,obY(a0)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
 		rts
@@ -9440,8 +9382,8 @@ ObjectMove:
 
 ObjectMove_Parent:
 		movem.w	obVelX(a1),d0/d2			; load xy speed
-		asl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
-		asl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
 		add.l	d0,obX(a1)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+obX(a0)
 		add.l	d2,obY(a1)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+obY(a0)
 		rts
@@ -9451,8 +9393,8 @@ ObjectMove_Parent:
 
 ObjectMove_Reserved:
 		movem.w	obVelX(a0),d0/d2			; load xy speed
-		asl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
-		asl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
 		add.l	d0,objoff_30(a0)			; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+obX(a0)
 		add.l	d2,objoff_34(a0)			; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+obY(a0)
 		rts
@@ -9462,8 +9404,8 @@ ObjectMove_Reserved:
 ; BossMove:
 ObjectMove_Reserved2:
 		movem.w	obVelX(a0),d0/d2			; load xy speed
-		asl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
-		asl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
 		add.l	d0,objoff_30(a0)			; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+obX(a0)
 		add.l	d2,objoff_38(a0)			; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+obY(a0)
 		rts
@@ -9480,8 +9422,8 @@ ObjectMove_Reserved2:
 
 ObjectMoveAndFall:
 		movem.w	obVelX(a0),d0/d2			; load xy speed
-		asl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
-		asl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
 		add.l	d0,obX(a0)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
 		add.l	d2,obY(a0)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
 		addi.w	#$38,obVelY(a0)				; increase vertical speed (apply gravity)
@@ -9495,8 +9437,8 @@ ObjectMoveAndFall_LightGravity:
 
 ObjectMoveAndFall_CustomGravity:
 		movem.w	obVelX(a0),d0/d2			; load xy speed
-		asl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
-		asl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
 		add.l	d0,obX(a0)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+obX(a0)
 		add.l	d2,obY(a0)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+obY(a0)
 		add.w	d1,obVelY(a0)				; increase vertical speed (apply gravity)
@@ -9510,8 +9452,8 @@ ObjectMoveAndFall_Parent:
 
 ObjectMoveAndFall_Parent_CustomGravity:
 		movem.w	obVelX(a1),d0/d2				; load xy speed
-		asl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
-		asl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
 		add.l	d0,obX(a1)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+obX(a0)
 		add.l	d2,obY(a1)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+obY(a0)
 		add.w	d1,obVelY(a1)				; increase vertical speed (apply gravity)
@@ -9522,8 +9464,8 @@ ObjectMoveAndFall_Parent_CustomGravity:
 
 ObjectMoveAndFall_Reserved:
 		movem.w	obVelX(a0),d0/d2				; load xy speed
-		asl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
-		asl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
 		add.l	d0,objoff_30(a0)			; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+obX(a0)
 		add.l	d2,objoff_34(a0)			; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+obY(a0)
 		addi.w	#$38,obVelY(a0)				; increase vertical speed (apply gravity)
@@ -10631,7 +10573,7 @@ ObjectsManager_Main:
 		move.w	(Camera_RAM).w,d6
 		andi.w	#-$80,d6
 		cmp.w	(Camera_X_pos_last).w,d6
-		beq.w	locret_DDDE
+		beq.s	loc_DD94.return
 		bge.s	loc_DD9A
 		move.w	d6,(Camera_X_pos_last).w
 		movea.l	(Obj_load_addr_left).w,a0
@@ -10681,7 +10623,7 @@ loc_DD90:
 
 loc_DD94:
 		move.l	a0,(Obj_load_addr_right).w
-		rts
+.return:	rts
 ; ===========================================================================
 
 loc_DD9A:
@@ -10721,8 +10663,6 @@ loc_DDD6:
 
 loc_DDDA:
 		move.l	a0,(Obj_load_addr_left).w
-
-locret_DDDE:
 		rts
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -10740,7 +10680,7 @@ sub_E0D2:
 
 loc_E0E6:
 		bsr.w	FindFreeObj
-		bne.s	locret_E120
+		bne.s	FindFreeObj.return
 		move.w	(a0)+,obX(a1)
 		move.w	(a0)+,d0
 		move.w	d0,d1
@@ -10759,8 +10699,6 @@ loc_E116:
 		_move.b	d0,obID(a1)
 		move.b	(a0)+,obSubtype(a1)
 		moveq	#0,d0
-
-locret_E120:
 		rts
 ; End of function sub_E0D2
 
@@ -10778,13 +10716,13 @@ FindFreeObj:
 		lea	(v_lvlobjspace).w,a1		; a1=object
 		move.w	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d0	; search to end of table
 
-loc_E18A:
+.loop:
 		tst.b	obID(a1)			; is object RAM slot empty?
-		beq.s	locret_E196			; if yes, branch
+		beq.s	.return				; if yes, branch
 		lea	object_size(a1),a1		; load obj address ; goto next object RAM slot
-		dbf	d0,loc_E18A			; repeat until end
+		dbf	d0,.loop			; repeat until end
 
-locret_E196:
+.return:
 		rts
 ; End of function FindFreeObj
 
@@ -10803,15 +10741,13 @@ FindNextFreeObj:
 		sub.w	a0,d0				; subtract current object location
 		lsr.w	#object_size_bits,d0		; divide by $40
 		subq.w	#1,d0				; keep from going over the object zone
-		blo.s	locret_E1B2
+		blo.s	FindFreeObj.return
 
-loc_E1A6:
+.loop:
 		tst.b	obID(a1)			; is object RAM slot empty?
-		beq.s	locret_E1B2			; if yes, branch
+		beq.s	FindFreeObj.return		; if yes, branch
 		lea	object_size(a1),a1		; load obj address ; goto next object RAM slot
-		dbf	d0,loc_E1A6			; repeat until end
-
-locret_E1B2:
+		dbf	d0,.loop			; repeat until end
 		rts
 ; End of function FindNextFreeObj
 
@@ -11466,11 +11402,11 @@ loc_F70A:
 MvSonicOnPtfm:
 		move.w	obY(a0),d0
 		sub.w	d3,d0
-		bra.s	loc_F71E
+	;	bra.s	loc_F71E
 ; ===========================================================================
 		; a couple lines of unused/leftover/dead code from Sonic 1 ; a0=object
-		move.w	obY(a0),d0
-		subi.w	#9,d0
+	;	move.w	obY(a0),d0
+	;	subi.w	#9,d0
 
 loc_F71E:
 		tst.b	(f_playerctrl).w
@@ -11915,10 +11851,8 @@ Obj01_ControlsLock:
 loc_FAFE:
 		bsr.w	Sonic_Animate
 		tst.b	(f_playerctrl).w
-		bmi.s	loc_FB0E
+		bmi.w	LoadSonicDynPLC
 		jsr	(TouchResponse).l
-
-loc_FB0E:
 		bra.w	LoadSonicDynPLC
 
 ; ===========================================================================
@@ -12032,9 +11966,7 @@ Sonic_RecordPos:
 Sonic_Water:
 		tst.b	(Water_flag).w
 		bne.s	Obj01_InWater
-
-locret_FC0A:
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 ; loc_FC0E: Obj01_InLevelWithWater:
 Obj01_InWater:
@@ -12043,7 +11975,7 @@ Obj01_InWater:
 		bge.s	Obj01_OutWater			; if yes, branch
 
 		bset	#6,obStatus(a0)			; set underwater flag
-		bne.s	locret_FC0A			; if already underwater, branch
+		bne.s	Sonic_Water.return		; if already underwater, branch
 
 		bsr.w	ResumeMusic
 		move.b	#id_Obj0A,(v_sonicbubbles).w		; load Obj0A (sonic's breathing bubbles) at $FFFFB340
@@ -12054,7 +11986,7 @@ Obj01_InWater:
 		asr	obVelX(a0)
 		asr	obVelY(a0)			; memory oprands can only be shifted one at a time
 		asr	obVelY(a0)
-		beq.s	locret_FC0A
+		beq.s	Sonic_Water.return
 		move.b	#id_Obj08,(v_splash).w		; splash animation
 		move.w	#sfx_Splash,d0			; splash sound
 		jmp	(PlaySound_Special).l
@@ -12062,14 +11994,14 @@ Obj01_InWater:
 ; Obj01_NotInWater:
 Obj01_OutWater:
 		bclr	#6,obStatus(a0)			; unset underwater flag
-		beq.s	locret_FC0A			; if already unset, branch
+		beq.s	Sonic_Water.return		; if already unset, branch
 
 		bsr.w	ResumeMusic
 		move.w	#$600,(Sonic_top_speed).w
 		move.w	#$C,(Sonic_acceleration).w
 		move.w	#$80,(Sonic_deceleration).w
 		asl	obVelY(a0)
-		beq.w	locret_FC0A
+		beq.w	Sonic_Water.return
 		move.b	#id_Obj08,(v_splash).w		; splash animation
 		cmpi.w	#-$1000,obVelY(a0)
 		bgt.s	loc_FC98
@@ -12093,7 +12025,11 @@ Obj01_MdNormal:
 		bsr.w	Sonic_Move
 		bsr.w	Sonic_Roll
 		bsr.w	Sonic_LevelBound
-		jsr	(ObjectMove).l
+		movem.w	obVelX(a0),d0/d2			; load xy speed
+		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,obX(a0)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
+		add.l	d2,obY(a0)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
 		bsr.w	AnglePos
 		bra.w	Sonic_SlopeRepel
 ; End of subroutine Obj01_MdNormal
@@ -12106,7 +12042,12 @@ Obj01_MdAir:
 		bsr.w	Sonic_JumpHeight
 		bsr.w	Sonic_ChgJumpDir
 		bsr.w	Sonic_LevelBound
-		jsr	(ObjectMoveAndFall).l
+		movem.w	obVelX(a0),d0/d2			; load xy speed
+		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,obX(a0)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
+		add.l	d2,obY(a0)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
+		addi.w	#$38,obVelY(a0)				; increase vertical speed (apply gravity)
 		btst	#6,obStatus(a0)			; is Sonic underwater?
 		beq.s	loc_FCEA			; if not, branch
 		subi.w	#$28,obVelY(a0)			; reduce gravity by $28 ($38-$28=$10)
@@ -12125,7 +12066,11 @@ Obj01_MdRoll:
 		bsr.w	Sonic_RollRepel
 		bsr.w	Sonic_RollSpeed
 		bsr.w	Sonic_LevelBound
-		jsr	(ObjectMove).l
+		movem.w	obVelX(a0),d0/d2			; load xy speed
+		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,obX(a0)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
+		add.l	d2,obY(a0)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
 		bsr.w	AnglePos
 		bra.w	Sonic_SlopeRepel
 ; End of subroutine Obj01_MdRoll
@@ -12140,7 +12085,12 @@ Obj01_MdJump:
 		bsr.w	Sonic_JumpHeight
 		bsr.w	Sonic_ChgJumpDir
 		bsr.w	Sonic_LevelBound
-		jsr	(ObjectMoveAndFall).l
+		movem.w	obVelX(a0),d0/d2			; load xy speed
+		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,obX(a0)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
+		add.l	d2,obY(a0)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
+		addi.w	#$38,obVelY(a0)				; increase vertical speed (apply gravity)
 		btst	#6,obStatus(a0)			; is Sonic underwater?
 		beq.s	loc_FD34			; if not, branch
 		subi.w	#$28,obVelY(a0)			; reduce gravity by $28 ($38-$28=$10)
@@ -13307,7 +13257,11 @@ loc_10748:
 Obj01_Hurt:
 		tst.b	ob2ndRout(a0)
 		bmi.w	loc_107E8
-		jsr	(ObjectMove).l
+		movem.w	obVelX(a0),d0/d2			; load xy speed
+		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,obX(a0)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
+		add.l	d2,obY(a0)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
 		addi.w	#$30,obVelY(a0)
 		btst	#6,obStatus(a0)
 		beq.s	loc_1077E
@@ -13374,7 +13328,12 @@ loc_10804:
 ; Obj01_Death:
 Obj01_Dead:
 		bsr.w	Sonic_GameOver
-		jsr	(ObjectMoveAndFall).l
+		movem.w	obVelX(a0),d0/d2			; load xy speed
+		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,obX(a0)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
+		add.l	d2,obY(a0)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
+		addi.w	#$38,obVelY(a0)				; increase vertical speed (apply gravity)
 		bsr.w	Sonic_RecordPos
 		bsr.w	Sonic_Animate
 		bsr.w	LoadSonicDynPLC
@@ -13994,7 +13953,11 @@ Obj02_MdNormal:
 		bsr.w	Tails_Move
 		bsr.w	Tails_Roll
 		bsr.w	Tails_LevelBoundaries
-		jsr	(ObjectMove).l
+		movem.w	obVelX(a0),d0/d2			; load xy speed
+		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,obX(a0)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
+		add.l	d2,obY(a0)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
 		bsr.w	AnglePos
 		bra.w	Tails_SlopeRepel
 ; ---------------------------------------------------------------------------
@@ -14003,7 +13966,12 @@ Obj02_MdJump:
 		bsr.w	Tails_JumpHeight
 		bsr.w	Tails_ChgJumpDir
 		bsr.w	Tails_LevelBoundaries
-		jsr	(ObjectMoveAndFall).l
+		movem.w	obVelX(a0),d0/d2			; load xy speed
+		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,obX(a0)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
+		add.l	d2,obY(a0)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
+		addi.w	#$38,obVelY(a0)				; increase vertical speed (apply gravity)
 		btst	#6,obStatus(a0)
 		beq.s	loc_10EC0
 		subi.w	#$28,obVelY(a0)
@@ -14018,7 +13986,11 @@ Obj02_MdRoll:
 		bsr.w	Tails_RollRepel
 		bsr.w	Tails_RollSpeed
 		bsr.w	Tails_LevelBoundaries
-		jsr	(ObjectMove).l
+		movem.w	obVelX(a0),d0/d2			; load xy speed
+		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,obX(a0)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
+		add.l	d2,obY(a0)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
 		bsr.w	AnglePos
 		bra.w	Tails_SlopeRepel
 ; ---------------------------------------------------------------------------
@@ -14027,7 +13999,12 @@ Obj02_MdJump2:
 		bsr.w	Tails_JumpHeight
 		bsr.w	Tails_ChgJumpDir
 		bsr.w	Tails_LevelBoundaries
-		jsr	(ObjectMoveAndFall).l
+		movem.w	obVelX(a0),d0/d2			; load xy speed
+		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,obX(a0)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
+		add.l	d2,obY(a0)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
+		addi.w	#$38,obVelY(a0)				; increase vertical speed (apply gravity)
 		btst	#6,obStatus(a0)
 		beq.s	loc_10F0A
 		subi.w	#$28,obVelY(a0)
@@ -14608,11 +14585,7 @@ Tails_Jump:
 		beq.w	locret_11496
 		moveq	#0,d0
 		move.b	obAngle(a0),d0
-
-loc_11404:	; unused
 		addi.b	#$80,d0
-
-loc_11408:	; unused
 		bsr.w	sub_13102
 		cmpi.w	#6,d1
 		blt.w	locret_11496
@@ -15140,7 +15113,11 @@ loc_118AA:
 ; ---------------------------------------------------------------------------
 
 Obj02_Hurt:
-		jsr	(ObjectMove).l
+		movem.w	obVelX(a0),d0/d2			; load xy speed
+		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,obX(a0)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
+		add.l	d2,obY(a0)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
 		addi.w	#$30,obVelY(a0)
 		btst	#6,obStatus(a0)
 		beq.s	loc_118D8
@@ -15180,7 +15157,12 @@ locret_1192A:
 
 Obj02_Dead:
 		bsr.w	Tails_GameOver
-		jsr	(ObjectMoveAndFall).l
+		movem.w	obVelX(a0),d0/d2			; load xy speed
+		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,obX(a0)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
+		add.l	d2,obY(a0)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
+		addi.w	#$38,obVelY(a0)				; increase vertical speed (apply gravity)
 		bsr.w	Tails_Animate
 		bsr.w	LoadTailsDynPLC
 		jmp	(DisplaySprite).l
@@ -16677,8 +16659,8 @@ locret_131D4:
 
 ; ---------------------------------------------------------------------------
 		; unused
-		move.w	obY(a0),d2
-		move.w	obX(a0),d3
+	;	move.w	obY(a0),d2
+	;	move.w	obX(a0),d3
 
 loc_131DE:
 		addi.w	#$A,d2
@@ -16869,8 +16851,8 @@ Sonic_DontRunOnWalls:
 
 ; ---------------------------------------------------------------------------
 		; unused
-		move.w	obY(a0),d2
-		move.w	obX(a0),d3
+	;	move.w	obY(a0),d2
+	;	move.w	obX(a0),d3
 
 loc_133B0:
 		subi.w	#$A,d2
@@ -18033,7 +18015,7 @@ Obj5E:
 ; ---------------------------------------------------------------------------
 Obj5E_Index:	dc.w See_Main-Obj5E_Index
 		dc.w See_Slope-Obj5E_Index
-		dc.w locret_14E3A-Obj5E_Index
+		dc.w loc_14F10.return-Obj5E_Index
 		dc.w See_Spikeball-Obj5E_Index
 		dc.w See_MoveSpike-Obj5E_Index
 		dc.w See_SpikeFall-Obj5E_Index
@@ -18155,7 +18137,7 @@ See_Slope2:
 sub_14E10:
 		move.b	obFrame(a0),d0
 		cmp.b	d1,d0
-		beq.s	locret_14E3A
+		beq.s	loc_14E1C.return
 		bhs.s	loc_14E1C
 		addq.b	#2,d0
 
@@ -18165,10 +18147,10 @@ loc_14E1C:
 		move.b	d1,objoff_3A(a0)
 		bclr	#0,obRender(a0)
 		btst	#1,obFrame(a0)
-		beq.s	locret_14E3A
+		beq.s	.return
 		bset	#0,obRender(a0)
 
-locret_14E3A:
+.return:
 		rts
 ; End of function sub_14E10
 
@@ -18218,12 +18200,22 @@ loc_14ED6:
 		move.w	d2,obVelX(a0)
 		move.w	obX(a0),d0
 		sub.w	objoff_30(a0),d0
-		bhs.s	loc_14EEC
+		bhs.s	+
 		neg.w	obVelX(a0)
-
-loc_14EEC:
++
 		addq.b	#2,obRoutine(a0)
-		bra.s	See_SpikeFall
+		; fall through
+; ---------------------------------------------------------------------------
+
+See_SpikeFall:
+		tst.w	obVelY(a0)
+		bpl.s	loc_14F4E
+		jsr	(ObjectMoveAndFall).l
+		move.w	objoff_34(a0),d0
+		subi.w	#$2F,d0
+		cmp.w	obY(a0),d0
+		bgt.s	loc_14F10.return
+		jmp	(ObjectMoveAndFall).l
 ; ---------------------------------------------------------------------------
 
 loc_14EF2:
@@ -18244,23 +18236,9 @@ loc_14F10:
 		move.w	d1,obY(a0)
 		add.w	objoff_30(a0),d2
 		move.w	d2,obX(a0)
-		clr.w	obYSub(a0)	; y_sub/obYSub
 		clr.w	obXSub(a0)	; x_sub/obXSub
-		rts
-; ---------------------------------------------------------------------------
-
-See_SpikeFall:
-		tst.w	obVelY(a0)
-		bpl.s	loc_14F4E
-		jsr	(ObjectMoveAndFall).l
-		move.w	objoff_34(a0),d0
-		subi.w	#$2F,d0
-		cmp.w	obY(a0),d0
-		bgt.s	locret_14F4C
-		jmp	(ObjectMoveAndFall).l
-
-locret_14F4C:
-		rts
+		clr.w	obYSub(a0)	; y_sub/obYSub
+.return:	rts
 ; ---------------------------------------------------------------------------
 
 loc_14F4E:
@@ -18279,7 +18257,7 @@ loc_14F6E:
 		move.w	objoff_34(a0),d1
 		add.w	(a2,d0.w),d1
 		cmp.w	obY(a0),d1
-		bgt.s	locret_14FC2
+		bgt.s	loc_14F10.return
 		movea.l	objoff_3C(a0),a1
 		moveq	#2,d1
 		tst.w	obVelX(a0)
@@ -18306,8 +18284,6 @@ loc_14FB6:
 		clr.w	obVelX(a0)
 		clr.w	obVelY(a0)
 		subq.b	#2,obRoutine(a0)
-
-locret_14FC2:
 		rts
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -18410,7 +18386,7 @@ Obj16_SubIndex:	dc.w Obj16_InitMove-Obj16_SubIndex
 Obj16_InitMove:
 		move.b	obStatus(a0),d0
 		andi.b	#$18,d0
-		beq.s	locret_151BE
+		beq.s	Obj16_NoMove
 		addq.b	#1,obSubtype(a0)
 		move.w	#$200,obVelX(a0)
 		; This fixes issues with the object being flipped horizontally
@@ -18421,20 +18397,14 @@ Obj16_InitMove:
 .facingright:
 		move.w	#$100,obVelY(a0)
 		move.w	#$A0,objoff_34(a0)
-
-locret_151BE:
 		rts
 ; ---------------------------------------------------------------------------
 
 Obj16_Move:
 		jsr	(ObjectMove).l
 		subq.w	#1,objoff_34(a0)
-		bne.s	locret_151CE
+		bne.s	Obj16_NoMove
 		addq.b	#1,obSubtype(a0)
-
-locret_151CE:
-		rts
-; ---------------------------------------------------------------------------
 
 Obj16_NoMove:
 		rts
@@ -19230,19 +19200,19 @@ Obj4F_Main:
 		jsr	Obj4F_SubIndex(pc,d1.w)
 		lea	Ani_obj4F(pc),a1
 		jsr	(AnimateSprite).l
-		out_of_range.s	loc_15E3E
-		jmp	(DisplaySprite).l
+		jmp	(MarkObjGone).l
+	;	jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
-loc_15E3E:
-		lea	(v_objstate).w,a2
-		moveq	#0,d0
-		move.b	obRespawnNo(a0),d0
-		beq.s	loc_15E50
-		bclr	#7,2(a2,d0.w)
+;loc_15E3E:
+	;	lea	(v_objstate).w,a2
+	;	moveq	#0,d0
+	;	move.b	obRespawnNo(a0),d0
+	;	beq.s	loc_15E50
+	;	bclr	#7,2(a2,d0.w)
 
-loc_15E50:
-		jmp	(DeleteObject).l
+;loc_15E50:
+	;	jmp	(DeleteObject).l
 ; ===========================================================================
 Obj4F_SubIndex:	dc.w Obj4F_MoveLeft-Obj4F_SubIndex
 		dc.w Obj4F_ChkFloor-Obj4F_SubIndex
@@ -24051,6 +24021,8 @@ Art_HUD:	binclude	"art/uncompressed/HUD Numbers.bin"
 		even
 Art_LivesNums:	binclude	"art/uncompressed/Lives Counter Numbers.bin"
 		even
+Art_Text:	binclude	"art/uncompressed/Level select and Debug Mode text.bin"
+Art_Text_End:	even
 ; ---------------------------------------------------------------------------
 
 ; ===========================================================================
