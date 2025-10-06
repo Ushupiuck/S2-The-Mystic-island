@@ -21,6 +21,7 @@ Mus_GRGZ1:	include "sound/music/GreenGZ1.asm" ; $114A bytes
 Mus_RRZ2:	include "sound/music/RRZ2.asm" ; $D84 bytes
 Mus_LBZ1:	include "sound/music/LBZ1.asm" ; $CDB bytes
 Mus_DDZ2:	include "sound/music/DDZ2.asm" ; $B7A bytes
+Mus_ALZ:	include "sound/music/Azure Lake.asm" ; $AFE bytes
 Mus_Test7:	include "sound/music/46.asm" ; $AB4 bytes
 Mus_GGZ1:	include "sound/music/GGZ1.asm" ; $A70 bytes
 Mus_Credits2:	include "sound/music/S3 Beta - Ending.asm" ; $A6E bytes
@@ -29,9 +30,7 @@ Mus_Test_Electoria:	BINCLUDE "sound/music/New - Electoria_cmp.bin" ; $614 bytes
 Mus_ARZ:	BINCLUDE "sound/music/ARZ_cmp.bin" ; $609 bytes
 Mus_GHZ:	BINCLUDE "sound/music/GHZ_cmp.bin" ; $5AA bytes
 Mus_GGZ2:	BINCLUDE "sound/music/GGZ2_cmp.bin" ; $552 bytes
-Mus_EHZ:	BINCLUDE "sound/music/EHZ_cmp.bin" ; $518 bytes
-Mus_Ending:	BINCLUDE "sound/music/Ending_cmp.bin" ; $4E8 bytes
-Mus_Title:	BINCLUDE "sound/music/Title screen_cmp.bin" ; $1CA bytes
+Mus_Emerald:	BINCLUDE "sound/music/Got emerald_cmp.bin" ; $CB bytes
 
 	finishBank
 
@@ -40,6 +39,8 @@ Mus_Title:	BINCLUDE "sound/music/Title screen_cmp.bin" ; $1CA bytes
 ; ------------------------------------------------------------------------------
 SndMus3_Start:	startBank
 
+Mus_EHZ:	BINCLUDE "sound/music/EHZ_cmp.bin" ; $518 bytes
+Mus_Ending:	BINCLUDE "sound/music/Ending_cmp.bin" ; $4E8 bytes
 Mus_SBZ:	BINCLUDE "sound/music/SBZ_cmp.bin" ; $4D7 bytes
 Mus_Boss2:	BINCLUDE "sound/music/Boss 2_cmp.bin" ; $478 bytes
 Mus_PPZ2:	BINCLUDE "sound/music/PPZ2_cmp.bin" ; $46E bytes
@@ -66,12 +67,12 @@ Mus_EndBoss:	BINCLUDE "sound/music/Final Boss_cmp.bin" ; $2CA bytes
 Mus_SuperSonic:	BINCLUDE "sound/music/Super Sonic_cmp.bin" ; $2B9 bytes
 Mus_Boss:	BINCLUDE "sound/music/Boss 1 (old)_cmp.bin" ; $250 bytes
 Mus_HPZ:	BINCLUDE "sound/music/HPZ_cmp.bin" ; $207 bytes
+Mus_Title:	BINCLUDE "sound/music/Title screen_cmp.bin" ; $1CA bytes
 Mus_Invincible:	BINCLUDE "sound/music/Invincible_cmp.bin" ; $191 bytes
 Mus_Continue:	BINCLUDE "sound/music/Continue_cmp.bin" ; $15A bytes
 Mus_GameOver:	include "sound/music/Game over.asm" ; $14F bytes
 Mus_Countdown:	BINCLUDE "sound/music/Drowning_cmp.bin" ; $11F bytes
 Mus_EndLevel:	BINCLUDE "sound/music/End of level_cmp.bin" ; $115 bytes
-Mus_Emerald:	BINCLUDE "sound/music/Got emerald_cmp.bin" ; $CB bytes
 Mus_ExtraLife:	BINCLUDE "sound/music/Extra life_cmp.bin" ; $B7 bytes
 
 	finishBank

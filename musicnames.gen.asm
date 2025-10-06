@@ -7,6 +7,7 @@ SongNames:	offsetTable
 	offsetTableEntry.w	MusNam_EHZ
 	offsetTableEntry.w	MusNam_GRGZ1
 	offsetTableEntry.w	MusNam_GRGZ2
+	offsetTableEntry.w	MusNam_ALZ
 	offsetTableEntry.w	MusNam_CPZ
 	offsetTableEntry.w	MusNam_GGZ1
 	offsetTableEntry.w	MusNam_GGZ2
@@ -63,6 +64,7 @@ MusNam_GHZ:	songtext	"GREEN HILL"
 MusNam_EHZ:	songtext	"EMERALD HILL"
 MusNam_GRGZ1:	songtext	"GREEN GROOVE ACT 1"
 MusNam_GRGZ2:	songtext	"GREEN GROOVE ACT 2"
+MusNam_ALZ:	songtext	"POTENTIAL SONG FOR THE FIRST LEVEL"
 MusNam_CPZ:	songtext	"CHEMICAL PLANT"
 MusNam_GGZ1:	songtext	"GENE GADGET ACT 1"
 MusNam_GGZ2:	songtext	"GENE GADGET ACT 2"

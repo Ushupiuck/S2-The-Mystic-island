@@ -6,6 +6,7 @@ zMasterPlaylist:
 	zmakePlaylistEntry	Mus_EHZ,0
 	zmakePlaylistEntry	Mus_GRGZ1,musprop_uncompressed
 	zmakePlaylistEntry	Mus_GRGZ2,musprop_uncompressed
+	zmakePlaylistEntry	Mus_ALZ,musprop_uncompressed
 	zmakePlaylistEntry	Mus_CPZ,0
 	zmakePlaylistEntry	Mus_GGZ1,musprop_uncompressed
 	zmakePlaylistEntry	Mus_GGZ2,0

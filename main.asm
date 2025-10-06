@@ -24863,46 +24863,124 @@ Nem_HTZ_AniPlaceholders:	binclude	"art/nemesis/HTZ Ani Placeholders.nem"
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - primary patterns and block mappings
 ; ---------------------------------------------------------------------------
+; Zone 00
 Kosp_GHZ:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
 		even
 Map16_GHZ:	binclude	"mappings/16x16/GHZ.kosp"
 		even
 Map128_GHZ:	binclude	"mappings/128x128/GHZ.kosp"
 		even
-
+; Zone 01
 Kosp_LZ:	binclude	"art/kosinski/level/8x8 - LZ.kosp"
 		even
 Map16_LZ:	binclude	"mappings/16x16/LZ.kosp"
 		even
 Map128_LZ:	binclude	"mappings/128x128/LZ.kosp"
 		even
-
+; Zone 02
 Kosp_CPZ:	binclude	"art/kosinski/level/8x8 - CPZ.kosp"
 		even
 Map16_CPZ:	binclude	"mappings/16x16/CPZ.kosp"
 		even
 Map128_CPZ:	binclude	"mappings/128x128/CPZ.kosp"
 		even
-
+; Zone 03
 Kosp_EHZ:	binclude	"art/kosinski/level/8x8 - EHZ.kosp"
 		even
 Map16_EHZ:	binclude	"mappings/16x16/EHZ.kosp"
 		even
 Map128_EHZ:	binclude	"mappings/128x128/EHZ.kosp"
 		even
-
+; Zone 04
 Kosp_HPZ:	binclude	"art/kosinski/level/8x8 - HPZ.kosp"
 		even
 Map16_HPZ:	binclude	"mappings/16x16/HPZ.kosp"
 		even
 Map128_HPZ:	binclude	"mappings/128x128/HPZ.kosp"
 		even
-
+; Zone 05
 Kosp_HTZ:	binclude	"art/kosinski/level/8x8 - HTZ.kosp"
 		even
 Map16_HTZ:	binclude	"mappings/16x16/HTZ.kosp"
 		even
 Map128_HTZ:	binclude	"mappings/128x128/HTZ.kosp"
+		even
+; Zone 06 (Filler; currently S1's leftover ending)
+		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+		even
+		binclude	"mappings/16x16/GHZ.kosp"
+		even
+		binclude	"mappings/128x128/GHZ.kosp"
+; From here onwards, filler data for the NEW levels.
+; Zone 07
+		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+		even
+		binclude	"mappings/16x16/GHZ.kosp"
+		even
+		binclude	"mappings/128x128/GHZ.kosp"
+		even
+; Zone 08
+		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+		even
+		binclude	"mappings/16x16/GHZ.kosp"
+		even
+		binclude	"mappings/128x128/GHZ.kosp"
+		even
+; Zone 09
+		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+		even
+		binclude	"mappings/16x16/GHZ.kosp"
+		even
+		binclude	"mappings/128x128/GHZ.kosp"
+		even
+; Zone $0A
+		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+		even
+		binclude	"mappings/16x16/GHZ.kosp"
+		even
+		binclude	"mappings/128x128/GHZ.kosp"
+		even
+; Zone $0B
+		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+		even
+		binclude	"mappings/16x16/GHZ.kosp"
+		even
+		binclude	"mappings/128x128/GHZ.kosp"
+		even
+; Zone $0C
+		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+		even
+		binclude	"mappings/16x16/GHZ.kosp"
+		even
+		binclude	"mappings/128x128/GHZ.kosp"
+		even
+; Zone $0D
+		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+		even
+		binclude	"mappings/16x16/GHZ.kosp"
+		even
+		binclude	"mappings/128x128/GHZ.kosp"
+		even
+; Zone $0E
+		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+		even
+		binclude	"mappings/16x16/GHZ.kosp"
+		even
+		binclude	"mappings/128x128/GHZ.kosp"
+		even
+; Zone $0F
+		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+		even
+		binclude	"mappings/16x16/GHZ.kosp"
+		even
+		binclude	"mappings/128x128/GHZ.kosp"
+		even
+; Zone $10
+		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+		even
+		binclude	"mappings/16x16/GHZ.kosp"
+		even
+		binclude	"mappings/128x128/GHZ.kosp"
 		even
 ; ---------------------------------------------------------------------------
 S1_AngleMap:	binclude	"collision/S1/Angle Map.bin"
@@ -25172,10 +25250,10 @@ Level_Index:
 		dc.w Level_HTZ3-Level_Index
 		dc.w Level_HTZ4-Level_Index
 		; Zone 06 - Placeholder entries
-		dc.w Level_Ending-Level_Index
-		dc.w Level_Ending-Level_Index
-		dc.w Level_Ending-Level_Index
-		dc.w Level_Ending-Level_Index
+		dc.w Level_MTZ1-Level_Index
+		dc.w Level_MTZ2-Level_Index
+		dc.w Level_MTZ3-Level_Index
+		dc.w Level_MTZ4-Level_Index
 
 Level_GHZ1:	binclude	"level/layout/GHZ_1.kosp"
 		even
@@ -25225,7 +25303,13 @@ Level_HTZ3:	binclude	"level/layout/HTZ_3.kosp"
 		even
 Level_HTZ4:	binclude	"level/layout/HTZ_4.kosp"
 		even
-Level_Ending:	binclude	"level/layout/Ending.kosp"
+Level_MTZ1:	binclude	"level/layout/MTZ_1.kosp"
+		even
+Level_MTZ2:	binclude	"level/layout/MTZ_2.kosp"
+		even
+Level_MTZ3:	binclude	"level/layout/MTZ_3.kosp"
+		even
+Level_MTZ4:	binclude	"level/layout/MTZ_4.kosp"
 		even
 Level_Null:	dc.l	0
 ; --------------------------------------------------------------------------------------

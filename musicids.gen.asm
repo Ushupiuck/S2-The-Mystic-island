@@ -1,9 +1,9 @@
 MusID__First = 1
 	enum MusID_Title=MusID__First,MusID_2PResult,MusID_Options,MusID_GHZ,MusID_EHZ,MusID_GRGZ1,MusID_GRGZ2
-	enum MusID_CPZ=MusID_GRGZ2+1,MusID_GGZ1,MusID_GGZ2,MusID_ARZ,MusID_RRZ1,MusID_RRZ2,MusID_HTZ
-	enum MusID_DDZ1=MusID_HTZ+1,MusID_DDZ2,MusID_ICZ1,MusID_ICZ2,MusID_MCZ,MusID_HPZ,MusID_OOZ
-	enum MusID_MTZ=MusID_OOZ+1,MusID_PPZ1,MusID_PPZ2,MusID_SBZ,MusID_LBZ1,MusID_LBZ2,MusID_DEZ
-	enum MusID_Boss=MusID_DEZ+1,MusID_Boss2,MusID_Boss3,MusID_EndBoss,MusID_Ending,MusID_Credits,MusID_Credits2
-	enum MusID_Test_Electoria=MusID_Credits2+1,MusID_Test_Evening_Star,MusID_Test_Hyper_Hyper,MusID_Test_Walkin,MusID_Test6,MusID_Test7,MusID_Invincible
-	enum MusID_SuperSonic=MusID_Invincible+1,MusID_SpecStage,MusID_EHZ_2P,MusID_SW_HPZ,MusID_CNZ_2P,MusID_SCZ,MusID_EndLevel
-	enum MusID_GameOver=MusID_EndLevel+1,MusID_ExtraLife,MusID_Continue,MusID_Emerald,MusID_Countdown,MusID__End
+	enum MusID_ALZ=MusID_GRGZ2+1,MusID_CPZ,MusID_GGZ1,MusID_GGZ2,MusID_ARZ,MusID_RRZ1,MusID_RRZ2
+	enum MusID_HTZ=MusID_RRZ2+1,MusID_DDZ1,MusID_DDZ2,MusID_ICZ1,MusID_ICZ2,MusID_MCZ,MusID_HPZ
+	enum MusID_OOZ=MusID_HPZ+1,MusID_MTZ,MusID_PPZ1,MusID_PPZ2,MusID_SBZ,MusID_LBZ1,MusID_LBZ2
+	enum MusID_DEZ=MusID_LBZ2+1,MusID_Boss,MusID_Boss2,MusID_Boss3,MusID_EndBoss,MusID_Ending,MusID_Credits
+	enum MusID_Credits2=MusID_Credits+1,MusID_Test_Electoria,MusID_Test_Evening_Star,MusID_Test_Hyper_Hyper,MusID_Test_Walkin,MusID_Test6,MusID_Test7
+	enum MusID_Invincible=MusID_Test7+1,MusID_SuperSonic,MusID_SpecStage,MusID_EHZ_2P,MusID_SW_HPZ,MusID_CNZ_2P,MusID_SCZ
+	enum MusID_EndLevel=MusID_SCZ+1,MusID_GameOver,MusID_ExtraLife,MusID_Continue,MusID_Emerald,MusID_Countdown,MusID__End
