@@ -835,8 +835,6 @@ v_palette:		ds.b	palette_size		; main palette
 v_palette_end:
 v_palette_fading:	ds.b	palette_size		; duplicate palette, used for transitions
 v_palette_fading_end:
-			ds.b	$140			; stack
-v_systemstack:
 
 v_crossresetram:					; RAM beyond this point is only cleared on a cold-boot
 Level_Inactive_flag:	ds.w	1			; (2 bytes)
@@ -943,7 +941,10 @@ v_creditsnum:		ds.w	1			; credits index number
 
 v_objstate:		ds.b	$C0			; object state list
 v_objstate_end:
-			ds.b	$740
+			ds.b	$540
+			ds.b	$140			; stack
+v_systemstack:
+			ds.b	$200
 v_end:
 	if * > 0	; don't declare more space than the RAM can contain!
 		fatal "The RAM variable declarations are too large by $\{*} bytes."
