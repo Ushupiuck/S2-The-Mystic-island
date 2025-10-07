@@ -1023,18 +1023,17 @@ PlaySound:
 ; MM: this routine and the table below control what PCM sample plays on the Sega screen
 ChangeSegaSound:
 		stopZ80
-		waitZ80
-		move.b	d0, (Z80_RAM+zPCMSound).l
+		move.b	d0,(Z80_RAM+zPCMSound).l
 		startZ80
 		rts
 
-SegaSndTblEntry	macro	offset, length, pitch
-		dc.b	pitch, (offset>>15)&$FF
-		dc.w	zROMWindow|(offset&$7FFF), length
+SegaSndTblEntry	macro	offset,length,pitch
+		dc.b	pitch,(offset>>15)&$FF
+		dc.w	zROMWindow|(offset&$7FFF),length
 		endm
 
 SegaSndTbl:
-	SegaSndTblEntry	Snd_Sega, Snd_Sega_End-Snd_Sega, $9
+	SegaSndTblEntry	Snd_Sega,Snd_Sega_End-Snd_Sega,$A
 
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
@@ -2202,12 +2201,12 @@ Sega_WaitPalette:
 		bsr.w	ChangeSegaSound
 		move.b	#sfx_Sega,d0
 		bsr.w	PlaySound
-		move.b	#VintID_PCM,(v_vbla_routine).w
+		move.b	#VintID_SEGA,(v_vbla_routine).w
 		bsr.w	WaitForVint
 		move.w	#100,(v_demolength).w
 
 Sega_WaitEnd:
-		move.b	#VintID_SEGA,(v_vbla_routine).w
+		move.b	#VintID_PCM,(v_vbla_routine).w
 		bsr.w	WaitForVint
 		tst.w	(v_demolength).w
 		beq.s	Sega_GoToTitleScreen
