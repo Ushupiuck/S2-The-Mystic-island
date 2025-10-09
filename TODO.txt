@@ -9,10 +9,9 @@ https://tcrf.net/Proto:Sonic_the_Hedgehog_2_(Genesis)
 ; ---------------------------------------------------------------------------
 
 TODO:
-Kos+ Compressed level layouts, alike Sonic 2/3. Preferably Twizzler if it turns out to be better, and it's glitch is related to large filesizes.
 Import S3&K mapping system (as it seems likely we only need a fragment of it to make it work), using the now empty labyrinth zone (01) as a test level
 Import the S3&K rings manager
-Add more level slots
+Add more level slots < IN PROGRESS
 Add Wood Zone, Marble Zone & Labyrinth (last one might be partly remixed with Chemical plant. feeling inspired)
 Metropolis zone.
 Port over Sonic 2 Special stages: Sonic 1 will be Bonus stages. Sonic 2's will be the ACTUAL Special stages.
@@ -20,7 +19,6 @@ Fix HTZ scrolling to use a straight table, rather than a soup of chunk entries.
 Fuse HTZ and Scrap brain into it's own level
 Improve Boss_MoveObject
 Improve SSObjectMoveAndFall (if it exists)
-
 Research & Implement "Find_SonicTails" From S3&K into sonic 1
 Reimplement the following ram adress & code (allows for extra life past 200 rings):
 ;v_ring1uplimit:	ds.w	1	; awards an extra life every 100 rings (2 bytes)
@@ -29,14 +27,14 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 Finished:
 LoadCollisionIndexes < DONE
 Free up a shared $1000 byte buffer for Moduled Twizzler & Moduled Kosinski
+KosM+ PLC's < DONE
+Kos+ Compressed level layouts, alike Sonic 2/3. Preferably Twizzler if it turns out to be better < DONE; Twizzler is worse: the decompressor is TOO big.
 Fix the constants back to what they should be after that derp many commits ago. < DONE
+Reimplement 4 act system < DONE!
 ; ---------------------------------------------------------------------------
 MISC. SUBROUTINES
 ; ---------------------------------------------------------------------------
 DeformBgLayer <--------- Research this fucker from the sonic 3 proto. it still exists
-
-
-
 
 Handle_Onscreen_Water_Height
 
@@ -45,8 +43,6 @@ LevelMusic_Playlist
 LS_Level_Order
 
 SpawnLevelMainSprites
-
-LoadEnemyArt <KosM Modules; like Nemesis PLC's but for KosM>
 
 Obj_TitleCardInit
 
@@ -151,8 +147,6 @@ ObjectMoveAndFall_LightGravity <--- Multiple variants of "ObjectMoveAndFall"; po
 ; ---------------------------------------------------------------------------
 To-Do:
 
-Reimplement 4 act system < DONE? Collision per act implemented
-
 Obj_S2Shield <---- Optional: Restore it <PARTLY COMPLETE>
 
 ObjAnimal < ---- Optional: Edit Ending animals to load as normal objects (aka reload when you approach them); this has to do with ObjAnimal_ChkDel
@@ -169,7 +163,7 @@ Obj_HCZMiniboss - Research
 Draw_Sprite:
 		lea	(Sprite_table_input).w,a1
 		adda.w	8(a0),a1
-		moveq	#7,d1		; 8 entries, 0–7
+		moveq	#7,d1		; 8 entries
 
 .loop:
 		cmpi.w	#$7E,(a1)	; is there space?
