@@ -26,25 +26,29 @@ SongNames:	offsetTable
 	offsetTableEntry.w	MusNam_PPZ1
 	offsetTableEntry.w	MusNam_PPZ2
 	offsetTableEntry.w	MusNam_SBZ
-	offsetTableEntry.w	MusNam_LBZ1
-	offsetTableEntry.w	MusNam_LBZ2
+	offsetTableEntry.w	MusNam_LBZ1_S3
+	offsetTableEntry.w	MusNam_LBZ2_S3
 	offsetTableEntry.w	MusNam_DEZ
 	offsetTableEntry.w	MusNam_Boss
 	offsetTableEntry.w	MusNam_Boss2
 	offsetTableEntry.w	MusNam_Boss3
 	offsetTableEntry.w	MusNam_EndBoss
-	offsetTableEntry.w	MusNam_Ending
+	offsetTableEntry.w	MusNam_Ending_S1
+	offsetTableEntry.w	MusNam_Ending_S2
 	offsetTableEntry.w	MusNam_Credits
-	offsetTableEntry.w	MusNam_Credits2
+	offsetTableEntry.w	MusNam_Credits_2
+	offsetTableEntry.w	MusNam_BonusStage
+	offsetTableEntry.w	MusNam_BonusStage2
+	offsetTableEntry.w	MusNam_BonusStage3
+	offsetTableEntry.w	MusNam_SpecialStage
+	offsetTableEntry.w	MusNam_Invincible
+	offsetTableEntry.w	MusNam_SuperSonic
 	offsetTableEntry.w	MusNam_Test_Electoria
 	offsetTableEntry.w	MusNam_Test_Evening_Star
 	offsetTableEntry.w	MusNam_Test_Hyper_Hyper
 	offsetTableEntry.w	MusNam_Test_Walkin
 	offsetTableEntry.w	MusNam_Test6
 	offsetTableEntry.w	MusNam_Test7
-	offsetTableEntry.w	MusNam_Invincible
-	offsetTableEntry.w	MusNam_SuperSonic
-	offsetTableEntry.w	MusNam_SpecStage
 	offsetTableEntry.w	MusNam_EHZ_2P
 	offsetTableEntry.w	MusNam_SW_HPZ
 	offsetTableEntry.w	MusNam_CNZ_2P
@@ -83,25 +87,29 @@ MusNam_MTZ:	songtext	"METROPOLIS"
 MusNam_PPZ1:	songtext	"PANIC PUPPET ACT 1"
 MusNam_PPZ2:	songtext	"PANIC PUPPET ACT 2"
 MusNam_SBZ:	songtext	"SCRAP BRAIN"
-MusNam_LBZ1:	songtext	"LAUNCH BASE ACT 1"
-MusNam_LBZ2:	songtext	"LAUNCH BASE ACT 2"
+MusNam_LBZ1_S3:	songtext	"LAUNCH BASE ACT 1 (PROTO)"
+MusNam_LBZ2_S3:	songtext	"LAUNCH BASE ACT 2 (PROTO)"
 MusNam_DEZ:	songtext	"DEATH EGG"
 MusNam_Boss:	songtext	"BOSS"
 MusNam_Boss2:	songtext	"BOSS 2"
 MusNam_Boss3:	songtext	"BOSS 3"
 MusNam_EndBoss:	songtext	"FINAL BOSS"
-MusNam_Ending:	songtext	"ENDING"
+MusNam_Ending_S1:	songtext	"ENDING SEQUENCE"
+MusNam_Ending_S2:	songtext	"PLANE ENDING SEQUENCE"
 MusNam_Credits:	songtext	"CREDITS"
-MusNam_Credits2:	songtext	"S3CREDITS"
+MusNam_Credits_2:	songtext	"S3CREDITS"
+MusNam_BonusStage:	songtext	"BONUS STAGE"
+MusNam_BonusStage2:	songtext	"BONUS STAGE 2"
+MusNam_BonusStage3:	songtext	"BONUS STAGE 3"
+MusNam_SpecialStage:	songtext	"SPECIAL STAGE"
+MusNam_Invincible:	songtext	"INVINCIBILITY"
+MusNam_SuperSonic:	songtext	"SUPER SONIC"
 MusNam_Test_Electoria:	songtext	"TEST 1"
 MusNam_Test_Evening_Star:	songtext	"TEST 2"
 MusNam_Test_Hyper_Hyper:	songtext	"TEST 3"
 MusNam_Test_Walkin:	songtext	"TEST 5"
 MusNam_Test6:	songtext	"UNUSED S3 MENU"
 MusNam_Test7:	songtext	"UNUSED S3 SUPER SONIC"
-MusNam_Invincible:	songtext	"INVINCIBILITY"
-MusNam_SuperSonic:	songtext	"SUPER SONIC"
-MusNam_SpecStage:	songtext	"SPECIAL STAGE"
 MusNam_EHZ_2P:	songtext	"EMERALD HILL 2P"
 MusNam_SW_HPZ:	songtext	"HIDDEN PALACE B"
 MusNam_CNZ_2P:	songtext	"CASINO NIGHT 2P"

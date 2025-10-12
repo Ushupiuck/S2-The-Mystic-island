@@ -1,5 +1,5 @@
 Boss_Header:
-	smpsHeaderStartSong 2, 1
+	smpsHeaderStartSong 2
 	smpsHeaderVoice     Boss_Voices
 	smpsHeaderChan      $06, $03
 	smpsHeaderTempo     $01, $E3

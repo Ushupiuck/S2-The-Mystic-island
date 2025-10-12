@@ -190,9 +190,9 @@ loc_17984:
 		clr.w	obVelX(a0)
 		addq.b	#2,ob2ndRout(a0)
 		move.w	#-$26,objoff_3C(a0)
-		tst.b	(v_bossstatus).w
+		tst.b	(Boss_defeated_flag).w
 		bne.s	locret_179AA
-		move.b	#1,(v_bossstatus).w
+		move.b	#1,(Boss_defeated_flag).w
 
 locret_179AA:
 		rts	

@@ -119,7 +119,7 @@ loc_9C4A:
 		move.b	#7,obTimeFrame(a0)
 		move.b	#2,obFrame(a0)
 		move.w	#-$400,obVelY(a0)
-		tst.b	(v_bossstatus).w
+		tst.b	(Boss_defeated_flag).w
 		bne.s	loc_9CAA
 		bsr.w	FindFreeObj
 		bne.s	+
@@ -155,7 +155,7 @@ loc_9CB8:
 		add.b	d0,d0
 		addq.b	#4,d0
 		move.b	d0,obRoutine(a0)
-		tst.b	(v_bossstatus).w
+		tst.b	(Boss_defeated_flag).w
 		beq.s	-
 		btst	#4,(Vint_runcount+3).w
 		beq.s	-

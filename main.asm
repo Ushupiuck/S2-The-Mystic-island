@@ -8924,7 +8924,7 @@ ptr_Obj60:		dc.l ObjNull
 ptr_Obj61:		dc.l ObjNull
 ptr_Obj62:		dc.l ObjNull
 ptr_Obj63:		dc.l ObjNull
-ptr_Obj64:		dc.l ObjNull
+ptr_Obj64:		dc.l Obj64
 ptr_Obj65:		dc.l ObjNull
 ptr_Obj66:		dc.l ObjNull
 ptr_Obj67:		dc.l ObjNull
@@ -15941,13 +15941,13 @@ Sonic_WalkVertR:
 		move.w	(sp)+,d0
 		bsr.w	Sonic_Angle
 		tst.w	d1
-		beq.s	locret_12C12
+		beq.s	.return
 		bpl.s	loc_12C14
 		cmpi.w	#-$E,d1
-		blt.s	locret_12C12
+		blt.s	.return
 		add.w	d1,obX(a0)
 
-locret_12C12:
+.return:
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -16002,13 +16002,13 @@ Sonic_WalkCeiling:
 		move.w	(sp)+,d0
 		bsr.w	Sonic_Angle
 		tst.w	d1
-		beq.s	locret_12CB0
+		beq.s	.return
 		bpl.s	loc_12CB2
 		cmpi.w	#-$E,d1
-		blt.s	locret_12CB0
+		blt.s	.return
 		sub.w	d1,obY(a0)
 
-locret_12CB0:
+.return:
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -16063,13 +16063,13 @@ Sonic_WalkVertL:
 		move.w	(sp)+,d0
 		bsr.w	Sonic_Angle
 		tst.w	d1
-		beq.s	locret_12D4E
+		beq.s	.return
 		bpl.s	loc_12D50
 		cmpi.w	#-$E,d1
-		blt.s	locret_12D4E
+		blt.s	.return
 		sub.w	d1,obX(a0)
 
-locret_12D4E:
+.return:
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -16577,7 +16577,19 @@ loc_130DE:
 loc_130F6:
 		cmpi.b	#$40,d0
 		beq.w	loc_13478
-		bra.w	loc_132F6
+		addi.w	#$A,d3
+		lea	(Primary_Angle).w,a4
+		movea.w	#$10,a3
+		move.w	#0,d6
+		bsr.w	FindWall
+		move.b	#$C0,d2
+		move.b	(Primary_Angle).w,d3
+		btst	#0,d3
+		beq.s	.return
+		move.b	d2,d3
+
+.return:
+		rts
 ; End of function CalcRoomInFront
 
 
@@ -16644,16 +16656,16 @@ loc_1315E:
 loc_131BE:
 		move.b	(Secondary_Angle).w,d3
 		cmp.w	d0,d1
-		ble.s	loc_131CC
+		ble.s	.skip
 		move.b	(Primary_Angle).w,d3
 		exg	d0,d1
 
-loc_131CC:
+.skip:
 		btst	#0,d3
-		beq.s	locret_131D4
+		beq.s	.return
 		move.b	d2,d3
 
-locret_131D4:
+.return:
 		rts
 ; End of function sub_13102
 
@@ -16669,14 +16681,12 @@ loc_131DE:
 		move.w	#0,d6
 		bsr.w	FindFloor
 		move.b	#0,d2
-
-loc_131F6:
 		move.b	(Primary_Angle).w,d3
 		btst	#0,d3
-		beq.s	locret_13202
+		beq.s	.return
 		move.b	d2,d3
 
-locret_13202:
+.return:
 		rts
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -16703,10 +16713,10 @@ loc_1322E:
 		bsr.w	FindFloor
 		move.b	(Primary_Angle).w,d3
 		btst	#0,d3
-		beq.s	locret_13254
+		beq.s	.return
 		move.b	#0,d3
 
-locret_13254:
+.return:
 		rts
 ; End of function ChkFloorEdge
 
@@ -16731,10 +16741,10 @@ ObjHitFloor2:
 		bsr.w	FindFloor
 		move.b	(Primary_Angle).w,d3
 		btst	#0,d3
-		beq.s	locret_1328C
+		beq.s	.return
 		move.b	#0,d3
 
-locret_1328C:
+.return:
 		rts
 ; End of function ObjHitFloor
 
@@ -16770,7 +16780,19 @@ loc_1328E:
 		bsr.w	FindWall
 		move.w	(sp)+,d0
 		move.b	#$C0,d2
-		bra.w	loc_131BE
+		move.b	(Secondary_Angle).w,d3
+		cmp.w	d0,d1
+		ble.s	.skip
+		move.b	(Primary_Angle).w,d3
+		exg	d0,d1
+
+.skip:
+		btst	#0,d3
+		beq.s	.return
+		move.b	d2,d3
+
+.return:
+		rts
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -16778,16 +16800,20 @@ loc_1328E:
 sub_132EE:
 		move.w	obY(a0),d2
 		move.w	obX(a0),d3
-; End of function sub_132EE
-
-loc_132F6:
 		addi.w	#$A,d3
 		lea	(Primary_Angle).w,a4
 		movea.w	#$10,a3
 		move.w	#0,d6
 		bsr.w	FindWall
 		move.b	#$C0,d2
-		bra.w	loc_131F6
+		move.b	(Primary_Angle).w,d3
+		btst	#0,d3
+		beq.s	.return
+		move.b	d2,d3
+
+.return:
+		rts
+; End of function sub_132EE
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -16803,10 +16829,10 @@ ObjHitWallRight:
 		bsr.w	FindWall
 		move.b	(Primary_Angle).w,d3
 		btst	#0,d3
-		beq.s	locret_1333E
+		beq.s	.return
 		move.b	#$C0,d3
 
-locret_1333E:
+.return:
 		rts
 ; End of function ObjHitWallRight
 
@@ -16846,7 +16872,19 @@ Sonic_DontRunOnWalls:
 		bsr.w	FindFloor
 		move.w	(sp)+,d0
 		move.b	#$80,d2
-		bra.w	loc_131BE
+		move.b	(Secondary_Angle).w,d3
+		cmp.w	d0,d1
+		ble.s	.skip
+		move.b	(Primary_Angle).w,d3
+		exg	d0,d1
+
+.skip:
+		btst	#0,d3
+		beq.s	.return
+		move.b	d2,d3
+
+.return:
+		rts
 ; End of function Sonic_DontRunOnWalls
 
 ; ---------------------------------------------------------------------------
@@ -16862,7 +16900,13 @@ loc_133B0:
 		move.w	#$800,d6
 		bsr.w	FindFloor
 		move.b	#$80,d2
-		bra.w	loc_131F6
+		move.b	(Primary_Angle).w,d3
+		btst	#0,d3
+		beq.s	.return
+		move.b	d2,d3
+
+.return:
+		rts
 ; ---------------------------------------------------------------------------
 
 ObjHitCeiling:
@@ -16880,10 +16924,10 @@ ObjHitCeiling:
 		bsr.w	FindFloor
 		move.b	(Primary_Angle).w,d3
 		btst	#0,d3
-		beq.s	locret_13406
+		beq.s	.return
 		move.b	#$80,d3
 
-locret_13406:
+.return:
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -16919,7 +16963,19 @@ loc_13408:
 		bsr.w	FindWall
 		move.w	(sp)+,d0
 		move.b	#$40,d2
-		bra.w	loc_131BE
+		move.b	(Secondary_Angle).w,d3
+		cmp.w	d0,d1
+		ble.s	.skip
+		move.b	(Primary_Angle).w,d3
+		exg	d0,d1
+
+.skip:
+		btst	#0,d3
+		beq.s	.return
+		move.b	d2,d3
+
+.return:
+		rts
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -16936,7 +16992,13 @@ loc_13478:
 		move.w	#$400,d6
 		bsr.w	FindWall
 		move.b	#$40,d2
-		bra.w	loc_131F6
+		move.b	(Primary_Angle).w,d3
+		btst	#0,d3
+		beq.s	.return
+		move.b	d2,d3
+
+.return:
+		rts
 ; End of function Sonic_HitWall
 
 ; ---------------------------------------------------------------------------
@@ -16958,10 +17020,10 @@ ObjHitWallLeft:
 		bsr.w	FindWall
 		move.b	(Primary_Angle).w,d3
 		btst	#0,d3
-		beq.s	locret_134C4
+		beq.s	.return
 		move.b	#$40,d3
 
-locret_134C4:
+.return:
 		rts
 ; ---------------------------------------------------------------------------
 		include	"objects/79 Lamppost.asm"
@@ -17116,21 +17178,21 @@ word_139BC:	dc.w 2
 		even
 ; ---------------------------------------------------------------------------
 
-S1Obj64:
+Obj64:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	S1Obj64_Index(pc,d0.w),d1
-		jmp	S1Obj64_Index(pc,d1.w)
+		move.w	Obj64_Index(pc,d0.w),d1
+		jmp	Obj64_Index(pc,d1.w)
 ; ---------------------------------------------------------------------------
-S1Obj64_Index:	dc.w S1Obj64_Init-S1Obj64_Index
-		dc.w S1Obj64_Animate-S1Obj64_Index
-		dc.w S1Obj64_ChkWater-S1Obj64_Index
-		dc.w S1Obj64_Display-S1Obj64_Index
-		dc.w S1Obj64_Delete-S1Obj64_Index
-		dc.w S1Obj64_BblMaker-S1Obj64_Index
+Obj64_Index:	dc.w Obj64_Init-Obj64_Index
+		dc.w Obj64_Animate-Obj64_Index
+		dc.w Obj64_ChkWater-Obj64_Index
+		dc.w Obj64_Display-Obj64_Index
+		dc.w Obj64_Delete-Obj64_Index
+		dc.w Obj64_BblMaker-Obj64_Index
 ; ---------------------------------------------------------------------------
 
-S1Obj64_Init:
+Obj64_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj0A_Bubbles,obMap(a0)
 		move.w	#make_art_tile(ArtTile_LZ_Bubbles,0,1),obGfx(a0)
@@ -17144,7 +17206,7 @@ S1Obj64_Init:
 		move.b	d0,objoff_32(a0)
 		move.b	d0,objoff_33(a0)
 		move.b	#6,obAnim(a0)
-		bra.w	S1Obj64_BblMaker
+		bra.w	Obj64_BblMaker
 ; ---------------------------------------------------------------------------
 
 loc_13A32:
@@ -17154,14 +17216,14 @@ loc_13A32:
 		jsr	(RandomNumber).l
 		move.b	d0,obAngle(a0)
 
-S1Obj64_Animate:
-		lea	Ani_S1Obj64(pc),a1
+Obj64_Animate:
+		lea	Ani_Obj64(pc),a1
 		jsr	(AnimateSprite).l
 		cmpi.b	#6,obFrame(a0)
-		bne.s	S1Obj64_ChkWater
+		bne.s	Obj64_ChkWater
 		move.b	#1,objoff_2E(a0)
 
-S1Obj64_ChkWater:
+Obj64_ChkWater:
 		move.w	(v_waterpos1).w,d0
 		cmp.w	obY(a0),d0
 		blo.s	loc_13A7E
@@ -17169,7 +17231,7 @@ S1Obj64_ChkWater:
 loc_13A70:
 		move.b	#6,obRoutine(a0)
 		addq.b	#3,obAnim(a0)
-		bra.w	S1Obj64_Display
+		bra.w	Obj64_Display
 ; ---------------------------------------------------------------------------
 
 loc_13A7E:
@@ -17183,7 +17245,7 @@ loc_13A7E:
 		move.w	d0,obX(a0)
 		tst.b	objoff_2E(a0)
 		beq.s	loc_13B0A
-		bsr.w	S1Obj64_ChkSonic
+		bsr.w	Obj64_ChkSonic
 		beq.s	loc_13B0A
 		bsr.w	ResumeMusic
 		move.w	#sfx_Bubble,d0
@@ -17217,8 +17279,8 @@ loc_13B1A:
 		jmp	(DeleteObject).l
 ; ---------------------------------------------------------------------------
 
-S1Obj64_Display:
-		lea	Ani_S1Obj64(pc),a1
+Obj64_Display:
+		lea	Ani_Obj64(pc),a1
 		jsr	(AnimateSprite).l
 		tst.b	obRender(a0)
 		bpl.s	loc_13B38
@@ -17229,11 +17291,11 @@ loc_13B38:
 		jmp	(DeleteObject).l
 ; ---------------------------------------------------------------------------
 
-S1Obj64_Delete:
+Obj64_Delete:
 		bra.w	DeleteObject
 ; ---------------------------------------------------------------------------
 
-S1Obj64_BblMaker:
+Obj64_BblMaker:
 		tst.w	objoff_36(a0)
 		bne.s	loc_13BA4
 		move.w	(v_waterpos1).w,d0
@@ -17253,7 +17315,7 @@ loc_13B6A:
 		bhs.s	loc_13B6A
 		move.b	d0,objoff_34(a0)
 		andi.w	#$C,d1
-		lea	S1Obj64_BblTypes(pc),a1
+		lea	Obj64_BblTypes(pc),a1
 		adda.w	d1,a1
 		move.l	a1,objoff_3C(a0)
 		subq.b	#1,objoff_32(a0)
@@ -17312,7 +17374,7 @@ loc_13C28:
 		clr.w	objoff_36(a0)
 
 loc_13C44:
-		lea	Ani_S1Obj64(pc),a1
+		lea	Ani_Obj64(pc),a1
 		jsr	(AnimateSprite).l
 
 loc_13C50:
@@ -17322,7 +17384,7 @@ loc_13C50:
 		blo.w	DisplaySprite
 		rts
 ; ---------------------------------------------------------------------------
-S1Obj64_BblTypes:
+Obj64_BblTypes:
 		dc.b	0,  1,	0,  0,	0,  0,	1,  0,	0
 		dc.b   0,  0,  1,  0,  1,  0,  0,  1,  0
 		even
@@ -17330,7 +17392,7 @@ S1Obj64_BblTypes:
 ; =============== S U B	R O U T	I N E =======================================
 
 
-S1Obj64_ChkSonic:
+Obj64_ChkSonic:
 		tst.b	(f_playerctrl).w
 		bmi.s	loc_13CBE
 		lea	(v_player).w,a1
@@ -17356,16 +17418,16 @@ S1Obj64_ChkSonic:
 loc_13CBE:
 		moveq	#0,d0
 		rts
-; End of function S1Obj64_ChkSonic
+; End of function Obj64_ChkSonic
 
 ; ---------------------------------------------------------------------------
-Ani_S1Obj64:	dc.w byte_13CD0-Ani_S1Obj64
-		dc.w byte_13CD5-Ani_S1Obj64
-		dc.w byte_13CDB-Ani_S1Obj64
-		dc.w byte_13CE2-Ani_S1Obj64
-		dc.w byte_13CE2-Ani_S1Obj64
-		dc.w byte_13CE4-Ani_S1Obj64
-		dc.w byte_13CE9-Ani_S1Obj64
+Ani_Obj64:	dc.w byte_13CD0-Ani_Obj64
+		dc.w byte_13CD5-Ani_Obj64
+		dc.w byte_13CDB-Ani_Obj64
+		dc.w byte_13CE2-Ani_Obj64
+		dc.w byte_13CE2-Ani_Obj64
+		dc.w byte_13CE4-Ani_Obj64
+		dc.w byte_13CE9-Ani_Obj64
 byte_13CD0:	dc.b  $E,  0,  1,  2,$FC
 byte_13CD5:	dc.b  $E,  1,  2,  3,  4,$FC
 byte_13CDB:	dc.b  $E,  2,  3,  4,  5,  6,$FC
@@ -17692,7 +17754,7 @@ Obj13:
 ; ---------------------------------------------------------------------------
 Obj13_Index:	dc.w loc_1446C-Obj13_Index
 		dc.w loc_14532-Obj13_Index
-		dc.w loc_145BC-Obj13_Index
+		dc.w loc_14584-Obj13_Index
 ; ---------------------------------------------------------------------------
 
 loc_1446C:
@@ -17722,7 +17784,7 @@ loc_1446C:
 
 sub_144D4:
 		jsr	(FindNextFreeObj).l
-		bne.s	locret_14516
+		bne.s	.return
 		_move.b	#id_Obj13,obID(a1)
 		addq.b	#4,obRoutine(a1)
 		move.w	obX(a0),obX(a1)
@@ -17733,7 +17795,7 @@ sub_144D4:
 		move.b	#$10,obActWid(a1)
 		move.b	#1,obPriority(a1)
 
-locret_14516:
+.return:
 		rts
 ; End of function sub_144D4
 
@@ -17793,11 +17855,6 @@ loc_1459C:
 		move.b	d0,obFrame(a1)
 		out_of_range.w	DeleteObject
 		rts
-; ---------------------------------------------------------------------------
-
-loc_145BC:
-		out_of_range.w	DeleteObject
-		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 Map_Obj13:	dc.w word_1460E-Map_Obj13
 		dc.w word_14618-Map_Obj13
@@ -18066,7 +18123,7 @@ See_Slope:
 		moveq	#1,d1
 +
 		btst	#4,obStatus(a0) ; p2_standing_bit
-		beq.s	See_Slope2
+		beq.s	See_ChgFrame
 		moveq	#2,d2
 		lea	(v_player2).w,a1
 		move.w	obX(a0),d0
@@ -18085,12 +18142,12 @@ See_Slope:
 		addq.w	#1,d1
 +
 		lsr.w	#1,d1
-		bra.s	See_Slope2
+		bra.s	See_ChgFrame
 ; ---------------------------------------------------------------------------
 
 loc_14D9A:
 		btst	#4,obStatus(a0) ; p2_standing_bit
-		beq.s	loc_21A38
+		beq.s	See_StoodOn
 		moveq	#2,d1
 		lea	(v_player2).w,a1
 		move.w	obX(a0),d0
@@ -18100,11 +18157,11 @@ loc_14D9A:
 		moveq	#0,d1
 +
 		cmpi.w	#8,d0
-		bhs.s	See_Slope2
+		bhs.s	See_ChgFrame
 		moveq	#1,d1
-		bra.s	See_Slope2
+		bra.s	See_ChgFrame
 ; ===========================================================================
-loc_21A38:
+See_StoodOn:
 		move.w	(v_player+obVelY).w,d0
 		move.w	(v_player2+obVelY).w,d2
 		cmp.w	d0,d2
@@ -18114,45 +18171,35 @@ loc_21A38:
 		move.w	d0,objoff_38(a0)
 
 
-See_Slope2:
-		bsr.w	sub_14E10
-		lea	byte_14FFE(pc),a2
+See_ChgFrame:
+		move.b	obFrame(a0),d0
+		cmp.b	d1,d0		; does frame need to change?
+		beq.s	.noflip		; if not, branch
+		bhs.s	.reduce_frame
+		addq.b	#2,d0
+
+.reduce_frame:
+		subq.b	#1,d0
+		move.b	d0,obFrame(a0)
+		move.b	d1,objoff_3A(a0)
+		bclr	#0,obRender(a0)
+		btst	#1,obFrame(a0)
+		beq.s	.noflip
+		bset	#0,obRender(a0)
+
+.noflip:
+		lea	See_DataSlope(pc),a2
 		btst	#0,obFrame(a0)
 		beq.s	+
-		lea	byte_1502F(pc),a2
+		lea	See_DataFlat(pc),a2
 +
-;		lea	(v_player).w,a1
-;		move.w	obVelY(a1),objoff_38(a0)
 		move.w	obX(a0),-(sp)
 		moveq	#0,d1
 		move.b	obActWid(a0),d1
 		moveq	#8,d3
 		move.w	(sp)+,d4
 		bra.w	SlopedPlatform
-; ---------------------------------------------------------------------------
-
-; =============== S U B	R O U T	I N E =======================================
-
-
-sub_14E10:
-		move.b	obFrame(a0),d0
-		cmp.b	d1,d0
-		beq.s	loc_14E1C.return
-		bhs.s	loc_14E1C
-		addq.b	#2,d0
-
-loc_14E1C:
-		subq.b	#1,d0
-		move.b	d0,obFrame(a0)
-		move.b	d1,objoff_3A(a0)
-		bclr	#0,obRender(a0)
-		btst	#1,obFrame(a0)
-		beq.s	.return
-		bset	#0,obRender(a0)
-
-.return:
-		rts
-; End of function sub_14E10
+; End of function See_ChgFrame
 
 ; ---------------------------------------------------------------------------
 
@@ -18219,7 +18266,7 @@ See_SpikeFall:
 ; ---------------------------------------------------------------------------
 
 loc_14EF2:
-		lea	word_14FF4(pc),a2
+		lea	See_YPos(pc),a2
 		moveq	#0,d0
 		move.b	obFrame(a1),d0
 		move.w	#$28,d2
@@ -18244,7 +18291,7 @@ loc_14F10:
 loc_14F4E:
 		jsr	(ObjectMoveAndFall).l
 		movea.l	objoff_3C(a0),a1
-		lea	word_14FF4(pc),a2
+		lea	See_YPos(pc),a2
 		moveq	#0,d0
 		move.b	obFrame(a1),d0
 		move.w	obX(a0),d1
@@ -18302,15 +18349,15 @@ sub_14FC4:
 ; End of function sub_14FC4
 
 ; ---------------------------------------------------------------------------
-word_14FF4:	dc.w	 -8,  -$1C,  -$2F,  -$1C,    -8	; 0
-byte_14FFE:	dc.b  $14, $14,	$16, $18, $1A, $1C, $1A	; 0
+See_YPos:	dc.w	 -8,  -$1C,  -$2F,  -$1C,    -8	; 0
+See_DataSlope:	dc.b  $14, $14,	$16, $18, $1A, $1C, $1A	; 0
 		dc.b  $18, $16,	$14, $13, $12, $11, $10	; 7
 		dc.b   $F,  $E,	 $D,  $C,  $B,	$A,   9	; 14
 		dc.b	8,   7,	  6,   5,   4,	 3,   2	; 21
 		dc.b	1,   0,	 -1,  -2,  -3,	-4,  -5	; 28
 		dc.b   -6,  -7,	 -8,  -9, -$A, -$B, -$C	; 35
 		dc.b  -$D, -$E,	-$E, -$E, -$E, -$E, -$E	; 42
-byte_1502F:	dc.b	5,   5,	  5,   5,   5,	 5,   5	; 0
+See_DataFlat:	dc.b	5,   5,	  5,   5,   5,	 5,   5	; 0
 		dc.b	5,   5,	  5,   5,   5,	 5,   5	; 7
 		dc.b	5,   5,	  5,   5,   5,	 5,   5	; 14
 		dc.b	5,   5,	  5,   5,   5,	 5,   5	; 21

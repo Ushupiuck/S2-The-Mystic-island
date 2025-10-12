@@ -738,19 +738,24 @@ Ring_end_addr_P2:	ds.w	1
 Screen_redraw_flag:	ds.b	1			; if whole screen needs to redraw, such as when you destroy the hatch before the boss in WFZ
 Scroll_Timer:		ds.b	1			; unused
 
-Water_flag:		ds.b	1
-			ds.b	1			; unused
-
 Sonic_top_speed:	ds.w	1
 Sonic_acceleration:	ds.w	1
 Sonic_deceleration:	ds.w	1
 Sonic_LastLoadedDPLC:	ds.b	1
+Tails_LastLoadedDPLC:		ds.b	1
+TailsTails_LastLoadedDPLC:	ds.b	1
 Primary_Angle:		ds.b	1
 Secondary_Angle:	ds.b	1
 Obj_placement_routine:	ds.b	1
 
 Camera_X_pos_last:	ds.w	1			; Camera_X_pos_coarse from the previous frame
 Camera_X_pos_last_End:
+Camera_X_pos_last_P2:	ds.w	1
+Camera_X_pos_last_P2_End:
+Camera_X_pos_coarse:	ds.w	1			; (Camera_X_pos - 128) / 256
+Camera_X_pos_coarse_End:
+Camera_X_pos_coarse_P2:	ds.w	1
+Camera_X_pos_coarse_P2_End:
 
 Object_Manager_Addresses:
 Obj_load_addr_right:	ds.l	1			; contains the address of the next object to load when moving right
@@ -761,18 +766,6 @@ Object_Manager_Addresses_P2:
 Obj_load_addr_right_P2:	ds.l	1
 Obj_load_addr_left_P2:	ds.l	1
 Object_Manager_Addresses_P2_End:
-
-Object_manager_2P_RAM:					; The next 16 bytes belong to this.
-Object_RAM_block_indices:	ds.b	6		; seems to be an array of horizontal chunk positions, used for object position range checks
-Player_1_loaded_object_blocks:	ds.b	3
-Player_2_loaded_object_blocks:	ds.b	3
-
-Camera_X_pos_last_P2:	ds.w	1
-Camera_X_pos_last_P2_End:
-
-Obj_respawn_index_P2:	ds.b	2			; respawn table indices of the next objects when moving left or right for the second player
-Obj_respawn_index_P2_End:
-Object_manager_2P_RAM_End:
 
 Demo_button_index:	ds.w	1			; index into button press demo data, for player 1
 Demo_press_counter:	ds.b	1			; frames remaining until next button press, for player 1
@@ -785,43 +778,30 @@ v_palss_num:		ds.w	1			; palette cycling in Special Stage - reference number
 v_palss_time:		ds.w	1			; palette cycling in Special Stage - time until next change
 v_palss_index:		ds.w	1			; palette cycling in Special Stage - index into palette cycle 2 (unused?)
 v_ssbganim:		ds.w	1			; Special Stage background animation
-			ds.b	1			; seems unused
-Boss_defeated_flag:
-v_bossstatus:		ds.b	1
 
 v_gfxbigring:		ds.w	1			; settings for giant ring graphics loading
 f_lockscreen:		ds.b	1
-
 f_wtunnelmode:		ds.b	1			; LZ water tunnel mode
+
 f_playerctrl:		ds.b	1			; Player control override flags (object ineraction, control enable)
 f_wtunnelallow:		ds.b	1			; LZ water tunnels (00 = enabled; 01 = disabled)
 f_slidemode:		ds.b	1			; LZ water slide mode
-			ds.b	1			; unused
+Boss_defeated_flag:	ds.b	1
 
+v_lz_deform:		ds.w	1			; LZ deformation offset, in units of $80
 f_lockctrl:		ds.b	1
 f_bigring:		ds.b	1			; flag set when Sonic collects the giant ring
-			ds.b	1			; v_syz3door; flag to move the blockade at SYZ act 3, unused
-			ds.b	1			; unused
 
 v_itembonus:		ds.w	1			; item bonus from broken enemies, blocks etc.
 v_timebonus:		ds.w	1			; time bonus at the end of an act
 v_ringbonus:		ds.w	1			; ring bonus at the end of an act
 f_endactbonus:		ds.b	1			; time/ring bonus update flag at the end of an act
-			ds.b	1			; unused
-v_lz_deform:		ds.w	1			; LZ deformation offset, in units of $80
-
-Camera_X_pos_coarse:	ds.w	1			; (Camera_X_pos - 128) / 256
-Camera_X_pos_coarse_End:
-
-Camera_X_pos_coarse_P2:	ds.w	1
-Camera_X_pos_coarse_P2_End:
-
-Tails_LastLoadedDPLC:	ds.b	1
-TailsTails_LastLoadedDPLC:	ds.b	1
+Water_flag:		ds.b	1
 
 f_switch:		ds.b	$10			; flags set when Sonic stands on a switch
 
 Anim_Counters:		ds.b	$10
+			ds.b	$14			; unused
 
 v_levelvariables_end:
 
@@ -939,11 +919,11 @@ f_demo:			ds.w	1			; demo mode flag (0 = no; 1 = yes; $8001 = ending)
 v_demonum:		ds.w	1			; demo level number (not the same as the level number)
 v_creditsnum:		ds.w	1			; credits index number
 
+			ds.b	$140			; stack
+v_systemstack:
 v_objstate:		ds.b	$C0			; object state list
 v_objstate_end:
 			ds.b	$540
-			ds.b	$140			; stack
-v_systemstack:
 			ds.b	$200
 v_end:
 	if * > 0	; don't declare more space than the RAM can contain!
@@ -1023,16 +1003,16 @@ HW_Expansion_SCtrl:		equ $A1001F
 
 ; Background music
 bgm_GHZ =		MusID_GHZ
-bgm_LZ =		MusID_CPZ
+bgm_LZ =		MusID_DDZ1
 bgm_MZ =		MusID_CPZ
 bgm_SLZ =		MusID_GRGZ1
-bgm_SYZ =		MusID_HPZ
+bgm_SYZ =		MusID_DDZ1
 bgm_SBZ =		MusID_HTZ
 bgm_Invincible =	MusID_Invincible
 bgm_ExtraLife =		MusID_ExtraLife
-bgm_SS =		MusID_SpecStage
+bgm_SS =		MusID_BonusStage
 bgm_Title =		MusID_Title
-bgm_Ending =		MusID_Ending
+bgm_Ending =		MusID_Ending_S1
 bgm_Boss =		MusID_Boss
 bgm_FZ =		MusID_HTZ
 bgm_GotThrough =	MusID_EndLevel
