@@ -109,7 +109,6 @@ planeLocH40 function col,line,(($80 * line) + (2 * col))
 ; function to calculate the location of a tile in plane mappings with a width of 128 cells
 planeLocH80 function col,line,(($100 * line) + (2 * col))
 ; ---------------------------------------------------------------------------
-; ---------------------------------------------------------------------------
 ; some variables and functions to help define those constants (redefined before a new set of IDs)
 offset :=	0					; this is the start of the pointer table
 ptrsize :=	1					; this is the size of a pointer (should be 1 if the ID is a multiple of the actual size)
