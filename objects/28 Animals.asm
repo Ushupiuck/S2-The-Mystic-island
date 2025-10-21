@@ -123,7 +123,7 @@ loc_9C4A:
 		bne.s	loc_9CAA
 		bsr.w	FindFreeObj
 		bne.s	+
-		_move.b	#id_Obj29,obID(a1)
+		_move.b	#id_Obj07,obID(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.w	objoff_3E(a0),d0
@@ -213,28 +213,28 @@ loc_9DA0:
 		bne.s	loc_9DB2
 		tst.b	obRender(a0)
 		bpl.w	DeleteObject
--		bra.w	DisplaySprite
+		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
 loc_9DB2:
 		move.w	obX(a0),d0
 		sub.w	(v_player+obX).w,d0
-		bcs.s	-
+		bcs.s	+
 		subi.w	#$180,d0
-		bpl.s	-
+		bpl.s	+
 		tst.b	obRender(a0)
 		bpl.w	DeleteObject
-		bra.w	DisplaySprite
++		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
 loc_9DCE:
 		tst.b	obRender(a0)
 		bpl.w	DeleteObject
 		subq.w	#1,objoff_36(a0)
-		bne.s	-
+		bne.s	+
 		move.b	#2,obRoutine(a0)
 		move.b	#3,obPriority(a0)
-		bra.w	DisplaySprite
++		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
 loc_9DEE:

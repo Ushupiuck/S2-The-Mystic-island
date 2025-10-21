@@ -1,8 +1,8 @@
 ; ---------------------------------------------------------------------------
-; Object 0E - Sonic and Tails from the title screen
+; Object 91 - Sonic and Tails from the title screen
 ; ---------------------------------------------------------------------------
 
-Obj0E:
+TitleSonicTails:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	TSon_Index(pc,d0.w),d1
@@ -18,7 +18,7 @@ TSon_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		move.w	#$148,obScreenX(a0)	; this part of code loads Sonic on the Title Screen.
 		move.w	#$C4,obScreenY(a0)	; position is fixed to screen
-		move.l	#Map_Obj0E,obMap(a0)
+		move.l	#Map_TitleST,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Title_Sonic_And_Tails,2,0),obGfx(a0)
 		move.b	#1,obPriority(a0)
 		move.b	#29,obDelayAni(a0)	; set time delay to 0.5 seconds

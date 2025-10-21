@@ -1,5 +1,6 @@
 SongNames:	offsetTable
 	offsetTableEntry.w	MusNam_Null
+	offsetTableEntry.w	MusNam_TestSong1
 	offsetTableEntry.w	MusNam_Title
 	offsetTableEntry.w	MusNam_2PResult
 	offsetTableEntry.w	MusNam_Options
@@ -25,9 +26,9 @@ SongNames:	offsetTable
 	offsetTableEntry.w	MusNam_MTZ
 	offsetTableEntry.w	MusNam_PPZ1
 	offsetTableEntry.w	MusNam_PPZ2
-	offsetTableEntry.w	MusNam_SBZ
 	offsetTableEntry.w	MusNam_LBZ1_S3
 	offsetTableEntry.w	MusNam_LBZ2_S3
+	offsetTableEntry.w	MusNam_SBZ
 	offsetTableEntry.w	MusNam_DEZ
 	offsetTableEntry.w	MusNam_Boss
 	offsetTableEntry.w	MusNam_Boss2
@@ -56,11 +57,13 @@ SongNames:	offsetTable
 	offsetTableEntry.w	MusNam_EndLevel
 	offsetTableEntry.w	MusNam_GameOver
 	offsetTableEntry.w	MusNam_ExtraLife
+	offsetTableEntry.w	MusNam_DoubleLife
 	offsetTableEntry.w	MusNam_Continue
 	offsetTableEntry.w	MusNam_Emerald
 	offsetTableEntry.w	MusNam_Countdown
 
 MusNam_Null:	dc.b 0,' '
+MusNam_TestSong1:	songtext	"EGG UTOPIA"
 MusNam_Title:	songtext	"TITLE SCREEN"
 MusNam_2PResult:	songtext	"2P RESULT"
 MusNam_Options:	songtext	"OPTIONS"
@@ -86,9 +89,9 @@ MusNam_OOZ:	songtext	"OIL OCEAN"
 MusNam_MTZ:	songtext	"METROPOLIS"
 MusNam_PPZ1:	songtext	"PANIC PUPPET ACT 1"
 MusNam_PPZ2:	songtext	"PANIC PUPPET ACT 2"
-MusNam_SBZ:	songtext	"SCRAP BRAIN"
 MusNam_LBZ1_S3:	songtext	"LAUNCH BASE ACT 1 (PROTO)"
 MusNam_LBZ2_S3:	songtext	"LAUNCH BASE ACT 2 (PROTO)"
+MusNam_SBZ:	songtext	"SCRAP BRAIN"
 MusNam_DEZ:	songtext	"DEATH EGG"
 MusNam_Boss:	songtext	"BOSS"
 MusNam_Boss2:	songtext	"BOSS 2"
@@ -117,6 +120,7 @@ MusNam_SCZ:	songtext	"SKY CHASE"
 MusNam_EndLevel:	songtext	"ACT CLEAR"
 MusNam_GameOver:	songtext	"GAME OVER"
 MusNam_ExtraLife:	songtext	"EXTRA LIFE"
+MusNam_DoubleLife:	songtext	"DOUBLE LIFE"
 MusNam_Continue:	songtext	"CONTINUE"
 MusNam_Emerald:	songtext	"CHAOS EMERALD"
 MusNam_Countdown:	songtext	"DROWNING"

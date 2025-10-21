@@ -57,6 +57,7 @@ Mus_CNZ_2P:	BINCLUDE "sound/music/CNZ 2P_cmp.bin" ; $3CE bytes
 Mus_Test_Evening_Star:	BINCLUDE "sound/music/New - Evening star_cmp.bin" ; $3CD bytes
 Mus_2PResult:	BINCLUDE "sound/music/Results screen 2P_cmp.bin" ; $3B4 bytes
 Mus_EHZ_2P:	BINCLUDE "sound/music/EHZ 2P_cmp.bin" ; $3AA bytes
+Mus_TestSong1:	BINCLUDE "sound/music/Egg_Utopia_cmp.bin" ; $390 bytes
 Mus_MTZ:	BINCLUDE "sound/music/MTZ_cmp.bin" ; $37D bytes
 Mus_DEZ:	BINCLUDE "sound/music/DEZ_cmp.bin" ; $37B bytes
 Mus_HTZ:	BINCLUDE "sound/music/HTZ_cmp.bin" ; $35E bytes
@@ -69,8 +70,7 @@ Mus_Test_Walkin:	BINCLUDE "sound/music/New - Walkin_cmp.bin" ; $2CB bytes
 Mus_EndBoss:	BINCLUDE "sound/music/Final Boss_cmp.bin" ; $2CA bytes
 Mus_SuperSonic:	BINCLUDE "sound/music/Super Sonic_cmp.bin" ; $2B9 bytes
 Mus_Ending_S1:	BINCLUDE "sound/music/Ending - S1 GHZ Outro_cmp.bin" ; $24C bytes
-Mus_Boss:	BINCLUDE "sound/music/Boss_cmp.bin" ; $217 bytes
-Mus_HPZ:	BINCLUDE "sound/music/HPZ_cmp.bin" ; $207 bytes
+Mus_DoubleLife:	include "sound/music/Double life.asm" ; $12A bytes
 
 	finishBank
 
@@ -79,6 +79,8 @@ Mus_HPZ:	BINCLUDE "sound/music/HPZ_cmp.bin" ; $207 bytes
 ; ------------------------------------------------------------------------------
 SndMus4_Start:	startBank
 
+Mus_Boss:	BINCLUDE "sound/music/Boss_cmp.bin" ; $217 bytes
+Mus_HPZ:	BINCLUDE "sound/music/HPZ_cmp.bin" ; $207 bytes
 Mus_Invincible:	BINCLUDE "sound/music/Invincible_cmp.bin" ; $191 bytes
 Mus_Continue:	BINCLUDE "sound/music/Continue_cmp.bin" ; $15A bytes
 Mus_GameOver:	include "sound/music/Game over.asm" ; $14F bytes

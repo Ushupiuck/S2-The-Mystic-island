@@ -1,16 +1,19 @@
-;----------------------------------------------------
+; ---------------------------------------------------------------------------
 ; Object 04 - water surface
-;----------------------------------------------------
+; ---------------------------------------------------------------------------
 
 Obj04:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	Obj04_Index(pc,d0.w),d1
-		jmp	Obj04_Index(pc,d1.w)
-; ---------------------------------------------------------------------------
-Obj04_Index:	dc.w Obj04_Init-Obj04_Index
-		dc.w Obj04_Main-Obj04_Index
-; ---------------------------------------------------------------------------
+		move.w	Surf_Index(pc,d0.w),d1
+		jmp	Surf_Index(pc,d1.w)
+; ===========================================================================
+Surf_Index:	dc.w Obj04_Init-Surf_Index
+		dc.w Obj04_Main-Surf_Index
+
+surf_origX = objoff_30		; original x-axis position
+surf_freeze = objoff_32		; flag to freeze animation
+; ===========================================================================
 
 Obj04_Init:
 		addq.b	#2,obRoutine(a0)
@@ -18,24 +21,26 @@ Obj04_Init:
 		move.w	#make_art_tile(ArtTile_Water_Surface,0,1),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.b	#$80,obActWid(a0)
-		move.w	obX(a0),objoff_30(a0)
+		move.w	obX(a0),surf_origX(a0)
 
 Obj04_Main:
 		move.w	(v_waterpos1).w,d1
 		move.w	d1,obY(a0)
-		tst.b	objoff_32(a0)
-		bne.s	loc_15530
-		btst	#bitStart,(v_jpadpress1).w
-		beq.s	loc_15540
+		tst.b	surf_freeze(a0)
+		bne.s	Obj04_Animate
+		move.b	(v_jpadpress1).w,d0 ; is Start button pressed?
+		or.b	(v_jpadpress2).w,d0 ; (either player)
+		andi.b	#btnStart,d0
+		beq.s	loc_15540		; if not, branch
 		addq.b	#3,obFrame(a0)
-		move.b	#1,objoff_32(a0)
-		bra.s	loc_15540
+		move.b	#1,surf_freeze(a0)
+		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
-loc_15530:
+Obj04_Animate:
 		tst.w	(f_pause).w
-		bne.s	loc_15540
-		move.b	#0,objoff_32(a0)
+		bne.s	Obj04_Display
+		move.b	#0,surf_freeze(a0)
 		subq.b	#3,obFrame(a0)
 
 loc_15540:
@@ -45,4 +50,14 @@ loc_15540:
 		move.b	(a1,d1.w),obFrame(a0)
 		addq.b	#1,obAniFrame(a0)
 		andi.b	#$3F,obAniFrame(a0)
+Obj04_Display:
 		jmp	(DisplaySprite).l
+; ===========================================================================
+; water sprite animation 'script' (custom format for this object)
+Obj04_FrameData:
+		dc.b 0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1
+		dc.b 1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2
+		dc.b 2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1
+		dc.b 1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0
+		even
+; ===========================================================================

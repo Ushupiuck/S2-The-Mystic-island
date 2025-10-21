@@ -1,46 +1,47 @@
-;----------------------------------------------------
-; Sonic	1 Object 4B - leftover giant ring code
-;----------------------------------------------------
+; ---------------------------------------------------------------------------
+; Object 7B - Special Stage Entry
+; ---------------------------------------------------------------------------
 
-S1Obj4B:
+GiantRing:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	S1Obj4B_Index(pc,d0.w),d1
-		jmp	S1Obj4B_Index(pc,d1.w)
+		move.w	GiantRing_Index(pc,d0.w),d1
+		jmp	GiantRing_Index(pc,d1.w)
 ; ---------------------------------------------------------------------------
-S1Obj4B_Index:	dc.w loc_AA88-S1Obj4B_Index
-		dc.w loc_AAD6-S1Obj4B_Index
-		dc.w loc_AAF4-S1Obj4B_Index
-		dc.w loc_AB38-S1Obj4B_Index
+GiantRing_Index:
+		dc.w GRing_Main-GiantRing_Index
+		dc.w GRing_Animate-GiantRing_Index
+		dc.w GRing_Collect-GiantRing_Index
+		dc.w GRing_Delete-GiantRing_Index
 ; ---------------------------------------------------------------------------
 
-loc_AA88:
-		move.l	#Map_S1Obj4B,obMap(a0)
+GRing_Main:
+		move.l	#Map_GiantRing,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Giant_Ring,1,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#$40,obActWid(a0)
 		tst.b	obRender(a0)
-		bpl.s	loc_AAD6
+		bpl.s	GRing_Animate
 		cmpi.b	#6,(v_emeralds).w
-		beq.w	loc_AB38
+		beq.w	GRing_Delete
 		cmpi.w	#50,(v_rings).w
-		bcc.s	loc_AAC0
+		bcc.s	GRing_Okay
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_AAC0:
+GRing_Okay:
 		addq.b	#2,obRoutine(a0)
 		move.b	#2,obPriority(a0)
 		move.b	#$52,obColType(a0)
 		move.w	#$C40,(v_gfxbigring).w
 
-loc_AAD6:
+GRing_Animate:
 		move.b	(v_ani1_frame).w,obFrame(a0)
 		out_of_range.w	DeleteObject
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
-loc_AAF4:
+GRing_Collect:
 		subq.b	#2,obRoutine(a0)
 		move.b	#0,obColType(a0)
 		bsr.w	FindFreeObj
@@ -57,8 +58,10 @@ loc_AAF4:
 loc_AB2C:
 		move.w	#sfx_GiantRing,d0
 		jsr	(PlaySound_Special).l
-		bra.s	loc_AAD6
+		move.b	(v_ani1_frame).w,obFrame(a0)
+		out_of_range.w	DeleteObject
+		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
-loc_AB38:
+GRing_Delete:
 		bra.w	DeleteObject

@@ -47,7 +47,7 @@ sub_B098:
 
 loc_B0AC:
 		addq.b	#2,obRoutine(a0)
-		move.w	#30-1,obTimeFrame(a0)
+		move.b	#30-1,obTimeFrame(a0)
 		moveq	#0,d0
 		move.b	obAnim(a0),d0
 		add.w	d0,d0
@@ -76,8 +76,8 @@ Monitor_Null:
 Monitor_SonicLife:	; Now rarer and MUCH more valuable!
 		addq.b	#2,(v_lives).w
 		addq.b	#2,(f_lifecount).w
-		move.w	#bgm_ExtraLife,d0	; Potentially with an
-		jmp	(PlaySound).l	; Unique sound. TODO!
+		move.w	#bgm_DoubleLife,d0
+		jmp	(PlaySound).l
 ; ---------------------------------------------------------------------------
 
 Monitor_TailsLife:	; 1up monitor
@@ -127,18 +127,14 @@ Monitor_Invincibility:
 		move.b	#id_Obj38,(v_starsobj1).w
 		move.b	#1,(v_starsobj1+obAnim).w
 		tst.b	(f_lockscreen).w
-		bne.s	locret_B1A8
+		bne.w	Monitor_Null
 		cmpi.w	#12,(v_air).w
-		bls.s	locret_B1A8
+		bls.w	Monitor_Null
 		move.w	#bgm_Invincible,d0
 		jmp	(PlaySound).l
 ; ---------------------------------------------------------------------------
 
-locret_B1A8:
-		rts
-; ---------------------------------------------------------------------------
-
 loc_B1AA:
-		subq.w	#1,obTimeFrame(a0)
+		subq.b	#1,obTimeFrame(a0)
 		bmi.w	DeleteObject
 		bra.w	DisplaySprite

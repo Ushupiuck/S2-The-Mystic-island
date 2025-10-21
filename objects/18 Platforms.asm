@@ -138,19 +138,22 @@ loc_8958:
 		move.b	obAngle(a0),d1
 		neg.b	d1
 		addi.b	#$40,d1
-		bra.s	loc_8974
+		ext.w	d1
+		add.w	d1,d0
+		move.w	d0,obX(a0)
+		move.b	(v_oscillate+$1A).w,obAngle(a0)
+		rts
 ; ---------------------------------------------------------------------------
 
 loc_8968:
 		move.w	objoff_32(a0),d0
 		move.b	obAngle(a0),d1
 		subi.b	#$40,d1
-
-loc_8974:
 		ext.w	d1
 		add.w	d1,d0
 		move.w	d0,obX(a0)
-		bra.w	loc_8AD2
+		move.b	(v_oscillate+$1A).w,obAngle(a0)
+		rts
 ; ---------------------------------------------------------------------------
 
 loc_8980:
@@ -158,14 +161,22 @@ loc_8980:
 		move.b	(v_oscillate+$E).w,d1
 		neg.b	d1
 		addi.b	#$30,d1
-		bra.s	loc_89BA
+		ext.w	d1
+		add.w	d1,d0
+		move.w	d0,objoff_2C(a0)
+		move.b	(v_oscillate+$1A).w,obAngle(a0)
+		rts
 ; ---------------------------------------------------------------------------
 
 loc_8990:
 		move.w	objoff_34(a0),d0
 		move.b	(v_oscillate+$E).w,d1
 		subi.b	#$30,d1
-		bra.s	loc_89BA
+		ext.w	d1
+		add.w	d1,d0
+		move.w	d0,objoff_2C(a0)
+		move.b	(v_oscillate+$1A).w,obAngle(a0)
+		rts
 ; ---------------------------------------------------------------------------
 
 loc_899E:
@@ -173,37 +184,40 @@ loc_899E:
 		move.b	obAngle(a0),d1
 		neg.b	d1
 		addi.b	#$40,d1
-		bra.s	loc_89BA
+		ext.w	d1
+		add.w	d1,d0
+		move.w	d0,objoff_2C(a0)
+		move.b	(v_oscillate+$1A).w,obAngle(a0)
+		rts
 ; ---------------------------------------------------------------------------
 
 loc_89AE:
 		move.w	objoff_34(a0),d0
 		move.b	obAngle(a0),d1
 		subi.b	#$40,d1
-
-loc_89BA:
 		ext.w	d1
 		add.w	d1,d0
 		move.w	d0,objoff_2C(a0)
-		bra.w	loc_8AD2
+		move.b	(v_oscillate+$1A).w,obAngle(a0)
+		rts
 ; ---------------------------------------------------------------------------
 
 loc_89C6:
 		tst.w	objoff_3A(a0)
 		bne.s	loc_89DC
 		btst	#3,obStatus(a0)
-		beq.s	locret_89DA
+		beq.s	.return
 		move.w	#$1E,objoff_3A(a0)
-
-locret_89DA:
+.return:
 		rts
 ; ---------------------------------------------------------------------------
 
 loc_89DC:
 		subq.w	#1,objoff_3A(a0)
-		bne.s	locret_89DA
+		bne.s	.return
 		move.w	#$20,objoff_3A(a0)
 		addq.b	#1,obSubtype(a0)
+.return:
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -236,10 +250,9 @@ loc_8A2E:
 		move.w	(Camera_Max_Y_pos).w,d0
 		addi.w	#224,d0
 		cmp.w	objoff_2C(a0),d0
-		bcc.s	locret_8A5A
+		bcc.s	.return
 		move.b	#4,obRoutine(a0)
-
-locret_8A5A:
+.return:
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -251,17 +264,17 @@ loc_8A5C:
 		move.b	obSubtype(a0),d0
 		lsr.w	#4,d0
 		tst.b	(a2,d0.w)
-		beq.s	locret_8A7A
+		beq.s	.return
 		move.w	#$3C,objoff_3A(a0)
-
-locret_8A7A:
+.return:
 		rts
 ; ---------------------------------------------------------------------------
 
 loc_8A7C:
 		subq.w	#1,objoff_3A(a0)
-		bne.s	locret_8A7A
+		bne.s	.return
 		addq.b	#1,obSubtype(a0)
+.return:
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -270,10 +283,9 @@ loc_8A88:
 		move.w	objoff_34(a0),d0
 		subi.w	#$200,d0
 		cmp.w	objoff_2C(a0),d0
-		bne.s	locret_8A9E
+		bne.s	.return
 		clr.b	obSubtype(a0)
-
-locret_8A9E:
+.return:
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -285,7 +297,8 @@ loc_8AA0:
 		asr.w	#1,d1
 		add.w	d1,d0
 		move.w	d0,objoff_2C(a0)
-		bra.w	loc_8AD2
+		move.b	(v_oscillate+$1A).w,obAngle(a0)
+		rts
 ; ---------------------------------------------------------------------------
 
 loc_8ABA:
@@ -297,7 +310,5 @@ loc_8ABA:
 		asr.w	#1,d1
 		add.w	d1,d0
 		move.w	d0,objoff_2C(a0)
-
-loc_8AD2:
 		move.b	(v_oscillate+$1A).w,obAngle(a0)
 		rts

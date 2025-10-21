@@ -46,20 +46,24 @@ Over_UpdatePos:
 ; ---------------------------------------------------------------------------
 
 Over_SetWait:
-		move.w	#720,obTimeFrame(a0)	; set time delay to 12 seconds
+		move.b	#$C0,obTimeFrame(a0)	; set time delay to 12 seconds
 		addq.b	#2,obRoutine(a0)
-		bra.w	DisplaySprite		; KoH additional line to prevent blinking.
+		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
 Over_Wait:	; Routine 4
+		btst	#0,obMap(a0)
+		bne.w	DisplaySprite
 		move.b	(v_jpadpress1).w,d0
+		or.b	(v_jpadpress2).w,d0
 		andi.b	#btnABC,d0	; is button A, B or C pressed?
 		bne.s	Over_ChgMode	; if yes, branch
-		btst	#0,obFrame(a0)
-		bne.w	DisplaySprite
-		tst.w	obTimeFrame(a0)	; has time delay reached zero?
+		tst.b	obTimeFrame(a0)	; has time delay reached zero?
 		beq.s	Over_ChgMode	; if yes, branch
-		subq.w	#1,obTimeFrame(a0) ; subtract 1 from time delay
+		move.b	(Timer_frames).w,d0
+		andi.b	#3,d0
+		bne.w	DisplaySprite
+		subq.b	#1,obTimeFrame(a0) ; subtract 1 from time delay when d0 = 0
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 

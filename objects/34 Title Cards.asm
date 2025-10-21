@@ -65,7 +65,7 @@ Card_MakeSprite:
 		move.b	#$78,obActWid(a1)
 		move.b	#0,obRender(a1)
 		move.b	#0,obPriority(a1)
-		move.w	#60,obTimeFrame(a1)
+		move.b	#60,obTimeFrame(a1)
 		lea	object_size(a1),a1
 		dbf	d1,Card_Loop
 
@@ -93,9 +93,9 @@ Obj34_NoDisplay:
 ; ---------------------------------------------------------------------------
 
 Card_Wait:	; Routine 4/6
-		tst.w	obTimeFrame(a0)	; is time remaining zero?
+		tst.b	obTimeFrame(a0)	; is time remaining zero?
 		beq.s	Card_ChkPos2	; if yes, branch
-		subq.w	#1,obTimeFrame(a0) ; subtract 1 from time
+		subq.b	#1,obTimeFrame(a0) ; subtract 1 from time
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 

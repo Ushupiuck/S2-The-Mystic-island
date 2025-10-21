@@ -18,14 +18,14 @@ Obj25_Index:
 ; ---------------------------------------------------------------------------
 
 Obj25_Init:
-		addq.b	#2,obRoutine(a1)
-		move.w	obX(a0),objoff_32(a1)
-		move.l	#Map_Ring,obMap(a1)
-		move.w	#make_art_tile(ArtTile_Ring,1,0),obGfx(a1)
-		move.b	#4,obRender(a1)
-		move.b	#2,obPriority(a1)
-		move.b	#$47,obColType(a1)
-		move.b	#8,obActWid(a1)
+		addq.b	#2,obRoutine(a0)
+		move.w	obX(a0),objoff_32(a0)
+		move.l	#Map_Ring,obMap(a0)
+		move.w	#make_art_tile(ArtTile_Ring,1,0),obGfx(a0)
+		move.b	#4,obRender(a0)
+		move.b	#2,obPriority(a0)
+		move.b	#$47,obColType(a0)
+		move.b	#8,obActWid(a0)
 
 Obj25_Animate:
 		move.b	(v_ani1_frame).w,obFrame(a0)
@@ -72,9 +72,8 @@ CollectRing:
 ; End of function CollectRing
 
 ; ---------------------------------------------------------------------------
-;----------------------------------------------------
 ; Object 37 - Rings flying out of you when you get hit
-;----------------------------------------------------
+;----------------------------------------------------------------------------
 
 Obj37:
 		moveq	#0,d0

@@ -32,13 +32,14 @@ obTimeFrame:		equ $1E		; time to next frame
 obDelayAni:		equ $1F		; time to delay animation
 obColType:		equ $20		; collision response type
 obColProp:		equ $21		; collision extra property
-obStatus:		equ $22		; orientation or mode
+obStatus:		equ $22		; note: exact meaning depends on the object... for sonic/tails: bit 0: leftfacing. bit 1: inair. bit 2: spinning. bit 3: onobject. bit 4: rolljumping. bit 5: pushing. bit 6: underwater.
 obRespawnNo:		equ $23		; respawn list index number
 obRoutine:		equ $24		; routine number
 ob2ndRout:		equ $25		; secondary routine number
-obAngle:		equ $26		; angle
+obAngle:		equ $26		; angle about the z axis (360 degrees = 256)
 obSubtype:		equ $28		; object subtype
 obControl:		equ $2A		; 0 for normal, 1 for hanging or for resting on a flipper, $81 for going through CNZ/OOZ/MTZ tubes or stopped in CNZ cages or stoppers or flying if Tails
+obStatusSecondary:	equ $2B
 obSolid:	equ ob2ndRout		; solid status flag
 
 obTopSolidBit:		equ $3E		; bit to check for top solidity (either $C or $E)
@@ -58,6 +59,7 @@ standonobject:		equ $3D		; object Sonic stands on
 objoff_25:		equ $25
 objoff_26:		equ $26
 objoff_27:		equ $27
+objoff_28:		equ $28
 objoff_29:		equ $29
 objoff_2A:		equ $2A
 objoff_2B:		equ $2B
@@ -66,6 +68,7 @@ objoff_2D:		equ $2D
 objoff_2E:		equ $2E
 objoff_2F:		equ $2F
 objoff_30:		equ $30
+objoff_31:		equ $31
 objoff_32:		equ $32
 objoff_33:		equ $33
 objoff_34:		equ $34
@@ -122,43 +125,14 @@ sub8_mapframe	= subspr_data+next_subspr*6+5
 sub9_x_pos	= subspr_data+next_subspr*7+0
 sub9_y_pos	= subspr_data+next_subspr*7+2
 sub9_mapframe	= subspr_data+next_subspr*7+5
-
 ; ---------------------------------------------------------------------------
-; Object Status Table offsets S2 Nomemclature
-; ---------------------------------------------------------------------------
-; universally followed object conventions:
-id =			  0 ; object ID (if you change this, change insn1op and insn2op in s2.macrosetup.asm, if you still use them)
-render_flags =		  1 ; bitfield ; bit 7 = onscreen flag, bit 0 = x mirror, bit 1 = y mirror, bit 2 = coordinate system, bit 6 = render subobjects
-art_tile =		  2 ; and 3 ; start of sprite's art
-mappings =		  4 ; and 5 and 6 and 7
-x_pos =			  8 ; and 9 ... some objects use $A and $B as well when extra precision is required (see ObjectMove) ... for screen-space objects this is called x_pixel instead
-x_sub =			 $A ; and $B
-y_pos =			 $C ; and $D ... some objects use $E and $F as well when extra precision is required ... screen-space objects use y_pixel instead
-y_sub =			 $E ; and $F
-priority =		$18 ; 0 = front
-width_pixels =		$19
-mapping_frame =		$1A
-; ---------------------------------------------------------------------------
-; conventions followed by most objects:
-x_vel =			$10 ; and $11 ; horizontal velocity
-y_vel =			$12 ; and $13 ; vertical velocity
-y_radius =		$16 ; collision height / 2
-x_radius =		$17 ; collision width / 2
-anim_frame =		$1B
-anim =			$1C
-prev_anim =		$1D
-anim_frame_duration =	$1E
-status =		$22 ; note: exact meaning depends on the object... for sonic/tails: bit 0: leftfacing. bit 1: inair. bit 2: spinning. bit 3: onobject. bit 4: rolljumping. bit 5: pushing. bit 6: underwater.
-routine =		$24
-routine_secondary =	$25
-angle =			$26 ; angle about the z axis (360 degrees = 256)
-; ---------------------------------------------------------------------------
-; conventions followed by many objects but NOT sonic/tails:
-collision_flags =	$20
-collision_property =	$21
-respawn_index =		$23
-subtype =		$28
-; ---------------------------------------------------------------------------
+; Animation flags
+afEnd:		equ $FF	; return to beginning of animation
+afBack:		equ $FE	; go back (specified number) bytes
+afChange:	equ $FD	; run specified animation
+afRoutine:	equ $FC	; increment routine counter
+afReset:	equ $FB	; reset animation and 2nd object routine counter
+af2ndRoutine:	equ $FA	; increment 2nd routine counter
 ; Levels
 id_GHZ:	equ 0
 id_LZ:	equ 1
@@ -1003,13 +977,14 @@ HW_Expansion_SCtrl:		equ $A1001F
 
 ; Background music
 bgm_GHZ =		MusID_GHZ
-bgm_LZ =		MusID_DDZ1
+bgm_LZ =		MusID_MCZ
 bgm_MZ =		MusID_CPZ
 bgm_SLZ =		MusID_GRGZ1
 bgm_SYZ =		MusID_DDZ1
 bgm_SBZ =		MusID_HTZ
 bgm_Invincible =	MusID_Invincible
 bgm_ExtraLife =		MusID_ExtraLife
+bgm_DoubleLife =	MusID_DoubleLife
 bgm_SS =		MusID_BonusStage
 bgm_Title =		MusID_Title
 bgm_Ending =		MusID_Ending_S1
@@ -1208,7 +1183,8 @@ ArtTile_FZ_Eggman_No_Vehicle:	equ $470
 
 ; General Level Art
 ArtTile_Level:			equ $000
-ArtTile_Ball_Hog:		equ $302
+ArtTile_Ball_HogV:		equ $1E0
+ArtTile_Ball_HogH:		equ ArtTile_Ball_HogV+$18
 ArtTile_Bomb:			equ $400
 ArtTile_Missile_Disolve:	equ $41C ; Unused
 ArtTile_Spikes:			equ $434

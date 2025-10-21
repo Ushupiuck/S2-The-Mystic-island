@@ -34,7 +34,7 @@ Chop_Main:	; Routine 0
 		move.w	obY(a0),chop_origY(a0)	; save original position
 
 Chop_ChgSpeed:	; Routine 2
-		lea	(Ani_Obj2B).l,a1
+		lea	Ani_Obj2B(pc),a1
 		bsr.w	AnimateSprite
 		bsr.w	ObjectMove
 		addi.w	#$18,obVelY(a0)		; reduce speed
@@ -52,7 +52,7 @@ Chop_ChgSpeed:	; Routine 2
 		subi.w	#$C0,d0
 		cmp.w	obY(a0),d0
 		bcc.s	.nochg
-		move.b	#0,obAnim(a0)		; use slow animation
+		sf	obAnim(a0)		; use slow animation
 		tst.w	obVelY(a0)		; is Chopper at	its highest point?
 		bmi.s	.nochg			; if not, branch
 		move.b	#2,obAnim(a0)		; use stationary animation
@@ -65,3 +65,11 @@ Chopper_JumpHeights:
 		dc.w	-$500, -$580	; 3, 4
 		dc.w	-$600, -$680	; 5, 6
 		dc.w	-$700, -$780	; 7, 8
+; ===========================================================================
+Ani_Obj2B:	dc.w byte_B7BA-Ani_Obj2B
+		dc.w byte_B7BE-Ani_Obj2B
+		dc.w byte_B7C2-Ani_Obj2B
+byte_B7BA:	dc.b   7,  0,  1,$FF
+byte_B7BE:	dc.b   3,  0,  1,$FF
+byte_B7C2:	dc.b   7,  0,$FF
+		even

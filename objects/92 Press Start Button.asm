@@ -1,8 +1,8 @@
 ; ---------------------------------------------------------------------------
-; Object 0F - "PRESS START BUTTON" from title screen
+; Object 92 - "PRESS START BUTTON" from title screen
 ; ---------------------------------------------------------------------------
 
-Obj0F:
+PressStartButton:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	PSB_Index(pc,d0.w),d1

@@ -20,23 +20,23 @@ Obj38_Init:
 		move.b	#1,obPriority(a0)
 		move.b	#$18,obActWid(a0)
 		tst.b	obAnim(a0)			; is this the shield?
-		bne.s	loc_12406			; if not, branch
+		bne.s	+				; if not, branch
 		move.w	#make_art_tile(ArtTile_Shield,0,0),obGfx(a0)
 		cmpi.b	#id_EHZ,(Current_Zone).w	; is this Emerald Hill Zone?
-		bne.s	loc_12406			; if not, branch
+		bne.s	+				; if not, branch
 		move.w	#make_art_tile(ArtTile_EHZ_Shield,0,0),obGfx(a0)
-
-loc_12406:
++
 		addq.b	#2,obRoutine(a0)
-		move.l	#Map_Sonic,obMap(a0)	; apparently use Sonic's mappings?
+		move.l	#Map_Sonic,obMap(a0)		; apparently use Sonic's mappings?
 		move.w	#make_art_tile(ArtTile_Invincibility,0,0),obGfx(a0)
 		move.b	#2,obPriority(a0)
+.return:
 		rts
 ; ===========================================================================
 
 Obj38_Shield:
 		tst.b	(v_invinc).w			; is Sonic invincible?
-		bne.s	locret_1245A			; if yes, branch
+		bne.s	Obj38_Init.return		; if yes, branch
 		tst.b	(v_shield).w			; does Sonic have a shield?
 		beq.s	Obj38_Delete			; if not, branch
 		move.w	(v_player+obX).w,obX(a0)
@@ -45,10 +45,6 @@ Obj38_Shield:
 		lea	(Ani_obj38).l,a1
 		jsr	(AnimateSprite).l
 		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-locret_1245A:
-		rts
 ; ===========================================================================
 ; loc_1245C:
 Obj38_Delete:

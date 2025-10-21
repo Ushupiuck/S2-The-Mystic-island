@@ -1,5 +1,5 @@
 ; ---------------------------------------------------------------------------
-; Object 24 - buzz bomber missile vanishing (unused?)
+; Object 24 - BallHog's bomb explosion (From the Sonic 1 prototype)
 ; ---------------------------------------------------------------------------
 
 Obj24:

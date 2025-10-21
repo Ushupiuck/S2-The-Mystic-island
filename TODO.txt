@@ -17,7 +17,7 @@ Metropolis zone.
 Port over Sonic 2 Special stages: Sonic 1 will be Bonus stages. Sonic 2's will be the ACTUAL Special stages.
 Fix HTZ scrolling to use a straight table, rather than a soup of chunk entries.
 Fuse HTZ and Scrap brain into it's own level
-Improve Boss_MoveObject
+Improve Boss_MoveObject < Not marked as done until I'm absolutely finished importing bosses (they tend to have their own version of this)
 Improve SSObjectMoveAndFall (if it exists)
 Research & Implement "Find_SonicTails" From S3&K into sonic 1
 Reimplement the following ram adress & code (allows for extra life past 200 rings):
@@ -53,6 +53,21 @@ Obj_HCZMiniboss
 
 SaveScreen: <---------- example implementations of KosArt_To_VDP
 
+; ===================================
+; TABLE CONVERSION FROM S1/S2 TO S3K
+; ===================================
+|   | S 2 | S3K |
+|---|-----|-----|
+| ~ | #   | #$  |
+| P | 0   | 0   |
+| R | 1   | 80  |
+| I | 2   | 100 |
+| O | 3   | 180 |
+| R | 4   | 200 |
+| I | 5   | 280 |
+| T | 6   | 300 |
+| Y | 7   | 380 |
+===============================
 ; ---------------------------------------------------------------------------
 ; Notes
 ; ---------------------------------------------------------------------------
@@ -81,22 +96,6 @@ Delete_Sprite_If_Not_In_Range:
 +
 		bra.w	Delete_Current_Sprite
 ; End of function Delete_Sprite_If_Not_In_Range
-
-; ===================================
-; TABLE CONVERSION FROM S1/S2 TO S3K
-; ===================================
-|   | S 2 | S3K |
-|---|-----|-----|
-| ~ | #   | #$  |
-| P | 0   | 0   |
-| R | 1   | 80  |
-| I | 2   | 100 |
-| O | 3   | 180 |
-| R | 4   | 200 |
-| I | 5   | 280 |
-| T | 6   | 300 |
-| Y | 7   | 380 |
-===============================
 
 
 ObjAnimal & PLCLoad_AnimalsAndExplosion <Always edit these whenever you want to change animals per level>
@@ -144,6 +143,7 @@ SetUp_ObjAttributes <---- Child object subroutines are here
 
 ObjectMoveAndFall_LightGravity <--- Multiple variants of "ObjectMoveAndFall"; potentially "ObjectMove" too
 
+Obj_CreateBossExplosion <--- CHECKLATER
 ; ---------------------------------------------------------------------------
 To-Do:
 
@@ -152,8 +152,6 @@ Obj_S2Shield <---- Optional: Restore it <PARTLY COMPLETE>
 ObjAnimal < ---- Optional: Edit Ending animals to load as normal objects (aka reload when you approach them); this has to do with ObjAnimal_ChkDel
 
 Obj_StarPost_MakeSpecialStars
-
-loc_6268 (???)
 
 Obj_HCZMiniboss - Research
 

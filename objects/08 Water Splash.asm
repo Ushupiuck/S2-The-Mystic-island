@@ -1,33 +1,48 @@
 ; ---------------------------------------------------------------------------
-; Object 08 - water splash
+; Object 08 - Water splash, Spindash dust
 ; ---------------------------------------------------------------------------
 
-Obj08:
+Splash:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	Obj08_Index(pc,d0.w),d1
-		jmp	Obj08_Index(pc,d1.w)
+		move.w	Spla_Index(pc,d0.w),d1
+		jmp	Spla_Index(pc,d1.w)
 ; ===========================================================================
-Obj08_Index:	dc.w Obj08_Init-Obj08_Index
-		dc.w Obj08_Display-Obj08_Index
-		dc.w Obj08_Delete-Obj08_Index
+Spla_Index:	dc.w Spla_Main-Spla_Index
+		dc.w Spla_Display-Spla_Index
+		dc.w Spla_Delete-Spla_Index
+
+obj08_previous_frame = objoff_30
+obj08_dust_timer = objoff_32
+obj08_belongs_to_tails = objoff_34
+obj08_vram_address = objoff_3C
 ; ===========================================================================
 
-Obj08_Init:
+Spla_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
-		move.l	#Map_obj08,obMap(a0)
+		move.l	#Map_Splash,obMap(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#1,obPriority(a0)
 		move.b	#$10,obActWid(a0)
 		move.w	#make_art_tile(ArtTile_LZ_Splash,2,0),obGfx(a0)
-		move.w	(v_player+obX).w,obX(a0)
+		move.w	(v_player+obX).w,obX(a0) ; copy x-position from Sonic
 
-Obj08_Display:
-		move.w	(v_waterpos1).w,obY(a0)
-		lea	(Ani_obj08).l,a1
+Spla_Display:	; Routine 2
+		move.w	(v_waterpos1).w,obY(a0) ; copy y-position from water height
+		lea	Ani_Splash(pc),a1
 		jsr	(AnimateSprite).l
 		jmp	(DisplaySprite).l
 ; ===========================================================================
 
-Obj08_Delete:
-		jmp	(DeleteObject).l
+Spla_Delete:	; Routine 4
+		jmp	(DeleteObject).l	; delete when animation is complete
+; ===========================================================================
+; animation script
+Ani_Splash:	dc.w byte_129C2-Ani_Splash
+byte_129C2:	dc.b 4,	0,	1,	2,	$FC,	0
+		even
+; ---------------------------------------------------------------------------
+; sprite mappings
+; ---------------------------------------------------------------------------
+Map_Splash:	binclude	"mappings/sprite/obj08.bin"
+		even

@@ -1,20 +1,20 @@
 ; ---------------------------------------------------------------------------
 
-S1Obj_53:	; leftover object from Sonic 1
+Obj1B:		; leftover object from Sonic 1
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	S1Obj_53_Index(pc,d0.w),d1
-		jmp	S1Obj_53_Index(pc,d1.w)
+		move.w	Obj1B_Index(pc,d0.w),d1
+		jmp	Obj1B_Index(pc,d1.w)
 ; ---------------------------------------------------------------------------
-S1Obj_53_Index:
-		dc.w loc_8D6A-S1Obj_53_Index
-		dc.w loc_8DB4-S1Obj_53_Index
-		dc.w loc_8DEA-S1Obj_53_Index
+Obj1B_Index:
+		dc.w loc_8D6A-Obj1B_Index
+		dc.w loc_8DB4-Obj1B_Index
+		dc.w loc_8DEA-Obj1B_Index
 ; ---------------------------------------------------------------------------
 
 loc_8D6A:
 		addq.b	#2,obRoutine(a0)
-		move.l	#Map_S1Obj53,obMap(a0)
+		move.l	#Map_Obj1B,obMap(a0)
 		move.w	#make_art_tile($2B8,2,0),obGfx(a0)	; we default to marble zone
 		cmpi.b	#id_SLZ,(Current_Zone).w
 		bne.s	loc_8D8E

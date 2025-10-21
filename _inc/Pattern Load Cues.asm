@@ -363,16 +363,16 @@ ptr_KPLC_THZ3:	dc.w PLCKosM_THZ3-KosMLoadCues  ; $00 Act 3
 ptr_KPLC_THZ4:	dc.w PLCKosM_THZ4-KosMLoadCues  ; $00 Act 4
 ; ---------------------------------------------------------------------------
 ; Level Slot $01: Rustic Ruins Zone  [WILL BE REPLACED] [LZ]
-ptr_KPLC_RRZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $01 Act 1
-ptr_KPLC_RRZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $01 Act 2
-ptr_KPLC_RRZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $01 Act 3
-ptr_KPLC_RRZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $01 Act 4
+ptr_KPLC_RRZ1:	dc.w PLCKosM_RRZ1-KosMLoadCues ; $01 Act 1
+ptr_KPLC_RRZ2:	dc.w PLCKosM_RRZ2-KosMLoadCues ; $01 Act 2
+ptr_KPLC_RRZ3:	dc.w PLCKosM_RRZ3-KosMLoadCues ; $01 Act 3
+ptr_KPLC_RRZ4:	dc.w PLCKosM_RRZ4-KosMLoadCues ; $01 Act 4
 ; ---------------------------------------------------------------------------
 ; Level Slot $02: Ancient Factory Zone [TO BE REMIXED] [CPZ]
-ptr_KPLC_AFZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $02 Act 1
-ptr_KPLC_AFZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $02 Act 2
-ptr_KPLC_AFZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $02 Act 3
-ptr_KPLC_AFZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $02 Act 4
+ptr_KPLC_AFZ1:	dc.w PLCKosM_AFZ1-KosMLoadCues ; $02 Act 1
+ptr_KPLC_AFZ2:	dc.w PLCKosM_AFZ2-KosMLoadCues ; $02 Act 2
+ptr_KPLC_AFZ3:	dc.w PLCKosM_AFZ3-KosMLoadCues ; $02 Act 3
+ptr_KPLC_AFZ4:	dc.w PLCKosM_AFZ4-KosMLoadCues ; $02 Act 4
 ; ---------------------------------------------------------------------------
 ; Level Slot $03: Emerald Hill Zone
 ptr_KPLC_EHZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $03 Act 1
@@ -532,31 +532,49 @@ PLCKosM_THZ4_End
 ; LV01 - Rustic Ruins Zone
 ; ---------------------------------------------------------------------------
 ; Act 1
-
+PLCKosM_RRZ1:	plrKosMlistheader
+	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
+	plreqKosM	ArtTile_Ball_HogV, Kospm_BallhogV
+	plreqKosM	ArtTile_Ball_HogH, Kospm_BallhogH
+PLCKosM_RRZ1_End
 ; ---------------------------------------------------------------------------
 ; Act 2
-
+PLCKosM_RRZ2:	plrKosMlistheader
+	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
+PLCKosM_RRZ2_End
 ; ---------------------------------------------------------------------------
 ; Act 3
-
+PLCKosM_RRZ3:	plrKosMlistheader
+	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
+PLCKosM_RRZ3_End
 ; ---------------------------------------------------------------------------
 ; Act 4
-
+PLCKosM_RRZ4:	plrKosMlistheader
+	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
+PLCKosM_RRZ4_End
 ; ---------------------------------------------------------------------------
 ; KOSM PATTERN LOAD REQUEST LIST
 ; LV02 - Ancient Factory Zone
 ; ---------------------------------------------------------------------------
 ; Act 1
-
+PLCKosM_AFZ1:	plrKosMlistheader
+	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
+PLCKosM_AFZ1_End
 ; ---------------------------------------------------------------------------
 ; Act 2
-
+PLCKosM_AFZ2:	plrKosMlistheader
+	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
+PLCKosM_AFZ2_End
 ; ---------------------------------------------------------------------------
 ; Act 3
-
+PLCKosM_AFZ3:	plrKosMlistheader
+	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
+PLCKosM_AFZ3_End
 ; ---------------------------------------------------------------------------
 ; Act 4
-
+PLCKosM_AFZ4:	plrKosMlistheader
+	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
+PLCKosM_AFZ4_End
 ; ---------------------------------------------------------------------------
 ; KOSM PATTERN LOAD REQUEST LIST
 ; LV03 - Emerald Hill Zone

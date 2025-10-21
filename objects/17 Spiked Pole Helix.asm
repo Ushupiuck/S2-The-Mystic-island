@@ -66,7 +66,7 @@ loc_8746:
 		dbf	d1,loc_86D4
 
 loc_874A:
-		bsr.w	sub_878C
+		bsr.s	sub_878C
 		out_of_range.w	loc_8766
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
@@ -76,18 +76,15 @@ loc_8766:
 		lea	obSubtype(a0),a2
 		move.b	(a2)+,d2
 		subq.b	#2,d2
-		bcs.s	loc_8788
+		bcs.w	DeleteObject
 
-loc_8772:
-		moveq	#0,d0
+-		moveq	#0,d0
 		move.b	(a2)+,d0
 		lsl.w	#object_size_bits,d0
 		addi.l	#v_objspace,d0
 		movea.l	d0,a1
 		bsr.w	DeleteObject2
-		dbf	d2,loc_8772
-
-loc_8788:
+		dbf	d2,-
 		bra.w	DeleteObject
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -99,15 +96,15 @@ sub_878C:
 		add.b	objoff_3E(a0),d0
 		andi.b	#7,d0
 		move.b	d0,obFrame(a0)
-		bne.s	locret_87AA
+		bne.s	.return
 		move.b	#$84,obColType(a0)
 
-locret_87AA:
+.return:
 		rts
 ; End of function sub_878C
 
 ; ---------------------------------------------------------------------------
 
 loc_87AC:
-		bsr.w	sub_878C
+		bsr.s	sub_878C
 		bra.w	DisplaySprite

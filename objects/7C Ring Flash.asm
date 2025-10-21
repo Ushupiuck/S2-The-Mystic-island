@@ -1,18 +1,17 @@
-;----------------------------------------------------
-; Sonic	1 Object 7C - leftover giant flash when	you
-;   collected the giant	ring
-;----------------------------------------------------
+; ---------------------------------------------------------------------------
+; Object 7C - Flash from the Giant Ring object
+; ---------------------------------------------------------------------------
 
-Obj_S1Obj7C:
+GiantRingFlash:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	Obj_S1Obj7C_Index(pc,d0.w),d1
-		jmp	Obj_S1Obj7C_Index(pc,d1.w)
+		move.w	GiantRingFlash_Index(pc,d0.w),d1
+		jmp	GiantRingFlash_Index(pc,d1.w)
 ; ---------------------------------------------------------------------------
-Obj_S1Obj7C_Index:
-		dc.w loc_AB50-Obj_S1Obj7C_Index
-		dc.w loc_AB7E-Obj_S1Obj7C_Index
-		dc.w loc_ABE6-Obj_S1Obj7C_Index
+GiantRingFlash_Index:
+		dc.w loc_AB50-GiantRingFlash_Index
+		dc.w loc_AB7E-GiantRingFlash_Index
+		dc.w loc_ABE6-GiantRingFlash_Index
 ; ---------------------------------------------------------------------------
 
 loc_AB50:
@@ -25,31 +24,23 @@ loc_AB50:
 		move.b	#$FF,obFrame(a0)
 
 loc_AB7E:
-		bsr.s	sub_AB98
-		out_of_range.w	DeleteObject
-		bra.w	DisplaySprite
-
-; =============== S U B	R O U T	I N E =======================================
-
-
-sub_AB98:
 		subq.b	#1,obTimeFrame(a0)
-		bpl.s	locret_ABD6
+		bpl.s	+
 		move.b	#1,obTimeFrame(a0)
 		addq.b	#1,obFrame(a0)
 		cmpi.b	#8,obFrame(a0)
 		bcc.s	loc_ABD8
 		cmpi.b	#3,obFrame(a0)
-		bne.s	locret_ABD6
+		bne.s	+
 		movea.l	objoff_3C(a0),a1
 		move.b	#6,obRoutine(a1)
 		move.b	#$1C,(v_player+obAnim).w
 		move.b	#1,(f_bigring).w
 		clr.b	(v_invinc).w
 		clr.b	(v_shield).w
-
-locret_ABD6:
-		rts
++
+		out_of_range.w	DeleteObject
+		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
 loc_ABD8:

@@ -1,4 +1,5 @@
 zMasterPlaylist:
+	zmakePlaylistEntry	Mus_TestSong1,0
 	zmakePlaylistEntry	Mus_Title,0
 	zmakePlaylistEntry	Mus_2PResult,0
 	zmakePlaylistEntry	Mus_Options,0
@@ -24,9 +25,9 @@ zMasterPlaylist:
 	zmakePlaylistEntry	Mus_MTZ,0
 	zmakePlaylistEntry	Mus_PPZ1,0
 	zmakePlaylistEntry	Mus_PPZ2,0
-	zmakePlaylistEntry	Mus_SBZ,0
 	zmakePlaylistEntry	Mus_LBZ1_S3,musprop_uncompressed
 	zmakePlaylistEntry	Mus_LBZ2_S3,musprop_uncompressed
+	zmakePlaylistEntry	Mus_SBZ,0
 	zmakePlaylistEntry	Mus_DEZ,0
 	zmakePlaylistEntry	Mus_Boss,0
 	zmakePlaylistEntry	Mus_Boss2,0
@@ -55,6 +56,7 @@ zMasterPlaylist:
 	zmakePlaylistEntry	Mus_EndLevel,0|musprop_nospeedup
 	zmakePlaylistEntry	Mus_GameOver,musprop_uncompressed|musprop_nospeedup
 	zmakePlaylistEntry	Mus_ExtraLife,0|musprop_1up|musprop_nospeedup
+	zmakePlaylistEntry	Mus_DoubleLife,musprop_uncompressed|musprop_1up|musprop_nospeedup
 	zmakePlaylistEntry	Mus_Continue,0
 	zmakePlaylistEntry	Mus_Emerald,0
 	zmakePlaylistEntry	Mus_Countdown,0|musprop_palmode|musprop_nospeedup
