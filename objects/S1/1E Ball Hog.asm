@@ -3,20 +3,29 @@
 ; ---------------------------------------------------------------------------
 
 ObjVBallhog:
+hog_launchflagV	= objoff_30	; byte; 0 to launch a cannonball
+hog_mode	= objoff_31	; byte; 1 = fire on a timer
+hog_wait	= objoff_32	; word; time between shots
+hog_backup	= objoff_34	; word; backup of hog_wait
+hog_walk	= objoff_36	; word; time to idle around from left to right
+
+Obj1E:					; XREF: Obj_Index
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	PHog_Index(pc,d0.w),d1
-		jmp	PHog_Index(pc,d1.w)
+		move.w	Obj1E_Index(pc,d0.w),d0
+		jmp	Obj1E_Index(pc,d0.w)
 ; ===========================================================================
-PHog_Index:	dc.w PHog_Main-PHog_Index
-		dc.w PHog_Vertical-PHog_Index
-phog_timer =	 objoff_30	; time to idle around from left to right
-phog_launchflag = objoff_32	; 0 to launch a cannonball
+Obj1E_Index:	dc.w Obj1E_Main-Obj1E_Index
+		dc.w Obj1E_Action-Obj1E_Index
+
+		dc.w Obj1E_Action2-Obj1E_Index
+		dc.w Obj1E_NormalBomb-Obj1E_Index
+		dc.w Obj1E_ProtoBomb-Obj1E_Index
 ; ===========================================================================
 
-PHog_Main:	; Routine 0
-		move.l	#Map_BallHogV,obMap(a0)
-		move.w	#make_art_tile(ArtTile_Ball_HogV,1,0),obGfx(a0)
+Obj1E_Main:				; XREF: Obj1E_Index
+		move.l	#Map_BallHogH,obMap(a0)
+		move.w	#make_art_tile(ArtTile_Ball_HogH,1,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.b	#4,obPriority(a0)
 		move.b	#5,obColType(a0)
@@ -24,89 +33,285 @@ PHog_Main:	; Routine 0
 		move.b	#$13,obHeight(a0)
 		move.b	#8,obWidth(a0)
 		bsr.w	ObjectMoveAndFall
+		jsr	ObjHitFloor
+		tst.w	d1
+		bpl.s	.return
+		add.w	d1,obY(a0)
+		move.w	#0,obVelY(a0)
+
+		moveq	#0,d0
+		move.b	obSubtype(a0),d0	; move subtype to d0
+		cmpi.b	#$1F,d0			; subtypes $20-$2F are vertical
+		bls.s	.normalmode		; subtypes $00-$1F are horizontal
+		bset	#0,hog_mode(a0)		; default to false
+
+		subi.b	#$1F,d0			; substract $1F. If more, means timed mode (yay, high byte recycling)
+		bgt.s	.not_timed		; if not, skip this segment
+		bset	#1,hog_mode(a0)		; flag to fire on a timer
+		add.w	d0,d0			; multiply by 60 frames (1 second)
+		add.w	d0,d0
+		move.w	d0,d1
+		lsl.w	#4,d0
+		sub.w	d1,d0
+		move.w	d0,hog_wait(a0)
+		move.w	d0,hog_backup(a0)
+.not_timed:
+		move.w	#256-1,hog_walk(a0)
+		sf	hog_launchflagV(a0)	; set to launch	cannonball
+
+		move.l	#Map_BallHogV,obMap(a0) ; set proto-hog mappings
+		move.w	#make_art_tile(ArtTile_Ball_HogV,1,0),obGfx(a0) ; and art pointer
+
+		addq.b	#2,obRoutine(a0)	; adds 2, so the next add branches to Action2
+
+.normalmode:
+		addq.b	#2,obRoutine(a0)
+.return:
+		rts	
+
+Obj1E_NormalBomb:
+		jsr	(ObjectMoveAndFall).l
+		tst.w	obVelY(a0)
+		bmi.s	.moving_up
 		jsr	(ObjHitFloor).l
 		tst.w	d1
-		bpl.s	.floornotfound
+		bpl.s	.moving_up
 		add.w	d1,obY(a0)
-		clr.w	obVelY(a0)
-		addq.b	#2,obRoutine(a0)
-
-.floornotfound:
-		rts
+		move.w	#-$300,obVelY(a0)
+		tst.b	d3
+		beq.s	.moving_up
+		bmi.s	.check_Xvel
+		tst.w	obVelX(a0)
+		bpl.s	.moving_up
+		neg.w	obVelX(a0)
+		bra.s	.moving_up
 ; ---------------------------------------------------------------------------
 
-PHog_Vertical:
+.check_Xvel:
+		tst.w	obVelX(a0)
+		bmi.s	.moving_up
+		neg.w	obVelX(a0)
+
+.moving_up:
+		subq.w	#1,objoff_30(a0)
+		bpl.s	.time_remaining
+		_move.b	#id_Obj24,obID(a0)
+	;	_move.b	#id_Obj3F,obID(a0)
+		move.b	#0,obRoutine(a0)
+		rts
+;		bra.w	FindFreeObj			; explosion object
+; ---------------------------------------------------------------------------
+
+.time_remaining:
+		subq.b	#1,obTimeFrame(a0)
+		bpl.s	.wait_frames
+		move.b	#5,obTimeFrame(a0)
+		bchg	#0,obFrame(a0)
+
+.wait_frames:
+		move.w	(Camera_Max_Y_pos).w,d0
+		addi.w	#$E0,d0
+		cmp.w	obY(a0),d0
+		bcs.w	DeleteObject
+		bra.w	DisplaySprite
+
+Obj1E_ProtoBomb:
+		btst	#7,obStatus(a0)
+		bne.s	.change_explosion
+		tst.w	objoff_30(a0)
+		bne.s	.dont_react_floor
+		jsr	(ObjHitFloor).l
+		tst.w	d1
+		bpl.s	.not_in_floor
+		add.w	d1,obY(a0)
+
+.change_explosion:
+		move.b	#$3F,(a0)
+		move.b	#0,obRoutine(a0)
+		rts	
+
+.dont_react_floor:
+		subq.w	#1,objoff_30(a0)
+
+.not_in_floor:
+		jsr	(ObjectMoveAndFall).l
+		move.w	(v_limitbtm2).w,d0
+		addi.w	#224,d0
+		cmp.w	obY(a0),d0
+		bcs.w	DeleteObject
+		bra.w	DisplaySprite
+
+; ===========================================================================
+
+Obj1E_Action:				; XREF: Obj1E_Index
+		lea	Ani_HogHoriz(pc),a1
+		bsr.w	AnimateSprite
+		cmpi.b	#1,obFrame(a0)	; is final frame (01) displayed?
+		bne.s	Obj1E_SetBall	; if not, branch
+		tst.b	hog_wait(a0)		; is it	set to launch cannonball?
+		beq.s	Obj1E_MakeBall	; if yes, branch
+		bra.w	MarkObjGone
+; ===========================================================================
+
+Obj1E_SetBall:				; XREF: Obj1E_Action
+		clr.b	hog_wait(a0)		; set to launch	cannonball
+		bra.w	MarkObjGone
+; ===========================================================================
+
+Obj1E_MakeBall:				; XREF: Obj1E_Action
+		move.b	#1,hog_wait(a0)
+		bsr.w	FindFreeObj
+		bne.w	.no_free_ram
+		move.b	#id_Obj1E,(a1)	; load bomb
+		move.b	#6,obRoutine(a1); set normal bomb
+		move.b	#4,obFrame(a1)  ; set bomb frame
+		move.l	#Map_BallHogH,obMap(a1)
+		move.w	#make_art_tile(ArtTile_Ball_HogH,1,0),obGfx(a1)
+		move.w	obX(a0),obX(a1)
+		move.w	obY(a0),obY(a1)
+		move.w	#-$100,obVelX(a1)	; cannonball bounces to	the left
+		move.w	#0,obVelY(a1)
+		move.b	#4,obRender(a1)
+		move.b	#3,obPriority(a1)
+		move.b	#$87,obColType(a1)
+		move.b	#8,obActWid(a1)
+		moveq	#0,d0
+		move.b	obSubtype(a0),d0						; move subtype to d0
+		add.w	d0,d0								; multiply by 60 frames (1 second)
+		add.w	d0,d0
+		move.w	d0,d1
+		lsl.w	#4,d0
+		sub.w	d1,d0
+		move.w	d0,objoff_30(a1)
+
+		moveq	#-4,d0
+		btst	#0,obStatus(a0)	; is Ball Hog facing right?
+		beq.s	.dont_change_dir	; if not, branch
+		neg.w	d0
+		neg.w	obVelX(a1)		; cannonball bounces to	the right
+
+.dont_change_dir:
+		add.w	d0,obX(a1)
+		addi.w	#$C,obY(a1)
+		move.b	obSubtype(a0),obSubtype(a1) ; copy object type from Ball Hog
+
+.no_free_ram:
+		bra.w	MarkObjGone
+
+Obj1E_Action2:
 		moveq	#0,d0
 		move.b	ob2ndRout(a0),d0
 		move.w	.action_index(pc,d0.w),d1
 		jsr	.action_index(pc,d1.w)
-		lea	Ani_HogVert(pc),a1
+		lea	(Ani_HogVert).l,a1
 		bsr.w	AnimateSprite
-		bra.w	MarkObjGone
+		jmp	MarkObjGone
 ; ===========================================================================
 .action_index:	dc.w Hog_Idle-.action_index
 		dc.w Hog_Move-.action_index
 ; ===========================================================================
 
 Hog_Idle:
-		subq.w	#1,phog_timer(a0)
-		bpl.s	.fire
-		addq.b	#2,ob2ndRout(a0)
-		move.w	#256-1,phog_timer(a0)
+		tst.b	obRender(a0)	; are we offscreen?
+		bpl.s	.go_walk	; skip straight to walking if so
+
+		subq.w	#1,hog_wait(a0)
+		bpl.s	.timed_fire
+.go_walk:
+		btst	#1,hog_mode(a0)	; timed fire mode?
+		bne.s	.default	; skip this if so
+		move.w	hog_walk(a0),hog_wait(a0)	; overwrite with defaults
+		move.w	hog_walk(a0),hog_backup(a0)	; ...for both
+.default:
 		move.w	#$40,obVelX(a0)
 		move.b	#1,obAnim(a0)
 		bchg	#0,obStatus(a0)
 		bne.s	.noflip
 		neg.w	obVelX(a0)
 .noflip:
-		sf	phog_launchflag(a0)
+		addq.b	#2,ob2ndRout(a0)
+		btst	#1,hog_mode(a0)	; timed fire mode?
+		sne	hog_launchflagV(a0)
 		rts
-; ---------------------------------------------------------------------------
 
-.fire:
+.timed_fire:
+		tst.b	hog_launchflagV(a0)
+		bne.s	.abort
 		cmpi.b	#2,obFrame(a0)
 		bne.s	.abort
-		tst.b	phog_launchflag(a0)
-		bne.s	.abort
-		st	phog_launchflag(a0)
+		st	hog_launchflagV(a0)
+
+
 		bsr.w	FindFreeObj
-		bne.s	.abort	; if ObjectRam is full, we bail!
-		_move.b	#id_Obj20,obID(a1)
+		bne.s	.abort			; if ObjectRam is full, we bail!
+		move.b	#id_Obj1E,(a1)	; load bomb
+		move.b	#8,obRoutine(a1); set normal bomb
+		move.b	#4,obFrame(a1)  ; set bomb frame
+		move.l	#Map_BallHogH,obMap(a1)
+		move.w	#make_art_tile(ArtTile_Ball_HogH,1,0),obGfx(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
-		addi.w	#$10,obY(a1)
+		move.b	#4,obRender(a1)
+		move.b	#3,obPriority(a1)
+		move.b	#$87,obColType(a1)
+		move.b	#8,obActWid(a1)
+		move.w	#$18,objoff_30(a1)
 
-.abort:		;.fail in the final
-		bra.w	MarkObjGone
+;		moveq	#0,d0
+;		move.b	obSubtype(a0),d0						; move subtype to d0
+;		add.w	d0,d0								; multiply by 60 frames (1 second)
+;		add.w	d0,d0
+;		move.w	d0,d1
+;		lsl.w	#4,d0
+;		sub.w	d1,d0
+;		move.w	d0,objoff_30(a1)
+
+		addi.w	#$10,obY(a1)
+		move.w	hog_backup(a0),hog_wait(a0)
+.abort:			;.fail in the final
+		rts
+		rts
+; ===========================================================================
 ; ---------------------------------------------------------------------------
 
 Hog_Move:
-		subq.w	#1,phog_timer(a0)
-		bmi.s	loc_7032
+		subq.w	#1,hog_wait(a0)
+		bmi.s	.stop
 		bsr.w	ObjectMove
-		jsr	(ObjHitFloor).l
+		move.w	obX(a0),d3
+		addi.w	#$10,d3
+		btst	#0,obStatus(a0)
+		beq.s	.probe
+		subi.w	#$20,d3
+
+.probe:
+		jsr	(ObjHitFloor2).l
+		cmpi.w	#-8,d1
+		blt.s	.stop
+		cmpi.w	#$C,d1
+		bge.s	.stop
 		add.w	d1,obY(a0)
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_7032:
+.stop:
 		subq.b	#2,ob2ndRout(a0)
-		move.w	#60-1,phog_timer(a0)
+		move.w	hog_walk(a0),hog_wait(a0)
 		clr.w	obVelX(a0)
-		sf	obAnim(a0)
+		move.b	#0,obAnim(a0)
 		tst.b	obRender(a0)
 		bpl.s	.return
 		move.b	#2,obAnim(a0)
-
 .return:
 		rts
-; ---------------------------------------------------------------------------
-Ani_HogVert:	dc.w .frame1-Ani_HogVert
-		dc.w .frame2-Ani_HogVert
-		dc.w .frame3-Ani_HogVert
+
+Ani_HogVert:		dc.w Ani_HogVert.frame1-Ani_HogVert
+			dc.w Ani_HogVert.frame2-Ani_HogVert
+			dc.w Ani_HogVert.frame3-Ani_HogVert
+
 Ani_HogVert.frame1:	dc.b $F, 0, afEnd
-		even
+			even
 Ani_HogVert.frame2:	dc.b $B, 1, 0, $21, 0, afEnd
-		even
+			even
 Ani_HogVert.frame3:	dc.b $14, 0, 2, 0, afBack, 1
-		even
+			even
