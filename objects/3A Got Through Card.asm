@@ -87,10 +87,10 @@ loc_BBEA:
 		cmpi.b	#4,obFrame(a0)
 		bne.s	loc_BBCC
 		addq.b	#2,obRoutine(a0)
-		move.w	#180,obTimeFrame(a0) ; set time delay to 3 seconds
+		move.b	#180,obTimeFrame(a0) ; set time delay to 3 seconds
 
 Got_Wait:	; Routine 4, 8, $C
-		subq.w	#1,obTimeFrame(a0) ; subtract 1 from time delay
+		subq.b	#1,obTimeFrame(a0) ; subtract 1 from time delay
 		bne.s	Got_Display
 		addq.b	#2,obRoutine(a0)
 
@@ -124,7 +124,7 @@ Got_ChkBonus:
 		addq.b	#4,obRoutine(a0)
 
 Got_SetDelay:
-		move.w	#180,obTimeFrame(a0) ; set time delay to 3 seconds
+		move.b	#180,obTimeFrame(a0) ; set time delay to 3 seconds
 
 locret_BC64:
 		rts

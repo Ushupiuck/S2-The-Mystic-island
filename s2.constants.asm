@@ -5,10 +5,11 @@ Size_of_DAC_samples =		$2F00
 Size_of_SEGA_sound =		$6978
 Size_of_Snd_driver_guess =	$F64 ; approximate post-compressed size of the Z80 sound driver
 ; ---------------------------------------------------------------------------
-; Object Status Table offsets
-; ---------------------------------------------------------------------------
-
 ; Object variables
+; ---------------------------------------------------------------------------
+; Object Status Table offsets (for everything between Object_RAM and Primary_Collision)
+; ---------------------------------------------------------------------------
+; universally followed object conventions:
 obID:			equ 0		; object ID number
 obRender:		equ 1		; bitfield for x/y flip, display mode
 obGfx:			equ 2		; palette line & VRAM setting (2 bytes)
@@ -17,43 +18,54 @@ obX:			equ 8		; x-axis position (2-4 bytes)
 obXSub:			equ $A		; for when exra presition is required (2 bytes)
 obY:			equ $C		; y-axis position (2-4 bytes)
 obYSub:			equ $E		; for when exra presition is required (2 bytes)
+obActWid:		equ $14		; action width
+obPriority:		equ $18		; (and soon $19) sprite stack priority -- 0 is front
+obFrame:		equ $1A		; current frame displayed
+; ---------------------------------------------------------------------------
+; conventions followed by most objects:
 obVelX:			equ $10		; x-axis velocity (2 bytes)
 obVelY:			equ $12		; y-axis velocity (2 bytes)
-obActWid:		equ $14		; action width
+obTimeFrame:		equ $15		; time to next frame
 obHeight:		equ $16		; height/2; y_radius
 obWidth:		equ $17		; width/2 ; x_radius
-obPriority:		equ $18		; sprite stack priority -- 0 is front
-obFrame:		equ $1A		; current frame displayed
 obAniFrame:		equ $1B		; current frame in animation script
 obAnim:			equ $1C		; current animation
 obPrevAni:		equ $1D		; previous animation
-obTimeFrame:		equ $1E		; time to next frame
-obDelayAni:		equ $1F		; time to delay animation
-obInertia:		equ $20		; and $21 directionless representation of speed... not updated in the air
-obColType:		equ $20		; collision response type
-obColProp:		equ $21		; collision extra property
 obStatus:		equ $22		; note: exact meaning depends on the object... for sonic/tails: bit 0: leftfacing. bit 1: inair. bit 2: spinning. bit 3: onobject. bit 4: rolljumping. bit 5: pushing. bit 6: underwater.
-obRespawnNo:		equ $23		; respawn list index number
 obRoutine:		equ $24		; routine number
 ob2ndRout:		equ $25		; secondary routine number
 obAngle:		equ $26		; angle about the z axis (360 degrees = 256)
+; ---------------------------------------------------------------------------
+; conventions followed by many objects but NOT Sonic/Tails:
+obColType:		equ $20		; collision response type
+obColProp:		equ $21		; collision extra property
+obRespawnNo:		equ $1E		; (and soon $1F) respawn list index number
 obSubtype:		equ $28		; object subtype
+; ---------------------------------------------------------------------------
+; conventions specific to Sonic/Tails (Obj01, Obj02, and ObjDB):
+; note: $23, and $14 are unused and available
+obInertia:		equ $20		; and $21 directionless representation of speed... not updated in the air
+;obSolid: 		equ $25		; (DEPRECATED, Sonic 1 leftover for reference only) solid status flag
+; air_left:		equ $28
+; flip_turned:		equ $29 ; 0 for normal, 1 to invert flipping (it's a 180 degree rotation about the axis of Sonic's spine, so he stays in the same position but looks turned around)
+; obj_control:		equ $2A ; 0 for normal, 1 for hanging or for resting on a flipper, $81 for going through CNZ/OOZ/MTZ tubes or stopped in CNZ cages or stoppers or flying if Tails
 obControl:		equ $2A		; 0 for normal, 1 for hanging or for resting on a flipper, $81 for going through CNZ/OOZ/MTZ tubes or stopped in CNZ cages or stoppers or flying if Tails
 obStatusSecondary:	equ $2B
-obSolid:	equ ob2ndRout		; solid status flag
-
-obTopSolidBit:		equ $3E		; bit to check for top solidity (either $C or $E)
-obLRBSolidBit:		equ $3F		; bit to check for left/right/bottom solidity (either $D or $F)
-
-; Object variables used by Sonic/Tails
-; v_air:		equ $28
+flips_remaining:	equ $2C ; number of flip revolutions remaining
+flip_speed:		equ $2D ; number of flip revolutions per frame / 256
+move_lock:		equ $2E ; and $2F ; horizontal control lock, counts down to 0
 flashtime:		equ $30		; time between flashes after getting hit
 invtime:		equ $32		; time left for invincibility
 shoetime:		equ $34		; time left for speed shoes
+;next_tilt:		equ $36 ; angle on ground in front of sprite
+;tilt: 			equ $37 ; angle on ground
 stick_to_convex:	equ $38
 spindash_flag:		equ $39		; 0 for normal, 1 for charging a spindash or forced rolling
-standonobject:		equ $3D		; object Sonic stands on
-
+;pinball_mode =		spindash_flag
+;jumping:		equ $3C
+standonobject:		equ $3D		; interact; ; RAM address of the last object Sonic stood on, minus v_objspace and divided by object_size
+obTopSolidBit:		equ $3E		; bit to check for top solidity (either $C or $E)
+obLRBSolidBit:		equ $3F		; bit to check for left/right/bottom solidity (either $D or $F)
 ; ---------------------------------------------------------------------------
 ; Miscellaneous object scratch-RAM
 objoff_25:		equ $25

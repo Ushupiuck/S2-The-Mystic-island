@@ -89,11 +89,11 @@ loc_BE44:
 		cmpi.b	#2,obFrame(a0)
 		bne.s	loc_BE32
 		addq.b	#2,obRoutine(a0)
-		move.w	#180,obTimeFrame(a0) ; set time delay to 3 seconds
+		move.w	#180,objoff_34(a0) ; set time delay to 3 seconds
 		_move.b	#id_Obj7F,(v_ssresemeralds).w ; load chaos emerald object
 
 SSR_Wait:	; Routine 4, 8, $C, $10
-		subq.w	#1,obTimeFrame(a0) ; subtract 1 from time delay
+		subq.w	#1,objoff_34(a0) ; subtract 1 from time delay
 		bne.s	SSR_Display
 		addq.b	#2,obRoutine(a0)
 
@@ -120,10 +120,10 @@ loc_BE9C:
 		move.w	#sfx_Cash,d0
 		jsr	(PlaySound_Special).l	; play "ker-ching" sound
 		addq.b	#2,obRoutine(a0)
-		move.w	#180,obTimeFrame(a0) ; set time delay to 3 seconds
+		move.w	#180,objoff_34(a0) ; set time delay to 3 seconds
 		cmpi.w	#50,(v_rings).w	; do you have at least 50 rings?
 		bcs.s	locret_BEC2	; if not, branch
-		move.w	#60,obTimeFrame(a0) ; set time delay to 1 second
+		move.w	#60,objoff_34(a0) ; set time delay to 1 second
 		addq.b	#4,obRoutine(a0) ; goto "SSR_Continue" routine
 
 locret_BEC2:
@@ -141,7 +141,7 @@ SSR_Continue:	; Routine $E
 		move.w	#sfx_Continue,d0
 		jsr	(PlaySound_Special).l	; play continues jingle
 		addq.b	#2,obRoutine(a0)
-		move.w	#360,obTimeFrame(a0) ; set time delay to 6 seconds
+		move.w	#360,objoff_34(a0) ; set time delay to 6 seconds
 		bra.w	DisplaySprite
 ; ===========================================================================
 
