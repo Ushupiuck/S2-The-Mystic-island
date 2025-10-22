@@ -21,7 +21,7 @@ TSon_Main:	; Routine 0
 		move.l	#Map_TitleST,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Title_Sonic_And_Tails,2,0),obGfx(a0)
 		move.b	#1,obPriority(a0)
-		move.b	#29,obDelayAni(a0)	; set time delay to 0.5 seconds
+	;	move.b	#29,obDelayAni(a0)	; set time delay to 0.5 seconds
 		tst.b	obFrame(a0)		; are we on frame 0?
 		beq.s	TSon_Delay		; if so, skip.
 		move.w	#$FC,obScreenX(a0)	; this part of code loads Tails on the Title Screen.
