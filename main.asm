@@ -22163,7 +22163,7 @@ Obj3E_Switched:
 		beq.s	locret_19620
 		addq.w	#8,obY(a0)
 		move.b	#$A,obRoutine(a0)
-		move.w	#60,obTimeFrame(a0)
+		move.b	#60,obTimeFrame(a0)
 		clr.b	(f_timecount).w
 		clr.b	(f_lockscreen).w
 		move.b	#1,(f_lockctrl).w
@@ -22196,7 +22196,7 @@ Obj3E_Explosion:
 		add.w	d0,obY(a1)
 
 loc_19660:
-		subq.w	#1,obTimeFrame(a0)
+		subq.b	#1,obTimeFrame(a0)
 		beq.s	loc_19668
 		rts
 ; ---------------------------------------------------------------------------
@@ -22205,7 +22205,7 @@ loc_19668:
 		move.b	#2,(Boss_defeated_flag).w
 		move.b	#$C,obRoutine(a0)
 		move.b	#6,obFrame(a0)
-		move.w	#150,obTimeFrame(a0)
+		move.b	#150,obTimeFrame(a0)
 		addi.w	#$20,obY(a0)
 		moveq	#7,d6
 		move.w	#$9A,d5
@@ -22248,12 +22248,12 @@ loc_196EE:
 		move.w	#$C,objoff_36(a1)
 
 loc_196F8:
-		subq.w	#1,obTimeFrame(a0)
-		bne.s	locret_19708
+		subq.b	#1,obTimeFrame(a0)
+		bne.s	.return
 		addq.b	#2,obRoutine(a0)
-		move.w	#60*3,obTimeFrame(a0)
+		move.b	#60*3,obTimeFrame(a0)
 
-locret_19708:
+.return:
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -22262,12 +22262,11 @@ Obj3E_EndAct:
 		moveq	#id_Obj28,d1
 		moveq	#object_size,d2
 		lea	(v_player2).w,a1
-
-loc_19714:
-		cmp.b	(a1),d1
-		beq.s	locret_19708
+-		cmp.b	(a1),d1
+		beq.s	loc_196F8.return
 		adda.w	d2,a1
-		dbf	d0,loc_19714
+		dbf	d0,-
+
 		jsr	(Load_EndOfAct).l
 		jmp	(DeleteObject).l
 ; ---------------------------------------------------------------------------

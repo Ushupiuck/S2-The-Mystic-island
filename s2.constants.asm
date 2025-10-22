@@ -19,17 +19,17 @@ obY:			equ $C		; y-axis position (2-4 bytes)
 obYSub:			equ $E		; for when exra presition is required (2 bytes)
 obVelX:			equ $10		; x-axis velocity (2 bytes)
 obVelY:			equ $12		; y-axis velocity (2 bytes)
-obInertia:		equ $20		; potential speed (2 bytes)
+obActWid:		equ $14		; action width
 obHeight:		equ $16		; height/2; y_radius
-obWidth:		equ $14		; width/2 ; x_radius
+obWidth:		equ $17		; width/2 ; x_radius
 obPriority:		equ $18		; sprite stack priority -- 0 is front
-obActWid:		equ $19		; action width
 obFrame:		equ $1A		; current frame displayed
 obAniFrame:		equ $1B		; current frame in animation script
 obAnim:			equ $1C		; current animation
 obPrevAni:		equ $1D		; previous animation
 obTimeFrame:		equ $1E		; time to next frame
 obDelayAni:		equ $1F		; time to delay animation
+obInertia:		equ $20		; and $21 directionless representation of speed... not updated in the air
 obColType:		equ $20		; collision response type
 obColProp:		equ $21		; collision extra property
 obStatus:		equ $22		; note: exact meaning depends on the object... for sonic/tails: bit 0: leftfacing. bit 1: inair. bit 2: spinning. bit 3: onobject. bit 4: rolljumping. bit 5: pushing. bit 6: underwater.
