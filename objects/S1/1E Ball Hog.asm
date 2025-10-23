@@ -348,20 +348,17 @@ Hog_Move2:
 		subi.w	#$20,d3
 
 +
-
 		jsr	(ObjHitFloor2).l
 		cmpi.w	#-8,d1
 		blt.s	.just_turn
 		cmpi.w	#$C,d1
 		bge.s	.just_turn
-		add.w	d1,obY(a0)
 		rts
 ; ---------------------------------------------------------------------------
 .just_turn:
 		bchg	#0,obStatus(a0)
-		bne.s	.noflip
+
 		neg.w	obVelX(a0)
-.noflip:
 		rts
 .finished_timer:
 		subq.b	#2,ob2ndRout(a0)
