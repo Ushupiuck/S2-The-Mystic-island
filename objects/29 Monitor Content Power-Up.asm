@@ -1,16 +1,16 @@
-;----------------------------------------------------
-; Object 2E - monitor contents (code for power-up behavior and rising image)
-;----------------------------------------------------
+; ---------------------------------------------------------------------------
+; Object 29 - monitor contents (code for power-up behavior and rising image)
+; ---------------------------------------------------------------------------
 
-Obj2E:
+Obj29:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	Obj2E_Index(pc,d0.w),d1
-		jmp	Obj2E_Index(pc,d1.w)
+		move.w	Obj29_Index(pc,d0.w),d1
+		jmp	Obj29_Index(pc,d1.w)
 ; ---------------------------------------------------------------------------
-Obj2E_Index:	dc.w loc_B04E-Obj2E_Index
-		dc.w loc_B092-Obj2E_Index
-		dc.w loc_B1AA-Obj2E_Index
+Obj29_Index:	dc.w loc_B04E-Obj29_Index
+		dc.w loc_B092-Obj29_Index
+		dc.w loc_B1AA-Obj29_Index
 ; ---------------------------------------------------------------------------
 
 loc_B04E:

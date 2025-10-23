@@ -1,17 +1,17 @@
 ; ---------------------------------------------------------------------------
-; Object 34 - zone title cards
+; Object 94 - zone title cards
 ; ---------------------------------------------------------------------------
 
-Obj34:
+Obj94:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	Obj34_Index(pc,d0.w),d1
-		jmp	Obj34_Index(pc,d1.w)
+		move.w	Obj94_Index(pc,d0.w),d1
+		jmp	Obj94_Index(pc,d1.w)
 ; ---------------------------------------------------------------------------
-Obj34_Index:	dc.w Card_CheckSBZ3-Obj34_Index
-		dc.w Card_ChkPos-Obj34_Index
-		dc.w Card_Wait-Obj34_Index
-		dc.w Card_Wait-Obj34_Index
+Obj94_Index:	dc.w Card_CheckSBZ3-Obj94_Index
+		dc.w Card_ChkPos-Obj94_Index
+		dc.w Card_Wait-Obj94_Index
+		dc.w Card_Wait-Obj94_Index
 
 card_mainX = objoff_30		; position for card to display on
 card_finalX = objoff_32		; position for card to finish on
@@ -40,7 +40,7 @@ Card_LoadConfig:
 		moveq	#3,d1
 
 Card_Loop:
-		_move.b	#id_Obj34,obID(a1)
+		_move.b	#id_Obj94,obID(a1)
 		move.w	(a3),obX(a1)	; load start x-position
 		move.w	(a3)+,card_finalX(a1) ; load finish x-position (same as start)
 		move.w	(a3)+,card_mainX(a1) ; load main x-position
@@ -82,13 +82,13 @@ Card_Move:
 
 Card_NoMove:
 		move.w	obX(a0),d0
-		bmi.s	Obj34_NoDisplay
+		bmi.s	Obj94_NoDisplay
 		cmpi.w	#$200,d0	; has item moved beyond	$200 on	x-axis?
-		bcc.s	Obj34_NoDisplay	; if yes, branch
+		bcc.s	Obj94_NoDisplay	; if yes, branch
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
-Obj34_NoDisplay:
+Obj94_NoDisplay:
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -112,13 +112,13 @@ Card_ChkPos2:
 Card_Move2:
 		add.w	d1,obX(a0)	; change item's position
 		move.w	obX(a0),d0
-		bmi.s	Obj34_NoDisplay2
+		bmi.s	Obj94_NoDisplay2
 		cmpi.w	#$200,d0	; has item moved beyond	$200 on	x-axis?
-		bcc.s	Obj34_NoDisplay2	; if yes, branch
+		bcc.s	Obj94_NoDisplay2	; if yes, branch
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
-Obj34_NoDisplay2:
+Obj94_NoDisplay2:
 		rts
 ; ---------------------------------------------------------------------------
 

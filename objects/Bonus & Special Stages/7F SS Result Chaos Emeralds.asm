@@ -31,7 +31,7 @@ SSRC_Loop:
 		move.b	d3,obAnim(a1)
 		addq.b	#1,d2
 		addq.b	#2,obRoutine(a1)
-		move.l	#Map_SSRC,obMap(a1)
+		move.l	#Map_SSRE,obMap(a1)
 		move.w	#make_art_tile(ArtTile_SS_Results_Emeralds,0,1),obGfx(a1)
 		move.b	#0,obRender(a1)
 		lea	object_size(a1),a1	; next object

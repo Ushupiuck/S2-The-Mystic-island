@@ -2645,7 +2645,7 @@ Level_PlayBgm:
 		lea	MusicList(pc),a1	; load music playlist
 		move.b	(a1,d0.w),d0
 		bsr.w	PlaySound		; play music
-		_move.b	#id_Obj34,(v_titlecard).w	; load title card object
+		_move.b	#id_Obj94,(v_titlecard).w	; load title card object
 
 Level_TtlCardLoop:
 		move.b	#VintID_TitleCard,(v_vbla_routine).w
@@ -7649,7 +7649,7 @@ Map_Ring:	binclude	"mappings/sprite/obj37_a.bin"
 		even
 
 		include	"objects/26 Monitor.asm"
-		include	"objects/2E Monitor Content Power-Up.asm"
+		include	"objects/29 Monitor Content Power-Up.asm"
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -8316,56 +8316,6 @@ Map_obj22:	binclude	"mappings/sprite/obj22.bin"
 Map_obj23:	binclude	"mappings/sprite/obj23.bin"
 		even
 ; ===========================================================================
-		include	"objects/7B Giant Ring.asm"
-		include	"objects/7C Ring Flash.asm"
-; ---------------------------------------------------------------------------
-Map_GiantRing:	binclude	"mappings/sprite/GiantRing.bin"
-		even
-Map_S1Obj7C:	dc.w word_AD66-Map_S1Obj7C
-		dc.w word_AD78-Map_S1Obj7C
-		dc.w word_AD9A-Map_S1Obj7C
-		dc.w word_ADBC-Map_S1Obj7C
-		dc.w word_ADDE-Map_S1Obj7C
-		dc.w word_AE00-Map_S1Obj7C
-		dc.w word_AE22-Map_S1Obj7C
-		dc.w word_AE34-Map_S1Obj7C
-word_AD66:	dc.w 2
-		dc.w $E00F,    0,    0,	   0
-		dc.w	$F,$1000,$1000,	   0
-word_AD78:	dc.w 4
-		dc.w $E00F,  $10,    8,$FFF0
-		dc.w $E007,  $20,  $10,	 $10
-		dc.w	$F,$1010,$1008,$FFF0
-		dc.w	 7,$1020,$1010,	 $10
-word_AD9A:	dc.w 4
-		dc.w $E00F,  $28,  $14,$FFE8
-		dc.w $E00B,  $38,  $1C,	   8
-		dc.w	$F,$1028,$1014,$FFE8
-		dc.w	$B,$1038,$101C,	   8
-word_ADBC:	dc.w 4
-		dc.w $E00F, $834, $81A,$FFE0
-		dc.w $E00F,  $34,  $1A,	   0
-		dc.w	$F,$1834,$181A,$FFE0
-		dc.w	$F,$1034,$101A,	   0
-word_ADDE:	dc.w 4
-		dc.w $E00B, $838, $81C,$FFE0
-		dc.w $E00F, $828, $814,$FFF8
-		dc.w	$B,$1838,$181C,$FFE0
-		dc.w	$F,$1828,$1814,$FFF8
-word_AE00:	dc.w 4
-		dc.w $E007, $820, $810,$FFE0
-		dc.w $E00F, $810, $808,$FFF0
-		dc.w	 7,$1820,$1810,$FFE0
-		dc.w	$F,$1810,$1808,$FFF0
-word_AE22:	dc.w 2
-		dc.w $E00F, $800, $800,$FFE0
-		dc.w	$F,$1800,$1800,$FFE0
-word_AE34:	dc.w 4
-		dc.w $E00F,  $44,  $22,$FFE0
-		dc.w $E00F, $844, $822,	   0
-		dc.w	$F,$1044,$1022,$FFE0
-		dc.w	$F,$1844,$1822,	   0
-		even
 ; ---------------------------------------------------------------------------
 		include	"objects/91 Title Sonic And Tails.asm"
 Map_TitleST:	binclude "mappings/sprite/Sonic & Tails on the title screen.bin"
@@ -8403,23 +8353,37 @@ word_B8B6:	dc.w 2
 		dc.w $F505,$101C,$100E,	 $10
 		even
 ; ---------------------------------------------------------------------------
-		include	"objects/34 Title Cards.asm"
+		include	"objects/94 Title Cards.asm"
 		include	"objects/39 Game Over.asm"
 		include	"objects/3A Got Through Card.asm"
-		include	"objects/7E Special Stage Results.asm"
-		include	"objects/7F SS Result Chaos Emeralds.asm"
-Map_Card:	include	"mappings/sprite/Title_Cards.asm"
-Map_Over:	include	"mappings/sprite/Game_Over.asm"
-Map_Got:	include	"mappings/sprite/Got_Through.asm"
+		include	"objects/Bonus & Special Stages/7A Special Stage Entry.asm"
+		include	"objects/Bonus & Special Stages/7B Giant Ring.asm"
+		include	"objects/Bonus & Special Stages/7C Ring Flash.asm"
+		include	"objects/Bonus & Special Stages/7E Special Stage Results.asm"
+		include	"objects/Bonus & Special Stages/7F SS Result Chaos Emeralds.asm"
 		include	"objects/S1/3B Purple Rock.asm"
 		include	"objects/36 Spikes.asm"
 Map_Obj36:	include	"mappings/sprite/obj36.asm"
 Map_Obj3B:	include	"mappings/sprite/S1/Purple Rock.asm"
 ; ---------------------------------------------------------------------------
-; Sprite mappings - special stage results screen (7E) & Chaos Emeralds (7F)
+Map_SpecialWarp:
+		binclude	"mappings/sprite/Special Stage Warp.bin"
+		even
+Map_GiantRing:
+		binclude	"mappings/sprite/GiantRing.bin"
+		even
+Map_GiantRingFlash:
+		binclude	"mappings/sprite/GiantRingFlash.bin"
+		even
+Map_SSRE:	binclude	"mappings/sprite/SSR Emeralds.bin"
+		even
+Map_Card:	include	"mappings/sprite/Title_Cards.asm"
+Map_Over:	include	"mappings/sprite/Game_Over.asm"
+Map_Got:	include	"mappings/sprite/Got_Through.asm"
+; ---------------------------------------------------------------------------
+; Sprite mappings - special stage results screen (7E)
 ; ---------------------------------------------------------------------------
 Map_SSR:	include	"mappings/sprite/SSResults.asm"
-Map_SSRC:	include	"mappings/sprite/SSResults_Emeralds.asm"
 ; ---------------------------------------------------------------------------
 		include	"objects/S1/3C Smashable Wall.asm"
 		include	"objects/S1/sub SmashObject.asm"
@@ -8578,32 +8542,32 @@ ptr_Obj19:		dc.l Obj19	; Platform from CPZ
 ptr_Obj1A:		dc.l Obj1A	; Collapsing platform from GHZ and HPZ
 ptr_Obj1B:		dc.l Obj1B
 ptr_Obj1C:		dc.l Obj1C	; Stage decorations in GHZ, EHZ, HTZ and HPZ
-ptr_Obj1D:		dc.l Obj1D
+ptr_Obj1D:		dc.l ObjNull
 ptr_Obj1E:		dc.l ObjVBallhog
 ptr_Obj1F:		dc.l Obj1F	; (S1) Crabmeat from GHZ
 
-ptr_Obj20:		dc.l Obj20
+ptr_Obj20:		dc.l ObjNull
 ptr_Obj21:		dc.l ObjNull
 ptr_Obj22:		dc.l Obj22	; (S1) Buzz Bomber from GHZ
 ptr_Obj23:		dc.l Obj23	; (S1) Buzz Bomber/Newtron missile
-ptr_Obj24:		dc.l Obj24	; (S1) Unused Buzz Bomber missile explosion
+ptr_Obj24:		dc.l Obj24	; Ballhog bomb explosion
 ptr_Obj25:		dc.l Obj25	; A ring
 ptr_Obj26:		dc.l Obj26	; Monitor
 ptr_Obj27:		dc.l Obj27	; An explosion, giving off an animal and 100 points
 ptr_Obj28:		dc.l Obj28	; Animal and the 100 points from a badnik
-ptr_Obj29:		dc.l ObjNull
+ptr_Obj29:		dc.l Obj29	; Monitor contents (code for power-up behavior and rising image)
 ptr_Obj2A:		dc.l Obj2A	; (S1) Small door from SBZ
 ptr_Obj2B:		dc.l Obj2B	; (S1) Chopper from GHZ
 ptr_Obj2C:		dc.l Obj2C	; (S1) Jaws from LZ
 ptr_Obj2D:		dc.l ObjNull
-ptr_Obj2E:		dc.l Obj2E	; Monitor contents (code for power-up behavior and rising image)
+ptr_Obj2E:		dc.l ObjNull
 ptr_Obj2F:		dc.l ObjNull
 
 ptr_Obj30:		dc.l ObjNull
 ptr_Obj31:		dc.l ObjNull
 ptr_Obj32:		dc.l ObjNull
 ptr_Obj33:		dc.l ObjNull
-ptr_Obj34:		dc.l Obj34	; (S1) Level title card
+ptr_Obj34:		dc.l ObjNull
 ptr_Obj35:		dc.l ObjNull
 ptr_Obj36:		dc.l Obj36	; Vertical spikes
 ptr_Obj37:		dc.l Obj37	; Scattering rings (generated when Sonic or Tails are hurt and has rings)
@@ -8704,8 +8668,8 @@ ptr_Obj8F:		dc.l ObjNull
 ptr_Obj90:		dc.l Credits		; "SONIC TEAM PRESENTS" screen and credits
 ptr_Obj91:		dc.l TitleSonicTails	; Sonic and Tails from the title screen
 ptr_Obj92:		dc.l PressStartButton	; Press Start Button
-ptr_Obj93:		dc.l ObjNull
-ptr_Obj94:		dc.l ObjNull
+ptr_Obj93:		dc.l ObjNull		; (Reserved, in case another object is added to the title screen)
+ptr_Obj94:		dc.l Obj94		; Level title card
 ptr_Obj95:		dc.l ObjNull
 ptr_Obj96:		dc.l ObjNull
 ptr_Obj97:		dc.l ObjNull
@@ -15610,9 +15574,6 @@ byte_125EE:	dc.b   0,  4,  4,  0,  4,  0,  0,  5,  5,  0,  5,  0,  0,  6,  6,  0
 		dc.b   6,  0,  0,  7,  7,  0,  7,  0,  0,$FF
 byte_12608:	dc.b   0,  4,  0,  0,  4,  0,  0,  5,  0,  0,  5,  0,  0,  6,  0,  0
 		dc.b   6,  0,  0,  7,  0,  0,  7,  0,  0,$FF
-		even
-		include	"objects/7A Special Stage Entry.asm"
-Map_obj7A:	binclude	"mappings/sprite/S1/obj7A.bin"
 		even
 
 ; =============== S U B	R O U T	I N E =======================================

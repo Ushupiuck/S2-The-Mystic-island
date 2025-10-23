@@ -63,8 +63,8 @@ Debug_LZ:	dc.w (Debug_LZ_End-Debug_LZ-2)/8
 	dbug	Map_obj41,	id_Obj41,	$40,	$A,	make_art_tile(ArtTile_Spring_Diagonal,0,0)
 	dbug	Map_BallHogV,	id_Obj1E,	$10,	0,	make_art_tile(ArtTile_Ball_HogV,1,0)
 	dbug	Map_BallHogV,	id_Obj1E,	$04,	0,	make_art_tile(ArtTile_Ball_HogV,1,0)
-	dbug	Map_BallHogH,	id_Obj1D,	$04,	0,	make_art_tile(ArtTile_Ball_HogH,1,0)
-	dbug	Map_BallHogH,	id_Obj1D,	$06,	0,	make_art_tile(ArtTile_Ball_HogH,1,0)
+	dbug	Map_BallHogH,	id_Obj1E,	$04,	0,	make_art_tile(ArtTile_Ball_HogH,1,0)
+	dbug	Map_BallHogH,	id_Obj1E,	$06,	0,	make_art_tile(ArtTile_Ball_HogH,1,0)
 Debug_LZ_End:
 
 Debug_EHZ:	dc.w (Debug_EHZ_End-Debug_EHZ-2)/8

@@ -16,7 +16,7 @@ GiantRingFlash_Index:
 
 loc_AB50:
 		addq.b	#2,obRoutine(a0)
-		move.l	#Map_S1Obj7C,obMap(a0)
+		move.l	#Map_GiantRingFlash,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Giant_Ring_Flash,1,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.w	#0,obPriority(a0)
@@ -45,7 +45,7 @@ loc_AB7E:
 
 loc_ABD8:
 		addq.b	#2,obRoutine(a0)
-		move.w	#0,(v_player).w
+		clr.w	(v_player).w
 		addq.l	#4,sp
 		rts
 ; End of function sub_AB98

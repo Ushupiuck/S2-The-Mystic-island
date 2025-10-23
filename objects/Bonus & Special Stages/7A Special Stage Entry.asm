@@ -25,7 +25,7 @@ Obj7A_Init:
 
 .continue:
 		addq.b	#2,obRoutine(a0)
-		move.l	#Map_obj7A,obMap(a0)
+		move.l	#Map_SpecialWarp,obMap(a0)
 		move.b	#4,obRender(a0)
 		move.w	#$80,obPriority(a0)
 		move.b	#$38,obActWid(a0)
@@ -42,7 +42,7 @@ Obj7A_RmvSonic:
 		bne.s	loc_1253E
 		tst.b	(v_player+obID).w		; is this Sonic?
 		beq.s	loc_1253E			; if not, branch
-		move.b	#0,(v_player+obID).w		; set Sonic's object ID to 0
+		clr.b	(v_player+obID).w		; set Sonic's object ID to 0
 		move.w	#sfx_SSGoal,d0
 		jsr	(PlaySound_Special).l		; play Special Stage entry sound effect
 
