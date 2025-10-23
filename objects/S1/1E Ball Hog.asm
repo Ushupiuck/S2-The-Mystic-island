@@ -19,6 +19,7 @@ Obj1E_Index:	dc.w Obj1E_Main-Obj1E_Index
 		dc.w Obj1E_Action-Obj1E_Index
 
 		dc.w Obj1E_Action2-Obj1E_Index
+
 		dc.w Obj1E_NormalBomb-Obj1E_Index
 		dc.w Obj1E_ProtoBomb-Obj1E_Index
 ; ===========================================================================
@@ -41,13 +42,12 @@ Obj1E_Main:				; XREF: Obj1E_Index
 
 		moveq	#0,d0
 		move.b	obSubtype(a0),d0	; move subtype to d0
-		cmpi.b	#$1F,d0			; subtypes $20-$2F are vertical
-		bls.s	.normalmode		; subtypes $00-$1F are horizontal
-		bset	#0,hog_mode(a0)		; default to false
-
-		subi.b	#$1F,d0			; substract $1F. If more, means timed mode (yay, high byte recycling)
-		bgt.s	.not_timed		; if not, skip this segment
-		bset	#1,hog_mode(a0)		; flag to fire on a timer
+		subi.b	#$10,d0			; substract $0F. If more, means timed mode (yay, high byte recycling)
+		bls.s	.normalmode		; subtypes $00-$0F are horizontal
+		bset	#1,hog_mode(a0)		; default to false
+		cmpi.b	#$0F,d0
+		bpl.s	.timed
+		bset	#0,hog_mode(a0)		; flag to fire on a timer
 		add.w	d0,d0			; multiply by 60 frames (1 second)
 		add.w	d0,d0
 		move.w	d0,d1
@@ -55,7 +55,7 @@ Obj1E_Main:				; XREF: Obj1E_Index
 		sub.w	d1,d0
 		move.w	d0,hog_wait(a0)
 		move.w	d0,hog_backup(a0)
-.not_timed:
+.timed:
 		move.w	#256-1,hog_walk(a0)
 		sf	hog_launchflagV(a0)	; set to launch	cannonball
 
@@ -197,6 +197,11 @@ Obj1E_MakeBall:				; XREF: Obj1E_Action
 
 .no_free_ram:
 		bra.w	MarkObjGone
+Ani_HogHoriz:	dc.w .frame1-Ani_HogHoriz
+.frame1:	dc.b   9,  0,  0,  2,  2,  3,  2,  0
+		dc.b   0,  2,  2,  3,  2,  0,  0,  2
+		dc.b   2,  3,  2,  0,  0,  1, afEnd
+		even
 
 Obj1E_Action2:
 		moveq	#0,d0
@@ -212,26 +217,32 @@ Obj1E_Action2:
 ; ===========================================================================
 
 Hog_Idle:
-		tst.b	obRender(a0)	; are we offscreen?
-		bpl.s	.go_walk	; skip straight to walking if so
-
-		subq.w	#1,hog_wait(a0)
-		bpl.s	.timed_fire
-.go_walk:
 		btst	#1,hog_mode(a0)	; timed fire mode?
 		bne.s	.default	; skip this if so
 		move.w	hog_walk(a0),hog_wait(a0)	; overwrite with defaults
 		move.w	hog_walk(a0),hog_backup(a0)	; ...for both
+		bsr.s	.load
+		bra.s	.go_walk
 .default:
+		tst.b	obRender(a0)	; are we offscreen?
+		bpl.s	.go_walk	; skip straight to walking if so
+
+
+		subq.w	#1,hog_wait(a0)
+		bpl.s	.timed_fire
+.go_walk:
+		move.w	hog_walk(a0),hog_wait(a0)
 		move.w	#$40,obVelX(a0)
 		move.b	#1,obAnim(a0)
+		cmpi.b	#2,hog_launchflagV(a0)
+		beq.s	.noflip
 		bchg	#0,obStatus(a0)
 		bne.s	.noflip
 		neg.w	obVelX(a0)
 .noflip:
 		addq.b	#2,ob2ndRout(a0)
-		btst	#1,hog_mode(a0)	; timed fire mode?
-		sne	hog_launchflagV(a0)
+
+		sf	hog_launchflagV(a0)
 		rts
 
 .timed_fire:
@@ -239,13 +250,14 @@ Hog_Idle:
 		bne.s	.abort
 		cmpi.b	#2,obFrame(a0)
 		bne.s	.abort
+.load
 		st	hog_launchflagV(a0)
 
 
 		bsr.w	FindFreeObj
 		bne.s	.abort			; if ObjectRam is full, we bail!
 		move.b	#id_Obj1E,(a1)	; load bomb
-		move.b	#8,obRoutine(a1); set normal bomb
+		move.b	#8,obRoutine(a1); set proto bomb
 		move.b	#4,obFrame(a1)  ; set bomb frame
 		move.l	#Map_BallHogH,obMap(a1)
 		move.w	#make_art_tile(ArtTile_Ball_HogH,1,0),obGfx(a1)
@@ -256,27 +268,16 @@ Hog_Idle:
 		move.b	#$87,obColType(a1)
 		move.b	#8,obActWid(a1)
 		move.w	#$18,objoff_30(a1)
-
-;		moveq	#0,d0
-;		move.b	obSubtype(a0),d0						; move subtype to d0
-;		add.w	d0,d0								; multiply by 60 frames (1 second)
-;		add.w	d0,d0
-;		move.w	d0,d1
-;		lsl.w	#4,d0
-;		sub.w	d1,d0
-;		move.w	d0,objoff_30(a1)
-
 		addi.w	#$10,obY(a1)
-		move.w	hog_backup(a0),hog_wait(a0)
+		move.w	hog_walk(a0),hog_wait(a0)
 .abort:			;.fail in the final
-		rts
 		rts
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 
 Hog_Move:
 		subq.w	#1,hog_wait(a0)
-		bmi.s	.stop
+		beq.s	.stop2
 		bsr.w	ObjectMove
 		move.w	obX(a0),d3
 		addi.w	#$10,d3
@@ -293,10 +294,15 @@ Hog_Move:
 		add.w	d1,obY(a0)
 		rts
 ; ---------------------------------------------------------------------------
-
+.stop2
+		btst	#1,hog_mode(a0)	; timed fire mode?
+		bne.s	.stop	; skip this if so
+		move.b	#2,hog_launchflagV(a0)
+		move.w	#256-1,hog_walk(a0)
 .stop:
-		subq.b	#2,ob2ndRout(a0)
+.go
 		move.w	hog_walk(a0),hog_wait(a0)
+		subq.b	#2,ob2ndRout(a0)
 		clr.w	obVelX(a0)
 		move.b	#0,obAnim(a0)
 		tst.b	obRender(a0)
