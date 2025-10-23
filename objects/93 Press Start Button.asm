@@ -1,5 +1,5 @@
 ; ---------------------------------------------------------------------------
-; Object 92 - "PRESS START BUTTON" from title screen
+; Object 93 - "PRESS START BUTTON" from title screen
 ; ---------------------------------------------------------------------------
 
 PressStartButton:

@@ -2104,7 +2104,7 @@ TitleScreen:
 		clearRAM v_sonicteam,v_sonicteam+object_size
 		_move.b	#id_Obj91,(v_titlesonic).w
 		_move.b	#id_Obj91,(v_titletails).w
-		_move.b	#id_Obj92,(v_pressstart).w
+		_move.b	#id_Obj93,(v_pressstart).w
 		move.b	#1,(v_titletails+obFrame).w
 		jsr	(ExecuteObjects).l
 		jsr	(BuildSprites).l
@@ -8321,7 +8321,8 @@ Map_obj23:	binclude	"mappings/sprite/obj23.bin"
 Map_TitleST:	binclude "mappings/sprite/Sonic & Tails on the title screen.bin"
 		even
 
-		include	"objects/92 Press Start Button.asm"
+		include	"objects/92 Title screen palette handler.asm"
+		include	"objects/93 Press Start Button.asm"
 Map_PSB:	binclude "mappings/sprite/press start button.bin"
 		even
 ; ---------------------------------------------------------------------------
@@ -8573,7 +8574,7 @@ ptr_Obj36:		dc.l Obj36	; Vertical spikes
 ptr_Obj37:		dc.l Obj37	; Scattering rings (generated when Sonic or Tails are hurt and has rings)
 ptr_Obj38:		dc.l Obj38	; Shield
 ptr_Obj39:		dc.l Obj39	; Game Over/Time Over text
-ptr_Obj3A:		dc.l Obj3A	; (S1) End of level results screen
+ptr_Obj3A:		dc.l ObjNull
 ptr_Obj3B:		dc.l Obj3B	; (S1) Purple rock from GHZ
 ptr_Obj3C:		dc.l Obj3C	; (S1) Breakable wall
 ptr_Obj3D:		dc.l Obj3D	; (S1) GHZ boss
@@ -8667,10 +8668,10 @@ ptr_Obj8F:		dc.l ObjNull
 
 ptr_Obj90:		dc.l Credits		; "SONIC TEAM PRESENTS" screen and credits
 ptr_Obj91:		dc.l TitleSonicTails	; Sonic and Tails from the title screen
-ptr_Obj92:		dc.l PressStartButton	; Press Start Button
-ptr_Obj93:		dc.l ObjNull		; (Reserved, in case another object is added to the title screen)
-ptr_Obj94:		dc.l Obj94		; Level title card
-ptr_Obj95:		dc.l ObjNull
+ptr_Obj92:		dc.l TitlePaletteHandler		; TODO
+ptr_Obj93:		dc.l PressStartButton	; Press Start Button
+ptr_Obj94:		dc.l TitleCards		; Level title card
+ptr_Obj95:		dc.l GotThrough		; End of level results screen
 ptr_Obj96:		dc.l ObjNull
 ptr_Obj97:		dc.l ObjNull
 ptr_Obj98:		dc.l ObjNull

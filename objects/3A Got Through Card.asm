@@ -2,7 +2,7 @@
 ; Object 3A - End of level results screen
 ; ---------------------------------------------------------------------------
 
-Obj3A:
+GotThrough:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	Got_Index(pc,d0.w),d1
@@ -25,6 +25,7 @@ got_finalX = objoff_32		; position for card to finish on
 Got_ChkPLC:	; Routine 0
 		tst.l	(v_plc_buffer).w ; are the pattern load cues empty?
 		beq.s	Got_Main	; if yes, branch
+.return:
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -34,7 +35,7 @@ Got_Main:
 		moveq	#6,d1
 
 Got_Loop:
-		_move.b	#id_Obj3A,obID(a1)
+		_move.b	#id_Obj95,obID(a1)
 		move.w	(a2),obX(a1)	; load start x-position
 		move.w	(a2)+,got_finalX(a1) ; load finish x-position (same as start)
 		move.w	(a2)+,got_mainX(a1) ; load main x-position
@@ -66,14 +67,10 @@ Got_ChgPos:
 
 loc_BBCC:
 		move.w	obX(a0),d0
-		bmi.s	locret_BBDE
+		bmi.s	Got_ChkPLC.return
 		cmpi.w	#$200,d0	; has item moved beyond	$200 on	x-axis?
-		bcc.s	locret_BBDE	; if yes, branch
+		bcc.s	Got_ChkPLC.return	; if yes, branch
 		bra.w	DisplaySprite
-; ===========================================================================
-
-locret_BBDE:
-		rts
 ; ===========================================================================
 
 loc_BBE0:
@@ -125,16 +122,14 @@ Got_ChkBonus:
 
 Got_SetDelay:
 		move.b	#180,obTimeFrame(a0) ; set time delay to 3 seconds
-
-locret_BC64:
-		rts
+-		rts
 ; ===========================================================================
 
 Got_AddBonus:
 		jsr	(AddPoints).l
 		move.b	(Vint_runcount+3).w,d0
 		andi.b	#3,d0
-		bne.s	locret_BC64
+		bne.s	-
 		move.w	#sfx_Switch,d0
 		jmp	(PlaySound_Special).l	; play "blip" sound
 ; ===========================================================================
@@ -221,14 +216,10 @@ Got_Move2:	; Routine $E
 Got_ChgPos2:
 		add.w	d1,obX(a0)	; change item's position
 		move.w	obX(a0),d0
-		bmi.s	locret_BD1C
+		bmi.s	loc_BD3A.return
 		cmpi.w	#$200,d0	; has item moved beyond	$200 on	x-axis?
-		bcc.s	locret_BD1C	; if yes, branch
+		bcc.s	loc_BD3A.return	; if yes, branch
 		bra.w	DisplaySprite
-; ---------------------------------------------------------------------------
-
-locret_BD1C:
-		rts
 ; ---------------------------------------------------------------------------
 
 Got_SBZ2:
@@ -244,6 +235,7 @@ Got_SBZ2:
 		addq.w	#2,(Camera_Max_X_pos).w
 		cmpi.w	#$2100,(Camera_Max_X_pos).w
 		beq.w	DeleteObject
+.return:
 		rts
 ; ---------------------------------------------------------------------------
 		;    x-start,	x-main,	y-main,

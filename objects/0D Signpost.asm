@@ -124,7 +124,7 @@ Load_EndOfAct:
 		move.w	(Camera_Max_X_pos).w,(Camera_Min_X_pos).w
 		clr.b	(v_invinc).w
 		clr.b	(f_timecount).w
-		_move.b	#id_Obj3A,(v_endcard).w
+		_move.b	#id_Obj95,(v_endcard).w
 		moveq	#plcid_TitleCard,d0
 		jsr	(NewPLC).l
 		move.b	#1,(f_endactbonus).w
