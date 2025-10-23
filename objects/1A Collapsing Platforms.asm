@@ -22,7 +22,7 @@ Ledge_Main:	; Routine 0
 		move.l	#Map_Obj1A,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Level,2,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
-		move.b	#4,obPriority(a0)
+		move.w	#$200,obPriority(a0)
 		move.b	#7,ledge_timedelay(a0) ; set time delay for collapse
 		move.b	obSubtype(a0),obFrame(a0)
 		cmpi.b	#id_HPZ,(Current_Zone).w
@@ -84,8 +84,8 @@ Ledge_Display:	; Routine 6
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
-loc_8D16:	; Actually "Ledge_WalkOff"! Due to how the subroitine evolved
-		; You'd support two players, the clode split into two. This,
+loc_8D16:	; Actually "Ledge_WalkOff"! Due to how the subroutine evolved
+		; You'd support two players, the code split into two. This,
 		bsr.w	Ledge_WalkOff	; and "Ledge_Destroy"
 		subq.b	#1,ledge_timedelay(a0)
 		bne.s	locret_8D44

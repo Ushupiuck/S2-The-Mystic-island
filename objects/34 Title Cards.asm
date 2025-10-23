@@ -64,7 +64,7 @@ Card_MakeSprite:
 		move.w	#make_art_tile(ArtTile_Title_Card,0,1),obGfx(a1)
 		move.b	#$78,obActWid(a1)
 		move.b	#0,obRender(a1)
-		move.b	#0,obPriority(a1)
+		move.w	#0,obPriority(a1)
 		move.b	#60,obTimeFrame(a1)
 		lea	object_size(a1),a1
 		dbf	d1,Card_Loop

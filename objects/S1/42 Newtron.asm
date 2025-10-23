@@ -18,7 +18,7 @@ Obj42_Init:
 		move.l	#Map_obj42,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Newtron,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
-		move.b	#4,obPriority(a0)
+		move.w	#$200,obPriority(a0)
 		move.b	#$14,obActWid(a0)
 		move.b	#$10,obHeight(a0)
 		move.b	#8,obWidth(a0)
@@ -28,7 +28,7 @@ Obj42_Main
 		move.b	ob2ndRout(a0),d0
 		move.w	Obj42_Main_Index(pc,d0.w),d1
 		jsr	Obj42_Main_Index(pc,d1.w)
-		lea	(Ani_obj42).l,a1
+		lea	Ani_obj42(pc),a1
 		bsr.w	AnimateSprite
 		bra.w	MarkObjGone
 ; ===========================================================================
@@ -162,3 +162,16 @@ locret_ED6C:
 ; loc_ED6E:
 Obj42_Delete:
 		bra.w	DeleteObject
+; ===========================================================================
+Ani_obj42:	dc.w byte_ED7C-Ani_obj42
+		dc.w byte_ED7F-Ani_obj42
+		dc.w byte_ED87-Ani_obj42
+		dc.w byte_ED8B-Ani_obj42
+		dc.w byte_ED8F-Ani_obj42
+byte_ED7C:	dc.b  $F, $A,$FF
+byte_ED7F:	dc.b $13,  0,  1,  3,  4,  5,$FE,  1
+byte_ED87:	dc.b   2,  6,  7,$FF
+byte_ED8B:	dc.b   2,  8,  9,$FF
+byte_ED8F:	dc.b $13,  0,  1,  1,  2,  1,  1,  0
+		dc.b $FC
+		even

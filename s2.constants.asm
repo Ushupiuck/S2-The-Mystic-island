@@ -19,7 +19,7 @@ obXSub:			equ $A		; for when exra presition is required (2 bytes)
 obY:			equ $C		; y-axis position (2-4 bytes)
 obYSub:			equ $E		; for when exra presition is required (2 bytes)
 obActWid:		equ $14		; action width
-obPriority:		equ $18		; (and soon $19) sprite stack priority -- 0 is front
+obPriority:		equ $18		; and $19 - sprite stack priority -- 0 is front
 obFrame:		equ $1A		; current frame displayed
 ; ---------------------------------------------------------------------------
 ; conventions followed by most objects:

@@ -20,7 +20,7 @@ ObjMovingSpring_Index:
 ObjMovingSpring_Init:
 		addq.b	#2,obRoutine(a0)
 		ori.b	#4,obRender(a0)
-		move.b	#4,obPriority(a0)
+		move.w	#$200,obPriority(a0)
 		move.l	#MapSpr_MovingSpring,obMap(a0)	; TODO: Convert to Sonic 2's format
 		move.b	#8,obWidth(a0)
 		move.b	#7,obHeight(a0)
@@ -110,7 +110,7 @@ Obj41_Init:
 loc_E22A:
 		ori.b	#4,obRender(a0)
 		move.b	#$10,obActWid(a0)
-		move.b	#4,obPriority(a0)
+		move.w	#$200,obPriority(a0)
 		move.b	obSubtype(a0),d0
 		lsr.w	#3,d0
 		andi.w	#$E,d0

@@ -1,41 +1,42 @@
 ; ---------------------------------------------------------------------------
-; Sonic	1 Object 4A - giant ring entry effect from prototype
+; Object 7A - Special Stage entry effect
 ; ---------------------------------------------------------------------------
 ; OST:
-obj4A_vanishtime:	equ $30				; time for Sonic to vanish for
+obj7A_vanishtime:	equ $30		; time for Sonic to vanish for
 ; ---------------------------------------------------------------------------
 
-S1Obj4A:
+SpecialStageEntry:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	S1Obj4A_Index(pc,d0.w),d1
-		jmp	S1Obj4A_Index(pc,d1.w)
+		move.w	Obj7A_Index(pc,d0.w),d1
+		jmp	Obj7A_Index(pc,d1.w)
 ; ===========================================================================
-S1Obj4A_Index:	dc.w S1Obj4A_Init-S1Obj4A_Index
-		dc.w S1Obj4A_RmvSonic-S1Obj4A_Index
-		dc.w S1Obj4A_LoadSonic-S1Obj4A_Index
+Obj7A_Index:	dc.w Obj7A_Init-Obj7A_Index
+		dc.w Obj7A_RmvSonic-Obj7A_Index
+		dc.w Obj7A_LoadSonic-Obj7A_Index
 ; ===========================================================================
 
-S1Obj4A_Init:
-		tst.l	(v_plc_buffer).w		; are the pattern load cues empty?
-		beq.s	loc_124D4			; if yes, branch
+Obj7A_Init:
+		tst.l	(v_plc_buffer).w	; are the pattern load cues empty?
+		beq.s	.continue		; if so, branch
+.return:
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_124D4:
+.continue:
 		addq.b	#2,obRoutine(a0)
-		move.l	#Map_S1obj4A,obMap(a0)
+		move.l	#Map_obj7A,obMap(a0)
 		move.b	#4,obRender(a0)
-		move.b	#1,obPriority(a0)
+		move.w	#$80,obPriority(a0)
 		move.b	#$38,obActWid(a0)
 		move.w	#make_art_tile(ArtTile_Warp,0,0),obGfx(a0)
-		move.w	#60*2,obj4A_vanishtime(a0)	; set vanishing time to 2 seconds
+		move.w	#60*2,obj7A_vanishtime(a0)	; set vanishing time to 2 seconds
 
-S1Obj4A_RmvSonic:
+Obj7A_RmvSonic:
 		move.w	(v_player+obX).w,obX(a0)
 		move.w	(v_player+obY).w,obY(a0)
 		move.b	(v_player+obStatus).w,obStatus(a0)
-		lea	Ani_S1obj4A(pc),a1
+		lea	Ani_obj7A(pc),a1
 		jsr	(AnimateSprite).l
 		cmpi.b	#2,obFrame(a0)
 		bne.s	loc_1253E
@@ -49,12 +50,13 @@ loc_1253E:
 		jmp	(DisplaySprite).l
 ; ===========================================================================
 
-S1Obj4A_LoadSonic:
-		subq.w	#1,obj4A_vanishtime(a0)		; subtract 1 from vanishing time
-		bne.s	locret_12556			; if there's any time left, branch
-		move.b	#id_Obj01,(v_player+obID).w			; set Sonic's object ID to 1
+Obj7A_LoadSonic:
+		subq.w	#1,obj7A_vanishtime(a0)		; subtract 1 from vanishing time
+		bne.s	Obj7A_Init.return		; if there's any time left, branch
+		move.b	#id_Obj01,(v_player+obID).w	; set Sonic's object ID to 1
 		jmp	(DeleteObject).l
 ; ---------------------------------------------------------------------------
-
-locret_12556:
-		rts
+Ani_obj7A:	dc.w byte_1278C-Ani_obj7A
+byte_1278C:	dc.b   5,  0,  1,  0,  1,  0,  7,  1,  7,  2,  7,  3,  7,  4,  7,  5
+		dc.b   7,  6,  7,$FC
+		even

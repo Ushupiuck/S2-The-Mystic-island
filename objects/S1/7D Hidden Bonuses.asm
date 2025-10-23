@@ -35,7 +35,7 @@ Obj7D_Main:
 		move.l	#Map_Obj7D,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Hidden_Points,0,1),obGfx(a0)
 		ori.b	#4,obRender(a0)
-		move.b	#0,obPriority(a0)
+		move.w	#0,obPriority(a0)
 		move.b	#$10,obActWid(a0)
 		move.b	obSubtype(a0),obFrame(a0)
 		move.w	#(60*2)-1,objoff_30(a0)
@@ -62,4 +62,3 @@ Obj7D_DelayDelete:
 		bmi.w	DeleteObject
 		out_of_range.w	DeleteObject
 		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------

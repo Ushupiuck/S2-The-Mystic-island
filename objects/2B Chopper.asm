@@ -24,7 +24,7 @@ Chop_Main:	; Routine 0
 		move.w	#make_art_tile(ArtTile_Masher,0,0),obGfx(a0)
 .notEHZ:
 		move.b	#4,obRender(a0)
-		move.b	#4,obPriority(a0)
+		move.w	#$200,obPriority(a0)
 		move.b	#9,obColType(a0)
 		move.b	#$10,obActWid(a0)
 		move.b	obSubtype(a0),d1	; get subtype (for vertical speed)

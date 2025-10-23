@@ -24,7 +24,7 @@ Obj22_Init:
 		move.l	#Map_obj22,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Buzz_Bomber,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
-		move.b	#3,obPriority(a0)
+		move.w	#$180,obPriority(a0)
 		move.b	#8,obColType(a0)
 		move.b	#$18,obActWid(a0)
 ; loc_A44A:

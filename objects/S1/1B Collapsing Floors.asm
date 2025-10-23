@@ -28,7 +28,7 @@ loc_8D8E:
 
 loc_8D9C:
 		ori.b	#4,obRender(a0)
-		move.b	#4,obPriority(a0)
+		move.w	#$200,obPriority(a0)
 		move.b	#7,objoff_38(a0)
 		move.b	#$44,obActWid(a0)
 
@@ -70,7 +70,7 @@ loc_8DEA:
 loc_8DFE:
 		bsr.w	sub_8DD6
 		subq.b	#1,objoff_38(a0)
-		bne.s	locret_8E2C
+		bne.s	sub_8E12.return
 		lea	(v_player).w,a1
 		bsr.s	sub_8E12
 		lea	(v_player2).w,a1
@@ -80,12 +80,12 @@ loc_8DFE:
 
 sub_8E12:
 		btst	#3,obStatus(a1)
-		beq.s	locret_8E2C
+		beq.s	.return
 		bclr	#3,obStatus(a1)
 		bclr	#5,obStatus(a1)
 		move.b	#1,obPrevAni(a1)
 
-locret_8E2C:
+.return:
 		rts
 ; End of function sub_8E12
 
@@ -99,10 +99,10 @@ loc_8E2E:
 ; ---------------------------------------------------------------------------
 
 loc_8E3E:
-		lea	(byte_8F17).l,a4
+		lea	byte_8F17(pc),a4
 		btst	#0,obSubtype(a0)
 		beq.s	loc_8E52
-		lea	(byte_8F1F).l,a4
+		lea	byte_8F1F(pc),a4
 
 loc_8E52:
 		addq.b	#1,obFrame(a0)

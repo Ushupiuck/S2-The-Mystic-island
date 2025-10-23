@@ -17,7 +17,7 @@ Obj38_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_obj38,obMap(a0)
 		move.b	#4,obRender(a0)
-		move.b	#1,obPriority(a0)
+		move.w	#$80,obPriority(a0)
 		move.b	#$18,obActWid(a0)
 		tst.b	obAnim(a0)			; is this the shield?
 		bne.s	+				; if not, branch
@@ -29,7 +29,7 @@ Obj38_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Sonic,obMap(a0)		; apparently use Sonic's mappings?
 		move.w	#make_art_tile(ArtTile_Invincibility,0,0),obGfx(a0)
-		move.b	#2,obPriority(a0)
+		move.w	#$100,obPriority(a0)
 .return:
 		rts
 ; ===========================================================================

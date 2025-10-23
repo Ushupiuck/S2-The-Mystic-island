@@ -18,7 +18,7 @@ ADoor_Main:	; Routine 0
 		move.w	#make_art_tile(ArtTile_SBZ_Door,2,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#8,obActWid(a0)
-		move.b	#4,obPriority(a0)
+		move.w	#$200,obPriority(a0)
 
 ADoor_OpenShut:	; Routine 2
 		move.w	#$40,d1		; set range for door detection
@@ -47,7 +47,7 @@ ADoor_Open:
 		move.b	#1,obAnim(a0)	; use "opening"	animation
 
 ADoor_Animate:
-		lea	(Ani_Obj2A).l,a1
+		lea	Ani_Obj2A(pc),a1
 		bsr.w	AnimateSprite
 		tst.b	obFrame(a0)	; is the door open?
 		bne.s	.remember	; if yes, branch
@@ -60,3 +60,11 @@ ADoor_Animate:
 
 .remember:
 		bra.w	MarkObjGone
+; ---------------------------------------------------------------------------
+Ani_Obj2A:	dc.w byte_9590-Ani_Obj2A
+		dc.w byte_959C-Ani_Obj2A
+byte_9590:	dc.b   0,  8,  7,  6,  5,  4,  3,  2
+		dc.b   1,  0,$FE,  1
+byte_959C:	dc.b   0,  0,  1,  2,  3,  4,  5,  6
+		dc.b   7,  8,$FE,  1
+		even

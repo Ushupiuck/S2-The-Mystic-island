@@ -28,7 +28,7 @@ Obj1E_Main:				; XREF: Obj1E_Index
 		move.l	#Map_BallHogH,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Ball_HogH,1,0),obGfx(a0)
 		move.b	#4,obRender(a0)
-		move.b	#4,obPriority(a0)
+		move.w	#$200,obPriority(a0)
 		move.b	#5,obColType(a0)
 		move.b	#$C,obActWid(a0)
 		move.b	#$13,obHeight(a0)
@@ -172,7 +172,7 @@ Obj1E_MakeBall:				; XREF: Obj1E_Action
 		move.w	#-$100,obVelX(a1)	; cannonball bounces to	the left
 		move.w	#0,obVelY(a1)
 		move.b	#4,obRender(a1)
-		move.b	#3,obPriority(a1)
+		move.w	#$180,obPriority(a1)
 		move.b	#$87,obColType(a1)
 		move.b	#8,obActWid(a1)
 		moveq	#0,d0
@@ -264,7 +264,7 @@ Hog_Idle:
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.b	#4,obRender(a1)
-		move.b	#3,obPriority(a1)
+		move.w	#$180,obPriority(a1)
 		move.b	#$87,obColType(a1)
 		move.b	#8,obActWid(a1)
 		move.w	#$18,objoff_30(a1)

@@ -1,6 +1,6 @@
-;----------------------------------------------------
+; ---------------------------------------------------------------------------
 ; Object 3C - GHZ smashable wall
-;----------------------------------------------------
+; ---------------------------------------------------------------------------
 
 Obj3C:
 		moveq	#0,d0
@@ -20,7 +20,7 @@ loc_C8DC:
 		move.w	#make_art_tile($590,2,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.b	#$10,obActWid(a0)
-		move.b	#4,obPriority(a0)
+		move.w	#$200,obPriority(a0)
 		move.b	obSubtype(a0),obFrame(a0)
 
 loc_C90A:
@@ -39,6 +39,9 @@ locret_C92C:
 
 loc_C92E:
 		lea	(v_player).w,a1
+		bsr.s	+
+		lea	(v_player2).w,a1
++
 		cmpi.b	#2,obAnim(a1)
 		bne.s	locret_C92C
 		move.w	objoff_30(a0),d0

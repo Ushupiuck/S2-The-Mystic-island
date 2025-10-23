@@ -20,7 +20,7 @@ TSon_Main:	; Routine 0
 		move.w	#$C4,obScreenY(a0)	; position is fixed to screen
 		move.l	#Map_TitleST,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Title_Sonic_And_Tails,2,0),obGfx(a0)
-		move.b	#1,obPriority(a0)
+		move.w	#$80,obPriority(a0)
 	;	move.b	#29,obDelayAni(a0)	; set time delay to 0.5 seconds
 		tst.b	obFrame(a0)		; are we on frame 0?
 		beq.s	TSon_Delay		; if so, skip.

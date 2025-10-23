@@ -19,7 +19,7 @@ Obj40_Init:
 		move.l	#Map_obj40,obMap(a0)
 		move.w	#make_art_tile($4E0,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
-		move.b	#4,obPriority(a0)
+		move.w	#$200,obPriority(a0)
 		move.b	#$14,obActWid(a0)
 		tst.b	obAnim(a0)
 		bne.s	Obj40_Smoke
@@ -41,7 +41,9 @@ locret_F2BC:
 ; loc_F2BE:
 Obj40_Smoke:
 		addq.b	#4,obRoutine(a0)
-		bra.w	Obj40_Animate
+		lea	Ani_obj40(pc),a1
+		bsr.w	AnimateSprite
+		bra.w	DisplaySprite
 ; ===========================================================================
 ; loc_F2C6:
 Obj40_Main:
@@ -49,7 +51,7 @@ Obj40_Main:
 		move.b	ob2ndRout(a0),d0
 		move.w	Obj40_Main_Index(pc,d0.w),d1
 		jsr	Obj40_Main_Index(pc,d1.w)
-		lea	(Ani_obj40).l,a1
+		lea	Ani_obj40(pc),a1
 		bsr.w	AnimateSprite
 		bra.w	MarkObjGone
 ; ===========================================================================
@@ -104,10 +106,19 @@ Obj40_StopMoving:
 ; ===========================================================================
 ; loc_F36E:
 Obj40_Animate:
-		lea	(Ani_obj40).l,a1
+		lea	Ani_obj40(pc),a1
 		bsr.w	AnimateSprite
 		bra.w	DisplaySprite
 ; ===========================================================================
 ; loc_F37C:
 Obj40_Delete:
 		bra.w	DeleteObject
+; ===========================================================================
+Ani_obj40:	dc.w byte_F386-Ani_obj40
+		dc.w byte_F389-Ani_obj40
+		dc.w byte_F38F-Ani_obj40
+byte_F386:	dc.b  $F,  2,$FF
+byte_F389:	dc.b   7,  0,  1,  0,  2,$FF
+byte_F38F:	dc.b   1,  3,  6,  3,  6,  4,  6,  4
+		dc.b   6,  4,  6,  5,$FC
+		even

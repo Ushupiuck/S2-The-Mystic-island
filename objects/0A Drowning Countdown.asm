@@ -1,6 +1,6 @@
-;----------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 ; Object 0A - drowning bubbles and countdown numbers
-;----------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 
 Obj0A:
 		moveq	#0,d0
@@ -25,7 +25,7 @@ Obj0A_Init:
 		move.w	#make_art_tile(ArtTile_LZ_Bubbles,0,1),obGfx(a0)
 		move.b	#$84,obRender(a0)
 		move.b	#$10,obActWid(a0)
-		move.b	#1,obPriority(a0)
+		move.w	#$80,obPriority(a0)
 		move.b	obSubtype(a0),d0
 		bpl.s	loc_11ECC
 		addq.b	#8,obRoutine(a0)
@@ -42,7 +42,7 @@ loc_11ECC:
 		move.w	#-$88,obVelY(a0)
 
 Obj0A_Animate:
-		lea	(Ani_Obj0A).l,a1
+		lea	Ani_Obj0A(pc),a1
 		jsr	(AnimateSprite).l
 
 Obj0A_ChkWater:
@@ -79,7 +79,7 @@ loc_11F14:
 
 Obj0A_Display:
 		bsr.s	Obj0A_ShowNumber
-		lea	(Ani_Obj0A).l,a1
+		lea	Ani_Obj0A(pc),a1
 		jsr	(AnimateSprite).l
 		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
@@ -99,7 +99,7 @@ Obj0A_AirLeft:
 ; ---------------------------------------------------------------------------
 
 loc_11F82:
-		lea	(Ani_Obj0A).l,a1
+		lea	Ani_Obj0A(pc),a1
 		jsr	(AnimateSprite).l
 		tst.b	obRender(a0)
 		bpl.s	Obj0A_Delete
@@ -110,11 +110,11 @@ loc_11F82:
 
 Obj0A_ShowNumber:
 		tst.w	objoff_38(a0)
-		beq.s	locret_11FEA
+		beq.s	.return
 		subq.w	#1,objoff_38(a0)
-		bne.s	locret_11FEA
+		bne.s	.return
 		cmpi.b	#7,obAnim(a0)
-		bhs.s	locret_11FEA
+		bhs.s	.return
 		move.w	#$F,objoff_38(a0)
 		clr.w	obVelY(a0)
 		move.b	#$80,obRender(a0)
@@ -128,31 +128,19 @@ Obj0A_ShowNumber:
 		move.w	d0,obScreenY(a0)
 		move.b	#$C,obRoutine(a0)
 
-locret_11FEA:
+.return:
 		rts
 ; End of function Obj0A_ShowNumber
 
-; ---------------------------------------------------------------------------
-Obj0A_WobbleData:
-		rept 2
-		dc.b 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2
-		dc.b 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3
-		dc.b 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2
-		dc.b 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0
-		dc.b 0, -1, -1, -1, -1, -1, -2, -2, -2, -2, -2, -3, -3, -3, -3, -3
-		dc.b -3, -3, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4
-		dc.b -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -3
-		dc.b -3, -3, -3, -3, -3, -3, -2, -2, -2, -2, -2, -1, -1, -1, -1, -1
-		endm
 ; ---------------------------------------------------------------------------
 
 Obj0A_Countdown:
 		tst.w	objoff_2C(a0)
 		bne.w	loc_121D6
 		cmpi.b	#6,(v_player+obRoutine).w
-		bhs.w	locret_122DC
+		bhs.w	Obj0A_ShowNumber.return
 		btst	#6,(v_player+obStatus).w
-		beq.w	locret_122DC
+		beq.w	Obj0A_ShowNumber.return
 		subq.w	#1,objoff_38(a0)
 		bpl.w	loc_121FC
 		move.w	#60-1,objoff_38(a0)
@@ -226,16 +214,16 @@ loc_121E4:
 
 loc_121FC:
 		tst.w	objoff_36(a0)
-		beq.w	locret_122DC
+		beq.w	loc_12242.return
 		subq.w	#1,objoff_3A(a0)
-		bpl.w	locret_122DC
+		bpl.w	loc_12242.return
 
 loc_1220C:
 		jsr	(RandomNumber).l
 		andi.w	#$F,d0
 		move.w	d0,objoff_3A(a0)
 		jsr	(FindFreeObj).l
-		bne.w	locret_122DC
+		bne.s	loc_12242.return
 		_move.b	#id_Obj0A,obID(a1)
 		move.w	(v_player+obX).w,obX(a1)
 		moveq	#6,d0
@@ -259,9 +247,14 @@ loc_12242:
 		move.b	d0,obAngle(a1)
 		move.w	(Timer_frames).w,d0
 		andi.b	#3,d0
-		bne.s	loc_122D2
+		bne.s	+
 		move.b	#$E,obSubtype(a1)
-		bra.s	loc_122D2
++
+		subq.b	#1,objoff_34(a0)
+		bpl.s	.return
+		clr.w	objoff_36(a0)
+.return:
+		rts
 ; ---------------------------------------------------------------------------
 
 loc_1228E:
@@ -287,8 +280,46 @@ loc_122BA:
 
 loc_122D2:
 		subq.b	#1,objoff_34(a0)
-		bpl.s	locret_122DC
+		bpl.s	.return
 		clr.w	objoff_36(a0)
 
-locret_122DC:
+.return:
 		rts
+; ---------------------------------------------------------------------------
+Ani_Obj0A:
+		dc.w byte_1233A-Ani_Obj0A,byte_12343-Ani_Obj0A
+		dc.w byte_1234C-Ani_Obj0A,byte_12355-Ani_Obj0A
+		dc.w byte_1235E-Ani_Obj0A,byte_12367-Ani_Obj0A
+		dc.w byte_12370-Ani_Obj0A,byte_12375-Ani_Obj0A
+		dc.w byte_1237D-Ani_Obj0A,byte_12385-Ani_Obj0A
+		dc.w byte_1238D-Ani_Obj0A,byte_12395-Ani_Obj0A
+		dc.w byte_1239D-Ani_Obj0A,byte_123A5-Ani_Obj0A
+		dc.w byte_123A7-Ani_Obj0A
+byte_1233A:	dc.b   5,  0,  1,  2,  3,  4,  9, $D,$FC
+byte_12343:	dc.b   5,  0,  1,  2,  3,  4, $C,$12,$FC
+byte_1234C:	dc.b   5,  0,  1,  2,  3,  4, $C,$11,$FC
+byte_12355:	dc.b   5,  0,  1,  2,  3,  4, $B,$10,$FC
+byte_1235E:	dc.b   5,  0,  1,  2,  3,  4,  9, $F,$FC
+byte_12367:	dc.b   5,  0,  1,  2,  3,  4, $A, $E,$FC
+byte_12370:	dc.b  $E,  0,  1,  2,$FC
+byte_12375:	dc.b   7,$16, $D,$16, $D,$16, $D,$FC
+byte_1237D:	dc.b   7,$16,$12,$16,$12,$16,$12,$FC
+byte_12385:	dc.b   7,$16,$11,$16,$11,$16,$11,$FC
+byte_1238D:	dc.b   7,$16,$10,$16,$10,$16,$10,$FC
+byte_12395:	dc.b   7,$16, $F,$16, $F,$16, $F,$FC
+byte_1239D:	dc.b   7,$16, $E,$16, $E,$16, $E,$FC
+byte_123A5:	dc.b  $E,$FC
+byte_123A7:	dc.b  $E,  1,  2,  3,  4,$FC
+		even
+; ---------------------------------------------------------------------------
+Obj0A_WobbleData:
+		rept 2
+		dc.b 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2
+		dc.b 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3
+		dc.b 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2
+		dc.b 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0
+		dc.b 0, -1, -1, -1, -1, -1, -2, -2, -2, -2, -2, -3, -3, -3, -3, -3
+		dc.b -3, -3, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4
+		dc.b -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -3
+		dc.b -3, -3, -3, -3, -3, -3, -2, -2, -2, -2, -2, -1, -1, -1, -1, -1
+		endm

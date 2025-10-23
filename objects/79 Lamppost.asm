@@ -20,7 +20,7 @@ Obj79_Init:
 		move.w	#make_art_tile(ArtTile_Lamppost,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.b	#8,obActWid(a0)
-		move.b	#5,obPriority(a0)
+		move.w	#$280,obPriority(a0)
 		lea	(v_objstate).w,a2
 		moveq	#0,d0
 		move.b	obRespawnNo(a0),d0

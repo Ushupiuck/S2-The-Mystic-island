@@ -15,7 +15,7 @@ loc_8680:
 		move.w	#make_art_tile($398,2,0),obGfx(a0)
 		move.b	#7,obStatus(a0)
 		move.b	#4,obRender(a0)
-		move.b	#3,obPriority(a0)
+		move.w	#$180,obPriority(a0)
 		move.b	#8,obActWid(a0)
 		move.w	obY(a0),d2
 		move.w	obX(a0),d3
@@ -48,7 +48,7 @@ loc_86D4:
 		move.l	obMap(a0),obMap(a1)
 		move.w	#make_art_tile($398,2,0),obGfx(a1)
 		move.b	#4,obRender(a1)
-		move.b	#3,obPriority(a1)
+		move.w	#$180,obPriority(a1)
 		move.b	#8,obActWid(a1)
 		move.b	d6,objoff_3E(a1)
 		addq.b	#1,d6

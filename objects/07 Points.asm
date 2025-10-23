@@ -17,7 +17,7 @@ Points_main:
 		move.l	#Map_Obj29,obMap(a0)
 		move.w	#make_art_tile($4AC,0,0),obGfx(a0)	; TODO Change
 		move.b	#4,obRender(a0)
-		move.b	#1,obPriority(a0)
+		move.w	#$80,obPriority(a0)
 		move.b	#8,obActWid(a0)
 		move.w	#-$300,obVelY(a0)			; move object upwards
 

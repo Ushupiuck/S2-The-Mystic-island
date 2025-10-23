@@ -7854,6 +7854,7 @@ word_9A9C:	dc.w 1
 		dc.w $F00F,  $50,  $28,$FFF0
 		even
 ; ---------------------------------------------------------------------------
+		include	"objects/Empty Slots/10.asm"
 		include	"objects/11 Bridge.asm"
 ; ---------------------------------------------------------------------------
 ; Sprite mappings - GHZ, HPZ & EHZ bridges
@@ -8014,7 +8015,7 @@ loc_8E70:
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.w	obGfx(a0),obGfx(a1)
-		move.b	obPriority(a0),obPriority(a1)
+		move.w	obPriority(a0),obPriority(a1)
 		move.b	obActWid(a0),obActWid(a1)
 		move.b	obHeight(a0),obHeight(a1)
 		move.b	(a4)+,objoff_38(a1)
@@ -8211,25 +8212,10 @@ word_9286:	dc.w 8
 		even
 ; ---------------------------------------------------------------------------
 		include	"objects/1C Scenery.asm"
-; ---------------------------------------------------------------------------
-Ani_Obj1C:	dc.w byte_9494-Ani_Obj1C
-		dc.w byte_949C-Ani_Obj1C
-byte_9494:	dc.b   8,  3,  3,  4,  5,  5,  4,$FF
-byte_949C:	dc.b   5,  0,  0,  0,  1,  2,  3,  3
-		dc.b   2,  1,  2,  3,  3,  1,$FF
-		even
 Map_Obj1C_01:	include	"mappings/sprite/obj1C.asm"
 ; ---------------------------------------------------------------------------
 
 		include	"objects/S1/2A SBZ Small Door.asm"
-; ---------------------------------------------------------------------------
-Ani_Obj2A:	dc.w byte_9590-Ani_Obj2A
-		dc.w byte_959C-Ani_Obj2A
-byte_9590:	dc.b   0,  8,  7,  6,  5,  4,  3,  2
-		dc.b   1,  0,$FE,  1
-byte_959C:	dc.b   0,  0,  1,  2,  3,  4,  5,  6
-		dc.b   7,  8,$FE,  1
-		even
 Map_Obj2A:	dc.w word_95BA-Map_Obj2A
 		dc.w word_95CC-Map_Obj2A
 		dc.w word_95DE-Map_Obj2A
@@ -8267,17 +8253,16 @@ word_964A:	dc.w 2
 		dc.w $C007, $800, $800,$FFF8
 		dc.w $2007, $800, $800,$FFF8
 ; ---------------------------------------------------------------------------
-		include	"objects/S1/1D Ball Hog.asm"
+		include	"objects/Empty Slots/1D.asm"
 		include	"objects/S1/1E Ball Hog.asm"
-		include	"objects/S1/20 Cannonball.asm"
+		include	"objects/S1/1F Crabmeat.asm"
+		include	"objects/Empty Slots/20.asm"
+		include	"objects/Empty Slots/21.asm"
 ; ---------------------------------------------------------------------------
 Map_BallHogV:	binclude	"mappings/sprite/Vertical Ballhog.bin"
 		even
 Map_BallHogH:	binclude	"mappings/sprite/Horizontal Ballhog.bin"
 		even
-; ===========================================================================
-		include	"objects/S1/1F Crabmeat.asm"
-		include	"objects/21.asm"
 ; ===========================================================================
 ; animation script
 Ani_obj1F:	dc.w byte_A30C-Ani_obj1F
@@ -8389,8 +8374,6 @@ Map_TitleST:	binclude "mappings/sprite/Sonic & Tails on the title screen.bin"
 		include	"objects/92 Press Start Button.asm"
 Map_PSB:	binclude "mappings/sprite/press start button.bin"
 		even
-		include	"objects/10.asm"
-
 ; ---------------------------------------------------------------------------
 		include	"objects/2B Chopper.asm"
 Map_Obj2B:	binclude	"mappings/sprite/obj2B.bin"	; Green hill
@@ -8546,10 +8529,15 @@ ExecuteObjectsDisplayOnly:
 		beq.s	loc_CB74			; if it's obj00, skip it
 		tst.b	obRender(a0)			; should we render it?
 		bpl.s	loc_CB74			; if not, skip it
-		bsr.w	DisplaySprite
+		move.w	obPriority(a0),d0		; move priority to d0
+		btst	#6,obRender			; is the compound sprites flag set?
+		beq.s	+				; if not, branch
+		move.w	#$200,d0			; override priority
++
+		bsr.w	DisplaySprite3			; Display the object using d0
 
 loc_CB74:
-		lea	object_size(a0),a0		; load obj address
+		lea	next_object(a0),a0		; load obj address
 		dbf	d7,ExecuteObjectsDisplayOnly
 		rts
 ; End of function ExecuteObjects
@@ -8574,10 +8562,10 @@ ptr_Obj0A:		dc.l Obj0A	; Small bubbles from Sonic's face while underwater
 ptr_Obj0B:		dc.l Obj0B	; (S1) Pole that breaks in LZ
 ptr_Obj0C:		dc.l FlapDoor	; (S1) Flapping door in LZ
 ptr_Obj0D:		dc.l Obj0D	; End of level signpost
-ptr_Obj0E:		dc.l ObjNull
-ptr_Obj0F:		dc.l ObjNull
+ptr_Obj0E:		dc.l ObjNull	; Empty
+ptr_Obj0F:		dc.l ObjNull	; Empty
 
-ptr_Obj10:		dc.l ObjNull
+ptr_Obj10:		dc.l ObjNull	; Empty
 ptr_Obj11:		dc.l Obj11	; Bridges in GHZ, EHZ and HPZ
 ptr_Obj12:		dc.l Obj12	; Emerald from Hidden Palace Zone
 ptr_Obj13:		dc.l Obj13	; Waterfall from Hidden Palace Zone
@@ -8590,7 +8578,7 @@ ptr_Obj19:		dc.l Obj19	; Platform from CPZ
 ptr_Obj1A:		dc.l Obj1A	; Collapsing platform from GHZ and HPZ
 ptr_Obj1B:		dc.l Obj1B
 ptr_Obj1C:		dc.l Obj1C	; Stage decorations in GHZ, EHZ, HTZ and HPZ
-ptr_Obj1D:		dc.l ObjHBallhog
+ptr_Obj1D:		dc.l Obj1D
 ptr_Obj1E:		dc.l ObjVBallhog
 ptr_Obj1F:		dc.l Obj1F	; (S1) Crabmeat from GHZ
 
@@ -8648,7 +8636,7 @@ ptr_Obj4F:		dc.l Obj4F	; Redz (dinosaur badnik) from HPZ
 ptr_Obj50:		dc.l Obj50	; Seahorse/Aquis from HPZ
 ptr_Obj51:		dc.l Obj51	; Skyhorse from HPZ
 ptr_Obj52:		dc.l Obj52	; BFish from HPZ
-ptr_Obj53:		dc.l ObjNull
+ptr_Obj53:		dc.l Obj53	; Empty
 ptr_Obj54:		dc.l Obj54	; Snail badnik from EHZ
 ptr_Obj55:		dc.l Obj55	; EHZ boss
 ptr_Obj56:		dc.l Obj56	; EHZ boss part 2
@@ -8689,8 +8677,8 @@ ptr_Obj76:		dc.l ObjNull
 ptr_Obj77:		dc.l ObjNull
 ptr_Obj78:		dc.l ObjNull
 ptr_Obj79:		dc.l Obj79	; Checkpoint
-ptr_Obj7A:		dc.l ObjNull
-ptr_Obj7B:		dc.l GiantRing
+ptr_Obj7A:		dc.l SpecialStageEntry
+ptr_Obj7B:		dc.l GiantRing	; Bonus stage entry
 ptr_Obj7C:		dc.l GiantRingFlash
 ptr_Obj7D:		dc.l Obj7D	; Hidden points at end of stage
 ptr_Obj7E:		dc.l Obj7E	; Special Stage Results
@@ -9223,10 +9211,7 @@ ObjectMoveAndFall_Reserved:
 
 DisplaySprite:
 		lea	(v_spritequeue).w,a1
-		move.w	obPriority(a0),d0
-		lsr.w	#1,d0
-		andi.w	#$380,d0
-		adda.w	d0,a1
+		adda.w	obPriority(a0),a1
 		cmpi.w	#$7E,(a1)
 		bhs.s	.return
 		addq.w	#2,(a1)
@@ -9244,10 +9229,7 @@ DisplaySprite:
 ; DisplayA1Sprite:
 DisplaySprite2:
 		lea	(v_spritequeue).w,a2
-		move.w	obPriority(a1),d0
-		lsr.w	#1,d0
-		andi.w	#$380,d0
-		adda.w	d0,a2
+		adda.w	obPriority(a1),a2
 		cmpi.w	#$7E,(a2)
 		bhs.s	.return
 		addq.w	#2,(a2)
@@ -10685,72 +10667,199 @@ Map_MovingSpring:
 		dc.w 1
 		dc.w $F805, 4, 2, $FFF8
 		even
+
 		include	"objects/S1/42 Newtron.asm"
-; ===========================================================================
-; animation script
-Ani_obj42:	dc.w byte_ED7C-Ani_obj42
-		dc.w byte_ED7F-Ani_obj42
-		dc.w byte_ED87-Ani_obj42
-		dc.w byte_ED8B-Ani_obj42
-		dc.w byte_ED8F-Ani_obj42
-byte_ED7C:	dc.b  $F, $A,$FF
-byte_ED7F:	dc.b $13,  0,  1,  3,  4,  5,$FE,  1
-byte_ED87:	dc.b   2,  6,  7,$FF
-byte_ED8B:	dc.b   2,  8,  9,$FF
-byte_ED8F:	dc.b $13,  0,  1,  1,  2,  1,  1,  0
-		dc.b $FC
-		even
-; ---------------------------------------------------------------------------
-; Sprite mappings
-; ---------------------------------------------------------------------------
 Map_obj42:	binclude	"mappings/sprite/obj42.bin"
 		even
 
 		include	"objects/S1/44 GHZ Edge Walls.asm"
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; Sprite mappings
-; ---------------------------------------------------------------------------
 Map_obj44:	binclude	"mappings/sprite/obj44.bin"
 		even
 
-		include	"objects/0D Signpost.asm"
 ; ===========================================================================
-; animation script
-; off_F18C:
-Ani_obj0D:	dc.w byte_F194-Ani_obj0D
-		dc.w byte_F197-Ani_obj0D
-		dc.w byte_F1A5-Ani_obj0D
-		dc.w byte_F1B3-Ani_obj0D
-byte_F194:	dc.b  $F,  2,$FF
-byte_F197:	dc.b   1,  2,  3,  4,  5,  1,  3,  4
-		dc.b   5,  0,  3,  4,  5,$FF
-byte_F1A5:	dc.b   1,  2,  3,  4,  5,  1,  3,  4
-		dc.b   5,  0,  3,  4,  5,$FF
-byte_F1B3:	dc.b  $F,  0,$FF
-		even
 
+Obj0B:
+		moveq	#0,d0
+		move.b	obRoutine(a0),d0
+		move.w	Obj0B_Index(pc,d0.w),d1
+		jmp	Obj0B_Index(pc,d1.w)
 ; ---------------------------------------------------------------------------
-; sprite mappings
+Obj0B_Index:	dc.w loc_141C8-Obj0B_Index
+		dc.w loc_1421C-Obj0B_Index
+		dc.w loc_1422A-Obj0B_Index
 ; ---------------------------------------------------------------------------
+
+loc_141C8:
+		addq.b	#2,obRoutine(a0)
+		move.l	#Map_Obj0B,obMap(a0)
+		move.w	#make_art_tile(ArtTile_Level,3,1),obGfx(a0)
+		ori.b	#4,obRender(a0)
+		move.b	#$10,obActWid(a0)
+		move.w	#$200,obPriority(a0)
+		moveq	#0,d0
+		move.b	obSubtype(a0),d0
+		andi.w	#$F0,d0
+		addi.w	#$10,d0
+		move.w	d0,d1
+		subq.w	#1,d0
+		move.w	d0,objoff_30(a0)
+		move.w	d0,objoff_32(a0)
+		moveq	#0,d0
+		move.b	obSubtype(a0),d0
+		andi.w	#$F,d0
+		addq.w	#1,d0
+		lsl.w	#4,d0
+		move.b	d0,objoff_36(a0)
+
+loc_1421C:
+		move.b	(Vint_runcount+3).w,d0
+		add.b	objoff_36(a0),d0
+		bne.s	loc_14254
+		addq.b	#2,obRoutine(a0)
+
+loc_1422A:
+		subq.w	#1,objoff_30(a0)
+		bpl.s	loc_14248
+		move.w	#$7F,objoff_30(a0)
+		tst.b	obAnim(a0)
+		beq.s	loc_14242
+		move.w	objoff_32(a0),objoff_30(a0)
+
+loc_14242:
+		bchg	#0,obAnim(a0)
+
+loc_14248:
+		lea	off_1428A(pc),a1
+		jsr	(AnimateSprite).l
+
+loc_14254:
+		tst.b	obFrame(a0)
+		bne.s	loc_1426E
+		moveq	#0,d1
+		move.b	obActWid(a0),d1
+		moveq	#$11,d3
+		move.w	obX(a0),d4
+		bsr.w	PlatformObject
+		bra.w	MarkObjGone
+; ---------------------------------------------------------------------------
+
+loc_1426E:
+		btst	#3,obStatus(a0)
+		beq.s	loc_14286
+		lea	(v_player).w,a1
+		bclr	#3,obStatus(a1)
+		bclr	#3,obStatus(a0)
+
+loc_14286:
+		bra.w	MarkObjGone
+; ---------------------------------------------------------------------------
+off_1428A:	dc.w byte_1428E-off_1428A
+		dc.w byte_14296-off_1428A
+byte_1428E:	dc.b   7,  0,  1,  2,  3,  4,$FE,  1
+byte_14296:	dc.b   7,  4,  3,  2,  1,  0,$FE,  1
+		even
+Map_Obj0B:	dc.w word_142A8-Map_Obj0B
+		dc.w word_142B2-Map_Obj0B
+		dc.w word_142BC-Map_Obj0B
+		dc.w word_142C6-Map_Obj0B
+		dc.w word_142D0-Map_Obj0B
+word_142A8:	dc.w 1
+		dc.w $F00C,  $11,    8,$FFF0		; 0
+word_142B2:	dc.w 1
+		dc.w $E80F,  $15,   $A,$FFF0		; 0
+word_142BC:	dc.w 1
+		dc.w $F40F,  $25,  $12,$FFF0		; 0
+word_142C6:	dc.w 1
+		dc.w	$F,$1015,$100A,$FFF0		; 0
+word_142D0:	dc.w 1
+		dc.w $100C,$1011,$1008,$FFF0		; 0
+		even
+; ---------------------------------------------------------------------------
+; Object 0C - flapping door (LZ)
+; ---------------------------------------------------------------------------
+
+FlapDoor:
+		moveq	#0,d0
+		move.b	obRoutine(a0),d0
+		move.w	Flap_Index(pc,d0.w),d1
+		jmp	Flap_Index(pc,d1.w)
+; ===========================================================================
+Flap_Index:	dc.w Flap_Main-Flap_Index
+		dc.w Flap_OpenClose-Flap_Index
+
+flap_time = objoff_32		; time between opening/closing
+flap_wait = objoff_30		; time until change
+; ===========================================================================
+
+Flap_Main:	; Routine 0
+		addq.b	#2,obRoutine(a0)
+		move.l	#Map_Flap,obMap(a0)
+		move.w	#make_art_tile(ArtTile_LZ_Flapping_Door,2,0),obGfx(a0)
+		ori.b	#4,obRender(a0)
+		move.b	#$28,obActWid(a0)
+		moveq	#0,d0
+		move.b	obSubtype(a0),d0						; move subtype to d0
+		add.w	d0,d0								; multiply by 60 frames (1 second)
+		add.w	d0,d0
+		move.w	d0,d1
+		lsl.w	#4,d0
+		sub.w	d1,d0
+		move.w	d0,flap_time(a0) ; set flap delay time
+
+Flap_OpenClose:	; Routine 2
+		subq.w	#1,flap_wait(a0) ; decrement time delay
+		bpl.s	.wait		; if time remains, branch
+		move.w	flap_time(a0),flap_wait(a0) ; reset time delay
+		bchg	#0,obAnim(a0)	; open/close door
+		tst.b	obRender(a0)
+		bpl.s	.nosound
+		move.w	#sfx_Door,d0
+		jsr	(PlaySound_Special).l	; play door sound
+
+.wait:
+.nosound:
+		lea	Ani_Flap(pc),a1
+		bsr.w	AnimateSprite
+		clr.b	(f_wtunnelallow).w ; enable wind tunnel
+		tst.b	obFrame(a0)	; is the door open?
+		bne.w	MarkObjGone	; if yes, branch
+;		move.w	(v_player+obX).w,d0	; this commented out bugfix
+;		move.w	obX(a0),d1	; is broken: it just mirrors
+;		btst	#0,obRender(a0)	; the collision accordingly
+;		beq.s	.flipped
+;		not.w	d0
+;		not.w	d1
+;.flipped:
+;		cmp.w	d1,d0	; has Sonic passed through the door?
+;		bhs.w	MarkObjGone	; if yes, branch
+		move.b	#1,(f_wtunnelallow).w ; disable wind tunnel
+		moveq	#$13,d1
+		moveq	#$20,d2
+		move.w	d2,d3
+		addq.w	#1,d3
+		move.w	obX(a0),d4
+		bsr.w	SolidObject	; make the door solid
+		bra.w	MarkObjGone
+; ---------------------------------------------------------------------------
+; Mappings & Animation script - flapping door (LZ)
+; ---------------------------------------------------------------------------
+Map_Flap:
+		binclude	"mappings/sprite/Flapping Door.bin"
+		even
+; ---------------------------------------------------------------------------
+Ani_Flap:	dc.w .opening-Ani_Flap
+		dc.w .closing-Ani_Flap
+.opening:	dc.b 3,	0, 1, 2, afBack, 1
+.closing:	dc.b 3,	2, 1, 0, afBack, 1
+		even
+		include	"objects/0D Signpost.asm"
 Map_obj0D:	include	"mappings/sprite/obj0D.asm"
 		even
+
+		include	"objects/Empty slots/0E.asm"
+		include	"objects/Empty slots/0F.asm"
 ; ===========================================================================
 		include	"objects/S1/40 Moto Bug.asm"
-; ===========================================================================
-; animation script
-Ani_obj40:	dc.w byte_F386-Ani_obj40
-		dc.w byte_F389-Ani_obj40
-		dc.w byte_F38F-Ani_obj40
-byte_F386:	dc.b  $F,  2,$FF
-byte_F389:	dc.b   7,  0,  1,  0,  2,$FF
-byte_F38F:	dc.b   1,  3,  6,  3,  6,  4,  6,  4
-		dc.b   6,  4,  6,  5,$FC
-		even
-
-; ---------------------------------------------------------------------------
-; sprite mappings
-; ---------------------------------------------------------------------------
 Map_obj40:	binclude	"mappings/sprite/obj40.bin"
 		even
 
@@ -11514,7 +11623,7 @@ Obj01_Init:
 		move.b	#$13,obHeight(a0)		; this sets Sonic's collision height (2*pixels)
 		move.b	#9,obWidth(a0)
 		move.l	#Map_Sonic,obMap(a0)
-		move.b	#2,obPriority(a0)
+		move.w	#$100,obPriority(a0)
 		move.b	#$18,obActWid(a0)
 		move.b	#4,obRender(a0)
 		move.w	#$600,(Sonic_top_speed).w	; set Sonic's top speed
@@ -13520,7 +13629,7 @@ Obj02_Init:
 		move.b	#9,obWidth(a0)
 		move.l	#Map_Tails,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Tails,0,0),obGfx(a0)
-		move.b	#2,obPriority(a0)
+		move.w	#$100,obPriority(a0)
 		move.b	#$18,obActWid(a0)
 		move.b	#$84,obRender(a0)
 		move.w	#$600,(Sonic_top_speed).w
@@ -15384,7 +15493,7 @@ Obj05_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Tails,obMap(a0)
 		move.w	#make_art_tile(ArtTile_TailsTails,0,0),obGfx(a0)
-		move.b	#2,obPriority(a0)
+		move.w	#$100,obPriority(a0)
 		move.b	#$18,obActWid(a0)
 		move.b	#4,obRender(a0)
 
@@ -15442,8 +15551,9 @@ byte_11E4E:	dc.b   3,$55,$56,$57,$58,$FF
 byte_11E54:	dc.b   2,$81,$82,$83,$84,$FF
 		even
 ; ---------------------------------------------------------------------------
-
-		include	"objects/S1/0A Drowning Countdown.asm"
+		include	"objects/06 EHZ Spiral.asm"
+		include	"objects/08 Water Splash.asm"
+		include	"objects/0A Drowning Countdown.asm"
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -15476,32 +15586,6 @@ loc_12310:
 ; End of function ResumeMusic
 
 ; ---------------------------------------------------------------------------
-Ani_Obj0A:
-		dc.w byte_1233A-Ani_Obj0A,byte_12343-Ani_Obj0A
-		dc.w byte_1234C-Ani_Obj0A,byte_12355-Ani_Obj0A
-		dc.w byte_1235E-Ani_Obj0A,byte_12367-Ani_Obj0A
-		dc.w byte_12370-Ani_Obj0A,byte_12375-Ani_Obj0A
-		dc.w byte_1237D-Ani_Obj0A,byte_12385-Ani_Obj0A
-		dc.w byte_1238D-Ani_Obj0A,byte_12395-Ani_Obj0A
-		dc.w byte_1239D-Ani_Obj0A,byte_123A5-Ani_Obj0A
-		dc.w byte_123A7-Ani_Obj0A
-byte_1233A:	dc.b   5,  0,  1,  2,  3,  4,  9, $D,$FC
-byte_12343:	dc.b   5,  0,  1,  2,  3,  4, $C,$12,$FC
-byte_1234C:	dc.b   5,  0,  1,  2,  3,  4, $C,$11,$FC
-byte_12355:	dc.b   5,  0,  1,  2,  3,  4, $B,$10,$FC
-byte_1235E:	dc.b   5,  0,  1,  2,  3,  4,  9, $F,$FC
-byte_12367:	dc.b   5,  0,  1,  2,  3,  4, $A, $E,$FC
-byte_12370:	dc.b  $E,  0,  1,  2,$FC
-byte_12375:	dc.b   7,$16, $D,$16, $D,$16, $D,$FC
-byte_1237D:	dc.b   7,$16,$12,$16,$12,$16,$12,$FC
-byte_12385:	dc.b   7,$16,$11,$16,$11,$16,$11,$FC
-byte_1238D:	dc.b   7,$16,$10,$16,$10,$16,$10,$FC
-byte_12395:	dc.b   7,$16, $F,$16, $F,$16, $F,$FC
-byte_1239D:	dc.b   7,$16, $E,$16, $E,$16, $E,$FC
-byte_123A5:	dc.b  $E,$FC
-byte_123A7:	dc.b  $E,  1,  2,  3,  4,$FC
-		even
-
 Map_Obj0A_Countdown:
 		dc.w word_123B0-Map_Obj0A_Countdown
 word_123B0:
@@ -15510,10 +15594,9 @@ word_123B0:
 		even
 
 		include	"objects/38 Shield and Invincibility.asm"
-		include	"objects/S1/4A Special Stage Entry (Unused).asm"
-		include	"objects/08 Water Splash.asm"
+Map_obj38:	binclude	"mappings/sprite/obj38.bin"
+		even
 ; ===========================================================================
-; animation script
 Ani_obj38:	dc.w byte_125C2-Ani_obj38
 		dc.w byte_125CE-Ani_obj38
 		dc.w byte_125D4-Ani_obj38
@@ -15528,20 +15611,8 @@ byte_125EE:	dc.b   0,  4,  4,  0,  4,  0,  0,  5,  5,  0,  5,  0,  0,  6,  6,  0
 byte_12608:	dc.b   0,  4,  0,  0,  4,  0,  0,  5,  0,  0,  5,  0,  0,  6,  0,  0
 		dc.b   6,  0,  0,  7,  0,  0,  7,  0,  0,$FF
 		even
-; ---------------------------------------------------------------------------
-; sprite mappings
-; ---------------------------------------------------------------------------
-Map_obj38:	binclude	"mappings/sprite/obj38.bin"
-		even
-; animation script
-Ani_S1obj4A:	dc.w byte_1278C-Ani_S1obj4A
-byte_1278C:	dc.b   5,  0,  1,  0,  1,  0,  7,  1,  7,  2,  7,  3,  7,  4,  7,  5
-		dc.b   7,  6,  7,$FC
-		even
-; ---------------------------------------------------------------------------
-; sprite mappings
-; ---------------------------------------------------------------------------
-Map_S1obj4A:	binclude	"mappings/sprite/S1/obj4A.bin"
+		include	"objects/7A Special Stage Entry.asm"
+Map_obj7A:	binclude	"mappings/sprite/S1/obj7A.bin"
 		even
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -16855,7 +16926,7 @@ Bump_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		move.b	#4,obRender(a0)
 		move.b	#$10,obActWid(a0)
-		move.b	#1,obPriority(a0)
+		move.w	#$80,obPriority(a0)
 		move.b	#$D7,obColType(a0)
 		move.l	#Map_Bump,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Bumper,0,0),obGfx(a0)
@@ -16970,7 +17041,7 @@ Obj64_Init:
 		move.w	#make_art_tile(ArtTile_LZ_Bubbles,0,1),obGfx(a0)
 		move.b	#$84,obRender(a0)
 		move.b	#$10,obActWid(a0)
-		move.b	#1,obPriority(a0)
+		move.w	#$80,obPriority(a0)
 		move.b	obSubtype(a0),d0
 		bpl.s	loc_13A32
 		addq.b	#8,obRoutine(a0)
@@ -17284,187 +17355,49 @@ word_13E28:	dc.w 0
 		even
 ; ---------------------------------------------------------------------------
 		include	"objects/03 Collision Switcher.asm"
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; sprite mappings
-; ---------------------------------------------------------------------------
 Map_Obj03:	include	"mappings/sprite/obj03.asm"
 		even
-; ===========================================================================
-
-Obj0B:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Obj0B_Index(pc,d0.w),d1
-		jmp	Obj0B_Index(pc,d1.w)
+		include	"objects/04 Water Surface.asm"
 ; ---------------------------------------------------------------------------
-Obj0B_Index:	dc.w loc_141C8-Obj0B_Index
-		dc.w loc_1421C-Obj0B_Index
-		dc.w loc_1422A-Obj0B_Index
-; ---------------------------------------------------------------------------
-
-loc_141C8:
-		addq.b	#2,obRoutine(a0)
-		move.l	#Map_Obj0B,obMap(a0)
-		move.w	#make_art_tile(ArtTile_Level,3,1),obGfx(a0)
-		ori.b	#4,obRender(a0)
-		move.b	#$10,obActWid(a0)
-		move.b	#4,obPriority(a0)
-		moveq	#0,d0
-		move.b	obSubtype(a0),d0
-		andi.w	#$F0,d0
-		addi.w	#$10,d0
-		move.w	d0,d1
-		subq.w	#1,d0
-		move.w	d0,objoff_30(a0)
-		move.w	d0,objoff_32(a0)
-		moveq	#0,d0
-		move.b	obSubtype(a0),d0
-		andi.w	#$F,d0
-		addq.w	#1,d0
-		lsl.w	#4,d0
-		move.b	d0,objoff_36(a0)
-
-loc_1421C:
-		move.b	(Vint_runcount+3).w,d0
-		add.b	objoff_36(a0),d0
-		bne.s	loc_14254
-		addq.b	#2,obRoutine(a0)
-
-loc_1422A:
-		subq.w	#1,objoff_30(a0)
-		bpl.s	loc_14248
-		move.w	#$7F,objoff_30(a0)
-		tst.b	obAnim(a0)
-		beq.s	loc_14242
-		move.w	objoff_32(a0),objoff_30(a0)
-
-loc_14242:
-		bchg	#0,obAnim(a0)
-
-loc_14248:
-		lea	off_1428A(pc),a1
-		jsr	(AnimateSprite).l
-
-loc_14254:
-		tst.b	obFrame(a0)
-		bne.s	loc_1426E
-		moveq	#0,d1
-		move.b	obActWid(a0),d1
-		moveq	#$11,d3
-		move.w	obX(a0),d4
-		bsr.w	PlatformObject
-		bra.w	MarkObjGone
-; ---------------------------------------------------------------------------
-
-loc_1426E:
-		btst	#3,obStatus(a0)
-		beq.s	loc_14286
-		lea	(v_player).w,a1
-		bclr	#3,obStatus(a1)
-		bclr	#3,obStatus(a0)
-
-loc_14286:
-		bra.w	MarkObjGone
-; ---------------------------------------------------------------------------
-off_1428A:	dc.w byte_1428E-off_1428A
-		dc.w byte_14296-off_1428A
-byte_1428E:	dc.b   7,  0,  1,  2,  3,  4,$FE,  1
-byte_14296:	dc.b   7,  4,  3,  2,  1,  0,$FE,  1
-		even
-Map_Obj0B:	dc.w word_142A8-Map_Obj0B
-		dc.w word_142B2-Map_Obj0B
-		dc.w word_142BC-Map_Obj0B
-		dc.w word_142C6-Map_Obj0B
-		dc.w word_142D0-Map_Obj0B
-word_142A8:	dc.w 1
-		dc.w $F00C,  $11,    8,$FFF0		; 0
-word_142B2:	dc.w 1
-		dc.w $E80F,  $15,   $A,$FFF0		; 0
-word_142BC:	dc.w 1
-		dc.w $F40F,  $25,  $12,$FFF0		; 0
-word_142C6:	dc.w 1
-		dc.w	$F,$1015,$100A,$FFF0		; 0
-word_142D0:	dc.w 1
-		dc.w $100C,$1011,$1008,$FFF0		; 0
-		even
-; ---------------------------------------------------------------------------
-; Object 0C - flapping door (LZ)
-; ---------------------------------------------------------------------------
-
-FlapDoor:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Flap_Index(pc,d0.w),d1
-		jmp	Flap_Index(pc,d1.w)
-; ===========================================================================
-Flap_Index:	dc.w Flap_Main-Flap_Index
-		dc.w Flap_OpenClose-Flap_Index
-
-flap_time = objoff_32		; time between opening/closing
-flap_wait = objoff_30		; time until change
-; ===========================================================================
-
-Flap_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)
-		move.l	#Map_Flap,obMap(a0)
-		move.w	#make_art_tile(ArtTile_LZ_Flapping_Door,2,0),obGfx(a0)
-		ori.b	#4,obRender(a0)
-		move.b	#$28,obActWid(a0)
-		moveq	#0,d0
-		move.b	obSubtype(a0),d0						; move subtype to d0
-		add.w	d0,d0								; multiply by 60 frames (1 second)
-		add.w	d0,d0
-		move.w	d0,d1
-		lsl.w	#4,d0
-		sub.w	d1,d0
-		move.w	d0,flap_time(a0) ; set flap delay time
-
-Flap_OpenClose:	; Routine 2
-		subq.w	#1,flap_wait(a0) ; decrement time delay
-		bpl.s	.wait		; if time remains, branch
-		move.w	flap_time(a0),flap_wait(a0) ; reset time delay
-		bchg	#0,obAnim(a0)	; open/close door
-		tst.b	obRender(a0)
-		bpl.s	.nosound
-		move.w	#sfx_Door,d0
-		jsr	(PlaySound_Special).l	; play door sound
-
-.wait:
-.nosound:
-		lea	Ani_Flap(pc),a1
-		bsr.w	AnimateSprite
-		clr.b	(f_wtunnelallow).w ; enable wind tunnel
-		tst.b	obFrame(a0)	; is the door open?
-		bne.w	MarkObjGone	; if yes, branch
-;		move.w	(v_player+obX).w,d0	; this commented out bugfix
-;		move.w	obX(a0),d1	; is broken: it just mirrors
-;		btst	#0,obRender(a0)	; the collision accordingly
-;		beq.s	.flipped
-;		not.w	d0
-;		not.w	d1
-;.flipped:
-;		cmp.w	d1,d0	; has Sonic passed through the door?
-;		bhs.w	MarkObjGone	; if yes, branch
-		move.b	#1,(f_wtunnelallow).w ; disable wind tunnel
-		moveq	#$13,d1
-		moveq	#$20,d2
-		move.w	d2,d3
-		addq.w	#1,d3
-		move.w	obX(a0),d4
-		bsr.w	SolidObject	; make the door solid
-		bra.w	MarkObjGone
-; ---------------------------------------------------------------------------
-; Mappings & Animation script - flapping door (LZ)
-; ---------------------------------------------------------------------------
-Map_Flap:
-		binclude	"mappings/sprite/Flapping Door.bin"
-		even
-; ---------------------------------------------------------------------------
-Ani_Flap:	dc.w .opening-Ani_Flap
-		dc.w .closing-Ani_Flap
-.opening:	dc.b 3,	0, 1, 2, afBack, 1
-.closing:	dc.b 3,	2, 1, 0, afBack, 1
+Map_Obj04:	dc.w word_155AC-Map_Obj04
+		dc.w word_155C6-Map_Obj04
+		dc.w word_155E0-Map_Obj04
+		dc.w word_155FA-Map_Obj04
+		dc.w word_1562C-Map_Obj04
+		dc.w word_1565E-Map_Obj04
+word_155AC:	dc.w 3
+		dc.w $F80D,    0,    0,$FFA0		; 0
+		dc.w $F80D,    0,    0,$FFE0		; 4
+		dc.w $F80D,    0,    0,	 $20		; 8
+word_155C6:	dc.w 3
+		dc.w $F80D,    8,    4,$FFA0		; 0
+		dc.w $F80D,    8,    4,$FFE0		; 4
+		dc.w $F80D,    8,    4,	 $20		; 8
+word_155E0:	dc.w 3
+		dc.w $F80D,  $10,    8,$FFA0		; 0
+		dc.w $F80D,  $10,    8,$FFE0		; 4
+		dc.w $F80D,  $10,    8,	 $20		; 8
+word_155FA:	dc.w 6
+		dc.w $F80D,    0,    0,$FFA0		; 0
+		dc.w $F80D,    8,    4,$FFC0		; 4
+		dc.w $F80D,    0,    0,$FFE0		; 8
+		dc.w $F80D,    8,    4,	   0		; 12
+		dc.w $F80D,    0,    0,	 $20		; 16
+		dc.w $F80D,    8,    4,	 $40		; 20
+word_1562C:	dc.w 6
+		dc.w $F80D,    8,    4,$FFA0		; 0
+		dc.w $F80D,  $10,    8,$FFC0		; 4
+		dc.w $F80D,    8,    4,$FFE0		; 8
+		dc.w $F80D,  $10,    8,	   0		; 12
+		dc.w $F80D,    8,    4,	 $20		; 16
+		dc.w $F80D,  $10,    8,	 $40		; 20
+word_1565E:	dc.w 6
+		dc.w $F80D,  $10,    8,$FFA0		; 0
+		dc.w $F80D,    8,    4,$FFC0		; 4
+		dc.w $F80D,  $10,    8,$FFE0		; 8
+		dc.w $F80D,    8,    4,	   0		; 12
+		dc.w $F80D,  $10,    8,	 $20		; 16
+		dc.w $F80D,    8,    4,	 $40		; 20
 		even
 ;----------------------------------------------------------------------------
 ; Object 12 - Master Emerald from HPZ
@@ -17486,7 +17419,7 @@ Obj12_Init:
 		move.w	#make_art_tile(ArtTile_HPZ_Emerald,3,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.b	#$20,obActWid(a0)
-		move.b	#4,obPriority(a0)
+		move.w	#$200,obPriority(a0)
 
 Obj12_Display:
 		moveq	#$20,d1
@@ -17503,9 +17436,8 @@ word_14444:	dc.w 2
 		dc.w $F00F,  $10,    8,	   0
 		even
 ; ---------------------------------------------------------------------------
-;----------------------------------------------------------------------------
 ; Object 13 - HPZ waterfall
-;----------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 
 Obj13:
 		moveq	#0,d0
@@ -17524,7 +17456,7 @@ loc_1446C:
 		move.w	#make_art_tile(ArtTile_HPZ_Waterfall,3,1),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.b	#$10,obActWid(a0)
-		move.b	#1,obPriority(a0)
+		move.w	#$80,obPriority(a0)
 		move.b	#$12,obFrame(a0)
 		bsr.s	sub_144D4
 		move.b	#$A0,obHeight(a1)
@@ -17554,7 +17486,7 @@ sub_144D4:
 		move.w	#make_art_tile(ArtTile_HPZ_Waterfall,3,1),obGfx(a1)
 		move.b	#4,obRender(a1)
 		move.b	#$10,obActWid(a1)
-		move.b	#1,obPriority(a1)
+		move.w	#$80,obPriority(a1)
 .return:	rts
 ; End of function sub_144D4
 
@@ -17773,50 +17705,7 @@ word_1494E:	dc.w 4
 		dc.w $400F,    0,    0,$FFF0		; 12
 		even
 ; ---------------------------------------------------------------------------
-		include	"objects/06 EHZ Spiral.asm"
-; ---------------------------------------------------------------------------
-Obj06_PlayerAngleArray:dc.b   0,  0,  1,  1		; 0
-		dc.b $16,$16,$16,$16			; 4
-		dc.b $2C,$2C,$2C,$2C			; 8
-		dc.b $42,$42,$42,$42			; 12
-		dc.b $58,$58,$58,$58			; 16
-		dc.b $6E,$6E,$6E,$6E			; 20
-		dc.b $84,$84,$84,$84			; 24
-		dc.b $9A,$9A,$9A,$9A			; 28
-		dc.b $B0,$B0,$B0,$B0			; 32
-		dc.b $C6,$C6,$C6,$C6			; 36
-		dc.b $DC,$DC,$DC,$DC			; 40
-		dc.b $F2,$F2,$F2,$F2			; 44
-		dc.b   1,  1,  0,  0			; 48
-		even
-
-Obj06_PlayerDeltaYArray:dc.b  $20, $20,	$20, $20, $20, $20, $20, $20, $20, $20,	$20, $20, $20, $20, $20, $20
-		dc.b  $20, $20,	$20, $20, $20, $20, $20, $20, $20, $20,	$20, $20, $20, $20, $1F, $1F ; 16
-		dc.b  $1F, $1F,	$1F, $1F, $1F, $1F, $1F, $1F, $1F, $1F,	$1F, $1F, $1F, $1E, $1E, $1E ; 32
-		dc.b  $1E, $1E,	$1E, $1E, $1E, $1E, $1D, $1D, $1D, $1D,	$1D, $1C, $1C, $1C, $1C, $1B ; 48
-		dc.b  $1B, $1B,	$1B, $1A, $1A, $1A, $19, $19, $19, $18,	$18, $18, $17, $17, $16, $16 ; 64
-		dc.b  $15, $15,	$14, $14, $13, $12, $12, $11, $10, $10,	 $F,  $E,  $E,	$D,  $C,  $C ; 80
-		dc.b   $B,  $A,	 $A,   9,   8,	 8,   7,   6,	6,   5,	  4,   4,   3,	 2,   2,   1 ; 96
-		dc.b	0,  -1,	 -2,  -2,  -3,	-4,  -4,  -5,  -6,  -7,	 -7,  -8,  -9,	-9, -$A, -$A ; 112
-		dc.b  -$B, -$B,	-$C, -$C, -$D, -$E, -$E, -$F, -$F,-$10,-$10,-$11,-$11,-$12,-$12,-$13 ; 128
-		dc.b -$13,-$13,-$14,-$15,-$15,-$16,-$16,-$17,-$17,-$18,-$18,-$19,-$19,-$1A,-$1A,-$1B ; 144
-		dc.b -$1B,-$1C,-$1C,-$1C,-$1D,-$1D,-$1E,-$1E,-$1E,-$1F,-$1F,-$1F,-$20,-$20,-$20,-$21 ; 160
-		dc.b -$21,-$21,-$21,-$22,-$22,-$22,-$23,-$23,-$23,-$23,-$23,-$23,-$23,-$23,-$24,-$24 ; 176
-		dc.b -$24,-$24,-$24,-$24,-$24,-$24,-$24,-$25,-$25,-$25,-$25,-$25,-$25,-$25,-$25,-$25 ; 192
-		dc.b -$25,-$25,-$25,-$25,-$25,-$25,-$25,-$25,-$25,-$25,-$25,-$25,-$25,-$25,-$25,-$25 ; 208
-		dc.b -$25,-$25,-$25,-$25,-$24,-$24,-$24,-$24,-$24,-$24,-$24,-$23,-$23,-$23,-$23,-$23 ; 224
-		dc.b -$23,-$23,-$23,-$22,-$22,-$22,-$21,-$21,-$21,-$21,-$20,-$20,-$20,-$1F,-$1F,-$1F ; 240
-		dc.b -$1E,-$1E,-$1E,-$1D,-$1D,-$1C,-$1C,-$1C,-$1B,-$1B,-$1A,-$1A,-$19,-$19,-$18,-$18 ; 256
-		dc.b -$17,-$17,-$16,-$16,-$15,-$15,-$14,-$13,-$13,-$12,-$12,-$11,-$10,-$10, -$F, -$E ; 272
-		dc.b  -$E, -$D,	-$C, -$B, -$B, -$A,  -9,  -8,  -7,  -7,	 -6,  -5,  -4,	-3,  -2,  -1 ; 288
-		dc.b	0,   1,	  2,   3,   4,	 5,   6,   7,	8,   8,	  9,  $A,  $A,	$B,  $C,  $D ; 304
-		dc.b   $D,  $E,	 $E,  $F,  $F, $10, $10, $11, $11, $12,	$12, $13, $13, $14, $14, $15 ; 320
-		dc.b  $15, $16,	$16, $17, $17, $18, $18, $18, $19, $19,	$19, $19, $1A, $1A, $1A, $1A ; 336
-		dc.b  $1B, $1B,	$1B, $1B, $1C, $1C, $1C, $1C, $1C, $1C,	$1D, $1D, $1D, $1D, $1D, $1D ; 352
-		dc.b  $1D, $1E,	$1E, $1E, $1E, $1E, $1E, $1E, $1F, $1F,	$1F, $1F, $1F, $1F, $1F, $1F ; 368
-		dc.b  $1F, $1F,	$20, $20, $20, $20, $20, $20, $20, $20,	$20, $20, $20, $20, $20, $20 ; 384
-		dc.b  $20, $20,	$20, $20, $20, $20, $20, $20, $20, $20,	$20, $20, $20, $20, $20, $20 ; 400
-		even
+		include	"objects/Empty slots/14.asm"
 ; ---------------------------------------------------------------------------
 ; Object 5E - HTZ see-saw
 ; ---------------------------------------------------------------------------
@@ -17842,7 +17731,7 @@ See_Main:
 		move.l	#Map_obj5E,obMap(a0)
 		move.w	#make_art_tile(ArtTile_HTZ_Seesaw,0,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
-		move.b	#4,obPriority(a0)
+		move.w	#$200,obPriority(a0)
 		move.b	#$30,obActWid(a0)
 		move.w	obX(a0),objoff_30(a0)
 		tst.b	obSubtype(a0)	; is object type 00 ?
@@ -17967,7 +17856,7 @@ See_Spikeball:
 		move.l	#Map_obj5Eb,obMap(a0)
 		move.w	#make_art_tile(ArtTile_HTZ_Seesaw,0,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
-		move.b	#4,obPriority(a0)
+		move.w	#$200,obPriority(a0)
 		move.b	#$8B,obColType(a0)
 		move.b	#$C,obActWid(a0)
 		move.w	obX(a0),objoff_30(a0)
@@ -18155,7 +18044,7 @@ Obj16_Init:
 		ori.b	#4,obRender(a0)
 		move.b	#$20,obActWid(a0)
 		move.b	#0,obFrame(a0)
-		move.b	#1,obPriority(a0)
+		move.w	#$80,obPriority(a0)
 		move.w	obX(a0),objoff_30(a0)
 		move.w	obY(a0),objoff_32(a0)
 
@@ -18249,7 +18138,7 @@ Obj19_Init:
 		lea	Obj19_WidthArray(pc,d0.w),a2
 		move.b	(a2)+,obActWid(a0)
 		move.b	(a2)+,obFrame(a0)
-		move.b	#4,obPriority(a0)
+		move.w	#$200,obPriority(a0)
 		move.w	obX(a0),objoff_30(a0)
 		move.w	obY(a0),objoff_32(a0)
 		andi.b	#$F,obSubtype(a0)
@@ -18442,49 +18331,6 @@ word_154AE:	dc.w 2
 		dc.w $F00F, $800, $800,	   0		; 4
 		even
 ; ---------------------------------------------------------------------------
-		include	"objects/04 Water Surface.asm"
-; ---------------------------------------------------------------------------
-Map_Obj04:	dc.w word_155AC-Map_Obj04
-		dc.w word_155C6-Map_Obj04
-		dc.w word_155E0-Map_Obj04
-		dc.w word_155FA-Map_Obj04
-		dc.w word_1562C-Map_Obj04
-		dc.w word_1565E-Map_Obj04
-word_155AC:	dc.w 3
-		dc.w $F80D,    0,    0,$FFA0		; 0
-		dc.w $F80D,    0,    0,$FFE0		; 4
-		dc.w $F80D,    0,    0,	 $20		; 8
-word_155C6:	dc.w 3
-		dc.w $F80D,    8,    4,$FFA0		; 0
-		dc.w $F80D,    8,    4,$FFE0		; 4
-		dc.w $F80D,    8,    4,	 $20		; 8
-word_155E0:	dc.w 3
-		dc.w $F80D,  $10,    8,$FFA0		; 0
-		dc.w $F80D,  $10,    8,$FFE0		; 4
-		dc.w $F80D,  $10,    8,	 $20		; 8
-word_155FA:	dc.w 6
-		dc.w $F80D,    0,    0,$FFA0		; 0
-		dc.w $F80D,    8,    4,$FFC0		; 4
-		dc.w $F80D,    0,    0,$FFE0		; 8
-		dc.w $F80D,    8,    4,	   0		; 12
-		dc.w $F80D,    0,    0,	 $20		; 16
-		dc.w $F80D,    8,    4,	 $40		; 20
-word_1562C:	dc.w 6
-		dc.w $F80D,    8,    4,$FFA0		; 0
-		dc.w $F80D,  $10,    8,$FFC0		; 4
-		dc.w $F80D,    8,    4,$FFE0		; 8
-		dc.w $F80D,  $10,    8,	   0		; 12
-		dc.w $F80D,    8,    4,	 $20		; 16
-		dc.w $F80D,  $10,    8,	 $40		; 20
-word_1565E:	dc.w 6
-		dc.w $F80D,  $10,    8,$FFA0		; 0
-		dc.w $F80D,    8,    4,$FFC0		; 4
-		dc.w $F80D,  $10,    8,$FFE0		; 8
-		dc.w $F80D,    8,    4,	   0		; 12
-		dc.w $F80D,  $10,    8,	 $20		; 16
-		dc.w $F80D,    8,    4,	 $40		; 20
-		even
-; ---------------------------------------------------------------------------
 ; Object 49 - EHZ waterfalls
 ; ---------------------------------------------------------------------------
 
@@ -18505,7 +18351,7 @@ Obj49_Init:
 		move.b	#4,obRender(a0)
 		move.b	#$20,obActWid(a0)
 		move.w	obX(a0),objoff_30(a0)
-		move.b	#0,obPriority(a0)
+		move.w	#0,obPriority(a0)
 		move.b	#$80,obHeight(a0)
 		bset	#4,obRender(a0)
 
@@ -18604,7 +18450,7 @@ Obj4D_Init:
 		move.w	#make_art_tile(ArtTile_Stegway,1,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#$A,obColType(a0)
-		move.b	#4,obPriority(a0)
+		move.w	#$200,obPriority(a0)
 		move.b	#$18,obActWid(a0)
 		move.b	#$10,obHeight(a0)
 		move.b	#$18,obWidth(a0)
@@ -18777,6 +18623,8 @@ word_15B14:	dc.w 4
 		dc.w $FB01,  $30,  $18,	 $1A		; 12
 		even
 ;----------------------------------------------------------------------------
+		include	"objects/Empty slots/53.asm"
+;----------------------------------------------------------------------------
 ; Object 52 - Piranha badnik
 ;----------------------------------------------------------------------------
 
@@ -18797,7 +18645,7 @@ Obj52_Init:
 		move.w	#make_art_tile(ArtTile_BFish,1,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#$A,obColType(a0)
-		move.b	#4,obPriority(a0)
+		move.w	#$200,obPriority(a0)
 		move.b	#$10,obActWid(a0)
 		moveq	#0,d0
 		move.b	obSubtype(a0),d0
@@ -18975,7 +18823,7 @@ Obj4F_Init:
 		move.l	#Map_obj4F,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Redz,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
-		move.b	#4,obPriority(a0)
+		move.w	#$200,obPriority(a0)
 		move.b	#$10,obActWid(a0)
 		move.b	#$10,obHeight(a0)
 		move.b	#6,obWidth(a0)
@@ -19074,7 +18922,7 @@ Obj50_Init:
 		move.w	#make_art_tile(ArtTile_Aquis,1,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#$A,obColType(a0)
-		move.b	#4,obPriority(a0)
+		move.w	#$200,obPriority(a0)
 		move.b	#$10,obActWid(a0)
 		move.w	#-$100,obVelX(a0)
 		move.b	obSubtype(a0),d0
@@ -19100,7 +18948,7 @@ Obj50_Init:
 		move.l	#Map_Obj50,obMap(a1)
 		move.w	#make_art_tile(ArtTile_Aquis_Child,1,0),obGfx(a1)
 		ori.b	#4,obRender(a1)
-		move.b	#3,obPriority(a1)
+		move.w	#$180,obPriority(a1)
 		move.b	obStatus(a0),obStatus(a1)
 		move.b	#3,obAnim(a1)
 		move.l	a1,objoff_36(a0)
@@ -19245,7 +19093,7 @@ loc_16086:
 		move.l	#Map_Obj50,obMap(a1)
 		move.w	#make_art_tile(ArtTile_Aquis_Child,1,0),obGfx(a1)
 		ori.b	#4,obRender(a1)
-		move.b	#3,obPriority(a1)
+		move.w	#$180,obPriority(a1)
 		move.b	#$E5,obColType(a1)
 		move.b	#2,obAnim(a1)
 		move.w	#$C,d0
@@ -19371,7 +19219,7 @@ sub_1629E:
 		move.w	(v_player+obX).w,obX(a0)
 		move.w	(v_player+obY).w,obY(a0)
 		ori.b	#4,obRender(a0)
-		move.b	#1,obPriority(a0)
+		move.w	#$80,obPriority(a0)
 		move.b	#5,obAnim(a0)
 		st	ob2ndRout(a0)
 		move.w	#$12C,objoff_2C(a0)
@@ -19412,7 +19260,7 @@ loc_16306:
 		move.l	obMap(a0),obMap(a1)
 		move.w	#make_art_tile(ArtTile_Aquis_Child,1,0),obGfx(a1)
 		ori.b	#4,obRender(a1)
-		move.b	#3,obPriority(a1)
+		move.w	#$180,obPriority(a1)
 		move.w	#-$100,obVelY(a1)
 		move.b	#4,obAnim(a1)
 		move.b	#$78,obColProp(a1)
@@ -19548,7 +19396,7 @@ loc_1653E:
 		move.w	#make_art_tile(ArtTile_Aquis,1,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#$A,obColType(a0)
-		move.b	#4,obPriority(a0)
+		move.w	#$200,obPriority(a0)
 		move.b	#$10,obActWid(a0)
 		move.b	#6,obAnim(a0)
 		move.b	obSubtype(a0),d0
@@ -19676,7 +19524,7 @@ loc_1669E:
 		move.l	#Map_Obj50,obMap(a1)
 		move.w	#make_art_tile(ArtTile_Aquis_Child,1,0),obGfx(a1)
 		ori.b	#4,obRender(a1)
-		move.b	#3,obPriority(a1)
+		move.w	#$180,obPriority(a1)
 		move.b	#2,obAnim(a1)
 		move.b	#$E5,obColType(a1)
 		move.w	#$C,d0
@@ -19786,11 +19634,11 @@ Obj4B_Init:
 		move.w	#make_art_tile(ArtTile_Buzzer,0,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#$A,obColType(a0)
-		move.b	#4,obPriority(a0)
+		move.w	#$200,obPriority(a0)
 		move.b	#$10,obActWid(a0)
 		move.b	#$10,obHeight(a0)
 		move.b	#$18,obWidth(a0)
-		move.b	#3,obPriority(a0)
+		move.w	#$180,obPriority(a0)
 		addq.b	#2,obRoutine(a0)		; => Obj4B_Main
 
 		; load exhaust flame object
@@ -19801,7 +19649,7 @@ Obj4B_Init:
 		move.b	#4,obRoutine(a1)		; => Obj4B_Flame
 		move.l	#Map_obj4B,obMap(a1)
 		move.w	#make_art_tile(ArtTile_Buzzer,0,0),obGfx(a1)
-		move.b	#4,obPriority(a1)
+		move.w	#$200,obPriority(a1)
 		move.b	#$10,obActWid(a1)
 		move.b	obStatus(a0),obStatus(a1)
 		move.b	obRender(a0),obRender(a1)
@@ -19921,7 +19769,7 @@ Obj4B_ShootProjectile:
 		move.b	#6,obRoutine(a1)		; => Obj4B_Projectile
 		move.l	#Map_obj4B,obMap(a1)
 		move.w	#make_art_tile(ArtTile_Buzzer,0,0),obGfx(a1)
-		move.b	#4,obPriority(a1)
+		move.w	#$200,obPriority(a1)
 		move.b	#$98,obColType(a1)
 		move.b	#$10,obActWid(a1)
 		move.b	obStatus(a0),obStatus(a1)
@@ -19998,7 +19846,7 @@ loc_16ADE:
 		move.w	#make_art_tile(ArtTile_Octus,1,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#$A,obColType(a0)
-		move.b	#4,obPriority(a0)
+		move.w	#$200,obPriority(a0)
 		move.b	#$10,obActWid(a0)
 		move.b	#$10,obHeight(a0)
 		move.b	#8,obWidth(a0)
@@ -20073,7 +19921,7 @@ loc_16BAA:
 		move.l	#Map_Obj4A,obMap(a1)
 		move.b	#4,obFrame(a1)
 		move.w	#make_art_tile(ArtTile_Octus_Child,1,0),obGfx(a1)
-		move.b	#3,obPriority(a1)
+		move.w	#$180,obPriority(a1)
 		move.b	#$10,obActWid(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
@@ -20088,7 +19936,7 @@ loc_16C10:
 		move.b	#6,obRoutine(a1)
 		move.l	#Map_Obj4A,obMap(a1)
 		move.w	#make_art_tile(ArtTile_Octus_Child,1,0),obGfx(a1)
-		move.b	#4,obPriority(a1)
+		move.w	#$200,obPriority(a1)
 		move.b	#$10,obActWid(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
@@ -20177,7 +20025,7 @@ Obj4C_Init:
 		move.w	#make_art_tile(ArtTile_BBat,0,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#$A,obColType(a0)
-		move.b	#4,obPriority(a0)
+		move.w	#$200,obPriority(a0)
 		move.b	#$10,obActWid(a0)
 		move.b	#$10,obHeight(a0)
 		move.b	#8,obWidth(a0)
@@ -20518,7 +20366,7 @@ Obj4E_Init:
 		move.w	#make_art_tile(ArtTile_Gator,1,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#$A,obColType(a0)
-		move.b	#4,obPriority(a0)
+		move.w	#$200,obPriority(a0)
 		move.b	#$10,obActWid(a0)
 		move.b	#$10,obHeight(a0)
 		move.b	#8,obWidth(a0)
@@ -20692,8 +20540,6 @@ word_17496:	dc.w 4
 		dc.w	 1,  $1E,   $F,	   4		; 8
 		dc.w	 5,  $28,  $14,	  $C		; 12
 		even
-; ---------------------------------------------------------------------------
-		include	"objects/53.asm"
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Object 54 - Snail badnik from	EHZ
@@ -20717,7 +20563,7 @@ Obj54_Init:
 		move.w	#make_art_tile(ArtTile_Snail,0,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#$A,obColType(a0)
-		move.b	#4,obPriority(a0)
+		move.w	#$200,obPriority(a0)
 		move.b	#$10,obActWid(a0)
 		move.b	#$10,obHeight(a0)
 		move.b	#$E,obWidth(a0)
@@ -20727,7 +20573,7 @@ Obj54_Init:
 		move.b	#6,obRoutine(a1)
 		move.l	#Map_obj54,obMap(a1)
 		move.w	#make_art_tile(ArtTile_Snail,1,0),obGfx(a1)
-		move.b	#3,obPriority(a1)
+		move.w	#$180,obPriority(a1)
 		move.b	#$10,obActWid(a1)
 		move.b	obStatus(a0),obStatus(a1)
 		move.b	obRender(a0),obRender(a1)
@@ -20815,7 +20661,7 @@ sub_17714:
 		move.b	#8,obRoutine(a1)
 		move.l	#Map_obj4B,obMap(a1)
 		move.w	#make_art_tile(ArtTile_Buzzer,0,0),obGfx(a1)
-		move.b	#4,obPriority(a1)
+		move.w	#$200,obPriority(a1)
 		move.b	#$10,obActWid(a1)
 		move.b	obStatus(a0),obStatus(a1)
 		move.b	obRender(a0),obRender(a1)
@@ -21018,7 +20864,7 @@ loc_179AE:
 		move.w	#make_art_tile($540,1,0),obGfx(a1)
 		move.b	#4,obRender(a1)
 		move.b	#$20,obActWid(a1)
-		move.b	#4,obPriority(a1)
+		move.w	#$200,obPriority(a1)
 		move.l	obX(a0),obX(a1)
 		move.l	obY(a0),obY(a1)
 		addi.w	#$C,obY(a1)
@@ -21212,7 +21058,7 @@ loc_17BB0:
 
 loc_17BF2:
 		move.b	#8,obFrame(a0)
-		move.b	#0,obPriority(a0)
+		move.w	#0,obPriority(a0)
 		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
@@ -21258,7 +21104,7 @@ loc_17C58:
 
 loc_17C6E:
 		move.w	#$100,obVelY(a0)
-		cmpi.b	#1,obPriority(a0)
+		cmpi.w	#$80,obPriority(a0)
 		bne.s	loc_17C88
 		move.w	obY(a0),d0
 		movea.l	objoff_34(a0),a1
@@ -21276,7 +21122,7 @@ loc_17C96:
 		addq.b	#2,ob2ndRout(a0)
 		move.w	#$A,objoff_2A(a0)
 		move.w	#-$300,obVelY(a0)
-		cmpi.b	#1,obPriority(a0)
+		cmpi.w	#$80,obPriority(a0)
 		beq.s	+
 		neg.w	obVelX(a0)
 /		jmp	(DisplaySprite).l
@@ -21377,7 +21223,7 @@ sub_17D9A:
 		move.w	#make_art_tile($4C0,1,0),obGfx(a1)
 		move.b	#4,obRender(a1)
 		move.b	#$10,obActWid(a1)
-		move.b	#1,obPriority(a1)
+		move.w	#$80,obPriority(a1)
 		move.b	#$10,obHeight(a1)
 		move.b	#$10,obWidth(a1)
 		move.l	obX(a0),obX(a1)
@@ -21399,7 +21245,7 @@ loc_17E0E:
 		move.w	#make_art_tile($4C0,1,0),obGfx(a1)
 		move.b	#4,obRender(a1)
 		move.b	#$10,obActWid(a1)
-		move.b	#1,obPriority(a1)
+		move.w	#$80,obPriority(a1)
 		move.b	#$10,obHeight(a1)
 		move.b	#$10,obWidth(a1)
 		move.l	obX(a0),obX(a1)
@@ -21421,7 +21267,7 @@ loc_17E82:
 		move.w	#make_art_tile($4C0,1,0),obGfx(a1)
 		move.b	#4,obRender(a1)
 		move.b	#$10,obActWid(a1)
-		move.b	#2,obPriority(a1)
+		move.w	#$100,obPriority(a1)
 		move.b	#$10,obHeight(a1)
 		move.b	#$10,obWidth(a1)
 		move.l	obX(a0),obX(a1)
@@ -21443,7 +21289,7 @@ loc_17EF6:
 		move.w	#make_art_tile($4C0,1,0),obGfx(a1)
 		move.b	#4,obRender(a1)
 		move.b	#$10,obActWid(a1)
-		move.b	#1,obPriority(a1)
+		move.w	#$80,obPriority(a1)
 		move.l	obX(a0),obX(a1)
 		move.l	obY(a0),obY(a1)
 		addi.w	#-$36,obX(a1)
@@ -21467,7 +21313,7 @@ loc_17F54:
 		move.w	#make_art_tile($4C0,0,0),obGfx(a1)
 		move.b	#4,obRender(a1)
 		move.b	#$20,obActWid(a1)
-		move.b	#2,obPriority(a1)
+		move.w	#$100,obPriority(a1)
 		move.l	obX(a0),obX(a1)
 		move.l	obY(a0),obY(a1)
 		move.b	#2,obRoutine(a1)
@@ -21485,7 +21331,7 @@ loc_17F98:
 		move.w	#make_art_tile($540,1,0),obGfx(a1)
 		move.b	#4,obRender(a1)
 		move.b	#$20,obActWid(a1)
-		move.b	#4,obPriority(a1)
+		move.w	#$200,obPriority(a1)
 		move.l	obX(a0),obX(a1)
 		move.l	obY(a0),obY(a1)
 		move.w	#$1E,objoff_2A(a1)
@@ -21625,7 +21471,7 @@ Obj55_Init:
 		move.w	#make_art_tile($400,1,0),obGfx(a0) ; vehicle with ability to fly, bottom part
 		ori.b	#4,obRender(a0)
 		move.b	#$20,obActWid(a0)
-		move.b	#3,obPriority(a0)
+		move.w	#$180,obPriority(a0)
 		move.b	#$F,obColType(a0)
 		move.b	#8,obColProp(a0)
 		addq.b	#2,obRoutine(a0)
@@ -21646,7 +21492,7 @@ loc_18230:
 		move.w	#make_art_tile($400,0,0),obGfx(a1)
 		move.b	#4,obRender(a1)
 		move.b	#$20,obActWid(a1)
-		move.b	#3,obPriority(a1)
+		move.w	#$180,obPriority(a1)
 		move.l	obX(a0),obX(a1)
 		move.l	obY(a0),obY(a1)
 		addq.b	#4,obRoutine(a1)
@@ -21673,7 +21519,7 @@ loc_182AC:
 loc_182C0:
 		move.b	#4,obRender(a1)
 		move.b	#$20,obActWid(a1)
-		move.b	#3,obPriority(a1)
+		move.w	#$180,obPriority(a1)
 		move.l	obX(a0),obX(a1)
 		move.l	obY(a0),obY(a1)
 		addq.b	#6,obRoutine(a1)
@@ -21806,7 +21652,7 @@ Obj56_Init:
 		move.l	#Map_Obj56,obMap(a0)
 		move.w	#make_art_tile($5A0,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
-		move.b	#1,obPriority(a0)
+		move.w	#$80,obPriority(a0)
 		move.b	#0,obColType(a0)
 		move.b	#$C,obActWid(a0)
 		move.b	#7,obTimeFrame(a0)
@@ -21917,7 +21763,7 @@ Credits_Init:
 		move.w	(v_creditsnum).w,d0		; load credits index number
 		move.b	d0,obFrame(a0)			; display appropriate credits
 		move.b	#0,obRender(a0)
-		move.b	#0,obPriority(a0)
+		move.w	#0,obPriority(a0)
 
 		cmpi.b	#GameModeID_TitleScreen,(v_gamemode).w	; but if this is the title screen...
 		bne.s	Credits_Display
@@ -22117,13 +21963,17 @@ Obj3E_Init:
 		move.b	(a1)+,obRoutine(a0)
 		move.b	(a1)+,obActWid(a0)
 		move.b	(a1)+,obPriority(a0)
+		move.w	obPriority(a0),d0
+		lsr.w	#1,d0
+		andi.w	#$380,d0
+		move.w	d0,obPriority(a0)
 		move.b	(a1)+,obFrame(a0)
 		cmpi.w	#8,d0
-		bne.s	locret_1957C
+		bne.s	.return
 		move.b	#6,obColType(a0)
 		move.b	#8,obColProp(a0)
 
-locret_1957C:
+.return:
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -22211,9 +22061,8 @@ loc_19668:
 		move.w	#$9A,d5
 		moveq	#-$1C,d4
 
-loc_1968E:
-		jsr	(FindFreeObj).l
-		bne.s	locret_196B8
+-		jsr	(FindFreeObj).l
+		bne.s	.return
 		_move.b	#id_Obj28,obID(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
@@ -22221,9 +22070,9 @@ loc_1968E:
 		addq.w	#7,d4
 		move.w	d5,objoff_36(a1)
 		subq.w	#8,d5
-		dbf	d6,loc_1968E
+		dbf	d6,-
 
-locret_196B8:
+.return:
 		rts
 ; ---------------------------------------------------------------------------
 

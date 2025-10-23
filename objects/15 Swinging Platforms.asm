@@ -22,7 +22,7 @@ loc_821E:
 		move.l	#Map_Obj15,obMap(a0)
 		move.w	#make_art_tile($4D0,2,0),obGfx(a0)
 		move.b	#4,obRender(a0)
-		move.b	#3,obPriority(a0)
+		move.w	#$180,obPriority(a0)
 		move.b	#$18,obActWid(a0)
 		move.b	#8,obHeight(a0)
 		move.w	obY(a0),objoff_38(a0)
@@ -83,14 +83,14 @@ loc_82F0:
 		move.w	obGfx(a0),obGfx(a1)
 		bclr	#6,obGfx(a1)
 		move.b	#4,obRender(a1)
-		move.b	#4,obPriority(a1)
+		move.w	#$200,obPriority(a1)
 		move.b	#8,obActWid(a1)
 		move.b	#1,obFrame(a1)
 		move.b	d3,objoff_3C(a1)
 		subi.b	#$10,d3
 		bcc.s	loc_8358
 		move.b	#2,obFrame(a1)
-		move.b	#3,obPriority(a1)
+		move.w	#$180,obPriority(a1)
 		bset	#6,obGfx(a1)
 
 loc_8358:
@@ -103,7 +103,7 @@ loc_835C:
 		move.l	#Map_Obj48,obMap(a0)
 		move.w	#make_art_tile($3AA,2,0),obGfx(a0)
 		move.b	#1,obFrame(a0)
-		move.b	#2,obPriority(a0)
+		move.w	#$100,obPriority(a0)
 		move.b	#$81,obColType(a0)
 
 loc_8388:
@@ -261,7 +261,7 @@ locret_84EC:
 ; ---------------------------------------------------------------------------
 
 loc_84EE:
-		out_of_range.s	loc_8506,$3A(a0)
+		out_of_range.s	loc_8506,objoff_3A(a0)
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 

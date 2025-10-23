@@ -31,7 +31,7 @@ GRing_Main:
 
 GRing_Okay:
 		addq.b	#2,obRoutine(a0)
-		move.b	#2,obPriority(a0)
+		move.w	#$100,obPriority(a0)
 		move.b	#$52,obColType(a0)
 		move.w	#$C40,(v_gfxbigring).w
 

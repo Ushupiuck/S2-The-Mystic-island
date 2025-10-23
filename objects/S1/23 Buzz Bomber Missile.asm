@@ -26,7 +26,7 @@ Obj23_Init:
 		move.l	#Map_obj23,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Buzz_Bomber,1,0),obGfx(a0)
 		move.b	#4,obRender(a0)
-		move.b	#3,obPriority(a0)
+		move.w	#$180,obPriority(a0)
 		move.b	#8,obActWid(a0)
 		andi.b	#3,obStatus(a0)
 		tst.b	obSubtype(a0)			; was the object created by a Newtron?

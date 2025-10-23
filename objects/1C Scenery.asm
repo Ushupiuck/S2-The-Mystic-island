@@ -39,6 +39,10 @@ loc_93F4:
 		move.b	(a1)+,obFrame(a0)
 		move.b	(a1)+,obActWid(a0)
 		move.b	(a1)+,obPriority(a0)
+		move.b	obPriority(a0),d0
+		lsr.w	#1,d0
+		andi.w	#$380,d0
+		move.w	d0,obPriority(a0)
 		move.b	(a1)+,obColType(a0)
 		move.b	obSubtype(a0),d0
 		andi.w	#$F0,d0
@@ -49,7 +53,14 @@ loc_93F4:
 		move.b	d0,obAnim(a0)
 		; fall through to the next subroutine
 ; ---------------------------------------------------------------------------
-loc_9464:	lea	(Ani_Obj1C).l,a1
+loc_9464:	lea	Ani_Obj1C(pc),a1
 		bsr.w	AnimateSprite
 loc_9442:	out_of_range.w	DeleteObject
 		bra.w	DisplaySprite
+; ---------------------------------------------------------------------------
+Ani_Obj1C:	dc.w byte_9494-Ani_Obj1C
+		dc.w byte_949C-Ani_Obj1C
+byte_9494:	dc.b   8,  3,  3,  4,  5,  5,  4,$FF
+byte_949C:	dc.b   5,  0,  0,  0,  1,  2,  3,  3
+		dc.b   2,  1,  2,  3,  3,  1,$FF
+		even
