@@ -107,6 +107,7 @@ PLC_GHZ:	dc.w ((PLC_GHZ_End-PLC_GHZ)/6)-1
 		plcm	Nem_GHZ_Bridge, ArtTile_GHZ_Bridge
 		plcm	Nem_Swing, $4D0
 		plcm	Nem_GHZ_Rock, ArtTile_GHZ_Purple_Rock
+		plcm	Nem_GroundExplosion, ArtTile_Ground_Explosion
 PLC_GHZ_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
@@ -498,6 +499,8 @@ PLCKosM_THZ1:	plrKosMlistheader
 	plreqKosM	ArtTile_Crabmeat, Kospm_Crabmeat
 	plreqKosM	ArtTile_Chopper, Kospm_Chopper
 	plreqKosM	ArtTile_Moto_Bug, Kospm_Motobug
+	plreqKosM	ArtTile_Ball_HogV, Kospm_BallhogV
+	plreqKosM	ArtTile_Ball_HogH, Kospm_BallhogH
 	plreqKosM	ArtTile_Newtron, Kospm_Newtron
 PLCKosM_THZ1_End
 ; ---------------------------------------------------------------------------
@@ -507,6 +510,8 @@ PLCKosM_THZ2:	plrKosMlistheader
 	plreqKosM	ArtTile_Crabmeat, Kospm_Crabmeat
 	plreqKosM	ArtTile_Chopper, Kospm_Chopper
 	plreqKosM	ArtTile_Moto_Bug, Kospm_Motobug
+	plreqKosM	ArtTile_Ball_HogV, Kospm_BallhogV
+	plreqKosM	ArtTile_Ball_HogH, Kospm_BallhogH
 	plreqKosM	ArtTile_Newtron, Kospm_Newtron
 PLCKosM_THZ2_End
 ; ---------------------------------------------------------------------------
@@ -516,6 +521,8 @@ PLCKosM_THZ3:	plrKosMlistheader
 	plreqKosM	ArtTile_Crabmeat, Kospm_Crabmeat
 	plreqKosM	ArtTile_Chopper, Kospm_Chopper
 	plreqKosM	ArtTile_Moto_Bug, Kospm_Motobug
+	plreqKosM	ArtTile_Ball_HogV, Kospm_BallhogV
+	plreqKosM	ArtTile_Ball_HogH, Kospm_BallhogH
 	plreqKosM	ArtTile_Newtron, Kospm_Newtron
 PLCKosM_THZ3_End
 ; ---------------------------------------------------------------------------
@@ -525,7 +532,7 @@ PLCKosM_THZ4:	plrKosMlistheader
 	plreqKosM	ArtTile_Crabmeat, Kospm_Crabmeat
 	plreqKosM	ArtTile_Chopper, Kospm_Chopper
 	plreqKosM	ArtTile_Moto_Bug, Kospm_Motobug
-	plreqKosM	ArtTile_Newtron, Kospm_Newtron
+;	plreqKosM	ArtTile_Newtron, Kospm_Newtron
 PLCKosM_THZ4_End
 ; ---------------------------------------------------------------------------
 ; KOSM PATTERN LOAD REQUEST LIST

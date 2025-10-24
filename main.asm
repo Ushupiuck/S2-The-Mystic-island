@@ -7743,7 +7743,8 @@ byte_B292:	dc.b   2,  0,  1, $B,$FE,  1
 ; ---------------------------------------------------------------------------
 ; sprite mappings
 ; ---------------------------------------------------------------------------
-Map_Obj26:	include	"mappings/sprite/obj26.asm"
+Map_Obj26:	binclude	"mappings/sprite/obj26.bin"
+		even
 ; ---------------------------------------------------------------------------
 		include	"objects/28 Animals.asm"
 		include	"objects/07 Points.asm"
@@ -7807,19 +7808,9 @@ word_A0BC:	dc.w 2
 ; ---------------------------------------------------------------------------
 		include	"objects/S1/24, 27 & 3F Explosions.asm"
 ; ---------------------------------------------------------------------------
-Map_Obj24:
-		dc.w word_99F4-Map_Obj24
-		dc.w word_99FE-Map_Obj24
-		dc.w word_9A08-Map_Obj24
-		dc.w word_9A12-Map_Obj24
-word_99F4:	dc.w 1
-		dc.w $F40A,    0,    0,$FFF4
-word_99FE:	dc.w 1
-		dc.w $F40A,    9,    4,$FFF4
-word_9A08:	dc.w 1
-		dc.w $F40A,  $12,    9,$FFF4
-word_9A12:	dc.w 1
-		dc.w $F40A,  $1B,   $D,$FFF4
+Map_GroundExplosion:
+		binclude	"mappings/sprite/Ground Explosion.bin"
+		even
 Map_Obj27:
 		dc.w word_9A26-Map_Obj27
 		dc.w word_9A30-Map_Obj27
@@ -24431,10 +24422,6 @@ Nem_Ring:	binclude	"art/nemesis/Ring.nem"
 		even
 Nem_Monitors:	binclude	"art/nemesis/Monitor and contents.nem"
 		even
-Nem_Explosion:	binclude	"art/nemesis/Explosion.nem"
-		even
-Nem_Explosion3:	binclude	"art/nemesis/Explosion - Ground.nem"
-		even
 Nem_Shield:	binclude	"art/nemesis/Shield.nem"
 		even
 Nem_Stars:	binclude	"art/nemesis/Stars.nem"
@@ -24503,7 +24490,13 @@ Nem_CPZ_Boss:	binclude	"art/nemesis/CPZ boss.nem"
 		even
 Nem_Smoke:	binclude	"art/nemesis/Smoke trail from CPZ boss.nem"
 		even
-Nem_Explosion2:	binclude	"art/nemesis/Large explosion.nem"
+Nem_Explosion:	binclude	"art/nemesis/Explosion.nem"
+		even
+Nem_BossExplosion:
+		binclude	"art/nemesis/Large explosion.nem"
+		even
+Nem_GroundExplosion:
+		binclude	"art/nemesis/Explosion - Ground.nem"
 		even
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - Ending (Leftover placeholder - to be re-used)

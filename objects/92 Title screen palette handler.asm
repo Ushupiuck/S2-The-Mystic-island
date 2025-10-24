@@ -1,5 +1,5 @@
 ; ----------------------------------------------------------------------------
-; Object 92 - "Palette changing handler" from title screen
+; Object 92 - "Palette changing handler" from title screen (W.I.P)
 ; ----------------------------------------------------------------------------
 ttlscrpalchanger_fadein_time_left = objoff_30
 ttlscrpalchanger_fadein_time = objoff_31

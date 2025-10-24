@@ -702,7 +702,7 @@ Kos_decomp_destination =	Kos_decomp_queue+4	; long ; the decompression location 
 Kos_decomp_queue_End:
 Kos_modules_left		ds.w	1		; the number of modules left to decompresses. Sign bit set indicates a module is being decompressed/has been decompressed
 Kos_last_module_size		ds.w	1		; the uncompressed size of the last module in words. All other modules are $800 words
-Kos_module_queue:		ds.w	3*6		; 6 bytes per entry, first longword is source location and next word is VRAM destination
+Kos_module_queue:		ds.w	3*7		; 6 bytes per entry, first longword is source location and next word is VRAM destination
 Kos_module_source =		Kos_module_queue	; long ; the compressed data location for the first module in the queue
 Kos_module_destination =	Kos_module_queue+4	; word ; the VRAM destination for the first module in the queue
 Kos_module_queue_End:
@@ -787,7 +787,7 @@ Water_flag:		ds.b	1
 f_switch:		ds.b	$10			; flags set when Sonic stands on a switch
 
 Anim_Counters:		ds.b	$10
-			ds.b	$14			; unused
+			ds.b	$E			; unused
 
 v_levelvariables_end:
 
@@ -1195,10 +1195,10 @@ ArtTile_FZ_Eggman_No_Vehicle:	equ $470
 
 ; General Level Art
 ArtTile_Level:			equ $000
-ArtTile_Ball_HogV:		equ $1E0
+ArtTile_Ball_HogV:		equ $33E
 ArtTile_Ball_HogH:		equ ArtTile_Ball_HogV+$18
 ArtTile_Bomb:			equ $400
-ArtTile_Missile_Disolve:	equ $41C ; Unused
+ArtTile_Ground_Explosion:	equ $385 ; Unused
 ArtTile_Spikes:			equ $434
 ArtTile_Spikes_GHZ:		equ ArtTile_Spikes+$6C
 

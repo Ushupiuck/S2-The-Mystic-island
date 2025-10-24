@@ -14,8 +14,8 @@ MDis_Index:	dc.w MDis_Main-MDis_Index
 
 MDis_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
-		move.l	#Map_Obj24,obMap(a0)
-		move.w	#make_art_tile(ArtTile_Missile_Disolve,0,0),obGfx(a0)
+		move.l	#Map_GroundExplosion,obMap(a0)
+		move.w	#make_art_tile(ArtTile_Ground_Explosion,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.w	#$80,obPriority(a0)
 		move.b	#0,obColType(a0)
