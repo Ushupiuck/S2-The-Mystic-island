@@ -44,6 +44,7 @@ Obj1E_Main:				; XREF: Obj1E_Index
 		moveq	#0,d0
 		move.b	obSubtype(a0),d0	; move subtype to d0
 		subi.b	#$10,d0			; substract $0F. If more, means timed mode (yay, high byte recycling)
+		beq.s	.timed
 		bls.s	.normalmode		; subtypes $00-$0F are horizontal
 
 		move.w	#256-1,hog_backup(a0)
@@ -52,8 +53,9 @@ Obj1E_Main:				; XREF: Obj1E_Index
 		move.l	#Map_BallHogV,obMap(a0) ; set proto-hog mappings
 		move.w	#make_art_tile(ArtTile_Ball_HogV,1,0),obGfx(a0) ; and art pointer
 		move.b	#4,ob2ndRout(a0)	; set to timed mode
+
 		cmpi.b	#$0F,d0
-		bpl.s	.timed
+		bpl.s	.stationary_proto
 
 		move.b	#0,ob2ndRout(a0)	; Normal mode
 		add.w	d0,d0			; multiply by 60 frames (1 second)
@@ -62,14 +64,34 @@ Obj1E_Main:				; XREF: Obj1E_Index
 		lsl.w	#4,d0
 		sub.w	d1,d0
 		move.w	d0,hog_backup(a0)
-
-.timed:
 		addq.b	#2,obRoutine(a0)	; adds 2, so the next add branches to Action2
 
 .normalmode:
 		addq.b	#2,obRoutine(a0)
 .return:
 		rts	
+
+
+.stationary_proto
+		subi.b	#$10,d0
+		add.w	d0,d0			; multiply by 60 frames (1 second)
+		add.w	d0,d0
+		move.w	d0,d1
+		lsl.w	#4,d0
+		sub.w	d1,d0
+		move.w	d0,hog_backup(a0)
+		move.b	#8,ob2ndRout(a0)	; set to timed mode
+		move.b	#4,obRoutine(a0)
+		rts
+.timed:
+		move.w	#256-1,hog_backup(a0)
+		sf	hog_launchflagV(a0)	; set to launch	cannonball
+		move.w	#$40,hog_walk(a0)
+		move.l	#Map_BallHogV,obMap(a0) ; set proto-hog mappings
+		move.w	#make_art_tile(ArtTile_Ball_HogV,1,0),obGfx(a0) ; and art pointer
+		move.b	#4,obRoutine(a0)
+		move.b	#4,ob2ndRout(a0)	; set to timed mode
+		rts
 
 Obj1E_NormalBomb:
 		jsr	(ObjectMoveAndFall).l
@@ -97,8 +119,7 @@ Obj1E_NormalBomb:
 .moving_up:
 		subq.w	#1,objoff_30(a0)
 		bpl.s	.time_remaining
-		_move.b	#id_Obj24,obID(a0)
-	;	_move.b	#id_Obj3F,obID(a0)
+		move.b	#id_Obj3F,(a0)
 		move.b	#0,obRoutine(a0)
 		rts
 ;		bra.w	FindFreeObj			; explosion object
@@ -128,7 +149,7 @@ Obj1E_ProtoBomb:
 		add.w	d1,obY(a0)
 
 .change_explosion:
-		move.b	#$3F,(a0)
+		move.b	#id_Obj24,(a0)
 		move.b	#0,obRoutine(a0)
 		rts	
 
@@ -221,6 +242,9 @@ Obj1E_Action2:
 ; timed
 		dc.w Hog_Idle2-.action_index
 		dc.w Hog_Move2-.action_index
+; Stationary
+		dc.w Hog_Idle3-.action_index
+		dc.w Hog_Move3-.action_index
 ; ===========================================================================
 
 Hog_Idle:
@@ -372,6 +396,54 @@ Hog_Move2:
 
 .return:
 		rts
+
+Hog_Idle3:
+		subq.w	#1,hog_timer(a0)
+		bpl.s	.fire
+		addq.b	#2,ob2ndRout(a0)
+		move.w	hog_backup(a0),hog_timer(a0)
+		move.b	#0,obAnim(a0)
+		sf	hog_launchflag(a0)
+		rts
+; ---------------------------------------------------------------------------
+
+.fire:
+		cmpi.b	#2,obFrame(a0)
+		bne.s	.abort
+		tst.b	hog_launchflag(a0)
+		bne.s	.abort
+		st	hog_launchflag(a0)
+
+.load_bomb:
+		bsr.w	FindFreeObj
+		bne.s	.abort			; if ObjectRam is full, we bail!
+		move.b	#id_Obj1E,(a1)	; load bomb
+		move.b	#8,obRoutine(a1); set proto bomb
+		move.b	#4,obFrame(a1)  ; set bomb frame
+		move.l	#Map_BallHogH,obMap(a1)
+		move.w	#make_art_tile(ArtTile_Ball_HogH,1,0),obGfx(a1)
+		move.w	obX(a0),obX(a1)
+		move.w	obY(a0),obY(a1)
+		move.b	#4,obRender(a1)
+		move.w	#$180,obPriority(a1)
+		move.b	#$87,obColType(a1)
+		move.b	#8,obActWid(a1)
+		move.w	#$18,objoff_30(a1)
+		addi.w	#$10,obY(a1)
+.abort:			;.fail in the final
+		rts
+; ===========================================================================
+; ---------------------------------------------------------------------------
+
+Hog_Move3:
+		subq.w	#1,hog_timer(a0)
+		bpl.s	.return
+		subq.b	#2,ob2ndRout(a0)
+		move.w	hog_backup(a0),hog_timer(a0)
+		move.b	#2,obAnim(a0)
+.return:
+		rts
+
 
 
 Ani_HogVert:		dc.w Ani_HogVert.frame1-Ani_HogVert
