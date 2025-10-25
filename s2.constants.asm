@@ -367,9 +367,9 @@ v_128x128_end:=	Chunk_Table_End
 Level_Layout:		ds.b	$1000			; level layout buffer ($1000 bytes)
 Level_Layout_End:
 
-v_lvllayout:=	Level_Layout
+v_lvllayout:=		Level_Layout
 v_lvllayout_end:=	Level_Layout_End
-v_lvllayoutbg:=	Level_Layout+$80
+v_lvllayoutbg:=		Level_Layout+$80
 v_16x16:		ds.b	$1800			; $1800 bytes; unused
 
 TempArray_LayerDef:	ds.b	$200			; background scroll buffer
@@ -377,13 +377,13 @@ Decomp_Buffer:		ds.b	$200			; Nemesis graphics decompression buffer
 Decomp_Buffer_End:
 
 v_bgscroll_buffer:=	TempArray_LayerDef
-v_ngfx_buffer:=	Decomp_Buffer
+v_ngfx_buffer:=		Decomp_Buffer
 v_ngfx_buffer_end:=	Decomp_Buffer_End
 
 Object_Display_Lists:	ds.b	$400			; sprite display queue, in order of priority
 Object_Display_Lists_End:
 
-v_spritequeue:=	Object_Display_Lists
+v_spritequeue:=		Object_Display_Lists
 v_spritequeue_end:=	Object_Display_Lists_End
 
 v_hscrolltablebuffer:	ds.b	$380			; scrolling table data
@@ -907,10 +907,10 @@ v_creditsnum:		ds.w	1			; credits index number
 
 			ds.b	$140			; stack
 v_systemstack:
-v_objstate:		ds.b	$C0			; object state list
+v_objstate:		ds.b	$300			; object state list
 v_objstate_end:
-			ds.b	$540
-			ds.b	$200
+			ds.b	$200			; will become used by the object table
+			ds.b	$200			; free
 v_end:
 	if * > 0	; don't declare more space than the RAM can contain!
 		fatal "The RAM variable declarations are too large by $\{*} bytes."
