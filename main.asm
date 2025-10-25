@@ -11,7 +11,7 @@ BackupSRAM	  = 1
 AddressSRAM	  = 3	; 0 = odd+even; 2 = even only; 3 = odd only
 
 FixBugs		  = 1	; change to 1 to enable bugfixes
-AdvancedHandler	  = 1
+AdvancedHandler	  = 0
 
 zeroOffsetOptimization = 1	; if 1, makes a handful of zero-offset instructions smaller
 
@@ -2683,10 +2683,10 @@ Level_SkipTtlCard:
 ;		beq.s	Level_ChkDebug		; the 2nd player, if neccesary
 
 ;LevelInit_LoadTails:	; Disabled until his AI &/or character selection is implemented
-	;	_move.b	#id_Obj02,(v_player2).w	; load Tails object
-	;	move.w	(v_player+obX).w,(v_player2+obX).w	; copy player 1's x position to player 2
-	;	move.w	(v_player+obY).w,(v_player2+obY).w	; copy player 1's y position to player 2
-	;	subi.w	#32,(v_player2+obX).w	; set player 2's x position 32 pixels behind player 1's
+		_move.b	#id_Obj02,(v_player2).w	; load Tails object
+		move.w	(v_player+obX).w,(v_player2+obX).w	; copy player 1's x position to player 2
+		move.w	(v_player+obY).w,(v_player2+obY).w	; copy player 1's y position to player 2
+		subi.w	#32,(v_player2+obX).w	; set player 2's x position 32 pixels behind player 1's
 
 Level_ChkDebug:
 		tst.b	(f_debugcheat).w
@@ -13241,14 +13241,14 @@ Sonic_Animate:
 		lea	SonicAniData(pc),a1	; Get animation script
 	;	tst.b	(Super_Sonic_flag).w	; Are we Super?
 	;	beq.s	+			; Skip if not
-	;	lea	AniSuperSonic(pc),a1
+	;	lea	AniSuperSonic(pc),a1	; Get Super animation script
 ;+
 		moveq	#0,d0			; Get current animation
 		move.b	obAnim(a0),d0
 		cmp.b	obPrevAni(a0),d0	; has animation changed?
 		beq.s	SAnim_Do		; if not, branch
 		move.b	d0,obPrevAni(a0)	; set previous animation
-		move.b	#0,obAniFrame(a0)	; reset animation
+		move.b	#0,obAniFrame(a0)	; reset animation frame
 		move.b	#0,obTimeFrame(a0)	; reset frame duration
 		bclr	#5,obStatus(a0)		; clear pushing flag
 
@@ -13256,67 +13256,62 @@ SAnim_Do:
 		add.w	d0,d0
 		adda.w	(a1,d0.w),a1		; jump to appropriate animation	script
 		move.b	(a1),d0
-		bmi.s	loc_1095C
+		bmi.s	SAnim_Do2		; if animation is walk/run/roll/jump, branch
 		move.b	obStatus(a0),d1
 		andi.b	#1,d1
 		andi.b	#$FC,obRender(a0)
 		or.b	d1,obRender(a0)
-		subq.b	#1,obTimeFrame(a0)
-		bpl.s	locret_1092A
-		move.b	d0,obTimeFrame(a0)
-; End of function Sonic_Animate
+		subq.b	#1,obTimeFrame(a0)	; subtract 1 from frame duration
+		bpl.s	SAnim_Delay		; if time remains, branch
+		move.b	d0,obTimeFrame(a0)	; load frame duration
+		; fall through
+; -------------------------------------------------------------------------
 
-
-; =============== S U B	R O U T	I N E =======================================
-
-
-sub_10912:
+SAnim_WalkRun:
 		moveq	#0,d1
-		move.b	obAniFrame(a0),d1
-		move.b	1(a1,d1.w),d0
-		cmpi.b	#$F0,d0
-		bhs.s	loc_1092C
+		move.b	obAniFrame(a0),d1	; load current frame number
+		move.b	1(a1,d1.w),d0		; read sprite number from script
+		beq.s	SAnim_Next		; If it's a frame ID, branch
+		bpl.s	SAnim_Next
+		cmpi.b	#$FD,d0			; is it a flag from FC to FF?
+;		bhs.s	SAnim_End_FF		; MJ: if so, branch to flag routines
+		bge.s	SAnim_End_FF		; MJ: if so, branch to flag routines
 
-loc_10922:
-		move.b	d0,obFrame(a0)
-		addq.b	#1,obAniFrame(a0)
+SAnim_Next:
+		move.b	d0,obFrame(a0)		; load sprite number
+		addq.b	#1,obAniFrame(a0)	; next frame number
 
-locret_1092A:
+SAnim_Delay:
 		rts
 ; ---------------------------------------------------------------------------
-
-loc_1092C:
-		addq.b	#1,d0
-		bne.s	loc_1093C
-		move.b	#0,obAniFrame(a0)
-		move.b	1(a1),d0
-		bra.s	loc_10922
+SAnim_End_FF:
+		addq.b	#1,d0			; is the end flag = $FF?
+		bne.s	SAnim_End_FE		; if not, branch
+		move.b	#0,obAniFrame(a0)	; restart the animation
+		move.b	1(a1),d0		; read sprite number
+		bra.s	SAnim_Next
 ; ---------------------------------------------------------------------------
-
-loc_1093C:
-		addq.b	#1,d0
-		bne.s	loc_10950
-		move.b	2(a1,d1.w),d0
-		sub.b	d0,obAniFrame(a0)
+SAnim_End_FE:
+		addq.b	#1,d0			; is the end flag = $FE?
+		bne.s	SAnim_End_FD		; if not, branch
+		move.b	2(a1,d1.w),d0		; read the next byte in the script
+		sub.b	d0,obAniFrame(a0)	; jump back d0 bytes in the script
 		sub.b	d0,d1
-		move.b	1(a1,d1.w),d0
-		bra.s	loc_10922
+		move.b	1(a1,d1.w),d0		; read sprite number
+		bra.s	SAnim_Next
 ; ---------------------------------------------------------------------------
+SAnim_End_FD:
+		addq.b	#1,d0			; is the end flag = $FD?
+		bne.s	SAnim_End		; if not, branch
+		move.b	2(a1,d1.w),obAnim(a0)	; read next byte, run that animation
 
-loc_10950:
-		addq.b	#1,d0
-		bne.s	locret_1095A
-		move.b	2(a1,d1.w),obAnim(a0)
-
-locret_1095A:
+SAnim_End:
 		rts
-; End of function sub_10912
-
 ; ---------------------------------------------------------------------------
 
-loc_1095C:
+SAnim_Do2:
 		subq.b	#1,obTimeFrame(a0)
-		bpl.s	locret_1092A
+		bpl.s	SAnim_End
 		addq.b	#1,d0
 		bne.w	loc_10A44
 		moveq	#0,d0
@@ -13368,7 +13363,7 @@ loc_109D8:
 		lsr.w	#8,d2
 		lsr.w	#1,d2	; divide by 512
 		move.b	d2,obTimeFrame(a0)
-		bsr.w	sub_10912
+		bsr.w	SAnim_WalkRun
 		add.b	d3,obFrame(a0)
 		rts
 ; ---------------------------------------------------------------------------
@@ -13429,7 +13424,7 @@ loc_10A6C:
 		andi.b	#1,d1
 		andi.b	#$FC,obRender(a0)
 		or.b	d1,obRender(a0)
-		bra.w	sub_10912
+		bra.w	SAnim_WalkRun
 ; ---------------------------------------------------------------------------
 
 loc_10A88:
@@ -13450,7 +13445,7 @@ loc_10A98:
 		andi.b	#1,d1
 		andi.b	#$FC,obRender(a0)
 		or.b	d1,obRender(a0)
-		bra.w	sub_10912
+		bra.w	SAnim_WalkRun
 ; End of function Sonic_Animate
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
