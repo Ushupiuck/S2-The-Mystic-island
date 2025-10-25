@@ -2,15 +2,14 @@
 ; Object 1E - Vertical Ball Hog enemy
 ; ---------------------------------------------------------------------------
 
-hog_launchflagV	= objoff_30	; byte; 0 to launch a cannonball
+hog_launchflag	= objoff_30	; byte; 0 to launch a cannonball (also doubles as a timer for the bomb subroutine)
 hog_mode	= objoff_31	; byte; 1 = fire on a timer
 hog_wait	= objoff_32	; word; time between shots
 hog_backup	= objoff_34	; word; backup of hog_wait
 hog_walk	= objoff_36	; word; time to idle around from left to right
 hog_timer:	= objoff_32
-hog_launchflag  = objoff_30
 ObjVBallhog:
-Obj1E:					; XREF: Obj_Index
+Obj1E:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	Obj1E_Index(pc,d0.w),d0
@@ -25,7 +24,7 @@ Obj1E_Index:	dc.w Obj1E_Main-Obj1E_Index
 		dc.w Obj1E_ProtoBomb-Obj1E_Index
 ; ===========================================================================
 
-Obj1E_Main:				; XREF: Obj1E_Index
+Obj1E_Main:
 		move.l	#Map_BallHogH,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Ball_HogH,1,0),obGfx(a0)
 		move.b	#4,obRender(a0)
@@ -48,15 +47,14 @@ Obj1E_Main:				; XREF: Obj1E_Index
 		bls.s	.normalmode		; subtypes $00-$0F are horizontal
 
 		move.w	#256-1,hog_backup(a0)
-		sf	hog_launchflagV(a0)	; set to launch	cannonball
+		sf	hog_launchflag(a0)	; set to launch	cannonball
 		move.w	#$40,hog_walk(a0)
 		move.l	#Map_BallHogV,obMap(a0) ; set proto-hog mappings
 		move.w	#make_art_tile(ArtTile_Ball_HogV,1,0),obGfx(a0) ; and art pointer
 		move.b	#4,ob2ndRout(a0)	; set to timed mode
 
-		cmpi.b	#$0F,d0
+		cmpi.b	#$F,d0
 		bpl.s	.stationary_proto
-
 		move.b	#0,ob2ndRout(a0)	; Normal mode
 		add.w	d0,d0			; multiply by 60 frames (1 second)
 		add.w	d0,d0
@@ -69,8 +67,8 @@ Obj1E_Main:				; XREF: Obj1E_Index
 .normalmode:
 		addq.b	#2,obRoutine(a0)
 .return:
-		rts	
-
+		rts
+; ---------------------------------------------------------------------------
 
 .stationary_proto
 		subi.b	#$10,d0
@@ -83,15 +81,19 @@ Obj1E_Main:				; XREF: Obj1E_Index
 		move.b	#8,ob2ndRout(a0)	; set to timed mode
 		move.b	#4,obRoutine(a0)
 		rts
+
+; ---------------------------------------------------------------------------
+
 .timed:
 		move.w	#256-1,hog_backup(a0)
-		sf	hog_launchflagV(a0)	; set to launch	cannonball
+		sf	hog_launchflag(a0)	; set to launch	cannonball
 		move.w	#$40,hog_walk(a0)
 		move.l	#Map_BallHogV,obMap(a0) ; set proto-hog mappings
 		move.w	#make_art_tile(ArtTile_Ball_HogV,1,0),obGfx(a0) ; and art pointer
 		move.b	#4,obRoutine(a0)
 		move.b	#4,ob2ndRout(a0)	; set to timed mode
 		rts
+; ===========================================================================
 
 Obj1E_NormalBomb:
 		jsr	(ObjectMoveAndFall).l
@@ -117,10 +119,10 @@ Obj1E_NormalBomb:
 		neg.w	obVelX(a0)
 
 .moving_up:
-		subq.w	#1,objoff_30(a0)
+		subq.w	#1,hog_launchflag(a0)
 		bpl.s	.time_remaining
 		move.b	#id_Obj3F,(a0)
-		move.b	#0,obRoutine(a0)
+		sf	obRoutine(a0)
 		rts
 ;		bra.w	FindFreeObj			; explosion object
 ; ---------------------------------------------------------------------------
@@ -137,11 +139,12 @@ Obj1E_NormalBomb:
 		cmp.w	obY(a0),d0
 		bcs.w	DeleteObject
 		bra.w	DisplaySprite
+; ---------------------------------------------------------------------------
 
 Obj1E_ProtoBomb:
 		btst	#7,obStatus(a0)
 		bne.s	.change_explosion
-		tst.w	objoff_30(a0)
+		tst.w	hog_launchflag(a0)
 		bne.s	.dont_react_floor
 		jsr	(ObjHitFloor).l
 		tst.w	d1
@@ -150,23 +153,24 @@ Obj1E_ProtoBomb:
 
 .change_explosion:
 		move.b	#id_Obj24,(a0)
-		move.b	#0,obRoutine(a0)
-		rts	
+		sf	obRoutine(a0)
+		rts
+; ---------------------------------------------------------------------------
 
 .dont_react_floor:
-		subq.w	#1,objoff_30(a0)
+		subq.w	#1,hog_launchflag(a0)
 
 .not_in_floor:
-		jsr	(ObjectMoveAndFall).l
+		moveq	#$22,d1
+		jsr	(ObjectMoveAndFall_CustomGravity).l
 		move.w	(v_limitbtm2).w,d0
 		addi.w	#224,d0
 		cmp.w	obY(a0),d0
 		bcs.w	DeleteObject
 		bra.w	DisplaySprite
-
 ; ===========================================================================
 
-Obj1E_Action:				; XREF: Obj1E_Index
+Obj1E_Action:
 		lea	Ani_HogHoriz(pc),a1
 		bsr.w	AnimateSprite
 		cmpi.b	#1,obFrame(a0)	; is final frame (01) displayed?
@@ -176,12 +180,12 @@ Obj1E_Action:				; XREF: Obj1E_Index
 		bra.w	MarkObjGone
 ; ===========================================================================
 
-Obj1E_SetBall:				; XREF: Obj1E_Action
-		clr.b	hog_wait(a0)		; set to launch	cannonball
+Obj1E_SetBall:
+		sf	hog_wait(a0)		; set to launch	cannonball
 		bra.w	MarkObjGone
 ; ===========================================================================
 
-Obj1E_MakeBall:				; XREF: Obj1E_Action
+Obj1E_MakeBall:
 		move.b	#1,hog_wait(a0)
 		bsr.w	FindFreeObj
 		bne.w	.no_free_ram
@@ -194,7 +198,7 @@ Obj1E_MakeBall:				; XREF: Obj1E_Action
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.w	#-$100,obVelX(a1)	; cannonball bounces to	the left
-		move.w	#0,obVelY(a1)
+		clr.w	obVelY(a1)
 		move.b	#4,obRender(a1)
 		move.w	#$180,obPriority(a1)
 		move.b	#$87,obColType(a1)
@@ -206,7 +210,7 @@ Obj1E_MakeBall:				; XREF: Obj1E_Action
 		move.w	d0,d1
 		lsl.w	#4,d0
 		sub.w	d1,d0
-		move.w	d0,objoff_30(a1)
+		move.w	d0,hog_launchflag(a1)
 
 		moveq	#-4,d0
 		btst	#0,obStatus(a0)	; is Ball Hog facing right?
@@ -221,18 +225,14 @@ Obj1E_MakeBall:				; XREF: Obj1E_Action
 
 .no_free_ram:
 		bra.w	MarkObjGone
-Ani_HogHoriz:	dc.w .frame1-Ani_HogHoriz
-.frame1:	dc.b   9,  0,  0,  2,  2,  3,  2,  0
-		dc.b   0,  2,  2,  3,  2,  0,  0,  2
-		dc.b   2,  3,  2,  0,  0,  1, afEnd
-		even
+; ===========================================================================
 
 Obj1E_Action2:
 		moveq	#0,d0
 		move.b	ob2ndRout(a0),d0
 		move.w	.action_index(pc,d0.w),d1
 		jsr	.action_index(pc,d1.w)
-		lea	(Ani_HogVert).l,a1
+		lea	Ani_HogVert(pc),a1
 		bsr.w	AnimateSprite
 		jmp	MarkObjGone
 ; ===========================================================================
@@ -283,12 +283,11 @@ Hog_Idle:
 		move.w	#$180,obPriority(a1)
 		move.b	#$87,obColType(a1)
 		move.b	#8,obActWid(a1)
-		move.w	#$18,objoff_30(a1)
+		move.w	#$18,hog_launchflag(a1)
 		addi.w	#$10,obY(a1)
 .abort:			;.fail in the final
 		rts
 ; ===========================================================================
-; ---------------------------------------------------------------------------
 
 Hog_Move:
 		subq.w	#1,hog_timer(a0)
@@ -314,13 +313,14 @@ Hog_Move:
 		subq.b	#2,ob2ndRout(a0)
 		move.w	#60-1,hog_timer(a0)
 		clr.w	obVelX(a0)
-		clr.b	obAnim(a0)
+		sf	obAnim(a0)
 		tst.b	obRender(a0)
 		bpl.s	.return
 		move.b	#2,obAnim(a0)
 
 .return:
 		rts
+; ===========================================================================
 
 Hog_Idle2:
 		subq.w	#1,hog_timer(a0)
@@ -354,12 +354,11 @@ Hog_Idle2:
 		move.w	#$180,obPriority(a1)
 		move.b	#$87,obColType(a1)
 		move.b	#8,obActWid(a1)
-		move.w	#$18,objoff_30(a1)
+		move.w	#$18,hog_launchflag(a1)
 		addi.w	#$10,obY(a1)
 .abort:			;.fail in the final
 		rts
 ; ===========================================================================
-; ---------------------------------------------------------------------------
 
 Hog_Move2:
 		subq.w	#1,hog_timer(a0)
@@ -370,7 +369,6 @@ Hog_Move2:
 		btst	#0,obStatus(a0)
 		beq.s	+
 		subi.w	#$20,d3
-
 +
 		jsr	(ObjHitFloor2).l
 		cmpi.w	#-8,d1
@@ -384,6 +382,8 @@ Hog_Move2:
 
 		neg.w	obVelX(a0)
 		rts
+; ---------------------------------------------------------------------------
+
 .finished_timer:
 		subq.b	#2,ob2ndRout(a0)
 		move.w	#60-1,hog_timer(a0)
@@ -396,13 +396,14 @@ Hog_Move2:
 
 .return:
 		rts
+; ===========================================================================
 
 Hog_Idle3:
 		subq.w	#1,hog_timer(a0)
 		bpl.s	.fire
 		addq.b	#2,ob2ndRout(a0)
 		move.w	hog_backup(a0),hog_timer(a0)
-		move.b	#0,obAnim(a0)
+		sf	obAnim(a0)
 		sf	hog_launchflag(a0)
 		rts
 ; ---------------------------------------------------------------------------
@@ -428,12 +429,11 @@ Hog_Idle3:
 		move.w	#$180,obPriority(a1)
 		move.b	#$87,obColType(a1)
 		move.b	#8,obActWid(a1)
-		move.w	#$18,objoff_30(a1)
+		move.w	#$18,hog_launchflag(a1)
 		addi.w	#$10,obY(a1)
 .abort:			;.fail in the final
 		rts
 ; ===========================================================================
-; ---------------------------------------------------------------------------
 
 Hog_Move3:
 		subq.w	#1,hog_timer(a0)
@@ -443,16 +443,26 @@ Hog_Move3:
 		move.b	#2,obAnim(a0)
 .return:
 		rts
-
-
-
-Ani_HogVert:		dc.w Ani_HogVert.frame1-Ani_HogVert
-			dc.w Ani_HogVert.frame2-Ani_HogVert
-			dc.w Ani_HogVert.frame3-Ani_HogVert
-
-Ani_HogVert.frame1:	dc.b $F, 0, afEnd
-			even
-Ani_HogVert.frame2:	dc.b $B, 1, 0, $21, 0, afEnd
-			even
-Ani_HogVert.frame3:	dc.b $14, 0, 2, 0, afBack, 1
-			even
+; ---------------------------------------------------------------------------
+Ani_HogVert:
+		dc.w Ani_HogVert.frame1-Ani_HogVert
+		dc.w Ani_HogVert.frame2-Ani_HogVert
+		dc.w Ani_HogVert.frame3-Ani_HogVert
+Ani_HogVert.frame1:
+		dc.b $F, 0, afEnd
+		even
+Ani_HogVert.frame2:
+		dc.b $B, 1, 0, $21, 0, afEnd
+		even
+Ani_HogVert.frame3:
+		dc.b $14, 0, 2, 0, afBack, 1
+		even
+; ---------------------------------------------------------------------------
+Ani_HogHoriz:
+		dc.w .frame1-Ani_HogHoriz
+.frame1:
+		dc.b   9,  0,  0,  2,  2,  3,  2,  0
+		dc.b   0,  2,  2,  3,  2,  0,  0,  2
+		dc.b   2,  3,  2,  0,  0,  1, afEnd
+		even
+; ---------------------------------------------------------------------------
