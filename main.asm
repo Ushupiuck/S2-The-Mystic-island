@@ -13238,18 +13238,23 @@ locret_108C8:
 
 
 Sonic_Animate:
-		lea	(SonicAniData).l,a1
-		moveq	#0,d0
+		lea	SonicAniData(pc),a1	; Get animation script
+	;	tst.b	(Super_Sonic_flag).w	; Are we Super?
+	;	beq.s	+			; Skip if not
+	;	lea	AniSuperSonic(pc),a1
+;+
+		moveq	#0,d0			; Get current animation
 		move.b	obAnim(a0),d0
-		cmp.b	obPrevAni(a0),d0
-		beq.s	loc_108EC
-		move.b	d0,obPrevAni(a0)
-		move.b	#0,obAniFrame(a0)
-		move.b	#0,obTimeFrame(a0)
+		cmp.b	obPrevAni(a0),d0	; has animation changed?
+		beq.s	SAnim_Do		; if not, branch
+		move.b	d0,obPrevAni(a0)	; set previous animation
+		move.b	#0,obAniFrame(a0)	; reset animation
+		move.b	#0,obTimeFrame(a0)	; reset frame duration
+		bclr	#5,obStatus(a0)		; clear pushing flag
 
-loc_108EC:
+SAnim_Do:
 		add.w	d0,d0
-		adda.w	(a1,d0.w),a1
+		adda.w	(a1,d0.w),a1		; jump to appropriate animation	script
 		move.b	(a1),d0
 		bmi.s	loc_1095C
 		move.b	obStatus(a0),d1

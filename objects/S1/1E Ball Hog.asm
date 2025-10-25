@@ -2,12 +2,11 @@
 ; Object 1E - Vertical Ball Hog enemy
 ; ---------------------------------------------------------------------------
 
-hog_launchflag	= objoff_30	; byte; 0 to launch a cannonball (also doubles as a timer for the bomb subroutine)
-hog_mode	= objoff_31	; byte; 1 = fire on a timer
-hog_wait	= objoff_32	; word; time between shots
-hog_backup	= objoff_34	; word; backup of hog_wait
-hog_walk	= objoff_36	; word; time to idle around from left to right
-hog_timer:	= objoff_32
+hog_launchflag	= objoff_30	; byte; 0 to launch a cannonball
+hog_wait	= objoff_31	; byte; time between shots
+hog_backup	= objoff_32	; word; backup of hog_wait
+hog_walk	= objoff_34	; word; time to idle around from left to right
+hog_timer:	= objoff_36
 ObjVBallhog:
 Obj1E:
 		moveq	#0,d0
@@ -55,7 +54,7 @@ Obj1E_Main:
 
 		cmpi.b	#$F,d0
 		bpl.s	.stationary_proto
-		move.b	#0,ob2ndRout(a0)	; Normal mode
+		sf	ob2ndRout(a0)		; Normal mode
 		add.w	d0,d0			; multiply by 60 frames (1 second)
 		add.w	d0,d0
 		move.w	d0,d1
@@ -93,81 +92,6 @@ Obj1E_Main:
 		move.b	#4,obRoutine(a0)
 		move.b	#4,ob2ndRout(a0)	; set to timed mode
 		rts
-; ===========================================================================
-
-Obj1E_NormalBomb:
-		jsr	(ObjectMoveAndFall).l
-		tst.w	obVelY(a0)
-		bmi.s	.moving_up
-		jsr	(ObjHitFloor).l
-		tst.w	d1
-		bpl.s	.moving_up
-		add.w	d1,obY(a0)
-		move.w	#-$300,obVelY(a0)
-		tst.b	d3
-		beq.s	.moving_up
-		bmi.s	.check_Xvel
-		tst.w	obVelX(a0)
-		bpl.s	.moving_up
-		neg.w	obVelX(a0)
-		bra.s	.moving_up
-; ---------------------------------------------------------------------------
-
-.check_Xvel:
-		tst.w	obVelX(a0)
-		bmi.s	.moving_up
-		neg.w	obVelX(a0)
-
-.moving_up:
-		subq.w	#1,hog_launchflag(a0)
-		bpl.s	.time_remaining
-		move.b	#id_Obj3F,(a0)
-		sf	obRoutine(a0)
-		rts
-;		bra.w	FindFreeObj			; explosion object
-; ---------------------------------------------------------------------------
-
-.time_remaining:
-		subq.b	#1,obTimeFrame(a0)
-		bpl.s	.wait_frames
-		move.b	#5,obTimeFrame(a0)
-		bchg	#0,obFrame(a0)
-
-.wait_frames:
-		move.w	(Camera_Max_Y_pos).w,d0
-		addi.w	#$E0,d0
-		cmp.w	obY(a0),d0
-		bcs.w	DeleteObject
-		bra.w	DisplaySprite
-; ---------------------------------------------------------------------------
-
-Obj1E_ProtoBomb:
-		btst	#7,obStatus(a0)
-		bne.s	.change_explosion
-		tst.w	hog_launchflag(a0)
-		bne.s	.dont_react_floor
-		jsr	(ObjHitFloor).l
-		tst.w	d1
-		bpl.s	.not_in_floor
-		add.w	d1,obY(a0)
-
-.change_explosion:
-		move.b	#id_Obj24,(a0)
-		sf	obRoutine(a0)
-		rts
-; ---------------------------------------------------------------------------
-
-.dont_react_floor:
-		subq.w	#1,hog_launchflag(a0)
-
-.not_in_floor:
-		moveq	#$22,d1
-		jsr	(ObjectMoveAndFall_CustomGravity).l
-		move.w	(v_limitbtm2).w,d0
-		addi.w	#224,d0
-		cmp.w	obY(a0),d0
-		bcs.w	DeleteObject
-		bra.w	DisplaySprite
 ; ===========================================================================
 
 Obj1E_Action:
@@ -389,6 +313,80 @@ Hog_Move3:
 		move.b	#2,obAnim(a0)
 .return:
 		rts
+; ===========================================================================
+
+Obj1E_NormalBomb:
+		jsr	(ObjectMoveAndFall).l
+		tst.w	obVelY(a0)
+		bmi.s	.moving_up
+		jsr	(ObjHitFloor).l
+		tst.w	d1
+		bpl.s	.moving_up
+		add.w	d1,obY(a0)
+		move.w	#-$300,obVelY(a0)
+		tst.b	d3
+		beq.s	.moving_up
+		bmi.s	.check_Xvel
+		tst.w	obVelX(a0)
+		bpl.s	.moving_up
+		neg.w	obVelX(a0)
+		bra.s	.moving_up
+; ---------------------------------------------------------------------------
+
+.check_Xvel:
+		tst.w	obVelX(a0)
+		bmi.s	.moving_up
+		neg.w	obVelX(a0)
+
+.moving_up:
+		subq.w	#1,hog_launchflag(a0)
+		bpl.s	.time_remaining
+		move.b	#id_Obj3F,(a0)
+		sf	obRoutine(a0)
+		rts
+; ---------------------------------------------------------------------------
+
+.time_remaining:
+		subq.b	#1,obTimeFrame(a0)
+		bpl.s	.wait_frames
+		move.b	#5,obTimeFrame(a0)
+		bchg	#0,obFrame(a0)
+
+.wait_frames:
+		move.w	(Camera_Max_Y_pos).w,d0
+		addi.w	#$E0,d0
+		cmp.w	obY(a0),d0
+		bcs.w	DeleteObject
+		bra.w	DisplaySprite
+; ---------------------------------------------------------------------------
+
+Obj1E_ProtoBomb:
+		btst	#7,obStatus(a0)
+		bne.s	.change_explosion
+		tst.w	hog_launchflag(a0)
+		bne.s	.dont_react_floor
+		jsr	(ObjHitFloor).l
+		tst.w	d1
+		bpl.s	.not_in_floor
+		add.w	d1,obY(a0)
+
+.change_explosion:
+		move.b	#id_Obj24,(a0)
+		sf	obRoutine(a0)
+		rts
+; ---------------------------------------------------------------------------
+
+.dont_react_floor:
+		subq.w	#1,hog_launchflag(a0)
+
+.not_in_floor:
+		moveq	#$22,d1
+		jsr	(ObjectMoveAndFall_CustomGravity).l
+		move.w	(v_limitbtm2).w,d0
+		addi.w	#224,d0
+		cmp.w	obY(a0),d0
+		bcs.w	DeleteObject
+		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 Ani_HogVert:
 		dc.w Ani_HogVert.frame1-Ani_HogVert
