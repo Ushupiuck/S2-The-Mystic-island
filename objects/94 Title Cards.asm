@@ -112,14 +112,10 @@ Card_ChkPos2:
 Card_Move2:
 		add.w	d1,obX(a0)	; change item's position
 		move.w	obX(a0),d0
-		bmi.s	Obj94_NoDisplay2
+		bmi.s	Obj94_NoDisplay
 		cmpi.w	#$200,d0	; has item moved beyond	$200 on	x-axis?
-		bcc.s	Obj94_NoDisplay2	; if yes, branch
+		bcc.s	Obj94_NoDisplay	; if yes, branch
 		bra.w	DisplaySprite
-; ---------------------------------------------------------------------------
-
-Obj94_NoDisplay2:
-		rts
 ; ---------------------------------------------------------------------------
 
 Card_ChangeArt:
@@ -137,13 +133,13 @@ Card_Delete:
 		bra.w	DeleteObject
 ; ---------------------------------------------------------------------------
 Card_ItemData:	dc.w $D0	; y-axis position
-		dc.b 2,	0	; routine number, frame	number (changes)
+		dc.b 2,0	; routine number, frame	number (changes)
 		dc.w $E4
-		dc.b 2,	6
+		dc.b 2,6
 		dc.w $EA
-		dc.b 2,	7
+		dc.b 2,7
 		dc.w $E0
-		dc.b 2,	$A
+		dc.b 2,$A
 ; ---------------------------------------------------------------------------
 ; Title	card configuration data
 ; Format:
