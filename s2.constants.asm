@@ -44,21 +44,20 @@ obSubtype:		equ $28		; object subtype
 ; ---------------------------------------------------------------------------
 ; conventions specific to Sonic/Tails (Obj01, Obj02, and ObjDB):
 ; note: $23, and $14 are unused and available
-obInertia:		equ $20		; and $21 directionless representation of speed... not updated in the air
+obInertia:		equ $20		; also known as ground_vel; and $21 directionless representation of speed... not updated in the air
 ;obSolid: 		equ $25		; (DEPRECATED, Sonic 1 leftover for reference only) solid status flag
 ; air_left:		equ $28
-; flip_turned:		equ $29 ; 0 for normal, 1 to invert flipping (it's a 180 degree rotation about the axis of Sonic's spine, so he stays in the same position but looks turned around)
-; obj_control:		equ $2A ; 0 for normal, 1 for hanging or for resting on a flipper, $81 for going through CNZ/OOZ/MTZ tubes or stopped in CNZ cages or stoppers or flying if Tails
+; flip_turned:		equ $29		; 0 for normal, 1 to invert flipping (it's a 180 degree rotation about the axis of Sonic's spine, so he stays in the same position but looks turned around)
 obControl:		equ $2A		; 0 for normal, 1 for hanging or for resting on a flipper, $81 for going through CNZ/OOZ/MTZ tubes or stopped in CNZ cages or stoppers or flying if Tails
 obStatusSecondary:	equ $2B
-flips_remaining:	equ $2C ; number of flip revolutions remaining
-flip_speed:		equ $2D ; number of flip revolutions per frame / 256
-move_lock:		equ $2E ; and $2F ; horizontal control lock, counts down to 0
+flips_remaining:	equ $2C		; number of flip revolutions remaining
+flip_speed:		equ $2D		; number of flip revolutions per frame / 256
+move_lock:		equ $2E		; and $2F ; horizontal control lock, counts down to 0
 flashtime:		equ $30		; time between flashes after getting hit
 invtime:		equ $32		; time left for invincibility
 shoetime:		equ $34		; time left for speed shoes
-;next_tilt:		equ $36 ; angle on ground in front of sprite
-;tilt: 			equ $37 ; angle on ground
+;next_tilt:		equ $36		; angle on ground in front of sprite
+;tilt: 			equ $37		; angle on ground
 stick_to_convex:	equ $38
 spindash_flag:		equ $39		; 0 for normal, 1 for charging a spindash or forced rolling
 ;pinball_mode =		spindash_flag
