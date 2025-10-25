@@ -2079,7 +2079,7 @@ TitleScreen:
 		move.w	d0,(f_demo).w
 		move.w	d0,(v_pcyc_time).w
 		move.b	d0,(Current_Timezone).w
-	;	move.w	#id_GHZ<<8,(Current_ZoneAndAct).w
+		move.w	#id_GHZ<<8,(Current_ZoneAndAct).w
 		bsr.w	Pal_FadeToBlack
 		disable_ints
 		lea	(Chunk_Table).l,a1
@@ -2110,7 +2110,7 @@ TitleScreen:
 		jsr	(BuildSprites).l
 		moveq	#plcid_Main,d0
 		bsr.w	NewPLC
-		move.w	#id_EHZ<<8,(Current_ZoneAndAct).w
+	;	move.w	#id_EHZ<<8,(Current_ZoneAndAct).w
 		moveq	#0,d0
 		move.w	d0,(v_title_dcount).w
 		move.w	d0,(v_title_ccount).w

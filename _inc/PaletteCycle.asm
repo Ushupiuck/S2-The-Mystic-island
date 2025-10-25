@@ -10,16 +10,16 @@ PalCycle_Load:
 		jmp	PalCycle(pc,d0.w)
 ; End of function PalCycle_Load
 ; ===========================================================================
-PalCycle:	dc.w PalCycle_GHZ-PalCycle
-		dc.w PalCycle_WZ-PalCycle
-		dc.w PalCycle_CPZ-PalCycle
-		dc.w PalCycle_EHZ-PalCycle
-		dc.w PalCycle_HPZ-PalCycle
-		dc.w PalCycle_HTZ-PalCycle
-		dc.w PalCycle_GHZ-PalCycle
-		dc.w PalCycle_WZ-PalCycle
-		dc.w PalCycle_MTZ-PalCycle
-		dc.w PalCycle_GHZ-PalCycle
+PalCycle:	dc.w PalCycle_GHZ-PalCycle	; Zone 0
+		dc.w PalCycle_WZ-PalCycle	; Zone 1
+		dc.w PalCycle_CPZ-PalCycle	; Zone 2
+		dc.w PalCycle_Null-PalCycle	; Zone 3 (DISABLED)
+		dc.w PalCycle_HPZ-PalCycle	; Zone 4
+		dc.w PalCycle_Null-PalCycle	; Zone 5 (DISABLED)
+		dc.w PalCycle_GHZ-PalCycle	; Zone 6
+		dc.w PalCycle_WZ-PalCycle	; Zone 7
+		dc.w PalCycle_MTZ-PalCycle	; Zone 8
+		dc.w PalCycle_GHZ-PalCycle	; Zone 9
 ; ===========================================================================
 PalCycle_Null:
 		rts

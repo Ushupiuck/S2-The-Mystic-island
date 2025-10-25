@@ -910,7 +910,7 @@ v_systemstack:
 v_objstate:		ds.b	$300			; object state list
 v_objstate_end:
 			ds.b	$200			; will become used by the object table
-			ds.b	$200			; free
+			ds.b	$300			; free
 v_end:
 	if * > 0	; don't declare more space than the RAM can contain!
 		fatal "The RAM variable declarations are too large by $\{*} bytes."
