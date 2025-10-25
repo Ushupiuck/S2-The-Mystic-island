@@ -249,7 +249,7 @@ Obj1E_Action2:
 
 Hog_Idle:
 		subq.w	#1,hog_timer(a0)
-		bpl.s	.fire
+		bpl.w	Hog_Idle3.fire
 		addq.b	#2,ob2ndRout(a0)
 		move.w	hog_backup(a0),hog_timer(a0)
 		move.w	#$40,obVelX(a0)
@@ -259,33 +259,6 @@ Hog_Idle:
 		neg.w	obVelX(a0)
 .noflip:
 		sf	hog_launchflag(a0)
-		rts
-; ---------------------------------------------------------------------------
-
-.fire:
-		cmpi.b	#2,obFrame(a0)
-		bne.s	.abort
-		tst.b	hog_launchflag(a0)
-		bne.s	.abort
-		st	hog_launchflag(a0)
-
-.load_bomb:
-		bsr.w	FindFreeObj
-		bne.s	.abort			; if ObjectRam is full, we bail!
-		move.b	#id_Obj1E,(a1)	; load bomb
-		move.b	#8,obRoutine(a1); set proto bomb
-		move.b	#4,obFrame(a1)  ; set bomb frame
-		move.l	#Map_BallHogH,obMap(a1)
-		move.w	#make_art_tile(ArtTile_Ball_HogH,1,0),obGfx(a1)
-		move.w	obX(a0),obX(a1)
-		move.w	obY(a0),obY(a1)
-		move.b	#4,obRender(a1)
-		move.w	#$180,obPriority(a1)
-		move.b	#$87,obColType(a1)
-		move.b	#8,obActWid(a1)
-		move.w	#$18,hog_launchflag(a1)
-		addi.w	#$10,obY(a1)
-.abort:			;.fail in the final
 		rts
 ; ===========================================================================
 
@@ -324,39 +297,12 @@ Hog_Move:
 
 Hog_Idle2:
 		subq.w	#1,hog_timer(a0)
-		bpl.s	.fire
+		bpl.w	Hog_Idle3.fire
 		addq.b	#2,ob2ndRout(a0)
 		move.w	hog_backup(a0),hog_timer(a0)
 		move.w	hog_walk(a0),obVelX(a0)
 		move.b	#1,obAnim(a0)
 		sf	hog_launchflag(a0)
-		rts
-; ---------------------------------------------------------------------------
-
-.fire:
-		cmpi.b	#2,obFrame(a0)
-		bne.s	.abort
-		tst.b	hog_launchflag(a0)
-		bne.s	.abort
-		st	hog_launchflag(a0)
-
-.load_bomb:
-		bsr.w	FindFreeObj
-		bne.s	.abort			; if ObjectRam is full, we bail!
-		move.b	#id_Obj1E,(a1)	; load bomb
-		move.b	#8,obRoutine(a1); set proto bomb
-		move.b	#4,obFrame(a1)  ; set bomb frame
-		move.l	#Map_BallHogH,obMap(a1)
-		move.w	#make_art_tile(ArtTile_Ball_HogH,1,0),obGfx(a1)
-		move.w	obX(a0),obX(a1)
-		move.w	obY(a0),obY(a1)
-		move.b	#4,obRender(a1)
-		move.w	#$180,obPriority(a1)
-		move.b	#$87,obColType(a1)
-		move.b	#8,obActWid(a1)
-		move.w	#$18,hog_launchflag(a1)
-		addi.w	#$10,obY(a1)
-.abort:			;.fail in the final
 		rts
 ; ===========================================================================
 
