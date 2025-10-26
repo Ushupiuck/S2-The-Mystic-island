@@ -123,7 +123,7 @@ loc_9C4A:
 		bne.s	loc_9CAA
 		bsr.w	FindFreeObj
 		bne.s	+
-		_move.b	#id_Obj07,obID(a1)
+		_move.b	#id_Obj2A,obID(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.w	objoff_3E(a0),d0

@@ -1,8 +1,8 @@
 ; ---------------------------------------------------------------------------
-; Object 2A - small vertical door (SBZ)
+; Object 30 - small vertical door (SBZ)
 ; ---------------------------------------------------------------------------
 
-Obj2A:
+Obj30:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	ADoor_Index(pc,d0.w),d1
@@ -14,7 +14,7 @@ ADoor_Index:	dc.w ADoor_Main-ADoor_Index
 
 ADoor_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
-		move.l	#Map_Obj2A,obMap(a0)
+		move.l	#Map_Obj30,obMap(a0)
 		move.w	#make_art_tile(ArtTile_SBZ_Door,2,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#8,obActWid(a0)
@@ -47,7 +47,7 @@ ADoor_Open:
 		move.b	#1,obAnim(a0)	; use "opening"	animation
 
 ADoor_Animate:
-		lea	Ani_Obj2A(pc),a1
+		lea	Ani_Obj30(pc),a1
 		bsr.w	AnimateSprite
 		tst.b	obFrame(a0)	; is the door open?
 		bne.s	.remember	; if yes, branch
@@ -61,8 +61,8 @@ ADoor_Animate:
 .remember:
 		bra.w	MarkObjGone
 ; ---------------------------------------------------------------------------
-Ani_Obj2A:	dc.w byte_9590-Ani_Obj2A
-		dc.w byte_959C-Ani_Obj2A
+Ani_Obj30:	dc.w byte_9590-Ani_Obj30
+		dc.w byte_959C-Ani_Obj30
 byte_9590:	dc.b   0,  8,  7,  6,  5,  4,  3,  2
 		dc.b   1,  0,$FE,  1
 byte_959C:	dc.b   0,  0,  1,  2,  3,  4,  5,  6

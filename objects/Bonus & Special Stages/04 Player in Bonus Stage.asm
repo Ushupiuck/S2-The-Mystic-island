@@ -1,27 +1,28 @@
 ; ---------------------------------------------------------------------------
-; Object 09 - Sonic in Special Stage
+; Object 04 - Player in Bonus Stage
 ; ---------------------------------------------------------------------------
 
-Obj09:
+BonusPlayer:
 		tst.w	(Debug_placement_mode).w	; is debug mode being used?
-		beq.s	Obj09_Normal			; if not, branch
+		beq.s	BonusPlayer_Normal			; if not, branch
 		bsr.w	S1SS_FixCamera
 		jmp	(DebugMode).l
 ; ===========================================================================
 
-Obj09_Normal:
+BonusPlayer_Normal:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	Obj09_Index(pc,d0.w),d1
-		jmp	Obj09_Index(pc,d1.w)
+		move.w	BonusPlayer_Index(pc,d0.w),d1
+		jmp	BonusPlayer_Index(pc,d1.w)
 ; ===========================================================================
-Obj09_Index:	dc.w Obj09_Main-Obj09_Index
-		dc.w Obj09_ChkDebug-Obj09_Index
-		dc.w Obj09_ExitStage-Obj09_Index
-		dc.w Obj09_Exit2-Obj09_Index
+BonusPlayer_Index:
+		dc.w BonusPlayer_Main-BonusPlayer_Index
+		dc.w BonusPlayer_ChkDebug-BonusPlayer_Index
+		dc.w BonusPlayer_ExitStage-BonusPlayer_Index
+		dc.w BonusPlayer_Exit2-BonusPlayer_Index
 ; ===========================================================================
 
-Obj09_Main:	; Routine 0
+BonusPlayer_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		move.b	#$E,obHeight(a0)
 		move.b	#7,obWidth(a0)
@@ -33,43 +34,44 @@ Obj09_Main:	; Routine 0
 		bset	#2,obStatus(a0)
 		bset	#1,obStatus(a0)
 
-Obj09_ChkDebug:	; Routine 2
+BonusPlayer_ChkDebug:	; Routine 2
 		tst.b	(Debug_mode_flag).w		; is debug mode	cheat enabled?
-		beq.s	Obj09_NoDebug			; if not, branch
+		beq.s	BonusPlayer_NoDebug			; if not, branch
 		btst	#bitB,(v_jpadpress1).w		; is button B pressed?
-		beq.s	Obj09_NoDebug			; if not, branch
+		beq.s	BonusPlayer_NoDebug			; if not, branch
 		move.w	#1,(Debug_placement_mode).w	; change Sonic into a ring
 
-Obj09_NoDebug:
+BonusPlayer_NoDebug:
 		move.b	#0,objoff_30(a0)
 		moveq	#0,d0
 		move.b	obStatus(a0),d0
 		andi.w	#2,d0
-		move.w	Obj09_Modes(pc,d0.w),d1
-		jsr	Obj09_Modes(pc,d1.w)
+		move.w	BonusPlayer_Modes(pc,d0.w),d1
+		jsr	BonusPlayer_Modes(pc,d1.w)
 		jsr	(LoadSonicDynPLC).l
 		jmp	(DisplaySprite).l
 ; ===========================================================================
-Obj09_Modes:	dc.w Obj09_OnWall-Obj09_Modes
-		dc.w Obj09_InAir-Obj09_Modes
+BonusPlayer_Modes:
+		dc.w BonusPlayer_OnWall-BonusPlayer_Modes
+		dc.w BonusPlayer_InAir-BonusPlayer_Modes
 ; ===========================================================================
 
-Obj09_OnWall:
+BonusPlayer_OnWall:
 		bclr	#7,obStatus(a0)		; clear "Sonic has jumped" flag
-		bsr.w	Obj09_Jump
-		bsr.w	Obj09_Move
-		bsr.w	Obj09_Fall
-		bra.s	Obj09_Display
+		bsr.w	BonusPlayer_Jump
+		bsr.w	BonusPlayer_Move
+		bsr.w	BonusPlayer_Fall
+		bra.s	BonusPlayer_Display
 ; ===========================================================================
 
-Obj09_InAir:
-		bsr.w	Obj09_JumpHeight
-		bsr.w	Obj09_Move
-		bsr.w	Obj09_Fall
+BonusPlayer_InAir:
+		bsr.w	BonusPlayer_JumpHeight
+		bsr.w	BonusPlayer_Move
+		bsr.w	BonusPlayer_Fall
 
-Obj09_Display:
-		bsr.w	Obj09_ChkItems
-		bsr.w	Obj09_ChkItems2
+BonusPlayer_Display:
+		bsr.w	BonusPlayer_ChkItems
+		bsr.w	BonusPlayer_ChkItems2
 		jsr	(ObjectMove).l
 		bsr.w	S1SS_FixCamera
 		move.w	(v_ssangle).w,d0
@@ -80,15 +82,15 @@ Obj09_Display:
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 
 
-Obj09_Move:
+BonusPlayer_Move:
 		btst	#bitL,(v_jpadhold2).w	; is left being pressed?
-		beq.s	Obj09_ChkRight		; if not, branch
-		bsr.w	Obj09_MoveLeft
+		beq.s	BonusPlayer_ChkRight		; if not, branch
+		bsr.w	BonusPlayer_MoveLeft
 
-Obj09_ChkRight:
+BonusPlayer_ChkRight:
 		btst	#bitR,(v_jpadhold2).w	; is right being pressed?
 		beq.s	loc_1A4B0		; if not, branch
-		bsr.w	Obj09_MoveRight
+		bsr.w	BonusPlayer_MoveRight
 
 loc_1A4B0:
 		move.b	(v_jpadhold2).w,d0
@@ -139,13 +141,13 @@ loc_1A4E0:
 loc_1A52A:
 		movem.l	(sp)+,d0-d1
 		rts
-; End of function Obj09_Move
+; End of function BonusPlayer_Move
 
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 
 
-Obj09_MoveLeft:
+BonusPlayer_MoveLeft:
 		bset	#0,obStatus(a0)
 		move.w	obInertia(a0),d0
 		beq.s	loc_1A53E
@@ -166,12 +168,12 @@ loc_1A552:
 		subi.w	#$40,d0
 		move.w	d0,obInertia(a0)
 		rts
-; End of function Obj09_MoveLeft
+; End of function BonusPlayer_MoveLeft
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 
 
-Obj09_MoveRight:
+BonusPlayer_MoveRight:
 		bclr	#0,obStatus(a0)
 		move.w	obInertia(a0),d0
 		bmi.s	loc_1A580
@@ -189,15 +191,15 @@ loc_1A580:
 		addi.w	#$40,d0
 		move.w	d0,obInertia(a0)
 		rts
-; End of function Obj09_MoveRight
+; End of function BonusPlayer_MoveRight
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 
 
-Obj09_Jump:
+BonusPlayer_Jump:
 		move.b	(v_jpadpress2).w,d0
 		andi.b	#btnABC,d0		; is A, B or C pressed?
-		beq.s	Obj09_NoJump		; if not, branch
+		beq.s	BonusPlayer_NoJump		; if not, branch
 		move.b	(v_ssangle).w,d0
 		neg.b	d0
 		subi.b	#$40,d0
@@ -213,9 +215,9 @@ Obj09_Jump:
 		move.w	#sfx_Jump,d0
 		jmp	(PlaySound_Special).l	; play jumping sound
 
-Obj09_NoJump:
+BonusPlayer_NoJump:
 		rts
-; End of function Obj09_Jump
+; End of function BonusPlayer_Jump
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -224,7 +226,7 @@ Obj09_NoJump:
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 
-Obj09_JumpHeight:
+BonusPlayer_JumpHeight:
 		move.b	(v_jpadhold2).w,d0	; is the jump button up?
 		andi.b	#btnABC,d0
 		bne.s	locret_1A5EC		; if not, branch to return
@@ -286,7 +288,7 @@ locret_1A616:
 
 ; ===========================================================================
 
-Obj09_ExitStage:
+BonusPlayer_ExitStage:
 		addi.w	#$40,(v_ssrotate).w
 		cmpi.w	#$1800,(v_ssrotate).w
 		bne.s	loc_1A62C
@@ -310,7 +312,7 @@ loc_1A64A:
 		jmp	(DisplaySprite).l
 ; ===========================================================================
 
-Obj09_Exit2:
+BonusPlayer_Exit2:
 		subq.w	#1,objoff_38(a0)
 		bne.s	loc_1A678
 		move.b	#GameModeID_Level,(v_gamemode).w
@@ -324,7 +326,7 @@ loc_1A678:
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 
 
-Obj09_Fall:
+BonusPlayer_Fall:
 		move.l	obY(a0),d2
 		move.l	obX(a0),d3
 		move.b	(v_ssangle).w,d0
@@ -379,7 +381,7 @@ loc_1A70C:
 		move.w	d1,obVelY(a0)
 		bset	#1,obStatus(a0)
 		rts
-; End of function Obj09_Fall
+; End of function BonusPlayer_Fall
 
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
@@ -444,7 +446,7 @@ loc_1A77E:
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 
 
-Obj09_ChkItems:
+BonusPlayer_ChkItems:
 		lea	(v_ssbuffer1).l,a1
 		moveq	#0,d4
 		move.w	obY(a0),d4
@@ -458,45 +460,45 @@ Obj09_ChkItems:
 		divu.w	#$18,d4
 		adda.w	d4,a1
 		move.b	(a1),d4
-		bne.s	Obj09_ChkCont
+		bne.s	BonusPlayer_ChkCont
 		tst.b	objoff_3A(a0)
-		bne.w	Obj09_MakeGhostSolid
+		bne.w	BonusPlayer_MakeGhostSolid
 		moveq	#0,d4
 		rts
 ; ===========================================================================
 
-Obj09_ChkCont:
+BonusPlayer_ChkCont:
 		cmpi.b	#$3A,d4			; is the item a ring?
-		bne.s	Obj09_Chk1Up
+		bne.s	BonusPlayer_Chk1Up
 		bsr.w	SS_RemoveCollectedItem
-		bne.s	Obj09_GetCont
+		bne.s	BonusPlayer_GetCont
 		move.b	#1,(a2)
 		move.l	a1,4(a2)
 
-Obj09_GetCont:
+BonusPlayer_GetCont:
 		jsr	(CollectRing).l
 		cmpi.w	#50,(v_rings).w		; check if you have 50 rings
-		bcs.s	Obj09_NoCont
+		bcs.s	BonusPlayer_NoCont
 		bset	#0,(v_lifecount).w
-		bne.s	Obj09_NoCont
+		bne.s	BonusPlayer_NoCont
 		addq.b	#1,(v_continues).w	; add 1 to the number of continues
 		move.w	#sfx_Continue,d0
 		jsr	(PlaySound).l		; play extra continue sound
 
-Obj09_NoCont:
+BonusPlayer_NoCont:
 		moveq	#0,d4
 		rts
 ; ===========================================================================
 
-Obj09_Chk1Up:
+BonusPlayer_Chk1Up:
 		cmpi.b	#$28,d4			; is the item an extra life?
-		bne.s	Obj09_ChkEmer
+		bne.s	BonusPlayer_ChkEmer
 		bsr.w	SS_RemoveCollectedItem
-		bne.s	Obj09_Get1Up
+		bne.s	BonusPlayer_Get1Up
 		move.b	#3,(a2)
 		move.l	a1,4(a2)
 
-Obj09_Get1Up:
+BonusPlayer_Get1Up:
 		addq.b	#1,(v_lives).w		; add 1 to number of lives
 		addq.b	#1,(f_lifecount).w	; update the lives counter
 		moveq	#0,d4
@@ -504,19 +506,19 @@ Obj09_Get1Up:
 		jmp	(PlaySound).l		; play extra life music
 ; ===========================================================================
 
-Obj09_ChkEmer:
+BonusPlayer_ChkEmer:
 		cmpi.b	#$3B,d4			; is the item an emerald?
-		bcs.s	Obj09_ChkGhost
+		bcs.s	BonusPlayer_ChkGhost
 		cmpi.b	#$40,d4
-		bhi.s	Obj09_ChkGhost
+		bhi.s	BonusPlayer_ChkGhost
 		bsr.w	SS_RemoveCollectedItem
-		bne.s	Obj09_GetEmer
+		bne.s	BonusPlayer_GetEmer
 		move.b	#5,(a2)
 		move.l	a1,4(a2)
 
-Obj09_GetEmer:
+BonusPlayer_GetEmer:
 		cmpi.b	#6,(v_emeralds).w	; do you have all the emeralds?
-		beq.s	Obj09_NoEmer		; if yes, branch
+		beq.s	BonusPlayer_NoEmer		; if yes, branch
 		subi.b	#$3B,d4
 		moveq	#0,d0
 		move.b	(v_emeralds).w,d0
@@ -524,62 +526,62 @@ Obj09_GetEmer:
 		move.b	d4,(a2,d0.w)
 		addq.b	#1,(v_emeralds).w	; add 1 to number of emeralds
 
-Obj09_NoEmer:
+BonusPlayer_NoEmer:
 		moveq	#0,d4
 		move.w	#bgm_Emerald,d0
 		jmp	(PlaySound_Special).l	; play emerald music
 ; ===========================================================================
 
-Obj09_ChkGhost:
+BonusPlayer_ChkGhost:
 		cmpi.b	#$41,d4			; is the item a ghost block?
-		bne.s	Obj09_ChkGhostTag
+		bne.s	BonusPlayer_ChkGhostTag
 		move.b	#1,objoff_3A(a0)	; mark the ghost block as "passed"
 
-Obj09_ChkGhostTag:
+BonusPlayer_ChkGhostTag:
 		cmpi.b	#$4A,d4			; is the item a switch for ghost blocks?
-		bne.s	Obj09_NoGhost
+		bne.s	BonusPlayer_NoGhost
 		cmpi.b	#1,objoff_3A(a0)	; have the ghost blocks been passed?
-		bne.s	Obj09_NoGhost		; if not, branch
+		bne.s	BonusPlayer_NoGhost		; if not, branch
 		move.b	#2,objoff_3A(a0)	; mark the ghost blocks as "solid"
 
-Obj09_NoGhost:
+BonusPlayer_NoGhost:
 		moveq	#-1,d4
 		rts
 ; ===========================================================================
 
-Obj09_MakeGhostSolid:
+BonusPlayer_MakeGhostSolid:
 		cmpi.b	#2,objoff_3A(a0)	; is the ghost marked as "solid"?
-		bne.s	Obj09_GhostNotSolid	; if not, branch
+		bne.s	BonusPlayer_GhostNotSolid	; if not, branch
 		lea	(v_ssblockbuffer).l,a1
 		moveq	#(v_ssblockbuffer_end-v_ssblockbuffer)/$80-1,d1
 
-Obj09_GhostLoop2:
+BonusPlayer_GhostLoop2:
 		moveq	#(v_ssblockbuffer_end-v_ssblockbuffer)/$80-1,d2
 
-Obj09_GhostLoop:
+BonusPlayer_GhostLoop:
 		cmpi.b	#$41,(a1)		; is the item a ghost block?
-		bne.s	Obj09_NoReplace		; if not, branch
+		bne.s	BonusPlayer_NoReplace		; if not, branch
 		move.b	#$2C,(a1)		; replace ghost block with a solid block
 
-Obj09_NoReplace:
+BonusPlayer_NoReplace:
 		addq.w	#1,a1
-		dbf	d2,Obj09_GhostLoop
+		dbf	d2,BonusPlayer_GhostLoop
 		lea	$40(a1),a1
-		dbf	d1,Obj09_GhostLoop2
+		dbf	d1,BonusPlayer_GhostLoop2
 
-Obj09_GhostNotSolid:
+BonusPlayer_GhostNotSolid:
 		clr.b	objoff_3A(a0)
 		moveq	#0,d4
 		rts
-; End of function Obj09_ChkItems
+; End of function BonusPlayer_ChkItems
 
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 
 
-Obj09_ChkItems2:
+BonusPlayer_ChkItems2:
 		move.b	objoff_30(a0),d0
-		bne.s	Obj09_ChkBumper
+		bne.s	BonusPlayer_ChkBumper
 		subq.b	#1,objoff_36(a0)
 		bpl.s	loc_1A8D8
 		move.b	#0,objoff_36(a0)
@@ -593,9 +595,9 @@ locret_1A8E4:
 		rts
 ; ===========================================================================
 
-Obj09_ChkBumper:
+BonusPlayer_ChkBumper:
 		cmpi.b	#$25,d0			; is the item a bumper?
-		bne.s	Obj09_GOAL		; if not, branch
+		bne.s	BonusPlayer_GOAL		; if not, branch
 		move.l	$32(a0),d1
 		subi.l	#$FFFF0001,d1
 		move.w	d1,d2
@@ -619,93 +621,93 @@ Obj09_ChkBumper:
 		bset	#1,obStatus(a0)
 		bclr	#7,obStatus(a0)		; clear "Sonic has jumped" flag
 		bsr.w	SS_RemoveCollectedItem
-		bne.s	Obj09_BumpSnd
+		bne.s	BonusPlayer_BumpSnd
 		move.b	#2,(a2)
 		move.l	objoff_32(a0),d0
 		subq.l	#1,d0
 		move.l	d0,4(a2)
 
-Obj09_BumpSnd:
+BonusPlayer_BumpSnd:
 		move.w	#sfx_Bumper,d0
 		jmp	(PlaySound_Special).l	; play bumper sound
 ; ===========================================================================
 
-Obj09_GOAL:
+BonusPlayer_GOAL:
 		cmpi.b	#$27,d0			; is the item a "GOAL"?
-		bne.s	Obj09_UPblock
-		addq.b	#2,obRoutine(a0)	; run routine "Obj09_ExitStage"
+		bne.s	BonusPlayer_UPblock
+		addq.b	#2,obRoutine(a0)	; run routine "BonusPlayer_ExitStage"
 		move.w	#sfx_SSGoal,d0
 		jmp	(PlaySound_Special).l	; play "GOAL" sound
 ; ===========================================================================
 
-Obj09_UPblock:
+BonusPlayer_UPblock:
 		cmpi.b	#$29,d0			; is the item an "UP" block?
-		bne.s	Obj09_DOWNblock
+		bne.s	BonusPlayer_DOWNblock
 		tst.b	objoff_36(a0)
-		bne.w	Obj09_NoGlass
+		bne.w	BonusPlayer_NoGlass
 		move.b	#$1E,objoff_36(a0)
 		btst	#6,(v_ssrotate+1).w
-		beq.s	Obj09_UPsnd
+		beq.s	BonusPlayer_UPsnd
 		asl	(v_ssrotate).w		; increase stage rotation speed
 		movea.l	objoff_32(a0),a1
 		subq.l	#1,a1
 		move.b	#$2A,(a1)		; change item to a "DOWN" block
 
-Obj09_UPsnd:
+BonusPlayer_UPsnd:
 		move.w	#sfx_SSItem,d0
 		jmp	(PlaySound_Special).l	; play up/down sound
 ; ===========================================================================
 
-Obj09_DOWNblock:
+BonusPlayer_DOWNblock:
 		cmpi.b	#$2A,d0			; is the item a "DOWN" block?
-		bne.s	Obj09_Rblock
+		bne.s	BonusPlayer_Rblock
 		tst.b	objoff_36(a0)
-		bne.w	Obj09_NoGlass
+		bne.w	BonusPlayer_NoGlass
 		move.b	#$1E,objoff_36(a0)
 		btst	#6,(v_ssrotate+1).w
-		bne.s	Obj09_DOWNsnd
+		bne.s	BonusPlayer_DOWNsnd
 		asr	(v_ssrotate).w		; reduce stage rotation speed
 		movea.l	objoff_32(a0),a1
 		subq.l	#1,a1
 		move.b	#$29,(a1)		; change item to an "UP" block
 
-Obj09_DOWNsnd:
+BonusPlayer_DOWNsnd:
 		move.w	#sfx_SSItem,d0
 		jmp	(PlaySound_Special).l	; play up/down sound
 ; ===========================================================================
 
-Obj09_Rblock:
+BonusPlayer_Rblock:
 		cmpi.b	#$2B,d0			; is the item an "R" block?
-		bne.s	Obj09_ChkGlass
+		bne.s	BonusPlayer_ChkGlass
 		tst.b	objoff_37(a0)
-		bne.w	Obj09_NoGlass
+		bne.w	BonusPlayer_NoGlass
 		move.b	#$1E,objoff_37(a0)
 		bsr.w	SS_RemoveCollectedItem
-		bne.s	Obj09_RevStage
+		bne.s	BonusPlayer_RevStage
 		move.b	#4,(a2)
 		move.l	objoff_32(a0),d0
 		subq.l	#1,d0
 		move.l	d0,4(a2)
 
-Obj09_RevStage:
+BonusPlayer_RevStage:
 		neg.w	(v_ssrotate).w		; reverse stage rotation
 		move.w	#sfx_SSItem,d0
 		jmp	(PlaySound_Special).l	; play sound
 ; ===========================================================================
 
-Obj09_ChkGlass:
+BonusPlayer_ChkGlass:
 		cmpi.b	#$2D,d0			; is the item a glass block?
-		beq.s	Obj09_Glass		; if yes, branch
+		beq.s	BonusPlayer_Glass		; if yes, branch
 		cmpi.b	#$2E,d0
-		beq.s	Obj09_Glass
+		beq.s	BonusPlayer_Glass
 		cmpi.b	#$2F,d0
-		beq.s	Obj09_Glass
+		beq.s	BonusPlayer_Glass
 		cmpi.b	#$30,d0
-		bne.s	Obj09_NoGlass		; if not, branch
+		bne.s	BonusPlayer_NoGlass		; if not, branch
 
-Obj09_Glass:
+BonusPlayer_Glass:
 		bsr.w	SS_RemoveCollectedItem
-		bne.s	Obj09_GlassSnd
+		bne.s	BonusPlayer_GlassSnd
 		move.b	#6,(a2)
 		movea.l	objoff_32(a0),a1
 		subq.l	#1,a1
@@ -713,17 +715,17 @@ Obj09_Glass:
 		move.b	(a1),d0
 		addq.b	#1,d0			; change glass type when touched
 		cmpi.b	#$30,d0
-		bls.s	Obj09_GlassUpdate	; if glass is still there, branch
+		bls.s	BonusPlayer_GlassUpdate	; if glass is still there, branch
 		clr.b	d0			; remove the glass block when it's destroyed
 
-Obj09_GlassUpdate:
+BonusPlayer_GlassUpdate:
 		move.b	d0,4(a2)		; update the stage layout
 
-Obj09_GlassSnd:
+BonusPlayer_GlassSnd:
 		move.w	#sfx_SSGlass,d0
 		jmp	(PlaySound_Special).l	; play glass block sound
 ; ===========================================================================
 
-Obj09_NoGlass:
+BonusPlayer_NoGlass:
 		rts
-; End of function Obj09_ChkItems2
+; End of function BonusPlayer_ChkItems2

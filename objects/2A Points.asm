@@ -1,5 +1,5 @@
 ; ---------------------------------------------------------------------------
-; Object 07 - points that appear when you destroy something
+; Object 2A - points that appear when you destroy something
 ; ---------------------------------------------------------------------------
 
 Points:
@@ -14,7 +14,7 @@ Points_Index:	dc.w Points_main-Points_Index
 
 Points_main:
 		addq.b	#2,obRoutine(a0)
-		move.l	#Map_Obj29,obMap(a0)
+		move.l	#Map_Obj2A,obMap(a0)
 		move.w	#make_art_tile($4AC,0,0),obGfx(a0)	; TODO Change
 		move.b	#4,obRender(a0)
 		move.w	#$80,obPriority(a0)

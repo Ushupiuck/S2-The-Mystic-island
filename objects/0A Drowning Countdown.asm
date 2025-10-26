@@ -21,7 +21,7 @@ Obj0A_Index:	dc.w Obj0A_Init-Obj0A_Index
 
 Obj0A_Init:
 		addq.b	#2,obRoutine(a0)
-		move.l	#Map_Obj0A_Bubbles,obMap(a0)
+		move.l	#Map_Obj09_Bubbles,obMap(a0)
 		move.w	#make_art_tile(ArtTile_LZ_Bubbles,0,1),obGfx(a0)
 		move.b	#$84,obRender(a0)
 		move.b	#$10,obActWid(a0)
@@ -65,7 +65,7 @@ loc_11F14:
 		move.b	obAngle(a0),d0
 		addq.b	#1,obAngle(a0)
 		andi.w	#$7F,d0
-		lea	(Obj0A_WobbleData).l,a1
+		lea	(Drown_WobbleData).l,a1
 		move.b	(a1,d0.w),d0
 		ext.w	d0
 		add.w	objoff_30(a0),d0
@@ -312,7 +312,7 @@ byte_123A5:	dc.b  $E,$FC
 byte_123A7:	dc.b  $E,  1,  2,  3,  4,$FC
 		even
 ; ---------------------------------------------------------------------------
-Obj0A_WobbleData:
+Drown_WobbleData:
 		rept 2
 		dc.b 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2
 		dc.b 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3

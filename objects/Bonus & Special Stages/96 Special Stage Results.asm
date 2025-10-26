@@ -1,8 +1,8 @@
 ; ---------------------------------------------------------------------------
-; Object 7E - special stage results screen
+; Object 96 - special stage results screen
 ; ---------------------------------------------------------------------------
 
-Obj7E:
+BonusGotThrough:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	SSR_Index(pc,d0.w),d1
@@ -38,7 +38,7 @@ SSR_Main:
 		addq.w	#1,d1		; if yes, add 1	to d1 (number of sprites)
 
 SSR_Loop:
-		_move.b	#id_Obj7E,obID(a1)
+		_move.b	#id_Obj96,obID(a1)
 		move.w	(a2)+,obX(a1)		; load start x-position
 		move.w	(a2)+,ssr_mainX(a1)	; load main x-position
 		move.w	(a2)+,obScreenY(a1)	; load y-position
@@ -90,7 +90,7 @@ loc_BE44:
 		bne.s	loc_BE32
 		addq.b	#2,obRoutine(a0)
 		move.w	#180,objoff_34(a0) ; set time delay to 3 seconds
-		_move.b	#id_Obj7F,(v_ssresemeralds).w ; load chaos emerald object
+		_move.b	#id_Obj97,(v_ssresemeralds).w ; load chaos emerald object
 
 SSR_Wait:	; Routine 4, 8, $C, $10
 		subq.w	#1,objoff_34(a0) ; subtract 1 from time delay

@@ -1,8 +1,8 @@
 ; ---------------------------------------------------------------------------
-; Object 39 - "GAME OVER" and "TIME OVER"
+; Object 98 - "GAME OVER" and "TIME OVER"
 ; ---------------------------------------------------------------------------
 
-Obj39:
+GameOver:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	Over_Index(pc,d0.w),d1

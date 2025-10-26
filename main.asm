@@ -2700,9 +2700,9 @@ Level_ChkWater:
 		clr.w	(v_jpadhold1).w
 		tst.b	(Water_flag).w
 		beq.s	Level_LoadObj
-		_move.b	#id_Obj04,(v_watersurface1).w
+		_move.b	#id_Obj07,(v_watersurface1).w
 		move.w	#$60,(v_watersurface1+obX).w
-		_move.b	#id_Obj04,(v_watersurface2).w
+		_move.b	#id_Obj07,(v_watersurface2).w
 		move.w	#$120,(v_watersurface2+obX).w
 
 Level_LoadObj:
@@ -3216,7 +3216,7 @@ SpecialStage:
 		bsr.w	S1SS_Load		; load SS layout data
 		move.l	#0,(Camera_X_pos).w
 		move.l	#0,(Camera_Y_pos).w
-		move.b	#id_Obj09,(v_player).w ; load special stage Sonic object
+		move.b	#id_Obj04,(v_player).w ; load special stage Sonic object
 		bsr.w	PalCycle_S1SS
 		clr.w	(v_ssangle).w	; set stage angle to "upright"
 		move.w	#$40,(v_ssrotate).w ; set stage rotation speed
@@ -3225,7 +3225,7 @@ SpecialStage:
 		clr.w	(v_rings).w
 		clr.b	(v_lifecount).w
 ;		move.w	#100,(v_ring1uplimit).w	; TODO: IMPLEMENT reset ring 1-up flag
-		move.w	#0,(Debug_placement_mode).w
+		clr.w	(Debug_placement_mode).w
 		move.w	#60*30,(v_demolength).w
 		tst.b	(f_debugcheat).w ; has debug cheat been entered?
 		beq.s	SS_NoDebug	; if not, branch
@@ -3307,7 +3307,7 @@ loc_5214:
 		move.w	#bgm_GotThrough,d0
 		jsr	(PlaySound_Special).l	; play end-of-level music
 		clearRAM v_objspace,v_objend	; clear object RAM
-		_move.b	#id_Obj7E,(v_endcard).w	; load results screen object
+		_move.b	#id_Obj96,(v_endcard).w	; load results screen object
 
 SS_NormalExit:
 		bsr.w	PauseGame
@@ -4235,7 +4235,7 @@ Map_SS_Down:	include	"mappings/sprite/S1/SS DOWN Block.asm"
 Map_SS_Bump:	include	"mappings/sprite/S1/SS Bumper.asm"
 Map_SS_Ring:	include	"mappings/sprite/S1/SS Rings.asm"
 		include	"mappings/sprite/S1/SS Chaos Emeralds.asm"
-		include	"objects/S1/09 Sonic in Special Stage.asm"
+		include	"objects/Bonus & Special Stages/04 Player in Bonus Stage.asm"
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 ; Load only art assets (Kos modules) from LevelArtPointers
@@ -4823,7 +4823,7 @@ Deform_LZ:
 		bsr.w	ScrollBlock1
 		move.w	(Camera_BG_Y_pos).w,(v_bgscrposy_vdp).w
 		lea	(Deform_LZ_Data1).l,a3
-		lea	(Obj0A_WobbleData).l,a2
+		lea	(Drown_WobbleData).l,a2
 		move.b	(v_lz_deform).w,d2
 		move.b	d2,d3
 		addi.w	#$80,(v_lz_deform).w
@@ -7747,7 +7747,7 @@ Map_Obj26:	binclude	"mappings/sprite/obj26.bin"
 		even
 ; ---------------------------------------------------------------------------
 		include	"objects/28 Animals.asm"
-		include	"objects/07 Points.asm"
+		include	"objects/2A Points.asm"
 ; ---------------------------------------------------------------------------
 Map_Obj28a:
 		dc.w word_A006-Map_Obj28a
@@ -7779,14 +7779,14 @@ word_A04E:	dc.w 1
 		dc.w $FC09,    6,    3,$FFF4
 word_A058:	dc.w 1
 		dc.w $FC09,   $C,    6,$FFF4
-Map_Obj29:
-		dc.w word_A070-Map_Obj29
-		dc.w word_A07A-Map_Obj29
-		dc.w word_A084-Map_Obj29
-		dc.w word_A08E-Map_Obj29
-		dc.w word_A0A0-Map_Obj29
-		dc.w word_A0AA-Map_Obj29
-		dc.w word_A0BC-Map_Obj29
+Map_Obj2A:
+		dc.w word_A070-Map_Obj2A
+		dc.w word_A07A-Map_Obj2A
+		dc.w word_A084-Map_Obj2A
+		dc.w word_A08E-Map_Obj2A
+		dc.w word_A0A0-Map_Obj2A
+		dc.w word_A0AA-Map_Obj2A
+		dc.w word_A0BC-Map_Obj2A
 word_A070:	dc.w 1
 		dc.w $F805,    2,    1,$FFF8
 word_A07A:	dc.w 1
@@ -8206,16 +8206,17 @@ word_9286:	dc.w 8
 Map_Obj1C_01:	include	"mappings/sprite/obj1C.asm"
 ; ---------------------------------------------------------------------------
 
-		include	"objects/S1/2A SBZ Small Door.asm"
-Map_Obj2A:	dc.w word_95BA-Map_Obj2A
-		dc.w word_95CC-Map_Obj2A
-		dc.w word_95DE-Map_Obj2A
-		dc.w word_95F0-Map_Obj2A
-		dc.w word_9602-Map_Obj2A
-		dc.w word_9614-Map_Obj2A
-		dc.w word_9626-Map_Obj2A
-		dc.w word_9638-Map_Obj2A
-		dc.w word_964A-Map_Obj2A
+		include	"objects/S1/30 SBZ Small Door.asm"
+Map_Obj30:
+		dc.w word_95BA-Map_Obj30
+		dc.w word_95CC-Map_Obj30
+		dc.w word_95DE-Map_Obj30
+		dc.w word_95F0-Map_Obj30
+		dc.w word_9602-Map_Obj30
+		dc.w word_9614-Map_Obj30
+		dc.w word_9626-Map_Obj30
+		dc.w word_9638-Map_Obj30
+		dc.w word_964A-Map_Obj30
 word_95BA:	dc.w 2
 		dc.w $E007, $800, $800,$FFF8
 		dc.w	 7, $800, $800,$FFF8
@@ -8345,19 +8346,23 @@ word_B8B6:	dc.w 2
 		dc.w $F505,$101C,$100E,	 $10
 		even
 ; ---------------------------------------------------------------------------
-		include	"objects/94 Title Cards.asm"
-		include	"objects/39 Game Over.asm"
-		include	"objects/3A Got Through Card.asm"
 		include	"objects/Bonus & Special Stages/7A Special Stage Entry.asm"
 		include	"objects/Bonus & Special Stages/7B Giant Ring.asm"
 		include	"objects/Bonus & Special Stages/7C Ring Flash.asm"
-		include	"objects/Bonus & Special Stages/7E Special Stage Results.asm"
-		include	"objects/Bonus & Special Stages/7F SS Result Chaos Emeralds.asm"
-		include	"objects/S1/3B Purple Rock.asm"
+		include	"objects/94 Title Cards.asm"
+		include	"objects/95 Got Through Card.asm"
+		include	"objects/Bonus & Special Stages/96 Special Stage Results.asm"
+		include	"objects/Bonus & Special Stages/97 SS Result Chaos Emeralds.asm"
+		include	"objects/98 Game Over.asm"
 		include	"objects/36 Spikes.asm"
+		include	"objects/S1/3B Purple Rock.asm"
 Map_Obj36:	include	"mappings/sprite/obj36.asm"
 Map_Obj3B:	include	"mappings/sprite/S1/Purple Rock.asm"
-; ---------------------------------------------------------------------------
+Map_Obj12:	dc.w word_14444-Map_Obj12
+word_14444:	dc.w 2
+		dc.w $F00F,    0,    0,$FFE0
+		dc.w $F00F,  $10,    8,	   0
+		even; ---------------------------------------------------------------------------
 Map_SpecialWarp:
 		binclude	"mappings/sprite/Special Stage Warp.bin"
 		even
@@ -8367,15 +8372,12 @@ Map_GiantRing:
 Map_GiantRingFlash:
 		binclude	"mappings/sprite/GiantRingFlash.bin"
 		even
+Map_SSR:	include		"mappings/sprite/SSResults.asm"
 Map_SSRE:	binclude	"mappings/sprite/SSR Emeralds.bin"
 		even
 Map_Card:	include	"mappings/sprite/Title_Cards.asm"
 Map_Over:	include	"mappings/sprite/Game_Over.asm"
 Map_Got:	include	"mappings/sprite/Got_Through.asm"
-; ---------------------------------------------------------------------------
-; Sprite mappings - special stage results screen (7E)
-; ---------------------------------------------------------------------------
-Map_SSR:	include	"mappings/sprite/SSResults.asm"
 ; ---------------------------------------------------------------------------
 		include	"objects/S1/3C Smashable Wall.asm"
 		include	"objects/S1/sub SmashObject.asm"
@@ -8457,14 +8459,14 @@ ExecuteObjects:
 ; sub_CB44:
 RunObject:
 		move.b	obID(a0),d0			; get the object's ID
-		beq.s	loc_CB54			; if it's obj00, skip it
+		beq.s	.skip				; if it's obj00, skip it
 		add.w	d0,d0
 		add.w	d0,d0				; d0 = object ID * 4
 		movea.l	Obj_Index-4(pc,d0.w),a1		; load the address of the object's code
 		jsr	(a1)				; dynamic call! to one of the the entries in Obj_Index
 		moveq	#0,d0
 
-loc_CB54:
+.skip:
 		lea	object_size(a0),a0		; load obj address
 		dbf	d7,RunObject
 		rts
@@ -8508,13 +8510,13 @@ Obj_Index:
 ptr_Obj01:		dc.l Obj01	; Sonic
 ptr_Obj02:		dc.l Obj02	; Tails
 ptr_Obj03:		dc.l Obj03	; Collision plane/layer switcher
-ptr_Obj04:		dc.l Obj04	; Surface of the water
+ptr_Obj04:		dc.l BonusPlayer; Sonic or Tails in the Bonus Stage
 ptr_Obj05:		dc.l Obj05	; Tails' tails
 ptr_Obj06:		dc.l Obj06	; Twisting spiral pathway in EHZ
-ptr_Obj07:		dc.l Points	; "100 points" text
-ptr_Obj08:		dc.l Splash	; Water splash in HPZ
-ptr_Obj09:		dc.l Obj09	; (S1) Sonic in the Special Stage
-ptr_Obj0A:		dc.l Obj0A	; Small bubbles from Sonic's face while underwater
+ptr_Obj07:		dc.l WaterSurface	; Surface of the water
+ptr_Obj08:		dc.l Splash		; Water splash in HPZ
+ptr_Obj09:		dc.l Bubbles		; Bubble maker
+ptr_Obj0A:		dc.l Obj0A		; Small bubbles from Sonic's face while underwater
 ptr_Obj0B:		dc.l Obj0B	; (S1) Pole that breaks in LZ
 ptr_Obj0C:		dc.l FlapDoor	; (S1) Flapping door in LZ
 ptr_Obj0D:		dc.l Obj0D	; End of level signpost
@@ -8523,7 +8525,7 @@ ptr_Obj0F:		dc.l ObjNull	; Empty
 
 ptr_Obj10:		dc.l ObjNull	; Empty
 ptr_Obj11:		dc.l Obj11	; Bridges in GHZ, EHZ and HPZ
-ptr_Obj12:		dc.l Obj12	; Emerald from Hidden Palace Zone
+ptr_Obj12:		dc.l ObjNull
 ptr_Obj13:		dc.l Obj13	; Waterfall from Hidden Palace Zone
 ptr_Obj14:		dc.l ObjNull
 ptr_Obj15:		dc.l Obj15	; Swinging platforms in GHZ, CPZ and EHZ
@@ -8548,14 +8550,14 @@ ptr_Obj26:		dc.l Obj26	; Monitor
 ptr_Obj27:		dc.l Obj27	; An explosion, giving off an animal and 100 points
 ptr_Obj28:		dc.l Obj28	; Animal and the 100 points from a badnik
 ptr_Obj29:		dc.l Obj29	; Monitor contents (code for power-up behavior and rising image)
-ptr_Obj2A:		dc.l Obj2A	; (S1) Small door from SBZ
+ptr_Obj2A:		dc.l Points	; "100 points" text
 ptr_Obj2B:		dc.l Obj2B	; (S1) Chopper from GHZ
 ptr_Obj2C:		dc.l Obj2C	; (S1) Jaws from LZ
 ptr_Obj2D:		dc.l ObjNull
 ptr_Obj2E:		dc.l ObjNull
 ptr_Obj2F:		dc.l ObjNull
 
-ptr_Obj30:		dc.l ObjNull
+ptr_Obj30:		dc.l Obj30	; (S1) Small door from SBZ
 ptr_Obj31:		dc.l ObjNull
 ptr_Obj32:		dc.l ObjNull
 ptr_Obj33:		dc.l ObjNull
@@ -8564,9 +8566,9 @@ ptr_Obj35:		dc.l ObjNull
 ptr_Obj36:		dc.l Obj36	; Vertical spikes
 ptr_Obj37:		dc.l Obj37	; Scattering rings (generated when Sonic or Tails are hurt and has rings)
 ptr_Obj38:		dc.l Obj38	; Shield
-ptr_Obj39:		dc.l Obj39	; Game Over/Time Over text
+ptr_Obj39:		dc.l ObjNull
 ptr_Obj3A:		dc.l ObjNull
-ptr_Obj3B:		dc.l Obj3B	; (S1) Purple rock from GHZ
+ptr_Obj3B:		dc.l Obj3B	; Rocks and Emeralds (GHZ, HPZ)
 ptr_Obj3C:		dc.l Obj3C	; (S1) Breakable wall
 ptr_Obj3D:		dc.l Obj3D	; (S1) GHZ boss
 ptr_Obj3E:		dc.l Obj3E	; Egg prison
@@ -8610,7 +8612,7 @@ ptr_Obj60:		dc.l ObjNull
 ptr_Obj61:		dc.l ObjNull
 ptr_Obj62:		dc.l ObjNull
 ptr_Obj63:		dc.l ObjNull
-ptr_Obj64:		dc.l Obj64
+ptr_Obj64:		dc.l ObjNull
 ptr_Obj65:		dc.l ObjNull
 ptr_Obj66:		dc.l ObjNull
 ptr_Obj67:		dc.l ObjNull
@@ -8637,8 +8639,8 @@ ptr_Obj7A:		dc.l SpecialStageEntry
 ptr_Obj7B:		dc.l GiantRing	; Bonus stage entry
 ptr_Obj7C:		dc.l GiantRingFlash
 ptr_Obj7D:		dc.l Obj7D	; Hidden points at end of stage
-ptr_Obj7E:		dc.l Obj7E	; Special Stage Results
-ptr_Obj7F:		dc.l Obj7F	; SS Result Chaos Emeralds
+ptr_Obj7E:		dc.l ObjNull
+ptr_Obj7F:		dc.l ObjNull
 
 ptr_Obj80:		dc.l ObjNull	; Was originally Continue Screen Elements, but was completely stripped out
 ptr_Obj81:		dc.l ObjNull	; Was originally Continue Screen Sonic, but was completely stripped out
@@ -8663,9 +8665,9 @@ ptr_Obj92:		dc.l TitlePaletteHandler		; TODO
 ptr_Obj93:		dc.l PressStartButton	; Press Start Button
 ptr_Obj94:		dc.l TitleCards		; Level title card
 ptr_Obj95:		dc.l GotThrough		; End of level results screen
-ptr_Obj96:		dc.l ObjNull
-ptr_Obj97:		dc.l ObjNull
-ptr_Obj98:		dc.l ObjNull
+ptr_Obj96:		dc.l BonusGotThrough	; Special Stage Results
+ptr_Obj97:		dc.l ChaosEmeralds	; SS Result Chaos Emeralds (These now belong to S2 special stages, so... To be changed)
+ptr_Obj98:		dc.l GameOver		; Game Over/Time Over text
 ptr_Obj99:		dc.l ObjNull
 ptr_Obj9A:		dc.l ObjNull
 ptr_Obj9B:		dc.l ObjNull
@@ -13194,8 +13196,8 @@ Sonic_GameOver:
 		subq.b	#1,(v_lives).w
 		bne.s	loc_10888
 		move.w	#0,objoff_3A(a0)
-		_move.b	#id_Obj39,(v_gameovertext1).w
-		_move.b	#id_Obj39,(v_gameovertext2).w
+		_move.b	#id_Obj98,(v_gameovertext1).w
+		_move.b	#id_Obj98,(v_gameovertext2).w
 		move.b	#1,(v_gameovertext2+obFrame).w
 		clr.b	(f_timeover).w
 
@@ -13211,8 +13213,8 @@ loc_10888:
 		tst.b	(f_timeover).w
 		beq.s	locret_108B4
 		move.w	#0,objoff_3A(a0)
-		_move.b	#id_Obj39,(v_gameovertext1).w
-		_move.b	#id_Obj39,(v_gameovertext2).w
+		_move.b	#id_Obj98,(v_gameovertext1).w
+		_move.b	#id_Obj98,(v_gameovertext2).w
 		move.b	#2,(v_gameovertext1+obFrame).w
 		move.b	#3,(v_gameovertext2+obFrame).w
 		move.w	#bgm_GameOver,d0
@@ -15511,8 +15513,6 @@ byte_11E54:	dc.b   2,$81,$82,$83,$84,$FF
 		even
 ; ---------------------------------------------------------------------------
 		include	"objects/06 EHZ Spiral.asm"
-		include	"objects/08 Water Splash.asm"
-		include	"objects/0A Drowning Countdown.asm"
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -15545,13 +15545,6 @@ loc_12310:
 ; End of function ResumeMusic
 
 ; ---------------------------------------------------------------------------
-Map_Obj0A_Countdown:
-		dc.w word_123B0-Map_Obj0A_Countdown
-word_123B0:
-		dc.w 1
-		dc.w $E80E,    0,    0,$FFF2
-		even
-
 		include	"objects/38 Shield and Invincibility.asm"
 Map_obj38:	binclude	"mappings/sprite/obj38.bin"
 		even
@@ -16952,7 +16945,7 @@ Bumper_bump:
 		jsr	(AddPoints).l
 		bsr.w	FindFreeObj
 		bne.s	locret_13974
-		_move.b	#id_Obj07,obID(a1)
+		_move.b	#id_Obj2A,obID(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.b	#4,obFrame(a1)
@@ -16976,287 +16969,80 @@ word_139BC:	dc.w 2
 		dc.w $F007, $80E, $807,	   0
 		even
 ; ---------------------------------------------------------------------------
-
-Obj64:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Obj64_Index(pc,d0.w),d1
-		jmp	Obj64_Index(pc,d1.w)
-; ---------------------------------------------------------------------------
-Obj64_Index:	dc.w Obj64_Init-Obj64_Index
-		dc.w Obj64_Animate-Obj64_Index
-		dc.w Obj64_ChkWater-Obj64_Index
-		dc.w Obj64_Display-Obj64_Index
-		dc.w Obj64_Delete-Obj64_Index
-		dc.w Obj64_BblMaker-Obj64_Index
-; ---------------------------------------------------------------------------
-
-Obj64_Init:
-		addq.b	#2,obRoutine(a0)
-		move.l	#Map_Obj0A_Bubbles,obMap(a0)
-		move.w	#make_art_tile(ArtTile_LZ_Bubbles,0,1),obGfx(a0)
-		move.b	#$84,obRender(a0)
-		move.b	#$10,obActWid(a0)
-		move.w	#$80,obPriority(a0)
-		move.b	obSubtype(a0),d0
-		bpl.s	loc_13A32
-		addq.b	#8,obRoutine(a0)
-		andi.w	#$7F,d0
-		move.b	d0,objoff_32(a0)
-		move.b	d0,objoff_33(a0)
-		move.b	#6,obAnim(a0)
-		bra.w	Obj64_BblMaker
-; ---------------------------------------------------------------------------
-
-loc_13A32:
-		move.b	d0,obAnim(a0)
-		move.w	obX(a0),objoff_30(a0)
-		move.w	#-$88,obVelY(a0)
-		jsr	(RandomNumber).l
-		move.b	d0,obAngle(a0)
-
-Obj64_Animate:
-		lea	Ani_Obj64(pc),a1
-		jsr	(AnimateSprite).l
-		cmpi.b	#6,obFrame(a0)
-		bne.s	Obj64_ChkWater
-		move.b	#1,objoff_2E(a0)
-
-Obj64_ChkWater:
-		move.w	(v_waterpos1).w,d0
-		cmp.w	obY(a0),d0
-		blo.s	loc_13A7E
-
-loc_13A70:
-		move.b	#6,obRoutine(a0)
-		addq.b	#3,obAnim(a0)
-		bra.w	Obj64_Display
-; ---------------------------------------------------------------------------
-
-loc_13A7E:
-		move.b	obAngle(a0),d0
-		addq.b	#1,obAngle(a0)
-		andi.w	#$7F,d0
-		lea	(Obj0A_WobbleData).l,a1
-		move.b	(a1,d0.w),d0
-		ext.w	d0
-		add.w	objoff_30(a0),d0
-		move.w	d0,obX(a0)
-		tst.b	objoff_2E(a0)
-		beq.s	loc_13B0A
-		bsr.w	Obj64_ChkSonic
-		beq.s	loc_13B0A
-		bsr.w	ResumeMusic
-		move.w	#sfx_Bubble,d0
-		jsr	(PlaySound_Special).l
-		lea	(v_player).w,a1
-		clr.w	obVelX(a1)
-		clr.w	obVelY(a1)
-		clr.w	obInertia(a1)
-		move.b	#$15,obAnim(a1)
-		move.w	#$23,objoff_2E(a1)
-		move.b	#0,objoff_3C(a1)
-		bclr	#5,obStatus(a1)
-		bclr	#4,obStatus(a1)
-		btst	#2,obStatus(a1)
-		beq.w	loc_13A70
-		bclr	#2,obStatus(a1)
-		move.b	#$13,obHeight(a1)
-		move.b	#9,obWidth(a1)
-		subq.w	#5,obY(a1)
-		bra.w	loc_13A70
-; ---------------------------------------------------------------------------
-
-loc_13B0A:
-		bsr.w	ObjectMove
-		tst.b	obRender(a0)
-		bpl.s	loc_13B1A
-		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-loc_13B1A:
-		jmp	(DeleteObject).l
-; ---------------------------------------------------------------------------
-
-Obj64_Display:
-		lea	Ani_Obj64(pc),a1
-		jsr	(AnimateSprite).l
-		tst.b	obRender(a0)
-		bpl.s	loc_13B38
-		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-loc_13B38:
-		jmp	(DeleteObject).l
-; ---------------------------------------------------------------------------
-
-Obj64_Delete:
-		bra.w	DeleteObject
-; ---------------------------------------------------------------------------
-
-Obj64_BblMaker:
-		tst.w	objoff_36(a0)
-		bne.s	loc_13BA4
-		move.w	(v_waterpos1).w,d0
-		cmp.w	obY(a0),d0
-		bhs.w	loc_13C50
-		tst.b	obRender(a0)
-		bpl.w	loc_13C50
-		subq.w	#1,objoff_38(a0)
-		bpl.w	loc_13C44
-		move.w	#1,objoff_36(a0)
-
-loc_13B6A:
-		jsr	(RandomNumber).l
-		move.w	d0,d1
-		andi.w	#7,d0
-		cmpi.w	#6,d0
-		bhs.s	loc_13B6A
-		move.b	d0,objoff_34(a0)
-		andi.w	#$C,d1
-		lea	Obj64_BblTypes(pc),a1
-		adda.w	d1,a1
-		move.l	a1,objoff_3C(a0)
-		subq.b	#1,objoff_32(a0)
-		bpl.s	loc_13BA2
-		move.b	objoff_33(a0),objoff_32(a0)
-		bset	#7,objoff_36(a0)
-
-loc_13BA2:
-		bra.s	loc_13BAC
-; ---------------------------------------------------------------------------
-
-loc_13BA4:
-		subq.w	#1,objoff_38(a0)
-		bpl.w	loc_13C44
-
-loc_13BAC:
-		jsr	(RandomNumber).l
-		andi.w	#$1F,d0
-		move.w	d0,objoff_38(a0)
-		bsr.w	FindFreeObj
-		bne.s	loc_13C28
-		_move.b	#id_Obj64,obID(a1)
-		move.w	obX(a0),obX(a1)
-		jsr	(RandomNumber).l
-		andi.w	#$F,d0
-		subq.w	#8,d0
-		add.w	d0,obX(a1)
-		move.w	obY(a0),obY(a1)
-		moveq	#0,d0
-		move.b	objoff_34(a0),d0
-		movea.l	objoff_3C(a0),a2
-		move.b	(a2,d0.w),obSubtype(a1)
-		btst	#7,objoff_36(a0)
-		beq.s	loc_13C28
-		jsr	(RandomNumber).l
-		andi.w	#3,d0
-		bne.s	loc_13C14
-		bset	#6,objoff_36(a0)
-		bne.s	loc_13C28
-		move.b	#2,obSubtype(a1)
-
-loc_13C14:
-		tst.b	objoff_34(a0)
-		bne.s	loc_13C28
-		bset	#6,objoff_36(a0)
-		bne.s	loc_13C28
-		move.b	#2,obSubtype(a1)
-
-loc_13C28:
-		subq.b	#1,objoff_34(a0)
-		bpl.s	loc_13C44
-		jsr	(RandomNumber).l
-		andi.w	#$7F,d0
-		addi.w	#$80,d0
-		add.w	d0,objoff_38(a0)
-		clr.w	objoff_36(a0)
-
-loc_13C44:
-		lea	Ani_Obj64(pc),a1
-		jsr	(AnimateSprite).l
-
-loc_13C50:
-		out_of_range.w	DeleteObject
-		move.w	(v_waterpos1).w,d0
-		cmp.w	obY(a0),d0
-		blo.w	DisplaySprite
-		rts
-; ---------------------------------------------------------------------------
-Obj64_BblTypes:
-		dc.b	0,  1,	0,  0,	0,  0,	1,  0,	0
-		dc.b   0,  0,  1,  0,  1,  0,  0,  1,  0
+		include	"objects/03 Collision Switcher.asm"
+Map_Obj03:	include	"mappings/sprite/obj03.asm"
 		even
-
-; =============== S U B	R O U T	I N E =======================================
-
-
-Obj64_ChkSonic:
-		tst.b	(f_playerctrl).w
-		bmi.s	loc_13CBE
-		lea	(v_player).w,a1
-		move.w	obX(a1),d0
-		move.w	obX(a0),d1
-		subi.w	#$10,d1
-		cmp.w	d0,d1
-		bhs.s	loc_13CBE
-		addi.w	#$20,d1
-		cmp.w	d0,d1
-		blo.s	loc_13CBE
-		move.w	obY(a1),d0
-		move.w	obY(a0),d1
-		cmp.w	d0,d1
-		bhs.s	loc_13CBE
-		addi.w	#$10,d1
-		cmp.w	d0,d1
-		blo.s	loc_13CBE
-		moveq	#1,d0
-		rts
+		include	"objects/07 Water Surface.asm"
+		include	"objects/08 Water Splash.asm"
+		include	"objects/09 Bubbles.asm"
+		include	"objects/0A Drowning Countdown.asm"
 ; ---------------------------------------------------------------------------
-
-loc_13CBE:
-		moveq	#0,d0
-		rts
-; End of function Obj64_ChkSonic
-
-; ---------------------------------------------------------------------------
-Ani_Obj64:	dc.w byte_13CD0-Ani_Obj64
-		dc.w byte_13CD5-Ani_Obj64
-		dc.w byte_13CDB-Ani_Obj64
-		dc.w byte_13CE2-Ani_Obj64
-		dc.w byte_13CE2-Ani_Obj64
-		dc.w byte_13CE4-Ani_Obj64
-		dc.w byte_13CE9-Ani_Obj64
-byte_13CD0:	dc.b  $E,  0,  1,  2,$FC
-byte_13CD5:	dc.b  $E,  1,  2,  3,  4,$FC
-byte_13CDB:	dc.b  $E,  2,  3,  4,  5,  6,$FC
-byte_13CE2:	dc.b   4,$FC
-byte_13CE4:	dc.b   4,  6,  7,  8,$FC
-byte_13CE9:	dc.b  $F,$13,$14,$15,$FF
+Map_Obj07:
+		dc.w word_155AC-Map_Obj07
+		dc.w word_155C6-Map_Obj07
+		dc.w word_155E0-Map_Obj07
+		dc.w word_155FA-Map_Obj07
+		dc.w word_1562C-Map_Obj07
+		dc.w word_1565E-Map_Obj07
+word_155AC:	dc.w 3
+		dc.w $F80D,    0,    0,$FFA0		; 0
+		dc.w $F80D,    0,    0,$FFE0		; 4
+		dc.w $F80D,    0,    0,	 $20		; 8
+word_155C6:	dc.w 3
+		dc.w $F80D,    8,    4,$FFA0		; 0
+		dc.w $F80D,    8,    4,$FFE0		; 4
+		dc.w $F80D,    8,    4,	 $20		; 8
+word_155E0:	dc.w 3
+		dc.w $F80D,  $10,    8,$FFA0		; 0
+		dc.w $F80D,  $10,    8,$FFE0		; 4
+		dc.w $F80D,  $10,    8,	 $20		; 8
+word_155FA:	dc.w 6
+		dc.w $F80D,    0,    0,$FFA0		; 0
+		dc.w $F80D,    8,    4,$FFC0		; 4
+		dc.w $F80D,    0,    0,$FFE0		; 8
+		dc.w $F80D,    8,    4,	   0		; 12
+		dc.w $F80D,    0,    0,	 $20		; 16
+		dc.w $F80D,    8,    4,	 $40		; 20
+word_1562C:	dc.w 6
+		dc.w $F80D,    8,    4,$FFA0		; 0
+		dc.w $F80D,  $10,    8,$FFC0		; 4
+		dc.w $F80D,    8,    4,$FFE0		; 8
+		dc.w $F80D,  $10,    8,	   0		; 12
+		dc.w $F80D,    8,    4,	 $20		; 16
+		dc.w $F80D,  $10,    8,	 $40		; 20
+word_1565E:	dc.w 6
+		dc.w $F80D,  $10,    8,$FFA0		; 0
+		dc.w $F80D,    8,    4,$FFC0		; 4
+		dc.w $F80D,  $10,    8,$FFE0		; 8
+		dc.w $F80D,    8,    4,	   0		; 12
+		dc.w $F80D,  $10,    8,	 $20		; 16
+		dc.w $F80D,    8,    4,	 $40		; 20
 		even
-Map_Obj0A_Bubbles:dc.w word_13D1C-Map_Obj0A_Bubbles
-		dc.w word_13D26-Map_Obj0A_Bubbles
-		dc.w word_13D30-Map_Obj0A_Bubbles
-		dc.w word_13D3A-Map_Obj0A_Bubbles
-		dc.w word_13D44-Map_Obj0A_Bubbles
-		dc.w word_13D4E-Map_Obj0A_Bubbles
-		dc.w word_13D58-Map_Obj0A_Bubbles
-		dc.w word_13D62-Map_Obj0A_Bubbles
-		dc.w word_13D84-Map_Obj0A_Bubbles
-		dc.w word_13DA6-Map_Obj0A_Bubbles
-		dc.w word_13DB0-Map_Obj0A_Bubbles
-		dc.w word_13DBA-Map_Obj0A_Bubbles
-		dc.w word_13DC4-Map_Obj0A_Bubbles
-		dc.w word_13DCE-Map_Obj0A_Bubbles
-		dc.w word_13DD8-Map_Obj0A_Bubbles
-		dc.w word_13DE2-Map_Obj0A_Bubbles
-		dc.w word_13DEC-Map_Obj0A_Bubbles
-		dc.w word_13DF6-Map_Obj0A_Bubbles
-		dc.w word_13E00-Map_Obj0A_Bubbles
-		dc.w word_13E0A-Map_Obj0A_Bubbles
-		dc.w word_13E14-Map_Obj0A_Bubbles
-		dc.w word_13E1E-Map_Obj0A_Bubbles
-		dc.w word_13E28-Map_Obj0A_Bubbles
+; ---------------------------------------------------------------------------
+Map_Obj09_Bubbles:
+		dc.w word_13D1C-Map_Obj09_Bubbles
+		dc.w word_13D26-Map_Obj09_Bubbles
+		dc.w word_13D30-Map_Obj09_Bubbles
+		dc.w word_13D3A-Map_Obj09_Bubbles
+		dc.w word_13D44-Map_Obj09_Bubbles
+		dc.w word_13D4E-Map_Obj09_Bubbles
+		dc.w word_13D58-Map_Obj09_Bubbles
+		dc.w word_13D62-Map_Obj09_Bubbles
+		dc.w word_13D84-Map_Obj09_Bubbles
+		dc.w word_13DA6-Map_Obj09_Bubbles
+		dc.w word_13DB0-Map_Obj09_Bubbles
+		dc.w word_13DBA-Map_Obj09_Bubbles
+		dc.w word_13DC4-Map_Obj09_Bubbles
+		dc.w word_13DCE-Map_Obj09_Bubbles
+		dc.w word_13DD8-Map_Obj09_Bubbles
+		dc.w word_13DE2-Map_Obj09_Bubbles
+		dc.w word_13DEC-Map_Obj09_Bubbles
+		dc.w word_13DF6-Map_Obj09_Bubbles
+		dc.w word_13E00-Map_Obj09_Bubbles
+		dc.w word_13E0A-Map_Obj09_Bubbles
+		dc.w word_13E14-Map_Obj09_Bubbles
+		dc.w word_13E1E-Map_Obj09_Bubbles
+		dc.w word_13E28-Map_Obj09_Bubbles
 word_13D1C:	dc.w 1
 		dc.w $FC00,    0,    0,$FFFC		; 0
 word_13D26:	dc.w 1
@@ -17310,86 +17096,11 @@ word_13E1E:	dc.w 1
 word_13E28:	dc.w 0
 		even
 ; ---------------------------------------------------------------------------
-		include	"objects/03 Collision Switcher.asm"
-Map_Obj03:	include	"mappings/sprite/obj03.asm"
-		even
-		include	"objects/04 Water Surface.asm"
-; ---------------------------------------------------------------------------
-Map_Obj04:	dc.w word_155AC-Map_Obj04
-		dc.w word_155C6-Map_Obj04
-		dc.w word_155E0-Map_Obj04
-		dc.w word_155FA-Map_Obj04
-		dc.w word_1562C-Map_Obj04
-		dc.w word_1565E-Map_Obj04
-word_155AC:	dc.w 3
-		dc.w $F80D,    0,    0,$FFA0		; 0
-		dc.w $F80D,    0,    0,$FFE0		; 4
-		dc.w $F80D,    0,    0,	 $20		; 8
-word_155C6:	dc.w 3
-		dc.w $F80D,    8,    4,$FFA0		; 0
-		dc.w $F80D,    8,    4,$FFE0		; 4
-		dc.w $F80D,    8,    4,	 $20		; 8
-word_155E0:	dc.w 3
-		dc.w $F80D,  $10,    8,$FFA0		; 0
-		dc.w $F80D,  $10,    8,$FFE0		; 4
-		dc.w $F80D,  $10,    8,	 $20		; 8
-word_155FA:	dc.w 6
-		dc.w $F80D,    0,    0,$FFA0		; 0
-		dc.w $F80D,    8,    4,$FFC0		; 4
-		dc.w $F80D,    0,    0,$FFE0		; 8
-		dc.w $F80D,    8,    4,	   0		; 12
-		dc.w $F80D,    0,    0,	 $20		; 16
-		dc.w $F80D,    8,    4,	 $40		; 20
-word_1562C:	dc.w 6
-		dc.w $F80D,    8,    4,$FFA0		; 0
-		dc.w $F80D,  $10,    8,$FFC0		; 4
-		dc.w $F80D,    8,    4,$FFE0		; 8
-		dc.w $F80D,  $10,    8,	   0		; 12
-		dc.w $F80D,    8,    4,	 $20		; 16
-		dc.w $F80D,  $10,    8,	 $40		; 20
-word_1565E:	dc.w 6
-		dc.w $F80D,  $10,    8,$FFA0		; 0
-		dc.w $F80D,    8,    4,$FFC0		; 4
-		dc.w $F80D,  $10,    8,$FFE0		; 8
-		dc.w $F80D,    8,    4,	   0		; 12
-		dc.w $F80D,  $10,    8,	 $20		; 16
-		dc.w $F80D,    8,    4,	 $40		; 20
-		even
-;----------------------------------------------------------------------------
-; Object 12 - Master Emerald from HPZ
-;----------------------------------------------------------------------------
-
-Obj12:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Obj12_Index(pc,d0.w),d1
-		jmp	Obj12_Index(pc,d1.w)
-; ---------------------------------------------------------------------------
-Obj12_Index:	dc.w Obj12_Init-Obj12_Index
-		dc.w Obj12_Display-Obj12_Index
-; ---------------------------------------------------------------------------
-
-Obj12_Init:
-		addq.b	#2,obRoutine(a0)
-		move.l	#Map_Obj12,obMap(a0)
-		move.w	#make_art_tile(ArtTile_HPZ_Emerald,3,0),obGfx(a0)
-		move.b	#4,obRender(a0)
-		move.b	#$20,obActWid(a0)
-		move.w	#$200,obPriority(a0)
-
-Obj12_Display:
-		moveq	#$20,d1
-		moveq	#$10,d2
-		moveq	#$10,d3
-		move.w	obX(a0),d4
-		bsr.w	SolidObject
-		out_of_range.w	DeleteObject
-		bra.w	DisplaySprite
-; ---------------------------------------------------------------------------
-Map_Obj12:	dc.w word_14444-Map_Obj12
-word_14444:	dc.w 2
-		dc.w $F00F,    0,    0,$FFE0
-		dc.w $F00F,  $10,    8,	   0
+Map_Obj0A_Countdown:
+		dc.w word_123B0-Map_Obj0A_Countdown
+word_123B0:
+		dc.w 1
+		dc.w $E80E,    0,    0,$FFF2
 		even
 ; ---------------------------------------------------------------------------
 ; Object 13 - HPZ waterfall

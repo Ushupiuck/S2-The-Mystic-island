@@ -1,8 +1,8 @@
 ; ---------------------------------------------------------------------------
-; Object 7F - chaos emeralds from the special stage results screen
+; Object 97 - chaos emeralds from the special stage results screen
 ; ---------------------------------------------------------------------------
 
-Obj7F:
+ChaosEmeralds:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	SSRC_Index(pc,d0.w),d1
@@ -22,7 +22,7 @@ SSRC_Main:	; Routine 0
 		bcs.w	DeleteObject	; if you have 0	emeralds, branch
 
 SSRC_Loop:
-		_move.b	#id_Obj7F,obID(a1)
+		_move.b	#id_Obj97,obID(a1)
 		move.w	(a2)+,obX(a1)	; set x-position
 		move.w	#$F0,obScreenY(a1) ; set y-position
 		lea	(v_emldlist).w,a3 ; check which emeralds you have

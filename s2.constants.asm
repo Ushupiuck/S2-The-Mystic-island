@@ -147,14 +147,14 @@ af2ndRoutine:	equ $FA	; increment 2nd routine counter
 ; Levels
 id_GHZ:		equ 0
 id_LZ:		equ 1
-id_CPZ:		equ 2
 id_MZ:		equ 2
-id_EHZ:		equ 3
+id_CPZ:		equ 2
 id_SLZ:		equ 3
-id_HPZ:		equ 4
+id_EHZ:		equ 3
 id_SYZ:		equ 4
-id_HTZ:		equ 5
+id_HPZ:		equ 4
 id_SBZ:		equ 5
+id_HTZ:		equ 5
 id_EndZ:	equ 6
 id_SS:		equ 7
 
@@ -421,7 +421,6 @@ Ring_Positions_End:
 
 v_objspace:		ds.b	object_size*$80		; object variable space ($40 bytes per object)
 v_objspace_end:
-
 ; ---------------------------------------------------------------------------
 ; Title screen objects
 v_sonicteam	= v_objspace+object_size*1		; object variable space for the "SONIC TEAM PRESENTS" text ($40 bytes)
@@ -433,18 +432,18 @@ v_pressstart	= v_objspace+object_size*5		; object variable space for the "PRESS 
 ; Reserved object slots
 v_player	= v_objspace+object_size*0		; object variable space for Sonic ($40 bytes)
 v_player2	= v_objspace+object_size*1		; object variable space for Tails ($40 bytes)
-v_shieldobj	= v_objspace+object_size*2		; object variable space for the shield ($40 bytes)
-v_player2tails	= v_objspace+object_size*3		; object variable space for Tails' Tails ($40 bytes)
-v_starsobj1	= v_objspace+object_size*8		; object variable space for the invincibility stars #1 ($40 bytes)
-v_starsobj2	= v_objspace+object_size*9		; object variable space for the invincibility stars #2 ($40 bytes)
-v_starsobj3	= v_objspace+object_size*10		; object variable space for the invincibility stars #3 ($40 bytes)
-v_starsobj4	= v_objspace+object_size*11		; object variable space for the invincibility stars #4 ($40 bytes)
+v_player2tails	= v_objspace+object_size*6		; object variable space for Tails' Tails ($40 bytes)
+v_shieldobj	= v_objspace+object_size*7		; object variable space for Sonic's shield ($40 bytes)
+v_shieldobj2	= v_objspace+object_size*8		; object variable space for Tails's shield ($40 bytes)
+v_starsobj1	= v_objspace+object_size*9		; object variable space for the invincibility stars #1 ($40 bytes)
+v_starsobj2	= v_objspace+object_size*10		; object variable space for the invincibility stars #2 ($40 bytes)
+v_starsobj3	= v_objspace+object_size*11		; object variable space for the invincibility stars #3 ($40 bytes)
+v_starsobj4	= v_objspace+object_size*12		; object variable space for the invincibility stars #4 ($40 bytes)
 
-v_splash	= v_objspace+object_size*12		; object variable space for the water splash ($40 bytes)
-v_sonicbubbles	= v_objspace+object_size*13		; object variable space for the bubbles that come out of Sonic's mouth/drown countdown ($40 bytes)
+v_splash	= v_objspace+object_size*13		; object variable space for the water splash ($40 bytes)
+v_sonicbubbles	= v_objspace+object_size*14		; object variable space for the bubbles that come out of Sonic's mouth/drown countdown ($40 bytes)
 v_watersurface1	= v_objspace+object_size*30		; object variable space for the water surface #1 ($40 bytes)
 v_watersurface2	= v_objspace+object_size*31		; object variable space for the water surface #2 ($40 bytes)
-;		= v_objspace+object_size*14		; empty
 
 v_gameovertext1	= v_objspace+object_size*2		; object variable space for the "GAME"/"TIME" in "GAME OVER"/"TIME OVER" text ($40 bytes)
 v_gameovertext2	= v_objspace+object_size*3		; object variable space for the "OVER" in "GAME OVER"/"TIME OVER" text ($40 bytes)
