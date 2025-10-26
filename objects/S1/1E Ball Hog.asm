@@ -1,27 +1,24 @@
 ; ---------------------------------------------------------------------------
 ; Object 1E - Vertical Ball Hog enemy
 ; ---------------------------------------------------------------------------
-
 hog_launchflag	= objoff_30	; byte; 0 to launch a cannonball
 hog_wait	= objoff_31	; byte; time between shots
 hog_backup	= objoff_32	; word; backup of hog_wait
 hog_walk	= objoff_34	; word; time to idle around from left to right
-hog_timer:	= objoff_36
-hog_cooldown:	= objoff_38
+hog_timer	= objoff_36
+hog_cooldown	= objoff_38
+
 ObjVBallhog:
-Obj1E:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	Obj1E_Index(pc,d0.w),d0
 		jmp	Obj1E_Index(pc,d0.w)
 ; ===========================================================================
-Obj1E_Index:	dc.w Obj1E_Main-Obj1E_Index
-		dc.w Obj1E_Action-Obj1E_Index
-
-		dc.w Obj1E_Action2-Obj1E_Index
-
-		dc.w Obj1E_NormalBomb-Obj1E_Index
-		dc.w Obj1E_ProtoBomb-Obj1E_Index
+Obj1E_Index:	dc.w Obj1E_Main-Obj1E_Index	; 0
+		dc.w Obj1E_Action-Obj1E_Index	; 2
+		dc.w Obj1E_Action2-Obj1E_Index	; 4
+		dc.w Obj1E_NormalBomb-Obj1E_Index	; 6
+		dc.w Obj1E_ProtoBomb-Obj1E_Index	; 8
 ; ===========================================================================
 
 Obj1E_Main:
@@ -34,7 +31,7 @@ Obj1E_Main:
 		move.b	#$13,obHeight(a0)
 		move.b	#8,obWidth(a0)
 		bsr.w	ObjectMoveAndFall
-		jsr	ObjHitFloor
+		jsr	(ObjHitFloor).l
 		tst.w	d1
 		bpl.s	.return
 		add.w	d1,obY(a0)
@@ -81,7 +78,6 @@ Obj1E_Main:
 		move.b	#8,ob2ndRout(a0)	; set to timed mode
 		move.b	#4,obRoutine(a0)
 		rts
-
 ; ---------------------------------------------------------------------------
 
 .timed:
@@ -114,9 +110,9 @@ Obj1E_MakeBall:
 		move.b	#1,hog_wait(a0)
 		bsr.w	FindFreeObj
 		bne.w	.no_free_ram
-		move.b	#id_Obj1E,(a1)	; load bomb
-		move.b	#6,obRoutine(a1); set normal bomb
-		move.b	#4,obFrame(a1)  ; set bomb frame
+		move.b	#id_Obj1E,(a1)		; load bomb
+		move.b	#6,obRoutine(a1)	; set normal bomb
+		move.b	#4,obFrame(a1)		; set bomb frame
 		move.l	#Map_BallHogH,obMap(a1)
 		move.b	#6,obHeight(a1)
 		move.w	#make_art_tile(ArtTile_Ball_HogH,1,0),obGfx(a1)
@@ -129,8 +125,8 @@ Obj1E_MakeBall:
 		move.b	#$87,obColType(a1)
 		move.b	#8,obActWid(a1)
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0						; move subtype to d0
-		add.w	d0,d0								; multiply by 60 frames (1 second)
+		move.b	obSubtype(a0),d0	; move subtype to d0
+		add.w	d0,d0			; multiply by 60 frames (1 second)
 		add.w	d0,d0
 		move.w	d0,d1
 		lsl.w	#4,d0
@@ -138,7 +134,7 @@ Obj1E_MakeBall:
 		move.w	d0,hog_launchflag(a1)
 
 		moveq	#-4,d0
-		btst	#0,obStatus(a0)	; is Ball Hog facing right?
+		btst	#0,obStatus(a0)		; is Ball Hog facing right?
 		beq.s	.dont_change_dir	; if not, branch
 		neg.w	d0
 		neg.w	obVelX(a1)		; cannonball bounces to	the right
@@ -146,7 +142,7 @@ Obj1E_MakeBall:
 .dont_change_dir:
 		add.w	d0,obX(a1)
 		addi.w	#$C,obY(a1)
-		move.b	obSubtype(a0),obSubtype(a1) ; copy object type from Ball Hog
+		move.b	obSubtype(a0),obSubtype(a1)	; copy object type from Ball Hog
 
 .no_free_ram:
 		bra.w	MarkObjGone
@@ -159,7 +155,7 @@ Obj1E_Action2:
 		jsr	.action_index(pc,d1.w)
 		lea	Ani_HogVert(pc),a1
 		bsr.w	AnimateSprite
-		jmp	MarkObjGone
+		bra.w	MarkObjGone
 ; ===========================================================================
 .action_index:
 		dc.w Hog_Idle-.action_index
@@ -188,43 +184,49 @@ Hog_Idle:
 ; ===========================================================================
 
 Hog_Move:
-		tst.w   hog_cooldown(a0)	;set_cooldown
+		tst.w   hog_cooldown(a0)	; set_cooldown
 		beq.s	.dochecks
 		subq.w	#1,hog_cooldown(a0)
 		bra.s	.keepmoving
-.dochecks:	
+.dochecks:
 		lea	(v_player2).w,a1
-
-		move.w	obX(a1),d0 	;Load Tails's X position
+		move.w	obX(a1),d0	; Load Tails's X position
 		sub.w	obX(a0),d0
 		bpl.s	+
 		neg.w	d0
-
 +
-		cmpi.w	#$10,d0		; is Proto Hog  within	$10 pixels of sonic?
+		cmpi.w	#$10,d0		; is Proto Hog within $10 pixels of sonic?
 		bcs.s	.checkY
 
 		lea	(v_player).w,a1
-
-		move.w	obX(a1),d0 	;Load Sonic's X position
+		move.w	obX(a1),d0	; Load Sonic's X position
 		sub.w	obX(a0),d0
 		bpl.s	+
 		neg.w	d0
-
 +
-		cmpi.w	#$10,d0		; is Proto Hog  within	$10 pixels of sonic?
+		cmpi.w	#$10,d0		; is Proto Hog within $10 pixels of sonic?
 		bcc.s	.not_below
 
-.checkY
-		move.w	obY(a1),d0 	;Load Character's Y position
+.checkY:
+		move.w	obY(a1),d0	; Load Character's Y position
 		sub.w	obY(a0),d0
 		cmpi.w	#$80,d0
 		bcc.s	.not_below
 
-		move.w	#120,hog_cooldown(a0)	;set_cooldown
-		bra.s	.finished_timer
+		move.w	#120,hog_cooldown(a0)	; set_cooldown
+		subq.b	#2,ob2ndRout(a0)
+		move.w	#60-1,hog_timer(a0)
+		clr.w	obVelX(a0)
+		sf	obAnim(a0)
+		tst.b	obRender(a0)
+		bpl.s	.return
+		move.b	#2,obAnim(a0)
 
-.not_below
+.return:
+		rts
+; ---------------------------------------------------------------------------
+
+.not_below:
 		subq.w	#1,hog_timer(a0)
 		bmi.s	.finished_timer
 .keepmoving:
@@ -234,7 +236,6 @@ Hog_Move:
 		btst	#0,obStatus(a0)
 		beq.s	.probe
 		subi.w	#$20,d3
-
 .probe:
 		jsr	(ObjHitFloor2).l
 		cmpi.w	#-8,d1
@@ -253,8 +254,6 @@ Hog_Move:
 		tst.b	obRender(a0)
 		bpl.s	.return
 		move.b	#2,obAnim(a0)
-
-.return:
 		rts
 ; ===========================================================================
 
@@ -270,45 +269,52 @@ Hog_Idle2:
 ; ===========================================================================
 
 Hog_Move2:
-		tst.w   hog_cooldown(a0)	;set_cooldown
+		tst.w   hog_cooldown(a0)	; set_cooldown
 		beq.s	.dochecks
 		subq.w	#1,hog_cooldown(a0)
 		bra.s	.keepmoving
-.dochecks:	
+.dochecks:
 		lea	(v_player2).w,a1
-
-		move.w	obX(a1),d0 	;Load Tails's X position
+		move.w	obX(a1),d0	; Load Tails's X position
 		sub.w	obX(a0),d0
 		bpl.s	+
 		neg.w	d0
-
 +
-		cmpi.w	#$10,d0		; is Proto Hog  within	$10 pixels of sonic?
+		cmpi.w	#$10,d0		; is Proto Hog within $10 pixels of sonic?
 		bcs.s	.checkY
 
 		lea	(v_player).w,a1
-
-		move.w	obX(a1),d0 	;Load Sonic's X position
+		move.w	obX(a1),d0	; Load Sonic's X position
 		sub.w	obX(a0),d0
 		bpl.s	+
 		neg.w	d0
-
 +
-		cmpi.w	#$10,d0		; is Proto Hog  within	$10 pixels of sonic?
+		cmpi.w	#$10,d0		; is Proto Hog within $10 pixels of sonic?
 		bcc.s	.not_below
 
-.checkY
-		move.w	obY(a1),d0 	;Load Character's Y position
+.checkY:
+		move.w	obY(a1),d0	; Load Character's Y position
 		sub.w	obY(a0),d0
 		cmpi.w	#$80,d0
 		bcc.s	.not_below
-		move.w	#120,hog_cooldown(a0)	;set_cooldown
-		bra.s	.finished_timer
+		move.w	#120,hog_cooldown(a0)	; set_cooldown
+		subq.b	#2,ob2ndRout(a0)
+		move.w	#60-1,hog_timer(a0)
+		move.w	obVelX(a0),hog_walk(a0)
+		clr.w	obVelX(a0)
+		sf	obAnim(a0)
+		tst.b	obRender(a0)
+		bpl.s	.return
+		move.b	#2,obAnim(a0)
 
-.not_below
+.return:
+		rts
+; ---------------------------------------------------------------------------
+
+.not_below:
 		subq.w	#1,hog_timer(a0)
 		bmi.s	.finished_timer
-.keepmoving
+.keepmoving:
 		bsr.w	ObjectMove
 		move.w	obX(a0),d3
 		addi.w	#$10,d3
@@ -323,9 +329,9 @@ Hog_Move2:
 		bge.s	.just_turn
 		rts
 ; ---------------------------------------------------------------------------
+
 .just_turn:
 		bchg	#0,obStatus(a0)
-
 		neg.w	obVelX(a0)
 		rts
 ; ---------------------------------------------------------------------------
@@ -339,8 +345,6 @@ Hog_Move2:
 		tst.b	obRender(a0)
 		bpl.s	.return
 		move.b	#2,obAnim(a0)
-
-.return:
 		rts
 ; ===========================================================================
 
@@ -363,7 +367,7 @@ Hog_Idle3:
 
 .load_bomb:
 		bsr.w	FindFreeObj
-		bne.s	.abort			; if ObjectRam is full, we bail!
+		bne.s	.abort		; if ObjectRam is full, we bail!
 		move.b	#id_Obj1E,(a1)	; load bomb
 		move.b	#8,obRoutine(a1); set proto bomb
 		move.b	#4,obFrame(a1)  ; set bomb frame
@@ -382,40 +386,42 @@ Hog_Idle3:
 ; ===========================================================================
 
 Hog_Move3:
-		tst.w   hog_cooldown(a0)	;set_cooldown
+		tst.w   hog_cooldown(a0)	; set_cooldown
 		beq.s	.dochecks
 		subq.w	#1,hog_cooldown(a0)
-		bra.s	.return
-.dochecks:	
-		lea	(v_player2).w,a1
+		rts
+; ---------------------------------------------------------------------------
 
-		move.w	obX(a1),d0 	;Load Tails's X position
+.dochecks:
+		lea	(v_player2).w,a1
+		move.w	obX(a1),d0 	; Load Tails's X position
 		sub.w	obX(a0),d0
 		bpl.s	+
 		neg.w	d0
-
 +
-		cmpi.w	#$10,d0		; is Proto Hog  within	$10 pixels of sonic?
+		cmpi.w	#$10,d0		; is Proto Hog within $10 pixels of sonic?
 		bcs.s	.checkY
 
 		lea	(v_player).w,a1
-
-		move.w	obX(a1),d0 	;Load Sonic's X position
+		move.w	obX(a1),d0 	; Load Sonic's X position
 		sub.w	obX(a0),d0
 		bpl.s	+
 		neg.w	d0
-
 +
-		cmpi.w	#$10,d0		; is Proto Hog  within	$10 pixels of sonic?
+		cmpi.w	#$10,d0		; is Proto Hog within $10 pixels of sonic?
 		bcc.s	.not_below
 
 .checkY
-		move.w	obY(a1),d0 	;Load Character's Y position
+		move.w	obY(a1),d0 	; Load Character's Y position
 		sub.w	obY(a0),d0
 		cmpi.w	#$80,d0
 		bcc.s	.not_below
-		move.w	#120,hog_cooldown(a0)	;set_cooldown
-		bra.s	.throw_ball
+		move.w	#120,hog_cooldown(a0)	; set_cooldown
+		subq.b	#2,ob2ndRout(a0)
+		move.w	hog_backup(a0),hog_timer(a0)
+		move.b	#2,obAnim(a0)
+		rts
+; ---------------------------------------------------------------------------
 
 .not_below
 		subq.w	#1,hog_timer(a0)
@@ -429,22 +435,19 @@ Hog_Move3:
 ; ===========================================================================
 
 Obj1E_NormalBomb:
-		jsr	(ObjectMoveAndFall).l
-
+		bsr.w	ObjectMoveAndFall
 		moveq	#$6,d3
-		jsr	ObjHitWallRight
+		jsr	(ObjHitWallRight).l
 		tst.w	d1
 		bpl.s	+
 		neg.w	obVelX(a0)
 +
-
 		moveq	#-$6,d3
-		jsr	ObjHitWallLeft
+		jsr	(ObjHitWallLeft).l
 		tst.w	d1
 		bpl.s	+		; delete if the	fireball hits a	wall
 		neg.w	obVelX(a0)
 +
-
 		tst.w	obVelY(a0)
 		bmi.s	.moving_up
 		jsr	(ObjHitFloor).l
@@ -458,7 +461,11 @@ Obj1E_NormalBomb:
 		tst.w	obVelX(a0)
 		bpl.s	.moving_up
 		neg.w	obVelX(a0)
-		bra.s	.moving_up
+		subq.w	#1,hog_launchflag(a0)
+		bpl.s	.time_remaining
+		move.b	#id_Obj3F,(a0)
+		sf	obRoutine(a0)
+		rts
 ; ---------------------------------------------------------------------------
 
 .check_Xvel:
@@ -509,7 +516,7 @@ Obj1E_ProtoBomb:
 
 .not_in_floor:
 		moveq	#$22,d1
-		jsr	(ObjectMoveAndFall_CustomGravity).l
+		bsr.w	ObjectMoveAndFall_CustomGravity
 		move.w	(v_limitbtm2).w,d0
 		addi.w	#224,d0
 		cmp.w	obY(a0),d0
