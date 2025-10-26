@@ -12801,10 +12801,10 @@ loc_1049C:
 
 
 Sonic_JumpAngle:
-		move.b	obAngle(a0),d0
-		beq.s	loc_104BC
-		bpl.s	loc_104B2
-		addq.b	#2,d0
+		move.b	obAngle(a0),d0	; get Sonic's angle
+		beq.s	loc_104BC	; if already 0, branch
+		bpl.s	loc_104B2	; if higher than 0, branch
+		addq.b	#2,d0		; increase angle
 		bhs.s	loc_104B0
 		moveq	#0,d0
 
@@ -13215,7 +13215,10 @@ loc_10888:
 		_move.b	#id_Obj39,(v_gameovertext2).w
 		move.b	#2,(v_gameovertext1+obFrame).w
 		move.b	#3,(v_gameovertext2+obFrame).w
-		bra.s	loc_10876
+		move.w	#bgm_GameOver,d0
+		jsr	(PlaySound).l
+		moveq	#plcid_GameOver,d0
+		jmp	(LoadPLC).l
 ; ---------------------------------------------------------------------------
 
 locret_108B4:
@@ -13342,10 +13345,10 @@ loc_1098C:
 		neg.w	d2
 
 loc_109B0:
-		lea	(SonicAni_Run).l,a1
+		lea	SonicAni_Run(pc),a1
 		cmpi.w	#$600,d2
 		bhs.s	loc_109C2
-		lea	(SonicAni_Walk).l,a1
+		lea	SonicAni_Walk(pc),a1
 
 loc_109C2:
 		move.b	d0,d1
@@ -13406,10 +13409,10 @@ loc_10A44:
 		neg.w	d2
 
 loc_10A50:
-		lea	(SonicAni_Roll2).l,a1
+		lea	SonicAni_Roll2(pc),a1
 		cmpi.w	#$600,d2
 		bhs.s	loc_10A62
-		lea	(SonicAni_Roll).l,a1
+		lea	SonicAni_Roll(pc),a1
 
 loc_10A62:
 		neg.w	d2
@@ -13440,7 +13443,7 @@ loc_10A90:
 loc_10A98:
 		lsr.w	#6,d2
 		move.b	d2,obTimeFrame(a0)
-		lea	(SonicAni_Push).l,a1
+		lea	SonicAni_Push(pc),a1
 		move.b	obStatus(a0),d1
 		andi.b	#1,d1
 		andi.b	#$FC,obRender(a0)
@@ -13482,22 +13485,22 @@ SonicAniData:	dc.w SonicAni_Walk-SonicAniData
 		dc.w SonicAni_Blank-SonicAniData
 		dc.w SonicAni_Float3-SonicAniData
 		dc.w SonicAni_1E-SonicAniData
-SonicAni_Walk:	dc.b $FF,$10,$11,$12,$13,$14,$15,$16,$17, $C, $D, $E, $F,$FF
-SonicAni_Run:	dc.b $FF,$3C,$3D,$3E,$3F,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-SonicAni_Roll:	dc.b $FE,$6C,$70,$6D,$70,$6E,$70,$6F,$70,$FF
-SonicAni_Roll2:	dc.b $FE,$6C,$70,$6D,$70,$6E,$70,$6F,$70,$FF
-SonicAni_Push:	dc.b $FD,$77,$78,$79,$7A,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-SonicAni_Wait:	dc.b   7,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1
-		dc.b   1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  2
-		dc.b   3,  3,  3,  4,  4,  5,  5,$FE,  4
+SonicAni_Walk:		dc.b $FF,$10,$11,$12,$13,$14,$15,$16,$17, $C, $D, $E, $F,$FF
+SonicAni_Run:		dc.b $FF,$3C,$3D,$3E,$3F,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+SonicAni_Roll:		dc.b $FE,$6C,$70,$6D,$70,$6E,$70,$6F,$70,$FF
+SonicAni_Roll2:		dc.b $FE,$6C,$70,$6D,$70,$6E,$70,$6F,$70,$FF
+SonicAni_Push:		dc.b $FD,$77,$78,$79,$7A,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+SonicAni_Wait:		dc.b   7,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1
+			dc.b   1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  2
+			dc.b   3,  3,  3,  4,  4,  5,  5,$FE,  4
 SonicAni_Balance:	dc.b	7,$89,$8A,$FF
 SonicAni_LookUp:	dc.b   5,  6,  7,$FE,  1
-SonicAni_Duck:	dc.b   5,$7F,$80,$FE,  1
+SonicAni_Duck:		dc.b   5,$7F,$80,$FE,  1
 SonicAni_Spindash:	dc.b	 0,$71,$72,$71,$73,$71,$74,$71,$75,$71,$76,$71,$FF
 SonicAni_WallRecoil1:	dc.b $3F,$82,$FF
 SonicAni_WallRecoil2:	dc.b   7, 8, 8, 9,$FD,	5
-SonicAni_0C:	dc.b   7,  9,$FD,  5
-SonicAni_Stop:	dc.b   3,$81,$82,$83,$84,$85,$86,$87,$88,$FE,  2
+SonicAni_0C:		dc.b   7,  9,$FD,  5
+SonicAni_Stop:		dc.b   3,$81,$82,$83,$84,$85,$86,$87,$88,$FE,  2
 SonicAni_Float1:	dc.b   7,$94,$96,$FF
 SonicAni_Float2:	dc.b   7,$91,$92,$93,$94,$95,$FF
 SonicAni_Spring:	dc.b $2F,$7E,$FD,  0
@@ -13507,14 +13510,14 @@ SonicAni_Unused13:	dc.b	$F,$43,$44,$FE,	 1
 SonicAni_Unused14:	dc.b $3F,$49,$FF
 SonicAni_Bubble:	dc.b  $B,$97,$97,$12,$13,$FD,  0
 SonicAni_DeathBW:	dc.b $20,$9A,$FF
-SonicAni_Drown:	dc.b $20,$99,$FF
-SonicAni_Death:	dc.b $20,$98,$FF
+SonicAni_Drown:		dc.b $20,$99,$FF
+SonicAni_Death:		dc.b $20,$98,$FF
 SonicAni_Unused19:	dc.b	 3,$4E,$4F,$50,$51,$52,	 0,$FE,	 1
-SonicAni_Hurt:	dc.b $40,$8D,$FF
+SonicAni_Hurt:		dc.b $40,$8D,$FF
 SonicAni_S1LZSlide:	dc.b	  9,$8D,$8E,$FF
-SonicAni_Blank:	dc.b $77,  0,$FD,  0
+SonicAni_Blank:		dc.b $77,  0,$FD,  0
 SonicAni_Float3:	dc.b   3,$91,$92,$93,$94,$95,$FF
-SonicAni_1E:	dc.b   3,$3C,$FD,  0
+SonicAni_1E:		dc.b   3,$3C,$FD,  0
 		even
 
 ; ---------------------------------------------------------------------------
@@ -13528,17 +13531,17 @@ LoadSonicDynPLC:
 		moveq	#0,d0
 		move.b	obFrame(a0),d0
 		cmp.b	(Sonic_LastLoadedDPLC).w,d0
-		beq.s	locret_10C34
+		beq.s	.return
 		move.b	d0,(Sonic_LastLoadedDPLC).w
 		lea	(SonicDynPLC).l,a2
 		add.w	d0,d0
 		adda.w	(a2,d0.w),a2
 		move.w	(a2)+,d5
 		subq.w	#1,d5
-		bmi.s	locret_10C34
+		bmi.s	.return
 		move.w	#ArtTile_Sonic*tile_size,d4
-; loc_10C08:
-SPLC_ReadEntry:
+
+.SPLC_ReadEntry:
 		moveq	#0,d1
 		move.w	(a2)+,d1
 		move.w	d1,d3
@@ -13552,9 +13555,9 @@ SPLC_ReadEntry:
 		add.w	d3,d4
 		add.w	d3,d4
 		jsr	(QueueDMATransfer).l
-		dbf	d5,SPLC_ReadEntry
+		dbf	d5,.SPLC_ReadEntry
 
-locret_10C34:
+.return:
 		rts
 ; End of function LoadSonicDynPLC
 
@@ -15050,7 +15053,7 @@ locret_1199A:
 
 
 Tails_Animate:
-		lea	(TailsAniData).l,a1
+		lea	TailsAniData(pc),a1
 
 Tails_Animate2:
 		moveq	#0,d0

@@ -98,7 +98,7 @@ objoff_3F:		equ $3F
 ; conventions followed by several objects but NOT Sonic/Tails:
 obScreenX =		obX ; and 1+x_pos ; x coordinate for objects using screen-space coordinate system (S2 x_pixel)
 obScreenY =		obXSub ; and 3+x_pos ; y coordinate for objects using screen-space coordinate system (S2 y_pixel)
-parent =		objoff_3E ; and $3F ; address of object that owns or spawned this one, if applicable
+obParent =		objoff_3E ; and $3F ; address of object that owns or spawned this one, if applicable
 
 object_size_bits:	equ 6
 object_size:		equ 1<<object_size_bits
@@ -110,8 +110,8 @@ next_subspr		= 6
 mainspr_mapframe	= $B
 mainspr_width		= $E
 mainspr_childsprites	= $F	; amount of child sprites
-mainspr_height	= $14
-subspr_data	= $10
+mainspr_height		= $14
+subspr_data		= $10
 sub2_x_pos	= subspr_data+next_subspr*0+0	;x_vel
 sub2_y_pos	= subspr_data+next_subspr*0+2	;y_vel
 sub2_mapframe	= subspr_data+next_subspr*0+5
@@ -145,18 +145,18 @@ afRoutine:	equ $FC	; increment routine counter
 afReset:	equ $FB	; reset animation and 2nd object routine counter
 af2ndRoutine:	equ $FA	; increment 2nd routine counter
 ; Levels
-id_GHZ:	equ 0
-id_LZ:	equ 1
-id_CPZ:	equ 2
-id_MZ:	equ 2
-id_EHZ:	equ 3
-id_SLZ:	equ 3
-id_HPZ:	equ 4
-id_SYZ:	equ 4
-id_HTZ:	equ 5
-id_SBZ:	equ 5
+id_GHZ:		equ 0
+id_LZ:		equ 1
+id_CPZ:		equ 2
+id_MZ:		equ 2
+id_EHZ:		equ 3
+id_SLZ:		equ 3
+id_HPZ:		equ 4
+id_SYZ:		equ 4
+id_HTZ:		equ 5
+id_SBZ:		equ 5
 id_EndZ:	equ 6
-id_SS:	equ 7
+id_SS:		equ 7
 
 ; Colours
 cBlack:		equ $000				; colour black
@@ -190,6 +190,27 @@ btnC:	EQU	1<<bitC			; $20
 btnA:	EQU	1<<bitA			; $40
 btnABC:	EQU	btnA|btnB|btnC		; $70
 btnStart:	EQU	1<<bitStart	; $80
+; ---------------------------------------------------------------------------
+; Casino night bumpers (Imported from Sonic 2. MIGHT get used, might not.)
+bumper_id           = 0
+bumper_x            = 2
+bumper_y            = 4
+next_bumper         = 6
+prev_bumper_x       = bumper_x-next_bumper
+
+; ---------------------------------------------------------------------------
+; status_secondary bitfield variables
+;
+; status_secondary variable bit numbers
+obStatusSecondary_hasShield:		EQU	0
+obStatusSecondary_isInvincible:		EQU	1
+obStatusSecondary_hasSpeedShoes:	EQU	2
+obStatusSecondary_isSliding:		EQU	7
+; status_secondary variable masks (1 << x == pow(2, x))
+obStatusSecondary_hasShield_mask:	EQU	1<<obStatusSecondary_hasShield		; $01
+obStatusSecondary_isInvincible_mask:	EQU	1<<obStatusSecondary_isInvincible	; $02
+obStatusSecondary_hasSpeedShoes_mask:	EQU	1<<obStatusSecondary_hasSpeedShoes	; $04
+obStatusSecondary_isSliding_mask:	EQU	1<<obStatusSecondary_isSliding		; $80
 ; ---------------------------------------------------------------------------
 ; Art tile stuff
 flip_x              =      (1<<11)
@@ -358,7 +379,7 @@ RAM_debug_end:
 v_start:
 RAM_Start:
 
-Chunk_Table:		ds.w	$40*$100			; 128x128 tile mappings ($8000 bytes)
+Chunk_Table:		ds.w	$40*$100		; 128x128 tile mappings ($8000 bytes)
 Chunk_Table_End:
 v_128x128:=	Chunk_Table
 v_128x128_end:=	Chunk_Table_End
@@ -369,7 +390,7 @@ Level_Layout_End:
 v_lvllayout:=		Level_Layout
 v_lvllayout_end:=	Level_Layout_End
 v_lvllayoutbg:=		Level_Layout+$80
-v_16x16:		ds.b	$1800			; $1800 bytes; unused
+v_16x16:		ds.b	$1800			; $1800 bytes
 
 TempArray_LayerDef:	ds.b	$200			; background scroll buffer
 Decomp_Buffer:		ds.b	$200			; Nemesis graphics decompression buffer
@@ -412,8 +433,8 @@ v_pressstart	= v_objspace+object_size*5		; object variable space for the "PRESS 
 ; Reserved object slots
 v_player	= v_objspace+object_size*0		; object variable space for Sonic ($40 bytes)
 v_player2	= v_objspace+object_size*1		; object variable space for Tails ($40 bytes)
-v_shieldobj	= v_objspace+object_size*6		; object variable space for the shield ($40 bytes)
-v_player2tails	= v_objspace+object_size*7		; object variable space for Tails' Tails ($40 bytes)
+v_shieldobj	= v_objspace+object_size*2		; object variable space for the shield ($40 bytes)
+v_player2tails	= v_objspace+object_size*3		; object variable space for Tails' Tails ($40 bytes)
 v_starsobj1	= v_objspace+object_size*8		; object variable space for the invincibility stars #1 ($40 bytes)
 v_starsobj2	= v_objspace+object_size*9		; object variable space for the invincibility stars #2 ($40 bytes)
 v_starsobj3	= v_objspace+object_size*10		; object variable space for the invincibility stars #3 ($40 bytes)
@@ -509,16 +530,10 @@ Verti_block_crossed_flag:	ds.b	1	; toggles between 0 and $10 when you cross a bl
 Horiz_block_crossed_flag_BG:	ds.b	1	; toggles between 0 and $10 when background camera crosses a block boundary horizontally
 Verti_block_crossed_flag_BG:	ds.b	1	; toggles between 0 and $10 when background camera crosses a block boundary vertically
 Horiz_block_crossed_flag_BG2:	ds.b	1	; used in CPZ
-				ds.b	1	; $FFFFEE45 ; seems unused
 Horiz_block_crossed_flag_BG3:	ds.b	1
+				ds.b	1	; $FFFFEE45 ; seems unused
 				ds.b	1	; $FFFFEE47 ; seems unused
 Block_Crossed_Flags_End:
-
-Block_Crossed_Flags_P2:
-Horiz_block_crossed_flag_P2:	ds.b	1	; toggles between 0 and $10 when you cross a block boundary horizontally
-Verti_block_crossed_flag_P2:	ds.b	1	; toggles between 0 and $10 when you cross a block boundary vertically
-				ds.b	6	; $FFFFEE4A-$FFFFEE4F ; seems unused
-Block_Crossed_Flags_P2_End:
 
 Scroll_Flags_All:
 Scroll_flags:			ds.w	1	; bitfield ; bit 0 = redraw top row, bit 1 = redraw bottom row, bit 2 = redraw left-most column, bit 3 = redraw right-most column
@@ -589,32 +604,30 @@ Camera_Max_Y_pos:	ds.w	1
 Camera_Boundaries_End:
 
 Camera_Delay:
-Horiz_scroll_delay_val:	ds.w	1			; if its value is a, where a != 0, X scrolling will be based on the player's X position a-1 frames ago
-Sonic_Pos_Record_Index:	ds.w	1			; into Sonic_Pos_Record_Buf and Sonic_Stat_Record_Buf
+Horiz_scroll_delay_val:	ds.w	1		; if its value is a, where a != 0, X scrolling will be based on the player's X position a-1 frames ago
+Sonic_Pos_Record_Index:	ds.w	1		; into Sonic_Pos_Record_Buf and Sonic_Stat_Record_Buf
 Camera_Delay_End:
 
 Camera_Delay_P2:
 Horiz_scroll_delay_val_P2:	ds.w	1
-Tails_Pos_Record_Index:	ds.w	1			; into Tails_Pos_Record_Buf
+Tails_Pos_Record_Index:	ds.w	1		; into Tails_Pos_Record_Buf
 Camera_Delay_P2_End:
 
-Camera_Y_pos_bias:	ds.w	1			; added to y position for lookup/lookdown, $60 is center
+Camera_Y_pos_bias:	ds.w	1		; added to y position for lookup/lookdown, $60 is center
 Camera_Y_pos_bias_End:
 
-Camera_Y_pos_bias_P2:	ds.w	1			; for Tails
+Camera_Y_pos_bias_P2:	ds.w	1		; for Tails
 Camera_Y_pos_bias_P2_End:
 
-Deform_lock:		ds.b	1			; set to 1 to stop all deformation
-			ds.b	1			; $FFFFEEDD ; seems unused
+Deform_lock:		ds.b	1		; set to 1 to stop all deformation
+			ds.b	1		; $FFFFEEDD ; seems unused
 Camera_Max_Y_Pos_Changing:	ds.b	1
 Dynamic_Resize_Routine:	ds.b	1
-			ds.w	1			; $FFFFEEE0-$FFFFEEE1
 Camera_BG_X_offset:	ds.w	1			; Used to control background scrolling in X in WFZ ending and HTZ screen shake
 Camera_BG_Y_offset:	ds.w	1			; Used to control background scrolling in Y in WFZ ending and HTZ screen shake
 HTZ_Terrain_Delay:	ds.w	1			; During HTZ screen shake, this is a delay between rising and sinking terrain during which there is no shaking
 HTZ_Terrain_Direction:	ds.b	1			; During HTZ screen shake, 0 if terrain/lava is rising, 1 if lowering
-			ds.b	3			; $FFFFEEE9-$FFFFEEEB ; seems unused
-Vscroll_Factor_P2_HInt:	ds.l	1
+			ds.b	$11			; $FFFFEEE9-$FFFFEEEB ; seems unused
 Camera_X_pos_copy:	ds.l	1
 Camera_Y_pos_copy:	ds.l	1
 

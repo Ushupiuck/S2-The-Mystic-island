@@ -36,8 +36,8 @@ loc_AB7E:
 		move.b	#6,obRoutine(a1)
 		move.b	#$1C,(v_player+obAnim).w
 		move.b	#1,(f_bigring).w
-		clr.b	(v_invinc).w
-		clr.b	(v_shield).w
+		bclr	#obStatusSecondary_hasShield,obStatusSecondary(a1)
+		bclr	#obStatusSecondary_isInvincible,obStatusSecondary(a1)
 +
 		out_of_range.w	DeleteObject
 		bra.w	DisplaySprite
