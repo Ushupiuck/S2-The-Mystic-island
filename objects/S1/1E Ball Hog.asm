@@ -7,6 +7,7 @@ hog_wait	= objoff_31	; byte; time between shots
 hog_backup	= objoff_32	; word; backup of hog_wait
 hog_walk	= objoff_34	; word; time to idle around from left to right
 hog_timer:	= objoff_36
+hog_cooldown:	= objoff_38
 ObjVBallhog:
 Obj1E:
 		moveq	#0,d0
@@ -187,8 +188,46 @@ Hog_Idle:
 ; ===========================================================================
 
 Hog_Move:
+		tst.w   hog_cooldown(a0)	;set_cooldown
+		beq.s	.dochecks
+		subq.w	#1,hog_cooldown(a0)
+		bra.s	.keepmoving
+.dochecks:	
+		lea	(v_player2).w,a1
+
+		move.w	obX(a1),d0 	;Load Tails's X position
+		sub.w	obX(a0),d0
+		bpl.s	+
+		neg.w	d0
+
++
+		cmpi.w	#$10,d0		; is Proto Hog  within	$10 pixels of sonic?
+		bcs.s	.checkY
+
+		lea	(v_player).w,a1
+
+		move.w	obX(a1),d0 	;Load Sonic's X position
+		sub.w	obX(a0),d0
+		bpl.s	+
+		neg.w	d0
+
++
+		cmpi.w	#$10,d0		; is Proto Hog  within	$10 pixels of sonic?
+		bcc.s	.not_below
+
+.checkY
+		move.w	obY(a1),d0 	;Load Character's Y position
+		sub.w	obY(a0),d0
+		cmpi.w	#$80,d0
+		bcc.s	.not_below
+
+		move.w	#120,hog_cooldown(a0)	;set_cooldown
+		bra.s	.finished_timer
+
+.not_below
 		subq.w	#1,hog_timer(a0)
 		bmi.s	.finished_timer
+.keepmoving:
 		bsr.w	ObjectMove
 		move.w	obX(a0),d3
 		addi.w	#$10,d3
@@ -231,8 +270,45 @@ Hog_Idle2:
 ; ===========================================================================
 
 Hog_Move2:
+		tst.w   hog_cooldown(a0)	;set_cooldown
+		beq.s	.dochecks
+		subq.w	#1,hog_cooldown(a0)
+		bra.s	.keepmoving
+.dochecks:	
+		lea	(v_player2).w,a1
+
+		move.w	obX(a1),d0 	;Load Tails's X position
+		sub.w	obX(a0),d0
+		bpl.s	+
+		neg.w	d0
+
++
+		cmpi.w	#$10,d0		; is Proto Hog  within	$10 pixels of sonic?
+		bcs.s	.checkY
+
+		lea	(v_player).w,a1
+
+		move.w	obX(a1),d0 	;Load Sonic's X position
+		sub.w	obX(a0),d0
+		bpl.s	+
+		neg.w	d0
+
++
+		cmpi.w	#$10,d0		; is Proto Hog  within	$10 pixels of sonic?
+		bcc.s	.not_below
+
+.checkY
+		move.w	obY(a1),d0 	;Load Character's Y position
+		sub.w	obY(a0),d0
+		cmpi.w	#$80,d0
+		bcc.s	.not_below
+		move.w	#120,hog_cooldown(a0)	;set_cooldown
+		bra.s	.finished_timer
+
+.not_below
 		subq.w	#1,hog_timer(a0)
 		bmi.s	.finished_timer
+.keepmoving
 		bsr.w	ObjectMove
 		move.w	obX(a0),d3
 		addi.w	#$10,d3
@@ -306,8 +382,45 @@ Hog_Idle3:
 ; ===========================================================================
 
 Hog_Move3:
+		tst.w   hog_cooldown(a0)	;set_cooldown
+		beq.s	.dochecks
+		subq.w	#1,hog_cooldown(a0)
+		bra.s	.return
+.dochecks:	
+		lea	(v_player2).w,a1
+
+		move.w	obX(a1),d0 	;Load Tails's X position
+		sub.w	obX(a0),d0
+		bpl.s	+
+		neg.w	d0
+
++
+		cmpi.w	#$10,d0		; is Proto Hog  within	$10 pixels of sonic?
+		bcs.s	.checkY
+
+		lea	(v_player).w,a1
+
+		move.w	obX(a1),d0 	;Load Sonic's X position
+		sub.w	obX(a0),d0
+		bpl.s	+
+		neg.w	d0
+
++
+		cmpi.w	#$10,d0		; is Proto Hog  within	$10 pixels of sonic?
+		bcc.s	.not_below
+
+.checkY
+		move.w	obY(a1),d0 	;Load Character's Y position
+		sub.w	obY(a0),d0
+		cmpi.w	#$80,d0
+		bcc.s	.not_below
+		move.w	#120,hog_cooldown(a0)	;set_cooldown
+		bra.s	.throw_ball
+
+.not_below
 		subq.w	#1,hog_timer(a0)
 		bpl.s	.return
+.throw_ball
 		subq.b	#2,ob2ndRout(a0)
 		move.w	hog_backup(a0),hog_timer(a0)
 		move.b	#2,obAnim(a0)
@@ -317,6 +430,21 @@ Hog_Move3:
 
 Obj1E_NormalBomb:
 		jsr	(ObjectMoveAndFall).l
+
+		moveq	#$6,d3
+		jsr	ObjHitWallRight
+		tst.w	d1
+		bpl.s	+
+		neg.w	obVelX(a0)
++
+
+		moveq	#-$6,d3
+		jsr	ObjHitWallLeft
+		tst.w	d1
+		bpl.s	+		; delete if the	fireball hits a	wall
+		neg.w	obVelX(a0)
++
+
 		tst.w	obVelY(a0)
 		bmi.s	.moving_up
 		jsr	(ObjHitFloor).l
