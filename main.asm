@@ -1401,7 +1401,7 @@ Pal_NoDec:
 ; End of function Pal_DecColor
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Pal_MakeWhite:
@@ -1428,7 +1428,7 @@ loc_2290:
 ; End of function Pal_MakeWhite
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Pal_WhiteToBlack:
@@ -1462,7 +1462,7 @@ locret_22E4:
 ; End of function Pal_WhiteToBlack
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Pal_DecColor2:
@@ -1500,7 +1500,7 @@ loc_2312:
 ; End of function Pal_DecColor2
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Pal_MakeFlash:
@@ -1517,7 +1517,7 @@ loc_2320:
 ; End of function Pal_MakeFlash
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Pal_ToWhite:
@@ -1543,7 +1543,7 @@ loc_235C:
 ; End of function Pal_ToWhite
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Pal_AddColor2:
@@ -1584,7 +1584,7 @@ loc_23A0:
 ; End of function Pal_AddColor2
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 PalCycle_Sega:
@@ -1682,7 +1682,7 @@ Pal_Sega1:	binclude "palette/Sega1.bin"
 Pal_Sega2:	binclude "palette/Sega2.bin"
 		even
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 PalLoad1:
@@ -1701,7 +1701,7 @@ PalLoad1:
 ; End of function PalLoad1
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 PalLoad2:
@@ -1719,7 +1719,7 @@ PalLoad2:
 ; End of function PalLoad2
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 PalLoad3_Water:
@@ -1738,7 +1738,7 @@ PalLoad3_Water:
 ; End of function PalLoad3_Water
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 PalLoad4_Water:
@@ -2205,7 +2205,6 @@ LevelSelect_Loop:
 		cmpi.w	#$14,d0
 		bne.s	loc_3570
 		move.w	(v_levselsound).w,d0
-	;	addi.w	#0,d0
 	;	cmpi.w	#$9F,d0
 	;	beq.s	loc_354C
 	;	cmpi.w	#$9E,d0
@@ -2361,7 +2360,7 @@ Demo_Levels:
 		dc.w id_HPZ<<8
 		dc.w id_HPZ<<8
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 LevelSelect_Controls:
@@ -2426,7 +2425,7 @@ locret_377A:
 ; End of function LevelSelect_Controls
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 textpos:	= ($40000000+(($E210&$3FFF)<<16)+(($E210&$C000)>>14))
 					; $E210 is a VRAM address
@@ -2467,7 +2466,6 @@ loc_3794:
 LevSel_DrawSnd:
 		locVRAM	vram_bg+$C30		; sound test position on screen
 		move.w	(v_levselsound).w,d0
-		addi.w	#0,d0
 		move.b	d0,d2
 		lsr.b	#4,d0
 		bsr.s	LevSel_ChgSnd
@@ -2476,7 +2474,7 @@ LevSel_DrawSnd:
 ; End of function LevelSelect_TextLoad
 
 
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 
 LevSel_ChgSnd:
@@ -2492,7 +2490,7 @@ LevSel_Numb:
 ; End of function LevSel_ChgSnd
 
 
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 
 LevSel_ChgLine:
@@ -3053,7 +3051,7 @@ BColPointers:
 
 		include	"_inc/Oscillatory Routines.asm"
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 ChangeRingFrame:
@@ -3121,7 +3119,7 @@ SetLevelEndType:
 ; End of function SetLevelEndType
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 SignpostArtLoad:
@@ -3214,8 +3212,8 @@ SpecialStage:
 		moveq	#palid_Special,d0
 		bsr.w	PalLoad1		; load special stage palette
 		bsr.w	S1SS_Load		; load SS layout data
-		move.l	#0,(Camera_X_pos).w
-		move.l	#0,(Camera_Y_pos).w
+		clr.l	(Camera_X_pos).w
+		clr.l	(Camera_Y_pos).w
 		move.b	#id_Obj04,(v_player).w ; load special stage Sonic object
 		bsr.w	PalCycle_S1SS
 		clr.w	(v_ssangle).w	; set stage angle to "upright"
@@ -3302,7 +3300,10 @@ loc_5214:
 		move.b	#1,(f_scorecount).w	; update score counter
 		move.b	#1,(f_endactbonus).w	; update ring bonus counter
 		move.w	(v_rings).w,d0
-		mulu.w	#10,d0			; multiply rings by 10
+		move.w	d0,d1			; multiply rings by 10
+		lsl.w	#3,d0
+		add.w	d1,d0
+		add.w	d1,d0
 		move.w	d0,(v_ringbonus).w	; set rings bonus
 		move.w	#bgm_GotThrough,d0
 		jsr	(PlaySound_Special).l	; play end-of-level music
@@ -3329,7 +3330,7 @@ SS_NormalExit:
 ; Special stage	background loading subroutine
 ; ---------------------------------------------------------------------------
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 S1_SSBGLoad:
@@ -3398,7 +3399,7 @@ loc_5360:
 ; Palette cycling routine - special stage
 ; ---------------------------------------------------------------------------
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 PalCycle_S1SS:
@@ -3436,7 +3437,7 @@ loc_53D0:
 		moveq	#0,d0
 		move.b	(a0)+,d0
 		bmi.s	loc_5426
-		lea	(Pal_S1SSCyc1).l,a1
+		lea	Pal_S1SSCyc1(pc),a1
 		adda.w	d0,a1
 		lea	(v_palette+$4E).w,a2
 		move.l	(a1)+,(a2)+
@@ -3454,8 +3455,15 @@ loc_5426:
 		addq.w	#1,d1
 
 loc_5432:
-		mulu.w	#$2A,d1
-		lea	(Pal_S1SSCyc2).l,a1
+		moveq	#0,d2
+		move.w	d1,d2
+		move.w	d1,d3
+		lsl.w	#5,d1
+		lsl.w	#3,d2
+		add.w	d2,d1
+		add.w	d3,d1
+		add.w	d3,d1
+		lea	Pal_S1SSCyc2(pc),a1
 		adda.w	d1,a1
 		andi.w	#$7F,d0
 		bclr	#0,d0
@@ -3557,7 +3565,7 @@ Pal_S1SSCyc2:	binclude	"palette/Cycle - Special Stage 2.bin"
 ; Subroutine to	make the special stage background animated
 ; ---------------------------------------------------------------------------
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 S1SS_BgAnimate:
@@ -3659,7 +3667,7 @@ byte_5709:	dc.b 8,	2, 4, $FF, 2, 3, 8, $FF, 4, 2, 2, 3, 8,	$FD, 4,	2, 2, 3, 2, $
 ; Subroutine to	show the special stage layout
 ; ---------------------------------------------------------------------------
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 S1SS_ShowLayout:
 		bsr.w	SS_AniWallsRings
@@ -3678,13 +3686,13 @@ S1SS_ShowLayout:
 		divu.w	#$18,d2
 		swap	d2
 		neg.w	d2
-		addi.w	#-$B4,d2
+		subi.w	#$B4,d2
 		moveq	#0,d3
 		move.w	(Camera_Y_pos).w,d3
 		divu.w	#$18,d3
 		swap	d3
 		neg.w	d3
-		addi.w	#-$B4,d3
+		subi.w	#$B4,d3
 		moveq	#$10-1,d7			; grid is 16 cells high
 
 .loop_gridrow:
@@ -3722,7 +3730,8 @@ S1SS_ShowLayout:
 		moveq	#0,d0
 		move.w	(Camera_Y_pos).w,d0		; get camera y pos
 		divu.w	#$18,d0				; divide by size of wall sprite (24 pixels)
-		mulu.w	#$80,d0				; multiply by width of level ($80)
+		lsl.w	#7,d0				; multiply by width of level ($80)
+		ext.l	d0
 		adda.l	d0,a0				; jump to correct row in level
 		moveq	#0,d0
 		move.w	(Camera_X_pos).w,d0		; get camera x pos
@@ -3743,21 +3752,21 @@ ssloop_spriterow:
 ssloop_sprite:
 		moveq	#0,d0
 		move.b	(a0)+,d0			; get level block
-		beq.s	loc_19C9A			; skip if 0 (blank)
+		beq.s	.loc_19C9A			; skip if 0 (blank)
 		cmpi.b	#$4E,d0				; in S3K, since there's less blocks, this becomes $13
-		bhi.s	loc_19C9A			; ...or if above $4E (invalid)
+		bhi.s	.loc_19C9A			; ...or if above $4E (invalid)
 		move.w	(a4),d3				; get grid x pos
 		addi.w	#288,d3
 		cmpi.w	#112,d3
-		blo.s	loc_19C9A			; branch if off screen
+		blo.s	.loc_19C9A			; branch if off screen
 		cmpi.w	#464,d3
-		bhs.s	loc_19C9A
+		bhs.s	.loc_19C9A
 		move.w	2(a4),d2			; get grid y pos
 		addi.w	#240,d2
 		cmpi.w	#112,d2
-		blo.s	loc_19C9A
+		blo.s	.loc_19C9A
 		cmpi.w	#368,d2
-		bhs.s	loc_19C9A
+		bhs.s	.loc_19C9A
 		lea	(v_ssbuffer2).l,a5
 		lsl.w	#3,d0
 		lea	(a5,d0.w),a5
@@ -3769,11 +3778,11 @@ ssloop_sprite:
 		moveq	#0,d1
 		move.b	(a1)+,d1			; get number of sprite pieces from mappings
 		subq.b	#1,d1				; branch if 0
-		bmi.s	loc_19C9A			; build sprites from mappings
+		bmi.s	.loc_19C9A			; build sprites from mappings
 
-BuildSpr_Special:
+.BuildSprites_Special:
 		cmpi.b	#$50,d5				; check sprite limit
-		beq.s	loc_19C9A
+		beq.s	.loc_19C9A
 		move.b	(a1)+,d0			; get y-offset
 		ext.w	d0
 		add.w	d2,d0				; add y-position
@@ -3796,9 +3805,9 @@ BuildSpr_Special:
 
 .writeX:
 		move.w	d0,(a2)+
-		dbf	d1,BuildSpr_Special
+		dbf	d1,.BuildSprites_Special
 
-loc_19C9A:
+.loc_19C9A:
 		addq.w	#4,a4				; next sprite
 		dbf	d6,ssloop_sprite
 		lea	$70(a0),a0			; next row
@@ -3819,7 +3828,7 @@ loc_19C9A:
 ; Subroutine to	animate	walls and rings	in the special stage
 ; ---------------------------------------------------------------------------
 
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 
 SS_AniWallsRings:
@@ -3943,20 +3952,20 @@ S1SS_WaRiVramSet:
 ; Subroutine to	remove items when you collect them in the special stage
 ; ---------------------------------------------------------------------------
 
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 
 SS_RemoveCollectedItem:
 		lea	(v_ssitembuffer).l,a2
 		move.w	#(v_ssitembuffer_end-v_ssitembuffer)/8-1,d0
 
-loc_19EF6:
+.loop:
 		tst.b	(a2)
-		beq.s	locret_19F00
+		beq.s	.return
 		addq.w	#8,a2
-		dbf	d0,loc_19EF6
+		dbf	d0,.loop
 
-locret_19F00:
+.return:
 		rts
 ; End of function SS_RemoveCollectedItem
 
@@ -3964,7 +3973,7 @@ locret_19F00:
 ; Subroutine to	animate	special	stage items when you touch them
 ; ---------------------------------------------------------------------------
 
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 
 SS_AniItems:
@@ -4149,7 +4158,7 @@ S1SS_StartLoc:	include	"_inc/Start Location Array - Special Stages.asm"
 ; Subroutine to	load special stage layout
 ; ---------------------------------------------------------------------------
 
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 
 S1SS_Load:
@@ -4158,7 +4167,7 @@ S1SS_Load:
 		addq.b	#1,(v_lastspecial).w
 		cmpi.b	#6,(v_lastspecial).w
 		blo.s	S1SS_ChkEmldNum
-		move.b	#0,(v_lastspecial).w	; reset if higher than 6
+		sf.b	(v_lastspecial).w	; reset if higher than 6
 
 S1SS_ChkEmldNum:
 		cmpi.b	#6,(v_emeralds).w	; do you have all emeralds?
@@ -4337,7 +4346,7 @@ LevelLayoutLoad:
 
 ; End of function LevelLayoutLoad
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 LevelSizeLoad:
@@ -4543,7 +4552,7 @@ StartLocArray:
 		binclude	"startpos/006_3.bin"	; S1 Ending 3
 		binclude	"startpos/006_4.bin"	; S1 Ending 4
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 BgScrollSpeed:
@@ -4669,7 +4678,7 @@ BgScroll_S1Ending:
 ; Background layer deformation subroutines
 ; ---------------------------------------------------------------------------
 
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 ; DeformLayers:
 DeformBGLayer:
@@ -5296,7 +5305,7 @@ loc_64D6:
 		dbf	d2,loc_64D0
 		rts
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 ScrollHorizontal:
@@ -5323,7 +5332,7 @@ locret_6512:
 ; End of function ScrollHorizontal
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 ;sub_6514:
 ScrollHoriz:
@@ -5416,7 +5425,7 @@ ScrollHoriz:
 ; End of function ScrollHoriz
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 ScrollVertical:
@@ -5574,7 +5583,7 @@ locret_66B4:
 ; End of function ScrollVertical
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 ScrollBlock1:
@@ -5624,7 +5633,7 @@ locret_671E:
 ; End of function ScrollBlock1
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 ScrollBlock2:
@@ -5676,7 +5685,7 @@ loc_677C:
 locret_6782:
 		rts
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 ScrollBlock4:
@@ -5706,7 +5715,7 @@ locret_67B6:
 ; End of function ScrollBlock4
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 ScrollBlock5:
@@ -5736,7 +5745,7 @@ locret_67EA:
 ; End of function ScrollBlock5
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 ScrollBlock6:
@@ -5765,7 +5774,7 @@ locret_681E:
 		rts
 ; End of function ScrollBlock6
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 LoadTilesAsYouMove:
@@ -5859,7 +5868,7 @@ locret_694A:
 ; End of function LoadTilesAsYouMove
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_694C:
@@ -5909,7 +5918,7 @@ locret_69B0:
 ; End of function sub_694C
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 DrawBGScrollBlock1:
 		tst.b	(a2)
@@ -6002,7 +6011,7 @@ locret_6A80:
 ; End of function DrawBGScrollBlock1
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 DrawBGScrollBlock2:
@@ -6101,7 +6110,7 @@ loc_6B66:
 ; End of function DrawBGScrollBlock2
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 DrawBGScrollBlock3:
@@ -6219,7 +6228,7 @@ loc_6CB6:
 ; End of function DrawBGScrollBlock3
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_6CFE:
@@ -6227,7 +6236,7 @@ sub_6CFE:
 ; End of function sub_6CFE
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 DrawBlocks_TB_2:
@@ -6260,7 +6269,7 @@ loc_6D48:
 ; End of function DrawBlocks_TB_2
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 DrawBlocks_LR_2:
@@ -6270,7 +6279,7 @@ DrawBlocks_LR_2:
 ; End of function DrawBlocks_LR_2
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 DrawBlocks_LR:
@@ -6279,7 +6288,7 @@ DrawBlocks_LR:
 ; End of function DrawBlocks_LR
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 DrawBlocks_LR_3:
@@ -6344,7 +6353,7 @@ loc_6E0A:
 ; End of function DrawBlocks_LR_3
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_6E98:
@@ -6371,7 +6380,7 @@ sub_6E98:
 ; End of function sub_6E98
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_6ED0:
@@ -6421,7 +6430,7 @@ loc_6F18:
 ; End of function sub_6ED0
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_6F32:
@@ -6459,7 +6468,7 @@ loc_6F62:
 ; End of function sub_6F32
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_6F70:
@@ -6527,7 +6536,7 @@ loc_6FD2:
 ; End of function sub_6F70
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 DrawBlock:
@@ -6571,7 +6580,7 @@ DrawFlipXY:
 ; End of function DrawBlock
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 GetBlockData:
@@ -6603,7 +6612,7 @@ GetBlockData:
 ; End of function GetBlockData
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 ; sub_7084:
 Calc_VRAM_Pos:
 		add.w	(a3),d5
@@ -6622,7 +6631,7 @@ Calc_VRAM_Pos_2:
 ; End of function Calc_VRAM_Pos_2
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_70C0:
@@ -6640,7 +6649,7 @@ sub_70C0:
 ; End of function sub_70C0
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 LoadTilesFromStart:
@@ -6658,7 +6667,7 @@ LoadTilesFromStart:
 ; End of function LoadTilesFromStart
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 DrawChunks:
@@ -6740,7 +6749,7 @@ word_722A:	dc.w Camera_BG_X_pos
 		dc.w Camera_BG2_X_pos
 		dc.w Camera_BG3_X_pos
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_7232:
@@ -6768,7 +6777,7 @@ loc_725A:
 ; End of function sub_7232
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 DynScreenResizeLoad:
@@ -7651,7 +7660,7 @@ Map_Ring:	binclude	"mappings/sprite/obj37_a.bin"
 		include	"objects/26 Monitor.asm"
 		include	"objects/29 Monitor Content Power-Up.asm"
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Obj26_SolidSides:
@@ -9088,7 +9097,7 @@ ObjectMove_Reserved:
 		rts
 ; End of function ObjectMove_Reserved
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 ; BossMove:
 ObjectMove_Reserved2:
 		movem.w	obVelX(a0),d0/d2			; load xy speed
@@ -9366,7 +9375,7 @@ BldSpr_ScrPos:	dc.l 0
 		dc.l Camera_BG_X_pos
 		dc.l Camera_BG3_X_pos
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 BuildSprites:
@@ -9589,7 +9598,7 @@ BuildSprites_MultiDraw_NextObj:
 ; End of function BuildSprites
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 DrawSprite:
@@ -9985,7 +9994,7 @@ locret_DA36:
 ; End of function Touch_Rings
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 BuildRings:
@@ -10343,7 +10352,7 @@ loc_DDDA:
 		move.l	a0,(Obj_load_addr_left).w
 		rts
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_E0D2:
@@ -11232,7 +11241,7 @@ locret_F746:
 ; End of function MvSonicOnPtfm
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_F748:
@@ -11264,7 +11273,7 @@ locret_F788:
 ; End of function sub_F748
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 PlatformObject:
@@ -11304,7 +11313,7 @@ loc_F7D2:
 ; End of function sub_F7A0
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 SlopedPlatform:
@@ -11318,7 +11327,7 @@ SlopedPlatform:
 ; End of function SlopedPlatform
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_F7F2:
@@ -11350,7 +11359,7 @@ loc_F824:
 ; End of function sub_F7F2
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_F82E:
@@ -11364,7 +11373,7 @@ sub_F82E:
 ; End of function sub_F82E
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_F844:
@@ -11396,7 +11405,7 @@ loc_F876:
 ; End of function sub_F844
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_F880:
@@ -11526,7 +11535,7 @@ loc_F9A0:
 		sub.w	d3,d0
 		bra.w	loc_F8C2
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_F9C8:
@@ -12228,7 +12237,7 @@ loc_FFDE:
 ; End of function Sonic_MoveRight
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Sonic_RollSpeed:
@@ -12304,7 +12313,7 @@ loc_100B8:
 ; End of function Sonic_RollSpeed
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Sonic_RollLeft:
@@ -12329,7 +12338,7 @@ loc_100DE:
 ; End of function Sonic_RollLeft
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Sonic_RollRight:
@@ -12351,7 +12360,7 @@ loc_10100:
 ; End of function Sonic_RollRight
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Sonic_ChgJumpDir:
@@ -12426,7 +12435,7 @@ locret_10190:
 ; End of function Sonic_ChgJumpDir
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 ; Sonic_LevelBoundaries:
 Sonic_LevelBound:
@@ -12478,7 +12487,7 @@ loc_101FA:
 ; End of function Sonic_LevelBound
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Sonic_Roll:
@@ -12524,7 +12533,7 @@ locret_10276:
 ; End of function Sonic_Roll
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Sonic_Jump:
@@ -12580,7 +12589,7 @@ loc_1031E:
 ; End of function Sonic_Jump
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Sonic_JumpHeight:
@@ -12698,7 +12707,7 @@ loc_103EA:
 ; End of function Sonic_CheckSpindash
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Sonic_SlopeResist:
@@ -12729,7 +12738,7 @@ locret_10422:
 ; End of function Sonic_SlopeResist
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Sonic_RollRepel:
@@ -12765,7 +12774,7 @@ locret_1045E:
 ; End of function Sonic_RollRepel
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Sonic_SlopeRepel:
@@ -12799,7 +12808,7 @@ loc_1049C:
 ; End of function Sonic_SlopeRepel
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Sonic_JumpAngle:
@@ -12855,7 +12864,7 @@ loc_104F6:
 ; End of function Sonic_JumpAngle
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 ; Sonic_Floor:
 Sonic_DoLevelCollision:
@@ -13064,7 +13073,7 @@ loc_106D6:
 ; End of function Sonic_DoLevelCollision
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Sonic_ResetOnFloor:
@@ -13117,7 +13126,7 @@ loc_1077E:
 		bsr.w	LoadSonicDynPLC
 		jmp	(DisplaySprite).l
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Sonic_HurtStop:
@@ -13181,7 +13190,7 @@ Obj01_Dead:
 		bsr.w	LoadSonicDynPLC
 		jmp	(DisplaySprite).l
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Sonic_GameOver:
@@ -13239,7 +13248,7 @@ Obj01_ResetLevel:
 locret_108C8:
 		rts
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Sonic_Animate:
@@ -13705,7 +13714,7 @@ Obj02_ExitChk:
 ; End of function Tails_Display
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Tails_Control:
@@ -13776,7 +13785,7 @@ loc_10E40:
 		move.w	(a1,d0.w),(v_2Pjpadhold1).w
 		rts
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 RecordTailsMoves:
@@ -13858,7 +13867,7 @@ loc_10F0A:
 		bsr.w	Tails_JumpAngle
 		bra.w	Tails_Floor
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Tails_Move:
@@ -14032,7 +14041,7 @@ locret_110B4:
 ; End of function Tails_Move
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Tails_MoveLeft:
@@ -14082,7 +14091,7 @@ loc_110EA:
 ; End of function Tails_MoveLeft
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Tails_MoveRight:
@@ -14128,7 +14137,7 @@ loc_11150:
 ; End of function Tails_MoveRight
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Tails_RollSpeed:
@@ -14204,7 +14213,7 @@ loc_11232:
 ; End of function Tails_RollSpeed
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Tails_RollLeft:
@@ -14229,7 +14238,7 @@ loc_11258:
 ; End of function Tails_RollLeft
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Tails_RollRight:
@@ -14251,7 +14260,7 @@ loc_1127A:
 ; End of function Tails_RollRight
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Tails_ChgJumpDir:
@@ -14326,7 +14335,7 @@ locret_1130A:
 ; End of function Tails_ChgJumpDir
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Tails_LevelBoundaries:
@@ -14378,7 +14387,7 @@ loc_11374:
 ; End of function Tails_LevelBoundaries
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Tails_Roll:
@@ -14424,7 +14433,7 @@ locret_113F0:
 ; End of function Tails_Roll
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Tails_Jump:
@@ -14480,7 +14489,7 @@ loc_11498:
 ; End of function Tails_Jump
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Tails_JumpHeight:
@@ -14513,7 +14522,7 @@ locret_114DA:
 ; End of function Tails_JumpHeight
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Tails_Spindash:
@@ -14575,7 +14584,7 @@ loc_11564:
 ; End of function Tails_Spindash
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Tails_SlopeResist:
@@ -14606,7 +14615,7 @@ locret_1159C:
 ; End of function Tails_SlopeResist
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Tails_RollRepel:
@@ -14642,7 +14651,7 @@ locret_115D8:
 ; End of function Tails_RollRepel
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Tails_SlopeRepel:
@@ -14676,7 +14685,7 @@ loc_11616:
 ; End of function Tails_SlopeRepel
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Tails_JumpAngle:
@@ -14729,7 +14738,7 @@ locret_11674:
 ; End of function Tails_JumpAngle
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Tails_Floor:
@@ -14929,7 +14938,7 @@ locret_11864:
 ; End of function Tails_Floor
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Tails_ResetTailsOnFloor:
@@ -14978,7 +14987,7 @@ loc_118D8:
 		bsr.w	LoadTailsDynPLC
 		jmp	(DisplaySprite).l
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Tails_HurtStop:
@@ -15015,7 +15024,7 @@ Obj02_Dead:
 		bsr.w	LoadTailsDynPLC
 		jmp	(DisplaySprite).l
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Tails_GameOver:
@@ -15051,7 +15060,7 @@ Obj02_ResetLevel:
 locret_1199A:
 		rts
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Tails_Animate:
@@ -15081,7 +15090,7 @@ loc_119BE:
 ; End of function Tails_Animate
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_119E4:
@@ -15102,7 +15111,7 @@ locret_119FC:
 loc_119FE:
 		addq.b	#1,d0
 		bne.s	loc_11A0E
-		move.b	#0,obAniFrame(a0)
+		sf.b	obAniFrame(a0)
 		move.b	1(a1),d0
 		bra.s	loc_119F4
 ; ---------------------------------------------------------------------------
@@ -15199,7 +15208,7 @@ loc_11AB4:
 		divu.w	#$16,d0
 		addi.b	#$75,d0
 		move.b	d0,obFrame(a0)
-		move.b	#0,obTimeFrame(a0)
+		sf.b	obTimeFrame(a0)
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -15212,7 +15221,7 @@ loc_11AE8:
 		divu.w	#$16,d0
 		addi.b	#$75,d0
 		move.b	d0,obFrame(a0)
-		move.b	#0,obTimeFrame(a0)
+		sf.b	obTimeFrame(a0)
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -15514,7 +15523,7 @@ byte_11E54:	dc.b   2,$81,$82,$83,$84,$FF
 ; ---------------------------------------------------------------------------
 		include	"objects/06 EHZ Spiral.asm"
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 ResumeMusic:
@@ -15564,7 +15573,7 @@ byte_12608:	dc.b   0,  4,  0,  0,  4,  0,  0,  5,  0,  0,  5,  0,  0,  6,  0,  0
 		dc.b   6,  0,  0,  7,  0,  0,  7,  0,  0,$FF
 		even
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 ; Sonic_AnglePos:
 AnglePos:
@@ -15674,7 +15683,7 @@ loc_12AF2:
 		rts
 ; End of function AnglePos
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Sonic_Angle:
@@ -15882,7 +15891,7 @@ loc_12D5C:
 		move.b	#1,obPrevAni(a0)
 		rts
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Floor_ChkTile:
@@ -16027,7 +16036,7 @@ loc_12E44:
 ; End of function FindFloor
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 FindFloor2:
@@ -16120,7 +16129,7 @@ loc_12ED8:
 ; End of function FindFloor2
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 FindWall:
@@ -16220,7 +16229,7 @@ loc_12F80:
 ; End of function FindWall
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 FindWall2:
@@ -16312,7 +16321,7 @@ loc_13014:
 		rts
 ; End of function FindWall2
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 ; Sonic_WalkSpeed:
 CalcRoomInFront:
@@ -16385,7 +16394,7 @@ loc_130F6:
 ; End of function CalcRoomInFront
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_13102:
@@ -16481,7 +16490,7 @@ loc_131DE:
 .return:
 		rts
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 ; Sonic_HitFloor:
 ChkFloorEdge:
@@ -16513,7 +16522,7 @@ loc_1322E:
 ; End of function ChkFloorEdge
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 ;  ObjGetFloorDist:
 ObjHitFloor:
@@ -16586,7 +16595,7 @@ loc_1328E:
 .return:
 		rts
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_132EE:
@@ -16607,7 +16616,7 @@ sub_132EE:
 		rts
 ; End of function sub_132EE
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 ObjHitWallRight:
@@ -16629,7 +16638,7 @@ ObjHitWallRight:
 ; End of function ObjHitWallRight
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Sonic_DontRunOnWalls:
@@ -16769,7 +16778,7 @@ loc_13408:
 .return:
 		rts
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Sonic_HitWall:
@@ -16909,7 +16918,7 @@ byte_1398B:	dc.b   3,  1,  2,  1,  2,$FD,  0
 		even
 ; ---------------------------------------------------------------------------
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Bumper_bump:
@@ -17139,7 +17148,7 @@ loc_1446C:
 		addi.w	#$98,obY(a1)
 		bra.s	loc_14518
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_144D4:
@@ -17648,7 +17657,7 @@ loc_14FB6:
 		subq.b	#2,obRoutine(a0)
 		rts
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_14FC4:
@@ -17727,7 +17736,7 @@ Obj16_Main:
 		out_of_range2	DeleteObject
 		jmp	(DisplaySprite).l
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_15184:
@@ -17821,7 +17830,7 @@ Obj19_Main:
 		out_of_range2	DeleteObject,objoff_30(a0)
 		jmp	(DisplaySprite).l
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 Obj19_Modes:
@@ -18186,7 +18195,7 @@ loc_15948:
 		move.b	#1,obAnim(a0)
 		rts
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_1596C:
@@ -18419,7 +18428,7 @@ loc_15CCE:
 		sf	objoff_2A(a0)
 +		jmp	(MarkObjGone).l
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_15CF8:
@@ -18738,7 +18747,7 @@ loc_16066:
 		sf	objoff_2D(a0)
 .return:	rts
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_16078:
@@ -18781,7 +18790,7 @@ locret_160F2:
 ; End of function sub_16078
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_16184:
@@ -18800,7 +18809,7 @@ sub_16184:
 ; End of function sub_16184
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_161D8:
@@ -18831,7 +18840,7 @@ Obj50_Routine08:
 		jsr	(AnimateSprite).l
 		jmp	(MarkObjGone).l
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_16228:
@@ -18874,7 +18883,7 @@ loc_16290:
 		jsr	(AnimateSprite).l
 		jmp	(DisplaySprite).l
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_1629E:
@@ -18895,7 +18904,7 @@ sub_1629E:
 ; End of function sub_1629E
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_162DE:
@@ -18935,13 +18944,13 @@ loc_16306:
 		beq.s	loc_16372
 		blt.s	loc_16364
 		move.w	#$C0,obVelX(a1)
-		addi.w	#-$C0,obVelY(a1)
+		subi.w	#$C0,obVelY(a1)
 		bra.s	loc_16378
 ; ---------------------------------------------------------------------------
 
 loc_16364:
 		move.w	#-$100,obVelX(a1)
-		addi.w	#-$40,obVelY(a1)
+		subi.w	#$40,obVelY(a1)
 		bra.s	loc_16378
 ; ---------------------------------------------------------------------------
 
@@ -19715,7 +19724,7 @@ Obj4C_SubIndex:	dc.w loc_16F2E-Obj4C_SubIndex
 		dc.w loc_16F66-Obj4C_SubIndex
 		dc.w loc_16F72-Obj4C_SubIndex
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_16DC8:
@@ -19729,7 +19738,7 @@ sub_16DC8:
 ; End of function sub_16DC8
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_16DE2:
@@ -19759,7 +19768,7 @@ loc_16E10:
 		jsr	(AnimateSprite).l
 		jmp	(MarkObjGone).l
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_16E30:
@@ -19773,7 +19782,7 @@ locret_16E42:
 ; End of function sub_16E30
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_16E44:
@@ -19816,7 +19825,7 @@ loc_16E9C:
 ; End of function sub_16E44
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_16EB0:
@@ -19854,7 +19863,7 @@ loc_16EDE:
 ; End of function sub_16EB0
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_16F0E:
@@ -20095,7 +20104,7 @@ loc_1729E:
 		move.b	#1,obAnim(a0)
 		rts
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_172B6:
@@ -20283,7 +20292,7 @@ Obj54_Display:
 		jsr	(AnimateSprite).l
 		jmp	(MarkObjGone).l
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_176D0:
@@ -20318,7 +20327,7 @@ locret_17712:
 ; End of function sub_176D0
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_17714:
@@ -20573,7 +20582,7 @@ loc_17A3C:
 locret_17A68:
 		rts
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_17A6A:
@@ -20593,7 +20602,7 @@ locret_17A8A:
 ; End of function sub_17A6A
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_17A8C:
@@ -20848,7 +20857,7 @@ loc_17D58:
 		jsr	(AnimateSprite).l
 		jmp	(DisplaySprite).l
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_17D6A:
@@ -20878,7 +20887,7 @@ loc_17D92:
 ; End of function sub_17D6A
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 sub_17D9A:
@@ -20917,7 +20926,7 @@ loc_17E0E:
 		move.b	#$10,obWidth(a1)
 		move.l	obX(a0),obX(a1)
 		move.l	obY(a0),obY(a1)
-		addi.w	#-$C,obX(a1)
+		subi.w	#$C,obX(a1)
 		addi.w	#$C,obY(a1)
 		move.w	#-$200,obVelX(a1)
 		move.b	#4,obRoutine(a1)
@@ -20939,7 +20948,7 @@ loc_17E82:
 		move.b	#$10,obWidth(a1)
 		move.l	obX(a0),obX(a1)
 		move.l	obY(a0),obY(a1)
-		addi.w	#-$2C,obX(a1)
+		subi.w	#$2C,obX(a1)
 		addi.w	#$C,obY(a1)
 		move.w	#-$200,obVelX(a1)
 		move.b	#4,obRoutine(a1)
@@ -20959,7 +20968,7 @@ loc_17EF6:
 		move.w	#$80,obPriority(a1)
 		move.l	obX(a0),obX(a1)
 		move.l	obY(a0),obY(a1)
-		addi.w	#-$36,obX(a1)
+		subi.w	#$36,obX(a1)
 		addq.w	#8,obY(a1)
 		move.b	#6,obRoutine(a1)
 		move.b	#1,obFrame(a1)
@@ -21429,8 +21438,7 @@ Credits_Init:
 		move.w	#make_art_tile(ArtTile_Credits_Font,0,0),obGfx(a0)
 		move.w	(v_creditsnum).w,d0		; load credits index number
 		move.b	d0,obFrame(a0)			; display appropriate credits
-		move.b	#0,obRender(a0)
-		move.w	#0,obPriority(a0)
+		sf.b	obRender(a0)
 
 		cmpi.b	#GameModeID_TitleScreen,(v_gamemode).w	; but if this is the title screen...
 		bne.s	Credits_Display
@@ -21565,7 +21573,7 @@ word_194C6:	dc.w 2
 		dc.w $1804,  $1C,   $E,	   0
 		dc.w	$B,  $1E,   $F,	 $10
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 BossDefeated:
@@ -21826,7 +21834,7 @@ word_197DE:	dc.w 0
 		even
 ; ---------------------------------------------------------------------------
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 TouchResponse:
@@ -21937,9 +21945,9 @@ loc_198BA:
 loc_198C0:
 		move.b	obColType(a1),d1
 		andi.b	#$C0,d1
-		beq.w	loc_1993A
+		beq.w	Touch_Enemy
 		cmpi.b	#$C0,d1
-		beq.w	Touch_Special
+		beq.s	Touch_Special
 		tst.b	d1
 		bmi.w	Touch_Hurt
 		move.b	obColType(a1),d0
@@ -21979,17 +21987,92 @@ loc_19926:
 .return:	rts
 ; ---------------------------------------------------------------------------
 
-loc_1993A:
-		tst.b	(v_invinc).w
-		bne.s	loc_19952
+Touch_Special:
+		move.b	obColType(a1),d1	; Get collision_flags
+		andi.b	#$3F,d1			; Get only collision size (but that doesn't seems to be its use here?)
+		cmpi.b	#6,d1
+		beq.s	Touch_D7
+		cmpi.b	#7,d1
+		beq.w	Touch_Unknown
+		cmpi.b	#$A,d1
+		beq.s	Touch_D7
+		cmpi.b	#$B,d1
+		beq.w	Touch_Caterkiller
+		cmpi.b	#$C,d1
+		beq.s	Touch_Yadrin
+		cmpi.b	#$14,d1
+		beq.s	Touch_D7
+		cmpi.b	#$15,d1
+		beq.s	Touch_D7
+		cmpi.b	#$16,d1
+		beq.s	Touch_D7
+		cmpi.b	#$17,d1
+		beq.s	Touch_D7
+		cmpi.b	#$18,d1
+		beq.s	Touch_D7
+		cmpi.b	#$1A,d1
+		beq.s	Touch_Inv
+		cmpi.b	#$21,d1
+		beq.s	Touch_E1
+		rts
+; ---------------------------------------------------------------------------
+
+Touch_Yadrin:
+		sub.w	d0,d5
+		cmpi.w	#8,d5
+		bhs.s	Touch_Enemy
+		move.w	obX(a1),d0
+		subq.w	#4,d0
+		btst	#0,obStatus(a1)
+		beq.s	loc_19B42
+		subi.w	#$10,d0
+
+loc_19B42:
+		sub.w	d2,d0
+		bhs.s	loc_19B4E
+		addi.w	#$18,d0
+		blo.w	Touch_Hurt
+		bra.s	Touch_Enemy
+; ---------------------------------------------------------------------------
+
+loc_19B4E:
+		cmp.w	d4,d0
+		bhi.s	Touch_Enemy
+		bra.w	Touch_Hurt
+; ---------------------------------------------------------------------------
+
+Touch_D7:
+		move.w	a0,d1
+		subi.w	#v_player,d1
+		beq.s	Touch_E1
+		addq.b	#1,obColProp(a1)
+
+Touch_E1:
+		addq.b	#1,obColProp(a1)
+		rts
+; ---------------------------------------------------------------------------
+
+Touch_Unknown:	; Touch_E2?
+		move.b	#2,obColProp(a1)	; set collision property to 2 (?)
+		bra.s	Touch_Enemy
+; ---------------------------------------------------------------------------
+
+Touch_Inv:	; Touch_E3?
+		st.b	obColProp(a1)	; set to -1 (as if invulnerable?)
+	;	bra.s	Touch_Enemy
+; ---------------------------------------------------------------------------
+
+Touch_Enemy:
+		btst	#obStatusSecondary_isInvincible,obStatusSecondary(a0)	; is Sonic invincible?
+		bne.s	.noharm			; if yes, branch
 		cmpi.b	#AniIDSonAni_Spindash,obAnim(a0)
-		beq.s	loc_19952
+		beq.s	.noharm
 		cmpi.b	#AniIDSonAni_Roll,obAnim(a0)
 		bne.w	Touch_Hurt
 
-loc_19952:
+.noharm:
 		tst.b	obColProp(a1)
-		beq.s	Touch_KillEnemy
+		beq.s	Touch_KillEnemy	; skip if zero
 		neg.w	obVelX(a0)
 		neg.w	obVelY(a0)
 		asr	obVelX(a0)
@@ -22041,7 +22124,7 @@ loc_199DC:
 		rts
 ; ---------------------------------------------------------------------------
 Enemy_Points:
-		dc.w 10,	20,	50,	100
+		dc.w 10, 20, 50, 100
 ; ---------------------------------------------------------------------------
 
 Touch_Caterkiller:
@@ -22055,8 +22138,7 @@ Touch_Hurt:
 		movea.l	a1,a2
 ; End of function TouchResponse
 
-
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 HurtSonic:
@@ -22093,7 +22175,7 @@ Hurt_Reverse:
 		neg.w	obVelX(a0)
 
 Hurt_ChkSpikes:
-		move.w	#0,obInertia(a0)
+		clr.w	obInertia(a0)
 		move.b	#AniIDSonAni_Hurt,obAnim(a0)
 		move.w	#60*2,flashtime(a0)
 -		move.w	#sfx_Death,d0
@@ -22109,7 +22191,7 @@ Hurt_ChkSpikes:
 ; End of function HurtSonic
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 KillSonic:
@@ -22120,8 +22202,8 @@ KillSonic:
 		jsr	(Sonic_ResetOnFloor).l
 		bset	#1,obStatus(a0)
 		move.w	#-$700,obVelY(a0)
-		move.w	#0,obVelX(a0)
-		move.w	#0,obInertia(a0)
+		clr.w	obVelX(a0)
+		clr.w	obInertia(a0)
 		move.w	obY(a0),objoff_38(a0)
 		move.b	#AniIDSonAni_Death,obAnim(a0)
 		bset	#7,obGfx(a0)
@@ -22137,57 +22219,6 @@ KillSonic:
 		rts
 
 ; End of function KillSonic
-
-; ---------------------------------------------------------------------------
-
-Touch_Special:
-		move.b	obColType(a1),d1
-		andi.b	#$3F,d1
-		cmpi.b	#$B,d1
-		beq.w	Touch_Caterkiller
-		cmpi.b	#$C,d1
-		beq.s	Touch_Yadrin
-		cmpi.b	#$17,d1
-		beq.s	Touch_D7
-		cmpi.b	#$21,d1
-		beq.s	Touch_E1
-		rts
-; ---------------------------------------------------------------------------
-
-Touch_Yadrin:
-		sub.w	d0,d5
-		cmpi.w	#8,d5
-		bhs.w	loc_1993A
-		move.w	obX(a1),d0
-		subq.w	#4,d0
-		btst	#0,obStatus(a1)
-		beq.s	loc_19B42
-		subi.w	#$10,d0
-
-loc_19B42:
-		sub.w	d2,d0
-		bhs.s	loc_19B4E
-		addi.w	#$18,d0
-		blo.w	Touch_Hurt
-		bra.w	loc_1993A
-; ---------------------------------------------------------------------------
-
-loc_19B4E:
-		cmp.w	d4,d0
-		bhi.w	loc_1993A
-		bra.w	Touch_Hurt
-; ---------------------------------------------------------------------------
-
-Touch_D7:
-		move.w	a0,d1
-		subi.w	#v_objspace,d1
-		beq.s	Touch_E1
-		addq.b	#1,obColProp(a1)
-
-Touch_E1:
-		addq.b	#1,obColProp(a1)
-		rts
-; ---------------------------------------------------------------------------
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -22689,7 +22720,7 @@ loc_1B214:
 ; End of function AddPoints
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 HudUpdate:
@@ -22848,7 +22879,7 @@ loc_1B372:
 ; End of function HudUpdate
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 HUD_LoadZero:
@@ -22859,7 +22890,7 @@ HUD_LoadZero:
 ; End of function HUD_LoadZero
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 HUD_Base:
@@ -22898,7 +22929,7 @@ loc_1B3EC:
 HUD_TilesBase:	dc.b $16,$FF,$FF,$FF,$FF,$FF,$FF,  0,  0,$14,  0,  0
 HUD_TilesZero:	dc.b $FF,$FF,  0,  0
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 HUDDebug_XY:
@@ -22913,7 +22944,7 @@ HUDDebug_XY:
 ; End of function HUDDebug_XY
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 HUDDebug_XY2:
@@ -22945,7 +22976,7 @@ loc_1B442:
 ; End of function HUDDebug_XY2
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 HUD_Rings:
@@ -22955,7 +22986,7 @@ HUD_Rings:
 ; End of function HUD_Rings
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 HUD_Score:
@@ -23016,7 +23047,7 @@ loc_1B4BC:
 ; Subroutine to	load countdown numbers on the continue screen
 ; ---------------------------------------------------------------------------
 
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 ; Technically unused
 ContScrCounter:
@@ -23069,7 +23100,7 @@ HUD_100:	dc.l 100
 HUD_10:		dc.l 10
 HUD_1:		dc.l 1
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 HUD_Mins:
@@ -23079,7 +23110,7 @@ HUD_Mins:
 ; End of function HUD_Mins
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 HUD_Secs:
@@ -23133,7 +23164,7 @@ loc_1B562:
 ; End of function HUD_Secs
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 HUD_TimeRingBonus:
@@ -23194,7 +23225,7 @@ loc_1B5EC:
 		rts
 ; End of function HUD_TimeRingBonus
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 HUD_Lives:
@@ -23345,7 +23376,7 @@ ErrorMessage:
 		enable_ints
 		rte
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 ShowErrorMsg:
@@ -23397,7 +23428,7 @@ ErrorText:
 .line1111:	dc.b "LINE 1111 EMULATOR "
 		even
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 ShowErrAddress:
@@ -23412,7 +23443,7 @@ ShowErrAddress_DigitLoop:
 ; End of function ShowErrAddress
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 ShowErrDigit:
@@ -23429,7 +23460,7 @@ ShowErrDigit_NoOverflow:
 ; End of function ShowErrDigit
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
 ErrorWaitForC:
@@ -23999,8 +24030,6 @@ Nem_SSRedWhite:	binclude	"art/nemesis/Special Red-White.nem" ; special stage red
 		even
 Nem_SSUpDown:	binclude	"art/nemesis/Special UP-DOWN.nem" ; special stage UP/DOWN block
 		even
-Nem_SSRings:	binclude	"art/nemesis/Special Rings.nem" ; special stage rings
-		even
 Nem_SSEmerald:	binclude	"art/nemesis/Special Emeralds.nem" ; special stage chaos emeralds
 		even
 Nem_SSGhost:	binclude	"art/nemesis/Special Ghost.nem" ; special stage ghost block
@@ -24238,7 +24267,6 @@ Art_HPZPulseOrb:	binclude	"art/uncompressed/Pulsing orb (HPZ).bin"
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - Level placeholders
 ; ---------------------------------------------------------------------------
-Nem_HTZ_AniPlaceholders:	binclude	"art/nemesis/HTZ Ani Placeholders.nem"
 		even
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - primary patterns and block mappings

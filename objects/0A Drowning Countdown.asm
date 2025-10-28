@@ -189,9 +189,9 @@ loc_12170:
 		move.b	#$17,obAnim(a0)
 		bset	#1,obStatus(a0)
 		bset	#7,obGfx(a0)
-		move.w	#0,obVelY(a0)
-		move.w	#0,obVelX(a0)
-		move.w	#0,obInertia(a0)
+		clr.w	obVelY(a0)
+		clr.w	obVelX(a0)
+		clr.w	obInertia(a0)
 		move.b	#1,(Deform_lock).w
 		movea.l	(sp)+,a0
 		rts
@@ -239,7 +239,6 @@ loc_12242:
 		tst.w	objoff_2C(a0)
 		beq.w	loc_1228E
 		andi.w	#7,objoff_3A(a0)
-		addi.w	#0,objoff_3A(a0)
 		move.w	(v_player+obY).w,d0
 		subi.w	#$C,d0
 		move.w	d0,obY(a1)

@@ -31,7 +31,10 @@ loc_93F4:
 		addq.b	#2,obRoutine(a0)
 		move.b	obSubtype(a0),d0
 		andi.w	#$F,d0
-		mulu.w	#10,d0
+		move.w	d0,d1
+		lsl.w	#3,d0
+		add.w	d1,d0
+		add.w	d1,d0
 		lea	Obj1C_Conf(pc,d0.w),a1
 		move.l	(a1)+,obMap(a0)
 		move.w	(a1)+,obGfx(a0)

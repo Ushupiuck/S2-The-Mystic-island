@@ -103,7 +103,15 @@ obParent =		objoff_3E ; and $3F ; address of object that owns or spawned this on
 object_size_bits:	equ 6
 object_size:		equ 1<<object_size_bits
 next_object =		object_size
-
+; ---------------------------------------------------------------------------
+; conventions followed by some/most bosses:
+boss_subtype		= obXSub
+boss_invulnerable_time	= obInertia
+boss_sine_count		= obFrame
+boss_routine		= obAngle
+boss_defeated		= objoff_2C
+boss_hitcount2		= objoff_32
+boss_hurt_sonic		= objoff_38	; flag set by collision response routine when Sonic has just been hurt (by boss?)
 ; ---------------------------------------------------------------------------
 ; when childsprites are activated (i.e. bit #6 of render_flags set)
 next_subspr		= 6
@@ -136,6 +144,31 @@ sub8_mapframe	= subspr_data+next_subspr*6+5
 sub9_x_pos	= subspr_data+next_subspr*7+0
 sub9_y_pos	= subspr_data+next_subspr*7+2
 sub9_mapframe	= subspr_data+next_subspr*7+5
+; ---------------------------------------------------------------------------
+; status_secondary bitfield variables
+;
+; status_secondary variable bit numbers
+obStatusSecondary_hasShield:		EQU	0
+obStatusSecondary_isInvincible:		EQU	1
+obStatusSecondary_hasSpeedShoes:	EQU	2
+obStatusSecondary_isSliding:		EQU	7
+; status_secondary variable masks (1 << x == pow(2, x))
+obStatusSecondary_hasShield_mask:	EQU	1<<obStatusSecondary_hasShield		; $01
+obStatusSecondary_isInvincible_mask:	EQU	1<<obStatusSecondary_isInvincible	; $02
+obStatusSecondary_hasSpeedShoes_mask:	EQU	1<<obStatusSecondary_hasSpeedShoes	; $04
+obStatusSecondary_isSliding_mask:	EQU	1<<obStatusSecondary_isSliding		; $80
+; ---------------------------------------------------------------------------
+; render_flags bitfield
+
+obRender.x_flip			= 0 ; Sprite mirrored horizontally.
+obRender.y_flip			= 1 ; Sprite mirrored vertically.
+obRender.level_fg		= 2 ; Move with level foreground.
+obRender.level_bg		= 3 ; Move with level background; leftover from Sonic 1.
+obRender.explicit_height	= 4 ; Draw culling uses `y_radius` instead of guessing a height.
+obRender.static_mappings	= 5 ; Mappings pointer points directly to a lone sprite piece instead of a list of sprites.
+obRender.multi_sprite		= 6 ; Object SST holds metadata for multiple sprites.
+obRender.on_screen		= 7 ; Object is on-screen and was rendered on the previous frame.
+
 ; ---------------------------------------------------------------------------
 ; Animation flags
 afEnd:		equ $FF	; return to beginning of animation
@@ -197,20 +230,6 @@ bumper_x            = 2
 bumper_y            = 4
 next_bumper         = 6
 prev_bumper_x       = bumper_x-next_bumper
-
-; ---------------------------------------------------------------------------
-; status_secondary bitfield variables
-;
-; status_secondary variable bit numbers
-obStatusSecondary_hasShield:		EQU	0
-obStatusSecondary_isInvincible:		EQU	1
-obStatusSecondary_hasSpeedShoes:	EQU	2
-obStatusSecondary_isSliding:		EQU	7
-; status_secondary variable masks (1 << x == pow(2, x))
-obStatusSecondary_hasShield_mask:	EQU	1<<obStatusSecondary_hasShield		; $01
-obStatusSecondary_isInvincible_mask:	EQU	1<<obStatusSecondary_isInvincible	; $02
-obStatusSecondary_hasSpeedShoes_mask:	EQU	1<<obStatusSecondary_hasSpeedShoes	; $04
-obStatusSecondary_isSliding_mask:	EQU	1<<obStatusSecondary_isSliding		; $80
 ; ---------------------------------------------------------------------------
 ; Art tile stuff
 flip_x              =      (1<<11)
@@ -406,19 +425,6 @@ Object_Display_Lists_End:
 v_spritequeue:=		Object_Display_Lists
 v_spritequeue_end:=	Object_Display_Lists_End
 
-v_hscrolltablebuffer:	ds.b	$380			; scrolling table data
-v_hscrolltablebuffer_end:
-			ds.b	$80			; would be unused, but data from v_hscrolltablebuffer can spill into here
-v_hscrolltablebuffer_end_padded:
-
-Sonic_Stat_Record_Buf:	ds.b	$100
-Sonic_Pos_Record_Buf:	ds.b	$100
-Tails_Pos_Record_Buf:	ds.b	$100
-
-Ring_Positions:		ds.b	$600
-Ring_Positions_End:
-
-
 v_objspace:		ds.b	object_size*$80		; object variable space ($40 bytes per object)
 v_objspace_end:
 ; ---------------------------------------------------------------------------
@@ -500,6 +506,18 @@ v_credits	= v_objspace+object_size*2		; object variable space for the credits te
 v_endeggman	= v_objspace+object_size*2		; object variable space for Eggman after the credits ($40 bytes)
 v_tryagain	= v_objspace+object_size*3		; object variable space for the "TRY AGAIN" text ($40 bytes)
 v_eggmanchaos	= v_objspace+object_size*32		; object variable space for the emeralds juggled by Eggman ($180 bytes)
+
+v_hscrolltablebuffer:	ds.b	$380			; scrolling table data
+v_hscrolltablebuffer_end:
+			ds.b	$80			; would be unused, but data from v_hscrolltablebuffer can spill into here
+v_hscrolltablebuffer_end_padded:
+
+Sonic_Stat_Record_Buf:	ds.b	$100
+Sonic_Pos_Record_Buf:	ds.b	$100
+Tails_Pos_Record_Buf:	ds.b	$100
+
+Ring_Positions:		ds.b	$600
+Ring_Positions_End:
 
 Kos_decomp_buffer:		ds.b	$1000		; Moduled Kosinski+ decompression buffer
 

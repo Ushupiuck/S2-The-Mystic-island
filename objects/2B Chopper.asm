@@ -11,7 +11,7 @@ Obj2B:
 ; ===========================================================================
 Chop_Index:	dc.w Chop_Main-Chop_Index
 		dc.w Chop_ChgSpeed-Chop_Index
-chop_origY = objoff_30
+chop_origY	= objoff_34
 ; ===========================================================================
 
 Chop_Main:	; Routine 0
@@ -29,7 +29,6 @@ Chop_Main:	; Routine 0
 		move.b	#$10,obActWid(a0)
 		move.b	obSubtype(a0),d1	; get subtype (for vertical speed)
 		add.w	d1,d1			; filter out which entry it is
-	;	lsl.w	#1,d1			; filter out which entry it is
 		move.w	Chopper_JumpHeights(pc,d1.w),obVelY(a0)		; and store the vertical speed
 		move.w	obY(a0),chop_origY(a0)	; save original position
 
@@ -44,7 +43,6 @@ Chop_ChgSpeed:	; Routine 2
 		move.w	d0,obY(a0)
 		move.b	obSubtype(a0),d1	; get subtype (for vertical speed)
 		add.w	d1,d1			; filter out which entry it is
-	;	lsl.w	#1,d1			; filter out which entry it is
 		move.w	Chopper_JumpHeights(pc,d1.w),obVelY(a0)		; and store the vertical speed
 
 .chganimation:
@@ -71,5 +69,5 @@ Ani_Obj2B:	dc.w byte_B7BA-Ani_Obj2B
 		dc.w byte_B7C2-Ani_Obj2B
 byte_B7BA:	dc.b   7,  0,  1,$FF
 byte_B7BE:	dc.b   3,  0,  1,$FF
-byte_B7C2:	dc.b   7,  0,$FF
+byte_B7C2:	dc.b   7,  0,  $FF
 		even

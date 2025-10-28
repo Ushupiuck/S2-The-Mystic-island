@@ -130,7 +130,11 @@ Load_EndOfAct:
 		move.b	#1,(f_endactbonus).w
 		moveq	#0,d0
 		move.b	(v_timemin).w,d0
-		mulu.w	#60,d0
+		add.w	d0,d0			; multiply by 60 frames (1 second)
+		add.w	d0,d0
+		move.w	d0,d1
+		lsl.w	#4,d0
+		sub.w	d1,d0
 		moveq	#0,d1
 		move.b	(v_timesec).w,d1
 		add.w	d1,d0
@@ -143,7 +147,10 @@ Load_EndOfAct:
 		add.w	d0,d0
 		move.w	TimeBonuses(pc,d0.w),(v_timebonus).w
 		move.w	(v_rings).w,d0
-		mulu.w	#10,d0
+		move.w	d0,d1			; multiply rings by 10
+		lsl.w	#3,d0
+		add.w	d1,d0
+		add.w	d1,d0
 		move.w	d0,(v_ringbonus).w
 		move.w	#bgm_GotThrough,d0
 		jmp	(PlaySound_Special).l
