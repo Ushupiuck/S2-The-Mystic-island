@@ -435,13 +435,19 @@ v_player2	= v_objspace+object_size*1		; object variable space for Tails ($40 byt
 v_player2tails	= v_objspace+object_size*6		; object variable space for Tails' Tails ($40 bytes)
 v_shieldobj	= v_objspace+object_size*7		; object variable space for Sonic's shield ($40 bytes)
 v_shieldobj2	= v_objspace+object_size*8		; object variable space for Tails's shield ($40 bytes)
-v_starsobj1	= v_objspace+object_size*9		; object variable space for the invincibility stars #1 ($40 bytes)
-v_starsobj2	= v_objspace+object_size*10		; object variable space for the invincibility stars #2 ($40 bytes)
-v_starsobj3	= v_objspace+object_size*11		; object variable space for the invincibility stars #3 ($40 bytes)
-v_starsobj4	= v_objspace+object_size*12		; object variable space for the invincibility stars #4 ($40 bytes)
+v_starsobj1	= v_objspace+object_size*9		; object variable space for Sonic's invincibility stars #1 ($40 bytes)
+v_starsobj2	= v_objspace+object_size*10		; object variable space for Sonic's invincibility stars #2 ($40 bytes)
+v_starsobj3	= v_objspace+object_size*11		; object variable space for Sonic's invincibility stars #3 ($40 bytes)
+v_starsobj4	= v_objspace+object_size*12		; object variable space for Sonic's invincibility stars #4 ($40 bytes)
+v_tstarsobj1	= v_objspace+object_size*13		; object variable space for Tails's invincibility stars #1 ($40 bytes)
+v_tstarsobj2	= v_objspace+object_size*14		; object variable space for Tails's invincibility stars #2 ($40 bytes)
+v_tstarsobj3	= v_objspace+object_size*15		; object variable space for Tails's invincibility stars #3 ($40 bytes)
+v_tstarsobj4	= v_objspace+object_size*16		; object variable space for Tails's invincibility stars #4 ($40 bytes)
 
-v_splash	= v_objspace+object_size*13		; object variable space for the water splash ($40 bytes)
-v_sonicbubbles	= v_objspace+object_size*14		; object variable space for the bubbles that come out of Sonic's mouth/drown countdown ($40 bytes)
+v_splash	= v_objspace+object_size*17		; object variable space for Sonic's water splash ($40 bytes)
+v_tsplash	= v_objspace+object_size*18		; object variable space for Tails's water splash ($40 bytes)
+v_sonicbubbles	= v_objspace+object_size*19		; object variable space for the bubbles that come out of Sonic's mouth/drown countdown ($40 bytes)
+v_tailsbubbles	= v_objspace+object_size*20		; object variable space for the bubbles that come out of Tails's mouth/drown countdown ($40 bytes)
 v_watersurface1	= v_objspace+object_size*30		; object variable space for the water surface #1 ($40 bytes)
 v_watersurface2	= v_objspace+object_size*31		; object variable space for the water surface #2 ($40 bytes)
 
@@ -738,6 +744,9 @@ Scroll_Timer:		ds.b	1			; unused
 Sonic_top_speed:	ds.w	1
 Sonic_acceleration:	ds.w	1
 Sonic_deceleration:	ds.w	1
+Tails_top_speed:	ds.w	1
+Tails_acceleration:	ds.w	1
+Tails_deceleration:	ds.w	1
 Sonic_LastLoadedDPLC:	ds.b	1
 Tails_LastLoadedDPLC:		ds.b	1
 TailsTails_LastLoadedDPLC:	ds.b	1
@@ -798,7 +807,7 @@ Water_flag:		ds.b	1
 f_switch:		ds.b	$10			; flags set when Sonic stands on a switch
 
 Anim_Counters:		ds.b	$10
-			ds.b	$E			; unused
+			ds.b	$8			; unused
 
 v_levelvariables_end:
 
