@@ -10,8 +10,9 @@
 BackupSRAM	  = 1
 AddressSRAM	  = 3	; 0 = odd+even; 2 = even only; 3 = odd only
 
-FixBugs		  = 1	; fixes a handful of bugs in the game
+FixBugs		  = 1	; change to 1 to enable bugfixes
 AdvancedHandler	  = 0
+
 zeroOffsetOptimization = 1	; if 1, makes a handful of zero-offset instructions smaller
 
 	include	"s2.macrosetup.asm"
@@ -281,7 +282,7 @@ V_Int:
 		btst	#0,(vdp_control_port-vdp_control_port)+1(a5)
 		beq.s	+					; branch if it's not a PAL system
 		move.w	#$700,d0
-		dbf	d0,*	; wait here doing nothing for a while...
+-		dbf	d0,-	; wait here doing nothing for a while...
 +
 		moveq	#$7E,d0
 		and.b	(v_vbla_routine).w,d0
@@ -331,8 +332,8 @@ VInt_0_Level:
 		btst	#6,(v_megadrive).w
 		beq.s	+	; branch if it isn't a PAL system
 
-		move.w	#17930/10-1,d0
-		dbf	d0,*	; otherwise waste a bit of time here
+		move.w	#14344/8-1,d0
+-		dbf	d0,-	; otherwise waste a bit of time here
 +
 		st.b	(f_hbla_pal).w
 		stopZ80
@@ -356,9 +357,9 @@ VInt_0_Water_Cont:
 ; loc_CAA: VintSub2:
 Vint_SEGA:
 		bsr.w	Do_ControllerPal
-		tst.w	(v_generictimer).w
+		tst.w	(v_demolength).w
 		beq.w	Set_Kos_Bookmark
-		subq.w	#1,(v_generictimer).w
+		subq.w	#1,(v_demolength).w
 		bra.w	Set_Kos_Bookmark
 ; ===========================================================================
 ; loc_CAE: VintSub14:
@@ -371,18 +372,18 @@ Vint_PCM:
 		bsr.w	ReadJoypads
 		startZ80
 +
-		tst.w	(v_generictimer).w
+		tst.w	(v_demolength).w
 		beq.w	Set_Kos_Bookmark
-		subq.w	#1,(v_generictimer).w
+		subq.w	#1,(v_demolength).w
 		bra.w	Set_Kos_Bookmark
 ; ===========================================================================
 ; loc_CBC: VintSub4:
 Vint_Title:
 		bsr.w	Do_ControllerPal
 		bsr.w	ProcessDPLC
-		tst.w	(v_generictimer).w
+		tst.w	(v_demolength).w
 		beq.w	Set_Kos_Bookmark
-		subq.w	#1,(v_generictimer).w
+		subq.w	#1,(v_demolength).w
 		bra.w	Set_Kos_Bookmark
 ; ===========================================================================
 ; loc_CD8: VintSub10:
@@ -441,9 +442,9 @@ Do_Updates:
 		jsr	(HudUpdate).l
 		clr.w	(Lag_frame_count).w
 		bsr.w	ProcessDPLC2
-		tst.w	(v_generictimer).w
+		tst.w	(v_demolength).w
 		beq.w	Set_Kos_Bookmark
-		subq.w	#1,(v_generictimer).w
+		subq.w	#1,(v_demolength).w
 		bra.w	Set_Kos_Bookmark
 ; End of function Do_Updates
 
@@ -459,9 +460,9 @@ Vint_S1SS:
 		bsr.w	ProcessDMAQueue
 		startZ80
 		bsr.w	PalCycle_S1SS
-		tst.w	(v_generictimer).w
+		tst.w	(v_demolength).w
 		beq.w	Set_Kos_Bookmark
-		subq.w	#1,(v_generictimer).w
+		subq.w	#1,(v_demolength).w
 		bra.w	Set_Kos_Bookmark
 ; ===========================================================================
 ; loc_EA2: VintSubC: VintSub18:
@@ -508,9 +509,9 @@ Vint_SSResults:
 		bsr.w	ProcessDMAQueue
 		startZ80
 		bsr.w	ProcessDPLC
-		tst.w	(v_generictimer).w
+		tst.w	(v_demolength).w
 		beq.w	Set_Kos_Bookmark
-		subq.w	#1,(v_generictimer).w
+		subq.w	#1,(v_demolength).w
 		bra.w	Set_Kos_Bookmark
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
@@ -2005,12 +2006,12 @@ Sega_WaitPalette:
 		bsr.w	PlaySound
 		move.b	#VintID_SEGA,(v_vbla_routine).w
 		bsr.w	WaitForVint
-		move.w	#100,(v_generictimer).w
+		move.w	#100,(v_demolength).w
 
 Sega_WaitEnd:
 		move.b	#VintID_PCM,(v_vbla_routine).w
 		bsr.w	WaitForVint
-		tst.w	(v_generictimer).w
+		tst.w	(v_demolength).w
 		beq.s	Sega_GoToTitleScreen
 		andi.b	#btnStart,(v_jpadpress1).w
 		beq.s	Sega_WaitEnd
@@ -2099,7 +2100,7 @@ TitleScreen:
 		move.b	#bgm_Title,d0
 		bsr.w	PlaySound_Special
 	;	move.b	#0,(Debug_mode_flag).w
-		move.w	#376,(v_generictimer).w
+		move.w	#376,(v_demolength).w
 		clearRAM v_sonicteam,v_sonicteam+object_size
 		_move.b	#id_Obj91,(v_titlesonic).w
 		_move.b	#id_Obj91,(v_titletails).w
@@ -2169,7 +2170,7 @@ Title_Cheat_CountC:
 		addq.w	#1,(v_title_ccount).w
 
 Title_Cheat_NoC:
-		tst.w	(v_generictimer).w
+		tst.w	(v_demolength).w
 		beq.w	Demo
 		andi.b	#btnStart,(v_jpadpress1).w
 		beq.w	TitleScreen_Loop
@@ -2292,7 +2293,7 @@ LvlSelCode:	dc.b btnUp, btnDn, btnDn, btnDn, btnDn, btnUp, 0, $FF	; up, down, do
 ; ---------------------------------------------------------------------------
 
 Demo:
-		move.w	#30,(v_generictimer).w
+		move.w	#30,(v_demolength).w
 
 loc_3630:
 		move.b	#VintID_Title,(v_vbla_routine).w
@@ -2310,7 +2311,7 @@ loc_3630:
 RunDemo:
 		andi.b	#btnStart,(v_jpadpress1).w	; was the Start button pressed?
 		bne.w	Title_CheckLvlSel	; if so, branch
-		tst.w	(v_generictimer).w
+		tst.w	(v_demolength).w
 		bne.w	loc_3630
 		move.b	#bgm_Fade,d0
 		bsr.w	PlaySound_Special	; fade out music
@@ -2746,13 +2747,13 @@ Level_SkipClr:
 Level_Demo:
 		move.b	1(a1),(Demo_press_counter).w
 		subq.b	#1,(Demo_press_counter).w
-		move.w	#1800,(v_generictimer).w
+		move.w	#1800,(v_demolength).w
 		tst.w	(f_demo).w	; is this an ending demo?
 		bpl.s	Level_ChkWaterPal	; if not, branch
-		move.w	#60*9,(v_generictimer).w
+		move.w	#60*9,(v_demolength).w
 		cmpi.w	#4,(v_creditsnum).w
 		bne.s	Level_ChkWaterPal
-		move.w	#510,(v_generictimer).w
+		move.w	#510,(v_demolength).w
 
 Level_ChkWaterPal:
 		tst.b	(Water_flag).w
@@ -2840,7 +2841,7 @@ Level_SkipScroll:
 Level_ChkDemo:
 		tst.w	(Level_Inactive_flag).w
 		bne.s	Level_EndDemo
-		tst.w	(v_generictimer).w
+		tst.w	(v_demolength).w
 		beq.s	Level_EndDemo
 		cmpi.b	#GameModeID_Demo,(v_gamemode).w
 		beq.w	Level_MainLoop
@@ -2857,7 +2858,7 @@ Level_EndDemo:
 		move.b	#GameModeID_Credits,(v_gamemode).w
 
 Level_FadeDemo:
-		move.w	#60,(v_generictimer).w
+		move.w	#60,(v_demolength).w
 		move.w	#$3F,(v_pfade_start).w
 		clr.w	(PalChangeSpeed).w
 
@@ -2874,7 +2875,7 @@ Level_FDLoop:
 		bsr.w	Pal_FadeOut
 
 loc_400E:
-		tst.w	(v_generictimer).w
+		tst.w	(v_demolength).w
 		bne.s	Level_FDLoop
 		rts
 
@@ -3223,7 +3224,7 @@ SpecialStage:
 		clr.b	(v_lifecount).w
 ;		move.w	#100,(v_ring1uplimit).w	; TODO: IMPLEMENT reset ring 1-up flag
 		clr.w	(Debug_placement_mode).w
-		move.w	#60*30,(v_generictimer).w
+		move.w	#60*30,(v_demolength).w
 		tst.b	(f_debugcheat).w ; has debug cheat been entered?
 		beq.s	SS_NoDebug	; if not, branch
 		btst	#bitA,(v_jpadhold1).w ; is A button pressed?
@@ -3257,7 +3258,7 @@ SS_MainLoop:
 		clr.w	(Current_ZoneAndAct).w	; set to GHZ1
 
 SS_Finish:
-		move.w	#60,(v_generictimer).w ; set delay time to 1 second
+		move.w	#60,(v_demolength).w ; set delay time to 1 second
 		move.w	#$3F,(v_pfade_start).w
 		clr.w	(PalChangeSpeed).w
 
@@ -3274,7 +3275,7 @@ SS_FinLoop:
 		bsr.w	Pal_ToWhite
 
 loc_5214:
-		tst.w	(v_generictimer).w
+		tst.w	(v_demolength).w
 		bne.s	SS_FinLoop
 		disable_ints
 		lea	(vdp_control_port).l,a6
@@ -10195,7 +10196,6 @@ loc_DC9C:
 		clr.l	(a2)+
 		dbf	d0,loc_DC9C
 
-	if FixBugs
 		; Clear the last word, since the above loop only does longwords.
 	if (v_objstate_end-v_objstate-2)&2
 		clr.w	(a2)+
@@ -14466,7 +14466,7 @@ loc_11424:
 		bclr	#5,obStatus(a0)
 		addq.l	#4,sp
 		move.b	#1,objoff_3C(a0)
-		clr.b	stick_to_convex(a0)
+		clr.b	$38(a0)
 		move.w	#sfx_Jump,d0
 		jsr	(PlaySound_Special).l
 		move.b	#$F,obHeight(a0)
@@ -16849,7 +16849,7 @@ word_1374E:	dc.w 4
 		dc.w $F803, $806, $803,	   0
 		even
 ; ---------------------------------------------------------------------------
-		include	"obj/S1/7D Hidden Bonuses.asm"
+		include	"objects/S1/7D Hidden Bonuses.asm"
 ; ---------------------------------------------------------------------------
 Map_Obj7D:
 		dc.w word_13852-Map_Obj7D

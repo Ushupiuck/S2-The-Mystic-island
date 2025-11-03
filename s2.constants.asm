@@ -675,7 +675,7 @@ v_2Pjpadhold1:		ds.b	1			; joypad input - held
 v_2Pjpadpress1:		ds.b	1			; joypad input - pressed
 v_vdp_buffer1:		ds.w	1			; VDP instruction buffer
 			ds.b	4			; used for the special stages; see below
-v_generictimer:		ds.w	1			; the length of a demo in frames
+v_demolength:		ds.w	1			; the length of a demo in frames
 v_scrposy_vdp:		ds.w	1			; screen position y (VDP)
 v_bgscrposy_vdp:	ds.w	1			; background screen position y (VDP)
 v_scrposx_vdp:		ds.w	1			; screen position x (VDP)
