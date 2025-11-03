@@ -142,3 +142,7 @@ _clr	macro
 _tst	macro
 		!tst.ATTRIBUTE ALLARGS
 	endm
+
+roundFloatToInteger function float,INT(float+0.5)
+min function a,b,b!((a!b)&(-(a<b)))
+max function a,b,a!((a!b)&(-(a<b)))
