@@ -12,13 +12,13 @@ MoveSonicInDemo:
 		bpl.s	.dontquit	; if not, branch
 		tst.w	(f_demo).w	; is this an ending sequence demo?
 		bmi.s	.dontquit	; if yes, branch
-		move.b	#GameModeID_TitleScreen,(v_gamemode).w ; go to title screen
+		move.w	#TitleScreen,(v_gamemode).w ; go to title screen
 
 .dontquit:
 		lea	Demo_Index(pc),a1
 		moveq	#0,d0
 		move.b	(Current_Zone).w,d0
-		cmpi.b	#GameModeID_SpecialStage,(v_gamemode).w ; is this a special stage?
+		cmpi.w	#BonusStage,(v_gamemode).w ; is this a bonus stage?
 		bne.s	.notspecial	; if not, branch
 		moveq	#6,d0		; use demo #6
 

@@ -22,7 +22,7 @@ GBall_Main:	; Routine 0
 		move.l	#Map_BossItems,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Eggman_Weapons,0,0),obGfx(a0)
 		lea	obSubtype(a0),a2
-		move.b	#0,(a2)+
+		clr.b	(a2)+
 		moveq	#5,d1
 		movea.l	a0,a1
 		bra.s	loc_1916A
@@ -128,7 +128,7 @@ loc_19248:
 		tst.b	obStatus(a1)
 		bpl.s	locret_19272
 		_move.b	#id_Obj3F,obID(a0)
-		move.b	#0,obRoutine(a0)
+		clr.b	obRoutine(a0)
 
 locret_19272:
 		rts
@@ -141,7 +141,7 @@ loc_19274:	; Routine 6
 		tst.b	obStatus(a1)
 		bpl.s	GBall_Display3
 		_move.b	#id_Obj3F,obID(a0)
-		move.b	#0,obRoutine(a0)
+		clr.b	obRoutine(a0)
 
 GBall_Display3:
 		jmp	(DisplaySprite).l

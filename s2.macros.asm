@@ -93,6 +93,16 @@ start:
 	dc.b numentries, numvramtiles
 zoneanimcount := zoneanimcount + 1
     endm
+; macro to declare an offset table
+offsetTable macro {INTLABEL}
+current_offset_table := __LABEL__
+__LABEL__ label *
+    endm
+
+; macro to declare an entry in an offset table
+offsetTableEntry macro ptr
+	dc.ATTRIBUTE ptr-current_offset_table
+    endm
 ; ---------------------------------------------------------------------------
 ; function to calculate the location of a tile in plane mappings
 planeLoc function width,col,line,(((width * line) + col) * 2)
@@ -138,8 +148,8 @@ writeVRAM:	macro source,destination
 		move.l	#$96000000+(((source>>1)&$FF00)<<8)+$9500+((source>>1)&$FF),(a5)
 		move.w	#$9700+((((source>>1)&$FF0000)>>16)&$7F),(a5)
 		move.w	#$4000+((destination)&$3FFF),(a5)
-		move.w	#$80+(((destination)&$C000)>>14),(v_vdp_buffer2).w
-		move.w	(v_vdp_buffer2).w,(a5)
+		move.w	#$80+(((destination)&$C000)>>14),(v_dma_thunk).w
+		move.w	(v_dma_thunk).w,(a5)
 		endm
 
 ; ---------------------------------------------------------------------------
@@ -153,8 +163,8 @@ writeCRAM:	macro source,destination
 		move.l	#$96000000+(((source>>1)&$FF00)<<8)+$9500+((source>>1)&$FF),(a5)
 		move.w	#$9700+((((source>>1)&$FF0000)>>16)&$7F),(a5)
 		move.w	#$C000+(destination&$3FFF),(a5)
-		move.w	#$80+((destination&$C000)>>14),(v_vdp_buffer2).w
-		move.w	(v_vdp_buffer2).w,(a5)
+		move.w	#$80+((destination&$C000)>>14),(v_dma_thunk).w
+		move.w	(v_dma_thunk).w,(a5)
 		endm
 
 ; ---------------------------------------------------------------------------
@@ -455,6 +465,6 @@ dma68kToVDP macro source,dest,length,type
 	move.l	#(($9600|((((source)>>1)&$FF00)>>8))<<16)|($9500|(((source)>>1)&$FF)),(a5)
 	move.w	#$9700|(((((source)>>1)&$FF0000)>>16)&$7F),(a5)
 	move.w	#((vdpComm(dest,type,DMA)>>16)&$FFFF),(a5)
-	move.w	#(vdpComm(dest,type,DMA)&$FFFF),(DMA_data_thunk).w
-	move.w	(DMA_data_thunk).w,(a5)
+	move.w	#(vdpComm(dest,type,DMA)&$FFFF),(v_dma_thunk).w
+	move.w	(v_dma_thunk).w,(a5)
     endm		

@@ -34,7 +34,7 @@ WaterEffects:
 		bsr.w	DynamicWaterHeight
 
 loc_4058:
-		clr.b	(f_wtr_state).w
+		sf.b	(f_wtr_state).w
 		moveq	#0,d0
 		move.b	(v_oscillate+2).w,d0
 		lsr.w	#1,d0
@@ -46,7 +46,7 @@ loc_4058:
 		tst.w	d0
 		bpl.s	loc_4086
 		move.b	#223,(v_hbla_line).w
-		move.b	#1,(f_wtr_state).w
+		st.b	(f_wtr_state).w
 
 loc_4086:
 		cmpi.w	#223,d0

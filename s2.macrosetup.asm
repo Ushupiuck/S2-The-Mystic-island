@@ -142,3 +142,12 @@ _clr	macro
 _tst	macro
 		!tst.ATTRIBUTE ALLARGS
 	endm
+addi_	macro
+		!addq.ATTRIBUTE ALLARGS
+	endm
+subi_	macro
+		!subq.ATTRIBUTE ALLARGS
+	endm
+adda_	macro
+		!addq.ATTRIBUTE ALLARGS
+	endm

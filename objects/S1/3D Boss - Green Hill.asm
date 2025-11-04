@@ -76,7 +76,7 @@ BGHZ_ShipStart:
 		jsr	(ObjectMove_Reserved2).l
 		cmpi.w	#boss_ghz_y+$38,objoff_38(a0)
 		bne.s	loc_177E6
-		move.w	#0,obVelY(a0)	; stop ship
+		clr.w	obVelY(a0)	; stop ship
 		addq.b	#2,ob2ndRout(a0) ; goto next routine
 
 loc_177E6:
@@ -88,31 +88,32 @@ loc_177E6:
 		move.w	objoff_30(a0),obX(a0)
 		addq.b	#2,objoff_3F(a0)
 		cmpi.b	#8,ob2ndRout(a0)
-		bhs.s	locret_1784A
+		bhs.s	.return
 		tst.b	obStatus(a0)
 		bmi.s	loc_1784C
 		tst.b	obColType(a0)
-		bne.s	locret_1784A
+		bne.s	.return
 		tst.b	objoff_3E(a0)
-		bne.s	BGHZ_ShipFlash
+		bne.s	.BGHZ_ShipFlash
 		move.b	#$20,objoff_3E(a0)	; set number of	times for ship to flash
 		move.w	#sfx_HitBoss,d0
 		jsr	(PlaySound_Special).l	; play boss damage sound
 
-BGHZ_ShipFlash:
+.BGHZ_ShipFlash:
 		lea	(v_palette+$22).w,a1 ; load 2nd palette, 2nd entry
 		moveq	#0,d0		; move 0 (black) to d0
 		tst.w	(a1)
-		bne.s	loc_1783C
+		bne.s	.loc_1783C
 		move.w	#cWhite,d0	; move 0EEE (white) to d0
 
-loc_1783C:
+.loc_1783C:
 		move.w	d0,(a1)		; load colour stored in	d0
 		subq.b	#1,objoff_3E(a0)
-		bne.s	locret_1784A
+		bne.s	.return
+		move.w	#$222,(v_palette+$22).w	; move 0EEE (white) to d0
 		move.b	#$F,obColType(a0)
 
-locret_1784A:
+.return:
 		rts
 ; ===========================================================================
 
@@ -130,8 +131,8 @@ BGHZ_MakeBall:
 		jsr	(ObjectMove_Reserved2).l
 		cmpi.w	#boss_ghz_x+$A0,objoff_30(a0)
 		bne.w	loc_177E6
-		move.w	#0,obVelX(a0)
-		move.w	#0,obVelY(a0)
+		clr.w	obVelX(a0)
+		clr.w	obVelY(a0)
 		addq.b	#2,ob2ndRout(a0)
 		jsr	(FindNextFreeObj).l
 		bne.s	loc_17910
@@ -174,7 +175,7 @@ loc_17960:
 		bchg	#0,obStatus(a0)
 		move.w	#$40-1,objoff_3C(a0)
 		subq.b	#2,ob2ndRout(a0)
-		move.w	#0,obVelX(a0)
+		clr.w	obVelX(a0)
 		bra.w	loc_177E6
 ; ===========================================================================
 
@@ -203,12 +204,14 @@ loc_179AC:
 		beq.s	loc_179BC
 		bpl.s	loc_179C2
 		addi.w	#$18,obVelY(a0)
-		bra.s	loc_179EE
+		jsr	(ObjectMove_Reserved2).l
+		bra.w	loc_177E6
 ; ===========================================================================
 
 loc_179BC:
 		clr.w	obVelY(a0)
-		bra.s	loc_179EE
+		jsr	(ObjectMove_Reserved2).l
+		bra.w	loc_177E6
 ; ===========================================================================
 
 loc_179C2:
@@ -275,14 +278,26 @@ loc_17A3E:
 		subq.b	#6,d0
 		bmi.s	loc_17A46
 		moveq	#$A,d1
-		bra.s	loc_17A5A
+		move.b	d1,obAnim(a0)
+		subq.b	#2,d0
+		bne.s	BGHZ_Display
+		move.b	#6,obAnim(a0)
+		tst.b	obRender(a0)
+		bpl.s	BGHZ_Del
+		bra.s	BGHZ_Display
 ; ===========================================================================
 
 loc_17A46:
 		tst.b	obColType(a1)
 		bne.s	loc_17A50
 		moveq	#5,d1
-		bra.s	loc_17A5A
+		move.b	d1,obAnim(a0)
+		subq.b	#2,d0
+		bne.s	BGHZ_Display
+		move.b	#6,obAnim(a0)
+		tst.b	obRender(a0)
+		bpl.s	BGHZ_Del
+		bra.s	BGHZ_Display
 ; ===========================================================================
 
 loc_17A50:

@@ -19,13 +19,13 @@ Pause_AlreadyPaused:
 		jsr	PauseSoundDriver
 
 Pause_Loop:
-		move.b	#VintID_Pause,(v_vbla_routine).w
+		move.w	#Vint_Pause,(v_vbla_routine).w
 		bsr.w	WaitForVint
 		tst.b	(f_slomocheat).w
 		beq.s	Pause_ChkStart
 		btst	#bitA,(v_jpadpress1).w
 		beq.s	Pause_ChkBC
-		move.b	#GameModeID_TitleScreen,(v_gamemode).w
+		move.w	#TitleScreen,(v_gamemode).w
 		nop
 		bra.s	Pause_Resume
 ; ===========================================================================

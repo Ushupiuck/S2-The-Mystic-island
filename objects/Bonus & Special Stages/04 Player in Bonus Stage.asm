@@ -78,9 +78,9 @@ BonusPlayer_Display:
 		bsr.w	SSS_ChkItems2
 		bsr.w	ObjectMove		; update position
 		bsr.w	S1SS_FixCamera		; centre camera on Sonic
-		move.w	(v_ssangle).w,d0
-		add.w	(v_ssrotate).w,d0	; add rotation speed to angle
-		move.w	d0,(v_ssangle).w	; update angle
+		move.w	(v_ssangle).l,d0
+		add.w	(v_ssrotate).l,d0	; add rotation speed to angle
+		move.w	d0,(v_ssangle).l	; update angle
 		jmp	(Sonic_Animate).l
 
 ; ---------------------------------------------------------------------------
@@ -122,7 +122,7 @@ BonusPlayer_Move:
 		move.w	d0,obInertia(a0)	; set new inertia
 
 SSS_UpdatePos:
-		move.b	(v_ssangle).w,d0	; get stage angle
+		move.b	(v_ssangle).l,d0	; get stage angle
 		addi.b	#$20,d0			; rotate angle 45 degrees (for wall/floor/ceiling detection)
 		andi.b	#$C0,d0			; read only bits 7 and 6
 		neg.b	d0
@@ -205,7 +205,7 @@ BonusPlayer_Jump:
 		move.b	(v_jpadpress2).w,d0
 		andi.b	#btnABC,d0		; is A, B or C pressed?
 		beq.s	.exit			; if not, branch
-		move.b	(v_ssangle).w,d0
+		move.b	(v_ssangle).l,d0
 		neg.b	d0
 		subi.b	#$40,d0
 		jsr	(CalcSine).l
@@ -237,7 +237,7 @@ BonusPlayer_JumpHeight:
 		bne.s	.return			; if not, branch to return
 		btst	#7,obStatus(a0)		; did Sonic jump or is he just falling or hit by a bumper?
 		beq.s	.return			; if not, branch to return
-		move.b	(v_ssangle).w,d0	; get SS angle
+		move.b	(v_ssangle).l,d0	; get SS angle
 		neg.b	d0
 		subi.b	#$40,d0
 		jsr	(CalcSine).l
@@ -250,7 +250,7 @@ BonusPlayer_JumpHeight:
 		add.w	d0,d1			; combine the two speeds
 		cmpi.w	#$400,d1		; compare the combined speed with the jump release speed
 		ble.s	.return			; if it's less, branch to return
-		move.b	(v_ssangle).w,d0
+		move.b	(v_ssangle).l,d0
 		neg.b	d0
 		subi.b	#$40,d0
 		jsr	(CalcSine).l
@@ -291,15 +291,15 @@ S1SS_FixCamera:
 ; ===========================================================================
 
 BonusPlayer_ExitStage:
-		addi.w	#$40,(v_ssrotate).w		; increase stage rotation
-		cmpi.w	#$1800,(v_ssrotate).w		; check if it's up to $1800
+		addi.w	#$40,(v_ssrotate).l		; increase stage rotation
+		cmpi.w	#$1800,(v_ssrotate).l		; check if it's up to $1800
 		blt.s	.not1800			; if not, branch
-		move.b	#GameModeID_Level,(v_gamemode).w
+		move.w	#Level,(v_gamemode).w
 
 .not1800:
-		move.w	(v_ssangle).w,d0
-		add.w	(v_ssrotate).w,d0
-		move.w	d0,(v_ssangle).w
+		move.w	(v_ssangle).l,d0
+		add.w	(v_ssrotate).l,d0
+		move.w	d0,(v_ssangle).l
 		jsr	(Sonic_Animate).l
 		jsr	(LoadSonicDynPLC).l
 		bsr.s	S1SS_FixCamera
@@ -309,7 +309,7 @@ BonusPlayer_ExitStage:
 BonusPlayer_Fall:
 		move.l	obY(a0),d2
 		move.l	obX(a0),d3
-		move.b	(v_ssangle).w,d0
+		move.b	(v_ssangle).l,d0
 		jsr	(CalcSine).l
 		move.w	obVelX(a0),d4
 		ext.l	d4
@@ -639,9 +639,9 @@ SSS_UPblock:
 		tst.b	ost_ss_updown_time(a0)	; check UP/DOWN cooldown
 		bne.w	SSS_ChkItems_End	; branch if time remains
 		move.b	#30,ost_ss_updown_time(a0)	; set cooldown to half a second
-		btst	#6,(v_ssrotate+1).w	; is SS rotation speed $40? (minimum)
+		btst	#6,(v_ssrotate+1).l	; is SS rotation speed $40? (minimum)
 		beq.s	.keepspeed		; if not, branch
-		asl	(v_ssrotate).w		; increase stage rotation speed
+		asl	(v_ssrotate).l		; increase stage rotation speed
 		movea.l	ost_ss_item_address(a0),a1
 		subq.l	#1,a1
 		move.b	#$2A,(a1)		; change item to a "DOWN" block
@@ -657,9 +657,9 @@ SSS_DOWNblock:
 		tst.b	ost_ss_updown_time(a0)	; check UP/DOWN cooldown
 		bne.w	SSS_ChkItems_End
 		move.b	#30,ost_ss_updown_time(a0)
-		btst	#6,(v_ssrotate+1).w	; is SS rotation speed $40? (minimum)
+		btst	#6,(v_ssrotate+1).l	; is SS rotation speed $40? (minimum)
 		bne.s	.keepspeed		; if so, branch
-		asr	(v_ssrotate).w		; reduce stage rotation speed
+		asr	(v_ssrotate).l		; reduce stage rotation speed
 		movea.l	ost_ss_item_address(a0),a1
 		subq.l	#1,a1
 		move.b	#$29,(a1)		; change item to an "UP" block
@@ -683,7 +683,7 @@ SSS_Rblock:
 		move.l	d0,4(a2)
 
 .noslot:
-		neg.w	(v_ssrotate).w		; reverse stage rotation
+		neg.w	(v_ssrotate).l		; reverse stage rotation
 		move.w	#sfx_SSItem,d0
 		jmp	(PlaySound_Special).l	; play sound
 ; ===========================================================================

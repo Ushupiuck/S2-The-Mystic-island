@@ -1,9 +1,9 @@
 ; ===========================================================================
 ; size variables - you'll get an informational error if you need to change these...
 ; they are all in units of bytes
-Size_of_DAC_samples =		$2F00
-Size_of_SEGA_sound =		$6978
-Size_of_Snd_driver_guess =	$F64 ; approximate post-compressed size of the Z80 sound driver
+Size_of_DAC_samples		= $2F00
+Size_of_SEGA_sound		= $6978
+Size_of_Snd_driver_guess	= $F64 ; approximate post-compressed size of the Z80 sound driver
 ; ---------------------------------------------------------------------------
 ; Object variables
 ; ---------------------------------------------------------------------------
@@ -327,45 +327,53 @@ vram_hscroll:		equ $FC00			; horizontal scroll table
 tile_size:		equ 8*8/2
 plane_size_64x32:	equ 64*32*2
 
-palette_size:		equ $80
+
+; Other sizes
+palette_line_size		= $10*2	; 16 word entries
+palette_size:			equ $80
+
 PLCKosPlusM_Count:	= 32
 
 ; ===========================================================================
+; The following come from Sonic 2 -- For compatibility only.
 ; ---------------------------------------------------------------------------
-; V-Int routines
-offset :=	Vint_SwitchTbl
-ptrsize :=	1
-idstart :=	0
+; VRAM and tile art base addresses.
+; VRAM Reserved regions.
+VRAM_Plane_A_Name_Table                  = $C000	; Extends until $CFFF
+VRAM_Plane_B_Name_Table                  = $E000	; Extends until $EFFF
+VRAM_Plane_Table_Size                    = $1000	; 64 cells x 32 cells x 2 bytes per cell
+VRAM_Sprite_Attribute_Table              = $F800	; Extends until $FA7F
+VRAM_Sprite_Attribute_Table_Size         = $0280	; 640 bytes
+VRAM_Horiz_Scroll_Table                  = $FC00	; Extends until $FF7F
+VRAM_Horiz_Scroll_Table_Size             = 224*2*2	; 224 lines * 2 bytes per entry * 2 PNTs
 
-VintID_Lag =		id(Vint_Lag_ptr)	; 0
-VintID_SEGA =		id(Vint_SEGA_ptr)	; 2
-VintID_Title =		id(Vint_Title_ptr)	; 4
-VintID_Level =		id(Vint_Level_ptr)	; 6
-VintID_S1SS =		id(Vint_S1SS_ptr)	; 8
-VintID_TitleCard =	id(Vint_TitleCard_ptr)	; $A
-VintID_Pause =		id(Vint_Pause_ptr)	; $C
-VintID_Fade =		id(Vint_Fade_ptr)	; $E
-VintID_PCM =		id(Vint_PCM_ptr)	; $10
-VintID_SSResults =	id(Vint_SSResults_ptr)	; $12
-VintID_TitleCard2 =	id(Vint_TitleCard2_ptr)	; $14
+; VRAM Reserved regions, Sega screen.
+VRAM_SegaScr_Plane_A_Name_Table          = $C000	; Extends until $DFFF
+VRAM_SegaScr_Plane_B_Name_Table          = $A000	; Extends until $BFFF
+VRAM_SegaScr_Plane_Table_Size            = $2000	; 128 cells x 32 cells x 2 bytes per cell
 
-; Game modes
-offset :=	GameModeArray
-ptrsize :=	1
-idstart :=	0
+; VRAM Reserved regions, Special Stage.
+VRAM_SS_Plane_A_Name_Table1              = $C000	; Extends until $DFFF
+VRAM_SS_Plane_A_Name_Table2              = $8000	; Extends until $9FFF
+VRAM_SS_Plane_B_Name_Table               = $A000	; Extends until $BFFF
+VRAM_SS_Plane_Table_Size                 = $2000	; 128 cells x 32 cells x 2 bytes per cell
 
-GameModeID_SegaScreen =		id(GameMode_SegaScreen)	; 0
-GameModeID_TitleScreen =	id(GameMode_TitleScreen) ; 4
-GameModeID_Demo =		id(GameMode_Demo)	; 8
-GameModeID_Level =		id(GameMode_Level)	; $C
-GameModeID_SpecialStage =	id(GameMode_SpecialStage) ; $10
-GameModeID_ContinueScreen =	id(GameMode_Continue)	; $14 ; (TODO)
-GameModeID_Ending =		id(GameMode_Ending)	; $18 ; (TODO)
-GameModeID_Credits =		id(GameMode_Credits)	; $1C ; (TODO)
-GameModeID_Options =		id(GameMode_Options)	; $20 ; (TODO)
-GameModeID_LevelSelect =	id(GameMode_SecretMenu)	; $24 ; (TODO)
-GameModeFlag_TitleCard:		equ 7			; flag bit
-GameModeID_TitleCard:		equ 1<<GameModeFlag_TitleCard ; $80 ; flag mask
+; VRAM Reserved regions, Title screen.
+VRAM_TtlScr_Plane_A_Name_Table           = $C000	; Extends until $CFFF
+VRAM_TtlScr_Plane_B_Name_Table           = $E000	; Extends until $EFFF
+VRAM_TtlScr_Plane_Table_Size             = $1000	; 64 cells x 32 cells x 2 bytes per cell
+
+; VRAM Reserved regions, Ending sequence and credits.
+VRAM_EndSeq_Plane_A_Name_Table           = $C000	; Extends until $DFFF
+VRAM_EndSeq_Plane_B_Name_Table1          = $E000	; Extends until $EFFF (plane size is 64x32)
+VRAM_EndSeq_Plane_B_Name_Table2          = $4000	; Extends until $5FFF
+VRAM_EndSeq_Plane_Table_Size             = $2000	; 64 cells x 64 cells x 2 bytes per cell
+
+; VRAM Reserved regions, menu screen.
+VRAM_Menu_Plane_A_Name_Table             = $C000	; Extends until $CFFF
+VRAM_Menu_Plane_B_Name_Table             = $E000	; Extends until $EFFF
+VRAM_Menu_Plane_Table_Size               = $1000	; 64 cells x 32 cells x 2 bytes per cell
+; ===========================================================================
 
 	include "musicids.gen.asm"
 
@@ -482,14 +490,14 @@ v_lvlobjspace	= v_objspace+object_size*32		; level object variable space ($1800 
 v_lvlobjend	= v_lvlobjspace+object_size*96
 v_objend	= v_lvlobjend
 
-; Special Stage objects
-v_ssrescard	= v_objspace+object_size*23		; object variable space for the Special Stage results card ($140 bytes)
-v_ssrestext	= v_ssrescard+object_size*0		; object variable space for the Special Stage results card text ($40 bytes)
-v_ssresscore	= v_ssrescard+object_size*1		; object variable space for the Special Stage results card score tally ($40 bytes)
-v_ssresring	= v_ssrescard+object_size*2		; object variable space for the Special Stage results card ring bonus tally ($40 bytes)
-v_ssresoval	= v_ssrescard+object_size*3		; object variable space for the Special Stage results card oval ($40 bytes)
-v_ssrescontinue	= v_ssrescard+object_size*4		; object variable space for the Special Stage results card continue icon ($40 bytes)
-v_ssresemeralds	= v_objspace+object_size*32		; object variable space for the emeralds in the Special Stage results ($180 bytes)
+; Bonus Stage objects
+v_bsrescard	= v_objspace+object_size*23		; object variable space for the Bonus Stage results card ($140 bytes)
+v_bsrestext	= v_bsrescard+object_size*0		; object variable space for the Bonus Stage results card text ($40 bytes)
+v_bsresscore	= v_bsrescard+object_size*1		; object variable space for the Bonus Stage results card score tally ($40 bytes)
+v_bsresring	= v_bsrescard+object_size*2		; object variable space for the Bonus Stage results card ring bonus tally ($40 bytes)
+v_bsresoval	= v_bsrescard+object_size*3		; object variable space for the Bonus Stage results card oval ($40 bytes)
+v_ssrescontinue	= v_bsrescard+object_size*4		; object variable space for the Bonus Stage results card continue icon ($40 bytes)
+v_ssresemeralds	= v_objspace+object_size*32		; object variable space for the emeralds in the Bonus Stage results ($180 bytes)
 
 ; Continue screen objects
 v_continuetext	= v_objspace+object_size*1		; object variable space for the continue screen text ($40 bytes)
@@ -506,6 +514,7 @@ v_credits	= v_objspace+object_size*2		; object variable space for the credits te
 v_endeggman	= v_objspace+object_size*2		; object variable space for Eggman after the credits ($40 bytes)
 v_tryagain	= v_objspace+object_size*3		; object variable space for the "TRY AGAIN" text ($40 bytes)
 v_eggmanchaos	= v_objspace+object_size*32		; object variable space for the emeralds juggled by Eggman ($180 bytes)
+; ---------------------------------------------------------------------------
 
 v_hscrolltablebuffer:	ds.b	$380			; scrolling table data
 v_hscrolltablebuffer_end:
@@ -519,7 +528,7 @@ Tails_Pos_Record_Buf:	ds.b	$100
 Ring_Positions:		ds.b	$600
 Ring_Positions_End:
 
-Kos_decomp_buffer:		ds.b	$1000		; Moduled Kosinski+ decompression buffer
+Kos_decomp_buffer:	ds.b	$1000		; Moduled Kosinski+ decompression buffer
 
 VDP_Command_Buffer:		ds.w	7*$12		; stores 18 ($12) VDP commands to issue the next time ProcessDMAQueue is called
 VDP_Command_Buffer_Slot:	ds.w	1		; stores the address of the next open slot for a queued VDP command
@@ -665,8 +674,7 @@ Camera_RAM_End:
 
 Block_cache:		ds.w	512/16*2		; Width of plane in blocks, with each block getting two words.
 
-v_gamemode:		ds.b	1			; game mode (00=Sega; 04=Title; 08=Demo; 0C=Level; 10=SS; 14=Cont; 18=End; 1C=Credit; +8C=PreLevel)
-			ds.b	1			; unused
+v_gamemode:		ds.w	1			; game mode - Pointer to the current Gamemode IN-ROM
 v_jpadhold2:		ds.b	1			; joypad input - held, duplicate
 v_jpadpress2:		ds.b	1			; joypad input - pressed, duplicate
 v_jpadhold1:		ds.b	1			; joypad input - held
@@ -674,15 +682,14 @@ v_jpadpress1:		ds.b	1			; joypad input - pressed
 v_2Pjpadhold1:		ds.b	1			; joypad input - held
 v_2Pjpadpress1:		ds.b	1			; joypad input - pressed
 v_vdp_buffer1:		ds.w	1			; VDP instruction buffer
-			ds.b	4			; used for the special stages; see below
-v_demolength:		ds.w	1			; the length of a demo in frames
+v_generictimer:		ds.w	1			; the length of a demo in frames
 v_scrposy_vdp:		ds.w	1			; screen position y (VDP)
+Vscroll_Factor		= v_scrposy_vdp
 v_bgscrposy_vdp:	ds.w	1			; background screen position y (VDP)
 v_scrposx_vdp:		ds.w	1			; screen position x (VDP)
 v_bgscrposx_vdp:	ds.w	1			; background screen position x (VDP)
 v_bg3scrposy_vdp:	ds.w	1
 v_bg3scrposx_vdp:	ds.w	1
-			ds.b	2			; unused
 v_hbla_hreg:		ds.w	1			; VDP H.interrupt register buffer (8Axx)
 v_hbla_line 		= v_hbla_hreg+1			; screen line where water starts and palette is changed by HBlank
 v_pfade_start:		ds.b	1			; palette fading - start position in bytes
@@ -690,27 +697,28 @@ v_pfade_size:		ds.b	1			; palette fading - number of colours
 
 v_misc_variables:
 Lag_frame_count:	ds.w	1			; more specifically, the number of times V-int routine 0 has run. Reset at the end of a normal frame
-v_vbla_routine:		ds.b	1			; VBlank - routine counter
+v_vbla_counter:		ds.b	1			; VBlank - routine counter
 v_spritecount:		ds.b	1			; number of sprites on-screen
-			ds.b	1			; unused
+v_vbla_routine:		ds.w	1
+f_doupdatesinhblank:	ds.b	1			; defers performing various tasks to the Horizontal Interrupt (H-Blank)
 f_hbla_pal:		ds.b	1			; flag set to change palette during HBlank (00 = no; 01 = change)
+v_dma_thunk:		ds.w	1			; Used as a RAM holder for the final DMA command word. Data will NOT be preserved across V-INTs, so consider this space reserved.
 v_pcyc_num:		ds.w	1			; palette cycling - current reference number
 v_pcyc_num2:		ds.w	1			; palette cycling - current reference number
 v_pcyc_num3:		ds.w	1			; palette cycling - current reference number
 v_pcyc_time:		ds.w	1			; palette cycling - time until the next change
 v_pcyc_time2:		ds.w	1			; palette cycling - time until the next change
 v_pcyc_time3:		ds.w	1			; palette cycling - time until the next change
+v_pal_buffer:		ds.b	$30			; palette data buffer (used for palette cycling)
 v_random:		ds.l	1			; pseudo random number buffer
 f_pause:		ds.w	1			; flag set to pause the game
-v_vdp_buffer2:		ds.w	1			; VDP instruction buffer
 v_waterpos1:		ds.w	1			; water height, actual
 v_waterpos2:		ds.w	1			; water height, ignoring sway
 v_waterpos3:		ds.w	1			; water height, next target
 f_water:		ds.b	1			; flag set for water
 v_wtr_routine:		ds.b	1			; water event - routine counter
 f_wtr_state:		ds.b	1			; water palette state when water is above/below the screen (00 = partly/all dry; 01 = all underwater)
-f_doupdatesinhblank:	ds.b	1			; defers performing various tasks to the Horizontal Interrupt (H-Blank)
-v_pal_buffer:		ds.b	$30			; palette data buffer (used for palette cycling)
+			ds.b	1			; unused
 v_misc_variables_end:
 
 v_plc_buffer:			ds.b	6*16		; pattern load cues buffer (maximum $10 PLCs)
@@ -798,10 +806,9 @@ PalChangeSpeed:		ds.w	1
 Collision_addr:		ds.l	1
 v_colladdr1:		ds.l	1
 v_colladdr2:		ds.l	1
-v_palss_num:		ds.w	1			; palette cycling in Special Stage - reference number
-v_palss_time:		ds.w	1			; palette cycling in Special Stage - time until next change
-v_palss_index:		ds.w	1			; palette cycling in Special Stage - index into palette cycle 2 (unused?)
-v_ssbganim:		ds.w	1			; Special Stage background animation
+v_palbs_num:		ds.w	1			; palette cycling in Bonus Stage - reference number
+v_palbs_time:		ds.w	1			; palette cycling in Bonus Stage - time until next change
+v_bsbganim:		ds.w	1			; bonus Stage background animation
 
 v_gfxbigring:		ds.w	1			; settings for giant ring graphics loading
 f_lockscreen:		ds.b	1
@@ -825,12 +832,13 @@ Water_flag:		ds.b	1
 f_switch:		ds.b	$10			; flags set when Sonic stands on a switch
 
 Anim_Counters:		ds.b	$10
-			ds.b	$8			; unused
+			ds.b	$E			; unused
 
 v_levelvariables_end:
 
 Sprite_Table:		ds.b	$280			; Sprite attribute table buffer
 Sprite_Table_end:
+
 v_palette_water_fading: ds.b	palette_size		; duplicate underwater palette, used for transitions ($80 bytes)
 v_palette_water_fading_end:
 v_palette_water:	ds.b	palette_size		; main underwater palette
@@ -862,7 +870,7 @@ v_lives:		ds.b	1			; (1 byte)
 			ds.b	1			; unused
 v_air:			ds.w	1			; air remaining while underwater
 v_airbyte =		v_air+1				; low byte for air
-v_lastspecial:		ds.b	1			; last special stage number
+v_lastbonus:		ds.b	1			; last bonus stage number
 v_continues:		ds.b	1			; number of continues
 f_timeover:		ds.b	1			; time over flag
 v_lifecount:		ds.b	1			; lives counter value (for actual number, see "v_lives")
@@ -975,18 +983,17 @@ v_limittop2:=		Camera_Min_Y_pos
 v_limitbtm2:=		Camera_Max_Y_pos
 
 
-; Special stage
-
-v_ssbuffer1		= v_128x128
-v_ssblockbuffer		= v_ssbuffer1+$1020		; ($2000 bytes)
-v_ssblockbuffer_end	= v_ssblockbuffer+$80*$40	; from here, $FE0 bytes free
-v_ssbuffer2		= v_128x128+$4000
+; Bonus stage
+v_ssbuffer1		= v_start
+v_ssblockbuffer		= v_ssbuffer1+$1020		; $1020 bytes -- layout padded from the top and sides
+v_ssblockbuffer_end	= v_ssblockbuffer+$80*$40	; ($2000 bytes)
+v_ssbuffer2		= v_ssblockbuffer_end
 v_ssblocktypes		= v_ssbuffer2
 v_ssitembuffer		= v_ssbuffer2+$400		; ($1000 bytes)
-v_ssitembuffer_end	= v_ssitembuffer+$100		; actually extends all the way to $FFFF5000; from here, $3000 bytes free
-v_ssbuffer3		= v_128x128+$8000
-v_ssscroll_buffer	= v_ngfx_buffer+$100
-v_ssangle		= v_vdp_buffer1+2
+v_ssitembuffer_end	= v_ssitembuffer+$100
+v_ssbuffer3		= v_ssitembuffer+$500
+v_ssscroll_buffer	= v_ssbuffer3+$400
+v_ssangle		= v_ssscroll_buffer+$300
 v_ssrotate		= v_ssangle+2
 
 ;v_ss_layout:			equ $FF0000 ; special stage layout with space added to top and sides
@@ -998,6 +1005,139 @@ v_ssrotate		= v_ssangle+2
 ;v_ss_sprite_grid_plot:		equ $FF4500 ; x/y positions of cells in a 16x16 grid centered around Sonic, updates as it rotates ($400 bytes)
 ;v_ss_bubble_x_pos:		equ $FF4900 ; x position of background bubbles
 ;v_ss_cloud_x_pos:		equ $FF4A00 ; x position of background clouds - 4 bytes per block, 7 blocks ($1C bytes)
+
+; ---------------------------------------------------------------------------
+; RAM variables - Special stage
+	phase	RAM_Start	; Move back to start of RAM
+PNT_Buffer:			ds.b	$700
+PNT_Buffer_End:
+SSRAM_ArtNem_SpecialSonicAndTails:
+				ds.b	tiles_to_bytes($353)	; $353 art blocks
+SSRAM_MiscKoz_SpecialPerspective:
+				ds.b	$1AFC
+SSRAM_MiscNem_SpecialLevelLayout:
+				ds.b	$180
+				ds.b	$9C	; padding
+SSRAM_MiscKoz_SpecialObjectLocations:
+				ds.b	$1AE0
+	dephase			; Ends Deep in the block table; roughly $600 bytes before "TempArray_LayerDef"
+ ; ---------------------------------------------------------------------------
+; RAM variables - Special stage Object RAM
+	phase	v_objspace	; Move back to the object RAM
+				ds.b	object_size
+				ds.b	object_size
+SpecialStageHUD:		; HUD in the special stage
+				ds.b	object_size
+SpecialStageStartBanner:
+				ds.b	object_size
+SpecialStageNumberOfRings:
+				ds.b	object_size
+SpecialStageShadow_Sonic:
+				ds.b	object_size
+SpecialStageShadow_Tails:
+				ds.b	object_size
+SpecialStageTails_Tails:
+				ds.b	object_size
+SS_Dynamic_Object_RAM:
+				ds.b	$18*object_size
+SpecialStageResults:
+				ds.b	object_size
+				ds.b	$C*object_size
+SpecialStageResults2:
+				ds.b	object_size
+				ds.b	$51*object_size
+SS_Dynamic_Object_RAM_End:
+    if * > v_objspace_end
+	fatal "Special stage objects go past end of object RAM buffer."
+    endif
+	dephase
+; ---------------------------------------------------------------------------
+	phase	ramaddr(v_hscrolltablebuffer)	; Still in SS RAM
+SS_Horiz_Scroll_Buf_1		= v_hscrolltablebuffer
+	dephase
+
+	phase (Ring_Positions)
+SS_Horiz_Scroll_Buf_2		= v_hscrolltablebuffer
+	dephase
+; ---------------------------------------------------------------------------
+	phase (v_16x16+$1300)
+		; The special stage mode also uses the rest of the RAM for
+		; different purposes.
+SSTrack_mappings_bitflags:		ds.l	1
+SSTrack_mappings_uncompressed:		ds.l	1
+SSTrack_anim:				ds.b	1
+SSTrack_last_anim_frame:		ds.b	1
+SpecialStage_CurrentSegment:		ds.b	1
+SSTrack_anim_frame:			ds.b	1
+SS_Alternate_PNT:			ds.b	1
+SSTrack_drawing_index:			ds.b	1
+SSTrack_Orientation:			ds.b	1
+SS_Alternate_HorizScroll_Buf:		ds.b	1
+SSTrack_mapping_frame:			ds.b	1
+SS_Last_Alternate_HorizScroll_Buf:	ds.b	1
+SS_New_Speed_Factor:			ds.l	1
+SS_Cur_Speed_Factor:			ds.l	1
+SSTrack_duration_timer:			ds.b	1
+SS_player_anim_frame_timer:		ds.b	1
+SpecialStage_LastSegment:		ds.b	1
+SpecialStage_Started:			ds.b	1
+SSTrack_last_mappings_copy:		ds.l	1
+SSTrack_last_mappings:			ds.l	1
+SSTrack_LastVScroll:			ds.w	1
+SpecialStage_LastSegment2:		ds.b	1
+SSTrack_last_mapping_frame:		ds.b	1
+SSTrack_mappings_RLE:			ds.l	1
+SSDrawRegBuffer:			ds.w	6
+SSDrawRegBuffer_End
+SS_Ctrl_Record_Buf:			ds.w	$10
+SS_Ctrl_Record_Buf_End
+SS_CurrentPerspective:			ds.l	1
+SS_Check_Rings_flag:			ds.b	1
+SS_Pause_Only_flag:			ds.b	1
+SS_CurrentLevelObjectLocations:		ds.l	1
+SS_Ring_Requirement:			ds.w	1
+SS_CurrentLevelLayout:			ds.l	1
+SS_2P_BCD_Score:			ds.b	1
+SS_NoCheckpoint_flag:			ds.b	1
+SS_Checkpoint_Rainbow_flag:		ds.b	1
+SS_Rainbow_palette:			ds.b	1
+SS_Perfect_rings_left:			ds.w	1
+SS_Star_color_1:			ds.b	1
+SS_Star_color_2:			ds.b	1
+SS_NoCheckpointMsg_flag:		ds.b	1
+SS_HideRingsToGo:			ds.b	1
+SS_NoRingsTogoLifetime:			ds.w	1
+SS_RingsToGoBCD:			ds.w	1
+SS_TriggerRingsToGo:			ds.b	1
+SS_Swap_Positions_Flag:			ds.b	1
+SS_Offset_X:				ds.w	1
+SS_Offset_Y:				ds.w	1
+	dephase
+; ---------------------------------------------------------------------------
+	phase (v_palette_water_fading)
+Underwater_target_palette:		ds.b palette_line_size	; This is used by the screen-fading subroutines.
+Underwater_target_palette_line2:	ds.b palette_line_size	; While Underwater_palette contains the blacked-out palette caused by the fading,
+Underwater_target_palette_line3:	ds.b palette_line_size	; Underwater_target_palette will contain the palette the screen will ultimately fade in to.
+Underwater_target_palette_line4:	ds.b palette_line_size
+
+Underwater_palette:			ds.b	palette_line_size	; main palette for underwater parts of the screen
+Underwater_palette_line2:		ds.b	palette_line_size
+Underwater_palette_line3:		ds.b	palette_line_size
+Underwater_palette_line4:		ds.b	palette_line_size
+
+Normal_palette:				ds.b	palette_line_size	; main palette for non-underwater parts of the screen
+Normal_palette_line2:			ds.b	palette_line_size
+Normal_palette_line3:			ds.b	palette_line_size
+Normal_palette_line4:			ds.b	palette_line_size
+Normal_palette_End:
+
+Target_palette:				ds.b	palette_line_size	; This is used by the screen-fading subroutines.
+Target_palette_line2:			ds.b	palette_line_size	; While Normal_palette contains the blacked-out palette caused by the fading,
+Target_palette_line3:			ds.b	palette_line_size	; Target_palette will contain the palette the screen will ultimately fade in to.
+Target_palette_line4:			ds.b	palette_line_size
+Target_palette_End:
+	dephase
+; ---------------------------------------------------------------------------
 
 ; Error handler
 	phase v_objstate
