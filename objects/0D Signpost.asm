@@ -96,7 +96,7 @@ Obj0D_EndLevel:
 		btst	#1,(v_player+obStatus).w
 		bne.s	loc_F0E0
 		move.b	#1,(f_lockctrl).w
-		move.w	#8<<btnR,(v_jpadhold2).w
+		move.w	#8<<btnR,(v_jpadholdlogical).w
 
 loc_F0E0:
 		; This check here is for S1's Big Ring, which would set Sonic's Object ID to 0

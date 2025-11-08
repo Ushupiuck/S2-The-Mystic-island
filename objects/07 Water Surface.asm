@@ -29,7 +29,7 @@ WaterSurface_Main:
 		tst.b	surf_freeze(a0)
 		bne.s	WaterSurface_Animate
 		move.b	(v_jpadpress1).w,d0 ; is Start button pressed?
-		or.b	(v_jpadpress2).w,d0 ; (either player)
+		or.b	(v_jpadpresslogical).w,d0 ; (either player)
 		andi.b	#btnStart,d0
 		beq.s	loc_15540		; if not, branch
 		addq.b	#3,obFrame(a0)

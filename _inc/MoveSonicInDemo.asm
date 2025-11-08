@@ -7,7 +7,7 @@
 
 MoveSonicInDemo:
 		tst.w	(f_demo).w	; is demo mode on?
-		beq.w	locret_4570	; if not, branch
+		beq.s	.return		; if not, branch
 		tst.b	(v_jpadhold1).w	; is start button pressed?
 		bpl.s	.dontquit	; if not, branch
 		tst.w	(f_demo).w	; is this an ending sequence demo?
@@ -18,11 +18,6 @@ MoveSonicInDemo:
 		lea	Demo_Index(pc),a1
 		moveq	#0,d0
 		move.b	(Current_Zone).w,d0
-		cmpi.w	#BonusStage,(v_gamemode).w ; is this a bonus stage?
-		bne.s	.notspecial	; if not, branch
-		moveq	#6,d0		; use demo #6
-
-.notspecial:
 		lsl.w	#2,d0
 		movea.l	(a1,d0.w),a1	; fetch address for demo data
 		tst.w	(f_demo).w	; is this an ending sequence demo?
@@ -39,7 +34,7 @@ MoveSonicInDemo:
 		move.b	(a1),d0
 		lea	(v_jpadhold1).w,a0
 		move.b	d0,d1
-		move.b	v_jpadhold2-v_jpadhold1(a0),d2
+		move.b	v_jpadholdlogical-v_jpadhold1(a0),d2
 		eor.b	d2,d0
 		move.b	d1,(a0)+
 		and.b	d1,d0
@@ -48,12 +43,8 @@ MoveSonicInDemo:
 		bcc.s	.MimicSonic
 		move.b	3(a1),(Demo_press_counter).w
 		addq.w	#2,(Demo_button_index).w
-
-.MimicSonic:
-		clr.w	(v_2Pjpadhold1).w
-
-locret_4570:
-		rts
+.MimicSonic:	clr.w	(v_jpadhold2).w
+.return:	rts
 ; End of function MoveSonicInDemo
 
 ; ---------------------------------------------------------------------------

@@ -400,40 +400,58 @@ CmdID__End =		id(CmdPtr__End)		; FE
 
 ; Main RAM
 	phase	ramaddr($FFFE0000)
-RAM_debug_start:	ds.b	$10000
+RAM_debug_start:		ds.b	$10000
 RAM_debug_end:
 
 v_start:
 RAM_Start:
 
-Chunk_Table:		ds.w	$40*$100		; 128x128 tile mappings ($8000 bytes)
+Chunk_Table:			ds.w	$40*$100	; 128x128 tile mappings ($8000 bytes)
 Chunk_Table_End:
 v_128x128:=	Chunk_Table
 v_128x128_end:=	Chunk_Table_End
 
-Level_Layout:		ds.b	$1000			; level layout buffer ($1000 bytes)
+Level_Layout:			ds.b	$1000		; level layout buffer ($1000 bytes)
 Level_Layout_End:
 
-v_lvllayout:=		Level_Layout
-v_lvllayout_end:=	Level_Layout_End
-v_lvllayoutbg:=		Level_Layout+$80
-v_16x16:		ds.b	$1800			; $1800 bytes
+v_lvllayout:=			Level_Layout
+v_lvllayout_end:=		Level_Layout_End
+v_lvllayoutbg:=			Level_Layout+$80
+v_16x16:			ds.b	$1800		; $1800 bytes
 
-TempArray_LayerDef:	ds.b	$200			; background scroll buffer
-Decomp_Buffer:		ds.b	$200			; Nemesis graphics decompression buffer
-Decomp_Buffer_End:
+TempArray_LayerDef:		ds.b	$200		; background scroll buffer
+v_bgscroll_buffer:=		TempArray_LayerDef
+v_hscrolltablebuffer:		ds.b	$380		; scrolling table data
+v_hscrolltablebuffer_end:
+				ds.b	$80		; would be unused, but data from v_hscrolltablebuffer can spill into here
+v_hscrolltablebuffer_end_padded:
+Sprite_Table:			ds.b	$280		; Sprite attribute table buffer
+Sprite_Table_end:
+				ds.b	$140		; stack
+v_systemstack:
+v_ngfx_buffer:			ds.b	$200		; Nemesis graphics decompression buffer
+v_ngfx_buffer_end:
 
-v_bgscroll_buffer:=	TempArray_LayerDef
-v_ngfx_buffer:=		Decomp_Buffer
-v_ngfx_buffer_end:=	Decomp_Buffer_End
-
-Object_Display_Lists:	ds.b	$400			; sprite display queue, in order of priority
+v_objstate:			ds.b	$300		; object state list
+v_objstate_end:
+Object_Display_Lists:		ds.b	$400		; sprite display queue, in order of priority
 Object_Display_Lists_End:
-
 v_spritequeue:=		Object_Display_Lists
 v_spritequeue_end:=	Object_Display_Lists_End
 
-v_objspace:		ds.b	object_size*$80		; object variable space ($40 bytes per object)
+Sonic_Stat_Record_Buf:		ds.b	$100
+Sonic_Pos_Record_Buf:		ds.b	$100
+Tails_Pos_Record_Buf:		ds.b	$100
+Ring_Positions:			ds.b	$600
+Ring_Positions_End:
+
+Kos_decomp_buffer:		ds.b	$1000		; Moduled Kosinski+ decompression buffer
+
+VDP_Command_Buffer:		ds.w	7*$12		; stores 18 ($12) VDP commands to issue the next time ProcessDMAQueue is called
+VDP_Command_Buffer_Slot:	ds.w	1		; stores the address of the next open slot for a queued VDP command
+
+; ---------------------------------------------------------------------------
+v_objspace:			ds.b	object_size*$80	; object variable space ($40 bytes per object)
 v_objspace_end:
 ; ---------------------------------------------------------------------------
 ; Title screen objects
@@ -462,12 +480,11 @@ v_splash	= v_objspace+object_size*17		; object variable space for Sonic's water 
 v_tsplash	= v_objspace+object_size*18		; object variable space for Tails's water splash ($40 bytes)
 v_sonicbubbles	= v_objspace+object_size*19		; object variable space for the bubbles that come out of Sonic's mouth/drown countdown ($40 bytes)
 v_tailsbubbles	= v_objspace+object_size*20		; object variable space for the bubbles that come out of Tails's mouth/drown countdown ($40 bytes)
-v_watersurface1	= v_objspace+object_size*30		; object variable space for the water surface #1 ($40 bytes)
-v_watersurface2	= v_objspace+object_size*31		; object variable space for the water surface #2 ($40 bytes)
+v_watersurface1	= v_objspace+object_size*21		; object variable space for the water surface #1 ($40 bytes)
+v_watersurface2	= v_objspace+object_size*22		; object variable space for the water surface #2 ($40 bytes)
 
 v_gameovertext1	= v_objspace+object_size*2		; object variable space for the "GAME"/"TIME" in "GAME OVER"/"TIME OVER" text ($40 bytes)
 v_gameovertext2	= v_objspace+object_size*3		; object variable space for the "OVER" in "GAME OVER"/"TIME OVER" text ($40 bytes)
-
 ; ---------------------------------------------------------------------------
 ; Start/End of level objects (Part of the above; used exclusively at the beginning/end of a level)
 v_titlecard	= v_objspace+object_size*2		; object variable space for the title card ($100 bytes)
@@ -515,24 +532,6 @@ v_endeggman	= v_objspace+object_size*2		; object variable space for Eggman after
 v_tryagain	= v_objspace+object_size*3		; object variable space for the "TRY AGAIN" text ($40 bytes)
 v_eggmanchaos	= v_objspace+object_size*32		; object variable space for the emeralds juggled by Eggman ($180 bytes)
 ; ---------------------------------------------------------------------------
-
-v_hscrolltablebuffer:	ds.b	$380			; scrolling table data
-v_hscrolltablebuffer_end:
-			ds.b	$80			; would be unused, but data from v_hscrolltablebuffer can spill into here
-v_hscrolltablebuffer_end_padded:
-
-Sonic_Stat_Record_Buf:	ds.b	$100
-Sonic_Pos_Record_Buf:	ds.b	$100
-Tails_Pos_Record_Buf:	ds.b	$100
-
-Ring_Positions:		ds.b	$600
-Ring_Positions_End:
-
-Kos_decomp_buffer:	ds.b	$1000		; Moduled Kosinski+ decompression buffer
-
-VDP_Command_Buffer:		ds.w	7*$12		; stores 18 ($12) VDP commands to issue the next time ProcessDMAQueue is called
-VDP_Command_Buffer_Slot:	ds.w	1		; stores the address of the next open slot for a queued VDP command
-
 Camera_RAM:
 Camera_Positions:
 Camera_X_pos:			ds.l	1
@@ -545,17 +544,6 @@ Camera_BG3_X_pos:		ds.l	1	; unused (only initialised at beginning of level)?
 Camera_BG3_Y_pos:		ds.l	1	; unused (only initialised at beginning of level)?
 Camera_Positions_End:
 
-Camera_Positions_P2:
-Camera_X_pos_P2:		ds.l	1
-Camera_Y_pos_P2:		ds.l	1
-Camera_BG_X_pos_P2:		ds.l	1	; only used sometimes as the layer deformation makes it sort of redundant
-Camera_BG_Y_pos_P2:		ds.l	1
-Camera_BG2_X_pos_P2:		ds.l	1	; unused (only initialised at beginning of level)?
-Camera_BG2_Y_pos_P2:		ds.l	1
-Camera_BG3_X_pos_P2:		ds.l	1	; unused (only initialised at beginning of level)?
-Camera_BG3_Y_pos_P2:		ds.l	1
-Camera_Positions_P2_End:
-
 Block_Crossed_Flags:
 Horiz_block_crossed_flag:	ds.b	1	; toggles between 0 and $10 when you cross a block boundary horizontally
 Verti_block_crossed_flag:	ds.b	1	; toggles between 0 and $10 when you cross a block boundary vertically
@@ -563,8 +551,6 @@ Horiz_block_crossed_flag_BG:	ds.b	1	; toggles between 0 and $10 when background 
 Verti_block_crossed_flag_BG:	ds.b	1	; toggles between 0 and $10 when background camera crosses a block boundary vertically
 Horiz_block_crossed_flag_BG2:	ds.b	1	; used in CPZ
 Horiz_block_crossed_flag_BG3:	ds.b	1
-				ds.b	1	; $FFFFEE45 ; seems unused
-				ds.b	1	; $FFFFEE47 ; seems unused
 Block_Crossed_Flags_End:
 
 Scroll_Flags_All:
@@ -574,13 +560,6 @@ Scroll_flags_BG2:		ds.w	1	; bitfield ; essentially unused; bit 0 = redraw left-m
 Scroll_flags_BG3:		ds.w	1	; bitfield ; for CPZ; bits 0-3 as Scroll_flags_BG but using Y-dependent BG camera; bits 4-5 = bits 2-3; bits 6-7 = bits 2-3
 Scroll_Flags_All_End:
 
-Scroll_Flags_All_P2:
-Scroll_flags_P2:		ds.w	1	; bitfield ; bit 0 = redraw top row, bit 1 = redraw bottom row, bit 2 = redraw left-most column, bit 3 = redraw right-most column
-Scroll_flags_BG_P2:		ds.w	1	; bitfield ; bits 0-3 as above, bit 4 = redraw top row (except leftmost block), bit 5 = redraw bottom row (except leftmost block), bits 6-7 = as bits 0-1
-Scroll_flags_BG2_P2:		ds.w	1	; bitfield ; essentially unused; bit 0 = redraw left-most column, bit 1 = redraw right-most column
-Scroll_flags_BG3_P2:		ds.w	1	; bitfield ; for CPZ; bits 0-3 as Scroll_flags_BG but using Y-dependent BG camera; bits 4-5 = bits 2-3; bits 6-7 = bits 2-3
-Scroll_Flags_All_P2_End:
-
 Camera_Positions_Copy:
 Camera_RAM_copy:		ds.l	2	; copied over every V-int
 Camera_BG_copy:			ds.l	2	; copied over every V-int
@@ -588,23 +567,12 @@ Camera_BG2_copy:		ds.l	2	; copied over every V-int
 Camera_BG3_copy:		ds.l	2	; copied over every V-int
 Camera_Positions_Copy_End:
 
-Camera_Positions_Copy_P2:
-Camera_P2_copy:			ds.l	8	; copied over every V-int
-Camera_Positions_Copy_P2_End:
-
 Scroll_Flags_Copy_All:
 Scroll_flags_copy:		ds.w	1	; copied over every V-int
 Scroll_flags_BG_copy:		ds.w	1	; copied over every V-int
 Scroll_flags_BG2_copy:		ds.w	1	; copied over every V-int
 Scroll_flags_BG3_copy:		ds.w	1	; copied over every V-int
 Scroll_Flags_Copy_All_End:
-
-Scroll_Flags_Copy_All_P2:
-Scroll_flags_copy_P2:		ds.w	1	; copied over every V-int
-Scroll_flags_BG_copy_P2:	ds.w	1	; copied over every V-int
-Scroll_flags_BG2_copy_P2:	ds.w	1	; copied over every V-int
-Scroll_flags_BG3_copy_P2:	ds.w	1	; copied over every V-int
-Scroll_Flags_Copy_All_P2_End:
 
 Camera_Difference:
 Camera_X_pos_diff:		ds.w	1	; (new X pos - old X pos) * 256
@@ -614,7 +582,7 @@ Camera_Difference_End:
 Camera_BG_X_pos_diff:		ds.w	1	; Effective camera change used in WFZ ending and HTZ screen shake
 Camera_BG_Y_pos_diff:		ds.w	1	; Effective camera change used in WFZ ending and HTZ screen shake
 
-Camera_Difference_P2:
+Camera_Difference_P2:		; These WILL be used for Tails respawning.
 Camera_X_pos_diff_P2:		ds.w	1	; (new X pos - old X pos) * 256
 Camera_Y_pos_diff_P2:		ds.w	1	; (new Y pos - old Y pos) * 256
 Camera_Difference_P2_End:
@@ -629,58 +597,53 @@ Camera_Min_Y_pos_target:	ds.w	1	; same as above. The write being a long also ove
 Camera_Max_Y_pos_target:	ds.w	1
 
 Camera_Boundaries:
-Camera_Min_X_pos:	ds.w	1
-Camera_Max_X_pos:	ds.w	1
-Camera_Min_Y_pos:	ds.w	1
-Camera_Max_Y_pos:	ds.w	1
+Camera_Min_X_pos:		ds.w	1
+Camera_Max_X_pos:		ds.w	1
+Camera_Min_Y_pos:		ds.w	1
+Camera_Max_Y_pos:		ds.w	1
 Camera_Boundaries_End:
 
 Camera_Delay:
-Horiz_scroll_delay_val:	ds.w	1		; if its value is a, where a != 0, X scrolling will be based on the player's X position a-1 frames ago
-Sonic_Pos_Record_Index:	ds.w	1		; into Sonic_Pos_Record_Buf and Sonic_Stat_Record_Buf
+Horiz_scroll_delay_val:		ds.w	1	; if its value is a, where a != 0, X scrolling will be based on the player's X position a-1 frames ago
+Sonic_Pos_Record_Index:		ds.w	1	; into Sonic_Pos_Record_Buf and Sonic_Stat_Record_Buf
 Camera_Delay_End:
+Tails_Pos_Record_Index:		ds.w	1	; into Tails_Pos_Record_Buf
 
-Camera_Delay_P2:
-Horiz_scroll_delay_val_P2:	ds.w	1
-Tails_Pos_Record_Index:	ds.w	1		; into Tails_Pos_Record_Buf
-Camera_Delay_P2_End:
-
-Camera_Y_pos_bias:	ds.w	1		; added to y position for lookup/lookdown, $60 is center
+Camera_Y_pos_bias:		ds.w	1	; added to y position for lookup/lookdown, $60 is center
 Camera_Y_pos_bias_End:
 
-Camera_Y_pos_bias_P2:	ds.w	1		; for Tails
-Camera_Y_pos_bias_P2_End:
-
-Deform_lock:		ds.b	1		; set to 1 to stop all deformation
-			ds.b	1		; $FFFFEEDD ; seems unused
+Deform_lock:			ds.b	1	; set to 1 to stop all deformation
+HTZ_Terrain_Direction:		ds.b	1	; During HTZ screen shake, 0 if terrain/lava is rising, 1 if lowering
 Camera_Max_Y_Pos_Changing:	ds.b	1
-Dynamic_Resize_Routine:	ds.b	1
-Camera_BG_X_offset:	ds.w	1			; Used to control background scrolling in X in WFZ ending and HTZ screen shake
-Camera_BG_Y_offset:	ds.w	1			; Used to control background scrolling in Y in WFZ ending and HTZ screen shake
-HTZ_Terrain_Delay:	ds.w	1			; During HTZ screen shake, this is a delay between rising and sinking terrain during which there is no shaking
-HTZ_Terrain_Direction:	ds.b	1			; During HTZ screen shake, 0 if terrain/lava is rising, 1 if lowering
-			ds.b	$11			; $FFFFEEE9-$FFFFEEEB ; seems unused
-Camera_X_pos_copy:	ds.l	1
-Camera_Y_pos_copy:	ds.l	1
+Dynamic_Resize_Routine:		ds.b	1
+Camera_BG_X_offset:		ds.w	1	; Used to control background scrolling in X in WFZ ending and HTZ screen shake
+Camera_BG_Y_offset:		ds.w	1	; Used to control background scrolling in Y in WFZ ending and HTZ screen shake
+HTZ_Terrain_Delay:		ds.w	1	; During HTZ screen shake, this is a delay between rising and sinking terrain during which there is no shaking
+Camera_X_pos_copy:		ds.l	1
+Camera_Y_pos_copy:		ds.l	1
 
 Camera_Boundaries_P2:
-Tails_Min_X_pos:	ds.w	1
-Tails_Max_X_pos:	ds.w	1
-Tails_Min_Y_pos:	ds.w	1			; seems not actually implemented (only written to)
-Tails_Max_Y_pos:	ds.w	1
+Tails_Min_X_pos:		ds.w	1
+Tails_Max_X_pos:		ds.w	1
+Tails_Min_Y_pos:		ds.w	1	; seems not actually implemented (only written to)
+Tails_Max_Y_pos:		ds.w	1
 Camera_Boundaries_P2_End:
-
 Camera_RAM_End:
+; ---------------------------------------------------------------------------
 
 Block_cache:		ds.w	512/16*2		; Width of plane in blocks, with each block getting two words.
 
 v_gamemode:		ds.w	1			; game mode - Pointer to the current Gamemode IN-ROM
-v_jpadhold2:		ds.b	1			; joypad input - held, duplicate
-v_jpadpress2:		ds.b	1			; joypad input - pressed, duplicate
+Ctrl_1_Logical:
+v_jpadholdlogical:	ds.b	1			; joypad input - held, duplicate
+v_jpadpresslogical:	ds.b	1			; joypad input - pressed, duplicate
+Ctrl_1:
 v_jpadhold1:		ds.b	1			; joypad input - held
 v_jpadpress1:		ds.b	1			; joypad input - pressed
-v_2Pjpadhold1:		ds.b	1			; joypad input - held
-v_2Pjpadpress1:		ds.b	1			; joypad input - pressed
+Ctrl_2:
+v_jpadhold2:		ds.b	1			; joypad input - held
+v_jpadpress2:		ds.b	1			; joypad input - pressed
+
 v_vdp_buffer1:		ds.w	1			; VDP instruction buffer
 v_generictimer:		ds.w	1			; the length of a demo in frames
 v_scrposy_vdp:		ds.w	1			; screen position y (VDP)
@@ -715,10 +678,8 @@ f_pause:		ds.w	1			; flag set to pause the game
 v_waterpos1:		ds.w	1			; water height, actual
 v_waterpos2:		ds.w	1			; water height, ignoring sway
 v_waterpos3:		ds.w	1			; water height, next target
-f_water:		ds.b	1			; flag set for water
 v_wtr_routine:		ds.b	1			; water event - routine counter
 f_wtr_state:		ds.b	1			; water palette state when water is above/below the screen (00 = partly/all dry; 01 = all underwater)
-			ds.b	1			; unused
 v_misc_variables_end:
 
 v_plc_buffer:			ds.b	6*16		; pattern load cues buffer (maximum $10 PLCs)
@@ -827,17 +788,12 @@ v_itembonus:		ds.w	1			; item bonus from broken enemies, blocks etc.
 v_timebonus:		ds.w	1			; time bonus at the end of an act
 v_ringbonus:		ds.w	1			; ring bonus at the end of an act
 f_endactbonus:		ds.b	1			; time/ring bonus update flag at the end of an act
-Water_flag:		ds.b	1
+Water_flag:		ds.b	1			; flag set for water
 
 f_switch:		ds.b	$10			; flags set when Sonic stands on a switch
-
 Anim_Counters:		ds.b	$10
-			ds.b	$E			; unused
 
 v_levelvariables_end:
-
-Sprite_Table:		ds.b	$280			; Sprite attribute table buffer
-Sprite_Table_end:
 
 v_palette_water_fading: ds.b	palette_size		; duplicate underwater palette, used for transitions ($80 bytes)
 v_palette_water_fading_end:
@@ -879,11 +835,11 @@ f_ringcount:		ds.b	1			; ring counter update flag
 f_timecount:		ds.b	1			; time counter update flag
 f_scorecount:		ds.b	1			; score counter update flag
 v_rings:		ds.w	1			; rings
-v_ringbyte = v_rings+1					; low byte for rings
+v_ringbyte		= v_rings+1			; low byte for rings
 v_time:			ds.l	1			; time
-v_timemin = v_time+1					; time - minutes
-v_timesec = v_time+2					; time - seconds
-v_timecent = v_time+3					; time - centiseconds
+v_timemin		= v_time+1			; time - minutes
+v_timesec		= v_time+2			; time - seconds
+v_timecent		= v_time+3			; time - centiseconds
 v_score:		ds.l	1			; score
 v_shield:		ds.b	1			; shield status (00 = no; 01 = yes)
 v_invinc:		ds.b	1			; invinciblity status (00 = no; 01 = yes)
@@ -951,12 +907,8 @@ f_demo:			ds.w	1			; demo mode flag (0 = no; 1 = yes; $8001 = ending)
 v_demonum:		ds.w	1			; demo level number (not the same as the level number)
 v_creditsnum:		ds.w	1			; credits index number
 
-			ds.b	$140			; stack
-v_systemstack:
-v_objstate:		ds.b	$300			; object state list
-v_objstate_end:
 			ds.b	$200			; will become used by the object table
-			ds.b	$300			; free
+			ds.b	$378			; free
 v_end:
 	if * > 0	; don't declare more space than the RAM can contain!
 		fatal "The RAM variable declarations are too large by $\{*} bytes."
@@ -1020,47 +972,9 @@ SSRAM_MiscNem_SpecialLevelLayout:
 				ds.b	$9C	; padding
 SSRAM_MiscKoz_SpecialObjectLocations:
 				ds.b	$1AE0
-	dephase			; Ends Deep in the block table; roughly $600 bytes before "TempArray_LayerDef"
- ; ---------------------------------------------------------------------------
-; RAM variables - Special stage Object RAM
-	phase	v_objspace	; Move back to the object RAM
-				ds.b	object_size
-				ds.b	object_size
-SpecialStageHUD:		; HUD in the special stage
-				ds.b	object_size
-SpecialStageStartBanner:
-				ds.b	object_size
-SpecialStageNumberOfRings:
-				ds.b	object_size
-SpecialStageShadow_Sonic:
-				ds.b	object_size
-SpecialStageShadow_Tails:
-				ds.b	object_size
-SpecialStageTails_Tails:
-				ds.b	object_size
-SS_Dynamic_Object_RAM:
-				ds.b	$18*object_size
-SpecialStageResults:
-				ds.b	object_size
-				ds.b	$C*object_size
-SpecialStageResults2:
-				ds.b	object_size
-				ds.b	$51*object_size
-SS_Dynamic_Object_RAM_End:
-    if * > v_objspace_end
-	fatal "Special stage objects go past end of object RAM buffer."
-    endif
-	dephase
+	;dephase			; Ends Deep in the block table; roughly $600 bytes before "TempArray_LayerDef"
 ; ---------------------------------------------------------------------------
-	phase	ramaddr(v_hscrolltablebuffer)	; Still in SS RAM
-SS_Horiz_Scroll_Buf_1		= v_hscrolltablebuffer
-	dephase
-
-	phase (Ring_Positions)
-SS_Horiz_Scroll_Buf_2		= v_hscrolltablebuffer
-	dephase
-; ---------------------------------------------------------------------------
-	phase (v_16x16+$1300)
+	;phase (v_16x16+$1300)
 		; The special stage mode also uses the rest of the RAM for
 		; different purposes.
 SSTrack_mappings_bitflags:		ds.l	1
@@ -1112,6 +1026,44 @@ SS_TriggerRingsToGo:			ds.b	1
 SS_Swap_Positions_Flag:			ds.b	1
 SS_Offset_X:				ds.w	1
 SS_Offset_Y:				ds.w	1
+	dephase
+; ---------------------------------------------------------------------------
+	phase	ramaddr(v_hscrolltablebuffer)	; Still in SS RAM
+SS_Horiz_Scroll_Buf_1		= v_hscrolltablebuffer
+	dephase
+
+	phase (Ring_Positions)
+SS_Horiz_Scroll_Buf_2		= v_hscrolltablebuffer
+	dephase
+; ---------------------------------------------------------------------------
+; RAM variables - Special stage Object RAM
+	phase	v_objspace	; Move back to the object RAM
+				ds.b	object_size
+				ds.b	object_size
+SpecialStageHUD:		; HUD in the special stage
+				ds.b	object_size
+SpecialStageStartBanner:
+				ds.b	object_size
+SpecialStageNumberOfRings:
+				ds.b	object_size
+SpecialStageShadow_Sonic:
+				ds.b	object_size
+SpecialStageShadow_Tails:
+				ds.b	object_size
+SpecialStageTails_Tails:
+				ds.b	object_size
+SS_Dynamic_Object_RAM:
+				ds.b	$18*object_size
+SpecialStageResults:
+				ds.b	object_size
+				ds.b	$C*object_size
+SpecialStageResults2:
+				ds.b	object_size
+				ds.b	$51*object_size
+SS_Dynamic_Object_RAM_End:
+    if * > v_objspace_end
+	fatal "Special stage objects go past end of object RAM buffer."
+    endif
 	dephase
 ; ---------------------------------------------------------------------------
 	phase (v_palette_water_fading)

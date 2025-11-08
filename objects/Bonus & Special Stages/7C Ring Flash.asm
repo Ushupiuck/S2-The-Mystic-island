@@ -19,7 +19,6 @@ loc_AB50:
 		move.l	#Map_GiantRingFlash,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Giant_Ring_Flash,1,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
-		move.w	#0,obPriority(a0)
 		move.b	#$20,obActWid(a0)
 		move.b	#$FF,obFrame(a0)
 

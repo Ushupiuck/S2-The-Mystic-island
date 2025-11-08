@@ -377,8 +377,6 @@ Vint_Level:
 		startZ80
 		movem.l	(Camera_RAM).w,d0-d7
 		movem.l	d0-d7,(Camera_RAM_copy).w
-		movem.l	(Camera_X_pos_P2).w,d0-d7
-		movem.l	d0-d7,(Camera_P2_copy).w
 		movem.l	(Scroll_flags).w,d0-d3
 		movem.l	d0-d3,(Scroll_flags_copy).w
 		move.l	(v_bg3scrposy_vdp).w,(Camera_X_pos_copy).w
@@ -2095,12 +2093,12 @@ SegaScreen:
 		bsr.w	ClearPLC
 		bsr.w	Pal_FadeToBlack
 		lea	(vdp_control_port).l,a6
-		move.w	#$8004,(a6)	; use 8-colour mode
+		move.w	#$8000+4,(a6)	; use 8-colour mode
 		move.w	#$8200+(vram_fg>>10),(a6) ; set foreground nametable address
 		move.w	#$8400+(vram_bg>>13),(a6) ; set background nametable address
 		move.w	#$8700,(a6)	; set background colour (palette entry 0)
 		move.w	#$8B00,(a6)	; full-screen vertical scrolling
-		move.w	#$8C81,(a6)
+		move.w	#$8C00+$81,(a6)
 		sf	(f_wtr_state).w
 		disable_ints
 		move.w	(v_vdp_buffer1).w,d0
@@ -2137,7 +2135,7 @@ Sega_WaitPalette:
 		bsr.w	WaitForVint
 		bsr.w	PalCycle_Sega
 		bne.s	Sega_WaitPalette
-		moveq	#0,d0
+	;	moveq	#0,d0	; unnecessary, at least according to tests so far
 		bsr.w	ChangeSegaSound
 		move.b	#sfx_Sega,d0
 		bsr.w	PlaySound
@@ -2150,7 +2148,9 @@ Sega_WaitEnd:
 		bsr.w	WaitForVint
 		tst.w	(v_generictimer).w
 		beq.s	Sega_GoToTitleScreen
-		andi.b	#btnStart,(v_jpadpress1).w
+		move.b	(v_jpadpress1).w,d0	; is Start button pressed?
+		or.b	(v_jpadpress2).w,d0	; (either player)
+		andi.b	#btnStart,d0
 		beq.s	Sega_WaitEnd
 
 Sega_GoToTitleScreen:
@@ -2485,6 +2485,7 @@ Demo_Level:
 ; Levels used in demos
 ; ---------------------------------------------------------------------------
 Demo_Levels:
+		dc.w id_GHZ<<8
 		dc.w id_CPZ<<8
 		dc.w id_EHZ<<8
 		dc.w id_HPZ<<8
@@ -2731,39 +2732,9 @@ Level_ClrRam:
 		move.w	#$8A00+224-1,(v_hbla_hreg).w
 		move.w	(v_hbla_hreg).w,(a6)
 		ResetDMAQueue
-		tst.b	(Water_flag).w
-		beq.s	LevelInit_NoWater
-		move.w	#$8000+$14,(a6)	; enable h-int
-		moveq	#0,d0
-		move.b	(Current_Act).w,d0
-		add.w	d0,d0
-		lea	(WaterHeight).l,a1
-		move.w	(a1,d0.w),d0
-		move.w	d0,(v_waterpos1).w
-		move.w	d0,(v_waterpos2).w
-		move.w	d0,(v_waterpos3).w
-		sf	(v_wtr_routine).w
-		sf	(f_wtr_state).w
-		move.b	#1,(f_water).w
-
-LevelInit_NoWater:
-		move.w	#30,(v_air).w
 		moveq	#palid_SonicTails,d0
 		bsr.w	PalLoad2
-		tst.b	(Water_flag).w
-		beq.s	Level_GetBgm
-		moveq	#palid_LZSonWater,d0
-		cmpi.b	#3,(Current_Act).w
-		bne.s	Level_WaterPal
-		moveq	#palid_SBZ3SonWat,d0
-
-Level_WaterPal:
-		bsr.w	PalLoad3_Water
-		tst.b	(v_lastlamp).w
-		beq.s	Level_GetBgm
-		move.b	(v_lamp_wtrstat).w,(f_wtr_state).w
-
-Level_GetBgm:
+		bsr.w	CheckLevelForWater
 		tst.w	(f_demo).w	; are we on an ending demo?
 		bmi.s	Level_SkipTtlCard	; if so, branch
 		moveq	#0,d0
@@ -2832,7 +2803,7 @@ Level_ChkDebug:
 		move.b	#1,(Debug_mode_flag).w
 
 Level_ChkWater:
-		clr.w	(v_jpadhold2).w
+		clr.w	(v_jpadholdlogical).w
 		clr.w	(v_jpadhold1).w
 		tst.b	(Water_flag).w
 		beq.s	Level_LoadObj
@@ -3022,6 +2993,37 @@ loc_400E:
 
 		include	"_inc/WaterFeatures.asm"
 		include "_inc/MoveSonicInDemo.asm"
+
+; ---------------------------------------------------------------------------
+; Demos - Normal gameplay & Ending
+; ---------------------------------------------------------------------------
+Demo_GHZ:	binclude	"demodata/WIP/Intro - GHZ.bin"
+		even
+Demo_CPZ:	binclude	"demodata/Intro - CPZ.bin"
+		even
+Demo_EHZ:	binclude	"demodata/Intro - EHZ.bin"
+		even
+Demo_HPZ:	binclude	"demodata/Intro - HPZ.bin"
+		even
+Demo_HTZ:	binclude	"demodata/Intro - HTZ.bin"
+		even
+; The following DEMO's are deprecated & need to be remade
+Demo_EndGHZ1:	binclude	"demodata/WIP/Ending - GHZ1.bin"
+		even
+Demo_EndMZ:	binclude	"demodata/WIP/Ending - MZ.bin"
+		even
+Demo_EndSYZ:	binclude	"demodata/WIP/Ending - SYZ.bin"
+		even
+Demo_EndLZ:	binclude	"demodata/WIP/Ending - LZ.bin"
+		even
+Demo_EndSLZ:	binclude	"demodata/WIP/Ending - SLZ.bin"
+		even
+Demo_EndSBZ1:	binclude	"demodata/WIP/Ending - SBZ1.bin"
+		even
+Demo_EndSBZ2:	binclude	"demodata/WIP/Ending - SBZ2.bin"
+		even
+Demo_EndGHZ2:	binclude	"demodata/WIP/Ending - GHZ2.bin"
+		even
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
@@ -3245,26 +3247,27 @@ loc_4788:
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 nosignpost macro actid
-	cmpi.w	#actid,(Current_ZoneAndAct).w
-	beq.ATTRIBUTE	+	; rts
+		cmpi.w	#actid,(Current_ZoneAndAct).w
+		beq.ATTRIBUTE	.return	; rts
     endm
 
 ; sub_4BD2:
 SetLevelEndType:
-;	clr.w	(Level_Has_Signpost).w	; set level type to non-signpost
-;	nosignpost.w $301	; emerald hill Act 2
-;	nosignpost.w $XYY	; metropolis Act 3
-;	nosignpost.w $XYY	; wing_fortress Act 1
-;	nosignpost.w $502	; hill top  Act 2
-;	nosignpost.w $XYY	; oil_ocean Act 2
-;	nosignpost.s $XYY	; mystic cave Act 2
-;	nosignpost.s $XYY	; casino night Act 2
-;	nosignpost.s $XYY	; chemical plant Act 2
-;	nosignpost.s $XYY	; death egg Act 1
-;	nosignpost.s $XYY	; aquatic ruin Act 2
-;	nosignpost.s $XYY	; sky chase Act 1
-;	move.w	#1,(Level_Has_Signpost).w	; set level type to signpost
-+	rts
+;		clr.w	(Level_Has_Signpost).w	; set level type to non-signpost
+;		nosignpost.w $301	; emerald hill Act 2
+;		nosignpost.w $XYY	; metropolis Act 3
+;		nosignpost.w $XYY	; wing_fortress Act 1
+;		nosignpost.w $502	; hill top  Act 2
+;		nosignpost.w $XYY	; oil_ocean Act 2
+;		nosignpost.s $XYY	; mystic cave Act 2
+;		nosignpost.s $XYY	; casino night Act 2
+;		nosignpost.s $XYY	; chemical plant Act 2
+;		nosignpost.s $XYY	; death egg Act 1
+;		nosignpost.s $XYY	; aquatic ruin Act 2
+;		nosignpost.s $XYY	; sky chase Act 1
+;		move.w	#1,(Level_Has_Signpost).w	; set level type to signpost
+.return:
+		rts
 ; End of function SetLevelEndType
 
 
@@ -3273,59 +3276,25 @@ SetLevelEndType:
 
 SignpostArtLoad:
 		tst.w	(Debug_placement_mode).w
-		bne.w	.return
+		bne.w	SetLevelEndType.return
 		cmpi.w	#$301,(Current_ZoneAndAct).w
-		beq.s	.return
+		beq.s	SetLevelEndType.return
 		cmpi.b	#2,(Current_Act).w
-		beq.s	.return
+		beq.s	SetLevelEndType.return
 		move.w	(Camera_RAM).w,d0
 		move.w	(Camera_Max_X_pos).w,d1
 		subi.w	#$100,d1
 		cmp.w	d1,d0
-		blt.s	.return
+		blt.s	SetLevelEndType.return
 		tst.b	(f_timecount).w
-		beq.s	.return
+		beq.s	SetLevelEndType.return
 		cmp.w	(Camera_Min_X_pos).w,d1
-		beq.s	.return
+		beq.s	SetLevelEndType.return
 		move.w	d1,(Camera_Min_X_pos).w
 		moveq	#plcid_Signpost,d0
 		bra.w	NewPLC
-; ---------------------------------------------------------------------------
-
-.return:
-		rts
 ; End of function SignpostArtLoad
 
-; ---------------------------------------------------------------------------
-; Demos - Normal gameplay & Ending
-; ---------------------------------------------------------------------------
-Demo_CPZ:	binclude	"demodata/Intro - CPZ.bin"
-		even
-Demo_EHZ:	binclude	"demodata/Intro - EHZ.bin"
-		even
-Demo_HPZ:	binclude	"demodata/Intro - HPZ.bin"
-		even
-Demo_HTZ:	binclude	"demodata/Intro - HTZ.bin"
-		even
-; The following DEMO's are deprecated & need to be remade
-Demo_GHZ:	binclude	"demodata/WIP/Intro - GHZ.bin"
-		even
-Demo_EndGHZ1:	binclude	"demodata/WIP/Ending - GHZ1.bin"
-		even
-Demo_EndMZ:	binclude	"demodata/WIP/Ending - MZ.bin"
-		even
-Demo_EndSYZ:	binclude	"demodata/WIP/Ending - SYZ.bin"
-		even
-Demo_EndLZ:	binclude	"demodata/WIP/Ending - LZ.bin"
-		even
-Demo_EndSLZ:	binclude	"demodata/WIP/Ending - SLZ.bin"
-		even
-Demo_EndSBZ1:	binclude	"demodata/WIP/Ending - SBZ1.bin"
-		even
-Demo_EndSBZ2:	binclude	"demodata/WIP/Ending - SBZ2.bin"
-		even
-Demo_EndGHZ2:	binclude	"demodata/WIP/Ending - GHZ2.bin"
-		even
 ; ---------------------------------------------------------------------------
 
 ; ===========================================================================
@@ -3394,7 +3363,7 @@ SS_MainLoop:
 		bsr.w	PauseGame
 		move.w	#Vint_S1SS,(v_vbla_routine).w
 		bsr.w	WaitForVint
-		move.w	(v_jpadhold1).w,(v_jpadhold2).w
+		move.w	(v_jpadhold1).w,(v_jpadholdlogical).w
 		jsr	(ExecuteObjects).l
 		jsr	(BuildSprites).l
 		bsr.w	S1SS_ShowLayout
@@ -4526,18 +4495,10 @@ LevelSizeLoad:
 		clr.w	(Scroll_flags_BG).w
 		clr.w	(Scroll_flags_BG2).w
 		clr.w	(Scroll_flags_BG3).w
-		clr.w	(Scroll_flags_P2).w
-		clr.w	(Scroll_flags_BG_P2).w
-		clr.w	(Scroll_flags_BG2_P2).w
-		clr.w	(Scroll_flags_BG3_P2).w
 		clr.w	(Scroll_flags_copy).w
 		clr.w	(Scroll_flags_BG_copy).w
 		clr.w	(Scroll_flags_BG2_copy).w
 		clr.w	(Scroll_flags_BG3_copy).w
-		clr.w	(Scroll_flags_copy_P2).w
-		clr.w	(Scroll_flags_BG_copy_P2).w
-		clr.w	(Scroll_flags_BG2_copy_P2).w
-		clr.w	(Scroll_flags_BG3_copy_P2).w
 		clr.b	(Deform_lock).w
 		moveq	#0,d0
 		move.b	d0,(Dynamic_Resize_Routine).w
@@ -4677,7 +4638,6 @@ loc_58E6:
 
 loc_58F0:
 		move.w	d1,(Camera_X_pos).w
-		move.w	d1,(Camera_X_pos_P2).w
 		subi.w	#$60,d0
 		bhs.s	loc_5900
 		moveq	#0,d0
@@ -4689,7 +4649,6 @@ loc_5900:
 
 loc_590A:
 		move.w	d0,(Camera_Y_pos).w
-		move.w	d0,(Camera_Y_pos_P2).w
 		bra.w	BgScrollSpeed
 ; End of function LevelSizeLoad
 
@@ -4735,11 +4694,6 @@ BgScrollSpeed:
 		move.w	d1,(Camera_BG_X_pos).w
 		move.w	d1,(Camera_BG2_X_pos).w
 		move.w	d1,(Camera_BG3_X_pos).w
-		move.w	d0,(Camera_BG_Y_pos_P2).w
-		move.w	d0,(Camera_BG2_Y_pos_P2).w
-		move.w	d1,(Camera_BG_X_pos_P2).w
-		move.w	d1,(Camera_BG2_X_pos_P2).w
-		move.w	d1,(Camera_BG3_X_pos_P2).w
 
 .skip:
 		moveq	#0,d2
@@ -4769,10 +4723,6 @@ BgScroll_GHZ:
 		clr.l	(a2)+
 		clr.l	(a2)+
 		clr.l	(a2)+
-		clr.l	(Camera_BG_X_pos_P2).w
-		clr.l	(Camera_BG_Y_pos_P2).w
-		clr.l	(Camera_BG2_Y_pos_P2).w
-		clr.l	(Camera_BG3_Y_pos_P2).w
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -4785,7 +4735,6 @@ BgScroll_LZ:
 BgScroll_CPZ:
 		lsr.w	#2,d0
 		move.w	d0,(Camera_BG_Y_pos).w
-		move.w	d0,(Camera_BG_Y_pos_P2).w
 		clr.l	(Camera_BG_X_pos).w
 		clr.l	(Camera_BG2_X_pos).w
 		rts
@@ -4801,10 +4750,6 @@ BgScroll_EHZ:
 		clr.l	(a2)+
 		clr.l	(a2)+
 		clr.l	(a2)+
-		clr.l	(Camera_BG_X_pos_P2).w
-		clr.l	(Camera_BG_Y_pos_P2).w
-		clr.l	(Camera_BG2_Y_pos_P2).w
-		clr.l	(Camera_BG3_Y_pos_P2).w
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -4860,10 +4805,6 @@ DeformBGLayer:
 		clr.w	(Scroll_flags_BG).w
 		clr.w	(Scroll_flags_BG2).w
 		clr.w	(Scroll_flags_BG3).w
-		clr.w	(Scroll_flags_P2).w
-		clr.w	(Scroll_flags_BG_P2).w
-		clr.w	(Scroll_flags_BG2_P2).w
-		clr.w	(Scroll_flags_BG3_P2).w
 		lea	(v_player).w,a0
 		lea	(Camera_RAM).w,a1
 		lea	(Horiz_block_crossed_flag).w,a2
@@ -11811,7 +11752,7 @@ Obj01_Control:
 loc_FAB0:
 		tst.b	(f_lockctrl).w			; are controls locked?
 		bne.s	loc_FABC			; if yes, branch
-		move.w	(v_jpadhold1).w,(v_jpadhold2).w	; copy new held buttons, to enable joypad
+		move.w	(v_jpadhold1).w,(v_jpadholdlogical).w	; copy new held buttons, to enable joypad
 
 loc_FABC:
 		btst	#0,(f_playerctrl).w		; is Sonic interacting with another object that holds him in place or controls his movement somehow?
@@ -12104,12 +12045,12 @@ Sonic_Move:
 		bne.w	Obj01_Traction
 		tst.w	objoff_2E(a0)
 		bne.w	Obj01_UpdateSpeedOnGround
-		btst	#bitL,(v_jpadhold2).w	; is left being pressed?
+		btst	#bitL,(v_jpadholdlogical).w	; is left being pressed?
 		beq.s	loc_FD66			; if not, branch
 		bsr.w	Sonic_MoveLeft
 
 loc_FD66:
-		btst	#bitR,(v_jpadhold2).w	; is right being pressed?
+		btst	#bitR,(v_jpadholdlogical).w	; is right being pressed?
 		beq.s	loc_FD72			; if not, branch
 		bsr.w	Sonic_MoveRight
 
@@ -12173,14 +12114,14 @@ loc_FE00:
 ; ---------------------------------------------------------------------------
 
 Sonic_LookUp:
-		btst	#bitUp,(v_jpadhold2).w	; is up being pressed?
+		btst	#bitUp,(v_jpadholdlogical).w	; is up being pressed?
 		beq.s	Sonic_Duck			; if not, branch
 		move.b	#AniIDSonAni_LookUp,obAnim(a0)	; use "looking up" animation
 		bra.s	Obj01_UpdateSpeedOnGround
 ; ---------------------------------------------------------------------------
 
 Sonic_Duck:
-		btst	#bitDn,(v_jpadhold2).w	; is down being pressed?
+		btst	#bitDn,(v_jpadholdlogical).w	; is down being pressed?
 		beq.s	Obj01_UpdateSpeedOnGround	; if not, branch
 		move.b	#AniIDSonAni_Duck,obAnim(a0)	; use "ducking" animation
 
@@ -12189,7 +12130,7 @@ Sonic_Duck:
 ; ---------------------------------------------------------------------------
 ; loc_FE2C:
 Obj01_UpdateSpeedOnGround:
-		move.b	(v_jpadhold2).w,d0
+		move.b	(v_jpadholdlogical).w,d0
 		andi.b	#btnL|btnR,d0	; is left/right being pressed?
 		bne.s	Obj01_Traction			; if yes, branch
 		move.w	obInertia(a0),d0
@@ -12423,12 +12364,12 @@ Sonic_RollSpeed:
 		bne.w	loc_1008A
 		tst.w	objoff_2E(a0)
 		bne.s	loc_10046
-		btst	#bitL,(v_jpadhold2).w
+		btst	#bitL,(v_jpadholdlogical).w
 		beq.s	loc_1003A
 		bsr.w	Sonic_RollLeft
 
 loc_1003A:
-		btst	#bitR,(v_jpadhold2).w
+		btst	#bitR,(v_jpadholdlogical).w
 		beq.s	loc_10046
 		bsr.w	Sonic_RollRight
 
@@ -12542,7 +12483,7 @@ Sonic_ChgJumpDir:
 		btst	#4,obStatus(a0)
 		bne.s	loc_10150
 		move.w	obVelX(a0),d0
-		btst	#bitL,(v_jpadhold2).w
+		btst	#bitL,(v_jpadholdlogical).w
 		beq.s	+
 		bset	#0,obStatus(a0)
 		sub.w	d5,d0	; add acceleration to the left
@@ -12555,7 +12496,7 @@ Sonic_ChgJumpDir:
 		ble.s	+	; if speed was already greater than the maximum, branch
 		move.w	d1,d0	; limit speed on ground going left
 +
-		btst	#bitR,(v_jpadhold2).w
+		btst	#bitR,(v_jpadholdlogical).w
 		beq.s	+
 		bclr	#0,obStatus(a0)
 		add.w	d5,d0	; add acceleration to the right
@@ -12672,10 +12613,10 @@ Sonic_Roll:
 loc_10220:
 		cmpi.w	#$80,d0
 		blo.s	Obj01_NoRoll
-		move.b	(v_jpadhold2).w,d0
+		move.b	(v_jpadholdlogical).w,d0
 		andi.b	#btnL|btnR,d0
 		bne.s	Obj01_NoRoll
-		btst	#bitDn,(v_jpadhold2).w
+		btst	#bitDn,(v_jpadholdlogical).w
 		bne.s	loc_1023A
 
 Obj01_NoRoll:
@@ -12709,7 +12650,7 @@ locret_10276:
 
 
 Sonic_Jump:
-		move.b	(v_jpadpress2).w,d0
+		move.b	(v_jpadpresslogical).w,d0
 		andi.b	#btnABC,d0
 		beq.w	locret_1031C
 		moveq	#0,d0
@@ -12775,7 +12716,7 @@ Sonic_JumpHeight:
 loc_1033C:
 		cmp.w	obVelY(a0),d1
 		ble.s	locret_10350
-		move.b	(v_jpadhold2).w,d0
+		move.b	(v_jpadholdlogical).w,d0
 		andi.b	#btnABC,d0
 		bne.s	locret_10350
 		move.w	d1,obVelY(a0)
@@ -12801,7 +12742,7 @@ locret_10360:
 
 Sonic_HomingAttack:
 		moveq	#btnABC,d0		; is any of the buttons ABC...
-		and.b	(v_jpadpress2).w,d0	; ...pressed?
+		and.b	(v_jpadpresslogical).w,d0	; ...pressed?
 		beq.s	.homeend		; if not, branch
 
 		move.w	#sfx_Teleport,d0	; play dash sound as a test
@@ -12823,7 +12764,7 @@ Sonic_CheckSpindash:
 		bne.s	Sonic_UpdateSpindash
 		cmpi.b	#AniIDSonAni_Duck,obAnim(a0)
 		bne.s	locret_10394
-		move.b	(v_jpadpress2).w,d0
+		move.b	(v_jpadpresslogical).w,d0
 		andi.b	#btnABC,d0
 		beq.w	locret_10394
 		move.b	#AniIDSonAni_Spindash,obAnim(a0)
@@ -12837,7 +12778,7 @@ locret_10394:
 ; ===========================================================================
 ; loc_10396:
 Sonic_UpdateSpindash:
-		move.b	(v_jpadhold2).w,d0
+		move.b	(v_jpadholdlogical).w,d0
 		btst	#bitDn,d0
 		bne.s	Sonic_ChargingSpindash
 
@@ -12868,7 +12809,7 @@ loc_103D4:
 ; ===========================================================================
 ; loc_103DC:
 Sonic_ChargingSpindash:
-		move.b	(v_jpadpress2).w,d0
+		move.b	(v_jpadpresslogical).w,d0
 		andi.b	#btnABC,d0
 		beq.w	loc_103EA
 		nop
@@ -13702,7 +13643,6 @@ SonicAni_Blank:		dc.b $77,  0,$FD,  0
 SonicAni_Float3:	dc.b   3,$91,$92,$93,$94,$95,$FF
 SonicAni_1E:		dc.b   3,$3C,$FD,  0
 		even
-
 ; ---------------------------------------------------------------------------
 ; Sonic pattern loading subroutine
 ; ---------------------------------------------------------------------------
@@ -13714,14 +13654,14 @@ LoadSonicDynPLC:
 		moveq	#0,d0
 		move.b	obFrame(a0),d0
 		cmp.b	(Sonic_LastLoadedDPLC).w,d0
-		beq.s	.return
+		beq.s	LoadSonicDynPLC.return
 		move.b	d0,(Sonic_LastLoadedDPLC).w
 		lea	(SonicDynPLC).l,a2
 		add.w	d0,d0
 		adda.w	(a2,d0.w),a2
 		move.w	(a2)+,d5
 		subq.w	#1,d5
-		bmi.s	.return
+		bmi.s	LoadSonicDynPLC.return
 		move.w	#ArtTile_Sonic*tile_size,d4
 
 .SPLC_ReadEntry:
@@ -13890,7 +13830,7 @@ Obj02_ExitChk:
 
 
 Tails_Control:
-		move.b	(v_2Pjpadhold1).w,d0
+		move.b	(v_jpadhold2).w,d0
 		andi.b	#btnUp+btnDn+btnL+btnR+btnABC,d0
 		beq.s	TailsC_NoKeysPressed
 		clr.w	(word_F700).w
@@ -13954,7 +13894,7 @@ loc_10E40:
 		move.w	(Sonic_Pos_Record_Index).w,d0
 		sub.b	d1,d0
 		lea	(Sonic_Stat_Record_Buf).w,a1
-		move.w	(a1,d0.w),(v_2Pjpadhold1).w
+		move.w	(a1,d0.w),(v_jpadhold2).w
 		rts
 
 ; =============== S U B R O U T I N E =======================================
@@ -14050,12 +13990,12 @@ Tails_Move:
 		bne.w	loc_11026
 		tst.w	objoff_2E(a0)
 		bne.w	loc_10FFA
-		btst	#bitL,(v_2Pjpadhold1).w
+		btst	#bitL,(v_jpadhold2).w
 		beq.s	loc_10F3C
 		bsr.w	Tails_MoveLeft
 
 loc_10F3C:
-		btst	#bitR,(v_2Pjpadhold1).w
+		btst	#bitR,(v_jpadhold2).w
 		beq.s	loc_10F48
 		bsr.w	Tails_MoveRight
 
@@ -14116,19 +14056,19 @@ loc_10FD4:
 ; ---------------------------------------------------------------------------
 
 Tails_LookUp:
-		btst	#bitUp,(v_2Pjpadhold1).w
+		btst	#bitUp,(v_jpadhold2).w
 		beq.s	Tails_Duck
 		move.b	#AniIDSonAni_LookUp,obAnim(a0)
 		bra.s	loc_10FFA
 ; ---------------------------------------------------------------------------
 
 Tails_Duck:
-		btst	#bitDn,(v_2Pjpadhold1).w
+		btst	#bitDn,(v_jpadhold2).w
 		beq.s	loc_10FFA
 		move.b	#AniIDSonAni_Duck,obAnim(a0)
 
 loc_10FFA:
-		move.b	(v_2Pjpadhold1).w,d0
+		move.b	(v_jpadhold2).w,d0
 		andi.b	#btnL+btnR,d0
 		bne.s	loc_11026
 		move.w	obInertia(a0),d0
@@ -14323,12 +14263,12 @@ Tails_RollSpeed:
 		bne.w	loc_11204
 		tst.w	objoff_2E(a0)
 		bne.s	loc_111C0
-		btst	#bitL,(v_2Pjpadhold1).w
+		btst	#bitL,(v_jpadhold2).w
 		beq.s	loc_111B4
 		bsr.w	Tails_RollLeft
 
 loc_111B4:
-		btst	#bitR,(v_2Pjpadhold1).w
+		btst	#bitR,(v_jpadhold2).w
 		beq.s	loc_111C0
 		bsr.w	Tails_RollRight
 
@@ -14442,7 +14382,7 @@ Tails_ChgJumpDir:
 		btst	#4,obStatus(a0)
 		bne.s	loc_112CA
 		move.w	obVelX(a0),d0
-		btst	#bitL,(v_2Pjpadhold1).w
+		btst	#bitL,(v_jpadhold2).w
 		beq.s	+
 		bset	#0,obStatus(a0)
 		sub.w	d5,d0	; add acceleration to the left
@@ -14455,7 +14395,7 @@ Tails_ChgJumpDir:
 		ble.s	+	; if speed was already greater than the maximum, branch
 		move.w	d1,d0	; limit speed on ground going left
 +
-		btst	#bitR,(v_2Pjpadhold1).w
+		btst	#bitR,(v_jpadhold2).w
 		beq.s	+
 		bclr	#0,obStatus(a0)
 		add.w	d5,d0	; add acceleration to the right
@@ -14572,10 +14512,10 @@ Tails_Roll:
 loc_1139A:
 		cmpi.w	#$80,d0
 		blo.s	locret_113B2
-		move.b	(v_2Pjpadhold1).w,d0
+		move.b	(v_jpadhold2).w,d0
 		andi.b	#btnL|btnR,d0
 		bne.s	locret_113B2
-		btst	#bitDn,(v_2Pjpadhold1).w
+		btst	#bitDn,(v_jpadhold2).w
 		bne.s	loc_113B4
 
 locret_113B2:
@@ -14609,7 +14549,7 @@ locret_113F0:
 
 
 Tails_Jump:
-		move.b	(v_2Pjpadpress1).w,d0
+		move.b	(v_jpadpress2).w,d0
 		andi.b	#btnABC,d0
 		beq.w	locret_11496
 		moveq	#0,d0
@@ -14675,7 +14615,7 @@ Tails_JumpHeight:
 loc_114B6:
 		cmp.w	obVelY(a0),d1
 		ble.s	locret_114CA
-		move.b	(v_2Pjpadhold1).w,d0
+		move.b	(v_jpadhold2).w,d0
 		andi.b	#btnABC,d0
 		bne.s	locret_114CA
 		move.w	d1,obVelY(a0)
@@ -14702,7 +14642,7 @@ Tails_Spindash:
 		bne.s	loc_11510
 		cmpi.b	#AniIDSonAni_Duck,obAnim(a0)
 		bne.s	locret_1150E
-		move.b	(v_2Pjpadpress1).w,d0
+		move.b	(v_jpadpress2).w,d0
 		andi.b	#btnABC,d0
 		beq.w	locret_1150E
 		move.b	#AniIDSonAni_Spindash,obAnim(a0)
@@ -14716,7 +14656,7 @@ locret_1150E:
 ; ---------------------------------------------------------------------------
 
 loc_11510:
-		move.b	(v_2Pjpadhold1).w,d0
+		move.b	(v_jpadhold2).w,d0
 		btst	#bitDn,d0
 		bne.s	loc_11556
 		move.b	#$E,obHeight(a0)
@@ -14745,7 +14685,7 @@ loc_1154E:
 ; ---------------------------------------------------------------------------
 
 loc_11556:
-		move.b	(v_2Pjpadpress1).w,d0
+		move.b	(v_jpadpress2).w,d0
 		andi.b	#btnABC,d0
 		beq.w	loc_11564
 		nop
@@ -15548,8 +15488,6 @@ TailsAni_1C:	dc.b $77,  0,$FD,  0
 TailsAni_1D:	dc.b   3,  1,  2,  3,  4,  5,  6,  7,  8,$FF
 TailsAni_1E:	dc.b   3,  1,  2,  3,  4,  5,  6,  7,  8,$FF
 		even
-
-; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Tails' Tails pattern loading subroutine
 ; ---------------------------------------------------------------------------
@@ -15561,16 +15499,16 @@ LoadTailsTailsDynPLC:
 		moveq	#0,d0
 		move.b	obFrame(a0),d0
 		cmp.b	(TailsTails_LastLoadedDPLC).w,d0
-		beq.s	locret_11D7C
+		beq.s	LoadTailsDynPLC.return
 		move.b	d0,(TailsTails_LastLoadedDPLC).w
 		lea	(TailsDynPLC).l,a2
 		add.w	d0,d0
 		adda.w	(a2,d0.w),a2
 		move.w	(a2)+,d5
 		subq.w	#1,d5
-		bmi.s	locret_11D7C
+		bmi.s	LoadTailsDynPLC.return
 		move.w	#ArtTile_TailsTails*tile_size,d4
-		bra.s	TPLC_ReadEntry
+		bra.s	LoadTailsDynPLC.TPLC_ReadEntry
 ; End of function LoadTailsTailsDynPLC
 
 ; ---------------------------------------------------------------------------
@@ -15584,17 +15522,17 @@ LoadTailsDynPLC:
 		moveq	#0,d0
 		move.b	obFrame(a0),d0
 		cmp.b	(Tails_LastLoadedDPLC).w,d0
-		beq.s	locret_11D7C
+		beq.s	LoadTailsDynPLC.return
 		move.b	d0,(Tails_LastLoadedDPLC).w
 		lea	(TailsDynPLC).l,a2
 		add.w	d0,d0
 		adda.w	(a2,d0.w),a2
 		move.w	(a2)+,d5
 		subq.w	#1,d5
-		bmi.s	locret_11D7C
+		bmi.s	LoadTailsDynPLC.return
 		move.w	#ArtTile_Tails*tile_size,d4
 ; loc_11D50:
-TPLC_ReadEntry:
+.TPLC_ReadEntry:
 		moveq	#0,d1
 		move.w	(a2)+,d1
 		move.w	d1,d3
@@ -15608,9 +15546,9 @@ TPLC_ReadEntry:
 		add.w	d3,d4
 		add.w	d3,d4
 		jsr	(QueueDMATransfer).l
-		dbf	d5,TPLC_ReadEntry
+		dbf	d5,.TPLC_ReadEntry
 
-locret_11D7C:
+.return:
 		rts
 ; End of function LoadTailsDynPLC
 
@@ -21862,7 +21800,7 @@ Obj3E_Switched:
 		clr.b	(f_timecount).w
 		clr.b	(f_lockscreen).w
 		move.b	#1,(f_lockctrl).w
-		move.w	#8<<btnR,(v_jpadhold2).w
+		move.w	#8<<btnR,(v_jpadholdlogical).w
 		clr.b	ob2ndRout(a0)
 		bclr	#3,(v_objspace+obStatus).w
 		bset	#1,(v_objspace+obStatus).w

@@ -30,8 +30,7 @@ Over_1stWord:
 		move.w	#$F0,obScreenY(a0)
 		move.l	#Map_Over,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Game_Over,0,1),obGfx(a0)
-		move.b	#0,obRender(a0)
-		move.w	#0,obPriority(a0)
+		sf	obRender(a0)	; shouldn't this be a "ori.b	#4,obRender(a0)"?
 
 Over_Move:	; Routine 2
 		moveq	#$10,d1		; set horizontal speed
@@ -46,13 +45,13 @@ Over_UpdatePos:
 ; ---------------------------------------------------------------------------
 
 Over_SetWait:
-		move.b	#$C0,obTimeFrame(a0)	; set time delay to 12 seconds
+		move.b	#$B0,obTimeFrame(a0)	; set time delay to 12 seconds
 		addq.b	#2,obRoutine(a0)
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
 Over_Wait:	; Routine 4
-		btst	#0,obMap(a0)
+		btst	#0,obFrame(a0)
 		bne.w	DisplaySprite
 		move.b	(v_jpadpress1).w,d0
 		or.b	(v_jpadpress2).w,d0
@@ -74,7 +73,7 @@ Over_ChgMode:
 		move.w	#BonusStage,(v_gamemode).w ; set mode to $10 (special stage)
 		tst.b	(v_continues).w	; do you have any continues?
 	;	bne.w	DisplaySprite	; if yes, branch
-		bne.w	.temp		; if yes, branch
+		bne.s	.temp		; if yes, branch
 		move.w	#SegaScreen,(v_gamemode).w ; set mode to 0 (Sega screen)
 		bra.w	DisplaySprite
 .temp:

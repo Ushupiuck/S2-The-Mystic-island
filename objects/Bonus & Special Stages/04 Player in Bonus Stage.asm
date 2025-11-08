@@ -33,7 +33,6 @@ BonusPlayer_Main:	; Routine 0
 		move.l	#Map_Sonic,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Sonic,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
-		clr.w	obPriority(a0)
 		move.b	#2,obAnim(a0)
 		bset	#2,obStatus(a0)
 		bset	#1,obStatus(a0)
@@ -88,17 +87,17 @@ BonusPlayer_Display:
 ; ---------------------------------------------------------------------------
 
 BonusPlayer_Move:
-		btst	#bitL,(v_jpadhold2).w	; is left being pressed?
+		btst	#bitL,(v_jpadholdlogical).w	; is left being pressed?
 		beq.s	.not_left		; if not, branch
 		bsr.w	BonusPlayer_MoveLeft
 
 .not_left:
-		btst	#bitR,(v_jpadhold2).w	; is right being pressed?
+		btst	#bitR,(v_jpadholdlogical).w	; is right being pressed?
 		beq.s	.not_right		; if not, branch
 		bsr.w	BonusPlayer_MoveRight
 
 .not_right:
-		move.b	(v_jpadhold2).w,d0
+		move.b	(v_jpadholdlogical).w,d0
 		andi.b	#btnL+btnR,d0		; is left or right being pressed?
 		bne.s	SSS_UpdatePos		; if yes, branch
 		move.w	obInertia(a0),d0	; get inertia
@@ -202,7 +201,7 @@ BonusPlayer_MoveRight:
 
 
 BonusPlayer_Jump:
-		move.b	(v_jpadpress2).w,d0
+		move.b	(v_jpadpresslogical).w,d0
 		andi.b	#btnABC,d0		; is A, B or C pressed?
 		beq.s	.exit			; if not, branch
 		move.b	(v_ssangle).l,d0
@@ -232,7 +231,7 @@ BonusPlayer_Jump:
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 
 BonusPlayer_JumpHeight:
-		move.b	(v_jpadhold2).w,d0	; is the jump button up?
+		move.b	(v_jpadholdlogical).w,d0	; is the jump button up?
 		andi.b	#btnABC,d0
 		bne.s	.return			; if not, branch to return
 		btst	#7,obStatus(a0)		; did Sonic jump or is he just falling or hit by a bumper?
