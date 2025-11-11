@@ -9,14 +9,13 @@ https://tcrf.net/Proto:Sonic_the_Hedgehog_2_(Genesis)
 ; ---------------------------------------------------------------------------
 
 TODO:
+Port Shield, invincibility & speed shoes to status_secondary < IN PROGRESS, HIGH PRIORITY
 Import S3&K mapping system (as it seems likely we only need a fragment of it to make it work), using the now empty labyrinth zone (01) as a test level
 Import the S3&K rings manager
 Add more level slots < IN PROGRESS
-Add Wood Zone, Marble Zone & Labyrinth (last one might be partly remixed with Chemical plant. feeling inspired)
-Metropolis zone.
-Port over Sonic 2 Special stages: Sonic 1 will be Bonus stages. Sonic 2's will be the ACTUAL Special stages.
+Port over Sonic 2 Special stages: Sonic 1 will be Bonus stages. Sonic 2's will be the ACTUAL Special stages. < IN PROGRESS, HIGH PRIORITY
+Add Rustic Ruins Zone (Marble + Aquatic Ruin), Ancient Workbench (Labyrinth + Chemical plant), Toy Factory (Wacky Workbench + Carnival Night), Egg Mountain (Hill Top + Scrap brain + Metropolis)
 Fix HTZ scrolling to use a straight table, rather than a soup of chunk entries.
-Fuse HTZ and Scrap brain into it's own level
 Improve Boss_MoveObject < Not marked as done until I'm absolutely finished importing bosses (they tend to have their own version of this)
 Improve SSObjectMoveAndFall (if it exists)
 Research & Implement "Find_SonicTails" From S3&K into sonic 1
@@ -26,7 +25,7 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 ; ---------------------------------------------------------------------------
 Finished:
 LoadCollisionIndexes < DONE
-Free up a shared $1000 byte buffer for Moduled Twizzler & Moduled Kosinski
+Free up a shared $1000 byte buffer for Moduled Kosinski < DONE
 KosM+ PLC's < DONE
 Kos+ Compressed level layouts, alike Sonic 2/3. Preferably Twizzler if it turns out to be better < DONE; Twizzler is worse: the decompressor is TOO big.
 Fix the constants back to what they should be after that derp many commits ago. < DONE

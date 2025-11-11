@@ -368,11 +368,11 @@ ptr_KPLC_RRZ2:	dc.w PLCKosM_RRZ2-KosMLoadCues ; $01 Act 2
 ptr_KPLC_RRZ3:	dc.w PLCKosM_RRZ3-KosMLoadCues ; $01 Act 3
 ptr_KPLC_RRZ4:	dc.w PLCKosM_RRZ4-KosMLoadCues ; $01 Act 4
 ; ---------------------------------------------------------------------------
-; Level Slot $02: Ancient Factory Zone [TO BE REMIXED] [CPZ]
-ptr_KPLC_AFZ1:	dc.w PLCKosM_AFZ1-KosMLoadCues ; $02 Act 1
-ptr_KPLC_AFZ2:	dc.w PLCKosM_AFZ2-KosMLoadCues ; $02 Act 2
-ptr_KPLC_AFZ3:	dc.w PLCKosM_AFZ3-KosMLoadCues ; $02 Act 3
-ptr_KPLC_AFZ4:	dc.w PLCKosM_AFZ4-KosMLoadCues ; $02 Act 4
+; Level Slot $02: Ancient Workbench Zone [TO BE REMIXED] [CPZ]
+ptr_KPLC_AWZ1:	dc.w PLCKosM_AWZ1-KosMLoadCues ; $02 Act 1
+ptr_KPLC_AWZ2:	dc.w PLCKosM_AWZ2-KosMLoadCues ; $02 Act 2
+ptr_KPLC_AWZ3:	dc.w PLCKosM_AWZ3-KosMLoadCues ; $02 Act 3
+ptr_KPLC_AWZ4:	dc.w PLCKosM_AWZ4-KosMLoadCues ; $02 Act 4
 ; ---------------------------------------------------------------------------
 ; Level Slot $03: Emerald Hill Zone
 ptr_KPLC_EHZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $03 Act 1
@@ -560,27 +560,27 @@ PLCKosM_RRZ4:	plrKosMlistheader
 PLCKosM_RRZ4_End
 ; ---------------------------------------------------------------------------
 ; KOSM PATTERN LOAD REQUEST LIST
-; LV02 - Ancient Factory Zone
+; LV02 - Ancient Workbench Zone
 ; ---------------------------------------------------------------------------
 ; Act 1
-PLCKosM_AFZ1:	plrKosMlistheader
+PLCKosM_AWZ1:	plrKosMlistheader
 	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
-PLCKosM_AFZ1_End
+PLCKosM_AWZ1_End
 ; ---------------------------------------------------------------------------
 ; Act 2
-PLCKosM_AFZ2:	plrKosMlistheader
+PLCKosM_AWZ2:	plrKosMlistheader
 	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
-PLCKosM_AFZ2_End
+PLCKosM_AWZ2_End
 ; ---------------------------------------------------------------------------
 ; Act 3
-PLCKosM_AFZ3:	plrKosMlistheader
+PLCKosM_AWZ3:	plrKosMlistheader
 	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
-PLCKosM_AFZ3_End
+PLCKosM_AWZ3_End
 ; ---------------------------------------------------------------------------
 ; Act 4
-PLCKosM_AFZ4:	plrKosMlistheader
+PLCKosM_AWZ4:	plrKosMlistheader
 	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
-PLCKosM_AFZ4_End
+PLCKosM_AWZ4_End
 ; ---------------------------------------------------------------------------
 ; KOSM PATTERN LOAD REQUEST LIST
 ; LV03 - Emerald Hill Zone
@@ -867,10 +867,10 @@ mkplcid_RRZ2:		equ (ptr_KPLC_RRZ2-KosMLoadCues)/2		; 5
 mkplcid_RRZ3:		equ (ptr_KPLC_RRZ3-KosMLoadCues)/2		; 6
 mkplcid_RRZ4:		equ (ptr_KPLC_RRZ4-KosMLoadCues)/2		; 7
 
-mkplcid_AFZ1:		equ (ptr_KPLC_AFZ1-KosMLoadCues)/2		; 8
-mkplcid_AFZ2:		equ (ptr_KPLC_AFZ2-KosMLoadCues)/2		; 9
-mkplcid_AFZ3:		equ (ptr_KPLC_AFZ3-KosMLoadCues)/2		; $A
-mkplcid_AFZ4:		equ (ptr_KPLC_AFZ4-KosMLoadCues)/2		; $B
+mkplcid_AWZ1:		equ (ptr_KPLC_AWZ1-KosMLoadCues)/2		; 8
+mkplcid_AWZ2:		equ (ptr_KPLC_AWZ2-KosMLoadCues)/2		; 9
+mkplcid_AWZ3:		equ (ptr_KPLC_AWZ3-KosMLoadCues)/2		; $A
+mkplcid_AWZ4:		equ (ptr_KPLC_AWZ4-KosMLoadCues)/2		; $B
 
 mkplcid_EHZ1:		equ (ptr_KPLC_EHZ1-KosMLoadCues)/2		; $C
 mkplcid_EHZ2:		equ (ptr_KPLC_EHZ2-KosMLoadCues)/2		; $D
