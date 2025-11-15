@@ -7,4 +7,3 @@
 		binclude	"startpos/bs4.bin"
 		binclude	"startpos/bs5.bin"
 		binclude	"startpos/bs6.bin"
-		even

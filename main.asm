@@ -247,7 +247,6 @@ MainGameLoop:
 		bra.s	MainGameLoop	; loop indefinitely
 ; ===========================================================================
 ; vertical and horizontal interrupt handlers
-; VERTICAL INTERRUPT HANDLER:
 	;	align	$434
 V_Int:
 		movem.l	d0-a6,-(sp)		; save all the registers to the stack
@@ -312,7 +311,7 @@ VInt_0_FullyUnderwater:
 
 VInt_0_Water_Cont:
 		move.w	(v_hbla_hreg).w,(a5)
-	;	move.w	#$8200+(vram_fg>>10),(vdp_control_port).l
+		move.w	#$8200+(vram_fg>>10),(vdp_control_port).l
 		startZ80	; rather than always branching to "VintRet",
 		addq.l	#1,(Vint_runcount).w	; we'll optimize by copying it here.
 		movem.l	(sp)+,d0-a6
@@ -2308,7 +2307,7 @@ Title_Cheat_CountC:
 
 Title_Cheat_NoC:
 		tst.w	(v_generictimer).w
-		beq.w	Demo1
+		beq.w	PrepareDemo
 		andi.b	#btnStart,(v_jpadpress1).w
 		beq.w	TitleScreen_Loop
 
@@ -2430,10 +2429,10 @@ PlayLevel:
 LvlSelCode:	dc.b btnUp, btnDn, btnDn, btnDn, btnDn, btnUp, 0, $FF	; up, down, down, down, down, up
 ; ---------------------------------------------------------------------------
 
-Demo1:
+PrepareDemo:
 		move.w	#30,(v_generictimer).w
 
-loc_3630:
+.keepgoing:
 		move.w	#Vint_Title,(v_vbla_routine).w
 		bsr.w	WaitForVint
 		bsr.w	RunPLC_RAM
@@ -2450,7 +2449,7 @@ RunDemo:
 		andi.b	#btnStart,(v_jpadpress1).w	; was the Start button pressed?
 		bne.w	Title_CheckLvlSel	; if so, branch
 		tst.w	(v_generictimer).w
-		bne.w	loc_3630
+		bne.s	PrepareDemo.keepgoing
 		move.b	#bgm_Fade,d0
 		bsr.w	PlaySound_Special	; fade out music
 		move.w	(v_demonum).w,d0	; load demo number
@@ -2460,10 +2459,10 @@ RunDemo:
 		move.w	d0,(Current_ZoneAndAct).w
 		addq.w	#1,(v_demonum).w	; add 1 to demo number
 		cmpi.w	#4,(v_demonum).w	; is this the 4th demo?
-		blo.s	loc_3694		; if so, continue
+		blo.s	RunDemo2		; if so, continue
 		clr.w	(v_demonum).w	; reset the demo counter & loop
 
-loc_3694:
+RunDemo2:
 		move.w	#1,(f_demo).w		; activate Demo mode
 		move.w	#Demo,(v_gamemode).w	; set gamemode to $8 (demo)
 		cmpi.w	#id_EndZ<<8,d0		; is this the ending?
@@ -2567,7 +2566,7 @@ textpos:	= ($40000000+(($E210&$3FFF)<<16)+(($E210&$C000)>>14))
 					; $E210 is a VRAM address
 
 LevelSelect_TextLoad:
-		lea	(LevelSelect_Text).l,a1
+		lea	LevelSelect_Text(pc),a1
 		lea	(vdp_data_port).l,a6
 		move.l	#textpos,d4
 		move.w	#$8680,d3
@@ -2575,7 +2574,7 @@ LevelSelect_TextLoad:
 
 loc_3794:
 		move.l	d4,4(a6)
-		bsr.w	LevSel_ChgLine
+		bsr.s	LevSel_ChgLine
 		addi.l	#$800000,d4
 		dbf	d1,loc_3794
 		moveq	#0,d0
@@ -2585,7 +2584,7 @@ loc_3794:
 		lsl.w	#7,d0
 		swap	d0
 		add.l	d0,d4
-		lea	(LevelSelect_Text).l,a1
+		lea	LevelSelect_Text(pc),a1
 		lsl.w	#3,d1
 		move.w	d1,d0
 		add.w	d1,d1
@@ -2593,7 +2592,7 @@ loc_3794:
 		adda.w	d1,a1
 		move.w	#$C680,d3
 		move.l	d4,4(a6)
-		bsr.w	LevSel_ChgLine
+		bsr.s	LevSel_ChgLine
 		move.w	#$8680,d3
 		cmpi.w	#$14,(v_levselitem).w
 		bne.s	LevSel_DrawSnd
@@ -3702,28 +3701,22 @@ loc_5634:
 		move.w	(Camera_BG_Y_pos).w,(v_bgscrposy_vdp).w
 
 loc_564E:
-		moveq	#0,d0
-		move.w	(Camera_BG_X_pos).w,d0
-		neg.w	d0
-		swap	d0
-		lea	(byte_5709).l,a1
+		lea	byte_5709(pc),a1
 		lea	(v_ngfx_buffer).w,a3
-		moveq	#9,d3
+		moveq	#10-1,d3
 
 loc_5664:
 		move.w	2(a3),d0
 		bsr.w	CalcSine
-		moveq	#0,d2
-		move.b	(a1)+,d2
-		muls.w	d2,d0
-		asr.l	#8,d0
-		move.w	d0,(a3)+
-		move.b	(a1)+,d2
-		ext.w	d2
+		move.w	(a1)+,d2
+		muls.w	d0,d2
+		swap	d2
+		move.w	d2,(a3)+
+		move.w	(a1)+,d2
 		add.w	d2,(a3)+
 		dbf	d3,loc_5664
 		lea	(v_ngfx_buffer).w,a3
-		lea	(byte_56F6).l,a2
+		lea	byte_56F6(pc),a2
 		bra.s	loc_56BC
 ; ---------------------------------------------------------------------------
 
@@ -3733,7 +3726,7 @@ loc_568C:
 		subq.w	#1,(Camera_BG3_X_pos).w
 		lea	(v_ssscroll_buffer).l,a3
 		move.l	#$18000,d2
-		moveq	#6,d1
+		moveq	#7-1,d1
 
 loc_56A2:
 		move.l	(a3),d0
@@ -3744,7 +3737,7 @@ loc_56A2:
 
 loc_56B2:
 		lea	(v_ssscroll_buffer).l,a3
-		lea	(byte_5701).l,a2
+		lea	byte_5701(pc),a2
 
 loc_56BC:
 		lea	(v_hscrolltablebuffer).w,a1
@@ -3756,11 +3749,12 @@ loc_56BC:
 		move.w	(Camera_BG_Y_pos).w,d2
 		neg.w	d2
 		andi.w	#$FF,d2
-		lsl.w	#2,d2
+		add.w	d2,d2
+		add.w	d2,d2
 
 loc_56D8:
-		move.w	(a3)+,d0
-		addq.w	#2,a3
+		move.w	(a3),d0
+		addq.w	#4,a3
 		moveq	#0,d1
 		move.b	(a2)+,d1
 		subq.w	#1,d1
@@ -3775,14 +3769,194 @@ loc_56E2:
 ; End of function S1SS_BgAnimate
 
 ; ---------------------------------------------------------------------------
-byte_56F6:	dc.b 9,	$28, $18, $10, $28, $18, $10, $30, $18,	8, $10,	0
-		even
-byte_5701:	dc.b 6,	$30, $30, $30, $28, $18, $18, $18
-		even
-byte_5709:	dc.b 8,	2, 4, $FF, 2, 3, 8, $FF, 4, 2, 2, 3, 8,	$FD, 4,	2, 2, 3, 2, $FF
-		even
+byte_56F6:				; SStage_Scroll_Buffer2
+		dc.b 9, $28		; d3, d1
+		dc.b $18, $10
+		dc.b $28, $18
+		dc.b $10, $30
+		dc.b $18, 8
+		dc.b $10, 0
+byte_5701:				; SStage_Scroll_Buffer
+		dc.b 6, $30		; d3, d1
+		dc.b $30, $30
+		dc.b $28, $18
+		dc.b $18, $18
+byte_5709:
+		dc.w $800, 2		; sin, cos
+		dc.w $400, -1
+		dc.w $200, 3
+		dc.w $800, -1
+		dc.w $400, 2
+		dc.w $200, 3
+		dc.w $800, -3
+		dc.w $400, 2
+		dc.w $200, 3
+		dc.w $200, -1
 ; ---------------------------------------------------------------------------
-; Subroutine to	show the special stage layout
+; New Subroutine to show the bonus stage layout
+; Uses S3&K mapping format, except as dc.b instead of dc.w
+; ---------------------------------------------------------------------------
+
+; =============== S U B R O U T I N E =======================================
+
+BS_ShowLayout:
+		bsr.w	SS_AniWallsRings
+		bsr.w	SS_AniItems
+; Calculate x/y positions of each cell in a 16x16 grid when rotated
+		lea	(v_ssbuffer3).l,a1		; address to write grid coords
+		move.b	(v_ssangle).l,d0
+		bsr.w	CalcSine			; convert to sine/cosine
+		move.w	d0,d4
+		move.w	d1,d5
+		muls.w	#$18,d4				; ss_block_width
+		muls.w	#$18,d5				; ss_block_width
+		moveq	#0,d2
+		move.w	(Camera_X_pos).w,d2
+		divu.w	#$18,d2
+		swap	d2
+		neg.w	d2
+		subi.w	#$B4,d2
+		moveq	#0,d3
+		move.w	(Camera_Y_pos).w,d3
+		divu.w	#$18,d3
+		swap	d3
+		neg.w	d3
+		subi.w	#$B4,d3
+		moveq	#$10-1,d7			; grid is 16 cells high
+
+.loop_gridrow:
+		movem.w	d0-d2,-(sp)
+		movem.w	d0-d1,-(sp)
+		neg.w	d0
+		muls.w	d2,d1
+		muls.w	d3,d0
+		move.l	d0,d6
+		add.l	d1,d6
+		movem.w	(sp)+,d0/d1
+		muls.w	d2,d0
+		muls.w	d3,d1
+		add.l	d0,d1
+		move.l	d6,d2
+		moveq	#$10-1,d6			; grid is 16 cells wide
+
+.loop_gridcell:
+		move.l	d2,d0
+		asr.l	#8,d0
+		move.w	d0,(a1)+
+		move.l	d1,d0
+		asr.l	#8,d0
+		move.w	d0,(a1)+
+		add.l	d5,d2
+		add.l	d4,d1
+		dbf	d6,.loop_gridcell		; repeat for all cells in row
+		movem.w	(sp)+,d0-d2
+		addi.w	#$18,d3
+		dbf	d7,.loop_gridrow		; repeat for all rows
+
+; Populate the 16x16 grid with sprites based on the level layout
+		lea	(v_ssbuffer1).l,a0
+		moveq	#0,d0
+		move.w	(Camera_Y_pos).w,d0		; get camera y pos
+		divu.w	#$18,d0				; divide by size of wall sprite (24 pixels)
+		lsl.w	#7,d0				; multiply by width of level ($80)
+		ext.l	d0
+		adda.l	d0,a0				; jump to correct row in level
+		moveq	#0,d0
+		move.w	(Camera_X_pos).w,d0		; get camera x pos
+		divu.w	#$18,d0				; divide by size of wall sprite (24 pixels)
+		adda.w	d0,a0				; jump to correct block in level
+		lea	(v_ssbuffer2).l,a2		; t2ansformation grid
+		lea	v_ssbuffer3-v_ssbuffer2(a2),a1	; load object xypos
+		lea	(Sprite_Table).w,a6		; the following commented out code was added in S3&K
+		moveq	#80-1,d7			; max sprites
+		moveq	#0,d6
+		move.b	(v_spritecount).w,d6	; Sprites_drawn in S3&K
+		sub.b	d6,d7
+		lsl.w	#3,d6
+		adda.w	d6,a6
+		moveq	#$10-1,d2
+
+.levelloop:
+		moveq	#$10-1,d3
+
+.objloop:
+		moveq	#0,d0
+		move.b	(a0)+,d0			; get level block
+		beq.s	.nextlevel			; skip if 0 (blank)
+		cmpi.b	#$4E,d0				; in S3K, since there's less blocks, this becomes $13 (decimal 19)
+		bhi.s	.nextlevel			; ...or if above $4E (decimal 78) (invalid)
+
+		move.w	(a1),d4				; get grid x pos
+		addi.w	#288,d4
+		cmpi.w	#112,d4
+		blo.s	.nextlevel			; branch if off screen
+		cmpi.w	#464,d4
+		bhs.s	.nextlevel
+
+		move.w	2(a1),d5			; get grid y pos
+		addi.w	#240,d5
+		cmpi.w	#112,d5
+		blo.s	.nextlevel
+		cmpi.w	#368,d5
+		bhs.s	.nextlevel
+
+		lsl.w	#3,d0
+		lea	(a2,d0.w),a4
+		movea.l	(a4)+,a3			; get mappings pointer
+		move.w	(a4)+,d6			; get frame id
+		add.w	d6,d6
+		adda.w	(a3,d6.w),a3			; apply frame id to mappings pointer
+		move.w	(a4),d6				; VRAM
+		move.w	(a3)+,d1			; number of sprite pieces
+		subq.w	#1,d1				; "
+		bmi.s	.nextlevel			; if there are 0 pieces, branch
+
+.setmap:
+		move.b	(a3)+,d0			; get y-offset
+		ext.w	d0				; byte to word
+		add.w	d5,d0				; add y-position
+		move.w	d0,(a6)+			; write to buffer
+		move.b	(a3)+,(a6)+			; write sprite size
+		addq.w	#1,a6				; skip sprite link
+		move.w	(a3)+,d0			; get art tile
+		add.w	d6,d0				; add art tile offset
+		move.w	d0,(a6)+			; write to buffer
+		move.w	(a3)+,d0			; get x-offset
+		add.w	d4,d0				; add x-position
+		andi.w	#$1FF,d0			; keep within 512px
+		bne.s	.writeX
+		addq.w	#1,d0
+
+.writeX:
+		move.w	d0,(a6)+			; write to buffer
+		subq.w	#1,d7				; decrease sprite counter
+		dbmi	d1,.setmap			; process next sprite piece
+		bmi.s	.finish
+
+.nextlevel:
+		addq.w	#4,a1				; next object xypos
+		dbf	d3,.objloop
+		lea	$70(a0),a0
+		dbf	d2,.levelloop
+
+.finish:
+		move.w	d7,d6
+		bmi.s	.end
+		moveq	#0,d0
+
+.clear:
+		move.w	d0,(a6)
+		addq.w	#8,a6
+		dbf	d7,.clear
+
+.end:
+		subi.w	#80-1,d6
+		neg.w	d6
+		move.b	d6,(v_spritecount).w
+		rts
+; End of function BS_ShowLayout
+; ---------------------------------------------------------------------------
+; New Subroutine to show the special stage layout
 ; ---------------------------------------------------------------------------
 
 ; =============== S U B R O U T I N E =======================================
@@ -3871,8 +4045,8 @@ ssloop_sprite:
 		moveq	#0,d0
 		move.b	(a0)+,d0			; get level block
 		beq.s	.loc_19C9A			; skip if 0 (blank)
-		cmpi.b	#$4E,d0				; in S3K, since there's less blocks, this becomes $13
-		bhi.s	.loc_19C9A			; ...or if above $4E (invalid)
+		cmpi.b	#$4E,d0				; in S3K, since there's less blocks, this becomes $13 (decimal 19)
+		bhi.s	.loc_19C9A			; ...or if above $4E (decimal 78) (invalid)
 		move.w	(a4),d3				; get grid x pos
 		addi.w	#288,d3
 		cmpi.w	#112,d3
@@ -3933,7 +4107,7 @@ ssloop_sprite:
 		move.b	d5,(v_spritecount).w
 		cmpi.b	#$50,d5				; max number of sprites ($50)
 		beq.s	.spritelimit			; branch if at limit
-		move.l	#0,(a2)
+		clr.l	(a2)
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -4098,7 +4272,7 @@ SS_AniItems:
 		lea	(v_ssitembuffer).l,a0
 		move.w	#(v_ssitembuffer_end-v_ssitembuffer)/8-1,d7
 
-loc_19F0C:
+.loop:
 		moveq	#0,d0
 		move.b	(a0),d0
 		beq.s	.no_update
@@ -4108,8 +4282,8 @@ loc_19F0C:
 
 .no_update:
 		addq.w	#8,a0
-		dbf	d7,loc_19F0C
-		rts
+		dbf	d7,.loop
+.return:	rts
 ; End of function SS_AniItems
 
 ; ---------------------------------------------------------------------------
@@ -4124,7 +4298,7 @@ S1SS_AniIndex:
 
 SS_AniRingSparks:
 		subq.b	#1,2(a0)
-		bpl.s	locret_19F62
+		bpl.s	SS_AniItems.return
 		move.b	#5,2(a0)
 		moveq	#0,d0
 		move.b	3(a0),d0
@@ -4132,112 +4306,97 @@ SS_AniRingSparks:
 		movea.l	4(a0),a1
 		move.b	SS_AniRingData(pc,d0.w),d0
 		move.b	d0,(a1)
-		bne.s	locret_19F62
+		bne.s	SS_AniItems.return
 		clr.l	(a0)
 		clr.l	4(a0)
-
-locret_19F62:
 		rts
 ; ---------------------------------------------------------------------------
-SS_AniRingData:	dc.b $42, $43, $44, $45, 0, 0
+SS_AniRingData:	dc.b $42, $43, $44, $45, 0
+		even
 ; ---------------------------------------------------------------------------
 
 SS_AniBumper:
 		subq.b	#1,2(a0)
-		bpl.s	locret_19F98
+		bpl.s	SS_AniItems.return
 		move.b	#7,2(a0)
 		moveq	#0,d0
 		move.b	3(a0),d0
 		addq.b	#1,3(a0)
 		movea.l	4(a0),a1
 		move.b	SS_AniBumpData(pc,d0.w),d0
-		bne.s	loc_19F96
+		bne.s	SS_AniReverse.update
 		clr.l	(a0)
 		clr.l	4(a0)
 		move.b	#$25,(a1)
 		rts
 ; ---------------------------------------------------------------------------
-
-loc_19F96:
-		move.b	d0,(a1)
-
-locret_19F98:
-		rts
-; ---------------------------------------------------------------------------
-SS_AniBumpData:	dc.b $32, $33, $32, $33, 0, 0
+SS_AniBumpData:	dc.b $32, $33, $32, $33, 0
+		even
 ; ---------------------------------------------------------------------------
 
 SS_Ani1Up:
 		subq.b	#1,2(a0)
-		bpl.s	locret_19FC8
+		bpl.s	SS_AniReverse.return
 		move.b	#5,2(a0)
 		moveq	#0,d0
 		move.b	3(a0),d0
 		addq.b	#1,3(a0)
 		movea.l	4(a0),a1
-		move.b	SS_Ani1UpData(pc,d0.w),d0
+		move.b	SS_Ani1UpData(pc,d0.w),d0	; shared across objects
 		move.b	d0,(a1)
-		bne.s	locret_19FC8
+		bne.s	SS_AniReverse.return
 		clr.l	(a0)
 		clr.l	4(a0)
-
-locret_19FC8:
 		rts
-; ---------------------------------------------------------------------------
-SS_Ani1UpData:	dc.b $46, $47, $48, $49, 0, 0
 ; ---------------------------------------------------------------------------
 
 SS_AniReverse:
 		subq.b	#1,2(a0)
-		bpl.s	locret_19FFE
+		bpl.s	SS_AniReverse.return
 		move.b	#7,2(a0)
 		moveq	#0,d0
 		move.b	3(a0),d0
 		addq.b	#1,3(a0)
 		movea.l	4(a0),a1
 		move.b	SS_AniRevData(pc,d0.w),d0
-		bne.s	loc_19FFC
+		bne.s	.update
 		clr.l	(a0)
 		clr.l	4(a0)
 		move.b	#$2B,(a1)
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_19FFC:
+.update:
 		move.b	d0,(a1)
-
-locret_19FFE:
-		rts
-; ---------------------------------------------------------------------------
-SS_AniRevData:	dc.b $2B, $31, $2B, $31, 0, 0
+.return:	rts
 ; ---------------------------------------------------------------------------
 
 SS_AniEmeraldSparks:
 		subq.b	#1,2(a0)
-		bpl.s	locret_1A03E
+		bpl.s	SS_AniReverse.return
 		move.b	#5,2(a0)
 		moveq	#0,d0
 		move.b	3(a0),d0
 		addq.b	#1,3(a0)
 		movea.l	4(a0),a1
-		move.b	SS_AniEmerData(pc,d0.w),d0
+		move.b	SS_Ani1UpData(pc,d0.w),d0	; shared across objects
 		move.b	d0,(a1)
-		bne.s	locret_1A03E
+		bne.s	SS_AniReverse.return
 		clr.l	(a0)
 		clr.l	4(a0)
 		move.b	#4,(v_objspace+obRoutine).w
 		move.w	#sfx_SSGoal,d0
 		jmp	(PlaySound_Special).l
-
-locret_1A03E:
-		rts
 ; ---------------------------------------------------------------------------
-SS_AniEmerData:	dc.b $46, $47, $48, $49, 0, 0
+SS_Ani1UpData:	dc.b $46, $47, $48, $49, 0
+SS_AniRevData:	dc.b $2B, $31, $2B, $31, 0
+SS_AniGlassData:dc.b $4B, $4C, $4D, $4E, $4B, $4C, $4D, $4E, 0
+		even
 ; ---------------------------------------------------------------------------
 
 SS_AniGlassBlock:
 		subq.b	#1,2(a0)
-		bpl.s	locret_1A072
+		bpl.s	SS_AniReverse.return
 		move.b	#1,2(a0)
 		moveq	#0,d0
 		move.b	3(a0),d0
@@ -4245,16 +4404,11 @@ SS_AniGlassBlock:
 		movea.l	4(a0),a1
 		move.b	SS_AniGlassData(pc,d0.w),d0
 		move.b	d0,(a1)
-		bne.s	locret_1A072
+		bne.s	SS_AniReverse.return
 		move.b	4(a0),(a1)
 		clr.l	(a0)
 		clr.l	4(a0)
-
-locret_1A072:
 		rts
-; ---------------------------------------------------------------------------
-SS_AniGlassData:dc.b $4B, $4C, $4D, $4E, $4B, $4C, $4D, $4E, 0, 0
-
 ; ---------------------------------------------------------------------------
 ; Special stage	layout pointers
 ; ---------------------------------------------------------------------------
@@ -4266,12 +4420,6 @@ Bonus_LayoutIndex:
 		dc.l BS_5
 		dc.l BS_6
 		even
-
-; ---------------------------------------------------------------------------
-; Bonus stage start locations
-; ---------------------------------------------------------------------------
-Bonus_StartLoc:	include	"_inc/Start Location Array - Bonus Stages.asm"
-
 ; ---------------------------------------------------------------------------
 ; Subroutine to	load the bonus stage layout
 ; ---------------------------------------------------------------------------
@@ -4349,6 +4497,11 @@ S1SS_ClrRAM3:
 		rts
 ; End of function BonusStage_Load
 
+; ---------------------------------------------------------------------------
+; Bonus stage start locations
+; ---------------------------------------------------------------------------
+Bonus_StartLoc:	include	"_inc/Start Location Array - Bonus Stages.asm"
+		even
 ; ---------------------------------------------------------------------------
 S1SS_MapIndex:
 		include	"_inc/Special Stage Mappings & VRAM Pointers.asm"
@@ -9603,7 +9756,7 @@ BuildSprites_NextLevel:
 		; was empty: then it would access data before the start of the list.
 		cmpi.b	#80,d5	; was the sprite limit reached?
 		beq.s	+	; if it was, branch
-		move.l	#0,(a2)	; set link field to 0
+		clr.l	(a2)	; set link field to 0
 		rts
 +
 		clr.b	-5(a2)	; set link field to 0
@@ -23027,7 +23180,7 @@ loc_1B3E0:
 ; ---------------------------------------------------------------------------
 
 loc_1B3EC:
-		move.l	#0,(a6)
+		clr.l	(a6)
 		dbf	d1,loc_1B3EC
 		dbf	d2,loc_1B3D0
 		rts
@@ -23327,7 +23480,7 @@ loc_1B5EA:
 		moveq	#$10-1,d5
 
 loc_1B5EC:
-		move.l	#0,(a6)
+		clr.l	(a6)
 		dbf	d5,loc_1B5EC
 		dbf	d6,loc_1B5A4
 		rts
@@ -23389,7 +23542,7 @@ loc_1B650:
 		moveq	#8-1,d5
 
 loc_1B656:
-		move.l	#0,(a6)
+		clr.l	(a6)
 		dbf	d5,loc_1B656
 		addi.l	#$400000,d0
 		dbf	d6,loc_1B610
