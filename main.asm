@@ -1,12 +1,6 @@
-;  =========================================================================
-; |    Sonic 2 (Early prototype) Disassembly for Sega Mega Drive            |
-;  =========================================================================
-; Disassembly originally created by drx; thanks to Hivebrain and Rika_Chou
-; Updated by Alex Field, Filter, and RepellantMold
-;  =========================================================================
-
-	CPU 68000
-
+; ===========================================================================
+; Sonic the Mystic Island Project -- For the Mega Drive
+; ===========================================================================
 
 FixBugs			= 1	; change to 1 to enable bugfixes
 AdvancedHandler		= 0	; 0 for Sonic 1's Error handler, 1 for the Advanced Error handler
@@ -14,6 +8,8 @@ zeroOffsetOptimization	= 1	; if 1, makes a handful of zero-offset instructions s
 TimeTravel		= 1	; if 1, allows time-travel mechanics (W.I.P)
 BackupSRAM		= 1
 AddressSRAM		= 3	; 0 = odd+even; 2 = even only; 3 = odd only
+
+	CPU 68000
 	include	"s2.macrosetup.asm"
 	include	"s2.macros.asm"
 	include	"s2.constants.asm"
@@ -61,8 +57,8 @@ ROMEndLoc:	dc.l EndOfRom-1				; End address of ROM
 		dc.b "                                                "	; Notes (unused, anything can be put in this space, but it has to be 48 bytes.)
 		dc.b "JUE             "			; Country code (region)
 EndOfHeader:
-
 ; ---------------------------------------------------------------------------
+
 InitValues:	dc.w	$8000
 		dc.w	bytesToLcnt($10000)
 		dc.w	$100
@@ -97,7 +93,6 @@ VDPInitValues:		; values for VDP registers
 		dc.w	0			; VDP $95/96 - DMA source
 		dc.b	$80			; VDP $97 - DMA fill VRAM
 VDPInitValues_End:
-
 		dc.l	$40000080		; value	for VRAM fill
 
 Z80StartupCodeBegin:
@@ -276,7 +271,7 @@ VintRet:
 ; ===========================================================================
 ; loc_B86: VintSub0:
 Vint_Lag:
-		addq.w	#4,sp
+		addq.w	#4,sp			; Don't execute "VintRet" twice
 
 Vint_Lag_Main:
 		addq.w	#1,(Lag_frame_count).w
@@ -353,9 +348,9 @@ Vint_Title:
 ; loc_CD8: VintSub10:
 Vint_Pause:
 		cmpi.w	#BonusStage,(v_gamemode).w
-		beq.w	Vint_S1SS		; If in a special stage, branch
+		beq.w	Vint_S1SS
 		cmpi.w	#SpecialStage,(v_gamemode).w
-		beq.w	Vint_S2SS		; If in a special stage, branch
+		beq.w	Vint_S2SS	; Branch if we're in either a bonus or Special stage
 ; loc_CE2: VintSub8:
 Vint_Level:
 		stopZ80
@@ -413,7 +408,7 @@ Do_Updates:
 ; End of function Do_Updates
 
 ; ---------------------------------------------------------------------------
-
+		align	$82E
 Vint_Pause_specialStage:
 		stopZ80
 		waitZ80
@@ -428,6 +423,7 @@ Vint_Pause_specialStage:
 		startZ80
 		rts
 ; ===========================================================================
+		align	$8A4
 Vint_S2SS:
 		stopZ80
 		waitZ80
@@ -854,52 +850,66 @@ ClearScreen:
 ; ShowVDPGraphics: PlaneMapToVRAM:
 PlaneMapToVRAM_H40:
 		lea	(vdp_data_port).l,a6
-		move.l	#$800000,d4
-
-PlaneMapToVRAM_H40_LineLoop:
-		move.l	d0,4(a6)
+		move.l	#vdpCommDelta(planeLoc(64,0,1)),d4	; $800000
+-		move.l	d0,vdp_control_port-vdp_data_port(a6)	; move d0 to VDP_control_port
 		move.w	d1,d3
-
-PlaneMapToVRAM_H40_TileLoop:
-		move.w	(a1)+,(a6)
-		dbf	d3,PlaneMapToVRAM_H40_TileLoop
-		add.l	d4,d0
-		dbf	d2,PlaneMapToVRAM_H40_LineLoop
+-		move.w	(a1)+,(a6)	; from source address to destination in VDP
+		dbf	d3,-		; next tile
+		add.l	d4,d0		; increase destination address by $80 (1 line)
+		dbf	d2,--		; next line
 		rts
 ; End of function PlaneMapToVRAM_H40
 
+; ---------------------------------------------------------------------------
+; Alternate subroutine to transfer a plane map to VRAM
+; (used for Special Stage background)
+; ---------------------------------------------------------------------------
 
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+
+; sub_142E: ShowVDPGraphics2: PlaneMapToVRAM2:
+PlaneMapToVRAM_H80_SpecialStage:
+		lea	(vdp_data_port).l,a6
+		move.l	#vdpCommDelta(planeLoc(128,0,1)),d4	; $1000000
+-		move.l	d0,vdp_control_port-vdp_data_port(a6)	; move d0 to VDP_control_port
+		move.w	d1,d3
+-		move.w	(a1)+,(a6)	; from source address to destination in VDP
+		dbf	d3,-		; next tile
+		add.l	d4,d0		; increase destination address by $80 (1 line)
+		dbf	d2,--		; next line
+		rts
+; End of function PlaneMapToVRAM_H80_SpecialStage
+
+; ---------------------------------------------------------------------------
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 ; ---------------------------------------------------------------------------
 ; Subroutine to load the sound driver
 ; ---------------------------------------------------------------------------
-; sub_EC000:
+
 SoundDriverLoad:
-	move.w	#$100,(Z80_Bus_Request).l	; stop the Z80
-	resetZ80
+		move.w	#$100,(Z80_Bus_Request).l	; stop the Z80
+		resetZ80
 
-	lea	(Snd_Driver).l,a0
-	lea	(Z80_RAM).l,a1
-	bsr.w	KosPlusDec
-	btst	#0,(VDP_control_port+1).l	; check video mode
-	sne	(Z80_RAM+zPalModeByte).l	; set if PAL
+		lea	(Snd_Driver).l,a0
+		lea	(Z80_RAM).l,a1
+		bsr.w	KosPlusDec
+		btst	#0,(VDP_control_port+1).l	; check video mode
+		sne	(Z80_RAM+zPalModeByte).l	; set if PAL
 
-	resetZ80a
-	nop
-	nop
-	nop
-	nop
-	resetZ80
-	startZ80	; start the Z80
-	rts
+		resetZ80a
+		nop
+		nop
+		nop
+		nop
+		resetZ80
+		startZ80	; start the Z80
+		rts
 ; End of function SoundDriverLoad
-
-
+; ---------------------------------------------------------------------------
 ; MM: these functions now write directly to Z80 RAM
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 ; If Music_to_play is clear, move d0 into Music_to_play,
 ; else move d0 into Music_to_play_2.
-; sub_135E:
+
 PlaySound_Special:
 PlayMusic:
 		disable_ints
@@ -917,9 +927,7 @@ PlayMusic:
 		enable_ints
 		rts
 ; End of function PlayMusic
-
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+; ---------------------------------------------------------------------------
 ; play a sound in alternating speakers (as in the ring collection sound)
 
 PlaySoundStereo:
@@ -931,9 +939,7 @@ PlaySoundStereo:
 		enable_ints
 		rts
 ; End of function PlaySoundStereo
-
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+; ---------------------------------------------------------------------------
 ; play a sound if the source is onscreen
 
 PlaySoundLocal:
@@ -974,6 +980,7 @@ SegaSndTbl:
 PauseSoundDriver:
 		disable_ints
 		stopZ80
+		waitZ80
 		move.b	#$7F,(Z80_RAM+zAbsVar.StopMusic).l
 		startZ80
 		enable_ints
@@ -982,6 +989,7 @@ PauseSoundDriver:
 UnpauseSoundDriver:
 		disable_ints
 		stopZ80
+		waitZ80
 		move.b	#$80,(Z80_RAM+zAbsVar.StopMusic).l
 		startZ80
 		enable_ints
@@ -1236,9 +1244,15 @@ QuickPLC:
 		rts
 ; End of function QuickPLC
 
+; ===========================================================================
 		include "_inc/Nemesis Decompression.asm"
+; ===========================================================================
+; ---------------------------------------------------------------------------
 
-KosPlusArt_To_VDP:	; commented out until I find a use for it
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+
+
+KosPlusArt_To_VDP:
 		movea.l	a1,a3		; a1 will be changed by KosPlusDec, so we're backing it up to a3
 		bsr.s	KosPlusDec
 		move.l	a3,d1		; move the backed-up a1 to d1
@@ -1252,10 +1266,11 @@ KosPlusArt_To_VDP:	; commented out until I find a use for it
 		movea.l	a3,a1		; restore a1
 		rts
 
+; ===========================================================================
 		include "_inc/KosinskiPlus.asm"
 		include "_inc/DMA Queue.asm"
+; ===========================================================================
 
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 ; ---------------------------------------------------------------------------
 ; Subroutine to queue Moduled Kosinski PLC's per level
 ; ---------------------------------------------------------------------------
@@ -1276,7 +1291,7 @@ LoadKosPLC:
 		moveq	#0,d0
 		move.w	(Current_ZoneAndAct).w,d0
 
-loc_2F7A2:
+; loc_2F7A2:
 		ror.b	#2,d0
 		lsr.w	#5,d0
 		adda.w	(a6,d0.w),a6
@@ -1305,34 +1320,6 @@ QuickKosPLC:
 ; ===========================================================================
 		include "_inc/KosinkiPlus_Moduled.asm"
 		include "_inc/Enigma Decompression.asm"
-		include	"_inc/PaletteCycle.asm"
-
-Pal_HTZCyc1:	binclude "palette/Hill Top Lava.bin"
-		even
-Pal_HTZCyc2:	binclude "palette/Hill Top Lava Delay.bin"
-		even
-Pal_GHZCyc:	binclude "palette/GHZ Water.bin"
-		even
-Pal_EHZCyc:	binclude "palette/EHZ Water.bin"
-		even
-Pal_CPZCyc1:	binclude "palette/CPZ Cycle 1.bin"
-		even
-Pal_CPZCyc2:	binclude "palette/CPZ Cycle 2.bin"
-		even
-Pal_CPZCyc3:	binclude "palette/CPZ Cycle 3.bin"
-		even
-Pal_MTZCyc1:	binclude "palette/MTZ Cycle 1.bin"
-		even
-Pal_MTZCyc2:	binclude "palette/MTZ Cycle 2.bin"
-		even
-Pal_MTZCyc3:	binclude "palette/MTZ Cycle 3.bin"
-		even
-Pal_HPZCyc1:	binclude "palette/HPZ Water Cycle.bin"
-		even
-Pal_HPZCyc2:	binclude "palette/HPZ Underwater Cycle.bin"
-		even
-Pal_WZCyc:	binclude "palette/WZ Cycle.bin"
-		even
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Subroutine to fade in from black
@@ -1935,6 +1922,34 @@ Pal_S1Continue:	binclude	"palette/Continue Screen.bin"
 Pal_S1Ending:	binclude	"palette/Ending.bin"
 		even
 ; ===========================================================================
+		include	"_inc/PaletteCycle.asm"
+
+Pal_HTZCyc1:	binclude "palette/Hill Top Lava.bin"
+		even
+Pal_HTZCyc2:	binclude "palette/Hill Top Lava Delay.bin"
+		even
+Pal_GHZCyc:	binclude "palette/GHZ Water.bin"
+		even
+Pal_EHZCyc:	binclude "palette/EHZ Water.bin"
+		even
+Pal_CPZCyc1:	binclude "palette/CPZ Cycle 1.bin"
+		even
+Pal_CPZCyc2:	binclude "palette/CPZ Cycle 2.bin"
+		even
+Pal_CPZCyc3:	binclude "palette/CPZ Cycle 3.bin"
+		even
+Pal_MTZCyc1:	binclude "palette/MTZ Cycle 1.bin"
+		even
+Pal_MTZCyc2:	binclude "palette/MTZ Cycle 2.bin"
+		even
+Pal_MTZCyc3:	binclude "palette/MTZ Cycle 3.bin"
+		even
+Pal_HPZCyc1:	binclude "palette/HPZ Water Cycle.bin"
+		even
+Pal_HPZCyc2:	binclude "palette/HPZ Underwater Cycle.bin"
+		even
+Pal_WZCyc:	binclude "palette/WZ Cycle.bin"
+		even
 ; ---------------------------------------------------------------------------
 ; Subroutine to perform vertical synchronization
 ; ---------------------------------------------------------------------------
@@ -1965,23 +1980,20 @@ WaitForVint:
 ; PseudoRandomNumber:
 RandomNumber:
 		move.l	(v_random).w,d1
-		bne.s	loc_2C9C
+		bne.s	+
 		move.l	#$2A6D365A,d1
-
-loc_2C9C:
-		; set the high word of d0 to be the high word of the RNG
++		; set the high word of d0 to be the high word of the RNG
 		; and multiply the RNG by 41
 		move.l	d1,d0
 		asl.l	#2,d1
 		add.l	d0,d1
 		asl.l	#3,d1
 		add.l	d0,d1
-
 		; add the low word of the RNG to the high word of the RNG
 		; and set the low word of d0 to be the result
 		move.w	d1,d0
-		abcd	d0,d1
-		addx.w	d1,d0
+		swap	d1
+		add.w	d1,d0
 		move.w	d0,d1
 		swap	d1
 		move.l	d1,(v_random).w
@@ -2031,17 +2043,17 @@ CalcAngle:
 		beq.s	CalcAngle_Zero			; special case return if x and y are both 0
 		move.w	d2,d4
 		tst.w	d3				; calculate absolute value of x
-		bpl.w	loc_2F68
+		bpl.s	loc_2F68
 		neg.w	d3
 
 loc_2F68:
 		tst.w	d4				; calculate absolute value of y
-		bpl.w	loc_2F70
+		bpl.s	loc_2F70
 		neg.w	d4
 
 loc_2F70:
 		cmp.w	d3,d4
-		bcc.w	loc_2F82
+		bcc.s	loc_2F82
 		lsl.l	#8,d4
 		divu.w	d3,d4
 		moveq	#0,d0
@@ -2057,13 +2069,13 @@ loc_2F82:
 
 loc_2F8C:
 		tst.w	d1
-		bpl.w	loc_2F98
+		bpl.s	loc_2F98
 		neg.w	d0
 		addi.w	#$80,d0
 
 loc_2F98:
 		tst.w	d2
-		bpl.w	loc_2FA4
+		bpl.s	loc_2FA4
 		neg.w	d0
 		addi.w	#$100,d0
 
@@ -2073,7 +2085,7 @@ loc_2FA4:
 ; ===========================================================================
 ; loc_2FAA:
 CalcAngle_Zero:
-		move.w	#$40,d0
+		moveq	#$40,d0
 		movem.l	(sp)+,d3-d4
 		rts
 ; End of function CalcAngle
