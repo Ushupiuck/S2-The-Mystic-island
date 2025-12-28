@@ -123,7 +123,7 @@ PLC_GHZ2_End:
 ; Labyrinth Zone primary
 ; ---------------------------------------------------------------------------
 PLC_LZ:		dc.w ((PLC_CPZ_End-PLC_CPZ)/6)-1
-		plcm	Nem_CPZ_FloatingPlatform,	ArtTile_CPZ_Platform
+		plcm	Nem_CPZ_Platform1,	ArtTile_CPZ_Platform
 PLC_LZ_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
@@ -140,7 +140,7 @@ PLC_LZ2_End:
 ; Chemical Plant Zone primary
 ; ---------------------------------------------------------------------------
 PLC_CPZ:	dc.w ((PLC_CPZ_End-PLC_CPZ)/6)-1
-		plcm	Nem_CPZ_FloatingPlatform,	ArtTile_CPZ_Platform
+		plcm	Nem_CPZ_Platform1,	ArtTile_CPZ_Platform
 PLC_CPZ_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST

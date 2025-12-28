@@ -21852,9 +21852,9 @@ word_194C6:	dc.w 2
 BossDefeated:
 		move.b	(Vint_runcount+3).w,d0
 		andi.b	#7,d0
-		bne.s	locret_18EA0
+		bne.s	.return
 		jsr	(FindFreeObj).l
-		bne.s	locret_18EA0
+		bne.s	.return
 		_move.b	#id_Obj3F,obID(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
@@ -21868,9 +21868,7 @@ BossDefeated:
 		lsr.w	#8,d0
 		lsr.b	#3,d0
 		add.w	d0,obY(a1)
-
-locret_18EA0:
-		rts
+.return:	rts
 ; End of function BossDefeated
 
 ; ---------------------------------------------------------------------------
@@ -22049,9 +22047,7 @@ loc_196F8:
 		bne.s	.return
 		addq.b	#2,obRoutine(a0)
 		move.b	#60*3,obTimeFrame(a0)
-
-.return:
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 
 Obj3E_EndAct:
@@ -23962,7 +23958,7 @@ Debug_SpawnObject:
 ; loc_1BC70:
 Debug_ExitDebugMode:
 		btst	#bitB,(v_jpadpress1).w	; is button B pressed?
-		beq.w	stayindebug		; if not, branch
+		beq.s	.stayindebug		; if not, branch
 		; exit Debug Mode
 		moveq	#0,d0
 		move.w	d0,(Debug_placement_mode).w	; deactivate debug mode
@@ -23975,21 +23971,17 @@ Debug_ExitDebugMode:
 		move.l	#Map_Sonic,(v_player+obMap).w
 		move.w	#make_art_tile(ArtTile_Sonic,0,0),(v_player+obGfx).w
 		bsr.s	Debug_ResetPlayerStats
-		move.b	#$13,obHeight(a1)	; y_radius
-		move.b	#9,obWidth(a1)		; x_radius
 		move.w	(v_limittopdb).w,(Camera_Min_Y_pos).w
 		move.w	(v_limitbtmdb).w,(Camera_Max_Y_pos_target).w
 		cmpi.w	#BonusStage,(v_gamemode).w ; is this the Bonus Stage?
-		bne.s	stayindebug			; if not, branch
+		bne.s	.stayindebug			; if not, branch
 
-		clr.w	(v_ssangle).l			; again, this resets the Special Stage rotation
+		move.w	d0,(v_ssangle).l		; again, this resets the Special Stage rotation
 		move.w	#$40,(v_ssrotate).l		; and Sonic's art for whatever reason
 		move.b	#AniIDSonAni_Roll,(v_player+obAnim).w
 		bset	#2,(v_player+obStatus).w
 		bset	#1,(v_player+obStatus).w
-
-stayindebug:
-		rts
+.stayindebug:	rts
 ; End of function Debug_Control
 
 
@@ -23997,7 +23989,7 @@ stayindebug:
 
 
 Debug_ResetPlayerStats:
-		moveq	#0,d0
+	;	moveq	#0,d0		; Unneccesary, as the caller already does this. Uncomment this if a new caller is added, and doesn't clear d0
 		move.b	d0,obAnim(a1)
 		move.w	d0,obXSub(a1)	; x_sub
 		move.w	d0,obYSub(a1)	; y_sub
@@ -24010,6 +24002,8 @@ Debug_ResetPlayerStats:
 		ori.b	#2,obStatus(a1)		; Set the 'is rolling' flag.
 		move.b	#2,obRoutine(a1)
 		clr.b	ob2ndRout(a1)
+		move.b	#$13,obHeight(a1)	; y_radius
+		move.b	#9,obWidth(a1)		; x_radius
 		rts
 ; End of function Debug_ResetPlayerStats
 
@@ -24136,7 +24130,6 @@ loc_29890:
 ; ---------------------------------------------------------------------------
 ; S2 sound driver (Kosinski+)
 ; ---------------------------------------------------------------------------
-; loc_EC0E8:
 Snd_Driver:
 	save
 	include "s2.sounddriver.asm" ; CPU Z80
@@ -24145,12 +24138,17 @@ Snd_Driver:
 	!org (Snd_Driver+Size_of_Snd_driver_guess) ; don't worry; I know what I'm doing
 
 
-; loc_ED04C:
+; loc_1C81A:	; For reference. Unless MAJOR ammounts of code are added before this,
+		; The driver will always end here. Which leads to..!
 Snd_Driver_End:
+; ---------------------------------------------------------------------------
+; There being free space between the driver and the Music Pointers after compiling,
+; so we may as well put it to good use! ($1C81A-$20000; $37E6 bytes)
 ; ---------------------------------------------------------------------------
 		include	"_inc/DebugList.asm"
 		include	"_inc/LevelHeaders.asm"
 		include	"_inc/Pattern Load Cues.asm"
+		; $8EE bytes taken, 2EF8 still free
 ; ---------------------------------------------------------------------------
 ; Music pointers
 ; ---------------------------------------------------------------------------
@@ -24260,10 +24258,9 @@ Nem_SegaLogo:		binclude	"art/nemesis/Sega Logo (JP1).nem"
 ; ---------------------------------------------------------------------------
 ; Misc. compressed data - Tilemaps
 ; ---------------------------------------------------------------------------
+		; enigma assets seem to be even by default?
 Eni_SegaLogo:	binclude	"tilemaps/Sega Logo (JP1).eni"
-		even
 Eni_TitleMap:	binclude	"tilemaps/Title Emblem.eni"
-		even
 Kosp_TitleBg1:	binclude	"tilemaps/Title Background - 1.kosp"
 Kosp_TitleBg2:	binclude	"tilemaps/Title Background - 2.kosp"
 ; ---------------------------------------------------------------------------
@@ -24286,8 +24283,8 @@ Art_Flowers1:		binclude	"art/uncompressed/EHZ and HTZ flowers - 1.bin"
 Art_Flowers2:		binclude	"art/uncompressed/EHZ and HTZ flowers - 2.bin"
 Art_Flowers3:		binclude	"art/uncompressed/EHZ and HTZ flowers - 3.bin"
 Art_Flowers4:		binclude	"art/uncompressed/EHZ and HTZ flowers - 4.bin"
-Art_CPZAnimBGPlates:	binclude	"art/uncompressed/CPZ animated background section.bin"
 Art_EHZPulseBall:	binclude	"art/uncompressed/Pulsing ball against checkered background (EHZ).bin"
+Art_CPZAnimBGPlates:	binclude	"art/uncompressed/CPZ animated background section.bin"
 Art_HPZPulseOrb:	binclude	"art/uncompressed/Pulsing orb (HPZ).bin"
 ; ---------------------------------------------------------------------------
 ; Green Hill Zone stage assets
@@ -24295,19 +24292,19 @@ Art_HPZPulseOrb:	binclude	"art/uncompressed/Pulsing orb (HPZ).bin"
 Nem_Stalk:	binclude	"art/nemesis/S1/GHZ Flower Stalk.nem"
 		even
 Nem_Swing:	binclude	"art/nemesis/S1/GHZ Swinging Platform.nem"
-		even
+	;	even		; Already even, uncomment if an edit makes it odd
 Nem_GHZ_Bridge:	binclude	"art/nemesis/S1/GHZ Bridge.nem"
 		even
 Nem_GHZ_Ball:	binclude	"art/nemesis/S1/GHZ Giant Ball.nem"
-		even
+	;	even		; Already even, uncomment if an edit makes it odd
 Nem_GHZ_Spikes:	binclude	"art/nemesis/S1/GHZ Spiked Log.nem"
-		even
+	;	even		; Already even, uncomment if an edit makes it odd
 Nem_GHZ_Rock:	binclude	"art/nemesis/S1/GHZ Purple Rock.nem"
-		even
+	;	even		; Already even, uncomment if an edit makes it odd
 Nem_GHZ_BWall:	binclude	"art/nemesis/S1/GHZ Breakable Wall.nem"
-		even
+	;	even		; Already even, uncomment if an edit makes it odd
 Nem_GHZ_SWall:	binclude	"art/nemesis/S1/GHZ Edge Wall.nem"
-		even
+	;	even		; Already even, uncomment if an edit makes it odd
 ; ---------------------------------------------------------------------------
 ; Rustic Ruins Zone stage assets
 ; ---------------------------------------------------------------------------
@@ -24315,7 +24312,7 @@ Kospm_FlapDoor:	binclude	"art/moduled kosinski/Flapping Door.kospm"
 ; ---------------------------------------------------------------------------
 ; Chemical Plant Zone stage assets
 ; ---------------------------------------------------------------------------
-Nem_CPZ_FloatingPlatform:	binclude	"art/nemesis/CPZ Floating Platform.nem"
+Nem_CPZ_Platform1:	binclude	"art/nemesis/CPZ Floating Platform.nem"
 		even
 ; ---------------------------------------------------------------------------
 ; Emerald Hill Zone stage assets
@@ -24352,6 +24349,10 @@ Nem_HTZ_AutomaticDoor:	binclude	"art/nemesis/HTZ Autodoor.nem"
 			even
 Nem_HTZ_Seesaw:		binclude	"art/nemesis/See-saw in HTZ.nem"
 			even
+; ---------------------------------------------------------------------------
+; Compressed misc. graphics - Level placeholders
+; ---------------------------------------------------------------------------
+		even
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - enemies
 ; ---------------------------------------------------------------------------
@@ -24498,19 +24499,15 @@ Nem_EndEm:	binclude	"art/nemesis/S1/Ending - Emeralds.nem"
 Nem_EndSonic:	binclude	"art/nemesis/S1/Ending - Sonic.nem"
 		even
 Kospm_EndFlowers:	binclude	"art/moduled kosinski/Ending - Flowers.kospm"
-Kospm_EndStalk:	binclude	"art/moduled kosinski/Ending - Flower Stalk.kospm"
+Kospm_EndStalk:		binclude	"art/moduled kosinski/Ending - Flower Stalk.kospm"
 Kosp_CreditText:	binclude	"art/kosinski/Ending - Credits.kosp"
-Kospm_TryAgain:	binclude	"art/moduled kosinski/Ending - Try Again.kospm"
-Nem_EndStH:	binclude	"art/nemesis/S1/Ending - StH Logo.nem"
-		even
-; ---------------------------------------------------------------------------
-; Compressed graphics - Level placeholders
-; ---------------------------------------------------------------------------
+Kospm_TryAgain:		binclude	"art/moduled kosinski/Ending - Try Again.kospm"
+Nem_EndStH:		binclude	"art/nemesis/S1/Ending - StH Logo.nem"
 		even
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - Bonus & Special stages
 ; ---------------------------------------------------------------------------
-Nem_Warp:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Flash.nem" ; entry to bonus stage flash
+Nem_Warp:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Flash.nem" ; bonus stage entry flash (Leftover from Sonic 1 beta; TO BE RESTORED)
 		even
 Nem_SSWalls:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Walls.nem" ; bonus stage walls
 		even
