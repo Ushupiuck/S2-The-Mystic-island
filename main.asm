@@ -23639,7 +23639,7 @@ ErrorMessage:
 		movem.l	d0-sp,(v_regbuffer).w
 		bsr.s	ShowErrorMsg
 		move.l	2(sp),d0
-		bsr.w	ShowErrAddress
+		bsr.s	ShowErrAddress
 		bsr.w	ErrorWaitForC
 		movem.l	(v_regbuffer).w,d0-sp
 		enable_ints
@@ -23671,32 +23671,6 @@ ShowErrorMsg:
 		rts
 ; End of function ShowErrorMsg
 
-; ---------------------------------------------------------------------------
-ErrorText:
-		dc.w .exception-ErrorText	; $00
-		dc.w .bus-ErrorText		; $02
-		dc.w .address-ErrorText		; $04
-		dc.w .illinstruct-ErrorText	; $06
-		dc.w .zerodivide-ErrorText	; $08
-		dc.w .chkinstruct-ErrorText	; $0A
-		dc.w .trapv-ErrorText		; $0C
-		dc.w .privilege-ErrorText	; $0E
-		dc.w .trace-ErrorText		; $10
-		dc.w .line1010-ErrorText	; $12
-		dc.w .line1111-ErrorText	; $14
-.exception:	dc.b "ERROR EXCEPTION    "
-.bus:		dc.b "BUS ERROR          "
-.address:	dc.b "ADDRESS ERROR      "
-.illinstruct:	dc.b "ILLEGAL INSTRUCTION"
-.zerodivide:	dc.b "@ERO DIVIDE        "
-.chkinstruct:	dc.b "CHK INSTRUCTION    "
-.trapv:		dc.b "TRAPV INSTRUCTION  "
-.privilege:	dc.b "PRIVILEGE VIOLATION"
-.trace:		dc.b "TRACE              "
-.line1010:	dc.b "LINE 1010 EMULATOR "
-.line1111:	dc.b "LINE 1111 EMULATOR "
-		even
-
 ; =============== S U B R O U T I N E =======================================
 
 
@@ -23711,6 +23685,20 @@ ShowErrAddress_DigitLoop:
 		rts
 ; End of function ShowErrAddress
 
+; ---------------------------------------------------------------------------
+ErrorText:
+		dc.w .exception-ErrorText	; $00
+		dc.w .bus-ErrorText		; $02
+		dc.w .address-ErrorText		; $04
+		dc.w .illinstruct-ErrorText	; $06
+		dc.w .zerodivide-ErrorText	; $08
+		dc.w .chkinstruct-ErrorText	; $0A
+		dc.w .trapv-ErrorText		; $0C
+		dc.w .privilege-ErrorText	; $0E
+		dc.w .trace-ErrorText		; $10
+		dc.w .line1010-ErrorText	; $12
+		dc.w .line1111-ErrorText	; $14
+; ---------------------------------------------------------------------------
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -23736,9 +23724,22 @@ ErrorWaitForC:
 		jsr	(ReadJoypads).l
 ;		cmpi.b	#btnC,(v_jpadpress1).w	; is button C pressed? temporarily commented out
 		cmpi.b	#btnC,(v_jpadhold1).w	; is button C held?
-		bne.w	ErrorWaitForC		; if not, branch
+		bne.s	ErrorWaitForC		; if not, branch
 		rts
 ; End of function ErrorWaitForC
+; ---------------------------------------------------------------------------
+ErrorText.exception:	dc.b "ERROR EXCEPTION    "
+ErrorText.bus:		dc.b "BUS ERROR          "
+ErrorText.address:	dc.b "ADDRESS ERROR      "
+ErrorText.illinstruct:	dc.b "ILLEGAL INSTRUCTION"
+ErrorText.zerodivide:	dc.b "@ERO DIVIDE        "
+ErrorText.chkinstruct:	dc.b "CHK INSTRUCTION    "
+ErrorText.trapv:	dc.b "TRAPV INSTRUCTION  "
+ErrorText.privilege:	dc.b "PRIVILEGE VIOLATION"
+ErrorText.trace:	dc.b "TRACE              "
+ErrorText.line1010:	dc.b "LINE 1010 EMULATOR "
+ErrorText.line1111:	dc.b "LINE 1111 EMULATOR "
+		even
  endif
 ; ---------------------------------------------------------------------------
 Art_HUD:	binclude	"art/uncompressed/HUD Numbers.bin"
