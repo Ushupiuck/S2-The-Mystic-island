@@ -1699,33 +1699,34 @@ zPlayMusic:
 
 	; The following code disables all sound (technically for duration of 1-up)
 	ld	a,(zAbsVar.1upPlaying)			; Check if 1-up sound is already playing
-	or	a							; Test it
-	jr	nz,zBGMLoad					; If it is, then just reload it!  (I suppose a humorous restore-to-1up could happen otherwise... with no good results after that)
+	or	a					; Test it
+	jr	nz,zBGMLoad				; If it is, then just reload it!  (I suppose a humorous restore-to-1up could happen otherwise... with no good results after that)
 	ld	ix,zTracksStart				; Starting at beginning of all tracks...
-	ld	de,zTrack.len					; Each track size
-	ld	b,MUSIC_TRACK_COUNT						; All 10 (DAC, 6FM, 3PSG) tracks
+	ld	de,zTrack.len				; Each track size
+	ld	b,MUSIC_TRACK_COUNT			; All 10 (DAC, 6FM, 3PSG) tracks
 
--	res	2,(ix+zTrack.PlaybackControl)					; Clear "SFX is overriding" bit (no SFX are allowed!)
-	add	ix,de						; Next track
+-	res	2,(ix+zTrack.PlaybackControl)		; Clear "SFX is overriding" bit (no SFX are allowed!)
+	add	ix,de					; Next track
 	djnz	-
 
 	; This performs a "massive" backup of all of the current track positions
 	; for restoration after 1-up BGM completes
 	; Backup music
-	ld	de,zTracksSaveStart	; Backup memory address
+	ld	de,zTracksSaveStart			; Backup memory address
 	ld	hl,zTracksStart
-	ld	bc,zTracksSaveEnd-zTracksSaveStart		; for this many bytes
-	ldir					; Go!
+	ld	bc,zTracksSaveEnd-zTracksSaveStart	; for this many bytes
+	ldir						; Go!
 	; Backup variables
 	ld	hl,zAbsVar
-	ld	bc,zVar.len		; for this many bytes
-	ldir					; Go!
+	ld	bc,zVar.len				; for this many bytes
+	ldir						; Go!
 
 	ld	a,80h
 	ld	(zAbsVar.1upPlaying),a	; Set 1-up song playing flag
 	xor	a
 	ld	(zAbsVar.SFXPriorityVal),a		; Clears SFX priority
-	jr	zBGMLoad			; Now load 1-up BGM
+;	jr	zBGMLoad			; Now load 1-up BGM
+	jp	zBGMLoad			; Now load 1-up BGM
 ; ---------------------------------------------------------------------------
 
 zloc_784:
@@ -1882,7 +1883,7 @@ zloc_884:
 	; The bugfix in zInitMusicPlayback does this, already
 	;ld	de,zPSGInitBytes	; 'de' points to zPSGInitBytes
 
--	ld	(iy+zTrack.PlaybackControl),82h			; At "playback control" byte of this track, set "track is playing" bit and "SFX is overriding" (?) bit (I think just to keep it from playing until init is done)
+-	ld	(iy+zTrack.PlaybackControl),82h		; At "playback control" byte of this track, set "track is playing" bit and "SFX is overriding" (?) bit (I think just to keep it from playing until init is done)
 	; The bugfix in zInitMusicPlayback does this, already
 	;ld	a,(de)				; Get current byte from zPSGInitBytes -> 'a'
 	;inc	de					; will get next byte from zPSGInitBytes next time
@@ -1938,7 +1939,10 @@ zloc_8D9:
 	jp	m,+					; If this is a PSG track, jump to '+'
 	sub	2					; Otherwise, subtract 2...
 	add	a,a					; ... multiply by 2 (preparing to index starting from FM 3 only)
-	jr	zloc_8F1			; Jump to zloc_8F1 (general track setup)
+;	jr	zloc_8F1			; Jump to zloc_8F1 (general track setup)
+	jp	zloc_8F1			; Jump to zloc_8F1 (general track setup)
+; ---------------------------------------------------------------------------
+
 +
 	rra
 	rra
@@ -2031,12 +2035,12 @@ zStoreAbsoluteTrackAddressToTrackRAM:
 ; FM channel assignment bits
 ;zbyte_916
 zFMDACInitBytes:
-	db    6,   0,   1,   2,   4,   5,   6		; first byte is for DAC; then notice the 0, 1, 2 then 4, 5, 6; this is the gap between parts I and II for YM2612 port writes
-
+	db 6,0,1,2,4,5,6	; first byte is for DAC; then notice the 0, 1, 2 then 4, 5, 6; this is the gap between parts I and II for YM2612 port writes
 ; Default values for PSG tracks
 ;zbyte_91D
 zPSGInitBytes:
 	db  80h,0A0h,0C0h	; Specifically, these configure writes to the PSG port for each channel
+; ---------------------------------------------------------------------------
 
 zPlaySound_Checks:
 	xor	a
