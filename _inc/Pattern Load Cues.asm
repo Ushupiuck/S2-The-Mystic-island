@@ -60,7 +60,8 @@ ptr_PLC_Ending:		dc.w PLC_S1SpecialStage-ArtLoadCues
 ptr_PLC_TryAgain:	dc.w PLC_S1SpecialStage-ArtLoadCues
 ptr_PLC_EggmanSBZ2:	dc.w PLC_Boss-ArtLoadCues		; Placeholder
 ptr_PLC_FZBoss:		dc.w PLC_Boss-ArtLoadCues		; Placeholder
-
+ptr_PLC_Filler:		dc.w PLC_Filler-ArtLoadCues		; Placeholder
+ptr_PLC_Filler2:	dc.w PLC_Filler2-ArtLoadCues		; Placeholder
 plcm:	macro gfx,vram
 	dc.l gfx
 	dc.w (vram<<5)
@@ -315,9 +316,26 @@ PLC_HTZAnimals_End:
 ; ---------------------------------------------------------------------------
 ; Pattern load cues - special stage results screen
 ; ---------------------------------------------------------------------------
-PLC_SSResult:dc.w ((PLC_SpeStResultend-PLC_SSResult-2)/6)-1
+PLC_SSResult:dc.w ((PLC_SpeStResult_End-PLC_SSResult-2)/6)-1
 		plcm	Nem_ResultEm,	ArtTile_SS_Results_Emeralds	; emeralds
-PLC_SpeStResultend:
+PLC_SpeStResult_End:
+; ---------------------------------------------------------------------------
+; PATTERN LOAD REQUEST LIST
+; Filler
+; ---------------------------------------------------------------------------
+PLC_Filler:	dc.w ((PLC_Filler_End-PLC_Filler-2)/6)-1
+		plcm	Nem_VSpikes,	ArtTile_Spikes
+PLC_Filler_End:
+
+; ---------------------------------------------------------------------------
+; PATTERN LOAD REQUEST LIST
+; Filler 2
+; ---------------------------------------------------------------------------
+PLC_Filler2:	dc.w ((PLC_Filler2_End-PLC_Filler2-2)/6)-1
+		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
+		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
+		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+PLC_Filler2_End:
 
 ; ---------------------------------------------------------------------------
 ; Pattern load cue IDs
@@ -354,6 +372,8 @@ plcid_Ending:		equ (ptr_PLC_Ending-ArtLoadCues)/2	; $1C
 plcid_TryAgain:		equ (ptr_PLC_TryAgain-ArtLoadCues)/2	; $1D
 plcid_EggmanSBZ2:	equ (ptr_PLC_EggmanSBZ2-ArtLoadCues)/2	; $1E
 plcid_FZBoss:		equ (ptr_PLC_FZBoss-ArtLoadCues)/2	; $1F
+plcid_Filler:		equ (ptr_PLC_Filler-ArtLoadCues)/2	; $20
+plcid_Filler2:		equ (ptr_PLC_Filler2-ArtLoadCues)/2	; $21
 ; ---------------------------------------------------------------------------
 KosMLoadCues:
 ; Level Slot $00: Twilight Hill Zone  [WILL BE REPLACED] [GHZ]

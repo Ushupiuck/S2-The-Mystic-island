@@ -3066,8 +3066,8 @@ LoadCollisionIndexes:
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Array of Pointer tables, per timezone.
-; Time travel is yet to be added, so for now, all tables point to the same
-; Pointer.
+; Time travel is yet to be added, so for now, all tables are a duplicate of
+; One another (At least their data. The entries themselves are unique)
 ; ---------------------------------------------------------------------------
 TimeZoneTable:
  if TimeTravel=1
@@ -23777,8 +23777,8 @@ Debug_Init:	; Routine 0
 		andi.w	#$3FF,(Camera_BG_Y_pos).w
 		clr.b	obFrame(a0)
 		clr.b	obAnim(a0)
-		bclr #1,(v_player+obStatus).w	; clear 'in air' bit
-		cmpi.w	#BonusStage,(v_gamemode).w ; is this the Special Stage?
+		bclr	#1,(v_player+obStatus).w		; clear 'in air' bit
+		cmpi.w	#BonusStage,(v_gamemode).w	; is this the Special Stage?
 		bne.s	.islevel			; if not, branch
 		move.b	#7-1,(Current_Zone).w		; set the debug object list and reset Special Stage rotation
 		clr.w	(v_ssrotate).l		; stop special stage rotation
@@ -23817,7 +23817,7 @@ Debug_Main:	; Routine 2
 		add.w	d0,d0
 		adda.w	(a2,d0.w),a2
 		move.w	(a2)+,d6
-		bsr.w	Debug_Control
+		bsr.s	Debug_Control
 		jmp	(DisplaySprite).l
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
@@ -23834,7 +23834,7 @@ Debug_Control:
 		bne.s	.dirheld	; if so, branch
 		move.b	#12,(Debug_Accel_Timer).w
 		move.b	#15,(Debug_Speed).w
-		bra.w	Debug_ControlObjects
+		bra.s	Debug_ControlObjects
 ; ===========================================================================
 
 .dirheld:
@@ -24002,7 +24002,7 @@ Debug_ResetPlayerStats:
 		andi.b	#1<<6,obStatus(a1)	; Preserve the 'is underwater' flag, and clear everything else.
 		ori.b	#2,obStatus(a1)		; Set the 'is rolling' flag.
 		move.b	#2,obRoutine(a1)
-		clr.b	ob2ndRout(a1)
+		move.b	d0,ob2ndRout(a1)
 		move.b	#$13,obHeight(a1)	; y_radius
 		move.b	#9,obWidth(a1)		; x_radius
 		rts
@@ -24148,6 +24148,11 @@ Snd_Driver_End:
 ; ---------------------------------------------------------------------------
 		include	"_inc/DebugList.asm"
 		include	"_inc/LevelHeaders.asm"
+ if TimeTravel=1
+		include	"_inc/LevelHeaders_Past.asm"
+		include	"_inc/LevelHeaders_GF.asm"
+		include	"_inc/LevelHeaders_BF.asm"
+ endif
 		include	"_inc/Pattern Load Cues.asm"
 		; $8EE bytes taken, 2EF8 still free
 ; ---------------------------------------------------------------------------
@@ -24353,7 +24358,7 @@ Nem_HTZ_Seesaw:		binclude	"art/nemesis/See-saw in HTZ.nem"
 ; ---------------------------------------------------------------------------
 ; Compressed misc. graphics - Level placeholders
 ; ---------------------------------------------------------------------------
-		even
+		align	$1000
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - enemies
 ; ---------------------------------------------------------------------------
@@ -26156,7 +26161,7 @@ AutoTunnel_19:
 SpriteTerminator:
 		ObjectLayoutBoundary
 
- if AdvancedHandler
+ if AdvancedHandler=1
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Debugging modules

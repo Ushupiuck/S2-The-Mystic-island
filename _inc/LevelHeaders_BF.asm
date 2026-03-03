@@ -23,14 +23,7 @@
 ; although the 128x128 mappings do affect the actual level layout and collision)
 ; ---------------------------------------------------------------------------
 
-; macro for declaring a "main level load block" (MLLB)
-levartptrs macro plc1,plc2,palette,art,map16x16,map128x128
-	dc.l (plc1<<24)|art
-	dc.l (plc2<<24)|map16x16
-	dc.l (palette<<24)|map128x128
-    endm
-
-LevelArtPointers:
+LevelArtPointersBF:
 		; GHZ
 		levartptrs plcid_GHZ, plcid_GHZ2, palid_GHZ, Kosp_GHZ, Map16_GHZ, Map128_GHZ	; GHZ	; ACT 1
 		levartptrs plcid_GHZ, plcid_GHZ2, palid_GHZ, Kosp_GHZ, Map16_GHZ, Map128_GHZ	; GHZ	; ACT 2
