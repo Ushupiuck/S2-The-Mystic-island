@@ -26178,7 +26178,7 @@ SpriteTerminator:
 ;	to resolve symbol names.
 ; ---------------------------------------------------------------------------
  else
-	;	align	$3FFFFF			; Pad to 4MB
+		align	$2FFFFF			; Pad to 3MB
 		even
  endif
 EndOfRom:
