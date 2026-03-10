@@ -400,8 +400,8 @@ jmi:		macro loc
 		endm
 
 ; ---------------------------------------------------------------------------
-; check if object moves out of range
-; input: location to jump to if out of range, x-axis pos (obX(a0) by default)
+; check if the object moves out of range
+; input: location to branch to if out of range, x-axis pos (obX(a0) by default)
 ; ---------------------------------------------------------------------------
 
 out_of_range:	macro exit,specpos
@@ -417,8 +417,8 @@ out_of_range:	macro exit,specpos
 		endm
 
 ; ---------------------------------------------------------------------------
-; Identical to the above, except using jhi. Exists since not all uses of
-; out_of_range are long jumps, and for those cases, jhi takes more cycles
+; Identical to the above, except it uses jhi. Since out_of_range only covers
+; short & long branches. jhi compensates for this, at the cost of a few extra cycles
 ; ---------------------------------------------------------------------------
 
 out_of_range2:	macro exit,specpos
