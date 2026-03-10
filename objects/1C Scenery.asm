@@ -1,3 +1,7 @@
+; ---------------------------------------------------------------------------
+; Object 1C - scenery (GHZ/HTZ bridge stump, SLZ lava thrower, HPZ Bridge)
+; ---------------------------------------------------------------------------
+
 Obj1C:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
@@ -42,12 +46,12 @@ loc_93F4:
 		move.b	(a1)+,obFrame(a0)
 		move.b	(a1)+,obActWid(a0)
 		move.b	(a1)+,obPriority(a0)
-		move.b	obPriority(a0),d0
-		lsr.w	#1,d0
+		move.b	obPriority(a0),d0	; Priority is manually converted here
+		lsr.w	#1,d0		; as otherwise this would be a convoluted mess
 		andi.w	#$380,d0
 		move.w	d0,obPriority(a0)
 		move.b	(a1)+,obColType(a0)
-		move.b	obSubtype(a0),d0
+		move.b	obSubtype(a0),d0	; we gotta process subtype one more time!
 		andi.w	#$F0,d0
 		beq.s	loc_9442
 		addq.b	#2,obRoutine(a0)
