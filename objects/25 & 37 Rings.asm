@@ -19,7 +19,6 @@ Obj25_Index:
 
 Obj25_Init:
 		addq.b	#2,obRoutine(a0)
-		move.w	obX(a0),objoff_32(a0)
 		move.l	#Map_Ring,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Ring,1,0),obGfx(a0)
 		move.b	#4,obRender(a0)
@@ -29,8 +28,7 @@ Obj25_Init:
 
 Obj25_Animate:
 		move.b	(v_ani1_frame).w,obFrame(a0)
-		move.w	objoff_32(a0),d0
-		bra.w	MarkObjGone3
+		bra.w	MarkObjGone
 ; ---------------------------------------------------------------------------
 
 Obj25_Collect:
