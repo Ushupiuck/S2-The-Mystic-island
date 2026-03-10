@@ -2,12 +2,18 @@
 ; Object 5E - HTZ see-saw
 ; ---------------------------------------------------------------------------
 
+see_origX = objoff_30		; original x-axis position
+see_origY = objoff_34		; original y-axis position
+see_speed = objoff_38		; speed of collision
+see_frame = objoff_3A		;
+see_parent = objoff_3C		; RAM address of parent object
+
 Obj5E:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	Obj5E_Index(pc,d0.w),d1
 		jsr	Obj5E_Index(pc,d1.w)
-		out_of_range.w	DeleteObject,objoff_30(a0)
+		out_of_range.w	DeleteObject,see_origX(a0)
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 Obj5E_Index:	dc.w See_Main-Obj5E_Index
@@ -25,7 +31,7 @@ See_Main:
 		ori.b	#4,obRender(a0)
 		move.w	#$200,obPriority(a0)
 		move.b	#$30,obActWid(a0)
-		move.w	obX(a0),objoff_30(a0)
+		move.w	obX(a0),see_origX(a0)
 		tst.b	obSubtype(a0)	; is object type 00 ?
 		bne.s	.noball		; if not, branch
 
@@ -36,18 +42,16 @@ See_Main:
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.b	obStatus(a0),obStatus(a1)
-		move.l	a0,objoff_3C(a1)
+		move.l	a0,see_parent(a1)
 
 .noball:
 		btst	#0,obStatus(a0)	; is seesaw flipped?
 		beq.s	.noflip		; if not, branch
 		move.b	#2,obFrame(a0)	; use different frame
-
-.noflip:
-		move.b	obFrame(a0),objoff_3A(a0)
+.noflip:	move.b	obFrame(a0),see_frame(a0)
 
 See_Slope:
-		move.b	objoff_3A(a0),d1
+		move.b	see_frame(a0),d1
 		btst	#3,obStatus(a0) ; p1_standing_bit
 		beq.s	loc_14D9A
 		moveq	#2,d1
@@ -107,8 +111,7 @@ See_StoodOn:
 		cmp.w	d0,d2
 		blt.s	+
 		move.w	d2,d0
-+
-		move.w	d0,objoff_38(a0)
++		move.w	d0,see_speed(a0)
 
 
 See_ChgFrame:
@@ -121,7 +124,7 @@ See_ChgFrame:
 .reduce_frame:
 		subq.b	#1,d0
 		move.b	d0,obFrame(a0)
-		move.b	d1,objoff_3A(a0)
+		move.b	d1,see_frame(a0)
 		bclr	#0,obRender(a0)
 		btst	#1,obFrame(a0)
 		beq.s	.noflip
@@ -151,21 +154,21 @@ See_Spikeball:
 		move.w	#$200,obPriority(a0)
 		move.b	#$8B,obColType(a0)
 		move.b	#$C,obActWid(a0)
-		move.w	obX(a0),objoff_30(a0)
+		move.w	obX(a0),see_origX(a0)
 		addi.w	#$28,obX(a0)
 		addi.w	#$10,obY(a0)
-		move.w	obY(a0),objoff_34(a0)
+		move.w	obY(a0),see_origY(a0)
 		move.b	#1,obFrame(a0)
 		btst	#0,obStatus(a0)
 		beq.s	See_MoveSpike
 		subi.w	#$50,obX(a0)
-		move.b	#2,objoff_3A(a0)
+		move.b	#2,see_frame(a0)
 
 See_MoveSpike:
-		movea.l	objoff_3C(a0),a1
+		movea.l	see_parent(a0),a1
 		moveq	#0,d0
-		move.b	objoff_3A(a0),d0
-		sub.b	objoff_3A(a1),d0
+		move.b	see_frame(a0),d0
+		sub.b	see_frame(a1),d0
 		beq.s	loc_14EF2
 		bhs.s	loc_14EB0
 		neg.b	d0
@@ -177,7 +180,7 @@ loc_14EB0:
 		beq.s	loc_14ED6
 		move.w	#-$AF0,d1
 		move.w	#-$CC,d2
-		cmpi.w	#$A00,objoff_38(a1)
+		cmpi.w	#$A00,see_speed(a1)
 		blt.s	loc_14ED6
 		move.w	#-$E00,d1
 		move.w	#-$A0,d2
@@ -186,11 +189,10 @@ loc_14ED6:
 		move.w	d1,obVelY(a0)
 		move.w	d2,obVelX(a0)
 		move.w	obX(a0),d0
-		sub.w	objoff_30(a0),d0
+		sub.w	see_origX(a0),d0
 		bhs.s	+
 		neg.w	obVelX(a0)
-+
-		addq.b	#2,obRoutine(a0)
++		addq.b	#2,obRoutine(a0)
 		; fall through
 ; ---------------------------------------------------------------------------
 
@@ -198,7 +200,7 @@ See_SpikeFall:
 		tst.w	obVelY(a0)
 		bpl.s	loc_14F4E
 		jsr	(ObjectMoveAndFall).l
-		move.w	objoff_34(a0),d0
+		move.w	see_origY(a0),d0
 		subi.w	#$2F,d0
 		cmp.w	obY(a0),d0
 		bgt.s	loc_14F10.return
@@ -211,17 +213,17 @@ loc_14EF2:
 		move.b	obFrame(a1),d0
 		move.w	#$28,d2
 		move.w	obX(a0),d1
-		sub.w	objoff_30(a0),d1
+		sub.w	see_origX(a0),d1
 		bhs.s	loc_14F10
 		neg.w	d2
 		addq.w	#2,d0
 
 loc_14F10:
 		add.w	d0,d0
-		move.w	objoff_34(a0),d1
+		move.w	see_origY(a0),d1
 		add.w	(a2,d0.w),d1
 		move.w	d1,obY(a0)
-		add.w	objoff_30(a0),d2
+		add.w	see_origX(a0),d2
 		move.w	d2,obX(a0)
 		clr.w	obXSub(a0)	; x_sub/obXSub
 		clr.w	obYSub(a0)	; y_sub/obYSub
@@ -230,64 +232,70 @@ loc_14F10:
 
 loc_14F4E:
 		jsr	(ObjectMoveAndFall).l
-		movea.l	objoff_3C(a0),a1
+		movea.l	see_parent(a0),a1
 		lea	See_YPos(pc),a2
 		moveq	#0,d0
 		move.b	obFrame(a1),d0
 		move.w	obX(a0),d1
-		sub.w	objoff_30(a0),d1
+		sub.w	see_origX(a0),d1
 		bhs.s	loc_14F6E
 		addq.w	#2,d0
 
 loc_14F6E:
 		add.w	d0,d0
-		move.w	objoff_34(a0),d1
+		move.w	see_origY(a0),d1
 		add.w	(a2,d0.w),d1
 		cmp.w	obY(a0),d1
 		bgt.s	loc_14F10.return
-		movea.l	objoff_3C(a0),a1
+		movea.l	see_parent(a0),a1
 		moveq	#2,d1
 		tst.w	obVelX(a0)
-		bmi.s	loc_14F8C
+		bmi.s	See_Spring
 		moveq	#0,d1
 
-loc_14F8C:
-		move.b	d1,objoff_3A(a1)
-		move.b	d1,objoff_3A(a0)
+See_Spring:
+		move.b	d1,see_frame(a1)
+		move.b	d1,see_frame(a0)
 		cmp.b	obFrame(a1),d1
 		beq.s	loc_14FB6
 		lea	(v_player).w,a2
 		bclr	#3,obStatus(a1)
 		beq.s	loc_14FA8
-		bsr.s	sub_14FC4
+	;	bsr.s	sub_14FC4
+		; Optimization: fall through
+		move.w	obVelY(a0),obVelY(a2)
+		neg.w	obVelY(a2)
+		bset	#1,obStatus(a2)
+		bclr	#3,obStatus(a2)
+		clr.b	see_parent(a2)
+		move.b	#$10,obAnim(a2)
+		move.b	#2,obRoutine(a2)
+		move.w	#sfx_Spring,d0
+		jmp	(PlaySound_Special).l
 
 loc_14FA8:
 		lea	(v_player2).w,a2
 		bclr	#4,obStatus(a1)
 		beq.s	loc_14FB6
-		bsr.s	sub_14FC4
-
-loc_14FB6:
-		clr.w	obVelX(a0)
-		clr.w	obVelY(a0)
-		subq.b	#2,obRoutine(a0)
-		rts
-
-; =============== S U B R O U T I N E =======================================
-
-
-sub_14FC4:
+	;	bsr.s	sub_14FC4
+		; Optimization: fall through
 		move.w	obVelY(a0),obVelY(a2)
 		neg.w	obVelY(a2)
 		bset	#1,obStatus(a2)
 		bclr	#3,obStatus(a2)
-		clr.b	objoff_3C(a2)
+		clr.b	see_parent(a2)
 		move.b	#$10,obAnim(a2)
 		move.b	#2,obRoutine(a2)
 		move.w	#sfx_Spring,d0
 		jmp	(PlaySound_Special).l
-; End of function sub_14FC4
 
+loc_14FB6:
+		; obVelX & obVelY are adjacent in ObjectRAM, so they can be cleared in one go
+	;	clr.w	obVelX(a0)
+	;	clr.w	obVelY(a0)
+		clr.l	obVelX(a0)
+		subq.b	#2,obRoutine(a0)
+		rts
 ; ---------------------------------------------------------------------------
 See_YPos:	dc.w	 -8,  -$1C,  -$2F,  -$1C,    -8	; 0
 See_DataSlope:	dc.b  $14, $14,	$16, $18, $1A, $1C, $1A	; 0
