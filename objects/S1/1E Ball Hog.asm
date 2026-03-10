@@ -118,7 +118,7 @@ Obj1E_MakeBall:
 		move.w	#make_art_tile(ArtTile_Ball_HogH,1,0),obGfx(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
-		move.w	#-$100,obVelX(a1)	; cannonball bounces to	the left
+		move.w	#-$100,d2		; cannonball bounces to	the left
 		clr.w	obVelY(a1)
 		move.b	#4,obRender(a1)
 		move.w	#$180,obPriority(a1)
@@ -137,9 +137,10 @@ Obj1E_MakeBall:
 		btst	#0,obStatus(a0)		; is Ball Hog facing right?
 		beq.s	.dont_change_dir	; if not, branch
 		neg.w	d0
-		neg.w	obVelX(a1)		; cannonball bounces to	the right
+		neg.w	d2			; cannonball bounces to	the right
 
 .dont_change_dir:
+		move.w	d2,obVelX(a1)
 		add.w	d0,obX(a1)
 		addi.w	#$C,obY(a1)
 		move.b	obSubtype(a0),obSubtype(a1)	; copy object type from Ball Hog
