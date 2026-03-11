@@ -1118,12 +1118,12 @@ HW_Expansion_RxData:		equ $A1001D
 HW_Expansion_SCtrl:		equ $A1001F
 
 ; Background music
-bgm_GHZ =		MusID_GHZ
+bgm_GHZ =		MusID_ALZ
 bgm_LZ =		MusID_MCZ
 bgm_MZ =		MusID_CPZ
 bgm_SLZ =		MusID_GRGZ1
 bgm_SYZ =		MusID_DDZ1
-bgm_SBZ =		MusID_HTZ
+bgm_SBZ =		MusID_LBZ1_S3
 bgm_Invincible =	MusID_Invincible
 bgm_ExtraLife =		MusID_ExtraLife
 bgm_DoubleLife =	MusID_DoubleLife
