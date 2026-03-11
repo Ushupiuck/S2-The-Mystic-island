@@ -12739,6 +12739,15 @@ loc_101C0:
 
 loc_101C4:
 		move.w	(Camera_Max_Y_pos).w,d0
+		; The original code does not consider that the camera boundary
+		; may be in the middle of lowering itself, which is why going
+		; down the S-tunnel in Green Hill Zone Act 1 fast enough can
+		; kill Sonic.
+		move.w	(Camera_Max_Y_pos_target).w,d1
+		cmp.w	d0,d1
+		blo.s	.skip
+		move.w	d1,d0
+.skip:
 		addi.w	#224,d0
 		cmp.w	obY(a0),d0
 		blt.s	loc_101D4
@@ -12746,6 +12755,9 @@ loc_101C4:
 ; ---------------------------------------------------------------------------
 
 loc_101D4:
+		; a2 needs to be set here, otherwise KillCharacter
+		; will access a dangling pointer!
+		movea.l	a0,a2
 		cmpi.w	#(id_SBZ<<8)+1,(Current_ZoneAndAct).w
 		bne.w	KillCharacter
 		cmpi.w	#$2000,(v_player+obX).w
@@ -12758,10 +12770,20 @@ loc_101D4:
 
 loc_101FA:
 		move.w	d0,obX(a0)
-		clr.w	obX+2(a0)
+		clr.w	obXSub(a0)
 		clr.w	obVelX(a0)
 		clr.w	obInertia(a0)
-		bra.s	loc_101C4
+		move.w	(Camera_Max_Y_pos).w,d0
+		move.w	(Camera_Max_Y_pos_target).w,d1
+		cmp.w	d0,d1
+		blo.s	.skip
+		move.w	d1,d0
+.skip:
+		addi.w	#224,d0
+		cmp.w	obY(a0),d0
+		blt.s	loc_101D4
+		rts
+
 ; End of function Sonic_LevelBound
 
 
@@ -13384,7 +13406,7 @@ loc_10748:
 
 Obj01_Hurt:
 		tst.b	ob2ndRout(a0)
-		bmi.w	loc_107E8
+		bmi.w	Sonic_HurtInstantRecover
 		movem.w	obVelX(a0),d0/d2			; load xy speed
 		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
 		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
@@ -13408,36 +13430,48 @@ loc_1077E:
 
 
 Sonic_HurtStop:
+		; a2 needs to be set here, otherwise KillCharacter
+		; will access a dangling pointer!
+		movea.l	a0,a2
 		move.w	(Camera_Max_Y_pos).w,d0
+		; The original code does not consider that the camera boundary
+		; may be in the middle of lowering itself, which is why going
+		; down the S-tunnel in Green Hill Zone Act 1 fast enough can
+		; kill Sonic.
+		move.w	(Camera_Max_Y_pos_target).w,d1
+		cmp.w	d0,d1
+		blo.s	.skip
+		move.w	d1,d0
+.skip:
 		addi.w	#224,d0
 		cmp.w	obY(a0),d0
 		blo.w	KillCharacter
 		bsr.w	Sonic_DoLevelCollision
-		btst	#1,obStatus(a0)
-		bne.s	locret_107E6
+		btst	#1,obStatus(a0)	; in_air
+		bne.s	.return
 		moveq	#0,d0
 		move.w	d0,obVelY(a0)
 		move.w	d0,obVelX(a0)
 		move.w	d0,obInertia(a0)
-		tst.b	ob2ndRout(a0)
+		tst.b	ob2ndRout(a0)	; seems to be responsible for wall recoil
 		beq.s	loc_107D6
 		move.b	#-1,ob2ndRout(a0)
 		move.b	#AniIDSonAni_WallRecoil2,obAnim(a0)
-		rts
+		move.b	d0,spindash_flag(a0)
+.return:	rts
 ; ---------------------------------------------------------------------------
 
 loc_107D6:
 		move.b	#AniIDSonAni_Walk,obAnim(a0)
 		subq.b	#2,obRoutine(a0)
 		move.w	#120,flashtime(a0)
-
-locret_107E6:
+		move.b	d0,spindash_flag(a0)
 		rts
 ; End of function Sonic_HurtStop
 
 ; ---------------------------------------------------------------------------
 
-loc_107E8:
+Sonic_HurtInstantRecover:
 		cmpi.b	#AniIDSonAni_WallRecoil2,obAnim(a0)
 		bne.s	loc_107FA
 		move.b	(v_jpadpress1).w,d0
@@ -13475,7 +13509,7 @@ Sonic_GameOver:
 		move.w	(Camera_Max_Y_pos).w,d0
 		addi.w	#$100,d0
 		cmp.w	obY(a0),d0
-		bhs.w	locret_108B4
+		bge.w	locret_108B4
 		move.w	#-$38,obVelY(a0)
 		addq.b	#2,obRoutine(a0)
 		clr.b	(f_timecount).w
