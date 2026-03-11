@@ -141,7 +141,7 @@ locret_13FB4:
 
 loc_13FB6:
 		tst.w	(Debug_placement_mode).w
-		bne.w	locret_140B6
+		bne.s	locret_13FB4
 		move.w	objoff_30(a0),d5
 		move.w	obX(a0),d0
 		move.w	d0,d1
@@ -230,8 +230,6 @@ loc_140AA:
 		dbf	d6,loc_13FE2
 		swap	d5
 		move.b	d5,objoff_30(a0)
-
-locret_140B6:
 		rts
 ; ---------------------------------------------------------------------------
 dword_140B8:	dc.l v_player

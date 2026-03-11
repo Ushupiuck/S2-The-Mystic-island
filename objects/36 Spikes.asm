@@ -153,8 +153,8 @@ loc_C7E6:
 		beq.s	loc_C808
 		subi.w	#$800,objoff_34(a0)
 		bcc.s	locret_C828
-		move.w	#0,objoff_34(a0)
-		move.w	#0,objoff_36(a0)
+		clr.w	objoff_34(a0)
+		clr.w	objoff_36(a0)
 		move.w	#60,objoff_38(a0)
 		rts
 ; ---------------------------------------------------------------------------

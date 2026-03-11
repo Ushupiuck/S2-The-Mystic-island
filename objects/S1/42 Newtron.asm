@@ -88,7 +88,7 @@ loc_EC9A:
 		tst.w	d1
 		bpl.s	locret_ECDE
 		add.w	d1,obY(a0)
-		move.w	#0,obVelY(a0)
+		clr.w	obVelY(a0)
 		addq.b	#2,ob2ndRout(a0)
 		move.b	#2,obAnim(a0)
 		btst	#5,obGfx(a0)

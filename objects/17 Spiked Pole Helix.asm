@@ -23,7 +23,7 @@ loc_8680:
 		lea	obSubtype(a0),a2
 		moveq	#0,d1
 		move.b	(a2),d1
-		move.b	#0,(a2)+
+		clr.b	(a2)+
 		move.w	d1,d0
 		lsr.w	#1,d0
 		lsl.w	#4,d0
@@ -92,13 +92,12 @@ loc_8766:
 
 sub_878C:
 		move.b	(v_ani0_frame).w,d0
-		move.b	#0,obColType(a0)
+		clr.b	obColType(a0)
 		add.b	objoff_3E(a0),d0
 		andi.b	#7,d0
 		move.b	d0,obFrame(a0)
 		bne.s	.return
 		move.b	#$84,obColType(a0)
-
 .return:
 		rts
 ; End of function sub_878C
@@ -106,5 +105,13 @@ sub_878C:
 ; ---------------------------------------------------------------------------
 
 loc_87AC:
-		bsr.s	sub_878C
+		move.b	(v_ani0_frame).w,d0
+		clr.b	obColType(a0)
+		add.b	objoff_3E(a0),d0
+		andi.b	#7,d0
+		move.b	d0,obFrame(a0)
+		bne.s	.display
+		move.b	#$84,obColType(a0)
+.display:
 		bra.w	DisplaySprite
+; End of function sub_87AC

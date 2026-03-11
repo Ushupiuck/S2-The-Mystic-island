@@ -13,7 +13,7 @@ Obj15_Index:	dc.w loc_821E-Obj15_Index
 		dc.w loc_83AA-Obj15_Index
 		dc.w loc_8526-Obj15_Index
 		dc.w loc_8526-Obj15_Index
-		dc.w loc_852A-Obj15_Index
+		dc.w loc_8450-Obj15_Index
 		dc.w loc_83CA-Obj15_Index
 ; ---------------------------------------------------------------------------
 
@@ -46,7 +46,7 @@ loc_8284:
 		move.b	(a2),d0
 		lsl.w	#4,d0
 		move.b	d0,objoff_3C(a0)
-		move.b	#0,(a2)+
+		clr.b	(a2)+
 		bra.w	loc_8388
 ; ---------------------------------------------------------------------------
 
@@ -141,11 +141,9 @@ sub_83D2:
 		move.b	(v_oscillate+$1A).w,d0
 		move.w	#$80,d1
 		btst	#0,obStatus(a0)
-		beq.s	loc_83E6
+		beq.w	loc_8472
 		neg.w	d0
 		add.w	d1,d0
-
-loc_83E6:
 		bra.w	loc_8472
 ; ---------------------------------------------------------------------------
 
@@ -262,7 +260,7 @@ locret_84EC:
 
 loc_84EE:
 		out_of_range.s	loc_8506,objoff_3A(a0)
-		bra.w	DisplaySprite
+loc_8450:	bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
 loc_8506:
@@ -284,6 +282,3 @@ loc_850E:
 loc_8526:
 		bra.w	DeleteObject
 ; ---------------------------------------------------------------------------
-
-loc_852A:
-		bra.w	DisplaySprite

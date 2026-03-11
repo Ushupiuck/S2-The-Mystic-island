@@ -85,7 +85,7 @@ Bub_ChkWater:	; Routine 4
 		clr.w	obInertia(a1)	; stop Sonic
 		move.b	#$15,obAnim(a1) ; use bubble-collecting animation
 		move.w	#$23,objoff_2E(a1)
-		move.b	#0,objoff_3C(a1)
+		clr.b	objoff_3C(a1)
 		bclr	#5,obStatus(a1)
 		bclr	#4,obStatus(a1)
 		btst	#2,obStatus(a1)
@@ -100,22 +100,16 @@ Bub_ChkWater:	; Routine 4
 .display:
 		bsr.w	ObjectMove
 		tst.b	obRender(a0)
-		bpl.s	.delete
+		bpl.s	Bub_Delete
 		jmp	(DisplaySprite).l
-
-.delete:
-		jmp	(DeleteObject).l
 ; ---------------------------------------------------------------------------
 
 Bub_Display:	; Routine 6
 		lea	Ani_Obj64(pc),a1
 		jsr	(AnimateSprite).l
 		tst.b	obRender(a0)
-		bpl.s	.delete
+		bpl.s	Bub_Delete
 		jmp	(DisplaySprite).l
-
-.delete:
-		bra.w	DeleteObject
 ; ---------------------------------------------------------------------------
 
 Bub_Delete:	; Routine 8
@@ -146,11 +140,9 @@ Bub_BblMaker:	; Routine $A
 		adda.w	d1,a1
 		move.l	a1,objoff_3C(a0)
 		subq.b	#1,bub_time(a0)
-		bpl.s	.loc_13BA2
+		bpl.s	.loc_13BAC
 		move.b	bub_freq(a0),bub_time(a0)
 		bset	#7,objoff_36(a0)
-
-.loc_13BA2:
 		bra.s	.loc_13BAC
 ; ---------------------------------------------------------------------------
 

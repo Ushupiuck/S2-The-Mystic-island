@@ -50,7 +50,7 @@ ADoor_Animate:
 		lea	Ani_Obj30(pc),a1
 		bsr.w	AnimateSprite
 		tst.b	obFrame(a0)	; is the door open?
-		bne.s	.remember	; if yes, branch
+		bne.w	MarkObjGone	; if yes, branch
 		move.w	#$11,d1
 		move.w	#$20,d2
 		move.w	d2,d3
@@ -58,8 +58,8 @@ ADoor_Animate:
 		move.w	obX(a0),d4
 		bsr.w	SolidObject
 
-.remember:
-		bra.w	MarkObjGone
+;.remember:
+;		bra.w	MarkObjGone
 ; ---------------------------------------------------------------------------
 Ani_Obj30:	dc.w byte_9590-Ani_Obj30
 		dc.w byte_959C-Ani_Obj30

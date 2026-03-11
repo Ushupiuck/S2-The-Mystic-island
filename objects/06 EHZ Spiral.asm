@@ -8,7 +8,7 @@ Obj06:
 		move.w	Obj06_Index(pc,d0.w),d1
 		jsr	Obj06_Index(pc,d1.w)
 		out_of_range.w	DeleteObject
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 Obj06_Index:	dc.w Obj06_Init-Obj06_Index
 		dc.w Obj06_Main-Obj06_Index
@@ -40,10 +40,15 @@ sub_149BC:
 		tst.w	obVelX(a1)
 		bmi.s	loc_149F2
 		cmpi.w	#-$C0,d0
-		bgt.s	locret_14A54
+		bgt.s	Obj06.return
 		cmpi.w	#-$D0,d0
-		blt.s	locret_14A54
-		bra.s	loc_149FE
+		blt.s	Obj06.return
+		move.w	obY(a1),d1
+		sub.w	obY(a0),d1
+		subi.w	#$10,d1
+		cmpi.w	#$30,d1
+		bcc.s	locret_14A54
+		bra.w	RideObject_SetRide
 ; ---------------------------------------------------------------------------
 
 loc_149F2:
@@ -51,8 +56,6 @@ loc_149F2:
 		blt.s	locret_14A54
 		cmpi.w	#$D0,d0
 		bgt.s	locret_14A54
-
-loc_149FE:
 		move.w	obY(a1),d1
 		sub.w	obY(a0),d1
 		subi.w	#$10,d1
@@ -70,7 +73,12 @@ loc_14A16:
 		bgt.s	locret_14A54
 		cmpi.w	#-$C0,d0
 		blt.s	locret_14A54
-		bra.s	loc_14A3E
+		move.w	obY(a1),d1
+		sub.w	obY(a0),d1
+		subi.w	#$10,d1
+		cmpi.w	#$30,d1
+		bcc.s	locret_14A54
+		bra.w	RideObject_SetRide
 ; ---------------------------------------------------------------------------
 
 loc_14A32:
@@ -78,8 +86,6 @@ loc_14A32:
 		blt.s	locret_14A54
 		cmpi.w	#$C0,d0
 		bgt.s	locret_14A54
-
-loc_14A3E:
 		move.w	obY(a1),d1
 		sub.w	obY(a0),d1
 		subi.w	#$10,d1
@@ -111,7 +117,7 @@ loc_14A5E:
 loc_14A80:
 		bclr	#3,obStatus(a1)
 		bclr	d6,obStatus(a0)
-		move.b	#0,objoff_2C(a1)
+		clr.b	objoff_2C(a1)
 		move.b	#4,objoff_2D(a1)
 		rts
 ; ---------------------------------------------------------------------------

@@ -91,7 +91,7 @@ Obj22_NearSonic:
 		bmi.s	loc_A536
 		bsr.w	ObjectMove
 		tst.b	obj22_status(a0)
-		bne.s	locret_A558
+		bne.s	loc_A51C.return
 		move.w	(v_player+obX).w,d0
 		sub.w	obX(a0),d0
 		bpl.s	loc_A51C
@@ -99,25 +99,24 @@ Obj22_NearSonic:
 
 loc_A51C:
 		cmpi.w	#$60,d0				; is Buzz Bomber within $60 pixels of Sonic?
-		bcc.s	locret_A558			; if not, branch
+		bcc.s	.return				; if not, branch
 		tst.b	obRender(a0)
-		bpl.s	locret_A558
+		bpl.s	.return
 		move.b	#2,obj22_status(a0)
 		move.w	#29,obj22_time(a0)
-		bra.s	loc_A548
+		subq.b	#2,ob2ndRout(a0)
+		clr.w	obVelX(a0)
+		clr.b	obAnim(a0)
+.return:	rts
 ; ===========================================================================
 
 loc_A536:
 		move.b	#0,obj22_status(a0)
 		bchg	#0,obStatus(a0)
 		move.w	#59,obj22_time(a0)
-
-loc_A548:
 		subq.b	#2,ob2ndRout(a0)
-		move.w	#0,obVelX(a0)
-		move.b	#0,obAnim(a0)
-
-locret_A558:
+		clr.w	obVelX(a0)
+		clr.b	obAnim(a0)
 		rts
 ; ===========================================================================
 ; loc_A55A:

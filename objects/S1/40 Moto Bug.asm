@@ -100,8 +100,8 @@ locret_F354:
 Obj40_StopMoving:
 		subq.b	#2,ob2ndRout(a0)
 		move.w	#59,objoff_30(a0)
-		move.w	#0,obVelX(a0)
-		move.b	#0,obAnim(a0)
+		clr.w	obVelX(a0)
+		clr.b	obAnim(a0)
 		rts
 ; ===========================================================================
 ; loc_F36E:
