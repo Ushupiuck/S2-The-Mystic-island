@@ -14,7 +14,7 @@ Obj25_Index:
 		dc.w Obj25_Animate-Obj25_Index
 		dc.w Obj25_Collect-Obj25_Index
 		dc.w Obj25_Sparkle-Obj25_Index
-		dc.w ObjRing_Delete-Obj25_Index ; small optimization to remove a jmpto; since Obj25 & 37 are technically the same
+		dc.w DeleteObject-Obj25_Index ; small optimization to remove a jmpto; since Obj25 & 37 are technically the same
 ; ---------------------------------------------------------------------------
 
 Obj25_Init:
@@ -33,7 +33,7 @@ Obj25_Animate:
 
 Obj25_Collect:
 		addq.b	#2,obRoutine(a0)
-		move.b	#0,obColType(a0)
+		clr.b	obColType(a0)
 		move.w	#$80,obPriority(a0)
 		bsr.s	CollectRing
 
@@ -63,7 +63,7 @@ CollectRing:
 +
 		addq.b	#1,(v_lives).w
 		addq.b	#1,(f_lifecount).w
-		move.w	#bgm_ExtraLife,d0
+		moveq	#bgm_ExtraLife,d0
 
 .playsound:
 		jmp	(PlaySound_Special).l
@@ -83,7 +83,7 @@ Obj37_Index:	dc.w loc_A936-Obj37_Index
 		dc.w loc_A9FA-Obj37_Index
 		dc.w loc_AA4C-Obj37_Index
 		dc.w loc_AA60-Obj37_Index
-		dc.w ObjRing_Delete-Obj37_Index
+		dc.w DeleteObject-Obj37_Index
 ; ---------------------------------------------------------------------------
 
 loc_A936:
@@ -142,11 +142,11 @@ loc_A956:
 		dbf	d5,loc_A94E
 
 loc_A9DE:
-		move.w	#0,(v_rings).w
-		move.b	#$80,(f_ringcount).w
-		move.b	#0,(v_lifecount).w
-		move.w	#sfx_RingLoss,d0
+		moveq	#sfx_RingLoss,d0
 		jsr	(PlaySound_Special).l
+		clr.w	(v_rings).w
+		move.b	#$80,(f_ringcount).w
+		clr.b	(v_lifecount).w
 
 loc_A9FA:
 		move.b	(v_ani3_frame).w,obFrame(a0)
@@ -170,17 +170,19 @@ loc_A9FA:
 
 loc_AA34:
 		tst.b	(v_ani3_time).w
-		beq.s	ObjRing_Delete
+	;	beq.s	ObjRing_Delete
+		beq.w	DeleteObject
 		move.w	(Camera_Max_Y_pos).w,d0
 		addi.w	#224,d0
 		cmp.w	obY(a0),d0
-		bcs.s	ObjRing_Delete
+	;	bcs.s	ObjRing_Delete
+		bcs.w	DeleteObject
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
 loc_AA4C:
 		addq.b	#2,obRoutine(a0)
-		move.b	#0,obColType(a0)
+		clr.b	obColType(a0)
 		move.w	#$80,obPriority(a0)
 		bsr.w	CollectRing
 
@@ -190,5 +192,5 @@ loc_AA60:
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
-ObjRing_Delete:
-		bra.w	DeleteObject
+; ObjRing_Delete:
+	;	bra.w	DeleteObject
