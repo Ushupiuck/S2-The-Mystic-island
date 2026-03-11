@@ -11839,7 +11839,7 @@ locret_F9FA:
 ; End of function sub_F9C8
 
 ; ===========================================================================
-		include	"obj/01 Sonic.asm"
+		include	"objects/01 Sonic.asm"
 ; ===========================================================================
 KillCharacter:
 		jmp	(KillSonic).l
@@ -11964,7 +11964,7 @@ Obj02_RmvInvin:
 		clr.b	(v_invinc).w
 ; loc_10D68:
 Obj02_ChkShoes:
-		; checks if Speed Shoes have expired and disables them if they have
+		; Checks if Speed Shoes have expired and disables them if they have
 		tst.b	(v_shoes).w
 		beq.s	Obj02_ExitChk
 		tst.w	shoetime(a0)
@@ -12011,12 +12011,12 @@ TailsC_DoControl:
 ; End of function Tails_Control
 
 ; ---------------------------------------------------------------------------
-TailsC_Index:	dc.w TailsC_00-TailsC_Index
-		dc.w TailsC_02-TailsC_Index
-		dc.w TailsC_04-TailsC_Index
-		dc.w TailsC_CopySonicMoves-TailsC_Index
+TailsC_Index:	dc.w TailsC_00-TailsC_Index		; 0
+		dc.w TailsC_02-TailsC_Index		; 2
+		dc.w TailsC_04-TailsC_Index		; 4
+		dc.w TailsC_CopySonicMoves-TailsC_Index	; 6
 ; ---------------------------------------------------------------------------
-
+ ; They're all dummy entries it seems
 TailsC_00:
 		move.w	#6,(Tails_CPU_routine).w
 		rts
@@ -12026,8 +12026,8 @@ TailsC_02:
 		move.w	#6,(Tails_CPU_routine).w
 		rts
 ; ---------------------------------------------------------------------------
-		move.w	#$40,(word_F706).w
-		move.w	#4,(Tails_CPU_routine).w
+	;	move.w	#$40,(word_F706).w
+	;	move.w	#4,(Tails_CPU_routine).w
 
 TailsC_04:
 		move.w	#6,(Tails_CPU_routine).w
@@ -12047,7 +12047,7 @@ loc_10E38:
 
 loc_10E40:
 		lea	(Sonic_Pos_Record_Buf).w,a1
-		move.w	#$10,d1
+		moveq	#$10,d1
 		lsl.b	#2,d1
 		addq.b	#4,d1
 		move.w	(Sonic_Pos_Record_Index).w,d0
@@ -12072,7 +12072,7 @@ RecordTailsMoves:
 ; ---------------------------------------------------------------------------
 
 Obj02_MdNormal:
-		bsr.w	Tails_Spindash
+		bsr.w	Tails_CheckSpindash
 		bsr.w	Tails_Jump
 		bsr.w	Tails_SlopeResist
 		bsr.w	Tails_Move
@@ -12103,7 +12103,7 @@ Obj02_MdJump:
 
 loc_10EC0:
 		bsr.w	Tails_JumpAngle
-		bra.w	Tails_Floor
+		bra.w	Tails_DoLevelCollision
 ; ---------------------------------------------------------------------------
 
 Obj02_MdRoll:
@@ -12136,12 +12136,15 @@ Obj02_MdJump2:
 
 loc_10F0A:
 		bsr.w	Tails_JumpAngle
-		bra.w	Tails_Floor
+		bra.w	Tails_DoLevelCollision
 
 ; =============== S U B R O U T I N E =======================================
 
 
-Tails_Move:
+Tails_Move:	; TODO: Uncomment these lines and implement this proper, alike Sonic 2
+	;	move.w	(Tails_top_speed).w,d6
+	;	move.w	(Tails_acceleration).w,d5
+	;	move.w	(Tails_deceleration).w,d4
 		move.w	(Sonic_top_speed).w,d6
 		move.w	(Sonic_acceleration).w,d5
 		move.w	(Sonic_deceleration).w,d4
@@ -12337,7 +12340,7 @@ Tails_MoveLeft:
 +
 		move.w	d0,obInertia(a0)
 		move.b	#AniIDSonAni_Walk,obAnim(a0)
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 
 loc_110EA:
@@ -12349,16 +12352,13 @@ loc_110EA:
 		move.b	obAngle(a0),d1
 		addi.b	#$20,d1
 		andi.b	#$C0,d1
-		bne.s	.return
+		bne.s	Tails_MoveLeft.return
 		cmpi.w	#$400,d0
-		blt.s	.return
+		blt.s	Tails_MoveLeft.return
 		move.b	#AniIDSonAni_Stop,obAnim(a0)
 		bclr	#0,obStatus(a0)
 		move.w	#sfx_Skid,d0
 		jmp	(PlaySound_Special).l
-
-.return:
-		rts
 ; End of function Tails_MoveLeft
 
 
@@ -12383,7 +12383,7 @@ Tails_MoveRight:
 +
 		move.w	d0,obInertia(a0)
 		move.b	#AniIDSonAni_Walk,obAnim(a0)
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 
 loc_11150:
@@ -12395,16 +12395,13 @@ loc_11150:
 		move.b	obAngle(a0),d1
 		addi.b	#$20,d1
 		andi.b	#$C0,d1
-		bne.s	.return
+		bne.s	Tails_MoveRight.return
 		cmpi.w	#-$400,d0
-		bgt.s	.return
+		bgt.s	Tails_MoveRight.return
 		move.b	#AniIDSonAni_Stop,obAnim(a0)
 		bset	#0,obStatus(a0)
 		move.w	#sfx_Skid,d0
 		jmp	(PlaySound_Special).l
-
-.return:
-		rts
 ; End of function Tails_MoveRight
 
 
@@ -12629,9 +12626,17 @@ Tails_LevelBoundaries:
 loc_1133A:
 		cmp.w	d1,d0
 		bls.s	loc_11374
-
-loc_1133E:
+; loc_1133E:
 		move.w	(Camera_Max_Y_pos).w,d0
+		; The original code does not consider that the camera boundary
+		; may be in the middle of lowering itself, which is why going
+		; down the S-tunnel in Green Hill Zone Act 1 fast enough can
+		; kill Sonic.
+		move.w	(Camera_Max_Y_pos_target).w,d1
+		cmp.w	d0,d1
+		blo.s	.skip
+		move.w	d1,d0
+.skip:
 		addi.w	#224,d0
 		cmp.w	obY(a0),d0
 		blt.s	loc_1134E
@@ -12639,6 +12644,9 @@ loc_1133E:
 ; ---------------------------------------------------------------------------
 
 loc_1134E:
+		; a2 needs to be set here, otherwise KillCharacter
+		; will access a dangling pointer!
+		movea.l	a0,a2
 		cmpi.w	#(id_SBZ<<8)+1,(Current_ZoneAndAct).w
 		bne.w	KillCharacter
 		cmpi.w	#$2000,obX(a0)
@@ -12651,10 +12659,23 @@ loc_1134E:
 
 loc_11374:
 		move.w	d0,obX(a0)
-		clr.w	obX+2(a0)
+		clr.w	obXSub(a0)
 		clr.w	obVelX(a0)
 		clr.w	obInertia(a0)
-		bra.s	loc_1133E
+		move.w	(Camera_Max_Y_pos).w,d0
+		; The original code does not consider that the camera boundary
+		; may be in the middle of lowering itself, which is why going
+		; down the S-tunnel in Green Hill Zone Act 1 fast enough can
+		; kill Sonic.
+		move.w	(Camera_Max_Y_pos_target).w,d1
+		cmp.w	d0,d1
+		blo.s	.skip
+		move.w	d1,d0
+.skip:
+		addi.w	#224,d0
+		cmp.w	obY(a0),d0
+		blt.s	loc_1134E
+		rts
 ; End of function Tails_LevelBoundaries
 
 
@@ -12663,31 +12684,31 @@ loc_11374:
 
 Tails_Roll:
 		tst.b	(f_slidemode).w
-		bne.s	locret_113B2
+		bne.s	Obj02_NoRoll
 		move.w	obInertia(a0),d0
 		bpl.s	loc_1139A
 		neg.w	d0
 
 loc_1139A:
 		cmpi.w	#$80,d0
-		blo.s	locret_113B2
+		blo.s	Obj02_NoRoll
 		move.b	(v_jpadhold2).w,d0
 		andi.b	#btnL|btnR,d0
-		bne.s	locret_113B2
+		bne.s	Obj02_NoRoll
 		btst	#bitDn,(v_jpadhold2).w
 		bne.s	loc_113B4
 
-locret_113B2:
+Obj02_NoRoll:
 		rts
 ; ---------------------------------------------------------------------------
 
 loc_113B4:
 		btst	#2,obStatus(a0)
-		beq.s	loc_113BE
+		beq.s	Obj02_DoRoll
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_113BE:
+Obj02_DoRoll:
 		bset	#2,obStatus(a0)
 		move.b	#$E,obHeight(a0)
 		move.b	#7,obWidth(a0)
@@ -12737,7 +12758,7 @@ loc_11424:
 		bclr	#5,obStatus(a0)
 		addq.l	#4,sp
 		move.b	#1,objoff_3C(a0)
-		clr.b	$38(a0)
+		clr.b	objoff_38(a0)
 		move.w	#sfx_Jump,d0
 		jsr	(PlaySound_Special).l
 		move.b	#$F,obHeight(a0)
@@ -12784,21 +12805,24 @@ locret_114CA:
 ; ---------------------------------------------------------------------------
 
 loc_114CC:
-		cmpi.w	#$F040,obVelY(a0)
+		cmpi.w	#-$FC0,obVelY(a0)
 		bge.s	locret_114DA
-		move.w	#$F040,obVelY(a0)
+		move.w	#-$FC0,obVelY(a0)
 
 locret_114DA:
 		rts
 ; End of function Tails_JumpHeight
 
+; ---------------------------------------------------------------------------
+; Subroutine to check for starting to charge a spindash
+; ---------------------------------------------------------------------------
 
-; =============== S U B R O U T I N E =======================================
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
-
-Tails_Spindash:
+; Tails_Spindash:
+Tails_CheckSpindash:
 		tst.b	spindash_flag(a0)
-		bne.s	loc_11510
+		bne.s	Tails_UpdateSpindash
 		cmpi.b	#AniIDSonAni_Duck,obAnim(a0)
 		bne.s	locret_1150E
 		move.b	(v_jpadpress2).w,d0
@@ -12814,10 +12838,12 @@ locret_1150E:
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_11510:
+Tails_UpdateSpindash:
 		move.b	(v_jpadhold2).w,d0
 		btst	#bitDn,d0
-		bne.s	loc_11556
+		bne.s	Tails_ChargingSpindash
+
+		; unleash the charged spindash and start rolling quickly:
 		move.b	#$E,obHeight(a0)
 		move.b	#7,obWidth(a0)
 		move.b	#AniIDSonAni_Roll,obAnim(a0)
@@ -12843,7 +12869,7 @@ loc_1154E:
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_11556:
+Tails_ChargingSpindash:
 		move.b	(v_jpadpress2).w,d0
 		andi.b	#btnABC,d0
 		beq.w	loc_11564
@@ -12852,7 +12878,7 @@ loc_11556:
 loc_11564:
 		addq.l	#4,sp
 		rts
-; End of function Tails_Spindash
+; End of function Tails_CheckSpindash
 
 
 ; =============== S U B R O U T I N E =======================================
@@ -12960,17 +12986,17 @@ loc_11616:
 
 
 Tails_JumpAngle:
-		move.b	obAngle(a0),d0
-		beq.s	loc_11636
-		bpl.s	loc_1162C
-		addq.b	#2,d0
+		move.b	obAngle(a0),d0	; get Tails's angle
+		beq.s	loc_11636	; if already 0, branch
+		bpl.s	loc_1162C	; if higher than 0, branch
+		addq.b	#2,d0		; increase angle
 		bhs.s	loc_11632
 		moveq	#0,d0
 		bra.s	loc_11632
 ; ---------------------------------------------------------------------------
 
 loc_1162C:
-		subq.b	#2,d0
+		subq.b	#2,d0		; decrease angle
 		bhs.s	loc_11632
 		moveq	#0,d0
 
@@ -12979,17 +13005,19 @@ loc_11632:
 
 loc_11636:
 		move.b	objoff_27(a0),d0
-		beq.s	locret_11674
+		beq.s	.return
 		tst.w	obInertia(a0)
 		bmi.s	loc_1165A
 		move.b	objoff_2D(a0),d1
 		add.b	d1,d0
-		bhs.s	loc_11670
+		bhs.s	+
 		subq.b	#1,objoff_2C(a0)
-		bhs.s	loc_11670
-		clr.b	objoff_2C(a0)
+		bhs.s	+
 		moveq	#0,d0
-		bra.s	loc_11670
+		move.b	d0,objoff_2C(a0)
++
+		move.b	d0,objoff_27(a0)
+.return:	rts
 ; ---------------------------------------------------------------------------
 
 loc_1165A:
@@ -12998,21 +13026,24 @@ loc_1165A:
 		bhs.s	loc_11670
 		subq.b	#1,objoff_2C(a0)
 		bhs.s	loc_11670
-		clr.b	objoff_2C(a0)
 		moveq	#0,d0
+		move.b	d0,objoff_2C(a0)
 
 loc_11670:
 		move.b	d0,objoff_27(a0)
-
-locret_11674:
 		rts
 ; End of function Tails_JumpAngle
 
 
 ; =============== S U B R O U T I N E =======================================
 
-
-Tails_Floor:
+; Tails_Floor:
+Tails_DoLevelCollision:
+		move.l	(v_colladdr1).w,(Collision_addr).w
+		cmpi.b	#$C,obTopSolidBit(a0)
+		beq.s	+
+		move.l	(v_colladdr2).w,(Collision_addr).w
++
 		move.b	obLRBSolidBit(a0),d5
 		move.w	obVelX(a0),d1
 		move.w	obVelY(a0),d2
@@ -13027,30 +13058,27 @@ Tails_Floor:
 		beq.w	loc_11804
 		bsr.w	Sonic_HitWall
 		tst.w	d1
-		bpl.s	loc_116BA
+		bpl.s	+
 		sub.w	d1,obX(a0)
 		clr.w	obVelX(a0)
-
-loc_116BA:
++
 		bsr.w	sub_132EE
 		tst.w	d1
-		bpl.s	loc_116CC
+		bpl.s	+
 		add.w	d1,obX(a0)
 		clr.w	obVelX(a0)
-
-loc_116CC:
++
 		bsr.w	loc_13146
 		tst.w	d1
-		bpl.s	locret_11744
+		bpl.s	.return
 		move.b	obVelY(a0),d2
 		addq.b	#8,d2
 		neg.b	d2
 		cmp.b	d2,d1
-		bge.s	loc_116E4
+		bge.s	+
 		cmp.b	d2,d0
-		blt.s	locret_11744
-
-loc_116E4:
+		blt.s	.return
++
 		add.w	d1,obY(a0)
 		move.b	d3,obAngle(a0)
 		bsr.w	Tails_ResetTailsOnFloor
@@ -13064,7 +13092,13 @@ loc_116E4:
 		andi.b	#$20,d0
 		beq.s	loc_11714
 		asr	obVelY(a0)
-		bra.s	loc_11736
+		move.w	obVelY(a0),obInertia(a0)
+		tst.b	d3
+		bpl.s	.return
+		neg.w	obInertia(a0)
+
+.return:
+		rts
 ; ---------------------------------------------------------------------------
 
 loc_11714:
@@ -13082,10 +13116,10 @@ loc_11722:
 loc_11736:
 		move.w	obVelY(a0),obInertia(a0)
 		tst.b	d3
-		bpl.s	locret_11744
+		bpl.s	.return
 		neg.w	obInertia(a0)
 
-locret_11744:
+.return:
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -13105,19 +13139,19 @@ loc_11760:
 		bpl.s	loc_1177A
 		sub.w	d1,obY(a0)
 		tst.w	obVelY(a0)
-		bpl.s	locret_11778
+		bpl.s	.return
 		clr.w	obVelY(a0)
 
-locret_11778:
+.return:
 		rts
 ; ---------------------------------------------------------------------------
 
 loc_1177A:
 		tst.w	obVelY(a0)
-		bmi.s	locret_117A6
+		bmi.s	.return
 		bsr.w	loc_13146
 		tst.w	d1
-		bpl.s	locret_117A6
+		bpl.s	.return
 		add.w	d1,obY(a0)
 		move.b	d3,obAngle(a0)
 		bsr.w	Tails_ResetTailsOnFloor
@@ -13125,7 +13159,7 @@ loc_1177A:
 		clr.w	obVelY(a0)
 		move.w	obVelX(a0),obInertia(a0)
 
-locret_117A6:
+.return:
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -13146,14 +13180,14 @@ loc_117BA:
 loc_117CC:
 		bsr.w	Sonic_DontRunOnWalls
 		tst.w	d1
-		bpl.s	locret_11802
+		bpl.s	.return
 		sub.w	d1,obY(a0)
 		move.b	d3,d0
 		addi.b	#$20,d0
 		andi.b	#$40,d0
 		bne.s	loc_117EC
 		clr.w	obVelY(a0)
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 
 loc_117EC:
@@ -13161,10 +13195,10 @@ loc_117EC:
 		bsr.w	Tails_ResetTailsOnFloor
 		move.w	obVelY(a0),obInertia(a0)
 		tst.b	d3
-		bpl.s	locret_11802
+		bpl.s	.return
 		neg.w	obInertia(a0)
 
-locret_11802:
+.return:
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -13184,19 +13218,19 @@ loc_1181E:
 		bpl.s	loc_11838
 		sub.w	d1,obY(a0)
 		tst.w	obVelY(a0)
-		bpl.s	locret_11836
+		bpl.s	.return
 		clr.w	obVelY(a0)
 
-locret_11836:
+.return:
 		rts
 ; ---------------------------------------------------------------------------
 
 loc_11838:
 		tst.w	obVelY(a0)
-		bmi.s	locret_11864
+		bmi.s	.return
 		bsr.w	loc_13146
 		tst.w	d1
-		bpl.s	locret_11864
+		bpl.s	.return
 		add.w	d1,obY(a0)
 		move.b	d3,obAngle(a0)
 		bsr.w	Tails_ResetTailsOnFloor
@@ -13204,9 +13238,9 @@ loc_11838:
 		clr.w	obVelY(a0)
 		move.w	obVelX(a0),obInertia(a0)
 
-locret_11864:
+.return:
 		rts
-; End of function Tails_Floor
+; End of function Tails_DoLevelCollision
 
 
 ; =============== S U B R O U T I N E =======================================
@@ -13262,13 +13296,25 @@ loc_118D8:
 
 
 Tails_HurtStop:
+		; a2 needs to be set here, otherwise KillCharacter
+		; will access a dangling pointer!
+		movea.l	a0,a2
 		move.w	(Camera_Max_Y_pos).w,d0
+		; The original code does not consider that the camera boundary
+		; may be in the middle of lowering itself, which is why going
+		; down the S-tunnel in Green Hill Zone Act 1 fast enough can
+		; kill Sonic.
+		move.w	(Camera_Max_Y_pos_target).w,d1
+		cmp.w	d0,d1
+		blo.s	.skip
+		move.w	d1,d0
+.skip:
 		addi.w	#224,d0
 		cmp.w	obY(a0),d0
 		blo.w	KillCharacter
-		bsr.w	Tails_Floor
+		bsr.w	Tails_DoLevelCollision
 		btst	#1,obStatus(a0)
-		bne.s	locret_1192A
+		bne.s	.return
 		moveq	#0,d0
 		move.w	d0,obVelY(a0)
 		move.w	d0,obVelX(a0)
@@ -13276,9 +13322,7 @@ Tails_HurtStop:
 		move.b	#AniIDSonAni_Walk,obAnim(a0)
 		move.b	#2,obRoutine(a0)
 		move.w	#120,flashtime(a0)
-
-locret_1192A:
-		rts
+.return:	rts
 ; End of function Tails_HurtStop
 
 ; ---------------------------------------------------------------------------
@@ -13302,7 +13346,7 @@ Tails_GameOver:
 		move.w	(Camera_Max_Y_pos).w,d0
 		addi.w	#$100,d0
 		cmp.w	obY(a0),d0
-		bhs.w	locret_11986
+		bge.s	.return
 		move.w	(v_player+obX).w,d0
 		subi.w	#$40,d0
 		move.w	d0,obX(a0)
@@ -13315,7 +13359,7 @@ Tails_GameOver:
 		move.b	#$D,obLRBSolidBit(a0)
 		nop
 
-locret_11986:
+.return:
 		rts
 ; End of function Tails_GameOver
 
@@ -13323,12 +13367,12 @@ locret_11986:
 
 Obj02_ResetLevel:
 		tst.w	objoff_3A(a0)
-		beq.s	locret_1199A
+		beq.s	.return
 		subq.w	#1,objoff_3A(a0)
-		bne.s	locret_1199A
+		bne.s	.return
 		move.w	#1,(Level_Inactive_flag).w
 
-locret_1199A:
+.return:
 		rts
 
 ; =============== S U B R O U T I N E =======================================
@@ -23913,7 +23957,7 @@ SpriteTerminator:
 ;	to resolve symbol names.
 ; ---------------------------------------------------------------------------
  else
-		align	$2FFFFF			; Pad to 3MB
+	;	align	$2FFFFF			; Pad to 3MB
 		even
  endif
 EndOfRom:

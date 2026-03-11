@@ -165,7 +165,8 @@ Obj01_ChkInvin:						; Checks if invincibility has expired and (should) disables
 Obj01_RmvInvin:
 		clr.b	(v_invinc).w
 ; loc_FB7A:
-Obj01_ChkShoes:						; Checks if Speed Shoes have expired and disables them if they have.
+Obj01_ChkShoes:
+		; Checks if Speed Shoes have expired and disables them if they have.
 		tst.b	(v_shoes).w
 		beq.s	Obj01_ExitChk
 		tst.w	shoetime(a0)
@@ -175,6 +176,7 @@ Obj01_ChkShoes:						; Checks if Speed Shoes have expired and disables them if t
 		move.w	#$600,(Sonic_top_speed).w
 		move.w	#$C,(Sonic_acceleration).w
 		move.w	#$80,(Sonic_deceleration).w
+; Obj01_RmvSpeed:
 		clr.b	(v_shoes).w
 		move.w	#bgm_Slowdown,d0
 		jmp	(PlaySound).l
@@ -602,7 +604,7 @@ Sonic_MoveLeft:
 +
 		move.w	d0,obInertia(a0)
 		move.b	#AniIDSonAni_Walk,obAnim(a0)
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 ; loc_FF70:
 Sonic_TurnLeft:
@@ -614,20 +616,18 @@ Sonic_TurnLeft:
 		move.b	obAngle(a0),d1
 		addi.b	#$20,d1
 		andi.b	#$C0,d1
-		bne.s	.return
+		bne.s	Sonic_MoveLeft.return
 		cmpi.w	#$400,d0
-		blt.s	.return
+		blt.s	Sonic_MoveLeft.return
 		move.b	#AniIDSonAni_Stop,obAnim(a0)
 		bclr	#0,obStatus(a0)
 		move.w	#sfx_Skid,d0
 		jmp	(PlaySound_Special).l
 		; TODO: Uncomment and implement these lines. When that time comes, the jmp will change, too.
 	;	cmpi.b	#12,air_left(a0)
-	;	blo.s	return_1A744	; if he's drowning, branch to not make dust
+	;	blo.s	Sonic_MoveLeft.return	; if he's drowning, branch to not make dust
 	;	move.b	#6,(Sonic_Dust+routine).w
 	;	move.b	#$15,(Sonic_Dust+mapping_frame).w
-.return:
-		rts
 ; End of function Sonic_MoveLeft
 
 
@@ -652,8 +652,7 @@ Sonic_MoveRight:
 +
 		move.w	d0,obInertia(a0)
 		move.b	#AniIDSonAni_Walk,obAnim(a0)
-locret_1000C:
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 ; loc_FFD6:
 Sonic_TurnRight:
@@ -666,13 +665,18 @@ loc_FFDE:
 		move.b	obAngle(a0),d1
 		addi.b	#$20,d1
 		andi.b	#$C0,d1
-		bne.s	locret_1000C
+		bne.s	Sonic_MoveRight.return
 		cmpi.w	#-$400,d0
-		bgt.s	locret_1000C
+		bgt.s	Sonic_MoveRight.return
 		move.b	#AniIDSonAni_Stop,obAnim(a0)
 		bset	#0,obStatus(a0)
 		move.w	#sfx_Skid,d0
 		jmp	(PlaySound_Special).l
+		; TODO: Uncomment and implement these lines. When that time comes, the jmp will change, too.
+	;	cmpi.b	#12,air_left(a0)
+	;	blo.s	Sonic_MoveLeft.return	; if he's drowning, branch to not make dust
+	;	move.b	#6,(Sonic_Dust+routine).w
+	;	move.b	#$15,(Sonic_Dust+mapping_frame).w
 ; End of function Sonic_MoveRight
 
 
@@ -897,8 +901,7 @@ Sonic_LevelBound:
 loc_101C0:
 		cmp.w	d1,d0
 		bls.s	loc_101FA
-
-loc_101C4:
+; loc_101C4:
 		move.w	(Camera_Max_Y_pos).w,d0
 		; The original code does not consider that the camera boundary
 		; may be in the middle of lowering itself, which is why going
@@ -935,6 +938,10 @@ loc_101FA:
 		clr.w	obVelX(a0)
 		clr.w	obInertia(a0)
 		move.w	(Camera_Max_Y_pos).w,d0
+		; The original code does not consider that the camera boundary
+		; may be in the middle of lowering itself, which is why going
+		; down the S-tunnel in Green Hill Zone Act 1 fast enough can
+		; kill Sonic.
 		move.w	(Camera_Max_Y_pos_target).w,d1
 		cmp.w	d0,d1
 		blo.s	.skip
@@ -981,7 +988,7 @@ Obj01_DoRoll:
 		bset	#2,obStatus(a0)
 		move.b	#$E,obHeight(a0)
 		move.b	#7,obWidth(a0)
-		move.b	#2,obAnim(a0)
+		move.b	#AniIDSonAni_Roll,obAnim(a0)
 		addq.w	#5,obY(a0)
 		move.w	#sfx_Roll,d0
 		jsr	(PlaySound_Special).l
@@ -1083,7 +1090,7 @@ locret_10360:
 ; End of function Sonic_JumpHeight
 
 ; ---------------------------------------------------------------------------
-; Subroutine to launch a homing attack
+; Subroutine to launch a homing attack -- TODO
 ; ---------------------------------------------------------------------------
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
@@ -1277,15 +1284,13 @@ Sonic_JumpAngle:
 		beq.s	loc_104BC	; if already 0, branch
 		bpl.s	loc_104B2	; if higher than 0, branch
 		addq.b	#2,d0		; increase angle
-		bhs.s	loc_104B0
+		bhs.s	loc_104B8
 		moveq	#0,d0
-
-loc_104B0:
 		bra.s	loc_104B8
 ; ---------------------------------------------------------------------------
 
 loc_104B2:
-		subq.b	#2,d0
+		subq.b	#2,d0		; decrease angle
 		bhs.s	loc_104B8
 		moveq	#0,d0
 
@@ -1302,12 +1307,11 @@ loc_104BC:
 		bhs.s	+
 		subq.b	#1,objoff_2C(a0)
 		bhs.s	+
-		clr.b	objoff_2C(a0)
 		moveq	#0,d0
+		move.b	d0,objoff_2C(a0)
 +
 		move.b	d0,objoff_27(a0)
-.return:
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 
 loc_104E0:
@@ -1316,8 +1320,8 @@ loc_104E0:
 		bhs.s	loc_104F6
 		subq.b	#1,objoff_2C(a0)
 		bhs.s	loc_104F6
-		clr.b	objoff_2C(a0)
 		moveq	#0,d0
+		move.b	d0,objoff_2C(a0)
 
 loc_104F6:
 		move.b	d0,objoff_27(a0)
@@ -1477,8 +1481,7 @@ loc_1066A:
 		andi.b	#$40,d0
 		bne.s	loc_1068A
 		clr.w	obVelY(a0)
-.return:
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 
 loc_1068A:
@@ -1670,30 +1673,27 @@ Sonic_GameOver:
 		move.w	(Camera_Max_Y_pos).w,d0
 		addi.w	#$100,d0
 		cmp.w	obY(a0),d0
-		bge.w	locret_108B4
+		bge.w	Obj01_ResetLevel.return
 		move.w	#-$38,obVelY(a0)
 		addq.b	#2,obRoutine(a0)
 		clr.b	(f_timecount).w
 		addq.b	#1,(f_lifecount).w
 		subq.b	#1,(v_lives).w
-		bne.s	loc_10888
+		bne.s	+
 		clr.w	objoff_3A(a0)
 		_move.b	#id_Obj98,(v_gameovertext1).w
 		_move.b	#id_Obj98,(v_gameovertext2).w
 		move.b	#1,(v_gameovertext2+obFrame).w
 		clr.b	(f_timeover).w
-
-loc_10876:
 		move.w	#bgm_GameOver,d0
 		jsr	(PlaySound).l
 		moveq	#plcid_GameOver,d0
 		jmp	(LoadPLC).l
 ; ---------------------------------------------------------------------------
-
-loc_10888:
++
 		move.w	#60,objoff_3A(a0)
 		tst.b	(f_timeover).w
-		beq.s	locret_108B4
+		beq.s	Obj01_ResetLevel.return
 		clr.w	objoff_3A(a0)
 		_move.b	#id_Obj98,(v_gameovertext1).w
 		_move.b	#id_Obj98,(v_gameovertext2).w
@@ -1703,22 +1703,18 @@ loc_10888:
 		jsr	(PlaySound).l
 		moveq	#plcid_GameOver,d0
 		jmp	(LoadPLC).l
-; ---------------------------------------------------------------------------
-
-locret_108B4:
-		rts
 ; End of function Sonic_GameOver
 
 ; ---------------------------------------------------------------------------
 
 Obj01_ResetLevel:
 		tst.w	objoff_3A(a0)
-		beq.s	locret_108C8
+		beq.s	.return
 		subq.w	#1,objoff_3A(a0)
-		bne.s	locret_108C8
+		bne.s	.return
 		move.w	#1,(Level_Inactive_flag).w
 
-locret_108C8:
+.return:
 		rts
 
 ; =============== S U B R O U T I N E =======================================
