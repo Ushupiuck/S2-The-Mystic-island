@@ -96,7 +96,7 @@ sub_7C76:
 loc_7CB6:
 		move.w	d3,(a2)+
 		move.w	d2,(a2)+
-		move.w	#0,(a2)+
+		clr.w	(a2)+
 		addi.w	#$10,d3
 		dbf	d1,loc_7CB6
 
@@ -136,7 +136,7 @@ loc_7CFA:
 		addq.b	#4,objoff_3E(a0)
 
 loc_7D06:
-		bsr.w	sub_7F36
+		bsr.w	Obj11_Depress
 
 loc_7D0A:
 		moveq	#0,d1
@@ -200,7 +200,7 @@ loc_7D90:
 		addq.b	#4,objoff_3E(a0)
 
 loc_7D9C:
-		bsr.w	sub_7F36
+		bsr.w	Obj11_Depress
 
 loc_7DA0:
 		moveq	#0,d1
@@ -326,8 +326,15 @@ loc_7E90:
 		move.b	byte_7E9E(pc,d0.w),d6
 		bra.s	loc_7EAE
 ; ---------------------------------------------------------------------------
-byte_7E9E:	dc.b 1
-		dc.b   2,  1,  2,  1,  2,  1,  2,  0,  1,  0,  0,  0,  0,  0,  1 ; 0
+byte_7E9E:
+		dc.b   1,  2
+		dc.b   1,  2	; 2
+		dc.b   1,  2	; 4
+		dc.b   1,  2	; 6
+		dc.b   0,  1	; 8
+		dc.b   0,  0	; 10
+		dc.b   0,  0	; 12
+		dc.b   0,  1	; 14
 ; ---------------------------------------------------------------------------
 
 loc_7EAE:
@@ -335,16 +342,14 @@ loc_7EAE:
 		moveq	#-2,d4
 		move.b	obStatus(a0),d0
 		andi.b	#8,d0
-		beq.s	loc_7EC0
+		beq.s	+
 		move.b	objoff_3F(a0),d3
-
-loc_7EC0:
++
 		move.b	obStatus(a0),d0
 		andi.b	#$10,d0
-		beq.s	loc_7ECE
+		beq.s	+
 		move.b	objoff_3B(a0),d4
-
-loc_7ECE:
++
 		movea.l	objoff_30(a0),a1
 		lea	$45(a1),a2
 		lea	$15(a1),a1
@@ -353,66 +358,58 @@ loc_7ECE:
 		subq.b	#1,d1
 		moveq	#0,d5
 
-loc_7EE4:
-		moveq	#0,d0
+-		moveq	#0,d0
 		subq.w	#1,d3
 		cmp.b	d3,d5
-		bne.s	loc_7EEE
+		bne.s	+
 		move.w	d2,d0
-
-loc_7EEE:
++
 		addq.w	#2,d3
 		cmp.b	d3,d5
-		bne.s	loc_7EF6
+		bne.s	+
 		move.w	d2,d0
-
-loc_7EF6:
++
 		subq.w	#1,d3
 		subq.w	#1,d4
 		cmp.b	d4,d5
-		bne.s	loc_7F00
+		bne.s	+
 		move.w	d6,d0
-
-loc_7F00:
++
 		addq.w	#2,d4
 		cmp.b	d4,d5
-		bne.s	loc_7F08
+		bne.s	+
 		move.w	d6,d0
-
-loc_7F08:
++
 		subq.w	#1,d4
 		cmp.b	d3,d5
-		bne.s	loc_7F14
+		bne.s	+
 		swap	d2
 		move.w	d2,d0
 		swap	d2
-
-loc_7F14:
++
 		cmp.b	d4,d5
-		bne.s	loc_7F1E
+		bne.s	+
 		swap	d6
 		move.w	d6,d0
 		swap	d6
-
-loc_7F1E:
++
 		move.b	d0,(a1)
 		addq.w	#1,d5
 		addq.w	#6,a1
 		cmpa.w	a2,a1
-		bne.s	loc_7F30
+		bne.s	+
 		movea.l	objoff_34(a0),a1
 		lea	$15(a1),a1
++		dbf	d1,-
 
-loc_7F30:
-		dbf	d1,loc_7EE4
 		rts
 ; End of function sub_7E60
+; ===========================================================================
 
-
-; =============== S U B	R O U T	I N E =======================================
-
-
-sub_7F36:
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+; subroutine to make the bridge push down where Sonic or Tails walks over
+; sub_7F36:
+Obj11_Depress:
 		move.b	objoff_3E(a0),d0
 		bsr.w	CalcSine
 		move.w	d0,d4
@@ -425,10 +422,8 @@ sub_7F36:
 		move.w	d3,d2
 		add.w	d0,d3
 		moveq	#0,d5
-		lea	(Obj11_BendData-$80).l,a5
+		lea	(Obj11_BendData).l,a5
 		move.b	(a5,d3.w),d5
-
-loc_7F64:
 		andi.w	#$F,d3
 		lsl.w	#4,d3
 		lea	(a4,d3.w),a3
@@ -436,8 +431,7 @@ loc_7F64:
 		lea	$42(a1),a2
 		lea	obVelY(a1),a1
 
-loc_7F7A:
-		moveq	#0,d0
+-		moveq	#0,d0
 		move.b	(a3)+,d0
 		addq.w	#1,d0
 		mulu.w	d5,d0
@@ -447,12 +441,11 @@ loc_7F7A:
 		move.w	d0,(a1)
 		addq.w	#6,a1
 		cmpa.w	a2,a1
-		bne.s	loc_7F9A
+		bne.s	+
 		movea.l	objoff_34(a0),a1
 		lea	obVelY(a1),a1
++		dbf	d2,-
 
-loc_7F9A:
-		dbf	d2,loc_7F7A
 		moveq	#0,d0
 		move.b	obSubtype(a0),d0
 		moveq	#0,d3
@@ -466,10 +459,9 @@ loc_7F9A:
 		lea	(a4,d3.w),a3
 		adda.w	d2,a3
 		subq.w	#1,d2
-		blo.s	locret_7FE4
+		bcs.s	locret_7FE4
 
-loc_7FC0:
-		moveq	#0,d0
+-		moveq	#0,d0
 		move.b	-(a3),d0
 		addq.w	#1,d0
 		mulu.w	d5,d0
@@ -479,40 +471,51 @@ loc_7FC0:
 		move.w	d0,(a1)
 		addq.w	#6,a1
 		cmpa.w	a2,a1
-		bne.s	loc_7FE0
+		bne.s	+
 		movea.l	objoff_34(a0),a1
 		lea	obVelY(a1),a1
-
-loc_7FE0:
-		dbf	d2,loc_7FC0
++		dbf	d2,-
 
 locret_7FE4:
 		rts
-; End of function sub_7F36
+; End of function Obj11_Depress
 
 ; ---------------------------------------------------------------------------
-Obj11_BendData:	dc.b   2,  4,  6,  8,  8,  6,  4,  2,  0,  0,  0,  0,  0,  0,  0,  0 ; 0
-		dc.b   2,  4,  6,  8, $A,  8,  6,  4,  2,  0,  0,  0,  0,  0,  0,  0 ; 16
-		dc.b   2,  4,  6,  8, $A, $A,  8,  6,  4,  2,  0,  0,  0,  0,  0,  0 ; 32
-		dc.b   2,  4,  6,  8, $A, $C, $A,  8,  6,  4,  2,  0,  0,  0,  0,  0 ; 48
-		dc.b   2,  4,  6,  8, $A, $C, $C, $A,  8,  6,  4,  2,  0,  0,  0,  0 ; 64
-		dc.b   2,  4,  6,  8, $A, $C, $E, $C, $A,  8,  6,  4,  2,  0,  0,  0 ; 80
-		dc.b   2,  4,  6,  8, $A, $C, $E, $E, $C, $A,  8,  6,  4,  2,  0,  0 ; 96
-		dc.b   2,  4,  6,  8, $A, $C, $E,$10, $E, $C, $A,  8,  6,  4,  2,  0 ; 112
-		dc.b   2,  4,  6,  8, $A, $C, $E,$10,$10, $E, $C, $A,  8,  6,  4,  2 ; 128
-Obj11_BendData2:dc.b $FF,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 ; 0
-		dc.b $B5,$FF,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 ; 16
-		dc.b $7E,$DB,$FF,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 ; 32
-		dc.b $61,$B5,$EC,$FF,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 ; 48
-		dc.b $4A,$93,$CD,$F3,$FF,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 ; 64
-		dc.b $3E,$7E,$B0,$DB,$F6,$FF,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0 ; 80
-		dc.b $38,$6D,$9D,$C5,$E4,$F8,$FF,  0,  0,  0,  0,  0,  0,  0,  0,  0 ; 96
-		dc.b $31,$61,$8E,$B5,$D4,$EC,$FB,$FF,  0,  0,  0,  0,  0,  0,  0,  0 ; 112
-		dc.b $2B,$56,$7E,$A2,$C1,$DB,$EE,$FB,$FF,  0,  0,  0,  0,  0,  0,  0 ; 128
-		dc.b $25,$4A,$73,$93,$B0,$CD,$E1,$F3,$FC,$FF,  0,  0,  0,  0,  0,  0 ; 144
-		dc.b $1F,$44,$67,$88,$A7,$BD,$D4,$E7,$F4,$FD,$FF,  0,  0,  0,  0,  0 ; 160
-		dc.b $1F,$3E,$5C,$7E,$98,$B0,$C9,$DB,$EA,$F6,$FD,$FF,  0,  0,  0,  0 ; 176
-		dc.b $19,$38,$56,$73,$8E,$A7,$BD,$D1,$E1,$EE,$F8,$FE,$FF,  0,  0,  0 ; 192
-		dc.b $19,$38,$50,$6D,$83,$9D,$B0,$C5,$D8,$E4,$F1,$F8,$FE,$FF,  0,  0 ; 208
-		dc.b $19,$31,$4A,$67,$7E,$93,$A7,$BD,$CD,$DB,$E7,$F3,$F9,$FE,$FF,  0 ; 224
-		dc.b $19,$31,$4A,$61,$78,$8E,$A2,$B5,$C5,$D4,$E1,$EC,$F4,$FB,$FE,$FF ; 240
+; seems to be bridge piece vertical position offset data
+Obj11_BendData:
+		dc.b   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0; 0 logs
+		dc.b   2,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0; 1 log
+		dc.b   2,  2,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0; 2 logs
+		dc.b   2,  4,  2,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0; 3 logs
+		dc.b   2,  4,  4,  2,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0; 4 logs
+		dc.b   2,  4,  6,  4,  2,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0; 5 logs
+		dc.b   2,  4,  6,  6,  4,  2,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0; 6 logs
+		dc.b   2,  4,  6,  8,  6,  4,  2,  0,  0,  0,  0,  0,  0,  0,  0,  0; 7 logs
+		dc.b   2,  4,  6,  8,  8,  6,  4,  2,  0,  0,  0,  0,  0,  0,  0,  0; 8 logs
+		dc.b   2,  4,  6,  8, $A,  8,  6,  4,  2,  0,  0,  0,  0,  0,  0,  0; 9 logs
+		dc.b   2,  4,  6,  8, $A, $A,  8,  6,  4,  2,  0,  0,  0,  0,  0,  0; 10 logs
+		dc.b   2,  4,  6,  8, $A, $C, $A,  8,  6,  4,  2,  0,  0,  0,  0,  0; 11 logs
+		dc.b   2,  4,  6,  8, $A, $C, $C, $A,  8,  6,  4,  2,  0,  0,  0,  0; 12 logs
+		dc.b   2,  4,  6,  8, $A, $C, $E, $C, $A,  8,  6,  4,  2,  0,  0,  0; 13 logs
+		dc.b   2,  4,  6,  8, $A, $C, $E, $E, $C, $A,  8,  6,  4,  2,  0,  0; 14 logs
+		dc.b   2,  4,  6,  8, $A, $C, $E,$10, $E, $C, $A,  8,  6,  4,  2,  0; 15 logs
+		dc.b   2,  4,  6,  8, $A, $C, $E,$10,$10, $E, $C, $A,  8,  6,  4,  2; 16 logs
+; something else important for bridge depression to work (phase? bridge size adjustment?)
+Obj11_BendData2:
+		dc.b $FF,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0; 16
+		dc.b $B5,$FF,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0; 32
+		dc.b $7E,$DB,$FF,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0; 48
+		dc.b $61,$B5,$EC,$FF,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0; 64
+		dc.b $4A,$93,$CD,$F3,$FF,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0; 80
+		dc.b $3E,$7E,$B0,$DB,$F6,$FF,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0; 96
+		dc.b $38,$6D,$9D,$C5,$E4,$F8,$FF,  0,  0,  0,  0,  0,  0,  0,  0,  0; 112
+		dc.b $31,$61,$8E,$B5,$D4,$EC,$FB,$FF,  0,  0,  0,  0,  0,  0,  0,  0; 128
+		dc.b $2B,$56,$7E,$A2,$C1,$DB,$EE,$FB,$FF,  0,  0,  0,  0,  0,  0,  0; 144
+		dc.b $25,$4A,$73,$93,$B0,$CD,$E1,$F3,$FC,$FF,  0,  0,  0,  0,  0,  0; 160
+		dc.b $1F,$44,$67,$88,$A7,$BD,$D4,$E7,$F4,$FD,$FF,  0,  0,  0,  0,  0; 176
+		dc.b $1F,$3E,$5C,$7E,$98,$B0,$C9,$DB,$EA,$F6,$FD,$FF,  0,  0,  0,  0; 192
+		dc.b $19,$38,$56,$73,$8E,$A7,$BD,$D1,$E1,$EE,$F8,$FE,$FF,  0,  0,  0; 208
+		dc.b $19,$38,$50,$6D,$83,$9D,$B0,$C5,$D8,$E4,$F1,$F8,$FE,$FF,  0,  0; 224
+		dc.b $19,$31,$4A,$67,$7E,$93,$A7,$BD,$CD,$DB,$E7,$F3,$F9,$FE,$FF,  0; 240
+		dc.b $19,$31,$4A,$61,$78,$8E,$A2,$B5,$C5,$D4,$E1,$EC,$F4,$FB,$FE,$FF; 256
+		even
