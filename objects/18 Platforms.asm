@@ -12,6 +12,7 @@ Obj18_Index:	dc.w Plat_Main-Obj18_Index	; 0
 		dc.w Plat_Solid-Obj18_Index	; 2
 		dc.w Plat_Delete-Obj18_Index	; 4
 		dc.w Plat_Action-Obj18_Index	; 6
+		dc.w Plat_Solid2-Obj18_Index	; 8	; From Sonic 2
 ; ---------------------------------------------------------------------------
 Obj18_Conf:
 		;    width_pixels
@@ -35,17 +36,29 @@ Plat_Main:	; Routine 0
 		move.l	#Map_Obj18_GHZ,obMap(a0)	; we default to GHZ's platform mappings
 		move.w	#make_art_tile(ArtTile_Level,2,0),obGfx(a0)
 		cmpi.b	#id_EHZ,(Current_Zone).w
-		bne.s	loc_8874			; for any level that's not GHZ
+		bne.s	.notEHZ			; for any level that's not GHZ
 		move.l	#Map_obj18_EHZ,obMap(a0)	; load EHZ specific platform mappings
 		move.w	#make_art_tile(ArtTile_Level,2,0),obGfx(a0)
-
-loc_8874:
+.notEHZ:
 		move.b	#4,obRender(a0)
 		move.w	#$200,obPriority(a0)
 		move.w	obY(a0),objoff_2C(a0)
 		move.w	obY(a0),objoff_34(a0)
 		move.w	obX(a0),objoff_32(a0)
 		move.w	#$80,obAngle(a0)
+		tst.b	obSubtype(a0)	; From Sonic 2
+		bpl.s	++
+		addq.b	#6,obRoutine(a0)
+		andi.b	#$F,obSubtype(a0)
+		move.b	#$30,obHeight(a0)
+	nop;	cmpi.b	#aquatic_ruin_zone,(Current_Zone).w	; is this aquatic ruin?
+	nop;	bne.s	+					; if not, skip
+	nop;	move.b	#$28,obHeight(a0)			; aquatic ruin specific height
++
+		bset	#4,obRender(a0)
+		bra.w	Plat_Solid2
+; ===========================================================================
++
 		andi.b	#$F,obSubtype(a0)
 
 Plat_Solid:	; Routine 2
@@ -53,17 +66,16 @@ Plat_Solid:	; Routine 2
 		andi.b	#$18,d0
 		bne.s	Plat_Action2
 		tst.b	objoff_38(a0)
-		beq.s	loc_88C4
+		beq.s	+
 		subq.b	#4,objoff_38(a0)
-		bra.s	loc_88C4
+		bra.s	+
 ; ---------------------------------------------------------------------------
 
 Plat_Action2:
 		cmpi.b	#$40,objoff_38(a0)
-		beq.s	loc_88C4
+		beq.s	+
 		addq.b	#4,objoff_38(a0)
-
-loc_88C4:
++
 		move.w	obX(a0),-(sp)
 		bsr.w	Plat_Move
 		bsr.w	Plat_Nudge
@@ -73,6 +85,35 @@ loc_88C4:
 		move.w	(sp)+,d4
 		bsr.w	PlatformObject
 	;	bra.s	Plat_ChkDel
+		out_of_range.w	DeleteObject,objoff_32(a0)
+		bra.w	DisplaySprite
+; ---------------------------------------------------------------------------
+Plat_Solid2:	; Routine 8
+		move.b	obStatus(a0),d0
+		andi.b	#$18,d0
+		bne.s	+
+		tst.b	objoff_38(a0)
+		beq.s	++
+		subq.b	#4,objoff_38(a0)
+		bra.s	++
+; ---------------------------------------------------------------------------
++
+		cmpi.b	#$40,objoff_38(a0)
+		beq.s	+
+		addq.b	#4,objoff_38(a0)
++
+		move.w	obX(a0),-(sp)
+		bsr.w	Plat_Move
+		bsr.w	Plat_Nudge
+		moveq	#0,d1
+		move.b	obActWid(a0),d1
+		addi.w	#$B,d1
+		moveq	#0,d2
+		move.b	obHeight(a0),d2
+		move.w	d2,d3
+		addq.w	#1,d3
+		move.w	(sp)+,d4
+		bsr.w	PlatformObject
 		out_of_range.w	DeleteObject,objoff_32(a0)
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
@@ -229,17 +270,16 @@ Plat_Move:
 		beq.s	.loc_8A2E
 		subq.w	#1,objoff_3A(a0)
 		bne.s	.loc_8A2E
-		btst	#3,obStatus(a0)
-		beq.s	.loc_8A28
+		bclr	#3,obStatus(a0)	; p1_standing_bit
+		beq.s	+
 		lea	(v_player).w,a1
-		bset	#1,obStatus(a1)
-		bclr	#3,obStatus(a1)
-		move.b	#2,obRoutine(a1)
-		bclr	#3,obStatus(a0)
-		clr.b	ob2ndRout(a0)
-		move.w	obVelY(a0),obVelY(a1)
-
-.loc_8A28:
+		bsr.s	.both_characters
++
+		bclr	#4,obStatus(a0)	; p2_standing_bit
+		beq.s	+
+		lea	(v_player2).w,a1
+		bsr.s	.both_characters
++
 		move.b	#6,obRoutine(a0)
 
 .loc_8A2E:
@@ -256,6 +296,12 @@ Plat_Move:
 		bcc.s	+
 		move.b	#4,obRoutine(a0)	; this was 6 in Sonic 1
 		rts
+; ---------------------------------------------------------------------------
+.both_characters:
+		bset	#1,obStatus(a1)
+		bclr	#3,obStatus(a1)
+		move.b	#2,obRoutine(a1)
+		move.w	obVelY(a0),obVelY(a1)
 ; ---------------------------------------------------------------------------
 
 .type07:
