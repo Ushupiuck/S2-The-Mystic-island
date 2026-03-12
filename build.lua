@@ -8,7 +8,7 @@
 -- Having this set to false will use an inferior compression algorithm that
 -- results in an accurate ROM being produced.
 local improved_dac_driver_compression = true
-local advanced_error_handler = false
+local advanced_error_handler = true
 
 ---------------------
 -- End of settings --

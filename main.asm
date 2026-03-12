@@ -3,7 +3,7 @@
 ; ===========================================================================
 
 FixBugs			= 1	; change to 1 to enable bugfixes
-AdvancedHandler		= 0	; 0 for Sonic 1's Error handler, 1 for the Advanced Error handler
+AdvancedHandler		= 1	; 0 for Sonic 1's Error handler, 1 for the Advanced Error handler
 zeroOffsetOptimization	= 1	; if 1, makes a handful of zero-offset instructions smaller
 BackupSRAM		= 1
 AddressSRAM		= 3	; 0 = odd+even; 2 = even only; 3 = odd only
