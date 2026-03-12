@@ -479,10 +479,9 @@ loc_FE46:
 ; loc_FE4C:
 Obj01_SettleLeft:
 		add.w	d5,d0
-		bhs.s	loc_FE54
+		bhs.s	+
 		clr.w	d0
-
-loc_FE54:
++
 		move.w	d0,obInertia(a0)
 
 ; increase or decrease speed on the ground
@@ -502,21 +501,20 @@ Obj01_Traction:
 Obj01_CheckWallsOnGround:
 		move.b	obAngle(a0),d0
 		addi.b	#$40,d0
-		bmi.s	locret_FEF6
+		bmi.s	.return
 		move.b	#$40,d1				; rotate 90 degress clockwise
 		tst.w	obInertia(a0)			; check if Sonic's moving
-		beq.s	locret_FEF6			; if not, branch
-		bmi.s	loc_FE8E			; if negative, branch
+		beq.s	.return			; If not moving, don't do anything
+		bmi.s	+			; if negative, branch
 		neg.w	d1				; rotate counterclockwise
-
-loc_FE8E:
++
 		move.b	obAngle(a0),d0
 		add.b	d1,d0
 		move.w	d0,-(sp)
 		bsr.w	CalcRoomInFront
 		move.w	(sp)+,d0
 		tst.w	d1
-		bpl.s	locret_FEF6
+		bpl.s	.return
 		asl.w	#8,d1
 		addi.b	#$20,d0
 		andi.b	#$C0,d0
@@ -525,13 +523,10 @@ loc_FE8E:
 		beq.s	loc_FED8
 		cmpi.b	#$80,d0
 		beq.s	loc_FED2
-		cmpi.w	#$600,obVelX(a0)		; is Sonic at max speed?
-		bge.s	Sonic_WallRecoil		; if yes, branch
 		add.w	d1,obVelX(a0)
 		bset	#5,obStatus(a0)
 		clr.w	obInertia(a0)
-locret_FEF6:
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 
 loc_FED2:
@@ -540,8 +535,6 @@ loc_FED2:
 ; ---------------------------------------------------------------------------
 
 loc_FED8:
-		cmpi.w	#-$600,obVelX(a0)		; is Sonic at max speed?
-		ble.s	Sonic_WallRecoil		; if yes, branch
 		sub.w	d1,obVelX(a0)
 		bset	#5,obStatus(a0)
 		clr.w	obInertia(a0)
@@ -551,31 +544,6 @@ loc_FED8:
 loc_FEF2:
 		add.w	d1,obVelY(a0)
 		rts
-
-; ---------------------------------------------------------------------------
-; Subroutine to recoil Sonic off a wall if moving a top speed
-; ---------------------------------------------------------------------------
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
-
-Sonic_WallRecoil:
-		move.b	#4,obRoutine(a0)
-		bsr.w	Sonic_ResetOnFloor
-		bset	#1,obStatus(a0)
-		move.w	#-$200,d0
-		tst.w	obVelX(a0)
-		bpl.s	Sonic_WallRecoil_Right
-		neg.w	d0
-
-Sonic_WallRecoil_Right:
-		move.w	d0,obVelX(a0)
-		move.w	#-$400,obVelY(a0)
-		clr.w	obInertia(a0)
-		move.b	#AniIDSonAni_WallRecoil1,obAnim(a0)
-		move.b	#1,ob2ndRout(a0)
-		move.w	#sfx_Death,d0
-		jmp	(PlaySound_Special).l
 ; End of function Sonic_Move
 
 
@@ -688,7 +656,7 @@ Sonic_RollSpeed:
 		asl.w	#1,d6
 		move.w	(Sonic_acceleration).w,d5
 		asr.w	#1,d5
-		move.w	(Sonic_deceleration).w,d4
+		moveq	#20,d4
 		asr.w	#2,d4
 		tst.b	(f_slidemode).w
 		bne.w	loc_1008A
@@ -1569,8 +1537,6 @@ loc_10748:
 ; ---------------------------------------------------------------------------
 
 Obj01_Hurt:
-		tst.b	ob2ndRout(a0)
-		bmi.w	Sonic_HurtInstantRecover
 		movem.w	obVelX(a0),d0/d2			; load xy speed
 		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
 		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
@@ -1617,40 +1583,13 @@ Sonic_HurtStop:
 		move.w	d0,obVelY(a0)
 		move.w	d0,obVelX(a0)
 		move.w	d0,obInertia(a0)
-		tst.b	ob2ndRout(a0)	; seems to be responsible for wall recoil
-		beq.s	loc_107D6
-		move.b	#-1,ob2ndRout(a0)
-		move.b	#AniIDSonAni_WallRecoil2,obAnim(a0)
-		move.b	d0,spindash_flag(a0)
-.return:	rts
-; ---------------------------------------------------------------------------
-
-loc_107D6:
 		move.b	#AniIDSonAni_Walk,obAnim(a0)
 		subq.b	#2,obRoutine(a0)
 		move.w	#120,flashtime(a0)
 		move.b	d0,spindash_flag(a0)
-		rts
+.return:	rts
 ; End of function Sonic_HurtStop
 
-; ---------------------------------------------------------------------------
-
-Sonic_HurtInstantRecover:
-		cmpi.b	#AniIDSonAni_WallRecoil2,obAnim(a0)
-		bne.s	loc_107FA
-		move.b	(v_jpadpress1).w,d0
-		andi.b	#btnUp|btnDn|btnL|btnR|btnABC,d0
-		beq.s	loc_10804
-
-loc_107FA:
-		subq.b	#2,obRoutine(a0)
-		clr.b	ob2ndRout(a0)
-
-loc_10804:
-		bsr.w	Sonic_RecordPos
-		bsr.w	Sonic_Animate
-		bsr.w	LoadSonicDynPLC
-		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 ; Obj01_Death:
 Obj01_Dead:
