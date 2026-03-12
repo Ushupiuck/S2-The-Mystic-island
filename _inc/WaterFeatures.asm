@@ -14,15 +14,14 @@ CheckLevelForWater:
 		move.w	d0,(v_waterpos3).w
 		sf	(v_wtr_routine).w
 		sf	(f_wtr_state).w
-		st	(Water_flag).w
+		move.b	#1,(Water_flag).w
 		move.w	#30,(v_air).w
 		moveq	#palid_LZSonWater,d0
 		cmpi.b	#3,(Current_Act).w
 		bne.s	.loadpalette
 		moveq	#palid_SBZ3SonWat,d0
 
-.loadpalette:
-		move.b	(v_lamp_wtrstat).w,(f_wtr_state).w
+.loadpalette:	move.b	(v_lamp_wtrstat).w,(f_wtr_state).w
 		bra.w	PalLoad3_Water
 ; ---------------------------------------------------------------------------
 ; Subroutine to move the water or oil surface sprites to where the screen is at
@@ -49,8 +48,7 @@ ChangeWaterSurfacePos:
 		move.w	d0,(v_watersurface1+obX).w
 		addi.w	#$120,d1
 		move.w	d1,(v_watersurface2+obX).w
-.return:
-		rts
+.return:	rts
 ; End of function ChangeWaterSurfacePos
 
 
@@ -93,11 +91,8 @@ WaterEffects:
 		bcs.s	.isvisible
 		move.w	#224-1,d0
 
-.isvisible:
-		move.b	d0,(v_hbla_line).w
-
-.return:
-		rts
+.isvisible:	move.b	d0,(v_hbla_line).w
+.return:	rts
 ; End of function WaterEffects
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -128,11 +123,8 @@ DynamicWaterHeight:
 		bcc.s	.movewater
 		neg.w	d1
 
-.movewater:
-		add.w	d1,(v_waterpos2).w
-
-.return:
-		rts
+.movewater:	add.w	d1,(v_waterpos2).w
+.return:	rts
 ; End of function DynamicWaterHeight
 
 ; ---------------------------------------------------------------------------
@@ -164,13 +156,12 @@ DynWater_Debug:						; This uses the 2nd controller to make the water level move
 
 .down:
 		btst	#bitDn,(v_jpadhold2).w		; is DOWN being held by player 2?
-		beq.s	.return				; return
+		beq.s	.return				; no? check for...
 		cmpi.w	#$700,(v_waterpos3).w
-		beq.s	.return
+		beq.s	.return				; we don't go any further down than this
 		addq.w	#1,(v_waterpos3).w
 
-.return:	; Horizontal water? You wish lol
-		rts
+.return:	rts	; ...Horizontal water? You wish lol
 ; ---------------------------------------------------------------------------
 
 DynWater_LZ1:				; leftover from Sonic 1
@@ -197,8 +188,7 @@ DynWater_LZ1:				; leftover from Sonic 1
 		bne.s	.setwater		; if not, branch
 		move.b	#1,(v_wtr_routine).w	; use second routine next
 
-.setwater:
-		move.w	d1,(v_waterpos3).w
+.setwater:	move.w	d1,(v_waterpos3).w
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -224,8 +214,7 @@ DynWater_LZ1:				; leftover from Sonic 1
 		move.w	#$108,d1
 		move.b	#2,(v_wtr_routine).w
 
-.setwater2:
-		move.w	d1,(v_waterpos3).w
+.setwater2:	move.w	d1,(v_waterpos3).w
 .skip:		rts
 ; ---------------------------------------------------------------------------
 
@@ -239,8 +228,7 @@ DynWater_LZ2:
 		bcs.s	.setwater
 		move.w	#$428,d1
 
-.setwater:
-		move.w	d1,(v_waterpos3).w
+.setwater:	move.w	d1,(v_waterpos3).w
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -258,13 +246,12 @@ DynWater_LZ3:	; Leftover from Sonic 1's LZ3
 		bcc.s	.setwaterlz3		; if not, branch
 
 		move.w	#$4C8,d1			; set new water height
-	;	move.b	#$4B,(v_lvllayout+$80*2+6).w	; update level layout (leftover from Sonic 1. Functional, but Also... Invalid? we'd have to update 4 chunks, not 1)
+	;	move.b	#$4B,(v_lvllayout+$80*2+6).w	; update level layout (leftover from Sonic 1. Functional, but Also... Invalid? If restored, we'd have to update a 2x2 grid of 4 chunks, not 1)
 		move.b	#1,(v_wtr_routine).w
 	;	move.w	#sfx_Rumbling,d0
 	;	bsr.w	PlaySound_Special		; play sound $B7 (rumbling)
 
-.setwaterlz3:
-		move.w	d1,(v_waterpos3).w
+.setwaterlz3:	move.w	d1,(v_waterpos3).w
 		move.w	d1,(v_waterpos2).w
 		rts
 ; ---------------------------------------------------------------------------
@@ -292,8 +279,7 @@ DynWater_LZ3:	; Leftover from Sonic 1's LZ3
 		bcs.s	.setwater2
 		move.b	#2,(v_wtr_routine).w
 
-.setwater2:
-		move.w	d1,(v_waterpos3).w
+.setwater2:	move.w	d1,(v_waterpos3).w
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -311,8 +297,7 @@ DynWater_LZ3:	; Leftover from Sonic 1's LZ3
 +
 		move.b	#3,(v_wtr_routine).w
 
-.setwater3:
-		move.w	d1,(v_waterpos3).w
+.setwater3:	move.w	d1,(v_waterpos3).w
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -342,9 +327,7 @@ DynWater_LZ3:	; Leftover from Sonic 1's LZ3
 		cmpi.w	#$1E00,d0	; has screen passed final position?
 		bcs.s	.dontset	; if not, branch
 		move.w	#$128,(v_waterpos3).w
-
-.dontset:
-		rts
+.dontset:	rts
 ; ---------------------------------------------------------------------------
 
 DynWater_LZ4:
@@ -353,10 +336,8 @@ DynWater_LZ4:
 		bcs.s	.setwater
 		move.w	#$4C8,d1
 
-.setwater:
-		move.w	d1,(v_waterpos3).w
+.setwater:	move.w	d1,(v_waterpos3).w
 		rts
-
 ; ---------------------------------------------------------------------------
 ; Wind tunnels subroutine
 ; ---------------------------------------------------------------------------
@@ -364,26 +345,30 @@ DynWater_LZ4:
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 
-WindTunnels:					; leftover from Sonic 1's LZ
-		tst.w	(Debug_placement_mode).w	; is debug mode being used?
-		bne.w	.quit			; if so, bail
+WindTunnels:	; leftover from Sonic 1's LZ
+		tst.w	(Debug_placement_mode).w; is debug mode being used?
+		bne.w	.return			; if so, bail
 		cmpi.b	#1,(Current_Zone).w	; From Sonic 3 & knuckles
-		bne.w	.end		; if we're not in labyrinth/hidrocity, bail
+		bne.w	.return			; if we're not in labyrinth/hidrocity, bail
 	;	cmpi.w	#2,(Player_mode).w	; Tails only game?
 	;	beq.s	loc_6F82		; Branch if so
-		lea	(S1LZWind_Data+8).l,a2
+	;	lea	(f_wtunnelallow).l,a3	; Sonic 3 & knuckles manually sets this to 1 later
+	;	lea	(f_wtunnelallow_p2).l,a3; For both players, conditionally. TODO
+		lea	(WindTunnel_Data).l,a2
 		moveq	#0,d0
 		move.b	(Current_Act).w,d0	; get act number
 		lsl.w	#3,d0			; multiply by 8
 		adda.w	d0,a2			; add to address for data
 		moveq	#0,d1
 		tst.b	(Current_Act).w		; is act number 1?
-		bne.s	.notact1	; if not, branch
-		moveq	#1,d1
-		subq.w	#8,a2		; use different data for act 1
+		beq.s	.notact1		; if so, skip
+		lea	(WindTunnel_Data+8).l,a2
+		addq.w	#8,a2			; use different data for act 2
 
 .notact1:
 		lea	(v_player).w,a1
+	;	bsr.s	.chksonic
+	;	lea	(v_player2).w,a1
 
 .chksonic:
 		move.w	obX(a1),d0
@@ -396,8 +381,7 @@ WindTunnels:					; leftover from Sonic 1's LZ
 		bcs.w	.chknext
 		cmp.w	6(a2),d2
 		bcc.s	.chknext	; branch if Sonic is outside a range
-		; d0 is overwritten but later used as if it wasn't!
-		move.w	d0,d1
+		move.w	d0,d1		; backup d0; it'll be overwritten
 		move.b	(Vint_runcount+3).w,d0
 		andi.b	#$3F,d0		; does VInt counter fall on 0, $40, $80 or $C0?
 		bne.s	.skipsound	; if not, branch
@@ -406,12 +390,11 @@ WindTunnels:					; leftover from Sonic 1's LZ
 
 .skipsound:
 		tst.b	(f_wtunnelallow).w ; are wind tunnels disabled?
-		bne.w	.quit	; if yes, branch
-		cmpi.b	#4,obRoutine(a1) ; is Sonic hurt/dying?
+		bne.w	.return		; if yes, branch
+		cmpi.b	#4,obRoutine(a1)	; is Sonic hurt/dying?
 		bhs.s	.clrquit	; if yes, branch
 		move.b	#1,(f_wtunnelmode).w
-		; See above.
-		move.w	d1,d0
+		move.w	d1,d0		; restore d0
 		subi.w	#$80,d0
 		cmp.w	(a2),d0
 		bcc.s	.movesonic
@@ -428,17 +411,15 @@ WindTunnels:					; leftover from Sonic 1's LZ
 		move.w	#$400,obVelX(a1)	; move Sonic horizontally
 		clr.w	obVelY(a1)
 		move.b	#$F,obAnim(a1)		; use floating animation
-		bset	#1,obStatus(a1)
+		bset	#1,obStatus(a1)		; set "in-air" bit
 		btst	#0,(v_jpadholdlogical).w	; is up pressed?
 		beq.s	.down			; if not, branch
 		subq.w	#1,obY(a1)		; move Sonic up on pole
 
 .down:
 		btst	#bitDn,(v_jpadhold2).w	; is down being pressed?
-		beq.s	.end			; if not, branch
+		beq.s	.return			; if not, branch
 		addq.w	#1,obY(a1)		; move Sonic down on pole
-
-.end:
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -446,26 +427,26 @@ WindTunnels:					; leftover from Sonic 1's LZ
 		addq.w	#8,a2		; use second set of values (act 1 only)
 		dbf	d1,.chksonic	; on act 1, repeat for a second tunnel
 		tst.b	(f_wtunnelmode).w ; is Sonic still in a tunnel?
-		beq.s	.quit		; if yes, branch
+		beq.s	.return		; if yes, branch
 		sf	obAnim(a1)	; use walking animation
 
-.clrquit:
-		clr.b	(f_wtunnelmode).w
-
-.quit:
-		rts
+.clrquit:	clr.b	(f_wtunnelmode).w
+.return:	rts
 ; End of function WindTunnels
 
 ; ---------------------------------------------------------------------------
-
-		;    left, top,  right, bottom boundaries
-S1LZWind_Data:	dc.w $A80, $300, $C10,  $380 ; act 1 values (set 1)
+; Wind Tunnel Coordinates (Current boundaries leftover from Sonic 1; Filler)
+; ---------------------------------------------------------------------------
+WindTunnel_Data:;    left, top,  right, bottom boundaries
+		dc.w $A80, $300, $C10,  $380 ; act 1 values (set 1)
 		dc.w $F80, $100, $1410,	$180 ; act 1 values (set 2)
-		dc.w $460, $400, $710,  $480 ; act 2 values
-		dc.w $A20, $600, $1610, $6E0 ; act 3 values
-		dc.w $C80, $600, $13D0, $680 ; SBZ act 3 values
-		even
 
+		dc.w $460, $400, $710,  $480 ; act 2 values
+
+		dc.w $A20, $600, $1610, $6E0 ; act 3 values
+
+		dc.w $C80, $600, $13D0, $680 ; act 4 values (SBZ3)
+		even
 ; ---------------------------------------------------------------------------
 ; Labyrinth Zone water slide subroutine
 ; ---------------------------------------------------------------------------
@@ -497,9 +478,7 @@ WaterSlides:
 		beq.s	.return
 		move.w	#5,move_lock(a1)	; In NA, move_lock changes from $3E, to $2E.
 		clr.b	(f_slidemode).w
-
-.return:
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 
 Slide_Move:
@@ -526,11 +505,8 @@ loc_4430:
 ; End of function WaterSlides
 
 ; ---------------------------------------------------------------------------
-Slide_Speeds:
-		dc.b 10, -11, 10, -10, -11, -12, 11
+Slide_Speeds:	dc.b 10, -11, 10, -10, -11, -12, 11
 		even
-
-Slide_Chunks:
-		dc.b 2, 7, 3, $4C, $4B, 8, 4
+Slide_Chunks:	dc.b 2, 7, 3, $4C, $4B, 8, 4
 Slide_Chunks_End:
 		even

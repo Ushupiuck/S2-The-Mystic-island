@@ -726,7 +726,7 @@ Ring_start_addr_P2:	ds.w	1
 Ring_end_addr_P2:	ds.w	1
 
 Screen_redraw_flag:	ds.b	1			; if whole screen needs to redraw, such as when you destroy the hatch before the boss in WFZ
-Scroll_Timer:		ds.b	1			; unused
+Boss_defeated_flag:	ds.b	1			;
 
 Sonic_top_speed:	ds.w	1
 Sonic_acceleration:	ds.w	1
@@ -777,8 +777,8 @@ f_wtunnelmode:		ds.b	1			; LZ water tunnel mode
 
 f_playerctrl:		ds.b	1			; Player control override flags (object ineraction, control enable)
 f_wtunnelallow:		ds.b	1			; LZ water tunnels (00 = enabled; 01 = disabled)
+f_wtunnelallow_p2:	ds.b	1			; For tails too
 f_slidemode:		ds.b	1			; LZ water slide mode
-Boss_defeated_flag:	ds.b	1
 
 v_lz_deform:		ds.w	1			; LZ deformation offset, in units of $80
 f_lockctrl:		ds.b	1
