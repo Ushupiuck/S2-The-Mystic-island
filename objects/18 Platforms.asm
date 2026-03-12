@@ -1,4 +1,6 @@
 ; ---------------------------------------------------------------------------
+; Object 18 - platforms (GHZ, SYZ, SLZ)
+; ---------------------------------------------------------------------------
 
 Obj18:
 		moveq	#0,d0
@@ -6,18 +8,22 @@ Obj18:
 		move.w	Obj18_Index(pc,d0.w),d1
 		jmp	Obj18_Index(pc,d1.w)
 ; ---------------------------------------------------------------------------
-Obj18_Index:	dc.w loc_882C-Obj18_Index
-		dc.w loc_88A2-Obj18_Index
-		dc.w loc_8908-Obj18_Index
-		dc.w loc_88E0-Obj18_Index
-Obj18_Conf:	dc.b $20, 0
+Obj18_Index:	dc.w Plat_Main-Obj18_Index	; 0
+		dc.w Plat_Solid-Obj18_Index	; 2
+		dc.w Plat_Delete-Obj18_Index	; 4
+		dc.w Plat_Action-Obj18_Index	; 6
+; ---------------------------------------------------------------------------
+Obj18_Conf:
+		;    width_pixels
+		;	  frame
+		dc.b $20, 0
 		dc.b $20, 1
 		dc.b $20, 2
 		dc.b $40, 3
 		dc.b $30, 4
 ; ---------------------------------------------------------------------------
 
-loc_882C:
+Plat_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		moveq	#0,d0
 		move.b	obSubtype(a0),d0
@@ -26,8 +32,8 @@ loc_882C:
 		lea	Obj18_Conf(pc,d0.w),a2
 		move.b	(a2)+,obActWid(a0)
 		move.b	(a2)+,obFrame(a0)
-		move.w	#make_art_tile(ArtTile_Level,2,0),obGfx(a0)
 		move.l	#Map_Obj18,obMap(a0)
+		move.w	#make_art_tile(ArtTile_Level,2,0),obGfx(a0)
 		cmpi.b	#id_EHZ,(Current_Zone).w
 		beq.s	loc_8866
 		cmpi.b	#id_HTZ,(Current_Zone).w
@@ -46,49 +52,54 @@ loc_8874:
 		move.w	#$80,obAngle(a0)
 		andi.b	#$F,obSubtype(a0)
 
-loc_88A2:
+Plat_Solid:	; Routine 2
 		move.b	obStatus(a0),d0
 		andi.b	#$18,d0
-		bne.s	loc_88B8
+		bne.s	Plat_Action2
 		tst.b	objoff_38(a0)
 		beq.s	loc_88C4
 		subq.b	#4,objoff_38(a0)
 		bra.s	loc_88C4
 ; ---------------------------------------------------------------------------
 
-loc_88B8:
+Plat_Action2:
 		cmpi.b	#$40,objoff_38(a0)
 		beq.s	loc_88C4
 		addq.b	#4,objoff_38(a0)
 
 loc_88C4:
 		move.w	obX(a0),-(sp)
-		bsr.w	sub_8926
-		bsr.w	sub_890C
+		bsr.w	Plat_Move
+		bsr.w	Plat_Nudge
 		moveq	#0,d1
 		move.b	obActWid(a0),d1
 		moveq	#8,d3
 		move.w	(sp)+,d4
 		bsr.w	PlatformObject
-		bra.s	loc_88E8
-; ---------------------------------------------------------------------------
-
-loc_88E0:
-		bsr.w	sub_8926
-		bsr.w	sub_890C
-
-loc_88E8:
+	;	bra.s	Plat_ChkDel
 		out_of_range.w	DeleteObject,objoff_32(a0)
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
-loc_8908:
+Plat_Action:	; Routine 6
+		bsr.w	Plat_Move
+		bsr.w	Plat_Nudge
+; Plat_ChkDel:
+		out_of_range.w	DeleteObject,objoff_32(a0)
+		bra.w	DisplaySprite
+; ---------------------------------------------------------------------------
+
+Plat_Delete:	; Routine 4
 		bra.w	DeleteObject
 
-; =============== S U B	R O U T	I N E =======================================
+; ---------------------------------------------------------------------------
+; Subroutine to move platform slightly when you stand on it
+; ---------------------------------------------------------------------------
+
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 
-sub_890C:
+Plat_Nudge:
 		move.b	objoff_38(a0),d0
 		bsr.w	CalcSine
 		move.w	#$400,d1
@@ -97,69 +108,67 @@ sub_890C:
 		add.w	objoff_2C(a0),d0
 		move.w	d0,obY(a0)
 		rts
-; End of function sub_890C
+; End of function Plat_Nudge
+
+; ---------------------------------------------------------------------------
+; Subroutine to move platforms
+; ---------------------------------------------------------------------------
+
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 
-; =============== S U B	R O U T	I N E =======================================
-
-
-sub_8926:
+Plat_Move:
 		moveq	#0,d0
 		move.b	obSubtype(a0),d0
 		andi.w	#$F,d0
 		add.w	d0,d0
-		move.w	off_893A(pc,d0.w),d1
-		jmp	off_893A(pc,d1.w)
-; End of function sub_8926
+		move.w	.index(pc,d0.w),d1
+		jmp	.index(pc,d1.w)
+; End of function Plat_Move
 
 ; ---------------------------------------------------------------------------
-off_893A:	dc.w locret_8956-off_893A
-		dc.w loc_8968-off_893A
-		dc.w loc_89AE-off_893A
-		dc.w loc_89C6-off_893A
-		dc.w loc_89EE-off_893A
-		dc.w loc_8958-off_893A
-		dc.w loc_899E-off_893A
-		dc.w loc_8A5C-off_893A
-		dc.w loc_8A88-off_893A
-		dc.w locret_8956-off_893A
-		dc.w loc_8AA0-off_893A
-		dc.w loc_8ABA-off_893A
-		dc.w loc_8990-off_893A
-		dc.w loc_8980-off_893A
+.index:		dc.w .type00-.index, .type01-.index
+		dc.w .type02-.index, .type03-.index
+		dc.w .type04-.index, .type05-.index
+		dc.w .type06-.index, .type07-.index
+		dc.w .type08-.index, .type00-.index
+		dc.w .type0A-.index, .type0D-.index
+		dc.w .type0B-.index, .type0C-.index
 ; ---------------------------------------------------------------------------
 
-locret_8956:
-		rts
+.type00:
+		rts		; platform 00 doesn't move
 ; ---------------------------------------------------------------------------
 
-loc_8958:
+.type05:
 		move.w	objoff_32(a0),d0
-		move.b	obAngle(a0),d1
-		neg.b	d1
+		move.b	obAngle(a0),d1	; load platform-motion variable
+		neg.b	d1		; reverse platform-motion
 		addi.b	#$40,d1
 		ext.w	d1
 		add.w	d1,d0
-		move.w	d0,obX(a0)
+		move.w	d0,obX(a0)	; change position on x-axis
 		move.b	(v_oscillate+$1A).w,obAngle(a0)
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_8968:
+.type01:
 		move.w	objoff_32(a0),d0
 		move.b	obAngle(a0),d1
 		subi.b	#$40,d1
+
+; .type01_move:
 		ext.w	d1
 		add.w	d1,d0
-		move.w	d0,obX(a0)
+		move.w	d0,obX(a0)	; change position on x-axis
 		move.b	(v_oscillate+$1A).w,obAngle(a0)
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_8980:
+.type0C:
 		move.w	objoff_34(a0),d0
-		move.b	(v_oscillate+$E).w,d1
-		neg.b	d1
+		move.b	(v_oscillate+$E).w,d1 ; load platform-motion variable
+		neg.b	d1		; reverse platform-motion
 		addi.b	#$30,d1
 		ext.w	d1
 		add.w	d1,d0
@@ -168,9 +177,9 @@ loc_8980:
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_8990:
+.type0B:
 		move.w	objoff_34(a0),d0
-		move.b	(v_oscillate+$E).w,d1
+		move.b	(v_oscillate+$E).w,d1 ; load platform-motion variable
 		subi.b	#$30,d1
 		ext.w	d1
 		add.w	d1,d0
@@ -179,10 +188,10 @@ loc_8990:
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_899E:
+.type06:
 		move.w	objoff_34(a0),d0
-		move.b	obAngle(a0),d1
-		neg.b	d1
+		move.b	obAngle(a0),d1	; load platform-motion variable
+		neg.b	d1		; reverse platform-motion
 		addi.b	#$40,d1
 		ext.w	d1
 		add.w	d1,d0
@@ -191,43 +200,41 @@ loc_899E:
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_89AE:
+.type02:
 		move.w	objoff_34(a0),d0
-		move.b	obAngle(a0),d1
+		move.b	obAngle(a0),d1	; load platform-motion variable
 		subi.b	#$40,d1
 		ext.w	d1
 		add.w	d1,d0
-		move.w	d0,objoff_2C(a0)
+		move.w	d0,objoff_2C(a0)	; change position on y-axis
 		move.b	(v_oscillate+$1A).w,obAngle(a0)
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_89C6:
-		tst.w	objoff_3A(a0)
-		bne.s	loc_89DC
-		btst	#3,obStatus(a0)
-		beq.s	.return
-		move.w	#$1E,objoff_3A(a0)
-.return:
+.type03:
+		tst.w	objoff_3A(a0)		; is time delay set?
+		bne.s	.type03_wait		; if it is, branch
+		btst	#3,obStatus(a0)		; is Sonic standing on the platform?
+		beq.s	+			; if not, return
+		move.w	#30,objoff_3A(a0)	; set time delay to 0.5 seconds
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_89DC:
-		subq.w	#1,objoff_3A(a0)
-		bne.s	.return
+.type03_wait:
+		subq.w	#1,objoff_3A(a0)	; subtract 1 from time delay
+		bne.s	+			; keep waiting until we hit 0
 		move.w	#$20,objoff_3A(a0)
-		addq.b	#1,obSubtype(a0)
-.return:
-		rts
+		addq.b	#1,obSubtype(a0)	; change to type 04 (falling)
++		rts
 ; ---------------------------------------------------------------------------
 
-loc_89EE:
+.type04:
 		tst.w	objoff_3A(a0)
-		beq.s	loc_8A2E
+		beq.s	.loc_8A2E
 		subq.w	#1,objoff_3A(a0)
-		bne.s	loc_8A2E
+		bne.s	.loc_8A2E
 		btst	#3,obStatus(a0)
-		beq.s	loc_8A28
+		beq.s	.loc_8A28
 		lea	(v_player).w,a1
 		bset	#1,obStatus(a1)
 		bclr	#3,obStatus(a1)
@@ -236,10 +243,10 @@ loc_89EE:
 		clr.b	ob2ndRout(a0)
 		move.w	obVelY(a0),obVelY(a1)
 
-loc_8A28:
+.loc_8A28:
 		move.b	#6,obRoutine(a0)
 
-loc_8A2E:
+.loc_8A2E:
 		move.l	objoff_2C(a0),d3
 		move.w	obVelY(a0),d0
 		ext.l	d0
@@ -250,65 +257,61 @@ loc_8A2E:
 		move.w	(Camera_Max_Y_pos).w,d0
 		addi.w	#224,d0
 		cmp.w	objoff_2C(a0),d0
-		bcc.s	.return
-		move.b	#4,obRoutine(a0)
-.return:
+		bcc.s	+
+		move.b	#4,obRoutine(a0)	; this was 6 in Sonic 1
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_8A5C:
-		tst.w	objoff_3A(a0)
-		bne.s	loc_8A7C
-		lea	(f_switch).w,a2
+.type07:
+		tst.w	objoff_3A(a0)		; is time delay set?
+		bne.s	.type07_wait		; if yes, branch
+		lea	(f_switch).w,a2		; load switch statuses
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0
-		lsr.w	#4,d0
-		tst.b	(a2,d0.w)
-		beq.s	.return
-		move.w	#$3C,objoff_3A(a0)
-.return:
+		move.b	obSubtype(a0),d0	; move object type ($x7) to d0
+		lsr.w	#4,d0			; divide d0 by 8, round down
+		tst.b	(a2,d0.w)		; has switch no. d0 been pressed?
+		beq.s	+			; if not, branch
+		move.w	#60,objoff_3A(a0)	; set time delay to 1 second
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_8A7C:
-		subq.w	#1,objoff_3A(a0)
-		bne.s	.return
-		addq.b	#1,obSubtype(a0)
-.return:
+.type07_wait:
+		subq.w	#1,objoff_3A(a0)	; subtract 1 from time delay
+		bne.s	+			; keep waiting until we hit 0
+		addq.b	#1,obSubtype(a0)	; change type to 08
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_8A88:
-		subq.w	#2,objoff_2C(a0)
+.type08:
+		subq.w	#2,objoff_2C(a0)	; move platform up
 		move.w	objoff_34(a0),d0
 		subi.w	#$200,d0
-		cmp.w	objoff_2C(a0),d0
-		bne.s	.return
-		clr.b	obSubtype(a0)
-.return:
-		rts
+		cmp.w	objoff_2C(a0),d0	; has the platform moved $200 pixels?
+		bne.s	+			; keep going until it has
+		clr.b	obSubtype(a0)		; then change to type 00 (stop moving)
++		rts
 ; ---------------------------------------------------------------------------
 
-loc_8AA0:
+.type0A:
 		move.w	objoff_34(a0),d0
-		move.b	obAngle(a0),d1
+		move.b	obAngle(a0),d1		; load platform-motion variable
 		subi.b	#$40,d1
 		ext.w	d1
 		asr.w	#1,d1
 		add.w	d1,d0
-		move.w	d0,objoff_2C(a0)
-		move.b	(v_oscillate+$1A).w,obAngle(a0)
+		move.w	d0,objoff_2C(a0)	; change position on y-axis
+		move.b	(v_oscillate+$1A).w,obAngle(a0)	; update platform-movement variable
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_8ABA:
+.type0D:
 		move.w	objoff_34(a0),d0
-		move.b	obAngle(a0),d1
+		move.b	obAngle(a0),d1		; load platform-motion variable
 		neg.b	d1
 		addi.b	#$40,d1
 		ext.w	d1
 		asr.w	#1,d1
 		add.w	d1,d0
-		move.w	d0,objoff_2C(a0)
-		move.b	(v_oscillate+$1A).w,obAngle(a0)
+		move.w	d0,objoff_2C(a0)	; change position on y-axis
+		move.b	(v_oscillate+$1A).w,obAngle(a0)	; update platform-movement variable
 		rts
