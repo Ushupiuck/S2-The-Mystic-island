@@ -32,15 +32,11 @@ Plat_Main:	; Routine 0
 		lea	Obj18_Conf(pc,d0.w),a2
 		move.b	(a2)+,obActWid(a0)
 		move.b	(a2)+,obFrame(a0)
-		move.l	#Map_Obj18,obMap(a0)
+		move.l	#Map_Obj18_GHZ,obMap(a0)	; we default to GHZ's platform mappings
 		move.w	#make_art_tile(ArtTile_Level,2,0),obGfx(a0)
 		cmpi.b	#id_EHZ,(Current_Zone).w
-		beq.s	loc_8866
-		cmpi.b	#id_HTZ,(Current_Zone).w
-		bne.s	loc_8874
-
-loc_8866:
-		move.l	#Map_obj18_EHZ,obMap(a0)
+		bne.s	loc_8874			; for any level that's not GHZ
+		move.l	#Map_obj18_EHZ,obMap(a0)	; load EHZ specific platform mappings
 		move.w	#make_art_tile(ArtTile_Level,2,0),obGfx(a0)
 
 loc_8874:

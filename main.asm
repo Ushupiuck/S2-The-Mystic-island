@@ -5,9 +5,10 @@
 FixBugs			= 1	; change to 1 to enable bugfixes
 AdvancedHandler		= 0	; 0 for Sonic 1's Error handler, 1 for the Advanced Error handler
 zeroOffsetOptimization	= 1	; if 1, makes a handful of zero-offset instructions smaller
-TimeTravel		= 1	; if 1, allows time-travel mechanics (W.I.P)
 BackupSRAM		= 1
 AddressSRAM		= 3	; 0 = odd+even; 2 = even only; 3 = odd only
+LoadTails		= 0	; Whether or not Tails will appear alongside Sonic in levels
+TimeTravel		= 1	; if 1, allows time-travel mechanics (W.I.P)
 
 	CPU 68000
 	include	"s2.macrosetup.asm"
@@ -72,10 +73,10 @@ InitValues:	dc.w	$8000
 VDPInitValues:		; values for VDP registers
 		dc.b	4			; VDP $80 - 8-colour mode
 		dc.b	$14			; VDP $81 - Megadrive mode, DMA enable
-		dc.b	($C000>>10)		; VDP $82 - foreground nametable address
-		dc.b	($F000>>10)		; VDP $83 - window nametable address
-		dc.b	($E000>>13)		; VDP $84 - background nametable address
-		dc.b	($D800>>9)		; VDP $85 - sprite table address
+		dc.b	(vram_fg>>10)		; VDP $82 - foreground nametable address
+		dc.b	(vram_window>>10)	; VDP $83 - window nametable address
+		dc.b	(vram_bg>>13)		; VDP $84 - background nametable address
+		dc.b	(vram_sprites>>9)	; VDP $85 - sprite table address
 		dc.b	0			; VDP $86 - unused
 		dc.b	0			; VDP $87 - background colour
 		dc.b	0			; VDP $88 - unused
@@ -83,7 +84,7 @@ VDPInitValues:		; values for VDP registers
 		dc.b	255			; VDP $8A - HBlank register
 		dc.b	0			; VDP $8B - full screen scroll
 		dc.b	$81			; VDP $8C - 40 cell display
-		dc.b	($DC00>>10)		; VDP $8D - hscroll table address
+		dc.b	(vram_hscroll>>10)	; VDP $8D - hscroll table address
 		dc.b	0			; VDP $8E - unused
 		dc.b	1			; VDP $8F - VDP increment
 		dc.b	1			; VDP $90 - 64 cell hscroll size
@@ -2801,11 +2802,12 @@ Level_SkipTtlCard:
 ;		beq.s	Level_ChkDebug		; the 2nd player, if neccesary
 
 ;LevelInit_LoadTails:	; Disabled until his AI &/or character selection is implemented
+ if LoadTails=1
 		_move.b	#id_Obj02,(v_player2).w	; load Tails object
 		move.w	(v_player+obX).w,(v_player2+obX).w	; copy player 1's x position to player 2
 		move.w	(v_player+obY).w,(v_player2+obY).w	; copy player 1's y position to player 2
 		subi.w	#32,(v_player2+obX).w	; set player 2's x position 32 pixels behind player 1's
-
+ endif
 Level_ChkDebug:
 		tst.b	(f_debugcheat).w
 		beq.s	Level_ChkWater
@@ -8211,50 +8213,9 @@ Map_Obj17:	include	"mappings/sprite/S1/Spiked Pole Helix.asm"
 
 		include	"objects/18 Platforms.asm"
 ; ---------------------------------------------------------------------------
-Map_Obj18x:	dc.w word_8ADE-Map_Obj18x
-		dc.w word_8AF0-Map_Obj18x
-word_8ADE:	dc.w 2
-		dc.w $F40B,  $3C,  $1E,$FFE8
-		dc.w $F40B,  $48,  $24,	   0
-word_8AF0:	dc.w $A
-		dc.w $F40F,  $CA,  $65,$FFE0
-		dc.w  $40F,  $DA,  $6D,$FFE0
-		dc.w $240F,  $DA,  $6D,$FFE0
-		dc.w $440F,  $DA,  $6D,$FFE0
-		dc.w $640F,  $DA,  $6D,$FFE0
-		dc.w $F40F, $8CA, $865,	   0
-		dc.w  $40F, $8DA, $86D,	   0
-		dc.w $240F, $8DA, $86D,	   0
-		dc.w $440F, $8DA, $86D,	   0
-		dc.w $640F, $8DA, $86D,	   0
-Map_Obj18:	dc.w word_8B46-Map_Obj18
-		dc.w word_8B68-Map_Obj18
-word_8B46:	dc.w 4
-		dc.w $F40B,  $3B,  $1D,$FFE0
-		dc.w $F407,  $3F,  $1F,$FFF8
-		dc.w $F407,  $3F,  $1F,	   8
-		dc.w $F403,  $47,  $23,	 $18
-word_8B68:	dc.w $A
-		dc.w $F40F,  $C5,  $62,$FFE0
-		dc.w  $40F,  $D5,  $6A,$FFE0
-		dc.w $240F,  $D5,  $6A,$FFE0
-		dc.w $440F,  $D5,  $6A,$FFE0
-		dc.w $640F,  $D5,  $6A,$FFE0
-		dc.w $F40F, $8C5, $862,	   0
-		dc.w  $40F, $8D5, $86A,	   0
-		dc.w $240F, $8D5, $86A,	   0
-		dc.w $440F, $8D5, $86A,	   0
-		dc.w $640F, $8D5, $86A,	   0
-		dc.w	 2,    3,$F60B,	 $49
-		dc.w   $24,$FFE0,$F607,	 $51
-		dc.w   $28,$FFF8,$F60B,	 $55
-		dc.w   $2A,    8,    2,	   2
-		dc.w $F80F,  $21,  $10,$FFE0
-		dc.w $F80F,  $21,  $10,	   0
-		even
+; Sprite mappings - GHZ, EHZ platforms
 ; ---------------------------------------------------------------------------
-; Sprite mappings - EHZ platforms
-; ---------------------------------------------------------------------------
+Map_Obj18_GHZ:	include	"mappings/sprite/18 - GHZ platforms mappings.asm"
 Map_obj18_EHZ:	include	"mappings/sprite/18 - EHZ platforms mappings.asm"
 ; ---------------------------------------------------------------------------
 		include	"objects/1A Collapsing Platforms.asm"
@@ -11494,28 +11455,19 @@ loc_F70A:
 MvSonicOnPtfm:
 		move.w	obY(a0),d0
 		sub.w	d3,d0
-	;	bra.s	loc_F71E
-; ===========================================================================
-		; a couple lines of unused/leftover/dead code from Sonic 1 ; a0=object
-	;	move.w	obY(a0),d0
-	;	subi.w	#9,d0
-
-loc_F71E:
 		tst.b	(f_playerctrl).w
-		bmi.s	locret_F746
+		bmi.s	.return
 		cmpi.b	#6,obRoutine(a1)
-		bhs.s	locret_F746
+		bhs.s	.return
 		tst.w	(Debug_placement_mode).w
-		bne.s	locret_F746
+		bne.s	.return
 		moveq	#0,d1
 		move.b	obHeight(a1),d1
 		sub.w	d1,d0
 		move.w	d0,obY(a1)
 		sub.w	obX(a0),d2
 		sub.w	d2,obX(a1)
-
-locret_F746:
-		rts
+.return:	rts
 ; End of function MvSonicOnPtfm
 
 
@@ -11688,26 +11640,26 @@ loc_F876:
 
 sub_F880:
 		tst.w	obVelY(a1)
-		bmi.w	locret_F966
+		bmi.w	loc_F916.return
 		move.w	obX(a1),d0
 		sub.w	obX(a0),d0
 		add.w	d1,d0
-		bmi.w	locret_F966
+		bmi.w	loc_F916.return
 		cmp.w	d2,d0
-		bhs.w	locret_F966
+		bhs.w	loc_F916.return
 		bra.s	loc_F8BC
 ; ---------------------------------------------------------------------------
 
 PlatformObject_cont:
 		tst.w	obVelY(a1)
-		bmi.w	locret_F966
+		bmi.w	loc_F916.return
 		move.w	obX(a1),d0
 		sub.w	obX(a0),d0
 		add.w	d1,d0
-		bmi.w	locret_F966
+		bmi.w	loc_F916.return
 		add.w	d1,d1
 		cmp.w	d1,d0
-		bhs.w	locret_F966
+		bhs.w	loc_F916.return
 
 loc_F8BC:
 		move.w	obY(a0),d0
@@ -11720,13 +11672,13 @@ loc_F8C2:
 		add.w	d2,d1
 		addq.w	#4,d1
 		sub.w	d1,d0
-		bhi.w	locret_F966
+		bhi.s	loc_F916.return
 		cmpi.w	#-$10,d0
-		blo.w	locret_F966
+		blo.s	loc_F916.return
 		tst.b	(f_playerctrl).w
-		bmi.w	locret_F966
+		bmi.s	loc_F916.return
 		cmpi.b	#6,obRoutine(a1)
-		bhs.w	locret_F966
+		bhs.s	loc_F916.return
 		add.w	d0,d2
 		addq.w	#3,d2
 		move.w	d2,obY(a1)
@@ -11751,40 +11703,37 @@ loc_F916:
 		clr.w	obVelY(a1)
 		move.w	obVelX(a1),obInertia(a1)
 		btst	#1,obStatus(a1)
-		beq.s	loc_F95C
+		beq.s	+
 		move.l	a0,-(sp)
 		movea.l	a1,a0
 		move.w	a0,d1
 		subi.w	#v_objspace,d1
 		bne.s	loc_F954
 		jsr	(Sonic_ResetOnFloor).l
-		bra.s	loc_F95A
+		movea.l	(sp)+,a0
++		bset	#3,obStatus(a1)
+		bset	d6,obStatus(a0)
+.return:	rts
 ; ===========================================================================
 
 loc_F954:
 		jsr	(Tails_ResetTailsOnFloor).l
-
-loc_F95A:
 		movea.l	(sp)+,a0
-
-loc_F95C:
 		bset	#3,obStatus(a1)
 		bset	d6,obStatus(a0)
-
-locret_F966:
 		rts
 ; ===========================================================================
 ; loc_F968:
 SlopedPlatform_cont:
 		tst.w	obVelY(a1)
-		bmi.w	locret_F966
+		bmi.s	loc_F916.return
 		move.w	obX(a1),d0
 		sub.w	obX(a0),d0
 		add.w	d1,d0
-		bmi.s	locret_F966
+		bmi.s	loc_F916.return
 		add.w	d1,d1
 		cmp.w	d1,d0
-		bhs.s	locret_F966
+		bhs.s	loc_F916.return
 		btst	#0,obRender(a0)
 		beq.s	loc_F98E
 		not.w	d0
@@ -11801,14 +11750,14 @@ loc_F98E:
 
 loc_F9A0:
 		tst.w	obVelY(a1)
-		bmi.w	locret_F966
+		bmi.s	sub_F9C8.return
 		move.w	obX(a1),d0
 		sub.w	obX(a0),d0
 		add.w	d1,d0
-		bmi.w	locret_F966
+		bmi.s	sub_F9C8.return
 		add.w	d1,d1
 		cmp.w	d1,d0
-		bhs.w	locret_F966
+		bhs.s	sub_F9C8.return
 		move.w	obY(a0),d0
 		sub.w	d3,d0
 		bra.w	loc_F8C2
@@ -11821,21 +11770,18 @@ sub_F9C8:
 		add.w	d2,d2
 		lea	(v_player).w,a1
 		btst	#1,obStatus(a1)
-		bne.s	loc_F9E8
+		bne.s	+
 		move.w	obX(a1),d0
 		sub.w	obX(a0),d0
 		add.w	d1,d0
-		bmi.s	loc_F9E8
+		bmi.s	+
 		cmp.w	d2,d0
-		blo.s	locret_F9FA
-
-loc_F9E8:
+		blo.s	.return
++
 		bclr	#3,obStatus(a1)
 		move.b	#2,obRoutine(a0)
 		bclr	#3,obStatus(a0)
-
-locret_F9FA:
-		rts
+.return:	rts
 ; End of function sub_F9C8
 
 ; ===========================================================================
