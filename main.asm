@@ -616,6 +616,7 @@ Vint_TitleCard:
 		movem.l	(Scroll_flags).w,d0-d1
 		movem.l	d0-d1,(Scroll_flags_copy).w
 		bsr.w	LoadTilesAsYouMove
+	;	jsr	(LoadTilesAsYouMove).l
 		jsr	(HudUpdate).l
 		bsr.w	ProcessDPLC
 		bra.w	Set_Kos_Bookmark
@@ -2851,7 +2852,6 @@ Level_SkipClr:
 		move.b	#1,(f_ringcount).w
 		move.b	#1,(f_timecount).w
 		move.w	#4,(Sonic_Pos_Record_Index).w
-		moveq	#0,d0
 		move.w	d0,(Sonic_Pos_Record_Buf).w
 		move.w	d0,(Demo_button_index).w
 		lea	(Demo_Index).l,a1
@@ -4035,14 +4035,16 @@ S1SS_ShowLayout:
 		lea	(v_ssbuffer1).l,a0
 		moveq	#0,d0
 		move.w	(Camera_Y_pos).w,d0		; get camera y pos
-		divu.w	#$18,d0				; divide by size of wall sprite (24 pixels)
-		lsl.w	#7,d0				; multiply by width of level ($80)
-		ext.l	d0
-		adda.l	d0,a0				; jump to correct row in level
+		add.w	d0,d0				; jump to correct row in level
+		lea	(BS_RowLUT).l,a6		; load precomputed table (divided by 24, multiplied by $80)
+		move.w	(a6,d0.w),d0
+		adda.w	d0,a0				; jump to correct row in level
 		moveq	#0,d0
+		moveq	#0,d4
 		move.w	(Camera_X_pos).w,d0		; get camera x pos
-		divu.w	#$18,d0				; divide by size of wall sprite (24 pixels)
-		adda.w	d0,a0				; jump to correct block in level
+		lea	(BS_ColLUT).l,a6		; load precomputed table (divided by 24)
+		move.b	(a6,d0.w),d4
+		adda.w	d4,a0				; jump to correct block in level
 		lea	(v_ssbuffer3).l,a4		; transformation grid
 ;		lea	(Sprite_Table).w,a2		; the following commented out code was added in S3&K
 ;		moveq	#0,d5
@@ -4129,7 +4131,6 @@ ssloop_sprite:
 		clr.b	-5(a2)
 		rts
 ; End of function S1SS_ShowLayout
-
 ; ---------------------------------------------------------------------------
 ; Subroutine to	animate	walls and rings	in the special stage
 ; ---------------------------------------------------------------------------
@@ -4987,6 +4988,8 @@ DeformBGLayer:
 		bsr.w	DynScreenResizeLoad
 		move.w	(Camera_Y_pos).w,(v_scrposy_vdp).w
 		move.w	(Camera_BG_Y_pos).w,(v_bgscrposy_vdp).w
+		move.l	(Camera_X_pos).w,(Camera_X_pos_copy).w
+		move.l	(Camera_Y_pos).w,(Camera_Y_pos_copy).w
 		moveq	#0,d0
 		move.b	(Current_Zone).w,d0
 		add.w	d0,d0
@@ -8571,7 +8574,6 @@ Map_Obj2B:	binclude	"mappings/sprite/obj2B.bin"	; Green hill
 		even
 Map_obj2B_1:	binclude	"mappings/sprite/obj2B_1.bin"	; Emerald hill
 		even
-
 ; ---------------------------------------------------------------------------
 		include	"objects/S1/2C Jaws.asm"
 ; ---------------------------------------------------------------------------
@@ -8610,7 +8612,8 @@ Map_Obj12:	dc.w word_14444-Map_Obj12
 word_14444:	dc.w 2
 		dc.w $F00F,    0,    0,$FFE0
 		dc.w $F00F,  $10,    8,	   0
-		even; ---------------------------------------------------------------------------
+		even
+; ---------------------------------------------------------------------------
 Map_SpecialWarp:
 		binclude	"mappings/sprite/Special Stage Warp.bin"
 		even
@@ -8681,8 +8684,9 @@ word_CAF0:	dc.w 8
 		dc.w $1005,    8,    4,	   0
 		even
 ; ---------------------------------------------------------------------------
-
-
+		include	"objects/Enemies/A0 Basaran.asm"
+Map_Bas:	binclude	"mappings/sprite/Basaran.bin"
+		even
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; This runs the code of all the objects that are in Object_RAM
@@ -8924,7 +8928,7 @@ ptr_Obj9D:		dc.l ObjNull
 ptr_Obj9E:		dc.l ObjNull
 ptr_Obj9F:		dc.l ObjNull
 
-ptr_ObjA0:		dc.l ObjNull
+ptr_ObjA0:		dc.l Basaran		; Basaran
 ptr_ObjA1:		dc.l ObjNull
 ptr_ObjA2:		dc.l ObjNull
 ptr_ObjA3:		dc.l ObjNull
@@ -9608,12 +9612,6 @@ Anim_End:
 		rts
 ; End of function AnimateSprite
 
-; ---------------------------------------------------------------------------
-BldSpr_ScrPos:	dc.l 0
-		dc.l Camera_RAM
-		dc.l Camera_BG_X_pos
-		dc.l Camera_BG3_X_pos
-
 ; =============== S U B R O U T I N E =======================================
 
 
@@ -9645,16 +9643,15 @@ BuildSprites_ObjLoop:
 		beq.w	BuildSprites_NextObj	; if not, branch
 		andi.b	#$7F,obRender(a0)	; clear on-screen flag
 		move.b	obRender(a0),d0
-		move.w	obX(a0),d3
-		move.w	obY(a0),d2
 		move.b	d0,d4
 		btst	#6,d0		; is the multi-draw flag set?
 		bne.w	BuildSprites_MultiDraw	; if it is, branch
 		andi.w	#$C,d0		; is this to be positioned by screen coordinates?
 		beq.s	BuildSprites_ScreenSpaceObj	; if it is, branch
-		movea.l	BldSpr_ScrPos(pc,d0.w),a1
+		lea	(Camera_X_pos_copy).w,a1
 		moveq	#0,d0
 		move.b	obActWid(a0),d0
+		move.w	obX(a0),d3
 		sub.w	(a1),d3
 		move.w	d3,d1
 		add.w	d0,d1	; is the object right edge to the left of the screen?
@@ -9668,7 +9665,8 @@ BuildSprites_ObjLoop:
 		beq.s	BuildSprites_ApproxYCheck	; if not, branch
 		moveq	#0,d0
 		move.b	obHeight(a0),d0
-		sub.w	obMap(a1),d2
+		move.w	obY(a0),d2
+		sub.w	4(a1),d2			; Apparently, this is NOT obMap
 		move.w	d2,d1
 		add.w	d0,d1
 		bmi.s	BuildSprites_NextObj	; if the object is above the screen
@@ -9688,7 +9686,7 @@ BuildSprites_ScreenSpaceObj:
 
 BuildSprites_ApproxYCheck:
 		move.w	obY(a0),d2
-		sub.w	obMap(a1),d2
+		sub.w	4(a1),d2			; Apparently, this is NOT obMap
 		addi.w	#128,d2
 	andi.w	#$7FF,d2
 		cmpi.w	#$60,d2	; assume Y radius to be 32 pixels
@@ -9805,7 +9803,7 @@ BuildSprites_MultiDraw:
 		moveq	#0,d0
 		move.b	mainspr_childsprites(a0),d0	; get child sprite count
 		subq.w	#1,d0		; if there are 0, go to next object
-		blo.s	BuildSprites_MultiDraw_NextObj
+		bcs.s	BuildSprites_MultiDraw_NextObj
 
 -		swap	d0
 		move.w	(a6)+,d3	; get X pos
@@ -14673,9 +14671,9 @@ Obj50:
 		jmp	Obj50_Index(pc,d1.w)
 ; ---------------------------------------------------------------------------
 Obj50_Index:	dc.w Obj50_Init-Obj50_Index
-		dc.w loc_15FDA-Obj50_Index
-		dc.w loc_16006-Obj50_Index
-		dc.w loc_16030-Obj50_Index
+		dc.w Obj50_Main-Obj50_Index
+		dc.w Obj50_Wing-Obj50_Index
+		dc.w Obj50_Bullet-Obj50_Index
 		dc.w Obj50_Routine08-Obj50_Index
 		dc.w Obj50_Routine0A-Obj50_Index
 ; ---------------------------------------------------------------------------
@@ -14702,7 +14700,7 @@ Obj50_Init:
 		move.w	d0,objoff_34(a0)
 		move.w	obY(a0),objoff_2A(a0)
 		jsr	(FindFreeObj).l
-		bne.s	loc_15FDA
+		bne.s	Obj50_Main
 		_move.b	#id_Obj50,obID(a1)
 		move.b	#4,obRoutine(a1)
 		move.w	obX(a0),obX(a1)
@@ -14719,7 +14717,7 @@ Obj50_Init:
 		move.l	a0,objoff_36(a1)
 		bset	#6,obStatus(a0)
 
-loc_15FDA:
+Obj50_Main:
 		lea	Ani_Obj50(pc),a1
 		jsr	(AnimateSprite).l
 		move.w	#$39C,(v_waterpos1).w
@@ -14727,7 +14725,7 @@ loc_15FDA:
 		move.b	ob2ndRout(a0),d0
 		move.w	Obj50_SubIndex(pc,d0.w),d1
 		jsr	Obj50_SubIndex(pc,d1.w)
-		bsr.w	sub_161D8
+		bsr.w	Obj50_ControlWing
 		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
 Obj50_SubIndex:	dc.w loc_16046-Obj50_SubIndex
@@ -14735,10 +14733,8 @@ Obj50_SubIndex:	dc.w loc_16046-Obj50_SubIndex
 		dc.w loc_16066-Obj50_SubIndex
 ; ---------------------------------------------------------------------------
 
-loc_16006:
+Obj50_Wing:
 		movea.l	objoff_36(a0),a1
-		tst.b	obID(a1)
-		beq.w	loc_1639A
 		cmpi.b	#id_Obj50,obID(a1)
 		bne.w	loc_1639A
 		btst	#7,obStatus(a1)
@@ -14748,7 +14744,7 @@ loc_16006:
 		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
-loc_16030:
+Obj50_Bullet:
 		bsr.w	loc_162FC
 		jsr	(ObjectMove).l
 		lea	(Ani_Obj50).l,a1
@@ -14900,7 +14896,7 @@ sub_16184:
 ; =============== S U B R O U T I N E =======================================
 
 
-sub_161D8:
+Obj50_ControlWing:
 		moveq	#$A,d0
 		moveq	#-6,d1
 		movea.l	objoff_36(a0),a1
@@ -14917,7 +14913,7 @@ loc_16208:
 		add.w	d0,obX(a1)
 		add.w	d1,obY(a1)
 		rts
-; End of function sub_161D8
+; End of function Obj50_ControlWing
 
 ; ---------------------------------------------------------------------------
 
@@ -15210,10 +15206,6 @@ loc_165EA:
 		bsr.w	sub_162DE
 		bsr.w	loc_16626
 		bsr.w	loc_16708
-		bra.w	loc_16600
-; ---------------------------------------------------------------------------
-
-loc_16600:
 		subq.w	#1,objoff_30(a0)
 		beq.s	loc_16614
 		move.w	objoff_30(a0),d0
@@ -15353,6 +15345,13 @@ loc_1675C:
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Object 4B - Buzzer from EHZ
+; ---------------------------------------------------------------------------
+; OST Variables:
+Obj4B_parent		= objoff_2A	; long
+Obj4B_move_timer	= objoff_2E	; word
+Obj4B_turn_delay	= objoff_30	; word
+Obj4B_shooting_flag	= objoff_32	; byte
+Obj4B_shot_timer	= objoff_34	; word
 ; ---------------------------------------------------------------------------
 
 Obj4B:
@@ -20172,7 +20171,7 @@ Nem_HTZ_Seesaw:		binclude	"art/nemesis/See-saw in HTZ.nem"
 ; ---------------------------------------------------------------------------
 ; Compressed misc. graphics - Level placeholders
 ; ---------------------------------------------------------------------------
-		align	$1000
+	;	align	$1000
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - enemies
 ; ---------------------------------------------------------------------------
@@ -20418,6 +20417,8 @@ BS_3:		binclude	"Bonus & Special Stages/3.kosp"
 BS_4:		binclude	"Bonus & Special Stages/4.kosp"
 BS_5:		binclude	"Bonus & Special Stages/5.kosp"
 BS_6:		binclude	"Bonus & Special Stages/6.kosp"
+BS_RowLUT:	binclude	"Bonus & Special Stages/BS Precalculated Rows.bin"
+BS_ColLUT:	binclude	"Bonus & Special Stages/BS Precalculated Columns.bin"
 ;-----------------------------------------------------------------------------------
 ; Bonus & Special Stage Assets
 ;-----------------------------------------------------------------------------------

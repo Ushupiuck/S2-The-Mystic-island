@@ -379,10 +379,6 @@ VRAM_Menu_Plane_Table_Size               = $1000	; 64 cells x 32 cells x 2 bytes
 
 	include "sfxids.gen.asm"
 
-SndID_ArrowFiring = SndID_LavaBall
-SndID_RingRight = SndID_Ring
-SndID_WingFortress = SndID_Helicopter
-SndID_Scatter = SndID_LaserFloor
 
 ; Sound command IDs
 offset :=	zCommandIndex
@@ -813,8 +809,8 @@ Debug_placement_mode:	ds.b	1
 			ds.b	1			; the whole word is tested, but the debug mode code uses only the low byte
 Debug_Accel_Timer:	ds.b	1			; (1 byte)
 Debug_Speed:		ds.b	1			; (1 byte)
-
-Vint_runcount:		ds.l	1			; the number of times V-int has run
+v_vbla_byte =		*				; see next line
+Vint_runcount:		ds.l	1			; v_vbla_byte in Sonic 1; the number of times V-int has run
 
 Player_mode		ds.w	1			; 0 = Sonic and Tails, 1 = Sonic alone, 2 = Tails alone, 3 = Knuckles alone
 Player_option		ds.w	1			; option selected on level select, data select screen or Sonic & Knuckles title screen
@@ -1342,7 +1338,7 @@ ArtTile_Yadrin:			equ $47B
 ArtTile_Lamppost:		equ $47C
 ArtTile_Jaws:			equ $486
 ArtTile_Burrobot:		equ $4A6
-ArtTile_Basaran:		equ $4B8
+ArtTile_Basaran:		equ $385
 ArtTile_Button:			equ $50F
 ArtTile_S1_Spring_Horizontal:	equ $4A8
 ArtTile_S1_Spring_Vertical:	equ $4B8

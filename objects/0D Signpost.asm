@@ -85,9 +85,7 @@ Obj0D_Sparkle:
 		move.b	#4,obRender(a1)
 		move.w	#$100,obPriority(a1)
 		move.b	#8,obActWid(a1)
-
-.return:
-		rts
+.return:	rts
 ; ===========================================================================
 ; loc_F0C4:
 Obj0D_EndLevel:
@@ -101,15 +99,13 @@ Obj0D_EndLevel:
 loc_F0E0:
 		; This check here is for S1's Big Ring, which would set Sonic's Object ID to 0
 		tst.b	(v_player).w
-		beq.s	loc_F0F6
+		beq.s	+
 		move.w	(v_player+obX).w,d0
 		move.w	(Camera_Max_X_pos).w,d1
 		addi.w	#320-24,d1
 		cmp.w	d1,d0
 		bcs.s	Obj0D_Sparkle.return
-
-loc_F0F6:
-		addq.b	#2,obRoutine(a0)
++		addq.b	#2,obRoutine(a0)
 
 ; ---------------------------------------------------------------------------
 ; Subroutine to load the end of act results screen

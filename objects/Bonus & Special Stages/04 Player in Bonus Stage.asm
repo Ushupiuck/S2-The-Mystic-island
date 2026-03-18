@@ -75,7 +75,7 @@ BonusPlayer_InAir:
 BonusPlayer_Display:
 		bsr.w	SSS_ChkItems
 		bsr.w	SSS_ChkItems2
-		bsr.w	ObjectMove		; update position
+		jsr	(ObjectMove).l		; update position
 		bsr.w	S1SS_FixCamera		; centre camera on Sonic
 		move.w	(v_ssangle).l,d0
 		add.w	(v_ssrotate).l,d0	; add rotation speed to angle
@@ -194,7 +194,7 @@ BonusPlayer_MoveRight:
 .inertia_neg:
 		addi.w	#$40,d0
 		move.w	d0,obInertia(a0)
-		rts
+.return:	rts
 ; End of function BonusPlayer_MoveRight
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
@@ -203,7 +203,7 @@ BonusPlayer_MoveRight:
 BonusPlayer_Jump:
 		move.b	(v_jpadpresslogical).w,d0
 		andi.b	#btnABC,d0		; is A, B or C pressed?
-		beq.s	.exit			; if not, branch
+		beq.s	BonusPlayer_MoveRight.return	; if not, branch
 		move.b	(v_ssangle).l,d0
 		neg.b	d0
 		subi.b	#$40,d0
@@ -218,9 +218,6 @@ BonusPlayer_Jump:
 		bset	#7,obStatus(a0)		; set "Sonic has jumped" flag
 		move.w	#sfx_Jump,d0
 		jmp	(PlaySound_Special).l	; play jumping sound
-
-.exit:
-		rts
 ; End of function BonusPlayer_Jump
 
 ; ===========================================================================

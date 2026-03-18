@@ -17,8 +17,8 @@ CheckLevelForWater:
 		move.b	#1,(Water_flag).w
 		move.w	#30,(v_air).w
 		moveq	#palid_LZSonWater,d0
-		cmpi.b	#3,(Current_Act).w
-		bne.s	.loadpalette
+		cmpi.b	#103,(Current_ZoneAndAct).w	; Labyrinth act 4?
+		bne.s	.loadpalette			; if not, load from lampost
 		moveq	#palid_SBZ3SonWat,d0
 
 .loadpalette:	move.b	(v_lamp_wtrstat).w,(f_wtr_state).w

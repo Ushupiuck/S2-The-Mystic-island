@@ -66,7 +66,8 @@ Obj02_Modes:	dc.w Obj02_MdNormal-Obj02_Modes
 		dc.w Obj02_MdJump2-Obj02_Modes
 ; ===========================================================================
 ; Used for when invincibility wears off; same as Sonic's...
-MusicList_Tails:dc.b bgm_GHZ
+MusicList_Tails:
+		dc.b bgm_GHZ
 		dc.b bgm_LZ
 		dc.b bgm_MZ
 		dc.b bgm_SLZ

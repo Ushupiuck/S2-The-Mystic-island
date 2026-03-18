@@ -37,13 +37,14 @@ Obj22_Main:
 		bsr.w	AnimateSprite
 		bra.w	MarkObjGone
 ; ===========================================================================
-Obj22_Main_Index:	dc.w Obj22_Move-Obj22_Main_Index
-			dc.w Obj22_NearSonic-Obj22_Main_Index
+Obj22_Main_Index:
+		dc.w Obj22_Move-Obj22_Main_Index
+		dc.w Obj22_NearSonic-Obj22_Main_Index
 ; ===========================================================================
 ; loc_A46A:
 Obj22_Move:
 		subq.w	#1,obj22_time(a0)
-		bpl.s	locret_A49A
+		bpl.s	.return
 		btst	#1,obj22_status(a0)
 		bne.s	Obj22_LoadMissile
 		addq.b	#2,ob2ndRout(a0)
@@ -51,29 +52,26 @@ Obj22_Move:
 		move.w	#$400,obVelX(a0)
 		move.b	#1,obAnim(a0)
 		btst	#0,obStatus(a0)
-		bne.s	locret_A49A
+		bne.s	.return
 		neg.w	obVelX(a0)
-
-locret_A49A:
-		rts
+.return:	rts
 ; ===========================================================================
 ; loc_A49C:
 Obj22_LoadMissile:
 		bsr.w	FindFreeObj
-		bne.s	locret_A4FE
+		bne.s	.return
 		_move.b	#id_Obj23,obID(a1)			; load Obj23 (Buzz Bomber/Newtron missile)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		addi.w	#$1C,obY(a1)
-		move.w	#$200,obVelY(a1)
 		move.w	#$200,obVelX(a1)
-		move.w	#$18,d0
+		move.w	#$200,obVelY(a1)
+		move.w	#$14,d0
 		btst	#0,obStatus(a0)
-		bne.s	loc_A4D8
+		bne.s	+
 		neg.w	d0
 		neg.w	obVelX(a1)
-
-loc_A4D8:
++
 		add.w	d0,obX(a1)
 		move.b	obStatus(a0),obStatus(a1)
 		move.w	#15-1,obj22_time(a1)
@@ -81,9 +79,7 @@ loc_A4D8:
 		move.b	#1,obj22_status(a0)
 		move.w	#60-1,obj22_time(a0)
 		move.b	#2,obAnim(a0)
-
-locret_A4FE:
-		rts
+.return:	rts
 ; ===========================================================================
 ; loc_A500:
 Obj22_NearSonic:
@@ -91,13 +87,12 @@ Obj22_NearSonic:
 		bmi.s	loc_A536
 		bsr.w	ObjectMove
 		tst.b	obj22_status(a0)
-		bne.s	loc_A51C.return
+		bne.s	.return
 		move.w	(v_player+obX).w,d0
 		sub.w	obX(a0),d0
-		bpl.s	loc_A51C
+		bpl.s	+
 		neg.w	d0
-
-loc_A51C:
++
 		cmpi.w	#$60,d0				; is Buzz Bomber within $60 pixels of Sonic?
 		bcc.s	.return				; if not, branch
 		tst.b	obRender(a0)
@@ -111,7 +106,7 @@ loc_A51C:
 ; ===========================================================================
 
 loc_A536:
-		move.b	#0,obj22_status(a0)
+		clr.b	obj22_status(a0)
 		bchg	#0,obStatus(a0)
 		move.w	#59,obj22_time(a0)
 		subq.b	#2,ob2ndRout(a0)

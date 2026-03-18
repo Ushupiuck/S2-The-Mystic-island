@@ -17,13 +17,16 @@
 ; their PLRs are split into multiple parts (like PLC_GHZ and PLC_GHZ2) and they fully
 ; process the first part before requesting the rest.
 ; ---------------------------------------------------------------------------
-
-;----------------------------------------------------------------------------
+plcm:	macro gfx,vram
+	dc.l gfx
+	dc.w (vram<<5)
+	endm
+; ---------------------------------------------------------------------------
 ; Table of pattern load request lists. Remember to use word-length data
 ; When adding lists. Otherwise you'll break the array.
-;----------------------------------------------------------------------------
-ArtLoadCues:
+; ---------------------------------------------------------------------------
 
+ArtLoadCues:
 ptr_PLC_Main:		dc.w PLC_Main-ArtLoadCues
 ptr_PLC_Main2:		dc.w PLC_Main2-ArtLoadCues
 ptr_PLC_Explode:	dc.w PLC_Explode-ArtLoadCues
@@ -62,10 +65,6 @@ ptr_PLC_EggmanSBZ2:	dc.w PLC_Boss-ArtLoadCues		; Placeholder
 ptr_PLC_FZBoss:		dc.w PLC_Boss-ArtLoadCues		; Placeholder
 ptr_PLC_Filler:		dc.w PLC_Filler-ArtLoadCues		; Placeholder
 ptr_PLC_Filler2:	dc.w PLC_Filler2-ArtLoadCues		; Placeholder
-plcm:	macro gfx,vram
-	dc.l gfx
-	dc.w (vram<<5)
-	endm
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Standard 1 - loaded for every level
@@ -124,7 +123,7 @@ PLC_GHZ2_End:
 ; Labyrinth Zone primary
 ; ---------------------------------------------------------------------------
 PLC_LZ:		dc.w ((PLC_CPZ_End-PLC_CPZ)/6)-1
-		plcm	Nem_CPZ_Platform1,	ArtTile_CPZ_Platform
+		plcm	Nem_GHZ_Rock,	ArtTile_GHZ_Purple_Rock	; without a filler entry, this crashes
 PLC_LZ_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
@@ -562,21 +561,31 @@ PLCKosM_RRZ1:	plrKosMlistheader
 	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
 	plreqKosM	ArtTile_Ball_HogV, Kospm_BallhogV
 	plreqKosM	ArtTile_Ball_HogH, Kospm_BallhogH
+	plreqKosM	ArtTile_Basaran, Kospm_Basaran
 PLCKosM_RRZ1_End
 ; ---------------------------------------------------------------------------
 ; Act 2
 PLCKosM_RRZ2:	plrKosMlistheader
 	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
+	plreqKosM	ArtTile_Ball_HogV, Kospm_BallhogV
+	plreqKosM	ArtTile_Ball_HogH, Kospm_BallhogH
+	plreqKosM	ArtTile_Basaran, Kospm_Basaran
 PLCKosM_RRZ2_End
 ; ---------------------------------------------------------------------------
 ; Act 3
 PLCKosM_RRZ3:	plrKosMlistheader
 	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
+	plreqKosM	ArtTile_Ball_HogV, Kospm_BallhogV
+	plreqKosM	ArtTile_Ball_HogH, Kospm_BallhogH
+	plreqKosM	ArtTile_Basaran, Kospm_Basaran
 PLCKosM_RRZ3_End
 ; ---------------------------------------------------------------------------
 ; Act 4
 PLCKosM_RRZ4:	plrKosMlistheader
 	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
+	plreqKosM	ArtTile_Ball_HogV, Kospm_BallhogV
+	plreqKosM	ArtTile_Ball_HogH, Kospm_BallhogH
+	plreqKosM	ArtTile_Basaran, Kospm_Basaran
 PLCKosM_RRZ4_End
 ; ---------------------------------------------------------------------------
 ; KOSM PATTERN LOAD REQUEST LIST

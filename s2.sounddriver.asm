@@ -909,7 +909,7 @@ zFMDoNext:
 	inc	hl				; Otherwise, go to next byte; a duration
 +
 	call	zSetDuration
-	jp	zFinishTrackUpdate		; Either way, jumping to zFinishTrackUpdate...
+	jr	zFinishTrackUpdate		; Either way, jumping to zFinishTrackUpdate...
 ; End of function zFMDoNext
 
 ; ---------------------------------------------------------------------------
@@ -924,10 +924,10 @@ zFMSetFreq:
 	add	a,a				; Offset into Frequency table...
 	add	a,zFrequencies&0FFh
 	ld	(zloc_292+2),a	; store into the instruction after zloc_292 (self-modifying code)
-	ld	d,a
-	adc	a,(zFrequencies&0FF00h)>>8
-	sub	d
-	ld	(zloc_292+3),a	; this is how you could store the high byte of the pointer too (unnecessary if it's in the right range)
+	;ld	d,a
+	;adc	a,(zFrequencies&0FF00h)>>8
+	;sub	d
+	;ld	(zloc_292+3),a	; this is how you could store the high byte of the pointer too (unnecessary if it's in the right range)
 zloc_292:
 	ld	de,(zFrequencies)	; Stores frequency into "de"
 	ld	(ix+zTrack.FreqLow),e		; Frequency low byte   -> trackPtr + 0Dh
@@ -1153,12 +1153,12 @@ zPSGUpdateTrack:
 	call	zPSGDoNoteOn			; Actually key it (if allowed)
 	call	zPSGDoVolFX				; This applies PSG volume as well as its special volume-based effects that I call "flutter"
 	call	zDoModulation			; Update modulation (if modulation doesn't change, we do not return here)
-	jp	zPSGUpdateFreq
+	jr	zPSGUpdateFreq
 +
 	call	zNoteFillUpdate			; Applies "note fill" (time until cut-off); NOTE: Will not return here if "note fill" expires
 	call	zPSGUpdateVolFX			; Update volume effects
 	call	zDoModulation			; Update modulation (if modulation doesn't change, we do not return here)
-	jp	zPSGUpdateFreq
+	jr	zPSGUpdateFreq
 ; End of function zPSGUpdateTrack
 
 
@@ -1202,10 +1202,10 @@ zPSGSetFreq:
 	add	a,a
 	add	a,zPSGFrequencies&0FFh	; Point to proper place in table
 	ld	(zloc_46D+2),a	; store into the instruction after zloc_46D (self-modifying code)
-	ld	d,a
-	adc	a,(zPSGFrequencies&0FF00h)>>8
-	sub	d
-	ld	(zloc_46D+3),a	; this is how you could store the high byte of the pointer too (unnecessary if it's in the right range)
+	;ld	d,a
+	;adc	a,(zPSGFrequencies&0FF00h)>>8
+	;sub	d
+	;ld	(zloc_46D+3),a	; this is how you could store the high byte of the pointer too (unnecessary if it's in the right range)
 zloc_46D:
 	ld	de,(zPSGFrequencies)	; Gets appropriate frequency setting -> 'de'
 	ld	(ix+zTrack.FreqLow),e		; Frequency low byte   -> trackPtr + 0Dh
@@ -1709,6 +1709,8 @@ zPlayMusic:
 	add	ix,de					; Next track
 	djnz	-
 
+	xor	a
+	ld	(zAbsVar.SFXPriorityVal),a		; Clears SFX priority
 	; This performs a "massive" backup of all of the current track positions
 	; for restoration after 1-up BGM completes
 	; Backup music
@@ -1723,10 +1725,7 @@ zPlayMusic:
 
 	ld	a,80h
 	ld	(zAbsVar.1upPlaying),a	; Set 1-up song playing flag
-	xor	a
-	ld	(zAbsVar.SFXPriorityVal),a		; Clears SFX priority
-;	jr	zBGMLoad			; Now load 1-up BGM
-	jp	zBGMLoad			; Now load 1-up BGM
+	jr	zBGMLoad			; Now load 1-up BGM
 ; ---------------------------------------------------------------------------
 
 zloc_784:
@@ -1939,8 +1938,7 @@ zloc_8D9:
 	jp	m,+					; If this is a PSG track, jump to '+'
 	sub	2					; Otherwise, subtract 2...
 	add	a,a					; ... multiply by 2 (preparing to index starting from FM 3 only)
-;	jr	zloc_8F1			; Jump to zloc_8F1 (general track setup)
-	jp	zloc_8F1			; Jump to zloc_8F1 (general track setup)
+	jr	zloc_8F1			; Jump to zloc_8F1 (general track setup)
 ; ---------------------------------------------------------------------------
 
 +

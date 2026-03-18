@@ -1,6 +1,6 @@
-;----------------------------------------------------
+; ---------------------------------------------------------------------------
 ; Object 79 - lamppost
-;----------------------------------------------------
+; ---------------------------------------------------------------------------
 
 Obj79:
 		moveq	#0,d0
@@ -24,17 +24,22 @@ Obj79_Init:
 		lea	(v_objstate).w,a2
 		moveq	#0,d0
 		move.b	obRespawnNo(a0),d0
+		; If you spawn a checkpoint in Debug Mode and activate it, then
+		; every checkpoint that is spawned with Debug Mode afterwards will be
+		; activated too. The cause of the bug is that the spawned checkpoint
+		; does not have a respawn entry, but this object fails to check for
+		; that before accessing the respawn table.
+		beq.s	Obj79_Main
 		bclr	#7,2(a2,d0.w)
 		btst	#0,2(a2,d0.w)
-		bne.s	loc_13536
+		bne.s	+
 		move.b	(v_lastlamp).w,d1
 		andi.b	#$7F,d1
 		move.b	obSubtype(a0),d2
 		andi.b	#$7F,d2
 		cmp.b	d2,d1
 		blo.s	Obj79_Main
-
-loc_13536:
++
 		bset	#0,2(a2,d0.w)
 		move.b	#4,obRoutine(a0)
 		rts
@@ -42,9 +47,9 @@ loc_13536:
 
 Obj79_Main:
 		tst.w	(Debug_placement_mode).w
-		bne.w	locret_135CA
+		bne.s	.return
 		tst.b	(f_playerctrl).w
-		bmi.w	locret_135CA
+		bmi.s	.return
 		move.b	(v_lastlamp).w,d1
 		andi.b	#$7F,d1
 		move.b	obSubtype(a0),d2
@@ -54,9 +59,15 @@ Obj79_Main:
 		lea	(v_objstate).w,a2
 		moveq	#0,d0
 		move.b	obRespawnNo(a0),d0
+		; If you spawn a checkpoint in Debug Mode and activate it, then
+		; every checkpoint that is spawned with Debug Mode afterwards will be
+		; activated too. The cause of the bug is that the spawned checkpoint
+		; does not have a respawn entry, but this object fails to check for
+		; that before accessing the respawn table.
+		beq.s	.return
 		bset	#0,2(a2,d0.w)
 		move.b	#4,obRoutine(a0)
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 
 Obj79_HitLamp:
@@ -64,23 +75,27 @@ Obj79_HitLamp:
 		sub.w	obX(a0),d0
 		addi.w	#8,d0
 		cmpi.w	#$10,d0
-		bhs.w	locret_135CA
+		bhs.s	.return
 		move.w	(v_player+obY).w,d0
 		sub.w	obY(a0),d0
 		addi.w	#$40,d0
 		cmpi.w	#$68,d0
-		bhs.s	locret_135CA
+		bhs.s	.return
 		move.w	#sfx_Lamppost,d0
 		jsr	(PlaySound_Special).l
 		addq.b	#2,obRoutine(a0)
-		bsr.w	Lamppost_StoreInfo
+		bsr.s	Lamppost_StoreInfo
 		lea	(v_objstate).w,a2
 		moveq	#0,d0
 		move.b	obRespawnNo(a0),d0
+		; If you spawn a checkpoint in Debug Mode and activate it, then
+		; every checkpoint that is spawned with Debug Mode afterwards will be
+		; activated too. The cause of the bug is that the spawned checkpoint
+		; does not have a respawn entry, but this object fails to check for
+		; that before accessing the respawn table.
+		beq.s	.return
 		bset	#0,2(a2,d0.w)
-
-locret_135CA:
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 
 Obj79_AfterHit:
@@ -149,19 +164,16 @@ Lamppost_LoadInfo:
 		move.w	(v_lamp_bg2scry).w,(Camera_BG2_Y_pos).w
 		move.w	(v_lamp_bg3scrx).w,(Camera_BG3_X_pos).w
 		move.w	(v_lamp_bg3scry).w,(Camera_BG3_Y_pos).w
-		cmpi.b	#id_LZ,(Current_Zone).w
-		bne.s	loc_136F0
+		tst.b	(Water_flag).w	; does the level have water?
+		beq.s	+		; if not, branch to skip loading water stuff
 		move.w	(v_lamp_wtrpos).w,(v_waterpos2).w
 		move.b	(v_lamp_wtrrout).w,(v_wtr_routine).w
 		move.b	(v_lamp_wtrstat).w,(f_wtr_state).w
-
-loc_136F0:
++
 		tst.b	(v_lastlamp).w
-		bpl.s	locret_13702
+		bpl.s	.return
 		move.w	(v_lamp_xpos).w,d0
 		subi.w	#$A0,d0
 		move.w	d0,(Camera_Min_X_pos).w
-
-locret_13702:
-		rts
+.return:	rts
 ; End of function Lamppost_LoadInfo

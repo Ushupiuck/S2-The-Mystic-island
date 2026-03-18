@@ -1,3 +1,12 @@
+; ---------------------------------------------------------------------------
+;
+; ---------------------------------------------------------------------------
+collapsing_platform_delay_pointer	= objoff_34
+ledge_timedelay				= objoff_38	; time between touching the ledge and it collapsing
+ledge_collapse_flag			= objoff_3A	; collapse flag
+collapsing_platform_slope_pointer	= objoff_3C
+
+; ---------------------------------------------------------------------------
 Obj1A:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
@@ -9,12 +18,6 @@ Ledge_Index:	dc.w Ledge_Main-Ledge_Index	; 0
 ;		dc.w Ledge_Collapse-Ledge_Index	; 4
 		dc.w Ledge_Display-Ledge_Index	; 6
 ;		dc.w Ledge_WalkOff-Ledge_Index	; 8
-
-collapsing_platform_delay_pointer = objoff_34
-ledge_timedelay = objoff_38		; time between touching the ledge and it collapsing
-ledge_collapse_flag = objoff_3A		; collapse flag
-collapsing_platform_slope_pointer = objoff_3C
-
 ; ---------------------------------------------------------------------------
 
 Ledge_Main:	; Routine 0
@@ -23,13 +26,13 @@ Ledge_Main:	; Routine 0
 		move.w	#make_art_tile(ArtTile_Level,2,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.w	#$200,obPriority(a0)
-		move.b	#7,ledge_timedelay(a0) ; set time delay for collapse
+		move.b	#$30,obActWid(a0)	; Default width
+		move.b	#7,ledge_timedelay(a0)	; set time delay for collapse
 		move.b	obSubtype(a0),obFrame(a0)
 		cmpi.b	#id_HPZ,(Current_Zone).w
 		bne.s	+
 		move.l	#Map_Obj1A_HPZ,obMap(a0)
 		move.w	#$434A,obGfx(a0)
-		move.b	#$30,obActWid(a0)
 		move.l	#Obj1A_Conf_HPZ,collapsing_platform_slope_pointer(a0)
 		bra.s	Ledge_Touch
 ; ===========================================================================
@@ -38,13 +41,13 @@ Ledge_Main:	; Routine 0
 ;		bne.s	+
 ;		move.l	#Obj1F_MapUnc_110C6,mappings(a0)
 ;		move.w	#make_art_tile(ArtTile_ArtNem_OOZPlatform,3,0),art_tile(a0)
-;		move.b	#$40,width_pixels(a0)
+;		move.b	#$40,obActWid(a0)
 ;		move.l	#Obj1A_OOZ_SlopeData,collapsing_platform_slope_pointer(a0)
 ;		bra.s	Ledge_Touch	; Obj1A_Main in S2 Final
 ; ===========================================================================
 +
 		move.l	#Obj1A_Conf,collapsing_platform_slope_pointer(a0)
-		move.b	#$34,obActWid(a0)
+		; any undefined ledge uses the default width ($30)
 		move.b	#$38,obHeight(a0)
 		bset	#4,obRender(a0)
 

@@ -115,7 +115,8 @@ Obj01_Modes:	dc.w Obj01_MdNormal-Obj01_Modes
 		dc.w Obj01_MdJump-Obj01_Modes
 ; ===========================================================================
 ; Used for when invincibility wears off
-MusicList_Sonic:dc.b bgm_GHZ
+MusicList_Sonic:
+		dc.b bgm_GHZ
 		dc.b bgm_LZ
 		dc.b bgm_MZ
 		dc.b bgm_SLZ
