@@ -28,6 +28,9 @@
 ; ---------------------------------------------------------------------------
 	mulu.w	#$80,d0		; decimal 128
 	; can be turned into (exact math)
+	andi.l	#$0000FFFF,d0
+	lsl.l	#7,d0		; multiply by 128
+	; or into (exact math, but only valid for values 0-$FF)
 	lsl.w	#7,d0		; multiply by 128
 	ext.l	d0
 ; ---------------------------------------------------------------------------
