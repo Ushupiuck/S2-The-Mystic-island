@@ -10427,11 +10427,10 @@ ObjectsManager_Init:
 		move.l	a0,(Obj_load_addr_left_P2).w
 		lea	(v_objstate).w,a2
 		move.w	#$101,(a2)+
-		move.w	#bytesToLcnt(v_objstate_end-v_objstate-2),d0
 
-loc_DC9C:
-		clr.l	(a2)+
-		dbf	d0,loc_DC9C
+		move.w	#bytesToLcnt(v_objstate_end-v_objstate-2),d0
+-		clr.l	(a2)+
+		dbf	d0,-
 
 		; Clear the last word, since the above loop only does longwords.
 	if (v_objstate_end-v_objstate-2)&2
