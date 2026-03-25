@@ -8,6 +8,7 @@ zeroOffsetOptimization	= 1	; if 1, makes a handful of zero-offset instructions s
 BackupSRAM		= 1
 AddressSRAM		= 3	; 0 = odd+even; 2 = even only; 3 = odd only
 LoadTails		= 0	; Whether or not Tails will appear alongside Sonic in levels
+EnableMusic		= 1	; Because it can get pretty tiring to hear level music over and over.
 TimeTravel		= 1	; if 1, allows time-travel mechanics (W.I.P)
 
 	CPU 68000
@@ -232,18 +233,32 @@ PortC_OK:	; Fall through to GameProgram
 
 		bsr.w	InitDMAQueue
 		bsr.w	VDPSetupGame
-		bsr.w	SoundDriverLoad
-		bsr.w	JoypadInit
-		move.w	#SegaScreen,(v_gamemode).w
-	;	bra.w	MainGameLoop
-	;	align	$366
+		; Load the Sound Driver
+		stopZ80
+		resetZ80
+		lea	(Snd_Driver).l,a0
+		lea	(Z80_RAM).l,a1
+		bsr.w	KosPlusDec
+		btst	#0,(VDP_control_port+1).l	; check video mode
+		sne	(Z80_RAM+zPalModeByte).l	; set if PAL
+		resetZ80a
+		; Initialize Joypads AND the YM chips -- 52 cycles vs the laughable 16 of before
+		moveq	#$40,d0
+		move.b	d0,(HW_Port_1_Control).l
+		move.b	d0,(HW_Port_2_Control).l
+		move.b	d0,(HW_Expansion_Control).l
+		resetZ80
+		startZ80
+		; We're done here!
+		move.w	#SegaScreen,(v_gamemode).w	; Set the gamemode to SEGA screen
+
 MainGameLoop:
 		movea.w	(v_gamemode).w,a0	; jump to apt location in ROM
 		jsr	(a0)
 		bra.s	MainGameLoop	; loop indefinitely
 ; ===========================================================================
 ; vertical and horizontal interrupt handlers
-	;	align	$434
+
 V_Int:
 		movem.l	d0-a6,-(sp)		; save all the registers to the stack
 		lea	(vdp_data_port).l,a6
@@ -409,7 +424,6 @@ Do_Updates:
 ; End of function Do_Updates
 
 ; ---------------------------------------------------------------------------
-		align	$82E
 Vint_Pause_specialStage:
 		stopZ80
 		waitZ80
@@ -424,7 +438,7 @@ Vint_Pause_specialStage:
 		startZ80
 		rts
 ; ===========================================================================
-		align	$8A4
+
 Vint_S2SS:
 		stopZ80
 		waitZ80
@@ -697,24 +711,6 @@ H_Int_done:
 ; ===========================================================================
 ; game code
 ; ---------------------------------------------------------------------------
-; Subroutine to initialize joypads
-; ---------------------------------------------------------------------------
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
-
-JoypadInit:
-		stopZ80
-		waitZ80
-		moveq	#$40,d0
-		move.b	d0,(HW_Port_1_Control).l
-		move.b	d0,(HW_Port_2_Control).l
-		move.b	d0,(HW_Expansion_Control).l
-		startZ80
-		rts
-; End of function JoypadInit
-
-; ---------------------------------------------------------------------------
 ; Subroutine to read joypad input, and send it to the RAM
 ; ---------------------------------------------------------------------------
 
@@ -882,31 +878,6 @@ PlaneMapToVRAM_H80_SpecialStage:
 		rts
 ; End of function PlaneMapToVRAM_H80_SpecialStage
 
-; ---------------------------------------------------------------------------
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-; ---------------------------------------------------------------------------
-; Subroutine to load the sound driver
-; ---------------------------------------------------------------------------
-
-SoundDriverLoad:
-		move.w	#$100,(Z80_Bus_Request).l	; stop the Z80
-		resetZ80
-
-		lea	(Snd_Driver).l,a0
-		lea	(Z80_RAM).l,a1
-		bsr.w	KosPlusDec
-		btst	#0,(VDP_control_port+1).l	; check video mode
-		sne	(Z80_RAM+zPalModeByte).l	; set if PAL
-
-		resetZ80a
-		nop
-		nop
-		nop
-		nop
-		resetZ80
-		startZ80	; start the Z80
-		rts
-; End of function SoundDriverLoad
 ; ---------------------------------------------------------------------------
 ; MM: these functions now write directly to Z80 RAM
 ; If Music_to_play is clear, move d0 into Music_to_play,
@@ -2340,6 +2311,7 @@ Title_CheckLvlSel:
 LevelSelect_ClearVRAM:
 		move.l	d0,(a6)
 		dbf	d1,LevelSelect_ClearVRAM
+		disable_ints
 		bsr.w	LevelSelect_TextLoad
 
 LevelSelect_Loop:
@@ -2667,25 +2639,35 @@ LevelSelect_Text:
 		binclude	"mappings/misc/Level select text.bin"
 		even
 ; ---------------------------------------------------------------------------
-MusicList:	dc.b bgm_GHZ
+MusicList:
+ if EnableMusic=1
+		dc.b bgm_GHZ
 		dc.b bgm_LZ
 		dc.b bgm_MZ
 		dc.b bgm_SLZ
 		dc.b bgm_SYZ
 		dc.b bgm_SBZ
 		dc.b MusID_MTZ
+ else
+		dc.b 0
+		dc.b 0
+		dc.b 0
+		dc.b 0
+		dc.b 0
+		dc.b 0
+		dc.b 0
+ endif
 		even
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Level
 ; DEMO AND ZONE LOOP (MLS values $08, $0C; bit 7 set indicates that load routine is running)
 ; ---------------------------------------------------------------------------
-Demo:
-		bra.s	+
+
 Level:
 		clr.w	(f_demo).w
-+		bset	#7,(v_gamemode).w	; GameModeFlag_TitleCard
-		tst.w	(f_demo).w	; are we on an ending demo?
+Demo:		bset	#7,(v_gamemode).w	; GameModeFlag_TitleCard
+		tst.w	(f_demo).w		; are we on an ending demo?
 		bmi.s	Level_NoMusicFade	; if so, branch
 		move.b	#bgm_Fade,d0
 		bsr.w	PlaySound_Special
@@ -2797,17 +2779,30 @@ Level_SkipTtlCard:
 		bsr.w	LoadCollisionIndexes
 		bsr.w	WaterEffects
 		_move.b	#id_Obj01,(v_player).w	; load Sonic object
-	;	tst.w	(f_demo).w		; are we on an ending demo?
-	;	bmi.s	LevelInit_LoadTails	; if not, branch
+		tst.w	(f_demo).w		; are we on an ending demo?
+		bmi.s	Level_ChkDebug		; if not, branch
 ;		cmpi.b	#id_EHZ,(Current_Zone).w; This is an example on how to skip
 ;		beq.s	Level_ChkDebug		; the 2nd player, if neccesary
 
-;LevelInit_LoadTails:	; Disabled until his AI &/or character selection is implemented
+LevelInit_LoadTails:	; W.I.P; Enabled via flags. Disabled by default until his AI &/or character selection is implemented
  if LoadTails=1
 		_move.b	#id_Obj02,(v_player2).w	; load Tails object
 		move.w	(v_player+obX).w,(v_player2+obX).w	; copy player 1's x position to player 2
 		move.w	(v_player+obY).w,(v_player2+obY).w	; copy player 1's y position to player 2
 		subi.w	#32,(v_player2+obX).w	; set player 2's x position 32 pixels behind player 1's
+ else
+		bra.s	Level_ChkDebug		; skip the Tails-load subroutine sized filler
+		nop				; This filler is only here to avoid breaking savestates
+		nop				; (Yes, the branch is part of the filler; accounted for)
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
  endif
 Level_ChkDebug:
 		tst.b	(f_debugcheat).w
@@ -3343,8 +3338,11 @@ BonusStage:
 		moveq	#palid_Special,d0
 		bsr.w	PalLoad1		; load special stage palette
 		bsr.w	BonusStage_Load		; load SS layout data
-		clr.l	(Camera_X_pos).w
-		clr.l	(Camera_Y_pos).w
+		moveq	#0,d0
+		move.l	d0,(Camera_X_pos).w
+		move.l	d0,(Camera_Y_pos).w
+		move.l	d0,(Camera_X_pos_copy).w
+		move.l	d0,(Camera_Y_pos_copy).w
 		move.b	#id_Obj04,(v_player).w ; load special stage Sonic object
 		bsr.w	PalCycle_S1SS
 		clr.w	(v_ssangle).l	; set stage angle to "upright"
@@ -4631,6 +4629,7 @@ LevelLayoutLoad:
 		bra.w	KosPlusDec
 
 ; End of function LevelLayoutLoad
+; ---------------------------------------------------------------------------
 SpecialStage:
 	;	cmpi.b	#7,(Current_Special_Stage).w
 	;	blo.s	+
@@ -4654,6 +4653,22 @@ SpecialStage:
 		move.w	(v_vdp_buffer1).w,d0
 		andi.b	#$BF,d0
 		move.w	d0,(vdp_control_port).l
+
+; /------------------------------------------------------------------------\
+; | We're gonna zero-fill a bunch of VRAM regions. This was done by macro, |
+; | so there's gonna be a lot of wasted cycles.                            |
+; \------------------------------------------------------------------------/
+
+		fillVRAM 0,VRAM_SS_Plane_A_Name_Table2,VRAM_SS_Plane_Table_Size ; clear Plane A pattern name table 1
+		fillVRAM 0,VRAM_SS_Plane_A_Name_Table1,VRAM_SS_Plane_Table_Size ; clear Plane A pattern name table 2
+		fillVRAM 0,VRAM_SS_Plane_B_Name_Table,VRAM_SS_Plane_Table_Size ; clear Plane B pattern name table
+		fillVRAM 0,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size  ; clear Horizontal scroll table
+		clr.l	(Vscroll_Factor).w	; v_scrposy_vdp
+		clr.b	(SpecialStage_Started).w
+		clearRAM Sprite_Table,Sprite_Table_end
+		clearRAM SS_Horiz_Scroll_Buf_1,$280
+		clearRAM PNT_Buffer,SS_Offset_Y
+
 		rts
 ; =============== S U B R O U T I N E =======================================
 
@@ -8792,7 +8807,7 @@ ptr_Obj1D:		dc.l ObjNull
 ptr_Obj1E:		dc.l ObjVBallhog
 ptr_Obj1F:		dc.l Obj1F	; (S1) Crabmeat from GHZ
 
-ptr_Obj20:		dc.l ObjNull
+ptr_Obj20:		dc.l Basaran
 ptr_Obj21:		dc.l ObjNull
 ptr_Obj22:		dc.l Obj22	; (S1) Buzz Bomber from GHZ
 ptr_Obj23:		dc.l Obj23	; (S1) Buzz Bomber/Newtron missile
@@ -8928,7 +8943,7 @@ ptr_Obj9D:		dc.l ObjNull
 ptr_Obj9E:		dc.l ObjNull
 ptr_Obj9F:		dc.l ObjNull
 
-ptr_ObjA0:		dc.l Basaran		; Basaran
+ptr_ObjA0:		dc.l ObjNull		; Basaran (Temporarily Relocated to Obj20)
 ptr_ObjA1:		dc.l ObjNull
 ptr_ObjA2:		dc.l ObjNull
 ptr_ObjA3:		dc.l ObjNull
@@ -20086,13 +20101,14 @@ Kosp_TitleBg2:	binclude	"tilemaps/Title Background - 2.kosp"
 ; ---------------------------------------------------------------------------
 		align $20
 Art_Sonic:	binclude	"art/uncompressed/Sonic's art.bin"
-Art_Tails:	binclude	"art/uncompressed/Tails' art.bin"
-Art_SplashDust:	binclude	"art/uncompressed/Dust and water splash.bin"
-Art_BigRing:	binclude	"art/uncompressed/Giant Ring.bin"
 Map_Sonic:	include		"mappings/sprite/Sonic.asm"
 SonicDynPLC:	include		"mappings/spriteDPLC/Sonic.asm"
+		align $20
+Art_Tails:	binclude	"art/uncompressed/Tails' art.bin"
 Map_Tails:	include		"mappings/sprite/Tails.asm"
 TailsDynPLC:	include		"mappings/spriteDPLC/Tails.asm"
+Art_SplashDust:	binclude	"art/uncompressed/Dust and water splash.bin"
+Art_BigRing:	binclude	"art/uncompressed/Giant Ring.bin"
 ; ---------------------------------------------------------------------------
 ; Misc. animated tiles
 ; ---------------------------------------------------------------------------
@@ -20323,8 +20339,25 @@ Kospm_TryAgain:		binclude	"art/moduled kosinski/Ending - Try Again.kospm"
 Nem_EndStH:		binclude	"art/nemesis/S1/Ending - StH Logo.nem"
 		even
 ; ---------------------------------------------------------------------------
+; Bonus & Special Stage data
+; ---------------------------------------------------------------------------
+		binclude	"Bonus & Special Stages/Special stage layouts.kosp"
+		binclude	"Bonus & Special Stages/Special stage object layout.kosp"
+		binclude	"Bonus & Special Stages/Special stage object perspective data.kosp"
+BS_RowLUT:	binclude	"Bonus & Special Stages/BS Precalculated Rows.bin"
+BS_ColLUT:	binclude	"Bonus & Special Stages/BS Precalculated Columns.bin"
+BS_1:		binclude	"Bonus & Special Stages/1.kosp"
+BS_2:		binclude	"Bonus & Special Stages/2.kosp"
+BS_3:		binclude	"Bonus & Special Stages/3.kosp"
+BS_4:		binclude	"Bonus & Special Stages/4.kosp"
+BS_5:		binclude	"Bonus & Special Stages/5.kosp"
+BS_6:		binclude	"Bonus & Special Stages/6.kosp"
+; ---------------------------------------------------------------------------
 ; Compressed graphics - Bonus & Special stages
 ; ---------------------------------------------------------------------------
+; Bonus Stage
+; ---------------------------------------------------------------------------
+
 Nem_Warp:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Flash.nem" ; bonus stage entry flash (Leftover from Sonic 1 beta; TO BE RESTORED)
 		even
 Nem_SSWalls:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Walls.nem" ; bonus stage walls
@@ -20333,69 +20366,59 @@ Nem_SSBgFish:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Birds & Fish.nem
 		even
 Nem_SSBgCloud:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Clouds.nem" ; bonus stage clouds background
 		even
-Nem_SSGOAL:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage GOAL.nem" ; bonus stage GOAL block
-		even
-Nem_SSRBlock:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage R.nem"	; bonus stage R block
-		even
-Nem_SS1UpBlock:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage 1UP.nem" ; bonus stage 1UP block
-		even
-Nem_SSEmStars:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Emerald Twinkle.nem" ; bonus stage stars from a collected emerald
+Nem_SSGhost:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Ghost.nem" ; bonus stage ghost block
 		even
 Nem_SSRedWhite:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Red-White.nem" ; bonus stage red/white block
 		even
 Nem_SSUpDown:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage UP-DOWN.nem" ; bonus stage UP/DOWN block
 		even
-Nem_SSEmerald:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Emeralds.nem" ; bonus stage chaos emeralds
-		even
-Nem_SSGhost:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Ghost.nem" ; bonus stage ghost block
+Nem_SSRBlock:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage R.nem"	; bonus stage R block
 		even
 Nem_SSWBlock:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage W.nem"	; bonus stage W block
 		even
 Nem_SSGlass:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Glass.nem" ; bonus stage destroyable glass block
 		even
+Nem_SS1UpBlock:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage 1UP.nem" ; bonus stage 1UP block
+		even
+Nem_SSGOAL:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage GOAL.nem" ; bonus stage GOAL block
+		even
+Nem_SSEmerald:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Emeralds.nem" ; bonus stage chaos emeralds
+		even
+Nem_SSEmStars:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Emerald Twinkle.nem" ; bonus stage stars from a collected emerald
+		even
 Nem_ResultEm:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Result Emeralds.nem" ; chaos emeralds on special stage results screen
 		even
-Nem_SpecialBack:
-		binclude	"art/nemesis/Bonus & Special Stage/Background art for special stage.nem"
-		even
-Nem_SpecialHUD:	binclude	"art/nemesis/Bonus & Special Stage/Sonic and Miles number text from special stage.nem"
-		even
-Nem_SpecialStart:
-		binclude	"art/nemesis/Bonus & Special Stage/Start text from special stage.nem" ; Also includes checkered flag
-		even
-Nem_SpecialStars:
-		binclude	"art/nemesis/Bonus & Special Stage/Stars in special stage.nem"
-		even
-Nem_SpecialRings:
-		binclude	"art/nemesis/Bonus & Special Stage/Special stage ring art.nem"
-		even
-Nem_SpecialFlatShadow:
-		binclude	"art/nemesis/Bonus & Special Stage/Horizontal shadow from special stage.nem"
-		even
-Nem_SpecialDiagShadow:
-		binclude	"art/nemesis/Bonus & Special Stage/Diagonal shadow from special stage.nem"
-		even
-Nem_SpecialSideShadow:
-		binclude	"art/nemesis/Bonus & Special Stage/Vertical shadow from special stage.nem"
-		even
-Nem_SpecialExplosion:
-		binclude	"art/nemesis/Bonus & Special Stage/Explosion from special stage.nem"
-		even
-Nem_SpecialBomb:
-		binclude	"art/nemesis/Bonus & Special Stage/Bomb from special stage.nem"
-		even
-Nem_SpecialEmerald:
-		binclude	"art/nemesis/Bonus & Special Stage/Emerald from special stage.nem"
-		even
-Nem_SpecialMessages:
-		binclude	"art/nemesis/Bonus & Special Stage/Special stage messages and icons.nem"
-		even
-Nem_SpecialSonicAndTails:
-		binclude	"art/nemesis/Bonus & Special Stage/Sonic and Tails animation frames in special stage.nem" ; [fixBugs] In this file, Tails' arms are tan instead of orange.
-		even
-Nem_SpecialTailsText:
-		binclude	"art/nemesis/Bonus & Special Stage/Tails text patterns from special stage.nem"
-		even
+; ---------------------------------------------------------------------------
+; Special Stage
+; ---------------------------------------------------------------------------
+Nem_SpecialBack:	binclude	"art/nemesis/Bonus & Special Stage/Background art for special stage.nem"
+			even
+Nem_SpecialHUD:		binclude	"art/nemesis/Bonus & Special Stage/Sonic and Miles number text from special stage.nem"
+			even
+Nem_SpecialStart:	binclude	"art/nemesis/Bonus & Special Stage/Start text from special stage.nem" ; Also includes checkered flag
+			even
+Nem_SpecialStars:	binclude	"art/nemesis/Bonus & Special Stage/Stars in special stage.nem"
+			even
+Nem_SpecialRings:	binclude	"art/nemesis/Bonus & Special Stage/Special stage ring art.nem"
+			even
+Nem_SpecialFlatShadow:	binclude	"art/nemesis/Bonus & Special Stage/Horizontal shadow from special stage.nem"
+			even
+Nem_SpecialDiagShadow:	binclude	"art/nemesis/Bonus & Special Stage/Diagonal shadow from special stage.nem"
+			even
+Nem_SpecialSideShadow:	binclude	"art/nemesis/Bonus & Special Stage/Vertical shadow from special stage.nem"
+			even
+Nem_SpecialExplosion:	binclude	"art/nemesis/Bonus & Special Stage/Explosion from special stage.nem"
+			even
+Nem_SpecialBomb:	binclude	"art/nemesis/Bonus & Special Stage/Bomb from special stage.nem"
+			even
+Nem_SpecialEmerald:	binclude	"art/nemesis/Bonus & Special Stage/Emerald from special stage.nem"
+			even
+Nem_SpecialMessages:	binclude	"art/nemesis/Bonus & Special Stage/Special stage messages and icons.nem"
+			even
+Nem_SpecialSonicTails:	binclude	"art/nemesis/Bonus & Special Stage/Sonic and Tails animation frames in special stage.nem" ; [fixBugs] In this file, Tails' arms are tan instead of orange.
+			even
+Nem_SpecialTailsText:	binclude	"art/nemesis/Bonus & Special Stage/Tails text patterns from special stage.nem"
+			even
 ;----------------------------------------------------------------------------
 ; Special stage level patterns
 ; Note: Only one line of each tile is stored in this archive. The other 7 lines are
@@ -20404,23 +20427,9 @@ Nem_SpecialTailsText:
 ;----------------------------------------------------------------------------
 Nem_Special:	binclude	"art/nemesis/Bonus & Special Stage/Special Half Pipe.nem"
 	even
-; ---------------------------------------------------------------------------
-; Bonus & Special Stage data
-; ---------------------------------------------------------------------------
-		binclude	"Bonus & Special Stages/Special stage layouts.kosp"
-		binclude	"Bonus & Special Stages/Special stage object layout.kosp"
-		binclude	"Bonus & Special Stages/Special stage object perspective data.kosp"
-BS_1:		binclude	"Bonus & Special Stages/1.kosp"
-BS_2:		binclude	"Bonus & Special Stages/2.kosp"
-BS_3:		binclude	"Bonus & Special Stages/3.kosp"
-BS_4:		binclude	"Bonus & Special Stages/4.kosp"
-BS_5:		binclude	"Bonus & Special Stages/5.kosp"
-BS_6:		binclude	"Bonus & Special Stages/6.kosp"
-BS_RowLUT:	binclude	"Bonus & Special Stages/BS Precalculated Rows.bin"
-BS_ColLUT:	binclude	"Bonus & Special Stages/BS Precalculated Columns.bin"
-;-----------------------------------------------------------------------------------
+;----------------------------------------------------------------------------
 ; Bonus & Special Stage Assets
-;-----------------------------------------------------------------------------------
+;----------------------------------------------------------------------------
 Eni_BSBg1:	binclude	"tilemaps/BS Background 1.eni" ; bonus stage background (mappings)
 Eni_BSBg2:	binclude	"tilemaps/BS Background 2.eni" ; bonus stage background (mappings)
 Eni_SpecialBack:

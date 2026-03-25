@@ -43,7 +43,7 @@ obRespawnNo:		equ $1E		; (and soon $1F) respawn list index number
 obSubtype:		equ $28		; object subtype
 ; ---------------------------------------------------------------------------
 ; conventions specific to Sonic/Tails (Obj01, Obj02, and ObjDB):
-; note: $23, and $14 are unused and available
+; note: $23 is unused and available
 obInertia:		equ $20		; also known as ground_vel; and $21 directionless representation of speed... not updated in the air
 ;obSolid: 		equ $25		; (DEPRECATED, Sonic 1 leftover for reference only) solid status flag
 ; air_left:		equ $28
@@ -374,11 +374,9 @@ VRAM_Menu_Plane_A_Name_Table             = $C000	; Extends until $CFFF
 VRAM_Menu_Plane_B_Name_Table             = $E000	; Extends until $EFFF
 VRAM_Menu_Plane_Table_Size               = $1000	; 64 cells x 32 cells x 2 bytes per cell
 ; ===========================================================================
-
+; Sound and Music tables
 	include "musicids.gen.asm"
-
 	include "sfxids.gen.asm"
-
 
 ; Sound command IDs
 offset :=	zCommandIndex
@@ -394,7 +392,91 @@ MusID_SlowDown =	id(CmdPtr_SlowDown)	; FC
 MusID_Stop =		id(CmdPtr_Stop)		; FD
 CmdID__End =		id(CmdPtr__End)		; FE
 
+; Background music
+bgm_GHZ =		MusID_ALZ
+bgm_LZ =		MusID_MCZ
+bgm_MZ =		MusID_CPZ
+bgm_SLZ =		MusID_GRGZ1
+bgm_SYZ =		MusID_DDZ1
+bgm_SBZ =		MusID_LBZ1_S3
+bgm_Invincible =	MusID_Invincible
+bgm_ExtraLife =		MusID_ExtraLife
+bgm_DoubleLife =	MusID_DoubleLife
+bgm_SS =		MusID_BonusStage
+bgm_Title =		MusID_Title
+bgm_Ending =		MusID_Ending_S1
+bgm_Boss =		MusID_Boss
+bgm_FZ =		MusID_HTZ
+bgm_GotThrough =	MusID_EndLevel
+bgm_GameOver =		MusID_GameOver
+bgm_Continue =		MusID_Continue
+bgm_Credits =		MusID_Credits
+bgm_Drowning =		MusID_Countdown
+bgm_Emerald =		MusID_Emerald
+
+; Sound effects -- Note: Some files are offset by +-$1E. That's a mess for future me to sort out
+sfx_Jump =		SndID_Jump
+sfx_Lamppost =		SndID_Checkpoint
+sfx_SpikeSwitch =	SndID_SpikeSwitch
+sfx_Death =		SndID_Hurt
+sfx_Skid =		SndID_Skidding
+sfx_Push =		SndID_BlockPush
+sfx_HitSpikes =		SndID_HurtBySpikes
+sfx_A5 =		SndID_MegaMackDrop
+sfx_SSGoal =		SndID_Goal
+sfx_SSItem =		SndID_Bwoop
+sfx_Splash =		SndID_Splash
+sfx_AB =		SndID_Swish
+sfx_HitBoss =		SndID_BossHit
+sfx_Bubble =		SndID_InhalingBubble
+sfx_Fireball =		SndID_FireBurn
+sfx_Shield =		SndID_Shield
+sfx_Saw =		SndID_LaserBeam
+sfx_Electric =		SndID_Zap
+sfx_Drown =		SndID_Drown
+sfx_Flamethrower =	SndID_FireBurn
+sfx_Bumper =		SndID_Bumper
+sfx_Ring =		SndID_Ring
+sfx_SpikesMove =	SndID_SpikesMove
+sfx_Rumbling =		SndID_Rumbling
+sfx_B8 =		SndID_DoorSlam		; 56
+sfx_Collapse =		SndID_Smash
+sfx_SSGlass =		SndID_Glass
+sfx_Door =		SndID_Trapdoor		; 59
+sfx_Teleport =		SndID_SpindashRelease
+sfx_ChainStomp =	SndID_ChainRise
+sfx_Roll =		SndID_Roll
+sfx_Continue =		SndID_ContinueJingle
+sfx_Basaran =		SndID_SpindashRelease
+sfx_BreakItem =		SndID_Explosion
+sfx_Warning =		SndID_WaterWarning
+sfx_GiantRing =		SndID_EnterGiantRing
+sfx_Bomb =		SndID_BossExplosion
+sfx_Cash =		SndID_TallyEnd
+sfx_RingLoss =		SndID_RingSpill
+sfx_ChainRise =		SndID_ChainRise
+sfx_Burning =		SndID_FireBurn
+sfx_Bonus =		SndID_Bonus
+sfx_EnterSS =		SndID_SpecStageEntry
+sfx_WallSmash =		SndID_SlowSmash
+sfx_Spring =		SndID_Spring
+sfx_Switch =		SndID_Blip	; file Sound4D.asm; internally 6B
+sfx_RingLeft =		SndID_RingLeft
+sfx_Signpost =		SndID_Signpost
+
+; Special sound effects
+sfx_Waterfall =	$D0
+
+bgm_Fade =		MusID_FadeOut
+sfx_Sega =		SndID_SegaSound
+bgm_Speedup =		MusID_SpeedUp
+bgm_Slowdown =		MusID_SlowDown
+bgm_Stop =		MusID_Stop
+
+; ===========================================================================
+; ---------------------------------------------------------------------------
 ; Main RAM
+; ---------------------------------------------------------------------------
 	phase	ramaddr($FFFE0000)
 RAM_debug_start:		ds.b	$10000
 RAM_debug_end:
@@ -1112,86 +1194,6 @@ HW_Port_2_SCtrl:		equ $A10019
 HW_Expansion_TxData:		equ $A1001B
 HW_Expansion_RxData:		equ $A1001D
 HW_Expansion_SCtrl:		equ $A1001F
-
-; Background music
-bgm_GHZ =		MusID_ALZ
-bgm_LZ =		MusID_MCZ
-bgm_MZ =		MusID_CPZ
-bgm_SLZ =		MusID_GRGZ1
-bgm_SYZ =		MusID_DDZ1
-bgm_SBZ =		MusID_LBZ1_S3
-bgm_Invincible =	MusID_Invincible
-bgm_ExtraLife =		MusID_ExtraLife
-bgm_DoubleLife =	MusID_DoubleLife
-bgm_SS =		MusID_BonusStage
-bgm_Title =		MusID_Title
-bgm_Ending =		MusID_Ending_S1
-bgm_Boss =		MusID_Boss
-bgm_FZ =		MusID_HTZ
-bgm_GotThrough =	MusID_EndLevel
-bgm_GameOver =		MusID_GameOver
-bgm_Continue =		MusID_Continue
-bgm_Credits =		MusID_Credits
-bgm_Drowning =		MusID_Countdown
-bgm_Emerald =		MusID_Emerald
-
-sfx_Jump =		SndID_Jump
-sfx_Lamppost =		SndID_Checkpoint
-sfx_SpikeSwitch =	SndID_SpikeSwitch
-sfx_Death =		SndID_Hurt
-sfx_Skid =		SndID_Skidding
-sfx_A5 =		SndID_Bwoop
-sfx_HitSpikes =		SndID_HurtBySpikes
-sfx_Push =		SndID_BlockPush
-sfx_SSGoal =		SndID_Goal
-sfx_SSItem =		SndID_Bwoop
-sfx_Splash =		SndID_Splash
-sfx_AB =		SndID_Swish
-sfx_HitBoss =		SndID_BossHit
-sfx_Bubble =		SndID_InhalingBubble
-sfx_Fireball =		SndID_FireBurn
-sfx_Shield =		SndID_Shield
-sfx_Saw =		SndID_LaserBeam
-sfx_Electric =		SndID_Zap
-sfx_Drown =		SndID_Drown
-sfx_Flamethrower =	SndID_FireBurn
-sfx_Bumper =		SndID_Bumper
-sfx_Ring =		SndID_Ring
-sfx_SpikesMove =	SndID_SpikesMove
-sfx_Rumbling =		SndID_Rumbling
-sfx_B8 =		SndID_unknown
-sfx_Collapse =		SndID_Smash
-sfx_SSGlass =		SndID_Glass
-sfx_Door =		SndID_DoorSlam
-sfx_Teleport =		SndID_SpindashRelease
-sfx_ChainStomp =	SndID_ChainRise
-sfx_Roll =		SndID_Roll
-sfx_Continue =		SndID_ContinueJingle
-sfx_Basaran =		SndID_SpindashRelease
-sfx_BreakItem =		SndID_Explosion
-sfx_Warning =		SndID_WaterWarning
-sfx_GiantRing =		SndID_EnterGiantRing
-sfx_Bomb =		SndID_BossExplosion
-sfx_Cash =		SndID_TallyEnd
-sfx_RingLoss =		SndID_RingSpill
-sfx_ChainRise =		SndID_ChainRise
-sfx_Burning =		SndID_FireBurn
-sfx_Bonus =		SndID_Bonus
-sfx_EnterSS =		SndID_SpecStageEntry
-sfx_WallSmash =		SndID_SlowSmash
-sfx_Spring =		SndID_Spring
-sfx_Switch =		SndID_Blip
-sfx_RingLeft =		SndID_RingLeft
-sfx_Signpost =		SndID_Signpost
-
-; Special sound effects
-sfx_Waterfall =	$D0
-
-bgm_Fade =		MusID_FadeOut
-sfx_Sega =		SndID_SegaSound
-bgm_Speedup =		MusID_SpeedUp
-bgm_Slowdown =		MusID_SlowDown
-bgm_Stop =		MusID_Stop
 
 ; Boss locations
 ; The main values are based on where the camera boundaries mainly lie

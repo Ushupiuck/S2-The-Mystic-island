@@ -33,6 +33,7 @@ BonusPlayer_Main:	; Routine 0
 		move.l	#Map_Sonic,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Sonic,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
+		move.w	#$100,obPriority(a0)
 		move.b	#2,obAnim(a0)
 		bset	#2,obStatus(a0)
 		bset	#1,obStatus(a0)
@@ -267,11 +268,11 @@ BonusPlayer_JumpHeight:
 S1SS_FixCamera:
 		move.w	obY(a0),d2
 		move.w	obX(a0),d3
-		move.w	(Camera_RAM).w,d0
+		move.w	(Camera_X_pos).w,d0
 		subi.w	#160,d3
 		bcs.s	.ignore_x		; branch if Sonic is within 160px of left edge
 		sub.w	d3,d0
-		sub.w	d0,(Camera_RAM).w	; fix camera 160px (half screen) left of Sonic
+		sub.w	d0,(Camera_X_pos).w	; fix camera 160px (half screen) left of Sonic
 
 .ignore_x:
 		move.w	(Camera_Y_pos).w,d0
@@ -281,6 +282,8 @@ S1SS_FixCamera:
 		sub.w	d0,(Camera_Y_pos).w	; fix camera 112px (half screen) above Sonic
 
 .ignore_y:
+		move.w	(Camera_X_pos).w,(Camera_X_pos_copy).w
+		move.w	(Camera_Y_pos).w,(Camera_Y_pos_copy).w
 		rts
 ; End of function S1SS_FixCamera
 

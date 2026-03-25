@@ -8,11 +8,11 @@ Obj26:
 		move.w	Obj26_Index(pc,d0.w),d1
 		jmp	Obj26_Index(pc,d1.w)
 ; ---------------------------------------------------------------------------
-Obj26_Index:	dc.w loc_AE70-Obj26_Index
-		dc.w loc_AED6-Obj26_Index
-		dc.w loc_AFDC-Obj26_Index
-		dc.w loc_AFBA-Obj26_Index
-		dc.w loc_AFC4-Obj26_Index
+Obj26_Index:	dc.w loc_AE70-Obj26_Index	; 0
+		dc.w loc_AED6-Obj26_Index	; 2
+		dc.w loc_AFDC-Obj26_Index	; 4
+		dc.w loc_AFBA-Obj26_Index	; 6
+		dc.w loc_AFC4-Obj26_Index	; 8
 ; ---------------------------------------------------------------------------
 
 loc_AE70:

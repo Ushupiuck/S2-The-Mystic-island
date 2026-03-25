@@ -23,10 +23,10 @@ SndNames:	offsetTable
 	offsetTableEntry.w	SndNam_Ring
 	offsetTableEntry.w	SndNam_SpikesMove
 	offsetTableEntry.w	SndNam_Rumbling
-	offsetTableEntry.w	SndNam_unknown
+	offsetTableEntry.w	SndNam_DoorSlam
 	offsetTableEntry.w	SndNam_Smash
 	offsetTableEntry.w	SndNam_Glass
-	offsetTableEntry.w	SndNam_DoorSlam
+	offsetTableEntry.w	SndNam_Trapdoor
 	offsetTableEntry.w	SndNam_SpindashRelease
 	offsetTableEntry.w	SndNam_Hammer
 	offsetTableEntry.w	SndNam_Roll
@@ -104,10 +104,10 @@ SndNam_Bumper:	songtext	"BUMPER"
 SndNam_Ring:	songtext	"RING"
 SndNam_SpikesMove:	songtext	"SPIKES MOVE"
 SndNam_Rumbling:	songtext	"RUMBLING"
-SndNam_unknown:	songtext	"UNKNOWN"
+SndNam_DoorSlam:	songtext	"DOOR SLAM"
 SndNam_Smash:	songtext	"SMASH"
 SndNam_Glass:	songtext	"SPECIAL STAGE GLASS"
-SndNam_DoorSlam:	songtext	"DOOR SLAM"
+SndNam_Trapdoor:	songtext	"TRAPDOOR"
 SndNam_SpindashRelease:	songtext	"SPINDASH RELEASE"
 SndNam_Hammer:	songtext	"HAMMER"
 SndNam_Roll:	songtext	"ROLL"
