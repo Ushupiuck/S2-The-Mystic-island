@@ -18300,15 +18300,15 @@ KillSonic:
 		move.w	#-$700,obVelY(a0)
 		clr.w	obVelX(a0)
 		clr.w	obInertia(a0)
-		move.w	obY(a0),objoff_38(a0)
+	;	move.w	obY(a0),objoff_38(a0)
 		move.b	#AniIDSonAni_Death,obAnim(a0)
 		bset	#7,obGfx(a0)
-		move.w	#sfx_Death,d0
-		cmpi.b	#id_Obj36,obID(a2)
-		bne.s	+
-;		cmpi.b	#id_Obj16,obID(a2)	; Used to be the LZ Harpoon in Sonic 1
-;		bne.s	+			; It's been replaced by the HTZ lifts
-		move.w	#sfx_HitSpikes,d0
+		move.w	#sfx_HitSpikes,d0	; Preload the spike sfx
+		cmpi.b	#id_Obj36,obID(a2)	; Is this the spikes object?
+		beq.s	+
+;		cmpi.b	#id_Obj16,obID(a2)	; Is this the LZ Harpoon? (Leftover from Sonic 1)
+;		beq.s	+			; It's been replaced by the HTZ lifts
+		move.w	#sfx_Death,d0		; Default to the death sfx
 +		jsr	(PlaySound_Special).l
 .exit:
 		moveq	#-1,d0
