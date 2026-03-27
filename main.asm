@@ -2622,7 +2622,7 @@ LevSel_LineLoop:
 		moveq	#0,d0
 		move.b	(a1)+,d0	; get character
 		bpl.s	LevSel_CharOk	; branch if valid
-		clr.w	(a6)		; use blank character
+		move.w	#0,(a6)	; use blank character
 		dbf	d2,LevSel_LineLoop
 		rts
 
@@ -2666,22 +2666,22 @@ MusicList:
 
 Level:
 		clr.w	(f_demo).w
-Demo:		bset	#7,(v_gamemode).w	; GameModeFlag_TitleCard
+Demo:
 		tst.w	(f_demo).w		; are we on an ending demo?
 		bmi.s	Level_NoMusicFade	; if so, branch
 		move.b	#bgm_Fade,d0
 		bsr.w	PlaySound_Special
 
 Level_NoMusicFade:
-		bsr.w	ClearPLC
 		bsr.w	Pal_FadeToBlack
+		bsr.w	ClearPLC
+		bset	#7,(v_gamemode).w	; GameModeFlag_TitleCard
 		tst.w	(f_demo).w	; are we on an ending demo?
 		bmi.s	Level_ClrRam	; if so, branch
 		disable_ints
 		locVRAM	ArtTile_Title_Card*tile_size
 		lea	(Nem_TitleCard).l,a0	; load title card patterns
 		bsr.w	NemDec
-		enable_ints
 		moveq	#0,d1
 		move.w	(Current_ZoneAndAct).w,d1
 		ror.b	#2,d1
@@ -2751,21 +2751,18 @@ Level_PlayBgm:
 
 Level_TtlCardLoop:
 		move.w	#Vint_TitleCard,(v_vbla_routine).w
-		bsr.w	WaitForVint
 		bsr.w	Process_Kos_Queue
+		bsr.w	WaitForVint
 		jsr	(ExecuteObjects).l
 		jsr	(BuildSprites).l
-		bsr.w	RunPLC_RAM
 		bsr.w	Process_Kos_Module_Queue
+		bsr.w	RunPLC_RAM
 		move.w	(v_ttlcardact+obX).w,d0
 		cmp.w	(v_ttlcardact+objoff_30).w,d0
 		bne.s	Level_TtlCardLoop
 		tst.l	(v_plc_buffer).w
 		bne.s	Level_TtlCardLoop
-		move.w	#Vint_TitleCard,(v_vbla_routine).w
-		bsr.w	WaitForVint
 		jsr	(HUD_Base).l
-
 Level_SkipTtlCard:
 		moveq	#palid_SonicTails,d0
 		bsr.w	PalLoad1
@@ -19015,7 +19012,7 @@ loc_1B3E0:
 ; ---------------------------------------------------------------------------
 
 loc_1B3EC:
-		clr.l	(a6)
+		move.l	#0,(a6)
 		dbf	d1,loc_1B3EC
 		dbf	d2,loc_1B3D0
 		rts
@@ -19315,7 +19312,7 @@ loc_1B5EA:
 		moveq	#$10-1,d5
 
 loc_1B5EC:
-		clr.l	(a6)
+		move.l	#0,(a6)
 		dbf	d5,loc_1B5EC
 		dbf	d6,loc_1B5A4
 		rts
@@ -19377,7 +19374,7 @@ loc_1B650:
 		moveq	#8-1,d5
 
 loc_1B656:
-		clr.l	(a6)
+		move.l	#0,(a6)
 		dbf	d5,loc_1B656
 		addi.l	#$400000,d0
 		dbf	d6,loc_1B610
