@@ -322,7 +322,6 @@ VInt_0_FullyUnderwater:
 
 VInt_0_Water_Cont:
 		move.w	(v_hbla_hreg).w,(a5)
-		move.w	#$8200+(vram_fg>>10),(vdp_control_port).l
 		startZ80	; rather than always branching to "VintRet",
 		addq.l	#1,(Vint_runcount).w	; we'll optimize by copying it here.
 		movem.l	(sp)+,d0-a6
@@ -335,6 +334,9 @@ Vint_SEGA:
 		beq.w	Set_Kos_Bookmark
 		subq.w	#1,(v_generictimer).w
 		bra.w	Set_Kos_Bookmark
+;		beq.s	.end
+;		subq.w	#1,(v_generictimer).w
+;.end:		rts
 ; ===========================================================================
 ; loc_CAE: VintSub14:
 Vint_PCM:
@@ -360,6 +362,9 @@ Vint_Title:
 		beq.w	Set_Kos_Bookmark
 		subq.w	#1,(v_generictimer).w
 		bra.w	Set_Kos_Bookmark
+;		beq.s	.end
+;		subq.w	#1,(v_generictimer).w
+;.end:		rts
 ; ===========================================================================
 ; loc_CD8: VintSub10:
 Vint_Pause:
@@ -389,7 +394,6 @@ Vint_Level:
 		movem.l	d0-d7,(Camera_RAM_copy).w
 		movem.l	(Scroll_flags).w,d0-d3
 		movem.l	d0-d3,(Scroll_flags_copy).w
-		move.l	(v_bg3scrposy_vdp).w,(Camera_X_pos_copy).w
 		enable_ints
 		tst.b	(Water_flag).w
 		beq.s	Do_Updates
@@ -421,6 +425,9 @@ Do_Updates:
 		beq.w	Set_Kos_Bookmark
 		subq.w	#1,(v_generictimer).w
 		bra.w	Set_Kos_Bookmark
+;		beq.s	.end
+;		subq.w	#1,(v_generictimer).w
+;.end:		rts
 ; End of function Do_Updates
 
 ; ---------------------------------------------------------------------------
@@ -2762,7 +2769,10 @@ Level_TtlCardLoop:
 		bne.s	Level_TtlCardLoop
 		tst.l	(v_plc_buffer).w
 		bne.s	Level_TtlCardLoop
+	;	move.w	#Vint_TitleCard,(v_vbla_routine).w
+	;	bsr.w	WaitForVint
 		jsr	(HUD_Base).l
+
 Level_SkipTtlCard:
 		moveq	#palid_SonicTails,d0
 		bsr.w	PalLoad1
@@ -3439,8 +3449,8 @@ loc_5214:
 SS_NormalExit:
 		bsr.w	PauseGame
 		move.w	#Vint_TitleCard,(v_vbla_routine).w
-		bsr.w	WaitForVint
 		bsr.w	Process_Kos_Queue
+		bsr.w	WaitForVint
 		jsr	(ExecuteObjects).l
 		jsr	(BuildSprites).l
 		bsr.w	RunPLC_RAM
@@ -4729,6 +4739,7 @@ LevelSizeArray:
 		dc.w $0000, $3FFF, $0000, $0110	; ZONE 6  2 (Was S1 Bad Ending)
 		dc.w $0000, $3FFF, $0000, $0320	; ZONE 6  3
 		dc.w $0000, $3FFF, $0000, $0320	; ZONE 6  4
+		; The following levels don't exist yet:
 		dc.w $0000, $3FFF, $0000, $0800	; ZONE 7  1
 		dc.w $0000, $3FFF, $0000, $0800	; ZONE 7  2
 		dc.w $0000, $3FFF, $0000, $0800	; ZONE 7  3
@@ -4985,6 +4996,8 @@ DeformBGLayer:
 		clr.w	(Scroll_flags_BG).w
 		clr.w	(Scroll_flags_BG2).w
 		clr.w	(Scroll_flags_BG3).w
+		clr.w	(Camera_X_pos_diff).w
+		clr.w	(Camera_Y_pos_diff).w
 		lea	(v_player).w,a0
 		lea	(Camera_RAM).w,a1
 		lea	(Horiz_block_crossed_flag).w,a2
@@ -9624,6 +9637,12 @@ Anim_End:
 		rts
 ; End of function AnimateSprite
 
+; ===========================================================================
+; ---------------------------------------------------------------------------
+; Sprite mappings - SCORE, TIME, RINGS
+; ---------------------------------------------------------------------------
+Map_obj21:	include	"mappings/sprite/obj21.asm"
+
 ; =============== S U B R O U T I N E =======================================
 
 
@@ -9632,10 +9651,40 @@ BuildSprites:
 		moveq	#0,d5
 		moveq	#0,d4
 		tst.b	(Level_started_flag).w
-		beq.s	+
-		jsr	(BuildHUD).l
-		bsr.w	BuildRings
+		beq.s	.levelstarted
+		; We proceed to draw the HUD
+		moveq	#0,d1			; Reset HUD frame index
+		btst	#3,(Timer_frames+1).w	; Only blink on certain frames
+		bne.s	.skipBlink
+		tst.w	(v_rings).w		; No rings?
+		bne.s	.checkTime
+		addq.w	#1,d1			; +1 = RING blink frame
+
+.checkTime:
+		cmpi.b	#9,(v_timemin).w	; 9:00 reached?
+		bne.s	.skipBlink
+		addq.w	#2,d1			; +2 = TIME blink frame
+
+.skipBlink:
+	;	move.b	(Level_started_flag).w,d3
+	;	ext.w	d3
+	;	bpl.s	+
+	;	addq.w	#2,d3
+	;	move.b	d3,(Level_started_flag).w
 +
+		move.w	#128+16,d3		; HUD X pos
+		move.w	#128+136,d2		; HUD Y pos
+		lea	Map_obj21(pc),a1	; Map data base
+		movea.w	#make_art_tile(ArtTile_HUD,0,0),a3 ; Art tile setup
+		add.w	d1,d1			; Word offset (2 bytes per entry)
+		adda.w	(a1,d1.w),a1		; Advance to correct HUD frame
+		move.w	(a1)+,d1
+		subq.w	#1,d1
+		bmi.s	+
+		bsr.w	DrawSprite_Loop		; Draw the HUD icon
+		; Continue onwards to to BuildRings
++		bsr.w	BuildRings
+.levelstarted:
 		lea	(v_spritequeue).w,a4
 		moveq	#7,d7	; 8 priority levels
 
@@ -9650,9 +9699,9 @@ BuildSprites_ObjLoop:
 		; have been queued for display. S3K gets rids of them compeletely,
 		; since they should not be needed and they just slow this code down.
 		tst.b	obID(a0)		; is this object slot occupied?
-		beq.w	BuildSprites_Crash	; if not, branch
-		tst.l	obMap(a0)		; does this object have any mappings?
 		beq.w	BuildSprites_NextObj	; if not, branch
+		tst.l	obMap(a0)		; does this object have any mappings?
+		beq.w	BuildSprites_Crash	; if not, branch
 		andi.b	#$7F,obRender(a0)	; clear on-screen flag
 		move.b	obRender(a0),d0
 		move.b	d0,d4
@@ -9700,7 +9749,7 @@ BuildSprites_ApproxYCheck:
 		move.w	obY(a0),d2
 		sub.w	4(a1),d2			; Apparently, this is NOT obMap
 		addi.w	#128,d2
-	andi.w	#$7FF,d2
+		andi.w	#$7FF,d2
 		cmpi.w	#$60,d2	; assume Y radius to be 32 pixels
 		blo.s	BuildSprites_NextObj
 		cmpi.w	#$180,d2
@@ -9769,46 +9818,46 @@ BuildSprites_MultiDraw:
 		sub.w	d0,d1
 		cmpi.w	#320,d1
 		bge.w	BuildSprites_MultiDraw_NextObj
-	addi.w	#128,d3
+		addi.w	#128,d3
 
-	; check if object is within Y bounds
-	btst	#4,d4
-	beq.s	+
-	moveq	#0,d0
-	move.b	mainspr_height(a0),d0	; load pixel height
+		; check if object is within Y bounds
+		btst	#4,d4
+		beq.s	+
+		moveq	#0,d0
+		move.b	mainspr_height(a0),d0	; load pixel height
 		move.w	obY(a0),d2
 		sub.w	4(a4),d2
-	move.w	d2,d1
-	add.w	d0,d1
-	bmi.w	BuildSprites_MultiDraw_NextObj
-	move.w	d2,d1
-	sub.w	d0,d1
-	cmpi.w	#224,d1
-	bge.w	BuildSprites_MultiDraw_NextObj
-	addi.w	#128,d2
-	bra.s	++
-+
-	move.w	obY(a0),d2
-	sub.w	4(a4),d2
+		move.w	d2,d1
+		add.w	d0,d1
+		bmi.w	BuildSprites_MultiDraw_NextObj
+		move.w	d2,d1
+		sub.w	d0,d1
+		cmpi.w	#224,d1
+		bge.w	BuildSprites_MultiDraw_NextObj
 		addi.w	#128,d2
-	andi.w	#$7FF,d2
+		bra.s	++
++
+		move.w	obY(a0),d2
+		sub.w	4(a4),d2
+		addi.w	#128,d2
+		andi.w	#$7FF,d2
 		cmpi.w	#$60,d2
 		blo.s	BuildSprites_MultiDraw_NextObj
 		cmpi.w	#$180,d2
 		bhs.s	BuildSprites_MultiDraw_NextObj
 +
-	moveq	#0,d1
-	move.b	mainspr_mapframe(a0),d1	; get current frame
-	beq.s	+
-	add.w	d1,d1
-	movea.l	a5,a1
-	adda.w	(a1,d1.w),a1
-	move.w	(a1)+,d1
-	subq.w	#1,d1
-	bmi.s	+
-	move.w	d4,-(sp)
-	bsr.w	ChkDrawSprite	; draw the sprite
-	move.w	(sp)+,d4
+		moveq	#0,d1
+		move.b	mainspr_mapframe(a0),d1	; get current frame
+		beq.s	+
+		add.w	d1,d1
+		movea.l	a5,a1
+		adda.w	(a1,d1.w),a1
+		move.w	(a1)+,d1
+		subq.w	#1,d1
+		bmi.s	+
+		move.w	d4,-(sp)
+		bsr.w	ChkDrawSprite	; draw the sprite
+		move.w	(sp)+,d4
 +
 		ori.b	#$80,obRender(a0)	; set onscreen flag
 		lea	subspr_data(a0),a6
@@ -9824,7 +9873,7 @@ BuildSprites_MultiDraw:
 		move.w	(a6)+,d2	; get Y pos
 		sub.w	4(a4),d2
 		addi.w	#128,d2
-	andi.w	#$7FF,d2
+		andi.w	#$7FF,d2
 		addq.w	#1,a6
 		moveq	#0,d1
 		move.b	(a6)+,d1	; get mapping frame
@@ -9834,9 +9883,9 @@ BuildSprites_MultiDraw:
 		move.w	(a1)+,d1
 		subq.w	#1,d1
 		bmi.s	+
-	move.w	d4,-(sp)
+		move.w	d4,-(sp)
 		bsr.w	ChkDrawSprite
-	move.w	(sp)+,d4
+		move.w	(sp)+,d4
 +
 		swap	d0
 		dbf	d0,-	; repeat for number of child sprites
@@ -9902,8 +9951,8 @@ DrawSprite_FlipX:
 		bne.w	DrawSprite_FlipXY	; if it is, branch
 
 -
-	cmpi.b	#80,d5		; has the sprite limit been reached?
-	bhs.s	++		; if it has, branch
+		cmpi.b	#80,d5		; has the sprite limit been reached?
+		bhs.s	++		; if it has, branch
 		move.b	(a1)+,d0
 		ext.w	d0
 		add.w	d2,d0
@@ -9947,8 +9996,8 @@ CellOffsets_YFlip:
 
 DrawSprite_FlipY:
 -
-	cmpi.b	#80,d5		; has the sprite limit been reached?
-	bhs.s	++		; if it has, branch
+		cmpi.b	#80,d5		; has the sprite limit been reached?
+		bhs.s	++		; if it has, branch
 		move.b	(a1)+,d0
 		move.b	(a1),d4
 		ext.w	d0
@@ -9986,8 +10035,8 @@ CellOffsets_YFlip2:
 
 DrawSprite_FlipXY:
 -
-	cmpi.b	#80,d5		; has the sprite limit been reached?
-	bhs.s	++		; if it has, branch
+		cmpi.b	#80,d5		; has the sprite limit been reached?
+		bhs.s	++		; if it has, branch
 		move.b	(a1)+,d0
 		move.b	(a1),d4
 		ext.w	d0
@@ -10249,56 +10298,51 @@ locret_DA36:
 BuildRings:
 		movea.w	(Ring_start_addr).w,a0
 		movea.w	(Ring_end_addr).w,a4
-		cmpa.l	a0,a4
-		bne.s	loc_DA46
-		rts
-; ---------------------------------------------------------------------------
+		cmpa.l	a0,a4	; are there any rings on-screen?
+		beq.s	BuildRings_NextRing.end	; if there aren't, return
+		lea	(Camera_RAM).w,a3	; otherwise, continue
 
-loc_DA46:
-		lea	(Camera_RAM).w,a3
-
-loc_DA4A:
-		tst.w	(a0)
-		bmi.w	loc_DAA8
-		move.w	2(a0),d3
-		sub.w	Camera_X_pos-Camera_RAM(a3),d3
-		addi.w	#128,d3
-		move.w	4(a0),d2
-		sub.w	Camera_Y_pos-Camera_RAM(a3),d2
+BuildRings_Loop:
+		tst.w	(a0)		; has this ring been consumed?
+		bmi.w	BuildRings_NextRing	; if it has, branch
+		move.w	2(a0),d3	; get ring X pos
+		sub.w	Camera_X_pos-Camera_RAM(a3),d3		; subtract camera X pos
+		addi.w	#128,d3		; screen top-left is 128x128 not 0x0
+		move.w	4(a0),d2	; get ring Y pos
+		sub.w	Camera_Y_pos-Camera_RAM(a3),d2	; subtract camera Y pos
 		addq.w	#8,d2
-		bmi.s	loc_DAA8
+		andi.w	#$7FF,d2
 		cmpi.w	#224+16,d2
-		bge.s	loc_DAA8
+		bhs.s	BuildRings_NextRing	; if the ring is not on-screen, branch
 		addi.w	#128-8,d2
-		lea	(off_DC04).l,a1
+		lea	(MapUnc_Rings).l,a1
 		moveq	#0,d1
-		move.b	1(a0),d1
-		bne.s	loc_DA84
-		move.b	(v_ani1_frame).w,d1
-
-loc_DA84:
+		move.b	1(a0),d1	; get ring frame
+		bne.s	+		; if this ring is using a specific frame, branch
+		move.b	(v_ani1_frame).w,d1	; use global frame
++
 		add.w	d1,d1
-		adda.w	(a1,d1.w),a1
-		move.b	(a1)+,d0
+		adda.w	(a1,d1.w),a1	; get frame data address
+		move.b	(a1)+,d0	; get Y offset
 		ext.w	d0
-		add.w	d2,d0
-		move.w	d0,(a2)+
-		move.b	(a1)+,(a2)+
+		add.w	d2,d0		; add Y offset to Y pos
+		move.w	d0,(a2)+	; set Y pos
+		move.b	(a1)+,(a2)+	; set size
 		addq.b	#1,d5
-		move.b	d5,(a2)+
-		move.w	(a1)+,d0
-		addi.w	#make_art_tile(ArtTile_Ring,1,0),d0
-		move.w	d0,(a2)+
-		addq.w	#2,a1
-		move.w	(a1)+,d0
-		add.w	d3,d0
-		move.w	d0,(a2)+
+		move.b	d5,(a2)+	; set link field
+		move.w	(a1)+,d0	; get art tile
+		addi.w	#make_art_tile(ArtTile_Ring,1,0),d0	; add base art tile
+		move.w	d0,(a2)+	; set art tile and flags
+		addq.w	#2,a1		; skip 2P art tile
+		move.w	(a1)+,d0	; get X offset
+		add.w	d3,d0		; add base X pos
+		move.w	d0,(a2)+	; set X pos
 
-loc_DAA8:
+BuildRings_NextRing:
 		lea	6(a0),a0
 		cmpa.l	a0,a4
-		bne.w	loc_DA4A
-		rts
+		bne.s	BuildRings_Loop
+.end:		rts
 ; End of function BuildRings
 
 
@@ -10385,7 +10429,7 @@ loc_DBF2:
 ; End of function RingsManager_Setup
 
 ; ---------------------------------------------------------------------------
-off_DC04:	include	"mappings/sprite/Rings.asm"
+MapUnc_Rings:	include	"mappings/sprite/Rings.asm"
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -11759,14 +11803,14 @@ loc_F98E:
 
 loc_F9A0:
 		tst.w	obVelY(a1)
-		bmi.s	sub_F9C8.return
+		bmi.s	ExitPlatform.return
 		move.w	obX(a1),d0
 		sub.w	obX(a0),d0
 		add.w	d1,d0
-		bmi.s	sub_F9C8.return
+		bmi.s	ExitPlatform.return
 		add.w	d1,d1
 		cmp.w	d1,d0
-		bhs.s	sub_F9C8.return
+		bhs.s	ExitPlatform.return
 		move.w	obY(a0),d0
 		sub.w	d3,d0
 		bra.w	loc_F8C2
@@ -11774,7 +11818,7 @@ loc_F9A0:
 ; =============== S U B R O U T I N E =======================================
 
 
-sub_F9C8:
+ExitPlatform:
 		move.w	d1,d2
 		add.w	d2,d2
 		lea	(v_player).w,a1
@@ -11791,7 +11835,7 @@ sub_F9C8:
 		move.b	#2,obRoutine(a0)
 		bclr	#3,obStatus(a0)
 .return:	rts
-; End of function sub_F9C8
+; End of function ExitPlatform
 
 ; ===========================================================================
 		include	"objects/01 Sonic.asm"
@@ -18297,7 +18341,6 @@ KillSonic:
 		move.w	#-$700,obVelY(a0)
 		clr.w	obVelX(a0)
 		clr.w	obInertia(a0)
-	;	move.w	obY(a0),objoff_38(a0)
 		move.b	#AniIDSonAni_Death,obAnim(a0)
 		bset	#7,obGfx(a0)
 		move.w	#sfx_HitSpikes,d0	; Preload the spike sfx
@@ -18738,53 +18781,6 @@ APM_None:
 		dc.w 0
 APM_None_End:
 
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; Sprite mappings - SCORE, TIME, RINGS
-; ---------------------------------------------------------------------------
-Map_obj21:	include	"mappings/sprite/obj21.asm"
-
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; Subroutine to draw the HUD
-; ---------------------------------------------------------------------------
-
-; loc_40804:
-BuildHUD:
-		moveq	#0,d1			; Reset HUD frame index
-		btst	#3,(Timer_frames+1).w	; Only blink on certain frames
-		bne.s	.skipBlink
-		tst.w	(v_rings).w		; No rings?
-		bne.s	.checkTime
-		addq.w	#1,d1			; +1 = RING blink frame
-
-.checkTime:
-		cmpi.b	#9,(v_timemin).w	; 9:00 reached?
-		bne.s	.skipBlink
-		addq.w	#2,d1			; +2 = TIME blink frame
-
-.skipBlink:
-	;	move.b	(Level_started_flag).w,d3
-	;	ext.w	d3
-	;	bpl.s	+
-	;	addq.w	#2,d3
-	;	move.b	d3,(Level_started_flag).w
-+
-		move.w	#128+16,d3		; HUD X pos
-		move.w	#128+136,d2		; HUD Y pos
-		lea	Map_obj21(pc),a1	; Map data base
-		movea.w	#make_art_tile(ArtTile_HUD,0,0),a3 ; Art tile setup
-		add.w	d1,d1			; Word offset (2 bytes per entry)
-		adda.w	(a1,d1.w),a1		; Advance to correct HUD frame
-		move.w	(a1)+,d1
-		subq.w	#1,d1
-		bmi.s	.return
-		jmp	(DrawSprite_Loop).l	; Draw the HUD icon
-
-.return:
-		rts
-; End of function BuildHUD
-
 ; ---------------------------------------------------------------------------
 ; Subroutine to add points to the score counter
 ; ---------------------------------------------------------------------------
@@ -18804,7 +18800,7 @@ AddPoints:
 loc_1B214:
 		move.l	(a3),d0
 		cmp.l	(v_scorelife).w,d0
-		blo.s	BuildHUD.return
+		blo.w	TimeOver.return
 		addi.l	#5000,(v_scorelife).w
 		addq.b	#1,(v_lives).w
 		addq.b	#1,(f_lifecount).w

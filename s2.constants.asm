@@ -724,8 +724,8 @@ v_jpadpress2:		ds.b	1			; joypad input - pressed
 
 v_vdp_buffer1:		ds.w	1			; VDP instruction buffer
 v_generictimer:		ds.w	1			; the length of a demo in frames
+Vscroll_Factor:
 v_scrposy_vdp:		ds.w	1			; screen position y (VDP)
-Vscroll_Factor		= v_scrposy_vdp
 v_bgscrposy_vdp:	ds.w	1			; background screen position y (VDP)
 v_scrposx_vdp:		ds.w	1			; screen position x (VDP)
 v_bgscrposx_vdp:	ds.w	1			; background screen position x (VDP)

@@ -11,7 +11,7 @@ Obj26:
 Obj26_Index:	dc.w loc_AE70-Obj26_Index	; 0
 		dc.w loc_AED6-Obj26_Index	; 2
 		dc.w loc_AFDC-Obj26_Index	; 4
-		dc.w loc_AFBA-Obj26_Index	; 6
+		dc.w Mon_Animate-Obj26_Index	; 6
 		dc.w loc_AFC4-Obj26_Index	; 8
 ; ---------------------------------------------------------------------------
 
@@ -47,29 +47,29 @@ loc_AED6:
 		moveq	#0,d1
 		move.b	obActWid(a0),d1
 		addi.w	#$B,d1
-		bsr.w	sub_F9C8
+		jsr	(ExitPlatform).l
 		btst	#3,obStatus(a1)
 		bne.w	loc_AF00
 		clr.b	ob2ndRout(a0)
-		bra.w	loc_AFBA
+		bra.w	Mon_Animate
 ; ---------------------------------------------------------------------------
 
 loc_AF00:
 		move.w	#$10,d3
 		move.w	obX(a0),d2
 		bsr.w	MvSonicOnPtfm
-		bra.w	loc_AFBA
+		bra.w	Mon_Animate
 ; ---------------------------------------------------------------------------
 
 loc_AF10:
 		bsr.w	ObjectMoveAndFall
 		jsr	(ObjHitFloor).l
 		tst.w	d1
-		bpl.w	loc_AFBA
+		bpl.w	Mon_Animate
 		add.w	d1,obY(a0)
 		clr.w	obVelY(a0)
 		clr.b	ob2ndRout(a0)
-		bra.w	loc_AFBA
+		bra.w	Mon_Animate
 ; ---------------------------------------------------------------------------
 
 loc_AF30:
@@ -88,7 +88,7 @@ loc_AF4E:
 		sub.w	d3,obY(a1)
 		bsr.w	RideObject_SetRide
 		move.b	#2,ob2ndRout(a0)
-		bra.w	loc_AFBA
+		bra.w	Mon_Animate
 ; ---------------------------------------------------------------------------
 
 loc_AF64:
@@ -114,19 +114,19 @@ loc_AF8A:
 		bne.s	loc_AFAE
 		bset	#5,obStatus(a1)
 		bset	#5,obStatus(a0)
-		bra.s	loc_AFBA
+		bra.s	Mon_Animate
 ; ---------------------------------------------------------------------------
 
 loc_AFA0:
 		btst	#5,obStatus(a0)
-		beq.s	loc_AFBA
+		beq.s	Mon_Animate
 		move.w	#1,obAnim(a1)
 
 loc_AFAE:
 		bclr	#5,obStatus(a0)
 		bclr	#5,obStatus(a1)
 
-loc_AFBA:
+Mon_Animate:
 		lea	(Ani_obj26).l,a1
 		bsr.w	AnimateSprite
 

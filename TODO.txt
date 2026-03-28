@@ -117,6 +117,8 @@ AllocateObject <----> FindFreeObj from Sonic 1
 
 AllocateObjectAfterCurrent <----> FindNextFreeObj from Sonic 1
 
+Render_Sprites <----> BuildSprites From Sonic 1/2
+
 sub_4B57C <----> Duplicate from FindFreeObj from Sonic 1, specifically for special stages
 Create_New_Sprite = FindFreeObj from Sonic 1
 Create_New_Sprite3 = FindNextFreeObj from Sonic 1.
