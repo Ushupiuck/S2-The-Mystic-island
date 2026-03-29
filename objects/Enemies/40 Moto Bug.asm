@@ -29,14 +29,12 @@ Obj40_Init:
 		bsr.w	ObjectMoveAndFall
 		jsr	(ObjHitFloor).l
 		tst.w	d1
-		bpl.s	locret_F2BC
+		bpl.s	.return
 		add.w	d1,obY(a0)
-		move.w	#0,obVelY(a0)
+		clr.w	obVelY(a0)
 		addq.b	#2,obRoutine(a0)
 		bchg	#0,obStatus(a0)
-
-locret_F2BC:
-		rts
+.return:	rts
 ; ===========================================================================
 ; loc_F2BE:
 Obj40_Smoke:
@@ -56,22 +54,21 @@ Obj40_Main:
 		bra.w	MarkObjGone
 ; ===========================================================================
 ; off_F2E2
-Obj40_Main_Index:	dc.w Obj40_Move-Obj40_Main_Index
-			dc.w Obj40_Floor-Obj40_Main_Index
+Obj40_Main_Index:
+		dc.w Obj40_Move-Obj40_Main_Index
+		dc.w Obj40_Floor-Obj40_Main_Index
 ; ===========================================================================
 ; loc_F2E6:
 Obj40_Move:
 		subq.w	#1,objoff_30(a0)
-		bpl.s	locret_F308
+		bpl.s	.return
 		addq.b	#2,ob2ndRout(a0)
 		move.w	#-$100,obVelX(a0)
 		move.b	#1,obAnim(a0)
 		bchg	#0,obStatus(a0)
-		bne.s	locret_F308
+		bne.s	.return
 		neg.w	obVelX(a0)
-
-locret_F308:
-		rts
+.return:	rts
 ; ===========================================================================
 ; loc_F30A:
 Obj40_Floor:
@@ -83,18 +80,16 @@ Obj40_Floor:
 		bge.s	Obj40_StopMoving
 		add.w	d1,obY(a0)
 		subq.b	#1,objoff_33(a0)
-		bpl.s	locret_F354
+		bpl.s	.return
 		move.b	#15,objoff_33(a0)
 		bsr.w	FindFreeObj
-		bne.s	locret_F354
+		bne.s	.return
 		_move.b	#id_Obj40,obID(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.b	obStatus(a0),obStatus(a1)
 		move.b	#2,obAnim(a1)
-
-locret_F354:
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 ; loc_F356:
 Obj40_StopMoving:

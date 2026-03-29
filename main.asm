@@ -7,7 +7,7 @@ AdvancedHandler		= 1	; 0 for Sonic 1's Error handler, 1 for the Advanced Error h
 zeroOffsetOptimization	= 1	; if 1, makes a handful of zero-offset instructions smaller
 BackupSRAM		= 1
 AddressSRAM		= 3	; 0 = odd+even; 2 = even only; 3 = odd only
-LoadTails		= 0	; Whether or not Tails will appear alongside Sonic in levels
+LoadTails		= 1	; Whether or not Tails will appear alongside Sonic in levels
 EnableMusic		= 1	; Because it can get pretty tiring to hear level music over and over.
 TimeTravel		= 1	; if 1, allows time-travel mechanics (W.I.P)
 
@@ -7955,9 +7955,6 @@ DynResize_SLZ4:
 		rts
 ; ---------------------------------------------------------------------------
 		include	"objects/25 & 37 Rings.asm"
-Ani_Obj25:	dc.w byte_ABEC-Ani_Obj25
-byte_ABEC:	dc.b   5,  4,  5,  6,  7,$FC
-		even
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; sprite mappings
@@ -8236,7 +8233,7 @@ word_8648:	dc.w 4
 		dc.w	$A,$101B,$100D,	   0
 		even
 ; ---------------------------------------------------------------------------
-		include	"objects/17 Spiked Pole Helix.asm"
+		include	"objects/S1/17 Spiked Pole Helix.asm"
 Map_Obj17:	include	"mappings/sprite/S1/Spiked Pole Helix.asm"
 
 		include	"objects/18 Platforms.asm"
@@ -8522,8 +8519,8 @@ word_964A:	dc.w 2
 		dc.w $2007, $800, $800,$FFF8
 ; ---------------------------------------------------------------------------
 		include	"objects/Empty Slots/1D.asm"
-		include	"objects/S1/1E Ball Hog.asm"
-		include	"objects/S1/1F Crabmeat.asm"
+		include	"objects/Enemies/1E Ball Hog.asm"
+		include	"objects/Enemies/1F Crabmeat.asm"
 		include	"objects/Empty Slots/20.asm"
 		include	"objects/Empty Slots/21.asm"
 ; ---------------------------------------------------------------------------
@@ -8557,22 +8554,8 @@ byte_A327:	dc.b   1,  5,  6,$FF
 Map_obj1F:	binclude	"mappings/sprite/obj1F.bin"
 		even
 
-		include	"objects/S1/22 Buzz Bomber.asm"
-		include	"objects/S1/23 Buzz Bomber Missile.asm"
-; ===========================================================================
-; animation script
-Ani_obj22:	dc.w byte_A652-Ani_obj22
-		dc.w byte_A656-Ani_obj22
-		dc.w byte_A65A-Ani_obj22
-byte_A652:	dc.b   1,  0,  1,$FF
-byte_A656:	dc.b   1,  2,  3,$FF
-byte_A65A:	dc.b   1,  4,  5,$FF
-		even
-Ani_obj23:	dc.w byte_A662-Ani_obj23
-		dc.w byte_A666-Ani_obj23
-byte_A662:	dc.b   7,  0,  1,$FC
-byte_A666:	dc.b   1,  2,  3,$FF
-		even
+		include	"objects/Enemies/22 Buzz Bomber.asm"
+		include	"objects/Enemies/23 Buzz Bomber Missile.asm"
 ; ---------------------------------------------------------------------------
 ; sprite mappings - Buzz Bomber
 ; ---------------------------------------------------------------------------
@@ -8594,13 +8577,13 @@ Map_TitleST:	binclude "mappings/sprite/Sonic & Tails on the title screen.bin"
 Map_PSB:	binclude "mappings/sprite/press start button.bin"
 		even
 ; ---------------------------------------------------------------------------
-		include	"objects/2B Chopper.asm"
+		include	"objects/Enemies/2B Chopper.asm"
 Map_Obj2B:	binclude	"mappings/sprite/obj2B.bin"	; Green hill
 		even
 Map_obj2B_1:	binclude	"mappings/sprite/obj2B_1.bin"	; Emerald hill
 		even
 ; ---------------------------------------------------------------------------
-		include	"objects/S1/2C Jaws.asm"
+		include	"objects/Enemies/2C Jaws.asm"
 ; ---------------------------------------------------------------------------
 Map_Jaws:
 Map_Obj2C:	dc.w word_B880-Map_Obj2C
@@ -8866,11 +8849,11 @@ ptr_Obj4B:		dc.l Obj4B	; Buzzer from EHZ
 ptr_Obj4C:		dc.l Obj4C	; BBat from HPZ
 ptr_Obj4D:		dc.l Obj4D	; Stego/Stegway from HPZ
 ptr_Obj4E:		dc.l Obj4E	; Gator from HPZ
-ptr_Obj4F:		dc.l Obj4F	; Redz (dinosaur badnik) from HPZ
+ptr_Obj4F:		dc.l Splats	; Bunny badnick from the Sonic 1 Prototype
 
 ptr_Obj50:		dc.l Obj50	; Seahorse/Aquis from HPZ
 ptr_Obj51:		dc.l Obj51	; Skyhorse from HPZ
-ptr_Obj52:		dc.l Obj52	; BFish from HPZ
+ptr_Obj52:		dc.l Piranha	; Piranha from HPZ
 ptr_Obj53:		dc.l Obj53	; Empty
 ptr_Obj54:		dc.l Obj54	; Snail badnik from EHZ
 ptr_Obj55:		dc.l Obj55	; EHZ boss
@@ -9447,11 +9430,11 @@ ObjectMoveAndFall_Reserved:
 DisplaySprite:
 		lea	(v_spritequeue).w,a1
 		adda.w	obPriority(a0),a1
-		cmpi.w	#$7E,(a1)
-		bhs.s	.return
-		addq.w	#2,(a1)
-		adda.w	(a1),a1
-		move.w	a0,(a1)
+		move.w	(a1),d0
+		addq.b	#2,d0
+		bmi.s	.return
+		move.w	d0,(a1)
+		move.w	a0,(a1,d0.w)
 .return:	rts
 ; End of function DisplaySprite
 
@@ -9465,11 +9448,11 @@ DisplaySprite:
 DisplaySprite2:
 		lea	(v_spritequeue).w,a2
 		adda.w	obPriority(a1),a2
-		cmpi.w	#$7E,(a2)
-		bhs.s	.return
-		addq.w	#2,(a2)
-		adda.w	(a2),a2
-		move.w	a1,(a2)
+		move.w	(a2),d0
+		addq.b	#2,d0
+		bmi.s	.return
+		move.w	d0,(a2)
+		move.w	a1,(a2,d0.w)
 .return:	rts
 ; End of function DisplaySprite2
 
@@ -9484,11 +9467,11 @@ DisplaySprite2:
 DisplaySprite3:
 		lea	(v_spritequeue).w,a1
 		adda.w	d0,a1
-		cmpi.w	#$7E,(a1)
-		bhs.s	.return
-		addq.w	#2,(a1)
-		adda.w	(a1),a1
-		move.w	a0,(a1)
+		move.w	(a1),d0
+		addq.b	#2,d0
+		bmi.s	.return
+		move.w	d0,(a1)
+		move.w	a0,(a1,d0.w)
 .return:	rts
 ; End of function DisplaySprite3
 
@@ -10927,7 +10910,7 @@ Map_MovingSpring:
 		dc.w $F805, 4, 2, $FFF8
 		even
 
-		include	"objects/S1/42 Newtron.asm"
+		include	"objects/Enemies/42 Newtron.asm"
 Map_obj42:	binclude	"mappings/sprite/obj42.bin"
 		even
 
@@ -11118,7 +11101,7 @@ Map_obj0D:	include	"mappings/sprite/obj0D.asm"
 		include	"objects/Empty slots/0E.asm"
 		include	"objects/Empty slots/0F.asm"
 ; ===========================================================================
-		include	"objects/S1/40 Moto Bug.asm"
+		include	"objects/Enemies/40 Moto Bug.asm"
 Map_obj40:	binclude	"mappings/sprite/obj40.bin"
 		even
 
@@ -12925,7 +12908,7 @@ loc_1322E:
 
 ; =============== S U B R O U T I N E =======================================
 
-;  ObjGetFloorDist:
+;  ObjGetFloorDist, ObjFloorDist:
 ObjHitFloor:
 		move.w	obX(a0),d3
 
@@ -14440,280 +14423,23 @@ word_15B14:	dc.w 4
 		dc.w $FB01,  $30,  $18,	 $1A		; 12
 		even
 ;----------------------------------------------------------------------------
-		include	"objects/Empty slots/53.asm"
-;----------------------------------------------------------------------------
-; Object 52 - Piranha badnik
-;----------------------------------------------------------------------------
-
-Obj52:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Obj52_Index(pc,d0.w),d1
-		jmp	Obj52_Index(pc,d1.w)
+	;	include	"objects/Enemies/4F Redz.asm"
+		include	"objects/Enemies/4F Splats.asm"
 ; ---------------------------------------------------------------------------
-Obj52_Index:	dc.w Obj52_Init-Obj52_Index
-		dc.w Obj52_Main-Obj52_Index
-		dc.w Obj52_Leap-Obj52_Index
+; Sprite mappings - Splats
 ; ---------------------------------------------------------------------------
-
-Obj52_Init:
-		addq.b	#2,obRoutine(a0)
-		move.l	#Map_Obj52,obMap(a0)
-		move.w	#make_art_tile(ArtTile_BFish,1,0),obGfx(a0)
-		ori.b	#4,obRender(a0)
-		move.b	#$A,obColType(a0)
-		move.w	#$200,obPriority(a0)
-		move.b	#$10,obActWid(a0)
-		moveq	#0,d0
-		move.b	obSubtype(a0),d0
-		move.b	d0,d1
-		andi.w	#$F0,d1
-		add.w	d1,d1
-		add.w	d1,d1
-		move.w	d1,objoff_3A(a0)
-		move.w	d1,objoff_3C(a0)
-		andi.w	#$F,d0
-		lsl.w	#6,d0
-		subq.w	#1,d0
-		move.w	d0,objoff_30(a0)
-		move.w	d0,objoff_32(a0)
-		move.w	#-$80,obVelX(a0)
-		move.l	#-$48000,objoff_36(a0)
-		move.w	obY(a0),objoff_34(a0)
-		bset	#6,obStatus(a0)
-		btst	#0,obStatus(a0)
-		beq.s	Obj52_Main
-		neg.w	obVelX(a0)
-
-Obj52_Main:
-		cmpi.w	#-1,objoff_3A(a0)
-		beq.s	loc_15BE4
-		subq.w	#1,objoff_3A(a0)
-
-loc_15BE4:
-		subq.w	#1,objoff_30(a0)
-		bpl.s	loc_15C06
-		move.w	objoff_32(a0),objoff_30(a0)
-		neg.w	obVelX(a0)
-		bchg	#0,obStatus(a0)
-		move.b	#1,obPrevAni(a0)
-		move.w	objoff_3C(a0),objoff_3A(a0)
-
-loc_15C06:
-		lea	Ani_Obj52(pc),a1
-		jsr	(AnimateSprite).l
-		jsr	(ObjectMove).l
-		tst.w	objoff_3A(a0)
-		bgt.s	+
-		cmpi.w	#-1,objoff_3A(a0)
-		beq.s	+
-		move.l	#-$48000,objoff_36(a0)
-		addq.b	#2,obRoutine(a0)
-		move.w	#-1,objoff_3A(a0)
-		move.b	#2,obAnim(a0)
-		move.w	#1,objoff_3E(a0)
-+		jmp	(MarkObjGone).l
-; ---------------------------------------------------------------------------
-
-Obj52_Leap:
-		move.w	#$390,(v_waterpos1).w
-		lea	Ani_Obj52(pc),a1
-		jsr	(AnimateSprite).l
-		move.w	objoff_3E(a0),d0
-		sub.w	d0,objoff_30(a0)
-		bsr.w	sub_15CF8
-		tst.l	objoff_36(a0)
-		bpl.s	loc_15CA0
-		move.w	obY(a0),d0
-		cmp.w	(v_waterpos1).w,d0
-		bgt.s	+
-		move.b	#3,obAnim(a0)
-		bclr	#6,obStatus(a0)
-		tst.b	objoff_2A(a0)
-		bne.s	+
-		move.w	obVelX(a0),d0
-		asl.w	#1,d0
-		move.w	d0,obVelX(a0)
-		addq.w	#1,objoff_3E(a0)
-		st	objoff_2A(a0)
-+		jmp	(MarkObjGone).l
-; ---------------------------------------------------------------------------
-
-loc_15CA0:
-		move.w	obY(a0),d0
-		cmp.w	(v_waterpos1).w,d0
-		bgt.s	loc_15CB4
-		move.b	#1,obAnim(a0)
-		jmp	(MarkObjGone).l
-; ---------------------------------------------------------------------------
-
-loc_15CB4:
-		clr.b	obAnim(a0)
-		bset	#6,obStatus(a0)
-		bne.s	loc_15CCE
-		move.l	objoff_36(a0),d0
-		asr.l	#1,d0
-		move.l	d0,objoff_36(a0)
-		nop
-
-loc_15CCE:
-		move.w	objoff_34(a0),d0
-		cmp.w	obY(a0),d0
-		bgt.s	+
-		subq.b	#2,obRoutine(a0)
-		tst.b	objoff_2A(a0)
-		beq.s	+
-		move.w	obVelX(a0),d0
-		asr.w	#1,d0
-		move.w	d0,obVelX(a0)
-		sf	objoff_2A(a0)
-+		jmp	(MarkObjGone).l
-
-; =============== S U B R O U T I N E =======================================
-
-
-sub_15CF8:
-		move.l	obX(a0),d2
-		move.l	obY(a0),d3
-		move.w	obVelX(a0),d0
-		ext.l	d0
-		asl.l	#8,d0
-		add.l	d0,d2
-		add.l	objoff_36(a0),d3
-		btst	#6,obStatus(a0)
-		beq.s	loc_15D34
-		tst.l	objoff_36(a0)
-		bpl.s	loc_15D2C
-		addi.l	#$1000,objoff_36(a0)
-		addi.l	#$1000,objoff_36(a0)
-
-loc_15D2C:
-		subi.l	#$1000,objoff_36(a0)
-
-loc_15D34:
-		addi.l	#$1800,objoff_36(a0)
-		move.l	d2,obX(a0)
-		move.l	d3,obY(a0)
-		rts
-; End of function sub_15CF8
-
-; ---------------------------------------------------------------------------
-Ani_Obj52:	dc.w byte_15D4E-Ani_Obj52
-		dc.w byte_15D52-Ani_Obj52
-		dc.w byte_15D56-Ani_Obj52
-		dc.w byte_15D5A-Ani_Obj52
-byte_15D4E:	dc.b  $E,  0,  1,$FF			; 0
-byte_15D52:	dc.b   3,  0,  1,$FF			; 0
-byte_15D56:	dc.b  $E,  2,  3,$FF			; 0
-byte_15D5A:	dc.b   3,  2,  3,$FF			; 0
+Map_Splats:	binclude	"mappings/sprite/Splats.bin"
 		even
-Map_Obj52:	dc.w word_15D66-Map_Obj52
-		dc.w word_15D70-Map_Obj52
-		dc.w word_15D7A-Map_Obj52
-		dc.w word_15D84-Map_Obj52
-word_15D66:	dc.w 1
-		dc.w $F00F,    0,    0,$FFF0		; 0
-word_15D70:	dc.w 1
-		dc.w $F00F,  $10,    8,$FFF0		; 0
-word_15D7A:	dc.w 1
-		dc.w $F00F,  $20,  $10,$FFF0		; 0
-word_15D84:	dc.w 1
-		dc.w $F00F,  $30,  $18,$FFF0		; 0
-		even
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; Object 4F - Redz (dinosaur badnik) from HPZ
-; ---------------------------------------------------------------------------
-
-Obj4F:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Obj4F_Index(pc,d0.w),d1
-		jmp	Obj4F_Index(pc,d1.w)
-; ===========================================================================
-Obj4F_Index:	dc.w Obj4F_Init-Obj4F_Index
-		dc.w Obj4F_Main-Obj4F_Index
-		dc.w Obj4F_Delete-Obj4F_Index
-; ===========================================================================
-
-Obj4F_Init:
-		move.l	#Map_obj4F,obMap(a0)
-		move.w	#make_art_tile(ArtTile_Redz,0,0),obGfx(a0)
-		move.b	#4,obRender(a0)
-		move.w	#$200,obPriority(a0)
-		move.b	#$10,obActWid(a0)
-		move.b	#$10,obHeight(a0)
-		move.b	#6,obWidth(a0)
-		move.b	#$C,obColType(a0)
-		jsr	(ObjectMoveAndFall).l
-		jsr	(ObjHitFloor).l
-		tst.w	d1
-		bpl.s	.return
-		add.w	d1,obY(a0)
-		clr.w	obVelY(a0)
-		addq.b	#2,obRoutine(a0)
-		bchg	#0,obStatus(a0)
-.return:	rts
-; ===========================================================================
-
-Obj4F_Main:
-		moveq	#0,d0
-		move.b	ob2ndRout(a0),d0
-		move.w	Obj4F_SubIndex(pc,d0.w),d1
-		jsr	Obj4F_SubIndex(pc,d1.w)
-		lea	Ani_obj4F(pc),a1
-		jsr	(AnimateSprite).l
-		jmp	(MarkObjGone).l
-; ===========================================================================
-Obj4F_SubIndex:	dc.w Obj4F_MoveLeft-Obj4F_SubIndex
-		dc.w Obj4F_ChkFloor-Obj4F_SubIndex
-; ===========================================================================
-; loc_15E58:
-Obj4F_MoveLeft:
-		subq.w	#1,objoff_30(a0)		; is Redz not moving?
-		bpl.s	locret_15E7A			; if not, branch
-		addq.b	#2,ob2ndRout(a0)
-		move.w	#-$80,obVelX(a0)
-		move.b	#1,obAnim(a0)
-		bchg	#0,obStatus(a0)
-		bne.s	locret_15E7A
-		neg.w	obVelX(a0)
-
-locret_15E7A:
-		rts
-; ===========================================================================
-; loc_15E7C:
-Obj4F_ChkFloor:
-		jsr	(ObjectMove).l
-		jsr	(ObjHitFloor).l
-		cmpi.w	#-8,d1
-		blt.s	Obj4F_StopMoving
-		cmpi.w	#$C,d1
-		bge.s	Obj4F_StopMoving
-		add.w	d1,obY(a0)
-		rts
-; ---------------------------------------------------------------------------
-; loc_15E98:
-Obj4F_StopMoving:
-		subq.b	#2,ob2ndRout(a0)
-		move.w	#60-1,objoff_30(a0)		; pause for 1 second
-		clr.w	obVelX(a0)
-		clr.b	obAnim(a0)
-		rts
-; ===========================================================================
-
-Obj4F_Delete:
-		jmp	(DeleteObject).l
-; ===========================================================================
-; animation script
-Ani_obj4F:	dc.w byte_15EB8-Ani_obj4F
-		dc.w byte_15EBB-Ani_obj4F
-byte_15EB8:	dc.b   9,  1,$FF
-byte_15EBB:	dc.b   9,  0,  1,  2,  1,$FF,  0
 ; ---------------------------------------------------------------------------
 ; Sprite mappings - Redz (dinosaur badnik) from HPZ
 ; ---------------------------------------------------------------------------
-Map_obj4F:	binclude	"mappings/sprite/obj4F.bin"
+; Map_Redz:	binclude	"mappings/sprite/Redz.bin"
+	;	even
+; ===========================================================================
+		include	"objects/Enemies/52 Piranha.asm"
+		include	"objects/Empty slots/53.asm"
+
+Map_Piranha:	binclude	"mappings/sprite/Piranha.bin"
 		even
 ; ---------------------------------------------------------------------------
 ; Object 50 - Aquis badnik from HPZ
@@ -20200,7 +19926,7 @@ Kospm_Bomb:	binclude	"art/moduled kosinski/Enemy Bomb.kospm"
 Kospm_Orbinaut:	binclude	"art/moduled kosinski/Enemy Orbinaut.kospm"
 Kospm_Cater:	binclude	"art/moduled kosinski/Enemy Caterkiller.kospm"
 Kospm_BBat:	binclude	"art/moduled kosinski/Enemy BBat.kospm"
-Kospm_Redz:	binclude	"art/moduled kosinski/Enemy Redz.kospm"
+; Kospm_Redz:	binclude	"art/moduled kosinski/Enemy Redz.kospm"
 Nem_Gator:	binclude	"art/nemesis/Enemy Gator.nem"
 		even
 Nem_Buzzer:	binclude	"art/nemesis/Enemy Buzzer.nem"

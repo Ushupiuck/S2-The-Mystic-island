@@ -16,7 +16,7 @@ Obj22:
 ; ===========================================================================
 Obj22_Index:	dc.w Obj22_Init-Obj22_Index
 		dc.w Obj22_Main-Obj22_Index
-		dc.w Obj22_Delete-Obj22_Index
+		dc.w DeleteObject-Obj22_Index	; small tweak to remove an optional jmpto
 ; ===========================================================================
 ; loc_A41C:
 Obj22_Init:
@@ -33,7 +33,7 @@ Obj22_Main:
 		move.b	ob2ndRout(a0),d0
 		move.w	Obj22_Main_Index(pc,d0.w),d1
 		jsr	Obj22_Main_Index(pc,d1.w)
-		lea	(Ani_obj22).l,a1
+		lea	Ani_obj22(pc),a1
 		bsr.w	AnimateSprite
 		bra.w	MarkObjGone
 ; ===========================================================================
@@ -115,5 +115,14 @@ loc_A536:
 		rts
 ; ===========================================================================
 ; loc_A55A:
-Obj22_Delete:
-		bra.w	DeleteObject
+; Obj22_Delete:
+	;	bra.w	DeleteObject
+; ===========================================================================
+; animation script
+Ani_obj22:	dc.w byte_A652-Ani_obj22
+		dc.w byte_A656-Ani_obj22
+		dc.w byte_A65A-Ani_obj22
+byte_A652:	dc.b   1,  0,  1,$FF
+byte_A656:	dc.b   1,  2,  3,$FF
+byte_A65A:	dc.b   1,  4,  5,$FF
+		even

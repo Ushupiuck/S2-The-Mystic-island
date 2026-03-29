@@ -931,29 +931,19 @@ Sonic_Roll:
 		tst.b	(f_slidemode).w
 		bne.s	Obj01_NoRoll
 		move.w	obInertia(a0),d0
-		bpl.s	loc_10220
+		bpl.s	Obj01_DoRoll
 		neg.w	d0
 
-loc_10220:
+Obj01_DoRoll:
 		cmpi.w	#$80,d0
 		blo.s	Obj01_NoRoll
 		move.b	(v_jpadholdlogical).w,d0
 		andi.b	#btnL|btnR,d0
 		bne.s	Obj01_NoRoll
 		btst	#bitDn,(v_jpadholdlogical).w
-		bne.s	loc_1023A
-
-Obj01_NoRoll:
-		rts
-; ---------------------------------------------------------------------------
-
-loc_1023A:
+		beq.s	Obj01_NoRoll
 		btst	#2,obStatus(a0)
-		beq.s	Obj01_DoRoll
-		rts
-; ---------------------------------------------------------------------------
-
-Obj01_DoRoll:
+		bne.s	Obj01_NoRoll
 		bset	#2,obStatus(a0)
 		move.b	#$E,obHeight(a0)
 		move.b	#7,obWidth(a0)
@@ -962,10 +952,10 @@ Obj01_DoRoll:
 		move.w	#sfx_Roll,d0
 		jsr	(PlaySound_Special).l
 		tst.w	obInertia(a0)
-		bne.s	locret_10276
+		bne.s	Obj01_NoRoll
 		move.w	#$200,obInertia(a0)
 
-locret_10276:
+Obj01_NoRoll:
 		rts
 ; End of function Sonic_Roll
 
@@ -976,19 +966,18 @@ locret_10276:
 Sonic_Jump:
 		move.b	(v_jpadpresslogical).w,d0
 		andi.b	#btnABC,d0
-		beq.w	locret_1031C
+		beq.s	Obj01_NoRoll
 		moveq	#0,d0
 		move.b	obAngle(a0),d0
 		addi.b	#$80,d0
 		bsr.w	sub_13102
 		cmpi.w	#6,d1
-		blt.w	locret_1031C
+		blt.s	Obj01_NoRoll
 		move.w	#$680,d2
 		btst	#6,obStatus(a0)
-		beq.s	loc_102AA
+		beq.s	+
 		move.w	#$380,d2
-
-loc_102AA:
++
 		moveq	#0,d0
 		move.b	obAngle(a0),d0
 		subi.b	#$40,d0
@@ -1006,8 +995,6 @@ loc_102AA:
 		clr.b	objoff_38(a0)
 		move.w	#sfx_Jump,d0
 		jsr	(PlaySound_Special).l
-		move.b	#$13,obHeight(a0)
-		move.b	#9,obWidth(a0)
 		btst	#2,obStatus(a0)
 		bne.s	loc_1031E
 		move.b	#$E,obHeight(a0)
@@ -1015,8 +1002,6 @@ loc_102AA:
 		move.b	#AniIDSonAni_Roll,obAnim(a0)
 		bset	#2,obStatus(a0)
 		addq.w	#5,obY(a0)
-
-locret_1031C:
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -1039,23 +1024,19 @@ Sonic_JumpHeight:
 
 loc_1033C:
 		cmp.w	obVelY(a0),d1
-		ble.s	locret_10350
+		ble.s	.return
 		move.b	(v_jpadholdlogical).w,d0
 		andi.b	#btnABC,d0
-		bne.s	locret_10350
+		bne.s	.return
 		move.w	d1,obVelY(a0)
-
-locret_10350:
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 
 loc_10352:
 		cmpi.w	#-$FC0,obVelY(a0)
-		bge.s	locret_10360
+		bge.s	.return
 		move.w	#-$FC0,obVelY(a0)
-
-locret_10360:
-		rts
+.return:	rts
 ; End of function Sonic_JumpHeight
 
 ; ---------------------------------------------------------------------------

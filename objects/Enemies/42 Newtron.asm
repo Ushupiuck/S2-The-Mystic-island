@@ -8,11 +8,12 @@ Obj42:
 		move.w	Obj42_Index(pc,d0.w),d1
 		jmp	Obj42_Index(pc,d1.w)
 ; ===========================================================================
-Obj42_Index:	dc.w Obj42_Init-Obj42_Index
-		dc.w Obj42_Main-Obj42_Index
-		dc.w Obj42_Delete-Obj42_Index
+Obj42_Index:
+		dc.w Obj42_Init-Obj42_Index	; 0
+		dc.w Obj42_Main-Obj42_Index	; 2
+		dc.w Obj42_Vanish-Obj42_Index	; 4
 ; ===========================================================================
-; loc_Ebhs:
+
 Obj42_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_obj42,obMap(a0)
@@ -23,44 +24,40 @@ Obj42_Init:
 		move.b	#$10,obHeight(a0)
 		move.b	#8,obWidth(a0)
 ; loc_EC00:
-Obj42_Main
+Obj42_Main:
 		moveq	#0,d0
 		move.b	ob2ndRout(a0),d0
 		move.w	Obj42_Main_Index(pc,d0.w),d1
 		jsr	Obj42_Main_Index(pc,d1.w)
 		lea	Ani_obj42(pc),a1
-		bsr.w	AnimateSprite
+		bsr.w	AnimateSprite	; If green, go to Vanish next time (animation flag afRoutine ensures this)
 		bra.w	MarkObjGone
 ; ===========================================================================
 Obj42_Main_Index:
-		dc.w Obj42_ChkDistance-Obj42_Main_Index
-		dc.w Obj42_Type00-Obj42_Main_Index
-		dc.w Obj42_ChkFloor-Obj42_Main_Index
-		dc.w Obj42_Move-Obj42_Main_Index
-		dc.w Obj42_Type02-Obj42_Main_Index
+		dc.w Obj42_ChkDistance-Obj42_Main_Index	; 0
+		dc.w Obj42_Type00-Obj42_Main_Index	; 2
+		dc.w Obj42_ChkFloor-Obj42_Main_Index	; 4
+		dc.w Obj42_Type02-Obj42_Main_Index	; 6
 ; ===========================================================================
 ; loc_EC26:
 Obj42_ChkDistance:
 		bset	#0,obStatus(a0)
 		move.w	(v_player+obX).w,d0
 		sub.w	obX(a0),d0
-		bhs.s	loc_EC3E
+		bhs.s	+
 		neg.w	d0
 		bclr	#0,obStatus(a0)
-
-loc_EC3E:
++
 		cmpi.w	#$80,d0
-		bhs.s	locret_EC6A
+		bhs.s	.return
 		addq.b	#2,ob2ndRout(a0)
 		move.b	#1,obAnim(a0)
 		tst.b	obSubtype(a0)
-		beq.s	locret_EC6A
+		beq.s	.return
 		move.w	#make_art_tile(ArtTile_Newtron,1,0),obGfx(a0)
-		move.b	#8,ob2ndRout(a0)
-		move.b	#4,obAnim(a0)
-
-locret_EC6A:
-		rts
+		move.b	#6,ob2ndRout(a0)
+		move.b	#3,obAnim(a0)
+.return:	rts
 ; ===========================================================================
 ; Blue Newtron that appears before chasing Sonic/Tails
 ; loc_EC6C:
@@ -70,60 +67,41 @@ Obj42_Type00:
 		bset	#0,obStatus(a0)
 		move.w	(v_player+obX).w,d0
 		sub.w	obX(a0),d0
-		bhs.s	locret_EC8A
+		bhs.s	.return
 		bclr	#0,obStatus(a0)
-
-locret_EC8A:
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 ; loc_EC8C:
 Obj42_Fall:
 		cmpi.b	#1,obFrame(a0)
-		bne.s	loc_EC9A
+		bne.s	+
 		move.b	#$C,obColType(a0)
-
-loc_EC9A:
++
 		bsr.w	ObjectMoveAndFall
 		bsr.w	ObjHitFloor
 		tst.w	d1
-		bpl.s	locret_ECDE
+		bpl.s	.return
 		add.w	d1,obY(a0)
 		clr.w	obVelY(a0)
 		addq.b	#2,ob2ndRout(a0)
 		move.b	#2,obAnim(a0)
-		btst	#5,obGfx(a0)
-		beq.s	loc_ECC6
-		addq.b	#1,obAnim(a0)
-
-loc_ECC6:
 		move.b	#$D,obColType(a0)
 		move.w	#$200,obVelX(a0)
 		btst	#0,obStatus(a0)
-		bne.s	locret_ECDE
+		bne.s	.return
 		neg.w	obVelX(a0)
-
-locret_ECDE:
-		rts
+.return:	rts
 ; ===========================================================================
 ; loc_ECE0:
 Obj42_ChkFloor:
 		bsr.w	ObjectMove
 		bsr.w	ObjHitFloor
 		cmpi.w	#-8,d1
-		blt.s	loc_ECFA
+		blt.s	.return	; Change to ObjectMove and it'll speed up
 		cmpi.w	#$C,d1
-		bge.s	loc_ECFA
+		bge.s	.return	; Change to ObjectMove and it'll speed up
 		add.w	d1,obY(a0)
-		rts
-; ---------------------------------------------------------------------------
-
-loc_ECFA:
-		addq.b	#2,ob2ndRout(a0)
-		rts
-; ===========================================================================
-; loc_ED00:
-Obj42_Move:
-		bra.w	ObjectMove
+.return:	rts
 ; ===========================================================================
 ; Green Newtron that fires a missile
 ; loc_ED06:
@@ -134,12 +112,12 @@ Obj42_Type02:
 ; loc_ED14:
 Obj42_FireMissile:
 		cmpi.b	#2,obFrame(a0)
-		bne.s	locret_ED6C
+		bne.s	.return
 		tst.b	objoff_32(a0)
-		bne.s	locret_ED6C
+		bne.s	.return
 		move.b	#1,objoff_32(a0)
 		bsr.w	FindFreeObj
-		bne.s	locret_ED6C
+		bne.s	.return
 		_move.b	#id_Obj23,obID(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
@@ -147,31 +125,26 @@ Obj42_FireMissile:
 		move.w	#$200,obVelX(a1)
 		move.w	#20,d0
 		btst	#0,obStatus(a0)
-		bne.s	loc_ED5C
+		bne.s	+
 		neg.w	d0
 		neg.w	obVelX(a1)
-
-loc_ED5C:
++
 		add.w	d0,obX(a1)
 		move.b	obStatus(a0),obStatus(a1)
 		move.b	#1,obSubtype(a1)
-
-locret_ED6C:
-		rts
+.return:	rts
 ; ===========================================================================
 ; loc_ED6E:
-Obj42_Delete:
-		bra.w	DeleteObject
+Obj42_Vanish:
+		clr.b	obColType(a0)	; Set as intangible
+		bra.w	MarkObjGone
 ; ===========================================================================
-Ani_obj42:	dc.w byte_ED7C-Ani_obj42
-		dc.w byte_ED7F-Ani_obj42
-		dc.w byte_ED87-Ani_obj42
-		dc.w byte_ED8B-Ani_obj42
-		dc.w byte_ED8F-Ani_obj42
-byte_ED7C:	dc.b  $F, $A,$FF
-byte_ED7F:	dc.b $13,  0,  1,  3,  4,  5,$FE,  1
-byte_ED87:	dc.b   2,  6,  7,$FF
-byte_ED8B:	dc.b   2,  8,  9,$FF
-byte_ED8F:	dc.b $13,  0,  1,  1,  2,  1,  1,  0
-		dc.b $FC
+Ani_obj42:	dc.w ani_newt_blank-Ani_obj42
+		dc.w ani_newt_drop-Ani_obj42
+		dc.w ani_newt_fly-Ani_obj42
+		dc.w ani_newt_firing-Ani_obj42
+ani_newt_blank:	dc.b  $F,  8,afEnd
+ani_newt_drop:	dc.b $13,  0,  1,  3,  4,  5, afBack,  1
+ani_newt_fly:	dc.b   2,  6,  7, afEnd
+ani_newt_firing:dc.b $13,  0,  1,  1,  2,  1,  1,  0,  8, afRoutine
 		even

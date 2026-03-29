@@ -14,7 +14,7 @@ Obj25_Index:
 		dc.w Obj25_Animate-Obj25_Index
 		dc.w Obj25_Collect-Obj25_Index
 		dc.w Obj25_Sparkle-Obj25_Index
-		dc.w DeleteObject-Obj25_Index ; small optimization to remove a jmpto; since Obj25 & 37 are technically the same
+		dc.w DeleteObject-Obj25_Index	; small tweak to remove an optional jmpto
 ; ---------------------------------------------------------------------------
 
 Obj25_Init:
@@ -38,7 +38,7 @@ Obj25_Collect:
 		bsr.s	CollectRing
 
 Obj25_Sparkle:
-		lea	(Ani_Obj25).l,a1
+		lea	Ani_Obj25(pc),a1
 		bsr.w	AnimateSprite
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
@@ -72,6 +72,7 @@ CollectRing:
 ; ---------------------------------------------------------------------------
 ; Object 37 - Rings flying out of you when you get hit
 ;----------------------------------------------------------------------------
+obDelayAni	= obXSub	; time to delay animation
 
 Obj37:
 		moveq	#0,d0
@@ -83,7 +84,7 @@ Obj37_Index:	dc.w loc_A936-Obj37_Index
 		dc.w loc_A9FA-Obj37_Index
 		dc.w loc_AA4C-Obj37_Index
 		dc.w loc_AA60-Obj37_Index
-		dc.w DeleteObject-Obj37_Index
+		dc.w DeleteObject-Obj37_Index	; small tweak to remove an optional jmpto
 ; ---------------------------------------------------------------------------
 
 loc_A936:
@@ -118,7 +119,6 @@ loc_A956:
 		move.w	#$180,obPriority(a1)
 		move.b	#$47,obColType(a1)
 		move.b	#8,obActWid(a1)
-		move.b	#-1,(v_ani3_time).w
 		tst.w	d4
 		bmi.s	+
 		move.w	d4,d0
@@ -142,11 +142,14 @@ loc_A956:
 		dbf	d5,loc_A94E
 
 loc_A9DE:
-		moveq	#sfx_RingLoss,d0
-		jsr	(PlaySound_Special).l
 		clr.w	(v_rings).w
 		move.b	#$80,(f_ringcount).w
 		clr.b	(v_lifecount).w
+		moveq	#-1,d0			; Move 255 to d0
+		move.b	d0,obDelayAni(a0)	; Move d0 to new timer
+		move.b	d0,(v_ani3_time).w	; Move d0 to old timer (for animated purposes)
+		moveq	#sfx_RingLoss,d0
+		jsr	(PlaySound_Special).l
 
 loc_A9FA:
 		move.b	(v_ani3_frame).w,obFrame(a0)
@@ -169,15 +172,19 @@ loc_A9FA:
 		neg.w	obVelY(a0)
 
 loc_AA34:
-		tst.b	(v_ani3_time).w
-	;	beq.s	ObjRing_Delete
-		beq.w	DeleteObject
+		subq.b	#1,obDelayAni(a0)	; Subtract 1
+		beq.w	DeleteObject		; If 0, delete
+		tst.w	(v_limittop2).w		; is vertical wrapping enabled?
+		bmi.w	DisplaySprite		; if so, don't delete rings by boundary
 		move.w	(Camera_Max_Y_pos).w,d0
 		addi.w	#224,d0
 		cmp.w	obY(a0),d0
-	;	bcs.s	ObjRing_Delete
 		bcs.w	DeleteObject
-		bra.w	DisplaySprite
+		btst	#0,obDelayAni(a0)	; Test the first bit of the timer, so rings flash every other frame.
+		beq.w	DisplaySprite		; If the bit is 0, the ring will appear.
+		cmpi.b	#80,obDelayAni(a0)	; Rings will flash during last 80 steps of their life.
+		bhi.w	DisplaySprite		; If the timer is higher than 80, obviously the rings will STAY visible.
+		rts
 ; ---------------------------------------------------------------------------
 
 loc_AA4C:
@@ -187,10 +194,14 @@ loc_AA4C:
 		bsr.w	CollectRing
 
 loc_AA60:
-		lea	(Ani_Obj25).l,a1
+		lea	Ani_Obj25(pc),a1
 		bsr.w	AnimateSprite
 		bra.w	DisplaySprite
-; ---------------------------------------------------------------------------
 
-; ObjRing_Delete:
+; ---------------------------------------------------------------------------
+; ObjRing_Delete:	; just in case it ever becomes neccesary
 	;	bra.w	DeleteObject
+; ---------------------------------------------------------------------------
+Ani_Obj25:	dc.w byte_ABEC-Ani_Obj25
+byte_ABEC:	dc.b   5,  4,  5,  6,  7,$FC
+		even

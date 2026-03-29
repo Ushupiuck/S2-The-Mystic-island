@@ -838,29 +838,19 @@ Tails_Roll:
 		tst.b	(f_slidemode).w
 		bne.s	Obj02_NoRoll
 		move.w	obInertia(a0),d0
-		bpl.s	loc_1139A
+		bpl.s	Obj02_DoRoll
 		neg.w	d0
 
-loc_1139A:
+Obj02_DoRoll:
 		cmpi.w	#$80,d0
 		blo.s	Obj02_NoRoll
 		move.b	(v_jpadhold2).w,d0
 		andi.b	#btnL|btnR,d0
 		bne.s	Obj02_NoRoll
 		btst	#bitDn,(v_jpadhold2).w
-		bne.s	loc_113B4
-
-Obj02_NoRoll:
-		rts
-; ---------------------------------------------------------------------------
-
-loc_113B4:
+		beq.s	Obj02_NoRoll
 		btst	#2,obStatus(a0)
-		beq.s	Obj02_DoRoll
-		rts
-; ---------------------------------------------------------------------------
-
-Obj02_DoRoll:
+		bne.s	Obj02_NoRoll
 		bset	#2,obStatus(a0)
 		move.b	#$E,obHeight(a0)
 		move.b	#7,obWidth(a0)
@@ -869,10 +859,10 @@ Obj02_DoRoll:
 		move.w	#sfx_Roll,d0
 		jsr	(PlaySound_Special).l
 		tst.w	obInertia(a0)
-		bne.s	locret_113F0
+		bne.s	Obj02_NoRoll
 		move.w	#$200,obInertia(a0)
 
-locret_113F0:
+Obj02_NoRoll:
 		rts
 ; End of function Tails_Roll
 
@@ -883,19 +873,18 @@ locret_113F0:
 Tails_Jump:
 		move.b	(v_jpadpress2).w,d0
 		andi.b	#btnABC,d0
-		beq.w	locret_11496
+		beq.s	Obj02_NoRoll
 		moveq	#0,d0
 		move.b	obAngle(a0),d0
 		addi.b	#$80,d0
 		bsr.w	sub_13102
 		cmpi.w	#6,d1
-		blt.w	locret_11496
+		blt.s	Obj02_NoRoll
 		move.w	#$680,d2
 		btst	#6,obStatus(a0)
-		beq.s	loc_11424
+		beq.s	+
 		move.w	#$380,d2
-
-loc_11424:
++
 		moveq	#0,d0
 		move.b	obAngle(a0),d0
 		subi.b	#$40,d0
@@ -913,8 +902,6 @@ loc_11424:
 		clr.b	objoff_38(a0)
 		move.w	#sfx_Jump,d0
 		jsr	(PlaySound_Special).l
-		move.b	#$F,obHeight(a0)
-		move.b	#9,obWidth(a0)
 		btst	#2,obStatus(a0)
 		bne.s	loc_11498
 		move.b	#$E,obHeight(a0)
@@ -922,8 +909,6 @@ loc_11424:
 		move.b	#AniIDSonAni_Roll,obAnim(a0)
 		bset	#2,obStatus(a0)
 		addq.w	#5,obY(a0)
-
-locret_11496:
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -946,23 +931,19 @@ Tails_JumpHeight:
 
 loc_114B6:
 		cmp.w	obVelY(a0),d1
-		ble.s	locret_114CA
+		ble.s	.return
 		move.b	(v_jpadhold2).w,d0
 		andi.b	#btnABC,d0
-		bne.s	locret_114CA
+		bne.s	.return
 		move.w	d1,obVelY(a0)
-
-locret_114CA:
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 
 loc_114CC:
 		cmpi.w	#-$FC0,obVelY(a0)
-		bge.s	locret_114DA
+		bge.s	.return
 		move.w	#-$FC0,obVelY(a0)
-
-locret_114DA:
-		rts
+.return:	rts
 ; End of function Tails_JumpHeight
 
 ; ---------------------------------------------------------------------------

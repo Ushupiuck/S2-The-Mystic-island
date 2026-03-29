@@ -1,0 +1,127 @@
+; ---------------------------------------------------------------------------
+; Object 17 - helix of spikes on a pole (GHZ)
+; ---------------------------------------------------------------------------
+
+Obj17:
+		moveq	#0,d0
+		move.b	obRoutine(a0),d0
+		move.w	Obj17_Index(pc,d0.w),d1
+		jmp	Obj17_Index(pc,d1.w)
+; ---------------------------------------------------------------------------
+Obj17_Index:	dc.w Hel_Main-Obj17_Index
+		dc.w Hel_Action-Obj17_Index
+		dc.w Hel_Display-Obj17_Index
+; ---------------------------------------------------------------------------
+
+Hel_Main:
+		addq.b	#2,obRoutine(a0)
+		move.l	#Map_Obj17,obMap(a0)
+		move.w	#make_art_tile($398,2,0),obGfx(a0)
+		move.b	#7,obStatus(a0)
+		move.b	#4,obRender(a0)
+		move.w	#$180,obPriority(a0)
+		move.b	#8,obActWid(a0)
+		move.w	obY(a0),d2
+		move.w	obX(a0),d3
+		_move.b	obID(a0),d4
+		lea	obSubtype(a0),a2	; move helix length to a2
+		moveq	#0,d1
+		move.b	(a2),d1			; move helix length to d1
+		clr.b	(a2)+			; clear subtype
+		move.w	d1,d0
+		lsr.w	#1,d0
+		lsl.w	#4,d0
+		sub.w	d0,d3		; d3 is x-axis position of leftmost spike
+		subq.b	#2,d1
+		bcs.s	Hel_Action	; skip to action if length is only 1
+		moveq	#0,d6
+
+Hel_Build:
+		bsr.w	FindNextFreeObj
+		bne.s	Hel_Action
+		addq.b	#1,obSubtype(a0)
+		move.w	a1,d5
+		subi.w	#v_objspace,d5
+    if object_size=$40
+		lsr.w	#object_size_bits,d5
+    else
+		divu.w	#object_size,d5
+    endif
+		andi.w	#$7F,d5
+		move.b	d5,(a2)+		; copy child address to parent RAM
+		move.b	#4,obRoutine(a1)
+		_move.b	d4,obID(a1)
+		move.w	d2,obY(a1)
+		move.w	d3,obX(a1)
+		move.l	obMap(a0),obMap(a1)
+		move.w	#make_art_tile($398,2,0),obGfx(a1)
+		move.b	#4,obRender(a1)
+		move.w	#$180,obPriority(a1)
+		move.b	#8,obActWid(a1)
+		move.b	d6,objoff_3E(a1)
+		addq.b	#1,d6
+		andi.b	#7,d6
+		addi.w	#$10,d3
+		cmp.w	obX(a0),d3		; is this spike in the centre?
+		bne.s	Hel_NotCentre		; if not, branch
+		move.b	d6,objoff_3E(a0)	; set parent spike frame
+		addq.b	#1,d6
+		andi.b	#7,d6
+		addi.w	#$10,d3			; skip to next spike
+		addq.b	#1,obSubtype(a0)
+
+Hel_NotCentre:
+		dbf	d1,Hel_Build	; repeat d1 times (helix length)
+
+Hel_Action:
+		bsr.s	Hel_RotateSpikes
+		out_of_range.w	Hel_DelAll
+		bra.w	DisplaySprite
+; ---------------------------------------------------------------------------
+
+Hel_DelAll:
+		moveq	#0,d2
+		lea	obSubtype(a0),a2	; move helix length to a2
+		move.b	(a2)+,d2		; move helix length to d2
+		subq.b	#2,d2
+		bcs.w	DeleteObject
+
+-		moveq	#0,d0
+		move.b	(a2)+,d0
+    if object_size=$40
+		lsl.w	#object_size_bits,d0
+    else
+		mulu.w	#object_size,d0
+    endif
+		addi.l	#v_objspace,d0
+		movea.l	d0,a1		; get child address
+		bsr.w	DeleteObject2	; delete object
+		dbf	d2,-		; repeat d2 times (helix length)
+		bra.w	DeleteObject
+
+; =============== S U B	R O U T	I N E =======================================
+
+
+Hel_RotateSpikes:
+		move.b	(v_ani0_frame).w,d0
+		clr.b	obColType(a0)		; make object harmless
+		add.b	objoff_3E(a0),d0
+		andi.b	#7,d0
+		move.b	d0,obFrame(a0)		; change current frame
+		bne.s	.return
+		move.b	#$84,obColType(a0)	; make object harmful
+.return:	rts
+; End of function Hel_RotateSpikes
+
+; ---------------------------------------------------------------------------
+
+Hel_Display:
+		move.b	(v_ani0_frame).w,d0
+		clr.b	obColType(a0)		; make object harmless
+		add.b	objoff_3E(a0),d0
+		andi.b	#7,d0
+		move.b	d0,obFrame(a0)		; change current frame
+		bne.s	.display
+		move.b	#$84,obColType(a0)	; make object harmful
+.display:	bra.w	DisplaySprite
+; End of function Hel_Display

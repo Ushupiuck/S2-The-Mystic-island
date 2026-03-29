@@ -31,6 +31,7 @@ obWidth:		equ $17		; width/2 ; x_radius
 obAniFrame:		equ $1B		; current frame in animation script
 obAnim:			equ $1C		; current animation
 obPrevAni:		equ $1D		; previous animation
+; obDelayAni:				; time to delay animation -- Now local; Value depends on the object
 obStatus:		equ $22		; note: exact meaning depends on the object... for sonic/tails: bit 0: leftfacing. bit 1: inair. bit 2: spinning. bit 3: onobject. bit 4: rolljumping. bit 5: pushing. bit 6: underwater.
 obRoutine:		equ $24		; routine number
 ob2ndRout:		equ $25		; secondary routine number
@@ -96,8 +97,8 @@ objoff_3E:		equ $3E
 objoff_3F:		equ $3F
 ; ---------------------------------------------------------------------------
 ; conventions followed by several objects but NOT Sonic/Tails:
-obScreenX =		obX ; and 1+x_pos ; x coordinate for objects using screen-space coordinate system (S2 x_pixel)
-obScreenY =		obXSub ; and 3+x_pos ; y coordinate for objects using screen-space coordinate system (S2 y_pixel)
+obScreenX =		obX ; and 1+obX ; x coordinate for objects using screen-space coordinate system (S2 x_pixel)
+obScreenY =		obXSub ; and 3+obX ; y coordinate for objects using screen-space coordinate system (S2 y_pixel)
 obParent =		objoff_3E ; and $3F ; address of object that owns or spawned this one, if applicable
 
 object_size_bits:	equ 6
@@ -884,6 +885,7 @@ v_palette_fading_end:
 
 v_crossresetram:					; RAM beyond this point is only cleared on a cold-boot
 Level_Inactive_flag:	ds.w	1			; (2 bytes)
+v_framecount:		; For compatibility
 Timer_frames:		ds.w	1			; the number of frames which have elapsed since the level started
 Debug_object:		ds.b	1			; the current position in the debug mode object list
 			ds.b	1			; unused
@@ -1498,7 +1500,8 @@ ArtTile_ArtNem_EggChoppers:	equ $540
 ArtTile_CPZ_Platform:		equ $400
 
 ; HPZ
-ArtTile_Redz:			equ $500
+;ArtTile_Redz:			equ $500
+ArtTile_Splats:			equ $500
 ArtTile_BBat:			equ $530
 
 ; HTZ
