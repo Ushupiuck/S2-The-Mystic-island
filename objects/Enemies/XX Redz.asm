@@ -43,7 +43,8 @@ Redz_Main:
 		jsr	(AnimateSprite).l
 		jmp	(MarkObjGone).l
 ; ===========================================================================
-Redz_SubIndex:	dc.w Redz_MoveLeft-Redz_SubIndex
+Redz_SubIndex:
+		dc.w Redz_MoveLeft-Redz_SubIndex
 		dc.w Redz_ChkFloor-Redz_SubIndex
 ; ===========================================================================
 ; loc_15E58:
@@ -84,5 +85,6 @@ Redz_Delete:
 ; animation script
 Ani_Redz:	dc.w byte_15EB8-Ani_Redz
 		dc.w byte_15EBB-Ani_Redz
-byte_15EB8:	dc.b   9,  1,$FF
-byte_15EBB:	dc.b   9,  0,  1,  2,  1,$FF,  0
+byte_15EB8:	dc.b   9,  1,afEnd
+byte_15EBB:	dc.b   9,  0,  1,  2,  1,afEnd
+		even

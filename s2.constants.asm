@@ -95,12 +95,28 @@ objoff_3C:		equ $3C
 objoff_3D:		equ $3D
 objoff_3E:		equ $3E
 objoff_3F:		equ $3F
+; the following are not yet implemented, and will be added as soon as object_size is expanded
+objoff_40:		equ $40
+objoff_41:		equ $41
+objoff_42:		equ $42
+objoff_43:		equ $43
+objoff_44:		equ $44
+objoff_45:		equ $45
+objoff_46:		equ $46
+objoff_47:		equ $47
+objoff_48:		equ $48
+objoff_49:		equ $49
+objoff_4A:		equ $4A
 ; ---------------------------------------------------------------------------
 ; conventions followed by several objects but NOT Sonic/Tails:
 obScreenX =		obX ; and 1+obX ; x coordinate for objects using screen-space coordinate system (S2 x_pixel)
 obScreenY =		obXSub ; and 3+obX ; y coordinate for objects using screen-space coordinate system (S2 y_pixel)
 obParent =		objoff_3E ; and $3F ; address of object that owns or spawned this one, if applicable
-
+; the following are not yet implemented, and will be added as soon as object_size is expanded
+obParent2 =		objoff_40 ; and $41 ; several objects use this instead
+obParent3 =		objoff_42 ; and $43 ; parent of child objects
+child_dx =		objoff_42 ; byte ; X offset of child relative to parent
+child_dy =		objoff_43 ; byte ; Y offset of child relative to parent
 object_size_bits:	equ 6
 object_size:		equ 1<<object_size_bits
 next_object =		object_size
@@ -160,7 +176,7 @@ obStatusSecondary_hasSpeedShoes_mask:	EQU	1<<obStatusSecondary_hasSpeedShoes	; $
 obStatusSecondary_isSliding_mask:	EQU	1<<obStatusSecondary_isSliding		; $80
 ; ---------------------------------------------------------------------------
 ; render_flags bitfield
-
+; (Sonic 2 github compatibility)
 obRender.x_flip			= 0 ; Sprite mirrored horizontally.
 obRender.y_flip			= 1 ; Sprite mirrored vertically.
 obRender.level_fg		= 2 ; Move with level foreground.
@@ -531,6 +547,7 @@ VDP_Command_Buffer_Slot:	ds.w	1		; stores the address of the next open slot for 
 
 ; ---------------------------------------------------------------------------
 v_objspace:			ds.b	object_size*$80	; object variable space ($40 bytes per object)
+			ds.b	$200			; will become used by the object table (assuming object_size = $44)
 v_objspace_end:
 ; ---------------------------------------------------------------------------
 ; Title screen objects
@@ -611,6 +628,7 @@ v_endeggman	= v_objspace+object_size*2		; object variable space for Eggman after
 v_tryagain	= v_objspace+object_size*3		; object variable space for the "TRY AGAIN" text ($40 bytes)
 v_eggmanchaos	= v_objspace+object_size*32		; object variable space for the emeralds juggled by Eggman ($180 bytes)
 ; ---------------------------------------------------------------------------
+Object_Respawn_Table:	ds.b	$300
 Camera_RAM:
 Camera_Positions:
 Camera_X_pos:			ds.l	1
@@ -875,12 +893,27 @@ Anim_Counters:		ds.b	$10
 v_levelvariables_end:
 
 v_palette_water_fading: ds.b	palette_size		; duplicate underwater palette, used for transitions ($80 bytes)
+v_palette_water_fading_line_2 =	palette_size+$20
+v_palette_water_fading_line_3 =	palette_size+$40
+v_palette_water_fading_line_4 =	palette_size+$60
 v_palette_water_fading_end:
+
 v_palette_water:	ds.b	palette_size		; main underwater palette
+v_palette_water_line_2 =	palette_size+$20
+v_palette_water_line_3 =	palette_size+$40
+v_palette_water_line_4 =	palette_size+$60
 v_palette_water_end:
+
 v_palette:		ds.b	palette_size		; main palette
+v_palette_line_2 =	palette_size+$20
+v_palette_line_3 =	palette_size+$40
+v_palette_line_4 =	palette_size+$60
 v_palette_end:
+
 v_palette_fading:	ds.b	palette_size		; duplicate palette, used for transitions
+v_palette_fading_line_2 =	palette_size+$20
+v_palette_fading_line_3 =	palette_size+$40
+v_palette_fading_line_4 =	palette_size+$60
 v_palette_fading_end:
 
 v_crossresetram:					; RAM beyond this point is only cleared on a cold-boot
@@ -987,8 +1020,7 @@ f_demo:			ds.w	1			; demo mode flag (0 = no; 1 = yes; $8001 = ending)
 v_demonum:		ds.w	1			; demo level number (not the same as the level number)
 v_creditsnum:		ds.w	1			; credits index number
 
-			ds.b	$200			; will become used by the object table
-			ds.b	$378			; free
+			ds.b	$78			; free
 v_end:
 	if * > 0	; don't declare more space than the RAM can contain!
 		fatal "The RAM variable declarations are too large by $\{*} bytes."
@@ -1196,7 +1228,7 @@ HW_Port_2_SCtrl:		equ $A10019
 HW_Expansion_TxData:		equ $A1001B
 HW_Expansion_RxData:		equ $A1001D
 HW_Expansion_SCtrl:		equ $A1001F
-
+; ---------------------------------------------------------------------------
 ; Boss locations
 ; The main values are based on where the camera boundaries mainly lie
 ; The end values are where the camera scrolls towards after defeat
@@ -1226,7 +1258,7 @@ boss_sbz2_y:	equ $510
 boss_fz_x:	equ $2450		; Final Zone
 boss_fz_y:	equ $510
 boss_fz_end:	equ boss_fz_x+$2B0
-
+; ---------------------------------------------------------------------------
 ; Tile VRAM Locations
 
 ; Shared
@@ -1493,14 +1525,13 @@ ArtTile_Art_EHZMountains:	equ $500
 
 ; EHZ boss
 ArtTile_ArtNem_Eggpod_1:	equ $460
-ArtTile_ArtNem_EHZBoss:	equ $4C0
+ArtTile_ArtNem_EHZBoss:		equ $4C0
 ArtTile_ArtNem_EggChoppers:	equ $540
 
 ; CPZ
 ArtTile_CPZ_Platform:		equ $400
 
 ; HPZ
-;ArtTile_Redz:			equ $500
 ArtTile_Splats:			equ $500
 ArtTile_BBat:			equ $530
 
@@ -1517,9 +1548,10 @@ ArtTile_Spiker:			equ $520
 
 ; Unused
 ArtTile_Gator:			equ $300
-ArtTile_Stegway:		equ $3C4
+ArtTile_Rhinobot:		equ $3C4
+ArtTile_Octus:			equ $38A
+ArtTile_Octus_Child:		equ $4C6
+ArtTile_Redz:			equ $500
 ArtTile_BFish:			equ $530
 ArtTile_Aquis:			equ $570
 ArtTile_Aquis_Child:		equ $4E0
-ArtTile_Octus:			equ $38A
-ArtTile_Octus_Child:		equ $4C6

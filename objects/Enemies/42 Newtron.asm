@@ -2,21 +2,21 @@
 ; Object 42 - GHZ Newtron badnik
 ; ---------------------------------------------------------------------------
 
-Obj42:
+Newtron:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	Obj42_Index(pc,d0.w),d1
-		jmp	Obj42_Index(pc,d1.w)
+		move.w	Newtron_Index(pc,d0.w),d1
+		jmp	Newtron_Index(pc,d1.w)
 ; ===========================================================================
-Obj42_Index:
-		dc.w Obj42_Init-Obj42_Index	; 0
-		dc.w Obj42_Main-Obj42_Index	; 2
-		dc.w Obj42_Vanish-Obj42_Index	; 4
+Newtron_Index:
+		dc.w Newtron_Init-Newtron_Index		; 0
+		dc.w Newtron_Main-Newtron_Index		; 2
+		dc.w Newtron_Vanish-Newtron_Index	; 4
 ; ===========================================================================
 
-Obj42_Init:
+Newtron_Init:
 		addq.b	#2,obRoutine(a0)
-		move.l	#Map_obj42,obMap(a0)
+		move.l	#Map_Newtron,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Newtron,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.w	#$200,obPriority(a0)
@@ -24,23 +24,23 @@ Obj42_Init:
 		move.b	#$10,obHeight(a0)
 		move.b	#8,obWidth(a0)
 ; loc_EC00:
-Obj42_Main:
+Newtron_Main:
 		moveq	#0,d0
 		move.b	ob2ndRout(a0),d0
-		move.w	Obj42_Main_Index(pc,d0.w),d1
-		jsr	Obj42_Main_Index(pc,d1.w)
-		lea	Ani_obj42(pc),a1
+		move.w	.secondary_index(pc,d0.w),d1
+		jsr	.secondary_index(pc,d1.w)
+		lea	Ani_Newtron(pc),a1
 		bsr.w	AnimateSprite	; If green, go to Vanish next time (animation flag afRoutine ensures this)
 		bra.w	MarkObjGone
 ; ===========================================================================
-Obj42_Main_Index:
-		dc.w Obj42_ChkDistance-Obj42_Main_Index	; 0
-		dc.w Obj42_Type00-Obj42_Main_Index	; 2
-		dc.w Obj42_ChkFloor-Obj42_Main_Index	; 4
-		dc.w Obj42_Type02-Obj42_Main_Index	; 6
+.secondary_index:
+		dc.w Newtron_ChkDistance-.secondary_index	; 0
+		dc.w Newtron_Type00-.secondary_index		; 2
+		dc.w Newtron_ChkFloor-.secondary_index		; 4
+		dc.w Newtron_Type02-.secondary_index		; 6
 ; ===========================================================================
 ; loc_EC26:
-Obj42_ChkDistance:
+Newtron_ChkDistance:
 		bset	#0,obStatus(a0)
 		move.w	(v_player+obX).w,d0
 		sub.w	obX(a0),d0
@@ -61,9 +61,9 @@ Obj42_ChkDistance:
 ; ===========================================================================
 ; Blue Newtron that appears before chasing Sonic/Tails
 ; loc_EC6C:
-Obj42_Type00:
+Newtron_Type00:
 		cmpi.b	#4,obFrame(a0)
-		bhs.s	Obj42_Fall
+		bhs.s	Newtron_Fall
 		bset	#0,obStatus(a0)
 		move.w	(v_player+obX).w,d0
 		sub.w	obX(a0),d0
@@ -72,7 +72,7 @@ Obj42_Type00:
 .return:	rts
 ; ---------------------------------------------------------------------------
 ; loc_EC8C:
-Obj42_Fall:
+Newtron_Fall:
 		cmpi.b	#1,obFrame(a0)
 		bne.s	+
 		move.b	#$C,obColType(a0)
@@ -93,7 +93,7 @@ Obj42_Fall:
 .return:	rts
 ; ===========================================================================
 ; loc_ECE0:
-Obj42_ChkFloor:
+Newtron_ChkFloor:
 		bsr.w	ObjectMove
 		bsr.w	ObjHitFloor
 		cmpi.w	#-8,d1
@@ -105,12 +105,12 @@ Obj42_ChkFloor:
 ; ===========================================================================
 ; Green Newtron that fires a missile
 ; loc_ED06:
-Obj42_Type02:
+Newtron_Type02:
 		cmpi.b	#1,obFrame(a0)
-		bne.s	Obj42_FireMissile
+		bne.s	Newtron_FireMissile
 		move.b	#$C,obColType(a0)
 ; loc_ED14:
-Obj42_FireMissile:
+Newtron_FireMissile:
 		cmpi.b	#2,obFrame(a0)
 		bne.s	.return
 		tst.b	objoff_32(a0)
@@ -135,14 +135,14 @@ Obj42_FireMissile:
 .return:	rts
 ; ===========================================================================
 ; loc_ED6E:
-Obj42_Vanish:
+Newtron_Vanish:
 		clr.b	obColType(a0)	; Set as intangible
 		bra.w	MarkObjGone
 ; ===========================================================================
-Ani_obj42:	dc.w ani_newt_blank-Ani_obj42
-		dc.w ani_newt_drop-Ani_obj42
-		dc.w ani_newt_fly-Ani_obj42
-		dc.w ani_newt_firing-Ani_obj42
+Ani_Newtron:	dc.w ani_newt_blank-Ani_Newtron
+		dc.w ani_newt_drop-Ani_Newtron
+		dc.w ani_newt_fly-Ani_Newtron
+		dc.w ani_newt_firing-Ani_Newtron
 ani_newt_blank:	dc.b  $F,  8,afEnd
 ani_newt_drop:	dc.b $13,  0,  1,  3,  4,  5, afBack,  1
 ani_newt_fly:	dc.b   2,  6,  7, afEnd

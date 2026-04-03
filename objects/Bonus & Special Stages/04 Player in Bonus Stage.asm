@@ -76,7 +76,12 @@ BonusPlayer_InAir:
 BonusPlayer_Display:
 		bsr.w	SSS_ChkItems
 		bsr.w	SSS_ChkItems2
-		jsr	(ObjectMove).l		; update position
+		; Update position
+		movem.w	obVelX(a0),d0/d2			; load xy speed
+		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,obX(a0)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
+		add.l	d2,obY(a0)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
 		bsr.w	S1SS_FixCamera		; centre camera on Sonic
 		move.w	(v_ssangle).l,d0
 		add.w	(v_ssrotate).l,d0	; add rotation speed to angle
@@ -258,9 +263,7 @@ BonusPlayer_JumpHeight:
 		asr.l	#8,d0
 		move.w	d0,obVelY(a0)		; set the speed to the jump release speed
 		bclr	#7,obStatus(a0)		; clear "Sonic has jumped" flag
-
-.return:
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 ; Subroutine to	fix the	camera on Sonic's position (special stage)
 ; ---------------------------------------------------------------------------

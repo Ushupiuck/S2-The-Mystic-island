@@ -631,28 +631,24 @@ PLCKosM_AWZ4_End
 ; ---------------------------------------------------------------------------
 ; Act 1
 PLCKosM_CVZ1:	plrKosMlistheader
-	;plreqKosM	ArtTile_Redz, Kospm_Redz
 	plreqKosM	ArtTile_Splats, Kospm_Splats
 	plreqKosM	ArtTile_BBat, Kospm_BBat
 PLCKosM_CVZ1_End
 ; ---------------------------------------------------------------------------
 ; Act 2
 PLCKosM_CVZ2:	plrKosMlistheader
-	;plreqKosM	ArtTile_Redz, Kospm_Redz
 	plreqKosM	ArtTile_Splats, Kospm_Splats
 	plreqKosM	ArtTile_BBat, Kospm_BBat
 PLCKosM_CVZ2_End
 ; ---------------------------------------------------------------------------
 ; Act 3
 PLCKosM_CVZ3:	plrKosMlistheader
-	;plreqKosM	ArtTile_Redz, Kospm_Redz
 	plreqKosM	ArtTile_Splats, Kospm_Splats
 	plreqKosM	ArtTile_BBat, Kospm_BBat
 PLCKosM_CVZ3_End
 ; ---------------------------------------------------------------------------
 ; Act 4
 PLCKosM_CVZ4:	plrKosMlistheader
-	;plreqKosM	ArtTile_Redz, Kospm_Redz
 	plreqKosM	ArtTile_Splats, Kospm_Splats
 	plreqKosM	ArtTile_BBat, Kospm_BBat
 PLCKosM_CVZ4_End

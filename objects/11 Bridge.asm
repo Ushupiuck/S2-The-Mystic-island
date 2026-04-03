@@ -1,6 +1,6 @@
-;----------------------------------------------------
+; ---------------------------------------------------------------------------
 ; Object 11 - Bridge
-;----------------------------------------------------
+; ---------------------------------------------------------------------------
 
 Obj11:
 		btst	#6,obRender(a0)
@@ -15,10 +15,9 @@ loc_7BB8:
 		move.w	#$180,d0
 		bra.w	DisplaySprite3
 ; ---------------------------------------------------------------------------
-Obj11_Index:	dc.w loc_7BC6-Obj11_Index
-		dc.w loc_7CC8-Obj11_Index
-		dc.w loc_7D5A-Obj11_Index
-		dc.w loc_7D5E-Obj11_Index
+Obj11_Index:	dc.w loc_7BC6-Obj11_Index	; 0
+		dc.w loc_7CC8-Obj11_Index	; 2
+		dc.w loc_7D5E-Obj11_Index	; 4
 ; ---------------------------------------------------------------------------
 
 loc_7BC6:
@@ -35,7 +34,7 @@ loc_7BC6:
 loc_7BFA:
 		cmpi.b	#4,(Current_Zone).w
 		bne.s	loc_7C14
-		addq.b	#4,obRoutine(a0)
+		addq.b	#2,obRoutine(a0)
 		move.l	#Map_obj11_HPZ,obMap(a0)
 		move.w	#make_art_tile(ArtTile_HPZ_Bridge,3,0),obGfx(a0)
 
@@ -164,10 +163,6 @@ loc_7D3E:
 
 loc_7D56:
 		bra.w	DeleteObject
-; ---------------------------------------------------------------------------
-
-loc_7D5A:
-		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
 loc_7D5E:

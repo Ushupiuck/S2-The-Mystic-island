@@ -14,9 +14,9 @@ ObjVBallhog:
 		move.w	Obj1E_Index(pc,d0.w),d0
 		jmp	Obj1E_Index(pc,d0.w)
 ; ===========================================================================
-Obj1E_Index:	dc.w Obj1E_Main-Obj1E_Index	; 0
-		dc.w Obj1E_Action-Obj1E_Index	; 2
-		dc.w Obj1E_Action2-Obj1E_Index	; 4
+Obj1E_Index:	dc.w Obj1E_Main-Obj1E_Index		; 0
+		dc.w Obj1E_Action-Obj1E_Index		; 2
+		dc.w Obj1E_Action2-Obj1E_Index		; 4
 		dc.w Obj1E_NormalBomb-Obj1E_Index	; 6
 		dc.w Obj1E_ProtoBomb-Obj1E_Index	; 8
 ; ===========================================================================

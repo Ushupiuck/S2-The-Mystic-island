@@ -21,14 +21,14 @@ ObjMovingSpring_Init:
 		addq.b	#2,obRoutine(a0)
 		ori.b	#4,obRender(a0)
 		move.w	#$200,obPriority(a0)
-		move.l	#MapSpr_MovingSpring,obMap(a0)	; TODO: Convert to Sonic 2's format
+		move.l	#Map_MovSpring,obMap(a0)
 		move.b	#8,obWidth(a0)
 		move.b	#7,obHeight(a0)
 		move.w	obX(a0),objoff_36(a0)
 		move.w	#$180,obVelX(a0)
-		jsr	(FindFreeObj).l
+		bsr.w	FindFreeObj
 		beq.s	.GenSpring
-		jmp	(DeleteObject).l
+		bra.w	DeleteObject
 
 ; -------------------------------------------------------------------------
 
@@ -45,7 +45,7 @@ ObjMovingSpring_Init:
 ; -------------------------------------------------------------------------
 
 ObjMovingSpring_AlignToGround:
-		jsr	(ObjHitFloor).l
+		bsr.w	ObjHitFloor
 		tst.w	d1
 		bpl.s	.Sink
 		add.w	d1,obY(a0)
@@ -63,7 +63,7 @@ ObjMovingSpring_AlignToGround:
 ; -------------------------------------------------------------------------
 
 ObjMovingSpring_Main:
-		jsr	(ObjHitFloor).l
+		bsr.w	ObjHitFloor
 		add.w	d1,obY(a0)
 		move.w	objoff_32(a0),d0
 		sub.w	obY(a0),d0
@@ -72,12 +72,32 @@ ObjMovingSpring_Main:
 		neg.w	obVelX(a0)
 
 .NotEdge:
-		jsr	(ObjectMove).l
-		lea	(Ani_MovingSpring).l,a1
-		jsr	(AnimateSprite).l
-		jmp	(DisplaySprite).l
+		bsr.w	ObjectMove
+		lea	Ani_MovSpring(pc),a1
+		bsr.w	AnimateSprite
+		bra.w	DisplaySprite
+; ---------------------------------------------------------------------------
+; animation scripts - Spring & Spring wheel
+Ani_obj41:	dc.w byte_E978-Ani_obj41
+		dc.w byte_E97B-Ani_obj41
+		dc.w byte_E987-Ani_obj41
+		dc.w byte_E98A-Ani_obj41
+		dc.w byte_E996-Ani_obj41
+		dc.w byte_E999-Ani_obj41
+byte_E978:	dc.b  $F,  0,afEnd
+byte_E97B:	dc.b   0,  1,  0,  0,  2,  2,  2,  2
+		dc.b   2,  2,afChange,  0
+byte_E987:	dc.b  $F,  3,afEnd
+byte_E98A:	dc.b   0,  4,  3,  3,  5,  5,  5,  5
+		dc.b   5,  5,afChange,  2
+byte_E996:	dc.b  $F,  7,afEnd
+byte_E999:	dc.b   0,  8,  7,  7,  9,  9,  9,  9
+		dc.b   9,  9,afChange,  4
+		even
 
-
+Ani_MovSpring:	dc.w	.frame1-Ani_MovSpring
+.frame1:	dc.b	8,0,1,afEnd
+		even
 ; ---------------------------------------------------------------------------
 ; Object 41 - springs
 ; ---------------------------------------------------------------------------
@@ -90,7 +110,8 @@ Obj41:
 		out_of_range.w	DeleteObject
 		bra.w	DisplaySprite
 ; ===========================================================================
-Obj41_Index:	dc.w Obj41_Init-Obj41_Index		; 0
+Obj41_Index:
+		dc.w Obj41_Init-Obj41_Index		; 0
 		dc.w Obj41_Up-Obj41_Index		; 2
 		dc.w Obj41_Horizontal-Obj41_Index	; 4
 		dc.w Obj41_Down-Obj41_Index		; 6
@@ -99,7 +120,7 @@ Obj41_Index:	dc.w Obj41_Init-Obj41_Index		; 0
 ; ============================================================================
 ; loc_E204:
 Obj41_Init:
-		addq.b	#2,obRoutine(a0)
+		addq.b	#2,obRoutine(a0)	; goto Up
 		move.l	#Map_obj41_GHZ,obMap(a0)
 		move.w	#make_art_tile(ArtTile_S1_Spring_Vertical,0,0),obGfx(a0)
 		tst.b	(Current_Zone).w
@@ -118,15 +139,15 @@ loc_E22A:
 		jmp	Obj41_Init_Subtypes(pc,d0.w)
 ; ===========================================================================
 Obj41_Init_Subtypes:
-		dc.w Obj41_Init_Common-Obj41_Init_Subtypes
-		dc.w Obj41_Init_Horizontal-Obj41_Init_Subtypes
-		dc.w Obj41_Init_Down-Obj41_Init_Subtypes
-		dc.w Obj41_Init_DiagonallyUp-Obj41_Init_Subtypes
-		dc.w Obj41_Init_DiagonallyDown-Obj41_Init_Subtypes
+		dc.w Obj41_Init_Common-Obj41_Init_Subtypes	; 0
+		dc.w Obj41_Init_Horizontal-Obj41_Init_Subtypes	; 2
+		dc.w Obj41_Init_Down-Obj41_Init_Subtypes	; 4
+		dc.w Obj41_Init_DiagUp-Obj41_Init_Subtypes	; 6
+		dc.w Obj41_Init_DiagDown-Obj41_Init_Subtypes	; 8
 ; ===========================================================================
 ; loc_E258:
 Obj41_Init_Horizontal:
-		move.b	#4,obRoutine(a0)
+		move.b	#4,obRoutine(a0)	; goto Horizontal
 		move.b	#2,obAnim(a0)
 		move.b	#3,obFrame(a0)
 		move.w	#make_art_tile(ArtTile_S1_Spring_Horizontal,0,0),obGfx(a0)
@@ -140,22 +161,22 @@ loc_E27C:
 ; ===========================================================================
 ; loc_E284:
 Obj41_Init_Down:
-		move.b	#6,obRoutine(a0)
+		move.b	#6,obRoutine(a0)	; goto Down
 		move.b	#6,obFrame(a0)
 		bset	#1,obStatus(a0)
 		bra.s	Obj41_Init_Common
 ; ===========================================================================
 ; loc_E298:
-Obj41_Init_DiagonallyUp:
-		move.b	#8,obRoutine(a0)
+Obj41_Init_DiagUp:
+		move.b	#8,obRoutine(a0)	; goto DiagonallyUp
 		move.b	#4,obAnim(a0)
 		move.b	#7,obFrame(a0)
 		move.w	#make_art_tile(ArtTile_Spring_Diagonal,0,0),obGfx(a0)
 		bra.s	Obj41_Init_Common
 ; ===========================================================================
 ; loc_E2B2:
-Obj41_Init_DiagonallyDown:
-		move.b	#$A,obRoutine(a0)
+Obj41_Init_DiagDown:
+		move.b	#$A,obRoutine(a0)	; goto DiagonallyDown
 		move.b	#4,obAnim(a0)
 		move.b	#$A,obFrame(a0)
 		move.w	#make_art_tile(ArtTile_Spring_Diagonal,0,0),obGfx(a0)
@@ -164,7 +185,7 @@ Obj41_Init_DiagonallyDown:
 Obj41_Init_Common:
 		move.b	obSubtype(a0),d0
 		andi.w	#2,d0
-		move.w	Obj41_Strengths(pc,d0.w),$30(a0)
+		move.w	Obj41_Strengths(pc,d0.w),objoff_30(a0)
 		btst	#1,d0
 		beq.s	.return
 		bset	#5,obGfx(a0)
@@ -204,7 +225,7 @@ loc_E32A:
 		bsr.s	sub_E34E
 
 loc_E342:
-		lea	(Ani_obj41).l,a1
+		lea	Ani_obj41(pc),a1
 		bra.w	AnimateSprite
 ; ===========================================================================
 
@@ -303,7 +324,7 @@ loc_E45C:
 
 loc_E464:
 		bsr.w	sub_E54C
-		lea	(Ani_obj41).l,a1
+		lea	Ani_obj41(pc),a1
 		bra.w	AnimateSprite
 ; ===========================================================================
 
@@ -326,19 +347,19 @@ loc_E4A2:
 		move.w	obVelX(a1),obInertia(a1)
 		btst	#2,obStatus(a1)
 		bne.s	loc_E4BC
-		move.b	#0,obAnim(a1)
+		clr.b	obAnim(a1)
 
 loc_E4BC:
 		move.b	obSubtype(a0),d0
 		bpl.s	loc_E4C8
-		move.w	#0,obVelY(a1)
+		clr.w	obVelY(a1)
 
 loc_E4C8:
 		btst	#0,d0
 		beq.s	loc_E508
 		move.w	#1,obInertia(a1)
 		move.b	#1,objoff_27(a1)
-		move.b	#0,obAnim(a1)
+		clr.b	obAnim(a1)
 		move.b	#1,objoff_2C(a1)
 		move.b	#8,objoff_2D(a1)
 		btst	#1,d0
@@ -470,7 +491,7 @@ loc_E62C:
 		bsr.s	sub_E64E
 
 loc_E642:
-		lea	(Ani_obj41).l,a1
+		lea	Ani_obj41(pc),a1
 		bra.w	AnimateSprite
 ; ===========================================================================
 
@@ -484,15 +505,15 @@ sub_E64E:
 		neg.w	obVelY(a1)
 		move.b	obSubtype(a0),d0
 		bpl.s	loc_E66E
-		move.w	#0,obVelX(a1)
+		clr.w	obVelX(a1)
 
 loc_E66E:
 		btst	#0,d0
 		beq.s	loc_E6AE
 		move.w	#1,obInertia(a1)
 		move.b	#1,objoff_27(a1)
-		move.b	#0,obAnim(a1)
-		move.b	#0,objoff_2C(a1)
+		clr.b	obAnim(a1)
+		clr.b	objoff_2C(a1)
 		move.b	#4,objoff_2D(a1)
 		btst	#1,d0
 		bne.s	loc_E69E
@@ -550,7 +571,7 @@ loc_E71A:
 		bsr.s	sub_E73E
 
 loc_E732:
-		lea	(Ani_obj41).l,a1
+		lea	Ani_obj41(pc),a1
 		bra.w	AnimateSprite
 ; ===========================================================================
 
@@ -598,7 +619,7 @@ loc_E79A:
 		beq.s	loc_E7F6
 		move.w	#1,obInertia(a1)
 		move.b	#1,objoff_27(a1)
-		move.b	#0,obAnim(a1)
+		clr.b	obAnim(a1)
 		move.b	#1,objoff_2C(a1)
 		move.b	#8,objoff_2D(a1)
 		btst	#1,d0
@@ -654,7 +675,7 @@ loc_E84E:
 		bsr.s	sub_E870
 
 loc_E864:
-		lea	(Ani_obj41).l,a1
+		lea	Ani_obj41(pc),a1
 		bra.w	AnimateSprite
 ; ===========================================================================
 
@@ -684,7 +705,7 @@ loc_E8AC:
 		beq.s	loc_E902
 		move.w	#1,obInertia(a1)
 		move.b	#1,objoff_27(a1)
-		move.b	#0,obAnim(a1)
+		clr.b	obAnim(a1)
 		move.b	#1,objoff_2C(a1)
 		move.b	#8,objoff_2D(a1)
 		btst	#1,d0
