@@ -21,7 +21,7 @@ Obj0A_Index:	dc.w Obj0A_Init-Obj0A_Index
 
 Obj0A_Init:
 		addq.b	#2,obRoutine(a0)
-		move.l	#Map_Obj09_Bubbles,obMap(a0)
+		move.l	#Map_Bubbles,obMap(a0)
 		move.w	#make_art_tile(ArtTile_LZ_Bubbles,0,1),obGfx(a0)
 		move.b	#$84,obRender(a0)
 		move.b	#$10,obActWid(a0)
@@ -29,7 +29,7 @@ Obj0A_Init:
 		move.b	obSubtype(a0),d0
 		bpl.s	loc_11ECC
 		addq.b	#8,obRoutine(a0)
-		move.l	#Map_Obj0A_Countdown,obMap(a0)
+		move.l	#Map_Countdown,obMap(a0)
 		move.w	#make_art_tile(ArtTile_LZ_Sonic_Drowning,0,0),obGfx(a0)
 		andi.w	#$7F,d0
 		move.b	d0,objoff_33(a0)
@@ -294,21 +294,21 @@ Ani_Obj0A:
 		dc.w byte_1238D-Ani_Obj0A,byte_12395-Ani_Obj0A
 		dc.w byte_1239D-Ani_Obj0A,byte_123A5-Ani_Obj0A
 		dc.w byte_123A7-Ani_Obj0A
-byte_1233A:	dc.b   5,  0,  1,  2,  3,  4,  9, $D,$FC
-byte_12343:	dc.b   5,  0,  1,  2,  3,  4, $C,$12,$FC
-byte_1234C:	dc.b   5,  0,  1,  2,  3,  4, $C,$11,$FC
-byte_12355:	dc.b   5,  0,  1,  2,  3,  4, $B,$10,$FC
-byte_1235E:	dc.b   5,  0,  1,  2,  3,  4,  9, $F,$FC
-byte_12367:	dc.b   5,  0,  1,  2,  3,  4, $A, $E,$FC
-byte_12370:	dc.b  $E,  0,  1,  2,$FC
-byte_12375:	dc.b   7,$16, $D,$16, $D,$16, $D,$FC
-byte_1237D:	dc.b   7,$16,$12,$16,$12,$16,$12,$FC
-byte_12385:	dc.b   7,$16,$11,$16,$11,$16,$11,$FC
-byte_1238D:	dc.b   7,$16,$10,$16,$10,$16,$10,$FC
-byte_12395:	dc.b   7,$16, $F,$16, $F,$16, $F,$FC
-byte_1239D:	dc.b   7,$16, $E,$16, $E,$16, $E,$FC
-byte_123A5:	dc.b  $E,$FC
-byte_123A7:	dc.b  $E,  1,  2,  3,  4,$FC
+byte_1233A:	dc.b   5,  0,  1,  2,  3,  4,  9, $D,afRoutine
+byte_12343:	dc.b   5,  0,  1,  2,  3,  4, $C,$12,afRoutine
+byte_1234C:	dc.b   5,  0,  1,  2,  3,  4, $C,$11,afRoutine
+byte_12355:	dc.b   5,  0,  1,  2,  3,  4, $B,$10,afRoutine
+byte_1235E:	dc.b   5,  0,  1,  2,  3,  4,  9, $F,afRoutine
+byte_12367:	dc.b   5,  0,  1,  2,  3,  4, $A, $E,afRoutine
+byte_12370:	dc.b  $E,  0,  1,  2,afRoutine
+byte_12375:	dc.b   7,$16, $D,$16, $D,$16, $D,afRoutine
+byte_1237D:	dc.b   7,$16,$12,$16,$12,$16,$12,afRoutine
+byte_12385:	dc.b   7,$16,$11,$16,$11,$16,$11,afRoutine
+byte_1238D:	dc.b   7,$16,$10,$16,$10,$16,$10,afRoutine
+byte_12395:	dc.b   7,$16, $F,$16, $F,$16, $F,afRoutine
+byte_1239D:	dc.b   7,$16, $E,$16, $E,$16, $E,afRoutine
+byte_123A5:	dc.b  $E,afRoutine
+byte_123A7:	dc.b  $E,  1,  2,  3,  4,afRoutine
 		even
 ; ---------------------------------------------------------------------------
 Drown_WobbleData:

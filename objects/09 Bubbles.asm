@@ -23,7 +23,7 @@ bub_freq = objoff_33		; frequency of bubble spawn
 
 Bub_Main:
 		addq.b	#2,obRoutine(a0)
-		move.l	#Map_Obj09_Bubbles,obMap(a0)
+		move.l	#Map_Bubbles,obMap(a0)
 		move.w	#make_art_tile(ArtTile_LZ_Bubbles,0,1),obGfx(a0)
 		move.b	#$84,obRender(a0)
 		move.b	#$10,obActWid(a0)
@@ -247,10 +247,10 @@ Ani_Obj64:	dc.w byte_13CD0-Ani_Obj64
 		dc.w byte_13CE2-Ani_Obj64
 		dc.w byte_13CE4-Ani_Obj64
 		dc.w byte_13CE9-Ani_Obj64
-byte_13CD0:	dc.b  $E,  0,  1,  2,$FC
-byte_13CD5:	dc.b  $E,  1,  2,  3,  4,$FC
-byte_13CDB:	dc.b  $E,  2,  3,  4,  5,  6,$FC
-byte_13CE2:	dc.b   4,$FC
-byte_13CE4:	dc.b   4,  6,  7,  8,$FC
-byte_13CE9:	dc.b  $F,$13,$14,$15,$FF
+byte_13CD0:	dc.b  $E,  0,  1,  2,afRoutine
+byte_13CD5:	dc.b  $E,  1,  2,  3,  4,afRoutine
+byte_13CDB:	dc.b  $E,  2,  3,  4,  5,  6,afRoutine
+byte_13CE2:	dc.b   4,afRoutine
+byte_13CE4:	dc.b   4,  6,  7,  8,afRoutine
+byte_13CE9:	dc.b  $F,$13,$14,$15,afEnd
 		even

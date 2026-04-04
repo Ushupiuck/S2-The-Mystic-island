@@ -9,20 +9,14 @@ Obj1F:
 		jmp	Crab_Index(pc,d1.w)
 ; ===========================================================================
 Crab_Index:
-ptr_Crab_Main:		dc.w Crab_Main-Crab_Index
-ptr_Crab_Action:	dc.w Crab_Action-Crab_Index
-ptr_Crab_Delete:	dc.w Crab_Delete-Crab_Index
-ptr_Crab_BallMain:	dc.w Crab_BallMain-Crab_Index
-ptr_Crab_BallMove:	dc.w Crab_BallMove-Crab_Index
+		dc.w Crab_Main-Crab_Index	; 0
+		dc.w Crab_Action-Crab_Index	; 2
+		dc.w Crab_Delete-Crab_Index	; 4
+		dc.w Crab_BallMain-Crab_Index	; 6
+		dc.w Crab_BallMove-Crab_Index	; 8
 
-id_Crab_Main = ptr_Crab_Main-Crab_Index	; 0
-id_Crab_Action = ptr_Crab_Action-Crab_Index	; 2
-id_Crab_Delete = ptr_Crab_Delete-Crab_Index	; 4
-id_Crab_BallMain = ptr_Crab_BallMain-Crab_Index	; 6
-id_Crab_BallMove = ptr_Crab_BallMove-Crab_Index	; 8
-
-crab_timedelay = objoff_30
-crab_mode = objoff_32
+crab_timedelay	= objoff_30
+crab_mode	= objoff_32
 ; ===========================================================================
 
 Crab_Main:	; Routine 0
@@ -52,7 +46,7 @@ Crab_Action:	; Routine 2
 		move.b	ob2ndRout(a0),d0
 		move.w	.index(pc,d0.w),d1
 		jsr	.index(pc,d1.w)
-		lea	(Ani_obj1F).l,a1
+		lea	Ani_obj1F(pc),a1
 		bsr.w	AnimateSprite
 		bra.w	MarkObjGone
 ; ===========================================================================
@@ -85,12 +79,12 @@ Crab_Action:	; Routine 2
 ; ===========================================================================
 
 .fire:
-		move.w	#59,crab_timedelay(a0)
+		move.w	#60-1,crab_timedelay(a0)
 		move.b	#6,obAnim(a0)	; use firing animation
 		bsr.w	FindFreeObj
 		bne.s	.failleft
 		_move.b	#id_Obj1F,obID(a1) ; load left fireball
-		move.b	#id_Crab_BallMain,obRoutine(a1)
+		move.b	#6,obRoutine(a1)
 		move.w	obX(a0),obX(a1)
 		subi.w	#$10,obX(a1)
 		move.w	obY(a0),obY(a1)
@@ -100,7 +94,7 @@ Crab_Action:	; Routine 2
 		bsr.w	FindFreeObj
 		bne.s	.failright
 		_move.b	#id_Obj1F,obID(a1) ; load right fireball
-		move.b	#id_Crab_BallMain,obRoutine(a1)
+		move.b	#6,obRoutine(a1)
 		move.w	obX(a0),obX(a1)
 		addi.w	#$10,obX(a1)
 		move.w	obY(a0),obY(a1)
@@ -160,26 +154,22 @@ Crab_SetAni:
 		move.b	obAngle(a0),d3
 		bmi.s	loc_96A4
 		cmpi.b	#6,d3
-		blo.s	locret_96A2
+		blo.s	.return
 		moveq	#1,d0
 		btst	#0,obStatus(a0)
-		bne.s	locret_96A2
+		bne.s	.return
 		moveq	#2,d0
-
-locret_96A2:
-		rts
+.return:	rts
 ; ===========================================================================
 
 loc_96A4:
 		cmpi.b	#-6,d3
-		bhi.s	locret_96B6
+		bhi.s	.return
 		moveq	#2,d0
 		btst	#0,obStatus(a0)
-		bne.s	locret_96B6
+		bne.s	.return
 		moveq	#1,d0
-
-locret_96B6:
-		rts
+.return:	rts
 ; End of function Crab_SetAni
 
 ; ===========================================================================
@@ -203,7 +193,7 @@ Crab_BallMain:	; Routine 6
 		move.b	#7,obAnim(a0)
 
 Crab_BallMove:	; Routine 8
-		lea	(Ani_obj1F).l,a1
+		lea	Ani_obj1F(pc),a1
 		bsr.w	AnimateSprite
 		bsr.w	ObjectMoveAndFall
 		move.w	(Camera_Max_Y_pos).w,d0
@@ -211,3 +201,22 @@ Crab_BallMove:	; Routine 8
 		cmp.w	obY(a0),d0
 		blo.w	DeleteObject
 		bra.w	DisplaySprite
+; ===========================================================================
+; animation script
+Ani_obj1F:	dc.w byte_A30C-Ani_obj1F
+		dc.w byte_A30F-Ani_obj1F
+		dc.w byte_A312-Ani_obj1F
+		dc.w byte_A315-Ani_obj1F
+		dc.w byte_A31A-Ani_obj1F
+		dc.w byte_A31F-Ani_obj1F
+		dc.w byte_A324-Ani_obj1F
+		dc.w byte_A327-Ani_obj1F
+byte_A30C:	dc.b  $F,  0,afEnd
+byte_A30F:	dc.b  $F,  2,afEnd
+byte_A312:	dc.b  $F,$22,afEnd
+byte_A315:	dc.b  $F,  1,$21,  0,afEnd
+byte_A31A:	dc.b  $F,$21,  3,  2,afEnd
+byte_A31F:	dc.b  $F,  1,$23,$22,afEnd
+byte_A324:	dc.b  $F,  4,afEnd
+byte_A327:	dc.b   1,  5,  6,afEnd
+		even

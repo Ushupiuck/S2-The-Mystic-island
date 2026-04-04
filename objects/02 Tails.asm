@@ -1214,7 +1214,7 @@ Tails_DoLevelCollision:
 +
 		add.w	d1,obY(a0)
 		move.b	d3,obAngle(a0)
-		bsr.w	Tails_ResetTailsOnFloor
+		bsr.w	Tails_ResetOnFloor
 		move.b	#AniIDSonAni_Walk,obAnim(a0)
 		move.b	d3,d0
 		addi.b	#$20,d0
@@ -1287,7 +1287,7 @@ loc_1177A:
 		bpl.s	.return
 		add.w	d1,obY(a0)
 		move.b	d3,obAngle(a0)
-		bsr.w	Tails_ResetTailsOnFloor
+		bsr.w	Tails_ResetOnFloor
 		move.b	#AniIDSonAni_Walk,obAnim(a0)
 		clr.w	obVelY(a0)
 		move.w	obVelX(a0),obInertia(a0)
@@ -1325,7 +1325,7 @@ loc_117CC:
 
 loc_117EC:
 		move.b	d3,obAngle(a0)
-		bsr.w	Tails_ResetTailsOnFloor
+		bsr.w	Tails_ResetOnFloor
 		move.w	obVelY(a0),obInertia(a0)
 		tst.b	d3
 		bpl.s	.return
@@ -1366,7 +1366,7 @@ loc_11838:
 		bpl.s	.return
 		add.w	d1,obY(a0)
 		move.b	d3,obAngle(a0)
-		bsr.w	Tails_ResetTailsOnFloor
+		bsr.w	Tails_ResetOnFloor
 		move.b	#AniIDSonAni_Walk,obAnim(a0)
 		clr.w	obVelY(a0)
 		move.w	obVelX(a0),obInertia(a0)
@@ -1379,7 +1379,7 @@ loc_11838:
 ; =============== S U B R O U T I N E =======================================
 
 
-Tails_ResetTailsOnFloor:
+Tails_ResetOnFloor:
 		btst	#4,obStatus(a0)
 		beq.s	loc_11874
 		nop
@@ -1403,7 +1403,7 @@ loc_118AA:
 		clr.w	(v_itembonus).w
 		clr.b	objoff_27(a0)
 		rts
-; End of function Tails_ResetTailsOnFloor
+; End of function Tails_ResetOnFloor
 
 ; ---------------------------------------------------------------------------
 

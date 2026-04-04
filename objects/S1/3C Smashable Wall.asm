@@ -16,6 +16,25 @@ Smash_Index:	dc.w Smash_Main-Smash_Index
 smash_speed	= objoff_30		; Sonic's horizontal speed
 smash_speed2	= objoff_32		; Tails's horizontal speed (I believe this is how Sonic 3 works)
 ; ---------------------------------------------------------------------------
+Obj3C_FragSpdRight:
+		dc.w  $400,-$500
+		dc.w  $600,-$100
+		dc.w  $600, $100
+		dc.w  $400, $500
+		dc.w  $600,-$600
+		dc.w  $800,-$200
+		dc.w  $800, $200
+		dc.w  $600, $600
+Obj3C_FragSpdLeft:
+		dc.w -$600,-$600
+		dc.w -$800,-$200
+		dc.w -$800, $200
+		dc.w -$600, $600
+		dc.w -$400,-$500
+		dc.w -$600,-$100
+		dc.w -$600, $100
+		dc.w -$400, $500
+; ---------------------------------------------------------------------------
 
 Smash_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
@@ -79,3 +98,4 @@ Smash_FragMove:	; Routine 4
 		tst.b	obRender(a0)
 		bpl.w	DeleteObject
 		bra.w	DisplaySprite
+; ---------------------------------------------------------------------------

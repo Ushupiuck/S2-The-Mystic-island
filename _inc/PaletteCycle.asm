@@ -266,3 +266,94 @@ PalCycle_SBZ:
 .return:
 		rts
 ; End of function PalCycle_SBZ
+; =============== S U B R O U T I N E =======================================
+
+
+PalCycle_Sega:
+		tst.b	(v_pcyc_time+1).w
+		bne.s	loc_2404
+		lea	(v_palette+$20).w,a1
+		lea	(Pal_Sega1).l,a0
+		moveq	#5,d1
+		move.w	(v_pcyc_num).w,d0
+
+loc_23BA:
+		bpl.s	loc_23C4
+		addq.w	#2,a0
+		subq.w	#1,d1
+		addq.w	#2,d0
+		bra.s	loc_23BA
+; ---------------------------------------------------------------------------
+
+loc_23C4:
+		move.w	d0,d2
+		andi.w	#$1E,d2
+		bne.s	loc_23CE
+		addq.w	#2,d0
+
+loc_23CE:
+		cmpi.w	#$60,d0
+		bcc.s	loc_23D8
+		move.w	(a0)+,(a1,d0.w)
+
+loc_23D8:
+		addq.w	#2,d0
+		dbf	d1,loc_23C4
+		move.w	(v_pcyc_num).w,d0
+		addq.w	#2,d0
+		move.w	d0,d2
+		andi.w	#$1E,d2
+		bne.s	loc_23EE
+		addq.w	#2,d0
+
+loc_23EE:
+		cmpi.w	#$64,d0
+		blt.s	loc_23FC
+		move.w	#$401,(v_pcyc_time).w
+		moveq	#-$C,d0
+
+loc_23FC:
+		move.w	d0,(v_pcyc_num).w
+		moveq	#1,d0
+		rts
+; ---------------------------------------------------------------------------
+
+loc_2404:
+		subq.b	#1,(v_pcyc_time).w
+		bpl.s	loc_2456
+		move.b	#4,(v_pcyc_time).w
+		move.w	(v_pcyc_num).w,d0
+		addi.w	#$C,d0
+		cmpi.w	#$30,d0
+		blo.s	loc_2422
+		moveq	#0,d0
+		rts
+; ---------------------------------------------------------------------------
+
+loc_2422:
+		move.w	d0,(v_pcyc_num).w
+		lea	(Pal_Sega2).l,a0
+		lea	(a0,d0.w),a0
+		lea	(v_palette+4).w,a1
+		move.l	(a0)+,(a1)+
+		move.l	(a0)+,(a1)+
+		move.w	(a0)+,(a1)
+		lea	(v_palette+$20).w,a1
+		moveq	#0,d0
+		moveq	#$2C,d1
+
+loc_2442:
+		move.w	d0,d2
+		andi.w	#$1E,d2
+		bne.s	loc_244C
+		addq.w	#2,d0
+
+loc_244C:
+		move.w	(a0),(a1,d0.w)
+		addq.w	#2,d0
+		dbf	d1,loc_2442
+
+loc_2456:
+		moveq	#1,d0
+		rts
+; End of function PalCycle_Sega

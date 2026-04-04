@@ -18,19 +18,19 @@ Scen_Conf:	; Organized in the following format:
 	;	dc.b obFrame, obActWid, obPriority (the last two bytes are a word)
 ; ---------------------------------------------------------------------------
 		; 0
-		dc.l Map_obj11_HPZ		; HPZ Pulsing Bridge
+		dc.l Map_HPZ_Bridge		; HPZ Pulsing Bridge
 		dc.w make_art_tile(ArtTile_HPZ_Bridge,3,0)
 		dc.b	3,	4,	0,	$80
 		; 1
-		dc.l Map_Obj1C_01		; HPZ Pulsing Orb
+		dc.l Map_HPZ_Orb		; HPZ Pulsing Orb
 		dc.w make_art_tile($35A,3,1)
 		dc.b	0,	$10,	0,	$80
 		; 2
-		dc.l Map_obj11			; EHZ Wooden Stake & Bridge
+		dc.l Map_EHZ_Bridge			; EHZ Wooden Stake & Bridge
 		dc.w make_art_tile($3C6,2,0)
 		dc.b	1,	4,	0,	$80
 		; 3
-		dc.l Map_obj11_GHZ		; GHZ Wooden Bridge & Stake (Yes, really. They're inverted)
+		dc.l Map_GHZ_Bridge		; GHZ Wooden Bridge & Stake (Yes, really. They're inverted)
 		dc.w make_art_tile($4C6,2,0)
 		dc.b	1,	$10,	0,	$80
 		; 4

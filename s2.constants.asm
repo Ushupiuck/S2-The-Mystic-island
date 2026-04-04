@@ -918,6 +918,7 @@ v_palette_fading_end:
 
 v_crossresetram:					; RAM beyond this point is only cleared on a cold-boot
 Level_Inactive_flag:	ds.w	1			; (2 bytes)
+Level_frame_counter:	; For compatibility
 v_framecount:		; For compatibility
 Timer_frames:		ds.w	1			; the number of frames which have elapsed since the level started
 Debug_object:		ds.b	1			; the current position in the debug mode object list

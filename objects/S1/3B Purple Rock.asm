@@ -18,18 +18,20 @@ Rock_Main:	; Routine 0
 		move.b	#4,obRender(a0)
 		move.b	#$18,obActWid(a0)
 		move.w	#$200,obPriority(a0)
-		move.l	#Map_Obj3B,obMap(a0)
+		move.l	#Map_PRock,obMap(a0)
 		move.w	#make_art_tile(ArtTile_GHZ_Purple_Rock,3,0),obGfx(a0)
 		cmpi.b	#id_HPZ,(Current_Zone).w
 		bne.s	.notHPZ
 		move.b	#$20,obActWid(a0)
-		move.l	#Map_Obj12,obMap(a0)
+		move.l	#Map_Emerald,obMap(a0)
 		move.w	#make_art_tile(ArtTile_HPZ_Emerald,3,0),obGfx(a0)
 		addq.b	#4,obRoutine(a0)
 		bra.s	Emerald_Solid
+; ===========================================================================
+
 .notHPZ:
 		addq.b	#2,obRoutine(a0)
-
+; ===========================================================================
 Rock_Solid:	; Routine 2
 		moveq	#$1B,d1
 		moveq	#$10,d2

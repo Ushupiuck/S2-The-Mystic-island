@@ -42,7 +42,9 @@ Obj25_Sparkle:
 		bsr.w	AnimateSprite
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
-
+Ani_Obj25:	dc.w byte_ABEC-Ani_Obj25
+byte_ABEC:	dc.b   5,  4,  5,  6,  7,$FC
+		even
 ; =============== S U B	R O U T	I N E =======================================
 
 
@@ -201,7 +203,3 @@ loc_AA60:
 ; ---------------------------------------------------------------------------
 ; ObjRing_Delete:	; just in case it ever becomes neccesary
 	;	bra.w	DeleteObject
-; ---------------------------------------------------------------------------
-Ani_Obj25:	dc.w byte_ABEC-Ani_Obj25
-byte_ABEC:	dc.b   5,  4,  5,  6,  7,$FC
-		even

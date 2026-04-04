@@ -38,6 +38,7 @@ Bas_Action:	; Routine 2
 ; ===========================================================================
 
 .dropcheck:
+		move.w	#$100,d1
 		move.w	#$80,d2
 		bsr.w	.chkdistance	; is Sonic < $80 pixels from basaran?
 		bcc.s	.nodrop		; if not, branch
@@ -62,6 +63,7 @@ Bas_Action:	; Routine 2
 .dropfly:
 		bsr.w	ObjectMove
 		addi.w	#$18,obVelY(a0)	; make basaran fall
+		move.w	#$100,d1
 		move.w	#$80,d2
 		bsr.w	.chkdistance
 		move.w	player_distance(a0),d0
@@ -131,7 +133,6 @@ Bas_Action:	; Routine 2
 ;	d1 = speed/direction for basaran to fly
 
 .chkdistance:
-		move.w	#$100,d1
 		bset	#0,obStatus(a0)
 		move.w	(v_player+obX).w,d0
 		sub.w	obX(a0),d0
