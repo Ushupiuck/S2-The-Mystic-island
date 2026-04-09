@@ -16,21 +16,22 @@ GiantRingFlash_Index:
 
 loc_AB50:
 		addq.b	#2,obRoutine(a0)
-		move.l	#Map_GiantRingFlash,obMap(a0)
-		move.w	#make_art_tile(ArtTile_Giant_Ring_Flash,1,0),obGfx(a0)
+		move.l	#Map_GiantRing,obMap(a0)
+		move.w	#make_art_tile(ArtTile_Giant_Ring,1,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#$20,obActWid(a0)
-		move.b	#$FF,obFrame(a0)
+		move.b	#2,(v_gfxbigring).w	; Start flash animation
+		move.b	#-1,(v_ani2_frame).w
 
 loc_AB7E:
 		subq.b	#1,obTimeFrame(a0)
 		bpl.s	+
 		move.b	#1,obTimeFrame(a0)
-		addq.b	#1,obFrame(a0)
-		cmpi.b	#8,obFrame(a0)
-		bcc.s	loc_ABD8
-		cmpi.b	#3,obFrame(a0)
-		bne.s	+
+		addq.b	#1,(v_ani2_frame).w
+		cmpi.b	#8,(v_ani2_frame).w	; has animation finished?
+		bhs.s	Flash_End		; if yes, branch
+		cmpi.b	#3,(v_ani2_frame).w	; is 3rd frame displayed?
+		bne.s	+			; if not, branch
 		movea.l	objoff_3C(a0),a1
 		move.b	#6,obRoutine(a1)
 		move.b	#$1C,(v_player+obAnim).w
@@ -42,8 +43,9 @@ loc_AB7E:
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
-loc_ABD8:
+Flash_End:
 		addq.b	#2,obRoutine(a0)
+		clr.b	(v_gfxbigring).w	; Stop loading giant ring graphics
 		clr.w	(v_player).w
 		addq.l	#4,sp
 		rts

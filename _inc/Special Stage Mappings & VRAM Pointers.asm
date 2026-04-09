@@ -71,10 +71,10 @@ specialStageData: macro frame,mappings,palette,vram
 		specialStageData	0, Map_SS_Chaos1, 0, ArtTile_SS_Emerald
 		specialStageData	0, Map_SS_Chaos2, 0, ArtTile_SS_Emerald
 		specialStageData	0, Map_SS_R,      0, ArtTile_SS_Ghost_Block
+		specialStageData	1, Map_SS_Ring,   1, ArtTile_SS_Rings
+		specialStageData	2, Map_SS_Ring,   1, ArtTile_SS_Rings
+		specialStageData	3, Map_SS_Ring,   1, ArtTile_SS_Rings
 		specialStageData	4, Map_SS_Ring,   1, ArtTile_SS_Rings
-		specialStageData	5, Map_SS_Ring,   1, ArtTile_SS_Rings
-		specialStageData	6, Map_SS_Ring,   1, ArtTile_SS_Rings
-		specialStageData	7, Map_SS_Ring,   1, ArtTile_SS_Rings
 		specialStageData	0, Map_SS_Glass,  1, ArtTile_SS_Emerald_Sparkle
 		specialStageData	1, Map_SS_Glass,  1, ArtTile_SS_Emerald_Sparkle
 		specialStageData	2, Map_SS_Glass,  1, ArtTile_SS_Emerald_Sparkle

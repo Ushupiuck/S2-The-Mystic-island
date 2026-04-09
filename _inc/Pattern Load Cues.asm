@@ -72,7 +72,7 @@ ptr_PLC_Filler2:	dc.w PLC_Filler2-ArtLoadCues		; Placeholder
 PLC_Main:	dc.w ((PLC_Main_End-PLC_Main)/6)-1
 		plcm	Nem_HUD,	ArtTile_HUD
 		plcm	Nem_Lives,	ArtTile_Lives_Counter
-		plcm	Nem_Ring,	ArtTile_Ring
+		plcm	Nem_Sparkles,	ArtTile_Sparkles
 PLC_Main_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
@@ -186,7 +186,7 @@ PLC_HPZ:	dc.w ((PLC_HPZ_End-PLC_HPZ)/6)-1
 		plcm	Nem_HPZ_Waterfall,	ArtTile_HPZ_Waterfall
 		plcm	Nem_HPZ_Platform,	ArtTile_HPZ_Platform
 		plcm	Nem_HPZ_PulsingBall,	ArtTile_HPZ_Orb
-		plcm	Nem_Water,	ArtTile_Water_Surface
+		plcm	Nem_Water,		ArtTile_Water_Surface
 PLC_HPZ_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
@@ -204,10 +204,10 @@ PLC_HTZ:	dc.w ((PLC_HTZ_End-PLC_HTZ)/6)-1
 		plcm	Nem_EHZ_Fireball,	ArtTile_Fireball
 		plcm	Nem_HTZ_Fireball,	ArtTile_HTZ_Fireball
 		plcm	Nem_HTZ_AutomaticDoor,	ArtTile_HTZ_AutomaticDoor
-		plcm	Nem_VSpikes,	ArtTile_Spikes
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_VSpikes,		ArtTile_Spikes
+		plcm	Nem_DSpring,		ArtTile_Spring_Diagonal
+		plcm	Nem_VSpring2,		ArtTile_Spring_Vertical
+		plcm	Nem_HSpring2,		ArtTile_Spring_Horizontal
 PLC_HTZ_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
@@ -241,7 +241,6 @@ PLC_Boss_End:
 PLC_Signpost:	dc.w ((PLC_Signpost_End-PLC_Signpost)/6)-1
 		plcm	Nem_Signpost,	ArtTile_Signpost
 		plcm	Nem_Bonus,	ArtTile_Hidden_Points
-		plcm	Nem_BigFlash,	ArtTile_Giant_Ring_Flash
 PLC_Signpost_End:
 ; ---------------------------------------------------------------------------
 ; Pattern load cues - special stage
@@ -256,7 +255,7 @@ PLC_S1SpecialStage:
 		plcm	Nem_SSUpDown,	ArtTile_SS_Up_Down		; UP and DOWN blocks
 		plcm	Nem_SSRBlock,	ArtTile_SS_R_Block		; R block
 		plcm	Nem_SS1UpBlock,	ArtTile_SS_Extra_Life		; 1UP block
-		plcm	Nem_Ring,	ArtTile_SS_Rings		; Rings
+		plcm	Nem_Sparkles,	ArtTile_SS_Sparkles		; Ring sparkle
 		plcm	Nem_SSEmStars,	ArtTile_SS_Emerald_Sparkle	; emerald collection stars
 		plcm	Nem_SSRedWhite,	ArtTile_SS_Red_White_Block	; red and white block
 		plcm	Nem_SSGhost,	ArtTile_SS_Ghost_Block		; ghost block
@@ -881,7 +880,8 @@ PLCKosM_SSResult_End
 ; ---------------------------------------------------------------------------
 ; Filler/Null entry
 PLCKosM_Null:	plrKosMlistheader
-	dc.w	$FFFF
+	dc.l	$0
+	dc.w	$0
 PLCKosM_Null_End
 ; ---------------------------------------------------------------------------
 ; Moduled Kosinski Pattern IDs

@@ -2683,6 +2683,7 @@ Level_TtlCardLoop:
 Level_SkipTtlCard:
 		moveq	#palid_SonicTails,d0
 		bsr.w	PalLoad1
+		bsr.w	LoadRingFrame
 		bsr.w	LevelSizeLoad
 		bsr.w	DeformBGLayer
 		bset	#2,(Scroll_flags).w
@@ -3128,43 +3129,97 @@ BColPointers:
 
 
 ChangeRingFrame:
+; Used for the GHZ Spiked pole
+		bsr.s	LoadRingFrame
 		subq.b	#1,(v_ani0_time).w
-		bpl.s	loc_4754
+		bpl.s	Sync2
 		move.b	#11,(v_ani0_time).w
 		subq.b	#1,(v_ani0_frame).w
 		andi.b	#7,(v_ani0_frame).w
 
-loc_4754:
+Sync2:
+; Used for rings
 		subq.b	#1,(v_ani1_time).w
-		bpl.s	loc_476A
-		move.b	#7,(v_ani1_time).w
+		bpl.s	Sync3
+		move.b	#4-1,(v_ani1_time).w
 		addq.b	#1,(v_ani1_frame).w
-		andi.b	#3,(v_ani1_frame).w
-
-loc_476A:
+		andi.b	#7,(v_ani1_frame).w
+; Used for giant rings
+Sync3:
+		cmpi.b	#1,(v_gfxbigring).w	; Is there a special stage ring and is its animation not being overridden?
+		bne.s	Sync4			; If not, branch
 		subq.b	#1,(v_ani2_time).w
-		bpl.s	loc_4788
-		move.b	#7,(v_ani2_time).w
+		bpl.s	Sync4
+		move.b	#4-1,(v_ani2_time).w
 		addq.b	#1,(v_ani2_frame).w
-		cmpi.b	#6,(v_ani2_frame).w
-		blo.s	loc_4788
-		clr.b	(v_ani2_frame).w
+		andi.b	#7,(v_ani2_frame).w
 
-loc_4788:
+Sync4:
 		tst.b	(v_ani3_time).w
 		beq.s	.return
 		moveq	#0,d0
 		move.b	(v_ani3_time).w,d0
 		add.w	(v_ani3_buf).w,d0
 		move.w	d0,(v_ani3_buf).w
-		rol.w	#7,d0
-		andi.w	#3,d0
+		rol.w	#8,d0
+		andi.w	#7,d0
 		move.b	d0,(v_ani3_frame).w
 		subq.b	#1,(v_ani3_time).w
-.return:
-		rts
+.return:	rts
 ; End of function ChangeRingFrame
 
+; ---------------------------------------------------------------------------
+; Queue ring frame graphics loading
+; ---------------------------------------------------------------------------
+
+LoadRingFrame:
+		cmpi.b	#6,(v_player+obRoutine).w	; Is Sonic dead?
+		bhs.w	.noringloss			; If so, branch
+		moveq	#0,d1				; Get ring frame offset for regular rings
+		move.b	(v_ani1_frame).w,d1
+		lsl.l	#7,d1				; Each ring frame takes $80 bytes, so multiply by $80
+		addi.l	#Art_Ring,d1			; Queue a DMA transfer for this ring frame
+		move.w	#ArtTile_Ring*tile_size,d2
+		cmpi.w	#Demo,(v_gamemode).w		; Are we in a DEMO?
+		beq.s	.skip				; If so, branch
+		cmpi.w	#Level,(v_gamemode).w		; Are we in a level?
+		beq.s	.skip				; If so, branch
+		move.w	#ArtTile_SS_Rings*tile_size,d2	; use a different VRAM location
+.skip:		moveq	#$80/2,d3
+		bsr.w	QueueDMATransfer		; (or DMA_68KtoVRAM)
+
+		cmpi.w	#BonusStage,(v_gamemode).w	; Are we in a special stage?
+		beq.s	.noringloss			; If so, branch
+
+		tst.b	(v_gfxbigring).w		; Is a there a special stage ring?
+		beq.s	.nossring			; If not, branch
+
+		move.l	#Art_BigRing,d2			; Use normal special stage ring graphics
+		cmpi.b	#1,(v_gfxbigring).w		; Should we be using them?
+		beq.s	.loadssring			; If so, branch
+		move.l	#Art_BigFlash,d2		; Use special stage ring flash graphics
+
+.loadssring:
+		moveq	#0,d1				; Get ring frame offset for special stage rings
+		move.b	(v_ani2_frame).w,d1
+		lsl.l	#8,d1				; Each giant ring frame takes $800 bytes, so multiply by $800
+		lsl.l	#3,d1
+		add.l	d2,d1				; Queue a DMA transfer for this ring frame
+		move.w	#ArtTile_Giant_Ring*tile_size,d2
+		move.w	#$800/2,d3
+		bsr.w	QueueDMATransfer		; (or DMA_68KtoVRAM)
+
+.nossring:
+		moveq	#0,d1				; Get ring frame offset for lost rings
+		move.b	(v_ani3_frame).w,d1
+		lsl.l	#7,d1				; Each ring frame takes $80 bytes, so multiply by $80
+		add.l	#Art_Ring,d1			; Queue a DMA transfer for this ring frame
+		move.w	#ArtTile_RingLoss*tile_size,d2
+		moveq	#$80/2,d3
+		bra.w	QueueDMATransfer		; (or DMA_68KtoVRAM)
+
+.noringloss:
+		rts
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
@@ -3243,6 +3298,7 @@ BonusStage:
 	;	moveq	#plcid_SpecialStage,d0
 		lea	(PLC_S1SpecialStage).l,a1
 		bsr.w	QuickPLC
+		bsr.w	LoadRingFrame
 		clearRAM v_objspace,v_objend
 		clearRAM v_levelvariables,v_levelvariables_end
 		clearRAM v_timingvariables,v_timingvariables_end
@@ -3291,6 +3347,7 @@ SS_MainLoop:
 		move.w	(v_jpadhold1).w,(v_jpadholdlogical).w
 		jsr	(ExecuteObjects).l
 		jsr	(BuildSprites).l
+		bsr.w	LoadRingFrame
 		bsr.w	S1SS_ShowLayout
 		bsr.w	S1SS_BgAnimate
 		cmpi.w	#BonusStage,(v_gamemode).w ; is game mode $10 (special stage)?
@@ -4064,12 +4121,11 @@ SS_AniWallsRings:
 		lea	(v_ssbuffer2+5).l,a1
 		subq.b	#1,(v_ani1_time).w
 		bpl.s	loc_19CFA
-		move.b	#7,(v_ani1_time).w
+		move.b	#4-1,(v_ani1_time).w
 		addq.b	#1,(v_ani1_frame).w
-		andi.b	#3,(v_ani1_frame).w
+		andi.b	#7,(v_ani1_frame).w
 
 loc_19CFA:
-		move.b	(v_ani1_frame).w,$1D0(a1)
 		subq.b	#1,(v_ani2_time).w
 		bpl.s	loc_19D16
 		move.b	#7,(v_ani2_time).w
@@ -4440,7 +4496,7 @@ Map_SS_Glass:	include	"mappings/sprite/S1/SS Glass Block.asm"
 Map_SS_Up:	include	"mappings/sprite/S1/SS UP Block.asm"
 Map_SS_Down:	include	"mappings/sprite/S1/SS DOWN Block.asm"
 Map_SS_Bump:	include	"mappings/sprite/S1/SS Bumper.asm"
-Map_SS_Ring:	include	"mappings/sprite/S1/SS Rings.asm"
+Map_SS_Ring:	binclude	"mappings/sprite/S1/SS Rings.bin"
 		include	"mappings/sprite/S1/SS Chaos Emeralds.asm"
 		include	"objects/Bonus & Special Stages/04 Player in Bonus Stage.asm"
 
@@ -7942,13 +7998,6 @@ DynResize_SLZ4:
 		rts
 ; ---------------------------------------------------------------------------
 		include	"objects/25 & 37 Rings.asm"
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; sprite mappings
-; ---------------------------------------------------------------------------
-Map_Ring:	binclude	"mappings/sprite/obj37_a.bin"
-		even
-
 		include	"objects/26 Monitor.asm"
 		include	"objects/29 Monitor Content Power-Up.asm"
 
@@ -8060,6 +8109,7 @@ word_A006:	dc.w 1
 		dc.w $F406,    6,    3,$FFF8
 word_A010:	dc.w 1
 		dc.w $F406,   $C,    6,$FFF8
+		even
 Map_Obj28:
 		dc.w word_A02A-Map_Obj28
 		dc.w word_A034-Map_Obj28
@@ -8070,6 +8120,7 @@ word_A02A:	dc.w 1
 		dc.w $FC05,    6,    3,$FFF8
 word_A034:	dc.w 1
 		dc.w $FC05,   $A,    5,$FFF8
+		even
 Map_Obj28b:
 		dc.w word_A04E-Map_Obj28b
 		dc.w word_A058-Map_Obj28b
@@ -8080,31 +8131,6 @@ word_A04E:	dc.w 1
 		dc.w $FC09,    6,    3,$FFF4
 word_A058:	dc.w 1
 		dc.w $FC09,   $C,    6,$FFF4
-Map_Obj2A:
-		dc.w word_A070-Map_Obj2A
-		dc.w word_A07A-Map_Obj2A
-		dc.w word_A084-Map_Obj2A
-		dc.w word_A08E-Map_Obj2A
-		dc.w word_A0A0-Map_Obj2A
-		dc.w word_A0AA-Map_Obj2A
-		dc.w word_A0BC-Map_Obj2A
-word_A070:	dc.w 1
-		dc.w $F805,    2,    1,$FFF8
-word_A07A:	dc.w 1
-		dc.w $F805,    6,    3,$FFF8
-word_A084:	dc.w 1
-		dc.w $F805,   $A,    5,$FFF8
-word_A08E:	dc.w 2
-		dc.w $F801,    0,    0,$FFF8
-		dc.w $F805,   $E,    7,	   0
-word_A0A0:	dc.w 1
-		dc.w $F801,    0,    0,$FFFC
-word_A0AA:	dc.w 2
-		dc.w $F805,    2,    1,$FFF0
-		dc.w $F805,   $E,    7,	   0
-word_A0BC:	dc.w 2
-		dc.w $F805,   $A,    5,$FFF0
-		dc.w $F805,   $E,    7,	   0
 		even
 ; ---------------------------------------------------------------------------
 		include	"objects/S1/24, 27 & 3F Explosions.asm"
@@ -9756,7 +9782,7 @@ loc_D8CC:
 		bne.s	loc_D8EA			; if it's not 0 yet, branch
 		move.b	#6,(a1)				; reset timer
 		addq.b	#1,1(a1)			; increment frame
-		cmpi.b	#8,1(a1)			; is it destruction time yet?
+		cmpi.b	#5,1(a1)			; is it destruction time yet?
 		bne.s	loc_D8EA			; if not, branch
 		move.w	#-1,(a1)			; destroy ring
 
@@ -9889,7 +9915,7 @@ loc_DA1E:
 		bhi.w	loc_DA2C
 
 loc_DA24:
-		move.w	#$604,(a1)
+		move.w	#$601,(a1)
 		bsr.w	CollectRing
 
 loc_DA2C:
@@ -9929,7 +9955,7 @@ BuildRings_Loop:
 		moveq	#0,d1
 		move.b	1(a0),d1	; get ring frame
 		bne.s	+		; if this ring is using a specific frame, branch
-		move.b	(v_ani1_frame).w,d1	; use global frame
+		clr.b	d1		; use global frame
 +
 		add.w	d1,d1
 		adda.w	(a1,d1.w),a1	; get frame data address
@@ -10039,7 +10065,7 @@ loc_DBF2:
 ; End of function RingsManager_Setup
 
 ; ---------------------------------------------------------------------------
-MapUnc_Rings:	include	"mappings/sprite/Rings.asm"
+MapUnc_Rings:	include	"mappings/sprite/Ring.asm"
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -18347,26 +18373,6 @@ Eni_TitleMap:	binclude	"tilemaps/Title Emblem.eni"
 Kosp_TitleBg1:	binclude	"tilemaps/Title Background - 1.kosp"
 Kosp_TitleBg2:	binclude	"tilemaps/Title Background - 2.kosp"
 ; ---------------------------------------------------------------------------
-; Uncompressed Assets
-; ---------------------------------------------------------------------------
-		align $20
-Art_Sonic:	binclude	"art/uncompressed/Sonic's art.bin"
-		align $20
-Art_Tails:	binclude	"art/uncompressed/Tails' art.bin"
-Art_SplashDust:	binclude	"art/uncompressed/Dust and water splash.bin"
-Art_BigRing:	binclude	"art/uncompressed/Giant Ring.bin"
-; ---------------------------------------------------------------------------
-; Misc. animated tiles
-; ---------------------------------------------------------------------------
-			align $20
-Art_Flowers1:		binclude	"art/uncompressed/EHZ and HTZ flowers - 1.bin"
-Art_Flowers2:		binclude	"art/uncompressed/EHZ and HTZ flowers - 2.bin"
-Art_Flowers3:		binclude	"art/uncompressed/EHZ and HTZ flowers - 3.bin"
-Art_Flowers4:		binclude	"art/uncompressed/EHZ and HTZ flowers - 4.bin"
-Art_EHZPulseBall:	binclude	"art/uncompressed/Pulsing ball against checkered background (EHZ).bin"
-Art_CPZAnimBGPlates:	binclude	"art/uncompressed/CPZ animated background section.bin"
-Art_HPZPulseOrb:	binclude	"art/uncompressed/Pulsing orb (HPZ).bin"
-; ---------------------------------------------------------------------------
 ; Green Hill Zone stage assets
 ; ---------------------------------------------------------------------------
 Nem_Stalk:	binclude	"art/nemesis/S1/GHZ Flower Stalk.nem"
@@ -18432,7 +18438,7 @@ Nem_HTZ_Seesaw:		binclude	"art/nemesis/See-saw in HTZ.nem"
 ; ---------------------------------------------------------------------------
 ; Compressed misc. graphics - Level placeholders
 ; ---------------------------------------------------------------------------
-		align	$1000
+	;	align	$1000
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - enemies
 ; ---------------------------------------------------------------------------
@@ -18481,15 +18487,17 @@ Nem_TitleCard:	binclude	"art/nemesis/Title Cards.nem"
 		even
 Nem_GameOver:	binclude	"art/nemesis/Game Over.nem"
 		even
-Nem_Signpost:	binclude	"art/nemesis/Signpost.nem"
-		even
 Nem_HUD:	binclude	"art/nemesis/HUD.nem"
 		even
-Nem_Points:	binclude	"art/nemesis/Numbers.nem"
+Nem_Points:	binclude	"art/nemesis/Points.nem"
 		even
 Nem_Lives:	binclude	"art/nemesis/Sonic lives counter.nem"
 		even
-Nem_Ring:	binclude	"art/nemesis/Ring.nem"
+Nem_Signpost:	binclude	"art/nemesis/Signpost.nem"
+		even
+Nem_Sparkles:	binclude	"art/nemesis/Ring Sparkles.nem"
+		even
+Nem_Bonus:	binclude	"art/nemesis/S1/Hidden Bonuses.nem"
 		even
 Nem_Monitors:	binclude	"art/nemesis/Monitor and contents.nem"
 		even
@@ -18509,42 +18517,13 @@ Nem_VSpring2:	binclude	"art/nemesis/Vertical spring.nem"
 		even
 Nem_DSpring:	binclude	"art/nemesis/Diagonal spring.nem"
 		even
-Nem_Bumper:	binclude	"art/nemesis/Bumper.nem"
-		even
 Nem_VSpikes:	binclude	"art/nemesis/Spikes.nem"
+		even
+Nem_Bumper:	binclude	"art/nemesis/Bumper.nem"
 		even
 Nem_Button:	binclude	"art/nemesis/Button.nem"
 		even
 Nem_Water:	binclude	"art/nemesis/Water Surface.nem"
-		even
-Nem_BigFlash:	binclude	"art/nemesis/Giant Ring Flash.nem"
-		even
-Nem_Bonus:	binclude	"art/nemesis/S1/Hidden Bonuses.nem"
-		even
-; ---------------------------------------------------------------------------
-; Compressed graphics - continue screen
-; ---------------------------------------------------------------------------
-; These files are already even, so...
-Kospm_ContSonic:	binclude	"art/moduled kosinski/Continue Screen Sonic.kospm"
-Kospm_ContTails:	binclude	"art/moduled kosinski/Continue screen Tails.kospm"
-Kospm_MiniSonic:	binclude	"art/moduled kosinski/Mini Sonic Continue.kospm"
-Kospm_MiniTails:	binclude	"art/moduled kosinski/Mini Tails Continue.kospm"
-; ---------------------------------------------------------------------------
-; Compressed graphics - animals
-; ---------------------------------------------------------------------------
-Nem_Bunny:	binclude	"art/nemesis/Animal Rabbit.nem"
-		even
-Nem_Chicken:	binclude	"art/nemesis/Animal Chicken.nem"
-		even
-Nem_Penguin:	binclude	"art/nemesis/Animal Penguin.nem"
-		even
-Nem_Seal:	binclude	"art/nemesis/Animal Seal.nem"
-		even
-Nem_Pig:	binclude	"art/nemesis/Animal Pig.nem"
-		even
-Nem_Flicky:	binclude	"art/nemesis/Animal Flicky.nem"
-		even
-Nem_Squirrel:	binclude	"art/nemesis/Animal Squirrel.nem"
 		even
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - Bosses and explosions
@@ -18570,18 +18549,65 @@ Nem_GroundExplosion:
 		binclude	"art/nemesis/Explosion - Ground.nem"
 		even
 ; ---------------------------------------------------------------------------
+; Compressed graphics - animals
+; ---------------------------------------------------------------------------
+Nem_Bunny:	binclude	"art/nemesis/Animal Rabbit.nem"
+		even
+Nem_Chicken:	binclude	"art/nemesis/Animal Chicken.nem"
+		even
+Nem_Penguin:	binclude	"art/nemesis/Animal Penguin.nem"
+		even
+Nem_Seal:	binclude	"art/nemesis/Animal Seal.nem"
+		even
+Nem_Pig:	binclude	"art/nemesis/Animal Pig.nem"
+		even
+Nem_Flicky:	binclude	"art/nemesis/Animal Flicky.nem"
+		even
+Nem_Squirrel:	binclude	"art/nemesis/Animal Squirrel.nem"
+		even
+; ---------------------------------------------------------------------------
+; Compressed graphics - continue screen
+; ---------------------------------------------------------------------------
+; These files are already even, so...
+Kospm_ContSonic:	binclude	"art/moduled kosinski/Continue Screen Sonic.kospm"
+Kospm_ContTails:	binclude	"art/moduled kosinski/Continue screen Tails.kospm"
+Kospm_MiniSonic:	binclude	"art/moduled kosinski/Mini Sonic Continue.kospm"
+Kospm_MiniTails:	binclude	"art/moduled kosinski/Mini Tails Continue.kospm"
+; ---------------------------------------------------------------------------
 ; Compressed graphics - Ending (Leftover placeholder - to be re-used)
 ; ---------------------------------------------------------------------------
-Nem_EndEm:	binclude	"art/nemesis/S1/Ending - Emeralds.nem"
-		even
-Nem_EndSonic:	binclude	"art/nemesis/S1/Ending - Sonic.nem"
-		even
+Nem_EndEm:		binclude	"art/nemesis/S1/Ending - Emeralds.nem"
+			even
+Nem_EndSonic:		binclude	"art/nemesis/S1/Ending - Sonic.nem"
+			even
 Kospm_EndFlowers:	binclude	"art/moduled kosinski/Ending - Flowers.kospm"
 Kospm_EndStalk:		binclude	"art/moduled kosinski/Ending - Flower Stalk.kospm"
 Kosp_CreditText:	binclude	"art/kosinski/Ending - Credits.kosp"
 Kospm_TryAgain:		binclude	"art/moduled kosinski/Ending - Try Again.kospm"
 Nem_EndStH:		binclude	"art/nemesis/S1/Ending - StH Logo.nem"
-		even
+			even
+; ---------------------------------------------------------------------------
+; Uncompressed Assets
+; ---------------------------------------------------------------------------
+	;	align $100
+Art_Sonic:	binclude	"art/uncompressed/Sonic's art.bin"
+	;	align $100
+Art_Tails:	binclude	"art/uncompressed/Tails' art.bin"
+Art_SplashDust:	binclude	"art/uncompressed/Dust and water splash.bin"
+Art_Ring:	binclude	"art/uncompressed/Ring.bin"
+Art_BigRing:	binclude	"art/uncompressed/Giant Ring.bin"
+Art_BigFlash:	binclude	"art/uncompressed/Giant Ring Flash.bin"
+; ---------------------------------------------------------------------------
+; Misc. animated tiles
+; ---------------------------------------------------------------------------
+	;		align $20
+Art_Flowers1:		binclude	"art/uncompressed/EHZ and HTZ flowers - 1.bin"
+Art_Flowers2:		binclude	"art/uncompressed/EHZ and HTZ flowers - 2.bin"
+Art_Flowers3:		binclude	"art/uncompressed/EHZ and HTZ flowers - 3.bin"
+Art_Flowers4:		binclude	"art/uncompressed/EHZ and HTZ flowers - 4.bin"
+Art_EHZPulseBall:	binclude	"art/uncompressed/Pulsing ball against checkered background (EHZ).bin"
+Art_CPZAnimBGPlates:	binclude	"art/uncompressed/CPZ animated background section.bin"
+Art_HPZPulseOrb:	binclude	"art/uncompressed/Pulsing orb (HPZ).bin"
 ; ---------------------------------------------------------------------------
 ; Bonus & Special Stage data
 ; ---------------------------------------------------------------------------
@@ -20186,6 +20212,10 @@ Map_obj23:	binclude	"mappings/sprite/Buzz Bomber Missile.bin"
 Map_GroundExplosion:
 		binclude	"mappings/sprite/Ground Explosion.bin"
 		even
+Map_Ring:	binclude	"mappings/sprite/Ring.bin"		; $25
+		even
+Map_Obj2A:	binclude	"mappings/sprite/Points from an enemy.bin"
+		even
 Map_Obj2B:	binclude	"mappings/sprite/GHZ Chopper.bin"
 		even
 Map_obj2B_1:	binclude	"mappings/sprite/EHZ Chopper.bin"
@@ -20223,9 +20253,9 @@ Map_SpecialWarp:
 		even
 Map_GiantRing:	binclude	"mappings/sprite/GiantRing.bin"
 		even
-Map_GiantRingFlash:
-		binclude	"mappings/sprite/GiantRingFlash.bin"
-		even
+;Map_GiantRingFlash:
+	;	binclude	"mappings/sprite/GiantRingFlash.bin"
+	;	even
 Map_Obj7D:	binclude	"mappings/sprite/Hidden Bonuses.bin"
 		even
 Map_Credits:	binclude	"mappings/sprite/Sonic Team Presents.bin"

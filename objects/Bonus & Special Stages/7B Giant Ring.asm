@@ -33,10 +33,9 @@ GRing_Okay:
 		addq.b	#2,obRoutine(a0)
 		move.w	#$100,obPriority(a0)
 		move.b	#$52,obColType(a0)
-		move.w	#$C40,(v_gfxbigring).w
+		move.b	#1,(v_gfxbigring).w	; Start loading giant ring graphics
 
 GRing_Animate:
-		move.b	(v_ani1_frame).w,obFrame(a0)
 		out_of_range.w	DeleteObject
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------

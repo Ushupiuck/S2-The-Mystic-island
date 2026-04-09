@@ -27,7 +27,6 @@ Obj25_Init:
 		move.b	#8,obActWid(a0)
 
 Obj25_Animate:
-		move.b	(v_ani1_frame).w,obFrame(a0)
 		bra.w	MarkObjGone
 ; ---------------------------------------------------------------------------
 
@@ -43,7 +42,7 @@ Obj25_Sparkle:
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 Ani_Obj25:	dc.w byte_ABEC-Ani_Obj25
-byte_ABEC:	dc.b   5,  4,  5,  6,  7,$FC
+byte_ABEC:	dc.b   5,  1,  2,  3,  4,afRoutine
 		even
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -116,7 +115,7 @@ loc_A956:
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.l	#Map_Ring,obMap(a1)
-		move.w	#make_art_tile(ArtTile_Ring,1,0),obGfx(a1)
+		move.w	#make_art_tile(ArtTile_RingLoss,1,0),obGfx(a1)
 		move.b	#4,obRender(a1)
 		move.w	#$180,obPriority(a1)
 		move.b	#$47,obColType(a1)
@@ -154,7 +153,6 @@ loc_A9DE:
 		jsr	(PlaySound_Special).l
 
 loc_A9FA:
-		move.b	(v_ani3_frame).w,obFrame(a0)
 		bsr.w	ObjectMove
 		addi.w	#$18,obVelY(a0)
 		bmi.s	loc_AA34
@@ -196,6 +194,7 @@ loc_AA4C:
 		bsr.w	CollectRing
 
 loc_AA60:
+		move.w	#make_art_tile(ArtTile_Ring,1,0),obGfx(a0)
 		lea	Ani_Obj25(pc),a1
 		bsr.w	AnimateSprite
 		bra.w	DisplaySprite

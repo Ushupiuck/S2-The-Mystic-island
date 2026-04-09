@@ -868,7 +868,8 @@ v_palbs_num:		ds.w	1			; palette cycling in Bonus Stage - reference number
 v_palbs_time:		ds.w	1			; palette cycling in Bonus Stage - time until next change
 v_bsbganim:		ds.w	1			; bonus Stage background animation
 
-v_gfxbigring:		ds.w	1			; settings for giant ring graphics loading
+v_gfxbigring:		ds.b	1			; settings for giant ring graphics loading
+			ds.b	1			; unused
 f_lockscreen:		ds.b	1
 f_wtunnelmode:		ds.b	1			; LZ water tunnel mode
 
@@ -1393,6 +1394,10 @@ ArtTile_Points:			equ $4AC
 ArtTile_Tails:			equ $7A0
 ArtTile_TailsTails:		equ $7B0
 ArtTile_Ring:			equ $6BC
+ArtTile_RingLoss:		equ ArtTile_Ring+4
+ArtTile_Sparkles:		equ ArtTile_Ring+8
+
+
 ArtTile_Lives_Counter:		equ $7D4
 ArtTile_Water_Surface:		equ $400
 ArtTile_Spring_Horizontal:	equ $470
@@ -1472,7 +1477,8 @@ ArtTile_SS_Glass:		equ $5F0
 ArtTile_SS_Plane_5:		equ $600
 ArtTile_SS_Plane_6:		equ $700
 ArtTile_SS_Emerald:		equ $770
-ArtTile_SS_Rings:		equ $7B2
+ArtTile_SS_Rings:		equ $7B0
+ArtTile_SS_Sparkles:		equ ArtTile_SS_Rings+4
 ArtTile_SS_Zone_1:		equ $797
 ArtTile_SS_Zone_2:		equ $7A0
 ArtTile_SS_Zone_3:		equ $7A9
