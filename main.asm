@@ -8133,48 +8133,10 @@ word_A058:	dc.w 1
 		dc.w $FC09,   $C,    6,$FFF4
 		even
 ; ---------------------------------------------------------------------------
-		include	"objects/S1/24, 27 & 3F Explosions.asm"
-; ---------------------------------------------------------------------------
-Map_Obj27:
-		dc.w word_9A26-Map_Obj27
-		dc.w word_9A30-Map_Obj27
-		dc.w word_9A3A-Map_Obj27
-		dc.w word_9A44-Map_Obj27
-		dc.w word_9A66-Map_Obj27
-word_9A26:	dc.w 1
-		dc.w $F809,    0,    0,$FFF4
-word_9A30:	dc.w 1
-		dc.w $F00F,    6,    3,$FFF0
-word_9A3A:	dc.w 1
-		dc.w $F00F,  $16,   $B,$FFF0
-word_9A44:	dc.w 4
-		dc.w $EC0A,  $26,  $13,$FFEC
-		dc.w $EC05,  $2F,  $17,	   4
-		dc.w  $405,$182F,$1817,$FFEC
-		dc.w $FC0A,$1826,$1813,$FFFC
-word_9A66:	dc.w 4
-		dc.w $EC0A,  $33,  $19,$FFEC
-		dc.w $EC05,  $3C,  $1E,	   4
-		dc.w  $405,$183C,$181E,$FFEC
-		dc.w $FC0A,$1833,$1819,$FFFC
-Map_Obj3F:
-		dc.w word_9A26-Map_Obj3F
-		dc.w word_9A92-Map_Obj3F
-		dc.w word_9A9C-Map_Obj3F
-		dc.w word_9A44-Map_Obj3F
-		dc.w word_9A66-Map_Obj3F
-word_9A92:	dc.w 1
-		dc.w $F00F,  $40,  $20,$FFF0
-word_9A9C:	dc.w 1
-		dc.w $F00F,  $50,  $28,$FFF0
-		even
-; ---------------------------------------------------------------------------
 		include	"objects/Empty Slots/10.asm"
 		include	"objects/11 Bridge.asm"
-; ===========================================================================
-
-; ---------------------------------------------------------------------------
 		include	"objects/15 Swinging Platforms.asm"
+		include	"objects/S1/24, 27 & 3F Explosions.asm"
 ; ---------------------------------------------------------------------------
 Map_Obj15:	dc.w word_8534-Map_Obj15
 		dc.w word_8546-Map_Obj15
@@ -20214,6 +20176,8 @@ Map_GroundExplosion:
 		even
 Map_Ring:	binclude	"mappings/sprite/Ring.bin"		; $25
 		even
+Map_Obj27:	binclude	"mappings/sprite/Explosion.bin"
+		even
 Map_Obj2A:	binclude	"mappings/sprite/Points from an enemy.bin"
 		even
 Map_Obj2B:	binclude	"mappings/sprite/GHZ Chopper.bin"
@@ -20228,19 +20192,21 @@ Map_Obj36:	binclude	"mappings/sprite/Spikes.bin"
 		even
 Map_obj38:	binclude	"mappings/sprite/obj38.bin"
 		even
-Map_PRock:	binclude	"mappings/sprite/Purple Rock.bin"
+Map_PRock:	binclude	"mappings/sprite/Purple Rock.bin"	; $3B
 		even
 Map_Emerald:	binclude	"mappings/sprite/HPZ Emerald.bin"
 		even
 Map_Obj3C:	binclude	"mappings/sprite/Breakable wall.bin"
 		even
+Map_Obj3F:	binclude	"mappings/sprite/Fiery Explosion.bin"
+		even
 Map_obj40:	binclude	"mappings/sprite/Motobug.bin"
 		even
-Map_Newtron:	binclude	"mappings/sprite/Newtron.bin"	; 42
+Map_Newtron:	binclude	"mappings/sprite/Newtron.bin"	; $42
 		even
 Map_obj44:	binclude	"mappings/sprite/GHZ Edge Walls.bin"
 		even
-Map_Bump:	binclude	"mappings/sprite/Bumper.bin"	; 47
+Map_Bump:	binclude	"mappings/sprite/Bumper.bin"	; $47
 		even
 Map_obj5E:	binclude	"mappings/sprite/obj5E_a.bin"
 		even
@@ -20261,19 +20227,18 @@ Map_Obj7D:	binclude	"mappings/sprite/Hidden Bonuses.bin"
 Map_Credits:	binclude	"mappings/sprite/Sonic Team Presents.bin"
 		even
 
-Map_TitleST:	binclude "mappings/sprite/Sonic & Tails on the title screen.bin" ; 92
+Map_TitleST:	binclude "mappings/sprite/Sonic & Tails on the title screen.bin" ; $92
 		even
 Map_PSB:	binclude "mappings/sprite/press start button.bin"
 		even
-Map_Card:	include		"mappings/sprite/Title_Cards.asm"	; 94
-Map_Got:	include		"mappings/sprite/Got_Through.asm"	; 95
-Map_SSR:	include		"mappings/sprite/SSResults.asm"		; 96
-Map_SSRE:	binclude	"mappings/sprite/SSR Emeralds.bin"	; 97
+Map_Card:	include		"mappings/sprite/Title_Cards.asm"	; $94
+Map_Got:	include		"mappings/sprite/Got_Through.asm"	; $95
+Map_SSR:	include		"mappings/sprite/SSResults.asm"		; $96
+Map_SSRE:	binclude	"mappings/sprite/SSR Emeralds.bin"	; $97
 		even
-Map_Over:	include		"mappings/sprite/Game_Over.asm"		; 98
-Map_Bas:	binclude	"mappings/sprite/Basaran.bin"		; A0 (Not yet, but soon)
+Map_Over:	include		"mappings/sprite/Game_Over.asm"		; $98
+Map_Bas:	binclude	"mappings/sprite/Basaran.bin"		; $A0 (Not yet, but soon)
 		even
-
 
  if AdvancedHandler=1
 ; ===========================================================================

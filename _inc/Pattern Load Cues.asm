@@ -549,7 +549,7 @@ PLCKosM_THZ4:	plrKosMlistheader
 	plreqKosM	ArtTile_Crabmeat, Kospm_Crabmeat
 	plreqKosM	ArtTile_Chopper, Kospm_Chopper
 	plreqKosM	ArtTile_Moto_Bug, Kospm_Motobug
-;	plreqKosM	ArtTile_Newtron, Kospm_Newtron
+	plreqKosM	ArtTile_Newtron, Kospm_Newtron
 PLCKosM_THZ4_End
 ; ---------------------------------------------------------------------------
 ; KOSM PATTERN LOAD REQUEST LIST
