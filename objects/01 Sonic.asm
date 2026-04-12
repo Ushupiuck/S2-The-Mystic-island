@@ -1289,17 +1289,23 @@ Sonic_DoLevelCollision:
 		move.l	(v_colladdr2).w,(Collision_addr).w
 +
 		move.b	obLRBSolidBit(a0),d5
-		move.w	obVelX(a0),d1
-		move.w	obVelY(a0),d2
-		jsr	(CalcAngle).l
-		subi.b	#$20,d0
-		andi.b	#$C0,d0
-		cmpi.b	#$40,d0
-		beq.w	loc_105E4
-		cmpi.b	#$80,d0
-		beq.w	loc_10646
-		cmpi.b	#$C0,d0
-		beq.w	loc_106A2
+		move.w	obVelX(a0),d0				; get X speed
+		move.w	obVelY(a0),d1				; get Y speed
+		bpl.s	SonAirCol_PosY				; if it's positive, branch
+		cmp.w	d0,d1					; are we moving towards the left?
+		bgt.w	Sonic_FloorLeft				; if so, branch
+		neg.w	d0					; negate for right cheeck
+		cmp.w	d0,d1					; are we moving towards the right?
+		bge.w	Sonic_FloorRight			; if so, branch
+		bra.w	Sonic_FloorUp				; we are moving upwards
+; ===========================================================================
+
+SonAirCol_PosY:
+		cmp.w	d0,d1					; are we moving towards the right?
+		blt.w	Sonic_FloorRight			; if so, branch
+		neg.w	d0					; negate for left check
+		cmp.w	d0,d1					; are we moving towards the left?
+		ble.w	Sonic_FloorLeft				; if so, branch
 		bsr.w	Sonic_HitWall
 		tst.w	d1
 		bpl.s	+
@@ -1367,7 +1373,7 @@ loc_105D4:
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_105E4:
+Sonic_FloorLeft:
 		bsr.w	Sonic_HitWall
 		tst.w	d1
 		bpl.s	loc_105FE
@@ -1407,7 +1413,7 @@ loc_10618:
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_10646:
+Sonic_FloorUp:
 		bsr.w	Sonic_HitWall
 		tst.w	d1
 		bpl.s	loc_10658
@@ -1446,7 +1452,7 @@ loc_1068A:
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_106A2:
+Sonic_FloorRight:
 		bsr.w	sub_132EE
 		tst.w	d1
 		bpl.s	loc_106BC

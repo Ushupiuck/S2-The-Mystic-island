@@ -609,6 +609,7 @@ Vint_S1SS:
 		bsr.w	ProcessDMAQueue
 		startZ80
 		bsr.w	PalCycle_S1SS
+		bsr.w	SS_LoadWalls
 		tst.w	(v_generictimer).w
 		beq.w	Set_Kos_Bookmark
 		subq.w	#1,(v_generictimer).w
@@ -659,10 +660,35 @@ Vint_SSResults:
 		bsr.w	ProcessDMAQueue
 		startZ80
 		bsr.w	ProcessDPLC
+		bsr.s	SS_LoadWalls
 		tst.w	(v_generictimer).w
 		beq.w	Set_Kos_Bookmark
 		subq.w	#1,(v_generictimer).w
 		bra.w	Set_Kos_Bookmark
+
+; ---------------------------------------------------------------------------
+; Subroutine to dynamically load wall graphics into VRAM
+; ---------------------------------------------------------------------------
+
+SS_LoadWalls:
+		moveq	#0,d0
+		move.b	(v_ssangle).l,d0	; get the Special Stage angle
+		lsr.b	#2,d0			; divide by four so it can be used as frame ID
+		andi.w	#$F,d0			; mask to a maximum of 16 frames
+		cmp.b	(v_ssangleprev).w,d0	; does the modified angle match the recorded value?
+		beq.s	.return			; if so, branch
+		move.b	d0,(v_ssangleprev).w	; record the modified angle for future comparison
+
+		move.l	#Art_SSWalls,d1		; load wall art
+		lsl.w	#8,d0			; multiply by $200 because...
+		add.w	d0,d0			; ...tile_size ($20) * 16 sprites (extra add because lsl 9 doesn't work)
+		add.l	d0,d1			; d1 = offset to current wall sprite for angle
+
+		move.w	#ArtTile_SS_Wall*tile_size,d2	; VRAM destination
+		move.w	#(16*tile_size)/2,d3		; 16 tiles * 32 bytes = $200 bytes = $100 words
+		jmp	(QueueDMATransfer).l
+.return:	rts
+; End of function SS_LoadWalls
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
@@ -1319,13 +1345,14 @@ Pal_FadeFromBlack2:
 		moveq	#cBlack,d1
 		move.b	(v_pfade_size).w,d0
 
-loc_2162:
-		move.w	d1,(a0)+
-		dbf	d0,loc_2162			; fill palette with $000 (black)
 		moveq	#$16-1,d4
+-		move.w	d1,(a0)+
+		tst.b	(Water_flag).w
+		beq.s	.nowater
+		move.w	d1,(v_palette_water-v_palette)-2(a0)
+.nowater:	dbf	d0,-			; fill palette with $000 (black)
 
-.loop:
-		move.w	#Vint_Fade,(v_vbla_routine).w
+.loop:		move.w	#Vint_Fade,(v_vbla_routine).w
 		bsr.w	WaitForVint
 		bsr.s	Pal_FadeIn
 		bsr.w	RunPLC_RAM
@@ -1339,7 +1366,7 @@ loc_2162:
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
-
+; Pal_FromBlack
 Pal_FadeIn:
 		moveq	#0,d0
 		lea	(v_palette).w,a0
@@ -1436,7 +1463,7 @@ loc_21F8:
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
-
+; Pal_ToBlack
 Pal_FadeOut:
 		moveq	#0,d0
 		lea	(v_palette).w,a0
@@ -1682,20 +1709,27 @@ loc_23A0:
 ; End of function Pal_AddColor2
 
 
-; =============== S U B R O U T I N E =======================================
+; ===========================================================================
+; ---------------------------------------------------------------------------
+; Subroutines to load main palettes into the fading buffer.
+; These get displayed once PaletteFadeIn/PaletteWhiteIn is called.
 
+; input:
+; d0 = index number for palette
+; ---------------------------------------------------------------------------
 
+; PalLoad_Fade
 PalLoad1:
 		lea	(PalPointers).l,a1
 		lsl.w	#3,d0
 		adda.w	d0,a1
-		movea.l	(a1)+,a2
-		movea.w	(a1)+,a3
-		adda.w	#palette_size,a3
-		move.w	(a1)+,d7
+		movea.l	(a1)+,a2	; get palette data address
+		movea.w	(a1)+,a3	; get target RAM address
+		adda.w	#v_palette_fading-v_palette,a3	; skip to "main" RAM address
+		move.w	(a1)+,d7	; get length of palette data
 
 .loop:
-		move.l	(a2)+,(a3)+
+		move.l	(a2)+,(a3)+	; move data to RAM
 		dbf	d7,.loop
 		rts
 ; End of function PalLoad1
@@ -1769,7 +1803,7 @@ Pal_Title:	binclude	"palette/Title Screen.bin"
 		even
 Pal_LevelSel:	binclude	"palette/Level Select.bin"
 		even
-Pal_SonicTails:	binclude	"palette/Sonic and Tails.bin"
+Pal_SonicTails:	binclude	"palette/SonicAndTails.bin"
 		even
 Pal_GHZ:	binclude	"palette/GHZ.bin"
 		even
@@ -1910,75 +1944,139 @@ CalcSine:
 ; ===========================================================================
 Sine_Data:	binclude "misc/sinewave.bin"
 		even
-; ---------------------------------------------------------------------------
-; Subroutine to calculate arctangent of y/x
-; d1 = input x
-; d2 = input y
-; d0 = output angle (360 degrees == 256)
-; ---------------------------------------------------------------------------
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
+; -------------------------------------------------------------------------
+; 2-argument arctangent (angle between (0,0) and (x,y))
+; Based on http://codebase64.org/doku.php?id=base:8bit_atan2_8-bit_angle
+; -------------------------------------------------------------------------
+; PARAMETERS:
+; 	d1.w - X value
+; 	d2.w - Y value
+; RETURNS:
+; 	d0.b - 2-argument arctangent value (angle between (0,0) and (x,y))
+; -------------------------------------------------------------------------
 
 CalcAngle:
-		movem.l	d3-d4,-(sp)
+		moveq	#0,d0				; Default to bottom right quadrant
+		tst.w	d1				; Is the X value negative?
+		beq.s	CalcAngle_XZero			; If the X value is zero, branch
+		bpl.s	CalcAngle_CheckY		; If not, branch
+		neg.w	d1				; If so, get the absolute value
+		moveq	#4,d0				; Shift to left quadrant
+
+CalcAngle_CheckY:
+		tst.w	d2				; Is the Y value negative?
+		beq.s	CalcAngle_YZero			; If the Y value is zero, branch
+		bpl.s	CalcAngle_CheckOctet		; If not, branch
+		neg.w	d2				; If so, get the absolute value
+		addq.b	#2,d0				; Shift to top quadrant
+
+CalcAngle_CheckOctet:
+		cmp.w	d2,d1				; Are we horizontally closer to the center?
+		bcc.s	CalcAngle_Divide		; If not, branch
+		exg.l	d1,d2				; If so, divide Y from X instead
+		addq.b	#1,d0				; Use octant that's horizontally closer to the center
+
+CalcAngle_Divide:
+		move.w	d1,-(sp)			; Shrink X and Y down into bytes
 		moveq	#0,d3
-		moveq	#0,d4
-		move.w	d1,d3
-		move.w	d2,d4
-		or.w	d3,d4
-		beq.s	CalcAngle_Zero			; special case return if x and y are both 0
-		move.w	d2,d4
-		tst.w	d3				; calculate absolute value of x
-		bpl.s	loc_2F68
-		neg.w	d3
+		move.b	(sp)+,d3
+		move.b	WordShiftTable(pc,d3.w),d3
+		lsr.w	d3,d1
+		lsr.w	d3,d2
 
-loc_2F68:
-		tst.w	d4				; calculate absolute value of y
-		bpl.s	loc_2F70
-		neg.w	d4
+		lea	Log2Table(pc),a2		; Perform logarithmic division
+		move.b	(a2,d2.w),d2
+		sub.b	(a2,d1.w),d2
+		bne.s	CalcAngle_GetAtan2Val
+		move.w	#$FF,d2				; Edge case where X and Y values are too close for the division to handle
 
-loc_2F70:
-		cmp.w	d3,d4
-		bcc.s	loc_2F82
-		lsl.l	#8,d4
-		divu.w	d3,d4
-		moveq	#0,d0
-		move.b	AngleData(pc,d4.w),d0
-		bra.s	loc_2F8C
-; ---------------------------------------------------------------------------
-
-loc_2F82:
-		lsl.l	#8,d3
-		divu.w	d4,d3
-		moveq	#$40,d0
-		sub.b	AngleData(pc,d3.w),d0
-
-loc_2F8C:
-		tst.w	d1
-		bpl.s	loc_2F98
-		neg.w	d0
-		addi.w	#$80,d0
-
-loc_2F98:
-		tst.w	d2
-		bpl.s	loc_2FA4
-		neg.w	d0
-		addi.w	#$100,d0
-
-loc_2FA4:
-		movem.l	(sp)+,d3-d4
+CalcAngle_GetAtan2Val:
+		lea	Atan2Table(pc),a2		; Get atan2 value
+		move.b	(a2,d2.w),d2
+		move.b	OctantAdjust(pc,d0.w),d0
+		eor.b	d2,d0
 		rts
-; ===========================================================================
-; loc_2FAA:
-CalcAngle_Zero:
-		moveq	#$40,d0
-		movem.l	(sp)+,d3-d4
-		rts
-; End of function CalcAngle
 
-; ===========================================================================
-AngleData:	binclude "misc/angles.bin"
+; -------------------------------------------------------------------------
+
+CalcAngle_YZero:
+		tst.b	d0				; Was the X value negated?
+		beq.s	CalcAngle_End			; If not, branch (d0 is already 0, so no need to set it again on branch)
+		moveq	#$FFFFFF80,d0			; 180 degrees
+
+CalcAngle_End:
+		rts
+
+CalcAngle_XZero:
+		tst.w	d2				; Is the Y value negative?
+		bmi.s	CalcAngle_XZeroYNeg		; If so, branch
+		moveq	#$40,d0				; 90 degrees
+		rts
+
+CalcAngle_XZeroYNeg:
+		moveq	#$FFFFFFC0,d0			; 270 degrees
+		rts
+
+; -------------------------------------------------------------------------
+
+OctantAdjust:
+		dc.b	%00000000			; +X, +Y, |X|>|Y|
+		dc.b	%00111111			; +X, +Y, |X|<|Y|
+		dc.b	%11111111			; +X, -Y, |X|>|Y|
+		dc.b	%11000000			; +X, -Y, |X|<|Y|
+		dc.b	%01111111			; -X, +Y, |X|>|Y|
+		dc.b	%01000000			; -X, +Y, |X|<|Y|
+		dc.b	%10000000			; -X, -Y, |X|>|Y|
+		dc.b	%10111111			; -X, -Y, |X|<|Y|
+		even
+
+WordShiftTable:
+		dc.b	$00, $01, $02, $02, $03, $03, $03, $03, $04, $04, $04, $04, $04, $04, $04, $04
+		dc.b	$05, $05, $05, $05, $05, $05, $05, $05, $05, $05, $05, $05, $05, $05, $05, $05
+		dc.b	$06, $06, $06, $06, $06, $06, $06, $06, $06, $06, $06, $06, $06, $06, $06, $06
+		dc.b	$06, $06, $06, $06, $06, $06, $06, $06, $06, $06, $06, $06, $06, $06, $06, $06
+		dc.b	$07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07
+		dc.b	$07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07
+		dc.b	$07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07
+		dc.b	$07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07, $07
+		even
+
+Log2Table:
+		dc.b	$00, $00, $1F, $32, $3F, $49, $52, $59, $5F, $64, $69, $6E, $72, $75, $79, $7C
+		dc.b	$7F, $82, $84, $87, $89, $8C, $8E, $90, $92, $94, $95, $97, $99, $9A, $9C, $9E
+		dc.b	$9F, $A0, $A2, $A3, $A4, $A6, $A7, $A8, $A9, $AA, $AC, $AD, $AE, $AF, $B0, $B1
+		dc.b	$B2, $B3, $B4, $B5, $B5, $B6, $B7, $B8, $B9, $BA, $BA, $BB, $BC, $BD, $BE, $BE
+		dc.b	$BF, $C0, $C0, $C1, $C2, $C2, $C3, $C4, $C4, $C5, $C6, $C6, $C7, $C8, $C8, $C9
+		dc.b	$C9, $CA, $CA, $CB, $CC, $CC, $CD, $CD, $CE, $CE, $CF, $CF, $D0, $D0, $D1, $D1
+		dc.b	$D2, $D2, $D3, $D3, $D4, $D4, $D5, $D5, $D5, $D6, $D6, $D7, $D7, $D8, $D8, $D8
+		dc.b	$D9, $D9, $DA, $DA, $DA, $DB, $DB, $DC, $DC, $DC, $DD, $DD, $DE, $DE, $DE, $DF
+		dc.b	$DF, $DF, $E0, $E0, $E0, $E1, $E1, $E1, $E2, $E2, $E2, $E3, $E3, $E3, $E4, $E4
+		dc.b	$E4, $E5, $E5, $E5, $E6, $E6, $E6, $E7, $E7, $E7, $E8, $E8, $E8, $E8, $E9, $E9
+		dc.b	$E9, $EA, $EA, $EA, $EA, $EB, $EB, $EB, $EC, $EC, $EC, $EC, $ED, $ED, $ED, $ED
+		dc.b	$EE, $EE, $EE, $EE, $EF, $EF, $EF, $F0, $F0, $F0, $F0, $F1, $F1, $F1, $F1, $F1
+		dc.b	$F2, $F2, $F2, $F2, $F3, $F3, $F3, $F3, $F4, $F4, $F4, $F4, $F5, $F5, $F5, $F5
+		dc.b	$F5, $F6, $F6, $F6, $F6, $F7, $F7, $F7, $F7, $F7, $F8, $F8, $F8, $F8, $F8, $F9
+		dc.b	$F9, $F9, $F9, $F9, $FA, $FA, $FA, $FA, $FA, $FB, $FB, $FB, $FB, $FB, $FC, $FC
+		dc.b	$FC, $FC, $FC, $FD, $FD, $FD, $FD, $FD, $FE, $FE, $FE, $FE, $FE, $FE, $FF, $FF
+		even
+
+Atan2Table:
+		dc.b	$00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+		dc.b	$00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+		dc.b	$00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
+		dc.b	$00, $00, $00, $00, $00, $00, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01
+		dc.b	$01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01
+		dc.b	$01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01, $01
+		dc.b	$01, $01, $01, $01, $01, $01, $01, $01, $01, $02, $02, $02, $02, $02, $02, $02
+		dc.b	$02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02
+		dc.b	$03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03, $03
+		dc.b	$04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $05, $05, $05, $05, $05
+		dc.b	$05, $05, $05, $05, $05, $06, $06, $06, $06, $06, $06, $06, $06, $07, $07, $07
+		dc.b	$07, $07, $07, $08, $08, $08, $08, $08, $08, $09, $09, $09, $09, $09, $09, $0A
+		dc.b	$0A, $0A, $0A, $0B, $0B, $0B, $0B, $0B, $0C, $0C, $0C, $0C, $0D, $0D, $0D, $0D
+		dc.b	$0E, $0E, $0E, $0F, $0F, $0F, $0F, $10, $10, $10, $11, $11, $11, $12, $12, $12
+		dc.b	$13, $13, $13, $14, $14, $14, $15, $15, $16, $16, $16, $17, $17, $17, $18, $18
+		dc.b	$19, $19, $1A, $1A, $1A, $1B, $1B, $1C, $1C, $1C, $1D, $1D, $1E, $1E, $1F, $1F
 		even
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -3273,13 +3371,116 @@ SignpostArtLoad:
 ; End of function SignpostArtLoad
 
 ; ---------------------------------------------------------------------------
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+; Load only art assets (Kos modules) from LevelArtPointers
+; Each entry = 8 bytes: PLC+Art1, PLC+Art2
 
+LoadZone:
+		moveq	#0,d0
+		move.w	(Current_ZoneAndAct).w,d0
+		ror.b	#2,d0
+		lsr.w	#3,d0
+		move.w	d0,d1
+		lsr.w	#1,d1
+		add.w	d1,d0
+		lea	(LevelArtPointers).l,a2
+		lea	(a2,d0.w),a2
+
+		move.l	(a2)+,d0
+		andi.l	#$FFFFFF,d0	; 8x8 tile pointer
+		movea.l	d0,a0
+		lea	(Chunk_Table).l,a1
+		bsr.w	KosPlusDec
+		move.w	a1,d3
+		move.w	d3,d7
+		andi.w	#$FFF,d3
+
+		lsr.w	#1,d3
+		rol.w	#4,d7
+		andi.w	#$F,d7
+
+-		move.w	d7,d2
+		lsl.w	#7,d2
+		lsl.w	#5,d2
+		move.l	#$FFFFFF,d1
+		move.w	d2,d1
+		bsr.w	QueueDMATransfer
+		move.w	d7,-(sp)
+		move.w	#Vint_TitleCard,(v_vbla_routine).w
+		bsr.w	WaitForVint
+		bsr.w	RunPLC_RAM
+		move.w	(sp)+,d7
+		move.w	#$800,d3
+		dbf	d7,-
+		; And now the 2nd half; blocks, chunks & layout!
+		moveq	#0,d0
+		move.w	(Current_ZoneAndAct).w,d0
+		ror.b	#2,d0
+		lsr.w	#3,d0		; d0 = 8 * (4*Z + A)
+		move.w	d0,d1
+		lsr.w	#1,d1
+		add.w	d1,d0
+		lea	(LevelArtPointers).l,a2
+		lea	(a2,d0.w),a2
+		move.l	a2,-(sp)
+		addq.w	#4,a2
+		move.l	(a2)+,d0
+		andi.l	#$FFFFFF,d0	; pointer to block mappings
+		movea.l	d0,a0
+		lea	(v_16x16).w,a1
+		bsr.w	KosPlusDec	; load block maps
+		move.l	(a2)+,d0
+		andi.l	#$FFFFFF,d0	; pointer to chunk mappings
+		movea.l	d0,a0
+		lea	(v_128x128).l,a1
+		bsr.w	KosPlusDec
+		bsr.s	LevelLayoutLoad
+		movea.l	(sp)+,a2	; zone specific pointer in LevelArtPointers
+		addq.w	#4,a2
+		moveq	#0,d0
+		move.b	(a2),d0	; PLC2 ID
+		beq.s	+
+		bsr.w	LoadPLC
++
+		addq.w	#4,a2
+		moveq	#0,d0
+		move.b	(a2),d0	; palette ID
+		bra.w	PalLoad1
+; End of function LoadZone
+
+; ===========================================================================
+; ---------------------------------------------------------------------------
+; Subroutine to load a level layout from RAM
+; ---------------------------------------------------------------------------
+
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+
+LevelLayoutLoad:
+		moveq	#0,d0
+		move.w	(Current_ZoneAndAct).w,d0
+		move.w	d0,d1
+		lsr.w	#5,d0
+		andi.w	#$FF,d1
+		add.w	d1,d1
+		add.w	d1,d0
+		lea	(Level_Index).l,a0
+		move.w	(a0,d0.w),d0
+		adda.l	d0,a0
+		lea	(v_lvllayout).w,a1
+		bra.w	KosPlusDec
+
+; End of function LevelLayoutLoad
 ; ===========================================================================
 ; Sonic 1 Special Stage
 ; GameMode10:
 BonusStage:
 		move.w	#sfx_EnterSS,d0
 		bsr.w	PlaySound_Special
+		clearRAM Kos_decomp_queue_count, Kos_module_queue_End		; clear the KosPlusM bytes
+		clearRAM v_objspace,v_objend
+		clearRAM v_levelvariables,v_levelvariables_end
+		clearRAM v_timingvariables,v_timingvariables_end
+		clearRAM v_ngfx_buffer,v_ngfx_buffer_end
 		bsr.w	Pal_MakeFlash
 		disable_ints
 		lea	(vdp_control_port).l,a6
@@ -3292,17 +3493,16 @@ BonusStage:
 		move.w	d0,(vdp_control_port).l
 		ResetDMAQueue
 		bsr.w	ClearScreen
+		fillVRAM	0,0,$10000	; clear the entirety of VRAM
 		enable_ints
 		fillVRAM	0, ArtTile_SS_Plane_1*tile_size+plane_size_64x32, ArtTile_SS_Plane_5*tile_size
-		bsr.w	S1_SSBGLoad
 	;	moveq	#plcid_SpecialStage,d0
+		bsr.w	S1_SSBGLoad
+		lea	(PLCKosM_SSBackground).l,a6
+		bsr.w	QuickKosPLC
 		lea	(PLC_S1SpecialStage).l,a1
 		bsr.w	QuickPLC
 		bsr.w	LoadRingFrame
-		clearRAM v_objspace,v_objend
-		clearRAM v_levelvariables,v_levelvariables_end
-		clearRAM v_timingvariables,v_timingvariables_end
-		clearRAM v_ngfx_buffer,v_ngfx_buffer_end
 		sf	(f_wtr_state).w
 		clr.w	(Level_Inactive_flag).w
 		moveq	#palid_Special,d0
@@ -3313,7 +3513,8 @@ BonusStage:
 		move.l	d0,(Camera_Y_pos).w
 		move.l	d0,(Camera_X_pos_copy).w
 		move.l	d0,(Camera_Y_pos_copy).w
-		move.b	#id_Obj04,(v_player).w ; load special stage Sonic object
+		_move.b	#id_Obj04,(v_player).w ; load special stage Sonic object
+		move.b	#-1,(v_ssangleprev).w
 		bsr.w	PalCycle_S1SS
 		clr.w	(v_ssangle).l	; set stage angle to "upright"
 		move.w	#$40,(v_ssrotate).l ; set stage rotation speed
@@ -3343,6 +3544,8 @@ SS_NoDebug:
 SS_MainLoop:
 		bsr.w	PauseGame
 		move.w	#Vint_S1SS,(v_vbla_routine).w
+		bsr.w	Process_Kos_Queue
+		bsr.w	Process_Kos_Module_Queue
 		bsr.w	WaitForVint
 		move.w	(v_jpadhold1).w,(v_jpadholdlogical).w
 		jsr	(ExecuteObjects).l
@@ -3435,7 +3638,7 @@ SS_NormalExit:
 
 S1_SSBGLoad:
 		lea	(v_ssbuffer1).l,a1
-		lea	(Eni_BSBg1).l,a0 ; load	mappings for the birds and fish
+		lea	Eni_BSBg1(pc),a0 ; load mappings for the birds and fish
 		move.w	#make_art_tile(ArtTile_SS_Background_Fish,2,0),d0
 		bsr.w	EniDec
 		locVRAM	ArtTile_SS_Plane_1*tile_size+plane_size_64x32,d3
@@ -3484,7 +3687,7 @@ loc_5360:
 		adda.w	#$80,a2
 		dbf	d7,loc_5302
 		lea	(v_ssbuffer1).l,a1
-		lea	(Eni_BSBg2).l,a0 ; load	mappings for the clouds
+		lea	Eni_BSBg2(pc),a0 ; load mappings for the clouds
 		move.w	#make_art_tile(ArtTile_SS_Background_Clouds,2,0),d0
 		bsr.w	EniDec
 		copyTilemap	v_ssbuffer1,ArtTile_SS_Plane_5*tile_size,64,32
@@ -3494,7 +3697,9 @@ loc_5360:
 		moveq	#64-1,d2
 		bra.w	PlaneMapToVRAM_H40
 ; End of function S1_SSBGLoad
-
+; ---------------------------------------------------------------------------
+Eni_BSBg1:	binclude	"tilemaps/BS Background 1.eni" ; bonus stage background (mappings)
+Eni_BSBg2:	binclude	"tilemaps/BS Background 2.eni" ; bonus stage background (mappings)
 ; ---------------------------------------------------------------------------
 ; Palette cycling routine - special stage
 ; ---------------------------------------------------------------------------
@@ -4108,16 +4313,6 @@ ssloop_sprite:
 
 
 SS_AniWallsRings:
-		lea	(v_ssbuffer2+$C).l,a1
-		moveq	#0,d0
-		move.b	(v_ssangle).l,d0
-		lsr.b	#2,d0
-		andi.w	#$F,d0
-		moveq	#$23,d1
-
--		move.w	d0,(a1)
-		addq.w	#8,a1
-		dbf	d1,-
 		lea	(v_ssbuffer2+5).l,a1
 		subq.b	#1,(v_ani1_time).w
 		bpl.s	loc_19CFA
@@ -4239,9 +4434,7 @@ SS_RemoveCollectedItem:
 		beq.s	.return
 		addq.w	#8,a2
 		dbf	d0,.loop
-
-.return:
-		rts
+.return:	rts
 ; End of function SS_RemoveCollectedItem
 
 ; ---------------------------------------------------------------------------
@@ -4465,7 +4658,7 @@ S1SS_ClrRAM3:
 		dbf	d1,--
 
 		lea	(v_ssblocktypes+8).l,a1
-		lea	(S1SS_MapIndex).l,a0
+		lea	S1SS_MapIndex(pc),a0
 		moveq	#bytesToXcnt(S1SS_MapIndex_End-S1SS_MapIndex,6),d1
 -		move.l	(a0)+,(a1)+
 		clr.w	(a1)+
@@ -4486,119 +4679,21 @@ S1SS_ClrRAM3:
 Bonus_StartLoc:	include	"_inc/Start Location Array - Bonus Stages.asm"
 		even
 ; ---------------------------------------------------------------------------
-S1SS_MapIndex:
-		include	"_inc/Special Stage Mappings & VRAM Pointers.asm"
+S1SS_MapIndex:	include	"_inc/Special Stage Mappings & VRAM Pointers.asm"
 S1SS_MapIndex_End:
-		even
-Map_SSWalls:	include	"mappings/sprite/S1/SS Walls.asm"
-Map_SS_R:	include	"mappings/sprite/S1/SS R Block.asm"
-Map_SS_Glass:	include	"mappings/sprite/S1/SS Glass Block.asm"
-Map_SS_Up:	include	"mappings/sprite/S1/SS UP Block.asm"
-Map_SS_Down:	include	"mappings/sprite/S1/SS DOWN Block.asm"
-Map_SS_Bump:	include	"mappings/sprite/S1/SS Bumper.asm"
+; ---------------------------------------------------------------------------
+; These mappings use Sonic 1's format. The backbone of sprite rotation
+; ---------------------------------------------------------------------------
+Map_SSWalls:	binclude	"mappings/sprite/S1/SS Walls.bin"
+Map_SS_R:	binclude	"mappings/sprite/S1/SS R Block.bin"
+Map_SS_Glass:	binclude	"mappings/sprite/S1/SS Glass Block.bin"
+Map_SS_Up:	binclude	"mappings/sprite/S1/SS UP Block.bin"
+Map_SS_Down:	binclude	"mappings/sprite/S1/SS DOWN Block.bin"
 Map_SS_Ring:	binclude	"mappings/sprite/S1/SS Rings.bin"
+Map_SS_Bump:	binclude	"mappings/sprite/S1/SS Bumper.bin"
+		even
 		include	"mappings/sprite/S1/SS Chaos Emeralds.asm"
 		include	"objects/Bonus & Special Stages/04 Player in Bonus Stage.asm"
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-; Load only art assets (Kos modules) from LevelArtPointers
-; Each entry = 8 bytes: PLC+Art1, PLC+Art2
-
-LoadZone:
-		moveq	#0,d0
-		move.w	(Current_ZoneAndAct).w,d0
-		ror.b	#2,d0
-		lsr.w	#3,d0
-		move.w	d0,d1
-		lsr.w	#1,d1
-		add.w	d1,d0
-		lea	(LevelArtPointers).l,a2
-		lea	(a2,d0.w),a2
-
-		move.l	(a2)+,d0
-		andi.l	#$FFFFFF,d0	; 8x8 tile pointer
-		movea.l	d0,a0
-		lea	(Chunk_Table).l,a1
-		bsr.w	KosPlusDec
-		move.w	a1,d3
-		move.w	d3,d7
-		andi.w	#$FFF,d3
-
-		lsr.w	#1,d3
-		rol.w	#4,d7
-		andi.w	#$F,d7
-
--		move.w	d7,d2
-		lsl.w	#7,d2
-		lsl.w	#5,d2
-		move.l	#$FFFFFF,d1
-		move.w	d2,d1
-		jsr	(QueueDMATransfer).l
-		move.w	d7,-(sp)
-		move.w	#Vint_TitleCard,(v_vbla_routine).w
-		bsr.w	WaitForVint
-		bsr.w	RunPLC_RAM
-		move.w	(sp)+,d7
-		move.w	#$800,d3
-		dbf	d7,-
-		; And now the 2nd half; blocks, chunks & layout!
-		moveq	#0,d0
-		move.w	(Current_ZoneAndAct).w,d0
-		ror.b	#2,d0
-		lsr.w	#3,d0		; d0 = 8 * (4*Z + A)
-		move.w	d0,d1
-		lsr.w	#1,d1
-		add.w	d1,d0
-		lea	(LevelArtPointers).l,a2
-		lea	(a2,d0.w),a2
-		move.l	a2,-(sp)
-		addq.w	#4,a2
-		move.l	(a2)+,d0
-		andi.l	#$FFFFFF,d0	; pointer to block mappings
-		movea.l	d0,a0
-		lea	(v_16x16).w,a1
-		bsr.w	KosPlusDec	; load block maps
-		move.l	(a2)+,d0
-		andi.l	#$FFFFFF,d0	; pointer to chunk mappings
-		movea.l	d0,a0
-		lea	(v_128x128).l,a1
-		bsr.w	KosPlusDec
-		bsr.s	LevelLayoutLoad
-		movea.l	(sp)+,a2	; zone specific pointer in LevelArtPointers
-		addq.w	#4,a2
-		moveq	#0,d0
-		move.b	(a2),d0	; PLC2 ID
-		beq.s	+
-		bsr.w	LoadPLC
-+
-		addq.w	#4,a2
-		moveq	#0,d0
-		move.b	(a2),d0	; palette ID
-		bra.w	PalLoad1
-; End of function LoadZone
-
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; Subroutine to load a level layout from RAM
-; ---------------------------------------------------------------------------
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
-LevelLayoutLoad:
-		moveq	#0,d0
-		move.w	(Current_ZoneAndAct).w,d0
-		move.w	d0,d1
-		lsr.w	#5,d0
-		andi.w	#$FF,d1
-		add.w	d1,d1
-		add.w	d1,d0
-		lea	(Level_Index).l,a0
-		move.w	(a0,d0.w),d0
-		adda.l	d0,a0
-		lea	(v_lvllayout).w,a1
-		bra.w	KosPlusDec
-
-; End of function LevelLayoutLoad
 ; ---------------------------------------------------------------------------
 SpecialStage:
 	;	cmpi.b	#7,(Current_Special_Stage).w
@@ -18592,17 +18687,14 @@ BS_6:		binclude	"Bonus & Special Stages/6.kosp"
 
 Nem_Warp:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Flash.nem" ; bonus stage entry flash (Leftover from Sonic 1 beta; TO BE RESTORED)
 		even
-Nem_SSWalls:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Walls.nem" ; bonus stage walls
+Art_SSWalls:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Walls.bin" ; bonus stage walls
 		even
-Nem_SSBgFish:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Birds & Fish.nem" ; bonus stage birds and fish background
-		even
-Nem_SSBgCloud:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Clouds.nem" ; bonus stage clouds background
-		even
-Nem_SSGhost:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Ghost.nem" ; bonus stage ghost block
-		even
+Kospm_SSBgFish:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Birds & Fish.kospm" ; bonus stage birds and fish background
+Kospm_SSBgCloud:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Clouds.kospm" ; bonus stage clouds background
+Kospm_SSGhost:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Ghost.kospm" ; bonus stage ghost block
 Nem_SSRedWhite:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Red-White.nem" ; bonus stage red/white block
 		even
-Nem_SSUpDown:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage UP-DOWN.nem" ; bonus stage UP/DOWN block
+Kospm_SSUpDown:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage UP-DOWN.kospm" ; bonus stage UP/DOWN block
 		even
 Nem_SSRBlock:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage R.nem"	; bonus stage R block
 		even
@@ -18610,8 +18702,7 @@ Nem_SSWBlock:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage W.nem"	; b
 		even
 Nem_SSGlass:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Glass.nem" ; bonus stage destroyable glass block
 		even
-Nem_SS1UpBlock:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage 1UP.nem" ; bonus stage 1UP block
-		even
+Kospm_SS1UpBlock:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage 1UP.kospm" ; bonus stage 1UP block
 Nem_SSGOAL:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage GOAL.nem" ; bonus stage GOAL block
 		even
 Nem_SSEmerald:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Emeralds.nem" ; bonus stage chaos emeralds
@@ -18662,8 +18753,6 @@ Nem_Special:	binclude	"art/nemesis/Bonus & Special Stage/Special Half Pipe.nem"
 ;----------------------------------------------------------------------------
 ; Bonus & Special Stage Assets
 ;----------------------------------------------------------------------------
-Eni_BSBg1:	binclude	"tilemaps/BS Background 1.eni" ; bonus stage background (mappings)
-Eni_BSBg2:	binclude	"tilemaps/BS Background 2.eni" ; bonus stage background (mappings)
 Eni_SpecialBack:
 		binclude	"tilemaps/Main background mappings for special stage.eni"
 Eni_SpecialBackBottom:

@@ -860,6 +860,7 @@ Object_Manager_Addresses_P2_End:
 Demo_button_index:	ds.w	1			; index into button press demo data, for player 1
 Demo_press_counter:	ds.b	1			; frames remaining until next button press, for player 1
 Current_Timezone:	ds.b	1			; byte; Whether we're in the present, past, or Good/Bad future
+v_palchgspeed:
 PalChangeSpeed:		ds.w	1
 Collision_addr:		ds.l	1
 v_colladdr1:		ds.l	1
@@ -869,7 +870,7 @@ v_palbs_time:		ds.w	1			; palette cycling in Bonus Stage - time until next chang
 v_bsbganim:		ds.w	1			; bonus Stage background animation
 
 v_gfxbigring:		ds.b	1			; settings for giant ring graphics loading
-			ds.b	1			; unused
+v_ssangleprev:		ds.b	1
 f_lockscreen:		ds.b	1
 f_wtunnelmode:		ds.b	1			; LZ water tunnel mode
 
@@ -1461,9 +1462,9 @@ ArtTile_SS_Background_Clouds:	equ $000
 ArtTile_SS_Background_Fish:	equ $051
 ArtTile_SS_Wall:		equ $142
 ArtTile_SS_Plane_1:		equ $200
-ArtTile_SS_Bumper:		equ $23B
-ArtTile_SS_Goal:		equ $251
-ArtTile_SS_Up_Down:		equ $263
+ArtTile_SS_Bumper:		equ $152
+ArtTile_SS_Goal:		equ $176
+ArtTile_SS_Up_Down:		equ $188
 ArtTile_SS_R_Block:		equ $2F0
 ArtTile_SS_Plane_2:		equ $300
 ArtTile_SS_Extra_Life:		equ $370

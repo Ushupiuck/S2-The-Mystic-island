@@ -20,15 +20,15 @@ MDis_Main:	; Routine 0
 		move.w	#$80,obPriority(a0)
 		clr.b	obColType(a0)
 		move.b	#$C,obActWid(a0)
-		move.b	#9,obTimeFrame(a0)
+		move.b	#7,obTimeFrame(a0)
 		clr.b	obFrame(a0)
-		move.w	#sfx_A5,d0
+		move.w	#sfx_Bomb,d0
 		jsr	(PlaySound_Special).l		 ; play sound
 
 MDis_Animate:	; Routine 2
 		subq.b	#1,obTimeFrame(a0) ; subtract 1 from frame duration
 		bpl.s	.display
-		move.b	#9,obTimeFrame(a0) ; set frame duration to 9 frames
+		move.b	#7,obTimeFrame(a0) ; set frame duration to 9 frames
 		addq.b	#1,obFrame(a0)	; next frame
 		cmpi.b	#4,obFrame(a0)	; has animation completed?
 		beq.w	DeleteObject	; if yes, branch

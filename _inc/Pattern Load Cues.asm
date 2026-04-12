@@ -247,18 +247,17 @@ PLC_Signpost_End:
 ; ---------------------------------------------------------------------------
 PLC_S1SpecialStage:
 		dc.w ((PLC_S1SpecialStage_End-PLC_S1SpecialStage)/6)-1
-		plcm	Nem_SSBgCloud,	ArtTile_SS_Background_Clouds	; bubble and cloud background
-		plcm	Nem_SSBgFish,	ArtTile_SS_Background_Fish	; bird and fish background
-		plcm	Nem_SSWalls,	ArtTile_SS_Wall			; walls
+	;	plcm	Nem_SSBgCloud,	ArtTile_SS_Background_Clouds	; bubble and cloud background
+	;	plcm	Nem_SSBgFish,	ArtTile_SS_Background_Fish	; bird and fish background
 		plcm	Nem_Bumper,	ArtTile_SS_Bumper		; bumper
 		plcm	Nem_SSGOAL,	ArtTile_SS_Goal			; GOAL block
-		plcm	Nem_SSUpDown,	ArtTile_SS_Up_Down		; UP and DOWN blocks
+	;	plcm	Nem_SSUpDown,	ArtTile_SS_Up_Down		; UP and DOWN blocks
 		plcm	Nem_SSRBlock,	ArtTile_SS_R_Block		; R block
-		plcm	Nem_SS1UpBlock,	ArtTile_SS_Extra_Life		; 1UP block
+	;	plcm	Nem_SS1UpBlock,	ArtTile_SS_Extra_Life		; 1UP block
 		plcm	Nem_Sparkles,	ArtTile_SS_Sparkles		; Ring sparkle
 		plcm	Nem_SSEmStars,	ArtTile_SS_Emerald_Sparkle	; emerald collection stars
 		plcm	Nem_SSRedWhite,	ArtTile_SS_Red_White_Block	; red and white block
-		plcm	Nem_SSGhost,	ArtTile_SS_Ghost_Block		; ghost block
+	;	plcm	Nem_SSGhost,	ArtTile_SS_Ghost_Block		; ghost block
 		plcm	Nem_SSWBlock,	ArtTile_SS_W_Block		; W block
 		plcm	Nem_SSGlass,	ArtTile_SS_Glass		; glass block
 		plcm	Nem_SSEmerald,	ArtTile_SS_Emerald		; emeralds
@@ -485,7 +484,7 @@ ptr_KPLC_4:	dc.w PLCKosM_Null-KosMLoadCues ; Boss 2
 ptr_KPLC_5:	dc.w PLCKosM_Null-KosMLoadCues ; Boss 3
 ptr_KPLC_6:	dc.w PLCKosM_Null-KosMLoadCues ; Boss 4
 ptr_KPLC_7:	dc.w PLCKosM_SSResult-KosMLoadCues ; Special stage results
-ptr_KPLC_8:	dc.w PLCKosM_Null-KosMLoadCues ; Level transition patchers
+ptr_KPLC_8:	dc.w PLCKosM_SSBackground-KosMLoadCues ; Level transition patchers
 ptr_KPLC_9:	dc.w PLCKosM_Null-KosMLoadCues ; Level transition patchers
 ptr_KPLC_10:	dc.w PLCKosM_Null-KosMLoadCues ; Level transition patchers
 ptr_KPLC_11:	dc.w PLCKosM_Null-KosMLoadCues ; Level transition patchers
@@ -861,7 +860,13 @@ PLCKosM_SSResult:	plrKosMlistheader
 PLCKosM_SSResult_End
 ; ---------------------------------------------------------------------------
 ; 8
-
+PLCKosM_SSBackground:	plrKosMlistheader
+	plreqKosM	ArtTile_SS_Background_Clouds, Kospm_SSBgCloud		; Clouds
+	plreqKosM	ArtTile_SS_Background_Fish, Kospm_SSBgFish		; Bird/Fish
+	plreqKosM	ArtTile_SS_Up_Down, Kospm_SSUpDown			; UP and DOWN blocks
+	plreqKosM	ArtTile_SS_Extra_Life, Kospm_SS1UpBlock			; 1UP block
+	plreqKosM	ArtTile_SS_Ghost_Block, Kospm_SSGhost			; ghost block
+PLCKosM_SSBackground_End
 ; ---------------------------------------------------------------------------
 ; 9
 
@@ -880,8 +885,7 @@ PLCKosM_SSResult_End
 ; ---------------------------------------------------------------------------
 ; Filler/Null entry
 PLCKosM_Null:	plrKosMlistheader
-	dc.l	$0
-	dc.w	$0
+	dc.w	$FFFF
 PLCKosM_Null_End
 ; ---------------------------------------------------------------------------
 ; Moduled Kosinski Pattern IDs
