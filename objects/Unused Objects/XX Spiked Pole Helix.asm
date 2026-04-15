@@ -1,22 +1,23 @@
 ; ---------------------------------------------------------------------------
-; Object 17 - helix of spikes on a pole (GHZ)
+; Object XX - helix of spikes on a pole (GHZ)
 ; ---------------------------------------------------------------------------
 
-Obj17:
+Spiked_Pole:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	Obj17_Index(pc,d0.w),d1
-		jmp	Obj17_Index(pc,d1.w)
+		move.w	Spiked_Pole_Index(pc,d0.w),d1
+		jmp	Spiked_Pole_Index(pc,d1.w)
 ; ---------------------------------------------------------------------------
-Obj17_Index:	dc.w Hel_Main-Obj17_Index
-		dc.w Hel_Action-Obj17_Index
-		dc.w Hel_Display-Obj17_Index
+Spiked_Pole_Index:
+		dc.w Hel_Main-Spiked_Pole_Index
+		dc.w Hel_Action-Spiked_Pole_Index
+		dc.w Hel_Display-Spiked_Pole_Index
 ; ---------------------------------------------------------------------------
 
 Hel_Main:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj17,obMap(a0)
-		move.w	#make_art_tile($398,2,0),obGfx(a0)
+		move.w	#make_art_tile(ArtTile_GHZ_Spike_Pole,2,0),obGfx(a0)
 		move.b	#7,obStatus(a0)
 		move.b	#4,obRender(a0)
 		move.w	#$180,obPriority(a0)
@@ -53,8 +54,8 @@ Hel_Build:
 		_move.b	d4,obID(a1)
 		move.w	d2,obY(a1)
 		move.w	d3,obX(a1)
-		move.l	obMap(a0),obMap(a1)
-		move.w	#make_art_tile($398,2,0),obGfx(a1)
+		move.l	#Map_Obj17,obMap(a1)
+		move.w	#make_art_tile(ArtTile_GHZ_Spike_Pole,2,0),obGfx(a1)
 		move.b	#4,obRender(a1)
 		move.w	#$180,obPriority(a1)
 		move.b	#8,obActWid(a1)

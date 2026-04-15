@@ -105,7 +105,8 @@ PLC_GameOver_End:
 ; ---------------------------------------------------------------------------
 PLC_GHZ:	dc.w ((PLC_GHZ_End-PLC_GHZ)/6)-1
 		plcm	Nem_GHZ_Bridge,	ArtTile_GHZ_Bridge
-		plcm	Nem_Swing, $4D0
+		plcm	Nem_Swing, ArtTile_GHZ_MZ_Swing
+		plcm	Nem_GHZ_Ball,	ArtTile_GHZ_Giant_Ball		; giant ball
 		plcm	Nem_GHZ_Rock,	ArtTile_GHZ_Purple_Rock
 		plcm	Nem_GroundExplosion,	ArtTile_Ground_Explosion
 PLC_GHZ_End:
@@ -333,6 +334,14 @@ PLC_Filler2:	dc.w ((PLC_Filler2_End-PLC_Filler2-2)/6)-1
 		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
 		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
 PLC_Filler2_End:
+
+; ---------------------------------------------------------------------------
+; PATTERN LOAD REQUEST LIST
+; Swinging ball boss
+; ---------------------------------------------------------------------------
+;PLC_Filler:	dc.w ((PLC_Filler_End-PLC_Filler-2)/6)-1
+;		plcm	Nem_VSpikes,	ArtTile_Spikes
+;PLC_Filler_End:
 
 ; ---------------------------------------------------------------------------
 ; Pattern load cue IDs

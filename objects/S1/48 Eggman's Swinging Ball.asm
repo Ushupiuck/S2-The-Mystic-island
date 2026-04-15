@@ -54,7 +54,7 @@ loc_1916A:
 
 GBall_MakeBall:
 		move.b	#8,obRoutine(a1)
-		move.l	#Map_Obj48,obMap(a1) ; load different mappings for final link
+		move.l	#Map_GBall,obMap(a1) ; load different mappings for final link
 		move.w	#make_art_tile(ArtTile_GHZ_Giant_Ball,2,0),obGfx(a1) ; use different graphics
 		move.b	#1,obFrame(a1)
 		move.w	#$280,obPriority(a1)
@@ -99,16 +99,87 @@ loc_19206:
 		addq.w	#1,objoff_32(a0)
 
 GBall_Display:
-		bsr.s	sub_19236
+		bsr.w	sub_19236
 		move.b	obAngle(a0),d0
-		jsr	(Swing_Move2).l
+		jsr	(CalcSine).l
+		move.w	objoff_38(a0),d2
+		move.w	objoff_3A(a0),d3
+		lea	obSubtype(a0),a2
+		moveq	#0,d6
+		move.b	(a2)+,d6
+
+.loop:
+		moveq	#0,d4
+		move.b	(a2)+,d4
+		lsl.w	#object_size_bits,d4
+		addi.l	#v_objspace,d4
+		movea.l	d4,a1
+		moveq	#0,d4
+		move.b	objoff_3C(a1),d4
+		move.l	d4,d5
+		muls.w	d0,d4
+		asr.l	#8,d4
+		muls.w	d1,d5
+		asr.l	#8,d5
+		add.w	d2,d4
+		add.w	d3,d5
+		move.w	d4,obY(a1)
+		move.w	d5,obX(a1)
+		dbf	d6,.loop
 		jmp	(DisplaySprite).l
 ; ===========================================================================
 
 GBall_Display2:	; Routine 4
-		bsr.s	sub_19236
-		jsr	(Obj48_Move).l
+		bsr.w	sub_19236
+	;	jsr	(Obj48_Move).l
+		tst.b	objoff_3D(a0)
+		bne.s	+
+		move.w	objoff_3E(a0),d0
+		addq.w	#8,d0
+		move.w	d0,objoff_3E(a0)
+		add.w	d0,obAngle(a0)
+		cmpi.w	#$200,d0
+		bne.s	++
+		move.b	#1,objoff_3D(a0)
+		bra.s	++
+; ===========================================================================
++
+		move.w	objoff_3E(a0),d0
+		subq.w	#8,d0
+		move.w	d0,objoff_3E(a0)
+		add.w	d0,obAngle(a0)
+		cmpi.w	#-$200,d0
+		bne.s	+
+		move.b	#0,objoff_3D(a0)
++
+		move.b	obAngle(a0),d0
+		jsr	(CalcSine).l
+		move.w	objoff_38(a0),d2
+		move.w	objoff_3A(a0),d3
+		lea	obSubtype(a0),a2
+		moveq	#0,d6
+		move.b	(a2)+,d6
+
+.loop:
+		moveq	#0,d4
+		move.b	(a2)+,d4
+		lsl.w	#object_size_bits,d4
+		addi.l	#v_objspace,d4
+		movea.l	d4,a1
+		moveq	#0,d4
+		move.b	objoff_3C(a1),d4
+		move.l	d4,d5
+		muls.w	d0,d4
+		asr.l	#8,d4
+		muls.w	d1,d5
+		asr.l	#8,d5
+		add.w	d2,d4
+		add.w	d3,d5
+		move.w	d4,obY(a1)
+		move.w	d5,obX(a1)
+		dbf	d6,.loop
 		jmp	(DisplaySprite).l
+
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 
@@ -116,22 +187,19 @@ GBall_Display2:	; Routine 4
 sub_19236:
 		movea.l	objoff_34(a0),a1
 		addi.b	#$20,obAniFrame(a0)
-		bcc.s	loc_19248
+		bcc.s	+
 		bchg	#0,obFrame(a0)
-
-loc_19248:
++
 		move.w	obX(a1),objoff_3A(a0)
 		move.w	obY(a1),d0
 		add.w	objoff_32(a0),d0
 		move.w	d0,objoff_38(a0)
 		move.b	obStatus(a1),obStatus(a0)
 		tst.b	obStatus(a1)
-		bpl.s	locret_19272
+		bpl.s	.return
 		_move.b	#id_Obj3F,obID(a0)
 		clr.b	obRoutine(a0)
-
-locret_19272:
-		rts
+.return:	rts
 ; End of function sub_17C2A
 
 ; ===========================================================================
@@ -158,10 +226,10 @@ GBall_Vanish:
 		movea.l	objoff_34(a0),a1
 		tst.b	obStatus(a1)
 		bpl.s	GBall_Display3
-		move.b	#0,obColType(a0)
+		clr.b	obColType(a0)
 		bsr.w	BossDefeated
 		subq.b	#1,objoff_3C(a0)
 		bpl.s	GBall_Display3
 		move.b	#id_Obj3F,obID(a0)
-		move.b	#0,obRoutine(a0)
+		clr.b	obRoutine(a0)
 		jmp	(DisplaySprite).l

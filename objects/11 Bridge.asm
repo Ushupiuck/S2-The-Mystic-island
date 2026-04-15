@@ -1,44 +1,44 @@
 ; ---------------------------------------------------------------------------
 ; Object 11 - Bridge
 ; ---------------------------------------------------------------------------
+Obj11_child1		= objoff_30	; pointer to first set of bridge segments
+Obj11_child2		= objoff_34	; pointer to second set of bridge segments, if applicable
 
 Obj11:
 		btst	#6,obRender(a0)
-		bne.w	loc_7BB8
+		bne.s	Obj11_Display
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	Obj11_Index(pc,d0.w),d1
 		jmp	Obj11_Index(pc,d1.w)
 ; ---------------------------------------------------------------------------
 
-loc_7BB8:
-		move.w	#$180,d0
+Obj11_Display:
+		move.w	#$200,d0
 		bra.w	DisplaySprite3
 ; ---------------------------------------------------------------------------
-Obj11_Index:	dc.w loc_7BC6-Obj11_Index	; 0
-		dc.w loc_7CC8-Obj11_Index	; 2
-		dc.w loc_7D5E-Obj11_Index	; 4
+Obj11_Index:	dc.w Obj11_Init-Obj11_Index	; 0
+		dc.w Obj11_EHZ-Obj11_Index	; 2
+		dc.w Obj11_HPZ-Obj11_Index	; 4
 ; ---------------------------------------------------------------------------
 
-loc_7BC6:
+Obj11_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_GHZ_Bridge,obMap(a0)
 		move.w	#make_art_tile(ArtTile_GHZ_Bridge,2,0),obGfx(a0)
-		move.w	#$180,obPriority(a0)
 		cmpi.b	#3,(Current_Zone).w
-		bne.s	loc_7BFA
+		bne.s	.notGHZ
 		move.l	#Map_EHZ_Bridge,obMap(a0)
 		move.w	#make_art_tile(ArtTile_EHZ_Bridge,2,0),obGfx(a0)
-		move.w	#$180,obPriority(a0)
 
-loc_7BFA:
+.notGHZ:
 		cmpi.b	#4,(Current_Zone).w
-		bne.s	loc_7C14
+		bne.s	.notEHZ
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_HPZ_Bridge,obMap(a0)
 		move.w	#make_art_tile(ArtTile_HPZ_Bridge,3,0),obGfx(a0)
 
-loc_7C14:
+.notEHZ:
 		move.b	#4,obRender(a0)
 		move.b	#$80,obActWid(a0)
 		move.w	obY(a0),d2
@@ -48,38 +48,37 @@ loc_7C14:
 		moveq	#0,d1
 		move.b	(a2),d1
 		move.w	d1,d0
-		lsr.w	#1,d0
-		lsl.w	#4,d0
+		lsl.w	#3,d0
 		sub.w	d0,d3
 		swap	d1
 		move.w	#8,d1
 		bsr.s	sub_7C76
-		move.w	obSubtype(a1),d0
+		move.w	sub6_x_pos(a1),d0
 		subq.w	#8,d0
 		move.w	d0,obX(a1)
-		move.l	a1,objoff_30(a0)
+		move.l	a1,Obj11_child1(a0)
 		swap	d1
 		subq.w	#8,d1
-		bls.s	loc_7C74
+		bls.s	+
+
 		move.w	d1,d4
 		bsr.s	sub_7C76
-		move.l	a1,objoff_34(a0)
+		move.l	a1,Obj11_child2(a0)
 		move.w	d4,d0
 		add.w	d0,d0
 		add.w	d4,d0
-		move.w	$10(a1,d0.w),d0
+		move.w	sub2_x_pos(a1,d0.w),d0
 		subq.w	#8,d0
 		move.w	d0,obX(a1)
-
-loc_7C74:
-		bra.s	loc_7CC8
++
+		bra.s	Obj11_EHZ
 
 ; =============== S U B	R O U T	I N E =======================================
 
 
 sub_7C76:
 		bsr.w	FindNextFreeObj
-		bne.s	locret_7CC6
+		bne.s	.return
 		_move.b	obID(a0),obID(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
@@ -92,44 +91,37 @@ sub_7C76:
 		subq.b	#1,d1
 		lea	subspr_data(a1),a2
 
-loc_7CB6:
-		move.w	d3,(a2)+
+.loop:		move.w	d3,(a2)+
 		move.w	d2,(a2)+
 		clr.w	(a2)+
 		addi.w	#$10,d3
-		dbf	d1,loc_7CB6
-
-locret_7CC6:
-		rts
+		dbf	d1,.loop
+.return:	rts
 ; End of function sub_7C76
 
 ; ---------------------------------------------------------------------------
 
-loc_7CC8:
+Obj11_EHZ:
 		move.b	obStatus(a0),d0
 		andi.b	#$18,d0
-		bne.s	loc_7CDE
+		bne.s	+
 		tst.b	objoff_3E(a0)
 		beq.s	loc_7D0A
 		subq.b	#4,objoff_3E(a0)
 		bra.s	loc_7D06
-; ---------------------------------------------------------------------------
-
-loc_7CDE:
++
 		andi.b	#$10,d0
-		beq.s	loc_7CFA
+		beq.s	++
 		move.b	objoff_3F(a0),d0
 		sub.b	objoff_3B(a0),d0
-		beq.s	loc_7CFA
-		bhs.s	loc_7CF6
+		beq.s	++
+		bhs.s	+
 		addq.b	#1,objoff_3F(a0)
-		bra.s	loc_7CFA
+		bra.s	++
 ; ---------------------------------------------------------------------------
-
-loc_7CF6:
++
 		subq.b	#1,objoff_3F(a0)
-
-loc_7CFA:
++
 		cmpi.b	#$40,objoff_3E(a0)
 		beq.s	loc_7D06
 		addq.b	#4,objoff_3E(a0)
@@ -154,42 +146,38 @@ loc_7D22:
 ; ---------------------------------------------------------------------------
 
 loc_7D3E:
-		movea.l	objoff_30(a0),a1
+		movea.l	Obj11_child1(a0),a1
 		bsr.w	DeleteObject2
 		cmpi.b	#8,obSubtype(a0)
-		bls.s	loc_7D56
-		movea.l	objoff_34(a0),a1
+		bls.s	+
+		movea.l	Obj11_child2(a0),a1
 		bsr.w	DeleteObject2
-
-loc_7D56:
++
 		bra.w	DeleteObject
 ; ---------------------------------------------------------------------------
 
-loc_7D5E:
+Obj11_HPZ:
 		move.b	obStatus(a0),d0
 		andi.b	#$18,d0
-		bne.s	loc_7D74
+		bne.s	+
 		tst.b	objoff_3E(a0)
 		beq.s	loc_7DA0
 		subq.b	#4,objoff_3E(a0)
 		bra.s	loc_7D9C
 ; ---------------------------------------------------------------------------
-
-loc_7D74:
++
 		andi.b	#$10,d0
-		beq.s	loc_7D90
+		beq.s	++
 		move.b	objoff_3F(a0),d0
 		sub.b	objoff_3B(a0),d0
-		beq.s	loc_7D90
-		bhs.s	loc_7D8C
+		beq.s	++
+		bhs.s	+
 		addq.b	#1,objoff_3F(a0)
-		bra.s	loc_7D90
+		bra.s	++
 ; ---------------------------------------------------------------------------
-
-loc_7D8C:
++
 		subq.b	#1,objoff_3F(a0)
-
-loc_7D90:
++
 		cmpi.b	#$40,objoff_3E(a0)
 		beq.s	loc_7D9C
 		addq.b	#4,objoff_3E(a0)
@@ -218,52 +206,43 @@ sub_7DC0:
 		moveq	#4,d6
 		moveq	#$3B,d5
 		movem.l	d1-d4,-(sp)
-		bsr.s	sub_7DDA
+		bsr.s	+
 		movem.l	(sp)+,d1-d4
 		lea	(v_player).w,a1
 		subq.b	#1,d6
 		moveq	#$3F,d5
-; End of function sub_7DC0
-
-
-; =============== S U B	R O U T	I N E =======================================
-
-
-sub_7DDA:
++
 		btst	d6,obStatus(a0)
 		beq.s	loc_7E3E
 		btst	#1,obStatus(a1)
-		bne.s	loc_7DFA
+		bne.s	+
 		moveq	#0,d0
 		move.w	obX(a1),d0
 		sub.w	obX(a0),d0
 		add.w	d1,d0
-		bmi.s	loc_7DFA
+		bmi.s	+
 		cmp.w	d2,d0
-		blo.s	loc_7E08
-
-loc_7DFA:
+		blo.s	++
++
 		bclr	#3,obStatus(a1)
 		bclr	d6,obStatus(a0)
 		moveq	#0,d4
 		rts
 ; ---------------------------------------------------------------------------
-
-loc_7E08:
++
 		lsr.w	#4,d0
 		move.b	d0,(a0,d5.w)
-		movea.l	objoff_30(a0),a2
+		movea.l	Obj11_child1(a0),a2
 		cmpi.w	#8,d0
-		blo.s	loc_7E20
-		movea.l	objoff_34(a0),a2
+		blo.s	+
+		movea.l	Obj11_child2(a0),a2
 		subi.w	#8,d0
-
-loc_7E20:
++
 		add.w	d0,d0
 		move.w	d0,d1
 		add.w	d0,d0
 		add.w	d1,d0
-		move.w	$12(a2,d0.w),d0
+		move.w	sub2_y_pos(a2,d0.w),d0
 		subq.w	#8,d0
 		moveq	#0,d1
 		move.b	obHeight(a1),d1
@@ -278,16 +257,14 @@ loc_7E3E:
 		bsr.w	sub_F880
 		move.w	(sp)+,d1
 		btst	d6,obStatus(a0)
-		beq.s	locret_7E5E
+		beq.s	.return
 		moveq	#0,d0
 		move.w	obX(a1),d0
 		sub.w	obX(a0),d0
 		add.w	d1,d0
 		lsr.w	#4,d0
 		move.b	d0,(a0,d5.w)
-
-locret_7E5E:
-		rts
+.return:	rts
 ; End of function sub_7DDA
 
 
@@ -297,24 +274,22 @@ locret_7E5E:
 sub_7E60:
 		moveq	#0,d0
 		tst.w	(v_player+obVelX).w
-		bne.s	loc_7E72
+		bne.s	+
 		move.b	(Vint_runcount+3).w,d0
 		andi.w	#$1C,d0
 		lsr.w	#1,d0
-
-loc_7E72:
++
 		moveq	#0,d2
 		move.b	byte_7E9E+1(pc,d0.w),d2
 		swap	d2
 		move.b	byte_7E9E(pc,d0.w),d2
 		moveq	#0,d0
 		tst.w	(v_player2+obVelX).w
-		bne.s	loc_7E90
+		bne.s	+
 		move.b	(Vint_runcount+3).w,d0
 		andi.w	#$1C,d0
 		lsr.w	#1,d0
-
-loc_7E90:
++
 		moveq	#0,d6
 		move.b	byte_7E9E+1(pc,d0.w),d6
 		swap	d6
@@ -345,9 +320,9 @@ loc_7EAE:
 		beq.s	+
 		move.b	objoff_3B(a0),d4
 +
-		movea.l	objoff_30(a0),a1
-		lea	$45(a1),a2
-		lea	$15(a1),a1
+		movea.l	Obj11_child1(a0),a1
+		lea	sub9_mapframe+next_subspr(a1),a2
+		lea	sub2_mapframe(a1),a1
 		moveq	#0,d1
 		move.b	obSubtype(a0),d1
 		subq.b	#1,d1
@@ -393,8 +368,8 @@ loc_7EAE:
 		addq.w	#6,a1
 		cmpa.w	a2,a1
 		bne.s	+
-		movea.l	objoff_34(a0),a1
-		lea	$15(a1),a1
+		movea.l	Obj11_child2(a0),a1
+		lea	sub2_mapframe(a1),a1
 +		dbf	d1,-
 
 		rts
@@ -422,9 +397,9 @@ Obj11_Depress:
 		andi.w	#$F,d3
 		lsl.w	#4,d3
 		lea	(a4,d3.w),a3
-		movea.l	objoff_30(a0),a1
-		lea	$42(a1),a2
-		lea	obVelY(a1),a1
+		movea.l	Obj11_child1(a0),a1
+		lea	sub9_y_pos+next_subspr(a1),a2
+		lea	sub2_y_pos(a1),a1
 
 -		moveq	#0,d0
 		move.b	(a3)+,d0
@@ -437,8 +412,8 @@ Obj11_Depress:
 		addq.w	#6,a1
 		cmpa.w	a2,a1
 		bne.s	+
-		movea.l	objoff_34(a0),a1
-		lea	obVelY(a1),a1
+		movea.l	Obj11_child2(a0),a1
+		lea	sub2_y_pos(a1),a1
 +		dbf	d2,-
 
 		moveq	#0,d0
@@ -448,13 +423,13 @@ Obj11_Depress:
 		addq.b	#1,d3
 		sub.b	d0,d3
 		neg.b	d3
-		bmi.s	locret_7FE4
+		bmi.s	.return
 		move.w	d3,d2
 		lsl.w	#4,d3
 		lea	(a4,d3.w),a3
 		adda.w	d2,a3
 		subq.w	#1,d2
-		bcs.s	locret_7FE4
+		bcs.s	.return
 
 -		moveq	#0,d0
 		move.b	-(a3),d0
@@ -467,12 +442,10 @@ Obj11_Depress:
 		addq.w	#6,a1
 		cmpa.w	a2,a1
 		bne.s	+
-		movea.l	objoff_34(a0),a1
-		lea	obVelY(a1),a1
+		movea.l	Obj11_child2(a0),a1
+		lea	sub2_y_pos(a1),a1
 +		dbf	d2,-
-
-locret_7FE4:
-		rts
+.return:	rts
 ; End of function Obj11_Depress
 
 ; ---------------------------------------------------------------------------

@@ -53,7 +53,7 @@ BonusPlayer_ChkDebug:	; Routine 2
 		move.w	BonusPlayer_Modes(pc,d0.w),d1
 		jsr	BonusPlayer_Modes(pc,d1.w)
 		jsr	(LoadSonicDynPLC).l		; update Sonic's gfx
-		jmp	(DisplaySprite).l
+		bra.w	DisplaySprite
 ; ===========================================================================
 BonusPlayer_Modes:
 		dc.w BonusPlayer_OnWall-BonusPlayer_Modes
@@ -305,7 +305,7 @@ BonusPlayer_ExitStage:
 		jsr	(Sonic_Animate).l
 		jsr	(LoadSonicDynPLC).l
 		bsr.s	S1SS_FixCamera
-		jmp	(DisplaySprite).l
+		bra.w	DisplaySprite
 ; ===========================================================================
 
 BonusPlayer_Fall:

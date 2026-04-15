@@ -19,7 +19,7 @@ Splats_Init:
 		addq.b	#2,obRoutine(a0)		; set to WaitForSonic
 		move.l	#Map_Splats,obMap(a0)		; set maps
 		move.w	#make_art_tile(ArtTile_Splats,1,0),obGfx(a0) ; set art tile
-		move.b	#4,obRender(a0)			; set render flags
+		ori.b	#4,obRender(a0)			; set render flags
 		move.w	#$200,obPriority(a0)		; set sprite priority
 		move.b	#$C,obActWid(a0)		; set width
 		move.b	#$14,obHeight(a0)		; set height

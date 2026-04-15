@@ -23,15 +23,15 @@ Scen_Conf:	; Organized in the following format:
 		dc.b	3,	4,	0,	$80
 		; 1
 		dc.l Map_HPZ_Orb		; HPZ Pulsing Orb
-		dc.w make_art_tile($35A,3,1)
+		dc.w make_art_tile(ArtTile_HPZ_Orb,3,1)
 		dc.b	0,	$10,	0,	$80
 		; 2
 		dc.l Map_EHZ_Bridge			; EHZ Wooden Stake & Bridge
-		dc.w make_art_tile($3C6,2,0)
+		dc.w make_art_tile(ArtTile_EHZ_Bridge,2,0)
 		dc.b	1,	4,	0,	$80
 		; 3
 		dc.l Map_GHZ_Bridge		; GHZ Wooden Bridge & Stake (Yes, really. They're inverted)
-		dc.w make_art_tile($4C6,2,0)
+		dc.w make_art_tile(ArtTile_GHZ_Bridge,2,0)
 		dc.b	1,	$10,	0,	$80
 		; 4
 		dc.l Map_Obj16			; HTZ Zipline
@@ -74,11 +74,11 @@ Scen_Init:	; FromSubtype
 Scen_Animate:	lea	Ani_Scen(pc),a1
 		bsr.w	AnimateSprite
 Scen_Display:	out_of_range.w	DeleteObject
-		bra.w	DisplaySprite
+		bra.w	Draw_Sprite
 ; ---------------------------------------------------------------------------
 Ani_Scen:	dc.w byte_9494-Ani_Scen
 		dc.w byte_949C-Ani_Scen
-byte_9494:	dc.b   8,  3,  3,  4,  5,  5,  4,$FF
+byte_9494:	dc.b   8,  3,  3,  4,  5,  5,  4,afEnd
 byte_949C:	dc.b   5,  0,  0,  0,  1,  2,  3,  3
-		dc.b   2,  1,  2,  3,  3,  1,$FF
+		dc.b   2,  1,  2,  3,  3,  1,afEnd
 		even

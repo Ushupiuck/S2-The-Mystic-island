@@ -7,7 +7,7 @@ AdvancedHandler		= 0	; 0 for Sonic 1's Error handler, 1 for the Advanced Error h
 zeroOffsetOptimization	= 1	; if 1, makes a handful of zero-offset instructions smaller
 BackupSRAM		= 1
 AddressSRAM		= 3	; 0 = odd+even; 2 = even only; 3 = odd only
-LoadTails		= 1	; Whether or not Tails will appear alongside Sonic in levels
+LoadTails		= 0	; Whether or not Tails will appear alongside Sonic in levels
 EnableMusic		= 1	; Because it can get pretty tiring to hear level music over and over.
 TimeTravel		= 1	; if 1, allows time-travel mechanics (W.I.P)
 
@@ -910,58 +910,6 @@ PlaneMapToVRAM_H80_SpecialStage:
 		dbf	d2,--		; next line
 		rts
 ; End of function PlaneMapToVRAM_H80_SpecialStage
-
-; ---------------------------------------------------------------------------
-; MM: these functions now write directly to Z80 RAM
-; If Music_to_play is clear, move d0 into Music_to_play,
-; else move d0 into Music_to_play_2.
-
-PlaySound_Special:
-PlayMusic:
-		disable_ints
-		stopZ80
-		waitZ80
-		tst.b	(Z80_RAM+zAbsVar.QueueToPlay).l
-		bne.s	+
-		move.b	d0,(Z80_RAM+zAbsVar.QueueToPlay).l
-		startZ80
-		enable_ints
-		rts
-+
-		move.b	d0,(Z80_RAM+zAbsVar.SFXToPlay).l
-		startZ80
-		enable_ints
-		rts
-; End of function PlayMusic
-; ---------------------------------------------------------------------------
-; play a sound in alternating speakers (as in the ring collection sound)
-
-PlaySoundStereo:
-		disable_ints
-		stopZ80
-		waitZ80
-		move.b	d0,(Z80_RAM+zAbsVar.SFXStereoToPlay).l
-		startZ80
-		enable_ints
-		rts
-; End of function PlaySoundStereo
-; ---------------------------------------------------------------------------
-; play a sound if the source is onscreen
-
-PlaySoundLocal:
-		tst.b	obRender(a0)
-		bpl.s	+	; rts
-
-PlaySound:
-		disable_ints
-		stopZ80
-		waitZ80
-		move.b	d0,(Z80_RAM+zAbsVar.SFXUnknown).l
-		startZ80
-		enable_ints
-+
-		rts
-; End of function PlaySoundLocal
 
 ; ===========================================================================
 ; MM: this routine and the table below control what PCM sample plays on the Sega screen
@@ -2232,7 +2180,7 @@ TitleScreen:
 		bsr.w	PalLoad1
 		move.b	#bgm_Title,d0
 		bsr.w	PlaySound_Special
-	;	clr.b	(Debug_mode_flag).w
+		clr.b	(Debug_mode_flag).w
 		move.w	#376,(v_generictimer).w
 		clearRAM v_sonicteam,v_sonicteam+object_size
 		_move.b	#id_Obj91,(v_titlesonic).w
@@ -2774,8 +2722,8 @@ Level_TtlCardLoop:
 		bne.s	Level_TtlCardLoop
 		tst.l	(v_plc_buffer).w
 		bne.s	Level_TtlCardLoop
-	;	move.w	#Vint_TitleCard,(v_vbla_routine).w
-	;	bsr.w	WaitForVint
+		move.w	#Vint_TitleCard,(v_vbla_routine).w
+		bsr.w	WaitForVint
 		jsr	(HUD_Base).l
 
 Level_SkipTtlCard:
@@ -3470,6 +3418,59 @@ LevelLayoutLoad:
 		bra.w	KosPlusDec
 
 ; End of function LevelLayoutLoad
+
+; ---------------------------------------------------------------------------
+; MM: these functions now write directly to Z80 RAM
+; If Music_to_play is clear, move d0 into Music_to_play,
+; else move d0 into Music_to_play_2.
+
+PlaySound_Special:
+PlayMusic:
+		disable_ints
+		stopZ80
+		waitZ80
+		tst.b	(Z80_RAM+zAbsVar.QueueToPlay).l
+		bne.s	+
+		move.b	d0,(Z80_RAM+zAbsVar.QueueToPlay).l
+		startZ80
+		enable_ints
+		rts
++
+		move.b	d0,(Z80_RAM+zAbsVar.SFXToPlay).l
+		startZ80
+		enable_ints
+		rts
+; End of function PlayMusic
+; ---------------------------------------------------------------------------
+; play a sound in alternating speakers (as in the ring collection sound)
+
+PlaySoundStereo:
+		disable_ints
+		stopZ80
+		waitZ80
+		move.b	d0,(Z80_RAM+zAbsVar.SFXStereoToPlay).l
+		startZ80
+		enable_ints
+		rts
+; End of function PlaySoundStereo
+; ---------------------------------------------------------------------------
+; play a sound if the source is onscreen
+
+PlaySoundLocal:
+		tst.b	obRender(a0)
+		bpl.s	+	; rts
+
+PlaySound:
+		disable_ints
+		stopZ80
+		waitZ80
+		move.b	d0,(Z80_RAM+zAbsVar.SFXUnknown).l
+		startZ80
+		enable_ints
++
+		rts
+; End of function PlaySoundLocal
+
 ; ===========================================================================
 ; Sonic 1 Special Stage
 ; GameMode10:
@@ -3589,6 +3590,8 @@ loc_5214:
 		locVRAM	ArtTile_Title_Card*tile_size
 		lea	(Nem_TitleCard).l,a0	; load title card patterns
 		bsr.w	NemDec
+		move.w	#Vint_SSResults,(v_vbla_routine).w
+		bsr.w	WaitForVint
 		jsr	(HUD_Base).l
 		ResetDMAQueue
 		enable_ints
@@ -3609,7 +3612,7 @@ loc_5214:
 		add.w	d1,d0
 		move.w	d0,(v_ringbonus).w	; set rings bonus
 		move.w	#bgm_GotThrough,d0
-		jsr	(PlaySound_Special).l	; play end-of-level music
+		bsr.w	PlaySound_Special	; play end-of-level music
 		clearRAM v_objspace,v_objend	; clear object RAM
 		_move.b	#id_Obj96,(v_endcard).w	; load results screen object
 
@@ -4562,7 +4565,7 @@ SS_AniEmeraldSparks:
 		clr.l	4(a0)
 		move.b	#4,(v_objspace+obRoutine).w
 		move.w	#sfx_SSGoal,d0
-		jmp	(PlaySound_Special).l
+		bra.w	PlaySound_Special
 ; ---------------------------------------------------------------------------
 SS_Ani1UpData:	dc.b $46, $47, $48, $49, 0
 SS_AniRevData:	dc.b $2B, $31, $2B, $31, 0
@@ -4733,7 +4736,6 @@ SpecialStage:
 		clearRAM Sprite_Table,Sprite_Table_end
 		clearRAM SS_Horiz_Scroll_Buf_1,$280
 		clearRAM PNT_Buffer,SS_Offset_Y
-
 		rts
 ; =============== S U B R O U T I N E =======================================
 
@@ -7296,27 +7298,23 @@ DynResize_GHZ_Index:
 DynResize_GHZ1:
 		move.w	#$300,(Camera_Max_Y_pos_target).w
 		cmpi.w	#$1780,(Camera_RAM).w
-		blo.s	locret_75CA
+		blo.s	.return
 		move.w	#$400,(Camera_Max_Y_pos_target).w
-
-locret_75CA:
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 
 DynResize_GHZ2:
 		move.w	#$300,(Camera_Max_Y_pos_target).w
 		cmpi.w	#$ED0,(Camera_RAM).w
-		blo.s	locret_75FC
+		blo.s	.return
 		move.w	#$200,(Camera_Max_Y_pos_target).w
 		cmpi.w	#$1600,(Camera_RAM).w
-		blo.s	locret_75FC
+		blo.s	.return
 		move.w	#$400,(Camera_Max_Y_pos_target).w
 		cmpi.w	#$1D60,(Camera_RAM).w
-		blo.s	locret_75FC
+		blo.s	.return
 		move.w	#$300,(Camera_Max_Y_pos_target).w
-
-locret_75FC:
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 
 DynResize_GHZ3:
@@ -7334,24 +7332,21 @@ DynResize_GHZ3_Index:
 DynResize_GHZ3_Main:
 		move.w	#$300,(Camera_Max_Y_pos_target).w
 		cmpi.w	#$380,(Camera_RAM).w
-		blo.s	locret_7658
+		blo.s	.return
 		move.w	#$310,(Camera_Max_Y_pos_target).w
 		cmpi.w	#$960,(Camera_RAM).w
-		blo.s	locret_7658
+		blo.s	.return
 		cmpi.w	#$280,(Camera_Y_pos).w
 		blo.s	loc_765A
 		move.w	#$400,(Camera_Max_Y_pos_target).w
 		cmpi.w	#$1380,(Camera_RAM).w
-		bhs.s	loc_7650
+		bhs.s	+
 		move.w	#$4C0,(Camera_Max_Y_pos_target).w
 		move.w	#$4C0,(Camera_Max_Y_pos).w
 
-loc_7650:
-		cmpi.w	#$1700,(Camera_RAM).w
++		cmpi.w	#$1700,(Camera_RAM).w
 		bhs.s	loc_765A
-
-locret_7658:
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 
 loc_765A:
@@ -7367,7 +7362,7 @@ DynResize_GHZ3_Boss:
 
 loc_7672:
 		cmpi.w	#$2960,(Camera_RAM).w
-		blo.s	locret_76AA
+		blo.s	DynResize_GHZ3_Main.return
 		bsr.w	FindFreeObj
 		bne.s	loc_7692
 		_move.b	#id_Obj3D,obID(a1)
@@ -7376,15 +7371,11 @@ loc_7672:
 
 loc_7692:
 		move.w	#bgm_Boss,d0
-		jsr	(PlaySound).l
+		bsr.w	PlaySound
 		move.b	#1,(f_lockscreen).w
 		addq.b	#2,(Dynamic_Resize_Routine).w
 		moveq	#plcid_Boss,d0
 		jmp	(LoadPLC).l
-; ---------------------------------------------------------------------------
-
-locret_76AA:
-		rts
 ; ---------------------------------------------------------------------------
 
 DynResize_GHZ3_End:
@@ -7426,44 +7417,38 @@ DynResize_LZ3:
 		beq.s	loc_76EA
 		move.b	#7,(a1)
 		move.w	#sfx_Rumbling,d0
-		jsr	(PlaySound_Special).l
+		bsr.w	PlaySound_Special
 
 loc_76EA:
 		tst.b	(Dynamic_Resize_Routine).w
-		bne.s	locret_7724
+		bne.s	.return
 		cmpi.w	#$1CA0,(Camera_RAM).w
-		blo.s	locret_7724
+		blo.s	.return
 		cmpi.w	#$600,(Camera_Y_pos).w
-		bhs.s	locret_7724
+		bhs.s	.return
 		bsr.w	FindFreeObj
-		bne.s	loc_770C
-		_move.b	#id_Obj77,obID(a1)
+		bne.s	+
+		_move.b	#id_Obj77,obID(a1)	; Load Labyrinth Zone's boss (No longer exists)
 
-loc_770C:
-		move.w	#bgm_Boss,d0
-		jsr	(PlaySound).l
++		move.w	#bgm_Boss,d0
+		bsr.w	PlaySound
 		move.b	#1,(f_lockscreen).w
 		addq.b	#2,(Dynamic_Resize_Routine).w
 		moveq	#plcid_Boss,d0
 		jmp	(LoadPLC).l
-; ---------------------------------------------------------------------------
-
-locret_7724:
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 
 DynResize_LZ4:
 		cmpi.w	#$D00,(Camera_RAM).w
-		blo.s	locret_774E
+		blo.s	.return
 		cmpi.w	#$18,(v_player+obY).w
-		bhs.s	locret_774E
+		bhs.s	.return
 		clr.b	(v_lastlamp).w
 		move.w	#1,(Level_Inactive_flag).w
 		move.w	#(id_SBZ<<8)+2,(Current_ZoneAndAct).w
 		move.b	#1,(f_playerctrl).w
-
-locret_774E:
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 
 DynResize_CPZ:
@@ -7495,31 +7480,10 @@ DynResize_CPZ3:
 		jmp	DynCPZ3_Index(pc,d0.w)
 ; ===========================================================================
 DynCPZ3_Index:
-		dc.w DynResize_CPZ3_BossCheck-DynCPZ3_Index
-		dc.w DynResize_CPZ3_Null-DynCPZ3_Index
+		dc.w DynResize_CPZ3_Routine1-DynCPZ3_Index
 ; ===========================================================================
 
-DynResize_CPZ3_BossCheck:
-		cmpi.w	#$480,(Camera_RAM).w
-		blt.s	DynResize_CPZ3_Null
-		cmpi.w	#$740,(Camera_RAM).w
-		bgt.s	DynResize_CPZ3_Null
-		move.w	(Camera_Max_Y_pos).w,d0
-		cmp.w	(Camera_Y_pos).w,d0
-		bne.s	DynResize_CPZ3_Null
-		move.w	#$740,(Camera_Max_X_pos).w
-		move.w	#$480,(Camera_Min_X_pos).w
-		addq.b	#2,(Dynamic_Resize_Routine).w
-		bsr.w	FindFreeObj
-		bne.s	DynResize_CPZ3_Null
-		_move.b	#id_Obj55,obID(a1)			; load Obj55 (EHZ boss, likely CPZ boss at one point)
-		move.w	#$680,obX(a1)
-		move.w	#$540,obY(a1)
-		moveq	#plcid_Boss,d0
-		jmp	(LoadPLC).l
-; ---------------------------------------------------------------------------
-
-DynResize_CPZ3_Null:
+DynResize_CPZ3_Routine1:
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -7573,7 +7537,7 @@ DynResize_EHZ2_01:
 
 loc_7946:
 		move.w	#bgm_Boss,d0
-		jsr	(PlaySound).l
+		bsr.w	PlaySound
 		move.b	#1,(f_lockscreen).w
 		moveq	#plcid_Boss,d0
 		jmp	(LoadPLC).l
@@ -7656,7 +7620,7 @@ DynResize_HPZ3_Main:
 		blo.s	locret_7A46
 		bsr.w	FindFreeObj
 		bne.s	locret_7A46
-		_move.b	#id_Obj76,obID(a1)	; load object 76
+		_move.b	#id_Obj76,obID(a1)	; load object Spring Yard's boss (No longer exists)
 		addq.b	#2,(Dynamic_Resize_Routine).w
 
 locret_7A46:
@@ -7674,7 +7638,7 @@ DynResize_HPZ3_Boss:
 
 loc_7A64:
 		move.w	#bgm_Boss,d0
-		jsr	(PlaySound).l
+		bsr.w	PlaySound
 		move.b	#1,(f_lockscreen).w
 		moveq	#plcid_Boss,d0
 		jmp	(LoadPLC).l
@@ -8001,7 +7965,7 @@ DynResize_MZ3Boss:
 		move.w	#$22C,obY(a1)
 +
 		move.w	#bgm_Boss,d0
-		jsr	(PlaySound).l	; play boss music
+		bsr.w	PlaySound	; play boss music
 		move.b	#1,(f_lockscreen).w ; lock screen
 		addq.b	#2,(Dynamic_Resize_Routine).w
 		moveq	#plcid_Boss,d0
@@ -8073,7 +8037,7 @@ loc_79AA:
 
 loc_79BC:
 		move.w	#bgm_Boss,d0
-		jsr	(PlaySound).l
+		bsr.w	PlaySound
 		move.b	#1,(f_lockscreen).w
 		addq.b	#2,(Dynamic_Resize_Routine).w
 		moveq	#plcid_Boss,d0
@@ -8172,129 +8136,36 @@ Ani_obj26:	dc.w byte_B246-Ani_obj26
 		dc.w byte_B282-Ani_obj26
 		dc.w byte_B28A-Ani_obj26
 		dc.w byte_B292-Ani_obj26
-byte_B246:	dc.b   1,  0,  1,$FF
-byte_B24A:	dc.b   1,  0,  2,  2,  1,  2,  2,$FF
-byte_B252:	dc.b   1,  0,  3,  3,  1,  3,  3,$FF
-byte_B25A:	dc.b   1,  0,  4,  4,  1,  4,  4,$FF
-byte_B262:	dc.b   1,  0,  5,  5,  1,  5,  5,$FF
-byte_B26A:	dc.b   1,  0,  6,  6,  1,  6,  6,$FF
-byte_B272:	dc.b   1,  0,  7,  7,  1,  7,  7,$FF
-byte_B27A:	dc.b   1,  0,  8,  8,  1,  8,  8,$FF
-byte_B282:	dc.b   1,  0,  9,  9,  1,  9,  9,$FF
-byte_B28A:	dc.b   1,  0, $A, $A,  1, $A, $A,$FF
-byte_B292:	dc.b   2,  0,  1, $B,$FE,  1
-		even
-
-; ---------------------------------------------------------------------------
-; sprite mappings
-; ---------------------------------------------------------------------------
-Map_Obj26:	binclude	"mappings/sprite/obj26.bin"
+byte_B246:	dc.b   1,  0,  1,afEnd
+byte_B24A:	dc.b   1,  0,  2,  2,  1,  2,  2,afEnd
+byte_B252:	dc.b   1,  0,  3,  3,  1,  3,  3,afEnd
+byte_B25A:	dc.b   1,  0,  4,  4,  1,  4,  4,afEnd
+byte_B262:	dc.b   1,  0,  5,  5,  1,  5,  5,afEnd
+byte_B26A:	dc.b   1,  0,  6,  6,  1,  6,  6,afEnd
+byte_B272:	dc.b   1,  0,  7,  7,  1,  7,  7,afEnd
+byte_B27A:	dc.b   1,  0,  8,  8,  1,  8,  8,afEnd
+byte_B282:	dc.b   1,  0,  9,  9,  1,  9,  9,afEnd
+byte_B28A:	dc.b   1,  0, $A, $A,  1, $A, $A,afEnd
+byte_B292:	dc.b   2,  0,  1, $B,afBack,  1
 		even
 ; ---------------------------------------------------------------------------
 		include	"objects/28 Animals.asm"
 		include	"objects/2A Points.asm"
 ; ---------------------------------------------------------------------------
-Map_Obj28a:
-		dc.w word_A006-Map_Obj28a
-		dc.w word_A010-Map_Obj28a
-		dc.w word_9FFC-Map_Obj28a
-word_9FFC:	dc.w 1
-		dc.w $F406,    0,    0,$FFF8
-word_A006:	dc.w 1
-		dc.w $F406,    6,    3,$FFF8
-word_A010:	dc.w 1
-		dc.w $F406,   $C,    6,$FFF8
-		even
-Map_Obj28:
-		dc.w word_A02A-Map_Obj28
-		dc.w word_A034-Map_Obj28
-		dc.w word_A020-Map_Obj28
-word_A020:	dc.w 1
-		dc.w $F406,    0,    0,$FFF8
-word_A02A:	dc.w 1
-		dc.w $FC05,    6,    3,$FFF8
-word_A034:	dc.w 1
-		dc.w $FC05,   $A,    5,$FFF8
-		even
-Map_Obj28b:
-		dc.w word_A04E-Map_Obj28b
-		dc.w word_A058-Map_Obj28b
-		dc.w word_A044-Map_Obj28b
-word_A044:	dc.w 1
-		dc.w $F406,    0,    0,$FFF8
-word_A04E:	dc.w 1
-		dc.w $FC09,    6,    3,$FFF4
-word_A058:	dc.w 1
-		dc.w $FC09,   $C,    6,$FFF4
-		even
-; ---------------------------------------------------------------------------
 		include	"objects/Empty Slots/10.asm"
 		include	"objects/11 Bridge.asm"
 		include	"objects/15 Swinging Platforms.asm"
-		include	"objects/S1/24, 27 & 3F Explosions.asm"
-; ---------------------------------------------------------------------------
-Map_Obj15:	dc.w word_8534-Map_Obj15
-		dc.w word_8546-Map_Obj15
-		dc.w word_8550-Map_Obj15
-word_8534:	dc.w 2
-		dc.w $F809,    4,    2,$FFE8
-		dc.w $F809,    4,    2,	   0
-word_8546:	dc.w 1
-		dc.w $F805,    0,    0,$FFF8
-word_8550:	dc.w 1
-		dc.w $F805,   $A,    5,$FFF8
-Map_Obj15_CPZ:	dc.w word_855C-Map_Obj15_CPZ
-word_855C:	dc.w 2
-		dc.w $F00F,    8,    4,$FFE0
-		dc.w $F00F, $808, $804,	   0
-Map_Obj15_EHZ:	dc.w word_8574-Map_Obj15_EHZ
-		dc.w word_85B6-Map_Obj15_EHZ
-		dc.w word_85C0-Map_Obj15_EHZ
-word_8574:	dc.w 8
-		dc.w $F00F,    4,    2,$FFE0
-		dc.w $F00F, $804, $802,	   0
-		dc.w $F005,  $14,   $A,$FFD0
-		dc.w $F005, $814, $80A,	 $20
-		dc.w $1004,  $18,   $C,$FFE0
-		dc.w $1004, $818, $80C,	 $10
-		dc.w $1001,  $1A,   $D,$FFF8
-		dc.w $1001, $81A, $80D,	   0
-word_85B6:	dc.w 1
-		dc.w $F805,$4000,$4000,$FFF8
-word_85C0:	dc.w 1
-		dc.w $F805,  $1C,   $E,$FFF8
-Map_Obj48:	dc.w word_85D2-Map_Obj48
-		dc.w word_8604-Map_Obj48
-		dc.w word_8626-Map_Obj48
-		dc.w word_8648-Map_Obj48
-word_85D2:	dc.w 6
-		dc.w $F004,  $24,  $12,$FFF0
-		dc.w $F804,$1024,$1012,$FFF0
-		dc.w $E80A,    0,    0,$FFE8
-		dc.w $E80A, $800, $800,	   0
-		dc.w	$A,$1000,$1000,$FFE8
-		dc.w	$A,$1800,$1800,	   0
-word_8604:	dc.w 4
-		dc.w $E80A,    9,    4,$FFE8
-		dc.w $E80A, $809, $804,	   0
-		dc.w	$A,$1009,$1004,$FFE8
-		dc.w	$A,$1809,$1804,	   0
-word_8626:	dc.w 4
-		dc.w $E80A,  $12,    9,$FFE8
-		dc.w $E80A,  $1B,   $D,	   0
-		dc.w	$A,$181B,$180D,$FFE8
-		dc.w	$A,$1812,$1809,	   0
-word_8648:	dc.w 4
-		dc.w $E80A, $81B, $80D,$FFE8
-		dc.w $E80A, $812, $809,	   0
-		dc.w	$A,$1012,$1009,$FFE8
-		dc.w	$A,$101B,$100D,	   0
-		even
-; ---------------------------------------------------------------------------
-		include	"objects/S1/17 Spiked Pole Helix.asm"
+		include	"objects/Empty slots/17.asm"
 		include	"objects/18 Platforms.asm"
 		include	"objects/1A Collapsing Platforms.asm"
 		include	"objects/S1/1B Collapsing Floors.asm"
+		include	"objects/1C Scenery.asm"
+		include	"objects/Empty Slots/1D.asm"
+		include	"objects/Enemies/1E Ball Hog.asm"
+		include	"objects/Enemies/1F Crabmeat.asm"
+		include	"objects/Empty Slots/20.asm"
+		include	"objects/Empty Slots/21.asm"
+		include	"objects/S1/24, 27 & 3F Explosions.asm"
 ; ---------------------------------------------------------------------------
 
 Ledge_Fragment:
@@ -8340,7 +8211,7 @@ loc_8E70:
 
 +		bsr.w	DisplaySprite
 		move.w	#sfx_Collapse,d0
-		jmp	(PlaySound_Special).l
+		bra.w	PlaySound_Special
 ; ---------------------------------------------------------------------------
 byte_8EF2:	dc.b $1C,$18,$14,$10
 		dc.b $1A,$16,$12, $E
@@ -8375,12 +8246,6 @@ Obj1A_Conf_HPZ:
 		dc.b $10,$10,$10,$10
 		even
 ; ---------------------------------------------------------------------------
-		include	"objects/1C Scenery.asm"
-		include	"objects/Empty Slots/1D.asm"
-		include	"objects/Enemies/1E Ball Hog.asm"
-		include	"objects/Enemies/1F Crabmeat.asm"
-		include	"objects/Empty Slots/20.asm"
-		include	"objects/Empty Slots/21.asm"
 		include	"objects/Enemies/22 Buzz Bomber.asm"
 		include	"objects/Enemies/23 Buzz Bomber Missile.asm"
 		include	"objects/Enemies/2B Chopper.asm"
@@ -8390,14 +8255,13 @@ Obj1A_Conf_HPZ:
 		include	"objects/S1/3B Purple Rock.asm"
 		include	"objects/S1/3C Smashable Wall.asm"
 		include	"objects/S1/sub SmashObject.asm"
-; ===========================================================================
 ; ---------------------------------------------------------------------------
-		include	"objects/91 Title Sonic And Tails.asm"
-		include	"objects/92 Title screen palette handler.asm"
-		include	"objects/93 Press Start Button.asm"
 		include	"objects/Bonus & Special Stages/7A Special Stage Entry.asm"
 		include	"objects/Bonus & Special Stages/7B Giant Ring.asm"
 		include	"objects/Bonus & Special Stages/7C Ring Flash.asm"
+		include	"objects/91 Title Sonic And Tails.asm"
+		include	"objects/92 Title screen palette handler.asm"
+		include	"objects/93 Press Start Button.asm"
 		include	"objects/94 Title Cards.asm"
 		include	"objects/95 Got Through Card.asm"
 		include	"objects/Bonus & Special Stages/96 Special Stage Results.asm"
@@ -8452,19 +8316,17 @@ ExecuteObjectsWhenPlayerIsDead:
 ; loc_CB64:
 ExecuteObjectsDisplayOnly:
 		moveq	#0,d0
-		move.b	obID(a0),d0			; get the object's ID
-		beq.s	loc_CB74			; if it's obj00, skip it
-		tst.b	obRender(a0)			; should we render it?
-		bpl.s	loc_CB74			; if not, skip it
-		move.w	obPriority(a0),d0		; move priority to d0
-		btst	#6,obRender			; is the compound sprites flag set?
-		beq.s	+				; if not, branch
-		move.w	#$200,d0			; override priority
+		move.b	obID(a0),d0		; get the object's ID
+		beq.s	+			; if it's obj00, skip it
+		tst.b	obRender(a0)		; should we render it?
+		bpl.s	+			; if not, skip it
+		pea	+(pc)			; This is an optimisation to avoid the need for extra branches: it makes it so '+' will be executed after 'DisplaySprite' or 'DisplaySprite3' return.
+		btst	#6,obRender		; is the compound sprites flag set?
+		beq.w	DisplaySprite		; if not, branch
+		move.w	#$200,d0		; override priority
+		bra.w	DisplaySprite3		; Display the object using d0
 +
-		bsr.w	DisplaySprite3			; Display the object using d0
-
-loc_CB74:
-		lea	next_object(a0),a0		; load obj address
+		lea	next_object(a0),a0	; load obj address
 		dbf	d7,ExecuteObjectsDisplayOnly
 		rts
 ; End of function ExecuteObjects
@@ -8499,11 +8361,11 @@ ptr_Obj13:		dc.l Obj13		; Waterfall from Hidden Palace Zone
 ptr_Obj14:		dc.l ObjNull
 ptr_Obj15:		dc.l Obj15		; Swinging platforms in GHZ, CPZ and EHZ
 ptr_Obj16:		dc.l Obj16		; Diagonally moving lift from HTZ
-ptr_Obj17:		dc.l Obj17		; (S1) GHZ rotating log helix spikes
+ptr_Obj17:		dc.l ObjNull
 ptr_Obj18:		dc.l Obj18		; Stationary/moving platforms from GHZ and EHZ
 ptr_Obj19:		dc.l Obj19		; Platform from CPZ
 ptr_Obj1A:		dc.l Obj1A		; Collapsing platform from GHZ and HPZ
-ptr_Obj1B:		dc.l Obj1B
+ptr_Obj1B:		dc.l Obj1B		; Collapsing floors (SBZ and MZ?)
 ptr_Obj1C:		dc.l Obj1C		; Stage decorations in GHZ, EHZ, HTZ and HPZ
 ptr_Obj1D:		dc.l ObjNull
 ptr_Obj1E:		dc.l ObjVBallhog
@@ -8517,7 +8379,7 @@ ptr_Obj24:		dc.l Obj24		; Ballhog bomb explosion
 ptr_Obj25:		dc.l Obj25		; A ring
 ptr_Obj26:		dc.l Obj26		; Monitor
 ptr_Obj27:		dc.l Obj27		; An explosion, giving off an animal and 100 points
-ptr_Obj28:		dc.l Obj28		; Animal and the 100 points from a badnik
+ptr_Obj28:		dc.l ObjFlicky		; Animal and the 100 points from a badnik
 ptr_Obj29:		dc.l Obj29		; Monitor contents (code for power-up behavior and rising image)
 ptr_Obj2A:		dc.l Points		; "100 points" text
 ptr_Obj2B:		dc.l Obj2B		; (S1) Chopper from GHZ
@@ -9184,6 +9046,22 @@ DisplaySprite3:
 .return:	rts
 ; End of function DisplaySprite3
 
+Draw_Sprite:
+		lea	(v_spritequeue).w,a1
+		adda.w	obPriority(a0),a1
+-		cmpi.w	#$7E,(a1)
+		bhs.s	+
+		addq.w	#2,(a1)
+		adda.w	(a1),a1
+		move.w	a0,(a1)
+.return:	rts
+; ---------------------------------------------------------------------------
++
+		cmpa.w	#v_spritequeue+($80*7),a1
+		beq.s	.return
+		adda.w	#$80,a1
+		bra.s	-
+; End of function Draw_Sprite
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Routines to mark an enemy/monitor/ring/platform as destroyed
@@ -9672,19 +9550,19 @@ DrawSprite_FlipX:
 +
 		rts
 ; ---------------------------------------------------------------------------
-; offsets for horizontally mirrored sprite pieces
-CellOffsets_XFlip:
-		dc.b   8,  8,  8,  8	; 4
-		dc.b $10,$10,$10,$10	; 8
-		dc.b $18,$18,$18,$18	; 12
-		dc.b $20,$20,$20,$20	; 16
-; ---------------------------------------------------------------------------
 ; offsets for vertically mirrored sprite pieces
 CellOffsets_YFlip:
 		dc.b   8,$10,$18,$20	; 4
 		dc.b   8,$10,$18,$20	; 8
 		dc.b   8,$10,$18,$20	; 12
 		dc.b   8,$10,$18,$20	; 16
+; ---------------------------------------------------------------------------
+; offsets for horizontally mirrored sprite pieces
+CellOffsets_XFlip:
+		dc.b   8,  8,  8,  8	; 4
+		dc.b $10,$10,$10,$10	; 8
+		dc.b $18,$18,$18,$18	; 12
+		dc.b $20,$20,$20,$20	; 16
 ; ---------------------------------------------------------------------------
 
 DrawSprite_FlipY:
@@ -9718,20 +9596,6 @@ DrawSprite_FlipY:
 +
 		rts
 ; ---------------------------------------------------------------------------
-; offsets for horizontally mirrored sprite pieces
-CellOffsets_XFlip2:
-		dc.b   8,  8,  8,  8	; 4
-		dc.b $10,$10,$10,$10	; 8
-		dc.b $18,$18,$18,$18	; 12
-		dc.b $20,$20,$20,$20	; 16
-; ---------------------------------------------------------------------------
-; offsets for vertically mirrored sprite pieces
-CellOffsets_YFlip2:
-		dc.b   8,$10,$18,$20	; 4
-		dc.b   8,$10,$18,$20	; 8
-		dc.b   8,$10,$18,$20	; 12
-		dc.b   8,$10,$18,$20	; 16
-; ---------------------------------------------------------------------------
 
 DrawSprite_FlipXY:
 -
@@ -9741,7 +9605,7 @@ DrawSprite_FlipXY:
 		move.b	(a1),d4
 		ext.w	d0
 		neg.w	d0
-		move.b	CellOffsets_YFlip2(pc,d4.w),d4
+		move.b	CellOffsets_YFlip(pc,d4.w),d4
 		sub.w	d4,d0
 		add.w	d2,d0
 		move.w	d0,(a2)+
@@ -9756,7 +9620,7 @@ DrawSprite_FlipXY:
 		addq.w	#2,a1
 		move.w	(a1)+,d0
 		neg.w	d0
-		move.b	CellOffsets_XFlip2(pc,d4.w),d4
+		move.b	CellOffsets_XFlip(pc,d4.w),d4
 		sub.w	d4,d0
 		add.w	d3,d0
 		andi.w	#$1FF,d0
@@ -17140,7 +17004,7 @@ Debug_ExitDebugMode:
 		moveq	#0,d0
 		move.w	d0,(Debug_placement_mode).w	; deactivate debug mode
 		disable_ints
-	;	bsr.w	HUD_Base
+		bsr.w	HUD_Base
 		move.b	#1,(f_scorecount).w
 		move.b	#$80,(f_ringcount).w
 		enable_ints
@@ -18401,7 +18265,7 @@ DACSample	macro	pPtr,pDelay,pFlags
 ; 8-bit unsigned raw audio at 16Khz
 ; -------------------------------------------------------------------------------
 ; loc_F1E8C:
-Snd_Sega:		BINCLUDE	"sound/PCM/SEGA.bin"
+Snd_Sega:		binclude	"sound/PCM/SEGA.bin"
 Snd_Sega_End:		even
 
 	if Snd_Sega_End - Snd_Sega > $8000
@@ -18435,12 +18299,10 @@ Kosp_TitleBg2:	binclude	"tilemaps/Title Background - 2.kosp"
 Nem_Stalk:	binclude	"art/nemesis/S1/GHZ Flower Stalk.nem"
 		even
 Nem_Swing:	binclude	"art/nemesis/S1/GHZ Swinging Platform.nem"
-	;	even		; Already even, uncomment if an edit makes it odd
+		even		; Already even, uncomment if an edit makes it odd
 Nem_GHZ_Bridge:	binclude	"art/nemesis/S1/GHZ Bridge.nem"
 		even
 Nem_GHZ_Ball:	binclude	"art/nemesis/S1/GHZ Giant Ball.nem"
-	;	even		; Already even, uncomment if an edit makes it odd
-Nem_GHZ_Spikes:	binclude	"art/nemesis/S1/GHZ Spiked Log.nem"
 	;	even		; Already even, uncomment if an edit makes it odd
 Nem_GHZ_Rock:	binclude	"art/nemesis/S1/GHZ Purple Rock.nem"
 	;	even		; Already even, uncomment if an edit makes it odd
@@ -18492,6 +18354,11 @@ Nem_HTZ_AutomaticDoor:	binclude	"art/nemesis/HTZ Autodoor.nem"
 			even
 Nem_HTZ_Seesaw:		binclude	"art/nemesis/See-saw in HTZ.nem"
 			even
+; ---------------------------------------------------------------------------
+; Scrap Madness Zone stage assets
+; ---------------------------------------------------------------------------
+Nem_Swing2:	binclude	"art/nemesis/S1/SLZ Swinging Platform.nem"
+		even
 ; ---------------------------------------------------------------------------
 ; Compressed misc. graphics - Level placeholders
 ; ---------------------------------------------------------------------------
@@ -18583,8 +18450,50 @@ Nem_Button:	binclude	"art/nemesis/Button.nem"
 Nem_Water:	binclude	"art/nemesis/Water Surface.nem"
 		even
 ; ---------------------------------------------------------------------------
+; Compressed graphics - animals
+; ---------------------------------------------------------------------------
+Nem_Flicky:	binclude	"art/nemesis/Flicky/Flicky.nem"
+		even
+Nem_Squirrel:	binclude	"art/nemesis/Flicky/Squirrel.nem"
+		even
+Nem_Mouse:	binclude	"art/nemesis/Flicky/Mouse.nem"
+		even
+Nem_Chicken:	binclude	"art/nemesis/Flicky/Chicken.nem"
+		even
+Nem_Monkey:	binclude	"art/nemesis/Flicky/Monkey.nem"
+		even
+Nem_Eagle:	binclude	"art/nemesis/Flicky/Eagle.nem"
+		even
+Nem_Pig:	binclude	"art/nemesis/Flicky/Pig.nem"
+		even
+Nem_Seal:	binclude	"art/nemesis/Flicky/Seal.nem"
+		even
+Nem_Penguin:	binclude	"art/nemesis/Flicky/Penguin.nem"
+		even
+Nem_Turtle:	binclude	"art/nemesis/Flicky/Turtle.nem"
+		even
+Nem_Bear:	binclude	"art/nemesis/Flicky/Bear.nem"
+		even
+Nem_Bunny:	binclude	"art/nemesis/Flicky/Rabbit.nem"
+		even
+; ---------------------------------------------------------------------------
 ; Compressed graphics - Bosses and explosions
 ; ---------------------------------------------------------------------------
+Nem_OldEggPod:	binclude	"art/nemesis/S1/Boss - Main.nem"
+		even
+Nem_FzEggman:	binclude	"art/nemesis/S1/Boss - Eggman after FZ Fight.nem"	; Ruined Eggpod tiles
+		even
+Nem_Eggman:	binclude	"art/nemesis/S1/Boss - Eggman in SBZ2 & FZ.nem"		; Walking/Running/Jumping frames
+		even
+Nem_Weapons:	binclude	"art/nemesis/S1/Boss - Weapons.nem"			; Anti-hedgehog measures
+		even
+Nem_FzBoss:	binclude	"art/nemesis/S1/Boss - Final Zone.nem"			; This boss might be reused
+		even
+Nem_Exhaust:	binclude	"art/nemesis/S1/Boss - Exhaust Flame.nem"		; Old exhaust flame -- looks cooler, might be reused
+		even
+Nem_Prison:	binclude	"art/nemesis/S1/Prison Capsule.nem"			; From Sonic 1. Again, will be reused (looks better)
+		even
+
 Nem_EggPod:	binclude	"art/nemesis/Boss Ship.nem"
 		even
 Nem_EggPodJets:	binclude	"art/nemesis/Boss Ship Boost.nem"
@@ -18605,44 +18514,6 @@ Nem_BossExplosion:
 Nem_GroundExplosion:
 		binclude	"art/nemesis/Explosion - Ground.nem"
 		even
-; ---------------------------------------------------------------------------
-; Compressed graphics - animals
-; ---------------------------------------------------------------------------
-Nem_Bunny:	binclude	"art/nemesis/Animal Rabbit.nem"
-		even
-Nem_Chicken:	binclude	"art/nemesis/Animal Chicken.nem"
-		even
-Nem_Penguin:	binclude	"art/nemesis/Animal Penguin.nem"
-		even
-Nem_Seal:	binclude	"art/nemesis/Animal Seal.nem"
-		even
-Nem_Pig:	binclude	"art/nemesis/Animal Pig.nem"
-		even
-Nem_Flicky:	binclude	"art/nemesis/Animal Flicky.nem"
-		even
-Nem_Squirrel:	binclude	"art/nemesis/Animal Squirrel.nem"
-		even
-; ---------------------------------------------------------------------------
-; Compressed graphics - continue screen
-; ---------------------------------------------------------------------------
-; These files are already even, so...
-Kospm_ContSonic:	binclude	"art/moduled kosinski/Continue Screen Sonic.kospm"
-Kospm_ContTails:	binclude	"art/moduled kosinski/Continue screen Tails.kospm"
-Kospm_MiniSonic:	binclude	"art/moduled kosinski/Mini Sonic Continue.kospm"
-Kospm_MiniTails:	binclude	"art/moduled kosinski/Mini Tails Continue.kospm"
-; ---------------------------------------------------------------------------
-; Compressed graphics - Ending (Leftover placeholder - to be re-used)
-; ---------------------------------------------------------------------------
-Nem_EndEm:		binclude	"art/nemesis/S1/Ending - Emeralds.nem"
-			even
-Nem_EndSonic:		binclude	"art/nemesis/S1/Ending - Sonic.nem"
-			even
-Kospm_EndFlowers:	binclude	"art/moduled kosinski/Ending - Flowers.kospm"
-Kospm_EndStalk:		binclude	"art/moduled kosinski/Ending - Flower Stalk.kospm"
-Kosp_CreditText:	binclude	"art/kosinski/Ending - Credits.kosp"
-Kospm_TryAgain:		binclude	"art/moduled kosinski/Ending - Try Again.kospm"
-Nem_EndStH:		binclude	"art/nemesis/S1/Ending - StH Logo.nem"
-			even
 ; ---------------------------------------------------------------------------
 ; Uncompressed Assets
 ; ---------------------------------------------------------------------------
@@ -18666,6 +18537,27 @@ Art_EHZPulseBall:	binclude	"art/uncompressed/Pulsing ball against checkered back
 Art_CPZAnimBGPlates:	binclude	"art/uncompressed/CPZ animated background section.bin"
 Art_HPZPulseOrb:	binclude	"art/uncompressed/Pulsing orb (HPZ).bin"
 ; ---------------------------------------------------------------------------
+; Compressed graphics - continue screen
+; ---------------------------------------------------------------------------
+; These files are already even, so...
+Kospm_ContSonic:	binclude	"art/moduled kosinski/Continue Screen Sonic.kospm"
+Kospm_ContTails:	binclude	"art/moduled kosinski/Continue screen Tails.kospm"
+Kospm_MiniSonic:	binclude	"art/moduled kosinski/Mini Sonic Continue.kospm"
+Kospm_MiniTails:	binclude	"art/moduled kosinski/Mini Tails Continue.kospm"
+; ---------------------------------------------------------------------------
+; Compressed graphics - Ending (Leftover placeholder - to be re-used)
+; ---------------------------------------------------------------------------
+Nem_EndEm:		binclude	"art/nemesis/S1/Ending - Emeralds.nem"
+			even
+Nem_EndSonic:		binclude	"art/nemesis/S1/Ending - Sonic.nem"
+			even
+Kospm_EndFlowers:	binclude	"art/moduled kosinski/Ending - Flowers.kospm"
+Kospm_EndStalk:		binclude	"art/moduled kosinski/Ending - Flower Stalk.kospm"
+Kosp_CreditText:	binclude	"art/kosinski/Ending - Credits.kosp"
+Kospm_TryAgain:		binclude	"art/moduled kosinski/Ending - Try Again.kospm"
+Nem_EndStH:		binclude	"art/nemesis/S1/Ending - StH Logo.nem"
+			even
+; ---------------------------------------------------------------------------
 ; Bonus & Special Stage data
 ; ---------------------------------------------------------------------------
 		binclude	"Bonus & Special Stages/Special stage layouts.kosp"
@@ -18684,159 +18576,151 @@ BS_6:		binclude	"Bonus & Special Stages/6.kosp"
 ; ---------------------------------------------------------------------------
 ; Bonus Stage
 ; ---------------------------------------------------------------------------
-
-Nem_Warp:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Flash.nem" ; bonus stage entry flash (Leftover from Sonic 1 beta; TO BE RESTORED)
-		even
-Art_SSWalls:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Walls.bin" ; bonus stage walls
-		even
-Kospm_SSBgFish:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Birds & Fish.kospm" ; bonus stage birds and fish background
-Kospm_SSBgCloud:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Clouds.kospm" ; bonus stage clouds background
-Kospm_SSGhost:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Ghost.kospm" ; bonus stage ghost block
-Nem_SSRedWhite:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Red-White.nem" ; bonus stage red/white block
-		even
-Kospm_SSUpDown:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage UP-DOWN.kospm" ; bonus stage UP/DOWN block
-		even
-Nem_SSRBlock:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage R.nem"	; bonus stage R block
-		even
-Nem_SSWBlock:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage W.nem"	; bonus stage W block
-		even
-Nem_SSGlass:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Glass.nem" ; bonus stage destroyable glass block
-		even
-Kospm_SS1UpBlock:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage 1UP.kospm" ; bonus stage 1UP block
-Nem_SSGOAL:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage GOAL.nem" ; bonus stage GOAL block
-		even
-Nem_SSEmerald:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Emeralds.nem" ; bonus stage chaos emeralds
-		even
-Nem_SSEmStars:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Emerald Twinkle.nem" ; bonus stage stars from a collected emerald
-		even
-Nem_ResultEm:	binclude	"art/nemesis/Bonus & Special Stage/Bonus Stage Result Emeralds.nem" ; chaos emeralds on special stage results screen
-		even
+Art_SSWalls:		binclude	"art/Bonus & Special Stage/Bonus Stage Walls.bin" ; bonus stage walls
+Kospm_SSBgFish:		binclude	"art/Bonus & Special Stage/Bonus Birds & Fish.kospm" ; bonus stage birds and fish background
+Kospm_SSBgCloud:	binclude	"art/Bonus & Special Stage/Bonus Clouds.kospm" ; bonus stage clouds background
+Kospm_SSGhost:		binclude	"art/Bonus & Special Stage/Bonus Stage Ghost.kospm" ; bonus stage ghost block
+Kospm_SS1UpBlock:	binclude	"art/Bonus & Special Stage/Bonus Stage 1UP.kospm" ; bonus stage 1UP block
+Nem_SSRedWhite:		binclude	"art/Bonus & Special Stage/Bonus Stage Red-White.nem" ; bonus stage red/white block
+			even
+Kospm_SSUpDown:		binclude	"art/Bonus & Special Stage/Bonus Stage UP-DOWN.kospm" ; bonus stage UP/DOWN block
+			even
+Nem_SSRBlock:		binclude	"art/Bonus & Special Stage/Bonus Stage R.nem"	; bonus stage R block
+			even
+Nem_SSWBlock:		binclude	"art/Bonus & Special Stage/Bonus Stage W.nem"	; bonus stage W block
+			even
+Nem_SSGlass:		binclude	"art/Bonus & Special Stage/Bonus Stage Glass.nem" ; bonus stage destroyable glass block
+			even
+Nem_SSGOAL:		binclude	"art/Bonus & Special Stage/Bonus Stage GOAL.nem" ; bonus stage GOAL block
+			even
+Nem_SSEmerald:		binclude	"art/Bonus & Special Stage/Bonus Stage Emeralds.nem" ; bonus stage chaos emeralds
+			even
+Nem_SSEmStars:		binclude	"art/Bonus & Special Stage/Bonus Stage Emerald Twinkle.nem" ; bonus stage stars from a collected emerald
+			even
+Nem_Warp:		binclude	"art/Bonus & Special Stage/Bonus Stage Flash.nem" ; bonus stage entry flash (Leftover from Sonic 1 beta; TO BE RESTORED)
+			even
+Nem_ResultEm:		binclude	"art/Bonus & Special Stage/Bonus Stage Result Emeralds.nem" ; chaos emeralds on special stage results screen
+			even
 ; ---------------------------------------------------------------------------
 ; Half-Pipe Special Stage
 ; ---------------------------------------------------------------------------
-Nem_SpecialBack:	binclude	"art/nemesis/Bonus & Special Stage/Background art for special stage.nem"
+Nem_SpecialBack:	binclude	"art/Bonus & Special Stage/Background art for special stage.nem"
 			even
-Nem_SpecialHUD:		binclude	"art/nemesis/Bonus & Special Stage/Sonic and Miles number text from special stage.nem"
+Nem_SpecialHUD:		binclude	"art/Bonus & Special Stage/Sonic and Miles number text from special stage.nem"
 			even
-Nem_SpecialStart:	binclude	"art/nemesis/Bonus & Special Stage/Start text from special stage.nem" ; Also includes checkered flag
+Nem_SpecialStart:	binclude	"art/Bonus & Special Stage/Start text from special stage.nem" ; Also includes checkered flag
 			even
-Nem_SpecialStars:	binclude	"art/nemesis/Bonus & Special Stage/Stars in special stage.nem"
+Nem_SpecialStars:	binclude	"art/Bonus & Special Stage/Stars in special stage.nem"
 			even
-Nem_SpecialRings:	binclude	"art/nemesis/Bonus & Special Stage/Special stage ring art.nem"
+Nem_SpecialRings:	binclude	"art/Bonus & Special Stage/Special stage ring art.nem"
 			even
-Nem_SpecialFlatShadow:	binclude	"art/nemesis/Bonus & Special Stage/Horizontal shadow from special stage.nem"
+Nem_SpecialFlatShadow:	binclude	"art/Bonus & Special Stage/Horizontal shadow from special stage.nem"
 			even
-Nem_SpecialDiagShadow:	binclude	"art/nemesis/Bonus & Special Stage/Diagonal shadow from special stage.nem"
+Nem_SpecialDiagShadow:	binclude	"art/Bonus & Special Stage/Diagonal shadow from special stage.nem"
 			even
-Nem_SpecialSideShadow:	binclude	"art/nemesis/Bonus & Special Stage/Vertical shadow from special stage.nem"
+Nem_SpecialSideShadow:	binclude	"art/Bonus & Special Stage/Vertical shadow from special stage.nem"
 			even
-Nem_SpecialExplosion:	binclude	"art/nemesis/Bonus & Special Stage/Explosion from special stage.nem"
+Nem_SpecialExplosion:	binclude	"art/Bonus & Special Stage/Explosion from special stage.nem"
 			even
-Nem_SpecialBomb:	binclude	"art/nemesis/Bonus & Special Stage/Bomb from special stage.nem"
+Nem_SpecialBomb:	binclude	"art/Bonus & Special Stage/Bomb from special stage.nem"
 			even
-Nem_SpecialEmerald:	binclude	"art/nemesis/Bonus & Special Stage/Emerald from special stage.nem"
+Nem_SpecialEmerald:	binclude	"art/Bonus & Special Stage/Emerald from special stage.nem"
 			even
-Nem_SpecialMessages:	binclude	"art/nemesis/Bonus & Special Stage/Special stage messages and icons.nem"
+Nem_SpecialMessages:	binclude	"art/Bonus & Special Stage/Special stage messages and icons.nem"
 			even
-Nem_SpecialSonicTails:	binclude	"art/nemesis/Bonus & Special Stage/Sonic and Tails animation frames in special stage.nem" ; [fixBugs] In this file, Tails' arms are tan instead of orange.
+Nem_SpecialSonicTails:	binclude	"art/Bonus & Special Stage/Sonic and Tails animation frames in special stage.nem" ; [fixBugs] In this file, Tails' arms are tan instead of orange.
 			even
-Nem_SpecialTailsText:	binclude	"art/nemesis/Bonus & Special Stage/Tails text patterns from special stage.nem"
+Nem_SpecialTailsText:	binclude	"art/Bonus & Special Stage/Tails text patterns from special stage.nem"
 			even
-;----------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 ; Special stage level patterns
 ; Note: Only one line of each tile is stored in this archive. The other 7 lines are
 ;  the same as this one line, so to get the full tiles, each line needs to be
 ;  duplicated 7 times over.
-;----------------------------------------------------------------------------
-Nem_Special:	binclude	"art/nemesis/Bonus & Special Stage/Special Half Pipe.nem"
-	even
-;----------------------------------------------------------------------------
-; Bonus & Special Stage Assets
-;----------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
+Nem_Special:		binclude	"art/Bonus & Special Stage/Special Half Pipe.nem"
+			even
+; ---------------------------------------------------------------------------
+; Special Stage Assets
+; ---------------------------------------------------------------------------
 Eni_SpecialBack:
 		binclude	"tilemaps/Main background mappings for special stage.eni"
 Eni_SpecialBackBottom:
 		binclude	"tilemaps/Lower background mappings for special stage.eni"
-
-;-----------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 ; Exit curve + slope up
-;-----------------------------------------------------------------------------------
-MapSpec_Rise1:		BINCLUDE	"mappings/special stage/Slope up - Frame 1.bin"
-MapSpec_Rise2:		BINCLUDE	"mappings/special stage/Slope up - Frame 2.bin"
-MapSpec_Rise3:		BINCLUDE	"mappings/special stage/Slope up - Frame 3.bin"
-MapSpec_Rise4:		BINCLUDE	"mappings/special stage/Slope up - Frame 4.bin"
-MapSpec_Rise5:		BINCLUDE	"mappings/special stage/Slope up - Frame 5.bin"
-MapSpec_Rise6:		BINCLUDE	"mappings/special stage/Slope up - Frame 6.bin"
-MapSpec_Rise7:		BINCLUDE	"mappings/special stage/Slope up - Frame 7.bin"
-MapSpec_Rise8:		BINCLUDE	"mappings/special stage/Slope up - Frame 8.bin"
-MapSpec_Rise9:		BINCLUDE	"mappings/special stage/Slope up - Frame 9.bin"
-MapSpec_Rise10:		BINCLUDE	"mappings/special stage/Slope up - Frame 10.bin"
-MapSpec_Rise11:		BINCLUDE	"mappings/special stage/Slope up - Frame 11.bin"
-MapSpec_Rise12:		BINCLUDE	"mappings/special stage/Slope up - Frame 12.bin"
-MapSpec_Rise13:		BINCLUDE	"mappings/special stage/Slope up - Frame 13.bin"
-MapSpec_Rise14:		BINCLUDE	"mappings/special stage/Slope up - Frame 14.bin"
-MapSpec_Rise15:		BINCLUDE	"mappings/special stage/Slope up - Frame 15.bin"
-MapSpec_Rise16:		BINCLUDE	"mappings/special stage/Slope up - Frame 16.bin"
-MapSpec_Rise17:		BINCLUDE	"mappings/special stage/Slope up - Frame 17.bin"
-
-;-----------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
+MapSpec_Rise1:		binclude	"mappings/special stage/Slope up - Frame 1.bin"
+MapSpec_Rise2:		binclude	"mappings/special stage/Slope up - Frame 2.bin"
+MapSpec_Rise3:		binclude	"mappings/special stage/Slope up - Frame 3.bin"
+MapSpec_Rise4:		binclude	"mappings/special stage/Slope up - Frame 4.bin"
+MapSpec_Rise5:		binclude	"mappings/special stage/Slope up - Frame 5.bin"
+MapSpec_Rise6:		binclude	"mappings/special stage/Slope up - Frame 6.bin"
+MapSpec_Rise7:		binclude	"mappings/special stage/Slope up - Frame 7.bin"
+MapSpec_Rise8:		binclude	"mappings/special stage/Slope up - Frame 8.bin"
+MapSpec_Rise9:		binclude	"mappings/special stage/Slope up - Frame 9.bin"
+MapSpec_Rise10:		binclude	"mappings/special stage/Slope up - Frame 10.bin"
+MapSpec_Rise11:		binclude	"mappings/special stage/Slope up - Frame 11.bin"
+MapSpec_Rise12:		binclude	"mappings/special stage/Slope up - Frame 12.bin"
+MapSpec_Rise13:		binclude	"mappings/special stage/Slope up - Frame 13.bin"
+MapSpec_Rise14:		binclude	"mappings/special stage/Slope up - Frame 14.bin"
+MapSpec_Rise15:		binclude	"mappings/special stage/Slope up - Frame 15.bin"
+MapSpec_Rise16:		binclude	"mappings/special stage/Slope up - Frame 16.bin"
+MapSpec_Rise17:		binclude	"mappings/special stage/Slope up - Frame 17.bin"
+; ---------------------------------------------------------------------------
 ; Straight path
-;-----------------------------------------------------------------------------------
-MapSpec_Straight1:	BINCLUDE	"mappings/special stage/Straight path - Frame 1.bin"
-MapSpec_Straight2:	BINCLUDE	"mappings/special stage/Straight path - Frame 2.bin"
-MapSpec_Straight3:	BINCLUDE	"mappings/special stage/Straight path - Frame 3.bin"
-MapSpec_Straight4:	BINCLUDE	"mappings/special stage/Straight path - Frame 4.bin"
-
-;-----------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
+MapSpec_Straight1:	binclude	"mappings/special stage/Straight path - Frame 1.bin"
+MapSpec_Straight2:	binclude	"mappings/special stage/Straight path - Frame 2.bin"
+MapSpec_Straight3:	binclude	"mappings/special stage/Straight path - Frame 3.bin"
+MapSpec_Straight4:	binclude	"mappings/special stage/Straight path - Frame 4.bin"
+; ---------------------------------------------------------------------------
 ; Exit curve + slope down
-;-----------------------------------------------------------------------------------
-MapSpec_Drop1:		BINCLUDE	"mappings/special stage/Slope down - Frame 1.bin"
-MapSpec_Drop2:		BINCLUDE	"mappings/special stage/Slope down - Frame 2.bin"
-MapSpec_Drop3:		BINCLUDE	"mappings/special stage/Slope down - Frame 3.bin"
-MapSpec_Drop4:		BINCLUDE	"mappings/special stage/Slope down - Frame 4.bin"
-MapSpec_Drop5:		BINCLUDE	"mappings/special stage/Slope down - Frame 5.bin"
-MapSpec_Drop6:		BINCLUDE	"mappings/special stage/Slope down - Frame 6.bin"
-MapSpec_Drop7:		BINCLUDE	"mappings/special stage/Slope down - Frame 7.bin"
-MapSpec_Drop8:		BINCLUDE	"mappings/special stage/Slope down - Frame 8.bin"
-MapSpec_Drop9:		BINCLUDE	"mappings/special stage/Slope down - Frame 9.bin"
-MapSpec_Drop10:		BINCLUDE	"mappings/special stage/Slope down - Frame 10.bin"
-MapSpec_Drop11:		BINCLUDE	"mappings/special stage/Slope down - Frame 11.bin"
-MapSpec_Drop12:		BINCLUDE	"mappings/special stage/Slope down - Frame 12.bin"
-MapSpec_Drop13:		BINCLUDE	"mappings/special stage/Slope down - Frame 13.bin"
-MapSpec_Drop14:		BINCLUDE	"mappings/special stage/Slope down - Frame 14.bin"
-MapSpec_Drop15:		BINCLUDE	"mappings/special stage/Slope down - Frame 15.bin"
-MapSpec_Drop16:		BINCLUDE	"mappings/special stage/Slope down - Frame 16.bin"
-MapSpec_Drop17:		BINCLUDE	"mappings/special stage/Slope down - Frame 17.bin"
-
-;-----------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
+MapSpec_Drop1:		binclude	"mappings/special stage/Slope down - Frame 1.bin"
+MapSpec_Drop2:		binclude	"mappings/special stage/Slope down - Frame 2.bin"
+MapSpec_Drop3:		binclude	"mappings/special stage/Slope down - Frame 3.bin"
+MapSpec_Drop4:		binclude	"mappings/special stage/Slope down - Frame 4.bin"
+MapSpec_Drop5:		binclude	"mappings/special stage/Slope down - Frame 5.bin"
+MapSpec_Drop6:		binclude	"mappings/special stage/Slope down - Frame 6.bin"
+MapSpec_Drop7:		binclude	"mappings/special stage/Slope down - Frame 7.bin"
+MapSpec_Drop8:		binclude	"mappings/special stage/Slope down - Frame 8.bin"
+MapSpec_Drop9:		binclude	"mappings/special stage/Slope down - Frame 9.bin"
+MapSpec_Drop10:		binclude	"mappings/special stage/Slope down - Frame 10.bin"
+MapSpec_Drop11:		binclude	"mappings/special stage/Slope down - Frame 11.bin"
+MapSpec_Drop12:		binclude	"mappings/special stage/Slope down - Frame 12.bin"
+MapSpec_Drop13:		binclude	"mappings/special stage/Slope down - Frame 13.bin"
+MapSpec_Drop14:		binclude	"mappings/special stage/Slope down - Frame 14.bin"
+MapSpec_Drop15:		binclude	"mappings/special stage/Slope down - Frame 15.bin"
+MapSpec_Drop16:		binclude	"mappings/special stage/Slope down - Frame 16.bin"
+MapSpec_Drop17:		binclude	"mappings/special stage/Slope down - Frame 17.bin"
+; ---------------------------------------------------------------------------
 ; Curved path
-;-----------------------------------------------------------------------------------
-MapSpec_Turning1:	BINCLUDE	"mappings/special stage/Curve right - Frame 1.bin"
-MapSpec_Turning2:	BINCLUDE	"mappings/special stage/Curve right - Frame 2.bin"
-MapSpec_Turning3:	BINCLUDE	"mappings/special stage/Curve right - Frame 3.bin"
-MapSpec_Turning4:	BINCLUDE	"mappings/special stage/Curve right - Frame 4.bin"
-MapSpec_Turning5:	BINCLUDE	"mappings/special stage/Curve right - Frame 5.bin"
-MapSpec_Turning6:	BINCLUDE	"mappings/special stage/Curve right - Frame 6.bin"
-
-;-----------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
+MapSpec_Turning1:	binclude	"mappings/special stage/Curve right - Frame 1.bin"
+MapSpec_Turning2:	binclude	"mappings/special stage/Curve right - Frame 2.bin"
+MapSpec_Turning3:	binclude	"mappings/special stage/Curve right - Frame 3.bin"
+MapSpec_Turning4:	binclude	"mappings/special stage/Curve right - Frame 4.bin"
+MapSpec_Turning5:	binclude	"mappings/special stage/Curve right - Frame 5.bin"
+MapSpec_Turning6:	binclude	"mappings/special stage/Curve right - Frame 6.bin"
+; ---------------------------------------------------------------------------
 ; Exit curve
-;-----------------------------------------------------------------------------------
-MapSpec_Unturn1:	BINCLUDE	"mappings/special stage/Curve right - Frame 7.bin"
-MapSpec_Unturn2:	BINCLUDE	"mappings/special stage/Curve right - Frame 8.bin"
-MapSpec_Unturn3:	BINCLUDE	"mappings/special stage/Curve right - Frame 9.bin"
-MapSpec_Unturn4:	BINCLUDE	"mappings/special stage/Curve right - Frame 10.bin"
-MapSpec_Unturn5:	BINCLUDE	"mappings/special stage/Curve right - Frame 11.bin"
-
-;-----------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
+MapSpec_Unturn1:	binclude	"mappings/special stage/Curve right - Frame 7.bin"
+MapSpec_Unturn2:	binclude	"mappings/special stage/Curve right - Frame 8.bin"
+MapSpec_Unturn3:	binclude	"mappings/special stage/Curve right - Frame 9.bin"
+MapSpec_Unturn4:	binclude	"mappings/special stage/Curve right - Frame 10.bin"
+MapSpec_Unturn5:	binclude	"mappings/special stage/Curve right - Frame 11.bin"
+; ---------------------------------------------------------------------------
 ; Enter curve
-;-----------------------------------------------------------------------------------
-MapSpec_Turn1:		BINCLUDE	"mappings/special stage/Begin curve right - Frame 1.bin"
-MapSpec_Turn2:		BINCLUDE	"mappings/special stage/Begin curve right - Frame 2.bin"
-MapSpec_Turn3:		BINCLUDE	"mappings/special stage/Begin curve right - Frame 3.bin"
-MapSpec_Turn4:		BINCLUDE	"mappings/special stage/Begin curve right - Frame 4.bin"
-MapSpec_Turn5:		BINCLUDE	"mappings/special stage/Begin curve right - Frame 5.bin"
-MapSpec_Turn6:		BINCLUDE	"mappings/special stage/Begin curve right - Frame 6.bin"
-MapSpec_Turn7:		BINCLUDE	"mappings/special stage/Begin curve right - Frame 7.bin"
+; ---------------------------------------------------------------------------
+MapSpec_Turn1:		binclude	"mappings/special stage/Begin curve right - Frame 1.bin"
+MapSpec_Turn2:		binclude	"mappings/special stage/Begin curve right - Frame 2.bin"
+MapSpec_Turn3:		binclude	"mappings/special stage/Begin curve right - Frame 3.bin"
+MapSpec_Turn4:		binclude	"mappings/special stage/Begin curve right - Frame 4.bin"
+MapSpec_Turn5:		binclude	"mappings/special stage/Begin curve right - Frame 5.bin"
+MapSpec_Turn6:		binclude	"mappings/special stage/Begin curve right - Frame 6.bin"
+MapSpec_Turn7:		binclude	"mappings/special stage/Begin curve right - Frame 7.bin"
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - primary patterns and block mappings
 ; ---------------------------------------------------------------------------
@@ -20232,10 +20116,14 @@ Map_HPZ_Bridge:	binclude	"mappings/sprite/obj11_HPZ.bin"
 		even
 Map_Obj13:	binclude	"mappings/sprite/HPZ Waterfall.bin"
 		even
+Map_Obj15:	binclude	"mappings/sprite/Swinging Platform.bin"
+		even
+Map_Obj15_SLZ:	binclude	"mappings/sprite/SLZ Swinging Platform.bin"
+		even
 Map_Obj16:	binclude	"mappings/sprite/HTZ Descending lift.bin"
 		even
-Map_Obj17:	binclude	"mappings/sprite/S1/Spiked Pole Helix.bin"
-		even
+Map_Obj17:;	binclude	"mappings/sprite/S1/Spiked Pole Helix.bin"
+	;	even
 Map_Obj18_GHZ:	binclude	"mappings/sprite/18 - GHZ platforms mappings.bin"
 		even
 Map_obj18_EHZ:	binclude	"mappings/sprite/18 - EHZ platforms mappings.bin"
@@ -20260,12 +20148,23 @@ Map_obj22:	binclude	"mappings/sprite/Buzz Bomber.bin"
 		even
 Map_obj23:	binclude	"mappings/sprite/Buzz Bomber Missile.bin"
 		even
-Map_GroundExplosion:
-		binclude	"mappings/sprite/Ground Explosion.bin"
+Map_GroundExplosion:	binclude	"mappings/sprite/Ground Explosion.bin"
 		even
 Map_Ring:	binclude	"mappings/sprite/Ring.bin"		; $25
 		even
+Map_Obj26:	binclude	"mappings/sprite/Monitor.bin"
+		even
 Map_Obj27:	binclude	"mappings/sprite/Explosion.bin"
+		even
+Map_Animals1:	binclude	"mappings/sprite/Map - Chicken Flicky Eagle.bin"
+		even
+Map_Animals2:	binclude	"mappings/sprite/Map - Bear Pig Squirrel Mouse Monkey.bin"
+		even
+Map_Animals3:	binclude	"mappings/sprite/Map - Turtle.bin"
+		even
+Map_Animals4:	binclude	"mappings/sprite/Map - Seal.bin"
+		even
+Map_Animals5:	binclude	"mappings/sprite/Map - Rabbit Penguin.bin"	; $28
 		even
 Map_Obj2A:	binclude	"mappings/sprite/Points from an enemy.bin"
 		even
@@ -20303,8 +20202,7 @@ Map_obj5Eb:	binclude	"mappings/sprite/obj5E_b.bin"
 		even
 Map_Obj79:	binclude	"mappings/sprite/Checkpoint.bin"
 		even
-Map_SpecialWarp:
-		binclude	"mappings/sprite/Special Stage Warp.bin"
+Map_SpecialWarp:	binclude	"mappings/sprite/Special Stage Warp.bin"
 		even
 Map_GiantRing:	binclude	"mappings/sprite/GiantRing.bin"
 		even
@@ -20327,6 +20225,8 @@ Map_SSRE:	binclude	"mappings/sprite/SSR Emeralds.bin"	; $97
 		even
 Map_Over:	include		"mappings/sprite/Game_Over.asm"		; $98
 Map_Bas:	binclude	"mappings/sprite/Basaran.bin"		; $A0 (Not yet, but soon)
+		even
+Map_GBall:	binclude	"mappings/sprite/Giant Ball.bin"
 		even
 
  if AdvancedHandler=1

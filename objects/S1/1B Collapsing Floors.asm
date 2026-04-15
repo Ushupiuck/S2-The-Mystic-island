@@ -84,9 +84,7 @@ sub_8E12:
 		bclr	#3,obStatus(a1)
 		bclr	#5,obStatus(a1)
 		move.b	#1,obPrevAni(a1)
-
-.return:
-		rts
+.return:	rts
 ; End of function sub_8E12
 
 ; ---------------------------------------------------------------------------
@@ -106,4 +104,4 @@ loc_8E3E:
 
 loc_8E52:
 		addq.b	#1,obFrame(a0)
-		bra.s	loc_8E70
+		bra.w	loc_8E70

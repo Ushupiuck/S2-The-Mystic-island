@@ -18,7 +18,7 @@ obX:			equ 8		; x-axis position (2-4 bytes)
 obXSub:			equ $A		; for when exra presition is required (2 bytes)
 obY:			equ $C		; y-axis position (2-4 bytes)
 obYSub:			equ $E		; for when exra presition is required (2 bytes)
-obActWid:		equ $14		; action width
+obActWid:		equ $14		; action width; width_pixels
 obPriority:		equ $18		; and $19 - sprite stack priority -- 0 is front
 obFrame:		equ $1A		; current frame displayed
 ; ---------------------------------------------------------------------------
@@ -137,9 +137,9 @@ mainspr_width		= $E
 mainspr_childsprites	= $F	; amount of child sprites
 mainspr_height		= $14
 subspr_data		= $10
-sub2_x_pos	= subspr_data+next_subspr*0+0	;x_vel
-sub2_y_pos	= subspr_data+next_subspr*0+2	;y_vel
-sub2_mapframe	= subspr_data+next_subspr*0+5
+sub2_x_pos	= subspr_data+next_subspr*0+0	; $10, obVelX
+sub2_y_pos	= subspr_data+next_subspr*0+2	; $12, obVelY
+sub2_mapframe	= subspr_data+next_subspr*0+5	; $15, obTimeFrame
 sub3_x_pos	= subspr_data+next_subspr*1+0	;y_radius
 sub3_y_pos	= subspr_data+next_subspr*1+2	;priority
 sub3_mapframe	= subspr_data+next_subspr*1+5	;anim_frame
@@ -1012,10 +1012,10 @@ v_scorelife:		ds.l	1			; points required for an extra life (JP1 only)
 
 f_levselcheat:		ds.b	1			; level select cheat flag
 f_slomocheat:		ds.b	1			; slow motion & frame advance cheat flag
-Debug_mode_flag:	ds.b	1
 f_debugcheat:		ds.b	1			; debug mode cheat flag
-v_megadrive:		ds.b	1			; Megadrive machine type
 			ds.b	1
+Debug_mode_flag:	ds.b	1
+v_megadrive:		ds.b	1			; Megadrive machine type
 v_title_dcount:		ds.w	1			; number of times the d-pad is pressed on title screen
 v_title_ccount:		ds.w	1			; number of times C is pressed on title screen
 
@@ -1278,7 +1278,7 @@ ArtTile_GHZ_Big_Flower_1:	equ ArtTile_Level+$35C
 ArtTile_GHZ_Small_Flower:	equ ArtTile_Level+$36C
 ArtTile_GHZ_Waterfall:		equ ArtTile_Level+$378
 ArtTile_GHZ_Flower_3:		equ ArtTile_Level+$380
-ArtTile_GHZ_Bridge:		equ $4C6 ; $38E in S1
+ArtTile_GHZ_Bridge:		equ $38E ; $38E in S1
 ArtTile_GHZ_Big_Flower_2:	equ ArtTile_Level+$390
 ArtTile_GHZ_Spike_Pole:		equ $398
 ArtTile_GHZ_Giant_Ball:		equ $3AA
@@ -1360,10 +1360,10 @@ ArtTile_FZ_Eggman_No_Vehicle:	equ $470
 
 ; General Level Art
 ArtTile_Level:			equ $000
-ArtTile_Ball_HogV:		equ $33E
+ArtTile_Ball_HogV:		equ $500
 ArtTile_Ball_HogH:		equ ArtTile_Ball_HogV+$18
 ArtTile_Bomb:			equ $400
-ArtTile_Ground_Explosion:	equ $385 ; Unused
+ArtTile_Ground_Explosion:	equ $547 ; Unused
 ArtTile_Spikes:			equ $434
 ArtTile_Spikes_GHZ:		equ ArtTile_Spikes+$6C
 
@@ -1563,3 +1563,12 @@ ArtTile_Redz:			equ $500
 ArtTile_BFish:			equ $530
 ArtTile_Aquis:			equ $570
 ArtTile_Aquis_Child:		equ $4E0
+
+; S1 Ending (leftover) (Original offsets temporarily overriden)
+ArtTile_ArtNem_S1EndFlicky:	equ $580;$05A5
+ArtTile_ArtNem_S1EndRabbit:	equ $592;$0553
+ArtTile_ArtNem_S1EndPenguin:	equ $580;$0573
+ArtTile_ArtNem_S1EndSeal:	equ $592;$0585
+ArtTile_ArtNem_S1EndPig:	equ $580;$0593
+ArtTile_ArtNem_S1EndChicken:	equ $592;$0565
+ArtTile_ArtNem_S1EndSquirrel:	equ $580;$05B3

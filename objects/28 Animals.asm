@@ -1,84 +1,178 @@
 ; ---------------------------------------------------------------------------
 ; Object 28 - animals
 ; ---------------------------------------------------------------------------
-
-Obj28:
+animal_direction	= objoff_2D	; 1 byte
+animal_type		= objoff_30	; 1 byte
+animal_x_vel		= objoff_32	; 2 bytes
+animal_y_vel		= objoff_34	; 2 bytes
+animal_prison_num	= objoff_36	; 2 bytes
+ObjFlicky:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	off_9AB6(pc,d0.w),d1
-		jmp	off_9AB6(pc,d1.w)
+		move.w	ObjFlicky_Index(pc,d0.w),d1
+		jmp	ObjFlicky_Index(pc,d1.w)
 ; ---------------------------------------------------------------------------
-off_9AB6:	dc.w loc_9B92-off_9AB6,loc_9CB8-off_9AB6,loc_9D12-off_9AB6
-		dc.w loc_9D4E-off_9AB6,loc_9D12-off_9AB6,loc_9D12-off_9AB6
-		dc.w loc_9D12-off_9AB6,loc_9D4E-off_9AB6,loc_9D12-off_9AB6
-		dc.w loc_9DCE-off_9AB6,loc_9DEE-off_9AB6,loc_9DEE-off_9AB6
-		dc.w loc_9E0E-off_9AB6,loc_9E48-off_9AB6,loc_9EA2-off_9AB6
-		dc.w loc_9EC0-off_9AB6,loc_9EA2-off_9AB6,loc_9EC0-off_9AB6
-		dc.w loc_9EA2-off_9AB6,loc_9EFE-off_9AB6,loc_9E64-off_9AB6
-byte_9AE0:	dc.b   0,  5,  2,  3,  6,  3,  4,  5,  4,  1,  0,  1
-word_9AEC:	dc.w -$200
-		dc.w -$400
-		dc.l Map_Obj28a
-		dc.w -$200
-		dc.w -$300
-		dc.l Map_Obj28
-		dc.w $FE80
-		dc.w -$300
-		dc.l Map_Obj28a
-		dc.w $FEC0
-		dc.w $FE80
-		dc.l Map_Obj28
-		dc.w $FE40
-		dc.w -$300
-		dc.l Map_Obj28b
-		dc.w -$300
-		dc.w -$400
-		dc.l Map_Obj28
-		dc.w $FD80
-		dc.w $FC80
-		dc.l Map_Obj28b
-word_9B24:	dc.w $FBC0,$FC00,$FBC0,$FC00
-		dc.w $FBC0,$FC00,$FD00,$FC00
-		dc.w $FD00,$FC00,$FE80,$FD00
-		dc.w $FE80,$FD00,$FEC0,$FE80
-		dc.w $FE40,$FD00,$FE00,$FD00
-		dc.w $FD80,$FC80
-off_9B50:	dc.l Map_Obj28,Map_Obj28
-		dc.l Map_Obj28,Map_Obj28a
-		dc.l Map_Obj28a,Map_Obj28a
-		dc.l Map_Obj28a,Map_Obj28
-		dc.l Map_Obj28b,Map_Obj28
-		dc.l Map_Obj28b
-word_9B7C:
-		dc.w make_art_tile($5A5,0,0)
-		dc.w make_art_tile($5A5,0,0)
-		dc.w make_art_tile($5A5,0,0)
-		dc.w make_art_tile($553,0,0)
-		dc.w make_art_tile($553,0,0)
-		dc.w make_art_tile($573,0,0)
-		dc.w make_art_tile($573,0,0)
-		dc.w make_art_tile($585,0,0)
-		dc.w make_art_tile($593,0,0)
-		dc.w make_art_tile($565,0,0)
-		dc.w make_art_tile($5B3,0,0)
+ObjFlicky_Index:
+		dc.w ObjFlicky_Init-ObjFlicky_Index		;   0
+		dc.w ObjFlicky_ChkFloor-ObjFlicky_Index		;   2
+		dc.w ObjFlicky_Walk-ObjFlicky_Index		;   4
+		dc.w ObjFlicky_Fly-ObjFlicky_Index		;   6
+		dc.w ObjFlicky_Walk-ObjFlicky_Index		;   8
+		dc.w ObjFlicky_Walk-ObjFlicky_Index		;  $A
+		dc.w ObjFlicky_Walk-ObjFlicky_Index		;  $C
+		dc.w ObjFlicky_Fly-ObjFlicky_Index		;  $E
+		dc.w ObjFlicky_Walk-ObjFlicky_Index		; $10
+		dc.w ObjFlicky_Fly-ObjFlicky_Index		; $12
+		dc.w ObjFlicky_Walk-ObjFlicky_Index		; $14
+		dc.w ObjFlicky_Walk-ObjFlicky_Index		; $16
+		dc.w ObjFlicky_Walk-ObjFlicky_Index		; $18
+		dc.w ObjFlicky_Walk-ObjFlicky_Index		; $1A
+		dc.w ObjFlicky_Prison-ObjFlicky_Index		; $1C
+		; These are the S1 ending actions:
+		dc.w ObjFlicky_FlickyWait-ObjFlicky_Index	; $1E
+		dc.w ObjFlicky_FlickyWait-ObjFlicky_Index	; $20
+		dc.w ObjFlicky_FlickyJump-ObjFlicky_Index	; $22
+		dc.w ObjFlicky_RabbitWait-ObjFlicky_Index	; $24
+		dc.w ObjFlicky_LandJump-ObjFlicky_Index		; $26
+		dc.w ObjFlicky_SingleBounce-ObjFlicky_Index	; $28
+		dc.w ObjFlicky_LandJump-ObjFlicky_Index		; $2A
+		dc.w ObjFlicky_SingleBounce-ObjFlicky_Index	; $2C
+		dc.w ObjFlicky_LandJump-ObjFlicky_Index		; $2E
+		dc.w ObjFlicky_FlyBounce-ObjFlicky_Index	; $30
+		dc.w ObjFlicky_DoubleBounce-ObjFlicky_Index	; $32
+; ---------------------------------------------------------------------------
+; Numerical defintions as for Which Flicky is which
+; Otherwise this would become a nightmare to modify
+; ---------------------------------------------------------------------------
+Rabbit = 0
+Chicken = 1
+Penguin = 2
+Seal = 3
+Pig = 4
+Bird = 5
+Squirrel = 6
+Eagle = 7
+Mouse = 8
+Monkey = 9
+Turtle = $A
+Bear = $B
+; ---------------------------------------------------------------------------
+ ; This table declares what animals will appear in the zone.
+ ; When an enemy is destroyed, a random animal is chosen from the 2 selected animals.
+ ; Note: you must also load the corresponding art in the PLCs.
+; ---------------------------------------------------------------------------
+ObjFlicky_ZoneAnimals:
+		dc.b Rabbit,	Bird	; AIZ  0
+		dc.b Rabbit,	Seal	; HCZ  1
+		dc.b Bird,	Chicken	; MGZ  2
+		dc.b Rabbit,	Bird	; CNZ  3
+		dc.b Squirrel,	Bird	; FBZ  4
+		dc.b Penguin,	Seal	; ICZ  5
+		dc.b Bird,	Chicken	; LBZ  6
+		dc.b Squirrel,	Chicken	; MHZ  7  ; (S3&K)
+		dc.b Rabbit,	Chicken	; SOZ  8  ; (S3&K)
+		dc.b Bird,	Chicken	; LRZ  9  ; (S3&K)
+		dc.b Rabbit,	Bird	; SSZ $A  ; (S3&K)
+		dc.b Squirrel,	Chicken	; DEZ $B  ; (S3&K)
+		dc.b Squirrel,	Bird	; DDZ $C  ; (S3&K) Doomsday skips loading animals, but this is what would load if it did
+		dc.b Bird,	Chicken	; ??Z $D  ; (S3&K)Intro and Ending
+		dc.b Bird,	Chicken	; ALZ $E  ; (S3&K)
+		dc.b Bird,	Chicken	; BPZ $F  ; (S3&K)
+		dc.b Bird,	Chicken	; CGZ $10 ; (S3&K)
+		dc.b Bird,	Chicken	; DPZ $11 ; (S3&K)
+		dc.b Bird,	Chicken	; EMZ $12 ; (S3&K)
+		dc.b Bird,	Chicken	; GBZ $13 ; (S3&K) Gumball
+		dc.b Bird,	Chicken	; SCZ $14 ; (S3&K) Glowing Spheres
+		dc.b Bird,	Chicken	; SCZ $15 ; (S3&K) Slot Machine
+		dc.b Bird,	Chicken	; HPZ $16 ; (S3&K) Act 1
+		dc.b Bird,	Chicken	; HPZ $16 ; (S3&K) Act 2
+
+ObjFlicky_Properties:	; This table declares the speed and mappings of each animal.
+		dc.w -$200, -$400 ; Rabbit
+		dc.l Map_Animals5
+		dc.w -$200, -$300 ; Chicken
+		dc.l Map_Animals1
+		dc.w -$180, -$300 ; Penguin
+		dc.l Map_Animals5
+		dc.w -$140, -$180 ; Seal
+		dc.l Map_Animals4
+		dc.w -$1C0, -$300 ; Pig
+		dc.l Map_Animals2
+		dc.w -$300, -$400 ; Blue Flicky
+		dc.l Map_Animals1
+		dc.w -$280, -$380 ; Squirrel
+		dc.l Map_Animals2
+		dc.w -$280, -$300 ; Eagle
+		dc.l Map_Animals1
+		dc.w -$200, -$380 ; Mouse
+		dc.l Map_Animals2
+		dc.w -$2C0, -$300 ; Monkey
+		dc.l Map_Animals2
+		dc.w -$140, -$200 ; Turtle
+		dc.l Map_Animals3
+		dc.w -$200, -$300 ; Bear
+		dc.l Map_Animals2
+
+; ---------------------------------------------------------------------------
+; The following tables are used exclusively by Sonic 1's ending
+; ---------------------------------------------------------------------------
+ObjFlicky_EndingProperties:
+		; Art, Horizontal speed, Vertical speed, Mappings
+		dc.w  ArtTile_ArtNem_S1EndFlicky	;  0	Flicky
+		dc.w -$440, -$400			;  0
+		dc.l Map_Animals1			;  0
+		dc.w  ArtTile_ArtNem_S1EndFlicky	;  1	Flicky (unused)
+		dc.w -$440, -$400			;  1
+		dc.l Map_Animals1			;  1
+		dc.w  ArtTile_ArtNem_S1EndFlicky	;  2	Flicky
+		dc.w -$440, -$400			;  2
+		dc.l Map_Animals1			;  2
+		dc.w  ArtTile_ArtNem_S1EndRabbit	;  3	Rabbit
+		dc.w -$300, -$400			;  3
+		dc.l Map_Animals5			;  3
+		dc.w  ArtTile_ArtNem_S1EndRabbit	;  4	Rabbit
+		dc.w -$300, -$400			;  4
+		dc.l Map_Animals5			;  4
+		dc.w  ArtTile_ArtNem_S1EndPenguin	;  5	Penguin (unused)
+		dc.w -$180, -$300			;  5
+		dc.l Map_Animals5			;  5
+		dc.w  ArtTile_ArtNem_S1EndPenguin	;  6	Penguin (unused)
+		dc.w -$180, -$300			;  6
+		dc.l Map_Animals5			;  6
+		dc.w  ArtTile_ArtNem_S1EndSeal		;  7	Seal (unused)
+		dc.w -$140, -$180			;  7
+		dc.l Map_Animals4			;  7
+		dc.w  ArtTile_ArtNem_S1EndPig		;  8	Pig (unused)
+		dc.w -$1C0, -$300			;  8
+		dc.l Map_Animals2			;  8
+		dc.w  ArtTile_ArtNem_S1EndChicken	;  9	Chicken
+		dc.w -$200, -$300			;  9
+		dc.l Map_Animals1			;  9
+		dc.w  ArtTile_ArtNem_S1EndSquirrel	;  $A	Squirrel
+		dc.w -$280, -$380			;  $A
+		dc.l Map_Animals2			;  $A
 ; ---------------------------------------------------------------------------
 
-loc_9B92:
+ObjFlicky_Init:
 		tst.b	obSubtype(a0)
-		beq.w	loc_9C00
+		beq.s	ObjFlickyRandom
 		moveq	#0,d0
 		move.b	obSubtype(a0),d0
 		add.w	d0,d0
 		move.b	d0,obRoutine(a0)
-		subi.w	#$14,d0
-		move.w	word_9B7C(pc,d0.w),obGfx(a0)
+		subi.w	#$14,d0		; d0 = (subtype-$A)*2
+		move.w	d0,d1
 		add.w	d0,d0
-		move.l	off_9B50(pc,d0.w),obMap(a0)
-		lea	word_9B24(pc),a1
-		move.w	(a1,d0.w),objoff_32(a0)
-		move.w	(a1,d0.w),obVelX(a0)
-		move.w	2(a1,d0.w),objoff_34(a0)
-		move.w	2(a1,d0.w),obVelY(a0)
+		add.w	d0,d0
+		add.w	d1,d0
+		lea	ObjFlicky_EndingProperties(pc),a1
+		adda.w	d0,a1
+		move.w	(a1)+,obGfx(a0)
+		move.w	(a1)+,animal_x_vel(a0)
+		move.w	animal_x_vel(a0),obVelX(a0)
+		move.w	(a1)+,animal_y_vel(a0)
+		move.w	animal_y_vel(a0),obVelY(a0)
+		move.l	(a1)+,obMap(a0)
 		move.b	#$C,obHeight(a0)
 		move.b	#4,obRender(a0)
 		bset	#0,obRender(a0)
@@ -88,29 +182,27 @@ loc_9B92:
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
-loc_9C00:
+ObjFlickyRandom:
 		addq.b	#2,obRoutine(a0)
 		bsr.w	RandomNumber
+		move.w	#make_art_tile($580,0,0),obGfx(a0)
 		andi.w	#1,d0
+		beq.s	+
+		move.w	#make_art_tile($592,0,0),obGfx(a0)
++
 		moveq	#0,d1
 		move.b	(Current_Zone).w,d1
 		add.w	d1,d1
 		add.w	d0,d1
-		lea	byte_9AE0(pc),a1
+		lea	ObjFlicky_ZoneAnimals(pc),a1
 		move.b	(a1,d1.w),d0
-		move.b	d0,objoff_30(a0)
+		move.b	d0,animal_type(a0)
 		lsl.w	#3,d0
-		lea	word_9AEC(pc),a1
+		lea	ObjFlicky_Properties(pc),a1
 		adda.w	d0,a1
-		move.w	(a1)+,objoff_32(a0)
-		move.w	(a1)+,objoff_34(a0)
+		move.w	(a1)+,animal_x_vel(a0)
+		move.w	(a1)+,animal_y_vel(a0)
 		move.l	(a1)+,obMap(a0)
-		move.w	#make_art_tile($580,0,0),obGfx(a0)
-		btst	#0,objoff_30(a0)
-		beq.s	loc_9C4A
-		move.w	#make_art_tile($592,0,0),obGfx(a0)
-
-loc_9C4A:
 		move.b	#$C,obHeight(a0)
 		move.b	#4,obRender(a0)
 		bset	#0,obRender(a0)
@@ -119,9 +211,10 @@ loc_9C4A:
 		move.b	#7,obTimeFrame(a0)
 		move.b	#2,obFrame(a0)
 		move.w	#-$400,obVelY(a0)
+	;	tst.b	objoff_38(a0)	; From Sonic 3 & knuckles
 		tst.b	(Boss_defeated_flag).w
-		bne.s	loc_9CAA
-		bsr.w	FindFreeObj
+		bne.s	++
+		jsr	(FindFreeObj).l
 		bne.s	+
 		_move.b	#id_Obj2A,obID(a1)
 		move.w	obX(a0),obX(a1)
@@ -129,265 +222,259 @@ loc_9C4A:
 		move.w	objoff_3E(a0),d0
 		lsr.w	#1,d0
 		move.b	d0,obFrame(a1)
++		bra.w	DisplaySprite
+; ---------------------------------------------------------------------------
++
+		move.b	#$1C,obRoutine(a0)
+		clr.w	obVelX(a0)
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
-loc_9CAA:
-		move.b	#$12,obRoutine(a0)
-		clr.w	obVelX(a0)
-/		bra.w	DisplaySprite
+;ObjFlicky_Delete:
+	;	jmp	(DeleteObject).l
 ; ---------------------------------------------------------------------------
 
-loc_9CB8:
+ObjFlicky_ChkFloor:
 		tst.b	obRender(a0)
 		bpl.w	DeleteObject
 		bsr.w	ObjectMoveAndFall
 		tst.w	obVelY(a0)
-		bmi.s	-
+		bmi.w	DisplaySprite
 		jsr	(ObjHitFloor).l
 		tst.w	d1
-		bpl.s	-
+		bpl.w	DisplaySprite
 		add.w	d1,obY(a0)
-		move.w	objoff_32(a0),obVelX(a0)
-		move.w	objoff_34(a0),obVelY(a0)
+		move.w	animal_x_vel(a0),obVelX(a0)
+		move.w	animal_y_vel(a0),obVelY(a0)
 		move.b	#1,obFrame(a0)
-		move.b	objoff_30(a0),d0
+		move.b	animal_type(a0),d0
 		add.b	d0,d0
 		addq.b	#4,d0
 		move.b	d0,obRoutine(a0)
-		tst.b	(Boss_defeated_flag).w
-		beq.s	-
+	;	tst.b	objoff_38(a0)	; From Sonic 3 & knuckles
+	;	tst.b	(Boss_defeated_flag).w
+	;	beq.w	DisplaySprite
 		btst	#4,(Vint_runcount+3).w
-		beq.s	-
+		beq.w	DisplaySprite
 		neg.w	obVelX(a0)
 		bchg	#0,obRender(a0)
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
-loc_9D12:
+ObjFlicky_Walk:
 		bsr.w	ObjectMoveAndFall
 		move.b	#1,obFrame(a0)
 		tst.w	obVelY(a0)
-		bmi.s	loc_9D3C
-		move.b	#0,obFrame(a0)
+		bmi.s	+
+		clr.b	obFrame(a0)
 		jsr	(ObjHitFloor).l
 		tst.w	d1
-		bpl.s	loc_9D3C
+		bpl.s	+
 		add.w	d1,obY(a0)
-		move.w	objoff_34(a0),obVelY(a0)
-
-loc_9D3C:
+		move.w	animal_y_vel(a0),obVelY(a0)
++
 		tst.b	obSubtype(a0)
-		bne.s	loc_9DB2
+		bne.s	ObjFlicky_ChkDel
 		tst.b	obRender(a0)
 		bpl.w	DeleteObject
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
-loc_9D4E:
+ObjFlicky_Fly:
 		bsr.w	ObjectMove
 		addi.w	#$18,obVelY(a0)
 		tst.w	obVelY(a0)
-		bmi.s	loc_9D8A
+		bmi.s	+
 		jsr	(ObjHitFloor).l
 		tst.w	d1
-		bpl.s	loc_9D8A
+		bpl.s	+
 		add.w	d1,obY(a0)
-		move.w	objoff_34(a0),obVelY(a0)
+		move.w	animal_y_vel(a0),obVelY(a0)
 		tst.b	obSubtype(a0)
-		beq.s	loc_9D8A
+		beq.s	+
 		cmpi.b	#$A,obSubtype(a0)
-		beq.s	loc_9D8A
+		beq.s	+
 		neg.w	obVelX(a0)
 		bchg	#0,obRender(a0)
-
-loc_9D8A:
++
 		subq.b	#1,obTimeFrame(a0)
-		bpl.s	loc_9DA0
+		bpl.s	+
 		move.b	#1,obTimeFrame(a0)
 		addq.b	#1,obFrame(a0)
 		andi.b	#1,obFrame(a0)
-
-loc_9DA0:
++
 		tst.b	obSubtype(a0)
-		bne.s	loc_9DB2
+		bne.s	ObjFlicky_ChkDel
 		tst.b	obRender(a0)
 		bpl.w	DeleteObject
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
-loc_9DB2:
+ObjFlicky_ChkDel:
 		move.w	obX(a0),d0
 		sub.w	(v_player+obX).w,d0
-		bcs.s	+
-		subi.w	#$180,d0
-		bpl.s	+
+		bcs.w	DisplaySprite
+		subi.w	#384,d0
+		bpl.w	DisplaySprite
 		tst.b	obRender(a0)
 		bpl.w	DeleteObject
-+		bra.w	DisplaySprite
+		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
-loc_9DCE:
+ObjFlicky_Prison:
 		tst.b	obRender(a0)
 		bpl.w	DeleteObject
-		subq.w	#1,objoff_36(a0)
-		bne.s	+
+		subq.w	#1,animal_prison_num(a0)
+		bne.w	DisplaySprite
 		move.b	#2,obRoutine(a0)
-		move.w	#$180,obPriority(a0)
-+		bra.w	DisplaySprite
+		move.w	#$80,obPriority(a0)
+		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
-loc_9DEE:
-		bsr.w	sub_9F92
-		bcc.w	loc_9DB2
-		move.w	objoff_32(a0),obVelX(a0)
-		move.w	objoff_34(a0),obVelY(a0)
+ObjFlicky_FlickyWait:
+		bsr.w	ChkAnimalInRange
+		bcc.s	ObjFlicky_ChkDel
+		move.w	animal_x_vel(a0),obVelX(a0)
+		move.w	animal_y_vel(a0),obVelY(a0)
 		move.b	#$E,obRoutine(a0)
-		bra.w	loc_9D4E
+		bra.w	ObjFlicky_Fly
 ; ---------------------------------------------------------------------------
 
-loc_9E0E:
-		bsr.w	sub_9F92
-		bpl.w	loc_9DB2
+ObjFlicky_FlickyJump:
+		bsr.w	ChkAnimalInRange
+		bpl.s	ObjFlicky_ChkDel
 		clr.w	obVelX(a0)
-		clr.w	objoff_32(a0)
+		clr.w	animal_x_vel(a0)
 		bsr.w	ObjectMove
 		addi.w	#$18,obVelY(a0)
-		bsr.w	sub_9F52
-		bsr.w	sub_9F7A
+		bsr.w	AnimalJump
+		bsr.w	AnimalFaceSonic
 		subq.b	#1,obTimeFrame(a0)
-		bpl.w	loc_9DB2
+		bpl.w	ObjFlicky_ChkDel
 		move.b	#1,obTimeFrame(a0)
 		addq.b	#1,obFrame(a0)
 		andi.b	#1,obFrame(a0)
-		bra.w	loc_9DB2
+		bra.w	ObjFlicky_ChkDel
 ; ---------------------------------------------------------------------------
 
-loc_9E48:
-		bsr.w	sub_9F92
-		bpl.w	loc_9DB2
-		move.w	objoff_32(a0),obVelX(a0)
-		move.w	objoff_34(a0),obVelY(a0)
+ObjFlicky_RabbitWait:
+		bsr.w	ChkAnimalInRange
+		bpl.w	ObjFlicky_ChkDel
+		move.w	animal_x_vel(a0),obVelX(a0)
+		move.w	animal_y_vel(a0),obVelY(a0)
 		move.b	#4,obRoutine(a0)
-		bra.w	loc_9D12
+		bra.w	ObjFlicky_Walk
 ; ---------------------------------------------------------------------------
 
-loc_9E64:
+ObjFlicky_DoubleBounce:
 		bsr.w	ObjectMoveAndFall
 		move.b	#1,obFrame(a0)
 		tst.w	obVelY(a0)
-		bmi.w	loc_9DB2
-		move.b	#0,obFrame(a0)
+		bmi.w	ObjFlicky_ChkDel
+		clr.b	obFrame(a0)
 		jsr	(ObjHitFloor).l
 		tst.w	d1
-		bpl.w	loc_9DB2
-		not.b	objoff_29(a0)
-		bne.s	loc_9E94
+		bpl.w	ObjFlicky_ChkDel
+		not.b	objoff_2D(a0) ; used to be objoff_29 in Sonic 1/2; in sonic 3, 29 is a "convention followed by many objects", so it was changed
+		bne.s	+
 		neg.w	obVelX(a0)
 		bchg	#0,obRender(a0)
-
-loc_9E94:
++
 		add.w	d1,obY(a0)
-		move.w	objoff_34(a0),obVelY(a0)
-		bra.w	loc_9DB2
+		move.w	animal_y_vel(a0),obVelY(a0)
+		bra.w	ObjFlicky_ChkDel
 ; ---------------------------------------------------------------------------
 
-loc_9EA2:
-		bsr.w	sub_9F92
-		bpl.w	loc_9DB2
+ObjFlicky_LandJump:
+		bsr.w	ChkAnimalInRange
+		bpl.w	ObjFlicky_ChkDel
 		clr.w	obVelX(a0)
-		clr.w	objoff_32(a0)
+		clr.w	animal_x_vel(a0)
 		bsr.w	ObjectMoveAndFall
-		bsr.w	sub_9F52
-		bsr.w	sub_9F7A
-		bra.w	loc_9DB2
+		bsr.w	AnimalJump
+		bsr.w	AnimalFaceSonic
+		bra.w	ObjFlicky_ChkDel
 ; ---------------------------------------------------------------------------
 
-loc_9EC0:
-		bsr.w	sub_9F92
-		bpl.w	loc_9DB2
+ObjFlicky_SingleBounce:
+		bsr.w	ChkAnimalInRange
+		bpl.w	ObjFlicky_ChkDel
 		bsr.w	ObjectMoveAndFall
 		move.b	#1,obFrame(a0)
 		tst.w	obVelY(a0)
-		bmi.w	loc_9DB2
-		move.b	#0,obFrame(a0)
+		bmi.w	ObjFlicky_ChkDel
+		clr.b	obFrame(a0)
 		jsr	(ObjHitFloor).l
 		tst.w	d1
-		bpl.w	loc_9DB2
+		bpl.w	ObjFlicky_ChkDel
 		neg.w	obVelX(a0)
 		bchg	#0,obRender(a0)
 		add.w	d1,obY(a0)
-		move.w	objoff_34(a0),obVelY(a0)
-		bra.w	loc_9DB2
+		move.w	animal_y_vel(a0),obVelY(a0)
+		bra.w	ObjFlicky_ChkDel
 ; ---------------------------------------------------------------------------
 
-loc_9EFE:
-		bsr.w	sub_9F92
-		bpl.w	loc_9DB2
+ObjFlicky_FlyBounce:
+		bsr.w	ChkAnimalInRange
+		bpl.w	ObjFlicky_ChkDel
 		bsr.w	ObjectMove
 		addi.w	#$18,obVelY(a0)
 		tst.w	obVelY(a0)
-		bmi.s	loc_9F38
+		bmi.s	++
 		jsr	(ObjHitFloor).l
 		tst.w	d1
-		bpl.s	loc_9F38
-		not.b	objoff_29(a0)
-		bne.s	loc_9F2E
+		bpl.s	++
+		not.b	objoff_2D(a0) ; used to be objoff_29 in Sonic 1/2; in sonic 3, 29 is a "convention followed by many objects", so it was changed
+		bne.s	+
 		neg.w	obVelX(a0)
 		bchg	#0,obRender(a0)
-
-loc_9F2E:
++
 		add.w	d1,obY(a0)
-		move.w	objoff_34(a0),obVelY(a0)
-
-loc_9F38:
+		move.w	animal_y_vel(a0),obVelY(a0)
++
 		subq.b	#1,obTimeFrame(a0)
-		bpl.w	loc_9DB2
+		bpl.w	ObjFlicky_ChkDel
 		move.b	#1,obTimeFrame(a0)
 		addq.b	#1,obFrame(a0)
 		andi.b	#1,obFrame(a0)
-		bra.w	loc_9DB2
+		bra.w	ObjFlicky_ChkDel
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
-sub_9F52:
+AnimalJump:
 		move.b	#1,obFrame(a0)
 		tst.w	obVelY(a0)
-		bmi.s	locret_9F78
-		move.b	#0,obFrame(a0)
+		bmi.s	+
+		clr.b	obFrame(a0)
 		jsr	(ObjHitFloor).l
 		tst.w	d1
-		bpl.s	locret_9F78
+		bpl.s	+
 		add.w	d1,obY(a0)
-		move.w	objoff_34(a0),obVelY(a0)
-
-locret_9F78:
-		rts
-; End of function sub_9F52
+		move.w	animal_y_vel(a0),obVelY(a0)
++		rts
+; End of function AnimalJump
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
-sub_9F7A:
+AnimalFaceSonic:
 		bset	#0,obRender(a0)
 		move.w	obX(a0),d0
 		sub.w	(v_player+obX).w,d0
-		bcc.s	locret_9F90
+		bcc.s	+
 		bclr	#0,obRender(a0)
-
-locret_9F90:
-		rts
-; End of function sub_9F7A
++		rts
+; End of function AnimalFaceSonic
 
 
-; =============== S U B	R O U T	I N E =======================================
+; =============== S U B R O U T I N E =======================================
 
 
-sub_9F92:
+ChkAnimalInRange:
 		move.w	(v_player+obX).w,d0
 		sub.w	obX(a0),d0
-		subi.w	#$B8,d0
+		subi.w	#184,d0
 		rts
-; End of function sub_9F92
+; End of function ChkAnimalInRange
