@@ -3,9 +3,9 @@
 ; Object 22 - Buzz Bomber from GHZ
 ; ---------------------------------------------------------------------------
 ; OST:
-obj22_time:	equ objoff_32					; time to wait for performing an action
-obj22_status:	equ objoff_34					; 0 = still, 1 = flying, 2 = shooting
-obj22_parent:	equ objoff_3C
+Buzz_time	= objoff_2C	; time to wait for performing an action
+Buzz_status	= objoff_2E	; 0 = still, 1 = flying, 2 = shooting
+Buzz_parent	= objoff_3C
 ; ---------------------------------------------------------------------------
 
 Obj22:
@@ -43,12 +43,12 @@ Obj22_Main_Index:
 ; ===========================================================================
 ; loc_A46A:
 Obj22_Move:
-		subq.w	#1,obj22_time(a0)
+		subq.w	#1,Buzz_time(a0)
 		bpl.s	.return
-		btst	#1,obj22_status(a0)
+		btst	#1,Buzz_status(a0)
 		bne.s	Obj22_LoadMissile
 		addq.b	#2,ob2ndRout(a0)
-		move.w	#128-1,obj22_time(a0)
+		move.w	#128-1,Buzz_time(a0)
 		move.w	#$400,obVelX(a0)
 		move.b	#1,obAnim(a0)
 		btst	#0,obStatus(a0)
@@ -74,19 +74,19 @@ Obj22_LoadMissile:
 +
 		add.w	d0,obX(a1)
 		move.b	obStatus(a0),obStatus(a1)
-		move.w	#15-1,obj22_time(a1)
-		move.l	a0,obj22_parent(a1)
-		move.b	#1,obj22_status(a0)
-		move.w	#60-1,obj22_time(a0)
+		move.w	#15-1,Buzz_time(a1)
+		move.l	a0,Buzz_parent(a1)
+		move.b	#1,Buzz_status(a0)
+		move.w	#60-1,Buzz_time(a0)
 		move.b	#2,obAnim(a0)
 .return:	rts
 ; ===========================================================================
 ; loc_A500:
 Obj22_NearSonic:
-		subq.w	#1,obj22_time(a0)
+		subq.w	#1,Buzz_time(a0)
 		bmi.s	loc_A536
 		bsr.w	ObjectMove
-		tst.b	obj22_status(a0)
+		tst.b	Buzz_status(a0)
 		bne.s	.return
 		move.w	(v_player+obX).w,d0
 		sub.w	obX(a0),d0
@@ -97,8 +97,8 @@ Obj22_NearSonic:
 		bcc.s	.return				; if not, branch
 		tst.b	obRender(a0)
 		bpl.s	.return
-		move.b	#2,obj22_status(a0)
-		move.w	#29,obj22_time(a0)
+		move.b	#2,Buzz_status(a0)
+		move.w	#29,Buzz_time(a0)
 		subq.b	#2,ob2ndRout(a0)
 		clr.w	obVelX(a0)
 		clr.b	obAnim(a0)
@@ -106,9 +106,9 @@ Obj22_NearSonic:
 ; ===========================================================================
 
 loc_A536:
-		clr.b	obj22_status(a0)
+		clr.b	Buzz_status(a0)
 		bchg	#0,obStatus(a0)
-		move.w	#59,obj22_time(a0)
+		move.w	#59,Buzz_time(a0)
 		subq.b	#2,ob2ndRout(a0)
 		clr.w	obVelX(a0)
 		clr.b	obAnim(a0)

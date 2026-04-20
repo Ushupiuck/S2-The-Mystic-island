@@ -15,26 +15,26 @@ dbug:	macro map,object,subtype,frame,vram
 
 Debug_GHZ:	dc.w (Debug_GHZ_End-Debug_GHZ-2)/8
 ;		mappings	object		subtype	frame	VRAM setting
-	dbug	Map_Ring,	id_Obj25,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Ring,	id_Obj12,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Obj26,	id_Obj26,	0,	0,	make_art_tile(ArtTile_Monitor,0,0)
 	dbug	Map_Obj03,	id_Obj03,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Obj03,	id_Obj03,	9,	1,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Obj03,	id_Obj03,	$D,	5,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Obj15,	id_Obj15,	5,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
-	dbug	Map_Obj15,	id_Obj15,	$15,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
-	dbug	Map_Obj15,	id_Obj15,	$25,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
-	dbug	Map_Obj15,	id_Obj15,	$35,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
-	dbug	Map_GBall,	id_Obj15,	$45,	0,	make_art_tile(ArtTile_GHZ_Giant_Ball,2,0)
-	dbug	Map_GBall,	id_Obj15,	$55,	0,	make_art_tile(ArtTile_GHZ_Giant_Ball,2,0)
-	dbug	Map_Obj15,	id_Obj15,	$85,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
-;	dbug	Map_Obj15,	id_Obj15,	8,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
+	dbug	Map_Obj17,	id_Obj17,	5,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
+	dbug	Map_Obj17,	id_Obj17,	$15,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
+	dbug	Map_Obj17,	id_Obj17,	$25,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
+	dbug	Map_Obj17,	id_Obj17,	$35,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
+	dbug	Map_GBall,	id_Obj17,	$45,	0,	make_art_tile(ArtTile_GHZ_Giant_Ball,2,0)
+	dbug	Map_GBall,	id_Obj17,	$55,	0,	make_art_tile(ArtTile_GHZ_Giant_Ball,2,0)
+	dbug	Map_Obj17,	id_Obj17,	$85,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
+;	dbug	Map_Obj17,	id_Obj17,	8,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
 	dbug	Map_obj1F,	id_Obj1F,	0,	0,	make_art_tile(ArtTile_Crabmeat,0,0)
 	dbug	Map_obj22,	id_Obj22,	0,	0,	make_art_tile(ArtTile_Buzz_Bomber,0,0)
 	dbug	Map_Obj2B,	id_Obj2B,	7,	0,	make_art_tile(ArtTile_Chopper,0,0)
-	dbug	Map_BallHogV,	id_Obj1E,	$12,	0,	make_art_tile(ArtTile_Ball_HogV,1,0)
-	dbug	Map_BallHogV,	id_Obj1E,	$13,	0,	make_art_tile(ArtTile_Ball_HogV,1,0)
-	dbug	Map_BallHogH,	id_Obj1E,	$00,	0,	make_art_tile(ArtTile_Ball_HogH,1,0)
-	dbug	Map_BallHogH,	id_Obj1E,	$06,	0,	make_art_tile(ArtTile_Ball_HogH,1,0)
+	dbug	Map_BallHogV,	id_Obj21,	$12,	0,	make_art_tile(ArtTile_Ball_HogV,1,0)
+	dbug	Map_BallHogV,	id_Obj21,	$13,	0,	make_art_tile(ArtTile_Ball_HogV,1,0)
+	dbug	Map_BallHogH,	id_Obj21,	$00,	0,	make_art_tile(ArtTile_Ball_HogH,1,0)
+	dbug	Map_BallHogH,	id_Obj21,	$06,	0,	make_art_tile(ArtTile_Ball_HogH,1,0)
 	dbug	Map_Obj36,	id_Obj36,	0,	0,	make_art_tile(ArtTile_Spikes_GHZ,0,0)
 	dbug	Map_Obj18_GHZ,	id_Obj18,	0,	0,	make_art_tile(ArtTile_Level,2,0)
 	dbug	Map_PRock,	id_Obj3B,	0,	0,	make_art_tile(ArtTile_GHZ_Purple_Rock,3,0)
@@ -49,7 +49,7 @@ Debug_GHZ_End:
 
 Debug_LZ:	dc.w (Debug_LZ_End-Debug_LZ-2)/8
 ;		mappings	object		subtype	frame	VRAM setting
-	dbug	Map_Ring,	id_Obj25,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Ring,	id_Obj12,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Obj26,	id_Obj26,	0,	0,	make_art_tile(ArtTile_Monitor,0,0)
 	dbug	Map_Obj03,	id_Obj03,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Obj03,	id_Obj03,	9,	1,	make_art_tile(ArtTile_Ring,1,0)
@@ -64,7 +64,7 @@ Debug_LZ_End:
 
 Debug_CPZ:	dc.w (Debug_CPZ_End-Debug_CPZ-2)/8
 ;		mappings	object		subtype	frame	VRAM setting
-	dbug	Map_Ring,	id_Obj25,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Ring,	id_Obj12,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Obj26,	id_Obj26,	0,	0,	make_art_tile(ArtTile_Monitor,0,0)
 	dbug	Map_Obj03,	id_Obj03,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Obj03,	id_Obj03,	9,	1,	make_art_tile(ArtTile_Ring,1,0)
@@ -83,7 +83,7 @@ Debug_CPZ_End:
 
 Debug_EHZ:	dc.w (Debug_EHZ_End-Debug_EHZ-2)/8
 ;		mappings	object		subtype	frame	VRAM setting
-	dbug	Map_Ring,	id_Obj25,	1,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Ring,	id_Obj12,	1,	0,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Obj26,	id_Obj26,	4,	5,	make_art_tile(ArtTile_Monitor,0,0)
 	dbug	Map_Obj03,	id_Obj03,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Obj03,	id_Obj03,	9,	1,	make_art_tile(ArtTile_Ring,1,0)
@@ -92,8 +92,8 @@ Debug_EHZ:	dc.w (Debug_EHZ_End-Debug_EHZ-2)/8
 	dbug	Map_Waterfall1,	id_Obj49,	0,	0,	make_art_tile(ArtTile_Waterfall,1,0)
 	dbug	Map_Waterfall1,	id_Obj49,	2,	3,	make_art_tile(ArtTile_Waterfall,1,0)
 	dbug	Map_Waterfall1,	id_Obj49,	4,	5,	make_art_tile(ArtTile_Waterfall,1,0)
-	dbug	Map_obj18_EHZ,	id_Obj18,	1,	0,	make_art_tile(ArtTile_Level,2,0)
-	dbug	Map_obj18_EHZ,	id_Obj18,	$A,	1,	make_art_tile(ArtTile_Level,2,0)
+	dbug	Map_Obj18_EHZ,	id_Obj18,	1,	0,	make_art_tile(ArtTile_Level,2,0)
+	dbug	Map_Obj18_EHZ,	id_Obj18,	$A,	1,	make_art_tile(ArtTile_Level,2,0)
 	dbug	Map_Obj36,	id_Obj36,	0,	0,	make_art_tile(ArtTile_Spikes,1,0)
 	dbug	Map_obj5E,	id_Obj5E,	0,	0,	make_art_tile(ArtTile_HTZ_Seesaw,0,0)
 	dbug	Map_obj41,	id_Obj41,	$81,	0,	make_art_tile(ArtTile_Spring_Vertical,0,0)
@@ -110,14 +110,14 @@ Debug_EHZ_End:
 
 Debug_HTZ:	dc.w (Debug_HTZ_End-Debug_HTZ-2)/8
 ;		mappings	object		subtype	frame	VRAM setting
-	dbug	Map_Ring,	id_Obj25,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Ring,	id_Obj12,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Obj26,	id_Obj26,	0,	0,	make_art_tile(ArtTile_Monitor,0,0)
 	dbug	Map_Obj03,	id_Obj03,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Obj03,	id_Obj03,	9,	1,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Obj03,	id_Obj03,	$D,	5,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Obj79,	id_Obj79,	1,	0,	make_art_tile(ArtTile_Lamppost,0,0)
-	dbug	Map_obj18_EHZ,	id_Obj18,	1,	0,	make_art_tile(ArtTile_Level,2,0)
-	dbug	Map_obj18_EHZ,	id_Obj18,	$A,	1,	make_art_tile(ArtTile_Level,2,0)
+	dbug	Map_Obj18_EHZ,	id_Obj18,	1,	0,	make_art_tile(ArtTile_Level,2,0)
+	dbug	Map_Obj18_EHZ,	id_Obj18,	$A,	1,	make_art_tile(ArtTile_Level,2,0)
 	dbug	Map_Obj36,	id_Obj36,	0,	0,	make_art_tile(ArtTile_Spikes,1,0)
 	dbug	Map_obj5E,	id_Obj5E,	0,	0,	make_art_tile(ArtTile_HTZ_Seesaw,0,0)
 	dbug	Map_obj41,	id_Obj41,	$81,	0,	make_art_tile(ArtTile_Spring_Vertical,0,0)
@@ -135,12 +135,12 @@ Debug_HTZ_End:
 
 Debug_HPZ:	dc.w (Debug_HPZ_End-Debug_HPZ-2)/8
 ;		mappings	object		subtype	frame	VRAM setting
-	dbug	Map_Ring,	id_Obj25,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Ring,	id_Obj12,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Obj26,	id_Obj26,	0,	0,	make_art_tile(ArtTile_Monitor,0,0)
 	dbug	Map_Obj03,	id_Obj03,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Obj03,	id_Obj03,	9,	1,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Obj03,	id_Obj03,	$D,	5,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Obj13,	id_Obj13,	4,	4,	make_art_tile(ArtTile_HPZ_Waterfall,3,1)
+	dbug	Map_Waterfall2,	id_Obj13,	4,	4,	make_art_tile(ArtTile_HPZ_Waterfall,3,1)
 	dbug	Map_Piranha,	id_Obj52,	0,	0,	make_art_tile(ArtTile_BFish,1,0)
 	dbug	Map_Splats,	id_Obj4F,	0,	0,	make_art_tile(ArtTile_Splats,1,0)
 	dbug	Map_Rhinobot,	id_Obj4D,	0,	0,	make_art_tile(ArtTile_Rhinobot,1,0)

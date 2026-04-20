@@ -1,20 +1,20 @@
 ; ---------------------------------------------------------------------------
-; Object 10 - Blank
+; Object 25 - Blank
 ; ---------------------------------------------------------------------------
 
-Obj10:
+Obj25:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	Obj10_Index(pc,d0.w),d1
-		jmp	Obj10_Index(pc,d1.w)
+		move.w	Obj25_Index(pc,d0.w),d1
+		jmp	Obj25_Index(pc,d1.w)
 ; ===========================================================================
-Obj10_Index:	dc.w Obj10_Init-Obj10_Index
-		dc.w Obj10_Delete-Obj10_Index
+Obj25_Index:	dc.w Obj25_Init-Obj25_Index
+		dc.w Obj25_Delete-Obj25_Index
 ; ===========================================================================
 
-Obj10_Init:
+Obj25_Init:
 		addq.b	#2,obRoutine(a0)
 		rts
 
-Obj10_Delete:
+Obj25_Delete:
 		bra.w	DeleteObject

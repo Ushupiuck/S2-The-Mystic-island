@@ -1,28 +1,28 @@
 ; ---------------------------------------------------------------------------
-; Object 11 - Bridge
+; Object 1D - Bridge
 ; ---------------------------------------------------------------------------
-Obj11_child1		= objoff_30	; pointer to first set of bridge segments
-Obj11_child2		= objoff_34	; pointer to second set of bridge segments, if applicable
+Bridge_child1		= objoff_30	; pointer to first set of bridge segments
+Bridge_child2		= objoff_34	; pointer to second set of bridge segments, if applicable
 
-Obj11:
+Bridge:
 		btst	#6,obRender(a0)
-		bne.s	Obj11_Display
+		bne.s	Bridge_Display
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	Obj11_Index(pc,d0.w),d1
-		jmp	Obj11_Index(pc,d1.w)
+		move.w	Bridge_Index(pc,d0.w),d1
+		jmp	Bridge_Index(pc,d1.w)
 ; ---------------------------------------------------------------------------
 
-Obj11_Display:
+Bridge_Display:
 		move.w	#$200,d0
 		bra.w	DisplaySprite3
 ; ---------------------------------------------------------------------------
-Obj11_Index:	dc.w Obj11_Init-Obj11_Index	; 0
-		dc.w Obj11_EHZ-Obj11_Index	; 2
-		dc.w Obj11_HPZ-Obj11_Index	; 4
+Bridge_Index:	dc.w Bridge_Init-Bridge_Index	; 0
+		dc.w Bridge_EHZ-Bridge_Index	; 2
+		dc.w Bridge_HPZ-Bridge_Index	; 4
 ; ---------------------------------------------------------------------------
 
-Obj11_Init:
+Bridge_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_GHZ_Bridge,obMap(a0)
 		move.w	#make_art_tile(ArtTile_GHZ_Bridge,2,0),obGfx(a0)
@@ -56,14 +56,14 @@ Obj11_Init:
 		move.w	sub6_x_pos(a1),d0
 		subq.w	#8,d0
 		move.w	d0,obX(a1)
-		move.l	a1,Obj11_child1(a0)
+		move.l	a1,Bridge_child1(a0)
 		swap	d1
 		subq.w	#8,d1
 		bls.s	+
 
 		move.w	d1,d4
 		bsr.s	sub_7C76
-		move.l	a1,Obj11_child2(a0)
+		move.l	a1,Bridge_child2(a0)
 		move.w	d4,d0
 		add.w	d0,d0
 		add.w	d4,d0
@@ -71,7 +71,7 @@ Obj11_Init:
 		subq.w	#8,d0
 		move.w	d0,obX(a1)
 +
-		bra.s	Obj11_EHZ
+		bra.s	Bridge_EHZ
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -101,7 +101,7 @@ sub_7C76:
 
 ; ---------------------------------------------------------------------------
 
-Obj11_EHZ:
+Bridge_EHZ:
 		move.b	obStatus(a0),d0
 		andi.b	#$18,d0
 		bne.s	+
@@ -127,7 +127,7 @@ Obj11_EHZ:
 		addq.b	#4,objoff_3E(a0)
 
 loc_7D06:
-		bsr.w	Obj11_Depress
+		bsr.w	Bridge_Depress
 
 loc_7D0A:
 		moveq	#0,d1
@@ -146,17 +146,17 @@ loc_7D22:
 ; ---------------------------------------------------------------------------
 
 loc_7D3E:
-		movea.l	Obj11_child1(a0),a1
+		movea.l	Bridge_child1(a0),a1
 		bsr.w	DeleteObject2
 		cmpi.b	#8,obSubtype(a0)
 		bls.s	+
-		movea.l	Obj11_child2(a0),a1
+		movea.l	Bridge_child2(a0),a1
 		bsr.w	DeleteObject2
 +
 		bra.w	DeleteObject
 ; ---------------------------------------------------------------------------
 
-Obj11_HPZ:
+Bridge_HPZ:
 		move.b	obStatus(a0),d0
 		andi.b	#$18,d0
 		bne.s	+
@@ -183,7 +183,7 @@ Obj11_HPZ:
 		addq.b	#4,objoff_3E(a0)
 
 loc_7D9C:
-		bsr.w	Obj11_Depress
+		bsr.w	Bridge_Depress
 
 loc_7DA0:
 		moveq	#0,d1
@@ -232,10 +232,10 @@ sub_7DC0:
 +
 		lsr.w	#4,d0
 		move.b	d0,(a0,d5.w)
-		movea.l	Obj11_child1(a0),a2
+		movea.l	Bridge_child1(a0),a2
 		cmpi.w	#8,d0
 		blo.s	+
-		movea.l	Obj11_child2(a0),a2
+		movea.l	Bridge_child2(a0),a2
 		subi.w	#8,d0
 +
 		add.w	d0,d0
@@ -320,7 +320,7 @@ loc_7EAE:
 		beq.s	+
 		move.b	objoff_3B(a0),d4
 +
-		movea.l	Obj11_child1(a0),a1
+		movea.l	Bridge_child1(a0),a1
 		lea	sub9_mapframe+next_subspr(a1),a2
 		lea	sub2_mapframe(a1),a1
 		moveq	#0,d1
@@ -368,7 +368,7 @@ loc_7EAE:
 		addq.w	#6,a1
 		cmpa.w	a2,a1
 		bne.s	+
-		movea.l	Obj11_child2(a0),a1
+		movea.l	Bridge_child2(a0),a1
 		lea	sub2_mapframe(a1),a1
 +		dbf	d1,-
 
@@ -379,11 +379,11 @@ loc_7EAE:
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 ; subroutine to make the bridge push down where Sonic or Tails walks over
 ; sub_7F36:
-Obj11_Depress:
+Bridge_Depress:
 		move.b	objoff_3E(a0),d0
 		bsr.w	CalcSine
 		move.w	d0,d4
-		lea	(Obj11_BendData2).l,a4
+		lea	(Bridge_BendData2).l,a4
 		moveq	#0,d0
 		move.b	obSubtype(a0),d0
 		lsl.w	#4,d0
@@ -392,12 +392,12 @@ Obj11_Depress:
 		move.w	d3,d2
 		add.w	d0,d3
 		moveq	#0,d5
-		lea	(Obj11_BendData).l,a5
+		lea	(Bridge_BendData).l,a5
 		move.b	(a5,d3.w),d5
 		andi.w	#$F,d3
 		lsl.w	#4,d3
 		lea	(a4,d3.w),a3
-		movea.l	Obj11_child1(a0),a1
+		movea.l	Bridge_child1(a0),a1
 		lea	sub9_y_pos+next_subspr(a1),a2
 		lea	sub2_y_pos(a1),a1
 
@@ -412,7 +412,7 @@ Obj11_Depress:
 		addq.w	#6,a1
 		cmpa.w	a2,a1
 		bne.s	+
-		movea.l	Obj11_child2(a0),a1
+		movea.l	Bridge_child2(a0),a1
 		lea	sub2_y_pos(a1),a1
 +		dbf	d2,-
 
@@ -442,15 +442,15 @@ Obj11_Depress:
 		addq.w	#6,a1
 		cmpa.w	a2,a1
 		bne.s	+
-		movea.l	Obj11_child2(a0),a1
+		movea.l	Bridge_child2(a0),a1
 		lea	sub2_y_pos(a1),a1
 +		dbf	d2,-
 .return:	rts
-; End of function Obj11_Depress
+; End of function Bridge_Depress
 
 ; ---------------------------------------------------------------------------
 ; seems to be bridge piece vertical position offset data
-Obj11_BendData:
+Bridge_BendData:
 		dc.b   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0; 0 logs
 		dc.b   2,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0; 1 log
 		dc.b   2,  2,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0; 2 logs
@@ -469,7 +469,7 @@ Obj11_BendData:
 		dc.b   2,  4,  6,  8, $A, $C, $E,$10, $E, $C, $A,  8,  6,  4,  2,  0; 15 logs
 		dc.b   2,  4,  6,  8, $A, $C, $E,$10,$10, $E, $C, $A,  8,  6,  4,  2; 16 logs
 ; something else important for bridge depression to work (phase? bridge size adjustment?)
-Obj11_BendData2:
+Bridge_BendData2:
 		dc.b $FF,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0; 16
 		dc.b $B5,$FF,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0; 32
 		dc.b $7E,$DB,$FF,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0; 48

@@ -25,7 +25,23 @@ GBall_Main:	; Routine 0
 		clr.b	(a2)+
 		moveq	#5,d1
 		movea.l	a0,a1
-		bra.s	loc_1916A
+		move.w	a1,d5
+		subi.w	#v_objspace,d5
+		lsr.w	#object_size_bits,d5
+		andi.w	#$7F,d5
+		move.b	d5,(a2)+
+		move.b	#4,obRender(a1)
+		move.b	#8,obActWid(a1)
+		move.w	#$300,obPriority(a1)
+		move.l	objoff_34(a0),objoff_34(a1)
+		dbf	d1,GBall_MakeLinks ; repeat sequence 5 more times
+		move.b	#8,obRoutine(a1)
+		move.l	#Map_GBall,obMap(a1) ; load different mappings for final link
+		move.w	#make_art_tile(ArtTile_GHZ_Giant_Ball,2,0),obGfx(a1) ; use different graphics
+		move.b	#1,obFrame(a1)
+		move.w	#$280,obPriority(a1)
+		move.b	#$81,obColType(a1) ; make object hurt Sonic
+		rts
 ; ===========================================================================
 
 GBall_MakeLinks:
@@ -35,12 +51,10 @@ GBall_MakeLinks:
 		move.w	obY(a0),obY(a1)
 		_move.b	#id_Obj48,obID(a1) ; load chain link object
 		move.b	#6,obRoutine(a1)
-		move.l	#Map_Obj15,obMap(a1)
+		move.l	#Map_Obj17,obMap(a1)
 		move.w	#make_art_tile(ArtTile_GHZ_MZ_Swing,0,0),obGfx(a1)
 		move.b	#1,obFrame(a1)
 		addq.b	#1,obSubtype(a0)
-
-loc_1916A:
 		move.w	a1,d5
 		subi.w	#v_objspace,d5
 		lsr.w	#object_size_bits,d5
@@ -197,7 +211,7 @@ sub_19236:
 		move.b	obStatus(a1),obStatus(a0)
 		tst.b	obStatus(a1)
 		bpl.s	.return
-		_move.b	#id_Obj3F,obID(a0)
+		_move.b	#id_Obj10,obID(a0)
 		clr.b	obRoutine(a0)
 .return:	rts
 ; End of function sub_17C2A
@@ -208,7 +222,7 @@ loc_19274:	; Routine 6
 		movea.l	objoff_34(a0),a1
 		tst.b	obStatus(a1)
 		bpl.s	GBall_Display3
-		_move.b	#id_Obj3F,obID(a0)
+		_move.b	#id_Obj10,obID(a0)
 		clr.b	obRoutine(a0)
 
 GBall_Display3:
@@ -230,6 +244,6 @@ GBall_Vanish:
 		bsr.w	BossDefeated
 		subq.b	#1,objoff_3C(a0)
 		bpl.s	GBall_Display3
-		move.b	#id_Obj3F,obID(a0)
+		_move.b	#id_Obj10,obID(a0)
 		clr.b	obRoutine(a0)
 		jmp	(DisplaySprite).l

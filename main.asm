@@ -1765,6 +1765,8 @@ Pal_HPZ:	binclude	"palette/HPZ.bin"
 		even
 Pal_HTZ:	binclude	"palette/HTZ.bin"
 		even
+Pal_MTZ:	binclude	"palette/MTZ.bin"
+		even
 Pal_LZ4:	binclude	"palette/LZ4.bin"
 		even
 Pal_LZ4Water:	binclude	"palette/LZ4 Underwater.bin"
@@ -3069,8 +3071,10 @@ ColPointers:
 		dc.l Col_HTZ2
 		dc.l Col_HTZ3
 		dc.l Col_HTZ4
-		dc.l Col_GHZ1		; Good Ending
-		dc.l Col_GHZ2		; Bad Ending
+		dc.l Col_MTZ1		; Good Ending
+		dc.l Col_MTZ2		; Bad Ending
+		dc.l Col_MTZ3
+		dc.l Col_MTZ4
  if TimeTravel=1
 ; ---------------------------------------------------------------------------
 ; Pointers to collision indexes
@@ -3102,8 +3106,10 @@ PColPointers:
 		dc.l PCol_HTZ2
 		dc.l PCol_HTZ3
 		dc.l PCol_HTZ4
-		dc.l PCol_GHZ1		; Good Ending
-		dc.l PCol_GHZ2		; Bad Ending
+		dc.l PCol_MTZ1		; Good Ending
+		dc.l PCol_MTZ2		; Bad Ending
+		dc.l PCol_MTZ3
+		dc.l PCol_MTZ4
 ; ---------------------------------------------------------------------------
 ; Pointers to collision indexes
 ; Contains an array of pointers to the primary collision index data for each
@@ -3134,8 +3140,10 @@ GColPointers:
 		dc.l GCol_HTZ2
 		dc.l GCol_HTZ3
 		dc.l GCol_HTZ4
-		dc.l GCol_GHZ1		; Good Ending
-		dc.l GCol_GHZ2		; Bad Ending
+		dc.l GCol_MTZ1		; Good Ending
+		dc.l GCol_MTZ2		; Bad Ending
+		dc.l GCol_MTZ3
+		dc.l GCol_MTZ4
 ; ---------------------------------------------------------------------------
 ; Pointers to collision indexes
 ; Contains an array of pointers to the primary collision index data for each
@@ -3166,8 +3174,10 @@ BColPointers:
 		dc.l BCol_HTZ2
 		dc.l BCol_HTZ3
 		dc.l BCol_HTZ4
-		dc.l BCol_GHZ1		; Good Ending
-		dc.l BCol_GHZ2		; Bad Ending
+		dc.l BCol_MTZ1		; Good Ending
+		dc.l BCol_MTZ2		; Bad Ending
+		dc.l BCol_MTZ3
+		dc.l BCol_MTZ4
  endif
 		include	"_inc/Oscillatory Routines.asm"
 
@@ -8056,9 +8066,107 @@ loc_79D6:
 DynResize_SLZ4:
 		rts
 ; ---------------------------------------------------------------------------
-		include	"objects/25 & 37 Rings.asm"
-		include	"objects/26 Monitor.asm"
+		include	"objects/0D Animals.asm"
+		include	"objects/0E Points.asm"
+		include	"objects/0F, 10 & 11 Explosions.asm"
+		include	"objects/12 & 13 Rings.asm"
+		include	"objects/Empty slots/14.asm"
+		include	"objects/Empty slots/15.asm"
+		include	"objects/17 Swinging Platforms.asm"
+		include	"objects/18 Platforms.asm"
+		include	"objects/1A Collapsing Platforms.asm"
+		include	"objects/S1/1B Collapsing Floors.asm"
+		include	"objects/1C Scenery.asm"
+		include	"objects/1D Bridge.asm"
+		include	"objects/1E HPZ Waterfall.asm"
+		include	"objects/Enemies/1F Crabmeat.asm"
+		include	"objects/Enemies/21 Ball Hog.asm"
 		include	"objects/29 Monitor Content Power-Up.asm"
+; ---------------------------------------------------------------------------
+
+Ledge_Fragment:
+		lea	byte_8EF2(pc),a4
+		cmpi.b	#id_HPZ,(Current_Zone).w
+		bne.s	+
+		lea	byte_8F0B(pc),a4
++		addq.b	#2,obFrame(a0)
+
+loc_8E70:
+		moveq	#0,d0
+		move.b	obFrame(a0),d0
+		add.w	d0,d0
+		movea.l	obMap(a0),a3
+		adda.w	(a3,d0.w),a3
+		move.w	(a3)+,d1
+		subq.w	#1,d1
+		bset	#5,obRender(a0)
+		_move.b	obID(a0),d4
+		move.b	obRender(a0),d5
+		movea.l	a0,a1
+		bra.s	+
+; ---------------------------------------------------------------------------
+.loop		bsr.w	FindFreeObj
+		bne.s	+++
+		addq.w	#8,a3
+
++		move.b	#4,obRoutine(a1)
+		_move.b	d4,obID(a1)
+		move.l	a3,obMap(a1)
+		move.b	d5,obRender(a1)
+		move.w	obX(a0),obX(a1)
+		move.w	obY(a0),obY(a1)
+		move.w	obGfx(a0),obGfx(a1)
+		move.w	obPriority(a0),obPriority(a1)
+		move.b	obActWid(a0),obActWid(a1)
+		move.b	obHeight(a0),obHeight(a1)
+		move.b	(a4)+,objoff_38(a1)
+		cmpa.l	a0,a1
+		bhs.s	+
+		bsr.w	DisplaySprite2
++		dbf	d1,.loop
+
++		bsr.w	DisplaySprite
+		move.w	#sfx_Collapse,d0
+		bra.w	PlaySound_Special
+; ---------------------------------------------------------------------------
+byte_8EF2:	dc.b $1C,$18,$14,$10
+		dc.b $1A,$16,$12, $E
+		dc.b  $A,  6,$18,$14
+		dc.b $10, $C,  8,  4
+		dc.b $16,$12, $E, $A
+		dc.b   6,  2,$14,$10
+		dc.b  $C,  0
+byte_8F0B:	dc.b $18,$1C,$20,$1E
+		dc.b $1A,$16,  6, $E
+		dc.b $14,$12, $A,  2
+byte_8F17:	dc.b $1E,$16, $E,  6
+		dc.b $1A,$12, $A,  2
+byte_8F1F:	dc.b $16,$1E,$1A,$12
+		dc.b   6, $E, $A,  2
+		even
+; ---------------------------------------------------------------------------
+Obj1A_Conf:	binclude	"misc/GHZ Collapsing Ledge Heightmap.bin"
+		even
+Obj1A_Conf_HPZ:
+		dc.b $10,$10,$10,$10
+		dc.b $10,$10,$10,$10
+		dc.b $10,$10,$10,$10
+		dc.b $10,$10,$10,$10
+		dc.b $10,$10,$10,$10
+		dc.b $10,$10,$10,$10
+		dc.b $10,$10,$10,$10
+		dc.b $10,$10,$10,$10
+		dc.b $10,$10,$10,$10
+		dc.b $10,$10,$10,$10
+		dc.b $10,$10,$10,$10
+		dc.b $10,$10,$10,$10
+		even
+; ---------------------------------------------------------------------------
+		include	"objects/Enemies/22 Buzz Bomber.asm"
+		include	"objects/Enemies/23 Buzz Bomber Missile.asm"
+		include	"objects/Empty Slots/24.asm"
+		include	"objects/Empty Slots/25.asm"
+		include	"objects/26 Monitor.asm"
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -8148,109 +8256,12 @@ byte_B282:	dc.b   1,  0,  9,  9,  1,  9,  9,afEnd
 byte_B28A:	dc.b   1,  0, $A, $A,  1, $A, $A,afEnd
 byte_B292:	dc.b   2,  0,  1, $B,afBack,  1
 		even
-; ---------------------------------------------------------------------------
-		include	"objects/28 Animals.asm"
-		include	"objects/2A Points.asm"
-; ---------------------------------------------------------------------------
-		include	"objects/Empty Slots/10.asm"
-		include	"objects/11 Bridge.asm"
-		include	"objects/15 Swinging Platforms.asm"
-		include	"objects/Empty slots/17.asm"
-		include	"objects/18 Platforms.asm"
-		include	"objects/1A Collapsing Platforms.asm"
-		include	"objects/S1/1B Collapsing Floors.asm"
-		include	"objects/1C Scenery.asm"
-		include	"objects/Empty Slots/1D.asm"
-		include	"objects/Enemies/1E Ball Hog.asm"
-		include	"objects/Enemies/1F Crabmeat.asm"
-		include	"objects/Empty Slots/20.asm"
-		include	"objects/Empty Slots/21.asm"
-		include	"objects/S1/24, 27 & 3F Explosions.asm"
-; ---------------------------------------------------------------------------
-
-Ledge_Fragment:
-		lea	byte_8EF2(pc),a4
-		cmpi.b	#id_HPZ,(Current_Zone).w
-		bne.s	+
-		lea	byte_8F0B(pc),a4
-+		addq.b	#2,obFrame(a0)
-
-loc_8E70:
-		moveq	#0,d0
-		move.b	obFrame(a0),d0
-		add.w	d0,d0
-		movea.l	obMap(a0),a3
-		adda.w	(a3,d0.w),a3
-		move.w	(a3)+,d1
-		subq.w	#1,d1
-		bset	#5,obRender(a0)
-		_move.b	obID(a0),d4
-		move.b	obRender(a0),d5
-		movea.l	a0,a1
-		bra.s	+
-; ---------------------------------------------------------------------------
-.loop		bsr.w	FindFreeObj
-		bne.s	+++
-		addq.w	#8,a3
-
-+		move.b	#4,obRoutine(a1)
-		_move.b	d4,obID(a1)
-		move.l	a3,obMap(a1)
-		move.b	d5,obRender(a1)
-		move.w	obX(a0),obX(a1)
-		move.w	obY(a0),obY(a1)
-		move.w	obGfx(a0),obGfx(a1)
-		move.w	obPriority(a0),obPriority(a1)
-		move.b	obActWid(a0),obActWid(a1)
-		move.b	obHeight(a0),obHeight(a1)
-		move.b	(a4)+,objoff_38(a1)
-		cmpa.l	a0,a1
-		bhs.s	+
-		bsr.w	DisplaySprite2
-+		dbf	d1,.loop
-
-+		bsr.w	DisplaySprite
-		move.w	#sfx_Collapse,d0
-		bra.w	PlaySound_Special
-; ---------------------------------------------------------------------------
-byte_8EF2:	dc.b $1C,$18,$14,$10
-		dc.b $1A,$16,$12, $E
-		dc.b  $A,  6,$18,$14
-		dc.b $10, $C,  8,  4
-		dc.b $16,$12, $E, $A
-		dc.b   6,  2,$14,$10
-		dc.b  $C,  0
-byte_8F0B:	dc.b $18,$1C,$20,$1E
-		dc.b $1A,$16,  6, $E
-		dc.b $14,$12, $A,  2
-byte_8F17:	dc.b $1E,$16, $E,  6
-		dc.b $1A,$12, $A,  2
-byte_8F1F:	dc.b $16,$1E,$1A,$12
-		dc.b   6, $E, $A,  2
-		even
-; ---------------------------------------------------------------------------
-Obj1A_Conf:	binclude	"misc/GHZ Collapsing Ledge Heightmap.bin"
-		even
-Obj1A_Conf_HPZ:
-		dc.b $10,$10,$10,$10
-		dc.b $10,$10,$10,$10
-		dc.b $10,$10,$10,$10
-		dc.b $10,$10,$10,$10
-		dc.b $10,$10,$10,$10
-		dc.b $10,$10,$10,$10
-		dc.b $10,$10,$10,$10
-		dc.b $10,$10,$10,$10
-		dc.b $10,$10,$10,$10
-		dc.b $10,$10,$10,$10
-		dc.b $10,$10,$10,$10
-		dc.b $10,$10,$10,$10
-		even
-; ---------------------------------------------------------------------------
-		include	"objects/Enemies/22 Buzz Bomber.asm"
-		include	"objects/Enemies/23 Buzz Bomber Missile.asm"
+		include	"objects/Empty Slots/27.asm"
+		include	"objects/Empty Slots/28.asm"
+		include	"objects/Empty Slots/2A.asm"
 		include	"objects/Enemies/2B Chopper.asm"
-		include	"objects/S1/30 SBZ Small Door.asm"
 		include	"objects/Enemies/2C Jaws.asm"
+		include	"objects/S1/30 SBZ Small Door.asm"
 		include	"objects/36 Spikes.asm"
 		include	"objects/S1/3B Purple Rock.asm"
 		include	"objects/S1/3C Smashable Wall.asm"
@@ -8350,38 +8361,38 @@ ptr_Obj09:		dc.l Bubbles		; Bubble maker
 ptr_Obj0A:		dc.l Obj0A		; Small bubbles from Sonic's face while underwater
 ptr_Obj0B:		dc.l Obj0B		; (S1) Pole that breaks in LZ
 ptr_Obj0C:		dc.l FlapDoor		; (S1) Flapping door in LZ
-ptr_Obj0D:		dc.l Obj0D		; End of level signpost
-ptr_Obj0E:		dc.l ObjNull		; Empty
-ptr_Obj0F:		dc.l ObjNull		; Empty
+ptr_Obj0D:		dc.l Flicky		; Animal and the 100 points from a badnik
+ptr_Obj0E:		dc.l Points		; "100 points" text
+ptr_Obj0F:		dc.l Explosion		; Boss explosion
 
-ptr_Obj10:		dc.l ObjNull		; Empty
-ptr_Obj11:		dc.l Obj11		; Bridges in GHZ, EHZ and HPZ
-ptr_Obj12:		dc.l ObjNull
-ptr_Obj13:		dc.l Obj13		; Waterfall from Hidden Palace Zone
+ptr_Obj10:		dc.l FieryExplosion	; An explosion, giving off an animal and 100 points
+ptr_Obj11:		dc.l GroundExplosion	; Ballhog bomb explosion
+ptr_Obj12:		dc.l Obj12		; A ring
+ptr_Obj13:		dc.l Obj13		; Scattering rings (generated when Sonic or Tails are hurt and has rings)
 ptr_Obj14:		dc.l ObjNull
-ptr_Obj15:		dc.l Obj15		; Swinging platforms in GHZ, CPZ and EHZ
+ptr_Obj15:		dc.l ObjNull
 ptr_Obj16:		dc.l Obj16		; Diagonally moving lift from HTZ
-ptr_Obj17:		dc.l ObjNull
+ptr_Obj17:		dc.l SwingingPtfm	; Swinging platforms in GHZ, CPZ and EHZ
 ptr_Obj18:		dc.l Obj18		; Stationary/moving platforms from GHZ and EHZ
 ptr_Obj19:		dc.l Obj19		; Platform from CPZ
 ptr_Obj1A:		dc.l Obj1A		; Collapsing platform from GHZ and HPZ
 ptr_Obj1B:		dc.l Obj1B		; Collapsing floors (SBZ and MZ?)
 ptr_Obj1C:		dc.l Obj1C		; Stage decorations in GHZ, EHZ, HTZ and HPZ
-ptr_Obj1D:		dc.l ObjNull
-ptr_Obj1E:		dc.l ObjVBallhog
+ptr_Obj1D:		dc.l Bridge		; Bridges in GHZ, EHZ and HPZ
+ptr_Obj1E:		dc.l HPZ_Waterfall	; Waterfall from Hidden Palace Zone
 ptr_Obj1F:		dc.l Obj1F		; (S1) Crabmeat from GHZ
 
 ptr_Obj20:		dc.l Basaran		; Basaran (Batbrain) Enemy
-ptr_Obj21:		dc.l ObjNull
+ptr_Obj21:		dc.l Ballhog		; Horizontal and Vertical Ballhog
 ptr_Obj22:		dc.l Obj22		; (S1) Buzz Bomber from GHZ
 ptr_Obj23:		dc.l Obj23		; (S1) Buzz Bomber/Newtron missile
-ptr_Obj24:		dc.l Obj24		; Ballhog bomb explosion
-ptr_Obj25:		dc.l Obj25		; A ring
+ptr_Obj24:		dc.l ObjNull
+ptr_Obj25:		dc.l ObjNull
 ptr_Obj26:		dc.l Obj26		; Monitor
-ptr_Obj27:		dc.l Obj27		; An explosion, giving off an animal and 100 points
-ptr_Obj28:		dc.l ObjFlicky		; Animal and the 100 points from a badnik
+ptr_Obj27:		dc.l ObjNull		; Empty
+ptr_Obj28:		dc.l ObjNull		; Empty
 ptr_Obj29:		dc.l Obj29		; Monitor contents (code for power-up behavior and rising image)
-ptr_Obj2A:		dc.l Points		; "100 points" text
+ptr_Obj2A:		dc.l ObjNull
 ptr_Obj2B:		dc.l Obj2B		; (S1) Chopper from GHZ
 ptr_Obj2C:		dc.l Obj2C		; (S1) Jaws from LZ
 ptr_Obj2D:		dc.l ObjNull
@@ -8395,15 +8406,15 @@ ptr_Obj33:		dc.l ObjNull
 ptr_Obj34:		dc.l ObjNull
 ptr_Obj35:		dc.l ObjNull
 ptr_Obj36:		dc.l Obj36		; Vertical spikes
-ptr_Obj37:		dc.l Obj37		; Scattering rings (generated when Sonic or Tails are hurt and has rings)
+ptr_Obj37:		dc.l ObjNull
 ptr_Obj38:		dc.l Obj38		; Shield
 ptr_Obj39:		dc.l ObjNull
 ptr_Obj3A:		dc.l ObjNull
-ptr_Obj3B:		dc.l Obj3B		; Rocks and Emeralds (GHZ, HPZ)
+ptr_Obj3B:		dc.l Obj3B		; Rock and Emerald (GHZ, HPZ)
 ptr_Obj3C:		dc.l Obj3C		; (S1) Breakable wall
 ptr_Obj3D:		dc.l Obj3D		; (S1) GHZ boss
-ptr_Obj3E:		dc.l Obj3E		; Egg prison
-ptr_Obj3F:		dc.l Obj3F		; Boss explosion
+ptr_Obj3E:		dc.l PrisonCapsule	; Egg prison
+ptr_Obj3F:		dc.l ObjNull		; Empty
 
 ptr_Obj40:		dc.l MotoBug		; (S1) Motobug from GHZ
 ptr_Obj41:		dc.l Obj41		; Spring
@@ -8470,7 +8481,7 @@ ptr_Obj7A:		dc.l SpecialStageEntry
 ptr_Obj7B:		dc.l GiantRing		; Bonus stage entry
 ptr_Obj7C:		dc.l GiantRingFlash
 ptr_Obj7D:		dc.l Obj7D		; Hidden points at end of stage
-ptr_Obj7E:		dc.l ObjNull
+ptr_Obj7E:		dc.l Signpost		; End of level signpost
 ptr_Obj7F:		dc.l ObjNull
 
 ptr_Obj80:		dc.l ObjNull		; Was originally Continue Screen Elements, but was completely stripped out
@@ -9079,7 +9090,7 @@ MarkObjGone2:
 		rts
 ; ---------------------------------------------------------------------------
 ; Special case where the x-coordinate is pre-fed by the object itself
-; a0 = the object
+; d0 = the object
 MarkObjGone3:
 		out_of_range3.s	loc_CEB0
 		bra.w	DisplaySprite
@@ -10248,6 +10259,7 @@ loc_E116:
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 ; loc_E182: SingleObjectLoad:
+AllocateObject:
 FindFreeObj:
 		lea	(v_lvlobjspace).w,a1		; a1=object
 		move.w	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d0	; search to end of table
@@ -10271,13 +10283,14 @@ FindFreeObj:
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 ; loc_E198: S1SingleObjectLoad2:
+AllocateObjectAfterCurrent:
 FindNextFreeObj:
 		movea.l	a0,a1
 		move.w	#v_lvlobjend,d0
 		sub.w	a0,d0				; subtract current object location
-		lsr.w	#object_size_bits,d0		; divide by $40
-		subq.w	#1,d0				; keep from going over the object zone
-		blo.s	FindFreeObj.return
+		lsr.w	#6,d0				; divide by $40
+		move.b	+(pc,d0.w),d0			; load the right number of objects from table
+		bmi.s	FindFreeObj.return		; if negative, we have failed!
 
 .loop:
 		tst.b	obID(a1)			; is object RAM slot empty?
@@ -10286,6 +10299,17 @@ FindNextFreeObj:
 		dbf	d0,.loop			; repeat until end
 		rts
 ; End of function FindNextFreeObj
+; ===========================================================================
++
+.a	set	v_lvlobjspace
+.b	set	v_lvlobjend
+.c	set	.b			; begin from bottom of array and decrease backwards
+	rept	(.b-.a+$40-1)/$40	; repeat for all slots, minus exception
+.c	set	.c-$40			; address for previous $40 (also skip last part)
+	dc.b	(.b-.c-1)/object_size-1	; write possible slots according to object_size division + hack + dbf hack
+	endm
+	even
+; ===========================================================================
 
 		include	"objects/41 Springs.asm"
 ; ===========================================================================
@@ -10451,9 +10475,6 @@ Map_MovSpring:	binclude	"mappings/sprite/Wheel for the moving spring.bin"
 
 		include	"objects/0B Tilting platform.asm"
 		include	"objects/0C Labyrinth Flapdoor.asm"
-		include	"objects/0D Signpost.asm"
-		include	"objects/Empty slots/0E.asm"
-		include	"objects/Empty slots/0F.asm"
 		include	"objects/Enemies/40 Moto Bug.asm"
 		include	"objects/Enemies/42 Newtron.asm"
 		include	"objects/S1/44 GHZ Edge Walls.asm"
@@ -11218,7 +11239,7 @@ loc_12310:
 
 ; =============== S U B R O U T I N E =======================================
 
-; Sonic_AnglePos:
+; Player_AnglePos:
 AnglePos:
 		move.l	(v_colladdr1).w,(Collision_addr).w
 		cmpi.b	#$C,obTopSolidBit(a0)
@@ -11296,7 +11317,7 @@ loc_12A5A:
 		clr.w	d6
 		bsr.w	FindFloor
 		move.w	(sp)+,d0
-		bsr.w	Sonic_Angle
+		bsr.w	Player_Angle
 		tst.w	d1
 		beq.s	locret_12AE4
 		bpl.s	loc_12AE6
@@ -11328,17 +11349,23 @@ loc_12AF2:
 
 ; =============== S U B R O U T I N E =======================================
 
-
-Sonic_Angle:
+; Player_Angle:
+Player_Angle:
 		move.b	(Secondary_Angle).w,d2
 		cmp.w	d0,d1
-		ble.s	loc_12B84
+		ble.s	+
 		move.b	(Primary_Angle).w,d2
 		move.w	d0,d1
-
-loc_12B84:
++
 		btst	#0,d2
 		bne.s	loc_12B90
+		move.b	d2,d0
+		sub.b	obAngle(a0),d0
+		bpl.s	+
+		neg.b	d0
++
+		cmpi.b	#$20,d0
+		bhs.s	loc_12B90
 		move.b	d2,obAngle(a0)
 		rts
 ; ---------------------------------------------------------------------------
@@ -11349,7 +11376,7 @@ loc_12B90:
 		andi.b	#$C0,d2
 		move.b	d2,obAngle(a0)
 		rts
-; End of function Sonic_Angle
+; End of function Player_Angle
 
 ; ---------------------------------------------------------------------------
 
@@ -11383,7 +11410,7 @@ Sonic_WalkVertR:
 		clr.w	d6
 		bsr.w	FindWall
 		move.w	(sp)+,d0
-		bsr.w	Sonic_Angle
+		bsr.w	Player_Angle
 		tst.w	d1
 		beq.s	.return
 		bpl.s	loc_12C14
@@ -11444,7 +11471,7 @@ Sonic_WalkCeiling:
 		move.w	#$800,d6
 		bsr.w	FindFloor
 		move.w	(sp)+,d0
-		bsr.w	Sonic_Angle
+		bsr.w	Player_Angle
 		tst.w	d1
 		beq.s	.return
 		bpl.s	loc_12CB2
@@ -11505,7 +11532,7 @@ Sonic_WalkVertL:
 		move.w	#$400,d6
 		bsr.w	FindWall
 		move.w	(sp)+,d0
-		bsr.w	Sonic_Angle
+		bsr.w	Player_Angle
 		tst.w	d1
 		beq.s	.return
 		bpl.s	loc_12D50
@@ -11608,8 +11635,8 @@ loc_12DCC:
 		move.b	(a2,d0.w),d0
 		andi.w	#$FF,d0
 		beq.s	loc_12DBE
-		cmpi.b	#6,(Current_Zone).w
-		beq.s	+
+	;	cmpi.b	#6,(Current_Zone).w
+	;	beq.s	+
 		cmpi.b	#1,(Current_Zone).w
 		beq.s	+
 		tst.b	(Current_Zone).w
@@ -11634,8 +11661,8 @@ loc_12DCC:
 +
 		andi.w	#$F,d1
 		add.w	d0,d1
-		cmpi.b	#6,(Current_Zone).w
-		beq.s	+
+	;	cmpi.b	#6,(Current_Zone).w
+	;	beq.s	+
 		cmpi.b	#1,(Current_Zone).w
 		beq.s	+
 		tst.b	(Current_Zone).w
@@ -11705,8 +11732,8 @@ loc_12E72:
 		move.b	(a2,d0.w),d0
 		andi.w	#$FF,d0
 		beq.s	loc_12E64
-		cmpi.b	#6,(Current_Zone).w
-		beq.s	+
+	;	cmpi.b	#6,(Current_Zone).w
+	;	beq.s	+
 		cmpi.b	#1,(Current_Zone).w
 		beq.s	+
 		tst.b	(Current_Zone).w
@@ -11733,8 +11760,8 @@ loc_12E96:
 loc_12EA6:
 		andi.w	#$F,d1
 		add.w	d0,d1
-		cmpi.b	#6,(Current_Zone).w
-		beq.s	+
+	;	cmpi.b	#6,(Current_Zone).w
+	;	beq.s	+
 		cmpi.b	#1,(Current_Zone).w
 		beq.s	+
 		tst.b	(Current_Zone).w
@@ -11798,8 +11825,8 @@ loc_12F08:
 		move.b	(a2,d0.w),d0
 		andi.w	#$FF,d0
 		beq.s	loc_12EFA
-		cmpi.b	#6,(Current_Zone).w
-		beq.s	+
+	;	cmpi.b	#6,(Current_Zone).w
+	;	beq.s	+
 		cmpi.b	#1,(Current_Zone).w
 		beq.s	+
 		tst.b	(Current_Zone).w
@@ -11826,8 +11853,8 @@ loc_12F34:
 loc_12F3C:
 		andi.w	#$F,d1
 		add.w	d0,d1
-		cmpi.b	#6,(Current_Zone).w
-		beq.s	+
+	;	cmpi.b	#6,(Current_Zone).w
+	;	beq.s	+
 		cmpi.b	#1,(Current_Zone).w
 		beq.s	+
 		tst.b	(Current_Zone).w
@@ -11898,8 +11925,8 @@ loc_12FAE:
 		move.b	(a2,d0.w),d0
 		andi.w	#$FF,d0
 		beq.s	loc_12FA0
-		cmpi.b	#6,(Current_Zone).w
-		beq.s	+
+	;	cmpi.b	#6,(Current_Zone).w
+	;	beq.s	+
 		cmpi.b	#1,(Current_Zone).w
 		beq.s	+
 		tst.b	(Current_Zone).w
@@ -11926,8 +11953,8 @@ loc_12FDA:
 loc_12FE2:
 		andi.w	#$F,d1
 		add.w	d0,d1
-		cmpi.b	#6,(Current_Zone).w
-		beq.s	+
+	;	cmpi.b	#6,(Current_Zone).w
+	;	beq.s	+
 		cmpi.b	#1,(Current_Zone).w
 		beq.s	+
 		tst.b	(Current_Zone).w
@@ -12478,11 +12505,11 @@ ObjHitWallLeft:
 		include	"objects/08 Water Splash.asm"
 		include	"objects/09 Bubbles.asm"
 		include	"objects/0A Drowning Countdown.asm"
-		include	"objects/13 HPZ Waterfall.asm"
 		include	"objects/16 HTZ Descending lift.asm"
 		include	"objects/19 CPZ Platform.asm"
-		include	"objects/Empty slots/14.asm"
+		include	"objects/Empty Slots/20.asm"
 		include	"objects/S1/7D Hidden Bonuses.asm"
+		include	"objects/7E Signpost.asm"
 		include	"objects/79 Lamppost.asm"
 
 ; ---------------------------------------------------------------------------
@@ -12543,17 +12570,6 @@ loc_1573A:
 		include	"objects/Enemies/4F Splats.asm"
 		include	"objects/Enemies/52 Piranha.asm"
 		include	"objects/Empty slots/53.asm"
-; ---------------------------------------------------------------------------
-; Sprite mappings - Splats, Piranha
-; ---------------------------------------------------------------------------
-Map_Waterfall1:	binclude	"mappings/sprite/EHZ Waterfall.bin"
-		even
-Map_Splats:	binclude	"mappings/sprite/Splats.bin"
-		even
-Map_Rhinobot:	binclude	"mappings/sprite/Rhinobot.bin"
-		even
-Map_Piranha:	binclude	"mappings/sprite/Piranha.bin"
-		even
 ; ---------------------------------------------------------------------------
 ; Object 50 - Aquis badnik from HPZ
 ;----------------------------------------------------------------------------
@@ -15368,7 +15384,7 @@ BossDefeated:
 		bne.s	.return
 		jsr	(FindFreeObj).l
 		bne.s	.return
-		_move.b	#id_Obj3F,obID(a1)
+		_move.b	#id_Obj10,obID(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		jsr	(RandomNumber).l
@@ -15385,236 +15401,7 @@ BossDefeated:
 ; End of function BossDefeated
 
 ; ---------------------------------------------------------------------------
-; Object 3E - prison capsule
-;----------------------------------------------------------------------------
-
-Obj3E:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Obj3E_Index(pc,d0.w),d1
-		jsr	Obj3E_Index(pc,d1.w)
-		out_of_range2	DeleteObject
-		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-Obj3E_Index:	dc.w Obj3E_Init-Obj3E_Index
-		dc.w Obj3E_BodyMain-Obj3E_Index
-		dc.w Obj3E_Switched-Obj3E_Index
-		dc.w Obj3E_Explosion-Obj3E_Index
-		dc.w Obj3E_Explosion-Obj3E_Index
-		dc.w Obj3E_Explosion-Obj3E_Index
-		dc.w Obj3E_Animals-Obj3E_Index
-		dc.w Obj3E_EndAct-Obj3E_Index
-Obj3E_Var:	dc.b   2,$20,  4,  0
-		dc.b   4, $C,  5,  1
-		dc.b   6,$10,  4,  3
-		dc.b   8,$10,  3,  5
-; ---------------------------------------------------------------------------
-
-Obj3E_Init:
-		move.l	#Map_Obj3E,obMap(a0)
-		move.w	#make_art_tile(ArtTile_Prison_Capsule,0,0),obGfx(a0)
-		move.b	#4,obRender(a0)
-		move.w	obY(a0),objoff_30(a0)
-		moveq	#0,d0
-		move.b	obSubtype(a0),d0
-		lsl.w	#2,d0
-		lea	Obj3E_Var(pc,d0.w),a1
-		move.b	(a1)+,obRoutine(a0)
-		move.b	(a1)+,obActWid(a0)
-		move.b	(a1)+,obPriority(a0)
-		move.w	obPriority(a0),d0
-		lsr.w	#1,d0
-		andi.w	#$380,d0
-		move.w	d0,obPriority(a0)
-		move.b	(a1)+,obFrame(a0)
-		cmpi.w	#8,d0
-		bne.s	.return
-		move.b	#6,obColType(a0)
-		move.b	#8,obColProp(a0)
-
-.return:
-		rts
-; ---------------------------------------------------------------------------
-
-Obj3E_BodyMain:
-		cmpi.b	#2,(Boss_defeated_flag).w
-		beq.s	loc_1959C
-		moveq	#$2B,d1
-		moveq	#$18,d2
-		moveq	#$18,d3
-		move.w	obX(a0),d4
-		jmp	(SolidObject).l
-; ---------------------------------------------------------------------------
-
-loc_1959C:
-		tst.b	ob2ndRout(a0)
-		beq.s	loc_195B2
-		clr.b	ob2ndRout(a0)
-		bclr	#3,(v_objspace+obStatus).w
-		bset	#1,(v_objspace+obStatus).w
-
-loc_195B2:
-		move.b	#2,obFrame(a0)
-		rts
-; ---------------------------------------------------------------------------
-
-Obj3E_Switched:
-		move.w	#$17,d1
-		move.w	#8,d2
-		move.w	#8,d3
-		move.w	obX(a0),d4
-		jsr	(SolidObject).l
-		lea	Ani_Obj3E(pc),a1
-		jsr	(AnimateSprite).l
-		move.w	objoff_30(a0),obY(a0)
-		move.b	obStatus(a0),d0
-		andi.b	#$18,d0
-		beq.s	locret_19620
-		addq.w	#8,obY(a0)
-		move.b	#$A,obRoutine(a0)
-		move.b	#60,obTimeFrame(a0)
-		clr.b	(f_timecount).w
-		clr.b	(f_lockscreen).w
-		move.b	#1,(f_lockctrl).w
-		move.w	#8<<btnR,(v_jpadholdlogical).w
-		clr.b	ob2ndRout(a0)
-		bclr	#3,(v_objspace+obStatus).w
-		bset	#1,(v_objspace+obStatus).w
-
-locret_19620:
-		rts
-; ---------------------------------------------------------------------------
-
-Obj3E_Explosion:
-		moveq	#7,d0
-		and.b	(Vint_runcount+3).w,d0
-		bne.s	loc_19660
-		jsr	(FindFreeObj).l
-		bne.s	loc_19660
-		_move.b	#id_Obj3F,obID(a1)
-		move.w	obX(a0),obX(a1)
-		move.w	obY(a0),obY(a1)
-		jsr	(RandomNumber).l
-		moveq	#0,d1
-		move.b	d0,d1
-		lsr.b	#2,d1
-		subi.w	#$20,d1
-		add.w	d1,obX(a1)
-		lsr.w	#8,d0
-		lsr.b	#3,d0
-		add.w	d0,obY(a1)
-
-loc_19660:
-		subq.b	#1,obTimeFrame(a0)
-		beq.s	loc_19668
-		rts
-; ---------------------------------------------------------------------------
-
-loc_19668:
-		move.b	#2,(Boss_defeated_flag).w
-		move.b	#$C,obRoutine(a0)
-		move.b	#6,obFrame(a0)
-		move.b	#150,obTimeFrame(a0)
-		addi.w	#$20,obY(a0)
-		moveq	#7,d6
-		move.w	#$9A,d5
-		moveq	#-$1C,d4
-
--		jsr	(FindFreeObj).l
-		bne.s	.return
-		_move.b	#id_Obj28,obID(a1)
-		move.w	obX(a0),obX(a1)
-		move.w	obY(a0),obY(a1)
-		add.w	d4,obX(a1)
-		addq.w	#7,d4
-		move.w	d5,objoff_36(a1)
-		subq.w	#8,d5
-		dbf	d6,-
-
-.return:
-		rts
-; ---------------------------------------------------------------------------
-
-Obj3E_Animals:
-		moveq	#7,d0
-		and.b	(Vint_runcount+3).w,d0
-		bne.s	loc_196F8
-		jsr	(FindFreeObj).l
-		bne.s	loc_196F8
-		_move.b	#id_Obj28,obID(a1)
-		move.w	obX(a0),obX(a1)
-		move.w	obY(a0),obY(a1)
-		jsr	(RandomNumber).l
-		andi.w	#$1F,d0
-		subq.w	#6,d0
-		tst.w	d1
-		bpl.s	loc_196EE
-		neg.w	d0
-
-loc_196EE:
-		add.w	d0,obX(a1)
-		move.w	#$C,objoff_36(a1)
-
-loc_196F8:
-		subq.b	#1,obTimeFrame(a0)
-		bne.s	.return
-		addq.b	#2,obRoutine(a0)
-		move.b	#60*3,obTimeFrame(a0)
-.return:	rts
-; ---------------------------------------------------------------------------
-
-Obj3E_EndAct:
-		moveq	#id_Obj3E,d0
-		moveq	#id_Obj28,d1
-		moveq	#object_size,d2
-		lea	(v_player2).w,a1
--		cmp.b	(a1),d1
-		beq.s	loc_196F8.return
-		adda.w	d2,a1
-		dbf	d0,-
-
-		jsr	(Load_EndOfAct).l
-		jmp	(DeleteObject).l
-; ---------------------------------------------------------------------------
-Ani_Obj3E:	dc.w byte_19730-Ani_Obj3E
-		dc.w byte_19730-Ani_Obj3E
-byte_19730:	dc.b 2,	1,	3,	$FF
-		even
-
-Map_Obj3E:	dc.w word_19742-Map_Obj3E
-		dc.w word_1977C-Map_Obj3E
-		dc.w word_19786-Map_Obj3E
-		dc.w word_197B8-Map_Obj3E
-		dc.w word_197C2-Map_Obj3E
-		dc.w word_197D4-Map_Obj3E
-		dc.w word_197DE-Map_Obj3E
-word_19742:	dc.w 7
-		dc.w $E00C,$2000,$2000,$FFF0
-		dc.w $E80D,$2004,$2002,$FFE0
-		dc.w $E80D,$200C,$2006,	   0
-		dc.w $F80E,$2014,$200A,$FFE0
-		dc.w $F80E,$2020,$2010,	   0
-		dc.w $100D,$202C,$2016,$FFE0
-		dc.w $100D,$2034,$201A,	   0
-word_1977C:	dc.w 1
-		dc.w $F809,  $3C,  $1E,$FFF4
-word_19786:	dc.w 6
-		dc.w	 8,$2042,$2021,$FFE0
-		dc.w  $80C,$2045,$2022,$FFE0
-		dc.w	 4,$2049,$2024,	 $10
-		dc.w  $80C,$204B,$2025,	   0
-		dc.w $100D,$202C,$2016,$FFE0
-		dc.w $100D,$2034,$201A,	   0
-word_197B8:	dc.w 1
-		dc.w $F809,  $4F,  $27,$FFF4
-word_197C2:	dc.w 2
-		dc.w $E80E,$2055,$202A,$FFF0
-		dc.w	$E,$2061,$2030,$FFF0
-word_197D4:	dc.w 1
-		dc.w $F007,$206D,$2036,$FFF8
-word_197DE:	dc.w 0
-		even
-; ---------------------------------------------------------------------------
+		include "objects/3E Prison Capsule.asm"
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -15866,7 +15653,7 @@ Touch_Enemy:
 .return:	rts
 ; ---------------------------------------------------------------------------
 
-Touch_KillEnemy:
+Touch_KillEnemy:	; Shared with Animals & Explosion for the chain hit bonus (The chain starts here)
 		bset	#7,obStatus(a1)
 		moveq	#0,d0
 		move.w	(v_itembonus).w,d0
@@ -15876,16 +15663,16 @@ Touch_KillEnemy:
 		moveq	#6,d0
 
 loc_19994:
-		move.w	d0,objoff_3E(a1)
+		move.w	d0,enemy_combo(a1)
 		move.w	Enemy_Points(pc,d0.w),d0
 		cmpi.w	#$20,(v_itembonus).w
 		blo.s	loc_199AE
 		move.w	#1000,d0
-		move.w	#10,objoff_3E(a1)
+		move.w	#10,enemy_combo(a1)
 
 loc_199AE:
 		bsr.w	AddPoints
-		_move.b	#id_Obj27,obID(a1)
+		_move.b	#id_Obj0F,obID(a1)
 		clr.b	obRoutine(a1)
 		tst.w	obVelY(a0)
 		bmi.s	loc_199D4
@@ -15934,7 +15721,7 @@ HurtSonic:
 .skip:
 		jsr	(FindFreeObj).l
 		bne.s	HurtShield
-		_move.b	#id_Obj37,obID(a1)
+		_move.b	#id_Obj13,obID(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 
@@ -18491,9 +18278,8 @@ Nem_FzBoss:	binclude	"art/nemesis/S1/Boss - Final Zone.nem"			; This boss might 
 		even
 Nem_Exhaust:	binclude	"art/nemesis/S1/Boss - Exhaust Flame.nem"		; Old exhaust flame -- looks cooler, might be reused
 		even
-Nem_Prison:	binclude	"art/nemesis/S1/Prison Capsule.nem"			; From Sonic 1. Again, will be reused (looks better)
+Nem_Prison:	binclude	"art/nemesis/Prison Capsule.nem"			; From Sonic 1. Again, will be reused (looks better)
 		even
-
 Nem_EggPod:	binclude	"art/nemesis/Boss Ship.nem"
 		even
 Nem_EggPodJets:	binclude	"art/nemesis/Boss Ship Boost.nem"
@@ -18840,22 +18626,22 @@ Map128_HTZ:	binclude	"mappings/128x128/HTZ.kosp"
  endif
 ; ===========================================================================
 ; Zone 06 (Filler; currently S1's leftover ending)
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+Kosp_MTZ:	binclude	"art/kosinski/level/8x8 - MTZ.kosp"
+Map16_MTZ:	binclude	"mappings/16x16/MTZ.kosp"
+Map128_MTZ:	binclude	"mappings/128x128/MTZ.kosp"
  if TimeTravel=1
 ; Past
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+		binclude	"art/kosinski/level/8x8 - MTZ.kosp"
+		binclude	"mappings/16x16/MTZ.kosp"
+		binclude	"mappings/128x128/MTZ.kosp"
 ; Good Future
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+		binclude	"art/kosinski/level/8x8 - MTZ.kosp"
+		binclude	"mappings/16x16/MTZ.kosp"
+		binclude	"mappings/128x128/MTZ.kosp"
 ; Bad Future
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+		binclude	"art/kosinski/level/8x8 - MTZ.kosp"
+		binclude	"mappings/16x16/MTZ.kosp"
+		binclude	"mappings/128x128/MTZ.kosp"
  endif
 ; From here onwards, filler data for the NEW levels.
 ; ===========================================================================
@@ -19113,6 +18899,14 @@ Col_HTZ3:	binclude	"collision/present/HTZ3.bin"
 		even
 Col_HTZ4:	binclude	"collision/present/HTZ4.bin"
 		even
+Col_MTZ1:	binclude	"collision/present/MTZ1.bin"
+		even
+Col_MTZ2:	binclude	"collision/present/MTZ2.bin"
+		even
+Col_MTZ3:	binclude	"collision/present/MTZ3.bin"
+		even
+Col_MTZ4:	binclude	"collision/present/MTZ4.bin"
+		even
  if TimeTravel=1
 ; ---------------------------------------------------------------------------
 ; Past Collision
@@ -19165,6 +18959,14 @@ PCol_HTZ3:	binclude	"collision/past/HTZ3.bin"
 		even
 PCol_HTZ4:	binclude	"collision/past/HTZ4.bin"
 		even
+PCol_MTZ1:	binclude	"collision/present/MTZ1.bin"
+		even
+PCol_MTZ2:	binclude	"collision/present/MTZ2.bin"
+		even
+PCol_MTZ3:	binclude	"collision/present/MTZ3.bin"
+		even
+PCol_MTZ4:	binclude	"collision/present/MTZ4.bin"
+		even
 ; ---------------------------------------------------------------------------
 ; Good Future Collision
 ; ---------------------------------------------------------------------------
@@ -19216,6 +19018,14 @@ GCol_HTZ3:	binclude	"collision/good future/HTZ3.bin"
 		even
 GCol_HTZ4:	binclude	"collision/good future/HTZ4.bin"
 		even
+GCol_MTZ1:	binclude	"collision/present/MTZ1.bin"
+		even
+GCol_MTZ2:	binclude	"collision/present/MTZ2.bin"
+		even
+GCol_MTZ3:	binclude	"collision/present/MTZ3.bin"
+		even
+GCol_MTZ4:	binclude	"collision/present/MTZ4.bin"
+		even
 ; ---------------------------------------------------------------------------
 ; Bad Future Collision
 ; ---------------------------------------------------------------------------
@@ -19266,6 +19076,14 @@ BCol_HTZ2:	binclude	"collision/bad future/HTZ2.bin"
 BCol_HTZ3:	binclude	"collision/bad future/HTZ3.bin"
 		even
 BCol_HTZ4:	binclude	"collision/bad future/HTZ4.bin"
+		even
+BCol_MTZ1:	binclude	"collision/present/MTZ1.bin"
+		even
+BCol_MTZ2:	binclude	"collision/present/MTZ2.bin"
+		even
+BCol_MTZ3:	binclude	"collision/present/MTZ3.bin"
+		even
+BCol_MTZ4:	binclude	"collision/present/MTZ4.bin"
 		even
  endif
 ; ---------------------------------------------------------------------------
@@ -19436,7 +19254,7 @@ ObjPos_HTZ3:	binclude	"level/objects/HTZ_3.bin"
 		ObjectLayoutBoundary
 ObjPos_HTZ4:	binclude	"level/objects/HTZ_4.bin"
 		ObjectLayoutBoundary
-ObjPos_Ending:	binclude	"level/objects/S1/ending.bin"
+ObjPos_Ending:	binclude	"level/objects/MTZ_1.bin"
 		ObjectLayoutBoundary
 ObjPos_Null:	ObjectLayoutBoundary
 		even
@@ -20102,59 +19920,9 @@ Map_Bubbles:	binclude	"mappings/sprite/Bubbles.bin"
 		even
 Map_Countdown:	binclude	"mappings/sprite/Drowning Countdown.bin"
 		even
-Map_Obj0B:	binclude	"mappings/sprite/Tilting Platform.bin"
+Map_Obj0B:	binclude	"mappings/sprite/Tilting Platform.bin"		; $0B
 		even
-Map_Flap:	binclude	"mappings/sprite/Flapping Door.bin"
-		even
-Map_obj0D:	binclude	"mappings/sprite/Signpost.bin"
-		even
-Map_GHZ_Bridge:	binclude	"mappings/sprite/obj11_GHZ.bin"
-		even
-Map_EHZ_Bridge:	binclude	"mappings/sprite/obj11_EHZ.bin"
-		even
-Map_HPZ_Bridge:	binclude	"mappings/sprite/obj11_HPZ.bin"
-		even
-Map_Obj13:	binclude	"mappings/sprite/HPZ Waterfall.bin"
-		even
-Map_Obj15:	binclude	"mappings/sprite/Swinging Platform.bin"
-		even
-Map_Obj15_SLZ:	binclude	"mappings/sprite/SLZ Swinging Platform.bin"
-		even
-Map_Obj16:	binclude	"mappings/sprite/HTZ Descending lift.bin"
-		even
-Map_Obj17:;	binclude	"mappings/sprite/S1/Spiked Pole Helix.bin"
-	;	even
-Map_Obj18_GHZ:	binclude	"mappings/sprite/18 - GHZ platforms mappings.bin"
-		even
-Map_obj18_EHZ:	binclude	"mappings/sprite/18 - EHZ platforms mappings.bin"
-		even
-Map_Obj19:	binclude	"mappings/sprite/CPZ Platform.bin"
-		even
-Map_Obj1A:	binclude	"mappings/sprite/GHZ Collapsing Ledge.bin"
-		even
-Map_Obj1A_HPZ:	binclude	"mappings/sprite/HPZ Collapsing Platform.bin"
-		even
-Map_Obj1B:	binclude	"mappings/sprite/Collapsing Floors.bin"
-		even
-Map_HPZ_Orb:	binclude	"mappings/sprite/HPZ Pulsing Orb.bin"	; $1C
-		even
-Map_BallHogV:	binclude	"mappings/sprite/Vertical Ballhog.bin"
-		even
-Map_BallHogH:	binclude	"mappings/sprite/Horizontal Ballhog.bin"
-		even
-Map_obj1F:	binclude	"mappings/sprite/Crabmeat.bin"
-		even
-Map_obj22:	binclude	"mappings/sprite/Buzz Bomber.bin"
-		even
-Map_obj23:	binclude	"mappings/sprite/Buzz Bomber Missile.bin"
-		even
-Map_GroundExplosion:	binclude	"mappings/sprite/Ground Explosion.bin"
-		even
-Map_Ring:	binclude	"mappings/sprite/Ring.bin"		; $25
-		even
-Map_Obj26:	binclude	"mappings/sprite/Monitor.bin"
-		even
-Map_Obj27:	binclude	"mappings/sprite/Explosion.bin"
+Map_Flap:	binclude	"mappings/sprite/Flapping Door.bin"		; $0C
 		even
 Map_Animals1:	binclude	"mappings/sprite/Map - Chicken Flicky Eagle.bin"
 		even
@@ -20164,9 +19932,57 @@ Map_Animals3:	binclude	"mappings/sprite/Map - Turtle.bin"
 		even
 Map_Animals4:	binclude	"mappings/sprite/Map - Seal.bin"
 		even
-Map_Animals5:	binclude	"mappings/sprite/Map - Rabbit Penguin.bin"	; $28
+Map_Animals5:	binclude	"mappings/sprite/Map - Rabbit Penguin.bin"	; $0D
 		even
-Map_Obj2A:	binclude	"mappings/sprite/Points from an enemy.bin"
+Map_Points:	binclude	"mappings/sprite/Points from an enemy.bin"	; $0E
+		even
+Map_Explosion:	binclude	"mappings/sprite/Explosion.bin"
+		even
+Map_FExplosion:	binclude	"mappings/sprite/Fiery Explosion.bin"
+		even
+Map_GExplosion:	binclude	"mappings/sprite/Ground Explosion.bin"		; $11
+		even
+Map_Obj16:	binclude	"mappings/sprite/HTZ Descending lift.bin"
+		even
+Map_Obj17:	binclude	"mappings/sprite/Swinging Platform.bin"
+		even
+Map_Obj17_SLZ:	binclude	"mappings/sprite/SLZ Swinging Platform.bin"
+		even
+Map_Obj18_GHZ:	binclude	"mappings/sprite/18 - GHZ platform mappings.bin"
+		even
+Map_Obj18_EHZ:	binclude	"mappings/sprite/18 - EHZ platform mappings.bin"
+		even
+Map_Obj19:	binclude	"mappings/sprite/CPZ Platform.bin"
+		even
+Map_Obj1A:	binclude	"mappings/sprite/GHZ Collapsing Ledge.bin"
+		even
+Map_Obj1A_HPZ:	binclude	"mappings/sprite/HPZ Collapsing Platform.bin"
+		even
+Map_Obj1B:	binclude	"mappings/sprite/Collapsing Floors.bin"
+		even
+Map_HPZ_Orb:	binclude	"mappings/sprite/HPZ Pulsing Orb.bin"		; $1C
+		even
+Map_GHZ_Bridge:	binclude	"mappings/sprite/obj1D_GHZ.bin"			; $1D
+		even
+Map_EHZ_Bridge:	binclude	"mappings/sprite/obj1D_EHZ.bin"
+		even
+Map_HPZ_Bridge:	binclude	"mappings/sprite/obj1D_HPZ.bin"
+		even
+Map_Waterfall2:	binclude	"mappings/sprite/HPZ Waterfall.bin"		; $1E
+		even
+Map_obj1F:	binclude	"mappings/sprite/Crabmeat.bin"
+		even
+Map_BallHogV:	binclude	"mappings/sprite/Vertical Ballhog.bin"		; $21
+		even
+Map_BallHogH:	binclude	"mappings/sprite/Horizontal Ballhog.bin"	; $1C
+		even
+Map_obj22:	binclude	"mappings/sprite/Buzz Bomber.bin"
+		even
+Map_obj23:	binclude	"mappings/sprite/Buzz Bomber Missile.bin"
+		even
+Map_Ring:	binclude	"mappings/sprite/Ring.bin"			; $25
+		even
+Map_Obj26:	binclude	"mappings/sprite/Monitor.bin"
 		even
 Map_Obj2B:	binclude	"mappings/sprite/GHZ Chopper.bin"
 		even
@@ -20180,21 +19996,31 @@ Map_Obj36:	binclude	"mappings/sprite/Spikes.bin"
 		even
 Map_obj38:	binclude	"mappings/sprite/obj38.bin"
 		even
-Map_PRock:	binclude	"mappings/sprite/Purple Rock.bin"	; $3B
+Map_PRock:	binclude	"mappings/sprite/Purple Rock.bin"		; $3B
 		even
 Map_Emerald:	binclude	"mappings/sprite/HPZ Emerald.bin"
 		even
 Map_Obj3C:	binclude	"mappings/sprite/Breakable wall.bin"
 		even
-Map_Obj3F:	binclude	"mappings/sprite/Fiery Explosion.bin"
+Map_Obj3E:	binclude	"mappings/sprite/Prison Capsule.bin"
 		even
 Map_obj40:	binclude	"mappings/sprite/Motobug.bin"
 		even
-Map_Newtron:	binclude	"mappings/sprite/Newtron.bin"	; $42
+Map_Newtron:	binclude	"mappings/sprite/Newtron.bin"			; $42
 		even
 Map_obj44:	binclude	"mappings/sprite/GHZ Edge Walls.bin"
 		even
-Map_Bump:	binclude	"mappings/sprite/Bumper.bin"	; $47
+Map_Bump:	binclude	"mappings/sprite/Bumper.bin"			; $47
+		even
+Map_GBall:	binclude	"mappings/sprite/Giant Ball.bin"		; $48
+		even
+Map_Waterfall1:	binclude	"mappings/sprite/EHZ Waterfall.bin"		; $49
+		even
+Map_Rhinobot:	binclude	"mappings/sprite/Rhinobot.bin"			; $4D
+		even
+Map_Splats:	binclude	"mappings/sprite/Splats.bin"			; $4F
+		even
+Map_Piranha:	binclude	"mappings/sprite/Piranha.bin"			; $52
 		even
 Map_obj5E:	binclude	"mappings/sprite/obj5E_a.bin"
 		even
@@ -20206,29 +20032,25 @@ Map_SpecialWarp:	binclude	"mappings/sprite/Special Stage Warp.bin"
 		even
 Map_GiantRing:	binclude	"mappings/sprite/GiantRing.bin"
 		even
-;Map_GiantRingFlash:
-	;	binclude	"mappings/sprite/GiantRingFlash.bin"
-	;	even
 Map_Obj7D:	binclude	"mappings/sprite/Hidden Bonuses.bin"
 		even
-Map_Credits:	binclude	"mappings/sprite/Sonic Team Presents.bin"
+Map_Signpost:	binclude	"mappings/sprite/Signpost.bin"			; $7E
+		even
+Map_Credits:	binclude	"mappings/sprite/Sonic Team Presents.bin"	; $90
 		even
 
-Map_TitleST:	binclude "mappings/sprite/Sonic & Tails on the title screen.bin" ; $92
+Map_TitleST:	binclude "mappings/sprite/Sonic & Tails on the title screen.bin"; $92
 		even
 Map_PSB:	binclude "mappings/sprite/press start button.bin"
 		even
-Map_Card:	include		"mappings/sprite/Title_Cards.asm"	; $94
-Map_Got:	include		"mappings/sprite/Got_Through.asm"	; $95
-Map_SSR:	include		"mappings/sprite/SSResults.asm"		; $96
-Map_SSRE:	binclude	"mappings/sprite/SSR Emeralds.bin"	; $97
+Map_Card:	include		"mappings/sprite/Title_Cards.asm"		; $94
+Map_Got:	include		"mappings/sprite/Got_Through.asm"		; $95
+Map_SSR:	include		"mappings/sprite/SSResults.asm"			; $96
+Map_SSRE:	binclude	"mappings/sprite/SSR Emeralds.bin"		; $97
 		even
-Map_Over:	include		"mappings/sprite/Game_Over.asm"		; $98
-Map_Bas:	binclude	"mappings/sprite/Basaran.bin"		; $A0 (Not yet, but soon)
+Map_Over:	include		"mappings/sprite/Game_Over.asm"			; $98
+Map_Bas:	binclude	"mappings/sprite/Basaran.bin"			; $A0 (Not yet, but soon)
 		even
-Map_GBall:	binclude	"mappings/sprite/Giant Ball.bin"
-		even
-
  if AdvancedHandler=1
 ; ===========================================================================
 ; ---------------------------------------------------------------------------

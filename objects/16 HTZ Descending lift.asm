@@ -21,14 +21,12 @@ Obj16_Init:
 		move.b	#$20,obActWid(a0)
 		clr.b	obFrame(a0)
 		move.w	#$80,obPriority(a0)
-	;	move.w	obX(a0),objoff_30(a0)
-	;	move.w	obY(a0),objoff_32(a0)
 		move.b	#$40,obHeight(a0)
 		bset	#4,obRender(a0)
 		moveq	#0,d0
 		move.b	obSubtype(a0),d0	; subtype determines how far we descend
 		lsl.w	#3,d0
-		move.w	d0,objoff_34(a0)
+		move.w	d0,objoff_2C(a0)
 
 Obj16_Main:
 		move.w	obX(a0),-(sp)
@@ -79,7 +77,7 @@ Obj16_Slide:	; this comes from S2 final; since the sound is yet to be added,
 	;	jsr	(PlaySound).l
 ;+
 		bsr.w	ObjectMove
-		subq.w	#1,objoff_34(a0)
+		subq.w	#1,objoff_2C(a0)
 		bne.s	.return
 		addq.b	#2,ob2ndRout(a0)
 	;	move.b	#2,obFrame(a0)	; doesn't exists yet, so we'll keep using frame 0 for now
@@ -91,7 +89,7 @@ Obj16_Slide:	; this comes from S2 final; since the sound is yet to be added,
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.b	obRender(a0),obRender(a1)
-		move.b	#6,obSubtype(a1)	; doesn't exists either but it's not causing any issues
+		move.b	#6,obSubtype(a1)	; (it only exists as a placeholder within Obj1C)
 .return:	rts
 ; ---------------------------------------------------------------------------
 

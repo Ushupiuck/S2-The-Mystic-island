@@ -1,6 +1,6 @@
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Object 15 - swinging platforms (ported toward S2 final behavior model)
+; Object 17 - swinging platforms (ported toward S2 final behavior model)
 ;   high nibble = behavior family
 ;   low  nibble = chain length
 ;
@@ -31,32 +31,32 @@ status_standing_mask	= $18
 status_in_air_bit	= 1
 ; ---------------------------------------------------------------------------
 
-Obj15:
+SwingingPtfm:
 		btst	#obRender.multi_sprite,obRender(a0)
-		bne.w	Obj15_HelperDisplay
+		bne.w	SwingingPtfm_HelperDisplay
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	Obj15_Index(pc,d0.w),d1
-		jmp	Obj15_Index(pc,d1.w)
+		move.w	SwingingPtfm_Index(pc,d0.w),d1
+		jmp	SwingingPtfm_Index(pc,d1.w)
 ; ---------------------------------------------------------------------------
 
-Obj15_HelperDisplay:
+SwingingPtfm_HelperDisplay:
 		move.w	#$200,d0
 		bra.w	DisplaySprite3
 ; ---------------------------------------------------------------------------
-Obj15_Index:
-		dc.w	Obj15_Init-Obj15_Index		; 00
-		dc.w	Obj15_SetSolid-Obj15_Index	; 02
-		dc.w	Obj15_Display-Obj15_Index	; 04
-		dc.w	Obj15_DetachCheck-Obj15_Index	; 06
-		dc.w	Obj15_PostDetach-Obj15_Index	; 08
-		dc.w	Obj15_Falling-Obj15_Index	; 0A
-		dc.w	Obj15_Floating-Obj15_Index	; 0C
+SwingingPtfm_Index:
+		dc.w	SwingingPtfm_Init-SwingingPtfm_Index		; 00
+		dc.w	SwingingPtfm_SetSolid-SwingingPtfm_Index	; 02
+		dc.w	SwingingPtfm_Display-SwingingPtfm_Index		; 04
+		dc.w	SwingingPtfm_DetachCheck-SwingingPtfm_Index	; 06
+		dc.w	SwingingPtfm_PostDetach-SwingingPtfm_Index	; 08
+		dc.w	SwingingPtfm_Falling-SwingingPtfm_Index		; 0A
+		dc.w	SwingingPtfm_Floating-SwingingPtfm_Index	; 0C
 ; ---------------------------------------------------------------------------
 
-Obj15_Init:
+SwingingPtfm_Init:
 		addq.b	#2,obRoutine(a0)
-		move.l	#Map_Obj15,obMap(a0)
+		move.l	#Map_Obj17,obMap(a0)
 		move.w	#make_art_tile(ArtTile_GHZ_MZ_Swing,0,0),obGfx(a0)
 		move.b	#1<<obRender.level_fg,obRender(a0)
 		move.w	#$180,obPriority(a0)
@@ -67,7 +67,7 @@ Obj15_Init:
 
 		cmpi.b	#id_SLZ,(Current_Zone).w
 		bne.s	.parseSubtype
-		move.l	#Map_Obj15_SLZ,obMap(a0)
+		move.l	#Map_Obj17_SLZ,obMap(a0)
 		move.w	#make_art_tile(ArtTile_SLZ_Swing,2,0),obGfx(a0)
 		move.b	#$20,obActWid(a0)
 		move.b	#$10,obHeight(a0)
@@ -186,9 +186,9 @@ Obj15_Init:
 .done:		rts
 ; ---------------------------------------------------------------------------
 
-Obj15_SetSolid:
+SwingingPtfm_SetSolid:
 		move.w	obX(a0),-(sp)
-		bsr.w	Obj15_UpdateMotion
+		bsr.w	SwingingPtfm_UpdateMotion
 		moveq	#0,d1
 		moveq	#0,d3
 		move.b	obActWid(a0),d1
@@ -196,12 +196,12 @@ Obj15_SetSolid:
 		addq.b	#1,d3
 		move.w	(sp)+,d4
 		bsr.w	sub_F82E
-		bra.w	Obj15_ChkDel
+		bra.w	SwingingPtfm_ChkDel
 ; ---------------------------------------------------------------------------
 
-Obj15_DetachCheck:
+SwingingPtfm_DetachCheck:
 		move.w	obX(a0),-(sp)
-		bsr.w	Obj15_UpdateMotion
+		bsr.w	SwingingPtfm_UpdateMotion
 		moveq	#0,d1
 		moveq	#0,d3
 		move.b	obActWid(a0),d1
@@ -211,9 +211,9 @@ Obj15_DetachCheck:
 		bsr.w	sub_F82E
 		move.b	obStatus(a0),d0
 		andi.b	#status_standing_mask,d0
-		beq.w	Obj15_ChkDel
+		beq.w	SwingingPtfm_ChkDel
 		tst.b	(v_oscillate+$1A).w
-		bne.w	Obj15_ChkDel
+		bne.w	SwingingPtfm_ChkDel
 		bsr.w	FindNextFreeObj
 		bne.s	.noSpawn
 		moveq	#0,d0
@@ -256,15 +256,15 @@ Obj15_DetachCheck:
 		move.b	#3,obFrame(a0)
 		addq.b	#2,obRoutine(a0)		; keep the hanging chain/anchor alive
 		andi.b	#$E7,obStatus(a0)
-		bra.w	Obj15_ChkDel
+		bra.w	SwingingPtfm_ChkDel
 ; ---------------------------------------------------------------------------
 
-Obj15_PostDetach:
-		bsr.w	Obj15_UpdateMotion
-		bra.w	Obj15_ChkDel
+SwingingPtfm_PostDetach:
+		bsr.w	SwingingPtfm_UpdateMotion
+		bra.w	SwingingPtfm_ChkDel
 ; ---------------------------------------------------------------------------
 
-Obj15_Falling:
+SwingingPtfm_Falling:
 		move.w	obX(a0),-(sp)
 		btst	#status_in_air_bit,obStatus(a0)
 		beq.s	.bob
@@ -303,7 +303,7 @@ Obj15_Falling:
 		bra.w	MarkObjGone
 ; ---------------------------------------------------------------------------
 
-Obj15_Floating:
+SwingingPtfm_Floating:
 		move.w	obX(a0),-(sp)
 		bsr.w	ObjectMove
 		btst	#status_in_air_bit,obStatus(a0)
@@ -355,56 +355,56 @@ Obj15_Floating:
 ; motion core
 ; ---------------------------------------------------------------------------
 
-Obj15_UpdateMotion:
+SwingingPtfm_UpdateMotion:
 		moveq	#0,d1
 		move.b	obSubtype(a0),d1
 		lsr.b	#4,d1				; family 0-6
 		add.w	d1,d1				; word index
-		move.w	Obj15_MotionIndex(pc,d1.w),d1
-		jmp	Obj15_MotionIndex(pc,d1.w)
+		move.w	SwingingPtfm_MotionIndex(pc,d1.w),d1
+		jmp	SwingingPtfm_MotionIndex(pc,d1.w)
 ; ---------------------------------------------------------------------------
-Obj15_MotionIndex:
-		dc.w	Obj15_Motion_Normal-Obj15_MotionIndex		; 0X
-		dc.w	Obj15_Motion_BounceLeft-Obj15_MotionIndex	; 1X
-		dc.w	Obj15_Motion_Static-Obj15_MotionIndex		; 2X
-		dc.w	Obj15_Motion_BounceRight-Obj15_MotionIndex	; 3X
-		dc.w	Obj15_Motion_Trap-Obj15_MotionIndex		; 4X
-		dc.w	Obj15_Motion_Normal-Obj15_MotionIndex		; 5X
-		dc.w	Obj15_Motion_Normal-Obj15_MotionIndex		; 6X
+SwingingPtfm_MotionIndex:
+		dc.w	SwingingPtfm_Motion_Normal-SwingingPtfm_MotionIndex		; 0X
+		dc.w	SwingingPtfm_Motion_BounceLeft-SwingingPtfm_MotionIndex	; 1X
+		dc.w	SwingingPtfm_Motion_Static-SwingingPtfm_MotionIndex		; 2X
+		dc.w	SwingingPtfm_Motion_BounceRight-SwingingPtfm_MotionIndex	; 3X
+		dc.w	SwingingPtfm_Motion_Trap-SwingingPtfm_MotionIndex		; 4X
+		dc.w	SwingingPtfm_Motion_Normal-SwingingPtfm_MotionIndex		; 5X
+		dc.w	SwingingPtfm_Motion_Normal-SwingingPtfm_MotionIndex		; 6X
 ; ---------------------------------------------------------------------------
 
-Obj15_Motion_Normal:
+SwingingPtfm_Motion_Normal:
 		moveq	#0,d0
 		move.b	(v_oscillate+$1A).w,d0
-		bra.w	Obj15_ApplyAngle
+		bra.w	SwingingPtfm_ApplyAngle
 ; ---------------------------------------------------------------------------
 
-Obj15_Motion_BounceLeft:
+SwingingPtfm_Motion_BounceLeft:
 		moveq	#0,d0
 		move.b	(v_oscillate+$1A).w,d0
 		cmpi.b	#$40,d0
 		bhs.s	+
 		moveq	#$40,d0
-+		bra.w	Obj15_ApplyAngle
++		bra.w	SwingingPtfm_ApplyAngle
 ; ---------------------------------------------------------------------------
 
-Obj15_Motion_Static:
+SwingingPtfm_Motion_Static:
 		moveq	#$40,d0
-		bra.w	Obj15_ApplyAngle
+		bra.w	SwingingPtfm_ApplyAngle
 ; ---------------------------------------------------------------------------
 
-Obj15_Motion_BounceRight:
+SwingingPtfm_Motion_BounceRight:
 		moveq	#0,d0
 		move.b	(v_oscillate+$1A).w,d0
 		cmpi.b	#$40,d0
 		blo.s	+
 		moveq	#$40,d0
-+		bra.w	Obj15_ApplyAngle
++		bra.w	SwingingPtfm_ApplyAngle
 ; ---------------------------------------------------------------------------
 ; trap family ($40)
 ; ---------------------------------------------------------------------------
 
-Obj15_Motion_Trap:
+SwingingPtfm_Motion_Trap:
 		tst.w	swing_mode_timer(a0)
 		beq.s	.chkTrigger
 		subq.w	#1,swing_mode_timer(a0)
@@ -453,10 +453,10 @@ Obj15_Motion_Trap:
 .done:		moveq	#0,d0
 		move.b	obAngle(a0),d0
 		; we're the last entry, so fall through!
-	;	bra.s	Obj15_ApplyAngle uncomment me if further entries are added
+	;	bra.s	SwingingPtfm_ApplyAngle uncomment me if further entries are added
 ; ---------------------------------------------------------------------------
 
-Obj15_ApplyAngle:
+SwingingPtfm_ApplyAngle:
 		cmp.b	swing_last_angle(a0),d0
 		beq.w	.return
 		move.b	d0,swing_last_angle(a0)
@@ -475,10 +475,10 @@ Obj15_ApplyAngle:
 		beq.w	.fallbackSingle
 		; convert sine/cosine to 16px fixed-point step
 		asl.w	#4,d0
-		ext.l	d0
-		asl.l	#8,d0
 		asl.w	#4,d1
+		ext.l	d0
 		ext.l	d1
+		asl.l	#8,d0
 		asl.l	#8,d1
 
 		moveq	#0,d6
@@ -588,12 +588,13 @@ Obj15_ApplyAngle:
 .return:	rts
 ; ---------------------------------------------------------------------------
 
-Obj15_ChkDel:
-		out_of_range.s	Obj15_DelAll,swing_orig_x(a0)
-Obj15_Display:	bra.w	DisplaySprite
+SwingingPtfm_ChkDel:
+		out_of_range.s	SwingingPtfm_DelAll,swing_orig_x(a0)
+SwingingPtfm_Display:
+		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
-Obj15_DelAll:
+SwingingPtfm_DelAll:
 		movea.l	swing_helper_ptr(a0),a1
 		beq.s	.noHelper
 		bsr.w	DeleteObject2

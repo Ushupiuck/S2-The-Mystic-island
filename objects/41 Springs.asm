@@ -399,70 +399,67 @@ loc_E530:
 
 sub_E54C:
 		cmpi.b	#3,obAnim(a0)
-		beq.w	locret_E604
+		beq.w	.return
 		move.w	obX(a0),d0
 		move.w	d0,d1
 		addi.w	#$28,d1
 		btst	#0,obStatus(a0)
-		beq.s	loc_E56E
+		beq.s	+
 		move.w	d0,d1
 		subi.w	#$28,d0
-
-loc_E56E:
++
 		move.w	obY(a0),d2
 		move.w	d2,d3
 		subi.w	#$18,d2
 		addi.w	#$18,d3
 		lea	(v_player).w,a1
 		btst	#1,obStatus(a1)
-		bne.s	loc_E5C2
+		bne.s	.loc_E5C2
 		move.w	obInertia(a1),d4
 		btst	#0,obStatus(a0)
-		beq.s	loc_E596
+		beq.s	+
 		neg.w	d4
-
-loc_E596:
++
 		tst.w	d4
-		bmi.s	loc_E5C2
+		bmi.s	.loc_E5C2
 		move.w	obX(a1),d4
 		cmp.w	d0,d4
-		bcs.w	loc_E5C2
+		bcs.s	.loc_E5C2
 		cmp.w	d1,d4
-		bcc.w	loc_E5C2
+		bcc.s	.loc_E5C2
 		move.w	obY(a1),d4
 		cmp.w	d2,d4
-		bcs.w	loc_E5C2
+		bcs.s	.loc_E5C2
 		cmp.w	d3,d4
-		bcc.w	loc_E5C2
+		bcc.s	.loc_E5C2
 		move.w	d0,-(sp)
 		bsr.w	sub_E474
 		move.w	(sp)+,d0
 
-loc_E5C2:
+.loc_E5C2:
 		lea	(v_player2).w,a1
 		btst	#1,obStatus(a1)
-		bne.s	locret_E604
+		bne.s	.return
 		move.w	obInertia(a1),d4
 		btst	#0,obStatus(a0)
-		beq.s	loc_E5DC
+		beq.s	+
 		neg.w	d4
-
-loc_E5DC:
++
 		tst.w	d4
-		bmi.s	locret_E604
+		bmi.s	.return
 		move.w	obX(a1),d4
 		cmp.w	d0,d4
-		bcs.w	locret_E604
+		bcs.w	.return
 		cmp.w	d1,d4
-		bcc.s	locret_E604
+		bcc.s	.return
 		move.w	obY(a1),d4
 		cmp.w	d2,d4
-		bcs.s	locret_E604
+		bcs.s	.return
 		cmp.w	d3,d4
-		bcc.s	locret_E604
+		bcc.s	.return
 		bra.w	sub_E474
 
-locret_E604:
+.return:
 		rts
 ; End of function sub_E54C
 

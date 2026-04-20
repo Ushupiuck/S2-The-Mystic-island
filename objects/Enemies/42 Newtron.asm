@@ -1,7 +1,7 @@
 ; ---------------------------------------------------------------------------
 ; Object 42 - GHZ Newtron badnik
 ; ---------------------------------------------------------------------------
-
+newtron_shoot	= objoff_2C	; flag set after shooting, so we don't shoot indefinitely
 Newtron:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
@@ -18,12 +18,15 @@ Newtron_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Newtron,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Newtron,0,0),obGfx(a0)
-		move.b	#4,obRender(a0)
+	;	cmpi.b	#id_MZ,(v_zone).w
+	;	bne.s	.skip
+	;	move.w	#make_art_tile(ArtTile_MZ_Newtron,0,0),obGfx(a0)
+;.skip		move.b	#4,obRender(a0)
 		move.w	#$200,obPriority(a0)
 		move.b	#$14,obActWid(a0)
 		move.b	#$10,obHeight(a0)
 		move.b	#8,obWidth(a0)
-; loc_EC00:
+
 Newtron_Main:
 		moveq	#0,d0
 		move.b	ob2ndRout(a0),d0
@@ -38,8 +41,9 @@ Newtron_Main:
 		dc.w Newtron_Type00-.secondary_index		; 2
 		dc.w Newtron_ChkFloor-.secondary_index		; 4
 		dc.w Newtron_Type02-.secondary_index		; 6
+		dc.w Newtron_Type03-.secondary_index		; 8
 ; ===========================================================================
-; loc_EC26:
+
 Newtron_ChkDistance:
 		bset	#0,obStatus(a0)
 		move.w	(v_player+obX).w,d0
@@ -53,14 +57,23 @@ Newtron_ChkDistance:
 		addq.b	#2,ob2ndRout(a0)
 		move.b	#1,obAnim(a0)
 		tst.b	obSubtype(a0)
-		beq.s	.return
+		beq.s	Newtron_Type00
 		move.w	#make_art_tile(ArtTile_Newtron,1,0),obGfx(a0)
+	;	cmpi.b	#id_MZ,(v_zone).w
+	;	bne.s	.skip
+	;	move.w	#make_art_tile(ArtTile_MZ_Newtron,1,0),obGfx(a0)
+.skip:		cmpi.b	#2,obSubtype(a0)
+		beq.s	.hybrid
 		move.b	#6,ob2ndRout(a0)
 		move.b	#3,obAnim(a0)
+		rts
+
+.hybrid:
+		move.b	#8,ob2ndRout(a0)
+		move.b	#4,obAnim(a0)
 .return:	rts
 ; ===========================================================================
 ; Blue Newtron that appears before chasing Sonic/Tails
-; loc_EC6C:
 Newtron_Type00:
 		cmpi.b	#4,obFrame(a0)
 		bhs.s	Newtron_Fall
@@ -71,7 +84,7 @@ Newtron_Type00:
 		bclr	#0,obStatus(a0)
 .return:	rts
 ; ---------------------------------------------------------------------------
-; loc_EC8C:
+
 Newtron_Fall:
 		cmpi.b	#1,obFrame(a0)
 		bne.s	+
@@ -92,7 +105,7 @@ Newtron_Fall:
 		neg.w	obVelX(a0)
 .return:	rts
 ; ===========================================================================
-; loc_ECE0:
+
 Newtron_ChkFloor:
 		bsr.w	ObjectMove
 		bsr.w	ObjHitFloor
@@ -104,29 +117,28 @@ Newtron_ChkFloor:
 .return:	rts
 ; ===========================================================================
 ; Green Newtron that fires a missile
-; loc_ED06:
 Newtron_Type02:
 		cmpi.b	#1,obFrame(a0)
 		bne.s	Newtron_FireMissile
 		move.b	#$C,obColType(a0)
 ; loc_ED14:
 Newtron_FireMissile:
-		cmpi.b	#2,obFrame(a0)
-		bne.s	.return
-		tst.b	objoff_32(a0)
-		bne.s	.return
-		move.b	#1,objoff_32(a0)
+		cmpi.b	#2,obFrame(a0)		; is animation on firing frame?
+		bne.s	.return			; if so, quit
+		tst.b	newtron_shoot(a0)	; has newtron already fired?
+		bne.s	.return			; if so, quit
+		move.b	#1,newtron_shoot(a0)	; set fired flag
 		bsr.w	FindFreeObj
 		bne.s	.return
 		_move.b	#id_Obj23,obID(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		subq.w	#8,obY(a1)
-		move.w	#$200,obVelX(a1)
+		move.w	#$200,obVelX(a1)	; by default, missile goes right
 		move.w	#20,d0
-		btst	#0,obStatus(a0)
-		bne.s	+
-		neg.w	d0
+		btst	#0,obStatus(a0)		; are we facing right?
+		bne.s	+			; carry on, then
+		neg.w	d0			; otherwise negate
 		neg.w	obVelX(a1)
 +
 		add.w	d0,obX(a1)
@@ -139,12 +151,45 @@ Newtron_Vanish:
 		clr.b	obColType(a0)	; Set as intangible
 		bra.w	MarkObjGone
 ; ===========================================================================
+; Green Newtron that fires a missile, then gives chase
+Newtron_Type03:
+		cmpi.b	#1,obFrame(a0)
+		bne.s	Newtron_FireMissile2
+		move.b	#$C,obColType(a0)
+; loc_ED14:
+Newtron_FireMissile2:
+		cmpi.b	#2,obFrame(a0)		; is animation on firing frame?
+		bne.s	.return			; if so, quit
+		tst.b	newtron_shoot(a0)	; has newtron already fired?
+		bne.s	.return			; if so, quit
+		move.b	#1,newtron_shoot(a0)	; set fired flag
+		bsr.w	FindFreeObj
+		bne.s	.return
+		move.b	#2,ob2ndRout(a0)
+		_move.b	#id_Obj23,obID(a1)
+		move.w	obX(a0),obX(a1)
+		move.w	obY(a0),obY(a1)
+		subq.w	#8,obY(a1)
+		move.w	#$200,obVelX(a1)	; by default, missile goes right
+		move.w	#20,d0
+		btst	#0,obStatus(a0)		; are we facing right?
+		bne.s	+			; carry on, then
+		neg.w	d0			; otherwise negate
+		neg.w	obVelX(a1)
++
+		add.w	d0,obX(a1)
+		move.b	obStatus(a0),obStatus(a1)
+		move.b	#1,obSubtype(a1)
+.return:	rts
+; ===========================================================================
 Ani_Newtron:	dc.w ani_newt_blank-Ani_Newtron
 		dc.w ani_newt_drop-Ani_Newtron
 		dc.w ani_newt_fly-Ani_Newtron
-		dc.w ani_newt_firing-Ani_Newtron
+		dc.w ani_newt_fire-Ani_Newtron
+		dc.w ani_newt_fire2-Ani_Newtron
 ani_newt_blank:	dc.b  $F,  8,afEnd
-ani_newt_drop:	dc.b $13,  0,  1,  3,  4,  5, afBack,  1
-ani_newt_fly:	dc.b   2,  6,  7, afEnd
-ani_newt_firing:dc.b $13,  0,  1,  1,  2,  1,  1,  0,  8, afRoutine
+ani_newt_drop:	dc.b $13,  0,  1,  3,  4,  5,afBack,  1
+ani_newt_fly:	dc.b   2,  6,  7,afEnd
+ani_newt_fire:	dc.b $13,  0,  1,  1,  2,  1,  1,  0,  8,afRoutine
+ani_newt_fire2:	dc.b $13,  0,  1,  1,  2,  1,  1,  4,  5,afBack,  1
 		even

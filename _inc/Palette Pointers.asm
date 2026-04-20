@@ -33,7 +33,8 @@ ptr_Pal_SBZ3SonWat:	palptr	Pal_SBZSonWat,v_palette,8 	; of full-level underwater
 ptr_Pal_SSResult:	palptr	Pal_SSResult,v_palette,$20
 ptr_Pal_Continue:	palptr	Pal_S1Continue,v_palette,$10
 ptr_Pal_Ending:		palptr	Pal_S1Ending,v_palette,$20
-		
+ptr_Pal_MTZ:		palptr	Pal_MTZ,v_palette+$20,$18
+
 palid_SegaBG:		equ (ptr_Pal_SegaBG-PalPointers)/8	; 0
 palid_Title:		equ (ptr_Pal_Title-PalPointers)/8	; 1
 palid_LevelSel:		equ (ptr_Pal_LevelSel-PalPointers)/8	; 2
@@ -54,3 +55,4 @@ palid_SBZ3SonWat:	equ (ptr_Pal_SBZ3SonWat-PalPointers)/8	; $10
 palid_SSResult:		equ (ptr_Pal_SSResult-PalPointers)/8	; $11
 palid_Continue:		equ (ptr_Pal_Continue-PalPointers)/8	; $12
 palid_Ending:		equ (ptr_Pal_Ending-PalPointers)/8	; $13
+palid_MTZ:		equ (ptr_Pal_MTZ-PalPointers)/8		; $14

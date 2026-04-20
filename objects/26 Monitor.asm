@@ -148,7 +148,7 @@ loc_AFDC:
 loc_B004:
 		bsr.w	FindFreeObj
 		bne.s	loc_B020
-		_move.b	#id_Obj27,obID(a1)
+		_move.b	#id_Obj0F,obID(a1)
 		addq.b	#2,obRoutine(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)

@@ -1,45 +1,47 @@
 ; ---------------------------------------------------------------------------
-; Object 28 - animals
+; Object 0D - animals
 ; ---------------------------------------------------------------------------
-animal_direction	= objoff_2D	; 1 byte
-animal_type		= objoff_30	; 1 byte
-animal_x_vel		= objoff_32	; 2 bytes
-animal_y_vel		= objoff_34	; 2 bytes
-animal_prison_num	= objoff_36	; 2 bytes
-ObjFlicky:
+animal_direction	= objoff_2C	; 1 byte
+animal_type		= objoff_2D	; 1 byte
+animal_x_vel		= objoff_2E	; 2 bytes
+animal_y_vel		= objoff_30	; 2 bytes
+animal_prison_num	= objoff_32	; 2 bytes
+enemy_combo		= objoff_3E	; 2 bytes. See Touch_KillEnemy
+; ---------------------------------------------------------------------------
+Flicky:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	ObjFlicky_Index(pc,d0.w),d1
-		jmp	ObjFlicky_Index(pc,d1.w)
+		move.w	Flicky_Index(pc,d0.w),d1
+		jmp	Flicky_Index(pc,d1.w)
 ; ---------------------------------------------------------------------------
-ObjFlicky_Index:
-		dc.w ObjFlicky_Init-ObjFlicky_Index		;   0
-		dc.w ObjFlicky_ChkFloor-ObjFlicky_Index		;   2
-		dc.w ObjFlicky_Walk-ObjFlicky_Index		;   4
-		dc.w ObjFlicky_Fly-ObjFlicky_Index		;   6
-		dc.w ObjFlicky_Walk-ObjFlicky_Index		;   8
-		dc.w ObjFlicky_Walk-ObjFlicky_Index		;  $A
-		dc.w ObjFlicky_Walk-ObjFlicky_Index		;  $C
-		dc.w ObjFlicky_Fly-ObjFlicky_Index		;  $E
-		dc.w ObjFlicky_Walk-ObjFlicky_Index		; $10
-		dc.w ObjFlicky_Fly-ObjFlicky_Index		; $12
-		dc.w ObjFlicky_Walk-ObjFlicky_Index		; $14
-		dc.w ObjFlicky_Walk-ObjFlicky_Index		; $16
-		dc.w ObjFlicky_Walk-ObjFlicky_Index		; $18
-		dc.w ObjFlicky_Walk-ObjFlicky_Index		; $1A
-		dc.w ObjFlicky_Prison-ObjFlicky_Index		; $1C
+Flicky_Index:
+		dc.w Flicky_Init-Flicky_Index		;   0
+		dc.w Flicky_ChkFloor-Flicky_Index	;   2
+		dc.w Flicky_Walk-Flicky_Index		;   4
+		dc.w Flicky_Fly-Flicky_Index		;   6
+		dc.w Flicky_Walk-Flicky_Index		;   8
+		dc.w Flicky_Walk-Flicky_Index		;  $A
+		dc.w Flicky_Walk-Flicky_Index		;  $C
+		dc.w Flicky_Fly-Flicky_Index		;  $E
+		dc.w Flicky_Walk-Flicky_Index		; $10
+		dc.w Flicky_Fly-Flicky_Index		; $12
+		dc.w Flicky_Walk-Flicky_Index		; $14
+		dc.w Flicky_Walk-Flicky_Index		; $16
+		dc.w Flicky_Walk-Flicky_Index		; $18
+		dc.w Flicky_Walk-Flicky_Index		; $1A
+		dc.w Flicky_Prison-Flicky_Index		; $1C
 		; These are the S1 ending actions:
-		dc.w ObjFlicky_FlickyWait-ObjFlicky_Index	; $1E
-		dc.w ObjFlicky_FlickyWait-ObjFlicky_Index	; $20
-		dc.w ObjFlicky_FlickyJump-ObjFlicky_Index	; $22
-		dc.w ObjFlicky_RabbitWait-ObjFlicky_Index	; $24
-		dc.w ObjFlicky_LandJump-ObjFlicky_Index		; $26
-		dc.w ObjFlicky_SingleBounce-ObjFlicky_Index	; $28
-		dc.w ObjFlicky_LandJump-ObjFlicky_Index		; $2A
-		dc.w ObjFlicky_SingleBounce-ObjFlicky_Index	; $2C
-		dc.w ObjFlicky_LandJump-ObjFlicky_Index		; $2E
-		dc.w ObjFlicky_FlyBounce-ObjFlicky_Index	; $30
-		dc.w ObjFlicky_DoubleBounce-ObjFlicky_Index	; $32
+		dc.w Flicky_FlickyWait-Flicky_Index	; $1E
+		dc.w Flicky_FlickyWait-Flicky_Index	; $20
+		dc.w Flicky_FlickyJump-Flicky_Index	; $22
+		dc.w Flicky_RabbitWait-Flicky_Index	; $24
+		dc.w Flicky_LandJump-Flicky_Index	; $26
+		dc.w Flicky_SingleBounce-Flicky_Index	; $28
+		dc.w Flicky_LandJump-Flicky_Index	; $2A
+		dc.w Flicky_SingleBounce-Flicky_Index	; $2C
+		dc.w Flicky_LandJump-Flicky_Index	; $2E
+		dc.w Flicky_FlyBounce-Flicky_Index	; $30
+		dc.w Flicky_DoubleBounce-Flicky_Index	; $32
 ; ---------------------------------------------------------------------------
 ; Numerical defintions as for Which Flicky is which
 ; Otherwise this would become a nightmare to modify
@@ -61,7 +63,7 @@ Bear = $B
  ; When an enemy is destroyed, a random animal is chosen from the 2 selected animals.
  ; Note: you must also load the corresponding art in the PLCs.
 ; ---------------------------------------------------------------------------
-ObjFlicky_ZoneAnimals:
+Flicky_ZoneAnimals:
 		dc.b Rabbit,	Bird	; AIZ  0
 		dc.b Rabbit,	Seal	; HCZ  1
 		dc.b Bird,	Chicken	; MGZ  2
@@ -87,7 +89,7 @@ ObjFlicky_ZoneAnimals:
 		dc.b Bird,	Chicken	; HPZ $16 ; (S3&K) Act 1
 		dc.b Bird,	Chicken	; HPZ $16 ; (S3&K) Act 2
 
-ObjFlicky_Properties:	; This table declares the speed and mappings of each animal.
+Flicky_Properties:	; This table declares the speed and mappings of each animal.
 		dc.w -$200, -$400 ; Rabbit
 		dc.l Map_Animals5
 		dc.w -$200, -$300 ; Chicken
@@ -116,7 +118,7 @@ ObjFlicky_Properties:	; This table declares the speed and mappings of each anima
 ; ---------------------------------------------------------------------------
 ; The following tables are used exclusively by Sonic 1's ending
 ; ---------------------------------------------------------------------------
-ObjFlicky_EndingProperties:
+Flicky_EndingProperties:
 		; Art, Horizontal speed, Vertical speed, Mappings
 		dc.w  ArtTile_ArtNem_S1EndFlicky	;  0	Flicky
 		dc.w -$440, -$400			;  0
@@ -153,9 +155,9 @@ ObjFlicky_EndingProperties:
 		dc.l Map_Animals2			;  $A
 ; ---------------------------------------------------------------------------
 
-ObjFlicky_Init:
+Flicky_Init:
 		tst.b	obSubtype(a0)
-		beq.s	ObjFlickyRandom
+		beq.s	FlickyRandom
 		moveq	#0,d0
 		move.b	obSubtype(a0),d0
 		add.w	d0,d0
@@ -165,7 +167,7 @@ ObjFlicky_Init:
 		add.w	d0,d0
 		add.w	d0,d0
 		add.w	d1,d0
-		lea	ObjFlicky_EndingProperties(pc),a1
+		lea	Flicky_EndingProperties(pc),a1
 		adda.w	d0,a1
 		move.w	(a1)+,obGfx(a0)
 		move.w	(a1)+,animal_x_vel(a0)
@@ -182,7 +184,7 @@ ObjFlicky_Init:
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
-ObjFlickyRandom:
+FlickyRandom:
 		addq.b	#2,obRoutine(a0)
 		bsr.w	RandomNumber
 		move.w	#make_art_tile($580,0,0),obGfx(a0)
@@ -194,11 +196,11 @@ ObjFlickyRandom:
 		move.b	(Current_Zone).w,d1
 		add.w	d1,d1
 		add.w	d0,d1
-		lea	ObjFlicky_ZoneAnimals(pc),a1
+		lea	Flicky_ZoneAnimals(pc),a1
 		move.b	(a1,d1.w),d0
 		move.b	d0,animal_type(a0)
 		lsl.w	#3,d0
-		lea	ObjFlicky_Properties(pc),a1
+		lea	Flicky_Properties(pc),a1
 		adda.w	d0,a1
 		move.w	(a1)+,animal_x_vel(a0)
 		move.w	(a1)+,animal_y_vel(a0)
@@ -216,10 +218,10 @@ ObjFlickyRandom:
 		bne.s	++
 		jsr	(FindFreeObj).l
 		bne.s	+
-		_move.b	#id_Obj2A,obID(a1)
+		_move.b	#id_Obj0E,obID(a1)	; load the points object
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
-		move.w	objoff_3E(a0),d0
+		move.w	enemy_combo(a0),d0	; Shared with Touch_KillEnemy & Explosion for the chain hit bonus
 		lsr.w	#1,d0
 		move.b	d0,obFrame(a1)
 +		bra.w	DisplaySprite
@@ -230,11 +232,11 @@ ObjFlickyRandom:
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
-;ObjFlicky_Delete:
+;Flicky_Delete:
 	;	jmp	(DeleteObject).l
 ; ---------------------------------------------------------------------------
 
-ObjFlicky_ChkFloor:
+Flicky_ChkFloor:
 		tst.b	obRender(a0)
 		bpl.w	DeleteObject
 		bsr.w	ObjectMoveAndFall
@@ -261,7 +263,7 @@ ObjFlicky_ChkFloor:
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
-ObjFlicky_Walk:
+Flicky_Walk:
 		bsr.w	ObjectMoveAndFall
 		move.b	#1,obFrame(a0)
 		tst.w	obVelY(a0)
@@ -274,13 +276,13 @@ ObjFlicky_Walk:
 		move.w	animal_y_vel(a0),obVelY(a0)
 +
 		tst.b	obSubtype(a0)
-		bne.s	ObjFlicky_ChkDel
+		bne.s	Flicky_ChkDel
 		tst.b	obRender(a0)
 		bpl.w	DeleteObject
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
-ObjFlicky_Fly:
+Flicky_Fly:
 		bsr.w	ObjectMove
 		addi.w	#$18,obVelY(a0)
 		tst.w	obVelY(a0)
@@ -304,13 +306,13 @@ ObjFlicky_Fly:
 		andi.b	#1,obFrame(a0)
 +
 		tst.b	obSubtype(a0)
-		bne.s	ObjFlicky_ChkDel
+		bne.s	Flicky_ChkDel
 		tst.b	obRender(a0)
 		bpl.w	DeleteObject
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
-ObjFlicky_ChkDel:
+Flicky_ChkDel:
 		move.w	obX(a0),d0
 		sub.w	(v_player+obX).w,d0
 		bcs.w	DisplaySprite
@@ -321,7 +323,7 @@ ObjFlicky_ChkDel:
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
-ObjFlicky_Prison:
+Flicky_Prison:
 		tst.b	obRender(a0)
 		bpl.w	DeleteObject
 		subq.w	#1,animal_prison_num(a0)
@@ -331,18 +333,18 @@ ObjFlicky_Prison:
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
-ObjFlicky_FlickyWait:
+Flicky_FlickyWait:
 		bsr.w	ChkAnimalInRange
-		bcc.s	ObjFlicky_ChkDel
+		bcc.s	Flicky_ChkDel
 		move.w	animal_x_vel(a0),obVelX(a0)
 		move.w	animal_y_vel(a0),obVelY(a0)
 		move.b	#$E,obRoutine(a0)
-		bra.w	ObjFlicky_Fly
+		bra.w	Flicky_Fly
 ; ---------------------------------------------------------------------------
 
-ObjFlicky_FlickyJump:
+Flicky_FlickyJump:
 		bsr.w	ChkAnimalInRange
-		bpl.s	ObjFlicky_ChkDel
+		bpl.s	Flicky_ChkDel
 		clr.w	obVelX(a0)
 		clr.w	animal_x_vel(a0)
 		bsr.w	ObjectMove
@@ -350,73 +352,73 @@ ObjFlicky_FlickyJump:
 		bsr.w	AnimalJump
 		bsr.w	AnimalFaceSonic
 		subq.b	#1,obTimeFrame(a0)
-		bpl.w	ObjFlicky_ChkDel
+		bpl.w	Flicky_ChkDel
 		move.b	#1,obTimeFrame(a0)
 		addq.b	#1,obFrame(a0)
 		andi.b	#1,obFrame(a0)
-		bra.w	ObjFlicky_ChkDel
+		bra.w	Flicky_ChkDel
 ; ---------------------------------------------------------------------------
 
-ObjFlicky_RabbitWait:
+Flicky_RabbitWait:
 		bsr.w	ChkAnimalInRange
-		bpl.w	ObjFlicky_ChkDel
+		bpl.w	Flicky_ChkDel
 		move.w	animal_x_vel(a0),obVelX(a0)
 		move.w	animal_y_vel(a0),obVelY(a0)
 		move.b	#4,obRoutine(a0)
-		bra.w	ObjFlicky_Walk
+		bra.w	Flicky_Walk
 ; ---------------------------------------------------------------------------
 
-ObjFlicky_DoubleBounce:
+Flicky_DoubleBounce:
 		bsr.w	ObjectMoveAndFall
 		move.b	#1,obFrame(a0)
 		tst.w	obVelY(a0)
-		bmi.w	ObjFlicky_ChkDel
+		bmi.w	Flicky_ChkDel
 		clr.b	obFrame(a0)
 		jsr	(ObjHitFloor).l
 		tst.w	d1
-		bpl.w	ObjFlicky_ChkDel
-		not.b	objoff_2D(a0) ; used to be objoff_29 in Sonic 1/2; in sonic 3, 29 is a "convention followed by many objects", so it was changed
+		bpl.w	Flicky_ChkDel
+		not.b	animal_direction(a0) ; used to be objoff_29 in Sonic 1/2; in sonic 3, 29 is a "convention followed by many objects", so it was changed
 		bne.s	+
 		neg.w	obVelX(a0)
 		bchg	#0,obRender(a0)
 +
 		add.w	d1,obY(a0)
 		move.w	animal_y_vel(a0),obVelY(a0)
-		bra.w	ObjFlicky_ChkDel
+		bra.w	Flicky_ChkDel
 ; ---------------------------------------------------------------------------
 
-ObjFlicky_LandJump:
+Flicky_LandJump:
 		bsr.w	ChkAnimalInRange
-		bpl.w	ObjFlicky_ChkDel
+		bpl.w	Flicky_ChkDel
 		clr.w	obVelX(a0)
 		clr.w	animal_x_vel(a0)
 		bsr.w	ObjectMoveAndFall
 		bsr.w	AnimalJump
 		bsr.w	AnimalFaceSonic
-		bra.w	ObjFlicky_ChkDel
+		bra.w	Flicky_ChkDel
 ; ---------------------------------------------------------------------------
 
-ObjFlicky_SingleBounce:
+Flicky_SingleBounce:
 		bsr.w	ChkAnimalInRange
-		bpl.w	ObjFlicky_ChkDel
+		bpl.w	Flicky_ChkDel
 		bsr.w	ObjectMoveAndFall
 		move.b	#1,obFrame(a0)
 		tst.w	obVelY(a0)
-		bmi.w	ObjFlicky_ChkDel
+		bmi.w	Flicky_ChkDel
 		clr.b	obFrame(a0)
 		jsr	(ObjHitFloor).l
 		tst.w	d1
-		bpl.w	ObjFlicky_ChkDel
+		bpl.w	Flicky_ChkDel
 		neg.w	obVelX(a0)
 		bchg	#0,obRender(a0)
 		add.w	d1,obY(a0)
 		move.w	animal_y_vel(a0),obVelY(a0)
-		bra.w	ObjFlicky_ChkDel
+		bra.w	Flicky_ChkDel
 ; ---------------------------------------------------------------------------
 
-ObjFlicky_FlyBounce:
+Flicky_FlyBounce:
 		bsr.w	ChkAnimalInRange
-		bpl.w	ObjFlicky_ChkDel
+		bpl.w	Flicky_ChkDel
 		bsr.w	ObjectMove
 		addi.w	#$18,obVelY(a0)
 		tst.w	obVelY(a0)
@@ -424,7 +426,7 @@ ObjFlicky_FlyBounce:
 		jsr	(ObjHitFloor).l
 		tst.w	d1
 		bpl.s	++
-		not.b	objoff_2D(a0) ; used to be objoff_29 in Sonic 1/2; in sonic 3, 29 is a "convention followed by many objects", so it was changed
+		not.b	animal_direction(a0) ; used to be objoff_29 in Sonic 1/2; in sonic 3, 29 is a "convention followed by many objects", so it was changed
 		bne.s	+
 		neg.w	obVelX(a0)
 		bchg	#0,obRender(a0)
@@ -433,11 +435,11 @@ ObjFlicky_FlyBounce:
 		move.w	animal_y_vel(a0),obVelY(a0)
 +
 		subq.b	#1,obTimeFrame(a0)
-		bpl.w	ObjFlicky_ChkDel
+		bpl.w	Flicky_ChkDel
 		move.b	#1,obTimeFrame(a0)
 		addq.b	#1,obFrame(a0)
 		andi.b	#1,obFrame(a0)
-		bra.w	ObjFlicky_ChkDel
+		bra.w	Flicky_ChkDel
 
 ; =============== S U B R O U T I N E =======================================
 

@@ -1,27 +1,27 @@
 ; ---------------------------------------------------------------------------
-; Object 1E - Vertical Ball Hog enemy
+; Object 21 - Vertical Ball Hog enemy
 ; ---------------------------------------------------------------------------
-hog_launchflag	= objoff_30	; byte; 0 to launch a cannonball
-hog_wait	= objoff_31	; byte; time between shots
-hog_backup	= objoff_32	; word; backup of hog_wait
-hog_walk	= objoff_34	; word; time to idle around from left to right
-hog_timer	= objoff_36
-hog_cooldown	= objoff_38
+hog_launchflag	= objoff_2C	; byte; 0 to launch a cannonball
+hog_wait	= objoff_2D	; byte; time between shots
+hog_backup	= objoff_2E	; word; backup of hog_wait
+hog_walk	= objoff_30	; word; time to idle around from left to right
+hog_timer	= objoff_32
+hog_cooldown	= objoff_34
 
-ObjVBallhog:
+Ballhog:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	Obj1E_Index(pc,d0.w),d0
-		jmp	Obj1E_Index(pc,d0.w)
+		move.w	Ballhog_Index(pc,d0.w),d0
+		jmp	Ballhog_Index(pc,d0.w)
 ; ===========================================================================
-Obj1E_Index:	dc.w Obj1E_Main-Obj1E_Index		; 0
-		dc.w Obj1E_Action-Obj1E_Index		; 2
-		dc.w Obj1E_Action2-Obj1E_Index		; 4
-		dc.w Obj1E_NormalBomb-Obj1E_Index	; 6
-		dc.w Obj1E_ProtoBomb-Obj1E_Index	; 8
+Ballhog_Index:	dc.w Ballhog_Main-Ballhog_Index		; 0
+		dc.w Ballhog_Action-Ballhog_Index	; 2
+		dc.w Ballhog_Action2-Ballhog_Index	; 4
+		dc.w Ballhog_NormalBomb-Ballhog_Index	; 6
+		dc.w Ballhog_ProtoBomb-Ballhog_Index	; 8
 ; ===========================================================================
 
-Obj1E_Main:
+Ballhog_Main:
 		move.l	#Map_BallHogH,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Ball_HogH,1,0),obGfx(a0)
 		move.b	#4,obRender(a0)
@@ -91,26 +91,26 @@ Obj1E_Main:
 		rts
 ; ===========================================================================
 
-Obj1E_Action:
+Ballhog_Action:
 		lea	Ani_HogHoriz(pc),a1
 		bsr.w	AnimateSprite
 		cmpi.b	#1,obFrame(a0)	; is final frame (01) displayed?
-		bne.s	Obj1E_SetBall	; if not, branch
+		bne.s	Ballhog_SetBall	; if not, branch
 		tst.b	hog_wait(a0)		; is it	set to launch cannonball?
-		beq.s	Obj1E_MakeBall	; if yes, branch
+		beq.s	Ballhog_MakeBall	; if yes, branch
 		bra.w	MarkObjGone
 ; ===========================================================================
 
-Obj1E_SetBall:
+Ballhog_SetBall:
 		sf	hog_wait(a0)		; set to launch	cannonball
 		bra.w	MarkObjGone
 ; ===========================================================================
 
-Obj1E_MakeBall:
+Ballhog_MakeBall:
 		move.b	#1,hog_wait(a0)
-		bsr.w	FindFreeObj
+		bsr.w	FindNextFreeObj
 		bne.w	.no_free_ram
-		move.b	#id_Obj1E,(a1)		; load bomb
+		_move.b	#id_Obj21,obID(a1)	; load bomb
 		move.b	#6,obRoutine(a1)	; set normal bomb
 		move.b	#4,obFrame(a1)		; set bomb frame
 		move.l	#Map_BallHogH,obMap(a1)
@@ -149,7 +149,7 @@ Obj1E_MakeBall:
 		bra.w	MarkObjGone
 ; ===========================================================================
 
-Obj1E_Action2:
+Ballhog_Action2:
 		moveq	#0,d0
 		move.b	ob2ndRout(a0),d0
 		move.w	.action_index(pc,d0.w),d1
@@ -367,11 +367,11 @@ Hog_Idle3:
 		st	hog_launchflag(a0)
 
 .load_bomb:
-		bsr.w	FindFreeObj
-		bne.s	.abort		; if ObjectRam is full, we bail!
-		move.b	#id_Obj1E,(a1)	; load bomb
-		move.b	#8,obRoutine(a1); set proto bomb
-		move.b	#4,obFrame(a1)  ; set bomb frame
+		bsr.w	FindNextFreeObj
+		bne.s	.abort			; if ObjectRam is full, we bail!
+		_move.b	#id_Obj21,obID(a1)	; load bomb
+		move.b	#8,obRoutine(a1)	; set proto bomb
+		move.b	#4,obFrame(a1)		; set bomb frame
 		move.l	#Map_BallHogH,obMap(a1)
 		move.w	#make_art_tile(ArtTile_Ball_HogH,1,0),obGfx(a1)
 		move.w	obX(a0),obX(a1)
@@ -382,8 +382,7 @@ Hog_Idle3:
 		move.b	#8,obActWid(a1)
 		move.w	#$18,hog_launchflag(a1)
 		addi.w	#$10,obY(a1)
-.abort:			;.fail in the final
-		rts
+.abort:		rts
 ; ===========================================================================
 
 Hog_Move3:
@@ -431,11 +430,10 @@ Hog_Move3:
 		subq.b	#2,ob2ndRout(a0)
 		move.w	hog_backup(a0),hog_timer(a0)
 		move.b	#2,obAnim(a0)
-.return:
-		rts
+.return:	rts
 ; ===========================================================================
 
-Obj1E_NormalBomb:
+Ballhog_NormalBomb:
 		bsr.w	ObjectMoveAndFall
 		moveq	#$6,d3
 		jsr	(ObjHitWallRight).l
@@ -464,7 +462,7 @@ Obj1E_NormalBomb:
 		neg.w	obVelX(a0)
 		subq.w	#1,hog_launchflag(a0)
 		bpl.s	.time_remaining
-		move.b	#id_Obj3F,(a0)
+		_move.b	#id_Obj10,obID(a0)
 		sf	obRoutine(a0)
 		rts
 ; ---------------------------------------------------------------------------
@@ -477,7 +475,7 @@ Obj1E_NormalBomb:
 .moving_up:
 		subq.w	#1,hog_launchflag(a0)
 		bpl.s	.time_remaining
-		move.b	#id_Obj3F,(a0)
+		_move.b	#id_Obj10,obID(a0)
 		sf	obRoutine(a0)
 		rts
 ; ---------------------------------------------------------------------------
@@ -496,7 +494,7 @@ Obj1E_NormalBomb:
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
-Obj1E_ProtoBomb:
+Ballhog_ProtoBomb:
 		btst	#7,obStatus(a0)
 		bne.s	.change_explosion
 		tst.w	hog_launchflag(a0)
@@ -507,7 +505,7 @@ Obj1E_ProtoBomb:
 		add.w	d1,obY(a0)
 
 .change_explosion:
-		move.b	#id_Obj24,(a0)
+		_move.b	#id_Obj11,obID(a0)
 		sf	obRoutine(a0)
 		rts
 ; ---------------------------------------------------------------------------

@@ -8,7 +8,6 @@ PalCycle_Load:
 		add.w	d0,d0
 		move.w	PalCycle(pc,d0.w),d0
 		jmp	PalCycle(pc,d0.w)
-; End of function PalCycle_Load
 ; ===========================================================================
 PalCycle:	dc.w PalCycle_GHZ-PalCycle	; Zone 0
 		dc.w PalCycle_WZ-PalCycle	; Zone 1
@@ -16,7 +15,7 @@ PalCycle:	dc.w PalCycle_GHZ-PalCycle	; Zone 0
 		dc.w PalCycle_Null-PalCycle	; Zone 3 (DISABLED)
 		dc.w PalCycle_HPZ-PalCycle	; Zone 4
 		dc.w PalCycle_Null-PalCycle	; Zone 5 (DISABLED)
-		dc.w PalCycle_GHZ-PalCycle	; Zone 6
+		dc.w PalCycle_MTZ-PalCycle	; Zone 6
 		dc.w PalCycle_WZ-PalCycle	; Zone 7
 		dc.w PalCycle_MTZ-PalCycle	; Zone 8
 		dc.w PalCycle_GHZ-PalCycle	; Zone 9
@@ -37,8 +36,7 @@ PalCycle_GHZ:
 		lea	(v_palette+$50).w,a1
 		move.l	(a0,d0.w),(a1)+
 		move.l	4(a0,d0.w),(a1)
-.return:
-		rts
+.return:	rts
 ; ===========================================================================
 
 PalCycle_WZ:
@@ -54,8 +52,7 @@ PalCycle_WZ:
 		lea	(v_palette+$66).w,a1
 		move.l	(a0,d0.w),(a1)+
 		move.l	4(a0,d0.w),(a1)
-.return:
-		rts
+.return:	rts
 ; ===========================================================================
 
 PalCycle_CPZ:
@@ -85,8 +82,7 @@ PalCycle_CPZ:
 		addq.w	#2,(v_pal_buffer+4).w
 		andi.w	#$1E,(v_pal_buffer+4).w
 		move.w	(a0,d0.w),(v_palette+$5E).w
-.return:
-		rts
+.return:	rts
 ; ===========================================================================
 
 PalCycle_HPZ:
@@ -106,8 +102,7 @@ PalCycle_HPZ:
 		lea	(v_palette_water+$72).w,a1
 		move.l	(a0,d0.w),(a1)+
 		move.l	4(a0,d0.w),(a1)
-.return:
-		rts
+.return:	rts
 ; ===========================================================================
 
 PalCycle_EHZ:
@@ -121,8 +116,7 @@ PalCycle_EHZ:
 		lsl.w	#3,d0
 		move.l	(a0,d0.w),(v_palette+$26).w
 		move.l	4(a0,d0.w),(v_palette+$3C).w
-.return:
-		rts
+.return:	rts
 ; ===========================================================================
 
 PalCycle_HTZ:
@@ -138,8 +132,7 @@ PalCycle_HTZ:
 		lsl.w	#3,d0
 		move.l	(a0,d0.w),(v_palette+$26).w
 		move.l	4(a0,d0.w),(v_palette+$3C).w
-.return:
-		rts
+.return:	rts
 ; ===========================================================================
 
 PalCycle_MTZ:
@@ -182,8 +175,7 @@ PalCycle_MTZ:
 +
 		lea	(v_palette+$5E).w,a1
 		move.w	(a0,d0.w),(a1)
-.return:
-		rts
+.return:	rts
 ; ===========================================================================
 PalCycle_ARZ:
 		lea	(Pal_GHZCyc).l,a0
@@ -197,8 +189,7 @@ PalCycle_ARZ:
 		lea	(v_palette+$44).w,a1
 		move.l	(a0,d0.w),(a1)+
 		move.l	4(a0,d0.w),(a1)
-.return:
-		rts
+.return:	rts
 ; ===========================================================================
 PalCycle_SBZ:
 ;		lea	(Pal_SBZCycList1).l,a2
@@ -263,11 +254,9 @@ PalCycle_SBZ:
 		lea	(v_palette+$58).w,a1
 		move.l	(a0,d0.w),(a1)+
 		move.w	4(a0,d0.w),(a1)
-.return:
-		rts
+.return:	rts
 ; End of function PalCycle_SBZ
-; =============== S U B R O U T I N E =======================================
-
+; ===========================================================================
 
 PalCycle_Sega:
 		tst.b	(v_pcyc_time+1).w
@@ -356,4 +345,4 @@ loc_244C:
 loc_2456:
 		moveq	#1,d0
 		rts
-; End of function PalCycle_Sega
+; End of function PalCycle_Load

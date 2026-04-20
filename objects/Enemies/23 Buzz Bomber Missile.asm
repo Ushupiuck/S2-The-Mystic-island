@@ -2,8 +2,7 @@
 ; ---------------------------------------------------------------------------
 ; Object 23 - Buzz Bomber/Newtron missile
 ; ---------------------------------------------------------------------------
-; OST:
-obj23_parent:	equ objoff_3C
+obj23_parent	= objoff_3C
 ; ---------------------------------------------------------------------------
 
 Obj23:
@@ -20,8 +19,6 @@ Obj23_Index:	dc.w Obj23_Init-Obj23_Index
 ; ===========================================================================
 ; loc_A576:
 Obj23_Init:
-		subq.w	#1,objoff_32(a0)
-		bpl.s	Obj23_ChkDel
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_obj23,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Buzz_Bomber,1,0),obGfx(a0)
@@ -42,27 +39,11 @@ Obj23_Init:
 ; loc_A5C4:
 Obj23_Animate:
 		movea.l	obj23_parent(a0),a1
-		_cmpi.b	#id_Obj27,obID(a1)			; is Buzz Bomber destroyed?
+		_cmpi.b	#id_Obj0F,obID(a1)			; is Buzz Bomber destroyed?
 		beq.w	DeleteObject			; if yes, branch
 		lea	Ani_obj23(pc),a1
 		bsr.w	AnimateSprite
 		bra.w	DisplaySprite
-
-; ---------------------------------------------------------------------------
-; Subroutine to	check if the Buzz Bomber which fired the missile has been
-; destroyed, and if it has, deletes the missile
-; ---------------------------------------------------------------------------
-
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
-
-; loc_A5DE:
-Obj23_ChkDel:
-		movea.l	obj23_parent(a0),a1
-		_cmpi.b	#id_Obj27,obID(a1)			; is Buzz Bomber destroyed?
-		beq.w	DeleteObject			; if yes, branch
-		rts
-; End of function Obj23_ChkDel
-
 ; ===========================================================================
 ; loc_A5EC:
 Obj23_Move:
@@ -81,8 +62,8 @@ Obj23_Move:
 ; ===========================================================================
 ; loc_A620:
 ;Obj23_Explode:
-	;	_move.b	#id_Obj24,obID(a0)			; load Obj24 (unused Buzz Bomber missile explosion)
-	;	move.b	#0,obRoutine(a0)
+	;	_move.b	#id_Obj11,obID(a0)			; load Obj11 (unused Buzz Bomber missile explosion)
+	;	clr.b	obRoutine(a0)
 	;	bra.w	Obj24
 ; ===========================================================================
 ; loc_A630:
@@ -101,6 +82,6 @@ Obj23_Newtron:
 ; animation script
 Ani_obj23:	dc.w byte_A662-Ani_obj23
 		dc.w byte_A666-Ani_obj23
-byte_A662:	dc.b   7,  0,  1,$FC
-byte_A666:	dc.b   1,  2,  3,$FF
+byte_A662:	dc.b   7,  0,  1,afRoutine
+byte_A666:	dc.b   1,  2,  3,afEnd
 		even

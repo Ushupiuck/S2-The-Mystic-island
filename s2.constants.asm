@@ -175,8 +175,7 @@ obStatusSecondary_isInvincible_mask:	EQU	1<<obStatusSecondary_isInvincible	; $02
 obStatusSecondary_hasSpeedShoes_mask:	EQU	1<<obStatusSecondary_hasSpeedShoes	; $04
 obStatusSecondary_isSliding_mask:	EQU	1<<obStatusSecondary_isSliding		; $80
 ; ---------------------------------------------------------------------------
-; render_flags bitfield
-; (Sonic 2 github compatibility)
+; obRender bitfield
 obRender.x_flip			= 0 ; Sprite mirrored horizontally.
 obRender.y_flip			= 1 ; Sprite mirrored vertically.
 obRender.level_fg		= 2 ; Move with level foreground.
@@ -185,6 +184,109 @@ obRender.explicit_height	= 4 ; Draw culling uses `y_radius` instead of guessing 
 obRender.static_mappings	= 5 ; Mappings pointer points directly to a lone sprite piece instead of a list of sprites.
 obRender.multi_sprite		= 6 ; Object SST holds metadata for multiple sprites.
 obRender.on_screen		= 7 ; Object is on-screen and was rendered on the previous frame.
+; ---------------------------------------------------------------------------
+; (Sonic 2 github compatibility)
+render_flags.x_flip		= obRender.x_flip
+render_flags.y_flip		= obRender.y_flip
+render_flags.level_fg		= obRender.level_fg
+render_flags.level_bg		= obRender.level_bg
+render_flags.explicit_height	= obRender.explicit_height
+render_flags.static_mappings	= obRender.static_mappings
+render_flags.multi_sprite	= obRender.multi_sprite
+render_flags.on_screen		= obRender.on_screen
+; ---------------------------------------------------------------------------
+; status bitfield
+
+status.player.x_flip			= render_flags.x_flip ; Facing left.
+status.player.in_air			= 1 ; Airborne. 
+status.player.rolling			= 2 ; Spinning, i.e. jumping or rolling.
+status.player.on_object			= 3 ; Stood on an object rather than the level.
+status.player.rolljumping		= 4 ; Jumping whilst rolling; locks the player's controls.
+status.player.pushing			= 5 ; Pressing against an object.
+status.player.underwater		= 6 ; Submersed.
+status.player.prevent_tails_respawn	= 7 ; Prevents AI Tails from respawning.
+
+status.player.ss.x_flip		= render_flags.x_flip ; Sprite mirrored horizontally.
+status.player.ss.y_flip		= render_flags.y_flip ; Sprite mirrored vertically.
+status.player.ss.jumping	= 2 ; Jumping.
+status.player.ss.slowing	= 6 ; Coming to a stop after moving or landing.
+
+status.npc.x_flip		= render_flags.x_flip ; Facing right.
+status.npc.y_flip		= render_flags.y_flip ; Facing up.
+status.npc.misc			= 2 ; Used for various purposes by bosses.
+status.npc.p1_standing		= 3 ; Stood on by player 1.
+status.npc.p2_standing		= 4 ; Stood on by player 2.
+status.npc.p1_pushing		= 5 ; Pushed by player 1.
+status.npc.p2_pushing		= 6 ; Pushed by player 2.
+status.npc.no_balancing		= 7 ; Prevents player from performing their balancing animation whilst stood upon this object. Also set when the object is destroyed by the player.
+
+; ---------------------------------------------------------------------------
+; status_secondary bitfield
+
+status_secondary.shield		= 0
+status_secondary.invincible	= 1
+status_secondary.speed_shoes	= 2
+status_secondary.sliding	= 7
+
+; Ugly old constants, kept for backwards-compatibility.
+
+; status_secondary variable bit numbers
+status_sec_hasShield:		EQU	status_secondary.shield
+status_sec_isInvincible:	EQU	status_secondary.invincible
+status_sec_hasSpeedShoes:	EQU	status_secondary.speed_shoes
+status_sec_isSliding:		EQU	status_secondary.sliding
+; status_secondary variable masks (1 << x == pow(2, x))
+status_sec_hasShield_mask:	EQU	1<<status_sec_hasShield		; $01
+status_sec_isInvincible_mask:	EQU	1<<status_sec_isInvincible	; $02
+status_sec_hasSpeedShoes_mask:	EQU	1<<status_sec_hasSpeedShoes	; $04
+status_sec_isSliding_mask:	EQU	1<<status_sec_isSliding		; $80
+
+; ---------------------------------------------------------------------------
+; Bits 3-6 of an object's status after a SolidObject call is a
+; bitfield with the following meaning:
+p1_standing_bit   = status.npc.p1_standing
+p2_standing_bit   = p1_standing_bit + 1
+
+p1_standing       = 1<<p1_standing_bit
+p2_standing       = 1<<p2_standing_bit
+
+pushing_bit_delta = status.npc.p1_pushing-status.npc.p1_standing
+p1_pushing_bit    = p1_standing_bit + pushing_bit_delta
+p2_pushing_bit    = p1_pushing_bit + 1
+
+p1_pushing        = 1<<p1_pushing_bit
+p2_pushing        = 1<<p2_pushing_bit
+
+
+standing_mask     = p1_standing|p2_standing
+pushing_mask      = p1_pushing|p2_pushing
+
+; ---------------------------------------------------------------------------
+; The high word of d6 after a SolidObject call is a bitfield
+; with the following meaning:
+p1_touch_side_bit   = 0
+p2_touch_side_bit   = p1_touch_side_bit + 1
+
+p1_touch_side       = 1<<p1_touch_side_bit
+p2_touch_side       = 1<<p2_touch_side_bit
+
+touch_side_mask     = p1_touch_side|p2_touch_side
+
+p1_touch_bottom_bit = p1_touch_side_bit + pushing_bit_delta
+p2_touch_bottom_bit = p1_touch_bottom_bit + 1
+
+p1_touch_bottom     = 1<<p1_touch_bottom_bit
+p2_touch_bottom     = 1<<p2_touch_bottom_bit
+
+touch_bottom_mask   = p1_touch_bottom|p2_touch_bottom
+
+p1_touch_top_bit   = p1_touch_bottom_bit + pushing_bit_delta
+p2_touch_top_bit   = p1_touch_top_bit + 1
+
+p1_touch_top       = 1<<p1_touch_top_bit
+p2_touch_top       = 1<<p2_touch_top_bit
+
+touch_top_mask     = p1_touch_top|p2_touch_top
 
 ; ---------------------------------------------------------------------------
 ; Animation flags

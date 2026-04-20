@@ -37,7 +37,7 @@ Plat_Main:	; Routine 0
 		move.w	#make_art_tile(ArtTile_Level,2,0),obGfx(a0)
 		cmpi.b	#id_EHZ,(Current_Zone).w
 		bne.s	.notEHZ			; for any level that's not GHZ
-		move.l	#Map_obj18_EHZ,obMap(a0)	; load EHZ specific platform mappings
+		move.l	#Map_Obj18_EHZ,obMap(a0)	; load EHZ specific platform mappings
 		move.w	#make_art_tile(ArtTile_Level,2,0),obGfx(a0)
 .notEHZ:
 		move.b	#4,obRender(a0)

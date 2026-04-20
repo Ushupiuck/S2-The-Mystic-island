@@ -1,47 +1,8 @@
 ; ---------------------------------------------------------------------------
-; Object 24 - BallHog's bomb explosion (From the Sonic 1 prototype)
+; Object 0F - explosion from a destroyed enemy or monitor
 ; ---------------------------------------------------------------------------
 
-Obj24:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	MDis_Index(pc,d0.w),d1
-		jmp	MDis_Index(pc,d1.w)
-; ===========================================================================
-MDis_Index:	dc.w MDis_Main-MDis_Index
-		dc.w MDis_Animate-MDis_Index
-; ===========================================================================
-
-MDis_Main:	; Routine 0
-		addq.b	#2,obRoutine(a0)
-		move.l	#Map_GroundExplosion,obMap(a0)
-		move.w	#make_art_tile(ArtTile_Ground_Explosion,0,0),obGfx(a0)
-		move.b	#4,obRender(a0)
-		move.w	#$80,obPriority(a0)
-		clr.b	obColType(a0)
-		move.b	#$C,obActWid(a0)
-		move.b	#7,obTimeFrame(a0)
-		clr.b	obFrame(a0)
-		move.w	#sfx_Bomb,d0
-		jsr	(PlaySound_Special).l		 ; play sound
-
-MDis_Animate:	; Routine 2
-		subq.b	#1,obTimeFrame(a0) ; subtract 1 from frame duration
-		bpl.s	.display
-		move.b	#7,obTimeFrame(a0) ; set frame duration to 9 frames
-		addq.b	#1,obFrame(a0)	; next frame
-		cmpi.b	#4,obFrame(a0)	; has animation completed?
-		beq.w	DeleteObject	; if yes, branch
-
-.display:
-		bra.w	DisplaySprite
-; ===========================================================================
-
-; ---------------------------------------------------------------------------
-; Object 27 - explosion	from a destroyed enemy or monitor
-; ---------------------------------------------------------------------------
-
-Obj27:
+Explosion:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	ExItem_Index(pc,d0.w),d1
@@ -56,14 +17,14 @@ ExItem_Animal:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		bsr.w	FindFreeObj
 		bne.s	ExItem_Main
-		_move.b	#id_Obj28,obID(a1) ; load animal object
+		_move.b	#id_Obj0D,obID(a1) ; load animal object
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
-		move.w	objoff_3E(a0),objoff_3E(a1)
+		move.w	enemy_combo(a0),enemy_combo(a1)	; Shared with Touch_KillEnemy & Animals for the chain hit bonus
 
 ExItem_Main:	; Routine 2
 		addq.b	#2,obRoutine(a0)
-		move.l	#Map_Obj27,obMap(a0)
+		move.l	#Map_Explosion,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Explosion,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.w	#$80,obPriority(a0)
@@ -81,15 +42,13 @@ ExItem_Animate:	; Routine 4 (2 for ExplosionBomb)
 		addq.b	#1,obFrame(a0)	; next frame
 		cmpi.b	#5,obFrame(a0)	; is the final frame (05) displayed?
 		beq.w	DeleteObject	; if yes, branch
-
-.display:
-		bra.w	DisplaySprite
+.display:	bra.w	DisplaySprite
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Object 3F - explosion	from a destroyed boss, bomb or cannonball
+; Object 10 - explosion from a destroyed boss, bomb or cannonball
 ; ---------------------------------------------------------------------------
 
-Obj3F:
+FieryExplosion:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	ExBom_Index(pc,d0.w),d1
@@ -101,7 +60,7 @@ ExBom_Index:	dc.w ExBom_Main-ExBom_Index
 
 ExBom_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
-		move.l	#Map_Obj3F,obMap(a0)
+		move.l	#Map_FExplosion,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Explosion,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.w	#$80,obPriority(a0)
@@ -111,3 +70,40 @@ ExBom_Main:	; Routine 0
 		clr.b	obFrame(a0)
 		move.w	#sfx_Bomb,d0
 		jmp	(PlaySound_Special).l	; play exploding bomb sound
+; ===========================================================================
+; ---------------------------------------------------------------------------
+; Object 11 - BallHog's bomb explosion (From the Sonic 1 prototype)
+; ---------------------------------------------------------------------------
+
+GroundExplosion:
+		moveq	#0,d0
+		move.b	obRoutine(a0),d0
+		move.w	MDis_Index(pc,d0.w),d1
+		jmp	MDis_Index(pc,d1.w)
+; ===========================================================================
+MDis_Index:	dc.w MDis_Main-MDis_Index
+		dc.w MDis_Animate-MDis_Index
+; ===========================================================================
+
+MDis_Main:	; Routine 0
+		addq.b	#2,obRoutine(a0)
+		move.l	#Map_GExplosion,obMap(a0)
+		move.w	#make_art_tile(ArtTile_Ground_Explosion,0,0),obGfx(a0)
+		move.b	#4,obRender(a0)
+		move.w	#$80,obPriority(a0)
+		clr.b	obColType(a0)
+		move.b	#$C,obActWid(a0)
+		move.b	#7,obTimeFrame(a0)
+		clr.b	obFrame(a0)
+		move.w	#sfx_Bomb,d0
+		jsr	(PlaySound_Special).l		 ; play sound
+
+MDis_Animate:	; Routine 2
+		subq.b	#1,obTimeFrame(a0) ; subtract 1 from frame duration
+		bpl.s	.display
+		move.b	#7,obTimeFrame(a0) ; set frame duration to 9 frames
+		addq.b	#1,obFrame(a0)	; next frame
+		cmpi.b	#4,obFrame(a0)	; has animation completed?
+		beq.w	DeleteObject	; if yes, branch
+.display:	bra.w	DisplaySprite
+; ===========================================================================

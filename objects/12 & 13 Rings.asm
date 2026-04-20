@@ -1,23 +1,23 @@
 ; ===========================================================================
 ;----------------------------------------------------------------------------
-; Object 25 - Rings
+; Object 12 - Rings
 ;----------------------------------------------------------------------------
 
-Obj25:
+Obj12:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	Obj25_Index(pc,d0.w),d1
-		jmp	Obj25_Index(pc,d1.w)
+		move.w	Obj12_Index(pc,d0.w),d1
+		jmp	Obj12_Index(pc,d1.w)
 ; ---------------------------------------------------------------------------
-Obj25_Index:
-		dc.w Obj25_Init-Obj25_Index
-		dc.w Obj25_Animate-Obj25_Index
-		dc.w Obj25_Collect-Obj25_Index
-		dc.w Obj25_Sparkle-Obj25_Index
-		dc.w DeleteObject-Obj25_Index	; small tweak to remove an optional jmpto
+Obj12_Index:
+		dc.w Obj12_Init-Obj12_Index
+		dc.w Obj12_Animate-Obj12_Index
+		dc.w Obj12_Collect-Obj12_Index
+		dc.w Obj12_Sparkle-Obj12_Index
+		dc.w DeleteObject-Obj12_Index	; small tweak to remove an optional jmpto
 ; ---------------------------------------------------------------------------
 
-Obj25_Init:
+Obj12_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Ring,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Ring,1,0),obGfx(a0)
@@ -26,22 +26,22 @@ Obj25_Init:
 		move.b	#$47,obColType(a0)
 		move.b	#8,obActWid(a0)
 
-Obj25_Animate:
+Obj12_Animate:
 		bra.w	MarkObjGone
 ; ---------------------------------------------------------------------------
 
-Obj25_Collect:
+Obj12_Collect:
 		addq.b	#2,obRoutine(a0)
 		clr.b	obColType(a0)
 		move.w	#$80,obPriority(a0)
 		bsr.s	CollectRing
 
-Obj25_Sparkle:
-		lea	Ani_Obj25(pc),a1
+Obj12_Sparkle:
+		lea	Ani_Obj12(pc),a1
 		bsr.w	AnimateSprite
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
-Ani_Obj25:	dc.w byte_ABEC-Ani_Obj25
+Ani_Obj12:	dc.w byte_ABEC-Ani_Obj12
 byte_ABEC:	dc.b   5,  1,  2,  3,  4,afRoutine
 		even
 ; =============== S U B	R O U T	I N E =======================================
@@ -71,21 +71,21 @@ CollectRing:
 ; End of function CollectRing
 
 ; ---------------------------------------------------------------------------
-; Object 37 - Rings flying out of you when you get hit
+; Object 13 - Rings flying out of you when you get hit
 ;----------------------------------------------------------------------------
 obDelayAni	= obXSub	; time to delay animation
 
-Obj37:
+Obj13:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	Obj37_Index(pc,d0.w),d1
-		jmp	Obj37_Index(pc,d1.w)
+		move.w	Obj13_Index(pc,d0.w),d1
+		jmp	Obj13_Index(pc,d1.w)
 ; ---------------------------------------------------------------------------
-Obj37_Index:	dc.w loc_A936-Obj37_Index
-		dc.w loc_A9FA-Obj37_Index
-		dc.w loc_AA4C-Obj37_Index
-		dc.w loc_AA60-Obj37_Index
-		dc.w DeleteObject-Obj37_Index	; small tweak to remove an optional jmpto
+Obj13_Index:	dc.w loc_A936-Obj13_Index
+		dc.w loc_A9FA-Obj13_Index
+		dc.w loc_AA4C-Obj13_Index
+		dc.w loc_AA60-Obj13_Index
+		dc.w DeleteObject-Obj13_Index	; small tweak to remove an optional jmpto
 ; ---------------------------------------------------------------------------
 
 loc_A936:
@@ -108,7 +108,7 @@ loc_A94E:
 		bne.w	loc_A9DE
 
 loc_A956:
-		_move.b	#id_Obj37,obID(a1)
+		_move.b	#id_Obj13,obID(a1)
 		addq.b	#2,obRoutine(a1)
 		move.b	#8,obHeight(a1)
 		move.b	#8,obWidth(a1)
@@ -123,7 +123,7 @@ loc_A956:
 		tst.w	d4
 		bmi.s	+
 		move.w	d4,d0
-		bsr.w	CalcSine
+		jsr	(CalcSine).l
 		move.w	d4,d2
 		lsr.w	#8,d2
 		asl.w	d2,d0
@@ -195,7 +195,7 @@ loc_AA4C:
 
 loc_AA60:
 		move.w	#make_art_tile(ArtTile_Ring,1,0),obGfx(a0)
-		lea	Ani_Obj25(pc),a1
+		lea	Ani_Obj12(pc),a1
 		bsr.w	AnimateSprite
 		bra.w	DisplaySprite
 

@@ -1,45 +1,45 @@
 ; ---------------------------------------------------------------------------
-; Object 0D - End of level signpost
+; Object 7E - End of level signpost
 ; ---------------------------------------------------------------------------
 
-Obj0D:
+Signpost:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	Obj0D_Index(pc,d0.w),d1
-		jsr	Obj0D_Index(pc,d1.w)
-		lea	Ani_obj0D(pc),a1
+		move.w	Signpost_Index(pc,d0.w),d1
+		jsr	Signpost_Index(pc,d1.w)
+		lea	Ani_Signpost(pc),a1
 		bsr.w	AnimateSprite
 		out_of_range.w	DeleteObject
 		bra.w	DisplaySprite
 ; ===========================================================================
-Obj0D_Index:	dc.w Obj0D_Init-Obj0D_Index
-		dc.w Obj0D_Main-Obj0D_Index
-		dc.w Obj0D_Spin-Obj0D_Index
-		dc.w Obj0D_EndLevel-Obj0D_Index
-		dc.w Obj0D_Sparkle.return-Obj0D_Index
+Signpost_Index:	dc.w Signpost_Init-Signpost_Index
+		dc.w Signpost_Main-Signpost_Index
+		dc.w Signpost_Spin-Signpost_Index
+		dc.w Signpost_EndLevel-Signpost_Index
+		dc.w Signpost_Sparkle.return-Signpost_Index
 ; ===========================================================================
 ; loc_EFD6:
-Obj0D_Init:
+Signpost_Init:
 		addq.b	#2,obRoutine(a0)
-		move.l	#Map_obj0D,obMap(a0)
+		move.l	#Map_Signpost,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Signpost,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.b	#$18,obActWid(a0)
 		move.w	#$200,obPriority(a0)
 ; loc_EFFE:
-Obj0D_Main:
+Signpost_Main:
 		move.w	(v_player+obX).w,d0
 		sub.w	obX(a0),d0
-		blo.w	Obj0D_Sparkle.return
+		blo.w	Signpost_Sparkle.return
 		cmpi.w	#32,d0
-		bhs.w	Obj0D_Sparkle.return
+		bhs.w	Signpost_Sparkle.return
 		clr.b	(f_timecount).w
 		move.w	(Camera_Max_X_pos).w,(Camera_Min_X_pos).w
 		addq.b	#2,obRoutine(a0)
 		move.w	#sfx_Signpost,d0
 		jmp	(PlaySound).l
 ; ===========================================================================
-Obj0D_RingSparklePositions:
+Signpost_RingSparklePositions:
 		dc.b -$18,-$10		; x-position, y-position
 		dc.b	8,   8
 		dc.b -$10,   0
@@ -50,16 +50,16 @@ Obj0D_RingSparklePositions:
 		dc.b  $18, $10
 ; ===========================================================================
 ; loc_F028:
-Obj0D_Spin:
+Signpost_Spin:
 		subq.w	#1,objoff_30(a0)
-		bpl.s	Obj0D_Sparkle
+		bpl.s	Signpost_Sparkle
 		move.w	#60,objoff_30(a0)
 		addq.b	#1,obAnim(a0)
 		cmpi.b	#3,obAnim(a0)
-		bne.s	Obj0D_Sparkle
+		bne.s	Signpost_Sparkle
 		addq.b	#2,obRoutine(a0)
 ; loc_F044:
-Obj0D_Sparkle:
+Signpost_Sparkle:
 		subq.w	#1,objoff_32(a0)
 		bpl.s	.return
 		move.w	#12-1,objoff_32(a0)
@@ -67,10 +67,10 @@ Obj0D_Sparkle:
 		move.b	objoff_34(a0),d0
 		addq.b	#2,objoff_34(a0)
 		andi.b	#$E,objoff_34(a0)
-		lea	Obj0D_RingSparklePositions(pc,d0.w),a2
+		lea	Signpost_RingSparklePositions(pc,d0.w),a2
 		bsr.w	FindFreeObj
 		bne.s	.return
-		_move.b	#id_Obj25,obID(a1)
+		_move.b	#id_Obj12,obID(a1)
 		move.b	#6,obRoutine(a1)
 		move.b	(a2)+,d0
 		ext.w	d0
@@ -88,15 +88,14 @@ Obj0D_Sparkle:
 .return:	rts
 ; ===========================================================================
 ; loc_F0C4:
-Obj0D_EndLevel:
+Signpost_EndLevel:
 		tst.w	(Debug_placement_mode).w
-		bne.s	Obj0D_Sparkle.return
+		bne.s	Signpost_Sparkle.return
 		btst	#1,(v_player+obStatus).w
-		bne.s	loc_F0E0
+		bne.s	+
 		move.b	#1,(f_lockctrl).w
 		move.w	#8<<btnR,(v_jpadholdlogical).w
-
-loc_F0E0:
++
 		; This check here is for S1's Big Ring, which would set Sonic's Object ID to 0
 		tst.b	(v_player).w
 		beq.s	+
@@ -104,7 +103,7 @@ loc_F0E0:
 		move.w	(Camera_Max_X_pos).w,d1
 		addi.w	#320-24,d1
 		cmp.w	d1,d0
-		bcs.s	Obj0D_Sparkle.return
+		bcs.s	Signpost_Sparkle.return
 +		addq.b	#2,obRoutine(a0)
 
 ; ---------------------------------------------------------------------------
@@ -116,7 +115,7 @@ loc_F0E0:
 ; GotThroughAct:
 Load_EndOfAct:
 		tst.b	(v_endcard).w
-		bne.s	Obj0D_Sparkle.return
+		bne.s	Signpost_Sparkle.return
 		move.w	(Camera_Max_X_pos).w,(Camera_Min_X_pos).w
 		clr.b	(v_invinc).w
 		clr.b	(f_timecount).w
@@ -160,14 +159,12 @@ TimeBonuses:	dc.w  5000, 5000, 1000,	 500
 		dc.w	50,   50,   50,	  50
 		dc.w	0
 ; ===========================================================================
-Ani_obj0D:	dc.w byte_F194-Ani_obj0D
-		dc.w byte_F197-Ani_obj0D
-		dc.w byte_F1A5-Ani_obj0D
-		dc.w byte_F1B3-Ani_obj0D
-byte_F194:	dc.b  $F,  2,  $FF
-byte_F197:	dc.b   1,  2,  3,  4,  5,  1,  3,  4
-		dc.b   5,  0,  3,  4,  5,  $FF
-byte_F1A5:	dc.b   1,  2,  3,  4,  5,  1,  3,  4
-		dc.b   5,  0,  3,  4,  5,  $FF
-byte_F1B3:	dc.b  $F,  0,  $FF
+Ani_Signpost:	dc.w byte_F194-Ani_Signpost
+		dc.w byte_F197-Ani_Signpost
+		dc.w byte_F1A5-Ani_Signpost
+		dc.w byte_F1B3-Ani_Signpost
+byte_F194:	dc.b  $F,  2,afEnd
+byte_F197:	dc.b   1,  2,  3,  4,  5,  1,  3,  4,  5,  0,  3,  4,  5,afEnd
+byte_F1A5:	dc.b   1,  2,  3,  4,  5,  1,  3,  4,  5,  0,  3,  4,  5,afEnd
+byte_F1B3:	dc.b  $F,  0,afEnd
 		even
