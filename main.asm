@@ -10023,8 +10023,6 @@ ObjectsManager:
 		move.b	(Obj_placement_routine).w,d0
 		move.w	ObjectsManager_States(pc,d0.w),d0
 		jmp	ObjectsManager_States(pc,d0.w)
-; End of function ObjectsManager
-
 ; ===========================================================================
 ; OPL_Index:
 ObjectsManager_States:
@@ -10080,7 +10078,7 @@ loc_DCBC:
 		addq.b	#1,(a2)
 
 loc_DCCA:
-		addq.w	#6,a0
+		addq.w	#6,a0	; 8 in Sonic CD
 		bra.s	loc_DCBC
 ; ===========================================================================
 
@@ -10099,7 +10097,7 @@ loc_DCE0:
 		addq.b	#1,1(a2)
 
 loc_DCEE:
-		addq.w	#6,a0
+		addq.w	#6,a0	; 8 in Sonic CD
 		bra.s	loc_DCE0
 ; ===========================================================================
 
@@ -10115,23 +10113,27 @@ ObjectsManager_Main:
 		subi.w	#$80,d1
 		andi.w	#-$80,d1
 		move.w	d1,(Camera_X_pos_coarse).w
-		lea	(v_objstate).w,a2
+		lea	(v_objstate).w,a2		; Sonic CD skips the first 4 lines
 		moveq	#0,d2
 		move.w	(Camera_RAM).w,d6
 		andi.w	#-$80,d6
 		cmp.w	(Camera_X_pos_last).w,d6
 		beq.s	loc_DD94.return
 		bge.s	loc_DD9A
-		move.w	d6,(Camera_X_pos_last).w
+		move.w	d6,(Camera_X_pos_last).w	; And there's a mysterious 4 "NOP" block of padding between the branches and this instruction
+
+; -------------------------------------------------------------------------
+
+; SpawnObjects_Backward:
 		movea.l	(Obj_load_addr_left).w,a0
 		subi.w	#$80,d6
 		blo.s	loc_DD76
 
 loc_DD4A:
-		cmp.w	-6(a0),d6
+		cmp.w	-6(a0),d6	; oeX-oeSize
 		bge.s	loc_DD76
-		subq.w	#6,a0
-		tst.b	4(a0)
+		subq.w	#6,a0		; oeSize
+		tst.b	4(a0)		; oeID
 		bpl.s	loc_DD60
 		subq.b	#1,1(a2)
 		move.b	1(a2),d2
@@ -10139,17 +10141,18 @@ loc_DD4A:
 loc_DD60:
 		bsr.w	sub_E0D2
 		bne.s	loc_DD6A
-		subq.w	#6,a0
+		subq.w	#6,a0		; oeSize
 		bra.s	loc_DD4A
 ; ===========================================================================
 
 loc_DD6A:
-		tst.b	4(a0)
+		tst.b	4(a0)		; oeID
 		bpl.s	loc_DD74
 		addq.b	#1,1(a2)
+		bclr	#7,2(a2,d3.w)	; SCD Only:	; Mark object as unloaded
 
 loc_DD74:
-		addq.w	#6,a0
+		addq.w	#6,a0		; oeSize
 
 loc_DD76:
 		move.l	a0,(Obj_load_addr_left).w
@@ -10157,14 +10160,14 @@ loc_DD76:
 		addi.w	#$300,d6
 
 loc_DD82:
-		cmp.w	-6(a0),d6
+		cmp.w	-6(a0),d6	; oeX-oeSize
 		bgt.s	loc_DD94
-		tst.b	-2(a0)
+		tst.b	-2(a0)		; oeID-oeSize
 		bpl.s	loc_DD90
 		subq.b	#1,(a2)
 
 loc_DD90:
-		subq.w	#6,a0
+		subq.w	#6,a0		; oeID
 		bra.s	loc_DD82
 ; ===========================================================================
 
@@ -10173,33 +10176,37 @@ loc_DD94:
 .return:	rts
 ; ===========================================================================
 
-loc_DD9A:
+loc_DD9A:	; Sonic CD pads the start with 4 NOP's
 		move.w	d6,(Camera_X_pos_last).w
 		movea.l	(Obj_load_addr_right).w,a0
 		addi.w	#$280,d6
 
 loc_DDA6:
 		cmp.w	(a0),d6
-		bls.s	loc_DDBA
-		tst.b	4(a0)
-		bpl.s	loc_DDB4
+		bls.s	.SpawnDone
+		tst.b	4(a0)		; oeID
+		bpl.s	.SpawnObj
 		move.b	(a2),d2
 		addq.b	#1,(a2)
 
-loc_DDB4:
+.SpawnObj:
 		bsr.w	sub_E0D2
 		beq.s	loc_DDA6
+		tst.b	4(a0)		; SCD		; Does this object have a saved flags entry?
+		bpl.s	.SpawnDone	; SCD		; If not, branch
+		subq.b	#1,(a2)		; SCD		; Rewind saved flags entry ID
+		bclr	#7,2(a2,d3.w)	; SCD		; Mark object as unloaded
 
-loc_DDBA:
+.SpawnDone:
 		move.l	a0,(Obj_load_addr_right).w
 		movea.l	(Obj_load_addr_left).w,a0
-		subi.w	#$300,d6
+		subi.w	#$80+$280,d6			; ((camera X & $FF80) - $80)
 		blo.s	loc_DDDA
 
 loc_DDC8:
 		cmp.w	(a0),d6
 		bls.s	loc_DDDA
-		tst.b	4(a0)
+		tst.b	4(a0)		; oeID
 		bpl.s	loc_DDD6
 		addq.b	#1,1(a2)
 
@@ -10211,23 +10218,55 @@ loc_DDD6:
 loc_DDDA:
 		move.l	a0,(Obj_load_addr_left).w
 		rts
+; End of function ObjectsManager
+
+; -------------------------------------------------------------------------
+; Check object time zone and get objects flag entry offset
+; -------------------------------------------------------------------------
+; PARAMETERS:
+;	a0.l  - Pointer to object entry
+;	d2.w  - Saved object flags entry ID
+; RETURNS:
+;	eq/ne - Wrong time zone/Corrent time zone
+;	d3.w  - Saved object flags entry offset
+; -------------------------------------------------------------------------
+
+CheckObjTimeZone:
+		moveq	#0,d0				; Get current time zone
+		move.b	(Current_Timezone).w,d0		; (timeZone).w in SCD
+		bclr	#7,d0
+		move.w	d2,d3				; Get saved objects flag entry offset
+		add.w	d3,d3
+		add.w	d2,d3
+		add.w	d0,d3
+		nop					; the next 6 lines of code have been temporarily commented out
+		nop
+		nop
+		nop
+		nop
+		nop
+	;	move.b	oeTimeZones(a0),d1		; Check time zone
+	;	rol.b	#3,d1
+	;	andi.b	#7,d1
+	;	btst	d0,d1
+		rts
 
 ; =============== S U B R O U T I N E =======================================
 
 
 sub_E0D2:
-		tst.b	4(a0)
+		tst.b	4(a0)		; oeID
 		bpl.s	loc_E0E6
-		bset	#7,2(a2,d2.w)
+		btst	#7,2(a2,d2.w)
 		beq.s	loc_E0E6
-		addq.w	#6,a0
+		addq.w	#6,a0		; oeSize
 		moveq	#0,d0
 		rts
 ; ---------------------------------------------------------------------------
 
 loc_E0E6:
 		bsr.w	FindFreeObj
-		bne.s	FindFreeObj.return
+		bne.s	.return
 		move.w	(a0)+,obX(a1)
 		move.w	(a0)+,d0
 		move.w	d0,d1
@@ -10238,15 +10277,15 @@ loc_E0E6:
 		move.b	d1,obRender(a1)
 		move.b	d1,obStatus(a1)
 		move.b	(a0)+,d0
-		bpl.s	loc_E116
+		bpl.s	+
+		bset	#7,2(a2,d2.w)
 		andi.b	#$7F,d0
 		move.b	d2,obRespawnNo(a1)
-
-loc_E116:
++
 		_move.b	d0,obID(a1)
 		move.b	(a0)+,obSubtype(a1)
 		moveq	#0,d0
-		rts
+.return:	rts
 ; End of function sub_E0D2
 
 
@@ -10269,9 +10308,7 @@ FindFreeObj:
 		beq.s	.return				; if yes, branch
 		lea	object_size(a1),a1		; load obj address ; goto next object RAM slot
 		dbf	d0,.loop			; repeat until end
-
-.return:
-		rts
+.return:	rts
 ; End of function FindFreeObj
 
 ; ===========================================================================

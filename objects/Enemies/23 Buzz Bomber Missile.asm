@@ -11,11 +11,11 @@ Obj23:
 		move.w	Obj23_Index(pc,d0.w),d1
 		jmp	Obj23_Index(pc,d1.w)
 ; ===========================================================================
-Obj23_Index:	dc.w Obj23_Init-Obj23_Index
-		dc.w Obj23_Animate-Obj23_Index
-		dc.w Obj23_Move-Obj23_Index
-		dc.w DeleteObject-Obj23_Index	; small tweak to remove an optional jmpto
-		dc.w Obj23_Newtron-Obj23_Index
+Obj23_Index:	dc.w Obj23_Init-Obj23_Index	; 0
+		dc.w Obj23_Animate-Obj23_Index	; 2
+		dc.w Obj23_Move-Obj23_Index	; 4
+		dc.w DeleteObject-Obj23_Index	; 6 ; small tweak to remove an optional jmpto
+		dc.w Obj23_Newtron-Obj23_Index	; 8
 ; ===========================================================================
 ; loc_A576:
 Obj23_Init:
@@ -28,7 +28,6 @@ Obj23_Init:
 		andi.b	#3,obStatus(a0)
 		tst.b	obSubtype(a0)			; was the object created by a Newtron?
 		beq.s	Obj23_Animate			; if not, branch
-
 		move.b	#8,obRoutine(a0)
 		move.b	#$87,obColType(a0)
 		move.b	#1,obAnim(a0)
@@ -47,8 +46,6 @@ Obj23_Animate:
 ; ===========================================================================
 ; loc_A5EC:
 Obj23_Move:
-	;	btst	#7,obStatus(a0)			; has the missile collided with the level? (flag never set)
-	;	bne.s	Obj23_Explode			; if yes, branch
 		move.b	#$87,obColType(a0)
 		move.b	#1,obAnim(a0)
 		bsr.w	ObjectMove
@@ -59,12 +56,6 @@ Obj23_Move:
 		cmp.w	obY(a0),d0
 		bcs.w	DeleteObject
 		bra.w	DisplaySprite
-; ===========================================================================
-; loc_A620:
-;Obj23_Explode:
-	;	_move.b	#id_Obj11,obID(a0)			; load Obj11 (unused Buzz Bomber missile explosion)
-	;	clr.b	obRoutine(a0)
-	;	bra.w	Obj24
 ; ===========================================================================
 ; loc_A630:
 ;Obj23_Delete:

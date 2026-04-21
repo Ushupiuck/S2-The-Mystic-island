@@ -21,7 +21,7 @@ Newtron_Init:
 	;	cmpi.b	#id_MZ,(v_zone).w
 	;	bne.s	.skip
 	;	move.w	#make_art_tile(ArtTile_MZ_Newtron,0,0),obGfx(a0)
-;.skip		move.b	#4,obRender(a0)
+.skip:		move.b	#4,obRender(a0)
 		move.w	#$200,obPriority(a0)
 		move.b	#$14,obActWid(a0)
 		move.b	#$10,obHeight(a0)

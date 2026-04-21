@@ -36,15 +36,15 @@ Scen_Conf:	; Organized in the following format:
 		; 4
 		dc.l Map_Obj16			; HTZ Zipline
 		dc.w make_art_tile(ArtTile_HtzZipline,2,0)
-		dc.b	1,	8,	2,	0
+		dc.b	3,	8,	2,	0
 		; 5
 		dc.l Map_Obj16			; HTZ Zipline (filler)
 		dc.w make_art_tile(ArtTile_HtzZipline,2,0)
-		dc.b	2,	8,	2,	0
+		dc.b	4,	8,	2,	0
 		; 6
 		dc.l Map_Obj16			; HTZ Zipline (filler)
 		dc.w make_art_tile(ArtTile_HtzZipline,2,0)
-		dc.b	2,	8,	2,	0
+		dc.b	1,	$20,	0,	$80
 ; ---------------------------------------------------------------------------
 
 Scen_Init:	; FromSubtype
@@ -74,7 +74,7 @@ Scen_Init:	; FromSubtype
 Scen_Animate:	lea	Ani_Scen(pc),a1
 		bsr.w	AnimateSprite
 Scen_Display:	out_of_range.w	DeleteObject
-		bra.w	Draw_Sprite
+		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 Ani_Scen:	dc.w byte_9494-Ani_Scen
 		dc.w byte_949C-Ani_Scen

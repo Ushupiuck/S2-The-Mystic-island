@@ -6,6 +6,17 @@ Size_of_SEGA_sound		= $6978
 Size_of_Snd_driver_guess	= $F64 ; approximate post-compressed size of the Z80 sound driver
 ; ---------------------------------------------------------------------------
 ; Object variables
+; -------------------------------------------------------------------------
+; Object layout entry structure (last two penultimate entries -- commented out -- belong to SCD)
+; -------------------------------------------------------------------------
+
+omX:		ds.w	1	; 0 oeX		; X position
+omY:		ds.w	1	; 2 oeY		; Y position/flags
+omID:		ds.b	1	; 4 oeID	; ID
+omSubtype:	ds.b	1	; 5 oeSubtype	; Subtype
+;omTimeZones:	ds.b	1	; 6 oeTimeZones	; Time zones
+;omSubtype2:	ds.b	1	; 7 oeSubtype2	; Subtype 2
+omSize:		ds.b	0	; 8 oeSize	; Size of structure
 ; ---------------------------------------------------------------------------
 ; Object Status Table offsets (for everything between Object_RAM and Primary_Collision)
 ; ---------------------------------------------------------------------------
@@ -41,7 +52,8 @@ obAngle:		equ $26		; angle about the z axis (360 degrees = 256)
 obColType:		equ $20		; collision response type
 obColProp:		equ $21		; collision extra property
 obRespawnNo:		equ $1E		; (and soon $1F) respawn list index number
-obSubtype:		equ $28		; object subtype
+obSubtype:		equ $28		; Primary object subtype
+ob2ndSubtype:		equ $29		; Secondary object subtype
 ; ---------------------------------------------------------------------------
 ; conventions specific to Sonic/Tails (Obj01, Obj02, and ObjDB):
 ; note: $23 is unused and available
@@ -72,7 +84,7 @@ objoff_25:		equ $25
 objoff_26:		equ $26
 objoff_27:		equ $27
 objoff_28:		equ $28
-objoff_29:		equ $29
+; objoff_29:		equ $29
 objoff_2A:		equ $2A
 objoff_2B:		equ $2B
 objoff_2C:		equ $2C
@@ -730,7 +742,7 @@ v_endeggman	= v_objspace+object_size*2		; object variable space for Eggman after
 v_tryagain	= v_objspace+object_size*3		; object variable space for the "TRY AGAIN" text ($40 bytes)
 v_eggmanchaos	= v_objspace+object_size*32		; object variable space for the emeralds juggled by Eggman ($180 bytes)
 ; ---------------------------------------------------------------------------
-Object_Respawn_Table:	ds.b	$300
+Object_Respawn_Table:		ds.b	$300
 Camera_RAM:
 Camera_Positions:
 Camera_X_pos:			ds.l	1
@@ -961,7 +973,7 @@ Object_Manager_Addresses_P2_End:
 
 Demo_button_index:	ds.w	1			; index into button press demo data, for player 1
 Demo_press_counter:	ds.b	1			; frames remaining until next button press, for player 1
-Current_Timezone:	ds.b	1			; byte; Whether we're in the present, past, or Good/Bad future
+Current_Timezone:	ds.b	1			; byte; Whether we're in the present (0), past (1), or Good/Bad future (2) (SCD has past & present inverted)
 v_palchgspeed:
 PalChangeSpeed:		ds.w	1
 Collision_addr:		ds.l	1

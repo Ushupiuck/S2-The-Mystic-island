@@ -33,7 +33,7 @@ Obj16_Main:
 		bsr.w	HTZLift_RunSecondaryRoutine
 		moveq	#0,d1
 		move.b	obActWid(a0),d1
-		move.w	#-$28,d3
+		moveq	#-$28,d3
 		move.w	(sp)+,d4
 		bsr.w	PlatformObject
 		bra.w	MarkObjGone
@@ -49,10 +49,10 @@ HTZLift_RunSecondaryRoutine:
 ; End of function HTZLift_RunSecondaryRoutine
 
 ; ---------------------------------------------------------------------------
-Obj16_SubIndex:	dc.w Obj16_Wait-Obj16_SubIndex
-		dc.w Obj16_Slide-Obj16_SubIndex
-		dc.w Obj16_Fall-Obj16_SubIndex
-		dc.w Obj16_NoMove-Obj16_SubIndex	; Stops rather than collapse; TODO
+Obj16_SubIndex:	dc.w Obj16_Wait-Obj16_SubIndex		; 0
+		dc.w Obj16_Slide-Obj16_SubIndex		; 2
+		dc.w Obj16_Fall-Obj16_SubIndex		; 4
+		dc.w Obj16_NoMove-Obj16_SubIndex	; 6	; Stops rather than collapse; TODO
 ; ---------------------------------------------------------------------------
 
 Obj16_Wait:
@@ -69,18 +69,18 @@ Obj16_Wait:
 .return:	rts
 ; ---------------------------------------------------------------------------
 
-Obj16_Slide:	; this comes from S2 final; since the sound is yet to be added,
-	;	move.w	(Level_frame_counter).w,d0	; so is this subroutine snippet
-	;	andi.w	#$F,d0	; play the sound only every 16 frames
-	;	bne.s	+
-	;	move.w	#SndID_HTZLiftClick,d0
-	;	jsr	(PlaySound).l
-;+
+Obj16_Slide:
+		move.w	(Timer_frames).w,d0
+		andi.w	#$F,d0		; play the sound only every 16 frames
+		bne.s	+
+		move.w	#SndID_HTZLiftClick,d0
+		jsr	(PlaySound).l
++
 		bsr.w	ObjectMove
 		subq.w	#1,objoff_2C(a0)
 		bne.s	.return
 		addq.b	#2,ob2ndRout(a0)
-	;	move.b	#2,obFrame(a0)	; doesn't exists yet, so we'll keep using frame 0 for now
+		move.b	#2,obFrame(a0)	; use frame 2
 		clr.l	obVelX(a0)	; clearing X and Y velocity will become relevant for the falling variant of this object
 		; this object will eventually gain a 4th secondary routine, where it descends but doesn't fall (alike in S2NA); TODO
 		bsr.w	FindNextFreeObj

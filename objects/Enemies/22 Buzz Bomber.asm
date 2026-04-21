@@ -2,7 +2,6 @@
 ; ---------------------------------------------------------------------------
 ; Object 22 - Buzz Bomber from GHZ
 ; ---------------------------------------------------------------------------
-; OST:
 Buzz_time	= objoff_2C	; time to wait for performing an action
 Buzz_status	= objoff_2E	; 0 = still, 1 = flying, 2 = shooting
 Buzz_parent	= objoff_3C
@@ -66,7 +65,7 @@ Obj22_LoadMissile:
 		addi.w	#$1C,obY(a1)
 		move.w	#$200,obVelX(a1)
 		move.w	#$200,obVelY(a1)
-		move.w	#$14,d0
+		moveq	#$14,d0
 		btst	#0,obStatus(a0)
 		bne.s	+
 		neg.w	d0
@@ -122,7 +121,7 @@ loc_A536:
 Ani_obj22:	dc.w byte_A652-Ani_obj22
 		dc.w byte_A656-Ani_obj22
 		dc.w byte_A65A-Ani_obj22
-byte_A652:	dc.b   1,  0,  1,$FF
-byte_A656:	dc.b   1,  2,  3,$FF
-byte_A65A:	dc.b   1,  4,  5,$FF
+byte_A652:	dc.b   1,  0,  1,afEnd
+byte_A656:	dc.b   1,  2,  3,afEnd
+byte_A65A:	dc.b   1,  4,  5,afEnd
 		even
