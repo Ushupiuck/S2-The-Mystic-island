@@ -457,7 +457,7 @@ copyTilemap:	macro source,destination,width,height
 		moveq	#height-1,d2
 		bsr.w	PlaneMapToVRAM_H40
 		endm
-		
+
 ; tells the VDP to copy a region of 68k memory to VRAM or CRAM or VSRAM
 dma68kToVDP macro source,dest,length,type
 	lea	(VDP_control_port).l,a5
@@ -467,4 +467,9 @@ dma68kToVDP macro source,dest,length,type
 	move.w	#((vdpComm(dest,type,DMA)>>16)&$FFFF),(a5)
 	move.w	#(vdpComm(dest,type,DMA)&$FFFF),(v_dma_thunk).w
 	move.w	(v_dma_thunk).w,(a5)
-    endm		
+    endm
+
+; Macro for marking the boundaries of an object layout file
+ObjectLayoutBoundary macro
+		dc.w	$FFFF,$0000,$0000
+    endm

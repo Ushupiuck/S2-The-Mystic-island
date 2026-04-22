@@ -43,7 +43,7 @@ loc_11ECC:
 
 Obj0A_Animate:
 		lea	Ani_Obj0A(pc),a1
-		jsr	(AnimateSprite).l
+		bsr.w	AnimateSprite
 
 Obj0A_ChkWater:
 		move.w	(v_waterpos1).w,d0
@@ -53,7 +53,11 @@ Obj0A_ChkWater:
 		addq.b	#7,obAnim(a0)
 		cmpi.b	#$D,obAnim(a0)
 		beq.s	Obj0A_Display
-		bra.s	Obj0A_Display
+	;	bra.w	Obj0A_Display
+		bsr.w	Obj0A_ShowNumber
+		lea	Ani_Obj0A(pc),a1
+		bsr.w	AnimateSprite
+		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
 loc_11F0A:
@@ -65,45 +69,48 @@ loc_11F14:
 		move.b	obAngle(a0),d0
 		addq.b	#1,obAngle(a0)
 		andi.w	#$7F,d0
-		lea	(Drown_WobbleData).l,a1
+		lea	Drown_WobbleData(pc),a1
 		move.b	(a1,d0.w),d0
 		ext.w	d0
 		add.w	objoff_30(a0),d0
 		move.w	d0,obX(a0)
 		bsr.s	Obj0A_ShowNumber
-		jsr	(ObjectMove).l
+		bsr.w	ObjectMove
 		tst.b	obRender(a0)
-		bpl.s	Obj0A_Delete
-		jmp	(DisplaySprite).l
+		bpl.w	DeleteObject
+		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
 Obj0A_Display:
 		bsr.s	Obj0A_ShowNumber
 		lea	Ani_Obj0A(pc),a1
-		jsr	(AnimateSprite).l
-		jmp	(DisplaySprite).l
+		bsr.w	AnimateSprite
+		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
 Obj0A_Delete:
-		jmp	(DeleteObject).l
+		bra.w	DeleteObject
 ; ---------------------------------------------------------------------------
 
 Obj0A_AirLeft:
 		cmpi.w	#$C,(v_air).w
-		bhi.s	Obj0A_Delete
+		bhi.w	DeleteObject
 		subq.w	#1,objoff_38(a0)
 		bne.s	loc_11F82
 		move.b	#$E,obRoutine(a0)
 		addq.b	#7,obAnim(a0)
-		bra.s	Obj0A_Display
+		bsr.s	Obj0A_ShowNumber
+		lea	Ani_Obj0A(pc),a1
+		bsr.w	AnimateSprite
+		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
 loc_11F82:
 		lea	Ani_Obj0A(pc),a1
-		jsr	(AnimateSprite).l
+		bsr.w	AnimateSprite
 		tst.b	obRender(a0)
-		bpl.s	Obj0A_Delete
-		jmp	(DisplaySprite).l
+		bpl.w	DeleteObject
+		bra.w	DisplaySprite
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -127,9 +134,7 @@ Obj0A_ShowNumber:
 		addi.w	#$80,d0
 		move.w	d0,obScreenY(a0)
 		move.b	#$C,obRoutine(a0)
-
-.return:
-		rts
+.return:	rts
 ; End of function Obj0A_ShowNumber
 
 ; ---------------------------------------------------------------------------
@@ -207,7 +212,7 @@ loc_121D6:
 loc_121E4:
 		move.l	a0,-(sp)
 		lea	(v_player).w,a0
-		jsr	(ObjectMove).l
+		bsr.w	ObjectMove
 		addi.w	#$10,obVelY(a0)
 		movea.l	(sp)+,a0
 ; ---------------------------------------------------------------------------
@@ -222,7 +227,7 @@ loc_1220C:
 		jsr	(RandomNumber).l
 		andi.w	#$F,d0
 		move.w	d0,objoff_3A(a0)
-		jsr	(FindFreeObj).l
+		bsr.w	FindFreeObj
 		bne.s	loc_12242.return
 		_move.b	#id_Obj0A,obID(a1)
 		move.w	(v_player+obX).w,obX(a1)
@@ -237,7 +242,7 @@ loc_12242:
 		move.w	(v_player+obY).w,obY(a1)
 		move.b	#6,obSubtype(a1)
 		tst.w	objoff_2C(a0)
-		beq.w	loc_1228E
+		beq.s	loc_1228E
 		andi.w	#7,objoff_3A(a0)
 		move.w	(v_player+obY).w,d0
 		subi.w	#$C,d0
@@ -252,8 +257,7 @@ loc_12242:
 		subq.b	#1,objoff_34(a0)
 		bpl.s	.return
 		clr.w	objoff_36(a0)
-.return:
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 
 loc_1228E:
@@ -281,9 +285,7 @@ loc_122D2:
 		subq.b	#1,objoff_34(a0)
 		bpl.s	.return
 		clr.w	objoff_36(a0)
-
-.return:
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 Ani_Obj0A:
 		dc.w byte_1233A-Ani_Obj0A,byte_12343-Ani_Obj0A
@@ -322,3 +324,4 @@ Drown_WobbleData:
 		dc.b -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -3
 		dc.b -3, -3, -3, -3, -3, -3, -2, -2, -2, -2, -2, -1, -1, -1, -1, -1
 		endm
+		even

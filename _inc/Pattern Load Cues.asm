@@ -600,21 +600,25 @@ PLCKosM_RRZ4_End
 ; Act 1
 PLCKosM_AWZ1:	plrKosMlistheader
 	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
+	plreqKosM	ArtTile_MZ_SYZ_Caterkiller, Kospm_Cater
 PLCKosM_AWZ1_End
 ; ---------------------------------------------------------------------------
 ; Act 2
 PLCKosM_AWZ2:	plrKosMlistheader
 	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
+	plreqKosM	ArtTile_MZ_SYZ_Caterkiller, Kospm_Cater
 PLCKosM_AWZ2_End
 ; ---------------------------------------------------------------------------
 ; Act 3
 PLCKosM_AWZ3:	plrKosMlistheader
 	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
+	plreqKosM	ArtTile_MZ_SYZ_Caterkiller, Kospm_Cater
 PLCKosM_AWZ3_End
 ; ---------------------------------------------------------------------------
 ; Act 4
 PLCKosM_AWZ4:	plrKosMlistheader
 	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
+	plreqKosM	ArtTile_MZ_SYZ_Caterkiller, Kospm_Cater
 PLCKosM_AWZ4_End
 ; ---------------------------------------------------------------------------
 ; KOSM PATTERN LOAD REQUEST LIST
@@ -639,24 +643,28 @@ PLCKosM_AWZ4_End
 PLCKosM_CVZ1:	plrKosMlistheader
 	plreqKosM	ArtTile_Splats, Kospm_Splats
 	plreqKosM	ArtTile_BBat, Kospm_BBat
+	plreqKosM	ArtTile_MZ_SYZ_Caterkiller, Kospm_Cater
 PLCKosM_CVZ1_End
 ; ---------------------------------------------------------------------------
 ; Act 2
 PLCKosM_CVZ2:	plrKosMlistheader
 	plreqKosM	ArtTile_Splats, Kospm_Splats
 	plreqKosM	ArtTile_BBat, Kospm_BBat
+	plreqKosM	ArtTile_MZ_SYZ_Caterkiller, Kospm_Cater
 PLCKosM_CVZ2_End
 ; ---------------------------------------------------------------------------
 ; Act 3
 PLCKosM_CVZ3:	plrKosMlistheader
 	plreqKosM	ArtTile_Splats, Kospm_Splats
 	plreqKosM	ArtTile_BBat, Kospm_BBat
+	plreqKosM	ArtTile_MZ_SYZ_Caterkiller, Kospm_Cater
 PLCKosM_CVZ3_End
 ; ---------------------------------------------------------------------------
 ; Act 4
 PLCKosM_CVZ4:	plrKosMlistheader
 	plreqKosM	ArtTile_Splats, Kospm_Splats
 	plreqKosM	ArtTile_BBat, Kospm_BBat
+	plreqKosM	ArtTile_MZ_SYZ_Caterkiller, Kospm_Cater
 PLCKosM_CVZ4_End
 
 ; ---------------------------------------------------------------------------

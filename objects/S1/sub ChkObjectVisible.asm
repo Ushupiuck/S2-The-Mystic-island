@@ -11,22 +11,16 @@
 ChkObjectVisible:
 		move.w	obX(a0),d0	; get object x-position
 		sub.w	(v_screenposx).w,d0 ; subtract screen x-position
-		bmi.s	.offscreen
+		bmi.s	ChkPartiallyVisible.offscreen
 		cmpi.w	#320,d0		; is object on the screen?
-		bge.s	.offscreen	; if not, branch
-
+		bge.s	ChkPartiallyVisible.offscreen	; if not, branch
 		move.w	obY(a0),d1	; get object y-position
 		sub.w	(v_screenposy).w,d1 ; subtract screen y-position
-		bmi.s	.offscreen
+		bmi.s	ChkPartiallyVisible.offscreen
 		cmpi.w	#224,d1		; is object on the screen?
-		bge.s	.offscreen	; if not, branch
-
+		bge.s	ChkPartiallyVisible.offscreen	; if not, branch
 		moveq	#0,d0		; set flag to 0
-		rts	
-
-.offscreen:
-		moveq	#1,d0		; set flag to 1
-		rts	
+		rts
 ; End of function ChkObjectVisible
 
 ; ---------------------------------------------------------------------------
@@ -46,22 +40,20 @@ ChkPartiallyVisible:
 		move.w	obX(a0),d0	; get object x-position
 		sub.w	(v_screenposx).w,d0 ; subtract screen x-position
 		add.w	d1,d0		; add object width
-		bmi.s	.offscreen2
+		bmi.s	.offscreen
 		add.w	d1,d1
 		sub.w	d1,d0
 		cmpi.w	#320,d0
-		bge.s	.offscreen2
-
+		bge.s	.offscreen
 		move.w	obY(a0),d1
 		sub.w	(v_screenposy).w,d1
-		bmi.s	.offscreen2
+		bmi.s	.offscreen
 		cmpi.w	#224,d1
-		bge.s	.offscreen2
-
+		bge.s	.offscreen
 		moveq	#0,d0
-		rts	
+		rts
 
-.offscreen2:
+.offscreen:
 		moveq	#1,d0
-		rts	
+		rts
 ; End of function ChkPartiallyVisible

@@ -41,12 +41,12 @@ LCon_Main:	; Routine 0
 		move.w	#make_art_tile(ArtTile_LZ_Conveyor_Belt,2,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#$10,obActWid(a0)
-		move.b	#4,obPriority(a0)
+		move.w	#$200,obPriority(a0)
 		cmpi.b	#$7F,obSubtype(a0)
 		bne.s	loc_123E2
 		addq.b	#4,obRoutine(a0)
 		move.w	#make_art_tile(ArtTile_LZ_Conveyor_Belt,0,0),obGfx(a0)
-		move.b	#1,obPriority(a0)
+		move.w	#$80,obPriority(a0)
 		bra.w	loc_124DE
 ; ===========================================================================
 
@@ -63,7 +63,9 @@ loc_123E2:
 		move.w	(a2)+,objoff_30(a0)
 		move.l	a2,objoff_3C(a0)
 		andi.w	#$F,d1
-		lsl.w	#2,d1
+	;	lsl.w	#2,d1
+		add.w	d1,d1
+		add.w	d1,d1
 		move.b	d1,objoff_38(a0)
 		move.b	#4,objoff_3A(a0)
 		tst.b	(f_conveyrev).w
@@ -99,12 +101,15 @@ loc_12460:
 		bset	#0,(a2,d0.w)
 		bne.s	.delete
 		add.w	d0,d0
-		andi.w	#$1E,d0
-		addi.w	#ObjPosLZPlatform_Index-ObjPos_Index,d0
-		lea	(ObjPos_Index).l,a2
+	;	andi.w	#$1E,d0
+	;	addi.w	#ObjPosLZPlatform_Index-ObjPos_Index,d0
+	;	lea	(ObjPos_Index).l,a2
+		lea	(ObjPosLZPlatform_Index).l,a2
 		adda.w	(a2,d0.w),a2
 		move.w	(a2)+,d1
 		movea.l	a0,a1
+	;	move.w	obX(a0),d2	; S2 Obj6C
+	;	move.w	obY(a0),d3	; S2 Obj6C
 		bra.s	LCon_MakePtfms
 
 		; Avoid returning to LabyrinthConvey to prevent a
@@ -127,7 +132,6 @@ LCon_MakePtfms:
 
 loc_124AA:
 		dbf	d1,LCon_Loop
-
 		addq.l	#4,sp
 		rts
 ; ===========================================================================
@@ -249,8 +253,8 @@ loc_125AE:
 		move.w	d0,obVelX(a0)
 		move.w	d3,obVelY(a0)
 		swap	d0
-		move.w	d0,obX+2(a0)
-		clr.w	obY+2(a0)
+		move.w	d0,obXSub(a0)
+		clr.w	obYSub(a0)
 		rts
 ; ===========================================================================
 
@@ -267,8 +271,8 @@ loc_125D4:
 		move.w	d1,obVelY(a0)
 		move.w	d2,obVelX(a0)
 		swap	d1
-		move.w	d1,obY+2(a0)
-		clr.w	obX+2(a0)
+		move.w	d0,obYSub(a0)
+		clr.w	obXSub(a0)
 		rts
 ; End of function LCon_ChangeDir
 
@@ -352,3 +356,17 @@ LCon_Data:	dc.w .group0-LCon_Data
 		dc.w .baseX_5+$DE, .baseY_5+$5A
 		dc.w .baseX_5-$AE, .baseY_5+$5A
 		even
+; ===========================================================================
+ObjPosLZPlatform_Index:
+		dc.w ObjPos_LZ1pf1-ObjPosLZPlatform_Index,ObjPos_LZ1pf2-ObjPosLZPlatform_Index
+		dc.w ObjPos_LZ2pf1-ObjPosLZPlatform_Index,ObjPos_LZ2pf2-ObjPosLZPlatform_Index
+		dc.w ObjPos_LZ3pf1-ObjPosLZPlatform_Index,ObjPos_LZ3pf2-ObjPosLZPlatform_Index
+		dc.w ObjPos_LZ1pf1-ObjPosLZPlatform_Index,ObjPos_LZ1pf2-ObjPosLZPlatform_Index
+		ObjectLayoutBoundary
+ObjPos_LZ1pf1:	binclude	"level/objects/S1/lz1pf1.bin"
+ObjPos_LZ1pf2:	binclude	"level/objects/S1/lz1pf2.bin"
+ObjPos_LZ2pf1:	binclude	"level/objects/S1/lz2pf1.bin"
+ObjPos_LZ2pf2:	binclude	"level/objects/S1/lz2pf2.bin"
+ObjPos_LZ3pf1:	binclude	"level/objects/S1/lz3pf1.bin"
+ObjPos_LZ3pf2:	binclude	"level/objects/S1/lz3pf2.bin"
+		ObjectLayoutBoundary

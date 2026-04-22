@@ -9,7 +9,7 @@ Obj03:
 		jsr	Obj03_Index(pc,d1.w)
 		tst.b	(Debug_mode_flag).w
 		beq.w	MarkObjGone2
-		jmp	(MarkObjGone).l
+		bra.w	MarkObjGone
 ; ---------------------------------------------------------------------------
 Obj03_Index:	dc.w Obj03_Init-Obj03_Index
 		dc.w loc_13EB4-Obj03_Index
@@ -56,25 +56,29 @@ loc_13EB4:
 		move.w	objoff_32(a0),d4
 		sub.w	d4,d2
 		add.w	d4,d3
-		lea	(dword_140B8).l,a2
+		lea	dword_140B8(pc),a2
 		moveq	#7,d6
 
 loc_13EE0:
 		move.l	(a2)+,d4
-		beq.w	loc_13FA8
+		beq.s	+
 		movea.l	d4,a1
 		move.w	obX(a1),d4
 		cmp.w	d0,d4
-		blo.w	loc_13F10
+		blo.s	loc_13F10
 		cmp.w	d1,d4
-		bhs.w	loc_13F10
+		bhs.s	loc_13F10
 		move.w	obY(a1),d4
 		cmp.w	d2,d4
-		blo.w	loc_13F10
+		blo.s	loc_13F10
 		cmp.w	d3,d4
-		bhs.w	loc_13F10
+		bhs.s	loc_13F10
 		ori.w	#$8000,d5
-		bra.w	loc_13FA8
++		add.l	d5,d5
+		dbf	d6,loc_13EE0
+		swap	d5
+		move.b	d5,objoff_30(a0)
+		rts
 ; ---------------------------------------------------------------------------
 
 loc_13F10:
@@ -152,25 +156,29 @@ loc_13FB6:
 		move.w	d2,d3
 		subq.w	#8,d2
 		addq.w	#8,d3
-		lea	(dword_140B8).l,a2
+		lea	dword_140B8(pc),a2
 		moveq	#7,d6
 
 loc_13FE2:
 		move.l	(a2)+,d4
-		beq.w	loc_140AA
+		beq.s	+
 		movea.l	d4,a1
 		move.w	obX(a1),d4
 		cmp.w	d0,d4
-		blo.w	loc_14012
+		blo.s	loc_14012
 		cmp.w	d1,d4
-		bhs.w	loc_14012
+		bhs.s	loc_14012
 		move.w	obY(a1),d4
 		cmp.w	d2,d4
-		blo.w	loc_14012
+		blo.s	loc_14012
 		cmp.w	d3,d4
-		bhs.w	loc_14012
+		bhs.s	loc_14012
 		ori.w	#$8000,d5
-		bra.w	loc_140AA
++		add.l	d5,d5
+		dbf	d6,loc_13FE2
+		swap	d5
+		move.b	d5,objoff_30(a0)
+		rts
 ; ---------------------------------------------------------------------------
 
 loc_14012:

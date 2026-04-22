@@ -47,7 +47,7 @@ Bub_Main:
 
 Bub_Animate:	; Routine 2
 		lea	Ani_Obj64(pc),a1
-		jsr	(AnimateSprite).l
+		bsr.w	AnimateSprite
 		cmpi.b	#6,obFrame(a0)	; is bubble full-size?
 		bne.s	Bub_ChkWater	; if not, branch
 		move.b	#1,bub_inhalable(a0) ; set "inhalable" flag
@@ -60,14 +60,18 @@ Bub_ChkWater:	; Routine 4
 .burst:
 		move.b	#6,obRoutine(a0) ; goto Bub_Display next
 		addq.b	#3,obAnim(a0)	; run "bursting" animation
-		bra.w	Bub_Display
+		lea	Ani_Obj64(pc),a1
+		bsr.w	AnimateSprite
+		tst.b	obRender(a0)
+		bpl.w	DeleteObject
+		bra.w	DisplaySprite
 ; ===========================================================================
 
 .wobble:
 		move.b	obAngle(a0),d0
 		addq.b	#1,obAngle(a0)
 		andi.w	#$7F,d0
-		lea	(Drown_WobbleData).l,a1
+		lea	Drown_WobbleData(pc),a1
 		move.b	(a1,d0.w),d0
 		ext.w	d0
 		add.w	bub_origX(a0),d0
@@ -94,22 +98,28 @@ Bub_ChkWater:	; Routine 4
 		move.b	#$13,obHeight(a1)
 		move.b	#9,obWidth(a1)
 		subq.w	#5,obY(a1)
-		bra.w	.burst
+		move.b	#6,obRoutine(a0) ; goto Bub_Display next
+		addq.b	#3,obAnim(a0)	; run "bursting" animation
+		lea	Ani_Obj64(pc),a1
+		bsr.w	AnimateSprite
+		tst.b	obRender(a0)
+		bpl.w	DeleteObject
+		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
 .display:
 		bsr.w	ObjectMove
 		tst.b	obRender(a0)
-		bpl.s	Bub_Delete
-		jmp	(DisplaySprite).l
+		bpl.w	DeleteObject
+		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
 Bub_Display:	; Routine 6
 		lea	Ani_Obj64(pc),a1
-		jsr	(AnimateSprite).l
+		bsr.w	AnimateSprite
 		tst.b	obRender(a0)
-		bpl.s	Bub_Delete
-		jmp	(DisplaySprite).l
+		bpl.w	DeleteObject
+		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
 Bub_Delete:	; Routine 8
@@ -194,7 +204,7 @@ Bub_BblMaker:	; Routine $A
 
 .loc_13C44:
 		lea	Ani_Obj64(pc),a1
-		jsr	(AnimateSprite).l
+		bsr.w	AnimateSprite
 
 .chkdel:
 		out_of_range.w	DeleteObject
@@ -208,7 +218,7 @@ Bub_BblMaker:	; Routine $A
 ; 0 = small bubble, 1 =	large bubble
 
 Bub_BblTypes:	dc.b 0,	1, 0, 0, 0, 0, 1, 0, 0,	0, 0, 1, 0, 1, 0, 0, 1,	0
-
+		even
 ; ===========================================================================
 
 Bub_ChkSonic:

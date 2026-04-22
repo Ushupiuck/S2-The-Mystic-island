@@ -30,19 +30,14 @@ Spla_Main:	; Routine 0
 Spla_Display:	; Routine 2
 		move.w	(v_waterpos1).w,obY(a0) ; copy y-position from water height
 		lea	Ani_Splash(pc),a1
-		jsr	(AnimateSprite).l
-		jmp	(DisplaySprite).l
+		bsr.w	AnimateSprite
+		bra.w	DisplaySprite
 ; ===========================================================================
 
 Spla_Delete:	; Routine 4
-		jmp	(DeleteObject).l	; delete when animation is complete
+		bra.w	DeleteObject	; delete when animation is complete
 ; ===========================================================================
 ; animation script
 Ani_Splash:	dc.w byte_129C2-Ani_Splash
-byte_129C2:	dc.b 4,	0,	1,	2,	$FC,	0
-		even
-; ---------------------------------------------------------------------------
-; sprite mappings
-; ---------------------------------------------------------------------------
-Map_Splash:	binclude	"mappings/sprite/obj08.bin"
+byte_129C2:	dc.b 4, 0, 1, 2, afRoutine
 		even

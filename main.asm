@@ -8162,11 +8162,20 @@ Obj1A_Conf_HPZ:
 		dc.b $10,$10,$10,$10
 		even
 ; ---------------------------------------------------------------------------
+		include	"objects/03 Collision Switcher.asm"
+		include	"objects/07 Water Surface.asm"
+		include	"objects/08 Water Splash.asm"
+		include	"objects/09 Bubbles.asm"
+		include	"objects/0A Drowning Countdown.asm"
+		include	"objects/16 HTZ Descending lift.asm"
+		include	"objects/19 CPZ Platform.asm"
+		include	"objects/Empty Slots/20.asm"
 		include	"objects/Enemies/22 Buzz Bomber.asm"
 		include	"objects/Enemies/23 Buzz Bomber Missile.asm"
 		include	"objects/Empty Slots/24.asm"
 		include	"objects/Empty Slots/25.asm"
 		include	"objects/26 Monitor.asm"
+		include	"objects/Enemies/60 Caterkiller.asm"
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -8450,7 +8459,7 @@ ptr_Obj5D:		dc.l ObjNull
 ptr_Obj5E:		dc.l Obj5E		; Seesaw from Hill Top Zone
 ptr_Obj5F:		dc.l ObjNull
 
-ptr_Obj60:		dc.l ObjNull
+ptr_Obj60:		dc.l Caterkiller
 ptr_Obj61:		dc.l ObjNull
 ptr_Obj62:		dc.l ObjNull
 ptr_Obj63:		dc.l LabyrinthConvey
@@ -12534,17 +12543,9 @@ ObjHitWallLeft:
 		include	"objects/47 Bumper.asm"
 		include	"objects/S1/5E See-Saw.asm"
 		include	"objects/S1/63 LZ Conveyor.asm"
-		include	"objects/03 Collision Switcher.asm"
-		include	"objects/07 Water Surface.asm"
-		include	"objects/08 Water Splash.asm"
-		include	"objects/09 Bubbles.asm"
-		include	"objects/0A Drowning Countdown.asm"
-		include	"objects/16 HTZ Descending lift.asm"
-		include	"objects/19 CPZ Platform.asm"
-		include	"objects/Empty Slots/20.asm"
+		include	"objects/79 Lamppost.asm"
 		include	"objects/S1/7D Hidden Bonuses.asm"
 		include	"objects/7E Signpost.asm"
-		include	"objects/79 Lamppost.asm"
 
 ; ---------------------------------------------------------------------------
 ; Object 49 - EHZ waterfalls
@@ -19200,10 +19201,6 @@ Level_Null:	dc.l	0
 ; --------------------------------------------------------------------------------------
 ; Object layouts
 ; --------------------------------------------------------------------------------------
-; Macro for marking the boundaries of an object layout file
-ObjectLayoutBoundary macro
-		dc.w	$FFFF,$0000,$0000
-    endm
 
 ObjPos_Index:
 		dc.w ObjPos_GHZ1-ObjPos_Index
@@ -19302,30 +19299,12 @@ ObjPos_Null:	binclude	"level/objects/S1_Ending.bin"
 		ObjectLayoutBoundary
 		even
 ; ---------------------------------------------------------------------------
-ObjPosLZPlatform_Index:
-		; platform objects in LZ (unused)
-		dc.w ObjPos_LZ1pf1-ObjPos_Index,ObjPos_LZ1pf2-ObjPos_Index
-		dc.w ObjPos_LZ2pf1-ObjPos_Index,ObjPos_LZ2pf2-ObjPos_Index
-		dc.w ObjPos_LZ3pf1-ObjPos_Index,ObjPos_LZ3pf2-ObjPos_Index
-		dc.w ObjPos_LZ1pf1-ObjPos_Index,ObjPos_LZ1pf2-ObjPos_Index
 ObjPosSBZPlatform_Index:
 		; platform objects in SBZ (unused)
 		dc.w ObjPos_SBZ1pf1-ObjPos_Index,ObjPos_SBZ1pf2-ObjPos_Index
 		dc.w ObjPos_SBZ1pf3-ObjPos_Index,ObjPos_SBZ1pf4-ObjPos_Index
 		dc.w ObjPos_SBZ1pf5-ObjPos_Index,ObjPos_SBZ1pf6-ObjPos_Index
 		dc.w ObjPos_SBZ1pf1-ObjPos_Index,ObjPos_SBZ1pf2-ObjPos_Index
-ObjPos_LZ1pf1:	binclude	"level/objects/S1/lz1pf1.bin"
-		ObjectLayoutBoundary
-ObjPos_LZ1pf2:	binclude	"level/objects/S1/lz1pf2.bin"
-		ObjectLayoutBoundary
-ObjPos_LZ2pf1:	binclude	"level/objects/S1/lz2pf1.bin"
-		ObjectLayoutBoundary
-ObjPos_LZ2pf2:	binclude	"level/objects/S1/lz2pf2.bin"
-		ObjectLayoutBoundary
-ObjPos_LZ3pf1:	binclude	"level/objects/S1/lz3pf1.bin"
-		ObjectLayoutBoundary
-ObjPos_LZ3pf2:	binclude	"level/objects/S1/lz3pf2.bin"
-		ObjectLayoutBoundary
 ObjPos_SBZ1pf1:	binclude	"level/objects/S1/sbz1pf1.bin"
 		ObjectLayoutBoundary
 ObjPos_SBZ1pf2:	binclude	"level/objects/S1/sbz1pf2.bin"
@@ -19961,6 +19940,8 @@ Map_Obj03:	binclude	"mappings/sprite/Patch switcher.bin"
 		even
 Map_Obj07:	binclude	"mappings/sprite/Water Surface.bin"
 		even
+Map_Splash:	binclude	"mappings/sprite/obj08.bin"
+		even
 Map_Bubbles:	binclude	"mappings/sprite/Bubbles.bin"
 		even
 Map_Countdown:	binclude	"mappings/sprite/Drowning Countdown.bin"
@@ -20073,9 +20054,11 @@ Map_obj5Eb:	binclude	"mappings/sprite/obj5E_b.bin"
 		even
 Map_LConv:	binclude	"mappings/sprite/LZ Conveyor.bin"		; $63
 		even
+Map_Cat:	binclude	"mappings/sprite/Caterkiller.bin"		; $78
+		even
 Map_Obj79:	binclude	"mappings/sprite/Checkpoint.bin"
 		even
-Map_SpecialWarp:	binclude	"mappings/sprite/Special Stage Warp.bin"
+Map_SpecialWarp:binclude	"mappings/sprite/Special Stage Warp.bin"
 		even
 Map_GiantRing:	binclude	"mappings/sprite/GiantRing.bin"
 		even

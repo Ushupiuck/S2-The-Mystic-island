@@ -34,13 +34,13 @@ WaterSurface_Main:
 		beq.s	loc_15540		; if not, branch
 		addq.b	#3,obFrame(a0)
 		move.b	#1,surf_freeze(a0)
-		jmp	(DisplaySprite).l
+		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
 WaterSurface_Animate:
 		tst.w	(f_pause).w
 		bne.s	WaterSurface_Display
-		move.b	#0,surf_freeze(a0)
+		clr.b	surf_freeze(a0)
 		subq.b	#3,obFrame(a0)
 
 loc_15540:
@@ -51,7 +51,7 @@ loc_15540:
 		addq.b	#1,obAniFrame(a0)
 		andi.b	#$3F,obAniFrame(a0)
 WaterSurface_Display:
-		jmp	(DisplaySprite).l
+		bra.w	DisplaySprite
 ; ===========================================================================
 ; water sprite animation 'script' (custom format for this object)
 Obj07_FrameData:
