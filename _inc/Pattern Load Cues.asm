@@ -561,7 +561,6 @@ PLCKosM_THZ4_End
 ; Act 1
 PLCKosM_RRZ1:	plrKosMlistheader
 	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
-	plreqKosM	ArtTile_LZ_Conveyor_Belt, Kospm_LzWheel
 	plreqKosM	ArtTile_Ball_HogV, Kospm_BallhogV
 	plreqKosM	ArtTile_Ball_HogH, Kospm_BallhogH
 	plreqKosM	ArtTile_Basaran, Kospm_Basaran
@@ -570,7 +569,6 @@ PLCKosM_RRZ1_End
 ; Act 2
 PLCKosM_RRZ2:	plrKosMlistheader
 	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
-	plreqKosM	ArtTile_LZ_Conveyor_Belt, Kospm_LzWheel
 	plreqKosM	ArtTile_Ball_HogV, Kospm_BallhogV
 	plreqKosM	ArtTile_Ball_HogH, Kospm_BallhogH
 	plreqKosM	ArtTile_Basaran, Kospm_Basaran
@@ -579,7 +577,6 @@ PLCKosM_RRZ2_End
 ; Act 3
 PLCKosM_RRZ3:	plrKosMlistheader
 	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
-	plreqKosM	ArtTile_LZ_Conveyor_Belt, Kospm_LzWheel
 	plreqKosM	ArtTile_Ball_HogV, Kospm_BallhogV
 	plreqKosM	ArtTile_Ball_HogH, Kospm_BallhogH
 	plreqKosM	ArtTile_Basaran, Kospm_Basaran
@@ -588,7 +585,6 @@ PLCKosM_RRZ3_End
 ; Act 4
 PLCKosM_RRZ4:	plrKosMlistheader
 	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
-	plreqKosM	ArtTile_LZ_Conveyor_Belt, Kospm_LzWheel
 	plreqKosM	ArtTile_Ball_HogV, Kospm_BallhogV
 	plreqKosM	ArtTile_Ball_HogH, Kospm_BallhogH
 	plreqKosM	ArtTile_Basaran, Kospm_Basaran
