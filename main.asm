@@ -8453,7 +8453,7 @@ ptr_Obj5F:		dc.l ObjNull
 ptr_Obj60:		dc.l ObjNull
 ptr_Obj61:		dc.l ObjNull
 ptr_Obj62:		dc.l ObjNull
-ptr_Obj63:		dc.l ObjNull
+ptr_Obj63:		dc.l LabyrinthConvey
 ptr_Obj64:		dc.l ObjNull
 ptr_Obj65:		dc.l ObjNull
 ptr_Obj66:		dc.l ObjNull
@@ -8897,7 +8897,7 @@ id_ObjFF:	equ ((ptr_ObjFF-Obj_Index)/4)+1
 ; ---------------------------------------------------------------------------
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-; SpeedToPos:
+SpeedToPos:
 
 ObjectMove:
 		movem.w	obVelX(a0),d0/d2			; load xy speed
@@ -8948,7 +8948,7 @@ ObjectMove_Reserved2:
 ; ---------------------------------------------------------------------------
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-; ObjectFall:
+ObjectFall:
 
 ObjectMoveAndFall:
 		movem.w	obVelX(a0),d0/d2			; load xy speed
@@ -10072,13 +10072,13 @@ loc_DCB4:
 loc_DCBC:
 		cmp.w	(a0),d6
 		bls.s	loc_DCCE
-		tst.b	4(a0)
+		tst.b	omID(a0)
 		bpl.s	loc_DCCA
 		move.b	(a2),d2
 		addq.b	#1,(a2)
 
 loc_DCCA:
-		addq.w	#6,a0	; 8 in Sonic CD
+		addq.w	#omSize,a0	; 8 in Sonic CD
 		bra.s	loc_DCBC
 ; ===========================================================================
 
@@ -10092,12 +10092,12 @@ loc_DCCE:
 loc_DCE0:
 		cmp.w	(a0),d6
 		bls.s	loc_DCF2
-		tst.b	4(a0)
+		tst.b	omID(a0)
 		bpl.s	loc_DCEE
 		addq.b	#1,1(a2)
 
 loc_DCEE:
-		addq.w	#6,a0	; 8 in Sonic CD
+		addq.w	#omSize,a0	; 8 in Sonic CD
 		bra.s	loc_DCE0
 ; ===========================================================================
 
@@ -10127,47 +10127,47 @@ ObjectsManager_Main:
 ; SpawnObjects_Backward:
 		movea.l	(Obj_load_addr_left).w,a0
 		subi.w	#$80,d6
-		blo.s	loc_DD76
+		bcs.s	loc_DD76
 
 loc_DD4A:
-		cmp.w	-6(a0),d6	; oeX-oeSize
+		cmp.w	omX-omSize(a0),d6	; oeX-oeSize
 		bge.s	loc_DD76
-		subq.w	#6,a0		; oeSize
-		tst.b	4(a0)		; oeID
+		subq.w	#omSize,a0		; oeSize
+		tst.b	omID(a0)		; oeID
 		bpl.s	loc_DD60
 		subq.b	#1,1(a2)
 		move.b	1(a2),d2
 
 loc_DD60:
-		bsr.w	sub_E0D2
+		bsr.w	SpawnObject
 		bne.s	loc_DD6A
-		subq.w	#6,a0		; oeSize
+		subq.w	#omSize,a0		; oeSize
 		bra.s	loc_DD4A
 ; ===========================================================================
 
 loc_DD6A:
-		tst.b	4(a0)		; oeID
+		tst.b	omID(a0)		; oeID
 		bpl.s	loc_DD74
 		addq.b	#1,1(a2)
 		bclr	#7,2(a2,d3.w)	; SCD Only:	; Mark object as unloaded
 
 loc_DD74:
-		addq.w	#6,a0		; oeSize
+		addq.w	#omSize,a0		; oeSize
 
 loc_DD76:
 		move.l	a0,(Obj_load_addr_left).w
 		movea.l	(Obj_load_addr_right).w,a0
-		addi.w	#$300,d6
+		addi.w	#$280+$80,d6		; ((camera X & $FF80) + $280)
 
 loc_DD82:
-		cmp.w	-6(a0),d6	; oeX-oeSize
+		cmp.w	omX-omSize(a0),d6	; oeX-oeSize
 		bgt.s	loc_DD94
-		tst.b	-2(a0)		; oeID-oeSize
+		tst.b	omID-omSize(a0)		; oeID-oeSize
 		bpl.s	loc_DD90
 		subq.b	#1,(a2)
 
 loc_DD90:
-		subq.w	#6,a0		; oeID
+		subq.w	#omSize,a0		; oeSize
 		bra.s	loc_DD82
 ; ===========================================================================
 
@@ -10184,15 +10184,15 @@ loc_DD9A:	; Sonic CD pads the start with 4 NOP's
 loc_DDA6:
 		cmp.w	(a0),d6
 		bls.s	.SpawnDone
-		tst.b	4(a0)		; oeID
+		tst.b	omID(a0)		; oeID
 		bpl.s	.SpawnObj
 		move.b	(a2),d2
 		addq.b	#1,(a2)
 
 .SpawnObj:
-		bsr.w	sub_E0D2
+		bsr.w	SpawnObject
 		beq.s	loc_DDA6
-		tst.b	4(a0)		; SCD		; Does this object have a saved flags entry?
+		tst.b	omID(a0)	; SCD		; Does this object have a saved flags entry?
 		bpl.s	.SpawnDone	; SCD		; If not, branch
 		subq.b	#1,(a2)		; SCD		; Rewind saved flags entry ID
 		bclr	#7,2(a2,d3.w)	; SCD		; Mark object as unloaded
@@ -10201,17 +10201,17 @@ loc_DDA6:
 		move.l	a0,(Obj_load_addr_right).w
 		movea.l	(Obj_load_addr_left).w,a0
 		subi.w	#$80+$280,d6			; ((camera X & $FF80) - $80)
-		blo.s	loc_DDDA
+		bcs.s	loc_DDDA
 
 loc_DDC8:
 		cmp.w	(a0),d6
 		bls.s	loc_DDDA
-		tst.b	4(a0)		; oeID
+		tst.b	omID(a0)	; oeID
 		bpl.s	loc_DDD6
 		addq.b	#1,1(a2)
 
 loc_DDD6:
-		addq.w	#6,a0
+		addq.w	#omSize,a0
 		bra.s	loc_DDC8
 ; ===========================================================================
 
@@ -10239,27 +10239,24 @@ CheckObjTimeZone:
 		add.w	d3,d3
 		add.w	d2,d3
 		add.w	d0,d3
-		nop					; the next 6 lines of code have been temporarily commented out
-		nop
-		nop
-		nop
-		nop
-		nop
-	;	move.b	oeTimeZones(a0),d1		; Check time zone
-	;	rol.b	#3,d1
-	;	andi.b	#7,d1
-	;	btst	d0,d1
+		move.b	omTimeZones(a0),d1		; Check time zone
+		rol.b	#3,d1
+		andi.b	#7,d1
+		btst	d0,d1
 		rts
 
 ; =============== S U B R O U T I N E =======================================
 
 
-sub_E0D2:
-		tst.b	4(a0)		; oeID
+SpawnObject:
+		bsr.s	CheckObjTimeZone		; Check object's time zone settings
+		beq.s	.NoSpawn			; If we are in the wrong time zone, branch
+		tst.b	omID(a0)		; oeID
 		bpl.s	loc_E0E6
-		btst	#7,2(a2,d2.w)
+		btst	#7,2(a2,d3.w)
 		beq.s	loc_E0E6
-		addq.w	#6,a0		; oeSize
+.NoSpawn:
+		addq.w	#omSize,a0		; oeSize
 		moveq	#0,d0
 		rts
 ; ---------------------------------------------------------------------------
@@ -10278,15 +10275,17 @@ loc_E0E6:
 		move.b	d1,obStatus(a1)
 		move.b	(a0)+,d0
 		bpl.s	+
-		bset	#7,2(a2,d2.w)
+		bset	#7,2(a2,d3.w)
 		andi.b	#$7F,d0
 		move.b	d2,obRespawnNo(a1)
 +
 		_move.b	d0,obID(a1)
 		move.b	(a0)+,obSubtype(a1)
+		move.b	(a0)+,d0			; Skip time zone settings
+		move.b	(a0)+,ob2ndSubtype(a1)		; Set secondary subtype
 		moveq	#0,d0
 .return:	rts
-; End of function sub_E0D2
+; End of function SpawnObject
 
 
 ; ===========================================================================
@@ -10895,11 +10894,16 @@ loc_F70A:
 ; ---------------------------------------------------------------------------
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
 ; sub_F70E:
 MvSonicOnPtfm:
 		move.w	obY(a0),d0
 		sub.w	d3,d0
+		bra.s	+
+MvSonicOnPtfm2:
+		move.w	obY(a0),d0
+		subi.w	#9,d0
+
++
 		tst.b	(f_playerctrl).w
 		bmi.s	.return
 		cmpi.b	#6,obRoutine(a1)
@@ -12537,6 +12541,7 @@ ObjHitWallLeft:
 ; ---------------------------------------------------------------------------
 		include	"objects/47 Bumper.asm"
 		include	"objects/S1/5E See-Saw.asm"
+		include	"objects/S1/63 LZ Conveyor.asm"
 		include	"objects/03 Collision Switcher.asm"
 		include	"objects/07 Water Surface.asm"
 		include	"objects/08 Water Splash.asm"
@@ -18138,8 +18143,10 @@ Nem_GHZ_SWall:	binclude	"art/nemesis/S1/GHZ Edge Wall.nem"
 ; Rustic Ruins Zone stage assets
 ; ---------------------------------------------------------------------------
 Kospm_FlapDoor:	binclude	"art/moduled kosinski/Flapping Door.kospm"
+Kospm_LzWheel:	binclude	"art/nemesis/S1/LZ conveyor.kospm"
+		even
 ; ---------------------------------------------------------------------------
-; Chemical Plant Zone stage assets
+; Ancient Workbench Zone stage assets
 ; ---------------------------------------------------------------------------
 Nem_CPZ_Platform1:	binclude	"art/nemesis/CPZ Floating Platform.nem"
 		even
@@ -19203,7 +19210,7 @@ Level_Null:	dc.l	0
 ; --------------------------------------------------------------------------------------
 ; Macro for marking the boundaries of an object layout file
 ObjectLayoutBoundary macro
-		dc.w	$FFFF,$0000,$0000
+		dc.w	$FFFF,0000,$0000
     endm
 
 ObjPos_Index:
@@ -19237,86 +19244,82 @@ ObjPos_Index:
 		dc.w ObjPos_HTZ3-ObjPos_Index
 		dc.w ObjPos_HTZ4-ObjPos_Index
 
-		dc.w ObjPos_Ending-ObjPos_Index
-		dc.w ObjPos_Ending-ObjPos_Index
-		dc.w ObjPos_Ending-ObjPos_Index
-		dc.w ObjPos_Ending-ObjPos_Index
-
-		ObjectLayoutBoundary
-ObjPos_GHZ1:	binclude	"level/objects/GHZ_1.bin"
-		ObjectLayoutBoundary
-ObjPos_GHZ2:	binclude	"level/objects/GHZ_2.bin"
-		ObjectLayoutBoundary
-ObjPos_GHZ3:	binclude	"level/objects/GHZ_3.bin"
-		ObjectLayoutBoundary
-ObjPos_GHZ4:	binclude	"level/objects/GHZ_4.bin"
-		ObjectLayoutBoundary
-ObjPos_LZ1:	binclude	"level/objects/LZ_1.bin"
-		ObjectLayoutBoundary
-ObjPos_LZ2:	binclude	"level/objects/LZ_2.bin"
-		ObjectLayoutBoundary
-ObjPos_LZ3:	binclude	"level/objects/LZ_3.bin"
-		ObjectLayoutBoundary
-ObjPos_LZ4:	binclude	"level/objects/LZ_4.bin"
-		ObjectLayoutBoundary
-ObjPos_CPZ1:	binclude	"level/objects/CPZ_1.bin"
-		ObjectLayoutBoundary
-ObjPos_CPZ2:	binclude	"level/objects/CPZ_2.bin"
-		ObjectLayoutBoundary
-ObjPos_CPZ3:	binclude	"level/objects/CPZ_3.bin"
-		ObjectLayoutBoundary
-ObjPos_CPZ4:	binclude	"level/objects/CPZ_4.bin"
-		ObjectLayoutBoundary
-ObjPos_EHZ1:	binclude	"level/objects/EHZ_1.bin"
-		ObjectLayoutBoundary
-ObjPos_EHZ2:	binclude	"level/objects/EHZ_2.bin"
-		ObjectLayoutBoundary
-ObjPos_EHZ3:	binclude	"level/objects/EHZ_3.bin"
-		ObjectLayoutBoundary
-ObjPos_EHZ4:	binclude	"level/objects/EHZ_4.bin"
-		ObjectLayoutBoundary
-ObjPos_HPZ1:	binclude	"level/objects/HPZ_1.bin"
-		ObjectLayoutBoundary
-ObjPos_HPZ2:	binclude	"level/objects/HPZ_2.bin"
-		ObjectLayoutBoundary
-ObjPos_HPZ3:	binclude	"level/objects/HPZ_3.bin"
-		ObjectLayoutBoundary
-ObjPos_HPZ4:	binclude	"level/objects/HPZ_4.bin"
-		ObjectLayoutBoundary
-ObjPos_HTZ1:	binclude	"level/objects/HTZ_1.bin"
-		ObjectLayoutBoundary
-ObjPos_HTZ2:	binclude	"level/objects/HTZ_2.bin"
-		ObjectLayoutBoundary
-ObjPos_HTZ3:	binclude	"level/objects/HTZ_3.bin"
-		ObjectLayoutBoundary
-ObjPos_HTZ4:	binclude	"level/objects/HTZ_4.bin"
-		ObjectLayoutBoundary
-ObjPos_Ending:	binclude	"level/objects/MTZ_1.bin"
-		ObjectLayoutBoundary
-ObjPos_Null:	ObjectLayoutBoundary
-		even
-; ---------------------------------------------------------------------------
+		dc.w ObjPos_MTZ1-ObjPos_Index
+		dc.w ObjPos_MTZ2-ObjPos_Index
+		dc.w ObjPos_MTZ3-ObjPos_Index
+		dc.w ObjPos_MTZ4-ObjPos_Index
 		; platform objects in LZ (unused)
-		dc.w ObjPos_LZ1pf1-ObjPos_Index,ObjPos_LZ1pf2-ObjPos_Index
-		dc.w ObjPos_LZ2pf1-ObjPos_Index,ObjPos_LZ2pf2-ObjPos_Index
-		dc.w ObjPos_LZ3pf1-ObjPos_Index,ObjPos_LZ3pf2-ObjPos_Index
-		dc.w ObjPos_LZ1pf1-ObjPos_Index,ObjPos_LZ1pf2-ObjPos_Index
+ObjPosLZPlatform_Index:
+		dc.w ObjPos_LZ1pf1-ObjPos_Index
+		dc.w ObjPos_LZ1pf2-ObjPos_Index
+		dc.w ObjPos_LZ2pf1-ObjPos_Index
+		dc.w ObjPos_LZ2pf2-ObjPos_Index
+		dc.w ObjPos_LZ3pf1-ObjPos_Index
+		dc.w ObjPos_LZ3pf2-ObjPos_Index
+		dc.w ObjPos_LZ1pf1-ObjPos_Index
+		dc.w ObjPos_LZ1pf2-ObjPos_Index
 		; platform objects in SBZ (unused)
+ObjPosSBZPlatform_Index:
 		dc.w ObjPos_SBZ1pf1-ObjPos_Index,ObjPos_SBZ1pf2-ObjPos_Index
 		dc.w ObjPos_SBZ1pf3-ObjPos_Index,ObjPos_SBZ1pf4-ObjPos_Index
 		dc.w ObjPos_SBZ1pf5-ObjPos_Index,ObjPos_SBZ1pf6-ObjPos_Index
 		dc.w ObjPos_SBZ1pf1-ObjPos_Index,ObjPos_SBZ1pf2-ObjPos_Index
+		ObjectLayoutBoundary
+
+ObjPos_GHZ1:	binclude	"level/objects/converted/GHZ_1.bin"
+		ObjectLayoutBoundary
+ObjPos_GHZ2:	binclude	"level/objects/converted/GHZ_2.bin"
+		ObjectLayoutBoundary
+ObjPos_GHZ3:	binclude	"level/objects/converted/GHZ_3.bin"
+		ObjectLayoutBoundary
+ObjPos_GHZ4:	binclude	"level/objects/converted/GHZ_4.bin"
+		ObjectLayoutBoundary
+ObjPos_LZ1:	binclude	"level/objects/converted/LZ_1.bin"
+		ObjectLayoutBoundary
+ObjPos_LZ2:	binclude	"level/objects/converted/LZ_2.bin"
+		ObjectLayoutBoundary
+ObjPos_LZ3:	binclude	"level/objects/converted/LZ_3.bin"
+		ObjectLayoutBoundary
+ObjPos_LZ4:	binclude	"level/objects/converted/LZ_4.bin"
+		ObjectLayoutBoundary
 ObjPos_LZ1pf1:	binclude	"level/objects/S1/lz1pf1.bin"
-		ObjectLayoutBoundary
 ObjPos_LZ1pf2:	binclude	"level/objects/S1/lz1pf2.bin"
-		ObjectLayoutBoundary
 ObjPos_LZ2pf1:	binclude	"level/objects/S1/lz2pf1.bin"
-		ObjectLayoutBoundary
 ObjPos_LZ2pf2:	binclude	"level/objects/S1/lz2pf2.bin"
-		ObjectLayoutBoundary
 ObjPos_LZ3pf1:	binclude	"level/objects/S1/lz3pf1.bin"
-		ObjectLayoutBoundary
 ObjPos_LZ3pf2:	binclude	"level/objects/S1/lz3pf2.bin"
+		ObjectLayoutBoundary
+ObjPos_CPZ1:	binclude	"level/objects/converted/CPZ_1.bin"
+		ObjectLayoutBoundary
+ObjPos_CPZ2:	binclude	"level/objects/converted/CPZ_2.bin"
+		ObjectLayoutBoundary
+ObjPos_CPZ3:	binclude	"level/objects/converted/CPZ_3.bin"
+		ObjectLayoutBoundary
+ObjPos_CPZ4:	binclude	"level/objects/converted/CPZ_4.bin"
+		ObjectLayoutBoundary
+ObjPos_EHZ1:	binclude	"level/objects/converted/EHZ_1.bin"
+		ObjectLayoutBoundary
+ObjPos_EHZ2:	binclude	"level/objects/converted/EHZ_2.bin"
+		ObjectLayoutBoundary
+ObjPos_EHZ3:	binclude	"level/objects/converted/EHZ_3.bin"
+		ObjectLayoutBoundary
+ObjPos_EHZ4:	binclude	"level/objects/converted/EHZ_4.bin"
+		ObjectLayoutBoundary
+ObjPos_HPZ1:	binclude	"level/objects/converted/HPZ_1.bin"
+		ObjectLayoutBoundary
+ObjPos_HPZ2:	binclude	"level/objects/converted/HPZ_2.bin"
+		ObjectLayoutBoundary
+ObjPos_HPZ3:	binclude	"level/objects/converted/HPZ_3.bin"
+		ObjectLayoutBoundary
+ObjPos_HPZ4:	binclude	"level/objects/converted/HPZ_4.bin"
+		ObjectLayoutBoundary
+ObjPos_HTZ1:	binclude	"level/objects/converted/HTZ_1.bin"
+		ObjectLayoutBoundary
+ObjPos_HTZ2:	binclude	"level/objects/converted/HTZ_2.bin"
+		ObjectLayoutBoundary
+ObjPos_HTZ3:	binclude	"level/objects/converted/HTZ_3.bin"
+		ObjectLayoutBoundary
+ObjPos_HTZ4:	binclude	"level/objects/converted/HTZ_4.bin"
 		ObjectLayoutBoundary
 ObjPos_SBZ1pf1:	binclude	"level/objects/S1/sbz1pf1.bin"
 		ObjectLayoutBoundary
@@ -19330,6 +19333,17 @@ ObjPos_SBZ1pf5:	binclude	"level/objects/S1/sbz1pf5.bin"
 		ObjectLayoutBoundary
 ObjPos_SBZ1pf6:	binclude	"level/objects/S1/sbz1pf6.bin"
 		ObjectLayoutBoundary
+ObjPos_MTZ1:	binclude	"level/objects/converted/MTZ_1.bin"
+		ObjectLayoutBoundary
+ObjPos_MTZ2:	binclude	"level/objects/converted/MTZ_2.bin"
+		ObjectLayoutBoundary
+ObjPos_MTZ3:	binclude	"level/objects/converted/MTZ_3.bin"
+		ObjectLayoutBoundary
+ObjPos_MTZ4:	binclude	"level/objects/converted/MTZ_4.bin"
+		ObjectLayoutBoundary
+ObjPos_Null:	binclude	"level/objects/converted/S1_Ending.bin"
+		ObjectLayoutBoundary
+		even
 ; ---------------------------------------------------------------------------
 ; Ring layouts; one entry per act, four entries per zone
 ; ---------------------------------------------------------------------------
@@ -20062,6 +20076,8 @@ Map_Piranha:	binclude	"mappings/sprite/Piranha.bin"			; $52
 Map_obj5E:	binclude	"mappings/sprite/obj5E_a.bin"
 		even
 Map_obj5Eb:	binclude	"mappings/sprite/obj5E_b.bin"
+		even
+Map_LConv:	binclude	"mappings/sprite/LZ Conveyor.bin"		; $63
 		even
 Map_Obj79:	binclude	"mappings/sprite/Checkpoint.bin"
 		even
