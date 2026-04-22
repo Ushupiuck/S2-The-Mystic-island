@@ -6,17 +6,16 @@ Size_of_SEGA_sound		= $6978
 Size_of_Snd_driver_guess	= $F64 ; approximate post-compressed size of the Z80 sound driver
 ; ---------------------------------------------------------------------------
 ; Object variables
-; -------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 ; Object layout entry structure (last two penultimate entries -- commented out -- belong to SCD)
-; -------------------------------------------------------------------------
-
-omX:		ds.w	1	; 0 oeX		; X position
-omY:		ds.w	1	; 2 oeY		; Y position/flags
-omID:		ds.b	1	; 4 oeID	; ID
-omSubtype:	ds.b	1	; 5 oeSubtype	; Subtype
-;omTimeZones:	ds.b	1	; 6 oeTimeZones	; Time zones
-;omSubtype2:	ds.b	1	; 7 oeSubtype2	; Subtype 2
-omSize:		ds.b	0	; 8 oeSize	; Size of structure
+; ---------------------------------------------------------------------------
+omX:		equ	0	; 0 oeX		; word; X position
+omY:		equ	2	; 2 oeY		; word; Y position/flags
+omID:		equ	4	; 4 oeID	; byte; ID
+omSubtype:	equ	5	; 5 oeSubtype	; byte; Subtype
+omTimeZones:	equ	6	; 6 oeTimeZones	; byte; Time zones
+omSubtype2:	equ	7	; 7 oeSubtype2	; byte; Subtype 2
+omSize:		equ	8	; 8 oeSize	; byte; Size of structure
 ; ---------------------------------------------------------------------------
 ; Object Status Table offsets (for everything between Object_RAM and Primary_Collision)
 ; ---------------------------------------------------------------------------
@@ -1038,7 +1037,7 @@ Level_frame_counter:	; For compatibility
 v_framecount:		; For compatibility
 Timer_frames:		ds.w	1			; the number of frames which have elapsed since the level started
 Debug_object:		ds.b	1			; the current position in the debug mode object list
-			ds.b	1			; unused
+f_conveyrev:		ds.b	1			; unused
 Debug_placement_mode:	ds.b	1
 			ds.b	1			; the whole word is tested, but the debug mode code uses only the low byte
 Debug_Accel_Timer:	ds.b	1			; (1 byte)
@@ -1136,8 +1135,8 @@ v_title_ccount:		ds.w	1			; number of times C is pressed on title screen
 f_demo:			ds.w	1			; demo mode flag (0 = no; 1 = yes; $8001 = ending)
 v_demonum:		ds.w	1			; demo level number (not the same as the level number)
 v_creditsnum:		ds.w	1			; credits index number
-
-			ds.b	$78			; free
+v_obj63:		ds.b	6			; object 63 (LZ/SBZ platforms) variables
+			ds.b	$72			; free
 v_end:
 	if * > 0	; don't declare more space than the RAM can contain!
 		fatal "The RAM variable declarations are too large by $\{*} bytes."

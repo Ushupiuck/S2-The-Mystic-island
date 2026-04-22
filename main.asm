@@ -8453,7 +8453,7 @@ ptr_Obj5F:		dc.l ObjNull
 ptr_Obj60:		dc.l ObjNull
 ptr_Obj61:		dc.l ObjNull
 ptr_Obj62:		dc.l ObjNull
-ptr_Obj63:		dc.l ObjNull
+ptr_Obj63:		dc.l LabyrinthConvey
 ptr_Obj64:		dc.l ObjNull
 ptr_Obj65:		dc.l ObjNull
 ptr_Obj66:		dc.l ObjNull
@@ -8897,8 +8897,8 @@ id_ObjFF:	equ ((ptr_ObjFF-Obj_Index)/4)+1
 ; ---------------------------------------------------------------------------
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-; SpeedToPos:
 
+SpeedToPos:
 ObjectMove:
 		movem.w	obVelX(a0),d0/d2			; load xy speed
 		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
@@ -8948,8 +8948,8 @@ ObjectMove_Reserved2:
 ; ---------------------------------------------------------------------------
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-; ObjectFall:
 
+ObjectFall:
 ObjectMoveAndFall:
 		movem.w	obVelX(a0),d0/d2			; load xy speed
 		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
@@ -10149,7 +10149,7 @@ loc_DD6A:
 		tst.b	4(a0)		; oeID
 		bpl.s	loc_DD74
 		addq.b	#1,1(a2)
-		bclr	#7,2(a2,d3.w)	; SCD Only:	; Mark object as unloaded
+		bclr	#7,2(a2,d2.w)	; SCD Only:	; Mark object as unloaded
 
 loc_DD74:
 		addq.w	#6,a0		; oeSize
@@ -10167,7 +10167,7 @@ loc_DD82:
 		subq.b	#1,(a2)
 
 loc_DD90:
-		subq.w	#6,a0		; oeID
+		subq.w	#6,a0		; oeSize
 		bra.s	loc_DD82
 ; ===========================================================================
 
@@ -10195,7 +10195,7 @@ loc_DDA6:
 		tst.b	4(a0)		; SCD		; Does this object have a saved flags entry?
 		bpl.s	.SpawnDone	; SCD		; If not, branch
 		subq.b	#1,(a2)		; SCD		; Rewind saved flags entry ID
-		bclr	#7,2(a2,d3.w)	; SCD		; Mark object as unloaded
+		bclr	#7,2(a2,d2.w)	; SCD		; Mark object as unloaded
 
 .SpawnDone:
 		move.l	a0,(Obj_load_addr_right).w
@@ -10211,7 +10211,7 @@ loc_DDC8:
 		addq.b	#1,1(a2)
 
 loc_DDD6:
-		addq.w	#6,a0
+		addq.w	#6,a0		; oeSize
 		bra.s	loc_DDC8
 ; ===========================================================================
 
@@ -10900,7 +10900,11 @@ loc_F70A:
 MvSonicOnPtfm:
 		move.w	obY(a0),d0
 		sub.w	d3,d0
-		tst.b	(f_playerctrl).w
+		bra.s	+
+MvSonicOnPtfm2:
+		move.w	obY(a0),d0
+		subi.w	#9,d0
++		tst.b	(f_playerctrl).w
 		bmi.s	.return
 		cmpi.b	#6,obRoutine(a1)
 		bhs.s	.return
@@ -12435,9 +12439,7 @@ ObjHitCeiling:
 		btst	#0,d3
 		beq.s	.return
 		move.b	#$80,d3
-
-.return:
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 
 loc_13408:
@@ -12482,9 +12484,7 @@ loc_13408:
 		btst	#0,d3
 		beq.s	.return
 		move.b	d2,d3
-
-.return:
-		rts
+.return:	rts
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -12505,9 +12505,7 @@ loc_13478:
 		btst	#0,d3
 		beq.s	.return
 		move.b	d2,d3
-
-.return:
-		rts
+.return:	rts
 ; End of function Sonic_HitWall
 
 ; ---------------------------------------------------------------------------
@@ -12531,12 +12529,11 @@ ObjHitWallLeft:
 		btst	#0,d3
 		beq.s	.return
 		move.b	#$40,d3
-
-.return:
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 		include	"objects/47 Bumper.asm"
 		include	"objects/S1/5E See-Saw.asm"
+		include	"objects/S1/63 LZ Conveyor.asm"
 		include	"objects/03 Collision Switcher.asm"
 		include	"objects/07 Water Surface.asm"
 		include	"objects/08 Water Splash.asm"
@@ -18138,8 +18135,10 @@ Nem_GHZ_SWall:	binclude	"art/nemesis/S1/GHZ Edge Wall.nem"
 ; Rustic Ruins Zone stage assets
 ; ---------------------------------------------------------------------------
 Kospm_FlapDoor:	binclude	"art/moduled kosinski/Flapping Door.kospm"
+Kospm_LzWheel:	binclude	"art/moduled kosinski/LZ conveyor.kospm"
+		even
 ; ---------------------------------------------------------------------------
-; Chemical Plant Zone stage assets
+; Ancient Workbench Zone stage assets
 ; ---------------------------------------------------------------------------
 Nem_CPZ_Platform1:	binclude	"art/nemesis/CPZ Floating Platform.nem"
 		even
@@ -19237,10 +19236,10 @@ ObjPos_Index:
 		dc.w ObjPos_HTZ3-ObjPos_Index
 		dc.w ObjPos_HTZ4-ObjPos_Index
 
-		dc.w ObjPos_Ending-ObjPos_Index
-		dc.w ObjPos_Ending-ObjPos_Index
-		dc.w ObjPos_Ending-ObjPos_Index
-		dc.w ObjPos_Ending-ObjPos_Index
+		dc.w ObjPos_MTZ1-ObjPos_Index
+		dc.w ObjPos_MTZ2-ObjPos_Index
+		dc.w ObjPos_MTZ3-ObjPos_Index
+		dc.w ObjPos_MTZ4-ObjPos_Index
 
 		ObjectLayoutBoundary
 ObjPos_GHZ1:	binclude	"level/objects/GHZ_1.bin"
@@ -19291,16 +19290,25 @@ ObjPos_HTZ3:	binclude	"level/objects/HTZ_3.bin"
 		ObjectLayoutBoundary
 ObjPos_HTZ4:	binclude	"level/objects/HTZ_4.bin"
 		ObjectLayoutBoundary
-ObjPos_Ending:	binclude	"level/objects/MTZ_1.bin"
+ObjPos_MTZ1:	binclude	"level/objects/MTZ_1.bin"
 		ObjectLayoutBoundary
-ObjPos_Null:	ObjectLayoutBoundary
+ObjPos_MTZ2:	binclude	"level/objects/MTZ_2.bin"
+		ObjectLayoutBoundary
+ObjPos_MTZ3:	binclude	"level/objects/MTZ_3.bin"
+		ObjectLayoutBoundary
+ObjPos_MTZ4:	binclude	"level/objects/MTZ_4.bin"
+		ObjectLayoutBoundary
+ObjPos_Null:	binclude	"level/objects/S1_Ending.bin"
+		ObjectLayoutBoundary
 		even
 ; ---------------------------------------------------------------------------
+ObjPosLZPlatform_Index:
 		; platform objects in LZ (unused)
 		dc.w ObjPos_LZ1pf1-ObjPos_Index,ObjPos_LZ1pf2-ObjPos_Index
 		dc.w ObjPos_LZ2pf1-ObjPos_Index,ObjPos_LZ2pf2-ObjPos_Index
 		dc.w ObjPos_LZ3pf1-ObjPos_Index,ObjPos_LZ3pf2-ObjPos_Index
 		dc.w ObjPos_LZ1pf1-ObjPos_Index,ObjPos_LZ1pf2-ObjPos_Index
+ObjPosSBZPlatform_Index:
 		; platform objects in SBZ (unused)
 		dc.w ObjPos_SBZ1pf1-ObjPos_Index,ObjPos_SBZ1pf2-ObjPos_Index
 		dc.w ObjPos_SBZ1pf3-ObjPos_Index,ObjPos_SBZ1pf4-ObjPos_Index
@@ -20062,6 +20070,8 @@ Map_Piranha:	binclude	"mappings/sprite/Piranha.bin"			; $52
 Map_obj5E:	binclude	"mappings/sprite/obj5E_a.bin"
 		even
 Map_obj5Eb:	binclude	"mappings/sprite/obj5E_b.bin"
+		even
+Map_LConv:	binclude	"mappings/sprite/LZ Conveyor.bin"		; $63
 		even
 Map_Obj79:	binclude	"mappings/sprite/Checkpoint.bin"
 		even
