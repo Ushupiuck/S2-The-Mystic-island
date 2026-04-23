@@ -619,49 +619,15 @@ Chunk_Table:			ds.w	$40*$100	; 128x128 tile mappings ($8000 bytes)
 Chunk_Table_End:
 v_128x128:=	Chunk_Table
 v_128x128_end:=	Chunk_Table_End
-
 Level_Layout:			ds.b	$1000		; level layout buffer ($1000 bytes)
 Level_Layout_End:
 
 v_lvllayout:=			Level_Layout
 v_lvllayout_end:=		Level_Layout_End
 v_lvllayoutbg:=			Level_Layout+$80
-v_16x16:			ds.b	$1800		; $1800 bytes
-
-TempArray_LayerDef:		ds.b	$200		; background scroll buffer
-v_bgscroll_buffer:=		TempArray_LayerDef
-v_hscrolltablebuffer:		ds.b	$380		; scrolling table data
-v_hscrolltablebuffer_end:
-				ds.b	$80		; would be unused, but data from v_hscrolltablebuffer can spill into here
-v_hscrolltablebuffer_end_padded:
-Sprite_Table:			ds.b	$280		; Sprite attribute table buffer
-Sprite_Table_end:
-				ds.b	$140		; stack
-v_systemstack:
-v_ngfx_buffer:			ds.b	$200		; Nemesis graphics decompression buffer
-v_ngfx_buffer_end:
-
-v_objstate:			ds.b	$300		; object state list
-v_objstate_end:
-Object_Display_Lists:		ds.b	$400		; sprite display queue, in order of priority
-Object_Display_Lists_End:
-v_spritequeue:=		Object_Display_Lists
-v_spritequeue_end:=	Object_Display_Lists_End
-
-Sonic_Stat_Record_Buf:		ds.b	$100
-Sonic_Pos_Record_Buf:		ds.b	$100
-Tails_Pos_Record_Buf:		ds.b	$100
-Ring_Positions:			ds.b	$600
-Ring_Positions_End:
-
 Kos_decomp_buffer:		ds.b	$1000		; Moduled Kosinski+ decompression buffer
-
-VDP_Command_Buffer:		ds.w	7*$12		; stores 18 ($12) VDP commands to issue the next time ProcessDMAQueue is called
-VDP_Command_Buffer_Slot:	ds.w	1		; stores the address of the next open slot for a queued VDP command
-
 ; ---------------------------------------------------------------------------
 v_objspace:			ds.b	object_size*$80	; object variable space ($40 bytes per object)
-			ds.b	$200			; will become used by the object table (assuming object_size = $44)
 v_objspace_end:
 ; ---------------------------------------------------------------------------
 ; Title screen objects
@@ -742,6 +708,38 @@ v_endeggman	= v_objspace+object_size*2		; object variable space for Eggman after
 v_tryagain	= v_objspace+object_size*3		; object variable space for the "TRY AGAIN" text ($40 bytes)
 v_eggmanchaos	= v_objspace+object_size*32		; object variable space for the emeralds juggled by Eggman ($180 bytes)
 ; ---------------------------------------------------------------------------
+			ds.b	$200			; will become used by the object table (assuming object_size = $44)
+v_16x16:			ds.b	$1800		; $1800 bytes
+
+TempArray_LayerDef:		ds.b	$200		; background scroll buffer
+v_bgscroll_buffer:=		TempArray_LayerDef
+v_hscrolltablebuffer:		ds.b	$380		; scrolling table data
+v_hscrolltablebuffer_end:
+				ds.b	$80		; would be unused, but data from v_hscrolltablebuffer can spill into here
+v_hscrolltablebuffer_end_padded:
+Sprite_Table:			ds.b	$280		; Sprite attribute table buffer
+Sprite_Table_end:
+				ds.b	$140		; stack
+v_systemstack:
+v_ngfx_buffer:			ds.b	$200		; Nemesis graphics decompression buffer
+v_ngfx_buffer_end:
+
+v_objstate:			ds.b	$300		; object state list
+v_objstate_end:
+Object_Display_Lists:		ds.b	$400		; sprite display queue, in order of priority
+Object_Display_Lists_End:
+v_spritequeue:=		Object_Display_Lists
+v_spritequeue_end:=	Object_Display_Lists_End
+
+Sonic_Stat_Record_Buf:		ds.b	$100
+Sonic_Pos_Record_Buf:		ds.b	$100
+Tails_Pos_Record_Buf:		ds.b	$100
+Ring_Positions:			ds.b	$600
+Ring_Positions_End:
+
+VDP_Command_Buffer:		ds.w	7*$12		; stores 18 ($12) VDP commands to issue the next time ProcessDMAQueue is called
+VDP_Command_Buffer_Slot:	ds.w	1		; stores the address of the next open slot for a queued VDP command
+
 Object_Respawn_Table:		ds.b	$300
 Camera_RAM:
 Camera_Positions:
