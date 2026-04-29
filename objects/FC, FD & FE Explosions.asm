@@ -1,5 +1,5 @@
 ; ---------------------------------------------------------------------------
-; Object 0F - explosion from a destroyed enemy or monitor
+; Object FC - explosion from a destroyed enemy or monitor
 ; ---------------------------------------------------------------------------
 
 Explosion:
@@ -45,7 +45,7 @@ ExItem_Animate:	; Routine 4 (2 for ExplosionBomb)
 .display:	bra.w	DisplaySprite
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Object 10 - explosion from a destroyed boss, bomb or cannonball
+; Object FD - explosion from a destroyed boss, bomb or cannonball
 ; ---------------------------------------------------------------------------
 
 FieryExplosion:
@@ -72,7 +72,7 @@ ExBom_Main:	; Routine 0
 		jmp	(PlaySound_Special).l	; play exploding bomb sound
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Object 11 - BallHog's bomb explosion (From the Sonic 1 prototype)
+; Object FE - BallHog's bomb explosion (From the Sonic 1 prototype)
 ; ---------------------------------------------------------------------------
 
 GroundExplosion:

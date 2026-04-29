@@ -10,6 +10,7 @@ Mus_Test6:	include "sound/music/45.asm" ; $119C bytes
 Mus_RRZ1:	include "sound/music/RRZ1.asm" ; $1158 bytes
 Mus_RRZ2:	include "sound/music/RRZ2.asm" ; $D84 bytes
 Mus_Title:	BINCLUDE "sound/music/Title screen_cmp.bin" ; $1CA bytes
+Mus_TestSong2:	include "sound/music/TTPast.asm" ; $0 bytes
 
 	finishBank
 
@@ -38,7 +39,6 @@ Mus_BonusStage:	BINCLUDE "sound/music/Bonus Stage_cmp.bin" ; $273 bytes
 ; ------------------------------------------------------------------------------
 SndMus3_Start:	startBank
 
-Mus_Test_Electoria:	BINCLUDE "sound/music/New - Electoria_cmp.bin" ; $614 bytes
 Mus_ARZ:	BINCLUDE "sound/music/ARZ_cmp.bin" ; $609 bytes
 Mus_GHZ:	BINCLUDE "sound/music/GHZ_cmp.bin" ; $5AA bytes
 Mus_GGZ2:	BINCLUDE "sound/music/GGZ2_cmp.bin" ; $552 bytes
@@ -48,13 +48,11 @@ Mus_SBZ:	BINCLUDE "sound/music/SBZ_cmp.bin" ; $4D7 bytes
 Mus_Boss2:	BINCLUDE "sound/music/Boss 2_cmp.bin" ; $478 bytes
 Mus_PPZ2:	BINCLUDE "sound/music/PPZ2_cmp.bin" ; $46E bytes
 Mus_Options:	BINCLUDE "sound/music/Menu_cmp.bin" ; $44E bytes
-Mus_Test_Hyper_Hyper:	BINCLUDE "sound/music/New - Hyper-Hyper_cmp.bin" ; $449 bytes
 Mus_CPZ:	BINCLUDE "sound/music/CPZ_cmp.bin" ; $434 bytes
-Mus_MCZ:	BINCLUDE "sound/music/MCZ_cmp.bin" ; $428 bytes
+Mus_LZ:	BINCLUDE "sound/music/LZ_cmp.bin" ; $3D9 bytes
 Mus_SpecialStage:	BINCLUDE "sound/music/Special Stage_cmp.bin" ; $3D9 bytes
 Mus_OOZ:	BINCLUDE "sound/music/OOZ_cmp.bin" ; $3D5 bytes
 Mus_CNZ_2P:	BINCLUDE "sound/music/CNZ 2P_cmp.bin" ; $3CE bytes
-Mus_Test_Evening_Star:	BINCLUDE "sound/music/New - Evening star_cmp.bin" ; $3CD bytes
 Mus_2PResult:	BINCLUDE "sound/music/Results screen 2P_cmp.bin" ; $3B4 bytes
 Mus_EHZ_2P:	BINCLUDE "sound/music/EHZ 2P_cmp.bin" ; $3AA bytes
 Mus_TestSong1:	BINCLUDE "sound/music/Egg_Utopia_cmp.bin" ; $390 bytes
@@ -66,24 +64,15 @@ Mus_Boss3:	BINCLUDE "sound/music/Boss 3_cmp.bin" ; $33A bytes
 Mus_SCZ:	BINCLUDE "sound/music/SCZ_cmp.bin" ; $326 bytes
 Mus_ICZ1:	BINCLUDE "sound/music/ICZ1_cmp.bin" ; $31F bytes
 Mus_SW_HPZ:	BINCLUDE "sound/music/SW_HPZ_cmp.bin" ; $317 bytes
-Mus_Test_Walkin:	BINCLUDE "sound/music/New - Walkin_cmp.bin" ; $2CB bytes
 Mus_EndBoss:	BINCLUDE "sound/music/Final Boss_cmp.bin" ; $2CA bytes
 Mus_SuperSonic:	BINCLUDE "sound/music/Super Sonic_cmp.bin" ; $2B9 bytes
 Mus_Ending_S1:	BINCLUDE "sound/music/Ending - S1 GHZ Outro_cmp.bin" ; $24C bytes
-Mus_DoubleLife:	include "sound/music/Double life.asm" ; $12A bytes
-
-	finishBank
-
-; ------------------------------------------------------------------------------
-; Music bank 4
-; ------------------------------------------------------------------------------
-SndMus4_Start:	startBank
-
 Mus_Boss:	BINCLUDE "sound/music/Boss_cmp.bin" ; $217 bytes
 Mus_HPZ:	BINCLUDE "sound/music/HPZ_cmp.bin" ; $207 bytes
 Mus_Invincible:	BINCLUDE "sound/music/Invincible_cmp.bin" ; $191 bytes
 Mus_Continue:	BINCLUDE "sound/music/Continue_cmp.bin" ; $15A bytes
 Mus_GameOver:	include "sound/music/Game over.asm" ; $14F bytes
+Mus_DoubleLife:	include "sound/music/Double life.asm" ; $12A bytes
 Mus_Countdown:	BINCLUDE "sound/music/Drowning_cmp.bin" ; $11F bytes
 Mus_EndLevel:	BINCLUDE "sound/music/End of level_cmp.bin" ; $115 bytes
 Mus_Emerald:	BINCLUDE "sound/music/Got emerald_cmp.bin" ; $CB bytes

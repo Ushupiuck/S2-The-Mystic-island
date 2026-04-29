@@ -1,5 +1,6 @@
 zMasterPlaylist:
 	zmakePlaylistEntry	Mus_TestSong1,0
+	zmakePlaylistEntry	Mus_TestSong2,musprop_uncompressed
 	zmakePlaylistEntry	Mus_Title,0
 	zmakePlaylistEntry	Mus_2PResult,0
 	zmakePlaylistEntry	Mus_Options,0
@@ -19,7 +20,7 @@ zMasterPlaylist:
 	zmakePlaylistEntry	Mus_DDZ2,musprop_uncompressed
 	zmakePlaylistEntry	Mus_ICZ1,0
 	zmakePlaylistEntry	Mus_ICZ2,0
-	zmakePlaylistEntry	Mus_MCZ,0
+	zmakePlaylistEntry	Mus_LZ,0
 	zmakePlaylistEntry	Mus_HPZ,0
 	zmakePlaylistEntry	Mus_OOZ,0
 	zmakePlaylistEntry	Mus_MTZ,0
@@ -43,10 +44,6 @@ zMasterPlaylist:
 	zmakePlaylistEntry	Mus_SpecialStage,0
 	zmakePlaylistEntry	Mus_Invincible,0
 	zmakePlaylistEntry	Mus_SuperSonic,0
-	zmakePlaylistEntry	Mus_Test_Electoria,0
-	zmakePlaylistEntry	Mus_Test_Evening_Star,0
-	zmakePlaylistEntry	Mus_Test_Hyper_Hyper,0
-	zmakePlaylistEntry	Mus_Test_Walkin,0
 	zmakePlaylistEntry	Mus_Test6,musprop_uncompressed
 	zmakePlaylistEntry	Mus_Test7,musprop_uncompressed
 	zmakePlaylistEntry	Mus_EHZ_2P,0

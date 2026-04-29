@@ -94,7 +94,7 @@ Bumper_bump:
 		bsr.w	AddPoints
 		bsr.w	FindFreeObj
 		bne.s	.return
-		_move.b	#id_Obj0E,obID(a1)
+		_move.b	#id_ObjFF,obID(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.b	#4,obFrame(a1)

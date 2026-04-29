@@ -211,7 +211,7 @@ sub_19236:
 		move.b	obStatus(a1),obStatus(a0)
 		tst.b	obStatus(a1)
 		bpl.s	.return
-		_move.b	#id_Obj10,obID(a0)
+		_move.b	#id_ObjFD,obID(a0)
 		clr.b	obRoutine(a0)
 .return:	rts
 ; End of function sub_17C2A
@@ -222,7 +222,7 @@ loc_19274:	; Routine 6
 		movea.l	objoff_34(a0),a1
 		tst.b	obStatus(a1)
 		bpl.s	GBall_Display3
-		_move.b	#id_Obj10,obID(a0)
+		_move.b	#id_ObjFD,obID(a0)
 		clr.b	obRoutine(a0)
 
 GBall_Display3:
@@ -244,6 +244,6 @@ GBall_Vanish:
 		bsr.w	BossDefeated
 		subq.b	#1,objoff_3C(a0)
 		bpl.s	GBall_Display3
-		_move.b	#id_Obj10,obID(a0)
+		_move.b	#id_ObjFD,obID(a0)
 		clr.b	obRoutine(a0)
 		jmp	(DisplaySprite).l

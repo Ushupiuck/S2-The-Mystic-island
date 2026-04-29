@@ -81,7 +81,7 @@ loc_15922:
 
 loc_15948:
 		subq.b	#2,ob2ndRout(a0)
-		move.w	#59,objoff_30(a0)
+		move.w	#60-1,objoff_30(a0)
 		move.w	obVelX(a0),d0
 		ext.l	d0
 		asl.l	#8,d0

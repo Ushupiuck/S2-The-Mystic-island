@@ -254,7 +254,7 @@ sub_7DC0:
 
 loc_7E3E:
 		move.w	d1,-(sp)
-		bsr.w	sub_F880
+		bsr.w	PlatformObject11_cont
 		move.w	(sp)+,d1
 		btst	d6,obStatus(a0)
 		beq.s	.return

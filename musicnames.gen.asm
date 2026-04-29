@@ -1,6 +1,7 @@
 SongNames:	offsetTable
 	offsetTableEntry.w	MusNam_Null
 	offsetTableEntry.w	MusNam_TestSong1
+	offsetTableEntry.w	MusNam_TestSong2
 	offsetTableEntry.w	MusNam_Title
 	offsetTableEntry.w	MusNam_2PResult
 	offsetTableEntry.w	MusNam_Options
@@ -20,7 +21,7 @@ SongNames:	offsetTable
 	offsetTableEntry.w	MusNam_DDZ2
 	offsetTableEntry.w	MusNam_ICZ1
 	offsetTableEntry.w	MusNam_ICZ2
-	offsetTableEntry.w	MusNam_MCZ
+	offsetTableEntry.w	MusNam_LZ
 	offsetTableEntry.w	MusNam_HPZ
 	offsetTableEntry.w	MusNam_OOZ
 	offsetTableEntry.w	MusNam_MTZ
@@ -44,10 +45,6 @@ SongNames:	offsetTable
 	offsetTableEntry.w	MusNam_SpecialStage
 	offsetTableEntry.w	MusNam_Invincible
 	offsetTableEntry.w	MusNam_SuperSonic
-	offsetTableEntry.w	MusNam_Test_Electoria
-	offsetTableEntry.w	MusNam_Test_Evening_Star
-	offsetTableEntry.w	MusNam_Test_Hyper_Hyper
-	offsetTableEntry.w	MusNam_Test_Walkin
 	offsetTableEntry.w	MusNam_Test6
 	offsetTableEntry.w	MusNam_Test7
 	offsetTableEntry.w	MusNam_EHZ_2P
@@ -64,6 +61,7 @@ SongNames:	offsetTable
 
 MusNam_Null:	dc.b 0,' '
 MusNam_TestSong1:	songtext	"EGG UTOPIA"
+MusNam_TestSong2:	songtext	"TIDAL TEMPEST PAST"
 MusNam_Title:	songtext	"TITLE SCREEN"
 MusNam_2PResult:	songtext	"2P RESULT"
 MusNam_Options:	songtext	"OPTIONS"
@@ -83,7 +81,7 @@ MusNam_DDZ1:	songtext	"DIAMOND DUST ACT 1"
 MusNam_DDZ2:	songtext	"DIAMOND DUST ACT 2"
 MusNam_ICZ1:	songtext	"ICECAP ACT 1"
 MusNam_ICZ2:	songtext	"ICECAP ACT 2"
-MusNam_MCZ:	songtext	"MYSTIC CAVE"
+MusNam_LZ:	songtext	"LABYRINTH ZONE"
 MusNam_HPZ:	songtext	"HIDDEN PALACE"
 MusNam_OOZ:	songtext	"OIL OCEAN"
 MusNam_MTZ:	songtext	"METROPOLIS"
@@ -107,10 +105,6 @@ MusNam_BonusStage3:	songtext	"BONUS STAGE 3"
 MusNam_SpecialStage:	songtext	"SPECIAL STAGE"
 MusNam_Invincible:	songtext	"INVINCIBILITY"
 MusNam_SuperSonic:	songtext	"SUPER SONIC"
-MusNam_Test_Electoria:	songtext	"TEST 1"
-MusNam_Test_Evening_Star:	songtext	"TEST 2"
-MusNam_Test_Hyper_Hyper:	songtext	"TEST 3"
-MusNam_Test_Walkin:	songtext	"TEST 5"
 MusNam_Test6:	songtext	"UNUSED S3 MENU"
 MusNam_Test7:	songtext	"UNUSED S3 SUPER SONIC"
 MusNam_EHZ_2P:	songtext	"EMERALD HILL 2P"

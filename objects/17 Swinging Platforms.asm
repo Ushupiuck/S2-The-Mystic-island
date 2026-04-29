@@ -195,7 +195,7 @@ SwingingPtfm_SetSolid:
 		move.b	obHeight(a0),d3
 		addq.b	#1,d3
 		move.w	(sp)+,d4
-		bsr.w	sub_F82E
+		bsr.w	PlatformObject2
 		bra.w	SwingingPtfm_ChkDel
 ; ---------------------------------------------------------------------------
 
@@ -208,7 +208,7 @@ SwingingPtfm_DetachCheck:
 		move.b	obHeight(a0),d3
 		addq.b	#1,d3
 		move.w	(sp)+,d4
-		bsr.w	sub_F82E
+		bsr.w	PlatformObject2
 		move.b	obStatus(a0),d0
 		andi.b	#status_standing_mask,d0
 		beq.w	SwingingPtfm_ChkDel
@@ -282,7 +282,7 @@ SwingingPtfm_Falling:
 		move.b	obHeight(a0),d3
 		addq.b	#1,d3
 		move.w	(sp)+,d4
-		bsr.w	sub_F82E
+		bsr.w	PlatformObject2
 		bra.w	MarkObjGone
 
 .bob:
@@ -299,7 +299,7 @@ SwingingPtfm_Falling:
 		move.b	obHeight(a0),d3
 		addq.b	#1,d3
 		move.w	(sp)+,d4
-		bsr.w	sub_F82E
+		bsr.w	PlatformObject2
 		bra.w	MarkObjGone
 ; ---------------------------------------------------------------------------
 
@@ -323,7 +323,7 @@ SwingingPtfm_Floating:
 		move.b	obHeight(a0),d3
 		addq.b	#1,d3
 		move.w	(sp)+,d4
-		bsr.w	sub_F82E
+		bsr.w	PlatformObject2
 		bra.w	MarkObjGone
 
 .bob:
@@ -349,7 +349,7 @@ SwingingPtfm_Floating:
 		move.b	obHeight(a0),d3
 		addq.b	#1,d3
 		move.w	(sp)+,d4
-		bsr.w	sub_F82E
+		bsr.w	PlatformObject2
 		bra.w	MarkObjGone
 ; ---------------------------------------------------------------------------
 ; motion core

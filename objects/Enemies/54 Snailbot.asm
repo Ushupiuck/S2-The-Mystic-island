@@ -2,10 +2,10 @@
 ; ---------------------------------------------------------------------------
 ; Object 54 - Snail badnik from EHZ (Nick Arcade / Simon Wai prototypes)
 ; ---------------------------------------------------------------------------
-snail_parent		= objoff_2A	; 4 bytes; parent pointer for child objects
-snail_turn_timer	= objoff_30	; 2 bytes; countdown before turning around
-snail_turning		= objoff_33	; 1 byte; set while waiting to reverse; also kills flame child
-snail_boosted		= objoff_34	; 1 byte; set after spotting player so boost only happens once per pass
+snail_turn_timer	= objoff_2E	; 2 bytes; countdown before turning around
+snail_turning		= objoff_30	; 1 byte; set while waiting to reverse; also kills flame child
+snail_boosted		= objoff_31	; 1 byte; set after spotting player so boost only happens once per pass
+snail_parent		= objoff_32	; 4 bytes; parent pointer for child objects
 
 Obj54:
 		moveq	#0,d0
@@ -21,7 +21,7 @@ Obj54_Index:	dc.w	Obj54_Init-Obj54_Index
 ; ===========================================================================
 
 Obj54_Init:
-		move.l	#Map_obj54,obMap(a0)
+		move.l	#Map_Snailbot,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Snail,0,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#$A,obColType(a0)
@@ -33,7 +33,7 @@ Obj54_Init:
 		bne.s	Obj54_InitDone
 		_move.b	#id_Obj54,obID(a1)
 		move.b	#6,obRoutine(a1)
-		move.l	#Map_obj54,obMap(a1)
+		move.l	#Map_Snailbot,obMap(a1)
 		move.w	#make_art_tile(ArtTile_Snail,1,0),obGfx(a1)
 		move.w	#$180,obPriority(a1)
 		move.b	#$10,obActWid(a1)
@@ -107,7 +107,7 @@ Obj54_CheckPlayerAndBoost:
 		bne.s	.return
 		_move.b	#id_Obj54,obID(a1)
 		move.b	#8,obRoutine(a1)
-		move.l	#Map_obj4B,obMap(a1)
+		move.l	#Map_Buzzer,obMap(a1)
 		move.w	#make_art_tile(ArtTile_Buzzer,0,0),obGfx(a1)
 		move.w	#$200,obPriority(a1)
 		move.b	#$10,obActWid(a1)
@@ -127,9 +127,9 @@ Obj54_CheckPlayerAndBoost:
 Obj54_FlameTrail:
 		movea.l	snail_parent(a0),a1
 		cmpi.b	#id_Obj54,obID(a1)
-		bne.w	loc_17854
+		bne.w	DeleteObject
 		tst.b	snail_turning(a1)
-		bne.w	loc_17854
+		bne.w	DeleteObject
 		move.w	obX(a1),obX(a0)
 		move.w	obY(a1),obY(a0)
 		addq.w	#7,obY(a0)
@@ -163,7 +163,7 @@ Obj54_TurnAround:
 Obj54_SlaveSprite:
 		movea.l	snail_parent(a0),a1
 		cmpi.b	#id_Obj54,obID(a1)
-		bne.w	loc_17854
+		bne.w	DeleteObject
 		move.w	obX(a1),obX(a0)
 		move.w	obY(a1),obY(a0)
 		move.b	obStatus(a1),obStatus(a0)

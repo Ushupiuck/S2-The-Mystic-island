@@ -462,7 +462,7 @@ Ballhog_NormalBomb:
 		neg.w	obVelX(a0)
 		subq.w	#1,hog_launchflag(a0)
 		bpl.s	.time_remaining
-		_move.b	#id_Obj10,obID(a0)
+		_move.b	#id_ObjFD,obID(a0)
 		sf	obRoutine(a0)
 		rts
 ; ---------------------------------------------------------------------------
@@ -475,7 +475,7 @@ Ballhog_NormalBomb:
 .moving_up:
 		subq.w	#1,hog_launchflag(a0)
 		bpl.s	.time_remaining
-		_move.b	#id_Obj10,obID(a0)
+		_move.b	#id_ObjFD,obID(a0)
 		sf	obRoutine(a0)
 		rts
 ; ---------------------------------------------------------------------------
@@ -505,7 +505,7 @@ Ballhog_ProtoBomb:
 		add.w	d1,obY(a0)
 
 .change_explosion:
-		_move.b	#id_Obj11,obID(a0)
+		_move.b	#id_ObjFE,obID(a0)
 		sf	obRoutine(a0)
 		rts
 ; ---------------------------------------------------------------------------

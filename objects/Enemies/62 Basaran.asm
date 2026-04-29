@@ -1,7 +1,8 @@
 ; ---------------------------------------------------------------------------
-; Object A0 - Basaran enemy (MZ)
+; Object 62 - Basaran enemy (MZ)
 ; ---------------------------------------------------------------------------
-player_distance	= objoff_36	; Sonic Y pos for the Basaran
+player_distance	= objoff_30	; Sonic Y pos for the Basaran
+; ---------------------------------------------------------------------------
 Basaran:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0

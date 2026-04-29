@@ -1,5 +1,5 @@
 ; ---------------------------------------------------------------------------
-; Object 63 - platforms on a conveyor belt (LZ)
+; Object 1F - platforms on a conveyor belt (LZ)
 ; ---------------------------------------------------------------------------
 
 LabyrinthConvey:
@@ -8,9 +8,7 @@ LabyrinthConvey:
 		move.w	LCon_Index(pc,d0.w),d1
 		jsr	LCon_Index(pc,d1.w)
 		out_of_range.s	loc_1236A,objoff_30(a0)
-
-LCon_Display:
-		bra.w	DisplaySprite
+LCon_Display:	bra.w	DisplaySprite
 ; ===========================================================================
 
 loc_1236A:
@@ -23,7 +21,7 @@ loc_12378:
 		move.b	objoff_2F(a0),d0
 		bpl.w	DeleteObject
 		andi.w	#$7F,d0
-		lea	(v_obj63).w,a2
+		lea	(v_obj1F).w,a2
 		bclr	#0,(a2,d0.w)
 		bra.w	DeleteObject
 ; ===========================================================================
@@ -57,13 +55,12 @@ loc_123E2:
 		move.w	d0,d1
 		lsr.w	#3,d0
 		andi.w	#$1E,d0
-		lea	LCon_Data(pc),a2
+		lea	(LCon_Data).l,a2
 		adda.w	(a2,d0.w),a2
 		move.w	(a2)+,objoff_38(a0)
 		move.w	(a2)+,objoff_30(a0)
 		move.l	a2,objoff_3C(a0)
 		andi.w	#$F,d1
-	;	lsl.w	#2,d1
 		add.w	d1,d1
 		add.w	d1,d1
 		move.b	d1,objoff_38(a0)
@@ -97,7 +94,7 @@ loc_1244C:
 loc_12460:
 		move.b	d0,objoff_2F(a0)
 		andi.w	#$7F,d0
-		lea	(v_obj63).w,a2
+		lea	(v_obj1F).w,a2
 		bset	#0,(a2,d0.w)
 		bne.s	.delete
 		add.w	d0,d0
@@ -124,7 +121,7 @@ LCon_Loop:
 		bne.s	loc_124AA
 
 LCon_MakePtfms:
-		_move.b	#id_Obj63,obID(a1)
+		_move.b	#id_Obj1F,obID(a1)
 		move.w	(a2)+,obX(a1)
 		move.w	(a2)+,obY(a1)
 		move.w	(a2)+,d0
@@ -277,96 +274,3 @@ loc_125D4:
 ; End of function LCon_ChangeDir
 
 ; ===========================================================================
-; Conveyor belt corner target coordinate definitions.
-; Each group corresponds to the lower nybble of the given subtype.
-; Format:
-; 	dc.w number of entries, times 4
-; 	dc.w base X position (used for out_of_range check)
-; 	dc.w entries...
-; Entries consist of a target X position and target Y position.
-
-LCon_Data:	dc.w .group0-LCon_Data
-		dc.w .group1-LCon_Data
-		dc.w .group2-LCon_Data
-		dc.w .group3-LCon_Data
-		dc.w .group4-LCon_Data
-		dc.w .group5-LCon_Data
-
-.group0:
-		.baseX_0: = $1070
-		.baseY_0: = $2F0
-		dc.w 6*4
-		dc.w .baseX_0
-		dc.w .baseX_0+$08, .baseY_0-$D6
-		dc.w .baseX_0+$4E, .baseY_0-$90
-		dc.w .baseX_0+$4E, .baseY_0+$A3
-		dc.w .baseX_0+$1C, .baseY_0+$D5
-		dc.w .baseX_0-$4E, .baseY_0+$A0
-		dc.w .baseX_0-$4E, .baseY_0-$AC
-
-.group1:
-		.baseX_1: = $1280
-		.baseY_1: = $377
-		dc.w 5*4
-		dc.w .baseX_1
-		dc.w .baseX_1-$02, .baseY_1-$F7
-		dc.w .baseX_1+$4E, .baseY_1-$A7
-		dc.w .baseX_1+$4E, .baseY_1+$F7
-		dc.w .baseX_1-$4E, .baseY_1+$A9
-		dc.w .baseX_1-$4E, .baseY_1-$AB
-
-.group2:
-		.baseX_2: = $D68
-		.baseY_2: = $530
-		dc.w 4*4
-		dc.w .baseX_2
-		dc.w .baseX_2-$46, .baseY_2-$AE
-		dc.w .baseX_2-$46, .baseY_2+$AE
-		dc.w .baseX_2+$46, .baseY_2+$AE
-		dc.w .baseX_2+$46, .baseY_2-$AE
-
-.group3:
-		.baseX_3: = $DA0
-		.baseY_3: = $440
-		dc.w 4*4
-		dc.w .baseX_3
-		dc.w .baseX_3-$3E, .baseY_3-$9E
-		dc.w .baseX_3+$4E, .baseY_3-$9E
-		dc.w .baseX_3+$4E, .baseY_3+$9E
-		dc.w .baseX_3-$3E, .baseY_3+$9E
-
-.group4:
-		.baseX_4: = $D00
-		.baseY_4: = $310
-		dc.w 5*4
-		dc.w .baseX_4
-		dc.w .baseX_4-$54, .baseY_4-$CE
-		dc.w .baseX_4+$DE, .baseY_4-$CE
-		dc.w .baseX_4+$DE, .baseY_4+$CE
-		dc.w .baseX_4-$AE, .baseY_4+$CE
-		dc.w .baseX_4-$AE, .baseY_4-$74
-
-.group5:
-		.baseX_5: = $1300
-		.baseY_5: = $264
-		dc.w 4*4
-		dc.w .baseX_5
-		dc.w .baseX_5-$AE, .baseY_5-$5A
-		dc.w .baseX_5+$DE, .baseY_5-$5A
-		dc.w .baseX_5+$DE, .baseY_5+$5A
-		dc.w .baseX_5-$AE, .baseY_5+$5A
-		even
-; ===========================================================================
-ObjPosLZPlatform_Index:
-		dc.w ObjPos_LZ1pf1-ObjPosLZPlatform_Index,ObjPos_LZ1pf2-ObjPosLZPlatform_Index
-		dc.w ObjPos_LZ2pf1-ObjPosLZPlatform_Index,ObjPos_LZ2pf2-ObjPosLZPlatform_Index
-		dc.w ObjPos_LZ3pf1-ObjPosLZPlatform_Index,ObjPos_LZ3pf2-ObjPosLZPlatform_Index
-		dc.w ObjPos_LZ1pf1-ObjPosLZPlatform_Index,ObjPos_LZ1pf2-ObjPosLZPlatform_Index
-		ObjectLayoutBoundary
-ObjPos_LZ1pf1:	binclude	"level/objects/S1/lz1pf1.bin"
-ObjPos_LZ1pf2:	binclude	"level/objects/S1/lz1pf2.bin"
-ObjPos_LZ2pf1:	binclude	"level/objects/S1/lz2pf1.bin"
-ObjPos_LZ2pf2:	binclude	"level/objects/S1/lz2pf2.bin"
-ObjPos_LZ3pf1:	binclude	"level/objects/S1/lz3pf1.bin"
-ObjPos_LZ3pf2:	binclude	"level/objects/S1/lz3pf2.bin"
-		ObjectLayoutBoundary

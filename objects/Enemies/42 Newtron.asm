@@ -16,7 +16,7 @@ Newtron_Index:
 
 Newtron_Init:
 		addq.b	#2,obRoutine(a0)
-		move.l	#Map_Newtron,obMap(a0)
+		move.l	#Map_Newtron,obMap(a0)	; Default to GHZ (test level for now)
 		move.w	#make_art_tile(ArtTile_Newtron,0,0),obGfx(a0)
 	;	cmpi.b	#id_MZ,(v_zone).w
 	;	bne.s	.skip
@@ -91,7 +91,7 @@ Newtron_Fall:
 		move.b	#$C,obColType(a0)
 +
 		bsr.w	ObjectMoveAndFall
-		bsr.w	ObjHitFloor
+		jsr	(ObjHitFloor).l
 		tst.w	d1
 		bpl.s	.return
 		add.w	d1,obY(a0)
@@ -108,7 +108,7 @@ Newtron_Fall:
 
 Newtron_ChkFloor:
 		bsr.w	ObjectMove
-		bsr.w	ObjHitFloor
+		jsr	(ObjHitFloor).l
 		cmpi.w	#-8,d1
 		blt.s	.return	; Change to ObjectMove and it'll speed up
 		cmpi.w	#$C,d1

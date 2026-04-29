@@ -124,7 +124,7 @@ PLC_GHZ2_End:
 ; Labyrinth Zone primary
 ; ---------------------------------------------------------------------------
 PLC_LZ:		dc.w ((PLC_CPZ_End-PLC_CPZ)/6)-1
-		plcm	Nem_GHZ_Rock,	ArtTile_GHZ_Purple_Rock	; without a filler entry, this crashes
+		plcm	Nem_MorphingPlatform,	ArtTile_MorphingOrbs	; without a filler entry, this crashes
 PLC_LZ_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST

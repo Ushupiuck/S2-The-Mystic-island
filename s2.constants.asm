@@ -173,6 +173,14 @@ sub9_x_pos	= subspr_data+next_subspr*7+0
 sub9_y_pos	= subspr_data+next_subspr*7+2
 sub9_mapframe	= subspr_data+next_subspr*7+5
 ; ---------------------------------------------------------------------------
+; Animation flags
+afEnd:		equ $FF	; return to beginning of animation
+afBack:		equ $FE	; go back (specified number) bytes
+afChange:	equ $FD	; run specified animation
+afRoutine:	equ $FC	; increment routine counter
+afReset:	equ $FB	; reset animation and 2nd object routine counter
+af2ndRoutine:	equ $FA	; increment 2nd routine counter
+; ---------------------------------------------------------------------------
 ; status_secondary bitfield variables
 ;
 ; status_secondary variable bit numbers
@@ -209,7 +217,7 @@ render_flags.on_screen		= obRender.on_screen
 ; status bitfield
 
 status.player.x_flip			= render_flags.x_flip ; Facing left.
-status.player.in_air			= 1 ; Airborne. 
+status.player.in_air			= 1 ; Airborne.
 status.player.rolling			= 2 ; Spinning, i.e. jumping or rolling.
 status.player.on_object			= 3 ; Stood on an object rather than the level.
 status.player.rolljumping		= 4 ; Jumping whilst rolling; locks the player's controls.
@@ -300,13 +308,6 @@ p2_touch_top       = 1<<p2_touch_top_bit
 touch_top_mask     = p1_touch_top|p2_touch_top
 
 ; ---------------------------------------------------------------------------
-; Animation flags
-afEnd:		equ $FF	; return to beginning of animation
-afBack:		equ $FE	; go back (specified number) bytes
-afChange:	equ $FD	; run specified animation
-afRoutine:	equ $FC	; increment routine counter
-afReset:	equ $FB	; reset animation and 2nd object routine counter
-af2ndRoutine:	equ $FA	; increment 2nd routine counter
 ; Levels
 id_GHZ:		equ 0
 id_LZ:		equ 1
@@ -524,7 +525,7 @@ CmdID__End =		id(CmdPtr__End)		; FE
 
 ; Background music
 bgm_GHZ =		MusID_ALZ
-bgm_LZ =		MusID_MCZ
+bgm_LZ =		MusID_LZ
 bgm_MZ =		MusID_CPZ
 bgm_SLZ =		MusID_GRGZ1
 bgm_SYZ =		MusID_DDZ1
@@ -1134,7 +1135,7 @@ v_title_ccount:		ds.w	1			; number of times C is pressed on title screen
 f_demo:			ds.w	1			; demo mode flag (0 = no; 1 = yes; $8001 = ending)
 v_demonum:		ds.w	1			; demo level number (not the same as the level number)
 v_creditsnum:		ds.w	1			; credits index number
-v_obj63:		ds.b	6			; object 63 (LZ/SBZ platforms) variables
+v_obj1F:		ds.b	6			; conveyor belt (Object 1F) variables
 			ds.b	$72			; free
 v_end:
 	if * > 0	; don't declare more space than the RAM can contain!
@@ -1617,7 +1618,7 @@ ArtTile_Art_Flowers4:		equ $39A
 ArtTile_EHZ_Shield:		equ $560
 
 ; CPZ
-ArtTile_CPZ_Buildings:		equ $3D0
+ArtTile_MorphingOrbs:		equ $3C0
 
 ; HPZ
 ArtTile_Art_HPZPulseOrb_1:	equ $2E8
@@ -1670,7 +1671,6 @@ ArtTile_Spiker:			equ $520
 ArtTile_Gator:			equ $300
 ArtTile_Rhinobot:		equ $3C4
 ArtTile_Octus:			equ $38A
-ArtTile_Octus_Child:		equ $4C6
 ArtTile_Redz:			equ $500
 ArtTile_BFish:			equ $530
 ArtTile_Aquis:			equ $570

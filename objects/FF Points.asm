@@ -1,5 +1,5 @@
 ; ---------------------------------------------------------------------------
-; Object 0E - points that appear when you destroy something
+; Object FF - points that appear when you destroy something
 ; ---------------------------------------------------------------------------
 
 Points:

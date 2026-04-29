@@ -473,3 +473,11 @@ dma68kToVDP macro source,dest,length,type
 ObjectLayoutBoundary macro
 		dc.w	$FFFF,$0000,$0000
     endm
+
+; macro to move the absolute value of the source in the destination
+mvabs macro source,destination
+	move.ATTRIBUTE	source,destination
+	bpl.s	.skip
+	neg.ATTRIBUTE	destination
+.skip:
+    endm
