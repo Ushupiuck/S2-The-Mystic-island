@@ -6,8 +6,9 @@ SmashObject:
 		move.b	obFrame(a0),d0
 		add.w	d0,d0
 		movea.l	obMap(a0),a3
-		adda.w	(a3,d0.w),a3
-		addq.w	#2,a3
+		adda.w	(a3,d0.w),a3	; put address of appropriate frame to a3
+		move.w	(a3)+,d1	; amount of pieces the frame consists of
+		subq.w	#1,d1
 		bset	#5,obRender(a0)
 		_move.b	obID(a0),d4
 		move.b	obRender(a0),d5
@@ -15,10 +16,9 @@ SmashObject:
 		bra.s	loc_C9CA
 ; ---------------------------------------------------------------------------
 
-loc_C9C2:
-		bsr.w	FindFreeObj
+-		bsr.w	FindNextFreeObj
 		bne.s	loc_CA1C
-		addq.w	#8,a3
+		addq.w	#8,a3	; in Sonic 3's mapping format, this is just addq.w #6,a3 due to different mapping format sizes (addq.w #5,a3 for Sonic 1)
 
 loc_C9CA:
 		move.b	#4,obRoutine(a1)
@@ -32,17 +32,7 @@ loc_C9CA:
 		move.b	obActWid(a0),obActWid(a1)
 		move.w	(a4)+,obVelX(a1)
 		move.w	(a4)+,obVelY(a1)
-		cmpa.l	a0,a1
-		bcc.s	loc_CA18
-		move.l	a0,-(sp)
-		movea.l	a1,a0
-		bsr.w	ObjectMove
-		add.w	d2,obVelY(a0)
-		movea.l	(sp)+,a0
-		bsr.w	DisplaySprite2
-
-loc_CA18:
-		dbf	d1,loc_C9C2
+		dbf	d1,-
 
 loc_CA1C:
 		move.w	#sfx_WallSmash,d0

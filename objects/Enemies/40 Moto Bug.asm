@@ -28,8 +28,7 @@ MotoBug_Init:
 		move.b	#8,obWidth(a0)
 		move.b	#$C,obColType(a0)
 		bsr.w	ObjectMoveAndFall
-		bsr.w	ObjHitFloor
-	;	jsr	(ObjHitFloor).l
+		jsr	(ObjHitFloor).l
 		tst.w	d1
 		bpl.s	.return
 		add.w	d1,obY(a0)
@@ -75,8 +74,7 @@ MotoBug_Move:
 
 MotoBug_Floor:
 		bsr.w	ObjectMove
-		bsr.w	ObjHitFloor
-	;	jsr	(ObjHitFloor).l
+		jsr	(ObjHitFloor).l
 		cmpi.w	#-8,d1
 		blt.s	MotoBug_StopMoving
 		cmpi.w	#$C,d1

@@ -91,23 +91,21 @@ loc_8D16:	; Actually "Ledge_WalkOff"! Due to how the subroutine evolved
 		; You'd support two players, the code split into two. This,
 		bsr.w	Ledge_WalkOff	; and "Ledge_Destroy"
 		subq.b	#1,ledge_timedelay(a0)
-		bne.s	locret_8D44
+		bne.s	.return
 		lea	(v_player).w,a1
-		bsr.s	sub_8D2A
+		bsr.s	.bothplayers
 		lea	(v_player2).w,a1
-
+		; fall through (as the previous label implied
 ; =============== S U B	R O U T	I N E =======================================
 
 
-sub_8D2A:
+.bothplayers:
 		btst	#3,obStatus(a1)
-		beq.s	locret_8D44
+		beq.s	.return
 		bclr	#3,obStatus(a1)
 		bclr	#5,obStatus(a1)
 		move.b	#1,obPrevAni(a1)
-
-locret_8D44:
-		rts
+.return:	rts
 ; End of function sub_8D2A
 
 ; ---------------------------------------------------------------------------

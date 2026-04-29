@@ -1,8 +1,8 @@
 ; ---------------------------------------------------------------------------
-; Object 1F - Crabmeat enemy (GHZ, SYZ)
+; Object 61 - Crabmeat enemy (GHZ, SYZ)
 ; ---------------------------------------------------------------------------
 
-Obj1F:
+Crabmeat:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	Crab_Index(pc,d0.w),d1
@@ -22,7 +22,7 @@ crab_mode	= objoff_32
 Crab_Main:	; Routine 0
 		move.b	#$10,obHeight(a0)
 		move.b	#8,obWidth(a0)
-		move.l	#Map_obj1F,obMap(a0)
+		move.l	#Map_Crab,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Crabmeat,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.w	#$180,obPriority(a0)
@@ -46,7 +46,7 @@ Crab_Action:	; Routine 2
 		move.b	ob2ndRout(a0),d0
 		move.w	.index(pc,d0.w),d1
 		jsr	.index(pc,d1.w)
-		lea	Ani_obj1F(pc),a1
+		lea	Ani_obj61(pc),a1
 		bsr.w	AnimateSprite
 		bra.w	MarkObjGone
 ; ===========================================================================
@@ -83,7 +83,7 @@ Crab_Action:	; Routine 2
 		move.b	#6,obAnim(a0)	; use firing animation
 		bsr.w	FindFreeObj
 		bne.s	.failleft
-		_move.b	#id_Obj1F,obID(a1) ; load left fireball
+		_move.b	#id_Obj61,obID(a1) ; load left fireball
 		move.b	#6,obRoutine(a1)
 		move.w	obX(a0),obX(a1)
 		subi.w	#$10,obX(a1)
@@ -93,7 +93,7 @@ Crab_Action:	; Routine 2
 .failleft:
 		bsr.w	FindFreeObj
 		bne.s	.failright
-		_move.b	#id_Obj1F,obID(a1) ; load right fireball
+		_move.b	#id_Obj61,obID(a1) ; load right fireball
 		move.b	#6,obRoutine(a1)
 		move.w	obX(a0),obX(a1)
 		addi.w	#$10,obX(a1)
@@ -183,7 +183,7 @@ Crab_Delete:	; Routine 4
 
 Crab_BallMain:	; Routine 6
 		addq.b	#2,obRoutine(a0)
-		move.l	#Map_obj1F,obMap(a0)
+		move.l	#Map_Crab,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Crabmeat,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.w	#$180,obPriority(a0)
@@ -193,7 +193,7 @@ Crab_BallMain:	; Routine 6
 		move.b	#7,obAnim(a0)
 
 Crab_BallMove:	; Routine 8
-		lea	Ani_obj1F(pc),a1
+		lea	Ani_obj61(pc),a1
 		bsr.w	AnimateSprite
 		bsr.w	ObjectMoveAndFall
 		move.w	(Camera_Max_Y_pos).w,d0
@@ -203,14 +203,14 @@ Crab_BallMove:	; Routine 8
 		bra.w	DisplaySprite
 ; ===========================================================================
 ; animation script
-Ani_obj1F:	dc.w byte_A30C-Ani_obj1F
-		dc.w byte_A30F-Ani_obj1F
-		dc.w byte_A312-Ani_obj1F
-		dc.w byte_A315-Ani_obj1F
-		dc.w byte_A31A-Ani_obj1F
-		dc.w byte_A31F-Ani_obj1F
-		dc.w byte_A324-Ani_obj1F
-		dc.w byte_A327-Ani_obj1F
+Ani_obj61:	dc.w byte_A30C-Ani_obj61
+		dc.w byte_A30F-Ani_obj61
+		dc.w byte_A312-Ani_obj61
+		dc.w byte_A315-Ani_obj61
+		dc.w byte_A31A-Ani_obj61
+		dc.w byte_A31F-Ani_obj61
+		dc.w byte_A324-Ani_obj61
+		dc.w byte_A327-Ani_obj61
 byte_A30C:	dc.b  $F,  0,afEnd
 byte_A30F:	dc.b  $F,  2,afEnd
 byte_A312:	dc.b  $F,$22,afEnd

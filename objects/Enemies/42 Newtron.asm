@@ -91,7 +91,7 @@ Newtron_Fall:
 		move.b	#$C,obColType(a0)
 +
 		bsr.w	ObjectMoveAndFall
-		bsr.w	ObjHitFloor
+		jsr	(ObjHitFloor).l
 		tst.w	d1
 		bpl.s	.return
 		add.w	d1,obY(a0)
@@ -108,7 +108,7 @@ Newtron_Fall:
 
 Newtron_ChkFloor:
 		bsr.w	ObjectMove
-		bsr.w	ObjHitFloor
+		jsr	(ObjHitFloor).l
 		cmpi.w	#-8,d1
 		blt.s	.return	; Change to ObjectMove and it'll speed up
 		cmpi.w	#$C,d1

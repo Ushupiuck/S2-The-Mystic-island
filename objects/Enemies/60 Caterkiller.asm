@@ -15,18 +15,19 @@ Cat_Index:	dc.w Cat_Main-Cat_Index
 		dc.w Cat_BodySeg1-Cat_Index
 		dc.w Cat_Delete-Cat_Index
 		dc.w Cat_Scatter-Cat_Index
-
+; ===========================================================================
 cat_wait_time	= obAniFrame		; 1 byte; delay between moves
 cat_mode	= obAnim		; 1 byte; bit 4 = segment up/down, bit 7 = animate
-cat_inertia	= objoff_2A		; 2 bytes; Needed to avoid overwriting it's own obColType & obColProp
 cat_floormap	= objoff_2C		; $C bytes; 16 packed 6-bit floor entries
 cat_parent	= objoff_38		; 4 bytes; parent object (high byte = segment index)
 cat_segment_pos	= cat_parent		; high byte; current position in floor buffer
-
+cat_inertia	= objoff_3C		; 2 bytes; Needed to avoid overwriting it's own obColType & obColProp
+; ===========================================================================
+; packed flat entries for 4 slots: $20,$82,$08
+; ===========================================================================
 cat_floor_bias	= 8			; -8..+11 -> 0..19
 cat_floor_flat	= cat_floor_bias	; encoded 0-height delta
 cat_floor_turn	= 20			; turn marker
-; packed flat entries for 4 slots: $20,$82,$08
 ; ===========================================================================
 
 Cat_Main:	; Routine 0
@@ -170,7 +171,7 @@ Cat_Index2:
 		move.w	#$800,obVelY(a0)
 .chkfloor:
 		bsr.w	ObjectFall
-		bsr.w	ObjHitFloor
+		jsr	(ObjHitFloor).l
 		tst.w	d1
 		bpl.s	.stillair
 		add.w	d1,obY(a0)
@@ -217,7 +218,7 @@ loc_16B02:
 		swap	d3
 		cmp.w	obX(a0),d3
 		beq.s	.notmoving
-		bsr.w	ObjHitFloor
+		jsr	(ObjHitFloor).l
 		cmpi.w	#-8,d1
 		blt.s	.turn
 		cmpi.w	#$C,d1
@@ -380,7 +381,7 @@ loc_16C64:
 		; at high speed causes Sonic to be hurt.
 
 		; Has the head been destroyed?
-		_cmpi.b	#id_Obj0F,obID(a1)
+		_cmpi.b	#id_ObjFC,obID(a1)
 		beq.s	.delete
 		; Is the parent going to delete itself?
 		cmpi.b	#$A,obRoutine(a1)
