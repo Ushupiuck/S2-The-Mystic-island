@@ -1136,7 +1136,10 @@ f_demo:			ds.w	1			; demo mode flag (0 = no; 1 = yes; $8001 = ending)
 v_demonum:		ds.w	1			; demo level number (not the same as the level number)
 v_creditsnum:		ds.w	1			; credits index number
 v_obj1F:		ds.b	6			; conveyor belt (Object 1F) variables
-			ds.b	$72			; free
+v_ani1_prev:		ds.b	1			; synchronised sprite animation 1 - previous frame
+v_ani2_prev:		ds.b	1			; synchronised sprite animation 2 - previous frame
+v_ani3_prev:		ds.b	1			; synchronised sprite animation 3 - previous frame
+			ds.b	$6F			; free
 v_end:
 	if * > 0	; don't declare more space than the RAM can contain!
 		fatal "The RAM variable declarations are too large by $\{*} bytes."

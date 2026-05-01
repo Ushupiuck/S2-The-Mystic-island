@@ -609,7 +609,22 @@ Vint_S1SS:
 		bsr.w	ProcessDMAQueue
 		startZ80
 		bsr.w	PalCycle_S1SS
-		bsr.w	SS_LoadWalls
+		moveq	#0,d0
+		move.b	(v_ssangle).l,d0	; get the Special Stage angle
+		lsr.b	#2,d0			; divide by four so it can be used as frame ID
+		andi.w	#$F,d0			; mask to a maximum of 16 frames
+		cmp.b	(v_ssangleprev).w,d0	; does the modified angle match the recorded value?
+		beq.w	Do_ControllerPal.return	; if so, branch
+		move.b	d0,(v_ssangleprev).w	; record the modified angle for future comparison
+
+		move.l	#Art_SSWalls,d1		; load wall art
+		lsl.w	#8,d0			; multiply by $200 because...
+		add.w	d0,d0			; ...tile_size ($20) * 16 sprites (extra add because lsl 9 doesn't work)
+		add.l	d0,d1			; d1 = offset to current wall sprite for angle
+
+		move.w	#ArtTile_SS_Wall*tile_size,d2	; VRAM destination
+		move.w	#(16*tile_size)/2,d3		; 16 tiles * 32 bytes = $200 bytes = $100 words
+		bsr.w	QueueDMATransfer
 		tst.w	(v_generictimer).w
 		beq.w	Set_Kos_Bookmark
 		subq.w	#1,(v_generictimer).w
@@ -660,23 +675,12 @@ Vint_SSResults:
 		bsr.w	ProcessDMAQueue
 		startZ80
 		bsr.w	ProcessDPLC
-		bsr.s	SS_LoadWalls
-		tst.w	(v_generictimer).w
-		beq.w	Set_Kos_Bookmark
-		subq.w	#1,(v_generictimer).w
-		bra.w	Set_Kos_Bookmark
-
-; ---------------------------------------------------------------------------
-; Subroutine to dynamically load wall graphics into VRAM
-; ---------------------------------------------------------------------------
-
-SS_LoadWalls:
 		moveq	#0,d0
 		move.b	(v_ssangle).l,d0	; get the Special Stage angle
 		lsr.b	#2,d0			; divide by four so it can be used as frame ID
 		andi.w	#$F,d0			; mask to a maximum of 16 frames
 		cmp.b	(v_ssangleprev).w,d0	; does the modified angle match the recorded value?
-		beq.s	.return			; if so, branch
+		beq.w	Do_ControllerPal.return	; if so, branch
 		move.b	d0,(v_ssangleprev).w	; record the modified angle for future comparison
 
 		move.l	#Art_SSWalls,d1		; load wall art
@@ -686,9 +690,11 @@ SS_LoadWalls:
 
 		move.w	#ArtTile_SS_Wall*tile_size,d2	; VRAM destination
 		move.w	#(16*tile_size)/2,d3		; 16 tiles * 32 bytes = $200 bytes = $100 words
-		jmp	(QueueDMATransfer).l
-.return:	rts
-; End of function SS_LoadWalls
+		bsr.w	QueueDMATransfer
+		tst.w	(v_generictimer).w
+		beq.w	Set_Kos_Bookmark
+		subq.w	#1,(v_generictimer).w
+		bra.w	Set_Kos_Bookmark
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
@@ -708,9 +714,9 @@ Do_ControllerPal:
 .waterbelow:
 		writeVRAM	Sprite_Table,vram_sprites
 		writeVRAM	v_hscrolltablebuffer,vram_hscroll
-		bsr.w	Process_DMA_Queue
+		bsr.w	ProcessDMAQueue
 		startZ80
-		rts
+.return:	rts
 ; End of function Do_ControllerPal
 
 ; ||||||||||||||| E N D   O F   V - I N T |||||||||||||||||||||||||||||||||||
@@ -1183,9 +1189,7 @@ loc_17D2:
 
 QuickPLC:
 		move.w	(a1)+,d1
-
-.load:
-		movea.l	(a1)+,a0
+.load:		movea.l	(a1)+,a0
 		moveq	#0,d0
 		move.w	(a1)+,d0
 		lsl.l	#2,d0
@@ -1219,7 +1223,6 @@ KosPlusArt_To_VDP:
 		bsr.w	QueueDMATransfer	; transfer *Transfer Length* of data from *Source Address* to *Destination Address*
 		movea.l	a3,a1		; restore a1
 		rts
-
 ; ===========================================================================
 		include "_inc/KosinskiPlus.asm"
 		include "_inc/DMA Queue.asm"
@@ -2320,9 +2323,9 @@ loc_3570:
 		cmpi.w	#id_SS<<8,d0
 		bne.s	LevelSelect_Level
 		move.w	#BonusStage,(v_gamemode).w
-		clr.w	(Current_ZoneAndAct).w
-		move.b	#3,(v_lives).w
 		moveq	#0,d0
+		move.w	d0,(Current_ZoneAndAct).w
+		move.b	#3,(v_lives).w
 		move.w	d0,(v_rings).w
 		move.l	d0,(v_time).w
 		move.l	d0,(v_score).w
@@ -2483,10 +2486,10 @@ loc_3736:
 
 loc_3740:
 		cmpi.w	#$14,(v_levselitem).w
-		bne.w	locret_377A
+		bne.w	LevSel_ChgSnd.return
 		move.b	(v_jpadpress1).w,d1
 		andi.b	#btnL+btnR,d1
-		beq.w	locret_377A
+		beq.w	LevSel_ChgSnd.return
 		move.w	(v_levselsound).w,d0
 		btst	#bitL,d1
 		beq.s	loc_3762
@@ -2520,11 +2523,11 @@ LevelSelect_TextLoad:
 		move.w	#$8680,d3
 		moveq	#$15-1,d1
 
-loc_3794:
-		move.l	d4,4(a6)
+.loop:		move.l	d4,4(a6)
 		bsr.s	LevSel_ChgLine
 		addi.l	#$800000,d4
-		dbf	d1,loc_3794
+
+		dbf	d1,.loop
 		moveq	#0,d0
 		move.w	(v_levselitem).w,d0
 		move.w	d0,d1
@@ -2563,14 +2566,12 @@ LevSel_DrawSnd:
 LevSel_ChgSnd:
 		andi.w	#$F,d0
 		cmpi.b	#$A,d0		; is digit $A-$F?
-		blo.s	LevSel_Numb	; if not, branch
+		blo.s	+		; if not, branch
 		addq.b	#7,d0		; use alpha characters
-
-LevSel_Numb:
++
 		add.w	d3,d0
 		move.w	d0,(a6)
-locret_377A:
-		rts
+.return:	rts
 ; End of function LevSel_ChgSnd
 
 
@@ -2730,7 +2731,7 @@ Level_TtlCardLoop:
 Level_SkipTtlCard:
 		moveq	#palid_SonicTails,d0
 		bsr.w	PalLoad1
-		bsr.w	LoadRingFrame
+		bsr.w	InitRingFrame
 		bsr.w	LevelSizeLoad
 		bsr.w	DeformBGLayer
 		bset	#2,(Scroll_flags).w
@@ -3227,11 +3228,19 @@ Sync4:
 ; Queue ring frame graphics loading
 ; ---------------------------------------------------------------------------
 
+InitRingFrame:
+		st.b	(v_ani1_prev).w			; Make sure initial frame art loads
+		st.b	(v_ani2_prev).w
+		st.b	(v_ani3_prev).w
+
 LoadRingFrame:
-		cmpi.b	#6,(v_player+obRoutine).w	; Is Sonic dead?
-		bhs.w	.noringloss			; If so, branch
+	;	cmpi.b	#6,(v_player+obRoutine).w	; Is Sonic dead?
+	;	bhs.s	Sync4.return			; If so, branch
 		moveq	#0,d1				; Get ring frame offset for regular rings
 		move.b	(v_ani1_frame).w,d1
+		cmp.b	(v_ani1_prev).w,d1		; Has it changed?
+		beq.s	.noring				; If not, branch
+		move.b	d1,(v_ani1_prev).w		; Mark frame's art as loaded
 		lsl.l	#7,d1				; Each ring frame takes $80 bytes, so multiply by $80
 		addi.l	#Art_Ring,d1			; Queue a DMA transfer for this ring frame
 		move.w	#ArtTile_Ring*tile_size,d2
@@ -3242,9 +3251,9 @@ LoadRingFrame:
 		move.w	#ArtTile_SS_Rings*tile_size,d2	; use a different VRAM location
 .skip:		moveq	#$80/2,d3
 		bsr.w	QueueDMATransfer		; (or DMA_68KtoVRAM)
-
+.noring:
 		cmpi.w	#BonusStage,(v_gamemode).w	; Are we in a special stage?
-		beq.s	.noringloss			; If so, branch
+		beq.s	.end				; If so, branch
 
 		tst.b	(v_gfxbigring).w		; Is a there a special stage ring?
 		beq.s	.nossring			; If not, branch
@@ -3257,6 +3266,9 @@ LoadRingFrame:
 .loadssring:
 		moveq	#0,d1				; Get ring frame offset for special stage rings
 		move.b	(v_ani2_frame).w,d1
+		cmp.b	(v_ani2_prev).w,d1		; Has it changed?
+		beq.s	.nossring			; If not, branch
+		move.b	d1,(v_ani2_prev).w		; Mark frame's art as loaded
 		lsl.l	#8,d1				; Each giant ring frame takes $800 bytes, so multiply by $800
 		lsl.l	#3,d1
 		add.l	d2,d1				; Queue a DMA transfer for this ring frame
@@ -3267,14 +3279,15 @@ LoadRingFrame:
 .nossring:
 		moveq	#0,d1				; Get ring frame offset for lost rings
 		move.b	(v_ani3_frame).w,d1
+		cmp.b	(v_ani3_prev).w,d1		; Has it changed?
+		beq.s	.end				; If not, branch
+		move.b	d1,(v_ani3_prev).w		; Mark frame's art as loaded
 		lsl.l	#7,d1				; Each ring frame takes $80 bytes, so multiply by $80
 		add.l	#Art_Ring,d1			; Queue a DMA transfer for this ring frame
 		move.w	#ArtTile_RingLoss*tile_size,d2
 		moveq	#$80/2,d3
 		bra.w	QueueDMATransfer		; (or DMA_68KtoVRAM)
-
-.noringloss:
-		rts
+.end:		rts
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
@@ -3512,7 +3525,7 @@ BonusStage:
 		bsr.w	QuickKosPLC
 		lea	(PLC_S1SpecialStage).l,a1
 		bsr.w	QuickPLC
-		bsr.w	LoadRingFrame
+		bsr.w	InitRingFrame
 		sf	(f_wtr_state).w
 		clr.w	(Level_Inactive_flag).w
 		moveq	#palid_Special,d0
@@ -3560,7 +3573,7 @@ SS_MainLoop:
 		move.w	(v_jpadhold1).w,(v_jpadholdlogical).w
 		jsr	(ExecuteObjects).l
 		jsr	(BuildSprites).l
-		bsr.w	LoadRingFrame
+		bsr.w	InitRingFrame
 		bsr.w	S1SS_ShowLayout
 		bsr.w	S1SS_BgAnimate
 		cmpi.w	#BonusStage,(v_gamemode).w ; is game mode $10 (special stage)?
@@ -8306,8 +8319,8 @@ ExecuteObjects:
 		lea	(v_objspace).w,a0
 		moveq	#(v_objend-v_objspace)/object_size-1,d7	; run the first $80 objects out of levels
 		moveq	#0,d0
-		cmpi.b	#6,(v_player+obRoutine).w	; is Sonic dead?
-		bhs.s	ExecuteObjectsWhenPlayerIsDead	; if yes, branch
+	;	cmpi.b	#6,(v_player+obRoutine).w	; is Sonic dead?
+	;	bhs.s	ExecuteObjectsWhenPlayerIsDead	; if yes, branch
 
 ; ---------------------------------------------------------------------------
 ; This is THE place where each individual object's code gets called from
@@ -8332,29 +8345,29 @@ RunObject:
 ; ---------------------------------------------------------------------------
 ; this skips certain objects to make enemies and things pause when Sonic dies
 ; loc_CB5E:
-ExecuteObjectsWhenPlayerIsDead:
-		moveq	#(v_lvlobjspace-v_objspace)/object_size-1,d7
-		bsr.s	RunObject
-		moveq	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d7
+; ExecuteObjectsWhenPlayerIsDead:
+	;	moveq	#(v_lvlobjspace-v_objspace)/object_size-1,d7
+	;	bsr.s	RunObject
+	;	moveq	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d7
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 ; loc_CB64:
-ExecuteObjectsDisplayOnly:
-		moveq	#0,d0
-		move.b	obID(a0),d0		; get the object's ID
-		beq.s	+			; if it's obj00, skip it
-		tst.b	obRender(a0)		; should we render it?
-		bpl.s	+			; if not, skip it
-		pea	+(pc)			; This is an optimisation to avoid the need for extra branches: it makes it so '+' will be executed after 'DisplaySprite' or 'DisplaySprite3' return.
-		btst	#6,obRender		; is the compound sprites flag set?
-		beq.w	DisplaySprite		; if not, branch
-		move.w	#$200,d0		; override priority
-		bra.w	DisplaySprite3		; Display the object using d0
-+
-		lea	next_object(a0),a0	; load obj address
-		dbf	d7,ExecuteObjectsDisplayOnly
-		rts
+; ExecuteObjectsDisplayOnly:
+	;	moveq	#0,d0
+	;	move.b	obID(a0),d0		; get the object's ID
+	;	beq.s	+			; if it's obj00, skip it
+	;	tst.b	obRender(a0)		; should we render it?
+	;	bpl.s	+			; if not, skip it
+	;	pea	+(pc)			; This is an optimisation to avoid the need for extra branches: it makes it so '+' will be executed after 'DisplaySprite' or 'DisplaySprite3' return.
+	;	btst	#6,obRender		; is the compound sprites flag set?
+	;	beq.w	DisplaySprite		; if not, branch
+	;	move.w	#$200,d0		; override priority
+	;	bra.w	DisplaySprite3		; Display the object using d0
+;+
+	;	lea	next_object(a0),a0	; load obj address
+	;	dbf	d7,ExecuteObjectsDisplayOnly
+	;	rts
 ; End of function ExecuteObjects
 
 ; ===========================================================================
@@ -16738,12 +16751,12 @@ AnimPatMaps:
 		dc.w APM_None-AnimPatMaps	; GHZ
 		dc.w APM_None-AnimPatMaps	; LZ
 		dc.w APM_CPZ-AnimPatMaps	; CPZ
-		dc.w APM_EHZ-AnimPatMaps	; EHZ
+		dc.w APM_None-AnimPatMaps	; EHZ
 		dc.w APM_HPZ-AnimPatMaps	; HPZ
-		dc.w APM_EHZ-AnimPatMaps	; HTZ
+		dc.w APM_None-AnimPatMaps	; HTZ
 		dc.w APM_None-AnimPatMaps	; 06
 		dc.w APM_None-AnimPatMaps	; 07
-		dc.w APM_HPZ-AnimPatMaps	; 08
+		dc.w APM_None-AnimPatMaps	; 08
 		dc.w APM_None-AnimPatMaps	; 09
 		dc.w APM_None-AnimPatMaps	; 0A
 		dc.w APM_None-AnimPatMaps	; 0B
@@ -17934,10 +17947,13 @@ Nem_GroundExplosion:
 ; Uncompressed Assets
 ; ---------------------------------------------------------------------------
 	;	align $100
+	;	align $8000
 Art_Sonic:	binclude	"art/uncompressed/Sonic's art.bin"
 	;	align $100
+	;	align $8000
 Art_Tails:	binclude	"art/uncompressed/Tails' art.bin"
 Art_SplashDust:	binclude	"art/uncompressed/Dust and water splash.bin"
+		align $100
 Art_Ring:	binclude	"art/uncompressed/Ring.bin"
 Art_BigRing:	binclude	"art/uncompressed/Giant Ring.bin"
 Art_BigFlash:	binclude	"art/uncompressed/Giant Ring Flash.bin"
