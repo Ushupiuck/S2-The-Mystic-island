@@ -1,7 +1,6 @@
 SongNames:	offsetTable
 	offsetTableEntry.w	MusNam_Null
 	offsetTableEntry.w	MusNam_TestSong1
-	offsetTableEntry.w	MusNam_TestSong2
 	offsetTableEntry.w	MusNam_Title
 	offsetTableEntry.w	MusNam_2PResult
 	offsetTableEntry.w	MusNam_Options
@@ -61,7 +60,6 @@ SongNames:	offsetTable
 
 MusNam_Null:	dc.b 0,' '
 MusNam_TestSong1:	songtext	"EGG UTOPIA"
-MusNam_TestSong2:	songtext	"TIDAL TEMPEST PAST"
 MusNam_Title:	songtext	"TITLE SCREEN"
 MusNam_2PResult:	songtext	"2P RESULT"
 MusNam_Options:	songtext	"OPTIONS"

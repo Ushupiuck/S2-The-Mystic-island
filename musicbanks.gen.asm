@@ -10,7 +10,6 @@ Mus_Test6:	include "sound/music/45.asm" ; $119C bytes
 Mus_RRZ1:	include "sound/music/RRZ1.asm" ; $1158 bytes
 Mus_RRZ2:	include "sound/music/RRZ2.asm" ; $D84 bytes
 Mus_Title:	BINCLUDE "sound/music/Title screen_cmp.bin" ; $1CA bytes
-Mus_TestSong2:	include "sound/music/TTPast.asm" ; $0 bytes
 
 	finishBank
 

@@ -1,6 +1,5 @@
 zMasterPlaylist:
 	zmakePlaylistEntry	Mus_TestSong1,0
-	zmakePlaylistEntry	Mus_TestSong2,musprop_uncompressed
 	zmakePlaylistEntry	Mus_Title,0
 	zmakePlaylistEntry	Mus_2PResult,0
 	zmakePlaylistEntry	Mus_Options,0
