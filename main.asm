@@ -9372,6 +9372,7 @@ BuildSprites_DrawSprite:
 		move.b	obFrame(a0),d1
 		add.w	d1,d1
 		adda.w	(a1,d1.w),a1
+		moveq	#0,d1
 		move.w	(a1)+,d1
 		subq.w	#1,d1	; get number of pieces
 		bmi.s	++	; if there are 0 pieces, branch
@@ -17948,7 +17949,7 @@ Nem_GroundExplosion:
 ; ---------------------------------------------------------------------------
 	;	align $100
 	;	align $8000
-Art_Sonic:	binclude	"art/uncompressed/Sonic's art.bin"
+Art_Sonic:	binclude	"art/uncompressed/Sonic's art.unc"
 	;	align $100
 	;	align $8000
 Art_Tails:	binclude	"art/uncompressed/Tails' art.bin"
@@ -19637,8 +19638,10 @@ SpriteTerminator:
 ; -------------------------------------------------------------------------------
 ; sprite mappings
 ; -------------------------------------------------------------------------------
-Map_Sonic:	include		"mappings/sprite/Sonic.asm"
-SonicDynPLC:	include		"mappings/spriteDPLC/Sonic.asm"
+Map_Sonic:	binclude	"mappings/sprite/Sonic mappings.bin"
+		even
+SonicDynPLC:	binclude	"mappings/spriteDPLC/Sonic DPLCs.bin"
+		even
 Map_Tails:	include		"mappings/sprite/Tails.asm"
 TailsDynPLC:	include		"mappings/spriteDPLC/Tails.asm"
 Map_Obj03:	binclude	"mappings/sprite/Patch switcher.bin"

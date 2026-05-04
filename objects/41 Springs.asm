@@ -203,9 +203,9 @@ Obj41_Strengths:
 ; ===========================================================================
 ; loc_E302:
 Obj41_Up:
-		move.w	#$1B,d1
-		move.w	#8,d2
-		move.w	#$10,d3
+		moveq	#$1B,d1
+		moveq	#8,d2
+		moveq	#$10,d3
 		move.w	obX(a0),d4
 		lea	(v_player).w,a1
 		moveq	#3,d6
@@ -248,18 +248,18 @@ loc_E382:
 		btst	#0,d0
 		beq.s	loc_E3C2
 		move.w	#1,obInertia(a1)
-		move.b	#1,objoff_27(a1)
+		move.b	#1,flip_angle(a1)
 		move.b	#0,obAnim(a1)
-		move.b	#0,objoff_2C(a1)
-		move.b	#4,objoff_2D(a1)
+		move.b	#0,flips_remaining(a1)
+		move.b	#4,flip_speed(a1)
 		btst	#1,d0
 		bne.s	loc_E3B2
-		move.b	#1,objoff_2C(a1)
+		move.b	#1,flips_remaining(a1)
 
 loc_E3B2:
 		btst	#0,obStatus(a1)
 		beq.s	loc_E3C2
-		neg.b	objoff_27(a1)
+		neg.b	flip_angle(a1)
 		neg.w	obInertia(a1)
 
 loc_E3C2:
@@ -283,9 +283,9 @@ loc_E3EA:
 ; ===========================================================================
 ; loc_E3F4:
 Obj41_Horizontal:
-		move.w	#$13,d1
-		move.w	#$E,d2
-		move.w	#$F,d3
+		moveq	#$13,d1
+		moveq	#$E,d2
+		moveq	#$F,d3
 		move.w	obX(a0),d4
 		lea	(v_player).w,a1
 		moveq	#3,d6
@@ -358,18 +358,18 @@ loc_E4C8:
 		btst	#0,d0
 		beq.s	loc_E508
 		move.w	#1,obInertia(a1)
-		move.b	#1,objoff_27(a1)
+		move.b	#1,flip_angle(a1)
 		clr.b	obAnim(a1)
-		move.b	#1,objoff_2C(a1)
-		move.b	#8,objoff_2D(a1)
+		move.b	#1,flips_remaining(a1)
+		move.b	#8,flip_speed(a1)
 		btst	#1,d0
 		bne.s	loc_E4F8
-		move.b	#3,objoff_2C(a1)
+		move.b	#3,flips_remaining(a1)
 
 loc_E4F8:
 		btst	#0,obStatus(a1)
 		beq.s	loc_E508
-		neg.b	objoff_27(a1)
+		neg.b	flip_angle(a1)
 		neg.w	obInertia(a1)
 
 loc_E508:
@@ -466,9 +466,9 @@ sub_E54C:
 ; ===========================================================================
 ; loc_E606:
 Obj41_Down:
-		move.w	#$1B,d1
-		move.w	#8,d2
-		move.w	#$10,d3
+		moveq	#$1B,d1
+		moveq	#8,d2
+		moveq	#$10,d3
 		move.w	obX(a0),d4
 		lea	(v_player).w,a1
 		moveq	#3,d6
@@ -492,9 +492,6 @@ loc_E642:
 		bra.w	AnimateSprite
 ; ===========================================================================
 
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
-
 sub_E64E:
 		move.w	#$100,obAnim(a0)
 		subq.w	#8,obY(a1)
@@ -508,18 +505,18 @@ loc_E66E:
 		btst	#0,d0
 		beq.s	loc_E6AE
 		move.w	#1,obInertia(a1)
-		move.b	#1,objoff_27(a1)
+		move.b	#1,flip_angle(a1)
 		clr.b	obAnim(a1)
-		clr.b	objoff_2C(a1)
-		move.b	#4,objoff_2D(a1)
+		clr.b	flips_remaining(a1)
+		move.b	#4,flip_speed(a1)
 		btst	#1,d0
 		bne.s	loc_E69E
-		move.b	#1,objoff_2C(a1)
+		move.b	#1,flips_remaining(a1)
 
 loc_E69E:
 		btst	#0,obStatus(a1)
 		beq.s	loc_E6AE
-		neg.b	objoff_27(a1)
+		neg.b	flip_angle(a1)
 		neg.w	obInertia(a1)
 
 loc_E6AE:
@@ -546,8 +543,8 @@ loc_E6D6:
 ; ===========================================================================
 ; loc_E6F2:
 Obj41_DiagonallyUp:
-		move.w	#$1B,d1
-		move.w	#$10,d2
+		moveq	#$1B,d1
+		moveq	#$10,d2
 		move.w	obX(a0),d4
 		lea	Obj41_SlopeData_DiagUp(pc),a2
 		lea	(v_player).w,a1
@@ -571,9 +568,6 @@ loc_E732:
 		lea	Ani_obj41(pc),a1
 		bra.w	AnimateSprite
 ; ===========================================================================
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
 
 sub_E73E:
 		btst	#0,obStatus(a0)
@@ -615,18 +609,18 @@ loc_E79A:
 		btst	#0,d0
 		beq.s	loc_E7F6
 		move.w	#1,obInertia(a1)
-		move.b	#1,objoff_27(a1)
+		move.b	#1,flip_angle(a1)
 		clr.b	obAnim(a1)
-		move.b	#1,objoff_2C(a1)
-		move.b	#8,objoff_2D(a1)
+		move.b	#1,flips_remaining(a1)
+		move.b	#8,flip_speed(a1)
 		btst	#1,d0
 		bne.s	loc_E7E6
-		move.b	#3,objoff_2C(a1)
+		move.b	#3,flips_remaining(a1)
 
 loc_E7E6:
 		btst	#0,obStatus(a1)
 		beq.s	loc_E7F6
-		neg.b	objoff_27(a1)
+		neg.b	flip_angle(a1)
 		neg.w	obInertia(a1)
 
 loc_E7F6:
@@ -650,8 +644,8 @@ loc_E81E:
 ; ===========================================================================
 ; loc_E828:
 Obj41_DiagonallyDown:
-		move.w	#$1B,d1
-		move.w	#$10,d2
+		moveq	#$1B,d1
+		moveq	#$10,d2
 		move.w	obX(a0),d4
 		lea	Obj41_SlopeData_DiagDown(pc),a2
 		lea	(v_player).w,a1
@@ -676,9 +670,6 @@ loc_E864:
 		bra.w	AnimateSprite
 ; ===========================================================================
 
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
-
 sub_E870:
 		move.w	#$500,obAnim(a0)
 		move.w	objoff_30(a0),obVelY(a1)
@@ -701,18 +692,18 @@ loc_E8AC:
 		btst	#0,d0
 		beq.s	loc_E902
 		move.w	#1,obInertia(a1)
-		move.b	#1,objoff_27(a1)
+		move.b	#1,flip_angle(a1)
 		clr.b	obAnim(a1)
-		move.b	#1,objoff_2C(a1)
-		move.b	#8,objoff_2D(a1)
+		move.b	#1,flips_remaining(a1)
+		move.b	#8,flip_speed(a1)
 		btst	#1,d0
 		bne.s	loc_E8F2
-		move.b	#3,objoff_2C(a1)
+		move.b	#3,flips_remaining(a1)
 
 loc_E8F2:
 		btst	#0,obStatus(a1)
 		beq.s	loc_E902
-		neg.b	objoff_27(a1)
+		neg.b	flip_angle(a1)
 		neg.w	obInertia(a1)
 
 loc_E902:

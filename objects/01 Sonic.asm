@@ -1248,7 +1248,7 @@ loc_104B8:
 		move.b	d0,obAngle(a0)
 
 loc_104BC:
-		move.b	objoff_27(a0),d0
+		move.b	flip_angle(a0),d0
 		beq.s	.return
 		tst.w	obInertia(a0)
 		bmi.s	loc_104E0
@@ -1260,7 +1260,7 @@ loc_104BC:
 		moveq	#0,d0
 		move.b	d0,objoff_2C(a0)
 +
-		move.b	d0,objoff_27(a0)
+		move.b	d0,flip_angle(a0)
 .return:	rts
 ; ---------------------------------------------------------------------------
 
@@ -1274,7 +1274,7 @@ loc_104E0:
 		move.b	d0,objoff_2C(a0)
 
 loc_104F6:
-		move.b	d0,objoff_27(a0)
+		move.b	d0,flip_angle(a0)
 		rts
 ; End of function Sonic_JumpAngle
 
@@ -1518,7 +1518,7 @@ loc_10712:
 loc_10748:
 		clr.b	objoff_3C(a0)
 		clr.w	(v_itembonus).w
-		clr.b	objoff_27(a0)
+		clr.b	flip_angle(a0)
 		rts
 ; End of function Sonic_ResetOnFloor
 
@@ -1640,9 +1640,7 @@ Obj01_ResetLevel:
 		subq.w	#1,objoff_3A(a0)
 		bne.s	.return
 		move.w	#1,(Level_Inactive_flag).w
-
-.return:
-		rts
+.return:	rts
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -1666,7 +1664,7 @@ SAnim_Do:
 		add.w	d0,d0
 		adda.w	(a1,d0.w),a1		; jump to appropriate animation	script
 		move.b	(a1),d0
-		bmi.s	SAnim_Do2		; if animation is walk/run/roll/jump, branch
+		bmi.s	SAnim_WalkRun		; if animation is walk/run/roll/jump, branch
 		move.b	obStatus(a0),d1
 		andi.b	#1,d1
 		andi.b	#$FC,obRender(a0)
@@ -1676,23 +1674,20 @@ SAnim_Do:
 		move.b	d0,obTimeFrame(a0)	; load frame duration
 		; fall through
 ; -------------------------------------------------------------------------
-
-SAnim_WalkRun:
+SAnim_Do2:
 		moveq	#0,d1
 		move.b	obAniFrame(a0),d1	; load current frame number
 		move.b	1(a1,d1.w),d0		; read sprite number from script
 		beq.s	SAnim_Next		; If it's a frame ID, branch
 		bpl.s	SAnim_Next
-		cmpi.b	#$FD,d0			; is it a flag from FC to FF?
-;		bhs.s	SAnim_End_FF		; MJ: if so, branch to flag routines
-		bge.s	SAnim_End_FF		; MJ: if so, branch to flag routines
+		cmpi.b	#afChange,d0			; is it a flag from FC to FF?
+		bhs.s	SAnim_End_FF		; MJ: if so, branch to flag routines
+	;	bge.s	SAnim_End_FF		; MJ: if so, branch to flag routines
 
 SAnim_Next:
 		move.b	d0,obFrame(a0)		; load sprite number
 		addq.b	#1,obAniFrame(a0)	; next frame number
-
-SAnim_Delay:
-		rts
+SAnim_Delay:	rts
 ; ---------------------------------------------------------------------------
 SAnim_End_FF:
 		addq.b	#1,d0			; is the end flag = $FF?
@@ -1714,218 +1709,312 @@ SAnim_End_FD:
 		addq.b	#1,d0			; is the end flag = $FD?
 		bne.s	SAnim_End		; if not, branch
 		move.b	2(a1,d1.w),obAnim(a0)	; read next byte, run that animation
-
-SAnim_End:
-		rts
+SAnim_End:	rts
 ; ---------------------------------------------------------------------------
 
-SAnim_Do2:
-		subq.b	#1,obTimeFrame(a0)
-		bpl.s	SAnim_End
-		addq.b	#1,d0
-		bne.w	loc_10A44
-		moveq	#0,d0
-		move.b	objoff_27(a0),d0
-		bne.w	loc_109EA
+SAnim_WalkRun:
+		addq.b	#1,d0		; is the start flag = $FF?
+		bne.w	SAnim_Roll	; if not, branch
+		moveq	#0,d0		; is animation walking/running?
+		move.b	flip_angle(a0),d0; if not, branch
+		bne.w	SAnim_Tumble
 		moveq	#0,d1
-		move.b	obAngle(a0),d0
+		move.b	obAngle(a0),d0	; get Sonic's angle
+		bmi.s	+
+		beq.s	+
+		subq.b	#1,d0
++
 		move.b	obStatus(a0),d2
-		andi.b	#1,d2
-		bne.s	loc_10984
-		not.b	d0
-
-loc_10984:
-		addi.b	#$10,d0
-		bpl.s	loc_1098C
-		moveq	#3,d1
-
-loc_1098C:
-		andi.b	#$FC,obRender(a0)
+		andi.b	#1<<status.player.x_flip,d2	; is Sonic mirrored horizontally?
+		bne.s	+				; if yes, branch
+		not.b	d0				; reverse angle
++
+		addi.b	#$10,d0		; add $10 to angle
+		bpl.s	+		; if angle is $0-$7F, branch
+		moveq	#1<<render_flags.x_flip|1<<render_flags.y_flip,d1
++
+		andi.b	#~(1<<render_flags.x_flip|1<<render_flags.y_flip),obRender(a0)
 		eor.b	d1,d2
 		or.b	d2,obRender(a0)
-		btst	#5,obStatus(a0)
-		bne.w	loc_10A88
+		btst	#status.player.pushing,obStatus(a0)
+		bne.w	SAnim_Push
 		lsr.b	#4,d0
 		andi.b	#6,d0
-		move.w	obInertia(a0),d2
-		bpl.s	loc_109B0
-		neg.w	d2
-
-loc_109B0:
-		lea	SonicAni_Run(pc),a1
+		mvabs.w	obInertia(a0),d2
+		btst	#status_secondary.sliding,obStatusSecondary(a0)
+		beq.s	+
+		add.w	d2,d2
++
+	;	tst.b	(Super_Sonic_flag).w
+	;	bne.s	SAnim_Super
+		lea	SonAni_Run(pc),a1
 		cmpi.w	#$600,d2
-		bhs.s	loc_109C2
-		lea	SonicAni_Walk(pc),a1
-
-loc_109C2:
-		move.b	d0,d1
-		lsr.b	#1,d1
-		add.b	d1,d0
+		bhs.s	+
+		lea	SonAni_Walk(pc),a1
 		add.b	d0,d0
++
 		add.b	d0,d0
 		move.b	d0,d3
+		moveq	#0,d1
+		move.b	obAniFrame(a0),d1
+		move.b	1(a1,d1.w),d0
+		cmpi.b	#-1,d0
+		bne.s	+
+		clr.b	obAniFrame(a0)
+		move.b	1(a1),d0
++
+		move.b	d0,obFrame(a0)
+		add.b	d3,obFrame(a0)
+		subq.b	#1,obTimeFrame(a0)
+		bpl.s	.return
 		neg.w	d2
 		addi.w	#$800,d2
-		bpl.s	loc_109D8
+		bpl.s	+
 		moveq	#0,d2
-
-loc_109D8:
++
 		lsr.w	#8,d2
-		lsr.w	#1,d2	; divide by 512
 		move.b	d2,obTimeFrame(a0)
-		bsr.w	SAnim_WalkRun
-		add.b	d3,obFrame(a0)
-		rts
+		addq.b	#1,obAniFrame(a0)
+.return:	rts
 ; ---------------------------------------------------------------------------
 
-loc_109EA:
-		move.b	objoff_27(a0),d0
+SAnim_Tumble:
+		move.b	flip_angle(a0),d0
 		moveq	#0,d1
 		move.b	obStatus(a0),d2
 		andi.b	#1,d2
-		bne.s	loc_10A1E
-		andi.b	#$FC,obRender(a0)
-		moveq	#0,d2
-		or.b	d2,obRender(a0)
+		bne.s	SAnim_Tumble_Left
+		andi.b	#~(1<<render_flags.x_flip|1<<render_flags.y_flip),obRender(a0)
 		addi.b	#$B,d0
 		divu.w	#$16,d0
-		addi.b	#$9B,d0
+		addi.b	#$5F,d0
 		move.b	d0,obFrame(a0)
 		clr.b	obTimeFrame(a0)
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_10A1E:
-		moveq	#3,d2
+SAnim_Tumble_Left:
 		andi.b	#$FC,obRender(a0)
-		or.b	d2,obRender(a0)
+		tst.b	flip_turned(a0)
+		beq.s	+
+		ori.b	#1<<render_flags.x_flip,obRender(a0)
+		addi.b	#$B,d0
+		bra.s	++
+; ===========================================================================
+
++
+		ori.b	#1<<render_flags.x_flip|1<<render_flags.y_flip,obRender(a0)
 		neg.b	d0
 		addi.b	#$8F,d0
+
++
 		divu.w	#$16,d0
-		addi.b	#$9B,d0
+		addi.b	#$5F,d0
 		move.b	d0,obFrame(a0)
 		clr.b	obTimeFrame(a0)
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_10A44:
-		addq.b	#1,d0
-		bne.s	loc_10A88
-		move.w	obInertia(a0),d2
-		bpl.s	loc_10A50
-		neg.w	d2
-
-loc_10A50:
-		lea	SonicAni_Roll2(pc),a1
+SAnim_Roll:
+		subq.b	#1,obTimeFrame(a0)	; subtract 1 from frame duration
+		bpl.w	SAnim_End		; if time remains, branch
+		addq.b	#1,d0			; is the start flag = $FE?
+		bne.s	SAnim_Push		; if not, branch
+		mvabs.w	obInertia(a0),d2
+		lea	SonAni_Roll2(pc),a1
 		cmpi.w	#$600,d2
-		bhs.s	loc_10A62
-		lea	SonicAni_Roll(pc),a1
-
-loc_10A62:
+		bhs.s	+
+		lea	SonAni_Roll(pc),a1
++
 		neg.w	d2
 		addi.w	#$400,d2
-		bpl.s	loc_10A6C
+		bpl.s	+
 		moveq	#0,d2
-
-loc_10A6C:
++
 		lsr.w	#8,d2
 		move.b	d2,obTimeFrame(a0)
 		move.b	obStatus(a0),d1
 		andi.b	#1,d1
-		andi.b	#$FC,obRender(a0)
+		andi.b	#~(1<<render_flags.x_flip|1<<render_flags.y_flip),obRender(a0)
 		or.b	d1,obRender(a0)
-		bra.w	SAnim_WalkRun
+		bra.w	SAnim_Do2
 ; ---------------------------------------------------------------------------
 
-loc_10A88:
+SAnim_Push:
+		subq.b	#1,obTimeFrame(a0)	; subtract 1 from frame duration
+		bpl.w	SAnim_End		; if time remains, branch
 		move.w	obInertia(a0),d2
-		bmi.s	loc_10A90
+		bmi.s	+
 		neg.w	d2
-
-loc_10A90:
++
 		addi.w	#$800,d2
-		bpl.s	loc_10A98
+		bpl.s	+
 		moveq	#0,d2
-
-loc_10A98:
++
 		lsr.w	#6,d2
 		move.b	d2,obTimeFrame(a0)
-		lea	SonicAni_Push(pc),a1
+		lea	SonAni_Push(pc),a1
+	;	tst.b	(Super_Sonic_flag).w
+	;	beq.s	+
+	;	lea	(SupSonAni_Push).l,a1
++
 		move.b	obStatus(a0),d1
 		andi.b	#1,d1
-		andi.b	#$FC,obRender(a0)
+		andi.b	#~(1<<render_flags.x_flip|1<<render_flags.y_flip),obRender(a0)
 		or.b	d1,obRender(a0)
-		bra.w	SAnim_WalkRun
+		bra.w	SAnim_Do2
 ; End of function Sonic_Animate
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Animation script - Sonic
 ; ---------------------------------------------------------------------------
-SonicAniData:	dc.w SonicAni_Walk-SonicAniData
-		dc.w SonicAni_Run-SonicAniData
-		dc.w SonicAni_Roll-SonicAniData
-		dc.w SonicAni_Roll2-SonicAniData
-		dc.w SonicAni_Push-SonicAniData
-		dc.w SonicAni_Wait-SonicAniData
-		dc.w SonicAni_Balance-SonicAniData
-		dc.w SonicAni_LookUp-SonicAniData
-		dc.w SonicAni_Duck-SonicAniData
-		dc.w SonicAni_Spindash-SonicAniData
-		dc.w SonicAni_WallRecoil1-SonicAniData
-		dc.w SonicAni_WallRecoil2-SonicAniData
-		dc.w SonicAni_0C-SonicAniData
-		dc.w SonicAni_Stop-SonicAniData
-		dc.w SonicAni_Float1-SonicAniData
-		dc.w SonicAni_Float2-SonicAniData
-		dc.w SonicAni_Spring-SonicAniData
-		dc.w SonicAni_S1LZHang-SonicAniData
-		dc.w SonicAni_Unused12-SonicAniData
-		dc.w SonicAni_Unused13-SonicAniData
-		dc.w SonicAni_Unused14-SonicAniData
-		dc.w SonicAni_Bubble-SonicAniData
-		dc.w SonicAni_DeathBW-SonicAniData
-		dc.w SonicAni_Drown-SonicAniData
-		dc.w SonicAni_Death-SonicAniData
-		dc.w SonicAni_Unused19-SonicAniData
-		dc.w SonicAni_Hurt-SonicAniData
-		dc.w SonicAni_S1LZSlide-SonicAniData
-		dc.w SonicAni_Blank-SonicAniData
-		dc.w SonicAni_Float3-SonicAniData
-		dc.w SonicAni_1E-SonicAniData
-SonicAni_Walk:		dc.b $FF,$10,$11,$12,$13,$14,$15,$16,$17, $C, $D, $E, $F,$FF
-SonicAni_Run:		dc.b $FF,$3C,$3D,$3E,$3F,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-SonicAni_Roll:		dc.b $FE,$6C,$70,$6D,$70,$6E,$70,$6F,$70,$FF
-SonicAni_Roll2:		dc.b $FE,$6C,$70,$6D,$70,$6E,$70,$6F,$70,$FF
-SonicAni_Push:		dc.b $FD,$77,$78,$79,$7A,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-SonicAni_Wait:		dc.b   7,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1
-			dc.b   1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  2
-			dc.b   3,  3,  3,  4,  4,  5,  5,$FE,  4
-SonicAni_Balance:	dc.b	7,$89,$8A,$FF
-SonicAni_LookUp:	dc.b   5,  6,  7,$FE,  1
-SonicAni_Duck:		dc.b   5,$7F,$80,$FE,  1
-SonicAni_Spindash:	dc.b	 0,$71,$72,$71,$73,$71,$74,$71,$75,$71,$76,$71,$FF
-SonicAni_WallRecoil1:	dc.b $3F,$82,$FF
-SonicAni_WallRecoil2:	dc.b   7, 8, 8, 9,$FD,	5
-SonicAni_0C:		dc.b   7,  9,$FD,  5
-SonicAni_Stop:		dc.b   3,$81,$82,$83,$84,$85,$86,$87,$88,$FE,  2
-SonicAni_Float1:	dc.b   7,$94,$96,$FF
-SonicAni_Float2:	dc.b   7,$91,$92,$93,$94,$95,$FF
-SonicAni_Spring:	dc.b $2F,$7E,$FD,  0
-SonicAni_S1LZHang:	dc.b	 5,$8F,$90,$FF
-SonicAni_Unused12:	dc.b	$F,$43,$43,$43,$FE,  1
-SonicAni_Unused13:	dc.b	$F,$43,$44,$FE,	 1
-SonicAni_Unused14:	dc.b $3F,$49,$FF
-SonicAni_Bubble:	dc.b  $B,$97,$97,$12,$13,$FD,  0
-SonicAni_DeathBW:	dc.b $20,$9A,$FF
-SonicAni_Drown:		dc.b $20,$99,$FF
-SonicAni_Death:		dc.b $20,$98,$FF
-SonicAni_Unused19:	dc.b	 3,$4E,$4F,$50,$51,$52,	 0,$FE,	 1
-SonicAni_Hurt:		dc.b $40,$8D,$FF
-SonicAni_S1LZSlide:	dc.b	  9,$8D,$8E,$FF
-SonicAni_Blank:		dc.b $77,  0,$FD,  0
-SonicAni_Float3:	dc.b   3,$91,$92,$93,$94,$95,$FF
-SonicAni_1E:		dc.b   3,$3C,$FD,  0
-		even
+; off_1B618:
+SonicAniData:			offsetTable
+SonAni_Walk_ptr:		offsetTableEntry.w SonAni_Walk		;  0 ;   0
+SonAni_Run_ptr:			offsetTableEntry.w SonAni_Run		;  1 ;   1
+SonAni_Roll_ptr:		offsetTableEntry.w SonAni_Roll		;  2 ;   2
+SonAni_Roll2_ptr:		offsetTableEntry.w SonAni_Roll2		;  3 ;   3
+SonAni_Push_ptr:		offsetTableEntry.w SonAni_Push		;  4 ;   4
+SonAni_Wait_ptr:		offsetTableEntry.w SonAni_Wait		;  5 ;   5
+SonAni_Balance_ptr:		offsetTableEntry.w SonAni_Balance	;  6 ;   6
+SonAni_LookUp_ptr:		offsetTableEntry.w SonAni_LookUp	;  7 ;   7
+SonAni_Duck_ptr:		offsetTableEntry.w SonAni_Duck		;  8 ;   8
+SonAni_Spindash_ptr:		offsetTableEntry.w SonAni_Spindash	;  9 ;   9
+SonAni_Blink_ptr:		offsetTableEntry.w SonAni_Blink		; 10 ;  $A
+SonAni_GetUp_ptr:		offsetTableEntry.w SonAni_GetUp		; 11 ;  $B
+SonAni_Balance2_ptr:		offsetTableEntry.w SonAni_Balance2	; 12 ;  $C
+SonAni_Stop_ptr:		offsetTableEntry.w SonAni_Stop		; 13 ;  $D
+SonAni_Float_ptr:		offsetTableEntry.w SonAni_Float		; 14 ;  $E
+SonAni_Float2_ptr:		offsetTableEntry.w SonAni_Float2	; 15 ;  $F
+SonAni_Spring_ptr:		offsetTableEntry.w SonAni_Spring	; 16 ; $10
+SonAni_Hang_ptr:		offsetTableEntry.w SonAni_Hang		; 17 ; $11
+SonAni_Dash2_ptr:		offsetTableEntry.w SonAni_Dash2		; 18 ; $12
+SonAni_Dash3_ptr:		offsetTableEntry.w SonAni_Dash3		; 19 ; $13
+SonAni_Hang2_ptr:		offsetTableEntry.w SonAni_Hang2		; 20 ; $14
+SonAni_Bubble_ptr:		offsetTableEntry.w SonAni_Bubble	; 21 ; $15
+SonAni_DeathBW_ptr:		offsetTableEntry.w SonAni_DeathBW	; 22 ; $16
+SonAni_Drown_ptr:		offsetTableEntry.w SonAni_Drown		; 23 ; $17
+SonAni_Death_ptr:		offsetTableEntry.w SonAni_Death		; 24 ; $18
+SonAni_Hurt_ptr:		offsetTableEntry.w SonAni_Hurt		; 25 ; $19
+SonAni_Hurt2_ptr:		offsetTableEntry.w SonAni_Hurt		; 26 ; $1A
+SonAni_Slide_ptr:		offsetTableEntry.w SonAni_Slide		; 27 ; $1B
+SonAni_Blank_ptr:		offsetTableEntry.w SonAni_Blank		; 28 ; $1C
+SonAni_Balance3_ptr:		offsetTableEntry.w SonAni_Balance3	; 29 ; $1D
+SonAni_Balance4_ptr:		offsetTableEntry.w SonAni_Balance4	; 30 ; $1E
+SupSonAni_Transform_ptr:	offsetTableEntry.w SupSonAni_Transform	; 31 ; $1F
+SonAni_Lying_ptr:		offsetTableEntry.w SonAni_Lying		; 32 ; $20
+SonAni_LieDown_ptr:		offsetTableEntry.w SonAni_LieDown	; 33 ; $21
+SonAni_Peelout_ptr:		offsetTableEntry.w SonAni_Peelout	; 34 ; $22
+; ---------------------------------------------------------------------------
+; --- Special animations (walk/run/roll/push) ---
+; Sonic handles animations with a start value of $80 or greater separately.
+; All special animations need to have EXACTLY 6 frames (plus one afEnd),
+; animations that are too short have extra afEnd to pad to the same length.
+; This is because the special animation handler switches between these
+; animations without resetting the animation positon.
+; ---------------------------------------------------------------------------
+SonAni_Walk:	dc.b $FF, $F,$10,$11,$12,$13,$14, $D, $E,afEnd
+SonAni_Run:	dc.b $FF,$2D,$2E,$2F,$30,afEnd,afEnd,afEnd,afEnd,afEnd
+SonAni_Roll:	dc.b $FE,$3D,$41,$3E,$41,$3F,$41,$40,$41,afEnd
+SonAni_Roll2:	dc.b $FE,$3D,$41,$3E,$41,$3F,$41,$40,$41,afEnd
+SonAni_Push:	dc.b $FD,$48,$49,$4A,$4B,afEnd,afEnd,afEnd,afEnd,afEnd
+; ---------------------------------------------------------------------------
+; --- Normal animations ---
+; First byte denotes number of frames between each animation.
+; Overview of animation flags (examples):
+; 	dc.b afEnd  		; return to beginning of animation
+; 	dc.b afBack, 5		; go back specified number of frames
+; 	dc.b afChange, id_Surf	; switch to a different animation
+; ---------------------------------------------------------------------------
+SonAni_Wait:
+	dc.b   5,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1
+	dc.b   1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  2
+	dc.b   3,  3,  3,  3,  3,  4,  4,  4,  5,  5,  5,  4,  4,  4,  5,  5
+	dc.b   5,  4,  4,  4,  5,  5,  5,  4,  4,  4,  5,  5,  5,  6,  6,  6
+	dc.b   6,  6,  6,  6,  6,  6,  6,  4,  4,  4,  5,  5,  5,  4,  4,  4
+	dc.b   5,  5,  5,  4,  4,  4,  5,  5,  5,  4,  4,  4,  5,  5,  5,  6
+	dc.b   6,  6,  6,  6,  6,  6,  6,  6,  6,  4,  4,  4,  5,  5,  5,  4
+	dc.b   4,  4,  5,  5,  5,  4,  4,  4,  5,  5,  5,  4,  4,  4,  5,  5
+	dc.b   5,  6,  6,  6,  6,  6,  6,  6,  6,  6,  6,  4,  4,  4,  5,  5
+	dc.b   5,  4,  4,  4,  5,  5,  5,  4,  4,  4,  5,  5,  5,  4,  4,  4
+	dc.b   5,  5,  5,  6,  6,  6,  6,  6,  6,  6,  6,  6,  6,  7,  8,  8
+	dc.b   8,  9,  9,  9,afBack,  6
+SonAni_Balance:	dc.b   9,$CC,$CD,$CE,$CD,afEnd
+SonAni_LookUp:	dc.b   5, $B, $C,afBack,  1
+SonAni_Duck:	dc.b   5,$4C,$4D,afBack,  1
+SonAni_Spindash:dc.b   0,$42,$43,$42,$44,$42,$45,$42,$46,$42,$47,afEnd
+SonAni_Blink:	dc.b   1,  2,afChange,  0
+SonAni_GetUp:	dc.b   3, $A,afChange,  0
+SonAni_Balance2:dc.b   3,$C8,$C9,$CA,$CB,afEnd
+SonAni_Stop:	dc.b   5,$D1,$D2,$D3,$D4,afChange,  0 ; halt/skidding animation
+SonAni_Float:	dc.b   7,$54,$59,afEnd
+SonAni_Float2:	dc.b   7,$54,$55,$56,$57,$58,afEnd
+SonAni_Spring:	dc.b   3,$DA,$DB,$DC,$DD,$DE,afChange,  0
+SonAni_Hang:	dc.b   1,$50,$51,afEnd
+SonAni_Dash2:	dc.b  $F,$43,$43,$43,afBack,  1
+SonAni_Dash3:	dc.b  $F,$43,$44,afBack,  1
+SonAni_Hang2:	dc.b $13,$6B,$6C,afEnd
+SonAni_Bubble:	dc.b  $B,$5A,$5A,$11,$12,afChange,  0 ; breathe
+SonAni_DeathBW:	dc.b $20,$5E,afEnd			; (Now victory pose, frame 2) CHANGE ME
+SonAni_Drown:	dc.b $20,$5D,afEnd
+SonAni_Death:	dc.b $20,$5C,afEnd
+SonAni_Hurt:	dc.b $40,$4E,afEnd
+SonAni_Slide:	dc.b   9,$4E,$4F,afEnd
+SonAni_Blank:	dc.b $77,  0,afChange,  0
+SonAni_Balance3:dc.b $13,$CF,$D0,afEnd
+SonAni_Balance4:dc.b   3,$C8,$C9,$CA,$CB,afBack,  4
+SonAni_Lying:	dc.b   9,  8,  9,afEnd
+SonAni_LieDown:	dc.b   3,  7,afChange,  0
+SonAni_Peelout:	dc.b $FF,$E2,$E3,$E4,$E5,afEnd,afEnd,afEnd,afEnd,afEnd	; TODO Implement
+	even
+
+; ---------------------------------------------------------------------------
+; Animation script - Super Sonic
+; (many of these point to the data above this)
+; ---------------------------------------------------------------------------
+SuperSonicAniData: offsetTable
+	offsetTableEntry.w SupSonAni_Walk	;  0 ;   0
+	offsetTableEntry.w SupSonAni_Run	;  1 ;   1
+	offsetTableEntry.w SonAni_Roll		;  2 ;   2
+	offsetTableEntry.w SonAni_Roll2		;  3 ;   3
+	offsetTableEntry.w SupSonAni_Push	;  4 ;   4
+	offsetTableEntry.w SupSonAni_Stand	;  5 ;   5
+	offsetTableEntry.w SupSonAni_Balance	;  6 ;   6
+	offsetTableEntry.w SonAni_LookUp	;  7 ;   7
+	offsetTableEntry.w SupSonAni_Duck	;  8 ;   8
+	offsetTableEntry.w SonAni_Spindash	;  9 ;   9
+	offsetTableEntry.w SonAni_Blink		; 10 ;  $A
+	offsetTableEntry.w SonAni_GetUp		; 11 ;  $B
+	offsetTableEntry.w SonAni_Balance2	; 12 ;  $C
+	offsetTableEntry.w SonAni_Stop		; 13 ;  $D
+	offsetTableEntry.w SonAni_Float		; 14 ;  $E
+	offsetTableEntry.w SonAni_Float2	; 15 ;  $F
+	offsetTableEntry.w SonAni_Spring	; 16 ; $10
+	offsetTableEntry.w SonAni_Hang		; 17 ; $11
+	offsetTableEntry.w SonAni_Dash2		; 18 ; $12
+	offsetTableEntry.w SonAni_Dash3		; 19 ; $13
+	offsetTableEntry.w SonAni_Hang2		; 20 ; $14
+	offsetTableEntry.w SonAni_Bubble	; 21 ; $15
+	offsetTableEntry.w SonAni_DeathBW	; 22 ; $16
+	offsetTableEntry.w SonAni_Drown		; 23 ; $17
+	offsetTableEntry.w SonAni_Death		; 24 ; $18
+	offsetTableEntry.w SonAni_Hurt		; 25 ; $19
+	offsetTableEntry.w SonAni_Hurt		; 26 ; $1A
+	offsetTableEntry.w SonAni_Slide		; 27 ; $1B
+	offsetTableEntry.w SonAni_Blank		; 28 ; $1C
+	offsetTableEntry.w SonAni_Balance3	; 29 ; $1D
+	offsetTableEntry.w SonAni_Balance4	; 30 ; $1E
+	offsetTableEntry.w SupSonAni_Transform	; 31 ; $1F
+	offsetTableEntry.w SonAni_Peelout	; 32 ; $20
+
+SupSonAni_Walk:		dc.b $FF,$77,$78,$79,$7A,$7B,$7C,$75,$76,afEnd
+SupSonAni_Run:		dc.b $FF,$B5,$B9,afEnd,afEnd,afEnd,afEnd,afEnd,afEnd,afEnd
+SupSonAni_Push:		dc.b $FD,$BD,$BE,$BF,$C0,afEnd,afEnd,afEnd,afEnd,afEnd
+SupSonAni_Stand:	dc.b   7,$72,$73,$74,$73,afEnd
+SupSonAni_Balance:	dc.b   9,$C2,$C3,$C4,$C3,$C5,$C6,$C7,$C6,afEnd
+SupSonAni_Duck:		dc.b   5,$C1,afEnd
+SupSonAni_Transform:	dc.b   2,$6D,$6D,$6E,$6E,$6F,$70,$71,$70,$71,$70,$71,$70,$71,afChange,  0
+	even
 ; ---------------------------------------------------------------------------
 ; Sonic pattern loading subroutine
 ; ---------------------------------------------------------------------------
