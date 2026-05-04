@@ -58,8 +58,9 @@ ob2ndSubtype:		equ $29		; Secondary object subtype
 ; note: $23 is unused and available
 obInertia:		equ $20		; also known as ground_vel; and $21 directionless representation of speed... not updated in the air
 ;obSolid: 		equ $25		; (DEPRECATED, Sonic 1 leftover for reference only) solid status flag
+flip_angle:		equ $27		; angle about the x axis (360 degrees = 256) (twist/tumble)
 ; air_left:		equ $28
-; flip_turned:		equ $29		; 0 for normal, 1 to invert flipping (it's a 180 degree rotation about the axis of Sonic's spine, so he stays in the same position but looks turned around)
+flip_turned:		equ $29		; 0 for normal, 1 to invert flipping (it's a 180 degree rotation about the axis of Sonic's spine, so he stays in the same position but looks turned around)
 obControl:		equ $2A		; 0 for normal, 1 for hanging or for resting on a flipper, $81 for going through CNZ/OOZ/MTZ tubes or stopped in CNZ cages or stoppers or flying if Tails
 obStatusSecondary:	equ $2B
 flips_remaining:	equ $2C		; number of flip revolutions remaining
