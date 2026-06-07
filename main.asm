@@ -2742,6 +2742,7 @@ Level_SkipTtlCard:
 		bsr.w	LoadCollisionIndexes
 		bsr.w	WaterEffects
 		_move.b	#id_Obj01,(v_player).w	; load Sonic object
+	;	_move.b	#id_Obj02,(v_player).w	; load Tails object
 		tst.w	(f_demo).w		; are we on an ending demo?
 		bmi.s	Level_ChkDebug		; if not, branch
 ;		cmpi.b	#id_EHZ,(Current_Zone).w; This is an example on how to skip

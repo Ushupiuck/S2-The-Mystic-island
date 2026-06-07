@@ -52,11 +52,12 @@ obColType:		equ $20		; collision response type
 obColProp:		equ $21		; collision extra property
 obRespawnNo:		equ $1E		; (and soon $1F) respawn list index number
 obSubtype:		equ $28		; Primary object subtype
-ob2ndSubtype:		equ $29		; Secondary object subtype
+ob2ndSubtype:		equ $29		; Secondary object subtype (unused for now)
 ; ---------------------------------------------------------------------------
 ; conventions specific to Sonic/Tails (Obj01, Obj02, and ObjDB):
 ; note: $23 is unused and available
 obInertia:		equ $20		; also known as ground_vel; and $21 directionless representation of speed... not updated in the air
+scroll_delay_counter:	equ $23		; byte ; incremented each frame the character is looking up/down, camera starts scrolling when this reaches 120
 ;obSolid: 		equ $25		; (DEPRECATED, Sonic 1 leftover for reference only) solid status flag
 flip_angle:		equ $27		; angle about the x axis (360 degrees = 256) (twist/tumble)
 ; air_left:		equ $28
@@ -69,12 +70,14 @@ move_lock:		equ $2E		; and $2F ; horizontal control lock, counts down to 0
 flashtime:		equ $30		; time between flashes after getting hit
 invtime:		equ $32		; time left for invincibility
 shoetime:		equ $34		; time left for speed shoes
-;next_tilt:		equ $36		; angle on ground in front of sprite
-;tilt: 			equ $37		; angle on ground
+next_tilt:		equ $36		; angle on ground in front of sprite
+tilt: 			equ $37		; angle on ground
 stick_to_convex:	equ $38
 spindash_flag:		equ $39		; 0 for normal, 1 for charging a spindash or forced rolling
-;pinball_mode =		spindash_flag
-;jumping:		equ $3C
+pinball_mode =		spindash_flag
+spindash_counter:	equ $3A ; and $3B
+restart_countdown =	spindash_counter; and 1+spindash_counter
+jumping:		equ $3C
 standonobject:		equ $3D		; interact; ; RAM address of the last object Sonic stood on, minus v_objspace and divided by object_size
 obTopSolidBit:		equ $3E		; bit to check for top solidity (either $C or $E)
 obLRBSolidBit:		equ $3F		; bit to check for left/right/bottom solidity (either $D or $F)
@@ -262,6 +265,28 @@ status_sec_hasSpeedShoes_mask:	EQU	1<<status_sec_hasSpeedShoes	; $04
 status_sec_isSliding_mask:	EQU	1<<status_sec_isSliding		; $80
 
 ; ---------------------------------------------------------------------------
+; Controller Buttons
+;
+; Buttons bit numbers
+button_up:			EQU	0
+button_down:			EQU	1
+button_left:			EQU	2
+button_right:			EQU	3
+button_B:			EQU	4
+button_C:			EQU	5
+button_A:			EQU	6
+button_start:			EQU	7
+; Buttons masks (1 << x == pow(2, x))
+button_up_mask:			EQU	1<<button_up	; $01
+button_down_mask:		EQU	1<<button_down	; $02
+button_left_mask:		EQU	1<<button_left	; $04
+button_right_mask:		EQU	1<<button_right	; $08
+button_B_mask:			EQU	1<<button_B	; $10
+button_C_mask:			EQU	1<<button_C	; $20
+button_A_mask:			EQU	1<<button_A	; $40
+button_start_mask:		EQU	1<<button_start	; $80
+
+; ---------------------------------------------------------------------------
 ; Bits 3-6 of an object's status after a SolidObject call is a
 ; bitfield with the following meaning:
 p1_standing_bit   = status.npc.p1_standing
@@ -380,40 +405,84 @@ nontile_mask        =      $F800
 drawing_mask        =      $7FFF
 
 ; Animation IDs
-	phase 0
-AniIDSonAni_Walk:		ds.b 1
-AniIDSonAni_Run:		ds.b 1
-AniIDSonAni_Roll:		ds.b 1
-AniIDSonAni_Roll2:		ds.b 1
-AniIDSonAni_Push:		ds.b 1
-AniIDSonAni_Wait:		ds.b 1
-AniIDSonAni_Balance:		ds.b 1
-AniIDSonAni_LookUp:		ds.b 1
-AniIDSonAni_Duck:		ds.b 1
-AniIDSonAni_Spindash:		ds.b 1
-AniIDSonAni_WallRecoil1:	ds.b 1
-AniIDSonAni_WallRecoil2:	ds.b 1
-AniIDSonAni_0C:			ds.b 1
-AniIDSonAni_Stop:		ds.b 1
-AniIDSonAni_Float:		ds.b 1
-AniIDSonAni_Float2:		ds.b 1
-AniIDSonAni_Spring:		ds.b 1
-AniIDSonAni_Hang:		ds.b 1
-AniIDSonAni_Unused12:		ds.b 1
-AniIDSonAni_Unused13:		ds.b 1
-AniIDSonAni_Unused14:		ds.b 1
-AniIDSonAni_Bubble:		ds.b 1
-AniIDSonAni_DeathBW:		ds.b 1
-AniIDSonAni_Drown:		ds.b 1
-AniIDSonAni_Death:		ds.b 1
-AniIDSonAni_Unused19:		ds.b 1
-AniIDSonAni_Hurt:		ds.b 1
-AniIDSonAni_Slide:		ds.b 1
-AniIDSonAni_Blank:		ds.b 1
-AniIDSonAni_Float3:		ds.b 1
-AniIDSonAni_1E:			ds.b 1
-	dephase
-	!org 0
+offset :=	SonicAniData
+ptrsize :=	2
+idstart :=	0
+
+AniIDSonAni_Walk		= id(SonAni_Walk_ptr)		;  0 ;   0
+AniIDSonAni_Run			= id(SonAni_Run_ptr)		;  1 ;   1
+AniIDSonAni_Roll		= id(SonAni_Roll_ptr)		;  2 ;   2
+AniIDSonAni_Roll2		= id(SonAni_Roll2_ptr)		;  3 ;   3
+AniIDSonAni_Push		= id(SonAni_Push_ptr)		;  4 ;   4
+AniIDSonAni_Wait		= id(SonAni_Wait_ptr)		;  5 ;   5
+AniIDSonAni_Balance		= id(SonAni_Balance_ptr)	;  6 ;   6
+AniIDSonAni_LookUp		= id(SonAni_LookUp_ptr)		;  7 ;   7
+AniIDSonAni_Duck		= id(SonAni_Duck_ptr)		;  8 ;   8
+AniIDSonAni_Spindash		= id(SonAni_Spindash_ptr)	;  9 ;   9
+AniIDSonAni_Blink		= id(SonAni_Blink_ptr)		; 10 ;  $A ; Exclusive to Sonic
+AniIDSonAni_GetUp		= id(SonAni_GetUp_ptr)		; 11 ;  $B ; Exclusive to Sonic
+AniIDSonAni_Balance2		= id(SonAni_Balance2_ptr)	; 12 ;  $C ; Exclusive to Sonic
+AniIDSonAni_Stop		= id(SonAni_Stop_ptr)		; 13 ;  $D
+AniIDSonAni_Float		= id(SonAni_Float_ptr)		; 14 ;  $E
+AniIDSonAni_Float2		= id(SonAni_Float2_ptr)		; 15 ;  $F
+AniIDSonAni_Spring		= id(SonAni_Spring_ptr)		; 16 ; $10
+AniIDSonAni_Hang		= id(SonAni_Hang_ptr)		; 17 ; $11
+AniIDSonAni_Dash2		= id(SonAni_Dash2_ptr)		; 18 ; $12 ; Unused.
+AniIDSonAni_Dash3		= id(SonAni_Dash3_ptr)		; 19 ; $13 ; Unused.
+AniIDSonAni_Hang2		= id(SonAni_Hang2_ptr)		; 20 ; $14
+AniIDSonAni_Bubble		= id(SonAni_Bubble_ptr)		; 21 ; $15
+AniIDSonAni_DeathBW		= id(SonAni_DeathBW_ptr)	; 22 ; $16
+AniIDSonAni_Drown		= id(SonAni_Drown_ptr)		; 23 ; $17
+AniIDSonAni_Death		= id(SonAni_Death_ptr)		; 24 ; $18
+AniIDSonAni_Hurt		= id(SonAni_Hurt_ptr)		; 25 ; $19
+AniIDSonAni_Hurt2		= id(SonAni_Hurt2_ptr)		; 26 ; $1A
+AniIDSonAni_Slide		= id(SonAni_Slide_ptr)		; 27 ; $1B
+AniIDSonAni_Blank		= id(SonAni_Blank_ptr)		; 28 ; $1C
+AniIDSonAni_Balance3		= id(SonAni_Balance3_ptr)	; 29 ; $1D ; Exclusive to Sonic
+AniIDSonAni_Balance4		= id(SonAni_Balance4_ptr)	; 30 ; $1E ; Exclusive to Sonic
+AniIDSupSonAni_Transform	= id(SupSonAni_Transform_ptr)	; 31 ; $1F ; Exclusive to Sonic
+AniIDSonAni_Lying		= id(SonAni_Lying_ptr)		; 32 ; $20 ; Exclusive to Sonic
+AniIDSonAni_LieDown		= id(SonAni_LieDown_ptr)	; 33 ; $21 ; Exclusive to Sonic
+
+
+	; TODO -- will get to this as soon as I'm done with Sonic.
+; offset :=	TailsAniData
+; ptrsize :=	2
+; idstart :=	0
+; 
+; AniIDTailsAni_Walk		= id(TailsAni_Walk_ptr)		;  0 ;   0
+; AniIDTailsAni_Run		= id(TailsAni_Run_ptr)		;  1 ;   1
+; AniIDTailsAni_Roll		= id(TailsAni_Roll_ptr)		;  2 ;   2
+; AniIDTailsAni_Roll2		= id(TailsAni_Roll2_ptr)	;  3 ;   3
+; AniIDTailsAni_Push		= id(TailsAni_Push_ptr)		;  4 ;   4
+; AniIDTailsAni_Wait		= id(TailsAni_Wait_ptr)		;  5 ;   5
+; AniIDTailsAni_Balance		= id(TailsAni_Balance_ptr)	;  6 ;   6
+; AniIDTailsAni_LookUp		= id(TailsAni_LookUp_ptr)	;  7 ;   7
+; AniIDTailsAni_Duck		= id(TailsAni_Duck_ptr)		;  8 ;   8
+; AniIDTailsAni_Spindash		= id(TailsAni_Spindash_ptr)	;  9 ;   9
+; AniIDTailsAni_Dummy1		= id(TailsAni_Dummy1_ptr)	; 10 ;  $A
+; AniIDTailsAni_Dummy2		= id(TailsAni_Dummy2_ptr)	; 11 ;  $B
+; AniIDTailsAni_Dummy3		= id(TailsAni_Dummy3_ptr)	; 12 ;  $C
+; AniIDTailsAni_Stop		= id(TailsAni_Stop_ptr)		; 13 ;  $D
+; AniIDTailsAni_Float		= id(TailsAni_Float_ptr)	; 14 ;  $E
+; AniIDTailsAni_Float2		= id(TailsAni_Float2_ptr)	; 15 ;  $F
+; AniIDTailsAni_Spring		= id(TailsAni_Spring_ptr)	; 16 ; $10
+; AniIDTailsAni_Hang		= id(TailsAni_Hang_ptr)		; 17 ; $11
+; AniIDTailsAni_Blink		= id(TailsAni_Blink_ptr)	; 18 ; $12
+; AniIDTailsAni_Blink2		= id(TailsAni_Blink2_ptr)	; 19 ; $13
+; AniIDTailsAni_Hang2		= id(TailsAni_Hang2_ptr)	; 20 ; $14
+; AniIDTailsAni_Bubble		= id(TailsAni_Bubble_ptr)	; 21 ; $15
+; AniIDTailsAni_DeathBW		= id(TailsAni_DeathBW_ptr)	; 22 ; $16
+; AniIDTailsAni_Drown		= id(TailsAni_Drown_ptr)	; 23 ; $17
+; AniIDTailsAni_Death		= id(TailsAni_Death_ptr)	; 24 ; $18
+; AniIDTailsAni_Hurt		= id(TailsAni_Hurt_ptr)		; 25 ; $19
+; AniIDTailsAni_Hurt2		= id(TailsAni_Hurt2_ptr)	; 26 ; $1A
+; AniIDTailsAni_Slide		= id(TailsAni_Slide_ptr)	; 27 ; $1B
+; AniIDTailsAni_Blank		= id(TailsAni_Blank_ptr)	; 28 ; $1C
+; AniIDTailsAni_Dummy4		= id(TailsAni_Dummy4_ptr)	; 29 ; $1D
+; AniIDTailsAni_Dummy5		= id(TailsAni_Dummy5_ptr)	; 30 ; $1E
+; AniIDTailsAni_HaulAss		= id(TailsAni_HaulAss_ptr)	; 31 ; $1F
+; AniIDTailsAni_Fly		= id(TailsAni_Fly_ptr)		; 32 ; $20
 
 Size_of_SegaPCM:		equ $6978
 Size_of_DAC_driver_guess:	equ $1760
@@ -1136,11 +1205,13 @@ v_title_ccount:		ds.w	1			; number of times C is pressed on title screen
 f_demo:			ds.w	1			; demo mode flag (0 = no; 1 = yes; $8001 = ending)
 v_demonum:		ds.w	1			; demo level number (not the same as the level number)
 v_creditsnum:		ds.w	1			; credits index number
+Super_Sonic_frame_count:	ds.w	1
 v_obj1F:		ds.b	6			; conveyor belt (Object 1F) variables
 v_ani1_prev:		ds.b	1			; synchronised sprite animation 1 - previous frame
 v_ani2_prev:		ds.b	1			; synchronised sprite animation 2 - previous frame
 v_ani3_prev:		ds.b	1			; synchronised sprite animation 3 - previous frame
-			ds.b	$6F			; free
+
+			ds.b	$6D			; free
 v_end:
 	if * > 0	; don't declare more space than the RAM can contain!
 		fatal "The RAM variable declarations are too large by $\{*} bytes."
