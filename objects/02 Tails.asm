@@ -29,8 +29,8 @@ Obj02_Init:
 		move.w	#$80,(Tails_deceleration).w
 		move.b	#$C,obTopSolidBit(a0)
 		move.b	#$D,obLRBSolidBit(a0)
-		clr.b	objoff_2C(a0)
-		move.b	#4,objoff_2D(a0)
+		clr.b	flips_remaining(a0)
+		move.b	#4,flip_speed(a0)
 		move.b	#id_Obj05,(v_player2tails).w		; load Tails' tails at $B1C0
 
 ; ---------------------------------------------------------------------------
@@ -49,14 +49,12 @@ Obj02_Control:
 Obj02_ControlsLock:
 		bsr.s	Tails_Display
 		bsr.w	RecordTailsMoves
-		move.b	(Primary_Angle).w,objoff_36(a0)
-		move.b	(Secondary_Angle).w,objoff_37(a0)
+		move.b	(Primary_Angle).w,next_tilt(a0)
+		move.b	(Secondary_Angle).w,tilt(a0)
 		bsr.w	Tails_Animate
 		tst.b	(f_playerctrl).w
-		bmi.s	loc_10CFC
+		bmi.w	LoadTailsDynPLC
 		jsr	(TouchResponse).l
-
-loc_10CFC:
 		bra.w	LoadTailsDynPLC
 ; ===========================================================================
 ; secondary states under state Obj02_Control
@@ -244,7 +242,7 @@ Obj02_MdNormal:
 
 Obj02_MdJump:
 		bsr.w	Tails_JumpHeight
-		bsr.w	Tails_ChgJumpDir
+		bsr.w	Tails_JumpDirection
 		bsr.w	Tails_LevelBoundaries
 		movem.w	obVelX(a0),d0/d2			; load xy speed
 		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
@@ -277,7 +275,7 @@ Obj02_MdRoll:
 
 Obj02_MdJump2:
 		bsr.w	Tails_JumpHeight
-		bsr.w	Tails_ChgJumpDir
+		bsr.w	Tails_JumpDirection
 		bsr.w	Tails_LevelBoundaries
 		movem.w	obVelX(a0),d0/d2			; load xy speed
 		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
@@ -296,14 +294,14 @@ loc_10F0A:
 ; =============== S U B R O U T I N E =======================================
 
 
-Tails_Move:	; TODO: Uncomment these lines and implement this proper, alike Sonic 2
+Tails_Move:
 		move.w	(Tails_top_speed).w,d6
 		move.w	(Tails_acceleration).w,d5
 		move.w	(Tails_deceleration).w,d4
 		tst.b	(f_slidemode).w
-		bne.w	loc_11026
-		tst.w	objoff_2E(a0)
-		bne.w	loc_10FFA
+		bne.w	Player_Traction
+		tst.w	move_lock(a0)
+		bne.w	Obj02_UpdateSpeedOnGround
 		btst	#bitL,(v_jpadhold2).w
 		beq.s	loc_10F3C
 		bsr.w	Tails_MoveLeft
@@ -317,16 +315,16 @@ loc_10F48:
 		move.b	obAngle(a0),d0
 		addi.b	#$20,d0
 		andi.b	#$C0,d0
-		bne.w	loc_10FFA
+		bne.w	Obj02_UpdateSpeedOnGround
 		tst.w	obInertia(a0)
-		bne.w	loc_10FFA
+		bne.w	Obj02_UpdateSpeedOnGround
 		bclr	#5,obStatus(a0)
 		move.b	#AniIDSonAni_Wait,obAnim(a0)
 		btst	#3,obStatus(a0)
 		beq.s	Tails_Balance
 		moveq	#0,d0
 		move.b	standonobject(a0),d0
-		lsl.w	#object_size_bits,d0
+		mulu.w	#object_size,d0
 		lea	(v_player).w,a1
 		lea	(a1,d0.w),a1
 		tst.b	obStatus(a1)
@@ -349,121 +347,73 @@ Tails_Balance:
 		jsr	(ObjHitFloor).l
 		cmpi.w	#$C,d1
 		blt.s	Tails_LookUp
-		cmpi.b	#3,objoff_36(a0)
+		cmpi.b	#3,next_tilt(a0)
 		bne.s	loc_10FC6
 
 loc_10FBE:
 		bclr	#0,obStatus(a0)
-		bra.s	loc_10FD4
+		move.b	#AniIDSonAni_Balance,obAnim(a0)
+		bra.w	Obj02_UpdateSpeedOnGround
 ; ---------------------------------------------------------------------------
 
 loc_10FC6:
-		cmpi.b	#3,objoff_37(a0)
+		cmpi.b	#3,tilt(a0)
 		bne.s	Tails_LookUp
 
 loc_10FCE:
 		bset	#0,obStatus(a0)
-
-loc_10FD4:
 		move.b	#AniIDSonAni_Balance,obAnim(a0)
-		bra.s	loc_10FFA
+		bra.s	Obj02_UpdateSpeedOnGround
 ; ---------------------------------------------------------------------------
 
 Tails_LookUp:
-		btst	#bitUp,(v_jpadhold2).w
-		beq.s	Tails_Duck
-		move.b	#AniIDSonAni_LookUp,obAnim(a0)
-		bra.s	loc_10FFA
+		btst	#button_up,(v_jpadhold2).w	; is up being pressed?
+		beq.s	Tails_Duck			; if not, branch
+		move.b	#AniIDSonAni_LookUp,obAnim(a0)	; use "looking up" animation
+		cmpi.b	#id_Obj02,(v_player).w		; is tails the main character?
+		bne.w	Player_CheckWallsOnGround.return	; skip the remaining logic if not
+		addq.b	#1,scroll_delay_counter(a0)
+		cmpi.b	#$78,scroll_delay_counter(a0)
+		blo.w	Player_ResetScr_Part2
+		move.b	#$78,scroll_delay_counter(a0)
+		cmpi.w	#$C8,(Camera_Y_pos_bias).w
+		beq.s	Obj02_UpdateSpeedOnGround
+		addq.w	#2,(Camera_Y_pos_bias).w
+		bra.s	Obj02_UpdateSpeedOnGround
+; ---------------------------------------------------------------------------
+; loc_1C1A2:
+Tails_Duck:
+		btst	#button_down,(v_jpadhold2).w	; is down being pressed?
+		beq.w	Player_ResetScr			; if not, branch
+		move.b	#AniIDSonAni_Duck,obAnim(a0)	; use "ducking" animation
+		cmpi.b	#id_Obj02,(v_player).w		; is tails the main character?
+		bne.w	Player_CheckWallsOnGround.return	; skip the remaining logic if not
+		addq.b	#1,scroll_delay_counter(a0)
+		cmpi.b	#$78,scroll_delay_counter(a0)
+		blo.w	Player_ResetScr_Part2
+		move.b	#$78,scroll_delay_counter(a0)
+		cmpi.w	#8,(Camera_Y_pos_bias).w
+		beq.s	Obj02_UpdateSpeedOnGround
+		subq.w	#2,(Camera_Y_pos_bias).w
+		; fall through
+
+; ---------------------------------------------------------------------------
+; updates Tails's speed on the ground
 ; ---------------------------------------------------------------------------
 
-Tails_Duck:
-		btst	#bitDn,(v_jpadhold2).w
-		beq.s	loc_10FFA
-		move.b	#AniIDSonAni_Duck,obAnim(a0)
-
-loc_10FFA:
+Obj02_UpdateSpeedOnGround:
 		move.b	(v_jpadhold2).w,d0
 		andi.b	#btnL+btnR,d0
-		bne.s	loc_11026
+		bne.w	Player_Traction
 		move.w	obInertia(a0),d0
-		beq.s	loc_11026
-		bmi.s	loc_1101A
+		beq.w	Player_Traction
+		bmi.w	Player_SettleLeft
 		sub.w	d5,d0
-		bhs.s	loc_11014
+		bhs.s	+
 		clr.w	d0
-
-loc_11014:
++
 		move.w	d0,obInertia(a0)
-		bra.s	loc_11026
-; ---------------------------------------------------------------------------
-
-loc_1101A:
-		add.w	d5,d0
-		bhs.s	loc_11022
-		clr.w	d0
-
-loc_11022:
-		move.w	d0,obInertia(a0)
-
-loc_11026:
-		move.b	obAngle(a0),d0
-		jsr	(CalcSine).l
-		muls.w	obInertia(a0),d1
-		asr.l	#8,d1
-		move.w	d1,obVelX(a0)
-		muls.w	obInertia(a0),d0
-		asr.l	#8,d0
-		move.w	d0,obVelY(a0)
-
-loc_11044:
-		move.b	obAngle(a0),d0
-		addi.b	#$40,d0
-		bmi.s	locret_110B4
-		move.b	#$40,d1
-		tst.w	obInertia(a0)
-		beq.s	locret_110B4
-		bmi.s	loc_1105C
-		neg.w	d1
-
-loc_1105C:
-		move.b	obAngle(a0),d0
-		add.b	d1,d0
-		move.w	d0,-(sp)
-		bsr.w	CalcRoomInFront
-		move.w	(sp)+,d0
-		tst.w	d1
-		bpl.s	locret_110B4
-		asl.w	#8,d1
-		addi.b	#$20,d0
-		andi.b	#$C0,d0
-		beq.s	loc_110B0
-		cmpi.b	#$40,d0
-		beq.s	loc_1109E
-		cmpi.b	#$80,d0
-		beq.s	loc_11098
-		add.w	d1,obVelX(a0)
-		bset	#5,obStatus(a0)
-		clr.w	obInertia(a0)
-		rts
-; ---------------------------------------------------------------------------
-
-loc_11098:
-		sub.w	d1,obVelY(a0)
-		rts
-; ---------------------------------------------------------------------------
-
-loc_1109E:
-		sub.w	d1,obVelX(a0)
-		bset	#5,obStatus(a0)
-		clr.w	obInertia(a0)
-		rts
-; ---------------------------------------------------------------------------
-
-loc_110B0:
-		add.w	d1,obVelY(a0)
-
-locret_110B4:
-		rts
+		bra.w	Player_Traction
 ; End of function Tails_Move
 
 
@@ -569,7 +519,7 @@ Tails_RollSpeed:
 		asr.w	#2,d4
 		tst.b	(f_slidemode).w
 		bne.w	loc_11204
-		tst.w	objoff_2E(a0)
+		tst.w	move_lock(a0)
 		bne.s	loc_111C0
 		btst	#bitL,(v_jpadhold2).w
 		beq.s	loc_111B4
@@ -629,7 +579,7 @@ loc_11228:
 
 loc_11232:
 		move.w	d1,obVelX(a0)
-		bra.w	loc_11044
+		bra.w	Player_CheckWallsOnGround
 ; End of function Tails_RollSpeed
 
 
@@ -683,12 +633,12 @@ loc_1127A:
 ; =============== S U B R O U T I N E =======================================
 
 
-Tails_ChgJumpDir:
+Tails_JumpDirection:
 		move.w	(Tails_top_speed).w,d6
 		move.w	(Tails_acceleration).w,d5
 		asl.w	#1,d5
-		btst	#4,obStatus(a0)
-		bne.s	loc_112CA
+	;	btst	#4,obStatus(a0)
+	;	bne.s	loc_112CA
 		move.w	obVelX(a0),d0
 		btst	#bitL,(v_jpadhold2).w
 		beq.s	+
@@ -716,7 +666,7 @@ Tails_ChgJumpDir:
 +
 		move.w	d0,obVelX(a0)
 
-loc_112CA:
+; loc_112CA:
 		cmpi.w	#$60,(Camera_Y_pos_bias).w
 		beq.s	loc_112DC
 		bhs.s	loc_112D8
@@ -752,7 +702,7 @@ loc_11306:
 
 locret_1130A:
 		rts
-; End of function Tails_ChgJumpDir
+; End of function Tails_JumpDirection
 
 
 ; =============== S U B R O U T I N E =======================================
@@ -898,23 +848,23 @@ Tails_Jump:
 		bset	#1,obStatus(a0)
 		bclr	#5,obStatus(a0)
 		addq.l	#4,sp
-		move.b	#1,objoff_3C(a0)
-		clr.b	objoff_38(a0)
+		move.b	#1,jumping(a0)
+		clr.b	stick_to_convex(a0)
 		move.w	#sfx_Jump,d0
 		jsr	(PlaySound_Special).l
 		btst	#2,obStatus(a0)
-		bne.s	loc_11498
+		bne.s	.return
 		move.b	#$E,obHeight(a0)
 		move.b	#7,obWidth(a0)
 		move.b	#AniIDSonAni_Roll,obAnim(a0)
 		bset	#2,obStatus(a0)
 		addq.w	#5,obY(a0)
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 
-loc_11498:
-		bset	#4,obStatus(a0)
-		rts
+;loc_11498:
+;		bset	#4,obStatus(a0)
+;		rts
 ; End of function Tails_Jump
 
 
@@ -922,7 +872,7 @@ loc_11498:
 
 
 Tails_JumpHeight:
-		tst.b	objoff_3C(a0)
+		tst.b	jumping(a0)
 		beq.s	loc_114CC
 		move.w	#-$400,d1
 		btst	#6,obStatus(a0)
@@ -1086,9 +1036,9 @@ locret_115D8:
 
 Tails_SlopeRepel:
 		nop
-		tst.b	objoff_38(a0)
+		tst.b	stick_to_convex(a0)
 		bne.s	locret_11614
-		tst.w	objoff_2E(a0)
+		tst.w	move_lock(a0)
 		bne.s	loc_11616
 		move.b	obAngle(a0),d0
 		addi.b	#$20,d0
@@ -1103,14 +1053,14 @@ loc_115FE:
 		bhs.s	locret_11614
 		clr.w	obInertia(a0)
 		bset	#1,obStatus(a0)
-		move.w	#$1E,objoff_2E(a0)
+		move.w	#$1E,move_lock(a0)
 
 locret_11614:
 		rts
 ; ---------------------------------------------------------------------------
 
 loc_11616:
-		subq.w	#1,objoff_2E(a0)
+		subq.w	#1,move_lock(a0)
 		rts
 ; End of function Tails_SlopeRepel
 
@@ -1137,33 +1087,33 @@ loc_11632:
 		move.b	d0,obAngle(a0)
 
 loc_11636:
-		move.b	objoff_27(a0),d0
+		move.b	flip_angle(a0),d0
 		beq.s	.return
 		tst.w	obInertia(a0)
 		bmi.s	loc_1165A
-		move.b	objoff_2D(a0),d1
+		move.b	flip_speed(a0),d1
 		add.b	d1,d0
 		bhs.s	+
-		subq.b	#1,objoff_2C(a0)
+		subq.b	#1,flips_remaining(a0)
 		bhs.s	+
 		moveq	#0,d0
-		move.b	d0,objoff_2C(a0)
+		move.b	d0,flips_remaining(a0)
 +
-		move.b	d0,objoff_27(a0)
+		move.b	d0,flip_angle(a0)
 .return:	rts
 ; ---------------------------------------------------------------------------
 
 loc_1165A:
-		move.b	objoff_2D(a0),d1
+		move.b	flip_speed(a0),d1
 		sub.b	d1,d0
 		bhs.s	loc_11670
-		subq.b	#1,objoff_2C(a0)
+		subq.b	#1,flips_remaining(a0)
 		bhs.s	loc_11670
 		moveq	#0,d0
-		move.b	d0,objoff_2C(a0)
+		move.b	d0,flips_remaining(a0)
 
 loc_11670:
-		move.b	d0,objoff_27(a0)
+		move.b	d0,flip_angle(a0)
 		rts
 ; End of function Tails_JumpAngle
 
@@ -1386,28 +1336,28 @@ loc_11838:
 
 
 Tails_ResetOnFloor:
-		btst	#4,obStatus(a0)
-		beq.s	loc_11874
-		nop
-		nop
-		nop
+	;	btst	#status.player.rolljumping,obStatus(a0)
+	;	beq.s	loc_11874
+	;	nop
+	;	nop
+	;	nop
 
-loc_11874:
-		bclr	#5,obStatus(a0)
-		bclr	#1,obStatus(a0)
-		bclr	#4,obStatus(a0)
-		btst	#2,obStatus(a0)
+;loc_11874:
+		bclr	#status.player.in_air,obStatus(a0)
+		bclr	#status.player.pushing,obStatus(a0)
+	;	bclr	#status.player.rolljumping,obStatus(a0)
+		move.b	#AniIDSonAni_Walk,obAnim(a0)
+		btst	#status.player.rolling,obStatus(a0)
 		beq.s	loc_118AA
-		bclr	#2,obStatus(a0)
+		bclr	#status.player.rolling,obStatus(a0)
 		move.b	#$F,obHeight(a0)
 		move.b	#9,obWidth(a0)
-		move.b	#AniIDSonAni_Walk,obAnim(a0)
 		subq.w	#1,obY(a0)
 
 loc_118AA:
-		clr.b	objoff_3C(a0)
+		clr.b	jumping(a0)
 		clr.w	(v_itembonus).w
-		clr.b	objoff_27(a0)
+		clr.b	flip_angle(a0)
 		rts
 ; End of function Tails_ResetOnFloor
 
@@ -1505,9 +1455,9 @@ Tails_GameOver:
 ; ---------------------------------------------------------------------------
 
 Obj02_ResetLevel:
-		tst.w	objoff_3A(a0)
+		tst.w	restart_countdown(a0)
 		beq.s	.return
-		subq.w	#1,objoff_3A(a0)
+		subq.w	#1,restart_countdown(a0)
 		bne.s	.return
 		move.w	#1,(Level_Inactive_flag).w
 
@@ -1597,7 +1547,7 @@ loc_11A2E:
 		addq.b	#1,d0
 		bne.w	loc_11B0E
 		moveq	#0,d0
-		move.b	objoff_27(a0),d0
+		move.b	flip_angle(a0),d0
 		bne.w	loc_11AB4
 		moveq	#0,d1
 		move.b	obAngle(a0),d0
@@ -1650,7 +1600,7 @@ loc_11AA4:
 ; ---------------------------------------------------------------------------
 
 loc_11AB4:
-		move.b	objoff_27(a0),d0
+		move.b	flip_angle(a0),d0
 		moveq	#0,d1
 		move.b	obStatus(a0),d2
 		andi.b	#1,d2
@@ -1841,16 +1791,32 @@ LoadTailsTailsDynPLC:
 		moveq	#0,d0
 		move.b	obFrame(a0),d0
 		cmp.b	(TailsTails_LastLoadedDPLC).w,d0
-		beq.s	LoadTailsDynPLC.return
+		beq.s	.return
 		move.b	d0,(TailsTails_LastLoadedDPLC).w
 		lea	(TailsDynPLC).l,a2
 		add.w	d0,d0
 		adda.w	(a2,d0.w),a2
 		move.w	(a2)+,d5
 		subq.w	#1,d5
-		bmi.s	LoadTailsDynPLC.return
+		bmi.s	.return
 		move.w	#ArtTile_TailsTails*tile_size,d4
-		bra.s	LoadTailsDynPLC.TPLC_ReadEntry
+
+.TTPLC_ReadEntry:
+		moveq	#0,d1
+		move.w	(a2)+,d1
+		move.w	d1,d3
+		lsr.w	#8,d3
+		andi.w	#$F0,d3
+		addi.w	#$10,d3
+		andi.w	#$FFF,d1
+		lsl.l	#5,d1
+		addi.l	#Art_Tails,d1
+		move.w	d4,d2
+		add.w	d3,d4
+		add.w	d3,d4
+		jsr	(QueueDMATransfer).l
+		dbf	d5,.TTPLC_ReadEntry
+.return:	rts
 ; End of function LoadTailsTailsDynPLC
 
 ; ---------------------------------------------------------------------------
@@ -1864,16 +1830,16 @@ LoadTailsDynPLC:
 		moveq	#0,d0
 		move.b	obFrame(a0),d0
 		cmp.b	(Tails_LastLoadedDPLC).w,d0
-		beq.s	LoadTailsDynPLC.return
+		beq.s	.return
 		move.b	d0,(Tails_LastLoadedDPLC).w
 		lea	(TailsDynPLC).l,a2
 		add.w	d0,d0
 		adda.w	(a2,d0.w),a2
 		move.w	(a2)+,d5
 		subq.w	#1,d5
-		bmi.s	LoadTailsDynPLC.return
+		bmi.s	.return
 		move.w	#ArtTile_Tails*tile_size,d4
-; loc_11D50:
+
 .TPLC_ReadEntry:
 		moveq	#0,d1
 		move.w	(a2)+,d1
@@ -1889,8 +1855,6 @@ LoadTailsDynPLC:
 		add.w	d3,d4
 		jsr	(QueueDMATransfer).l
 		dbf	d5,.TPLC_ReadEntry
-
-.return:
-		rts
+.return:	rts
 ; End of function LoadTailsDynPLC
 ; ===========================================================================
