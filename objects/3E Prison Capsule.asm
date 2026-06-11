@@ -20,8 +20,8 @@ Pri_Index:	dc.w Pri_Init-Pri_Index		; 0
 		dc.w Pri_EndAct-Pri_Index	; $A
 ; ===========================================================================
 Pri_Var:	; routine, width, priority, frame
-		dc.b   2,$20,  4,  0	; capsule body
-		dc.b   4, $C,  5,  1	; capsule button
+		dc.b   2,$20,  4,  1	; capsule body
+		dc.b   4, $C,  5,  3	; capsule button
 ; ===========================================================================
 
 Pri_Init:	; Routine 0
@@ -47,7 +47,7 @@ Pri_Init:	; Routine 0
 
 Pri_BodyMain:	; Routine 2
 		cmpi.b	#2,(Boss_defeated_flag).w
-		beq.s	.chkopened
+		beq.s	.opened
 		moveq	#$2B,d1
 		moveq	#$18,d2
 		moveq	#$18,d3
@@ -55,16 +55,32 @@ Pri_BodyMain:	; Routine 2
 		jmp	(SolidObject).l
 ; ---------------------------------------------------------------------------
 
-.chkopened:
-		tst.b	ob2ndRout(a0)	; has the prison been opened?
-		beq.s	.open		; if so, branch
-		clr.b	ob2ndRout(a0)
-		bclr	#3,(v_player+obStatus).w
-		bclr	#3,(v_player2+obStatus).w
-		bset	#1,(v_player+obStatus).w
-		bset	#1,(v_player2+obStatus).w
-.open:		move.b	#2,obFrame(a0)	; use frame number 2 (destroyed prison)
-		rts
+.opened:
+		cmpi.b	#2,obFrame(a0)	; frame 2 already?
+		beq.s	.done		; then don't bother with all of this
+		bsr.s	Pri_DropCharacters
+		move.b	#2,obFrame(a0)	; use frame number 2 (destroyed prison)
+.done:		rts
+; ---------------------------------------------------------------------------
+; Drop characters only when standing on the capsule.
+; ---------------------------------------------------------------------------
+
+Pri_DropCharacters:
+		btst	#status.player.on_object,obStatus(a0)	; Sonic standing on this object?
+		beq.s	.chkTails
+		bclr	#status.player.on_object,obStatus(a0)	; no longer standing on object
+		bclr	#status.player.on_object,(v_player+obStatus).w
+		bset	#status.player.in_air,obStatus(a0)		; airborne / falling
+		bset	#status.player.in_air,(v_player+obStatus).w	; airborne / falling
+
+.chkTails:
+		btst	#status.sidekick.on_object,obStatus(a0)	; Tails standing on this object?
+		beq.s	.done
+		bclr	#status.sidekick.on_object,obStatus(a0)	; no longer standing on object
+		bclr	#status.sidekick.on_object,(v_player2+obStatus).w
+		bset	#status.sidekick.in_air,obStatus(a0)		; airborne / falling
+		bset	#status.player.in_air,(v_player2+obStatus).w	; airborne / falling
+.done:		rts
 ; ---------------------------------------------------------------------------
 
 Pri_Switched:	; Routine 4
@@ -78,18 +94,14 @@ Pri_Switched:	; Routine 4
 		move.w	pri_origY(a0),obY(a0)
 		move.b	obStatus(a0),d0
 		andi.b	#$18,d0		; is the character touching/pressing the switch?
-		beq.s	.open2		; if not, quit
+		beq.s	.opened2	; if not, quit
+		bsr.s	Pri_DropCharacters
 		addq.w	#8,obY(a0)
 		move.b	#6,obRoutine(a0)
 		move.b	#60,obTimeFrame(a0)	; set delay between animal spawns
 		clr.b	(f_timecount).w		; stop time counter
 		clr.b	(f_lockscreen).w	; lock screen position
-		clr.b	ob2ndRout(a0)
-		bclr	#3,(v_player+obStatus).w
-		bclr	#3,(v_player2+obStatus).w
-		bset	#1,(v_player+obStatus).w
-		bset	#1,(v_player2+obStatus).w
-.open2:		rts
+.opened2:	rts
 ; ---------------------------------------------------------------------------
 
 Pri_Explosion:	; Routine 6
@@ -116,7 +128,7 @@ Pri_Explosion:	; Routine 6
 		bne.s	.fail
 		move.b	#2,(Boss_defeated_flag).w
 		move.b	#8,obRoutine(a0)	; replace explosions with animals
-		move.b	#4,obFrame(a0)
+		clr.b	obFrame(a0)		; use frame 0 (empty)
 		move.b	#150,obTimeFrame(a0)
 		addi.w	#$20,obY(a0)
 		moveq	#7,d6
@@ -178,5 +190,5 @@ Pri_EndAct:	; Routine $A
 ; ---------------------------------------------------------------------------
 Ani_Pri:	dc.w byte_19730-Ani_Pri
 		dc.w byte_19730-Ani_Pri
-byte_19730:	dc.b 2,  1,  3,afEnd
+byte_19730:	dc.b 2,  3,  4,afEnd
 		even
