@@ -224,7 +224,6 @@ loc_16B02:
 		move.w	obVelX(a0),d0
 		beq.s	.notmoving
 		bra.w	Cat_HeadPath
-.notmoving:	rts
 ; ===========================================================================
 
 .loc_16B5E:
@@ -232,7 +231,7 @@ loc_16B02:
 		move.b	#7,cat_wait_time(a0)
 		clr.w	obVelX(a0)
 		clr.w	cat_inertia(a0)
-		rts
+.notmoving:	rts
 ; ===========================================================================
 
 Cat_BodySeg2:	; Routine 6
@@ -470,8 +469,7 @@ Cat_HeadPath:
 		rts
 .pendingup:
 		addq.w	#1,cat_pending_y(a0)
-.return:
-		rts
+.return:	rts
 ; ===========================================================================
 ; Check the proposed body position before consuming a trail entry.
 ; A curved/stepped trail can be eight pixels long while its endpoints are
