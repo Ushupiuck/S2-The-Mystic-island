@@ -185,6 +185,16 @@ afRoutine:	equ $FC	; increment routine counter
 afReset:	equ $FB	; reset animation and 2nd object routine counter
 af2ndRoutine:	equ $FA	; increment 2nd routine counter
 ; ---------------------------------------------------------------------------
+; Sonic's collision sizes
+sonic_width:		equ 18/2	; Sonic's width
+sonic_height:		equ 38/2	; Sonic's height
+sonic_roll_width:	equ 14/2	; Sonic's width (rolling)
+sonic_roll_height:	equ 28/2	; Sonic's height (rolling)
+sonic_solid_width:	equ 22/2	; Sonic's width (solid object collision)
+sonic_react_width:	equ 16/2	; Sonic's width (object collision)
+sonic_duck_height:	equ 20/2	; Sonic's height (object collision, ducking)
+sonic_quick_size:	equ 20/2	; Sonic's size (quick terrain find)
+; ---------------------------------------------------------------------------
 ; status_secondary bitfield variables
 ;
 ; status_secondary variable bit numbers
@@ -1567,7 +1577,7 @@ ArtTile_Lamppost:		equ $47C
 ArtTile_Jaws:			equ $486
 ArtTile_Burrobot:		equ $4A6
 ArtTile_Basaran:		equ $385
-ArtTile_Button:			equ $50F
+ArtTile_Button:			equ $50F	; TO BE CHANGED
 ArtTile_S1_Spring_Horizontal:	equ $4A8
 ArtTile_S1_Spring_Vertical:	equ $4B8
 ArtTile_Shield:			equ $4BE
