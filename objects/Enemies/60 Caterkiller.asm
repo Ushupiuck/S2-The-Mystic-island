@@ -285,8 +285,11 @@ Cat_BodySeg1:	; Routine 4, 8
 		add.w	d1,d0
 		move.w	d0,obVelX(a0)
 		neg.w	d0			; gait velocity -> positive distance budget
-		beq.w	loc_16C64
 		add.w	d0,cat_path_credit(a0)
+.path:
+		; Finish deferred movement as soon as there is room, including
+		; a phase whose nominal speed is zero. Otherwise the held budget
+		; would stretch the chain during the next extension.
 		cmpi.w	#cat_step_cost,cat_path_credit(a0)
 		blo.w	loc_16C64
 		moveq	#0,d0
@@ -294,7 +297,17 @@ Cat_BodySeg1:	; Routine 4, 8
 		cmp.b	cat_segment_pos(a1),d0	; never consume unwritten trail
 		beq.w	loc_16C64
 		bsr.w	Cat_ReadFloor
-		bsr.w	Cat_PathCost
+		bsr.w	Cat_CheckSpacing
+		blo.w	loc_16C64		; retain the step and its budget until there is room
+		; Inline the cost check: avoid BSR/RTS on every path step.
+		move.w	#cat_step_cost,d2
+		cmpi.w	#cat_floor_up,d1
+		beq.s	.diagonal
+		cmpi.w	#cat_floor_down,d1
+		bne.s	.costready
+.diagonal:
+		move.w	#cat_diag_cost,d2
+.costready:
 		cmp.w	cat_path_credit(a0),d2
 		bhi.w	loc_16C64
 		sub.w	d2,cat_path_credit(a0)
@@ -303,7 +316,7 @@ Cat_BodySeg1:	; Routine 4, 8
 		addq.w	#1,d0
 		andi.w	#$F,d0
 		move.b	d0,cat_segment_pos(a0)
-		bra.s	loc_16C64
+		bra.s	.path
 
 Cat_BodyAirborne:
 		move.l	obY(a1),obY(a0)
@@ -431,7 +444,14 @@ Cat_HeadPath:
 .cache:
 		move.b	d1,cat_next_step(a0)
 .spend:
-		bsr.w	Cat_PathCost
+		move.w	#cat_step_cost,d2
+		cmpi.w	#cat_floor_up,d1
+		beq.s	.diagonal
+		cmpi.w	#cat_floor_down,d1
+		bne.s	.costready
+.diagonal:
+		move.w	#cat_diag_cost,d2
+.costready:
 		cmp.w	cat_path_credit(a0),d2
 		bhi.s	.return
 		sub.w	d2,cat_path_credit(a0)
@@ -447,23 +467,72 @@ Cat_HeadPath:
 		beq.s	.return
 		bmi.s	.pendingup
 		subq.w	#1,cat_pending_y(a0)
-.return:
 		rts
 .pendingup:
 		addq.w	#1,cat_pending_y(a0)
-		rts
-; ===========================================================================
-; in: d1.w = step; out: d2.w = its distance cost. All other registers preserved.
-Cat_PathCost:
-		move.w	#cat_step_cost,d2
-		cmpi.w	#cat_floor_up,d1
-		beq.s	.diagonal
-		cmpi.w	#cat_floor_down,d1
-		bne.s	.return
-.diagonal:
-		move.w	#cat_diag_cost,d2
 .return:
 		rts
+; ===========================================================================
+; Check the proposed body position before consuming a trail entry.
+; A curved/stepped trail can be eight pixels long while its endpoints are
+; closer together. Keep at least eight pixels between like-facing centers.
+; During a reversal, retain the original delayed turn through the chain.
+; in: d1.w = step, a1 = parent; out: carry set if the step is too close
+; preserves d0/d1/a0/a1; clobbers d2/d3/a2
+Cat_CheckSpacing:
+		cmpi.w	#cat_floor_turn,d1
+		beq.s	.allow
+		move.b	obStatus(a1),d2
+		move.b	obStatus(a0),d3
+		eor.b	d3,d2
+		btst	#0,d2
+		bne.s	.allow
+		move.w	obX(a1),d2
+		sub.w	obX(a0),d2
+		move.w	obY(a1),d3
+		sub.w	obY(a0),d3
+		cmpi.w	#cat_floor_vup,d1
+		beq.s	.up
+		cmpi.w	#cat_floor_vdown,d1
+		beq.s	.down
+		addq.w	#1,d2
+		btst	#0,obStatus(a0)
+		beq.s	.vertical
+		subq.w	#2,d2
+.vertical:
+		cmpi.w	#cat_floor_up,d1
+		beq.s	.up
+		cmpi.w	#cat_floor_down,d1
+		bne.s	.distance
+.down:
+		subq.w	#1,d3
+		bra.s	.distance
+.up:
+		addq.w	#1,d3
+.distance:
+		tst.w	d2
+		bpl.s	.xpositive
+		neg.w	d2
+.xpositive:
+		cmpi.w	#8,d2
+		bhs.s	.allow
+		tst.w	d3
+		bpl.s	.ypositive
+		neg.w	d3
+.ypositive:
+		cmpi.w	#8,d3
+		bhs.s	.allow
+		lea	.squares(pc),a2
+		move.b	(a2,d2.w),d2
+		move.b	(a2,d3.w),d3
+		add.b	d3,d2
+		cmpi.b	#8*8,d2
+		rts
+.allow:
+		moveq	#0,d2			; clear carry
+		rts
+.squares:
+		dc.b 0,1,4,9,16,25,36,49
 ; ===========================================================================
 ; Apply one recorded step, preserving d0/d1/a1 for cursor and parent handling.
 ; World subpixels are untouched: distance fractions live in cat_path_credit.
