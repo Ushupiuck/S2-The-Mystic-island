@@ -8079,8 +8079,8 @@ DynResize_SLZ4:
 ; ===========================================================================
 		include	"objects/0D Animals.asm"
 		include	"objects/12 & 13 Rings.asm"
-		include	"objects/Empty slots/14.asm"
-		include	"objects/Empty slots/15.asm"
+		include	"objects/Empty Slots/14.asm"
+		include	"objects/Empty Slots/15.asm"
 		include	"objects/17 Swinging Platforms.asm"
 		include	"objects/18 Platforms.asm"
 		include	"objects/1A Collapsing Platforms.asm"
@@ -12647,7 +12647,7 @@ loc_1573A:
 		include	"objects/Enemies/4D Rhinobot.asm"
 		include	"objects/Enemies/4F Splats.asm"
 		include	"objects/Enemies/52 Piranha.asm"
-		include	"objects/Empty slots/53.asm"
+		include	"objects/Empty Slots/53.asm"
 ; ---------------------------------------------------------------------------
 ; Object 50 - Aquis badnik from HPZ
 ;----------------------------------------------------------------------------
