@@ -132,9 +132,7 @@ Cat_Head:	; Routine 2
 		andi.w	#$7F,d0
 		addq.b	#4,obAngle(a0)
 		move.b	(a1,d0.w),d0
-		bpl.s	.animate
-		bclr	#7,cat_mode(a0)
-		bra.s	.display
+		bmi.s	.stopanim
 
 .animate:
 		andi.b	#$10,d1
@@ -142,6 +140,11 @@ Cat_Head:	; Routine 2
 		move.b	d0,obFrame(a0)
 
 .display:
+		out_of_range.w	Cat_ChkGone
+		bra.w	DisplaySprite
+
+.stopanim:
+		bclr	#7,cat_mode(a0)
 		out_of_range.w	Cat_ChkGone
 		bra.w	DisplaySprite
 
@@ -165,7 +168,7 @@ Cat_Index2:
 		dc.w loc_16B02-Cat_Index2
 ; ===========================================================================
 .airborne:
-		cmpi.w	#$800,obVelY(a0)	; cap at 8px/frame — safely within ObjHitFloor's $10 range
+		cmpi.w	#$800,obVelY(a0)	; cap at 8px/frame â€” safely within ObjHitFloor's $10 range
 	;	blt.s	.chkfloor
 		bls.s	.chkfloor
 		move.w	#$800,obVelY(a0)
