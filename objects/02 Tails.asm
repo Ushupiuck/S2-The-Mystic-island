@@ -324,7 +324,7 @@ loc_10F48:
 		beq.s	Tails_Balance
 		moveq	#0,d0
 		move.b	standonobject(a0),d0
-		mulu.w	#object_size,d0
+		obj_index_to_offset d0
 		lea	(v_player).w,a1
 		lea	(a1,d0.w),a1
 		tst.b	obStatus(a1)

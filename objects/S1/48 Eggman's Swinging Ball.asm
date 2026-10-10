@@ -27,7 +27,7 @@ GBall_Main:	; Routine 0
 		movea.l	a0,a1
 		move.w	a1,d5
 		subi.w	#v_objspace,d5
-		lsr.w	#object_size_bits,d5
+		obj_offset_to_index d5
 		andi.w	#$7F,d5
 		move.b	d5,(a2)+
 		move.b	#4,obRender(a1)
@@ -57,7 +57,7 @@ GBall_MakeLinks:
 		addq.b	#1,obSubtype(a0)
 		move.w	a1,d5
 		subi.w	#v_objspace,d5
-		lsr.w	#object_size_bits,d5
+		obj_offset_to_index d5
 		andi.w	#$7F,d5
 		move.b	d5,(a2)+
 		move.b	#4,obRender(a1)
@@ -89,7 +89,7 @@ GBall_Base:	; Routine 2
 loc_191D2:
 		moveq	#0,d4
 		move.b	(a2)+,d4
-		lsl.w	#object_size_bits,d4
+		obj_index_to_offset d4
 		addi.l	#v_objspace,d4
 		movea.l	d4,a1
 		move.b	(a3)+,d0
@@ -125,7 +125,7 @@ GBall_Display:
 .loop:
 		moveq	#0,d4
 		move.b	(a2)+,d4
-		lsl.w	#object_size_bits,d4
+		obj_index_to_offset d4
 		addi.l	#v_objspace,d4
 		movea.l	d4,a1
 		moveq	#0,d4
@@ -177,7 +177,7 @@ GBall_Display2:	; Routine 4
 .loop:
 		moveq	#0,d4
 		move.b	(a2)+,d4
-		lsl.w	#object_size_bits,d4
+		obj_index_to_offset d4
 		addi.l	#v_objspace,d4
 		movea.l	d4,a1
 		moveq	#0,d4

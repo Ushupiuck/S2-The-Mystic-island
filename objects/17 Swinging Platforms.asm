@@ -235,12 +235,12 @@ SwingingPtfm_DetachCheck:
 
 		move.w	a0,d0
 		subi.w	#v_objspace,d0
-		lsr.w	#object_size_bits,d0
+		obj_offset_to_index d0
 		andi.w	#$7F,d0
 
 		move.w	a1,d1
 		subi.w	#v_objspace,d1
-		lsr.w	#object_size_bits,d1
+		obj_offset_to_index d1
 		andi.w	#$7F,d1
 
 		cmp.b	(v_player+standonobject).w,d0

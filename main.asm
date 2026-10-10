@@ -8314,7 +8314,7 @@ byte_B292:	dc.b   2,  0,  1, $B,afBack,  1
 ; ObjectsLoad:
 ExecuteObjects:
 		lea	(v_objspace).w,a0
-		moveq	#(v_objend-v_objspace)/object_size-1,d7	; run the first $80 objects out of levels
+		moveq	#(v_objend-v_objspace)/object_size-1,d7	; run every slot in the object pool
 		moveq	#0,d0
 	;	cmpi.b	#6,(v_player+obRoutine).w	; is Sonic dead?
 	;	bhs.s	ExecuteObjectsWhenPlayerIsDead	; if yes, branch
@@ -10345,7 +10345,7 @@ FindNextFreeObj:
 		movea.l	a0,a1
 		move.w	#v_lvlobjend,d0
 		sub.w	a0,d0				; subtract current object location
-		lsr.w	#6,d0				; divide by $40
+		lsr.w	#6,d0				; select a $40-byte lookup bucket, independent of SST size
 		move.b	+(pc,d0.w),d0			; load the right number of objects from table
 		bmi.s	FindFreeObj.return		; if negative, we have failed!
 
@@ -10361,9 +10361,9 @@ FindNextFreeObj:
 .a	set	v_lvlobjspace
 .b	set	v_lvlobjend
 .c	set	.b			; begin from bottom of array and decrease backwards
-	rept	(.b-.a+$40-1)/$40	; repeat for all slots, minus exception
+	rept	(.b-.a)/$40+1	; include the bucket at the first dynamic slot, even on a $40-byte boundary
 .c	set	.c-$40			; address for previous $40 (also skip last part)
-	dc.b	(.b-.c-1)/object_size-1	; write possible slots according to object_size division + hack + dbf hack
+	dc.b	(.b-.c-1)/object_size-1	; remaining slots in this bucket, minus the DBF adjustment
 	endm
 	even
 ; ===========================================================================
@@ -11193,7 +11193,7 @@ PlatformObject_ChkYRange:
 		tst.b	(f_playerctrl).w
 		bmi.w	loc_F916.return
 		cmpi.b	#6,obRoutine(a1)
-		bhs.s	loc_F916.return
+		bhs.w	loc_F916.return
 		add.w	d0,d2
 		addq.w	#3,d2
 		move.w	d2,obY(a1)
@@ -11203,16 +11203,16 @@ RideObject_SetRide:
 		beq.s	loc_F916
 		moveq	#0,d0
 		move.b	standonobject(a1),d0
-		mulu.w	#object_size,d0
+		obj_index_to_offset d0
 		addi.l	#v_objspace,d0
 		movea.l	d0,a3
 		bclr	#3,obStatus(a3)
 
 loc_F916:
-		moveq	#0,d0 ; Clear the high word for the coming division.
+		moveq	#0,d0
 		move.w	a0,d0
 		subi.w	#v_objspace,d0
-		divu.w	#object_size,d0
+		obj_offset_to_index d0
 		andi.w	#$7F,d0
 		move.b	d0,standonobject(a1)
 		clr.b	obAngle(a1)

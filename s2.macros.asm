@@ -54,6 +54,26 @@ bytesTo2Lcnt function n,bytesTo2Xcnt(n,4)
 ; that writes n bytes total at 2 bytes per iteration
 bytesTo2Wcnt function n,bytesTo2Xcnt(n,2)
 ; ---------------------------------------------------------------------------
+; Object reference conversions. Inputs/outputs use the low word of a data
+; register; its high word is unspecified. No other registers are changed.
+; Keep the cheap shifts for $40-byte SSTs; other sizes use the actual stride.
+obj_index_to_offset macro register
+    if object_size=$40
+		lsl.w	#6,register
+    else
+		mulu.w	#object_size,register
+    endif
+    endm
+
+obj_offset_to_index macro register
+    if object_size=$40
+		lsr.w	#6,register
+    else
+		andi.l	#$FFFF,register	; DIVU reads a long dividend; ignore the old high word
+		divu.w	#object_size,register
+    endif
+    endm
+; ---------------------------------------------------------------------------
 
 ; values for the type argument
 VRAM = %100001

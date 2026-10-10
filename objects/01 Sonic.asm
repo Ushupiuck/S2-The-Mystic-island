@@ -430,7 +430,7 @@ loc_FD72:
 		beq.s	Sonic_Balance
 		moveq	#0,d0
 		move.b	standonobject(a0),d0
-		mulu.w	#object_size,d0
+		obj_index_to_offset d0
 		lea	(v_player).w,a1			; a1=character
 		lea	(a1,d0.w),a1			; a1=object
 		tst.b	obStatus(a1)
