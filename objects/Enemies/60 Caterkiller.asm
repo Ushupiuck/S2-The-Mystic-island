@@ -183,6 +183,13 @@ Cat_Index2:
 		dc.w .wait-Cat_Index2
 		dc.w loc_16B02-Cat_Index2
 ; ===========================================================================
+.endmove:
+		subq.b	#2,ob2ndRout(a0)
+		move.b	#7,cat_wait_time(a0)
+		clr.w	obVelX(a0)
+		clr.w	cat_inertia(a0)
+		rts
+; ===========================================================================
 .airborne:
 		cmpi.w	#$800,obVelY(a0)	; cap at 8px/frame — safely within ObjHitFloor's $10 range
 	;	blt.s	.chkfloor
@@ -192,18 +199,16 @@ Cat_Index2:
 		bsr.w	ObjectFall
 		jsr	(ObjHitFloor).l
 		tst.w	d1
-		bpl.s	.stillair
+		bpl.s	.return
 		add.w	d1,obY(a0)
 		clr.w	obVelY(a0)
 		move.b	#2,ob2ndRout(a0)
 		move.b	#7,cat_wait_time(a0)
-.stillair:	rts
+.return:	rts
 ; ===========================================================================
 .wait:
 		subq.b	#1,cat_wait_time(a0)
-		bmi.s	.move
-		rts
-; ===========================================================================
+		bpl.s	.return
 
 .move:
 		addq.b	#2,ob2ndRout(a0)
@@ -220,18 +225,87 @@ loc_16AFC:
 
 loc_16B02:
 		subq.b	#1,cat_wait_time(a0)
-		bmi.s	.loc_16B5E
+		bmi.s	Cat_Index2.endmove
 		move.w	obVelX(a0),d0
-		beq.s	.notmoving
-		bra.w	Cat_HeadPath
-; ===========================================================================
+		beq.s	Cat_Index2.return
+; Spend the head's crawl speed as distance along a trail of small steps.
+; A floor delta of e.g. +5 becomes one down-diagonal followed by four
+; vertical steps. Each child replays those steps with the same distance
+; costs, so horizontal separation shrinks naturally as the slope steepens.
+; obVelY is gravity while airborne, and pending Y only after landing.
+.path:
+		neg.w	d0
+		add.w	d0,cat_path_credit(a0)
+		cmpi.w	#cat_step_cost,cat_path_credit(a0)
+		blo.s	Cat_Index2.return
+		moveq	#0,d1
+		move.b	cat_next_step(a0),d1
+		cmpi.b	#$FF,d1
+		bne.w	.spend
+		tst.w	cat_pending_y(a0)
+		beq.s	.probe
+		bmi.s	.verticalup
+		moveq	#cat_floor_vdown,d1
+		bra.s	.cache
+.verticalup:
+		moveq	#cat_floor_vup,d1
+		bra.s	.cache
 
-.loc_16B5E:
-		subq.b	#2,ob2ndRout(a0)
-		move.b	#7,cat_wait_time(a0)
-		clr.w	obVelX(a0)
-		clr.w	cat_inertia(a0)
-.notmoving:	rts
+.probe:
+		move.w	obX(a0),d3
+		subq.w	#1,d3
+		btst	#0,obStatus(a0)
+		beq.s	.floor
+		addq.w	#2,d3
+.floor:
+		jsr	(ObjHitFloor2).l		; probe next X without moving the head yet
+		cmpi.w	#-8,d1
+		blt.s	.turn
+		cmpi.w	#$C,d1
+		bge.s	.turn
+		move.w	d1,cat_pending_y(a0)
+		beq.s	.flat
+		bmi.s	.up
+		moveq	#cat_floor_down,d1
+		bra.s	.cache
+.up:
+		moveq	#cat_floor_up,d1
+		bra.s	.cache
+.flat:
+		moveq	#cat_floor_flat,d1
+		bra.s	.cache
+.turn:
+		moveq	#cat_floor_turn,d1
+.cache:
+		move.b	d1,cat_next_step(a0)
+.spend:
+		move.w	#cat_step_cost,d2
+		cmpi.w	#cat_floor_up,d1
+		beq.s	.diagonal
+		cmpi.w	#cat_floor_down,d1
+		bne.s	.costready
+.diagonal:
+		move.w	#cat_diag_cost,d2
+.costready:
+		cmp.w	cat_path_credit(a0),d2
+		bhi.s	.return
+		sub.w	d2,cat_path_credit(a0)
+		moveq	#0,d0
+		move.b	cat_segment_pos(a0),d0
+		bsr.w	Cat_WriteFloor
+		bsr.w	Cat_ApplyPathStep
+		addq.w	#1,d0
+		andi.w	#$F,d0
+		move.b	d0,cat_segment_pos(a0)
+		move.b	#$FF,cat_next_step(a0)
+		tst.w	cat_pending_y(a0)
+		beq.s	.return
+		bmi.s	.pendingup
+		subq.w	#1,cat_pending_y(a0)
+		rts
+.pendingup:
+		addq.w	#1,cat_pending_y(a0)
+.return:	rts
 ; ===========================================================================
 
 Cat_BodySeg2:	; Routine 6
@@ -340,7 +414,7 @@ loc_16C64:
 		beq.s	.delete
 		; Is the parent going to delete itself?
 		cmpi.b	#$A,obRoutine(a1)
-		bne.s	.display
+		bne.w	DisplaySprite
 		; Delete the parent.
 		bsr.w	DeleteObject2	; Don't mind this misnomer.
 
@@ -350,8 +424,6 @@ loc_16C64:
 		; Do not queue self for display, since it will be deleted by
 		; its child later.
 		rts
-
-.display:	bra.w	DisplaySprite
 ; ===========================================================================
 Cat_FragSpeed:
 		dc.w -$200				; head x speed
@@ -391,85 +463,6 @@ loc_16CE0:
 		tst.b	obRender(a0)
 		bpl.w	Cat_ChkGone
 		bra.w	DisplaySprite
-; ===========================================================================
-; Spend the head's crawl speed as distance along a trail of small steps.
-; A floor delta of e.g. +5 becomes one down-diagonal followed by four
-; vertical steps. Each child replays those steps with the same distance
-; costs, so horizontal separation shrinks naturally as the slope steepens.
-; obVelY is gravity while airborne, and pending Y only after landing.
-Cat_HeadPath:
-		neg.w	d0
-		add.w	d0,cat_path_credit(a0)
-		cmpi.w	#cat_step_cost,cat_path_credit(a0)
-		blo.w	.return
-		moveq	#0,d1
-		move.b	cat_next_step(a0),d1
-		cmpi.b	#$FF,d1
-		bne.w	.spend
-		tst.w	cat_pending_y(a0)
-		beq.s	.probe
-		bmi.s	.verticalup
-		moveq	#cat_floor_vdown,d1
-		bra.s	.cache
-.verticalup:
-		moveq	#cat_floor_vup,d1
-		bra.s	.cache
-
-.probe:
-		move.w	obX(a0),d3
-		subq.w	#1,d3
-		btst	#0,obStatus(a0)
-		beq.s	.floor
-		addq.w	#2,d3
-.floor:
-		jsr	(ObjHitFloor2).l		; probe next X without moving the head yet
-		cmpi.w	#-8,d1
-		blt.s	.turn
-		cmpi.w	#$C,d1
-		bge.s	.turn
-		move.w	d1,cat_pending_y(a0)
-		beq.s	.flat
-		bmi.s	.up
-		moveq	#cat_floor_down,d1
-		bra.s	.cache
-.up:
-		moveq	#cat_floor_up,d1
-		bra.s	.cache
-.flat:
-		moveq	#cat_floor_flat,d1
-		bra.s	.cache
-.turn:
-		moveq	#cat_floor_turn,d1
-.cache:
-		move.b	d1,cat_next_step(a0)
-.spend:
-		move.w	#cat_step_cost,d2
-		cmpi.w	#cat_floor_up,d1
-		beq.s	.diagonal
-		cmpi.w	#cat_floor_down,d1
-		bne.s	.costready
-.diagonal:
-		move.w	#cat_diag_cost,d2
-.costready:
-		cmp.w	cat_path_credit(a0),d2
-		bhi.s	.return
-		sub.w	d2,cat_path_credit(a0)
-		moveq	#0,d0
-		move.b	cat_segment_pos(a0),d0
-		bsr.w	Cat_WriteFloor
-		bsr.w	Cat_ApplyPathStep
-		addq.w	#1,d0
-		andi.w	#$F,d0
-		move.b	d0,cat_segment_pos(a0)
-		move.b	#$FF,cat_next_step(a0)
-		tst.w	cat_pending_y(a0)
-		beq.s	.return
-		bmi.s	.pendingup
-		subq.w	#1,cat_pending_y(a0)
-		rts
-.pendingup:
-		addq.w	#1,cat_pending_y(a0)
-.return:	rts
 ; ===========================================================================
 ; Check the proposed body position before consuming a trail entry.
 ; A curved/stepped trail can be eight pixels long while its endpoints are
