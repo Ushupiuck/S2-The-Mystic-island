@@ -43,7 +43,8 @@ Hel_Build:
 		addq.b	#1,obSubtype(a0)
 		move.w	a1,d5
 		subi.w	#v_objspace,d5
-		obj_offset_to_index d5
+		andi.l	#$FFFF,d5	; DIVU reads a long dividend; ignore the old high word
+		divu.w	#object_size,d5
 		andi.w	#$7F,d5
 		move.b	d5,(a2)+		; copy child address to parent RAM
 		move.b	#4,obRoutine(a1)
@@ -85,7 +86,7 @@ Hel_DelAll:
 
 -		moveq	#0,d0
 		move.b	(a2)+,d0
-		obj_index_to_offset d0
+		mulu.w	#object_size,d0
 		addi.l	#v_objspace,d0
 		movea.l	d0,a1		; get child address
 		bsr.w	DeleteObject2	; delete object

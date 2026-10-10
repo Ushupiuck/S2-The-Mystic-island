@@ -11203,7 +11203,7 @@ RideObject_SetRide:
 		beq.s	loc_F916
 		moveq	#0,d0
 		move.b	standonobject(a1),d0
-		obj_index_to_offset d0
+		mulu.w	#object_size,d0
 		addi.l	#v_objspace,d0
 		movea.l	d0,a3
 		bclr	#3,obStatus(a3)
@@ -11212,7 +11212,8 @@ loc_F916:
 		moveq	#0,d0
 		move.w	a0,d0
 		subi.w	#v_objspace,d0
-		obj_offset_to_index d0
+		andi.l	#$FFFF,d0	; DIVU reads a long dividend; ignore the old high word
+		divu.w	#object_size,d0
 		andi.w	#$7F,d0
 		move.b	d0,standonobject(a1)
 		clr.b	obAngle(a1)

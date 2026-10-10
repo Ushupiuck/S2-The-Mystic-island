@@ -133,7 +133,7 @@ obParent2 =		objoff_40 ; and $41 ; several objects use this instead
 obParent3 =		objoff_42 ; and $43 ; parent of child objects
 child_dx =		objoff_42 ; byte ; X offset of child relative to parent
 child_dy =		objoff_43 ; byte ; Y offset of child relative to parent
-object_size_bits:	equ 6		; legacy log2($40); use the conversion macros for object references
+object_size_bits:	equ 6		; legacy log2($40); do not use for SST address calculations
 object_size:		equ $48		; SST stride in bytes
 object_slot_count:	equ $78		; 120 slots, including the reserved objects
 reserved_object_slots:	equ $20		; first 32 slots are reserved

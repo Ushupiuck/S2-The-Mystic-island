@@ -235,12 +235,14 @@ SwingingPtfm_DetachCheck:
 
 		move.w	a0,d0
 		subi.w	#v_objspace,d0
-		obj_offset_to_index d0
+		andi.l	#$FFFF,d0	; DIVU reads a long dividend; ignore the old high word
+		divu.w	#object_size,d0
 		andi.w	#$7F,d0
 
 		move.w	a1,d1
 		subi.w	#v_objspace,d1
-		obj_offset_to_index d1
+		andi.l	#$FFFF,d1	; DIVU reads a long dividend; ignore the old high word
+		divu.w	#object_size,d1
 		andi.w	#$7F,d1
 
 		cmp.b	(v_player+standonobject).w,d0
