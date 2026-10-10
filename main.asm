@@ -17967,7 +17967,7 @@ Art_HPZPulseOrb:	binclude	"art/uncompressed/Pulsing orb (HPZ).bin"
 Kospm_ContSonic:	binclude	"art/moduled kosinski/Continue Screen Sonic.kospm"
 Kospm_ContTails:	binclude	"art/moduled kosinski/Continue screen Tails.kospm"
 Kospm_MiniSonic:	binclude	"art/moduled kosinski/Mini Sonic Continue.kospm"
-Kospm_MiniTails:	binclude	"art/moduled kosinski/Mini Tails Continue.kospm"
+Kospm_MiniTails:	binclude	"art/moduled kosinski/Mini Tails continue.kospm"
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - Ending (Leftover placeholder - to be re-used)
 ; ---------------------------------------------------------------------------
@@ -18608,53 +18608,53 @@ PCol_MTZ4:	binclude	"collision/present/MTZ4.bin"
 ; ---------------------------------------------------------------------------
 ; Good Future Collision
 ; ---------------------------------------------------------------------------
-GCol_GHZ1:	binclude	"collision/good future/GHZ1.bin"	; To be replaced
+GCol_GHZ1:	binclude	"collision/good Future/GHZ1.bin"	; To be replaced
 		even
-GCol_GHZ2:	binclude	"collision/good future/GHZ2.bin"	; To be replaced
+GCol_GHZ2:	binclude	"collision/good Future/GHZ2.bin"	; To be replaced
 		even
-GCol_GHZ3:	binclude	"collision/good future/GHZ3.bin"	; To be replaced
+GCol_GHZ3:	binclude	"collision/good Future/GHZ3.bin"	; To be replaced
 		even
-GCol_GHZ4:	binclude	"collision/good future/GHZ4.bin"	; To be replaced
+GCol_GHZ4:	binclude	"collision/good Future/GHZ4.bin"	; To be replaced
 		even
-GCol_LZ1:	binclude	"collision/good future/LZ1.bin"
+GCol_LZ1:	binclude	"collision/good Future/LZ1.bin"
 		even
-GCol_LZ2:	binclude	"collision/good future/LZ2.bin"
+GCol_LZ2:	binclude	"collision/good Future/LZ2.bin"
 		even
-GCol_LZ3:	binclude	"collision/good future/LZ3.bin"
+GCol_LZ3:	binclude	"collision/good Future/LZ3.bin"
 		even
-GCol_LZ4:	binclude	"collision/good future/LZ4.bin"
+GCol_LZ4:	binclude	"collision/good Future/LZ4.bin"
 		even
-GCol_EHZ1:	binclude	"collision/good future/EHZ1.bin"
+GCol_EHZ1:	binclude	"collision/good Future/EHZ1.bin"
 		even
-GCol_EHZ2:	binclude	"collision/good future/EHZ2.bin"
+GCol_EHZ2:	binclude	"collision/good Future/EHZ2.bin"
 		even
-GCol_EHZ3:	binclude	"collision/good future/EHZ3.bin"
+GCol_EHZ3:	binclude	"collision/good Future/EHZ3.bin"
 		even
-GCol_EHZ4:	binclude	"collision/good future/EHZ4.bin"
+GCol_EHZ4:	binclude	"collision/good Future/EHZ4.bin"
 		even
-GCol_CPZ1:	binclude	"collision/good future/CPZ1.bin"
+GCol_CPZ1:	binclude	"collision/good Future/CPZ1.bin"
 		even
-GCol_CPZ2:	binclude	"collision/good future/CPZ2.bin"
+GCol_CPZ2:	binclude	"collision/good Future/CPZ2.bin"
 		even
-GCol_CPZ3:	binclude	"collision/good future/CPZ3.bin"
+GCol_CPZ3:	binclude	"collision/good Future/CPZ3.bin"
 		even
-GCol_CPZ4:	binclude	"collision/good future/CPZ4.bin"
+GCol_CPZ4:	binclude	"collision/good Future/CPZ4.bin"
 		even
-GCol_HPZ1:	binclude	"collision/good future/HPZ1.bin"
+GCol_HPZ1:	binclude	"collision/good Future/HPZ1.bin"
 		even
-GCol_HPZ2:	binclude	"collision/good future/HPZ2.bin"
+GCol_HPZ2:	binclude	"collision/good Future/HPZ2.bin"
 		even
-GCol_HPZ3:	binclude	"collision/good future/HPZ3.bin"
+GCol_HPZ3:	binclude	"collision/good Future/HPZ3.bin"
 		even
-GCol_HPZ4:	binclude	"collision/good future/HPZ4.bin"
+GCol_HPZ4:	binclude	"collision/good Future/HPZ4.bin"
 		even
-GCol_HTZ1:	binclude	"collision/good future/HTZ1.bin"
+GCol_HTZ1:	binclude	"collision/good Future/HTZ1.bin"
 		even
-GCol_HTZ2:	binclude	"collision/good future/HTZ2.bin"
+GCol_HTZ2:	binclude	"collision/good Future/HTZ2.bin"
 		even
-GCol_HTZ3:	binclude	"collision/good future/HTZ3.bin"
+GCol_HTZ3:	binclude	"collision/good Future/HTZ3.bin"
 		even
-GCol_HTZ4:	binclude	"collision/good future/HTZ4.bin"
+GCol_HTZ4:	binclude	"collision/good Future/HTZ4.bin"
 		even
 GCol_MTZ1:	binclude	"collision/present/MTZ1.bin"
 		even
@@ -19629,7 +19629,7 @@ SpriteTerminator:
 ; -------------------------------------------------------------------------------
 ; sprite mappings
 ; -------------------------------------------------------------------------------
-Map_Sonic:	binclude	"mappings/sprite/Sonic mappings.bin"
+Map_Sonic:	binclude	"mappings/sprite/Sonic Mappings.bin"
 		even
 SonicDynPLC:	binclude	"mappings/spriteDPLC/Sonic DPLCs.bin"
 		even
@@ -19637,7 +19637,7 @@ Map_Tails:	include		"mappings/sprite/Tails.asm"
 TailsDynPLC:	include		"mappings/spriteDPLC/Tails.asm"
 Map_Obj03:	binclude	"mappings/sprite/Patch switcher.bin"
 		even
-Map_Obj07:	binclude	"mappings/sprite/Water Surface.bin"
+Map_Obj07:	binclude	"mappings/sprite/Water surface.bin"
 		even
 Map_Splash:	binclude	"mappings/sprite/obj08.bin"
 		even
@@ -19661,7 +19661,7 @@ Map_Animals5:	binclude	"mappings/sprite/Map - Rabbit Penguin.bin"	; $0D
 		even
 Map_Obj16:	binclude	"mappings/sprite/HTZ Descending lift.bin"
 		even
-Map_Obj17:	binclude	"mappings/sprite/Swinging Platform.bin"
+Map_Obj17:	binclude	"mappings/sprite/Swinging platform.bin"
 		even
 Map_Obj17_SLZ:	binclude	"mappings/sprite/SLZ Swinging Platform.bin"
 		even
@@ -19669,11 +19669,11 @@ Map_Obj18_GHZ:	binclude	"mappings/sprite/18 - GHZ platform mappings.bin"
 		even
 Map_Obj18_EHZ:	binclude	"mappings/sprite/18 - EHZ platform mappings.bin"
 		even
-Map_Obj19:	binclude	"mappings/sprite/CPZ Platform.bin"
+Map_Obj19:	binclude	"mappings/sprite/CPZ platform.bin"
 		even
 Map_Obj1A:	binclude	"mappings/sprite/GHZ Collapsing Ledge.bin"
 		even
-Map_Obj1A_HPZ:	binclude	"mappings/sprite/HPZ Collapsing Platform.bin"
+Map_Obj1A_HPZ:	binclude	"mappings/sprite/HPZ Collapsing platform.bin"
 		even
 Map_Obj1B:	binclude	"mappings/sprite/Collapsing Floors.bin"
 		even
@@ -19687,7 +19687,7 @@ Map_HPZ_Bridge:	binclude	"mappings/sprite/obj1D_HPZ.bin"
 		even
 Map_Waterfall2:	binclude	"mappings/sprite/HPZ Waterfall.bin"		; $1E
 		even
-Map_LConv:	binclude	"mappings/sprite/LZ Conveyor.bin"		; $1F
+Map_LConv:	binclude	"mappings/sprite/LZ conveyor.bin"		; $1F
 		even
 Map_Mplat:	binclude	"mappings/sprite/Morphing Platform.bin"		; $20
 		even
