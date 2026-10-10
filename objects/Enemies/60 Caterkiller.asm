@@ -157,12 +157,12 @@ Cat_Head:	; Routine 2
 
 .display:
 		out_of_range.w	Cat_ChkGone
-.display2:	jmp	(DisplaySprite).l
+		bra.w	DisplaySprite
 
 .stopanim:
 		bclr	#7,cat_mode(a0)
 		out_of_range.w	Cat_ChkGone
-		jmp	(DisplaySprite).l
+		bra.w	DisplaySprite
 
 Cat_ChkGone:
 		lea	(v_objstate).w,a2
@@ -414,7 +414,7 @@ loc_16C64:
 		beq.s	.delete
 		; Is the parent going to delete itself?
 		cmpi.b	#$A,obRoutine(a1)
-		bne.w	Cat_Head.display2
+		bne.w	DisplaySprite
 		; Delete the parent.
 		bsr.w	DeleteObject2	; Don't mind this misnomer.
 
@@ -462,7 +462,7 @@ Cat_Scatter:	; Routine $C
 loc_16CE0:
 		tst.b	obRender(a0)
 		bpl.w	Cat_ChkGone
-		jmp	(DisplaySprite).l
+		bra.w	DisplaySprite
 ; ===========================================================================
 ; Check the proposed body position before consuming a trail entry.
 ; A curved/stepped trail can be eight pixels long while its endpoints are
