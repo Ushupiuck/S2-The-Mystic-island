@@ -22,12 +22,24 @@ cat_floormap	= objoff_2C		; $C bytes; 16 packed 6-bit floor entries
 cat_parent	= objoff_38		; 4 bytes; parent object (high byte = segment index)
 cat_segment_pos	= cat_parent		; high byte; current position in floor buffer
 cat_inertia	= objoff_3C		; 2 bytes; Needed to avoid overwriting it's own obColType & obColProp
+cat_path_credit	= objoff_3E		; 2 bytes; unspent distance along the trail (8.8)
+cat_next_step	= obPrevAni		; 1 byte; head's cached next step ($FF = not prepared)
+cat_pending_y	= obVelY		; grounded head only: remaining vertical steps
 ; ===========================================================================
 ; packed flat entries for 4 slots: $20,$82,$08
 ; ===========================================================================
-cat_floor_bias	= 8			; -8..+11 -> 0..19
-cat_floor_flat	= cat_floor_bias	; encoded 0-height delta
+; One entry now describes one small path step, rather than a potentially
+; large Y change for one X pixel. Diagonals cost sqrt(2) pixels of distance;
+; horizontal/vertical steps cost one. The original 8..12-pixel gait thus
+; measures distance along the trail, even on steep curves.
+cat_floor_flat	= 8			; one horizontal pixel
+cat_floor_up	= 7			; one horizontal pixel and one pixel up
+cat_floor_down	= 9			; one horizontal pixel and one pixel down
 cat_floor_turn	= 20			; turn marker
+cat_floor_vup	= 21			; one pixel up, no horizontal movement
+cat_floor_vdown	= 22			; one pixel down, no horizontal movement
+cat_step_cost	= $100			; one pixel in 8.8 fixed point
+cat_diag_cost	= $16A			; sqrt(2) pixels, rounded to 8.8
 ; ===========================================================================
 
 Cat_Main:	; Routine 0
@@ -53,6 +65,8 @@ Cat_Main:	; Routine 0
 		clr.w	obVelX(a0)
 		clr.w	obVelY(a0)
 		clr.w	cat_inertia(a0)
+		clr.w	cat_path_credit(a0)
+		move.b	#$FF,cat_next_step(a0)
 
 		move.w	obX(a0),d2
 		moveq	#$C,d5
@@ -82,6 +96,7 @@ Cat_Loop:
 		clr.w	obVelX(a1)
 		clr.w	obVelY(a1)
 		clr.w	cat_inertia(a1)
+		clr.w	cat_path_credit(a1)
 
 		add.w	d5,d2
 		move.w	d2,obX(a1)
@@ -208,33 +223,7 @@ loc_16B02:
 		bmi.s	.loc_16B5E
 		move.w	obVelX(a0),d0
 		beq.s	.notmoving
-		move.l	obX(a0),d2
-		move.l	d2,d3
-		btst	#0,obStatus(a0)
-		beq.s	.noflip
-		neg.w	d0
-
-.noflip:
-		ext.l	d0
-		asl.l	#8,d0
-		add.l	d0,d2
-		move.l	d2,obX(a0)
-		swap	d3
-		cmp.w	obX(a0),d3
-		beq.s	.notmoving
-		jsr	(ObjHitFloor).l
-		cmpi.w	#-8,d1
-		blt.s	.turn
-		cmpi.w	#$C,d1
-		bge.s	.turn
-		add.w	d1,obY(a0)
-		addi.w	#cat_floor_bias,d1
-		moveq	#0,d0
-		move.b	cat_segment_pos(a0),d0
-		bsr.w	Cat_WriteFloor
-		addq.w	#1,d0
-		andi.w	#$F,d0
-		move.b	d0,cat_segment_pos(a0)
+		bra.w	Cat_HeadPath
 .notmoving:	rts
 ; ===========================================================================
 
@@ -243,29 +232,6 @@ loc_16B02:
 		move.b	#7,cat_wait_time(a0)
 		clr.w	obVelX(a0)
 		clr.w	cat_inertia(a0)
-		rts
-; ===========================================================================
-
-.turn:
-		moveq	#0,d0
-		move.b	cat_segment_pos(a0),d0
-		move.w	#cat_floor_turn,d1
-		bsr.w	Cat_WriteFloor
-		neg.w	obX+2(a0)
-		beq.s	.flip
-		btst	#0,obStatus(a0)
-		beq.s	.flip
-		subq.w	#1,obX(a0)
-		addq.w	#1,d0
-		andi.w	#$F,d0
-		move.w	#cat_floor_flat,d1
-		bsr.w	Cat_WriteFloor
-.flip:
-		bchg	#0,obStatus(a0)
-		move.b	obStatus(a0),obRender(a0)
-		addq.w	#1,d0
-		andi.w	#$F,d0
-		move.b	d0,cat_segment_pos(a0)
 		rts
 ; ===========================================================================
 
@@ -318,28 +284,22 @@ Cat_BodySeg1:	; Routine 4, 8
 		move.w	obVelX(a1),d0
 		add.w	d1,d0
 		move.w	d0,obVelX(a0)
-		move.l	obX(a0),d2
-		move.l	d2,d3
-		btst	#0,obStatus(a0)
-		beq.s	.noflip
-		neg.w	d0
-
-.noflip:
-		ext.l	d0
-		asl.l	#8,d0
-		add.l	d0,d2
-		move.l	d2,obX(a0)
-		swap	d3
-		cmp.w	obX(a0),d3
+		neg.w	d0			; gait velocity -> positive distance budget
 		beq.w	loc_16C64
+		add.w	d0,cat_path_credit(a0)
+		cmpi.w	#cat_step_cost,cat_path_credit(a0)
+		blo.w	loc_16C64
 		moveq	#0,d0
 		move.b	cat_segment_pos(a0),d0
+		cmp.b	cat_segment_pos(a1),d0	; never consume unwritten trail
+		beq.w	loc_16C64
 		bsr.w	Cat_ReadFloor
+		bsr.w	Cat_PathCost
+		cmp.w	cat_path_credit(a0),d2
+		bhi.w	loc_16C64
+		sub.w	d2,cat_path_credit(a0)
 		bsr.w	Cat_WriteFloor
-		cmpi.w	#cat_floor_turn,d1
-		beq.s	Cat_BodyAirborne.turn
-		subi.w	#cat_floor_bias,d1
-		add.w	d1,obY(a0)
+		bsr.w	Cat_ApplyPathStep
 		addq.w	#1,d0
 		andi.w	#$F,d0
 		move.b	d0,cat_segment_pos(a0)
@@ -351,27 +311,6 @@ Cat_BodyAirborne:
 		clr.w	obVelY(a0)
 		clr.w	cat_inertia(a0)
 		move.b	#8,obFrame(a0)
-		bra.s	loc_16C64
-
-.turn:
-		neg.w	obX+2(a0)
-		beq.s	.flip
-		btst	#0,obStatus(a0)
-		beq.s	.flip
-		cmpi.w	#-$C0,obVelX(a0)
-		bne.s	.flip
-		subq.w	#1,obX(a0)
-		addq.w	#1,d0
-		andi.w	#$F,d0
-		move.w	#cat_floor_flat,d1
-		bsr.w	Cat_WriteFloor
-.flip:
-		bchg	#0,obStatus(a0)
-		move.b	obStatus(a0),obRender(a0)
-		addq.w	#1,d0
-		andi.w	#$F,d0
-		move.b	d0,cat_segment_pos(a0)
-		; fall through to loc_16C64
 ; ===========================================================================
 
 loc_16C64:
@@ -440,6 +379,123 @@ loc_16CE0:
 		tst.b	obRender(a0)
 		bpl.w	Cat_ChkGone
 		bra.w	DisplaySprite
+; ===========================================================================
+; Spend the head's crawl speed as distance along a trail of small steps.
+; A floor delta of e.g. +5 becomes one down-diagonal followed by four
+; vertical steps. Each child replays those steps with the same distance
+; costs, so horizontal separation shrinks naturally as the slope steepens.
+; obVelY is gravity while airborne, and pending Y only after landing.
+Cat_HeadPath:
+		neg.w	d0
+		add.w	d0,cat_path_credit(a0)
+		cmpi.w	#cat_step_cost,cat_path_credit(a0)
+		blo.w	.return
+		moveq	#0,d1
+		move.b	cat_next_step(a0),d1
+		cmpi.b	#$FF,d1
+		bne.w	.spend
+		tst.w	cat_pending_y(a0)
+		beq.s	.probe
+		bmi.s	.verticalup
+		moveq	#cat_floor_vdown,d1
+		bra.s	.cache
+.verticalup:
+		moveq	#cat_floor_vup,d1
+		bra.s	.cache
+
+.probe:
+		move.w	obX(a0),d3
+		subq.w	#1,d3
+		btst	#0,obStatus(a0)
+		beq.s	.floor
+		addq.w	#2,d3
+.floor:
+		jsr	(ObjHitFloor2).l		; probe next X without moving the head yet
+		cmpi.w	#-8,d1
+		blt.s	.turn
+		cmpi.w	#$C,d1
+		bge.s	.turn
+		move.w	d1,cat_pending_y(a0)
+		beq.s	.flat
+		bmi.s	.up
+		moveq	#cat_floor_down,d1
+		bra.s	.cache
+.up:
+		moveq	#cat_floor_up,d1
+		bra.s	.cache
+.flat:
+		moveq	#cat_floor_flat,d1
+		bra.s	.cache
+.turn:
+		moveq	#cat_floor_turn,d1
+.cache:
+		move.b	d1,cat_next_step(a0)
+.spend:
+		bsr.w	Cat_PathCost
+		cmp.w	cat_path_credit(a0),d2
+		bhi.s	.return
+		sub.w	d2,cat_path_credit(a0)
+		moveq	#0,d0
+		move.b	cat_segment_pos(a0),d0
+		bsr.w	Cat_WriteFloor
+		bsr.w	Cat_ApplyPathStep
+		addq.w	#1,d0
+		andi.w	#$F,d0
+		move.b	d0,cat_segment_pos(a0)
+		move.b	#$FF,cat_next_step(a0)
+		tst.w	cat_pending_y(a0)
+		beq.s	.return
+		bmi.s	.pendingup
+		subq.w	#1,cat_pending_y(a0)
+.return:
+		rts
+.pendingup:
+		addq.w	#1,cat_pending_y(a0)
+		rts
+; ===========================================================================
+; in: d1.w = step; out: d2.w = its distance cost. All other registers preserved.
+Cat_PathCost:
+		move.w	#cat_step_cost,d2
+		cmpi.w	#cat_floor_up,d1
+		beq.s	.diagonal
+		cmpi.w	#cat_floor_down,d1
+		bne.s	.return
+.diagonal:
+		move.w	#cat_diag_cost,d2
+.return:
+		rts
+; ===========================================================================
+; Apply one recorded step, preserving d0/d1/a1 for cursor and parent handling.
+; World subpixels are untouched: distance fractions live in cat_path_credit.
+; Turn markers consume one step's time but no movement, and propagate just
+; like terrain. No X-subpixel mirroring is needed for distance-based motion.
+Cat_ApplyPathStep:
+		cmpi.w	#cat_floor_turn,d1
+		beq.s	.turn
+		cmpi.w	#cat_floor_vup,d1
+		beq.s	.up
+		cmpi.w	#cat_floor_vdown,d1
+		beq.s	.down
+		subq.w	#1,obX(a0)
+		btst	#0,obStatus(a0)
+		beq.s	.vertical
+		addq.w	#2,obX(a0)
+.vertical:
+		cmpi.w	#cat_floor_up,d1
+		beq.s	.up
+		cmpi.w	#cat_floor_down,d1
+		beq.s	.down
+		rts
+.up:
+		subq.w	#1,obY(a0)
+		rts
+.down:
+		addq.w	#1,obY(a0)
+		rts
+.turn:
+		bchg	#0,obStatus(a0)
+		move.b	obStatus(a0),obRender(a0)
+		rts
 ; ---------------------------------------------------------------------------
 ; Animation script - Caterkiller enemy (uses non-standard format)
 ; ---------------------------------------------------------------------------
