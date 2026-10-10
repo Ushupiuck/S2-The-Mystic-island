@@ -78,7 +78,7 @@ Pri_DropCharacters:
 		beq.s	.done
 		bclr	#status.sidekick.on_object,obStatus(a0)	; no longer standing on object
 		bclr	#status.sidekick.on_object,(v_player2+obStatus).w
-		bset	#status.sidekick.in_air,obStatus(a0)		; airborne / falling
+		bset	#status.player.in_air,obStatus(a0)		; airborne / falling
 		bset	#status.player.in_air,(v_player2+obStatus).w	; airborne / falling
 .done:		rts
 ; ---------------------------------------------------------------------------
