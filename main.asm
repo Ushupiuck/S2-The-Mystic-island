@@ -3448,8 +3448,7 @@ LevelLayoutLoad:
 ; else move d0 into Music_to_play_2.
 
 PlaySound_Special:
-PlayMusic:
-		disable_ints
+PlayMusic:	disable_ints
 		stopZ80
 		waitZ80
 		tst.b	(Z80_RAM+zAbsVar.QueueToPlay).l
@@ -3482,16 +3481,13 @@ PlaySoundStereo:
 PlaySoundLocal:
 		tst.b	obRender(a0)
 		bpl.s	+	; rts
-
-PlaySound:
-		disable_ints
+PlaySound:	disable_ints
 		stopZ80
 		waitZ80
 		move.b	d0,(Z80_RAM+zAbsVar.SFXUnknown).l
 		startZ80
 		enable_ints
-+
-		rts
++		rts
 ; End of function PlaySoundLocal
 
 ; ===========================================================================
@@ -13734,7 +13730,13 @@ loc_1725A:
 ; ---------------------------------------------------------------------------
 
 loc_1727E:
-		bsr.w	sub_172B6
+		move.w	obX(a0),d0
+		sub.w	(v_player+obX).w,d0
+		bmi.s	loc_172D0
+		cmpi.w	#$40,d0
+		bgt.s	loc_172E6
+		btst	#0,obStatus(a0)
+		beq.s	loc_172DE
 		jsr	(ObjectMove).l
 		jsr	(ObjHitFloor).l
 		cmpi.w	#-8,d1
@@ -13752,18 +13754,6 @@ loc_1729E:
 		move.b	#1,obAnim(a0)
 		rts
 
-; =============== S U B R O U T I N E =======================================
-
-
-sub_172B6:
-		move.w	obX(a0),d0
-		sub.w	(v_player+obX).w,d0
-		bmi.s	loc_172D0
-		cmpi.w	#$40,d0
-		bgt.s	loc_172E6
-		btst	#0,obStatus(a0)
-		beq.s	loc_172DE
-		rts
 ; ---------------------------------------------------------------------------
 
 loc_172D0:
