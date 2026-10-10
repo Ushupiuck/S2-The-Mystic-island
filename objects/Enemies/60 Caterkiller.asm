@@ -123,8 +123,9 @@ Cat_Head:	; Routine 2
 		bmi.w	loc_16C96
 		moveq	#0,d0
 		move.b	ob2ndRout(a0),d0
-		move.w	Cat_Index2(pc,d0.w),d1
-		jsr	Cat_Index2(pc,d1.w)
+		lea	Cat_Index2(pc),a1
+		move.w	(a1,d0.w),d1
+		jsr	(a1,d1.w)
 		move.b	cat_mode(a0),d1
 		bpl.s	.display
 		lea	Ani_Cat(pc),a1
