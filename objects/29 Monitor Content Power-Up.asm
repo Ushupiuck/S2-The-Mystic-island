@@ -112,6 +112,8 @@ loc_B130:
 		jmp	(PlaySound).l
 ; ---------------------------------------------------------------------------
 
+; Give both live players speed shoes, then change the shared tempo once.
+; ---------------------------------------------------------------------------
 Monitor_Shoes:
 		movea.l	a1,a2
 		bsr.w	Monitor_GiveShoes
@@ -122,12 +124,17 @@ Monitor_Shoes:
 		moveq	#8,d0
 		jmp	(ChangeMusicTempo).l
 
+; ---------------------------------------------------------------------------
+; Grant speed shoes to the player in a2 without retriggering the audio.
+; ---------------------------------------------------------------------------
 Monitor_GiveShoes:
 		bset	#obStatusSecondary_hasSpeedShoes,obStatusSecondary(a2)
 		move.w	#20*60,shoetime(a2)
 		jmp	(Player_UpdateSpeed).l
 ; ---------------------------------------------------------------------------
 
+; Give both live players their own shield state and effect object.
+; ---------------------------------------------------------------------------
 Monitor_Shield:
 		movea.l	a1,a2
 		bsr.w	Monitor_GiveShield
@@ -138,8 +145,10 @@ Monitor_Shield:
 		move.w	#sfx_Shield,d0
 		jmp	(PlaySound).l
 
+; ---------------------------------------------------------------------------
 ; Apply a shield to one player. Pickup sharing calls this once per live
 ; player; damage/death clear only the affected player's shield status.
+; ---------------------------------------------------------------------------
 Monitor_GiveShield:
 		bset	#obStatusSecondary_hasShield,obStatusSecondary(a2)
 		lea	(v_shieldobj2).w,a3
@@ -157,6 +166,7 @@ Monitor_GiveShield:
 ; ---------------------------------------------------------------------------
 
 ; a1 is the collector; return the other player in a2, Z clear if live.
+; ---------------------------------------------------------------------------
 Monitor_GetPartner:
 		lea	(v_player).w,a2
 		cmpa.w	#v_player,a1
@@ -174,6 +184,9 @@ Monitor_GetPartner:
 		rts
 ; ---------------------------------------------------------------------------
 
+; Give both live players invincibility, refresh the shared star object,
+; and request the music once when the current scene permits it.
+; ---------------------------------------------------------------------------
 Monitor_Invincibility:
 		tst.b	(Super_Sonic_flag).w	; is Sonic super?
 		bne.s	.return			; if yes, branch

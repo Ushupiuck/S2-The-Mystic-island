@@ -13,7 +13,7 @@ Obj38_Index:
 		dc.w Obj38_Shield-Obj38_Index
 ; ===========================================================================
 
-Obj38_Init:
+Obj38_Init:	; Routine 0
 		move.b	#2,obRoutine(a0)
 		move.l	#Map_obj38,obMap(a0)
 		move.b	#4,obRender(a0)
@@ -24,6 +24,10 @@ Obj38_Init:
 		bne.s	Obj38_Shield
 		move.w	#make_art_tile(ArtTile_EHZ_Shield,0,0),obGfx(a0)
 
+; ===========================================================================
+; Routine 2 - follow the shield's owner. Hide the shield during
+; invincibility, and delete it when that player dies or loses the shield.
+; ---------------------------------------------------------------------------
 Obj38_Shield:
 		movea.w	obParent(a0),a2
 		tst.b	obID(a2)
@@ -48,11 +52,18 @@ Obj38_Shield:
 .return:
 		rts
 
+; ===========================================================================
+; Remove this player's shield effect; the partner's effect is independent.
+; ---------------------------------------------------------------------------
 Obj38_Delete:
 		jmp	(DeleteObject).l
 
+; ===========================================================================
+; Shield animation. Frame 5 is the large flash between the smaller frames.
+; ---------------------------------------------------------------------------
 Ani_obj38:
 		dc.w .shield-Ani_obj38
 .shield:
 		dc.b 0,5,0,5,1,5,2,5,3,5,4,afEnd
 		even
+; ===========================================================================

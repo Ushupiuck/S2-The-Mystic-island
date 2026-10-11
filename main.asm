@@ -293,6 +293,7 @@ Vint_Lag_Main:
 		addq.w	#1,(Lag_frame_count).w
 		; branch if a level or demo is running
 		move.w	(v_gamemode).w,d0
+		andi.w	#$7FFF,d0		; ignore the title-card/loading flag
 		cmpi.w	#Demo,d0			; Demo play Mode?
 		beq.s	VInt_0_Level			; return if not
 		cmpi.w	#Level,d0			; Zone play Mode?
@@ -3465,6 +3466,7 @@ PlayMusic:	disable_ints
 ; driver flag directly so simultaneous music/SFX requests cannot overwrite
 ; this update. During a 1-up jingle, change the saved song's flag instead,
 ; just as the driver's speed-up/slow-down commands do.
+; ---------------------------------------------------------------------------
 ChangeMusicTempo:
 		disable_ints
 		stopZ80
@@ -9427,15 +9429,24 @@ BuildSprites_Crash:
 ; ---------------------------------------------------------------------------
 
 BuildSprites_MultiDraw:
+		; Obj35 builds its temporary composite on the stack; other objects
+		; already store their composite header and children in object RAM.
 		cmpi.b	#id_Obj35,obID(a0)
 		beq.s	BuildSprites_InvincibilityStars
 		bsr.s	BuildSprites_DrawComposite
 		bra.w	BuildSprites_NextObj
 
+; ---------------------------------------------------------------------------
+; Draw the shared invincibility-star object, then resume the sprite queue.
+; ---------------------------------------------------------------------------
 BuildSprites_InvincibilityStars:
 		jsr	(InvincibilityStars_Draw).l
 		bra.w	BuildSprites_NextObj
 
+; ---------------------------------------------------------------------------
+; Draw a composite object's main sprite and children. Return the advanced
+; VDP sprite-table pointer in a2 and the total sprite count in d5.
+; ---------------------------------------------------------------------------
 BuildSprites_DrawComposite:
 		move.l	a4,-(sp)
 		lea	(Camera_RAM).w,a4

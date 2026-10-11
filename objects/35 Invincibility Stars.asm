@@ -3,6 +3,7 @@
 ; Keep the normal object fields intact. Persistent local state is $30-$39;
 ; the eight child sprites exist only in a temporary render-time stack buffer.
 ; ---------------------------------------------------------------------------
+; SST Variables:
 
 invincibility_angles	= objoff_30	; four bytes: the current frame's orbit angles
 invincibility_frames	= objoff_34	; four bytes: the current frame's animation indices
@@ -11,7 +12,9 @@ invincibility_draw_size	= subspr_data+8*next_subspr	; temporary composite header
 		if (invincibility_angles<objoff_30)||(invincibility_frames<>invincibility_angles+4)||(invincibility_parent<>invincibility_frames+4)||(invincibility_parent+2>object_size)
 			fatal "The shared stars need ten non-overlapping scratch bytes starting at objoff_30."
 		endif
+; ---------------------------------------------------------------------------
 
+; Initialise the shared effect on its first update, then choose its parent.
 Obj35:
 		moveq	#0,d2
 		tst.b	obRoutine(a0)
@@ -27,6 +30,10 @@ Obj35:
 		clr.l	invincibility_frames(a0)
 		moveq	#1,d2				; draw the initial phase before advancing it
 
+; ===========================================================================
+; Routine 2 - follow a live invincible player and queue the shared effect.
+; Prefer the main player; switch to the partner if only they are invincible.
+; ---------------------------------------------------------------------------
 InvincibilityStars_Update:
 		tst.b	(Super_Sonic_flag).w
 		bne.w	DeleteObject
@@ -48,9 +55,11 @@ InvincibilityStars_Update:
 		andi.b	#1,obStatus(a0)			; remember this frame's orbit direction
 		jmp	(DisplaySprite).l
 
+; ===========================================================================
 ; Advance once per object update, including frames that are not rendered.
 ; The saved orientation belongs to the preceding frame, matching S2's
 ; draw-then-advance orbit timing when the parent turns or changes.
+; ---------------------------------------------------------------------------
 InvincibilityStars_Advance:
 		lea	invincibility_angles(a0),a2
 		lea	invincibility_frames(a0),a3
@@ -75,10 +84,12 @@ InvincibilityStars_Advance:
 		dbf	d1,.layer
 		rts
 
+; ===========================================================================
 ; BuildSprites calls this directly for Obj35. The generic composite layout
 ; is confined to this stack buffer, never overlaid on the persistent SST.
 ; Keep the queue/priority registers intact and return the advanced VDP
 ; pointer in a2 and sprite count in d5, as the normal renderer does.
+; ---------------------------------------------------------------------------
 InvincibilityStars_Draw:
 		movem.l	d4/d6-d7/a1/a3-a6,-(sp)
 		movea.w	invincibility_parent(a0),a1
@@ -97,6 +108,7 @@ InvincibilityStars_Draw:
 		move.b	#$FF,mainspr_width(a0)
 		move.w	(Camera_RAM).w,obX(a0)		; children perform their own bounds checks
 		move.w	(Camera_RAM+4).w,obY(a0)
+		; Select this player's position history, including Tails as player 1.
 		lea	(Sonic_Pos_Record_Buf).w,a5
 		move.w	(Sonic_Pos_Record_Index).w,d4
 		cmpa.w	#v_player,a1
@@ -112,6 +124,8 @@ InvincibilityStars_Draw:
 		lea	InvincibilityStars_Layers(pc),a3
 		moveq	#0,d7
 .layer:
+		; The first pair orbits the current position; the remaining pairs
+		; orbit progressively older entries in the player's position history.
 		move.w	obX(a1),d0
 		move.w	obY(a1),d1
 		tst.w	d7
@@ -155,6 +169,7 @@ InvincibilityStars_Draw:
 		addq.w	#1,d7
 		cmpi.w	#4,d7
 		blo.w	.layer
+		; Render the packed children, then discard the temporary composite.
 		move.b	#$FF,mainspr_height(a0)		; unused high byte of the first child's frame
 		move.l	invincibility_draw_size(sp),d5
 		movea.l	invincibility_draw_size+4(sp),a2
@@ -171,7 +186,10 @@ InvincibilityStars_Draw:
 		movem.l	(sp)+,d4/d6-d7/a1/a3-a6
 		rts
 
+; ===========================================================================
 ; Z clear only for a living, present player with the invincibility bit set.
+; Input: a1 = player SST. Output: d0 = 1 if valid, 0 otherwise.
+; ---------------------------------------------------------------------------
 InvincibilityStars_CheckParent:
 		moveq	#0,d0
 		btst	#obStatusSecondary_isInvincible,obStatusSecondary(a1)
@@ -185,8 +203,12 @@ InvincibilityStars_CheckParent:
 		tst.b	d0
 		rts
 
+; ===========================================================================
 ; Pack only nearby children. This prevents distant trail coordinates from
 ; wrapping onto the screen when the VDP truncates X positions to nine bits.
+; Input: d2 = child X, d1 = orbit centre Y, d5 = mapping frame;
+; a0 = temporary composite, a2 = next child, a6/d6 = orbit position.
+; ---------------------------------------------------------------------------
 InvincibilityStars_WriteChild:
 		move.w	d2,d3				; preserve X while checking the horizontal bounds
 		sub.w	(Camera_RAM).w,d3
@@ -213,6 +235,11 @@ InvincibilityStars_WriteChild:
 		addq.w	#2,sp
 		rts
 
+; ===========================================================================
+; Add a signed orbit offset to its centre. The angle wraps within 32 pairs.
+; Input: d0/d1 = centre X/Y, d6 = angle, a6 = orbit-offset table.
+; Output: d2/d3 = child X/Y.
+; ---------------------------------------------------------------------------
 InvincibilityStars_GetPosition:
 		andi.w	#$3E,d6
 		move.b	(a6,d6.w),d2
@@ -223,6 +250,10 @@ InvincibilityStars_GetPosition:
 		add.w	d1,d3
 		rts
 
+; ===========================================================================
+; Layer records: frame-table offset (word), first-star sequence offset
+; (byte), and animation frame count (byte).
+; ---------------------------------------------------------------------------
 InvincibilityStars_Layers:
 		dc.w InvincibilityStars_Layer0Frames-InvincibilityStars_Layers
 		dc.b 0,12
@@ -233,11 +264,18 @@ InvincibilityStars_Layers:
 		dc.w InvincibilityStars_Layer3Frames-InvincibilityStars_Layers
 		dc.b 12,12
 
+; ---------------------------------------------------------------------------
+; Signed X/Y offsets for the 32 positions around each star's orbit.
+; ---------------------------------------------------------------------------
 InvincibilityStars_Positions:
 		dc.b 15,0,15,3,14,6,13,8,11,11,8,13,6,14,3,15
 		dc.b 0,16,-4,15,-7,14,-9,13,-12,11,-14,8,-15,6,-16,3
 		dc.b -16,0,-16,-4,-15,-7,-14,-9,-12,-12,-9,-14,-7,-15,-4,-16
 		dc.b -1,-16,3,-16,6,-15,8,-14,11,-12,13,-9,14,-7,15,-4
+; ---------------------------------------------------------------------------
+; Animation frames for each pair of stars. Layer 0 shares one sequence;
+; layers 1-3 store the opposite-star sequence before the first-star sequence.
+; ---------------------------------------------------------------------------
 InvincibilityStars_Layer0Frames:
 		dc.b 8,5,7,6,6,7,5,8,6,7,7,6
 InvincibilityStars_Layer1Frames:
@@ -251,5 +289,9 @@ InvincibilityStars_Layer3Frames:
 		dc.b 1,2,3,4,5,6,7,6,5,4,3,2
 		even
 
+; ===========================================================================
+; Sprite mappings
+; ---------------------------------------------------------------------------
 Map_InvincibilityStars:
 		include	"mappings/sprite/Invincibility Stars.asm"
+; ===========================================================================

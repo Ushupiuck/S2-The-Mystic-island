@@ -1,10 +1,15 @@
-; Obj38 shield mappings. The four obsolete star frames have been removed.
+; ---------------------------------------------------------------------------
+; Obj38 shield mappings
+; ---------------------------------------------------------------------------
 		dc.w .frame0-Map_obj38
 		dc.w .frame1-Map_obj38
 		dc.w .frame2-Map_obj38
 		dc.w .frame3-Map_obj38
 		dc.w .frame4-Map_obj38
 		dc.w .frame5-Map_obj38
+; ===========================================================================
+; Frames 0-4 form the small shield; frame 5 is its large flash.
+; ---------------------------------------------------------------------------
 .frame0:
 		dc.w 4
 		dc.w $F005,$0000,$0000,$FFF0
@@ -42,3 +47,4 @@
 		dc.w $000B,$1014,$100A,$FFE8
 		dc.w $000B,$1814,$180A,$0000
 		even
+; ===========================================================================

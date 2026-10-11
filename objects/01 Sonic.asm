@@ -166,8 +166,10 @@ Player_ChkInvincibility:
 .return:
 		rts
 
+; ---------------------------------------------------------------------------
 ; Per-player speed-shoe timer. Restore this player's movement stats first;
 ; slow the shared music only after neither player has speed shoes left.
+; ---------------------------------------------------------------------------
 Player_ChkSpeedShoes:
 		btst	#obStatusSecondary_hasSpeedShoes,obStatusSecondary(a0)
 		beq.s	.return
@@ -179,13 +181,19 @@ Player_ChkSpeedShoes:
 .return:
 		rts
 
+; ---------------------------------------------------------------------------
 ; Clear only this player's effects on death or when leaving the level.
-; Invincibility and shoe timers occupy the adjacent words at $32/$34.
+; Clear the adjacent invtime/shoetime words, then end speed shoes below.
+; ---------------------------------------------------------------------------
 Player_ClearPowerUps:
 		bclr	#obStatusSecondary_hasShield,obStatusSecondary(a0)
 		bclr	#obStatusSecondary_isInvincible,obStatusSecondary(a0)
 		clr.l	invtime(a0)
 
+; ---------------------------------------------------------------------------
+; End this player's speed shoes and restore their movement stats. Retain
+; the faster shared music while their partner still has speed shoes.
+; ---------------------------------------------------------------------------
 Player_EndSpeedShoes:
 		bclr	#obStatusSecondary_hasSpeedShoes,obStatusSecondary(a0)
 		beq.s	.return
@@ -203,8 +211,10 @@ Player_EndSpeedShoes:
 .return:
 		rts
 
+; ---------------------------------------------------------------------------
 ; a2 is the player. Select the movement bank actually used by that
 ; character, including Tails in the main slot, and respect water status.
+; ---------------------------------------------------------------------------
 Player_UpdateSpeed:
 		lea	(Sonic_top_speed).w,a3
 		cmpa.w	#v_player,a2
