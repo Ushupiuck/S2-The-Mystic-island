@@ -5436,7 +5436,7 @@ Deform_EHZ:
 		divs.w	#$30,d0
 		ext.l	d0
 		asl.l	#8,d0
-		clr.w	d3
+		moveq	#0,d3		; clear the grass scroll accumulator, including its fractional word
 		move.w	d2,d3
 		asr.w	#3,d3
 		; Do 15 lines.
