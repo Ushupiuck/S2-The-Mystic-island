@@ -7,7 +7,7 @@ AdvancedHandler		= 0	; 0 for Sonic 1's Error handler, 1 for the Advanced Error h
 zeroOffsetOptimization	= 1	; if 1, makes a handful of zero-offset instructions smaller
 BackupSRAM		= 1
 AddressSRAM		= 3	; 0 = odd+even; 2 = even only; 3 = odd only
-LoadTails		= 1	; Whether or not Tails will appear alongside Sonic in levels
+LoadTails		= 0	; Whether or not Tails will appear alongside Sonic in levels
 EnableMusic		= 1	; Because it can get pretty tiring to hear level music over and over.
 TimeTravel		= 1	; if 1, allows time-travel mechanics (W.I.P)
 
