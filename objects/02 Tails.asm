@@ -31,7 +31,12 @@ Obj02_Init:
 		move.b	#$D,obLRBSolidBit(a0)
 		clr.b	flips_remaining(a0)
 		move.b	#4,flip_speed(a0)
-		move.b	#id_Obj05,(v_player2tails).w		; load Tails' tails at $B1C0
+		clr.w	(Tails_Pos_Record_Index).w
+		move.w	#($100/4)-1,d2
+.history:
+		bsr.w	RecordTailsMoves
+		dbf	d2,.history
+		move.b	#id_Obj05,(v_player2tails).w		; load Tails' tails in their reserved slot
 
 ; ---------------------------------------------------------------------------
 ; Normal state for Tails
@@ -63,19 +68,6 @@ Obj02_Modes:	dc.w Obj02_MdNormal-Obj02_Modes
 		dc.w Obj02_MdRoll-Obj02_Modes
 		dc.w Obj02_MdJump2-Obj02_Modes
 ; ===========================================================================
-; Used for when invincibility wears off; same as Sonic's...
-MusicList_Tails:
-		dc.b bgm_GHZ
-		dc.b bgm_LZ
-		dc.b bgm_MZ
-		dc.b bgm_SLZ
-		dc.b bgm_SYZ
-		dc.b bgm_SBZ
-		dc.b MusID_MTZ
-		even
-
-; ===========================================================================
-
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 
@@ -93,24 +85,8 @@ Obj02_ChkInvinc:
 		bsr.w	Player_ChkInvincibility
 ; loc_10D68:
 Obj02_ChkShoes:
-		; Checks if Speed Shoes have expired and disables them if they have
-		tst.b	(v_shoes).w
-		beq.s	Obj02_ExitChk
-		tst.w	shoetime(a0)
-		beq.s	Obj02_ExitChk
-		subq.w	#1,shoetime(a0)
-		bne.s	Obj02_ExitChk
-		move.w	#$600,(Tails_top_speed).w
-		move.w	#$C,(Tails_acceleration).w
-		move.w	#$80,(Tails_deceleration).w
-; Obj02_RmvSpeed:
-		clr.b	(v_shoes).w
-		move.w	#bgm_Slowdown,d0		; slow down tempo
-		jmp	(PlaySound).l
-; ===========================================================================
-; locret_10D9C:
-Obj02_ExitChk:
-		rts
+		bra.w	Player_ChkSpeedShoes
+; ---------------------------------------------------------------------------
 ; End of function Tails_Display
 
 
@@ -1340,6 +1316,8 @@ loc_118AA:
 ; ---------------------------------------------------------------------------
 
 Obj02_Hurt:
+		bsr.w	Player_ChkInvincibility
+		bsr.w	Player_ChkSpeedShoes
 		movem.w	obVelX(a0),d0/d2			; load xy speed
 		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
 		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
@@ -1353,6 +1331,7 @@ Obj02_Hurt:
 loc_118D8:
 		bsr.w	Tails_HurtStop
 		bsr.w	Tails_LevelBoundaries
+		bsr.w	RecordTailsMoves
 		bsr.w	Tails_Animate
 		bsr.w	LoadTailsDynPLC
 		jmp	(DisplaySprite).l

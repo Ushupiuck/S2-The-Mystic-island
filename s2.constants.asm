@@ -119,9 +119,10 @@ objoff_44:		equ $44
 objoff_45:		equ $45
 objoff_46:		equ $46
 objoff_47:		equ $47
-; These offsets remain outside the current SST
+; Final word available in the $4A-byte SST
 objoff_48:		equ $48
 objoff_49:		equ $49
+; One past the end of the current SST
 objoff_4A:		equ $4A
 ; ---------------------------------------------------------------------------
 ; conventions followed by several objects but NOT Sonic/Tails:
@@ -741,7 +742,7 @@ v_player2	= v_objspace+object_size*1		; object variable space for Tails (1 SST)
 v_player2tails	= v_objspace+object_size*6		; object variable space for Tails' Tails (1 SST)
 v_shieldobj	= v_objspace+object_size*7		; object variable space for Sonic's shield (1 SST)
 v_shieldobj2	= v_objspace+object_size*8		; object variable space for Tails's shield (1 SST)
-v_starsobj	= v_objspace+object_size*9		; shared eight-star invincibility effect (1 composite SST)
+v_starsobj	= v_objspace+object_size*9		; shared eight-star invincibility effect (1 SST)
 
 v_splash	= v_objspace+object_size*10		; object variable space for Sonic's water splash (1 SST)
 v_tsplash	= v_objspace+object_size*11		; object variable space for Tails's water splash (1 SST)
@@ -1164,9 +1165,7 @@ v_timemin		= v_time+1			; time - minutes
 v_timesec		= v_time+2			; time - seconds
 v_timecent		= v_time+3			; time - centiseconds
 v_score:		ds.l	1			; score
-v_shield:		ds.b	1			; shield status (00 = no; 01 = yes)
-v_invinc:		ds.b	1			; invinciblity status (00 = no; 01 = yes)
-v_shoes:		ds.b	1			; speed shoes status (00 = no; 01 = yes)
+			ds.b	3			; unused former global power-up flags
 Super_Sonic_flag:	ds.b	1
 
 v_lastlamp:		ds.b	2			; number of the last lamppost you hit

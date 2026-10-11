@@ -1,46 +1,107 @@
 ; ---------------------------------------------------------------------------
 ; Object 35 - all four S2 invincibility-star layers in one shared SST
-; $10-$3F: eight six-byte child sprites; $40-$47: four angles/frame counters;
-; $48-$49: parent. Normal routine/priority/parent fields overlap child sprites.
+; Keep the normal object fields intact. Persistent local state is $30-$39;
+; the eight child sprites exist only in a temporary render-time stack buffer.
 ; ---------------------------------------------------------------------------
 
-invincibility_angles	= $40
-invincibility_frames	= $44
-invincibility_parent	= $48
-		if (subspr_data+8*next_subspr<>invincibility_angles)||(invincibility_parent+2>object_size)
-			fatal "The composite invincibility stars need eight children and ten bytes of state."
+invincibility_angles	= objoff_30	; four bytes: the current frame's orbit angles
+invincibility_frames	= objoff_34	; four bytes: the current frame's animation indices
+invincibility_parent	= objoff_38	; word: the player followed by this shared effect
+invincibility_draw_size	= subspr_data+8*next_subspr	; temporary composite header and eight children
+		if (invincibility_angles<objoff_30)||(invincibility_frames<>invincibility_angles+4)||(invincibility_parent<>invincibility_frames+4)||(invincibility_parent+2>object_size)
+			fatal "The shared stars need ten non-overlapping scratch bytes starting at objoff_30."
 		endif
 
 Obj35:
-		move.l	d7,-(sp)			; ExecuteObjects owns this loop counter
-		btst	#6,obRender(a0)
+		moveq	#0,d2
+		tst.b	obRoutine(a0)
 		bne.s	InvincibilityStars_Update
+		move.b	#2,obRoutine(a0)
 		move.l	#Map_InvincibilityStars,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Invincibility,0,0),obGfx(a0)
-		move.b	#$54,obRender(a0)		; world coordinates, composite sprites, accurate Y culling
-		clr.b	mainspr_mapframe(a0)		; no main sprite
-		move.b	#$FF,mainspr_width(a0)		; include the moving history trail in X culling
+		move.b	#$44,obRender(a0)		; world coordinates, multiple stars
+		move.w	#$80,obPriority(a0)
+		move.b	#$18,obActWid(a0)
+		clr.b	obFrame(a0)
 		move.l	#$0400162C,invincibility_angles(a0)
 		clr.l	invincibility_frames(a0)
+		moveq	#1,d2				; draw the initial phase before advancing it
 
 InvincibilityStars_Update:
 		tst.b	(Super_Sonic_flag).w
-		bne.w	InvincibilityStars_Delete
+		bne.w	DeleteObject
 		lea	(v_player).w,a1			; prefer the main player when both are invincible
 		bsr.w	InvincibilityStars_CheckParent
 		bne.s	.parent_ready
 		lea	(v_player2).w,a1
 		bsr.w	InvincibilityStars_CheckParent
-		beq.w	InvincibilityStars_Delete
+		beq.w	DeleteObject
 .parent_ready:
+		tst.w	d2
+		bne.s	.position
+		bsr.w	InvincibilityStars_Advance
+.position:
 		move.w	a1,invincibility_parent(a0)
 		move.w	obX(a1),obX(a0)
 		move.w	obY(a1),obY(a0)
+		move.b	obStatus(a1),obStatus(a0)
+		andi.b	#1,obStatus(a0)			; remember this frame's orbit direction
+		jmp	(DisplaySprite).l
+
+; Advance once per object update, including frames that are not rendered.
+; The saved orientation belongs to the preceding frame, matching S2's
+; draw-then-advance orbit timing when the parent turns or changes.
+InvincibilityStars_Advance:
+		lea	invincibility_angles(a0),a2
+		lea	invincibility_frames(a0),a3
+		lea	InvincibilityStars_Layers(pc),a4
+		moveq	#3,d1
+		moveq	#9*2,d2
+.layer:
+		btst	#status.player.x_flip,obStatus(a0)
+		beq.s	.direction
+		neg.w	d2
+.direction:
+		add.b	d2,(a2)+
+		addq.b	#1,(a3)
+		move.b	(a3),d0
+		cmp.b	3(a4),d0
+		blo.s	.frame_ready
+		clr.b	(a3)
+.frame_ready:
+		addq.w	#1,a3
+		addq.w	#4,a4
+		moveq	#2,d2
+		dbf	d1,.layer
+		rts
+
+; BuildSprites calls this directly for Obj35. The generic composite layout
+; is confined to this stack buffer, never overlaid on the persistent SST.
+; Keep the queue/priority registers intact and return the advanced VDP
+; pointer in a2 and sprite count in d5, as the normal renderer does.
+InvincibilityStars_Draw:
+		movem.l	d4/d6-d7/a1/a3-a6,-(sp)
+		movea.w	invincibility_parent(a0),a1
+		bsr.w	InvincibilityStars_CheckParent
+		beq.w	.return
+		move.l	a0,-(sp)			; owner, below the temporary buffer
+		move.l	a2,-(sp)			; current VDP sprite-table pointer
+		move.l	d5,-(sp)			; current VDP sprite count
+		lea	-invincibility_draw_size(sp),sp
+		move.l	obMap(a0),obMap(sp)
+		move.w	obGfx(a0),obGfx(sp)
+		lea	invincibility_angles(a0),a4
+		movea.l	sp,a0
+		move.b	#$54,obRender(a0)
+		clr.b	mainspr_mapframe(a0)		; no main sprite
+		move.b	#$FF,mainspr_width(a0)
+		move.w	(Camera_RAM).w,obX(a0)		; children perform their own bounds checks
+		move.w	(Camera_RAM+4).w,obY(a0)
 		lea	(Sonic_Pos_Record_Buf).w,a5
 		move.w	(Sonic_Pos_Record_Index).w,d4
 		cmpa.w	#v_player,a1
 		bne.s	.tails_history
-		cmpi.w	#2,(Player_mode).w		; Tails as the main character
+		cmpi.w	#2,(Player_mode).w
 		bne.s	.history_ready
 .tails_history:
 		lea	(Tails_Pos_Record_Buf).w,a5
@@ -49,7 +110,6 @@ InvincibilityStars_Update:
 		clr.b	mainspr_childsprites(a0)
 		lea	subspr_data(a0),a2
 		lea	InvincibilityStars_Layers(pc),a3
-		lea	invincibility_angles(a0),a4
 		moveq	#0,d7
 .layer:
 		move.w	obX(a1),d0
@@ -73,8 +133,6 @@ InvincibilityStars_Update:
 		blo.s	.frame_ready
 		moveq	#0,d2
 .frame_ready:
-		move.b	d2,invincibility_frames-invincibility_angles(a4)
-		addq.b	#1,invincibility_frames-invincibility_angles(a4)
 		move.w	(a3),d5
 		lea	InvincibilityStars_Layers(pc),a6
 		adda.w	d5,a6
@@ -92,32 +150,26 @@ InvincibilityStars_Update:
 		swap	d5
 		bsr.w	InvincibilityStars_GetPosition
 		bsr.w	InvincibilityStars_WriteChild
-		moveq	#2,d2
-		tst.w	d7
-		bne.s	.speed_ready
-		moveq	#9*2,d2				; the leading layer orbits faster
-.speed_ready:
-		btst	#status.player.x_flip,obStatus(a1)
-		beq.s	.angle_ready
-		neg.w	d2
-.angle_ready:
-		add.b	d2,(a4)+
+		addq.w	#1,a4
 		addq.w	#4,a3
 		addq.w	#1,d7
 		cmpi.w	#4,d7
 		blo.w	.layer
-		move.b	#$FF,mainspr_height(a0)		; first child's unused frame high byte holds the Y radius
+		move.b	#$FF,mainspr_height(a0)		; unused high byte of the first child's frame
+		move.l	invincibility_draw_size(sp),d5
+		movea.l	invincibility_draw_size+4(sp),a2
 		tst.b	mainspr_childsprites(a0)
-		beq.s	.return
-		move.w	#$80,d0				; priority is supplied, never written over child #2
-		bsr.w	DisplaySprite3
+		beq.s	.no_children
+		movea.l	invincibility_draw_size+8(sp),a6
+		ori.b	#$80,obRender(a6)
+		moveq	#$54,d4			; composite flags, independent of the history index
+		bsr.w	BuildSprites_DrawComposite
+.no_children:
+		lea	invincibility_draw_size+8(sp),sp
+		movea.l	(sp)+,a0
 .return:
-		move.l	(sp)+,d7
+		movem.l	(sp)+,d4/d6-d7/a1/a3-a6
 		rts
-
-InvincibilityStars_Delete:
-		move.l	(sp)+,d7
-		bra.w	DeleteObject
 
 ; Z clear only for a living, present player with the invincibility bit set.
 InvincibilityStars_CheckParent:
@@ -201,33 +253,3 @@ InvincibilityStars_Layer3Frames:
 
 Map_InvincibilityStars:
 		include	"mappings/sprite/Invincibility Stars.asm"
-
-; ---------------------------------------------------------------------------
-; Shared per-player invincibility timer. Keep the music while either player
-; remains invincible; shield/speed-shoe migration is handled separately.
-; ---------------------------------------------------------------------------
-Player_ChkInvincibility:
-		btst	#obStatusSecondary_isInvincible,obStatusSecondary(a0)
-		beq.s	.return
-		tst.w	invtime(a0)
-		beq.s	.return
-		subq.w	#1,invtime(a0)
-		bne.s	.return
-		bclr	#obStatusSecondary_isInvincible,obStatusSecondary(a0)
-		move.b	(v_player+obStatusSecondary).w,d0
-		or.b	(v_player2+obStatusSecondary).w,d0
-		btst	#obStatusSecondary_isInvincible,d0
-		bne.s	.return
-		tst.b	(Super_Sonic_flag).w
-		bne.s	.return
-		tst.b	(f_lockscreen).w
-		bne.s	.return
-		cmpi.w	#12,(v_air).w
-		bls.s	.return
-		moveq	#0,d0
-		move.b	(Current_Zone).w,d0
-		lea	(MusicList).l,a1
-		move.b	(a1,d0.w),d0
-		jmp	(PlaySound).l
-.return:
-		rts

@@ -49,7 +49,7 @@ Obj01_Init_Continued:
 		clr.b	flips_remaining(a0)
 		move.b	#4,flip_speed(a0)		; flip_speed
 		clr.b	(Super_Sonic_flag).w
-		move.b	#30,(v_air).w			; v_air(a0)
+		move.w	#30,(v_air).w			; v_air(a0)
 		subi.w	#$20,obX(a0)
 		addq.w	#4,obY(a0)
 		clr.w	(Sonic_Pos_Record_Index).w
@@ -114,19 +114,6 @@ Obj01_Modes:	dc.w Obj01_MdNormal_Checks-Obj01_Modes
 		dc.w Obj01_MdRoll-Obj01_Modes
 		dc.w Obj01_MdJump-Obj01_Modes
 ; ===========================================================================
-; Used for when invincibility wears off
-MusicList_Sonic:
-		dc.b bgm_GHZ
-		dc.b bgm_LZ
-		dc.b bgm_MZ
-		dc.b bgm_SLZ
-		dc.b bgm_SYZ
-		dc.b bgm_SBZ
-		dc.b MusID_MTZ
-		even
-
-; ===========================================================================
-
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 
@@ -144,26 +131,104 @@ Obj01_ChkInvin:
 		bsr.w	Player_ChkInvincibility
 ; loc_FB7A:
 Obj01_ChkShoes:
-		; Checks if Speed Shoes have expired and disables them if they have.
-		tst.b	(v_shoes).w
-		beq.s	Obj01_ExitChk
-		tst.w	shoetime(a0)
-		beq.s	Obj01_ExitChk
-		subq.w	#1,shoetime(a0)
-		bne.s	Obj01_ExitChk
-		move.w	#$600,(Sonic_top_speed).w
-		move.w	#$C,(Sonic_acceleration).w
-		move.w	#$80,(Sonic_deceleration).w
-; Obj01_RmvSpeed:
-		clr.b	(v_shoes).w
-		move.w	#bgm_Slowdown,d0
-		jmp	(PlaySound).l
+		bra.w	Player_ChkSpeedShoes
 ; ---------------------------------------------------------------------------
-; locret_FBAE:
-Obj01_ExitChk:
-		rts
 ; End of function Sonic_Display
 
+
+; ---------------------------------------------------------------------------
+; Shared per-player invincibility timer. Keep the music while either player
+; remains invincible. Each player owns their status bits and timers.
+; ---------------------------------------------------------------------------
+Player_ChkInvincibility:
+		btst	#obStatusSecondary_isInvincible,obStatusSecondary(a0)
+		beq.s	.return
+		tst.w	invtime(a0)
+		beq.s	.return
+		subq.w	#1,invtime(a0)
+		bne.s	.return
+		bclr	#obStatusSecondary_isInvincible,obStatusSecondary(a0)
+		move.b	(v_player+obStatusSecondary).w,d0
+		or.b	(v_player2+obStatusSecondary).w,d0
+		btst	#obStatusSecondary_isInvincible,d0
+		bne.s	.return
+		tst.b	(Super_Sonic_flag).w
+		bne.s	.return
+		tst.b	(f_lockscreen).w
+		bne.s	.return
+		cmpi.w	#12,(v_air).w
+		bls.s	.return
+		moveq	#0,d0
+		move.b	(Current_Zone).w,d0
+		lea	(MusicList).l,a1
+		move.b	(a1,d0.w),d0
+		jmp	(PlayMusic).l
+.return:
+		rts
+
+; Per-player speed-shoe timer. Restore this player's movement stats first;
+; slow the shared music only after neither player has speed shoes left.
+Player_ChkSpeedShoes:
+		btst	#obStatusSecondary_hasSpeedShoes,obStatusSecondary(a0)
+		beq.s	.return
+		tst.w	shoetime(a0)
+		beq.s	.return
+		subq.w	#1,shoetime(a0)
+		bne.s	.return
+		bra.s	Player_EndSpeedShoes
+.return:
+		rts
+
+; Clear only this player's effects on death or when leaving the level.
+; Invincibility and shoe timers occupy the adjacent words at $32/$34.
+Player_ClearPowerUps:
+		bclr	#obStatusSecondary_hasShield,obStatusSecondary(a0)
+		bclr	#obStatusSecondary_isInvincible,obStatusSecondary(a0)
+		clr.l	invtime(a0)
+
+Player_EndSpeedShoes:
+		bclr	#obStatusSecondary_hasSpeedShoes,obStatusSecondary(a0)
+		beq.s	.return
+		clr.w	shoetime(a0)
+		movem.l	a2-a3,-(sp)
+		movea.l	a0,a2
+		bsr.w	Player_UpdateSpeed
+		movem.l	(sp)+,a2-a3
+		move.b	(v_player+obStatusSecondary).w,d0
+		or.b	(v_player2+obStatusSecondary).w,d0
+		btst	#obStatusSecondary_hasSpeedShoes,d0
+		bne.s	.return
+		moveq	#0,d0
+		jmp	(ChangeMusicTempo).l
+.return:
+		rts
+
+; a2 is the player. Select the movement bank actually used by that
+; character, including Tails in the main slot, and respect water status.
+Player_UpdateSpeed:
+		lea	(Sonic_top_speed).w,a3
+		cmpa.w	#v_player,a2
+		bne.s	.tails
+		cmpi.w	#2,(Player_mode).w
+		bne.s	.stats_ready
+.tails:
+		lea	(Tails_top_speed).w,a3
+.stats_ready:
+		move.w	#$600,(a3)
+		move.w	#$C,2(a3)
+		move.w	#$80,4(a3)
+		btst	#obStatusSecondary_hasSpeedShoes,obStatusSecondary(a2)
+		beq.s	.water
+		move.w	#$C00,(a3)
+		move.w	#$18,2(a3)
+.water:
+		btst	#6,obStatus(a2)
+		beq.s	.return
+		lsr.w	(a3)
+		lsr.w	2(a3)
+		lsr.w	4(a3)
+.return:
+		rts
 
 ; ---------------------------------------------------------------------------
 ; Subroutine to record Sonic's previous positions for invincibility stars
@@ -211,11 +276,10 @@ Obj01_InWater:
 		bne.s	Sonic_Water.return		; if already underwater, branch
 
 		bsr.w	ResumeMusic
-		move.b	#id_Obj0A,(v_sonicbubbles).w		; load Obj0A (sonic's breathing bubbles) at $FFFFB340
+		move.b	#id_Obj0A,(v_sonicbubbles).w		; load Sonic's breathing bubbles
 		move.b	#$81,(v_sonicbubbles+obSubtype).w
-		move.w	#$300,(Sonic_top_speed).w
-		move.w	#6,(Sonic_acceleration).w
-		move.w	#$40,(Sonic_deceleration).w
+		movea.l	a0,a2
+		bsr.w	Player_UpdateSpeed
 		asr	obVelX(a0)
 		asr	obVelY(a0)			; memory oprands can only be shifted one at a time
 		asr	obVelY(a0)
@@ -230,9 +294,8 @@ Obj01_OutWater:
 		beq.s	Sonic_Water.return		; if already unset, branch
 
 		bsr.w	ResumeMusic
-		move.w	#$600,(Sonic_top_speed).w
-		move.w	#$C,(Sonic_acceleration).w
-		move.w	#$80,(Sonic_deceleration).w
+		movea.l	a0,a2
+		bsr.w	Player_UpdateSpeed
 		asl	obVelY(a0)
 		tst.w	obVelY(a0)
 		beq.w	Sonic_Water.return
@@ -1560,6 +1623,8 @@ loc_10748:
 ; ---------------------------------------------------------------------------
 
 Obj01_Hurt:
+		bsr.w	Player_ChkInvincibility
+		bsr.w	Player_ChkSpeedShoes
 		movem.w	obVelX(a0),d0/d2			; load xy speed
 		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
 		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position

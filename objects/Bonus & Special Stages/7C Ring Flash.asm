@@ -36,8 +36,14 @@ loc_AB7E:
 		move.b	#6,obRoutine(a1)
 		move.b	#$1C,(v_player+obAnim).w
 		move.b	#1,(f_bigring).w
-		bclr	#obStatusSecondary_hasShield,obStatusSecondary(a1)
-		bclr	#obStatusSecondary_isInvincible,obStatusSecondary(a1)
+		; a1 is the giant ring, not a player. Both players are leaving
+		; the level, so clear their effects and restore the shared tempo.
+		move.l	a0,-(sp)
+		lea	(v_player).w,a0
+		jsr	(Player_ClearPowerUps).l
+		lea	(v_player2).w,a0
+		jsr	(Player_ClearPowerUps).l
+		movea.l	(sp)+,a0
 +
 		out_of_range.w	DeleteObject
 		bra.w	DisplaySprite

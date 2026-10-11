@@ -190,6 +190,7 @@ loc_12170:
 		move.w	#60*2,objoff_2C(a0)
 		move.l	a0,-(sp)
 		lea	(v_player).w,a0
+		jsr	(Player_ClearPowerUps).l
 		bsr.w	Sonic_ResetOnFloor
 		move.b	#$17,obAnim(a0)
 		bset	#1,obStatus(a0)

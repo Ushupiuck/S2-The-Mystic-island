@@ -113,40 +113,64 @@ loc_B130:
 ; ---------------------------------------------------------------------------
 
 Monitor_Shoes:
-		bset	#obStatusSecondary_hasSpeedShoes,obStatusSecondary(a1)	; give super sneakers status
-		move.w	#60*20,shoetime(a1)
-		cmpa.w	#v_player,a1		; did the main character break the monitor?
-		bne.s	super_shoes_Tails	; if not, branch
-		cmpi.w	#2,(Player_mode).w	; is player using Tails?
-		beq.s	super_shoes_Tails	; if yes, branch
-		move.w	#$C00,(Sonic_top_speed).w	; set stats
-		move.w	#$18,(Sonic_acceleration).w
-		move.w	#$80,(Sonic_deceleration).w
-		move.w	#bgm_Speedup,d0
-		jmp	(PlaySound).l
-; ---------------------------------------------------------------------------
-;loc_12A10:
-super_shoes_Tails:
-		move.w	#$C00,(Tails_top_speed).w
-		move.w	#$18,(Tails_acceleration).w
-		move.w	#$80,(Tails_deceleration).w
-		move.w	#bgm_Speedup,d0
-		jmp	(PlaySound).l
+		movea.l	a1,a2
+		bsr.w	Monitor_GiveShoes
+		bsr.w	Monitor_GetPartner
+		beq.s	.sound
+		bsr.w	Monitor_GiveShoes
+.sound:
+		moveq	#8,d0
+		jmp	(ChangeMusicTempo).l
+
+Monitor_GiveShoes:
+		bset	#obStatusSecondary_hasSpeedShoes,obStatusSecondary(a2)
+		move.w	#20*60,shoetime(a2)
+		jmp	(Player_UpdateSpeed).l
 ; ---------------------------------------------------------------------------
 
 Monitor_Shield:
-		bset	#obStatusSecondary_hasShield,obStatusSecondary(a1)	; give shield status
+		movea.l	a1,a2
+		bsr.w	Monitor_GiveShield
+		bsr.w	Monitor_GetPartner
+		beq.s	.sound
+		bsr.w	Monitor_GiveShield
+.sound:
 		move.w	#sfx_Shield,d0
-		jsr	(PlaySound).l
-		tst.b	obParent+1(a0)
-		bne.s	+
-		_move.b	#id_Obj38,(v_shieldobj+obID).w ; load Obj38 (shield) at $FFFFD180
-		move.w	a1,(v_shieldobj+obParent).w
+		jmp	(PlaySound).l
+
+; Apply a shield to one player. Pickup sharing calls this once per live
+; player; damage/death clear only the affected player's shield status.
+Monitor_GiveShield:
+		bset	#obStatusSecondary_hasShield,obStatusSecondary(a2)
+		lea	(v_shieldobj2).w,a3
+		cmpa.w	#v_player,a2
+		bne.s	.slot_ready
+		lea	(v_shieldobj).w,a3
+.slot_ready:
+		_move.b	#id_Obj38,obID(a3)
+		clr.b	obRoutine(a3)
+		clr.b	obAnim(a3)
+		clr.b	obAniFrame(a3)
+		clr.b	obTimeFrame(a3)
+		move.w	a2,obParent(a3)
 		rts
 ; ---------------------------------------------------------------------------
-+		; give shield to sidekick
-		_move.b	#id_Obj38,(v_shieldobj2+obID).w ; load Obj38 (shield) at $FFFFD1C0
-		move.w	a1,(v_shieldobj2+obParent).w
+
+; a1 is the collector; return the other player in a2, Z clear if live.
+Monitor_GetPartner:
+		lea	(v_player).w,a2
+		cmpa.w	#v_player,a1
+		bne.s	.check
+		lea	(v_player2).w,a2
+.check:
+		moveq	#0,d0
+		tst.b	obID(a2)
+		beq.s	.return
+		cmpi.b	#6,obRoutine(a2)
+		bhs.s	.return
+		moveq	#1,d0
+.return:
+		tst.b	d0
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -155,14 +179,10 @@ Monitor_Invincibility:
 		bne.s	.return			; if yes, branch
 		bset	#obStatusSecondary_isInvincible,obStatusSecondary(a1)	; give invincibility status
 		move.w	#20*60,invtime(a1)	; 20 seconds
-		cmpa.w	#v_player,a1
-		bne.s	.shared_ready
-		tst.b	(v_player2+obID).w		; the main player's pickup also covers the live sidekick
+		bsr.w	Monitor_GetPartner	; either player's pickup also covers the live partner
 		beq.s	.shared_ready
-		cmpi.b	#6,(v_player2+obRoutine).w
-		bhs.s	.shared_ready
-		bset	#obStatusSecondary_isInvincible,(v_player2+obStatusSecondary).w
-		move.w	#20*60,(v_player2+invtime).w
+		bset	#obStatusSecondary_isInvincible,obStatusSecondary(a2)
+		move.w	#20*60,invtime(a2)
 .shared_ready:
 		tst.b	(f_lockscreen).w	; don't change music during boss battles
 		bne.s	+
@@ -170,11 +190,11 @@ Monitor_Invincibility:
 		cmpi.w	#12,(v_air).w
 		bls.s	+
 		move.w	#bgm_Invincible,d0
-		jsr	(PlaySound).l
+		jsr	(PlayMusic).l
 +
 		lea	(v_starsobj).w,a2
 		_move.b	#id_Obj35,obID(a2)
-		clr.b	obRender(a2)		; reinitialize all four layers on a fresh pickup
+		clr.b	obRoutine(a2)		; reinitialize all four layers on a fresh pickup
 		move.w	a1,invincibility_parent(a2)
 .return:
 		rts

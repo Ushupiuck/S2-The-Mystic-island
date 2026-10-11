@@ -2800,9 +2800,6 @@ Level_LoadObj:
 
 Level_SkipClr:
 		move.b	d0,(f_timeover).w
-		move.b	d0,(v_shield).w
-		move.b	d0,(v_invinc).w
-		move.b	d0,(v_shoes).w
 		move.w	d0,(Debug_placement_mode).w
 		move.w	d0,(Level_Inactive_flag).w
 		move.w	d0,(Timer_frames).w
@@ -3463,6 +3460,25 @@ PlayMusic:	disable_ints
 		enable_ints
 		rts
 ; End of function PlayMusic
+; ---------------------------------------------------------------------------
+; d0.b = speed-shoe tempo adjustment (8 enabled, 0 normal). Change the
+; driver flag directly so simultaneous music/SFX requests cannot overwrite
+; this update. During a 1-up jingle, change the saved song's flag instead,
+; just as the driver's speed-up/slow-down commands do.
+ChangeMusicTempo:
+		disable_ints
+		stopZ80
+		waitZ80
+		tst.b	(Z80_RAM+zAbsVar.1upPlaying).l
+		beq.s	.live_song
+		move.b	d0,(Z80_RAM+zSaveVar.SpeedUpFlag).l
+		bra.s	.resume
+.live_song:
+		move.b	d0,(Z80_RAM+zAbsVar.SpeedUpFlag).l
+.resume:
+		startZ80
+		enable_ints
+		rts
 ; ---------------------------------------------------------------------------
 ; play a sound in alternating speakers (as in the ring collection sound)
 
@@ -9411,6 +9427,16 @@ BuildSprites_Crash:
 ; ---------------------------------------------------------------------------
 
 BuildSprites_MultiDraw:
+		cmpi.b	#id_Obj35,obID(a0)
+		beq.s	BuildSprites_InvincibilityStars
+		bsr.s	BuildSprites_DrawComposite
+		bra.w	BuildSprites_NextObj
+
+BuildSprites_InvincibilityStars:
+		jsr	(InvincibilityStars_Draw).l
+		bra.w	BuildSprites_NextObj
+
+BuildSprites_DrawComposite:
 		move.l	a4,-(sp)
 		lea	(Camera_RAM).w,a4
 		movea.w	obGfx(a0),a3
@@ -9502,7 +9528,7 @@ BuildSprites_MultiDraw:
 
 BuildSprites_MultiDraw_NextObj:
 		movea.l	(sp)+,a4
-		bra.w	BuildSprites_NextObj
+		rts
 ; End of function BuildSprites
 
 
@@ -11331,10 +11357,10 @@ KillCharacter:
 ResumeMusic:
 		cmpi.w	#12,(v_air).w
 		bhi.s	loc_12310
-		move.w	#bgm_SYZ,d0
-	;	cmpi.w	#id_LZ<<8+3,(Current_ZoneAndAct).w
-	;	bne.s	loc_122F6
-	;	move.w	#bgm_SBZ,d0
+		moveq	#0,d0
+		move.b	(Current_Zone).w,d0
+		lea	(MusicList).l,a1
+		move.b	(a1,d0.w),d0
 
 loc_122F6:
 		move.b	(v_player+obStatusSecondary).w,d1
@@ -11349,7 +11375,7 @@ loc_12300:
 		move.w	#bgm_Boss,d0
 
 loc_1230A:
-		jsr	(PlaySound).l
+		jsr	(PlayMusic).l
 
 loc_12310:
 		move.w	#30,(v_air).w
@@ -11359,7 +11385,7 @@ loc_12310:
 
 ; ---------------------------------------------------------------------------
 		include	"objects/35 Invincibility Stars.asm"
-		include	"objects/38 Shield and Invincibility.asm"
+		include	"objects/38 Shield.asm"
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -15351,7 +15377,7 @@ Touch_Hurt:
 
 
 HurtSonic:
-		tst.b	(v_shield).w
+		btst	#obStatusSecondary_hasShield,obStatusSecondary(a0)
 		bne.s	HurtShield
 		tst.w	(v_rings).w
 		bne.s	.skip
@@ -15366,7 +15392,7 @@ HurtSonic:
 		move.w	obY(a0),obY(a1)
 
 HurtShield:
-		clr.b	(v_shield).w
+		bclr	#obStatusSecondary_hasShield,obStatusSecondary(a0)
 		move.b	#4,obRoutine(a0)
 		jsr	(Sonic_ResetOnFloor).l
 		bset	#1,obStatus(a0)
@@ -15406,8 +15432,7 @@ Hurt_ChkSpikes:
 KillSonic:
 		tst.w	(Debug_placement_mode).w
 		bne.s	.exit
-		bclr	#obStatusSecondary_isInvincible,obStatusSecondary(a0)
-		clr.w	invtime(a0)
+		jsr	(Player_ClearPowerUps).l
 		move.b	#6,obRoutine(a0)
 		jsr	(Sonic_ResetOnFloor).l
 		bset	#1,obStatus(a0)
@@ -19723,7 +19748,8 @@ Map_Obj30:	binclude	"mappings/sprite/SBZ Door.bin"
 		even
 Map_Obj36:	binclude	"mappings/sprite/Spikes.bin"
 		even
-Map_obj38:	binclude	"mappings/sprite/obj38.bin"
+Map_obj38:
+		include	"mappings/sprite/Shield.asm"
 		even
 Map_PRock:	binclude	"mappings/sprite/Purple Rock.bin"		; $3B
 		even
