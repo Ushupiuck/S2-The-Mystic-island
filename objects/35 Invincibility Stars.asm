@@ -158,11 +158,25 @@ InvincibilityStars_Draw:
 		lea	InvincibilityStars_Positions(pc),a6
 		moveq	#0,d6
 		move.b	(a4),d6
-		bsr.w	InvincibilityStars_GetPosition
+	;	bsr.w	InvincibilityStars_GetPosition
+		andi.w	#$3E,d6
+		move.b	(a6,d6.w),d2
+		move.b	1(a6,d6.w),d3
+		ext.w	d2
+		ext.w	d3
+		add.w	d0,d2
+		add.w	d1,d3
 		bsr.w	InvincibilityStars_WriteChild
 		addi.w	#16*2,d6			; opposite side of the orbit
 		swap	d5
-		bsr.w	InvincibilityStars_GetPosition
+	;	bsr.w	InvincibilityStars_GetPosition
+		andi.w	#$3E,d6
+		move.b	(a6,d6.w),d2
+		move.b	1(a6,d6.w),d3
+		ext.w	d2
+		ext.w	d3
+		add.w	d0,d2
+		add.w	d1,d3
 		bsr.w	InvincibilityStars_WriteChild
 		addq.w	#1,a4
 		addq.w	#4,a3
@@ -233,21 +247,6 @@ InvincibilityStars_WriteChild:
 		rts
 .outside_y:
 		addq.w	#2,sp
-		rts
-
-; ===========================================================================
-; Add a signed orbit offset to its centre. The angle wraps within 32 pairs.
-; Input: d0/d1 = centre X/Y, d6 = angle, a6 = orbit-offset table.
-; Output: d2/d3 = child X/Y.
-; ---------------------------------------------------------------------------
-InvincibilityStars_GetPosition:
-		andi.w	#$3E,d6
-		move.b	(a6,d6.w),d2
-		move.b	1(a6,d6.w),d3
-		ext.w	d2
-		ext.w	d3
-		add.w	d0,d2
-		add.w	d1,d3
 		rts
 
 ; ===========================================================================
