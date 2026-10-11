@@ -13,21 +13,17 @@ S1_SSBGLoad:
 		lea	SSBG_Chunks(pc),a0
 		lea	(Chunk_Table).l,a1
 		bsr.w	KosPlusDec
-		clr.w	(v_ssbg_fg_frame).l
-		clr.w	(v_ssbg_fg_uploaded).l
-		move.w	#1,(v_ssbg_bg_uploaded).l
-		move.w	#1,(v_ssbg_bg_wanted).l
-		move.w	#16,(v_ssbg_fg_build_row).l
-		move.w	#16,(v_ssbg_bg_build_row).l
-		clr.w	(v_ssbg_art_uploaded).l
-		clr.w	(v_ssbg_anim_counter).l
+		clr.l	(v_ssbg_fg_frame).l	; prepared/displayed FG arrangement
+		move.l	#(1<<16)|1,(v_ssbg_bg_uploaded).l	; displayed/wanted BG layout
+		move.l	#(16<<16)|16,(v_ssbg_fg_build_row).l	; both plane buffers complete
+		clr.l	(v_ssbg_art_uploaded).l	; art cache and private animation counter
 		lea	SSBG_Layouts(pc),a0
 		lea	(v_ssbg_fg_buffer).l,a1
-		bsr.w	S1SS_BgDrawPlane
+		bsr.s	S1SS_BgDrawPlane
 		copyTilemap	v_ssbg_fg_buffer,vram_fg,64,32
 		lea	SSBG_Layouts+4*8(pc),a0
 		lea	(v_ssbg_bg_buffer).l,a1
-		bsr.w	S1SS_BgDrawPlane
+		bsr.s	S1SS_BgDrawPlane
 		copyTilemap	v_ssbg_bg_buffer,vram_bg,64,32
 		moveq	#8,d0		; first fish frame, loaded beneath the opaque FG
 		bra.w	S1SS_AnimateTiles
@@ -37,8 +33,8 @@ S1_SSBGLoad:
 ; all original tile palette, priority and flip flags are in v_16x16.
 S1SS_BgDrawPlane:
 		moveq	#0,d6
-		moveq	#16,d4
-; d6 = first block row, d4 = number of block rows, a1 = plane buffer base.
+		moveq	#16-1,d4
+; d6 = first block row, d4 = row count minus one, a1 = plane buffer base.
 S1SS_BgDrawRows:
 		move.w	d6,d0
 		lsl.w	#8,d0
@@ -70,8 +66,7 @@ S1SS_BgDrawRows:
 		dbf	d7,.chunk
 		lea	$80(a1),a1
 		addq.w	#1,d6
-		subq.w	#1,d4
-		bne.s	.row
+		dbf	d4,.row
 		rts
 
 ; Called after the regular scroll animation, outside VBlank. Only the opaque
@@ -88,8 +83,8 @@ S1SS_BgPrepare:
 		adda.w	d0,a0
 		lea	(v_ssbg_bg_buffer).l,a1
 		move.w	(v_ssbg_bg_build_row).l,d6
-		moveq	#4,d4		; keep map construction inside the frame budget
-		bsr.w	S1SS_BgDrawRows
+		moveq	#4-1,d4		; keep map construction inside the frame budget
+		bsr.s	S1SS_BgDrawRows
 		move.w	d6,(v_ssbg_bg_build_row).l
 		cmpi.w	#16,d6
 		blo.s	.foreground
@@ -133,7 +128,7 @@ S1SS_BgPrepare:
 		lea	SSBG_Layouts(pc),a0
 		adda.w	d1,a0
 		lea	(v_ssbg_fg_buffer).l,a1
-		moveq	#4,d4
+		moveq	#4-1,d4
 		bsr.w	S1SS_BgDrawRows
 		move.w	d6,(v_ssbg_fg_build_row).l
 .return:
@@ -143,9 +138,9 @@ S1SS_BgPrepare:
 ; makes pause and the frozen exit fade retain the currently displayed frame.
 S1SS_BgVBlank:
 		tst.w	(f_pause).w
-		bne.s	.return
+		bne.s	S1SS_BgPrepare.return
 		tst.w	(v_palbs_time).w
-		bne.s	.return
+		bne.s	S1SS_BgPrepare.return
 		move.w	(v_palbs_num).w,d0
 		andi.w	#$1F,d0
 		lsl.w	#2,d0
@@ -163,7 +158,7 @@ S1SS_BgVBlank:
 		cmp.w	(v_ssbg_fg_uploaded).l,d1
 		beq.s	.animatedframe
 		cmpi.w	#16,(v_ssbg_fg_build_row).l
-		bne.s	.return
+		bne.s	S1SS_BgPrepare.return
 		move.w	d1,(v_ssbg_fg_uploaded).l
 		move.l	#v_ssbg_fg_buffer,d1
 		move.w	#vram_fg,d2
@@ -171,16 +166,14 @@ S1SS_BgVBlank:
 		bra.w	QueueDMATransfer
 .animatedframe:
 		tst.w	d0
-		bne.s	S1SS_AnimateTiles
-.return:
-		rts
+		beq.s	S1SS_BgPrepare.return
 
 ; d0 = original animation ID (2,4,6 birds / 8,10,12 fish). The special stage
 ; keeps its original palette clock; the existing animated-tile engine performs
 ; the art transfer using a private counter, without disturbing level scripts.
 S1SS_AnimateTiles:
 		cmp.w	(v_ssbg_art_uploaded).l,d0
-		beq.s	.return
+		beq.s	S1SS_BgPrepare.return
 		move.w	d0,(v_ssbg_art_uploaded).l
 		lea	AnimCue_S1SSBirds(pc),a2
 		cmpi.w	#8,d0
@@ -191,11 +184,8 @@ S1SS_AnimateTiles:
 		lsr.w	#1,d0
 		subq.w	#1,d0
 		lea	(v_ssbg_anim_counter).l,a3
-		clr.b	(a3)
-		move.b	d0,1(a3)
+		move.w	d0,(a3)		; zero timer and selected frame (0..2)
 		jmp	(Dynamic_Normal_AtCounter).l
-.return:
-		rts
 
 AnimCue_S1SSBirds:	zoneanimstart
 		zoneanimdecl 0, Art_S1SSBGBirds, ArtTile_SS_Background_Animated, 3, 64
