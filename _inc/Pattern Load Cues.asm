@@ -869,7 +869,7 @@ PLCKosM_CVZ4_End
 ; 6
 PLCKosM_SSBackground:	plrKosMlistheader
 	plreqKosM	ArtTile_SS_Background_Clouds, Kospm_SSBgCloud		; Clouds
-	plreqKosM	ArtTile_SS_Background_Fish, Kospm_SSBgFish		; Bird/Fish
+	plreqKosM	ArtTile_SS_Background_Transition, Kospm_SSBgTransition	; opaque transition tiles
 	plreqKosM	ArtTile_SS_Up_Down, Kospm_SSUpDown			; UP and DOWN blocks
 	plreqKosM	ArtTile_SS_Extra_Life, Kospm_SS1UpBlock			; 1UP block
 	plreqKosM	ArtTile_SS_Ghost_Block, Kospm_SSGhost			; ghost block

@@ -9,6 +9,7 @@ https://tcrf.net/Proto:Sonic_the_Hedgehog_2_(Genesis)
 ; ---------------------------------------------------------------------------
 
 TODO:
+Port remaining level animated-art/block setup to S1/S3&K style through Animate_Tiles and AniPLC scripts; replace make_block_tile mapping patches with regular block data < FUTURE, separate from the S1 bonus-stage background conversion
 Compare remaining S3&K power-up behavior and timer layout with the current per-player implementation
 Compare S3&K's byte timers (150 ticks, decremented every 8 frames), expiry/cleanup and music-tempo handling; retain shared Sonic/Tails invincibility and the single shared star SST
 Use two independent VRAM effect banks, one per player; each bank shares shield/invincibility art as in S3&K/S.C.E. Restore shield art/DPLCs after invincibility, and check zone/boss PLC allocations before assigning the ranges
@@ -30,6 +31,7 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
+Convert the S1 bonus-stage background to normal blocks/chunks and two live $1000-byte planes; animate birds/fish through the existing Animate_Tiles interpreter, group stage art below $2940, and preserve pause/results/level-return behavior < DONE
 Share TIME's static E with SCORE in the HUD and results mappings; retain debug coordinates in their separate digit mappings < DONE
 Replace RING BONUS lettering with the animated ring icon on both results screens; special-stage results replace the stage's $F600 ring art with a separate palette-0 copy of all eight frames, preserving the normal $D780 art, emerald colors and bonus digits < DONE
 Remove the results-only RING lettering art/PLCs and the duplicate uncompressed HUD E glyph < DONE

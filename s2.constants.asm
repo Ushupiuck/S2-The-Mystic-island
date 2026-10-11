@@ -1261,28 +1261,35 @@ v_limittop2:=		Camera_Min_Y_pos
 v_limitbtm2:=		Camera_Max_Y_pos
 
 
-; Bonus stage
-v_ssbuffer1		= v_start
+; S1 bonus stage: background chunks, rotating playfield and plane buffers
+; all share the normal chunk table. The normal block table stays at v_16x16.
+SSBG_Chunk_RAM_Size	= $A00
+v_ssbuffer1		= Chunk_Table+SSBG_Chunk_RAM_Size
 v_ssblockbuffer		= v_ssbuffer1+$1020		; $1020 bytes -- layout padded from the top and sides
 v_ssblockbuffer_end	= v_ssblockbuffer+$80*$40	; ($2000 bytes)
 v_ssbuffer2		= v_ssblockbuffer_end
 v_ssblocktypes		= v_ssbuffer2
-v_ssitembuffer		= v_ssbuffer2+$400		; ($1000 bytes)
+v_ssitembuffer		= v_ssbuffer2+$400		; animation list ($100 bytes)
 v_ssitembuffer_end	= v_ssitembuffer+$100
 v_ssbuffer3		= v_ssitembuffer+$500
 v_ssscroll_buffer	= v_ssbuffer3+$400
 v_ssangle		= v_ssscroll_buffer+$300
 v_ssrotate		= v_ssangle+2
+v_ssbg_fg_frame		= v_ssrotate+2		; frame prepared in RAM
+v_ssbg_fg_uploaded	= v_ssbg_fg_frame+2	; frame displayed in VRAM
+v_ssbg_bg_uploaded	= v_ssbg_fg_uploaded+2	; 0 = clouds, 1 = bubbles
+v_ssbg_bg_wanted		= v_ssbg_bg_uploaded+2
+v_ssbg_fg_build_row	= v_ssbg_bg_wanted+2	; next 16-pixel row to prepare
+v_ssbg_bg_build_row	= v_ssbg_fg_build_row+2
+v_ssbg_art_uploaded	= v_ssbg_bg_build_row+2	; animation 2,4,...12 in the shared tile bank
+v_ssbg_anim_counter	= v_ssbg_art_uploaded+2	; private counter for Dynamic_Normal
+v_ssbg_fg_buffer		= v_ssbg_anim_counter+2
+v_ssbg_bg_buffer		= v_ssbg_fg_buffer+plane_size_64x32
+v_ssbg_end		= v_ssbg_bg_buffer+plane_size_64x32
 
-;v_ss_layout:			equ $FF0000 ; special stage layout with space added to top and sides
-;v_ss_layout_start:		equ v_ss_layout+sizeof_ss_padding_top+ss_width_padding_left ; $FF1020
-;v_ss_enidec_buffer:		equ $FF0000 ; special stage background mappings are stored here before being moved to VRAM
-;v_ss_layout_buffer:		equ $FF4000 ; unprocessed special stage layout - overwritten later ($1000 bytes)
-;v_ss_sprite_info:		equ $FF4000 ; sprite info for each item type - mappings pointer (4 bytes); frame id (2 bytes); tile id (2 bytes) (total $278 bytes)
-;v_ss_sprite_update_list:	equ $FF4400 ; list of items currently being updated - 8 bytes each ($100 bytes)
-;v_ss_sprite_grid_plot:		equ $FF4500 ; x/y positions of cells in a 16x16 grid centered around Sonic, updates as it rotates ($400 bytes)
-;v_ss_bubble_x_pos:		equ $FF4900 ; x position of background bubbles
-;v_ss_cloud_x_pos:		equ $FF4A00 ; x position of background clouds - 4 bytes per block, 7 blocks ($1C bytes)
+	if v_ssbg_end>Chunk_Table_End
+		fatal "S1 special-stage RAM exceeds the chunk table."
+	endif
 
 ; ---------------------------------------------------------------------------
 ; RAM variables - Special stage
@@ -1673,33 +1680,23 @@ ArtTile_Try_Again_Eggman:	equ $3E1
 
 ; Special Stage
 ArtTile_SS_Background_Clouds:	equ $000
-ArtTile_SS_Background_Fish:	equ $051
-ArtTile_SS_Wall:		equ $142
-ArtTile_SS_Plane_1:		equ $200
-ArtTile_SS_Bumper:		equ $152
-ArtTile_SS_Goal:		equ $176
-ArtTile_SS_Up_Down:		equ $188
-ArtTile_SS_R_Block:		equ $2F0
-ArtTile_SS_Plane_2:		equ $300
-ArtTile_SS_Extra_Life:		equ $370
-ArtTile_SS_Emerald_Sparkle:	equ $3F0
-ArtTile_SS_Plane_3:		equ $400
-ArtTile_SS_Red_White_Block:	equ $470
-ArtTile_SS_Ghost_Block:		equ $4F0
-ArtTile_SS_Plane_4:		equ $500
-ArtTile_SS_W_Block:		equ $570
-ArtTile_SS_Glass:		equ $5F0
-ArtTile_SS_Plane_5:		equ $600
-ArtTile_SS_Plane_6:		equ $700
-ArtTile_SS_Emerald:		equ $770
+ArtTile_SS_Background_Transition:	equ $051
+ArtTile_SS_Background_Animated:	equ ArtTile_SS_Background_Transition+9	; one 64-tile animation bank
+ArtTile_SS_Wall:		equ ArtTile_SS_Background_Animated+64
+ArtTile_SS_Bumper:		equ ArtTile_SS_Wall+16
+ArtTile_SS_Goal:		equ ArtTile_SS_Bumper+36
+ArtTile_SS_Up_Down:		equ ArtTile_SS_Goal+18
+; Fixed stage art is contiguous now that it no longer lives between BG maps.
+ArtTile_SS_R_Block:		equ ArtTile_SS_Up_Down+27
+ArtTile_SS_Extra_Life:		equ ArtTile_SS_R_Block+9
+ArtTile_SS_Emerald_Sparkle:	equ ArtTile_SS_Extra_Life+9
+ArtTile_SS_Red_White_Block:	equ ArtTile_SS_Emerald_Sparkle+9
+ArtTile_SS_Ghost_Block:		equ ArtTile_SS_Red_White_Block+9
+ArtTile_SS_W_Block:		equ ArtTile_SS_Ghost_Block+9
+ArtTile_SS_Glass:		equ ArtTile_SS_W_Block+9
+ArtTile_SS_Emerald:		equ ArtTile_SS_Glass+9	; away from the live BG plane
 ArtTile_SS_Rings:		equ $7B0
 ArtTile_SS_Sparkles:		equ ArtTile_SS_Rings+4
-ArtTile_SS_Zone_1:		equ $797
-ArtTile_SS_Zone_2:		equ $7A0
-ArtTile_SS_Zone_3:		equ $7A9
-ArtTile_SS_Zone_4:		equ $797
-ArtTile_SS_Zone_5:		equ $7A0
-ArtTile_SS_Zone_6:		equ $7A9
 
 ; Special Stage Results
 ArtTile_SS_Results_Emeralds:	equ $541

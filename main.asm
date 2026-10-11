@@ -607,6 +607,7 @@ Vint_S1SS:
 		writeCRAM	v_palette,0
 		writeVRAM	Sprite_Table,vram_sprites
 		writeVRAM	v_hscrolltablebuffer,vram_hscroll
+		bsr.w	S1SS_BgVBlank
 		bsr.w	ProcessDMAQueue
 		startZ80
 		bsr.w	PalCycle_S1SS
@@ -3581,7 +3582,9 @@ BonusStage:
 		move.w	#$8B03,(a6)	; line scroll mode
 		move.w	#$8004,(a6)	; 8-colour mode
 		move.w	#$8A00+175,(v_hbla_hreg).w
-		move.w	#$9011,(a6)
+		move.w	#$9001,(a6)	; two live 64x32 background planes
+		move.w	#$8200+(vram_fg>>10),(a6)
+		move.w	#$8400+(vram_bg>>13),(a6)
 		move.w	(v_vdp_buffer1).w,d0
 		andi.b	#$BF,d0
 		move.w	d0,(vdp_control_port).l
@@ -3589,8 +3592,6 @@ BonusStage:
 		bsr.w	ClearScreen
 		fillVRAM	0,0,$10000	; clear the entirety of VRAM
 		enable_ints
-		fillVRAM	0, ArtTile_SS_Plane_1*tile_size+plane_size_64x32, ArtTile_SS_Plane_5*tile_size
-	;	moveq	#plcid_SpecialStage,d0
 		bsr.w	S1_SSBGLoad
 		lea	(PLCKosM_SSBackground).l,a6
 		bsr.w	QuickKosPLC
@@ -3734,70 +3735,7 @@ SS_NormalExit:
 ; =============== S U B R O U T I N E =======================================
 
 
-S1_SSBGLoad:
-		lea	(v_ssbuffer1).l,a1
-		lea	Eni_BSBg1(pc),a0 ; load mappings for the birds and fish
-		move.w	#make_art_tile(ArtTile_SS_Background_Fish,2,0),d0
-		bsr.w	EniDec
-		locVRAM	ArtTile_SS_Plane_1*tile_size+plane_size_64x32,d3
-		lea	(v_ssbuffer1+$80).l,a2
-		moveq	#7-1,d7
-
-loc_5302:
-		move.l	d3,d0
-		moveq	#4-1,d6
-		moveq	#0,d4
-		cmpi.w	#3,d7
-		bhs.s	loc_5310
-		moveq	#1,d4
-
-loc_5310:
-		moveq	#8-1,d5
-
-loc_5312:
-		movea.l	a2,a1
-		eori.b	#1,d4
-		bne.s	loc_5326
-		cmpi.w	#6,d7
-		bne.s	loc_5336
-		lea	(v_ssbuffer1).l,a1
-
-loc_5326:
-		movem.l	d0-d4,-(sp)
-		moveq	#8-1,d1
-		moveq	#8-1,d2
-		bsr.w	PlaneMapToVRAM_H40
-		movem.l	(sp)+,d0-d4
-
-loc_5336:
-		addi.l	#$100000,d0
-		dbf	d5,loc_5312
-		addi.l	#$3800000,d0
-		eori.b	#1,d4
-		dbf	d6,loc_5310
-		addi.l	#$10000000,d3
-		bpl.s	loc_5360
-		swap	d3
-		addi.l	#$C000,d3
-		swap	d3
-
-loc_5360:
-		adda.w	#$80,a2
-		dbf	d7,loc_5302
-		lea	(v_ssbuffer1).l,a1
-		lea	Eni_BSBg2(pc),a0 ; load mappings for the clouds
-		move.w	#make_art_tile(ArtTile_SS_Background_Clouds,2,0),d0
-		bsr.w	EniDec
-		copyTilemap	v_ssbuffer1,ArtTile_SS_Plane_5*tile_size,64,32
-		lea	(v_ssbuffer1).l,a1
-		locVRAM	ArtTile_SS_Plane_5*tile_size+plane_size_64x32,d0
-		moveq	#64-1,d1
-		moveq	#64-1,d2
-		bra.w	PlaneMapToVRAM_H40
-; End of function S1_SSBGLoad
-; ---------------------------------------------------------------------------
-Eni_BSBg1:	binclude	"tilemaps/BS Background 1.eni" ; bonus stage background (mappings)
-Eni_BSBg2:	binclude	"tilemaps/BS Background 2.eni" ; bonus stage background (mappings)
+		include "_inc/S1 Special Stage Background.asm"
 ; ---------------------------------------------------------------------------
 ; Palette cycling routine - special stage
 ; ---------------------------------------------------------------------------
@@ -3810,12 +3748,11 @@ PalCycle_S1SS:
 		bne.s	locret_5424
 		subq.w	#1,(v_palbs_time).w
 		bpl.s	locret_5424
-		lea	(vdp_control_port).l,a6
 		move.w	(v_palbs_num).w,d0
 		addq.w	#1,(v_palbs_num).w
 		andi.w	#$1F,d0
 		lsl.w	#2,d0
-		lea	(word_547A).l,a0
+		lea	(S1SS_BgCycle).l,a0
 		adda.w	d0,a0
 		move.b	(a0)+,d0
 		bpl.s	loc_53D0
@@ -3826,15 +3763,14 @@ loc_53D0:
 		moveq	#0,d0
 		move.b	(a0)+,d0
 		move.w	d0,(v_bsbganim).w
-		lea	(word_54FA).l,a1
-		lea	(a1,d0.w),a1
-		move.w	#$8200,d0
-		move.b	(a1)+,d0
-		move.w	d0,(a6)
-		move.b	(a1),(v_scrposy_vdp).w
-		move.w	#$8400,d0
+		clr.w	(v_scrposy_vdp).w	; live FG frame starts at row zero
+		moveq	#0,d0
 		move.b	(a0)+,d0
-		move.w	d0,(a6)
+		cmp.w	(v_ssbg_bg_wanted).l,d0
+		beq.s	.samebackground
+		move.w	d0,(v_ssbg_bg_wanted).l
+		clr.w	(v_ssbg_bg_build_row).l
+.samebackground:
 		move.l	#$40000010,(vdp_control_port).l
 		move.l	(v_scrposy_vdp).w,(vdp_data_port).l
 		moveq	#0,d0
@@ -3895,8 +3831,8 @@ loc_546C:
 ; End of function PalCycle_S1SS
 
 ; ---------------------------------------------------------------------------
-SSBGData:	macro time,anim,vram,index,flag1,flag2
-		dc.b	(time), (anim), ((vram)*tile_size)>>13
+SSBGData:	macro time,anim,bg,index,flag1,flag2
+		dc.b	(time), (anim), (bg)
 	if flag1
 		dc.b	(index)|$80|(flag2)
 	else
@@ -3904,59 +3840,44 @@ SSBGData:	macro time,anim,vram,index,flag1,flag2
 	endif
 		endm
 
-word_547A:
-		; Time, anim, BG VRAM, palette cycle index & flags
-		SSBGData  3,  0, ArtTile_SS_Plane_6, 18, TRUE , FALSE
-		SSBGData  3,  0, ArtTile_SS_Plane_6, 16, TRUE , FALSE
-		SSBGData  3,  0, ArtTile_SS_Plane_6, 14, TRUE , FALSE
-		SSBGData  3,  0, ArtTile_SS_Plane_6, 12, TRUE , FALSE
-		SSBGData  3,  0, ArtTile_SS_Plane_6, 10, TRUE , TRUE
+S1SS_BgCycle:
+		; Time, anim, BG layout (0 clouds/1 bubbles), palette cycle index & flags
+		SSBGData  3,  0, 1, 18, TRUE , FALSE
+		SSBGData  3,  0, 1, 16, TRUE , FALSE
+		SSBGData  3,  0, 1, 14, TRUE , FALSE
+		SSBGData  3,  0, 1, 12, TRUE , FALSE
+		SSBGData  3,  0, 1, 10, TRUE , TRUE
 
-		SSBGData  3,  0, ArtTile_SS_Plane_6,  0, TRUE , FALSE
-		SSBGData  3,  0, ArtTile_SS_Plane_6,  2, TRUE , FALSE
-		SSBGData  3,  0, ArtTile_SS_Plane_6,  4, TRUE , FALSE
-		SSBGData  3,  0, ArtTile_SS_Plane_6,  6, TRUE , FALSE
-		SSBGData  3,  0, ArtTile_SS_Plane_6,  8, TRUE , FALSE
+		SSBGData  3,  0, 1,  0, TRUE , FALSE
+		SSBGData  3,  0, 1,  2, TRUE , FALSE
+		SSBGData  3,  0, 1,  4, TRUE , FALSE
+		SSBGData  3,  0, 1,  6, TRUE , FALSE
+		SSBGData  3,  0, 1,  8, TRUE , FALSE
 
-		SSBGData  7,  8, ArtTile_SS_Plane_6,  0, FALSE, FALSE
-		SSBGData  7, 10, ArtTile_SS_Plane_6,  1, FALSE, FALSE
-		SSBGData -1, 12, ArtTile_SS_Plane_6,  2, FALSE, FALSE
-		SSBGData -1, 12, ArtTile_SS_Plane_6,  2, FALSE, FALSE
-		SSBGData  7, 10, ArtTile_SS_Plane_6,  1, FALSE, FALSE
-		SSBGData  7,  8, ArtTile_SS_Plane_6,  0, FALSE, FALSE
-		SSBGData  3,  0, ArtTile_SS_Plane_5,  8, TRUE , FALSE
-		SSBGData  3,  0, ArtTile_SS_Plane_5,  6, TRUE , FALSE
-		SSBGData  3,  0, ArtTile_SS_Plane_5,  4, TRUE , FALSE
-		SSBGData  3,  0, ArtTile_SS_Plane_5,  2, TRUE , FALSE
-		SSBGData  3,  0, ArtTile_SS_Plane_5,  0, TRUE , TRUE
+		SSBGData  7,  8, 1,  0, FALSE, FALSE
+		SSBGData  7, 10, 1,  1, FALSE, FALSE
+		SSBGData -1, 12, 1,  2, FALSE, FALSE
+		SSBGData -1, 12, 1,  2, FALSE, FALSE
+		SSBGData  7, 10, 1,  1, FALSE, FALSE
+		SSBGData  7,  8, 1,  0, FALSE, FALSE
+		SSBGData  3,  0, 0,  8, TRUE , FALSE
+		SSBGData  3,  0, 0,  6, TRUE , FALSE
+		SSBGData  3,  0, 0,  4, TRUE , FALSE
+		SSBGData  3,  0, 0,  2, TRUE , FALSE
+		SSBGData  3,  0, 0,  0, TRUE , TRUE
 
-		SSBGData  3,  0, ArtTile_SS_Plane_5, 10, TRUE , FALSE
-		SSBGData  3,  0, ArtTile_SS_Plane_5, 12, TRUE , FALSE
-		SSBGData  3,  0, ArtTile_SS_Plane_5, 14, TRUE , FALSE
-		SSBGData  3,  0, ArtTile_SS_Plane_5, 16, TRUE , FALSE
-		SSBGData  3,  0, ArtTile_SS_Plane_5, 18, TRUE , FALSE
+		SSBGData  3,  0, 0, 10, TRUE , FALSE
+		SSBGData  3,  0, 0, 12, TRUE , FALSE
+		SSBGData  3,  0, 0, 14, TRUE , FALSE
+		SSBGData  3,  0, 0, 16, TRUE , FALSE
+		SSBGData  3,  0, 0, 18, TRUE , FALSE
 
-		SSBGData  7,  2, ArtTile_SS_Plane_5,  3, FALSE, FALSE
-		SSBGData  7,  4, ArtTile_SS_Plane_5,  4, FALSE, FALSE
-		SSBGData -1,  6, ArtTile_SS_Plane_5,  5, FALSE, FALSE
-		SSBGData -1,  6, ArtTile_SS_Plane_5,  5, FALSE, FALSE
-		SSBGData  7,  4, ArtTile_SS_Plane_5,  4, FALSE, FALSE
-		SSBGData  7,  2, ArtTile_SS_Plane_5,  3, FALSE, FALSE
-		even
-
-SSFGData:	macro vram,y
-		dc.b ((vram)*tile_size)>>10, (y)>>8
-		endm
-
-word_54FA:
-		; FG VRAM, Y coordinate
-		SSFGData ArtTile_SS_Plane_1, $100
-		SSFGData ArtTile_SS_Plane_2,    0
-		SSFGData ArtTile_SS_Plane_2, $100
-		SSFGData ArtTile_SS_Plane_3,    0
-		SSFGData ArtTile_SS_Plane_3, $100
-		SSFGData ArtTile_SS_Plane_4,    0
-		SSFGData ArtTile_SS_Plane_4, $100
+		SSBGData  7,  2, 0,  3, FALSE, FALSE
+		SSBGData  7,  4, 0,  4, FALSE, FALSE
+		SSBGData -1,  6, 0,  5, FALSE, FALSE
+		SSBGData -1,  6, 0,  5, FALSE, FALSE
+		SSBGData  7,  4, 0,  4, FALSE, FALSE
+		SSBGData  7,  2, 0,  3, FALSE, FALSE
 		even
 
 Pal_S1SSCyc1:	binclude	"palette/Cycle - Special Stage 1.bin"
@@ -4051,7 +3972,7 @@ loc_56E2:
 		andi.w	#$3FC,d2
 		dbf	d1,loc_56E2
 		dbf	d3,loc_56D8
-		rts
+		bra.w	S1SS_BgPrepare
 ; End of function S1SS_BgAnimate
 
 ; ---------------------------------------------------------------------------
@@ -4507,14 +4428,23 @@ loc_19D82:
 
 ; ---------------------------------------------------------------------------
 S1SS_WaRiVramSet:
-		dc.w $0142, $6142, $0142, $0142, $0142, $0142, $0142, $6142
-		dc.w $0142, $6142, $0142, $0142, $0142, $0142, $0142, $6142
-		dc.w $2142, $0142, $2142, $2142, $2142, $2142, $2142, $0142
-		dc.w $2142, $0142, $2142, $2142, $2142, $2142, $2142, $0142
-		dc.w $4142, $2142, $4142, $4142, $4142, $4142, $4142, $2142
-		dc.w $4142, $2142, $4142, $4142, $4142, $4142, $4142, $2142
-		dc.w $6142, $4142, $6142, $6142, $6142, $6142, $6142, $4142
-		dc.w $6142, $4142, $6142, $6142, $6142, $6142, $6142, $4142
+		; Keep the wall base symbolic when moving the stage art.
+		dc.w ArtTile_SS_Wall, ArtTile_SS_Wall|$6000, ArtTile_SS_Wall, ArtTile_SS_Wall
+		dc.w ArtTile_SS_Wall, ArtTile_SS_Wall, ArtTile_SS_Wall, ArtTile_SS_Wall|$6000
+		dc.w ArtTile_SS_Wall, ArtTile_SS_Wall|$6000, ArtTile_SS_Wall, ArtTile_SS_Wall
+		dc.w ArtTile_SS_Wall, ArtTile_SS_Wall, ArtTile_SS_Wall, ArtTile_SS_Wall|$6000
+		dc.w ArtTile_SS_Wall|$2000, ArtTile_SS_Wall, ArtTile_SS_Wall|$2000, ArtTile_SS_Wall|$2000
+		dc.w ArtTile_SS_Wall|$2000, ArtTile_SS_Wall|$2000, ArtTile_SS_Wall|$2000, ArtTile_SS_Wall
+		dc.w ArtTile_SS_Wall|$2000, ArtTile_SS_Wall, ArtTile_SS_Wall|$2000, ArtTile_SS_Wall|$2000
+		dc.w ArtTile_SS_Wall|$2000, ArtTile_SS_Wall|$2000, ArtTile_SS_Wall|$2000, ArtTile_SS_Wall
+		dc.w ArtTile_SS_Wall|$4000, ArtTile_SS_Wall|$2000, ArtTile_SS_Wall|$4000, ArtTile_SS_Wall|$4000
+		dc.w ArtTile_SS_Wall|$4000, ArtTile_SS_Wall|$4000, ArtTile_SS_Wall|$4000, ArtTile_SS_Wall|$2000
+		dc.w ArtTile_SS_Wall|$4000, ArtTile_SS_Wall|$2000, ArtTile_SS_Wall|$4000, ArtTile_SS_Wall|$4000
+		dc.w ArtTile_SS_Wall|$4000, ArtTile_SS_Wall|$4000, ArtTile_SS_Wall|$4000, ArtTile_SS_Wall|$2000
+		dc.w ArtTile_SS_Wall|$6000, ArtTile_SS_Wall|$4000, ArtTile_SS_Wall|$6000, ArtTile_SS_Wall|$6000
+		dc.w ArtTile_SS_Wall|$6000, ArtTile_SS_Wall|$6000, ArtTile_SS_Wall|$6000, ArtTile_SS_Wall|$4000
+		dc.w ArtTile_SS_Wall|$6000, ArtTile_SS_Wall|$4000, ArtTile_SS_Wall|$6000, ArtTile_SS_Wall|$6000
+		dc.w ArtTile_SS_Wall|$6000, ArtTile_SS_Wall|$6000, ArtTile_SS_Wall|$6000, ArtTile_SS_Wall|$4000
 		even
 ; ---------------------------------------------------------------------------
 ; Subroutine to	remove items when you collect them in the special stage
@@ -16643,6 +16573,7 @@ Dynamic_NullGHZ:
 
 Dynamic_Normal:
 		lea	(Anim_Counters).w,a3
+Dynamic_Normal_AtCounter:			; also used by the S1 background's palette-clocked art
 ;.customCounters:
 		move.w	(a2)+,d6	; Get number of scripts in list
 		bmi.s	.exit		; If there's none, bail
@@ -18107,7 +18038,11 @@ BS_6:		binclude	"Bonus & Special Stages/6.kosp"
 ; Bonus Stage
 ; ---------------------------------------------------------------------------
 Art_SSWalls:		binclude	"art/Bonus & Special Stage/Bonus Stage Walls.bin" ; bonus stage walls
-Kospm_SSBgFish:		binclude	"art/Bonus & Special Stage/Bonus Birds & Fish.kospm" ; bonus stage birds and fish background
+Kospm_SSBgTransition:	binclude	"art/Bonus & Special Stage/Bonus BG Transition.kospm" ; opaque S1 background transition
+		even
+Art_S1SSBGBirds:		binclude	"art/uncompressed/S1 Special Stage BG Animation.bin"
+Art_S1SSBGFish	= Art_S1SSBGBirds+3*$800
+		even
 Kospm_SSBgCloud:	binclude	"art/Bonus & Special Stage/Bonus Clouds.kospm" ; bonus stage clouds background
 Kospm_SSGhost:		binclude	"art/Bonus & Special Stage/Bonus Stage Ghost.kospm" ; bonus stage ghost block
 Kospm_SS1UpBlock:	binclude	"art/Bonus & Special Stage/Bonus Stage 1UP.kospm" ; bonus stage 1UP block
