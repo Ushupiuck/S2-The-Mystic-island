@@ -3263,15 +3263,18 @@ LoadRingFrame:
 		lsl.l	#7,d1				; Each ring frame takes $80 bytes, so multiply by $80
 		addi.l	#Art_Ring,d1			; Queue a DMA transfer for this ring frame
 		move.w	#ArtTile_Ring*tile_size,d2
-		cmpi.w	#Demo,(v_gamemode).w		; Are we in a DEMO?
-		beq.s	.skip				; If so, branch
-		cmpi.w	#Level,(v_gamemode).w		; Are we in a level?
-		beq.s	.skip				; If so, branch
-		move.w	#ArtTile_SS_Rings*tile_size,d2	; use a different VRAM location
+		; Demo playback does not change the active stage's VRAM layout.
+		move.w	(v_gamemode).w,d0
+		andi.w	#$7FFF,d0			; Ignore the title-card/loading flag
+		cmpi.w	#BonusStage,d0			; Only the S1 special stage uses this allocation
+		bne.s	.skip
+		move.w	#ArtTile_SS_Rings*tile_size,d2
 .skip:		moveq	#$80/2,d3
 		bsr.w	QueueDMATransfer		; (or DMA_68KtoVRAM)
 .noring:
-		cmpi.w	#BonusStage,(v_gamemode).w	; Are we in a special stage?
+		move.w	(v_gamemode).w,d0
+		andi.w	#$7FFF,d0			; Ignore the title-card/loading flag
+		cmpi.w	#BonusStage,d0			; Are we in the S1 special stage?
 		beq.s	.end				; If so, branch
 
 		tst.b	(v_gfxbigring).w		; Is a there a special stage ring?
