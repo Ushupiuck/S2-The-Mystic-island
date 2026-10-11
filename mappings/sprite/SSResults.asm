@@ -26,20 +26,20 @@ M_SSR_Chaos:	dc.w $D			; "CHAOS EMERALDS"
 		dc.w $F805, $C, 6, $50
 		dc.w $F805, $3E, $1F, $60
 M_SSR_Score:	dc.w 6			; "SCORE"
-		dc.w $F80D, $14A, $A5, $FFB0
-		dc.w $F801, $162, $B1, $FFD0
-		dc.w $F809, $164, $B2, $18
-		dc.w $F80D, $16A, $B5, $30
+		dc.w $F80D, Map_Results_ScoreLetters, Map_Results_ScoreLetters/2, $FFB0
+		dc.w $F801, Map_Results_ScoreE, Map_Results_ScoreE/2, $FFD0
+		dc.w $F809, Map_Results_ScoreDigits, Map_Results_ScoreDigits/2, $18
+		dc.w $F80D, Map_Results_ScoreDigits+6, (Map_Results_ScoreDigits+6)/2, $30
 		dc.w $F704, $6E, $37, $FFCD
 		dc.w $FF04, $186E, $1837, $FFCD
 byte_CD0D:	dc.w 7
-		dc.w $F80D, $152, $A9, $FFB0
+		dc.w $F80D, Map_Results_RingLetters, Map_Results_RingLetters/2, $FFB0
 		dc.w $F80D, $66, $33, $FFD9
-		dc.w $F801, $14A, $A5, $FFF9
+		dc.w $F801, Map_Results_ScoreLetters, Map_Results_ScoreLetters/2, $FFF9
 		dc.w $F704, $6E, $37, $FFF6
 		dc.w $FF04, $186E, $1837, $FFF6
 		dc.w $F80D, $FFF8, $FBFC, $28
-		dc.w $F801, $170, $B8, $48
+		dc.w $F801, Map_Results_Zero, Map_Results_Zero/2, $48
 byte_CD31:	dc.w 4
 		dc.w $F80D, $FFD1, $7FC8, $FFB0
 		dc.w $F80D, $FFD9, $7FD4, $FFD0

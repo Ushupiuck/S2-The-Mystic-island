@@ -225,6 +225,7 @@ PLC_HTZ2_End:
 ; ---------------------------------------------------------------------------
 PLC_S1TitleCard:dc.w ((PLC_S1TitleCard_End-PLC_S1TitleCard)/6)-1
 		plcm	Nem_TitleCard,	ArtTile_Title_Card
+		plcm	Nem_ResultsRingLabel,	ArtTile_Results_Ring_Label ; End-of-act RING BONUS lettering
 PLC_S1TitleCard_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
@@ -311,6 +312,7 @@ PLC_HTZAnimals_End:
 ; ---------------------------------------------------------------------------
 PLC_SSResult:dc.w ((PLC_SpeStResult_End-PLC_SSResult-2)/6)-1
 		plcm	Nem_ResultEm,	ArtTile_SS_Results_Emeralds	; emeralds
+		plcm	Nem_ResultsRingLabel,	ArtTile_Results_Ring_Label
 PLC_SpeStResult_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST

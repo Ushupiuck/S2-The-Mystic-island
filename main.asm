@@ -17899,6 +17899,8 @@ Nem_GameOver:	binclude	"art/nemesis/Game Over.nem"
 		even
 Nem_HUD:	binclude	"art/nemesis/HUD.nem"
 		even
+Nem_ResultsRingLabel:	binclude	"art/nemesis/Results Ring Label.nem"
+		even
 Nem_Points:	binclude	"art/nemesis/Points.nem"
 		even
 Nem_Lives:	binclude	"art/nemesis/Sonic lives counter.nem"

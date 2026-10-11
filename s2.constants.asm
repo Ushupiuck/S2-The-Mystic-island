@@ -1634,6 +1634,7 @@ ArtTile_Warp:			equ $541
 ArtTile_Mini_Tails:		equ $535
 ArtTile_Mini_Sonic:		equ $551
 ArtTile_Bonuses:		equ $570
+ArtTile_Results_Ring_Label:	equ ArtTile_HUD_Numbers+$1E ; Results-only RING lettering, after the 30 dynamic HUD tiles
 ArtTile_Signpost:		equ $680
 
 ; Sega Screen
