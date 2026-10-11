@@ -185,7 +185,7 @@ S1SS_AnimateTiles:
 		subq.w	#1,d0
 		lea	(v_ssbg_anim_counter).l,a3
 		move.w	d0,(a3)		; zero timer and selected frame (0..2)
-		jmp	(Dynamic_Normal_AtCounter).l
+		jmp	(Dynamic_Normal_AtCounter).l	; shared Animate_Tiles interpreter, using our private counter
 
 AnimCue_S1SSBirds:	zoneanimstart
 		zoneanimdecl 0, Art_S1SSBGBirds, ArtTile_SS_Background_Animated, 3, 64

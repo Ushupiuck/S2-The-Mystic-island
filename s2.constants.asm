@@ -1066,7 +1066,7 @@ Object_Manager_Addresses_P2_End:
 
 Demo_button_index:	ds.w	1			; index into button press demo data, for player 1
 Demo_press_counter:	ds.b	1			; frames remaining until next button press, for player 1
-Current_Timezone:	ds.b	1			; byte; Whether we're in the present (0), past (1), or Good/Bad future (2) (SCD has past & present inverted)
+Current_Timezone:	ds.b	1			; byte; Present (0), Past (1), Good Future (2), Bad Future (3); SCD swaps Past/Present
 v_palchgspeed:
 PalChangeSpeed:		ds.w	1
 Collision_addr:		ds.l	1

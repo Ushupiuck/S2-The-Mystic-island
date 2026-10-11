@@ -3022,13 +3022,8 @@ Demo_EndGHZ2:	binclude	"demodata/WIP/Ending - GHZ2.bin"
 LoadCollisionIndexes:
 		moveq	#0,d0
 		move.w	(Current_ZoneAndAct).w,d0
-	;	move.w	d0,d1
-	;	lsr.w	#5,d0
-	;	andi.w	#$FF,d1
-	;	lsl.w	#1,d1
-	;	add.w	d1,d0
-		ror.b	#2,d0
-		lsr.w	#4,d0		; d0 = Zone*4
+		ror.b	#2,d0		; $ZZAA -> $ZZ(A*64), for acts 0..3
+		lsr.w	#4,d0		; byte offset = Zone*16 + Act*4
 		moveq	#0,d1
 		move.b	(Current_Timezone).w,d1		; 0 = Present, 1 = Past, 2 = Good Future, 3 = Bad Future
 		lsl.w	#2,d1				; d1 *= 4 (pointer size)

@@ -9,6 +9,7 @@ https://tcrf.net/Proto:Sonic_the_Hedgehog_2_(Genesis)
 ; ---------------------------------------------------------------------------
 
 TODO:
+Fix BS_ShowLayout and use it to replace S1SS_ShowLayout < FUTURE; the replacement exists but is not working yet
 Port remaining level animated-art/block setup to S1/S3&K style through Animate_Tiles and AniPLC scripts; replace make_block_tile mapping patches with regular block data < FUTURE, separate from the S1 bonus-stage background conversion
 Compare remaining S3&K power-up behavior and timer layout with the current per-player implementation
 Compare S3&K's byte timers (150 ticks, decremented every 8 frames), expiry/cleanup and music-tempo handling; retain shared Sonic/Tails invincibility and the single shared star SST
