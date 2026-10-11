@@ -30,6 +30,9 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
+Share TIME's static E with SCORE in the HUD and results mappings; retain debug coordinates in their separate digit mappings < DONE
+Replace RING BONUS lettering with the animated ring icon on both results screens; special-stage results replace the stage's $F600 ring art with a separate palette-0 copy of all eight frames, preserving the normal $D780 art, emerald colors and bonus digits < DONE
+Remove the results-only RING lettering art/PLCs and the duplicate uncompressed HUD E glyph < DONE
 Use $4A SSTs with 90 dynamic slots and 23 reserved slots < DONE
 Render all eight invincibility stars from one shared SST; either player's pickup grants both live players 20 seconds of invincibility < DONE
 Share shield and speed-shoe pickups in either direction; retain individual shield loss and speed-shoe timers/expiry < DONE

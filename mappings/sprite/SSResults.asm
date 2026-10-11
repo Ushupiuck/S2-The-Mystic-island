@@ -32,8 +32,8 @@ M_SSR_Score:	dc.w 6			; "SCORE"
 		dc.w $F80D, Map_Results_ScoreDigits+6, (Map_Results_ScoreDigits+6)/2, $30
 		dc.w $F704, $6E, $37, $FFCD
 		dc.w $FF04, $186E, $1837, $FFCD
-byte_CD0D:	dc.w 7
-		dc.w $F80D, Map_Results_RingLetters, Map_Results_RingLetters/2, $FFB0
+byte_CD0D:	dc.w 7			; Palette-0 animated ring + BONUS
+		dc.w $F805, Map_SSResults_RingTile, Map_SSResults_RingTile/2, $FFC0
 		dc.w $F80D, $66, $33, $FFD9
 		dc.w $F801, Map_Results_ScoreLetters, Map_Results_ScoreLetters/2, $FFF9
 		dc.w $F704, $6E, $37, $FFF6

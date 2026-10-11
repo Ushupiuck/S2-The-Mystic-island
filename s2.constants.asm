@@ -1601,7 +1601,9 @@ ArtTile_Animal_2:		equ $592
 ArtTile_Explosion:		equ $5A0
 ArtTile_Monitor:		equ $680
 ArtTile_HUD:			equ $6CA
-ArtTile_HUD_Numbers:		equ ArtTile_HUD+$10	; Static SCOR and TIME lettering occupies the first 16 tiles
+ArtTile_HUD_E:			equ ArtTile_HUD+$E	; SCORE shares TIME's static E
+ArtTile_HUD_Debug_Numbers:	equ ArtTile_HUD+$10	; First two tiles are used only by debug coordinates
+ArtTile_HUD_Numbers:		equ ArtTile_HUD_Debug_Numbers+2 ; 28 tiles for score, time and ring digits
 ArtTile_Sonic:			equ $780
 ArtTile_Points:			equ $4AC
 ArtTile_Tails:			equ $7A0
@@ -1634,7 +1636,6 @@ ArtTile_Warp:			equ $541
 ArtTile_Mini_Tails:		equ $535
 ArtTile_Mini_Sonic:		equ $551
 ArtTile_Bonuses:		equ $570
-ArtTile_Results_Ring_Label:	equ ArtTile_HUD_Numbers+$1E ; Results-only RING lettering, after the 30 dynamic HUD tiles
 ArtTile_Signpost:		equ $680
 
 ; Sega Screen

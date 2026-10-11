@@ -3311,6 +3311,39 @@ LoadRingFrame:
 		bra.w	QueueDMATransfer		; (or DMA_68KtoVRAM)
 .end:		rts
 
+; ---------------------------------------------------------------------------
+; S1 special-stage results replace that stage's ring art at $F600 with palette 0.
+; Keep the normal $D780 art intact for the return to the level.
+; This loop does not run ChangeRingFrame, so load and animate that copy here.
+; ---------------------------------------------------------------------------
+
+InitSSResultsRing:
+		st.b	(v_ani1_prev).w		; Force the first remapped frame to load
+		move.b	#4-1,(v_ani1_time).w
+		bra.s	LoadSSResultsRingFrame
+
+AnimateSSResultsRing:
+		bsr.s	LoadSSResultsRingFrame
+		subq.b	#1,(v_ani1_time).w
+		bpl.s	.return
+		move.b	#4-1,(v_ani1_time).w
+		addq.b	#1,(v_ani1_frame).w
+		andi.b	#7,(v_ani1_frame).w
+.return:	rts
+
+LoadSSResultsRingFrame:
+		moveq	#0,d1
+		move.b	(v_ani1_frame).w,d1
+		cmp.b	(v_ani1_prev).w,d1
+		beq.s	.return
+		move.b	d1,(v_ani1_prev).w
+		lsl.l	#7,d1
+		addi.l	#Art_SSResultsRing,d1
+		move.w	#ArtTile_SS_Rings*tile_size,d2
+		moveq	#$80/2,d3
+		bra.w	QueueDMATransfer
+.return:	rts
+
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 nosignpost macro actid
@@ -3654,6 +3687,7 @@ loc_5214:
 		bsr.w	WaitForVint
 		jsr	(HUD_Base).l
 		ResetDMAQueue
+		bsr.w	InitSSResultsRing	; Queue palette-0 ring art for the results
 		enable_ints
 		moveq	#palid_SSResult,d0
 		bsr.w	PalLoad2		; load results screen palette
@@ -3681,6 +3715,7 @@ SS_NormalExit:
 		move.w	#Vint_TitleCard,(v_vbla_routine).w
 		bsr.w	Process_Kos_Queue
 		bsr.w	WaitForVint
+		bsr.w	AnimateSSResultsRing
 		jsr	(ExecuteObjects).l
 		jsr	(BuildSprites).l
 		bsr.w	RunPLC_RAM
@@ -9304,6 +9339,10 @@ BuildSprites:
 		beq.s	.levelstarted
 		; We proceed to draw the HUD
 		moveq	#0,d1			; Reset HUD frame index
+		tst.b	(Debug_mode_flag).w
+		beq.s	.checkBlink
+		moveq	#2,d1			; Debug coordinates retain their own mappings
+.checkBlink:
 		btst	#3,(Timer_frames+1).w	; Only blink on certain frames
 		bne.s	.skipBlink
 		cmpi.b	#9,(v_timemin).w	; 9:00 reached?
@@ -15522,7 +15561,7 @@ HudUpdate:
 		tst.b	(f_scorecount).w	; does the score need updating?
 		beq.s	loc_1B266	; if not, branch
 		clr.b	(f_scorecount).w
-		locVRAM	(ArtTile_HUD_Numbers+2)*tile_size,d0	; set VRAM address
+		locVRAM	ArtTile_HUD_Numbers*tile_size,d0	; set VRAM address
 		move.l	(v_score).w,d1	; load score
 		bsr.w	HUD_Score
 
@@ -15534,7 +15573,7 @@ loc_1B266:
 
 loc_1B272:
 		clr.b	(f_ringcount).w
-		locVRAM	(ArtTile_HUD_Numbers+$18)*tile_size,d0	; set VRAM address
+		locVRAM	(ArtTile_HUD_Numbers+$16)*tile_size,d0	; set VRAM address
 		moveq	#0,d1
 		move.w	(v_rings).w,d1
 		bsr.w	HUD_Rings
@@ -15566,11 +15605,11 @@ Hud_ChkTime:
 		blo.s	+
 		move.b	#9,(a1)
 +
-		locVRAM	(ArtTile_HUD_Numbers+$10)*tile_size,d0
+		locVRAM	(ArtTile_HUD_Numbers+$E)*tile_size,d0
 		moveq	#0,d1
 		move.b	(v_timemin).w,d1
 		bsr.w	HUD_Mins
-		locVRAM	(ArtTile_HUD_Numbers+$14)*tile_size,d0
+		locVRAM	(ArtTile_HUD_Numbers+$12)*tile_size,d0
 		moveq	#0,d1
 		move.b	(v_timesec).w,d1
 		bsr.w	HUD_Secs
@@ -15616,17 +15655,17 @@ HudUpdate_Debug:
 
 loc_1B340:
 		clr.b	(f_ringcount).w
-		locVRAM	(ArtTile_HUD_Numbers+$18)*tile_size,d0	; set VRAM address
+		locVRAM	(ArtTile_HUD_Numbers+$16)*tile_size,d0	; set VRAM address
 		moveq	#0,d1
 		move.w	(v_rings).w,d1
 		bsr.w	HUD_Rings
 
 loc_1B354:
-;		locVRAM	(ArtTile_HUD_Numbers+$10)*tile_size,d0
+;		locVRAM	(ArtTile_HUD_Numbers+$E)*tile_size,d0
 ;		moveq	#0,d1
 ;		move.w	(Lag_frame_count).w,d1
 ;		bsr.w	HUD_Mins
-		locVRAM	(ArtTile_HUD_Numbers+$14)*tile_size,d0	; set VRAM address
+		locVRAM	(ArtTile_HUD_Numbers+$12)*tile_size,d0	; set VRAM address
 		moveq	#0,d1
 		move.b	(v_spritecount).w,d1
 		bsr.w	HUD_Secs
@@ -15674,7 +15713,7 @@ loc_1B372:
 
 
 HUD_LoadZero:
-		locVRAM	(ArtTile_HUD_Numbers+$18)*tile_size
+		locVRAM	(ArtTile_HUD_Numbers+$16)*tile_size
 		lea	HUD_TilesZero(pc),a2
 		moveq	#3-1,d2
 		bra.s	loc_1B3CC
@@ -15689,7 +15728,7 @@ HUD_Base:
 		bsr.w	HUD_Lives
 		locVRAM	ArtTile_HUD_Numbers*tile_size
 		lea	HUD_TilesBase(pc),a2
-		moveq	#$F-1,d2
+		moveq	#$E-1,d2
 
 loc_1B3CC:
 		lea	Art_HUD(pc),a1
@@ -15717,14 +15756,15 @@ loc_1B3EC:
 ; End of function HUD_Base
 
 ; ---------------------------------------------------------------------------
-HUD_TilesBase:	dc.b $16,$FF,$FF,$FF,$FF,$FF,$FF,  0,  0,$14,  0,  0
+HUD_TilesBase:	dc.b $FF,$FF,$FF,$FF,$FF,$FF,  0,  0,$14,  0,  0
 HUD_TilesZero:	dc.b $FF,$FF,  0,  0
+		even
 
 ; =============== S U B R O U T I N E =======================================
 
 
 HUDDebug_XY:
-		locVRAM	ArtTile_HUD_Numbers*tile_size		; set VRAM address
+		locVRAM	ArtTile_HUD_Debug_Numbers*tile_size	; Include the two debug-only tiles
 		move.w	(Camera_RAM).w,d1
 		swap	d1
 		move.w	(v_player+obX).w,d1
@@ -17899,8 +17939,6 @@ Nem_GameOver:	binclude	"art/nemesis/Game Over.nem"
 		even
 Nem_HUD:	binclude	"art/nemesis/HUD.nem"
 		even
-Nem_ResultsRingLabel:	binclude	"art/nemesis/Results Ring Label.nem"
-		even
 Nem_Points:	binclude	"art/nemesis/Points.nem"
 		even
 Nem_Lives:	binclude	"art/nemesis/Sonic lives counter.nem"
@@ -18013,6 +18051,8 @@ Art_Tails:	binclude	"art/uncompressed/Tails' art.bin"
 Art_SplashDust:	binclude	"art/uncompressed/Dust and water splash.bin"
 		align $100
 Art_Ring:	binclude	"art/uncompressed/Ring.bin"
+; Same eight ring frames, with 6 -> E, C -> C, D -> B and E -> A for palette 0.
+Art_SSResultsRing:	binclude "art/uncompressed/SS Results Ring.bin"
 Art_BigRing:	binclude	"art/uncompressed/Giant Ring.bin"
 Art_BigFlash:	binclude	"art/uncompressed/Giant Ring Flash.bin"
 ; ---------------------------------------------------------------------------
