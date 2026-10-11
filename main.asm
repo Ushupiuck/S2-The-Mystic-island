@@ -9289,7 +9289,7 @@ Anim_End:
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Sprite mappings - SCORE, TIME, RINGS
+; Sprite mappings - level HUD
 ; ---------------------------------------------------------------------------
 Map_obj21:	include	"mappings/sprite/obj21.asm"
 
@@ -9306,14 +9306,9 @@ BuildSprites:
 		moveq	#0,d1			; Reset HUD frame index
 		btst	#3,(Timer_frames+1).w	; Only blink on certain frames
 		bne.s	.skipBlink
-		tst.w	(v_rings).w		; No rings?
-		bne.s	.checkTime
-		addq.w	#1,d1			; +1 = RING blink frame
-
-.checkTime:
 		cmpi.b	#9,(v_timemin).w	; 9:00 reached?
 		bne.s	.skipBlink
-		addq.w	#2,d1			; +2 = TIME blink frame
+		addq.w	#1,d1			; +1 = TIME blink frame
 
 .skipBlink:
 	;	move.b	(Level_started_flag).w,d3
@@ -15527,7 +15522,7 @@ HudUpdate:
 		tst.b	(f_scorecount).w	; does the score need updating?
 		beq.s	loc_1B266	; if not, branch
 		clr.b	(f_scorecount).w
-		locVRAM	(ArtTile_HUD+$1A)*tile_size,d0	; set VRAM address
+		locVRAM	(ArtTile_HUD_Numbers+2)*tile_size,d0	; set VRAM address
 		move.l	(v_score).w,d1	; load score
 		bsr.w	HUD_Score
 
@@ -15539,7 +15534,7 @@ loc_1B266:
 
 loc_1B272:
 		clr.b	(f_ringcount).w
-		locVRAM	(ArtTile_HUD+$30)*tile_size,d0	; set VRAM address
+		locVRAM	(ArtTile_HUD_Numbers+$18)*tile_size,d0	; set VRAM address
 		moveq	#0,d1
 		move.w	(v_rings).w,d1
 		bsr.w	HUD_Rings
@@ -15571,11 +15566,11 @@ Hud_ChkTime:
 		blo.s	+
 		move.b	#9,(a1)
 +
-		locVRAM	(ArtTile_HUD+$28)*tile_size,d0
+		locVRAM	(ArtTile_HUD_Numbers+$10)*tile_size,d0
 		moveq	#0,d1
 		move.b	(v_timemin).w,d1
 		bsr.w	HUD_Mins
-		locVRAM	(ArtTile_HUD+$2C)*tile_size,d0
+		locVRAM	(ArtTile_HUD_Numbers+$14)*tile_size,d0
 		moveq	#0,d1
 		move.b	(v_timesec).w,d1
 		bsr.w	HUD_Secs
@@ -15621,17 +15616,17 @@ HudUpdate_Debug:
 
 loc_1B340:
 		clr.b	(f_ringcount).w
-		locVRAM	(ArtTile_HUD+$30)*tile_size,d0	; set VRAM address
+		locVRAM	(ArtTile_HUD_Numbers+$18)*tile_size,d0	; set VRAM address
 		moveq	#0,d1
 		move.w	(v_rings).w,d1
 		bsr.w	HUD_Rings
 
 loc_1B354:
-;		locVRAM	(ArtTile_HUD+$28)*tile_size,d0
+;		locVRAM	(ArtTile_HUD_Numbers+$10)*tile_size,d0
 ;		moveq	#0,d1
 ;		move.w	(Lag_frame_count).w,d1
 ;		bsr.w	HUD_Mins
-		locVRAM	(ArtTile_HUD+$2C)*tile_size,d0	; set VRAM address
+		locVRAM	(ArtTile_HUD_Numbers+$14)*tile_size,d0	; set VRAM address
 		moveq	#0,d1
 		move.b	(v_spritecount).w,d1
 		bsr.w	HUD_Secs
@@ -15679,7 +15674,7 @@ loc_1B372:
 
 
 HUD_LoadZero:
-		locVRAM	(ArtTile_HUD+$30)*tile_size
+		locVRAM	(ArtTile_HUD_Numbers+$18)*tile_size
 		lea	HUD_TilesZero(pc),a2
 		moveq	#3-1,d2
 		bra.s	loc_1B3CC
@@ -15692,7 +15687,7 @@ HUD_LoadZero:
 HUD_Base:
 		lea	(vdp_data_port).l,a6
 		bsr.w	HUD_Lives
-		locVRAM	(ArtTile_HUD+$18)*tile_size
+		locVRAM	ArtTile_HUD_Numbers*tile_size
 		lea	HUD_TilesBase(pc),a2
 		moveq	#$F-1,d2
 
@@ -15729,7 +15724,7 @@ HUD_TilesZero:	dc.b $FF,$FF,  0,  0
 
 
 HUDDebug_XY:
-		locVRAM	(ArtTile_HUD+$18)*tile_size		; set VRAM address
+		locVRAM	ArtTile_HUD_Numbers*tile_size		; set VRAM address
 		move.w	(Camera_RAM).w,d1
 		swap	d1
 		move.w	(v_player+obX).w,d1

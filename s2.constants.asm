@@ -1601,6 +1601,7 @@ ArtTile_Animal_2:		equ $592
 ArtTile_Explosion:		equ $5A0
 ArtTile_Monitor:		equ $680
 ArtTile_HUD:			equ $6CA
+ArtTile_HUD_Numbers:		equ ArtTile_HUD+$10	; Static SCOR and TIME lettering occupies the first 16 tiles
 ArtTile_Sonic:			equ $780
 ArtTile_Points:			equ $4AC
 ArtTile_Tails:			equ $7A0
