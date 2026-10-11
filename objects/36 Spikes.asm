@@ -102,7 +102,7 @@ loc_C70C:
 		beq.s	loc_C766
 
 loc_C736:
-		tst.b	(v_invinc).w
+		btst	#obStatusSecondary_isInvincible,(v_player+obStatusSecondary).w
 		bne.s	loc_C766
 		move.l	a0,-(sp)
 		movea.l	a0,a2

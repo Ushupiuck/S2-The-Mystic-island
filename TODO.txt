@@ -9,7 +9,8 @@ https://tcrf.net/Proto:Sonic_the_Hedgehog_2_(Genesis)
 ; ---------------------------------------------------------------------------
 
 TODO:
-Port Shield, invincibility & speed shoes to status_secondary < IN PROGRESS, HIGH PRIORITY
+Finish the status_secondary transition for shields, invincibility and speed shoes, preferably using S3&K's implementation where it improves on Sonic 2 < MID-TRANSITION; tackle after the 90 $4A dynamic-slot implementation
+Compare S3&K's byte timers (150 ticks, decremented every 8 frames), expiry/cleanup and music-tempo handling; retain shared Sonic/Tails invincibility and the single shared star SST
 Import S3&K mapping system (as it seems likely we only need a fragment of it to make it work), using the now empty labyrinth zone (01) as a test level
 Import the S3&K rings manager
 Add more level slots < IN PROGRESS
@@ -24,6 +25,8 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
+Use $4A SSTs with 90 dynamic slots and 23 reserved slots < DONE
+Pack all eight invincibility stars into one shared SST; Sonic's pickup also grants Tails 20 seconds of invincibility < DONE
 LoadCollisionIndexes < DONE
 Free up a shared $1000 byte buffer for Moduled Kosinski < DONE
 KosM+ PLC's < DONE

@@ -152,9 +152,18 @@ Monitor_Shield:
 
 Monitor_Invincibility:
 		tst.b	(Super_Sonic_flag).w	; is Sonic super?
-		bne.s	+++	; rts		; if yes, branch
+		bne.s	.return			; if yes, branch
 		bset	#obStatusSecondary_isInvincible,obStatusSecondary(a1)	; give invincibility status
 		move.w	#20*60,invtime(a1)	; 20 seconds
+		cmpa.w	#v_player,a1
+		bne.s	.shared_ready
+		tst.b	(v_player2+obID).w		; the main player's pickup also covers the live sidekick
+		beq.s	.shared_ready
+		cmpi.b	#6,(v_player2+obRoutine).w
+		bhs.s	.shared_ready
+		bset	#obStatusSecondary_isInvincible,(v_player2+obStatusSecondary).w
+		move.w	#20*60,(v_player2+invtime).w
+.shared_ready:
 		tst.b	(f_lockscreen).w	; don't change music during boss battles
 		bne.s	+
 	;	cmpi.b	#12,air_left(a1)	; or when drowning
@@ -163,21 +172,18 @@ Monitor_Invincibility:
 		move.w	#bgm_Invincible,d0
 		jsr	(PlaySound).l
 +
-		tst.b	obParent+1(a0)
-		bne.s	+
-		_move.b	#id_Obj38,(v_starsobj1+obID).w ; load Obj35 (invincibility stars) at $FFFFD200
-		move.w	a1,(v_starsobj1+obParent).w
-		rts
-; ---------------------------------------------------------------------------
-+		; give invincibility to sidekick
-		_move.b	#id_Obj38,(v_tstarsobj1+obID).w ; load Obj35 (invincibility stars) at $FFFFD300
-		move.w	a1,(v_tstarsobj1+obParent).w
-/
+		lea	(v_starsobj).w,a2
+		_move.b	#id_Obj35,obID(a2)
+		clr.b	obRender(a2)		; reinitialize all four layers on a fresh pickup
+		move.w	a1,invincibility_parent(a2)
+.return:
 		rts
 ; ---------------------------------------------------------------------------
 
 Pow_Delete:
 		subq.b	#1,obTimeFrame(a0)
-		bpl.s	-
+		bpl.s	.return
 		addq.l	#4,sp
 		bra.w	DeleteObject
+.return:
+		rts

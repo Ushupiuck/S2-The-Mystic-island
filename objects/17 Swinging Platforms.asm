@@ -222,6 +222,9 @@ SwingingPtfm_DetachCheck:
 		move.l	(a0,d0.w),(a1,d0.w)
 		addq.w	#4,d0
 		dbf	d1,.copy
+	if object_size&2
+		move.w	(a0,d0.w),(a1,d0.w)	; copy the final word of a non-longword-sized SST
+	endif
 
 		move.b	#$A,obRoutine(a1)		; falling state
 		clr.l	swing_helper_ptr(a1)		; detached copy has no helper

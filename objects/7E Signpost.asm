@@ -117,7 +117,10 @@ Load_EndOfAct:
 		tst.b	(v_endcard).w
 		bne.s	Signpost_Sparkle.return
 		move.w	(Camera_Max_X_pos).w,(Camera_Min_X_pos).w
-		clr.b	(v_invinc).w
+		bclr	#obStatusSecondary_isInvincible,(v_player+obStatusSecondary).w
+		bclr	#obStatusSecondary_isInvincible,(v_player2+obStatusSecondary).w
+		clr.w	(v_player+invtime).w
+		clr.w	(v_player2+invtime).w
 		clr.b	(f_timecount).w
 		_move.b	#id_Obj95,(v_endcard).w
 		moveq	#plcid_TitleCard,d0

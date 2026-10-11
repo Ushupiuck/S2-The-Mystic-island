@@ -8429,7 +8429,7 @@ ptr_Obj31:		dc.l ObjNull
 ptr_Obj32:		dc.l ObjNull
 ptr_Obj33:		dc.l ObjNull
 ptr_Obj34:		dc.l ObjNull
-ptr_Obj35:		dc.l ObjNull
+ptr_Obj35:		dc.l Obj35		; Composite invincibility stars
 ptr_Obj36:		dc.l Obj36		; Vertical spikes
 ptr_Obj37:		dc.l ObjNull
 ptr_Obj38:		dc.l Obj38		; Shield
@@ -9144,6 +9144,9 @@ DeleteObject2:
 		; delete the object by setting all of its bytes to 0
 -		move.l	d1,(a1)+
 		dbf	d0,-
+	if object_size&2
+		move.w	d1,(a1)+			; clear the final word of a non-longword-sized SST
+	endif
 		rts
 ; End of function DeleteObject
 
@@ -10345,8 +10348,8 @@ FindNextFreeObj:
 		movea.l	a0,a1
 		move.w	#v_lvlobjend,d0
 		sub.w	a0,d0				; subtract current object location
-		lsr.w	#6,d0				; select a $40-byte lookup bucket, independent of SST size
-		move.b	+(pc,d0.w),d0			; load the right number of objects from table
+		lsr.w	#object_size_bits,d0		; select a lookup bucket, independent of SST size
+		move.b	.lookup(pc,d0.w),d0		; load the right number of objects from table
 		bmi.s	FindFreeObj.return		; if negative, we have failed!
 
 .loop:
@@ -10357,14 +10360,15 @@ FindNextFreeObj:
 		rts
 ; End of function FindNextFreeObj
 ; ===========================================================================
-+
+.lookup:
 .a	set	v_lvlobjspace
 .b	set	v_lvlobjend
 .c	set	.b			; begin from bottom of array and decrease backwards
-	rept	(.b-.a)/$40+1	; include the bucket at the first dynamic slot, even on a $40-byte boundary
-.c	set	.c-$40			; address for previous $40 (also skip last part)
+	rept	(.b-.a)/(1<<object_size_bits)+1	; include the first slot's bucket, even on an exact boundary
+.c	set	.c-(1<<object_size_bits)	; upper edge of the previous lookup bucket
 	dc.b	(.b-.c-1)/object_size-1	; remaining slots in this bucket, minus the DBF adjustment
 	endm
+.lookup_end:
 	even
 ; ===========================================================================
 		include	"objects/41 Springs.asm"
@@ -11333,7 +11337,9 @@ ResumeMusic:
 	;	move.w	#bgm_SBZ,d0
 
 loc_122F6:
-		tst.b	(v_invinc).w
+		move.b	(v_player+obStatusSecondary).w,d1
+		or.b	(v_player2+obStatusSecondary).w,d1
+		btst	#obStatusSecondary_isInvincible,d1
 		beq.s	loc_12300
 		move.w	#bgm_Invincible,d0
 
@@ -11352,6 +11358,7 @@ loc_12310:
 ; End of function ResumeMusic
 
 ; ---------------------------------------------------------------------------
+		include	"objects/35 Invincibility Stars.asm"
 		include	"objects/38 Shield and Invincibility.asm"
 
 ; =============== S U B R O U T I N E =======================================
@@ -15184,6 +15191,7 @@ loc_19926:
 		cmpi.b	#AniIDSonAni_Roll,obAnim(a0)
 		bne.s	.return
 		neg.w	obVelY(a0)
+		move.w	a0,obParent(a1)		; remember which player broke the monitor
 		move.b	#4,obRoutine(a1)
 .return:	rts
 ; ---------------------------------------------------------------------------
@@ -15332,7 +15340,7 @@ Touch_Caterkiller:
 		bset	#7,obStatus(a1)
 
 Touch_Hurt:
-		tst.b	(v_invinc).w
+		btst	#obStatusSecondary_isInvincible,obStatusSecondary(a0)
 		bne.w	Hurt_ChkSpikes.exit
 		tst.w	flashtime(a0)
 		bne.w	Hurt_ChkSpikes.exit
@@ -15398,7 +15406,8 @@ Hurt_ChkSpikes:
 KillSonic:
 		tst.w	(Debug_placement_mode).w
 		bne.s	.exit
-		clr.b	(v_invinc).w
+		bclr	#obStatusSecondary_isInvincible,obStatusSecondary(a0)
+		clr.w	invtime(a0)
 		move.b	#6,obRoutine(a0)
 		jsr	(Sonic_ResetOnFloor).l
 		bset	#1,obStatus(a0)

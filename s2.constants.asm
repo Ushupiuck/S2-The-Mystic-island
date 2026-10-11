@@ -133,12 +133,22 @@ obParent2 =		objoff_40 ; and $41 ; several objects use this instead
 obParent3 =		objoff_42 ; and $43 ; parent of child objects
 child_dx =		objoff_42 ; byte ; X offset of child relative to parent
 child_dy =		objoff_43 ; byte ; Y offset of child relative to parent
-object_size_bits:	equ 6		; legacy log2($40); do not use for SST address calculations
-object_size:		equ $48		; SST stride in bytes
-object_slot_count:	equ $78		; 120 slots, including the reserved objects
-reserved_object_slots:	equ $20		; first 32 slots are reserved
+object_size_bits:	equ 6		; $40-byte allocator lookup buckets; not the SST stride
+object_size:		equ $4A		; SST stride in bytes
+reserved_object_slots:	equ 23		; one shared star SST; no unused reserved slots
+dynamic_object_slots:	equ 90		; slots available to the level allocator
+object_slot_count:	equ reserved_object_slots+dynamic_object_slots	; 113 slots in total
 object_ram_size:	equ $2200	; original $2000 pool plus its $200 growth area
 next_object =		object_size
+	if (object_size<(1<<object_size_bits))||((object_size&1)<>0)
+		fatal "SSTs must be even-sized and at least as large as an allocator lookup bucket."
+	endif
+	if (dynamic_object_slots<1)||(object_slot_count>$80)
+		fatal "The object pool needs dynamic slots and must fit its byte references and MOVEQ counter."
+	endif
+	if (dynamic_object_slots*object_size)/(1<<object_size_bits)>$FF
+		fatal "The allocator lookup index must fit the low byte of its loop-counter register."
+	endif
 ; ---------------------------------------------------------------------------
 ; conventions followed by some/most bosses:
 boss_subtype		= obXSub
@@ -731,21 +741,14 @@ v_player2	= v_objspace+object_size*1		; object variable space for Tails (1 SST)
 v_player2tails	= v_objspace+object_size*6		; object variable space for Tails' Tails (1 SST)
 v_shieldobj	= v_objspace+object_size*7		; object variable space for Sonic's shield (1 SST)
 v_shieldobj2	= v_objspace+object_size*8		; object variable space for Tails's shield (1 SST)
-v_starsobj1	= v_objspace+object_size*9		; object variable space for Sonic's invincibility stars #1 (1 SST)
-v_starsobj2	= v_objspace+object_size*10		; object variable space for Sonic's invincibility stars #2 (1 SST)
-v_starsobj3	= v_objspace+object_size*11		; object variable space for Sonic's invincibility stars #3 (1 SST)
-v_starsobj4	= v_objspace+object_size*12		; object variable space for Sonic's invincibility stars #4 (1 SST)
-v_tstarsobj1	= v_objspace+object_size*13		; object variable space for Tails's invincibility stars #1 (1 SST)
-v_tstarsobj2	= v_objspace+object_size*14		; object variable space for Tails's invincibility stars #2 (1 SST)
-v_tstarsobj3	= v_objspace+object_size*15		; object variable space for Tails's invincibility stars #3 (1 SST)
-v_tstarsobj4	= v_objspace+object_size*16		; object variable space for Tails's invincibility stars #4 (1 SST)
+v_starsobj	= v_objspace+object_size*9		; shared eight-star invincibility effect (1 composite SST)
 
-v_splash	= v_objspace+object_size*17		; object variable space for Sonic's water splash (1 SST)
-v_tsplash	= v_objspace+object_size*18		; object variable space for Tails's water splash (1 SST)
-v_sonicbubbles	= v_objspace+object_size*19		; object variable space for the bubbles that come out of Sonic's mouth/drown countdown (1 SST)
-v_tailsbubbles	= v_objspace+object_size*20		; object variable space for the bubbles that come out of Tails's mouth/drown countdown (1 SST)
-v_watersurface1	= v_objspace+object_size*21		; object variable space for the water surface #1 (1 SST)
-v_watersurface2	= v_objspace+object_size*22		; object variable space for the water surface #2 (1 SST)
+v_splash	= v_objspace+object_size*10		; object variable space for Sonic's water splash (1 SST)
+v_tsplash	= v_objspace+object_size*11		; object variable space for Tails's water splash (1 SST)
+v_sonicbubbles	= v_objspace+object_size*12		; object variable space for the bubbles that come out of Sonic's mouth/drown countdown (1 SST)
+v_tailsbubbles	= v_objspace+object_size*13		; object variable space for the bubbles that come out of Tails's mouth/drown countdown (1 SST)
+v_watersurface1	= v_objspace+object_size*14		; object variable space for the water surface #1 (1 SST)
+v_watersurface2	= v_objspace+object_size*15		; object variable space for the water surface #2 (1 SST)
 
 v_gameovertext1	= v_objspace+object_size*2		; object variable space for the "GAME"/"TIME" in "GAME OVER"/"TIME OVER" text (1 SST)
 v_gameovertext2	= v_objspace+object_size*3		; object variable space for the "OVER" in "GAME OVER"/"TIME OVER" text (1 SST)
@@ -757,7 +760,7 @@ v_ttlcardzone	= v_titlecard+object_size*1		; object variable space for the title
 v_ttlcardact	= v_titlecard+object_size*2		; object variable space for the title card act text (1 SST)
 v_ttlcardoval	= v_titlecard+object_size*3		; object variable space for the title card oval (1 SST)
 
-v_endcard	= v_objspace+object_size*23		; object variable space for the level results card (7 SSTs)
+v_endcard	= v_objspace+object_size*16		; object variable space for the level results card (7 SSTs)
 v_endcardsonic	= v_endcard+object_size*0		; object variable space for the level results card "SONIC HAS" text (1 SST)
 v_endcardpassed	= v_endcard+object_size*1		; object variable space for the level results card "PASSED" text (1 SST)
 v_endcardact	= v_endcard+object_size*2		; object variable space for the level results card act text (1 SST)
@@ -765,14 +768,17 @@ v_endcardscore	= v_endcard+object_size*3		; object variable space for the level 
 v_endcardtime	= v_endcard+object_size*4		; object variable space for the level results card time bonus tally (1 SST)
 v_endcardring	= v_endcard+object_size*5		; object variable space for the level results card ring bonus tally (1 SST)
 v_endcardoval	= v_endcard+object_size*6		; object variable space for the level results card oval (1 SST)
+	if v_endcardoval+object_size>v_objspace+reserved_object_slots*object_size
+		fatal "The level results card overlaps the dynamic object pool."
+	endif
 ; ---------------------------------------------------------------------------
 ; Dynamic slots -- for all other objects
-v_lvlobjspace	= v_objspace+object_size*reserved_object_slots	; 88 dynamic slots
+v_lvlobjspace	= v_objspace+object_size*reserved_object_slots	; 90 dynamic slots
 v_lvlobjend	= v_objspace_end
 v_objend	= v_lvlobjend
 
 ; Bonus Stage objects
-v_bsrescard	= v_objspace+object_size*23		; object variable space for the Bonus Stage results card (5 SSTs)
+v_bsrescard	= v_objspace+object_size*16		; object variable space for the Bonus Stage results card (5 SSTs)
 v_bsrestext	= v_bsrescard+object_size*0		; object variable space for the Bonus Stage results card text (1 SST)
 v_bsresscore	= v_bsrescard+object_size*1		; object variable space for the Bonus Stage results card score tally (1 SST)
 v_bsresring	= v_bsrescard+object_size*2		; object variable space for the Bonus Stage results card ring bonus tally (1 SST)
@@ -796,7 +802,7 @@ v_endeggman	= v_objspace+object_size*2		; object variable space for Eggman after
 v_tryagain	= v_objspace+object_size*3		; object variable space for the "TRY AGAIN" text (1 SST)
 v_eggmanchaos	= v_objspace+object_size*32		; object variable space for the emeralds juggled by Eggman (6 SSTs)
 ; ---------------------------------------------------------------------------
-			ds.b	object_ram_size-(v_objspace_end-v_objspace)	; remaining growth area ($40 bytes)
+				ds.b	object_ram_size-(v_objspace_end-v_objspace)	; unused object RAM budget, if any
 v_16x16:			ds.b	$1800		; $1800 bytes
 
 TempArray_LayerDef:		ds.b	$200		; background scroll buffer

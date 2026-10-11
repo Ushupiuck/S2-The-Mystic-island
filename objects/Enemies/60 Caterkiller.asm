@@ -453,7 +453,7 @@ Cat_Scatter:	; Routine $C
 		bsr.w	ObjectFall
 		tst.w	obVelY(a0)
 		bmi.s	loc_16CE0
-		bsr.w	ObjHitFloor
+		jsr	(ObjHitFloor).l
 		tst.w	d1
 		bpl.s	loc_16CE0
 		add.w	d1,obY(a0)

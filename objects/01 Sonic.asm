@@ -140,31 +140,8 @@ Sonic_Display:
 Obj01_Display:
 		jsr	(DisplaySprite).l
 ; loc_FB34:
-Obj01_ChkInvin:						; Checks if invincibility has expired and (should) disables it if it has
-		tst.b	(v_invinc).w
-		beq.s	Obj01_ChkShoes
-		tst.w	invtime(a0)
-;		beq.s	Obj01_ChkShoes
-		bra.s	Obj01_ChkShoes			; invincibility timer is currently disabled
-		subq.w	#1,invtime(a0)
-		bne.s	Obj01_ChkShoes
-		tst.b	(f_lockscreen).w
-		bne.s	Obj01_RmvInvin
-		cmpi.w	#12,(v_air).w
-		blo.s	Obj01_RmvInvin
-		moveq	#0,d0
-		move.b	(Current_Zone).w,d0
-;		cmpi.w	#(id_LZ<<8)+3,(Current_ZoneAndAct).w	; Leftover check from Sonic 1 for SBZ3
-;		bne.s	loc_FB66
-;		moveq	#5,d0
-
-;loc_FB66:
-		lea	MusicList_Sonic(pc),a1
-		move.b	(a1,d0.w),d0
-		jsr	(PlaySound).l
-; loc_FB74:
-Obj01_RmvInvin:
-		clr.b	(v_invinc).w
+Obj01_ChkInvin:
+		bsr.w	Player_ChkInvincibility
 ; loc_FB7A:
 Obj01_ChkShoes:
 		; Checks if Speed Shoes have expired and disables them if they have.

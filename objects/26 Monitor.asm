@@ -22,6 +22,7 @@ loc_AE70:
 		move.l	#Map_Obj26,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Monitor,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
+		move.w	#v_player,obParent(a0)		; default collector for scripted/debug breakage
 		move.w	#$180,obPriority(a0)
 		move.b	#$F,obActWid(a0)
 		lea	(v_objstate).w,a2
@@ -144,6 +145,8 @@ loc_AFDC:
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.b	obAnim(a0),obAnim(a1)
+		move.b	obRender(a0),obRender(a1)
+		move.w	obParent(a0),obParent(a1)		; power-up must reach the player who broke this monitor
 
 loc_B004:
 		bsr.w	FindFreeObj
