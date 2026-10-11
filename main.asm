@@ -661,7 +661,7 @@ Vint_TitleCard:
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; First level VBlank after loading: enable the water split with a valid counter.
-; Initial tile drawing masks interrupts, so H-int must stay disabled until here.
+; H_Int ignores any old pending H-int delivered during this VBlank.
 ; ---------------------------------------------------------------------------
 
 Vint_LevelLoad:
@@ -742,6 +742,10 @@ Do_ControllerPal:
 H_Int:
 		tst.b	(f_hbla_pal).w
 		beq.w	H_Int_done
+		; Enabling H-int can release a pending interrupt from the loading sequence.
+		; Acknowledge it during VBlank without consuming this frame's water split.
+		btst	#3,(vdp_control_port+1).l	; is the VDP still in VBlank?
+		bne.w	H_Int_done		; if so, leave CRAM and the H-int counter unchanged
 		disable_ints
 		sf	(f_hbla_pal).w
 		movem.l	a0-a1,-(sp)

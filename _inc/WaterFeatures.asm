@@ -4,7 +4,7 @@ CheckLevelForWater:
 		tst.b	(Water_flag).w
 		beq.w	ChangeWaterSurfacePos.return
 		; Keep H-int disabled while the title card and initial tiles are loaded.
-		; Vint_LevelLoad enables it after the next VBlank acknowledges pending interrupts.
+		; Vint_LevelLoad enables the water split during the first level VBlank.
 		moveq	#0,d0
 		move.b	(Current_Act).w,d0
 		add.w	d0,d0
