@@ -659,6 +659,21 @@ Vint_TitleCard:
 		bsr.w	ProcessDPLC
 		bra.w	Set_Kos_Bookmark
 ; ===========================================================================
+; ---------------------------------------------------------------------------
+; First level VBlank after loading: enable the water split with a valid counter.
+; Initial tile drawing masks interrupts, so H-int must stay disabled until here.
+; ---------------------------------------------------------------------------
+
+Vint_LevelLoad:
+		move.w	(v_hbla_hreg).w,(a5)	; set the water line before enabling H-int
+		tst.b	(Water_flag).w
+		beq.s	.nowater
+		move.w	#$8000+$14,(a5)		; enable H-int during VBlank
+.nowater:
+		bra.w	Vint_Level		; upload palettes and finish the usual level updates
+; End of function Vint_LevelLoad
+
+; ===========================================================================
 ; loc_F98: VintSub12:
 Vint_Fade:
 		bsr.w	Do_ControllerPal
@@ -2846,11 +2861,12 @@ Level_WtrNotHtz:
 		bsr.w	PalLoad4_Water
 
 Level_Delay:
+		move.w	#Vint_LevelLoad,(v_vbla_routine).w	; safely enable the water split on the first frame
 		moveq	#4-1,d1
 
 Level_DelayLoop:
-		move.w	#Vint_Level,(v_vbla_routine).w
 		bsr.w	WaitForVint
+		move.w	#Vint_Level,(v_vbla_routine).w
 		dbf	d1,Level_DelayLoop
 		move.w	#$202F,(v_pfade_start).w
 		bsr.w	Pal_FadeFromBlack2

@@ -3,7 +3,8 @@
 CheckLevelForWater:
 		tst.b	(Water_flag).w
 		beq.w	ChangeWaterSurfacePos.return
-		move.w	#$8000+$14,(a6)	; enable h-int
+		; Keep H-int disabled while the title card and initial tiles are loaded.
+		; Vint_LevelLoad enables it after the next VBlank acknowledges pending interrupts.
 		moveq	#0,d0
 		move.b	(Current_Act).w,d0
 		add.w	d0,d0
