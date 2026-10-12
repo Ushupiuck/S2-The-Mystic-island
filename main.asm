@@ -8075,69 +8075,6 @@ Obj1A_Conf_HPZ:
 		include	"objects/Empty Slots/25.asm"
 		include	"objects/26 Monitor.asm"
 
-; =============== S U B R O U T I N E =======================================
-
-
-Obj26_SolidSides:
-		lea	(v_player).w,a1
-		move.w	obX(a1),d0
-		sub.w	obX(a0),d0
-		add.w	d1,d0
-		bmi.s	loc_B20E
-		move.w	d1,d3
-		add.w	d3,d3
-		cmp.w	d3,d0
-		bhi.s	loc_B20E
-		move.b	obHeight(a1),d3
-		ext.w	d3
-		add.w	d3,d2
-		move.w	obY(a1),d3
-		sub.w	obY(a0),d3
-		add.w	d2,d3
-		bmi.s	loc_B20E
-		add.w	d2,d2
-		cmp.w	d2,d3
-		bhs.s	loc_B20E
-		tst.b	(f_playerctrl).w
-		bmi.s	loc_B20E
-		cmpi.b	#6,(v_player+obRoutine).w
-		bhs.s	loc_B20E
-		tst.w	(Debug_placement_mode).w
-		bne.s	loc_B20E
-		cmp.w	d0,d1
-		bhs.s	loc_B204
-		add.w	d1,d1
-		sub.w	d1,d0
-
-loc_B204:
-		cmpi.w	#$10,d3
-		blo.s	loc_B212
-
-loc_B20A:
-		moveq	#1,d1
-		rts
-; ---------------------------------------------------------------------------
-
-loc_B20E:
-		moveq	#0,d1
-		rts
-; ---------------------------------------------------------------------------
-
-loc_B212:
-		moveq	#0,d1
-		move.b	obActWid(a0),d1
-		addq.w	#4,d1
-		move.w	d1,d2
-		add.w	d2,d2
-		add.w	obX(a1),d1
-		sub.w	obX(a0),d1
-		bmi.s	loc_B20A
-		cmp.w	d2,d1
-		bhs.s	loc_B20A
-		moveq	#-1,d1
-		rts
-; End of function Obj26_SolidSides
-
 ; ===========================================================================
 ; animation script
 Ani_obj26:	dc.w byte_B246-Ani_obj26
@@ -10640,7 +10577,7 @@ RideObject_SetRide:
 		mulu.w	#object_size,d0
 		addi.l	#v_objspace,d0
 		movea.l	d0,a3
-		bclr	#3,obStatus(a3)
+		bclr	d6,obStatus(a3)
 
 loc_F916:
 		moveq	#0,d0

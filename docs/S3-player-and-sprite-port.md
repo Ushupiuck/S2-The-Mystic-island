@@ -47,10 +47,14 @@ second tile word for 2P interlace is removed.
 mapping geometry to determine an object's size. Collision radii retain their
 existing fields. Composite rendering uses its normal path for every composite,
 including invincibility stars.
-Object `$35` prepares eight packed children in `$10–$3F`, stores four orbit
+Object `$35` prepares eight packed children per player in `$10–$3F`, stores four orbit
 angles and animation indices in `$40–$47`, and uses flags at `$48`. It queues
 through `DisplaySprite3` because child data overlaps the ordinary priority
 field. Its header covers the padded viewport, with children clipped separately.
+The primary uses its reserved SST; the companion uses one dynamic SST while
+invincible. Their animation/facing/history and lifetime are independent, with
+shared art. Re-pickups reuse the companion object and full-pool allocation
+retries occur only while needed.
 No star ID check or temporary star buffer remains in `Render_Sprites`;
 `height_pixels` at `$49`, the SST stride and neighboring objects stay intact.
 
@@ -224,3 +228,22 @@ per emulated frame with zero lag frames, as the baseline also did. These
 figures measure renderer CPU cost, not an increase in the game's framerate.
 NTSC/PAL gameplay checks retain startup, flashing, flight, exhaustion, carrying,
 flight attacks, dust, swimming, independent air and star lifetime behavior.
+
+## Monitor and capsule rider cleanup
+
+Monitors use a per-character solidity pass for both players, with separate
+standing/pushing bits and the existing ball-attack path. Breaking drops both
+riders/pushers and retains the player who broke the monitor as its collector.
+Standing transfers clear the departing player's bit on the old object.
+
+On an object's status byte, rider bits 3/4 identify primary/companion players.
+On either player's own status byte, the on-object flag is always bit 3. The
+capsule previously cleared bit 4 on Tails himself, leaving bit 3 set: he fell,
+then skipped terrain following when he landed. The detach path now clears
+bit 3 for both players, and sets airborne only on the players.
+
+Native tests cover both-side monitor collisions, simultaneous riders, collector
+ownership, standing transfers, both invincibility collectors, repeated pickups,
+independent expiry/facing, allocation retry and primary Tails. Genesis Plus GX
+checks in NTSC/PAL cover real pickups, both full eight-star trails, monitor
+walking/breaking, capsule detachment and subsequent GHZ slope following.

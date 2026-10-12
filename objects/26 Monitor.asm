@@ -42,91 +42,48 @@ loc_AECA:
 		move.b	obSubtype(a0),obAnim(a0)
 
 loc_AED6:
-		move.b	ob2ndRout(a0),d0
-		beq.s	loc_AF30
-		subq.b	#2,d0
-		bne.s	loc_AF10
-		moveq	#0,d1
-		move.b	obActWid(a0),d1
-		addi.w	#$B,d1
-		jsr	(ExitPlatform).l
-		btst	#3,obStatus(a1)
-		bne.w	loc_AF00
-		clr.b	ob2ndRout(a0)
-		bra.w	Mon_Animate
-; ---------------------------------------------------------------------------
-
-loc_AF00:
-		move.w	#$10,d3
-		move.w	obX(a0),d2
-		bsr.w	MvSonicOnPtfm
-		bra.w	Mon_Animate
-; ---------------------------------------------------------------------------
-
-loc_AF10:
+		tst.b	ob2ndRout(a0)
+		beq.s	Monitor_Solid
 		bsr.w	ObjectMoveAndFall
 		jsr	(ObjHitFloor).l
 		tst.w	d1
-		bpl.w	Mon_Animate
+		bpl.s	Monitor_Solid
 		add.w	d1,obY(a0)
 		clr.w	obVelY(a0)
 		clr.b	ob2ndRout(a0)
-		bra.w	Mon_Animate
-; ---------------------------------------------------------------------------
 
-loc_AF30:
+; Sonic 2 final's per-character monitor solidity, with ball attacks enabled
+; for both players. Standing and pushing use separate bits on the monitor.
+Monitor_Solid:
 		move.w	#$1A,d1
 		move.w	#$F,d2
-		bsr.w	Obj26_SolidSides
-		beq.w	loc_AFA0
-		tst.w	obVelY(a1)
-		bmi.s	loc_AF4E
-		cmpi.b	#AniIDSonAni_Roll,obAnim(a1)
-		beq.s	loc_AFA0
-
-loc_AF4E:
-		tst.w	d1
-		bpl.s	loc_AF64
-		sub.w	d3,obY(a1)
-		bsr.w	RideObject_SetRide
-		move.b	#2,ob2ndRout(a0)
-		bra.w	Mon_Animate
-; ---------------------------------------------------------------------------
-
-loc_AF64:
-		tst.w	d0
-		beq.w	loc_AF8A
-		bmi.s	loc_AF74
-		tst.w	obVelX(a1)
-		bmi.s	loc_AF8A
-		bra.s	loc_AF7A
-; ---------------------------------------------------------------------------
-
-loc_AF74:
-		tst.w	obVelX(a1)
-		bpl.s	loc_AF8A
-
-loc_AF7A:
-		sub.w	d0,obX(a1)
-		move.w	#0,obInertia(a1)
-		move.w	#0,obVelX(a1)
-
-loc_AF8A:
-		btst	#1,obStatus(a1)
-		bne.s	loc_AFAE
-		bset	#5,obStatus(a1)
-		bset	#5,obStatus(a0)
+		move.w	#$10,d3
+		move.w	obX(a0),d4
+		lea	(v_player).w,a1
+		moveq	#status.player.on_object,d6
+		movem.l	d1-d4,-(sp)
+		bsr.s	Monitor_SolidCharacter
+		movem.l	(sp)+,d1-d4
+		lea	(v_player2).w,a1
+		moveq	#status.sidekick.on_object,d6
+		bsr.s	Monitor_SolidCharacter
 		bra.s	Mon_Animate
-; ---------------------------------------------------------------------------
 
-loc_AFA0:
-		btst	#5,obStatus(a0)
-		beq.s	Mon_Animate
-		move.w	#1,obAnim(a1)
-
-loc_AFAE:
-		bclr	#5,obStatus(a0)
-		bclr	#5,obStatus(a1)
+Monitor_SolidCharacter:
+		tst.b	obID(a1)
+		beq.s	.return
+		btst	d6,obStatus(a0)
+		bne.s	.standing
+		cmpi.b	#AniIDSonAni_Roll,obAnim(a1)
+		beq.s	.return
+		cmpi.b	#AniIDSonAni_Spindash,obAnim(a1)
+		beq.s	.return
+		bra.w	SolidObject_cont
+.standing:
+		; Use the common standing/edge path, preserving this player's bit.
+		bra.w	SolidObject_Always_SingleCharacter
+.return:
+		rts
 
 Mon_Animate:
 		lea	(Ani_obj26).l,a1
@@ -138,6 +95,19 @@ loc_AFC4:
 ; ---------------------------------------------------------------------------
 
 loc_AFDC:
+		move.b	obStatus(a0),d0
+		andi.b	#$28,d0
+		beq.s	.partner
+		andi.b	#$D7,(v_player+obStatus).w
+		bset	#status.player.in_air,(v_player+obStatus).w
+.partner:
+		move.b	obStatus(a0),d0
+		andi.b	#$50,d0
+		beq.s	.spawn
+		andi.b	#$D7,(v_player2+obStatus).w
+		bset	#status.player.in_air,(v_player2+obStatus).w
+.spawn:
+		clr.b	obStatus(a0)
 		addq.b	#2,obRoutine(a0)
 		clr.b	obColType(a0)
 		bsr.w	FindFreeObj

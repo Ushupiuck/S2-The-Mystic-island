@@ -185,7 +185,7 @@ Monitor_GetPartner:
 		rts
 ; ---------------------------------------------------------------------------
 
-; Give both live players invincibility, refresh the shared star object,
+; Give both live players invincibility and refresh their composite effects.
 ; and request the music once when the current scene permits it.
 ; ---------------------------------------------------------------------------
 Monitor_Invincibility:
@@ -208,7 +208,7 @@ Monitor_Invincibility:
 +
 		lea	(v_starsobj).w,a2
 		_move.b	#id_Obj35,obID(a2)
-		clr.b	invincibility_flags(a2)	; reinitialize all four layers on a fresh pickup
+		clr.b	invincibility_flags(a2)	; refresh primary and partner trails on a fresh pickup
 .return:
 		rts
 ; ---------------------------------------------------------------------------

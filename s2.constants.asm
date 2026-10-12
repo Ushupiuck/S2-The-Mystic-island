@@ -178,7 +178,7 @@ child_dx =		objoff_42 ; byte ; X offset of child relative to parent
 child_dy =		objoff_43 ; byte ; Y offset of child relative to parent
 object_size_bits:	equ 6		; $40-byte allocator lookup buckets; not the SST stride
 object_size:		equ $4A		; SST stride; height_pixels occupies its final byte at $49
-reserved_object_slots:	equ 23		; one shared star SST; dust uses dynamic slots
+reserved_object_slots:	equ 23		; primary stars reserved; partner stars/dust use dynamic slots
 dynamic_object_slots:	equ 90		; slots available to the level allocator
 object_slot_count:	equ reserved_object_slots+dynamic_object_slots	; 113 slots in total
 object_ram_size:	equ $2200	; original $2000 pool plus its $200 growth area
@@ -841,7 +841,7 @@ v_player2	= v_objspace+object_size*1		; object variable space for Tails (1 SST)
 v_player2tails	= v_objspace+object_size*6		; object variable space for Tails' Tails (1 SST)
 v_shieldobj	= v_objspace+object_size*7		; object variable space for Sonic's shield (1 SST)
 v_shieldobj2	= v_objspace+object_size*8		; object variable space for Tails's shield (1 SST)
-v_starsobj	= v_objspace+object_size*9		; shared eight-star invincibility effect (1 SST)
+v_starsobj	= v_objspace+object_size*9		; primary eight-star effect; partner uses one dynamic SST
 
 v_splash	= v_objspace+object_size*10		; object variable space for Sonic's water splash (1 SST)
 v_tsplash	= v_objspace+object_size*11		; object variable space for Tails's water splash (1 SST)

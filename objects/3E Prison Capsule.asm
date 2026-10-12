@@ -63,7 +63,8 @@ Pri_BodyMain:	; Routine 2
 		move.b	#2,obFrame(a0)	; use frame number 2 (destroyed prison)
 .done:		rts
 ; ---------------------------------------------------------------------------
-; Drop characters only when standing on the capsule.
+; Drop characters only when standing on the capsule. Object rider bits are
+; 3/4, but the on-object bit in either player's own status is always bit 3.
 ; ---------------------------------------------------------------------------
 
 Pri_DropCharacters:
@@ -71,15 +72,13 @@ Pri_DropCharacters:
 		beq.s	.chkTails
 		bclr	#status.player.on_object,obStatus(a0)	; no longer standing on object
 		bclr	#status.player.on_object,(v_player+obStatus).w
-		bset	#status.player.in_air,obStatus(a0)		; airborne / falling
 		bset	#status.player.in_air,(v_player+obStatus).w	; airborne / falling
 
 .chkTails:
 		btst	#status.sidekick.on_object,obStatus(a0)	; Tails standing on this object?
 		beq.s	.done
 		bclr	#status.sidekick.on_object,obStatus(a0)	; no longer standing on object
-		bclr	#status.sidekick.on_object,(v_player2+obStatus).w
-		bset	#status.player.in_air,obStatus(a0)		; airborne / falling
+		bclr	#status.player.on_object,(v_player2+obStatus).w
 		bset	#status.player.in_air,(v_player2+obStatus).w	; airborne / falling
 .done:		rts
 ; ---------------------------------------------------------------------------

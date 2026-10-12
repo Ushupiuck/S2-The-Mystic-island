@@ -1,5 +1,5 @@
 ; ---------------------------------------------------------------------------
-; Object 35 - all four S2 invincibility-star layers in one shared SST
+; Object 35 - four S2 invincibility-star layers in one SST per player
 ; Pack eight children in $10-$3F and keep orbit state in $40-$48. This is a
 ; normal composite object: Render_Sprites needs no effect-specific dispatch.
 ; ---------------------------------------------------------------------------
@@ -9,13 +9,16 @@ InvincibilityStars_LayerCount = 4
 InvincibilityStars_Priority = $80
 invincibility_angles	= objoff_40	; four bytes: the current frame's orbit angles
 invincibility_frames	= objoff_44	; four bytes: the current frame's animation indices
-invincibility_flags	= objoff_48	; bit 7: initialized; bit 0: preceding frame's facing
+invincibility_flags	= objoff_48	; bit 7: initialized; bit 6: retry partner allocation
+InvincibilityStars_PartnerBit = 1	; bit 1: follows player 2; bit 0: preceding frame's facing
+InvincibilityStars_RetryBit = 6
+InvincibilityStars_OwnershipMask = (1<<InvincibilityStars_PartnerBit)|(1<<InvincibilityStars_RetryBit)
 		if (subspr_data+InvincibilityStars_LayerCount*2*next_subspr>invincibility_angles)||(invincibility_frames<>invincibility_angles+InvincibilityStars_LayerCount)||(invincibility_flags<>invincibility_frames+InvincibilityStars_LayerCount)||(invincibility_flags>=height_pixels)
-			fatal "The shared stars must fit their children and orbit state below height_pixels."
+			fatal "The star composite must fit their children and orbit state below height_pixels."
 		endif
 ; ---------------------------------------------------------------------------
 
-; Initialise the shared effect on its first update, then choose its parent.
+; Initialise the composite effect on its first update, then choose its parent.
 Obj35:
 		moveq	#0,d2
 		tst.b	invincibility_flags(a0)
@@ -28,21 +31,38 @@ Obj35:
 		move.b	#320/2+32,mainspr_width(a0)		; children perform their own bounds checks
 		move.l	#$0400162C,invincibility_angles(a0)
 		clr.l	invincibility_frames(a0)
+		btst	#InvincibilityStars_PartnerBit,invincibility_flags(a0)
+		bne.s	.partner_initialized
+		bset	#InvincibilityStars_RetryBit,invincibility_flags(a0)	; ensure a full trail for the live invincible partner
+.partner_initialized:
 		moveq	#1,d2				; draw the initial phase before advancing it
 
 ; ===========================================================================
-; Follow a live invincible player and queue the shared effect.
-; Prefer the main player; switch to the partner if only they are invincible.
+; Each composite owns one player's full trail and position history.
+; The primary effect retries partner allocation only while the pool is full.
 ; ---------------------------------------------------------------------------
 InvincibilityStars_Update:
 		tst.b	(Super_Sonic_flag).w
 		bne.w	DeleteObject
-		lea	(v_player).w,a1			; prefer the main player when both are invincible
+		btst	#InvincibilityStars_RetryBit,invincibility_flags(a0)
+		beq.s	.choose_parent
+		bsr.w	InvincibilityStars_EnsurePartner
+.choose_parent:
+		lea	(v_player).w,a1
+		btst	#InvincibilityStars_PartnerBit,invincibility_flags(a0)
+		beq.s	.check_parent
+		lea	(v_player2).w,a1
+.check_parent:
 		bsr.w	InvincibilityStars_CheckParent
 		bne.s	.parent_ready
+		btst	#InvincibilityStars_RetryBit,invincibility_flags(a0)
+		beq.w	DeleteObject
+		; With a full pool and only the partner alive, reuse this effect.
 		lea	(v_player2).w,a1
 		bsr.w	InvincibilityStars_CheckParent
 		beq.w	DeleteObject
+		bclr	#InvincibilityStars_RetryBit,invincibility_flags(a0)
+		bset	#InvincibilityStars_PartnerBit,invincibility_flags(a0)
 .parent_ready:
 		tst.w	d2
 		bne.s	.position
@@ -50,9 +70,41 @@ InvincibilityStars_Update:
 .position:
 		move.b	obStatus(a1),d0
 		andi.b	#1,d0
+		move.b	invincibility_flags(a0),d1
+		andi.b	#InvincibilityStars_OwnershipMask,d1			; retain ownership and any pending allocation
+		or.b	d1,d0
 		ori.b	#$80,d0
 		move.b	d0,invincibility_flags(a0)	; initialized, with this frame's orbit direction
 		bra.s	InvincibilityStars_BuildChildren
+
+; ===========================================================================
+; Create/refresh at most one secondary effect. No reserved slots or VRAM are
+; added: its single SST comes from the normal pool and is freed on expiry.
+; Re-pickups reuse it; a full pool keeps bit 6 set so the primary can retry.
+; ---------------------------------------------------------------------------
+InvincibilityStars_EnsurePartner:
+		lea	(v_player2).w,a1
+		bsr.w	InvincibilityStars_CheckParent
+		beq.s	.done
+		lea	(v_lvlobjspace).w,a1
+		moveq	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d0
+.find:
+		cmpi.b	#id_Obj35,obID(a1)
+		bne.s	.next
+		btst	#InvincibilityStars_PartnerBit,invincibility_flags(a1)
+		bne.s	.refresh
+.next:
+		lea	object_size(a1),a1
+		dbf	d0,.find
+		jsr	(FindFreeObj).l
+		bne.s	.return
+		_move.b	#id_Obj35,obID(a1)
+.refresh:
+		move.b	#1<<InvincibilityStars_PartnerBit,invincibility_flags(a1)
+.done:
+		bclr	#InvincibilityStars_RetryBit,invincibility_flags(a0)
+.return:
+		rts
 
 ; ===========================================================================
 ; Advance once per object update, including frames that are not rendered.
@@ -201,7 +253,7 @@ InvincibilityStars_CheckParent:
 ; Pack only nearby children. This prevents distant trail coordinates from
 ; wrapping onto the screen when the VDP truncates X positions to nine bits.
 ; Input: d2 = child X, d1 = orbit centre Y, d5 = mapping frame;
-; a0 = shared SST, a2 = next child, a6/d6 = orbit position.
+; a0 = effect SST, a2 = next child, a6/d6 = orbit position.
 ; ---------------------------------------------------------------------------
 InvincibilityStars_WriteChild:
 		move.w	d2,d3				; preserve X while checking the horizontal bounds

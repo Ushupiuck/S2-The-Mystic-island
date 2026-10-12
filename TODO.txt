@@ -13,7 +13,7 @@ Implement time-travel transitions and replace the dummy timezone asset/layout ta
 Port Sonic CD's object manager from the experimental branch for timezone object placement < LONG TERM; separate from LoadZone and its asset/layout tables
 Port remaining level animated-art/block setup to S1/S3&K style through Animate_Tiles and AniPLC scripts; replace make_block_tile mapping patches with regular block data < FUTURE, separate from the S1 bonus-stage background conversion
 Compare remaining S3&K power-up behavior and timer layout with the current per-player implementation
-Compare S3&K's byte timers (150 ticks, decremented every 8 frames), expiry/cleanup and music-tempo handling; retain shared Sonic/Tails invincibility and the single shared star SST
+Compare S3&K's byte timers (150 ticks, decremented every 8 frames), expiry/cleanup and music-tempo handling; retain shared Sonic/Tails invincibility and one star composite SST per live player, with shared art
 Use two independent VRAM effect banks, one per player; each bank shares shield/invincibility art as in S3&K/S.C.E. Restore shield art/DPLCs after invincibility, and check zone/boss PLC allocations before assigning the ranges
 Adapt the existing classic-shield loader and assets under Temp/objects/Shield objects.asm and Temp/Classic Shield; invalidate its frame cache when switching art, and retry queued transfers if the DMA queue is full
 Repack temporary zone/boss art when final levels replace the test stages; GHZ allocations are intentionally provisional. The shared monitor/signpost bank is $9880; current Newtron/Motobug and shield/star allocations can overlap it. Preserve the fixed player, HUD, ring, dust and VDP-table banks.
@@ -33,6 +33,7 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
+Give both players independent full invincibility trails, including re-pickup/expiry and allocation retry; fix Tails monitor solidity and detach both riders on break; clear the correct player bit when opening the capsule and when transferring between solid objects < DONE
 Replace the four-ID prototype EHZ boss with Sonic 2 final's eight linked parts, complete animations and large explosions; retain S3&K mappings and automatic bounds < DONE
 Fix EHZ2 arena settling from above/below, preserve its lock through debug exit, restore the capsule/act-clear handoff, and derive initial row/column crossing flags from the camera (Final Zone look-up strip) < DONE
 Document object imports and generated Map*_height/width values using the final EHZ boss; add mapping/art/VRAM/capsule checks < DONE
@@ -53,7 +54,7 @@ Share TIME's static E with SCORE in the HUD and results mappings; retain debug c
 Replace RING BONUS lettering with the animated ring icon on both results screens; special-stage results replace the stage's $F600 ring art with a separate palette-0 copy of all eight frames, preserving the normal $D780 art, emerald colors and bonus digits < DONE
 Remove the results-only RING lettering art/PLCs and the duplicate uncompressed HUD E glyph < DONE
 Use $4A SSTs with 90 dynamic slots and 23 reserved slots < DONE
-Render all eight invincibility stars from one shared SST; either player's pickup grants both live players 20 seconds of invincibility < DONE
+Render eight invincibility stars per player from one composite SST each (primary reserved, companion dynamically allocated), sharing art; either player's pickup grants both live players 20 seconds of invincibility < DONE
 Share shield and speed-shoe pickups in either direction; retain individual shield loss and speed-shoe timers/expiry < DONE
 LoadCollisionIndexes < DONE
 Free up a shared $1000 byte buffer for Moduled Kosinski < DONE
