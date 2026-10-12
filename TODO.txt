@@ -34,6 +34,7 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
+Preserve the swinging chain helper's rendering height after initializing its child mappings, so visible links survive when the helper centre goes offscreen; use aligned initialization writes to avoid the odd $1B word-clear crash < DONE
 Simplify LoadZone, share timezone/act header selection with the primary PLC load, label the prepared asset copies, and add separate dummy timezone layouts/indexes; preserve Current_Timezone across level RAM clearing and avoid zero-length art DMA at exact $1000 boundaries < DONE
 Fix overlapping giant-ring flashes: share one animation clock and VRAM bank, handle each parent once, validate reused slots, and queue one special-stage entry at level end < DONE
 Convert the S1 bonus-stage background to normal blocks/chunks and two live $1000-byte planes; animate birds/fish through the existing Animate_Tiles interpreter, group stage art below $2940, and preserve pause/results/level-return behavior < DONE

@@ -93,9 +93,9 @@ SwingingPtfm_Init:
 
 		moveq	#0,d0
 		move.l	d0,swing_helper_ptr(a0)
-		move.w	d0,swing_last_angle(a0)		; With a single SST re-arrange,
-		move.l	d0,swing_mode_timer(a0)		; We get a double Two-for-one clean
-		move.b	d0,swing_dir_flag(a0)
+		move.b	d0,swing_last_angle(a0)		; $1B is odd; clear the frame cache as a byte
+		move.w	d0,swing_mode_started(a0)		; aligned clear of the mode and direction flags
+		move.l	d0,swing_mode_timer(a0)		; clear the timer and angular velocity
 		move.w	#$8000,obAngle(a0)
 
 		; spawn a helper multi-sprite object for the chain
@@ -108,7 +108,6 @@ SwingingPtfm_Init:
 		bset	#obRender.multi_sprite,obRender(a1)
 		bset	#obRender.explicit_height,obRender(a1)
 		move.b	#$48,mainspr_width(a1)
-		move.b	#$50,mainspr_height(a1)
 		move.b	d1,mainspr_childsprites(a1)
 		move.w	swing_orig_x(a0),d2
 		move.w	swing_orig_y(a0),d3
@@ -158,6 +157,8 @@ SwingingPtfm_Init:
 		move.w	d3,obY(a0)
 
 .helperDone:
+		; The height shares the first child's mapping high byte; set it after .fillChain.
+		move.b	#$50,mainspr_height(a1)
 		move.l	a1,swing_helper_ptr(a0)
 
 .noHelper:
