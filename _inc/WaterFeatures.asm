@@ -351,7 +351,7 @@ WindTunnels:	; leftover from Sonic 1's LZ
 		bne.w	.return			; if so, bail
 		cmpi.b	#1,(Current_Zone).w	; From Sonic 3 & knuckles
 		bne.w	.return			; if we're not in labyrinth/hidrocity, bail
-	;	cmpi.w	#2,(Player_mode).w	; Tails only game?
+	;	cmpi.w	#PlayerMode_Tails,(Player_mode).w	; Tails only game?
 	;	beq.s	loc_6F82		; Branch if so
 	;	lea	(f_wtunnelallow).l,a3	; Sonic 3 & knuckles manually sets this to 1 later
 	;	lea	(f_wtunnelallow_p2).l,a3; For both players, conditionally. TODO

@@ -4795,7 +4795,7 @@ LevelSizeLoad:
 		move.l	d0,(Camera_Min_Y_pos).w
 		move.l	d0,(Camera_Min_Y_pos_target).w
 		move.w	#$1010,(Horiz_block_crossed_flag).w
-		move.w	#$60,(Camera_Y_pos_bias).w
+		move.w	#Camera_LookCenter,(Camera_Y_pos_bias).w
 		bra.w	LevelSize_CheckLamp
 ; ===========================================================================
 LevelSizeArray:
@@ -5860,7 +5860,7 @@ loc_65B8:
 ; ---------------------------------------------------------------------------
 
 loc_65C8:
-		cmpi.w	#$60,(Camera_Y_pos_bias).w
+		cmpi.w	#Camera_LookCenter,(Camera_Y_pos_bias).w
 		bne.s	loc_65F0
 		move.w	obInertia(a0),d1
 		bpl.s	loc_65D8
@@ -11261,7 +11261,7 @@ loc_F916:
 		move.w	a0,d1
 		subi.w	#v_objspace,d1
 		bne.s	loc_F954
-		cmpi.w	#2,(Player_mode).w	; TODO
+		cmpi.w	#PlayerMode_Tails,(Player_mode).w	; TODO
 		beq.s	loc_F954		; TODO
 		bsr.w	Sonic_ResetOnFloor
 		movea.l	(sp)+,a0
@@ -17519,7 +17519,7 @@ AutoTunnel_GetPath:	; In Sonic 2, this is found at loc_27310
 loc_297D6:
 		cmpi.b	#$10,d0
 		bne.s	loc_297E6
-		cmpi.w	#2,(Player_mode).w
+		cmpi.w	#PlayerMode_Tails,(Player_mode).w
 		bne.s	loc_297E6
 		moveq	#0,d0			; If playing as Tails, use path 0 when doing path $10
 

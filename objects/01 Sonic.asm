@@ -31,9 +31,9 @@ Obj01_Init:
 		move.w	#$100,obPriority(a0)
 		move.b	#$18,obActWid(a0)
 		move.b	#4,obRender(a0)
-		move.w	#$600,(Sonic_top_speed).w	; set Sonic's top speed
-		move.w	#$C,(Sonic_acceleration).w	; set Sonic's acceleration
-		move.w	#$80,(Sonic_deceleration).w	; set Sonic's deceleration
+		move.w	#Player_DefaultTopSpeed,(Sonic_top_speed).w
+		move.w	#Player_DefaultAcceleration,(Sonic_acceleration).w
+		move.w	#Player_DefaultDeceleration,(Sonic_deceleration).w
 		tst.b	(v_lastlamp).w
 		bne.s	Obj01_Init_Continued
 		; only happens when not starting at a checkpoint:
@@ -219,24 +219,24 @@ Player_UpdateSpeed:
 		lea	(Sonic_top_speed).w,a3
 		cmpa.w	#v_player,a2
 		bne.s	.tails
-		cmpi.w	#2,(Player_mode).w
+		cmpi.w	#PlayerMode_Tails,(Player_mode).w
 		bne.s	.stats_ready
 .tails:
 		lea	(Tails_top_speed).w,a3
 .stats_ready:
-		move.w	#$600,(a3)
-		move.w	#$C,2(a3)
-		move.w	#$80,4(a3)
+		move.w	#Player_DefaultTopSpeed,(a3)
+		move.w	#Player_DefaultAcceleration,PlayerSpeed_AccelerationOffset(a3)
+		move.w	#Player_DefaultDeceleration,PlayerSpeed_DecelerationOffset(a3)
 		btst	#obStatusSecondary_hasSpeedShoes,obStatusSecondary(a2)
 		beq.s	.water
-		move.w	#$C00,(a3)
-		move.w	#$18,2(a3)
+		move.w	#Player_ShoesTopSpeed,(a3)
+		move.w	#Player_ShoesAcceleration,PlayerSpeed_AccelerationOffset(a3)
 .water:
-		btst	#6,obStatus(a2)
+		btst	#status.player.underwater,obStatus(a2)
 		beq.s	.return
 		lsr.w	(a3)
-		lsr.w	2(a3)
-		lsr.w	4(a3)
+		lsr.w	PlayerSpeed_AccelerationOffset(a3)
+		lsr.w	PlayerSpeed_DecelerationOffset(a3)
 .return:
 		rts
 
@@ -455,9 +455,9 @@ Sonic_Move:
 		move.w	(Sonic_acceleration).w,d5
 		move.w	(Sonic_deceleration).w,d4
 		tst.b	(f_slidemode).w
-		bne.w	Player_Traction
+		bne.w	Sonic_ResetScr_Traction
 		tst.w	move_lock(a0)
-		bne.w	Obj01_UpdateSpeedOnGround
+		bne.w	Sonic_ResetScr
 		btst	#bitL,(v_jpadholdlogical).w	; is left being pressed?
 		beq.s	loc_FD66			; if not, branch
 		bsr.w	Sonic_MoveLeft
@@ -471,9 +471,9 @@ loc_FD72:
 		move.b	obAngle(a0),d0
 		addi.b	#$20,d0
 		andi.b	#$C0,d0				; is Sonic on a slope?
-		bne.w	Obj01_UpdateSpeedOnGround	; if yes, branch
+		bne.w	Sonic_ResetScr		; if yes, branch
 		tst.w	obInertia(a0)			; is Sonic moving?
-		bne.w	Obj01_UpdateSpeedOnGround	; if yes, branch
+		bne.w	Sonic_ResetScr		; if yes, branch
 		bclr	#5,obStatus(a0)
 		move.b	#AniIDSonAni_Wait,obAnim(a0)	; use "standing" animation
 		btst	#3,obStatus(a0)
@@ -509,7 +509,7 @@ Sonic_Balance:
 loc_FDF0:
 		bclr	#0,obStatus(a0)
 		move.b	#AniIDSonAni_Balance,obAnim(a0)
-		bra.w	Obj01_UpdateSpeedOnGround
+		bra.w	Sonic_ResetScr
 ; ---------------------------------------------------------------------------
 
 loc_FDF8:
@@ -519,48 +519,67 @@ loc_FDF8:
 loc_FE00:
 		bset	#0,obStatus(a0)
 		move.b	#AniIDSonAni_Balance,obAnim(a0)
-		bra.s	Obj01_UpdateSpeedOnGround
+		bra.s	Sonic_ResetScr
 ; ---------------------------------------------------------------------------
 
 Sonic_LookUp:
 		btst	#button_up,(v_jpadholdlogical).w	; is up being pressed?
 		beq.s	Sonic_Duck				; if not, branch
 		move.b	#AniIDSonAni_LookUp,obAnim(a0)		; use "looking up" animation
+		cmpa.w	#v_player,a0				; only the camera's player can move its bias
+		bne.s	Obj01_UpdateSpeedOnGround
 		addq.b	#1,scroll_delay_counter(a0)
-		cmpi.b	#$78,scroll_delay_counter(a0)
-		blo.s	Player_ResetScr_Part2
-		move.b	#$78,scroll_delay_counter(a0)
-		cmpi.w	#$C8,(Camera_Y_pos_bias).w
+		cmpi.b	#Camera_LookDelay,scroll_delay_counter(a0)
+		blo.s	Sonic_ResetScr_Part2
+		move.b	#Camera_LookDelay,scroll_delay_counter(a0)
+		cmpi.w	#Camera_LookUpLimit,(Camera_Y_pos_bias).w
 		beq.s	Obj01_UpdateSpeedOnGround
-		addq.w	#2,(Camera_Y_pos_bias).w
+		addq.w	#Camera_LookPanSpeed,(Camera_Y_pos_bias).w
 		bra.s	Obj01_UpdateSpeedOnGround
 ; ---------------------------------------------------------------------------
 ; loc_1A5B2:
 Sonic_Duck:
 		btst	#button_down,(v_jpadholdlogical).w	; is down being pressed?
-		beq.s	Player_ResetScr				; if not, branch
+		beq.s	Sonic_ResetScr				; if not, branch
 		move.b	#AniIDSonAni_Duck,obAnim(a0)		; use "ducking" animation
+		cmpa.w	#v_player,a0
+		bne.s	Obj01_UpdateSpeedOnGround
 		addq.b	#1,scroll_delay_counter(a0)
-		cmpi.b	#$78,scroll_delay_counter(a0)
-		blo.s	Player_ResetScr_Part2
-		move.b	#$78,scroll_delay_counter(a0)
-		cmpi.w	#8,(Camera_Y_pos_bias).w
+		cmpi.b	#Camera_LookDelay,scroll_delay_counter(a0)
+		blo.s	Sonic_ResetScr_Part2
+		move.b	#Camera_LookDelay,scroll_delay_counter(a0)
+		cmpi.w	#Camera_LookDownLimit,(Camera_Y_pos_bias).w
 		beq.s	Obj01_UpdateSpeedOnGround
-		subq.w	#2,(Camera_Y_pos_bias).w
+		subq.w	#Camera_LookPanSpeed,(Camera_Y_pos_bias).w
 		bra.s	Obj01_UpdateSpeedOnGround
 
 ; ===========================================================================
 ; moves the screen back to its normal position after looking up or down
 ; loc_1A5E0:
+Sonic_ResetScr_Traction:
+		bsr.s	Player_ResetScr
+		bra.s	Player_Traction
+Sonic_ResetScr:
+		bsr.s	Player_ResetScr
+		bra.s	Obj01_UpdateSpeedOnGround
+Sonic_ResetScr_Part2:
+		bsr.s	Player_ResetScr_Part2
+		bra.s	Obj01_UpdateSpeedOnGround
+
+; Shared by both characters; keep the delay while waiting to start looking.
+; No data/address registers are changed. Secondary players cannot change the camera.
 Player_ResetScr:
 		clr.b	scroll_delay_counter(a0)
 ; loc_1A5E6:
 Player_ResetScr_Part2:
-		cmpi.w	#($E0/2)-16,(Camera_Y_pos_bias).w	; is screen in its default position?
-		beq.s	Obj01_UpdateSpeedOnGround		; if yes, branch.
-		bhs.s	+					; depending on the sign of the difference,
-		addq.w	#4,(Camera_Y_pos_bias).w		; either add 2
-+		subq.w	#2,(Camera_Y_pos_bias).w		; or subtract 2
+		cmpa.w	#v_player,a0
+		bne.s	.return
+		cmpi.w	#Camera_LookCenter,(Camera_Y_pos_bias).w
+		beq.s	.return					; if yes, branch
+		bhs.s	+
+		addq.w	#Camera_LookReturnSpeed*2,(Camera_Y_pos_bias).w
++		subq.w	#Camera_LookReturnSpeed,(Camera_Y_pos_bias).w	; net step toward the default
+.return:	rts
 
 ; ---------------------------------------------------------------------------
 ; updates Sonic's speed on the ground
@@ -761,6 +780,7 @@ loc_FFDE:
 
 
 Sonic_RollSpeed:
+		bsr.w	Player_ResetScr
 		move.w	(Sonic_top_speed).w,d6
 		asl.w	#1,d6
 		move.w	(Sonic_acceleration).w,d5
@@ -917,13 +937,7 @@ Sonic_JumpDirection:
 		move.w	d0,obVelX(a0)
 
 ; loc_10150:
-		cmpi.w	#$60,(Camera_Y_pos_bias).w
-		beq.s	loc_10162
-		bhs.s	loc_1015E
-		addq.w	#4,(Camera_Y_pos_bias).w
-
-loc_1015E:
-		subq.w	#2,(Camera_Y_pos_bias).w
+		bsr.w	Player_ResetScr
 
 loc_10162:
 		cmpi.w	#-$400,obVelY(a0)
@@ -1196,6 +1210,7 @@ Sonic_UpdateSpindash:
 		bne.s	Sonic_ChargingSpindash
 
 		; unleash the charged spindash and start rolling quickly:
+		bsr.w	Player_ResetScr
 		move.b	#$E,obHeight(a0)
 		move.b	#7,obWidth(a0)
 		move.b	#AniIDSonAni_Roll,obAnim(a0)

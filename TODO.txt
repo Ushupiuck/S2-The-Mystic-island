@@ -20,6 +20,7 @@ Adapt the existing classic-shield loader and assets under Temp/objects/Shield ob
 Resolve existing VRAM overlaps during that migration: the default shield ($4BE-$4DD) intersects GHZ springs and signpost bonuses, while the boss PLC overwrites the default shield and stars ($4DE-$4FF)
 Future elemental-shield pickups must grant the same type to both live players; damage/death remove only the affected player's shield
 Continue the WIP Sonic 2 player transition; later prefer Sonic 3 player versions with Super forms for both, Tails flight/swimming and AI, and Sonic Insta-Shield < LONG TERM, separate from the object/power-up cleanup
+Add Sonic & Tails / Sonic / Tails character selection, with either character using the main-player slot and its look-camera controls < FUTURE; alongside the S3 player/ability ports
 Import S3&K mapping system (as it seems likely we only need a fragment of it to make it work), using the now empty labyrinth zone (01) as a test level
 Import the S3&K rings manager
 Add more level slots < IN PROGRESS
@@ -34,6 +35,7 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
+Recenter look-up/down camera offsets when Sonic or Tails starts moving, rolls, or becomes airborne; reset the look delay and keep secondary players from changing the shared camera bias < DONE
 Preserve the swinging chain helper's rendering height after initializing its child mappings, so visible links survive when the helper centre goes offscreen; use aligned initialization writes to avoid the odd $1B word-clear crash < DONE
 Simplify LoadZone, share timezone/act header selection with the primary PLC load, label the prepared asset copies, and add separate dummy timezone layouts/indexes; preserve Current_Timezone across level RAM clearing and avoid zero-length art DMA at exact $1000 boundaries < DONE
 Fix overlapping giant-ring flashes: share one animation clock and VRAM bank, handle each parent once, validate reused slots, and queue one special-stage entry at level end < DONE

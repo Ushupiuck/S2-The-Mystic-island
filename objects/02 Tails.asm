@@ -24,9 +24,9 @@ Obj02_Init:
 		move.w	#$100,obPriority(a0)
 		move.b	#$18,obActWid(a0)
 		move.b	#$84,obRender(a0)
-		move.w	#$600,(Tails_top_speed).w
-		move.w	#$C,(Tails_acceleration).w
-		move.w	#$80,(Tails_deceleration).w
+		move.w	#Player_DefaultTopSpeed,(Tails_top_speed).w
+		move.w	#Player_DefaultAcceleration,(Tails_acceleration).w
+		move.w	#Player_DefaultDeceleration,(Tails_deceleration).w
 		move.b	#$C,obTopSolidBit(a0)
 		move.b	#$D,obLRBSolidBit(a0)
 		clr.b	flips_remaining(a0)
@@ -251,9 +251,9 @@ Tails_Move:
 		move.w	(Tails_acceleration).w,d5
 		move.w	(Tails_deceleration).w,d4
 		tst.b	(f_slidemode).w
-		bne.w	Player_Traction
+		bne.w	Tails_ResetScr_Traction
 		tst.w	move_lock(a0)
-		bne.w	Obj02_UpdateSpeedOnGround
+		bne.w	Tails_ResetScr
 		btst	#bitL,(v_jpadhold2).w
 		beq.s	loc_10F3C
 		bsr.w	Tails_MoveLeft
@@ -267,9 +267,9 @@ loc_10F48:
 		move.b	obAngle(a0),d0
 		addi.b	#$20,d0
 		andi.b	#$C0,d0
-		bne.w	Obj02_UpdateSpeedOnGround
+		bne.w	Tails_ResetScr
 		tst.w	obInertia(a0)
-		bne.w	Obj02_UpdateSpeedOnGround
+		bne.w	Tails_ResetScr
 		bclr	#5,obStatus(a0)
 		move.b	#AniIDSonAni_Wait,obAnim(a0)
 		btst	#3,obStatus(a0)
@@ -305,7 +305,7 @@ Tails_Balance:
 loc_10FBE:
 		bclr	#0,obStatus(a0)
 		move.b	#AniIDSonAni_Balance,obAnim(a0)
-		bra.w	Obj02_UpdateSpeedOnGround
+		bra.w	Tails_ResetScr
 ; ---------------------------------------------------------------------------
 
 loc_10FC6:
@@ -315,39 +315,49 @@ loc_10FC6:
 loc_10FCE:
 		bset	#0,obStatus(a0)
 		move.b	#AniIDSonAni_Balance,obAnim(a0)
-		bra.s	Obj02_UpdateSpeedOnGround
+		bra.s	Tails_ResetScr
 ; ---------------------------------------------------------------------------
 
 Tails_LookUp:
 		btst	#button_up,(v_jpadhold2).w	; is up being pressed?
 		beq.s	Tails_Duck			; if not, branch
 		move.b	#AniIDSonAni_LookUp,obAnim(a0)	; use "looking up" animation
-		cmpi.b	#id_Obj02,(v_player).w		; is tails the main character?
-		bne.w	Player_CheckWallsOnGround.return	; skip the remaining logic if not
+		cmpa.w	#v_player,a0			; only the camera's player can move its bias
+		bne.s	Obj02_UpdateSpeedOnGround
 		addq.b	#1,scroll_delay_counter(a0)
-		cmpi.b	#$78,scroll_delay_counter(a0)
-		blo.w	Player_ResetScr_Part2
-		move.b	#$78,scroll_delay_counter(a0)
-		cmpi.w	#$C8,(Camera_Y_pos_bias).w
+		cmpi.b	#Camera_LookDelay,scroll_delay_counter(a0)
+		blo.s	Tails_ResetScr_Part2
+		move.b	#Camera_LookDelay,scroll_delay_counter(a0)
+		cmpi.w	#Camera_LookUpLimit,(Camera_Y_pos_bias).w
 		beq.s	Obj02_UpdateSpeedOnGround
-		addq.w	#2,(Camera_Y_pos_bias).w
+		addq.w	#Camera_LookPanSpeed,(Camera_Y_pos_bias).w
 		bra.s	Obj02_UpdateSpeedOnGround
 ; ---------------------------------------------------------------------------
 ; loc_1C1A2:
 Tails_Duck:
 		btst	#button_down,(v_jpadhold2).w	; is down being pressed?
-		beq.w	Player_ResetScr			; if not, branch
+		beq.s	Tails_ResetScr			; if not, branch
 		move.b	#AniIDSonAni_Duck,obAnim(a0)	; use "ducking" animation
-		cmpi.b	#id_Obj02,(v_player).w		; is tails the main character?
-		bne.w	Player_CheckWallsOnGround.return	; skip the remaining logic if not
+		cmpa.w	#v_player,a0
+		bne.s	Obj02_UpdateSpeedOnGround
 		addq.b	#1,scroll_delay_counter(a0)
-		cmpi.b	#$78,scroll_delay_counter(a0)
-		blo.w	Player_ResetScr_Part2
-		move.b	#$78,scroll_delay_counter(a0)
-		cmpi.w	#8,(Camera_Y_pos_bias).w
+		cmpi.b	#Camera_LookDelay,scroll_delay_counter(a0)
+		blo.s	Tails_ResetScr_Part2
+		move.b	#Camera_LookDelay,scroll_delay_counter(a0)
+		cmpi.w	#Camera_LookDownLimit,(Camera_Y_pos_bias).w
 		beq.s	Obj02_UpdateSpeedOnGround
-		subq.w	#2,(Camera_Y_pos_bias).w
-		; fall through
+		subq.w	#Camera_LookPanSpeed,(Camera_Y_pos_bias).w
+		bra.s	Obj02_UpdateSpeedOnGround
+
+Tails_ResetScr_Traction:
+		bsr.w	Player_ResetScr
+		bra.w	Player_Traction
+Tails_ResetScr:
+		bsr.w	Player_ResetScr
+		bra.s	Obj02_UpdateSpeedOnGround
+Tails_ResetScr_Part2:
+		bsr.w	Player_ResetScr_Part2
+		; fall through to Tails's speed update, using controller 2
 
 ; ---------------------------------------------------------------------------
 ; updates Tails's speed on the ground
@@ -463,6 +473,7 @@ loc_11150:
 
 
 Tails_RollSpeed:
+		bsr.w	Player_ResetScr
 		move.w	(Tails_top_speed).w,d6
 		asl.w	#1,d6
 		move.w	(Tails_acceleration).w,d5
@@ -619,13 +630,7 @@ Tails_JumpDirection:
 		move.w	d0,obVelX(a0)
 
 ; loc_112CA:
-		cmpi.w	#$60,(Camera_Y_pos_bias).w
-		beq.s	loc_112DC
-		bhs.s	loc_112D8
-		addq.w	#4,(Camera_Y_pos_bias).w
-
-loc_112D8:
-		subq.w	#2,(Camera_Y_pos_bias).w
+		bsr.w	Player_ResetScr
 
 loc_112DC:
 		cmpi.w	#-$400,obVelY(a0)
@@ -879,6 +884,7 @@ Tails_UpdateSpindash:
 		bne.s	Tails_ChargingSpindash
 
 		; unleash the charged spindash and start rolling quickly:
+		bsr.w	Player_ResetScr
 		move.b	#$E,obHeight(a0)
 		move.b	#7,obWidth(a0)
 		move.b	#AniIDSonAni_Roll,obAnim(a0)

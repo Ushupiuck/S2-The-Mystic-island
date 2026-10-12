@@ -113,7 +113,7 @@ InvincibilityStars_Draw:
 		move.w	(Sonic_Pos_Record_Index).w,d4
 		cmpa.w	#v_player,a1
 		bne.s	.tails_history
-		cmpi.w	#2,(Player_mode).w
+		cmpi.w	#PlayerMode_Tails,(Player_mode).w
 		bne.s	.history_ready
 .tails_history:
 		lea	(Tails_Pos_Record_Buf).w,a5

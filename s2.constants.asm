@@ -55,9 +55,8 @@ obSubtype:		equ $28		; Primary object subtype
 ob2ndSubtype:		equ $29		; Secondary object subtype (unused for now)
 ; ---------------------------------------------------------------------------
 ; conventions specific to Sonic/Tails (Obj01, Obj02, and ObjDB):
-; note: $23 is unused and available
 obInertia:		equ $20		; also known as ground_vel; and $21 directionless representation of speed... not updated in the air
-scroll_delay_counter:	equ $23		; byte ; incremented each frame the character is looking up/down, camera starts scrolling when this reaches 120
+scroll_delay_counter:	equ $23		; byte; frames spent looking up/down, capped at Camera_LookDelay
 ;obSolid: 		equ $25		; (DEPRECATED, Sonic 1 leftover for reference only) solid status flag
 flip_angle:		equ $27		; angle about the x axis (360 degrees = 256) (twist/tumble)
 ; air_left:		equ $28
@@ -358,6 +357,29 @@ p1_touch_top       = 1<<p1_touch_top_bit
 p2_touch_top       = 1<<p2_touch_top_bit
 
 touch_top_mask     = p1_touch_top|p2_touch_top
+
+; ---------------------------------------------------------------------------
+; Player modes (character selection remains a future feature)
+PlayerMode_SonicAndTails:	equ 0
+PlayerMode_Sonic:		equ 1
+PlayerMode_Tails:		equ 2
+PlayerMode_Knuckles:		equ 3	; reserved
+
+; Shared Sonic/Tails movement settings. Speeds use 8.8 pixels/frame;
+; acceleration and deceleration use 8.8 pixels/frame squared.
+Player_DefaultTopSpeed:		equ $600
+Player_DefaultAcceleration:	equ $C
+Player_DefaultDeceleration:	equ $80
+Player_ShoesTopSpeed:		equ $C00
+Player_ShoesAcceleration:	equ $18
+
+; Look camera: delays are frames; biases and steps are pixels.
+Camera_LookDelay:		equ 120
+Camera_LookCenter:		equ 96	; 16 pixels above the 224-pixel screen's centre
+Camera_LookUpLimit:		equ 200
+Camera_LookDownLimit:		equ 8
+Camera_LookPanSpeed:		equ 2
+Camera_LookReturnSpeed:		equ 2
 
 ; ---------------------------------------------------------------------------
 ; Levels
@@ -913,7 +935,7 @@ Sonic_Pos_Record_Index:		ds.w	1	; into Sonic_Pos_Record_Buf and Sonic_Stat_Recor
 Camera_Delay_End:
 Tails_Pos_Record_Index:		ds.w	1	; into Tails_Pos_Record_Buf
 
-Camera_Y_pos_bias:		ds.w	1	; added to y position for lookup/lookdown, $60 is center
+Camera_Y_pos_bias:		ds.w	1	; look-up/down bias; Camera_LookCenter is the default
 Camera_Y_pos_bias_End:
 
 Deform_lock:			ds.b	1	; set to 1 to stop all deformation
@@ -1038,6 +1060,9 @@ Sonic_deceleration:	ds.w	1
 Tails_top_speed:	ds.w	1
 Tails_acceleration:	ds.w	1
 Tails_deceleration:	ds.w	1
+; Both speed banks have the same three-word layout, based at top_speed.
+PlayerSpeed_AccelerationOffset:	equ Sonic_acceleration-Sonic_top_speed
+PlayerSpeed_DecelerationOffset:	equ Sonic_deceleration-Sonic_top_speed
 Sonic_LastLoadedDPLC:	ds.b	1
 Tails_LastLoadedDPLC:		ds.b	1
 TailsTails_LastLoadedDPLC:	ds.b	1
@@ -1139,7 +1164,7 @@ Debug_Speed:		ds.b	1			; (1 byte)
 v_vbla_byte =		*				; see next line
 Vint_runcount:		ds.l	1			; v_vbla_byte in Sonic 1; the number of times V-int has run
 
-Player_mode		ds.w	1			; 0 = Sonic and Tails, 1 = Sonic alone, 2 = Tails alone, 3 = Knuckles alone
+Player_mode		ds.w	1			; PlayerMode_*; Knuckles remains reserved
 Player_option		ds.w	1			; option selected on level select, data select screen or Sonic & Knuckles title screen
 Current_ZoneAndAct =	*
 v_zone:			; For compatibility
