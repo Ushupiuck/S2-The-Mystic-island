@@ -2665,16 +2665,9 @@ Level_NoMusicFade:
 		locVRAM	ArtTile_Title_Card*tile_size
 		lea	(Nem_TitleCard).l,a0	; load title card patterns
 		bsr.w	NemDec
-		moveq	#0,d1
-		move.w	(Current_ZoneAndAct).w,d1
-		ror.b	#2,d1
-		lsr.w	#3,d1
-		move.w	d1,d0
-		lsr.w	#1,d0
-		add.w	d0,d1
-		lea	(LevelArtPointers).l,a2
+		bsr.w	GetLevelArtHeader
 		moveq	#0,d0
-		move.b	(a2,d1.w),d0
+		move.b	(a2),d0		; primary PLC for this timezone and act
 		beq.s	loc_3BB0
 		bsr.w	LoadPLC
 
@@ -2683,11 +2676,13 @@ loc_3BB0:
 		bsr.w	LoadPLC
 
 Level_ClrRam:
+		move.b	(Current_Timezone).w,d2	; level selection survives clearing transient RAM
 		clearRAM v_spritequeue,v_spritequeue_end
 		clearRAM v_objspace,v_objend
 		clearRAM v_levelvariables,v_levelvariables_end
 		clearRAM v_misc_variables,v_misc_variables_end
 		clearRAM v_timingvariables,v_timingvariables_end
+		move.b	d2,(Current_Timezone).w	; clearRAM only changes d0-d1/a1
 		; TODO switch for a proper water table
 		moveq	#0,d0
 		moveq	#0,d1
@@ -2757,7 +2752,6 @@ Level_SkipTtlCard:
 		bsr.w	DeformBGLayer
 		bset	#2,(Scroll_flags).w
 		bsr.w	LoadZone
-	;	bsr.w	MainLevelLoadBlock
 		jsr	(LoadAnimatedBlocks).l
 		bsr.w	LoadTilesFromStart
 		bsr.w	LoadCollisionIndexes
@@ -3393,77 +3387,85 @@ SignpostArtLoad:
 
 ; ---------------------------------------------------------------------------
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-; Load only art assets (Kos modules) from LevelArtPointers
-; Each entry = 8 bytes: PLC+Art1, PLC+Art2
+; Return the current timezone/zone/act's LevelArtPointers entry in a2.
+; Shared by the title-card primary PLC load and LoadZone; destroys d0-d1.
+; Current_Timezone: 0 = Present, 1 = Past, 2 = Good Future, 3 = Bad Future.
 
-LoadZone:
-		moveq	#0,d0
+GetLevelArtHeader:
 		move.w	(Current_ZoneAndAct).w,d0
 		ror.b	#2,d0
 		lsr.w	#3,d0
 		move.w	d0,d1
 		lsr.w	#1,d1
-		add.w	d1,d0
-		lea	(LevelArtPointers).l,a2
-		lea	(a2,d0.w),a2
+		add.w	d1,d0		; byte offset = (Zone*4 + Act)*12
+		moveq	#0,d1
+		move.b	(Current_Timezone).w,d1
+		lsl.w	#2,d1
+		movea.l	LevelArt_TimezoneTable(pc,d1.w),a2
+		adda.w	d0,a2
+		rts
 
+LevelArt_TimezoneTable:
+ if TimeTravel=1
+		dc.l LevelArtPointers	; Present
+		dc.l LevelArtPointersP	; Past
+		dc.l LevelArtPointersGF	; Good Future
+		dc.l LevelArtPointersBF	; Bad Future
+ else
+		dc.l LevelArtPointers,LevelArtPointers,LevelArtPointers,LevelArtPointers
+ endif
+
+; ---------------------------------------------------------------------------
+; Load level art, blocks, chunks, layout, secondary PLCs and palette.
+; LevelArtPointers entries are 12 bytes: PLC1+art, PLC2+blocks, palette+chunks.
+; Each pointer occupies the low 24 bits; the ID occupies the high byte.
+
+LoadZone:
+		bsr.s	GetLevelArtHeader
 		move.l	(a2)+,d0
 		andi.l	#$FFFFFF,d0	; 8x8 tile pointer
 		movea.l	d0,a0
+		move.l	a2,-(sp)	; keep the remaining header across RunPLC_RAM
 		lea	(Chunk_Table).l,a1
-		bsr.w	KosPlusDec
-		move.w	a1,d3
-		move.w	d3,d7
+		bsr.w	KosPlusDec	; temporarily decompress raw art into chunk RAM
+		move.w	a1,d2
+		subq.w	#1,d2		; last byte, so exact $1000 multiples use a full DMA
+		move.w	d2,d3
 		andi.w	#$FFF,d3
-
+		addq.w	#1,d3
 		lsr.w	#1,d3
-		rol.w	#4,d7
-		andi.w	#$F,d7
+		andi.w	#$F000,d2	; VRAM offset of the last $1000-byte block
 
--		move.w	d7,d2
-		lsl.w	#7,d2
-		lsl.w	#5,d2
-		move.l	#$FFFFFF,d1
+.upload_art:
+		move.l	#Chunk_Table,d1
 		move.w	d2,d1
+		move.w	d2,-(sp)	; preserve the offset across DMA/PLC processing
 		bsr.w	QueueDMATransfer
-		move.w	d7,-(sp)
 		move.w	#Vint_TitleCard,(v_vbla_routine).w
 		bsr.w	WaitForVint
 		bsr.w	RunPLC_RAM
-		move.w	(sp)+,d7
-		move.w	#$800,d3
-		dbf	d7,-
-		; And now the 2nd half; blocks, chunks & layout!
-		moveq	#0,d0
-		move.w	(Current_ZoneAndAct).w,d0
-		ror.b	#2,d0
-		lsr.w	#3,d0		; d0 = 8 * (4*Z + A)
-		move.w	d0,d1
-		lsr.w	#1,d1
-		add.w	d1,d0
-		lea	(LevelArtPointers).l,a2
-		lea	(a2,d0.w),a2
-		move.l	a2,-(sp)
-		addq.w	#4,a2
+		move.w	(sp)+,d2
+		move.w	#$1000/2,d3	; all remaining blocks contain $1000 bytes
+		subi.w	#$1000,d2
+		bcc.s	.upload_art
+
+		movea.l	(sp)+,a2	; PLC2+blocks; KosPlusDec preserves a2
 		move.l	(a2)+,d0
 		andi.l	#$FFFFFF,d0	; pointer to block mappings
 		movea.l	d0,a0
 		lea	(v_16x16).w,a1
 		bsr.w	KosPlusDec	; load block maps
-		move.l	(a2)+,d0
+		move.l	(a2),d0
 		andi.l	#$FFFFFF,d0	; pointer to chunk mappings
 		movea.l	d0,a0
 		lea	(v_128x128).l,a1
 		bsr.w	KosPlusDec
-		bsr.s	LevelLayoutLoad
-		movea.l	(sp)+,a2	; zone specific pointer in LevelArtPointers
-		addq.w	#4,a2
+		bsr.s	LevelLayoutLoad	; also preserves a2 (palette+chunks)
 		moveq	#0,d0
-		move.b	(a2),d0	; PLC2 ID
-		beq.s	+
+		move.b	-4(a2),d0	; PLC2 ID
+		beq.s	.palette
 		bsr.w	LoadPLC
-+
-		addq.w	#4,a2
+.palette:
 		moveq	#0,d0
 		move.b	(a2),d0	; palette ID
 		bra.w	PalLoad1
@@ -3471,7 +3473,7 @@ LoadZone:
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Subroutine to load a level layout from RAM
+; Decompress the current act's level layout from ROM into RAM.
 ; ---------------------------------------------------------------------------
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
@@ -3479,18 +3481,28 @@ LoadZone:
 LevelLayoutLoad:
 		moveq	#0,d0
 		move.w	(Current_ZoneAndAct).w,d0
-		move.w	d0,d1
-		lsr.w	#5,d0
-		andi.w	#$FF,d1
-		add.w	d1,d1
-		add.w	d1,d0
-		lea	(Level_Index).l,a0
+		ror.b	#2,d0
+		lsr.w	#5,d0		; byte offset = Zone*8 + Act*2 (acts 0..3)
+		moveq	#0,d1
+		move.b	(Current_Timezone).w,d1
+		lsl.w	#2,d1
+		movea.l	LevelLayout_TimezoneTable(pc,d1.w),a0
 		move.w	(a0,d0.w),d0
 		adda.l	d0,a0
 		lea	(v_lvllayout).w,a1
 		bra.w	KosPlusDec
 
 ; End of function LevelLayoutLoad
+
+LevelLayout_TimezoneTable:
+ if TimeTravel=1
+		dc.l Level_Index	; Present
+		dc.l Level_Index_Past	; Past
+		dc.l Level_Index_GoodFuture	; Good Future
+		dc.l Level_Index_BadFuture	; Bad Future
+ else
+		dc.l Level_Index,Level_Index,Level_Index,Level_Index
+ endif
 
 ; ---------------------------------------------------------------------------
 ; MM: these functions now write directly to Z80 RAM
@@ -18191,17 +18203,17 @@ Map16_GHZ:	binclude	"mappings/16x16/GHZ.kosp"
 Map128_GHZ:	binclude	"mappings/128x128/GHZ.kosp"
  if TimeTravel=1
 ; Past
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+PKosp_GHZ:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+PMap16_GHZ:	binclude	"mappings/16x16/GHZ.kosp"
+PMap128_GHZ:	binclude	"mappings/128x128/GHZ.kosp"
 ; Good Future
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+GKosp_GHZ:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+GMap16_GHZ:	binclude	"mappings/16x16/GHZ.kosp"
+GMap128_GHZ:	binclude	"mappings/128x128/GHZ.kosp"
 ; Bad Future
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+BKosp_GHZ:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+BMap16_GHZ:	binclude	"mappings/16x16/GHZ.kosp"
+BMap128_GHZ:	binclude	"mappings/128x128/GHZ.kosp"
  endif
 ; ===========================================================================
 ; Zone 01
@@ -18210,17 +18222,17 @@ Map16_LZ:	binclude	"mappings/16x16/LZ.kosp"
 Map128_LZ:	binclude	"mappings/128x128/LZ.kosp"
  if TimeTravel=1
 ; Past
-		binclude	"art/kosinski/level/8x8 - LZ.kosp"
-		binclude	"mappings/16x16/LZ.kosp"
-		binclude	"mappings/128x128/LZ.kosp"
+PKosp_LZ:	binclude	"art/kosinski/level/8x8 - LZ.kosp"
+PMap16_LZ:	binclude	"mappings/16x16/LZ.kosp"
+PMap128_LZ:	binclude	"mappings/128x128/LZ.kosp"
 ; Good Future
-		binclude	"art/kosinski/level/8x8 - LZ.kosp"
-		binclude	"mappings/16x16/LZ.kosp"
-		binclude	"mappings/128x128/LZ.kosp"
+GKosp_LZ:	binclude	"art/kosinski/level/8x8 - LZ.kosp"
+GMap16_LZ:	binclude	"mappings/16x16/LZ.kosp"
+GMap128_LZ:	binclude	"mappings/128x128/LZ.kosp"
 ; Bad Future
-		binclude	"art/kosinski/level/8x8 - LZ.kosp"
-		binclude	"mappings/16x16/LZ.kosp"
-		binclude	"mappings/128x128/LZ.kosp"
+BKosp_LZ:	binclude	"art/kosinski/level/8x8 - LZ.kosp"
+BMap16_LZ:	binclude	"mappings/16x16/LZ.kosp"
+BMap128_LZ:	binclude	"mappings/128x128/LZ.kosp"
  endif
 ; ===========================================================================
 ; Zone 02
@@ -18229,17 +18241,17 @@ Map16_CPZ:	binclude	"mappings/16x16/CPZ.kosp"
 Map128_CPZ:	binclude	"mappings/128x128/CPZ.kosp"
  if TimeTravel=1
 ; Past
-		binclude	"art/kosinski/level/8x8 - CPZ.kosp"
-		binclude	"mappings/16x16/CPZ.kosp"
-		binclude	"mappings/128x128/CPZ.kosp"
+PKosp_CPZ:	binclude	"art/kosinski/level/8x8 - CPZ.kosp"
+PMap16_CPZ:	binclude	"mappings/16x16/CPZ.kosp"
+PMap128_CPZ:	binclude	"mappings/128x128/CPZ.kosp"
 ; Good Future
-		binclude	"art/kosinski/level/8x8 - CPZ.kosp"
-		binclude	"mappings/16x16/CPZ.kosp"
-		binclude	"mappings/128x128/CPZ.kosp"
+GKosp_CPZ:	binclude	"art/kosinski/level/8x8 - CPZ.kosp"
+GMap16_CPZ:	binclude	"mappings/16x16/CPZ.kosp"
+GMap128_CPZ:	binclude	"mappings/128x128/CPZ.kosp"
 ; Bad Future
-		binclude	"art/kosinski/level/8x8 - CPZ.kosp"
-		binclude	"mappings/16x16/CPZ.kosp"
-		binclude	"mappings/128x128/CPZ.kosp"
+BKosp_CPZ:	binclude	"art/kosinski/level/8x8 - CPZ.kosp"
+BMap16_CPZ:	binclude	"mappings/16x16/CPZ.kosp"
+BMap128_CPZ:	binclude	"mappings/128x128/CPZ.kosp"
  endif
 ; ===========================================================================
 ; Zone 03
@@ -18248,17 +18260,17 @@ Map16_EHZ:	binclude	"mappings/16x16/EHZ.kosp"
 Map128_EHZ:	binclude	"mappings/128x128/EHZ.kosp"
  if TimeTravel=1
 ; Past
-		binclude	"art/kosinski/level/8x8 - EHZ.kosp"
-		binclude	"mappings/16x16/EHZ.kosp"
-		binclude	"mappings/128x128/EHZ.kosp"
+PKosp_EHZ:	binclude	"art/kosinski/level/8x8 - EHZ.kosp"
+PMap16_EHZ:	binclude	"mappings/16x16/EHZ.kosp"
+PMap128_EHZ:	binclude	"mappings/128x128/EHZ.kosp"
 ; Good Future
-		binclude	"art/kosinski/level/8x8 - EHZ.kosp"
-		binclude	"mappings/16x16/EHZ.kosp"
-		binclude	"mappings/128x128/EHZ.kosp"
+GKosp_EHZ:	binclude	"art/kosinski/level/8x8 - EHZ.kosp"
+GMap16_EHZ:	binclude	"mappings/16x16/EHZ.kosp"
+GMap128_EHZ:	binclude	"mappings/128x128/EHZ.kosp"
 ; Bad Future
-		binclude	"art/kosinski/level/8x8 - EHZ.kosp"
-		binclude	"mappings/16x16/EHZ.kosp"
-		binclude	"mappings/128x128/EHZ.kosp"
+BKosp_EHZ:	binclude	"art/kosinski/level/8x8 - EHZ.kosp"
+BMap16_EHZ:	binclude	"mappings/16x16/EHZ.kosp"
+BMap128_EHZ:	binclude	"mappings/128x128/EHZ.kosp"
  endif
 ; ===========================================================================
 ; Zone 04
@@ -18267,17 +18279,17 @@ Map16_HPZ:	binclude	"mappings/16x16/HPZ.kosp"
 Map128_HPZ:	binclude	"mappings/128x128/HPZ.kosp"
  if TimeTravel=1
 ; Past
-		binclude	"art/kosinski/level/8x8 - HPZ.kosp"
-		binclude	"mappings/16x16/HPZ.kosp"
-		binclude	"mappings/128x128/HPZ.kosp"
+PKosp_HPZ:	binclude	"art/kosinski/level/8x8 - HPZ.kosp"
+PMap16_HPZ:	binclude	"mappings/16x16/HPZ.kosp"
+PMap128_HPZ:	binclude	"mappings/128x128/HPZ.kosp"
 ; Good Future
-		binclude	"art/kosinski/level/8x8 - HPZ.kosp"
-		binclude	"mappings/16x16/HPZ.kosp"
-		binclude	"mappings/128x128/HPZ.kosp"
+GKosp_HPZ:	binclude	"art/kosinski/level/8x8 - HPZ.kosp"
+GMap16_HPZ:	binclude	"mappings/16x16/HPZ.kosp"
+GMap128_HPZ:	binclude	"mappings/128x128/HPZ.kosp"
 ; Bad Future
-		binclude	"art/kosinski/level/8x8 - HPZ.kosp"
-		binclude	"mappings/16x16/HPZ.kosp"
-		binclude	"mappings/128x128/HPZ.kosp"
+BKosp_HPZ:	binclude	"art/kosinski/level/8x8 - HPZ.kosp"
+BMap16_HPZ:	binclude	"mappings/16x16/HPZ.kosp"
+BMap128_HPZ:	binclude	"mappings/128x128/HPZ.kosp"
  endif
 ; ===========================================================================
 ; Zone 05
@@ -18286,17 +18298,17 @@ Map16_HTZ:	binclude	"mappings/16x16/HTZ.kosp"
 Map128_HTZ:	binclude	"mappings/128x128/HTZ.kosp"
  if TimeTravel=1
 ; Past
-		binclude	"art/kosinski/level/8x8 - HTZ.kosp"
-		binclude	"mappings/16x16/HTZ.kosp"
-		binclude	"mappings/128x128/HTZ.kosp"
+PKosp_HTZ:	binclude	"art/kosinski/level/8x8 - HTZ.kosp"
+PMap16_HTZ:	binclude	"mappings/16x16/HTZ.kosp"
+PMap128_HTZ:	binclude	"mappings/128x128/HTZ.kosp"
 ; Good Future
-		binclude	"art/kosinski/level/8x8 - HTZ.kosp"
-		binclude	"mappings/16x16/HTZ.kosp"
-		binclude	"mappings/128x128/HTZ.kosp"
+GKosp_HTZ:	binclude	"art/kosinski/level/8x8 - HTZ.kosp"
+GMap16_HTZ:	binclude	"mappings/16x16/HTZ.kosp"
+GMap128_HTZ:	binclude	"mappings/128x128/HTZ.kosp"
 ; Bad Future
-		binclude	"art/kosinski/level/8x8 - HTZ.kosp"
-		binclude	"mappings/16x16/HTZ.kosp"
-		binclude	"mappings/128x128/HTZ.kosp"
+BKosp_HTZ:	binclude	"art/kosinski/level/8x8 - HTZ.kosp"
+BMap16_HTZ:	binclude	"mappings/16x16/HTZ.kosp"
+BMap128_HTZ:	binclude	"mappings/128x128/HTZ.kosp"
  endif
 ; ===========================================================================
 ; Zone 06 (Filler; currently S1's leftover ending)
@@ -18305,208 +18317,208 @@ Map16_MTZ:	binclude	"mappings/16x16/MTZ.kosp"
 Map128_MTZ:	binclude	"mappings/128x128/MTZ.kosp"
  if TimeTravel=1
 ; Past
-		binclude	"art/kosinski/level/8x8 - MTZ.kosp"
-		binclude	"mappings/16x16/MTZ.kosp"
-		binclude	"mappings/128x128/MTZ.kosp"
+PKosp_MTZ:	binclude	"art/kosinski/level/8x8 - MTZ.kosp"
+PMap16_MTZ:	binclude	"mappings/16x16/MTZ.kosp"
+PMap128_MTZ:	binclude	"mappings/128x128/MTZ.kosp"
 ; Good Future
-		binclude	"art/kosinski/level/8x8 - MTZ.kosp"
-		binclude	"mappings/16x16/MTZ.kosp"
-		binclude	"mappings/128x128/MTZ.kosp"
+GKosp_MTZ:	binclude	"art/kosinski/level/8x8 - MTZ.kosp"
+GMap16_MTZ:	binclude	"mappings/16x16/MTZ.kosp"
+GMap128_MTZ:	binclude	"mappings/128x128/MTZ.kosp"
 ; Bad Future
-		binclude	"art/kosinski/level/8x8 - MTZ.kosp"
-		binclude	"mappings/16x16/MTZ.kosp"
-		binclude	"mappings/128x128/MTZ.kosp"
+BKosp_MTZ:	binclude	"art/kosinski/level/8x8 - MTZ.kosp"
+BMap16_MTZ:	binclude	"mappings/16x16/MTZ.kosp"
+BMap128_MTZ:	binclude	"mappings/128x128/MTZ.kosp"
  endif
 ; From here onwards, filler data for the NEW levels.
 ; ===========================================================================
 ; Zone 07
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+Kosp_LV7:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+Map16_LV7:	binclude	"mappings/16x16/GHZ.kosp"
+Map128_LV7:	binclude	"mappings/128x128/GHZ.kosp"
  if TimeTravel=1
 ; Past
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+PKosp_LV7:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+PMap16_LV7:	binclude	"mappings/16x16/GHZ.kosp"
+PMap128_LV7:	binclude	"mappings/128x128/GHZ.kosp"
 ; Good Future
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+GKosp_LV7:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+GMap16_LV7:	binclude	"mappings/16x16/GHZ.kosp"
+GMap128_LV7:	binclude	"mappings/128x128/GHZ.kosp"
 ; Bad Future
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+BKosp_LV7:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+BMap16_LV7:	binclude	"mappings/16x16/GHZ.kosp"
+BMap128_LV7:	binclude	"mappings/128x128/GHZ.kosp"
  endif
 ; ===========================================================================
 ; Zone 08
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+Kosp_LV8:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+Map16_LV8:	binclude	"mappings/16x16/GHZ.kosp"
+Map128_LV8:	binclude	"mappings/128x128/GHZ.kosp"
  if TimeTravel=1
 ; Past
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+PKosp_LV8:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+PMap16_LV8:	binclude	"mappings/16x16/GHZ.kosp"
+PMap128_LV8:	binclude	"mappings/128x128/GHZ.kosp"
 ; Good Future
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+GKosp_LV8:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+GMap16_LV8:	binclude	"mappings/16x16/GHZ.kosp"
+GMap128_LV8:	binclude	"mappings/128x128/GHZ.kosp"
 ; Bad Future
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+BKosp_LV8:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+BMap16_LV8:	binclude	"mappings/16x16/GHZ.kosp"
+BMap128_LV8:	binclude	"mappings/128x128/GHZ.kosp"
  endif
 ; ===========================================================================
 ; Zone 09
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+Kosp_LV9:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+Map16_LV9:	binclude	"mappings/16x16/GHZ.kosp"
+Map128_LV9:	binclude	"mappings/128x128/GHZ.kosp"
  if TimeTravel=1
 ; Past
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+PKosp_LV9:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+PMap16_LV9:	binclude	"mappings/16x16/GHZ.kosp"
+PMap128_LV9:	binclude	"mappings/128x128/GHZ.kosp"
 ; Good Future
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+GKosp_LV9:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+GMap16_LV9:	binclude	"mappings/16x16/GHZ.kosp"
+GMap128_LV9:	binclude	"mappings/128x128/GHZ.kosp"
 ; Bad Future
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+BKosp_LV9:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+BMap16_LV9:	binclude	"mappings/16x16/GHZ.kosp"
+BMap128_LV9:	binclude	"mappings/128x128/GHZ.kosp"
  endif
 ; ===========================================================================
 ; Zone $0A
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+Kosp_LVA:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+Map16_LVA:	binclude	"mappings/16x16/GHZ.kosp"
+Map128_LVA:	binclude	"mappings/128x128/GHZ.kosp"
  if TimeTravel=1
 ; Past
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+PKosp_LVA:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+PMap16_LVA:	binclude	"mappings/16x16/GHZ.kosp"
+PMap128_LVA:	binclude	"mappings/128x128/GHZ.kosp"
 ; Good Future
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+GKosp_LVA:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+GMap16_LVA:	binclude	"mappings/16x16/GHZ.kosp"
+GMap128_LVA:	binclude	"mappings/128x128/GHZ.kosp"
 ; Bad Future
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+BKosp_LVA:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+BMap16_LVA:	binclude	"mappings/16x16/GHZ.kosp"
+BMap128_LVA:	binclude	"mappings/128x128/GHZ.kosp"
  endif
 ; ===========================================================================
 ; Zone $0B
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+Kosp_LVB:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+Map16_LVB:	binclude	"mappings/16x16/GHZ.kosp"
+Map128_LVB:	binclude	"mappings/128x128/GHZ.kosp"
  if TimeTravel=1
 ; Past
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+PKosp_LVB:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+PMap16_LVB:	binclude	"mappings/16x16/GHZ.kosp"
+PMap128_LVB:	binclude	"mappings/128x128/GHZ.kosp"
 ; Good Future
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+GKosp_LVB:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+GMap16_LVB:	binclude	"mappings/16x16/GHZ.kosp"
+GMap128_LVB:	binclude	"mappings/128x128/GHZ.kosp"
 ; Bad Future
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+BKosp_LVB:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+BMap16_LVB:	binclude	"mappings/16x16/GHZ.kosp"
+BMap128_LVB:	binclude	"mappings/128x128/GHZ.kosp"
  endif
 ; ===========================================================================
 ; Zone $0C
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+Kosp_LVC:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+Map16_LVC:	binclude	"mappings/16x16/GHZ.kosp"
+Map128_LVC:	binclude	"mappings/128x128/GHZ.kosp"
  if TimeTravel=1
 ; Past
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+PKosp_LVC:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+PMap16_LVC:	binclude	"mappings/16x16/GHZ.kosp"
+PMap128_LVC:	binclude	"mappings/128x128/GHZ.kosp"
 ; Good Future
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+GKosp_LVC:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+GMap16_LVC:	binclude	"mappings/16x16/GHZ.kosp"
+GMap128_LVC:	binclude	"mappings/128x128/GHZ.kosp"
 ; Bad Future
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+BKosp_LVC:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+BMap16_LVC:	binclude	"mappings/16x16/GHZ.kosp"
+BMap128_LVC:	binclude	"mappings/128x128/GHZ.kosp"
  endif
 ; ===========================================================================
 ; Zone $0D
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+Kosp_LVD:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+Map16_LVD:	binclude	"mappings/16x16/GHZ.kosp"
+Map128_LVD:	binclude	"mappings/128x128/GHZ.kosp"
  if TimeTravel=1
 ; Past
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+PKosp_LVD:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+PMap16_LVD:	binclude	"mappings/16x16/GHZ.kosp"
+PMap128_LVD:	binclude	"mappings/128x128/GHZ.kosp"
 ; Good Future
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+GKosp_LVD:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+GMap16_LVD:	binclude	"mappings/16x16/GHZ.kosp"
+GMap128_LVD:	binclude	"mappings/128x128/GHZ.kosp"
 ; Bad Future
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+BKosp_LVD:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+BMap16_LVD:	binclude	"mappings/16x16/GHZ.kosp"
+BMap128_LVD:	binclude	"mappings/128x128/GHZ.kosp"
  endif
 ; ===========================================================================
 ; Zone $0E
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+Kosp_LVE:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+Map16_LVE:	binclude	"mappings/16x16/GHZ.kosp"
+Map128_LVE:	binclude	"mappings/128x128/GHZ.kosp"
  if TimeTravel=1
 ; Past
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+PKosp_LVE:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+PMap16_LVE:	binclude	"mappings/16x16/GHZ.kosp"
+PMap128_LVE:	binclude	"mappings/128x128/GHZ.kosp"
 ; Good Future
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+GKosp_LVE:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+GMap16_LVE:	binclude	"mappings/16x16/GHZ.kosp"
+GMap128_LVE:	binclude	"mappings/128x128/GHZ.kosp"
 ; Bad Future
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+BKosp_LVE:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+BMap16_LVE:	binclude	"mappings/16x16/GHZ.kosp"
+BMap128_LVE:	binclude	"mappings/128x128/GHZ.kosp"
  endif
 ; ===========================================================================
 ; Zone $0F
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+Kosp_LVF:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+Map16_LVF:	binclude	"mappings/16x16/GHZ.kosp"
+Map128_LVF:	binclude	"mappings/128x128/GHZ.kosp"
  if TimeTravel=1
 ; Past
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+PKosp_LVF:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+PMap16_LVF:	binclude	"mappings/16x16/GHZ.kosp"
+PMap128_LVF:	binclude	"mappings/128x128/GHZ.kosp"
 ; Good Future
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+GKosp_LVF:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+GMap16_LVF:	binclude	"mappings/16x16/GHZ.kosp"
+GMap128_LVF:	binclude	"mappings/128x128/GHZ.kosp"
 ; Bad Future
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+BKosp_LVF:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+BMap16_LVF:	binclude	"mappings/16x16/GHZ.kosp"
+BMap128_LVF:	binclude	"mappings/128x128/GHZ.kosp"
  endif
 ; ===========================================================================
 ; Zone $10
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+Kosp_LV10:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+Map16_LV10:	binclude	"mappings/16x16/GHZ.kosp"
+Map128_LV10:	binclude	"mappings/128x128/GHZ.kosp"
  if TimeTravel=1
 ; Past
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+PKosp_LV10:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+PMap16_LV10:	binclude	"mappings/16x16/GHZ.kosp"
+PMap128_LV10:	binclude	"mappings/128x128/GHZ.kosp"
 ; Good Future
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+GKosp_LV10:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+GMap16_LV10:	binclude	"mappings/16x16/GHZ.kosp"
+GMap128_LV10:	binclude	"mappings/128x128/GHZ.kosp"
 ; Bad Future
-		binclude	"art/kosinski/level/8x8 - GHZ.kosp"
-		binclude	"mappings/16x16/GHZ.kosp"
-		binclude	"mappings/128x128/GHZ.kosp"
+BKosp_LV10:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
+BMap16_LV10:	binclude	"mappings/16x16/GHZ.kosp"
+BMap128_LV10:	binclude	"mappings/128x128/GHZ.kosp"
  endif
 ; ---------------------------------------------------------------------------
 S1_AngleMap:	binclude	"collision/S1/Angle Map.bin"
@@ -18835,6 +18847,9 @@ Level_MTZ2:	binclude	"level/layout/MTZ_2.kosp"
 Level_MTZ3:	binclude	"level/layout/MTZ_3.kosp"
 Level_MTZ4:	binclude	"level/layout/MTZ_4.kosp"
 Level_Null:	dc.l	0
+ if TimeTravel=1
+		include	"_inc/LevelLayouts_Timezones.asm"
+ endif
 ; --------------------------------------------------------------------------------------
 ; Object layouts
 ; --------------------------------------------------------------------------------------

@@ -9,6 +9,8 @@ https://tcrf.net/Proto:Sonic_the_Hedgehog_2_(Genesis)
 ; ---------------------------------------------------------------------------
 
 TODO:
+Implement time-travel transitions and replace the dummy timezone asset/layout tables with distinct data; header/layout selection already supports four timezones and four acts
+Port Sonic CD's object manager from the experimental branch for timezone object placement < LONG TERM; separate from LoadZone and its asset/layout tables
 Fix BS_ShowLayout and use it to replace S1SS_ShowLayout < FUTURE; the replacement exists but is not working yet
 Port remaining level animated-art/block setup to S1/S3&K style through Animate_Tiles and AniPLC scripts; replace make_block_tile mapping patches with regular block data < FUTURE, separate from the S1 bonus-stage background conversion
 Compare remaining S3&K power-up behavior and timer layout with the current per-player implementation
@@ -32,6 +34,7 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
+Simplify LoadZone, share timezone/act header selection with the primary PLC load, label the prepared asset copies, and add separate dummy timezone layouts/indexes; preserve Current_Timezone across level RAM clearing and avoid zero-length art DMA at exact $1000 boundaries < DONE
 Fix overlapping giant-ring flashes: share one animation clock and VRAM bank, handle each parent once, validate reused slots, and queue one special-stage entry at level end < DONE
 Convert the S1 bonus-stage background to normal blocks/chunks and two live $1000-byte planes; animate birds/fish through the existing Animate_Tiles interpreter, group stage art below $2940, and preserve pause/results/level-return behavior < DONE
 Share TIME's static E with SCORE in the HUD and results mappings; retain debug coordinates in their separate digit mappings < DONE
