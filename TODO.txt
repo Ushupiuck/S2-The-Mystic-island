@@ -32,6 +32,7 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
+Fix overlapping giant-ring flashes: share one animation clock and VRAM bank, handle each parent once, validate reused slots, and queue one special-stage entry at level end < DONE
 Convert the S1 bonus-stage background to normal blocks/chunks and two live $1000-byte planes; animate birds/fish through the existing Animate_Tiles interpreter, group stage art below $2940, and preserve pause/results/level-return behavior < DONE
 Share TIME's static E with SCORE in the HUD and results mappings; retain debug coordinates in their separate digit mappings < DONE
 Replace RING BONUS lettering with the animated ring icon on both results screens; special-stage results replace the stage's $F600 ring art with a separate palette-0 copy of all eight frames, preserving the normal $D780 art, emerald colors and bonus digits < DONE

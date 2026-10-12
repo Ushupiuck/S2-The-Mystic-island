@@ -33,6 +33,10 @@ GRing_Okay:
 		addq.b	#2,obRoutine(a0)
 		move.w	#$100,obPriority(a0)
 		move.b	#$52,obColType(a0)
+		cmpi.b	#2,(v_gfxbigring).w	; A running flash owns the shared art/clock
+		beq.s	GRing_Animate
+		tst.b	(f_bigring).w		; Entry is already queued for level end
+		bne.s	GRing_Animate
 		move.b	#1,(v_gfxbigring).w	; Start loading giant ring graphics
 
 GRing_Animate:
