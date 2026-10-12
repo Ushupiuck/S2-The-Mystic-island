@@ -79,6 +79,9 @@ SndNames:	offsetTable
 	offsetTableEntry.w	SndNam_LargeLaser
 	offsetTableEntry.w	SndNam_OilSlide
 	offsetTableEntry.w	SndNam_Goal
+	offsetTableEntry.w	SndNam_TailsGrab
+	offsetTableEntry.w	SndNam_TailsFlying
+	offsetTableEntry.w	SndNam_TailsFlyingTired
 
 SndNam_Jump:	songtext	"JUMP"
 SndNam_Checkpoint:	songtext	"CHECKPOINT"
@@ -160,4 +163,11 @@ SndNam_MechaSonicBuzz:	songtext	"MECHA SONIC BUZZ"
 SndNam_LargeLaser:	songtext	"LARGE LASER"
 SndNam_OilSlide:	songtext	"OIL SLIDE"
 SndNam_Goal:	songtext	"GOAL"
+	even
+
+SndNam_TailsGrab:	songtext "TAILS GRAB"
+
+SndNam_TailsFlying:	songtext "TAILS FLYING"
+
+SndNam_TailsFlyingTired:	songtext "TAILS TIRED"
 	even

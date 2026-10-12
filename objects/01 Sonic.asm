@@ -1,6 +1,8 @@
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Object 01 - Sonic
+; Normal-player behavior follows S3&K, adapted to this engine's SST and art.
+; Keep the custom homing hook and unrestricted rolling-jump air control.
 ; ---------------------------------------------------------------------------
 
 Obj01:
@@ -25,8 +27,10 @@ Obj01_Index:
 ; Obj01_Main:
 Obj01_Init:
 		addq.b	#2,obRoutine(a0)		; => Obj01_Control
-		move.b	#$13,obHeight(a0)		; this sets Sonic's collision height (2*pixels)
-		move.b	#9,obWidth(a0)
+		move.b	#sonic_height,obHeight(a0)
+		move.b	#sonic_width,obWidth(a0)
+		move.b	#sonic_height,default_y_radius(a0)
+		move.b	#sonic_width,default_x_radius(a0)
 		move.l	#Map_Sonic,obMap(a0)
 		move.w	#$100,obPriority(a0)
 		move.b	#$18,obActWid(a0)
@@ -46,18 +50,15 @@ Obj01_Init:
 		move.w	obTopSolidBit(a0),(v_lamp_solid).w
 
 Obj01_Init_Continued:
+		clr.b	character_id(a0)
+		bsr.w	CreatePlayerDust
 		clr.b	flips_remaining(a0)
 		move.b	#4,flip_speed(a0)		; flip_speed
 		clr.b	(Super_Sonic_flag).w
 		move.w	#30,(v_air).w			; v_air(a0)
 		subi.w	#$20,obX(a0)
 		addq.w	#4,obY(a0)
-		clr.w	(Sonic_Pos_Record_Index).w
-
-		move.w	#$40-1,d2
--		bsr.w	Sonic_RecordPos
-		clr.w	(a1,d0.w)
-		dbf	d2,-
+		bsr.w	Sonic_ResetPositionHistory
 		addi.w	#$20,obX(a0)
 		subq.w	#4,obY(a0)
 
@@ -80,6 +81,8 @@ loc_FAB0:
 		move.w	(v_jpadhold1).w,(v_jpadholdlogical).w	; copy new held buttons, to enable joypad
 
 loc_FABC:
+		btst	#0,obControl(a0)
+		bne.s	Obj01_ControlsLock
 		btst	#0,(f_playerctrl).w		; is Sonic interacting with another object that holds him in place or controls his movement somehow?
 		bne.s	Obj01_ControlsLock		; if yes, branch to skip Sonic's control
 		moveq	#0,d0
@@ -101,11 +104,15 @@ Obj01_ControlsLock:
 		move.b	obPrevAni(a0),obAnim(a0)
 
 loc_FAFE:
+		btst	#1,obControl(a0)
+		bne.s	.carried
 		bsr.w	Sonic_Animate
 		tst.b	(f_playerctrl).w
 		bmi.w	LoadSonicDynPLC
 		jsr	(TouchResponse).l
 		bra.w	LoadSonicDynPLC
+.carried:
+		jmp	(TouchResponse).l
 
 ; ===========================================================================
 ; secondary states under state Obj01_Control
@@ -122,10 +129,11 @@ Sonic_Display:
 		beq.s	Obj01_Display
 		subq.w	#1,flashtime(a0)
 		lsr.w	#3,d0
-		bhs.s	Player_ChkInvincibility
+		bhs.s	Obj01_Display.effects
 ; loc_FB2E:
 Obj01_Display:
 		jsr	(DisplaySprite).l
+.effects:				; flashing skips drawing, but both timers still tick
 		bsr.s	Player_ChkInvincibility
 		bra.w	Player_ChkSpeedShoes
 ; ---------------------------------------------------------------------------
@@ -250,7 +258,23 @@ Player_UpdateSpeed:
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 ; loc_FBB2: CopySonicMovesForTails:
+; S3&K initializes the complete position and input history directly.
+; Keep writes inside the two buffers; RecordPos advances a1 and the index.
+Sonic_ResetPositionHistory:
+		lea	(Sonic_Pos_Record_Buf).w,a1
+		lea	(Sonic_Stat_Record_Buf).w,a2
+		move.w	#bytesToLcnt(Sonic_Pos_Record_Buf_End-Sonic_Pos_Record_Buf),d0
+.loop:
+		move.w	obX(a0),(a1)+
+		move.w	obY(a0),(a1)+
+		clr.l	(a2)+
+		dbf	d0,.loop
+		clr.w	(Sonic_Pos_Record_Index).w
+		rts
+
 Sonic_RecordPos:
+		cmpa.w	#v_player,a0
+		bne.s	.return
 		move.w	(Sonic_Pos_Record_Index).w,d0
 		lea	(Sonic_Pos_Record_Buf).w,a1
 		lea	(a1,d0.w),a1
@@ -259,7 +283,7 @@ Sonic_RecordPos:
 		addq.b	#4,(Sonic_Pos_Record_Index+1).w
 		lea	(Sonic_Stat_Record_Buf).w,a1
 		lea	(a1,d0.w),a1
-		move.w	(v_jpadhold1).w,(a1)+
+		move.w	(v_jpadholdlogical).w,(a1)+
 		move.b	obStatus(a0),(a1)+
 		move.b	obGfx(a0),(a1)+
 .return:	rts
@@ -280,7 +304,7 @@ Sonic_Water:
 		cmp.w	obY(a0),d0			; is Sonic above water?
 		bge.s	Obj01_OutWater			; if yes, branch
 
-		bset	#6,obStatus(a0)			; set underwater flag
+		bset	#status.player.underwater,obStatus(a0)
 		bne.s	Sonic_RecordPos.return		; if already underwater, branch
 
 		bsr.w	ResumeMusic
@@ -288,29 +312,44 @@ Sonic_Water:
 		move.b	#$81,(v_sonicbubbles+obSubtype).w
 		movea.l	a0,a2
 		bsr.w	Player_UpdateSpeed
+		tst.b	obControl(a0)
+		bne.s	Sonic_RecordPos.return
+		tst.b	(f_playerctrl).w		; leave externally controlled velocity alone
+		bne.s	Sonic_RecordPos.return
 		asr	obVelX(a0)
 		asr	obVelY(a0)			; memory oprands can only be shifted one at a time
 		asr	obVelY(a0)
 		beq.s	Sonic_RecordPos.return
-		move.b	#id_Obj08,(v_splash).w		; splash animation
+		jsr	(SpawnPlayerSplash).l		; separate splash owned by this player
 		move.w	#sfx_Splash,d0			; splash sound
 		jmp	(PlaySound_Special).l
 ; ---------------------------------------------------------------------------
 ; Obj01_NotInWater:
 Obj01_OutWater:
-		bclr	#6,obStatus(a0)			; unset underwater flag
+		bclr	#status.player.underwater,obStatus(a0)
 		beq.s	Sonic_RecordPos.return		; if already unset, branch
 
 		bsr.w	ResumeMusic
 		movea.l	a0,a2
 		bsr.w	Player_UpdateSpeed
+		cmpi.b	#4,obRoutine(a0)		; hurt recoil does not receive the exit boost
+		beq.s	.checksplash
+		tst.b	obControl(a0)
+		bne.s	.checksplash
+		tst.b	(f_playerctrl).w
+		bne.s	.checksplash
+		cmpi.w	#-Sonic_JumpReleaseSpeed,obVelY(a0)
+		blt.s	.checksplash		; preserve faster springs and launches
 		asl	obVelY(a0)
+.checksplash:
+		cmpi.b	#AniIDSonAni_Blank,obAnim(a0)
+		beq.w	Sonic_RecordPos.return
 		tst.w	obVelY(a0)
 		beq.w	Sonic_RecordPos.return
-		move.b	#id_Obj08,(v_splash).w		; splash animation
-		cmpi.w	#-$1000,obVelY(a0)
+		jsr	(SpawnPlayerSplash).l		; separate splash owned by this player
+		cmpi.w	#-Sonic_WaterExitSpeedLimit,obVelY(a0)
 		bgt.s	loc_FC98
-		move.w	#-$1000,obVelY(a0)		; limit upward y velocity exiting the water
+		move.w	#-Sonic_WaterExitSpeedLimit,obVelY(a0)
 
 loc_FC98:
 		move.w	#sfx_Splash,d0			; splash sound
@@ -401,7 +440,10 @@ loc_FCEA:
 ; Called if Sonic is in a ball, but not airborne (thus, probably rolling)
 
 Obj01_MdRoll:
+		tst.b	spindash_flag(a0)		; forced rolls stay under their controller
+		bne.s	.forcedroll
 		bsr.w	Sonic_Jump
+.forcedroll:
 		bsr.w	Sonic_RollRepel
 		bsr.w	Sonic_RollSpeed
 		bsr.w	Sonic_LevelBound
@@ -454,77 +496,111 @@ Sonic_Move:
 		move.w	(Sonic_deceleration).w,d4
 		tst.b	(f_slidemode).w
 		bne.w	Sonic_ResetScr_Traction
+		btst	#status_secondary.sliding,obStatusSecondary(a0)
+		bne.w	Sonic_ResetScr_Traction
 		tst.w	move_lock(a0)
 		bne.w	Sonic_ResetScr
-		btst	#bitL,(v_jpadholdlogical).w	; is left being pressed?
-		beq.s	loc_FD66			; if not, branch
+		btst	#button_left,(v_jpadholdlogical).w
+		beq.s	.notleft
 		bsr.w	Sonic_MoveLeft
-
-loc_FD66:
-		btst	#bitR,(v_jpadholdlogical).w	; is right being pressed?
-		beq.s	loc_FD72			; if not, branch
+.notleft:
+		btst	#button_right,(v_jpadholdlogical).w
+		beq.s	.notright
 		bsr.w	Sonic_MoveRight
-
-loc_FD72:
+.notright:
 		move.b	obAngle(a0),d0
 		addi.b	#$20,d0
-		andi.b	#$C0,d0				; is Sonic on a slope?
-		bne.w	Sonic_ResetScr		; if yes, branch
-		tst.w	obInertia(a0)			; is Sonic moving?
-		bne.w	Sonic_ResetScr		; if yes, branch
-		bclr	#5,obStatus(a0)
-		move.b	#AniIDSonAni_Wait,obAnim(a0)	; use "standing" animation
-		btst	#3,obStatus(a0)
-		beq.s	Sonic_Balance
+		andi.b	#$C0,d0
+		bne.w	Sonic_ResetScr
+		tst.w	obInertia(a0)
+		bne.w	Sonic_ResetScr
+		bclr	#status.player.pushing,obStatus(a0)
+		move.b	#AniIDSonAni_Wait,obAnim(a0)
+		btst	#status.player.on_object,obStatus(a0)
+		beq.w	Sonic_Balance
 		moveq	#0,d0
 		move.b	standonobject(a0),d0
 		mulu.w	#object_size,d0
-		lea	(v_player).w,a1			; a1=character
-		lea	(a1,d0.w),a1			; a1=object
+		lea	(v_player).w,a1
+		lea	(a1,d0.w),a1
 		tst.b	obStatus(a1)
-		bmi.s	Sonic_LookUp
+		bmi.w	Sonic_LookUp
 		moveq	#0,d1
 		move.b	obActWid(a1),d1
 		move.w	d1,d2
 		add.w	d2,d2
-		subq.w	#4,d2
+		subq.w	#2,d2			; S3&K's two-pixel edge margin
 		add.w	obX(a0),d1
 		sub.w	obX(a1),d1
-		cmpi.w	#4,d1
-		blt.s	loc_FE00
+		cmpi.w	#2,d1
+		blt.s	Sonic_BalanceOnObjLeft
 		cmp.w	d2,d1
-		bge.s	loc_FDF0
-		bra.s	Sonic_LookUp
-; ---------------------------------------------------------------------------
+		bge.s	Sonic_BalanceOnObjRight
+		bra.w	Sonic_LookUp
+
+; Face the edge; use the second balance animation farther out.
+Sonic_BalanceOnObjRight:
+		bclr	#status.player.x_flip,obStatus(a0)
+		move.b	#AniIDSonAni_Balance,obAnim(a0)
+		addq.w	#6,d2
+		cmp.w	d2,d1
+		blt.w	Sonic_ResetScr
+		move.b	#AniIDSonAni_Balance2,obAnim(a0)
+		bra.w	Sonic_ResetScr
+Sonic_BalanceOnObjLeft:
+		bset	#status.player.x_flip,obStatus(a0)
+		move.b	#AniIDSonAni_Balance,obAnim(a0)
+		cmpi.w	#-4,d1
+		bge.w	Sonic_ResetScr
+		move.b	#AniIDSonAni_Balance2,obAnim(a0)
+		bra.w	Sonic_ResetScr
 
 Sonic_Balance:
 		jsr	(ChkFloorEdge).l
 		cmpi.w	#$C,d1
-		blt.s	Sonic_LookUp
+		blt.w	Sonic_LookUp
 		cmpi.b	#3,next_tilt(a0)
-		bne.s	loc_FDF8
-
-loc_FDF0:
-		bclr	#0,obStatus(a0)
+		bne.s	.leftedge
+		bclr	#status.player.x_flip,obStatus(a0)
 		move.b	#AniIDSonAni_Balance,obAnim(a0)
-		bra.w	Sonic_ResetScr
-; ---------------------------------------------------------------------------
-
-loc_FDF8:
+		move.w	obX(a0),d3
+		subq.w	#6,d3
+		bra.s	.probe
+.leftedge:
 		cmpi.b	#3,tilt(a0)
 		bne.s	Sonic_LookUp
-
-loc_FE00:
-		bset	#0,obStatus(a0)
+		bset	#status.player.x_flip,obStatus(a0)
 		move.b	#AniIDSonAni_Balance,obAnim(a0)
-		bra.s	Sonic_ResetScr
-; ---------------------------------------------------------------------------
+		move.w	obX(a0),d3
+		addq.w	#6,d3
+.probe:
+		jsr	(ChkFloorEdge_Part2).l
+		cmpi.w	#$C,d1
+		blt.w	Sonic_ResetScr
+		move.b	#AniIDSonAni_Balance2,obAnim(a0)
+		bra.w	Sonic_ResetScr
 
+; S3&K checks Down before Up when both buttons are held.
 Sonic_LookUp:
-		btst	#button_up,(v_jpadholdlogical).w	; is up being pressed?
-		beq.s	Sonic_Duck				; if not, branch
-		move.b	#AniIDSonAni_LookUp,obAnim(a0)		; use "looking up" animation
-		cmpa.w	#v_player,a0				; only the camera's player can move its bias
+Sonic_Duck:
+		btst	#button_down,(v_jpadholdlogical).w
+		beq.s	.lookup
+		move.b	#AniIDSonAni_Duck,obAnim(a0)
+		cmpa.w	#v_player,a0
+		bne.w	Obj01_UpdateSpeedOnGround
+		addq.b	#1,scroll_delay_counter(a0)
+		cmpi.b	#Camera_LookDelay,scroll_delay_counter(a0)
+		blo.w	Sonic_ResetScr_Part2
+		move.b	#Camera_LookDelay,scroll_delay_counter(a0)
+		cmpi.w	#Camera_LookDownLimit,(Camera_Y_pos_bias).w
+		beq.w	Obj01_UpdateSpeedOnGround
+		subq.w	#Camera_LookPanSpeed,(Camera_Y_pos_bias).w
+		bra.w	Obj01_UpdateSpeedOnGround
+.lookup:
+		btst	#button_up,(v_jpadholdlogical).w
+		beq.s	Sonic_ResetScr
+		move.b	#AniIDSonAni_LookUp,obAnim(a0)
+		cmpa.w	#v_player,a0
 		bne.s	Obj01_UpdateSpeedOnGround
 		addq.b	#1,scroll_delay_counter(a0)
 		cmpi.b	#Camera_LookDelay,scroll_delay_counter(a0)
@@ -534,26 +610,8 @@ Sonic_LookUp:
 		beq.s	Obj01_UpdateSpeedOnGround
 		addq.w	#Camera_LookPanSpeed,(Camera_Y_pos_bias).w
 		bra.s	Obj01_UpdateSpeedOnGround
-; ---------------------------------------------------------------------------
-; loc_1A5B2:
-Sonic_Duck:
-		btst	#button_down,(v_jpadholdlogical).w	; is down being pressed?
-		beq.s	Sonic_ResetScr				; if not, branch
-		move.b	#AniIDSonAni_Duck,obAnim(a0)		; use "ducking" animation
-		cmpa.w	#v_player,a0
-		bne.s	Obj01_UpdateSpeedOnGround
-		addq.b	#1,scroll_delay_counter(a0)
-		cmpi.b	#Camera_LookDelay,scroll_delay_counter(a0)
-		blo.s	Sonic_ResetScr_Part2
-		move.b	#Camera_LookDelay,scroll_delay_counter(a0)
-		cmpi.w	#Camera_LookDownLimit,(Camera_Y_pos_bias).w
-		beq.s	Obj01_UpdateSpeedOnGround
-		subq.w	#Camera_LookPanSpeed,(Camera_Y_pos_bias).w
-		bra.s	Obj01_UpdateSpeedOnGround
 
-; ===========================================================================
-; moves the screen back to its normal position after looking up or down
-; loc_1A5E0:
+; Move the screen back to its normal position after looking up or down.
 Sonic_ResetScr_Traction:
 		bsr.s	Player_ResetScr
 		bra.s	Player_Traction
@@ -625,9 +683,17 @@ Player_Traction:
 ; stops Sonic from running through walls that meet the ground
 ; loc_FE76:
 Player_CheckWallsOnGround:
+		btst	#PlayerControl_SkipWallCollision,obControl(a0)
+		bne.s	.return
+		btst	#PlayerControl_SkipWallCollision,(f_playerctrl).w
+		bne.s	.return
+		move.b	obAngle(a0),d0
+		andi.b	#$3F,d0
+		beq.s	.probe			; S3&K also checks the four cardinal surfaces
 		move.b	obAngle(a0),d0
 		addi.b	#$40,d0
 		bmi.s	.return
+.probe:
 		move.b	#$40,d1				; rotate 90 degress clockwise
 		tst.w	obInertia(a0)			; check if Sonic's moving
 		beq.s	.return			; If not moving, don't do anything
@@ -779,56 +845,61 @@ loc_FFDE:
 
 Sonic_RollSpeed:
 		bsr.w	Player_ResetScr
-		move.w	(Sonic_top_speed).w,d6
-		asl.w	#1,d6
 		move.w	(Sonic_acceleration).w,d5
 		asr.w	#1,d5
-		moveq	#20,d4
-		asr.w	#2,d4
+		move.w	#Sonic_RollBraking,d4
+		tst.b	spindash_flag(a0)
+		bmi.w	.velocity
 		tst.b	(f_slidemode).w
-		bne.w	loc_1008A
+		bne.w	.velocity
+		btst	#status_secondary.sliding,obStatusSecondary(a0)
+		bne.w	.velocity
 		tst.w	move_lock(a0)
-		bne.s	loc_10046
-		btst	#bitL,(v_jpadholdlogical).w
-		beq.s	loc_1003A
+		bne.s	.friction
+		btst	#button_left,(v_jpadholdlogical).w
+		beq.s	.notleft
 		bsr.w	Sonic_RollLeft
-
-loc_1003A:
-		btst	#bitR,(v_jpadholdlogical).w
-		beq.s	loc_10046
+.notleft:
+		btst	#button_right,(v_jpadholdlogical).w
+		beq.s	.friction
 		bsr.w	Sonic_RollRight
-
-loc_10046:
+.friction:
 		move.w	obInertia(a0),d0
-		beq.s	loc_10068
-		bmi.s	loc_1005C
+		beq.s	.checkstop
+		bmi.s	.left
 		sub.w	d5,d0
-		bhs.s	loc_10056
+		bhs.s	.setspeed
 		clr.w	d0
-
-loc_10056:
+.setspeed:
 		move.w	d0,obInertia(a0)
-		bra.s	loc_10068
-; ---------------------------------------------------------------------------
-
-loc_1005C:
+		bra.s	.checkstop
+.left:
 		add.w	d5,d0
-		bhs.s	loc_10064
+		bhs.s	.setleft
 		clr.w	d0
-
-loc_10064:
+.setleft:
 		move.w	d0,obInertia(a0)
-
-loc_10068:
-		tst.w	obInertia(a0)
-		bne.s	loc_1008A
-		bclr	#2,obStatus(a0)
-		move.b	#$13,obHeight(a0)
-		move.b	#9,obWidth(a0)
-		move.b	#5,obAnim(a0)
-		subq.w	#5,obY(a0)
-
-loc_1008A:
+.checkstop:
+		mvabs.w	obInertia(a0),d0
+		cmpi.w	#Sonic_RollStopSpeed,d0
+		bhs.s	.velocity
+		tst.b	spindash_flag(a0)
+		bne.s	.keeprolling
+		bclr	#status.player.rolling,obStatus(a0)
+		move.b	obHeight(a0),d0
+		move.b	default_y_radius(a0),obHeight(a0)
+		move.b	default_x_radius(a0),obWidth(a0)
+		move.b	#AniIDSonAni_Wait,obAnim(a0)
+		sub.b	default_y_radius(a0),d0
+		ext.w	d0
+		add.w	d0,obY(a0)
+		bra.s	.velocity
+.keeprolling:
+		move.w	#Sonic_ForcedRollSpeed,obInertia(a0)
+		btst	#status.player.x_flip,obStatus(a0)
+		beq.s	.velocity
+		neg.w	obInertia(a0)
+.velocity:
 		move.b	obAngle(a0),d0
 		jsr	(CalcSine).l
 		muls.w	obInertia(a0),d0
@@ -836,22 +907,16 @@ loc_1008A:
 		move.w	d0,obVelY(a0)
 		muls.w	obInertia(a0),d1
 		asr.l	#8,d1
-		cmpi.w	#$1000,d1
-		ble.s	loc_100AE
-		move.w	#$1000,d1
-
-loc_100AE:
-		cmpi.w	#-$1000,d1
-		bge.s	loc_100B8
-		move.w	#-$1000,d1
-
-loc_100B8:
+		cmpi.w	#Sonic_RollMaxXSpeed,d1
+		ble.s	.checkleftcap
+		move.w	#Sonic_RollMaxXSpeed,d1
+.checkleftcap:
+		cmpi.w	#-Sonic_RollMaxXSpeed,d1
+		bge.s	.setx
+		move.w	#-Sonic_RollMaxXSpeed,d1
+.setx:
 		move.w	d1,obVelX(a0)
 		bra.w	Player_CheckWallsOnGround
-; End of function Sonic_RollSpeed
-
-
-; =============== S U B R O U T I N E =======================================
 
 
 Sonic_RollLeft:
@@ -1050,37 +1115,37 @@ loc_101FA:
 Sonic_Roll:
 		tst.b	(f_slidemode).w
 		bne.s	Obj01_NoRoll
-		move.w	obInertia(a0),d0
-		bpl.s	Obj01_DoRoll
-		neg.w	d0
-
-Obj01_DoRoll:
-		cmpi.w	#$80,d0
-		blo.s	Obj01_NoRoll
+		btst	#status_secondary.sliding,obStatusSecondary(a0)
+		bne.s	Obj01_NoRoll
 		move.b	(v_jpadholdlogical).w,d0
-		andi.b	#btnL|btnR,d0
+		andi.b	#button_left_mask|button_right_mask,d0
 		bne.s	Obj01_NoRoll
-		btst	#bitDn,(v_jpadholdlogical).w
-		beq.s	Obj01_NoRoll
-		btst	#2,obStatus(a0)
+		btst	#button_down,(v_jpadholdlogical).w
+		beq.s	.checkwalk
+		mvabs.w	obInertia(a0),d0
+		cmpi.w	#Sonic_RollStartSpeed,d0
+		bhs.s	.doroll
+		btst	#status.player.on_object,obStatus(a0)
 		bne.s	Obj01_NoRoll
-		bset	#2,obStatus(a0)
-		move.b	#$E,obHeight(a0)
-		move.b	#7,obWidth(a0)
+		move.b	#AniIDSonAni_Duck,obAnim(a0)
+		rts
+.checkwalk:
+		cmpi.b	#AniIDSonAni_Duck,obAnim(a0)
+		bne.s	Obj01_NoRoll
+		move.b	#AniIDSonAni_Walk,obAnim(a0)
+		rts
+.doroll:
+		btst	#status.player.rolling,obStatus(a0)
+		bne.s	Obj01_NoRoll
+		bset	#status.player.rolling,obStatus(a0)
+		move.b	#sonic_roll_height,obHeight(a0)
+		move.b	#sonic_roll_width,obWidth(a0)
 		move.b	#AniIDSonAni_Roll,obAnim(a0)
-		addq.w	#5,obY(a0)
+		addq.w	#sonic_height-sonic_roll_height,obY(a0)
 		move.w	#sfx_Roll,d0
-		jsr	(PlaySound_Special).l
-		tst.w	obInertia(a0)
-		bne.s	Obj01_NoRoll
-		move.w	#$200,obInertia(a0)
-
+		jmp	(PlaySound_Special).l
 Obj01_NoRoll:
 		rts
-; End of function Sonic_Roll
-
-
-; =============== S U B R O U T I N E =======================================
 
 
 Sonic_Jump:
@@ -1093,10 +1158,10 @@ Sonic_Jump:
 		bsr.w	sub_13102
 		cmpi.w	#6,d1
 		blt.s	Obj01_NoRoll
-		move.w	#$680,d2
-		btst	#6,obStatus(a0)
+		move.w	#Sonic_JumpSpeed,d2
+		btst	#status.player.underwater,obStatus(a0)
 		beq.s	+
-		move.w	#$380,d2
+		move.w	#Sonic_WaterJumpSpeed,d2
 +
 		moveq	#0,d0
 		move.b	obAngle(a0),d0
@@ -1117,8 +1182,8 @@ Sonic_Jump:
 		jsr	(PlaySound_Special).l
 		btst	#2,obStatus(a0)
 		bne.s	.return
-		move.b	#$E,obHeight(a0)
-		move.b	#7,obWidth(a0)
+		move.b	#sonic_roll_height,obHeight(a0)
+		move.b	#sonic_roll_width,obWidth(a0)
 		move.b	#AniIDSonAni_Roll,obAnim(a0)
 		bset	#2,obStatus(a0)
 		addq.w	#5,obY(a0)
@@ -1137,10 +1202,10 @@ Sonic_Jump:
 Sonic_JumpHeight:
 		tst.b	jumping(a0)
 		beq.s	loc_10352
-		move.w	#-$400,d1
-		btst	#6,obStatus(a0)
+		move.w	#-Sonic_JumpReleaseSpeed,d1
+		btst	#status.player.underwater,obStatus(a0)
 		beq.s	loc_1033C
-		move.w	#-$200,d1
+		move.w	#-Sonic_WaterJumpReleaseSpeed,d1
 
 loc_1033C:
 		cmp.w	obVelY(a0),d1
@@ -1153,9 +1218,11 @@ loc_1033C:
 ; ---------------------------------------------------------------------------
 
 loc_10352:
-		cmpi.w	#-$FC0,obVelY(a0)
+		tst.b	spindash_flag(a0)		; forced rolls retain their launch velocity
+		bne.s	.return
+		cmpi.w	#-Sonic_UpwardSpeedLimit,obVelY(a0)
 		bge.s	.return
-		move.w	#-$FC0,obVelY(a0)
+		move.w	#-Sonic_UpwardSpeedLimit,obVelY(a0)
 .return:	rts
 ; End of function Sonic_JumpHeight
 
@@ -1188,96 +1255,114 @@ Sonic_CheckSpindash:
 		tst.b	spindash_flag(a0)
 		bne.s	Sonic_UpdateSpindash
 		cmpi.b	#AniIDSonAni_Duck,obAnim(a0)
-		bne.s	locret_10394
+		bne.s	.return
 		move.b	(v_jpadpresslogical).w,d0
 		andi.b	#btnABC,d0
-		beq.w	locret_10394
+		beq.s	.return
 		move.b	#AniIDSonAni_Spindash,obAnim(a0)
-		move.w	#sfx_Roll,d0
+		move.w	#sfx_Spindash,d0
 		jsr	(PlaySound_Special).l
-		addq.l	#4,sp
 		move.b	#1,spindash_flag(a0)
-
-locret_10394:
+		clr.w	spindash_counter(a0)
+		bra.w	Sonic_SpindashGround
+.return:
 		rts
-; ===========================================================================
-; loc_10396:
-Sonic_UpdateSpindash:
-		move.b	(v_jpadholdlogical).w,d0
-		btst	#bitDn,d0
-		bne.s	Sonic_ChargingSpindash
 
-		; unleash the charged spindash and start rolling quickly:
-		bsr.w	Player_ResetScr
-		move.b	#$E,obHeight(a0)
-		move.b	#7,obWidth(a0)
+Sonic_UpdateSpindash:
+		btst	#button_down,(v_jpadholdlogical).w
+		bne.w	Sonic_ChargingSpindash
+		move.b	#sonic_roll_height,obHeight(a0)
+		move.b	#sonic_roll_width,obWidth(a0)
 		move.b	#AniIDSonAni_Roll,obAnim(a0)
-		addq.w	#5,obY(a0)			; add the difference between Sonic's rolling and standing heights
+		addq.w	#sonic_height-sonic_roll_height,obY(a0)
 		clr.b	spindash_flag(a0)
+		moveq	#0,d0
+		move.b	spindash_counter(a0),d0	; integer part of the 8.8 charge
+		add.w	d0,d0
+		move.w	Sonic_SpindashSpeeds(pc,d0.w),obInertia(a0)
+		move.w	obInertia(a0),d0
+		subi.w	#Sonic_SpindashMinSpeed,d0
+		add.w	d0,d0
+		neg.w	d0
+		addi.w	#Sonic_SpindashCameraDelayMax<<8,d0
 	if FixBugs
-		; To fix a bug in 'ScrollHoriz', we need an extra variable, so this
-		; code has been modified to make the delay value only a single byte.
-		; This is used by the fixed 'ScrollHoriz'.
-		move.b	#$20,(Horiz_scroll_delay_val).w
-		; Back up the position array index for later.
+		lsr.w	#8,d0
+		move.b	d0,(Horiz_scroll_delay_val).w
 		move.b	(Sonic_Pos_Record_Index+1).w,(Horiz_scroll_delay_val+1).w
 	else
-		move.w	#$2000,(Horiz_scroll_delay_val).w
+		move.w	d0,(Horiz_scroll_delay_val).w
 	endif
-		move.w	#$800,obInertia(a0)
-		btst	#0,obStatus(a0)
-		beq.s	loc_103D4
+		btst	#status.player.x_flip,obStatus(a0)
+		beq.s	.right
 		neg.w	obInertia(a0)
+.right:
+		bset	#status.player.rolling,obStatus(a0)
+		move.w	#sfx_Dash,d0
+		jsr	(PlaySound_Special).l
+		bra.s	Sonic_SpindashGround
 
-loc_103D4:
-		bset	#2,obStatus(a0)
-		rts
-; ===========================================================================
-; loc_103DC:
+Sonic_SpindashSpeeds:
+		dc.w Sonic_SpindashMinSpeed
+		dc.w Sonic_SpindashMinSpeed+Sonic_SpindashSpeedStep
+		dc.w Sonic_SpindashMinSpeed+2*Sonic_SpindashSpeedStep
+		dc.w Sonic_SpindashMinSpeed+3*Sonic_SpindashSpeedStep
+		dc.w Sonic_SpindashMinSpeed+4*Sonic_SpindashSpeedStep
+		dc.w Sonic_SpindashMinSpeed+5*Sonic_SpindashSpeedStep
+		dc.w Sonic_SpindashMinSpeed+6*Sonic_SpindashSpeedStep
+		dc.w Sonic_SpindashMinSpeed+7*Sonic_SpindashSpeedStep
+		dc.w Sonic_SpindashMinSpeed+8*Sonic_SpindashSpeedStep
+
 Sonic_ChargingSpindash:
+		tst.w	spindash_counter(a0)
+		beq.s	.press
+		move.w	spindash_counter(a0),d0
+		lsr.w	#Sonic_SpindashDecayShift,d0
+		sub.w	d0,spindash_counter(a0)
+		bhs.s	.press
+		clr.w	spindash_counter(a0)
+.press:
 		move.b	(v_jpadpresslogical).w,d0
 		andi.b	#btnABC,d0
-		beq.w	loc_103EA
-		nop
+		beq.s	Sonic_SpindashGround
+		move.w	#AniIDSonAni_Spindash<<8,obAnim(a0)
+		move.w	#sfx_Spindash,d0
+		jsr	(PlaySound_Special).l
+		addi.w	#Sonic_SpindashChargeStep,spindash_counter(a0)
+		cmpi.w	#Sonic_SpindashMaxCharge,spindash_counter(a0)
+		blo.s	Sonic_SpindashGround
+		move.w	#Sonic_SpindashMaxCharge,spindash_counter(a0)
 
-loc_103EA:
-		addq.l	#4,sp
-		rts
-; End of function Sonic_CheckSpindash
-
-
-; =============== S U B R O U T I N E =======================================
+Sonic_SpindashGround:
+		addq.l	#4,sp			; skip the rest of MdNormal on start, charge and release
+		bsr.w	Player_ResetScr
+		bsr.w	Sonic_LevelBound
+		bra.w	AnglePos			; follow the ground while charging
 
 
 Sonic_SlopeResist:
 		move.b	obAngle(a0),d0
 		addi.b	#$60,d0
 		cmpi.b	#$C0,d0
-		bhs.s	locret_10422
+		bhs.s	.return
 		move.b	obAngle(a0),d0
 		jsr	(CalcSine).l
 		muls.w	#$20,d0
 		asr.l	#8,d0
 		tst.w	obInertia(a0)
-		beq.s	locret_10422
-		bmi.s	loc_1041E
+		beq.s	.standing
+		bmi.s	.add
 		tst.w	d0
-		beq.s	locret_1041C
+		beq.s	.return
+.add:
 		add.w	d0,obInertia(a0)
-
-locret_1041C:
+.return:
 		rts
-; ---------------------------------------------------------------------------
-
-loc_1041E:
+.standing:
+		mvabs.w	d0,d1
+		cmpi.w	#Sonic_SlopeStandingThreshold,d1
+		blo.s	.return
 		add.w	d0,obInertia(a0)
-
-locret_10422:
 		rts
-; End of function Sonic_SlopeResist
-
-
-; =============== S U B R O U T I N E =======================================
 
 
 Sonic_RollRepel:
@@ -1317,37 +1402,36 @@ locret_1045E:
 
 
 Sonic_SlopeRepel:
-		nop
 		tst.b	stick_to_convex(a0)
-		bne.s	locret_1049A
+		bne.s	.return
 		tst.w	move_lock(a0)
-		bne.s	loc_1049C
+		bne.s	.locked
 		move.b	obAngle(a0),d0
-		addi.b	#$20,d0
-		andi.b	#$C0,d0
-		beq.s	locret_1049A
-		move.w	obInertia(a0),d0
-		bpl.s	loc_10484
-		neg.w	d0
-
-loc_10484:
-		cmpi.w	#$280,d0
-		bhs.s	locret_1049A
-		clr.w	obInertia(a0)
-		bset	#1,obStatus(a0)
-		move.w	#$1E,move_lock(a0)
-
-locret_1049A:
+		addi.b	#$18,d0
+		cmpi.b	#$30,d0
+		blo.s	.return
+		mvabs.w	obInertia(a0),d0
+		cmpi.w	#Sonic_SlopeDetachSpeed,d0
+		bhs.s	.return
+		move.w	#Sonic_SlopeLockTime,move_lock(a0)
+		move.b	obAngle(a0),d0
+		addi.b	#$30,d0
+		cmpi.b	#$60,d0
+		blo.s	.slide
+		bset	#status.player.in_air,obStatus(a0)
+.return:
 		rts
-; ---------------------------------------------------------------------------
-
-loc_1049C:
+.slide:
+		cmpi.b	#$30,d0
+		blo.s	.left
+		addi.w	#Sonic_SlopeSlipStep,obInertia(a0)
+		rts
+.left:
+		subi.w	#Sonic_SlopeSlipStep,obInertia(a0)
+		rts
+.locked:
 		subq.w	#1,move_lock(a0)
 		rts
-; End of function Sonic_SlopeRepel
-
-
-; =============== S U B R O U T I N E =======================================
 
 
 Sonic_JumpAngle:
@@ -1453,7 +1537,6 @@ SonAirCol_PosY:
 		add.w	d1,obY(a0)
 		move.b	d3,obAngle(a0)
 		bsr.w	Sonic_ResetOnFloor
-		move.b	#AniIDSonAni_Walk,obAnim(a0)
 		move.b	d3,d0
 		addi.b	#$20,d0
 		andi.b	#$40,d0
@@ -1508,7 +1591,10 @@ loc_105FE:
 		bsr.w	Sonic_DontRunOnWalls
 		tst.w	d1
 		bpl.s	loc_10618
-		sub.w	d1,obY(a0)
+		neg.w	d1
+		cmpi.w	#Sonic_CeilingPenetrationLimit,d1
+		bhs.s	Sonic_FloorLeft_OppositeWall
+		add.w	d1,obY(a0)
 		tst.w	obVelY(a0)
 		bpl.s	.return
 		clr.w	obVelY(a0)
@@ -1517,16 +1603,27 @@ loc_105FE:
 		rts
 ; ---------------------------------------------------------------------------
 
+Sonic_FloorLeft_OppositeWall:
+		bsr.w	sub_132EE
+		tst.w	d1
+		bpl.s	.return
+		add.w	d1,obX(a0)
+		clr.w	obVelX(a0)
+.return:
+		rts
+
 loc_10618:
+		tst.b	(f_wtunnelmode).w
+		bne.s	.checkfloor
 		tst.w	obVelY(a0)
 		bmi.s	.return
+.checkfloor:
 		bsr.w	loc_13146
 		tst.w	d1
 		bpl.s	.return
 		add.w	d1,obY(a0)
 		move.b	d3,obAngle(a0)
 		bsr.w	Sonic_ResetOnFloor
-		move.b	#AniIDSonAni_Walk,obAnim(a0)
 		clr.w	obVelY(a0)
 		move.w	obVelX(a0),obInertia(a0)
 
@@ -1597,15 +1694,17 @@ loc_106BC:
 ; ---------------------------------------------------------------------------
 
 loc_106D6:
+		tst.b	(f_wtunnelmode).w
+		bne.s	.checkfloor
 		tst.w	obVelY(a0)
 		bmi.s	.return
+.checkfloor:
 		bsr.w	loc_13146
 		tst.w	d1
 		bpl.s	.return
 		add.w	d1,obY(a0)
 		move.b	d3,obAngle(a0)
 		bsr.w	Sonic_ResetOnFloor
-		move.b	#AniIDSonAni_Walk,obAnim(a0)
 		clr.w	obVelY(a0)
 		move.w	obVelX(a0),obInertia(a0)
 
@@ -1618,30 +1717,40 @@ loc_106D6:
 
 
 Sonic_ResetOnFloor:
-	;	btst	#status.player.rolljumping,obStatus(a0)
-	;	beq.s	loc_10712
-	;	nop
-	;	nop
-	;	nop
-
-loc_10712:
+		cmpi.b	#id_Obj02,obID(a0)
+		bne.s	+
+		clr.b	tails_flight_flag(a0)
++
+		tst.b	spindash_flag(a0)
+		bne.s	.reset			; forced rolls retain their ball and animation
+		move.b	#AniIDSonAni_Walk,obAnim(a0)
+		move.b	obHeight(a0),d0
+		move.b	default_y_radius(a0),obHeight(a0)
+		move.b	default_x_radius(a0),obWidth(a0)
+		btst	#status.player.rolling,obStatus(a0)
+		beq.s	.reset
+		bclr	#status.player.rolling,obStatus(a0)
+		sub.b	default_y_radius(a0),d0
+		ext.w	d0
+		move.w	d0,-(sp)
+		move.b	obAngle(a0),d0
+		addi.b	#$40,d0
+		bpl.s	.adjustheight
+		neg.w	(sp)			; standing radius extends the other way on ceilings
+.adjustheight:
+		move.w	(sp)+,d0
+		add.w	d0,obY(a0)
+.reset:
 		bclr	#status.player.in_air,obStatus(a0)
 		bclr	#status.player.pushing,obStatus(a0)
-	;	bclr	#status.player.rolljumping,obStatus(a0)
-		move.b	#AniIDSonAni_Walk,obAnim(a0)
-		btst	#status.player.rolling,obStatus(a0)
-		beq.s	loc_10748
-		bclr	#status.player.rolling,obStatus(a0)
-		move.b	#$13,obHeight(a0)
-		move.b	#9,obWidth(a0)
-		subq.w	#5,obY(a0)
-
-loc_10748:
+		; Roll-jump locking stays removed; rolling jumps retain air control.
 		clr.b	jumping(a0)
 		clr.w	(v_itembonus).w
 		clr.b	flip_angle(a0)
+		clr.b	flip_turned(a0)
+		clr.b	flips_remaining(a0)
+		clr.b	scroll_delay_counter(a0)
 		rts
-; End of function Sonic_ResetOnFloor
 
 ; ---------------------------------------------------------------------------
 
@@ -1694,9 +1803,11 @@ Sonic_HurtStop:
 		move.w	d0,obVelY(a0)
 		move.w	d0,obVelX(a0)
 		move.w	d0,obInertia(a0)
+		move.b	d0,obControl(a0)
 		move.b	#AniIDSonAni_Walk,obAnim(a0)
+		move.w	#$100,obPriority(a0)
 		subq.b	#2,obRoutine(a0)
-		move.w	#120,flashtime(a0)
+		move.w	#Player_HurtFlashTime,flashtime(a0)
 		move.b	d0,spindash_flag(a0)
 .return:	rts
 ; End of function Sonic_HurtStop
@@ -1720,8 +1831,10 @@ Obj01_Dead:
 
 
 Sonic_GameOver:
-		move.w	(Camera_Max_Y_pos).w,d0
-		addi.w	#$100,d0
+		move.b	#1,(Deform_lock).w		; S3&K holds the camera during the death fall
+		clr.b	spindash_flag(a0)
+		move.w	(Camera_Y_pos).w,d0
+		addi.w	#Sonic_DeathScreenMargin,d0
 		cmp.w	obY(a0),d0
 		bge.w	Obj01_ResetLevel.return
 		move.w	#-$38,obVelY(a0)
@@ -2180,34 +2293,11 @@ SupSonAni_Transform:	dc.b   2,$6D,$6D,$6E,$6E,$6F,$70,$71,$70,$71,$70,$71,$70,$7
 LoadSonicDynPLC:
 		moveq	#0,d0
 		move.b	obFrame(a0),d0
-		cmp.b	(Sonic_LastLoadedDPLC).w,d0
-		beq.s	LoadSonicDynPLC.return
-		move.b	d0,(Sonic_LastLoadedDPLC).w
+LoadSonicDynPLC_Frame:
 		lea	(SonicDynPLC).l,a2
-		add.w	d0,d0
-		adda.w	(a2,d0.w),a2
-		move.w	(a2)+,d5
-		subq.w	#1,d5
-		bmi.s	LoadSonicDynPLC.return
+		lea	(Sonic_LastLoadedDPLC).w,a3
 		move.w	#ArtTile_Sonic*tile_size,d4
-
-.SPLC_ReadEntry:
-		moveq	#0,d1
-		move.w	(a2)+,d1
-		move.w	d1,d3
-		lsr.w	#8,d3
-		andi.w	#$F0,d3
-		addi.w	#$10,d3
-		andi.w	#$FFF,d1
-		lsl.l	#5,d1
-		addi.l	#Art_Sonic,d1
-		move.w	d4,d2
-		add.w	d3,d4
-		add.w	d3,d4
-		jsr	(QueueDMATransfer).l
-		dbf	d5,.SPLC_ReadEntry
-
-.return:
-		rts
+		move.l	#Art_Sonic,d6
+		jmp	(Load_DynamicPLC).l
 ; End of function LoadSonicDynPLC
 

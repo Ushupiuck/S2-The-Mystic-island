@@ -11,17 +11,15 @@ https://tcrf.net/Proto:Sonic_the_Hedgehog_2_(Genesis)
 TODO:
 Implement time-travel transitions and replace the dummy timezone asset/layout tables with distinct data; header/layout selection already supports four timezones and four acts
 Port Sonic CD's object manager from the experimental branch for timezone object placement < LONG TERM; separate from LoadZone and its asset/layout tables
-Fix BS_ShowLayout and use it to replace S1SS_ShowLayout < FUTURE; the replacement exists but is not working yet
 Port remaining level animated-art/block setup to S1/S3&K style through Animate_Tiles and AniPLC scripts; replace make_block_tile mapping patches with regular block data < FUTURE, separate from the S1 bonus-stage background conversion
 Compare remaining S3&K power-up behavior and timer layout with the current per-player implementation
 Compare S3&K's byte timers (150 ticks, decremented every 8 frames), expiry/cleanup and music-tempo handling; retain shared Sonic/Tails invincibility and the single shared star SST
 Use two independent VRAM effect banks, one per player; each bank shares shield/invincibility art as in S3&K/S.C.E. Restore shield art/DPLCs after invincibility, and check zone/boss PLC allocations before assigning the ranges
 Adapt the existing classic-shield loader and assets under Temp/objects/Shield objects.asm and Temp/Classic Shield; invalidate its frame cache when switching art, and retry queued transfers if the DMA queue is full
-Resolve existing VRAM overlaps during that migration: the default shield ($4BE-$4DD) intersects GHZ springs and signpost bonuses, while the boss PLC overwrites the default shield and stars ($4DE-$4FF)
+Repack temporary zone/boss art when final levels replace the test stages; GHZ allocations are intentionally provisional. The shared monitor/signpost bank is $9880; current Newtron/Motobug and shield/star allocations can overlap it. Preserve the fixed player, HUD, ring, dust and VDP-table banks.
 Future elemental-shield pickups must grant the same type to both live players; damage/death remove only the affected player's shield
-Continue the WIP Sonic 2 player transition; later prefer Sonic 3 player versions with Super forms for both, Tails flight/swimming and AI, and Sonic Insta-Shield < LONG TERM, separate from the object/power-up cleanup
-Add Sonic & Tails / Sonic / Tails character selection, with either character using the main-player slot and its look-camera controls < FUTURE; alongside the S3 player/ability ports
-Import S3&K mapping system (as it seems likely we only need a fragment of it to make it work), using the now empty labyrinth zone (01) as a test level
+Add Super forms and decide how an optional Sonic Insta-Shield would coexist with the WIP homing attack < FUTURE; both deliberately excluded from the completed normal S3&K player port
+Add Sonic & Tails / Sonic / Tails character-selection UI < FUTURE; Player_mode already loads the three modes, including primary Tails with controller 1 and camera ownership
 Import the S3&K rings manager
 Add more level slots < IN PROGRESS
 Port over Sonic 2 Special stages: Sonic 1 will be Bonus stages. Sonic 2's will be the ACTUAL Special stages. < IN PROGRESS, HIGH PRIORITY
@@ -35,6 +33,14 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
+Upgrade normal Sonic physics to S3&K while preserving the WIP homing hook, unrestricted rolling-jump air control and existing look-camera fixes < DONE
+Port normal S3&K Tails movement, flight/swimming, carrying Sonic, CPU following/catch-up/spindash and controller-2 override; add body/extra/tail art, mappings, DPLCs and flight/grab sounds < DONE
+Remap all Tails art to Mystic Island's palette order, retaining its warmer skin shades; align SonLVL with the runtime palette < DONE
+Keep water splash (08) and spindash/skid dust (0E) as separate objects; use independent dust banks and independent underwater air/countdown/bubble handling for both players < DONE
+Convert all ordinary root sprite mappings, the renderer and fragment readers to S3&K's word-count/six-byte-piece ABI; add universal height_pixels at $49 without growing $4A SSTs < DONE
+Share one S3&K-format dynamic DPLC loader across players, tails and dust; reserve complete frames before uploading and retry when the DMA queue is full < DONE
+Use S3&K common VRAM positions for planes, HScroll, players, tails, rings, HUD, lives and dust; relocate monitor/signpost art away from the player bank while leaving test-zone allocations provisional < DONE
+Use BS_ShowLayout for the rotating S1 bonus stage, preserving its dedicated S1 mapping ABI as S3&K Slots_RenderLayout does; append valid sprite links and respect the shared 80-sprite limit < DONE
 Recenter look-up/down camera offsets when Sonic or Tails starts moving, rolls, or becomes airborne; reset the look delay and keep secondary players from changing the shared camera bias < DONE
 Preserve the swinging chain helper's rendering height after initializing its child mappings, so visible links survive when the helper centre goes offscreen; use aligned initialization writes to avoid the odd $1B word-clear crash < DONE
 Simplify LoadZone, share timezone/act header selection with the primary PLC load, label the prepared asset copies, and add separate dummy timezone layouts/indexes; preserve Current_Timezone across level RAM clearing and avoid zero-length art DMA at exact $1000 boundaries < DONE

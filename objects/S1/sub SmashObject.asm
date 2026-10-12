@@ -18,7 +18,7 @@ SmashObject:
 
 -		bsr.w	FindNextFreeObj
 		bne.s	loc_CA1C
-		addq.w	#8,a3	; in Sonic 3's mapping format, this is just addq.w #6,a3 due to different mapping format sizes (addq.w #5,a3 for Sonic 1)
+		addq.w	#6,a3	; S3&K sprite-piece stride
 
 loc_C9CA:
 		move.b	#4,obRoutine(a1)

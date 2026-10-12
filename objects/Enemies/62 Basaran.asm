@@ -115,7 +115,7 @@ Bas_Action:	; Routine 2
 .flyup:
 		bsr.w	ObjectMove
 		subi.w	#$18,obVelY(a0)	; make basaran fly upwards
-		bsr.w	ObjHitCeiling
+		jsr	(ObjHitCeiling).l		; beyond BSR's word displacement after the player port
 		tst.w	d1		; has basaran hit the ceiling?
 		bpl.s	.noceiling	; if not, branch
 		sub.w	d1,obY(a0)

@@ -1,53 +1,52 @@
-Map_obj03:	mappingsTable
-	mappingsTableEntry.w	Map_obj03_0010
-	mappingsTableEntry.w	Map_obj03_0032
-	mappingsTableEntry.w	Map_obj03_0054
-	mappingsTableEntry.w	Map_obj03_0054
-	mappingsTableEntry.w	Map_obj03_0076
-	mappingsTableEntry.w	Map_obj03_0098
-	mappingsTableEntry.w	Map_obj03_00BA
-	mappingsTableEntry.w	Map_obj03_00BA
-
-Map_obj03_0010:	spriteHeader
-	spritePiece	-8, -$20, 2, 2, 0, 0, 0, 0, 0
-	spritePiece	-8, -$10, 2, 2, 0, 0, 0, 0, 0
-	spritePiece	-8, 0, 2, 2, 0, 0, 0, 0, 0
-	spritePiece	-8, $10, 2, 2, 0, 0, 0, 0, 0
+Map_obj03:
+		dc.w Map_obj03_0010-Map_obj03
+		dc.w Map_obj03_0032-Map_obj03
+		dc.w Map_obj03_0054-Map_obj03
+		dc.w Map_obj03_0054-Map_obj03
+		dc.w Map_obj03_0076-Map_obj03
+		dc.w Map_obj03_0098-Map_obj03
+		dc.w Map_obj03_00BA-Map_obj03
+		dc.w Map_obj03_00BA-Map_obj03
+Map_obj03_0010:	dc.w 4
+		dc.w $E005, $0000, $FFF8
+		dc.w $F005, $0000, $FFF8
+		dc.w $0005, $0000, $FFF8
+		dc.w $1005, $0000, $FFF8
 Map_obj03_0010_End
 
-Map_obj03_0032:	spriteHeader
-	spritePiece	-8, -$40, 2, 2, 0, 0, 0, 0, 0
-	spritePiece	-8, -$20, 2, 2, 0, 0, 0, 0, 0
-	spritePiece	-8, 0, 2, 2, 0, 0, 0, 0, 0
-	spritePiece	-8, $30, 2, 2, 0, 0, 0, 0, 0
+Map_obj03_0032:	dc.w 4
+		dc.w $C005, $0000, $FFF8
+		dc.w $E005, $0000, $FFF8
+		dc.w $0005, $0000, $FFF8
+		dc.w $3005, $0000, $FFF8
 Map_obj03_0032_End
 
-Map_obj03_0054:	spriteHeader
-	spritePiece	-8, -$80, 2, 2, 0, 0, 0, 0, 0
-	spritePiece	-8, -$20, 2, 2, 0, 0, 0, 0, 0
-	spritePiece	-8, 0, 2, 2, 0, 0, 0, 0, 0
-	spritePiece	-8, $70, 2, 2, 0, 0, 0, 0, 0
+Map_obj03_0054:	dc.w 4
+		dc.w $8005, $0000, $FFF8
+		dc.w $E005, $0000, $FFF8
+		dc.w $0005, $0000, $FFF8
+		dc.w $7005, $0000, $FFF8
 Map_obj03_0054_End
 
-Map_obj03_0076:	spriteHeader
-	spritePiece	-$20, -8, 2, 2, 0, 0, 0, 0, 0
-	spritePiece	-$10, -8, 2, 2, 0, 0, 0, 0, 0
-	spritePiece	0, -8, 2, 2, 0, 0, 0, 0, 0
-	spritePiece	$10, -8, 2, 2, 0, 0, 0, 0, 0
+Map_obj03_0076:	dc.w 4
+		dc.w $F805, $0000, $FFE0
+		dc.w $F805, $0000, $FFF0
+		dc.w $F805, $0000, $0000
+		dc.w $F805, $0000, $0010
 Map_obj03_0076_End
 
-Map_obj03_0098:	spriteHeader
-	spritePiece	-$40, -8, 2, 2, 0, 0, 0, 0, 0
-	spritePiece	-$20, -8, 2, 2, 0, 0, 0, 0, 0
-	spritePiece	0, -8, 2, 2, 0, 0, 0, 0, 0
-	spritePiece	$30, -8, 2, 2, 0, 0, 0, 0, 0
+Map_obj03_0098:	dc.w 4
+		dc.w $F805, $0000, $FFC0
+		dc.w $F805, $0000, $FFE0
+		dc.w $F805, $0000, $0000
+		dc.w $F805, $0000, $0030
 Map_obj03_0098_End
 
-Map_obj03_00BA:	spriteHeader
-	spritePiece	-$80, -8, 2, 2, 0, 0, 0, 0, 0
-	spritePiece	-$20, -8, 2, 2, 0, 0, 0, 0, 0
-	spritePiece	0, -8, 2, 2, 0, 0, 0, 0, 0
-	spritePiece	$70, -8, 2, 2, 0, 0, 0, 0, 0
+Map_obj03_00BA:	dc.w 4
+		dc.w $F805, $0000, $FF80
+		dc.w $F805, $0000, $FFE0
+		dc.w $F805, $0000, $0000
+		dc.w $F805, $0000, $0070
 Map_obj03_00BA_End
 
 	even

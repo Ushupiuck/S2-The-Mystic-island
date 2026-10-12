@@ -93,7 +93,8 @@ Obj0A_Delete:
 ; ---------------------------------------------------------------------------
 
 Obj0A_AirLeft:
-		cmpi.w	#$C,(v_air).w
+		bsr.w	Obj0A_GetAir
+		cmpi.w	#$C,d0
 		bhi.w	DeleteObject
 		subq.w	#1,objoff_38(a0)
 		bne.s	loc_11F82
@@ -140,11 +141,14 @@ Obj0A_ShowNumber:
 ; ---------------------------------------------------------------------------
 
 Obj0A_Countdown:
+		bsr.w	Obj0A_GetAir
 		tst.w	objoff_2C(a0)
 		bne.w	loc_121D6
-		cmpi.b	#6,(v_player+obRoutine).w
+		tst.b	obControl(a2)	; CPU catch-up and scripted absence do not consume air
+		bmi.w	Obj0A_ShowNumber.return
+		cmpi.b	#6,obRoutine(a2)
 		bhs.w	Obj0A_ShowNumber.return
-		btst	#6,(v_player+obStatus).w
+		btst	#6,obStatus(a2)
 		beq.w	Obj0A_ShowNumber.return
 		subq.w	#1,objoff_38(a0)
 		bpl.w	loc_121FC
@@ -153,7 +157,7 @@ Obj0A_Countdown:
 		jsr	(RandomNumber).l
 		andi.w	#1,d0
 		move.b	d0,objoff_34(a0)
-		move.w	(v_air).w,d0
+		bsr.w	Obj0A_GetAir
 		cmpi.w	#25,d0
 		beq.s	loc_12166
 		cmpi.w	#20,d0
@@ -162,6 +166,8 @@ Obj0A_Countdown:
 		beq.s	loc_12166
 		cmpi.w	#12,d0
 		bhi.s	loc_12170
+		bne.s	loc_12152
+		cmpa.w	#v_player,a2
 		bne.s	loc_12152
 		move.w	#bgm_Drowning,d0
 		jsr	(PlaySound).l
@@ -179,17 +185,25 @@ loc_12166:
 		jsr	(PlaySound_Special).l
 
 loc_12170:
+		cmpa.w	#v_player,a2
+		beq.s	.primary_air
+		subq.b	#1,air_left(a2)
+		bhs.w	loc_1220C
+		bra.s	.drown
+.primary_air:
 		subq.w	#1,(v_air).w
 		bhs.w	loc_1220C
 		bsr.w	ResumeMusic
 		move.b	#$81,(f_playerctrl).w
+.drown:
+		move.b	#$81,obControl(a2)
 		move.w	#sfx_Drown,d0
 		jsr	(PlaySound_Special).l
 		move.b	#$A,objoff_34(a0)
 		move.w	#1,objoff_36(a0)
 		move.w	#60*2,objoff_2C(a0)
 		move.l	a0,-(sp)
-		lea	(v_player).w,a0
+		movea.l	a2,a0
 		jsr	(Player_ClearPowerUps).l
 		bsr.w	Sonic_ResetOnFloor
 		move.b	#$17,obAnim(a0)
@@ -198,7 +212,10 @@ loc_12170:
 		clr.w	obVelY(a0)
 		clr.w	obVelX(a0)
 		clr.w	obInertia(a0)
+		cmpa.w	#v_player,a0
+		bne.s	+
 		move.b	#1,(Deform_lock).w
++
 		movea.l	(sp)+,a0
 		rts
 ; ---------------------------------------------------------------------------
@@ -206,13 +223,13 @@ loc_12170:
 loc_121D6:
 		subq.w	#1,objoff_2C(a0)
 		bne.s	loc_121E4
-		move.b	#6,(v_player+obRoutine).w
+		move.b	#6,obRoutine(a2)
 		rts
 ; ---------------------------------------------------------------------------
 
 loc_121E4:
 		move.l	a0,-(sp)
-		lea	(v_player).w,a0
+		movea.l	a2,a0
 		bsr.w	ObjectMove
 		addi.w	#$10,obVelY(a0)
 		movea.l	(sp)+,a0
@@ -231,21 +248,22 @@ loc_1220C:
 		bsr.w	FindFreeObj
 		bne.s	loc_12242.return
 		_move.b	#id_Obj0A,obID(a1)
-		move.w	(v_player+obX).w,obX(a1)
+		move.w	a2,obParent(a1)
+		move.w	obX(a2),obX(a1)
 		moveq	#6,d0
-		btst	#0,(v_player+obStatus).w
+		btst	#0,obStatus(a2)
 		beq.s	loc_12242
 		neg.w	d0
 		move.b	#$40,obAngle(a1)
 
 loc_12242:
 		add.w	d0,obX(a1)
-		move.w	(v_player+obY).w,obY(a1)
+		move.w	obY(a2),obY(a1)
 		move.b	#6,obSubtype(a1)
 		tst.w	objoff_2C(a0)
 		beq.s	loc_1228E
 		andi.w	#7,objoff_3A(a0)
-		move.w	(v_player+obY).w,d0
+		move.w	obY(a2),d0
 		subi.w	#$C,d0
 		move.w	d0,obY(a1)
 		jsr	(RandomNumber).l
@@ -264,7 +282,8 @@ loc_12242:
 loc_1228E:
 		btst	#7,objoff_36(a0)
 		beq.s	loc_122D2
-		move.w	(v_air).w,d2
+		bsr.w	Obj0A_GetAir
+		move.w	d0,d2
 		lsr.w	#1,d2
 		jsr	(RandomNumber).l
 		andi.w	#3,d0
@@ -288,6 +307,22 @@ loc_122D2:
 		clr.w	objoff_36(a0)
 .return:	rts
 ; ---------------------------------------------------------------------------
+; Return the parent's air in d0 and pointer in a2. Older/scripted bubbles
+; with no parent default to the primary player, retaining their original ABI.
+Obj0A_GetAir:
+		lea	(v_player).w,a2
+		tst.w	obParent(a0)
+		beq.s	.primary
+		movea.w	obParent(a0),a2
+		cmpa.w	#v_player,a2
+		beq.s	.primary
+		moveq	#0,d0
+		move.b	air_left(a2),d0
+		rts
+.primary:
+		move.w	(v_air).w,d0
+		rts
+
 Ani_Obj0A:
 		dc.w byte_1233A-Ani_Obj0A,byte_12343-Ani_Obj0A
 		dc.w byte_1234C-Ani_Obj0A,byte_12355-Ani_Obj0A

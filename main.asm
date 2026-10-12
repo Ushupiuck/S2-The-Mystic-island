@@ -7,7 +7,7 @@ AdvancedHandler		= 0	; 0 for Sonic 1's Error handler, 1 for the Advanced Error h
 zeroOffsetOptimization	= 1	; if 1, makes a handful of zero-offset instructions smaller
 BackupSRAM		= 1
 AddressSRAM		= 3	; 0 = odd+even; 2 = even only; 3 = odd only
-LoadTails		= 0	; Whether or not Tails will appear alongside Sonic in levels
+LoadTails		= 1	; Whether or not Tails will appear alongside Sonic in levels
 EnableMusic		= 1	; Because it can get pretty tiring to hear level music over and over.
 TimeTravel		= 1	; if 1, allows time-travel mechanics (W.I.P)
 
@@ -2756,15 +2756,20 @@ Level_SkipTtlCard:
 		bsr.w	LoadTilesFromStart
 		bsr.w	LoadCollisionIndexes
 		bsr.w	WaterEffects
-		_move.b	#id_Obj01,(v_player).w	; load Sonic object
-	;	_move.b	#id_Obj02,(v_player).w	; load Tails object
+		_move.b	#id_Obj01,(v_player).w
+		cmpi.w	#PlayerMode_Tails,(Player_mode).w
+		bne.s	+
+		_move.b	#id_Obj02,(v_player).w
++
 		tst.w	(f_demo).w		; are we on an ending demo?
 		bmi.s	Level_ChkDebug		; if not, branch
 ;		cmpi.b	#id_EHZ,(Current_Zone).w; This is an example on how to skip
 ;		beq.s	Level_ChkDebug		; the 2nd player, if neccesary
 
-LevelInit_LoadTails:	; W.I.P; Enabled via flags. Disabled by default until his AI &/or character selection is implemented
+LevelInit_LoadTails:	; S3&K companion, enabled in Sonic & Tails mode
  if LoadTails=1
+		tst.w	(Player_mode).w
+		bne.s	Level_ChkDebug
 		_move.b	#id_Obj02,(v_player2).w	; load Tails object
 		move.w	(v_player+obX).w,(v_player2+obX).w	; copy player 1's x position to player 2
 		move.w	(v_player+obY).w,(v_player2+obY).w	; copy player 1's y position to player 2
@@ -3653,7 +3658,7 @@ SS_MainLoop:
 		jsr	(ExecuteObjects).l
 		jsr	(BuildSprites).l
 		bsr.w	InitRingFrame
-		bsr.w	S1SS_ShowLayout
+		bsr.w	BS_ShowLayout
 		bsr.w	S1SS_BgAnimate
 		cmpi.w	#BonusStage,(v_gamemode).w ; is game mode $10 (special stage)?
 		beq.w	SS_MainLoop	; if yes, branch
@@ -3672,7 +3677,7 @@ SS_FinLoop:
 		bsr.w	WaitForVint
 		jsr	(ExecuteObjects).l
 		jsr	(BuildSprites).l
-		bsr.w	S1SS_ShowLayout
+		bsr.w	BS_ShowLayout
 		bsr.w	S1SS_BgAnimate
 		subq.w	#1,(PalChangeSpeed).w
 		bpl.s	loc_5214
@@ -4007,179 +4012,15 @@ byte_5709:
 		dc.w $200, 3
 		dc.w $200, -1
 ; ---------------------------------------------------------------------------
-; New Subroutine to show the bonus stage layout
-; Uses S3&K mapping format, except as dc.b instead of dc.w
+; Rotating bonus-stage layout, following S3&K's Slots_RenderLayout.
+; Its grid tiles use the S1 mapping ABI: byte count and five bytes per piece.
+; Ordinary objects use the S3&K renderer before this routine appends the grid.
+; Our engine writes sprite links here rather than preinitializing the whole SAT.
 ; ---------------------------------------------------------------------------
-
-; =============== S U B R O U T I N E =======================================
-
 BS_ShowLayout:
 		bsr.w	SS_AniWallsRings
 		bsr.w	SS_AniItems
 ; Calculate x/y positions of each cell in a 16x16 grid when rotated
-		lea	(v_ssbuffer3).l,a1		; address to write grid coords
-		move.b	(v_ssangle).l,d0
-		bsr.w	CalcSine			; convert to sine/cosine
-		move.w	d0,d4
-		move.w	d1,d5
-		muls.w	#$18,d4				; ss_block_width
-		muls.w	#$18,d5				; ss_block_width
-		moveq	#0,d2
-		move.w	(Camera_X_pos).w,d2
-		divu.w	#$18,d2
-		swap	d2
-		neg.w	d2
-		subi.w	#$B4,d2
-		moveq	#0,d3
-		move.w	(Camera_Y_pos).w,d3
-		divu.w	#$18,d3
-		swap	d3
-		neg.w	d3
-		subi.w	#$B4,d3
-		moveq	#$10-1,d7			; grid is 16 cells high
-
-.loop_gridrow:
-		movem.w	d0-d2,-(sp)
-		movem.w	d0-d1,-(sp)
-		neg.w	d0
-		muls.w	d2,d1
-		muls.w	d3,d0
-		move.l	d0,d6
-		add.l	d1,d6
-		movem.w	(sp)+,d0/d1
-		muls.w	d2,d0
-		muls.w	d3,d1
-		add.l	d0,d1
-		move.l	d6,d2
-		moveq	#$10-1,d6			; grid is 16 cells wide
-
-.loop_gridcell:
-		move.l	d2,d0
-		asr.l	#8,d0
-		move.w	d0,(a1)+
-		move.l	d1,d0
-		asr.l	#8,d0
-		move.w	d0,(a1)+
-		add.l	d5,d2
-		add.l	d4,d1
-		dbf	d6,.loop_gridcell		; repeat for all cells in row
-		movem.w	(sp)+,d0-d2
-		addi.w	#$18,d3
-		dbf	d7,.loop_gridrow		; repeat for all rows
-
-; Populate the 16x16 grid with sprites based on the level layout
-		lea	(v_ssbuffer1).l,a0
-		moveq	#0,d0
-		move.w	(Camera_Y_pos).w,d0		; get camera y pos
-		divu.w	#$18,d0				; divide by size of wall sprite (24 pixels)
-		lsl.w	#7,d0				; multiply by width of level ($80)
-		ext.l	d0
-		adda.l	d0,a0				; jump to correct row in level
-		moveq	#0,d0
-		move.w	(Camera_X_pos).w,d0		; get camera x pos
-		divu.w	#$18,d0				; divide by size of wall sprite (24 pixels)
-		adda.w	d0,a0				; jump to correct block in level
-		lea	(v_ssbuffer2).l,a2		; t2ansformation grid
-		lea	v_ssbuffer3-v_ssbuffer2(a2),a1	; load object xypos
-		lea	(Sprite_Table).w,a6		; the following commented out code was added in S3&K
-		moveq	#80-1,d7			; max sprites
-		moveq	#0,d6
-		move.b	(v_spritecount).w,d6	; Sprites_drawn in S3&K
-		sub.b	d6,d7
-		lsl.w	#3,d6
-		adda.w	d6,a6
-		moveq	#$10-1,d2
-
-.levelloop:
-		moveq	#$10-1,d3
-
-.objloop:
-		moveq	#0,d0
-		move.b	(a0)+,d0			; get level block
-		beq.s	.nextlevel			; skip if 0 (blank)
-		cmpi.b	#$4E,d0				; in S3K, since there's less blocks, this becomes $13 (decimal 19)
-		bhi.s	.nextlevel			; ...or if above $4E (decimal 78) (invalid)
-
-		move.w	(a1),d4				; get grid x pos
-		addi.w	#288,d4
-		cmpi.w	#112,d4
-		blo.s	.nextlevel			; branch if off screen
-		cmpi.w	#464,d4
-		bhs.s	.nextlevel
-
-		move.w	2(a1),d5			; get grid y pos
-		addi.w	#240,d5
-		cmpi.w	#112,d5
-		blo.s	.nextlevel
-		cmpi.w	#368,d5
-		bhs.s	.nextlevel
-
-		lsl.w	#3,d0
-		lea	(a2,d0.w),a4
-		movea.l	(a4)+,a3			; get mappings pointer
-		move.w	(a4)+,d6			; get frame id
-		add.w	d6,d6
-		adda.w	(a3,d6.w),a3			; apply frame id to mappings pointer
-		move.w	(a4),d6				; VRAM
-		move.w	(a3)+,d1			; number of sprite pieces
-		subq.w	#1,d1				; "
-		bmi.s	.nextlevel			; if there are 0 pieces, branch
-
-.setmap:
-		move.b	(a3)+,d0			; get y-offset
-		ext.w	d0				; byte to word
-		add.w	d5,d0				; add y-position
-		move.w	d0,(a6)+			; write to buffer
-		move.b	(a3)+,(a6)+			; write sprite size
-		addq.w	#1,a6				; skip sprite link
-		move.w	(a3)+,d0			; get art tile
-		add.w	d6,d0				; add art tile offset
-		move.w	d0,(a6)+			; write to buffer
-		move.w	(a3)+,d0			; get x-offset
-		add.w	d4,d0				; add x-position
-		andi.w	#$1FF,d0			; keep within 512px
-		bne.s	.writeX
-		addq.w	#1,d0
-
-.writeX:
-		move.w	d0,(a6)+			; write to buffer
-		subq.w	#1,d7				; decrease sprite counter
-		dbmi	d1,.setmap			; process next sprite piece
-		bmi.s	.finish
-
-.nextlevel:
-		addq.w	#4,a1				; next object xypos
-		dbf	d3,.objloop
-		lea	$70(a0),a0
-		dbf	d2,.levelloop
-
-.finish:
-		move.w	d7,d6
-		bmi.s	.end
-		moveq	#0,d0
-
-.clear:
-		move.w	d0,(a6)
-		addq.w	#8,a6
-		dbf	d7,.clear
-
-.end:
-		subi.w	#80-1,d6
-		neg.w	d6
-		move.b	d6,(v_spritecount).w
-		rts
-; End of function BS_ShowLayout
-; ---------------------------------------------------------------------------
-; New Subroutine to show the special stage layout
-; ---------------------------------------------------------------------------
-
-; =============== S U B R O U T I N E =======================================
-
-S1SS_ShowLayout:
-		bsr.w	SS_AniWallsRings
-		bsr.w	SS_AniItems
-; Calculate x/y positions of each cell in a 16x16 grid when rotated
-		move.w	d5,-(sp)			; save sprite count to stack	; S3&K removes this
 		lea	(v_ssbuffer3).l,a1		; address to write grid coords
 		move.b	(v_ssangle).l,d0
 		jsr	(CalcSine).l			; convert to sine/cosine
@@ -4230,8 +4071,8 @@ S1SS_ShowLayout:
 		addi.w	#$18,d3
 		dbf	d7,.loop_gridrow		; repeat for all rows
 
-; Populate the 16x16 grid with sprites based on the level layout
-		move.w	(sp)+,d5		; S3&K removes this
+
+; Find the padded 16x16 window using the existing row/column lookup tables.
 		lea	(v_ssbuffer1).l,a0
 		moveq	#0,d0
 		move.w	(Camera_Y_pos).w,d0		; get camera y pos
@@ -4245,36 +4086,38 @@ S1SS_ShowLayout:
 		lea	(BS_ColLUT).l,a6		; load precomputed table (divided by 24)
 		move.b	(a6,d0.w),d4
 		adda.w	d4,a0				; jump to correct block in level
-		lea	(v_ssbuffer3).l,a4		; transformation grid
-;		lea	(Sprite_Table).w,a2		; the following commented out code was added in S3&K
-;		moveq	#0,d5
-;		move.b	(v_spritecount).w,d5	; Sprites_drawn in S3&K
-;		move.w	d5,d0
-;		lsl.w	#3,d0
-;		adda.w	d0,a2
+		lea	(v_ssbuffer3).l,a4
+		lea	(Sprite_Table).w,a2
+		moveq	#0,d5
+		move.b	(v_spritecount).w,d5
+		move.w	d5,d0
+		lsl.w	#3,d0
+		adda.w	d0,a2
+		cmpi.b	#80,d5
+		bhs.w	.finish
 		moveq	#$10-1,d7
 
-ssloop_spriterow:
+.row:
 		moveq	#$10-1,d6
 
-ssloop_sprite:
+.cell:
 		moveq	#0,d0
 		move.b	(a0)+,d0			; get level block
-		beq.s	.loc_19C9A			; skip if 0 (blank)
+		beq.s	.nextcell			; skip if 0 (blank)
 		cmpi.b	#$4E,d0				; in S3K, since there's less blocks, this becomes $13 (decimal 19)
-		bhi.s	.loc_19C9A			; ...or if above $4E (decimal 78) (invalid)
+		bhi.s	.nextcell			; ...or if above $4E (decimal 78) (invalid)
 		move.w	(a4),d3				; get grid x pos
 		addi.w	#288,d3
 		cmpi.w	#112,d3
-		blo.s	.loc_19C9A			; branch if off screen
+		blo.s	.nextcell			; branch if off screen
 		cmpi.w	#464,d3
-		bhs.s	.loc_19C9A
+		bhs.s	.nextcell
 		move.w	2(a4),d2			; get grid y pos
 		addi.w	#240,d2
 		cmpi.w	#112,d2
-		blo.s	.loc_19C9A
+		blo.s	.nextcell
 		cmpi.w	#368,d2
-		bhs.s	.loc_19C9A
+		bhs.s	.nextcell
 		lea	(v_ssbuffer2).l,a5
 		lsl.w	#3,d0
 		lea	(a5,d0.w),a5
@@ -4286,18 +4129,37 @@ ssloop_sprite:
 		moveq	#0,d1
 		move.b	(a1)+,d1			; get number of sprite pieces from mappings
 		subq.b	#1,d1				; branch if 0
-		bmi.s	.loc_19C9A			; build sprites from mappings
+		bmi.s	.nextcell			; build sprites from mappings
 
-.BuildSprites_Special:
+		bsr.w	BS_DrawSprite
+
+.nextcell:
+		addq.w	#4,a4				; next sprite
+		dbf	d6,.cell
+		lea	$70(a0),a0			; next row
+		dbf	d7,.row
+
+.finish:
+		move.b	d5,(v_spritecount).w
+		cmpi.b	#80,d5
+		bhs.s	.full
+		clr.l	(a2)			; terminate after the final appended sprite
+		rts
+.full:
+		clr.b	-5(a2)			; full SAT: terminate its final link
+		rts
+
+; The S3&K slot renderer also has this dedicated S1 mapping reader.
+
+BS_DrawSprite:
 		cmpi.b	#$50,d5				; check sprite limit
-		beq.s	.loc_19C9A
+		bhs.s	.return
 		move.b	(a1)+,d0			; get y-offset
 		ext.w	d0
 		add.w	d2,d0				; add y-position
 		move.w	d0,(a2)+			; write to buffer
 		move.b	(a1)+,(a2)+			; write sprite size
 		addq.b	#1,d5				; increase sprite counter
-;		addq.w	#1,a2			; set as sprite link (S3&K method)
 		move.b	d5,(a2)+			; set as sprite link
 		move.b	(a1)+,d0			; get art tile
 		lsl.w	#8,d0
@@ -4313,24 +4175,11 @@ ssloop_sprite:
 
 .writeX:
 		move.w	d0,(a2)+
-		dbf	d1,.BuildSprites_Special
+		dbf	d1,BS_DrawSprite
 
-.loc_19C9A:
-		addq.w	#4,a4				; next sprite
-		dbf	d6,ssloop_sprite
-		lea	$70(a0),a0			; next row
-		dbf	d7,ssloop_spriterow
-		move.b	d5,(v_spritecount).w
-		cmpi.b	#$50,d5				; max number of sprites ($50)
-		beq.s	.spritelimit			; branch if at limit
-		clr.l	(a2)
+.return:
 		rts
-; ---------------------------------------------------------------------------
 
-.spritelimit:
-		clr.b	-5(a2)
-		rts
-; End of function S1SS_ShowLayout
 ; ---------------------------------------------------------------------------
 ; Subroutine to	animate	walls and rings	in the special stage
 ; ---------------------------------------------------------------------------
@@ -4748,7 +4597,7 @@ SpecialStage:
 		move.w	#$8C08,(a6)		; H res 32 cells, no interlace, S/H enabled
 		move.w	#$9003,(a6)		; Scroll table size: 128x32
 		move.w	#$8700,(a6)		; Background palette/color: 0/0
-		move.w	#$8D00|(VRAM_Horiz_Scroll_Table/$400),(a6)		; H scroll table base: $FC00
+		move.w	#$8D00|(VRAM_Horiz_Scroll_Table/$400),(a6)		; H scroll table base: $F000
 		move.w	#$8500|(VRAM_Sprite_Attribute_Table/$200),(a6)	; Sprite attribute table base: $F800
 		move.w	(v_vdp_buffer1).w,d0
 		andi.b	#$BF,d0
@@ -8130,7 +7979,7 @@ loc_8E70:
 ; ---------------------------------------------------------------------------
 .loop		bsr.w	FindFreeObj
 		bne.s	+++
-		addq.w	#8,a3
+		addq.w	#6,a3		; S3&K sprite-piece stride
 
 +		move.b	#4,obRoutine(a1)
 		_move.b	d4,obID(a1)
@@ -8400,7 +8249,7 @@ ptr_Obj0A:		dc.l Obj0A		; Small bubbles from Sonic's face while underwater
 ptr_Obj0B:		dc.l Obj0B		; (S1) Pole that breaks in LZ
 ptr_Obj0C:		dc.l FlapDoor		; (S1) Flapping door in LZ
 ptr_Obj0D:		dc.l Flicky		; Flickies (Also summons the 100 points from a badnik)
-ptr_Obj0E:		dc.l ObjNull
+ptr_Obj0E:		dc.l SpindashDust	; independent spindash/skid dust
 ptr_Obj0F:		dc.l ObjNull
 
 ptr_Obj10:		dc.l ObjNull
@@ -9328,6 +9177,7 @@ BuildSprites_ObjLoop:
 		move.b	d0,d4
 		btst	#6,d0		; is the multi-draw flag set?
 		bne.w	BuildSprites_MultiDraw	; if it is, branch
+		bsr.w	UpdateSpriteBounds	; legacy objects do not initialize display height
 		andi.w	#$C,d0		; is this to be positioned by screen coordinates?
 		beq.s	BuildSprites_ScreenSpaceObj	; if it is, branch
 		lea	(Camera_X_pos_copy).w,a1
@@ -9343,19 +9193,19 @@ BuildSprites_ObjLoop:
 		cmpi.w	#320,d1	; is the object left edge to the right of the screen?
 		bge.w	BuildSprites_NextObj	; if it is, branch
 		addi.w	#128,d3	; VDP sprites start at 128px
-		btst	#4,d4		; is the accurate Y check flag set?
-		beq.s	BuildSprites_ApproxYCheck	; if not, branch
 		moveq	#0,d0
-		move.b	obHeight(a0),d0
+		move.b	height_pixels(a0),d0
 		move.w	obY(a0),d2
-		sub.w	4(a1),d2			; Apparently, this is NOT obMap
-		move.w	d2,d1
-		add.w	d0,d1
-		bmi.s	BuildSprites_NextObj	; if the object is above the screen
-		move.w	d2,d1
-		sub.w	d0,d1
-		cmpi.w	#224,d1
-		bge.s	BuildSprites_NextObj	; if the object is below the screen
+		sub.w	Camera_Y_pos-Camera_RAM(a1),d2
+		; Wrap before checking both edges, including stages with vertical loops.
+		add.w	d0,d2
+		andi.w	#$7FF,d2
+		move.w	d0,d1
+		add.w	d1,d1
+		addi.w	#224,d1
+		cmp.w	d1,d2
+		bhs.s	BuildSprites_NextObj
+		sub.w	d0,d2
 		addi.w	#128,d2
 		bra.s	BuildSprites_DrawSprite
 ; ---------------------------------------------------------------------------
@@ -9363,18 +9213,6 @@ BuildSprites_ObjLoop:
 BuildSprites_ScreenSpaceObj:
 		move.w	obScreenY(a0),d2
 		move.w	obScreenX(a0),d3
-		bra.s	BuildSprites_DrawSprite
-; ---------------------------------------------------------------------------
-
-BuildSprites_ApproxYCheck:
-		move.w	obY(a0),d2
-		sub.w	4(a1),d2			; Apparently, this is NOT obMap
-		addi.w	#128,d2
-		andi.w	#$7FF,d2
-		cmpi.w	#$60,d2	; assume Y radius to be 32 pixels
-		blo.s	BuildSprites_NextObj
-		cmpi.w	#$180,d2
-		bhs.s	BuildSprites_NextObj
 
 BuildSprites_DrawSprite:
 		movea.l	obMap(a0),a1
@@ -9537,6 +9375,8 @@ BuildSprites_MultiDraw_NextObj:
 ; End of function BuildSprites
 
 
+		include	"_inc/Sprite Bounds.asm"
+
 ; =============== S U B R O U T I N E =======================================
 
 
@@ -9573,7 +9413,6 @@ DrawSprite_Loop:
 		move.w	(a1)+,d0
 		add.w	a3,d0
 		move.w	d0,(a2)+	; set art tile and flags
-		addq.w	#2,a1
 		move.w	(a1)+,d0
 		add.w	d3,d0
 		andi.w	#$1FF,d0
@@ -9606,7 +9445,6 @@ DrawSprite_FlipX:
 		add.w	a3,d0
 		eori.w	#$800,d0	; toggle X flip flag
 		move.w	d0,(a2)+
-		addq.w	#2,a1
 		move.w	(a1)+,d0
 		neg.w	d0	; negate X offset
 		move.b	CellOffsets_XFlip(pc,d4.w),d4
@@ -9655,7 +9493,6 @@ DrawSprite_FlipY:
 		add.w	a3,d0
 		eori.w	#$1000,d0	; toggle Y flip flag
 		move.w	d0,(a2)+	; set art tile and flags
-		addq.w	#2,a1
 		move.w	(a1)+,d0
 		add.w	d3,d0
 		andi.w	#$1FF,d0
@@ -9688,7 +9525,6 @@ DrawSprite_FlipXY:
 		add.w	a3,d0
 		eori.w	#$1800,d0	; toggle X and Y flip flags
 		move.w	d0,(a2)+
-		addq.w	#2,a1
 		move.w	(a1)+,d0
 		neg.w	d0
 		move.b	CellOffsets_XFlip(pc,d4.w),d4
@@ -9943,28 +9779,27 @@ BuildRings_Loop:
 		cmpi.w	#224+16,d2
 		bhs.s	BuildRings_NextRing	; if the ring is not on-screen, branch
 		addi.w	#128-8,d2
-		lea	(MapUnc_Rings).l,a1
+		cmpi.b	#80,d5
+		bhs.s	BuildRings_NextRing.end	; the ring path shares the sprite budget
 		moveq	#0,d1
-		move.b	1(a0),d1	; get ring frame
-		bne.s	+		; if this ring is using a specific frame, branch
-		clr.b	d1		; use global frame
-+
-		add.w	d1,d1
-		adda.w	(a1,d1.w),a1	; get frame data address
-		move.b	(a1)+,d0	; get Y offset
-		ext.w	d0
-		add.w	d2,d0		; add Y offset to Y pos
-		move.w	d0,(a2)+	; set Y pos
-		move.b	(a1)+,(a2)+	; set size
+		move.b	1(a0),d1	; 0 = animated art, 1..4 = sparkle records
+		cmpi.b	#5,d1
+		bhs.s	BuildRings_NextRing
+		lsl.w	#3,d1		; S3&K fixed eight-byte custom records
+		lea	(MapUnc_Rings).l,a1
+		adda.w	d1,a1
+		add.w	(a1)+,d2
+		move.w	d2,(a2)+
+		move.w	(a1)+,d0
+		move.b	d0,(a2)+
 		addq.b	#1,d5
-		move.b	d5,(a2)+	; set link field
-		move.w	(a1)+,d0	; get art tile
-		addi.w	#make_art_tile(ArtTile_Ring,1,0),d0	; add base art tile
-		move.w	d0,(a2)+	; set art tile and flags
-		addq.w	#2,a1		; skip 2P art tile
-		move.w	(a1)+,d0	; get X offset
-		add.w	d3,d0		; add base X pos
-		move.w	d0,(a2)+	; set X pos
+		move.b	d5,(a2)+
+		move.w	(a1)+,(a2)+	; record includes tile, palette and flip flags
+		add.w	(a1)+,d3
+		andi.w	#$1FF,d3
+		bne.s	+
+		addq.w	#1,d3		; avoid activating VDP sprite masking
++		move.w	d3,(a2)+
 
 BuildRings_NextRing:
 		lea	6(a0),a0
@@ -10443,53 +10278,53 @@ Map_obj41:
 
 word_EA4A:
 		dc.w 2
-		dc.w $F00D,    0,    0,$FFF0
-		dc.w	 5,    8,    4,$FFF8
+		dc.w $F00D, 0, $FFF0
+		dc.w	 5, 8, $FFF8
 word_EA5C:
 		dc.w 1
-		dc.w $F80D,    0,    0,$FFF0
+		dc.w $F80D, 0, $FFF0
 word_EA66:
 		dc.w 2
-		dc.w $E00D,    0,    0,$FFF0
-		dc.w $F007,   $C,    6,$FFF8
+		dc.w $E00D, 0, $FFF0
+		dc.w $F007, $C, $FFF8
 word_EA78:
 		dc.w 2
-		dc.w $F003,    0,    0,	   0
-		dc.w $F801,    4,    2,$FFF8
+		dc.w $F003, 0, 0
+		dc.w $F801, 4, $FFF8
 word_EA8A:
 		dc.w 1
-		dc.w $F003,    0,    0,$FFF8
+		dc.w $F003, 0, $FFF8
 word_EA94:
 		dc.w 2
-		dc.w $F003,    0,    0,	 $10
-		dc.w $F809,    6,    3,$FFF8
+		dc.w $F003, 0, $10
+		dc.w $F809, 6, $FFF8
 word_EAA6:
 		dc.w 2
-		dc.w	$D,$1000,$1000,$FFF0
-		dc.w $F005,$1008,$1004,$FFF8
+		dc.w	$D, $1000, $FFF0
+		dc.w $F005, $1008, $FFF8
 word_EAB8:
 		dc.w 4
-		dc.w $F00D,    0,    0,$FFF0
-		dc.w	 5,    8,    4,	   0
-		dc.w $FB05,   $C,    6,$FFF6
-		dc.w	 5,$201C,$200E,$FFF0
+		dc.w $F00D, 0, $FFF0
+		dc.w	 5, 8, 0
+		dc.w $FB05, $C, $FFF6
+		dc.w	 5, $201C, $FFF0
 word_EADA:
 		dc.w 3
-		dc.w $F60D,    0,    0,$FFEA
-		dc.w  $605,    8,    4,$FFFA
-		dc.w	 5,$201C,$200E,$FFF0
+		dc.w $F60D, 0, $FFEA
+		dc.w  $605, 8, $FFFA
+		dc.w	 5, $201C, $FFF0
 word_EAF4:
 		dc.w 4
-		dc.w $E60D,    0,    0,$FFFB
-		dc.w $F605,    8,    4,	  $B
-		dc.w $F30B,  $10,    8,$FFF6
-		dc.w	 5,$201C,$200E,$FFF0
+		dc.w $E60D, 0, $FFFB
+		dc.w $F605, 8, $B
+		dc.w $F30B, $10, $FFF6
+		dc.w	 5, $201C, $FFF0
 word_EB16:
 		dc.w 4
-		dc.w	$D,$1000,$1000,$FFF0
-		dc.w $F005,$1008,$1004,	   0
-		dc.w $F505,$100C,$1006,$FFF6
-		dc.w $F005,$301C,$300E,$FFF0
+		dc.w	$D, $1000, $FFF0
+		dc.w $F005, $1008, 0
+		dc.w $F505, $100C, $FFF6
+		dc.w $F005, $301C, $FFF0
 		even
 ; -------------------------------------------------------------------------------
 ; Secondary sprite mappings for springs
@@ -10508,53 +10343,53 @@ Map_obj41a:
 		dc.w word_EC96-Map_obj41a
 word_EB4A:
 		dc.w 2
-		dc.w $F00D,    0,    0,$FFF0
-		dc.w	 5,    8,    4,$FFF8
+		dc.w $F00D, 0, $FFF0
+		dc.w	 5, 8, $FFF8
 word_EB5C:
 		dc.w 1
-		dc.w $F80D,    0,    0,$FFF0
+		dc.w $F80D, 0, $FFF0
 word_EB66:
 		dc.w 2
-		dc.w $E00D,    0,    0,$FFF0
-		dc.w $F007,   $C,    6,$FFF8
+		dc.w $E00D, 0, $FFF0
+		dc.w $F007, $C, $FFF8
 word_EB78:
 		dc.w 2
-		dc.w $F003,    0,    0,	   0
-		dc.w $F801,    4,    2,$FFF8
+		dc.w $F003, 0, 0
+		dc.w $F801, 4, $FFF8
 word_EB8A:
 		dc.w 1
-		dc.w $F003,    0,    0,$FFF8
+		dc.w $F003, 0, $FFF8
 word_EB94:
 		dc.w 2
-		dc.w $F003,    0,    0,	 $10
-		dc.w $F809,    6,    3,$FFF8
+		dc.w $F003, 0, $10
+		dc.w $F809, 6, $FFF8
 word_EBA6:
 		dc.w 2
-		dc.w	$D,$1000,$1000,$FFF0
-		dc.w $F005,$1008,$1004,$FFF8
+		dc.w	$D, $1000, $FFF0
+		dc.w $F005, $1008, $FFF8
 word_EC38:
 		dc.w 4
-		dc.w $F00D,    0,    0,$FFF0
-		dc.w	 5,    8,    4,	   0
-		dc.w $FB05,   $C,    6,$FFF6
-		dc.w	 5,  $1C,   $E,$FFF0
+		dc.w $F00D, 0, $FFF0
+		dc.w	 5, 8, 0
+		dc.w $FB05, $C, $FFF6
+		dc.w	 5, $1C, $FFF0
 word_EC5A:
 		dc.w 3
-		dc.w $F60D,    0,    0,$FFEA
-		dc.w  $605,    8,    4,$FFFA
-		dc.w	 5,  $1C,   $E,$FFF0
+		dc.w $F60D, 0, $FFEA
+		dc.w  $605, 8, $FFFA
+		dc.w	 5, $1C, $FFF0
 word_EC74:
 		dc.w 4
-		dc.w $E60D,    0,    0,$FFFB
-		dc.w $F605,    8,    4,	  $B
-		dc.w $F30B,  $10,    8,$FFF6
-		dc.w	 5,  $1C,   $E,$FFF0
+		dc.w $E60D, 0, $FFFB
+		dc.w $F605, 8, $B
+		dc.w $F30B, $10, $FFF6
+		dc.w	 5, $1C, $FFF0
 word_EC96:
 		dc.w 4
-		dc.w	$D,$1000,$1000,$FFF0
-		dc.w $F005,$1008,$1004,	   0
-		dc.w $F505,$100C,$1006,$FFF6
-		dc.w $F005,$101C,$100E,$FFF0
+		dc.w	$D, $1000, $FFF0
+		dc.w $F005, $1008, 0
+		dc.w $F505, $100C, $FFF6
+		dc.w $F005, $101C, $FFF0
 		even
 ; ----------------------------------------------------------------------------
 ; Sprite mappings - GHZ springs
@@ -11346,6 +11181,8 @@ ExitPlatform:
 		include	"objects/05 Tails' Tails.asm"
 		include	"objects/07 Water Surface.asm"
 		include	"objects/08 Water Splash.asm"
+		include	"_inc/Dynamic Sprite Art.asm"
+		include	"objects/0E Spindash Dust.asm"
 		include	"objects/09 Bubbles.asm"
 		include	"objects/0A Drowning Countdown.asm"
 ; ===========================================================================
@@ -12308,6 +12145,7 @@ loc_131DE:
 ; Sonic_HitFloor:
 ChkFloorEdge:
 		move.w	obX(a0),d3
+ChkFloorEdge_Part2:			; S3&K edge balancing also probes an offset X in d3
 		move.w	obY(a0),d2
 		moveq	#0,d0
 		move.b	obHeight(a0),d0
@@ -13113,53 +12951,53 @@ Map_Obj50:
 		dc.w word_164D0-Map_Obj50
 		dc.w word_164FA-Map_Obj50
 word_163F2:	dc.w 3
-		dc.w $E80D,    0,    0,$FFF0		; 0
-		dc.w $F809,  $16,   $B,$FFF8		; 4
-		dc.w  $805,  $24,  $12,$FFF8		; 8
+		dc.w $E80D, 0, $FFF0	; 0
+		dc.w $F809, $16, $FFF8	; 4
+		dc.w  $805, $24, $FFF8	; 8
 word_1640C:	dc.w 1
-		dc.w $F805,  $28,  $14,$FFF8		; 0
+		dc.w $F805, $28, $FFF8	; 0
 word_16416:	dc.w 1
-		dc.w $F805,  $2C,  $16,$FFF8		; 0
+		dc.w $F805, $2C, $FFF8	; 0
 word_16420:	dc.w 4
-		dc.w $E809,    8,    4,$FFF0		; 0
-		dc.w $E801,   $E,    7,	   8		; 4
-		dc.w $F809,  $16,   $B,$FFF8		; 8
-		dc.w  $805,  $24,  $12,$FFF8		; 12
+		dc.w $E809, 8, $FFF0	; 0
+		dc.w $E801, $E, 8	; 4
+		dc.w $F809, $16, $FFF8	; 8
+		dc.w  $805, $24, $FFF8	; 12
 word_16442:	dc.w 4
-		dc.w $E809,  $10,    8,$FFF0		; 0
-		dc.w $E801,   $E,    7,	   8		; 4
-		dc.w $F809,  $16,   $B,$FFF8		; 8
-		dc.w  $805,  $24,  $12,$FFF8		; 12
+		dc.w $E809, $10, $FFF0	; 0
+		dc.w $E801, $E, 8	; 4
+		dc.w $F809, $16, $FFF8	; 8
+		dc.w  $805, $24, $FFF8	; 12
 word_16464:	dc.w 1
-		dc.w $F801,  $30,  $18,$FFFC		; 0
+		dc.w $F801, $30, $FFFC	; 0
 word_1646E:	dc.w 1
-		dc.w $F801,  $32,  $19,$FFFC		; 0
+		dc.w $F801, $32, $FFFC	; 0
 word_16478:	dc.w 1
-		dc.w $F801,  $34,  $1A,$FFFC		; 0
+		dc.w $F801, $34, $FFFC	; 0
 word_16482:	dc.w 1
-		dc.w $F80D,  $36,  $1B,$FFF0		; 0
+		dc.w $F80D, $36, $FFF0	; 0
 word_1648C:	dc.w 4
-		dc.w $E80D,    0,    0,$FFF0		; 0
-		dc.w $F805,  $1C,   $E,$FFF8		; 4
-		dc.w $F801,  $20,  $10,	   8		; 8
-		dc.w  $805,  $24,  $12,$FFF8		; 12
+		dc.w $E80D, 0, $FFF0	; 0
+		dc.w $F805, $1C, $FFF8	; 4
+		dc.w $F801, $20, 8	; 8
+		dc.w  $805, $24, $FFF8	; 12
 word_164AE:	dc.w 4
-		dc.w $E80D,    0,    0,$FFF0		; 0
-		dc.w $F805,  $1C,   $E,$FFF8		; 4
-		dc.w $F801,  $22,  $11,	   8		; 8
-		dc.w  $805,  $24,  $12,$FFF8		; 12
+		dc.w $E80D, 0, $FFF0	; 0
+		dc.w $F805, $1C, $FFF8	; 4
+		dc.w $F801, $22, 8	; 8
+		dc.w  $805, $24, $FFF8	; 12
 word_164D0:	dc.w 5
-		dc.w $E809,    8,    4,$FFF0		; 0
-		dc.w $E801,   $E,    7,	   8		; 4
-		dc.w $F805,  $1C,   $E,$FFF8		; 8
-		dc.w $F801,  $20,  $10,	   8		; 12
-		dc.w  $805,  $24,  $12,$FFF8		; 16
+		dc.w $E809, 8, $FFF0	; 0
+		dc.w $E801, $E, 8	; 4
+		dc.w $F805, $1C, $FFF8	; 8
+		dc.w $F801, $20, 8	; 12
+		dc.w  $805, $24, $FFF8	; 16
 word_164FA:	dc.w 5
-		dc.w $E809,  $10,    8,$FFF0		; 0
-		dc.w $E801,   $E,    7,	   8		; 4
-		dc.w $F805,  $1C,   $E,$FFF8		; 8
-		dc.w $F801,  $22,  $11,	   8		; 12
-		dc.w  $805,  $24,  $12,$FFF8		; 16
+		dc.w $E809, $10, $FFF0	; 0
+		dc.w $E801, $E, 8	; 4
+		dc.w $F805, $1C, $FFF8	; 8
+		dc.w $F801, $22, 8	; 12
+		dc.w  $805, $24, $FFF8	; 16
 		even
 ; ---------------------------------------------------------------------------
 ; Object 51 - Aquis badnik from HPZ
@@ -13643,71 +13481,71 @@ Map_Obj4C:	dc.w word_1700C-Map_Obj4C
 		dc.w word_17196-Map_Obj4C
 		dc.w word_171A8-Map_Obj4C
 word_1700C:	dc.w 4
-		dc.w $F005,    0,    0,$FFF8		; 0
-		dc.w	 5,    4,    2,$FFF8		; 4
-		dc.w $F00B,    8,    4,	   5		; 8
-		dc.w $F00B, $808, $804,$FFE3		; 12
+		dc.w $F005, 0, $FFF8	; 0
+		dc.w	 5, 4, $FFF8	; 4
+		dc.w $F00B, 8, 5	; 8
+		dc.w $F00B, $808, $FFE3	; 12
 word_1702E:	dc.w 4
-		dc.w $F005,    0,    0,$FFF8		; 0
-		dc.w	 5,    4,    2,$FFF8		; 4
-		dc.w $F60D,  $14,   $A,	   5		; 8
-		dc.w $F60D, $814, $80A,$FFDB		; 12
+		dc.w $F005, 0, $FFF8	; 0
+		dc.w	 5, 4, $FFF8	; 4
+		dc.w $F60D, $14, 5	; 8
+		dc.w $F60D, $814, $FFDB	; 12
 word_17050:	dc.w 4
-		dc.w $F005,    0,    0,$FFF8		; 0
-		dc.w	 5,    4,    2,$FFF8		; 4
-		dc.w $F80D,  $1C,   $E,	   4		; 8
-		dc.w $F80D, $81C, $80E,$FFDC		; 12
+		dc.w $F005, 0, $FFF8	; 0
+		dc.w	 5, 4, $FFF8	; 4
+		dc.w $F80D, $1C, 4	; 8
+		dc.w $F80D, $81C, $FFDC	; 12
 word_17072:	dc.w 4
-		dc.w $F005,    0,    0,$FFF8		; 0
-		dc.w	 5,    4,    2,$FFF8		; 4
-		dc.w $F805,  $24,  $12,$FFEC		; 8
-		dc.w $F805,  $28,  $14,	   4		; 12
+		dc.w $F005, 0, $FFF8	; 0
+		dc.w	 5, 4, $FFF8	; 4
+		dc.w $F805, $24, $FFEC	; 8
+		dc.w $F805, $28, 4	; 12
 word_17094:	dc.w 3
-		dc.w $F801,  $2C,  $16,	   0		; 0
-		dc.w $F005,    0,    0,$FFF8		; 4
-		dc.w	 5,    4,    2,$FFF8		; 8
+		dc.w $F801, $2C, 0	; 0
+		dc.w $F005, 0, $FFF8	; 4
+		dc.w	 5, 4, $FFF8	; 8
 word_170AE:	dc.w 4
-		dc.w $F005,    0,    0,$FFF8		; 0
-		dc.w	 5,  $2E,  $17,$FFF8		; 4
-		dc.w $F00B,    8,    4,	   5		; 8
-		dc.w $F00B, $808, $804,$FFE3		; 12
+		dc.w $F005, 0, $FFF8	; 0
+		dc.w	 5, $2E, $FFF8	; 4
+		dc.w $F00B, 8, 5	; 8
+		dc.w $F00B, $808, $FFE3	; 12
 word_170D0:	dc.w 4
-		dc.w $F005,    0,    0,$FFF8		; 0
-		dc.w	 5,  $2E,  $17,$FFF8		; 4
-		dc.w $F60D,  $14,   $A,	   5		; 8
-		dc.w $F60D, $814, $80A,$FFDB		; 12
+		dc.w $F005, 0, $FFF8	; 0
+		dc.w	 5, $2E, $FFF8	; 4
+		dc.w $F60D, $14, 5	; 8
+		dc.w $F60D, $814, $FFDB	; 12
 word_170F2:	dc.w 4
-		dc.w $F005,    0,    0,$FFF8		; 0
-		dc.w	 5,  $2E,  $17,$FFF8		; 4
-		dc.w $F80D,  $1C,   $E,	   4		; 8
-		dc.w $F80D, $81C, $80E,$FFDC		; 12
+		dc.w $F005, 0, $FFF8	; 0
+		dc.w	 5, $2E, $FFF8	; 4
+		dc.w $F80D, $1C, 4	; 8
+		dc.w $F80D, $81C, $FFDC	; 12
 word_17114:	dc.w 4
-		dc.w $F005,    0,    0,$FFF8		; 0
-		dc.w	 5,  $2E,  $17,$FFF8		; 4
-		dc.w $F805,  $28,  $14,	   4		; 8
-		dc.w $F805,  $24,  $12,$FFEC		; 12
+		dc.w $F005, 0, $FFF8	; 0
+		dc.w	 5, $2E, $FFF8	; 4
+		dc.w $F805, $28, 4	; 8
+		dc.w $F805, $24, $FFEC	; 12
 word_17136:	dc.w 3
-		dc.w $F801,  $2C,  $16,	   0		; 0
-		dc.w $F005,    0,    0,$FFF8		; 4
-		dc.w	 5,  $2E,  $17,$FFF8		; 8
+		dc.w $F801, $2C, 0	; 0
+		dc.w $F005, 0, $FFF8	; 4
+		dc.w	 5, $2E, $FFF8	; 8
 word_17150:	dc.w 3
-		dc.w $F007,  $32,  $19,$FFF8		; 0
-		dc.w $F80D,  $1C,   $E,	   4		; 4
-		dc.w $F80D, $81C, $80E,$FFDC		; 8
+		dc.w $F007, $32, $FFF8	; 0
+		dc.w $F80D, $1C, 4	; 4
+		dc.w $F80D, $81C, $FFDC	; 8
 word_1716A:	dc.w 3
-		dc.w $F007,  $32,  $19,$FFF8		; 0
-		dc.w $F805,  $28,  $14,	   4		; 4
-		dc.w $F805,  $24,  $12,$FFEC		; 8
+		dc.w $F007, $32, $FFF8	; 0
+		dc.w $F805, $28, 4	; 4
+		dc.w $F805, $24, $FFEC	; 8
 word_17184:	dc.w 2
-		dc.w $F801,  $2C,  $16,	   0		; 0
-		dc.w $F007,  $32,  $19,$FFF8		; 4
+		dc.w $F801, $2C, 0	; 0
+		dc.w $F007, $32, $FFF8	; 4
 word_17196:	dc.w 2
-		dc.w $F801, $82C, $816,$FFF8		; 0
-		dc.w $F007,  $32,  $19,$FFF8		; 4
+		dc.w $F801, $82C, $FFF8	; 0
+		dc.w $F007, $32, $FFF8	; 4
 word_171A8:	dc.w 3
-		dc.w $F007,  $32,  $19,$FFF8		; 0
-		dc.w $F805, $828, $814,$FFEC		; 4
-		dc.w $F805, $824, $812,	   4		; 8
+		dc.w $F007, $32, $FFF8	; 0
+		dc.w $F805, $828, $FFEC	; 4
+		dc.w $F805, $824, 4	; 8
 		even
 ;----------------------------------------------------------------------------
 ; Object 4E - Gator badnik from HPZ
@@ -13833,65 +13671,65 @@ Map_Obj4E:	dc.w word_17320-Map_Obj4E
 		dc.w word_17474-Map_Obj4E
 		dc.w word_17496-Map_Obj4E
 word_17320:	dc.w 4
-		dc.w $F80E,    0,    0,$FFE4		; 0
-		dc.w $F805,  $18,   $C,	   4		; 4
-		dc.w	 1,  $1C,   $E,	   4		; 8
-		dc.w	 5,  $20,  $10,	  $C		; 12
+		dc.w $F80E, 0, $FFE4	; 0
+		dc.w $F805, $18, 4	; 4
+		dc.w	 1, $1C, 4	; 8
+		dc.w	 5, $20, $C	; 12
 word_17342:	dc.w 4
-		dc.w $F80E,    0,    0,$FFE4		; 0
-		dc.w $F805,  $18,   $C,	   4		; 4
-		dc.w	 1,  $1C,   $E,	   4		; 8
-		dc.w	 5,  $24,  $12,	  $C		; 12
+		dc.w $F80E, 0, $FFE4	; 0
+		dc.w $F805, $18, 4	; 4
+		dc.w	 1, $1C, 4	; 8
+		dc.w	 5, $24, $C	; 12
 word_17364:	dc.w 4
-		dc.w $F80E,    0,    0,$FFE4		; 0
-		dc.w $F805,  $18,   $C,	   4		; 4
-		dc.w	 1,  $1C,   $E,	   4		; 8
-		dc.w	 5,  $28,  $14,	  $C		; 12
+		dc.w $F80E, 0, $FFE4	; 0
+		dc.w $F805, $18, 4	; 4
+		dc.w	 1, $1C, 4	; 8
+		dc.w	 5, $28, $C	; 12
 word_17386:	dc.w 4
-		dc.w $F80E,    0,    0,$FFE4		; 0
-		dc.w $F805,  $18,   $C,	   4		; 4
-		dc.w	 1,  $1E,   $F,	   4		; 8
-		dc.w	 5,  $20,  $10,	  $C		; 12
+		dc.w $F80E, 0, $FFE4	; 0
+		dc.w $F805, $18, 4	; 4
+		dc.w	 1, $1E, 4	; 8
+		dc.w	 5, $20, $C	; 12
 word_173A8:	dc.w 4
-		dc.w $F80E,    0,    0,$FFE4		; 0
-		dc.w $F805,  $18,   $C,	   4		; 4
-		dc.w	 1,  $1E,   $F,	   4		; 8
-		dc.w	 5,  $24,  $12,	  $C		; 12
+		dc.w $F80E, 0, $FFE4	; 0
+		dc.w $F805, $18, 4	; 4
+		dc.w	 1, $1E, 4	; 8
+		dc.w	 5, $24, $C	; 12
 word_173CA:	dc.w 4
-		dc.w $F80E,    0,    0,$FFE4		; 0
-		dc.w $F805,  $18,   $C,	   4		; 4
-		dc.w	 1,  $1E,   $F,	   4		; 8
-		dc.w	 5,  $28,  $14,	  $C		; 12
+		dc.w $F80E, 0, $FFE4	; 0
+		dc.w $F805, $18, 4	; 4
+		dc.w	 1, $1E, 4	; 8
+		dc.w	 5, $28, $C	; 12
 word_173EC:	dc.w 4
-		dc.w $F00B,   $C,    6,$FFEC		; 0
-		dc.w $F805,  $18,   $C,	   4		; 4
-		dc.w	 1,  $1C,   $E,	   4		; 8
-		dc.w	 5,  $20,  $10,	  $C		; 12
+		dc.w $F00B, $C, $FFEC	; 0
+		dc.w $F805, $18, 4	; 4
+		dc.w	 1, $1C, 4	; 8
+		dc.w	 5, $20, $C	; 12
 word_1740E:	dc.w 4
-		dc.w $F00B,   $C,    6,$FFEC		; 0
-		dc.w $F805,  $18,   $C,	   4		; 4
-		dc.w	 1,  $1C,   $E,	   4		; 8
-		dc.w	 5,  $24,  $12,	  $C		; 12
+		dc.w $F00B, $C, $FFEC	; 0
+		dc.w $F805, $18, 4	; 4
+		dc.w	 1, $1C, 4	; 8
+		dc.w	 5, $24, $C	; 12
 word_17430:	dc.w 4
-		dc.w $F00B,   $C,    6,$FFEC		; 0
-		dc.w $F805,  $18,   $C,	   4		; 4
-		dc.w	 1,  $1C,   $E,	   4		; 8
-		dc.w	 5,  $28,  $14,	  $C		; 12
+		dc.w $F00B, $C, $FFEC	; 0
+		dc.w $F805, $18, 4	; 4
+		dc.w	 1, $1C, 4	; 8
+		dc.w	 5, $28, $C	; 12
 word_17452:	dc.w 4
-		dc.w $F00B,   $C,    6,$FFEC		; 0
-		dc.w $F805,  $18,   $C,	   4		; 4
-		dc.w	 1,  $1E,   $F,	   4		; 8
-		dc.w	 5,  $20,  $10,	  $C		; 12
+		dc.w $F00B, $C, $FFEC	; 0
+		dc.w $F805, $18, 4	; 4
+		dc.w	 1, $1E, 4	; 8
+		dc.w	 5, $20, $C	; 12
 word_17474:	dc.w 4
-		dc.w $F00B,   $C,    6,$FFEC		; 0
-		dc.w $F805,  $18,   $C,	   4		; 4
-		dc.w	 1,  $1E,   $F,	   4		; 8
-		dc.w	 5,  $24,  $12,	  $C		; 12
+		dc.w $F00B, $C, $FFEC	; 0
+		dc.w $F805, $18, 4	; 4
+		dc.w	 1, $1E, 4	; 8
+		dc.w	 5, $24, $C	; 12
 word_17496:	dc.w 4
-		dc.w $F00B,   $C,    6,$FFEC		; 0
-		dc.w $F805,  $18,   $C,	   4		; 4
-		dc.w	 1,  $1E,   $F,	   4		; 8
-		dc.w	 5,  $28,  $14,	  $C		; 12
+		dc.w $F00B, $C, $FFEC	; 0
+		dc.w $F805, $18, 4	; 4
+		dc.w	 1, $1E, 4	; 8
+		dc.w	 5, $28, $C	; 12
 		even
 ;----------------------------------------------------------------------------
 ; Object 57 - sub object of the	EHZ boss
@@ -14515,35 +14353,35 @@ Map_Obj58:	dc.w word_18042-Map_Obj58
 		dc.w word_180D4-Map_Obj58
 		dc.w word_180EE-Map_Obj58
 word_18042:	dc.w 1
-		dc.w $D805,    0,    0,	   2		; 0
+		dc.w $D805, 0, 2	; 0
 word_1804C:	dc.w 5
-		dc.w $D805,    4,    2,	   2		; 0
-		dc.w $D80D,   $C,    6,	 $12		; 4
-		dc.w $D80D,   $C,    6,	 $32		; 8
-		dc.w $D80D,   $C,    6,$FFE2		; 12
-		dc.w $D80D,   $C,    6,$FFC2		; 16
+		dc.w $D805, 4, 2	; 0
+		dc.w $D80D, $C, $12	; 4
+		dc.w $D80D, $C, $32	; 8
+		dc.w $D80D, $C, $FFE2	; 12
+		dc.w $D80D, $C, $FFC2	; 16
 word_18076:	dc.w 5
-		dc.w $D805,    4,    2,	   2		; 0
-		dc.w $D80D,   $C,    6,	 $12		; 4
-		dc.w $D805,    8,    4,	 $32		; 8
-		dc.w $D80D,   $C,    6,$FFE2		; 12
-		dc.w $D805,    8,    4,$FFD2		; 16
+		dc.w $D805, 4, 2	; 0
+		dc.w $D80D, $C, $12	; 4
+		dc.w $D805, 8, $32	; 8
+		dc.w $D80D, $C, $FFE2	; 12
+		dc.w $D805, 8, $FFD2	; 16
 word_180A0:	dc.w 3
-		dc.w $D805,    4,    2,	   2		; 0
-		dc.w $D80D,   $C,    6,	 $12		; 4
-		dc.w $D80D,   $C,    6,$FFE2		; 8
+		dc.w $D805, 4, 2	; 0
+		dc.w $D80D, $C, $12	; 4
+		dc.w $D80D, $C, $FFE2	; 8
 word_180BA:	dc.w 3
-		dc.w $D805,    4,    2,	   2		; 0
-		dc.w $D805,    8,    4,	 $12		; 4
-		dc.w $D805,    8,    4,$FFF2		; 8
+		dc.w $D805, 4, 2	; 0
+		dc.w $D805, 8, $12	; 4
+		dc.w $D805, 8, $FFF2	; 8
 word_180D4:	dc.w 3
-		dc.w $D805,    0,    0,	   2		; 0
-		dc.w $D80D,   $C,    6,	 $12		; 4
-		dc.w $D80D,   $C,    6,	 $32		; 8
+		dc.w $D805, 0, 2	; 0
+		dc.w $D80D, $C, $12	; 4
+		dc.w $D80D, $C, $32	; 8
 word_180EE:	dc.w 3
-		dc.w $D805,    4,    2,	   2		; 0
-		dc.w $D80D,   $C,    6,$FFE2		; 4
-		dc.w $D80D,   $C,    6,$FFC2		; 8
+		dc.w $D805, 4, 2	; 0
+		dc.w $D80D, $C, $FFE2	; 4
+		dc.w $D80D, $C, $FFC2	; 8
 Ani_Obj58a:	dc.w byte_1810E-Ani_Obj58a
 		dc.w byte_18113-Ani_Obj58a
 		dc.w byte_18117-Ani_Obj58a
@@ -14562,27 +14400,27 @@ Map_Obj58a:	dc.w word_1812E-Map_Obj58a
 		dc.w word_18184-Map_Obj58a
 		dc.w word_1818E-Map_Obj58a
 word_1812E:	dc.w 3
-		dc.w $F00F,    0,    0,$FFD0		; 0
-		dc.w $F00F,  $10,    8,$FFF0		; 4
-		dc.w $F00F,  $20,  $10,	 $10		; 8
+		dc.w $F00F, 0, $FFD0	; 0
+		dc.w $F00F, $10, $FFF0	; 4
+		dc.w $F00F, $20, $10	; 8
 word_18148:	dc.w 1
-		dc.w $F00F,  $30,  $18,$FFF0		; 0
+		dc.w $F00F, $30, $FFF0	; 0
 word_18152:	dc.w 1
-		dc.w $F00F,  $40,  $20,$FFF0		; 0
+		dc.w $F00F, $40, $FFF0	; 0
 word_1815C:	dc.w 1
-		dc.w $F00F,  $50,  $28,$FFF0		; 0
+		dc.w $F00F, $50, $FFF0	; 0
 word_18166:	dc.w 1
-		dc.w $F00F,  $60,  $30,$FFF0		; 0
+		dc.w $F00F, $60, $FFF0	; 0
 word_18170:	dc.w 1
-		dc.w $F00F,$1060,$1030,$FFF0		; 0
+		dc.w $F00F, $1060, $FFF0	; 0
 word_1817A:	dc.w 1
-		dc.w $F00F,  $70,  $38,$FFF0		; 0
+		dc.w $F00F, $70, $FFF0	; 0
 word_18184:	dc.w 1
-		dc.w $F00F,$1070,$1038,$FFF0		; 0
+		dc.w $F00F, $1070, $FFF0	; 0
 word_1818E:	dc.w 3
-		dc.w $F00F,$8000,$8000,$FFD0		; 0
-		dc.w $F00F,$8010,$8008,$FFF0		; 4
-		dc.w $F00F,$8020,$8010,	 $10		; 8
+		dc.w $F00F, $8000, $FFD0	; 0
+		dc.w $F00F, $8010, $FFF0	; 4
+		dc.w $F00F, $8020, $10	; 8
 		even
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -14832,21 +14670,21 @@ Obj56_Delete:
 Map_Obj55a:	dc.w word_184C2-Map_Obj55a
 		dc.w word_184CC-Map_Obj55a
 word_184C2:	dc.w 1
-		dc.w	 5,    0,    0,	 $1C		; 0
+		dc.w	 5, 0, $1C	; 0
 word_184CC:	dc.w 1
-		dc.w	 5,    4,    2,	 $1C		; 0
+		dc.w	 5, 4, $1C	; 0
 Map_Obj55b:	dc.w word_184DE-Map_Obj55b
 		dc.w word_184E8-Map_Obj55b
 		dc.w word_184F2-Map_Obj55b
 		dc.w word_184FC-Map_Obj55b
 word_184DE:	dc.w 1
-		dc.w $F805,    0,    0,$FFF8		; 0
+		dc.w $F805, 0, $FFF8	; 0
 word_184E8:	dc.w 1
-		dc.w $F805,    4,    2,$FFF8		; 0
+		dc.w $F805, 4, $FFF8	; 0
 word_184F2:	dc.w 1
-		dc.w $F805,    8,    4,$FFF8		; 0
+		dc.w $F805, 8, $FFF8	; 0
 word_184FC:	dc.w 1
-		dc.w $F805,   $C,    6,$FFF8		; 0
+		dc.w $F805, $C, $FFF8	; 0
 Map_Obj56:	dc.w word_18514-Map_Obj56
 		dc.w word_1851E-Map_Obj56
 		dc.w word_18528-Map_Obj56
@@ -14855,19 +14693,19 @@ Map_Obj56:	dc.w word_18514-Map_Obj56
 		dc.w word_18546-Map_Obj56
 		dc.w word_18550-Map_Obj56
 word_18514:	dc.w 1
-		dc.w $F805,    0,    0,$FFF8		; 0
+		dc.w $F805, 0, $FFF8	; 0
 word_1851E:	dc.w 1
-		dc.w $F00F,    4,    2,$FFF0		; 0
+		dc.w $F00F, 4, $FFF0	; 0
 word_18528:	dc.w 1
-		dc.w $F00F,  $14,   $A,$FFF0		; 0
+		dc.w $F00F, $14, $FFF0	; 0
 word_18532:	dc.w 1
-		dc.w $F00F,  $24,  $12,$FFF0		; 0
+		dc.w $F00F, $24, $FFF0	; 0
 word_1853C:	dc.w 1
-		dc.w $F00F,  $34,  $1A,$FFF0		; 0
+		dc.w $F00F, $34, $FFF0	; 0
 word_18546:	dc.w 1
-		dc.w $F00F,  $44,  $22,$FFF0		; 0
+		dc.w $F00F, $44, $FFF0	; 0
 word_18550:	dc.w 1
-		dc.w $F00F,  $54,  $2A,$FFF0		; 0
+		dc.w $F00F, $54, $FFF0	; 0
 Ani_Obj55a:	dc.w byte_1855E-Ani_Obj55a
 		dc.w byte_18561-Ani_Obj55a
 byte_1855E:	dc.b  $F,  0,$FF
@@ -14878,20 +14716,20 @@ Map_Obj55:	dc.w word_1856C-Map_Obj55
 		dc.w word_1858E-Map_Obj55
 		dc.w word_185B0-Map_Obj55
 word_1856C:	dc.w 4
-		dc.w $F805,    0,    0,$FFE0		; 0
-		dc.w  $805,    4,    2,$FFE0		; 4
-		dc.w $F80F,    8,    4,$FFF0		; 8
-		dc.w $F807,  $18,   $C,	 $10		; 12
+		dc.w $F805, 0, $FFE0	; 0
+		dc.w  $805, 4, $FFE0	; 4
+		dc.w $F80F, 8, $FFF0	; 8
+		dc.w $F807, $18, $10	; 12
 word_1858E:	dc.w 4
-		dc.w $E805,  $28,  $14,$FFE0		; 0
-		dc.w $E80D,  $30,  $18,$FFF0		; 4
-		dc.w $E805,  $24,  $12,	 $10		; 8
-		dc.w $D805,  $20,  $10,	   2		; 12
+		dc.w $E805, $28, $FFE0	; 0
+		dc.w $E80D, $30, $FFF0	; 4
+		dc.w $E805, $24, $10	; 8
+		dc.w $D805, $20, 2	; 12
 word_185B0:	dc.w 4
-		dc.w $E805,  $28,  $14,$FFE0		; 0
-		dc.w $E80D,  $38,  $1C,$FFF0		; 4
-		dc.w $E805,  $24,  $12,	 $10		; 8
-		dc.w $D805,  $20,  $10,	   2		; 12
+		dc.w $E805, $28, $FFE0	; 0
+		dc.w $E80D, $38, $FFF0	; 4
+		dc.w $E805, $24, $10	; 8
+		dc.w $D805, $20, 2	; 12
 		even
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -14970,50 +14808,50 @@ Map_Eggman:	dc.w word_1932E-Map_Eggman
 		dc.w word_19424-Map_Eggman
 		dc.w word_19436-Map_Eggman
 word_1932E:	dc.w 6
-		dc.w $EC01,   $A,    5,$FFE4
-		dc.w $EC05,   $C,    6,	  $C
-		dc.w $FC0E,$2010,$2008,$FFE4
-		dc.w $FC0E,$201C,$200E,	   4
-		dc.w $140C,$2028,$2014,$FFEC
-		dc.w $1400,$202C,$2016,	  $C
+		dc.w $EC01, $A, $FFE4
+		dc.w $EC05, $C, $C
+		dc.w $FC0E, $2010, $FFE4
+		dc.w $FC0E, $201C, 4
+		dc.w $140C, $2028, $FFEC
+		dc.w $1400, $202C, $C
 word_19360:	dc.w 2
-		dc.w $E404,    0,    0,$FFF4
-		dc.w $EC0D,    2,    1,$FFEC
+		dc.w $E404, 0, $FFF4
+		dc.w $EC0D, 2, $FFEC
 word_19372:	dc.w 2
-		dc.w $E404,    0,    0,$FFF4
-		dc.w $EC0D,  $35,  $1A,$FFEC
+		dc.w $E404, 0, $FFF4
+		dc.w $EC0D, $35, $FFEC
 word_19384:	dc.w 3
-		dc.w $E408,  $3D,  $1E,$FFF4
-		dc.w $EC09,  $40,  $20,$FFEC
-		dc.w $EC05,  $46,  $23,	   4
+		dc.w $E408, $3D, $FFF4
+		dc.w $EC09, $40, $FFEC
+		dc.w $EC05, $46, 4
 word_1939E:	dc.w 3
-		dc.w $E408,  $4A,  $25,$FFF4
-		dc.w $EC09,  $4D,  $26,$FFEC
-		dc.w $EC05,  $53,  $29,	   4
+		dc.w $E408, $4A, $FFF4
+		dc.w $EC09, $4D, $FFEC
+		dc.w $EC05, $53, 4
 word_193B8:	dc.w 3
-		dc.w $E408,  $57,  $2B,$FFF4
-		dc.w $EC09,  $5A,  $2D,$FFEC
-		dc.w $EC05,  $60,  $30,	   4
+		dc.w $E408, $57, $FFF4
+		dc.w $EC09, $5A, $FFEC
+		dc.w $EC05, $60, 4
 word_193D2:	dc.w 3
-		dc.w $E404,  $64,  $32,	   4
-		dc.w $E404,    0,    0,$FFF4
-		dc.w $EC0D,  $35,  $1A,$FFEC
+		dc.w $E404, $64, 4
+		dc.w $E404, 0, $FFF4
+		dc.w $EC0D, $35, $FFEC
 word_193EC:	dc.w 4
-		dc.w $E409,  $66,  $33,$FFF4
-		dc.w $E408,  $57,  $2B,$FFF4
-		dc.w $EC09,  $5A,  $2D,$FFEC
-		dc.w $EC05,  $60,  $30,	   4
+		dc.w $E409, $66, $FFF4
+		dc.w $E408, $57, $FFF4
+		dc.w $EC09, $5A, $FFEC
+		dc.w $EC05, $60, 4
 word_1940E:	dc.w 1
-		dc.w  $405,  $2D,  $16,	 $22
+		dc.w  $405, $2D, $22
 word_19418:	dc.w 1
-		dc.w  $405,  $31,  $18,	 $22
+		dc.w  $405, $31, $22
 word_19422:	dc.w 0
 word_19424:	dc.w 2
-		dc.w	 8, $12A, $195,	 $22
-		dc.w  $808,$112A,$1995,	 $22
+		dc.w	 8, $12A, $22
+		dc.w  $808, $112A, $22
 word_19436:	dc.w 2
-		dc.w $F80B, $12D, $199,	 $22
-		dc.w	 1, $139, $1AB,	 $3A
+		dc.w $F80B, $12D, $22
+		dc.w	 1, $139, $3A
 Map_BossItems:	dc.w word_19458-Map_BossItems
 		dc.w word_19462-Map_BossItems
 		dc.w word_19474-Map_BossItems
@@ -15023,27 +14861,27 @@ Map_BossItems:	dc.w word_19458-Map_BossItems
 		dc.w word_194B4-Map_BossItems
 		dc.w word_194C6-Map_BossItems
 word_19458:	dc.w 1
-		dc.w $F805,    0,    0,$FFF8
+		dc.w $F805, 0, $FFF8
 word_19462:	dc.w 2
-		dc.w $FC04,    4,    2,$FFF8
-		dc.w $F805,    0,    0,$FFF8
+		dc.w $FC04, 4, $FFF8
+		dc.w $F805, 0, $FFF8
 word_19474:	dc.w 1
-		dc.w $FC00,    6,    3,$FFFC
+		dc.w $FC00, 6, $FFFC
 word_1947E:	dc.w 1
-		dc.w $1409,    7,    3,$FFF4
+		dc.w $1409, 7, $FFF4
 word_19488:	dc.w 1
-		dc.w $1405,   $D,    6,$FFF8
+		dc.w $1405, $D, $FFF8
 word_19492:	dc.w 4
-		dc.w $F004,  $11,    8,$FFF8
-		dc.w $F801,  $13,    9,$FFF8
-		dc.w $F801, $813, $809,	   0
-		dc.w  $804,  $15,   $A,$FFF8
+		dc.w $F004, $11, $FFF8
+		dc.w $F801, $13, $FFF8
+		dc.w $F801, $813, 0
+		dc.w  $804, $15, $FFF8
 word_194B4:	dc.w 2
-		dc.w	 5,  $17,   $B,	   0
-		dc.w	 0,  $1B,   $D,	 $10
+		dc.w	 5, $17, 0
+		dc.w	 0, $1B, $10
 word_194C6:	dc.w 2
-		dc.w $1804,  $1C,   $E,	   0
-		dc.w	$B,  $1E,   $F,	 $10
+		dc.w $1804, $1C, 0
+		dc.w	$B, $1E, $10
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -17985,8 +17823,12 @@ Nem_GroundExplosion:
 Art_Sonic:	binclude	"art/uncompressed/Sonic's art.unc"
 	;	align $100
 	;	align $8000
+; S&K body/extra/tail pixels are remapped to Pal_SonicTails' slot order.
+; Preserve this hack's warmer skin shades and green-to-dark-red replacement.
 Art_Tails:	binclude	"art/uncompressed/Tails' art.bin"
-Art_SplashDust:	binclude	"art/uncompressed/Dust and water splash.bin"
+Art_Tails_Extra:	binclude "art/uncompressed/Tails extra.bin"
+Art_Tails_Tails:	binclude "art/uncompressed/Tails tails.bin"
+Art_SpindashDust:	binclude "art/uncompressed/Spindash and skid dust.bin"
 		align $100
 Art_Ring:	binclude	"art/uncompressed/Ring.bin"
 ; Same eight ring frames, with 6 -> E, C -> C, D -> B and E -> A for palette 0.
@@ -19685,7 +19527,9 @@ Map_Sonic:	binclude	"mappings/sprite/Sonic Mappings.bin"
 SonicDynPLC:	binclude	"mappings/spriteDPLC/Sonic DPLCs.bin"
 		even
 Map_Tails:	include		"mappings/sprite/Tails.asm"
+Map_Tails_Tail:	include "mappings/sprite/Tails tails.asm"
 TailsDynPLC:	include		"mappings/spriteDPLC/Tails.asm"
+TailsTailsDynPLC:	include "mappings/spriteDPLC/Tails tails.asm"
 Map_Obj03:	binclude	"mappings/sprite/Patch switcher.bin"
 		even
 Map_Obj07:	binclude	"mappings/sprite/Water surface.bin"

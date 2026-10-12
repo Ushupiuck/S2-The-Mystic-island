@@ -29,6 +29,8 @@ obXSub:			equ $A		; for when exra presition is required (2 bytes)
 obY:			equ $C		; y-axis position (2-4 bytes)
 obYSub:			equ $E		; for when exra presition is required (2 bytes)
 obActWid:		equ $14		; action width; width_pixels
+height_pixels:		equ $49		; universal display half-height; computed from mappings for legacy objects
+width_pixels =		obActWid
 obPriority:		equ $18		; and $19 - sprite stack priority -- 0 is front
 obFrame:		equ $1A		; current frame displayed
 ; ---------------------------------------------------------------------------
@@ -80,6 +82,39 @@ jumping:		equ $3C
 standonobject:		equ $3D		; interact; ; RAM address of the last object Sonic stood on, minus v_objspace and divided by object_size
 obTopSolidBit:		equ $3E		; bit to check for top solidity (either $C or $E)
 obLRBSolidBit:		equ $3F		; bit to check for left/right/bottom solidity (either $D or $F)
+player_dust_ptr:	equ $42		; word; validated pointer to the separate dust controller
+default_y_radius:	equ $44		; byte; Sonic's standing collision radius (S3&K)
+default_x_radius:	equ $45		; byte; Sonic's standing collision radius (S3&K)
+; S3&K ability fields in bytes already free in the player SST.
+character_id:		equ $46		; 0 Sonic, 1 Tails
+tails_flight_flag:	equ $47		; 0 inactive, 1 falling, 2..31 flapping
+tails_flight_energy:	equ $48		; half-frame flight budget
+air_left:		equ $28		; Tails' independent air supply
+; $41 remains available to S3&K's CPU respawn code; $42-$43 is the dust pointer.
+tails_width:		equ 9
+tails_roll_height:	equ 14
+tails_roll_width:	equ 7
+Tails_FlightBudget:	equ (8*60)/2
+Tails_FlightGravity:	equ 8
+Tails_FlapAcceleration:	equ $20
+Tails_FlapRiseLimit:	equ $100
+Tails_FlapStateLimit:	equ $20
+Tails_ExtraFirstFrame:	equ $D1
+Tails_CPU_ManualTime:	equ 10*60
+Tails_CPU_RespawnTime:	equ 5*60
+; Reuse the existing CPU words and unused tail-object scratch bytes. The
+; controller's owner remains in obParent; no SST or global RAM expansion.
+v_jpadholdlogical2:	equ word_F700
+v_jpadpresslogical2:	equ v_jpadholdlogical2+1
+Tails_CPU_idle_timer:	equ Tails_control_counter
+Tails_CPU_flight_timer:	equ Tails_respawn_counter
+Tails_CPU_interact:	equ word_F706
+Tails_CPU_target_X:	equ v_player2tails+objoff_40
+Tails_CPU_target_Y:	equ v_player2tails+objoff_42
+Tails_CPU_auto_jump_flag:	equ v_player2tails+objoff_35
+Flying_carrying_Sonic_flag: equ v_player2tails+objoff_38
+Tails_Carry_SavedXSpeed:	equ v_player2tails+objoff_3A
+Tails_Carry_SavedYSpeed:	equ v_player2tails+objoff_3C
 ; ---------------------------------------------------------------------------
 ; Miscellaneous object scratch-RAM
 objoff_25:		equ $25
@@ -134,8 +169,8 @@ obParent3 =		objoff_42 ; and $43 ; parent of child objects
 child_dx =		objoff_42 ; byte ; X offset of child relative to parent
 child_dy =		objoff_43 ; byte ; Y offset of child relative to parent
 object_size_bits:	equ 6		; $40-byte allocator lookup buckets; not the SST stride
-object_size:		equ $4A		; SST stride in bytes
-reserved_object_slots:	equ 23		; one shared star SST; no unused reserved slots
+object_size:		equ $4A		; SST stride; height_pixels occupies its final byte at $49
+reserved_object_slots:	equ 23		; one shared star SST; dust uses dynamic slots
 dynamic_object_slots:	equ 90		; slots available to the level allocator
 object_slot_count:	equ reserved_object_slots+dynamic_object_slots	; 113 slots in total
 object_ram_size:	equ $2200	; original $2000 pool plus its $200 growth area
@@ -199,7 +234,8 @@ afRoutine:	equ $FC	; increment routine counter
 afReset:	equ $FB	; reset animation and 2nd object routine counter
 af2ndRoutine:	equ $FA	; increment 2nd routine counter
 ; ---------------------------------------------------------------------------
-; Sonic's collision sizes
+; Player collision sizes
+tails_height:		equ 30/2	; Tails's standing radius
 sonic_width:		equ 18/2	; Sonic's width
 sonic_height:		equ 38/2	; Sonic's height
 sonic_roll_width:	equ 14/2	; Sonic's width (rolling)
@@ -249,7 +285,7 @@ status.player.in_air			= 1 ; Airborne.
 status.player.rolling			= 2 ; Spinning, i.e. jumping or rolling.
 status.player.on_object			= 3 ; Stood on an object rather than the level.
 status.sidekick.on_object		= 4 ; Stood on an object rather than the level.
-; status.player.rolljumping		= 4 ; Jumping whilst rolling; locks the player's controls.
+status.player.rolljumping		= 4 ; Legacy bit, cleared on carry/flight; air steering stays enabled.
 status.player.pushing			= 5 ; Pressing against an object.
 status.player.underwater		= 6 ; Submersed.
 status.player.prevent_tails_respawn	= 7 ; Prevents AI Tails from respawning.
@@ -364,6 +400,7 @@ PlayerMode_SonicAndTails:	equ 0
 PlayerMode_Sonic:		equ 1
 PlayerMode_Tails:		equ 2
 PlayerMode_Knuckles:		equ 3	; reserved
+PlayerControl_SkipWallCollision:	equ 6	; bit in f_playerctrl and obControl
 
 ; Shared Sonic/Tails movement settings. Speeds use 8.8 pixels/frame;
 ; acceleration and deceleration use 8.8 pixels/frame squared.
@@ -372,6 +409,32 @@ Player_DefaultAcceleration:	equ $C
 Player_DefaultDeceleration:	equ $80
 Player_ShoesTopSpeed:		equ $C00
 Player_ShoesAcceleration:	equ $18
+
+; Normal Sonic movement from S3&K. Velocities use 8.8 pixels/frame.
+Sonic_RollStartSpeed:		equ $100
+Sonic_RollStopSpeed:		equ $80
+Sonic_RollBraking:		equ $20
+Sonic_ForcedRollSpeed:		equ $400
+Sonic_RollMaxXSpeed:		equ $1000
+Sonic_JumpSpeed:			equ $680
+Sonic_WaterJumpSpeed:		equ $380
+Sonic_JumpReleaseSpeed:		equ $400
+Sonic_WaterJumpReleaseSpeed:	equ $200
+Sonic_UpwardSpeedLimit:		equ $FC0
+Sonic_WaterExitSpeedLimit:	equ $1000
+Sonic_CeilingPenetrationLimit:	equ 20	; pixels; deeper overlaps check the opposite wall
+Sonic_DeathScreenMargin:		equ $100	; pixels below the frozen camera
+Player_HurtFlashTime:		equ 2*60	; frames
+Sonic_SlopeStandingThreshold:	equ $D
+Sonic_SlopeDetachSpeed:		equ $280
+Sonic_SlopeLockTime:		equ 30	; frames
+Sonic_SlopeSlipStep:		equ $80
+Sonic_SpindashChargeStep:		equ $200
+Sonic_SpindashMaxCharge:		equ $800
+Sonic_SpindashDecayShift:		equ 5	; lose 1/32 of the accumulated charge per frame
+Sonic_SpindashMinSpeed:		equ $800
+Sonic_SpindashSpeedStep:		equ $80
+Sonic_SpindashCameraDelayMax:	equ 32	; frames; reduced as launch speed increases
 
 ; Look camera: delays are frames; biases and steps are pixels.
 Camera_LookDelay:		equ 120
@@ -572,7 +635,7 @@ vram_window:		equ $A000			; window namespace
 vram_fg:		equ $C000			; foreground namespace
 vram_bg:		equ $E000			; background namespace
 vram_sprites:		equ $F800			; sprite table
-vram_hscroll:		equ $FC00			; horizontal scroll table
+vram_hscroll:		equ $F000			; horizontal scroll table
 tile_size:		equ 8*8/2
 plane_size_64x32:	equ 64*32*2
 
@@ -593,7 +656,7 @@ VRAM_Plane_B_Name_Table                  = $E000	; Extends until $EFFF
 VRAM_Plane_Table_Size                    = $1000	; 64 cells x 32 cells x 2 bytes per cell
 VRAM_Sprite_Attribute_Table              = $F800	; Extends until $FA7F
 VRAM_Sprite_Attribute_Table_Size         = $0280	; 640 bytes
-VRAM_Horiz_Scroll_Table                  = $FC00	; Extends until $FF7F
+VRAM_Horiz_Scroll_Table                  = $F000	; Extends until $F37F
 VRAM_Horiz_Scroll_Table_Size             = 224*2*2	; 224 lines * 2 bytes per entry * 2 PNTs
 
 ; VRAM Reserved regions, Sega screen.
@@ -675,6 +738,9 @@ sfx_A5 =		SndID_MegaMackDrop
 sfx_SSGoal =		SndID_Goal
 sfx_SSItem =		SndID_Bwoop
 sfx_Splash =		SndID_Splash
+sfx_Grab =		SndID_TailsGrab
+sfx_Flying =		SndID_TailsFlying
+sfx_FlyTired =		SndID_TailsFlyingTired
 sfx_AB =		SndID_Swish
 sfx_HitBoss =		SndID_BossHit
 sfx_Bubble =		SndID_InhalingBubble
@@ -695,6 +761,8 @@ sfx_Door =		SndID_Trapdoor		; 59
 sfx_Teleport =		SndID_SpindashRelease
 sfx_ChainStomp =	SndID_ChainRise
 sfx_Roll =		SndID_Roll
+sfx_Spindash =		SndID_SpindashRev
+sfx_Dash =		SndID_SpindashRelease
 sfx_Continue =		SndID_ContinueJingle
 sfx_Basaran =		SndID_SpindashRelease
 sfx_BreakItem =		SndID_Explosion
@@ -849,8 +917,11 @@ v_spritequeue:=		Object_Display_Lists
 v_spritequeue_end:=	Object_Display_Lists_End
 
 Sonic_Stat_Record_Buf:		ds.b	$100
+Sonic_Stat_Record_Buf_End:
 Sonic_Pos_Record_Buf:		ds.b	$100
+Sonic_Pos_Record_Buf_End:
 Tails_Pos_Record_Buf:		ds.b	$100
+Tails_Pos_Record_Buf_End:
 Ring_Positions:			ds.b	$600
 Ring_Positions_End:
 
@@ -1038,7 +1109,7 @@ Kos_module_destination =	Kos_module_queue+4	; word ; the VRAM destination for th
 Kos_module_queue_End:
 
 v_levelvariables:					; variables that are reset between levels
-word_F700:		ds.w	1			; set to 0 in Tails_Control, otherwise unused
+word_F700:		ds.w	1			; Tails' logical controller (held/pressed)
 Tails_control_counter:	ds.w	1
 Tails_respawn_counter:	ds.w	1
 word_F706:		ds.w	1
@@ -1631,21 +1702,23 @@ ArtTile_Title_Card:		equ $580
 ArtTile_Animal_1:		equ $580
 ArtTile_Animal_2:		equ $592
 ArtTile_Explosion:		equ $5A0
-ArtTile_Monitor:		equ $680
+ArtTile_Monitor:		equ $4C4
 ArtTile_HUD:			equ $6CA
 ArtTile_HUD_E:			equ ArtTile_HUD+$E	; SCORE shares TIME's static E
 ArtTile_HUD_Debug_Numbers:	equ ArtTile_HUD+$10	; First two tiles are used only by debug coordinates
 ArtTile_HUD_Numbers:		equ ArtTile_HUD_Debug_Numbers+2 ; 28 tiles for score, time and ring digits
-ArtTile_Sonic:			equ $780
+ArtTile_Sonic:			equ $680
 ArtTile_Points:			equ $4AC
-ArtTile_Tails:			equ $7A0
-ArtTile_TailsTails:		equ $7B0
+ArtTile_Tails:			equ $6A0
+ArtTile_TailsTails:		equ $6B0	; stock S3&K shares this area with larger body frames
 ArtTile_Ring:			equ $6BC
 ArtTile_RingLoss:		equ ArtTile_Ring+4
 ArtTile_Sparkles:		equ ArtTile_Ring+8
 
 
 ArtTile_Lives_Counter:		equ $7D4
+ArtTile_Sonic_Dust:		equ $7E0
+ArtTile_Tails_Dust:		equ $7F0
 ArtTile_Water_Surface:		equ $400
 ArtTile_Spring_Horizontal:	equ $470
 ArtTile_Spring_Vertical:	equ $45C
@@ -1668,7 +1741,7 @@ ArtTile_Warp:			equ $541
 ArtTile_Mini_Tails:		equ $535
 ArtTile_Mini_Sonic:		equ $551
 ArtTile_Bonuses:		equ $570
-ArtTile_Signpost:		equ $680
+ArtTile_Signpost:		equ ArtTile_Monitor	; replaces monitor art near the level exit
 
 ; Sega Screen
 ArtTile_Sega_Tiles:		equ $000

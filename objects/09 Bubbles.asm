@@ -77,34 +77,43 @@ Bub_ChkWater:	; Routine 4
 		add.w	bub_origX(a0),d0
 		move.w	d0,obX(a0)	; change bubble's x-axis position
 		tst.b	bub_inhalable(a0)
-		beq.s	.display
-		bsr.w	Bub_ChkSonic	; has Sonic touched the bubble?
+		beq.w	.display
+		bsr.w	Bub_ChkPlayer	; either live player can inhale the bubble
 		beq.s	.display	; if not, branch
-		bsr.w	ResumeMusic	; cancel countdown music
+		move.l	a1,-(sp)
+		cmpa.w	#v_player,a1
+		bne.s	.partnerair
+		bsr.w	ResumeMusic	; only the primary player controls countdown music
+		bra.s	.collect
+.partnerair:
+		move.b	#30,air_left(a1)
+		clr.b	(v_tailsbubbles+objoff_32).w
+.collect:
 		move.w	#sfx_Bubble,d0
 		jsr	(PlaySound_Special).l	; play collecting bubble sound
-		lea	(v_player).w,a1
+		movea.l	(sp)+,a1
 		clr.w	obVelX(a1)
 		clr.w	obVelY(a1)
-		clr.w	obInertia(a1)	; stop Sonic
+		clr.w	obInertia(a1)
 		move.b	#$15,obAnim(a1) ; use bubble-collecting animation
-		move.w	#$23,objoff_2E(a1)
-		clr.b	objoff_3C(a1)
-		bclr	#5,obStatus(a1)
-	;	bclr	#4,obStatus(a1)
-		btst	#2,obStatus(a1)
+		move.w	#$23,move_lock(a1)
+		clr.b	jumping(a1)
+		cmpi.b	#id_Obj02,obID(a1)
+		bne.s	.restore
+		clr.b	tails_flight_flag(a1)
+.restore:
+		bclr	#status.player.pushing,obStatus(a1)
+		bclr	#status.player.rolling,obStatus(a1)
 		beq.w	.burst
-		bclr	#2,obStatus(a1)
-		move.b	#$13,obHeight(a1)
-		move.b	#9,obWidth(a1)
-		subq.w	#5,obY(a1)
-		move.b	#6,obRoutine(a0) ; goto Bub_Display next
-		addq.b	#3,obAnim(a0)	; run "bursting" animation
-		lea	Ani_Obj64(pc),a1
-		bsr.w	AnimateSprite
-		tst.b	obRender(a0)
-		bpl.w	DeleteObject
-		bra.w	DisplaySprite
+		moveq	#0,d0
+		move.b	default_y_radius(a1),d0
+		moveq	#0,d1
+		move.b	obHeight(a1),d1
+		sub.w	d0,d1
+		add.w	d1,obY(a1)
+		move.b	d0,obHeight(a1)
+		move.b	default_x_radius(a1),obWidth(a1)
+		bra.w	.burst
 ; ---------------------------------------------------------------------------
 
 .display:
@@ -221,33 +230,52 @@ Bub_BblTypes:	dc.b 0,	1, 0, 0, 0, 0, 1, 0, 0,	0, 0, 1, 0, 1, 0, 0, 1,	0
 		even
 ; ===========================================================================
 
-Bub_ChkSonic:
-		tst.b	(f_playerctrl).w
-		bmi.s	.loc_13CBE
+Bub_ChkPlayer:
 		lea	(v_player).w,a1
+		tst.b	(f_playerctrl).w
+		bmi.s	.partner
+		bsr.s	Bub_ChkPlayerRect
+		bne.s	.return
+.partner:
+		tst.w	(Player_mode).w
+		bne.s	Bub_ChkPlayerRect.miss
+		lea	(v_player2).w,a1
+		cmpi.b	#id_Obj02,obID(a1)
+		bne.s	Bub_ChkPlayerRect.miss
+		bra.s	Bub_ChkPlayerRect
+.return:
+		rts
+
+Bub_ChkPlayerRect:
+		cmpi.b	#4,obRoutine(a1)
+		bhs.s	.miss
+		tst.b	obControl(a1)
+		bmi.s	.miss
+		btst	#status.player.underwater,obStatus(a1)
+		beq.s	.miss
 		move.w	obX(a1),d0
 		move.w	obX(a0),d1
 		subi.w	#$10,d1
 		cmp.w	d0,d1
-		bhs.s	.loc_13CBE
+		bhs.s	.miss
 		addi.w	#$20,d1
 		cmp.w	d0,d1
-		blo.s	.loc_13CBE
+		blo.s	.miss
 		move.w	obY(a1),d0
 		move.w	obY(a0),d1
 		cmp.w	d0,d1
-		bhs.s	.loc_13CBE
+		bhs.s	.miss
 		addi.w	#$10,d1
 		cmp.w	d0,d1
-		blo.s	.loc_13CBE
+		blo.s	.miss
 		moveq	#1,d0
 		rts
 ; ---------------------------------------------------------------------------
 
-.loc_13CBE:
+.miss:
 		moveq	#0,d0
 		rts
-; End of function Obj64_ChkSonic
+; End of function Bub_ChkPlayer
 
 ; ---------------------------------------------------------------------------
 Ani_Obj64:	dc.w byte_13CD0-Ani_Obj64

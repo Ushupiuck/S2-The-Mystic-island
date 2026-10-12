@@ -31,17 +31,17 @@ All ranges are inclusive. They apply before the results screen loads its PLCs.
 | `$1340–$293F` | Fixed stage art, from walls through emeralds |
 | `$2940–$BFFF` | Free, `$96C0` bytes |
 | `$C000–$CFFF` | Live foreground map, 64 by 32 tiles |
-| `$D000–$DFFF` | Free, `$1000` bytes |
+| `$D000–$D3FF` | Normal Sonic art bank reserved; stage rolling art uses its first `$200` bytes |
+| `$D400–$DFFF` | Free, `$C00` bytes |
 | `$E000–$EFFF` | Live background map, 64 by 32 tiles |
-| `$F000–$F3FF` | Normal Sonic art bank reserved; stage rolling art uses its first `$200` bytes |
-| `$F400–$F5FF` | Free, `$200` bytes |
+| `$F000–$F37F` | Horizontal scroll table |
+| `$F380–$F5FF` | Free, `$280` bytes |
 | `$F600–$F67F` | Stage ring art |
 | `$F680–$F6FF` | Ring sparkles |
 | `$F700–$F7FF` | Free, `$100` bytes |
 | `$F800–$FA7F` | Sprite table |
 | `$FA80–$FBFF` | Free, `$180` bytes |
-| `$FC00–$FF7F` | Horizontal scroll table |
-| `$FF80–$FFFF` | Free, `$80` bytes |
+| `$FC00–$FFFF` | Free, `$400` bytes; level dust is inactive here |
 
 The old maps occupied `$9000` bytes after excluding their sprite-art gaps;
 the two live maps use `$2000`, freeing `$7000`. Keeping only 9 static transition
@@ -73,8 +73,9 @@ animated tile's original flips into its art and preserves its palette;
 the static maps retain their original tile-word attributes. Its map/art
 indices must stay consistent with `ArtTile_SS_Background_*`.
 
-The wider level migration away from `make_block_tile` and the general level
-VRAM/HScroll rearrangement are separate future work.
+The shared VRAM/HScroll rearrangement is documented in
+[S3-player-and-sprite-port.md](S3-player-and-sprite-port.md). The wider level
+migration away from `make_block_tile` remains separate future work.
 
 Validation covered the assembled ROM, 4,500 native 68000 background frames,
 all six rotating layouts/spawns, all 78 item mappings, the relocated wall

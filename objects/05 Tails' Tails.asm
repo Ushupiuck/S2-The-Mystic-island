@@ -1,77 +1,105 @@
-; ---------------------------------------------------------------------------
-; Object 05 - Tails' tails
-; ---------------------------------------------------------------------------
-
+; S3&K tail animation and separate 12-tile art bank.
 Obj05:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Obj05_Index(pc,d0.w),d1
-		jmp	Obj05_Index(pc,d1.w)
-; ===========================================================================
-Obj05_Index:	dc.w Obj05_Init-Obj05_Index
-		dc.w Obj05_Main-Obj05_Index
-
-Tails_prev_anim = objoff_30
-; ===========================================================================
-
-Obj05_Init:
-		addq.b	#2,obRoutine(a0)
-		move.l	#Map_Tails,obMap(a0)
+		tst.b	obRoutine(a0)
+		bne.s	Obj_Tails_Tail_Main
+Obj_Tails_Tail:
+		; Init
+		move.l	#Map_Tails_Tail,obMap(a0)
 		move.w	#make_art_tile(ArtTile_TailsTails,0,0),obGfx(a0)
 		move.w	#$100,obPriority(a0)
-		move.b	#$18,obActWid(a0)
+		move.b	#$18,width_pixels(a0)
+		move.b	#$18,height_pixels(a0)
 		move.b	#4,obRender(a0)
+		move.b	#2,obRoutine(a0)
 
-Obj05_Main:
-		move.b	(v_player2+obAngle).w,obAngle(a0)
-		move.b	(v_player2+obStatus).w,obStatus(a0)
-		move.w	(v_player2+obX).w,obX(a0)
-		move.w	(v_player2+obY).w,obY(a0)
+Obj_Tails_Tail_Main:
+		movea.w	obParent(a0),a2
+		cmpi.b	#id_Obj02,obID(a2)
+		bne.w	DeleteObject
+
+		; Here, several SSTs are inherited from the parent, normally Tails
+		move.b	obAngle(a2),obAngle(a0)
+		move.b	obStatus(a2),obStatus(a0)
+		move.w	obX(a2),obX(a0)
+		move.w	obY(a2),obY(a0)
+		move.w	obPriority(a2),obPriority(a0)
+		andi.w	#drawing_mask,obGfx(a0)
+		tst.w	obGfx(a2)
+		bpl.s	TailS3_loc_16106
+		ori.w	#high_priority,obGfx(a0)
+
+TailS3_loc_16106:
 		moveq	#0,d0
-		move.b	(v_player2+obAnim).w,d0
-		cmp.b	Tails_prev_anim(a0),d0
-		beq.s	+
-		move.b	d0,Tails_prev_anim(a0)
-		move.b	Obj05_Animations(pc,d0.w),obAnim(a0)
-+
-		lea	Obj05_AniData(pc),a1
-		bsr.w	Tails_Animate2
-		bsr.w	LoadTailsTailsDynPLC
-	;	jmp	(DisplaySprite).l
-		bra.w	DisplaySprite
-; ---------------------------------------------------------------------------
-Obj05_Animations:
-		dc.b   0,  0
-		dc.b   3,  3
-		dc.b   0,  1
-		dc.b   0,  2
-		dc.b   1,  7
-		dc.b   0,  0
-		dc.b   0,  0
-		dc.b   0,  0
-		dc.b   0,  0
-		dc.b   0,  0
-		dc.b   0,  0
-		dc.b   0,  0
-		dc.b   0,  0
-		dc.b   0,  0
-		dc.b   0,  0
-		even
+		move.b	obAnim(a2),d0
+		btst	#status.player.pushing,obStatus(a2)
+		beq.s	TailS3_loc_1612C
+		tst.b	(f_wtunnelmode).w
+		bne.s	TailS3_loc_1612C
+		; This is checking if parent (Tails) is in its pushing animation
+		cmpi.b	#$A9,obFrame(a2)
+		blo.s	TailS3_loc_1612C
+		cmpi.b	#$AC,obFrame(a2)
+		bhi.s	TailS3_loc_1612C
+		moveq	#4,d0
 
-Obj05_AniData:	dc.w byte_11E2A-Obj05_AniData
-		dc.w byte_11E2D-Obj05_AniData
-		dc.w byte_11E34-Obj05_AniData
-		dc.w byte_11E3C-Obj05_AniData
-		dc.w byte_11E42-Obj05_AniData
-		dc.w byte_11E48-Obj05_AniData
-		dc.w byte_11E4E-Obj05_AniData
-		dc.w byte_11E54-Obj05_AniData
-byte_11E2A:	dc.b $20,  0,afEnd
-byte_11E2D:	dc.b   7,  9, $A, $B, $C, $D,afEnd
-byte_11E34:	dc.b   3,  9, $A, $B, $C, $D,afChange,  1
-byte_11E3C:	dc.b $FC,$49,$4A,$4B,$4C,afEnd
-byte_11E42:	dc.b   3,$4D,$4E,$4F,$50,afEnd
-byte_11E48:	dc.b   3,$51,$52,$53,$54,afEnd
-byte_11E4E:	dc.b   3,$55,$56,$57,$58,afEnd
-byte_11E54:	dc.b   2,$81,$82,$83,$84,afEnd
+TailS3_loc_1612C:
+		cmp.b	objoff_34(a0),d0	; Has the input parent obAnim changed since last check?
+		beq.s	TailS3_loc_1613C		; If not, branch and skip setting a matching Tails' Tails obAnim
+		move.b	d0,objoff_34(a0)	; Store d0 for the above comparison
+		move.b	Obj_Tails_Tail_AniSelection(pc,d0.w),obAnim(a0)	; Load obAnim relative to parent's
+
+TailS3_loc_1613C:
+		lea	(AniTails_Tail).l,a1
+		bsr.w	Animate_Tails_Part2
+TailS3_loc_1615A:
+		bsr.w	LoadTailsTailsDynPLC
+		jmp	(DisplaySprite).l
+; ---------------------------------------------------------------------------
+; animation master script table for the tails
+; chooses which animation script to run depending on what Tails is doing
+
+Obj_Tails_Tail_AniSelection:
+		dc.b 0,0	; TailsAni_Walk,Run	->
+		dc.b 3		; TailsAni_Roll		-> Directional
+		dc.b 3		; TailsAni_Roll2	-> Directional
+		dc.b 9		; TailsAni_Push		-> Pushing
+		dc.b 1		; TailsAni_Wait		-> Swish
+		dc.b 0		; TailsAni_Balance	-> Blank
+		dc.b 2		; TailsAni_LookUp	-> Flick
+		dc.b 1		; TailsAni_Duck		-> Swish
+		dc.b 7		; TailsAni_Spindash	-> Spindash
+		dc.b 0,0,0	; TailsAni_Dummy1,2,3	->
+		dc.b 8		; TailsAni_Stop		-> Skidding
+		dc.b 0,0	; TailsAni_Float,2	->
+		dc.b 0		; TailsAni_Spring	->
+		dc.b 0		; TailsAni_Hang		->
+		dc.b 0		;
+		dc.b 0		; TailsAni_Victory	->
+		dc.b $A		; TailsAni_Hang2	-> Hanging
+		dc.b 0		; TailsAni_Bubble	->
+		dc.b 0,0,0	; TailsAni_Death,2,3	->
+		dc.b 0		; TailsAni_Slide2?	->
+		dc.b 0,0	; TailsAni_Hurt,Slide	->
+		dc.b 0		; TailsAni_Blank	->
+		dc.b 0,0	; TailsAni_Dummy4,5	->
+		dc.b 0		; TailsAni_HaulAss	->
+		dc.b $B,$C	; TailsAni_Fly,2	-> Fly1,2
+		dc.b $B		; TailsAni_Carry	-> Fly1
+		dc.b $C		; TailsAni_Ascend	-> Fly2
+		dc.b $B		; TailsAni_Tired	-> Fly1
+		dc.b 0,0	; TailsAni_Swim,2	->
+		dc.b 0		; TailsAni_Tired2	->
+		dc.b 0		; TailsAni_Tired3	->
+		dc.b 0
+		dc.b 0
+		dc.b 0
+		dc.b 0
+		dc.b 0
+		dc.b 0
+		dc.b 0
+		dc.b 0
+		dc.b 0
 		even
+AniTails_Tail:
+		include "animations/Tails tails.asm"
+; ---------------------------------------------------------------------------

@@ -79,6 +79,9 @@ SoundIndex:
 	zSoundIndexEntry	Snd_LargeLaser,$70
 	zSoundIndexEntry	Snd_OilSlide,$6F
 	zSoundIndexEntry	Snd_Goal,$70
+	zSoundIndexEntry	Snd_TailsGrab,$70
+	zSoundIndexEntry	Snd_TailsFlying,$70
+	zSoundIndexEntry	Snd_TailsFlyingTired,$70
 
 Snd_Jump:	include "sound/SFX/Sound20.asm"
 Snd_Checkpoint:	include "sound/SFX/Sound21.asm"
@@ -161,3 +164,7 @@ Snd_LargeLaser:	include "sound/SFX/Sound6F.asm"
 Snd_OilSlide:	include "sound/SFX/Sound70.asm"
 Snd_Goal:	include "sound/SFX/SndA8 - SS Goal.asm"
 
+
+Snd_TailsGrab:	include "sound/SFX/Tails Grab.asm"
+Snd_TailsFlying:	include "sound/SFX/Tails Flying.asm"
+Snd_TailsFlyingTired:	include "sound/SFX/Tails Flying Tired.asm"
