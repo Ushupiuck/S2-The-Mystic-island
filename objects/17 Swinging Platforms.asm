@@ -57,10 +57,11 @@ SwingingPtfm_Index:
 SwingingPtfm_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj17,obMap(a0)
+		move.b	#Map_Obj17_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_GHZ_MZ_Swing,0,0),obGfx(a0)
 		move.b	#1<<obRender.level_fg,obRender(a0)
 		move.w	#$180,obPriority(a0)
-		move.b	#$18,obActWid(a0)
+		move.b	#sprite_bound($18,Map_Obj17_width),obActWid(a0)
 		move.b	#8,obHeight(a0)
 		move.w	obY(a0),swing_orig_y(a0)
 		move.w	obX(a0),swing_orig_x(a0)
@@ -68,8 +69,9 @@ SwingingPtfm_Init:
 		cmpi.b	#id_SLZ,(Current_Zone).w
 		bne.s	.parseSubtype
 		move.l	#Map_Obj17_SLZ,obMap(a0)
+		move.b	#Map_Obj17_SLZ_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_SLZ_Swing,2,0),obGfx(a0)
-		move.b	#$20,obActWid(a0)
+		move.b	#sprite_bound($20,Map_Obj17_SLZ_width),obActWid(a0)
 		move.b	#$10,obHeight(a0)
 		move.b	#$99,obColType(a0)
 
@@ -103,6 +105,7 @@ SwingingPtfm_Init:
 		bne.w	.noHelper
 		_move.b	obID(a0),obID(a1)
 		move.l	obMap(a0),obMap(a1)
+		move.b	height_pixels(a0),height_pixels(a1)
 		move.w	obGfx(a0),obGfx(a1)
 		move.b	#1<<obRender.level_fg,obRender(a1)
 		bset	#obRender.multi_sprite,obRender(a1)
@@ -157,7 +160,7 @@ SwingingPtfm_Init:
 		move.w	d3,obY(a0)
 
 .helperDone:
-		; The height shares the first child's mapping high byte; set it after .fillChain.
+		; The universal height byte stays separate from the packed chain children.
 		move.b	#$50,mainspr_height(a1)
 		move.l	a1,swing_helper_ptr(a0)
 
@@ -178,10 +181,11 @@ SwingingPtfm_Init:
 
 .makeBall:
 		move.l	#Map_GBall,obMap(a0)
+		move.b	#Map_GBall_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_GHZ_Giant_Ball,2,0),obGfx(a0)
 		move.b	#1,obFrame(a0)
 		move.w	#$100,obPriority(a0)
-		move.b	#$18,obActWid(a0)
+		move.b	#sprite_bound($18,Map_GBall_width),obActWid(a0)
 		move.b	#$18,obHeight(a0)
 		move.b	#$99,obColType(a0)
 .done:		rts

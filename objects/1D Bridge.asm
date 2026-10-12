@@ -25,10 +25,12 @@ Bridge_Index:	dc.w Bridge_Init-Bridge_Index	; 0
 Bridge_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_GHZ_Bridge,obMap(a0)
+		move.b	#Map_GHZ_Bridge_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_GHZ_Bridge,2,0),obGfx(a0)
 		cmpi.b	#3,(Current_Zone).w
 		bne.s	.notGHZ
 		move.l	#Map_EHZ_Bridge,obMap(a0)
+		move.b	#Map_EHZ_Bridge_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_EHZ_Bridge,2,0),obGfx(a0)
 
 .notGHZ:
@@ -36,11 +38,12 @@ Bridge_Init:
 		bne.s	.notEHZ
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_HPZ_Bridge,obMap(a0)
+		move.b	#Map_HPZ_Bridge_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_HPZ_Bridge,3,0),obGfx(a0)
 
 .notEHZ:
 		move.b	#4,obRender(a0)
-		move.b	#$80,obActWid(a0)
+		move.b	#sprite_bound($80,Map_HPZ_Bridge_width),obActWid(a0)
 		move.w	obY(a0),d2
 		move.w	d2,objoff_3C(a0)
 		move.w	obX(a0),d3
@@ -83,10 +86,12 @@ sub_7C76:
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.l	obMap(a0),obMap(a1)
+		move.b	height_pixels(a0),height_pixels(a1)
 		move.w	obGfx(a0),obGfx(a1)
 		move.b	obRender(a0),obRender(a1)
 		bset	#6,obRender(a1)
 		move.b	#$40,mainspr_width(a1)
+		move.b	#32,height_pixels(a1)	; bridge depression fits the former wrapped-Y margin
 		move.b	d1,mainspr_childsprites(a1)
 		subq.b	#1,d1
 		lea	subspr_data(a1),a2

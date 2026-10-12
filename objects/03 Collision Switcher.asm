@@ -19,9 +19,10 @@ Obj03_Index:	dc.w Obj03_Init-Obj03_Index
 Obj03_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj03,obMap(a0)
+		move.b	#Map_Obj03_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Ring,1,0),obGfx(a0)
 		move.b	#4,obRender(a0)
-		move.b	#$10,obActWid(a0)
+		move.b	#sprite_bound($10,Map_Obj03_width),obActWid(a0)
 		move.w	#$280,obPriority(a0)
 		move.b	obSubtype(a0),d0
 		btst	#2,d0

@@ -51,9 +51,10 @@ SpindashDust:
 Dust_Init:
 		move.b	#2,obRoutine(a0)
 		move.l	#Map_SpindashDust,obMap(a0)
+		move.b	#Map_SpindashDust_height,height_pixels(a0)
 		move.b	#4,obRender(a0)
 		move.w	#$80,obPriority(a0)
-		move.b	#32,obActWid(a0)
+		move.b	#sprite_bound(32,Map_SpindashDust_width),obActWid(a0)
 		move.b	#-1,dust_loaded_frame(a0)
 		move.w	#make_art_tile(ArtTile_Sonic_Dust,0,0),obGfx(a0)
 		move.w	#ArtTile_Sonic_Dust*tile_size,dust_vram_address(a0)
@@ -136,6 +137,7 @@ Dust_Main:
 		subq.w	#sonic_height-tails_height,obY(a1)
 .particle:
 		move.l	obMap(a0),obMap(a1)
+		move.b	height_pixels(a0),height_pixels(a1)
 		move.b	#4,obRender(a1)
 		move.w	#$80,obPriority(a1)
 		move.b	#8,obActWid(a1)

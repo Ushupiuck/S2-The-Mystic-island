@@ -22,6 +22,7 @@ MorphingPlatform_Index:
 MorphingPlatform_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Mplat,obMap(a0)
+		move.b	#Map_Mplat_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_MorphingOrbs,0,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.w	#$180,obPriority(a0)

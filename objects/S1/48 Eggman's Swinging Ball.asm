@@ -20,6 +20,7 @@ GBall_Main:	; Routine 0
 		move.w	#$4080,obAngle(a0)
 		move.w	#-$200,objoff_3E(a0)
 		move.l	#Map_BossItems,obMap(a0)
+		move.b	#Map_BossItems_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Eggman_Weapons,0,0),obGfx(a0)
 		lea	obSubtype(a0),a2
 		clr.b	(a2)+
@@ -32,12 +33,13 @@ GBall_Main:	; Routine 0
 		andi.w	#$7F,d5
 		move.b	d5,(a2)+
 		move.b	#4,obRender(a1)
-		move.b	#8,obActWid(a1)
+		move.b	#Map_BossItems_width,width_pixels(a1)
 		move.w	#$300,obPriority(a1)
 		move.l	objoff_34(a0),objoff_34(a1)
 		dbf	d1,GBall_MakeLinks ; repeat sequence 5 more times
 		move.b	#8,obRoutine(a1)
 		move.l	#Map_GBall,obMap(a1) ; load different mappings for final link
+		move.b	#Map_GBall_height,height_pixels(a1)
 		move.w	#make_art_tile(ArtTile_GHZ_Giant_Ball,2,0),obGfx(a1) ; use different graphics
 		move.b	#1,obFrame(a1)
 		move.w	#$280,obPriority(a1)
@@ -53,6 +55,7 @@ GBall_MakeLinks:
 		_move.b	#id_Obj48,obID(a1) ; load chain link object
 		move.b	#6,obRoutine(a1)
 		move.l	#Map_Obj17,obMap(a1)
+		move.b	#Map_Obj17_height,height_pixels(a1)
 		move.w	#make_art_tile(ArtTile_GHZ_MZ_Swing,0,0),obGfx(a1)
 		move.b	#1,obFrame(a1)
 		addq.b	#1,obSubtype(a0)
@@ -63,7 +66,7 @@ GBall_MakeLinks:
 		andi.w	#$7F,d5
 		move.b	d5,(a2)+
 		move.b	#4,obRender(a1)
-		move.b	#8,obActWid(a1)
+		move.b	#sprite_bound(8,Map_Obj17_width),obActWid(a1)
 		move.w	#$300,obPriority(a1)
 		move.l	objoff_34(a0),objoff_34(a1)
 		dbf	d1,GBall_MakeLinks ; repeat sequence 5 more times
@@ -71,6 +74,7 @@ GBall_MakeLinks:
 GBall_MakeBall:
 		move.b	#8,obRoutine(a1)
 		move.l	#Map_GBall,obMap(a1) ; load different mappings for final link
+		move.b	#Map_GBall_height,height_pixels(a1)
 		move.w	#make_art_tile(ArtTile_GHZ_Giant_Ball,2,0),obGfx(a1) ; use different graphics
 		move.b	#1,obFrame(a1)
 		move.w	#$280,obPriority(a1)

@@ -23,15 +23,17 @@ Ledge_Index:	dc.w Ledge_Main-Ledge_Index	; 0
 Ledge_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj1A,obMap(a0)
+		move.b	#Map_Obj1A_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Level,2,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.w	#$200,obPriority(a0)
-		move.b	#$30,obActWid(a0)	; Default width
+		move.b	#sprite_bound($30,Map_Obj1A_width),obActWid(a0)	; Default width
 		move.b	#7,ledge_timedelay(a0)	; set time delay for collapse
 		move.b	obSubtype(a0),obFrame(a0)
 		cmpi.b	#id_HPZ,(Current_Zone).w
 		bne.s	+
 		move.l	#Map_Obj1A_HPZ,obMap(a0)
+		move.b	#Map_Obj1A_HPZ_height,height_pixels(a0)
 		move.w	#$434A,obGfx(a0)
 		move.l	#Obj1A_Conf_HPZ,collapsing_platform_slope_pointer(a0)
 		bra.s	Ledge_Touch

@@ -16,9 +16,10 @@ Obj16_Index:	dc.w Obj16_Init-Obj16_Index
 Obj16_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj16,obMap(a0)
+		move.b	#Map_Obj16_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_HtzZipline,2,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
-		move.b	#$20,obActWid(a0)
+		move.b	#sprite_bound($20,Map_Obj16_width),obActWid(a0)
 		clr.b	obFrame(a0)
 		move.w	#$80,obPriority(a0)
 		move.b	#$40,obHeight(a0)

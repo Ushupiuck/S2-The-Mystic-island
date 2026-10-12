@@ -22,6 +22,8 @@ ObjMovingSpring_Init:
 		ori.b	#4,obRender(a0)
 		move.w	#$200,obPriority(a0)
 		move.l	#Map_MovSpring,obMap(a0)
+		move.b	#Map_MovSpring_height,height_pixels(a0)
+		move.b	#Map_MovSpring_width,width_pixels(a0)
 		move.b	#8,obWidth(a0)
 		move.b	#7,obHeight(a0)
 		move.w	obX(a0),objoff_36(a0)
@@ -122,15 +124,17 @@ Obj41_Index:
 Obj41_Init:
 		addq.b	#2,obRoutine(a0)	; goto Up
 		move.l	#Map_obj41_GHZ,obMap(a0)
+		move.b	#Map_obj41_GHZ_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_S1_Spring_Vertical,0,0),obGfx(a0)
 		tst.b	(Current_Zone).w
 		beq.s	loc_E22A
 		move.l	#Map_obj41,obMap(a0)
+		move.b	#Map_obj41_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Spring_Vertical,0,0),obGfx(a0)
 
 loc_E22A:
 		ori.b	#4,obRender(a0)
-		move.b	#$10,obActWid(a0)
+		move.b	#sprite_bound($10,sprite_bound(Map_obj41_GHZ_width,sprite_bound(Map_obj41_width,Map_obj41a_width))),obActWid(a0)
 		move.w	#$200,obPriority(a0)
 		move.b	obSubtype(a0),d0
 		lsr.w	#3,d0
@@ -156,7 +160,7 @@ Obj41_Init_Horizontal:
 		move.w	#make_art_tile(ArtTile_Spring_Horizontal,0,0),obGfx(a0)
 
 loc_E27C:
-		move.b	#8,obActWid(a0)
+		move.b	#sprite_bound(8,sprite_bound(Map_obj41_GHZ_width,sprite_bound(Map_obj41_width,Map_obj41a_width))),obActWid(a0)
 		bra.s	Obj41_Init_Common
 ; ===========================================================================
 ; loc_E284:
@@ -192,6 +196,7 @@ Obj41_Init_Common:
 		tst.b	(Current_Zone).w	; don't bother loading diagonal spring mappings
 		beq.s	.return			; in green hill zone (art for it doesn't exist)
 		move.l	#Map_obj41a,obMap(a0)
+		move.b	#Map_obj41a_height,height_pixels(a0)
 
 .return:
 		rts

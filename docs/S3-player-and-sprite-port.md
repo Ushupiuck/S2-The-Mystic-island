@@ -43,14 +43,72 @@ byte size, tile word and signed word X. Inline spring and boss mappings in
 second tile word for 2P interlace is removed.
 
 `height_pixels` is the display half-height byte at `$49`; the SST stride stays
-`$4A`. The normal renderer conservatively expands legacy bounds from mapping
-geometry. Collision radii retain their existing fields. Composite rendering
-uses its normal path for every composite, including invincibility stars.
+`$4A`. `Render_Sprites` uses bounds initialized by each object; it never scans
+mapping geometry to determine an object's size. Collision radii retain their
+existing fields. Composite rendering uses its normal path for every composite,
+including invincibility stars.
 Object `$35` prepares eight packed children in `$10–$3F`, stores four orbit
 angles and animation indices in `$40–$47`, and uses flags at `$48`. It queues
 through `DisplaySprite3` because child data overlaps the ordinary priority
-field. No star ID check or temporary star buffer remains in `BuildSprites`;
+field. Its header covers the padded viewport, with children clipped separately.
+No star ID check or temporary star buffer remains in `Render_Sprites`;
 `height_pixels` at `$49`, the SST stride and neighboring objects stay intact.
+
+### Initializing display bounds
+
+The normal `build.lua` workflow regenerates `_inc/Sprite Bounds.asm` before
+assembling the playable ROM. It discovers `Map*_height` and `Map*_width`
+references in the included source, then uses an intermediate assembly to
+resolve binary mappings, inline tables, aliases and shared frames. No separate
+mapping registry or additional runtime dependency is needed. A failed pass
+restores the previous generated constants and leaves the playable ROM intact.
+
+For each six-byte piece, its height is `((size & 3) + 1) * 8` and its width is
+`((size >> 2) + 1) * 8`. The vertical half-bound is the largest absolute value
+of either `Y` or `Y + height`, across every piece in every frame. The horizontal
+half-bound similarly covers `X` and `X + width`. These symmetric bounds also
+cover flipped frames. They describe the display extent, not collision radii.
+
+For example, `Map_Sonic_height` is `$23`: frame `$26` has a 16-pixel-high piece
+at Y = -35, and no frame extends farther from the origin. This is derived data,
+not a manually chosen Sonic-specific constant.
+
+An imported ordinary object initializes its mapping and bounds together:
+
+```asm
+        move.l  #Map_NewObject,obMap(a0)
+        move.b  #Map_NewObject_height,height_pixels(a0)
+        move.b  #sprite_bound($18,Map_NewObject_width),width_pixels(a0)
+```
+
+`sprite_bound` takes the larger of the legacy width and the mapping width at
+assembly time. If no legacy minimum is needed, use `Map_NewObject_width`
+directly. A normal build discovers the new references automatically. ASM
+mapping pointer tables use `dc.w frame-Map_NewObject`; binary tables may share
+or reorder their frames. Fragment constructors copy the parent's bounds when
+switching to static pieces. Objects selecting from several mapping sets use
+the largest bound in that family. Moving composite groups define the extent
+of the whole group rather than the size of one child's mapping. Debug object
+selection alone calculates the selected frame's bounds at runtime.
+
+### Rendering
+
+The ordinary and composite mapping loops come from S3&K's `Render_Sprites`.
+HUD and ring-manager drawing remain inlined. Mapping groups return to their
+queue or child loop by branch, without a BSR/RTS pair per object. Queue counts
+are consumed once per priority. The ID-based object manager still needs the
+deleted-object guard; the renderer reads the ID and flags together.
+
+SAT links are initialized when the table is cleared. Each render repairs the
+previous terminator and writes one new hidden terminator, while retaining
+link zero in the final entry. The S1 bonus-stage layout can append to that
+same chain. This removes per-piece link writes and the loop clearing every
+unused sprite Y. Both paths respect `Sprite_Table_Max = 80`.
+
+The legacy composite header remains compact: half-width at `$0E`, byte child
+count at `$0F`, six-byte children at `$10`, and universal half-height at `$49`.
+Screen-space objects retain their existing Y field at `$0A`; world-space
+objects use `$0C` and support wrapped camera Y.
 
 `Load_DynamicPLC` uses the S3&K word-count/packed-word run format for Sonic,
 Tails, tails and dust. It reserves room for every run, including possible
@@ -103,7 +161,10 @@ runtime palette and its documented `mapver=S3K` / `dplcver=S3K` overrides.
 
 ## Validation
 
-Build the ROM, then run `python build_tools/check_sprite_assets.py`.
+Build the ROM with `build.lua`, then run
+`python build_tools/check_sprite_bounds.py` and
+`python build_tools/check_sprite_assets.py`. The first checks all generated
+bounds against the final assembled mappings, including their frame counts.
 With a pinned skdisasm checkout, add `--skdisasm /path/to/skdisasm` to verify
 all remapped Tails pixels against the original files. The check covers all
 79 root binary tables, all 296 Tails body/tail mapping/DPLC frames, and the
@@ -129,3 +190,33 @@ flight-contact cases, deferred carry uploads and carried-pose cycles in both
 directions. Genesis Plus GX checks under NTSC and PAL cover
 primary/companion startup in GHZ and SYZ, damage flashing, pickup/carry/release,
 flight boss contacts and the shared star lifetime.
+
+The renderer replacement passed 4,572 ordinary flip cases across 102 tables,
+1,728 composite edge/flip/budget cases, 1,143 debug-bound cases and 32 static
+fragment cases. Integration checks compare 72 HUD configurations, 24 results
+screens, 36 ring-manager configurations and 720 visible star frames with the
+previous renderer. All 21 scenery setups and 33 constructed fragments retain
+their bounds. The 1,024 S1 layout cases still match, and 80 consecutive
+render/layout/render cases verify persistent links through empty, partial and
+full sprite tables. The normal Lua build handles newly imported reordered
+binary frames, aliases and backward shared ASM frames; invalid imports leave
+the previous constants and ROM intact, and removed imports leave no stale
+constants.
+
+Genesis Plus GX profiling counted emulated 68000 cycles inside the renderer,
+including the old separate ring routine, over 180 frames per scene:
+
+| NTSC scene | Previous cycles/call | New cycles/call | Reduction |
+| --- | ---: | ---: | ---: |
+| GHZ idle | 11,687 | 4,969 | 57.5% |
+| GHZ running | 16,118 | 6,234 | 61.3% |
+| GHZ invincibility | 15,669 | 8,771 | 44.0% |
+| SYZ idle | 13,895 | 5,511 | 60.3% |
+| SYZ running | 17,085 | 6,951 | 59.3% |
+| SYZ invincibility | 17,859 | 9,262 | 48.1% |
+
+PAL gives equivalent savings. Each of these samples completes one main update
+per emulated frame with zero lag frames, as the baseline also did. These
+figures measure renderer CPU cost, not an increase in the game's framerate.
+NTSC/PAL gameplay checks retain startup, flashing, flight, exhaustion, carrying,
+flight attacks, dust, swimming, independent air and star lifetime behavior.

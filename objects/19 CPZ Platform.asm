@@ -21,6 +21,7 @@ Obj19_WidthArray:
 Obj19_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj19,obMap(a0)
+		move.b	#Map_Obj19_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_CPZ_Platform,3,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		moveq	#0,d0

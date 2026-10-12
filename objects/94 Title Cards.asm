@@ -61,8 +61,9 @@ Card_ActNumber:
 Card_MakeSprite:
 		move.b	d0,obFrame(a1)
 		move.l	#Map_Card,obMap(a1)
+		move.b	#Map_Card_height,height_pixels(a1)
 		move.w	#make_art_tile(ArtTile_Title_Card,0,1),obGfx(a1)
-		move.b	#$78,obActWid(a1)
+		move.b	#sprite_bound($78,Map_Card_width),obActWid(a1)
 		sf	obRender(a1)
 		move.b	#60,obTimeFrame(a1)
 		lea	object_size(a1),a1

@@ -19,11 +19,12 @@ Octus_Index:	dc.w Octus_Init-Octus_Index	; 0
 
 Octus_Init:
 		move.l	#Map_Octus,obMap(a0)
+		move.b	#Map_Octus_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Octus,1,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#$A,obColType(a0)
 		move.w	#$200,obPriority(a0)
-		move.b	#$10,obActWid(a0)
+		move.b	#sprite_bound($10,Map_Octus_width),obActWid(a0)
 		move.b	#$B,obHeight(a0)
 		move.b	#8,obWidth(a0)
 		jsr	(ObjectMoveAndFall).l
@@ -99,9 +100,10 @@ Octus_MoveUpAndFire:
 		_move.b	#id_Obj63,obID(a1)
 		move.b	#4,obRoutine(a1)
 		move.l	#Map_Octus,obMap(a1)
+		move.b	#Map_Octus_height,height_pixels(a1)
 		move.w	#make_art_tile(ArtTile_Octus,1,0),obGfx(a1)
 		move.w	#$200,obPriority(a1)
-		move.b	#$10,obActWid(a1)
+		move.b	#sprite_bound($10,Map_Octus_width),obActWid(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.b	#$F,octus_timer(a1)

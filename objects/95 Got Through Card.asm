@@ -49,6 +49,7 @@ Got_Loop:
 loc_BB94:
 		move.b	d0,obFrame(a1)
 		move.l	#Map_Obj3A,obMap(a1)
+		move.b	#Map_Obj3A_height,height_pixels(a1)
 		move.w	#make_art_tile(ArtTile_Title_Card,0,1),obGfx(a1)
 		sf	obRender(a1)
 		lea	object_size(a1),a1

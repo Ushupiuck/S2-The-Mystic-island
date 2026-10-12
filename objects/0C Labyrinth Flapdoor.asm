@@ -18,9 +18,10 @@ flap_wait = objoff_30		; time until change
 Flap_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Flap,obMap(a0)
+		move.b	#Map_Flap_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_LZ_Flapping_Door,2,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
-		move.b	#$28,obActWid(a0)
+		move.b	#sprite_bound($28,Map_Flap_width),obActWid(a0)
 		moveq	#0,d0
 		move.b	obSubtype(a0),d0						; move subtype to d0
 		add.w	d0,d0								; multiply by 60 frames (1 second)

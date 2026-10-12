@@ -20,11 +20,12 @@ loc_AE70:
 		move.b	#$E,obHeight(a0)
 		move.b	#$E,obWidth(a0)
 		move.l	#Map_Obj26,obMap(a0)
+		move.b	#Map_Obj26_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Monitor,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.w	#v_player,obParent(a0)		; default collector for scripted/debug breakage
 		move.w	#$180,obPriority(a0)
-		move.b	#$F,obActWid(a0)
+		move.b	#sprite_bound($F,Map_Obj26_width),obActWid(a0)
 		lea	(v_objstate).w,a2
 		moveq	#0,d0
 		move.b	obRespawnNo(a0),d0

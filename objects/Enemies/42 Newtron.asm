@@ -17,13 +17,14 @@ Newtron_Index:
 Newtron_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Newtron,obMap(a0)	; Default to GHZ (test level for now)
+		move.b	#Map_Newtron_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Newtron,0,0),obGfx(a0)
 	;	cmpi.b	#id_MZ,(v_zone).w
 	;	bne.s	.skip
 	;	move.w	#make_art_tile(ArtTile_MZ_Newtron,0,0),obGfx(a0)
 .skip:		move.b	#4,obRender(a0)
 		move.w	#$200,obPriority(a0)
-		move.b	#$14,obActWid(a0)
+		move.b	#sprite_bound($14,Map_Newtron_width),obActWid(a0)
 		move.b	#$10,obHeight(a0)
 		move.b	#8,obWidth(a0)
 

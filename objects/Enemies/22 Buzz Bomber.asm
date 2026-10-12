@@ -21,11 +21,12 @@ Obj22_Index:	dc.w Obj22_Init-Obj22_Index
 Obj22_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_obj22,obMap(a0)
+		move.b	#Map_obj22_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Buzz_Bomber,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.w	#$180,obPriority(a0)
 		move.b	#8,obColType(a0)
-		move.b	#$18,obActWid(a0)
+		move.b	#sprite_bound($18,Map_obj22_width),obActWid(a0)
 ; loc_A44A:
 Obj22_Main:
 		moveq	#0,d0

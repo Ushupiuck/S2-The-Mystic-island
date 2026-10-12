@@ -27,10 +27,11 @@ Obj5E_Index:	dc.w See_Main-Obj5E_Index
 See_Main:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_obj5E,obMap(a0)
+		move.b	#Map_obj5E_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_HTZ_Seesaw,0,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.w	#$200,obPriority(a0)
-		move.b	#$30,obActWid(a0)
+		move.b	#sprite_bound($30,Map_obj5E_width),obActWid(a0)
 		move.w	obX(a0),see_origX(a0)
 		tst.b	obSubtype(a0)	; is object type 00 ?
 		bne.s	.noball		; if not, branch
@@ -149,11 +150,12 @@ See_ChgFrame:
 See_Spikeball:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_obj5Eb,obMap(a0)
+		move.b	#Map_obj5Eb_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_HTZ_Seesaw,0,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.w	#$200,obPriority(a0)
 		move.b	#$8B,obColType(a0)
-		move.b	#$C,obActWid(a0)
+		move.b	#sprite_bound($C,Map_obj5Eb_width),obActWid(a0)
 		move.w	obX(a0),see_origX(a0)
 		addi.w	#$28,obX(a0)
 		addi.w	#$10,obY(a0)

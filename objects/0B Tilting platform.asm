@@ -20,9 +20,10 @@ tilt_offset	= objoff_36	; 1 byte; individual timer per tilting platform
 Obj0B_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj0B,obMap(a0)
+		move.b	#Map_Obj0B_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Level,3,1),obGfx(a0)
 		ori.b	#4,obRender(a0)
-		move.b	#$10,obActWid(a0)
+		move.b	#sprite_bound($10,Map_Obj0B_width),obActWid(a0)
 		move.w	#$200,obPriority(a0)
 		moveq	#0,d0
 		move.b	obSubtype(a0),d0

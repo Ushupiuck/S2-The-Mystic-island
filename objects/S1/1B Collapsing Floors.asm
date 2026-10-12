@@ -15,6 +15,7 @@ Obj1B_Index:
 loc_8D6A:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj1B,obMap(a0)
+		move.b	#Map_Obj1B_height,height_pixels(a0)
 		move.w	#make_art_tile($2B8,2,0),obGfx(a0)	; we default to marble zone
 		cmpi.b	#id_SLZ,(Current_Zone).w
 		bne.s	loc_8D8E
@@ -30,7 +31,7 @@ loc_8D9C:
 		ori.b	#4,obRender(a0)
 		move.w	#$200,obPriority(a0)
 		move.b	#7,objoff_38(a0)
-		move.b	#$44,obActWid(a0)
+		move.b	#sprite_bound($44,Map_Obj1B_width),obActWid(a0)
 
 loc_8DB4:
 		tst.b	objoff_3A(a0)

@@ -16,11 +16,12 @@ Piranha_Index:	dc.w Piranha_Init-Piranha_Index
 Piranha_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Piranha,obMap(a0)
+		move.b	#Map_Piranha_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_BFish,1,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#$A,obColType(a0)
 		move.w	#$200,obPriority(a0)
-		move.b	#$10,obActWid(a0)
+		move.b	#sprite_bound($10,Map_Piranha_width),obActWid(a0)
 		moveq	#0,d0
 		move.b	obSubtype(a0),d0
 		move.b	d0,d1

@@ -1,7 +1,7 @@
 ; ---------------------------------------------------------------------------
 ; Object 35 - all four S2 invincibility-star layers in one shared SST
 ; Pack eight children in $10-$3F and keep orbit state in $40-$48. This is a
-; normal composite object: BuildSprites needs no effect-specific dispatch.
+; normal composite object: Render_Sprites needs no effect-specific dispatch.
 ; ---------------------------------------------------------------------------
 ; SST Variables:
 
@@ -21,10 +21,11 @@ Obj35:
 		tst.b	invincibility_flags(a0)
 		bmi.s	InvincibilityStars_Update
 		move.l	#Map_InvincibilityStars,obMap(a0)
+		move.b	#224/2+32,height_pixels(a0)	; the group covers the padded viewport
 		move.w	#make_art_tile(ArtTile_Invincibility,0,0),obGfx(a0)
 		move.b	#$44,obRender(a0)		; world coordinates, composite with wrapped Y
 		clr.b	mainspr_mapframe(a0)		; no main sprite
-		move.b	#$FF,mainspr_width(a0)		; children perform their own bounds checks
+		move.b	#320/2+32,mainspr_width(a0)		; children perform their own bounds checks
 		move.l	#$0400162C,invincibility_angles(a0)
 		clr.l	invincibility_frames(a0)
 		moveq	#1,d2				; draw the initial phase before advancing it
@@ -92,7 +93,9 @@ InvincibilityStars_BuildChildren:
 		move.l	d7,-(sp)
 		lea	invincibility_angles(a0),a4
 		andi.b	#$7F,obRender(a0)		; no children means the effect stays offscreen
-		move.w	(Camera_RAM).w,obX(a0)		; children perform their own bounds checks
+		move.w	(Camera_RAM).w,d0
+		addi.w	#320/2,d0
+		move.w	d0,obX(a0)			; header bounds cover the clipped children
 		move.w	(Camera_RAM+4).w,d0
 		addi.w	#224/2,d0			; header stays visible across camera motion/Y wraps
 		move.w	d0,obY(a0)

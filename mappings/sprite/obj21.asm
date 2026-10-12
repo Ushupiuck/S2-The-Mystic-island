@@ -1,4 +1,4 @@
-; DrawSprite_Loop adds ArtTile_HUD to these mappings. Derive the complete
+; Render_Sprites adds ArtTile_HUD to these mappings. Derive the complete
 ; ring tile word before subtracting that base, preserving palette and flips.
 Map_Obj21_RingTile = make_art_tile(ArtTile_Ring,1,1)-ArtTile_HUD
 Map_Obj21_ScoreE = make_art_tile(ArtTile_HUD_E,1,1)-ArtTile_HUD

@@ -24,9 +24,10 @@ bub_freq = objoff_33		; frequency of bubble spawn
 Bub_Main:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Bubbles,obMap(a0)
+		move.b	#Map_Bubbles_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_LZ_Bubbles,0,1),obGfx(a0)
 		move.b	#$84,obRender(a0)
-		move.b	#$10,obActWid(a0)
+		move.b	#sprite_bound($10,Map_Bubbles_width),obActWid(a0)
 		move.w	#$80,obPriority(a0)
 		move.b	obSubtype(a0),d0	; get bubble type
 		bpl.s	.bubble			; if type is $0-$7F, branch

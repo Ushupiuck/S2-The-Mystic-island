@@ -37,9 +37,10 @@ Spla_Index:	dc.w Spla_Main-Spla_Index
 Spla_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Splash,obMap(a0)
+		move.b	#Map_Splash_height,height_pixels(a0)
 		ori.b	#4,obRender(a0)
 		move.w	#$80,obPriority(a0)
-		move.b	#$10,obActWid(a0)
+		move.b	#sprite_bound($10,Map_Splash_width),obActWid(a0)
 		move.w	#make_art_tile(ArtTile_LZ_Splash,2,0),obGfx(a0)
 		; Scripted/debug splashes default to the main player.
 		tst.w	obParent(a0)

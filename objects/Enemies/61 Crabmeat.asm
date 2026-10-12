@@ -23,11 +23,12 @@ Crab_Main:	; Routine 0
 		move.b	#$10,obHeight(a0)
 		move.b	#8,obWidth(a0)
 		move.l	#Map_Crab,obMap(a0)
+		move.b	#Map_Crab_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Crabmeat,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.w	#$180,obPriority(a0)
 		move.b	#6,obColType(a0)
-		move.b	#$15,obActWid(a0)
+		move.b	#sprite_bound($15,Map_Crab_width),obActWid(a0)
 		bsr.w	ObjectMoveAndFall
 		jsr	(ObjHitFloor).l	; find floor
 		tst.w	d1
@@ -184,11 +185,12 @@ Crab_Delete:	; Routine 4
 Crab_BallMain:	; Routine 6
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Crab,obMap(a0)
+		move.b	#Map_Crab_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Crabmeat,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.w	#$180,obPriority(a0)
 		move.b	#$87,obColType(a0)
-		move.b	#8,obActWid(a0)
+		move.b	#sprite_bound(8,Map_Crab_width),obActWid(a0)
 		move.w	#-$400,obVelY(a0)
 		move.b	#7,obAnim(a0)
 

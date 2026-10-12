@@ -15,36 +15,43 @@ Scen_Index:	dc.w Scen_Init-Scen_Index		; 0
 Scen_Conf:	; Organized in the following format:
 	;	dc.l Mappings
 	;	dc.w Art
-	;	dc.b obFrame, obActWid, obPriority (the last two bytes are a word)
+	;	dc.b obFrame, width_pixels; dc.w priority; dc.b height_pixels, padding
 ; ---------------------------------------------------------------------------
 		; 0
 		dc.l Map_HPZ_Bridge		; HPZ Pulsing Bridge
 		dc.w make_art_tile(ArtTile_HPZ_Bridge,3,0)
-		dc.b	3,	4,	0,	$80
+		dc.b 3, sprite_bound(4,Map_HPZ_Bridge_width), 0, $80
+		dc.b Map_HPZ_Bridge_height, 0
 		; 1
 		dc.l Map_HPZ_Orb		; HPZ Pulsing Orb
 		dc.w make_art_tile(ArtTile_HPZ_Orb,3,1)
-		dc.b	0,	$10,	0,	$80
+		dc.b 0, sprite_bound($10,Map_HPZ_Orb_width), 0, $80
+		dc.b Map_HPZ_Orb_height, 0
 		; 2
 		dc.l Map_EHZ_Bridge			; EHZ Wooden Stake & Bridge
 		dc.w make_art_tile(ArtTile_EHZ_Bridge,2,0)
-		dc.b	1,	4,	0,	$80
+		dc.b 1, sprite_bound(4,Map_EHZ_Bridge_width), 0, $80
+		dc.b Map_EHZ_Bridge_height, 0
 		; 3
 		dc.l Map_GHZ_Bridge		; GHZ Wooden Bridge & Stake (Yes, really. They're inverted)
 		dc.w make_art_tile(ArtTile_GHZ_Bridge,2,0)
-		dc.b	1,	$10,	0,	$80
+		dc.b 1, sprite_bound($10,Map_GHZ_Bridge_width), 0, $80
+		dc.b Map_GHZ_Bridge_height, 0
 		; 4
 		dc.l Map_Obj16			; HTZ Zipline
 		dc.w make_art_tile(ArtTile_HtzZipline,2,0)
-		dc.b	3,	8,	2,	0
+		dc.b 3, sprite_bound(8,Map_Obj16_width), 2, 0
+		dc.b Map_Obj16_height, 0
 		; 5
 		dc.l Map_Obj16			; HTZ Zipline (filler)
 		dc.w make_art_tile(ArtTile_HtzZipline,2,0)
-		dc.b	4,	8,	2,	0
+		dc.b 4, sprite_bound(8,Map_Obj16_width), 2, 0
+		dc.b Map_Obj16_height, 0
 		; 6
 		dc.l Map_Obj16			; HTZ Zipline (filler)
 		dc.w make_art_tile(ArtTile_HtzZipline,2,0)
-		dc.b	1,	$20,	0,	$80
+		dc.b 1, sprite_bound($20,Map_Obj16_width), 0, $80
+		dc.b Map_Obj16_height, 0
 ; ---------------------------------------------------------------------------
 
 Scen_Init:	; FromSubtype
@@ -52,9 +59,9 @@ Scen_Init:	; FromSubtype
 		move.b	obSubtype(a0),d0	; Use the low nibble to determine which configuration to load
 		andi.w	#$F,d0
 		move.w	d0,d1
-		lsl.w	#3,d0
+		add.w	d0,d0
 		add.w	d1,d0
-		add.w	d1,d0
+		lsl.w	#2,d0			; 12 bytes per configuration
 		lea	Scen_Conf(pc,d0.w),a1	; Done? Load the proper object
 		move.l	(a1)+,obMap(a0)
 		move.w	(a1)+,obGfx(a0)
@@ -62,6 +69,7 @@ Scen_Init:	; FromSubtype
 		move.b	(a1)+,obFrame(a0)
 		move.b	(a1)+,obActWid(a0)
 		move.w	(a1)+,obPriority(a0)
+		move.b	(a1),height_pixels(a0)
 		move.b	obSubtype(a0),d0	; we gotta process subtype one more time!
 		andi.w	#$F0,d0			; high nibble this time
 		beq.s	Scen_Display		; if 0, don't bother. Otherwise keep going, we gotta animate

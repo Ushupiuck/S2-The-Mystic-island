@@ -18,10 +18,11 @@ MotoBug_Index:
 
 MotoBug_Init:
 		move.l	#Map_obj40,obMap(a0)
+		move.b	#Map_obj40_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Moto_Bug,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.w	#$200,obPriority(a0)
-		move.b	#$14,obActWid(a0)
+		move.b	#sprite_bound($14,Map_obj40_width),obActWid(a0)
 		tst.b	obAnim(a0)
 		bne.s	MotoBug_Smoke
 		move.b	#$E,obHeight(a0)

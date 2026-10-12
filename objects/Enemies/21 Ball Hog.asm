@@ -23,11 +23,12 @@ Ballhog_Index:	dc.w Ballhog_Main-Ballhog_Index		; 0
 
 Ballhog_Main:
 		move.l	#Map_BallHogH,obMap(a0)
+		move.b	#Map_BallHogH_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Ball_HogH,1,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.w	#$200,obPriority(a0)
 		move.b	#5,obColType(a0)
-		move.b	#$C,obActWid(a0)
+		move.b	#sprite_bound($C,Map_BallHogH_width),obActWid(a0)
 		move.b	#$13,obHeight(a0)
 		move.b	#8,obWidth(a0)
 		bsr.w	ObjectMoveAndFall
@@ -47,6 +48,8 @@ Ballhog_Main:
 		sf	hog_launchflag(a0)	; set to launch	cannonball
 		move.w	#$40,hog_walk(a0)
 		move.l	#Map_BallHogV,obMap(a0) ; set proto-hog mappings
+		move.b	#Map_BallHogV_height,height_pixels(a0)
+		move.b	#Map_BallHogV_width,width_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Ball_HogV,1,0),obGfx(a0) ; and art pointer
 		move.b	#4,ob2ndRout(a0)	; set to timed mode
 
@@ -85,6 +88,8 @@ Ballhog_Main:
 		sf	hog_launchflag(a0)	; set to launch	cannonball
 		move.w	#$40,hog_walk(a0)
 		move.l	#Map_BallHogV,obMap(a0) ; set proto-hog mappings
+		move.b	#Map_BallHogV_height,height_pixels(a0)
+		move.b	#Map_BallHogV_width,width_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Ball_HogV,1,0),obGfx(a0) ; and art pointer
 		move.b	#4,obRoutine(a0)
 		move.b	#4,ob2ndRout(a0)	; set to timed mode
@@ -114,6 +119,7 @@ Ballhog_MakeBall:
 		move.b	#6,obRoutine(a1)	; set normal bomb
 		move.b	#4,obFrame(a1)		; set bomb frame
 		move.l	#Map_BallHogH,obMap(a1)
+		move.b	#Map_BallHogH_height,height_pixels(a1)
 		move.b	#6,obHeight(a1)
 		move.w	#make_art_tile(ArtTile_Ball_HogH,1,0),obGfx(a1)
 		move.w	obX(a0),obX(a1)
@@ -123,7 +129,7 @@ Ballhog_MakeBall:
 		move.b	#4,obRender(a1)
 		move.w	#$180,obPriority(a1)
 		move.b	#$87,obColType(a1)
-		move.b	#8,obActWid(a1)
+		move.b	#sprite_bound(8,Map_BallHogH_width),obActWid(a1)
 		moveq	#0,d0
 		move.b	obSubtype(a0),d0	; move subtype to d0
 		add.w	d0,d0			; multiply by 60 frames (1 second)
@@ -373,13 +379,14 @@ Hog_Idle3:
 		move.b	#8,obRoutine(a1)	; set proto bomb
 		move.b	#4,obFrame(a1)		; set bomb frame
 		move.l	#Map_BallHogH,obMap(a1)
+		move.b	#Map_BallHogH_height,height_pixels(a1)
 		move.w	#make_art_tile(ArtTile_Ball_HogH,1,0),obGfx(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.b	#4,obRender(a1)
 		move.w	#$180,obPriority(a1)
 		move.b	#$87,obColType(a1)
-		move.b	#8,obActWid(a1)
+		move.b	#sprite_bound(8,Map_BallHogH_width),obActWid(a1)
 		move.w	#$18,hog_launchflag(a1)
 		addi.w	#$10,obY(a1)
 .abort:		rts

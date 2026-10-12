@@ -18,9 +18,10 @@ surf_freeze = objoff_32		; flag to freeze animation
 WaterSurface_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj07,obMap(a0)
+		move.b	#Map_Obj07_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Water_Surface,0,1),obGfx(a0)
 		move.b	#4,obRender(a0)
-		move.b	#$80,obActWid(a0)
+		move.b	#sprite_bound($80,Map_Obj07_width),obActWid(a0)
 		move.w	obX(a0),surf_origX(a0)
 
 WaterSurface_Main:

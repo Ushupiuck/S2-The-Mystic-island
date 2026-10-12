@@ -29,6 +29,7 @@ Over_Main:
 Over_1stWord:
 		move.w	#$F0,obScreenY(a0)
 		move.l	#Map_Over,obMap(a0)
+		move.b	#Map_Over_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Game_Over,0,1),obGfx(a0)
 		sf	obRender(a0)	; shouldn't this be a "ori.b	#4,obRender(a0)"?
 

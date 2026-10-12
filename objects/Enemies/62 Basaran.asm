@@ -16,12 +16,13 @@ Bas_Index:	dc.w Bas_Main-Bas_Index
 Bas_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Bas,obMap(a0)
+		move.b	#Map_Bas_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Basaran,0,1),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.b	#$C,obHeight(a0)
 		move.w	#$100,obPriority(a0)
 		move.b	#$B,obColType(a0)
-		move.b	#$10,obActWid(a0)
+		move.b	#sprite_bound($10,Map_Bas_width),obActWid(a0)
 
 Bas_Action:	; Routine 2
 		moveq	#0,d0

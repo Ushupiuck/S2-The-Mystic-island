@@ -8,6 +8,9 @@ animal_y_vel		= objoff_30	; 2 bytes
 animal_prison_num	= objoff_32	; 2 bytes
 enemy_combo		= objoff_3E	; 2 bytes. See Touch_KillEnemy
 ; ---------------------------------------------------------------------------
+Flicky_DisplayHeight = sprite_bound(Map_Animals1_height,sprite_bound(Map_Animals2_height,sprite_bound(Map_Animals3_height,sprite_bound(Map_Animals4_height,Map_Animals5_height))))
+Flicky_DisplayWidth = sprite_bound(Map_Animals1_width,sprite_bound(Map_Animals2_width,sprite_bound(Map_Animals3_width,sprite_bound(Map_Animals4_width,Map_Animals5_width))))
+
 Flicky:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
@@ -175,11 +178,12 @@ Flicky_Init:
 		move.w	(a1)+,animal_y_vel(a0)
 		move.w	animal_y_vel(a0),obVelY(a0)
 		move.l	(a1)+,obMap(a0)
+		move.b	#Flicky_DisplayHeight,height_pixels(a0)
 		move.b	#$C,obHeight(a0)
 		move.b	#4,obRender(a0)
 		bset	#0,obRender(a0)
 		move.w	#$300,obPriority(a0)
-		move.b	#8,obActWid(a0)
+		move.b	#Flicky_DisplayWidth,obActWid(a0)
 		move.b	#7,obTimeFrame(a0)
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
@@ -205,11 +209,12 @@ FlickyRandom:
 		move.w	(a1)+,animal_x_vel(a0)
 		move.w	(a1)+,animal_y_vel(a0)
 		move.l	(a1)+,obMap(a0)
+		move.b	#Flicky_DisplayHeight,height_pixels(a0)
 		move.b	#$C,obHeight(a0)
 		move.b	#4,obRender(a0)
 		bset	#0,obRender(a0)
 		move.w	#$300,obPriority(a0)
-		move.b	#8,obActWid(a0)
+		move.b	#Flicky_DisplayWidth,obActWid(a0)
 		move.b	#7,obTimeFrame(a0)
 		move.b	#2,obFrame(a0)
 		move.w	#-$400,obVelY(a0)

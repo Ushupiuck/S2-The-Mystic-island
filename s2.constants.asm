@@ -29,7 +29,7 @@ obXSub:			equ $A		; for when exra presition is required (2 bytes)
 obY:			equ $C		; y-axis position (2-4 bytes)
 obYSub:			equ $E		; for when exra presition is required (2 bytes)
 obActWid:		equ $14		; action width; width_pixels
-height_pixels:		equ $49		; universal display half-height; computed from mappings for legacy objects
+height_pixels:		equ $49		; universal display half-height; initialized by each object
 width_pixels =		obActWid
 obPriority:		equ $18		; and $19 - sprite stack priority -- 0 is front
 obFrame:		equ $1A		; current frame displayed
@@ -207,7 +207,7 @@ next_subspr		= 6
 mainspr_mapframe	= $B
 mainspr_width		= $E
 mainspr_childsprites	= $F	; amount of child sprites
-mainspr_height		= $14
+mainspr_height		= height_pixels
 subspr_data		= $10
 sub2_x_pos	= subspr_data+next_subspr*0+0	; $10, obVelX
 sub2_y_pos	= subspr_data+next_subspr*0+2	; $12, obVelY
@@ -271,7 +271,7 @@ obRender.x_flip			= 0 ; Sprite mirrored horizontally.
 obRender.y_flip			= 1 ; Sprite mirrored vertically.
 obRender.level_fg		= 2 ; Move with level foreground.
 obRender.level_bg		= 3 ; Move with level background; leftover from Sonic 1.
-obRender.explicit_height	= 4 ; Draw culling uses `y_radius` instead of guessing a height.
+obRender.explicit_height	= 4 ; Legacy composite flag; display height is always height_pixels.
 obRender.static_mappings	= 5 ; Mappings pointer points directly to a lone sprite piece instead of a list of sprites.
 obRender.multi_sprite		= 6 ; Object SST holds metadata for multiple sprites.
 obRender.on_screen		= 7 ; Object is on-screen and was rendered on the previous frame.
@@ -911,7 +911,8 @@ v_hscrolltablebuffer:		ds.b	$380		; scrolling table data
 v_hscrolltablebuffer_end:
 				ds.b	$80		; would be unused, but data from v_hscrolltablebuffer can spill into here
 v_hscrolltablebuffer_end_padded:
-Sprite_Table:			ds.b	$280		; Sprite attribute table buffer
+Sprite_Table_Max:		equ 80
+Sprite_Table:			ds.b	Sprite_Table_Max*8		; Sprite attribute table buffer
 Sprite_Table_end:
 				ds.b	$140		; stack
 v_systemstack:

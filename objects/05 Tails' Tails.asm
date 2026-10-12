@@ -5,10 +5,10 @@ Obj05:
 Obj_Tails_Tail:
 		; Init
 		move.l	#Map_Tails_Tail,obMap(a0)
+		move.b	#Map_Tails_Tail_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_TailsTails,0,0),obGfx(a0)
 		move.w	#$100,obPriority(a0)
-		move.b	#$18,width_pixels(a0)
-		move.b	#$18,height_pixels(a0)
+		move.b	#sprite_bound($18,Map_Tails_Tail_width),width_pixels(a0)
 		move.b	#4,obRender(a0)
 		move.b	#2,obRoutine(a0)
 

@@ -15,11 +15,12 @@ Obj4D_Index:
 
 Obj4D_Init:
 		move.l	#Map_Rhinobot,obMap(a0)
+		move.b	#Map_Rhinobot_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Rhinobot,1,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#$A,obColType(a0)
 		move.w	#$200,obPriority(a0)
-		move.b	#$18,obActWid(a0)
+		move.b	#sprite_bound($18,Map_Rhinobot_width),obActWid(a0)
 		move.b	#$10,obHeight(a0)
 		move.b	#$18,obWidth(a0)
 		jsr	(ObjectMoveAndFall).l

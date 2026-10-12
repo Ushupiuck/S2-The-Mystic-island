@@ -54,11 +54,12 @@ Obj4B_Flame:
 
 Obj4B_Init:
 		move.l	#Map_Buzzer,obMap(a0)
+		move.b	#Map_Buzzer_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Buzzer,0,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#$A,obColType(a0)
 		move.w	#$200,obPriority(a0)
-		move.b	#$10,obActWid(a0)
+		move.b	#sprite_bound($10,Map_Buzzer_width),obActWid(a0)
 		move.b	#$10,obHeight(a0)
 		move.b	#$18,obWidth(a0)
 		addq.b	#2,obRoutine(a0)		; => Obj4B_Main
@@ -70,9 +71,10 @@ Obj4B_Init:
 		_move.b	#id_Obj4B,obID(a1)			; load obj4B
 		move.b	#4,obRoutine(a1)		; => Obj4B_Flame
 		move.l	#Map_Buzzer,obMap(a1)
+		move.b	#Map_Buzzer_height,height_pixels(a1)
 		move.w	#make_art_tile(ArtTile_Buzzer,0,0),obGfx(a1)
 		move.w	#$200,obPriority(a1)
-		move.b	#$10,obActWid(a1)
+		move.b	#sprite_bound($10,Map_Buzzer_width),obActWid(a1)
 		move.b	obStatus(a0),obStatus(a1)
 		move.b	obRender(a0),obRender(a1)
 		move.b	#1,obAnim(a1)
@@ -190,10 +192,11 @@ Obj4B_ShootProjectile:
 		_move.b	#id_Obj4B,obID(a1)			; load obj4B
 		move.b	#6,obRoutine(a1)		; => Obj4B_Projectile
 		move.l	#Map_Buzzer,obMap(a1)
+		move.b	#Map_Buzzer_height,height_pixels(a1)
 		move.w	#make_art_tile(ArtTile_Buzzer,0,0),obGfx(a1)
 		move.w	#$200,obPriority(a1)
 		move.b	#$98,obColType(a1)
-		move.b	#$10,obActWid(a1)
+		move.b	#sprite_bound($10,Map_Buzzer_width),obActWid(a1)
 		move.b	obStatus(a0),obStatus(a1)
 		move.b	obRender(a0),obRender(a1)
 		move.b	#2,obAnim(a1)

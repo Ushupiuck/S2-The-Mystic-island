@@ -17,9 +17,10 @@ GiantRing_Index:
 
 GRing_Main:
 		move.l	#Map_GiantRing,obMap(a0)
+		move.b	#Map_GiantRing_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Giant_Ring,1,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
-		move.b	#$40,obActWid(a0)
+		move.b	#sprite_bound($40,Map_GiantRing_width),obActWid(a0)
 		tst.b	obRender(a0)
 		bpl.s	GRing_Animate
 		cmpi.b	#6,(v_emeralds).w

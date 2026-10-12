@@ -22,9 +22,10 @@ GiantRingFlash_Index:
 Flash_Main:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_GiantRing,obMap(a0)
+		move.b	#Map_GiantRing_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Giant_Ring,1,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
-		move.b	#$20,obActWid(a0)
+		move.b	#sprite_bound($20,Map_GiantRing_width),obActWid(a0)
 		clr.b	ob2ndRout(a0)		; Initialize this flash's ownership/cleanup flags
 		cmpi.b	#2,(v_gfxbigring).w
 		beq.s	Flash_Animate		; Join the existing flash animation

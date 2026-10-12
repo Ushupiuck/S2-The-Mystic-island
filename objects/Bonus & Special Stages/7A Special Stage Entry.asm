@@ -26,9 +26,10 @@ Obj7A_Init:
 .continue:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_SpecialWarp,obMap(a0)
+		move.b	#Map_SpecialWarp_height,height_pixels(a0)
 		move.b	#4,obRender(a0)
 		move.w	#$80,obPriority(a0)
-		move.b	#$38,obActWid(a0)
+		move.b	#sprite_bound($38,Map_SpecialWarp_width),obActWid(a0)
 		move.w	#make_art_tile(ArtTile_Warp,0,0),obGfx(a0)
 		move.w	#60*2,obj7A_vanishtime(a0)	; set vanishing time to 2 seconds
 

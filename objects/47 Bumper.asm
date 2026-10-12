@@ -15,10 +15,11 @@ Bump_Index:	dc.w Bump_Main-Bump_Index
 Bump_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		move.b	#4,obRender(a0)
-		move.b	#$10,obActWid(a0)
+		move.b	#Map_Bump_width,width_pixels(a0)
 		move.w	#$80,obPriority(a0)
 		move.b	#$D7,obColType(a0)
 		move.l	#Map_Bump,obMap(a0)
+		move.b	#Map_Bump_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Bumper,0,0),obGfx(a0)
 		move.w	obX(a0),objoff_30(a0)	; setting these up for later!
 		move.w	obY(a0),objoff_32(a0)

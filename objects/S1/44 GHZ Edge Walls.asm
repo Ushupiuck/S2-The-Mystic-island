@@ -16,9 +16,10 @@ Edge_Index:	dc.w Edge_Main-Edge_Index
 Edge_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_obj44,obMap(a0)
+		move.b	#Map_obj44_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_GHZ_Edge_Wall,2,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
-		move.b	#8,obActWid(a0)
+		move.b	#sprite_bound(8,Map_obj44_width),obActWid(a0)
 		move.w	#$300,obPriority(a0)
 		move.b	obSubtype(a0),obFrame(a0)	; copy object type number to frame number
 		bclr	#4,obFrame(a0)		; clear	4th bit	(deduct	$10)

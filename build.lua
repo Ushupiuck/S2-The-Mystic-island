@@ -26,7 +26,13 @@ local common = require "build_tools.lua.common"
 
 -- Build the ROM.
 local compression = improved_dac_driver_compression and "kosinskiplus" or "kosinski"
-local message, abort = common.build_rom("main", "s2built", "", "-p=FF -z=0," .. compression .. ",Size_of_DAC_driver_guess,after", false, "https://github.com/sonicretro/s1disasm")
+local p2bin_arguments = "-p=FF -z=0," .. compression .. ",Size_of_DAC_driver_guess,after"
+local repository = "https://github.com/sonicretro/s1disasm"
+local sprite_bounds = require "build_tools.lua.sprite_bounds"
+if not sprite_bounds.generate(common, "", p2bin_arguments, repository) then
+	os.exit(false, true)
+end
+local message, abort = common.build_rom("main", "s2built", "", p2bin_arguments, false, repository)
 
 if message then
 	exit_code = false

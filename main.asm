@@ -15,6 +15,7 @@ TimeTravel		= 1	; if 1, allows time-travel mechanics (W.I.P)
 	include	"s2.macrosetup.asm"
 	include	"s2.macros.asm"
 	include	"s2.constants.asm"
+	include	"_inc/Sprite Bounds.asm"
 	include	"sound/_smps2asm_inc.asm"
  if AdvancedHandler
 	include	"Debugger.asm"
@@ -870,7 +871,7 @@ ClearScreen:
 		fillVRAM 0, vram_bg, vram_bg+plane_size_64x32 ; clear background namespace
 		clr.l	(v_scrposy_vdp).w
 		clr.l	(v_scrposx_vdp).w
-		clearRAM Sprite_Table,Sprite_Table_end
+		jsr	(Init_SpriteTable).l	; S3&K fixed SAT links, initialized only on a clear
 		clearRAM v_hscrolltablebuffer,v_hscrolltablebuffer_end_padded
 		rts
 ; End of function ClearScreen
@@ -2159,7 +2160,7 @@ TitleScreen:
 		bsr.w	PalLoad1
 		_move.b	#id_Obj90,(v_sonicteam).w	; load "SONIC TEAM PRESENTS" object
 		jsr	(ExecuteObjects).l
-		jsr	(BuildSprites).l
+		jsr	(Render_Sprites).l
         	bsr.w	Pal_FadeFromBlack
 		disable_ints
 		lea	(Kosp_Title).l,a0
@@ -2214,7 +2215,7 @@ TitleScreen:
 		_move.b	#id_Obj93,(v_pressstart).w
 		move.b	#1,(v_titletails+obFrame).w
 		jsr	(ExecuteObjects).l
-		jsr	(BuildSprites).l
+		jsr	(Render_Sprites).l
 		moveq	#plcid_Main,d0
 		bsr.w	NewPLC
 	;	move.w	#id_EHZ<<8,(Current_ZoneAndAct).w
@@ -2232,7 +2233,7 @@ TitleScreen_Loop:
 		move.w	#Vint_Title,(v_vbla_routine).w
 		bsr.w	WaitForVint
 		jsr	(ExecuteObjects).l
-		jsr	(BuildSprites).l
+		jsr	(Render_Sprites).l
 		bsr.w	Deform_TitleScreen
 	;	bsr.w	PalCycle_TitleScreen	; For reference, in case this is implemented
 		bsr.w	RunPLC_RAM
@@ -2732,7 +2733,7 @@ Level_TtlCardLoop:
 		bsr.w	Process_Kos_Queue
 		bsr.w	WaitForVint
 		jsr	(ExecuteObjects).l
-		jsr	(BuildSprites).l
+		jsr	(Render_Sprites).l
 		bsr.w	Process_Kos_Module_Queue
 		bsr.w	RunPLC_RAM
 		move.w	(v_ttlcardact+obX).w,d0
@@ -2809,7 +2810,7 @@ Level_LoadObj:
 		jsr	(ObjectsManager).l
 		jsr	(RingsManager).l
 		jsr	(ExecuteObjects).l
-		jsr	(BuildSprites).l
+		jsr	(Render_Sprites).l
 		jsr	(Animate_Tiles).l
 		moveq	#0,d0
 		tst.b	(v_lastlamp).w
@@ -2927,7 +2928,7 @@ Level_SkipScroll:
 		bsr.w	OscillateNumDo
 		bsr.w	ChangeRingFrame
 		bsr.w	SignpostArtLoad
-		jsr	(BuildSprites).l
+		jsr	(Render_Sprites).l
 		jsr	(ObjectsManager).l
 		cmpi.w	#Demo,(v_gamemode).w
 		beq.s	Level_ChkDemo
@@ -2968,7 +2969,7 @@ Level_FDLoop:
 		bsr.w	WaitForVint
 		bsr.w	MoveSonicInDemo
 		jsr	(ExecuteObjects).l
-		jsr	(BuildSprites).l
+		jsr	(Render_Sprites).l
 		jsr	(ObjectsManager).l
 		subq.w	#1,(PalChangeSpeed).w
 		bpl.s	loc_400E
@@ -3655,7 +3656,7 @@ SS_MainLoop:
 		bsr.w	WaitForVint
 		move.w	(v_jpadhold1).w,(v_jpadholdlogical).w
 		jsr	(ExecuteObjects).l
-		jsr	(BuildSprites).l
+		jsr	(Render_Sprites).l
 		bsr.w	InitRingFrame
 		bsr.w	BS_ShowLayout
 		bsr.w	S1SS_BgAnimate
@@ -3675,7 +3676,7 @@ SS_FinLoop:
 		move.w	#Vint_SSResults,(v_vbla_routine).w
 		bsr.w	WaitForVint
 		jsr	(ExecuteObjects).l
-		jsr	(BuildSprites).l
+		jsr	(Render_Sprites).l
 		bsr.w	BS_ShowLayout
 		bsr.w	S1SS_BgAnimate
 		subq.w	#1,(PalChangeSpeed).w
@@ -3729,7 +3730,7 @@ SS_NormalExit:
 		bsr.w	WaitForVint
 		bsr.w	AnimateSSResultsRing
 		jsr	(ExecuteObjects).l
-		jsr	(BuildSprites).l
+		jsr	(Render_Sprites).l
 		bsr.w	RunPLC_RAM
 		bsr.w	Process_Kos_Module_Queue
 		tst.w	(Level_Inactive_flag).w
@@ -4092,7 +4093,7 @@ BS_ShowLayout:
 		move.w	d5,d0
 		lsl.w	#3,d0
 		adda.w	d0,a2
-		cmpi.b	#80,d5
+		cmpi.b	#Sprite_Table_Max,d5
 		bhs.w	.finish
 		moveq	#$10-1,d7
 
@@ -4140,7 +4141,7 @@ BS_ShowLayout:
 
 .finish:
 		move.b	d5,(v_spritecount).w
-		cmpi.b	#80,d5
+		cmpi.b	#Sprite_Table_Max,d5
 		bhs.s	.full
 		clr.l	(a2)			; terminate after the final appended sprite
 		rts
@@ -4151,7 +4152,7 @@ BS_ShowLayout:
 ; The S3&K slot renderer also has this dedicated S1 mapping reader.
 
 BS_DrawSprite:
-		cmpi.b	#$50,d5				; check sprite limit
+		cmpi.b	#Sprite_Table_Max,d5				; check sprite limit
 		bhs.s	.return
 		move.b	(a1)+,d0			; get y-offset
 		ext.w	d0
@@ -4613,7 +4614,7 @@ SpecialStage:
 		fillVRAM 0,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size  ; clear Horizontal scroll table
 		clr.l	(Vscroll_Factor).w	; v_scrposy_vdp
 		clr.b	(SpecialStage_Started).w
-		clearRAM Sprite_Table,Sprite_Table_end
+		jsr	(Init_SpriteTable).l	; S3&K fixed SAT links, initialized only on a clear
 		clearRAM SS_Horiz_Scroll_Buf_1,$280
 		clearRAM PNT_Buffer,SS_Offset_Y
 		rts
@@ -7983,6 +7984,7 @@ loc_8E70:
 +		move.b	#4,obRoutine(a1)
 		_move.b	d4,obID(a1)
 		move.l	a3,obMap(a1)
+		move.b	height_pixels(a0),height_pixels(a1)
 		move.b	d5,obRender(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
@@ -9116,417 +9118,7 @@ Map_obj21:	include	"mappings/sprite/obj21.asm"
 ; =============== S U B R O U T I N E =======================================
 
 
-BuildSprites:
-		lea	(Sprite_Table).w,a2
-		moveq	#0,d5
-		moveq	#0,d4
-		tst.b	(Level_started_flag).w
-		beq.s	.levelstarted
-		; We proceed to draw the HUD
-		moveq	#0,d1			; Reset HUD frame index
-		tst.b	(Debug_mode_flag).w
-		beq.s	.checkBlink
-		moveq	#2,d1			; Debug coordinates retain their own mappings
-.checkBlink:
-		btst	#3,(Timer_frames+1).w	; Only blink on certain frames
-		bne.s	.skipBlink
-		cmpi.b	#9,(v_timemin).w	; 9:00 reached?
-		bne.s	.skipBlink
-		addq.w	#1,d1			; +1 = TIME blink frame
-
-.skipBlink:
-	;	move.b	(Level_started_flag).w,d3
-	;	ext.w	d3
-	;	bpl.s	+
-	;	addq.w	#2,d3
-	;	move.b	d3,(Level_started_flag).w
-+
-		move.w	#128+16,d3		; HUD X pos
-		move.w	#128+136,d2		; HUD Y pos
-		lea	Map_obj21(pc),a1	; Map data base
-		movea.w	#make_art_tile(ArtTile_HUD,0,0),a3 ; Art tile setup
-		add.w	d1,d1			; Word offset (2 bytes per entry)
-		adda.w	(a1,d1.w),a1		; Advance to correct HUD frame
-		move.w	(a1)+,d1
-		subq.w	#1,d1
-		bmi.s	+
-		bsr.w	DrawSprite_Loop		; Draw the HUD icon
-		; Continue onwards to to BuildRings
-+		bsr.w	BuildRings
-.levelstarted:
-		lea	(v_spritequeue).w,a4
-		moveq	#7,d7	; 8 priority levels
-
-BuildSprites_LevelLoop:
-		tst.w	(a4)	; does this level have any objects?
-		beq.w	BuildSprites_NextLevel	; if not, check the next one
-		moveq	#2,d6
-
-BuildSprites_ObjLoop:
-		movea.w	(a4,d6.w),a0 ; a0=object
-		; These are sanity checks, to detect invalid objects which should not
-		; have been queued for display. S3K gets rids of them compeletely,
-		; since they should not be needed and they just slow this code down.
-		tst.b	obID(a0)		; is this object slot occupied?
-		beq.w	BuildSprites_NextObj	; if not, branch
-		tst.l	obMap(a0)		; does this object have any mappings?
-		beq.w	BuildSprites_Crash	; if not, branch
-		andi.b	#$7F,obRender(a0)	; clear on-screen flag
-		move.b	obRender(a0),d0
-		move.b	d0,d4
-		btst	#6,d0		; is the multi-draw flag set?
-		bne.w	BuildSprites_MultiDraw	; if it is, branch
-		bsr.w	UpdateSpriteBounds	; legacy objects do not initialize display height
-		andi.w	#$C,d0		; is this to be positioned by screen coordinates?
-		beq.s	BuildSprites_ScreenSpaceObj	; if it is, branch
-		lea	(Camera_X_pos_copy).w,a1
-		moveq	#0,d0
-		move.b	obActWid(a0),d0
-		move.w	obX(a0),d3
-		sub.w	(a1),d3
-		move.w	d3,d1
-		add.w	d0,d1	; is the object right edge to the left of the screen?
-		bmi.w	BuildSprites_NextObj	; if it is, branch
-		move.w	d3,d1
-		sub.w	d0,d1
-		cmpi.w	#320,d1	; is the object left edge to the right of the screen?
-		bge.w	BuildSprites_NextObj	; if it is, branch
-		addi.w	#128,d3	; VDP sprites start at 128px
-		moveq	#0,d0
-		move.b	height_pixels(a0),d0
-		move.w	obY(a0),d2
-		sub.w	Camera_Y_pos-Camera_RAM(a1),d2
-		; Wrap before checking both edges, including stages with vertical loops.
-		add.w	d0,d2
-		andi.w	#$7FF,d2
-		move.w	d0,d1
-		add.w	d1,d1
-		addi.w	#224,d1
-		cmp.w	d1,d2
-		bhs.s	BuildSprites_NextObj
-		sub.w	d0,d2
-		addi.w	#128,d2
-		bra.s	BuildSprites_DrawSprite
-; ---------------------------------------------------------------------------
-
-BuildSprites_ScreenSpaceObj:
-		move.w	obScreenY(a0),d2
-		move.w	obScreenX(a0),d3
-
-BuildSprites_DrawSprite:
-		movea.l	obMap(a0),a1
-		moveq	#0,d1
-		btst	#5,d4	; is the static mappings flag set?
-		bne.s	+	; if it is, branch
-		move.b	obFrame(a0),d1
-		add.w	d1,d1
-		adda.w	(a1,d1.w),a1
-		moveq	#0,d1
-		move.w	(a1)+,d1
-		subq.w	#1,d1	; get number of pieces
-		bmi.s	++	; if there are 0 pieces, branch
-+
-		bsr.w	DrawSprite	; draw the sprite
-+
-		ori.b	#$80,obRender(a0)	; set on-screen flag
-
-BuildSprites_NextObj:
-		addq.w	#2,d6	; load next object
-		subq.w	#2,(a4)	; decrement object count
-		bne.w	BuildSprites_ObjLoop	; if there are objects left, repeat
-
-BuildSprites_NextLevel:
-		lea	$80(a4),a4
-		dbf	d7,BuildSprites_LevelLoop
-		move.b	d5,(v_spritecount).w
-		; Terminate the sprite list.
-		; If the sprite list is full, then set the link field of the last
-		; entry to 0. Otherwise, push the next sprite offscreen and set its
-		; link field to 0. You might be thinking why this doesn't just do the
-		; first one no matter what. Well, think about what if the sprite list
-		; was empty: then it would access data before the start of the list.
-		cmpi.b	#80,d5	; was the sprite limit reached?
-		beq.s	+	; if it was, branch
-		clr.l	(a2)	; set link field to 0
-		rts
-+
-		clr.b	-5(a2)	; set link field to 0
-		rts
-; ---------------------------------------------------------------------------
-
-BuildSprites_Crash:
-		move.w	(1).w,d0	; force a crash if the object has a blank ID/mapping pointers
-		bra.s	BuildSprites_NextObj
-; ---------------------------------------------------------------------------
-
-BuildSprites_MultiDraw:
-		bsr.s	BuildSprites_DrawComposite
-		bra.w	BuildSprites_NextObj
-
-; ---------------------------------------------------------------------------
-; Draw a composite object's main sprite and children. Return the advanced
-; VDP sprite-table pointer in a2 and the total sprite count in d5.
-; ---------------------------------------------------------------------------
-BuildSprites_DrawComposite:
-		move.l	a4,-(sp)
-		lea	(Camera_RAM).w,a4
-		movea.w	obGfx(a0),a3
-		movea.l	obMap(a0),a5
-		moveq	#0,d0
-
-		; check if object is within X bounds
-		move.b	mainspr_width(a0),d0	; load pixel width
-		move.w	obX(a0),d3
-		sub.w	(a4),d3
-		move.w	d3,d1
-		add.w	d0,d1
-		bmi.w	BuildSprites_MultiDraw_NextObj
-		move.w	d3,d1
-		sub.w	d0,d1
-		cmpi.w	#320,d1
-		bge.w	BuildSprites_MultiDraw_NextObj
-		addi.w	#128,d3
-
-		; check if object is within Y bounds
-		btst	#4,d4
-		beq.s	+
-		moveq	#0,d0
-		move.b	mainspr_height(a0),d0	; load pixel height
-		move.w	obY(a0),d2
-		sub.w	4(a4),d2
-		move.w	d2,d1
-		add.w	d0,d1
-		bmi.w	BuildSprites_MultiDraw_NextObj
-		move.w	d2,d1
-		sub.w	d0,d1
-		cmpi.w	#224,d1
-		bge.w	BuildSprites_MultiDraw_NextObj
-		addi.w	#128,d2
-		bra.s	++
-+
-		move.w	obY(a0),d2
-		sub.w	4(a4),d2
-		addi.w	#128,d2
-		andi.w	#$7FF,d2
-		cmpi.w	#$60,d2
-		blo.s	BuildSprites_MultiDraw_NextObj
-		cmpi.w	#$180,d2
-		bhs.s	BuildSprites_MultiDraw_NextObj
-+
-		moveq	#0,d1
-		move.b	mainspr_mapframe(a0),d1	; get current frame
-		beq.s	+
-		add.w	d1,d1
-		movea.l	a5,a1
-		adda.w	(a1,d1.w),a1
-		move.w	(a1)+,d1
-		subq.w	#1,d1
-		bmi.s	+
-		move.w	d4,-(sp)
-		bsr.w	ChkDrawSprite	; draw the sprite
-		move.w	(sp)+,d4
-+
-		ori.b	#$80,obRender(a0)	; set onscreen flag
-		lea	subspr_data(a0),a6
-		moveq	#0,d0
-		move.b	mainspr_childsprites(a0),d0	; get child sprite count
-		subq.w	#1,d0		; if there are 0, go to next object
-		bcs.s	BuildSprites_MultiDraw_NextObj
-
--		swap	d0
-		move.w	(a6)+,d3	; get X pos
-		sub.w	(a4),d3
-		addi.w	#128,d3
-		move.w	(a6)+,d2	; get Y pos
-		sub.w	4(a4),d2
-		addi.w	#128,d2
-		andi.w	#$7FF,d2
-		addq.w	#1,a6
-		moveq	#0,d1
-		move.b	(a6)+,d1	; get mapping frame
-		add.w	d1,d1
-		movea.l	a5,a1
-		adda.w	(a1,d1.w),a1
-		move.w	(a1)+,d1
-		subq.w	#1,d1
-		bmi.s	+
-		move.w	d4,-(sp)
-		bsr.w	ChkDrawSprite
-		move.w	(sp)+,d4
-+
-		swap	d0
-		dbf	d0,-	; repeat for number of child sprites
-
-BuildSprites_MultiDraw_NextObj:
-		movea.l	(sp)+,a4
-		rts
-; End of function BuildSprites
-
-
-		include	"_inc/Sprite Bounds.asm"
-
-; =============== S U B R O U T I N E =======================================
-
-
-DrawSprite:
-		movea.w	obGfx(a0),a3
-
-ChkDrawSprite:
-		btst	#0,d4	; is the sprite to be X-flipped?
-		bne.s	DrawSprite_FlipX	; if it is, branch
-		btst	#1,d4	; is the sprite to be Y-flipped?
-		bne.w	DrawSprite_FlipY	; if it is, branch
-
-DrawSprite_Loop:
-	; In a rather overzealous optimisation, this game doesn't check if
-	; the sprite limit has been reached every time it processes a sprite
-	; piece. Naturally, this leads to the 'Sprite_Table' buffer being
-	; overflowed if too many sprites are processed. To mitigate this, the
-	; developers placed an $80 byte large spill buffer after
-	; 'Sprite_Table', to 'catch' the overflow. Unfortunately, this spill
-	; buffer is not big enough to catch all overflow: this oversight is
-	; responsible for the famous 'Ashua' bug. To fix this, we'll just
-	; undo this optimistaion. Sonic 3 & Knuckles undid this optimistaion
-	; too, but heavily optimised the rest of 'BuildSprites' to make up
-	; for it.
-		cmpi.b	#$50,d5		; has the sprite limit been reached?
-		bhs.s	DrawSprite_Done	; if it has, branch
-		move.b	(a1)+,d0
-		ext.w	d0
-		add.w	d2,d0
-		move.w	d0,(a2)+	; set Y pos
-		move.b	(a1)+,(a2)+	; set sprite size
-		addq.b	#1,d5
-		move.b	d5,(a2)+	; set link field
-		move.w	(a1)+,d0
-		add.w	a3,d0
-		move.w	d0,(a2)+	; set art tile and flags
-		move.w	(a1)+,d0
-		add.w	d3,d0
-		andi.w	#$1FF,d0
-		bne.s	+
-		addq.w	#1,d0	; avoid activating sprite masking
-+
-		move.w	d0,(a2)+	; set X pos
-		dbf	d1,DrawSprite_Loop	; repeat for next sprite
-
-DrawSprite_Done:
-		rts
-; ---------------------------------------------------------------------------
-
-DrawSprite_FlipX:
-		btst	#1,d4	; is it to be Y-flipped as well?
-		bne.w	DrawSprite_FlipXY	; if it is, branch
-
--
-		cmpi.b	#80,d5		; has the sprite limit been reached?
-		bhs.s	++		; if it has, branch
-		move.b	(a1)+,d0
-		ext.w	d0
-		add.w	d2,d0
-		move.w	d0,(a2)+
-		move.b	(a1)+,d4	; store size for later use
-		move.b	d4,(a2)+
-		addq.b	#1,d5
-		move.b	d5,(a2)+
-		move.w	(a1)+,d0
-		add.w	a3,d0
-		eori.w	#$800,d0	; toggle X flip flag
-		move.w	d0,(a2)+
-		move.w	(a1)+,d0
-		neg.w	d0	; negate X offset
-		move.b	CellOffsets_XFlip(pc,d4.w),d4
-		sub.w	d4,d0	; subtract sprite size
-		add.w	d3,d0
-		andi.w	#$1FF,d0
-		bne.s	+
-		addq.w	#1,d0
-+
-		move.w	d0,(a2)+
-		dbf	d1,-
-+
-		rts
-; ---------------------------------------------------------------------------
-; offsets for vertically mirrored sprite pieces
-CellOffsets_YFlip:
-		dc.b   8,$10,$18,$20	; 4
-		dc.b   8,$10,$18,$20	; 8
-		dc.b   8,$10,$18,$20	; 12
-		dc.b   8,$10,$18,$20	; 16
-; ---------------------------------------------------------------------------
-; offsets for horizontally mirrored sprite pieces
-CellOffsets_XFlip:
-		dc.b   8,  8,  8,  8	; 4
-		dc.b $10,$10,$10,$10	; 8
-		dc.b $18,$18,$18,$18	; 12
-		dc.b $20,$20,$20,$20	; 16
-; ---------------------------------------------------------------------------
-
-DrawSprite_FlipY:
--
-		cmpi.b	#80,d5		; has the sprite limit been reached?
-		bhs.s	++		; if it has, branch
-		move.b	(a1)+,d0
-		move.b	(a1),d4
-		ext.w	d0
-		neg.w	d0
-		move.b	CellOffsets_YFlip(pc,d4.w),d4
-		sub.w	d4,d0
-		add.w	d2,d0
-		move.w	d0,(a2)+	; set Y pos
-		move.b	(a1)+,(a2)+	; set size
-		addq.b	#1,d5
-		move.b	d5,(a2)+	; set link field
-		move.w	(a1)+,d0
-		add.w	a3,d0
-		eori.w	#$1000,d0	; toggle Y flip flag
-		move.w	d0,(a2)+	; set art tile and flags
-		move.w	(a1)+,d0
-		add.w	d3,d0
-		andi.w	#$1FF,d0
-		bne.s	+
-		addq.w	#1,d0
-+
-		move.w	d0,(a2)+	; set X pos
-		dbf	d1,-
-+
-		rts
-; ---------------------------------------------------------------------------
-
-DrawSprite_FlipXY:
--
-		cmpi.b	#80,d5		; has the sprite limit been reached?
-		bhs.s	++		; if it has, branch
-		move.b	(a1)+,d0
-		move.b	(a1),d4
-		ext.w	d0
-		neg.w	d0
-		move.b	CellOffsets_YFlip(pc,d4.w),d4
-		sub.w	d4,d0
-		add.w	d2,d0
-		move.w	d0,(a2)+
-		move.b	(a1)+,d4
-		move.b	d4,(a2)+
-		addq.b	#1,d5
-		move.b	d5,(a2)+
-		move.w	(a1)+,d0
-		add.w	a3,d0
-		eori.w	#$1800,d0	; toggle X and Y flip flags
-		move.w	d0,(a2)+
-		move.w	(a1)+,d0
-		neg.w	d0
-		move.b	CellOffsets_XFlip(pc,d4.w),d4
-		sub.w	d4,d0
-		add.w	d3,d0
-		andi.w	#$1FF,d0
-		bne.s	+
-		addq.w	#1,d0
-+
-		move.w	d0,(a2)+
-		dbf	d1,DrawSprite_FlipXY
-+
-		rts
-; End of function DrawSprite
+		include	"_inc/Render Sprites.asm"
 
 ; ---------------------------------------------------------------------------
 		include	"objects/S1/sub ChkObjectVisible.asm"
@@ -9745,56 +9337,6 @@ locret_DA36:
 
 
 ; =============== S U B R O U T I N E =======================================
-
-
-BuildRings:
-		movea.w	(Ring_start_addr).w,a0
-		movea.w	(Ring_end_addr).w,a4
-		cmpa.l	a0,a4	; are there any rings on-screen?
-		beq.s	BuildRings_NextRing.end	; if there aren't, return
-		lea	(Camera_RAM).w,a3	; otherwise, continue
-
-BuildRings_Loop:
-		tst.w	(a0)		; has this ring been consumed?
-		bmi.w	BuildRings_NextRing	; if it has, branch
-		move.w	2(a0),d3	; get ring X pos
-		sub.w	Camera_X_pos-Camera_RAM(a3),d3		; subtract camera X pos
-		addi.w	#128,d3		; screen top-left is 128x128 not 0x0
-		move.w	4(a0),d2	; get ring Y pos
-		sub.w	Camera_Y_pos-Camera_RAM(a3),d2	; subtract camera Y pos
-		addq.w	#8,d2
-		andi.w	#$7FF,d2
-		cmpi.w	#224+16,d2
-		bhs.s	BuildRings_NextRing	; if the ring is not on-screen, branch
-		addi.w	#128-8,d2
-		cmpi.b	#80,d5
-		bhs.s	BuildRings_NextRing.end	; the ring path shares the sprite budget
-		moveq	#0,d1
-		move.b	1(a0),d1	; 0 = animated art, 1..4 = sparkle records
-		cmpi.b	#5,d1
-		bhs.s	BuildRings_NextRing
-		lsl.w	#3,d1		; S3&K fixed eight-byte custom records
-		lea	(MapUnc_Rings).l,a1
-		adda.w	d1,a1
-		add.w	(a1)+,d2
-		move.w	d2,(a2)+
-		move.w	(a1)+,d0
-		move.b	d0,(a2)+
-		addq.b	#1,d5
-		move.b	d5,(a2)+
-		move.w	(a1)+,(a2)+	; record includes tile, palette and flip flags
-		add.w	(a1)+,d3
-		andi.w	#$1FF,d3
-		bne.s	+
-		addq.w	#1,d3		; avoid activating VDP sprite masking
-+		move.w	d3,(a2)+
-
-BuildRings_NextRing:
-		lea	6(a0),a0
-		cmpa.l	a0,a4
-		bne.s	BuildRings_Loop
-.end:		rts
-; End of function BuildRings
 
 
 ; ---------------------------------------------------------------------------
@@ -12472,9 +12014,10 @@ Obj49_Index:	dc.w Obj49_Init-Obj49_Index
 Obj49_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Waterfall1,obMap(a0)
+		move.b	#Map_Waterfall1_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Waterfall,1,0),obGfx(a0)
 		move.b	#4,obRender(a0)
-		move.b	#$20,obActWid(a0)
+		move.b	#sprite_bound($20,Map_Waterfall1_width),obActWid(a0)
 		move.w	obX(a0),objoff_30(a0)
 		move.b	#$80,obHeight(a0)
 		bset	#4,obRender(a0)
@@ -12534,11 +12077,12 @@ Obj50_Index:	dc.w Obj50_Init-Obj50_Index
 Obj50_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj50,obMap(a0)
+		move.b	#Map_Obj50_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Aquis,1,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#$A,obColType(a0)
 		move.w	#$200,obPriority(a0)
-		move.b	#$10,obActWid(a0)
+		move.b	#sprite_bound($10,Map_Obj50_width),obActWid(a0)
 		move.w	#-$100,obVelX(a0)
 		move.b	obSubtype(a0),d0
 		move.b	d0,d1
@@ -12561,6 +12105,8 @@ Obj50_Init:
 		addi.w	#$A,obX(a1)
 		subq.w	#6,obY(a1)	; addi #-6 to subq #6
 		move.l	#Map_Obj50,obMap(a1)
+		move.b	#Map_Obj50_height,height_pixels(a1)
+		move.b	#Map_Obj50_width,width_pixels(a1)
 		move.w	#make_art_tile(ArtTile_Aquis_Child,1,0),obGfx(a1)
 		ori.b	#4,obRender(a1)
 		move.w	#$180,obPriority(a1)
@@ -12704,6 +12250,8 @@ loc_16086:
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.l	#Map_Obj50,obMap(a1)
+		move.b	#Map_Obj50_height,height_pixels(a1)
+		move.b	#Map_Obj50_width,width_pixels(a1)
 		move.w	#make_art_tile(ArtTile_Aquis_Child,1,0),obGfx(a1)
 		ori.b	#4,obRender(a1)
 		move.w	#$180,obPriority(a1)
@@ -12871,6 +12419,8 @@ loc_16306:
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.l	obMap(a0),obMap(a1)
+		move.b	height_pixels(a0),height_pixels(a1)
+		move.b	width_pixels(a0),width_pixels(a1)
 		move.w	#make_art_tile(ArtTile_Aquis_Child,1,0),obGfx(a1)
 		ori.b	#4,obRender(a1)
 		move.w	#$180,obPriority(a1)
@@ -12901,6 +12451,8 @@ loc_16378:
 		_move.b	obID(a0),obID(a1)
 		move.b	#$A,obRoutine(a1)
 		move.l	obMap(a0),obMap(a1)
+		move.b	height_pixels(a0),height_pixels(a1)
+		move.b	width_pixels(a0),width_pixels(a1)
 		move.w	#make_art_tile(ArtTile_Aquis_Child,1,0),obGfx(a1)
 
 loc_1639A:
@@ -13008,11 +12560,12 @@ off_16532:	dc.w loc_1653E-off_16532
 loc_1653E:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj50,obMap(a0)
+		move.b	#Map_Obj50_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Aquis,1,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#$A,obColType(a0)
 		move.w	#$200,obPriority(a0)
-		move.b	#$10,obActWid(a0)
+		move.b	#sprite_bound($10,Map_Obj50_width),obActWid(a0)
 		move.b	#6,obAnim(a0)
 		move.b	obSubtype(a0),d0
 		andi.w	#$F,d0
@@ -13133,6 +12686,8 @@ loc_1669E:
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.l	#Map_Obj50,obMap(a1)
+		move.b	#Map_Obj50_height,height_pixels(a1)
+		move.b	#Map_Obj50_width,width_pixels(a1)
 		move.w	#make_art_tile(ArtTile_Aquis_Child,1,0),obGfx(a1)
 		ori.b	#4,obRender(a1)
 		move.w	#$180,obPriority(a1)
@@ -13210,11 +12765,12 @@ Obj4C_Index:	dc.w Obj4C_Init-Obj4C_Index
 
 Obj4C_Init:
 		move.l	#Map_Obj4C,obMap(a0)
+		move.b	#Map_Obj4C_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_BBat,0,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#$A,obColType(a0)
 		move.w	#$200,obPriority(a0)
-		move.b	#$10,obActWid(a0)
+		move.b	#sprite_bound($10,Map_Obj4C_width),obActWid(a0)
 		move.b	#$10,obHeight(a0)
 		move.b	#8,obWidth(a0)
 		addq.b	#2,obRoutine(a0)
@@ -13551,11 +13107,12 @@ Obj4E_Index:	dc.w Obj4E_Init-Obj4E_Index
 
 Obj4E_Init:
 		move.l	#Map_Obj4E,obMap(a0)
+		move.b	#Map_Obj4E_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Gator,1,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#$A,obColType(a0)
 		move.w	#$200,obPriority(a0)
-		move.b	#$10,obActWid(a0)
+		move.b	#sprite_bound($10,Map_Obj4E_width),obActWid(a0)
 		move.b	#$10,obHeight(a0)
 		move.b	#8,obWidth(a0)
 		jsr	(ObjectMoveAndFall).l
@@ -13842,9 +13399,10 @@ loc_179AE:
 		_move.b	#id_Obj58,obID(a1)
 		move.l	a0,objoff_34(a1)
 		move.l	#Map_Obj58,obMap(a1)
+		move.b	#Map_Obj58_height,height_pixels(a1)
 		move.w	#make_art_tile($540,1,0),obGfx(a1)
 		move.b	#4,obRender(a1)
-		move.b	#$20,obActWid(a1)
+		move.b	#sprite_bound($20,Map_Obj58_width),obActWid(a1)
 		move.w	#$200,obPriority(a1)
 		move.l	obX(a0),obX(a1)
 		move.l	obY(a0),obY(a1)
@@ -14200,9 +13758,10 @@ sub_17D9A:
 		_move.b	#id_Obj58,obID(a1)
 		move.l	a0,objoff_34(a1)
 		move.l	#Map_Obj58a,obMap(a1)
+		move.b	#Map_Obj58a_height,height_pixels(a1)
 		move.w	#make_art_tile($4C0,1,0),obGfx(a1)
 		move.b	#4,obRender(a1)
-		move.b	#$10,obActWid(a1)
+		move.b	#sprite_bound($10,Map_Obj58a_width),obActWid(a1)
 		move.w	#$80,obPriority(a1)
 		move.b	#$10,obHeight(a1)
 		move.b	#$10,obWidth(a1)
@@ -14222,9 +13781,10 @@ loc_17E0E:
 		_move.b	#id_Obj58,obID(a1)
 		move.l	a0,objoff_34(a1)
 		move.l	#Map_Obj58a,obMap(a1)
+		move.b	#Map_Obj58a_height,height_pixels(a1)
 		move.w	#make_art_tile($4C0,1,0),obGfx(a1)
 		move.b	#4,obRender(a1)
-		move.b	#$10,obActWid(a1)
+		move.b	#sprite_bound($10,Map_Obj58a_width),obActWid(a1)
 		move.w	#$80,obPriority(a1)
 		move.b	#$10,obHeight(a1)
 		move.b	#$10,obWidth(a1)
@@ -14244,9 +13804,10 @@ loc_17E82:
 		_move.b	#id_Obj58,obID(a1)
 		move.l	a0,objoff_34(a1)
 		move.l	#Map_Obj58a,obMap(a1)
+		move.b	#Map_Obj58a_height,height_pixels(a1)
 		move.w	#make_art_tile($4C0,1,0),obGfx(a1)
 		move.b	#4,obRender(a1)
-		move.b	#$10,obActWid(a1)
+		move.b	#sprite_bound($10,Map_Obj58a_width),obActWid(a1)
 		move.w	#$100,obPriority(a1)
 		move.b	#$10,obHeight(a1)
 		move.b	#$10,obWidth(a1)
@@ -14266,9 +13827,10 @@ loc_17EF6:
 		_move.b	#id_Obj58,obID(a1)
 		move.l	a0,objoff_34(a1)
 		move.l	#Map_Obj58a,obMap(a1)
+		move.b	#Map_Obj58a_height,height_pixels(a1)
 		move.w	#make_art_tile($4C0,1,0),obGfx(a1)
 		move.b	#4,obRender(a1)
-		move.b	#$10,obActWid(a1)
+		move.b	#sprite_bound($10,Map_Obj58a_width),obActWid(a1)
 		move.w	#$80,obPriority(a1)
 		move.l	obX(a0),obX(a1)
 		move.l	obY(a0),obY(a1)
@@ -14290,9 +13852,10 @@ loc_17F54:
 		_move.b	#id_Obj58,obID(a1)
 		move.l	a0,objoff_34(a1)
 		move.l	#Map_Obj58a,obMap(a1)
+		move.b	#Map_Obj58a_height,height_pixels(a1)
 		move.w	#make_art_tile($4C0,0,0),obGfx(a1)
 		move.b	#4,obRender(a1)
-		move.b	#$20,obActWid(a1)
+		move.b	#sprite_bound($20,Map_Obj58a_width),obActWid(a1)
 		move.w	#$100,obPriority(a1)
 		move.l	obX(a0),obX(a1)
 		move.l	obY(a0),obY(a1)
@@ -14308,9 +13871,10 @@ loc_17F98:
 		_move.b	#id_Obj58,obID(a1)
 		move.l	a0,objoff_34(a1)
 		move.l	#Map_Obj58,obMap(a1)
+		move.b	#Map_Obj58_height,height_pixels(a1)
 		move.w	#make_art_tile($540,1,0),obGfx(a1)
 		move.b	#4,obRender(a1)
-		move.b	#$20,obActWid(a1)
+		move.b	#sprite_bound($20,Map_Obj58_width),obActWid(a1)
 		move.w	#$200,obPriority(a1)
 		move.l	obX(a0),obX(a1)
 		move.l	obY(a0),obY(a1)
@@ -14448,9 +14012,10 @@ Obj55_Index:
 ; loc_181E4:
 Obj55_Init:
 		move.l	#Map_Obj55,obMap(a0)	; main object
+		move.b	#Map_Obj55_height,height_pixels(a0)
 		move.w	#make_art_tile($400,1,0),obGfx(a0) ; vehicle with ability to fly, bottom part
 		ori.b	#4,obRender(a0)
-		move.b	#$20,obActWid(a0)
+		move.b	#sprite_bound($20,Map_Obj55_width),obActWid(a0)
 		move.w	#$180,obPriority(a0)
 		move.b	#$F,obColType(a0)
 		move.b	#8,obColProp(a0)
@@ -14469,9 +14034,10 @@ loc_18230:
 		move.l	a0,objoff_34(a1)
 		move.l	a1,objoff_34(a0)
 		move.l	#Map_Obj55,obMap(a1)
+		move.b	#Map_Obj55_height,height_pixels(a1)
 		move.w	#make_art_tile($400,0,0),obGfx(a1)
 		move.b	#4,obRender(a1)
-		move.b	#$20,obActWid(a1)
+		move.b	#sprite_bound($20,Map_Obj55_width),obActWid(a1)
 		move.w	#$180,obPriority(a1)
 		move.l	obX(a0),obX(a1)
 		move.l	obY(a0),obY(a1)
@@ -14493,12 +14059,13 @@ loc_18294:
 
 loc_182AC:
 		move.l	#Map_Obj55a,obMap(a1)
+		move.b	#Map_Obj55a_height,height_pixels(a1)
 		move.w	#make_art_tile($4D0,0,0),obGfx(a1)
 		move.b	#1,obTimeFrame(a0)
 
 loc_182C0:
 		move.b	#4,obRender(a1)
-		move.b	#$20,obActWid(a1)
+		move.b	#sprite_bound($20,Map_Obj55a_width),obActWid(a1)
 		move.w	#$180,obPriority(a1)
 		move.l	obX(a0),obX(a1)
 		move.l	obY(a0),obY(a1)
@@ -14586,6 +14153,7 @@ loc_183C6:
 loc_183D4:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj55b,obMap(a0)
+		move.b	#Map_Obj55b_height,height_pixels(a0)
 		move.w	#make_art_tile($4D8,0,0),obGfx(a0)
 		clr.b	obFrame(a0)
 		move.b	#5,obTimeFrame(a0)
@@ -14630,11 +14198,12 @@ Obj56_Index:	dc.w Obj56_Init-Obj56_Index
 Obj56_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj56,obMap(a0)
+		move.b	#Map_Obj56_height,height_pixels(a0)
 		move.w	#make_art_tile($5A0,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.w	#$80,obPriority(a0)
 		clr.b	obColType(a0)
-		move.b	#$C,obActWid(a0)
+		move.b	#sprite_bound($C,Map_Obj56_width),obActWid(a0)
 		move.b	#7,obTimeFrame(a0)
 		clr.b	obFrame(a0)
 		rts
@@ -14739,6 +14308,7 @@ Credits_Init:
 		move.w	#$120,obX(a0)
 		move.w	#$F0,obScreenY(a0)
 		move.l	#Map_Credits,obMap(a0)
+		move.b	#Map_Credits_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Credits_Font,0,0),obGfx(a0)
 		move.w	(v_creditsnum).w,d0		; load credits index number
 		move.b	d0,obFrame(a0)			; display appropriate credits
@@ -16272,7 +15842,7 @@ LoadDebugObjectSprite:
 		move.w	6(a2,d0.w),obGfx(a0)
 		move.b	5(a2,d0.w),obFrame(a0)
 ;		move.b	4(a2,d0.w),obSubtype(a0)	; this does... something with the object's subtype
-		rts
+		bra.w	Set_SpriteBounds	; only rescan when selecting a debug mapping
 ; End of function Debug_ShowItem
 
 ; ===========================================================================
@@ -16310,6 +15880,8 @@ Debug_ExitDebugMode:
 		enable_ints
 		lea	(v_player).w,a1 ; a1=character
 		move.l	#Map_Sonic,(v_player+obMap).w
+		move.b	#Map_Sonic_height,(v_player+height_pixels).w
+		move.b	#Map_Sonic_width,(v_player+width_pixels).w
 		move.w	#make_art_tile(ArtTile_Sonic,0,0),(v_player+obGfx).w
 		bsr.s	Debug_ResetPlayerStats
 		move.w	(v_limittopdb).w,(Camera_Min_Y_pos).w
@@ -16347,6 +15919,8 @@ Debug_ResetPlayerStats:
 		move.b	#9,obWidth(a1)		; x_radius
 		rts
 ; End of function Debug_ResetPlayerStats
+
+		include	"_inc/Set Sprite Bounds.asm"
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------

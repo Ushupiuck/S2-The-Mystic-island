@@ -31,6 +31,8 @@ BonusPlayer_Main:	; Routine 0
 		move.b	#$E,obHeight(a0)
 		move.b	#7,obWidth(a0)
 		move.l	#Map_Sonic,obMap(a0)
+		move.b	#Map_Sonic_height,height_pixels(a0)
+		move.b	#Map_Sonic_width,width_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Sonic,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.w	#$100,obPriority(a0)

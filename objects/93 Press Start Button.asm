@@ -17,6 +17,7 @@ PSB_Main:	; Routine 0
 		move.w	#$D8,obX(a0)
 		move.w	#$130,obScreenY(a0)
 		move.l	#Map_PSB,obMap(a0)
+		move.b	#Map_PSB_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Title_Press_Start,3,0),obGfx(a0)
 		lea	Ani_PSB(pc),a1
 		bra.w	AnimateSprite	; "PRESS START" is animated

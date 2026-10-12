@@ -22,14 +22,17 @@ Obj0A_Index:	dc.w Obj0A_Init-Obj0A_Index
 Obj0A_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Bubbles,obMap(a0)
+		move.b	#Map_Bubbles_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_LZ_Bubbles,0,1),obGfx(a0)
 		move.b	#$84,obRender(a0)
-		move.b	#$10,obActWid(a0)
+		move.b	#sprite_bound($10,Map_Bubbles_width),obActWid(a0)
 		move.w	#$80,obPriority(a0)
 		move.b	obSubtype(a0),d0
 		bpl.s	loc_11ECC
 		addq.b	#8,obRoutine(a0)
 		move.l	#Map_Countdown,obMap(a0)
+		move.b	#Map_Countdown_height,height_pixels(a0)
+		move.b	#Map_Countdown_width,width_pixels(a0)
 		move.w	#make_art_tile(ArtTile_LZ_Sonic_Drowning,0,0),obGfx(a0)
 		andi.w	#$7F,d0
 		move.b	d0,objoff_33(a0)

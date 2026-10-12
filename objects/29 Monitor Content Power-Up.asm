@@ -30,6 +30,7 @@ loc_B04E:
 		adda.w	(a1,d0.w),a1
 		addq.w	#2,a1
 		move.l	a1,obMap(a0)
+		move.b	#Map_Obj26_height,height_pixels(a0)
 
 loc_B092:
 		btst	#1,obRender(a0)

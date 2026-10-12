@@ -8,10 +8,13 @@ Signpost:
 		move.w	Signpost_Index(pc,d0.w),d1
 		jsr	Signpost_Index(pc,d1.w)
 		lea	Ani_Signpost(pc),a1
-		bsr.w	AnimateSprite
-		out_of_range.w	DeleteObject
+		jsr	(AnimateSprite).l
+		out_of_range.s	Signpost_Delete
 		jmp	(DisplaySprite).l
 ; ===========================================================================
+Signpost_Delete:
+		jmp	(DeleteObject).l
+
 Signpost_Index:	dc.w Signpost_Init-Signpost_Index
 		dc.w Signpost_Main-Signpost_Index
 		dc.w Signpost_Spin-Signpost_Index
@@ -22,9 +25,10 @@ Signpost_Index:	dc.w Signpost_Init-Signpost_Index
 Signpost_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Signpost,obMap(a0)
+		move.b	#Map_Signpost_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Signpost,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
-		move.b	#$18,obActWid(a0)
+		move.b	#sprite_bound($18,Map_Signpost_width),obActWid(a0)
 		move.w	#$200,obPriority(a0)
 ; loc_EFFE:
 Signpost_Main:
@@ -81,10 +85,11 @@ Signpost_Sparkle:
 		add.w	obY(a0),d0
 		move.w	d0,obY(a1)
 		move.l	#Map_Ring,obMap(a1)
+		move.b	#Map_Ring_height,height_pixels(a1)
 		move.w	#make_art_tile(ArtTile_Ring,1,0),obGfx(a1)
 		move.b	#4,obRender(a1)
 		move.w	#$100,obPriority(a1)
-		move.b	#8,obActWid(a1)
+		move.b	#sprite_bound(8,Map_Ring_width),obActWid(a1)
 .return:	rts
 ; ===========================================================================
 ; loc_F0C4:

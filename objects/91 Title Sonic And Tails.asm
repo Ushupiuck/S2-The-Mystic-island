@@ -19,6 +19,7 @@ TSon_Main:	; Routine 0
 		move.w	#$148,obScreenX(a0)	; this part of code loads Sonic on the Title Screen.
 		move.w	#$C4,obScreenY(a0)	; position is fixed to screen
 		move.l	#Map_TitleST,obMap(a0)
+		move.b	#Map_TitleST_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Title_Sonic_And_Tails,2,0),obGfx(a0)
 		move.w	#$80,obPriority(a0)
 	;	move.b	#29,obDelayAni(a0)	; set time delay to 0.5 seconds

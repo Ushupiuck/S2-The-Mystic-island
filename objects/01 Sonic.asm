@@ -32,8 +32,9 @@ Obj01_Init:
 		move.b	#sonic_height,default_y_radius(a0)
 		move.b	#sonic_width,default_x_radius(a0)
 		move.l	#Map_Sonic,obMap(a0)
+		move.b	#Map_Sonic_height,height_pixels(a0)
 		move.w	#$100,obPriority(a0)
-		move.b	#$18,obActWid(a0)
+		move.b	#sprite_bound($18,Map_Sonic_width),obActWid(a0)
 		move.b	#4,obRender(a0)
 		move.w	#Player_DefaultTopSpeed,(Sonic_top_speed).w
 		move.w	#Player_DefaultAcceleration,(Sonic_acceleration).w

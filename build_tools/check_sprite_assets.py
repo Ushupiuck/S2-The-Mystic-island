@@ -14,7 +14,14 @@ TAILS_PALETTE_REMAP = (0, 6, 5, 3, 2, 4, 12, 13, 14, 15, 10, 11, 7, 8, 9, 1)
 
 
 def frames(data, base=0):
-    count = struct.unpack_from('>H', data, base)[0] // 2
+    boundary, offset = len(data) - base, 0
+    while offset < boundary:
+        target = struct.unpack_from('>h', data, base + offset)[0]
+        assert target > 0 and target % 2 == 0
+        boundary = min(boundary, target)
+        offset += 2
+        assert offset <= boundary and offset <= 512
+    count = offset // 2
     assert 0 < count <= 256
     result = []
     for frame in range(count):

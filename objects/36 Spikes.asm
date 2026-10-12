@@ -36,6 +36,7 @@ Obj36_Conf:
 Spike_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj36,obMap(a0)
+		move.b	#Map_Obj36_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Spikes,1,0),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.w	#$200,obPriority(a0)

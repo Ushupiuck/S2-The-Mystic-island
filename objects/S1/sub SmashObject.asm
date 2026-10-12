@@ -24,6 +24,7 @@ loc_C9CA:
 		move.b	#4,obRoutine(a1)
 		_move.b	d4,obID(a1)
 		move.l	a3,obMap(a1)
+		move.b	height_pixels(a0),height_pixels(a1)
 		move.b	d5,obRender(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)

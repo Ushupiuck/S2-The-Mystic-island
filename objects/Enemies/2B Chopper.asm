@@ -17,16 +17,18 @@ chop_origY	= objoff_34
 Chop_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj2B,obMap(a0)
+		move.b	#Map_Obj2B_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Chopper,0,0),obGfx(a0)
 		tst.b	(Current_Zone).w	; is this GHZ?
 		beq.s	.notEHZ			; skip if so
 		move.l	#Map_obj2B_1,obMap(a0)	; EHZ specific data
+		move.b	#Map_obj2B_1_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Masher,0,0),obGfx(a0)
 .notEHZ:
 		move.b	#4,obRender(a0)
 		move.w	#$200,obPriority(a0)
 		move.b	#9,obColType(a0)
-		move.b	#$10,obActWid(a0)
+		move.b	#sprite_bound($10,sprite_bound(Map_Obj2B_width,Map_obj2B_1_width)),obActWid(a0)
 		move.b	obSubtype(a0),d1	; get subtype (for vertical speed)
 		add.w	d1,d1			; filter out which entry it is
 		move.w	Chopper_JumpHeights(pc,d1.w),obVelY(a0)		; and store the vertical speed

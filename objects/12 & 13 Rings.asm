@@ -20,11 +20,12 @@ Obj12_Index:
 Obj12_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Ring,obMap(a0)
+		move.b	#Map_Ring_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Ring,1,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.w	#$100,obPriority(a0)
 		move.b	#$47,obColType(a0)
-		move.b	#8,obActWid(a0)
+		move.b	#sprite_bound(8,Map_Ring_width),obActWid(a0)
 
 Obj12_Animate:
 		bra.w	MarkObjGone
@@ -115,11 +116,12 @@ loc_A956:
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.l	#Map_Ring,obMap(a1)
+		move.b	#Map_Ring_height,height_pixels(a1)
 		move.w	#make_art_tile(ArtTile_RingLoss,1,0),obGfx(a1)
 		move.b	#4,obRender(a1)
 		move.w	#$180,obPriority(a1)
 		move.b	#$47,obColType(a1)
-		move.b	#8,obActWid(a1)
+		move.b	#sprite_bound(8,Map_Ring_width),obActWid(a1)
 		tst.w	d4
 		bmi.s	+
 		move.w	d4,d0

@@ -25,11 +25,12 @@ ExItem_Animal:	; Routine 0
 ExItem_Main:	; Routine 2
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Explosion,obMap(a0)
+		move.b	#Map_Explosion_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Explosion,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.w	#$80,obPriority(a0)
 		clr.b	obColType(a0)
-		move.b	#$C,obActWid(a0)
+		move.b	#sprite_bound($C,Map_Explosion_width),obActWid(a0)
 		move.b	#7,obTimeFrame(a0) ; set frame duration to 7 frames
 		clr.b	obFrame(a0)
 		move.w	#sfx_BreakItem,d0
@@ -61,11 +62,12 @@ ExBom_Index:	dc.w ExBom_Main-ExBom_Index
 ExBom_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_FExplosion,obMap(a0)
+		move.b	#Map_FExplosion_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Explosion,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.w	#$80,obPriority(a0)
 		clr.b	obColType(a0)
-		move.b	#$C,obActWid(a0)
+		move.b	#sprite_bound($C,Map_FExplosion_width),obActWid(a0)
 		move.b	#7,obTimeFrame(a0)
 		clr.b	obFrame(a0)
 		move.w	#sfx_Bomb,d0
@@ -88,11 +90,12 @@ MDis_Index:	dc.w MDis_Main-MDis_Index
 MDis_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_GExplosion,obMap(a0)
+		move.b	#Map_GExplosion_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Ground_Explosion,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.w	#$80,obPriority(a0)
 		clr.b	obColType(a0)
-		move.b	#$C,obActWid(a0)
+		move.b	#sprite_bound($C,Map_GExplosion_width),obActWid(a0)
 		move.b	#7,obTimeFrame(a0)
 		clr.b	obFrame(a0)
 		move.w	#sfx_Bomb,d0

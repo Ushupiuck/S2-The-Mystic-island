@@ -23,10 +23,10 @@ Obj02_Init:
 		move.b	#tails_width,default_x_radius(a0)
 		move.b	#CharacterID_Tails,character_id(a0)
 		move.l	#Map_Tails,obMap(a0)
+		move.b	#Map_Tails_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Tails,0,0),obGfx(a0)
 		move.w	#$100,obPriority(a0)
-		move.b	#$18,width_pixels(a0)
-		move.b	#$18,height_pixels(a0)
+		move.b	#sprite_bound($18,Map_Tails_width),width_pixels(a0)
 		move.b	#$84,obRender(a0)
 		move.b	#$C,obTopSolidBit(a0)
 		move.b	#$D,obLRBSolidBit(a0)
@@ -57,7 +57,7 @@ Obj02_Init:
 		move.w	a0,(v_player2tails+obParent).w
 		move.b	#-1,(v_player2tails+objoff_34).w
 		; Run the first update now, so body art and the separate tail are ready
-		; together before the first BuildSprites, as with Sonic's initialization.
+		; together before the first Render_Sprites, as with Sonic's initialization.
 
 Obj02_Control:
 		lea	(Tails_top_speed).w,a4
