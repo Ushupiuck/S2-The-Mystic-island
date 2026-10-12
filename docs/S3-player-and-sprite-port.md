@@ -14,6 +14,21 @@ and Tails, Sonic alone, or primary Tails; the selection UI remains future work.
 Each player owns its air/countdown object. Large air bubbles restore the player
 who touched them, with music changes reserved for the primary player.
 
+Tails runs his first update during initialization, so body and tail art are
+ready together. Level loading retains the initialized position history;
+clearing its first X record made the follow AI step left 16 frames later.
+The separate tail follows the body's flash decision in `tails_hidden` at
+`$40`, without decrementing the damage timer twice. Hurt/death drawing remains
+consistent with the body. Flying contacts use S3&K's upward attack sector and
+original angle rounding; swimming and contacts outside that sector retain
+their normal responses.
+
+Sonic's carried animation reuses this hack's five prototype poses at mapping
+frames `$D5–$D9`, with the existing art and DPLCs. Pickup selects and uploads
+the centre pose immediately. Carry updates retry deferred uploads, retain the
+28-pixel offset, mirror the poses and support jump release. The S3&K carry
+frame numbers `$90–$92` select tumble poses in this Sonic mapping set.
+
 Water splash remains object `$08`. Spindash/skid dust is separate object `$0E`,
 with one dynamically allocated controller and one 16-tile bank per player.
 The original combined splash/dust art remains an unused source asset; the
@@ -30,7 +45,12 @@ second tile word for 2P interlace is removed.
 `height_pixels` is the display half-height byte at `$49`; the SST stride stays
 `$4A`. The normal renderer conservatively expands legacy bounds from mapping
 geometry. Collision radii retain their existing fields. Composite rendering
-uses its separate path, including the shared invincibility-star stack header.
+uses its normal path for every composite, including invincibility stars.
+Object `$35` prepares eight packed children in `$10–$3F`, stores four orbit
+angles and animation indices in `$40–$47`, and uses flags at `$48`. It queues
+through `DisplaySprite3` because child data overlaps the ordinary priority
+field. No star ID check or temporary star buffer remains in `BuildSprites`;
+`height_pixels` at `$49`, the SST stride and neighboring objects stay intact.
 
 `Load_DynamicPLC` uses the S3&K word-count/packed-word run format for Sonic,
 Tails, tails and dust. It reserves room for every run, including possible
@@ -86,7 +106,8 @@ runtime palette and its documented `mapver=S3K` / `dplcver=S3K` overrides.
 Build the ROM, then run `python build_tools/check_sprite_assets.py`.
 With a pinned skdisasm checkout, add `--skdisasm /path/to/skdisasm` to verify
 all remapped Tails pixels against the original files. The check covers all
-79 root binary tables and all 296 Tails body/tail mapping/DPLC frames.
+79 root binary tables, all 296 Tails body/tail mapping/DPLC frames, and the
+art ranges and VRAM bank bounds for Sonic's five activated carry poses.
 
 Native 68000 validation compared 8,007 Sonic cases and 1,152 Tails flight/swim
 cases with independently assembled stock S3&K routines. Rendering checks
@@ -100,3 +121,11 @@ manual flight, exhaustion, carrying/jump release, separate dust banks,
 swimming and independent air supplies. Forced large camera teleports briefly
 slow the existing scrolling path; the settled water stage resumes normal
 frame progress. Bonus-stage rendering remains covered separately.
+
+The follow-up fixes passed 720 comparisons of the old and new star sprite
+tables, camera movement/Y-wrap checks, sprite-limit/composite guards, 258
+body/tail flash-phase cases, 4,225 stock angle comparisons, 1,152 enemy/boss
+flight-contact cases, deferred carry uploads and carried-pose cycles in both
+directions. Genesis Plus GX checks under NTSC and PAL cover
+primary/companion startup in GHZ and SYZ, damage flashing, pickup/carry/release,
+flight boss contacts and the shared star lifetime.

@@ -2139,6 +2139,7 @@ SupSonAni_Transform_ptr:	offsetTableEntry.w SupSonAni_Transform	; 31 ; $1F
 SonAni_Lying_ptr:		offsetTableEntry.w SonAni_Lying		; 32 ; $20
 SonAni_LieDown_ptr:		offsetTableEntry.w SonAni_LieDown	; 33 ; $21
 SonAni_Peelout_ptr:		offsetTableEntry.w SonAni_Peelout	; 34 ; $22
+SonAni_Carried_ptr:		offsetTableEntry.w SonAni_Carried	; 35 ; $23
 ; ---------------------------------------------------------------------------
 ; --- Special animations (walk/run/roll/push) ---
 ; Sonic handles animations with a start value of $80 or greater separately.

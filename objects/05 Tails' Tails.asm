@@ -53,6 +53,12 @@ TailS3_loc_1613C:
 		bsr.w	Animate_Tails_Part2
 TailS3_loc_1615A:
 		bsr.w	LoadTailsTailsDynPLC
+		movea.w	obParent(a0),a2
+		tst.b	tails_hidden(a2)		; use the exact decision made by Tails_Display
+		beq.s	.show
+		andi.b	#$7F,obRender(a0)
+		rts
+.show:
 		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 ; animation master script table for the tails

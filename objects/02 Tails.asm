@@ -21,7 +21,7 @@ Obj02_Init:
 		move.b	#tails_width,obWidth(a0)
 		move.b	#tails_height,default_y_radius(a0)
 		move.b	#tails_width,default_x_radius(a0)
-		move.b	#1,character_id(a0)
+		move.b	#CharacterID_Tails,character_id(a0)
 		move.l	#Map_Tails,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Tails,0,0),obGfx(a0)
 		move.w	#$100,obPriority(a0)
@@ -56,7 +56,8 @@ Obj02_Init:
 		clr.b	(v_player2tails+obRoutine).w
 		move.w	a0,(v_player2tails+obParent).w
 		move.b	#-1,(v_player2tails+objoff_34).w
-		rts
+		; Run the first update now, so body art and the separate tail are ready
+		; together before the first BuildSprites, as with Sonic's initialization.
 
 Obj02_Control:
 		lea	(Tails_top_speed).w,a4
@@ -103,7 +104,16 @@ Obj02_Modes:
 		dc.w Obj02_MdJump2-Obj02_Modes
 
 Tails_Display:
-		jmp	(Sonic_Display).l	; shared word timers and blink behavior
+		move.w	flashtime(a0),d0
+		beq.s	.show
+		subq.w	#1,flashtime(a0)
+		lsr.w	#3,d0
+		bcs.s	.show
+		st	tails_hidden(a0)		; the tail still animates/uploads while hidden
+		bra.w	Obj01_Display.effects	; shared power-up timers; no second flash decrement
+.show:
+		clr.b	tails_hidden(a0)
+		bra.w	Obj01_Display		; queue the body and update its power-up timers
 
 ; Physical controller 2 remains intact. AI only writes its logical copy.
 Tails_Control:
@@ -800,7 +810,7 @@ TailS3_loc_1446A:
 TailS3_loc_14474:
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
-		addi.w	#$1C,obY(a1)
+		addi.w	#Tails_CarriedYOffset,obY(a1)
 TailS3_loc_14492:
 		andi.b	#$FC,obRender(a1)
 		andi.b	#$FE,obStatus(a1)
@@ -811,7 +821,7 @@ TailS3_loc_14492:
 TailS3_loc_144BA:
 		subq.b	#1,obTimeFrame(a1)
 		bpl.s	TailS3_loc_144F8
-		move.b	#$B,obTimeFrame(a1)
+		move.b	#Sonic_CarriedFrameDelay,obTimeFrame(a1)
 		moveq	#0,d1
 		move.b	obAniFrame(a1),d1
 		addq.b	#1,obAniFrame(a1)
@@ -823,13 +833,14 @@ TailS3_loc_144BA:
 
 TailS3_loc_144E4:
 		move.b	d0,obFrame(a1)
+
+TailS3_loc_144F8:
+		; Retry a deferred upload every frame; the shared loader skips cached art.
 		moveq	#0,d0
 		move.b	obFrame(a1),d0
 		move.l	a2,-(sp)
 		jsr	(Perform_Player_DPLC).l
 		movea.l	(sp)+,a2
-
-TailS3_loc_144F8:
 		move.w	obVelX(a0),(v_player+obVelX).w
 		move.w	obVelX(a0),(Tails_Carry_SavedXSpeed).w
 		move.w	obVelY(a0),(v_player+obVelY).w
@@ -840,8 +851,12 @@ TailS3_loc_144F8:
 		movem.l	(sp)+,d0-a6
 		rts
 ; ---------------------------------------------------------------------------
+SonAni_Carried:
+		dc.b Sonic_CarriedFrameDelay	; also available through Sonic's normal animation table
 AniRaw_Tails_Carry:
-		dc.b  $91, $91, $90, $90, $90, $90, $90, $90, $92, $92, $92, $92, $92, $92, $91, $91, $FF
+		; Existing prototype poses: centre, sway left, centre, sway right.
+		dc.b SonicFrame_CarriedBase+2,SonicFrame_CarriedBase+1,SonicFrame_CarriedBase,SonicFrame_CarriedBase+1
+		dc.b SonicFrame_CarriedBase+2,SonicFrame_CarriedBase+3,SonicFrame_CarriedBase+4,SonicFrame_CarriedBase+3,afEnd
 		even
 ; ---------------------------------------------------------------------------
 
@@ -891,8 +906,9 @@ TailS3_sub_1459E:
 		clr.w	obAngle(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
-		addi.w	#$1C,obY(a1)
-		move.w	#$22<<8,obAnim(a1)	; and obPrevAni
+		addi.w	#Tails_CarriedYOffset,obY(a1)
+		move.w	#AniIDSonAni_Carried<<8,obAnim(a1)	; and obPrevAni
+		move.b	#SonicFrame_CarriedFirst,obFrame(a1)
 		move.b	#0,obTimeFrame(a1)
 		move.b	#0,obAniFrame(a1)
 		move.b	#3,obControl(a1)
@@ -909,6 +925,11 @@ TailS3_sub_1459E:
 		move.w	obVelX(a0),obVelX(a1)
 		move.w	obVelY(a0),(Tails_Carry_SavedYSpeed).w
 		move.w	obVelY(a0),obVelY(a1)
+		; The pickup frame must upload the hanging pose before either sprite is drawn.
+		move.w	#SonicFrame_CarriedFirst,d0
+		move.l	a2,-(sp)
+		jsr	(Perform_Player_DPLC).l
+		movea.l	(sp)+,a2
 TailS3_locret_14630:
 		rts
 ; End of function TailS3_sub_1459E
@@ -2173,6 +2194,7 @@ Tails_ResetOnFloor:
 ; ---------------------------------------------------------------------------
 
 Obj02_Hurt:
+		clr.b	tails_hidden(a0)		; hurt recoil draws the body unconditionally
 		bsr.w	Player_ChkInvincibility
 		bsr.w	Player_ChkSpeedShoes
 		movem.w	obVelX(a0),d0/d2			; load xy speed
@@ -2233,6 +2255,7 @@ Tails_HurtStop:
 ; ---------------------------------------------------------------------------
 ; Obj01_Death:
 Obj02_Dead:
+		clr.b	tails_hidden(a0)
 		bsr.w	Tails_GameOver
 		movem.w	obVelX(a0),d0/d2			; load xy speed
 		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
@@ -2533,6 +2556,7 @@ AniTails:
 ; S3&K word-count/run DPLCs, through the shared atomic queue loader.
 ; The tail has its own art/table and a 12-tile bank ending before the rings.
 ; ---------------------------------------------------------------------------
+
 LoadTailsTailsDynPLC:
 		moveq	#0,d0
 		move.b	obFrame(a0),d0

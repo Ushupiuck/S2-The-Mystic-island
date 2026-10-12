@@ -87,6 +87,8 @@ default_y_radius:	equ $44		; byte; Sonic's standing collision radius (S3&K)
 default_x_radius:	equ $45		; byte; Sonic's standing collision radius (S3&K)
 ; S3&K ability fields in bytes already free in the player SST.
 character_id:		equ $46		; 0 Sonic, 1 Tails
+CharacterID_Tails:	equ 1
+tails_hidden:		equ $40		; tail follows the body's damage-flash decision
 tails_flight_flag:	equ $47		; 0 inactive, 1 falling, 2..31 flapping
 tails_flight_energy:	equ $48		; half-frame flight budget
 air_left:		equ $28		; Tails' independent air supply
@@ -102,6 +104,12 @@ Tails_FlapStateLimit:	equ $20
 Tails_ExtraFirstFrame:	equ $D1
 Tails_CPU_ManualTime:	equ 10*60
 Tails_CPU_RespawnTime:	equ 5*60
+Tails_FlightAttackMinAngle: equ $20	; S3&K's upward contact sector
+Tails_FlightAttackArc:	equ $40
+Tails_CarriedYOffset:	equ 28
+Sonic_CarriedFrameDelay:	equ 11
+SonicFrame_CarriedBase:	equ $D5		; five existing prototype carry/sway poses
+SonicFrame_CarriedFirst:	equ SonicFrame_CarriedBase+2
 ; Reuse the existing CPU words and unused tail-object scratch bytes. The
 ; controller's owner remains in obParent; no SST or global RAM expansion.
 v_jpadholdlogical2:	equ word_F700
@@ -554,6 +562,7 @@ AniIDSonAni_Balance4		= id(SonAni_Balance4_ptr)	; 30 ; $1E ; Exclusive to Sonic
 AniIDSupSonAni_Transform	= id(SupSonAni_Transform_ptr)	; 31 ; $1F ; Exclusive to Sonic
 AniIDSonAni_Lying		= id(SonAni_Lying_ptr)		; 32 ; $20 ; Exclusive to Sonic
 AniIDSonAni_LieDown		= id(SonAni_LieDown_ptr)	; 33 ; $21 ; Exclusive to Sonic
+AniIDSonAni_Carried		= id(SonAni_Carried_ptr)	; 35 ; $23 ; Sonic carried by Tails
 
 
 	; TODO -- will get to this as soon as I'm done with Sonic.

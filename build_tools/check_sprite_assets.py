@@ -69,6 +69,28 @@ def main():
                 assert (tile & 0x7FF) + ((size >> 2) + 1) * ((size & 3) + 1) <= loaded
             imported_frames += 1
 
+    # The carry animation activates existing Sonic poses. Validate their art
+    # ranges and destination bank too, rather than merely checking frame IDs.
+    carry_script = rom[symbols['AniRaw_Tails_Carry']:symbols['AniRaw_Tails_Carry'] + 256]
+    assert 0xFF in carry_script, 'Unterminated carry animation'
+    carry_frames = set(carry_script[:carry_script.index(0xFF)])
+    sonic = frames(rom, symbols['Map_Sonic'])
+    table = symbols['SonicDynPLC']
+    art_length = (ROOT / "art/uncompressed/Sonic's art.unc").stat().st_size
+    for frame in carry_frames:
+        assert frame < len(sonic)
+        start = table + struct.unpack_from('>h', rom, table + frame * 2)[0]
+        count = struct.unpack_from('>H', rom, start)[0]
+        loaded = 0
+        for i in range(count):
+            run = struct.unpack_from('>H', rom, start + 2 + i * 2)[0]
+            tiles = (run >> 12) + 1
+            assert ((run & 0xFFF) + tiles) * 32 <= art_length, (frame, run)
+            loaded += tiles
+        assert loaded <= 32, ('Sonic carry bank overflow', frame, loaded)
+        for _, size, tile, _ in sonic[frame]:
+            assert (tile & 0x7FF) + ((size >> 2) + 1) * ((size & 3) + 1) <= loaded
+
     if args.skdisasm:
         source = args.skdisasm / 'General/Sprites/Tails/Art'
         for original, remapped in (
@@ -81,7 +103,8 @@ def main():
                              TAILS_PALETTE_REMAP[b & 15] for b in pixels)
             assert expected == (ROOT / 'art/uncompressed' / remapped).read_bytes(), remapped
 
-    print(f'{len(binaries)} ordinary binary mappings and {imported_frames} Tails frames pass.')
+    print(f'{len(binaries)} ordinary binary mappings, {imported_frames} Tails frames '
+          f'and {len(carry_frames)} Sonic carry frames pass.')
     if args.skdisasm:
         print('All three Tails art files match the palette-remapped S&K source pixels.')
 

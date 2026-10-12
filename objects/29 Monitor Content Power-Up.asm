@@ -207,8 +207,7 @@ Monitor_Invincibility:
 +
 		lea	(v_starsobj).w,a2
 		_move.b	#id_Obj35,obID(a2)
-		clr.b	obRoutine(a2)		; reinitialize all four layers on a fresh pickup
-		move.w	a1,invincibility_parent(a2)
+		clr.b	invincibility_flags(a2)	; reinitialize all four layers on a fresh pickup
 .return:
 		rts
 ; ---------------------------------------------------------------------------

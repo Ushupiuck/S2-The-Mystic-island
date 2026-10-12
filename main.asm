@@ -2827,8 +2827,7 @@ Level_SkipClr:
 		move.b	#1,(f_scorecount).w
 		move.b	#1,(f_ringcount).w
 		move.b	#1,(f_timecount).w
-		move.w	#4,(Sonic_Pos_Record_Index).w
-		move.w	d0,(Sonic_Pos_Record_Buf).w
+		; Player initialization already filled and recorded the position history.
 		move.w	d0,(Demo_button_index).w
 		lea	(Demo_Index).l,a1
 		move.b	(Current_Zone).w,d0
@@ -9261,18 +9260,7 @@ BuildSprites_Crash:
 ; ---------------------------------------------------------------------------
 
 BuildSprites_MultiDraw:
-		; Obj35 builds its temporary composite on the stack; other objects
-		; already store their composite header and children in object RAM.
-		cmpi.b	#id_Obj35,obID(a0)
-		beq.s	BuildSprites_InvincibilityStars
 		bsr.s	BuildSprites_DrawComposite
-		bra.w	BuildSprites_NextObj
-
-; ---------------------------------------------------------------------------
-; Draw the shared invincibility-star object, then resume the sprite queue.
-; ---------------------------------------------------------------------------
-BuildSprites_InvincibilityStars:
-		jsr	(InvincibilityStars_Draw).l
 		bra.w	BuildSprites_NextObj
 
 ; ---------------------------------------------------------------------------
@@ -15146,7 +15134,21 @@ Touch_Enemy:
 		cmpi.b	#AniIDSonAni_Spindash,obAnim(a0)
 		beq.s	.noharm
 		cmpi.b	#AniIDSonAni_Roll,obAnim(a0)
+		beq.s	.noharm
+		cmpi.b	#CharacterID_Tails,character_id(a0)	; spinning tails attack while flying
 		bne.w	Touch_Hurt
+		tst.b	tails_flight_flag(a0)
+		beq.w	Touch_Hurt
+		btst	#status.player.underwater,obStatus(a0)
+		bne.w	Touch_Hurt		; swimming does not have the flight attack
+		move.w	obX(a0),d1
+		move.w	obY(a0),d2
+		sub.w	obX(a1),d1
+		sub.w	obY(a1),d2
+		jsr	(Tails_CalcFlightAttackAngle).l
+		subi.b	#Tails_FlightAttackMinAngle,d0
+		cmpi.b	#Tails_FlightAttackArc,d0
+		bhs.w	Touch_Hurt		; contacts below/beside the body still hurt
 
 .noharm:
 		tst.b	obColProp(a1)
@@ -15324,6 +15326,7 @@ loc_1B214:
 		jmp	(PlaySound).l
 ; End of function AddPoints
 
+		include "_inc/Tails Flight Attack.asm"
 
 ; =============== S U B R O U T I N E =======================================
 
