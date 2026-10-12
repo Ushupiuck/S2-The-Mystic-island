@@ -357,8 +357,6 @@ TailS3_loc_13B78:
 		move.b	d0,flip_speed(a0)
 		move.w	d0,move_lock(a0)
 		move.w	d0,flashtime(a0)
-		move.w	d0,invtime(a0)
-		move.w	d0,shoetime(a0)
 		move.b	d0,scroll_delay_counter(a0)
 		move.w	d0,next_tilt(a0)	; and tilt
 		move.b	d0,stick_to_convex(a0)
@@ -367,7 +365,7 @@ TailS3_loc_13B78:
 		move.b	d0,jumping(a0)
 		move.b	d0,objoff_41(a0)
 		movem.l	a1-a3,-(sp)
-		jsr	(Player_ClearPowerUps).l
+		; Catch-up is not death: keep shield/status and the ticking timers.
 		movea.l	a0,a2
 		jsr	(Player_UpdateSpeed).l	; catch-up has reset the underwater status
 		movem.l	(sp)+,a1-a3
