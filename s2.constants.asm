@@ -1745,7 +1745,7 @@ ArtTile_Eggman_Exhaust:		equ ArtTile_Eggman+$12A
 ; End of Level
 ArtTile_Giant_Ring:		equ $400
 ArtTile_Giant_Ring_Flash:	equ $462
-ArtTile_Prison_Capsule:		equ $49D
+ArtTile_Prison_Capsule:		equ $508	; 85 tiles; clear of both shields and the $C000 plane
 ArtTile_Hidden_Points:		equ $4B6
 ArtTile_Warp:			equ $541
 ArtTile_Mini_Tails:		equ $535
@@ -1851,9 +1851,10 @@ ArtTile_Masher:			equ $41C
 ArtTile_Art_EHZMountains:	equ $500
 
 ; EHZ boss
-ArtTile_ArtNem_Eggpod_1:	equ $460
-ArtTile_ArtNem_EHZBoss:		equ $4C0
-ArtTile_ArtNem_EggChoppers:	equ $540
+ArtTile_ArtNem_Eggpod_1:	equ $3A0
+ArtTile_ArtNem_EHZBoss:		equ $400
+ArtTile_ArtNem_EggChoppers:	equ $480
+ArtTile_BossExplosion:	equ $580	; 100 tiles; replaced by animals/normal explosions after escape
 
 ; CPZ
 ArtTile_CPZ_Platform:		equ $400

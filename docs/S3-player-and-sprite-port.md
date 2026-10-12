@@ -81,6 +81,10 @@ An imported ordinary object initializes its mapping and bounds together:
         move.b  #sprite_bound($18,Map_NewObject_width),width_pixels(a0)
 ```
 
+The [EHZ boss import](Importing-objects-EHZ-boss.md) is a complete worked
+example, including S1/S2/S3 format differences, every child initializer,
+generated bounds, packed composites, art lifetimes and arena checks.
+
 `sprite_bound` takes the larger of the legacy width and the mapping width at
 assembly time. If no legacy minimum is needed, use `Map_NewObject_width`
 directly. A normal build discovers the new references automatically. ASM

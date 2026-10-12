@@ -33,6 +33,9 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
+Replace the four-ID prototype EHZ boss with Sonic 2 final's eight linked parts, complete animations and large explosions; retain S3&K mappings and automatic bounds < DONE
+Fix EHZ2 arena settling from above/below, preserve its lock through debug exit, restore the capsule/act-clear handoff, and derive initial row/column crossing flags from the camera (Final Zone look-up strip) < DONE
+Document object imports and generated Map*_height/width values using the final EHZ boss; add mapping/art/VRAM/capsule checks < DONE
 Upgrade normal Sonic physics to S3&K while preserving the WIP homing hook, unrestricted rolling-jump air control and existing look-camera fixes < DONE
 Port normal S3&K Tails movement, flight/swimming, carrying Sonic, CPU following/catch-up/spindash and controller-2 override; add body/extra/tail art, mappings, DPLCs and flight/grab sounds < DONE
 Remap all Tails art to Mystic Island's palette order, retaining its warmer skin shades; align SonLVL with the runtime palette < DONE

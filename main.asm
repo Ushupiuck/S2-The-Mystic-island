@@ -4643,7 +4643,6 @@ LevelSizeLoad:
 		move.l	(a0)+,d0
 		move.l	d0,(Camera_Min_Y_pos).w
 		move.l	d0,(Camera_Min_Y_pos_target).w
-		move.w	#$1010,(Horiz_block_crossed_flag).w
 		move.w	#Camera_LookCenter,(Camera_Y_pos_bias).w
 		bra.w	LevelSize_CheckLamp
 ; ===========================================================================
@@ -4781,6 +4780,14 @@ loc_5900:
 
 loc_590A:
 		move.w	d0,(Camera_Y_pos).w
+		; The streamer expects the opposite of each camera's current bit 4.
+		; A fixed $1010 skips the first row/column at nonzero start positions.
+		move.b	d1,(Horiz_block_crossed_flag).w
+		andi.b	#$10,(Horiz_block_crossed_flag).w
+		eori.b	#$10,(Horiz_block_crossed_flag).w
+		move.b	d0,(Verti_block_crossed_flag).w
+		andi.b	#$10,(Verti_block_crossed_flag).w
+		eori.b	#$10,(Verti_block_crossed_flag).w
 		bra.w	BgScrollSpeed
 ; End of function LevelSizeLoad
 
@@ -5760,14 +5767,13 @@ loc_6602:
 ; ---------------------------------------------------------------------------
 
 loc_6614:
-		moveq	#0,d0
-		move.b	d0,(Camera_Max_Y_Pos_Changing).w
+		clr.b	(Camera_Max_Y_Pos_Changing).w
 		moveq	#0,d1
-		move.w	d0,d1
-		add.w	(a1),d1
-		tst.w	d0
-		bpl.w	loc_6664
-		bra.s	loc_6634
+		move.w	(a1),d1
+		; A stationary player still needs to follow a rising top boundary.
+		cmp.w	(Camera_Min_Y_pos).w,d1
+		blt.s	loc_6656
+		bra.w	loc_6664
 ; ---------------------------------------------------------------------------
 
 loc_662A:
@@ -7129,6 +7135,7 @@ DynScreenResizeLoad:
 
 loc_7560:
 		add.w	d1,(Camera_Max_Y_pos).w
+		move.w	(Camera_Max_Y_pos).w,(Tails_Max_Y_pos).w
 		move.b	#1,(Camera_Max_Y_Pos_Changing).w
 
 locret_756A:
@@ -7147,6 +7154,7 @@ loc_756C:
 
 loc_7586:
 		add.w	d1,(Camera_Max_Y_pos).w
+		move.w	(Camera_Max_Y_pos).w,(Tails_Max_Y_pos).w
 		move.b	#1,(Camera_Max_Y_Pos_Changing).w
 		rts
 ; End of function DynScreenResizeLoad
@@ -7393,6 +7401,35 @@ DynResize_EHZ1:
 DynResize_EHZ2:
 		moveq	#0,d0
 		move.b	(Dynamic_Resize_Routine).w,d0
+		cmpi.b	#4,d0
+		blo.s	.sync_limits
+		; Maintain the lock after debug entry/exit too. The generic boundary
+		; updater lowers Max_Y smoothly; raising Min_Y must also wake scrolling.
+		move.w	#EHZBoss_CameraY,(Camera_Max_Y_pos_target).w
+		move.w	(Camera_Y_pos).w,d1
+		cmpi.w	#EHZBoss_CameraY,d1
+		bhi.s	.below_arena
+		beq.s	.at_arena
+		move.w	#EHZBoss_CameraY,(Camera_Max_Y_pos).w
+		addq.w	#2,d1
+		cmpi.w	#EHZBoss_CameraY,d1
+		bls.s	.set_min
+.below_arena:
+		move.w	#EHZBoss_CameraY,d1
+.set_min:
+		move.b	#1,(Camera_Max_Y_Pos_Changing).w
+		bra.s	.store_min
+.at_arena:
+		move.w	#EHZBoss_CameraY,(Camera_Max_Y_pos).w
+		move.w	#EHZBoss_CameraY,d1
+.store_min:
+		move.w	d1,(Camera_Min_Y_pos).w
+.sync_limits:
+		; These limits belong to the same arena, including while it settles.
+		move.w	(Camera_Min_X_pos).w,(Tails_Min_X_pos).w
+		move.w	(Camera_Max_X_pos).w,(Tails_Max_X_pos).w
+		move.w	(Camera_Min_Y_pos).w,(Tails_Min_Y_pos).w
+		move.w	(Camera_Max_Y_pos).w,(Tails_Max_Y_pos).w
 		move.w	DynResize_EHZ2_Index(pc,d0.w),d0
 		jmp	DynResize_EHZ2_Index(pc,d0.w)
 ; ---------------------------------------------------------------------------
@@ -7407,18 +7444,18 @@ DynResize_EHZ2_Routine1:
 		cmpi.w	#$2780,(Camera_X_pos).w
 		blo.s	.return
 		move.w	(Camera_X_pos).w,(Camera_Min_X_pos).w
-		move.w	#$390,(Camera_Max_Y_pos_target).w
-		move.w	#$390,(Camera_Max_Y_pos).w
+		move.w	(Camera_X_pos).w,(Tails_Min_X_pos).w
+		move.w	#EHZBoss_CameraY,(Camera_Max_Y_pos_target).w
 		addq.b	#2,(Dynamic_Resize_Routine).w
 .return:	rts
 ; ---------------------------------------------------------------------------
 DynResize_EHZ2_Routine2:
 		cmpi.w	#$28F0,(Camera_X_pos).w
 		blo.s	DynResize_EHZ2_Routine1.return	; rts
-		move.w	#$28F0,(Camera_Min_X_pos).w
-		move.w	#$2940,(Camera_Max_X_pos).w
-		move.w	#$28F0,(Tails_Min_X_pos).w
-		move.w	#$2940,(Tails_Max_X_pos).w
+		move.w	#EHZBoss_CameraLeft,(Camera_Min_X_pos).w
+		move.w	#EHZBoss_CameraFightRight,(Camera_Max_X_pos).w
+		move.w	#EHZBoss_CameraLeft,(Tails_Min_X_pos).w
+		move.w	#EHZBoss_CameraFightRight,(Tails_Max_X_pos).w
 		addq.b	#2,(Dynamic_Resize_Routine).w ; => DynResize_EHZ2_Routine3
 		move.w	#MusID_FadeOut,d0
 		jsr	(PlaySound).l
@@ -7426,22 +7463,20 @@ DynResize_EHZ2_Routine2:
 		jmp	(LoadPLC).l
 ; ---------------------------------------------------------------------------
 DynResize_EHZ2_Routine3:
-		cmpi.w	#$388,(Camera_Y_pos).w
-		blo.s	+
-		move.w	#$388,(Camera_Min_Y_pos).w
-		move.w	#$388,(Tails_Min_Y_pos).w
-+
+		; Wait for either vertical approach to finish before starting the fight.
+		cmpi.w	#EHZBoss_CameraY,(Camera_Y_pos).w
+		bne.s	.return
 		bsr.w	FindFreeObj
-		bne.s	+
+		bne.s	.return			; retry until a controller slot is available
 		_move.b	#id_Obj55,obID(a1)	; load EHZ Boss object
 		move.b	#$81,obSubtype(a1)
-		move.w	#$29D0,obX(a1)
-		move.w	#$426,obY(a1)
-+
+		move.w	#EHZBoss_LandingX,obX(a1)
+		move.w	#EHZBoss_LandingY+8,obY(a1)
+		move.b	#1,(f_lockscreen).w	; keep power-up music changes on the boss track
 		addq.b	#2,(Dynamic_Resize_Routine).w ; => DynResize_EHZ2_Routine4
 		move.w	#bgm_Boss,d0
 		bra.w	PlaySound
-	;	move.b	#1,(f_lockscreen).w
+.return:	rts
 ; ---------------------------------------------------------------------------
 
 DynResize_EHZ2_Routine4:
@@ -7450,7 +7485,6 @@ DynResize_EHZ2_Routine4:
 		move.w	(Camera_X_pos).w,(Camera_Min_X_pos).w
 		move.w	(Camera_Max_X_pos).w,(Tails_Max_X_pos).w
 		move.w	(Camera_X_pos).w,(Tails_Min_X_pos).w
-		move.w	#SegaScreen,(v_gamemode).w
 .return:	rts
 ; ---------------------------------------------------------------------------
 
@@ -8326,10 +8360,10 @@ ptr_Obj51:		dc.l Obj51		; Skyhorse from HPZ
 ptr_Obj52:		dc.l Piranha		; Piranha from HPZ
 ptr_Obj53:		dc.l Obj53		; Empty
 ptr_Obj54:		dc.l Obj54		; Snail badnik from EHZ
-ptr_Obj55:		dc.l Obj55		; EHZ boss
-ptr_Obj56:		dc.l Obj56		; EHZ boss part 2
-ptr_Obj57:		dc.l Obj57		; EHZ boss part 3
-ptr_Obj58:		dc.l Obj58		; EHZ boss part 4
+ptr_Obj55:		dc.l EHZBoss		; Sonic 2 final EHZ boss
+ptr_Obj56:		dc.l ObjNull		; Free: prototype EHZ boss part 2
+ptr_Obj57:		dc.l ObjNull		; Free: prototype EHZ boss part 3
+ptr_Obj58:		dc.l BossExplosion	; Sonic 2 final large boss explosion
 ptr_Obj59:		dc.l ObjNull
 ptr_Obj5A:		dc.l ObjNull
 ptr_Obj5B:		dc.l ObjNull
@@ -13276,1018 +13310,7 @@ word_17496:	dc.w 4
 		dc.w	 1, $1E, 4	; 8
 		dc.w	 5, $28, $C	; 12
 		even
-;----------------------------------------------------------------------------
-; Object 57 - sub object of the	EHZ boss
-;----------------------------------------------------------------------------
-
-Obj57:
-		moveq	#0,d0
-		move.b	ob2ndRout(a0),d0
-		move.w	off_17892(pc,d0.w),d1
-		jmp	off_17892(pc,d1.w)
-; ---------------------------------------------------------------------------
-off_17892:	dc.w loc_1789E-off_17892
-		dc.w loc_178C4-off_17892
-		dc.w loc_17920-off_17892
-		dc.w loc_17952-off_17892
-		dc.w loc_1797C-off_17892
-		dc.w loc_17996-off_17892
-; ---------------------------------------------------------------------------
-
-loc_1789E:
-		clr.b	obColType(a0)
-		cmpi.w	#$29D0,obX(a0)
-		ble.s	loc_178B6
-		subq.w	#1,obX(a0)
-		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-loc_178B6:
-		move.w	#$29D0,obX(a0)
-		addq.b	#2,ob2ndRout(a0)
-		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-loc_178C4:
-		moveq	#0,d0
-		move.b	objoff_2C(a0),d0
-		move.w	off_178D2(pc,d0.w),d1
-		jmp	off_178D2(pc,d1.w)
-; ---------------------------------------------------------------------------
-off_178D2:	dc.w loc_178D6-off_178D2
-		dc.w loc_178FC-off_178D2
-; ---------------------------------------------------------------------------
-
-loc_178D6:
-		cmpi.w	#$41E,obY(a0)
-		bge.s	loc_178E8
-		addq.w	#1,obY(a0)
-		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-loc_178E8:
-		addq.b	#2,objoff_2C(a0)
-		bset	#0,objoff_2D(a0)
-		move.w	#$3C,objoff_2A(a0)
-		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-loc_178FC:
-		subq.w	#1,objoff_2A(a0)
-		bpl.s	+
-		move.w	#-$200,obVelX(a0)
-		addq.b	#2,ob2ndRout(a0)
-		move.b	#$F,obColType(a0)
-		bset	#1,objoff_2D(a0)
-+		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-loc_17920:
-		bsr.w	sub_17A8C
-		bsr.w	sub_17A6A
-		move.w	objoff_2E(a0),d0
-		lsr.w	#1,d0
-		subi.w	#$14,d0
-		move.w	d0,obY(a0)
-		clr.w	objoff_2E(a0)
-		move.l	obX(a0),d2
-		move.w	obVelX(a0),d0
-		ext.l	d0
-		asl.l	#8,d0
-		add.l	d0,d2
-		move.l	d2,obX(a0)
-		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-loc_17952:
-		subq.w	#1,objoff_3C(a0)
-		bpl.w	BossDefeated
-		bset	#0,obStatus(a0)
-		bclr	#7,obStatus(a0)
-		clr.w	obVelX(a0)
-		addq.b	#2,ob2ndRout(a0)
-		move.w	#-$26,objoff_3C(a0)
-		move.w	#$C,objoff_2A(a0)
-		rts
-; ---------------------------------------------------------------------------
-
-loc_1797C:
-		addq.w	#1,obY(a0)
-		subq.w	#1,objoff_2A(a0)
-		bpl.s	+
-		addq.b	#2,ob2ndRout(a0)
-		clr.b	objoff_2C(a0)
-+		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-loc_17996:
-		moveq	#0,d0
-		move.b	objoff_2C(a0),d0
-		move.w	off_179A8(pc,d0.w),d1
-		jsr	off_179A8(pc,d1.w)
--		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-off_179A8:	dc.w loc_179AE-off_179A8
-		dc.w loc_17A22-off_179A8
-		dc.w loc_17A3C-off_179A8
-; ---------------------------------------------------------------------------
-
-loc_179AE:
-		bclr	#0,objoff_2D(a0)
-		jsr	(FindNextFreeObj).l
-		bne.s	-
-		_move.b	#id_Obj58,obID(a1)
-		move.l	a0,objoff_34(a1)
-		move.l	#Map_Obj58,obMap(a1)
-		move.b	#Map_Obj58_height,height_pixels(a1)
-		move.w	#make_art_tile($540,1,0),obGfx(a1)
-		move.b	#4,obRender(a1)
-		move.b	#sprite_bound($20,Map_Obj58_width),obActWid(a1)
-		move.w	#$200,obPriority(a1)
-		move.l	obX(a0),obX(a1)
-		move.l	obY(a0),obY(a1)
-		addi.w	#$C,obY(a1)
-		move.b	obStatus(a0),obStatus(a1)
-		move.b	obRender(a0),obRender(a1)
-		move.b	#8,obRoutine(a1)
-		move.b	#2,obAnim(a1)
-		move.w	#$10,objoff_2A(a1)
-		move.w	#$32,objoff_2A(a0)
-		addq.b	#2,objoff_2C(a0)
-		rts
-; ---------------------------------------------------------------------------
-
-loc_17A22:
-		subq.w	#1,objoff_2A(a0)
-		bpl.s	locret_17A3A
-		bset	#2,objoff_2D(a0)
-		move.w	#$60,objoff_2A(a0)
-		addq.b	#2,objoff_2C(a0)
-
-locret_17A3A:
-		rts
-; ---------------------------------------------------------------------------
-
-loc_17A3C:
-		subq.w	#1,obY(a0)
-		subq.w	#1,objoff_2A(a0)
-		bpl.s	locret_17A68
-		addq.w	#1,obY(a0)
-		addq.w	#2,obX(a0)
-		cmpi.w	#$2B08,obX(a0)
-		blo.s	locret_17A68
-		tst.b	(Boss_defeated_flag).w
-		bne.s	locret_17A68
-		move.b	#1,(Boss_defeated_flag).w
-		jmp	(DeleteObject).l
-; ---------------------------------------------------------------------------
-
-locret_17A68:
-		rts
-
-; =============== S U B R O U T I N E =======================================
-
-
-sub_17A6A:
-		move.w	obX(a0),d0
-		cmpi.w	#$2720,d0
-		ble.s	loc_17A7A
-		cmpi.w	#$2B08,d0
-		blt.s	locret_17A8A
-
-loc_17A7A:
-		bchg	#0,obStatus(a0)
-		bchg	#0,obRender(a0)
-		neg.w	obVelX(a0)
-
-locret_17A8A:
-		rts
-; End of function sub_17A6A
-
-
-; =============== S U B R O U T I N E =======================================
-
-
-sub_17A8C:
-		cmpi.b	#6,ob2ndRout(a0)
-		bhs.s	locret_17AD2
-		tst.b	obStatus(a0)
-		bmi.s	loc_17AD4
-		tst.b	obColType(a0)
-		bne.s	locret_17AD2
-		tst.b	objoff_3E(a0)
-		bne.s	loc_17AB6
-		move.b	#$20,objoff_3E(a0)
-		move.w	#sfx_HitBoss,d0
-		jsr	(PlaySound_Special).l
-
-loc_17AB6:
-		lea	(v_palette+$22).w,a1
-		moveq	#0,d0
-		tst.w	(a1)
-		bne.s	loc_17AC4
-		move.w	#cWhite,d0
-
-loc_17AC4:
-		move.w	d0,(a1)
-		subq.b	#1,objoff_3E(a0)
-		bne.s	locret_17AD2
-		move.b	#$F,obColType(a0)
-
-locret_17AD2:
-		rts
-; ---------------------------------------------------------------------------
-
-loc_17AD4:
-		moveq	#100,d0
-		bsr.w	AddPoints
-		move.b	#6,ob2ndRout(a0)
-		move.w	#180-1,objoff_3C(a0)
-		bset	#3,objoff_2D(a0)
-		rts
-; End of function sub_17A8C
-
-; ---------------------------------------------------------------------------
-; Object 58 - sub object of the	EHZ boss
-; ---------------------------------------------------------------------------
-
-Obj58:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	off_17AFC(pc,d0.w),d1
-		jmp	off_17AFC(pc,d1.w)
-; ---------------------------------------------------------------------------
-off_17AFC:	dc.w loc_17B2A-off_17AFC
-		dc.w loc_17BB0-off_17AFC
-		dc.w loc_17C02-off_17AFC
-		dc.w loc_17CE4-off_17AFC
-		dc.w loc_17B06-off_17AFC
-; ---------------------------------------------------------------------------
-
-loc_17B06:
-		subq.w	#1,obY(a0)
-		subq.w	#1,objoff_2A(a0)
-		bpl.s	+
-		clr.b	obRoutine(a0)
-		lea	(Ani_Obj58).l,a1
-		jsr	(AnimateSprite).l
-+		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-loc_17B2A:
-		moveq	#0,d0
-		move.b	ob2ndRout(a0),d0
-		move.w	off_17B38(pc,d0.w),d1
-		jmp	off_17B38(pc,d1.w)
-; ---------------------------------------------------------------------------
-off_17B38:	dc.w loc_17B3C-off_17B38
-		dc.w loc_17B86-off_17B38
-; ---------------------------------------------------------------------------
-
-loc_17B3C:
-		movea.l	objoff_34(a0),a1
-		cmpi.b	#id_Obj55,obID(a1)
-		bne.w	Obj58_Delete
-		btst	#0,objoff_2D(a1)
-		beq.s	loc_17B60
-		move.b	#1,obAnim(a0)
-		move.w	#$18,objoff_2A(a0)
-		addq.b	#2,ob2ndRout(a0)
-
-loc_17B60:
-		move.w	obX(a1),obX(a0)
-		move.w	obY(a1),obY(a0)
-		move.b	obStatus(a1),obStatus(a0)
-		move.b	obRender(a1),obRender(a0)
-		lea	(Ani_Obj58).l,a1
-		jsr	(AnimateSprite).l
-		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-loc_17B86:
-		subq.w	#1,objoff_2A(a0)
-		bpl.s	loc_17BA2
-		cmpi.w	#-$10,objoff_2A(a0)
-		ble.w	Obj58_Delete
-		addq.w	#1,obY(a0)
-		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-loc_17BA2:
-		lea	(Ani_Obj58).l,a1
-		jsr	(AnimateSprite).l
-		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-loc_17BB0:
-		movea.l	objoff_34(a0),a1
-		cmpi.b	#id_Obj55,obID(a1)
-		bne.w	Obj58_Delete
-		btst	#1,objoff_2D(a1)
-		beq.s	+
-		btst	#2,objoff_2D(a1)
-		bne.w	loc_17BF2
-		move.w	obX(a1),obX(a0)
-		move.w	obY(a1),obY(a0)
-		addq.w	#8,obY(a0)
-		move.b	obStatus(a1),obStatus(a0)
-		move.b	obRender(a1),obRender(a0)
-+		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-loc_17BF2:
-		move.b	#8,obFrame(a0)
-		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-loc_17C02:
-		moveq	#0,d0
-		move.b	ob2ndRout(a0),d0
-		move.w	off_17C10(pc,d0.w),d1
-		jmp	off_17C10(pc,d1.w)
-; ---------------------------------------------------------------------------
-off_17C10:	dc.w loc_17C18-off_17C10
-		dc.w loc_17C36-off_17C10
-		dc.w loc_17C96-off_17C10
-		dc.w loc_17CC2-off_17C10
-; ---------------------------------------------------------------------------
-
-loc_17C18:
-		movea.l	objoff_34(a0),a1
-		cmpi.b	#id_Obj55,obID(a1)
-		bne.w	Obj58_Delete
-		btst	#1,objoff_2D(a1)
-		beq.s	+
-		addq.b	#2,ob2ndRout(a0)
-+		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-loc_17C36:
-		movea.l	objoff_34(a0),a1
-		cmpi.b	#id_Obj55,obID(a1)
-		bne.w	Obj58_Delete
-		move.b	obStatus(a1),obStatus(a0)
-		move.b	obRender(a1),obRender(a0)
-		tst.b	obStatus(a0)
-		bpl.s	loc_17C58
-		addq.b	#2,ob2ndRout(a0)
-
-loc_17C58:
-		bsr.w	sub_17A6A
-		jsr	(ObjectMoveAndFall).l
-		jsr	(ObjHitFloor).l
-		tst.w	d1
-		bpl.s	loc_17C6E
-		add.w	d1,obY(a0)
-
-loc_17C6E:
-		move.w	#$100,obVelY(a0)
-		cmpi.w	#$80,obPriority(a0)
-		bne.s	loc_17C88
-		move.w	obY(a0),d0
-		movea.l	objoff_34(a0),a1
-		add.w	d0,objoff_2E(a1)
-
-loc_17C88:
-		lea	(Ani_Obj58a).l,a1
-		jsr	(AnimateSprite).l
-		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-loc_17C96:
-		subq.w	#1,objoff_2A(a0)
-		bpl.w	+
-		addq.b	#2,ob2ndRout(a0)
-		move.w	#$A,objoff_2A(a0)
-		move.w	#-$300,obVelY(a0)
-		cmpi.w	#$80,obPriority(a0)
-		beq.s	+
-		neg.w	obVelX(a0)
-/		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-loc_17CC2:
-		subq.w	#1,objoff_2A(a0)
-		bpl.s	-
-		jsr	(ObjectMoveAndFall).l
-		bsr.w	ObjHitFloor
-		tst.w	d1
-		bpl.s	loc_17CE0
-		move.w	#-$200,obVelY(a0)
-		add.w	d1,obY(a0)
-
-loc_17CE0:
-		jmp	(MarkObjGone).l
-; ---------------------------------------------------------------------------
-
-loc_17CE4:
-		movea.l	objoff_34(a0),a1
-		cmpi.b	#id_Obj55,obID(a1)
-		bne.w	Obj58_Delete
-		btst	#3,objoff_2D(a1)
-		bne.s	loc_17D4A
-		bsr.w	sub_17D6A
-		btst	#1,objoff_2D(a1)
-		beq.s	+
-		move.b	#$8B,obColType(a0)
-		move.w	obX(a1),obX(a0)
-		move.w	obY(a1),obY(a0)
-		move.b	obStatus(a1),obStatus(a0)
-		move.b	obRender(a1),obRender(a0)
-		addi.w	#$10,obY(a0)
-		move.w	#-$36,d0
-		btst	#0,obStatus(a0)
-		beq.s	loc_17D38
-		neg.w	d0
-
-loc_17D38:
-		add.w	d0,obX(a0)
-		lea	(Ani_Obj58a).l,a1
-		jsr	(AnimateSprite).l
-+		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-loc_17D4A:
-		move.w	#-3,d0
-		btst	#0,obStatus(a0)
-		beq.s	loc_17D58
-		neg.w	d0
-
-loc_17D58:
-		add.w	d0,obX(a0)
-		lea	(Ani_Obj58a).l,a1
-		jsr	(AnimateSprite).l
-		jmp	(DisplaySprite).l
-
-; =============== S U B R O U T I N E =======================================
-
-
-sub_17D6A:
-		cmpi.b	#1,obColProp(a1)
-		beq.s	loc_17D74
-		rts
-; ---------------------------------------------------------------------------
-
-loc_17D74:
-		move.w	obX(a0),d0
-		sub.w	(v_player+obX).w,d0
-		bpl.s	loc_17D88
-		btst	#0,obStatus(a1)
-		bne.s	loc_17D92
-		rts
-; ---------------------------------------------------------------------------
-
-loc_17D88:
-		btst	#0,obStatus(a1)
-		beq.s	loc_17D92
-		rts
-; ---------------------------------------------------------------------------
-
-loc_17D92:
-		bset	#3,objoff_2D(a1)
-		rts
-; End of function sub_17D6A
-
-
-; =============== S U B R O U T I N E =======================================
-
-
-sub_17D9A:
-		jsr	(FindNextFreeObj).l
-		bne.s	loc_17E0E
-		_move.b	#id_Obj58,obID(a1)
-		move.l	a0,objoff_34(a1)
-		move.l	#Map_Obj58a,obMap(a1)
-		move.b	#Map_Obj58a_height,height_pixels(a1)
-		move.w	#make_art_tile($4C0,1,0),obGfx(a1)
-		move.b	#4,obRender(a1)
-		move.b	#sprite_bound($10,Map_Obj58a_width),obActWid(a1)
-		move.w	#$80,obPriority(a1)
-		move.b	#$10,obHeight(a1)
-		move.b	#$10,obWidth(a1)
-		move.l	obX(a0),obX(a1)
-		move.l	obY(a0),obY(a1)
-		addi.w	#$1C,obX(a1)
-		addi.w	#$C,obY(a1)
-		move.w	#-$200,obVelX(a1)
-		move.b	#4,obRoutine(a1)
-		move.b	#4,obFrame(a1)
-		move.b	#1,obAnim(a1)
-		move.w	#$16,objoff_2A(a1)
-
-loc_17E0E:
-		jsr	(FindNextFreeObj).l
-		bne.s	loc_17E82
-		_move.b	#id_Obj58,obID(a1)
-		move.l	a0,objoff_34(a1)
-		move.l	#Map_Obj58a,obMap(a1)
-		move.b	#Map_Obj58a_height,height_pixels(a1)
-		move.w	#make_art_tile($4C0,1,0),obGfx(a1)
-		move.b	#4,obRender(a1)
-		move.b	#sprite_bound($10,Map_Obj58a_width),obActWid(a1)
-		move.w	#$80,obPriority(a1)
-		move.b	#$10,obHeight(a1)
-		move.b	#$10,obWidth(a1)
-		move.l	obX(a0),obX(a1)
-		move.l	obY(a0),obY(a1)
-		subi.w	#$C,obX(a1)
-		addi.w	#$C,obY(a1)
-		move.w	#-$200,obVelX(a1)
-		move.b	#4,obRoutine(a1)
-		move.b	#4,obFrame(a1)
-		move.b	#1,obAnim(a1)
-		move.w	#$4B,objoff_2A(a1)
-
-loc_17E82:
-		jsr	(FindNextFreeObj).l
-		bne.s	loc_17EF6
-		_move.b	#id_Obj58,obID(a1)
-		move.l	a0,objoff_34(a1)
-		move.l	#Map_Obj58a,obMap(a1)
-		move.b	#Map_Obj58a_height,height_pixels(a1)
-		move.w	#make_art_tile($4C0,1,0),obGfx(a1)
-		move.b	#4,obRender(a1)
-		move.b	#sprite_bound($10,Map_Obj58a_width),obActWid(a1)
-		move.w	#$100,obPriority(a1)
-		move.b	#$10,obHeight(a1)
-		move.b	#$10,obWidth(a1)
-		move.l	obX(a0),obX(a1)
-		move.l	obY(a0),obY(a1)
-		subi.w	#$2C,obX(a1)
-		addi.w	#$C,obY(a1)
-		move.w	#-$200,obVelX(a1)
-		move.b	#4,obRoutine(a1)
-		move.b	#6,obFrame(a1)
-		move.b	#2,obAnim(a1)
-		move.w	#$30,objoff_2A(a1)
-
-loc_17EF6:
-		jsr	(FindNextFreeObj).l
-		bne.s	locret_17F52
-		_move.b	#id_Obj58,obID(a1)
-		move.l	a0,objoff_34(a1)
-		move.l	#Map_Obj58a,obMap(a1)
-		move.b	#Map_Obj58a_height,height_pixels(a1)
-		move.w	#make_art_tile($4C0,1,0),obGfx(a1)
-		move.b	#4,obRender(a1)
-		move.b	#sprite_bound($10,Map_Obj58a_width),obActWid(a1)
-		move.w	#$80,obPriority(a1)
-		move.l	obX(a0),obX(a1)
-		move.l	obY(a0),obY(a1)
-		subi.w	#$36,obX(a1)
-		addq.w	#8,obY(a1)
-		move.b	#6,obRoutine(a1)
-		move.b	#1,obFrame(a1)
-		clr.b	obAnim(a1)
-
-locret_17F52:
-		rts
-; End of function sub_17D9A
-
-; ---------------------------------------------------------------------------
-
-loc_17F54:
-		jsr	(FindNextFreeObj).l
-		bne.s	loc_17F98
-		_move.b	#id_Obj58,obID(a1)
-		move.l	a0,objoff_34(a1)
-		move.l	#Map_Obj58a,obMap(a1)
-		move.b	#Map_Obj58a_height,height_pixels(a1)
-		move.w	#make_art_tile($4C0,0,0),obGfx(a1)
-		move.b	#4,obRender(a1)
-		move.b	#sprite_bound($20,Map_Obj58a_width),obActWid(a1)
-		move.w	#$100,obPriority(a1)
-		move.l	obX(a0),obX(a1)
-		move.l	obY(a0),obY(a1)
-		move.b	#2,obRoutine(a1)
-
-loc_17F98:
-		bsr.w	sub_17D9A
-		subq.w	#8,objoff_38(a0)
-		move.w	#$2A00,obX(a0)
-		move.w	#$2C0,obY(a0)
-		jsr	(FindNextFreeObj).l
-		bne.s	locret_17FF8
-		_move.b	#id_Obj58,obID(a1)
-		move.l	a0,objoff_34(a1)
-		move.l	#Map_Obj58,obMap(a1)
-		move.b	#Map_Obj58_height,height_pixels(a1)
-		move.w	#make_art_tile($540,1,0),obGfx(a1)
-		move.b	#4,obRender(a1)
-		move.b	#sprite_bound($20,Map_Obj58_width),obActWid(a1)
-		move.w	#$200,obPriority(a1)
-		move.l	obX(a0),obX(a1)
-		move.l	obY(a0),obY(a1)
-		move.w	#$1E,objoff_2A(a1)
-		clr.b	obRoutine(a1)
-
-locret_17FF8:
-		rts
-; ---------------------------------------------------------------------------
-Obj58_Delete:
-		jmp	(DeleteObject).l
-; ---------------------------------------------------------------------------
-Ani_Obj58:	dc.w byte_18000-Ani_Obj58
-		dc.w byte_18004-Ani_Obj58
-		dc.w byte_1801A-Ani_Obj58
-byte_18000:	dc.b   1,  5,  6,$FF			; 0
-byte_18004:	dc.b   1,  1,  1,  1,  2,  2,  2,  3,  3,  3,  4,  4,  4,  0,  0,  0
-		dc.b   0,  0,  0,  0,  0,$FF		; 16
-byte_1801A:	dc.b   1,  0,  0,  0,  0,  0,  0,  0,  0,  4,  4,  4,  3,  3,  3,  2
-		dc.b   2,  2,  1,  1,  1,  5,  6,$FE,  2,  0 ; 16
-		even
-
-Map_Obj58:	dc.w word_18042-Map_Obj58
-		dc.w word_1804C-Map_Obj58
-		dc.w word_18076-Map_Obj58
-		dc.w word_180A0-Map_Obj58
-		dc.w word_180BA-Map_Obj58
-		dc.w word_180D4-Map_Obj58
-		dc.w word_180EE-Map_Obj58
-word_18042:	dc.w 1
-		dc.w $D805, 0, 2	; 0
-word_1804C:	dc.w 5
-		dc.w $D805, 4, 2	; 0
-		dc.w $D80D, $C, $12	; 4
-		dc.w $D80D, $C, $32	; 8
-		dc.w $D80D, $C, $FFE2	; 12
-		dc.w $D80D, $C, $FFC2	; 16
-word_18076:	dc.w 5
-		dc.w $D805, 4, 2	; 0
-		dc.w $D80D, $C, $12	; 4
-		dc.w $D805, 8, $32	; 8
-		dc.w $D80D, $C, $FFE2	; 12
-		dc.w $D805, 8, $FFD2	; 16
-word_180A0:	dc.w 3
-		dc.w $D805, 4, 2	; 0
-		dc.w $D80D, $C, $12	; 4
-		dc.w $D80D, $C, $FFE2	; 8
-word_180BA:	dc.w 3
-		dc.w $D805, 4, 2	; 0
-		dc.w $D805, 8, $12	; 4
-		dc.w $D805, 8, $FFF2	; 8
-word_180D4:	dc.w 3
-		dc.w $D805, 0, 2	; 0
-		dc.w $D80D, $C, $12	; 4
-		dc.w $D80D, $C, $32	; 8
-word_180EE:	dc.w 3
-		dc.w $D805, 4, 2	; 0
-		dc.w $D80D, $C, $FFE2	; 4
-		dc.w $D80D, $C, $FFC2	; 8
-Ani_Obj58a:	dc.w byte_1810E-Ani_Obj58a
-		dc.w byte_18113-Ani_Obj58a
-		dc.w byte_18117-Ani_Obj58a
-byte_1810E:	dc.b   5,  1,  2,  3,$FF
-byte_18113:	dc.b   1,  4,  5,$FF
-byte_18117:	dc.b   1,  6,  7,$FF
-		even
-
-Map_Obj58a:	dc.w word_1812E-Map_Obj58a
-		dc.w word_18148-Map_Obj58a
-		dc.w word_18152-Map_Obj58a
-		dc.w word_1815C-Map_Obj58a
-		dc.w word_18166-Map_Obj58a
-		dc.w word_18170-Map_Obj58a
-		dc.w word_1817A-Map_Obj58a
-		dc.w word_18184-Map_Obj58a
-		dc.w word_1818E-Map_Obj58a
-word_1812E:	dc.w 3
-		dc.w $F00F, 0, $FFD0	; 0
-		dc.w $F00F, $10, $FFF0	; 4
-		dc.w $F00F, $20, $10	; 8
-word_18148:	dc.w 1
-		dc.w $F00F, $30, $FFF0	; 0
-word_18152:	dc.w 1
-		dc.w $F00F, $40, $FFF0	; 0
-word_1815C:	dc.w 1
-		dc.w $F00F, $50, $FFF0	; 0
-word_18166:	dc.w 1
-		dc.w $F00F, $60, $FFF0	; 0
-word_18170:	dc.w 1
-		dc.w $F00F, $1060, $FFF0	; 0
-word_1817A:	dc.w 1
-		dc.w $F00F, $70, $FFF0	; 0
-word_18184:	dc.w 1
-		dc.w $F00F, $1070, $FFF0	; 0
-word_1818E:	dc.w 3
-		dc.w $F00F, $8000, $FFD0	; 0
-		dc.w $F00F, $8010, $FFF0	; 4
-		dc.w $F00F, $8020, $10	; 8
-		even
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; Object 55 - EHZ boss
-; the bottom part of the vehicle with the ability to fly is the parent object
-; ---------------------------------------------------------------------------
-
-Obj55:		; TODO - Replace with it's Final counterpart
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Obj55_Index(pc,d0.w),d1
-		jmp	Obj55_Index(pc,d1.w)
-; ===========================================================================
-Obj55_Index:
-		dc.w Obj55_Init-Obj55_Index	; 0 - Init
-		dc.w loc_18302-Obj55_Index	; 2 - Flying vehicle, bottom = main object
-		dc.w loc_18340-Obj55_Index	; 4 - Propeller normal
-		dc.w loc_18372-Obj55_Index	; 6 - Vehicle on ground
-		dc.w loc_18410-Obj55_Index	; 8 - Wheels
-	;	dc.w loc_2F7F4-Obj55_Index	; A - Spike
-	;	dc.w loc_2F52A-Obj55_Index	; C - Propeller after defeat
-	;	dc.w loc_2F8DA-Obj55_Index	; E - Flying vehicle, top
-; ===========================================================================
-
-; #7,status(ax) set via collision response routine (Touch_Enemy_Part2)
-; 	when after a hit collision_property(ax) = hitcount has reached zero
-; objoff_2A(ax) used as timer (countdown)
-; objoff_2C(ax) tertiary rountine counter
-; #0,objoff_2D(ax) set when Robotnik is on ground
-; #1,objoff_2D(ax) set when Robotnik is active (moving back & forth)
-; #2,objoff_2D(ax) set when Robotnik is flying off after being defeated
-;	#3,objoff_2D(ax) flag to separate spike from vehicle
-; objoff_2E(ax)	y_position of wheels
-;	objoff_34(ax) parent object
-; objoff_3C(ax)	timer after defeat
-
-; loc_181E4:
-Obj55_Init:
-		move.l	#Map_Obj55,obMap(a0)	; main object
-		move.b	#Map_Obj55_height,height_pixels(a0)
-		move.w	#make_art_tile($400,1,0),obGfx(a0) ; vehicle with ability to fly, bottom part
-		ori.b	#4,obRender(a0)
-		move.b	#sprite_bound($20,Map_Obj55_width),obActWid(a0)
-		move.w	#$180,obPriority(a0)
-		move.b	#$F,obColType(a0)
-		move.b	#8,obColProp(a0)
-		addq.b	#2,obRoutine(a0)
-		move.w	obX(a0),objoff_30(a0)
-		move.w	obY(a0),objoff_38(a0)
-		move.b	obSubtype(a0),d0
-		cmpi.b	#$81,d0
-		bne.s	loc_18230
-		addi.w	#$60,obGfx(a0)
-
-loc_18230:
-		jsr	(FindNextFreeObj).l
-		bne.w	loc_182E8
-		_move.b	#id_Obj55,obID(a1)
-		move.l	a0,objoff_34(a1)
-		move.l	a1,objoff_34(a0)
-		move.l	#Map_Obj55,obMap(a1)
-		move.b	#Map_Obj55_height,height_pixels(a1)
-		move.w	#make_art_tile($400,0,0),obGfx(a1)
-		move.b	#4,obRender(a1)
-		move.b	#sprite_bound($20,Map_Obj55_width),obActWid(a1)
-		move.w	#$180,obPriority(a1)
-		move.l	obX(a0),obX(a1)
-		move.l	obY(a0),obY(a1)
-		addq.b	#4,obRoutine(a1)
-		move.b	#1,obAnim(a1)
-		move.b	obRender(a0),obRender(a1)
-		move.b	obSubtype(a0),d0
-		cmpi.b	#$81,d0
-		bne.s	loc_18294
-		addi.w	#$60,obGfx(a1)
-
-loc_18294:
-		tst.b	obSubtype(a0)
-		bmi.s	loc_182E8
-		jsr	(FindNextFreeObj).l
-		bne.s	loc_182E8
-		_move.b	#id_Obj55,obID(a1)
-		move.l	a0,objoff_34(a1)
-
-loc_182AC:
-		move.l	#Map_Obj55a,obMap(a1)
-		move.b	#Map_Obj55a_height,height_pixels(a1)
-		move.w	#make_art_tile($4D0,0,0),obGfx(a1)
-		move.b	#1,obTimeFrame(a0)
-
-loc_182C0:
-		move.b	#4,obRender(a1)
-		move.b	#sprite_bound($20,Map_Obj55a_width),obActWid(a1)
-		move.w	#$180,obPriority(a1)
-		move.l	obX(a0),obX(a1)
-		move.l	obY(a0),obY(a1)
-		addq.b	#6,obRoutine(a1)
-		move.b	obRender(a0),obRender(a1)
-
-loc_182E8:
-		move.b	obSubtype(a0),d0
-		andi.w	#$7F,d0
-		add.w	d0,d0
-		add.w	d0,d0
-		movea.l	dword_182FA(pc,d0.w),a1
-		jmp	(a1)
-; ===========================================================================
-dword_182FA:	dc.l 0
-		dc.l loc_17F54
-; ===========================================================================
-
-loc_18302:
-		move.b	obSubtype(a0),d0
-		andi.w	#$7F,d0
-		add.w	d0,d0
-		add.w	d0,d0
-		movea.l	dword_18338(pc,d0.w),a1
-		jsr	(a1)
-		lea	(Ani_Obj55a).l,a1
-		jsr	(AnimateSprite).l
-		move.b	obStatus(a0),d0
-		andi.b	#3,d0
-		andi.b	#$FC,obRender(a0)
-		or.b	d0,obRender(a0)
-		jmp	(DisplaySprite).l
-; ===========================================================================
-dword_18338:	dc.l 0
-		dc.l Obj57
-; ===========================================================================
-
-loc_18340:
-		movea.l	objoff_34(a0),a1
-		move.l	obX(a1),obX(a0)
-		move.l	obY(a1),obY(a0)
-		move.b	obStatus(a1),obStatus(a0)
-		move.b	obRender(a1),obRender(a0)
-		movea.l	#Ani_Obj55a,a1
-		jsr	(AnimateSprite).l
-		jmp	(DisplaySprite).l
-; ===========================================================================
-byte_1836E:	dc.b   0,$FF,  1,  0
-; ===========================================================================
-
-loc_18372:
-		btst	#7,obStatus(a0)
-		bne.s	loc_183C6
-		movea.l	objoff_34(a0),a1
-		move.l	obX(a1),obX(a0)
-		move.l	obY(a1),obY(a0)
-		move.b	obStatus(a1),obStatus(a0)
-		move.b	obRender(a1),obRender(a0)
-		subq.b	#1,obTimeFrame(a0)
-		bpl.s	loc_183BA
-		move.b	#1,obTimeFrame(a0)
-		move.b	objoff_2A(a0),d0
-		addq.b	#1,d0
-		cmpi.b	#2,d0
-		ble.s	loc_183B0
-		moveq	#0,d0
-
-loc_183B0:
-		move.b	byte_1836E(pc,d0.w),obFrame(a0)
-		move.b	d0,objoff_2A(a0)
-
-loc_183BA:
-		cmpi.b	#$FF,obFrame(a0)
-		bne.w	loc_18452
-		rts
-; ===========================================================================
-
-loc_183C6:
-		movea.l	objoff_34(a0),a1
-		btst	#6,objoff_2E(a1)
-		bne.s	loc_183D4
-		rts
-; ===========================================================================
-
-loc_183D4:
-		addq.b	#2,obRoutine(a0)
-		move.l	#Map_Obj55b,obMap(a0)
-		move.b	#Map_Obj55b_height,height_pixels(a0)
-		move.w	#make_art_tile($4D8,0,0),obGfx(a0)
-		clr.b	obFrame(a0)
-		move.b	#5,obTimeFrame(a0)
-		movea.l	objoff_34(a0),a1
-		move.w	obX(a1),obX(a0)
-		move.w	obY(a1),obY(a0)
-		addq.w	#4,obY(a0)
-		subi.w	#$28,obX(a0)
-		rts
-; ===========================================================================
-
-loc_18410:
-		subq.b	#1,obTimeFrame(a0)
-		bpl.s	loc_18452
-		move.b	#5,obTimeFrame(a0)
-		addq.b	#1,obFrame(a0)
-		cmpi.b	#4,obFrame(a0)
-		bne.w	loc_18452
-		clr.b	obFrame(a0)
-		movea.l	objoff_34(a0),a1
-		move.b	(a1),d0
-		beq.w	Obj56_Delete
-		move.w	obX(a1),obX(a0)
-		move.w	obY(a1),obY(a0)
-		addq.w	#4,obY(a0)
-		subi.w	#$28,obX(a0)
-
-loc_18452:
-		jmp	(DisplaySprite).l
-; ===========================================================================
-
-Obj56:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Obj56_Index(pc,d0.w),d1
-		jmp	Obj56_Index(pc,d1.w)
-; ---------------------------------------------------------------------------
-Obj56_Index:	dc.w Obj56_Init-Obj56_Index
-		dc.w Obj56_Animate-Obj56_Index
-; ---------------------------------------------------------------------------
-
-Obj56_Init:
-		addq.b	#2,obRoutine(a0)
-		move.l	#Map_Obj56,obMap(a0)
-		move.b	#Map_Obj56_height,height_pixels(a0)
-		move.w	#make_art_tile($5A0,0,0),obGfx(a0)
-		move.b	#4,obRender(a0)
-		move.w	#$80,obPriority(a0)
-		clr.b	obColType(a0)
-		move.b	#sprite_bound($C,Map_Obj56_width),obActWid(a0)
-		move.b	#7,obTimeFrame(a0)
-		clr.b	obFrame(a0)
-		rts
-; ---------------------------------------------------------------------------
-
-Obj56_Animate:
-		subq.b	#1,obTimeFrame(a0)
-		bpl.s	loc_184BA
-		move.b	#7,obTimeFrame(a0)
-		addq.b	#1,obFrame(a0)
-		cmpi.b	#7,obFrame(a0)
-		beq.s	Obj56_Delete
-
-loc_184BA:
-		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-
-Obj56_Delete:
-		jmp	(DeleteObject).l
-; ---------------------------------------------------------------------------
-Map_Obj55a:	dc.w word_184C2-Map_Obj55a
-		dc.w word_184CC-Map_Obj55a
-word_184C2:	dc.w 1
-		dc.w	 5, 0, $1C	; 0
-word_184CC:	dc.w 1
-		dc.w	 5, 4, $1C	; 0
-Map_Obj55b:	dc.w word_184DE-Map_Obj55b
-		dc.w word_184E8-Map_Obj55b
-		dc.w word_184F2-Map_Obj55b
-		dc.w word_184FC-Map_Obj55b
-word_184DE:	dc.w 1
-		dc.w $F805, 0, $FFF8	; 0
-word_184E8:	dc.w 1
-		dc.w $F805, 4, $FFF8	; 0
-word_184F2:	dc.w 1
-		dc.w $F805, 8, $FFF8	; 0
-word_184FC:	dc.w 1
-		dc.w $F805, $C, $FFF8	; 0
-Map_Obj56:	dc.w word_18514-Map_Obj56
-		dc.w word_1851E-Map_Obj56
-		dc.w word_18528-Map_Obj56
-		dc.w word_18532-Map_Obj56
-		dc.w word_1853C-Map_Obj56
-		dc.w word_18546-Map_Obj56
-		dc.w word_18550-Map_Obj56
-word_18514:	dc.w 1
-		dc.w $F805, 0, $FFF8	; 0
-word_1851E:	dc.w 1
-		dc.w $F00F, 4, $FFF0	; 0
-word_18528:	dc.w 1
-		dc.w $F00F, $14, $FFF0	; 0
-word_18532:	dc.w 1
-		dc.w $F00F, $24, $FFF0	; 0
-word_1853C:	dc.w 1
-		dc.w $F00F, $34, $FFF0	; 0
-word_18546:	dc.w 1
-		dc.w $F00F, $44, $FFF0	; 0
-word_18550:	dc.w 1
-		dc.w $F00F, $54, $FFF0	; 0
-Ani_Obj55a:	dc.w byte_1855E-Ani_Obj55a
-		dc.w byte_18561-Ani_Obj55a
-byte_1855E:	dc.b  $F,  0,$FF
-byte_18561:	dc.b   7,  1,  2,$FF
-		even
-
-Map_Obj55:	dc.w word_1856C-Map_Obj55
-		dc.w word_1858E-Map_Obj55
-		dc.w word_185B0-Map_Obj55
-word_1856C:	dc.w 4
-		dc.w $F805, 0, $FFE0	; 0
-		dc.w  $805, 4, $FFE0	; 4
-		dc.w $F80F, 8, $FFF0	; 8
-		dc.w $F807, $18, $10	; 12
-word_1858E:	dc.w 4
-		dc.w $E805, $28, $FFE0	; 0
-		dc.w $E80D, $30, $FFF0	; 4
-		dc.w $E805, $24, $10	; 8
-		dc.w $D805, $20, 2	; 12
-word_185B0:	dc.w 4
-		dc.w $E805, $28, $FFE0	; 0
-		dc.w $E80D, $38, $FFF0	; 4
-		dc.w $E805, $24, $10	; 8
-		dc.w $D805, $20, 2	; 12
-		even
+		include "objects/55 EHZ Boss.asm"
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Object 90 - "SONIC TEAM PRESENTS" screen and credits

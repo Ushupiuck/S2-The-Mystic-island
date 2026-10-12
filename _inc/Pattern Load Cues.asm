@@ -65,6 +65,7 @@ ptr_PLC_EggmanSBZ2:	dc.w PLC_Boss-ArtLoadCues		; Placeholder
 ptr_PLC_FZBoss:		dc.w PLC_Boss-ArtLoadCues		; Placeholder
 ptr_PLC_Filler:		dc.w PLC_Filler-ArtLoadCues		; Placeholder
 ptr_PLC_Filler2:	dc.w PLC_Filler2-ArtLoadCues		; Placeholder
+ptr_PLC_Capsule:	dc.w PLC_Capsule-ArtLoadCues
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Standard 1 - loaded for every level
@@ -234,7 +235,12 @@ PLC_Boss:	dc.w ((PLC_Boss_End-PLC_Boss)/6)-1
 		plcm	Nem_EggPod,	ArtTile_ArtNem_Eggpod_1
 		plcm	Nem_EHZ_Boss,	ArtTile_ArtNem_EHZBoss
 		plcm	Nem_EggChopper,	ArtTile_ArtNem_EggChoppers
+		plcm	Nem_BossExplosion,	ArtTile_BossExplosion
 PLC_Boss_End:
+; Capsule art can coexist with the boss during its defeat/escape sequence.
+PLC_Capsule:	dc.w ((PLC_Capsule_End-PLC_Capsule)/6)-1
+		plcm	Nem_Prison,	ArtTile_Prison_Capsule
+PLC_Capsule_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; End of level signpost
@@ -376,6 +382,8 @@ plcid_FZBoss:		equ (ptr_PLC_FZBoss-ArtLoadCues)/2	; $1F
 plcid_Filler:		equ (ptr_PLC_Filler-ArtLoadCues)/2	; $20
 plcid_Filler2:		equ (ptr_PLC_Filler2-ArtLoadCues)/2	; $21
 ; ---------------------------------------------------------------------------
+plcid_Capsule:		equ (ptr_PLC_Capsule-ArtLoadCues)/2
+
 KosMLoadCues:
 ; Level Slot $00: Twilight Hill Zone  [WILL BE REPLACED] [GHZ]
 ptr_KPLC_THZ1:	dc.w PLCKosM_THZ1-KosMLoadCues  ; $00 Act 1
