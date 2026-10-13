@@ -10,7 +10,7 @@ SndID__First = MusID__End
 	enum SndID_Gloop=SndID_LargeBumper+1,SndID_PreArrowFiring,SndID_Fire,SndID_ArrowStick,SndID_Helicopter,SndID_SuperTransform,SndID_SpindashRev
 	enum SndID_Rumbling2=SndID_SpindashRev+1,SndID_CNZLaunch,SndID_Flipper,SndID_HTZLiftClick,SndID_Leaves,SndID_MegaMackDrop,SndID_DrawbridgeMove
 	enum SndID_QuickDoorSlam=SndID_DrawbridgeMove+1,SndID_DrawbridgeDown,SndID_LaserBurst,SndID_LaserFloor,SndID_Teleport,SndID_Error,SndID_MechaSonicBuzz
-	enum SndID_LargeLaser=SndID_MechaSonicBuzz+1,SndID_OilSlide,SndID_Goal
-	enum SndID_TailsGrab=SndID_Goal+1,SndID_TailsFlying,SndID_TailsFlyingTired,SndID__End
+	enum SndID_LargeLaser=SndID_MechaSonicBuzz+1,SndID_OilSlide,SndID_Goal,SndID_TailsGrab,SndID_TailsFlying,SndID_TailsFlyingTired,SndID__End
+
 DACSFXID__First = SndID__End
 	enum DACSFXID__End=DACSFXID__First

@@ -163,8 +163,7 @@ Snd_MechaSonicBuzz:	include "sound/SFX/Sound6E.asm"
 Snd_LargeLaser:	include "sound/SFX/Sound6F.asm"
 Snd_OilSlide:	include "sound/SFX/Sound70.asm"
 Snd_Goal:	include "sound/SFX/SndA8 - SS Goal.asm"
-
-
 Snd_TailsGrab:	include "sound/SFX/Tails Grab.asm"
 Snd_TailsFlying:	include "sound/SFX/Tails Flying.asm"
 Snd_TailsFlyingTired:	include "sound/SFX/Tails Flying Tired.asm"
+

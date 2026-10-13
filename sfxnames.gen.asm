@@ -163,11 +163,7 @@ SndNam_MechaSonicBuzz:	songtext	"MECHA SONIC BUZZ"
 SndNam_LargeLaser:	songtext	"LARGE LASER"
 SndNam_OilSlide:	songtext	"OIL SLIDE"
 SndNam_Goal:	songtext	"GOAL"
-	even
-
-SndNam_TailsGrab:	songtext "TAILS GRAB"
-
-SndNam_TailsFlying:	songtext "TAILS FLYING"
-
-SndNam_TailsFlyingTired:	songtext "TAILS TIRED"
+SndNam_TailsGrab:	songtext	"TAILS GRAB"
+SndNam_TailsFlying:	songtext	"TAILS FLYING"
+SndNam_TailsFlyingTired:	songtext	"TAILS FLYING TIRED"
 	even

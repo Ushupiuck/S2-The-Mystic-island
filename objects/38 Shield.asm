@@ -19,7 +19,7 @@ Obj38_Init:	; Routine 0
 		move.b	#Map_obj38_height,height_pixels(a0)
 		move.b	#4,obRender(a0)
 		move.w	#$80,obPriority(a0)
-		move.b	#sprite_bound($18,Map_obj38_width),obActWid(a0)
+		move.b	#Map_obj38_width,obActWid(a0)
 
 ; ===========================================================================
 ; Routine 2 - follow the shield's owner. Hide the shield during
@@ -32,7 +32,7 @@ Obj38_Shield:
 		cmpi.b	#6,obRoutine(a2)
 		bhs.s	Obj38_Delete
 		btst	#obStatusSecondary_isInvincible,obStatusSecondary(a2)
-		bne.s	.return				; retain the shield while its owner is invincible
+		bne.s	Obj38_Delete.return		; retain the shield while its owner is invincible
 		btst	#obStatusSecondary_hasShield,obStatusSecondary(a2)
 		beq.s	Obj38_Delete
 		; Tails uses the auxiliary bank. Sonic also uses it while Tails has
@@ -52,13 +52,11 @@ Obj38_Shield:
 		bpl.s	.animate
 		ori.w	#high_priority,obGfx(a0)
 .animate:
-		lea	(Ani_obj38).l,a1
+		lea	Ani_obj38(pc),a1
 		jsr	(AnimateSprite).l
 		bsr.s	Shield_LoadArt
-		bcs.s	.return				; retry a full DMA queue before drawing
+		bcs.s	Obj38_Delete.return		; retry a full DMA queue before drawing
 		jmp	(DisplaySprite).l
-.return:
-		rts
 
 ; ===========================================================================
 ; Remove this player's shield effect; the partner's effect is independent.
@@ -67,7 +65,7 @@ Obj38_Shield:
 ; ---------------------------------------------------------------------------
 Obj38_Delete:
 		clr.b	obID(a0)
-		rts
+.return:	rts
 
 ; Stream the current frame through the common S3&K DPLC loader. The cache
 ; also records resident stars, so the first visible shield frame restores
@@ -90,11 +88,12 @@ Shield_LoadArt:
 		jmp	(Load_DynamicPLC).l
 
 ; ===========================================================================
-; Shield animation. Frame 5 is the large flash between the smaller frames.
+; Shield animation
 ; ---------------------------------------------------------------------------
 Ani_obj38:
 		dc.w .shield-Ani_obj38
-.shield:
-		dc.b 0,5,0,5,1,5,2,5,3,5,4,afEnd
+.shield:	dc.b 1
+		dc.b 1, 0, 2, 0, 3, 0
+		dc.b afEnd
 		even
 ; ===========================================================================

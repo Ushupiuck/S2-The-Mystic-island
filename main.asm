@@ -18159,11 +18159,8 @@ Map_Obj30:	binclude	"mappings/sprite/SBZ Door.bin"
 		even
 Map_Obj36:	binclude	"mappings/sprite/Spikes.bin"
 		even
-Map_obj38:
-		include	"mappings/sprite/Shield.asm"
-DPLC_Shield:
-		include "mappings/spriteDPLC/Shield.asm"
-		even
+Map_obj38:	binclude	"mappings/sprite/Shield.bin"
+DPLC_Shield:	binclude	"mappings/spriteDPLC/Shield.bin"
 Map_PRock:	binclude	"mappings/sprite/Purple Rock.bin"		; $3B
 		even
 Map_Emerald:	binclude	"mappings/sprite/HPZ Emerald.bin"
