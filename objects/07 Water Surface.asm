@@ -25,6 +25,10 @@ WaterSurface_Init:
 		move.w	obX(a0),surf_origX(a0)
 
 WaterSurface_Main:
+		cmpi.w	#Level_YWrapMask,(v_waterpos1).w
+		bls.s	.visible
+		rts				; hidden surface stays hidden after Y wrapping
+.visible:
 		move.w	(v_waterpos1).w,d1
 		move.w	d1,obY(a0)
 		tst.b	surf_freeze(a0)

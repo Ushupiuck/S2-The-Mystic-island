@@ -48,7 +48,7 @@ Obj7D_Main:
 		jsr	(AddPoints).l
 
 loc_13804:
-		out_of_range.s Obj7D_Delete
+		out_of_range2	UnloadObject
 		rts
 ; ---------------------------------------------------------------------------
 Obj7D_Points:	dc.w 0
@@ -60,7 +60,7 @@ Obj7D_Points:	dc.w 0
 Obj7D_DelayDelete:
 		subq.w	#1,objoff_30(a0)
 		bmi.s	Obj7D_Delete
-		out_of_range.s	Obj7D_Delete
+		out_of_range2	UnloadObject
 		jmp	(DisplaySprite).l
 Obj7D_Delete:
 		jmp	(DeleteObject).l

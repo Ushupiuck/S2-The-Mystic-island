@@ -1,12 +1,11 @@
 DebugList:
-		dc.w Debug_GHZ-DebugList
-		dc.w Debug_LZ-DebugList
-		dc.w Debug_CPZ-DebugList
-		dc.w Debug_EHZ-DebugList
-		dc.w Debug_HPZ-DebugList
-		dc.w Debug_HTZ-DebugList
-		dc.w Debug_GHZ-DebugList
-
+		dc.w Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList
+		dc.w Debug_LZ-DebugList,Debug_LZ-DebugList,Debug_LZ-DebugList,Debug_LZ-DebugList
+		dc.w Debug_CPZ-DebugList,Debug_CPZ-DebugList,Debug_CPZ-DebugList,Debug_CPZ-DebugList
+		dc.w Debug_EHZ-DebugList,Debug_EHZ-DebugList,Debug_EHZ-DebugList,Debug_EHZ-DebugList
+		dc.w Debug_HPZ-DebugList,Debug_HPZ-DebugList,Debug_HPZ-DebugList,Debug_HPZ-DebugList
+		dc.w Debug_HTZ-DebugList,Debug_HTZ-DebugList,Debug_HTZ-DebugList,Debug_HTZ-DebugList
+		dc.w Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList
 dbug:	macro map,object,subtype,frame,vram
 	dc.l map|(object<<24)
 	dc.b subtype,frame
@@ -140,7 +139,7 @@ Debug_HPZ:	dc.w (Debug_HPZ_End-Debug_HPZ-2)/8
 	dbug	Map_Obj03,	id_Obj03,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Obj03,	id_Obj03,	9,	1,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Obj03,	id_Obj03,	$D,	5,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Waterfall2,	id_Obj13,	4,	4,	make_art_tile(ArtTile_HPZ_Waterfall,3,1)
+	dbug	Map_Waterfall2,	id_Obj1E,	4,	4,	make_art_tile(ArtTile_HPZ_Waterfall,3,1)
 	dbug	Map_Piranha,	id_Obj52,	0,	0,	make_art_tile(ArtTile_BFish,1,0)
 	dbug	Map_Splats,	id_Obj4F,	0,	0,	make_art_tile(ArtTile_Splats,1,0)
 	dbug	Map_Rhinobot,	id_Obj4D,	0,	0,	make_art_tile(ArtTile_Rhinobot,1,0)

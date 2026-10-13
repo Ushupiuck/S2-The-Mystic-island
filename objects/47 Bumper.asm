@@ -81,13 +81,12 @@ Bumper_bump:
 		move.b	#1,obAnim(a0)	; use "hit" animation
 		move.w	#sfx_Bumper,d0
 		jsr	(PlaySound_Special).l	; play bumper sound
-		lea	(v_objstate).w,a2
-		moveq	#0,d0
-		move.b	obRespawnNo(a0),d0
+		move.w	respawn_addr(a0),d0
 		beq.s	.addscore
-		cmpi.b	#$8A,2(a2,d0.w)
+		movea.w	d0,a2
+		cmpi.b	#$8A,(a2)
 		bhs.s	.return
-		addq.b	#1,2(a2,d0.w)
+		addq.b	#1,(a2)
 
 .addscore:
 		move.w	a1,-(sp)			; save the player before FindFreeObj replaces a1

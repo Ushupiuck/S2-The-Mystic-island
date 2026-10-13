@@ -26,11 +26,10 @@ loc_AE70:
 		move.w	#v_player,obParent(a0)		; default collector for scripted/debug breakage
 		move.w	#$180,obPriority(a0)
 		move.b	#sprite_bound($F,Map_Obj26_width),obActWid(a0)
-		lea	(v_objstate).w,a2
-		moveq	#0,d0
-		move.b	obRespawnNo(a0),d0
-		bclr	#7,2(a2,d0.w)
-		btst	#0,2(a2,d0.w)
+		move.w	respawn_addr(a0),d0
+		beq.s	loc_AECA			; Debug/scripted monitors have no placement state
+		movea.w	d0,a2
+		btst	#0,(a2)
 		beq.s	loc_AECA
 		move.b	#8,obRoutine(a0)
 		move.b	#$B,obFrame(a0)
@@ -90,7 +89,7 @@ Mon_Animate:
 		bsr.w	AnimateSprite
 
 loc_AFC4:
-		out_of_range.w	DeleteObject
+		out_of_range.w	UnloadObject
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
@@ -128,9 +127,10 @@ loc_B004:
 		move.w	obY(a0),obY(a1)
 
 loc_B020:
-		lea	(v_objstate).w,a2
-		moveq	#0,d0
-		move.b	obRespawnNo(a0),d0
-		bset	#0,2(a2,d0.w)
+		move.w	respawn_addr(a0),d0
+		beq.s	.no_state
+		movea.w	d0,a2
+		bset	#0,(a2)
+.no_state:
 		move.b	#$A,obAnim(a0)
 		bra.w	DisplaySprite

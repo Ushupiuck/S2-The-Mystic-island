@@ -1,5 +1,8 @@
 # S3&K players and sprite data
 
+The level loader and Debug port are documented in
+[S3&K object loading and Debug](S3-object-manager-and-debug.md).
+
 Normal Sonic and Tails behavior is adapted from
 [skdisasm](https://github.com/sonicretro/skdisasm/tree/73de97c6b55055bcb8089c1d55d006b02136f163),
 commit `73de97c6b55055bcb8089c1d55d006b02136f163`. Sonic retains the unfinished

@@ -22,6 +22,10 @@ Obj12_Init:
 		move.l	#Map_Ring,obMap(a0)
 		move.b	#Map_Ring_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Ring,1,0),obGfx(a0)
+		cmpi.w	#BonusStage,(v_gamemode).w
+		bne.s	.level
+		move.w	#make_art_tile(ArtTile_SS_Rings,1,0),obGfx(a0)
+.level:
 		move.b	#4,obRender(a0)
 		move.w	#$100,obPriority(a0)
 		move.b	#$47,obColType(a0)

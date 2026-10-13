@@ -9,8 +9,10 @@ https://tcrf.net/Proto:Sonic_the_Hedgehog_2_(Genesis)
 ; ---------------------------------------------------------------------------
 
 TODO:
+Add inverse-gravity player physics/collision before enabling S3&K's Debug gravity-reversal cheat < FUTURE engine feature
+Add cached DMA switching between interleaved S3 horizontal spike art and linear S1 horizontal spike art in the shared bank, after the S3&K object-manager migration; handle preloading, backtracking and visible-bank ownership < FUTURE, separate task
 Implement time-travel transitions and replace the dummy timezone asset/layout tables with distinct data; header/layout selection already supports four timezones and four acts
-Port Sonic CD's object manager from the experimental branch for timezone object placement < LONG TERM; separate from LoadZone and its asset/layout tables
+Port Sonic CD's timezone-aware object placement from the experimental branch; adapt the S3&K loader/respawn interface where useful < LONG TERM; separate from LoadZone and its asset/layout tables
 Port remaining level animated-art/block setup to S1/S3&K style through Animate_Tiles and AniPLC scripts; replace make_block_tile mapping patches with regular block data < FUTURE, separate from the S1 bonus-stage background conversion
 Compare remaining S3&K power-up behavior and timer layout with the current per-player implementation
 Compare S3&K's byte timers (150 ticks, decremented every 8 frames), expiry/cleanup and music-tempo handling; retain shared Sonic/Tails invincibility and one star composite SST per live player, with shared art
@@ -31,6 +33,8 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
+Port the S3&K level object manager with six-byte placements, word respawn pointers, X/Y preloading, full-pool retry and safe multipart ownership; convert all 30 ordinary layouts and SonLVL, preserve object updates after player death < DONE
+Bring Debug controls/restoration to S3&K behavior, add mapping-frame cycling and per-act lists, support both Sonic and Tails as player 1, exclude companion Tails, and preserve S1-stage/results shortcuts < DONE
 Give GHZ's S1 boss a separate matching Eggpod/weapons/exhaust/capsule PLC; preserve the resident ball and chain, place exhaust after weapons and derive its mapping offsets to coexist with the capsule < DONE
 Replace spikes with normal S3&K behavior/art/mappings; damage both players from floor, side and ceiling, retain immunity and movement, clear respawn flags, remap to palette 0, pack GHZ art from $6560 and standardize spring/spike/monitor/checkpoint banks; retain intentional boss/capsule overwrites < DONE
 Fix Debug Start+A from the S1 special stage: advance the fade timer with frozen wall art, preserve the return zone, clear placement state before returning to gameplay, retain the results-to-title shortcut, and move stage rings/sparkles plus the palette-0 results ring to $2940/$29C0 < DONE

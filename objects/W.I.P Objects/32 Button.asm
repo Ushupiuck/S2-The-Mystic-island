@@ -91,7 +91,7 @@ But_Pressed:	; Routine 2
 		btst	#4,ob2ndRout(a0)			; persistent?
 		bne.s	+					; if yes, don't clear
 		bclr	d3,(a3)					; clear stored button pressed state
-+		out_of_range.w	.delete
++		out_of_range.w	UnloadObject
 		bra.w	DisplaySprite
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -112,7 +112,7 @@ But_Pressed:	; Routine 2
 		btst	#4,ob2ndRout(a0)			; persistent?
 		bne.s	+					; if yes, don't clear
 		bclr	d3,(a3)					; clear stored button pressed state
-+		out_of_range.w	.delete
++		out_of_range.w	UnloadObject
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 .type20_use:
@@ -121,7 +121,7 @@ But_Pressed:	; Routine 2
 ; ---------------------------------------------------------------------------
 .type20_used:
 		move.b	#1,obFrame(a0)		; stay down
-		out_of_range.s	.delete
+		out_of_range.w	UnloadObject
 		bra.w	DisplaySprite
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -140,7 +140,7 @@ But_Pressed:	; Routine 2
 	;	bne.s	.explode				; dummied out until it's been properly implemented
 		bne.s	+					; if yes, don't clear
 		bclr	d3,(a3)					; clear stored button pressed state
-+		out_of_range.s	.delete
++		out_of_range.w	UnloadObject
 		bra.w	DisplaySprite
 ; ===========================================================================
 
@@ -153,7 +153,7 @@ But_Pressed:	; Routine 2
 .setPressedState:
 		bset	d3,(a3)					; set stored button pressed state
 		move.b	#1,obFrame(a0)				; use "pressed" frame
-.display:	out_of_range.s	.delete
+.display:	out_of_range.w	UnloadObject
 		bra.w	DisplaySprite
 .delete:	bra.w	DeleteObject
 

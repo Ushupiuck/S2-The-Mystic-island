@@ -19,11 +19,11 @@ loc_1236A:
 
 loc_12378:
 		move.b	objoff_2F(a0),d0
-		bpl.w	DeleteObject
+		bpl.w	UnloadObject
 		andi.w	#$7F,d0
 		lea	(v_obj1F).w,a2
 		bclr	#0,(a2,d0.w)
-		bra.w	DeleteObject
+		bra.w	UnloadObject
 ; ===========================================================================
 LCon_Index:	dc.w LCon_Main-LCon_Index
 		dc.w loc_124B2-LCon_Index
@@ -114,7 +114,7 @@ loc_12460:
 		; display-and-delete bug.
 .delete:
 		addq.l	#4,sp
-		bra.w	DeleteObject
+		bra.w	UnloadObject
 ; ===========================================================================
 
 LCon_Loop:

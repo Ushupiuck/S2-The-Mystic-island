@@ -9,11 +9,9 @@ Signpost:
 		jsr	Signpost_Index(pc,d1.w)
 		lea	Ani_Signpost(pc),a1
 		jsr	(AnimateSprite).l
-		out_of_range.s	Signpost_Delete
+		out_of_range2	UnloadObject
 		jmp	(DisplaySprite).l
 ; ===========================================================================
-Signpost_Delete:
-		jmp	(DeleteObject).l
 
 Signpost_Index:	dc.w Signpost_Init-Signpost_Index
 		dc.w Signpost_Main-Signpost_Index

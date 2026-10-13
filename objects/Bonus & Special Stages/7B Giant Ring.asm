@@ -41,7 +41,7 @@ GRing_Okay:
 		move.b	#1,(v_gfxbigring).w	; Start loading giant ring graphics
 
 GRing_Animate:
-		out_of_range.w	DeleteObject
+		out_of_range.w	UnloadObject
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
@@ -63,7 +63,7 @@ loc_AB2C:
 		move.w	#sfx_GiantRing,d0
 		jsr	(PlaySound_Special).l
 		move.b	(v_ani1_frame).w,obFrame(a0)
-		out_of_range.w	DeleteObject
+		out_of_range.w	UnloadObject
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 

@@ -22,17 +22,12 @@ Obj79_Init:
 		move.b	#4,obRender(a0)
 		move.b	#sprite_bound(8,Map_Obj79_width),obActWid(a0)
 		move.w	#$280,obPriority(a0)
-		lea	(v_objstate).w,a2
-		moveq	#0,d0
-		move.b	obRespawnNo(a0),d0
-		; If you spawn a checkpoint in Debug Mode and activate it, then
-		; every checkpoint that is spawned with Debug Mode afterwards will be
-		; activated too. The cause of the bug is that the spawned checkpoint
-		; does not have a respawn entry, but this object fails to check for
-		; that before accessing the respawn table.
+		move.w	respawn_addr(a0),d0
+		; Scripted/Debug checkpoints have no placement entry.
+		; Guard the pointer before reading or writing persistent state.
 		beq.s	Obj79_Main
-		bclr	#7,2(a2,d0.w)
-		btst	#0,2(a2,d0.w)
+		movea.w	d0,a2
+		btst	#0,(a2)
 		bne.s	+
 		move.b	(v_lastlamp).w,d1
 		andi.b	#$7F,d1
@@ -41,7 +36,7 @@ Obj79_Init:
 		cmp.b	d2,d1
 		blo.s	Obj79_Main
 +
-		bset	#0,2(a2,d0.w)
+		bset	#0,(a2)
 		move.b	#4,obRoutine(a0)
 		rts
 ; ---------------------------------------------------------------------------
@@ -57,16 +52,12 @@ Obj79_Main:
 		andi.b	#$7F,d2
 		cmp.b	d2,d1
 		blo.s	Obj79_HitLamp
-		lea	(v_objstate).w,a2
-		moveq	#0,d0
-		move.b	obRespawnNo(a0),d0
-		; If you spawn a checkpoint in Debug Mode and activate it, then
-		; every checkpoint that is spawned with Debug Mode afterwards will be
-		; activated too. The cause of the bug is that the spawned checkpoint
-		; does not have a respawn entry, but this object fails to check for
-		; that before accessing the respawn table.
+		move.w	respawn_addr(a0),d0
+		; Scripted/Debug checkpoints have no placement entry.
+		; Guard the pointer before reading or writing persistent state.
 		beq.s	.return
-		bset	#0,2(a2,d0.w)
+		movea.w	d0,a2
+		bset	#0,(a2)
 		move.b	#4,obRoutine(a0)
 .return:	rts
 ; ---------------------------------------------------------------------------
@@ -86,16 +77,12 @@ Obj79_HitLamp:
 		jsr	(PlaySound_Special).l
 		addq.b	#2,obRoutine(a0)
 		bsr.s	Lamppost_StoreInfo
-		lea	(v_objstate).w,a2
-		moveq	#0,d0
-		move.b	obRespawnNo(a0),d0
-		; If you spawn a checkpoint in Debug Mode and activate it, then
-		; every checkpoint that is spawned with Debug Mode afterwards will be
-		; activated too. The cause of the bug is that the spawned checkpoint
-		; does not have a respawn entry, but this object fails to check for
-		; that before accessing the respawn table.
+		move.w	respawn_addr(a0),d0
+		; Scripted/Debug checkpoints have no placement entry.
+		; Guard the pointer before reading or writing persistent state.
 		beq.s	.return
-		bset	#0,2(a2,d0.w)
+		movea.w	d0,a2
+		bset	#0,(a2)
 .return:	rts
 ; ---------------------------------------------------------------------------
 

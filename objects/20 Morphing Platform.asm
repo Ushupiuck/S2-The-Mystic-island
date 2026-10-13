@@ -11,7 +11,7 @@ MorphingPlatform:
 		move.b	obRoutine(a0),d0
 		move.w	MorphingPlatform_Index(pc,d0.w),d0
 		jsr	MorphingPlatform_Index(pc,d0.w)
-		out_of_range.w	DeleteObject,mplat_origin_x(a0)
+		out_of_range.w	UnloadObject,mplat_origin_x(a0)
 		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 MorphingPlatform_Index:

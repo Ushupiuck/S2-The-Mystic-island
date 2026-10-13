@@ -608,5 +608,5 @@ SwingingPtfm_DelAll:
 		movea.l	swing_helper_ptr(a0),a1
 		beq.s	.noHelper
 		bsr.w	DeleteObject2
-.noHelper:	bra.w	DeleteObject
+.noHelper:	bra.w	UnloadObject
 ; ===========================================================================

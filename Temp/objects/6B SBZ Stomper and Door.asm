@@ -58,11 +58,6 @@ Sto_Main:	; Routine 0
 		bset	#4,obRender(a0)
 
 .chkgone:
-		lea	(v_objstate).w,a2
-		moveq	#0,d0
-		move.b	obRespawnNo(a0),d0
-		beq.s	Sto_Action
-		bclr	#7,2(a2,d0.w)
 
 Sto_Action:	; Routine 2
 		move.w	obX(a0),-(sp)
@@ -134,11 +129,10 @@ Sto_Action:	; Routine 2
 		addq.b	#1,obSubtype(a0)
 		move.w	#$B4,$36(a0)
 		clr.b	sto_active(a0)
-		lea	(v_objstate).w,a2
-		moveq	#0,d0
-		move.b	obRespawnNo(a0),d0
+		move.w	respawn_addr(a0),d0
 		beq.s	.loc_15DC2
-		bset	#0,2(a2,d0.w)
+		movea.w	d0,a2
+		bset	#0,(a2)
 		bra.s	.loc_15DC2
 ; ===========================================================================
 
@@ -171,11 +165,10 @@ Sto_Action:	; Routine 2
 .loc_15E3C:
 		subq.b	#1,obSubtype(a0)
 		clr.b	sto_active(a0)
-		lea	(v_objstate).w,a2
-		moveq	#0,d0
-		move.b	obRespawnNo(a0),d0
+		move.w	respawn_addr(a0),d0
 		beq.s	.loc_15E1E
-		bclr	#0,2(a2,d0.w)
+		movea.w	d0,a2
+		bclr	#0,(a2)
 		bra.s	.loc_15E1E
 ; ===========================================================================
 

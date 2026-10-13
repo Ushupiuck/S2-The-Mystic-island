@@ -44,7 +44,7 @@ Obj19_Main:
 		moveq	#$10,d3
 		move.w	(sp)+,d4
 		bsr.w	PlatformObject
-		out_of_range.w	DeleteObject,objoff_30(a0)
+		out_of_range.w	UnloadObject,objoff_30(a0)
 		jmp	(DisplaySprite).l
 
 ; =============== S U B R O U T I N E =======================================
@@ -155,7 +155,7 @@ loc_1540E:
 
 loc_15418:
 		addq.l	#6,sp
-		out_of_range2	DeleteObject,objoff_30(a0)
+		out_of_range2	UnloadObject,objoff_30(a0)
 		rts
 ; ---------------------------------------------------------------------------
 

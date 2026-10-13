@@ -97,6 +97,6 @@ Smash_FragMove:	; Routine 4
 		bsr.w	ObjectMove
 		addi.w	#$70,obVelY(a0) ; make fragment fall faster
 		tst.b	obRender(a0)
-		bpl.w	DeleteObject
+		bpl.w	UnloadObject
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------

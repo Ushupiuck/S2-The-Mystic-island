@@ -91,7 +91,7 @@ Hel_DelAll:
 		movea.l	d0,a1		; get child address
 		bsr.w	DeleteObject2	; delete object
 		dbf	d2,-		; repeat d2 times (helix length)
-		bra.w	DeleteObject
+		bra.w	UnloadObject
 
 ; =============== S U B	R O U T	I N E =======================================
 

@@ -7,7 +7,7 @@ ObjMovingSpring:
 		move.b	obRoutine(a0),d0
 		move.w	ObjMovingSpring_Index(pc,d0.w),d0
 		jsr	ObjMovingSpring_Index(pc,d0.w)
-		out_of_range.w	DeleteObject,objoff_36(a0)	; used for moving the spring
+		out_of_range.w	UnloadObject,objoff_36(a0)	; used for moving the spring
 		rts
 
 ; -------------------------------------------------------------------------
@@ -30,7 +30,7 @@ ObjMovingSpring_Init:
 		move.w	#$180,obVelX(a0)
 		bsr.w	FindFreeObj
 		beq.s	.GenSpring
-		bra.w	DeleteObject
+		bra.w	UnloadObject
 
 ; -------------------------------------------------------------------------
 
@@ -109,7 +109,7 @@ Obj41:
 		move.b	obRoutine(a0),d0
 		move.w	Obj41_Index(pc,d0.w),d1
 		jsr	Obj41_Index(pc,d1.w)
-		out_of_range.w	DeleteObject
+		out_of_range.w	UnloadObject
 		bra.w	DisplaySprite
 ; ===========================================================================
 Obj41_Index:

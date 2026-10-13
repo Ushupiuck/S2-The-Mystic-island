@@ -72,9 +72,7 @@ Obj01_Control:
 		beq.s	loc_FAB0			; if not, branch
 		btst	#bitB,(v_jpadpress1).w		; is button B pressed?
 		beq.s	loc_FAB0			; if not, branch
-		move.w	#1,(Debug_placement_mode).w	; change Sonic into ring/item
-		clr.b	(f_lockctrl).w			; unlock control
-		rts
+		jmp	(Debug_Begin).l		; C held selects S3&K frame cycling
 ; -----------------------------------------------------------------------
 loc_FAB0:
 		tst.b	(f_lockctrl).w			; are controls locked?
@@ -93,6 +91,10 @@ loc_FABC:
 		jsr	Obj01_Modes(pc,d1.w)		; run Sonic's movement control code
 
 Obj01_ControlsLock:
+		tst.w	(Camera_Min_Y_pos).w
+		bpl.s	.no_wrap
+		andi.w	#Level_YWrapMask,obY(a0)
+.no_wrap:
 		bsr.s	Sonic_Display
 		bsr.w	Sonic_RecordPos
 		bsr.w	Sonic_Water
@@ -1769,6 +1771,10 @@ Obj01_Hurt:
 		subi.w	#$20,obVelY(a0)
 
 loc_1077E:
+		tst.w	(Camera_Min_Y_pos).w
+		bpl.s	.no_wrap
+		andi.w	#Level_YWrapMask,obY(a0)
+.no_wrap:
 		bsr.w	Sonic_HurtStop
 		bsr.w	Sonic_LevelBound
 		bsr.w	Sonic_RecordPos

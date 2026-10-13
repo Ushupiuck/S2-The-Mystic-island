@@ -5688,6 +5688,10 @@ ScrollVertical:
 		moveq	#0,d1
 		move.w	obY(a0),d0
 		sub.w	(a1),d0
+		tst.w	(Camera_Min_Y_pos).w
+		bpl.s	.no_wrap
+		andi.w	#Level_YWrapMask,d0
+.no_wrap:
 		btst	#2,obStatus(a0)
 		beq.s	loc_6598
 		subq.w	#5,d0
@@ -5791,8 +5795,8 @@ loc_6634:
 		cmpi.w	#$FF00,d1
 		bgt.s	loc_6656
 		andi.w	#$7FF,d1
-		andi.w	#$7FF,obY(a0)
-		andi.w	#$7FF,(a1)
+		bset	#0,(a3)			; wrap seam: redraw the entering top row
+		andi.w	#Level_YWrapMask,(a1)
 		andi.w	#$3FF,obX(a1)
 +		move.w	(a1),d4
 		swap	d1
@@ -5857,8 +5861,8 @@ loc_6664:
 		blt.s	+
 		subi.w	#$800,d1
 		blo.s	loc_6682
-		andi.w	#$7FF,obY(a0)
-		subi.w	#$800,(a1)
+		bset	#1,(a3)			; wrap seam: redraw the entering bottom row
+		subi.w	#Level_YWrapMask+1,(a1)
 		andi.w	#$3FF,obX(a1)
 +		move.w	(a1),d4
 		swap	d1
@@ -8957,12 +8961,14 @@ MarkObjGone3:
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
+; Only parents loaded from a layout own a respawn entry. Dynamic helpers,
+; Debug objects and consumed objects use DeleteObject without releasing it.
+UnloadObject:
 loc_CEB0:
-		lea	(v_objstate).w,a2
-		moveq	#0,d0
-		move.b	obRespawnNo(a0),d0
+		move.w	respawn_addr(a0),d0
 		beq.s	DeleteObject
-		bclr	#7,2(a2,d0.w)
+		movea.w	d0,a2
+		bclr	#7,(a2)
 
 ; ---------------------------------------------------------------------------
 ; Subroutine to delete an object
@@ -9398,288 +9404,7 @@ loc_DBF2:
 MapUnc_Rings:	include	"mappings/sprite/Ring.asm"
 
 ; ===========================================================================
-; ---------------------------------------------------------------------------
-; Objects Manager
-; Subroutine that keeps track of any objects that need to remember
-; their state, such as monitors or enemies.
-;
-; input variables:
-;  -none-
-;
-; writes:
-;  d0, d1
-;  d2 = respawn index of object to load
-;  d6 = camera position
-;
-;  a0 = address in object placement list
-;  a2 = respawn table
-; ---------------------------------------------------------------------------
-
-; ObjPosLoad:
-ObjectsManager:
-		moveq	#0,d0
-		move.b	(Obj_placement_routine).w,d0
-		move.w	ObjectsManager_States(pc,d0.w),d0
-		jmp	ObjectsManager_States(pc,d0.w)
-; ===========================================================================
-; OPL_Index:
-ObjectsManager_States:
-		dc.w ObjectsManager_Init-ObjectsManager_States
-		dc.w ObjectsManager_Main-ObjectsManager_States
-; ===========================================================================
-; loc_DC68:
-ObjectsManager_Init:
-		addq.b	#2,(Obj_placement_routine).w
-		move.w	(Current_ZoneAndAct).w,d0
-		move.w	d0,d1
-		lsr.w	#5,d0
-		andi.w	#$FF,d1
-		add.w	d1,d1
-		add.w	d1,d0
-;		lsl.b	#6,d0
-;		lsr.w	#4,d0
-		lea	(ObjPos_Index).l,a0
-		movea.l	a0,a1
-		adda.w	(a0,d0.w),a0
-		move.l	a0,(Obj_load_addr_right).w
-		move.l	a0,(Obj_load_addr_left).w
-		move.l	a0,(Obj_load_addr_right_P2).w
-		move.l	a0,(Obj_load_addr_left_P2).w
-		lea	(v_objstate).w,a2
-		move.w	#$101,(a2)+
-
-		move.w	#bytesToLcnt(v_objstate_end-v_objstate-2),d0
--		clr.l	(a2)+
-		dbf	d0,-
-
-		; Clear the last word, since the above loop only does longwords.
-	if (v_objstate_end-v_objstate-2)&2
-		clr.w	(a2)+
-	endif
-		lea	(v_objstate).w,a2
-		moveq	#0,d2
-		move.w	(Camera_RAM).w,d6
-		subi.w	#$80,d6
-		bhs.s	loc_DCB4
-		moveq	#0,d6
-
-loc_DCB4:
-		andi.w	#-$80,d6
-		movea.l	(Obj_load_addr_right).w,a0
-
-loc_DCBC:
-		cmp.w	(a0),d6
-		bls.s	loc_DCCE
-		tst.b	4(a0)
-		bpl.s	loc_DCCA
-		move.b	(a2),d2
-		addq.b	#1,(a2)
-
-loc_DCCA:
-		addq.w	#6,a0	; 8 in Sonic CD
-		bra.s	loc_DCBC
-; ===========================================================================
-
-loc_DCCE:
-		move.l	a0,(Obj_load_addr_right).w
-		move.l	a0,(Obj_load_addr_right_P2).w
-		movea.l	(Obj_load_addr_left).w,a0
-		subi.w	#$80,d6
-		blo.s	loc_DCF2
-
-loc_DCE0:
-		cmp.w	(a0),d6
-		bls.s	loc_DCF2
-		tst.b	4(a0)
-		bpl.s	loc_DCEE
-		addq.b	#1,1(a2)
-
-loc_DCEE:
-		addq.w	#6,a0	; 8 in Sonic CD
-		bra.s	loc_DCE0
-; ===========================================================================
-
-loc_DCF2:
-		move.l	a0,(Obj_load_addr_left).w
-		move.l	a0,(Obj_load_addr_left_P2).w
-		move.w	#-1,(Camera_X_pos_last).w
-		move.w	#-1,(Camera_X_pos_last_P2).w
-; ===========================================================================
-; loc_DD14:
-ObjectsManager_Main:
-		move.w	(Camera_RAM).w,d1
-		subi.w	#$80,d1
-		andi.w	#-$80,d1
-		move.w	d1,(Camera_X_pos_coarse).w
-		lea	(v_objstate).w,a2		; Sonic CD skips the first 4 lines
-		moveq	#0,d2
-		move.w	(Camera_RAM).w,d6
-		andi.w	#-$80,d6
-		cmp.w	(Camera_X_pos_last).w,d6
-		beq.s	loc_DD94.return
-		bge.s	loc_DD9A
-		move.w	d6,(Camera_X_pos_last).w	; And there's a mysterious 4 "NOP" block of padding between the branches and this instruction
-
-; -------------------------------------------------------------------------
-
-; SpawnObjects_Backward:
-		movea.l	(Obj_load_addr_left).w,a0
-		subi.w	#$80,d6
-		blo.s	loc_DD76
-
-loc_DD4A:
-		cmp.w	-6(a0),d6	; oeX-oeSize
-		bge.s	loc_DD76
-		subq.w	#6,a0		; oeSize
-		tst.b	4(a0)		; oeID
-		bpl.s	loc_DD60
-		subq.b	#1,1(a2)
-		move.b	1(a2),d2
-
-loc_DD60:
-		bsr.w	sub_E0D2
-		bne.s	loc_DD6A
-		subq.w	#6,a0		; oeSize
-		bra.s	loc_DD4A
-; ===========================================================================
-
-loc_DD6A:
-		tst.b	4(a0)		; oeID
-		bpl.s	loc_DD74
-		addq.b	#1,1(a2)
-		bclr	#7,2(a2,d2.w)	; SCD Only:	; Mark object as unloaded
-
-loc_DD74:
-		addq.w	#6,a0		; oeSize
-
-loc_DD76:
-		move.l	a0,(Obj_load_addr_left).w
-		movea.l	(Obj_load_addr_right).w,a0
-		addi.w	#$300,d6
-
-loc_DD82:
-		cmp.w	-6(a0),d6	; oeX-oeSize
-		bgt.s	loc_DD94
-		tst.b	-2(a0)		; oeID-oeSize
-		bpl.s	loc_DD90
-		subq.b	#1,(a2)
-
-loc_DD90:
-		subq.w	#6,a0		; oeSize
-		bra.s	loc_DD82
-; ===========================================================================
-
-loc_DD94:
-		move.l	a0,(Obj_load_addr_right).w
-.return:	rts
-; ===========================================================================
-
-loc_DD9A:	; Sonic CD pads the start with 4 NOP's
-		move.w	d6,(Camera_X_pos_last).w
-		movea.l	(Obj_load_addr_right).w,a0
-		addi.w	#$280,d6
-
-loc_DDA6:
-		cmp.w	(a0),d6
-		bls.s	.SpawnDone
-		tst.b	4(a0)		; oeID
-		bpl.s	.SpawnObj
-		move.b	(a2),d2
-		addq.b	#1,(a2)
-
-.SpawnObj:
-		bsr.w	sub_E0D2
-		beq.s	loc_DDA6
-		tst.b	4(a0)		; SCD		; Does this object have a saved flags entry?
-		bpl.s	.SpawnDone	; SCD		; If not, branch
-		subq.b	#1,(a2)		; SCD		; Rewind saved flags entry ID
-		bclr	#7,2(a2,d2.w)	; SCD		; Mark object as unloaded
-
-.SpawnDone:
-		move.l	a0,(Obj_load_addr_right).w
-		movea.l	(Obj_load_addr_left).w,a0
-		subi.w	#$80+$280,d6			; ((camera X & $FF80) - $80)
-		blo.s	loc_DDDA
-
-loc_DDC8:
-		cmp.w	(a0),d6
-		bls.s	loc_DDDA
-		tst.b	4(a0)		; oeID
-		bpl.s	loc_DDD6
-		addq.b	#1,1(a2)
-
-loc_DDD6:
-		addq.w	#6,a0		; oeSize
-		bra.s	loc_DDC8
-; ===========================================================================
-
-loc_DDDA:
-		move.l	a0,(Obj_load_addr_left).w
-		rts
-; End of function ObjectsManager
-
-; -------------------------------------------------------------------------
-; Check object time zone and get objects flag entry offset
-; -------------------------------------------------------------------------
-; PARAMETERS:
-;	a0.l  - Pointer to object entry
-;	d2.w  - Saved object flags entry ID
-; RETURNS:
-;	eq/ne - Wrong time zone/Corrent time zone
-;	d3.w  - Saved object flags entry offset
-; -------------------------------------------------------------------------
-
-CheckObjTimeZone:
-	;	moveq	#0,d0				; Get current time zone
-	;	move.b	(Current_Timezone).w,d0		; (timeZone).w in SCD
-	;	bclr	#7,d0
-	;	move.w	d2,d3				; Get saved objects flag entry offset
-	;	add.w	d3,d3
-	;	add.w	d2,d3
-	;	add.w	d0,d3
-	;	move.b	oeTimeZones(a0),d1		; Check time zone
-	;	rol.b	#3,d1
-	;	andi.b	#7,d1
-	;	btst	d0,d1
-	;	rts
-
-; =============== S U B R O U T I N E =======================================
-
-
-sub_E0D2:
-		tst.b	4(a0)		; oeID
-		bpl.s	loc_E0E6
-		btst	#7,2(a2,d2.w)
-		beq.s	loc_E0E6
-		addq.w	#6,a0		; oeSize
-		moveq	#0,d0
-		rts
-; ---------------------------------------------------------------------------
-
-loc_E0E6:
-		bsr.w	FindFreeObj
-		bne.s	.return
-		move.w	(a0)+,obX(a1)
-		move.w	(a0)+,d0
-		move.w	d0,d1
-		andi.w	#$FFF,d0
-		move.w	d0,obY(a1)
-		rol.w	#2,d1
-		andi.b	#3,d1
-		move.b	d1,obRender(a1)
-		move.b	d1,obStatus(a1)
-		move.b	(a0)+,d0
-		bpl.s	+
-		bset	#7,2(a2,d2.w)
-		andi.b	#$7F,d0
-		move.b	d2,obRespawnNo(a1)
-+
-		_move.b	d0,obID(a1)
-		move.b	(a0)+,obSubtype(a1)
-		moveq	#0,d0
-.return:	rts
-; End of function sub_E0D2
-
+		include	"_inc/Objects Manager.asm"
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -11997,7 +11722,7 @@ Obj49_Init:
 		bset	#4,obRender(a0)
 
 Obj49_Main:
-		out_of_range2	DeleteObject
+		out_of_range2	UnloadObject
 		move.w	obX(a0),d1
 		move.w	d1,d2
 		subi.w	#$40,d1
@@ -12071,7 +11796,7 @@ Obj50_Init:
 		move.w	d0,objoff_34(a0)
 		move.w	obY(a0),objoff_2A(a0)
 		jsr	(FindFreeObj).l
-		bne.s	Obj50_Main
+		bne.w	Obj50_RetryInit
 		_move.b	#id_Obj50,obID(a1)
 		move.b	#4,obRoutine(a1)
 		move.w	obX(a0),obX(a1)
@@ -12089,6 +11814,11 @@ Obj50_Init:
 		move.l	a1,objoff_36(a0)
 		move.l	a0,objoff_36(a1)
 		bset	#6,obStatus(a0)
+
+		bra.s	Obj50_Main
+Obj50_RetryInit:
+		clr.b	obRoutine(a0)
+		rts
 
 Obj50_Main:
 		lea	Ani_Obj50(pc),a1
@@ -12278,7 +12008,6 @@ Obj50_ControlWing:
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.b	obStatus(a0),obStatus(a1)
-		move.b	obRespawnNo(a0),obRespawnNo(a1)
 		move.b	obRender(a0),obRender(a1)
 		btst	#0,obStatus(a1)
 		beq.s	loc_16208
@@ -14633,260 +14362,7 @@ Art_Text_End:	even
 ; When debug mode is currently in use
 ; ---------------------------------------------------------------------------
 
-DebugMode:
-		moveq	#0,d0
-		move.b	(Debug_placement_mode).w,d0
-		move.w	DebugIndex(pc,d0.w),d1
-		jmp	DebugIndex(pc,d1.w)
-; ===========================================================================
-DebugIndex:
-		dc.w Debug_Init-DebugIndex
-		dc.w Debug_Main-DebugIndex
-; ===========================================================================
-
-Debug_Init:	; Routine 0
-		addq.b	#2,(Debug_placement_mode).w
-		move.w	(Camera_Min_Y_pos).w,(v_limittopdb).w
-		move.w	(Camera_Max_Y_pos_target).w,(v_limitbtmdb).w
-		clr.w	(Camera_Min_Y_pos).w
-		move.w	#$720,(Camera_Max_Y_pos_target).w	; Sonic 2 doesn't bothers
-		andi.w	#$7FF,(v_player+obY).w
-		andi.w	#$7FF,(Camera_Y_pos).w
-		andi.w	#$3FF,(Camera_BG_Y_pos).w
-		clr.b	obFrame(a0)
-		clr.b	obAnim(a0)
-		bclr	#1,(v_player+obStatus).w		; clear 'in air' bit
-		cmpi.w	#BonusStage,(v_gamemode).w	; is this the Special Stage?
-		bne.s	.islevel			; if not, branch
-		; The stage's debug list is selected below; keep the return level's zone.
-		clr.w	(v_ssrotate).l		; stop special stage rotation
-		clr.w	(v_ssangle).l		; make special stage "upright"
-		moveq	#6,d0			; force zone 6's (S1 ending) debug object list
-		bra.s	.selectlist
-; ===========================================================================
-
-.islevel:
-		moveq	#0,d0
-		move.b	(Current_Zone).w,d0
-
-.selectlist:
-		lea	DebugList(pc),a2
-		add.w	d0,d0
-		adda.w	(a2,d0.w),a2
-		move.w	(a2)+,d6
-		cmp.b	(Debug_object).w,d6	; have you gone past the last item?
-		bhi.s	.noreset		; if not, branch
-		clr.b	(Debug_object).w	; back to start of list
-.noreset:
-		bsr.w	LoadDebugObjectSprite
-		move.b	#12,(Debug_Accel_Timer).w
-		move.b	#1,(Debug_Speed).w
-
-Debug_Main:	; Routine 2
-		moveq	#6,d0				; force zone 6's debug object list (was the ending in S1)
-		cmpi.w	#BonusStage,(v_gamemode).w ; is this the Special Stage?
-		beq.s	.isntlevel			; if yes, branch
-
-		moveq	#0,d0
-		move.b	(Current_Zone).w,d0
-
-.isntlevel:
-		lea	DebugList(pc),a2
-		add.w	d0,d0
-		adda.w	(a2,d0.w),a2
-		move.w	(a2)+,d6
-		bsr.s	Debug_Control
-		jmp	(DisplaySprite).l
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
-
-Debug_Control:
-		moveq	#0,d4
-		moveq	#1,d1
-		move.b	(v_jpadpress1).w,d4
-		andi.w	#btnUp|btnDn|btnL|btnR,d4	; is up/down/left/right	pressed?
-		bne.s	.dirpressed		; if so, branch
-		move.b	(v_jpadhold1).w,d0
-		andi.w	#btnUp|btnDn|btnL|btnR,d0	; is up/down/left/right	held?
-		bne.s	.dirheld	; if so, branch
-		move.b	#12,(Debug_Accel_Timer).w
-		move.b	#15,(Debug_Speed).w
-		bra.s	Debug_ControlObjects
-; ===========================================================================
-
-.dirheld:
-		subq.b	#1,(Debug_Accel_Timer).w
-		bne.s	Debug_TimerNotOver
-		move.b	#1,(Debug_Accel_Timer).w
-		addq.b	#1,(Debug_Speed).w
-		bne.s	.dirpressed
-		move.b	#-1,(Debug_Speed).w
-.dirpressed:
-		move.b	(v_jpadhold1).w,d4
-
-Debug_TimerNotOver:
-		moveq	#0,d1
-		move.b	(Debug_Speed).w,d1
-		addq.w	#1,d1
-		swap	d1
-		asr.l	#4,d1
-		move.l	obY(a0),d2
-		move.l	obX(a0),d3
-
-		; move up
-		btst	#bitUp,d4	; is up	being pressed?
-		beq.s	.upNotHeld	; if not, branch
-		sub.l	d1,d2
-		moveq	#0,d0
-		move.w	(Camera_Min_Y_pos).w,d0
-		swap	d0
-		cmp.l	d0,d2
-		bge.s	.minYPosNotReached
-		move.l	d0,d2
-.minYPosNotReached:
-
-.upNotHeld:
-		; move down
-		btst	#bitDn,d4	; is down being	pressed?
-		beq.s	.downNotHeld	; if not, branch
-		add.l	d1,d2
-		moveq	#0,d0
-		move.w	(Camera_Max_Y_pos_target).w,d0
-		addi.w	#224-1,d0
-		swap	d0
-		cmp.l	d0,d2
-		blt.s	.maxYPosNotReached
-		move.l	d0,d2
-.maxYPosNotReached:
-
-.downNotHeld:
-		; move left
-		btst	#bitL,d4
-		beq.s	.leftNotHeld
-		sub.l	d1,d3
-		bcc.s	.minXPosNotReached
-		moveq	#0,d3
-.minXPosNotReached:
-
-.leftNotHeld:
-		; move right
-		btst	#bitR,d4
-		beq.s	.rightNotHeld
-		add.l	d1,d3
-
-.rightNotHeld:
-		move.l	d2,obY(a0)
-		move.l	d3,obX(a0)
-; loc_1BBF4:
-Debug_ControlObjects:
-		btst	#bitA,(v_jpadhold1).w	; is button A pressed?
-		beq.s	Debug_SpawnObject	; if not, branch
-		btst	#bitC,(v_jpadpress1).w	; is button C pressed?
-		beq.s	Debug_CycleObjects	; if not, branch
-		; Cycle backwards though object list
-		subq.b	#1,(Debug_object).w	; go back 1 item
-		bcc.s	LoadDebugObjectSprite
-		add.b	d6,(Debug_object).w
-		bra.s	LoadDebugObjectSprite
-; ===========================================================================
-; loc_1BC10:
-Debug_CycleObjects:
-		btst	#bitA,(v_jpadpress1).w	; is button A pressed?
-		beq.s	Debug_SpawnObject	; if not, branch
-		; Cycle backwards though object list
-		addq.b	#1,(Debug_object).w	; go forwards 1 item
-		cmp.b	(Debug_object).w,d6
-		bhi.s	LoadDebugObjectSprite
-		clr.b	(Debug_object).w
-
-; ===========================================================================
-; loc_1bhsC: Debug_ShowItem:
-LoadDebugObjectSprite:
-		moveq	#0,d0
-		move.b	(Debug_object).w,d0
-		lsl.w	#3,d0
-		move.l	(a2,d0.w),obMap(a0)
-		move.w	6(a2,d0.w),obGfx(a0)
-		move.b	5(a2,d0.w),obFrame(a0)
-;		move.b	4(a2,d0.w),obSubtype(a0)	; this does... something with the object's subtype
-		bra.w	Set_SpriteBounds	; only rescan when selecting a debug mapping
-; End of function Debug_ShowItem
-
-; ===========================================================================
-; loc_1BC2C:
-Debug_SpawnObject:
-		btst	#bitC,(v_jpadpress1).w	; is button C pressed?
-		beq.s	Debug_ExitDebugMode	; if not, branch
-		; spawn object
-		jsr	(FindFreeObj).l
-		bne.s	Debug_ExitDebugMode
-		move.w	obX(a0),obX(a1)
-		move.w	obY(a0),obY(a1)
-		_move.b	obMap(a0),obID(a1)	; load obj
-		move.b	obRender(a0),obRender(a1)
-		andi.b	#$7F,obRender(a1)
-		move.b	obRender(a0),obStatus(a1)
-		andi.b	#$7F,obStatus(a1)
-		moveq	#0,d0
-		move.b	(Debug_object).w,d0
-		lsl.w	#3,d0
-		move.b	4(a2,d0.w),obSubtype(a1)
-		rts
-; ===========================================================================
-; loc_1BC70:
-Debug_ExitDebugMode:
-		btst	#bitB,(v_jpadpress1).w	; is button B pressed?
-		beq.s	.stayindebug		; if not, branch
-		; exit Debug Mode
-		moveq	#0,d0
-		move.w	d0,(Debug_placement_mode).w	; deactivate debug mode
-		disable_ints
-		bsr.w	HUD_Base
-		move.b	#1,(f_scorecount).w
-		move.b	#$80,(f_ringcount).w
-		enable_ints
-		lea	(v_player).w,a1 ; a1=character
-		move.l	#Map_Sonic,(v_player+obMap).w
-		move.b	#Map_Sonic_height,(v_player+height_pixels).w
-		move.b	#Map_Sonic_width,(v_player+width_pixels).w
-		move.w	#make_art_tile(ArtTile_Sonic,0,0),(v_player+obGfx).w
-		bsr.s	Debug_ResetPlayerStats
-		move.w	(v_limittopdb).w,(Camera_Min_Y_pos).w
-		move.w	(v_limitbtmdb).w,(Camera_Max_Y_pos_target).w
-		cmpi.w	#BonusStage,(v_gamemode).w ; is this the Bonus Stage?
-		bne.s	.stayindebug			; if not, branch
-
-		move.w	d0,(v_ssangle).l		; again, this resets the Special Stage rotation
-		move.w	#$40,(v_ssrotate).l		; and Sonic's art for whatever reason
-		move.b	#AniIDSonAni_Roll,(v_player+obAnim).w
-		bset	#2,(v_player+obStatus).w
-		bset	#1,(v_player+obStatus).w
-.stayindebug:	rts
-; End of function Debug_Control
-
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
-
-Debug_ResetPlayerStats:
-	;	moveq	#0,d0		; Unneccesary, as the caller already does this. Uncomment this if a new caller is added, and doesn't clear d0
-		move.b	d0,obAnim(a1)
-		move.w	d0,obXSub(a1)	; x_sub
-		move.w	d0,obYSub(a1)	; y_sub
-		move.b	d0,obControl(a1)	; Not yet implemented in NA, but we'll clear it anyways in preparation for when it's actually ported
-		move.b	d0,spindash_flag(a1)
-		move.w	d0,obVelX(a1)
-		move.w	d0,obVelY(a1)
-		move.w	d0,obInertia(a1)
-		andi.b	#1<<6,obStatus(a1)	; Preserve the 'is underwater' flag, and clear everything else.
-		ori.b	#2,obStatus(a1)		; Set the 'is rolling' flag.
-		move.b	#2,obRoutine(a1)
-		move.b	d0,ob2ndRout(a1)
-		move.b	#$13,obHeight(a1)	; y_radius
-		move.b	#9,obWidth(a1)		; x_radius
-		rts
-; End of function Debug_ResetPlayerStats
+		include	"_inc/Debug Mode.asm"
 
 		include	"_inc/Set Sprite Bounds.asm"
 

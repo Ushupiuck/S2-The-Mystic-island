@@ -1,5 +1,8 @@
 # Importing objects: the Sonic 2 final EHZ boss
 
+Placement ownership and the word `respawn_addr` interface are covered in
+[S3&K object loading and Debug](S3-object-manager-and-debug.md).
+
 The final EHZ boss is in `objects/55 EHZ Boss.asm`, adapted from
 [s2disasm](https://github.com/sonicretro/s2disasm/tree/15e9fd52a65318bec3d5e746ce48dba6db6910db)
 commit `15e9fd52a65318bec3d5e746ce48dba6db6910db`. It replaces the prototype

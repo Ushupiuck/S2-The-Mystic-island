@@ -81,7 +81,7 @@ Scen_Init:	; FromSubtype
 ; ---------------------------------------------------------------------------
 Scen_Animate:	lea	Ani_Scen(pc),a1
 		bsr.w	AnimateSprite
-Scen_Display:	out_of_range.w	DeleteObject
+Scen_Display:	out_of_range.w	UnloadObject
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 Ani_Scen:	dc.w byte_9494-Ani_Scen

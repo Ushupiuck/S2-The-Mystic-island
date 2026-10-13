@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ObjDef xmlns="http://www.sonicretro.org" Name="Monitor" Image="static" RememberState="true">
+<ObjDef xmlns="http://www.sonicretro.org" Name="Monitor" Image="static">
   <Images>
     <ImageFromMappings id="static">
       <ArtFile filename="../art/nemesis/Monitor and contents.nem" />

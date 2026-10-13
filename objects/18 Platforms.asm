@@ -87,7 +87,7 @@ Plat_Action2:
 		move.w	(sp)+,d4
 		bsr.w	PlatformObject
 	;	bra.s	Plat_ChkDel
-		out_of_range.w	DeleteObject,objoff_32(a0)
+		out_of_range.w	UnloadObject,objoff_32(a0)
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 Plat_Solid2:	; Routine 8
@@ -116,7 +116,7 @@ Plat_Solid2:	; Routine 8
 		addq.w	#1,d3
 		move.w	(sp)+,d4
 		bsr.w	PlatformObject
-		out_of_range.w	DeleteObject,objoff_32(a0)
+		out_of_range.w	UnloadObject,objoff_32(a0)
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
@@ -124,12 +124,12 @@ Plat_Action:	; Routine 6
 		bsr.w	Plat_Move
 		bsr.w	Plat_Nudge
 ; Plat_ChkDel:
-		out_of_range.w	DeleteObject,objoff_32(a0)
+		out_of_range.w	UnloadObject,objoff_32(a0)
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
 Plat_Delete:	; Routine 4
-		bra.w	DeleteObject
+		bra.w	UnloadObject
 
 ; ---------------------------------------------------------------------------
 ; Subroutine to move platform slightly when you stand on it

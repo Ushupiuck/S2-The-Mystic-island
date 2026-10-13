@@ -7,7 +7,7 @@ Obj06:
 		move.b	obRoutine(a0),d0
 		move.w	Obj06_Index(pc,d0.w),d1
 		jsr	Obj06_Index(pc,d1.w)
-		out_of_range.w	DeleteObject
+		out_of_range.w	UnloadObject
 .return:	rts
 ; ---------------------------------------------------------------------------
 Obj06_Index:	dc.w Obj06_Init-Obj06_Index

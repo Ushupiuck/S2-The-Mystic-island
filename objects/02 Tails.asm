@@ -4,6 +4,12 @@
 ; 73de97c6b55055bcb8089c1d55d006b02136f163. Stage-specific cutscenes stay out.
 ; ---------------------------------------------------------------------------
 Obj02:
+		cmpa.w	#v_player,a0		; companion Tails never gets Debug privileges
+		bne.s	Obj02_Normal
+		tst.w	(Debug_placement_mode).w
+		beq.s	Obj02_Normal
+		jmp	(DebugMode).l
+Obj02_Normal:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	Obj02_Index(pc,d0.w),d1
@@ -60,6 +66,14 @@ Obj02_Init:
 		; together before the first Render_Sprites, as with Sonic's initialization.
 
 Obj02_Control:
+		cmpa.w	#v_player,a0
+		bne.s	.normal
+		tst.b	(Debug_mode_flag).w
+		beq.s	.normal
+		btst	#bitB,(v_jpadpress1).w
+		beq.s	.normal
+		jmp	(Debug_Begin).l
+.normal:
 		lea	(Tails_top_speed).w,a4
 		bsr.w	Tails_Control
 		btst	#0,obControl(a0)
@@ -77,6 +91,10 @@ Obj02_Control:
 		jsr	Obj02_Modes(pc,d1.w)
 		movem.l	(sp)+,a4-a6
 .update:
+		tst.w	(Camera_Min_Y_pos).w
+		bpl.s	.no_wrap
+		andi.w	#Level_YWrapMask,obY(a0)
+.no_wrap:
 		btst	#0,obControl(a0)
 		beq.s	+
 		bsr.w	Tails_ReleaseCarry
@@ -2206,6 +2224,10 @@ Obj02_Hurt:
 		subi.w	#$20,obVelY(a0)
 
 TailPhysics_loc_1077E:
+		tst.w	(Camera_Min_Y_pos).w
+		bpl.s	.no_wrap
+		andi.w	#Level_YWrapMask,obY(a0)
+.no_wrap:
 		bsr.w	Tails_HurtStop
 		bsr.w	Tails_LevelBound
 		bsr.w	RecordTailsMoves

@@ -24,11 +24,10 @@ Mon_Init:	; Routine 0
 		move.b	#4,obRender(a0)
 		move.b	#3,obPriority(a0)
 		move.b	#$F,obActWid(a0)
-		lea	(v_objstate).w,a2
-		moveq	#0,d0
-		move.b	obRespawnNo(a0),d0
-		bclr	#7,2(a2,d0.w)
-		btst	#0,2(a2,d0.w)	; has monitor been broken?
+		move.w	respawn_addr(a0),d0
+		beq.s	.notbroken
+		movea.w	d0,a2
+		btst	#0,(a2)	; has monitor been broken?
 		beq.s	.notbroken	; if not, branch
 		move.b	#8,obRoutine(a0) ; run "Mon_Display" routine
 		move.b	#$B,obFrame(a0)	; use broken monitor frame
@@ -153,9 +152,10 @@ Mon_SpawnSmoke:
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 +
-		lea	(v_objstate).w,a2
-		moveq	#0,d0
-		move.b	obRespawnNo(a0),d0
-		bset	#0,2(a2,d0.w)
+		move.w	respawn_addr(a0),d0
+		beq.s	.no_state
+		movea.w	d0,a2
+		bset	#0,(a2)
+.no_state:
 		move.b	#$A,obAnim(a0)	; set monitor type to broken
 		bra.w	DisplaySprite

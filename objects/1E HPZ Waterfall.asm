@@ -25,7 +25,7 @@ loc_1446C:
 		move.b	#$12,obFrame(a0)
 
 		jsr	(FindNextFreeObj).l
-		bne.w	loc_1459C.return
+		bne.w	HPZ_Waterfall_Retry
 		_move.b	#id_Obj1E,obID(a1)
 	;	_move.b	obID(a0),obID(a1)
 		addq.b	#4,obRoutine(a1)
@@ -47,7 +47,7 @@ loc_1446C:
 		blo.s	loc_14518
 
 		jsr	(FindNextFreeObj).l
-		bne.w	loc_1459C.return
+		bne.w	HPZ_Waterfall_RetrySecond
 		_move.b	#id_Obj1E,obID(a1)
 	;	_move.b	obID(a0),obID(a1)
 		addq.b	#4,obRoutine(a1)
@@ -106,7 +106,7 @@ loc_14564:
 		move.b	d1,obFrame(a1)
 
 loc_14584:
-		out_of_range.w	DeleteObject
+		out_of_range.w	UnloadObject
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
@@ -114,5 +114,14 @@ loc_1459C:
 		moveq	#$13,d0
 		move.b	d0,obFrame(a0)
 		move.b	d0,obFrame(a1)
-		out_of_range.w	DeleteObject
+		out_of_range.w	UnloadObject
 .return:	rts
+; Retry a partially allocated tall waterfall as one unit.
+HPZ_Waterfall_RetrySecond:
+		movea.l	objoff_38(a0),a1
+		jsr	(DeleteObject2).l
+HPZ_Waterfall_Retry:
+		clr.l	objoff_38(a0)
+		clr.l	objoff_3C(a0)
+		clr.b	obRoutine(a0)
+		rts

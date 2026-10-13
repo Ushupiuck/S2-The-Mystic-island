@@ -93,7 +93,7 @@ sub_8E12:
 loc_8E2E:
 		bsr.w	ObjectMoveAndFall
 		tst.b	obRender(a0)
-		bpl.w	DeleteObject
+		bpl.w	UnloadObject
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 

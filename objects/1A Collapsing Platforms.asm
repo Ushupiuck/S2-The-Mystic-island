@@ -115,5 +115,5 @@ loc_8D16:	; Actually "Ledge_WalkOff"! Due to how the subroutine evolved
 Ledge_TimeZero:
 		bsr.w	ObjectMoveAndFall
 		tst.b	obRender(a0)
-		bpl.w	DeleteObject
+		bpl.w	UnloadObject
 		bra.w	DisplaySprite

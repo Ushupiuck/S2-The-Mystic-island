@@ -7,15 +7,23 @@ Size_of_Snd_driver_guess	= $F64 ; approximate post-compressed size of the Z80 so
 ; ---------------------------------------------------------------------------
 ; Object variables
 ; ---------------------------------------------------------------------------
-; Object layout entry structure (last two penultimate entries -- commented out -- belong to SCD)
+; S3&K object placement: X word, Y/flags word, ID byte, subtype byte.
+; Y flags: bit 13 = X flip, bit 14 = Y flip, bit 15 = load at any Y.
 ; ---------------------------------------------------------------------------
-omX:		equ	0	; 0 oeX		; word; X position
-omY:		equ	2	; 2 oeY		; word; Y position/flags
-omID:		equ	4	; 4 oeID	; byte; ID
-omSubtype:	equ	5	; 5 oeSubtype	; byte; Subtype
-omTimeZones:	equ	6	; 6 oeTimeZones	; byte; Time zones
-omSubtype2:	equ	7	; 7 oeSubtype2	; byte; Subtype 2
-omSize:		equ	8	; 8 oeSize	; byte; Size of structure
+omX:		equ	0
+omY:		equ	2
+omID:		equ	4
+omSubtype:	equ	5
+omSize:		equ	6
+omYMask:		equ	$FFF
+omLoadAtAnyY:	equ	$8000
+Object_Load_BandSize:	equ $80
+Object_Load_CoarseMask:	equ -Object_Load_BandSize
+Object_Load_XBehind:	equ Object_Load_BandSize
+Object_Load_XAhead:	equ $280	; screen plus two preload bands
+Object_Load_YAbove:	equ Object_Load_BandSize
+Object_Load_YBelow:	equ $200	; screen plus vertical preload margin
+Level_YWrapMask:		equ $7FF	; the existing camera wraps at $800 pixels
 ; ---------------------------------------------------------------------------
 ; Object Status Table offsets (for everything between Object_RAM and Primary_Collision)
 ; ---------------------------------------------------------------------------
@@ -52,7 +60,7 @@ obAngle:		equ $26		; angle about the z axis (360 degrees = 256)
 ; conventions followed by many objects but NOT Sonic/Tails:
 obColType:		equ $20		; collision response type
 obColProp:		equ $21		; collision extra property
-obRespawnNo:		equ $1E		; (and soon $1F) respawn list index number
+respawn_addr:		equ $1E		; word; signed RAM pointer to this placement's respawn byte; 0 for dynamic/debug objects
 obSubtype:		equ $28		; Primary object subtype
 ob2ndSubtype:		equ $29		; Secondary object subtype (unused for now)
 ; ---------------------------------------------------------------------------
@@ -443,6 +451,10 @@ Sonic_SpindashDecayShift:		equ 5	; lose 1/32 of the accumulated charge per frame
 Sonic_SpindashMinSpeed:		equ $800
 Sonic_SpindashSpeedStep:		equ $80
 Sonic_SpindashCameraDelayMax:	equ 32	; frames; reduced as launch speed increases
+
+; Debug mode IDs occupy the low byte of the routine/type word.
+DebugType_Placement:	equ 1
+DebugType_FrameCycle:	equ 2
 
 ; Look camera: delays are frames; biases and steps are pixels.
 Camera_LookDelay:		equ 120
@@ -926,8 +938,14 @@ v_systemstack:
 v_ngfx_buffer:			ds.b	$200		; Nemesis graphics decompression buffer
 v_ngfx_buffer_end:
 
-v_objstate:			ds.b	$300		; object state list
-v_objstate_end:
+Error_Handler_Buffer:		ds.b	$45		; register/SP/error-type overlay below
+				ds.b	1		; align the Debug snapshot after the error buffer
+Debug_saved_mappings:		ds.l	1
+Debug_saved_art_tile:		ds.w	1
+Debug_saved_width:		ds.b	1
+Debug_saved_height:		ds.b	1
+Free_LegacyObjectState:		ds.b	$2B2		; free; retired S1/S2 respawn storage
+Free_LegacyObjectState_end:
 Object_Display_Lists:		ds.b	$400		; sprite display queue, in order of priority
 Object_Display_Lists_End:
 v_spritequeue:=		Object_Display_Lists
@@ -945,7 +963,8 @@ Ring_Positions_End:
 VDP_Command_Buffer:		ds.w	7*$12		; stores 18 ($12) VDP commands to issue the next time ProcessDMAQueue is called
 VDP_Command_Buffer_Slot:	ds.w	1		; stores the address of the next open slot for a queued VDP command
 
-Object_Respawn_Table:		ds.b	$300
+Object_Respawn_Table:		ds.b	$300	; S3&K: one byte per placement (loaded bit + local state)
+Object_Respawn_Table_end:
 Camera_RAM:
 Camera_Positions:
 Camera_X_pos:			ds.l	1
@@ -1158,18 +1177,18 @@ Primary_Angle:		ds.b	1
 Secondary_Angle:	ds.b	1
 Obj_placement_routine:	ds.b	1
 
-Camera_X_pos_last:	ds.w	1			; Camera_X_pos_coarse from the previous frame
-Camera_X_pos_last_End:
+Camera_X_pos_coarse:	ds.w	1			; last processed camera X, rounded down to $80
+Camera_X_pos_coarse_End:
 Camera_X_pos_last_P2:	ds.w	1
 Camera_X_pos_last_P2_End:
-Camera_X_pos_coarse:	ds.w	1			; (Camera_X_pos - 128) / 256
-Camera_X_pos_coarse_End:
+Camera_X_pos_coarse_back:	ds.w	1			; (Camera_X_pos - $80) & $FF80, for object deletion
+Camera_X_pos_coarse_back_End:
 Camera_X_pos_coarse_P2:	ds.w	1
 Camera_X_pos_coarse_P2_End:
 
 Object_Manager_Addresses:
-Obj_load_addr_right:	ds.l	1			; contains the address of the next object to load when moving right
-Obj_load_addr_left:	ds.l	1			; contains the address of the last object loaded when moving left
+Object_load_addr_front:	ds.l	1			; first placement beyond the right loading edge
+Object_load_addr_back:	ds.l	1			; first placement inside the left loading edge
 Object_Manager_Addresses_End:
 
 Object_Manager_Addresses_P2:
@@ -1245,8 +1264,9 @@ v_framecount:		; For compatibility
 Timer_frames:		ds.w	1			; the number of frames which have elapsed since the level started
 Debug_object:		ds.b	1			; the current position in the debug mode object list
 f_conveyrev:		ds.b	1			; unused
-Debug_placement_mode:	ds.b	1
-			ds.b	1			; the whole word is tested, but the debug mode code uses only the low byte
+Debug_placement_mode =	*			; routine/type word; nonzero while either mode is active
+Debug_placement_routine:	ds.b	1			; placement init/main (0/2)
+Debug_placement_type:	ds.b	1			; DebugType_*
 Debug_Accel_Timer:	ds.b	1			; (1 byte)
 Debug_Speed:		ds.b	1			; (1 byte)
 v_vbla_byte =		*				; see next line
@@ -1347,7 +1367,15 @@ v_ani1_prev:		ds.b	1			; synchronised sprite animation 1 - previous frame
 v_ani2_prev:		ds.b	1			; synchronised sprite animation 2 - previous frame
 v_ani3_prev:		ds.b	1			; synchronised sprite animation 3 - previous frame
 
-			ds.b	$6D			; free
+; S3&K object-manager additions fit in the existing tail padding.
+Respawn_table_keep:	ds.b	1	; preserve placement state when reinitializing the same live layout
+Camera_Y_pos_coarse:	ds.w	1	; last processed camera Y, rounded down to $80
+Camera_Y_pos_coarse_back:	ds.w	1	; (Camera_Y_pos - $80) & $FF80
+Object_respawn_index_front:	ds.w	1	; RAM address paired with Object_load_addr_front
+Object_respawn_index_back:	ds.w	1	; RAM address paired with Object_load_addr_back
+Object_load_retry:	ds.b	1	; an eligible placement could not get an SST this frame
+
+			ds.b	$63			; free (99 bytes)
 v_end:
 	if * > 0	; don't declare more space than the RAM can contain!
 		fatal "The RAM variable declarations are too large by $\{*} bytes."
@@ -1538,7 +1566,7 @@ Target_palette_End:
 ; ---------------------------------------------------------------------------
 
 ; Error handler
-	phase v_objstate
+	phase Error_Handler_Buffer
 v_regbuffer:		ds.b	$40			; stores registers d0-a7 during an error event
 v_spbuffer:		ds.l	1			; stores most recent sp address
 v_errortype:		ds.b	1			; error type

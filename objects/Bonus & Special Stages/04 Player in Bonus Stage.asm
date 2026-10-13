@@ -45,7 +45,7 @@ BonusPlayer_ChkDebug:	; Routine 2
 		beq.s	.no_debug			; if not, branch
 		btst	#bitB,(v_jpadpress1).w		; is button B pressed?
 		beq.s	.no_debug			; if not, branch
-		move.w	#1,(Debug_placement_mode).w	; change Sonic into a ring
+		jmp	(Debug_Begin).l		; common placement/frame-cycle entry
 
 .no_debug:
 		sf.b	ost_ss_item(a0)
@@ -294,6 +294,10 @@ S1SS_FixCamera:
 		sub.w	d0,(Camera_Y_pos).w	; fix camera 112px (half screen) above Sonic
 
 .ignore_y:
+		move.w	(Camera_X_pos).w,d0
+		subi.w	#Object_Load_XBehind,d0
+		andi.w	#Object_Load_CoarseMask,d0
+		move.w	d0,(Camera_X_pos_coarse_back).w	; lifetime checks for Debug-placed SSTs
 		move.w	(Camera_X_pos).w,(Camera_X_pos_copy).w
 		move.w	(Camera_Y_pos).w,(Camera_Y_pos_copy).w
 		rts

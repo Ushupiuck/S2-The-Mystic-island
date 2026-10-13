@@ -167,11 +167,10 @@ Cat_Head:	; Routine 2
 		bra.w	DisplaySprite
 
 Cat_ChkGone:
-		lea	(v_objstate).w,a2
-		moveq	#0,d0
-		move.b	obRespawnNo(a0),d0
+		move.w	respawn_addr(a0),d0
 		beq.s	.delete
-		bclr	#7,2(a2,d0.w)
+		movea.w	d0,a2
+		bclr	#7,(a2)
 
 .delete:	move.b	#$A,obRoutine(a0)	; goto Cat_Delete next
 		rts

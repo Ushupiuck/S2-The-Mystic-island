@@ -9,7 +9,7 @@ PrisonCapsule:
 		move.b	obRoutine(a0),d0
 		move.w	Pri_Index(pc,d0.w),d1
 		jsr	Pri_Index(pc,d1.w)
-		out_of_range.w	Pri_EndAct.delete
+		out_of_range2	UnloadObject
 		jmp	(DisplaySprite).l
 ; ===========================================================================
 Pri_Index:	dc.w Pri_Init-Pri_Index		; 0

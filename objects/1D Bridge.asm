@@ -55,7 +55,8 @@ Bridge_Init:
 		sub.w	d0,d3
 		swap	d1
 		move.w	#8,d1
-		bsr.s	sub_7C76
+		bsr.w	sub_7C76
+		bne.w	Bridge_RetryInit
 		move.w	sub6_x_pos(a1),d0
 		subq.w	#8,d0
 		move.w	d0,obX(a1)
@@ -65,7 +66,8 @@ Bridge_Init:
 		bls.s	+
 
 		move.w	d1,d4
-		bsr.s	sub_7C76
+		bsr.w	sub_7C76
+		bne.s	Bridge_RetrySecondChild
 		move.l	a1,Bridge_child2(a0)
 		move.w	d4,d0
 		add.w	d0,d0
@@ -75,6 +77,16 @@ Bridge_Init:
 		move.w	d0,obX(a1)
 +
 		bra.s	Bridge_EHZ
+
+Bridge_RetrySecondChild:
+		movea.l	Bridge_child1(a0),a1
+		bsr.w	DeleteObject2
+Bridge_RetryInit:
+		clr.l	Bridge_child1(a0)
+		clr.l	Bridge_child2(a0)
+		clr.b	obRoutine(a0)		; retain the parent's placement entry while waiting
+		rts
+; ---------------------------------------------------------------------------
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -101,6 +113,7 @@ sub_7C76:
 		clr.w	(a2)+
 		addi.w	#$10,d3
 		dbf	d1,.loop
+		moveq	#0,d0			; report successful child creation
 .return:	rts
 ; End of function sub_7C76
 
@@ -158,7 +171,7 @@ loc_7D3E:
 		movea.l	Bridge_child2(a0),a1
 		bsr.w	DeleteObject2
 +
-		bra.w	DeleteObject
+		bra.w	UnloadObject
 ; ---------------------------------------------------------------------------
 
 Bridge_HPZ:
