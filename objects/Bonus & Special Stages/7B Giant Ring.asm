@@ -62,7 +62,8 @@ GRing_Collect:
 loc_AB2C:
 		move.w	#sfx_GiantRing,d0
 		jsr	(PlaySound_Special).l
-		move.b	(v_ani1_frame).w,obFrame(a0)
+		; The ring and flash animate their shared art, using one mapping frame.
+		; v_ani1_frame belongs to the small rings and is not a mapping index here.
 		out_of_range.w	UnloadObject
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------

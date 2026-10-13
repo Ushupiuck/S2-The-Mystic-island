@@ -54,7 +54,12 @@ loc_1253E:
 Obj7A_LoadSonic:
 		subq.w	#1,obj7A_vanishtime(a0)		; subtract 1 from vanishing time
 		bne.s	Obj7A_Init.return		; if there's any time left, branch
-		move.b	#id_Obj01,(v_player+obID).w	; set Sonic's object ID to 1
+		moveq	#id_Obj01,d0
+		cmpi.w	#PlayerMode_Tails,(Player_mode).w
+		bne.s	.restore
+		moveq	#id_Obj02,d0
+.restore:
+		move.b	d0,(v_player+obID).w	; restore the selected primary character
 		jmp	(DeleteObject).l
 ; ---------------------------------------------------------------------------
 Ani_obj7A:	dc.w byte_1278C-Ani_obj7A

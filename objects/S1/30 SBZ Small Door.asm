@@ -58,9 +58,7 @@ ADoor_Animate:
 		addq.w	#1,d3
 		move.w	obX(a0),d4
 		bsr.w	SolidObject
-
-;.remember:
-;		bra.w	MarkObjGone
+		bra.w	MarkObjGone
 ; ---------------------------------------------------------------------------
 Ani_Obj30:	dc.w byte_9590-Ani_Obj30
 		dc.w byte_959C-Ani_Obj30
