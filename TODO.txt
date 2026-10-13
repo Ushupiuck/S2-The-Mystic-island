@@ -14,7 +14,7 @@ Port Sonic CD's object manager from the experimental branch for timezone object 
 Port remaining level animated-art/block setup to S1/S3&K style through Animate_Tiles and AniPLC scripts; replace make_block_tile mapping patches with regular block data < FUTURE, separate from the S1 bonus-stage background conversion
 Compare remaining S3&K power-up behavior and timer layout with the current per-player implementation
 Compare S3&K's byte timers (150 ticks, decremented every 8 frames), expiry/cleanup and music-tempo handling; retain shared Sonic/Tails invincibility and one star composite SST per live player, with shared art
-Repack temporary zone/boss art when final levels replace the test stages; GHZ allocations are intentionally provisional. The shared monitor/signpost bank is $9880; current Newtron/Motobug allocations can overlap it. Preserve the fixed player, HUD, ring, dust and VDP-table banks.
+Repack temporary zone/boss art when final levels replace the test stages; GHZ currently packs from $6560. Preserve the common spring/spike/monitor slots and fixed player, HUD, ring, effect, animal, dust and VDP-table banks during ordinary play; boss/capsule PLCs may replace general level-object art.
 Future elemental-shield pickups must grant the same type and benefits to both live players, including fire/lava immunity and bubble-shield underwater breathing; damage/death remove only the affected player's shield
 Add Super forms and decide how an optional Sonic Insta-Shield would coexist with the WIP homing attack < FUTURE; both deliberately excluded from the completed normal S3&K player port
 Add Sonic & Tails / Sonic / Tails character-selection UI < FUTURE; Player_mode already loads the three modes, including primary Tails with controller 1 and camera ownership
@@ -31,9 +31,11 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
+Give GHZ's S1 boss a separate matching Eggpod/weapons/exhaust/capsule PLC; preserve the resident ball and chain, place exhaust after weapons and derive its mapping offsets to coexist with the capsule < DONE
+Replace spikes with normal S3&K behavior/art/mappings; damage both players from floor, side and ceiling, retain immunity and movement, clear respawn flags, remap to palette 0, pack GHZ art from $6560 and standardize spring/spike/monitor/checkpoint banks; retain intentional boss/capsule overwrites < DONE
 Fix Debug Start+A from the S1 special stage: advance the fade timer with frozen wall art, preserve the return zone, clear placement state before returning to gameplay, retain the results-to-title shortcut, and move stage rings/sparkles plus the palette-0 results ring to $2940/$29C0 < DONE
 Reorder the level explosion/fiery/animal art group from $B040 to $BFFF; retain shared explosion mappings, move both animal slots to $BC00/$BE40 and reclaim the two normal-level tiles at $B000-$B03F < DONE
-Load points through S3&K DPLCs into two two-tile banks at $6F3/$6F5; preserve all seven labels by repeating existing zero tiles, carry the player through enemy/explosion/animal and bumper paths, safely replace only that player's previous popup, and retain nine free tiles at $DEE0-$DFFF < DONE
+Load points through S3&K DPLCs into two two-tile banks at $6F3/$6F5; preserve all seven labels by repeating existing zero tiles, carry the player through enemy/explosion/animal and bumper paths, safely replace only that player's previous popup, and free nine tiles at $DEE0-$DFFF (eight now used by GHZ walls) < DONE
 Activate the shared $79C / $F380 shield/invincibility bank; share one resident star art set between both trails and stream classic-shield frames through Load_DynamicPLC, using $ADC0 for independent shield phases and mixed states; preserve bank caches on shield retirement and protect results/game-over art < DONE
 Pack rings, lost rings, sparkles and HUD together from tile $6B9; retain all Tails body/tail uploads, shared E, debug digits, lives and both results mappings; consolidate 13 free tiles at $DE60-$DFFF and document the 9,999,990 displayed score cap < DONE
 Give both players independent full invincibility trails, including re-pickup/expiry and allocation retry; fix Tails monitor solidity and detach both riders on break; clear the correct player bit when opening the capsule and when transferring between solid objects < DONE
@@ -90,6 +92,8 @@ SaveScreen: <---------- example implementations of KosArt_To_VDP
 ; ---------------------------------------------------------------------------
 ; Notes
 ; ---------------------------------------------------------------------------
+Zone 6 (Metropolis / Sonic 1 ending) is intentionally a blank test level for now. For temporary object tests, add each object to its Debug list AND load its matching art/PLCs at the VRAM addresses its mappings use, then enter directly; normal out-of-range deletion still applies. It will become a real level later.
+
 Offs_PLC = PLC request table
 
 ; =============== S U B R O U T I N E =======================================

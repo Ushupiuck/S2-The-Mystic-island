@@ -1,75 +1,109 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ObjDef xmlns="http://www.sonicretro.org" Namespace="S2ObjectDefinitions.Common" TypeName="Spikes" Language="cs" Name="Spikes" Image="horiz1">
+<ObjDef xmlns="http://www.sonicretro.org" Namespace="MysticIslandObjectDefinitions.Common" TypeName="Spikes" Language="cs" Name="Spikes" Image="floor1">
   <Images>
-    <ImageFromMappings id="horiz1">
-      <ArtFile filename="../art/nemesis/Spikes.nem" />
-      <MapFile type="Binary" filename="../mappings/sprite/Spikes.bin" frame="0" startpal="1" />
+    <ImageFromMappings id="floor1">
+      <ArtFile filename="../art/nemesis/Spikes.nem" compression="Nemesis" />
+      <MapFile type="Binary" filename="../mappings/sprite/Spikes.bin" frame="0" startpal="0" version="S3K" />
     </ImageFromMappings>
-    <ImageFromMappings id="horiz2">
-      <ArtFile filename="../art/nemesis/Spikes.nem" />
-      <MapFile type="Binary" filename="../mappings/sprite/Spikes.bin" frame="0" startpal="1" />
+    <ImageFromMappings id="floor2">
+      <ArtFile filename="../art/nemesis/Spikes.nem" compression="Nemesis" />
+      <MapFile type="Binary" filename="../mappings/sprite/Spikes.bin" frame="1" startpal="0" version="S3K" />
     </ImageFromMappings>
-    <ImageFromMappings id="horiz3">
-      <ArtFile filename="../art/nemesis/Spikes.nem" />
-      <MapFile type="Binary" filename="../mappings/sprite/Spikes.bin" frame="0" startpal="1" />
+    <ImageFromMappings id="floor3">
+      <ArtFile filename="../art/nemesis/Spikes.nem" compression="Nemesis" />
+      <MapFile type="Binary" filename="../mappings/sprite/Spikes.bin" frame="2" startpal="0" version="S3K" />
     </ImageFromMappings>
-    <ImageFromMappings id="horiz4">
-      <ArtFile filename="../art/nemesis/Spikes.nem" />
-      <MapFile type="Binary" filename="../mappings/sprite/Spikes.bin" frame="0" startpal="1" />
+    <ImageFromMappings id="floor4">
+      <ArtFile filename="../art/nemesis/Spikes.nem" compression="Nemesis" />
+      <MapFile type="Binary" filename="../mappings/sprite/Spikes.bin" frame="3" startpal="0" version="S3K" />
+    </ImageFromMappings>
+    <ImageFromMappings id="side1">
+      <ArtFile filename="../art/nemesis/Spikes.nem" compression="Nemesis" />
+      <MapFile type="Binary" filename="../mappings/sprite/Spikes.bin" frame="4" startpal="0" version="S3K" />
+    </ImageFromMappings>
+    <ImageFromMappings id="side2">
+      <ArtFile filename="../art/nemesis/Spikes.nem" compression="Nemesis" />
+      <MapFile type="Binary" filename="../mappings/sprite/Spikes.bin" frame="5" startpal="0" version="S3K" />
+    </ImageFromMappings>
+    <ImageFromMappings id="side3">
+      <ArtFile filename="../art/nemesis/Spikes.nem" compression="Nemesis" />
+      <MapFile type="Binary" filename="../mappings/sprite/Spikes.bin" frame="6" startpal="0" version="S3K" />
+    </ImageFromMappings>
+    <ImageFromMappings id="side4">
+      <ArtFile filename="../art/nemesis/Spikes.nem" compression="Nemesis" />
+      <MapFile type="Binary" filename="../mappings/sprite/Spikes.bin" frame="7" startpal="0" version="S3K" />
     </ImageFromMappings>
   </Images>
   <Subtypes>
-    <Subtype id="00" name="One Horizontal" image="horiz1" />
-    <Subtype id="10" name="Two Horizontal" image="horiz2" />
-    <Subtype id="20" name="Three Horizontal" image="horiz3" />
-    <Subtype id="30" name="Four Horizontal" image="horiz4" />
+    <Subtype id="00" name="1 Floor/Ceiling Pair(s)" image="floor1" />
+    <Subtype id="10" name="2 Floor/Ceiling Pair(s)" image="floor2" />
+    <Subtype id="20" name="3 Floor/Ceiling Pair(s)" image="floor3" />
+    <Subtype id="30" name="4 Floor/Ceiling Pair(s)" image="floor4" />
+    <Subtype id="40" name="1 Side Pair(s)" image="side1" />
+    <Subtype id="50" name="2 Side Pair(s)" image="side2" />
+    <Subtype id="60" name="3 Side Pair(s)" image="side3" />
+    <Subtype id="70" name="4 Side Pair(s)" image="side4" />
   </Subtypes>
   <Properties>
     <CustomProperty name="Count" type="int">
       <get><![CDATA[return ((obj.SubType & 0x30) >> 4) + 1;]]></get>
-      <set>
-        <![CDATA[        value = System.Math.Max(1, value);
-        value = System.Math.Min(4, value);
-        value--;
-        obj.SubType = (byte)((obj.SubType & ~0x30) | (value << 4));]]>
-      </set>
+      <set><![CDATA[value = System.Math.Max(1, System.Math.Min(4, value)); obj.SubType = (byte)((obj.SubType & ~0x30) | ((value - 1) << 4));]]></set>
     </CustomProperty>
     <BitsProperty name="Movement" type="SpikeMovement" startbit="0" length="2" />
-    <BitsProperty name="Direction" type="Direction" startbit="6" length="1" />
+    <BitsProperty name="Direction" type="SpikeDirection" startbit="6" length="1" />
   </Properties>
   <Enums>
     <Enum name="SpikeMovement">
       <EnumMember name="Stationary" />
       <EnumMember name="Vertical" />
       <EnumMember name="Horizontal" />
-      <EnumMember name="Invalid" />
+      <EnumMember name="Pushable" />
     </Enum>
-    <Enum name="Direction">
-      <EnumMember name="Horizontal" />
-      <EnumMember name="Vertical" />
+    <Enum name="SpikeDirection">
+      <EnumMember name="Floor" />
+      <EnumMember name="Side" />
     </Enum>
   </Enums>
   <Display>
     <DisplayOption>
-      <Condition property="Direction" value="Horizontal" />
+      <Condition property="Direction" value="Floor" />
       <Condition property="Count" value="1" />
-      <ImageRef image="horiz1" />
+      <ImageRef image="floor1" />
     </DisplayOption>
     <DisplayOption>
-      <Condition property="Direction" value="Horizontal" />
+      <Condition property="Direction" value="Floor" />
       <Condition property="Count" value="2" />
-      <ImageRef image="horiz2" />
+      <ImageRef image="floor2" />
     </DisplayOption>
     <DisplayOption>
-      <Condition property="Direction" value="Horizontal" />
+      <Condition property="Direction" value="Floor" />
       <Condition property="Count" value="3" />
-      <ImageRef image="horiz3" />
+      <ImageRef image="floor3" />
     </DisplayOption>
     <DisplayOption>
-      <Condition property="Direction" value="Horizontal" />
+      <Condition property="Direction" value="Floor" />
       <Condition property="Count" value="4" />
-      <ImageRef image="horiz4" />
+      <ImageRef image="floor4" />
     </DisplayOption>
+    <DisplayOption>
+      <Condition property="Direction" value="Side" />
+      <Condition property="Count" value="1" />
+      <ImageRef image="side1" />
+    </DisplayOption>
+    <DisplayOption>
+      <Condition property="Direction" value="Side" />
+      <Condition property="Count" value="2" />
+      <ImageRef image="side2" />
+    </DisplayOption>
+    <DisplayOption>
+      <Condition property="Direction" value="Side" />
+      <Condition property="Count" value="3" />
+      <ImageRef image="side3" />
+    </DisplayOption>
+    <DisplayOption>
+      <Condition property="Direction" value="Side" />
+      <Condition property="Count" value="4" />
+      <ImageRef image="side4" />
     </DisplayOption>
   </Display>
 </ObjDef>

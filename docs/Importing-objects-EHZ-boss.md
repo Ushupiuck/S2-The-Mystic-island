@@ -125,8 +125,9 @@ continues to the capsule rather than returning to the Sega screen.
 | `$B000–$BC80` | Large boss explosion, 100 tiles |
 
 These banks coexist with the shared shield/star bank at `$F380`, the auxiliary
-shield bank at `$ADC0`, monitor/signpost art,
-the planes, players and HUD. Animals and normal explosion art replace the
+shield bank at `$ADC0`, the planes, players and HUD. General level-object
+art, including monitors, spikes and springs, can be overwritten during the
+boss/capsule phases. Animals and normal explosion art replace the
 large-explosion bank only after the defeat timer finishes. Regular explosion
 art starts at `$B040`, with animal banks at `$BC00` and `$BE40`. The existing S1
 capsule needs separate body/button placement records, now present in EHZ2.

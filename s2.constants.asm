@@ -1595,25 +1595,47 @@ boss_fz_end:	equ boss_fz_x+$2B0
 ; ---------------------------------------------------------------------------
 ; Tile VRAM Locations
 
+; Universal level sprites; zone/boss PLCs may replace inactive banks.
+ArtTile_Spring_Diagonal:	equ $4D5	; 32 tiles
+ArtTile_Spring_Vertical:	equ ArtTile_Spring_Diagonal+$20 ; 20 tiles
+ArtTile_Spring_Horizontal:	equ ArtTile_Spring_Vertical+$14 ; 14 tiles (S2 uses 12)
+ArtTile_Spikes:		equ ArtTile_Spring_Horizontal+$E ; side eight, then floor eight
+ArtTile_Monitor:		equ ArtTile_Spikes+$10 ; 60 tiles
+ArtTile_Lamppost:	equ ArtTile_Monitor+$3C ; 10 tiles; ends at $AD9F
+
+; GHZ's packed objects/badniks, starting immediately after its 811 level tiles.
+ArtTile_GHZ_Bridge:	equ $32B	; $6560
+ArtTile_GHZ_MZ_Swing:	equ ArtTile_GHZ_Bridge+$A
+ArtTile_GHZ_Giant_Ball:	equ ArtTile_GHZ_MZ_Swing+$E
+ArtTile_GHZ_Purple_Rock:	equ ArtTile_GHZ_Giant_Ball+$26
+ArtTile_Ground_Explosion:	equ ArtTile_GHZ_Purple_Rock+$18
+ArtTile_Buzz_Bomber:	equ ArtTile_Ground_Explosion+$24
+ArtTile_Crabmeat:	equ ArtTile_Buzz_Bomber+$37
+ArtTile_Moto_Bug:	equ ArtTile_Crabmeat+$44
+ArtTile_Ball_HogV:	equ ArtTile_Moto_Bug+$1D
+ArtTile_Ball_HogH:	equ ArtTile_Ball_HogV+$18
+ArtTile_Newtron:		equ ArtTile_Ball_HogH+$2F ; 81 tiles; four shared tail tiles below
+ArtTile_Chopper:		equ ArtTile_Spring_Diagonal ; GHZ has no diagonal spring art
+ArtTile_S1_Spring_Vertical:	equ ArtTile_Spring_Vertical ; 16 tiles; Newtron uses +$10-$13
+ArtTile_S1_Spring_Horizontal:	equ ArtTile_Spring_Horizontal
+ArtTile_Newtron_Tail:	equ ArtTile_S1_Spring_Vertical+$10
+ArtTile_GHZ_Edge_Wall:	equ $6F7	; eight tiles in the HUD/points gap; cap uses level art
+
+
 ; Shared
-ArtTile_GHZ_MZ_Swing:		equ $380
 ArtTile_MZ_SYZ_Caterkiller:	equ $3D0
 ArtTile_GHZ_SLZ_Smashable_Wall:	equ $50F
 ArtTile_Bumper:			equ $380
 
 ; Green Hill Zone
 ArtTile_GHZ_Flower_4:		equ ArtTile_Level+$340
-ArtTile_GHZ_Edge_Wall:		equ $34C
 ArtTile_GHZ_Flower_Stalk:	equ ArtTile_Level+$358
 ArtTile_GHZ_Big_Flower_1:	equ ArtTile_Level+$35C
 ArtTile_GHZ_Small_Flower:	equ ArtTile_Level+$36C
 ArtTile_GHZ_Waterfall:		equ ArtTile_Level+$378
 ArtTile_GHZ_Flower_3:		equ ArtTile_Level+$380
-ArtTile_GHZ_Bridge:		equ $38E ; $38E in S1
 ArtTile_GHZ_Big_Flower_2:	equ ArtTile_Level+$390
 ArtTile_GHZ_Spike_Pole:		equ $398
-ArtTile_GHZ_Giant_Ball:		equ $3AA
-ArtTile_GHZ_Purple_Rock:	equ $3D0 ; $3D0 in S1
 
 ; Marble Zone
 ArtTile_ArtUnc_CPZAnimBack	equ $319 ; $370 in S2
@@ -1689,29 +1711,18 @@ ArtTile_FZ_Boss:		equ $300
 ArtTile_FZ_Eggman_Fleeing:	equ $3A0
 ArtTile_FZ_Eggman_No_Vehicle:	equ $470
 
+; GHZ badniks and ground explosion continue the packed bank after its scenery.
+; Universal springs, spikes, monitors and checkpoint follow in fixed slots.
 ; General Level Art
 ArtTile_Level:			equ $000
-ArtTile_Ball_HogV:		equ $500
-ArtTile_Ball_HogH:		equ ArtTile_Ball_HogV+$18
 ArtTile_Bomb:			equ $400
-ArtTile_Ground_Explosion:	equ $547 ; 36 tiles, below the auxiliary shield bank
-ArtTile_Spikes:			equ $434
-ArtTile_Spikes_GHZ:		equ ArtTile_Spikes+$6C
 
-ArtTile_Buzz_Bomber:		equ $444
-ArtTile_Crabmeat:		equ $400
-ArtTile_Chopper:		equ $470
-ArtTile_Moto_Bug:		equ $4E0
-ArtTile_Newtron:		equ $49B
 
 ArtTile_Yadrin:			equ $47B
-ArtTile_Lamppost:		equ $47C
 ArtTile_Jaws:			equ $486
 ArtTile_Burrobot:		equ $4A6
 ArtTile_Basaran:		equ $385
 ArtTile_Button:			equ $50F	; TO BE CHANGED
-ArtTile_S1_Spring_Horizontal:	equ $4A8
-ArtTile_S1_Spring_Vertical:	equ $4B8
 ArtTile_Shield:			equ $79C	; $F380; shared with primary invincibility
 ArtTile_Shield_2:			equ $56E	; $ADC0; 18 tiles, clear of ground explosions and BBat
 ArtTile_Shield_2_End:		equ ArtTile_Shield_2+$12 ; $B000; exclusive end of this bank
@@ -1722,7 +1733,6 @@ ArtTile_Title_Card:		equ $580
 ArtTile_Explosion:		equ $582	; $B040; 94 tiles, shared by both explosion mappings
 ArtTile_Animal_1:		equ ArtTile_Explosion+$5E ; $5E0 / $BC00; 18 tiles
 ArtTile_Animal_2:		equ ArtTile_Animal_1+$12 ; $5F2 / $BE40; 14 tiles, ending at $BFFF
-ArtTile_Monitor:		equ $4C4
 
 ArtTile_Sonic:			equ $680
 ArtTile_Tails:			equ $6A0
@@ -1742,9 +1752,6 @@ ArtTile_Lives_Counter:		equ $7D4
 ArtTile_Sonic_Dust:		equ $7E0
 ArtTile_Tails_Dust:		equ $7F0
 ArtTile_Water_Surface:		equ $400
-ArtTile_Spring_Horizontal:	equ $470
-ArtTile_Spring_Vertical:	equ $45C
-ArtTile_Spring_Diagonal:	equ $43C
 
 ; Eggman
 ArtTile_Eggman:			equ $400
@@ -1752,12 +1759,12 @@ ArtTile_Eggman_Weapons:		equ $46C
 ArtTile_Eggman_Button:		equ $4A4
 ArtTile_Eggman_Spikeball:	equ $518
 ArtTile_Eggman_Trap_Floor:	equ $518
-ArtTile_Eggman_Exhaust:		equ ArtTile_Eggman+$12A
+ArtTile_Eggman_Exhaust:		equ ArtTile_Eggman_Weapons+$2A ; 17 tiles, after 42 weapon tiles
 
 ; End of Level
 ArtTile_Giant_Ring:		equ $400
 ArtTile_Giant_Ring_Flash:	equ $462
-ArtTile_Prison_Capsule:		equ $508	; 85 tiles; ends below the companion effect bank
+ArtTile_Prison_Capsule:		equ $508	; boss/capsule PLCs replace general level-object art
 ArtTile_Hidden_Points:		equ $4B6
 ArtTile_Warp:			equ $541
 ArtTile_Mini_Tails:		equ $535
@@ -1871,8 +1878,8 @@ ArtTile_BossExplosion:	equ $580	; 100 tiles; replaced by animals/normal explosio
 ArtTile_CPZ_Platform:		equ $400
 
 ; HPZ
-ArtTile_Splats:			equ $500
-ArtTile_BBat:			equ $530
+ArtTile_Splats:			equ ArtTile_Water_Surface+$18 ; 29 tiles, after 24 water tiles
+ArtTile_BBat:			equ ArtTile_Splats+$1D ; 58 tiles, below common level sprites
 
 ; HTZ
 ArtTile_Rexon:			equ $37E

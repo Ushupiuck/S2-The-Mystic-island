@@ -136,7 +136,9 @@ historical/staged sources rather than ordinary runtime mapping tables.
 | Address | Use |
 | --- | --- |
 | `$2940`, `$29C0` | S1 bonus-stage/results ring and stage sparkles |
-| `$9880` | Monitor/signpost bank |
+| `$9AA0`, `$9EA0`, `$A120` | Diagonal, vertical and horizontal spring banks |
+| `$A2E0` | Floor/side spike bank, 16 tiles |
+| `$A4E0`, `$AC60` | Monitor/signpost and checkpoint banks |
 | `$ADC0–$AFFF` | Auxiliary shield bank, 18 tiles |
 | `$B040–$B7FF` | Normal explosion and shared fiery frames, 62 tiles |
 | `$B800–$BBFF` | Additional fiery explosion frames, 32 tiles |
@@ -147,7 +149,8 @@ historical/staged sources rather than ordinary runtime mapping tables.
 | `$D720`, `$D7A0`, `$D820` | Ring, lost ring and sparkles, starting at tile `$6B9` |
 | `$D8A0–$DE5F` | HUD, shared E, debug coordinates and counters |
 | `$DE60–$DE9F`, `$DEA0–$DEDF` | Primary and companion points, two tiles each |
-| `$DEE0–$DFFF` | Free, nine contiguous tiles / `$120` bytes |
+| `$DEE0–$DFDF` | GHZ wall art, eight tiles |
+| `$DFE0–$DFFF` | Free, one tile |
 | `$F000–$F37F` | HScroll |
 | `$F380–$F7FF` | Shared level shield/invincibility bank, tile `$79C` |
 | `$F800–$FA7F` | Sprite table |
@@ -158,8 +161,11 @@ Tails body uploads can reuse the start of the tail area, as in the original;
 the largest body upload is 24 tiles and the largest tail upload is nine.
 They end at `$6B7` and `$6B8`, so the ring group starts at `$6B9`.
 This is not an additional independent 32-tile body allocation.
-Lower test-zone/NPC allocations remain provisional. No GHZ terrain art
-or block/chunk data was repacked during this port.
+GHZ's test-zone scenery and badnik art is packed from `$6560`, immediately
+after its terrain. The [spike/common-art layout](Spikes-and-GHZ-VRAM.md)
+documents the fixed general-object slots and GHZ's use of otherwise empty
+spring space. Boss/capsule PLCs intentionally replace general level-object
+art. No GHZ terrain art or block/chunk data was repacked.
 
 The shared 94-tile explosion art starts at tile `$582` / `$B040`; both
 explosion mappings retain their relative offsets and shared frames. Animals

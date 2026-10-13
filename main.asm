@@ -7265,7 +7265,7 @@ loc_7692:
 		bsr.w	PlaySound
 		move.b	#1,(f_lockscreen).w
 		addq.b	#2,(Dynamic_Resize_Routine).w
-		moveq	#plcid_Boss,d0
+		moveq	#plcid_GHZBoss,d0
 		jmp	(LoadPLC).l
 ; ---------------------------------------------------------------------------
 
@@ -13368,11 +13368,11 @@ word_19418:	dc.w 1
 		dc.w  $405, $31, $22
 word_19422:	dc.w 0
 word_19424:	dc.w 2
-		dc.w	 8, $12A, $22
-		dc.w  $808, $112A, $22
+		dc.w	 8, ArtTile_Eggman_Exhaust-ArtTile_Eggman, $22
+		dc.w  $808, $1000+ArtTile_Eggman_Exhaust-ArtTile_Eggman, $22
 word_19436:	dc.w 2
-		dc.w $F80B, $12D, $22
-		dc.w	 1, $139, $3A
+		dc.w $F80B, ArtTile_Eggman_Exhaust+3-ArtTile_Eggman, $22
+		dc.w	 1, ArtTile_Eggman_Exhaust+$F-ArtTile_Eggman, $3A
 Map_BossItems:	dc.w word_19458-Map_BossItems
 		dc.w word_19462-Map_BossItems
 		dc.w word_19474-Map_BossItems
@@ -16282,7 +16282,10 @@ Nem_VSpring2:	binclude	"art/nemesis/Vertical spring.nem"
 		even
 Nem_DSpring:	binclude	"art/nemesis/Diagonal spring.nem"
 		even
+; S3&K side and floor spikes, remapped to the shared player palette.
 Nem_VSpikes:	binclude	"art/nemesis/Spikes.nem"
+		even
+Nem_NewtronTail:	binclude	"art/nemesis/Enemy Newtron tail.nem"
 		even
 Nem_Bumper:	binclude	"art/nemesis/Bumper.nem"
 		even
@@ -18171,9 +18174,9 @@ Map_Pri:	binclude	"mappings/sprite/Prison Capsule.bin"
 		even
 Map_obj40:	binclude	"mappings/sprite/Motobug.bin"
 		even
-Map_Newtron:	binclude	"mappings/sprite/Newtron.bin"			; $42
+Map_Newtron:	include	"mappings/sprite/Newtron.asm"			; $42
 		even
-Map_obj44:	binclude	"mappings/sprite/GHZ Edge Walls.bin"
+Map_obj44:	include	"mappings/sprite/GHZ Edge Walls.asm"
 		even
 Map_Bump:	binclude	"mappings/sprite/Bumper.bin"			; $47
 		even

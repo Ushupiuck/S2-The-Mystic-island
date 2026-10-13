@@ -66,6 +66,7 @@ ptr_PLC_FZBoss:		dc.w PLC_Boss-ArtLoadCues		; Placeholder
 ptr_PLC_Filler:		dc.w PLC_Filler-ArtLoadCues		; Placeholder
 ptr_PLC_Filler2:	dc.w PLC_Filler2-ArtLoadCues		; Placeholder
 ptr_PLC_Capsule:	dc.w PLC_Capsule-ArtLoadCues
+ptr_PLC_GHZBoss:	dc.w PLC_GHZBoss-ArtLoadCues
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Standard 1 - loaded for every level
@@ -82,6 +83,7 @@ PLC_Main_End:
 PLC_Main2:	dc.w ((PLC_Main2_End-PLC_Main2)/6)-1
 		plcm	Nem_Lamppost,	ArtTile_Lamppost
 		plcm	Nem_Monitors,	ArtTile_Monitor
+		plcm	Nem_VSpikes,	ArtTile_Spikes
 PLC_Main2_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
@@ -113,9 +115,10 @@ PLC_GHZ_End:
 ; Green Hill Zone secondary
 ; ---------------------------------------------------------------------------
 PLC_GHZ2:	dc.w ((PLC_GHZ2_End-PLC_GHZ2)/6)-1
-		plcm	Nem_VSpikes,	ArtTile_Spikes_GHZ
 		plcm	Nem_HSpring,	ArtTile_S1_Spring_Horizontal
 		plcm	Nem_VSpring,	ArtTile_S1_Spring_Vertical
+		plcm	Nem_GHZ_SWall,	ArtTile_GHZ_Edge_Wall
+		plcm	Nem_NewtronTail,	ArtTile_Newtron_Tail
 PLC_GHZ2_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
@@ -129,7 +132,6 @@ PLC_LZ_End:
 ; Labyrinth Zone secondary
 ; ---------------------------------------------------------------------------
 PLC_LZ2:	dc.w ((PLC_CPZ2_End-PLC_CPZ2)/6)-1
-		plcm	Nem_VSpikes,	ArtTile_Spikes
 		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
 		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
 		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
@@ -146,7 +148,6 @@ PLC_CPZ_End:
 ; Chemical Plant Zone secondary
 ; ---------------------------------------------------------------------------
 PLC_CPZ2:	dc.w ((PLC_CPZ2_End-PLC_CPZ2)/6)-1
-		plcm	Nem_VSpikes,	ArtTile_Spikes
 		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
 		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
 		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
@@ -160,7 +161,6 @@ PLC_EHZ:	dc.w ((PLC_EHZ_End-PLC_EHZ)/6)-1
 		plcm	Nem_EHZ_Waterfall,	ArtTile_Waterfall
 		plcm	Nem_EHZ_Bridge,	ArtTile_EHZ_Bridge
 		plcm	Nem_HTZ_Seesaw,	ArtTile_HTZ_Seesaw
-		plcm	Nem_VSpikes,	ArtTile_Spikes
 		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
 		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
 		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
@@ -201,7 +201,6 @@ PLC_HTZ:	dc.w ((PLC_HTZ_End-PLC_HTZ)/6)-1
 		plcm	Nem_EHZ_Fireball,	ArtTile_Fireball
 		plcm	Nem_HTZ_Fireball,	ArtTile_HTZ_Fireball
 		plcm	Nem_HTZ_AutomaticDoor,	ArtTile_HTZ_AutomaticDoor
-		plcm	Nem_VSpikes,		ArtTile_Spikes
 		plcm	Nem_DSpring,		ArtTile_Spring_Diagonal
 		plcm	Nem_VSpring2,		ArtTile_Spring_Vertical
 		plcm	Nem_HSpring2,		ArtTile_Spring_Horizontal
@@ -232,6 +231,13 @@ PLC_Boss:	dc.w ((PLC_Boss_End-PLC_Boss)/6)-1
 		plcm	Nem_EggChopper,	ArtTile_ArtNem_EggChoppers
 		plcm	Nem_BossExplosion,	ArtTile_BossExplosion
 PLC_Boss_End:
+; GHZ retains its S1 boss mappings; its ball and chain are already resident.
+PLC_GHZBoss:	dc.w ((PLC_GHZBoss_End-PLC_GHZBoss)/6)-1
+		plcm	Nem_OldEggPod,	ArtTile_Eggman
+		plcm	Nem_Weapons,	ArtTile_Eggman_Weapons
+		plcm	Nem_Exhaust,	ArtTile_Eggman_Exhaust
+		plcm	Nem_Prison,	ArtTile_Prison_Capsule
+PLC_GHZBoss_End:
 ; Capsule art can coexist with the boss during its defeat/escape sequence.
 PLC_Capsule:	dc.w ((PLC_Capsule_End-PLC_Capsule)/6)-1
 		plcm	Nem_Prison,	ArtTile_Prison_Capsule
@@ -318,7 +324,6 @@ PLC_SpeStResult_End:
 ; Filler
 ; ---------------------------------------------------------------------------
 PLC_Filler:	dc.w ((PLC_Filler_End-PLC_Filler-2)/6)-1
-		plcm	Nem_VSpikes,	ArtTile_Spikes
 PLC_Filler_End:
 
 ; ---------------------------------------------------------------------------
@@ -378,6 +383,7 @@ plcid_Filler:		equ (ptr_PLC_Filler-ArtLoadCues)/2	; $20
 plcid_Filler2:		equ (ptr_PLC_Filler2-ArtLoadCues)/2	; $21
 ; ---------------------------------------------------------------------------
 plcid_Capsule:		equ (ptr_PLC_Capsule-ArtLoadCues)/2
+plcid_GHZBoss:		equ (ptr_PLC_GHZBoss-ArtLoadCues)/2
 
 KosMLoadCues:
 ; Level Slot $00: Twilight Hill Zone  [WILL BE REPLACED] [GHZ]

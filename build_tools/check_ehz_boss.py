@@ -61,11 +61,8 @@ def main():
     # overwritten by the boss's explosions or the capsule loaded at defeat.
     protected = [(sym['vram_fg'], 0x10000),
                  (sym['ArtTile_Shield_2'] * 32, sym['ArtTile_Shield_2_End'] * 32)]
-    for tile, art in (
-        ('ArtTile_Monitor', 'Nem_Monitors'),
-    ):
-        low = sym[tile] * 32
-        protected.append((low, low + art_tiles(art) * 32))
+    # Boss/capsule PLCs intentionally replace general sprites, including
+    # monitors, spikes and springs. Player/effect/table banks remain protected.
     for label, low, high in cues:
         assert low % 32 == 0 and low < high <= 0x10000
         assert all(high <= a or low >= b for a, b in protected), (
