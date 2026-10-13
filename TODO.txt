@@ -17,7 +17,7 @@ Compare S3&K's byte timers (150 ticks, decremented every 8 frames), expiry/clean
 Use two independent VRAM effect banks, one per player; each bank shares shield/invincibility art as in S3&K/S.C.E. Restore shield art/DPLCs after invincibility, and check zone/boss PLC allocations before assigning the ranges
 Adapt the existing classic-shield loader and assets under Temp/objects/Shield objects.asm and Temp/Classic Shield; invalidate its frame cache when switching art, and retry queued transfers if the DMA queue is full
 Repack temporary zone/boss art when final levels replace the test stages; GHZ allocations are intentionally provisional. The shared monitor/signpost bank is $9880; current Newtron/Motobug and shield/star allocations can overlap it. Preserve the fixed player, HUD, ring, dust and VDP-table banks.
-Future elemental-shield pickups must grant the same type to both live players; damage/death remove only the affected player's shield
+Future elemental-shield pickups must grant the same type and benefits to both live players, including fire/lava immunity and bubble-shield underwater breathing; damage/death remove only the affected player's shield
 Add Super forms and decide how an optional Sonic Insta-Shield would coexist with the WIP homing attack < FUTURE; both deliberately excluded from the completed normal S3&K player port
 Add Sonic & Tails / Sonic / Tails character-selection UI < FUTURE; Player_mode already loads the three modes, including primary Tails with controller 1 and camera ownership
 Import the S3&K rings manager

@@ -13752,10 +13752,6 @@ Touch_Hurt:
 
 
 HurtSonic:
-		; The companion recoils/loses his shield, but never spends shared rings.
-		; Primary Tails uses v_player and retains the normal ring/death rules.
-		cmpa.w	#v_player2,a0
-		beq.s	HurtShield
 		btst	#obStatusSecondary_hasShield,obStatusSecondary(a0)
 		bne.s	HurtShield
 		tst.w	(v_rings).w
@@ -13764,6 +13760,10 @@ HurtSonic:
 		bne.s	HurtShield
 		bra.w	KillSonic
 .skip:
+		; A shield absorbs the hit first; zero rings still means death.
+		; Only the primary character scatters the shared rings on damage.
+		cmpa.w	#v_player2,a0
+		beq.s	HurtShield
 		jsr	(FindFreeObj).l
 		bne.s	HurtShield
 		_move.b	#id_Obj13,obID(a1)
