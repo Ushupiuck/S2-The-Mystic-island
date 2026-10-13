@@ -80,7 +80,6 @@ PLC_Main_End:
 ; Standard 2 - loaded for every level
 ; ---------------------------------------------------------------------------
 PLC_Main2:	dc.w ((PLC_Main2_End-PLC_Main2)/6)-1
-		plcm	Nem_Points,	ArtTile_Points
 		plcm	Nem_Lamppost,	ArtTile_Lamppost
 		plcm	Nem_Monitors,	ArtTile_Monitor
 PLC_Main2_End:

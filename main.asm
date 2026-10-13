@@ -16257,8 +16257,6 @@ Nem_GameOver:	binclude	"art/nemesis/Game Over.nem"
 		even
 Nem_HUD:	binclude	"art/nemesis/HUD.nem"
 		even
-Nem_Points:	binclude	"art/nemesis/Points.nem"
-		even
 Nem_Lives:	binclude	"art/nemesis/Sonic lives counter.nem"
 		even
 Nem_Signpost:	binclude	"art/nemesis/Signpost.nem"
@@ -16367,7 +16365,8 @@ Art_Tails:	binclude	"art/uncompressed/Tails' art.bin"
 Art_Tails_Extra:	binclude "art/uncompressed/Tails extra.bin"
 Art_Tails_Tails:	binclude "art/uncompressed/Tails tails.bin"
 Art_SpindashDust:	binclude "art/uncompressed/Spindash and skid dust.bin"
-Art_Shield:	binclude "art/uncompressed/Shield.unc"
+Art_Points:		binclude	"art/uncompressed/Points.unc"
+Art_Shield:		binclude "art/uncompressed/Shield.unc"
 Art_Shield_End:
 Art_Invincibility:	binclude "art/uncompressed/Invincibility.unc"
 Art_Invincibility_End:

@@ -1721,17 +1721,18 @@ ArtTile_Animal_1:		equ $580
 ArtTile_Animal_2:		equ $592
 ArtTile_Explosion:		equ $5A0
 ArtTile_Monitor:		equ $4C4
-ArtTile_HUD:			equ ArtTile_Sparkles+4 ; $6C5 / $D8A0; contiguous with rings/sparkles
-ArtTile_HUD_E:			equ ArtTile_HUD+$E	; SCORE shares TIME's static E
-ArtTile_HUD_Debug_Numbers:	equ ArtTile_HUD+$10	; First two tiles are used only by debug coordinates
-ArtTile_HUD_Numbers:		equ ArtTile_HUD_Debug_Numbers+2 ; 28 tiles for score, time and ring digits
+
 ArtTile_Sonic:			equ $680
-ArtTile_Points:			equ $4AC
 ArtTile_Tails:			equ $6A0
 ArtTile_TailsTails:		equ $6B0	; stock S3&K shares this area with larger body frames
 ArtTile_Ring:			equ $6B9	; $D720; Tails body/tail uploads stop at $6B7/$6B8
 ArtTile_RingLoss:		equ ArtTile_Ring+4
 ArtTile_Sparkles:		equ ArtTile_Ring+8
+ArtTile_HUD:			equ ArtTile_Sparkles+4 ; $6C5 / $D8A0; contiguous with rings/sparkles
+ArtTile_HUD_E:			equ ArtTile_HUD+$E	; SCORE shares TIME's static E
+ArtTile_HUD_Debug_Numbers:	equ ArtTile_HUD+$10	; First two tiles are used only by debug coordinates
+ArtTile_HUD_Numbers:		equ ArtTile_HUD_Debug_Numbers+2 ; 28 tiles for score, time and ring digits
+ArtTile_Points:			equ $6F3
 
 
 ArtTile_Lives_Counter:		equ $7D4
