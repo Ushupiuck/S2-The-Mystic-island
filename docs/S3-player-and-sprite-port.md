@@ -136,6 +136,10 @@ historical/staged sources rather than ordinary runtime mapping tables.
 | Address | Use |
 | --- | --- |
 | `$9880` | Monitor/signpost bank |
+| `$ADC0–$AFFF` | Auxiliary shield bank, 18 tiles |
+| `$B040–$B7FF` | Normal explosion and shared fiery frames, 62 tiles |
+| `$B800–$BBFF` | Additional fiery explosion frames, 32 tiles |
+| `$BC00–$BE3F`, `$BE40–$BFFF` | Animal banks 1 and 2, 18 and 14 tiles |
 | `$C000`, `$E000` | Two 64 by 32 planes, `$1000` bytes each |
 | `$D000` | Sonic body |
 | `$D400`, `$D600` | Tails body and separate tail, using stock S3&K's shared allocation |
@@ -143,7 +147,6 @@ historical/staged sources rather than ordinary runtime mapping tables.
 | `$D8A0–$DE5F` | HUD, shared E, debug coordinates and counters |
 | `$DE60–$DE9F`, `$DEA0–$DEDF` | Primary and companion points, two tiles each |
 | `$DEE0–$DFFF` | Free, nine contiguous tiles / `$120` bytes |
-| `$ADC0–$AFFF` | Auxiliary shield bank, 18 tiles |
 | `$F000–$F37F` | HScroll |
 | `$F380–$F7FF` | Shared level shield/invincibility bank, tile `$79C` |
 | `$F600` | S1 bonus-stage/results ring, separate from the level ring |
@@ -157,6 +160,12 @@ They end at `$6B7` and `$6B8`, so the ring group starts at `$6B9`.
 This is not an additional independent 32-tile body allocation.
 Lower test-zone/NPC allocations remain provisional. No GHZ terrain art
 or block/chunk data was repacked during this port.
+
+The shared 94-tile explosion art starts at tile `$582` / `$B040`; both
+explosion mappings retain their relative offsets and shared frames. Animals
+follow at `$5E0` / `$BC00` and `$5F2` / `$BE40`, ending exactly at Plane A.
+The two tiles at `$B000–$B03F` are available during normal level play;
+title-card and large boss-explosion art still reuse this area in their own phases.
 
 Both star trails share 34 resident tiles at `$F380`, uploaded once when that
 bank changes to stars. Classic shields stream four tiles per small frame or

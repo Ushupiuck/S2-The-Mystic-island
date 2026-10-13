@@ -127,7 +127,8 @@ continues to the capsule rather than returning to the Sega screen.
 These banks coexist with the shared shield/star bank at `$F380`, the auxiliary
 shield bank at `$ADC0`, monitor/signpost art,
 the planes, players and HUD. Animals and normal explosion art replace the
-large-explosion bank only after the defeat timer finishes. The existing S1
+large-explosion bank only after the defeat timer finishes. Regular explosion
+art starts at `$B040`, with animal banks at `$BC00` and `$BE40`. The existing S1
 capsule needs separate body/button placement records, now present in EHZ2.
 The boss can also use the existing MZ placeholder's position: origin deltas at
 `$40/$42` translate the stock movement/escape coordinates without growing SSTs.

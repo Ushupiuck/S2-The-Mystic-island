@@ -79,7 +79,7 @@ def main():
     assert symbols['ArtTile_Shield'] == symbols['ArtTile_Invincibility']
     assert symbols['ArtTile_Shield'] * 32 == 0xF380
     effect_banks = [(symbols['ArtTile_Shield'] * 32, symbols['VRAM_Sprite_Attribute_Table']),
-                    (symbols['ArtTile_Shield_2'] * 32, symbols['ArtTile_Animal_1'] * 32)]
+                    (symbols['ArtTile_Shield_2'] * 32, symbols['ArtTile_Shield_2_End'] * 32)]
     stars_size = symbols['Art_Invincibility_End'] - symbols['Art_Invincibility']
     assert effect_banks[0][0] + stars_size <= effect_banks[0][1]
 
@@ -117,6 +117,27 @@ def main():
             source, low = struct.unpack_from('>IH', rom, base + 2 + i * 6)
             high = low + struct.unpack_from('>H', rom, source)[0]
             assert all(high <= a or low >= b for a, b in effect_banks + points_banks), (label, hex(low), hex(high))
+
+    # The complete level explosion/animal group ends at Plane A. Read the
+    # actual art headers so a future larger asset cannot spill into its neighbor.
+    group_limits = {
+        symbols['ArtTile_Explosion'] * 32: symbols['ArtTile_Animal_1'] * 32,
+        symbols['ArtTile_Animal_1'] * 32: symbols['ArtTile_Animal_2'] * 32,
+        symbols['ArtTile_Animal_2'] * 32: symbols['vram_fg'],
+    }
+    assert sorted(group_limits) == [0xB040, 0xBC00, 0xBE40]
+    for label in ('PLC_Explode',) + tuple('PLC_' + zone + 'Animals' for zone in ('GHZ', 'LZ', 'CPZ', 'EHZ', 'HPZ', 'HTZ')):
+        base = symbols[label]
+        count = struct.unpack_from('>H', rom, base)[0] + 1
+        for i in range(count):
+            source, low = struct.unpack_from('>IH', rom, base + 2 + i * 6)
+            high = low + (struct.unpack_from('>H', rom, source)[0] & 0x7FFF) * 32
+            assert low in group_limits and high <= group_limits[low], (label, hex(low), hex(high))
+    explosion_tiles = struct.unpack_from('>H', rom, symbols['Nem_Explosion'])[0] & 0x7FFF
+    for label in ('Map_Explosion', 'Map_FExplosion'):
+        for frame, row in enumerate(frames(rom, symbols[label])):
+            for _, size, tile, _ in row:
+                assert (tile & 0x7FF) + ((size >> 2) + 1) * ((size & 3) + 1) <= explosion_tiles, (label, frame)
 
     imported_frames = 0
     for mapping, dplc, regular, extra, capacity in (
@@ -178,6 +199,7 @@ def main():
           f'and {len(carry_frames)} Sonic carry frames pass.')
     print(f'{len(shield_frames)} shield DPLC frames, the shared star bank and auxiliary shield bank pass, including level/boss PLC exclusions.')
     print(f'{len(points_frames) - 1} points values fit both two-tile banks; hidden-frame and HUD/plane/PLC boundaries pass.')
+    print('Explosion/fiery and all six animal PLC pairs fit the reordered $B040-$BFFF group.')
     if args.skdisasm:
         print('All three Tails art files match the palette-remapped S&K source pixels.')
 

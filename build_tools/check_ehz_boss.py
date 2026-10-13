@@ -60,7 +60,7 @@ def main():
     # permits independent shield phases and mixed shield/star states. Neither may be
     # overwritten by the boss's explosions or the capsule loaded at defeat.
     protected = [(sym['vram_fg'], 0x10000),
-                 (sym['ArtTile_Shield_2'] * 32, sym['ArtTile_Animal_1'] * 32)]
+                 (sym['ArtTile_Shield_2'] * 32, sym['ArtTile_Shield_2_End'] * 32)]
     for tile, art in (
         ('ArtTile_Monitor', 'Nem_Monitors'),
     ):

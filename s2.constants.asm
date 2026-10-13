@@ -1714,12 +1714,14 @@ ArtTile_S1_Spring_Horizontal:	equ $4A8
 ArtTile_S1_Spring_Vertical:	equ $4B8
 ArtTile_Shield:			equ $79C	; $F380; shared with primary invincibility
 ArtTile_Shield_2:			equ $56E	; $ADC0; 18 tiles, clear of ground explosions and BBat
+ArtTile_Shield_2_End:		equ ArtTile_Shield_2+$12 ; $B000; exclusive end of this bank
 ArtTile_Invincibility:		equ ArtTile_Shield
 ArtTile_Game_Over:		equ ArtTile_Shield ; replaces the dead primary player's effects, as in S3&K
 ArtTile_Title_Card:		equ $580
-ArtTile_Animal_1:		equ $580
-ArtTile_Animal_2:		equ $592
-ArtTile_Explosion:		equ $5A0
+; Shared explosion/fiery art first, then both animals, ending at Plane A.
+ArtTile_Explosion:		equ $582	; $B040; 94 tiles, shared by both explosion mappings
+ArtTile_Animal_1:		equ ArtTile_Explosion+$5E ; $5E0 / $BC00; 18 tiles
+ArtTile_Animal_2:		equ ArtTile_Animal_1+$12 ; $5F2 / $BE40; 14 tiles, ending at $BFFF
 ArtTile_Monitor:		equ $4C4
 
 ArtTile_Sonic:			equ $680
