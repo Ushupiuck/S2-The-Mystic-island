@@ -33,6 +33,7 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
+Audit every object source through an isolated 16-section LZ2 course, context-specific screens and GHZ/EHZ combat; record 93-file coverage, exclude the broken conveyor, preserve known gator limitations and intentional demo timing, fix closed-door fallthrough/giant-ring mapping phases/primary warp identity, and add reproducible ROM regressions < DONE
 Port the S3&K level object manager with six-byte placements, word respawn pointers, X/Y preloading, full-pool retry and safe multipart ownership; convert all 30 ordinary layouts and SonLVL, preserve object updates after player death < DONE
 Bring Debug controls/restoration to S3&K behavior, add mapping-frame cycling and per-act lists, support both Sonic and Tails as player 1, exclude companion Tails, and preserve S1-stage/results shortcuts < DONE
 Give GHZ's S1 boss a separate matching Eggpod/weapons/exhaust/capsule PLC; preserve the resident ball and chain, place exhaust after weapons and derive its mapping offsets to coexist with the capsule < DONE

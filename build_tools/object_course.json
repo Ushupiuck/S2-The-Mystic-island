@@ -1,0 +1,94 @@
+{
+  "banks": [
+    {"name":"Universal pickups", "objects":[
+      {"name":"Rings", "id":"12", "x":256, "subtype":3},
+      {"name":"Shield monitor", "id":"26", "x":384, "y":1264, "subtype":6},
+      {"name":"Checkpoint", "id":"79", "x":512, "y":1256, "subtype":1},
+      {"name":"Invincibility monitor", "id":"26", "x":640, "y":1264, "subtype":7},
+      {"name":"Speed monitor", "id":"26", "x":768, "y":1264, "subtype":5},
+      {"name":"Bubble maker", "id":"09", "x":880, "y":1256,"subtype":128}],
+      "art":[["nem","Nem_Monitors","ArtTile_Monitor"],["nem","Nem_Lamppost","ArtTile_Lamppost"],["nem","ObjectTest_SplashArt","ArtTile_LZ_Splash"],["nem","ObjectTest_BubblesArt","ArtTile_LZ_Bubbles"],["nem","Nem_Water","ArtTile_Water_Surface"]]},
+    {"name":"Springs and spikes", "objects":[
+      {"name":"Up spring", "id":"41", "x":256, "y":1264},
+      {"name":"Side spring", "id":"41", "x":384, "y":1264, "subtype":16},
+      {"name":"Diagonal spring", "id":"41", "x":512, "y":1264, "subtype":48},
+      {"name":"Floor spikes", "id":"36", "x":640, "y":1264},
+      {"name":"Ceiling spikes", "id":"36", "x":768, "y":1152, "flags":16384}],
+      "art":[["nem","Nem_VSpring2","ArtTile_Spring_Vertical"],["nem","Nem_HSpring2","ArtTile_Spring_Horizontal"],["nem","Nem_DSpring","ArtTile_Spring_Diagonal"],["nem","Nem_VSpikes","ArtTile_Spikes"]]},
+    {"name":"Morph and path controllers", "objects":[
+      {"name":"Morphing platform", "id":"20", "x":256, "y":1200},
+      {"name":"Vertical path switch", "id":"03", "x":480, "subtype":27,"flags":32768},
+      {"name":"Horizontal path switch", "id":"03", "x":608, "subtype":31,"flags":32768},
+      {"name":"Spiral", "id":"06", "x":768, "y":1200}],
+      "art":[["nem","Nem_MorphingPlatform","ArtTile_MorphingOrbs"]]},
+    {"name":"Multipart moving platforms", "objects":[
+      {"name":"Hanging platform", "id":"17", "x":256, "y":1088, "subtype":4,"flags":32768},
+      {"name":"Bridge", "id":"1D", "x":512, "y":1216, "subtype":12},
+      {"name":"Descending lift", "id":"16", "x":768, "y":1152, "subtype":16,"flags":32768}],
+      "art":[["nem","Nem_Swing","ArtTile_GHZ_MZ_Swing"],["nem","Nem_GHZ_Bridge","ArtTile_GHZ_Bridge"],["nem","Nem_HTZ_Lift","ArtTile_HtzZipline"]]},
+    {"name":"Solid and collapsing platforms", "objects":[
+      {"name":"Moving platform", "id":"18", "x":256, "y":1216, "subtype":1},
+      {"name":"CPZ platform", "id":"19", "x":416, "y":1216},
+      {"name":"Collapsing platform", "id":"1A", "x":576, "y":1216},
+      {"name":"Tilting platform", "id":"0B", "x":768, "y":1216, "subtype":16}],
+      "art":[["nem","Nem_CPZ_Platform1","ArtTile_CPZ_Platform"],["raw","ObjectTest_GHZArt+$3B*32","$3B",5440],["raw","ObjectTest_CPZArt","0",1536]]},
+    {"name":"Waterfall and scenery", "objects":[
+      {"name":"Tall waterfall", "id":"1E", "x":256, "y":1152, "subtype":16,"flags":32768},
+      {"name":"Bridge stump", "id":"1C", "x":416, "y":1248, "subtype":3},
+      {"name":"Purple rock", "id":"3B", "x":576, "y":1256},
+      {"name":"Orb scenery", "id":"1C", "x":768, "y":1216, "subtype":33}],
+      "art":[["nem","Nem_HPZ_Waterfall","ArtTile_HPZ_Waterfall"],["nem","Nem_GHZ_Bridge","ArtTile_GHZ_Bridge"],["nem","Nem_GHZ_Rock","ArtTile_GHZ_Purple_Rock"],["nem","Nem_HPZ_PulsingBall","ArtTile_HPZ_Orb"]]},
+    {"name":"Breakable structures", "objects":[
+      {"name":"Collapsing floor", "id":"1B", "x":256, "y":1216},
+      {"name":"Smashable wall", "id":"3C", "x":448, "y":1248},
+      {"name":"Small door", "id":"30", "x":640, "y":1248},
+      {"name":"GHZ edge wall", "id":"44", "x":768, "y":1232}],
+      "art":[["nem","Nem_GHZ_BWall","$590"],["nem","Nem_GHZ_SWall","ArtTile_GHZ_Edge_Wall"],["nem","ObjectTest_FloorArt","$2B8"],["nem","ObjectTest_DoorArt","ArtTile_SBZ_Door"]],
+      "limitations":"The test uses SBZ's four-tile floor artwork with the shared S1 floor mappings; original MZ floor artwork is level art."},
+    {"name":"GHZ ground enemies", "objects":[
+      {"name":"Moto Bug", "id":"40", "x":256, "y":1248},
+      {"name":"Crabmeat", "id":"61", "x":448, "y":1248},
+      {"name":"Ball Hog horizontal", "id":"21", "x":640, "y":1248},
+      {"name":"Ball Hog vertical", "id":"21", "x":768, "y":1248, "subtype":17}],
+      "art":[["kos","Kospm_Motobug","ArtTile_Moto_Bug"],["kos","Kospm_Crabmeat","ArtTile_Crabmeat"],["kos","Kospm_BallhogH","ArtTile_Ball_HogH"],["kos","Kospm_BallhogV","ArtTile_Ball_HogV"]]},
+    {"name":"GHZ airborne enemies", "objects":[
+      {"name":"Buzz Bomber", "id":"22", "x":256, "y":1168},
+      {"name":"Newtron", "id":"42", "x":512, "y":1256},
+      {"name":"Chopper Masher", "id":"2B", "x":768, "y":1264}],
+      "art":[["kos","Kospm_Buzz","ArtTile_Buzz_Bomber"],["kos","Kospm_Newtron","ArtTile_Newtron"],["nem","Nem_NewtronTail","ArtTile_Newtron_Tail"],["nem","Nem_Masher","ArtTile_Masher"]]},
+    {"name":"Caterkiller and Basaran", "objects":[
+      {"name":"Caterkiller", "id":"60", "x":320, "y":1256},
+      {"name":"Basaran", "id":"62", "x":704, "y":1120}],
+      "art":[["kos","Kospm_Cater","ArtTile_MZ_SYZ_Caterkiller"],["kos","Kospm_Basaran","ArtTile_Basaran"]]},
+    {"name":"Buzzer Snail and Splats", "objects":[
+      {"name":"Buzzer", "id":"4B", "x":256, "y":1168, "subtype":32},
+      {"name":"Snailbot", "id":"54", "x":512, "y":1256},
+      {"name":"Splats", "id":"4F", "x":768, "y":1256}],
+      "art":[["nem","Nem_Buzzer","ArtTile_Buzzer"],["nem","Nem_Snail","ArtTile_Snail"],["kos","Kospm_Splats","ArtTile_Splats"]]},
+    {"name":"HPZ land enemies", "objects":[
+      {"name":"BBat", "id":"4C", "x":256, "y":1120},
+      {"name":"Rhinobot", "id":"4D", "x":512, "y":1256},
+      {"name":"Gator known broken", "id":"4E", "x":768, "y":1248}],
+      "art":[["kos","Kospm_BBat","ArtTile_BBat"],["kos","Kospm_Rhinobot","ArtTile_Rhinobot"],["nem","Nem_Gator","ArtTile_Gator"]]},
+    {"name":"Water enemies", "objects":[
+      {"name":"Jaws", "id":"2C", "x":256, "y":1200},
+      {"name":"Piranha", "id":"52", "x":512, "y":1216},
+      {"name":"Aquis", "id":"50", "x":704, "y":1200, "subtype":34}],
+      "art":[["kos","Kospm_Jaws","ArtTile_Jaws"],["nem","Nem_BFish","ArtTile_BFish"],["nem","Nem_Aquis","ArtTile_Aquis"],["nem","Nem_Aquis","ArtTile_Aquis_Child"]]},
+    {"name":"Octus Skyhorse and water", "objects":[
+      {"name":"Octus", "id":"63", "x":256, "y":1248},
+      {"name":"Skyhorse", "id":"51", "x":512, "y":1200,"subtype":34}],
+      "art":[["nem","Nem_Octus","ArtTile_Octus"],["nem","Nem_Aquis","ArtTile_Aquis"],["nem","Nem_Aquis","ArtTile_Aquis_Child"],["nem","Nem_Water","ArtTile_Water_Surface"]]},
+    {"name":"Bumper seesaw and flapdoor", "objects":[
+      {"name":"Bumper", "id":"47", "x":256, "y":1184},
+      {"name":"Seesaw", "id":"5E", "x":512, "y":1248},
+      {"name":"Flapdoor", "id":"0C", "x":768, "y":1216}],
+      "art":[["nem","Nem_Bumper","ArtTile_Bumper"],["nem","Nem_HTZ_Seesaw","ArtTile_HTZ_Seesaw"],["nem","Nem_EHZ_Fireball","ArtTile_Fireball"],["kos","Kospm_FlapDoor","ArtTile_LZ_Flapping_Door"]]},
+    {"name":"Level exit and giant rings", "objects":[
+      {"name":"Hidden bonus", "id":"7D", "x":256, "y":1232},
+      {"name":"Signpost", "id":"7E", "x":416, "y":1256},
+      {"name":"Giant ring 1", "id":"7B", "x":608, "y":1184},
+      {"name":"Giant ring 2", "id":"7B", "x":768, "y":1184}],
+      "art":[["nem","Nem_Signpost","ArtTile_Signpost"],["nem","Nem_Bonus","ArtTile_Hidden_Points"]]}
+  ]
+}

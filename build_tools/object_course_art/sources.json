@@ -1,0 +1,27 @@
+{
+  "repository": "https://github.com/sonicretro/s1disasm",
+  "commit": "2c51d46a0b0682133834db2093292d41da872ecf",
+  "purpose": "Disposable LZ2 test ROM only; not gameplay PLCs. Floor uses the SBZ four-tile art with the shared S1 floor mappings.",
+  "files": [
+    {
+      "file": "bubbles.nem",
+      "source": "artnem/LZ Bubbles & Countdown.nem",
+      "sha256": "8b6d394c9818a8d91771008167f50b678592a91b0cdc95ac6c1224a6f93a4c17"
+    },
+    {
+      "file": "door.nem",
+      "source": "artnem/SBZ Small Vertical Door.nem",
+      "sha256": "cb42e021d3e0b3cef93f779d4d959ef8e83e8ab6cfd8d0afd6a5c3a8ed1fcd1a"
+    },
+    {
+      "file": "floor.nem",
+      "source": "artnem/SBZ Collapsing Floor.nem",
+      "sha256": "a046a784837fdc02f6fbbc45fb5e63d4171903fac187ccd50a91ac0eb06a24e8"
+    },
+    {
+      "file": "splash.nem",
+      "source": "artnem/LZ Water & Splashes.nem",
+      "sha256": "e8962e3867baf6f842a8e5d07364262cc4446834a7159014d9fb9ebebd416689"
+    }
+  ]
+}

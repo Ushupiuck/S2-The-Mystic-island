@@ -495,4 +495,50 @@ m.act('DebugMode','v_player')
 assert m.get('v_player','obHeight')==14 and m.get('v_player','obWidth')==7
 assert m.read('v_ssrotate',2)==0x40 and m.read('Current_ZoneAndAct',2)==0x301
 report['bonus_debug_return_zone_ring_bank_and_radii']=True
+# A collected giant ring must remain renderable at every small-ring clock
+# phase: its animation changes art, whereas its mappings have one frame.
+for phase in range(8):
+    m.start()
+    m.write('Camera_X_pos',440,2)
+    m.write('Camera_Y_pos',0,2)
+    m.write('Camera_X_pos_copy',440,2)
+    m.write('Camera_Y_pos_copy',0,2)
+    a=next(iter(pool()))
+    for field,value,size in [('obID',0x7B,1),('obRoutine',4,1),('obX',600,2),
+            ('obY',116,2),('obRender',4,1),('obMap',m.s['Map_GiantRing'],4),
+            ('obGfx',m.s['ArtTile_Giant_Ring'],2),('obPriority',0x100,2),
+            ('obActWid',64,1),('height_pixels',32,1)]:
+        m.put(a,field,value,size)
+    m.write('v_ani1_frame',phase)
+    m.act('GiantRing',a)
+    assert m.get(a,'obFrame') < m.s['Map_GiantRing_frames']
+    m.act('Render_Sprites')
+    assert m.read('v_spritecount')==4
+report['collected_giant_ring_renders_at_all_eight_small_ring_phases']=True
+for mode,objid in [(m.s['PlayerMode_Sonic'],1),(m.s['PlayerMode_Tails'],2)]:
+    m.start()
+    m.write('Player_mode',mode,2)
+    m.put('v_player','obID',0)
+    a=next(iter(pool()))
+    m.put(a,'obID',0x7A)
+    m.put(a,'obj7A_vanishtime',1,2)
+    m.act('Obj7A_LoadSonic',a)
+    assert m.get('v_player','obID')==objid and not m.get(a,'obID')
+report['warp_restores_both_primary_characters']=True
+# The compiled S1 visibility helpers are not placement objects, but remain
+# available to imported code. Exercise their centre/partial-width distinction.
+for routine,left_visible in [('ChkObjectVisible',False),('ChkPartiallyVisible',True)]:
+    for x,y,visible in [(395,116,left_visible),(400,116,True),
+                         (735,116,routine=='ChkPartiallyVisible'),
+                         (736,116,False),(560,224,False)]:
+        m.start()
+        m.write('Camera_X_pos',400,2)
+        m.write('Camera_Y_pos',0,2)
+        a=pool()[0]
+        m.put(a,'obX',x,2)
+        m.put(a,'obY',y,2)
+        m.put(a,'obActWid',16)
+        m.act(routine,a)
+        assert bool(m.cpu.reg_read(UC_M68K_REG_D0)==0)==visible,(routine,x,y)
+report['legacy_visibility_helper_edges']=True
 print(report,flush=True)

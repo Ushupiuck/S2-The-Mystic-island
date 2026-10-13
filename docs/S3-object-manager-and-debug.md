@@ -161,3 +161,8 @@ companion exclusion and continued object updates after death. Both regions
 passed normal and Debug Special Stage fades to results and return to gameplay;
 the results-to-title shortcut also passed. The results ring displayed all eight
 palette-0 frames while preserving the normal level ring bank.
+
+The follow-up [LZ2 object course](Object-test-course.md) checks the complete
+object-folder inventory, including context-dependent effects/screens and the
+normal boss encounters. Its [coverage matrix](Object-course-coverage.md) lists
+inactive, empty, unfinished and deliberately excluded entries explicitly.
