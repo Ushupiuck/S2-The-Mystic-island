@@ -91,14 +91,15 @@ def main():
         total += len(frames)
 
     # This manager consumes six-byte records; preserve the sorted list and its
-    # sentinel. The S1 capsule needs a separate button above its body.
+    # sentinel. The button rests 38 pixels above the body: its stem ends at
+    # +7 and the body's visible cap starts at -30 (two transparent art rows).
     placements = (ROOT / 'level/objects/EHZ_2.bin').read_bytes()
     assert len(placements) % 6 == 0 and placements[-6:] == bytes.fromhex('FFFF00000000')
     records = list(struct.iter_unpack('>HHBB', placements[:-6]))
     assert [x for x, *_ in records] == sorted(x for x, *_ in records)
     capsule = [r for r in records if r[2] == sym['id_Obj3E'] and r[0] == 0x2B50]
     assert capsule == [(0x2B50, 0x422, sym['id_Obj3E'], 0),
-                       (0x2B50, 0x3FA, sym['id_Obj3E'], 1)], capsule
+                       (0x2B50, 0x3FC, sym['id_Obj3E'], 1)], capsule
     print(f'{total} boss/explosion mapping frames, {len(cues)} disjoint art banks '
           'and the capsule placements pass.')
     if stock:

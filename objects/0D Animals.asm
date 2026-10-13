@@ -62,35 +62,18 @@ Monkey = 9
 Turtle = $A
 Bear = $B
 ; ---------------------------------------------------------------------------
- ; This table declares what animals will appear in the zone.
- ; When an enemy is destroyed, a random animal is chosen from the 2 selected animals.
- ; Note: you must also load the corresponding art in the PLCs.
+; This table follows Mystic Island's zone IDs, with one animal per art bank.
+; Keep each pair in the same order as its PLC_*Animals entries in
+; _inc/Pattern Load Cues.asm: ArtTile_Animal_1, then ArtTile_Animal_2.
+; The species selects both its movement and the mappings for that bank's art.
 ; ---------------------------------------------------------------------------
 Flicky_ZoneAnimals:
-		dc.b Rabbit,	Bird	; AIZ  0
-		dc.b Rabbit,	Seal	; HCZ  1
-		dc.b Bird,	Chicken	; MGZ  2
-		dc.b Rabbit,	Bird	; CNZ  3
-		dc.b Squirrel,	Bird	; FBZ  4
-		dc.b Penguin,	Seal	; ICZ  5
-		dc.b Bird,	Chicken	; LBZ  6
-		dc.b Squirrel,	Chicken	; MHZ  7  ; (S3&K)
-		dc.b Rabbit,	Chicken	; SOZ  8  ; (S3&K)
-		dc.b Bird,	Chicken	; LRZ  9  ; (S3&K)
-		dc.b Rabbit,	Bird	; SSZ $A  ; (S3&K)
-		dc.b Squirrel,	Chicken	; DEZ $B  ; (S3&K)
-		dc.b Squirrel,	Bird	; DDZ $C  ; (S3&K) Doomsday skips loading animals, but this is what would load if it did
-		dc.b Bird,	Chicken	; ??Z $D  ; (S3&K)Intro and Ending
-		dc.b Bird,	Chicken	; ALZ $E  ; (S3&K)
-		dc.b Bird,	Chicken	; BPZ $F  ; (S3&K)
-		dc.b Bird,	Chicken	; CGZ $10 ; (S3&K)
-		dc.b Bird,	Chicken	; DPZ $11 ; (S3&K)
-		dc.b Bird,	Chicken	; EMZ $12 ; (S3&K)
-		dc.b Bird,	Chicken	; GBZ $13 ; (S3&K) Gumball
-		dc.b Bird,	Chicken	; SCZ $14 ; (S3&K) Glowing Spheres
-		dc.b Bird,	Chicken	; SCZ $15 ; (S3&K) Slot Machine
-		dc.b Bird,	Chicken	; HPZ $16 ; (S3&K) Act 1
-		dc.b Bird,	Chicken	; HPZ $16 ; (S3&K) Act 2
+		dc.b Rabbit,	Bird	; GHZ 0
+		dc.b Penguin,	Seal	; LZ  1
+		dc.b Squirrel,	Seal	; CPZ 2
+		dc.b Pig,	Bird	; EHZ 3
+		dc.b Pig,	Chicken	; HPZ 4
+		dc.b Rabbit,	Chicken	; HTZ 5
 
 Flicky_Properties:	; This table declares the speed and mappings of each animal.
 		dc.w -$200, -$400 ; Rabbit
@@ -191,10 +174,10 @@ Flicky_Init:
 FlickyRandom:
 		addq.b	#2,obRoutine(a0)
 		bsr.w	RandomNumber
-		move.w	#make_art_tile($580,0,0),obGfx(a0)
+		move.w	#make_art_tile(ArtTile_Animal_1,0,0),obGfx(a0)
 		andi.w	#1,d0
 		beq.s	+
-		move.w	#make_art_tile($592,0,0),obGfx(a0)
+		move.w	#make_art_tile(ArtTile_Animal_2,0,0),obGfx(a0)
 +
 		moveq	#0,d1
 		move.b	(Current_Zone).w,d1
