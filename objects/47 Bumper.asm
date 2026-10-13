@@ -90,12 +90,15 @@ Bumper_bump:
 		addq.b	#1,2(a2,d0.w)
 
 .addscore:
+		move.w	a1,-(sp)			; save the player before FindFreeObj replaces a1
 		moveq	#1,d0
 	;	jsr	(AddPoints).l
 		bsr.w	AddPoints
 		bsr.w	FindFreeObj
+		movea.w	(sp)+,a2			; MOVEA preserves the allocator's Z flag
 		bne.s	.return
 		_move.b	#id_ObjFF,obID(a1)
+		move.w	a2,points_parent(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.b	#4,obFrame(a1)

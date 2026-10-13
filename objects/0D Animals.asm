@@ -207,6 +207,7 @@ FlickyRandom:
 		jsr	(FindFreeObj).l
 		bne.s	+
 		_move.b	#id_ObjFF,obID(a1)	; load the points object
+		move.w	points_parent(a0),points_parent(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.w	enemy_combo(a0),d0	; Shared with Touch_KillEnemy & Explosion for the chain hit bonus

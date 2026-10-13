@@ -31,6 +31,7 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
+Load points through S3&K DPLCs into two two-tile banks at $6F3/$6F5; preserve all seven labels by repeating existing zero tiles, carry the player through enemy/explosion/animal and bumper paths, safely replace only that player's previous popup, and retain nine free tiles at $DEE0-$DFFF < DONE
 Activate the shared $79C / $F380 shield/invincibility bank; share one resident star art set between both trails and stream classic-shield frames through Load_DynamicPLC, using $ADC0 for independent shield phases and mixed states; preserve bank caches on shield retirement and protect results/game-over art < DONE
 Pack rings, lost rings, sparkles and HUD together from tile $6B9; retain all Tails body/tail uploads, shared E, debug digits, lives and both results mappings; consolidate 13 free tiles at $DE60-$DFFF and document the 9,999,990 displayed score cap < DONE
 Give both players independent full invincibility trails, including re-pickup/expiry and allocation retry; fix Tails monitor solidity and detach both riders on break; clear the correct player bit when opening the capsule and when transferring between solid objects < DONE

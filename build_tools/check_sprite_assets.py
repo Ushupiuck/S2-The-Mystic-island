@@ -55,6 +55,27 @@ def main():
     assert symbols['ArtTile_HUD'] == symbols['ArtTile_Sparkles'] + 4
     assert symbols['ArtTile_SS_Rings'] * 32 == 0xF600
 
+    points_banks = [(symbols['ArtTile_Points'] * 32, (symbols['ArtTile_Points'] + 2) * 32),
+                    (symbols['ArtTile_Points_2'] * 32, (symbols['ArtTile_Points_2'] + 2) * 32)]
+    assert points_banks == [(0xDE60, 0xDEA0), (0xDEA0, 0xDEE0)]
+    assert symbols['ArtTile_HUD_Numbers'] + 28 == symbols['ArtTile_Points']
+    assert points_banks[-1][1] <= symbols['vram_bg']
+    points_frames = frames(rom, symbols['Map_Points'])
+    assert len(points_frames) == symbols['Points_HiddenFrame'] + 1
+    for frame, row in enumerate(points_frames):
+        table = symbols['DPLC_Points']
+        start = table + struct.unpack_from('>h', rom, table + (frame + symbols['Points_FrameBias']) * 2)[0]
+        count = struct.unpack_from('>H', rom, start)[0]
+        loaded = 0
+        for i in range(count):
+            run = struct.unpack_from('>H', rom, start + 2 + i * 2)[0]
+            length = (run >> 12) + 1
+            assert ((run & 0xFFF) + length) * 32 <= symbols['Art_Points_End'] - symbols['Art_Points']
+            loaded += length
+        assert loaded <= 2, ('Points bank overflow', frame, loaded)
+        for _, size, tile, _ in row:
+            assert (tile & 0x7FF) + ((size >> 2) + 1) * ((size & 3) + 1) <= loaded
+
     assert symbols['ArtTile_Shield'] == symbols['ArtTile_Invincibility']
     assert symbols['ArtTile_Shield'] * 32 == 0xF380
     effect_banks = [(symbols['ArtTile_Shield'] * 32, symbols['VRAM_Sprite_Attribute_Table']),
@@ -87,7 +108,7 @@ def main():
         for i in range(count):
             source, low = struct.unpack_from('>IH', rom, base + 2 + i * 6)
             high = low + (struct.unpack_from('>H', rom, source)[0] & 0x7FFF) * 32
-            assert all(high <= a or low >= b for a, b in effect_banks), (label, hex(low), hex(high))
+            assert all(high <= a or low >= b for a, b in effect_banks + points_banks), (label, hex(low), hex(high))
     for label, base in symbols.items():
         if not re.fullmatch(r'PLCKosM_[A-Z]+[1-4]', label):
             continue
@@ -95,7 +116,7 @@ def main():
         for i in range(count):
             source, low = struct.unpack_from('>IH', rom, base + 2 + i * 6)
             high = low + struct.unpack_from('>H', rom, source)[0]
-            assert all(high <= a or low >= b for a, b in effect_banks), (label, hex(low), hex(high))
+            assert all(high <= a or low >= b for a, b in effect_banks + points_banks), (label, hex(low), hex(high))
 
     imported_frames = 0
     for mapping, dplc, regular, extra, capacity in (
@@ -156,6 +177,7 @@ def main():
     print(f'{len(binaries)} ordinary binary mappings, {imported_frames} Tails frames '
           f'and {len(carry_frames)} Sonic carry frames pass.')
     print(f'{len(shield_frames)} shield DPLC frames, the shared star bank and auxiliary shield bank pass, including level/boss PLC exclusions.')
+    print(f'{len(points_frames) - 1} points values fit both two-tile banks; hidden-frame and HUD/plane/PLC boundaries pass.')
     if args.skdisasm:
         print('All three Tails art files match the palette-remapped S&K source pixels.')
 

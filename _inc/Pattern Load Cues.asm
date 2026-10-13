@@ -170,7 +170,6 @@ PLC_EHZ_End:
 ; Emerald Hill Zone secondary
 ; ---------------------------------------------------------------------------
 PLC_EHZ2:	dc.w ((PLC_EHZ2_End-PLC_EHZ2)/6)-1
-		plcm	Nem_Points,	$4AC
 		plcm	Nem_Buzzer,	ArtTile_Buzzer
 		plcm	Nem_Snail,	ArtTile_Snail
 		plcm	Nem_Masher,	ArtTile_Masher

@@ -13713,6 +13713,7 @@ loc_19994:
 		move.w	#10,enemy_combo(a1)
 
 loc_199AE:
+		move.w	a0,points_parent(a1)		; preserve the attacker through explosion/animal setup
 		bsr.w	AddPoints
 		_move.b	#id_ObjFC,obID(a1)
 		clr.b	obRoutine(a1)
@@ -16366,6 +16367,7 @@ Art_Tails_Extra:	binclude "art/uncompressed/Tails extra.bin"
 Art_Tails_Tails:	binclude "art/uncompressed/Tails tails.bin"
 Art_SpindashDust:	binclude "art/uncompressed/Spindash and skid dust.bin"
 Art_Points:		binclude	"art/uncompressed/Points.unc"
+Art_Points_End:
 Art_Shield:		binclude "art/uncompressed/Shield.unc"
 Art_Shield_End:
 Art_Invincibility:	binclude "art/uncompressed/Invincibility.unc"
@@ -18229,7 +18231,8 @@ Map_FExplosion:	binclude	"mappings/sprite/Fiery Explosion.bin"		; $FD
 		even
 Map_GExplosion:	binclude	"mappings/sprite/Ground Explosion.bin"		; $FE
 		even
-Map_Points:	binclude	"mappings/sprite/Points from an enemy.bin"	; $FF
+Map_Points:	include	"mappings/sprite/Points.asm"	; $FF, S3&K mappings
+DPLC_Points:	include	"mappings/spriteDPLC/Points.asm"
 		even
  if AdvancedHandler=1
 ; ===========================================================================

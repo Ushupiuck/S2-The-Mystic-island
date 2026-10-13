@@ -141,7 +141,8 @@ historical/staged sources rather than ordinary runtime mapping tables.
 | `$D400`, `$D600` | Tails body and separate tail, using stock S3&K's shared allocation |
 | `$D720`, `$D7A0`, `$D820` | Ring, lost ring and sparkles, starting at tile `$6B9` |
 | `$D8A0–$DE5F` | HUD, shared E, debug coordinates and counters |
-| `$DE60–$DFFF` | Free, 13 contiguous tiles / `$1A0` bytes |
+| `$DE60–$DE9F`, `$DEA0–$DEDF` | Primary and companion points, two tiles each |
+| `$DEE0–$DFFF` | Free, nine contiguous tiles / `$120` bytes |
 | `$ADC0–$AFFF` | Auxiliary shield bank, 18 tiles |
 | `$F000–$F37F` | HScroll |
 | `$F380–$F7FF` | Shared level shield/invincibility bank, tile `$79C` |
@@ -186,6 +187,28 @@ and removing the old two-tile gap before the HUD consolidates the remaining
 free space below Plane B. Lives mappings derive their offsets from the lives
 bank, so this move retains their positions, palette and pixels. Regular and
 S1-stage results mappings derive the same shared HUD addresses.
+
+Points use `ArtTile_Points = $6F3` and `ArtTile_Points_2 = $6F5`. Their
+S3&K DPLCs load at most two tiles from the supplied, unchanged `Points.unc`.
+Mappings repeat the existing zero tile for 1000, 10000 and 50000, retaining
+all seven original labels' pixels, colors and positions. `Map_Points` bounds
+are generated from its new assembly mappings by the normal build.
+
+The attacking player's address is carried through the enemy, explosion,
+animal and popup, and saved across the bumper's allocator call. Bank selection
+uses the player slot, so primary Tails uses the primary bank. Each player has
+one visible popup: a new award replaces only that player's previous popup
+after its complete art upload fits. The predecessor gets an empty mapping
+and zero vertical speed until its next update deletes it; an already queued
+SST cannot be reused and accidentally render another value in that frame.
+
+Unused shield-SST bytes `$31` and `$32–$33` hold each points bank's frame cache
+and latest-popup pointer. Cache zero is empty and 1–7 identify the award DPLCs.
+Mapping frame 7 is the empty retirement frame. This adds no global RAM or SSTs and is
+preserved across shield retirement and re-pickup. Repeated values reuse the
+resident pixels. A full DMA queue keeps the old popup/cache intact and retries
+the new popup without starting its lifetime. Both points banks end before
+the remaining nine free tiles at `$6F7–$6FF` and Plane B at `$E000`.
 
 ## Tails palette
 

@@ -1732,7 +1732,8 @@ ArtTile_HUD:			equ ArtTile_Sparkles+4 ; $6C5 / $D8A0; contiguous with rings/spar
 ArtTile_HUD_E:			equ ArtTile_HUD+$E	; SCORE shares TIME's static E
 ArtTile_HUD_Debug_Numbers:	equ ArtTile_HUD+$10	; First two tiles are used only by debug coordinates
 ArtTile_HUD_Numbers:		equ ArtTile_HUD_Debug_Numbers+2 ; 28 tiles for score, time and ring digits
-ArtTile_Points:			equ $6F3
+ArtTile_Points:			equ $6F3	; $DE60; two tiles for the primary player's popup
+ArtTile_Points_2:		equ ArtTile_Points+2 ; $6F5 / $DEA0; two tiles for the companion
 
 
 ArtTile_Lives_Counter:		equ $7D4

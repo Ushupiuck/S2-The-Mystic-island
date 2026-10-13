@@ -21,6 +21,7 @@ ExItem_Animal:	; Routine 0
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.w	enemy_combo(a0),enemy_combo(a1)	; Shared with Touch_KillEnemy & Animals for the chain hit bonus
+		move.w	points_parent(a0),points_parent(a1)	; carry the attacking player's bank selection
 
 ExItem_Main:	; Routine 2
 		addq.b	#2,obRoutine(a0)
