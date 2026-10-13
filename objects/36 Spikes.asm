@@ -1,6 +1,8 @@
 ; ---------------------------------------------------------------------------
 ; Object 36 - S3&K spikes, adapted to Mystic Island's SSTs and player routines.
-; High subtype: 0-3 = floor rows, 4-7 = side columns, one to four pairs.
+; High subtype: 0-3 = S3 floor rows, 4-7 = S3 side columns.
+; 8-D = S1's six arrangements (three floor, three side, single floor,
+; wide three floor, wide six floor, single side), using the same art.
 ; Low subtype: 0 = stationary, 1 = vertical, 2 = horizontal, 3 = pushable.
 ; Status flips select ceiling spikes or the direction of side spikes.
 ; ---------------------------------------------------------------------------
@@ -44,13 +46,21 @@ Obj36_Index:	dc.w Spike_Floor-Obj36_Index
 ; Collision half-width and half-height; also the exact frame's display bounds.
 Obj36_Conf:	dc.b $10,$10, $20,$10, $30,$10, Map_Obj36_width,$10
 		dc.b $10,$10, $10,$20, $10,$30, $10,Map_Obj36_height
+		dc.b $14,$10	; $8: three floor spikes, 16 pixels apart
+		dc.b $10,$14	; $9: three side spikes, 16 pixels apart
+		dc.b $04,$10	; $A: one floor spike
+		dc.b $1C,$10	; $B: three floor spikes, 24 pixels apart
+		dc.b $40,$10	; $C: six floor spikes, 24 pixels apart
+		dc.b $10,$04	; $D: one side spike
+; Routine 2 = floor, 4 = side. Y flip selects routine 6 (ceiling).
+Obj36_Routines:	dc.b 2,2,2,2, 4,4,4,4, 2,4,2,2,2,4
 ; ---------------------------------------------------------------------------
 Spike_Init:
 		ori.b	#4,obRender(a0)
 		move.w	#$200,obPriority(a0)
 		move.l	#Map_Obj36,obMap(a0)
 		move.b	obSubtype(a0),d0
-		andi.w	#$70,d0
+		andi.w	#$F0,d0
 		lsr.w	#3,d0
 		lea	Obj36_Conf(pc,d0.w),a1
 		move.b	(a1)+,obActWid(a0)
@@ -58,12 +68,8 @@ Spike_Init:
 		move.b	(a1),height_pixels(a0)
 		lsr.w	#1,d0
 		move.b	d0,obFrame(a0)
-		move.b	#2,obRoutine(a0)
+		move.b	Obj36_Routines(pc,d0.w),obRoutine(a0)
 		move.w	#make_art_tile(ArtTile_Spikes,0,0),obGfx(a0)
-		cmpi.b	#4,d0
-		blo.s	.flip
-		move.b	#4,obRoutine(a0)
-.flip:
 		btst	#render_flags.y_flip,obStatus(a0)
 		beq.s	.position
 		move.b	#6,obRoutine(a0)

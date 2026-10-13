@@ -1,8 +1,9 @@
 ; The two shield SSTs cache the two physical banks, independently of their
-; owners. Zero means empty, shield frames use DPLC indices 1-6, and $80 means
+; owners. Zero means empty, shield frames use DPLC indices 1-4, and $80 means
 ; resident stars in the primary bank. $FE reserves a bank for results/game
 ; over; $FF invalidates it. Both players share the resident star pixels.
 effect_loaded_frame = objoff_30
+; DPLC_Shield entry 0 is cache-only; entry 1 is the invisible mapping frame 0.
 PlayerEffects_ShieldFrameBias = 1
 PlayerEffects_StarsLoaded = $80
 PlayerEffects_GameOverLoaded = $FE

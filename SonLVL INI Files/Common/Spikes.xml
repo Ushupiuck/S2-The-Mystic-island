@@ -33,24 +33,50 @@
       <ArtFile filename="../art/nemesis/Spikes.nem" compression="Nemesis" />
       <MapFile type="Binary" filename="../mappings/sprite/Spikes.bin" frame="7" startpal="0" version="S3K" />
     </ImageFromMappings>
+    <ImageFromMappings id="classicfloor3">
+      <ArtFile filename="../art/nemesis/Spikes.nem" compression="Nemesis" />
+      <MapFile type="Binary" filename="../mappings/sprite/Spikes.bin" frame="8" startpal="0" version="S3K" />
+    </ImageFromMappings>
+    <ImageFromMappings id="classicside3">
+      <ArtFile filename="../art/nemesis/Spikes.nem" compression="Nemesis" />
+      <MapFile type="Binary" filename="../mappings/sprite/Spikes.bin" frame="9" startpal="0" version="S3K" />
+    </ImageFromMappings>
+    <ImageFromMappings id="classicfloor1">
+      <ArtFile filename="../art/nemesis/Spikes.nem" compression="Nemesis" />
+      <MapFile type="Binary" filename="../mappings/sprite/Spikes.bin" frame="10" startpal="0" version="S3K" />
+    </ImageFromMappings>
+    <ImageFromMappings id="classicfloor3wide">
+      <ArtFile filename="../art/nemesis/Spikes.nem" compression="Nemesis" />
+      <MapFile type="Binary" filename="../mappings/sprite/Spikes.bin" frame="11" startpal="0" version="S3K" />
+    </ImageFromMappings>
+    <ImageFromMappings id="classicfloor6">
+      <ArtFile filename="../art/nemesis/Spikes.nem" compression="Nemesis" />
+      <MapFile type="Binary" filename="../mappings/sprite/Spikes.bin" frame="12" startpal="0" version="S3K" />
+    </ImageFromMappings>
+    <ImageFromMappings id="classicside1">
+      <ArtFile filename="../art/nemesis/Spikes.nem" compression="Nemesis" />
+      <MapFile type="Binary" filename="../mappings/sprite/Spikes.bin" frame="13" startpal="0" version="S3K" />
+    </ImageFromMappings>
   </Images>
   <Subtypes>
-    <Subtype id="00" name="1 Floor/Ceiling Pair(s)" image="floor1" />
-    <Subtype id="10" name="2 Floor/Ceiling Pair(s)" image="floor2" />
-    <Subtype id="20" name="3 Floor/Ceiling Pair(s)" image="floor3" />
-    <Subtype id="30" name="4 Floor/Ceiling Pair(s)" image="floor4" />
-    <Subtype id="40" name="1 Side Pair(s)" image="side1" />
-    <Subtype id="50" name="2 Side Pair(s)" image="side2" />
-    <Subtype id="60" name="3 Side Pair(s)" image="side3" />
-    <Subtype id="70" name="4 Side Pair(s)" image="side4" />
+    <Subtype id="00" name="S3 Floor/Ceiling: 4 Spikes" image="floor1" />
+    <Subtype id="10" name="S3 Floor/Ceiling: 8 Spikes" image="floor2" />
+    <Subtype id="20" name="S3 Floor/Ceiling: 12 Spikes" image="floor3" />
+    <Subtype id="30" name="S3 Floor/Ceiling: 16 Spikes" image="floor4" />
+    <Subtype id="40" name="S3 Side: 4 Spikes" image="side1" />
+    <Subtype id="50" name="S3 Side: 8 Spikes" image="side2" />
+    <Subtype id="60" name="S3 Side: 12 Spikes" image="side3" />
+    <Subtype id="70" name="S3 Side: 16 Spikes" image="side4" />
+    <Subtype id="80" name="S1 Floor/Ceiling: 3 Spikes" image="classicfloor3" />
+    <Subtype id="90" name="S1 Side: 3 Spikes" image="classicside3" />
+    <Subtype id="A0" name="S1 Floor/Ceiling: 1 Spike" image="classicfloor1" />
+    <Subtype id="B0" name="S1 Floor/Ceiling: 3 Wide Spikes" image="classicfloor3wide" />
+    <Subtype id="C0" name="S1 Floor/Ceiling: 6 Wide Spikes" image="classicfloor6" />
+    <Subtype id="D0" name="S1 Side: 1 Spike" image="classicside1" />
   </Subtypes>
   <Properties>
-    <CustomProperty name="Count" type="int">
-      <get><![CDATA[return ((obj.SubType & 0x30) >> 4) + 1;]]></get>
-      <set><![CDATA[value = System.Math.Max(1, System.Math.Min(4, value)); obj.SubType = (byte)((obj.SubType & ~0x30) | ((value - 1) << 4));]]></set>
-    </CustomProperty>
+    <BitsProperty name="Arrangement" type="SpikeArrangement" startbit="4" length="4" />
     <BitsProperty name="Movement" type="SpikeMovement" startbit="0" length="2" />
-    <BitsProperty name="Direction" type="SpikeDirection" startbit="6" length="1" />
   </Properties>
   <Enums>
     <Enum name="SpikeMovement">
@@ -59,51 +85,79 @@
       <EnumMember name="Horizontal" />
       <EnumMember name="Pushable" />
     </Enum>
-    <Enum name="SpikeDirection">
-      <EnumMember name="Floor" />
-      <EnumMember name="Side" />
+    <Enum name="SpikeArrangement">
+      <EnumMember name="S3 Floor/Ceiling: 4 Spikes" />
+      <EnumMember name="S3 Floor/Ceiling: 8 Spikes" />
+      <EnumMember name="S3 Floor/Ceiling: 12 Spikes" />
+      <EnumMember name="S3 Floor/Ceiling: 16 Spikes" />
+      <EnumMember name="S3 Side: 4 Spikes" />
+      <EnumMember name="S3 Side: 8 Spikes" />
+      <EnumMember name="S3 Side: 12 Spikes" />
+      <EnumMember name="S3 Side: 16 Spikes" />
+      <EnumMember name="S1 Floor/Ceiling: 3 Spikes" />
+      <EnumMember name="S1 Side: 3 Spikes" />
+      <EnumMember name="S1 Floor/Ceiling: 1 Spike" />
+      <EnumMember name="S1 Floor/Ceiling: 3 Wide Spikes" />
+      <EnumMember name="S1 Floor/Ceiling: 6 Wide Spikes" />
+      <EnumMember name="S1 Side: 1 Spike" />
     </Enum>
   </Enums>
   <Display>
     <DisplayOption>
-      <Condition property="Direction" value="Floor" />
-      <Condition property="Count" value="1" />
+      <Condition property="Arrangement" value="S3 Floor/Ceiling: 4 Spikes" />
       <ImageRef image="floor1" />
     </DisplayOption>
     <DisplayOption>
-      <Condition property="Direction" value="Floor" />
-      <Condition property="Count" value="2" />
+      <Condition property="Arrangement" value="S3 Floor/Ceiling: 8 Spikes" />
       <ImageRef image="floor2" />
     </DisplayOption>
     <DisplayOption>
-      <Condition property="Direction" value="Floor" />
-      <Condition property="Count" value="3" />
+      <Condition property="Arrangement" value="S3 Floor/Ceiling: 12 Spikes" />
       <ImageRef image="floor3" />
     </DisplayOption>
     <DisplayOption>
-      <Condition property="Direction" value="Floor" />
-      <Condition property="Count" value="4" />
+      <Condition property="Arrangement" value="S3 Floor/Ceiling: 16 Spikes" />
       <ImageRef image="floor4" />
     </DisplayOption>
     <DisplayOption>
-      <Condition property="Direction" value="Side" />
-      <Condition property="Count" value="1" />
+      <Condition property="Arrangement" value="S3 Side: 4 Spikes" />
       <ImageRef image="side1" />
     </DisplayOption>
     <DisplayOption>
-      <Condition property="Direction" value="Side" />
-      <Condition property="Count" value="2" />
+      <Condition property="Arrangement" value="S3 Side: 8 Spikes" />
       <ImageRef image="side2" />
     </DisplayOption>
     <DisplayOption>
-      <Condition property="Direction" value="Side" />
-      <Condition property="Count" value="3" />
+      <Condition property="Arrangement" value="S3 Side: 12 Spikes" />
       <ImageRef image="side3" />
     </DisplayOption>
     <DisplayOption>
-      <Condition property="Direction" value="Side" />
-      <Condition property="Count" value="4" />
+      <Condition property="Arrangement" value="S3 Side: 16 Spikes" />
       <ImageRef image="side4" />
+    </DisplayOption>
+    <DisplayOption>
+      <Condition property="Arrangement" value="S1 Floor/Ceiling: 3 Spikes" />
+      <ImageRef image="classicfloor3" />
+    </DisplayOption>
+    <DisplayOption>
+      <Condition property="Arrangement" value="S1 Side: 3 Spikes" />
+      <ImageRef image="classicside3" />
+    </DisplayOption>
+    <DisplayOption>
+      <Condition property="Arrangement" value="S1 Floor/Ceiling: 1 Spike" />
+      <ImageRef image="classicfloor1" />
+    </DisplayOption>
+    <DisplayOption>
+      <Condition property="Arrangement" value="S1 Floor/Ceiling: 3 Wide Spikes" />
+      <ImageRef image="classicfloor3wide" />
+    </DisplayOption>
+    <DisplayOption>
+      <Condition property="Arrangement" value="S1 Floor/Ceiling: 6 Wide Spikes" />
+      <ImageRef image="classicfloor6" />
+    </DisplayOption>
+    <DisplayOption>
+      <Condition property="Arrangement" value="S1 Side: 1 Spike" />
+      <ImageRef image="classicside1" />
     </DisplayOption>
   </Display>
 </ObjDef>

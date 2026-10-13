@@ -1,6 +1,6 @@
 # Spikes and common level art
 
-Object `$36` uses the normal S3&K spike behavior and eight mappings from
+Object `$36` uses the normal S3&K spike behavior and eight arrangements from
 [skdisasm](https://github.com/sonicretro/skdisasm/tree/73de97c6b55055bcb8089c1d55d006b02136f163).
 The port adapts its object pointers to Mystic Island's ID/routine SSTs,
 `SolidObject` contact masks and per-player damage routines. Floor, side and
@@ -9,15 +9,36 @@ nonzero **word** `flashtime` remains protected. A simultaneous contact preserves
 the second player's collision flags across the first player's damage call.
 Out-of-range deletion clears the placement's respawn flag.
 
-The high subtype selects one through four pairs: `$00–$30` are floor rows and
-`$40–$70` are side columns. Y flip selects ceiling behavior; X flip mirrors
+The high subtype selects four, eight, twelve or sixteen spikes: `$00–$30`
+are floor rows and `$40–$70` are side columns. Y flip selects ceiling behavior; X flip mirrors
 the drawing. Low subtype `$0/$1/$2/$3` selects stationary, vertical movement,
 horizontal movement or S3&K's 32-pixel pushable variant. The largest display
 bounds use the generated `Map_Obj36_width/height`; smaller frames initialize
 their exact bounds from the configuration table. Competition-mode art, FBZ
 spikes and reverse gravity are outside the current engine's features.
 
-`Spikes.nem` contains the original eight side tiles followed by eight floor
+Subtypes `$80–$D0` add Sonic 1's six arrangements to the same object:
+
+| Subtype | Arrangement | Collision half-width / half-height |
+| --- | --- | --- |
+| `$80` | Three floor/ceiling spikes, 16 pixels apart | `$14 / $10` |
+| `$90` | Three side spikes, 16 pixels apart | `$10 / $14` |
+| `$A0` | One floor/ceiling spike | `$04 / $10` |
+| `$B0` | Three floor/ceiling spikes, 24 pixels apart | `$1C / $10` |
+| `$C0` | Six floor/ceiling spikes, 24 pixels apart | `$40 / $10` |
+| `$D0` | One side spike | `$10 / $04` |
+
+These keep the original [S1 mapping positions](https://github.com/sonicretro/s1disasm/blob/AS/_maps/Spikes.asm)
+while using the already resident S3 art. Each upright spike selects one 1×4
+column from the floor pair. The existing eight side tiles are de-interleaved
+into two complete four-tile spikes. Each S1 side spike uses one 4×1 piece;
+S3 side pairs use two 4×1 pieces instead of one 4×2 piece. Their X flips preserve the original facing
+direction. No new tiles or PLC entries are needed. GHZ's 75
+existing spike placements select these added frames, preserving their other
+placement flags. The configuration tables supply the correct dimensions and
+handler during initialization, without adding checks to the per-frame path.
+
+`Spikes.nem` contains eight de-interleaved side tiles followed by eight floor
 tiles. All frames use one art base; floor mappings add eight to their tile
 indices. The S3 palette indices used by these pixels map as follows:
 
@@ -31,7 +52,7 @@ indices. The S3 palette indices used by these pixels map as follows:
 
 Both orientations use palette line 0. `PLC_Main2` loads this art once for
 every level; the redundant zone spike loads are removed. The SonLVL definition
-uses the same eight frames, palette, sizes and movement options.
+uses all fourteen frames, palette, arrangement and movement options.
 
 ## VRAM during normal gameplay
 
@@ -93,11 +114,14 @@ PLC destinations, checks all four GHZ acts and HPZ for overlaps, checks the
 other live zone PLCs against common slots and verifies the shared mapping
 references against resident art.
 
-Native 68000 checks cover all sizes/orientations, both players, simultaneous
+Native 68000 checks cover all fourteen sizes/orientations, both players, simultaneous
 hits, shield and zero-ring damage, immunity, movement, push limits and respawn
-flags. Pixel comparisons cover all eight S3 spike frames and both flip axes,
+flags. Pixel comparisons cover all eight S3 spike frames, all six added S1
+arrangements and both flip axes,
 all Newtron poses in both palettes, and every wall frame. Genesis Plus GX tests
 exercise both players' floor walking, side and ceiling collisions and compare
 loaded GHZ/EHZ/HPZ VRAM bytes under NTSC and PAL.
+The added S1 groups and the actual GHZ2 shield-monitor pickup also pass under
+both regions, including all four shield frames and both physical shield banks.
 The GHZ3 arena test also verifies the S1 boss/capsule PLC and the resident ball
 and chain after the complete boss has spawned.

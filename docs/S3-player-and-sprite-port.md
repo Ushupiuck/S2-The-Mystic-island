@@ -174,18 +174,21 @@ The two tiles at `$B000–$B03F` are available during normal level play;
 title-card and large boss-explosion art still reuse this area in their own phases.
 
 Both star trails share 34 resident tiles at `$F380`, uploaded once when that
-bank changes to stars. Classic shields stream four tiles per small frame or
-twelve for the flash through `Load_DynamicPLC`, preserving their original
-pixels and flips. With two shields, the primary uses `$F380` and the companion
-uses `$ADC0`. When either player remains invincible, the visible shield uses
+bank changes to stars. The optimized S1 shield streams nine or eighteen tiles
+per visible frame through `Load_DynamicPLC`, preserving its pixels and flips.
+Its first mapping frame is invisible. With two shields, the primary uses
+`$F380` and the companion uses `$ADC0`. When either player remains invincible, the visible shield uses
 `$ADC0`, leaving the shared stars intact. Once both timers expire, the primary
 shield restores its current frame at `$F380`.
 
 The two reserved shield SSTs cache the physical banks at `$30`; retiring a
 shield clears its ID while retaining that cache. Cache zero means empty,
-1–6 identify shield DPLC frames, `$80` means stars, and `$FE` reserves the bank
+1–4 identify shield DPLC entries, `$80` means stars, and `$FE` reserves the bank
 for UI art. A full DMA queue leaves the cache unchanged and defers drawing
 until the complete upload fits. No SSTs or RAM regions grow.
+The DPLC has five pointers: unused cache entry 0, invisible mapping frame 0,
+then visible mapping frames 1–3. The first two pointers share one empty record;
+`Shield_LoadArt` adds `PlayerEffects_ShieldFrameBias` before indexing and caching.
 
 Act-clear reserves both banks before bonus digits reuse `$AE00–$AFFF`,
 preserving logical shield state while hiding the effects. Game/time-over

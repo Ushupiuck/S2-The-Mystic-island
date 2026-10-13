@@ -52,11 +52,20 @@ def main():
                        (symbols['ArtTile_Newtron_Tail'] + 4) * 32)
     assert struct.unpack_from('>H', rom, symbols['Nem_VSpikes'])[0] & 0x7FFF == 16
     spike_frames = frames(rom, symbols['Map_Obj36'])
-    assert len(spike_frames) == 8
+    assert len(spike_frames) == 14
     for row in spike_frames:
         for _, size, tile, _ in row:
             assert (tile & 0x7FF) + ((size >> 2) + 1) * ((size & 3) + 1) <= 16
             assert tile & 0x6000 == 0  # player palette, including side pieces
+    # GHZ keeps the original S1 spacing with the six appended arrangements.
+    # Verify the built placement data, including the loader's respawn ID bit.
+    for act in range(1, 5):
+        pos = symbols[f'ObjPos_GHZ{act}']
+        while struct.unpack_from('>H', rom, pos)[0] != 0xFFFF:
+            _, _, obj, subtype = struct.unpack_from('>HHBB', rom, pos)
+            if obj & 0x7F == symbols['id_Obj36']:
+                assert 8 <= subtype >> 4 <= 13, ('GHZ spike arrangement', act, hex(subtype))
+            pos += 6
 
     level_end = len((ROOT / 'art/kosinski/level/8x8 - GHZ.unc').read_bytes())
     assert level_end == symbols['ArtTile_GHZ_Bridge'] * 32
