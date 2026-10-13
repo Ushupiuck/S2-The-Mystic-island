@@ -6,6 +6,8 @@ Map_Obj21_ScoreDigits = make_art_tile(ArtTile_HUD_Numbers,1,1)-ArtTile_HUD
 Map_Obj21_DebugDigits = make_art_tile(ArtTile_HUD_Debug_Numbers,1,1)-ArtTile_HUD
 Map_Obj21_TimeDigits = make_art_tile(ArtTile_HUD_Numbers+$E,1,1)-ArtTile_HUD
 Map_Obj21_RingDigits = make_art_tile(ArtTile_HUD_Numbers+$16,1,1)-ArtTile_HUD
+Map_Obj21_LivesIcon = make_art_tile(ArtTile_Lives_Counter,0,1)-ArtTile_HUD
+Map_Obj21_LivesLetters = make_art_tile(ArtTile_Lives_Counter+4,1,1)-ArtTile_HUD
 
 Map_Obj21_internal:
 		dc.w .normal-Map_Obj21_internal
@@ -21,8 +23,8 @@ Map_Obj21_internal:
 		dc.w $900D, Map_Obj21_TimeDigits, $28
 		dc.w $A005, Map_Obj21_RingTile, 0
 		dc.w $A009, Map_Obj21_RingDigits, $30
-		dc.w $4005, $810A, 0
-		dc.w $400D, $A10E, $10
+		dc.w $4005, Map_Obj21_LivesIcon, 0
+		dc.w $400D, Map_Obj21_LivesLetters, $10
 .timeBlink:	dc.w 10
 		dc.w $800D, $A000, 0
 		dc.w $8001, Map_Obj21_ScoreE, $20
@@ -32,8 +34,8 @@ Map_Obj21_internal:
 		dc.w $900D, Map_Obj21_TimeDigits, $28
 		dc.w $A005, Map_Obj21_RingTile, 0
 		dc.w $A009, Map_Obj21_RingDigits, $30
-		dc.w $4005, $810A, 0
-		dc.w $400D, $A10E, $10
+		dc.w $4005, Map_Obj21_LivesIcon, 0
+		dc.w $400D, Map_Obj21_LivesLetters, $10
 .debug:	dc.w 9
 		dc.w $800D, $A000, 0
 		dc.w $800D, Map_Obj21_DebugDigits, $20
@@ -42,8 +44,8 @@ Map_Obj21_internal:
 		dc.w $900D, Map_Obj21_TimeDigits, $28
 		dc.w $A005, Map_Obj21_RingTile, 0
 		dc.w $A009, Map_Obj21_RingDigits, $30
-		dc.w $4005, $810A, 0
-		dc.w $400D, $A10E, $10
+		dc.w $4005, Map_Obj21_LivesIcon, 0
+		dc.w $400D, Map_Obj21_LivesLetters, $10
 .debugTimeBlink:	dc.w 9
 		dc.w $800D, $A000, 0
 		dc.w $800D, Map_Obj21_DebugDigits, $20
@@ -52,6 +54,6 @@ Map_Obj21_internal:
 		dc.w $900D, Map_Obj21_TimeDigits, $28
 		dc.w $A005, Map_Obj21_RingTile, 0
 		dc.w $A009, Map_Obj21_RingDigits, $30
-		dc.w $4005, $810A, 0
-		dc.w $400D, $A10E, $10
+		dc.w $4005, Map_Obj21_LivesIcon, 0
+		dc.w $400D, Map_Obj21_LivesLetters, $10
 		even

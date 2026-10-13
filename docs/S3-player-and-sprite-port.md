@@ -139,25 +139,53 @@ historical/staged sources rather than ordinary runtime mapping tables.
 | `$C000`, `$E000` | Two 64 by 32 planes, `$1000` bytes each |
 | `$D000` | Sonic body |
 | `$D400`, `$D600` | Tails body and separate tail, using stock S3&K's shared allocation |
-| `$D780`, `$D800`, `$D880` | Ring, lost ring and sparkles |
-| `$D940` | HUD, shared E and digits |
+| `$D720`, `$D7A0`, `$D820` | Ring, lost ring and sparkles, starting at tile `$6B9` |
+| `$D8A0–$DE5F` | HUD, shared E, debug coordinates and counters |
+| `$DE60–$DFFF` | Free, 13 contiguous tiles / `$1A0` bytes |
+| `$ADC0–$AFFF` | Auxiliary shield bank, 18 tiles |
 | `$F000–$F37F` | HScroll |
-| `$F380–$F7FF` | Reserved level shield/invincibility bank, tile `$79C`; loader migration pending |
+| `$F380–$F7FF` | Shared level shield/invincibility bank, tile `$79C` |
 | `$F600` | S1 bonus-stage/results ring, separate from the level ring |
 | `$F800–$FA7F` | Sprite table |
 | `$FA80–$FBFF` | Lives art |
 | `$FC00–$FDFF`, `$FE00–$FFFF` | Sonic and Tails dust |
 
 Tails body uploads can reuse the start of the tail area, as in the original;
-every imported body frame fits below the ring, and every tail upload fits its
-12-tile area. This is not an additional independent 32-tile body allocation.
-Lower test-zone/NPC/effect allocations remain provisional. No GHZ terrain art
+the largest body upload is 24 tiles and the largest tail upload is nine.
+They end at `$6B7` and `$6B8`, so the ring group starts at `$6B9`.
+This is not an additional independent 32-tile body allocation.
+Lower test-zone/NPC allocations remain provisional. No GHZ terrain art
 or block/chunk data was repacked during this port.
 
-Shield and invincibility art will reuse the same `$F380` bank, with shield
-art restored when invincibility ends. This space is reserved while the current
-loaders still use their legacy allocations. The S1 stage reuses part of the
-bank for its rings while level shield/invincibility effects are inactive.
+Both star trails share 34 resident tiles at `$F380`, uploaded once when that
+bank changes to stars. Classic shields stream four tiles per small frame or
+twelve for the flash through `Load_DynamicPLC`, preserving their original
+pixels and flips. With two shields, the primary uses `$F380` and the companion
+uses `$ADC0`. When either player remains invincible, the visible shield uses
+`$ADC0`, leaving the shared stars intact. Once both timers expire, the primary
+shield restores its current frame at `$F380`.
+
+The two reserved shield SSTs cache the physical banks at `$30`; retiring a
+shield clears its ID while retaining that cache. Cache zero means empty,
+1–6 identify shield DPLC frames, `$80` means stars, and `$FE` reserves the bank
+for UI art. A full DMA queue leaves the cache unchanged and defers drawing
+until the complete upload fits. No SSTs or RAM regions grow.
+
+Act-clear reserves both banks before bonus digits reuse `$AE00–$AFFF`,
+preserving logical shield state while hiding the effects. Game/time-over
+lettering replaces the dead primary's bank; its reservation also stops the
+companion's stars overwriting it. The old standard/EHZ shield and star PLCs
+are removed. The S1 stage reuses part of `$F380–$F7FF` for rings while level
+shield/invincibility effects are inactive.
+
+The HUD's 16 letter tiles are followed by two debug-only tiles and 28 counter
+tiles. Its six mutable score digits plus the fixed trailing zero support
+**9,999,990** points (`Score_Max = 999999` in ten-point units). The two debug
+tiles are used; the normal counters are contiguous. Moving the ring group
+and removing the old two-tile gap before the HUD consolidates the remaining
+free space below Plane B. Lives mappings derive their offsets from the lives
+bank, so this move retains their positions, palette and pixels. Regular and
+S1-stage results mappings derive the same shared HUD addresses.
 
 ## Tails palette
 

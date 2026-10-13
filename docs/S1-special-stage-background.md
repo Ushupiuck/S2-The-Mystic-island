@@ -60,7 +60,7 @@ Stage PLCs, mapping bases, the rotating-wall upload and its palette-animation
 table use the relocated `ArtTile_SS_*` constants. Emerald art no longer
 shares the end of a background map. Special-stage results continue replacing
 the stage ring at `$F600` with their palette-0 art; their animation leaves the
-normal ring at `$D780` alone for the return to level mode.
+normal ring at `$D720` alone for the return to level mode.
 
 ## RAM and asset regeneration
 

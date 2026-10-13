@@ -14,9 +14,7 @@ Port Sonic CD's object manager from the experimental branch for timezone object 
 Port remaining level animated-art/block setup to S1/S3&K style through Animate_Tiles and AniPLC scripts; replace make_block_tile mapping patches with regular block data < FUTURE, separate from the S1 bonus-stage background conversion
 Compare remaining S3&K power-up behavior and timer layout with the current per-player implementation
 Compare S3&K's byte timers (150 ticks, decremented every 8 frames), expiry/cleanup and music-tempo handling; retain shared Sonic/Tails invincibility and one star composite SST per live player, with shared art
-Use two independent VRAM effect banks, one per player; each bank shares shield/invincibility art as in S3&K/S.C.E. The primary bank is reserved at tile $79C / $F380, below the $F800 sprite table; choose the companion range after checking zone/boss PLC allocations. Swap art in the shared bank and restore shield art/DPLCs after invincibility; replace the current legacy shield/star allocations
-Adapt the existing classic-shield loader and assets under Temp/objects/Shield objects.asm and Temp/Classic Shield; invalidate its frame cache when switching art, and retry queued transfers if the DMA queue is full
-Repack temporary zone/boss art when final levels replace the test stages; GHZ allocations are intentionally provisional. The shared monitor/signpost bank is $9880; current Newtron/Motobug and shield/star allocations can overlap it. Preserve the fixed player, HUD, ring, dust and VDP-table banks.
+Repack temporary zone/boss art when final levels replace the test stages; GHZ allocations are intentionally provisional. The shared monitor/signpost bank is $9880; current Newtron/Motobug allocations can overlap it. Preserve the fixed player, HUD, ring, dust and VDP-table banks.
 Future elemental-shield pickups must grant the same type and benefits to both live players, including fire/lava immunity and bubble-shield underwater breathing; damage/death remove only the affected player's shield
 Add Super forms and decide how an optional Sonic Insta-Shield would coexist with the WIP homing attack < FUTURE; both deliberately excluded from the completed normal S3&K player port
 Add Sonic & Tails / Sonic / Tails character-selection UI < FUTURE; Player_mode already loads the three modes, including primary Tails with controller 1 and camera ownership
@@ -33,6 +31,8 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
+Activate the shared $79C / $F380 shield/invincibility bank; share one resident star art set between both trails and stream classic-shield frames through Load_DynamicPLC, using $ADC0 for independent shield phases and mixed states; preserve bank caches on shield retirement and protect results/game-over art < DONE
+Pack rings, lost rings, sparkles and HUD together from tile $6B9; retain all Tails body/tail uploads, shared E, debug digits, lives and both results mappings; consolidate 13 free tiles at $DE60-$DFFF and document the 9,999,990 displayed score cap < DONE
 Give both players independent full invincibility trails, including re-pickup/expiry and allocation retry; fix Tails monitor solidity and detach both riders on break; clear the correct player bit when opening the capsule and when transferring between solid objects < DONE
 Replace the four-ID prototype EHZ boss with Sonic 2 final's eight linked parts, complete animations and large explosions; retain S3&K mappings and automatic bounds < DONE
 Fix EHZ2 arena settling from above/below, preserve its lock through debug exit, restore the capsule/act-clear handoff, and derive initial row/column crossing flags from the camera (Final Zone look-up strip) < DONE
@@ -51,7 +51,7 @@ Simplify LoadZone, share timezone/act header selection with the primary PLC load
 Fix overlapping giant-ring flashes: share one animation clock and VRAM bank, handle each parent once, validate reused slots, and queue one special-stage entry at level end < DONE
 Convert the S1 bonus-stage background to normal blocks/chunks and two live $1000-byte planes; animate birds/fish through the existing Animate_Tiles interpreter, group stage art below $2940, and preserve pause/results/level-return behavior < DONE
 Share TIME's static E with SCORE in the HUD and results mappings; retain debug coordinates in their separate digit mappings < DONE
-Replace RING BONUS lettering with the animated ring icon on both results screens; special-stage results replace the stage's $F600 ring art with a separate palette-0 copy of all eight frames, preserving the normal $D780 art, emerald colors and bonus digits < DONE
+Replace RING BONUS lettering with the animated ring icon on both results screens; special-stage results replace the stage's $F600 ring art with a separate palette-0 copy of all eight frames, preserving the normal $D720 art, emerald colors and bonus digits < DONE
 Remove the results-only RING lettering art/PLCs and the duplicate uncompressed HUD E glyph < DONE
 Use $4A SSTs with 90 dynamic slots and 23 reserved slots < DONE
 Render eight invincibility stars per player from one composite SST each (primary reserved, companion dynamically allocated), sharing art; either player's pickup grants both live players 20 seconds of invincibility < DONE

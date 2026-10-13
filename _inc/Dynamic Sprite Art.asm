@@ -44,5 +44,6 @@ Load_DynamicPLC:
 		rts
 .full:
 		addq.w	#2,sp
+.full_return:
 		ori.b	#1,ccr
 		rts

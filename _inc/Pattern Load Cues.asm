@@ -83,8 +83,6 @@ PLC_Main2:	dc.w ((PLC_Main2_End-PLC_Main2)/6)-1
 		plcm	Nem_Points,	ArtTile_Points
 		plcm	Nem_Lamppost,	ArtTile_Lamppost
 		plcm	Nem_Monitors,	ArtTile_Monitor
-		plcm	Nem_Shield,	ArtTile_Shield
-		plcm	Nem_Stars,	ArtTile_Invincibility
 PLC_Main2_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
@@ -173,7 +171,6 @@ PLC_EHZ_End:
 ; Emerald Hill Zone secondary
 ; ---------------------------------------------------------------------------
 PLC_EHZ2:	dc.w ((PLC_EHZ2_End-PLC_EHZ2)/6)-1
-		plcm	Nem_Shield,	ArtTile_EHZ_Shield
 		plcm	Nem_Points,	$4AC
 		plcm	Nem_Buzzer,	ArtTile_Buzzer
 		plcm	Nem_Snail,	ArtTile_Snail

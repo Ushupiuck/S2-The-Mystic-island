@@ -56,13 +56,12 @@ def main():
             length = (struct.unpack_from('>H', rom, source)[0] & 0x7FFF) * 32
             cues.append((label, dest, dest + length))
 
-    # Both shield allocations exist in this engine. The EHZ-specific one is
-    # still used during the fight, as are stars and the monitor/signpost bank.
-    protected = [(sym['vram_fg'], 0x10000)]
+    # Both star trails share the primary bank. The auxiliary shield bank
+    # permits independent shield phases and mixed shield/star states. Neither may be
+    # overwritten by the boss's explosions or the capsule loaded at defeat.
+    protected = [(sym['vram_fg'], 0x10000),
+                 (sym['ArtTile_Shield_2'] * 32, sym['ArtTile_Animal_1'] * 32)]
     for tile, art in (
-        ('ArtTile_Shield', 'Nem_Shield'),
-        ('ArtTile_EHZ_Shield', 'Nem_Shield'),
-        ('ArtTile_Invincibility', 'Nem_Stars'),
         ('ArtTile_Monitor', 'Nem_Monitors'),
     ):
         low = sym[tile] * 32

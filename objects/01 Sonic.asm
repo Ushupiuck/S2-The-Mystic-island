@@ -1851,6 +1851,7 @@ Sonic_GameOver:
 		clr.b	(f_timeover).w
 		move.w	#bgm_GameOver,d0
 		jsr	(PlaySound).l
+		move.b	#PlayerEffects_GameOverLoaded,(v_shieldobj+effect_loaded_frame).w
 		moveq	#plcid_GameOver,d0
 		jmp	(LoadPLC).l
 ; ---------------------------------------------------------------------------
@@ -1865,6 +1866,7 @@ Sonic_GameOver:
 		move.b	#3,(v_gameovertext2+obFrame).w
 		move.w	#bgm_GameOver,d0
 		jsr	(PlaySound).l
+		move.b	#PlayerEffects_GameOverLoaded,(v_shieldobj+effect_loaded_frame).w
 		moveq	#plcid_GameOver,d0
 		jmp	(LoadPLC).l
 ; End of function Sonic_GameOver

@@ -51,13 +51,56 @@ def main():
         (ROOT / 'main.lst').read_text())}
     assert symbols['height_pixels'] == 0x49 and symbols['object_size'] == 0x4A
     assert symbols['vram_hscroll'] == 0xF000
-    assert symbols['ArtTile_Ring'] * 32 == 0xD780
+    assert symbols['ArtTile_Ring'] * 32 == 0xD720
+    assert symbols['ArtTile_HUD'] == symbols['ArtTile_Sparkles'] + 4
     assert symbols['ArtTile_SS_Rings'] * 32 == 0xF600
+
+    assert symbols['ArtTile_Shield'] == symbols['ArtTile_Invincibility']
+    assert symbols['ArtTile_Shield'] * 32 == 0xF380
+    effect_banks = [(symbols['ArtTile_Shield'] * 32, symbols['VRAM_Sprite_Attribute_Table']),
+                    (symbols['ArtTile_Shield_2'] * 32, symbols['ArtTile_Animal_1'] * 32)]
+    stars_size = symbols['Art_Invincibility_End'] - symbols['Art_Invincibility']
+    assert effect_banks[0][0] + stars_size <= effect_banks[0][1]
+
+    shield_frames = frames(rom, symbols['Map_obj38'])
+    for frame, row in enumerate(shield_frames):
+        table = symbols['DPLC_Shield']
+        start = table + struct.unpack_from('>h', rom, table + (frame + symbols['PlayerEffects_ShieldFrameBias']) * 2)[0]
+        count = struct.unpack_from('>H', rom, start)[0]
+        loaded = 0
+        for i in range(count):
+            run = struct.unpack_from('>H', rom, start + 2 + i * 2)[0]
+            length = (run >> 12) + 1
+            assert ((run & 0xFFF) + length) * 32 <= symbols['Art_Shield_End'] - symbols['Art_Shield']
+            loaded += length
+        assert all(loaded * 32 <= high - low for low, high in effect_banks)
+        for _, size, tile, _ in row:
+            assert (tile & 0x7FF) + ((size >> 2) + 1) * ((size & 3) + 1) <= loaded
+
+    # Level and boss PLCs must leave both effect banks intact. Game-over
+    # lettering deliberately replaces the dead primary player's bank.
+    for label in ('PLC_Main', 'PLC_Main2', 'PLC_Explode', 'PLC_Boss', 'PLC_Capsule') + tuple(
+            'PLC_' + zone + suffix for zone in ('GHZ', 'LZ', 'CPZ', 'EHZ', 'HPZ', 'HTZ')
+            for suffix in ('', '2', 'Animals')):
+        base = symbols[label]
+        count = struct.unpack_from('>H', rom, base)[0] + 1
+        for i in range(count):
+            source, low = struct.unpack_from('>IH', rom, base + 2 + i * 6)
+            high = low + (struct.unpack_from('>H', rom, source)[0] & 0x7FFF) * 32
+            assert all(high <= a or low >= b for a, b in effect_banks), (label, hex(low), hex(high))
+    for label, base in symbols.items():
+        if not re.fullmatch(r'PLCKosM_[A-Z]+[1-4]', label):
+            continue
+        count = struct.unpack_from('>H', rom, base)[0] + 1
+        for i in range(count):
+            source, low = struct.unpack_from('>IH', rom, base + 2 + i * 6)
+            high = low + struct.unpack_from('>H', rom, source)[0]
+            assert all(high <= a or low >= b for a, b in effect_banks), (label, hex(low), hex(high))
 
     imported_frames = 0
     for mapping, dplc, regular, extra, capacity in (
-        ('Map_Tails', 'TailsDynPLC', "Tails' art.bin", 'Tails extra.bin', 28),
-        ('Map_Tails_Tail', 'TailsTailsDynPLC', 'Tails tails.bin', None, 12),
+        ('Map_Tails', 'TailsDynPLC', "Tails' art.bin", 'Tails extra.bin', symbols['ArtTile_Ring'] - symbols['ArtTile_Tails']),
+        ('Map_Tails_Tail', 'TailsTailsDynPLC', 'Tails tails.bin', None, symbols['ArtTile_Ring'] - symbols['ArtTile_TailsTails']),
     ):
         table = symbols[dplc]
         for frame, pieces in enumerate(frames(rom, symbols[mapping])):
@@ -112,6 +155,7 @@ def main():
 
     print(f'{len(binaries)} ordinary binary mappings, {imported_frames} Tails frames '
           f'and {len(carry_frames)} Sonic carry frames pass.')
+    print(f'{len(shield_frames)} shield DPLC frames, the shared star bank and auxiliary shield bank pass, including level/boss PLC exclusions.')
     if args.skdisasm:
         print('All three Tails art files match the palette-remapped S&K source pixels.')
 

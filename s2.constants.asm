@@ -452,6 +452,9 @@ Camera_LookDownLimit:		equ 8
 Camera_LookPanSpeed:		equ 2
 Camera_LookReturnSpeed:		equ 2
 
+; Scores are stored in 10-point units; the HUD appends a fixed trailing zero.
+Score_Max:		equ 999999	; displayed cap: 9,999,990
+
 ; ---------------------------------------------------------------------------
 ; Levels
 id_GHZ:		equ 0
@@ -668,8 +671,8 @@ VRAM_Sprite_Attribute_Table_Size         = $0280	; 640 bytes
 VRAM_Horiz_Scroll_Table                  = $F000	; Extends until $F37F
 VRAM_Horiz_Scroll_Table_Size             = 224*2*2	; 224 lines * 2 bytes per entry * 2 PNTs
 ; Level-mode tile $79C ($F380), up to the $F800 sprite table, is reserved
-; for the shared shield/invincibility art bank. The effect-loader migration
-; is pending; the legacy allocations below remain active until then.
+; for shared shield/invincibility art. A second shield bank at tile $56E
+; ($ADC0) permits independent shield phases and mixed shield/star states.
 ; The S1 stage uses part of this bank for rings while level effects are inactive.
 
 ; VRAM Reserved regions, Sega screen.
@@ -1691,7 +1694,7 @@ ArtTile_Level:			equ $000
 ArtTile_Ball_HogV:		equ $500
 ArtTile_Ball_HogH:		equ ArtTile_Ball_HogV+$18
 ArtTile_Bomb:			equ $400
-ArtTile_Ground_Explosion:	equ $547 ; Unused
+ArtTile_Ground_Explosion:	equ $547 ; 36 tiles, below the auxiliary shield bank
 ArtTile_Spikes:			equ $434
 ArtTile_Spikes_GHZ:		equ ArtTile_Spikes+$6C
 
@@ -1709,15 +1712,16 @@ ArtTile_Basaran:		equ $385
 ArtTile_Button:			equ $50F	; TO BE CHANGED
 ArtTile_S1_Spring_Horizontal:	equ $4A8
 ArtTile_S1_Spring_Vertical:	equ $4B8
-ArtTile_Shield:			equ $4BE
-ArtTile_Invincibility:		equ $4DE
-ArtTile_Game_Over:		equ $55E
+ArtTile_Shield:			equ $79C	; $F380; shared with primary invincibility
+ArtTile_Shield_2:			equ $56E	; $ADC0; 18 tiles, clear of ground explosions and BBat
+ArtTile_Invincibility:		equ ArtTile_Shield
+ArtTile_Game_Over:		equ ArtTile_Shield ; replaces the dead primary player's effects, as in S3&K
 ArtTile_Title_Card:		equ $580
 ArtTile_Animal_1:		equ $580
 ArtTile_Animal_2:		equ $592
 ArtTile_Explosion:		equ $5A0
 ArtTile_Monitor:		equ $4C4
-ArtTile_HUD:			equ $6CA
+ArtTile_HUD:			equ ArtTile_Sparkles+4 ; $6C5 / $D8A0; contiguous with rings/sparkles
 ArtTile_HUD_E:			equ ArtTile_HUD+$E	; SCORE shares TIME's static E
 ArtTile_HUD_Debug_Numbers:	equ ArtTile_HUD+$10	; First two tiles are used only by debug coordinates
 ArtTile_HUD_Numbers:		equ ArtTile_HUD_Debug_Numbers+2 ; 28 tiles for score, time and ring digits
@@ -1725,7 +1729,7 @@ ArtTile_Sonic:			equ $680
 ArtTile_Points:			equ $4AC
 ArtTile_Tails:			equ $6A0
 ArtTile_TailsTails:		equ $6B0	; stock S3&K shares this area with larger body frames
-ArtTile_Ring:			equ $6BC
+ArtTile_Ring:			equ $6B9	; $D720; Tails body/tail uploads stop at $6B7/$6B8
 ArtTile_RingLoss:		equ ArtTile_Ring+4
 ArtTile_Sparkles:		equ ArtTile_Ring+8
 
@@ -1749,7 +1753,7 @@ ArtTile_Eggman_Exhaust:		equ ArtTile_Eggman+$12A
 ; End of Level
 ArtTile_Giant_Ring:		equ $400
 ArtTile_Giant_Ring_Flash:	equ $462
-ArtTile_Prison_Capsule:		equ $508	; 85 tiles; clear of both shields and the $C000 plane
+ArtTile_Prison_Capsule:		equ $508	; 85 tiles; ends below the companion effect bank
 ArtTile_Hidden_Points:		equ $4B6
 ArtTile_Warp:			equ $541
 ArtTile_Mini_Tails:		equ $535
@@ -1825,7 +1829,6 @@ ArtTile_Art_Flowers1:		equ $394
 ArtTile_Art_Flowers2:		equ $396
 ArtTile_Art_Flowers3:		equ $398
 ArtTile_Art_Flowers4:		equ $39A
-ArtTile_EHZ_Shield:		equ $560
 
 ; CPZ
 ArtTile_MorphingOrbs:		equ $3C0

@@ -3308,7 +3308,7 @@ LoadRingFrame:
 
 ; ---------------------------------------------------------------------------
 ; S1 special-stage results replace that stage's ring art at $F600 with palette 0.
-; Keep the normal $D780 art intact for the return to the level.
+; Keep the normal $D720 art intact for the return to the level.
 ; This loop does not run ChangeRingFrame, so load and animate that copy here.
 ; ---------------------------------------------------------------------------
 
@@ -10683,6 +10683,7 @@ ExitPlatform:
 		include	"objects/07 Water Surface.asm"
 		include	"objects/08 Water Splash.asm"
 		include	"_inc/Dynamic Sprite Art.asm"
+		include	"_inc/Player Effect Art.asm"
 		include	"objects/0E Spindash Dust.asm"
 		include	"objects/09 Bubbles.asm"
 		include	"objects/0A Drowning Countdown.asm"
@@ -13844,7 +13845,7 @@ AddPoints:
 		move.b	#1,(f_scorecount).w
 		lea	(v_score).w,a3
 		add.l	d0,(a3)
-		move.l	#999999,d1
+		move.l	#Score_Max,d1
 		cmp.l	(a3),d1
 		bhi.s	loc_1B214
 		move.l	d1,(a3)
@@ -16268,10 +16269,6 @@ Nem_Bonus:	binclude	"art/nemesis/S1/Hidden Bonuses.nem"
 		even
 Nem_Monitors:	binclude	"art/nemesis/Monitor and contents.nem"
 		even
-Nem_Shield:	binclude	"art/nemesis/Shield.nem"
-		even
-Nem_Stars:	binclude	"art/nemesis/Stars.nem"
-		even
 Nem_Lamppost:	binclude	"art/nemesis/Lamppost.nem"
 		even
 Nem_HSpring:	binclude	"art/nemesis/S1/Spring Horizontal.nem"
@@ -16370,6 +16367,13 @@ Art_Tails:	binclude	"art/uncompressed/Tails' art.bin"
 Art_Tails_Extra:	binclude "art/uncompressed/Tails extra.bin"
 Art_Tails_Tails:	binclude "art/uncompressed/Tails tails.bin"
 Art_SpindashDust:	binclude "art/uncompressed/Spindash and skid dust.bin"
+Art_Shield:	binclude "art/uncompressed/Shield.unc"
+Art_Shield_End:
+Art_Invincibility:	binclude "art/uncompressed/Invincibility.unc"
+Art_Invincibility_End:
+		if (Art_Invincibility_End-Art_Invincibility)>((VRAM_Sprite_Attribute_Table/tile_size-ArtTile_Invincibility)*tile_size)
+			fatal "Invincibility art exceeds the primary effect bank."
+		endif
 		align $100
 Art_Ring:	binclude	"art/uncompressed/Ring.bin"
 ; Same eight ring frames, with 6 -> E, C -> C, D -> B and E -> A for palette 0.
@@ -18151,6 +18155,8 @@ Map_Obj36:	binclude	"mappings/sprite/Spikes.bin"
 		even
 Map_obj38:
 		include	"mappings/sprite/Shield.asm"
+DPLC_Shield:
+		include "mappings/spriteDPLC/Shield.asm"
 		even
 Map_PRock:	binclude	"mappings/sprite/Purple Rock.bin"		; $3B
 		even

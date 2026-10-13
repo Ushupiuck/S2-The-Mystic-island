@@ -2552,7 +2552,7 @@ AniTails:
 
 ; ---------------------------------------------------------------------------
 ; S3&K word-count/run DPLCs, through the shared atomic queue loader.
-; The tail has its own art/table and a 12-tile bank ending before the rings.
+; The tail has its own art/table; its largest upload uses nine tiles before the rings.
 ; ---------------------------------------------------------------------------
 
 LoadTailsTailsDynPLC:

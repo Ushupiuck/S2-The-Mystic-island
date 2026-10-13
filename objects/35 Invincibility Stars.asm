@@ -25,7 +25,6 @@ Obj35:
 		bmi.s	InvincibilityStars_Update
 		move.l	#Map_InvincibilityStars,obMap(a0)
 		move.b	#224/2+32,height_pixels(a0)	; the group covers the padded viewport
-		move.w	#make_art_tile(ArtTile_Invincibility,0,0),obGfx(a0)
 		move.b	#$44,obRender(a0)		; world coordinates, composite with wrapped Y
 		clr.b	mainspr_mapframe(a0)		; no main sprite
 		move.b	#320/2+32,mainspr_width(a0)		; children perform their own bounds checks
@@ -64,6 +63,18 @@ InvincibilityStars_Update:
 		bclr	#InvincibilityStars_RetryBit,invincibility_flags(a0)
 		bset	#InvincibilityStars_PartnerBit,invincibility_flags(a0)
 .parent_ready:
+		lea	(v_shieldobj+effect_loaded_frame).w,a3
+		move.w	#make_art_tile(ArtTile_Invincibility,0,0),obGfx(a0)
+		move.w	#ArtTile_Invincibility*tile_size,d4
+		cmpi.b	#PlayerEffects_GameOverLoaded,(a3)
+		beq.w	InvincibilityStars_EnsurePartner.return
+		cmpi.b	#PlayerEffects_StarsLoaded,(a3)
+		beq.s	.art_loaded
+		movem.l	d2/a1,-(sp)			; initial phase and selected parent
+		bsr.w	PlayerEffects_LoadStars
+		movem.l	(sp)+,d2/a1
+		bcs.w	InvincibilityStars_EnsurePartner.return
+.art_loaded:
 		tst.w	d2
 		bne.s	.position
 		bsr.w	InvincibilityStars_Advance
