@@ -142,6 +142,7 @@ historical/staged sources rather than ordinary runtime mapping tables.
 | `$D780`, `$D800`, `$D880` | Ring, lost ring and sparkles |
 | `$D940` | HUD, shared E and digits |
 | `$F000–$F37F` | HScroll |
+| `$F380–$F7FF` | Reserved level shield/invincibility bank, tile `$79C`; loader migration pending |
 | `$F600` | S1 bonus-stage/results ring, separate from the level ring |
 | `$F800–$FA7F` | Sprite table |
 | `$FA80–$FBFF` | Lives art |
@@ -152,6 +153,11 @@ every imported body frame fits below the ring, and every tail upload fits its
 12-tile area. This is not an additional independent 32-tile body allocation.
 Lower test-zone/NPC/effect allocations remain provisional. No GHZ terrain art
 or block/chunk data was repacked during this port.
+
+Shield and invincibility art will reuse the same `$F380` bank, with shield
+art restored when invincibility ends. This space is reserved while the current
+loaders still use their legacy allocations. The S1 stage reuses part of the
+bank for its rings while level shield/invincibility effects are inactive.
 
 ## Tails palette
 

@@ -43,6 +43,11 @@ All ranges are inclusive. They apply before the results screen loads its PLCs.
 | `$FA80–$FBFF` | Free, `$180` bytes |
 | `$FC00–$FFFF` | Free, `$400` bytes; level dust is inactive here |
 
+The ranges marked free apply only to this stage. In level mode, tile `$79C`
+at `$F380` is reserved for the shared shield/invincibility art bank below the
+`$F800` sprite table. The stage's rings reuse part of that bank while level
+effects are inactive; it is not general free space for level allocations.
+
 The old maps occupied `$9000` bytes after excluding their sprite-art gaps;
 the two live maps use `$2000`, freeing `$7000`. Keeping only 9 static transition
 tiles plus the 64-tile animation bank replaces 241 resident bird/fish tiles,

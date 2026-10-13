@@ -667,6 +667,10 @@ VRAM_Sprite_Attribute_Table              = $F800	; Extends until $FA7F
 VRAM_Sprite_Attribute_Table_Size         = $0280	; 640 bytes
 VRAM_Horiz_Scroll_Table                  = $F000	; Extends until $F37F
 VRAM_Horiz_Scroll_Table_Size             = 224*2*2	; 224 lines * 2 bytes per entry * 2 PNTs
+; Level-mode tile $79C ($F380), up to the $F800 sprite table, is reserved
+; for the shared shield/invincibility art bank. The effect-loader migration
+; is pending; the legacy allocations below remain active until then.
+; The S1 stage uses part of this bank for rings while level effects are inactive.
 
 ; VRAM Reserved regions, Sega screen.
 VRAM_SegaScr_Plane_A_Name_Table          = $C000	; Extends until $DFFF
