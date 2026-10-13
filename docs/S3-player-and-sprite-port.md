@@ -135,6 +135,7 @@ historical/staged sources rather than ordinary runtime mapping tables.
 
 | Address | Use |
 | --- | --- |
+| `$2940`, `$29C0` | S1 bonus-stage/results ring and stage sparkles |
 | `$9880` | Monitor/signpost bank |
 | `$ADC0–$AFFF` | Auxiliary shield bank, 18 tiles |
 | `$B040–$B7FF` | Normal explosion and shared fiery frames, 62 tiles |
@@ -149,7 +150,6 @@ historical/staged sources rather than ordinary runtime mapping tables.
 | `$DEE0–$DFFF` | Free, nine contiguous tiles / `$120` bytes |
 | `$F000–$F37F` | HScroll |
 | `$F380–$F7FF` | Shared level shield/invincibility bank, tile `$79C` |
-| `$F600` | S1 bonus-stage/results ring, separate from the level ring |
 | `$F800–$FA7F` | Sprite table |
 | `$FA80–$FBFF` | Lives art |
 | `$FC00–$FDFF`, `$FE00–$FFFF` | Sonic and Tails dust |
@@ -185,8 +185,8 @@ Act-clear reserves both banks before bonus digits reuse `$AE00–$AFFF`,
 preserving logical shield state while hiding the effects. Game/time-over
 lettering replaces the dead primary's bank; its reservation also stops the
 companion's stars overwriting it. The old standard/EHZ shield and star PLCs
-are removed. The S1 stage reuses part of `$F380–$F7FF` for rings while level
-shield/invincibility effects are inactive.
+are removed. The S1 stage's ring and sparkles use `$2940/$29C0`; level
+shield/invincibility effects are inactive in that mode.
 
 The HUD's 16 letter tiles are followed by two debug-only tiles and 28 counter
 tiles. Its six mutable score digits plus the fixed trailing zero support

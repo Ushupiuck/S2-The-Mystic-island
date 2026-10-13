@@ -698,7 +698,7 @@ Vint_SSResults:
 		lsr.b	#2,d0			; divide by four so it can be used as frame ID
 		andi.w	#$F,d0			; mask to a maximum of 16 frames
 		cmp.b	(v_ssangleprev).w,d0	; does the modified angle match the recorded value?
-		beq.w	Do_ControllerPal.return	; if so, branch
+		beq.s	.timer			; frozen Debug walls must still tick the exit fade
 		move.b	d0,(v_ssangleprev).w	; record the modified angle for future comparison
 
 		move.l	#Art_SSWalls,d1		; load wall art
@@ -709,6 +709,7 @@ Vint_SSResults:
 		move.w	#ArtTile_SS_Wall*tile_size,d2	; VRAM destination
 		move.w	#(16*tile_size)/2,d3		; 16 tiles * 32 bytes = $200 bytes = $100 words
 		bsr.w	QueueDMATransfer
+.timer:
 		tst.w	(v_generictimer).w
 		beq.w	Set_Kos_Bookmark
 		subq.w	#1,(v_generictimer).w
@@ -3307,7 +3308,7 @@ LoadRingFrame:
 .end:		rts
 
 ; ---------------------------------------------------------------------------
-; S1 special-stage results replace that stage's ring art at $F600 with palette 0.
+; S1 special-stage results replace that stage's ring art at $2940 with palette 0.
 ; Keep the normal $D720 art intact for the return to the level.
 ; This loop does not run ChangeRingFrame, so load and animate that copy here.
 ; ---------------------------------------------------------------------------
@@ -3720,6 +3721,7 @@ loc_5214:
 		move.w	d0,(v_ringbonus).w	; set rings bonus
 		move.w	#bgm_GotThrough,d0
 		bsr.w	PlaySound_Special	; play end-of-level music
+		clr.w	(Debug_placement_mode).w	; the stage's Debug object is about to be removed
 		clearRAM v_objspace,v_objend	; clear object RAM
 		_move.b	#id_Obj96,(v_endcard).w	; load results screen object
 
@@ -14656,7 +14658,7 @@ Debug_Init:	; Routine 0
 		bclr	#1,(v_player+obStatus).w		; clear 'in air' bit
 		cmpi.w	#BonusStage,(v_gamemode).w	; is this the Special Stage?
 		bne.s	.islevel			; if not, branch
-		move.b	#7-1,(Current_Zone).w		; set the debug object list and reset Special Stage rotation
+		; The stage's debug list is selected below; keep the return level's zone.
 		clr.w	(v_ssrotate).l		; stop special stage rotation
 		clr.w	(v_ssangle).l		; make special stage "upright"
 		moveq	#6,d0			; force zone 6's (S1 ending) debug object list

@@ -29,24 +29,23 @@ All ranges are inclusive. They apply before the results screen loads its PLCs.
 | `$0A20–$0B3F` | Opaque transition, 9 tiles |
 | `$0B40–$133F` | Shared bird/fish animation bank, 64 tiles |
 | `$1340–$293F` | Fixed stage art, from walls through emeralds |
-| `$2940–$BFFF` | Free, `$96C0` bytes |
+| `$2940–$29BF` | Stage ring art; palette-0 ring copy during results |
+| `$29C0–$2A3F` | Ring sparkles |
+| `$2A40–$BFFF` | Free, `$95C0` bytes |
 | `$C000–$CFFF` | Live foreground map, 64 by 32 tiles |
 | `$D000–$D3FF` | Normal Sonic art bank reserved; stage rolling art uses its first `$200` bytes |
 | `$D400–$DFFF` | Free, `$C00` bytes |
 | `$E000–$EFFF` | Live background map, 64 by 32 tiles |
 | `$F000–$F37F` | Horizontal scroll table |
-| `$F380–$F5FF` | Free, `$280` bytes |
-| `$F600–$F67F` | Stage ring art |
-| `$F680–$F6FF` | Ring sparkles |
-| `$F700–$F7FF` | Free, `$100` bytes |
+| `$F380–$F7FF` | Free, `$480` bytes |
 | `$F800–$FA7F` | Sprite table |
 | `$FA80–$FBFF` | Free, `$180` bytes |
 | `$FC00–$FFFF` | Free, `$400` bytes; level dust is inactive here |
 
 The ranges marked free apply only to this stage. In level mode, tile `$79C`
 at `$F380` is reserved for the shared shield/invincibility art bank below the
-`$F800` sprite table. The stage's rings reuse part of that bank while level
-effects are inactive; it is not general free space for level allocations.
+`$F800` sprite table. The stage's rings and sparkles use `$2940/$29C0` instead;
+the stage's free ranges are not general free space for level allocations.
 
 The old maps occupied `$9000` bytes after excluding their sprite-art gaps;
 the two live maps use `$2000`, freeing `$7000`. Keeping only 9 static transition
@@ -59,8 +58,16 @@ build; only one frame is resident in VRAM.
 Stage PLCs, mapping bases, the rotating-wall upload and its palette-animation
 table use the relocated `ArtTile_SS_*` constants. Emerald art no longer
 shares the end of a background map. Special-stage results continue replacing
-the stage ring at `$F600` with their palette-0 art; their animation leaves the
+the stage ring at `$2940` with their palette-0 art; their animation leaves the
 normal ring at `$D720` alone for the return to level mode.
+
+Debug Start+A uses the same fade and results path as GOAL/emerald exits.
+The results VBlank ticks the fade timer even when Debug has stopped the wall
+rotation; the wall-art cache only skips its transfer. Entering stage Debug
+selects its object list without overwriting the return level's zone.
+The results clear the stage's Debug placement state with its objects, so the
+next level's player initializes normally. Start+A on the results screen still
+requests the title screen through the existing pause shortcut.
 
 ## RAM and asset regeneration
 

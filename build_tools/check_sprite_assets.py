@@ -53,7 +53,8 @@ def main():
     assert symbols['vram_hscroll'] == 0xF000
     assert symbols['ArtTile_Ring'] * 32 == 0xD720
     assert symbols['ArtTile_HUD'] == symbols['ArtTile_Sparkles'] + 4
-    assert symbols['ArtTile_SS_Rings'] * 32 == 0xF600
+    assert symbols['ArtTile_SS_Rings'] * 32 == 0x2940
+    assert symbols['ArtTile_SS_Sparkles'] * 32 == 0x29C0
 
     points_banks = [(symbols['ArtTile_Points'] * 32, (symbols['ArtTile_Points'] + 2) * 32),
                     (symbols['ArtTile_Points_2'] * 32, (symbols['ArtTile_Points_2'] + 2) * 32)]
