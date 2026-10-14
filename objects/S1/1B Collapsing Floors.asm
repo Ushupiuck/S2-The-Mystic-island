@@ -23,9 +23,11 @@ loc_8D6A:
 		addq.b	#2,obFrame(a0)
 
 loc_8D8E:
-		cmpi.b	#id_SBZ,(Current_Zone).w
+		cmpi.b	#id_SMZ,(Current_Zone).w
 		bne.s	loc_8D9C
-		move.w	#make_art_tile($3F5,2,0),obGfx(a0)	; or scrap brain
+		move.w #ArtTile_SMZ_Atlas,obGfx(a0)
+		move.l #Map_SMZ_Floor,obMap(a0)
+		move.b #Map_SMZ_Floor_height,height_pixels(a0)	; or scrap brain
 
 loc_8D9C:
 		ori.b	#4,obRender(a0)

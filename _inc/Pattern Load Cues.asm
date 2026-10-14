@@ -67,6 +67,9 @@ ptr_PLC_Filler:		dc.w PLC_Filler-ArtLoadCues		; Placeholder
 ptr_PLC_Filler2:	dc.w PLC_Filler2-ArtLoadCues		; Placeholder
 ptr_PLC_Capsule:	dc.w PLC_Capsule-ArtLoadCues
 ptr_PLC_GHZBoss:	dc.w PLC_GHZBoss-ArtLoadCues
+ptr_PLC_SMZ: dc.w PLC_SMZ-ArtLoadCues
+ptr_PLC_SMZ2: dc.w PLC_SMZ2-ArtLoadCues
+ptr_PLC_PP: dc.w PLC_PP-ArtLoadCues
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Standard 1 - loaded for every level
@@ -115,8 +118,8 @@ PLC_GHZ_End:
 ; Green Hill Zone secondary
 ; ---------------------------------------------------------------------------
 PLC_GHZ2:	dc.w ((PLC_GHZ2_End-PLC_GHZ2)/6)-1
-		plcm	Nem_HSpring,	ArtTile_S1_Spring_Horizontal
-		plcm	Nem_VSpring,	ArtTile_S1_Spring_Vertical
+		plcm	Nem_HSpring2,	ArtTile_S1_Spring_Horizontal
+		plcm	Nem_VSpring2,	ArtTile_S1_Spring_Vertical
 		plcm	Nem_GHZ_SWall,	ArtTile_GHZ_Edge_Wall
 		plcm	Nem_NewtronTail,	ArtTile_Newtron_Tail
 PLC_GHZ2_End:
@@ -194,6 +197,9 @@ PLC_HPZ_End:
 PLC_HPZ2:	dc.w ((PLC_HPZ2_End-PLC_HPZ2)/6)-1
 		plcm	Nem_HPZ_Various,	$37C
 		plcm	Nem_HPZ_Emerald,	ArtTile_HPZ_Emerald
+		plcm Nem_DSpring, ArtTile_Spring_Diagonal
+		plcm Nem_VSpring2, ArtTile_Spring_Vertical
+		plcm Nem_HSpring2, ArtTile_Spring_Horizontal
 PLC_HPZ2_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
@@ -431,10 +437,10 @@ ptr_KPLC_MZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $06 Act 3
 ptr_KPLC_MZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $06 Act 4
 ; ---------------------------------------------------------------------------
 ; Level Slot $07: Shocking Blizzard Zone [TO BE ADDED]
-ptr_KPLC_SBZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $08 Act 1
-ptr_KPLC_SBZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $08 Act 2
-ptr_KPLC_SBZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $08 Act 3
-ptr_KPLC_SBZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $08 Act 4
+ptr_KPLC_SBZ1:	dc.w PLCKosM_SMZ-KosMLoadCues ; $08 Act 1
+ptr_KPLC_SBZ2:	dc.w PLCKosM_SMZ-KosMLoadCues ; $08 Act 2
+ptr_KPLC_SBZ3:	dc.w PLCKosM_SMZ-KosMLoadCues ; $08 Act 3
+ptr_KPLC_SBZ4:	dc.w PLCKosM_SMZ-KosMLoadCues ; $08 Act 4
 ; ---------------------------------------------------------------------------
 ; Level Slot $08: Scrap Madness Zone [TO BE ADDED]
 ptr_KPLC_SMZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $07 Act 1
@@ -1016,3 +1022,29 @@ mkplcid_Misc10:		equ (ptr_KPLC_10-KosMLoadCues)/2		; $4D
 mkplcid_Misc11:		equ (ptr_KPLC_11-KosMLoadCues)/2		; $4E
 mkplcid_Misc12:		equ (ptr_KPLC_12-KosMLoadCues)/2		; $4F
 mkplcid_Misc13:		equ (ptr_KPLC_13-KosMLoadCues)/2		; $50
+
+; 516 shared sprite tiles plus eight wheel tiles. No plane/player overlap.
+PLC_SMZ: dc.w 1
+        plcm Nem_SMZAtlas, ArtTile_SMZ_Atlas
+        plcm Nem_Wheel, ArtTile_Wheel
+PLC_SMZ_End:
+PLC_SMZ2: dc.w 2
+        plcm Nem_DSpring, ArtTile_Spring_Diagonal
+        plcm Nem_VSpring2, ArtTile_Spring_Vertical
+        plcm Nem_HSpring2, ArtTile_Spring_Horizontal
+PLC_SMZ2_End:
+
+plcid_SMZ: equ (ptr_PLC_SMZ-ArtLoadCues)/2
+plcid_SMZ2: equ (ptr_PLC_SMZ2-ArtLoadCues)/2
+
+PLCKosM_SMZ: dc.w -1
+
+plcid_PP: equ (ptr_PLC_PP-ArtLoadCues)/2
+PLC_PP: dc.w (PLC_PP_End-PLC_PP-2)/6-1
+        plcm Nem_PP_Anton, ArtTile_PP_Anton
+        plcm Nem_PP_Mosqui, ArtTile_PP_Mosqui
+        plcm Nem_PP_PataBata, ArtTile_PP_PataBata
+        plcm Nem_PP_TagaTaga, ArtTile_PP_TagaTaga
+        plcm Nem_PP_Tamabboh, ArtTile_PP_Tamabboh
+        plcm Nem_Wheel, ArtTile_Wheel
+PLC_PP_End:

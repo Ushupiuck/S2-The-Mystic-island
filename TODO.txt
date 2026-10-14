@@ -9,6 +9,8 @@ https://tcrf.net/Proto:Sonic_the_Hedgehog_2_(Genesis)
 ; ---------------------------------------------------------------------------
 
 TODO:
+Design distinct terrain/art/objects for the newly enabled zone slots and four-act templates; MTZ1 remains the existing unfinished test stage, MTZ2-4 and SMZ3-4 are safe editable starters, and LV0A1 currently showcases imported PP enemies < NEXT level-content work
+Complete Scrap Madness presentation (full S1 REV01 background parallax and an intentional act-2 ending/cutscene); the current port has the original act-1/2 terrain, hazards, industrial background tiles, smoke and palette cycles
 Add inverse-gravity player physics/collision before enabling S3&K's Debug gravity-reversal cheat < FUTURE engine feature
 Add cached DMA switching between interleaved S3 horizontal spike art and linear S1 horizontal spike art in the shared bank, after the S3&K object-manager migration; handle preloading, backtracking and visible-bank ownership < FUTURE, separate task
 Implement time-travel transitions and replace the dummy timezone asset/layout tables with distinct data; header/layout selection already supports four timezones and four acts
@@ -19,9 +21,7 @@ Compare S3&K's byte timers (150 ticks, decremented every 8 frames), expiry/clean
 Repack temporary zone/boss art when final levels replace the test stages; GHZ currently packs from $6560. Preserve the common spring/spike/monitor slots and fixed player, HUD, ring, effect, animal, dust and VDP-table banks during ordinary play; boss/capsule PLCs may replace general level-object art.
 Future elemental-shield pickups must grant the same type and benefits to both live players, including fire/lava immunity and bubble-shield underwater breathing; damage/death remove only the affected player's shield
 Add Super forms and decide how an optional Sonic Insta-Shield would coexist with the WIP homing attack < FUTURE; both deliberately excluded from the completed normal S3&K player port
-Add Sonic & Tails / Sonic / Tails character-selection UI < FUTURE; Player_mode already loads the three modes, including primary Tails with controller 1 and camera ownership
 Import the S3&K rings manager
-Add more level slots < IN PROGRESS
 Port over Sonic 2 Special stages: Sonic 1 will be Bonus stages. Sonic 2's will be the ACTUAL Special stages. < IN PROGRESS, HIGH PRIORITY
 Add Rustic Ruins Zone (Marble + Aquatic Ruin), Ancient Workbench (Labyrinth + Chemical plant), Toy Factory (Wacky Workbench + Carnival Night), Egg Mountain (Hill Top + Scrap brain + Metropolis)
 Fix HTZ scrolling to use a straight table, rather than a soup of chunk entries.
@@ -33,6 +33,13 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
+Enable all $10 zone slots / 64 acts, use the existing zone names, repair MTZ2-4 and provide valid editable blank-act templates through LV0F; extend headers, timezones, layouts, bounds, music, collision, debug, starts, rings, exits and SonLVL < DONE
+Replace level select with S3&K art/layout and two pages, NEXT/PREVIOUS immediately before SOUND TEST on both pages, all four acts, and C to choose Sonic & Tails / Sonic / Tails; boot all 64 selections in NTSC/PAL < DONE
+Import actual S1 Scrap Brain acts 1/2 as ID $08 Scrap Madness, including 548 placements, collision, rings and missing objects at $A0-$AF; pack 516 sprite tiles without changing adapted indexed pixels, and keep both actors independent in solid objects/transports < DONE
+Replace vertical, horizontal and diagonal spring art/mappings with palette-adapted S3&K versions; share per-direction callbacks across both actors, preserve airborne side contacts, and protect common VRAM/results/title banks < DONE
+Import the Sonic CD wheel as independent $B0 carrier with editable ordinary-object mounts, eight spring/monitor/spike presets, allocation retry, consumed-payload and rider/unload ownership < DONE
+Keep companion Tails inside a stationary lead player's ridden platform and discard stale horizontal history there; preserve normal platform jumps, slow-ramp spindash recovery, manual controller-2 input and bounded flight recovery; stress actual SBZ1/2 and HPZ1 in NTSC/PAL < DONE
+Import PP Anton, Mosqui, Pata-Bata, Taga-Taga and Tamabboh normal/damaged variants at $B1-$B5 plus missile $B6 as the final checklist item; adapt palette/art/mappings, remove recursive ledge retries, support both actors, add LV0A1 and SonLVL previews, and verify motion/combat/ownership in NTSC/PAL < DONE
 Remove the timed flight fallback for unreachable targets; keep normal jumps, cap collapse pursuit at 6px horizontally / 1px vertically, recover grounded slope slips through the existing spindash AI, and verify slow/fast actual HPZ1 routes and successive platform landings in NTSC/PAL < DONE
 Keep Tails's horizontal rolling jump until the last ridden ledge/floor actually fragments; fly only towards nearby running/jumping Sonic above him, keep ordinary movement on GHZ1's paired ledges, distinguish descending jumps from accidental falls and preserve controller 2 precedence < DONE
 Lock Debug and both logical controls from primary drowning animation start; preserve low-air/other hurt/death Debug, companion independence and unlocked level restart < DONE

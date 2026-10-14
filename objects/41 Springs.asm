@@ -1,84 +1,7 @@
-; -------------------------------------------------------------------------
-; Moving spring object
-; -------------------------------------------------------------------------
-
-ObjMovingSpring:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	ObjMovingSpring_Index(pc,d0.w),d0
-		jsr	ObjMovingSpring_Index(pc,d0.w)
-		out_of_range.w	UnloadObject,objoff_3A(a0)	; used for moving the spring
-		rts
-
-; -------------------------------------------------------------------------
-ObjMovingSpring_Index:
-		dc.w	ObjMovingSpring_Init-ObjMovingSpring_Index
-		dc.w	ObjMovingSpring_AlignToGround-ObjMovingSpring_Index
-		dc.w	ObjMovingSpring_Main-ObjMovingSpring_Index
-; -------------------------------------------------------------------------
-
-ObjMovingSpring_Init:
-		addq.b	#2,obRoutine(a0)
-		ori.b	#4,obRender(a0)
-		move.w	#$200,obPriority(a0)
-		move.l	#Map_MovSpring,obMap(a0)
-		move.b	#Map_MovSpring_height,height_pixels(a0)
-		move.b	#Map_MovSpring_width,width_pixels(a0)
-		move.b	#8,obWidth(a0)
-		move.b	#7,obHeight(a0)
-		move.w	obX(a0),objoff_3A(a0)
-		move.w	#$180,obVelX(a0)
-		bsr.w	FindFreeObj
-		beq.s	.GenSpring
-		bra.w	UnloadObject
-
-; -------------------------------------------------------------------------
-
-.GenSpring:
-		move.l	#Obj41,code(a1)	; spawn object 41
-		move.w	obX(a0),obX(a1)
-		move.w	obY(a0),obY(a1)
-		subi.w	#$10,obY(a1)
-		move.b	#$F0,objoff_3D(a1)
-		move.w	a0,objoff_38(a1)
-		move.b	obSubtype(a0),obSubtype(a1)
-; End of function ObjMovingSpring_Init
-
-; -------------------------------------------------------------------------
-
-ObjMovingSpring_AlignToGround:
-		bsr.w	ObjHitFloor
-		tst.w	d1
-		bpl.s	.Sink
-		add.w	d1,obY(a0)
-		move.w	obY(a0),objoff_36(a0)
-		addq.b	#2,obRoutine(a0)
-		rts
-
-; -------------------------------------------------------------------------
-
-.Sink:
-		addq.w	#1,obY(a0)
-		rts
-; End of function ObjMovingSpring_AlignToGround
-
-; -------------------------------------------------------------------------
-
-ObjMovingSpring_Main:
-		bsr.w	ObjHitFloor
-		add.w	d1,obY(a0)
-		move.w	objoff_36(a0),d0
-		sub.w	obY(a0),d0
-		cmpi.w	#$C,d0
-		bcs.s	.NotEdge
-		neg.w	obVelX(a0)
-
-.NotEdge:
-		bsr.w	ObjectMove
-		lea	Ani_MovSpring(pc),a1
-		bsr.w	AnimateSprite
-		bra.w	DisplaySprite
-; ---------------------------------------------------------------------------
+; Straight/diagonal springs: S3&K mappings, shared two-player contact dispatch.
+; All zones use the shared sprite palette, including yellow caps.
+; One contact dispatcher handles both characters in all five orientations.
+; Launch strengths/subtype flips and collision paths follow S3&K's model.
 ; animation scripts - Spring & Spring wheel
 Ani_obj41:	dc.w byte_E978-Ani_obj41
 		dc.w byte_E97B-Ani_obj41
@@ -123,14 +46,9 @@ Obj41_Index:
 ; loc_E204:
 Obj41_Init:
 		addq.b	#2,obRoutine(a0)	; goto Up
-		move.l	#Map_obj41_GHZ,obMap(a0)
-		move.b	#Map_obj41_GHZ_height,height_pixels(a0)
-		move.w	#make_art_tile(ArtTile_S1_Spring_Vertical,0,0),obGfx(a0)
-		tst.b	(Current_Zone).w
-		beq.s	loc_E22A
-		move.l	#Map_obj41,obMap(a0)
-		move.b	#Map_obj41_height,height_pixels(a0)
-		move.w	#make_art_tile(ArtTile_Spring_Vertical,0,0),obGfx(a0)
+		move.l #Map_obj41,obMap(a0)
+		move.b #Map_obj41_height,height_pixels(a0)
+		move.w #make_art_tile(ArtTile_Spring_Vertical,0,0),obGfx(a0)
 
 loc_E22A:
 		ori.b	#4,obRender(a0)
@@ -154,10 +72,7 @@ Obj41_Init_Horizontal:
 		move.b	#4,obRoutine(a0)	; goto Horizontal
 		move.b	#2,obAnim(a0)
 		move.b	#3,obFrame(a0)
-		move.w	#make_art_tile(ArtTile_S1_Spring_Horizontal,0,0),obGfx(a0)
-		tst.b	(Current_Zone).w
-		beq.s	loc_E27C
-		move.w	#make_art_tile(ArtTile_Spring_Horizontal,0,0),obGfx(a0)
+		move.w #make_art_tile(ArtTile_Spring_Horizontal,0,0),obGfx(a0)
 
 loc_E27C:
 		move.b	#sprite_bound(8,sprite_bound(Map_obj41_GHZ_width,sprite_bound(Map_obj41_width,Map_obj41a_width))),obActWid(a0)
@@ -192,9 +107,6 @@ Obj41_Init_Common:
 		move.w	Obj41_Strengths(pc,d0.w),objoff_34(a0)
 		btst	#1,d0
 		beq.s	.return
-		bset	#5,obGfx(a0)
-		tst.b	(Current_Zone).w	; don't bother loading diagonal spring mappings
-		beq.s	.return			; in green hill zone (art for it doesn't exist)
 		move.l	#Map_obj41a,obMap(a0)
 		move.b	#Map_obj41a_height,height_pixels(a0)
 
@@ -208,36 +120,27 @@ Obj41_Strengths:
 ; ===========================================================================
 ; loc_E302:
 Obj41_Up:
-		moveq	#$1B,d1
-		moveq	#8,d2
-		moveq	#$10,d3
-		move.w	obX(a0),d4
-		lea	(v_player).w,a1
-		moveq	#3,d6
-		movem.l	d1-d4,-(sp)
-		bsr.w	SolidObject_Always_SingleCharacter
-		btst	#3,obStatus(a0)
-		beq.s	loc_E32A
-		bsr.s	sub_E34E
-
-loc_E32A:
-		movem.l	(sp)+,d1-d4
-		lea	(v_player2).w,a1
-		moveq	#4,d6
-		bsr.w	SolidObject_Always_SingleCharacter
-		btst	#4,obStatus(a0)
-		beq.s	loc_E342
-		bsr.s	sub_E34E
-
-loc_E342:
-		lea	Ani_obj41(pc),a1
-		bra.w	AnimateSprite
-; ===========================================================================
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
+        moveq #27,d1
+        moveq #8,d2
+        moveq #16,d3
+        move.w obX(a0),d4
+        lea .actor(pc),a5
+        bsr.w Obj41_TestBoth
+        lea Ani_obj41(pc),a1
+        jmp (AnimateSprite).l
+.actor:
+        jsr (SolidObject_Always_SingleCharacter).l
+        btst d6,obStatus(a0)
+        beq.s .return
+        jmp (sub_E34E).l
+.return:
+        rts
 
 sub_E34E:
+        clr.b jumping(a1)
+        clr.b spindash_flag(a1)
+        clr.b tails_flight_flag(a1)
+        bclr #status.player.rolljumping,obStatus(a1)
 		move.w	#$100,obAnim(a0)
 		addq.w	#8,obY(a1)
 		move.w	objoff_34(a0),obVelY(a1)
@@ -288,55 +191,36 @@ loc_E3EA:
 ; ===========================================================================
 ; loc_E3F4:
 Obj41_Horizontal:
-		moveq	#$13,d1
-		moveq	#$E,d2
-		moveq	#$F,d3
-		move.w	obX(a0),d4
-		lea	(v_player).w,a1
-		moveq	#3,d6
-		movem.l	d1-d4,-(sp)
-		bsr.w	SolidObject_Always_SingleCharacter
-		btst	#5,obStatus(a0)
-		beq.s	loc_E434
-		move.b	obStatus(a0),d1
-		move.w	obX(a0),d0
-		sub.w	obX(a1),d0
-		bcs.s	loc_E42C
-		eori.b	#1,d1
-
-loc_E42C:
-		andi.b	#1,d1
-		bne.s	loc_E434
-		bsr.s	sub_E474
-
-loc_E434:
-		movem.l	(sp)+,d1-d4
-		lea	(v_player2).w,a1
-		moveq	#4,d6
-		bsr.w	SolidObject_Always_SingleCharacter
-		btst	#6,obStatus(a0)
-		beq.s	loc_E464
-		move.b	obStatus(a0),d1
-		move.w	obX(a0),d0
-		sub.w	obX(a1),d0
-		bcs.s	loc_E45C
-		eori.b	#1,d1
-
-loc_E45C:
-		andi.b	#1,d1
-		bne.s	loc_E464
-		bsr.s	sub_E474
-
-loc_E464:
-		bsr.w	sub_E54C
-		lea	Ani_obj41(pc),a1
-		bra.w	AnimateSprite
-; ===========================================================================
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
+        moveq #19,d1
+        moveq #14,d2
+        moveq #15,d3
+        move.w obX(a0),d4
+        lea .actor(pc),a5
+        bsr.w Obj41_TestBoth
+        bsr.w sub_E54C
+        lea Ani_obj41(pc),a1
+        jmp (AnimateSprite).l
+.actor:
+        jsr (SolidObject_Always_SingleCharacter).l
+        cmpi.w #1,d4 ; S3&K side-contact result, including airborne actors
+        bne.s .return
+        move.b obStatus(a0),d1
+        move.w obX(a0),d0
+        sub.w obX(a1),d0
+        bcs.s .facing
+        eori.b #1,d1
+.facing:
+        andi.b #1,d1
+        bne.s .return
+        jmp (sub_E474).l
+.return:
+        rts
 
 sub_E474:
+        clr.b jumping(a1)
+        clr.b spindash_flag(a1)
+        clr.b tails_flight_flag(a1)
+        bclr #status.player.rolljumping,obStatus(a1)
 		move.w	#$300,obAnim(a0)
 		move.w	objoff_34(a0),obVelX(a1)
 		addq.w	#8,obX(a1)
@@ -348,7 +232,7 @@ sub_E474:
 		neg.w	obVelX(a1)
 
 loc_E4A2:
-		move.w	#$F,objoff_32(a1)
+		move.w	#$F,move_lock(a1)
 		move.w	obVelX(a1),obInertia(a1)
 		btst	#2,obStatus(a1)
 		bne.s	loc_E4BC
@@ -471,33 +355,27 @@ sub_E54C:
 ; ===========================================================================
 ; loc_E606:
 Obj41_Down:
-		moveq	#$1B,d1
-		moveq	#8,d2
-		moveq	#$10,d3
-		move.w	obX(a0),d4
-		lea	(v_player).w,a1
-		moveq	#3,d6
-		movem.l	d1-d4,-(sp)
-		bsr.w	SolidObject_Always_SingleCharacter
-		cmpi.w	#-2,d4
-		bne.s	loc_E62C
-		bsr.s	sub_E64E
-
-loc_E62C:
-		movem.l	(sp)+,d1-d4
-		lea	(v_player2).w,a1
-		moveq	#4,d6
-		bsr.w	SolidObject_Always_SingleCharacter
-		cmpi.w	#-2,d4
-		bne.s	loc_E642
-		bsr.s	sub_E64E
-
-loc_E642:
-		lea	Ani_obj41(pc),a1
-		bra.w	AnimateSprite
-; ===========================================================================
+        moveq #27,d1
+        moveq #8,d2
+        moveq #16,d3
+        move.w obX(a0),d4
+        lea .actor(pc),a5
+        bsr.w Obj41_TestBoth
+        lea Ani_obj41(pc),a1
+        jmp (AnimateSprite).l
+.actor:
+        jsr (SolidObject_Always_SingleCharacter).l
+        cmpi.w #-2,d4
+        bne.s .return
+        jmp (sub_E64E).l
+.return:
+        rts
 
 sub_E64E:
+        clr.b jumping(a1)
+        clr.b spindash_flag(a1)
+        clr.b tails_flight_flag(a1)
+        bclr #status.player.rolljumping,obStatus(a1)
 		move.w	#$100,obAnim(a0)
 		subq.w	#8,obY(a1)
 		move.w	objoff_34(a0),obVelY(a1)
@@ -548,31 +426,22 @@ loc_E6D6:
 ; ===========================================================================
 ; loc_E6F2:
 Obj41_DiagonallyUp:
-		moveq	#$1B,d1
-		moveq	#$10,d2
-		move.w	obX(a0),d4
-		lea	Obj41_SlopeData_DiagUp(pc),a2
-		lea	(v_player).w,a1
-		moveq	#3,d6
-		movem.l	d1-d4,-(sp)
-		bsr.w	SlopedSolid_SingleCharacter
-		btst	#3,obStatus(a0)
-		beq.s	loc_E71A
-		bsr.s	sub_E73E
-
-loc_E71A:
-		movem.l	(sp)+,d1-d4
-		lea	(v_player2).w,a1
-		moveq	#4,d6
-		bsr.w	SlopedSolid_SingleCharacter
-		btst	#4,obStatus(a0)
-		beq.s	loc_E732
-		bsr.s	sub_E73E
-
-loc_E732:
-		lea	Ani_obj41(pc),a1
-		bra.w	AnimateSprite
-; ===========================================================================
+        moveq #27,d1
+        moveq #16,d2
+        moveq #0,d3
+        move.w obX(a0),d4
+        lea .actor(pc),a5
+        bsr.w Obj41_TestBoth
+        lea Ani_obj41(pc),a1
+        jmp (AnimateSprite).l
+.actor:
+        lea Obj41_SlopeData_DiagUp(pc),a2
+        jsr (SlopedSolid_SingleCharacter).l
+        btst d6,obStatus(a0)
+        beq.s .return
+        jmp (sub_E73E).l
+.return:
+        rts
 
 sub_E73E:
 		btst	#0,obStatus(a0)
@@ -593,6 +462,10 @@ loc_E754:
 ; ===========================================================================
 
 loc_E762:
+        clr.b jumping(a1)
+        clr.b spindash_flag(a1)
+        clr.b tails_flight_flag(a1)
+        bclr #status.player.rolljumping,obStatus(a1)
 		move.w	#$500,obAnim(a0)
 		move.w	objoff_34(a0),obVelY(a1)
 		move.w	objoff_34(a0),obVelX(a1)
@@ -649,33 +522,28 @@ loc_E81E:
 ; ===========================================================================
 ; loc_E828:
 Obj41_DiagonallyDown:
-		moveq	#$1B,d1
-		moveq	#$10,d2
-		move.w	obX(a0),d4
-		lea	Obj41_SlopeData_DiagDown(pc),a2
-		lea	(v_player).w,a1
-		moveq	#3,d6
-		movem.l	d1-d4,-(sp)
-		bsr.w	SlopedSolid_SingleCharacter
-		cmpi.w	#-2,d4
-		bne.s	loc_E84E
-		bsr.s	sub_E870
-
-loc_E84E:
-		movem.l	(sp)+,d1-d4
-		lea	(v_player2).w,a1
-		moveq	#4,d6
-		bsr.w	SlopedSolid_SingleCharacter
-		cmpi.w	#-2,d4
-		bne.s	loc_E864
-		bsr.s	sub_E870
-
-loc_E864:
-		lea	Ani_obj41(pc),a1
-		bra.w	AnimateSprite
-; ===========================================================================
+        moveq #27,d1
+        moveq #16,d2
+        moveq #0,d3
+        move.w obX(a0),d4
+        lea .actor(pc),a5
+        bsr.w Obj41_TestBoth
+        lea Ani_obj41(pc),a1
+        jmp (AnimateSprite).l
+.actor:
+        lea Obj41_SlopeData_DiagDown(pc),a2
+        jsr (SlopedSolid_SingleCharacter).l
+        cmpi.w #-2,d4
+        bne.s .return
+        jmp (sub_E870).l
+.return:
+        rts
 
 sub_E870:
+        clr.b jumping(a1)
+        clr.b spindash_flag(a1)
+        clr.b tails_flight_flag(a1)
+        bclr #status.player.rolljumping,obStatus(a1)
 		move.w	#$500,obAnim(a0)
 		move.w	objoff_34(a0),obVelY(a1)
 		neg.w	obVelY(a1)
@@ -728,3 +596,18 @@ loc_E92A:
 		move.w	#sfx_Spring,d0
 		jmp	(PlaySound_Special).l
 ; End of function sub_E870
+
+; Input d1-d4 is shared; a5 names one direction's actor callback.
+Obj41_TestBoth:
+        lea (v_player).w,a1
+        moveq #3,d6
+        movem.l d1-d4/a5,-(sp)
+        jsr (a5)
+        movem.l (sp)+,d1-d4/a5
+        lea (v_player2).w,a1
+        tst.l code(a1)
+        beq.s .return
+        moveq #4,d6
+        jmp (a5)
+.return:
+        rts

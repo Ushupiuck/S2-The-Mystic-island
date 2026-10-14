@@ -36,9 +36,9 @@ def main():
         'ArtTile_Spring_Diagonal': 0x4D5,
         'ArtTile_Spring_Vertical': 0x4F5,
         'ArtTile_Spring_Horizontal': 0x509,
-        'ArtTile_Spikes': 0x517,
-        'ArtTile_Monitor': 0x527,
-        'ArtTile_Lamppost': 0x563,
+        'ArtTile_Spikes': 0x519,
+        'ArtTile_Monitor': 0x529,
+        'ArtTile_Lamppost': 0x565,
     }
     for name, tile in expected.items():
         assert symbols[name] == tile, (name, hex(symbols[name]))

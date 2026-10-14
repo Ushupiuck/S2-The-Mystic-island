@@ -75,6 +75,17 @@ Flicky_ZoneAnimals:
 		dc.b Pig,	Chicken	; HPZ 4
 		dc.b Rabbit,	Chicken	; HTZ 5
 
+		dc.b Rabbit,Bird ; remaining zone
+		dc.b Rabbit,Bird ; remaining zone
+		dc.b Rabbit,Bird ; remaining zone
+		dc.b Rabbit,Bird ; remaining zone
+		dc.b Rabbit,Bird ; remaining zone
+		dc.b Rabbit,Bird ; remaining zone
+		dc.b Rabbit,Bird ; remaining zone
+		dc.b Rabbit,Bird ; remaining zone
+		dc.b Rabbit,Bird ; remaining zone
+		dc.b Rabbit,Bird ; remaining zone
+
 Flicky_Properties:	; This table declares the speed and mappings of each animal.
 		dc.w -$200, -$400 ; Rabbit
 		dc.l Map_Animals5

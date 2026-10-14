@@ -7,7 +7,8 @@ import struct
 
 ROOT = Path(__file__).resolve().parent.parent
 SENTINEL = bytes.fromhex('FFFF00000000')
-ZONES = ('GHZ', 'LZ', 'CPZ', 'EHZ', 'HPZ', 'HTZ', 'MTZ')
+ZONES = ('GHZ', 'LZ', 'CPZ', 'EHZ', 'HPZ', 'HTZ', 'MTZ', 'LV07', 'SMZ', 'LV09', 'LV0A', 'LV0B',
+         'LV0C', 'LV0D', 'LV0E', 'LV0F')
 
 
 def check_named_sst_fields(symbols):
@@ -132,7 +133,7 @@ def main():
     assert symbols['Debug_placement_mode'] == symbols['Debug_placement_routine']
     check_named_sst_fields(symbols)
     print(f'Checked {len(layouts)} S3&K layouts / {sum(n for _, n in layouts.values())} '
-          f'placements, all 28 act pointers and Debug lists, and manager/Debug RAM.')
+          f'placements, all 64 act pointers and Debug lists, and manager/Debug RAM.')
 
 
 if __name__ == '__main__':

@@ -49,7 +49,7 @@ Cat_Main:	; Routine 0
 		move.l	#Map_Cat,obMap(a0)
 		move.b	#Map_Cat_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_SBZ_Caterkiller,1,0),obGfx(a0)
-		cmpi.b	#id_SBZ,(v_zone).w	; if level is SBZ, branch
+		cmpi.b	#id_SMZ,(v_zone).w	; if level is SBZ, branch
 		beq.s	.isscrapbrain
 		move.w	#make_art_tile(ArtTile_MZ_SYZ_Caterkiller,1,0),obGfx(a0)
 
@@ -58,7 +58,13 @@ Cat_Main:	; Routine 0
 		ori.b	#4,obRender(a0)
 		move.b	obRender(a0),obStatus(a0)
 		move.w	#$200,obPriority(a0)
-		move.b	#sprite_bound(8,Map_Cat_width),obActWid(a0)
+		cmpi.b #id_SMZ,(Current_Zone).w
+        bne.s .catAtlasReady
+        move.l #Map_SMZ_Cat,obMap(a0)
+        move.b #Map_SMZ_Cat_height,height_pixels(a0)
+        move.w #ArtTile_SMZ_Atlas,obGfx(a0)
+.catAtlasReady:
+        move.b	#sprite_bound(8,Map_Cat_width),obActWid(a0)
 		move.b	#$B,obColType(a0)
 
 		; airborne / dormant start
@@ -92,7 +98,13 @@ Cat_Loop:
 		move.b	#Map_Cat_height,height_pixels(a1)
 		move.w	obGfx(a0),obGfx(a1)
 		move.w	#$280,obPriority(a1)
-		move.b	#sprite_bound(8,Map_Cat_width),obActWid(a1)
+		cmpi.b #id_SMZ,(Current_Zone).w
+        bne.s .catAtlasChildReady
+        move.l #Map_SMZ_Cat,obMap(a1)
+        move.b #Map_SMZ_Cat_height,height_pixels(a1)
+        move.w #ArtTile_SMZ_Atlas,obGfx(a1)
+.catAtlasChildReady:
+        move.b	#sprite_bound(8,Map_Cat_width),obActWid(a1)
 		move.b	#$CB,obColType(a1)
 
 		clr.w	obVelX(a1)

@@ -31,6 +31,43 @@ Level_Index_Past:
 		dc.w PLevel_MTZ3-Level_Index_Past
 		dc.w PLevel_MTZ4-Level_Index_Past
 
+		dc.w PLevel_LV071-Level_Index_Past
+		dc.w PLevel_LV072-Level_Index_Past
+		dc.w PLevel_LV073-Level_Index_Past
+		dc.w PLevel_LV074-Level_Index_Past
+		dc.w PLevel_SMZ1-Level_Index_Past
+		dc.w PLevel_SMZ2-Level_Index_Past
+		dc.w PLevel_SMZ3-Level_Index_Past
+		dc.w PLevel_SMZ4-Level_Index_Past
+		dc.w PLevel_LV091-Level_Index_Past
+		dc.w PLevel_LV092-Level_Index_Past
+		dc.w PLevel_LV093-Level_Index_Past
+		dc.w PLevel_LV094-Level_Index_Past
+		dc.w PLevel_LV0A1-Level_Index_Past
+		dc.w PLevel_LV0A2-Level_Index_Past
+		dc.w PLevel_LV0A3-Level_Index_Past
+		dc.w PLevel_LV0A4-Level_Index_Past
+		dc.w PLevel_LV0B1-Level_Index_Past
+		dc.w PLevel_LV0B2-Level_Index_Past
+		dc.w PLevel_LV0B3-Level_Index_Past
+		dc.w PLevel_LV0B4-Level_Index_Past
+		dc.w PLevel_LV0C1-Level_Index_Past
+		dc.w PLevel_LV0C2-Level_Index_Past
+		dc.w PLevel_LV0C3-Level_Index_Past
+		dc.w PLevel_LV0C4-Level_Index_Past
+		dc.w PLevel_LV0D1-Level_Index_Past
+		dc.w PLevel_LV0D2-Level_Index_Past
+		dc.w PLevel_LV0D3-Level_Index_Past
+		dc.w PLevel_LV0D4-Level_Index_Past
+		dc.w PLevel_LV0E1-Level_Index_Past
+		dc.w PLevel_LV0E2-Level_Index_Past
+		dc.w PLevel_LV0E3-Level_Index_Past
+		dc.w PLevel_LV0E4-Level_Index_Past
+		dc.w PLevel_LV0F1-Level_Index_Past
+		dc.w PLevel_LV0F2-Level_Index_Past
+		dc.w PLevel_LV0F3-Level_Index_Past
+		dc.w PLevel_LV0F4-Level_Index_Past
+
 PLevel_GHZ1:	binclude	"level/layout/past/GHZ_1.kosp"
 PLevel_GHZ2:	binclude	"level/layout/past/GHZ_2.kosp"
 PLevel_GHZ3:	binclude	"level/layout/past/GHZ_3.kosp"
@@ -59,6 +96,43 @@ PLevel_MTZ1:	binclude	"level/layout/past/MTZ_1.kosp"
 PLevel_MTZ2:	binclude	"level/layout/past/MTZ_2.kosp"
 PLevel_MTZ3:	binclude	"level/layout/past/MTZ_3.kosp"
 PLevel_MTZ4:	binclude	"level/layout/past/MTZ_4.kosp"
+
+PLevel_LV071: binclude "level/layout/past/LV07_1.kosp"
+PLevel_LV072: binclude "level/layout/past/LV07_2.kosp"
+PLevel_LV073: binclude "level/layout/past/LV07_3.kosp"
+PLevel_LV074: binclude "level/layout/past/LV07_4.kosp"
+PLevel_SMZ1: binclude "level/layout/past/SMZ_1.kosp"
+PLevel_SMZ2: binclude "level/layout/past/SMZ_2.kosp"
+PLevel_SMZ3: binclude "level/layout/past/SMZ_3.kosp"
+PLevel_SMZ4: binclude "level/layout/past/SMZ_4.kosp"
+PLevel_LV091: binclude "level/layout/past/LV09_1.kosp"
+PLevel_LV092: binclude "level/layout/past/LV09_2.kosp"
+PLevel_LV093: binclude "level/layout/past/LV09_3.kosp"
+PLevel_LV094: binclude "level/layout/past/LV09_4.kosp"
+PLevel_LV0A1: binclude "level/layout/past/LV0A_1.kosp"
+PLevel_LV0A2: binclude "level/layout/past/LV0A_2.kosp"
+PLevel_LV0A3: binclude "level/layout/past/LV0A_3.kosp"
+PLevel_LV0A4: binclude "level/layout/past/LV0A_4.kosp"
+PLevel_LV0B1: binclude "level/layout/past/LV0B_1.kosp"
+PLevel_LV0B2: binclude "level/layout/past/LV0B_2.kosp"
+PLevel_LV0B3: binclude "level/layout/past/LV0B_3.kosp"
+PLevel_LV0B4: binclude "level/layout/past/LV0B_4.kosp"
+PLevel_LV0C1: binclude "level/layout/past/LV0C_1.kosp"
+PLevel_LV0C2: binclude "level/layout/past/LV0C_2.kosp"
+PLevel_LV0C3: binclude "level/layout/past/LV0C_3.kosp"
+PLevel_LV0C4: binclude "level/layout/past/LV0C_4.kosp"
+PLevel_LV0D1: binclude "level/layout/past/LV0D_1.kosp"
+PLevel_LV0D2: binclude "level/layout/past/LV0D_2.kosp"
+PLevel_LV0D3: binclude "level/layout/past/LV0D_3.kosp"
+PLevel_LV0D4: binclude "level/layout/past/LV0D_4.kosp"
+PLevel_LV0E1: binclude "level/layout/past/LV0E_1.kosp"
+PLevel_LV0E2: binclude "level/layout/past/LV0E_2.kosp"
+PLevel_LV0E3: binclude "level/layout/past/LV0E_3.kosp"
+PLevel_LV0E4: binclude "level/layout/past/LV0E_4.kosp"
+PLevel_LV0F1: binclude "level/layout/past/LV0F_1.kosp"
+PLevel_LV0F2: binclude "level/layout/past/LV0F_2.kosp"
+PLevel_LV0F3: binclude "level/layout/past/LV0F_3.kosp"
+PLevel_LV0F4: binclude "level/layout/past/LV0F_4.kosp"
 
 ; ---------------------------------------------------------------------------
 Level_Index_GoodFuture:
@@ -91,6 +165,43 @@ Level_Index_GoodFuture:
 		dc.w GLevel_MTZ3-Level_Index_GoodFuture
 		dc.w GLevel_MTZ4-Level_Index_GoodFuture
 
+		dc.w GLevel_LV071-Level_Index_GoodFuture
+		dc.w GLevel_LV072-Level_Index_GoodFuture
+		dc.w GLevel_LV073-Level_Index_GoodFuture
+		dc.w GLevel_LV074-Level_Index_GoodFuture
+		dc.w GLevel_SMZ1-Level_Index_GoodFuture
+		dc.w GLevel_SMZ2-Level_Index_GoodFuture
+		dc.w GLevel_SMZ3-Level_Index_GoodFuture
+		dc.w GLevel_SMZ4-Level_Index_GoodFuture
+		dc.w GLevel_LV091-Level_Index_GoodFuture
+		dc.w GLevel_LV092-Level_Index_GoodFuture
+		dc.w GLevel_LV093-Level_Index_GoodFuture
+		dc.w GLevel_LV094-Level_Index_GoodFuture
+		dc.w GLevel_LV0A1-Level_Index_GoodFuture
+		dc.w GLevel_LV0A2-Level_Index_GoodFuture
+		dc.w GLevel_LV0A3-Level_Index_GoodFuture
+		dc.w GLevel_LV0A4-Level_Index_GoodFuture
+		dc.w GLevel_LV0B1-Level_Index_GoodFuture
+		dc.w GLevel_LV0B2-Level_Index_GoodFuture
+		dc.w GLevel_LV0B3-Level_Index_GoodFuture
+		dc.w GLevel_LV0B4-Level_Index_GoodFuture
+		dc.w GLevel_LV0C1-Level_Index_GoodFuture
+		dc.w GLevel_LV0C2-Level_Index_GoodFuture
+		dc.w GLevel_LV0C3-Level_Index_GoodFuture
+		dc.w GLevel_LV0C4-Level_Index_GoodFuture
+		dc.w GLevel_LV0D1-Level_Index_GoodFuture
+		dc.w GLevel_LV0D2-Level_Index_GoodFuture
+		dc.w GLevel_LV0D3-Level_Index_GoodFuture
+		dc.w GLevel_LV0D4-Level_Index_GoodFuture
+		dc.w GLevel_LV0E1-Level_Index_GoodFuture
+		dc.w GLevel_LV0E2-Level_Index_GoodFuture
+		dc.w GLevel_LV0E3-Level_Index_GoodFuture
+		dc.w GLevel_LV0E4-Level_Index_GoodFuture
+		dc.w GLevel_LV0F1-Level_Index_GoodFuture
+		dc.w GLevel_LV0F2-Level_Index_GoodFuture
+		dc.w GLevel_LV0F3-Level_Index_GoodFuture
+		dc.w GLevel_LV0F4-Level_Index_GoodFuture
+
 GLevel_GHZ1:	binclude	"level/layout/good future/GHZ_1.kosp"
 GLevel_GHZ2:	binclude	"level/layout/good future/GHZ_2.kosp"
 GLevel_GHZ3:	binclude	"level/layout/good future/GHZ_3.kosp"
@@ -119,6 +230,43 @@ GLevel_MTZ1:	binclude	"level/layout/good future/MTZ_1.kosp"
 GLevel_MTZ2:	binclude	"level/layout/good future/MTZ_2.kosp"
 GLevel_MTZ3:	binclude	"level/layout/good future/MTZ_3.kosp"
 GLevel_MTZ4:	binclude	"level/layout/good future/MTZ_4.kosp"
+
+GLevel_LV071: binclude "level/layout/good future/LV07_1.kosp"
+GLevel_LV072: binclude "level/layout/good future/LV07_2.kosp"
+GLevel_LV073: binclude "level/layout/good future/LV07_3.kosp"
+GLevel_LV074: binclude "level/layout/good future/LV07_4.kosp"
+GLevel_SMZ1: binclude "level/layout/good future/SMZ_1.kosp"
+GLevel_SMZ2: binclude "level/layout/good future/SMZ_2.kosp"
+GLevel_SMZ3: binclude "level/layout/good future/SMZ_3.kosp"
+GLevel_SMZ4: binclude "level/layout/good future/SMZ_4.kosp"
+GLevel_LV091: binclude "level/layout/good future/LV09_1.kosp"
+GLevel_LV092: binclude "level/layout/good future/LV09_2.kosp"
+GLevel_LV093: binclude "level/layout/good future/LV09_3.kosp"
+GLevel_LV094: binclude "level/layout/good future/LV09_4.kosp"
+GLevel_LV0A1: binclude "level/layout/good future/LV0A_1.kosp"
+GLevel_LV0A2: binclude "level/layout/good future/LV0A_2.kosp"
+GLevel_LV0A3: binclude "level/layout/good future/LV0A_3.kosp"
+GLevel_LV0A4: binclude "level/layout/good future/LV0A_4.kosp"
+GLevel_LV0B1: binclude "level/layout/good future/LV0B_1.kosp"
+GLevel_LV0B2: binclude "level/layout/good future/LV0B_2.kosp"
+GLevel_LV0B3: binclude "level/layout/good future/LV0B_3.kosp"
+GLevel_LV0B4: binclude "level/layout/good future/LV0B_4.kosp"
+GLevel_LV0C1: binclude "level/layout/good future/LV0C_1.kosp"
+GLevel_LV0C2: binclude "level/layout/good future/LV0C_2.kosp"
+GLevel_LV0C3: binclude "level/layout/good future/LV0C_3.kosp"
+GLevel_LV0C4: binclude "level/layout/good future/LV0C_4.kosp"
+GLevel_LV0D1: binclude "level/layout/good future/LV0D_1.kosp"
+GLevel_LV0D2: binclude "level/layout/good future/LV0D_2.kosp"
+GLevel_LV0D3: binclude "level/layout/good future/LV0D_3.kosp"
+GLevel_LV0D4: binclude "level/layout/good future/LV0D_4.kosp"
+GLevel_LV0E1: binclude "level/layout/good future/LV0E_1.kosp"
+GLevel_LV0E2: binclude "level/layout/good future/LV0E_2.kosp"
+GLevel_LV0E3: binclude "level/layout/good future/LV0E_3.kosp"
+GLevel_LV0E4: binclude "level/layout/good future/LV0E_4.kosp"
+GLevel_LV0F1: binclude "level/layout/good future/LV0F_1.kosp"
+GLevel_LV0F2: binclude "level/layout/good future/LV0F_2.kosp"
+GLevel_LV0F3: binclude "level/layout/good future/LV0F_3.kosp"
+GLevel_LV0F4: binclude "level/layout/good future/LV0F_4.kosp"
 
 ; ---------------------------------------------------------------------------
 Level_Index_BadFuture:
@@ -151,6 +299,43 @@ Level_Index_BadFuture:
 		dc.w BLevel_MTZ3-Level_Index_BadFuture
 		dc.w BLevel_MTZ4-Level_Index_BadFuture
 
+		dc.w BLevel_LV071-Level_Index_BadFuture
+		dc.w BLevel_LV072-Level_Index_BadFuture
+		dc.w BLevel_LV073-Level_Index_BadFuture
+		dc.w BLevel_LV074-Level_Index_BadFuture
+		dc.w BLevel_SMZ1-Level_Index_BadFuture
+		dc.w BLevel_SMZ2-Level_Index_BadFuture
+		dc.w BLevel_SMZ3-Level_Index_BadFuture
+		dc.w BLevel_SMZ4-Level_Index_BadFuture
+		dc.w BLevel_LV091-Level_Index_BadFuture
+		dc.w BLevel_LV092-Level_Index_BadFuture
+		dc.w BLevel_LV093-Level_Index_BadFuture
+		dc.w BLevel_LV094-Level_Index_BadFuture
+		dc.w BLevel_LV0A1-Level_Index_BadFuture
+		dc.w BLevel_LV0A2-Level_Index_BadFuture
+		dc.w BLevel_LV0A3-Level_Index_BadFuture
+		dc.w BLevel_LV0A4-Level_Index_BadFuture
+		dc.w BLevel_LV0B1-Level_Index_BadFuture
+		dc.w BLevel_LV0B2-Level_Index_BadFuture
+		dc.w BLevel_LV0B3-Level_Index_BadFuture
+		dc.w BLevel_LV0B4-Level_Index_BadFuture
+		dc.w BLevel_LV0C1-Level_Index_BadFuture
+		dc.w BLevel_LV0C2-Level_Index_BadFuture
+		dc.w BLevel_LV0C3-Level_Index_BadFuture
+		dc.w BLevel_LV0C4-Level_Index_BadFuture
+		dc.w BLevel_LV0D1-Level_Index_BadFuture
+		dc.w BLevel_LV0D2-Level_Index_BadFuture
+		dc.w BLevel_LV0D3-Level_Index_BadFuture
+		dc.w BLevel_LV0D4-Level_Index_BadFuture
+		dc.w BLevel_LV0E1-Level_Index_BadFuture
+		dc.w BLevel_LV0E2-Level_Index_BadFuture
+		dc.w BLevel_LV0E3-Level_Index_BadFuture
+		dc.w BLevel_LV0E4-Level_Index_BadFuture
+		dc.w BLevel_LV0F1-Level_Index_BadFuture
+		dc.w BLevel_LV0F2-Level_Index_BadFuture
+		dc.w BLevel_LV0F3-Level_Index_BadFuture
+		dc.w BLevel_LV0F4-Level_Index_BadFuture
+
 BLevel_GHZ1:	binclude	"level/layout/bad future/GHZ_1.kosp"
 BLevel_GHZ2:	binclude	"level/layout/bad future/GHZ_2.kosp"
 BLevel_GHZ3:	binclude	"level/layout/bad future/GHZ_3.kosp"
@@ -179,3 +364,40 @@ BLevel_MTZ1:	binclude	"level/layout/bad future/MTZ_1.kosp"
 BLevel_MTZ2:	binclude	"level/layout/bad future/MTZ_2.kosp"
 BLevel_MTZ3:	binclude	"level/layout/bad future/MTZ_3.kosp"
 BLevel_MTZ4:	binclude	"level/layout/bad future/MTZ_4.kosp"
+
+BLevel_LV071: binclude "level/layout/bad future/LV07_1.kosp"
+BLevel_LV072: binclude "level/layout/bad future/LV07_2.kosp"
+BLevel_LV073: binclude "level/layout/bad future/LV07_3.kosp"
+BLevel_LV074: binclude "level/layout/bad future/LV07_4.kosp"
+BLevel_SMZ1: binclude "level/layout/bad future/SMZ_1.kosp"
+BLevel_SMZ2: binclude "level/layout/bad future/SMZ_2.kosp"
+BLevel_SMZ3: binclude "level/layout/bad future/SMZ_3.kosp"
+BLevel_SMZ4: binclude "level/layout/bad future/SMZ_4.kosp"
+BLevel_LV091: binclude "level/layout/bad future/LV09_1.kosp"
+BLevel_LV092: binclude "level/layout/bad future/LV09_2.kosp"
+BLevel_LV093: binclude "level/layout/bad future/LV09_3.kosp"
+BLevel_LV094: binclude "level/layout/bad future/LV09_4.kosp"
+BLevel_LV0A1: binclude "level/layout/bad future/LV0A_1.kosp"
+BLevel_LV0A2: binclude "level/layout/bad future/LV0A_2.kosp"
+BLevel_LV0A3: binclude "level/layout/bad future/LV0A_3.kosp"
+BLevel_LV0A4: binclude "level/layout/bad future/LV0A_4.kosp"
+BLevel_LV0B1: binclude "level/layout/bad future/LV0B_1.kosp"
+BLevel_LV0B2: binclude "level/layout/bad future/LV0B_2.kosp"
+BLevel_LV0B3: binclude "level/layout/bad future/LV0B_3.kosp"
+BLevel_LV0B4: binclude "level/layout/bad future/LV0B_4.kosp"
+BLevel_LV0C1: binclude "level/layout/bad future/LV0C_1.kosp"
+BLevel_LV0C2: binclude "level/layout/bad future/LV0C_2.kosp"
+BLevel_LV0C3: binclude "level/layout/bad future/LV0C_3.kosp"
+BLevel_LV0C4: binclude "level/layout/bad future/LV0C_4.kosp"
+BLevel_LV0D1: binclude "level/layout/bad future/LV0D_1.kosp"
+BLevel_LV0D2: binclude "level/layout/bad future/LV0D_2.kosp"
+BLevel_LV0D3: binclude "level/layout/bad future/LV0D_3.kosp"
+BLevel_LV0D4: binclude "level/layout/bad future/LV0D_4.kosp"
+BLevel_LV0E1: binclude "level/layout/bad future/LV0E_1.kosp"
+BLevel_LV0E2: binclude "level/layout/bad future/LV0E_2.kosp"
+BLevel_LV0E3: binclude "level/layout/bad future/LV0E_3.kosp"
+BLevel_LV0E4: binclude "level/layout/bad future/LV0E_4.kosp"
+BLevel_LV0F1: binclude "level/layout/bad future/LV0F_1.kosp"
+BLevel_LV0F2: binclude "level/layout/bad future/LV0F_2.kosp"
+BLevel_LV0F3: binclude "level/layout/bad future/LV0F_3.kosp"
+BLevel_LV0F4: binclude "level/layout/bad future/LV0F_4.kosp"

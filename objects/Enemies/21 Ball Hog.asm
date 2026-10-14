@@ -25,6 +25,12 @@ Ballhog_Main:
 		move.l	#Map_BallHogH,obMap(a0)
 		move.b	#Map_BallHogH_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Ball_HogH,1,0),obGfx(a0)
+		cmpi.b #id_SMZ,(Current_Zone).w
+		bne.s .defaultArt
+		move.w #ArtTile_SMZ_Atlas,obGfx(a0)
+		move.l #Map_SMZ_Hog,obMap(a0)
+		move.b #Map_SMZ_Hog_height,height_pixels(a0)
+.defaultArt:
 		move.b	#4,obRender(a0)
 		move.w	#$200,obPriority(a0)
 		move.b	#5,obColType(a0)
@@ -119,6 +125,10 @@ Ballhog_MakeBall:
 		move.b	#6,obRoutine(a1)	; set normal bomb
 		move.b	#4,obFrame(a1)		; set bomb frame
 		move.l	#Map_BallHogH,obMap(a1)
+		cmpi.b #id_SMZ,(Current_Zone).w
+		bne.s .hogMapReady
+		move.l #Map_SMZ_Hog,obMap(a1)
+.hogMapReady:
 		move.b	#Map_BallHogH_height,height_pixels(a1)
 		move.b	#6,obHeight(a1)
 		move.w	#make_art_tile(ArtTile_Ball_HogH,1,0),obGfx(a1)
@@ -379,6 +389,10 @@ Hog_Idle3:
 		move.b	#8,obRoutine(a1)	; set proto bomb
 		move.b	#4,obFrame(a1)		; set bomb frame
 		move.l	#Map_BallHogH,obMap(a1)
+		cmpi.b #id_SMZ,(Current_Zone).w
+		bne.s .hogMapReady
+		move.l #Map_SMZ_Hog,obMap(a1)
+.hogMapReady:
 		move.b	#Map_BallHogH_height,height_pixels(a1)
 		move.w	#make_art_tile(ArtTile_Ball_HogH,1,0),obGfx(a1)
 		move.w	obX(a0),obX(a1)

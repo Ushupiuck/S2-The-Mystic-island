@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ObjDef xmlns="http://www.sonicretro.org" Name="Tamabboh" Image="normal">
+  <Images>
+    <ImageFromMappings id="normal">
+      <ArtFile filename="../art/nemesis/PP Tamabboh.nem" />
+      <MapFile type="Binary" filename="../mappings/sprite/PP Tamabboh Normal.bin" frame="0" startpal="0" />
+    </ImageFromMappings>
+    <ImageFromMappings id="damaged">
+      <ArtFile filename="../art/nemesis/PP Tamabboh.nem" />
+      <MapFile type="Binary" filename="../mappings/sprite/PP Tamabboh Damaged.bin" frame="0" startpal="0" />
+    </ImageFromMappings>
+  </Images>
+  <Subtypes>
+    <Subtype id="00" name="Normal" image="normal" />
+    <Subtype id="01" name="Damaged" image="damaged" />
+  </Subtypes>
+  <Properties>
+    <BitsProperty name="Variant" type="EnemyVariant" startbit="0" length="1" />
+  </Properties>
+  <Enums>
+    <Enum name="EnemyVariant">
+      <EnumMember name="Normal" />
+      <EnumMember name="Damaged" />
+    </Enum>
+  </Enums>
+  <Display>
+    <DisplayOption>
+      <Condition property="Variant" value="Normal" />
+      <ImageRef image="normal" />
+    </DisplayOption>
+    <DisplayOption>
+      <Condition property="Variant" value="Damaged" />
+      <ImageRef image="damaged" />
+    </DisplayOption>
+  </Display>
+</ObjDef>

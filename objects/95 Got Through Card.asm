@@ -137,7 +137,7 @@ Got_AddBonus:
 
 Got_NextLevel:	; Routine $A
 		move.b	(Current_Zone).w,d0
-		andi.w	#7,d0
+		andi.w	#$F,d0
 		lsl.w	#3,d0
 		move.b	(Current_Act).w,d1
 		andi.w	#3,d1
@@ -166,42 +166,71 @@ VBla_08A:
 ; ---------------------------------------------------------------------------
 ; Level	order array
 ; ---------------------------------------------------------------------------
-LevelOrder:	; Don't be fooled: the 2nd byte is the act you're transitioning TO
-		; Green Hill Zone
-		dc.b id_GHZ, 1	; Act 1
-		dc.b id_GHZ, 2	; Act 2
-		dc.b id_MZ, 0	; Act 3
-		dc.b 0, 0
-
-		; Labyrinth Zone
-		dc.b id_LZ, 1	; Act 1
-		dc.b id_LZ, 2	; Act 2
-		dc.b id_SLZ, 0	; Act 3
-		dc.b id_SBZ, 2	; Scrap Brain Zone Act 3
-
-		; Marble Zone
-		dc.b id_MZ, 1	; Act 1
-		dc.b id_MZ, 2	; Act 2
-		dc.b id_SYZ, 0	; Act 3
-		dc.b 0, 0
-
-		; Star Light Zone
-		dc.b id_SLZ, 1	; Act 1
-		dc.b id_SLZ, 2	; Act 2
-		dc.b id_SBZ, 0	; Act 3
-		dc.b 0, 0
-
-		; Spring Yard Zone
-		dc.b id_SYZ, 1	; Act 1
-		dc.b id_SYZ, 2	; Act 2
-		dc.b id_LZ, 0	; Act 3
-		dc.b 0, 0
-
-		; Scrap Brain Zone
-		dc.b id_SBZ, 1	; Act 1
-		dc.b id_LZ, 3	; Act 2
-		dc.b 0, 0	; Final Zone
-		dc.b 0, 0
+LevelOrder:
+		dc.w $0001
+		dc.w $0002
+		dc.w $0003
+		dc.w $0100
+		dc.w $0101
+		dc.w $0102
+		dc.w $0103
+		dc.w $0200
+		dc.w $0201
+		dc.w $0202
+		dc.w $0203
+		dc.w $0300
+		dc.w $0301
+		dc.w $0302
+		dc.w $0303
+		dc.w $0400
+		dc.w $0401
+		dc.w $0402
+		dc.w $0403
+		dc.w $0500
+		dc.w $0501
+		dc.w $0502
+		dc.w $0503
+		dc.w $0600
+		dc.w $0601
+		dc.w $0602
+		dc.w $0603
+		dc.w $0700
+		dc.w $0701
+		dc.w $0702
+		dc.w $0703
+		dc.w $0800
+		dc.w $0801
+		dc.w $0802
+		dc.w $0803
+		dc.w $0900
+		dc.w $0901
+		dc.w $0902
+		dc.w $0903
+		dc.w $0A00
+		dc.w $0A01
+		dc.w $0A02
+		dc.w $0A03
+		dc.w $0B00
+		dc.w $0B01
+		dc.w $0B02
+		dc.w $0B03
+		dc.w $0C00
+		dc.w $0C01
+		dc.w $0C02
+		dc.w $0C03
+		dc.w $0D00
+		dc.w $0D01
+		dc.w $0D02
+		dc.w $0D03
+		dc.w $0E00
+		dc.w $0E01
+		dc.w $0E02
+		dc.w $0E03
+		dc.w $0F00
+		dc.w $0F01
+		dc.w $0F02
+		dc.w $0F03
+		dc.w $0000
 		even
 
 ; ---------------------------------------------------------------------------

@@ -11,7 +11,7 @@ import json
 from genesis_test_core import Genesis
 
 
-def boot_level(g,item=10,player=0):
+def boot_level(g,item=10,player=0,zone=None,act=0):
     for _ in range(1800):
         g.run()
         if g.read('v_vbla_routine',2)==g.s['Vint_Title'] and g.read('v_generictimer',2)==375:
@@ -19,8 +19,18 @@ def boot_level(g,item=10,player=0):
     else:
         raise AssertionError('Title did not start')
     g.write('f_levselcheat',1)
-    g.buttons={3};g.run(2);g.buttons=set();g.run(5)
+    g.buttons={3};g.run(2);g.buttons=set();g.run(90 if 'LevelSelect_Names' in g.s else 5)
     g.write('Player_mode',player,2)
+    if 'LevelSelect_Names' in g.s:
+        # Keep the legacy fixture API while exercising the new two-page menu.
+        old=((0,0),(0,1),(0,2),(2,0),(2,1),(2,2),(4,0),(4,1),(4,2),
+             (1,0),(1,1),(1,2),(3,0),(3,1),(3,2),(5,0),(5,1),(1,3),(5,2))
+        if zone is None:
+            if item < len(old): zone,act=old[item]
+            else: item=34 if item==19 else 33
+        if zone is not None: item=(zone//8)*256+(zone%8)*4+act
+    elif zone is not None:
+        raise AssertionError('Explicit zone boot needs the two-page menu')
     g.write('v_levselitem',item,2);g.run(5)
     g.buttons={3};g.run(2);g.buttons=set()
     for _ in range(600):

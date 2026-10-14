@@ -27,6 +27,7 @@ Card_CheckSBZ3:	; Routine 0
 
 ; Card_CheckFZ:
 		move.w	d0,d2
+		addi.w #12,d2
 	;	cmpi.w	#(id_SBZ<<8)+2,(Current_ZoneAndAct).w ; check if level is FZ
 	;	bne.s	Card_LoadConfig
 	;	moveq	#6,d0		; load title card number 6 (FZ)
@@ -53,7 +54,12 @@ Card_Loop:
 Card_ActNumber:
 		cmpi.b	#7,d0
 		bne.s	Card_MakeSprite
+		cmpi.b #3,(Current_Act).w
+		beq.s .act4
 		add.b	(Current_Act).w,d0
+		bra.s Card_MakeSprite
+.act4:
+		moveq #28,d0
 	;	cmpi.b	#3,(Current_Act).w
 	;	bne.s	Card_MakeSprite
 	;	subq.b	#1,d0
@@ -62,7 +68,7 @@ Card_MakeSprite:
 		move.b	d0,obFrame(a1)
 		move.l	#Map_Card,obMap(a1)
 		move.b	#Map_Card_height,height_pixels(a1)
-		move.w	#make_art_tile(ArtTile_Title_Card,0,1),obGfx(a1)
+		move.w	#make_art_tile(ArtTile_Zone_Title,0,1),obGfx(a1)
 		move.b	#sprite_bound($78,Map_Card_width),obActWid(a1)
 		sf	obRender(a1)
 		move.b	#60,obTimeFrame(a1)
@@ -125,7 +131,9 @@ Card_ChangeArt:
 		jsr	(LoadPLC).l	; load explosion patterns
 		moveq	#0,d0
 		move.b	(Current_Zone).w,d0
-		addi.w	#plcid_GHZAnimals,d0
+		add.w d0,d0
+		lea (Card_AnimalPLC).l,a1
+		move.w (a1,d0.w),d0
 		jsr	(LoadPLC).l	; load animal patterns
 		jsr	(LoadKosPLC).l
 
@@ -146,11 +154,24 @@ Card_ItemData:	dc.w $D0	; y-axis position
 ; 4 bytes per item (YYYY XXXX)
 ; 4 items per level (GREEN HILL, ZONE, ACT X, oval)
 ; ---------------------------------------------------------------------------
-Card_ConData:	dc.w 0,	$120, $FEFC, $13C, $414, $154, $214, $154 ; GHZ
-		dc.w 0,	$120, $FEF4, $134, $40C, $14C, $20C, $14C ; LZ
-		dc.w 0,	$120, $FEE0, $120, $3F8, $138, $1F8, $138 ; MZ
-		dc.w 0,	$120, $FEFC, $13C, $414, $154, $214, $154 ; SLZ
-		dc.w 0,	$120, $FF04, $144, $41C, $15C, $21C, $15C ; SYZ
-		dc.w 0,	$120, $FF04, $144, $41C, $15C, $21C, $15C ; SBZ
-		dc.w 0,	$120, $FEE4, $124, $3EC, $3EC, $1EC, $12C ; FZ
-; ---------------------------------------------------------------------------
+Card_ConData:
+		dc.w 0,$120,$FEFC,$13C,$414,$154,$214,$154
+		dc.w 0,$120,$FEFC,$13C,$414,$154,$214,$154
+		dc.w 0,$120,$FEFC,$13C,$414,$154,$214,$154
+		dc.w 0,$120,$FEFC,$13C,$414,$154,$214,$154
+		dc.w 0,$120,$FEFC,$13C,$414,$154,$214,$154
+		dc.w 0,$120,$FEFC,$13C,$414,$154,$214,$154
+		dc.w 0,$120,$FEFC,$13C,$414,$154,$214,$154
+		dc.w 0,$120,$FEFC,$13C,$414,$154,$214,$154
+		dc.w 0,$120,$FEFC,$13C,$414,$154,$214,$154
+		dc.w 0,$120,$FEFC,$13C,$414,$154,$214,$154
+		dc.w 0,$120,$FEFC,$13C,$414,$154,$214,$154
+		dc.w 0,$120,$FEFC,$13C,$414,$154,$214,$154
+		dc.w 0,$120,$FEFC,$13C,$414,$154,$214,$154
+		dc.w 0,$120,$FEFC,$13C,$414,$154,$214,$154
+		dc.w 0,$120,$FEFC,$13C,$414,$154,$214,$154
+		dc.w 0,$120,$FEFC,$13C,$414,$154,$214,$154
+
+Card_AnimalPLC:
+		dc.w plcid_GHZAnimals,plcid_LZAnimals,plcid_CPZAnimals,plcid_EHZAnimals,plcid_HPZAnimals,plcid_HTZAnimals
+		dc.w plcid_GHZAnimals,plcid_GHZAnimals,plcid_GHZAnimals,plcid_GHZAnimals,plcid_GHZAnimals,plcid_GHZAnimals,plcid_GHZAnimals,plcid_GHZAnimals,plcid_GHZAnimals,plcid_GHZAnimals

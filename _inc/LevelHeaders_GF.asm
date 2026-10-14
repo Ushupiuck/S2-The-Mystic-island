@@ -63,9 +63,9 @@ LevelArtPointersGF:
 
 		; LV6 placeholder
 		levartptrs plcid_Filler, plcid_Filler2, palid_MTZ, GKosp_MTZ, GMap16_MTZ, GMap128_MTZ	; LV6Z	; ACT 1
-		levartptrs plcid_Filler, plcid_Filler2, palid_MTZ, GKosp_MTZ, GMap16_MTZ, GMap128_MTZ	; LV6Z	; ACT 2
-		levartptrs plcid_Filler, plcid_Filler2, palid_MTZ, GKosp_MTZ, GMap16_MTZ, GMap128_MTZ	; LV6Z	; ACT 3
-		levartptrs plcid_Filler, plcid_Filler2, palid_MTZ, GKosp_MTZ, GMap16_MTZ, GMap128_MTZ	; LV6Z	; ACT 4
+		levartptrs plcid_Filler, plcid_Filler2, palid_MTZ, GKosp_MTZ, GMap16_MTZ, Map128_MTZBlank	; LV6Z	; ACT 2
+		levartptrs plcid_Filler, plcid_Filler2, palid_MTZ, GKosp_MTZ, GMap16_MTZ, Map128_MTZBlank	; LV6Z	; ACT 3
+		levartptrs plcid_Filler, plcid_Filler2, palid_MTZ, GKosp_MTZ, GMap16_MTZ, Map128_MTZBlank	; LV6Z	; ACT 4
 
 		; LV7 placeholder
 		levartptrs plcid_Filler, plcid_Filler2, palid_GHZ, GKosp_LV7, GMap16_LV7, GMap128_LV7	; LV7Z	; ACT 1
@@ -74,10 +74,10 @@ LevelArtPointersGF:
 		levartptrs plcid_Filler, plcid_Filler2, palid_GHZ, GKosp_LV7, GMap16_LV7, GMap128_LV7	; LV7Z	; ACT 4
 
 		; LV8 placeholder
-		levartptrs plcid_Filler, plcid_Filler2, palid_GHZ, GKosp_LV8, GMap16_LV8, GMap128_LV8	; LV8Z	; ACT 1
-		levartptrs plcid_Filler, plcid_Filler2, palid_GHZ, GKosp_LV8, GMap16_LV8, GMap128_LV8	; LV8Z	; ACT 2
-		levartptrs plcid_Filler, plcid_Filler2, palid_GHZ, GKosp_LV8, GMap16_LV8, GMap128_LV8	; LV8Z	; ACT 3
-		levartptrs plcid_Filler, plcid_Filler2, palid_GHZ, GKosp_LV8, GMap16_LV8, GMap128_LV8	; LV8Z	; ACT 4
+		levartptrs plcid_SMZ, plcid_SMZ2, palid_SMZ1, GKosp_LV8, GMap16_LV8, GMap128_LV8	; LV8Z	; ACT 1
+		levartptrs plcid_SMZ, plcid_SMZ2, palid_SMZ2, GKosp_LV8, GMap16_LV8, GMap128_LV8	; LV8Z	; ACT 2
+		levartptrs plcid_SMZ, plcid_SMZ2, palid_SMZ1, GKosp_LV8, GMap16_LV8, Map128_SMZBlank	; LV8Z	; ACT 3
+		levartptrs plcid_SMZ, plcid_SMZ2, palid_SMZ1, GKosp_LV8, GMap16_LV8, Map128_SMZBlank	; LV8Z	; ACT 4
 
 		; LV9 placeholder
 		levartptrs plcid_Filler, plcid_Filler2, palid_GHZ, GKosp_LV9, GMap16_LV9, GMap128_LV9	; LV9Z	; ACT 1
@@ -86,10 +86,10 @@ LevelArtPointersGF:
 		levartptrs plcid_Filler, plcid_Filler2, palid_GHZ, GKosp_LV9, GMap16_LV9, GMap128_LV9	; LV9Z	; ACT 4
 
 		; LVA placeholder
-		levartptrs plcid_Filler, plcid_Filler2, palid_GHZ, GKosp_LVA, GMap16_LVA, GMap128_LVA	; LVAZ	; ACT 1
-		levartptrs plcid_Filler, plcid_Filler2, palid_GHZ, GKosp_LVA, GMap16_LVA, GMap128_LVA	; LVAZ	; ACT 2
-		levartptrs plcid_Filler, plcid_Filler2, palid_GHZ, GKosp_LVA, GMap16_LVA, GMap128_LVA	; LVAZ	; ACT 3
-		levartptrs plcid_Filler, plcid_Filler2, palid_GHZ, GKosp_LVA, GMap16_LVA, GMap128_LVA	; LVAZ	; ACT 4
+		levartptrs plcid_PP, plcid_Filler2, palid_GHZ, GKosp_LVA, GMap16_LVA, GMap128_LVA	; LVAZ	; ACT 1
+		levartptrs plcid_PP, plcid_Filler2, palid_GHZ, GKosp_LVA, GMap16_LVA, GMap128_LVA	; LVAZ	; ACT 2
+		levartptrs plcid_PP, plcid_Filler2, palid_GHZ, GKosp_LVA, GMap16_LVA, GMap128_LVA	; LVAZ	; ACT 3
+		levartptrs plcid_PP, plcid_Filler2, palid_GHZ, GKosp_LVA, GMap16_LVA, GMap128_LVA	; LVAZ	; ACT 4
 
 		; LVB placeholder
 		levartptrs plcid_Filler, plcid_Filler2, palid_GHZ, GKosp_LVB, GMap16_LVB, GMap128_LVB	; LVBZ	; ACT 1

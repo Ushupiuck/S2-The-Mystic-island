@@ -5,7 +5,7 @@ Map_Obj7E:
 		dc.w M_SSR_Chaos-Map_Obj7E
 		dc.w M_SSR_Score-Map_Obj7E
 		dc.w byte_CD0D-Map_Obj7E
-		dc.w M_Card_Oval-Map_Obj7E
+		dc.w M_Result_Oval-Map_Obj7E
 		dc.w byte_CD31-Map_Obj7E
 		dc.w byte_CD46-Map_Obj7E
 		dc.w byte_CD5B-Map_Obj7E
@@ -30,14 +30,14 @@ M_SSR_Score:	dc.w 6			; "SCORE"
 		dc.w $F801, Map_Results_ScoreE, $FFD0
 		dc.w $F809, Map_Results_ScoreDigits, $18
 		dc.w $F80D, Map_Results_ScoreDigits+6, $30
-		dc.w $F704, $6E, $FFCD
-		dc.w $FF04, $186E, $FFCD
+		dc.w $F704, $6D, $FFCD
+		dc.w $FF04, $186D, $FFCD
 byte_CD0D:	dc.w 7			; Palette-0 animated ring + BONUS
 		dc.w $F805, Map_SSResults_RingTile, $FFC0
-		dc.w $F80D, $66, $FFD9
+		dc.w $F80D, $65, $FFD9
 		dc.w $F801, Map_Results_ScoreLetters, $FFF9
-		dc.w $F704, $6E, $FFF6
-		dc.w $FF04, $186E, $FFF6
+		dc.w $F704, $6D, $FFF6
+		dc.w $FF04, $186D, $FFF6
 		dc.w $F80D, $FFF8, $28
 		dc.w $F801, Map_Results_Zero, $48
 byte_CD31:	dc.w 4

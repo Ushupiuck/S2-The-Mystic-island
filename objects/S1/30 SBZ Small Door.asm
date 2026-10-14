@@ -17,6 +17,12 @@ ADoor_Main:	; Routine 0
 		move.l	#Map_Obj30,obMap(a0)
 		move.b	#Map_Obj30_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_SBZ_Door,2,0),obGfx(a0)
+		cmpi.b #id_SMZ,(Current_Zone).w
+		bne.s .doorAtlasReady
+		move.l #Map_SMZ_Door,obMap(a0)
+		move.b #Map_SMZ_Door_height,height_pixels(a0)
+		move.w #ArtTile_SMZ_Atlas,obGfx(a0)
+.doorAtlasReady:
 		ori.b	#4,obRender(a0)
 		move.b	#sprite_bound(8,Map_Obj30_width),obActWid(a0)
 		move.w	#$200,obPriority(a0)

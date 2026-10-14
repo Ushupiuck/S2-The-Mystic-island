@@ -76,6 +76,12 @@ SwingingPtfm_Init:
 		move.b	#$99,obColType(a0)
 
 .parseSubtype:
+        cmpi.b #id_SMZ,(Current_Zone).w
+        bne.s .swingAtlasReady
+        move.l #Map_SMZ_Swing,obMap(a0)
+        move.b #Map_SMZ_Swing_height,height_pixels(a0)
+        move.w #ArtTile_SMZ_Atlas,obGfx(a0)
+.swingAtlasReady:
 		moveq	#0,d1
 		move.b	obSubtype(a0),d1
 
@@ -180,14 +186,20 @@ SwingingPtfm_Init:
 		bne.s	.done
 
 .makeBall:
-		move.l	#Map_GBall,obMap(a0)
-		move.b	#Map_GBall_height,height_pixels(a0)
-		move.w	#make_art_tile(ArtTile_GHZ_Giant_Ball,2,0),obGfx(a0)
-		move.b	#1,obFrame(a0)
-		move.w	#$100,obPriority(a0)
-		move.b	#sprite_bound($18,Map_GBall_width),obActWid(a0)
-		move.b	#$18,obHeight(a0)
-		move.b	#$99,obColType(a0)
+        cmpi.b #id_SMZ,(Current_Zone).w
+        beq.s .smzBall
+        move.l #Map_GBall,obMap(a0)
+        move.b #Map_GBall_height,height_pixels(a0)
+        move.w #make_art_tile(ArtTile_GHZ_Giant_Ball,2,0),obGfx(a0)
+        move.b #1,obFrame(a0)
+        bra.s .ballReady
+.smzBall:
+        clr.b obFrame(a0)
+.ballReady:
+        move.w #$100,obPriority(a0)
+        move.b #sprite_bound($18,Map_GBall_width),obActWid(a0)
+        move.b #$18,obHeight(a0)
+        move.b #$99,obColType(a0)
 .done:		rts
 ; ---------------------------------------------------------------------------
 

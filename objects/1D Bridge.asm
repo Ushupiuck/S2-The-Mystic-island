@@ -393,7 +393,7 @@ loc_7EAE:
 ; sub_7F36:
 Bridge_Depress:
 		move.b	objoff_42(a0),d0
-		bsr.w	CalcSine
+		jsr	(CalcSine).l
 		move.w	d0,d4
 		lea	(Bridge_BendData2).l,a4
 		moveq	#0,d0

@@ -17,8 +17,14 @@ PalCycle:	dc.w PalCycle_GHZ-PalCycle	; Zone 0
 		dc.w PalCycle_Null-PalCycle	; Zone 5 (DISABLED)
 		dc.w PalCycle_MTZ-PalCycle	; Zone 6
 		dc.w PalCycle_WZ-PalCycle	; Zone 7
-		dc.w PalCycle_MTZ-PalCycle	; Zone 8
+		dc.w PalCycle_SMZ-PalCycle	; Zone 8
 		dc.w PalCycle_GHZ-PalCycle	; Zone 9
+		dc.w PalCycle_Null-PalCycle
+		dc.w PalCycle_Null-PalCycle
+		dc.w PalCycle_Null-PalCycle
+		dc.w PalCycle_Null-PalCycle
+		dc.w PalCycle_Null-PalCycle
+		dc.w PalCycle_Null-PalCycle
 ; ===========================================================================
 PalCycle_Null:
 		rts
@@ -346,3 +352,127 @@ loc_2456:
 		moveq	#1,d0
 		rts
 ; End of function PalCycle_Load
+; The imported SBZ scripts retain their existing per-colour clocks.
+PalCycle_SMZ:
+        lea Pal_SMZScripts1(pc),a2
+        tst.b (Current_Act).w
+        beq.s .first
+        lea Pal_SMZScripts2(pc),a2
+.first:
+        lea (v_pal_buffer).w,a1
+        move.w (a2)+,d7
+.loop:
+        subq.b #1,(a1)
+        bpl.s .skip
+        move.b (a2),(a1)+
+        moveq #0,d0
+        move.b (a1),d0
+        addq.b #1,d0
+        cmp.b 1(a2),d0
+        blo.s .frame
+        moveq #0,d0
+.frame:
+        move.b d0,(a1)+
+        add.w d0,d0
+        move.w 2(a2),d1
+        lea (v_palette).w,a3
+        adda.w d1,a3
+        movea.l 4(a2),a0
+        move.w (a0,d0.w),(a3)
+        bra.s .next
+.skip:
+        addq.l #2,a1
+.next:
+        addq.l #8,a2
+        dbf d7,.loop
+        subq.w #1,(v_pcyc_time).w
+        bpl.s .return
+        lea Pal_SMZCyc4(pc),a0
+        move.w #1,(v_pcyc_time).w
+        tst.b (Current_Act).w
+        beq.s .direction
+        lea Pal_SMZCyc10(pc),a0
+        clr.w (v_pcyc_time).w
+.direction:
+        moveq #-1,d1
+        tst.b (f_conveyrev).w
+        beq.s .advance
+        neg.w d1
+.advance:
+        move.w (v_pcyc_num).w,d0
+        add.w d1,d0
+        cmpi.w #3,d0
+        blo.s .colour
+        move.w d0,d1
+        moveq #0,d0
+        tst.w d1
+        bpl.s .colour
+        moveq #2,d0
+.colour:
+        move.w d0,(v_pcyc_num).w
+        add.w d0,d0
+        move.l (a0,d0.w),(v_palette+$58).w
+        move.w 4(a0,d0.w),(v_palette+$5C).w
+.return:
+        rts
+Pal_SMZScripts1: dc.w 8
+		dc.b 8,8
+		dc.w $50
+		dc.l Pal_SMZCyc1+0
+		dc.b 14,8
+		dc.w $52
+		dc.l Pal_SMZCyc2+0
+		dc.b 15,8
+		dc.w $6E
+		dc.l Pal_SMZCyc3+0
+		dc.b 12,8
+		dc.w $70
+		dc.l Pal_SMZCyc5+0
+		dc.b 8,8
+		dc.w $72
+		dc.l Pal_SMZCyc6+0
+		dc.b 29,16
+		dc.w $7E
+		dc.l Pal_SMZCyc7+0
+		dc.b 4,3
+		dc.w $78
+		dc.l Pal_SMZCyc8+0
+		dc.b 4,3
+		dc.w $7A
+		dc.l Pal_SMZCyc8+2
+		dc.b 4,3
+		dc.w $7C
+		dc.l Pal_SMZCyc8+4
+Pal_SMZScripts2: dc.w 6
+		dc.b 8,8
+		dc.w $50
+		dc.l Pal_SMZCyc1+0
+		dc.b 14,8
+		dc.w $52
+		dc.l Pal_SMZCyc2+0
+		dc.b 10,8
+		dc.w $70
+		dc.l Pal_SMZCyc9+0
+		dc.b 8,8
+		dc.w $72
+		dc.l Pal_SMZCyc6+0
+		dc.b 4,3
+		dc.w $78
+		dc.l Pal_SMZCyc8+0
+		dc.b 4,3
+		dc.w $7A
+		dc.l Pal_SMZCyc8+2
+		dc.b 4,3
+		dc.w $7C
+		dc.l Pal_SMZCyc8+4
+Pal_SMZCyc1: binclude "palette/SMZ Cycle 1.bin"
+Pal_SMZCyc2: binclude "palette/SMZ Cycle 2.bin"
+Pal_SMZCyc3: binclude "palette/SMZ Cycle 3.bin"
+Pal_SMZCyc4: binclude "palette/SMZ Cycle 4.bin"
+Pal_SMZCyc5: binclude "palette/SMZ Cycle 5.bin"
+Pal_SMZCyc6: binclude "palette/SMZ Cycle 6.bin"
+Pal_SMZCyc7: binclude "palette/SMZ Cycle 7.bin"
+Pal_SMZCyc8: binclude "palette/SMZ Cycle 8.bin"
+Pal_SMZCyc9: binclude "palette/SMZ Cycle 9.bin"
+Pal_SMZCyc10: binclude "palette/SMZ Cycle 10.bin"
+		even

@@ -17,10 +17,11 @@ Map_Obj3A:
 		dc.w M_Got_Score-Map_Obj3A
 		dc.w M_Got_TBonus-Map_Obj3A
 		dc.w M_Got_RBonus-Map_Obj3A
-		dc.w M_Card_Oval-Map_Obj3A
-		dc.w M_Card_Act1-Map_Obj3A
-		dc.w M_Card_Act2-Map_Obj3A
-		dc.w M_Card_Act3-Map_Obj3A
+		dc.w M_Result_Oval-Map_Obj3A
+		dc.w M_Result_Act1-Map_Obj3A
+		dc.w M_Result_Act2-Map_Obj3A
+		dc.w M_Result_Act3-Map_Obj3A
+		dc.w M_Result_Act4-Map_Obj3A
 M_Got_SonicHas:	dc.w 8			; SONIC HAS
 		dc.w $F805, $3E, $FFB8
 		dc.w $F805, $32, $FFC8
@@ -42,22 +43,22 @@ M_Got_Score:	dc.w 6			; SCORE
 		dc.w $F801, Map_Results_ScoreE, $FFD0
 		dc.w $F809, Map_Results_ScoreDigits, $18
 		dc.w $F80D, Map_Results_ScoreDigits+6, $30
-		dc.w $F704, $6E, $FFCD
-		dc.w $FF04, $186E, $FFCD
+		dc.w $F704, $6D, $FFCD
+		dc.w $FF04, $186D, $FFCD
 M_Got_TBonus:	dc.w 7			; TIME BONUS
 		dc.w $F80D, Map_Results_TimeLetters, $FFB0
-		dc.w $F80D, $66, $FFD9
+		dc.w $F80D, $65, $FFD9
 		dc.w $F801, Map_Results_ScoreLetters, $FFF9
-		dc.w $F704, $6E, $FFF6
-		dc.w $FF04, $186E, $FFF6
+		dc.w $F704, $6D, $FFF6
+		dc.w $FF04, $186D, $FFF6
 		dc.w $F80D, $FFF0, $28
 		dc.w $F801, Map_Results_Zero, $48
 M_Got_RBonus:	dc.w 7			; Animated ring + BONUS
 		dc.w $F805, Map_Results_RingTile, $FFC0
-		dc.w $F80D, $66, $FFD9
+		dc.w $F80D, $65, $FFD9
 		dc.w $F801, Map_Results_ScoreLetters, $FFF9
-		dc.w $F704, $6E, $FFF6
-		dc.w $FF04, $186E, $FFF6
+		dc.w $F704, $6D, $FFF6
+		dc.w $FF04, $186D, $FFF6
 		dc.w $F80D, $FFF8, $28
 		dc.w $F801, Map_Results_Zero, $48
 		even

@@ -1,0 +1,34 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ObjDef xmlns="http://www.sonicretro.org" Name="Wheel Carrier" Image="wheel">
+  <Images>
+    <ImageFromMappings id="wheel">
+      <ArtFile filename="../art/nemesis/Wheel carrier.nem" />
+      <MapFile type="Binary" filename="../mappings/sprite/Wheel for the moving spring.bin" frame="0" startpal="0" />
+    </ImageFromMappings>
+  </Images>
+  <Subtypes>
+    <Subtype id="00" name="Red Up Spring" image="wheel" />
+    <Subtype id="01" name="Yellow Up Spring" image="wheel" />
+    <Subtype id="02" name="Red Side Spring" image="wheel" />
+    <Subtype id="03" name="Yellow Side Spring" image="wheel" />
+    <Subtype id="04" name="Red Diagonal Spring" image="wheel" />
+    <Subtype id="05" name="Ring Monitor" image="wheel" />
+    <Subtype id="06" name="Shield Monitor" image="wheel" />
+    <Subtype id="07" name="Spikes" image="wheel" />
+  </Subtypes>
+  <Properties>
+    <BitsProperty name="Payload" type="WheelPayload" startbit="0" length="4" />
+  </Properties>
+  <Enums>
+    <Enum name="WheelPayload">
+      <EnumMember name="Red Up Spring" />
+      <EnumMember name="Yellow Up Spring" />
+      <EnumMember name="Red Side Spring" />
+      <EnumMember name="Yellow Side Spring" />
+      <EnumMember name="Red Diagonal Spring" />
+      <EnumMember name="Ring Monitor" />
+      <EnumMember name="Shield Monitor" />
+      <EnumMember name="Spikes" />
+    </Enum>
+  </Enums>
+</ObjDef>

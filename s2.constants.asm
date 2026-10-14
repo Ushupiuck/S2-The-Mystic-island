@@ -509,6 +509,13 @@ id_HTZ:		equ 5
 id_EndZ:	equ 6
 id_SS:		equ 7
 
+LevelCount: equ $10
+ActsPerZone: equ 4
+id_MTZ: equ $06
+id_BLZ: equ $07 ; Shocking Blizzard (SBZ is a legacy Hill Top alias)
+id_SMZ: equ $08
+id_DEZ: equ $09
+
 ; Colours
 cBlack:		equ $000				; colour black
 cWhite:		equ $EEE				; colour white
@@ -1656,8 +1663,8 @@ boss_fz_end:	equ boss_fz_x+$2B0
 ; Universal level sprites; zone/boss PLCs may replace inactive banks.
 ArtTile_Spring_Diagonal:	equ $4D5	; 32 tiles
 ArtTile_Spring_Vertical:	equ ArtTile_Spring_Diagonal+$20 ; 20 tiles
-ArtTile_Spring_Horizontal:	equ ArtTile_Spring_Vertical+$14 ; 14 tiles (S2 uses 12)
-ArtTile_Spikes:		equ ArtTile_Spring_Horizontal+$E ; side eight, then floor eight
+ArtTile_Spring_Horizontal: equ $509 ; 16 S3&K tiles
+ArtTile_Spikes: equ $519 ; 16 tiles
 ArtTile_Monitor:		equ ArtTile_Spikes+$10 ; 60 tiles
 ArtTile_Lamppost:	equ ArtTile_Monitor+$3C ; 10 tiles; ends at $AD9F
 
@@ -1673,9 +1680,17 @@ ArtTile_Moto_Bug:	equ ArtTile_Crabmeat+$44
 ArtTile_Ball_HogV:	equ ArtTile_Moto_Bug+$1D
 ArtTile_Ball_HogH:	equ ArtTile_Ball_HogV+$18
 ArtTile_Newtron:		equ ArtTile_Ball_HogH+$2F ; 81 tiles; four shared tail tiles below
-ArtTile_Chopper:		equ ArtTile_Spring_Diagonal ; GHZ has no diagonal spring art
+ArtTile_Chopper:		equ ArtTile_Spring_Diagonal ; GHZ reserves this bank for Chopper
 ArtTile_S1_Spring_Vertical:	equ ArtTile_Spring_Vertical ; 16 tiles; Newtron uses +$10-$13
 ArtTile_S1_Spring_Horizontal:	equ ArtTile_Spring_Horizontal
+ArtTile_Wheel: equ $4B4 ; loaded with the SMZ sprite atlas
+ArtTile_SMZ_BallHog: equ $2B0 ; shared atlas
+ArtTile_SMZ_Junction: equ $2B0 ; shared sprite atlas
+ArtTile_SMZ_Disc: equ $2B0 ; shared sprite atlas
+ArtTile_SMZ_Saw: equ $2B0 ; shared sprite atlas
+ArtTile_SMZ_Spin: equ $2B0 ; shared sprite atlas
+ArtTile_SMZ_VanP: equ $2B0 ; shared sprite atlas
+ArtTile_SMZ_Button: equ $2B0 ; shared sprite atlas
 ArtTile_Newtron_Tail:	equ ArtTile_S1_Spring_Vertical+$10
 ArtTile_GHZ_Edge_Wall:	equ $6F7	; eight tiles in the HUD/points gap; cap uses level art
 
@@ -1780,11 +1795,12 @@ ArtTile_Burrobot:		equ $4A6
 ArtTile_Basaran:		equ $385
 ArtTile_Button:			equ $50F	; TO BE CHANGED
 ArtTile_Shield:			equ $79C	; $F380; shared with primary invincibility
-ArtTile_Shield_2:			equ $56E	; $ADC0; 18 tiles, clear of ground explosions and BBat
+ArtTile_Shield_2:			equ $56F ; 18 tiles; follows the enlarged horizontal-spring/common banks
 ArtTile_Shield_2_End:		equ ArtTile_Shield_2+$12 ; $B000; exclusive end of this bank
 ArtTile_Invincibility:		equ ArtTile_Shield
 ArtTile_Game_Over:		equ ArtTile_Shield ; replaces the dead primary player's effects, as in S3&K
-ArtTile_Title_Card:		equ $580
+ArtTile_Title_Card: equ $581 ; 127 result tiles; preserves both shield banks
+ArtTile_Zone_Title: equ $570 ; 144 intro tiles; replaced after the intro
 ; Shared explosion/fiery art first, then both animals, ending at Plane A.
 ArtTile_Explosion:		equ $582	; $B040; 94 tiles, shared by both explosion mappings
 ArtTile_Animal_1:		equ ArtTile_Explosion+$5E ; $5E0 / $BC00; 18 tiles
@@ -1928,7 +1944,7 @@ ArtTile_Art_EHZMountains:	equ $500
 ArtTile_ArtNem_Eggpod_1:	equ $3A0
 ArtTile_ArtNem_EHZBoss:		equ $400
 ArtTile_ArtNem_EggChoppers:	equ $480
-ArtTile_BossExplosion:	equ $580	; 100 tiles; replaced by animals/normal explosions after escape
+ArtTile_BossExplosion:	equ $581	; 100 tiles; replaced by animals/normal explosions after escape
 
 ; CPZ
 ArtTile_CPZ_Platform:		equ $400
@@ -1965,3 +1981,9 @@ ArtTile_ArtNem_S1EndSeal:	equ $592;$0585
 ArtTile_ArtNem_S1EndPig:	equ $580;$0593
 ArtTile_ArtNem_S1EndChicken:	equ $592;$0565
 ArtTile_ArtNem_S1EndSquirrel:	equ $580;$05B3
+
+ArtTile_SMZ_Atlas: equ $2B0
+ArtTile_SMZ_Smoke1: equ $4BD
+ArtTile_SMZ_Smoke2: equ $4C9
+
+	include "_inc/PalmtreeArtTiles.asm"

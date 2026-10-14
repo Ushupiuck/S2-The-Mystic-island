@@ -633,13 +633,21 @@ TailS3_loc_13DA6:
 .mounted_target:
 		move.w	obX(a1),d2		; steer at the live target, including during a ledge jump
 		move.w	obY(a1),d3		; follows static, moving and depressed platforms alike
+		bsr.w Tails_CPU_MountedTargetX
 
 TailS3_loc_13DD0:
 		lea	(Sonic_Stat_Record_Buf).w,a2
 		move.w	(a2,d0.w),d1
 		move.b	2(a2,d0.w),d4
-		move.w	d1,d0
-		btst	#status.player.pushing,obStatus(a0)
+		move.w d1,d0
+        btst #status.player.on_object,obStatus(a1)
+        bne.s .live_direction
+        tst.w (Tails_CPU_reach_state).w
+        beq.s .record_direction
+.live_direction:
+        andi.w #$F3F3,d1 ; live steering must not inherit delayed left/right
+.record_direction:
+        btst #status.player.pushing,obStatus(a0)
 		beq.s	TailS3_loc_13DF2
 		btst	#5,d4
 		beq.w	TailS3_loc_13E9C
@@ -809,6 +817,53 @@ Tails_CPU_CheckReach:
 .return:
 		moveq	#0,d0
 		rts
+
+; On the same resting surface, keep the ordinary trailing gap and clamp it
+; inside that parent's width. A lead player may balance beyond the real edge.
+; d2 is the live target; preserve the position-history index in d0.
+Tails_CPU_MountedTargetX:
+        btst #status.player.on_object,obStatus(a0)
+        beq.s .return
+        btst #status.player.in_air,obStatus(a0)
+        bne.s .return
+        move.b standonobject(a1),d4
+        cmp.b standonobject(a0),d4
+        bne.s .return
+        move.w obVelX(a1),d4
+        bpl.s .speed
+        neg.w d4
+.speed:
+        cmpi.w #$100,d4
+        bhs.s .return
+        movem.l d0/a3,-(sp)
+        bsr.w Tails_GetStandingObject
+        tst.l code(a3)
+        beq.s .restore
+        moveq #0,d4
+        move.b obActWid(a3),d4
+        cmpi.w #8,d4
+        blo.s .restore
+        subi.w #5,d4
+        subi.w #32,d2
+        btst #status.player.x_flip,obStatus(a1)
+        beq.s .bounds
+        addi.w #64,d2
+.bounds:
+        move.w obX(a3),d0
+        sub.w d4,d0
+        cmp.w d0,d2
+        bge.s .right
+        move.w d0,d2
+.right:
+        add.w d4,d0
+        add.w d4,d0
+        cmp.w d0,d2
+        ble.s .restore
+        move.w d0,d2
+.restore:
+        movem.l (sp)+,d0/a3
+.return:
+        rts
 
 ; a1 = lead player; d0 = 1 only after the last ridden ledge/floor breaks up,
 ; while Sonic runs or deliberately jumps away with horizontal motion.

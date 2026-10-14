@@ -111,7 +111,7 @@ class Native:
         value = int.from_bytes(self.cpu.mem_read((obj + self.s[field]) & 0xFFFFFF, size), 'big')
         return self.ids_by_code.get(value, value) if projected else value
 
-    def act(self, routine, obj=None, regs=None):
+    def act(self, routine, obj=None, regs=None, limit=100000):
         self.cpu.reg_write(UC_M68K_REG_SR, 0x2000)
         for reg in DATA:
             self.cpu.reg_write(reg, 0xA5A51234)
@@ -122,7 +122,7 @@ class Native:
             self.cpu.reg_write(reg, value)
         self.cpu.reg_write(UC_M68K_REG_A7, STACK)
         self.cpu.mem_write(STACK, struct.pack('>I', STOP))
-        self.cpu.emu_start(self.s[routine], STOP, count=100000)
+        self.cpu.emu_start(self.s[routine], STOP, count=limit)
         assert self.cpu.reg_read(UC_M68K_REG_PC) == STOP, routine
         assert self.cpu.reg_read(UC_M68K_REG_A7) == STACK + 4, routine
 
@@ -200,7 +200,7 @@ m=Manager()
 report={}
 cases=0
 # Every act uses the existing four-act zone math and the correct ROM layout.
-names=['GHZ','LZ','CPZ','EHZ','HPZ','HTZ','MTZ']
+names=['GHZ','LZ','CPZ','EHZ','HPZ','HTZ','MTZ','LV07','SMZ','LV09','LV0A','LV0B','LV0C','LV0D','LV0E','LV0F']
 for z,n in enumerate(names):
     for act in range(4):
         m.start()
