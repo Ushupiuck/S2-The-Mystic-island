@@ -983,38 +983,122 @@ assert not m.cpu.reg_read(UC_M68K_REG_D5)&255
 assert m.get('v_player','obX',2)==x
 report['special_stage_negative_fraction_cannot_cross_wall_boundary']=True
 
-# Only the walk/run leader's actual triggered ledge/floor warrants take-off.
-for oid,triggered,moving,rolling in product((0x1A,0x1B),(False,True),(False,True),(False,True)):
+# The ledge must actually fragment. Tails first jumps toward the lead;
+# Sonic may run away or deliberately jump, including the descending half.
+# Falling off with no jump flag must never provoke this flight.
+cases=0
+for oid,triggered,fragmented,moving,lead_phase,tail_phase,towards in product(
+        (0x1A,0x1B),(False,True),(False,True),(False,True),
+        ('run','jump-rise','jump-descend','fall'),('ground','fall','jump'),(False,True)):
     obj,ptr=setup(oid,0)
     index=(obj-m.s['v_objspace'])//m.s['object_size']
     for actor in ('v_player','v_player2'):
-        m.put(actor,'obStatus',8);m.put(actor,'standonobject',index)
-        m.put(actor,'obX',600,2);m.put(actor,'obY',116,2)
-    m.put('v_player','obInertia',0x400 if moving else 0,2)
-    m.put('v_player','obAnim',m.s['AniIDSonAni_Roll'] if rolling else m.s['AniIDSonAni_Walk'])
-    m.put(obj,'ledge_collapse_flag',int(triggered));m.put(obj,'obStatus',0x18)
+        m.put(actor,'standonobject',index);m.put(actor,'obY',116,2)
+    m.put('v_player','obStatus',0 if lead_phase=='run' else 2)
+    m.put('v_player','obX',600,2)
+    m.put('v_player','jumping',int(lead_phase.startswith('jump')))
+    m.put('v_player','obVelY',0xFC00 if lead_phase=='jump-rise' else 0x400,2)
+    m.put('v_player2','obStatus',8 if tail_phase=='ground' else 2)
+    m.put('v_player2','obX',568,2);m.put('v_player2','obY',164,2)
+    m.put('v_player2','jumping',int(tail_phase=='jump'))
+    m.put('v_player2','obVelX',0x400 if towards else 0xFC00,2)
+    m.put('v_player','obVelX',0x400 if moving else 0,2)
+    m.put(obj,'obRoutine',m.s['ledge_fragment_routine'] if fragmented else 2)
+    m.put(obj,'ledge_collapse_flag',int(triggered));m.put(obj,'obStatus',8)
     m.write('Tails_CPU_routine',6,2)
     m.act('Tails_CPU_CheckReach','v_player2',{UC_M68K_REG_A1:m.s['v_player']})
-    expected=triggered and moving and not rolling
-    assert bool(m.cpu.reg_read(UC_M68K_REG_D0))==expected
+    expected=fragmented and moving and lead_phase!='fall' and tail_phase=='jump' and towards
+    assert bool(m.cpu.reg_read(UC_M68K_REG_D0))==expected, (oid,triggered,fragmented,moving,lead_phase,tail_phase,towards)
     assert m.read('Tails_CPU_routine',2)==(4 if expected else 6)
-    if expected:assert not m.get(obj,'obStatus')&16 and not m.get('v_player2','obStatus')&8
-report['crumbling_walk_run_target_takes_off_stationary_or_rolling_does_not']=16
+    if expected:
+        assert m.read('Tails_CPU_reach_timer',2)==65535
+        assert not m.get(obj,'obStatus')&16 and not m.get('v_player2','obStatus')&8
+    cases+=1
+report['collapsed_target_only_interrupts_horizontal_approach_jump']=cases
 
-obj,ptr=setup(0x1A,0)
-index=(obj-m.s['v_objspace'])//m.s['object_size']
-m.put(obj,'ledge_collapse_flag',1)
-m.put('v_player','obStatus',8);m.put('v_player','standonobject',index)
-m.put('v_player','obInertia',0x400,2);m.put('v_player','obAnim',m.s['AniIDSonAni_Walk'])
-for actor in ('v_player','v_player2'):
-    m.put(actor,'obX',600,2);m.put(actor,'obY',116,2)
-m.cpu.mem_write(m.s['Sonic_Pos_Record_Buf']&0xFFFFFF,struct.pack('>HH',600,116)*64)
-m.write('Tails_CPU_routine',4,2)
-m.act('TailS3_loc_13C50','v_player2',{UC_M68K_REG_A1:m.s['v_player']})
-assert m.read('Tails_CPU_routine',2)==4 and m.get('v_player2','obControl')==0x81
-m.put('v_player','obInertia',0,2)
-m.act('TailS3_loc_13C50','v_player2',{UC_M68K_REG_A1:m.s['v_player']})
+# Crossing paired ledges or jumping above the target needs no flight.
+for lead_air,dy in product((False,True),(-48,0,16,48)):
+    obj,ptr=setup(0x1A,0)
+    m.put(obj,'obRoutine',m.s['ledge_fragment_routine'])
+    m.put('v_player','standonobject',(obj-m.s['v_objspace'])//m.s['object_size'])
+    m.put('v_player','obX',600,2);m.put('v_player','obY',200,2)
+    m.put('v_player','obVelX',0x400,2);m.put('v_player','obStatus',2 if lead_air else 0)
+    m.put('v_player','jumping',int(lead_air))
+    m.put('v_player2','obX',568,2);m.put('v_player2','obY',200+dy,2)
+    m.put('v_player2','obStatus',6);m.put('v_player2','jumping',1)
+    m.put('v_player2','obVelX',0x400,2);m.write('Tails_CPU_routine',6,2)
+    m.act('Tails_CPU_CheckReach','v_player2',{UC_M68K_REG_A1:m.s['v_player']})
+    assert (m.read('Tails_CPU_routine',2)==4)==(dy==48)
+report['collapsed_target_at_or_below_tails_keeps_normal_jump']=8
+
+# A lingering fragment reference must not interrupt a later jump after Sonic
+# has run out of reach. Check both directions, exact limits and zero motion.
+for dx,velocity in product((-129,-128,-32,0,32,128,129),(-0x400,0,0x400)):
+    obj,ptr=setup(0x1A,0)
+    m.put(obj,'obRoutine',m.s['ledge_fragment_routine'])
+    m.put('v_player','standonobject',(obj-m.s['v_objspace'])//m.s['object_size'])
+    m.put('v_player','obX',600+dx,2);m.put('v_player','obY',116,2)
+    m.put('v_player','obVelX',0x400,2)
+    m.put('v_player2','obX',600,2);m.put('v_player2','obY',164,2)
+    m.put('v_player2','obStatus',6);m.put('v_player2','jumping',1)
+    m.put('v_player2','obVelX',velocity,2);m.write('Tails_CPU_routine',6,2)
+    m.act('Tails_CPU_CheckReach','v_player2',{UC_M68K_REG_A1:m.s['v_player']})
+    expected=0<abs(dx)<=m.s['Tails_CPU_ReachWidth'] and dx*velocity>0
+    assert (m.read('Tails_CPU_routine',2)==4)==expected, (dx,velocity)
+report['collapsed_target_rejects_distant_or_wrong_direction_jumps']=21
+
+# A retained index is not permission to interpret an unrelated/reused slot.
+for index,code_pointer in ((m.s['object_slot_count'],m.s['Obj1A']),
+                           (m.s['reserved_object_slots'],m.s['Obj18'])):
+    obj,ptr=setup(0x1A,0)
+    m.put(obj,'code',code_pointer);m.put(obj,'obRoutine',m.s['ledge_fragment_routine'])
+    m.put(obj,'ledge_collapse_flag',1)
+    m.put('v_player','standonobject',index);m.put('v_player','obVelX',0x400,2)
+    m.act('Tails_CPU_TargetHasCollapsed','v_player2',{UC_M68K_REG_A1:m.s['v_player']})
+    assert not m.cpu.reg_read(UC_M68K_REG_D0)
+report['collapsed_target_rejects_invalid_or_reused_slot']=True
+
+# Matching the recorded position must not make Tails drop during either
+# half of Sonic's jump. A grounded target allows normal following to resume; a genuine fall releases immediately even at a distance.
+for lead_phase in ('run','jump-rise','jump-descend','idle'):
+    m.start()
+    for actor in ('v_player','v_player2'):
+        m.put(actor,'obX',600,2);m.put(actor,'obY',116,2)
+    m.put('v_player','obStatus',2 if lead_phase.startswith('jump') else 0)
+    m.put('v_player','jumping',int(lead_phase.startswith('jump')))
+    m.put('v_player','obVelX',0 if lead_phase=='idle' else 0x400,2)
+    m.put('v_player','obVelY',0xFC00 if lead_phase=='jump-rise' else 0x400,2)
+    m.cpu.mem_write(m.s['Sonic_Pos_Record_Buf']&0xFFFFFF,struct.pack('>HH',600,116)*64)
+    m.write('Tails_CPU_routine',4,2);m.write('Tails_CPU_reach_timer',65535,2)
+    m.act('TailS3_loc_13C50','v_player2',{UC_M68K_REG_A1:m.s['v_player']})
+    flying=lead_phase.startswith('jump')
+    assert m.read('Tails_CPU_routine',2)==(4 if flying else 6)
+    assert m.get('v_player2','obControl')==(0x81 if flying else 0)
+report['ledge_flight_follows_whole_jump_and_lands_at_grounded_target']=True
+m.write('Tails_CPU_routine',4,2);m.write('Tails_CPU_reach_timer',65535,2)
+m.put('v_player2','obControl',0x81)
+m.put('v_player','obStatus',2);m.put('v_player','jumping',0)
+m.put('v_player','obVelY',0x100,2)
+m.act('Tails_FlySwim_Unknown','v_player2',{UC_M68K_REG_A1:m.s['v_player']})
 assert m.read('Tails_CPU_routine',2)==6 and not m.get('v_player2','obControl')
-assert m.get('v_player2','obStatus')&2
-report['crumbling_flight_waits_for_walking_leader_and_releases_when_he_stops']=True
+assert not m.read('Tails_CPU_reach_timer',2) and m.get('v_player2','obStatus')&2
+report['ledge_flight_releases_immediately_when_sonic_falls']=True
+
+# The real air-expiry path locks both logical inputs before its 120-frame
+# drowning animation. Companion drowning must not lock the primary player.
+for actor,primary_id in (('v_player',1),('v_player',2),('v_player2',1)):
+    m.start();m.put('v_player','layout_id',primary_id)
+    m.put(actor,'obStatus',64);m.put(actor,'air_left',0)
+    m.write('v_air',0,2);m.write('Player_mode',2 if primary_id==2 else 0,2)
+    m.write('v_jpadholdlogical',0x0808,2);m.write('v_jpadholdlogical2',0x0404,2)
+    bubble=m.s['v_sonicbubbles' if actor=='v_player' else 'v_tailsbubbles']
+    m.put(bubble,'obParent',m.s[actor]&65535,2)
+    m.act('Obj0A_Countdown',bubble)
+    assert m.get(actor,'obAnim')==m.s['AniIDSonAni_Drown']
+    assert m.get(actor,'obControl')==0x81
+    if actor=='v_player':
+        assert m.read('f_lockctrl')==m.s['PlayerInputLock_Drowning']
+        assert not m.read('v_jpadholdlogical',2) and not m.read('v_jpadholdlogical2',2)
+    else:assert not m.read('f_lockctrl')
+report['real_drowning_locks_only_primary_controls_before_death_routine']=3
 print(report,flush=True)

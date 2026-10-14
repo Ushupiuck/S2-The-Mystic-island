@@ -207,6 +207,9 @@ loc_12170:
 		bhs.w	loc_1220C
 		bsr.w	ResumeMusic
 		move.b	#$81,(f_playerctrl).w
+		move.b	#PlayerInputLock_Drowning,(f_lockctrl).w
+		clr.w	(v_jpadholdlogical).w
+		clr.w	(v_jpadholdlogical2).w
 .drown:
 		move.b	#$81,obControl(a2)
 		move.w	#sfx_Drown,d0
@@ -218,7 +221,7 @@ loc_12170:
 		movea.l	a2,a0
 		jsr	(Player_ClearPowerUps).l
 		bsr.w	Sonic_ResetOnFloor
-		move.b	#$17,obAnim(a0)
+		move.b	#AniIDSonAni_Drown,obAnim(a0)
 		bset	#1,obStatus(a0)
 		bset	#7,obGfx(a0)
 		clr.w	obVelY(a0)

@@ -24,12 +24,26 @@ Tails starts catch-up flight from his current position. Ordinary follow/jump
 behavior remains the default, and controller 2 retains precedence. Catch-up
 flight approaches large vertical gaps faster and slows near its target.
 
-A collapsing ledge/floor already triggered under walking/running Sonic skips
-that delay. The AI checks Sonic's standing-object index, its full routine
-pointer and its real collapse flag, then takes off locally and waits in
-flight while that moving target remains unsafe. A stationary or rolling
-Sonic does not trigger this reaction; Tails can fall normally. Controller 2
-still takes precedence. No additional SST fields are needed.
+Tails first makes his ordinary horizontal rolling jump toward Sonic. If the
+last ridden ledge/floor actually fragments, he switches to local flight only
+when Sonic is running or deliberately jumping away, still within 128 pixels
+horizontally and at least 24 pixels above Tails. A jump already level with or
+above Sonic continues normally, including GHZ1's paired ledges before the first
+checkpoint. The same distance check serves both flight paths and prevents a
+retained fragment reference from interrupting a later, distant jump.
+`jumping` distinguishes
+a jump from simply falling off; a descending jump still qualifies. If Sonic
+falls without that flag, Tails falls normally, and any flight tagged for that
+ledge ends on the next AI update. Reaching a grounded target resumes ordinary
+following.
+
+The check resolves Sonic's retained standing-object index to one SST, validates
+its full routine pointer and fragment routine, and never scans the object
+pool. The initial touch countdown does not qualify. Controller 2 retains
+precedence. The existing reach-timer word becomes a marker only during CPU
+flight; no new RAM or SST fields are allocated. The common flight initializer
+preserves that marker, avoiding a temporary stack save. The fragment routine
+already proves break-up, so a redundant collapse-flag check is unnecessary.
 
 Taking off detaches Tails from his standing object and its companion-rider
 flag. Negative `obControl` prevents catch-up flight from becoming a platform
@@ -44,6 +58,11 @@ AI. Game/Time Over uses a distinct high-bit input lock, preventing Debug entry
 and clearing both logical controls while keeping raw A/B/C available to the
 card. Sega/current Continue placeholder and restarted levels release it.
 Objects intentionally continue updating after the primary player's death.
+
+Primary drowning applies the same logical-input/Debug lock from the start of
+the drowning animation, before routine 6 begins. Low air still permits Debug;
+companion drowning does not lock the primary. Restart clears the lock. Other
+hurt/death states remain eligible for Debug before the Over card.
 
 Either live character can collect hidden end-of-level bonuses. The existing
 shared score, popup mappings, art and one-time award remain unchanged.
@@ -70,23 +89,26 @@ positions and use normal movement and real bumper callbacks.
 
 | Check | Result |
 | --- | --- |
-| Normal build and source audit | 94 mapping bounds / 1,118 frames; all 93 object sources plus `main.asm`; 6,261 named SST operands |
+| Normal build and source audit | 94 mapping bounds / 1,118 frames; all 93 object sources plus `main.asm`; 6,267 named SST operands |
 | Native packed-star tests | 270 updates with full/partial/no visible children; padding survives compaction and rendering |
 | Native deletion | All 78 SST bytes cleared; following slot untouched |
-| Companion emulator cases | Both ledge-jump directions, moving platform, flight fallback, walking/stationary crumbling ledge, manual override, flat ground, bridge approaches above/below, bonus pickup and signpost override pass in NTSC/PAL |
+| Companion emulator cases | Both ledge-jump directions, moving platform, flight fallback, actual collapse with running/jumping/falling Sonic, manual override, flat ground, bridge approaches above/below, bonus pickup and signpost override pass in NTSC/PAL |
+| GHZ1 double ledge before checkpoint 1 | 36 riding and 36 rock-approach speed/timing combinations per region; riding introduces no jump or flight, and neither setup triggers collapse flight; ordinary offscreen respawn remains available |
 | Stage 1 bumper approaches | 352 valid starts / 140 real bumper contacts per region; old ROM embeds on three cases, current ROM embeds on none |
 | Stage item callbacks | Normal DOWN contact changes rotation; normal GOAL contact reaches results |
 | Ordinary stage play | 1,200 frames per region without an embedded position or added lag frames |
 | Over cards | Real zero-ring monitor deaths lock Debug and logical input; raw controller 2 advances both cards; exit/restart unlocks |
 | Object course | 57 placement lifecycles and 46 interactions pass for Sonic/NTSC and primary Tails/PAL |
 | Effects, Debug and giant rings | Shield/star VRAM contents, hurt/death Debug entry and single/triple giant-ring contacts pass for both primary characters |
+| Drowning | Real air expiry blocks both logical controls and Debug for the 120-frame animation, reaches death and unlocks on restart for Sonic/NTSC and primary Tails/PAL; companion expiry leaves primary Debug available |
 | Attract mode | All four demos finish and return to title in NTSC/PAL; intentional timing and desynchronization retained |
 
 The optional emulator runners accept `--rom`, `--listing`, `--core` and
 `--output`; add `--pal` for PAL. New cases live in
-`build_tools/check_companion_followup.py`, `check_over_screen_input.py` and
-`check_special_stage_overlap.py`. The latter accepts `--probe` to record an
-older ROM's embedding failures. Native cases are in `check_object_manager.py`.
+`build_tools/check_companion_followup.py`, `check_over_screen_input.py`,
+`check_special_stage_overlap.py` and `check_drowning_input.py`. The overlap
+runner accepts `--probe` to record an older ROM's embedding failures. Native
+cases are in `check_object_manager.py`.
 The course retains the previously documented broken Gator and excluded
 Labyrinth conveyor; these are separate unfinished objects.
 

@@ -41,7 +41,7 @@ loc_138CA:
 loc_138D8:
 		clr.b	obColProp(a0)
 +		lea	Ani_Bump(pc),a1
-		bsr.w	AnimateSprite
+		jsr	(AnimateSprite).l
 		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
 Ani_Bump:	dc.w byte_13988-Ani_Bump

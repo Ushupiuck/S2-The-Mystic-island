@@ -13,7 +13,7 @@ Obj01:
 		tst.b	(Debug_mode_flag).w
 		beq.s	Obj01_Normal
 		tst.b	(f_lockctrl).w
-		bmi.s	Obj01_Normal			; Game/Time Over owns input; hurt/death still allow Debug
+		bmi.s	Obj01_Normal			; drowning / Game/Time Over owns input; other deaths allow Debug
 		tst.b	obRoutine(a0)			; initialize the character before allowing Debug
 		beq.s	Obj01_Normal
 		btst	#bitB,(v_jpadpress1).w

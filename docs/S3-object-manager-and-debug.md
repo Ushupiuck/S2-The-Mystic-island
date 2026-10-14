@@ -110,6 +110,9 @@ duplicating the same check in each state. C+B remains available in those
 states too. Frame cycling pauses the current state; placement exit restores
 normal movement.
 
+Primary drowning sets the input lock when its animation begins, before the
+death routine. Low air and companion drowning do not block primary Debug.
+
 Game/Time Over sets the high bit of `f_lockctrl`, blocking Debug entry and
 neutralizing both players' logical controls. Physical A/B/C input remains
 available to advance the card. Sega and the current Continue placeholder

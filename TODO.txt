@@ -33,7 +33,8 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
-Let companion Tails immediately fly when walking/running Sonic rides an already-triggered collapsing ledge/floor; preserve normal falling for stationary/rolling Sonic and controller 2 precedence < DONE
+Keep Tails's horizontal rolling jump until the last ridden ledge/floor actually fragments; fly only towards nearby running/jumping Sonic above him, keep ordinary movement on GHZ1's paired ledges, distinguish descending jumps from accidental falls and preserve controller 2 precedence < DONE
+Lock Debug and both logical controls from primary drowning animation start; preserve low-air/other hurt/death Debug, companion independence and unlocked level restart < DONE
 Pack invincibility orbit/frame state into the eight composite padding bytes, reduce SSTs from $50 to $4E, move water bank caches into splash scratch and reclaim 226 bytes; preserve renderer fall-through optimizations and test BG composites at entry < DONE
 Prevent flying catch-up Tails from depressing bridges, use each depressed log's actual landing surface, and detach his old object before take-off < DONE
 Give companion ledge jumps horizontal steering towards the live target, follow moving/depressed platform riders without math subroutines, and use local catch-up flight after unsuccessful jumps; preserve manual controller 2 precedence < DONE

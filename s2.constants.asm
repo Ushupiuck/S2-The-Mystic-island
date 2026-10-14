@@ -132,6 +132,7 @@ Tails_CPU_ReachHeight:	equ 24
 Tails_CPU_ReachWidth:	equ $80
 Tails_CPU_FollowWidth:	equ $30	; ordinary recorded-position following distance
 Tails_CPU_ReachStopWidth:	equ 8	; close the horizontal gap during a ledge jump
+Tails_CPU_CrumbleFlight:	equ -1	; reach timer's alternate meaning only in CPU flight state 4
 Tails_CPU_FlyVerticalMax:	equ 6	; pixels per frame; slow down near the target
 Tails_FlightAttackMinAngle: equ $20	; S3&K's upward contact sector
 Tails_FlightAttackArc:	equ $40
@@ -443,6 +444,7 @@ PlayerMode_Knuckles:		equ 3	; reserved
 PlayerControl_SkipWallCollision:	equ 6	; bit in f_playerctrl and obControl
 PlayerInputLock_Automatic:	equ 1	; logical input is supplied by the level script
 PlayerInputLock_Over:		equ $81	; also prohibit Debug while the over-screen owns input
+PlayerInputLock_Drowning:	equ PlayerInputLock_Over	; no Debug resurrection once drowning begins
 
 ; Shared Sonic/Tails movement settings. Speeds use 8.8 pixels/frame;
 ; acceleration and deceleration use 8.8 pixels/frame squared.

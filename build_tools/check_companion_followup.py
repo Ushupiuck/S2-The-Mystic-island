@@ -71,6 +71,7 @@ def main():
     args = p.parse_args()
     g = Genesis(args.core, args.rom, args.listing, args.output, args.pal)
     boot_level(g, item=0)
+    level = g.save()  # retain GHZ1's actual paired ledges and surrounding terrain
     isolate(g)
     baseline = g.save()
     rows = []
@@ -138,44 +139,62 @@ def main():
         flew |= g.read('Tails_CPU_routine', 2) == 4
     finish('flat-ground-no-ai-takeoff', not flew, final=state(g))
 
-    for moving in (True, False):
+    for action in ('run', 'jump', 'fall'):
         g.restore(baseline)
         ledge = spawn(g, 'Obj1A', 184, 900)
         place(g, 'v_player', 168, 760)
-        place(g, 'v_player2', 150, 760)
-        reset_cpu(g)
-        g.write('Tails_CPU_idle_timer', 100, 2)  # permit physics; delay AI until both land
+        g.put('v_player2', 'obControl', 1)
         for tick in range(90):
             g.run()
-            if (g.get('v_player', 'obStatus') & 8 and
-                    g.get('v_player2', 'obStatus') & 8 and
-                    g.get(ledge, 'ledge_collapse_flag')):
+            if g.get('v_player', 'obStatus') & 8 and g.get(ledge, 'ledge_collapse_flag'):
                 break
         else:
-            raise AssertionError('Both players did not land on the real collapsing ledge')
+            raise AssertionError('Lead did not trigger the real collapsing ledge')
+        place(g, 'v_player2', 136, 944, airborne=False)
         reset_cpu(g)
-        before_x, before_y = g.get('v_player2', 'obX', 2), g.get('v_player2', 'obY', 2)
-        if moving:
-            g.buttons = {7}
+        if action != 'fall':
+            g.buttons = {7, 8} if action == 'jump' else {7}
             g.put('v_player', 'obVelX', 0x100, 2)
             g.put('v_player', 'obInertia', 0x100, 2)
-        g.run(1)
-        if moving:
-            finish('crumbling-ledge-walking', g.read('Tails_CPU_routine', 2) == 4 and
-                   g.get('v_player2', 'obControl') == 0x81 and
-                   not g.get(ledge, 'obStatus') & 16 and
-                   g.get('v_player2', 'obX', 2) == before_x and
-                   g.get('v_player2', 'obY', 2) == before_y,
-                   final=state(g))
-        else:
-            flew = False
-            for tick in range(45):
+        g.write('Timer_frames', 63, 2)  # provoke the normal CPU jump, not a forced flight
+        jumped = flew = descending_jump_flight = falling_release = False
+        trace = []
+        for tick in range(90):
+            before = (g.get('v_player2', 'obX', 2), g.get('v_player2', 'obY', 2))
+            was_flying = g.read('Tails_CPU_routine', 2) == 4
+            g.run()
+            lead_air = bool(g.get('v_player', 'obStatus') & 2)
+            lead_jump = bool(g.get('v_player', 'jumping'))
+            flying = g.read('Tails_CPU_routine', 2) == 4
+            jumped |= bool(g.get('v_player2', 'jumping'))
+            if flying and not was_flying:
+                assert jumped, 'Flight replaced the initial rolling jump'
+                assert g.get(ledge, 'obRoutine') == g.s['ledge_fragment_routine'], 'Countdown triggered flight'
+                assert before == (g.get('v_player2', 'obX', 2), g.get('v_player2', 'obY', 2)), 'Take-off teleported Tails'
+                assert g.read('Tails_CPU_reach_timer', 2) == 65535
+            flew |= flying
+            descending_jump_flight |= (flying and lead_air and lead_jump and
+                                       g.get('v_player', 'obVelY', 2) < 0x8000)
+            if lead_air and not lead_jump:
+                # NPCs update after the players; allow the next AI update to
+                # observe the ledge releasing its rider, then require falling.
                 g.run()
-                flew |= g.read('Tails_CPU_routine', 2) == 4
-            finish('crumbling-ledge-stationary', not flew and
-                   not g.get('v_player2', 'obStatus') & 8 and
-                   g.get('v_player2', 'obY', 2) > before_y,
-                   final=state(g))
+                falling_release = (g.read('Tails_CPU_routine', 2) == 6 and
+                                   not g.get('v_player2', 'obControl'))
+                if action != 'jump':
+                    break
+            trace.append({'tick': tick, 'ledge_routine': g.get(ledge, 'obRoutine'),
+                          'lead_air': lead_air, 'lead_jump': lead_jump,
+                          'lead_vy': g.get('v_player', 'obVelY', 2), **state(g)})
+        (args.output / ('collapsed-ledge-' + action + '-trace.json')).write_text(json.dumps(trace))
+        ok = jumped and (not flew and falling_release if action == 'fall' else flew)
+        if action == 'jump':
+            ok &= descending_jump_flight
+        else:
+            ok &= falling_release
+        finish('collapsed-ledge-' + action, ok, jumped=jumped, flew=flew,
+               descending_jump_flight=descending_jump_flight,
+               ordinary_fall=falling_release, final=state(g))
 
     for initial_y in (780, 948):
         g.restore(baseline)
@@ -231,6 +250,76 @@ def main():
         good &= g.read('v_jpadholdlogical2', 2) == g.read('v_jpadholdlogical', 2)
     finish('signpost-controller2-lock', good and
            g.read('v_jpadholdlogical2') == g.s['btnR'], final=state(g))
+
+    # The real double ledge before checkpoint 1: continuous running must not
+    # provoke a rescue flight. The rock approach also catches a stale ledge
+    # reference interrupting a later jump after Sonic has left the segment.
+    for entry, sx, tx, y, settle in (
+            ('riding', 0x1040, 0x1020, 632, 2),
+            ('approach', 0xFC0, 0xFA0, 560, 90)):
+        g.restore(level)
+        place(g, 'v_player', sx, y)
+        place(g, 'v_player2', tx, y)
+        g.write('Camera_X_pos', 0xF20, 2)
+        g.write('Camera_Y_pos', 480, 2)
+        for actor in ('v_player', 'v_player2'):
+            g.put(actor, 'obStatusSecondary', 2)
+            g.put(actor, 'invtime', 1200, 2)
+        g.write('Tails_CPU_idle_timer', 120, 2)
+        g.run(settle)
+        if entry == 'riding':
+            assert all(g.get(a, 'obStatus') & 8 for a in ('v_player', 'v_player2'))
+        start = g.save()
+        cases = []
+        for speed in (0, 0x100, 0x300, 0x600):
+            for phase in (*range(0, 64, 8), 63):
+                g.restore(start)
+                reset_cpu(g)
+                g.write('Timer_frames', phase, 2)
+                for actor in ('v_player', 'v_player2'):
+                    g.put(actor, 'obVelX', speed, 2)
+                    g.put(actor, 'obInertia', speed, 2)
+                g.buttons = {7}
+                broken, trace = set(), []
+                flew = jumped = crumble_flight = crossed = False
+                for tick in range(200):
+                    g.run()
+                    for obj in range(g.s['v_lvlobjspace'] & 65535,
+                                     g.s['v_lvlobjend'] & 65535, g.s['object_size']):
+                        if (g.get(obj, 'code') == g.s['Obj1A'] and
+                                g.get(obj, 'obX', 2) in (0x1030, 0x10A0) and
+                                g.get(obj, 'obRoutine') == g.s['ledge_fragment_routine']):
+                            broken.add(g.get(obj, 'obX', 2))
+                    sample = state(g)
+                    flew |= sample['cpu'] == 4
+                    jumped |= bool(g.get('v_player2', 'jumping'))
+                    crumble_flight |= (sample['cpu'] == 4 and
+                                       g.read('Tails_CPU_reach_timer', 2) == 65535)
+                    if tick % 8 == 0:
+                        trace.append({'tick': tick, **sample})
+                    if sample['obX'] > 0x10D0 and not sample['obStatus'] & 2:
+                        crossed = True
+                        break
+                # If Tails misses the rock and falls offscreen, the existing
+                # respawn flight remains valid. It must not be tagged as a
+                # collapse rescue. Riding cases need neither jump nor flight.
+                ok = crossed and bool(broken) and not crumble_flight
+                if entry == 'riding':
+                    ok &= not flew and not jumped and len(broken) == 2
+                label = f'ghz1-double-ledge-{entry}-{speed:X}-{phase}'
+                detail = {'case': label, 'passed': bool(ok), 'flew': flew,
+                          'jumped': jumped, 'crumble_flight': crumble_flight,
+                          'crossed': crossed, 'broken': sorted(broken)}
+                cases.append(detail)
+                (args.output / (label + '-trace.json')).write_text(json.dumps(trace))
+                if not args.probe:
+                    assert ok, detail
+                assert not g.read('v_errortype'), detail
+        (args.output / (f'ghz1-double-ledge-{entry}-cases.json')).write_text(
+            json.dumps(cases, indent=2) + '\n')
+        finish(f'ghz1-double-ledge-{entry}', all(c['passed'] for c in cases),
+               runs=len(cases), collapse_flights=sum(c['crumble_flight'] for c in cases),
+               ordinary_respawns=sum(c['flew'] for c in cases))
     (args.output / 'report.json').write_text(json.dumps(rows, indent=2) + '\n')
     g.close()
 

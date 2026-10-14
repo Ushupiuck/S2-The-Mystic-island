@@ -4,6 +4,7 @@
 collapsing_platform_delay_pointer	= objoff_38
 ledge_timedelay				= objoff_3C	; time between touching the ledge and it collapsing
 ledge_collapse_flag			= objoff_3E	; collapse flag
+ledge_fragment_routine			= 4		; shared by ledge/floor fragments after break-up
 collapsing_platform_slope_pointer	= objoff_40
 
 ; ---------------------------------------------------------------------------
