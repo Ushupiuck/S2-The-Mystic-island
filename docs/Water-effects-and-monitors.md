@@ -25,7 +25,12 @@ The two physical banks cache an art kind and frame in the reserved splash SSTs.
 Switching from dust to splash or numbers invalidates the cached frame even if
 the frame indexes match. A full DMA queue leaves an invalid frame and retries.
 A live splash takes priority over dust; skid particles disappear when their
-bank no longer holds skid art. Both water zones load resident bubbles through
+bank no longer holds skid art. Spindash dust stays hidden throughout a fall or
+an ascent. If the charge is still held on landing, dust restarts automatically
+from its first frame. This uses the player's airborne flag, so a solid object
+or platform counts as ground too. Landing during a splash waits for it to finish
+before returning that bank to dust; an off-screen splash uses the same ordering.
+Both water zones load resident bubbles through
 their normal PLCs. HPZ's BBat bank moves immediately after the bubbles, to
 `$9280–$99BF`, below the common spring banks. The unrelated player/HUD/ring/
 shield/effect allocations remain unchanged.

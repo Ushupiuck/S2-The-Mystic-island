@@ -677,4 +677,86 @@ for primary_id in (1,2):
     m.act('Native_TestDustCarry',regs={UC_M68K_REG_A2:m.s['v_player']&0xFFFFFFFF})
     assert m.cpu.reg_read(UC_M68K_REG_D0)==1,'primary dust ignored the active air supply'
 report['both_primary_characters_reserve_low_air_bank_for_numbers']=True
+
+# A held charge survives falling, but its dust must not. Exercise the actual
+# dust controller, player landing routines and entire splash animation together.
+for player,character,cache,destination,landing in [
+        ('v_player',1,'v_splash',0xFC00,'Sonic_ResetOnFloor'),
+        ('v_player',2,'v_splash',0xFC00,'Tails_ResetOnFloor'),
+        ('v_player2',2,'v_tsplash',0xFE00,'Tails_ResetOnFloor')]:
+    m.start();m.uploads.clear()
+    m.put(player,'layout_id',character)
+    m.write('Player_mode',m.s['PlayerMode_Tails'] if character==2 and player=='v_player' else 0,2)
+    m.put(player,'air_left',30)
+    m.put(player,'obAnim',m.s['AniIDSonAni_Spindash'])
+    m.put(player,'spindash_flag',1)
+    m.put(player,'spindash_counter',0x600,2)
+    m.act('CreatePlayerDust',player)
+    dust=m.get(player,'player_dust_ptr',2)|0xFF0000
+    queue=(m.s['v_spritequeue']+0x80)&0xFFFFFF
+    def dust_tick():
+        m.cpu.mem_write(queue,b'\0\0')
+        before=len(m.uploads)
+        m.act('SpindashDust',dust)
+        return int.from_bytes(m.cpu.mem_read(queue,2),'big'),len(m.uploads)-before
+    assert dust_tick()[0]==2
+    for velocity in (0xFA00,0,0x600):
+        m.put(player,'obStatus',1<<m.s['status.player.in_air'])
+        m.put(player,'obVelY',velocity,2)
+        assert dust_tick()==(0,0),(player,'airborne dust',velocity)
+        assert m.get(dust,'obAnim')==0
+        assert m.get(player,'spindash_flag')==1
+        assert m.get(player,'spindash_counter',2)==0x600
+    m.act(landing,player)
+    assert not m.get(player,'obStatus')&(1<<m.s['status.player.in_air'])
+    assert dust_tick()[0]==2,(player,'dust did not resume on landing')
+
+    # Use the real one-way-platform collision/ride path too, rather than
+    # setting the standing flag in the fixture. Object ground is ground.
+    platform=pool()[1]
+    for field,value,size in [('code',m.s['Obj18'],4),('obX',600,2),('obY',144,2)]:
+        m.put(platform,field,value,size)
+    def platform_landing():
+        m.put(platform,'obStatus',0)
+        m.put(player,'obVelY',0x600,2)
+        m.act('PlatformObject_SingleCharacter',platform,{
+            UC_M68K_REG_A1:m.s[player]&0xFFFFFFFF,UC_M68K_REG_D1:32,
+            UC_M68K_REG_D3:8,UC_M68K_REG_D4:600,
+            UC_M68K_REG_D6:3 if player=='v_player' else 4})
+        assert m.get(player,'obStatus')&(1<<m.s['status.player.on_object'])
+        assert not m.get(player,'obStatus')&(1<<m.s['status.player.in_air'])
+        assert m.get(player,'spindash_flag')==1
+    m.put(player,'obStatus',1<<m.s['status.player.in_air'])
+    assert dust_tick()==(0,0)
+    platform_landing()
+    assert dust_tick()[0]==2,(player,'dust did not resume on platform')
+
+    m.put(player,'obStatus',1<<m.s['status.player.in_air'])
+    assert dust_tick()==(0,0)
+    m.act('SpawnPlayerSplash',player)
+    m.act('Splash',cache)
+    platform_landing()
+    splash_frames=set()
+    for tick in range(50):
+        m.cpu.mem_write(queue,b'\0\0')
+        m.act('Splash',cache)
+        splash_live=bool(m.get(cache,'code'))
+        queued=int.from_bytes(m.cpu.mem_read(queue,2),'big')
+        before=len(m.uploads)
+        m.act('SpindashDust',dust)
+        if splash_live:
+            splash_frames.add(m.get(cache,'obFrame'))
+            assert int.from_bytes(m.cpu.mem_read(queue,2),'big')==queued
+            assert len(m.uploads)==before,(player,'dust overwrote splash')
+            assert m.get(cache,'water_loaded_kind')==m.s['WaterArt_Splash']
+        else:
+            assert int.from_bytes(m.cpu.mem_read(queue,2),'big')==2
+            assert m.get(cache,'water_loaded_kind')==m.s['WaterArt_Dust']
+            assert m.uploads[-1][1]&65535==destination
+            assert m.get(dust,'obFrame')==1,(player,'dust did not restart cleanly')
+            break
+    else:
+        raise AssertionError((player,'dust never resumed after splash'))
+    assert splash_frames==set(range(1,10)),(player,splash_frames)
+report['airborne_charge_hides_dust_floor_and_platform_resume_after_splash']=True
 print(report,flush=True)
