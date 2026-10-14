@@ -53,26 +53,26 @@ Signpost_RingSparklePositions:
 ; ===========================================================================
 ; loc_F028:
 Signpost_Spin:
-		subq.w	#1,objoff_30(a0)
+		subq.w	#1,objoff_34(a0)
 		bpl.s	Signpost_Sparkle
-		move.w	#60,objoff_30(a0)
+		move.w	#60,objoff_34(a0)
 		addq.b	#1,obAnim(a0)
 		cmpi.b	#3,obAnim(a0)
 		bne.s	Signpost_Sparkle
 		addq.b	#2,obRoutine(a0)
 ; loc_F044:
 Signpost_Sparkle:
-		subq.w	#1,objoff_32(a0)
+		subq.w	#1,objoff_36(a0)
 		bpl.s	.return
-		move.w	#12-1,objoff_32(a0)
+		move.w	#12-1,objoff_36(a0)
 		moveq	#0,d0
-		move.b	objoff_34(a0),d0
-		addq.b	#2,objoff_34(a0)
-		andi.b	#$E,objoff_34(a0)
+		move.b	objoff_38(a0),d0
+		addq.b	#2,objoff_38(a0)
+		andi.b	#$E,objoff_38(a0)
 		lea	Signpost_RingSparklePositions(pc,d0.w),a2
 		bsr.w	FindFreeObj
 		bne.s	.return
-		_move.b	#id_Obj12,obID(a1)
+		move.l	#Obj12,code(a1)
 		move.b	#6,obRoutine(a1)
 		move.b	(a2)+,d0
 		ext.w	d0
@@ -129,7 +129,7 @@ Load_EndOfAct:
 		move.b	#PlayerEffects_ResultsLoaded,(v_shieldobj+effect_loaded_frame).w
 		move.b	#PlayerEffects_ResultsLoaded,(v_shieldobj2+effect_loaded_frame).w
 		clr.b	(f_timecount).w
-		_move.b	#id_Obj95,(v_endcard).w
+		move.l	#GotThrough,(v_endcard).w
 		moveq	#plcid_TitleCard,d0
 		jsr	(NewPLC).l
 		move.b	#1,(f_endactbonus).w

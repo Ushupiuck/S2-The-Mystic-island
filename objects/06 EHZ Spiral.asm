@@ -117,8 +117,8 @@ loc_14A5E:
 loc_14A80:
 		bclr	#3,obStatus(a1)
 		bclr	d6,obStatus(a0)
-		clr.b	objoff_2C(a1)
-		move.b	#4,objoff_2D(a1)
+		clr.b	objoff_30(a1)
+		move.b	#4,objoff_31(a1)
 		rts
 ; ---------------------------------------------------------------------------
 

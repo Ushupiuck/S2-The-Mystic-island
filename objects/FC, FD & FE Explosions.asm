@@ -17,7 +17,7 @@ ExItem_Animal:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		bsr.w	FindFreeObj
 		bne.s	ExItem_Main
-		_move.b	#id_Obj0D,obID(a1) ; load animal object
+		move.l	#Flicky,code(a1) ; load animal object
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.w	enemy_combo(a0),enemy_combo(a1)	; Shared with Touch_KillEnemy & Animals for the chain hit bonus

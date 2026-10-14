@@ -1,8 +1,8 @@
 ; ---------------------------------------------------------------------------
 ; Object 1D - Bridge
 ; ---------------------------------------------------------------------------
-Bridge_child1		= objoff_30	; pointer to first set of bridge segments
-Bridge_child2		= objoff_34	; pointer to second set of bridge segments, if applicable
+Bridge_child1		= objoff_34	; pointer to first set of bridge segments
+Bridge_child2		= objoff_38	; pointer to second set of bridge segments, if applicable
 
 Bridge:
 		btst	#6,obRender(a0)
@@ -45,7 +45,7 @@ Bridge_Init:
 		move.b	#4,obRender(a0)
 		move.b	#sprite_bound($80,Map_HPZ_Bridge_width),obActWid(a0)
 		move.w	obY(a0),d2
-		move.w	d2,objoff_3C(a0)
+		move.w	d2,objoff_40(a0)
 		move.w	obX(a0),d3
 		lea	obSubtype(a0),a2
 		moveq	#0,d1
@@ -94,7 +94,7 @@ Bridge_RetryInit:
 sub_7C76:
 		bsr.w	FindNextFreeObj
 		bne.s	.return
-		_move.b	obID(a0),obID(a1)
+		move.l	code(a0),code(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.l	obMap(a0),obMap(a1)
@@ -123,26 +123,26 @@ Bridge_EHZ:
 		move.b	obStatus(a0),d0
 		andi.b	#$18,d0
 		bne.s	+
-		tst.b	objoff_3E(a0)
+		tst.b	objoff_42(a0)
 		beq.s	loc_7D0A
-		subq.b	#4,objoff_3E(a0)
+		subq.b	#4,objoff_42(a0)
 		bra.s	loc_7D06
 +
 		andi.b	#$10,d0
 		beq.s	++
-		move.b	objoff_3F(a0),d0
-		sub.b	objoff_3B(a0),d0
+		move.b	objoff_43(a0),d0
+		sub.b	objoff_3F(a0),d0
 		beq.s	++
 		bhs.s	+
-		addq.b	#1,objoff_3F(a0)
+		addq.b	#1,objoff_43(a0)
 		bra.s	++
 ; ---------------------------------------------------------------------------
 +
-		subq.b	#1,objoff_3F(a0)
+		subq.b	#1,objoff_43(a0)
 +
-		cmpi.b	#$40,objoff_3E(a0)
+		cmpi.b	#$40,objoff_42(a0)
 		beq.s	loc_7D06
-		addq.b	#4,objoff_3E(a0)
+		addq.b	#4,objoff_42(a0)
 
 loc_7D06:
 		bsr.w	Bridge_Depress
@@ -178,27 +178,27 @@ Bridge_HPZ:
 		move.b	obStatus(a0),d0
 		andi.b	#$18,d0
 		bne.s	+
-		tst.b	objoff_3E(a0)
+		tst.b	objoff_42(a0)
 		beq.s	loc_7DA0
-		subq.b	#4,objoff_3E(a0)
+		subq.b	#4,objoff_42(a0)
 		bra.s	loc_7D9C
 ; ---------------------------------------------------------------------------
 +
 		andi.b	#$10,d0
 		beq.s	++
-		move.b	objoff_3F(a0),d0
-		sub.b	objoff_3B(a0),d0
+		move.b	objoff_43(a0),d0
+		sub.b	objoff_3F(a0),d0
 		beq.s	++
 		bhs.s	+
-		addq.b	#1,objoff_3F(a0)
+		addq.b	#1,objoff_43(a0)
 		bra.s	++
 ; ---------------------------------------------------------------------------
 +
-		subq.b	#1,objoff_3F(a0)
+		subq.b	#1,objoff_43(a0)
 +
-		cmpi.b	#$40,objoff_3E(a0)
+		cmpi.b	#$40,objoff_42(a0)
 		beq.s	loc_7D9C
-		addq.b	#4,objoff_3E(a0)
+		addq.b	#4,objoff_42(a0)
 
 loc_7D9C:
 		bsr.w	Bridge_Depress
@@ -222,13 +222,13 @@ loc_7DA0:
 sub_7DC0:
 		lea	(v_player2).w,a1
 		moveq	#4,d6
-		moveq	#$3B,d5
+		moveq	#objoff_3F,d5		; companion's current log, not the child-pointer byte
 		movem.l	d1-d4,-(sp)
 		bsr.s	+
 		movem.l	(sp)+,d1-d4
 		lea	(v_player).w,a1
 		subq.b	#1,d6
-		moveq	#$3F,d5
+		moveq	#objoff_43,d5		; primary player's current log
 +
 		btst	d6,obStatus(a0)
 		beq.s	loc_7E3E
@@ -331,12 +331,12 @@ loc_7EAE:
 		move.b	obStatus(a0),d0
 		andi.b	#8,d0
 		beq.s	+
-		move.b	objoff_3F(a0),d3
+		move.b	objoff_43(a0),d3
 +
 		move.b	obStatus(a0),d0
 		andi.b	#$10,d0
 		beq.s	+
-		move.b	objoff_3B(a0),d4
+		move.b	objoff_3F(a0),d4
 +
 		movea.l	Bridge_child1(a0),a1
 		lea	sub9_mapframe+next_subspr(a1),a2
@@ -398,7 +398,7 @@ loc_7EAE:
 ; subroutine to make the bridge push down where Sonic or Tails walks over
 ; sub_7F36:
 Bridge_Depress:
-		move.b	objoff_3E(a0),d0
+		move.b	objoff_42(a0),d0
 		bsr.w	CalcSine
 		move.w	d0,d4
 		lea	(Bridge_BendData2).l,a4
@@ -406,7 +406,7 @@ Bridge_Depress:
 		move.b	obSubtype(a0),d0
 		lsl.w	#4,d0
 		moveq	#0,d3
-		move.b	objoff_3F(a0),d3
+		move.b	objoff_43(a0),d3
 		move.w	d3,d2
 		add.w	d0,d3
 		moveq	#0,d5
@@ -425,7 +425,7 @@ Bridge_Depress:
 		mulu.w	d5,d0
 		mulu.w	d4,d0
 		swap	d0
-		add.w	objoff_3C(a0),d0
+		add.w	objoff_40(a0),d0
 		move.w	d0,(a1)
 		addq.w	#6,a1
 		cmpa.w	a2,a1
@@ -437,7 +437,7 @@ Bridge_Depress:
 		moveq	#0,d0
 		move.b	obSubtype(a0),d0
 		moveq	#0,d3
-		move.b	objoff_3F(a0),d3
+		move.b	objoff_43(a0),d3
 		addq.b	#1,d3
 		sub.b	d0,d3
 		neg.b	d3
@@ -455,7 +455,7 @@ Bridge_Depress:
 		mulu.w	d5,d0
 		mulu.w	d4,d0
 		swap	d0
-		add.w	objoff_3C(a0),d0
+		add.w	objoff_40(a0),d0
 		move.w	d0,(a1)
 		addq.w	#6,a1
 		cmpa.w	a2,a1

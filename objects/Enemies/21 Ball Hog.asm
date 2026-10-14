@@ -1,12 +1,12 @@
 ; ---------------------------------------------------------------------------
 ; Object 21 - Vertical Ball Hog enemy
 ; ---------------------------------------------------------------------------
-hog_launchflag	= objoff_2C	; byte; 0 to launch a cannonball
-hog_wait	= objoff_2D	; byte; time between shots
-hog_backup	= objoff_2E	; word; backup of hog_wait
-hog_walk	= objoff_30	; word; time to idle around from left to right
-hog_timer	= objoff_32
-hog_cooldown	= objoff_34
+hog_launchflag	= objoff_30	; byte; 0 to launch a cannonball
+hog_wait	= objoff_31	; byte; time between shots
+hog_backup	= objoff_32	; word; backup of hog_wait
+hog_walk	= objoff_34	; word; time to idle around from left to right
+hog_timer	= objoff_36
+hog_cooldown	= objoff_38
 
 Ballhog:
 		moveq	#0,d0
@@ -115,7 +115,7 @@ Ballhog_MakeBall:
 		move.b	#1,hog_wait(a0)
 		bsr.w	FindNextFreeObj
 		bne.w	.no_free_ram
-		_move.b	#id_Obj21,obID(a1)	; load bomb
+		move.l	#Ballhog,code(a1)	; load bomb
 		move.b	#6,obRoutine(a1)	; set normal bomb
 		move.b	#4,obFrame(a1)		; set bomb frame
 		move.l	#Map_BallHogH,obMap(a1)
@@ -375,7 +375,7 @@ Hog_Idle3:
 .load_bomb:
 		bsr.w	FindNextFreeObj
 		bne.s	.abort			; if ObjectRam is full, we bail!
-		_move.b	#id_Obj21,obID(a1)	; load bomb
+		move.l	#Ballhog,code(a1)	; load bomb
 		move.b	#8,obRoutine(a1)	; set proto bomb
 		move.b	#4,obFrame(a1)		; set bomb frame
 		move.l	#Map_BallHogH,obMap(a1)
@@ -469,7 +469,7 @@ Ballhog_NormalBomb:
 		neg.w	obVelX(a0)
 		subq.w	#1,hog_launchflag(a0)
 		bpl.s	.time_remaining
-		_move.b	#id_ObjFD,obID(a0)
+		move.l	#FieryExplosion,code(a0)
 		sf	obRoutine(a0)
 		rts
 ; ---------------------------------------------------------------------------
@@ -482,7 +482,7 @@ Ballhog_NormalBomb:
 .moving_up:
 		subq.w	#1,hog_launchflag(a0)
 		bpl.s	.time_remaining
-		_move.b	#id_ObjFD,obID(a0)
+		move.l	#FieryExplosion,code(a0)
 		sf	obRoutine(a0)
 		rts
 ; ---------------------------------------------------------------------------
@@ -512,7 +512,7 @@ Ballhog_ProtoBomb:
 		add.w	d1,obY(a0)
 
 .change_explosion:
-		_move.b	#id_ObjFE,obID(a0)
+		move.l	#GroundExplosion,code(a0)
 		sf	obRoutine(a0)
 		rts
 ; ---------------------------------------------------------------------------

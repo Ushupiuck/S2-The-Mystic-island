@@ -80,7 +80,7 @@ MotoBug_Main_Index:
 ; ===========================================================================
 
 MotoBug_Move:
-		subq.w	#1,objoff_30(a0)		; is object paused?
+		subq.w	#1,objoff_34(a0)		; is object paused?
 		bpl.s	.return				; if so, branch
 		addq.b	#2,ob2ndRout(a0)
 		moveq	#0,d0
@@ -106,12 +106,12 @@ MotoBug_Floor:
 		add.w	d1,obY(a0)
 		tst.b	obSubtype(a0)			; is this a Redz? (no smoke)
 		bne.s	.return
-		subq.b	#1,objoff_33(a0)		; countdown to next smoke puff
+		subq.b	#1,objoff_37(a0)		; countdown to next smoke puff
 		bpl.s	.return
-		move.b	#15,objoff_33(a0)		; reset counter
+		move.b	#15,objoff_37(a0)		; reset counter
 		bsr.w	FindFreeObj
 		bne.s	.return
-		_move.b	#id_Obj40,obID(a1)		; spawn smoke child (subtype 0, obAnim will be set to 2)
+		move.l	#MotoBug,code(a1)		; spawn smoke child (subtype 0, obAnim will be set to 2)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.b	obStatus(a0),obStatus(a1)
@@ -121,7 +121,7 @@ MotoBug_Floor:
 
 MotoBug_StopMoving:
 		subq.b	#2,ob2ndRout(a0)
-		move.w	#59,objoff_30(a0)		; pause for 1 second
+		move.w	#59,objoff_34(a0)		; pause for 1 second
 		clr.w	obVelX(a0)
 		clr.b	obAnim(a0)
 		rts

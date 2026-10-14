@@ -26,8 +26,8 @@ loc_1446C:
 
 		jsr	(FindNextFreeObj).l
 		bne.w	HPZ_Waterfall_Retry
-		_move.b	#id_Obj1E,obID(a1)
-	;	_move.b	obID(a0),obID(a1)
+		move.l	#HPZ_Waterfall,code(a1)
+	;	_move.b	code(a0),code(a1)
 		addq.b	#4,obRoutine(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
@@ -40,16 +40,16 @@ loc_1446C:
 		move.b	#$A0,obHeight(a1)
 		bset	#4,obRender(a1)
 
-		move.l	a1,objoff_38(a0)
-		move.w	obY(a0),objoff_34(a0)
-		move.w	obY(a0),objoff_36(a0)
+		move.l	a1,objoff_3C(a0)
+		move.w	obY(a0),objoff_38(a0)
+		move.w	obY(a0),objoff_3A(a0)
 		cmpi.b	#$10,obSubtype(a0)
 		blo.s	loc_14518
 
 		jsr	(FindNextFreeObj).l
 		bne.w	HPZ_Waterfall_RetrySecond
-		_move.b	#id_Obj1E,obID(a1)
-	;	_move.b	obID(a0),obID(a1)
+		move.l	#HPZ_Waterfall,code(a1)
+	;	_move.b	code(a0),code(a1)
 		addq.b	#4,obRoutine(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
@@ -59,24 +59,24 @@ loc_1446C:
 		move.b	#4,obRender(a1)
 		move.b	#sprite_bound($10,Map_Waterfall2_width),obActWid(a1)
 		move.w	#$80,obPriority(a1)
-		move.l	a1,objoff_3C(a0)
+		move.l	a1,objoff_40(a0)
 		move.w	obY(a0),obY(a1)
 		addi.w	#$98,obY(a1)
 
 loc_14518:
 		moveq	#0,d1
 		move.b	obSubtype(a0),d1
-		move.w	objoff_34(a0),d0
+		move.w	objoff_38(a0),d0
 		subi.w	#$78,d0
 		lsl.w	#4,d1
 		add.w	d1,d0
 		move.w	d0,obY(a0)
-		move.w	d0,objoff_34(a0)
+		move.w	d0,objoff_38(a0)
 
 loc_14532:
-		movea.l	objoff_38(a0),a1
+		movea.l	objoff_3C(a0),a1
 		move.b	#$12,obFrame(a0)
-		move.w	objoff_34(a0),d0
+		move.w	objoff_38(a0),d0
 		move.w	(v_waterpos1).w,d1
 		cmp.w	d0,d1
 		bhs.s	loc_1454A
@@ -84,7 +84,7 @@ loc_14532:
 
 loc_1454A:
 		move.w	d0,obY(a0)
-		sub.w	objoff_36(a0),d0
+		sub.w	objoff_3A(a0),d0
 		addi.w	#$80,d0
 		bmi.s	loc_1459C
 		lsr.w	#4,d0
@@ -97,7 +97,7 @@ loc_14564:
 		move.b	d0,obFrame(a1)
 		cmpi.b	#$10,obSubtype(a0)
 		blo.s	loc_14584
-		movea.l	objoff_3C(a0),a1
+		movea.l	objoff_40(a0),a1
 		subi.w	#$F,d1
 		bhs.s	+
 		moveq	#0,d1
@@ -118,10 +118,10 @@ loc_1459C:
 .return:	rts
 ; Retry a partially allocated tall waterfall as one unit.
 HPZ_Waterfall_RetrySecond:
-		movea.l	objoff_38(a0),a1
+		movea.l	objoff_3C(a0),a1
 		jsr	(DeleteObject2).l
 HPZ_Waterfall_Retry:
-		clr.l	objoff_38(a0)
 		clr.l	objoff_3C(a0)
+		clr.l	objoff_40(a0)
 		clr.b	obRoutine(a0)
 		rts

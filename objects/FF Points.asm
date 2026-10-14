@@ -5,8 +5,8 @@
 points_parent = obParent2		; survives enemy -> explosion -> animal -> points
 ; The reserved shield SSTs have unused bytes beside their effect-bank cache.
 ; Cache the points banks here too; no SST or global RAM allocation grows.
-points_loaded_frame = objoff_31	; byte, zero = empty, DPLC indices 1-7 = loaded
-points_last_object = objoff_32	; word, latest popup for this player
+points_loaded_frame = objoff_35	; byte, zero = empty, DPLC indices 1-7 = loaded
+points_last_object = objoff_36	; word, latest popup for this player
 Points_FrameBias = 1
 Points_HiddenFrame = 7
 
@@ -50,7 +50,7 @@ Points_main:
 		cmp.w	a0,d0
 		beq.s	.setup				; the old SST may have been reused for this popup
 		movea.w	d0,a1
-		cmpi.b	#id_ObjFF,obID(a1)
+		cmpi.l	#Points,code(a1)
 		bne.s	.setup
 		cmpi.b	#2,obRoutine(a1)
 		bne.s	.setup				; do not delete a newly allocated, pending popup

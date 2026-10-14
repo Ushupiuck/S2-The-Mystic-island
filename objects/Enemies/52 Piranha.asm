@@ -28,48 +28,48 @@ Piranha_Init:
 		andi.w	#$F0,d1
 		add.w	d1,d1
 		add.w	d1,d1
-		move.w	d1,objoff_3A(a0)
-		move.w	d1,objoff_3C(a0)
+		move.w	d1,objoff_3E(a0)
+		move.w	d1,objoff_40(a0)
 		andi.w	#$F,d0
 		lsl.w	#6,d0
 		subq.w	#1,d0
-		move.w	d0,objoff_30(a0)
-		move.w	d0,objoff_32(a0)
+		move.w	d0,objoff_34(a0)
+		move.w	d0,objoff_36(a0)
 		move.w	#-$80,obVelX(a0)
-		move.l	#-$48000,objoff_36(a0)
-		move.w	obY(a0),objoff_34(a0)
+		move.l	#-$48000,objoff_3A(a0)
+		move.w	obY(a0),objoff_38(a0)
 		bset	#6,obStatus(a0)
 		btst	#0,obStatus(a0)
 		beq.s	Piranha_Main
 		neg.w	obVelX(a0)
 
 Piranha_Main:
-		cmpi.w	#-1,objoff_3A(a0)
+		cmpi.w	#-1,objoff_3E(a0)
 		beq.s	loc_15BE4
-		subq.w	#1,objoff_3A(a0)
+		subq.w	#1,objoff_3E(a0)
 
 loc_15BE4:
-		subq.w	#1,objoff_30(a0)
+		subq.w	#1,objoff_34(a0)
 		bpl.s	loc_15C06
-		move.w	objoff_32(a0),objoff_30(a0)
+		move.w	objoff_36(a0),objoff_34(a0)
 		neg.w	obVelX(a0)
 		bchg	#0,obStatus(a0)
 		move.b	#1,obPrevAni(a0)
-		move.w	objoff_3C(a0),objoff_3A(a0)
+		move.w	objoff_40(a0),objoff_3E(a0)
 
 loc_15C06:
 		lea	Ani_Piranha(pc),a1
 		jsr	(AnimateSprite).l
 		jsr	(ObjectMove).l
-		tst.w	objoff_3A(a0)
+		tst.w	objoff_3E(a0)
 		bgt.s	+
-		cmpi.w	#-1,objoff_3A(a0)
+		cmpi.w	#-1,objoff_3E(a0)
 		beq.s	+
-		move.l	#-$48000,objoff_36(a0)
+		move.l	#-$48000,objoff_3A(a0)
 		addq.b	#2,obRoutine(a0)
-		move.w	#-1,objoff_3A(a0)
+		move.w	#-1,objoff_3E(a0)
 		move.b	#2,obAnim(a0)
-		move.w	#1,objoff_3E(a0)
+		move.w	#1,objoff_42(a0)
 +		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
 
@@ -77,23 +77,23 @@ Piranha_Leap:
 		move.w	#$390,(v_waterpos1).w
 		lea	Ani_Piranha(pc),a1
 		jsr	(AnimateSprite).l
-		move.w	objoff_3E(a0),d0
-		sub.w	d0,objoff_30(a0)
+		move.w	objoff_42(a0),d0
+		sub.w	d0,objoff_34(a0)
 		bsr.w	sub_15CF8
-		tst.l	objoff_36(a0)
+		tst.l	objoff_3A(a0)
 		bpl.s	loc_15CA0
 		move.w	obY(a0),d0
 		cmp.w	(v_waterpos1).w,d0
 		bgt.s	+
 		move.b	#3,obAnim(a0)
 		bclr	#6,obStatus(a0)
-		tst.b	objoff_2A(a0)
+		tst.b	objoff_2E(a0)
 		bne.s	+
 		move.w	obVelX(a0),d0
 		asl.w	#1,d0
 		move.w	d0,obVelX(a0)
-		addq.w	#1,objoff_3E(a0)
-		st	objoff_2A(a0)
+		addq.w	#1,objoff_42(a0)
+		st	objoff_2E(a0)
 +		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
 
@@ -109,22 +109,22 @@ loc_15CB4:
 		clr.b	obAnim(a0)
 		bset	#6,obStatus(a0)
 		bne.s	loc_15CCE
-		move.l	objoff_36(a0),d0
+		move.l	objoff_3A(a0),d0
 		asr.l	#1,d0
-		move.l	d0,objoff_36(a0)
+		move.l	d0,objoff_3A(a0)
 		nop
 
 loc_15CCE:
-		move.w	objoff_34(a0),d0
+		move.w	objoff_38(a0),d0
 		cmp.w	obY(a0),d0
 		bgt.s	+
 		subq.b	#2,obRoutine(a0)
-		tst.b	objoff_2A(a0)
+		tst.b	objoff_2E(a0)
 		beq.s	+
 		move.w	obVelX(a0),d0
 		asr.w	#1,d0
 		move.w	d0,obVelX(a0)
-		sf	objoff_2A(a0)
+		sf	objoff_2E(a0)
 +		jmp	(MarkObjGone).l
 
 ; =============== S U B R O U T I N E =======================================
@@ -137,19 +137,19 @@ sub_15CF8:
 		ext.l	d0
 		asl.l	#8,d0
 		add.l	d0,d2
-		add.l	objoff_36(a0),d3
+		add.l	objoff_3A(a0),d3
 		btst	#6,obStatus(a0)
 		beq.s	loc_15D34
-		tst.l	objoff_36(a0)
+		tst.l	objoff_3A(a0)
 		bpl.s	loc_15D2C
-		addi.l	#$1000,objoff_36(a0)
-		addi.l	#$1000,objoff_36(a0)
+		addi.l	#$1000,objoff_3A(a0)
+		addi.l	#$1000,objoff_3A(a0)
 
 loc_15D2C:
-		subi.l	#$1000,objoff_36(a0)
+		subi.l	#$1000,objoff_3A(a0)
 
 loc_15D34:
-		addi.l	#$1800,objoff_36(a0)
+		addi.l	#$1800,objoff_3A(a0)
 		move.l	d2,obX(a0)
 		move.l	d3,obY(a0)
 		rts

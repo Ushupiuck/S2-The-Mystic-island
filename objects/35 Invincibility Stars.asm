@@ -1,20 +1,20 @@
 ; ---------------------------------------------------------------------------
 ; Object 35 - four S2 invincibility-star layers in one SST per player
-; Pack eight children in $10-$3F and keep orbit state in $40-$48. This is a
+; Pack eight children in $18-$47 and keep orbit state in $48-$4F. This is a
 ; normal composite object: Render_Sprites needs no effect-specific dispatch.
 ; ---------------------------------------------------------------------------
 ; SST Variables:
 
 InvincibilityStars_LayerCount = 4
 InvincibilityStars_Priority = $80
-invincibility_angles	= objoff_40	; four bytes: the current frame's orbit angles
-invincibility_frames	= objoff_44	; four bytes: the current frame's animation indices
-invincibility_flags	= objoff_48	; bit 7: initialized; bit 6: retry partner allocation
+invincibility_angles	= objoff_48	; four bytes: current orbit angles
+invincibility_frames	= objoff_4C	; four bytes: current animation indices
+invincibility_flags	= obPriority	; byte; explicit queue priority leaves this field free
 InvincibilityStars_PartnerBit = 1	; bit 1: follows player 2; bit 0: preceding frame's facing
 InvincibilityStars_RetryBit = 6
 InvincibilityStars_OwnershipMask = (1<<InvincibilityStars_PartnerBit)|(1<<InvincibilityStars_RetryBit)
-		if (subspr_data+InvincibilityStars_LayerCount*2*next_subspr>invincibility_angles)||(invincibility_frames<>invincibility_angles+InvincibilityStars_LayerCount)||(invincibility_flags<>invincibility_frames+InvincibilityStars_LayerCount)||(invincibility_flags>=height_pixels)
-			fatal "The star composite must fit their children and orbit state below height_pixels."
+		if (subspr_data+InvincibilityStars_LayerCount*2*next_subspr>invincibility_angles)||(invincibility_frames<>invincibility_angles+InvincibilityStars_LayerCount)||(invincibility_frames+InvincibilityStars_LayerCount>object_size)
+			fatal "The star children and orbit arrays must fit within their SST."
 		endif
 ; ---------------------------------------------------------------------------
 
@@ -100,7 +100,7 @@ InvincibilityStars_EnsurePartner:
 		lea	(v_lvlobjspace).w,a1
 		moveq	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d0
 .find:
-		cmpi.b	#id_Obj35,obID(a1)
+		cmpi.l	#Obj35,code(a1)
 		bne.s	.next
 		btst	#InvincibilityStars_PartnerBit,invincibility_flags(a1)
 		bne.s	.refresh
@@ -109,7 +109,7 @@ InvincibilityStars_EnsurePartner:
 		dbf	d0,.find
 		jsr	(FindFreeObj).l
 		bne.s	.return
-		_move.b	#id_Obj35,obID(a1)
+		move.l	#Obj35,code(a1)
 .refresh:
 		move.b	#1<<InvincibilityStars_PartnerBit,invincibility_flags(a1)
 .done:
@@ -148,7 +148,7 @@ InvincibilityStars_Advance:
 
 ; ===========================================================================
 ; Prepare the generic composite during the object's update. Child data
-; overlaps the usual routine/status/priority fields, so this object uses
+; overlaps the usual routine/status fields, so this object uses
 ; invincibility_flags for initialization/facing and DisplaySprite3 to queue.
 ; Preserve ExecuteObjects' loop counter while preparing all four layers.
 ; ---------------------------------------------------------------------------
@@ -238,7 +238,7 @@ InvincibilityStars_BuildChildren:
 		move.l	(sp)+,d7
 		tst.b	mainspr_childsprites(a0)
 		beq.s	.return
-		move.w	#InvincibilityStars_Priority,d0	; obPriority belongs to packed child data
+		move.w	#InvincibilityStars_Priority,d0	; obPriority holds this effect's flags
 		jmp	(DisplaySprite3).l
 .return:
 		rts
@@ -251,7 +251,7 @@ InvincibilityStars_CheckParent:
 		moveq	#0,d0
 		btst	#obStatusSecondary_isInvincible,obStatusSecondary(a1)
 		beq.s	.return
-		tst.b	obID(a1)
+		tst.l	code(a1)
 		beq.s	.return
 		cmpi.b	#6,obRoutine(a1)
 		bhs.s	.return

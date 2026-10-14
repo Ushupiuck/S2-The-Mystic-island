@@ -38,7 +38,7 @@ Obj7D_Main:
 		ori.b	#4,obRender(a0)
 		move.b	#sprite_bound($10,Map_Obj7D_width),obActWid(a0)
 		move.b	obSubtype(a0),obFrame(a0)
-		move.w	#(60*2)-1,objoff_30(a0)
+		move.w	#(60*2)-1,objoff_34(a0)
 		move.w	#sfx_Bonus,d0
 		jsr	(PlaySound_Special).l
 		moveq	#0,d0
@@ -58,7 +58,7 @@ Obj7D_Points:	dc.w 0
 ; ---------------------------------------------------------------------------
 
 Obj7D_DelayDelete:
-		subq.w	#1,objoff_30(a0)
+		subq.w	#1,objoff_34(a0)
 		bmi.s	Obj7D_Delete
 		out_of_range2	UnloadObject
 		jmp	(DisplaySprite).l

@@ -79,6 +79,13 @@ class Genesis:
         self.core.retro_load_game.argtypes = [C.POINTER(GameInfo)]
         self.core.retro_load_game.restype = C.c_bool
         self.rom = C.create_string_buffer(rom.read_bytes())
+        # Fixtures name objects by their placement byte IDs. Resolve
+        # those IDs at the fixture boundary; real RAM contains code pointers.
+        import struct
+        self.object_codes = [0] + list(struct.unpack_from(
+            '>255I', rom.read_bytes(), self.s['Obj_Index']))
+        self.ids_by_code = {pointer: oid for oid, pointer in
+                            enumerate(self.object_codes[1:], 1)}
         info = GameInfo(str(rom).encode(),C.cast(self.rom,C.c_void_p),len(self.rom)-1,None)
         assert self.core.retro_load_game(C.byref(info))
         self.ram = (C.c_uint8*65536).in_dll(self.core,'work_ram')
@@ -101,9 +108,15 @@ class Genesis:
             self.ram[(address+i)^1] = b
 
     def get(self,actor,field,size=1):
-        return self.read((self.s[actor] if isinstance(actor,str) else actor)+self.s[field],size)
+        projected=field=='layout_id'
+        if projected: field,size='code',4
+        elif field in ('code','obID'): size=4
+        value=self.read((self.s[actor] if isinstance(actor,str) else actor)+self.s[field],size)
+        return self.ids_by_code.get(value,value) if projected else value
 
     def put(self,actor,field,value,size=1):
+        if field=='layout_id': field,value,size='code',self.object_codes[value],4
+        elif field in ('code','obID'): size=4
         self.write((self.s[actor] if isinstance(actor,str) else actor)+self.s[field],value,size)
 
     def run(self, frames=1):

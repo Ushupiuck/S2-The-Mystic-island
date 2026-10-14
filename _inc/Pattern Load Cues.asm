@@ -124,14 +124,15 @@ PLC_GHZ2_End:
 ; PATTERN LOAD REQUEST LIST
 ; Labyrinth Zone primary
 ; ---------------------------------------------------------------------------
-PLC_LZ:		dc.w ((PLC_CPZ_End-PLC_CPZ)/6)-1
+PLC_LZ:		dc.w ((PLC_LZ_End-PLC_LZ)/6)-1
 		plcm	Nem_MorphingPlatform,	ArtTile_MorphingOrbs	; without a filler entry, this crashes
+		plcm	Nem_WaterBubbles,	ArtTile_Bubbles
 PLC_LZ_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Labyrinth Zone secondary
 ; ---------------------------------------------------------------------------
-PLC_LZ2:	dc.w ((PLC_CPZ2_End-PLC_CPZ2)/6)-1
+PLC_LZ2:	dc.w ((PLC_LZ2_End-PLC_LZ2)/6)-1
 		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
 		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
 		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
@@ -184,6 +185,7 @@ PLC_HPZ:	dc.w ((PLC_HPZ_End-PLC_HPZ)/6)-1
 		plcm	Nem_HPZ_Platform,	ArtTile_HPZ_Platform
 		plcm	Nem_HPZ_PulsingBall,	ArtTile_HPZ_Orb
 		plcm	Nem_Water,		ArtTile_Water_Surface
+		plcm	Nem_WaterBubbles,	ArtTile_Bubbles
 PLC_HPZ_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST

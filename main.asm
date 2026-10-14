@@ -2159,7 +2159,7 @@ TitleScreen:
 		bsr.w	KosPlusArt_To_VDP
 		moveq	#palid_SonicTails,d0
 		bsr.w	PalLoad1
-		_move.b	#id_Obj90,(v_sonicteam).w	; load "SONIC TEAM PRESENTS" object
+		move.l	#Credits,(v_sonicteam).w	; load "SONIC TEAM PRESENTS" object
 		jsr	(ExecuteObjects).l
 		jsr	(Render_Sprites).l
         	bsr.w	Pal_FadeFromBlack
@@ -2211,9 +2211,9 @@ TitleScreen:
 		clr.b	(Debug_mode_flag).w
 		move.w	#376,(v_generictimer).w
 		clearRAM v_sonicteam,v_sonicteam+object_size
-		_move.b	#id_Obj91,(v_titlesonic).w
-		_move.b	#id_Obj91,(v_titletails).w
-		_move.b	#id_Obj93,(v_pressstart).w
+		move.l	#TitleSonicTails,(v_titlesonic).w
+		move.l	#TitleSonicTails,(v_titletails).w
+		move.l	#PressStartButton,(v_pressstart).w
 		move.b	#1,(v_titletails+obFrame).w
 		jsr	(ExecuteObjects).l
 		jsr	(Render_Sprites).l
@@ -2727,7 +2727,7 @@ Level_PlayBgm:
 		lea	MusicList(pc),a1	; load music playlist
 		move.b	(a1,d0.w),d0
 		bsr.w	PlaySound		; play music
-		_move.b	#id_Obj94,(v_titlecard).w	; load title card object
+		move.l	#TitleCards,(v_titlecard).w	; load title card object
 
 Level_TtlCardLoop:
 		move.w	#Vint_TitleCard,(v_vbla_routine).w
@@ -2738,7 +2738,7 @@ Level_TtlCardLoop:
 		bsr.w	Process_Kos_Module_Queue
 		bsr.w	RunPLC_RAM
 		move.w	(v_ttlcardact+obX).w,d0
-		cmp.w	(v_ttlcardact+objoff_30).w,d0
+		cmp.w	(v_ttlcardact+objoff_34).w,d0
 		bne.s	Level_TtlCardLoop
 		tst.l	(v_plc_buffer).w
 		bne.s	Level_TtlCardLoop
@@ -2758,10 +2758,10 @@ Level_SkipTtlCard:
 		bsr.w	LoadTilesFromStart
 		bsr.w	LoadCollisionIndexes
 		bsr.w	WaterEffects
-		_move.b	#id_Obj01,(v_player).w
+		move.l	#Obj01,(v_player).w
 		cmpi.w	#PlayerMode_Tails,(Player_mode).w
 		bne.s	+
-		_move.b	#id_Obj02,(v_player).w
+		move.l	#Obj02,(v_player).w
 +
 		tst.w	(f_demo).w		; are we on an ending demo?
 		bmi.s	Level_ChkDebug		; if not, branch
@@ -2772,7 +2772,7 @@ LevelInit_LoadTails:	; S3&K companion, enabled in Sonic & Tails mode
  if LoadTails=1
 		tst.w	(Player_mode).w
 		bne.s	Level_ChkDebug
-		_move.b	#id_Obj02,(v_player2).w	; load Tails object
+		move.l	#Obj02,(v_player2).w	; load Tails object
 		move.w	(v_player+obX).w,(v_player2+obX).w	; copy player 1's x position to player 2
 		move.w	(v_player+obY).w,(v_player2+obY).w	; copy player 1's y position to player 2
 		subi.w	#32,(v_player2+obX).w	; set player 2's x position 32 pixels behind player 1's
@@ -2802,9 +2802,9 @@ Level_ChkWater:
 		clr.w	(v_jpadhold1).w
 		tst.b	(Water_flag).w
 		beq.s	Level_LoadObj
-		_move.b	#id_Obj07,(v_watersurface1).w
+		move.l	#WaterSurface,(v_watersurface1).w
 		move.w	#$60,(v_watersurface1+obX).w
-		_move.b	#id_Obj07,(v_watersurface2).w
+		move.l	#WaterSurface,(v_watersurface2).w
 		move.w	#$120,(v_watersurface2+obX).w
 
 Level_LoadObj:
@@ -3621,7 +3621,7 @@ BonusStage:
 		move.l	d0,(Camera_Y_pos).w
 		move.l	d0,(Camera_X_pos_copy).w
 		move.l	d0,(Camera_Y_pos_copy).w
-		_move.b	#id_Obj04,(v_player).w ; load special stage Sonic object
+		move.l	#BonusPlayer,(v_player).w ; load special stage Sonic object
 		move.b	#-1,(v_ssangleprev).w
 		bsr.w	PalCycle_S1SS
 		clr.w	(v_ssangle).l	; set stage angle to "upright"
@@ -3723,7 +3723,7 @@ loc_5214:
 		bsr.w	PlaySound_Special	; play end-of-level music
 		clr.w	(Debug_placement_mode).w	; the stage's Debug object is about to be removed
 		clearRAM v_objspace,v_objend	; clear object RAM
-		_move.b	#id_Obj96,(v_endcard).w	; load results screen object
+		move.l	#BonusGotThrough,(v_endcard).w	; load results screen object
 
 SS_NormalExit:
 		bsr.w	PauseGame
@@ -7260,7 +7260,7 @@ loc_7672:
 		blo.s	DynResize_GHZ3_Main.return
 		bsr.w	FindFreeObj
 		bne.s	loc_7692
-		_move.b	#id_Obj3D,obID(a1)
+		move.l	#Obj3D,code(a1)
 		move.w	#$2A60,obX(a1)
 		move.w	#$280,obY(a1)
 
@@ -7323,7 +7323,7 @@ loc_76EA:
 		bhs.s	.return
 		bsr.w	FindFreeObj
 		bne.s	+
-		_move.b	#id_Obj77,obID(a1)	; Load Labyrinth Zone's boss (No longer exists)
+		move.l	#ObjNull,code(a1)	; Load Labyrinth Zone's boss (No longer exists)
 
 +		move.w	#bgm_Boss,d0
 		bsr.w	PlaySound
@@ -7474,7 +7474,7 @@ DynResize_EHZ2_Routine3:
 		bne.s	.return
 		bsr.w	FindFreeObj
 		bne.s	.return			; retry until a controller slot is available
-		_move.b	#id_Obj55,obID(a1)	; load EHZ Boss object
+		move.l	#EHZBoss,code(a1)	; load EHZ Boss object
 		move.b	#$81,obSubtype(a1)
 		move.w	#EHZBoss_LandingX,obX(a1)
 		move.w	#EHZBoss_LandingY+8,obY(a1)
@@ -7548,7 +7548,7 @@ DynResize_SYZ3_Main:
 		blo.s	.return
 		bsr.w	FindFreeObj
 		bne.s	.return
-		_move.b	#id_Obj76,obID(a1)	; load object Spring Yard's boss (No longer exists)
+		move.l	#ObjNull,code(a1)	; load object Spring Yard's boss (No longer exists)
 		addq.b	#2,(Dynamic_Resize_Routine).w
 .return:	rts
 ; ---------------------------------------------------------------------------
@@ -7559,7 +7559,7 @@ DynResize_SYZ3_Boss:
 		move.w	#$4CC,(Camera_Max_Y_pos_target).w
 		bsr.w	FindFreeObj
 		bne.s	loc_7A64
-		_move.b	#id_Obj75,obID(a1)	; load object 75
+		move.l	#ObjNull,code(a1)	; load object 75
 		addq.b	#2,(Dynamic_Resize_Routine).w
 
 loc_7A64:
@@ -7633,7 +7633,7 @@ loc_7AF4:
 		blo.s	loc_7AD2.return
 		bsr.w	FindFreeObj
 		bne.s	loc_7AD2.return
-		_move.b	#id_Obj83,obID(a1) ; load object 83 (collapsing block object in S1)
+		move.l	#ObjNull,code(a1) ; load object 83 (collapsing block object in S1)
 		addq.b	#2,(Dynamic_Resize_Routine).w
 		moveq	#plcid_EggmanSBZ2,d0
 		jmp	(LoadPLC).l		; load SBZ2 Eggman patterns
@@ -7644,7 +7644,7 @@ loc_7B12:
 		blo.s	loc_7B2E
 		bsr.w	FindFreeObj
 		bne.s	loc_7B28
-		_move.b	#id_Obj82,obID(a1)	; load object 82 (SBZ Eggman in S1)
+		move.l	#ObjNull,code(a1)	; load object 82 (SBZ Eggman in S1)
 		addq.b	#2,(Dynamic_Resize_Routine).w
 
 loc_7B28:
@@ -7697,7 +7697,7 @@ DynResize_SBZ3_Boss:
 		blo.s	loc_7B8A
 		bsr.w	FindFreeObj
 		bne.s	loc_7B8A
-		_move.b	#id_Obj85,obID(a1)	; load object 85 (final boss object)
+		move.l	#ObjNull,code(a1)	; load object 85 (final boss object)
 		addq.b	#2,(Dynamic_Resize_Routine).w
 		move.b	#1,(f_lockscreen).w
 
@@ -7893,7 +7893,7 @@ DynResize_MZ3Boss:
 		bcs.s	DynResize_MZ3End.return
 		bsr.w	FindFreeObj
 		bne.s	+
-		_move.b	#id_Obj55,obID(a1)			; load Obj55 (EHZ boss, Placeholder)
+		move.l	#EHZBoss,code(a1)			; load Obj55 (EHZ boss, Placeholder)
 		move.w	#$19F0,obX(a1)
 		move.w	#$22C,obY(a1)
 +
@@ -7961,7 +7961,7 @@ loc_79AA:
 		blo.s	loc_7996.return
 		bsr.w	FindFreeObj
 		bne.s	+
-		_move.b	#id_Obj7A,obID(a1)	; load object 7A
+		move.l	#SpecialStageEntry,code(a1)	; load object 7A
 +
 		move.w	#bgm_Boss,d0
 		bsr.w	PlaySound
@@ -7994,7 +7994,7 @@ DynResize_SLZ4:
 		include	"objects/29 Monitor Content Power-Up.asm"
 ; ---------------------------------------------------------------------------
 ; Shared across objects $1A and $1B.
-; Expects time remaining in objoff_38
+; Expects time remaining in objoff_3C
 ; ---------------------------------------------------------------------------
 Ledge_Fragment:
 		lea	byte_8EF2(pc),a4
@@ -8012,7 +8012,7 @@ loc_8E70:
 		move.w	(a3)+,d1
 		subq.w	#1,d1
 		bset	#5,obRender(a0)
-		_move.b	obID(a0),d4
+		move.l	code(a0),d4
 		move.b	obRender(a0),d5
 		movea.l	a0,a1
 		bra.s	+
@@ -8022,7 +8022,7 @@ loc_8E70:
 		addq.w	#6,a3		; S3&K sprite-piece stride
 
 +		move.b	#4,obRoutine(a1)
-		_move.b	d4,obID(a1)
+		move.l	d4,code(a1)
 		move.l	a3,obMap(a1)
 		move.b	height_pixels(a0),height_pixels(a1)
 		move.b	d5,obRender(a1)
@@ -8032,7 +8032,7 @@ loc_8E70:
 		move.w	obPriority(a0),obPriority(a1)
 		move.b	obActWid(a0),obActWid(a1)
 		move.b	obHeight(a0),obHeight(a1)
-		move.b	(a4)+,objoff_38(a1)
+		move.b	(a4)+,objoff_3C(a1)
 		cmpa.l	a0,a1
 		bhs.s	+
 		bsr.w	DisplaySprite2
@@ -8155,9 +8155,7 @@ byte_B292:	dc.b   2,  0,  1, $B,afBack,  1
 ExecuteObjects:
 		lea	(v_objspace).w,a0
 		moveq	#(v_objend-v_objspace)/object_size-1,d7	; run every slot in the object pool
-		moveq	#0,d0
-	;	cmpi.b	#6,(v_player+obRoutine).w	; is Sonic dead?
-	;	bhs.s	ExecuteObjectsWhenPlayerIsDead	; if yes, branch
+		; Objects deliberately continue running after the primary player dies.
 
 ; ---------------------------------------------------------------------------
 ; This is THE place where each individual object's code gets called from
@@ -8167,52 +8165,26 @@ ExecuteObjects:
 
 ; sub_CB44:
 RunObject:
-		move.b	obID(a0),d0			; get the object's ID
-		beq.s	.skip				; if it's obj00, skip it
-		add.w	d0,d0
-		add.w	d0,d0				; d0 = object ID * 4
-		movea.l	Obj_Index-4(pc,d0.w),a1		; load the address of the object's code
-		jsr	(a1)				; dynamic call! to one of the the entries in Obj_Index
-		moveq	#0,d0
+		move.l	code(a0),d0			; zero longword = empty slot
+		beq.s	.skip
+		movea.l	d0,a1
+		jsr	(a1)				; call the SST's routine directly
 
 .skip:
 		lea	object_size(a0),a0		; load obj address
 		dbf	d7,RunObject
 		rts
 ; ---------------------------------------------------------------------------
-; this skips certain objects to make enemies and things pause when Sonic dies
-; loc_CB5E:
-; ExecuteObjectsWhenPlayerIsDead:
-	;	moveq	#(v_lvlobjspace-v_objspace)/object_size-1,d7
-	;	bsr.s	RunObject
-	;	moveq	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d7
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
-; loc_CB64:
-; ExecuteObjectsDisplayOnly:
-	;	moveq	#0,d0
-	;	move.b	obID(a0),d0		; get the object's ID
-	;	beq.s	+			; if it's obj00, skip it
-	;	tst.b	obRender(a0)		; should we render it?
-	;	bpl.s	+			; if not, skip it
-	;	pea	+(pc)			; This is an optimisation to avoid the need for extra branches: it makes it so '+' will be executed after 'DisplaySprite' or 'DisplaySprite3' return.
-	;	btst	#6,obRender		; is the compound sprites flag set?
-	;	beq.w	DisplaySprite		; if not, branch
-	;	move.w	#$200,d0		; override priority
-	;	bra.w	DisplaySprite3		; Display the object using d0
-;+
-	;	lea	next_object(a0),a0	; load obj address
-	;	dbf	d7,ExecuteObjectsDisplayOnly
-	;	rts
 ; End of function ExecuteObjects
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; OBJECT POINTER ARRAY ; object pointers ; sprite pointers ; object list ; sprite list
 ;
-; This array contains the pointers to all the objects used in the game.
+; Byte IDs in the six-byte placement records resolve through this array once,
+; when loaded. Dynamically created objects store their code pointer directly.
 ; ---------------------------------------------------------------------------
+Obj_Index_Zero:		dc.l ObjNull
 Obj_Index:
 ptr_Obj01:		dc.l Obj01		; Sonic
 ptr_Obj02:		dc.l Obj02		; Tails
@@ -8790,8 +8762,8 @@ ObjectMove_Reserved:
 		movem.w	obVelX(a0),d0/d2			; load xy speed
 		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
 		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
-		add.l	d0,objoff_30(a0)			; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+obX(a0)
-		add.l	d2,objoff_34(a0)			; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+obY(a0)
+		add.l	d0,objoff_34(a0)			; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+obX(a0)
+		add.l	d2,objoff_38(a0)			; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+obY(a0)
 		rts
 ; End of function ObjectMove_Reserved
 
@@ -8801,8 +8773,8 @@ ObjectMove_Reserved2:
 		movem.w	obVelX(a0),d0/d2			; load xy speed
 		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
 		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
-		add.l	d0,objoff_30(a0)			; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+obX(a0)
-		add.l	d2,objoff_38(a0)			; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+obY(a0)
+		add.l	d0,objoff_34(a0)			; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+obX(a0)
+		add.l	d2,objoff_3C(a0)			; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+obY(a0)
 		rts
 ; End of function ObjectMove_Reserved2
 
@@ -8861,8 +8833,8 @@ ObjectMoveAndFall_Reserved:
 		movem.w	obVelX(a0),d0/d2				; load xy speed
 		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
 		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
-		add.l	d0,objoff_30(a0)			; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+obX(a0)
-		add.l	d2,objoff_34(a0)			; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+obY(a0)
+		add.l	d0,objoff_34(a0)			; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+obX(a0)
+		add.l	d2,objoff_38(a0)			; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+obY(a0)
 		addi.w	#$38,obVelY(a0)				; increase vertical speed (apply gravity)
 		rts
 ; End of function ObjectMoveAndFall_Reserved
@@ -9421,7 +9393,7 @@ FindFreeObj:
 		move.w	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d0	; search to end of table
 
 .loop:
-		tst.b	obID(a1)			; is object RAM slot empty?
+		tst.l	code(a1)			; is object RAM slot empty?
 		beq.s	.return				; if yes, branch
 		lea	object_size(a1),a1		; load obj address ; goto next object RAM slot
 		dbf	d0,.loop			; repeat until end
@@ -9447,7 +9419,7 @@ FindNextFreeObj:
 		bmi.s	FindFreeObj.return		; if negative, we have failed!
 
 .loop:
-		tst.b	obID(a1)			; is object RAM slot empty?
+		tst.l	code(a1)			; is object RAM slot empty?
 		beq.s	FindFreeObj.return		; if yes, branch
 		lea	object_size(a1),a1		; load obj address ; goto next object RAM slot
 		dbf	d0,.loop			; repeat until end
@@ -10411,6 +10383,7 @@ ExitPlatform:
 		include	"objects/08 Water Splash.asm"
 		include	"_inc/Dynamic Sprite Art.asm"
 		include	"_inc/Player Effect Art.asm"
+		include	"_inc/Player Water Art.asm"
 		include	"objects/0E Spindash Dust.asm"
 		include	"objects/09 Bubbles.asm"
 		include	"objects/0A Drowning Countdown.asm"
@@ -10450,7 +10423,7 @@ loc_1230A:
 
 loc_12310:
 		move.w	#30,(v_air).w
-		clr.b	(v_sonicbubbles+objoff_32).w
+		clr.b	(v_sonicbubbles+objoff_36).w
 		rts
 ; End of function ResumeMusic
 
@@ -11717,7 +11690,7 @@ Obj49_Init:
 		move.w	#make_art_tile(ArtTile_Waterfall,1,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.b	#sprite_bound($20,Map_Waterfall1_width),obActWid(a0)
-		move.w	obX(a0),objoff_30(a0)
+		move.w	obX(a0),objoff_34(a0)
 		move.b	#$80,obHeight(a0)
 		bset	#4,obRender(a0)
 
@@ -11787,17 +11760,17 @@ Obj50_Init:
 		move.b	d0,d1
 		andi.w	#$F0,d1
 		lsl.w	#4,d1
-		move.w	d1,objoff_2E(a0)
-		move.w	d1,objoff_30(a0)
+		move.w	d1,objoff_32(a0)
+		move.w	d1,objoff_34(a0)
 		andi.w	#$F,d0
 		lsl.w	#4,d0
 		subq.w	#1,d0
-		move.w	d0,objoff_32(a0)
-		move.w	d0,objoff_34(a0)
-		move.w	obY(a0),objoff_2A(a0)
+		move.w	d0,objoff_36(a0)
+		move.w	d0,objoff_38(a0)
+		move.w	obY(a0),objoff_2E(a0)
 		jsr	(FindFreeObj).l
 		bne.w	Obj50_RetryInit
-		_move.b	#id_Obj50,obID(a1)
+		move.l	#Obj50,code(a1)
 		move.b	#4,obRoutine(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
@@ -11811,8 +11784,8 @@ Obj50_Init:
 		move.w	#$180,obPriority(a1)
 		move.b	obStatus(a0),obStatus(a1)
 		move.b	#3,obAnim(a1)
-		move.l	a1,objoff_36(a0)
-		move.l	a0,objoff_36(a1)
+		move.l	a1,objoff_3A(a0)
+		move.l	a0,objoff_3A(a1)
 		bset	#6,obStatus(a0)
 
 		bra.s	Obj50_Main
@@ -11837,8 +11810,8 @@ Obj50_SubIndex:	dc.w loc_16046-Obj50_SubIndex
 ; ---------------------------------------------------------------------------
 
 Obj50_Wing:
-		movea.l	objoff_36(a0),a1
-		cmpi.b	#id_Obj50,obID(a1)
+		movea.l	objoff_3A(a0),a1
+		cmpi.l	#Obj50,code(a1)
 		bne.w	loc_1639A
 		btst	#7,obStatus(a1)
 		bne.w	loc_1639A
@@ -11859,7 +11832,7 @@ loc_16046:
 		jsr	(ObjectMove).l
 		bsr.w	sub_162DE
 		bsr.w	sub_16184
-		tst.b	objoff_2C(a0)
+		tst.b	objoff_30(a0)
 		beq.s	loc_16168.return
 		move.w	(v_player+obX).w,d0
 		move.w	(v_player+obY).w,d1
@@ -11889,7 +11862,7 @@ loc_1615A:
 
 loc_16168:
 		moveq	#$20,d0
-		cmp.w	objoff_32(a0),d0
+		cmp.w	objoff_36(a0),d0
 		bgt.s	.return
 		move.b	#4,ob2ndRout(a0)
 		move.b	#1,obAnim(a0)
@@ -11901,21 +11874,21 @@ loc_16058:
 		jsr	(ObjectMove).l
 		bsr.w	sub_162DE
 		move.w	obY(a0),d0
-		tst.b	objoff_2C(a0)
+		tst.b	objoff_30(a0)
 		bne.s	loc_161C4
 		cmp.w	(v_waterpos1).w,d0
 		bgt.s	.return
 		subq.b	#2,ob2ndRout(a0)
-		st	objoff_2C(a0)
+		st	objoff_30(a0)
 		clr.w	obVelY(a0)
 .return:	rts
 ; ---------------------------------------------------------------------------
 
 loc_161C4:
-		cmp.w	objoff_2A(a0),d0
+		cmp.w	objoff_2E(a0),d0
 		blt.s	loc_16058.return
 		subq.b	#2,ob2ndRout(a0)
-		sf	objoff_2C(a0)
+		sf	objoff_30(a0)
 		clr.w	obVelY(a0)
 		rts
 ; ---------------------------------------------------------------------------
@@ -11929,16 +11902,16 @@ loc_16066:
 		blt.s	.return
 		move.b	#2,ob2ndRout(a0)
 		clr.b	obAnim(a0)
-		move.w	objoff_30(a0),objoff_2E(a0)
+		move.w	objoff_34(a0),objoff_32(a0)
 		move.w	#$40,obVelY(a0)
-		sf	objoff_2D(a0)
+		sf	objoff_31(a0)
 .return:	rts
 
 ; =============== S U B R O U T I N E =======================================
 
 
 sub_16078:
-		tst.b	objoff_2D(a0)
+		tst.b	objoff_31(a0)
 		bne.s	.return
 		tst.w	obVelY(a0)
 		bpl.s	loc_16086
@@ -11946,10 +11919,10 @@ sub_16078:
 ; ---------------------------------------------------------------------------
 
 loc_16086:
-		st	objoff_2D(a0)
+		st	objoff_31(a0)
 		jsr	(FindFreeObj).l
 		bne.s	locret_160F2
-		_move.b	#id_Obj50,obID(a1)
+		move.l	#Obj50,code(a1)
 		move.b	#6,obRoutine(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
@@ -11983,12 +11956,12 @@ locret_160F2:
 
 
 sub_16184:
-		subq.w	#1,objoff_2E(a0)
+		subq.w	#1,objoff_32(a0)
 		bne.s	.return
-		move.w	objoff_30(a0),objoff_2E(a0)
+		move.w	objoff_34(a0),objoff_32(a0)
 		addq.b	#2,ob2ndRout(a0)
 		move.w	#-$40,d0
-		tst.b	objoff_2C(a0)
+		tst.b	objoff_30(a0)
 		beq.s	+
 		neg.w	d0
 +		move.w	d0,obVelY(a0)
@@ -12004,7 +11977,7 @@ sub_16184:
 Obj50_ControlWing:
 		moveq	#$A,d0
 		moveq	#-6,d1
-		movea.l	objoff_36(a0),a1
+		movea.l	objoff_3A(a0),a1
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.b	obStatus(a0),obStatus(a1)
@@ -12053,14 +12026,14 @@ Obj50_Routine0A:
 		bsr.w	sub_1629E
 		tst.b	ob2ndRout(a0)
 		beq.s	.return
-		subq.w	#1,objoff_2C(a0)
+		subq.w	#1,objoff_30(a0)
 		beq.w	loc_1639A
 		move.w	(v_player+obX).w,obX(a0)
 		move.w	(v_player+obY).w,obY(a0)
 		addi.w	#$C,obY(a0)
-		subq.b	#1,objoff_2A(a0)
+		subq.b	#1,objoff_2E(a0)
 		bne.s	loc_16290
-		move.b	#3,objoff_2A(a0)
+		move.b	#3,objoff_2E(a0)
 		bchg	#0,obStatus(a0)
 		bchg	#0,obRender(a0)
 .return:	rts
@@ -12086,8 +12059,8 @@ sub_1629E:
 		move.w	#$80,obPriority(a0)
 		move.b	#5,obAnim(a0)
 		st	ob2ndRout(a0)
-		move.w	#$12C,objoff_2C(a0)
-		move.b	#3,objoff_2A(a0)
+		move.w	#$12C,objoff_30(a0)
+		move.b	#3,objoff_2E(a0)
 .return:	rts
 ; End of function sub_1629E
 
@@ -12096,9 +12069,9 @@ sub_1629E:
 
 
 sub_162DE:
-		subq.w	#1,objoff_32(a0)
+		subq.w	#1,objoff_36(a0)
 		bpl.s	.return
-		move.w	objoff_34(a0),objoff_32(a0)
+		move.w	objoff_38(a0),objoff_36(a0)
 		neg.w	obVelX(a0)
 		bchg	#0,obStatus(a0)
 		move.b	#1,obPrevAni(a0)
@@ -12117,7 +12090,7 @@ loc_162FC:
 loc_16306:
 		jsr	(FindFreeObj).l
 		bne.s	loc_16378
-		_move.b	obID(a0),obID(a1)
+		move.l	code(a0),code(a1)
 		move.b	#8,obRoutine(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
@@ -12151,7 +12124,7 @@ loc_16378:
 		dbf	d3,loc_16306
 		jsr	(FindFreeObj).l
 		bne.s	loc_1639A
-		_move.b	obID(a0),obID(a1)
+		move.l	code(a0),code(a1)
 		move.b	#$A,obRoutine(a1)
 		move.l	obMap(a0),obMap(a1)
 		move.b	height_pixels(a0),height_pixels(a1)
@@ -12275,11 +12248,11 @@ loc_1653E:
 		move.w	d0,d1
 		lsl.w	#5,d1
 		subq.w	#1,d1
-		move.w	d1,objoff_32(a0)
-		move.w	d1,objoff_34(a0)
-		move.w	obY(a0),objoff_2A(a0)
+		move.w	d1,objoff_36(a0)
+		move.w	d1,objoff_38(a0)
 		move.w	obY(a0),objoff_2E(a0)
-		addi.w	#$60,objoff_2E(a0)
+		move.w	obY(a0),objoff_32(a0)
+		addi.w	#$60,objoff_32(a0)
 		move.w	#-$100,obVelX(a0)
 
 loc_1659C:
@@ -12317,9 +12290,9 @@ loc_165EA:
 		bsr.w	sub_162DE
 		bsr.w	loc_16626
 		bsr.w	loc_16708
-		subq.w	#1,objoff_30(a0)
+		subq.w	#1,objoff_34(a0)
 		beq.s	loc_16614
-		move.w	objoff_30(a0),d0
+		move.w	objoff_34(a0),d0
 		cmpi.w	#$12,d0
 		beq.w	loc_1669E
 		rts
@@ -12328,14 +12301,14 @@ loc_165EA:
 loc_16614:
 		subq.b	#2,ob2ndRout(a0)
 		move.b	#6,obAnim(a0)
-		move.w	#180,objoff_30(a0)
+		move.w	#180,objoff_34(a0)
 		rts
 ; ---------------------------------------------------------------------------
 
 loc_16626:
-		sf	objoff_2D(a0)
-		sf	objoff_2C(a0)
-		sf	objoff_36(a0)
+		sf	objoff_31(a0)
+		sf	objoff_30(a0)
+		sf	objoff_3A(a0)
 		move.w	(v_player+obX).w,d0
 		sub.w	obX(a0),d0
 		bpl.s	loc_16646
@@ -12349,7 +12322,7 @@ loc_16646:
 		bne.s	loc_16652
 
 loc_1664E:
-		st	objoff_2C(a0)
+		st	objoff_30(a0)
 
 loc_16652:
 		move.w	(v_player+obY).w,d0
@@ -12358,25 +12331,25 @@ loc_16652:
 		blt.s	.return
 		cmpi.w	#4,d0
 		bgt.s	loc_16672
-		st	objoff_2D(a0)
+		st	objoff_31(a0)
 		clr.w	obVelY(a0)
 .return:	rts
 ; ---------------------------------------------------------------------------
 
 loc_16672:
-		st	objoff_36(a0)
+		st	objoff_3A(a0)
 		rts
 ; ---------------------------------------------------------------------------
 
 loc_16678:
-		tst.b	objoff_2C(a0)
+		tst.b	objoff_30(a0)
 		bne.s	.return
-		subq.w	#1,objoff_30(a0)
+		subq.w	#1,objoff_34(a0)
 		bgt.s	.return
-		tst.b	objoff_2D(a0)
+		tst.b	objoff_31(a0)
 		beq.s	.return
 		move.b	#7,obAnim(a0)
-		move.w	#$24,objoff_30(a0)
+		move.w	#$24,objoff_34(a0)
 		addq.b	#2,ob2ndRout(a0)
 .return:	rts
 ; ---------------------------------------------------------------------------
@@ -12384,7 +12357,7 @@ loc_16678:
 loc_1669E:
 		jsr	(FindFreeObj).l
 		bne.s	.return
-		_move.b	#id_Obj51,obID(a1)
+		move.l	#Obj51,code(a1)
 		move.b	#4,obRoutine(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
@@ -12410,16 +12383,16 @@ loc_1669E:
 ; ---------------------------------------------------------------------------
 
 loc_16708:
-		tst.b	objoff_2D(a0)
+		tst.b	objoff_31(a0)
 		bne.s	.return
-		tst.b	objoff_36(a0)
+		tst.b	objoff_3A(a0)
 		beq.s	loc_16738
-		move.w	objoff_2E(a0),d0
+		move.w	objoff_32(a0),d0
 		cmp.w	obY(a0),d0
 		ble.s	loc_1675C
-		tst.b	objoff_2C(a0)
+		tst.b	objoff_30(a0)
 		beq.s	loc_16730
-		move.w	objoff_2A(a0),d0
+		move.w	objoff_2E(a0),d0
 		cmp.w	obY(a0),d0
 		bge.s	loc_1675C
 .return:	rts
@@ -12431,12 +12404,12 @@ loc_16730:
 ; ---------------------------------------------------------------------------
 
 loc_16738:
-		move.w	objoff_2A(a0),d0
+		move.w	objoff_2E(a0),d0
 		cmp.w	obY(a0),d0
 		bge.s	loc_1675C
-		tst.b	objoff_2C(a0)
+		tst.b	objoff_30(a0)
 		beq.s	loc_16754
-		move.w	objoff_2E(a0),d0
+		move.w	objoff_32(a0),d0
 		cmp.w	obY(a0),d0
 		ble.s	loc_1675C
 		rts
@@ -12477,7 +12450,7 @@ Obj4C_Init:
 		move.b	#$10,obHeight(a0)
 		move.b	#8,obWidth(a0)
 		addq.b	#2,obRoutine(a0)
-		move.w	obY(a0),objoff_2E(a0)
+		move.w	obY(a0),objoff_32(a0)
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -12499,12 +12472,12 @@ Obj4C_SubIndex:	dc.w loc_16F2E-Obj4C_SubIndex
 
 
 sub_16DC8:
-		move.b	objoff_3F(a0),d0
+		move.b	objoff_43(a0),d0
 		jsr	(CalcSine).l
 		asr.w	#6,d0
-		add.w	objoff_2E(a0),d0
+		add.w	objoff_32(a0),d0
 		move.w	d0,obY(a0)
-		addq.b	#4,objoff_3F(a0)
+		addq.b	#4,objoff_43(a0)
 		rts
 ; End of function sub_16DC8
 
@@ -12521,8 +12494,8 @@ sub_16DE2:
 		blt.s	locret_16E0E
 		move.b	#4,ob2ndRout(a0)
 		move.b	#2,obAnim(a0)
-		move.w	#8,objoff_2A(a0)
-		clr.b	objoff_3E(a0)
+		move.w	#8,objoff_2E(a0)
+		clr.b	objoff_42(a0)
 
 locret_16E0E:
 		rts
@@ -12543,7 +12516,7 @@ loc_16E10:
 
 
 sub_16E30:
-		tst.b	objoff_3D(a0)
+		tst.b	objoff_41(a0)
 		beq.s	locret_16E42
 		bset	#0,obRender(a0)
 		bset	#0,obStatus(a0)
@@ -12557,7 +12530,7 @@ locret_16E42:
 
 
 sub_16E44:
-		subq.w	#1,objoff_2C(a0)
+		subq.w	#1,objoff_30(a0)
 		bpl.s	locret_16E8E
 		move.w	obX(a0),d0
 		sub.w	(v_player+obX).w,d0
@@ -12567,15 +12540,15 @@ sub_16E44:
 		blt.s	loc_16E90
 		tst.w	d0
 		bpl.s	loc_16E68
-		st	objoff_3D(a0)
+		st	objoff_41(a0)
 
 loc_16E68:
-		move.b	#$40,objoff_3F(a0)
+		move.b	#$40,objoff_43(a0)
 		move.w	#$400,obInertia(a0)
 		move.b	#4,obRoutine(a0)
 		move.b	#3,obAnim(a0)
-		move.w	#$C,objoff_2A(a0)
-		move.b	#1,objoff_3E(a0)
+		move.w	#$C,objoff_2E(a0)
+		move.b	#1,objoff_42(a0)
 		moveq	#0,d0
 
 locret_16E8E:
@@ -12591,7 +12564,7 @@ loc_16E90:
 loc_16E9C:
 		move.b	#1,obAnim(a0)
 		clr.b	ob2ndRout(a0)
-		move.w	#$18,objoff_2A(a0)
+		move.w	#$18,objoff_2E(a0)
 		rts
 ; End of function sub_16E44
 
@@ -12600,33 +12573,33 @@ loc_16E9C:
 
 
 sub_16EB0:
-		tst.b	objoff_3D(a0)
+		tst.b	objoff_41(a0)
 		bne.s	loc_16ECA
 		moveq	#0,d0
-		move.b	objoff_3F(a0),d0
+		move.b	objoff_43(a0),d0
 		cmpi.w	#$C0,d0
 		bge.s	loc_16EDE
 		addq.b	#2,d0
-		move.b	d0,objoff_3F(a0)
+		move.b	d0,objoff_43(a0)
 		rts
 ; ---------------------------------------------------------------------------
 
 loc_16ECA:
 		moveq	#0,d0
-		move.b	objoff_3F(a0),d0
+		move.b	objoff_43(a0),d0
 		cmpi.w	#$C0,d0
 		beq.s	loc_16EDE
 		subq.b	#2,d0
-		move.b	d0,objoff_3F(a0)
+		move.b	d0,objoff_43(a0)
 		rts
 ; ---------------------------------------------------------------------------
 
 loc_16EDE:
-		sf	objoff_3D(a0)
+		sf	objoff_41(a0)
 		clr.b	obAnim(a0)
 		move.b	#2,obRoutine(a0)
 		clr.b	ob2ndRout(a0)
-		move.w	#$18,objoff_2A(a0)
+		move.w	#$18,objoff_2E(a0)
 		move.b	#1,obAnim(a0)
 		bclr	#0,obRender(a0)
 		bclr	#0,obStatus(a0)
@@ -12638,7 +12611,7 @@ loc_16EDE:
 
 
 sub_16F0E:
-		move.b	objoff_3F(a0),d0
+		move.b	objoff_43(a0),d0
 		jsr	(CalcSine).l
 		muls.w	obInertia(a0),d1
 		asr.l	#8,d1
@@ -12652,25 +12625,25 @@ sub_16F0E:
 ; ---------------------------------------------------------------------------
 
 loc_16F2E:
-		subq.w	#1,objoff_2A(a0)
+		subq.w	#1,objoff_2E(a0)
 		bpl.s	locret_16F64
 		bsr.w	sub_16DE2
 		beq.s	locret_16F64
 		jsr	(RandomNumber).l
 		andi.b	#$FF,d0
 		bne.s	locret_16F64
-		move.w	#$18,objoff_2A(a0)
-		move.w	#30,objoff_2C(a0)
+		move.w	#$18,objoff_2E(a0)
+		move.w	#30,objoff_30(a0)
 		addq.b	#2,ob2ndRout(a0)
 		move.b	#1,obAnim(a0)
-		clr.b	objoff_3E(a0)
+		clr.b	objoff_42(a0)
 
 locret_16F64:
 		rts
 ; ---------------------------------------------------------------------------
 
 loc_16F66:
-		subq.b	#1,objoff_2A(a0)
+		subq.b	#1,objoff_2E(a0)
 		bpl.s	locret_16F70
 		subq.b	#2,ob2ndRout(a0)
 
@@ -12681,20 +12654,20 @@ locret_16F70:
 loc_16F72:
 		bsr.w	sub_16E44
 		beq.s	locret_16FB8
-		subq.w	#1,objoff_2A(a0)
+		subq.w	#1,objoff_2E(a0)
 		bne.s	locret_16FB8
-		move.b	objoff_3E(a0),d0
+		move.b	objoff_42(a0),d0
 		beq.s	loc_16FA0
-		clr.b	objoff_3E(a0)
-		move.w	#8,objoff_2A(a0)
+		clr.b	objoff_42(a0)
+		move.w	#8,objoff_2E(a0)
 		bset	#0,obRender(a0)
 		bset	#0,obStatus(a0)
 		rts
 ; ---------------------------------------------------------------------------
 
 loc_16FA0:
-		move.b	#1,objoff_3E(a0)
-		move.w	#$C,objoff_2A(a0)
+		move.b	#1,objoff_42(a0)
+		move.w	#$C,objoff_2E(a0)
 		bclr	#0,obRender(a0)
 		bclr	#0,obStatus(a0)
 
@@ -12843,7 +12816,7 @@ Obj4E_SubIndex:
 ; ---------------------------------------------------------------------------
 
 loc_1725A:
-		subq.w	#1,objoff_30(a0)
+		subq.w	#1,objoff_34(a0)
 		bpl.s	.return
 		addq.b	#2,ob2ndRout(a0)
 		move.w	#-$C0,obVelX(a0)
@@ -12874,7 +12847,7 @@ loc_1727E:
 
 loc_1729E:
 		subq.b	#2,ob2ndRout(a0)
-		move.w	#60-1,objoff_30(a0)
+		move.w	#60-1,objoff_34(a0)
 		clr.w	obVelX(a0)
 		move.b	#1,obAnim(a0)
 		rts
@@ -13142,7 +13115,7 @@ BossDefeated:
 		bne.s	.return
 		jsr	(FindFreeObj).l
 		bne.s	.return
-		_move.b	#id_ObjFD,obID(a1)
+		move.l	#FieryExplosion,code(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		jsr	(RandomNumber).l
@@ -13288,6 +13261,13 @@ loc_198C0:
 ; ---------------------------------------------------------------------------
 
 loc_198FA:
+		; Ground motion up a slope has negative Y velocity too. A rolling
+		; attack must break the monitor before the rising-jump underside test.
+		btst	#status.player.in_air,obStatus(a0)
+		bne.s	.rising_test
+		cmpi.b	#AniIDSonAni_Roll,obAnim(a0)
+		beq.s	loc_19926.break
+.rising_test:
 		tst.w	obVelY(a0)
 		bpl.s	loc_19926
 		move.w	obY(a0),d0
@@ -13309,6 +13289,7 @@ loc_19912:
 loc_19926:
 		cmpi.b	#AniIDSonAni_Roll,obAnim(a0)
 		bne.s	.return
+.break:
 		neg.w	obVelY(a0)
 		move.w	a0,obParent(a1)		; remember which player broke the monitor
 		move.b	#4,obRoutine(a1)
@@ -13446,7 +13427,7 @@ loc_19994:
 loc_199AE:
 		move.w	a0,points_parent(a1)		; preserve the attacker through explosion/animal setup
 		bsr.w	AddPoints
-		_move.b	#id_ObjFC,obID(a1)
+		move.l	#Explosion,code(a1)
 		clr.b	obRoutine(a1)
 		tst.w	obVelY(a0)
 		bmi.s	loc_199D4
@@ -13499,7 +13480,7 @@ HurtSonic:
 		beq.s	HurtShield
 		jsr	(FindFreeObj).l
 		bne.s	HurtShield
-		_move.b	#id_Obj13,obID(a1)
+		move.l	#Obj13,code(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 
@@ -13526,9 +13507,9 @@ Hurt_ChkSpikes:
 		move.b	#AniIDSonAni_Hurt,obAnim(a0)
 		move.w	#60*2,flashtime(a0)
 -		move.w	#sfx_Death,d0
-		cmpi.b	#id_Obj36,obID(a2)
+		cmpi.l	#Obj36,code(a2)
 		bne.s	+
-;		cmpi.b	#id_Obj16,obID(a2)	; Used to be the LZ Harpoon in Sonic 1
+;		cmpi.b	#id_Obj16,code(a2)	; Used to be the LZ Harpoon in Sonic 1
 ;		bne.s	+			; It's been replaced by the HTZ lifts
 		move.w	#sfx_HitSpikes,d0
 +		jsr	(PlaySound_Special).l
@@ -13554,9 +13535,9 @@ KillSonic:
 		move.b	#AniIDSonAni_Death,obAnim(a0)
 		bset	#7,obGfx(a0)
 		move.w	#sfx_HitSpikes,d0	; Preload the spike sfx
-		cmpi.b	#id_Obj36,obID(a2)	; Is this the spikes object?
+		cmpi.l	#Obj36,code(a2)	; Is this the spikes object?
 		beq.s	+
-;		cmpi.b	#id_Obj16,obID(a2)	; Is this the LZ Harpoon? (Leftover from Sonic 1)
+;		cmpi.b	#id_Obj16,code(a2)	; Is this the LZ Harpoon? (Leftover from Sonic 1)
 ;		beq.s	+			; It's been replaced by the HTZ lifts
 		move.w	#sfx_Death,d0		; Default to the death sfx
 +		jsr	(PlaySound_Special).l
@@ -15413,7 +15394,7 @@ AutoTunnel_CalcSpeed:
 loc_29828:
 		moveq	#0,d1
 		move.w	d5,d1
-		sub.w	$14(a1),d1
+		sub.w	obY(a1),d1
 		bge.s	loc_29836
 		neg.w	d1
 		neg.w	d3			; Change Y velocity depending on direction of destination
@@ -15847,6 +15828,14 @@ Art_Tails:	binclude	"art/uncompressed/Tails' art.bin"
 Art_Tails_Extra:	binclude "art/uncompressed/Tails extra.bin"
 Art_Tails_Tails:	binclude "art/uncompressed/Tails tails.bin"
 Art_SpindashDust:	binclude "art/uncompressed/Spindash and skid dust.bin"
+		even
+Art_WaterSplash:	binclude "art/uncompressed/Water splash.unc"
+Art_WaterSplash_End:
+		even
+Art_AirCountdown:	binclude "art/uncompressed/Drowning countdown.unc"
+Art_AirCountdown_End:
+		even
+Nem_WaterBubbles:	binclude "art/nemesis/Water bubbles.nem"
 Art_Points:		binclude	"art/uncompressed/Points.unc"
 Art_Points_End:
 Art_Shield:		binclude "art/uncompressed/Shield.unc"
@@ -17561,11 +17550,10 @@ Map_Obj03:	binclude	"mappings/sprite/Patch switcher.bin"
 		even
 Map_Obj07:	binclude	"mappings/sprite/Water surface.bin"
 		even
-Map_Splash:	binclude	"mappings/sprite/obj08.bin"
+Map_Splash:	include	"mappings/sprite/Water splash.asm"
 		even
-Map_Bubbles:	binclude	"mappings/sprite/Bubbles.bin"
+Map_Bubbles:	include	"mappings/sprite/Bubbles.asm"
 		even
-Map_Countdown:	binclude	"mappings/sprite/Drowning Countdown.bin"
 		even
 Map_Obj0B:	binclude	"mappings/sprite/Tilting Platform.bin"		; $0B
 		even

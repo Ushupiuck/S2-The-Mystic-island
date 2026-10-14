@@ -48,7 +48,7 @@ def position(g,x,y=0x4ED,frozen=True):
 
 def objects(g,oid=None):
     return [a for a in range(g.s['v_lvlobjspace']&65535,g.s['v_lvlobjend']&65535,g.s['object_size'])
-            if g.get(a,'obID') and (oid is None or g.get(a,'obID')==oid)]
+            if g.get(a,'layout_id') and (oid is None or g.get(a,'layout_id')==oid)]
 
 
 def owner(g,obj):
@@ -57,7 +57,7 @@ def owner(g,obj):
 
 
 def snapshot(g,a):
-    return {f:g.get(a,f,z) for f,z in [('obID',1),('obRoutine',1),('ob2ndRout',1),
+    return {f:g.get(a,f,z) for f,z in [('layout_id',1),('code',4),('obRoutine',1),('ob2ndRout',1),
             ('obX',2),('obY',2),('obRender',1),('obFrame',1),('obMap',4),('obGfx',2),
             ('respawn_addr',2),('obStatus',1),('obColType',1),('height_pixels',1)]}
 
@@ -84,7 +84,7 @@ def main():
             g.restore(initial)
             # Preserve the assembled object code and load the real placements.
             # Hide the companion during the lifecycle pass to attribute contacts.
-            g.put('v_player2','obID',0)
+            g.put('v_player2','layout_id',0)
             position(g,obj['world_x']-64)
             states=[];seen=False; rendered=False;live_frames=0
             previous_vint=g.read('Vint_runcount',4)

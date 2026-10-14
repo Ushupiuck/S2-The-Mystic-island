@@ -32,8 +32,8 @@ Obj19_Init:
 		move.b	(a2)+,obActWid(a0)
 		move.b	(a2)+,obFrame(a0)
 		move.w	#$200,obPriority(a0)
-		move.w	obX(a0),objoff_30(a0)
-		move.w	obY(a0),objoff_32(a0)
+		move.w	obX(a0),objoff_34(a0)
+		move.w	obY(a0),objoff_36(a0)
 		andi.b	#$F,obSubtype(a0)
 
 Obj19_Main:
@@ -44,7 +44,7 @@ Obj19_Main:
 		moveq	#$10,d3
 		move.w	(sp)+,d4
 		bsr.w	PlatformObject
-		out_of_range.w	UnloadObject,objoff_30(a0)
+		out_of_range.w	UnloadObject,objoff_34(a0)
 		jmp	(DisplaySprite).l
 
 ; =============== S U B R O U T I N E =======================================
@@ -86,7 +86,7 @@ loc_1537C:
 		add.w	d1,d0
 
 loc_15390:
-		move.w	objoff_30(a0),d1
+		move.w	objoff_34(a0),d1
 		sub.w	d0,d1
 		move.w	d1,obX(a0)
 		rts
@@ -109,7 +109,7 @@ loc_153AC:
 		tst.w	d1
 		bmi.s	loc_153C6
 		addq.w	#1,obX(a0)
-		move.w	obX(a0),objoff_30(a0)
+		move.w	obX(a0),objoff_34(a0)
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -125,7 +125,7 @@ loc_153CC:
 		tst.w	d1
 		bmi.s	loc_153E6
 		addq.w	#1,obX(a0)
-		move.w	obX(a0),objoff_30(a0)
+		move.w	obX(a0),objoff_34(a0)
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -155,7 +155,7 @@ loc_1540E:
 
 loc_15418:
 		addq.l	#6,sp
-		out_of_range2	UnloadObject,objoff_30(a0)
+		out_of_range2	UnloadObject,objoff_34(a0)
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -168,7 +168,7 @@ loc_15430:
 		add.w	d1,d0
 
 loc_15444:
-		move.w	objoff_32(a0),d1
+		move.w	objoff_36(a0),d1
 		sub.w	d0,d1
 		move.w	d1,obY(a0)
 		rts
@@ -185,21 +185,21 @@ loc_15450:
 		neg.w	d3
 
 loc_15466:
-		tst.w	objoff_36(a0)
+		tst.w	objoff_3A(a0)
 		bne.s	loc_15492
 		move.w	obX(a0),d0
-		sub.w	objoff_30(a0),d0
+		sub.w	objoff_34(a0),d0
 		cmp.w	d3,d0
 		beq.s	loc_15484
 		add.w	d1,obX(a0)
-		move.w	#$12C,objoff_34(a0)
+		move.w	#$12C,objoff_38(a0)
 		rts
 ; ---------------------------------------------------------------------------
 
 loc_15484:
-		subq.w	#1,objoff_34(a0)
+		subq.w	#1,objoff_38(a0)
 		bne.s	locret_15490
-		move.w	#1,objoff_36(a0)
+		move.w	#1,objoff_3A(a0)
 
 locret_15490:
 		rts
@@ -207,13 +207,13 @@ locret_15490:
 
 loc_15492:
 		move.w	obX(a0),d0
-		sub.w	objoff_30(a0),d0
+		sub.w	objoff_34(a0),d0
 		beq.s	loc_154A2
 		sub.w	d1,obX(a0)
 		rts
 ; ---------------------------------------------------------------------------
 
 loc_154A2:
-		clr.w	objoff_36(a0)
+		clr.w	objoff_3A(a0)
 		subq.b	#1,obSubtype(a0)
 		rts

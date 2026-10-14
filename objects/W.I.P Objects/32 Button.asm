@@ -12,8 +12,8 @@
 ; Object 32 - buttons/switches
 ; ---------------------------------------------------------------------------
 
-capsule_triggered	= objoff_34
-external_settings	= objoff_35	; byte, subtype override from parent object
+capsule_triggered	= objoff_38
+external_settings	= objoff_39	; byte, subtype override from parent object
 
 Button:
 		moveq	#0,d0
@@ -98,7 +98,7 @@ But_Pressed:	; Routine 2
 ; Stays down when pressed
 ; ---------------------------------------------------------------------------
 .type20:
-		tst.b	objoff_36(a0)				; already used?
+		tst.b	objoff_3A(a0)				; already used?
 		bne.s	.type20_used				; then skip all of this
 		btst	#7,ob2ndRout(a0)			; is this a special, object-triggered button? (bit 7 set)
 		beq.s	.type20_CheckPlayer			; if not, branch
@@ -116,7 +116,7 @@ But_Pressed:	; Routine 2
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 .type20_use:
-		move.b	#1,objoff_36(a0)
+		move.b	#1,objoff_3A(a0)
 		bra.s	.pressed
 ; ---------------------------------------------------------------------------
 .type20_used:
@@ -180,7 +180,7 @@ But_SBlock:
 		tst.b	obRender(a1)				; is object on screen?
 		bpl.s	.nextObject				; if not, branch
 		; Temporarily commented out until such object is added
-	;	cmpi.b	#id_PushBlock,obID(a1)			; is object a pushable block?
+	;	cmpi.b	#id_PushBlock,code(a1)			; is object a pushable block?
 	;	beq.s	.blockFound				; if yes, branch
 
 .nextObject:

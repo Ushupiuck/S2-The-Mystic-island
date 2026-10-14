@@ -51,8 +51,8 @@ Flash_Animate:
 		blo.s	.display
 		bset	#GRFlash_ParentHandled_bit,ob2ndRout(a0)
 		bne.s	.display			; Each parent is handled only once
-		movea.l	objoff_3C(a0),a1
-		cmpi.b	#id_Obj7B,obID(a1)	; The parent may have left the screen/reused its slot
+		movea.l	objoff_40(a0),a1
+		cmpi.l	#GiantRing,code(a1)	; The parent may have left the screen/reused its slot
 		bne.s	.entry
 		cmpi.b	#2,obRoutine(a1)
 		bne.s	.entry

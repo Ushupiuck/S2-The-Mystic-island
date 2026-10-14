@@ -113,7 +113,7 @@ loc_A94E:
 		bne.w	loc_A9DE
 
 loc_A956:
-		_move.b	#id_Obj13,obID(a1)
+		move.l	#Obj13,code(a1)
 		addq.b	#2,obRoutine(a1)
 		move.b	#8,obHeight(a1)
 		move.b	#8,obWidth(a1)

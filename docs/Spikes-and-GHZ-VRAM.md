@@ -2,7 +2,7 @@
 
 Object `$36` uses the normal S3&K spike behavior and eight arrangements from
 [skdisasm](https://github.com/sonicretro/skdisasm/tree/73de97c6b55055bcb8089c1d55d006b02136f163).
-The port adapts its object pointers to Mystic Island's ID/routine SSTs,
+The port adapts its object pointers to Mystic Island's routine-pointer SSTs,
 `SolidObject` contact masks and per-player damage routines. Floor, side and
 ceiling contacts damage either player; an invincible player or one with a
 nonzero **word** `flashtime` remains protected. A simultaneous contact preserves

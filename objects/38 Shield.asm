@@ -27,7 +27,7 @@ Obj38_Init:	; Routine 0
 ; ---------------------------------------------------------------------------
 Obj38_Shield:
 		movea.w	obParent(a0),a2
-		tst.b	obID(a2)
+		tst.l	code(a2)
 		beq.s	Obj38_Delete
 		cmpi.b	#6,obRoutine(a2)
 		bhs.s	Obj38_Delete
@@ -64,7 +64,7 @@ Obj38_Shield:
 ; the object, including the game-over/results reservation stored there.
 ; ---------------------------------------------------------------------------
 Obj38_Delete:
-		clr.b	obID(a0)
+		clr.l	code(a0)
 .return:	rts
 
 ; Stream the current frame through the common S3&K DPLC loader. The cache

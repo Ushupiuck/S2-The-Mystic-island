@@ -40,6 +40,12 @@ class Native:
         self.cpu.mem_map(0xFF0000, 0x10000)
         self.cpu.mem_map(0xFFFF0000, 0x10000)
         self.cpu.mem_write(0, args.rom.read_bytes())
+        # layout_id is a test-only projection through the placement pointer table.
+        # The engine stores and tests the full code pointer, never that byte ID.
+        self.object_codes = [0] + list(struct.unpack_from(
+            '>255I', args.rom.read_bytes(), self.s['Obj_Index']))
+        self.ids_by_code = {pointer: oid for oid, pointer in
+                            enumerate(self.object_codes[1:], 1)}
         for label in ('QueueDMATransfer', 'PlayMusic', 'PlaySound', 'PlaySound_Special'):
             self.cpu.mem_write(self.s[label], bytes.fromhex('4E75'))
         self.cpu.hook_add(UC_HOOK_MEM_READ | UC_HOOK_MEM_WRITE, self.bus)
@@ -58,8 +64,8 @@ class Native:
                 cpu.mem_write(physical, value.to_bytes(size, 'big'))
 
     def alias(self, cpu, access, address, size, value, unused):
-        # Real 68000 addresses are 24-bit. Debug stores the ID in the top
-        # mapping byte; Caterkiller stores a trail index above its parent.
+        # Real 68000 addresses are 24-bit. Caterkiller stores a trail index
+        # above its parent pointer.
         if address <= 0xFFFFFF:
             return False
         page = address & ~0xFFF
@@ -84,15 +90,25 @@ class Native:
         return int.from_bytes(self.cpu.mem_read(self.s[name] & 0xFFFFFF, size), 'big')
 
     def put(self, obj, field, value, size=1):
+        if field == 'layout_id':
+            field, value, size = 'code', self.object_codes[value], 4
+        elif field in ('code', 'obID'):
+            size = 4
         if isinstance(obj, str):
             obj = self.s[obj]
         self.cpu.mem_write((obj + self.s[field]) & 0xFFFFFF,
                           (value & ((1 << (8 * size)) - 1)).to_bytes(size, 'big'))
 
     def get(self, obj, field, size=1):
+        projected = field == 'layout_id'
+        if projected:
+            field, size = 'code', 4
+        elif field in ('code', 'obID'):
+            size = 4
         if isinstance(obj, str):
             obj = self.s[obj]
-        return int.from_bytes(self.cpu.mem_read((obj + self.s[field]) & 0xFFFFFF, size), 'big')
+        value = int.from_bytes(self.cpu.mem_read((obj + self.s[field]) & 0xFFFFFF, size), 'big')
+        return self.ids_by_code.get(value, value) if projected else value
 
     def act(self, routine, obj=None, regs=None):
         self.cpu.reg_write(UC_M68K_REG_SR, 0x2000)
@@ -116,7 +132,7 @@ class Native:
         self.write('v_air', 30, 2)
         self.act('Init_SpriteTable')
         for obj, object_id in [('v_player', 1), ('v_player2', 2)]:
-            for field, value, size in [('obID', object_id, 1), ('obRoutine', 2, 1),
+            for field, value, size in [('layout_id', object_id, 1), ('obRoutine', 2, 1),
                     ('obRender', 0x84, 1), ('obHeight', 19, 1), ('obWidth', 9, 1),
                     ('default_y_radius', 19, 1), ('default_x_radius', 9, 1),
                     ('obX', 600, 2), ('obY', 116, 2), ('obTopSolidBit', 12, 1),
@@ -127,7 +143,7 @@ class Manager(Native):
     def pool(self):
         return range(self.s['v_lvlobjspace'],self.s['v_lvlobjend'],self.s['object_size'])
     def live(self):
-        return {self.get(a,'respawn_addr',2):a for a in self.pool() if self.get(a,'obID') and self.get(a,'respawn_addr',2)}
+        return {self.get(a,'respawn_addr',2):a for a in self.pool() if self.get(a,'layout_id') and self.get(a,'respawn_addr',2)}
     def rows(self,name):
         return list(struct.iter_unpack('>HHBB',(R/'level/objects'/name).read_bytes()[:-6]))
     def cam(self,x,y):
@@ -146,14 +162,15 @@ class Manager(Native):
     def verify(self,rows,base=None):
         table=self.s['Object_Respawn_Table']&65535
         live=self.live()
-        ptrs=[self.get(a,'respawn_addr',2) for a in self.pool() if self.get(a,'obID') and self.get(a,'respawn_addr',2)]
+        ptrs=[self.get(a,'respawn_addr',2) for a in self.pool() if self.get(a,'layout_id') and self.get(a,'respawn_addr',2)]
         assert len(ptrs)==len(set(ptrs)),('duplicate placement',ptrs)
         for ptr,a in live.items():
             idx=(ptr-table)&65535
             assert idx<len(rows),(hex(ptr),idx,len(rows))
             x,y,obj,sub=rows[idx]
             assert self.get(a,'obX',2)==x and self.get(a,'obY',2)==y&0xFFF
-            assert self.get(a,'obID')==obj and self.get(a,'obSubtype')==sub
+            assert self.get(a,'code')==self.object_codes[obj]
+            assert self.get(a,'obSubtype')==sub
             assert self.get(a,'obStatus')==self.get(a,'obRender')==(y>>13)&3
             assert self.cpu.mem_read(0xFF0000+ptr,1)[0]&128
         if base is not None:
@@ -236,7 +253,7 @@ report['vertical_bands_jumps_and_wrap']=True
 rows=[(256,128,0x36,i) for i in range(95)]
 base=m.fixture(rows)
 for a in m.pool():
-    m.put(a,'obID',0x35)
+    m.put(a,'layout_id',0x35)
 m.cam(0,0)
 m.act('ObjectsManager')
 assert not m.live() and m.read('Object_load_retry')
@@ -246,7 +263,7 @@ for a in list(m.pool())[::2]:
 m.act('ObjectsManager')
 assert len(m.verify(rows,base))==45 and m.read('Object_load_retry')
 for a in m.pool():
-    if m.get(a,'obID')==0x35:
+    if m.get(a,'layout_id')==0x35:
         m.act('DeleteObject',a)
 m.act('ObjectsManager')
 assert len(m.verify(rows,base))==90 and m.read('Object_load_retry')
@@ -292,7 +309,7 @@ def setup(objid,sub=0,state=0x80):
     m.start()
     obj=pool()[0]
     ptr=m.s['Object_Respawn_Table']&65535
-    for f,v,n in [('obID',objid,1),('obX',240,2),('obY',240,2),('obSubtype',sub,1),('respawn_addr',ptr,2)]:
+    for f,v,n in [('layout_id',objid,1),('obX',240,2),('obY',240,2),('obSubtype',sub,1),('respawn_addr',ptr,2)]:
         m.put(obj,f,v,n)
     m.write('Object_Respawn_Table',state)
     return obj,ptr
@@ -304,7 +321,7 @@ for state in (0x80,0x81):
     assert (m.get(obj,'obRoutine')==8)==bool(state&1)
     m.write('Camera_X_pos_coarse_back',0x1000,2)
     m.act('Obj26',obj)
-    assert m.get(obj,'obID')==0 and m.read('Object_Respawn_Table')==state&127
+    assert m.get(obj,'layout_id')==0 and m.read('Object_Respawn_Table')==state&127
 obj,ptr=setup(0x26)
 m.act('Obj26',obj)
 m.put(obj,'obRoutine',4)
@@ -336,19 +353,19 @@ m.act('UnloadObject',obj)
 assert m.read('Object_Respawn_Table')==10
 report['bumper_cap_persists']=True
 # Compound initializers must handle zero/one remaining helper slots atomically.
-for objid,sub,routine,fields,needed in [(0x1D,16,'Bridge',('Bridge_child1','Bridge_child2'),2),(0x1E,0x10,'HPZ_Waterfall',('objoff_38','objoff_3C'),2),(0x50,0x11,'Obj50',('objoff_36',),1)]:
+for objid,sub,routine,fields,needed in [(0x1D,16,'Bridge',('Bridge_child1','Bridge_child2'),2),(0x1E,0x10,'HPZ_Waterfall',('objoff_3C','objoff_40'),2),(0x50,0x11,'Obj50',('objoff_3A',),1)]:
     for free in range(needed):
         obj,ptr=setup(objid,sub)
         for a in pool()[1:]:
-            m.put(a,'obID',0x55)
+            m.put(a,'layout_id',0x55)
         for a in pool()[1:1+free]:
-            m.put(a,'obID',0)
+            m.put(a,'layout_id',0)
         m.act(routine,obj)
         assert m.get(obj,'obRoutine')==0 and m.read('Object_Respawn_Table')==0x80,(routine,free)
         assert all(m.get(obj,f,4)==0 for f in fields),(routine,'half parent')
-        assert sum(m.get(a,'obID')==0 for a in pool()[1:])==free,(routine,'leak')
+        assert sum(m.get(a,'layout_id')==0 for a in pool()[1:])==free,(routine,'leak')
         for a in pool()[1:1+needed]:
-            m.put(a,'obID',0)
+            m.put(a,'layout_id',0)
         m.act(routine,obj)
         assert m.get(obj,'obRoutine')!=0
         assert all(m.get(obj,f,4) for f in fields)
@@ -357,6 +374,38 @@ for objid,sub,routine,fields,needed in [(0x1D,16,'Bridge',('Bridge_child1','Brid
             if objid!=0x1D:
                 assert m.get(child,'respawn_addr',2)==0
 report['multipart_pool_exhaustion_and_retry']=5
+# Both riders update their private log indexes. An old literal offset here
+# used to overwrite the low byte of the second helper pointer in real demos.
+obj,ptr=setup(0x1D,16)
+m.act('Bridge',obj)
+children=tuple(m.get(obj,f,4) for f in ('Bridge_child1','Bridge_child2'))
+m.put(obj,'obStatus',0x18)
+for player,x in (('v_player',256),('v_player2',192)):
+    m.put(player,'obX',x,2)
+    m.put(player,'obStatus',8)
+m.act('Bridge',obj)
+assert tuple(m.get(obj,f,4) for f in ('Bridge_child1','Bridge_child2'))==children
+assert m.get(obj,'objoff_43')==9 and m.get(obj,'objoff_3F')==5
+for _ in range(20):
+    m.act('Bridge',obj)
+    assert tuple(m.get(obj,f,4) for f in ('Bridge_child1','Bridge_child2'))==children
+report['bridge_two_riders_preserve_helper_pointers']=True
+# Negative Y speed on an uphill slope is grounded motion, not a rising jump.
+for player in ('v_player','v_player2'):
+    for vy in (0,0x100,0xFF00):
+        obj,ptr=setup(0x26,1)
+        m.act('Obj26',obj)
+        m.put(player,'obX',240,2);m.put(player,'obY',240,2)
+        m.put(player,'obAnim',m.s['AniIDSonAni_Roll'])
+        m.put(player,'obStatus',4);m.put(player,'obVelY',vy,2)
+        m.act('loc_198FA',player,{UC_M68K_REG_A1:obj|0xFF000000})
+        assert m.get(obj,'obRoutine')==4 and m.get(obj,'obParent',2)==m.s[player]&65535
+    obj,ptr=setup(0x26,1);m.act('Obj26',obj)
+    m.put(player,'obY',260,2);m.put(player,'obStatus',6)
+    m.put(player,'obAnim',m.s['AniIDSonAni_Roll']);m.put(player,'obVelY',0xFF00,2)
+    m.act('loc_198FA',player,{UC_M68K_REG_A1:obj|0xFF000000})
+    assert m.get(obj,'obRoutine')==2 and m.get(obj,'ob2ndRout')==4
+report['monitor_ground_roll_slopes_and_airborne_underside']=8
 # Dynamic objects do not consume a placement; explicit destruction does.
 obj,ptr=setup(0x22,state=0x85)
 m.act('DeleteObject',obj)
@@ -367,16 +416,16 @@ report['destruction_keeps_consumed_tag']=True
 for free in (0,1,2):
     obj,ptr=setup(0x60,state=0x85)
     for a in pool()[1:]:
-        m.put(a,'obID',0x55)
+        m.put(a,'layout_id',0x55)
     for a in pool()[1:1+free]:
-        m.put(a,'obID',0)
+        m.put(a,'layout_id',0)
     m.act('Caterkiller',obj)
     assert m.get(obj,'obRoutine')==10
     assert m.read('Object_Respawn_Table')==5
-    children=[a for a in pool()[1:] if m.get(a,'obID')==0x60]
+    children=[a for a in pool()[1:] if m.get(a,'layout_id')==0x60]
     assert len(children)==free and all(m.get(a,'respawn_addr',2)==0 for a in children)
     m.act('Cat_Delete',obj)
-    assert m.get(obj,'obID')==0
+    assert m.get(obj,'layout_id')==0
 report['caterkiller_owner_and_partial_allocation']=3
 # Fragment copies are dynamic. The original collapsed scenery slot releases
 # its placement when leaving the display area, retaining object-local bits.
@@ -384,7 +433,7 @@ obj,ptr=setup(0x1A,state=0x83)
 m.put(obj,'obRoutine',4)
 m.put(obj,'obRender',4)
 m.act('Obj1A',obj)
-assert m.read('Object_Respawn_Table')==3 and m.get(obj,'obID')==0
+assert m.read('Object_Respawn_Table')==3 and m.get(obj,'layout_id')==0
 report['collapsed_scenery_releases_placement']=True
 # Natural top/bottom wrapping keeps a small camera delta and redraws the row.
 for camera,player,target,flag,delta in [(0xFF00,0x75F,0x6FF,1,0xFF00),(0x7FF,0x61,1,2,0x200)]:
@@ -417,7 +466,7 @@ for who,objid,mode,mapname,h,w in [('Sonic',1,1,'Map_Sonic',19,9),('Tails',2,2,'
     m.write('Debug_mode_flag',1)
     m.write('Camera_Min_Y_pos',0x80,2)
     m.write('Camera_Max_Y_pos_target',0x280,2)
-    for f,v,n in [('obID',objid,1),('character_id',objid-1,1),('obMap',m.s[mapname],4),('obGfx',m.s['ArtTile_'+who],2),('height_pixels',m.s[mapname+'_height'],1),('width_pixels',m.s[mapname+'_width'],1),('default_y_radius',h,1),('default_x_radius',w,1),('obStatus',0x7D,1),('obRender',0x85,1)]:
+    for f,v,n in [('layout_id',objid,1),('character_id',objid-1,1),('obMap',m.s[mapname],4),('obGfx',m.s['ArtTile_'+who],2),('height_pixels',m.s[mapname+'_height'],1),('width_pixels',m.s[mapname+'_width'],1),('default_y_radius',h,1),('default_x_radius',w,1),('obStatus',0x7D,1),('obRender',0x85,1)]:
         m.put('v_player',f,v,n)
     m.write('v_jpadpress1',m.s['btnB'])
     m.act('Obj01_Control' if objid==1 else 'Obj02_Control','v_player')
@@ -438,7 +487,7 @@ for who,objid,mode,mapname,h,w in [('Sonic',1,1,'Map_Sonic',19,9),('Tails',2,2,'
     m.write('v_jpadhold1',0)
     m.write('v_jpadpress1',m.s['btnC'])
     m.act('DebugMode','v_player')
-    placed=[a for a in pool() if m.get(a,'obID')==0x12]
+    placed=[a for a in pool() if m.get(a,'layout_id')==0x12]
     assert len(placed)==1 and m.get(placed[0],'respawn_addr',2)==0
     assert m.get(placed[0],'obStatus')==1, 'Debug placement lost the facing flag'
     for f,v,n in [('obVelX',0x1234,2),('obVelY',0x3456,2),('spindash_counter',0x9876,2),('obControl',0x81,1),('move_lock',0xABCD,2),('stick_to_convex',1,1),('tails_flight_flag',7,1),('tails_flight_energy',24,1)]:
@@ -477,7 +526,7 @@ report['companion_has_no_debug_access']=True
 m.start()
 m.write('v_gamemode',m.s['BonusStage'],2)
 m.write('Current_ZoneAndAct',0x301,2)
-m.put('v_player','obID',4)
+m.put('v_player','layout_id',4)
 m.put('v_player','obMap',m.s['Map_Sonic'],4)
 m.put('v_player','obGfx',m.s['ArtTile_Sonic'],2)
 m.act('Debug_Begin','v_player')
@@ -487,7 +536,7 @@ assert m.read('Current_ZoneAndAct',2)==0x301
 assert m.get('v_player','obGfx',2)==m.s['ArtTile_SS_Rings']|0x2000
 m.write('v_jpadpress1',m.s['btnC'])
 m.act('DebugMode','v_player')
-stage_ring=next(a for a in pool() if m.get(a,'obID')==0x12)
+stage_ring=next(a for a in pool() if m.get(a,'layout_id')==0x12)
 m.act('Obj12',stage_ring)
 assert m.get(stage_ring,'obGfx',2)==m.s['ArtTile_SS_Rings']|0x2000
 m.write('v_jpadpress1',m.s['btnB'])
@@ -504,7 +553,7 @@ for phase in range(8):
     m.write('Camera_X_pos_copy',440,2)
     m.write('Camera_Y_pos_copy',0,2)
     a=next(iter(pool()))
-    for field,value,size in [('obID',0x7B,1),('obRoutine',4,1),('obX',600,2),
+    for field,value,size in [('layout_id',0x7B,1),('obRoutine',4,1),('obX',600,2),
             ('obY',116,2),('obRender',4,1),('obMap',m.s['Map_GiantRing'],4),
             ('obGfx',m.s['ArtTile_Giant_Ring'],2),('obPriority',0x100,2),
             ('obActWid',64,1),('height_pixels',32,1)]:
@@ -518,12 +567,12 @@ report['collected_giant_ring_renders_at_all_eight_small_ring_phases']=True
 for mode,objid in [(m.s['PlayerMode_Sonic'],1),(m.s['PlayerMode_Tails'],2)]:
     m.start()
     m.write('Player_mode',mode,2)
-    m.put('v_player','obID',0)
+    m.put('v_player','layout_id',0)
     a=next(iter(pool()))
-    m.put(a,'obID',0x7A)
+    m.put(a,'layout_id',0x7A)
     m.put(a,'obj7A_vanishtime',1,2)
     m.act('Obj7A_LoadSonic',a)
-    assert m.get('v_player','obID')==objid and not m.get(a,'obID')
+    assert m.get('v_player','layout_id')==objid and not m.get(a,'layout_id')
 report['warp_restores_both_primary_characters']=True
 # The compiled S1 visibility helpers are not placement objects, but remain
 # available to imported code. Exercise their centre/partial-width distinction.
@@ -541,4 +590,91 @@ for routine,left_visible in [('ChkObjectVisible',False),('ChkPartiallyVisible',T
         m.act(routine,a)
         assert bool(m.cpu.reg_read(UC_M68K_REG_D0)==0)==visible,(routine,x,y)
 report['legacy_visibility_helper_edges']=True
+# Direct dispatch must accept routines outside Obj_Index, process the final
+# slot, and honor a routine pointer changed by the preceding state.
+m.start()
+m.cpu.mem_write(m.s['v_objspace']&0xFFFFFF,
+                bytes(m.s['object_size']*m.s['object_slot_count']))
+first,second=0x3E0000,0x3E0040
+m.cpu.mem_write(first,bytes.fromhex('317C1357')+
+    struct.pack('>H',m.s['obVelX'])+bytes.fromhex('20BC')+
+    struct.pack('>I',second)+bytes.fromhex('4E75'))
+m.cpu.mem_write(second,bytes.fromhex('317C2468')+
+    struct.pack('>H',m.s['obVelX'])+bytes.fromhex('20BC000000004E75'))
+slots=[m.s['v_objspace'],m.s['v_objend']-m.s['object_size']]
+assert first not in m.object_codes and second not in m.object_codes
+for a in slots:m.put(a,'code',first)
+m.act('ExecuteObjects')
+for a in slots:
+    assert m.get(a,'obVelX',2)==0x1357 and m.get(a,'code')==second
+m.act('ExecuteObjects')
+for a in slots:
+    assert m.get(a,'obVelX',2)==0x2468 and not m.get(a,'code')
+report['direct_pointer_dispatch_state_changes_and_final_slot']=True
+
+# Both alive and deleted queued objects have a zero leading byte. Only a
+# full-longword existence test can distinguish them.
+m.start()
+m.write('Camera_X_pos',0,2);m.write('Camera_Y_pos',0,2)
+m.write('Camera_X_pos_copy',0,2);m.write('Camera_Y_pos_copy',0,2)
+for a in slots:
+    for field,value,size in [('code',first,4),('obX',160,2),('obY',112,2),
+            ('obMap',m.s['Map_Ring'],4),('obGfx',m.s['ArtTile_Ring'],2),
+            ('width_pixels',16,1),('height_pixels',16,1),('obPriority',0,2),
+            ('obFrame',0,1),('obRender',4,1)]:
+        m.put(a,field,value,size)
+    m.act('DisplaySprite',a)
+m.put(slots[-1],'code',0)
+m.act('Render_Sprites')
+assert m.read('v_spritecount')==1
+report['full_pointer_existence_and_deleted_queue_guard']=True
+
+# The AI's remembered interaction must compare all 32 bits. Test equal
+# pointers and different pointers with identical low words.
+for standing,respawns in [(0x3E1000,False),(0x3F1000,True)]:
+    m.start()
+    a=pool()[0]
+    m.put(a,'code',standing)
+    m.put('v_player2','obRender',4)
+    m.put('v_player2','obStatus',1<<m.s['status.player.on_object'])
+    m.put('v_player2','standonobject',m.s['reserved_object_slots'])
+    m.write('Tails_CPU_interact',0x3E1000,4)
+    m.write('Tails_CPU_routine',0,2)
+    m.act('TailS3_sub_13EFC','v_player2')
+    assert (m.read('Tails_CPU_routine',2)==2)==respawns
+report['tails_cpu_remembers_full_routine_pointer']=True
+# Switching source art must upload again even when its frame number matches.
+for player,destination,cache in [('v_player',0xFC00,'v_splash'),('v_player2',0xFE00,'v_tsplash')]:
+    m.start();m.uploads.clear()
+    for table,art,kind in [('DPLC_SpindashDust','Art_SpindashDust','WaterArt_Dust'),('DPLC_Splash','Art_WaterSplash','WaterArt_Splash'),('DPLC_SpindashDust','Art_SpindashDust','WaterArt_Dust')]:
+        regs={UC_M68K_REG_D0:1,UC_M68K_REG_A2:m.s[table],UC_M68K_REG_D4:destination,UC_M68K_REG_D5:m.s[kind],UC_M68K_REG_D6:m.s[art]}
+        before=len(m.uploads)
+        m.act('PlayerWaterArt_LoadDPLC',regs=regs)
+        assert len(m.uploads)>before and m.uploads[-1][1]&65535==destination
+        assert m.get(cache,'water_loaded_kind')==m.s[kind]
+        m.act('PlayerWaterArt_LoadDPLC',regs=regs)
+        assert len(m.uploads)==before+1
+    m.write('VDP_Command_Buffer_Slot',m.s['VDP_Command_Buffer_Slot']&65535,2)
+    regs={UC_M68K_REG_D0:1,UC_M68K_REG_A2:m.s['DPLC_Splash'],UC_M68K_REG_D4:destination,UC_M68K_REG_D5:m.s['WaterArt_Splash'],UC_M68K_REG_D6:m.s['Art_WaterSplash']}
+    m.act('PlayerWaterArt_LoadDPLC',regs=regs)
+    assert m.get(cache,'water_loaded_frame')==255 and m.cpu.reg_read(UC_M68K_REG_SR)&1
+    m.write('VDP_Command_Buffer_Slot',m.s['VDP_Command_Buffer']&65535,2)
+    m.act('PlayerWaterArt_LoadDPLC',regs=regs)
+    assert m.get(cache,'water_loaded_frame')==1 and not m.cpu.reg_read(UC_M68K_REG_SR)&1
+    for frame in range(9,19):
+        obj=pool()[0]
+        m.put(obj,'obParent',m.s[player]&65535,2);m.put(obj,'obFrame',frame)
+        m.act('Obj0A_LoadArt',obj)
+        assert m.uploads[-1][1]&65535==destination and m.uploads[-1][2]&65535==6*16,(player,frame,m.uploads[-1])
+report['water_shared_banks_source_switch_dma_retry_and_all_numbers']=True
+# Resolve the carry through an actual BCC: Unicorn's lazy CMP flags need not
+# be materialized by an SR read immediately after returning from the helper.
+m.s['Native_TestDustCarry']=0x3E0800
+m.cpu.mem_write(0x3E0800,bytes.fromhex('4EB9')+struct.pack('>I',m.s['Dust_CheckAir'])+bytes.fromhex('640470014E7570004E75'))
+for primary_id in (1,2):
+    m.start();m.put('v_player','layout_id',primary_id)
+    m.write('v_air',11,2);m.put('v_player','air_left',30)
+    m.act('Native_TestDustCarry',regs={UC_M68K_REG_A2:m.s['v_player']&0xFFFFFFFF})
+    assert m.cpu.reg_read(UC_M68K_REG_D0)==1,'primary dust ignored the active air supply'
+report['both_primary_characters_reserve_low_air_bank_for_numbers']=True
 print(report,flush=True)

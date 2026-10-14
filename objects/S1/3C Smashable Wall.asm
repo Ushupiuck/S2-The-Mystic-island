@@ -13,8 +13,8 @@ Smash_Index:	dc.w Smash_Main-Smash_Index
 		dc.w Smash_Solid-Smash_Index
 		dc.w Smash_FragMove-Smash_Index
 
-smash_speed	= objoff_30		; Sonic's horizontal speed
-smash_speed2	= objoff_32		; Tails's horizontal speed (I believe this is how Sonic 3 works)
+smash_speed	= objoff_34		; Sonic's horizontal speed
+smash_speed2	= objoff_36		; Tails's horizontal speed (I believe this is how Sonic 3 works)
 ; ---------------------------------------------------------------------------
 Obj3C_FragSpdRight:
 		dc.w  $400,-$500

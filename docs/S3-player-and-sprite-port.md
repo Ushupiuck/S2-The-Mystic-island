@@ -21,7 +21,7 @@ Tails runs his first update during initialization, so body and tail art are
 ready together. Level loading retains the initialized position history;
 clearing its first X record made the follow AI step left 16 frames later.
 The separate tail follows the body's flash decision in `tails_hidden` at
-`$40`, without decrementing the damage timer twice. Hurt/death drawing remains
+`$44`, without decrementing the damage timer twice. Hurt/death drawing remains
 consistent with the body. Flying contacts use S3&K's upward attack sector and
 original angle rounding; swimming and contacts outside that sector retain
 their normal responses.
@@ -34,8 +34,10 @@ frame numbers `$90–$92` select tumble poses in this Sonic mapping set.
 
 Water splash remains object `$08`. Spindash/skid dust is separate object `$0E`,
 with one dynamically allocated controller and one 16-tile bank per player.
-The original combined splash/dust art remains an unused source asset; the
-active dust file contains only its 74 charge and 16 skid tiles.
+Splash now uses S3&K art, mappings and DPLCs. Each player's splash, dust and
+drowning numbers share the `$FC00`/`$FE00` banks, with a physical-bank cache
+that distinguishes their source art. Resident bubbles occupy `$8B80–$927F`.
+See [water effects and monitor fixes](Water-effects-and-monitors.md).
 
 ## Sprite ABI
 
@@ -45,21 +47,21 @@ byte size, tile word and signed word X. Inline spring and boss mappings in
 `main.asm` use the same format. Fragment readers advance six bytes. The old
 second tile word for 2P interlace is removed.
 
-`height_pixels` is the display half-height byte at `$49`; the SST stride stays
-`$4A`. `Render_Sprites` uses bounds initialized by each object; it never scans
+`height_pixels` is the display half-height byte at `$06`; the SST stride is
+`$50`. `Render_Sprites` uses bounds initialized by each object; it never scans
 mapping geometry to determine an object's size. Collision radii retain their
 existing fields. Composite rendering uses its normal path for every composite,
 including invincibility stars.
-Object `$35` prepares eight packed children per player in `$10–$3F`, stores four orbit
-angles and animation indices in `$40–$47`, and uses flags at `$48`. It queues
-through `DisplaySprite3` because child data overlaps the ordinary priority
-field. Its header covers the padded viewport, with children clipped separately.
+Object `$35` prepares eight packed children per player in `$18–$47`, stores
+four orbit angles at `$48–$4B` and four animation indices at `$4C–$4F`. Its
+flags reuse the priority field at `$08`, and it queues through `DisplaySprite3`
+with an explicit priority. Children are clipped separately.
 The primary uses its reserved SST; the companion uses one dynamic SST while
 invincible. Their animation/facing/history and lifetime are independent, with
 shared art. Re-pickups reuse the companion object and full-pool allocation
 retries occur only while needed.
 No star ID check or temporary star buffer remains in `Render_Sprites`;
-`height_pixels` at `$49`, the SST stride and neighboring objects stay intact.
+`height_pixels` at `$06`, the SST stride and neighboring objects stay intact.
 
 ### Initializing display bounds
 
@@ -107,8 +109,9 @@ selection alone calculates the selected frame's bounds at runtime.
 The ordinary and composite mapping loops come from S3&K's `Render_Sprites`.
 HUD and ring-manager drawing remain inlined. Mapping groups return to their
 queue or child loop by branch, without a BSR/RTS pair per object. Queue counts
-are consumed once per priority. The ID-based object manager still needs the
-deleted-object guard; the renderer reads the ID and flags together.
+are consumed once per priority. The renderer tests the full longword routine pointer to reject deleted
+objects, then reads the render flags. A byte check cannot identify a live ROM
+pointer whose high byte is zero.
 
 SAT links are initialized when the table is cleared. Each render repairs the
 previous terminator and writes one new hidden terminator, while retaining
@@ -116,10 +119,10 @@ link zero in the final entry. The S1 bonus-stage layout can append to that
 same chain. This removes per-piece link writes and the loop clearing every
 unused sprite Y. Both paths respect `Sprite_Table_Max = 80`.
 
-The legacy composite header remains compact: half-width at `$0E`, byte child
-count at `$0F`, six-byte children at `$10`, and universal half-height at `$49`.
-Screen-space objects retain their existing Y field at `$0A`; world-space
-objects use `$0C` and support wrapped camera Y.
+The legacy composite header remains compact: half-width at `$07`, byte child
+count at `$16`, six-byte children at `$18`, and universal half-height at `$06`.
+Screen-space objects use Y at `$12`; world-space
+objects use `$14` and support wrapped camera Y.
 
 `Load_DynamicPLC` uses the S3&K word-count/packed-word run format for Sonic,
 Tails, tails and dust. It reserves room for every run, including possible

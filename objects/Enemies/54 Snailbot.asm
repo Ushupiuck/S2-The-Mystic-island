@@ -2,10 +2,10 @@
 ; ---------------------------------------------------------------------------
 ; Object 54 - Snail badnik from EHZ (Nick Arcade / Simon Wai prototypes)
 ; ---------------------------------------------------------------------------
-snail_turn_timer	= objoff_2E	; 2 bytes; countdown before turning around
-snail_turning		= objoff_30	; 1 byte; set while waiting to reverse; also kills flame child
-snail_boosted		= objoff_31	; 1 byte; set after spotting player so boost only happens once per pass
-snail_parent		= objoff_32	; 4 bytes; parent pointer for child objects
+snail_turn_timer	= objoff_32	; 2 bytes; countdown before turning around
+snail_turning		= objoff_34	; 1 byte; set while waiting to reverse; also kills flame child
+snail_boosted		= objoff_35	; 1 byte; set after spotting player so boost only happens once per pass
+snail_parent		= objoff_36	; 4 bytes; parent pointer for child objects
 
 Obj54:
 		moveq	#0,d0
@@ -32,7 +32,7 @@ Obj54_Init:
 		move.b	#$E,obWidth(a0)
 		jsr	(FindNextFreeObj).l
 		bne.s	Obj54_InitDone
-		_move.b	#id_Obj54,obID(a1)
+		move.l	#Obj54,code(a1)
 		move.b	#6,obRoutine(a1)
 		move.l	#Map_Snailbot,obMap(a1)
 		move.b	#Map_Snailbot_height,height_pixels(a1)
@@ -107,7 +107,7 @@ Obj54_CheckPlayerAndBoost:
 		st	snail_boosted(a0)
 		jsr	(FindNextFreeObj).l
 		bne.s	.return
-		_move.b	#id_Obj54,obID(a1)
+		move.l	#Obj54,code(a1)
 		move.b	#8,obRoutine(a1)
 		move.l	#Map_Buzzer,obMap(a1)
 		move.b	#Map_Buzzer_height,height_pixels(a1)
@@ -129,7 +129,7 @@ Obj54_CheckPlayerAndBoost:
 
 Obj54_FlameTrail:
 		movea.l	snail_parent(a0),a1
-		cmpi.b	#id_Obj54,obID(a1)
+		cmpi.l	#Obj54,code(a1)
 		bne.w	DeleteObject
 		tst.b	snail_turning(a1)
 		bne.w	DeleteObject
@@ -165,7 +165,7 @@ Obj54_TurnAround:
 ; ---------------------------------------------------------------------------
 Obj54_SlaveSprite:
 		movea.l	snail_parent(a0),a1
-		cmpi.b	#id_Obj54,obID(a1)
+		cmpi.l	#Obj54,code(a1)
 		bne.w	DeleteObject
 		move.w	obX(a1),obX(a0)
 		move.w	obY(a1),obY(a0)

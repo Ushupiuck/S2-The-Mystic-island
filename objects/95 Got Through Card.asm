@@ -18,8 +18,8 @@ Got_Index:	dc.w Got_ChkPLC-Got_Index
 		dc.w Got_Move2-Got_Index
 		dc.w loc_BD3A-Got_Index
 
-got_mainX = objoff_30		; position for card to display on
-got_finalX = objoff_32		; position for card to finish on
+got_mainX = objoff_34		; position for card to display on
+got_finalX = objoff_36		; position for card to finish on
 ; ===========================================================================
 
 Got_ChkPLC:	; Routine 0
@@ -35,7 +35,7 @@ Got_Main:
 		moveq	#6,d1
 
 Got_Loop:
-		_move.b	#id_Obj95,obID(a1)
+		move.l	#GotThrough,code(a1)
 		move.w	(a2),obX(a1)	; load start x-position
 		move.w	(a2)+,got_finalX(a1) ; load finish x-position (same as start)
 		move.w	(a2)+,got_mainX(a1) ; load main x-position

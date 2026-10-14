@@ -14,14 +14,14 @@
 ; ---------------------------------------------------------------------------
 
 ; local object scratch aliases
-swing_helper_ptr	= objoff_2C	; 4 bytes
+swing_helper_ptr	= objoff_30	; 4 bytes
 swing_last_angle	= obAniFrame	; 1 byte; SST 1B
 swing_mode_started	= obAnim	; 1 byte; SST 1C
-swing_mode_timer	= objoff_30	; 2 bytes
-swing_ang_vel		= objoff_32	; 2 bytes
-swing_orig_y		= objoff_34	; 2 bytes
-swing_orig_x		= objoff_36	; 2 bytes
-swing_radius		= objoff_38	; 2 bytes
+swing_mode_timer	= objoff_34	; 2 bytes
+swing_ang_vel		= objoff_36	; 2 bytes
+swing_orig_y		= objoff_38	; 2 bytes
+swing_orig_x		= objoff_3A	; 2 bytes
+swing_radius		= objoff_3C	; 2 bytes
 swing_dir_flag		= obPrevAni	; 1 byte; SST 1D
 
 ; local status helpers (keep them local and honest)
@@ -103,7 +103,7 @@ SwingingPtfm_Init:
 		; spawn a helper multi-sprite object for the chain
 		bsr.w	FindNextFreeObj
 		bne.w	.noHelper
-		_move.b	obID(a0),obID(a1)
+		move.l	code(a0),code(a1)
 		move.l	obMap(a0),obMap(a1)
 		move.b	height_pixels(a0),height_pixels(a1)
 		move.w	obGfx(a0),obGfx(a1)

@@ -58,10 +58,10 @@ Obj02_Init:
 		clr.b	(Tails_LastLoadedDPLC).w
 		clr.b	(TailsTails_LastLoadedDPLC).w	; reset body and tail caches together
 		bsr.w	Tails_ResetHistory
-		move.b	#id_Obj05,(v_player2tails).w
+		move.l	#Obj05,(v_player2tails).w
 		clr.b	(v_player2tails+obRoutine).w
 		move.w	a0,(v_player2tails+obParent).w
-		move.b	#-1,(v_player2tails+objoff_34).w
+		move.b	#-1,(v_player2tails+objoff_38).w
 		; Run the first update now, so body art and the separate tail are ready
 		; together before the first Render_Sprites, as with Sonic's initialization.
 
@@ -280,11 +280,11 @@ Tails_Water:
 		cmpa.w	#v_player,a0
 		bne.s	.bubbles
 		jsr	(ResumeMusic).l
-		move.b	#id_Obj0A,(v_sonicbubbles).w
+		move.l	#Obj0A,(v_sonicbubbles).w
 		move.b	#$81,(v_sonicbubbles+obSubtype).w
 		bra.s	.drag
 .bubbles:
-		move.b	#id_Obj0A,(v_tailsbubbles).w
+		move.l	#Obj0A,(v_tailsbubbles).w
 		clr.b	(v_tailsbubbles+obRoutine).w
 		move.b	#$81,(v_tailsbubbles+obSubtype).w
 		move.w	a0,(v_tailsbubbles+obParent).w
@@ -381,7 +381,7 @@ TailS3_loc_13B78:
 		move.b	d0,spindash_flag(a0)
 		move.w	d0,spindash_counter(a0)
 		move.b	d0,jumping(a0)
-		move.b	d0,objoff_41(a0)
+		move.b	d0,objoff_45(a0)
 		movem.l	a1-a3,-(sp)
 		; Catch-up is not death: keep shield/status and the ticking timers.
 		movea.l	a0,a2
@@ -681,10 +681,9 @@ TailS3_sub_13EFC:
 		beq.s	TailS3_loc_13F18
 		moveq	#0,d0
 		bsr.w	Tails_GetStandingObject
-		move.w	(Tails_CPU_interact).w,d0
-		moveq	#0,d1
-		move.b	obID(a3),d1
-		cmp.w	d1,d0
+		move.l	(Tails_CPU_interact).w,d0
+		move.l	code(a3),d1
+		cmp.l	d1,d0
 		bne.s	TailS3_loc_13F24
 
 TailS3_loc_13F18:
@@ -703,9 +702,8 @@ TailS3_loc_13F2E:
 		btst	#status.player.on_object,obStatus(a0)
 		beq.s	TailS3_locret_13F3E
 		bsr.w	Tails_GetStandingObject
-		moveq	#0,d0
-		move.b	obID(a3),d0
-		move.w	d0,(Tails_CPU_interact).w
+		move.l	code(a3),d0
+		move.l	d0,(Tails_CPU_interact).w
 
 TailS3_locret_13F3E:
 		rts
@@ -781,10 +779,10 @@ Tails_Carry_Sonic:
 		beq.w	TailS3_loc_14474
 		clr.b	obControl(a1)
 		clr.b	(a2)
-		move.b	#$12,1(a2)
+		move.b	#$12,Tails_Carry_RegrabDelay-Flying_carrying_Sonic_flag(a2)
 		andi.w	#(button_up_mask|button_down_mask|button_left_mask|button_right_mask)<<8,d0
 		beq.w	TailS3_loc_14410
-		move.b	#$3C,1(a2)
+		move.b	#$3C,Tails_Carry_RegrabDelay-Flying_carrying_Sonic_flag(a2)
 
 TailS3_loc_14410:
 		btst	#button_left+8,d0
@@ -819,7 +817,7 @@ TailS3_loc_14466:
 
 TailS3_loc_1446A:
 		clr.b	(a2)
-		move.b	#$3C,1(a2)
+		move.b	#$3C,Tails_Carry_RegrabDelay-Flying_carrying_Sonic_flag(a2)
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -877,9 +875,9 @@ AniRaw_Tails_Carry:
 ; ---------------------------------------------------------------------------
 
 TailS3_loc_14534:
-		tst.b	1(a2)
+		tst.b	Tails_Carry_RegrabDelay-Flying_carrying_Sonic_flag(a2)
 		beq.s	TailS3_loc_14542
-		subq.b	#1,1(a2)
+		subq.b	#1,Tails_Carry_RegrabDelay-Flying_carrying_Sonic_flag(a2)
 		bne.w	TailS3_locret_1459C
 
 TailS3_loc_14542:
@@ -2604,7 +2602,7 @@ LoadTailsDynPLC_Frame:
 Perform_Player_DPLC:
 		movem.l	a0-a1,-(sp)
 		movea.l	a1,a0
-		cmpi.b	#id_Obj02,obID(a0)
+		cmpi.l	#Obj02,code(a0)
 		beq.s	.tails
 		jsr	(LoadSonicDynPLC_Frame).l
 		bra.s	.return

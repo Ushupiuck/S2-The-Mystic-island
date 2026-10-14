@@ -48,7 +48,7 @@ Obj4D_SubIndex:
 ; ---------------------------------------------------------------------------
 
 loc_158FE:
-		subq.w	#1,objoff_30(a0)
+		subq.w	#1,objoff_34(a0)
 		bpl.s	.return
 		addq.b	#2,ob2ndRout(a0)
 		move.w	#-$80,obVelX(a0)
@@ -82,7 +82,7 @@ loc_15922:
 
 loc_15948:
 		subq.b	#2,ob2ndRout(a0)
-		move.w	#60-1,objoff_30(a0)
+		move.w	#60-1,objoff_34(a0)
 		move.w	obVelX(a0),d0
 		ext.l	d0
 		asl.l	#8,d0

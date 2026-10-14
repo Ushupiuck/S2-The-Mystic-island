@@ -18,11 +18,11 @@ Cat_Index:	dc.w Cat_Main-Cat_Index
 ; ===========================================================================
 cat_wait_time	= obAniFrame		; 1 byte; delay between moves
 cat_mode	= obAnim		; 1 byte; bit 4 = segment up/down, bit 7 = animate
-cat_floormap	= objoff_2C		; $C bytes; 16 packed 6-bit floor entries
-cat_parent	= objoff_38		; 4 bytes; parent object (high byte = segment index)
+cat_floormap	= objoff_30		; $C bytes; 16 packed 6-bit floor entries
+cat_parent	= objoff_3C		; 4 bytes; parent object (high byte = segment index)
 cat_segment_pos	= cat_parent		; high byte; current position in floor buffer
-cat_inertia	= objoff_3C		; 2 bytes; Needed to avoid overwriting it's own obColType & obColProp
-cat_path_credit	= objoff_3E		; 2 bytes; unspent distance along the trail (8.8)
+cat_inertia	= objoff_40		; 2 bytes; Needed to avoid overwriting it's own obColType & obColProp
+cat_path_credit	= objoff_42		; 2 bytes; unspent distance along the trail (8.8)
 cat_next_step	= obPrevAni		; 1 byte; head's cached next step ($FF = not prepared)
 cat_pending_y	= obVelY		; grounded head only: remaining vertical steps
 ; ===========================================================================
@@ -85,7 +85,7 @@ Cat_Main:	; Routine 0
 Cat_Loop:
 		jsr	(FindNextFreeObj).l
 		bne.w	Cat_ChkGone
-		_move.b	#id_Obj60,obID(a1)
+		move.l	#Caterkiller,code(a1)
 		move.b	d6,obRoutine(a1)	; goto Cat_BodySeg1 or Cat_BodySeg2
 		addq.b	#2,d6			; alternate between the two
 		move.l	#Map_Cat,obMap(a1)
@@ -411,7 +411,7 @@ loc_16C64:
 		; at high speed causes Sonic to be hurt.
 
 		; Has the head been destroyed?
-		_cmpi.b	#id_ObjFC,obID(a1)
+		cmpi.l	#Explosion,code(a1)
 		beq.s	.delete
 		; Is the parent going to delete itself?
 		cmpi.b	#$A,obRoutine(a1)

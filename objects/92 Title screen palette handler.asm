@@ -1,12 +1,12 @@
 ; ----------------------------------------------------------------------------
 ; Object 92 - "Palette changing handler" from title screen (W.I.P)
 ; ----------------------------------------------------------------------------
-ttlscrpalchanger_fadein_time_left = objoff_30
-ttlscrpalchanger_fadein_time = objoff_31
-ttlscrpalchanger_fadein_amount = objoff_32
-ttlscrpalchanger_start_offset = objoff_34
-ttlscrpalchanger_length = objoff_36
-ttlscrpalchanger_codeptr = objoff_3A
+ttlscrpalchanger_fadein_time_left = objoff_34
+ttlscrpalchanger_fadein_time = objoff_35
+ttlscrpalchanger_fadein_amount = objoff_36
+ttlscrpalchanger_start_offset = objoff_38
+ttlscrpalchanger_length = objoff_3A
+ttlscrpalchanger_codeptr = objoff_3E
 
 TitlePaletteHandler:
 		moveq	#0,d0

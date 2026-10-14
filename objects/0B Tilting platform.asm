@@ -12,9 +12,9 @@ Obj0B_Index:	dc.w Obj0B_Init-Obj0B_Index
 		dc.w Obj0B_WaitTilt-Obj0B_Index
 		dc.w Obj0B_TiltLoop-Obj0B_Index
 
-tilt_timer	= objoff_30	; 2 bytes; time until next tilt
-tilt_duration	= objoff_32	; 2 bytes; how long it stays tilted for
-tilt_offset	= objoff_36	; 1 byte; individual timer per tilting platform
+tilt_timer	= objoff_34	; 2 bytes; time until next tilt
+tilt_duration	= objoff_36	; 2 bytes; how long it stays tilted for
+tilt_offset	= objoff_3A	; 1 byte; individual timer per tilting platform
 ; ---------------------------------------------------------------------------
 
 Obj0B_Init:

@@ -2,7 +2,7 @@
 ; ---------------------------------------------------------------------------
 ; Object 23 - Buzz Bomber/Newtron missile
 ; ---------------------------------------------------------------------------
-obj23_parent	= objoff_3C
+obj23_parent	= objoff_40
 ; ---------------------------------------------------------------------------
 
 Obj23:
@@ -39,7 +39,7 @@ Obj23_Init:
 ; loc_A5C4:
 Obj23_Animate:
 		movea.l	obj23_parent(a0),a1
-		_cmpi.b	#id_ObjFC,obID(a1)			; is Buzz Bomber destroyed?
+		cmpi.l	#Explosion,code(a1)			; is Buzz Bomber destroyed?
 		beq.w	DeleteObject			; if yes, branch
 		lea	Ani_obj23(pc),a1
 		bsr.w	AnimateSprite

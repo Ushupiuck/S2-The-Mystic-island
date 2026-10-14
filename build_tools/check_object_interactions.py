@@ -29,7 +29,7 @@ def main():
     executed=set();report={'region':'PAL' if args.pal else 'NTSC','primary':'Tails' if args.player==2 else 'Sonic','checks':[]}
 
     def prepare(name,behind=112):
-        g.restore(initial);g.put('v_player2','obID',0)
+        g.restore(initial);g.put('v_player2','layout_id',0)
         obj=cases[name];position(g,obj['world_x']-behind)
         g.run(90)
         actors=owner(g,obj)
@@ -173,7 +173,7 @@ def main():
         player(g.get(a,'obX',2),g.get(a,'obY',2)-16,rolling=True)
         original=int(obj['id'],16);destroyed=False
         for _ in range(10):
-            g.run();destroyed|=g.get(a,'obID')!=original
+            g.run();destroyed|=g.get(a,'layout_id')!=original
         assert destroyed,(name,snapshot(g,a))
         g.run(120)
         position(g,obj['world_x']+0x700);g.run(90)
@@ -255,7 +255,7 @@ def main():
     run_check('Successive giant rings share one flash',big_rings)
 
     def spindash():
-        g.restore(initial);g.put('v_player2','obID',0)
+        g.restore(initial);g.put('v_player2','layout_id',0)
         position(g,192,frozen=False);g.run(5)
         g.put('v_player','obStatusSecondary',0)
         g.buttons={5};g.run(3)
@@ -263,7 +263,7 @@ def main():
         g.buttons={5};g.run(15)
         assert g.get('v_player','obAnim')==g.s['AniIDSonAni_Spindash'],g.get('v_player','obAnim')
         dust=g.get('v_player','player_dust_ptr',2)
-        assert g.get(dust,'obID')==0x0E
+        assert g.get(dust,'layout_id')==0x0E
         g.buttons=set();g.run(2)
         speed=g.get('v_player','obInertia',2)
         assert speed>=0x700,speed
@@ -283,9 +283,9 @@ def main():
 
     def empty_slot():
         prepare('Rings')
-        a=next(a for a in range(g.s['v_lvlobjspace']&65535,g.s['v_lvlobjend']&65535,g.s['object_size']) if not g.get(a,'obID'))
-        g.put(a,'obID',0x53);g.run(2)
-        assert not g.get(a,'obID')
+        a=next(a for a in range(g.s['v_lvlobjspace']&65535,g.s['v_lvlobjend']&65535,g.s['object_size']) if not g.get(a,'layout_id'))
+        g.put(a,'layout_id',0x53);g.run(2)
+        assert not g.get(a,'layout_id')
         return {'empty_53_deletes':True}
     run_check('Empty object placeholder deletes',empty_slot)
 

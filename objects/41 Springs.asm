@@ -7,7 +7,7 @@ ObjMovingSpring:
 		move.b	obRoutine(a0),d0
 		move.w	ObjMovingSpring_Index(pc,d0.w),d0
 		jsr	ObjMovingSpring_Index(pc,d0.w)
-		out_of_range.w	UnloadObject,objoff_36(a0)	; used for moving the spring
+		out_of_range.w	UnloadObject,objoff_3A(a0)	; used for moving the spring
 		rts
 
 ; -------------------------------------------------------------------------
@@ -26,7 +26,7 @@ ObjMovingSpring_Init:
 		move.b	#Map_MovSpring_width,width_pixels(a0)
 		move.b	#8,obWidth(a0)
 		move.b	#7,obHeight(a0)
-		move.w	obX(a0),objoff_36(a0)
+		move.w	obX(a0),objoff_3A(a0)
 		move.w	#$180,obVelX(a0)
 		bsr.w	FindFreeObj
 		beq.s	.GenSpring
@@ -35,12 +35,12 @@ ObjMovingSpring_Init:
 ; -------------------------------------------------------------------------
 
 .GenSpring:
-		move.b	#id_Obj41,obID(a1)	; spawn object 41
+		move.l	#Obj41,code(a1)	; spawn object 41
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		subi.w	#$10,obY(a1)
-		move.b	#$F0,objoff_39(a1)
-		move.w	a0,objoff_34(a1)
+		move.b	#$F0,objoff_3D(a1)
+		move.w	a0,objoff_38(a1)
 		move.b	obSubtype(a0),obSubtype(a1)
 ; End of function ObjMovingSpring_Init
 
@@ -51,7 +51,7 @@ ObjMovingSpring_AlignToGround:
 		tst.w	d1
 		bpl.s	.Sink
 		add.w	d1,obY(a0)
-		move.w	obY(a0),objoff_32(a0)
+		move.w	obY(a0),objoff_36(a0)
 		addq.b	#2,obRoutine(a0)
 		rts
 
@@ -67,7 +67,7 @@ ObjMovingSpring_AlignToGround:
 ObjMovingSpring_Main:
 		bsr.w	ObjHitFloor
 		add.w	d1,obY(a0)
-		move.w	objoff_32(a0),d0
+		move.w	objoff_36(a0),d0
 		sub.w	obY(a0),d0
 		cmpi.w	#$C,d0
 		bcs.s	.NotEdge
@@ -189,7 +189,7 @@ Obj41_Init_DiagDown:
 Obj41_Init_Common:
 		move.b	obSubtype(a0),d0
 		andi.w	#2,d0
-		move.w	Obj41_Strengths(pc,d0.w),objoff_30(a0)
+		move.w	Obj41_Strengths(pc,d0.w),objoff_34(a0)
 		btst	#1,d0
 		beq.s	.return
 		bset	#5,obGfx(a0)
@@ -240,7 +240,7 @@ loc_E342:
 sub_E34E:
 		move.w	#$100,obAnim(a0)
 		addq.w	#8,obY(a1)
-		move.w	objoff_30(a0),obVelY(a1)
+		move.w	objoff_34(a0),obVelY(a1)
 		bset	#1,obStatus(a1)
 		bclr	#3,obStatus(a1)
 		move.b	#$10,obAnim(a1)
@@ -338,7 +338,7 @@ loc_E464:
 
 sub_E474:
 		move.w	#$300,obAnim(a0)
-		move.w	objoff_30(a0),obVelX(a1)
+		move.w	objoff_34(a0),obVelX(a1)
 		addq.w	#8,obX(a1)
 		bset	#0,obStatus(a1)
 		btst	#0,obStatus(a0)
@@ -348,7 +348,7 @@ sub_E474:
 		neg.w	obVelX(a1)
 
 loc_E4A2:
-		move.w	#$F,objoff_2E(a1)
+		move.w	#$F,objoff_32(a1)
 		move.w	obVelX(a1),obInertia(a1)
 		btst	#2,obStatus(a1)
 		bne.s	loc_E4BC
@@ -500,7 +500,7 @@ loc_E642:
 sub_E64E:
 		move.w	#$100,obAnim(a0)
 		subq.w	#8,obY(a1)
-		move.w	objoff_30(a0),obVelY(a1)
+		move.w	objoff_34(a0),obVelY(a1)
 		neg.w	obVelY(a1)
 		move.b	obSubtype(a0),d0
 		bpl.s	loc_E66E
@@ -594,8 +594,8 @@ loc_E754:
 
 loc_E762:
 		move.w	#$500,obAnim(a0)
-		move.w	objoff_30(a0),obVelY(a1)
-		move.w	objoff_30(a0),obVelX(a1)
+		move.w	objoff_34(a0),obVelY(a1)
+		move.w	objoff_34(a0),obVelX(a1)
 		addq.w	#6,obY(a1)
 		addq.w	#6,obX(a1)
 		bset	#0,obStatus(a1)
@@ -677,9 +677,9 @@ loc_E864:
 
 sub_E870:
 		move.w	#$500,obAnim(a0)
-		move.w	objoff_30(a0),obVelY(a1)
+		move.w	objoff_34(a0),obVelY(a1)
 		neg.w	obVelY(a1)
-		move.w	objoff_30(a0),obVelX(a1)
+		move.w	objoff_34(a0),obVelX(a1)
 		subq.w	#6,obY(a1)
 		addq.w	#6,obX(a1)
 		bset	#0,obStatus(a1)

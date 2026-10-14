@@ -6,8 +6,8 @@
 ; final choreography when this boss is used as the existing MZ placeholder.
 ; $49 remains the universal display half-height; collision radii are separate.
 ; ---------------------------------------------------------------------------
-EHZBoss_origin_x = objoff_40
-EHZBoss_origin_y = objoff_42
+EHZBoss_origin_x = objoff_44
+EHZBoss_origin_y = objoff_46
 EHZBoss_LandingX = $29D0
 EHZBoss_LandingY = $41E
 EHZBoss_ApproachX = EHZBoss_LandingX+$120
@@ -40,15 +40,15 @@ EHZBoss_Index:	offsetTable
 
 ; #status.npc.no_balancing,status(ax) set via collision response routine (Touch_Enemy_Part2)
 ; when after a hit collision_property(ax) = hitcount has reached zero
-; objoff_2A(ax)		used as timer (countdown)
-; objoff_2C(ax)		tertiary routine counter
-; #0,objoff_2D(ax)	set when Robotnik is on ground
-; #1,objoff_2D(ax)	set when Robotnik is active (moving back & forth)
-; #2,objoff_2D(ax)	set when Robotnik is flying off after being defeated
-; #3,objoff_2D(ax)	flag to separate spike from vehicle
-; objoff_2E(ax)		y_position of wheels
-; objoff_34(ax)		parent object
-; objoff_3C(ax)		timer after defeat
+; objoff_2E(ax)		used as timer (countdown)
+; objoff_30(ax)		tertiary routine counter
+; #0,objoff_31(ax)	set when Robotnik is on ground
+; #1,objoff_31(ax)	set when Robotnik is active (moving back & forth)
+; #2,objoff_31(ax)	set when Robotnik is flying off after being defeated
+; #3,objoff_31(ax)	flag to separate spike from vehicle
+; objoff_32(ax)		y_position of wheels
+; objoff_38(ax)		parent object
+; objoff_40(ax)		timer after defeat
 
 ; EHZBoss_loc_2EF36:
 EHZBoss_Init:
@@ -60,7 +60,7 @@ EHZBoss_Init:
 .free_slot:
 	cmpa.w	#v_lvlobjend,a1
 	bhs.w	EHZBoss_Return
-	tst.b	obID(a1)
+	tst.l	code(a1)
 	bne.s	.next_slot
 	dbf	d1,.next_slot
 	bra.s	.slots_ready
@@ -89,16 +89,16 @@ EHZBoss_Init:
 	move.b	#$F,obColType(a0)
 	move.b	#8,obColProp(a0)	; hitcount
 	addq.b	#2,obRoutine(a0)
-	move.w	obX(a0),objoff_30(a0)
-	move.w	obY(a0),objoff_38(a0)
+	move.w	obX(a0),objoff_34(a0)
+	move.w	obY(a0),objoff_3C(a0)
 	jsr	(FindNextFreeObj).l	; vehicle with ability to fly, top part
 	bne.w	+
 
-	_move.b	#id_Obj55,obID(a1) ; load EHZ boss child
-	move.l	a0,objoff_34(a1)	; link top and bottom to each other
+	move.l	#EHZBoss,code(a1) ; load EHZ boss child
+	move.l	a0,objoff_38(a1)	; link top and bottom to each other
 	move.w	EHZBoss_origin_x(a0),EHZBoss_origin_x(a1)
 	move.w	EHZBoss_origin_y(a0),EHZBoss_origin_y(a1)
-	move.l	a1,objoff_34(a0)	; i.e. addresses for cross references
+	move.l	a1,objoff_38(a0)	; i.e. addresses for cross references
 	move.l	#Map_EHZBoss_Vehicle,obMap(a1)
 	move.b	#Map_EHZBoss_Vehicle_height,height_pixels(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_Eggpod_1,0,0),obGfx(a1)
@@ -114,8 +114,8 @@ EHZBoss_Init:
 	jsr	(FindNextFreeObj).l	; Vehicle on ground
 	bne.w	+
 
-	_move.b	#id_Obj55,obID(a1) ; load EHZ boss child
-	move.l	a0,objoff_34(a1)	; linked to main object
+	move.l	#EHZBoss,code(a1) ; load EHZ boss child
+	move.l	a0,objoff_38(a1)	; linked to main object
 	move.w	EHZBoss_origin_x(a0),EHZBoss_origin_x(a1)
 	move.w	EHZBoss_origin_y(a0),EHZBoss_origin_y(a1)
 	move.l	#Map_EHZBoss_Ground,obMap(a1)
@@ -132,7 +132,7 @@ EHZBoss_Init:
 	move.b	#6,obRoutine(a1)
 +
 	bsr.w	EHZBoss_MakeGroundParts
-	subq.w	#8,objoff_38(a0)
+	subq.w	#8,objoff_3C(a0)
 	move.w	EHZBoss_origin_x(a0),d0
 	addi.w	#EHZBoss_ApproachX,d0
 	move.w	d0,obX(a0)
@@ -142,8 +142,8 @@ EHZBoss_Init:
 	jsr	(FindNextFreeObj).l	; propeller normal
 	bne.w	+	; rts
 
-	_move.b	#id_Obj55,obID(a1) ; load EHZ boss child
-	move.l	a0,objoff_34(a1)	; linked to main object
+	move.l	#EHZBoss,code(a1) ; load EHZ boss child
+	move.l	a0,objoff_38(a1)	; linked to main object
 	move.w	EHZBoss_origin_x(a0),EHZBoss_origin_x(a1)
 	move.w	EHZBoss_origin_y(a0),EHZBoss_origin_y(a1)
 	move.l	#Map_EHZBoss_Propeller,obMap(a1)
@@ -154,7 +154,7 @@ EHZBoss_Init:
 	move.w	#$180,obPriority(a1)
 	move.l	obX(a0),obX(a1)
 	move.l	obY(a0),obY(a1)
-	move.w	#$1E,objoff_2A(a1)
+	move.w	#$1E,objoff_2E(a1)
 	move.b	#4,obRoutine(a1)
 +
 	rts
@@ -164,8 +164,8 @@ EHZBoss_MakeGroundParts:
 	jsr	(FindNextFreeObj).l	; first foreground wheel
 	bne.w	+
 
-	_move.b	#id_Obj55,obID(a1) ; load EHZ boss child
-	move.l	a0,objoff_34(a1)	; linked to main object
+	move.l	#EHZBoss,code(a1) ; load EHZ boss child
+	move.l	a0,objoff_38(a1)	; linked to main object
 	move.w	EHZBoss_origin_x(a0),EHZBoss_origin_x(a1)
 	move.w	EHZBoss_origin_y(a0),EHZBoss_origin_y(a1)
 	move.l	#Map_EHZBoss_Ground,obMap(a1)
@@ -185,14 +185,14 @@ EHZBoss_MakeGroundParts:
 	move.b	#8,obRoutine(a1)
 	move.b	#4,obFrame(a1)
 	move.b	#1,obAnim(a1)
-	move.w	#$A,objoff_2A(a1)
+	move.w	#$A,objoff_2E(a1)
 	move.b	#0,obSubtype(a1)
 +
 	jsr	(FindNextFreeObj).l	; second foreground wheel
 	bne.w	+
 
-	_move.b	#id_Obj55,obID(a1) ; load EHZ boss child
-	move.l	a0,objoff_34(a1)	; linked to main object
+	move.l	#EHZBoss,code(a1) ; load EHZ boss child
+	move.l	a0,objoff_38(a1)	; linked to main object
 	move.w	EHZBoss_origin_x(a0),EHZBoss_origin_x(a1)
 	move.w	EHZBoss_origin_y(a0),EHZBoss_origin_y(a1)
 	move.l	#Map_EHZBoss_Ground,obMap(a1)
@@ -212,14 +212,14 @@ EHZBoss_MakeGroundParts:
 	move.b	#8,obRoutine(a1)
 	move.b	#4,obFrame(a1)
 	move.b	#1,obAnim(a1)
-	move.w	#$A,objoff_2A(a1)
+	move.w	#$A,objoff_2E(a1)
 	move.b	#1,obSubtype(a1)
 +
 	jsr	(FindNextFreeObj).l	; background wheel
 	bne.w	+
 
-	_move.b	#id_Obj55,obID(a1) ; load EHZ boss child
-	move.l	a0,objoff_34(a1)	; linked to main object
+	move.l	#EHZBoss,code(a1) ; load EHZ boss child
+	move.l	a0,objoff_38(a1)	; linked to main object
 	move.w	EHZBoss_origin_x(a0),EHZBoss_origin_x(a1)
 	move.w	EHZBoss_origin_y(a0),EHZBoss_origin_y(a1)
 	move.l	#Map_EHZBoss_Ground,obMap(a1)
@@ -239,14 +239,14 @@ EHZBoss_MakeGroundParts:
 	move.b	#8,obRoutine(a1)
 	move.b	#6,obFrame(a1)
 	move.b	#2,obAnim(a1)
-	move.w	#$A,objoff_2A(a1)
+	move.w	#$A,objoff_2E(a1)
 	move.b	#2,obSubtype(a1)
 +
 	jsr	(FindNextFreeObj).l	; Spike
 	bne.w	+
 
-	_move.b	#id_Obj55,obID(a1) ; load EHZ boss child
-	move.l	a0,objoff_34(a1)	; linked to main object
+	move.l	#EHZBoss,code(a1) ; load EHZ boss child
+	move.l	a0,objoff_38(a1)	; linked to main object
 	move.w	EHZBoss_origin_x(a0),EHZBoss_origin_x(a1)
 	move.w	EHZBoss_origin_y(a0),EHZBoss_origin_y(a1)
 	move.l	#Map_EHZBoss_Ground,obMap(a1)
@@ -304,7 +304,7 @@ EHZBoss_loc_2F29A:
 
 EHZBoss_Landing:	; EHZBoss_VehicleMain_Sub2:
 	moveq	#0,d0
-	move.b	objoff_2C(a0),d0	; tertiary routine
+	move.b	objoff_30(a0),d0	; tertiary routine
 	move.w	EHZBoss_off_2F2B6(pc,d0.w),d1
 	jmp	EHZBoss_off_2F2B6(pc,d1.w)
 ; ---------------------------------------------------------------------------
@@ -323,30 +323,30 @@ EHZBoss_LandVertical:	; EHZBoss_VehicleMain_Sub2_0:
 ; ---------------------------------------------------------------------------
 
 EHZBoss_loc_2F2CC:
-	addq.b	#2,objoff_2C(a0)	; tertiary routine
-	bset	#0,objoff_2D(a0)	; Robotnik on ground (relevant for propeller)
-	move.w	#60,objoff_2A(a0)	; timer for standing still
+	addq.b	#2,objoff_30(a0)	; tertiary routine
+	bset	#0,objoff_31(a0)	; Robotnik on ground (relevant for propeller)
+	move.w	#60,objoff_2E(a0)	; timer for standing still
 	jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 EHZBoss_WaitActivation:	; EHZBoss_VehicleMain_Sub2_2:
-	subq.w	#1,objoff_2A(a0)	; timer
+	subq.w	#1,objoff_2E(a0)	; timer
 	bpl.w	EHZBoss_Display
 	move.w	#-$200,obVelX(a0)
 	addq.b	#2,ob2ndRout(a0)
 	move.b	#$F,obColType(a0)
-	bset	#1,objoff_2D(a0)	; boss now active and moving
+	bset	#1,objoff_31(a0)	; boss now active and moving
 	jmp	(DisplaySprite).l
 ; ===========================================================================
 
 EHZBoss_Drive:	; EHZBoss_VehicleMain_Sub4:
 	bsr.w	EHZBoss_CheckHits	; routine to handle hits
 	bsr.w	EHZBoss_CheckDirection	; position check, sets direction
-	move.w	objoff_2E(a0),d0	; y_position of wheels
+	move.w	objoff_32(a0),d0	; y_position of wheels
 	lsr.w	#1,d0
 	subi.w	#$14,d0
 	move.w	d0,obY(a0)	; set y_pos depending on wheels
-	move.w	#0,objoff_2E(a0)
+	move.w	#0,objoff_32(a0)
 	move.l	obX(a0),d2
 	move.w	obVelX(a0),d0
 	ext.l	d0
@@ -357,7 +357,7 @@ EHZBoss_Drive:	; EHZBoss_VehicleMain_Sub4:
 ; ===========================================================================
 
 EHZBoss_FallDefeated:	; EHZBoss_VehicleMain_Sub6:
-	subq.w	#1,objoff_3C(a0)	; timer set after defeat
+	subq.w	#1,objoff_40(a0)	; timer set after defeat
 	bmi.s	EHZBoss_loc_2F35C	; if countdown finished
 	bsr.w	EHZBoss_LoadExplosion
 	jsr	(ObjectMoveAndFall).l
@@ -372,22 +372,22 @@ EHZBoss_FallDefeated:	; EHZBoss_VehicleMain_Sub6:
 EHZBoss_loc_2F35C:
 	clr.w	obVelX(a0)
 	addq.b	#2,ob2ndRout(a0)
-	move.w	#-$26,objoff_3C(a0)
-	move.w	#$C,objoff_2A(a0)
+	move.w	#-$26,objoff_40(a0)
+	move.w	#$C,objoff_2E(a0)
 	jmp	(DisplaySprite).l
 ; ===========================================================================
 
 EHZBoss_PauseDefeated:	; EHZBoss_VehicleMain_Sub8:
-	subq.w	#1,objoff_2A(a0)	; timer
+	subq.w	#1,objoff_2E(a0)	; timer
 	bpl.w	EHZBoss_Display
 	addq.b	#2,ob2ndRout(a0)
-	move.b	#0,objoff_2C(a0)	; tertiary routine
+	move.b	#0,objoff_30(a0)	; tertiary routine
 	jmp	(DisplaySprite).l
 ; ===========================================================================
 
 EHZBoss_Escape:	; EHZBoss_VehicleMain_SubA:
 	moveq	#0,d0
-	move.b	objoff_2C(a0),d0	; tertiary routine
+	move.b	objoff_30(a0),d0	; tertiary routine
 	move.w	EHZBoss_off_2F39C(pc,d0.w),d1
 	jsr	EHZBoss_off_2F39C(pc,d1.w)
 	jmp	(DisplaySprite).l
@@ -399,12 +399,12 @@ EHZBoss_off_2F39C:	offsetTable
 ; ===========================================================================
 
 EHZBoss_ReloadPropeller:	; EHZBoss_VehicleMain_SubA_0:
-	bclr	#0,objoff_2D(a0)	; Robotnik off ground
+	bclr	#0,objoff_31(a0)	; Robotnik off ground
 	jsr	(FindNextFreeObj).l	; reload propeller after defeat
 	bne.w	+	; rts
 
-	_move.b	#id_Obj55,obID(a1) ; load EHZ boss child
-	move.l	a0,objoff_34(a1)	; linked to main object
+	move.l	#EHZBoss,code(a1) ; load EHZ boss child
+	move.l	a0,objoff_38(a1)	; linked to main object
 	move.w	EHZBoss_origin_x(a0),EHZBoss_origin_x(a1)
 	move.w	EHZBoss_origin_y(a0),EHZBoss_origin_y(a1)
 	move.l	#Map_EHZBoss_Propeller,obMap(a1)
@@ -420,9 +420,9 @@ EHZBoss_ReloadPropeller:	; EHZBoss_VehicleMain_SubA_0:
 	move.b	obRender(a0),obRender(a1)
 	move.b	#$C,obRoutine(a1)
 	move.b	#2,obAnim(a1)
-	move.w	#$10,objoff_2A(a1)	; timer
-	move.w	#$32,objoff_2A(a0)	; timer
-	addq.b	#2,objoff_2C(a0)	; tertiary routine - increase
+	move.w	#$10,objoff_2E(a1)	; timer
+	move.w	#$32,objoff_2E(a0)	; timer
+	addq.b	#2,objoff_30(a0)	; tertiary routine - increase
 	jsr	(EHZBoss_PlayLevelMusic).l ; play level Music
 	move.b	#1,(Boss_defeated_flag).w
 +
@@ -430,18 +430,18 @@ EHZBoss_ReloadPropeller:	; EHZBoss_VehicleMain_SubA_0:
 ; ===========================================================================
 
 EHZBoss_WaitPropeller:	; EHZBoss_VehicleMain_SubA_2:
-	subq.w	#1,objoff_2A(a0)	; timer
+	subq.w	#1,objoff_2E(a0)	; timer
 	bpl.s	+	; rts
-	bset	#2,objoff_2D(a0)	; Robotnik flying off
-	move.w	#$60,objoff_2A(a0)	; timer
-	addq.b	#2,objoff_2C(a0)	; tertiary routine
+	bset	#2,objoff_31(a0)	; Robotnik flying off
+	move.w	#$60,objoff_2E(a0)	; timer
+	addq.b	#2,objoff_30(a0)	; tertiary routine
 	jsr	(EHZBoss_RestoreLevelArt).l ; PLC_Explosion
 +
 	rts
 ; ===========================================================================
 
 EHZBoss_FlyAway:	; EHZBoss_VehicleMain_SubA_4:
-	subq.w	#1,objoff_2A(a0)	; timer
+	subq.w	#1,objoff_2E(a0)	; timer
 	bpl.s	EHZBoss_loc_2F45C
 	bset	#status.npc.x_flip,obStatus(a0)
 	bset	#obRender.x_flip,obRender(a0)
@@ -466,7 +466,7 @@ EHZBoss_loc_2F46E:
 	btst	#obRender.on_screen,obRender(a0)
 	bne.s	EHZBoss_return_2F482
 	addq.w	#4,sp
-	movea.l	objoff_34(a0),a1 ; parent address (vehicle)
+	movea.l	objoff_38(a0),a1 ; parent address (vehicle)
 	jsr	(DeleteObject2).l
 	jmp	(DeleteObject).l
 ; ===========================================================================
@@ -499,9 +499,9 @@ EHZBoss_CheckHits:	; routine to handle hits
 	bne.s	EHZBoss_Defeated	; Sonic has just defeated the boss (i.e. bit 7 set)
 	tst.b	obColType(a0)	; set to 0 when boss was hit by Touch_Enemy_Part2
 	bne.s	EHZBoss_return_2F4EC	; not 0, i.e. boss not hit
-	tst.b	objoff_3E(a0)
+	tst.b	objoff_42(a0)
 	bne.s	EHZBoss_loc_2F4D0	; boss already invincibile
-	move.b	#$20,objoff_3E(a0)	; boss invincibility timer
+	move.b	#$20,objoff_42(a0)	; boss invincibility timer
 	move.w	#sfx_HitBoss,d0
 	jsr	(PlaySound).l	; play boss hit sound
 
@@ -514,7 +514,7 @@ EHZBoss_loc_2F4D0:
 
 EHZBoss_loc_2F4DE:
 	move.w	d0,(a1)	; set respective color
-	subq.b	#1,objoff_3E(a0)	; decrease boss invincibility timer
+	subq.b	#1,objoff_42(a0)	; decrease boss invincibility timer
 	bne.s	EHZBoss_return_2F4EC
 	move.b	#$F,obColType(a0)	; if invincibility ended, allow collision again
 
@@ -528,9 +528,9 @@ EHZBoss_Defeated:	; boss defeated
 	move.b	#6,ob2ndRout(a0)
 	move.w	#0,obVelX(a0)
 	move.w	#-$180,obVelY(a0)
-	move.w	#$B3,objoff_3C(a0)	; timer
-	bset	#3,objoff_2D(a0)	; flag to separate spike from vehicle
-	movea.l	objoff_34(a0),a1 ; address top part
+	move.w	#$B3,objoff_40(a0)	; timer
+	bset	#3,objoff_31(a0)	; flag to separate spike from vehicle
+	movea.l	objoff_38(a0),a1 ; address top part
 	move.b	#4,obAnim(a1)	; flying off animation
 	move.b	#6,obFrame(a1)
 	moveq	#plcid_Capsule,d0
@@ -539,7 +539,7 @@ EHZBoss_Defeated:	; boss defeated
 
 EHZBoss_PropellerReloaded:	; Propeller after defeat
 	subq.w	#1,obY(a0)	; move up
-	subq.w	#1,objoff_2A(a0)	; decrease timer
+	subq.w	#1,objoff_2E(a0)	; decrease timer
 	bpl.w	EHZBoss_Display
 	move.b	#4,obRoutine(a0)	; Propeller normal
 	lea	(Ani_EHZBoss_Propeller).l,a1
@@ -559,13 +559,13 @@ EHZBoss_off_2F55C:	offsetTable
 ; ---------------------------------------------------------------------------
 
 EHZBoss_loc_2F560:	; EHZBoss_Propeller_Sub0
-	movea.l	objoff_34(a0),a1 ; parent address (vehicle)
-	cmpi.b	#id_Obj55,obID(a1)
+	movea.l	objoff_38(a0),a1 ; parent address (vehicle)
+	cmpi.l	#EHZBoss,code(a1)
 	bne.w	EHZBoss_Delete	; if boss non-existant
-	btst	#0,objoff_2D(a1)	; is Robotnik on ground?
+	btst	#0,objoff_31(a1)	; is Robotnik on ground?
 	beq.s	EHZBoss_loc_2F58E	; if not, branch
 	move.b	#1,obAnim(a0)
-	move.w	#$18,objoff_2A(a0)	; timer until deletion
+	move.w	#$18,objoff_2E(a0)	; timer until deletion
 	addq.b	#2,ob2ndRout(a0)
 	move.b	#MusID_StopSFX,d0
 	jsr	(PlaySound).l
@@ -590,9 +590,9 @@ EHZBoss_loc_2F5A0:
 ; ---------------------------------------------------------------------------
 
 EHZBoss_loc_2F5C6:	; EHZBoss_Propeller_Sub2
-	subq.w	#1,objoff_2A(a0)	; timer
+	subq.w	#1,objoff_2E(a0)	; timer
 	bpl.s	EHZBoss_loc_2F5E8
-	cmpi.w	#-$10,objoff_2A(a0)
+	cmpi.w	#-$10,objoff_2E(a0)
 	ble.w	EHZBoss_Delete
 	move.w	#$200,obPriority(a0)
 	addq.w	#1,obY(a0)	; move down
@@ -630,10 +630,10 @@ EHZBoss_loc_2F618:
 ; ---------------------------------------------------------------------------
 
 EHZBoss_loc_2F626:	; EHZBoss_GroundVehicle_Sub2:
-	movea.l	objoff_34(a0),a1 ; parent address (vehicle)
-	btst	#1,objoff_2D(a1)
+	movea.l	objoff_38(a0),a1 ; parent address (vehicle)
+	btst	#1,objoff_31(a1)
 	beq.w	EHZBoss_Display	; boss not moving yet (inactive)
-	btst	#2,objoff_2D(a1)	; Robotnik flying off flag
+	btst	#2,objoff_31(a1)	; Robotnik flying off flag
 	bne.w	EHZBoss_Display
 	move.w	obX(a1),obX(a0)
 	move.w	obY(a1),obY(a0)
@@ -732,25 +732,25 @@ EHZBoss_loc_2F706:
 ; ---------------------------------------------------------------------------
 
 EHZBoss_loc_2F714:	; EHZBoss_Wheel_Sub2:
-	movea.l	objoff_34(a0),a1 ; parent address (vehicle)
-	cmpi.b	#id_Obj55,obID(a1)
+	movea.l	objoff_38(a0),a1 ; parent address (vehicle)
+	cmpi.l	#EHZBoss,code(a1)
 	bne.w	EHZBoss_Delete	; if boss non-existant
-	btst	#1,objoff_2D(a1)
+	btst	#1,objoff_31(a1)
 	beq.w	EHZBoss_Display	; boss not moving yet (inactive)
 	addq.b	#2,ob2ndRout(a0)
 	cmpi.w	#$100,obPriority(a0)
 	bne.s	BranchTo_JmpTo35_DisplaySprite
 	move.w	obY(a0),d0
-	movea.l	objoff_34(a0),a1 ; parent address (vehicle)
-	add.w	d0,objoff_2E(a1)
+	movea.l	objoff_38(a0),a1 ; parent address (vehicle)
+	add.w	d0,objoff_32(a1)
 
 BranchTo_JmpTo35_DisplaySprite ; BranchTo
 	jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 EHZBoss_loc_2F746:	; EHZBoss_Wheel_Sub4:
-	movea.l	objoff_34(a0),a1 ; parent address (vehicle)
-	cmpi.b	#id_Obj55,obID(a1)
+	movea.l	objoff_38(a0),a1 ; parent address (vehicle)
+	cmpi.l	#EHZBoss,code(a1)
 	bne.w	EHZBoss_Delete	; if boss non-existant
 	move.b	obStatus(a1),obStatus(a0)
 	move.b	obRender(a1),obRender(a0)
@@ -771,8 +771,8 @@ EHZBoss_loc_2F77E:
 	cmpi.w	#$100,obPriority(a0)
 	bne.s	EHZBoss_loc_2F798
 	move.w	obY(a0),d0
-	movea.l	objoff_34(a0),a1 ; parent address (vehicle)
-	add.w	d0,objoff_2E(a1)
+	movea.l	objoff_38(a0),a1 ; parent address (vehicle)
+	add.w	d0,objoff_32(a1)
 
 EHZBoss_loc_2F798:
 	lea	(Ani_EHZBoss_Ground).l,a1
@@ -781,10 +781,10 @@ EHZBoss_loc_2F798:
 ; ---------------------------------------------------------------------------
 
 EHZBoss_loc_2F7A6:	; EHZBoss_Wheel_Sub6:
-	subq.w	#1,objoff_2A(a0)	; timer, initially set to $A (first delay until wheels rolling off)
+	subq.w	#1,objoff_2E(a0)	; timer, initially set to $A (first delay until wheels rolling off)
 	bpl.w	EHZBoss_Display
 	addq.b	#2,ob2ndRout(a0)	; Sub8
-	move.w	#$A,objoff_2A(a0)
+	move.w	#$A,objoff_2E(a0)
 	move.w	#-$300,obVelY(a0)	; first bounce higher
 	cmpi.w	#$100,obPriority(a0)
 	beq.w	EHZBoss_Display
@@ -793,7 +793,7 @@ EHZBoss_loc_2F7A6:	; EHZBoss_Wheel_Sub6:
 ; ---------------------------------------------------------------------------
 
 EHZBoss_loc_2F7D2:	; EHZBoss_Wheel_Sub8:
-	subq.w	#1,objoff_2A(a0)	; timer, initially set to $A (second delay until wheels rolling off)
+	subq.w	#1,objoff_2E(a0)	; timer, initially set to $A (second delay until wheels rolling off)
 	bpl.w	EHZBoss_Display
 	jsr	(ObjectMoveAndFall).l
 	jsr	(ObjHitFloor).l
@@ -831,13 +831,13 @@ EHZBoss_loc_2F816:
 ; ---------------------------------------------------------------------------
 
 EHZBoss_loc_2F824:	; EHZBoss_Spike_Sub2:
-	movea.l	objoff_34(a0),a1 ; parent address (vehicle)
-	cmpi.b	#id_Obj55,obID(a1)
+	movea.l	objoff_38(a0),a1 ; parent address (vehicle)
+	cmpi.l	#EHZBoss,code(a1)
 	bne.w	EHZBoss_Delete	; if boss non-existant
-	btst	#3,objoff_2D(a1)
+	btst	#3,objoff_31(a1)
 	bne.s	EHZBoss_loc_2F88A	; spike separated from vehicle
 	bsr.w	EHZBoss_loc_2F8AA
-	btst	#1,objoff_2D(a1)
+	btst	#1,objoff_31(a1)
 	beq.w	EHZBoss_Display	; boss not moving yet (inactive)
 	move.b	#$8B,obColType(a0)	; spike still linked to vehicle
 	move.w	obX(a1),obX(a0)
@@ -892,17 +892,17 @@ EHZBoss_loc_2F8C8:
 ; ---------------------------------------------------------------------------
 
 EHZBoss_loc_2F8D2:
-	bset	#3,objoff_2D(a1)	; flag to separate spike from vehicle
+	bset	#3,objoff_31(a1)	; flag to separate spike from vehicle
 	rts
 ; ===========================================================================
 
 EHZBoss_Cockpit:	; EHZBoss_VehicleTop:
-	movea.l	objoff_34(a0),a1 ; parent address (vehicle)
+	movea.l	objoff_38(a0),a1 ; parent address (vehicle)
 	move.l	obX(a1),obX(a0)
 	move.l	obY(a1),obY(a0)
 	move.b	obStatus(a1),obStatus(a0)	; update position and status
 	move.b	obRender(a1),obRender(a0)
-	move.b	objoff_3E(a1),d0	; boss invincibility timer
+	move.b	objoff_42(a1),d0	; boss invincibility timer
 	cmpi.b	#$1F,d0	; boss just got hit?
 	bne.s	EHZBoss_loc_2F906
 	move.b	#2,obAnim(a0)	; Robotnik animation when hit
@@ -1040,7 +1040,7 @@ EHZBoss_LoadExplosion:
 	bne.s	.return
 	jsr	(FindFreeObj).l
 	bne.s	.return
-	move.b	#id_Obj58,obID(a1)
+	move.l	#BossExplosion,code(a1)
 	move.w	obX(a0),obX(a1)
 	move.w	obY(a0),obY(a1)
 	jsr	(RandomNumber).l

@@ -27,7 +27,7 @@ Obj16_Init:
 		moveq	#0,d0
 		move.b	obSubtype(a0),d0	; subtype determines how far we descend
 		lsl.w	#3,d0
-		move.w	d0,objoff_2C(a0)
+		move.w	d0,objoff_30(a0)
 
 Obj16_Main:
 		move.w	obX(a0),-(sp)
@@ -78,7 +78,7 @@ Obj16_Slide:
 		jsr	(PlaySound).l
 +
 		bsr.w	ObjectMove
-		subq.w	#1,objoff_2C(a0)
+		subq.w	#1,objoff_30(a0)
 		bne.s	.return
 		addq.b	#2,ob2ndRout(a0)
 		move.b	#2,obFrame(a0)	; use frame 2
@@ -86,7 +86,7 @@ Obj16_Slide:
 		; this object will eventually gain a 4th secondary routine, where it descends but doesn't fall (alike in S2NA); TODO
 		bsr.w	FindNextFreeObj
 		bne.s	.return
-		_move.b	#id_Obj1C,obID(a1) ; load obj1C
+		move.l	#Obj1C,code(a1) ; load obj1C
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.b	obRender(a0),obRender(a1)

@@ -21,8 +21,8 @@ Bump_Main:	; Routine 0
 		move.l	#Map_Bump,obMap(a0)
 		move.b	#Map_Bump_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Bumper,0,0),obGfx(a0)
-		move.w	obX(a0),objoff_30(a0)	; setting these up for later!
-		move.w	obY(a0),objoff_32(a0)
+		move.w	obX(a0),objoff_34(a0)	; setting these up for later!
+		move.w	obY(a0),objoff_36(a0)
 
 Bump_Hit:	; Routine 2
 		move.b	obColProp(a0),d0
@@ -96,7 +96,7 @@ Bumper_bump:
 		bsr.w	FindFreeObj
 		movea.w	(sp)+,a2			; MOVEA preserves the allocator's Z flag
 		bne.s	.return
-		_move.b	#id_ObjFF,obID(a1)
+		move.l	#Points,code(a1)
 		move.w	a2,points_parent(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)

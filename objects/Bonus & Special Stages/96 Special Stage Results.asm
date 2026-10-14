@@ -20,7 +20,7 @@ SSR_Index:	dc.w SSR_ChkPLC-SSR_Index
 		dc.w SSR_Exit-SSR_Index
 		dc.w loc_BEF2-SSR_Index
 
-ssr_mainX = objoff_30	; position for card to display on
+ssr_mainX = objoff_34	; position for card to display on
 ; ===========================================================================
 
 SSR_ChkPLC:	; Routine 0
@@ -38,7 +38,7 @@ SSR_Main:
 		addq.w	#1,d1		; if yes, add 1	to d1 (number of sprites)
 
 SSR_Loop:
-		_move.b	#id_Obj96,obID(a1)
+		move.l	#BonusGotThrough,code(a1)
 		move.w	(a2)+,obX(a1)		; load start x-position
 		move.w	(a2)+,ssr_mainX(a1)	; load main x-position
 		move.w	(a2)+,obScreenY(a1)	; load y-position
@@ -90,11 +90,11 @@ loc_BE44:
 		cmpi.b	#2,obFrame(a0)
 		bne.s	loc_BE32
 		addq.b	#2,obRoutine(a0)
-		move.w	#180,objoff_34(a0) ; set time delay to 3 seconds
-		_move.b	#id_Obj97,(v_ssresemeralds).w ; load chaos emerald object
+		move.w	#180,objoff_38(a0) ; set time delay to 3 seconds
+		move.l	#ChaosEmeralds,(v_ssresemeralds).w ; load chaos emerald object
 
 SSR_Wait:	; Routine 4, 8, $C, $10
-		subq.w	#1,objoff_34(a0) ; subtract 1 from time delay
+		subq.w	#1,objoff_38(a0) ; subtract 1 from time delay
 		bne.s	SSR_Display
 		addq.b	#2,obRoutine(a0)
 
@@ -121,10 +121,10 @@ loc_BE9C:
 		move.w	#sfx_Cash,d0
 		jsr	(PlaySound_Special).l	; play "ker-ching" sound
 		addq.b	#2,obRoutine(a0)
-		move.w	#180,objoff_34(a0) ; set time delay to 3 seconds
+		move.w	#180,objoff_38(a0) ; set time delay to 3 seconds
 		cmpi.w	#50,(v_rings).w	; do you have at least 50 rings?
 		bcs.s	locret_BEC2	; if not, branch
-		move.w	#60,objoff_34(a0) ; set time delay to 1 second
+		move.w	#60,objoff_38(a0) ; set time delay to 1 second
 		addq.b	#4,obRoutine(a0) ; goto "SSR_Continue" routine
 
 locret_BEC2:
@@ -142,7 +142,7 @@ SSR_Continue:	; Routine $E
 		move.w	#sfx_Continue,d0
 		jsr	(PlaySound_Special).l	; play continues jingle
 		addq.b	#2,obRoutine(a0)
-		move.w	#360,objoff_34(a0) ; set time delay to 6 seconds
+		move.w	#360,objoff_38(a0) ; set time delay to 6 seconds
 		bra.w	DisplaySprite
 ; ===========================================================================
 

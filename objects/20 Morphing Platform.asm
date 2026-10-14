@@ -1,10 +1,10 @@
 ; ---------------------------------------------------------------------------
 ; Morphing Platform
 ; ---------------------------------------------------------------------------
-mplat_origin_x	= objoff_30
-mplat_origin_y	= objoff_32
-mplat_timer	= objoff_34
-mplat_state	= objoff_35
+mplat_origin_x	= objoff_34
+mplat_origin_y	= objoff_36
+mplat_timer	= objoff_38
+mplat_state	= objoff_39
 ; ---------------------------------------------------------------------------
 MorphingPlatform:
 		moveq	#0,d0

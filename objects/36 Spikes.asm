@@ -6,15 +6,15 @@
 ; Low subtype: 0 = stationary, 1 = vertical, 2 = horizontal, 3 = pushable.
 ; Status flips select ceiling spikes or the direction of side spikes.
 ; ---------------------------------------------------------------------------
-spikes_base_x_pos	= objoff_30
-spikes_base_y_pos	= objoff_32
-spikes_retract_offset	= objoff_34	; unsigned 8.8 displacement
-spikes_retract_state	= objoff_36	; 0 = extend, 1 = retract
-spikes_retract_timer	= objoff_38
-spikes_push_timer	= objoff_3A
-spikes_push_distance	= objoff_3C
-spikes_sonic_status	= objoff_3E	; preceding frame's player pushing flags
-spikes_tails_status	= objoff_3F
+spikes_base_x_pos	= objoff_34
+spikes_base_y_pos	= objoff_36
+spikes_retract_offset	= objoff_38	; unsigned 8.8 displacement
+spikes_retract_state	= objoff_3A	; 0 = extend, 1 = retract
+spikes_retract_timer	= objoff_3C
+spikes_push_timer	= objoff_3E
+spikes_push_distance	= objoff_40
+spikes_sonic_status	= objoff_42	; preceding frame's player pushing flags
+spikes_tails_status	= objoff_43
 spikes_travel		= $20
 spikes_move_step		= $800
 spikes_move_delay	= 60

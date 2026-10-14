@@ -1,5 +1,5 @@
 ; ---------------------------------------------------------------------------
-; S3&K Debug controls, adapted to ID/routine SSTs and eight-byte debug entries.
+; S3&K Debug controls, with routine-pointer SSTs and twelve-byte Debug entries.
 ; Only player 1 enters here. B: placement; hold C + press B: frame cycling.
 ; Placement: A next, hold A + press C previous, C place, B return to play.
 ; The existing full-height Debug travel range is retained for arena testing.
@@ -167,10 +167,13 @@ Debug_CycleObjects:
 LoadDebugObjectSprite:
 		moveq	#0,d0
 		move.b	(Debug_object).w,d0
-		lsl.w	#3,d0
-		move.l	(a2,d0.w),obMap(a0)
-		move.w	6(a2,d0.w),obGfx(a0)
-		move.b	5(a2,d0.w),obFrame(a0)
+		move.w	d0,d1
+		add.w	d0,d0
+		add.w	d1,d0
+		lsl.w	#2,d0			; entry * 12
+		move.l	DebugEntry_mappings(a2,d0.w),obMap(a0)
+		move.w	DebugEntry_art_tile(a2,d0.w),obGfx(a0)
+		move.b	DebugEntry_frame(a2,d0.w),obFrame(a0)
 		bra.w	Set_SpriteBounds	; scan only when the selected preview changes
 
 Debug_SpawnObject:
@@ -180,15 +183,18 @@ Debug_SpawnObject:
 		bne.s	Debug_ExitDebugMode
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
-		_move.b	obMap(a0),obID(a1)	; ID occupies the unused top address byte
 		move.b	obRender(a0),d0
 		andi.b	#(1<<render_flags.x_flip)|(1<<render_flags.y_flip),d0
 		move.b	d0,obRender(a1)
 		move.b	d0,obStatus(a1)
 		moveq	#0,d0
 		move.b	(Debug_object).w,d0
-		lsl.w	#3,d0
-		move.b	4(a2,d0.w),obSubtype(a1)
+		move.w	d0,d1
+		add.w	d0,d0
+		add.w	d1,d0
+		lsl.w	#2,d0			; entry * 12
+		move.l	DebugEntry_code(a2,d0.w),code(a1)
+		move.b	DebugEntry_subtype(a2,d0.w),obSubtype(a1)
 		rts				; cleared SST => respawn_addr = 0
 
 Debug_ExitDebugMode:
@@ -291,6 +297,6 @@ Debug_FrameCycle:
 ; bank; the rotating layout itself still uses its dedicated S1 mapping ABI.
 Debug_SS:
 		dc.w 1
-		dc.l Map_Ring|(id_Obj12<<24)
+		dc.l Obj12,Map_Ring
 		dc.b 0,0
 		dc.w make_art_tile(ArtTile_SS_Rings,1,0)

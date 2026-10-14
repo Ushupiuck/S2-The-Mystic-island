@@ -11,8 +11,8 @@ Obj2C:
 Jaws_Index:	dc.w Jaws_Main-Jaws_Index
 		dc.w Jaws_Turn-Jaws_Index
 ; ===========================================================================
-jaws_timecount = objoff_30
-jaws_timedelay = objoff_32
+jaws_timecount = objoff_34
+jaws_timedelay = objoff_36
 ; ===========================================================================
 
 Jaws_Main:	; Routine 0

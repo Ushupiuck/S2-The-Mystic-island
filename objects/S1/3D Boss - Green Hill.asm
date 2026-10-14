@@ -31,7 +31,7 @@ BGHZ_Loop:
 
 BGHZ_LoadBoss:
 		move.b	(a2)+,obRoutine(a1)
-		_move.b	#id_Obj3D,obID(a1)
+		move.l	#Obj3D,code(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.l	#Map_Eggman,obMap(a1)
@@ -41,12 +41,12 @@ BGHZ_LoadBoss:
 		move.b	#sprite_bound($20,Map_Eggman_width),obActWid(a1)
 		move.w	#$180,obPriority(a1)
 		move.b	(a2)+,obAnim(a1)
-		move.l	a0,objoff_34(a1)
+		move.l	a0,objoff_38(a1)
 		dbf	d1,BGHZ_Loop	; repeat sequence 2 more times
 
 loc_18D70:
-		move.w	obX(a0),objoff_30(a0)
-		move.w	obY(a0),objoff_38(a0)
+		move.w	obX(a0),objoff_34(a0)
+		move.w	obY(a0),objoff_3C(a0)
 		move.b	#$F,obColType(a0)
 		move.b	#8,obColProp(a0) ; set number of hits to 8
 
@@ -75,28 +75,28 @@ BGHZ_ShipIndex:	dc.w BGHZ_ShipStart-BGHZ_ShipIndex
 BGHZ_ShipStart:
 		move.w	#$100,obVelY(a0) ; move ship down
 		jsr	(ObjectMove_Reserved2).l
-		cmpi.w	#boss_ghz_y+$38,objoff_38(a0)
+		cmpi.w	#boss_ghz_y+$38,objoff_3C(a0)
 		bne.s	loc_177E6
 		clr.w	obVelY(a0)	; stop ship
 		addq.b	#2,ob2ndRout(a0) ; goto next routine
 
 loc_177E6:
-		move.b	objoff_3F(a0),d0
+		move.b	objoff_43(a0),d0
 		jsr	(CalcSine).l
 		asr.w	#6,d0
-		add.w	objoff_38(a0),d0
+		add.w	objoff_3C(a0),d0
 		move.w	d0,obY(a0)
-		move.w	objoff_30(a0),obX(a0)
-		addq.b	#2,objoff_3F(a0)
+		move.w	objoff_34(a0),obX(a0)
+		addq.b	#2,objoff_43(a0)
 		cmpi.b	#8,ob2ndRout(a0)
 		bhs.s	.return
 		tst.b	obStatus(a0)
 		bmi.s	loc_1784C
 		tst.b	obColType(a0)
 		bne.s	.return
-		tst.b	objoff_3E(a0)
+		tst.b	objoff_42(a0)
 		bne.s	.BGHZ_ShipFlash
-		move.b	#$20,objoff_3E(a0)	; set number of	times for ship to flash
+		move.b	#$20,objoff_42(a0)	; set number of	times for ship to flash
 		move.w	#sfx_HitBoss,d0
 		jsr	(PlaySound_Special).l	; play boss damage sound
 
@@ -109,7 +109,7 @@ loc_177E6:
 
 .loc_1783C:
 		move.w	d0,(a1)		; load colour stored in	d0
-		subq.b	#1,objoff_3E(a0)
+		subq.b	#1,objoff_42(a0)
 		bne.s	.return
 		move.w	#$222,(v_palette+$22).w	; move 0EEE (white) to d0
 		move.b	#$F,obColType(a0)
@@ -122,7 +122,7 @@ loc_1784C:
 		moveq	#100,d0
 		jsr	(AddPoints).l
 		move.b	#8,ob2ndRout(a0)
-		move.w	#$B3,objoff_3C(a0)
+		move.w	#$B3,objoff_40(a0)
 		rts
 ; ===========================================================================
 
@@ -130,32 +130,32 @@ BGHZ_MakeBall:
 		move.w	#-$100,obVelX(a0)
 		move.w	#-$40,obVelY(a0)
 		jsr	(ObjectMove_Reserved2).l
-		cmpi.w	#boss_ghz_x+$A0,objoff_30(a0)
+		cmpi.w	#boss_ghz_x+$A0,objoff_34(a0)
 		bne.w	loc_177E6
 		clr.w	obVelX(a0)
 		clr.w	obVelY(a0)
 		addq.b	#2,ob2ndRout(a0)
 		jsr	(FindNextFreeObj).l
 		bne.s	loc_17910
-		_move.b	#id_Obj48,obID(a1) ; load swinging ball object
-		move.w	objoff_30(a0),obX(a1)
-		move.w	objoff_38(a0),obY(a1)
-		move.l	a0,objoff_34(a1)
+		move.l	#Obj48,code(a1) ; load swinging ball object
+		move.w	objoff_34(a0),obX(a1)
+		move.w	objoff_3C(a0),obY(a1)
+		move.l	a0,objoff_38(a1)
 
 loc_17910:
-		move.w	#$77,objoff_3C(a0)
+		move.w	#$77,objoff_40(a0)
 		bra.w	loc_177E6
 ; ===========================================================================
 
 BGHZ_ShipMove:
-		subq.w	#1,objoff_3C(a0)
+		subq.w	#1,objoff_40(a0)
 		bpl.s	BGHZ_Reverse
 		addq.b	#2,ob2ndRout(a0)
-		move.w	#$40-1,objoff_3C(a0)
+		move.w	#$40-1,objoff_40(a0)
 		move.w	#$100,obVelX(a0) ; move the ship sideways
-		cmpi.w	#boss_ghz_x+$A0,objoff_30(a0)
+		cmpi.w	#boss_ghz_x+$A0,objoff_34(a0)
 		bne.s	BGHZ_Reverse
-		move.w	#($40*2)-1,objoff_3C(a0)
+		move.w	#($40*2)-1,objoff_40(a0)
 		move.w	#$40,obVelX(a0)
 
 BGHZ_Reverse:
@@ -166,7 +166,7 @@ BGHZ_Reverse:
 ; ===========================================================================
 
 loc_17954:
-		subq.w	#1,objoff_3C(a0)
+		subq.w	#1,objoff_40(a0)
 		bmi.s	loc_17960
 		jsr	(ObjectMove_Reserved2).l
 		bra.w	loc_177E6
@@ -174,14 +174,14 @@ loc_17954:
 
 loc_17960:
 		bchg	#0,obStatus(a0)
-		move.w	#$40-1,objoff_3C(a0)
+		move.w	#$40-1,objoff_40(a0)
 		subq.b	#2,ob2ndRout(a0)
 		clr.w	obVelX(a0)
 		bra.w	loc_177E6
 ; ===========================================================================
 
 loc_1797A:
-		subq.w	#1,objoff_3C(a0)
+		subq.w	#1,objoff_40(a0)
 		bmi.s	loc_17984
 		bra.w	BossDefeated
 ; ===========================================================================
@@ -191,7 +191,7 @@ loc_17984:
 		bclr	#7,obStatus(a0)
 		clr.w	obVelX(a0)
 		addq.b	#2,ob2ndRout(a0)
-		move.w	#-$26,objoff_3C(a0)
+		move.w	#-$26,objoff_40(a0)
 		tst.b	(Boss_defeated_flag).w
 		bne.s	locret_179AA
 		move.b	#1,(Boss_defeated_flag).w
@@ -201,7 +201,7 @@ locret_179AA:
 ; ===========================================================================
 
 loc_179AC:
-		addq.w	#1,objoff_3C(a0)
+		addq.w	#1,objoff_40(a0)
 		beq.s	loc_179BC
 		bpl.s	loc_179C2
 		addi.w	#$18,obVelY(a0)
@@ -216,10 +216,10 @@ loc_179BC:
 ; ===========================================================================
 
 loc_179C2:
-		cmpi.w	#$30,objoff_3C(a0)
+		cmpi.w	#$30,objoff_40(a0)
 		blo.s	loc_179DA
 		beq.s	loc_179E0
-		cmpi.w	#$38,objoff_3C(a0)
+		cmpi.w	#$38,objoff_40(a0)
 		blo.s	loc_179EE
 		addq.b	#2,ob2ndRout(a0)
 		jsr	(ObjectMove_Reserved2).l
@@ -267,11 +267,11 @@ BGHZ_ShipDel:
 BGHZ_FaceMain:	; Routine 4
 		moveq	#0,d0
 		moveq	#1,d1
-		movea.l	objoff_34(a0),a1
+		movea.l	objoff_38(a0),a1
 		move.b	ob2ndRout(a1),d0
 		subq.b	#4,d0
 		bne.s	loc_17A3E
-		cmpi.w	#boss_ghz_x+$A0,objoff_30(a1)
+		cmpi.w	#boss_ghz_x+$A0,objoff_34(a1)
 		bne.s	loc_17A46
 		moveq	#4,d1
 
@@ -322,7 +322,7 @@ BGHZ_Del:
 
 BGHZ_FlameMain:	; Routine 6
 		move.b	#7,obAnim(a0)
-		movea.l	objoff_34(a0),a1
+		movea.l	objoff_38(a0),a1
 		cmpi.b	#$C,ob2ndRout(a1)
 		bne.s	loc_17A96
 		move.b	#$B,obAnim(a0)
@@ -339,7 +339,7 @@ loc_17A96:
 ; ===========================================================================
 
 BGHZ_Display:
-		movea.l	objoff_34(a0),a1
+		movea.l	objoff_38(a0),a1
 		move.w	obX(a1),obX(a0)
 		move.w	obY(a1),obY(a0)
 		move.b	obStatus(a1),obStatus(a0)

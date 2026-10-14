@@ -50,10 +50,10 @@ GRing_Collect:
 		move.b	#0,obColType(a0)
 		bsr.w	FindFreeObj
 		bne.w	loc_AB2C
-		_move.b	#id_Obj7C,obID(a1)
+		move.l	#GiantRingFlash,code(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
-		move.l	a0,objoff_3C(a1)
+		move.l	a0,objoff_40(a1)
 		move.w	(v_player+obX).w,d0
 		cmp.w	obX(a0),d0
 		bcs.s	loc_AB2C

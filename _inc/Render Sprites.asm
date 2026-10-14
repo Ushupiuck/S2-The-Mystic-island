@@ -140,11 +140,10 @@ Render_Sprites_Deleted:
 		bra.w	Render_Sprites_NextObj
 Render_Sprites_NextEntry:
 		movea.w	(a4)+,a0
-		; This ID-based engine can delete a queued child later in the update.
-		; Read ID and flags together, retaining that guard without a second read.
-		move.w	(a0),d6
-		cmpi.w	#$100,d6
-		blo.s	Render_Sprites_Deleted
+		; A queued object can be deleted later in the update.
+		tst.l	code(a0)
+		beq.s	Render_Sprites_Deleted
+		move.b	obRender(a0),d6
 		andi.w	#$7F,d6
 		move.b	d6,obRender(a0)
 		move.w	obX(a0),d0
@@ -180,7 +179,7 @@ Render_Sprites_World:
 Render_Sprites_CheckBG:
 		btst	#obRender.level_bg,d6	; retain legacy background-relative objects
 		bne.s	Render_Sprites_World
-		move.w	obScreenY(a0),d1	; S2 screen-space Y is at $A, not world Y at $C
+		move.w	obScreenY(a0),d1	; screen-space Y is at $12; world Y is at $14
 Render_Sprites_Visible:
 		ori.b	#$80,obRender(a0)
 		tst.w	d7
@@ -216,8 +215,8 @@ Render_Sprites_AdvanceLevel:
 		rts
 
 ; ---------------------------------------------------------------------------
-; Generic composite. Its compact S2 header remains compatible with children
-; packed in $10-$3F. Height now uses the universal byte at $49, not child data.
+; Generic composite. Children occupy $18-$47; display fields use the shared
+; header, with the child count in the unused Y fractional byte.
 ; a2 remains the queue end; a4 temporarily holds the shared mapping base.
 ; d3 holds child count in its low word and saved render flags in its high word.
 ; ---------------------------------------------------------------------------

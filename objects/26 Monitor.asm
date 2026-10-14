@@ -69,7 +69,7 @@ Monitor_Solid:
 		bra.s	Mon_Animate
 
 Monitor_SolidCharacter:
-		tst.b	obID(a1)
+		tst.l	code(a1)
 		beq.s	.return
 		btst	d6,obStatus(a0)
 		bne.s	.standing
@@ -111,7 +111,7 @@ loc_AFDC:
 		clr.b	obColType(a0)
 		bsr.w	FindFreeObj
 		bne.s	loc_B004
-		_move.b	#id_Obj29,obID(a1)
+		move.l	#Obj29,code(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.b	obAnim(a0),obAnim(a1)
@@ -121,7 +121,7 @@ loc_AFDC:
 loc_B004:
 		bsr.w	FindFreeObj
 		bne.s	loc_B020
-		_move.b	#id_ObjFC,obID(a1)
+		move.l	#Explosion,code(a1)
 		addq.b	#2,obRoutine(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)

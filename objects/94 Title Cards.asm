@@ -13,8 +13,8 @@ Obj94_Index:	dc.w Card_CheckSBZ3-Obj94_Index
 		dc.w Card_Wait-Obj94_Index
 		dc.w Card_Wait-Obj94_Index
 
-card_mainX = objoff_30		; position for card to display on
-card_finalX = objoff_32		; position for card to finish on
+card_mainX = objoff_34		; position for card to display on
+card_finalX = objoff_36		; position for card to finish on
 ; ---------------------------------------------------------------------------
 
 Card_CheckSBZ3:	; Routine 0
@@ -40,7 +40,7 @@ Card_LoadConfig:
 		moveq	#3,d1
 
 Card_Loop:
-		_move.b	#id_Obj94,obID(a1)
+		move.l	#TitleCards,code(a1)
 		move.w	(a3),obX(a1)	; load start x-position
 		move.w	(a3)+,card_finalX(a1) ; load finish x-position (same as start)
 		move.w	(a3)+,card_mainX(a1) ; load main x-position

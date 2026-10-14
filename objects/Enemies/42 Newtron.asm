@@ -1,7 +1,7 @@
 ; ---------------------------------------------------------------------------
 ; Object 42 - GHZ Newtron badnik
 ; ---------------------------------------------------------------------------
-newtron_shoot	= objoff_2C	; flag set after shooting, so we don't shoot indefinitely
+newtron_shoot	= objoff_30	; flag set after shooting, so we don't shoot indefinitely
 Newtron:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
@@ -131,7 +131,7 @@ Newtron_FireMissile:
 		move.b	#1,newtron_shoot(a0)	; set fired flag
 		bsr.w	FindFreeObj
 		bne.s	.return
-		_move.b	#id_Obj23,obID(a1)
+		move.l	#Obj23,code(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		subq.w	#8,obY(a1)
@@ -167,7 +167,7 @@ Newtron_FireMissile2:
 		bsr.w	FindFreeObj
 		bne.s	.return
 		move.b	#2,ob2ndRout(a0)
-		_move.b	#id_Obj23,obID(a1)
+		move.l	#Obj23,code(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		subq.w	#8,obY(a1)

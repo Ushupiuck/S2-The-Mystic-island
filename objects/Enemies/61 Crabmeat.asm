@@ -15,8 +15,8 @@ Crab_Index:
 		dc.w Crab_BallMain-Crab_Index	; 6
 		dc.w Crab_BallMove-Crab_Index	; 8
 
-crab_timedelay	= objoff_30
-crab_mode	= objoff_32
+crab_timedelay	= objoff_34
+crab_mode	= objoff_36
 ; ===========================================================================
 
 Crab_Main:	; Routine 0
@@ -84,7 +84,7 @@ Crab_Action:	; Routine 2
 		move.b	#6,obAnim(a0)	; use firing animation
 		bsr.w	FindFreeObj
 		bne.s	.failleft
-		_move.b	#id_Obj61,obID(a1) ; load left fireball
+		move.l	#Crabmeat,code(a1) ; load left fireball
 		move.b	#6,obRoutine(a1)
 		move.w	obX(a0),obX(a1)
 		subi.w	#$10,obX(a1)
@@ -94,7 +94,7 @@ Crab_Action:	; Routine 2
 .failleft:
 		bsr.w	FindFreeObj
 		bne.s	.failright
-		_move.b	#id_Obj61,obID(a1) ; load right fireball
+		move.l	#Crabmeat,code(a1) ; load right fireball
 		move.b	#6,obRoutine(a1)
 		move.w	obX(a0),obX(a1)
 		addi.w	#$10,obX(a1)

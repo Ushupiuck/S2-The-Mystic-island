@@ -1,5 +1,5 @@
 ; ---------------------------------------------------------------------------
-; S3&K level object manager, adapted to Mystic Island's ID/routine SSTs.
+; S3&K level object manager, using longword routine pointers in the SSTs.
 ; Source: sonicretro/skdisasm, Load_Sprites (73de97c6).
 ; Also checked against ProjectFM's S1 port in RetroKoH/S1Fixed (d29550bd).
 ;
@@ -13,9 +13,9 @@
 ;
 ; Differences from stock: continue the slot search instead of restarting it,
 ; retry a full pool with a stationary camera, and scan the whole Y window on
-; a jump of more than one $80 band (Debug/arena settling). No SST-size growth.
+; a jump of more than one $80 band (Debug/arena settling).
 ;
-; Clobbers d0-d7/a0-a3/a6. d0 = remaining slot-search count; a1 = free SST.
+; Clobbers d0-d7/a0-a4/a6. d0 = remaining slot-search count; a1 = free SST.
 ; d3/d4 = Y bounds, d5 = Y mask, d6 = camera X, a3 = placement respawn byte.
 ; ---------------------------------------------------------------------------
 Load_Sprites:
@@ -267,7 +267,7 @@ ObjectsManager_CheckY:
 ; ---------------------------------------------------------------------------
 ObjectsManager_LoadWrapped:
 		tst.b	(a3)
-		bmi.s	ObjectsManager_Skip
+		bmi.w	ObjectsManager_Skip
 		move.w	omY(a0),d2
 		move.w	d2,d1
 		and.w	d5,d1
@@ -301,16 +301,21 @@ ObjectsManager_Load:
 		andi.b	#3,d2
 		move.b	d2,obRender(a1)
 		move.b	d2,obStatus(a1)
-		move.b	omID(a0),obID(a1)		; full-byte ID; dispatch remains through Obj_Index
+		moveq	#0,d1
+		move.b	omID(a0),d1			; compact placement ID stays a byte
+		add.w	d1,d1
+		add.w	d1,d1
+		lea	(Obj_Index-4).l,a4
+		move.l	(a4,d1.w),code(a1)		; resolve only at creation
 		move.b	omSubtype(a0),obSubtype(a1)
 		move.w	a3,respawn_addr(a1)
 		addq.w	#omSize,a0
-		; S3&K's CreateNewSprite4, using our ID byte and $4A SST stride.
+		; Continue S3&K's CreateNewSprite4 search using the SST stride.
 		subq.w	#1,d0
 		bmi.s	.return
 .next_slot:
 		lea	object_size(a1),a1
-		tst.b	obID(a1)
+		tst.l	code(a1)
 		dbeq	d0,.next_slot
 .return:
 		rts

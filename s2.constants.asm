@@ -17,6 +17,13 @@ omSubtype:	equ	5
 omSize:		equ	6
 omYMask:		equ	$FFF
 omLoadAtAnyY:	equ	$8000
+; Debug entries carry direct routine/mapping pointers; placement files do not.
+DebugEntry_code:         equ $00
+DebugEntry_mappings:     equ $04
+DebugEntry_subtype:      equ $08
+DebugEntry_frame:        equ $09
+DebugEntry_art_tile:     equ $0A
+DebugEntry_size:         equ $0C
 Object_Load_BandSize:	equ $80
 Object_Load_CoarseMask:	equ -Object_Load_BandSize
 Object_Load_XBehind:	equ Object_Load_BandSize
@@ -27,80 +34,88 @@ Level_YWrapMask:		equ $7FF	; the existing camera wraps at $800 pixels
 ; ---------------------------------------------------------------------------
 ; Object Status Table offsets (for everything between Object_RAM and Primary_Collision)
 ; ---------------------------------------------------------------------------
-; universally followed object conventions:
-obID:			equ 0		; object ID number
-obRender:		equ 1		; bitfield for x/y flip, display mode
-obGfx:			equ 2		; palette line & VRAM setting (2 bytes)
-obMap:			equ 4		; mappings address (4 bytes)
-obX:			equ 8		; x-axis position (2-4 bytes)
-obXSub:			equ $A		; for when exra presition is required (2 bytes)
-obY:			equ $C		; y-axis position (2-4 bytes)
-obYSub:			equ $E		; for when exra presition is required (2 bytes)
-obActWid:		equ $14		; action width; width_pixels
-height_pixels:		equ $49		; universal display half-height; initialized by each object
-width_pixels =		obActWid
-obPriority:		equ $18		; and $19 - sprite stack priority -- 0 is front
-obFrame:		equ $1A		; current frame displayed
+; Shared display/dispatch header, $00-$17. All normal object fields use
+; these offsets; an object may overlay a field it does not use.
+code:                   equ $00     ; long; routine address; zero = empty slot
+obID =                  code        ; legacy spelling; longword, not a layout ID
+obRender:               equ $04     ; byte; rendering flags
+obFrame:                equ $05     ; byte; displayed mapping frame
+height_pixels:          equ $06     ; byte; display half-height
+obActWid:               equ $07     ; byte; display half-width
+width_pixels =          obActWid
+obPriority:             equ $08     ; word; sprite queue offset, in units of $80
+obGfx:                  equ $0A     ; word; base tile and VDP attributes
+obMap:                  equ $0C     ; long; mappings address
+obX:                    equ $10     ; word, or long including fractional position
+obXSub:                 equ $12     ; word; X fractional position
+obY:                    equ $14     ; word, or long including fractional position
+obYSub:                 equ $16     ; word; Y fractional position
+; S3&K spellings for imported objects.
+render_flags =          obRender
+mapping_frame =         obFrame
+priority =              obPriority
+art_tile =              obGfx
+mappings =              obMap
+x_pos =                 obX
+y_pos =                 obY
+x_sub =                 obXSub
+y_sub =                 obYSub
 ; ---------------------------------------------------------------------------
-; conventions followed by most objects:
-obVelX:			equ $10		; x-axis velocity (2 bytes)
-obVelY:			equ $12		; y-axis velocity (2 bytes)
-obTimeFrame:		equ $15		; time to next frame
-obHeight:		equ $16		; height/2; y_radius
-obWidth:		equ $17		; width/2 ; x_radius
-obAniFrame:		equ $1B		; current frame in animation script
-obAnim:			equ $1C		; current animation
-obPrevAni:		equ $1D		; previous animation
-; obDelayAni:				; time to delay animation -- Now local; Value depends on the object
-obStatus:		equ $22		; note: exact meaning depends on the object... for sonic/tails: bit 0: leftfacing. bit 1: inair. bit 2: spinning. bit 3: onobject. bit 4: rolljumping. bit 5: pushing. bit 6: underwater.
-obRoutine:		equ $24		; routine number
-ob2ndRout:		equ $25		; secondary routine number
-obAngle:		equ $26		; angle about the z axis (360 degrees = 256)
+; Conventions followed by most objects, $18-$2D.
+obVelX:                 equ $18     ; word; X velocity
+obVelY:                 equ $1A     ; word; Y velocity
+obHeight:               equ $1C     ; byte; collision Y radius
+obWidth:                equ $1D     ; byte; collision X radius
+obTimeFrame:            equ $1E     ; byte; animation frame timer
+obAniFrame:             equ $1F     ; byte; position in animation script
+obAnim:                 equ $20     ; byte; current animation
+obPrevAni:              equ $21     ; byte; previous animation
+respawn_addr:           equ $22     ; word; placement respawn-byte pointer; zero for dynamic/Debug objects
+obRoutine:              equ $24     ; byte; main routine
+ob2ndRout:              equ $25     ; byte; secondary routine
+obAngle:                equ $26     ; byte; angle about the Z axis
+obColType:              equ $28     ; byte; NPC collision response type
+obColProp:              equ $29     ; byte; NPC collision property
+obStatus:               equ $2A     ; byte; meaning depends on object type
+obSubtype:              equ $2C     ; byte; primary subtype
+ob2ndSubtype:           equ $2D     ; byte; optional secondary subtype, currently unused
+; Animation delay counters remain local to the objects that need them.
 ; ---------------------------------------------------------------------------
-; conventions followed by many objects but NOT Sonic/Tails:
-obColType:		equ $20		; collision response type
-obColProp:		equ $21		; collision extra property
-respawn_addr:		equ $1E		; word; signed RAM pointer to this placement's respawn byte; 0 for dynamic/debug objects
-obSubtype:		equ $28		; Primary object subtype
-ob2ndSubtype:		equ $29		; Secondary object subtype (unused for now)
-; ---------------------------------------------------------------------------
-; conventions specific to Sonic/Tails (Obj01, Obj02, and ObjDB):
-obInertia:		equ $20		; also known as ground_vel; and $21 directionless representation of speed... not updated in the air
-scroll_delay_counter:	equ $23		; byte; frames spent looking up/down, capped at Camera_LookDelay
-;obSolid: 		equ $25		; (DEPRECATED, Sonic 1 leftover for reference only) solid status flag
-flip_angle:		equ $27		; angle about the x axis (360 degrees = 256) (twist/tumble)
-; air_left:		equ $28
-flip_turned:		equ $29		; 0 for normal, 1 to invert flipping (it's a 180 degree rotation about the axis of Sonic's spine, so he stays in the same position but looks turned around)
-obControl:		equ $2A		; 0 for normal, 1 for hanging or for resting on a flipper, $81 for going through CNZ/OOZ/MTZ tubes or stopped in CNZ cages or stoppers or flying if Tails
-obStatusSecondary:	equ $2B
-flips_remaining:	equ $2C		; number of flip revolutions remaining
-flip_speed:		equ $2D		; number of flip revolutions per frame / 256
-move_lock:		equ $2E		; and $2F ; horizontal control lock, counts down to 0
-flashtime:		equ $30		; time between flashes after getting hit
-invtime:		equ $32		; time left for invincibility
-shoetime:		equ $34		; time left for speed shoes
-next_tilt:		equ $36		; angle on ground in front of sprite
-tilt: 			equ $37		; angle on ground
-stick_to_convex:	equ $38
-spindash_flag:		equ $39		; 0 for normal, 1 for charging a spindash or forced rolling
-pinball_mode =		spindash_flag
-spindash_counter:	equ $3A ; and $3B
-restart_countdown =	spindash_counter; and 1+spindash_counter
-jumping:		equ $3C
-standonobject:		equ $3D		; interact; ; RAM address of the last object Sonic stood on, minus v_objspace and divided by object_size
-obTopSolidBit:		equ $3E		; bit to check for top solidity (either $C or $E)
-obLRBSolidBit:		equ $3F		; bit to check for left/right/bottom solidity (either $D or $F)
-player_dust_ptr:	equ $42		; word; validated pointer to the separate dust controller
-default_y_radius:	equ $44		; byte; Sonic's standing collision radius (S3&K)
-default_x_radius:	equ $45		; byte; Sonic's standing collision radius (S3&K)
-; S3&K ability fields in bytes already free in the player SST.
-character_id:		equ $46		; 0 Sonic, 1 Tails
-CharacterID_Tails:	equ 1
-tails_hidden:		equ $40		; tail follows the body's damage-flash decision
-tails_flight_flag:	equ $47		; 0 inactive, 1 falling, 2..31 flapping
-tails_flight_energy:	equ $48		; half-frame flight budget
-air_left:		equ $28		; Tails' independent air supply
-; $41 remains available to S3&K's CPU respawn code; $42-$43 is the dust pointer.
+; Player meanings. These bytes are private scratch in other object types.
+obInertia:              equ $28     ; word; ground speed; overlays NPC collision type/property
+scroll_delay_counter:   equ $2B     ; byte; camera look delay
+flip_angle:             equ $27     ; byte; twist/tumble angle
+air_left:               equ $2C     ; byte; companion Tails' independent air supply
+flip_turned:            equ $2D     ; byte; tumble orientation
+obControl:              equ $2E     ; byte; control override flags
+obStatusSecondary:      equ $2F     ; byte; shield, invincibility, shoes and sliding
+flips_remaining:        equ $30     ; byte
+flip_speed:             equ $31     ; byte
+move_lock:              equ $32     ; word; horizontal control lock timer
+flashtime:              equ $34     ; word; post-hit invulnerability/blinking timer
+invtime:                equ $36     ; word; invincibility duration
+shoetime:               equ $38     ; word; speed shoes duration
+next_tilt:              equ $3A     ; byte; forward ground sensor angle
+tilt:                   equ $3B     ; byte; ground sensor angle
+stick_to_convex:        equ $3C     ; byte
+spindash_flag:          equ $3D     ; byte; charging/forced rolling state
+pinball_mode =          spindash_flag
+spindash_counter:       equ $3E     ; word; 8.8 spindash charge
+restart_countdown =     spindash_counter
+jumping:                equ $40     ; byte
+standonobject:          equ $41     ; byte; object-slot index
+obTopSolidBit:          equ $42     ; byte; top solidity bit
+obLRBSolidBit:          equ $43     ; byte; side/bottom solidity bit
+tails_hidden:           equ $44     ; byte; body's damage-blink decision
+; $45 is available to the CPU respawn code.
+player_dust_ptr:        equ $46     ; word; validated dust-controller pointer
+default_y_radius:       equ $48     ; byte; standing collision Y radius
+default_x_radius:       equ $49     ; byte; standing collision X radius
+character_id:           equ $4A     ; byte; Sonic = 0, Tails = 1
+CharacterID_Tails:      equ 1
+tails_flight_flag:      equ $4B     ; byte; falling/flapping state
+tails_flight_energy:    equ $4C     ; byte; half-frame flight budget
+; $4D-$4F remain private scratch; display height is in the shared header.
 tails_width:		equ 9
 tails_roll_height:	equ 14
 tails_roll_width:	equ 7
@@ -124,123 +139,128 @@ v_jpadholdlogical2:	equ word_F700
 v_jpadpresslogical2:	equ v_jpadholdlogical2+1
 Tails_CPU_idle_timer:	equ Tails_control_counter
 Tails_CPU_flight_timer:	equ Tails_respawn_counter
-Tails_CPU_interact:	equ word_F706
-Tails_CPU_target_X:	equ v_player2tails+objoff_40
-Tails_CPU_target_Y:	equ v_player2tails+objoff_42
-Tails_CPU_auto_jump_flag:	equ v_player2tails+objoff_35
-Flying_carrying_Sonic_flag: equ v_player2tails+objoff_38
-Tails_Carry_SavedXSpeed:	equ v_player2tails+objoff_3A
-Tails_Carry_SavedYSpeed:	equ v_player2tails+objoff_3C
+Tails_CPU_interact:	equ v_player2tails+objoff_2E	; long; remembered standing-object code
+Tails_CPU_target_X:	equ v_player2tails+objoff_44
+Tails_CPU_target_Y:	equ v_player2tails+objoff_46
+Tails_CPU_auto_jump_flag:	equ v_player2tails+objoff_39
+Flying_carrying_Sonic_flag: equ v_player2tails+objoff_3C
+Tails_Carry_RegrabDelay:	equ v_player2tails+objoff_3D
+Tails_Carry_SavedXSpeed:	equ v_player2tails+objoff_3E
+Tails_Carry_SavedYSpeed:	equ v_player2tails+objoff_40
 ; ---------------------------------------------------------------------------
-; Miscellaneous object scratch-RAM
-objoff_25:		equ $25
-objoff_26:		equ $26
-objoff_27:		equ $27
-objoff_28:		equ $28
-; objoff_29:		equ $29
-objoff_2A:		equ $2A
-objoff_2B:		equ $2B
-objoff_2C:		equ $2C
-objoff_2D:		equ $2D
-objoff_2E:		equ $2E
-objoff_2F:		equ $2F
-objoff_30:		equ $30
-objoff_31:		equ $31
-objoff_32:		equ $32
-objoff_33:		equ $33
-objoff_34:		equ $34
-objoff_35:		equ $35
-objoff_36:		equ $36
-objoff_37:		equ $37
-objoff_38:		equ $38
-objoff_39:		equ $39
-objoff_3A:		equ $3A
-objoff_3B:		equ $3B
-objoff_3C:		equ $3C
-objoff_3D:		equ $3D
-objoff_3E:		equ $3E
-objoff_3F:		equ $3F
-; Extra scratch bytes available in the expanded SST
-objoff_40:		equ $40
-objoff_41:		equ $41
-objoff_42:		equ $42
-objoff_43:		equ $43
-objoff_44:		equ $44
-objoff_45:		equ $45
-objoff_46:		equ $46
-objoff_47:		equ $47
-; Final word available in the $4A-byte SST
-objoff_48:		equ $48
-objoff_49:		equ $49
-; One past the end of the current SST
-objoff_4A:		equ $4A
+; Raw scratch aliases name their actual offsets. Their availability depends
+; on the services used by an object; they do not reserve extra RAM.
+objoff_25:             equ $25
+objoff_26:             equ $26
+objoff_27:             equ $27
+objoff_28:             equ $28
+objoff_29:             equ $29
+objoff_2A:             equ $2A
+objoff_2B:             equ $2B
+objoff_2C:             equ $2C
+objoff_2D:             equ $2D
+objoff_2E:             equ $2E
+objoff_2F:             equ $2F
+objoff_30:             equ $30
+objoff_31:             equ $31
+objoff_32:             equ $32
+objoff_33:             equ $33
+objoff_34:             equ $34
+objoff_35:             equ $35
+objoff_36:             equ $36
+objoff_37:             equ $37
+objoff_38:             equ $38
+objoff_39:             equ $39
+objoff_3A:             equ $3A
+objoff_3B:             equ $3B
+objoff_3C:             equ $3C
+objoff_3D:             equ $3D
+objoff_3E:             equ $3E
+objoff_3F:             equ $3F
+objoff_40:             equ $40
+objoff_41:             equ $41
+objoff_42:             equ $42
+objoff_43:             equ $43
+objoff_44:             equ $44
+objoff_45:             equ $45
+objoff_46:             equ $46
+objoff_47:             equ $47
+objoff_48:             equ $48
+objoff_49:             equ $49
+objoff_4A:             equ $4A
+objoff_4B:             equ $4B
+objoff_4C:             equ $4C
+objoff_4D:             equ $4D
+objoff_4E:             equ $4E
+objoff_4F:             equ $4F
+objoff_50:             equ $50     ; one past the end of the SST
 ; ---------------------------------------------------------------------------
-; conventions followed by several objects but NOT Sonic/Tails:
-obScreenX =		obX ; and 1+obX ; x coordinate for objects using screen-space coordinate system (S2 x_pixel)
-obScreenY =		obXSub ; and 3+obX ; y coordinate for objects using screen-space coordinate system (S2 y_pixel)
-obParent =		objoff_3E ; and $3F ; address of object that owns or spawned this one, if applicable
-; Extra parent/child fields available in the expanded SST
-obParent2 =		objoff_40 ; and $41 ; several objects use this instead
-obParent3 =		objoff_42 ; and $43 ; parent of child objects
-child_dx =		objoff_42 ; byte ; X offset of child relative to parent
-child_dy =		objoff_43 ; byte ; Y offset of child relative to parent
-object_size_bits:	equ 6		; $40-byte allocator lookup buckets; not the SST stride
-object_size:		equ $4A		; SST stride; height_pixels occupies its final byte at $49
-reserved_object_slots:	equ 23		; primary stars reserved; partner stars/dust use dynamic slots
-dynamic_object_slots:	equ 90		; slots available to the level allocator
-object_slot_count:	equ reserved_object_slots+dynamic_object_slots	; 113 slots in total
-object_ram_size:	equ $2200	; original $2000 pool plus its $200 growth area
-next_object =		object_size
-	if (object_size<(1<<object_size_bits))||((object_size&1)<>0)
-		fatal "SSTs must be even-sized and at least as large as an allocator lookup bucket."
-	endif
-	if (dynamic_object_slots<1)||(object_slot_count>$80)
-		fatal "The object pool needs dynamic slots and must fit its byte references and MOVEQ counter."
-	endif
-	if (dynamic_object_slots*object_size)/(1<<object_size_bits)>$FF
-		fatal "The allocator lookup index must fit the low byte of its loop-counter register."
-	endif
+; Screen-space and parent/child overlays.
+obScreenX =             obX
+obScreenY =             obXSub     ; retained S2 screen Y convention
+obParent =              objoff_42  ; word
+obParent2 =             objoff_44  ; word
+obParent3 =             objoff_46  ; word
+child_dx =              objoff_46  ; byte; alternative to obParent3
+child_dy =              objoff_47  ; byte
+object_size_bits:       equ 6      ; allocator lookup buckets, not SST stride
+object_size:            equ $50    ; 80 bytes; four-byte aligned clearing
+reserved_object_slots: equ 23
+dynamic_object_slots:  equ 90
+object_slot_count:      equ reserved_object_slots+dynamic_object_slots
+object_ram_size:        equ object_size*object_slot_count ; $2350; keep all 113 slots
+next_object =           object_size
+    if (object_size<(1<<object_size_bits))||((object_size&1)<>0)
+        fatal "SSTs must be even-sized and at least as large as an allocator lookup bucket."
+    endif
+    if (dynamic_object_slots<1)||(object_slot_count>$80)
+        fatal "The object pool must fit its byte references and MOVEQ counter."
+    endif
+    if (dynamic_object_slots*object_size)/(1<<object_size_bits)>$FF
+        fatal "The allocator lookup index must fit its loop-counter register."
+    endif
 ; ---------------------------------------------------------------------------
-; conventions followed by some/most bosses:
-boss_subtype		= obXSub
-boss_invulnerable_time	= obInertia
-boss_sine_count		= obFrame
-boss_routine		= obAngle
-boss_defeated		= objoff_2C
-boss_hitcount2		= objoff_32
-boss_hurt_sonic		= objoff_38	; flag set by collision response routine when Sonic has just been hurt (by boss?)
+; Optional boss aliases.
+boss_subtype =              obXSub
+boss_invulnerable_time =    obInertia
+boss_sine_count =           obFrame
+boss_routine =              obAngle
+boss_defeated =             objoff_30
+boss_hitcount2 =            objoff_36
+boss_hurt_sonic =           objoff_3C
 ; ---------------------------------------------------------------------------
-; when childsprites are activated (i.e. bit #6 of render_flags set)
-next_subspr		= 6
-mainspr_mapframe	= $B
-mainspr_width		= $E
-mainspr_childsprites	= $F	; amount of child sprites
-mainspr_height		= height_pixels
-subspr_data		= $10
-sub2_x_pos	= subspr_data+next_subspr*0+0	; $10, obVelX
-sub2_y_pos	= subspr_data+next_subspr*0+2	; $12, obVelY
-sub2_mapframe	= subspr_data+next_subspr*0+5	; $15, obTimeFrame
-sub3_x_pos	= subspr_data+next_subspr*1+0	;y_radius
-sub3_y_pos	= subspr_data+next_subspr*1+2	;priority
-sub3_mapframe	= subspr_data+next_subspr*1+5	;anim_frame
-sub4_x_pos	= subspr_data+next_subspr*2+0	;anim
-sub4_y_pos	= subspr_data+next_subspr*2+2	;anim_frame_duration
-sub4_mapframe	= subspr_data+next_subspr*2+5	;collision_property
-sub5_x_pos	= subspr_data+next_subspr*3+0	;status
-sub5_y_pos	= subspr_data+next_subspr*3+2	;routine
-sub5_mapframe	= subspr_data+next_subspr*3+5
-sub6_x_pos	= subspr_data+next_subspr*4+0	;subtype
-sub6_y_pos	= subspr_data+next_subspr*4+2
-sub6_mapframe	= subspr_data+next_subspr*4+5
-sub7_x_pos	= subspr_data+next_subspr*5+0
-sub7_y_pos	= subspr_data+next_subspr*5+2
-sub7_mapframe	= subspr_data+next_subspr*5+5
-sub8_x_pos	= subspr_data+next_subspr*6+0
-sub8_y_pos	= subspr_data+next_subspr*6+2
-sub8_mapframe	= subspr_data+next_subspr*6+5
-sub9_x_pos	= subspr_data+next_subspr*7+0
-sub9_y_pos	= subspr_data+next_subspr*7+2
-sub9_mapframe	= subspr_data+next_subspr*7+5
+; Composite overlay. Y's fractional byte holds the child count;
+; $18-$47 holds eight six-byte records.
+next_subspr =           6
+mainspr_mapframe =      obFrame
+mainspr_width =         width_pixels
+mainspr_childsprites =  obYSub
+mainspr_height =        height_pixels
+subspr_data =           $18
+sub2_x_pos =          $18
+sub2_y_pos =          $1A
+sub2_mapframe =       $1D
+sub3_x_pos =          $1E
+sub3_y_pos =          $20
+sub3_mapframe =       $23
+sub4_x_pos =          $24
+sub4_y_pos =          $26
+sub4_mapframe =       $29
+sub5_x_pos =          $2A
+sub5_y_pos =          $2C
+sub5_mapframe =       $2F
+sub6_x_pos =          $30
+sub6_y_pos =          $32
+sub6_mapframe =       $35
+sub7_x_pos =          $36
+sub7_y_pos =          $38
+sub7_mapframe =       $3B
+sub8_x_pos =          $3C
+sub8_y_pos =          $3E
+sub8_mapframe =       $41
+sub9_x_pos =          $42
+sub9_y_pos =          $44
+sub9_mapframe =       $47
 ; ---------------------------------------------------------------------------
 ; Animation flags
 afEnd:		equ $FF	; return to beginning of animation
@@ -944,7 +964,10 @@ Debug_saved_mappings:		ds.l	1
 Debug_saved_art_tile:		ds.w	1
 Debug_saved_width:		ds.b	1
 Debug_saved_height:		ds.b	1
-Free_LegacyObjectState:		ds.b	$2B2		; free; retired S1/S2 respawn storage
+	if object_ram_size-$2200>$2B2
+		fatal "Object RAM growth exceeds the retired state-buffer budget"
+	endif
+Free_LegacyObjectState:		ds.b	$2B2-(object_ram_size-$2200)	; retain later RAM addresses after SST growth
 Free_LegacyObjectState_end:
 Object_Display_Lists:		ds.b	$400		; sprite display queue, in order of priority
 Object_Display_Lists_End:
@@ -1148,7 +1171,7 @@ v_levelvariables:					; variables that are reset between levels
 word_F700:		ds.w	1			; Tails' logical controller (held/pressed)
 Tails_control_counter:	ds.w	1
 Tails_respawn_counter:	ds.w	1
-word_F706:		ds.w	1
+word_F706:		ds.w	1		; free; CPU object code lives in the tail SST
 Tails_CPU_routine:	ds.w	1
 
 Rings_manager_routine:	ds.b	1
@@ -1684,12 +1707,11 @@ ArtTile_SYZ_Spikeball_Chain:	equ $3BA
 ; Labyrinth Zone
 ArtTile_LZ_Block_1:		equ $1E0
 ArtTile_LZ_Block_2:		equ $1F0
-ArtTile_LZ_Splash:		equ $259
 ArtTile_LZ_Gargoyle:		equ $2E9
 ArtTile_LZ_Water_Surface:	equ $300
 ArtTile_LZ_Spikeball_Chain:	equ $310
 ArtTile_LZ_Flapping_Door:	equ $328
-ArtTile_LZ_Bubbles:		equ $348
+ArtTile_Bubbles:		equ $45C	; S3&K resident bubbles, 56 tiles at $8B80
 ArtTile_LZ_Moving_Block:	equ $3BC
 ArtTile_LZ_Door:		equ $3C4
 ArtTile_LZ_Harpoon:		equ $3CC
@@ -1697,7 +1719,6 @@ ArtTile_LZ_Pole:		equ $3DE
 ArtTile_LZ_Push_Block:		equ $3DE
 ArtTile_LZ_Blocks:		equ $3E6
 ArtTile_LZ_Conveyor_Belt:	equ $3F6
-ArtTile_LZ_Sonic_Drowning:	equ $440
 ArtTile_LZ_Rising_Platform:	equ ArtTile_LZ_Blocks+$69
 ArtTile_LZ_Orbinaut:		equ $467
 ArtTile_LZ_Cork:		equ ArtTile_LZ_Blocks+$11A
@@ -1907,7 +1928,7 @@ ArtTile_CPZ_Platform:		equ $400
 
 ; HPZ
 ArtTile_Splats:			equ ArtTile_Water_Surface+$18 ; 29 tiles, after 24 water tiles
-ArtTile_BBat:			equ ArtTile_Splats+$1D ; 58 tiles, below common level sprites
+ArtTile_BBat:			equ ArtTile_Bubbles+$38 ; 58 tiles after bubbles, below common level sprites
 
 ; HTZ
 ArtTile_Rexon:			equ $37E

@@ -23,7 +23,7 @@ def main():
         executed.update(i for i in range(1,256) if g.read(g.s['ObjectTest_Executed']+i))
     if args.case=='warp':
         boot_level(g,player=args.player)
-        g.put('v_player2','obID',0);position(g,192)
+        g.put('v_player2','layout_id',0);position(g,192)
         # The original compressed warp art exists, but its ordinary PLC ID now
         # selects stage art. Queue its real art explicitly in the test course.
         queue=g.s['v_plc_buffer']
@@ -33,13 +33,13 @@ def main():
         for _ in range(90):
             step()
             if not g.read('v_plc_buffer',4):break
-        a=next(a for a in range(g.s['v_lvlobjspace']&65535,g.s['v_lvlobjend']&65535,g.s['object_size']) if not g.get(a,'obID'))
-        g.put(a,'obID',0x7A)
+        a=next(a for a in range(g.s['v_lvlobjspace']&65535,g.s['v_lvlobjend']&65535,g.s['object_size']) if not g.get(a,'layout_id'))
+        g.put(a,'layout_id',0x7A)
         vanished=False;returned=False;after_id=None
         for _ in range(250):
-            step();vanished|=not g.get('v_player','obID')
-            if vanished and g.get('v_player','obID'):
-                returned=True;after_id=g.get('v_player','obID');break
+            step();vanished|=not g.get('v_player','layout_id')
+            if vanished and g.get('v_player','layout_id'):
+                returned=True;after_id=g.get('v_player','layout_id');break
         assert vanished and returned,(vanished,returned)
         report.update(vanished=vanished,returned=returned,restored_id=after_id)
         expected=2 if args.player==2 else 1
@@ -59,7 +59,7 @@ def main():
             if g.read('v_vbla_routine',2)==g.s['Vint_S1SS']:break
         else:raise AssertionError('stage')
         g.buttons=set();step(180)
-        assert g.get('v_player','obID')==4
+        assert g.get('v_player','layout_id')==4
         g.video.save(args.output/'stage.png')
         # Existing emeralds exercise all six results objects. This does not
         # inject the stage's exit routine: Start+A takes its real Debug path.

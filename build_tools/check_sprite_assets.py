@@ -13,15 +13,16 @@ ROOT = Path(__file__).resolve().parents[1]
 TAILS_PALETTE_REMAP = (0, 6, 5, 3, 2, 4, 12, 13, 14, 15, 10, 11, 7, 8, 9, 1)
 
 
-def frames(data, base=0):
-    boundary, offset = len(data) - base, 0
-    while offset < boundary:
-        target = struct.unpack_from('>h', data, base + offset)[0]
-        assert target > 0 and target % 2 == 0
-        boundary = min(boundary, target)
-        offset += 2
-        assert offset <= boundary and offset <= 512
-    count = offset // 2
+def frames(data, base=0, count=None):
+    if count is None:
+        boundary, offset = len(data) - base, 0
+        while offset < boundary:
+            target = struct.unpack_from('>h', data, base + offset)[0]
+            assert target > 0 and target % 2 == 0
+            boundary = min(boundary, target)
+            offset += 2
+            assert offset <= boundary and offset <= 512
+        count = offset // 2
     assert 0 < count <= 256
     result = []
     for frame in range(count):
@@ -49,12 +50,46 @@ def main():
     symbols = {name: int(value, 16) for name, value in re.findall(
         r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]',
         (ROOT / 'main.lst').read_text())}
-    assert symbols['height_pixels'] == 0x49 and symbols['object_size'] == 0x4A
+    assert symbols['code'] == 0 and symbols['height_pixels'] == 6
+    assert symbols['object_size'] == 0x50
     assert symbols['vram_hscroll'] == 0xF000
     assert symbols['ArtTile_Ring'] * 32 == 0xD720
     assert symbols['ArtTile_HUD'] == symbols['ArtTile_Sparkles'] + 4
     assert symbols['ArtTile_SS_Rings'] * 32 == 0x2940
     assert symbols['ArtTile_SS_Sparkles'] * 32 == 0x29C0
+
+    # The Sonic monitor icon reuses the lives art, outside the monitor bank.
+    monitor_frames = frames(rom, symbols['Map_Obj26'])
+    assert (monitor_frames[2][0][2] + symbols['ArtTile_Monitor']) & 0x7FF == symbols['ArtTile_Lives_Counter']
+
+    assert symbols['ArtTile_Bubbles'] * 32 == 0x8B80
+    assert struct.unpack_from('>H',rom,symbols['Nem_WaterBubbles'])[0] & 0x7FFF == 56
+    assert symbols['ArtTile_Sonic_Dust'] * 32 == 0xFC00
+    assert symbols['ArtTile_Tails_Dust'] * 32 == 0xFE00
+    # The two bubble tables share their frame data, but select separate banks
+    # for the six-tile numbers. Supply their assembled frame count explicitly.
+    for label,bank in [('Map_Bubbles','ArtTile_Sonic_Dust'),('Map_Bubbles2','ArtTile_Tails_Dust')]:
+        bubble_frames=frames(rom,symbols[label],symbols['Map_Bubbles_frames'])
+        assert len(bubble_frames)==23
+        for index,row in enumerate(bubble_frames):
+            for _,size,tile,_ in row:
+                tile=(tile+symbols['ArtTile_Bubbles'])&0x7FF
+                length=((size>>2)+1)*((size&3)+1)
+                if 9<=index<19:
+                    assert tile==symbols[bank] and length==6
+                else:
+                    assert symbols['ArtTile_Bubbles']<=tile and tile+length<=symbols['ArtTile_Bubbles']+56
+    for mapping,table,art,end,capacity in [('Map_Splash','DPLC_Splash','Art_WaterSplash','Art_WaterSplash_End',16)]:
+        for index,row in enumerate(frames(rom,symbols[mapping],symbols[mapping+'_frames'])):
+            pointer=symbols[table]+struct.unpack_from('>h',rom,symbols[table]+index*2)[0]
+            runs=struct.unpack_from('>H',rom,pointer)[0];loaded=0
+            for run in range(runs):
+                packed=struct.unpack_from('>H',rom,pointer+2+run*2)[0]
+                length=(packed>>12)+1;loaded+=length
+                assert ((packed&0xFFF)+length)*32<=symbols[end]-symbols[art]
+            assert loaded<=capacity
+            assert all((tile&0x7FF)+((size>>2)+1)*((size&3)+1)<=loaded for _,size,tile,_ in row)
+    assert symbols['Art_AirCountdown_End']-symbols['Art_AirCountdown']==10*6*32
 
     points_banks = [(symbols['ArtTile_Points'] * 32, (symbols['ArtTile_Points'] + 2) * 32),
                     (symbols['ArtTile_Points_2'] * 32, (symbols['ArtTile_Points_2'] + 2) * 32)]
@@ -195,12 +230,18 @@ def main():
             expected = bytes(TAILS_PALETTE_REMAP[b >> 4] << 4 |
                              TAILS_PALETTE_REMAP[b & 15] for b in pixels)
             assert expected == (ROOT / 'art/uncompressed' / remapped).read_bytes(), remapped
+        for original,remapped in [('Dash Dust/Dash Dust.unc','Water splash.unc'),('Bubbles/Air Countdown.unc','Drowning countdown.unc')]:
+            pixels=(args.skdisasm/'General/Sprites'/original).read_bytes()
+            if remapped=='Water splash.unc':pixels=pixels[:98*32]
+            expected=bytes(TAILS_PALETTE_REMAP[b>>4]<<4|TAILS_PALETTE_REMAP[b&15] for b in pixels)
+            assert expected==(ROOT/'art/uncompressed'/remapped).read_bytes(),remapped
 
     print(f'{len(binaries)} ordinary binary mappings, {imported_frames} Tails frames '
           f'and {len(carry_frames)} Sonic carry frames pass.')
     print(f'{len(shield_frames)} shield DPLC frames, the shared star bank and auxiliary shield bank pass, including level/boss PLC exclusions.')
     print(f'{len(points_frames) - 1} points values fit both two-tile banks; hidden-frame and HUD/plane/PLC boundaries pass.')
     print('Explosion/fiery and all six animal PLC pairs fit the reordered $B040-$BFFF group.')
+    print('Life-monitor icon, 56 resident bubble tiles and both streamed splash/countdown banks pass.')
     if args.skdisasm:
         print('All three Tails art files match the palette-remapped S&K source pixels.')
 

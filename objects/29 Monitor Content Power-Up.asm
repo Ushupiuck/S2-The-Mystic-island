@@ -157,7 +157,7 @@ Monitor_GiveShield:
 		bne.s	.slot_ready
 		lea	(v_shieldobj).w,a3
 .slot_ready:
-		_move.b	#id_Obj38,obID(a3)
+		move.l	#Obj38,code(a3)
 		clr.b	obRoutine(a3)
 		clr.b	obAnim(a3)
 		clr.b	obAniFrame(a3)
@@ -175,7 +175,7 @@ Monitor_GetPartner:
 		lea	(v_player2).w,a2
 .check:
 		moveq	#0,d0
-		tst.b	obID(a2)
+		tst.l	code(a2)
 		beq.s	.return
 		cmpi.b	#6,obRoutine(a2)
 		bhs.s	.return
@@ -207,7 +207,7 @@ Monitor_Invincibility:
 		jsr	(PlayMusic).l
 +
 		lea	(v_starsobj).w,a2
-		_move.b	#id_Obj35,obID(a2)
+		move.l	#Obj35,code(a2)
 		clr.b	invincibility_flags(a2)	; refresh primary and partner trails on a fresh pickup
 .return:
 		rts

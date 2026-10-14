@@ -1,8 +1,8 @@
 ; ---------------------------------------------------------------------------
 ; Object 3E - prison capsule
 ;----------------------------------------------------------------------------
-pri_origY		= objoff_30	; original y-axis position
-animal_release_signal	= objoff_32
+pri_origY		= objoff_34	; original y-axis position
+animal_release_signal	= objoff_36
 
 PrisonCapsule:
 		moveq	#0,d0
@@ -110,7 +110,7 @@ Pri_Explosion:	; Routine 6
 		bne.s	.makeanimal
 		jsr	(FindFreeObj).l
 		bne.s	.makeanimal
-		_move.b	#id_ObjFD,obID(a1)	; load fiery explosion
+		move.l	#FieryExplosion,code(a1)	; load fiery explosion
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		jsr	(RandomNumber).l
@@ -137,7 +137,7 @@ Pri_Explosion:	; Routine 6
 
 -		jsr	(FindFreeObj).l
 		bne.s	.fail
-		_move.b	#id_Obj0D,obID(a1)	; load animal object
+		move.l	#Flicky,code(a1)	; load animal object
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		add.w	d4,obX(a1)
@@ -154,7 +154,7 @@ Pri_Animals:	; Routine 8
 		bne.s	.noanimal
 		jsr	(FindFreeObj).l
 		bne.s	.noanimal
-		_move.b	#id_Obj0D,obID(a1)	; load animal object
+		move.l	#Flicky,code(a1)	; load animal object
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		jsr	(RandomNumber).l
@@ -177,10 +177,10 @@ Pri_Animals:	; Routine 8
 
 Pri_EndAct:	; Routine $A
 		moveq	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d0
-		moveq	#id_Obj0D,d1
+		move.l	#Flicky,d1
 		moveq	#object_size,d2
 		lea	(v_lvlobjspace).w,a1
--		cmp.b	obID(a1),d1		; is object $28 (animal) loaded?
+-		cmp.l	code(a1),d1		; is object $28 (animal) loaded?
 		beq.s	Pri_Animals.wait	; if yes, branch
 		adda.w	d2,a1			; next object RAM
 		dbf	d0,-			; repeat $3E times

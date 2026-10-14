@@ -3,11 +3,11 @@
 ; Object 4B - Buzzer from EHZ
 ; ---------------------------------------------------------------------------
 ; OST Variables:
-Obj4B_move_timer	= objoff_2C	; word
-Obj4B_turn_delay	= objoff_2E	; word
-Obj4B_shot_timer	= objoff_30	; word
-Obj4B_parent		= objoff_32	; long
-Obj4B_shooting_flag	= objoff_36	; byte
+Obj4B_move_timer	= objoff_30	; word
+Obj4B_turn_delay	= objoff_32	; word
+Obj4B_shot_timer	= objoff_34	; word
+Obj4B_parent		= objoff_36	; long
+Obj4B_shooting_flag	= objoff_3A	; byte
 ; ---------------------------------------------------------------------------
 
 Obj4B:
@@ -34,7 +34,7 @@ Obj4B_Projectile:
 ; loc_167BC:
 Obj4B_Flame:
 		movea.l	Obj4B_parent(a0),a1
-		cmpi.b	#id_Obj4B,(a1)
+		cmpi.l	#Obj4B,(a1)
 		bne.w	DeleteObject
 		tst.w	Obj4B_turn_delay(a1)
 		bmi.s	+
@@ -68,7 +68,7 @@ Obj4B_Init:
 		bsr.w	FindNextFreeObj
 		bne.s	.return
 
-		_move.b	#id_Obj4B,obID(a1)			; load obj4B
+		move.l	#Obj4B,code(a1)			; load obj4B
 		move.b	#4,obRoutine(a1)		; => Obj4B_Flame
 		move.l	#Map_Buzzer,obMap(a1)
 		move.b	#Map_Buzzer_height,height_pixels(a1)
@@ -189,7 +189,7 @@ Obj4B_ShootProjectile:
 		bsr.w	FindNextFreeObj
 		bne.s	.return
 
-		_move.b	#id_Obj4B,obID(a1)			; load obj4B
+		move.l	#Obj4B,code(a1)			; load obj4B
 		move.b	#6,obRoutine(a1)		; => Obj4B_Projectile
 		move.l	#Map_Buzzer,obMap(a1)
 		move.b	#Map_Buzzer_height,height_pixels(a1)

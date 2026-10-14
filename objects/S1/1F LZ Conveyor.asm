@@ -7,7 +7,7 @@ LabyrinthConvey:
 		move.b	obRoutine(a0),d0
 		move.w	LCon_Index(pc,d0.w),d1
 		jsr	LCon_Index(pc,d1.w)
-		out_of_range.s	loc_1236A,objoff_30(a0)
+		out_of_range.s	loc_1236A,objoff_34(a0)
 LCon_Display:	bra.w	DisplaySprite
 ; ===========================================================================
 
@@ -18,7 +18,7 @@ loc_1236A:
 		bhs.s	LCon_Display
 
 loc_12378:
-		move.b	objoff_2F(a0),d0
+		move.b	objoff_33(a0),d0
 		bpl.w	UnloadObject
 		andi.w	#$7F,d0
 		lea	(v_obj1F).w,a2
@@ -58,42 +58,42 @@ loc_123E2:
 		andi.w	#$1E,d0
 		lea	(LCon_Data).l,a2
 		adda.w	(a2,d0.w),a2
-		move.w	(a2)+,objoff_38(a0)
-		move.w	(a2)+,objoff_30(a0)
-		move.l	a2,objoff_3C(a0)
+		move.w	(a2)+,objoff_3C(a0)
+		move.w	(a2)+,objoff_34(a0)
+		move.l	a2,objoff_40(a0)
 		andi.w	#$F,d1
 		add.w	d1,d1
 		add.w	d1,d1
-		move.b	d1,objoff_38(a0)
-		move.b	#4,objoff_3A(a0)
+		move.b	d1,objoff_3C(a0)
+		move.b	#4,objoff_3E(a0)
 		tst.b	(f_conveyrev).w
 		beq.s	loc_1244C
-		move.b	#1,objoff_3B(a0)
-		neg.b	objoff_3A(a0)
+		move.b	#1,objoff_3F(a0)
+		neg.b	objoff_3E(a0)
 		moveq	#0,d1
-		move.b	objoff_38(a0),d1
-		add.b	objoff_3A(a0),d1
-		cmp.b	objoff_39(a0),d1
+		move.b	objoff_3C(a0),d1
+		add.b	objoff_3E(a0),d1
+		cmp.b	objoff_3D(a0),d1
 		blo.s	loc_12448
 		move.b	d1,d0
 		moveq	#0,d1
 		tst.b	d0
 		bpl.s	loc_12448
-		move.b	objoff_39(a0),d1
+		move.b	objoff_3D(a0),d1
 		subq.b	#4,d1
 
 loc_12448:
-		move.b	d1,objoff_38(a0)
+		move.b	d1,objoff_3C(a0)
 
 loc_1244C:
-		move.w	(a2,d1.w),objoff_34(a0)
-		move.w	2(a2,d1.w),objoff_36(a0)
+		move.w	(a2,d1.w),objoff_38(a0)
+		move.w	2(a2,d1.w),objoff_3A(a0)
 		bsr.w	LCon_ChangeDir
 		bra.w	loc_124B2
 ; ===========================================================================
 
 loc_12460:
-		move.b	d0,objoff_2F(a0)
+		move.b	d0,objoff_33(a0)
 		andi.w	#$7F,d0
 		lea	(v_obj1F).w,a2
 		bset	#0,(a2,d0.w)
@@ -122,7 +122,7 @@ LCon_Loop:
 		bne.s	loc_124AA
 
 LCon_MakePtfms:
-		_move.b	#id_Obj1F,obID(a1)
+		move.l	#LabyrinthConvey,code(a1)
 		move.w	(a2)+,obX(a1)
 		move.w	(a2)+,obY(a1)
 		move.w	(a2)+,d0
@@ -174,40 +174,40 @@ loc_124FC:
 sub_12502:
 		tst.b	(f_switch+$E).w
 		beq.s	loc_12520
-		tst.b	objoff_3B(a0)
+		tst.b	objoff_3F(a0)
 		bne.s	loc_12520
-		move.b	#1,objoff_3B(a0)
+		move.b	#1,objoff_3F(a0)
 		move.b	#1,(f_conveyrev).w
-		neg.b	objoff_3A(a0)
+		neg.b	objoff_3E(a0)
 		bra.s	loc_12534
 ; ===========================================================================
 
 loc_12520:
 		move.w	obX(a0),d0
-		cmp.w	objoff_34(a0),d0
+		cmp.w	objoff_38(a0),d0
 		bne.s	loc_1256A
 		move.w	obY(a0),d0
-		cmp.w	objoff_36(a0),d0
+		cmp.w	objoff_3A(a0),d0
 		bne.s	loc_1256A
 
 loc_12534:
 		moveq	#0,d1
-		move.b	objoff_38(a0),d1
-		add.b	objoff_3A(a0),d1
-		cmp.b	objoff_39(a0),d1
+		move.b	objoff_3C(a0),d1
+		add.b	objoff_3E(a0),d1
+		cmp.b	objoff_3D(a0),d1
 		blo.s	loc_12552
 		move.b	d1,d0
 		moveq	#0,d1
 		tst.b	d0
 		bpl.s	loc_12552
-		move.b	objoff_39(a0),d1
+		move.b	objoff_3D(a0),d1
 		subq.b	#4,d1
 
 loc_12552:
-		move.b	d1,objoff_38(a0)
-		movea.l	objoff_3C(a0),a1
-		move.w	(a1,d1.w),objoff_34(a0)
-		move.w	2(a1,d1.w),objoff_36(a0)
+		move.b	d1,objoff_3C(a0)
+		movea.l	objoff_40(a0),a1
+		move.w	(a1,d1.w),objoff_38(a0)
+		move.w	2(a1,d1.w),objoff_3A(a0)
 		bsr.w	LCon_ChangeDir
 
 loc_1256A:
@@ -222,7 +222,7 @@ LCon_ChangeDir:
 		moveq	#0,d0
 		move.w	#-$100,d2
 		move.w	obX(a0),d0
-		sub.w	objoff_34(a0),d0
+		sub.w	objoff_38(a0),d0
 		bcc.s	loc_12584
 		neg.w	d0
 		neg.w	d2
@@ -231,7 +231,7 @@ loc_12584:
 		moveq	#0,d1
 		move.w	#-$100,d3
 		move.w	obY(a0),d1
-		sub.w	objoff_36(a0),d1
+		sub.w	objoff_3A(a0),d1
 		bcc.s	loc_12598
 		neg.w	d1
 		neg.w	d3
@@ -240,7 +240,7 @@ loc_12598:
 		cmp.w	d0,d1
 		blo.s	loc_125C2
 		move.w	obX(a0),d0
-		sub.w	objoff_34(a0),d0
+		sub.w	objoff_38(a0),d0
 		beq.s	loc_125AE
 		ext.l	d0
 		asl.l	#8,d0
@@ -258,7 +258,7 @@ loc_125AE:
 
 loc_125C2:
 		move.w	obY(a0),d1
-		sub.w	objoff_36(a0),d1
+		sub.w	objoff_3A(a0),d1
 		beq.s	loc_125D4
 		ext.l	d1
 		asl.l	#8,d1

@@ -2,9 +2,9 @@
 ; ---------------------------------------------------------------------------
 ; Object 22 - Buzz Bomber from GHZ
 ; ---------------------------------------------------------------------------
-Buzz_time	= objoff_2C	; time to wait for performing an action
-Buzz_status	= objoff_2E	; 0 = still, 1 = flying, 2 = shooting
-Buzz_parent	= objoff_3C
+Buzz_time	= objoff_30	; time to wait for performing an action
+Buzz_status	= objoff_32	; 0 = still, 1 = flying, 2 = shooting
+Buzz_parent	= objoff_40
 ; ---------------------------------------------------------------------------
 
 Obj22:
@@ -60,7 +60,7 @@ Obj22_Move:
 Obj22_LoadMissile:
 		bsr.w	FindFreeObj
 		bne.s	.return
-		_move.b	#id_Obj23,obID(a1)			; load Obj23 (Buzz Bomber/Newtron missile)
+		move.l	#Obj23,code(a1)			; load Obj23 (Buzz Bomber/Newtron missile)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		addi.w	#$1C,obY(a1)

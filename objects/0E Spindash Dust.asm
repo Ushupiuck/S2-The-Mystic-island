@@ -3,10 +3,9 @@
 ; Each player owns one controller and one 16-tile bank; skid particles share
 ; their owner's bank only while it still contains the four skid frames.
 ; ---------------------------------------------------------------------------
-dust_loaded_frame = objoff_30
-dust_emit_timer = objoff_32
-dust_vram_address = objoff_3C
-dust_controller = objoff_40
+dust_emit_timer = objoff_36
+dust_vram_address = objoff_40
+dust_controller = objoff_44
 Dust_SkidBankFrame = 12
 Dust_MinAir = 12
 Dust_SkidInterval = 4
@@ -23,7 +22,7 @@ CreatePlayerDust:
 		btst	#0,d0
 		bne.s	.allocate
 		movea.w	d0,a1
-		cmpi.b	#id_Obj0E,obID(a1)
+		cmpi.l	#SpindashDust,code(a1)
 		bne.s	.allocate
 		cmpa.w	obParent(a1),a0
 		beq.s	.return
@@ -31,7 +30,7 @@ CreatePlayerDust:
 		clr.w	player_dust_ptr(a0)
 		jsr	(FindFreeObj).l
 		bne.s	.return
-		move.b	#id_Obj0E,obID(a1)
+		move.l	#SpindashDust,code(a1)
 		move.w	a0,obParent(a1)
 		move.w	a1,player_dust_ptr(a0)
 .return:
@@ -55,7 +54,6 @@ Dust_Init:
 		move.b	#4,obRender(a0)
 		move.w	#$80,obPriority(a0)
 		move.b	#sprite_bound(32,Map_SpindashDust_width),obActWid(a0)
-		move.b	#-1,dust_loaded_frame(a0)
 		move.w	#make_art_tile(ArtTile_Sonic_Dust,0,0),obGfx(a0)
 		move.w	#ArtTile_Sonic_Dust*tile_size,dust_vram_address(a0)
 		cmpi.w	#v_player,obParent(a0)
@@ -65,13 +63,21 @@ Dust_Init:
 
 Dust_Main:
 		movea.w	obParent(a0),a2
-		cmpi.b	#id_Obj01,obID(a2)
+		cmpi.l	#Obj01,code(a2)
 		beq.s	.owner
-		cmpi.b	#id_Obj02,obID(a2)
+		cmpi.l	#Obj02,code(a2)
 		bne.w	Dust_Delete
 .owner:
 		cmpa.w	player_dust_ptr(a2),a0
 		bne.w	Dust_Delete
+		; A live splash owns this player's bank until its animation ends.
+		lea	(v_splash).w,a1
+		cmpa.w	#v_player,a2
+		beq.s	.splash
+		lea	(v_tsplash).w,a1
+.splash:
+		tst.l	code(a1)
+		bne.w	.idle
 		cmpi.b	#4,obRoutine(a2)
 		bhs.w	.idle
 		tst.w	(Debug_placement_mode).w
@@ -91,7 +97,7 @@ Dust_Main:
 .follow:
 		move.w	obX(a2),obX(a0)
 		move.w	obY(a2),obY(a0)
-		cmpi.b	#id_Obj02,obID(a2)
+		cmpi.l	#Obj02,code(a2)
 		bne.s	.orientation
 		subq.w	#sonic_height-tails_height,obY(a0)
 .orientation:
@@ -126,13 +132,13 @@ Dust_Main:
 		jsr	(FindFreeObj).l
 		bne.s	.return
 		movea.w	obParent(a0),a2
-		move.b	#id_Obj0E,obID(a1)
+		move.l	#SpindashDust,code(a1)
 		move.b	#4,obRoutine(a1)
 		move.w	a0,dust_controller(a1)
 		move.w	obX(a2),obX(a1)
 		move.w	obY(a2),obY(a1)
 		addi.w	#Dust_SkidYOffset,obY(a1)
-		cmpi.b	#id_Obj02,obID(a2)
+		cmpi.l	#Obj02,code(a2)
 		bne.s	.particle
 		subq.w	#sonic_height-tails_height,obY(a1)
 .particle:
@@ -151,14 +157,21 @@ Dust_Main:
 
 Dust_Particle:
 		movea.w	dust_controller(a0),a1
-		cmpi.b	#id_Obj0E,obID(a1)
-		bne.s	.delete
-		cmpi.b	#Dust_SkidBankFrame,dust_loaded_frame(a1)
+		cmpi.l	#SpindashDust,code(a1)
 		bne.s	.delete
 		movea.w	obParent(a1),a2
-		cmpi.b	#id_Obj01,obID(a2)
+		lea	(v_splash+water_loaded_kind).w,a3
+		cmpa.w	#v_player,a2
+		beq.s	.bank
+		lea	(v_tsplash+water_loaded_kind).w,a3
+.bank:
+		cmpi.b	#WaterArt_Dust,(a3)
+		bne.s	.delete
+		cmpi.b	#Dust_SkidBankFrame,1(a3)
+		bne.s	.delete
+		cmpi.l	#Obj01,code(a2)
 		beq.s	.owner
-		cmpi.b	#id_Obj02,obID(a2)
+		cmpi.l	#Obj02,code(a2)
 		bne.s	.delete
 .owner:
 		cmpa.w	player_dust_ptr(a2),a1
@@ -179,9 +192,9 @@ Dust_Particle:
 
 Dust_Delete:
 		movea.w	obParent(a0),a2
-		cmpi.b	#id_Obj01,obID(a2)
+		cmpi.l	#Obj01,code(a2)
 		beq.s	.owner
-		cmpi.b	#id_Obj02,obID(a2)
+		cmpi.l	#Obj02,code(a2)
 		bne.s	Dust_Particle.delete
 .owner:
 		cmpa.w	player_dust_ptr(a2),a0
@@ -190,8 +203,8 @@ Dust_Delete:
 		bra.s	Dust_Particle.delete
 
 Dust_CheckAir:
-		cmpi.b	#id_Obj02,obID(a2)
-		bne.s	.primary
+		cmpa.w	#v_player,a2		; primary Tails uses v_air too
+		beq.s	.primary
 		cmpi.b	#Dust_MinAir,air_left(a2)
 		rts
 .primary:
@@ -210,10 +223,10 @@ Dust_LoadArt:
 		moveq	#0,d0
 		move.b	obFrame(a0),d0
 		lea	(DPLC_SpindashDust).l,a2
-		lea	dust_loaded_frame(a0),a3
 		move.w	dust_vram_address(a0),d4
 		move.l	#Art_SpindashDust,d6
-		bra.w	Load_DynamicPLC
+		moveq	#WaterArt_Dust,d5
+		bra.w	PlayerWaterArt_LoadDPLC
 
 Ani_SpindashDust:
 		dc.w .idle-Ani_SpindashDust

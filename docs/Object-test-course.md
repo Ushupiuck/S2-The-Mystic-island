@@ -30,23 +30,21 @@ behavior/lifecycle checks, not every subtype combination or a manual playthrough
 | `$3800` | Bumper, seesaw and ball, flapdoor |
 | `$3C00` | Hidden bonus, signpost, successive giant rings |
 
-Course-only bank changes let water art and prototype enemies coexist. Splash
-mappings start at tile `$6D`, so the test base `$1F0-$6D` puts their first visible
-tile at `$1F0`; earlier unused splash tiles replace unused terrain in this flat
-fixture. Bubbles occupy `$220-$293`, surface art `$294-$2AB`. Aquis/Piranha/Octus
-use temporary slots; Splats retains its normal slot despite surface relocation.
-The fixed player/ring/HUD/explosion banks keep their gameplay addresses.
+Course-only banks let prototype enemies and the water surface coexist.
+The restored S3&K bubbles use their normal `$45C–$493` tile bank, and splash
+and numbers stream into the normal player dust banks. Surface art uses
+`$294–$2AB`. Aquis/Piranha/Octus use temporary slots; the fixed player, ring,
+HUD, explosion and water-effect banks retain their gameplay addresses.
 
 The legacy wall still uses `$590`, inside explosion art. Its isolated structure
 section loads wall art there; fresh snapshots restore explosion art for the
 enemy/effect tests. This does not validate that wall allocation for a populated
 gameplay level.
 
-Four small S1 art files are bundled solely for this test build, with source
+Two small S1 art files are bundled solely for this test build, with source
 commit and hashes in `build_tools/object_course_art/sources.json`. The floor uses
 SBZ's four tiles with the shared S1 mappings. Appearance uses LZ's palettes; this
-does not certify each zone's intended colors. The old invisible drowning
-tracker still has an unused face-art reference.
+does not certify each zone's intended colors.
 
 ## Reproduce
 
@@ -65,7 +63,9 @@ python build_tools/check_object_contexts.py --build /tmp/mystic-object-course --
 `--pal --player 2` selects primary Tails in PAL for the sweep/contacts. `--bank N`
 narrows the sweep; `--filter REGEX` narrows contacts. Reports/screenshots go in
 the chosen output directories. Instrumentation records executed IDs in retired
-respawn RAM; its cost makes this ROM unsuitable for performance profiling.
+respawn RAM at the actual routine entry points, rather than indexing a
+routine pointer as if it were a byte ID. Fixtures use `layout_id` only as a
+test-side projection; real SSTs store `code` longwords. Its cost makes this ROM unsuitable for performance profiling.
 
 ## Findings and coverage
 

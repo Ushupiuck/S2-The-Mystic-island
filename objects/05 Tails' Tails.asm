@@ -14,7 +14,7 @@ Obj_Tails_Tail:
 
 Obj_Tails_Tail_Main:
 		movea.w	obParent(a0),a2
-		cmpi.b	#id_Obj02,obID(a2)
+		cmpi.l	#Obj02,code(a2)
 		bne.w	DeleteObject
 
 		; Here, several SSTs are inherited from the parent, normally Tails
@@ -43,9 +43,9 @@ TailS3_loc_16106:
 		moveq	#4,d0
 
 TailS3_loc_1612C:
-		cmp.b	objoff_34(a0),d0	; Has the input parent obAnim changed since last check?
+		cmp.b	objoff_38(a0),d0	; Has the input parent obAnim changed since last check?
 		beq.s	TailS3_loc_1613C		; If not, branch and skip setting a matching Tails' Tails obAnim
-		move.b	d0,objoff_34(a0)	; Store d0 for the above comparison
+		move.b	d0,objoff_38(a0)	; Store d0 for the above comparison
 		move.b	Obj_Tails_Tail_AniSelection(pc,d0.w),obAnim(a0)	; Load obAnim relative to parent's
 
 TailS3_loc_1613C:

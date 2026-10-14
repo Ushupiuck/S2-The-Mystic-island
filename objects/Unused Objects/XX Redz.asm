@@ -49,7 +49,7 @@ Redz_SubIndex:
 ; ===========================================================================
 ; loc_15E58:
 Redz_MoveLeft:
-		subq.w	#1,objoff_30(a0)		; is Redz not moving?
+		subq.w	#1,objoff_34(a0)		; is Redz not moving?
 		bpl.s	.return				; if not, branch
 		addq.b	#2,ob2ndRout(a0)
 		move.w	#-$80,obVelX(a0)
@@ -73,7 +73,7 @@ Redz_ChkFloor:
 ; loc_15E98:
 Redz_StopMoving:
 		subq.b	#2,ob2ndRout(a0)
-		move.w	#60-1,objoff_30(a0)		; pause for 1 second
+		move.w	#60-1,objoff_34(a0)		; pause for 1 second
 		clr.w	obVelX(a0)
 		clr.b	obAnim(a0)
 		rts

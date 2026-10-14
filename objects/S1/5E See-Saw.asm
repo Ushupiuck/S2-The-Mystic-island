@@ -2,11 +2,11 @@
 ; Object 5E - HTZ see-saw
 ; ---------------------------------------------------------------------------
 
-see_origX = objoff_30		; original x-axis position
-see_origY = objoff_34		; original y-axis position
-see_speed = objoff_38		; speed of collision
-see_frame = objoff_3A		;
-see_parent = objoff_3C		; RAM address of parent object
+see_origX = objoff_34		; original x-axis position
+see_origY = objoff_38		; original y-axis position
+see_speed = objoff_3C		; speed of collision
+see_frame = objoff_3E		;
+see_parent = objoff_40		; RAM address of parent object
 
 Obj5E:
 		moveq	#0,d0
@@ -38,7 +38,7 @@ See_Main:
 
 		bsr.w	FindNextFreeObj
 		bne.s	.noball
-		_move.b	#id_Obj5E,obID(a1)	; load spikeball object
+		move.l	#Obj5E,code(a1)	; load spikeball object
 		addq.b	#6,obRoutine(a1)	; use See_Spikeball routine
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)

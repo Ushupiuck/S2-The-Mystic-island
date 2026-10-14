@@ -1,12 +1,12 @@
 ; ---------------------------------------------------------------------------
 ; Object 0D - animals
 ; ---------------------------------------------------------------------------
-animal_direction	= objoff_2C	; 1 byte
-animal_type		= objoff_2D	; 1 byte
-animal_x_vel		= objoff_2E	; 2 bytes
-animal_y_vel		= objoff_30	; 2 bytes
-animal_prison_num	= objoff_32	; 2 bytes
-enemy_combo		= objoff_3E	; 2 bytes. See Touch_KillEnemy
+animal_direction	= objoff_30	; 1 byte
+animal_type		= objoff_31	; 1 byte
+animal_x_vel		= objoff_32	; 2 bytes
+animal_y_vel		= objoff_34	; 2 bytes
+animal_prison_num	= objoff_36	; 2 bytes
+enemy_combo		= objoff_42	; 2 bytes. See Touch_KillEnemy
 ; ---------------------------------------------------------------------------
 Flicky_DisplayHeight = sprite_bound(Map_Animals1_height,sprite_bound(Map_Animals2_height,sprite_bound(Map_Animals3_height,sprite_bound(Map_Animals4_height,Map_Animals5_height))))
 Flicky_DisplayWidth = sprite_bound(Map_Animals1_width,sprite_bound(Map_Animals2_width,sprite_bound(Map_Animals3_width,sprite_bound(Map_Animals4_width,Map_Animals5_width))))
@@ -201,12 +201,12 @@ FlickyRandom:
 		move.b	#7,obTimeFrame(a0)
 		move.b	#2,obFrame(a0)
 		move.w	#-$400,obVelY(a0)
-	;	tst.b	objoff_38(a0)	; From Sonic 3 & knuckles
+	;	tst.b	objoff_3C(a0)	; From Sonic 3 & knuckles
 		tst.b	(Boss_defeated_flag).w
 		bne.s	++
 		jsr	(FindFreeObj).l
 		bne.s	+
-		_move.b	#id_ObjFF,obID(a1)	; load the points object
+		move.l	#Points,code(a1)	; load the points object
 		move.w	points_parent(a0),points_parent(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
@@ -242,7 +242,7 @@ Flicky_ChkFloor:
 		add.b	d0,d0
 		addq.b	#4,d0
 		move.b	d0,obRoutine(a0)
-	;	tst.b	objoff_38(a0)	; From Sonic 3 & knuckles
+	;	tst.b	objoff_3C(a0)	; From Sonic 3 & knuckles
 	;	tst.b	(Boss_defeated_flag).w
 	;	beq.w	DisplaySprite
 		btst	#4,(Vint_runcount+3).w
@@ -366,7 +366,7 @@ Flicky_DoubleBounce:
 		jsr	(ObjHitFloor).l
 		tst.w	d1
 		bpl.w	Flicky_ChkDel
-		not.b	animal_direction(a0) ; used to be objoff_29 in Sonic 1/2; in sonic 3, 29 is a "convention followed by many objects", so it was changed
+		not.b	animal_direction(a0) ; used to be objoff_2D in Sonic 1/2; in sonic 3, 29 is a "convention followed by many objects", so it was changed
 		bne.s	+
 		neg.w	obVelX(a0)
 		bchg	#0,obRender(a0)
@@ -415,7 +415,7 @@ Flicky_FlyBounce:
 		jsr	(ObjHitFloor).l
 		tst.w	d1
 		bpl.s	++
-		not.b	animal_direction(a0) ; used to be objoff_29 in Sonic 1/2; in sonic 3, 29 is a "convention followed by many objects", so it was changed
+		not.b	animal_direction(a0) ; used to be objoff_2D in Sonic 1/2; in sonic 3, 29 is a "convention followed by many objects", so it was changed
 		bne.s	+
 		neg.w	obVelX(a0)
 		bchg	#0,obRender(a0)

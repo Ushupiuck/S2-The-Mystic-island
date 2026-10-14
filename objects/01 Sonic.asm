@@ -311,7 +311,7 @@ Sonic_Water:
 		bne.s	Sonic_RecordPos.return		; if already underwater, branch
 
 		bsr.w	ResumeMusic
-		move.b	#id_Obj0A,(v_sonicbubbles).w		; load Sonic's breathing bubbles
+		move.l	#Obj0A,(v_sonicbubbles).w		; load Sonic's breathing bubbles
 		move.b	#$81,(v_sonicbubbles+obSubtype).w
 		movea.l	a0,a2
 		bsr.w	Player_UpdateSpeed
@@ -1720,7 +1720,7 @@ loc_106D6:
 
 
 Sonic_ResetOnFloor:
-		cmpi.b	#id_Obj02,obID(a0)
+		cmpi.l	#Obj02,code(a0)
 		bne.s	+
 		clr.b	tails_flight_flag(a0)
 +
@@ -1851,8 +1851,8 @@ Sonic_GameOver:
 		subq.b	#1,(v_lives).w
 		bne.s	+
 		clr.w	restart_countdown(a0)
-		_move.b	#id_Obj98,(v_gameovertext1).w
-		_move.b	#id_Obj98,(v_gameovertext2).w
+		move.l	#GameOver,(v_gameovertext1).w
+		move.l	#GameOver,(v_gameovertext2).w
 		move.b	#1,(v_gameovertext2+obFrame).w
 		clr.b	(f_timeover).w
 		move.w	#bgm_GameOver,d0
@@ -1866,8 +1866,8 @@ Sonic_GameOver:
 		tst.b	(f_timeover).w
 		beq.s	Obj01_ResetLevel.return
 		clr.w	restart_countdown(a0)
-		_move.b	#id_Obj98,(v_gameovertext1).w
-		_move.b	#id_Obj98,(v_gameovertext2).w
+		move.l	#GameOver,(v_gameovertext1).w
+		move.l	#GameOver,(v_gameovertext2).w
 		move.b	#2,(v_gameovertext1+obFrame).w
 		move.b	#3,(v_gameovertext2+obFrame).w
 		move.w	#bgm_GameOver,d0

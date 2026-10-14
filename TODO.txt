@@ -33,6 +33,9 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
+Convert the SST code field to a longword routine pointer, group the shared display header, retain byte placement IDs and all 113 slots in $50-byte SSTs; adapt Debug, objects/children/composites and tests, and fix the two-rider bridge offset regression < DONE
+Fix Sonic double-life monitor icon mappings and SonLVL art offset; grounded rolling attacks break monitors on slopes for either player while rising airborne underside hits retain their lift behavior < DONE
+Restore S3&K splash and streamed drowning numbers in the per-player $FC00/$FE00 banks, resident bubbles at $8B80, palette remapping, shared source/frame caching and safe DMA retry; retain separate dust/splash objects and independent air supplies < DONE
 Audit every object source through an isolated 16-section LZ2 course, context-specific screens and GHZ/EHZ combat; record 93-file coverage, exclude the broken conveyor, preserve known gator limitations and intentional demo timing, fix closed-door fallthrough/giant-ring mapping phases/primary warp identity, and add reproducible ROM regressions < DONE
 Port the S3&K level object manager with six-byte placements, word respawn pointers, X/Y preloading, full-pool retry and safe multipart ownership; convert all 30 ordinary layouts and SonLVL, preserve object updates after player death < DONE
 Bring Debug controls/restoration to S3&K behavior, add mapping-frame cycling and per-act lists, support both Sonic and Tails as player 1, exclude companion Tails, and preserve S1-stage/results shortcuts < DONE
@@ -51,7 +54,7 @@ Upgrade normal Sonic physics to S3&K while preserving the WIP homing hook, unres
 Port normal S3&K Tails movement, flight/swimming, carrying Sonic, CPU following/catch-up/spindash and controller-2 override; add body/extra/tail art, mappings, DPLCs and flight/grab sounds < DONE
 Remap all Tails art to Mystic Island's palette order, retaining its warmer skin shades; align SonLVL with the runtime palette < DONE
 Keep water splash (08) and spindash/skid dust (0E) as separate objects; use independent dust banks and independent underwater air/countdown/bubble handling for both players < DONE
-Convert all ordinary root sprite mappings, the renderer and fragment readers to S3&K's word-count/six-byte-piece ABI; add universal height_pixels at $49 without growing $4A SSTs < DONE
+Convert all ordinary root sprite mappings, the renderer and fragment readers to S3&K's word-count/six-byte-piece ABI; initialize universal height_pixels from generated bounds (now $06 in the grouped $50-byte SST) < DONE
 Share one S3&K-format dynamic DPLC loader across players, tails and dust; reserve complete frames before uploading and retry when the DMA queue is full < DONE
 Use S3&K common VRAM positions for planes, HScroll, players, tails, rings, HUD, lives and dust; relocate monitor/signpost art away from the player bank while leaving test-zone allocations provisional < DONE
 Use BS_ShowLayout for the rotating S1 bonus stage, preserving its dedicated S1 mapping ABI as S3&K Slots_RenderLayout does; append valid sprite links and respect the shared 80-sprite limit < DONE
@@ -63,7 +66,7 @@ Convert the S1 bonus-stage background to normal blocks/chunks and two live $1000
 Share TIME's static E with SCORE in the HUD and results mappings; retain debug coordinates in their separate digit mappings < DONE
 Replace RING BONUS lettering with the animated ring icon on both results screens; special-stage results replace the stage's $2940 ring art with a separate palette-0 copy of all eight frames, preserving the normal $D720 art, emerald colors and bonus digits < DONE
 Remove the results-only RING lettering art/PLCs and the duplicate uncompressed HUD E glyph < DONE
-Use $4A SSTs with 90 dynamic slots and 23 reserved slots < DONE
+Use $50 SSTs with 90 dynamic slots and 23 reserved slots < DONE
 Render eight invincibility stars per player from one composite SST each (primary reserved, companion dynamically allocated), sharing art; either player's pickup grants both live players 20 seconds of invincibility < DONE
 Share shield and speed-shoe pickups in either direction; retain individual shield loss and speed-shoe timers/expiry < DONE
 LoadCollisionIndexes < DONE

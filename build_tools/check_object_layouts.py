@@ -53,18 +53,20 @@ def main():
             count = struct.unpack_from('>H', rom, debug_address)[0]
             assert 0 < count <= 255, 'Debug list must fit Debug_object'
             for entry in range(count):
-                mapping = struct.unpack_from('>I', rom, debug_address + 2 + entry * 8)[0]
-                assert mapping >> 24, 'Missing Debug object ID'
-                assert (mapping & 0xFFFFFF) < len(rom), 'Bad Debug mapping address'
+                code, mapping = struct.unpack_from('>II', rom,
+                    debug_address + 2 + entry * symbols['DebugEntry_size'])
+                assert code and not code & 1 and code < len(rom), 'Bad Debug code pointer'
+                assert mapping < len(rom), 'Bad Debug mapping address'
     assert symbols['omSize'] == 6
-    assert symbols['respawn_addr'] == 0x1E
-    assert symbols['object_size'] == 0x4A and symbols['height_pixels'] == 0x49
-    assert symbols['v_lvlobjend'] - symbols['v_lvlobjspace'] == 90 * 0x4A
-    assert symbols['v_16x16'] == 0xFFC200, 'Object pool expansion moved the block table'
-    assert symbols['Error_Handler_Buffer'] == symbols['v_regbuffer'] == 0xFFE5C0
+    assert symbols['respawn_addr'] == 0x22
+    assert symbols['code'] == 0 and symbols['object_size'] == 0x50
+    assert symbols['height_pixels'] == 6 and symbols['DebugEntry_size'] == 12
+    assert symbols['v_lvlobjend'] - symbols['v_lvlobjspace'] == 90 * 0x50
+    assert symbols['v_16x16'] == 0xFFC350
+    assert symbols['Error_Handler_Buffer'] == symbols['v_regbuffer'] == 0xFFE710
     assert symbols['Object_Display_Lists'] == 0xFFE8C0
     assert symbols['Free_LegacyObjectState_end'] == symbols['Object_Display_Lists']
-    assert symbols['Free_LegacyObjectState_end'] - symbols['Free_LegacyObjectState'] == 0x2B2
+    assert symbols['Free_LegacyObjectState_end'] - symbols['Free_LegacyObjectState'] == 0x162
     assert not symbols['Debug_saved_mappings'] & 1
     assert symbols['Debug_saved_height'] + 1 == symbols['Free_LegacyObjectState']
     assert symbols['Debug_placement_type'] == symbols['Debug_placement_routine'] + 1

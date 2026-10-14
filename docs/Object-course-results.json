@@ -303,6 +303,56 @@
       "contacts": 46
     },
     {
+      "name": "context-stage-ntsc",
+      "case": "stage",
+      "region": "NTSC",
+      "primary_mode": 0,
+      "stage_player": true,
+      "results": true,
+      "six_emeralds": true,
+      "returned_zone_act": 768,
+      "executed_ids": [
+        "01",
+        "02",
+        "04",
+        "05",
+        "0E",
+        "90",
+        "91",
+        "93",
+        "94",
+        "96",
+        "97"
+      ],
+      "placements": 0,
+      "contacts": 0
+    },
+    {
+      "name": "context-stage-pal",
+      "case": "stage",
+      "region": "PAL",
+      "primary_mode": 0,
+      "stage_player": true,
+      "results": true,
+      "six_emeralds": true,
+      "returned_zone_act": 768,
+      "executed_ids": [
+        "01",
+        "02",
+        "04",
+        "05",
+        "0E",
+        "90",
+        "91",
+        "93",
+        "94",
+        "96",
+        "97"
+      ],
+      "placements": 0,
+      "contacts": 0
+    },
+    {
       "name": "context-warp-sonic",
       "case": "warp",
       "region": "NTSC",
@@ -356,51 +406,61 @@
       "contacts": 0
     },
     {
-      "name": "context-stage-ntsc",
-      "case": "stage",
-      "region": "NTSC",
-      "primary_mode": 0,
-      "stage_player": true,
-      "results": true,
-      "six_emeralds": true,
-      "returned_zone_act": 768,
-      "executed_ids": [
-        "01",
-        "02",
-        "04",
-        "05",
-        "0E",
-        "90",
-        "91",
-        "93",
-        "94",
-        "96",
-        "97"
-      ],
-      "placements": 0,
-      "contacts": 0
-    },
-    {
-      "name": "context-stage-pal",
-      "case": "stage",
+      "name": "water-final-companion",
       "region": "PAL",
-      "primary_mode": 0,
-      "stage_player": true,
-      "results": true,
-      "six_emeralds": true,
-      "returned_zone_act": 768,
+      "player": "Companion Tails",
+      "bank": "0xfe00",
+      "entry_splash_frames": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "entry_uploads": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "number_frames": [
+        10,
+        12,
+        14,
+        15
+      ],
+      "number_uploads": [
+        10,
+        12,
+        14,
+        15
+      ],
+      "resurfacing_clears_numbers": true,
+      "exit_splash": true,
       "executed_ids": [
         "01",
         "02",
-        "04",
         "05",
+        "07",
+        "08",
+        "0A",
         "0E",
+        "12",
+        "26",
+        "79",
         "90",
         "91",
         "93",
-        "94",
-        "96",
-        "97"
+        "94"
       ],
       "placements": 0,
       "contacts": 0
@@ -502,7 +562,7 @@
   ],
   "demos": [
     {
-      "name": "Demos-ntsc",
+      "name": "ntsc",
       "region": "ntsc",
       "demos": [
         {
@@ -544,7 +604,7 @@
       ]
     },
     {
-      "name": "Demos-pal",
+      "name": "pal",
       "region": "pal",
       "demos": [
         {
@@ -1298,7 +1358,7 @@
     "Gator lifecycle/rendering is checked; its known broken gameplay is not certified.",
     "Nine W.I.P/Unused files are not assembled; seven empty sources have no implementation.",
     "The compiled title palette handler lacks completed data setup and an update entry, and is not instantiated.",
-    "Test-only S1 art supplies bubbles, splashes, the small door and the shared floor arrangement.",
+    "Test-only S1 art supplies the small door and shared floor arrangement; water effects use the restored gameplay assets.",
     "Course bank relocations, extra art and LZ2 replacement exist only in the copied test ROM."
   ]
 }

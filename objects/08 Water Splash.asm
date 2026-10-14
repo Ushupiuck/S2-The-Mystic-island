@@ -17,7 +17,7 @@ SpawnPlayerSplash:
 .clear:
 		clr.w	(a2)+
 		dbf	d1,.clear
-		move.b	#id_Obj08,obID(a1)
+		move.l	#Splash,code(a1)
 		move.w	a0,obParent(a1)
 		move.w	obX(a0),obX(a1)
 		rts
@@ -41,17 +41,35 @@ Spla_Main:	; Routine 0
 		ori.b	#4,obRender(a0)
 		move.w	#$80,obPriority(a0)
 		move.b	#sprite_bound($10,Map_Splash_width),obActWid(a0)
-		move.w	#make_art_tile(ArtTile_LZ_Splash,2,0),obGfx(a0)
+		move.w	#make_art_tile(ArtTile_Sonic_Dust,0,0),obGfx(a0)
+		move.w	#ArtTile_Sonic_Dust*tile_size,objoff_40(a0)
 		; Scripted/debug splashes default to the main player.
 		tst.w	obParent(a0)
-		bne.s	Spla_Display
+		bne.s	.owner
+		move.w	#v_player,obParent(a0)
 		move.w	(v_player+obX).w,obX(a0)
+.owner:
+		cmpi.w	#v_player,obParent(a0)
+		beq.s	Spla_Display
+		move.w	#make_art_tile(ArtTile_Tails_Dust,0,0),obGfx(a0)
+		move.w	#ArtTile_Tails_Dust*tile_size,objoff_40(a0)
 
 Spla_Display:	; Routine 2
 		move.w	(v_waterpos1).w,obY(a0) ; copy y-position from water height
 		lea	Ani_Splash(pc),a1
 		bsr.w	AnimateSprite
+		cmpi.b	#4,obRoutine(a0)
+		beq.s	Spla_Delete
+		moveq	#0,d0
+		move.b	obFrame(a0),d0
+		lea	DPLC_Splash(pc),a2
+		move.w	objoff_40(a0),d4
+		moveq	#WaterArt_Splash,d5
+		move.l	#Art_WaterSplash,d6
+		bsr.w	PlayerWaterArt_LoadDPLC
+		bcs.s	.return
 		bra.w	DisplaySprite
+.return:	rts
 ; ===========================================================================
 
 Spla_Delete:	; Routine 4
@@ -59,5 +77,7 @@ Spla_Delete:	; Routine 4
 ; ===========================================================================
 ; animation script
 Ani_Splash:	dc.w byte_129C2-Ani_Splash
-byte_129C2:	dc.b 4, 0, 1, 2, afRoutine
+byte_129C2:	dc.b 3,1,2,3,4,5,6,7,8,9,afRoutine
 		even
+DPLC_Splash:
+		include "mappings/spriteDPLC/Water splash.asm"

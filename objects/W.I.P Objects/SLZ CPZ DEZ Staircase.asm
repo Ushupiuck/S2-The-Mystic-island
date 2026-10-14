@@ -9,20 +9,20 @@
 ; - Child blocks report collision/touch info back to the parent
 ; ----------------------------------------------------------------------------
 
-stair_wait_time		= objoff_2C	; frames remaining before changing staircase state
-stair_touch_flags	= objoff_2E	; accumulated touch/collision flags from child blocks
-stair_yoff_slot		= objoff_2F	; offset of this child's Y-offset entry in parent ($34/$36/$38/$3A)
+stair_wait_time		= objoff_30	; frames remaining before changing staircase state
+stair_touch_flags	= objoff_32	; accumulated touch/collision flags from child blocks
+stair_yoff_slot		= objoff_33	; offset of this child's Y-offset entry in parent ($34/$36/$38/$3A)
 
-stair_origX		= objoff_30	; original X position
-stair_origY		= objoff_32	; original Y position
+stair_origX		= objoff_34	; original X position
+stair_origY		= objoff_36	; original Y position
 
-stair_yoff_table	= objoff_34	; 4-word Y-offset table for the staircase steps
-stair_yoff_0		= objoff_34	; Y offset for step 0
-stair_yoff_1		= objoff_36	; Y offset for step 1
-stair_yoff_2		= objoff_38	; Y offset for step 2
-stair_yoff_3		= objoff_3A	; Y offset for step 3
+stair_yoff_table	= objoff_38	; 4-word Y-offset table for the staircase steps
+stair_yoff_0		= objoff_38	; Y offset for step 0
+stair_yoff_1		= objoff_3A	; Y offset for step 1
+stair_yoff_2		= objoff_3C	; Y offset for step 2
+stair_yoff_3		= objoff_3E	; Y offset for step 3
 
-stair_parent		= objoff_3C	; pointer to parent staircase object
+stair_parent		= objoff_40	; pointer to parent staircase object
 
 Obj78:
 		moveq	#0,d0
@@ -70,7 +70,7 @@ Obj78_SpawnLoop:
 		move.b	#4,obRoutine(a1)			; child blocks start at Obj78_Solid
 
 Obj78_LoadBlock:
-		_move.b	obID(a0),obID(a1)			; load Obj78
+		move.l	code(a0),code(a1)			; load Obj78
 		move.l	#Obj6B_MapUnc_2800E,mappings(a1)
 		move.w	#make_art_tile(ArtTile_ArtNem_CPZStairBlock,3,0),obGfx(a1)
 		move.b	obRender(a0),obRender(a1)

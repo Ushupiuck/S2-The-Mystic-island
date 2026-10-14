@@ -1,10 +1,10 @@
 ; ---------------------------------------------------------------------------
 ;
 ; ---------------------------------------------------------------------------
-collapsing_platform_delay_pointer	= objoff_34
-ledge_timedelay				= objoff_38	; time between touching the ledge and it collapsing
-ledge_collapse_flag			= objoff_3A	; collapse flag
-collapsing_platform_slope_pointer	= objoff_3C
+collapsing_platform_delay_pointer	= objoff_38
+ledge_timedelay				= objoff_3C	; time between touching the ledge and it collapsing
+ledge_collapse_flag			= objoff_3E	; collapse flag
+collapsing_platform_slope_pointer	= objoff_40
 
 ; ---------------------------------------------------------------------------
 Obj1A:

@@ -2,7 +2,7 @@
 ; Object 7A - Special Stage entry effect
 ; ---------------------------------------------------------------------------
 ; OST:
-obj7A_vanishtime:	equ $30		; time for Sonic to vanish for
+obj7A_vanishtime:	equ objoff_34		; time for Sonic to vanish for
 ; ---------------------------------------------------------------------------
 
 SpecialStageEntry:
@@ -41,9 +41,9 @@ Obj7A_RmvSonic:
 		jsr	(AnimateSprite).l
 		cmpi.b	#2,obFrame(a0)
 		bne.s	loc_1253E
-		tst.b	(v_player+obID).w		; is this Sonic?
+		tst.l	(v_player+code).w		; is this Sonic?
 		beq.s	loc_1253E			; if not, branch
-		clr.b	(v_player+obID).w		; set Sonic's object ID to 0
+		clr.l	(v_player+code).w		; set Sonic's object ID to 0
 		move.w	#sfx_SSGoal,d0
 		jsr	(PlaySound_Special).l		; play Special Stage entry sound effect
 
@@ -54,12 +54,12 @@ loc_1253E:
 Obj7A_LoadSonic:
 		subq.w	#1,obj7A_vanishtime(a0)		; subtract 1 from vanishing time
 		bne.s	Obj7A_Init.return		; if there's any time left, branch
-		moveq	#id_Obj01,d0
+		move.l	#Obj01,d0
 		cmpi.w	#PlayerMode_Tails,(Player_mode).w
 		bne.s	.restore
-		moveq	#id_Obj02,d0
+		move.l	#Obj02,d0
 .restore:
-		move.b	d0,(v_player+obID).w	; restore the selected primary character
+		move.l	d0,(v_player+code).w	; restore the selected primary character
 		jmp	(DeleteObject).l
 ; ---------------------------------------------------------------------------
 Ani_obj7A:	dc.w byte_1278C-Ani_obj7A

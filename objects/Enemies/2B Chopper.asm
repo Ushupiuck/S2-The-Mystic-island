@@ -11,7 +11,7 @@ Obj2B:
 ; ===========================================================================
 Chop_Index:	dc.w Chop_Main-Chop_Index
 		dc.w Chop_ChgSpeed-Chop_Index
-chop_origY	= objoff_34
+chop_origY	= objoff_38
 ; ===========================================================================
 
 Chop_Main:	; Routine 0

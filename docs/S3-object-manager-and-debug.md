@@ -2,7 +2,8 @@
 
 The level loader follows `Load_Sprites` from
 [skdisasm, commit 73de97c6](https://github.com/sonicretro/skdisasm/tree/73de97c6b55055bcb8089c1d55d006b02136f163),
-adapted to Mystic Island's existing object ID/routine dispatch. MoDule's Sonic 2
+adapted to Mystic Island's routine-pointer SST dispatch. Placement byte IDs
+resolve through Obj_Index only when an object is created. MoDule's Sonic 2
 guide, Selbi's Sonic 1 guide, and
 [ProjectFM's S1 port in S1Fixed](https://github.com/RetroKoH/S1Fixed/tree/d29550bd43e4259cd43efca86642bfba0d8bf741)
 were checked alongside the original implementation.
@@ -51,7 +52,7 @@ discard skipped records. A full pool sets a retry flag, so missed eligible
 placements can load even after the camera stops. Slot searches continue from
 the previous result instead of starting over for every placement.
 
-`respawn_addr` occupies the word at SST offset `$1E`. It contains the low word
+`respawn_addr` occupies the word at SST offset `$22`. It contains the low word
 of a RAM address, used with `movea.w`; zero identifies an object without a
 placement entry. `Object_Respawn_Table` has 768 bytes: bit 7 means loaded or
 consumed, and the other seven bits belong to the object.
@@ -68,7 +69,7 @@ For an imported or new object:
   Debug and scripted objects must not write to the respawn table.
 - Keep dynamically allocated children independent of the parent's respawn
   entry. The parent releases it after its child cleanup. Composite children
-  reuse `$1E` as subsprite data, so delete those children directly.
+  reuse `$22` as subsprite data, so delete those children directly.
 
 Monitors, checkpoints, bumpers and Caterkiller use the word interface.
 Collapsing scenery releases its original slot when the fragments retire.
@@ -84,15 +85,15 @@ retain their existing frozen-camera behavior.
 
 ## RAM
 
-The SST stays `$4A` bytes, including `height_pixels` at `$49`. The pool remains
-23 reserved slots plus 90 dynamic slots, and the block table stays at `$FFC200`.
-The existing 768-byte table at `$FFF6BE` is now the active respawn table.
+The SST is `$50` bytes, with the longword routine pointer and display fields
+grouped in its shared header. The pool retains 23 reserved and 90 dynamic
+slots. The block table now begins at `$FFC350`; the 768-byte respawn table
+remains at `$FFF6BE`. See [the field map](SST-routine-pointers.md).
 
-Ten bytes of tail padding hold the manager's new state, leaving 99 bytes there.
-The retired S1/S2 state buffer keeps its `$45`-byte error-handler overlay and
-one alignment byte. Debug saves its mapping pointer, art word and display
-bounds in eight bytes there, leaving another 690 bytes explicitly free. The
-sprite queue remains at `$FFE8C0`.
+Growth uses the old pool slack and part of the retired state buffer. Its
+error-handler overlay moves to `$FFE710`, while the sprite queue and later
+RAM remain at `$FFE8C0` and their previous addresses. Debug saves its mappings,
+art and display bounds in eight bytes; 354 bytes remain explicitly free.
 
 `Respawn_table_keep` can preserve state when reinitializing the same live
 layout. Normal level initialization clears the table. Timezone-aware object
@@ -122,7 +123,8 @@ Power-up flags remain intact. Placement retains the preview's facing flags. The 
 is retained for testing arena entry from above or below, then restored on exit.
 
 Debug lists have four pointers per zone, presently sharing each zone's list.
-Their compact eight-byte entry format is unchanged. The HPZ waterfall entry
+Each entry is now 12 bytes: routine pointer, mapping pointer, subtype byte,
+preview-frame byte and art word. Debug places the routine pointer directly. The HPZ waterfall entry
 now places object `$1E` rather than a lost ring.
 
 The S1 bonus stage has a ring-only preview list using its loaded `$2940` bank.

@@ -17,8 +17,8 @@ Snailbot_Index:
 		dc.w Snailbot_Animate-Snailbot_Index	; flame child
 		dc.w Snailbot_Delete-Snailbot_Index
 
-snail_wait	= objoff_30			; word; pause countdown
-snail_flame	= objoff_32			; byte; flame spawn countdown
+snail_wait	= objoff_34			; word; pause countdown
+snail_flame	= objoff_36			; byte; flame spawn countdown
 ; ===========================================================================
 
 Snailbot_Init:
@@ -92,7 +92,7 @@ Snailbot_Move:
 		move.b	#15,snail_flame(a0)
 		bsr.w	FindFreeObj
 		bne.s	.chktrigger
-		_move.b	#id_Snailbot,obID(a1)
+		move.l	#id_Snailbot,code(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.b	obStatus(a0),obStatus(a1)

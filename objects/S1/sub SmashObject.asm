@@ -10,7 +10,7 @@ SmashObject:
 		move.w	(a3)+,d1	; amount of pieces the frame consists of
 		subq.w	#1,d1
 		bset	#5,obRender(a0)
-		_move.b	obID(a0),d4
+		move.l	code(a0),d4
 		move.b	obRender(a0),d5
 		movea.l	a0,a1
 		bra.s	loc_C9CA
@@ -22,7 +22,7 @@ SmashObject:
 
 loc_C9CA:
 		move.b	#4,obRoutine(a1)
-		_move.b	d4,obID(a1)
+		move.l	d4,code(a1)
 		move.l	a3,obMap(a1)
 		move.b	height_pixels(a0),height_pixels(a1)
 		move.b	d5,obRender(a1)

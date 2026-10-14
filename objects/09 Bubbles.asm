@@ -15,17 +15,17 @@ Bub_Index:	dc.w Bub_Main-Bub_Index
 		dc.w Bub_Delete-Bub_Index
 		dc.w Bub_BblMaker-Bub_Index
 
-bub_inhalable = objoff_2E	; flag set when bubble is collectable
-bub_origX = objoff_30		; original x-axis position
-bub_time = objoff_32		; time until next bubble spawn
-bub_freq = objoff_33		; frequency of bubble spawn
+bub_inhalable = objoff_32	; flag set when bubble is collectable
+bub_origX = objoff_34		; original x-axis position
+bub_time = objoff_36		; time until next bubble spawn
+bub_freq = objoff_37		; frequency of bubble spawn
 ; ===========================================================================
 
 Bub_Main:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Bubbles,obMap(a0)
 		move.b	#Map_Bubbles_height,height_pixels(a0)
-		move.w	#make_art_tile(ArtTile_LZ_Bubbles,0,1),obGfx(a0)
+		move.w	#make_art_tile(ArtTile_Bubbles,0,0),obGfx(a0)
 		move.b	#$84,obRender(a0)
 		move.b	#sprite_bound($10,Map_Bubbles_width),obActWid(a0)
 		move.w	#$80,obPriority(a0)
@@ -35,7 +35,7 @@ Bub_Main:
 		andi.w	#$7F,d0			; read only last 7 bits (deduct $80)
 		move.b	d0,bub_time(a0)
 		move.b	d0,bub_freq(a0)		; set bubble frequency
-		move.b	#6,obAnim(a0)
+		move.b	#8,obAnim(a0)
 		bra.w	Bub_BblMaker
 ; ---------------------------------------------------------------------------
 
@@ -60,7 +60,7 @@ Bub_ChkWater:	; Routine 4
 
 .burst:
 		move.b	#6,obRoutine(a0) ; goto Bub_Display next
-		addq.b	#3,obAnim(a0)	; run "bursting" animation
+		addq.b	#4,obAnim(a0)	; S3&K's small/medium/large bursting animations
 		lea	Ani_Obj64(pc),a1
 		bsr.w	AnimateSprite
 		tst.b	obRender(a0)
@@ -88,7 +88,7 @@ Bub_ChkWater:	; Routine 4
 		bra.s	.collect
 .partnerair:
 		move.b	#30,air_left(a1)
-		clr.b	(v_tailsbubbles+objoff_32).w
+		clr.b	(v_tailsbubbles+objoff_36).w
 .collect:
 		move.w	#sfx_Bubble,d0
 		jsr	(PlaySound_Special).l	; play collecting bubble sound
@@ -99,7 +99,7 @@ Bub_ChkWater:	; Routine 4
 		move.b	#$15,obAnim(a1) ; use bubble-collecting animation
 		move.w	#$23,move_lock(a1)
 		clr.b	jumping(a1)
-		cmpi.b	#id_Obj02,obID(a1)
+		cmpi.l	#Obj02,code(a1)
 		bne.s	.restore
 		clr.b	tails_flight_flag(a1)
 .restore:
@@ -137,16 +137,16 @@ Bub_Delete:	; Routine 8
 ; ---------------------------------------------------------------------------
 
 Bub_BblMaker:	; Routine $A
-		tst.w	objoff_36(a0)
+		tst.w	objoff_3A(a0)
 		bne.s	.loc_13BA4
 		move.w	(v_waterpos1).w,d0
 		cmp.w	obY(a0),d0	; is bubble maker underwater?
 		bhs.w	.chkdel		; if not, branch
 		tst.b	obRender(a0)
 		bpl.w	.chkdel
-		subq.w	#1,objoff_38(a0)
+		subq.w	#1,objoff_3C(a0)
 		bpl.w	.loc_13C44
-		move.w	#1,objoff_36(a0)
+		move.w	#1,objoff_3A(a0)
 
 .tryagain:
 		jsr	(RandomNumber).l
@@ -154,29 +154,29 @@ Bub_BblMaker:	; Routine $A
 		andi.w	#7,d0
 		cmpi.w	#6,d0		; random number over 6?
 		bhs.s	.tryagain	; if yes, branch
-		move.b	d0,objoff_34(a0)
+		move.b	d0,objoff_38(a0)
 		andi.w	#$C,d1
 		lea	Bub_BblTypes(pc),a1
 		adda.w	d1,a1
-		move.l	a1,objoff_3C(a0)
+		move.l	a1,objoff_40(a0)
 		subq.b	#1,bub_time(a0)
 		bpl.s	.loc_13BAC
 		move.b	bub_freq(a0),bub_time(a0)
-		bset	#7,objoff_36(a0)
+		bset	#7,objoff_3A(a0)
 		bra.s	.loc_13BAC
 ; ---------------------------------------------------------------------------
 
 .loc_13BA4:
-		subq.w	#1,objoff_38(a0)
+		subq.w	#1,objoff_3C(a0)
 		bpl.w	.loc_13C44
 
 .loc_13BAC:
 		jsr	(RandomNumber).l
 		andi.w	#$1F,d0
-		move.w	d0,objoff_38(a0)
+		move.w	d0,objoff_3C(a0)
 		bsr.w	FindFreeObj
 		bne.s	.fail
-		_move.b	#id_Obj09,obID(a1) ; load bubble object
+		move.l	#Bubbles,code(a1) ; load bubble object
 		move.w	obX(a0),obX(a1)
 		jsr	(RandomNumber).l
 		andi.w	#$F,d0
@@ -184,33 +184,33 @@ Bub_BblMaker:	; Routine $A
 		add.w	d0,obX(a1)
 		move.w	obY(a0),obY(a1)
 		moveq	#0,d0
-		move.b	objoff_34(a0),d0
-		movea.l	objoff_3C(a0),a2
+		move.b	objoff_38(a0),d0
+		movea.l	objoff_40(a0),a2
 		move.b	(a2,d0.w),obSubtype(a1)
-		btst	#7,objoff_36(a0)
+		btst	#7,objoff_3A(a0)
 		beq.s	.fail
 		jsr	(RandomNumber).l
 		andi.w	#3,d0
 		bne.s	.loc_buh
-		bset	#6,objoff_36(a0)
+		bset	#6,objoff_3A(a0)
 		bne.s	.fail
 		move.b	#2,obSubtype(a1)
 
 .loc_buh:
-		tst.b	objoff_34(a0)
+		tst.b	objoff_38(a0)
 		bne.s	.fail
-		bset	#6,objoff_36(a0)
+		bset	#6,objoff_3A(a0)
 		bne.s	.fail
 		move.b	#2,obSubtype(a1)
 
 .fail:
-		subq.b	#1,objoff_34(a0)
+		subq.b	#1,objoff_38(a0)
 		bpl.s	.loc_13C44
 		jsr	(RandomNumber).l
 		andi.w	#$7F,d0
 		addi.w	#$80,d0
-		add.w	d0,objoff_38(a0)
-		clr.w	objoff_36(a0)
+		add.w	d0,objoff_3C(a0)
+		clr.w	objoff_3A(a0)
 
 .loc_13C44:
 		lea	Ani_Obj64(pc),a1
@@ -241,7 +241,7 @@ Bub_ChkPlayer:
 		tst.w	(Player_mode).w
 		bne.s	Bub_ChkPlayerRect.miss
 		lea	(v_player2).w,a1
-		cmpi.b	#id_Obj02,obID(a1)
+		cmpi.l	#Obj02,code(a1)
 		bne.s	Bub_ChkPlayerRect.miss
 		bra.s	Bub_ChkPlayerRect
 .return:
@@ -279,17 +279,5 @@ Bub_ChkPlayerRect:
 ; End of function Bub_ChkPlayer
 
 ; ---------------------------------------------------------------------------
-Ani_Obj64:	dc.w byte_13CD0-Ani_Obj64
-		dc.w byte_13CD5-Ani_Obj64
-		dc.w byte_13CDB-Ani_Obj64
-		dc.w byte_13CE2-Ani_Obj64
-		dc.w byte_13CE2-Ani_Obj64
-		dc.w byte_13CE4-Ani_Obj64
-		dc.w byte_13CE9-Ani_Obj64
-byte_13CD0:	dc.b  $E,  0,  1,  2,afRoutine
-byte_13CD5:	dc.b  $E,  1,  2,  3,  4,afRoutine
-byte_13CDB:	dc.b  $E,  2,  3,  4,  5,  6,afRoutine
-byte_13CE2:	dc.b   4,afRoutine
-byte_13CE4:	dc.b   4,  6,  7,  8,afRoutine
-byte_13CE9:	dc.b  $F,$13,$14,$15,afEnd
-		even
+Ani_Obj64:
+		include "animations/Water bubbles.asm"

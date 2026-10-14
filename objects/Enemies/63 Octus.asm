@@ -2,8 +2,8 @@
 ; ---------------------------------------------------------------------------
 ; Object 63 - Octus badnik
 ; ---------------------------------------------------------------------------
-octus_startpos	= objoff_2E
-octus_timer	= objoff_30
+octus_startpos	= objoff_32
+octus_timer	= objoff_34
 ; ---------------------------------------------------------------------------
 
 Octus:
@@ -97,7 +97,7 @@ Octus_MoveUpAndFire:
 		move.b	#60,octus_timer(a0)
 		jsr	(FindFreeObj).l
 		bne.s	.return
-		_move.b	#id_Obj63,obID(a1)
+		move.l	#Octus,code(a1)
 		move.b	#4,obRoutine(a1)
 		move.l	#Map_Octus,obMap(a1)
 		move.b	#Map_Octus_height,height_pixels(a1)

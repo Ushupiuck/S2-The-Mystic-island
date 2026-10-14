@@ -13,6 +13,7 @@ import re
 import shutil
 import struct
 import subprocess
+import tempfile
 
 ROOT = Path(__file__).resolve().parent.parent
 COURSE = ROOT / 'build_tools/object_course.json'
@@ -24,6 +25,33 @@ def replace_once(text, before, after):
     return text.replace(before, after, 1)
 
 
+def instrument_entries(root):
+    """Stamp real routine entries without adding an ID lookup to RunObject."""
+    main = root / 'main.asm'
+    text = main.read_text()
+    entries = {}
+    for oid, label in re.findall(r'^ptr_Obj([0-9A-F]{2}):\s*dc\.l\s+(\w+)', text, re.M):
+        if label != 'ObjNull':
+            entries.setdefault(label, []).append(int(oid, 16))
+    files = [main] + [root / name for name in re.findall(
+        r'^\s*include\s+"(objects/[^"]+\.asm)"', text, re.M)]
+    seen = set()
+    for path in files:
+        text = path.read_text(encoding='latin1')
+        for label, ids in entries.items():
+            pattern = r'^' + re.escape(label) + r':[ \t]*([^\n]*)\n'
+            def hook(match):
+                seen.add(label)
+                stamps = ''.join('\tmove.b #1,(ObjectTest_Executed+$%02X).w\n' % oid
+                                 for oid in ids)
+                suffix = match[1]
+                return label + ':\n' + stamps + ('\t' + suffix + '\n' if suffix else '')
+            text, count = re.subn(pattern, hook, text, flags=re.M)
+            assert count <= 1, (path, label)
+        path.write_text(text, encoding='latin1')
+    assert seen == entries.keys(), ('Missing coverage entry', entries.keys()-seen)
+
+
 def generate(root, banks):
     records = []
     asm = ["; Generated test-only LZ2 course. Not included by normal builds.",
@@ -31,6 +59,9 @@ def generate(root, banks):
            "ObjectTest_Bank = ObjectTest_Executed+$100",
            "ObjectTest_Active = ObjectTest_Bank+1",
            "ObjectTest_Enable = ObjectTest_Bank+2",
+           "\tif ObjectTest_Enable+1>Free_LegacyObjectState_end",
+           "\t\tfatal \"Object course coverage exceeds the free RAM area.\"",
+           "\tendif",
            "ObjectTest_FloorY = $500",
            "ObjectTest_Initialize:",
            "\tmove.b #1,(ObjectTest_Active).w",
@@ -120,13 +151,9 @@ def generate(root, banks):
     placements.append('\tdc.w $FFFF,0,0')
     (root / '_inc/Object Test Placements.asm').write_text('\n'.join(placements)+'\n')
     asm.extend([
-                'ObjectTest_BubblesArt: binclude "build_tools/object_course_art/bubbles.nem"',
-                '\teven',
                 'ObjectTest_DoorArt: binclude "build_tools/object_course_art/door.nem"',
                 '\teven',
                 'ObjectTest_FloorArt: binclude "build_tools/object_course_art/floor.nem"',
-                '\teven',
-                'ObjectTest_SplashArt: binclude "build_tools/object_course_art/splash.nem"',
                 '\teven',
                 'ObjectTest_LZArt: binclude "art/kosinski/level/8x8 - LZ.unc"',
                 'ObjectTest_GHZArt: binclude "art/kosinski/level/8x8 - GHZ.unc"',
@@ -163,21 +190,18 @@ def main():
                           'RingPos_LZ2:\tdc.w $FFFF,0')
     source = replace_once(source, '\t\tbinclude\t"startpos/LZ_2.bin"\t; LZ2',
                           '\t\tdc.w $80,$4ED\t; test-course LZ2')
-    source = replace_once(source, '\t\tadd.w\td0,d0\n\t\tadd.w\td0,d0\t\t\t\t; d0 = object ID * 4',
-                          '\t\tlea (ObjectTest_Executed).w,a1\n'
-                          '\t\tmove.b #1,(a1,d0.w)\n'
-                          '\t\tadd.w\td0,d0\n\t\tadd.w\td0,d0\t\t\t\t; d0 = object ID * 4')
     source = replace_once(source, 'EndOfRom:\n',
                           '\t\tinclude "_inc/Object Test Course.asm"\nEndOfRom:\n')
     mainfile.write_text(source)
+    instrument_entries(root)
     # These prototype water enemies still use old banks which overlap today's
     # universal assets. Relocate their art only in the disposable course ROM.
     constants = root/'s2.constants.asm'
     text = constants.read_text()
     for symbol, value in [('ArtTile_BFish', '$400'), ('ArtTile_Aquis', '$350'),
                           ('ArtTile_Aquis_Child', '$390'), ('ArtTile_Octus','$440'),
-                          ('ArtTile_LZ_Bubbles','$220'), ('ArtTile_Water_Surface','$294'),
-                          ('ArtTile_Splats','$418'), ('ArtTile_LZ_Splash','$1F0-$6D')]:
+                          ('ArtTile_Water_Surface','$294'),
+                          ('ArtTile_Splats','$418')]:
         text, count = re.subn(r'('+symbol+r':\s*equ\s+)[^;\n]+',r'\g<1>'+value+' ',text)
         assert count == 1, symbol
     constants.write_text(text)
@@ -190,9 +214,19 @@ def main():
     build.write_text(script)
     for name in ('object-course.bin','object-course.lst'):
         (root/name).unlink(missing_ok=True)
-    for name in ('asl','p2bin'):
-        (root/f'build_tools/Linux-x86_64/{name}').chmod(0o755)
-    result = subprocess.run(['texlua','build.lua'],cwd=root,capture_output=True,text=True)
+    # Run executable copies outside the checkout. This also avoids changing
+    # tracked binary modes or having a workspace sync reset them between passes.
+    with tempfile.TemporaryDirectory(prefix='mystic-object-tools-') as directory:
+        tools = Path(directory)
+        shutil.copytree(root/'build_tools/Linux-x86_64', tools, dirs_exist_ok=True)
+        for name in ('asl', 'p2bin'):
+            (tools/name).chmod(0o755)
+        common = root/'build_tools/lua/common.lua'
+        script = common.read_text()
+        hook = '\tlocal platform_directory, executable_suffix = get_platform_specific_info_memoised()\n'
+        script = replace_once(script, hook, hook + '\tplatform_directory = "' + tools.as_posix() + '/"\n')
+        common.write_text(script)
+        result = subprocess.run(['texlua','build.lua'],cwd=root,capture_output=True,text=True)
     (output/'build.log').write_text(result.stdout+result.stderr)
     if result.returncode or not (root/'object-course.lst').exists() or 'Symbol Table' not in (root/'object-course.lst').read_text():
         raise SystemExit(f'Build failed; see {output}/build.log')

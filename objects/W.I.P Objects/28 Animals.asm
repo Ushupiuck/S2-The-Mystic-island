@@ -1,7 +1,7 @@
 ; ---------------------------------------------------------------------------
-animal_ground_routine_base = objoff_30
-animal_ground_x_vel = objoff_32
-animal_ground_y_vel = objoff_34
+animal_ground_routine_base = objoff_34
+animal_ground_x_vel = objoff_36
+animal_ground_y_vel = objoff_38
 ObjAnimal:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
@@ -222,15 +222,15 @@ ObjAnimalRandom:
 		move.b	#7,obTimeFrame(a0)
 		move.b	#2,obFrame(a0)
 		move.w	#-$400,obVelY(a0)
-	;	tst.b	objoff_38(a0)	; From Sonic 3 & knuckles
+	;	tst.b	objoff_3C(a0)	; From Sonic 3 & knuckles
 		tst.b	(Boss_defeated_flag).w
 		bne.s	++
 		jsr	(FindFreeObj).l
 		bne.s	+
-		_move.b	#id_Obj2A,obID(a1)
+		move.l	#ObjNull,code(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
-		move.w	objoff_3E(a0),d0
+		move.w	objoff_42(a0),d0
 		lsr.w	#1,d0
 		move.b	d0,obFrame(a1)
 +		bra.w	DisplaySprite
@@ -262,7 +262,7 @@ ObjAnimal_Main:
 		add.b	d0,d0
 		addq.b	#4,d0
 		move.b	d0,obRoutine(a0)
-		tst.b	objoff_38(a0)
+		tst.b	objoff_3C(a0)
 		beq.s	+
 		btst	#4,(Vint_runcount+3).w
 		beq.s	+
@@ -334,7 +334,7 @@ ObjAnimal_ChkDel:
 ObjAnimal_Prison:
 		tst.b	obRender(a0)
 		bpl.w	DeleteObject
-		subq.w	#1,objoff_36(a0)
+		subq.w	#1,objoff_3A(a0)
 		bne.w	+
 		move.b	#2,obRoutine(a0)
 		move.w	#$80,obPriority(a0)
@@ -385,7 +385,7 @@ ObjAnimal_DoubleBounce:
 		jsr	(ObjHitFloor).l
 		tst.w	d1
 		bpl.w	ObjAnimal_ChkDel
-		not.b	objoff_2D(a0) ; used to be objoff_29 in Sonic 1/2; in sonic 3, 29 is a "convention followed by many objects", so it was changed
+		not.b	objoff_31(a0) ; used to be objoff_2D in Sonic 1/2; in sonic 3, 29 is a "convention followed by many objects", so it was changed
 		bne.s	+
 		neg.w	obVelX(a0)
 		bchg	#0,obRender(a0)
@@ -434,7 +434,7 @@ ObjAnimal_FlyBounce:
 		jsr	(ObjHitFloor).l
 		tst.w	d1
 		bpl.s	++
-		not.b	objoff_2D(a0) ; used to be objoff_29 in Sonic 1/2; in sonic 3, 29 is a "convention followed by many objects", so it was changed
+		not.b	objoff_31(a0) ; used to be objoff_2D in Sonic 1/2; in sonic 3, 29 is a "convention followed by many objects", so it was changed
 		bne.s	+
 		neg.w	obVelX(a0)
 		bchg	#0,obRender(a0)

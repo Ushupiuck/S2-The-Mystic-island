@@ -18,7 +18,7 @@ GBall_Index:	dc.w GBall_Main-GBall_Index
 GBall_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		move.w	#$4080,obAngle(a0)
-		move.w	#-$200,objoff_3E(a0)
+		move.w	#-$200,objoff_42(a0)
 		move.l	#Map_BossItems,obMap(a0)
 		move.b	#Map_BossItems_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Eggman_Weapons,0,0),obGfx(a0)
@@ -35,7 +35,7 @@ GBall_Main:	; Routine 0
 		move.b	#4,obRender(a1)
 		move.b	#Map_BossItems_width,width_pixels(a1)
 		move.w	#$300,obPriority(a1)
-		move.l	objoff_34(a0),objoff_34(a1)
+		move.l	objoff_38(a0),objoff_38(a1)
 		dbf	d1,GBall_MakeLinks ; repeat sequence 5 more times
 		move.b	#8,obRoutine(a1)
 		move.l	#Map_GBall,obMap(a1) ; load different mappings for final link
@@ -52,7 +52,7 @@ GBall_MakeLinks:
 		bne.s	GBall_MakeBall
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
-		_move.b	#id_Obj48,obID(a1) ; load chain link object
+		move.l	#Obj48,code(a1) ; load chain link object
 		move.b	#6,obRoutine(a1)
 		move.l	#Map_Obj17,obMap(a1)
 		move.b	#Map_Obj17_height,height_pixels(a1)
@@ -68,7 +68,7 @@ GBall_MakeLinks:
 		move.b	#4,obRender(a1)
 		move.b	#sprite_bound(8,Map_Obj17_width),obActWid(a1)
 		move.w	#$300,obPriority(a1)
-		move.l	objoff_34(a0),objoff_34(a1)
+		move.l	objoff_38(a0),objoff_38(a1)
 		dbf	d1,GBall_MakeLinks ; repeat sequence 5 more times
 
 GBall_MakeBall:
@@ -99,31 +99,31 @@ loc_191D2:
 		addi.l	#v_objspace,d4
 		movea.l	d4,a1
 		move.b	(a3)+,d0
-		cmp.b	objoff_3C(a1),d0
+		cmp.b	objoff_40(a1),d0
 		beq.s	loc_191EC
-		addq.b	#1,objoff_3C(a1)
+		addq.b	#1,objoff_40(a1)
 
 loc_191EC:
 		dbf	d6,loc_191D2
 
-		cmp.b	objoff_3C(a1),d0
+		cmp.b	objoff_40(a1),d0
 		bne.s	loc_19206
-		movea.l	objoff_34(a0),a1
+		movea.l	objoff_38(a0),a1
 		cmpi.b	#6,ob2ndRout(a1)
 		bne.s	loc_19206
 		addq.b	#2,obRoutine(a0)
 
 loc_19206:
-		cmpi.w	#$20,objoff_32(a0)
+		cmpi.w	#$20,objoff_36(a0)
 		beq.s	GBall_Display
-		addq.w	#1,objoff_32(a0)
+		addq.w	#1,objoff_36(a0)
 
 GBall_Display:
 		bsr.w	sub_19236
 		move.b	obAngle(a0),d0
 		jsr	(CalcSine).l
-		move.w	objoff_38(a0),d2
-		move.w	objoff_3A(a0),d3
+		move.w	objoff_3C(a0),d2
+		move.w	objoff_3E(a0),d3
 		lea	obSubtype(a0),a2
 		moveq	#0,d6
 		move.b	(a2)+,d6
@@ -135,7 +135,7 @@ GBall_Display:
 		addi.l	#v_objspace,d4
 		movea.l	d4,a1
 		moveq	#0,d4
-		move.b	objoff_3C(a1),d4
+		move.b	objoff_40(a1),d4
 		move.l	d4,d5
 		muls.w	d0,d4
 		asr.l	#8,d4
@@ -152,30 +152,30 @@ GBall_Display:
 GBall_Display2:	; Routine 4
 		bsr.w	sub_19236
 	;	jsr	(Obj48_Move).l
-		tst.b	objoff_3D(a0)
+		tst.b	objoff_41(a0)
 		bne.s	+
-		move.w	objoff_3E(a0),d0
+		move.w	objoff_42(a0),d0
 		addq.w	#8,d0
-		move.w	d0,objoff_3E(a0)
+		move.w	d0,objoff_42(a0)
 		add.w	d0,obAngle(a0)
 		cmpi.w	#$200,d0
 		bne.s	++
-		move.b	#1,objoff_3D(a0)
+		move.b	#1,objoff_41(a0)
 		bra.s	++
 ; ===========================================================================
 +
-		move.w	objoff_3E(a0),d0
+		move.w	objoff_42(a0),d0
 		subq.w	#8,d0
-		move.w	d0,objoff_3E(a0)
+		move.w	d0,objoff_42(a0)
 		add.w	d0,obAngle(a0)
 		cmpi.w	#-$200,d0
 		bne.s	+
-		move.b	#0,objoff_3D(a0)
+		move.b	#0,objoff_41(a0)
 +
 		move.b	obAngle(a0),d0
 		jsr	(CalcSine).l
-		move.w	objoff_38(a0),d2
-		move.w	objoff_3A(a0),d3
+		move.w	objoff_3C(a0),d2
+		move.w	objoff_3E(a0),d3
 		lea	obSubtype(a0),a2
 		moveq	#0,d6
 		move.b	(a2)+,d6
@@ -187,7 +187,7 @@ GBall_Display2:	; Routine 4
 		addi.l	#v_objspace,d4
 		movea.l	d4,a1
 		moveq	#0,d4
-		move.b	objoff_3C(a1),d4
+		move.b	objoff_40(a1),d4
 		move.l	d4,d5
 		muls.w	d0,d4
 		asr.l	#8,d4
@@ -205,19 +205,19 @@ GBall_Display2:	; Routine 4
 
 
 sub_19236:
-		movea.l	objoff_34(a0),a1
+		movea.l	objoff_38(a0),a1
 		addi.b	#$20,obAniFrame(a0)
 		bcc.s	+
 		bchg	#0,obFrame(a0)
 +
-		move.w	obX(a1),objoff_3A(a0)
+		move.w	obX(a1),objoff_3E(a0)
 		move.w	obY(a1),d0
-		add.w	objoff_32(a0),d0
-		move.w	d0,objoff_38(a0)
+		add.w	objoff_36(a0),d0
+		move.w	d0,objoff_3C(a0)
 		move.b	obStatus(a1),obStatus(a0)
 		tst.b	obStatus(a1)
 		bpl.s	.return
-		_move.b	#id_ObjFD,obID(a0)
+		move.l	#FieryExplosion,code(a0)
 		clr.b	obRoutine(a0)
 .return:	rts
 ; End of function sub_17C2A
@@ -225,10 +225,10 @@ sub_19236:
 ; ===========================================================================
 
 loc_19274:	; Routine 6
-		movea.l	objoff_34(a0),a1
+		movea.l	objoff_38(a0),a1
 		tst.b	obStatus(a1)
 		bpl.s	GBall_Display3
-		_move.b	#id_ObjFD,obID(a0)
+		move.l	#FieryExplosion,code(a0)
 		clr.b	obRoutine(a0)
 
 GBall_Display3:
@@ -243,13 +243,13 @@ GBall_ChkVanish:; Routine 8
 
 GBall_Vanish:
 		move.b	d0,obFrame(a0)
-		movea.l	objoff_34(a0),a1
+		movea.l	objoff_38(a0),a1
 		tst.b	obStatus(a1)
 		bpl.s	GBall_Display3
 		clr.b	obColType(a0)
 		bsr.w	BossDefeated
-		subq.b	#1,objoff_3C(a0)
+		subq.b	#1,objoff_40(a0)
 		bpl.s	GBall_Display3
-		_move.b	#id_ObjFD,obID(a0)
+		move.l	#FieryExplosion,code(a0)
 		clr.b	obRoutine(a0)
 		jmp	(DisplaySprite).l

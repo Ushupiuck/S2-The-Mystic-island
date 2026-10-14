@@ -12,8 +12,10 @@ implementation previously spread across IDs `$55–$58` in `main.asm`.
 
 1. Include its code and mappings through the normal `main.asm` include tree,
    and connect its entry point to the ID-based `Obj_Index`. Update placements
-   or the event that creates it, as appropriate. Objects still have a `$4A`
+   or the event that creates it, as appropriate. Objects have a `$50`
    SST stride; use this project's named fields rather than source offsets.
+   Dynamic creation writes `move.l #ObjectEntry,code(a1)`. See the
+   [routine-pointer import notes](SST-routine-pointers.md).
 2. Use S3&K mappings: word piece count, then six bytes per piece: signed byte
    Y, byte size, tile word, signed word X. S1 imports need their byte counts
    and five-byte pieces converted. S2 imports lose the second tile word used
@@ -39,7 +41,7 @@ The boss's main ship provides a concrete initializer:
 `sprite_bound` evaluates the larger of the retained legacy half-width and the
 mapping half-width at assembly time. It emits an immediate constant; there is
 no function call. A newly authored object without a legacy minimum can assign
-`Map_NewObject_width` directly. Set `height_pixels` at `$49` on the same object
+`Map_NewObject_width` directly. Set `height_pixels` at `$06` on the same object
 whose mappings you set: child constructors using `a1` must initialize `a1`.
 If an object switches between several mapping tables, update its bounds too
 or use the maximum bounds across those tables.
@@ -91,7 +93,7 @@ remains independent of its 20-pixel collision radius.
 
 Sonic 2 final's EHZ boss uses **eight linked ordinary SST slots**, all with
 the same boss ID: ship bottom (controller), cockpit, car, three wheels, drill
-and propeller. Their routine selects the role; `objoff_34` links them to their
+and propeller. Their routine selects the role; `objoff_38` links them to their
 parent, with a reciprocal controller/cockpit link. Each child receives its own
 mappings, art, bounds and priority and queues through `DisplaySprite`.
 The port retries initialization until all seven child slots are available.
@@ -99,13 +101,13 @@ It preserves the stock eight-hit fight, hurt/laughter/escape animations,
 terrain-following wheels and drill separation.
 
 This differs from a packed composite such as the bridge or invincibility
-stars. Those use a header containing main frame, group half-width at `$0E`,
-byte child count at `$0F`, six-byte child records from `$10`, and group
-half-height at `$49`. The header's bounds must cover the positions of the
+stars. Those use a header containing main frame, group half-width at `$07`,
+byte child count at `$16`, six-byte child records from `$18`, and group
+half-height at `$06`. The header's bounds must cover the positions of the
 moving children, not just the geometry of one child frame. Derive that extent
 from the movement range or update it when building the group. A mapping-only
-constant cannot infer runtime child positions. Use `DisplaySprite3` when packed
-records occupy the ordinary priority field, as the star object does.
+constant cannot infer runtime child positions. Use `DisplaySprite3` when an object repurposes the priority field, as the
+star object does.
 
 No renderer special case or ID check is needed for either arrangement. The
 rotating S1 special-stage grid keeps its existing dedicated S1-format loader;
@@ -135,7 +137,7 @@ large-explosion bank only after the defeat timer finishes. Regular explosion
 art starts at `$B040`, with animal banks at `$BC00` and `$BE40`. The existing S1
 capsule needs separate body/button placement records, now present in EHZ2.
 The boss can also use the existing MZ placeholder's position: origin deltas at
-`$40/$42` translate the stock movement/escape coordinates without growing SSTs.
+`$44/$46` translate the stock movement/escape coordinates without growing SSTs.
 
 Final Zone's look-up strip was a separate initialization error in the shared
 streamer. Fixed `$1010` crossing flags assumed an origin aligned to that bit;

@@ -57,7 +57,7 @@ def main():
                 'Gator lifecycle/rendering is checked; its known broken gameplay is not certified.',
                 'Nine W.I.P/Unused files are not assembled; seven empty sources have no implementation.',
                 'The compiled title palette handler lacks completed data setup and an update entry, and is not instantiated.',
-                'Test-only S1 art supplies bubbles, splashes, the small door and the shared floor arrangement.',
+                'Test-only S1 art supplies the small door and shared floor arrangement; water effects use the restored gameplay assets.',
                 'Course bank relocations, extra art and LZ2 replacement exist only in the copied test ROM.']}
     (ROOT/'docs/Object-course-results.json').write_text(json.dumps(result,indent=2)+'\n')
     lines=['# Object-folder coverage','',
