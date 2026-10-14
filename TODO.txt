@@ -33,11 +33,12 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
+Remove the timed flight fallback for unreachable targets; keep normal jumps, cap collapse pursuit at 6px horizontally / 1px vertically, recover grounded slope slips through the existing spindash AI, and verify slow/fast actual HPZ1 routes and successive platform landings in NTSC/PAL < DONE
 Keep Tails's horizontal rolling jump until the last ridden ledge/floor actually fragments; fly only towards nearby running/jumping Sonic above him, keep ordinary movement on GHZ1's paired ledges, distinguish descending jumps from accidental falls and preserve controller 2 precedence < DONE
 Lock Debug and both logical controls from primary drowning animation start; preserve low-air/other hurt/death Debug, companion independence and unlocked level restart < DONE
 Pack invincibility orbit/frame state into the eight composite padding bytes, reduce SSTs from $50 to $4E, move water bank caches into splash scratch and reclaim 226 bytes; preserve renderer fall-through optimizations and test BG composites at entry < DONE
 Prevent flying catch-up Tails from depressing bridges, use each depressed log's actual landing surface, and detach his old object before take-off < DONE
-Give companion ledge jumps horizontal steering towards the live target, follow moving/depressed platform riders without math subroutines, and use local catch-up flight after unsuccessful jumps; preserve manual controller 2 precedence < DONE
+Give companion ledge jumps horizontal steering towards the live target, follow moving/depressed platform riders without math subroutines, retain ordinary jump attempts at unreachable targets, and preserve manual controller 2 precedence < DONE
 Lock Game/Time Over logical controls and Debug entry while retaining raw card-advance buttons; unlock Sega/current Continue placeholder and restarted levels; force companion Tails right after signposts < DONE
 Allow companion Tails to collect hidden end-of-level bonuses once through the shared score < DONE
 Prevent normal S1-stage wall embedding: validate the exact rounded movement delta and recheck changed bumper velocities before applying them; reproduce three stage-1 bumper failures and pass 352 approaches in NTSC/PAL without adding recovery/teleport logic < DONE

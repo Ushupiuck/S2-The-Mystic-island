@@ -84,9 +84,9 @@ use ordinary velocity/animation/state space as child records.
 
 `$45` and `$4D` are available private player scratch. The tail object has
 its own overlays, including a full remembered interaction pointer at `$2E`
-and the companion's ledge-attempt timer at `$32–$33`. During CPU flight only,
-that same word marks a collapse-triggered pursuit; it is cleared on landing
-or when the leader falls without deliberately jumping.
+and the companion's ledge-approach state at `$32–$33` (0 normal, 1 approach).
+During CPU flight only, -1 marks a collapse-triggered pursuit; it is cleared
+on landing or when the leader falls without deliberately jumping.
 Two reserved splash slots cache their physical water/dust banks at `$34–$35`.
 
 ## Importing and creating objects

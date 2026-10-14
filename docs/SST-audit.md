@@ -22,7 +22,7 @@ The latter include `Obj49` (waterfall), `Obj50`/`Obj51` (Aquis), `Obj4C`
 The final named-field scan found no remaining odd word/long operands or
 operands extending beyond `$4E`. `check_object_layouts.py` now checks
 byte/word accesses to routine pointers (including absolute reserved slots),
-numeric `id_*` values used as code pointers, and 6,267 bare named SST operands.
+numeric `id_*` values used as code pointers, and 6,269 bare named SST operands.
 This checker does not trace register aliases or prove runtime array indexes.
 Those cases were reviewed separately below; duplicate field meanings across
 different object types are intentional, not conflicts.
@@ -35,7 +35,7 @@ different object types are intentional, not conflicts.
 | Bridge / swinging helpers | Children use the common composite ABI. Ordinary parent state and helper pointers remain in their own SSTs. Child helpers delete directly rather than interpreting the overlaid respawn word. Bridge's two-rider selectors use named scratch offsets. |
 | Shield / points caches | Reserved shield SSTs retain effect-frame cache `$34`, points-frame cache `$35`, latest-points pointer `$36–$37` and shield-parent word `$42–$43`. Points uses a pointer already advanced to `$35`, then displacement `+1` reaches the even word at `$36`. |
 | Water bank caches | The two reserved splash SSTs use unused scratch bytes `$34–$35`. Dust, splash and countdown share the bank/cache service; initialization and DMA retries were exercised. |
-| Tails / separate tail | Player flight energy ends at `$4C`. The separate tail's CPU remembered-code longword `$2E–$31` and ledge-attempt timer / CPU-flight marker `$32–$33` are disjoint from its art-frame cache `$38` and parent word `$42–$43`. |
+| Tails / separate tail | Player flight energy ends at `$4C`. The separate tail's CPU remembered-code longword `$2E–$31` and ledge-approach state / CPU-flight marker `$32–$33` are disjoint from its art-frame cache `$38` and parent word `$42–$43`. |
 | Caterkiller | Twelve-byte trail `$30–$3B`, packed parent longword `$3C–$3F`, inertia `$40–$41`, distance credit `$42–$43`. Parent's high byte remains a segment index, handled through the 68000's 24-bit address behavior. |
 | EHZ / GHZ bosses and other multipart objects | Parent/child fields, identity tests, slot strides and fragment copying use the moved symbols/full routine pointers. Real collisions and defeat/capsule/results sequences were exercised. |
 | WIP staircase | Timer `$30–$31`, touch/slot bytes `$32–$33`, origins `$34–$37`, four-word offsets `$38–$3F`, parent `$40–$43`. Stored table selectors use the named offset constants; stale comments were corrected. |
@@ -86,7 +86,7 @@ Indexed/compound addressing is covered by the separate review above.
 | --- | ---: |
 | `main.asm` | 802 |
 | `objects/01 Sonic.asm` | 423 |
-| `objects/02 Tails.asm` | 573 |
+| `objects/02 Tails.asm` | 575 |
 | `objects/03 Collision Switcher.asm` | 52 |
 | `objects/05 Tails' Tails.asm` | 32 |
 | `objects/06 EHZ Spiral.asm` | 26 |

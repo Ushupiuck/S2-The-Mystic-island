@@ -48,7 +48,7 @@ def place(g, actor, x, y, airborne=True):
 def reset_cpu(g):
     g.write('Tails_CPU_routine', 6, 2)
     for f in ('Tails_CPU_idle_timer', 'Tails_CPU_flight_timer',
-              'Tails_CPU_reach_timer'):
+              'Tails_CPU_reach_state'):
         if f in g.s:
             g.write(f, 0, 2)
     g.write('Tails_CPU_auto_jump_flag', 0)
@@ -88,7 +88,7 @@ def main():
             ('ledge-right', 48, 184, 168, 136, 0),
             ('ledge-left', 48, 116, 132, 164, 0),
             ('ledge-moving', 48, 184, 168, 136, 5),
-            ('ledge-flight', 132, 184, 168, 136, 0)):
+            ('ledge-unreachable', 132, 184, 168, 136, 0)):
         g.restore(baseline)
         platform = spawn(g, 'Obj18', px, 960 - height, subtype & 0xF0)
         place(g, 'v_player', sx, 760)
@@ -104,18 +104,25 @@ def main():
         place(g, 'v_player2', tx, 948)
         reset_cpu(g)
         trace, flew, landed = [], False, False
+        jumps, was_jumping = 0, False
         for tick in range(480):
             g.run()
             sample = state(g)
             flew |= sample['cpu'] == 4
+            jumping = bool(g.get('v_player2', 'jumping'))
+            jumps += jumping and not was_jumping
+            was_jumping = jumping
             if tick % 8 == 0:
                 trace.append({'tick': tick, **sample})
             if g.get(platform, 'obStatus') & 16 and not sample['obStatus'] & 2:
                 landed = True
                 break
+            if height > 100 and tick == 239:
+                break  # several normal jump attempts, before offscreen respawn
         (args.output / (label + '-trace.json')).write_text(json.dumps(trace))
-        finish(label, landed and (height > 100 or not flew),
-               landed=landed, flew=flew, frames=tick + 1, final=state(g))
+        expected = not landed and jumps >= 2 if height > 100 else landed
+        finish(label, expected and not flew, landed=landed, flew=flew,
+               jumps=jumps, frames=tick + 1, final=state(g))
 
     g.restore(baseline)
     spawn(g, 'Obj18', 184, 828)
@@ -158,6 +165,7 @@ def main():
             g.put('v_player', 'obInertia', 0x100, 2)
         g.write('Timer_frames', 63, 2)  # provoke the normal CPU jump, not a forced flight
         jumped = flew = descending_jump_flight = falling_release = False
+        max_flight_dx = max_flight_dy = 0
         trace = []
         for tick in range(90):
             before = (g.get('v_player2', 'obX', 2), g.get('v_player2', 'obY', 2))
@@ -171,8 +179,11 @@ def main():
                 assert jumped, 'Flight replaced the initial rolling jump'
                 assert g.get(ledge, 'obRoutine') == g.s['ledge_fragment_routine'], 'Countdown triggered flight'
                 assert before == (g.get('v_player2', 'obX', 2), g.get('v_player2', 'obY', 2)), 'Take-off teleported Tails'
-                assert g.read('Tails_CPU_reach_timer', 2) == 65535
+                assert g.read('Tails_CPU_reach_state', 2) == 65535
             flew |= flying
+            if flying and was_flying:
+                max_flight_dx = max(max_flight_dx, abs(g.get('v_player2', 'obX', 2) - before[0]))
+                max_flight_dy = max(max_flight_dy, abs(g.get('v_player2', 'obY', 2) - before[1]))
             descending_jump_flight |= (flying and lead_air and lead_jump and
                                        g.get('v_player', 'obVelY', 2) < 0x8000)
             if lead_air and not lead_jump:
@@ -192,7 +203,9 @@ def main():
             ok &= descending_jump_flight
         else:
             ok &= falling_release
+        ok &= max_flight_dx <= 6 and max_flight_dy <= 1
         finish('collapsed-ledge-' + action, ok, jumped=jumped, flew=flew,
+               max_flight_dx=max_flight_dx, max_flight_dy=max_flight_dy,
                descending_jump_flight=descending_jump_flight,
                ordinary_fall=falling_release, final=state(g))
 
@@ -282,7 +295,7 @@ def main():
                 g.buttons = {7}
                 broken, trace = set(), []
                 flew = jumped = crumble_flight = crossed = False
-                for tick in range(200):
+                for tick in range(480):
                     g.run()
                     for obj in range(g.s['v_lvlobjspace'] & 65535,
                                      g.s['v_lvlobjend'] & 65535, g.s['object_size']):
@@ -294,7 +307,7 @@ def main():
                     flew |= sample['cpu'] == 4
                     jumped |= bool(g.get('v_player2', 'jumping'))
                     crumble_flight |= (sample['cpu'] == 4 and
-                                       g.read('Tails_CPU_reach_timer', 2) == 65535)
+                                       g.read('Tails_CPU_reach_state', 2) == 65535)
                     if tick % 8 == 0:
                         trace.append({'tick': tick, **sample})
                     if sample['obX'] > 0x10D0 and not sample['obStatus'] & 2:

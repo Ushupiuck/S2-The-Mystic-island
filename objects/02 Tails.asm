@@ -66,7 +66,7 @@ Obj02_Init:
 		clr.b	tails_flight_flag(a0)
 		clr.w	(Tails_CPU_idle_timer).w
 		clr.w	(Tails_CPU_flight_timer).w
-		clr.w	(Tails_CPU_reach_timer).w
+		clr.w	(Tails_CPU_reach_state).w
 		clr.w	(Tails_CPU_routine).w
 		clr.b	(Tails_CPU_auto_jump_flag).w
 		clr.w	(Flying_carrying_Sonic_flag).w
@@ -180,7 +180,7 @@ Tails_Control:
 .locked:
 		move.w	(v_jpadholdlogical).w,(v_jpadholdlogical2).w
 		clr.w	(Tails_CPU_idle_timer).w
-		clr.w	(Tails_CPU_reach_timer).w
+		clr.w	(Tails_CPU_reach_state).w
 		tst.b	(f_lockctrl).w
 		bmi.s	.return			; drowning / over-screen supplies neutral input
 		clr.b	tails_flight_flag(a0)
@@ -386,7 +386,7 @@ Tails_Catch_Up_Flying:
 
 TailS3_loc_13B50:
 		move.w	#4,(Tails_CPU_routine).w
-		clr.w	(Tails_CPU_reach_timer).w
+		clr.w	(Tails_CPU_reach_state).w
 		move.w	obX(a1),d0
 		move.w	d0,obX(a0)
 		move.w	d0,(Tails_CPU_target_X).w
@@ -435,7 +435,7 @@ TailS3_locret_13BF6:
 ; ---------------------------------------------------------------------------
 
 Tails_FlySwim_Unknown:
-		cmpi.w	#Tails_CPU_CrumbleFlight,(Tails_CPU_reach_timer).w
+		cmpi.w	#Tails_CPU_CrumbleFlight,(Tails_CPU_reach_state).w
 		bne.s	.catch_up
 		btst	#status.player.in_air,obStatus(a1)
 		beq.s	.catch_up
@@ -494,6 +494,12 @@ TailS3_loc_13C88:
 TailS3_loc_13C90:
 		add.b	d1,d2
 		addq.w	#1,d2
+		cmpi.w	#Tails_CPU_CrumbleFlight,(Tails_CPU_reach_state).w
+		bne.s	.speed_ready
+		cmpi.w	#Tails_CPU_FlyHorizontalMax,d2
+		bls.s	.speed_ready
+		moveq	#Tails_CPU_FlyHorizontalMax,d2
+.speed_ready:
 		tst.w	d0
 		bmi.s	TailS3_loc_13CAA
 		bset	#status.player.x_flip,obStatus(a0)
@@ -519,20 +525,10 @@ TailS3_loc_13CBA:
 		add.w	d2,obX(a0)
 
 TailS3_loc_13CBE:
+		moveq	#1,d2
 		move.w	obY(a0),d1
 		sub.w	(Tails_CPU_target_Y).w,d1
 		beq.s	TailS3_loc_13CD2
-		move.w	d1,d2
-		bpl.s	.vertical_distance
-		neg.w	d2
-.vertical_distance:
-		lsr.w	#4,d2
-		addq.w	#1,d2
-		cmpi.w	#Tails_CPU_FlyVerticalMax,d2
-		bls.s	.vertical_step
-		moveq	#Tails_CPU_FlyVerticalMax,d2
-.vertical_step:
-		tst.w	d1
 		bmi.s	TailS3_loc_13CCE
 		neg.w	d2
 
@@ -548,7 +544,7 @@ TailS3_loc_13CD2:
 		bne.s	TailS3_loc_13D42
 		cmpi.b	#6,(v_player+obRoutine).w
 		bhs.s	TailS3_loc_13D42
-		cmpi.w	#Tails_CPU_CrumbleFlight,(Tails_CPU_reach_timer).w
+		cmpi.w	#Tails_CPU_CrumbleFlight,(Tails_CPU_reach_state).w
 		bne.s	Tails_CPU_EndFlight
 		btst	#status.player.in_air,obStatus(a1)
 		beq.s	Tails_CPU_EndFlight	; entry already rejected falls; grounded targets resume following
@@ -556,7 +552,7 @@ TailS3_loc_13D42:
 		move.b	#$81,obControl(a0)
 		rts
 Tails_CPU_EndFlight:
-		clr.w	(Tails_CPU_reach_timer).w
+		clr.w	(Tails_CPU_reach_state).w
 		move.w	#6,(Tails_CPU_routine).w
 		move.b	#0,obControl(a0)
 		move.b	#0,obAnim(a0)
@@ -600,8 +596,18 @@ TailS3_loc_13D78:
 		bmi.w	TailS3_loc_13EBE
 		tst.w	move_lock(a0)
 		beq.s	TailS3_loc_13DA6
-		tst.w	obInertia(a0)
+		btst	#status.player.in_air,obStatus(a0)
 		bne.s	TailS3_loc_13DA6
+		move.w	obInertia(a0),d1
+		beq.s	.slope_recovery
+		move.w	obX(a1),d0
+		sub.w	obX(a0),d0
+		beq.s	TailS3_loc_13DA6
+		eor.w	d1,d0
+		bpl.s	TailS3_loc_13DA6		; still climbing towards Sonic
+.slope_recovery:
+		; Slope slip can retain downhill inertia instead of producing exact zero.
+		; Let the normal CPU spindash state wait for the lock and come to rest.
 		move.w	#8,(Tails_CPU_routine).w
 
 TailS3_loc_13DA6:
@@ -614,7 +620,7 @@ TailS3_loc_13DA6:
 		move.w	(a2,d0.w),d2
 		move.w	2(a2,d0.w),d3
 		moveq	#Tails_CPU_FollowWidth,d5
-		tst.w	(Tails_CPU_reach_timer).w
+		tst.w	(Tails_CPU_reach_state).w
 		bne.s	.reach_target
 		btst	#status.player.on_object,obStatus(a1)
 		bne.s	.mounted_target
@@ -744,9 +750,8 @@ TailS3_sub_13ECA:
 		rts
 ; End of function TailS3_sub_13ECA
 
-; Preserve the normal recorded-input AI for ordinary terrain. A grounded
-; higher target that remains unreachable after a sustained ledge attempt gets
-; a local flight take-off instead of endless identical failed jumps.
+; Keep horizontal steering during normal jumps towards a higher ledge.
+; Only an actually fragmented ledge can interrupt that jump with local flight.
 ; d0 = 1 if take-off began. Manual controller 2 input always takes precedence.
 Tails_CPU_CheckReach:
 		tst.w	(Tails_CPU_idle_timer).w
@@ -757,7 +762,7 @@ Tails_CPU_CheckReach:
 		bmi.w	.reset
 		move.w	obX(a1),d0
 		sub.w	obX(a0),d0
-		move.w	d0,d1			; retain direction while bounding both flight paths
+		move.w	d0,d1			; retain the direction of the jump towards Sonic
 		bpl.s	.distance
 		neg.w	d0
 .distance:
@@ -780,26 +785,19 @@ Tails_CPU_CheckReach:
 		bsr.w	Tails_CPU_TargetHasCollapsed
 		tst.w	d0
 		beq.s	.check_lead
-		move.w	#Tails_CPU_CrumbleFlight,(Tails_CPU_reach_timer).w
+		move.w	#Tails_CPU_CrumbleFlight,(Tails_CPU_reach_state).w
 		bra.s	.start_flight
 .check_lead:
 		btst	#status.player.in_air,obStatus(a1)
 		bne.s	.reset			; when Sonic is falling, continue the ordinary jump/fall
 		btst	#status.player.in_air,obStatus(a0)
-		bne.s	.in_air
+		bne.s	.return			; preserve approach steering through the normal jump
 		move.w	obY(a0),d0
 		sub.w	obY(a1),d0
 		cmpi.w	#Tails_CPU_ReachHeight,d0
 		blt.s	.reset
-		bra.s	.count
-.in_air:
-		tst.w	(Tails_CPU_reach_timer).w
-		beq.s	.return
-.count:
-		addq.w	#1,(Tails_CPU_reach_timer).w
-		cmpi.w	#Tails_CPU_ReachTime,(Tails_CPU_reach_timer).w
-		blo.s	.return
-		clr.w	(Tails_CPU_reach_timer).w
+		move.w	#1,(Tails_CPU_reach_state).w
+		bra.s	.return
 .start_flight:
 		move.w	#4,(Tails_CPU_routine).w
 		move.w	obY(a0),d0		; take off here; do not teleport to Sonic
@@ -807,7 +805,7 @@ Tails_CPU_CheckReach:
 		moveq	#1,d0
 		rts
 .reset:
-		clr.w	(Tails_CPU_reach_timer).w
+		clr.w	(Tails_CPU_reach_state).w
 .return:
 		moveq	#0,d0
 		rts

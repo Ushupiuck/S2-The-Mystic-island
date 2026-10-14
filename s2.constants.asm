@@ -127,13 +127,12 @@ Tails_FlapStateLimit:	equ $20
 Tails_ExtraFirstFrame:	equ $D1
 Tails_CPU_ManualTime:	equ 10*60
 Tails_CPU_RespawnTime:	equ 5*60
-Tails_CPU_ReachTime:	equ 2*60	; sustained failed ledge approach before local catch-up
 Tails_CPU_ReachHeight:	equ 24
 Tails_CPU_ReachWidth:	equ $80
 Tails_CPU_FollowWidth:	equ $30	; ordinary recorded-position following distance
 Tails_CPU_ReachStopWidth:	equ 8	; close the horizontal gap during a ledge jump
-Tails_CPU_CrumbleFlight:	equ -1	; reach timer's alternate meaning only in CPU flight state 4
-Tails_CPU_FlyVerticalMax:	equ 6	; pixels per frame; slow down near the target
+Tails_CPU_CrumbleFlight:	equ -1	; approach state becomes the collapse marker in CPU flight state 4
+Tails_CPU_FlyHorizontalMax: equ 6	; local collapse pursuit; offscreen respawn keeps stock speed
 Tails_FlightAttackMinAngle: equ $20	; S3&K's upward contact sector
 Tails_FlightAttackArc:	equ $40
 Tails_CarriedYOffset:	equ 28
@@ -147,7 +146,7 @@ v_jpadpresslogical2:	equ v_jpadholdlogical2+1
 Tails_CPU_idle_timer:	equ Tails_control_counter
 Tails_CPU_flight_timer:	equ Tails_respawn_counter
 Tails_CPU_interact:	equ v_player2tails+objoff_2E	; long; remembered standing-object code
-Tails_CPU_reach_timer:	equ v_player2tails+objoff_32	; word; unused separate-tail scratch
+Tails_CPU_reach_state:	equ v_player2tails+objoff_32	; word; 0 normal, 1 ledge approach, -1 collapse flight
 Tails_CPU_target_X:	equ v_player2tails+objoff_44
 Tails_CPU_target_Y:	equ v_player2tails+objoff_46
 Tails_CPU_auto_jump_flag:	equ v_player2tails+objoff_39

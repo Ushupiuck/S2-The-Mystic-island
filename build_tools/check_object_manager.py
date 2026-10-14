@@ -983,6 +983,52 @@ assert not m.cpu.reg_read(UC_M68K_REG_D5)&255
 assert m.get('v_player','obX',2)==x
 report['special_stage_negative_fraction_cannot_cross_wall_boundary']=True
 
+# An ordinary unreachable platform never becomes a timed flight trigger.
+for height in (24,48,132,256):
+    obj,ptr=setup(0x18,0)
+    m.put('v_player','obX',600,2);m.put('v_player','obY',116,2)
+    m.put('v_player2','obX',568,2);m.put('v_player2','obY',116+height,2)
+    m.write('Tails_CPU_routine',6,2)
+    for tick in range(420):
+        m.put('v_player2','obStatus',2 if tick%64<48 else 0)
+        m.put('v_player2','jumping',int(tick%64<48))
+        m.put('v_player2','obVelX',0x100,2)
+        m.act('Tails_CPU_CheckReach','v_player2',{UC_M68K_REG_A1:m.s['v_player']})
+        assert not m.cpu.reg_read(UC_M68K_REG_D0) and m.read('Tails_CPU_routine',2)==6
+        assert m.read('Tails_CPU_reach_state',2) in (0,1)
+report['unreachable_platforms_keep_normal_jump_approach']=1680
+
+# Only a grounded slope lock with zero or retreating inertia enters the
+# existing spindash state. Airborne, progressing and manual cases keep following.
+for side,inertia,locked,air,manual in product((-1,1),(-0x80,0,0x80),
+                                             (False,True),(False,True),(False,True)):
+    m.start();m.put('v_player','obX',600+side*32,2);m.put('v_player','obY',116,2)
+    m.put('v_player2','obX',600,2);m.put('v_player2','obY',116,2)
+    m.put('v_player2','obRender',0x80);m.put('v_player2','obStatus',2 if air else 0)
+    m.put('v_player2','obInertia',inertia,2);m.put('v_player2','move_lock',30 if locked else 0,2)
+    m.write('Tails_CPU_routine',6,2);m.write('Tails_CPU_idle_timer',120 if manual else 0,2)
+    m.act('TailS3_loc_13D78','v_player2',{UC_M68K_REG_A1:m.s['v_player']})
+    expected=locked and not air and not manual and (inertia==0 or side*inertia<0)
+    assert m.read('Tails_CPU_routine',2)==(8 if expected else 6),(side,inertia,locked,air,manual)
+report['slope_spindash_recovery_respects_motion_air_and_manual_input']=48
+
+# Local collapse flight has normal bounded movement in either direction,
+# including large inherited leader velocities and final one-pixel approach.
+for dx,dy,velocity in product((-256,-32,-6,-1,1,6,32,256),
+                              (-128,-16,-1,0,1,16,128),(-0x2000,-0x600,0,0x600,0x2000)):
+    m.start()
+    m.put('v_player','obX',600,2);m.put('v_player','obY',200,2)
+    m.put('v_player','obVelX',velocity,2)
+    m.put('v_player2','obX',600+dx,2);m.put('v_player2','obY',200+dy,2)
+    m.cpu.mem_write(m.s['Sonic_Pos_Record_Buf']&0xFFFFFF,struct.pack('>HH',600,200)*64)
+    m.write('Tails_CPU_routine',4,2);m.write('Tails_CPU_reach_state',65535,2)
+    m.act('TailS3_loc_13C50','v_player2',{UC_M68K_REG_A1:m.s['v_player']})
+    new_dx=m.get('v_player2','obX',2)-600;new_dy=m.get('v_player2','obY',2)-200
+    assert abs(new_dx-dx)<=6 and abs(new_dy-dy)<=1,(dx,dy,velocity,new_dx,new_dy)
+    assert abs(new_dx)<abs(dx) and abs(new_dy)<=abs(dy)
+    assert new_dx*dx>=0 and new_dy*dy>=0
+report['collapse_flight_speed_bounds_and_no_overshoot']=280
+
 # The ledge must actually fragment. Tails first jumps toward the lead;
 # Sonic may run away or deliberately jump, including the descending half.
 # Falling off with no jump flag must never provoke this flight.
@@ -1011,7 +1057,7 @@ for oid,triggered,fragmented,moving,lead_phase,tail_phase,towards in product(
     assert bool(m.cpu.reg_read(UC_M68K_REG_D0))==expected, (oid,triggered,fragmented,moving,lead_phase,tail_phase,towards)
     assert m.read('Tails_CPU_routine',2)==(4 if expected else 6)
     if expected:
-        assert m.read('Tails_CPU_reach_timer',2)==65535
+        assert m.read('Tails_CPU_reach_state',2)==65535
         assert not m.get(obj,'obStatus')&16 and not m.get('v_player2','obStatus')&8
     cases+=1
 report['collapsed_target_only_interrupts_horizontal_approach_jump']=cases
@@ -1069,19 +1115,19 @@ for lead_phase in ('run','jump-rise','jump-descend','idle'):
     m.put('v_player','obVelX',0 if lead_phase=='idle' else 0x400,2)
     m.put('v_player','obVelY',0xFC00 if lead_phase=='jump-rise' else 0x400,2)
     m.cpu.mem_write(m.s['Sonic_Pos_Record_Buf']&0xFFFFFF,struct.pack('>HH',600,116)*64)
-    m.write('Tails_CPU_routine',4,2);m.write('Tails_CPU_reach_timer',65535,2)
+    m.write('Tails_CPU_routine',4,2);m.write('Tails_CPU_reach_state',65535,2)
     m.act('TailS3_loc_13C50','v_player2',{UC_M68K_REG_A1:m.s['v_player']})
     flying=lead_phase.startswith('jump')
     assert m.read('Tails_CPU_routine',2)==(4 if flying else 6)
     assert m.get('v_player2','obControl')==(0x81 if flying else 0)
 report['ledge_flight_follows_whole_jump_and_lands_at_grounded_target']=True
-m.write('Tails_CPU_routine',4,2);m.write('Tails_CPU_reach_timer',65535,2)
+m.write('Tails_CPU_routine',4,2);m.write('Tails_CPU_reach_state',65535,2)
 m.put('v_player2','obControl',0x81)
 m.put('v_player','obStatus',2);m.put('v_player','jumping',0)
 m.put('v_player','obVelY',0x100,2)
 m.act('Tails_FlySwim_Unknown','v_player2',{UC_M68K_REG_A1:m.s['v_player']})
 assert m.read('Tails_CPU_routine',2)==6 and not m.get('v_player2','obControl')
-assert not m.read('Tails_CPU_reach_timer',2) and m.get('v_player2','obStatus')&2
+assert not m.read('Tails_CPU_reach_state',2) and m.get('v_player2','obStatus')&2
 report['ledge_flight_releases_immediately_when_sonic_falls']=True
 
 # The real air-expiry path locks both logical inputs before its 120-frame
