@@ -12,7 +12,7 @@ implementation previously spread across IDs `$55–$58` in `main.asm`.
 
 1. Include its code and mappings through the normal `main.asm` include tree,
    and connect its entry point to the ID-based `Obj_Index`. Update placements
-   or the event that creates it, as appropriate. Objects have a `$50`
+   or the event that creates it, as appropriate. Objects have a `$4E`
    SST stride; use this project's named fields rather than source offsets.
    Dynamic creation writes `move.l #ObjectEntry,code(a1)`. See the
    [routine-pointer import notes](SST-routine-pointers.md).

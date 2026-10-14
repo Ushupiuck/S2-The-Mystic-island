@@ -99,7 +99,7 @@ def main():
                 assert mapping < len(rom), 'Bad Debug mapping address'
     assert symbols['omSize'] == 6
     assert symbols['respawn_addr'] == 0x22
-    assert symbols['code'] == 0 and symbols['object_size'] == 0x50
+    assert symbols['code'] == 0 and symbols['object_size'] == 0x4E
     # Legacy code sometimes addressed an SST base directly instead of obID.
     # Cover those absolute references as well as symbolic code(aN) accesses.
     constants = (ROOT / 's2.constants.asm').read_text()
@@ -120,12 +120,12 @@ def main():
             assert not narrow.search(active), f'{source}:{line}: byte/word access to code pointer'
             assert not numeric_id.search(active), f'{source}:{line}: numeric placement ID used as a routine pointer'
     assert symbols['height_pixels'] == 6 and symbols['DebugEntry_size'] == 12
-    assert symbols['v_lvlobjend'] - symbols['v_lvlobjspace'] == 90 * 0x50
-    assert symbols['v_16x16'] == 0xFFC350
-    assert symbols['Error_Handler_Buffer'] == symbols['v_regbuffer'] == 0xFFE710
+    assert symbols['v_lvlobjend'] - symbols['v_lvlobjspace'] == 90 * 0x4E
+    assert symbols['v_16x16'] == 0xFFC26E
+    assert symbols['Error_Handler_Buffer'] == symbols['v_regbuffer'] == 0xFFE62E
     assert symbols['Object_Display_Lists'] == 0xFFE8C0
     assert symbols['Free_LegacyObjectState_end'] == symbols['Object_Display_Lists']
-    assert symbols['Free_LegacyObjectState_end'] - symbols['Free_LegacyObjectState'] == 0x162
+    assert symbols['Free_LegacyObjectState_end'] - symbols['Free_LegacyObjectState'] == 0x244
     assert not symbols['Debug_saved_mappings'] & 1
     assert symbols['Debug_saved_height'] + 1 == symbols['Free_LegacyObjectState']
     assert symbols['Debug_placement_type'] == symbols['Debug_placement_routine'] + 1

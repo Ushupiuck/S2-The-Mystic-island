@@ -2,8 +2,8 @@
 ; The reserved splash SST caches each physical bank even when no splash lives.
 ; A source change invalidates the frame cache before the generic loader runs;
 ; a full DMA queue leaves frame $FF, so the next attempt still retries.
-water_loaded_kind = objoff_4E
-water_loaded_frame = objoff_4F
+water_loaded_kind = objoff_34	; unused splash scratch, retained between bank users
+water_loaded_frame = objoff_35
 WaterArt_Dust = 1
 WaterArt_Splash = 2
 WaterArt_Countdown = 3

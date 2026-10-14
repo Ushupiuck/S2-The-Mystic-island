@@ -211,7 +211,7 @@ loc_12552:
 		bsr.w	LCon_ChangeDir
 
 loc_1256A:
-		bra.w	SpeedToPos
+		jmp	(SpeedToPos).l
 ; End of function sub_12502
 
 

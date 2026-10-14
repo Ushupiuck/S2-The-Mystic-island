@@ -84,13 +84,18 @@ BonusPlayer_InAir:
 
 BonusPlayer_Display:
 		bsr.w	SSS_ChkItems
+		move.l	obVelX(a0),-(sp)		; Fall already validated this velocity
 		bsr.w	SSS_ChkItems2
+		move.l	(sp)+,d0
+		cmp.l	obVelX(a0),d0
+		bne.w	SSS_MoveAfterBumper		; a new bounce must be checked before it moves Sonic
 		; Update position
 		movem.w	obVelX(a0),d0/d2			; load xy speed
 		lsl.l	#8,d0					; shift velocity to line up with the middle 16 bits of the 32-bit position
 		lsl.l	#8,d2					; shift velocity to line up with the middle 16 bits of the 32-bit position
 		add.l	d0,obX(a0)				; add to x-axis position ; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
 		add.l	d2,obY(a0)				; add to y-axis position ; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
+.update_camera:
 		bsr.w	S1SS_FixCamera		; centre camera on Sonic
 		move.w	(v_ssangle).l,d0
 		add.w	(v_ssrotate).l,d0	; add rotation speed to angle
@@ -343,6 +348,10 @@ BonusPlayer_Fall:
 		asl.l	#8,d4
 		muls.w	#$2A,d1
 		add.l	d4,d1
+		; The final move uses 8.8 velocities. Test that exact rounded delta,
+		; especially when a negative fractional step is beside a cell boundary.
+		andi.l	#$FFFFFF00,d0
+		andi.l	#$FFFFFF00,d1
 		add.l	d0,d3
 		bsr.w	SSS_FindWall
 		beq.s	SSS_Fall_NoWall
@@ -452,6 +461,35 @@ SSS_FindWall_Chk:
 		move.l	a1,ost_ss_item_address(a0)
 		moveq	#-1,d5
 		rts
+
+; A bumper replaces the velocity after Fall's checks. Validate its complete
+; destination, then retain any unobstructed axis when the rebound hits a wall.
+; Ordinary movement keeps the already-validated fast path above.
+SSS_MoveAfterBumper:
+		movem.w	obVelX(a0),d0-d1
+		lsl.l	#8,d0
+		lsl.l	#8,d1
+		move.l	obY(a0),d2
+		move.l	obX(a0),d3
+		add.l	d0,d3
+		add.l	d1,d2
+		bsr.w	SSS_FindWall
+		beq.s	.apply
+		sub.l	d1,d2			; try X without the blocked diagonal move
+		bsr.w	SSS_FindWall
+		beq.s	.x_clear
+		sub.l	d0,d3
+		clr.w	obVelX(a0)
+.x_clear:
+		add.l	d1,d2
+		bsr.w	SSS_FindWall
+		beq.s	.apply
+		sub.l	d1,d2
+		clr.w	obVelY(a0)
+.apply:
+		move.l	d3,obX(a0)
+		move.l	d2,obY(a0)
+		bra.w	BonusPlayer_Display.update_camera
 
 ; ---------------------------------------------------------------------------
 ; Subroutine to check for collision with rings/1UPs/emerald/ghost blocks

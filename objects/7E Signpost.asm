@@ -96,8 +96,8 @@ Signpost_EndLevel:
 		bne.s	Signpost_Sparkle.return
 		btst	#1,(v_player+obStatus).w
 		bne.s	+
-		move.b	#1,(f_lockctrl).w
-		move.w	#8<<btnR,(v_jpadholdlogical).w
+		move.b	#PlayerInputLock_Automatic,(f_lockctrl).w
+		move.w	#btnR<<8,(v_jpadholdlogical).w
 +
 		; S1's giant-ring flash clears the primary player's routine pointer.
 		tst.l	(v_player+code).w

@@ -880,4 +880,141 @@ for player,character,cache,destination,landing in [
         raise AssertionError((player,'dust never resumed after splash'))
     assert splash_frames==set(range(1,10)),(player,splash_frames)
 report['airborne_charge_hides_dust_floor_and_platform_resume_after_splash']=True
+
+# Packed star state survives full, partial and empty child compaction, drawing,
+# and repeated animation updates. No global SST growth is required for it.
+for camera,alternating in ((0,False),(400,True),(1600,False)):
+    m.start();m.write('Camera_X_pos',camera,2)
+    m.put('v_player','obX',600 if camera else 160,2)
+    m.put('v_player','obStatusSecondary',2)
+    m.put('v_starsobj','code',m.s['Obj35'])
+    m.put('v_shieldobj','effect_loaded_frame',m.s['PlayerEffects_StarsLoaded'])
+    history=b''.join(struct.pack('>HH',1200 if alternating and i%2==0 else
+                                (600 if camera else 160),116) for i in range(64))
+    m.cpu.mem_write(m.s['Sonic_Pos_Record_Buf']&0xFFFFFF,history)
+    for tick in range(90):
+        m.act('Obj35','v_starsobj',{UC_M68K_REG_D7:0x13579BDF})
+        assert m.cpu.reg_read(UC_M68K_REG_D7)==0x13579BDF
+        angles=[m.cpu.mem_read(
+            (m.s['v_starsobj']+m.s['invincibility_angles']+i*6)&0xFFFFFF,1)[0] for i in range(4)]
+        frames=[m.cpu.mem_read((m.s['v_starsobj']+m.s['invincibility_frames']+i*6)&0xFFFFFF,1)[0]
+                for i in range(4)]
+        assert angles==[(phase+tick*(18 if i==0 else 2))&255
+                        for i,phase in enumerate((4,0,22,44))],(tick,angles)
+        assert frames==[tick%n for n in (12,10,12,12)],(tick,frames)
+        m.act('Render_Sprites')
+        assert frames==[m.cpu.mem_read((m.s['v_starsobj']+m.s['invincibility_frames']+i*6)&0xFFFFFF,1)[0]
+                        for i in range(4)]
+report['packed_star_state_survives_child_compaction_and_rendering']=270
+for obj in (pool()[0],pool()[-1]):
+    m.start();address=obj&0xFFFFFF
+    m.cpu.mem_write(address,b'\xA5'*m.s['object_size'])
+    m.cpu.mem_write(address+m.s['object_size'],b'\x5A'*4)
+    m.act('DeleteObject',obj)
+    assert bytes(m.cpu.mem_read(address,m.s['object_size']))==bytes(m.s['object_size'])
+    assert bytes(m.cpu.mem_read(address+m.s['object_size'],4))==b'\x5A'*4
+report['non_longword_sst_delete_clears_final_word_without_touching_next_slot']=True
+
+# Landing uses the actual depressed log, not the bridge parent's original Y.
+obj,ptr=setup(0x1D,16);m.act('Bridge',obj)
+child=m.get(obj,'Bridge_child1',4)&0xFFFFFF
+m.put(child,'sub2_y_pos',280,2)
+m.put('v_player2','obX',112,2);m.put('v_player2','obY',254,2)
+m.put('v_player2','obHeight',15);m.put('v_player2','obStatus',2)
+m.put('v_player2','obVelY',0x100,2)
+m.act('sub_7DC0',obj,{UC_M68K_REG_D1:136,UC_M68K_REG_D2:256,
+        UC_M68K_REG_D3:8,UC_M68K_REG_D4:240})
+assert m.get(obj,'obStatus')&16 and m.get('v_player2','obStatus')&8, (m.get(obj,'obStatus'),m.get('v_player2','obStatus'),m.get('v_player2','obY',2))
+m.put('v_player2','obControl',0x81)
+m.act('sub_7DC0',obj,{UC_M68K_REG_D1:136,UC_M68K_REG_D2:256,
+        UC_M68K_REG_D3:8,UC_M68K_REG_D4:240})
+assert not m.get(obj,'obStatus')&16 and not m.get('v_player2','obStatus')&8
+report['depressed_bridge_landing_and_catchup_rider_release']=True
+
+# Over-screen owns Debug/input; scripted exits own both logical controllers.
+for primary in (1,2):
+    m.start();m.put('v_player','layout_id',primary)
+    m.put('v_player','obRoutine',8);m.write('Debug_mode_flag',1)
+    m.write('f_lockctrl',m.s['PlayerInputLock_Over'])
+    m.write('v_jpadpress1',m.s['btnB'])
+    m.act('Obj01' if primary==1 else 'Obj02','v_player')
+    assert not m.read('Debug_placement_mode',2)
+for lock,logical in ((m.s['PlayerInputLock_Automatic'],m.s['btnR']<<8),
+                     (m.s['PlayerInputLock_Over'],0)):
+    m.start();m.write('f_lockctrl',lock);m.write('v_jpadholdlogical',logical,2)
+    m.write('v_jpadhold2',(m.s['btnL']<<8)|m.s['btnC'],2)
+    m.act('Tails_Control','v_player2')
+    assert m.read('v_jpadholdlogical2',2)==logical
+    assert m.read('v_jpadhold2',2)==(m.s['btnL']<<8)|m.s['btnC']
+    assert not m.read('Tails_CPU_idle_timer',2)
+m.start();m.write('f_lockctrl',m.s['PlayerInputLock_Over'])
+m.write('v_jpadpress1',m.s['btnB'])
+obj=pool()[0];m.put(obj,'code',m.s['GameOver']);m.put(obj,'obRoutine',4)
+m.act('Over_Wait',obj)
+assert m.read('v_gamemode',2)==m.s['SegaScreen'] and not m.read('f_lockctrl')
+report['over_screen_blocks_debug_and_exits_keep_raw_buttons']=True
+report['scripted_input_overrides_controller2_and_ai']=True
+
+for role in ('v_player','v_player2'):
+    obj,ptr=setup(0x7D,3)
+    m.put('v_player','obX',2000,2);m.put('v_player2','obX',2000,2)
+    m.put(role,'obX',240,2);m.put(role,'obY',240,2)
+    m.act('Obj7D',obj)
+    assert m.get(obj,'obRoutine')==2 and m.read('v_score',4)==10
+report['hidden_bonus_accepts_either_live_character']=True
+
+# Collision must test the exact delta that the 8.8 velocity later commits.
+# At this boundary the old full-precision prediction was clear, but rounding
+# a negative step moved Sonic into the adjacent wall by 77/65536 of a pixel.
+m.start();m.put('v_player','layout_id',4)
+x=51*24-20;y=50*24-68+5
+m.put('v_player','obX',(x<<16)|7603,4);m.put('v_player','obY',y<<16,4)
+m.put('v_player','obVelX',0,2);m.put('v_player','obVelY',0,2)
+m.write('v_ssangle',0xE000,2)
+m.cpu.mem_write((m.s['v_ssbuffer1']+50*128+50)&0xFFFFFF,b'\x01')
+m.act('BonusPlayer_Fall','v_player')
+for pos,vel in (('obX','obVelX'),('obY','obVelY')):
+    delta=m.get('v_player',vel,2)
+    if delta&32768: delta-=65536
+    m.put('v_player',pos,(m.get('v_player',pos,4)+(delta<<8))&0xFFFFFFFF,4)
+m.act('SSS_FindWall','v_player',{UC_M68K_REG_D2:m.get('v_player','obY',4),
+                               UC_M68K_REG_D3:m.get('v_player','obX',4)})
+assert not m.cpu.reg_read(UC_M68K_REG_D5)&255
+assert m.get('v_player','obX',2)==x
+report['special_stage_negative_fraction_cannot_cross_wall_boundary']=True
+
+# Only the walk/run leader's actual triggered ledge/floor warrants take-off.
+for oid,triggered,moving,rolling in product((0x1A,0x1B),(False,True),(False,True),(False,True)):
+    obj,ptr=setup(oid,0)
+    index=(obj-m.s['v_objspace'])//m.s['object_size']
+    for actor in ('v_player','v_player2'):
+        m.put(actor,'obStatus',8);m.put(actor,'standonobject',index)
+        m.put(actor,'obX',600,2);m.put(actor,'obY',116,2)
+    m.put('v_player','obInertia',0x400 if moving else 0,2)
+    m.put('v_player','obAnim',m.s['AniIDSonAni_Roll'] if rolling else m.s['AniIDSonAni_Walk'])
+    m.put(obj,'ledge_collapse_flag',int(triggered));m.put(obj,'obStatus',0x18)
+    m.write('Tails_CPU_routine',6,2)
+    m.act('Tails_CPU_CheckReach','v_player2',{UC_M68K_REG_A1:m.s['v_player']})
+    expected=triggered and moving and not rolling
+    assert bool(m.cpu.reg_read(UC_M68K_REG_D0))==expected
+    assert m.read('Tails_CPU_routine',2)==(4 if expected else 6)
+    if expected:assert not m.get(obj,'obStatus')&16 and not m.get('v_player2','obStatus')&8
+report['crumbling_walk_run_target_takes_off_stationary_or_rolling_does_not']=16
+
+obj,ptr=setup(0x1A,0)
+index=(obj-m.s['v_objspace'])//m.s['object_size']
+m.put(obj,'ledge_collapse_flag',1)
+m.put('v_player','obStatus',8);m.put('v_player','standonobject',index)
+m.put('v_player','obInertia',0x400,2);m.put('v_player','obAnim',m.s['AniIDSonAni_Walk'])
+for actor in ('v_player','v_player2'):
+    m.put(actor,'obX',600,2);m.put(actor,'obY',116,2)
+m.cpu.mem_write(m.s['Sonic_Pos_Record_Buf']&0xFFFFFF,struct.pack('>HH',600,116)*64)
+m.write('Tails_CPU_routine',4,2)
+m.act('TailS3_loc_13C50','v_player2',{UC_M68K_REG_A1:m.s['v_player']})
+assert m.read('Tails_CPU_routine',2)==4 and m.get('v_player2','obControl')==0x81
+m.put('v_player','obInertia',0,2)
+m.act('TailS3_loc_13C50','v_player2',{UC_M68K_REG_A1:m.s['v_player']})
+assert m.read('Tails_CPU_routine',2)==6 and not m.get('v_player2','obControl')
+assert m.get('v_player2','obStatus')&2
+report['crumbling_flight_waits_for_walking_leader_and_releases_when_he_stops']=True
 print(report,flush=True)

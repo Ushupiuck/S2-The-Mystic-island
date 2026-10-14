@@ -1,20 +1,20 @@
 ; ---------------------------------------------------------------------------
 ; Object 35 - four S2 invincibility-star layers in one SST per player
-; Pack eight children in $18-$47 and keep orbit state in $48-$4F. This is a
-; normal composite object: Render_Sprites needs no effect-specific dispatch.
+; Pack eight children in $18-$47; their unused padding bytes hold orbit state.
+; Render_Sprites draws this normal composite without effect-specific dispatch.
 ; ---------------------------------------------------------------------------
 ; SST Variables:
 
 InvincibilityStars_LayerCount = 4
 InvincibilityStars_Priority = $80
-invincibility_angles	= objoff_48	; four bytes: current orbit angles
-invincibility_frames	= objoff_4C	; four bytes: current animation indices
+invincibility_angles	= sub2_x_pos+4	; padding of children 0-3, six-byte stride
+invincibility_frames	= sub6_x_pos+4	; padding of children 4-7, six-byte stride
 invincibility_flags	= obPriority	; byte; explicit queue priority leaves this field free
 InvincibilityStars_PartnerBit = 1	; bit 1: follows player 2; bit 0: preceding frame's facing
 InvincibilityStars_RetryBit = 6
 InvincibilityStars_OwnershipMask = (1<<InvincibilityStars_PartnerBit)|(1<<InvincibilityStars_RetryBit)
-		if (subspr_data+InvincibilityStars_LayerCount*2*next_subspr>invincibility_angles)||(invincibility_frames<>invincibility_angles+InvincibilityStars_LayerCount)||(invincibility_frames+InvincibilityStars_LayerCount>object_size)
-			fatal "The star children and orbit arrays must fit within their SST."
+		if (invincibility_angles<>subspr_data+4)||(invincibility_frames<>invincibility_angles+InvincibilityStars_LayerCount*next_subspr)||(invincibility_frames+(InvincibilityStars_LayerCount-1)*next_subspr>=object_size)
+			fatal "Star state must occupy the eight unused subsprite padding bytes."
 		endif
 ; ---------------------------------------------------------------------------
 
@@ -28,8 +28,15 @@ Obj35:
 		move.b	#$44,obRender(a0)		; world coordinates, composite with wrapped Y
 		clr.b	mainspr_mapframe(a0)		; no main sprite
 		move.b	#320/2+32,mainspr_width(a0)		; children perform their own bounds checks
-		move.l	#$0400162C,invincibility_angles(a0)
-		clr.l	invincibility_frames(a0)
+		lea	invincibility_angles(a0),a2
+		move.l	#$0400162C,d0		; S2 layer phases: 4, 0, 22, 44
+		moveq	#InvincibilityStars_LayerCount-1,d1
+.init_layers:
+		rol.l	#8,d0
+		move.b	d0,(a2)
+		clr.b	invincibility_frames-invincibility_angles(a2)
+		addq.w	#next_subspr,a2
+		dbf	d1,.init_layers
 		btst	#InvincibilityStars_PartnerBit,invincibility_flags(a0)
 		bne.s	.partner_initialized
 		bset	#InvincibilityStars_RetryBit,invincibility_flags(a0)	; ensure a full trail for the live invincible partner
@@ -133,14 +140,15 @@ InvincibilityStars_Advance:
 		beq.s	.direction
 		neg.w	d2
 .direction:
-		add.b	d2,(a2)+
+		add.b	d2,(a2)
 		addq.b	#1,(a3)
 		move.b	(a3),d0
 		cmp.b	3(a4),d0
 		blo.s	.frame_ready
 		clr.b	(a3)
 .frame_ready:
-		addq.w	#1,a3
+		addq.w	#next_subspr,a2
+		addq.w	#next_subspr,a3
 		addq.w	#4,a4
 		moveq	#2,d2
 		dbf	d1,.layer
@@ -230,7 +238,7 @@ InvincibilityStars_BuildChildren:
 		add.w	d0,d2
 		add.w	d1,d3
 		bsr.w	InvincibilityStars_WriteChild
-		addq.w	#1,a4
+		addq.w	#next_subspr,a4
 		addq.w	#4,a3
 		addq.w	#1,d7
 		cmpi.w	#InvincibilityStars_LayerCount,d7
@@ -284,7 +292,8 @@ InvincibilityStars_WriteChild:
 		move.w	(sp)+,d3
 		move.w	d2,(a2)+
 		move.w	d3,(a2)+
-		move.w	d5,(a2)+
+		addq.w	#1,a2			; preserve this physical record's orbit-state byte
+		move.b	d5,(a2)+
 		addq.b	#1,mainspr_childsprites(a0)
 .return:
 		rts

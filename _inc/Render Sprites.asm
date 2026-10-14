@@ -222,7 +222,10 @@ Render_Sprites_Composite:
 		moveq	#0,d2
 		move.b	mainspr_width(a0),d2
 		btst	#obRender.level_fg,d6
-		beq.w	.check_bg
+		bne.s	.world
+		btst	#obRender.level_bg,d6
+		beq.w	.screen
+		bset	#obRender.level_fg,d6	; normalize legacy BG-relative children once
 .world:
 		sub.w	(a3),d0
 		move.w	d0,d3
@@ -266,11 +269,6 @@ Render_Sprites_Composite:
 		subq.w	#1,d4
 		bmi.w	.children
 		bra.w	Render_CompositeMappings	; main group rejoins .next_piece directly
-.check_bg:
-		btst	#obRender.level_bg,d6
-		beq.s	.screen
-		bset	#obRender.level_fg,d6	; normalize legacy BG-relative children once
-		bra.w	.world
 .screen:
 		move.w	d0,d3
 		subi.w	#128,d3

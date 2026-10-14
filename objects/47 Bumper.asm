@@ -42,7 +42,7 @@ loc_138D8:
 		clr.b	obColProp(a0)
 +		lea	Ani_Bump(pc),a1
 		bsr.w	AnimateSprite
-		bra.w	MarkObjGone
+		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
 Ani_Bump:	dc.w byte_13988-Ani_Bump
 		dc.w byte_1398B-Ani_Bump

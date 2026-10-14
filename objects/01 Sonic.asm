@@ -12,6 +12,8 @@ Obj01:
 .check_entry:
 		tst.b	(Debug_mode_flag).w
 		beq.s	Obj01_Normal
+		tst.b	(f_lockctrl).w
+		bmi.s	Obj01_Normal			; Game/Time Over owns input; hurt/death still allow Debug
 		tst.b	obRoutine(a0)			; initialize the character before allowing Debug
 		beq.s	Obj01_Normal
 		btst	#bitB,(v_jpadpress1).w
@@ -1857,11 +1859,7 @@ Sonic_GameOver:
 		move.l	#GameOver,(v_gameovertext2).w
 		move.b	#1,(v_gameovertext2+obFrame).w
 		clr.b	(f_timeover).w
-		move.w	#bgm_GameOver,d0
-		jsr	(PlaySound).l
-		move.b	#PlayerEffects_GameOverLoaded,(v_shieldobj+effect_loaded_frame).w
-		moveq	#plcid_GameOver,d0
-		jmp	(LoadPLC).l
+		bra.s	Sonic_LoadOverScreen
 ; ---------------------------------------------------------------------------
 +
 		move.w	#60,restart_countdown(a0)
@@ -1872,6 +1870,10 @@ Sonic_GameOver:
 		move.l	#GameOver,(v_gameovertext2).w
 		move.b	#2,(v_gameovertext1+obFrame).w
 		move.b	#3,(v_gameovertext2+obFrame).w
+Sonic_LoadOverScreen:
+		move.b	#PlayerInputLock_Over,(f_lockctrl).w
+		clr.w	(v_jpadholdlogical).w
+		clr.w	(v_jpadholdlogical2).w
 		move.w	#bgm_GameOver,d0
 		jsr	(PlaySound).l
 		move.b	#PlayerEffects_GameOverLoaded,(v_shieldobj+effect_loaded_frame).w

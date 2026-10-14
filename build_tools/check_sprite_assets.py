@@ -58,7 +58,7 @@ def main():
             'Art_SSResultsRing', 'Art_BigRing', 'Art_BigFlash'):
         assert symbols[label] % 2 == 0, f'{label}: DMA source needs word alignment'
     assert symbols['code'] == 0 and symbols['height_pixels'] == 6
-    assert symbols['object_size'] == 0x50
+    assert symbols['object_size'] == 0x4E
     assert symbols['vram_hscroll'] == 0xF000
     assert symbols['ArtTile_Ring'] * 32 == 0xD720
     assert symbols['ArtTile_HUD'] == symbols['ArtTile_Sparkles'] + 4

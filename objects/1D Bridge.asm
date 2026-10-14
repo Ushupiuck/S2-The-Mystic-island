@@ -222,67 +222,61 @@ loc_7DA0:
 sub_7DC0:
 		lea	(v_player2).w,a1
 		moveq	#4,d6
-		moveq	#objoff_3F,d5		; companion's current log, not the child-pointer byte
+		moveq	#objoff_3F,d5		; companion's current log
 		movem.l	d1-d4,-(sp)
-		bsr.s	+
+		bsr.w	Bridge_CheckRider
 		movem.l	(sp)+,d1-d4
 		lea	(v_player).w,a1
 		subq.b	#1,d6
 		moveq	#objoff_43,d5		; primary player's current log
-+
-		btst	d6,obStatus(a0)
-		beq.s	loc_7E3E
-		btst	#1,obStatus(a1)
-		bne.s	+
-		moveq	#0,d0
+Bridge_CheckRider:
+		tst.l	code(a1)
+		beq.w	.release
+		cmpi.b	#6,obRoutine(a1)
+		bhs.w	.release
+		tst.b	obControl(a1)		; catch-up flight must not ride or depress logs
+		bmi.w	.release
 		move.w	obX(a1),d0
 		sub.w	obX(a0),d0
 		add.w	d1,d0
-		bmi.s	+
+		bmi.w	.release
 		cmp.w	d2,d0
-		blo.s	++
-+
-		bclr	#3,obStatus(a1)
-		bclr	d6,obStatus(a0)
-		moveq	#0,d4
-		rts
-; ---------------------------------------------------------------------------
-+
+		bhs.w	.release
 		lsr.w	#4,d0
 		move.b	d0,(a0,d5.w)
 		movea.l	Bridge_child1(a0),a2
 		cmpi.w	#8,d0
-		blo.s	+
+		blo.s	.log
 		movea.l	Bridge_child2(a0),a2
 		subi.w	#8,d0
-+
+.log:
 		add.w	d0,d0
 		move.w	d0,d1
 		add.w	d0,d0
-		add.w	d1,d0
+		add.w	d1,d0			; six-byte child record
 		move.w	sub2_y_pos(a2,d0.w),d0
-		subq.w	#8,d0
+		subq.w	#8,d0			; land on this log's depressed surface
+		btst	d6,obStatus(a0)
+		beq.s	.land
+		btst	#status.player.in_air,obStatus(a1)
+		bne.s	.release
 		moveq	#0,d1
 		move.b	obHeight(a1),d1
 		sub.w	d1,d0
 		move.w	d0,obY(a1)
 		moveq	#0,d4
 		rts
-; ---------------------------------------------------------------------------
-
-loc_7E3E:
-		move.w	d1,-(sp)
-		bsr.w	PlatformObject11_cont
-		move.w	(sp)+,d1
-		btst	d6,obStatus(a0)
+.land:
+		tst.w	obVelY(a1)
+		bmi.s	.return
+		jmp	(PlatformObject_ChkYRange).l
+.release:
+		bclr	d6,obStatus(a0)
 		beq.s	.return
-		moveq	#0,d0
-		move.w	obX(a1),d0
-		sub.w	obX(a0),d0
-		add.w	d1,d0
-		lsr.w	#4,d0
-		move.b	d0,(a0,d5.w)
-.return:	rts
+		bclr	#status.player.on_object,obStatus(a1)
+.return:
+		moveq	#0,d4
+		rts
 ; End of function sub_7DDA
 
 

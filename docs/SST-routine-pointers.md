@@ -13,7 +13,7 @@ to rewrite every object's internal states into separate pointer routines.
 
 ## Shared display header
 
-The SST stride is `$50` bytes. All ordinary objects share this prefix:
+The SST stride is `$4E` bytes. All ordinary objects share this prefix:
 
 | Offset | Bytes | Field | Meaning |
 | --- | ---: | --- | --- |
@@ -34,12 +34,12 @@ is not identical to stock S3&K. Use symbols rather than copied source offsets.
 
 The former stride was `$4A`. Widening the ID and grouping the header moved
 the old private fields forward by four bytes. Tails's last byte now occupies
-`$4C`, requiring at least an even `$4E` stride. The invincibility composite
-uses eight six-byte children at `$18–$47`, four orbit angles at `$48–$4B`
-and four animation indexes at `$4C–$4F`, so it requires the full `$50`.
-That also gives clearing/copying a whole number of longwords. The 68000 only
-requires word/long operands to have even addresses; four-byte alignment is
-not a hardware requirement. Across 113 slots, the growth costs `$2A6` bytes.
+`$4C`, requiring an even `$4E` stride. Invincibility stores its four angles
+and four animation indexes in the eight unused composite padding bytes,
+so it needs no larger stride. Clearing/copying handles the final word after
+the longwords. The 68000 requires even addresses for word/long operands;
+four-byte alignment is not required. Growth from `$4A` costs `$1C4` bytes
+across 113 slots; packing the stars saves `$E2` (226) bytes versus `$50`.
 
 ## Fields used by many objects
 
@@ -82,9 +82,10 @@ use ordinary velocity/animation/state space as child records.
 | `$48`, `$49` | 1 each | `default_y_radius`, `default_x_radius` |
 | `$4A`, `$4B`, `$4C` | 1 each | `character_id`, `tails_flight_flag`, `tails_flight_energy` |
 
-`$45` and `$4D–$4F` are available private player scratch. The tail object has
-its own overlays, including a full remembered interaction pointer at `$2E`.
-Two reserved splash slots cache their physical water/dust banks at `$4E–$4F`.
+`$45` and `$4D` are available private player scratch. The tail object has
+its own overlays, including a full remembered interaction pointer at `$2E`
+and the companion's ledge-attempt timer at `$32–$33`.
+Two reserved splash slots cache their physical water/dust banks at `$34–$35`.
 
 ## Importing and creating objects
 
@@ -118,12 +119,15 @@ Composites use main frame `$05`, width `$07`, height `$06`, child count `$16`
 and eight six-byte child records at `$18–$47`. Each record contains X/Y words,
 a padding byte and a mapping-frame byte. Such helpers bypass ordinary state
 dispatch and use the shared composite renderer. Invincibility stars keep their
-four angles and four animation indexes at `$48–$4F`; flags reuse priority.
+four angles in child-padding bytes `$1C/$22/$28/$2E`, and four animation
+indexes in `$34/$3A/$40/$46`; flags reuse priority. Each child writer skips
+the padding byte and writes only its frame byte. This remains safe when
+offscreen children are omitted and visible children are compacted.
 
-The pool still contains 23 reserved and 90 dynamic slots: `$2350` bytes from
-`$FFA000` to `$FFC34F`. The block table starts at `$FFC350`. Pool slack and
-retired state RAM fund the growth; 354 bytes remain in `Free_LegacyObjectState`.
-The error buffer moves to `$FFE710`, while the sprite queue and later RAM keep
+The pool still contains 23 reserved and 90 dynamic slots: `$226E` bytes from
+`$FFA000` to `$FFC26D`. The block table starts at `$FFC26E`. Pool slack and
+retired state RAM fund the growth; 580 bytes remain in `Free_LegacyObjectState`.
+The error buffer moves to `$FFE62E`, while the sprite queue and later RAM keep
 their addresses. Assembly guards reject growth beyond this budget.
 
 Debug records are 12 bytes: code long, mapping long, subtype byte, preview-frame

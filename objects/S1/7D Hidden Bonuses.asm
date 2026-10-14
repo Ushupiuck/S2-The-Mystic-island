@@ -13,24 +13,35 @@ Obj7D_Index:	dc.w Obj7D_Main-Obj7D_Index
 ; ---------------------------------------------------------------------------
 
 Obj7D_Main:
+		tst.w	(Debug_placement_mode).w
+		bne.w	loc_13804
+		tst.b	(f_bigring).w
+		bne.w	loc_13804
 		moveq	#$10,d2
 		move.w	d2,d3
 		add.w	d3,d3
 		lea	(v_player).w,a1
+		moveq	#1,d6			; either live character may collect the shared award
+.check_player:
+		tst.l	code(a1)
+		beq.s	.next_player
+		cmpi.b	#6,obRoutine(a1)
+		bhs.s	.next_player
 		move.w	obX(a1),d0
 		sub.w	obX(a0),d0
 		add.w	d2,d0
 		cmp.w	d3,d0
-		bhs.s	loc_13804
+		bhs.s	.next_player
 		move.w	obY(a1),d1
 		sub.w	obY(a0),d1
 		add.w	d2,d1
 		cmp.w	d3,d1
-		bhs.s	loc_13804
-		tst.w	(Debug_placement_mode).w
-		bne.s	loc_13804
-		tst.b	(f_bigring).w
-		bne.s	loc_13804
+		blo.s	.collected
+.next_player:
+		lea	object_size(a1),a1
+		dbf	d6,.check_player
+		bra.w	loc_13804
+.collected:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj7D,obMap(a0)
 		move.b	#Map_Obj7D_height,height_pixels(a0)

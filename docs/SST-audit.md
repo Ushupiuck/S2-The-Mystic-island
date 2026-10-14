@@ -20,9 +20,9 @@ The latter include `Obj49` (waterfall), `Obj50`/`Obj51` (Aquis), `Obj4C`
 | Player Debug entry | The check lived only in normal-control handlers. | Check before state dispatch, preserving initialization and primary-player ownership. |
 
 The final named-field scan found no remaining odd word/long operands or
-operands extending beyond `$50`. `check_object_layouts.py` now checks
+operands extending beyond `$4E`. `check_object_layouts.py` now checks
 byte/word accesses to routine pointers (including absolute reserved slots),
-numeric `id_*` values used as code pointers, and 6,227 bare named SST operands.
+numeric `id_*` values used as code pointers, and 6,261 bare named SST operands.
 This checker does not trace register aliases or prove runtime array indexes.
 Those cases were reviewed separately below; duplicate field meanings across
 different object types are intentional, not conflicts.
@@ -31,16 +31,16 @@ different object types are intentional, not conflicts.
 
 | Record or service | Reviewed layout / exception |
 | --- | --- |
-| Invincibility composite | Eight six-byte children occupy `$18–$47`; angles occupy `$48–$4B`, animation indexes `$4C–$4F`. Flags reuse priority because `DisplaySprite3` supplies queue priority explicitly. No ordinary state/respawn fields coexist with the child records. |
+| Invincibility composite | Eight six-byte children occupy `$18–$47`; angles use padding `$1C/$22/$28/$2E`, animation indexes use padding `$34/$3A/$40/$46`. Child writers skip the padding, including when clipped children are compacted. Flags reuse priority because `DisplaySprite3` supplies queue priority explicitly. No ordinary state/respawn fields coexist with these records. |
 | Bridge / swinging helpers | Children use the common composite ABI. Ordinary parent state and helper pointers remain in their own SSTs. Child helpers delete directly rather than interpreting the overlaid respawn word. Bridge's two-rider selectors use named scratch offsets. |
 | Shield / points caches | Reserved shield SSTs retain effect-frame cache `$34`, points-frame cache `$35`, latest-points pointer `$36–$37` and shield-parent word `$42–$43`. Points uses a pointer already advanced to `$35`, then displacement `+1` reaches the even word at `$36`. |
-| Water bank caches | The two reserved splash SSTs use bytes `$4E–$4F`. Dust, splash and countdown share the bank/cache service; initialization and DMA retries were exercised. |
-| Tails / separate tail | Player flight energy ends at `$4C`. The separate tail's CPU remembered-code longword at `$2E–$31` is disjoint from its art-frame cache `$38` and parent word `$42–$43`. |
+| Water bank caches | The two reserved splash SSTs use unused scratch bytes `$34–$35`. Dust, splash and countdown share the bank/cache service; initialization and DMA retries were exercised. |
+| Tails / separate tail | Player flight energy ends at `$4C`. The separate tail's CPU remembered-code longword `$2E–$31` and ledge-attempt timer `$32–$33` are disjoint from its art-frame cache `$38` and parent word `$42–$43`. |
 | Caterkiller | Twelve-byte trail `$30–$3B`, packed parent longword `$3C–$3F`, inertia `$40–$41`, distance credit `$42–$43`. Parent's high byte remains a segment index, handled through the 68000's 24-bit address behavior. |
 | EHZ / GHZ bosses and other multipart objects | Parent/child fields, identity tests, slot strides and fragment copying use the moved symbols/full routine pointers. Real collisions and defeat/capsule/results sequences were exercised. |
 | WIP staircase | Timer `$30–$31`, touch/slot bytes `$32–$33`, origins `$34–$37`, four-word offsets `$38–$3F`, parent `$40–$43`. Stored table selectors use the named offset constants; stale comments were corrected. |
 | Ring manager / S1 stage | Their six-byte ring records and eight-byte special-stage update records are separate ABIs. Bare word/byte reads in these records remain appropriate. Special-stage layout row offsets refer to the grid, not an SST. |
-| Dispatch / allocation / deletion | Actual slot stride is `object_size`; `object_size_bits` describes allocator lookup buckets. Clearing/copying covers all `$50` bytes. Invincibility preserves the dispatcher loop counter when building children. Other stack skips remain within their own nested calls. |
+| Dispatch / allocation / deletion | Actual slot stride is `object_size`; `object_size_bits` describes allocator lookup buckets. Clearing/copying covers all `$4E` bytes, including the final word, without touching the next slot. Invincibility preserves the dispatcher loop counter when building children. Other stack skips remain within their own nested calls. |
 
 Combined writes were checked where byte fields are deliberately accessed as
 words/longwords: animation/previous-animation pairs, angular words and paired
@@ -49,6 +49,10 @@ to the special-stage grid/VDP update buffers. Indexed mappings, animation
 scripts, history records and composite children retain their own formats.
 
 ## Runtime checks
+
+The current gameplay and packed-state follow-up is documented in
+[Gameplay-followup.md](Gameplay-followup.md), including normal special-stage
+bumper embedding, companion ledge/bridge cases and Over-screen input locks.
 
 - Normal ROM builds both passes and generates 94 mapping bounds / 1,118 frames.
 - Native 68000 regression tests cover pointer dispatch/deletion, all 28 acts,
@@ -80,9 +84,9 @@ Indexed/compound addressing is covered by the separate review above.
 
 | Source | Named operands checked |
 | --- | ---: |
-| `main.asm` | 800 |
+| `main.asm` | 802 |
 | `objects/01 Sonic.asm` | 423 |
-| `objects/02 Tails.asm` | 545 |
+| `objects/02 Tails.asm` | 567 |
 | `objects/03 Collision Switcher.asm` | 52 |
 | `objects/05 Tails' Tails.asm` | 32 |
 | `objects/06 EHZ Spiral.asm` | 26 |
@@ -101,12 +105,12 @@ Indexed/compound addressing is covered by the separate review above.
 | `objects/19 CPZ Platform.asm` | 53 |
 | `objects/1A Collapsing Platforms.asm` | 31 |
 | `objects/1C Scenery.asm` | 13 |
-| `objects/1D Bridge.asm` | 93 |
+| `objects/1D Bridge.asm` | 95 |
 | `objects/1E HPZ Waterfall.asm` | 63 |
 | `objects/20 Morphing Platform.asm` | 28 |
 | `objects/26 Monitor.asm` | 48 |
 | `objects/29 Monitor Content Power-Up.asm` | 34 |
-| `objects/35 Invincibility Stars.asm` | 25 |
+| `objects/35 Invincibility Stars.asm` | 23 |
 | `objects/36 Spikes.asm` | 63 |
 | `objects/38 Shield.asm` | 25 |
 | `objects/3E Prison Capsule.asm` | 53 |
@@ -121,7 +125,7 @@ Indexed/compound addressing is covered by the separate review above.
 | `objects/94 Title Cards.asm` | 25 |
 | `objects/95 Got Through Card.asm` | 30 |
 | `objects/98 Game Over.asm` | 14 |
-| `objects/Bonus & Special Stages/04 Player in Bonus Stage.asm` | 87 |
+| `objects/Bonus & Special Stages/04 Player in Bonus Stage.asm` | 96 |
 | `objects/Bonus & Special Stages/7A Special Stage Entry.asm` | 14 |
 | `objects/Bonus & Special Stages/7B Giant Ring.asm` | 19 |
 | `objects/Bonus & Special Stages/7C Ring Flash.asm` | 17 |
@@ -161,8 +165,8 @@ Indexed/compound addressing is covered by the separate review above.
 | `objects/S1/3D Boss - Green Hill.asm` | 114 |
 | `objects/S1/44 GHZ Edge Walls.asm` | 12 |
 | `objects/S1/48 Eggman's Swinging Ball.asm` | 95 |
-| `objects/S1/5E See-Saw.asm` | 99 |
-| `objects/S1/7D Hidden Bonuses.asm` | 16 |
+| `objects/S1/5E See-Saw.asm` | 98 |
+| `objects/S1/7D Hidden Bonuses.asm` | 18 |
 | `objects/S1/sub ChkObjectVisible.asm` | 5 |
 | `objects/S1/sub SmashObject.asm` | 22 |
 | `objects/Unused Objects/XX Potential Snailbot rewrite.asm` | 42 |

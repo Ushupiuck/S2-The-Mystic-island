@@ -48,12 +48,13 @@ byte size, tile word and signed word X. Inline spring and boss mappings in
 second tile word for 2P interlace is removed.
 
 `height_pixels` is the display half-height byte at `$06`; the SST stride is
-`$50`. `Render_Sprites` uses bounds initialized by each object; it never scans
+`$4E`. `Render_Sprites` uses bounds initialized by each object; it never scans
 mapping geometry to determine an object's size. Collision radii retain their
 existing fields. Composite rendering uses its normal path for every composite,
 including invincibility stars.
 Object `$35` prepares eight packed children per player in `$18–$47`, stores
-four orbit angles at `$48–$4B` and four animation indices at `$4C–$4F`. Its
+four orbit angles in the first four child-padding bytes and four animation
+indices in the last four child-padding bytes, at six-byte intervals. Its
 flags reuse the priority field at `$08`, and it queues through `DisplaySprite3`
 with an explicit priority. Children are clipped separately.
 The primary uses its reserved SST; the companion uses one dynamic SST while

@@ -2060,6 +2060,7 @@ Atan2Table:
 ; ---------------------------------------------------------------------------
 
 SegaScreen:
+		clr.b	(f_lockctrl).w
 		move.b	#bgm_Stop,d0
 		bsr.w	PlaySound_Special
 		bsr.w	ClearPLC
@@ -9856,6 +9857,8 @@ SolidObject_cont:
 		bhs.w	SolidObject_TestClearPush	; branch, if Sonic is below this point
 ; loc_F5D2:
 SolidObject_ChkBounds:
+		tst.b	obControl(a1)
+		bmi.w	SolidObject_NoCollision	; catch-up / carried characters do not collide
 		tst.b	(f_playerctrl).w
 		bmi.w	SolidObject_TestClearPush	; branch, if object collisions are disabled for Sonic
 		cmpi.b	#6,obRoutine(a1)		; is Sonic dead?
@@ -10251,6 +10254,8 @@ loc_F8BC:
 		sub.w	d3,d0
 
 PlatformObject_ChkYRange:
+		tst.b	obControl(a1)
+		bmi.w	loc_F916.return
 		move.w	obY(a1),d2
 		move.b	obHeight(a1),d1
 		ext.w	d1

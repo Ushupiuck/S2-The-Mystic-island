@@ -115,7 +115,7 @@ character_id:           equ $4A     ; byte; Sonic = 0, Tails = 1
 CharacterID_Tails:      equ 1
 tails_flight_flag:      equ $4B     ; byte; falling/flapping state
 tails_flight_energy:    equ $4C     ; byte; half-frame flight budget
-; $4D-$4F remain private scratch; display height is in the shared header.
+; $4D remains private scratch; display height is in the shared header.
 tails_width:		equ 9
 tails_roll_height:	equ 14
 tails_roll_width:	equ 7
@@ -127,6 +127,12 @@ Tails_FlapStateLimit:	equ $20
 Tails_ExtraFirstFrame:	equ $D1
 Tails_CPU_ManualTime:	equ 10*60
 Tails_CPU_RespawnTime:	equ 5*60
+Tails_CPU_ReachTime:	equ 2*60	; sustained failed ledge approach before local catch-up
+Tails_CPU_ReachHeight:	equ 24
+Tails_CPU_ReachWidth:	equ $80
+Tails_CPU_FollowWidth:	equ $30	; ordinary recorded-position following distance
+Tails_CPU_ReachStopWidth:	equ 8	; close the horizontal gap during a ledge jump
+Tails_CPU_FlyVerticalMax:	equ 6	; pixels per frame; slow down near the target
 Tails_FlightAttackMinAngle: equ $20	; S3&K's upward contact sector
 Tails_FlightAttackArc:	equ $40
 Tails_CarriedYOffset:	equ 28
@@ -140,6 +146,7 @@ v_jpadpresslogical2:	equ v_jpadholdlogical2+1
 Tails_CPU_idle_timer:	equ Tails_control_counter
 Tails_CPU_flight_timer:	equ Tails_respawn_counter
 Tails_CPU_interact:	equ v_player2tails+objoff_2E	; long; remembered standing-object code
+Tails_CPU_reach_timer:	equ v_player2tails+objoff_32	; word; unused separate-tail scratch
 Tails_CPU_target_X:	equ v_player2tails+objoff_44
 Tails_CPU_target_Y:	equ v_player2tails+objoff_46
 Tails_CPU_auto_jump_flag:	equ v_player2tails+objoff_39
@@ -191,9 +198,6 @@ objoff_4A:             equ $4A
 objoff_4B:             equ $4B
 objoff_4C:             equ $4C
 objoff_4D:             equ $4D
-objoff_4E:             equ $4E
-objoff_4F:             equ $4F
-objoff_50:             equ $50     ; one past the end of the SST
 ; ---------------------------------------------------------------------------
 ; Screen-space and parent/child overlays.
 obScreenX =             obX
@@ -204,11 +208,11 @@ obParent3 =             objoff_46  ; word
 child_dx =              objoff_46  ; byte; alternative to obParent3
 child_dy =              objoff_47  ; byte
 object_size_bits:       equ 6      ; allocator lookup buckets, not SST stride
-object_size:            equ $50    ; 80 bytes; eight star children plus orbit state; longword clearing
+object_size:            equ $4E    ; 78 bytes; player flight energy ends at $4C
 reserved_object_slots: equ 23
 dynamic_object_slots:  equ 90
 object_slot_count:      equ reserved_object_slots+dynamic_object_slots
-object_ram_size:        equ object_size*object_slot_count ; $2350; keep all 113 slots
+object_ram_size:        equ object_size*object_slot_count ; $226E; keep all 113 slots
 next_object =           object_size
     if (object_size<(1<<object_size_bits))||((object_size&1)<>0)
         fatal "SSTs must be even-sized and at least as large as an allocator lookup bucket."
@@ -437,6 +441,8 @@ PlayerMode_Sonic:		equ 1
 PlayerMode_Tails:		equ 2
 PlayerMode_Knuckles:		equ 3	; reserved
 PlayerControl_SkipWallCollision:	equ 6	; bit in f_playerctrl and obControl
+PlayerInputLock_Automatic:	equ 1	; logical input is supplied by the level script
+PlayerInputLock_Over:		equ $81	; also prohibit Debug while the over-screen owns input
 
 ; Shared Sonic/Tails movement settings. Speeds use 8.8 pixels/frame;
 ; acceleration and deceleration use 8.8 pixels/frame squared.

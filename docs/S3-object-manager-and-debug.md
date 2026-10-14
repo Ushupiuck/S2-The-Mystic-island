@@ -85,15 +85,15 @@ retain their existing frozen-camera behavior.
 
 ## RAM
 
-The SST is `$50` bytes, with the longword routine pointer and display fields
+The SST is `$4E` bytes, with the longword routine pointer and display fields
 grouped in its shared header. The pool retains 23 reserved and 90 dynamic
-slots. The block table now begins at `$FFC350`; the 768-byte respawn table
+slots. The block table now begins at `$FFC26E`; the 768-byte respawn table
 remains at `$FFF6BE`. See [the field map](SST-routine-pointers.md).
 
 Growth uses the old pool slack and part of the retired state buffer. Its
-error-handler overlay moves to `$FFE710`, while the sprite queue and later
+error-handler overlay moves to `$FFE62E`, while the sprite queue and later
 RAM remain at `$FFE8C0` and their previous addresses. Debug saves its mappings,
-art and display bounds in eight bytes; 354 bytes remain explicitly free.
+art and display bounds in eight bytes; 580 bytes remain explicitly free.
 
 `Respawn_table_keep` can preserve state when reinitializing the same live
 layout. Normal level initialization clears the table. Timezone-aware object
@@ -109,6 +109,13 @@ This follows S3&K's checks in its normal, hurt and dying handlers without
 duplicating the same check in each state. C+B remains available in those
 states too. Frame cycling pauses the current state; placement exit restores
 normal movement.
+
+Game/Time Over sets the high bit of `f_lockctrl`, blocking Debug entry and
+neutralizing both players' logical controls. Physical A/B/C input remains
+available to advance the card. Sega and the current Continue placeholder
+release the lock; level initialization releases it after a Time Over restart.
+The signpost uses the ordinary automatic-control lock instead, supplying
+held-right input to both players and overriding controller 2 and companion AI.
 
 | Input | Action |
 | --- | --- |

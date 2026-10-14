@@ -12,6 +12,8 @@ Obj02:
 .check_entry:
 		tst.b	(Debug_mode_flag).w
 		beq.s	Obj02_Normal
+		tst.b	(f_lockctrl).w
+		bmi.s	Obj02_Normal
 		tst.b	obRoutine(a0)			; initialization still runs before Debug entry
 		beq.s	Obj02_Normal
 		btst	#bitB,(v_jpadpress1).w
@@ -64,6 +66,7 @@ Obj02_Init:
 		clr.b	tails_flight_flag(a0)
 		clr.w	(Tails_CPU_idle_timer).w
 		clr.w	(Tails_CPU_flight_timer).w
+		clr.w	(Tails_CPU_reach_timer).w
 		clr.w	(Tails_CPU_routine).w
 		clr.b	(Tails_CPU_auto_jump_flag).w
 		clr.w	(Flying_carrying_Sonic_flag).w
@@ -150,6 +153,8 @@ Tails_Control:
 .return:
 		rts
 .partner:
+		tst.b	(f_lockctrl).w
+		bne.s	.locked			; scripted exit / over-screen overrides controller 2 and AI
 		move.w	(v_jpadhold2).w,(v_jpadholdlogical2).w
 		move.b	(v_jpadhold2).w,d0
 		andi.b	#btnUp|btnDn|btnL|btnR|btnABC,d0
@@ -172,6 +177,18 @@ Tails_Control:
 		move.w	#6,(Tails_CPU_routine).w
 		clr.b	obControl(a0)
 		rts
+.locked:
+		move.w	(v_jpadholdlogical).w,(v_jpadholdlogical2).w
+		clr.w	(Tails_CPU_idle_timer).w
+		clr.w	(Tails_CPU_reach_timer).w
+		tst.b	(f_lockctrl).w
+		bmi.s	.return			; over-screen supplies neutral input
+		clr.b	tails_flight_flag(a0)
+		tst.b	obControl(a0)
+		bpl.s	.return
+		move.w	#6,(Tails_CPU_routine).w
+		clr.b	obControl(a0)		; let a catching-up companion land and run right
+		rts
 
 Tails_GetStandingObject:
 		moveq	#0,d0
@@ -179,6 +196,18 @@ Tails_GetStandingObject:
 		mulu.w	#object_size,d0
 		lea	(v_objspace).w,a3
 		adda.w	d0,a3
+		rts
+
+; Detach before changing to flight, including bridges and moving platforms.
+; a1 remains the lead player; the indexed standing parent is returned in a3.
+Tails_DetachStandingObject:
+		bclr	#status.player.on_object,obStatus(a0)
+		beq.s	.return
+		bsr.s	Tails_GetStandingObject
+		tst.l	code(a3)
+		beq.s	.return
+		bclr	#4,obStatus(a3)		; this object no longer has companion Tails as a rider
+.return:
 		rts
 
 Tails_ResetHistory:
@@ -364,6 +393,9 @@ TailS3_loc_13B50:
 		move.w	d0,(Tails_CPU_target_Y).w
 		subi.w	#$C0,d0
 TailS3_loc_13B78:
+		move.w	d0,-(sp)
+		bsr.w	Tails_DetachStandingObject
+		move.w	(sp)+,d0
 		move.w	d0,obY(a0)
 		ori.w	#high_priority,obGfx(a0)
 		move.w	#$100,obPriority(a0)
@@ -374,6 +406,9 @@ TailS3_loc_13B78:
 		move.b	d0,flip_turned(a0)
 		move.b	d0,tails_flight_flag(a0)
 		move.b	#2,obStatus(a0)
+		move.b	default_y_radius(a0),obHeight(a0)
+		move.b	default_x_radius(a0),obWidth(a0)
+		clr.w	(Tails_CPU_reach_timer).w
 		move.b	#30,air_left(a0)
 		move.b	#$81,obControl(a0)
 		move.b	d0,flips_remaining(a0)
@@ -477,10 +512,20 @@ TailS3_loc_13CBA:
 		add.w	d2,obX(a0)
 
 TailS3_loc_13CBE:
-		moveq	#1,d2
 		move.w	obY(a0),d1
 		sub.w	(Tails_CPU_target_Y).w,d1
 		beq.s	TailS3_loc_13CD2
+		move.w	d1,d2
+		bpl.s	.vertical_distance
+		neg.w	d2
+.vertical_distance:
+		lsr.w	#4,d2
+		addq.w	#1,d2
+		cmpi.w	#Tails_CPU_FlyVerticalMax,d2
+		bls.s	.vertical_step
+		moveq	#Tails_CPU_FlyVerticalMax,d2
+.vertical_step:
+		tst.w	d1
 		bmi.s	TailS3_loc_13CCE
 		neg.w	d2
 
@@ -496,6 +541,9 @@ TailS3_loc_13CD2:
 		bne.s	TailS3_loc_13D42
 		cmpi.b	#6,(v_player+obRoutine).w
 		bhs.s	TailS3_loc_13D42
+		bsr.w	Tails_CPU_TargetIsCrumbling
+		tst.w	d0
+		bne.s	TailS3_loc_13D42		; do not land on the moving leader's failing platform
 		move.w	#6,(Tails_CPU_routine).w
 		move.b	#0,obControl(a0)
 		move.b	#0,obAnim(a0)
@@ -535,6 +583,9 @@ TailS3_loc_13D4A:
 
 TailS3_loc_13D78:
 		bsr.w	TailS3_sub_13EFC
+		bsr.w	Tails_CPU_CheckReach
+		tst.w	d0
+		bne.w	TailS3_locret_13EC8
 		tst.w	(Tails_CPU_idle_timer).w
 		bne.w	TailS3_loc_13EBE
 		tst.b	obControl(a0)
@@ -553,14 +604,23 @@ TailS3_loc_13DA6:
 		move.w	(Sonic_Pos_Record_Index).w,d0
 		sub.b	d1,d0
 		move.w	(a2,d0.w),d2
+		move.w	2(a2,d0.w),d3
+		moveq	#Tails_CPU_FollowWidth,d5
+		tst.w	(Tails_CPU_reach_timer).w
+		bne.s	.reach_target
 		btst	#status.player.on_object,obStatus(a1)
-		bne.s	TailS3_loc_13DD0
+		bne.s	.mounted_target
 		cmpi.w	#$400,obInertia(a1)
 		bge.s	TailS3_loc_13DD0
 		subi.w	#$20,d2
+		bra.s	TailS3_loc_13DD0
+.reach_target:
+		moveq	#Tails_CPU_ReachStopWidth,d5
+.mounted_target:
+		move.w	obX(a1),d2		; steer at the live target, including during a ledge jump
+		move.w	obY(a1),d3		; follows static, moving and depressed platforms alike
 
 TailS3_loc_13DD0:
-		move.w	2(a2,d0.w),d3
 		lea	(Sonic_Stat_Record_Buf).w,a2
 		move.w	(a2,d0.w),d1
 		move.b	2(a2,d0.w),d4
@@ -575,7 +635,7 @@ TailS3_loc_13DF2:
 		beq.s	TailS3_loc_13E50
 		bpl.s	TailS3_loc_13E26
 		neg.w	d2
-		cmpi.w	#$30,d2
+		cmp.w	d5,d2
 		blo.s	TailS3_loc_13E0A
 		andi.w	#$F3F3,d1
 		ori.w	#$404,d1
@@ -592,7 +652,7 @@ TailS3_loc_13E0A:
 ; ---------------------------------------------------------------------------
 
 TailS3_loc_13E26:
-		cmpi.w	#$30,d2
+		cmp.w	d5,d2
 		blo.s	TailS3_loc_13E34
 		andi.w	#$F3F3,d1
 		ori.w	#$808,d1
@@ -664,6 +724,7 @@ TailS3_locret_13EC8:
 
 
 TailS3_sub_13ECA:
+		bsr.w	Tails_DetachStandingObject
 		move.w	#0,(Tails_CPU_idle_timer).w
 		move.w	#0,(Tails_CPU_flight_timer).w
 		move.w	#2,(Tails_CPU_routine).w
@@ -674,6 +735,90 @@ TailS3_sub_13ECA:
 		move.b	#0,tails_flight_flag(a0)
 		rts
 ; End of function TailS3_sub_13ECA
+
+; Preserve the normal recorded-input AI for ordinary terrain. A grounded
+; higher target that remains unreachable after a sustained ledge attempt gets
+; a local flight take-off instead of endless identical failed jumps.
+; d0 = 1 if take-off began. Manual controller 2 input always takes precedence.
+Tails_CPU_CheckReach:
+		tst.w	(Tails_CPU_idle_timer).w
+		bne.s	.reset
+		tst.b	obControl(a0)
+		bne.s	.reset			; a scripted object owns the companion's movement
+		tst.b	obControl(a1)
+		bmi.s	.reset
+		btst	#status.player.in_air,obStatus(a1)
+		bne.s	.reset
+		btst	#status.player.on_object,obStatus(a1)
+		beq.s	.check_distance
+		bsr.w	Tails_CPU_TargetIsCrumbling
+		tst.w	d0
+		bne.s	.take_off
+.check_distance:
+		move.w	obX(a1),d0
+		sub.w	obX(a0),d0
+		bpl.s	.distance
+		neg.w	d0
+.distance:
+		cmpi.w	#Tails_CPU_ReachWidth,d0
+		bhi.s	.reset
+		btst	#status.player.in_air,obStatus(a0)
+		bne.s	.in_air
+		move.w	obY(a0),d0
+		sub.w	obY(a1),d0
+		cmpi.w	#Tails_CPU_ReachHeight,d0
+		blt.s	.reset
+		bra.s	.count
+.in_air:
+		tst.w	(Tails_CPU_reach_timer).w
+		beq.s	.return
+.count:
+		addq.w	#1,(Tails_CPU_reach_timer).w
+		cmpi.w	#Tails_CPU_ReachTime,(Tails_CPU_reach_timer).w
+		blo.s	.return
+.take_off:
+		move.w	#4,(Tails_CPU_routine).w
+		move.w	obY(a0),d0		; take off here; do not teleport to Sonic
+		bsr.w	TailS3_loc_13B78
+		moveq	#1,d0
+		rts
+.reset:
+		clr.w	(Tails_CPU_reach_timer).w
+.return:
+		moveq	#0,d0
+		rts
+
+; a1 = lead player; d0 = 1 only for walk/run on a triggered collapsing ledge
+; or floor. Stationary/rolling players retain the ordinary falling behavior.
+; The two objects share ledge_collapse_flag; no per-object motion arithmetic.
+Tails_CPU_TargetIsCrumbling:
+		btst	#status.player.in_air,obStatus(a1)
+		bne.s	.no
+		tst.w	obInertia(a1)
+		beq.s	.no
+		cmpi.b	#AniIDSonAni_Walk,obAnim(a1)
+		bne.s	.no
+		btst	#status.player.on_object,obStatus(a1)
+		beq.s	.no
+		moveq	#0,d0
+		move.b	standonobject(a1),d0
+		cmpi.w	#object_slot_count,d0
+		bhs.s	.no
+		mulu.w	#object_size,d0
+		lea	(v_objspace).w,a3
+		adda.w	d0,a3
+		cmpi.l	#Obj1A,code(a3)
+		beq.s	.collapse_state
+		cmpi.l	#Obj1B,code(a3)
+		bne.s	.no
+.collapse_state:
+		tst.b	ledge_collapse_flag(a3)
+		beq.s	.no
+		moveq	#1,d0
+		rts
+.no:
+		moveq	#0,d0
+		rts
 
 
 ; =============== S U B R O U T I N E =======================================

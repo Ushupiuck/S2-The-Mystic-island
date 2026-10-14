@@ -13,8 +13,10 @@ Obj5E:
 		move.b	obRoutine(a0),d0
 		move.w	Obj5E_Index(pc,d0.w),d1
 		jsr	Obj5E_Index(pc,d1.w)
-		out_of_range.w	UnloadObject,see_origX(a0)
-		bra.w	DisplaySprite
+		out_of_range.s	.unload,see_origX(a0)
+		jmp	(DisplaySprite).l
+.unload:
+		jmp	(UnloadObject).l
 ; ---------------------------------------------------------------------------
 Obj5E_Index:	dc.w See_Main-Obj5E_Index
 		dc.w See_Slope-Obj5E_Index

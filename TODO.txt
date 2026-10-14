@@ -33,11 +33,18 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
+Let companion Tails immediately fly when walking/running Sonic rides an already-triggered collapsing ledge/floor; preserve normal falling for stationary/rolling Sonic and controller 2 precedence < DONE
+Pack invincibility orbit/frame state into the eight composite padding bytes, reduce SSTs from $50 to $4E, move water bank caches into splash scratch and reclaim 226 bytes; preserve renderer fall-through optimizations and test BG composites at entry < DONE
+Prevent flying catch-up Tails from depressing bridges, use each depressed log's actual landing surface, and detach his old object before take-off < DONE
+Give companion ledge jumps horizontal steering towards the live target, follow moving/depressed platform riders without math subroutines, and use local catch-up flight after unsuccessful jumps; preserve manual controller 2 precedence < DONE
+Lock Game/Time Over logical controls and Debug entry while retaining raw card-advance buttons; unlock Sega/current Continue placeholder and restarted levels; force companion Tails right after signposts < DONE
+Allow companion Tails to collect hidden end-of-level bonuses once through the shared score < DONE
+Prevent normal S1-stage wall embedding: validate the exact rounded movement delta and recheck changed bumper velocities before applying them; reproduce three stage-1 bumper failures and pass 352 approaches in NTSC/PAL without adding recovery/teleport logic < DONE
 Audit all 93 object sources and the objects embedded in main.asm after the SST migration; fix the giant-ring flash's stale stack escape and full-pointer clear, signpost/result-card existence checks and the unused Snailbot draft's numeric ID; add pointer-width/ID/alignment/boundary guards < DONE
 Allow Sonic and primary Tails to enter Debug during hurt/death, preserving initialization and companion exclusion; verify placement restoration and frame cycling in NTSC/PAL < DONE
 Make held spindash charges land on monitors, route blank/Eggman rewards to the collector with shield/invincibility/ring/death rules, and initialize primary Tails's shared air counter so ground dust resumes < DONE
 Align streamed Points/Shield/Invincibility art after the odd-sized bubble file; verify actual VRAM tiles and both shield banks before/after stars < DONE
-Convert the SST code field to a longword routine pointer, group the shared display header, retain byte placement IDs and all 113 slots in $50-byte SSTs; adapt Debug, objects/children/composites and tests, and fix the two-rider bridge offset regression < DONE
+Convert the SST code field to a longword routine pointer, group the shared display header, retain byte placement IDs and all 113 slots in $4E-byte SSTs; adapt Debug, objects/children/composites and tests, and fix the two-rider bridge offset regression < DONE
 Fix Sonic double-life monitor icon mappings and SonLVL art offset; grounded rolling attacks break monitors on slopes for either player while rising airborne underside hits retain their lift behavior < DONE
 Restore S3&K splash and streamed drowning numbers in the per-player $FC00/$FE00 banks, resident bubbles at $8B80, palette remapping, shared source/frame caching and safe DMA retry; retain separate dust/splash objects and independent air supplies < DONE
 Audit every object source through an isolated 16-section LZ2 course, context-specific screens and GHZ/EHZ combat; record 93-file coverage, exclude the broken conveyor, preserve known gator limitations and intentional demo timing, fix closed-door fallthrough/giant-ring mapping phases/primary warp identity, and add reproducible ROM regressions < DONE
@@ -58,7 +65,7 @@ Upgrade normal Sonic physics to S3&K while preserving the WIP homing hook, unres
 Port normal S3&K Tails movement, flight/swimming, carrying Sonic, CPU following/catch-up/spindash and controller-2 override; add body/extra/tail art, mappings, DPLCs and flight/grab sounds < DONE
 Remap all Tails art to Mystic Island's palette order, retaining its warmer skin shades; align SonLVL with the runtime palette < DONE
 Keep water splash (08) and spindash/skid dust (0E) as separate objects; use independent dust banks and independent underwater air/countdown/bubble handling for both players < DONE
-Convert all ordinary root sprite mappings, the renderer and fragment readers to S3&K's word-count/six-byte-piece ABI; initialize universal height_pixels from generated bounds (now $06 in the grouped $50-byte SST) < DONE
+Convert all ordinary root sprite mappings, the renderer and fragment readers to S3&K's word-count/six-byte-piece ABI; initialize universal height_pixels from generated bounds (now $06 in the grouped $4E-byte SST) < DONE
 Share one S3&K-format dynamic DPLC loader across players, tails and dust; reserve complete frames before uploading and retry when the DMA queue is full < DONE
 Use S3&K common VRAM positions for planes, HScroll, players, tails, rings, HUD, lives and dust; relocate monitor/signpost art away from the player bank while leaving test-zone allocations provisional < DONE
 Use BS_ShowLayout for the rotating S1 bonus stage, preserving its dedicated S1 mapping ABI as S3&K Slots_RenderLayout does; append valid sprite links and respect the shared 80-sprite limit < DONE
@@ -70,7 +77,7 @@ Convert the S1 bonus-stage background to normal blocks/chunks and two live $1000
 Share TIME's static E with SCORE in the HUD and results mappings; retain debug coordinates in their separate digit mappings < DONE
 Replace RING BONUS lettering with the animated ring icon on both results screens; special-stage results replace the stage's $2940 ring art with a separate palette-0 copy of all eight frames, preserving the normal $D720 art, emerald colors and bonus digits < DONE
 Remove the results-only RING lettering art/PLCs and the duplicate uncompressed HUD E glyph < DONE
-Use $50 SSTs with 90 dynamic slots and 23 reserved slots < DONE
+Use $4E SSTs with 90 dynamic slots and 23 reserved slots < DONE
 Render eight invincibility stars per player from one composite SST each (primary reserved, companion dynamically allocated), sharing art; either player's pickup grants both live players 20 seconds of invincibility < DONE
 Share shield and speed-shoe pickups in either direction; retain individual shield loss and speed-shoe timers/expiry < DONE
 LoadCollisionIndexes < DONE
