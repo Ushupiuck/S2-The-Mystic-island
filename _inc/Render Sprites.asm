@@ -135,14 +135,11 @@ Render_Sprites_NextLevel:
 		clr.w	(a5)		; consume the queue once instead of writing it per object
 		lea	2(a5),a4
 		lea	(a4,d3.w),a2
-		bra.s	Render_Sprites_NextEntry
-Render_Sprites_Deleted:
-		bra.w	Render_Sprites_NextObj
 Render_Sprites_NextEntry:
 		movea.w	(a4)+,a0
 		; A queued object can be deleted later in the update.
 		tst.l	code(a0)
-		beq.s	Render_Sprites_Deleted
+		beq.w	Render_Sprites_NextObj
 		move.b	obRender(a0),d6
 		andi.w	#$7F,d6
 		move.b	d6,obRender(a0)
@@ -225,7 +222,7 @@ Render_Sprites_Composite:
 		moveq	#0,d2
 		move.b	mainspr_width(a0),d2
 		btst	#obRender.level_fg,d6
-		beq.s	.check_bg
+		beq.w	.check_bg
 .world:
 		sub.w	(a3),d0
 		move.w	d0,d3
@@ -247,7 +244,28 @@ Render_Sprites_Composite:
 		bhs.w	Render_Sprites_NextObj
 		addi.w	#128,d1
 		sub.w	d3,d1
-		bra.s	.visible
+		ori.b	#$80,obRender(a0)
+		tst.w	d7
+		bmi.w	Render_Sprites_NextObj
+		move.l	a4,-(sp)
+		movea.l	obMap(a0),a4
+		move.w	obGfx(a0),d5
+		moveq	#0,d3
+		move.b	mainspr_childsprites(a0),d3
+		swap	d3
+		move.w	d6,d3
+		swap	d3
+		moveq	#0,d4
+		move.b	mainspr_mapframe(a0),d4
+		lea	subspr_data(a0),a0	; the same continuation handles main and child groups
+		beq.w	.children
+		add.w	d4,d4
+		movea.l	a4,a1
+		adda.w	(a1,d4.w),a1
+		move.w	(a1)+,d4
+		subq.w	#1,d4
+		bmi.w	.children
+		bra.w	Render_CompositeMappings	; main group rejoins .next_piece directly
 .check_bg:
 		btst	#obRender.level_bg,d6
 		beq.s	.screen
@@ -272,7 +290,6 @@ Render_Sprites_Composite:
 		sub.w	d2,d3
 		cmpi.w	#224,d3
 		bge.w	Render_Sprites_NextObj
-.visible:
 		ori.b	#$80,obRender(a0)
 		tst.w	d7
 		bmi.w	Render_Sprites_NextObj
@@ -559,7 +576,6 @@ Render_Composite_FlipX_SkipY:
 		dbf	d4,Render_Composite_FlipX
 		bra.w	Render_Sprites_Composite.next_piece
 ; ---------------------------------------------------------------------------
-; ---------------------------------------------------------------------------
 
 Render_Composite_XSize:
 		dc.b 8,8,8,8,$10,$10,$10,$10,$18,$18,$18,$18,$20,$20,$20,$20
@@ -611,7 +627,6 @@ Render_Composite_FlipXY_SkipY:
 		dbf	d4,Render_Composite_FlipXY
 		bra.w	Render_Sprites_Composite.next_piece
 ; ---------------------------------------------------------------------------
-; ---------------------------------------------------------------------------
 
 Render_Composite_YSize:
 		dc.b 8,$10,$18,$20,8,$10,$18,$20,8,$10,$18,$20,8,$10,$18,$20
@@ -658,5 +673,3 @@ Render_Composite_FlipY_SkipY:
 		addq.w	#4,a1
 		dbf	d4,Render_Composite_FlipY
 		bra.w	Render_Sprites_Composite.next_piece
-
-Render_Sprites_End:
