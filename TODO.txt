@@ -33,6 +33,10 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
+Audit all 93 object sources and the objects embedded in main.asm after the SST migration; fix the giant-ring flash's stale stack escape and full-pointer clear, signpost/result-card existence checks and the unused Snailbot draft's numeric ID; add pointer-width/ID/alignment/boundary guards < DONE
+Allow Sonic and primary Tails to enter Debug during hurt/death, preserving initialization and companion exclusion; verify placement restoration and frame cycling in NTSC/PAL < DONE
+Make held spindash charges land on monitors, route blank/Eggman rewards to the collector with shield/invincibility/ring/death rules, and initialize primary Tails's shared air counter so ground dust resumes < DONE
+Align streamed Points/Shield/Invincibility art after the odd-sized bubble file; verify actual VRAM tiles and both shield banks before/after stars < DONE
 Convert the SST code field to a longword routine pointer, group the shared display header, retain byte placement IDs and all 113 slots in $50-byte SSTs; adapt Debug, objects/children/composites and tests, and fix the two-rider bridge offset regression < DONE
 Fix Sonic double-life monitor icon mappings and SonLVL art offset; grounded rolling attacks break monitors on slopes for either player while rising airborne underside hits retain their lift behavior < DONE
 Restore S3&K splash and streamed drowning numbers in the per-player $FC00/$FE00 banks, resident bubbles at $8B80, palette remapping, shared source/frame caching and safe DMA retry; retain separate dust/splash objects and independent air supplies < DONE

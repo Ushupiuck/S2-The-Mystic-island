@@ -15836,6 +15836,7 @@ Art_AirCountdown:	binclude "art/uncompressed/Drowning countdown.unc"
 Art_AirCountdown_End:
 		even
 Nem_WaterBubbles:	binclude "art/nemesis/Water bubbles.nem"
+		even				; following raw art is streamed by word-addressed DMA
 Art_Points:		binclude	"art/uncompressed/Points.unc"
 Art_Points_End:
 Art_Shield:		binclude "art/uncompressed/Shield.unc"

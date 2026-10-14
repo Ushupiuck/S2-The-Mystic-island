@@ -19,11 +19,11 @@ BonusPlayer_Index:
 		dc.w BonusPlayer_Main-BonusPlayer_Index
 		dc.w BonusPlayer_ChkDebug-BonusPlayer_Index
 		dc.w BonusPlayer_ExitStage-BonusPlayer_Index
-ost_ss_item		= objoff_38					; $34 ; item id Sonic is touching
-ost_ss_ghost		= objoff_39					; $35 ; status of ghost blocks - 0 = ghost; 1 = passed; 2 = solid
-ost_ss_item_address	= objoff_3A					; $36 ; RAM address of item in layout Sonic is touching
-ost_ss_updown_time	= objoff_3E					; $3A ; time until UP/DOWN can be triggered again
-ost_ss_r_time		= objoff_3F					; $3B ; time until R can be triggered again
+ost_ss_item		= objoff_38					; item id Sonic is touching
+ost_ss_ghost		= objoff_39					; status of ghost blocks - 0 = ghost; 1 = passed; 2 = solid
+ost_ss_item_address	= objoff_3A					; RAM address of item in layout Sonic is touching
+ost_ss_updown_time	= objoff_3E					; time until UP/DOWN can be triggered again
+ost_ss_r_time		= objoff_3F					; time until R can be triggered again
 ; ===========================================================================
 
 BonusPlayer_Main:	; Routine 0

@@ -75,8 +75,8 @@ Monitor_SolidCharacter:
 		bne.s	.standing
 		cmpi.b	#AniIDSonAni_Roll,obAnim(a1)
 		beq.s	.return
-		cmpi.b	#AniIDSonAni_Spindash,obAnim(a1)
-		beq.s	.return
+		; A held charge is solid: it can land on a monitor without breaking it.
+		; Releasing the charge switches to Roll, handled by TouchResponse.
 		bra.w	SolidObject_cont
 .standing:
 		; Use the common standing/edge path, preserving this player's bit.

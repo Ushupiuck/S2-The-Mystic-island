@@ -9,6 +9,7 @@ from pathlib import Path
 import argparse
 import re
 import struct
+from itertools import product
 
 try:
     from unicorn import (Uc, UC_ARCH_M68K, UC_MODE_BIG_ENDIAN, UC_HOOK_CODE,
@@ -406,6 +407,102 @@ for player in ('v_player','v_player2'):
     m.act('loc_198FA',player,{UC_M68K_REG_A1:obj|0xFF000000})
     assert m.get(obj,'obRoutine')==2 and m.get(obj,'ob2ndRout')==4
 report['monitor_ground_roll_slopes_and_airborne_underside']=8
+# A held charge is still solid when falling onto a monitor. Rolling attacks
+# use TouchResponse instead; these states must not leave a collision gap.
+for player,character in [('v_player',1),('v_player',2),('v_player2',2)]:
+    obj,ptr=setup(0x26,6)
+    m.put(player,'layout_id',character)
+    m.write('Player_mode',m.s['PlayerMode_Tails'] if player=='v_player' and character==2 else 0,2)
+    m.act('Obj26',obj)
+    for field,value,size in [('obX',240,2),('obY',207,2),('obVelY',0x400,2),
+            ('obStatus',2,1),('obAnim',m.s['AniIDSonAni_Spindash'],1),
+            ('spindash_flag',1,1),('spindash_counter',0x600,2)]:
+        m.put(player,field,value,size)
+    m.act('Monitor_SolidCharacter',obj,{
+        UC_M68K_REG_A1:m.s[player]&0xFFFFFFFF,UC_M68K_REG_D1:0x1A,
+        UC_M68K_REG_D2:0xF,UC_M68K_REG_D3:0x10,UC_M68K_REG_D4:240,
+        UC_M68K_REG_D6:3 if player=='v_player' else 4})
+    assert m.get(player,'obStatus')&8 and not m.get(player,'obStatus')&2
+    assert m.get(obj,'obRoutine')==2 and m.get(player,'spindash_flag')==1
+    assert m.get(player,'spindash_counter',2)==0x600
+report['held_charge_lands_on_monitor_for_all_player_roles']=True
+
+# Harmful monitor rewards must mutate the collector, never the floating icon.
+# Cover shields/zero rings and both invulnerability protections, including the
+# companion's intentional immunity to scattering the shared ring inventory.
+damage_cases=0
+for player,character in [('v_player',1),('v_player',2),('v_player2',2)]:
+    for rings,shield,invincible,flashing in product((0,30),(False,True),(False,True),(False,True)):
+        m.start()
+        m.put(player,'layout_id',character)
+        m.write('Player_mode',m.s['PlayerMode_Tails'] if player=='v_player' and character==2 else 0,2)
+        m.write('v_rings',rings,2)
+        m.put(player,'obStatusSecondary',int(shield)|(int(invincible)<<m.s['obStatusSecondary_isInvincible']))
+        m.put(player,'flashtime',8 if flashing else 0,2)
+        icon=pool()[0]
+        for field,value,size in [('code',m.s['Obj29'],4),('obRoutine',4,1),
+                ('obAnim',0,1),('obParent',m.s[player]&65535,2),('obX',600,2),('obY',180,2)]:
+            m.put(icon,field,value,size)
+        before=bytes(m.cpu.mem_read(icon&0xFFFFFF,m.s['object_size']))
+        partner='v_player2' if player=='v_player' else 'v_player'
+        other=bytes(m.cpu.mem_read(m.s[partner]&0xFFFFFF,m.s['object_size']))
+        m.act('Monitor_Null',icon,{UC_M68K_REG_A1:m.s[player]&0xFFFFFFFF})
+        assert m.cpu.reg_read(UC_M68K_REG_A0)&0xFFFFFF==icon&0xFFFFFF
+        assert bytes(m.cpu.mem_read(icon&0xFFFFFF,m.s['object_size']))==before
+        assert bytes(m.cpu.mem_read(m.s[partner]&0xFFFFFF,m.s['object_size']))==other
+        protected=invincible or flashing
+        expected=2 if protected else (4 if shield or rings else 6)
+        assert m.get(player,'obRoutine')==expected,(player,rings,shield,invincible,flashing)
+        assert bool(m.get(player,'obStatusSecondary')&1)==(shield and protected)
+        scatters=[a for a in pool() if m.get(a,'code')==m.s['Obj13']]
+        assert bool(scatters)==(not protected and not shield and rings>0 and player=='v_player')
+        damage_cases+=1
+    for routine,present in [(0,False),(4,True),(6,True)]:
+        m.start()
+        m.put(player,'code',m.s['Obj01' if character==1 else 'Obj02'] if present else 0)
+        m.put(player,'obRoutine',routine)
+        icon=pool()[0];m.put(icon,'code',m.s['Obj29']);m.put(icon,'obRoutine',4)
+        before=bytes(m.cpu.mem_read(m.s[player]&0xFFFFFF,m.s['object_size']))
+        m.act('Monitor_Null',icon,{UC_M68K_REG_A1:m.s[player]&0xFFFFFFFF})
+        assert bytes(m.cpu.mem_read(m.s[player]&0xFFFFFF,m.s['object_size']))==before
+report['harmful_monitor_targets_collector_and_preserves_icon']=damage_cases
+
+# Drive the complete giant-ring flash, including its terminal state. The old
+# extra stack pop escaped the direct object dispatcher instead of returning.
+for primary in (1,2):
+    m.start();m.put('v_player','layout_id',primary)
+    parent,flash=pool()[:2]
+    for field,value,size in [('code',m.s['GiantRing'],4),('obRoutine',2,1)]:
+        m.put(parent,field,value,size)
+    for field,value,size in [('code',m.s['GiantRingFlash'],4),
+            ('objoff_40',parent&0xFFFFFFFF,4),('obX',600,2),('obY',116,2)]:
+        m.put(flash,field,value,size)
+    for tick in range(30):
+        m.act('GiantRingFlash',flash)
+        if not m.get('v_player','code'):
+            break
+    else:
+        raise AssertionError('Giant-ring flash did not hide the primary player')
+    assert m.read('f_bigring')==1 and m.read('v_gfxbigring')==0
+    assert m.get(flash,'obRoutine')==4
+    m.act('GiantRingFlash',flash)
+    assert not m.get(flash,'code')
+report['giant_ring_final_frame_preserves_stack_and_clears_full_player_pointer']=True
+
+# A real ROM pointer has a zero leading byte. A live player must finish
+# leaving the screen; a hidden player can immediately queue the result card.
+m.start()
+sign=pool()[0];m.put(sign,'code',m.s['Signpost']);m.put(sign,'obRoutine',6)
+m.write('Camera_Max_X_pos',600,2);m.put('v_player','obX',600,2)
+m.act('Signpost_EndLevel',sign)
+assert m.get(sign,'obRoutine')==6 and not m.get('v_endcard','code')
+m.put('v_player','code',0)
+m.act('Signpost_EndLevel',sign)
+assert m.get(sign,'obRoutine')==8 and m.get('v_endcard','code')==m.s['GotThrough']
+m.write('v_timebonus',0x1234,2)
+m.act('Load_EndOfAct',sign)
+assert m.read('v_timebonus',2)==0x1234,'Existing result card was restarted'
+report['signpost_and_result_card_use_full_pointer_existence']=True
 # Dynamic objects do not consume a placement; explicit destruction does.
 obj,ptr=setup(0x22,state=0x85)
 m.act('DeleteObject',obj)
@@ -469,7 +566,7 @@ for who,objid,mode,mapname,h,w in [('Sonic',1,1,'Map_Sonic',19,9),('Tails',2,2,'
     for f,v,n in [('layout_id',objid,1),('character_id',objid-1,1),('obMap',m.s[mapname],4),('obGfx',m.s['ArtTile_'+who],2),('height_pixels',m.s[mapname+'_height'],1),('width_pixels',m.s[mapname+'_width'],1),('default_y_radius',h,1),('default_x_radius',w,1),('obStatus',0x7D,1),('obRender',0x85,1)]:
         m.put('v_player',f,v,n)
     m.write('v_jpadpress1',m.s['btnB'])
-    m.act('Obj01_Control' if objid==1 else 'Obj02_Control','v_player')
+    m.act('Obj01' if objid==1 else 'Obj02','v_player')
     assert m.read('Debug_placement_mode',2)==1
     m.write('v_jpadpress1',0)
     m.act('DebugMode','v_player')
@@ -513,6 +610,30 @@ for who,objid,mode,mapname,h,w in [('Sonic',1,1,'Map_Sonic',19,9),('Tails',2,2,'
     m.act('DebugMode','v_player')
     assert m.read('Debug_placement_mode',2)==0
 report['primary_character_debug_restore_and_frame_cycle']=2
+
+# Entry belongs before the player-state dispatch, so B also works during
+# recoil and death. C+B keeps the existing frame-cycle entry in each state.
+for objid,mode in ((1,1),(2,2)):
+    for routine in (2,4,6):
+        for held_c in (False,True):
+            m.start();m.put('v_player','layout_id',objid)
+            m.write('Player_mode',mode,2);m.write('Debug_mode_flag',1)
+            m.put('v_player','obRoutine',routine)
+            m.write('v_jpadpress1',m.s['btnB'])
+            m.write('v_jpadhold1',m.s['btnC'] if held_c else 0)
+            m.act('Obj01' if objid==1 else 'Obj02','v_player')
+            assert m.read('Debug_placement_mode',2)==(2 if held_c else 1)
+report['both_primary_characters_enter_debug_in_normal_hurt_and_death_states']=12
+for objid,mode,mapname in ((1,1,'Map_Sonic'),(2,2,'Map_Tails')):
+    m.start();m.put('v_player','layout_id',objid)
+    m.write('Player_mode',mode,2);m.write('Debug_mode_flag',1)
+    m.put('v_player','obRoutine',0);m.put('v_player','obControl',1)
+    m.write('v_jpadpress1',m.s['btnB'])
+    m.act('Obj01' if objid==1 else 'Obj02','v_player')
+    assert not m.read('Debug_placement_mode',2)
+    assert m.get('v_player','obMap',4)==m.s[mapname]
+    assert m.get('v_player','obRoutine')==2
+report['debug_cannot_skip_character_initialization']=True
 # Companion controls remain active when player 1 uses Debug.
 m.start()
 m.write('Debug_mode_flag',1)

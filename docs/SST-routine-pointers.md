@@ -32,6 +32,15 @@ Screen-space objects retain their alternate Y convention in `obScreenY`, now
 at `$12`. The named fields adapt S1/S2/S3 imports; the complete binary layout
 is not identical to stock S3&K. Use symbols rather than copied source offsets.
 
+The former stride was `$4A`. Widening the ID and grouping the header moved
+the old private fields forward by four bytes. Tails's last byte now occupies
+`$4C`, requiring at least an even `$4E` stride. The invincibility composite
+uses eight six-byte children at `$18–$47`, four orbit angles at `$48–$4B`
+and four animation indexes at `$4C–$4F`, so it requires the full `$50`.
+That also gives clearing/copying a whole number of longwords. The 68000 only
+requires word/long operands to have even addresses; four-byte alignment is
+not a hardware requirement. Across 113 slots, the growth costs `$2A6` bytes.
+
 ## Fields used by many objects
 
 | Offset | Bytes | Field |
@@ -127,3 +136,5 @@ and S1 special-stage mapping ABI. The two-rider bridge regression caught an old
 literal scratch offset overwriting a child pointer; its indexes now use named
 offsets. Native tests exercise arbitrary routines outside `Obj_Index`, pointer
 state changes, the final slot, deleted sprite queues and full CPU identity.
+The [follow-up SST audit](SST-audit.md) records all object sources, packed
+overlays and the pointer/stack regressions found after this conversion.

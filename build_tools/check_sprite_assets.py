@@ -50,6 +50,13 @@ def main():
     symbols = {name: int(value, 16) for name, value in re.findall(
         r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]',
         (ROOT / 'main.lst').read_text())}
+    # The VDP DMA source is a word address; an odd ROM pointer silently
+    # uploads the preceding byte and shifts every pixel in the frame.
+    for label in ('Art_Sonic', 'Art_Tails', 'Art_Tails_Extra', 'Art_Tails_Tails',
+            'Art_SpindashDust', 'Art_WaterSplash', 'Art_AirCountdown',
+            'Art_Points', 'Art_Shield', 'Art_Invincibility', 'Art_Ring',
+            'Art_SSResultsRing', 'Art_BigRing', 'Art_BigFlash'):
+        assert symbols[label] % 2 == 0, f'{label}: DMA source needs word alignment'
     assert symbols['code'] == 0 and symbols['height_pixels'] == 6
     assert symbols['object_size'] == 0x50
     assert symbols['vram_hscroll'] == 0xF000

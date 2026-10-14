@@ -11,7 +11,7 @@
 
 stair_wait_time		= objoff_30	; frames remaining before changing staircase state
 stair_touch_flags	= objoff_32	; accumulated touch/collision flags from child blocks
-stair_yoff_slot		= objoff_33	; offset of this child's Y-offset entry in parent ($34/$36/$38/$3A)
+stair_yoff_slot		= objoff_33	; offset of this child's Y-offset entry in parent ($38/$3A/$3C/$3E)
 
 stair_origX		= objoff_34	; original X position
 stair_origY		= objoff_36	; original Y position

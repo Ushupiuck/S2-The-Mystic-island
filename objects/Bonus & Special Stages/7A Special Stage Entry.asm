@@ -41,9 +41,9 @@ Obj7A_RmvSonic:
 		jsr	(AnimateSprite).l
 		cmpi.b	#2,obFrame(a0)
 		bne.s	loc_1253E
-		tst.l	(v_player+code).w		; is this Sonic?
+		tst.l	(v_player+code).w		; is the primary player still active?
 		beq.s	loc_1253E			; if not, branch
-		clr.l	(v_player+code).w		; set Sonic's object ID to 0
+		clr.l	(v_player+code).w		; hide the primary player until the warp finishes
 		move.w	#sfx_SSGoal,d0
 		jsr	(PlaySound_Special).l		; play Special Stage entry sound effect
 

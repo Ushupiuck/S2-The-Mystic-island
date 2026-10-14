@@ -99,8 +99,8 @@ Signpost_EndLevel:
 		move.b	#1,(f_lockctrl).w
 		move.w	#8<<btnR,(v_jpadholdlogical).w
 +
-		; This check here is for S1's Big Ring, which would set Sonic's Object ID to 0
-		tst.b	(v_player).w
+		; S1's giant-ring flash clears the primary player's routine pointer.
+		tst.l	(v_player+code).w
 		beq.s	+
 		move.w	(v_player+obX).w,d0
 		move.w	(Camera_Max_X_pos).w,d1
@@ -117,7 +117,7 @@ Signpost_EndLevel:
 
 ; GotThroughAct:
 Load_EndOfAct:
-		tst.b	(v_endcard).w
+		tst.l	(v_endcard+code).w
 		bne.s	Signpost_Sparkle.return
 		move.w	(Camera_Max_X_pos).w,(Camera_Min_X_pos).w
 		bclr	#obStatusSecondary_isInvincible,(v_player+obStatusSecondary).w

@@ -7,8 +7,16 @@
 
 Obj01:
 		tst.w	(Debug_placement_mode).w	; is debug mode being used?
-		beq.s	Obj01_Normal			; if not, branch
+		beq.s	.check_entry
 		jmp	(DebugMode).l
+.check_entry:
+		tst.b	(Debug_mode_flag).w
+		beq.s	Obj01_Normal
+		tst.b	obRoutine(a0)			; initialize the character before allowing Debug
+		beq.s	Obj01_Normal
+		btst	#bitB,(v_jpadpress1).w
+		beq.s	Obj01_Normal
+		jmp	(Debug_Begin).l		; available while normal, hurt or dying
 ; ===========================================================================
 
 Obj01_Normal:
@@ -68,12 +76,6 @@ Obj01_Init_Continued:
 ; ---------------------------------------------------------------------------
 
 Obj01_Control:
-		tst.b	(Debug_mode_flag).w		; is debug cheat enabled?
-		beq.s	loc_FAB0			; if not, branch
-		btst	#bitB,(v_jpadpress1).w		; is button B pressed?
-		beq.s	loc_FAB0			; if not, branch
-		jmp	(Debug_Begin).l		; C held selects S3&K frame cycling
-; -----------------------------------------------------------------------
 loc_FAB0:
 		tst.b	(f_lockctrl).w			; are controls locked?
 		bne.s	loc_FABC			; if yes, branch

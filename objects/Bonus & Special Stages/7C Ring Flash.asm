@@ -82,8 +82,8 @@ Flash_Animate:
 Flash_End:
 		addq.b	#2,obRoutine(a0)
 		clr.b	(v_gfxbigring).w	; Stop loading giant ring graphics
-		clr.w	(v_player).w
-		addq.l	#4,sp
+		clr.l	(v_player+code).w	; hide the primary player until the queued stage entry
+		; ExecuteObjects calls the code pointer directly; return to its loop.
 		rts
 ; End of function GiantRingFlash
 

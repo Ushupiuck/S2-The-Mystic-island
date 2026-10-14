@@ -79,7 +79,20 @@ Monitor_Subroutines:
 ; ---------------------------------------------------------------------------
 
 Monitor_Null:
-		jmp	(HurtSonic).l
+		; The reward object is in a0; a1 is its collector. Keep the icon SST
+		; intact while the normal damage path handles that character's rings,
+		; shield, invincibility and death. The caller still draws the icon.
+		tst.l	code(a1)
+		beq.s	.return
+		cmpi.b	#4,obRoutine(a1)
+		bhs.s	.return
+		move.l	a0,-(sp)
+		movea.l	a1,a0			; hurt the collector
+		movea.l	(sp),a1			; icon is the damage source for Touch_Hurt
+		jsr	(Touch_Hurt).l
+		movea.l	(sp)+,a0			; restore the reward object for DisplaySprite
+.return:
+		rts
 ; ---------------------------------------------------------------------------
 
 Monitor_SonicLife:	; Now rarer and MUCH more valuable!

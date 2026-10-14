@@ -204,7 +204,7 @@ obParent3 =             objoff_46  ; word
 child_dx =              objoff_46  ; byte; alternative to obParent3
 child_dy =              objoff_47  ; byte
 object_size_bits:       equ 6      ; allocator lookup buckets, not SST stride
-object_size:            equ $50    ; 80 bytes; four-byte aligned clearing
+object_size:            equ $50    ; 80 bytes; eight star children plus orbit state; longword clearing
 reserved_object_slots: equ 23
 dynamic_object_slots:  equ 90
 object_slot_count:      equ reserved_object_slots+dynamic_object_slots

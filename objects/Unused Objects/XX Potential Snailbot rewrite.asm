@@ -92,7 +92,7 @@ Snailbot_Move:
 		move.b	#15,snail_flame(a0)
 		bsr.w	FindFreeObj
 		bne.s	.chktrigger
-		move.l	#id_Snailbot,code(a1)
+		move.l	#Snailbot,code(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.b	obStatus(a0),obStatus(a1)

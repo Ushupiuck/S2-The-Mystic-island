@@ -10,6 +10,46 @@ SENTINEL = bytes.fromhex('FFFF00000000')
 ZONES = ('GHZ', 'LZ', 'CPZ', 'EHZ', 'HPZ', 'HTZ', 'MTZ')
 
 
+def check_named_sst_fields(symbols):
+    """Check literal named SST operands; indexed/packed records need review.
+
+    This is not register dataflow analysis. In particular, a pointer to an
+    interior cache can legitimately use an odd displacement to reach an even
+    word, as Points does. Only bare field(aN) operands are checked here.
+    """
+    constants = (ROOT / 's2.constants.asm').read_text().split('; Animation flags')[0]
+    names = set(re.findall(r'^\s*(\w+)\s*:?\s*(?:equ|=)\s*(?:\$[0-9A-Fa-f]+|\w+)',
+                           constants, re.M))
+    fields = {name: offset for name, offset in symbols.items()
+              if name in names and 0 <= offset <= symbols['object_size']}
+    count = 0
+    sources = [ROOT / 'main.asm', *sorted((ROOT / 'objects').rglob('*.asm'))]
+    for source in sources:
+        text = source.read_text(encoding='latin1')
+        local = fields.copy()
+        aliases = re.findall(r'^\s*(\w+)\s*:?\s*(?:equ|=)\s*(\w+)\s*(?:;.*)?$', text, re.M)
+        for _ in range(3):
+            for name, value in aliases:
+                if value in local:
+                    local[name] = local[value]
+        for line, text in enumerate(text.splitlines(), 1):
+            instruction = re.match(r'\s*(?:\w+:\s*)?(?:[-+]\s*)?([a-zA-Z_]+)\.([bwl])\s+(.*)',
+                                   text.split(';')[0])
+            if not instruction:
+                continue
+            size = {'b': 1, 'w': 2, 'l': 4}[instruction[2]]
+            for name in re.findall(r'(?<![\w+\-])\b(\w+)\(a[0-6]\)', instruction[3]):
+                if name not in local:
+                    continue
+                count += 1
+                offset = local[name]
+                if instruction[1].lower() in ('lea', 'pea'):
+                    continue
+                assert offset + size <= symbols['object_size'], f'{source}:{line}: {name} crosses SST boundary'
+                assert size == 1 or not offset & 1, f'{source}:{line}: odd word/long SST field {name}'
+    print(f'Checked {count} named SST operands in all {len(sources)-1} object files and main.asm.')
+
+
 def placements(path, capacity):
     data = path.read_bytes()
     assert len(data) >= 6 and len(data) % 6 == 0, f'{path.name}: incomplete record'
@@ -60,6 +100,25 @@ def main():
     assert symbols['omSize'] == 6
     assert symbols['respawn_addr'] == 0x22
     assert symbols['code'] == 0 and symbols['object_size'] == 0x50
+    # Legacy code sometimes addressed an SST base directly instead of obID.
+    # Cover those absolute references as well as symbolic code(aN) accesses.
+    constants = (ROOT / 's2.constants.asm').read_text()
+    slots = re.findall(r'^(v_\w+)\s*=\s*v_objspace(?:\+object_size\*\d+)?\b', constants, re.M)
+    slots += ['v_objspace', 'v_lvlobjspace']
+    # Include reserved-slot aliases, such as the seven result-card children.
+    for _ in range(2):
+        bases = '|'.join(map(re.escape, slots))
+        slots += re.findall(r'^(v_\w+)\s*=\s*(?:' + bases + r')\+object_size\*\d+\b', constants, re.M)
+        slots = sorted(set(slots))
+    absolute = '|'.join(map(re.escape, slots))
+    pointer = r'(?:\((?:' + absolute + r')(?:\+code)?\)|(?:code|obID)\(a[0-6]\))'
+    narrow = re.compile(r'\b_?(?:movea?|cmpa?|cmpi|clr|tst|andi|ori|eori)\.[bw]\b[^;\n]*' + pointer)
+    numeric_id = re.compile(r'\b_?(?:move|cmpi)\.l\s+#id_\w+\s*,\s*' + pointer)
+    for source in [ROOT / 'main.asm', *(ROOT / 'objects').rglob('*.asm'), *(ROOT / '_inc').rglob('*.asm')]:
+        for line, text in enumerate(source.read_text(errors='replace').splitlines(), 1):
+            active = text.split(';')[0]
+            assert not narrow.search(active), f'{source}:{line}: byte/word access to code pointer'
+            assert not numeric_id.search(active), f'{source}:{line}: numeric placement ID used as a routine pointer'
     assert symbols['height_pixels'] == 6 and symbols['DebugEntry_size'] == 12
     assert symbols['v_lvlobjend'] - symbols['v_lvlobjspace'] == 90 * 0x50
     assert symbols['v_16x16'] == 0xFFC350
@@ -71,6 +130,7 @@ def main():
     assert symbols['Debug_saved_height'] + 1 == symbols['Free_LegacyObjectState']
     assert symbols['Debug_placement_type'] == symbols['Debug_placement_routine'] + 1
     assert symbols['Debug_placement_mode'] == symbols['Debug_placement_routine']
+    check_named_sst_fields(symbols)
     print(f'Checked {len(layouts)} S3&K layouts / {sum(n for _, n in layouts.values())} '
           f'placements, all 28 act pointers and Debug lists, and manager/Debug RAM.')
 

@@ -7,8 +7,16 @@ Obj02:
 		cmpa.w	#v_player,a0		; companion Tails never gets Debug privileges
 		bne.s	Obj02_Normal
 		tst.w	(Debug_placement_mode).w
-		beq.s	Obj02_Normal
+		beq.s	.check_entry
 		jmp	(DebugMode).l
+.check_entry:
+		tst.b	(Debug_mode_flag).w
+		beq.s	Obj02_Normal
+		tst.b	obRoutine(a0)			; initialization still runs before Debug entry
+		beq.s	Obj02_Normal
+		btst	#bitB,(v_jpadpress1).w
+		beq.s	Obj02_Normal
+		jmp	(Debug_Begin).l		; primary Tails can enter while normal, hurt or dying
 Obj02_Normal:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
@@ -49,6 +57,10 @@ Obj02_Init:
 		clr.b	flips_remaining(a0)
 		move.b	#4,flip_speed(a0)
 		move.b	#30,air_left(a0)
+		cmpa.w	#v_player,a0
+		bne.s	.air_ready
+		move.w	#30,(v_air).w		; primary Tails uses the shared air counter too
+.air_ready:
 		clr.b	tails_flight_flag(a0)
 		clr.w	(Tails_CPU_idle_timer).w
 		clr.w	(Tails_CPU_flight_timer).w
@@ -66,13 +78,6 @@ Obj02_Init:
 		; together before the first Render_Sprites, as with Sonic's initialization.
 
 Obj02_Control:
-		cmpa.w	#v_player,a0
-		bne.s	.normal
-		tst.b	(Debug_mode_flag).w
-		beq.s	.normal
-		btst	#bitB,(v_jpadpress1).w
-		beq.s	.normal
-		jmp	(Debug_Begin).l
 .normal:
 		lea	(Tails_top_speed).w,a4
 		bsr.w	Tails_Control

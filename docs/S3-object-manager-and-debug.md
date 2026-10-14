@@ -103,6 +103,12 @@ placement is separate future work.
 
 Only the primary player can enter Debug. Sonic and primary Tails use
 controller 1; companion Tails keeps his controller/AI behavior.
+Entry is checked before the ordinary player-state dispatch, after character
+initialization, so B also works during hurt recoil and the death animation.
+This follows S3&K's checks in its normal, hurt and dying handlers without
+duplicating the same check in each state. C+B remains available in those
+states too. Frame cycling pauses the current state; placement exit restores
+normal movement.
 
 | Input | Action |
 | --- | --- |
@@ -168,3 +174,9 @@ The follow-up [LZ2 object course](Object-test-course.md) checks the complete
 object-folder inventory, including context-dependent effects/screens and the
 normal boss encounters. Its [coverage matrix](Object-course-coverage.md) lists
 inactive, empty, unfinished and deliberately excluded entries explicitly.
+
+The SST follow-up repeats the course's 57 lifecycles and 46 contacts with
+Sonic in NTSC and primary Tails in PAL. `check_debug_states.py` also uses
+real harmful-monitor collisions to enter placement/frame cycling during
+recoil and death, then exercises exit, for both characters in both regions.
+See [the complete source audit and focused regressions](SST-audit.md).
