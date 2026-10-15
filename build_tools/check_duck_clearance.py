@@ -93,6 +93,24 @@ for pose in ('standing','ducking'):
 assert landings[0]==landings[1]
 checks.append({'case':'landing-and-riding-foot-position','passed':True})
 
+# Compare whole contacts with a rolling Sonic at the same foot point, including
+# deeper overlaps where the top/bottom choice matters as much as clearance.
+for dx in (-99,-80,0,80,99):
+    for dy in (-40,-30,-20,-10,-7,-5,0,4,5,7,8,9,10,20,30,40):
+        contacts=[]
+        for pose,radius in [('ducking',19),('rolling',14),('spindash',14)]:
+            setup(pose,x=4096+dx,y=4115-radius)
+            m.put(obj,'obX',4096,2)
+            m.put(obj,'obY',4096+dy,2)
+            m.put('v_player','obVelX',0x100 if dx<=0 else -0x100,2)
+            solid()
+            contacts.append((m.get('v_player','obX',2),
+                m.get('v_player','obY',2)+m.get('v_player','obHeight'),
+                m.get('v_player','obRoutine'),m.get('v_player','obStatus')&~4,
+                m.get('v_player','obVelX',2),m.get('v_player','obVelY',2)))
+        assert contacts[0]==contacts[1]==contacts[2],(dx,dy,contacts)
+        checks.append({'case':'compact-contact-equivalence','dx':dx,'dy':dy,'passed':True})
+
 report = {'passed':True,'checks':checks,'companion_ai_run':False}
 if args.output:
     args.output.parent.mkdir(parents=True,exist_ok=True)

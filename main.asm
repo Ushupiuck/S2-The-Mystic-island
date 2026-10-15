@@ -9760,6 +9760,7 @@ SolidObject_ChkBounds:
 		move.b	obHeight(a1),d5
 		subi.w	#sonic_roll_height,d5
 		ble.s	.full_height		; already using a compact radius
+		sub.w	d5,d2			; use the same top/bottom midpoint as the compact body
 		add.w	d5,d5			; standing diameter minus compact diameter
 		sub.w	d5,d4
 		cmp.w	d4,d3
