@@ -906,6 +906,54 @@ for camera,alternating in ((0,False),(400,True),(1600,False)):
         assert frames==[m.cpu.mem_read((m.s['v_starsobj']+m.s['invincibility_frames']+i*6)&0xFFFFFF,1)[0]
                         for i in range(4)]
 report['packed_star_state_survives_child_compaction_and_rendering']=270
+
+# A partner's composite stars live in the scanned dynamic pool. Their orbit
+# state overlays collision bytes, even when no children are on screen.
+for camera,partner_x in ((0,160),(1600,600)):
+    m.start();m.write('Camera_X_pos',camera,2)
+    for actor,x,history in (('v_player',camera+160,'Sonic_Pos_Record_Buf'),
+                            ('v_player2',partner_x,'Tails_Pos_Record_Buf')):
+        m.put(actor,'obX',x,2);m.put(actor,'obY',112,2)
+        m.put(actor,'obVelX',0x200,2);m.put(actor,'obVelY',0x100,2)
+        m.put(actor,'obStatusSecondary',2)
+        m.cpu.mem_write(m.s[history]&0xFFFFFF,struct.pack('>HH',x,112)*64)
+    m.put('v_starsobj','code',m.s['Obj35'])
+    m.put('v_shieldobj','effect_loaded_frame',m.s['PlayerEffects_StarsLoaded'])
+    for tick in range(128):
+        m.act('Obj35','v_starsobj')
+        partner=next(a for a in pool() if m.get(a,'code')==m.s['Obj35'])
+        m.act('Obj35',partner)
+        effects=[m.s['v_starsobj'],partner]
+        before=[bytes(m.cpu.mem_read(a&0xFFFFFF,m.s['object_size'])) for a in effects]
+        for actor in ('v_player','v_player2'):
+            player_before=bytes(m.cpu.mem_read(m.s[actor]&0xFFFFFF,m.s['object_size']))
+            m.act('TouchResponse',actor)
+            assert bytes(m.cpu.mem_read(m.s[actor]&0xFFFFFF,m.s['object_size']))==player_before,(
+                'composite stars changed player collision state',camera,tick,actor)
+            assert [bytes(m.cpu.mem_read(a&0xFFFFFF,m.s['object_size'])) for a in effects]==before,(
+                'touch response mutated composite star data',camera,tick,actor)
+            assert m.read('v_score',4)==0 and m.read('v_itembonus',2)==0,(
+                'composite stars awarded a phantom enemy kill',camera,tick,actor)
+report['composite_stars_cannot_mutate_players_or_award_phantom_kills']=512
+
+# The same scan must still process real enemies and breakable monitors for
+# either player after excluding display-only composite SSTs.
+for actor in ('v_player','v_player2'):
+    for kind in ('enemy','monitor'):
+        m.start();target=pool()[0]
+        m.put(actor,'obX',160,2);m.put(actor,'obY',112,2)
+        m.put(actor,'obStatusSecondary',2);m.put(actor,'obAnim',m.s['AniIDSonAni_Roll'])
+        m.put(actor,'obVelY',0x100,2)
+        m.put(target,'code',m.s['Crabmeat'] if kind=='enemy' else m.s['Obj26'])
+        m.put(target,'obRender',4);m.put(target,'obX',160,2);m.put(target,'obY',112,2)
+        m.put(target,'obColType',9 if kind=='enemy' else 0x46)
+        m.act('TouchResponse',actor)
+        if kind=='enemy':
+            assert m.get(target,'code')==m.s['Explosion'] and m.read('v_score',4)>0
+        else:
+            assert m.get(target,'obRoutine')==4 and m.get(target,'obParent',2)==m.s[actor]&65535
+report['real_enemy_and_monitor_touches_still_work_for_both_players']=4
+
 for obj in (pool()[0],pool()[-1]):
     m.start();address=obj&0xFFFFFF
     m.cpu.mem_write(address,b'\xA5'*m.s['object_size'])

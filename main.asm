@@ -13125,6 +13125,10 @@ Touch_Sizes:	dc.b $14,$14
 ; ---------------------------------------------------------------------------
 
 Touch_Height:
+		; Composite child records overlay NPC collision fields. Their
+		; visual groups have no touch hitbox; normal parents handle contact.
+		btst	#obRender.multi_sprite,obRender(a1)
+		bne.s	loc_19826
 		andi.w	#$3F,d0
 		add.w	d0,d0
 		lea	Touch_Sizes-2(pc,d0.w),a2
