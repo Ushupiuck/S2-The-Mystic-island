@@ -84,6 +84,12 @@ SMZ_Spin_Trapdoor:	; Routine 2
 		move.w	d2,d3					; collision height (stood-on)
 		addq.w	#1,d3					; +1px for stood-on height
 		move.w	obX(a0),d4				; collision X-position (stood-on)
+		; On closure, feet near the top must land before the full solid
+		; resolves a shallow edge overlap as a wall. Keep underside solidity.
+		movem.l	d1-d4,-(sp)
+		move.w	d2,d3				; initial top; the ride offset includes the extra pixel
+		jsr	(PlatformObject).l
+		movem.l	(sp)+,d1-d4
 		jsr (SolidObject).l				; make trapdoor solid
 
 		jmp (RememberState).l				; display trapdoor, or delete it if out of range

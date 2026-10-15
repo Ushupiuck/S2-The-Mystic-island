@@ -89,6 +89,20 @@ at Final Zone's entrance uses source terrain tiles `$25F-$263`. The wheel bank
 remains at `$4B4-$4BB`, and two smoke strips remain at `$4BD-$4D4`.
 The plane-A tile-table range `$600-$67F` remains unavailable for sprite art.
 
+Grounded ducking uses the rolling/spindash diameter for solid-object head
+clearance (28 pixels for Sonic), without changing the player's stored radius,
+feet, landing height or platform ride offset. Standing and airborne contacts
+retain their existing bounds, and gaps too small for the compact body still
+crush. `check_duck_clearance.py` exercises those boundaries and support points
+with Sonic-only 68000 fixtures.
+
+Closed trapdoors try the ordinary top-landing check before full solidity.
+This prevents a shallow foot overlap at the closing edge from being resolved
+as a side wall that cancels movement. The closed underside still blocks
+upward jumps, the ride height stays the same, and opening releases riders.
+`check_smz_trapdoor.py` checks both edges, three approach speeds, closure
+depths, underside contact and opening release without running companion AI.
+
 ## Springs, carrier and Tails
 
 S3&K vertical, horizontal and diagonal art/mappings replace the S2 sets.

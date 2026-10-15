@@ -9750,6 +9750,21 @@ SolidObject_ChkBounds:
 		tst.w	(Debug_placement_mode).w
 		bne.w	SolidObject_NoCollision			; branch, if in Debug Mode
 
+		; A grounded duck has the same clearance as rolling/spindashing.
+		; Keep the feet, landing bounds and platform ride position unchanged.
+		cmpi.b	#AniIDSonAni_Duck,obAnim(a1)
+		bne.s	.full_height
+		btst	#status.player.in_air,obStatus(a1)
+		bne.s	.full_height		; an airborne animation is not a grounded duck
+		moveq	#0,d5
+		move.b	obHeight(a1),d5
+		subi.w	#sonic_roll_height,d5
+		ble.s	.full_height		; already using a compact radius
+		add.w	d5,d5			; standing diameter minus compact diameter
+		sub.w	d5,d4
+		cmp.w	d4,d3
+		bhs.w	Solid_NotPushing		; clear this object's push flags, retaining Duck
+.full_height:
 		move.w	d0,d5
 		cmp.w	d0,d1
 		bhs.s	.isToTheLeft			; branch, if Sonic is to the object's left
