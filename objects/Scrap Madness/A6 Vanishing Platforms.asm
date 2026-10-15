@@ -88,18 +88,17 @@ SMZ_VanP_StoodOn:	; Routine 4
 		lea	(SMZ_Ani_Van).l,a1				; load animation script
 		jsr	(AnimateSprite).l			; (stays on final animation frame indefinitely)
 
-		btst	#1,obFrame(a0)				; is platform visible? (frame IDs 1 and 3)
+		btst	#1,obFrame(a0)				; is platform non-solid? (frames 2 and 3)
 		bne.s	.notSolid				; if not, don't make solid
 
-        moveq #27,d1
-        moveq #8,d2
-        moveq #9,d3
-        move.w obX(a0),d4
-        jsr (SolidObject).l
-        jmp (RememberState).l
+		moveq	#32/2,d1				; top-only support, as in Sonic 1
+		moveq	#8,d3
+		move.w	obX(a0),d4
+		jsr	(PlatformObject).l
+		jmp	(RememberState).l
 .notSolid:
-        jsr (SMZ_ReleaseRiders).l
-        jmp (RememberState).l
+		jsr	(SMZ_ReleaseRiders).l
+		jmp	(RememberState).l
 
 SMZ_Ani_Van:	dc.w SMZ_Ani_Van_vanish-SMZ_Ani_Van
 		dc.w SMZ_Ani_Van_appear-SMZ_Ani_Van
