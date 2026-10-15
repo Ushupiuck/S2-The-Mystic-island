@@ -63,9 +63,11 @@ SMZ_Junction:
         jsr (SolidObject).l
         lea (v_player).w,a1
         lea smz_jun_grab(a0),a3
+        moveq #status.npc.p1_pushing,d6
         bsr.s .actor
         lea (v_player2).w,a1
         lea smz_jun_grab+1(a0),a3
+        moveq #status.npc.p2_pushing,d6
         bsr.s .actor
 .display:
         out_of_range2 .unload
@@ -77,7 +79,7 @@ SMZ_Junction:
         bhs.w .return
         tst.b obControl(a1)
         bne.w .return
-        btst #status.player.pushing,obStatus(a1)
+        btst d6,obStatus(a0)     ; this junction's contact, not another object's
         beq.w .return
         moveq #14,d0
         move.w obX(a1),d1
@@ -88,6 +90,7 @@ SMZ_Junction:
         cmp.b obFrame(a0),d0
         bne.w .return
         move.b d0,(a3)
+        bclr d6,obStatus(a0)
         move.b #$81,obControl(a1)
         move.b #2,obAnim(a1)
         move.w #$800,obInertia(a1)
@@ -110,6 +113,8 @@ SMZ_Junction:
 .exit_frame:
         cmp.b (a3),d0
         beq.s .position
+        bsr.s .position         ; align to the exit before restoring physics
+        move.b obFrame(a0),d0
         clr.w obVelX(a1)
         move.w #$800,obVelY(a1)
         cmpi.b #7,d0

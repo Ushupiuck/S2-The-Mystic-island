@@ -64,10 +64,10 @@ SMZ_MBlock_StandOn:
         move.w (sp)+,d4
         moveq #0,d1
         move.b obActWid(a0),d1
-        addi.w #sonic_solid_width,d1
-        moveq #8,d2
         moveq #9,d3
-        jsr (SolidObject).l
+        ; Original Object 52 is a one-way platform: both actors may jump
+        ; through the underside before landing on the sliding floor.
+        jsr (PlatformObject2).l
 SMZ_MBlock_DisplayOrDelete:
 		out_of_range2	UnloadObject,SMZ_mblock_origX(a0)	; has platform gone out of range? if yes, delete it
 		jmp (DisplaySprite).l				; display platform sprite
@@ -125,7 +125,7 @@ SMZ_MBlock_NextWhenStoodOn:
 		move.b obStatus(a0),d0
 		andi.b #$18,d0
 		tst.b d0			; is Sonic standing on the platform?
-		bne.s	.return					; if not, branch
+		beq.s	.return					; if neither actor stands on it, wait
 		addq.b	#1,obSubtype(a0)			; if yes, go to next subtype in list
 
 	.return:
