@@ -65,11 +65,9 @@ READ = %001100
 WRITE = %000111
 DMA = %100111
 ; ---------------------------------------------------------------------------
-; macros to convert from tile index to art tiles, block mapping or VRAM address.
+; helpers to convert a tile index to an art tile or VRAM address.
 make_art_tile function addr,pal,pri,((pri&1)<<15)|((pal&3)<<13)|(addr&tile_mask)
-make_block_tile function addr,flx,fly,pal,pri,((pri&1)<<15)|((pal&3)<<13)|((fly&1)<<12)|((flx&1)<<11)|(addr&tile_mask)
 tiles_to_bytes function addr,((addr&$7FF)<<5)
-make_block_tile_pair function addr,flx,fly,pal,pri,((make_block_tile(addr,flx,fly,pal,pri)<<16)|make_block_tile(addr,flx,fly,pal,pri))
 ; ---------------------------------------------------------------------------
 ; macros for defining animated PLC script lists
 zoneanimstart macro {INTLABEL}
