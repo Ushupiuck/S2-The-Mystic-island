@@ -14338,16 +14338,6 @@ Dynamic_NullGHZ:
 		rts
 ; ===========================================================================
 
-AnimCue_SMZ: dc.w 1
-        dc.l $FF000000|Art_SMZSmoke
-        dc.w ArtTile_SMZ_Smoke1*tile_size
-        dc.b 8,12
-        dc.b 84,179,0,7,12,7,24,7,36,7,48,7,60,7,72,7
-        dc.l $FF000000|Art_SMZSmoke
-        dc.w ArtTile_SMZ_Smoke2*tile_size
-        dc.b 8,12
-        dc.b 84,119,0,7,12,7,24,7,36,7,48,7,60,7,72,7
-        even
 Dynamic_Normal:
 		lea	(Anim_Counters).w,a3
 Dynamic_Normal_AtCounter:			; also used by the S1 background's palette-clocked art
@@ -14515,6 +14505,31 @@ AnimCue_HPZ:	zoneanimstart
 		dc.b   0
 		dc.b   8
 		dc.b $10
+		even
+		zoneanimend
+
+AnimCue_SMZ:	zoneanimstart
+		; Smoke vent 1
+		zoneanimdecl	-1, Art_SMZSmoke, ArtTile_SMZ_Smoke1, 8, 12
+		dc.b	$54,$B3
+		dc.b	0,7
+		dc.b	$C,7
+		dc.b	$18,7
+		dc.b	$24,7
+		dc.b	$30,7
+		dc.b	$3C,7
+		dc.b	$48,7
+		even
+		; Smoke vent 2
+		zoneanimdecl	-1, Art_SMZSmoke, ArtTile_SMZ_Smoke2, 8, 12
+		dc.b	$54,$77
+		dc.b	0,7
+		dc.b	$C,7
+		dc.b	$18,7
+		dc.b	$24,7
+		dc.b	$30,7
+		dc.b	$3C,7
+		dc.b	$48,7
 		even
 		zoneanimend
 
