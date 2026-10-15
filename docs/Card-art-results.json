@@ -1,7 +1,7 @@
 {
   "passed": true,
-  "rom_sha256": "77d824a8d332f526c720f77c5d18cdc745b96bcee12d5184e45dcac285abf46f",
-  "rom_bytes": 1818030,
+  "rom_sha256": "daeba61262aff8bb1f80f63cfc1a5d909aea876435f971610456fa727b939150",
+  "rom_bytes": 1818286,
   "companion_ai_run": false,
   "native": {
     "passed": true,
@@ -9,22 +9,22 @@
       {
         "case": "card-queue-full-resume",
         "scene": 0,
-        "tiles": 64
+        "tiles": 66
       },
       {
         "case": "card-queue-full-resume",
         "scene": 1,
-        "tiles": 64
+        "tiles": 66
       },
       {
         "case": "card-queue-full-resume",
         "scene": 2,
-        "tiles": 64
+        "tiles": 66
       },
       {
         "case": "card-queue-full-resume",
         "scene": 3,
-        "tiles": 64
+        "tiles": 66
       },
       {
         "case": "card-queue-full-resume",
@@ -49,22 +49,22 @@
       {
         "case": "card-queue-full-resume",
         "scene": 8,
-        "tiles": 76
+        "tiles": 78
       },
       {
         "case": "card-queue-full-resume",
         "scene": 9,
-        "tiles": 76
+        "tiles": 78
       },
       {
         "case": "card-queue-full-resume",
         "scene": 10,
-        "tiles": 76
+        "tiles": 78
       },
       {
         "case": "card-queue-full-resume",
         "scene": 11,
-        "tiles": 76
+        "tiles": 78
       },
       {
         "case": "card-queue-full-resume",
@@ -1110,5 +1110,12 @@
     "passed": true,
     "tables": 119,
     "frames": 1291
+  },
+  "font_metrics": {
+    "source_tiles": 150,
+    "W_width_and_advance": 24,
+    "I_width_and_advance": 8,
+    "default_width_and_advance": 16,
+    "intro_max_tiles": 84
   }
 }

@@ -23,18 +23,18 @@ Map_Cards: ; 16 names, ZONE, ACT 1-4, oval
 		dc.w Map_Cards_20-Map_Cards
 		dc.w Map_Cards_21-Map_Cards
 Map_Cards_0: dc.w 12
-		dc.w $F805, $38, $FFA6
-		dc.w $F805, $3C, $FFB6
-		dc.w $F801, $32, $FFC6
-		dc.w $F805, $34, $FFCE
-		dc.w $F801, $32, $FFDE
-		dc.w $F805, $2A, $FFE6
-		dc.w $F805, $2E, $FFF6
-		dc.w $F805, $38, $0006
-		dc.w $F805, $2E, $0022
-		dc.w $F801, $32, $0032
-		dc.w $F805, $34, $003A
-		dc.w $F805, $34, $004A
+		dc.w $F805, $38, $FFA2
+		dc.w $F809, $3C, $FFB2
+		dc.w $F801, $32, $FFCA
+		dc.w $F805, $34, $FFD2
+		dc.w $F801, $32, $FFE2
+		dc.w $F805, $2A, $FFEA
+		dc.w $F805, $2E, $FFFA
+		dc.w $F805, $38, $000A
+		dc.w $F805, $2E, $0026
+		dc.w $F801, $32, $0036
+		dc.w $F805, $34, $003E
+		dc.w $F805, $34, $004E
 Map_Cards_1: dc.w 11
 		dc.w $F805, $30, $FFAA
 		dc.w $F805, $3C, $FFBA
@@ -48,22 +48,22 @@ Map_Cards_1: dc.w 11
 		dc.w $F805, $4, $0036
 		dc.w $F805, $34, $0046
 Map_Cards_2: dc.w 16
-		dc.w $F805, $2A, $FF7E
-		dc.w $F805, $4, $FF8E
-		dc.w $F805, $32, $FF9E
-		dc.w $F801, $3A, $FFAE
-		dc.w $F805, $0, $FFB6
-		dc.w $F805, $4, $FFC6
-		dc.w $F805, $44, $FFD6
-		dc.w $F805, $48, $FFF2
-		dc.w $F805, $8, $0002
-		dc.w $F805, $40, $0012
-		dc.w $F805, $3C, $0022
-		dc.w $F805, $2E, $0032
-		dc.w $F805, $0, $0042
-		dc.w $F805, $4, $0052
-		dc.w $F805, $32, $0062
-		dc.w $F805, $36, $0072
+		dc.w $F805, $2A, $FF7A
+		dc.w $F805, $4, $FF8A
+		dc.w $F805, $32, $FF9A
+		dc.w $F801, $3A, $FFAA
+		dc.w $F805, $0, $FFB2
+		dc.w $F805, $4, $FFC2
+		dc.w $F805, $44, $FFD2
+		dc.w $F809, $48, $FFEE
+		dc.w $F805, $8, $0006
+		dc.w $F805, $40, $0016
+		dc.w $F805, $3C, $0026
+		dc.w $F805, $2E, $0036
+		dc.w $F805, $0, $0046
+		dc.w $F805, $4, $0056
+		dc.w $F805, $32, $0066
+		dc.w $F805, $36, $0076
 Map_Cards_3: dc.w 11
 		dc.w $F805, $0, $FFA6
 		dc.w $F805, $3C, $FFB6

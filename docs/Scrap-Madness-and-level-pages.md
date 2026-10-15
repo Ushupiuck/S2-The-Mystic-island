@@ -119,10 +119,12 @@ Spikes/monitors/checkpoints start at `$519/$529/$565`; the auxiliary shield bank
 starts at `$56F`. Title cards and results use per-screen DPLCs at `$581`,
 with a maximum of 84 tiles, preserving both shield banks. Existing letters
 retain their original S1 pixels (including K and U); new V/W and act 4 match
-the original serif letters and orange digits. Zero shares the original O.
+the original serif letters and orange digits. W uses a 24-pixel-wide sprite
+and advance, giving its inner strokes room while keeping the other letters'
+metrics. Zero shares the original O.
 
 Normal results load 74 tiles for Sonic or 70 for Tails; special-stage results
-load 60-72 tiles for the selected heading. The 148-tile raw font remains in
+load 60-72 tiles for the selected heading. The 150-tile raw font remains in
 ROM, so no decompression buffer is needed. Card loading resumes when the DMA
 queue is full and waits until the last upload has executed before showing
 the card. Bonus mappings derive their offsets from the current bank instead

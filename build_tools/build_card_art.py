@@ -20,6 +20,7 @@ GLYPHS = dict(zip('ABCDEFGHIKLMNOPRSTUYZ',
                    50, 54, 58, 62, 66, 70, 74, 78)))
 GLYPHS.update(V=128, W=132)
 GLYPHS['0'] = GLYPHS['O']
+GLYPH_WIDTHS = {'I': 8, 'W': 24}
 OVAL = [(-28, 12, 0x70, -12), (-28, 2, 0x74, 20),
         (-20, 4, 0x77, -20), (-12, 5, 0x79, -28),
         (20, 12, 0x1870, -20), (4, 2, 0x1874, -28),
@@ -27,7 +28,7 @@ OVAL = [(-28, 12, 0x70, -12), (-28, 2, 0x74, 20),
         (-20, 8, 0x7D, -4), (-12, 12, 0x7C, -12),
         (-4, 8, 0x7C, -12), (4, 12, 0x7C, -20),
         (12, 8, 0x7C, -20)]
-ACT = (0x8E, 0x5A, 0x60, 0x88)  # 1 padded to six tiles; 2/3; new 4
+ACT = (0x90, 0x5A, 0x60, 0x8A)  # 1 padded to six tiles; 2/3; new 4
 
 
 def tiles(pixels):
@@ -38,7 +39,7 @@ def tiles(pixels):
                  for y in range(8) for x in range(0, 8, 2))
 
 
-def serif(points):
+def serif(points, width=16):
     """Rasterize a 15-pixel cap with the original white/gray/black slots."""
     def inside(x, y):
         hit = False
@@ -46,19 +47,19 @@ def serif(points):
             if (ay > y) != (by > y) and x < (bx-ax)*(y-ay)/(by-ay)+ax:
                 hit = not hit
         return hit
-    body = [[0]*16 for _ in range(16)]
+    body = [[0]*width for _ in range(16)]
     for y in range(15):
-        for x in range(15):
+        for x in range(width-1):
             n = sum(inside(x+(sx+.5)/4, y+(sy+.5)/4)
                     for sy in range(4) for sx in range(4))
             body[y][x] = 6 if n >= 12 else 8 if n >= 6 else 7 if n >= 2 else 0
-    out = [[0]*16 for _ in range(16)]
+    out = [[0]*width for _ in range(16)]
     for y in range(15):
-        for x in range(15):
+        for x in range(width-1):
             if body[y][x]:
                 out[y+1][x+1] = 1
     for y in range(16):
-        for x in range(16):
+        for x in range(width):
             if body[y][x]:
                 out[y][x] = body[y][x]
     return tiles(out)
@@ -92,13 +93,14 @@ def used(pieces):
 
 
 def lettering(text, space=12, x=None):
-    width = sum(space if c == ' ' else 8 if c == 'I' else 16 for c in text)
+    width = sum(space if c == ' ' else GLYPH_WIDTHS.get(c, 16) for c in text)
     x = -width//2 if x is None else x
     out = []
     for c in text:
         if c != ' ':
-            out.append((-8, 1 if c == 'I' else 5, GLYPHS[c], x))
-        x += space if c == ' ' else 8 if c == 'I' else 16
+            size = ((GLYPH_WIDTHS.get(c, 16)//8-1) << 2) | 1
+            out.append((-8, size, GLYPHS[c], x))
+        x += space if c == ' ' else GLYPH_WIDTHS.get(c, 16)
     return out
 
 
@@ -149,13 +151,13 @@ def main():
     assert len(raw) == 128*32
     raw += serif([(0,0),(6,0),(6,1),(5,1),(9,11),(13,1),(11,1),
                   (11,0),(15,0),(15,1),(14,1),(9,15),(7,15),(2,1),(0,1)])
-    raw += serif([(0,0),(5,0),(5,1),(4,1),(6,10),(8,4),(7,1),(6,1),
-                  (6,0),(11,0),(11,1),(10,1),(12,10),(14,1),(12,1),
-                  (12,0),(15,0),(15,1),(12,15),(10,15),(8,8),(6,15),
-                  (4,15),(1,1),(0,1)])
+    raw += serif([(0,0),(7,0),(7,1),(5,1),(9,11),(11,5),(9,1),(8,1),
+                  (8,0),(15,0),(15,1),(13,1),(17,11),(21,1),(19,1),
+                  (19,0),(23,0),(23,1),(22,1),(17,15),(15,15),(12,8),
+                  (9,15),(7,15),(2,1),(0,1)], width=24)
     raw += act_four()
     raw += raw[0x57*32:0x5A*32] + bytes(3*32)
-    assert len(raw) == 148*32
+    assert len(raw) == 150*32
     (ROOT/'art/uncompressed/Card Font.unc').write_bytes(raw)
 
     scenes = []
