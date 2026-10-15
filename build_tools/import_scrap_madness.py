@@ -135,12 +135,29 @@ def palette_lookup(source, target):
         return (color & 14, (color >> 4) & 14, (color >> 8) & 14)
     def distance(a, b):
         return sum((x-y)**2 for x, y in zip(rgb(a), rgb(b)))
-    return [0] + [min(range(1, 16), key=lambda i: distance(c, target[i]))
-                  for c in source[1:]]
+    lookup = [0] + [min(range(1, 16), key=lambda i: distance(c, target[i]))
+                    for c in source[1:]]
+    # These slots retain their role as the gray ramp. Their S3 shades are
+    # intentional; nearest-color matching would shift every shade darker.
+    for index in (7, 8, 9):
+        lookup[index] = index
+    return lookup
 
 
 def remap_pixels(raw, lookup):
     return bytes(lookup[b >> 4] << 4 | lookup[b & 15] for b in raw)
+
+
+def remap_player_art(name, raw, lookup):
+    """Keep stage-palette parts intact in art shared with player-palette FX."""
+    if name == 'SBZ Electrocuter':
+        # First eight tiles: line 4 cyan dome and line 3 body. Only the
+        # remaining discharge tiles use the shared player palette.
+        return raw[:8*32] + remap_pixels(raw[8*32:], lookup)
+    if name == 'SBZ Flaming Pipe':
+        # Flames use line 1; both pipe ends use stage line 3.
+        return remap_pixels(raw[:20*32], lookup) + raw[20*32:]
+    return remap_pixels(raw, lookup)
 
 
 def geometry(source):
@@ -193,8 +210,10 @@ def geometry(source):
     (ROOT/'collision/present/SMZ.bin').write_bytes(b''.join(bytes((v,v)) for v in collisions))
     for act in (1,2):
         (ROOT/f'startpos/SMZ_{act}.bin').write_bytes((source/f'startpos/sbz{act}.bin').read_bytes())
-        palette = (source/f'palette/SBZ Act {act}.bin').read_bytes()
+        palette = bytearray((source/f'palette/SBZ Act {act}.bin').read_bytes())
         assert len(palette) == 96
+        # The first imported row is palette line 2, shared by terrain/objects.
+        palette[14:20] = (ROOT/'palette/SonicAndTails.bin').read_bytes()[14:20]
         (ROOT/f'palette/SMZ{act}.bin').write_bytes(palette)
     return {'blocks':len(blocks)//8,'chunks':len(chunks)}
 
@@ -282,17 +301,21 @@ def main():
                'SBZ Stomper','SBZ Spinning Platform','SBZ Trapdoor',
                'SBZ Collapsing Floor','SBZ Electrocuter','SBZ Vanishing Block',
                'SBZ Flaming Pipe','SBZ Small Vertical Door','SBZ Sliding Floor Trap',
-               'SBZ Large Horizontal Door','SBZ Crushing Girder','Enemy Bomb','SBZ Giant Spikeball')
+               'SBZ Large Horizontal Door','SBZ Crushing Girder','Enemy Bomb','SBZ Giant Spikeball',
+               'SBZ Button')
     for name in art_names:
-        path=source/f'artnem/{"SYZ Large Spikeball" if name=="SBZ Giant Spikeball" else name}.nem'
+        filename = {'SBZ Giant Spikeball': 'SYZ Large Spikeball',
+                    'SBZ Button': 'Switch'}.get(name, name)
+        path=source/f'artnem/{filename}.nem'
         if not path.exists() and name=='Enemy Bomb':
             path=next((source/'artnem').glob('*Bomb*'))
         data = path.read_bytes()
         if name in ('SBZ Flaming Pipe', 'SBZ Electrocuter',
-                    'SBZ Spinning Platform', 'Enemy Bomb'):
+                    'SBZ Spinning Platform', 'Enemy Bomb', 'SBZ Button'):
             original = struct.unpack('>16H', (source/'palette/Sonic.bin').read_bytes())
             target = struct.unpack('>16H', (ROOT/'palette/SonicAndTails.bin').read_bytes()[:32])
-            data = nemesis_inline(remap_pixels(nemesis(path), palette_lookup(original, target)))
+            data = nemesis_inline(remap_player_art(name, nemesis(path),
+                                                 palette_lookup(original, target)))
         (ROOT/f'art/nemesis/S1/{name}.nem').write_bytes(data)
     print(json.dumps(report,indent=2))
 

@@ -24,10 +24,13 @@ def fill(base,raw):
  for i in range(len(raw)//32):bank[base+i]=raw[i*32:(i+1)*32]
 for name,base in [('Stomper',0x2c0),('Small Vertical Door',0x2e8),('Crushing Girder',0x2f0),('Spinning Platform',0x302),('Running Disc',0x344),('Junction Wheel',0x348),('Giant Spikeball',0x391),('Pizza Cutter',0x3b5),('Flaming Pipe',0x3d9),('Collapsing Floor',0x3f5),('Sliding Floor Trap',0x460),('Large Horizontal Door',0x46f),('Electrocuter',0x47e),('Trapdoor',0x492),('Vanishing Block',0x429)]:
  raw=dec(R/f'art/nemesis/S1/SBZ {name}.nem')
- if name=='Giant Spikeball':raw=remap_pixels(raw,palette_lookup(struct.unpack('>16H',(S/'palette/Sonic.bin').read_bytes()),struct.unpack('>16H',(R/'palette/SonicAndTails.bin').read_bytes()[:32])))
+ if name=='Giant Spikeball':
+  lookup=palette_lookup(struct.unpack('>16H',(S/'palette/Sonic.bin').read_bytes()),struct.unpack('>16H',(R/'palette/SonicAndTails.bin').read_bytes()[:32]))
+  # Ball and chain use the player palette; the anchor uses stage line 3.
+  raw=remap_pixels(raw[:0x18*32],lookup)+raw[0x18*32:0x20*32]+remap_pixels(raw[0x20*32:],lookup)
  fill(base,raw)
  if name=='Collapsing Floor':fill(base+4,raw)
-fill(0x400,dec(R/'art/nemesis/S1/Enemy Bomb.nem'));fill(0x332,dec(R/'art/nemesis/Button.nem'))
+fill(0x400,dec(R/'art/nemesis/S1/Enemy Bomb.nem'));fill(0x332,dec(R/'art/nemesis/S1/SBZ Button.nem'))
 for name,base in [('Enemy Caterkiller',0x2b0),('Enemy Ballhog (Horizontal)',0x620)]:fill(base,kosinski_plus_decode((R/f'art/moduled kosinski/{name}.kospm').read_bytes()[2:])[0])
 sources={'Jun':'Rotating Junction','Disc':'Running Disc','Trap':'Trapdoor','Spin':'SBZ Spinning Platforms','Saw':'Saws and Pizza Cutters','Stomp':'SBZ Stomper and Door','VanP':'SBZ Vanishing Platforms','Flame':'Flamethrower','Elec':'Electrocuter','Gird':'Girder Block','Bomb':'Bomb Enemy','But':'Button'}
 inputs={name:(frames(mapping((S/f'_maps/{sources[name]}.asm').read_text())),base) for name,base in [('Jun',0x4348),('Disc',0xc344),('Trap',0x4492),('Spin',0x302),('Saw',0x43b5),('Stomp',0x22c0),('VanP',0x4429),('Flame',0x83d9),('Elec',0x47e),('Gird',0x42f0),('Bomb',0x400),('But',0x336)]}
@@ -38,7 +41,7 @@ for name,label,base in [('Floor','Map_Obj1B',0x43f5),('Door','Map_obj30',0x42e8)
  rs=frames(rom,m.s[label],m.s[label+'_frames'])
  if name=='Floor':rs=rs[:2]+rs[:2]
  inputs[name]=(rs,base)
-inputs['Swing']=(frames(mapping((S/'_maps/Big Spiked Ball.asm').read_text())),0x391)
+inputs['Swing']=(frames(mapping((S/'_maps/Big Spiked Ball.asm').read_text())),lambda i:0x4391 if i==2 else 0x391)
 atlas=bytearray();patterns={};out={}
 for name,(rs,base) in inputs.items():
  new=[]
