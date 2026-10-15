@@ -166,7 +166,7 @@ loc_124F2:
 
 loc_124FC:
 		addq.l	#4,sp
-		bra.w	RememberState
+		jmp	(RememberState).l
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 

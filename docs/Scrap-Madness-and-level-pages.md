@@ -116,9 +116,24 @@ will need a corresponding art allocation change.
 
 The common diagonal/vertical/horizontal banks start at `$4D5/$4F5/$509`.
 Spikes/monitors/checkpoints start at `$519/$529/$565`; the auxiliary shield bank
-starts at `$56F`. Zone-intro font art uses the temporary `$570-$5FF` interval,
-while results use `$581-$5FF`, preserving active shield art. The extended font
-includes missing zone-name characters and act 4.
+starts at `$56F`. Title cards and results use per-screen DPLCs at `$581`,
+with a maximum of 84 tiles, preserving both shield banks. Existing letters
+retain their original S1 pixels (including K and U); new V/W and act 4 match
+the original serif letters and orange digits. Zero shares the original O.
+
+Normal results load 74 tiles for Sonic or 70 for Tails; special-stage results
+load 60-72 tiles for the selected heading. The 148-tile raw font remains in
+ROM, so no decompression buffer is needed. Card loading resumes when the DMA
+queue is full and waits until the last upload has executed before showing
+the card. Bonus mappings derive their offsets from the current bank instead
+of assuming a `$580` base.
+
+Tails's HUD portrait refers directly to monitor tiles 56-59 (`$561-$564`).
+All twelve monitor frames retain their indexed pixels after moving that
+portrait to the end of the bank. Sonic's separate life portrait remains
+available for Sonic monitors. The HUD name strip and normal/special results
+headings follow the selected solo character. Signpost DPLCs use at most
+18 tiles (`$529-$53A`), leaving Tails's portrait intact throughout the spin.
 
 The wheel is its own object. `WheelPayloads` in `objects/B0 Wheel Carrier.asm`
 is an editable table of ordinary routine pointer, vertical offset, subtype and
@@ -175,6 +190,19 @@ python build_tools/pack_scrap_sprites.py --source /path/to/s1disasm --rom s2buil
 python build_tools/import_palmtree_enemies.py --source /path/to/scddisasm/src --rom s2built.bin --listing main.lst
 ```
 
+Regenerate the card font, card DPLCs/mappings, signpost DPLCs/mappings and
+monitor arrangement with:
+
+```sh
+python build_tools/build_card_art.py
+python build_tools/build_signpost_art.py
+```
+
+The Tails HUD name source is the eight text tiles from the original S2
+`Tails life counter.nem` (`sonicretro/s2disasm`, commit
+`15e9fd52a65318bec3d5e746ce48dba6db6910db`). The signpost source and original
+static mappings remain available for editor previews.
+
 The first SMZ converter writes unpacked source-based assets; the packer then
 creates the final atlas/mappings and rebases the smoke blocks. The ROM supplies
 unchanged shared mappings and the Nemesis decompressor. PP's converter reads
@@ -184,8 +212,18 @@ its art bounds.
 
 ## Validation and limits
 
-`Scrap-Madness-results.json` records the tested ROM hash and detailed reports.
-The final normal build is `$1B4430` bytes and generates 119 requested mapping
+`Card-art-results.json` records the current card-maintenance build and checks.
+Its 108 native 68000 checks cover all 78 DPLC scenes, queue exhaustion/retry,
+mapping ranges, bonus tile addresses, character selectors, all six signpost
+frames, and the unchanged 64-entry progression table. Genesis Plus GX checks
+cover all 64 intro screens, Sonic/Tails normal results for acts 1 and 4,
+all three special-stage heading states for each character, both continue
+poses, and PAL Tails normal/special results. The shared asset and sprite-bound
+checks also pass. These are solo UI/VRAM fixtures, not companion-AI route runs;
+Tails's AI code is unchanged by this batch.
+
+`Scrap-Madness-results.json` retains the earlier integration report and ROM
+hash. That snapshot was `$1B4430` bytes and generated 119 requested mapping
 bounds across 1300 frames. Static checks cover 117 object files, 7182 named SST
 operands, 66 ordinary layouts/1830 placements, all 64 act pointers, Debug/RAM,
 105 binary mapping files, common VRAM banks and both existing boss/capsule sets.

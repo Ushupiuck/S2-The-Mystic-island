@@ -10,7 +10,19 @@ Signpost:
 		lea	Ani_Signpost(pc),a1
 		jsr	(AnimateSprite).l
 		out_of_range2	UnloadObject
+		moveq	#0,d0
+		move.b	obFrame(a0),d0
+		lea	(DPLC_Signpost).l,a2
+		lea	signpost_loaded(a0),a3
+		move.w	#ArtTile_Signpost*tile_size,d4
+		move.l	#Art_Signpost,d6
+		jsr	(Load_DynamicPLC).l
+		bcs.s	.return
 		jmp	(DisplaySprite).l
+.return:
+		rts
+
+signpost_loaded = objoff_3A
 ; ===========================================================================
 
 Signpost_Index:	dc.w Signpost_Init-Signpost_Index
@@ -21,6 +33,7 @@ Signpost_Index:	dc.w Signpost_Init-Signpost_Index
 ; ===========================================================================
 ; loc_EFD6:
 Signpost_Init:
+		st	signpost_loaded(a0)
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Signpost,obMap(a0)
 		move.b	#Map_Signpost_height,height_pixels(a0)

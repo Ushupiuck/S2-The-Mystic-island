@@ -89,6 +89,6 @@
       {"name":"Signpost", "id":"7E", "x":416, "y":1256},
       {"name":"Giant ring 1", "id":"7B", "x":608, "y":1184},
       {"name":"Giant ring 2", "id":"7B", "x":768, "y":1184}],
-      "art":[["nem","Nem_Signpost","ArtTile_Signpost"],["nem","Nem_Bonus","ArtTile_Hidden_Points"]]}
+      "art":[["nem","Nem_Bonus","ArtTile_Hidden_Points"]]}
   ]
 }

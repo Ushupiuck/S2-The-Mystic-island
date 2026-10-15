@@ -1665,7 +1665,8 @@ ArtTile_Spring_Diagonal:	equ $4D5	; 32 tiles
 ArtTile_Spring_Vertical:	equ ArtTile_Spring_Diagonal+$20 ; 20 tiles
 ArtTile_Spring_Horizontal: equ $509 ; 16 S3&K tiles
 ArtTile_Spikes: equ $519 ; 16 tiles
-ArtTile_Monitor:		equ ArtTile_Spikes+$10 ; 60 tiles
+ArtTile_Monitor:		equ ArtTile_Spikes+$10 ; 60 tiles; final four retain Tails's life icon
+ArtTile_Tails_Life:	equ ArtTile_Monitor+$38
 ArtTile_Lamppost:	equ ArtTile_Monitor+$3C ; 10 tiles; ends at $AD9F
 
 ; GHZ's packed objects/badniks, starting immediately after its 811 level tiles.
@@ -1799,8 +1800,8 @@ ArtTile_Shield_2:			equ $56F ; 18 tiles; follows the enlarged horizontal-spring/
 ArtTile_Shield_2_End:		equ ArtTile_Shield_2+$12 ; $B000; exclusive end of this bank
 ArtTile_Invincibility:		equ ArtTile_Shield
 ArtTile_Game_Over:		equ ArtTile_Shield ; replaces the dead primary player's effects, as in S3&K
-ArtTile_Title_Card: equ $581 ; 127 result tiles; preserves both shield banks
-ArtTile_Zone_Title: equ $570 ; 144 intro tiles; replaced after the intro
+ArtTile_Title_Card:	equ $581 ; per-card DPLCs; at most 84 tiles, preserving both shield banks
+ArtTile_Zone_Title:	equ ArtTile_Title_Card
 ; Shared explosion/fiery art first, then both animals, ending at Plane A.
 ArtTile_Explosion:		equ $582	; $B040; 94 tiles, shared by both explosion mappings
 ArtTile_Animal_1:		equ ArtTile_Explosion+$5E ; $5E0 / $BC00; 18 tiles
@@ -1842,7 +1843,7 @@ ArtTile_Warp:			equ $541
 ArtTile_Mini_Tails:		equ $535
 ArtTile_Mini_Sonic:		equ $551
 ArtTile_Bonuses:		equ $570
-ArtTile_Signpost:		equ ArtTile_Monitor	; replaces monitor art near the level exit
+ArtTile_Signpost:		equ ArtTile_Monitor	; 18-tile DPLC buffer; stops before Tails's life icon
 
 ; Sega Screen
 ArtTile_Sega_Tiles:		equ $000

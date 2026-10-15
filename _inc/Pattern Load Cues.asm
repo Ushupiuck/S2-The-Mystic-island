@@ -70,15 +70,22 @@ ptr_PLC_GHZBoss:	dc.w PLC_GHZBoss-ArtLoadCues
 ptr_PLC_SMZ: dc.w PLC_SMZ-ArtLoadCues
 ptr_PLC_SMZ2: dc.w PLC_SMZ2-ArtLoadCues
 ptr_PLC_PP: dc.w PLC_PP-ArtLoadCues
+ptr_PLC_LivesSonic:	dc.w PLC_LivesSonic-ArtLoadCues
+ptr_PLC_LivesTails:	dc.w PLC_LivesTails-ArtLoadCues
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Standard 1 - loaded for every level
 ; ---------------------------------------------------------------------------
 PLC_Main:	dc.w ((PLC_Main_End-PLC_Main)/6)-1
 		plcm	Nem_HUD,	ArtTile_HUD
-		plcm	Nem_Lives,	ArtTile_Lives_Counter
 		plcm	Nem_Sparkles,	ArtTile_Sparkles
 PLC_Main_End:
+; Character selection happens on level select, after the shared HUD PLC.
+PLC_LivesSonic:	dc.w 0
+		plcm	Nem_Lives,	ArtTile_Lives_Counter
+PLC_LivesTails:	dc.w 1
+		plcm	Nem_Lives,	ArtTile_Lives_Counter
+		plcm	Nem_TailsLifeText,(ArtTile_Lives_Counter+4)
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Standard 2 - loaded for every level
@@ -226,8 +233,8 @@ PLC_HTZ2_End:
 ; PATTERN LOAD REQUEST LIST
 ; Sonic 1 title card
 ; ---------------------------------------------------------------------------
-PLC_S1TitleCard:dc.w ((PLC_S1TitleCard_End-PLC_S1TitleCard)/6)-1
-		plcm	Nem_TitleCard,	ArtTile_Title_Card
+; NewPLC still clears pending level PLCs; the results object queues its DPLC.
+PLC_S1TitleCard:dc.w -1
 PLC_S1TitleCard_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
@@ -255,7 +262,6 @@ PLC_Capsule_End:
 ; End of level signpost
 ; ---------------------------------------------------------------------------
 PLC_Signpost:	dc.w ((PLC_Signpost_End-PLC_Signpost)/6)-1
-		plcm	Nem_Signpost,	ArtTile_Signpost
 		plcm	Nem_Bonus,	ArtTile_Hidden_Points
 PLC_Signpost_End:
 ; ---------------------------------------------------------------------------
@@ -392,6 +398,8 @@ plcid_Filler2:		equ (ptr_PLC_Filler2-ArtLoadCues)/2	; $21
 ; ---------------------------------------------------------------------------
 plcid_Capsule:		equ (ptr_PLC_Capsule-ArtLoadCues)/2
 plcid_GHZBoss:		equ (ptr_PLC_GHZBoss-ArtLoadCues)/2
+plcid_LivesSonic:	equ (ptr_PLC_LivesSonic-ArtLoadCues)/2
+plcid_LivesTails:	equ (ptr_PLC_LivesTails-ArtLoadCues)/2
 
 KosMLoadCues:
 ; Level Slot $00: Twilight Hill Zone  [WILL BE REPLACED] [GHZ]

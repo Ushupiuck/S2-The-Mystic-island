@@ -24,12 +24,17 @@ got_finalX = objoff_36		; position for card to finish on
 
 Got_ChkPLC:	; Routine 0
 		tst.l	(v_plc_buffer).w ; are the pattern load cues empty?
-		beq.s	Got_Main	; if yes, branch
+		bne.s	.return
+		jsr	(Get_NormalCardScene).l
+		move.w	#ArtTile_Title_Card*tile_size,d4
+		jsr	(Load_CardDPLC).l
+		bcc.s	Got_Main
 .return:
 		rts
 ; ---------------------------------------------------------------------------
 
 Got_Main:
+		jsr	(Get_NormalCardScene).l
 		movea.l	a0,a1
 		lea	(Got_Config).l,a2
 		moveq	#6,d1
@@ -48,7 +53,7 @@ Got_Loop:
 
 loc_BB94:
 		move.b	d0,obFrame(a1)
-		move.l	#Map_Obj3A,obMap(a1)
+		move.l	a3,obMap(a1)
 		move.b	#Map_Obj3A_height,height_pixels(a1)
 		move.w	#make_art_tile(ArtTile_Title_Card,0,1),obGfx(a1)
 		sf	obRender(a1)
@@ -166,71 +171,104 @@ VBla_08A:
 ; ---------------------------------------------------------------------------
 ; Level	order array
 ; ---------------------------------------------------------------------------
-LevelOrder:
-		dc.w $0001
-		dc.w $0002
-		dc.w $0003
-		dc.w $0100
-		dc.w $0101
-		dc.w $0102
-		dc.w $0103
-		dc.w $0200
-		dc.w $0201
-		dc.w $0202
-		dc.w $0203
-		dc.w $0300
-		dc.w $0301
-		dc.w $0302
-		dc.w $0303
-		dc.w $0400
-		dc.w $0401
-		dc.w $0402
-		dc.w $0403
-		dc.w $0500
-		dc.w $0501
-		dc.w $0502
-		dc.w $0503
-		dc.w $0600
-		dc.w $0601
-		dc.w $0602
-		dc.w $0603
-		dc.w $0700
-		dc.w $0701
-		dc.w $0702
-		dc.w $0703
-		dc.w $0800
-		dc.w $0801
-		dc.w $0802
-		dc.w $0803
-		dc.w $0900
-		dc.w $0901
-		dc.w $0902
-		dc.w $0903
-		dc.w $0A00
-		dc.w $0A01
-		dc.w $0A02
-		dc.w $0A03
-		dc.w $0B00
-		dc.w $0B01
-		dc.w $0B02
-		dc.w $0B03
-		dc.w $0C00
-		dc.w $0C01
-		dc.w $0C02
-		dc.w $0C03
-		dc.w $0D00
-		dc.w $0D01
-		dc.w $0D02
-		dc.w $0D03
-		dc.w $0E00
-		dc.w $0E01
-		dc.w $0E02
-		dc.w $0E03
-		dc.w $0F00
-		dc.w $0F01
-		dc.w $0F02
-		dc.w $0F03
-		dc.w $0000
+LevelOrder: ; Don't be fooled: the 2nd byte is the act you're transitioning TO
+; Four entries per current zone, indexed by the current act (0-3).
+
+		; Twilight Hill Zone
+		dc.b id_GHZ, 1	; Act 1 -> Act 2
+		dc.b id_GHZ, 2	; Act 2 -> Act 3
+		dc.b id_GHZ, 3	; Act 3 -> Act 4
+		dc.b id_LZ, 0	; Act 4 -> Rustic Ruins Zone Act 1
+
+		; Rustic Ruins Zone
+		dc.b id_LZ, 1	; Act 1 -> Act 2
+		dc.b id_LZ, 2	; Act 2 -> Act 3
+		dc.b id_LZ, 3	; Act 3 -> Act 4
+		dc.b id_CPZ, 0	; Act 4 -> Ancient Workbench Zone Act 1
+
+		; Ancient Workbench Zone
+		dc.b id_CPZ, 1	; Act 1 -> Act 2
+		dc.b id_CPZ, 2	; Act 2 -> Act 3
+		dc.b id_CPZ, 3	; Act 3 -> Act 4
+		dc.b id_EHZ, 0	; Act 4 -> Emerald Hill Zone Act 1
+
+		; Emerald Hill Zone
+		dc.b id_EHZ, 1	; Act 1 -> Act 2
+		dc.b id_EHZ, 2	; Act 2 -> Act 3
+		dc.b id_EHZ, 3	; Act 3 -> Act 4
+		dc.b id_HPZ, 0	; Act 4 -> Crystal Valley Zone Act 1
+
+		; Crystal Valley Zone
+		dc.b id_HPZ, 1	; Act 1 -> Act 2
+		dc.b id_HPZ, 2	; Act 2 -> Act 3
+		dc.b id_HPZ, 3	; Act 3 -> Act 4
+		dc.b id_HTZ, 0	; Act 4 -> Egg Mountain Zone Act 1
+
+		; Egg Mountain Zone
+		dc.b id_HTZ, 1	; Act 1 -> Act 2
+		dc.b id_HTZ, 2	; Act 2 -> Act 3
+		dc.b id_HTZ, 3	; Act 3 -> Act 4
+		dc.b id_MTZ, 0	; Act 4 -> Metropolis Zone Act 1
+
+		; Metropolis Zone
+		dc.b id_MTZ, 1	; Act 1 -> Act 2
+		dc.b id_MTZ, 2	; Act 2 -> Act 3
+		dc.b id_MTZ, 3	; Act 3 -> Act 4
+		dc.b $07, 0	; Act 4 -> Shocking Blizzard Zone Act 1
+
+		; Shocking Blizzard Zone
+		dc.b $07, 1	; Act 1 -> Act 2
+		dc.b $07, 2	; Act 2 -> Act 3
+		dc.b $07, 3	; Act 3 -> Act 4
+		dc.b id_SMZ, 0	; Act 4 -> Scrap Madness Zone Act 1
+
+		; Scrap Madness Zone
+		dc.b id_SMZ, 1	; Act 1 -> Act 2
+		dc.b id_SMZ, 2	; Act 2 -> Act 3
+		dc.b id_SMZ, 3	; Act 3 -> Act 4
+		dc.b id_DEZ, 0	; Act 4 -> Death Egg Zone Act 1
+
+		; Death Egg Zone
+		dc.b id_DEZ, 1	; Act 1 -> Act 2
+		dc.b id_DEZ, 2	; Act 2 -> Act 3
+		dc.b id_DEZ, 3	; Act 3 -> Act 4
+		dc.b $0A, 0	; Act 4 -> Level 0A Act 1
+
+		; Level 0A
+		dc.b $0A, 1	; Act 1 -> Act 2
+		dc.b $0A, 2	; Act 2 -> Act 3
+		dc.b $0A, 3	; Act 3 -> Act 4
+		dc.b $0B, 0	; Act 4 -> Level 0B Act 1
+
+		; Level 0B
+		dc.b $0B, 1	; Act 1 -> Act 2
+		dc.b $0B, 2	; Act 2 -> Act 3
+		dc.b $0B, 3	; Act 3 -> Act 4
+		dc.b $0C, 0	; Act 4 -> Level 0C Act 1
+
+		; Level 0C
+		dc.b $0C, 1	; Act 1 -> Act 2
+		dc.b $0C, 2	; Act 2 -> Act 3
+		dc.b $0C, 3	; Act 3 -> Act 4
+		dc.b $0D, 0	; Act 4 -> Level 0D Act 1
+
+		; Level 0D
+		dc.b $0D, 1	; Act 1 -> Act 2
+		dc.b $0D, 2	; Act 2 -> Act 3
+		dc.b $0D, 3	; Act 3 -> Act 4
+		dc.b $0E, 0	; Act 4 -> Level 0E Act 1
+
+		; Level 0E
+		dc.b $0E, 1	; Act 1 -> Act 2
+		dc.b $0E, 2	; Act 2 -> Act 3
+		dc.b $0E, 3	; Act 3 -> Act 4
+		dc.b $0F, 0	; Act 4 -> Level 0F Act 1
+
+		; Level 0F
+		dc.b $0F, 1	; Act 1 -> Act 2
+		dc.b $0F, 2	; Act 2 -> Act 3
+		dc.b $0F, 3	; Act 3 -> Act 4
+		dc.b id_GHZ, 0	; Act 4 -> Twilight Hill Zone Act 1
 		even
 
 ; ---------------------------------------------------------------------------

@@ -2442,9 +2442,6 @@ Level_NoMusicFade:
 		tst.w	(f_demo).w	; are we on an ending demo?
 		bmi.s	Level_ClrRam	; if so, branch
 		disable_ints
-		locVRAM	ArtTile_Zone_Title*tile_size
-		lea	(Nem_ZoneTitleCard).l,a0	; load title card patterns
-		bsr.w	NemDec
 		bsr.w	GetLevelArtHeader
 		moveq	#0,d0
 		move.b	(a2),d0		; primary PLC for this timezone and act
@@ -2454,6 +2451,7 @@ Level_NoMusicFade:
 loc_3BB0:
 		moveq	#plcid_Main2,d0
 		bsr.w	LoadPLC
+		jsr	(Load_LifeArtPLC).l
 
 Level_ClrRam:
 		move.b	(Current_Timezone).w,d2	; level selection survives clearing transient RAM
@@ -2515,6 +2513,8 @@ Level_TtlCardLoop:
 		jsr	(Render_Sprites).l
 		bsr.w	Process_Kos_Module_Queue
 		bsr.w	RunPLC_RAM
+		tst.l	(v_ttlcardact+code).w	; card DPLCs may still be waiting for DMA space
+		beq.s	Level_TtlCardLoop
 		move.w	(v_ttlcardact+obX).w,d0
 		cmp.w	(v_ttlcardact+objoff_34).w,d0
 		bne.s	Level_TtlCardLoop
@@ -3621,9 +3621,6 @@ loc_5214:
 		move.w	#$8400+(vram_bg>>13),(a6) ; set background nametable address
 		move.w	#$9001,(a6)
 		bsr.w	ClearScreen
-		locVRAM	ArtTile_Title_Card*tile_size
-		lea	(Nem_TitleCard).l,a0	; load title card patterns
-		bsr.w	NemDec
 		move.w	#Vint_SSResults,(v_vbla_routine).w
 		bsr.w	WaitForVint
 		jsr	(HUD_Base).l
@@ -3634,6 +3631,7 @@ loc_5214:
 		bsr.w	PalLoad2		; load results screen palette
 		moveq	#plcid_Main,d0
 		bsr.w	NewPLC
+		jsr	(Load_LifeArtPLC).l
 		moveq	#plcid_SSResult,d0
 		bsr.w	LoadPLC			; load results screen patterns
 		lea	(PLCKosM_SSResult).l,a6
@@ -10287,6 +10285,7 @@ ExitPlatform:
 		include	"objects/07 Water Surface.asm"
 		include	"objects/08 Water Splash.asm"
 		include	"_inc/Dynamic Sprite Art.asm"
+		include	"_inc/Card Art.asm"
 		include	"_inc/Player Effect Art.asm"
 		include	"_inc/Player Water Art.asm"
 		include	"objects/0E Spindash Dust.asm"
@@ -15668,18 +15667,22 @@ Nem_Masher:	binclude	"art/nemesis/Enemy Masher.nem"
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - various
 ; ---------------------------------------------------------------------------
-Nem_ZoneTitleCard: binclude "art/nemesis/Zone Title Cards.nem"
-        even
-Nem_TitleCard:	binclude	"art/nemesis/Title Cards.nem"
-		even
+Art_CardFont:	binclude	"art/uncompressed/Card Font.unc"
+Art_CardFont_End:
+			even
+		include		"mappings/spriteDPLC/Cards.asm"
 Nem_GameOver:	binclude	"art/nemesis/Game Over.nem"
 		even
 Nem_HUD:	binclude	"art/nemesis/HUD.nem"
 		even
 Nem_Lives:	binclude	"art/nemesis/Sonic lives counter.nem"
 		even
-Nem_Signpost:	binclude	"art/nemesis/Signpost.nem"
+Nem_TailsLifeText: binclude "art/nemesis/Tails Life Text.nem"
+			even
+Art_Signpost:	binclude	"art/uncompressed/Signpost.unc"
+Art_Signpost_End:
 		even
+		include	"mappings/spriteDPLC/Signpost.asm"
 Nem_Sparkles:	binclude	"art/nemesis/Ring Sparkles.nem"
 		even
 Nem_Bonus:	binclude	"art/nemesis/S1/Hidden Bonuses.nem"
@@ -17964,7 +17967,7 @@ Map_GiantRing:	binclude	"mappings/sprite/GiantRing.bin"
 		even
 Map_Obj7D:	binclude	"mappings/sprite/Hidden Bonuses.bin"
 		even
-Map_Signpost:	binclude	"mappings/sprite/Signpost.bin"			; $7E
+Map_Signpost:	binclude	"mappings/sprite/Signpost DPLC.bin"		; $7E
 		even
 Map_Credits:	binclude	"mappings/sprite/Sonic Team Presents.bin"	; $90
 		even

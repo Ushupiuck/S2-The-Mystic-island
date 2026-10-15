@@ -18,6 +18,13 @@ card_finalX = objoff_36		; position for card to finish on
 ; ---------------------------------------------------------------------------
 
 Card_CheckSBZ3:	; Routine 0
+		moveq	#0,d0
+		move.b	(Current_Zone).w,d0
+		lsl.w	#2,d0
+		add.b	(Current_Act).w,d0
+		move.w	#ArtTile_Zone_Title*tile_size,d4
+		jsr	(Load_CardDPLC).l
+		bcs.w	Obj94_NoDisplay
 		movea.l	a0,a1
 		moveq	#0,d0
 		move.b	(Current_Zone).w,d0
@@ -27,7 +34,6 @@ Card_CheckSBZ3:	; Routine 0
 
 ; Card_CheckFZ:
 		move.w	d0,d2
-		addi.w #12,d2
 	;	cmpi.w	#(id_SBZ<<8)+2,(Current_ZoneAndAct).w ; check if level is FZ
 	;	bne.s	Card_LoadConfig
 	;	moveq	#6,d0		; load title card number 6 (FZ)
@@ -52,14 +58,9 @@ Card_Loop:
 		move.b	d2,d0
 
 Card_ActNumber:
-		cmpi.b	#7,d0
+		cmpi.b	#17,d0
 		bne.s	Card_MakeSprite
-		cmpi.b #3,(Current_Act).w
-		beq.s .act4
 		add.b	(Current_Act).w,d0
-		bra.s Card_MakeSprite
-.act4:
-		moveq #28,d0
 	;	cmpi.b	#3,(Current_Act).w
 	;	bne.s	Card_MakeSprite
 	;	subq.b	#1,d0
@@ -143,11 +144,11 @@ Card_Delete:
 Card_ItemData:	dc.w $D0	; y-axis position
 		dc.b 2,0	; routine number, frame	number (changes)
 		dc.w $E4
-		dc.b 2,6
+		dc.b 2,16
 		dc.w $EA
-		dc.b 2,7
+		dc.b 2,17
 		dc.w $E0
-		dc.b 2,$A
+		dc.b 2,21
 ; ---------------------------------------------------------------------------
 ; Title	card configuration data
 ; Format:

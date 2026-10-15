@@ -25,11 +25,17 @@ ssr_mainX = objoff_34	; position for card to display on
 
 SSR_ChkPLC:	; Routine 0
 		tst.l	(v_plc_buffer).w ; are the pattern load cues empty?
-		beq.s	SSR_Main	; if yes, branch
+		bne.s	.wait
+		jsr	(Get_SpecialCardScene).l
+		move.w	#ArtTile_Title_Card*tile_size,d4
+		jsr	(Load_CardDPLC).l
+		bcc.s	SSR_Main
+.wait:
 		rts
 ; ===========================================================================
 
 SSR_Main:
+		jsr	(Get_SpecialCardScene).l
 		movea.l	a0,a1
 		lea	(SSR_Config).l,a2
 		moveq	#3,d1
@@ -44,24 +50,14 @@ SSR_Loop:
 		move.w	(a2)+,obScreenY(a1)	; load y-position
 		move.b	(a2)+,obRoutine(a1)
 		move.b	(a2)+,obFrame(a1)
-		move.l	#Map_SSR,obMap(a1)
+		move.l	a3,obMap(a1)
 		move.b	#Map_SSR_height,height_pixels(a1)
 		move.w	#make_art_tile(ArtTile_Title_Card,0,1),obGfx(a1)
 		sf	obRender(a1)
 		lea	object_size(a1),a1
 		dbf	d1,SSR_Loop	; repeat sequence 3 or 4 times
-		moveq	#7,d0
-		move.b	(v_emeralds).w,d1
-		beq.s	loc_BE1A
-		moveq	#0,d0
-		cmpi.b	#6,d1		; do you have all chaos	emeralds?
-		bne.s	loc_BE1A	; if not, branch
-		moveq	#8,d0		; load "Sonic got them all" text
-		move.w	#$18,obX(a0)
-		move.w	#$118,ssr_mainX(a0)	; change position of text
-
-loc_BE1A:
-		move.b	d0,obFrame(a0)
+		; Frame 0 contains the selected SPECIAL STAGE / emeralds / character
+		; heading; its mappings and DPLC were chosen before creating children.
 
 SSR_Move:	; Routine 2
 		moveq	#$10,d1		; set horizontal speed

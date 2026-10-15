@@ -53,6 +53,10 @@ Render_Sprites:
 		addq.w	#1,d0
 .hud_frame:
 		lea	Map_obj21(pc),a1
+		cmpi.w	#PlayerMode_Tails,(Player_mode).w
+		bne.s	.hud_character
+		addq.w	#4,d0
+.hud_character:
 		add.w	d0,d0
 		adda.w	(a1,d0.w),a1
 		move.w	(a1)+,d4
