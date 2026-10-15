@@ -1684,13 +1684,13 @@ ArtTile_Chopper:		equ ArtTile_Spring_Diagonal ; GHZ reserves this bank for Chopp
 ArtTile_S1_Spring_Vertical:	equ ArtTile_Spring_Vertical ; 16 tiles; Newtron uses +$10-$13
 ArtTile_S1_Spring_Horizontal:	equ ArtTile_Spring_Horizontal
 ArtTile_Wheel: equ $4B4 ; loaded with the SMZ sprite atlas
-ArtTile_SMZ_BallHog: equ $2B0 ; shared atlas
-ArtTile_SMZ_Junction: equ $2B0 ; shared sprite atlas
-ArtTile_SMZ_Disc: equ $2B0 ; shared sprite atlas
-ArtTile_SMZ_Saw: equ $2B0 ; shared sprite atlas
-ArtTile_SMZ_Spin: equ $2B0 ; shared sprite atlas
-ArtTile_SMZ_VanP: equ $2B0 ; shared sprite atlas
-ArtTile_SMZ_Button: equ $2B0 ; shared sprite atlas
+ArtTile_SMZ_BallHog: equ ArtTile_SMZ_Atlas
+ArtTile_SMZ_Junction: equ ArtTile_SMZ_Atlas
+ArtTile_SMZ_Disc: equ ArtTile_SMZ_Atlas
+ArtTile_SMZ_Saw: equ ArtTile_SMZ_Atlas
+ArtTile_SMZ_Spin: equ ArtTile_SMZ_Atlas
+ArtTile_SMZ_VanP: equ ArtTile_SMZ_Atlas
+ArtTile_SMZ_Button: equ ArtTile_SMZ_Atlas
 ArtTile_Newtron_Tail:	equ ArtTile_S1_Spring_Vertical+$10
 ArtTile_GHZ_Edge_Wall:	equ $6F7	; eight tiles in the HUD/points gap; cap uses level art
 
@@ -1982,7 +1982,8 @@ ArtTile_ArtNem_S1EndPig:	equ $580;$0593
 ArtTile_ArtNem_S1EndChicken:	equ $592;$0565
 ArtTile_ArtNem_S1EndSquirrel:	equ $580;$05B3
 
-ArtTile_SMZ_Atlas: equ $2B0
+ArtTile_SMZ_Atlas: equ $2B0 ; original sprite rectangles, shared by both acts
+ArtTile_SMZ_Junction_Gap: equ $4A8 ; twelve streamed tiles, below the wheel bank
 ArtTile_SMZ_Smoke1: equ $4BD
 ArtTile_SMZ_Smoke2: equ $4C9
 

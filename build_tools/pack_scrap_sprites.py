@@ -15,7 +15,7 @@ p.add_argument('--listing',type=Path,required=True)
 args=p.parse_args();S=args.source
 sys.path.insert(0,str(R/'build_tools'));from check_sprite_assets import frames
 from import_scrap_madness import mapping,nemesis_inline,remap_pixels,palette_lookup
-from convert_s1_ss_background import kosinski_plus_decode,kosinski_plus
+from convert_s1_ss_background import kosinski_plus_decode
 sys.argv=['atlas','--rom',str(args.rom),'--listing',str(args.listing)];ns={'__file__':str(R/'build_tools/check_object_manager.py')};exec((R/'build_tools/check_object_manager.py').read_text().split('m=Manager()')[0],ns);m=ns['Native']();rom=args.rom.read_bytes()
 def dec(path):
  d=path.read_bytes();n=struct.unpack_from('>H',d)[0]&32767;m.cpu.mem_write(0x300000,d);m.act('NemDecToRAM',limit=2000000,regs={ns['UC_M68K_REG_A0']:0x300000,ns['UC_M68K_REG_A4']:0xff0000});return bytes(m.cpu.mem_read(0xff0000,n*32))
@@ -42,47 +42,96 @@ for name,label,base in [('Floor','Map_Obj1B',0x43f5),('Door','Map_obj30',0x42e8)
  if name=='Floor':rs=rs[:2]+rs[:2]
  inputs[name]=(rs,base)
 inputs['Swing']=(frames(mapping((S/'_maps/Big Spiked Ball.asm').read_text())),lambda i:0x4391 if i==2 else 0x391)
-atlas=bytearray();patterns={};out={}
-for name,(rs,base) in inputs.items():
- new=[]
- for frame,row in enumerate(rs):
-  pieces=[];gfx=base(frame) if callable(base) else base
-  for y,size,tile,x in row:
-   total=(tile+gfx)&65535;t=total&2047;w,h=(size>>2)+1,(size&3)+1
-   cells=[[bank[t+cx*h+cy] for cy in range(h)] for cx in range(w)]
-   # Two-tile rectangles preserve VDP batching while sharing repeated strips.
-   for left in range(0,w,2):
-    for top in range(0,h,2):
-     ww,hh=min(2,w-left),min(2,h-top);body=b''.join(cells[cx][cy] for cx in range(left,left+ww) for cy in range(top,top+hh))
-     if not any(body):continue
-     if body not in patterns:patterns[body]=len(atlas)//32;atlas+=body
-     xx=x+((w-left-ww) if total&0x800 else left)*8;yy=y+((h-top-hh) if total&0x1000 else top)*8
-     pieces.append((yy,(ww-1)*4+hh-1,(total&0xf800)|patterns[body],xx))
-  assert len(pieces)<=64,(name,frame,len(pieces));new.append(pieces)
- data=bytearray(len(new)*2)
- for i,row in enumerate(new):struct.pack_into('>H',data,i*2,len(data));data+=struct.pack('>H',len(row))+b''.join(struct.pack('>bBHh',*p) for p in row)
- out[name]=data
-print('Atlas tiles',len(atlas)//32,'capacity525; max pieces',max(len(row) for d in out.values() for row in frames(d)),flush=True)
-# Recover larger VDP rectangles wherever their complete pixels remain contiguous.
-for name,(rs,base) in inputs.items():
- new=[]
- for frame,row in enumerate(rs):
-  result=[];gfx=base(frame) if callable(base) else base
-  for y,size,tile,x in row:
-   total=(tile+gfx)&65535;t=total&2047;w,h=(size>>2)+1,(size&3)+1
-   body=b''.join(bank[t+i] for i in range(w*h));pos=atlas.find(body)
-   if pos>=0 and pos%32==0:
-    result.append((y,size,(total&0xf800)|pos//32,x));continue
-   for left in range(0,w,2):
-    for top in range(0,h,2):
-     ww,hh=min(2,w-left),min(2,h-top);body=b''.join(bank[t+cx*h+cy] for cx in range(left,left+ww) for cy in range(top,top+hh))
-     if not any(body):continue
-     xx=x+((w-left-ww) if total&0x800 else left)*8;yy=y+((h-top-hh) if total&0x1000 else top)*8
-     result.append((yy,(ww-1)*4+hh-1,(total&0xf800)|patterns[body],xx))
-  new.append(result)
- data=bytearray(len(new)*2)
- for i,row in enumerate(new):struct.pack_into('>H',data,i*2,len(data));data+=struct.pack('>H',len(row))+b''.join(struct.pack('>bBHh',*p) for p in row)
- out[name]=data
+def find_tiles(sequence, pattern):
+    """Find an entire column-major sprite rectangle at a tile boundary."""
+    return next((i for i in range(len(sequence)-len(pattern)+1)
+                 if sequence[i:i+len(pattern)] == pattern), None)
+
+
+def pack_rectangles(patterns):
+    """Share complete rectangles and overlapping ends; never split a piece."""
+    strings = []
+    for pattern in sorted(set(patterns), key=lambda p: (-len(p), p)):
+        if not any(find_tiles(s, pattern) is not None for s in strings):
+            strings.append(pattern)
+    while True:
+        best = (0, 0, 0)
+        for i, a in enumerate(strings):
+            for j, b in enumerate(strings):
+                if i == j:
+                    continue
+                for count in range(min(len(a), len(b)), 0, -1):
+                    if a[-count:] == b[:count]:
+                        if count > best[0]:
+                            best = count, i, j
+                        break
+        count, i, j = best
+        if not count:
+            return tuple(tile for s in strings for tile in s)
+        joined = strings[i] + strings[j][count:]
+        strings = [s for k, s in enumerate(strings)
+                   if k not in (i, j) and find_tiles(joined, s) is None]
+        strings.append(joined)
+
+
+def rectangle(tile, size, gfx):
+    start = (tile+gfx) & 2047
+    count = ((size >> 2)+1) * ((size & 3)+1)
+    return tuple(bank[start+i] for i in range(count))
+
+
+# Only the first two pieces of each rotating junction frame change their art.
+# Their source tiles form five contiguous runs; flips reuse those runs across
+# all sixteen angles. Keep the centre and outer ring in the shared static bank.
+gap_first, gap_end = 0x22, 0x49
+gap_art = b''.join(bank[0x348+t] for t in range(gap_first, gap_end))
+gap_runs = []
+for row in inputs['Jun'][0][:16]:
+    ranges = [(tile & 2047, ((size >> 2)+1)*((size & 3)+1))
+              for y, size, tile, x in row[:2]]
+    first = min(tile for tile, count in ranges)
+    last = max(tile+count for tile, count in ranges)
+    assert gap_first <= first < last <= gap_end
+    gap_runs.append((first-gap_first, last-first))
+
+constants = (R/'s2.constants.asm').read_text()
+def art_tile(name):
+    return int(re.search(r'^'+name+r':\s+equ\s+\$([\dA-Fa-f]+)',
+                         constants, re.M)[1], 16)
+
+atlas_base = art_tile('ArtTile_SMZ_Atlas')
+gap_base = art_tile('ArtTile_SMZ_Junction_Gap')
+gap_offset = gap_base-atlas_base
+capacity = gap_offset
+assert max(count for first, count in gap_runs) <= m.s['ArtTile_Wheel']-gap_base
+patterns = []
+for name, (rs, base) in inputs.items():
+    for i, row in enumerate(rs):
+        gfx = base(i) if callable(base) else base
+        patterns.extend(rectangle(tile, size, gfx)
+                        for j, (y, size, tile, x) in enumerate(row)
+                        if name != 'Jun' or i == 16 or j >= 2)
+atlas_tiles = pack_rectangles(patterns)
+atlas = b''.join(atlas_tiles)
+assert len(atlas_tiles) <= capacity, (len(atlas_tiles), capacity)
+out = {}
+for name, (rs, base) in inputs.items():
+    data = bytearray(len(rs)*2)
+    for i, row in enumerate(rs):
+        gfx = base(i) if callable(base) else base
+        pieces = []
+        for j, (y, size, tile, x) in enumerate(row):
+            if name == 'Jun' and i < 16 and j < 2:
+                first, count = gap_runs[i]
+                pos = gap_offset+(tile & 2047)-gap_first-first
+            else:
+                pos = find_tiles(atlas_tiles, rectangle(tile, size, gfx))
+            assert pos is not None, (name, i, tile)
+            pieces.append((y, size, ((tile+gfx) & 0xF800) | pos, x))
+        struct.pack_into('>H', data, i*2, len(data))
+        data += struct.pack('>H', len(pieces))
+        data += b''.join(struct.pack('>bBHh', *piece) for piece in pieces)
+    out[name] = data
 # Independently compare visible indexed pixels, flags and positions in every frame.
 def pixels(row,get,gfx):
  result={}
@@ -97,15 +146,34 @@ def pixels(row,get,gfx):
 for name,(rs,base) in inputs.items():
  packed=frames(out[name]);assert len(rs)==len(packed),(name,len(rs),len(packed))
  for i,(old,new) in enumerate(zip(rs,packed)):
-  assert pixels(old,lambda t:bank[t],base(i) if callable(base) else base)==pixels(new,lambda t:atlas[t*32:(t+1)*32],0),(name,i,'pixel mismatch')
-print('Pixel/priority/palette equivalence passed:',sum(len(rs) for rs,_ in inputs.values()),'frames; junction pieces:',[len(row) for row in frames(out['Jun'])])
-assert len(atlas)//32<=525
-for name,d in out.items():(R/f'mappings/sprite/SMZ {name}.bin').write_bytes(d)
+  resident = dict(enumerate(atlas_tiles))
+  if name == 'Jun' and i < 16:
+   first, count = gap_runs[i]
+   resident.update((gap_offset+t, gap_art[(first+t)*32:(first+t+1)*32])
+                   for t in range(count))
+  assert pixels(old,lambda t:bank[t],base(i) if callable(base) else base)==pixels(new,lambda t:resident[t],0),(name,i,'pixel mismatch')
+  gfx = base(i) if callable(base) else base
+  assert [(y,s,(t+gfx)&0xF800,x) for y,s,t,x in old] == [
+      (y,s,t&0xF800,x) for y,s,t,x in new], (name,i,'piece layout changed')
 
+# The common S3&K loader uses a word count followed by packed tile runs.
+# Index zero is empty so a newly allocated object's zero cache forces upload.
+dplc = ['; Generated by pack_scrap_sprites.py; one changing-edge run per angle.',
+        '        dc.w .empty-DPLC_SMZ_Junction']
+dplc += [f'        dc.w .gap{i:X}-DPLC_SMZ_Junction' for i in range(16)]
+dplc += ['.empty: dc.w 0']
+for i, (first, count) in enumerate(gap_runs):
+    dplc.append(f'.gap{i:X}: dc.w 1,${((count-1)<<12)|first:04X}')
+
+for name, data in out.items():
+    (R/f'mappings/sprite/SMZ {name}.bin').write_bytes(data)
 (R/'art/nemesis/SMZ Sprite Atlas.nem').write_bytes(nemesis_inline(atlas))
 (R/'art/uncompressed/SMZ Sprite Atlas.unc').write_bytes(atlas)
-# Geometry's two smoke banks move together; ordinary terrain remains intact.
-p=R/'mappings/16x16/SMZ.kosp';raw=kosinski_plus_decode(p.read_bytes())[0]
-words=struct.unpack('>'+str(len(raw)//2)+'H',raw)
-raw=b''.join(struct.pack('>H',(w&~2047)|((w&2047)-0x448+0x4bd)) if 0x448<=w&2047<0x460 else struct.pack('>H',w) for w in words)
-p.write_bytes(kosinski_plus(raw))
+(R/'art/uncompressed/SMZ Junction Gap.unc').write_bytes(gap_art)
+(R/'mappings/spriteDPLC/SMZ Junction.asm').write_text('\n'.join(dplc)+'\n')
+print('Atlas:', len(atlas_tiles), 'tiles; capacity:', capacity,
+      '; original rectangles retained in all', sum(len(rs) for rs,_ in inputs.values()), 'frames')
+print('Junction DPLC:', max(count for first,count in gap_runs),
+      'resident tiles;', len(gap_art)//32, 'source tiles; terrain unchanged')
+for name in ('Jun','Gird','Trap','Stomp','Swing'):
+    print(name, 'pieces:', [len(row) for row in frames(out[name])])

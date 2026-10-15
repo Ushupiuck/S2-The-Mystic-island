@@ -5,6 +5,7 @@ smz_jun_grab = objoff_32       ; two bytes, one captured frame per player
 smz_jun_direction = objoff_34
 smz_jun_pressed = objoff_36
 smz_jun_switch = objoff_38
+smz_jun_loaded = objoff_39    ; frame + 1 resident in the shared DPLC buffer
 
 SMZ_Junction:
         tst.b obRoutine(a0)
@@ -71,7 +72,21 @@ SMZ_Junction:
         bsr.s .actor
 .display:
         out_of_range2 .unload
+        cmpi.b #4,obRoutine(a0)
+        beq.s .draw             ; the outer ring uses static art
+        bsr.w .load_art
+        bcs.w .return           ; queue full: retry without drawing stale art
+.draw:
         jmp (DisplaySprite).l
+.load_art:
+        moveq #0,d0
+        move.b obFrame(a0),d0
+        addq.w #1,d0            ; zero cache means no frame has been loaded
+        lea (DPLC_SMZ_Junction).l,a2
+        lea smz_jun_loaded(a0),a3
+        move.w #ArtTile_SMZ_Junction_Gap*tile_size,d4
+        move.l #Art_SMZ_Junction_Gap,d6
+        jmp (Load_DynamicPLC).l
 .actor:
         tst.b (a3)
         bne.s .captured
@@ -158,3 +173,10 @@ SMZ_Junction:
         dc.b $20,0,$1E,-$E,$18,-$18,$E,-$1E,0,-$20,-$E,-$1E,-$18,-$18,-$1E,-$E
         even
 Map_SMZ_Jun: binclude "mappings/sprite/SMZ Jun.bin"
+        even
+; Junction placements have non-overlapping loading windows. Only the changing
+; edge streams; the centre/ring remain resident and actor timing stays above.
+DPLC_SMZ_Junction: include "mappings/spriteDPLC/SMZ Junction.asm"
+        even
+Art_SMZ_Junction_Gap: binclude "art/uncompressed/SMZ Junction Gap.unc"
+        even

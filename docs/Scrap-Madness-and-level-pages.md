@@ -70,11 +70,24 @@ objects use long routine pointers, the `$4E` SST layout, six-byte mappings and
 S3&K placement/respawn ownership. No high-ID mirror bit is used. Collision
 indices are translated by dimensions rather than copied between games.
 
-The SMZ atlas preserves all 135 source frames' adapted indexed pixels, flips,
-palette and priority attributes. It occupies 516 tiles at `$2B0-$4B3`; the wheel
-uses `$4B4-$4BB`, and two smoke strips use `$4BD-$4D4`. Larger contiguous
-rectangles are restored after packing to keep sprite-piece counts down. The
-plane-A tile-table range `$600-$67F` remains unavailable for sprite allocation.
+The SMZ atlas preserves all 135 source frames' original piece counts, sizes,
+positions, ordering, flips, adapted indexed pixels, palettes and priority.
+Complete sprite rectangles share identical art and overlapping tile sequences;
+pieces are never subdivided. All objects share one bank in both acts.
+
+The static atlas occupies 501 tiles at `$2B0-$4A4`. The junction's changing
+edge uses a twelve-tile DPLC buffer at `$4A8-$4B3`; its centre and outer ring
+stay in the static atlas. Each angle uploads one 4-12-tile run when it changes,
+through the existing atomic S3&K loader. Its two placements have disjoint loading
+windows. Collision, switch reversal, capture/release and rotation timing remain
+independent of the upload. A full DMA queue hides the rotating sprite for that
+frame and retries; it never caches or displays a partial upload.
+
+Both acts retain every object family in the same allocation. Terrain art,
+blocks, chunks, layouts and collision data are unchanged. The striped barrier
+at Final Zone's entrance uses source terrain tiles `$25F-$263`. The wheel bank
+remains at `$4B4-$4BB`, and two smoke strips remain at `$4BD-$4D4`.
+The plane-A tile-table range `$600-$67F` remains unavailable for sprite art.
 
 ## Springs, carrier and Tails
 

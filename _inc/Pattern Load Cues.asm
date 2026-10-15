@@ -1023,7 +1023,7 @@ mkplcid_Misc11:		equ (ptr_KPLC_11-KosMLoadCues)/2		; $4E
 mkplcid_Misc12:		equ (ptr_KPLC_12-KosMLoadCues)/2		; $4F
 mkplcid_Misc13:		equ (ptr_KPLC_13-KosMLoadCues)/2		; $50
 
-; 516 shared sprite tiles plus eight wheel tiles. No plane/player overlap.
+; 501 static sprite tiles; junction DPLCs use twelve tiles at $4A8-$4B3.
 PLC_SMZ: dc.w 1
         plcm Nem_SMZAtlas, ArtTile_SMZ_Atlas
         plcm Nem_Wheel, ArtTile_Wheel
