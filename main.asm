@@ -8966,10 +8966,10 @@ Object_CheckSpawnXRange:
 		andi.w	#Object_Load_CoarseMask,d1
 		sub.w	(Camera_X_pos_coarse_back).w,d1
 		cmpi.w	#128+320+192,d1
-		bra.s	.return
+		movem.l	(sp)+,d0-d1/a1
+		rts
 .dynamic:
 		cmpi.w	#128+320+192,d0	; no placement: keep the normal X lifetime
-.return:
 		movem.l	(sp)+,d0-d1/a1
 		rts
 
