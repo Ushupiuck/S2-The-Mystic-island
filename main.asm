@@ -13071,8 +13071,8 @@ word_194B4:	dc.w 2
 		dc.w	 5, $17, 0
 		dc.w	 0, $1B, $10
 word_194C6:	dc.w 2
-		dc.w $1804, $1C, 0
-		dc.w	$B, $1E, $10
+		dc.w $1804, $201C, 0	; yellow claws use palette line 2
+		dc.w	$B, $201E, $10
 
 ; =============== S U B R O U T I N E =======================================
 
