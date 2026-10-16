@@ -133,6 +133,7 @@ Tails_CPU_FollowWidth:	equ $30	; ordinary recorded-position following distance
 Tails_CPU_ReachStopWidth:	equ 8	; close the horizontal gap during a ledge jump
 Tails_CPU_CrumbleFlight:	equ -1	; approach state becomes the collapse marker in CPU flight state 4
 Tails_CPU_FlyHorizontalMax: equ 6	; local collapse pursuit; offscreen respawn keeps stock speed
+Tails_CPU_CatchUpVerticalMax:	equ 6	; respawn flight must keep up with a descending camera
 Tails_FlightAttackMinAngle: equ $20	; S3&K's upward contact sector
 Tails_FlightAttackArc:	equ $40
 Tails_CarriedYOffset:	equ 28

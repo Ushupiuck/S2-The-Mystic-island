@@ -21,9 +21,17 @@ without relying on object-specific velocity fields or a math subroutine.
 
 Unreachable ordinary platforms retain normal jump attempts. The approach
 word is a steering state, not a timer that eventually promotes any higher
-target to flight. A grounded slope lock with zero momentum or a slip away
-from Sonic enters the existing CPU spindash routine; it waits for the lock,
-comes to rest, charges and releases through normal logical controls.
+target to flight. A grounded lock with zero momentum, or a slip away from
+Sonic on a real slope, enters the existing CPU spindash routine; it waits for
+the lock, comes to rest, charges and releases through normal logical controls.
+A moving spring landing on flat ground keeps normal steering instead.
+
+When Sonic stands on a higher object, a grounded Tails within the existing
+64-pixel jump window can jump without waiting for the next global 64-frame
+tick. He closes larger gaps before taking off, retaining a run-up on small
+carriers. An established approach keeps live steering through Sonic's next
+deliberate jump; simply falling still cancels it. See the recorded evidence
+and focused comparisons in [Scrap Madness AI follow-up](Tails-Scrap-Madness.md).
 
 Tails first makes his ordinary horizontal rolling jump toward Sonic. If the
 last ridden ledge/floor actually fragments, he switches to local flight only
@@ -45,9 +53,11 @@ flight; no new RAM or SST fields are allocated. The common flight initializer
 preserves that marker, avoiding a temporary stack save. The fragment routine
 already proves break-up, so a redundant collapse-flag check is unnecessary.
 
-Collapse pursuit moves at most six pixels horizontally per update. Vertical
-CPU flight restores S3&K's one-pixel step. Ordinary offscreen respawn retains
-its original horizontal pursuit calculation and five-second timeout.
+Collapse pursuit moves at most six pixels horizontally and one pixel
+vertically per update. Ordinary offscreen respawn retains its original
+horizontal pursuit calculation and five-second timeout; vertical pursuit
+scales with the gap up to six pixels, so a descending camera does not keep
+leaving the respawn flight above the screen.
 
 Taking off detaches Tails from his standing object and its companion-rider
 flag. Negative `obControl` prevents catch-up flight from becoming a platform
@@ -118,8 +128,10 @@ cases are in `check_object_manager.py`.
 The HPZ runner uses the actual level and controller input from its start for
 the ramp routes. Its platform route positions only the initial actors at the
 real ledges; no layout, object or collision substitute is introduced. Native
-checks include 1,680 unreachable-target updates, 48 slope-recovery conditions
-and 280 flight speed/direction/overshoot cases.
+checks include 1,680 unreachable-target updates, 288 slope/spring recovery
+conditions and 280 local-flight speed/direction/overshoot cases. The SBZ
+follow-up adds a 64-phase conveyor transfer, a shared-carrier ride and the
+captured normal-run catch-up failure in `check_companion_sbz.py`.
 The course retains the previously documented broken Gator and excluded
 Labyrinth conveyor; these are separate unfinished objects.
 

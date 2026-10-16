@@ -1046,19 +1046,46 @@ for height in (24,48,132,256):
         assert m.read('Tails_CPU_reach_state',2) in (0,1)
 report['unreachable_platforms_keep_normal_jump_approach']=1680
 
-# Only a grounded slope lock with zero or retreating inertia enters the
-# existing spindash state. Airborne, progressing and manual cases keep following.
-for side,inertia,locked,air,manual in product((-1,1),(-0x80,0,0x80),
-                                             (False,True),(False,True),(False,True)):
+# A stopped slope lock still recovers after the floor angle has reset. Moving
+# backwards needs an actual slope: a flat spring landing must keep steering.
+for side,inertia,locked,air,manual,angle in product((-1,1),(-0x80,0,0x80),
+        (False,True),(False,True),(False,True),(0,0x17,0x18,0x30,0xE7,0xE8)):
     m.start();m.put('v_player','obX',600+side*32,2);m.put('v_player','obY',116,2)
     m.put('v_player2','obX',600,2);m.put('v_player2','obY',116,2)
     m.put('v_player2','obRender',0x80);m.put('v_player2','obStatus',2 if air else 0)
+    m.put('v_player2','obAngle',angle)
     m.put('v_player2','obInertia',inertia,2);m.put('v_player2','move_lock',30 if locked else 0,2)
     m.write('Tails_CPU_routine',6,2);m.write('Tails_CPU_idle_timer',120 if manual else 0,2)
     m.act('TailS3_loc_13D78','v_player2',{UC_M68K_REG_A1:m.s['v_player']})
-    expected=locked and not air and not manual and (inertia==0 or side*inertia<0)
-    assert m.read('Tails_CPU_routine',2)==(8 if expected else 6),(side,inertia,locked,air,manual)
-report['slope_spindash_recovery_respects_motion_air_and_manual_input']=48
+    slope=angle in (0x18,0x30,0xE7)
+    expected=locked and not air and not manual and (inertia==0 or slope and side*inertia<0)
+    assert m.read('Tails_CPU_routine',2)==(8 if expected else 6),(side,inertia,locked,air,manual,angle)
+report['slope_spindash_recovery_respects_springs_motion_air_and_manual_input']=288
+
+# A deliberate lead jump retains a pending approach; a fall cancels it.
+# Neither case is permission to enter flight or to invent a fresh approach.
+for approach,air,jumping in product((0,1),(0,2),(0,1)):
+    m.start();m.put('v_player','obY',116,2)
+    m.put('v_player','obStatus',air);m.put('v_player','jumping',jumping)
+    m.put('v_player2','obY',180,2);m.put('v_player2','obStatus',2)
+    m.write('Tails_CPU_reach_state',approach,2);m.write('Tails_CPU_routine',6,2)
+    m.act('Tails_CPU_CheckReach','v_player2',{UC_M68K_REG_A1:m.s['v_player']})
+    assert m.read('Tails_CPU_routine',2)==6
+    assert m.read('Tails_CPU_reach_state',2)==(approach if not air or jumping else 0)
+report['approach_follows_lead_jump_but_not_fall']=8
+
+# Ordinary respawn pursuit closes either vertical gap without overshooting.
+# Local collapse flights retain their independent one-pixel limit below.
+for dy in (-384,-128,-16,-2,-1,0,1,2,16,128,384):
+    m.start();m.put('v_player','obY',700,2)
+    m.put('v_player2','obY',700+dy,2)
+    m.cpu.mem_write(m.s['Sonic_Pos_Record_Buf']&0xFFFFFF,struct.pack('>HH',600,700)*64)
+    m.write('Tails_CPU_routine',4,2)
+    m.act('TailS3_loc_13C50','v_player2',{UC_M68K_REG_A1:m.s['v_player']})
+    new_dy=m.get('v_player2','obY',2)-700
+    assert abs(new_dy-dy)<=6 and new_dy*dy>=0,(dy,new_dy)
+    assert abs(new_dy)<abs(dy) if dy else new_dy==0
+report['respawn_vertical_pursuit_bounds_and_no_overshoot']=11
 
 # Local collapse flight has normal bounded movement in either direction,
 # including large inherited leader velocities and final one-pixel approach.

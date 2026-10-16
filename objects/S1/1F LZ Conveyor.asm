@@ -114,7 +114,7 @@ loc_12460:
 		; display-and-delete bug.
 .delete:
 		addq.l	#4,sp
-		bra.w	UnloadObject
+		jmp	(UnloadObject).l
 ; ===========================================================================
 
 LCon_Loop:

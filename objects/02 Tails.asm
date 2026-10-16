@@ -525,10 +525,23 @@ TailS3_loc_13CBA:
 		add.w	d2,obX(a0)
 
 TailS3_loc_13CBE:
-		moveq	#1,d2
 		move.w	obY(a0),d1
 		sub.w	(Tails_CPU_target_Y).w,d1
 		beq.s	TailS3_loc_13CD2
+		moveq	#1,d2
+		cmpi.w	#Tails_CPU_CrumbleFlight,(Tails_CPU_reach_state).w
+		beq.s	.vertical_ready		; local ledge rescue keeps its one-pixel vertical step
+		move.w	d1,d2
+		bpl.s	.vertical_distance
+		neg.w	d2
+.vertical_distance:
+		lsr.w	#4,d2
+		addq.w	#1,d2
+		cmpi.w	#Tails_CPU_CatchUpVerticalMax,d2
+		bls.s	.vertical_ready
+		moveq	#Tails_CPU_CatchUpVerticalMax,d2
+.vertical_ready:
+		tst.w	d1
 		bmi.s	TailS3_loc_13CCE
 		neg.w	d2
 
@@ -600,6 +613,10 @@ TailS3_loc_13D78:
 		bne.s	TailS3_loc_13DA6
 		move.w	obInertia(a0),d1
 		beq.s	.slope_recovery
+		move.b	obAngle(a0),d0
+		addi.b	#$18,d0
+		cmpi.b	#$30,d0
+		blo.s	TailS3_loc_13DA6		; a spring's lock on flat ground is not a failed climb
 		move.w	obX(a1),d0
 		sub.w	obX(a0),d0
 		beq.s	TailS3_loc_13DA6
@@ -706,6 +723,15 @@ TailS3_loc_13E64:
 		move.b	#0,(Tails_CPU_auto_jump_flag).w
 
 TailS3_loc_13E7C:
+		tst.w	(Tails_CPU_reach_state).w
+		beq.s	.timed_jump
+		btst	#status.player.on_object,obStatus(a1)
+		beq.s	.timed_jump		; terrain climbs still allow the slope/spindash recovery
+		cmpi.w	#$40,d2
+		bhs.s	.timed_jump		; close the gap and gain momentum before taking off
+		btst	#status.player.in_air,obStatus(a0)
+		beq.s	Tails_CPU_Jump		; use the available landing surface before it moves away
+.timed_jump:
 		move.w	(Timer_frames).w,d0
 		andi.w	#$FF,d0
 		beq.s	TailS3_loc_13E8C
@@ -724,6 +750,7 @@ TailS3_loc_13E9C:
 		move.b	(Timer_frames+1).w,d0
 		andi.b	#$3F,d0
 		bne.s	TailS3_loc_13EB8
+Tails_CPU_Jump:
 		cmpi.b	#8,obAnim(a0)
 		beq.s	TailS3_loc_13EB8
 		ori.w	#((button_A_mask|button_B_mask|button_C_mask)<<8)|(button_A_mask|button_B_mask|button_C_mask),d1
@@ -797,7 +824,12 @@ Tails_CPU_CheckReach:
 		bra.s	.start_flight
 .check_lead:
 		btst	#status.player.in_air,obStatus(a1)
-		bne.s	.reset			; when Sonic is falling, continue the ordinary jump/fall
+		beq.s	.check_companion
+		tst.b	jumping(a1)
+		beq.s	.reset			; a fall does not extend the ledge approach
+		tst.w	(Tails_CPU_reach_state).w
+		beq.s	.return			; only carry an existing approach into Sonic's next jump
+.check_companion:
 		btst	#status.player.in_air,obStatus(a0)
 		bne.s	.return			; preserve approach steering through the normal jump
 		move.w	obY(a0),d0
