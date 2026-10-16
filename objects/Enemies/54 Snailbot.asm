@@ -1,6 +1,7 @@
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Object 54 - Snail badnik from EHZ (Nick Arcade / Simon Wai prototypes)
+; Shell and face share palette 1; only the boost flame needs a child.
 ; ---------------------------------------------------------------------------
 snail_turn_timer	= objoff_32	; 2 bytes; countdown before turning around
 snail_turning		= objoff_34	; 1 byte; set while waiting to reverse; also kills flame child
@@ -16,7 +17,6 @@ Obj54:
 Obj54_Index:	dc.w	Obj54_Init-Obj54_Index
 		dc.w	Obj54_Move-Obj54_Index
 		dc.w	Obj54_TurnAround-Obj54_Index
-		dc.w	Obj54_SlaveSprite-Obj54_Index
 		dc.w	Obj54_FlameTrail-Obj54_Index
 ; ===========================================================================
 
@@ -30,23 +30,6 @@ Obj54_Init:
 		move.b	#sprite_bound($10,Map_Snailbot_width),obActWid(a0)
 		move.b	#$10,obHeight(a0)
 		move.b	#$E,obWidth(a0)
-		jsr	(FindNextFreeObj).l
-		bne.s	Obj54_InitDone
-		move.l	#Obj54,code(a1)
-		move.b	#6,obRoutine(a1)
-		move.l	#Map_Snailbot,obMap(a1)
-		move.b	#Map_Snailbot_height,height_pixels(a1)
-		move.w	#make_art_tile(ArtTile_Snail,1,0),obGfx(a1)
-		move.w	#$180,obPriority(a1)
-		move.b	#sprite_bound($10,Map_Snailbot_width),obActWid(a1)
-		move.b	obStatus(a0),obStatus(a1)
-		move.b	obRender(a0),obRender(a1)
-		move.l	a0,snail_parent(a1)
-		move.w	obX(a0),obX(a1)
-		move.w	obY(a0),obY(a1)
-		move.b	#2,obFrame(a1)
-
-Obj54_InitDone:
 		addq.b	#2,obRoutine(a0)
 		move.w	#-$80,d0
 		btst	#0,obStatus(a0)
@@ -108,7 +91,7 @@ Obj54_CheckPlayerAndBoost:
 		jsr	(FindNextFreeObj).l
 		bne.s	.return
 		move.l	#Obj54,code(a1)
-		move.b	#8,obRoutine(a1)
+		move.b	#6,obRoutine(a1)
 		move.l	#Map_Buzzer,obMap(a1)
 		move.b	#Map_Buzzer_height,height_pixels(a1)
 		move.w	#make_art_tile(ArtTile_Buzzer,0,0),obGfx(a1)
@@ -162,16 +145,6 @@ Obj54_TurnAround:
 		sf	snail_turning(a0)
 		sf	snail_boosted(a0)
 .display:	jmp	(MarkObjGone).l
-; ---------------------------------------------------------------------------
-Obj54_SlaveSprite:
-		movea.l	snail_parent(a0),a1
-		cmpi.l	#Obj54,code(a1)
-		bne.w	DeleteObject
-		move.w	obX(a1),obX(a0)
-		move.w	obY(a1),obY(a0)
-		move.b	obStatus(a1),obStatus(a0)
-		move.b	obRender(a1),obRender(a0)
-		jmp	(MarkObjGone).l
 ; ---------------------------------------------------------------------------
 Ani_Obj54:	dc.w byte_17818-Ani_Obj54
 		dc.w byte_1781C-Ani_Obj54
