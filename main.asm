@@ -8924,21 +8924,54 @@ Draw_Sprite:
 ; ---------------------------------------------------------------------------
 RememberState:
 MarkObjGone:
-		out_of_range.s	loc_CEB0
+		out_of_range.s	.check_spawn
+		bra.w	DisplaySprite
+.check_spawn:
+		bsr.w	Object_CheckSpawnXRange
+		bhi.w	UnloadObject
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 ; does nothing instead of calling DisplaySprite in the case of no deletion
 ; a0 = the object
 MarkObjGone2:
-		out_of_range.s	loc_CEB0
+		out_of_range.s	.check_spawn
+		rts
+.check_spawn:
+		bsr.w	Object_CheckSpawnXRange
+		bhi.w	UnloadObject
 		rts
 ; ---------------------------------------------------------------------------
 ; Special case where the x-coordinate is pre-fed by the object itself
 ; d0 = the object
 MarkObjGone3:
-		out_of_range3.s	loc_CEB0
+		out_of_range3.s	MarkObjGone.check_spawn
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
+
+; Moving objects must not unload while their placement is still retained:
+; the loader only revisits it after an X/Y boundary crossing. This fallback
+; runs only after the object's own X check fails. Recover the placement from
+; the paired front cursors, without adding an original-X field to each SST.
+; Return the range flags; preserve registers and the caller's X delta.
+Object_CheckSpawnXRange:
+		movem.l	d0-d1/a1,-(sp)
+		move.w	respawn_addr(a0),d1
+		beq.s	.dynamic
+		tst.l	(Object_load_addr_front).w
+		beq.s	.dynamic
+		sub.w	(Object_respawn_index_front).w,d1
+		muls.w	#omSize,d1
+		movea.l	(Object_load_addr_front).w,a1
+		move.w	omX(a1,d1.l),d1
+		andi.w	#Object_Load_CoarseMask,d1
+		sub.w	(Camera_X_pos_coarse_back).w,d1
+		cmpi.w	#128+320+192,d1
+		bra.s	.return
+.dynamic:
+		cmpi.w	#128+320+192,d0	; no placement: keep the normal X lifetime
+.return:
+		movem.l	(sp)+,d0-d1/a1
+		rts
 
 ; Only parents loaded from a layout own a respawn entry. Dynamic helpers,
 ; Debug objects and consumed objects use DeleteObject without releasing it.

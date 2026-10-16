@@ -8,6 +8,8 @@
 ; ---------------------------------------------------------------------------
 
 SMZ_SpinConvey:
+		tst.b	obSubtype(a0)
+		bmi.w	SMZ_SpinC_Spawn
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	SMZ_SpinC_Index(pc,d0.w),d1
@@ -39,10 +41,48 @@ SMZ_spinc_reversed:		equ objoff_3B	; (unused in SBZ) flag set if conveyor direct
 SMZ_spinc_targetdata:	equ objoff_3C	; pointer to corner data for group
 ; ===========================================================================
 
-SMZ_SpinC_Main:	; Routine 0
-		move.b	obSubtype(a0),d0			; is this the initial spawner object?
-		andi.b	#$7F,d0			; if yes, branch
+; One layout placement owns the complete loop, as in Sonic 1. Reserve no
+; helpers until the whole group fits, so a full pool can retry next frame.
+; Only the original SST retains respawn_addr; all members use the same base X.
+; The layout sets omLoadAtAnyY, since members can be far from the spawner's Y.
+SMZ_SpinC_Spawn:
+		move.w	obX(a0),SMZ_spinc_baseX(a0)
+		out_of_range2	UnloadObject,SMZ_spinc_baseX(a0)
+		moveq	#0,d0
+		move.b	obSubtype(a0),d0
+		andi.w	#$7F,d0
+		add.w	d0,d0
+		lea	SMZ_SpinC_Placements(pc),a2
+		adda.w	(a2,d0.w),a2
+		move.w	(a2)+,d1		; group size minus the original SST
+		move.w	d1,d6
+		lea	(v_lvlobjspace).w,a1
+		move.w	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d0
+.count_free:
+		tst.l	code(a1)
+		bne.s	.next
+		subq.w	#1,d1
+		beq.s	.spawn
+.next:
+		lea	object_size(a1),a1
+		dbf	d0,.count_free
+		rts
+.spawn:
+		movea.l	a0,a1
+.make_platform:
+		move.l	#SMZ_SpinConvey,code(a1)
+		move.w	(a2)+,obX(a1)
+		move.w	(a2)+,obY(a1)
+		move.w	(a2)+,d0
+		move.b	d0,obSubtype(a1)
+		dbf	d6,.allocate
+		rts
+.allocate:
+		jsr	(FindFreeObj).l		; the preflight found enough free SSTs
+		bra.s	.make_platform
+; ===========================================================================
 
+SMZ_SpinC_Main:	; Routine 0
 		; Object is a platform (from custom objpos data)
 		addq.b	#2,obRoutine(a0)			; advance to SMZ_SpinC_Solid
 		move.l	#Map_SMZ_Spin,obMap(a0)
@@ -319,3 +359,72 @@ SMZ_LCon_ChangeDir:
 		move.w	d1,obY+2(a0)			; use division remainder as initial Y-subpixel position
 		clr.w	obX+2(a0)				; force initial X-subpixel position to 0
 		rts						; return
+
+; Original Sonic 1 eight-platform groups. Each row is X, Y, subtype.
+SMZ_SpinC_Placements:
+		dc.w	.group0-SMZ_SpinC_Placements
+		dc.w	.group1-SMZ_SpinC_Placements
+		dc.w	.group2-SMZ_SpinC_Placements
+		dc.w	.group3-SMZ_SpinC_Placements
+		dc.w	.group4-SMZ_SpinC_Placements
+		dc.w	.group5-SMZ_SpinC_Placements
+.group0:
+		dc.w	8-1
+		dc.w	$0E14, $0370, $0000
+		dc.w	$0E5A, $034D, $0001
+		dc.w	$0EA0, $032A, $0001
+		dc.w	$0EE7, $0307, $0001
+		dc.w	$0EEF, $0340, $0002
+		dc.w	$0EA9, $0363, $0003
+		dc.w	$0E63, $0386, $0003
+		dc.w	$0E1C, $03A9, $0003
+.group1:
+		dc.w	8-1
+		dc.w	$0F14, $02E0, $0010
+		dc.w	$0F5A, $02BD, $0011
+		dc.w	$0FA0, $029A, $0011
+		dc.w	$0FE7, $0277, $0011
+		dc.w	$0FEF, $02B0, $0012
+		dc.w	$0FA9, $02D3, $0013
+		dc.w	$0F63, $02F6, $0013
+		dc.w	$0F1C, $0319, $0013
+.group2:
+		dc.w	8-1
+		dc.w	$1014, $0270, $0020
+		dc.w	$105A, $024D, $0021
+		dc.w	$10A0, $022A, $0021
+		dc.w	$10E7, $0207, $0021
+		dc.w	$10EF, $0240, $0022
+		dc.w	$10A9, $0263, $0023
+		dc.w	$1063, $0286, $0023
+		dc.w	$101C, $02A9, $0023
+.group3:
+		dc.w	8-1
+		dc.w	$0F14, $0570, $0030
+		dc.w	$0F5A, $054D, $0031
+		dc.w	$0FA0, $052A, $0031
+		dc.w	$0FE7, $0507, $0031
+		dc.w	$0FEF, $0540, $0032
+		dc.w	$0FA9, $0563, $0033
+		dc.w	$0F63, $0586, $0033
+		dc.w	$0F1C, $05A9, $0033
+.group4:
+		dc.w	8-1
+		dc.w	$1B14, $0670, $0040
+		dc.w	$1B5A, $064D, $0041
+		dc.w	$1BA0, $062A, $0041
+		dc.w	$1BE7, $0607, $0041
+		dc.w	$1BEF, $0640, $0042
+		dc.w	$1BA9, $0663, $0043
+		dc.w	$1B63, $0686, $0043
+		dc.w	$1B1C, $06A9, $0043
+.group5:
+		dc.w	8-1
+		dc.w	$1C14, $05E0, $0050
+		dc.w	$1C5A, $05BD, $0051
+		dc.w	$1CA0, $059A, $0051
+		dc.w	$1CE7, $0577, $0051
+		dc.w	$1CEF, $05B0, $0052
+		dc.w	$1CA9, $05D3, $0053
+		dc.w	$1C63, $05F6, $0053
+		dc.w	$1C1C, $0619, $0053
