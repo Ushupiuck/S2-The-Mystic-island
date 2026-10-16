@@ -30,11 +30,11 @@ def main():
 
     common = sum((cues(label) for label in ('PLC_Main2', 'PLC_GHZ', 'PLC_GHZ2',
                                           'PLC_Explode', 'PLC_GHZAnimals')), [])
-    # These banks are shared across stages. GHZ supplies its shorter spring
-    # art and uses only otherwise empty space inside the reserved spring slots.
+    # GHZ's 32-tile Chopper occupies the diagonal-spring bank plus four tiles
+    # before it. The shared spring banks themselves have no gaps.
     expected = {
-        'ArtTile_Spring_Diagonal': 0x4D5,
-        'ArtTile_Spring_Vertical': 0x4F5,
+        'ArtTile_Spring_Diagonal': 0x4DD,
+        'ArtTile_Spring_Vertical': 0x4F9,
         'ArtTile_Spring_Horizontal': 0x509,
         'ArtTile_Spikes': 0x519,
         'ArtTile_Monitor': 0x529,
@@ -42,14 +42,23 @@ def main():
     }
     for name, tile in expected.items():
         assert symbols[name] == tile, (name, hex(symbols[name]))
-    assert symbols['ArtTile_Chopper'] == symbols['ArtTile_Spring_Diagonal']
-    assert symbols['ArtTile_Newtron_Tail'] == symbols['ArtTile_Spring_Vertical'] + 16
+    assert symbols['ArtTile_Chopper'] + 4 == symbols['ArtTile_Spring_Diagonal']
+    for art, first, following in (
+            ('Nem_DSpring', 'ArtTile_Spring_Diagonal', 'ArtTile_Spring_Vertical'),
+            ('Nem_VSpring2', 'ArtTile_Spring_Vertical', 'ArtTile_Spring_Horizontal'),
+            ('Nem_HSpring2', 'ArtTile_Spring_Horizontal', 'ArtTile_Spikes')):
+        tiles = struct.unpack_from('>H', rom, symbols[art])[0] & 0x7FFF
+        assert symbols[first] + tiles == symbols[following], (art, 'gap or overlap')
+    newtron_tiles = struct.unpack_from('>H', rom, symbols['Kospm_Newtron'])[0] // 32
+    assert newtron_tiles == 85
+    assert symbols['ArtTile_Newtron'] + newtron_tiles == symbols['ArtTile_Chopper']
+    assert 'Nem_NewtronTail' not in symbols and 'ArtTile_Newtron_Tail' not in symbols
+    for row in frames(rom, symbols['Map_Newtron']):
+        for _, size, tile, _ in row:
+            assert (tile & 0x7FF) + ((size >> 2) + 1) * ((size & 3) + 1) <= newtron_tiles
     assert symbols['ArtTile_Points_2'] + 2 == symbols['ArtTile_GHZ_Edge_Wall']
     assert symbols['ArtTile_GHZ_Edge_Wall'] + 8 == symbols['vram_bg'] // 32 - 1
 
-    tail = next(cue for cue in common if cue[0] == symbols['Nem_NewtronTail'])
-    assert tail[1:] == (symbols['ArtTile_Newtron_Tail'] * 32,
-                       (symbols['ArtTile_Newtron_Tail'] + 4) * 32)
     assert struct.unpack_from('>H', rom, symbols['Nem_VSpikes'])[0] & 0x7FFF == 16
     spike_frames = frames(rom, symbols['Map_Obj36'])
     assert len(spike_frames) == 14
@@ -80,7 +89,7 @@ def main():
                 low == symbols['ArtTile_GHZ_Edge_Wall'] * 32 and high == 0xDFE0), (
                     'fixed bank overwritten', act, hex(low), hex(high))
         # Check actual sprite tile references against resident banks, including
-        # Newtron's four shared tiles and the wall cap borrowed from terrain.
+        # the complete Newtron and the wall cap borrowed from terrain.
         available = [(0, level_end)] + [(a, b) for _, a, b in loaded]
         for mapping, base in (('Map_Newtron', 'ArtTile_Newtron'),
                               ('Map_obj44', 'ArtTile_GHZ_Edge_Wall'),

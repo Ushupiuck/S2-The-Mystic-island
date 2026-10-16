@@ -114,7 +114,9 @@ actual side-collision result. GHZ keeps the diagonal bank for Chopper because
 its current layouts contain no diagonal springs; a GHZ diagonal-spring design
 will need a corresponding art allocation change.
 
-The common diagonal/vertical/horizontal banks start at `$4D5/$4F5/$509`.
+The common diagonal/vertical/horizontal banks start at `$4DD/$4F9/$509`,
+with 28/16/16 tiles and no gaps. GHZ's Chopper uses its own `$4D9` start,
+leaving room for Newtron's complete 85-tile art immediately before it.
 Spikes/monitors/checkpoints start at `$519/$529/$565`; the auxiliary shield bank
 starts at `$56F`. Title cards and results use per-screen DPLCs at `$581`,
 with a maximum of 84 tiles, preserving both shield banks. Existing letters

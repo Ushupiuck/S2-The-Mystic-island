@@ -1,7 +1,4 @@
-; S3&K mapping records. Cross-bank tile offsets follow the VRAM constants.
-; GHZ keeps four tiles in the unused tail of its short vertical-spring bank.
-Map_Newtron_Tail0 = ArtTile_Newtron_Tail-ArtTile_Newtron
-Map_Newtron_Tail1 = ArtTile_Newtron_Tail+2-ArtTile_Newtron
+; S3&K mapping records. The complete 85-tile art keeps Sonic 1's tile order.
 Map_Newtron_internal:
 		dc.w .frame0-Map_Newtron_internal
 		dc.w .frame1-Map_Newtron_internal
@@ -35,15 +32,15 @@ Map_Newtron_internal:
 		dc.w $0408, $0045, $FFFC
 .frame5:	dc.w 2
 		dc.w $F80D, $0048, $FFEC
-		dc.w $F801, Map_Newtron_Tail0, $000C
+		dc.w $F801, $0050, $000C
 .frame6:	dc.w 3
 		dc.w $F80D, $0048, $FFEC
-		dc.w $F801, Map_Newtron_Tail0, $000C
-		dc.w $FE00, $0050, $0014
+		dc.w $F801, $0050, $000C
+		dc.w $FE00, $0052, $0014
 .frame7:	dc.w 3
 		dc.w $F80D, $0048, $FFEC
-		dc.w $F801, Map_Newtron_Tail0, $000C
-		dc.w $FE04, Map_Newtron_Tail1, $0014
+		dc.w $F801, $0050, $000C
+		dc.w $FE04, $0053, $0014
 .frame8:	dc.w 0
 Map_Newtron_internal_End:
 		even

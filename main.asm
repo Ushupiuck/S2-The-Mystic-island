@@ -15576,8 +15576,6 @@ Nem_DSpring:	binclude	"art/nemesis/Diagonal spring.nem"
 ; S3&K side and floor spikes, remapped to the shared player palette.
 Nem_VSpikes:	binclude	"art/nemesis/Spikes.nem"
 		even
-Nem_NewtronTail:	binclude	"art/nemesis/Enemy Newtron tail.nem"
-		even
 Nem_Bumper:	binclude	"art/nemesis/Bumper.nem"
 		even
 Nem_Wheel: binclude "art/nemesis/Wheel carrier.nem"

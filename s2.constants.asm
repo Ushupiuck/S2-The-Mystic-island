@@ -1662,9 +1662,9 @@ boss_fz_end:	equ boss_fz_x+$2B0
 ; Tile VRAM Locations
 
 ; Universal level sprites; zone/boss PLCs may replace inactive banks.
-ArtTile_Spring_Diagonal:	equ $4D5	; 32 tiles
-ArtTile_Spring_Vertical:	equ ArtTile_Spring_Diagonal+$20 ; 20 tiles
-ArtTile_Spring_Horizontal: equ $509 ; 16 S3&K tiles
+ArtTile_Spring_Diagonal:	equ $4DD	; 28 S3&K tiles; spring banks are contiguous
+ArtTile_Spring_Vertical:	equ ArtTile_Spring_Diagonal+$1C ; 16 tiles
+ArtTile_Spring_Horizontal:	equ ArtTile_Spring_Vertical+$10 ; 16 tiles
 ArtTile_Spikes: equ $519 ; 16 tiles
 ArtTile_Monitor:		equ ArtTile_Spikes+$10 ; 60 tiles; final four retain Tails's life icon
 ArtTile_Tails_Life:	equ ArtTile_Monitor+$38
@@ -1681,9 +1681,9 @@ ArtTile_Crabmeat:	equ ArtTile_Buzz_Bomber+$37
 ArtTile_Moto_Bug:	equ ArtTile_Crabmeat+$44
 ArtTile_Ball_HogV:	equ ArtTile_Moto_Bug+$1D
 ArtTile_Ball_HogH:	equ ArtTile_Ball_HogV+$18
-ArtTile_Newtron:		equ ArtTile_Ball_HogH+$2F ; 81 tiles; four shared tail tiles below
-ArtTile_Chopper:		equ ArtTile_Spring_Diagonal ; GHZ reserves this bank for Chopper
-ArtTile_S1_Spring_Vertical:	equ ArtTile_Spring_Vertical ; 16 tiles; Newtron uses +$10-$13
+ArtTile_Newtron:		equ ArtTile_Ball_HogH+$2F ; 85 tiles, including tail and exhaust
+ArtTile_Chopper:		equ ArtTile_Newtron+$55 ; 32 tiles; GHZ has no diagonal springs
+ArtTile_S1_Spring_Vertical:	equ ArtTile_Spring_Vertical ; 16 tiles
 ArtTile_S1_Spring_Horizontal:	equ ArtTile_Spring_Horizontal
 ArtTile_Wheel: equ $4B4 ; loaded with the SMZ sprite atlas
 ArtTile_SMZ_BallHog: equ ArtTile_SMZ_Atlas
@@ -1693,7 +1693,6 @@ ArtTile_SMZ_Saw: equ ArtTile_SMZ_Atlas
 ArtTile_SMZ_Spin: equ ArtTile_SMZ_Atlas
 ArtTile_SMZ_VanP: equ ArtTile_SMZ_Atlas
 ArtTile_SMZ_Button: equ ArtTile_SMZ_Atlas
-ArtTile_Newtron_Tail:	equ ArtTile_S1_Spring_Vertical+$10
 ArtTile_GHZ_Edge_Wall:	equ $6F7	; eight tiles in the HUD/points gap; cap uses level art
 
 

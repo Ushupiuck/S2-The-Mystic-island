@@ -68,22 +68,32 @@ uses all fourteen frames, palette, arrangement and movement options.
 | `$8400–$879F` | `$420–$43C` | Motobug, 29 tiles |
 | `$87A0–$8A9F` | `$43D–$454` | Vertical Ball Hog, 24 tiles |
 | `$8AA0–$907F` | `$455–$483` | Horizontal Ball Hog, 47 tiles |
-| `$9080–$9A9F` | `$484–$4D4` | Newtron main art, 81 tiles |
-| `$9AA0–$9E9F` | `$4D5–$4F4` | Diagonal spring bank; GHZ uses it for Chopper |
-| `$9EA0–$A11F` | `$4F5–$508` | Vertical spring bank, 20 tiles |
-| `$A120–$A2DF` | `$509–$516` | Horizontal spring bank, 14 tiles |
-| `$A2E0–$A4DF` | `$517–$526` | Both spike orientations, 16 tiles |
-| `$A4E0–$AC5F` | `$527–$562` | Monitor/signpost bank, 60 tiles |
-| `$AC60–$AD9F` | `$563–$56C` | Checkpoint, 10 tiles |
-| `$ADA0–$ADBF` | `$56D` | Free, one tile |
+| `$9080–$9B1F` | `$484–$4D8` | Complete Newtron, 85 tiles |
+| `$9B20–$9F1F` | `$4D9–$4F8` | Chopper, 32 tiles; GHZ has no diagonal springs |
+| `$9F20–$A11F` | `$4F9–$508` | Vertical spring bank, 16 tiles |
+| `$A120–$A31F` | `$509–$518` | Horizontal spring bank, 16 tiles |
+| `$A320–$A51F` | `$519–$528` | Both spike orientations, 16 tiles |
+| `$A520–$AC9F` | `$529–$564` | Monitor/signpost bank, 60 tiles |
+| `$ACA0–$ADDF` | `$565–$56E` | Checkpoint, 10 tiles |
 | `$DEE0–$DFDF` | `$6F7–$6FE` | GHZ wall segments, eight tiles |
 | `$DFE0–$DFFF` | `$6FF` | Free, one tile |
 
-GHZ scenery and badniks start immediately after its 811 terrain tiles. GHZ's
-vertical spring uses only 16 of the reserved 20 tiles, so Newtron's four tail
-tiles occupy `$A0A0–$A11F`. Its main art keeps the other 81 tiles, and assembly
-mappings derive the tail offsets from `ArtTile_Newtron_Tail`. This preserves
-every original pose without padding the lower bank or moving fixed effects.
+GHZ scenery and badniks start immediately after its 811 terrain tiles.
+Newtron's body, tail and exhaust now share one 85-tile Kosinski+ art file and
+one contiguous VRAM bank. Its bytes and tile order match the original Sonic 1
+art, so the flying frames use ordinary `$50/$52/$53` mapping offsets. The
+separate tail file, Nemesis load and cross-bank constants are removed.
+
+The three common spring banks are contiguous: diagonal at `$4DD` (28 tiles),
+vertical at `$4F9` (16), horizontal at `$509` (16), ending exactly at the
+spike bank `$519`. GHZ's Chopper starts four tiles before the diagonal bank,
+using that interval instead; this fits both complete badniks without adding
+VRAM or moving the fixed player/effect banks.
+
+Motobug uses the approved darker-blue option: four head-highlight pixels move
+from `$4` to `$3`, the 15 stored dark-red pixels from `$E` to `$4`, and eight
+antenna-tip pixels from `$F` to the brighter orange `$E`. The other brass
+details, smoke art, transparency and shared palette are preserved.
 
 The previously missing GHZ wall load uses the eight available tiles after the
 points banks. Its cap reuses identical X-flipped terrain pixels at tile `$C1`.

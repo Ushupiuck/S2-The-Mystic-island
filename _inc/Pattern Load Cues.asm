@@ -128,7 +128,6 @@ PLC_GHZ2:	dc.w ((PLC_GHZ2_End-PLC_GHZ2)/6)-1
 		plcm	Nem_HSpring2,	ArtTile_S1_Spring_Horizontal
 		plcm	Nem_VSpring2,	ArtTile_S1_Spring_Vertical
 		plcm	Nem_GHZ_SWall,	ArtTile_GHZ_Edge_Wall
-		plcm	Nem_NewtronTail,	ArtTile_Newtron_Tail
 PLC_GHZ2_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST

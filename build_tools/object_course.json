@@ -55,7 +55,7 @@
       {"name":"Buzz Bomber", "id":"22", "x":256, "y":1168},
       {"name":"Newtron", "id":"42", "x":512, "y":1256},
       {"name":"Chopper Masher", "id":"2B", "x":768, "y":1264}],
-      "art":[["kos","Kospm_Buzz","ArtTile_Buzz_Bomber"],["kos","Kospm_Newtron","ArtTile_Newtron"],["nem","Nem_NewtronTail","ArtTile_Newtron_Tail"],["nem","Nem_Masher","ArtTile_Masher"]]},
+      "art":[["kos","Kospm_Buzz","ArtTile_Buzz_Bomber"],["kos","Kospm_Newtron","ArtTile_Newtron"],["nem","Nem_Masher","ArtTile_Masher"]]},
     {"name":"Caterkiller and Basaran", "objects":[
       {"name":"Caterkiller", "id":"60", "x":320, "y":1256},
       {"name":"Basaran", "id":"62", "x":704, "y":1120}],
