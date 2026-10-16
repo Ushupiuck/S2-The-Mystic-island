@@ -165,14 +165,27 @@ for frame in range(6):
     assert m.get(obj,'signpost_loaded') == frame
     assert m.cpu.reg_read(ns['UC_M68K_REG_D7']) == 0x1976
     loaded=b''.join(rom[src:src+words*2] for src,_,words in m.uploads)
-    assert len(loaded) <= 18*32
+    assert len(loaded) <= 26*32
     assert render(loaded,dynamic[frame]) == render(source,original[frame])
     n=len(m.uploads);m.act('Load_DynamicPLC',obj,regs);assert len(m.uploads) == n
     checks.append({'case':'signpost-pixels-and-cache','frame':frame,'tiles':len(loaded)//32})
 
+for mode in (0,1,2):
+    reset()
+    m.write('Player_mode',mode,2)
+    m.put(obj,'obRoutine',4)
+    m.put(obj,'obAnim',2)
+    m.put(obj,'objoff_36',12,2)
+    m.act('Signpost_Spin',obj)
+    assert m.get(obj,'obRoutine') == 6
+    assert m.get(obj,'obAnim') == (4 if mode == 2 else 3)
+    m.act('AnimateSprite',obj,{ns['UC_M68K_REG_A1']:m.s['Ani_Signpost']})
+    assert m.get(obj,'obFrame') == (1 if mode == 2 else 0)
+    checks.append({'case':'signpost-final-character','mode':mode,'frame':m.get(obj,'obFrame')})
+
 monitor=frames(rom,m.s['Map_Obj26'])
 assert monitor[3][0][2] & 0x7FF == 56
-assert m.s['ArtTile_Signpost']+18 <= m.s['ArtTile_Tails_Life']
+assert m.s['ArtTile_Signpost']+26 <= m.s['ArtTile_Tails_Life']
 assert m.s['ArtTile_Tails_Life']+4 == m.s['ArtTile_Lamppost']
 hud=frames(rom,m.s['Map_obj21'],8)
 for i in range(8):

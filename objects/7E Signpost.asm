@@ -73,6 +73,9 @@ Signpost_Spin:
 		cmpi.b	#3,obAnim(a0)
 		bne.s	Signpost_Sparkle
 		addq.b	#2,obRoutine(a0)
+		cmpi.w	#PlayerMode_Tails,(Player_mode).w
+		bne.s	Signpost_Sparkle
+		addq.b	#1,obAnim(a0)		; solo Tails finishes on his own portrait
 ; loc_F044:
 Signpost_Sparkle:
 		subq.w	#1,objoff_36(a0)
@@ -182,12 +185,14 @@ TimeBonuses:	dc.w  5000, 5000, 1000,	 500
 		dc.w	50,   50,   50,	  50
 		dc.w	0
 ; ===========================================================================
-Ani_Signpost:	dc.w byte_F194-Ani_Signpost
-		dc.w byte_F197-Ani_Signpost
-		dc.w byte_F1A5-Ani_Signpost
-		dc.w byte_F1B3-Ani_Signpost
-byte_F194:	dc.b  $F,  2,afEnd
-byte_F197:	dc.b   1,  2,  3,  4,  5,  1,  3,  4,  5,  0,  3,  4,  5,afEnd
-byte_F1A5:	dc.b   1,  2,  3,  4,  5,  1,  3,  4,  5,  0,  3,  4,  5,afEnd
-byte_F1B3:	dc.b  $F,  0,afEnd
+Ani_Signpost:	dc.w	.eggman-Ani_Signpost
+		dc.w	.spin1-Ani_Signpost
+		dc.w	.spin2-Ani_Signpost
+		dc.w	.sonic-Ani_Signpost
+		dc.w	.tails-Ani_Signpost
+.eggman:	dc.b	$F,2,afEnd
+.spin1:	dc.b	1,2,3,4,5,1,3,4,5,0,3,4,5,afEnd
+.spin2:	dc.b	1,2,3,4,5,1,3,4,5,0,3,4,5,afEnd
+.sonic:		dc.b	$F,0,afEnd
+.tails:		dc.b	$F,1,afEnd
 		even

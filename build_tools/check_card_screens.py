@@ -173,6 +173,11 @@ elif args.case == 'normal':
                               {n:g.get(actor,n,z) for n,z in [('obRoutine',1),('obFrame',1),('obAnim',1),('objoff_34',2),('obX',2),('obY',2)]},
                               'player',g.get('v_player','obX',2),'seen',sorted(seen)))
     assert seen==set(range(6)),seen
+    expected_frame=1 if args.player==2 else 0
+    assert g.get(actor,'obAnim')==(4 if args.player==2 else 3), 'Wrong signpost final animation'
+    assert g.get(actor,'obFrame')==expected_frame, 'Wrong signpost final portrait'
+    step(2)  # Present the final portrait after its queued DMA reaches VBlank.
+    assert g.get(actor,'signpost_loaded')==expected_frame
     g.video.save(args.output/'signpost.png')
     g.put('v_player','obX',300,2)
     for _ in range(150):
@@ -193,7 +198,8 @@ elif args.case == 'normal':
     assert_ink_color('v_endcardact',6+args.act,(1,),10)
     assert vram(g.s['ArtTile_Tails_Life']*32,4*32)==portrait
     g.video.save(args.output/'results.png')
-    report.update(signpost_frames=sorted(seen),portrait_preserved=True,
+    assert g.get(actor,'obFrame')==expected_frame, 'Signpost portrait changed during results'
+    report.update(signpost_frames=sorted(seen),signpost_final_frame=expected_frame,portrait_preserved=True,
                   time_bonus=g.read('v_timebonus',2),ring_bonus=g.read('v_ringbonus',2),act=args.act+1)
 else:
     menu();g.write('v_levselitem',34,2)

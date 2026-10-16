@@ -1843,7 +1843,7 @@ ArtTile_Warp:			equ $541
 ArtTile_Mini_Tails:		equ $535
 ArtTile_Mini_Sonic:		equ $551
 ArtTile_Bonuses:		equ $570
-ArtTile_Signpost:		equ ArtTile_Monitor	; 18-tile DPLC buffer; stops before Tails's life icon
+ArtTile_Signpost:		equ ArtTile_Monitor	; 26-tile DPLC buffer; stops before Tails's life icon
 
 ; Sega Screen
 ArtTile_Sega_Tiles:		equ $000
