@@ -37,8 +37,10 @@ ptr_Pal_MTZ:		palptr	Pal_MTZ,v_palette+$20,$18
 
 ptr_Pal_SMZ1: palptr Pal_SMZ1,v_palette+$20,$18
 ptr_Pal_SMZ2: palptr Pal_SMZ2,v_palette+$20,$18
+ptr_Pal_TitleCard:	palptr	Pal_SonicTails,v_palette,$10
 palid_SMZ1: equ (ptr_Pal_SMZ1-PalPointers)/8
 palid_SMZ2: equ (ptr_Pal_SMZ2-PalPointers)/8
+palid_TitleCard:		equ (ptr_Pal_TitleCard-PalPointers)/8
 
 palid_SegaBG:		equ (ptr_Pal_SegaBG-PalPointers)/8	; 0
 palid_Title:		equ (ptr_Pal_Title-PalPointers)/8	; 1

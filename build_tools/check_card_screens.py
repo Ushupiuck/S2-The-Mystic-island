@@ -11,6 +11,7 @@ import json
 import struct
 from genesis_test_core import Genesis
 from check_object_course import boot_level
+from check_sprite_assets import frames
 
 ROOT=Path(__file__).resolve().parents[1]
 p=argparse.ArgumentParser(description=__doc__)
@@ -53,6 +54,18 @@ def card_data(scene):
 def assert_card(scene):
     data=card_data(scene)
     assert vram(g.s['ArtTile_Title_Card']*32,len(data)) == data,('card VRAM',scene)
+
+
+def assert_ink_color(actor, frame, pieces, count, expected=0x0EE):
+    rows=frames(rom,g.get(actor,'obMap',4),count)
+    base=g.get(actor,'obGfx',2)
+    for index in pieces:
+        _,size,word,_=rows[frame][index]
+        tile=(base+word)&65535
+        data=vram((tile&2047)*32,((size>>2)+1)*((size&3)+1)*32)
+        colors={n for b in data for n in (b>>4,b&15)}-{0,1}
+        actual={g.read(g.s['v_palette']+((tile>>13&3)*16+n)*2,2) for n in colors}
+        assert actual=={expected},('label colors',actor,frame,index,actual)
 
 
 def assert_bonus():
@@ -105,10 +118,18 @@ if args.case == 'intro':
             assert_card(zone*4+act)
             assert g.get('v_ttlcardname','obFrame')==zone
             assert g.get('v_ttlcardact','obFrame')==17+act
+            assert_ink_color('v_ttlcardact',17+act,(1,),22)
             if zone in (0,2,4,7,8,10,15) and act in (0,3):
                 step();g.video.save(args.output/f'zone-{zone:02X}-act-{act+1}.png')
             for _ in range(700):
                 step()
+                if g.get('v_ttlcardact','code')==g.s['TitleCards']:
+                    assert_ink_color('v_ttlcardact',17+act,(1,),22)
+                if g.read('Water_flag') and g.read('v_vbla_routine',2) in (
+                        g.s['Vint_LevelLoad'],g.s['Vint_Level'],g.s['Vint_Fade']):
+                    actual=g.read(g.s['v_palette_water']+0x38,2)
+                    target=g.read(g.s['v_palette_water_fading']+0x38,2)
+                    assert actual==target,('underwater ACT color during fade',zone,act,actual,target)
                 if (g.read('v_gamemode',2)==g.s['Level'] and
                     g.read('v_vbla_routine',2)==g.s['Vint_Level'] and g.read('f_timecount')):
                     break
@@ -166,6 +187,10 @@ elif args.case == 'normal':
     expected=g.s['Map_Got_Tails'] if args.player==2 else g.s['Map_Obj3A']
     assert g.get('v_endcard','obMap',4)==expected
     assert g.get('v_endcardact','obFrame')==6+args.act
+    assert_ink_color('v_endcard',2,(0,1),10)
+    assert_ink_color('v_endcard',3,(0,1,2),10)
+    assert_ink_color('v_endcard',4,(1,2),10)
+    assert_ink_color('v_endcardact',6+args.act,(1,),10)
     assert vram(g.s['ArtTile_Tails_Life']*32,4*32)==portrait
     g.video.save(args.output/'results.png')
     report.update(signpost_frames=sorted(seen),portrait_preserved=True,
@@ -202,6 +227,8 @@ else:
     state=0 if not args.emeralds else 2 if args.emeralds==6 else 1
     assert_card(72+state*2+(args.player==2));assert_bonus();assert_score()
     assert g.get('v_endcard','obMap',4)==g.s[f'Map_SSR_{state}_{int(args.player==2)}']
+    assert_ink_color('v_endcard',1,(0,1),7)
+    assert_ink_color('v_endcard',2,(1,2),7)
     g.video.save(args.output/'results.png')
     poses=set()
     if args.rings>=50:
@@ -216,6 +243,7 @@ else:
                 if poses=={4,5}:
                     break
         assert poses=={4,5},poses
+        assert_ink_color('v_endcard',4,(0,),7)
     report.update(emeralds=args.emeralds,rings=args.rings,continue_poses=sorted(poses))
 
 report['passed']=True

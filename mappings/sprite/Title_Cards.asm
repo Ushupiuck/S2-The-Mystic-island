@@ -207,16 +207,16 @@ Map_Cards_16: dc.w 4
 		dc.w $F805, $0, $0010
 Map_Cards_17: dc.w 2
 		dc.w $040C, $10, $FFEC
-		dc.w $F402, $24, $000C
+		dc.w $F402, $2024, $000C
 Map_Cards_18: dc.w 2
 		dc.w $040C, $10, $FFEC
-		dc.w $F406, $24, $0008
+		dc.w $F406, $2024, $0008
 Map_Cards_19: dc.w 2
 		dc.w $040C, $10, $FFEC
-		dc.w $F406, $24, $0008
+		dc.w $F406, $2024, $0008
 Map_Cards_20: dc.w 2
 		dc.w $040C, $10, $FFEC
-		dc.w $F406, $24, $0008
+		dc.w $F406, $2024, $0008
 Map_Cards_21: dc.w 13
 		dc.w $E40C, $14, $FFF4
 		dc.w $E402, $18, $0014

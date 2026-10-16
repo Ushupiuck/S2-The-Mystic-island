@@ -1319,13 +1319,15 @@ Pal_FadeFromBlack2:
 		moveq	#cBlack,d1
 		move.b	(v_pfade_size).w,d0
 
-		moveq	#$16-1,d4
 -		move.w	d1,(a0)+
 		tst.b	(Water_flag).w
 		beq.s	.nowater
 		move.w	d1,(v_palette_water-v_palette)-2(a0)
 .nowater:	dbf	d0,-			; fill palette with $000 (black)
 
+; Entry for a prepared black palette with title-card colors already visible.
+Pal_FadeFromCurrent:
+		moveq	#$16-1,d4
 .loop:		move.w	#Vint_Fade,(v_vbla_routine).w
 		bsr.w	WaitForVint
 		bsr.s	Pal_FadeIn
@@ -1779,6 +1781,11 @@ Pal_LevelSel:	binclude	"palette/Level Select.bin"
 		even
 Pal_SonicTails:	binclude	"palette/SonicAndTails.bin"
 		even
+; Loaded with Pal_SonicTails for title cards, as Sonic 2 loads two lines.
+; Only the ACT-number yellow is needed before the level palette is available.
+Pal_TitleCardYellow:
+		dc.l	0,0,0,0,0,0
+		dc.w	$0EE,0,0,0
 Pal_GHZ:	binclude	"palette/GHZ.bin"
 		even
 Pal_LZ:		binclude	"palette/LZ.bin"
@@ -2483,7 +2490,7 @@ Level_ClrRam:
 		move.w	#$8A00+224-1,(v_hbla_hreg).w
 		move.w	(v_hbla_hreg).w,(a6)
 		ResetDMAQueue
-		moveq	#palid_SonicTails,d0
+		moveq	#palid_TitleCard,d0
 		bsr.w	PalLoad2
 		bsr.w	CheckLevelForWater
 		tst.w	(f_demo).w	; are we on an ending demo?
@@ -2643,6 +2650,10 @@ Level_WtrNotHtz:
 		bsr.w	PalLoad4_Water
 
 Level_Delay:
+		tst.b	(Water_flag).w
+		beq.s	.palette_ready
+		move.w	(v_palette_water_fading+$38).w,(v_palette_water+$38).w ; underwater ACT color
+.palette_ready:
 		move.w	#Vint_LevelLoad,(v_vbla_routine).w	; safely enable the water split on the first frame
 		moveq	#4-1,d1
 
@@ -2651,7 +2662,7 @@ Level_DelayLoop:
 		move.w	#Vint_Level,(v_vbla_routine).w
 		dbf	d1,Level_DelayLoop
 		move.w	#$202F,(v_pfade_start).w
-		bsr.w	Pal_FadeFromBlack2
+		bsr.w	Pal_FadeFromCurrent	; keep the title card's yellow while the level fades in
 		tst.w	(f_demo).w	; is this an ending demo?
 		bmi.s	Level_ClrTitleCard	; if so, branch
 		addq.b	#2,(v_ttlcardname+obRoutine).w
