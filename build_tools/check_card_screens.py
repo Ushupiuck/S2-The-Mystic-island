@@ -227,8 +227,9 @@ else:
     state=0 if not args.emeralds else 2 if args.emeralds==6 else 1
     assert_card(72+state*2+(args.player==2));assert_bonus();assert_score()
     assert g.get('v_endcard','obMap',4)==g.s[f'Map_SSR_{state}_{int(args.player==2)}']
-    assert_ink_color('v_endcard',1,(0,1),7)
-    assert_ink_color('v_endcard',2,(1,2),7)
+    ink=int.from_bytes((ROOT/'palette/Special Stage Results.bin').read_bytes()[30:32],'big')
+    assert_ink_color('v_endcard',1,(0,1),7,ink)
+    assert_ink_color('v_endcard',2,(1,2),7,ink)
     g.video.save(args.output/'results.png')
     poses=set()
     if args.rings>=50:
@@ -243,7 +244,7 @@ else:
                 if poses=={4,5}:
                     break
         assert poses=={4,5},poses
-        assert_ink_color('v_endcard',4,(0,),7)
+        assert_ink_color('v_endcard',4,(0,),7,ink)
     report.update(emeralds=args.emeralds,rings=args.rings,continue_poses=sorted(poses))
 
 report['passed']=True

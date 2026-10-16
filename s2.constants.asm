@@ -1800,7 +1800,7 @@ ArtTile_Shield_2:			equ $56F ; 18 tiles; follows the enlarged horizontal-spring/
 ArtTile_Shield_2_End:		equ ArtTile_Shield_2+$12 ; $B000; exclusive end of this bank
 ArtTile_Invincibility:		equ ArtTile_Shield
 ArtTile_Game_Over:		equ ArtTile_Shield ; replaces the dead primary player's effects, as in S3&K
-ArtTile_Title_Card:	equ $581 ; per-card DPLCs; at most 100 tiles, preserving both shield banks
+ArtTile_Title_Card:	equ $581 ; per-card DPLCs; at most 84 tiles, preserving both shield banks
 ArtTile_Zone_Title:	equ ArtTile_Title_Card
 ; Shared explosion/fiery art first, then both animals, ending at Plane A.
 ArtTile_Explosion:		equ $582	; $B040; 94 tiles, shared by both explosion mappings

@@ -29,7 +29,7 @@ OVAL = [(-28, 12, 0x70, -12), (-28, 2, 0x74, 20),
         (-4, 8, 0x7C, -12), (4, 12, 0x7C, -20),
         (12, 8, 0x7C, -20)]
 ACT = (0x90, 0x5A, 0x60, 0x8A)  # 1 padded to six tiles; 2/3; new 4
-SS_SCORE, SS_BONUS, SS_CONTINUE = 150, 160, 168
+SS_SCORE, SS_BONUS = 150, 160
 
 
 def tiles(pixels):
@@ -164,12 +164,12 @@ def main():
     colors = list(range(16))
     colors[4], colors[15] = 5, 12
     raw = bytearray(colors[b >> 4] << 4 | colors[b & 15] for b in raw)
-    # Special results have their own palette: yellow is $3 there. These
-    # color variants keep its ring, emerald and mini-character colors intact.
+    # S1 special results use their own cyan/green scheme. Its small labels
+    # retain ink $F rather than borrowing the normal results' yellow.
     labels = (ROOT/'art/uncompressed/SS Results Labels.unc').read_bytes()
-    assert len(labels) == 36*32
+    assert len(labels) == 18*32
     raw += labels
-    assert len(raw) == 186*32
+    assert len(raw) == 168*32
     (ROOT/'art/uncompressed/Card Font.unc').write_bytes(raw)
 
     scenes = []
@@ -206,6 +206,7 @@ Map_Results_TimeDigits = ArtTile_Bonuses-ArtTile_Title_Card
 Map_Results_RingDigits = ArtTile_Bonuses+8-ArtTile_Title_Card
 Map_Results_RingTile = make_art_tile(ArtTile_Ring,1,0)-ArtTile_Title_Card
 Map_SSResults_RingTile = ArtTile_SS_Rings-ArtTile_Title_Card
+Map_Results_ContinueText = ArtTile_Mini_Sonic-ArtTile_Title_Card
 '''
 
     def fixed(lookup, special=False, tails=False):
@@ -249,8 +250,7 @@ Map_SSResults_RingTile = ArtTile_SS_Rings-ArtTile_Title_Card
     (ROOT/'mappings/sprite/Got_Through.asm').write_text(''.join(normal_output))
 
     special_common = sorted(used(OVAL+[row(-9,4,0x6E,0),
-        row(-8,13,SS_SCORE,0),row(-8,1,SS_SCORE+8,0),row(-8,13,SS_BONUS,0),
-        row(-8,13,SS_CONTINUE,0),row(-8,13,SS_CONTINUE+8,0),row(-8,1,SS_CONTINUE+16,0)]))
+        row(-8,13,SS_SCORE,0),row(-8,1,SS_SCORE+8,0),row(-8,13,SS_BONUS,0)]))
     special_output = [header]
     for state in range(3):
         for tails in (False,True):
@@ -261,9 +261,9 @@ Map_SSResults_RingTile = ArtTile_SS_Rings-ArtTile_Title_Card
             scenes.append((name,order))
             score, bonus = fixed(lookup,special=True,tails=tails)
             mini = 'ArtTile_Mini_Tails' if tails else 'ArtTile_Mini_Sonic+18'
-            continues = mapped([row(-8,13,SS_CONTINUE,-80),
-                                row(-8,13,SS_CONTINUE+8,-48),
-                                row(-8,1,SS_CONTINUE+16,-16)],lookup)
+            continues = [row(-8,13,'Map_Results_ContinueText',-80),
+                         row(-8,13,'Map_Results_ContinueText+8',-48),
+                         row(-8,1,'Map_Results_ContinueText+16',-16)]
             frames = [mapped(text,lookup),score,bonus(False),mapped(OVAL,lookup),
                       continues+[row(-8,6,f'make_art_tile({mini},1,0)-ArtTile_Title_Card',64)],
                       continues+[row(-8,6,f'make_art_tile({mini}+6,1,0)-ArtTile_Title_Card',64)],
