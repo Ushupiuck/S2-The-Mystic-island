@@ -28,30 +28,28 @@ ADoor_Main:	; Routine 0
 		move.w	#$200,obPriority(a0)
 
 ADoor_OpenShut:	; Routine 2
-		move.w	#$40,d1		; set range for door detection
-		clr.b	obAnim(a0)	; use "closing"	animation
-		move.w	(v_player+obX).w,d0
-		add.w	d1,d0
-		cmp.w	obX(a0),d0
-		blo.s	ADoor_Animate
-		sub.w	d1,d0
-		sub.w	d1,d0
-		cmp.w	obX(a0),d0	; is Sonic > $40 pixels from door?
-		bhs.s	ADoor_Animate	; close door
-		add.w	d1,d0
-		cmp.w	obX(a0),d0	; is Sonic left of the door?
-		bhs.s	loc_899A	; if yes, branch
+		; S3&K's HCZ/CNZ/DEZ door checks both players and extends its
+		; open range across the doorway until the crossing player clears it.
+		move.w	obX(a0),d2
+		move.w	d2,d3
 		btst	#0,obStatus(a0)
-		bne.s	ADoor_Animate
-		bra.s	ADoor_Open
-; ===========================================================================
-
-loc_899A:
-		btst	#0,obStatus(a0)
-		beq.s	ADoor_Animate
-
-ADoor_Open:
-		move.b	#1,obAnim(a0)	; use "opening"	animation
+		bne.s	.fromRight
+		subi.w	#$40,d2		; retain the original approach distance
+		tst.b	obAnim(a0)		; previous open request is the crossing latch
+		beq.s	.rangeReady
+		addi.w	#$18,d3		; keep an open door clear for either player
+		bra.s	.rangeReady
+.fromRight:
+		addi.w	#$40,d3
+		tst.b	obAnim(a0)
+		beq.s	.rangeReady
+		subi.w	#$18,d2
+.rangeReady:
+		clr.b	obAnim(a0)
+		lea	(v_player).w,a1
+		bsr.w	ADoor_CheckPlayer
+		lea	(v_player2).w,a1
+		bsr.w	ADoor_CheckPlayer
 
 ADoor_Animate:
 		lea	Ani_Obj30(pc),a1
@@ -66,6 +64,27 @@ ADoor_Animate:
 		bsr.w	SolidObject
 		bra.w	MarkObjGone
 ; ---------------------------------------------------------------------------
+ADoor_CheckPlayer:
+		tst.l	code(a1)
+		beq.s	.return
+		cmpi.b	#6,obRoutine(a1)
+		bhs.s	.return
+		tst.b	obControl(a1)		; ignore scripted/respawning players
+		bmi.s	.return
+		move.w	obX(a1),d0
+		cmp.w	d2,d0
+		blt.s	.return
+		cmp.w	d3,d0
+		bge.s	.return
+		move.w	obY(a1),d0
+		sub.w	obY(a0),d0
+		addi.w	#$20,d0
+		cmpi.w	#$40,d0		; player must be at the door's height
+		bhs.s	.return
+		move.b	#1,obAnim(a0)
+.return:
+		rts
+; ---------------------------------------------------------------------------
 Ani_Obj30:	dc.w byte_9590-Ani_Obj30
 		dc.w byte_959C-Ani_Obj30
 byte_9590:	dc.b   0,  8,  7,  6,  5,  4,  3,  2
@@ -73,3 +92,4 @@ byte_9590:	dc.b   0,  8,  7,  6,  5,  4,  3,  2
 byte_959C:	dc.b   0,  0,  1,  2,  3,  4,  5,  6
 		dc.b   7,  8,$FE,  1
 		even
+
