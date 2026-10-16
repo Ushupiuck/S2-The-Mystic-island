@@ -10487,6 +10487,10 @@ Player_Angle:
 +
 		btst	#0,d2
 		bne.s	loc_12B90
+		; Running discs need S1's valid angles around their tight curves.
+		; Keep the angle-change limit for ordinary terrain.
+		tst.b	stick_to_convex(a0)
+		bne.s	.set_angle
 		move.b	d2,d0
 		sub.b	obAngle(a0),d0
 		bpl.s	+
@@ -10494,6 +10498,7 @@ Player_Angle:
 +
 		cmpi.b	#$20,d0
 		bhs.s	loc_12B90
+.set_angle:
 		move.b	d2,obAngle(a0)
 		rts
 ; ---------------------------------------------------------------------------
