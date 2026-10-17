@@ -125,13 +125,14 @@ Ballhog_MakeBall:
 		move.b	#6,obRoutine(a1)	; set normal bomb
 		move.b	#4,obFrame(a1)		; set bomb frame
 		move.l	#Map_BallHogH,obMap(a1)
-		cmpi.b #id_SMZ,(Current_Zone).w
-		bne.s .hogMapReady
-		move.l #Map_SMZ_Hog,obMap(a1)
+		move.w	#make_art_tile(ArtTile_Ball_HogH,1,0),obGfx(a1)
+		cmpi.b	#id_SMZ,(Current_Zone).w
+		bne.s	.hogMapReady
+		move.l	#Map_SMZ_Hog,obMap(a1)
+		move.w	#ArtTile_SMZ_Atlas,obGfx(a1)	; atlas mappings include the palette
 .hogMapReady:
 		move.b	#Map_BallHogH_height,height_pixels(a1)
 		move.b	#6,obHeight(a1)
-		move.w	#make_art_tile(ArtTile_Ball_HogH,1,0),obGfx(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.w	#-$100,d2		; cannonball bounces to	the left
@@ -389,12 +390,13 @@ Hog_Idle3:
 		move.b	#8,obRoutine(a1)	; set proto bomb
 		move.b	#4,obFrame(a1)		; set bomb frame
 		move.l	#Map_BallHogH,obMap(a1)
-		cmpi.b #id_SMZ,(Current_Zone).w
-		bne.s .hogMapReady
-		move.l #Map_SMZ_Hog,obMap(a1)
+		move.w	#make_art_tile(ArtTile_Ball_HogH,1,0),obGfx(a1)
+		cmpi.b	#id_SMZ,(Current_Zone).w
+		bne.s	.hogMapReady
+		move.l	#Map_SMZ_Hog,obMap(a1)
+		move.w	#ArtTile_SMZ_Atlas,obGfx(a1)	; atlas mappings include the palette
 .hogMapReady:
 		move.b	#Map_BallHogH_height,height_pixels(a1)
-		move.w	#make_art_tile(ArtTile_Ball_HogH,1,0),obGfx(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.b	#4,obRender(a1)
