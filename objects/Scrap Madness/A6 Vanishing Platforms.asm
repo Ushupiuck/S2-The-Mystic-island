@@ -92,7 +92,7 @@ SMZ_VanP_StoodOn:	; Routine 4
 		bne.s	.notSolid				; if not, don't make solid
 
 		moveq	#32/2,d1				; top-only support, as in Sonic 1
-		moveq	#8,d3
+		moveq	#9,d3				; Sonic 1's stood-on height
 		move.w	obX(a0),d4
 		jsr	(PlatformObject).l
 		jmp	(RememberState).l

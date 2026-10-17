@@ -83,10 +83,10 @@ for role in roles:
             m.act('SMZ_VanishPlatform', obj)
             assert m.get(player, 'obStatus') & 8, (role, frame, depth, 'did not land')
             assert not m.get(player, 'obStatus') & 2
-            assert m.get(player, 'obY', 2) == 503 - height
+            assert m.get(player, 'obY', 2) == 502 - height
             for _ in range(8):
                 m.act('SMZ_VanishPlatform', obj)
-                assert m.get(player, 'obY', 2) == 504 - height
+                assert m.get(player, 'obY', 2) == 503 - height
                 assert m.get(player, 'obStatus') & 8
             m.put(player, 'obX', 596, 2)
             m.act('SMZ_VanishPlatform', obj)
