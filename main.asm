@@ -7,8 +7,6 @@ AdvancedHandler		= 0	; 0 for Sonic 1's Error handler, 1 for the Advanced Error h
 zeroOffsetOptimization	= 1	; if 1, makes a handful of zero-offset instructions smaller
 BackupSRAM		= 1
 AddressSRAM		= 3	; 0 = odd+even; 2 = even only; 3 = odd only
-LoadTails		= 1	; Whether or not Tails will appear alongside Sonic in levels
-EnableMusic		= 1	; Because it can get pretty tiring to hear level music over and over.
 TimeTravel		= 1	; if 1, allows time-travel mechanics (W.I.P)
 
 	CPU 68000
@@ -1802,6 +1800,10 @@ Pal_MTZ:	binclude	"palette/MTZ.bin"
 		even
 Pal_LZ4:	binclude	"palette/LZ4.bin"
 		even
+Pal_SMZ1:	binclude	"palette/SMZ1.bin"
+		even
+Pal_SMZ2:	binclude	"palette/SMZ2.bin"
+		even
 Pal_LZ4Water:	binclude	"palette/LZ4 Underwater.bin"
 		even
 Pal_HPZWater:	binclude	"palette/HPZ Underwater.bin"
@@ -2170,7 +2172,7 @@ TitleScreen:
 		move.l	#Credits,(v_sonicteam).w	; load "SONIC TEAM PRESENTS" object
 		jsr	(ExecuteObjects).l
 		jsr	(Render_Sprites).l
-        	bsr.w	Pal_FadeFromBlack
+		bsr.w	Pal_FadeFromBlack
 		disable_ints
 		lea	(Kosp_Title).l,a0
 		lea	(Chunk_Table).l,a1
@@ -2218,7 +2220,7 @@ TitleScreen:
 		bsr.w	PlaySound_Special
 		clr.b	(Debug_mode_flag).w
 		move.w	#376,(v_generictimer).w
-		clearRAM v_sonicteam,v_sonicteam+object_size
+		clearRAM	v_sonicteam,v_sonicteam+object_size
 		move.l	#TitleSonicTails,(v_titlesonic).w
 		move.l	#TitleSonicTails,(v_titletails).w
 		move.l	#PressStartButton,(v_pressstart).w
@@ -2293,9 +2295,9 @@ Title_Cheat_NoC:
 		beq.w	TitleScreen_Loop
 
 Title_CheckLvlSel:
-        tst.b (f_levselcheat).w
-        beq.w PlayLevel
-        bra.w LevelSelect_Init
+		tst.b	(f_levselcheat).w
+		beq.s	PlayLevel
+		bra.w	LevelSelect_Init
 
 PlayLevel:
 		move.w	#Level,(v_gamemode).w
@@ -2372,19 +2374,19 @@ Demo_Level:
 ; Levels used in demos
 ; ---------------------------------------------------------------------------
 Demo_Levels:
-		dc.w id_GHZ<<8
-		dc.w id_CPZ<<8
-		dc.w id_EHZ<<8
-		dc.w id_HPZ<<8
-		dc.w id_HTZ<<8
-		dc.w id_HTZ<<8
-		dc.w id_HTZ<<8
-		dc.w id_HTZ<<8
-		dc.w id_HTZ<<8
-		dc.w id_HPZ<<8
-		dc.w id_HPZ<<8
-		dc.w id_HPZ<<8
-		dc.w id_HPZ<<8
+		dc.w	id_GHZ<<8
+		dc.w	id_CPZ<<8
+		dc.w	id_EHZ<<8
+		dc.w	id_HPZ<<8
+		dc.w	id_HTZ<<8
+		dc.w	id_HTZ<<8
+		dc.w	id_HTZ<<8
+		dc.w	id_HTZ<<8
+		dc.w	id_HTZ<<8
+		dc.w	id_HPZ<<8
+		dc.w	id_HPZ<<8
+		dc.w	id_HPZ<<8
+		dc.w	id_HPZ<<8
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -2392,42 +2394,22 @@ Demo_Levels:
 		include "_inc/LevelSelect.asm"
 
 MusicList:
- if EnableMusic=1
-		dc.b bgm_GHZ
-		dc.b bgm_LZ
-		dc.b bgm_MZ
-		dc.b bgm_SLZ
-		dc.b bgm_SYZ
-		dc.b bgm_SBZ
-		dc.b MusID_MTZ
-		dc.b bgm_GHZ
-		dc.b bgm_SBZ
-		dc.b bgm_GHZ
-		dc.b bgm_GHZ
-		dc.b bgm_GHZ
-		dc.b bgm_GHZ
-		dc.b bgm_GHZ
-		dc.b bgm_GHZ
-		dc.b bgm_GHZ
-
- else
-		dc.b 0
-		dc.b 0
-		dc.b 0
-		dc.b 0
-		dc.b 0
-		dc.b 0
-		dc.b 0
-		dc.b 0
-		dc.b 0
-		dc.b 0
-		dc.b 0
-		dc.b 0
-		dc.b 0
-		dc.b 0
-		dc.b 0
-		dc.b 0
- endif
+		dc.b	bgm_GHZ
+		dc.b	bgm_LZ
+		dc.b	bgm_MZ
+		dc.b	bgm_SLZ
+		dc.b	bgm_SYZ
+		dc.b	bgm_HTZ
+		dc.b	MusID_MTZ
+		dc.b	bgm_GHZ
+		dc.b	bgm_SBZ
+		dc.b	bgm_GHZ
+		dc.b	bgm_GHZ
+		dc.b	bgm_GHZ
+		dc.b	bgm_GHZ
+		dc.b	bgm_GHZ
+		dc.b	bgm_GHZ
+		dc.b	bgm_GHZ
 		even
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -2553,27 +2535,12 @@ Level_SkipTtlCard:
 ;		beq.s	Level_ChkDebug		; the 2nd player, if neccesary
 
 LevelInit_LoadTails:	; S3&K companion, enabled in Sonic & Tails mode
- if LoadTails=1
 		tst.w	(Player_mode).w
 		bne.s	Level_ChkDebug
 		move.l	#Obj02,(v_player2).w	; load Tails object
 		move.w	(v_player+obX).w,(v_player2+obX).w	; copy player 1's x position to player 2
 		move.w	(v_player+obY).w,(v_player2+obY).w	; copy player 1's y position to player 2
 		subi.w	#32,(v_player2+obX).w	; set player 2's x position 32 pixels behind player 1's
- else
-		bra.s	Level_ChkDebug		; skip the Tails-load subroutine sized filler
-		nop				; This filler is only here to avoid breaking savestates
-		nop				; (Yes, the branch is part of the filler; accounted for)
-		nop
-		nop
-		nop
-		nop
-		nop
-		nop
-		nop
-		nop
-		nop
- endif
 Level_ChkDebug:
 		tst.b	(f_debugcheat).w
 		beq.s	Level_ChkWater
@@ -2677,9 +2644,9 @@ Level_ClrTitleCard:
 		bsr.w	LoadPLC
 		moveq	#0,d0
 		move.b	(Current_Zone).w,d0
-		add.w d0,d0
-		lea (Card_AnimalPLC).l,a1
-		move.w (a1,d0.w),d0
+		add.w	d0,d0
+		lea	(Card_AnimalPLC).l,a1
+		move.w	(a1,d0.w),d0
 		bsr.w	LoadPLC
 		bsr.w	LoadKosPLC
 
@@ -2788,7 +2755,7 @@ Demo_HPZ:	binclude	"demodata/Intro - HPZ.bin"
 		even
 Demo_HTZ:	binclude	"demodata/Intro - HTZ.bin"
 		even
-; The following DEMO's are deprecated & need to be remade
+; The following ENDING DEMO's are deprecated & need to be remade
 Demo_EndGHZ1:	binclude	"demodata/WIP/Ending - GHZ1.bin"
 		even
 Demo_EndMZ:	binclude	"demodata/WIP/Ending - MZ.bin"
@@ -2847,7 +2814,7 @@ TimeZoneTable:
 		dc.l ColPointers	; 3 - Bad Future
  endif
 ; ---------------------------------------------------------------------------
-; Pointers to collision indexes
+; Pointers to collision indexes (Present)
 ; Contains an array of pointers to the primary collision index data for each
 ; level. 1 pointer for act, pointing to an interleaved collision index.
 ; ---------------------------------------------------------------------------
@@ -2884,41 +2851,41 @@ ColPointers:
 		dc.l Col_GHZ1
 		dc.l Col_GHZ1
 		dc.l Col_GHZ1
-		dc.l Col_SMZ
-		dc.l Col_SMZ
-		dc.l Col_SMZ
-		dc.l Col_SMZ
+		dc.l Col_SMZ1
+		dc.l Col_SMZ2
+		dc.l Col_SMZ3
+		dc.l Col_SMZ4
 		dc.l Col_GHZ1
+		dc.l Col_GHZ2
+		dc.l Col_GHZ3
+		dc.l Col_GHZ4
 		dc.l Col_GHZ1
+		dc.l Col_GHZ2
+		dc.l Col_GHZ3
+		dc.l Col_GHZ4
 		dc.l Col_GHZ1
+		dc.l Col_GHZ2
+		dc.l Col_GHZ3
+		dc.l Col_GHZ4
 		dc.l Col_GHZ1
+		dc.l Col_GHZ2
+		dc.l Col_GHZ3
+		dc.l Col_GHZ4
 		dc.l Col_GHZ1
+		dc.l Col_GHZ2
+		dc.l Col_GHZ3
+		dc.l Col_GHZ4
 		dc.l Col_GHZ1
+		dc.l Col_GHZ2
+		dc.l Col_GHZ3
+		dc.l Col_GHZ4
 		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
+		dc.l Col_GHZ2
+		dc.l Col_GHZ3
+		dc.l Col_GHZ4
  if TimeTravel=1
 ; ---------------------------------------------------------------------------
-; Pointers to collision indexes
+; Pointers to collision indexes (Past)
 ; Contains an array of pointers to the primary collision index data for each
 ; level. 1 pointer for act, pointing to an interleaved collision index.
 ; ---------------------------------------------------------------------------
@@ -2951,44 +2918,44 @@ PColPointers:
 		dc.l PCol_MTZ2		; Bad Ending
 		dc.l PCol_MTZ3
 		dc.l PCol_MTZ4
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_SMZ
-		dc.l Col_SMZ
-		dc.l Col_SMZ
-		dc.l Col_SMZ
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
+		dc.l PCol_GHZ1
+		dc.l PCol_GHZ2
+		dc.l PCol_GHZ3
+		dc.l PCol_GHZ4
+		dc.l PCol_SMZ1
+		dc.l PCol_SMZ2
+		dc.l PCol_SMZ3
+		dc.l PCol_SMZ4
+		dc.l PCol_GHZ1
+		dc.l PCol_GHZ2
+		dc.l PCol_GHZ3
+		dc.l PCol_GHZ4
+		dc.l PCol_GHZ1
+		dc.l PCol_GHZ2
+		dc.l PCol_GHZ3
+		dc.l PCol_GHZ4
+		dc.l PCol_GHZ1
+		dc.l PCol_GHZ2
+		dc.l PCol_GHZ3
+		dc.l PCol_GHZ4
+		dc.l PCol_GHZ1
+		dc.l PCol_GHZ2
+		dc.l PCol_GHZ3
+		dc.l PCol_GHZ4
+		dc.l PCol_GHZ1
+		dc.l PCol_GHZ2
+		dc.l PCol_GHZ3
+		dc.l PCol_GHZ4
+		dc.l PCol_GHZ1
+		dc.l PCol_GHZ2
+		dc.l PCol_GHZ3
+		dc.l PCol_GHZ4
+		dc.l PCol_GHZ1
+		dc.l PCol_GHZ2
+		dc.l PCol_GHZ3
+		dc.l PCol_GHZ4
 ; ---------------------------------------------------------------------------
-; Pointers to collision indexes
+; Pointers to collision indexes (Good Future)
 ; Contains an array of pointers to the primary collision index data for each
 ; level. 1 pointer for act, pointing to an interleaved collision index.
 ; ---------------------------------------------------------------------------
@@ -3021,44 +2988,44 @@ GColPointers:
 		dc.l GCol_MTZ2		; Bad Ending
 		dc.l GCol_MTZ3
 		dc.l GCol_MTZ4
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_SMZ
-		dc.l Col_SMZ
-		dc.l Col_SMZ
-		dc.l Col_SMZ
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
+		dc.l GCol_GHZ1
+		dc.l GCol_GHZ2
+		dc.l GCol_GHZ3
+		dc.l GCol_GHZ4
+		dc.l GCol_SMZ1
+		dc.l GCol_SMZ2
+		dc.l GCol_SMZ3
+		dc.l GCol_SMZ4
+		dc.l GCol_GHZ1
+		dc.l GCol_GHZ2
+		dc.l GCol_GHZ3
+		dc.l GCol_GHZ4
+		dc.l GCol_GHZ1
+		dc.l GCol_GHZ2
+		dc.l GCol_GHZ3
+		dc.l GCol_GHZ4
+		dc.l GCol_GHZ1
+		dc.l GCol_GHZ2
+		dc.l GCol_GHZ3
+		dc.l GCol_GHZ4
+		dc.l GCol_GHZ1
+		dc.l GCol_GHZ2
+		dc.l GCol_GHZ3
+		dc.l GCol_GHZ4
+		dc.l GCol_GHZ1
+		dc.l GCol_GHZ2
+		dc.l GCol_GHZ3
+		dc.l GCol_GHZ4
+		dc.l GCol_GHZ1
+		dc.l GCol_GHZ2
+		dc.l GCol_GHZ3
+		dc.l GCol_GHZ4
+		dc.l GCol_GHZ1
+		dc.l GCol_GHZ2
+		dc.l GCol_GHZ3
+		dc.l GCol_GHZ4
 ; ---------------------------------------------------------------------------
-; Pointers to collision indexes
+; Pointers to collision indexes (Bad Future)
 ; Contains an array of pointers to the primary collision index data for each
 ; level. 1 pointer for act, pointing to an interleaved collision index.
 ; ---------------------------------------------------------------------------
@@ -3091,42 +3058,42 @@ BColPointers:
 		dc.l BCol_MTZ2		; Bad Ending
 		dc.l BCol_MTZ3
 		dc.l BCol_MTZ4
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_SMZ
-		dc.l Col_SMZ
-		dc.l Col_SMZ
-		dc.l Col_SMZ
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
-		dc.l Col_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_SMZ1
+		dc.l BCol_SMZ2
+		dc.l BCol_SMZ3
+		dc.l BCol_SMZ4
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
+		dc.l BCol_GHZ1
  endif
 		include	"_inc/Oscillatory Routines.asm"
 
@@ -9104,11 +9071,7 @@ Anim_End_FA:
 		addq.b	#1,d0				; is the end flag = $FA ?
 		bne.s	Anim_End			; if not, branch
 		addq.b	#2,ob2ndRout(a0)		; jump to next routine
-		rts
-; ===========================================================================
-; locret_CFFA:
-Anim_End:
-		rts
+Anim_End:	rts
 ; End of function AnimateSprite
 
 ; ===========================================================================
@@ -15547,36 +15510,29 @@ Nem_Crawl:	binclude	"art/nemesis/Enemy Crawl.nem"
 		even
 Nem_Masher:	binclude	"art/nemesis/Enemy Masher.nem"
 		even
+Nem_PP_Anton:	binclude	"art/nemesis/PP Anton.nem"
+		even
+Nem_PP_Mosqui:	binclude	"art/nemesis/PP Mosqui.nem"
+		even
+Nem_PP_PataBata:
+		binclude	"art/nemesis/PP Pata-Bata.nem"
+		even
+Nem_PP_TagaTaga:
+		binclude	"art/nemesis/PP Taga-Taga.nem"
+		even
+Nem_PP_Tamabboh:
+		binclude	"art/nemesis/PP Tamabboh.nem"
+		even
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - various
 ; ---------------------------------------------------------------------------
-Art_CardFont:	binclude	"art/uncompressed/Card Font.unc"
-Art_CardFont_End:
-			even
-		include		"mappings/spriteDPLC/Cards.asm"
-Nem_GameOver:	binclude	"art/nemesis/Game Over.nem"
-		even
-Nem_HUD:	binclude	"art/nemesis/HUD.nem"
-		even
-Nem_Lives:	binclude	"art/nemesis/Sonic lives counter.nem"
-		even
-Nem_TailsLifeText: binclude "art/nemesis/Tails Life Text.nem"
-			even
-Art_Signpost:	binclude	"art/uncompressed/Signpost.unc"
-Art_Signpost_End:
-		even
-		include	"mappings/spriteDPLC/Signpost.asm"
 Nem_Sparkles:	binclude	"art/nemesis/Ring Sparkles.nem"
-		even
-Nem_Bonus:	binclude	"art/nemesis/S1/Hidden Bonuses.nem"
 		even
 Nem_Monitors:	binclude	"art/nemesis/Monitor and contents.nem"
 		even
 Nem_Lamppost:	binclude	"art/nemesis/Lamppost.nem"
 		even
-Nem_HSpring:	binclude	"art/nemesis/S1/Spring Horizontal.nem"
-		even
-Nem_VSpring:	binclude	"art/nemesis/S1/Spring Vertical.nem"
+Nem_Wheel:	binclude	"art/nemesis/Wheel carrier.nem"
 		even
 Nem_HSpring2:	binclude	"art/nemesis/Horizontal spring.nem"
 		even
@@ -15589,23 +15545,23 @@ Nem_VSpikes:	binclude	"art/nemesis/Spikes.nem"
 		even
 Nem_Bumper:	binclude	"art/nemesis/Bumper.nem"
 		even
-Nem_Wheel: binclude "art/nemesis/Wheel carrier.nem"
-		even
-Nem_PP_Anton: binclude "art/nemesis/PP Anton.nem"
-		even
-Nem_PP_Mosqui: binclude "art/nemesis/PP Mosqui.nem"
-		even
-Nem_PP_PataBata: binclude "art/nemesis/PP Pata-Bata.nem"
-		even
-Nem_PP_TagaTaga: binclude "art/nemesis/PP Taga-Taga.nem"
-		even
-Nem_PP_Tamabboh: binclude "art/nemesis/PP Tamabboh.nem"
-		even
-
-		even
 Nem_Button:	binclude	"art/nemesis/Button.nem"
 		even
 Nem_Water:	binclude	"art/nemesis/Water Surface.nem"
+		even
+Nem_WaterBubbles:
+		binclude	"art/nemesis/Water bubbles.nem"
+		even
+Nem_Bonus:	binclude	"art/nemesis/S1/Hidden Bonuses.nem"
+		even
+Nem_HUD:	binclude	"art/nemesis/HUD.nem"
+		even
+Nem_Lives:	binclude	"art/nemesis/Sonic lives counter.nem"
+		even
+Nem_TailsLifeText:
+		binclude	"art/nemesis/Tails Life Text.nem"
+		even
+Nem_GameOver:	binclude	"art/nemesis/Game Over.nem"
 		even
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - animals
@@ -15684,16 +15640,12 @@ Art_Sonic:	binclude	"art/uncompressed/Sonic's art.unc"
 Art_Tails:	binclude	"art/uncompressed/Tails' art.bin"
 Art_Tails_Extra:	binclude "art/uncompressed/Tails extra.bin"
 Art_Tails_Tails:	binclude "art/uncompressed/Tails tails.bin"
+; ---------------------------------------------------------------------------
 Art_SpindashDust:	binclude "art/uncompressed/Spindash and skid dust.bin"
-		even
 Art_WaterSplash:	binclude "art/uncompressed/Water splash.unc"
 Art_WaterSplash_End:
-		even
 Art_AirCountdown:	binclude "art/uncompressed/Drowning countdown.unc"
 Art_AirCountdown_End:
-		even
-Nem_WaterBubbles:	binclude "art/nemesis/Water bubbles.nem"
-		even				; following raw art is streamed by word-addressed DMA
 Art_Points:		binclude	"art/uncompressed/Points.unc"
 Art_Points_End:
 Art_Shield:		binclude "art/uncompressed/Shield.unc"
@@ -15704,9 +15656,13 @@ Art_Invincibility_End:
 			fatal "Invincibility art exceeds the primary effect bank."
 		endif
 		align $100
+Art_CardFont:	binclude	"art/uncompressed/Card Font.unc"
+Art_CardFont_End:
+Art_Signpost:	binclude	"art/uncompressed/Signpost.unc"
+Art_Signpost_End:
 Art_Ring:	binclude	"art/uncompressed/Ring.bin"
 ; Same eight ring frames, with 6 -> E, C -> C, D -> B and E -> A for palette 0.
-Art_SSResultsRing:	binclude "art/uncompressed/SS Results Ring.bin"
+Art_SSResultsRing:	binclude	"art/uncompressed/SS Results Ring.bin"
 Art_BigRing:	binclude	"art/uncompressed/Giant Ring.bin"
 Art_BigFlash:	binclude	"art/uncompressed/Giant Ring Flash.bin"
 ; ---------------------------------------------------------------------------
@@ -15917,6 +15873,7 @@ MapSpec_Turn7:		binclude	"mappings/special stage/Begin curve right - Frame 7.bin
 Kosp_GHZ:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
 Map16_GHZ:	binclude	"mappings/16x16/GHZ.kosp"
 Map128_GHZ:	binclude	"mappings/128x128/GHZ.kosp"
+Map128_Blank:	binclude	"mappings/128x128/Blank.kosp"
  if TimeTravel=1
 ; Past
 PKosp_GHZ:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
@@ -16048,206 +16005,201 @@ BMap128_MTZ:	binclude	"mappings/128x128/MTZ.kosp"
 ; From here onwards, filler data for the NEW levels.
 ; ===========================================================================
 ; Zone 07
-Kosp_SMZ: binclude "art/kosinski/level/8x8 - SMZ.kosp"
-Map16_SMZ: binclude "mappings/16x16/SMZ.kosp"
-Map128_SMZ: binclude "mappings/128x128/SMZ.kosp"
-Map128_SMZBlank: binclude "mappings/128x128/SMZ Blank.kosp"
-Map128_Blank: binclude "mappings/128x128/Blank.kosp"
-Map128_MTZBlank: binclude "mappings/128x128/MTZ Blank.kosp"
-Col_SMZ: binclude "collision/present/SMZ.bin"
-Kosp_LV7: equ Kosp_GHZ
-Map16_LV7: equ Map16_GHZ
-Map128_LV7: equ Map128_Blank
+Kosp_SMZ:	binclude	"art/kosinski/level/8x8 - SMZ.kosp"
+Map16_SMZ:	binclude	"mappings/16x16/SMZ.kosp"
+Map128_SMZ:	binclude	"mappings/128x128/SMZ.kosp"
+Map128_SMZBlank:	binclude	"mappings/128x128/SMZ Blank.kosp"
+Map128_MTZBlank:	binclude	"mappings/128x128/MTZ Blank.kosp"
+Kosp_LV7:	equ Kosp_GHZ
+Map16_LV7:	equ Map16_GHZ
+Map128_LV7:	equ Map128_Blank
  if TimeTravel=1
 ; Past
-PKosp_LV7: equ Kosp_GHZ
-PMap16_LV7: equ Map16_GHZ
-PMap128_LV7: equ Map128_Blank
+PKosp_LV7:	equ Kosp_GHZ
+PMap16_LV7:	equ Map16_GHZ
+PMap128_LV7:	equ Map128_Blank
 ; Good Future
-GKosp_LV7: equ Kosp_GHZ
-GMap16_LV7: equ Map16_GHZ
-GMap128_LV7: equ Map128_Blank
+GKosp_LV7:	equ Kosp_GHZ
+GMap16_LV7:	equ Map16_GHZ
+GMap128_LV7:	equ Map128_Blank
 ; Bad Future
-BKosp_LV7: equ Kosp_GHZ
-BMap16_LV7: equ Map16_GHZ
-BMap128_LV7: equ Map128_Blank
+BKosp_LV7:	equ Kosp_GHZ
+BMap16_LV7:	equ Map16_GHZ
+BMap128_LV7:	equ Map128_Blank
  endif
 ; ===========================================================================
 ; Zone 08
-Kosp_LV8: equ Kosp_SMZ
-Map16_LV8: equ Map16_SMZ
-Map128_LV8: equ Map128_SMZ
+Kosp_LV8:	equ Kosp_SMZ
+Map16_LV8:	equ Map16_SMZ
+Map128_LV8:	equ Map128_SMZ
  if TimeTravel=1
 ; Past
-PKosp_LV8: equ Kosp_SMZ
-PMap16_LV8: equ Map16_SMZ
-PMap128_LV8: equ Map128_SMZ
+PKosp_LV8:	equ Kosp_SMZ
+PMap16_LV8:	equ Map16_SMZ
+PMap128_LV8:	equ Map128_SMZ
 ; Good Future
-GKosp_LV8: equ Kosp_SMZ
-GMap16_LV8: equ Map16_SMZ
-GMap128_LV8: equ Map128_SMZ
+GKosp_LV8:	equ Kosp_SMZ
+GMap16_LV8:	equ Map16_SMZ
+GMap128_LV8:	equ Map128_SMZ
 ; Bad Future
-BKosp_LV8: equ Kosp_SMZ
-BMap16_LV8: equ Map16_SMZ
-BMap128_LV8: equ Map128_SMZ
+BKosp_LV8:	equ Kosp_SMZ
+BMap16_LV8:	equ Map16_SMZ
+BMap128_LV8:	equ Map128_SMZ
  endif
 ; ===========================================================================
 ; Zone 09
-Kosp_LV9: equ Kosp_GHZ
-Map16_LV9: equ Map16_GHZ
-Map128_LV9: equ Map128_Blank
+Kosp_LV9:	equ Kosp_GHZ
+Map16_LV9:	equ Map16_GHZ
+Map128_LV9:	equ Map128_Blank
  if TimeTravel=1
 ; Past
-PKosp_LV9: equ Kosp_GHZ
-PMap16_LV9: equ Map16_GHZ
-PMap128_LV9: equ Map128_Blank
+PKosp_LV9:	equ Kosp_GHZ
+PMap16_LV9:	equ Map16_GHZ
+PMap128_LV9:	equ Map128_Blank
 ; Good Future
-GKosp_LV9: equ Kosp_GHZ
-GMap16_LV9: equ Map16_GHZ
-GMap128_LV9: equ Map128_Blank
+GKosp_LV9:	equ Kosp_GHZ
+GMap16_LV9:	equ Map16_GHZ
+GMap128_LV9:	equ Map128_Blank
 ; Bad Future
-BKosp_LV9: equ Kosp_GHZ
-BMap16_LV9: equ Map16_GHZ
-BMap128_LV9: equ Map128_Blank
+BKosp_LV9:	equ Kosp_GHZ
+BMap16_LV9:	equ Map16_GHZ
+BMap128_LV9:	equ Map128_Blank
  endif
 ; ===========================================================================
 ; Zone $0A
-Kosp_LVA: equ Kosp_GHZ
-Map16_LVA: equ Map16_GHZ
-Map128_LVA: equ Map128_Blank
+Kosp_LVA:	equ Kosp_GHZ
+Map16_LVA:	equ Map16_GHZ
+Map128_LVA:	equ Map128_Blank
  if TimeTravel=1
 ; Past
-PKosp_LVA: equ Kosp_GHZ
-PMap16_LVA: equ Map16_GHZ
-PMap128_LVA: equ Map128_Blank
+PKosp_LVA:	equ Kosp_GHZ
+PMap16_LVA:	equ Map16_GHZ
+PMap128_LVA:	equ Map128_Blank
 ; Good Future
-GKosp_LVA: equ Kosp_GHZ
-GMap16_LVA: equ Map16_GHZ
-GMap128_LVA: equ Map128_Blank
+GKosp_LVA:	equ Kosp_GHZ
+GMap16_LVA:	equ Map16_GHZ
+GMap128_LVA:	equ Map128_Blank
 ; Bad Future
-BKosp_LVA: equ Kosp_GHZ
-BMap16_LVA: equ Map16_GHZ
-BMap128_LVA: equ Map128_Blank
+BKosp_LVA:	equ Kosp_GHZ
+BMap16_LVA:	equ Map16_GHZ
+BMap128_LVA:	equ Map128_Blank
  endif
 ; ===========================================================================
 ; Zone $0B
-Kosp_LVB: equ Kosp_GHZ
-Map16_LVB: equ Map16_GHZ
-Map128_LVB: equ Map128_Blank
+Kosp_LVB:	equ Kosp_GHZ
+Map16_LVB:	equ Map16_GHZ
+Map128_LVB:	equ Map128_Blank
  if TimeTravel=1
 ; Past
-PKosp_LVB: equ Kosp_GHZ
-PMap16_LVB: equ Map16_GHZ
-PMap128_LVB: equ Map128_Blank
+PKosp_LVB:	equ Kosp_GHZ
+PMap16_LVB:	equ Map16_GHZ
+PMap128_LVB:	equ Map128_Blank
 ; Good Future
-GKosp_LVB: equ Kosp_GHZ
-GMap16_LVB: equ Map16_GHZ
-GMap128_LVB: equ Map128_Blank
+GKosp_LVB:	equ Kosp_GHZ
+GMap16_LVB:	equ Map16_GHZ
+GMap128_LVB:	equ Map128_Blank
 ; Bad Future
-BKosp_LVB: equ Kosp_GHZ
-BMap16_LVB: equ Map16_GHZ
-BMap128_LVB: equ Map128_Blank
+BKosp_LVB:	equ Kosp_GHZ
+BMap16_LVB:	equ Map16_GHZ
+BMap128_LVB:	equ Map128_Blank
  endif
 ; ===========================================================================
 ; Zone $0C
-Kosp_LVC: equ Kosp_GHZ
-Map16_LVC: equ Map16_GHZ
-Map128_LVC: equ Map128_Blank
+Kosp_LVC:	equ Kosp_GHZ
+Map16_LVC:	equ Map16_GHZ
+Map128_LVC:	equ Map128_Blank
  if TimeTravel=1
 ; Past
-PKosp_LVC: equ Kosp_GHZ
-PMap16_LVC: equ Map16_GHZ
-PMap128_LVC: equ Map128_Blank
+PKosp_LVC:	equ Kosp_GHZ
+PMap16_LVC:	equ Map16_GHZ
+PMap128_LVC:	equ Map128_Blank
 ; Good Future
-GKosp_LVC: equ Kosp_GHZ
-GMap16_LVC: equ Map16_GHZ
-GMap128_LVC: equ Map128_Blank
+GKosp_LVC:	equ Kosp_GHZ
+GMap16_LVC:	equ Map16_GHZ
+GMap128_LVC:	equ Map128_Blank
 ; Bad Future
-BKosp_LVC: equ Kosp_GHZ
-BMap16_LVC: equ Map16_GHZ
-BMap128_LVC: equ Map128_Blank
+BKosp_LVC:	equ Kosp_GHZ
+BMap16_LVC:	equ Map16_GHZ
+BMap128_LVC:	equ Map128_Blank
  endif
 ; ===========================================================================
 ; Zone $0D
-Kosp_LVD: equ Kosp_GHZ
-Map16_LVD: equ Map16_GHZ
-Map128_LVD: equ Map128_Blank
+Kosp_LVD:	equ Kosp_GHZ
+Map16_LVD:	equ Map16_GHZ
+Map128_LVD:	equ Map128_Blank
  if TimeTravel=1
 ; Past
-PKosp_LVD: equ Kosp_GHZ
-PMap16_LVD: equ Map16_GHZ
-PMap128_LVD: equ Map128_Blank
+PKosp_LVD:	equ Kosp_GHZ
+PMap16_LVD:	equ Map16_GHZ
+PMap128_LVD:	equ Map128_Blank
 ; Good Future
-GKosp_LVD: equ Kosp_GHZ
-GMap16_LVD: equ Map16_GHZ
-GMap128_LVD: equ Map128_Blank
+GKosp_LVD:	equ Kosp_GHZ
+GMap16_LVD:	equ Map16_GHZ
+GMap128_LVD:	equ Map128_Blank
 ; Bad Future
-BKosp_LVD: equ Kosp_GHZ
-BMap16_LVD: equ Map16_GHZ
-BMap128_LVD: equ Map128_Blank
+BKosp_LVD:	equ Kosp_GHZ
+BMap16_LVD:	equ Map16_GHZ
+BMap128_LVD:	equ Map128_Blank
  endif
 ; ===========================================================================
 ; Zone $0E
-Kosp_LVE: equ Kosp_GHZ
-Map16_LVE: equ Map16_GHZ
-Map128_LVE: equ Map128_Blank
+Kosp_LVE:	equ Kosp_GHZ
+Map16_LVE:	equ Map16_GHZ
+Map128_LVE:	equ Map128_Blank
  if TimeTravel=1
 ; Past
-PKosp_LVE: equ Kosp_GHZ
-PMap16_LVE: equ Map16_GHZ
-PMap128_LVE: equ Map128_Blank
+PKosp_LVE:	equ Kosp_GHZ
+PMap16_LVE:	equ Map16_GHZ
+PMap128_LVE:	equ Map128_Blank
 ; Good Future
-GKosp_LVE: equ Kosp_GHZ
-GMap16_LVE: equ Map16_GHZ
-GMap128_LVE: equ Map128_Blank
+GKosp_LVE:	equ Kosp_GHZ
+GMap16_LVE:	equ Map16_GHZ
+GMap128_LVE:	equ Map128_Blank
 ; Bad Future
-BKosp_LVE: equ Kosp_GHZ
-BMap16_LVE: equ Map16_GHZ
-BMap128_LVE: equ Map128_Blank
+BKosp_LVE:	equ Kosp_GHZ
+BMap16_LVE:	equ Map16_GHZ
+BMap128_LVE:	equ Map128_Blank
  endif
 ; ===========================================================================
 ; Zone $0F
-Kosp_LVF: equ Kosp_GHZ
-Map16_LVF: equ Map16_GHZ
-Map128_LVF: equ Map128_Blank
+Kosp_LVF:	equ Kosp_GHZ
+Map16_LVF:	equ Map16_GHZ
+Map128_LVF:	equ Map128_Blank
  if TimeTravel=1
 ; Past
-PKosp_LVF: equ Kosp_GHZ
-PMap16_LVF: equ Map16_GHZ
-PMap128_LVF: equ Map128_Blank
+PKosp_LVF:	equ Kosp_GHZ
+PMap16_LVF:	equ Map16_GHZ
+PMap128_LVF:	equ Map128_Blank
 ; Good Future
-GKosp_LVF: equ Kosp_GHZ
-GMap16_LVF: equ Map16_GHZ
-GMap128_LVF: equ Map128_Blank
+GKosp_LVF:	equ Kosp_GHZ
+GMap16_LVF:	equ Map16_GHZ
+GMap128_LVF:	equ Map128_Blank
 ; Bad Future
-BKosp_LVF: equ Kosp_GHZ
-BMap16_LVF: equ Map16_GHZ
-BMap128_LVF: equ Map128_Blank
+BKosp_LVF:	equ Kosp_GHZ
+BMap16_LVF:	equ Map16_GHZ
+BMap128_LVF:	equ Map128_Blank
  endif
 ; ===========================================================================
 ; Zone $10
-Kosp_LV10: equ Kosp_GHZ
-Map16_LV10: equ Map16_GHZ
-Map128_LV10: equ Map128_Blank
+Kosp_LV10:	equ Kosp_GHZ
+Map16_LV10:	equ Map16_GHZ
+Map128_LV10:	equ Map128_Blank
  if TimeTravel=1
 ; Past
-PKosp_LV10: equ Kosp_GHZ
-PMap16_LV10: equ Map16_GHZ
-PMap128_LV10: equ Map128_Blank
+PKosp_LV10:	equ Kosp_GHZ
+PMap16_LV10:	equ Map16_GHZ
+PMap128_LV10:	equ Map128_Blank
 ; Good Future
-GKosp_LV10: equ Kosp_GHZ
-GMap16_LV10: equ Map16_GHZ
-GMap128_LV10: equ Map128_Blank
+GKosp_LV10:	equ Kosp_GHZ
+GMap16_LV10:	equ Map16_GHZ
+GMap128_LV10:	equ Map128_Blank
 ; Bad Future
-BKosp_LV10: equ Kosp_GHZ
-BMap16_LV10: equ Map16_GHZ
-BMap128_LV10: equ Map128_Blank
+BKosp_LV10:	equ Kosp_GHZ
+BMap16_LV10:	equ Map16_GHZ
+BMap128_LV10:	equ Map128_Blank
  endif
+		even
 ; ---------------------------------------------------------------------------
-        even
-Pal_SMZ1: binclude "palette/SMZ1.bin"
-Pal_SMZ2: binclude "palette/SMZ2.bin"
-
 S1_AngleMap:	binclude	"collision/S1/Angle Map.bin"
 		even
 S1_ColArray1:	binclude	"collision/S1/Collision Array (Normal).bin"
@@ -16320,6 +16272,14 @@ Col_MTZ3:	binclude	"collision/present/MTZ3.bin"
 		even
 Col_MTZ4:	binclude	"collision/present/MTZ4.bin"
 		even
+Col_SMZ1:	binclude	"collision/present/SMZ1.bin"
+		even
+Col_SMZ2:	binclude	"collision/present/SMZ2.bin"
+		even
+Col_SMZ3:	binclude	"collision/present/SMZ3.bin"
+		even
+Col_SMZ4:	binclude	"collision/present/SMZ4.bin"
+		even
  if TimeTravel=1
 ; ---------------------------------------------------------------------------
 ; Past Collision
@@ -16372,13 +16332,21 @@ PCol_HTZ3:	binclude	"collision/past/HTZ3.bin"
 		even
 PCol_HTZ4:	binclude	"collision/past/HTZ4.bin"
 		even
-PCol_MTZ1:	binclude	"collision/present/MTZ1.bin"
+PCol_MTZ1:	binclude	"collision/past/MTZ1.bin"
 		even
-PCol_MTZ2:	binclude	"collision/present/MTZ2.bin"
+PCol_MTZ2:	binclude	"collision/past/MTZ2.bin"
 		even
-PCol_MTZ3:	binclude	"collision/present/MTZ3.bin"
+PCol_MTZ3:	binclude	"collision/past/MTZ3.bin"
 		even
-PCol_MTZ4:	binclude	"collision/present/MTZ4.bin"
+PCol_MTZ4:	binclude	"collision/past/MTZ4.bin"
+		even
+PCol_SMZ1:	binclude	"collision/past/SMZ1.bin"
+		even
+PCol_SMZ2:	binclude	"collision/past/SMZ2.bin"
+		even
+PCol_SMZ3:	binclude	"collision/past/SMZ3.bin"
+		even
+PCol_SMZ4:	binclude	"collision/past/SMZ4.bin"
 		even
 ; ---------------------------------------------------------------------------
 ; Good Future Collision
@@ -16431,13 +16399,21 @@ GCol_HTZ3:	binclude	"collision/good Future/HTZ3.bin"
 		even
 GCol_HTZ4:	binclude	"collision/good Future/HTZ4.bin"
 		even
-GCol_MTZ1:	binclude	"collision/present/MTZ1.bin"
+GCol_MTZ1:	binclude	"collision/good future/MTZ1.bin"
 		even
-GCol_MTZ2:	binclude	"collision/present/MTZ2.bin"
+GCol_MTZ2:	binclude	"collision/good future/MTZ2.bin"
 		even
-GCol_MTZ3:	binclude	"collision/present/MTZ3.bin"
+GCol_MTZ3:	binclude	"collision/good future/MTZ3.bin"
 		even
-GCol_MTZ4:	binclude	"collision/present/MTZ4.bin"
+GCol_MTZ4:	binclude	"collision/good future/MTZ4.bin"
+		even
+GCol_SMZ1:	binclude	"collision/good future/SMZ1.bin"
+		even
+GCol_SMZ2:	binclude	"collision/good future/SMZ2.bin"
+		even
+GCol_SMZ3:	binclude	"collision/good future/SMZ3.bin"
+		even
+GCol_SMZ4:	binclude	"collision/good future/SMZ4.bin"
 		even
 ; ---------------------------------------------------------------------------
 ; Bad Future Collision
@@ -16490,13 +16466,21 @@ BCol_HTZ3:	binclude	"collision/bad future/HTZ3.bin"
 		even
 BCol_HTZ4:	binclude	"collision/bad future/HTZ4.bin"
 		even
-BCol_MTZ1:	binclude	"collision/present/MTZ1.bin"
+BCol_MTZ1:	binclude	"collision/bad future/MTZ1.bin"
 		even
-BCol_MTZ2:	binclude	"collision/present/MTZ2.bin"
+BCol_MTZ2:	binclude	"collision/bad future/MTZ2.bin"
 		even
-BCol_MTZ3:	binclude	"collision/present/MTZ3.bin"
+BCol_MTZ3:	binclude	"collision/bad future/MTZ3.bin"
 		even
-BCol_MTZ4:	binclude	"collision/present/MTZ4.bin"
+BCol_MTZ4:	binclude	"collision/bad future/MTZ4.bin"
+		even
+BCol_SMZ1:	binclude	"collision/bad future/SMZ1.bin"
+		even
+BCol_SMZ2:	binclude	"collision/bad future/SMZ2.bin"
+		even
+BCol_SMZ3:	binclude	"collision/bad future/SMZ3.bin"
+		even
+BCol_SMZ4:	binclude	"collision/bad future/SMZ4.bin"
 		even
  endif
 ; ---------------------------------------------------------------------------
@@ -16543,34 +16527,42 @@ Level_Index:
 		dc.w Level_LV072-Level_Index
 		dc.w Level_LV073-Level_Index
 		dc.w Level_LV074-Level_Index
+
 		dc.w Level_SMZ1-Level_Index
 		dc.w Level_SMZ2-Level_Index
 		dc.w Level_SMZ3-Level_Index
 		dc.w Level_SMZ4-Level_Index
+
 		dc.w Level_LV091-Level_Index
 		dc.w Level_LV092-Level_Index
 		dc.w Level_LV093-Level_Index
 		dc.w Level_LV094-Level_Index
+
 		dc.w Level_LV0A1-Level_Index
 		dc.w Level_LV0A2-Level_Index
 		dc.w Level_LV0A3-Level_Index
 		dc.w Level_LV0A4-Level_Index
+
 		dc.w Level_LV0B1-Level_Index
 		dc.w Level_LV0B2-Level_Index
 		dc.w Level_LV0B3-Level_Index
 		dc.w Level_LV0B4-Level_Index
+
 		dc.w Level_LV0C1-Level_Index
 		dc.w Level_LV0C2-Level_Index
 		dc.w Level_LV0C3-Level_Index
 		dc.w Level_LV0C4-Level_Index
+
 		dc.w Level_LV0D1-Level_Index
 		dc.w Level_LV0D2-Level_Index
 		dc.w Level_LV0D3-Level_Index
 		dc.w Level_LV0D4-Level_Index
+
 		dc.w Level_LV0E1-Level_Index
 		dc.w Level_LV0E2-Level_Index
 		dc.w Level_LV0E3-Level_Index
 		dc.w Level_LV0E4-Level_Index
+
 		dc.w Level_LV0F1-Level_Index
 		dc.w Level_LV0F2-Level_Index
 		dc.w Level_LV0F3-Level_Index
@@ -16610,42 +16602,51 @@ Level_MTZ1:	binclude	"level/layout/MTZ_1.kosp"
 Level_MTZ2:	binclude	"level/layout/MTZ_2.kosp"
 Level_MTZ3:	binclude	"level/layout/MTZ_3.kosp"
 Level_MTZ4:	binclude	"level/layout/MTZ_4.kosp"
-Level_LV071: binclude "level/layout/LV07_1.kosp"
-Level_LV072: binclude "level/layout/LV07_2.kosp"
-Level_LV073: binclude "level/layout/LV07_3.kosp"
-Level_LV074: binclude "level/layout/LV07_4.kosp"
-Level_SMZ1: binclude "level/layout/SMZ_1.kosp"
-Level_SMZ2: binclude "level/layout/SMZ_2.kosp"
-Level_SMZ3: binclude "level/layout/SMZ_3.kosp"
-Level_SMZ4: binclude "level/layout/SMZ_4.kosp"
-Level_LV091: binclude "level/layout/LV09_1.kosp"
-Level_LV092: binclude "level/layout/LV09_2.kosp"
-Level_LV093: binclude "level/layout/LV09_3.kosp"
-Level_LV094: binclude "level/layout/LV09_4.kosp"
-Level_LV0A1: binclude "level/layout/LV0A_1.kosp"
-Level_LV0A2: binclude "level/layout/LV0A_2.kosp"
-Level_LV0A3: binclude "level/layout/LV0A_3.kosp"
-Level_LV0A4: binclude "level/layout/LV0A_4.kosp"
-Level_LV0B1: binclude "level/layout/LV0B_1.kosp"
-Level_LV0B2: binclude "level/layout/LV0B_2.kosp"
-Level_LV0B3: binclude "level/layout/LV0B_3.kosp"
-Level_LV0B4: binclude "level/layout/LV0B_4.kosp"
-Level_LV0C1: binclude "level/layout/LV0C_1.kosp"
-Level_LV0C2: binclude "level/layout/LV0C_2.kosp"
-Level_LV0C3: binclude "level/layout/LV0C_3.kosp"
-Level_LV0C4: binclude "level/layout/LV0C_4.kosp"
-Level_LV0D1: binclude "level/layout/LV0D_1.kosp"
-Level_LV0D2: binclude "level/layout/LV0D_2.kosp"
-Level_LV0D3: binclude "level/layout/LV0D_3.kosp"
-Level_LV0D4: binclude "level/layout/LV0D_4.kosp"
-Level_LV0E1: binclude "level/layout/LV0E_1.kosp"
-Level_LV0E2: binclude "level/layout/LV0E_2.kosp"
-Level_LV0E3: binclude "level/layout/LV0E_3.kosp"
-Level_LV0E4: binclude "level/layout/LV0E_4.kosp"
-Level_LV0F1: binclude "level/layout/LV0F_1.kosp"
-Level_LV0F2: binclude "level/layout/LV0F_2.kosp"
-Level_LV0F3: binclude "level/layout/LV0F_3.kosp"
-Level_LV0F4: binclude "level/layout/LV0F_4.kosp"
+
+Level_LV071:	binclude	"level/layout/LV07_1.kosp"
+Level_LV072:	binclude	"level/layout/LV07_2.kosp"
+Level_LV073:	binclude	"level/layout/LV07_3.kosp"
+Level_LV074:	binclude	"level/layout/LV07_4.kosp"
+
+Level_SMZ1:	binclude	"level/layout/SMZ_1.kosp"
+Level_SMZ2:	binclude	"level/layout/SMZ_2.kosp"
+Level_SMZ3:	binclude	"level/layout/SMZ_3.kosp"
+Level_SMZ4:	binclude	"level/layout/SMZ_4.kosp"
+
+Level_LV091:	binclude	"level/layout/LV09_1.kosp"
+Level_LV092:	binclude	"level/layout/LV09_2.kosp"
+Level_LV093:	binclude	"level/layout/LV09_3.kosp"
+Level_LV094:	binclude	"level/layout/LV09_4.kosp"
+
+Level_LV0A1:	binclude	"level/layout/LV0A_1.kosp"
+Level_LV0A2:	binclude	"level/layout/LV0A_2.kosp"
+Level_LV0A3:	binclude	"level/layout/LV0A_3.kosp"
+Level_LV0A4:	binclude	"level/layout/LV0A_4.kosp"
+
+Level_LV0B1:	binclude	"level/layout/LV0B_1.kosp"
+Level_LV0B2:	binclude	"level/layout/LV0B_2.kosp"
+Level_LV0B3:	binclude	"level/layout/LV0B_3.kosp"
+Level_LV0B4:	binclude	"level/layout/LV0B_4.kosp"
+
+Level_LV0C1:	binclude	"level/layout/LV0C_1.kosp"
+Level_LV0C2:	binclude	"level/layout/LV0C_2.kosp"
+Level_LV0C3:	binclude	"level/layout/LV0C_3.kosp"
+Level_LV0C4:	binclude	"level/layout/LV0C_4.kosp"
+
+Level_LV0D1:	binclude	"level/layout/LV0D_1.kosp"
+Level_LV0D2:	binclude	"level/layout/LV0D_2.kosp"
+Level_LV0D3:	binclude	"level/layout/LV0D_3.kosp"
+Level_LV0D4:	binclude	"level/layout/LV0D_4.kosp"
+
+Level_LV0E1:	binclude	"level/layout/LV0E_1.kosp"
+Level_LV0E2:	binclude	"level/layout/LV0E_2.kosp"
+Level_LV0E3:	binclude	"level/layout/LV0E_3.kosp"
+Level_LV0E4:	binclude	"level/layout/LV0E_4.kosp"
+
+Level_LV0F1:	binclude	"level/layout/LV0F_1.kosp"
+Level_LV0F2:	binclude	"level/layout/LV0F_2.kosp"
+Level_LV0F3:	binclude	"level/layout/LV0F_3.kosp"
+Level_LV0F4:	binclude	"level/layout/LV0F_4.kosp"
 Level_Null:	dc.l	0
  if TimeTravel=1
 		include	"_inc/LevelLayouts_Timezones.asm"
@@ -16694,34 +16695,42 @@ ObjPos_Index:
 		dc.w ObjPos_LV072-ObjPos_Index
 		dc.w ObjPos_LV073-ObjPos_Index
 		dc.w ObjPos_LV074-ObjPos_Index
+
 		dc.w ObjPos_SMZ1-ObjPos_Index
 		dc.w ObjPos_SMZ2-ObjPos_Index
 		dc.w ObjPos_SMZ3-ObjPos_Index
 		dc.w ObjPos_SMZ4-ObjPos_Index
+
 		dc.w ObjPos_LV091-ObjPos_Index
 		dc.w ObjPos_LV092-ObjPos_Index
 		dc.w ObjPos_LV093-ObjPos_Index
 		dc.w ObjPos_LV094-ObjPos_Index
+
 		dc.w ObjPos_LV0A1-ObjPos_Index
 		dc.w ObjPos_LV0A2-ObjPos_Index
 		dc.w ObjPos_LV0A3-ObjPos_Index
 		dc.w ObjPos_LV0A4-ObjPos_Index
+
 		dc.w ObjPos_LV0B1-ObjPos_Index
 		dc.w ObjPos_LV0B2-ObjPos_Index
 		dc.w ObjPos_LV0B3-ObjPos_Index
 		dc.w ObjPos_LV0B4-ObjPos_Index
+
 		dc.w ObjPos_LV0C1-ObjPos_Index
 		dc.w ObjPos_LV0C2-ObjPos_Index
 		dc.w ObjPos_LV0C3-ObjPos_Index
 		dc.w ObjPos_LV0C4-ObjPos_Index
+
 		dc.w ObjPos_LV0D1-ObjPos_Index
 		dc.w ObjPos_LV0D2-ObjPos_Index
 		dc.w ObjPos_LV0D3-ObjPos_Index
 		dc.w ObjPos_LV0D4-ObjPos_Index
+
 		dc.w ObjPos_LV0E1-ObjPos_Index
 		dc.w ObjPos_LV0E2-ObjPos_Index
 		dc.w ObjPos_LV0E3-ObjPos_Index
 		dc.w ObjPos_LV0E4-ObjPos_Index
+
 		dc.w ObjPos_LV0F1-ObjPos_Index
 		dc.w ObjPos_LV0F2-ObjPos_Index
 		dc.w ObjPos_LV0F3-ObjPos_Index
@@ -16784,78 +16793,78 @@ ObjPos_MTZ3:	binclude	"level/objects/MTZ_3.bin"
 		ObjectLayoutBoundary
 ObjPos_MTZ4:	binclude	"level/objects/MTZ_4.bin"
 		ObjectLayoutBoundary
+ObjPos_LV071:	binclude	"level/objects/LV07_1.bin"
 		ObjectLayoutBoundary
-ObjPos_LV071: binclude "level/objects/LV07_1.bin"
+ObjPos_LV072:	binclude	"level/objects/LV07_2.bin"
 		ObjectLayoutBoundary
-ObjPos_LV072: binclude "level/objects/LV07_2.bin"
+ObjPos_LV073:	binclude	"level/objects/LV07_3.bin"
 		ObjectLayoutBoundary
-ObjPos_LV073: binclude "level/objects/LV07_3.bin"
+ObjPos_LV074:	binclude	"level/objects/LV07_4.bin"
 		ObjectLayoutBoundary
-ObjPos_LV074: binclude "level/objects/LV07_4.bin"
+ObjPos_SMZ1:	binclude	"level/objects/SMZ_1.bin"
 		ObjectLayoutBoundary
-ObjPos_SMZ1: binclude "level/objects/SMZ_1.bin"
+ObjPos_SMZ2:	binclude	"level/objects/SMZ_2.bin"
 		ObjectLayoutBoundary
-ObjPos_SMZ2: binclude "level/objects/SMZ_2.bin"
+ObjPos_SMZ3:	binclude	"level/objects/SMZ_3.bin"
 		ObjectLayoutBoundary
-ObjPos_SMZ3: binclude "level/objects/SMZ_3.bin"
+ObjPos_SMZ4:	binclude	"level/objects/SMZ_4.bin"
 		ObjectLayoutBoundary
-ObjPos_SMZ4: binclude "level/objects/SMZ_4.bin"
+ObjPos_LV091:	binclude	"level/objects/LV09_1.bin"
 		ObjectLayoutBoundary
-ObjPos_LV091: binclude "level/objects/LV09_1.bin"
+ObjPos_LV092:	binclude	"level/objects/LV09_2.bin"
 		ObjectLayoutBoundary
-ObjPos_LV092: binclude "level/objects/LV09_2.bin"
+ObjPos_LV093:	binclude	"level/objects/LV09_3.bin"
 		ObjectLayoutBoundary
-ObjPos_LV093: binclude "level/objects/LV09_3.bin"
+ObjPos_LV094:	binclude	"level/objects/LV09_4.bin"
 		ObjectLayoutBoundary
-ObjPos_LV094: binclude "level/objects/LV09_4.bin"
+ObjPos_LV0A1:	binclude	"level/objects/LV0A_1.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0A1: binclude "level/objects/LV0A_1.bin"
+ObjPos_LV0A2:	binclude	"level/objects/LV0A_2.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0A2: binclude "level/objects/LV0A_2.bin"
+ObjPos_LV0A3:	binclude	"level/objects/LV0A_3.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0A3: binclude "level/objects/LV0A_3.bin"
+ObjPos_LV0A4:	binclude	"level/objects/LV0A_4.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0A4: binclude "level/objects/LV0A_4.bin"
+ObjPos_LV0B1:	binclude	"level/objects/LV0B_1.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0B1: binclude "level/objects/LV0B_1.bin"
+ObjPos_LV0B2:	binclude	"level/objects/LV0B_2.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0B2: binclude "level/objects/LV0B_2.bin"
+ObjPos_LV0B3:	binclude	"level/objects/LV0B_3.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0B3: binclude "level/objects/LV0B_3.bin"
+ObjPos_LV0B4:	binclude	"level/objects/LV0B_4.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0B4: binclude "level/objects/LV0B_4.bin"
+ObjPos_LV0C1:	binclude	"level/objects/LV0C_1.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0C1: binclude "level/objects/LV0C_1.bin"
+ObjPos_LV0C2:	binclude	"level/objects/LV0C_2.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0C2: binclude "level/objects/LV0C_2.bin"
+ObjPos_LV0C3:	binclude	"level/objects/LV0C_3.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0C3: binclude "level/objects/LV0C_3.bin"
+ObjPos_LV0C4:	binclude	"level/objects/LV0C_4.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0C4: binclude "level/objects/LV0C_4.bin"
+ObjPos_LV0D1:	binclude	"level/objects/LV0D_1.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0D1: binclude "level/objects/LV0D_1.bin"
+ObjPos_LV0D2:	binclude	"level/objects/LV0D_2.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0D2: binclude "level/objects/LV0D_2.bin"
+ObjPos_LV0D3:	binclude	"level/objects/LV0D_3.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0D3: binclude "level/objects/LV0D_3.bin"
+ObjPos_LV0D4:	binclude	"level/objects/LV0D_4.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0D4: binclude "level/objects/LV0D_4.bin"
+ObjPos_LV0E1:	binclude	"level/objects/LV0E_1.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0E1: binclude "level/objects/LV0E_1.bin"
+ObjPos_LV0E2:	binclude	"level/objects/LV0E_2.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0E2: binclude "level/objects/LV0E_2.bin"
+ObjPos_LV0E3:	binclude	"level/objects/LV0E_3.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0E3: binclude "level/objects/LV0E_3.bin"
+ObjPos_LV0E4:	binclude	"level/objects/LV0E_4.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0E4: binclude "level/objects/LV0E_4.bin"
+ObjPos_LV0F1:	binclude	"level/objects/LV0F_1.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0F1: binclude "level/objects/LV0F_1.bin"
+ObjPos_LV0F2:	binclude	"level/objects/LV0F_2.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0F2: binclude "level/objects/LV0F_2.bin"
+ObjPos_LV0F3:	binclude	"level/objects/LV0F_3.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0F3: binclude "level/objects/LV0F_3.bin"
+ObjPos_LV0F4:	binclude	"level/objects/LV0F_4.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0F4: binclude "level/objects/LV0F_4.bin"
 ObjPos_Null:	binclude	"level/objects/S1_Ending.bin"
 		ObjectLayoutBoundary
 		even
@@ -16942,38 +16951,6 @@ LCon_Data:	dc.w .group0-LCon_Data
 		dc.w .baseX_5-$AE, .baseY_5+$5A
 		even
 ; ===========================================================================
-ObjPosLZPlatform_Index:
-		dc.w ObjPos_LZ1pf1-ObjPosLZPlatform_Index,ObjPos_LZ1pf2-ObjPosLZPlatform_Index
-		dc.w ObjPos_LZ2pf1-ObjPosLZPlatform_Index,ObjPos_LZ2pf2-ObjPosLZPlatform_Index
-		dc.w ObjPos_LZ3pf1-ObjPosLZPlatform_Index,ObjPos_LZ3pf2-ObjPosLZPlatform_Index
-		dc.w ObjPos_LZ1pf1-ObjPosLZPlatform_Index,ObjPos_LZ1pf2-ObjPosLZPlatform_Index
-		ObjectLayoutBoundary
-ObjPos_LZ1pf1:	binclude	"level/objects/S1/lz1pf1.bin"
-ObjPos_LZ1pf2:	binclude	"level/objects/S1/lz1pf2.bin"
-ObjPos_LZ2pf1:	binclude	"level/objects/S1/lz2pf1.bin"
-ObjPos_LZ2pf2:	binclude	"level/objects/S1/lz2pf2.bin"
-ObjPos_LZ3pf1:	binclude	"level/objects/S1/lz3pf1.bin"
-ObjPos_LZ3pf2:	binclude	"level/objects/S1/lz3pf2.bin"
-		ObjectLayoutBoundary
-; ===========================================================================
-ObjPosSBZPlatform_Index:
-		; platform objects in SBZ (unused)
-		dc.w ObjPos_SBZ1pf1-ObjPos_Index,ObjPos_SBZ1pf2-ObjPos_Index
-		dc.w ObjPos_SBZ1pf3-ObjPos_Index,ObjPos_SBZ1pf4-ObjPos_Index
-		dc.w ObjPos_SBZ1pf5-ObjPos_Index,ObjPos_SBZ1pf6-ObjPos_Index
-		dc.w ObjPos_SBZ1pf1-ObjPos_Index,ObjPos_SBZ1pf2-ObjPos_Index
-ObjPos_SBZ1pf1:	binclude	"level/objects/S1/sbz1pf1.bin"
-		ObjectLayoutBoundary
-ObjPos_SBZ1pf2:	binclude	"level/objects/S1/sbz1pf2.bin"
-		ObjectLayoutBoundary
-ObjPos_SBZ1pf3:	binclude	"level/objects/S1/sbz1pf3.bin"
-		ObjectLayoutBoundary
-ObjPos_SBZ1pf4:	binclude	"level/objects/S1/sbz1pf4.bin"
-		ObjectLayoutBoundary
-ObjPos_SBZ1pf5:	binclude	"level/objects/S1/sbz1pf5.bin"
-		ObjectLayoutBoundary
-ObjPos_SBZ1pf6:	binclude	"level/objects/S1/sbz1pf6.bin"
-		ObjectLayoutBoundary
 ; ---------------------------------------------------------------------------
 ; Ring layouts; one entry per act, four entries per zone
 ; ---------------------------------------------------------------------------
@@ -17012,123 +16989,51 @@ RingPos_Index:
 		dc.w RingPos_MTZ2-RingPos_Index
 		dc.w RingPos_MTZ3-RingPos_Index
 		dc.w RingPos_MTZ4-RingPos_Index
+
 		dc.w RingPos_LV071-RingPos_Index
 		dc.w RingPos_LV072-RingPos_Index
 		dc.w RingPos_LV073-RingPos_Index
 		dc.w RingPos_LV074-RingPos_Index
+
 		dc.w RingPos_SMZ1-RingPos_Index
 		dc.w RingPos_SMZ2-RingPos_Index
 		dc.w RingPos_SMZ3-RingPos_Index
 		dc.w RingPos_SMZ4-RingPos_Index
+
 		dc.w RingPos_LV091-RingPos_Index
 		dc.w RingPos_LV092-RingPos_Index
 		dc.w RingPos_LV093-RingPos_Index
 		dc.w RingPos_LV094-RingPos_Index
+
 		dc.w RingPos_LV0A1-RingPos_Index
 		dc.w RingPos_LV0A2-RingPos_Index
 		dc.w RingPos_LV0A3-RingPos_Index
 		dc.w RingPos_LV0A4-RingPos_Index
+
 		dc.w RingPos_LV0B1-RingPos_Index
 		dc.w RingPos_LV0B2-RingPos_Index
 		dc.w RingPos_LV0B3-RingPos_Index
 		dc.w RingPos_LV0B4-RingPos_Index
+
 		dc.w RingPos_LV0C1-RingPos_Index
 		dc.w RingPos_LV0C2-RingPos_Index
 		dc.w RingPos_LV0C3-RingPos_Index
 		dc.w RingPos_LV0C4-RingPos_Index
+
 		dc.w RingPos_LV0D1-RingPos_Index
 		dc.w RingPos_LV0D2-RingPos_Index
 		dc.w RingPos_LV0D3-RingPos_Index
 		dc.w RingPos_LV0D4-RingPos_Index
+
 		dc.w RingPos_LV0E1-RingPos_Index
 		dc.w RingPos_LV0E2-RingPos_Index
 		dc.w RingPos_LV0E3-RingPos_Index
 		dc.w RingPos_LV0E4-RingPos_Index
+
 		dc.w RingPos_LV0F1-RingPos_Index
 		dc.w RingPos_LV0F2-RingPos_Index
 		dc.w RingPos_LV0F3-RingPos_Index
 		dc.w RingPos_LV0F4-RingPos_Index
-
-RingPos_MTZ1: binclude "level/rings/MTZ_1.bin"
-		even
-RingPos_MTZ2: binclude "level/rings/MTZ_2.bin"
-		even
-RingPos_MTZ3: binclude "level/rings/MTZ_3.bin"
-		even
-RingPos_MTZ4: binclude "level/rings/MTZ_4.bin"
-		even
-RingPos_LV071: binclude "level/rings/LV07_1.bin"
-		even
-RingPos_LV072: binclude "level/rings/LV07_2.bin"
-		even
-RingPos_LV073: binclude "level/rings/LV07_3.bin"
-		even
-RingPos_LV074: binclude "level/rings/LV07_4.bin"
-		even
-RingPos_SMZ1: binclude "level/rings/SMZ_1.bin"
-		even
-RingPos_SMZ2: binclude "level/rings/SMZ_2.bin"
-		even
-RingPos_SMZ3: binclude "level/rings/SMZ_3.bin"
-		even
-RingPos_SMZ4: binclude "level/rings/SMZ_4.bin"
-		even
-RingPos_LV091: binclude "level/rings/LV09_1.bin"
-		even
-RingPos_LV092: binclude "level/rings/LV09_2.bin"
-		even
-RingPos_LV093: binclude "level/rings/LV09_3.bin"
-		even
-RingPos_LV094: binclude "level/rings/LV09_4.bin"
-		even
-RingPos_LV0A1: binclude "level/rings/LV0A_1.bin"
-		even
-RingPos_LV0A2: binclude "level/rings/LV0A_2.bin"
-		even
-RingPos_LV0A3: binclude "level/rings/LV0A_3.bin"
-		even
-RingPos_LV0A4: binclude "level/rings/LV0A_4.bin"
-		even
-RingPos_LV0B1: binclude "level/rings/LV0B_1.bin"
-		even
-RingPos_LV0B2: binclude "level/rings/LV0B_2.bin"
-		even
-RingPos_LV0B3: binclude "level/rings/LV0B_3.bin"
-		even
-RingPos_LV0B4: binclude "level/rings/LV0B_4.bin"
-		even
-RingPos_LV0C1: binclude "level/rings/LV0C_1.bin"
-		even
-RingPos_LV0C2: binclude "level/rings/LV0C_2.bin"
-		even
-RingPos_LV0C3: binclude "level/rings/LV0C_3.bin"
-		even
-RingPos_LV0C4: binclude "level/rings/LV0C_4.bin"
-		even
-RingPos_LV0D1: binclude "level/rings/LV0D_1.bin"
-		even
-RingPos_LV0D2: binclude "level/rings/LV0D_2.bin"
-		even
-RingPos_LV0D3: binclude "level/rings/LV0D_3.bin"
-		even
-RingPos_LV0D4: binclude "level/rings/LV0D_4.bin"
-		even
-RingPos_LV0E1: binclude "level/rings/LV0E_1.bin"
-		even
-RingPos_LV0E2: binclude "level/rings/LV0E_2.bin"
-		even
-RingPos_LV0E3: binclude "level/rings/LV0E_3.bin"
-		even
-RingPos_LV0E4: binclude "level/rings/LV0E_4.bin"
-		even
-RingPos_LV0F1: binclude "level/rings/LV0F_1.bin"
-		even
-RingPos_LV0F2: binclude "level/rings/LV0F_2.bin"
-		even
-RingPos_LV0F3: binclude "level/rings/LV0F_3.bin"
-		even
-RingPos_LV0F4: binclude "level/rings/LV0F_4.bin"
-		even
 
 RingPos_GHZ1:	binclude	"level/rings/GHZ_1.bin"
 		even
@@ -17177,6 +17082,86 @@ RingPos_HTZ2:	binclude	"level/rings/HTZ_2.bin"
 RingPos_HTZ3:	binclude	"level/rings/HTZ_3.bin"
 		even
 RingPos_HTZ4:	binclude	"level/rings/HTZ_4.bin"
+		even
+RingPos_MTZ1:	binclude	"level/rings/MTZ_1.bin"
+		even
+RingPos_MTZ2:	binclude	"level/rings/MTZ_2.bin"
+		even
+RingPos_MTZ3:	binclude	"level/rings/MTZ_3.bin"
+		even
+RingPos_MTZ4:	binclude	"level/rings/MTZ_4.bin"
+		even
+RingPos_LV071:	binclude	"level/rings/LV07_1.bin"
+		even
+RingPos_LV072:	binclude	"level/rings/LV07_2.bin"
+		even
+RingPos_LV073:	binclude	"level/rings/LV07_3.bin"
+		even
+RingPos_LV074:	binclude	"level/rings/LV07_4.bin"
+		even
+RingPos_SMZ1:	binclude	"level/rings/SMZ_1.bin"
+		even
+RingPos_SMZ2:	binclude	"level/rings/SMZ_2.bin"
+		even
+RingPos_SMZ3:	binclude	"level/rings/SMZ_3.bin"
+		even
+RingPos_SMZ4:	binclude	"level/rings/SMZ_4.bin"
+		even
+RingPos_LV091:	binclude	"level/rings/LV09_1.bin"
+		even
+RingPos_LV092:	binclude	"level/rings/LV09_2.bin"
+		even
+RingPos_LV093:	binclude	"level/rings/LV09_3.bin"
+		even
+RingPos_LV094:	binclude	"level/rings/LV09_4.bin"
+		even
+RingPos_LV0A1:	binclude	"level/rings/LV0A_1.bin"
+		even
+RingPos_LV0A2:	binclude	"level/rings/LV0A_2.bin"
+		even
+RingPos_LV0A3:	binclude	"level/rings/LV0A_3.bin"
+		even
+RingPos_LV0A4:	binclude	"level/rings/LV0A_4.bin"
+		even
+RingPos_LV0B1:	binclude	"level/rings/LV0B_1.bin"
+		even
+RingPos_LV0B2:	binclude	"level/rings/LV0B_2.bin"
+		even
+RingPos_LV0B3:	binclude	"level/rings/LV0B_3.bin"
+		even
+RingPos_LV0B4:	binclude	"level/rings/LV0B_4.bin"
+		even
+RingPos_LV0C1:	binclude	"level/rings/LV0C_1.bin"
+		even
+RingPos_LV0C2:	binclude	"level/rings/LV0C_2.bin"
+		even
+RingPos_LV0C3:	binclude	"level/rings/LV0C_3.bin"
+		even
+RingPos_LV0C4:	binclude	"level/rings/LV0C_4.bin"
+		even
+RingPos_LV0D1:	binclude	"level/rings/LV0D_1.bin"
+		even
+RingPos_LV0D2:	binclude	"level/rings/LV0D_2.bin"
+		even
+RingPos_LV0D3:	binclude	"level/rings/LV0D_3.bin"
+		even
+RingPos_LV0D4:	binclude	"level/rings/LV0D_4.bin"
+		even
+RingPos_LV0E1:	binclude	"level/rings/LV0E_1.bin"
+		even
+RingPos_LV0E2:	binclude	"level/rings/LV0E_2.bin"
+		even
+RingPos_LV0E3:	binclude	"level/rings/LV0E_3.bin"
+		even
+RingPos_LV0E4:	binclude	"level/rings/LV0E_4.bin"
+		even
+RingPos_LV0F1:	binclude	"level/rings/LV0F_1.bin"
+		even
+RingPos_LV0F2:	binclude	"level/rings/LV0F_2.bin"
+		even
+RingPos_LV0F3:	binclude	"level/rings/LV0F_3.bin"
+		even
+RingPos_LV0F4:	binclude	"level/rings/LV0F_4.bin"
 		even
 ; ---------------------------------------------------------------------------
 AutoTunnel_Data:
@@ -17870,6 +17855,9 @@ Map_FExplosion:	binclude	"mappings/sprite/Fiery Explosion.bin"		; $FD
 		even
 Map_GExplosion:	binclude	"mappings/sprite/Ground Explosion.bin"		; $FE
 		even
+		include		"mappings/spriteDPLC/Cards.asm"
+		include		"mappings/spriteDPLC/Signpost.asm"
+
 Map_Points:	include	"mappings/sprite/Points.asm"	; $FF, S3&K mappings
 DPLC_Points:	include	"mappings/spriteDPLC/Points.asm"
 		even

@@ -102,7 +102,7 @@ loc_12460:
 	;	andi.w	#$1E,d0
 	;	addi.w	#ObjPosLZPlatform_Index-ObjPos_Index,d0
 	;	lea	(ObjPos_Index).l,a2
-		lea	(ObjPosLZPlatform_Index).l,a2
+	;	lea	(ObjPosLZPlatform_Index).l,a2
 		adda.w	(a2,d0.w),a2
 		move.w	(a2)+,d1
 		movea.l	a0,a1
