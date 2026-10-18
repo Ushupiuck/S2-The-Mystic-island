@@ -16399,21 +16399,21 @@ GCol_HTZ3:	binclude	"collision/good Future/HTZ3.bin"
 		even
 GCol_HTZ4:	binclude	"collision/good Future/HTZ4.bin"
 		even
-GCol_MTZ1:	binclude	"collision/good future/MTZ1.bin"
+GCol_MTZ1:	binclude	"collision/good Future/MTZ1.bin"
 		even
-GCol_MTZ2:	binclude	"collision/good future/MTZ2.bin"
+GCol_MTZ2:	binclude	"collision/good Future/MTZ2.bin"
 		even
-GCol_MTZ3:	binclude	"collision/good future/MTZ3.bin"
+GCol_MTZ3:	binclude	"collision/good Future/MTZ3.bin"
 		even
-GCol_MTZ4:	binclude	"collision/good future/MTZ4.bin"
+GCol_MTZ4:	binclude	"collision/good Future/MTZ4.bin"
 		even
-GCol_SMZ1:	binclude	"collision/good future/SMZ1.bin"
+GCol_SMZ1:	binclude	"collision/good Future/SMZ1.bin"
 		even
-GCol_SMZ2:	binclude	"collision/good future/SMZ2.bin"
+GCol_SMZ2:	binclude	"collision/good Future/SMZ2.bin"
 		even
-GCol_SMZ3:	binclude	"collision/good future/SMZ3.bin"
+GCol_SMZ3:	binclude	"collision/good Future/SMZ3.bin"
 		even
-GCol_SMZ4:	binclude	"collision/good future/SMZ4.bin"
+GCol_SMZ4:	binclude	"collision/good Future/SMZ4.bin"
 		even
 ; ---------------------------------------------------------------------------
 ; Bad Future Collision

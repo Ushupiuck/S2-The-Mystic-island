@@ -103,6 +103,27 @@ def main():
     assert points_banks == [(0xDE60, 0xDEA0), (0xDEA0, 0xDEE0)]
     assert symbols['ArtTile_HUD_Numbers'] + 28 == symbols['ArtTile_Points']
     assert points_banks[-1][1] <= symbols['vram_bg']
+
+    # End-of-level bonuses replace unused monitor contents. The signpost's
+    # largest DPLC and Tails's permanent life icon must survive beside them.
+    bonus_first = symbols['ArtTile_Hidden_Points']
+    bonus_tiles = struct.unpack_from('>H', rom, symbols['Nem_Bonus'])[0] & 0x7FFF
+    bonus_end = bonus_first + bonus_tiles
+    signpost_table = symbols['DPLC_Signpost']
+    for frame in range(symbols['Map_Signpost_frames']):
+        start = signpost_table + struct.unpack_from('>h', rom, signpost_table + frame * 2)[0]
+        runs = struct.unpack_from('>H', rom, start)[0]
+        loaded = sum((struct.unpack_from('>H', rom, start + 2 + run * 2)[0] >> 12) + 1
+                     for run in range(runs))
+        assert symbols['ArtTile_Signpost'] + loaded <= bonus_first
+    assert bonus_end <= symbols['ArtTile_Tails_Life']
+    for bank in ('ArtTile_SMZ_Smoke1', 'ArtTile_SMZ_Smoke2'):
+        first = symbols[bank]
+        assert bonus_end <= first or bonus_first >= first + 12
+    for row in frames(rom, symbols['Map_Obj7D'], symbols['Map_Obj7D_frames']):
+        for _, size, tile, _ in row:
+            assert (tile & 0x7FF) + ((size >> 2) + 1) * ((size & 3) + 1) <= bonus_tiles
+
     points_frames = frames(rom, symbols['Map_Points'])
     assert len(points_frames) == symbols['Points_HiddenFrame'] + 1
     for frame, row in enumerate(points_frames):
@@ -249,6 +270,7 @@ def main():
     print(f'{len(points_frames) - 1} points values fit both two-tile banks; hidden-frame and HUD/plane/PLC boundaries pass.')
     print('Explosion/fiery and all six animal PLC pairs fit the reordered $B040-$BFFF group.')
     print('Life-monitor icon, 56 resident bubble tiles and both streamed splash/countdown banks pass.')
+    print('Hidden bonuses fit between all signpost DPLC frames and Tails\'s life icon, clear of both SMZ smoke banks.')
     if args.skdisasm:
         print('All three Tails art files match the palette-remapped S&K source pixels.')
 

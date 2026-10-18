@@ -1839,7 +1839,7 @@ ArtTile_Eggman_Exhaust:		equ ArtTile_Eggman_Weapons+$2A ; 17 tiles, after 42 wea
 ArtTile_Giant_Ring:		equ $400
 ArtTile_Giant_Ring_Flash:	equ $462
 ArtTile_Prison_Capsule:		equ $508	; boss/capsule PLCs replace general level-object art
-ArtTile_Hidden_Points:		equ $4B6
+ArtTile_Hidden_Points:		equ ArtTile_Signpost+$1A ; 28 tiles after the signpost DPLC bank; below Tails's life icon
 ArtTile_Warp:			equ $541
 ArtTile_Mini_Tails:		equ $535
 ArtTile_Mini_Sonic:		equ $551
