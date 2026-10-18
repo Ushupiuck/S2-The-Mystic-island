@@ -115,7 +115,7 @@ character_id:           equ $4A     ; byte; Sonic = 0, Tails = 1
 CharacterID_Tails:      equ 1
 tails_flight_flag:      equ $4B     ; byte; falling/flapping state
 tails_flight_energy:    equ $4C     ; byte; half-frame flight budget
-; $4D remains private scratch; display height is in the shared header.
+conveyor_applied:	equ $4D	; byte; prevents stacked belt pushes in one player update
 tails_width:		equ 9
 tails_roll_height:	equ 14
 tails_roll_width:	equ 7

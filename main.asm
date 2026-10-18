@@ -8342,7 +8342,7 @@ ptr_Obj9F:		dc.l ObjNull
 
 ptr_ObjA0:		dc.l SMZ_Junction
 ptr_ObjA1:		dc.l SMZ_RunningDisc
-ptr_ObjA2:		dc.l SMZ_Conveyor
+ptr_ObjA2:		dc.l Conveyor
 ptr_ObjA3:		dc.l SMZ_SpinPlatform
 ptr_ObjA4:		dc.l SMZ_Saws
 ptr_ObjA5:		dc.l SMZ_ScrapStomp
@@ -15453,7 +15453,7 @@ Kospm_Chopper:	binclude	"art/moduled kosinski/Enemy Chopper.kospm"
 Kospm_Motobug:	binclude	"art/moduled kosinski/Enemy Motobug.kospm"
 Kospm_Crabmeat:	binclude	"art/moduled kosinski/Enemy Crabmeat.kospm"
 		include "objects/Scrap Madness/A1 Running Disc.asm"
-		include "objects/Scrap Madness/A2 Conveyor.asm"
+		include "objects/A2 Conveyor Belt.asm"
 		include "objects/Scrap Madness/A3 Spinning Platforms.asm"
 		include "objects/Scrap Madness/A4 Saws.asm"
 		include "objects/Scrap Madness/A5 Stomper.asm"

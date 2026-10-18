@@ -6,6 +6,7 @@
 ; ---------------------------------------------------------------------------
 
 Obj01:
+		clr.b	conveyor_applied(a0)
 		tst.w	(Debug_placement_mode).w	; is debug mode being used?
 		beq.s	.check_entry
 		jmp	(DebugMode).l

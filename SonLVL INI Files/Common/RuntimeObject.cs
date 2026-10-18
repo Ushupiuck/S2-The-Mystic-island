@@ -114,7 +114,13 @@ namespace MysticIsland.ObjectDefinitions
 				case "Bubbles": Bits("Generator", 7, 1, "Set for a bubble generator; clear for an individual bubble.", "Individual bubble", "Generator"); Bits("Frequency / size", 0, 127, "Generator frequency, or animation ID for an individual bubble."); break;
 				case "Junction": Bits("Switch number", 0, 15, "Button that reverses junction rotation."); break;
 				case "RunningDisc": Bits("Radius", 0, 15, "Zero: 24-pixel spot orbit / 72-pixel trigger. Nonzero: 16-pixel orbit / 56-pixel trigger."); SignedNibble("Rotation speed", "High nibble scaled by $80 angular units."); break;
-				case "Conveyor": Bits("Width", 0, 15, "Zero = 256 pixels; nonzero = 112 pixels."); SignedNibble("Speed (pixels/frame)", "Positive pushes right, negative pushes left."); break;
+				case "Conveyor":
+					Bits("Width", 0, 15, "Full width = (value + 1) * 16 pixels.", Enumerable.Range(1, 16).Select(i => i * 16 + " pixels").ToArray());
+					Bits("Speed (pixels/frame)", 4, 7, "Speed magnitude; X flip selects leftward travel.");
+					Bits("Height", 7, 1, "The area extends upward from its placement Y.", "48 pixels", "112 pixels");
+					properties.Add(new PropertySpec("Direction", typeof(int), "Object settings", "Placement X flip reverses the belt.", null,
+						Choices("Right", "Left"), obj => obj.XFlip ? 1 : 0, (obj, value) => obj.XFlip = (int)value != 0));
+					break;
 				case "SpinTrap":
 					alternate = Load("../art/nemesis/SMZ Sprite Atlas.nem", CompressionType.Nemesis, "SMZ Trap.bin", 0);
 					Bits("Type", 7, 1, "Selects two different objects and mapping sets.", "Trapdoor", "Spinning platform");
@@ -153,9 +159,13 @@ namespace MysticIsland.ObjectDefinitions
 		}
 		private void Bits(string name, int shift, int mask, string description, params string[] names)
 		{
-			properties.Add(new PropertySpec(name, typeof(int), "Object settings", description, null, names.Length == 0 ? null : Choices(names),
-				obj => (obj.SubType >> shift) & mask,
-				(obj, value) => obj.SubType = (byte)((obj.SubType & ~(mask << shift)) | (((int)value & mask) << shift))));
+			Func<ObjectEntry, object> get = obj => (obj.SubType >> shift) & mask;
+			Action<ObjectEntry, object> set = (obj, value) => obj.SubType = (byte)((obj.SubType & ~(mask << shift)) | (((int)value & mask) << shift));
+			// The enum overload always installs StringEnumConverter, even for a
+			// null dictionary. Numeric fields need the ordinary int converter.
+			properties.Add(names.Length == 0
+				? new PropertySpec(name, typeof(int), "Object settings", description, null, get, set)
+				: new PropertySpec(name, typeof(int), "Object settings", description, null, Choices(names), get, set));
 		}
 		private void SignedNibble(string name, string description)
 		{
@@ -306,7 +316,8 @@ namespace MysticIsland.ObjectDefinitions
 				case "Stomper": return At(frames, (subtype >> 4) & 7);
 				case "Flame": return At(frames, yflip ? 0xB : 0);
 				case "Conveyor":
-					Sprite belt = Outline((subtype & 15) == 0 ? 256 : 112, 48); belt.Offset(0, -24); return belt;
+					int height = (subtype & 0x80) == 0 ? 48 : 112;
+					Sprite belt = Outline(((subtype & 15) + 1) * 16, height); belt.Offset(0, -height / 2); return belt;
 				case "InvisibleSolid": return Outline(((subtype >> 4) + 1) * 16, ((subtype & 15) + 1) * 16);
 				case "Teleporter":
 					Sprite trigger = Outline(16, 64); trigger.Offset(8, 0); return trigger;

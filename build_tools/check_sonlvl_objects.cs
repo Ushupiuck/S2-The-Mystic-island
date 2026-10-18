@@ -2,8 +2,10 @@
 // Loads the actual editor definitions, including XML and CodeDOM compilation.
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using SonicRetro.SonLVL.API;
@@ -14,6 +16,17 @@ class CheckSonLVLObjects
 	static string current;
 	static readonly List<string> logs = new List<string>();
 	static readonly HashSet<string> previewed = new HashSet<string>();
+
+	class GridContext : ITypeDescriptorContext
+	{
+		public IContainer Container { get { return null; } }
+		public object Instance { get; private set; }
+		public PropertyDescriptor PropertyDescriptor { get; private set; }
+		public GridContext(ObjectEntry entry, PropertyDescriptor property) { Instance = entry; PropertyDescriptor = property; }
+		public object GetService(Type serviceType) { return null; }
+		public bool OnComponentChanging() { return true; }
+		public void OnComponentChanged() { }
+	}
 
 	static void Fail(string message)
 	{
@@ -35,6 +48,23 @@ class CheckSonLVLObjects
 
 	static void RoundTripProperties(ObjectDefinition definition, byte id)
 	{
+		// Exercise the same descriptor/converter path as the property grid.
+		// Direct getter/setter checks alone miss invalid enum converters.
+		ObjectEntry gridEntry = new SonicRetro.SonLVL.API.S3K.S3KObjectEntry { ID = id, SubType = definition.DefaultSubtype };
+		PropertyDescriptorCollection descriptors = TypeDescriptor.GetProperties(gridEntry);
+		foreach (PropertySpec property in definition.CustomProperties)
+		{
+			PropertyDescriptor descriptor = descriptors[property.Name];
+			var context = new GridContext(gridEntry, descriptor);
+			TypeConverter converter = descriptor.Converter;
+			if (converter.GetStandardValuesSupported(context)) converter.GetStandardValues(context);
+			object value = descriptor.GetValue(gridEntry);
+			string text = converter.ConvertToString(context, CultureInfo.InvariantCulture, value);
+			if (string.IsNullOrEmpty(text)) Fail("Blank property-grid value: $" + id.ToString("X2") + " " + property.Name);
+			byte[] before = gridEntry.GetBytes();
+			descriptor.SetValue(gridEntry, converter.ConvertFromString(context, CultureInfo.InvariantCulture, text));
+			if (!gridEntry.GetBytes().SequenceEqual(before)) Fail("Property-grid conversion changed " + property.Name);
+		}
 		IEnumerable<byte> values = definition.GetType().Namespace == "MysticIsland.ObjectDefinitions"
 			? Enumerable.Range(0, 256).Select(i => (byte)i) : definition.Subtypes;
 		foreach (byte subtype in values)
@@ -137,6 +167,22 @@ class CheckSonLVLObjects
 		}
 	}
 
+	static void CheckConveyor()
+	{
+		ObjectDefinition definition = LevelData.ObjTypes[0xA2];
+		for (int subtype = 0; subtype < 256; subtype++)
+		{
+			Sprite area = definition.SubtypeImage((byte)subtype);
+			int width = ((subtype & 15) + 1) * 16, height = (subtype & 128) == 0 ? 48 : 112;
+			if (area.Bounds != new Rectangle(-width / 2, -height, width, height)) Fail("Incorrect terrain-conveyor area.");
+		}
+		var entry = new SonicRetro.SonLVL.API.S3K.S3KObjectEntry { ID = 0xA2, SubType = 0xAF, YFlip = true, LoadAtAnyYPos = true };
+		definition.CustomProperties.Single(p => p.Name == "Width").SetValue(entry, 6);
+		if (entry.SubType != 0xA6) Fail("Conveyor width changed its height or speed.");
+		definition.CustomProperties.Single(p => p.Name == "Direction").SetValue(entry, 1);
+		if (!entry.XFlip || !entry.YFlip || !entry.LoadAtAnyYPos || entry.SubType != 0xA6) Fail("Conveyor direction changed unrelated flags.");
+	}
+
 	static void CheckBallhog()
 	{
 		ObjectDefinition definition = LevelData.ObjTypes[0x21];
@@ -199,6 +245,7 @@ class CheckSonLVLObjects
 		if (!LevelData.ObjectFormat.WriteLayout(entries, terminator).SequenceEqual(original)) Fail("Object placement bytes did not round trip.");
 		CheckSwitcher();
 		CheckBallhog();
+		CheckConveyor();
 		if (previewDirectory != null) Preview(previewDirectory);
 		Console.WriteLine("PASS " + name + " (" + LevelData.Objects.Count + " placements)");
 	}

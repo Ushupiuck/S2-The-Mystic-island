@@ -4,6 +4,7 @@
 ; 73de97c6b55055bcb8089c1d55d006b02136f163. Stage-specific cutscenes stay out.
 ; ---------------------------------------------------------------------------
 Obj02:
+		clr.b	conveyor_applied(a0)
 		cmpa.w	#v_player,a0		; companion Tails never gets Debug privileges
 		bne.s	Obj02_Normal
 		tst.w	(Debug_placement_mode).w

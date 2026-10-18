@@ -52,7 +52,7 @@ their route when debug overlays are enabled.
 | `$7D` | Hidden bonus | `$01`: 10000; `$02`: 1000; `$03`: 100 points. |
 | `$A0` | Junction | Low nibble: reversing switch number. |
 | `$A1` | Running disc | Low nibble: radius; signed high nibble: rotation speed. |
-| `$A2` | Conveyor | Low nibble: 256/112 px width; signed high nibble: speed. |
+| `$A2` | Terrain conveyor | Low nibble: full width / 16 minus one (16–256 px); bits 4–6: speed magnitude (0–7 px/frame); bit 7: 48/112 px height. X flip selects leftward travel. The rectangle extends upward from its origin; adjacent rectangles can cover uneven terrain. |
 | `$A3` | Spinning platform / trapdoor | Bit 7: object type; low nibble: spin phase / trapdoor delay; bits 4–6: spin synchronization period. |
 | `$A4` | Saw | Stationary, horizontal/vertical cutter, speeding from left/right. |
 | `$A5` | Stomper / door | Bits 4–6: shape; bit 7: switch control; low nibble: movement / switch number. |
@@ -77,13 +77,21 @@ The shared enemy definitions make imported art inspectable in every act. Adding
 an enemy to a new stage may also require its game-side pattern load cue; editor
 previews do not alter runtime art loading.
 
+Terrain conveyors (`$A2`) are available in every zone. Cover the characters'
+centers over the entire surface with their rectangles, using adjacent areas at
+different heights for longer slopes. Grounded players receive one belt push per
+frame, even at joins or overlaps; jumping leaves the belt's influence, and walls
+limit the push using each player's collision path. The migrated Scrap Madness
+Act 2 placements retain their original widths, heights, speeds and directions.
+
 ## Validation
 
 `build_tools/check_sonlvl_objects.cs` uses the real SonLVL API to load every act,
 compile definitions, render all advertised subtypes and all placed objects with
 all four flips, check property round trips and verify byte-exact placement
 serialization. It also rejects duplicate C# cache names and fallback definitions,
-and checks the path switcher's bit preservation, sizes and numbered markers.
+checks property-grid value conversion, and checks the path switcher's bit
+preservation, sizes and numbered markers.
 Optional contact sheets show each zone's object picker previews.
 
 Compile the checker beside `SonLVLAPI.dll` and its dependencies, then run:
@@ -105,3 +113,17 @@ it is editor-only and does not change the game's graphics.
 The saved `Emerald Hill Zone Act 1.sls` section and `EHZ/AnimatedBlocks.bin` are
 still used by SonLVL. Stale definitions and private copies of runtime maps/chunks
 have been removed.
+
+After building the ROM, the terrain-conveyor regression runs the real player
+and object code in Genesis Plus GX:
+
+```text
+python build_tools/check_terrain_conveyors.py --core path/to/genesis_plus_gx_libretro.so --output path/to/conveyor-results
+```
+
+It checks both players, every subtype and flip, rectangle boundaries, joins,
+both collision paths, standing and spin-dash wall contact, jumping/landing,
+bumps, slopes through 45 degrees, stepped rectangles, and all 20 actual Scrap
+Madness Act 2 placements. Traversal tests compare each moving-belt frame with an
+otherwise identical zero-speed frame and require complete rectangle coverage.
+Use `--before-ref <commit-before-migration>` to also verify the layout conversion.
