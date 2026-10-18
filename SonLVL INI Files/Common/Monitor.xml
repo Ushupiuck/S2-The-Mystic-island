@@ -1,81 +1,127 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ObjDef xmlns="http://www.sonicretro.org" Name="Monitor" Image="static">
-  <Images>
-    <ImageFromMappings id="static">
-      <ArtFile filename="../art/nemesis/Monitor and contents.nem" />
-      <MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="1" startpal="0" />
-    </ImageFromMappings>
-    <ImageFromMappings id="sonic">
-      <ArtFile filename="../art/nemesis/Monitor and contents.nem" />
-      <ArtFile filename="../art/nemesis/Sonic lives counter.nem" offset="21856" />
-      <MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="2" startpal="0" />
-    </ImageFromMappings>
-    <ImageFromMappings id="tails">
-      <ArtFile filename="../art/nemesis/Monitor and contents.nem" />
-      <MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="3" startpal="0" />
-    </ImageFromMappings>
-    <ImageFromMappings id="eggman">
-      <ArtFile filename="../art/nemesis/Monitor and contents.nem" />
-      <MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="4" startpal="0" />
-    </ImageFromMappings>
-    <ImageFromMappings id="rings">
-      <ArtFile filename="../art/nemesis/Monitor and contents.nem" />
-      <MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="5" startpal="0" />
-    </ImageFromMappings>
-    <ImageFromMappings id="shoes">
-      <ArtFile filename="../art/nemesis/Monitor and contents.nem" />
-      <MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="6" startpal="0" />
-    </ImageFromMappings>
-    <ImageFromMappings id="shield">
-      <ArtFile filename="../art/nemesis/Monitor and contents.nem" />
-      <MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="7" startpal="0" />
-    </ImageFromMappings>
-    <ImageFromMappings id="invincibility">
-      <ArtFile filename="../art/nemesis/Monitor and contents.nem" />
-      <MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="8" startpal="0" />
-    </ImageFromMappings>
-    <ImageFromMappings id="random">
-      <ArtFile filename="../art/nemesis/Monitor and contents.nem" />
-      <MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="9" startpal="0" />
-    </ImageFromMappings>
-    <ImageFromMappings id="spring">
-      <ArtFile filename="../art/nemesis/Monitor and contents.nem" />
-      <MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="10" startpal="0" />
-    </ImageFromMappings>
-    <ImageFromMappings id="broken">
-      <ArtFile filename="../art/nemesis/Monitor and contents.nem" />
-      <MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="11" startpal="0" />
-    </ImageFromMappings>
-  </Images>
-  <Subtypes>
-    <Subtype id="00" name="Static" image="static" />
-    <Subtype id="01" name="Sonic" image="sonic" />
-    <Subtype id="02" name="Tails" image="tails" />
-    <Subtype id="03" name="Eggman" image="eggman" />
-    <Subtype id="04" name="Rings" image="rings" />
-    <Subtype id="05" name="Shoes" image="shoes" />
-    <Subtype id="06" name="Shield" image="shield" />
-    <Subtype id="07" name="Invincibility" image="invincibility" />
-    <Subtype id="08" name="Random" image="random" />
-    <Subtype id="09" name="Spring" image="spring" />
-    <Subtype id="0A" name="Broken" image="broken" />
-  </Subtypes>
-  <Properties>
-    <BitsProperty name="Contents" type="MonitorType" startbit="0" length="4" />
-  </Properties>
-  <Enums>
-    <Enum name="MonitorType">
-      <EnumMember name="Static" />
-      <EnumMember name="Sonic" />
-      <EnumMember name="Tails" />
-      <EnumMember name="Eggman" />
-      <EnumMember name="Rings" />
-      <EnumMember name="Shoes" />
-      <EnumMember name="Shield" />
-      <EnumMember name="Invincibility" />
-      <EnumMember name="Random" />
-      <EnumMember name="Spring" />
-      <EnumMember name="Broken" />
-    </Enum>
-  </Enums>
+	<Images>
+		<ImageFromMappings id="static">
+			<ArtFile filename="../art/nemesis/Monitor and contents.nem" />
+			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="1" startpal="0" />
+		</ImageFromMappings>
+		<ImageFromMappings id="sonic">
+			<ArtFile filename="../art/nemesis/Monitor and contents.nem" />
+			<ArtFile filename="../art/nemesis/Sonic lives counter.nem" offset="21856" />
+			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="2" startpal="0" />
+		</ImageFromMappings>
+		<ImageFromMappings id="tails">
+			<ArtFile filename="../art/nemesis/Monitor and contents.nem" />
+			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="3" startpal="0" />
+		</ImageFromMappings>
+		<ImageFromMappings id="eggman">
+			<ArtFile filename="../art/nemesis/Monitor and contents.nem" />
+			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="4" startpal="0" />
+		</ImageFromMappings>
+		<ImageFromMappings id="rings">
+			<ArtFile filename="../art/nemesis/Monitor and contents.nem" />
+			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="5" startpal="0" />
+		</ImageFromMappings>
+		<ImageFromMappings id="shoes">
+			<ArtFile filename="../art/nemesis/Monitor and contents.nem" />
+			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="6" startpal="0" />
+		</ImageFromMappings>
+		<ImageFromMappings id="shield">
+			<ArtFile filename="../art/nemesis/Monitor and contents.nem" />
+			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="7" startpal="0" />
+		</ImageFromMappings>
+		<ImageFromMappings id="invincibility">
+			<ArtFile filename="../art/nemesis/Monitor and contents.nem" />
+			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="8" startpal="0" />
+		</ImageFromMappings>
+		<ImageFromMappings id="random">
+			<ArtFile filename="../art/nemesis/Monitor and contents.nem" />
+			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="9" startpal="0" />
+		</ImageFromMappings>
+		<ImageFromMappings id="spring">
+			<ArtFile filename="../art/nemesis/Monitor and contents.nem" />
+			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="10" startpal="0" />
+		</ImageFromMappings>
+		<ImageFromMappings id="broken">
+			<ArtFile filename="../art/nemesis/Monitor and contents.nem" />
+			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="11" startpal="0" />
+		</ImageFromMappings>
+	</Images>
+	<Subtypes>
+		<Subtype id="00" name="Static" image="static" />
+		<Subtype id="01" name="Sonic" image="sonic" />
+		<Subtype id="02" name="Tails" image="tails" />
+		<Subtype id="03" name="Eggman" image="eggman" />
+		<Subtype id="04" name="Rings" image="rings" />
+		<Subtype id="05" name="Shoes" image="shoes" />
+		<Subtype id="06" name="Shield" image="shield" />
+		<Subtype id="07" name="Invincibility" image="invincibility" />
+		<Subtype id="08" name="Random" image="random" />
+		<Subtype id="09" name="Spring" image="spring" />
+		<Subtype id="0A" name="Broken" image="broken" />
+	</Subtypes>
+	<Properties>
+		<BitsProperty name="Contents" type="MonitorType" startbit="0" length="4" />
+	</Properties>
+	<Enums>
+		<Enum name="MonitorType">
+			<EnumMember name="Static" />
+			<EnumMember name="Sonic" />
+			<EnumMember name="Tails" />
+			<EnumMember name="Eggman" />
+			<EnumMember name="Rings" />
+			<EnumMember name="Shoes" />
+			<EnumMember name="Shield" />
+			<EnumMember name="Invincibility" />
+			<EnumMember name="Random" />
+			<EnumMember name="Spring" />
+			<EnumMember name="Broken" />
+		</Enum>
+	</Enums>
+	<Display>
+		<DisplayOption>
+			<Condition property="Contents" value="Static" />
+			<ImageRef image="static" />
+		</DisplayOption>
+		<DisplayOption>
+			<Condition property="Contents" value="Sonic" />
+			<ImageRef image="sonic" />
+		</DisplayOption>
+		<DisplayOption>
+			<Condition property="Contents" value="Tails" />
+			<ImageRef image="tails" />
+		</DisplayOption>
+		<DisplayOption>
+			<Condition property="Contents" value="Eggman" />
+			<ImageRef image="eggman" />
+		</DisplayOption>
+		<DisplayOption>
+			<Condition property="Contents" value="Rings" />
+			<ImageRef image="rings" />
+		</DisplayOption>
+		<DisplayOption>
+			<Condition property="Contents" value="Shoes" />
+			<ImageRef image="shoes" />
+		</DisplayOption>
+		<DisplayOption>
+			<Condition property="Contents" value="Shield" />
+			<ImageRef image="shield" />
+		</DisplayOption>
+		<DisplayOption>
+			<Condition property="Contents" value="Invincibility" />
+			<ImageRef image="invincibility" />
+		</DisplayOption>
+		<DisplayOption>
+			<Condition property="Contents" value="Random" />
+			<ImageRef image="random" />
+		</DisplayOption>
+		<DisplayOption>
+			<Condition property="Contents" value="Spring" />
+			<ImageRef image="spring" />
+		</DisplayOption>
+		<DisplayOption>
+			<Condition property="Contents" value="Broken" />
+			<ImageRef image="broken" />
+		</DisplayOption>
+	</Display>
 </ObjDef>

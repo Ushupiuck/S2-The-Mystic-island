@@ -13,7 +13,11 @@ namespace S2ObjectDefinitions.EHZ
 
 		public override void Init(ObjectData data)
 		{
-			img = ObjectHelper.UnknownObject;
+			BitmapBits marker = new BitmapBits(17, 17);
+			marker.DrawRectangle(LevelData.ColorYellow, 0, 0, 16, 16);
+			marker.DrawLine(LevelData.ColorWhite, 0, 8, 16, 8);
+			marker.DrawLine(LevelData.ColorWhite, 8, 0, 8, 16);
+			img = new Sprite(marker, -8, -8);
 			List<Sprite> sprs = new List<Sprite>();
 			int left = -208;
 			int right = 208;
@@ -30,13 +34,13 @@ namespace S2ObjectDefinitions.EHZ
 			{
 				int y = Obj06_CosineTable[x] - top;
 				if (x < bmp.Width & y >= 0 & y < bmp.Height)
-					bmp[x, y] = 0x1C;
+					bmp[x, y] = LevelData.ColorYellow;
 			}
 			sprs.Add(new Sprite(bmp, offset));
 			offset = new Point(-192, 0);
 			bmp = new BitmapBits(0x180, 53);
-			bmp.DrawLine(0x1C, 192, 0, 192, 52);
-			bmp.DrawLine(0x1C, 0, 52, 0x180, 52);
+			bmp.DrawLine(LevelData.ColorYellow, 192, 0, 192, 52);
+			bmp.DrawLine(LevelData.ColorYellow, 0, 52, 0x180, 52);
 			sprs.Add(new Sprite(bmp, offset));
 			sprs.Add(img);
 			sprite = new Sprite(sprs.ToArray());

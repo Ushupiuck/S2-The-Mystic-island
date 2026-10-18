@@ -1,34 +1,170 @@
-<?xml version='1.0' encoding='utf-8'?>
-<ObjDef xmlns="http://www.sonicretro.org" Name="Wheel Carrier" Image="wheel">
-  <Images>
-    <ImageFromMappings id="wheel">
-      <ArtFile filename="../art/nemesis/Wheel carrier.nem" />
-      <MapFile type="Binary" filename="../mappings/sprite/Wheel for the moving spring.bin" frame="0" startpal="0" />
-    </ImageFromMappings>
-  </Images>
-  <Subtypes>
-    <Subtype id="00" name="Red Up Spring" image="wheel" />
-    <Subtype id="01" name="Yellow Up Spring" image="wheel" />
-    <Subtype id="02" name="Red Side Spring" image="wheel" />
-    <Subtype id="03" name="Yellow Side Spring" image="wheel" />
-    <Subtype id="04" name="Red Diagonal Spring" image="wheel" />
-    <Subtype id="05" name="Ring Monitor" image="wheel" />
-    <Subtype id="06" name="Shield Monitor" image="wheel" />
-    <Subtype id="07" name="Spikes" image="wheel" />
-  </Subtypes>
-  <Properties>
-    <BitsProperty name="Payload" type="WheelPayload" startbit="0" length="4" />
-  </Properties>
-  <Enums>
-    <Enum name="WheelPayload">
-      <EnumMember name="Red Up Spring" />
-      <EnumMember name="Yellow Up Spring" />
-      <EnumMember name="Red Side Spring" />
-      <EnumMember name="Yellow Side Spring" />
-      <EnumMember name="Red Diagonal Spring" />
-      <EnumMember name="Ring Monitor" />
-      <EnumMember name="Shield Monitor" />
-      <EnumMember name="Spikes" />
-    </Enum>
-  </Enums>
+<?xml version="1.0" encoding="utf-8"?>
+<ObjDef xmlns="http://www.sonicretro.org" Name="Wheel carrier" Image="wheel">
+	<Images>
+		<ImageFromMappings id="wheel">
+			<ArtFile filename="../art/nemesis/Wheel carrier.nem" />
+			<MapFile type="Binary" filename="../mappings/sprite/Wheel for the moving spring.bin" frame="0" startpal="0" />
+		</ImageFromMappings>
+		<ImageFromMappings id="payload0">
+			<ArtFile filename="../art/nemesis/Vertical spring.nem" />
+			<MapFile type="Binary" filename="../mappings/sprite/Spring.bin" frame="0" startpal="0" />
+		</ImageFromMappings>
+		<ImageFromMappings id="payload1">
+			<ArtFile filename="../art/nemesis/Vertical spring.nem" />
+			<MapFile type="Binary" filename="../mappings/sprite/Spring (Yellow).bin" frame="0" startpal="0" />
+		</ImageFromMappings>
+		<ImageFromMappings id="payload2">
+			<ArtFile filename="../art/nemesis/Horizontal spring.nem" />
+			<MapFile type="Binary" filename="../mappings/sprite/Spring.bin" frame="3" startpal="0" />
+		</ImageFromMappings>
+		<ImageFromMappings id="payload3">
+			<ArtFile filename="../art/nemesis/Horizontal spring.nem" />
+			<MapFile type="Binary" filename="../mappings/sprite/Spring (Yellow).bin" frame="3" startpal="0" />
+		</ImageFromMappings>
+		<ImageFromMappings id="payload4">
+			<ArtFile filename="../art/nemesis/Diagonal spring.nem" />
+			<MapFile type="Binary" filename="../mappings/sprite/Spring.bin" frame="7" startpal="0" />
+		</ImageFromMappings>
+		<ImageFromMappings id="payload5">
+			<ArtFile filename="../art/nemesis/Monitor and contents.nem" />
+			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="5" startpal="0" />
+		</ImageFromMappings>
+		<ImageFromMappings id="payload6">
+			<ArtFile filename="../art/nemesis/Monitor and contents.nem" />
+			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="7" startpal="0" />
+		</ImageFromMappings>
+		<ImageFromMappings id="payload7">
+			<ArtFile filename="../art/nemesis/Spikes.nem" />
+			<MapFile type="Binary" filename="../mappings/sprite/Spikes.bin" frame="10" startpal="0" />
+		</ImageFromMappings>
+	</Images>
+	<DefaultImage>
+			<ImageRef image="wheel" />
+			<ImageRef image="payload0" xflip="NeverFlip" yflip="NeverFlip">
+				<Offset X="0" Y="-16" />
+			</ImageRef>
+	</DefaultImage>
+	<Subtypes>
+		<Subtype id="00" name="Red Up Spring">
+			<ImageRef image="wheel" />
+			<ImageRef image="payload0" xflip="NeverFlip" yflip="NeverFlip">
+				<Offset X="0" Y="-16" />
+			</ImageRef>
+		</Subtype>
+		<Subtype id="01" name="Yellow Up Spring">
+			<ImageRef image="wheel" />
+			<ImageRef image="payload1" xflip="NeverFlip" yflip="NeverFlip">
+				<Offset X="0" Y="-16" />
+			</ImageRef>
+		</Subtype>
+		<Subtype id="02" name="Red Side Spring">
+			<ImageRef image="wheel" />
+			<ImageRef image="payload2" xflip="NeverFlip" yflip="NeverFlip">
+				<Offset X="0" Y="-16" />
+			</ImageRef>
+		</Subtype>
+		<Subtype id="03" name="Yellow Side Spring">
+			<ImageRef image="wheel" />
+			<ImageRef image="payload3" xflip="AlwaysFlip" yflip="NeverFlip">
+				<Offset X="0" Y="-16" />
+			</ImageRef>
+		</Subtype>
+		<Subtype id="04" name="Red Diagonal Spring">
+			<ImageRef image="wheel" />
+			<ImageRef image="payload4" xflip="NeverFlip" yflip="NeverFlip">
+				<Offset X="0" Y="-16" />
+			</ImageRef>
+		</Subtype>
+		<Subtype id="05" name="Ring Monitor">
+			<ImageRef image="wheel" />
+			<ImageRef image="payload5" xflip="NeverFlip" yflip="NeverFlip">
+				<Offset X="0" Y="-21" />
+			</ImageRef>
+		</Subtype>
+		<Subtype id="06" name="Shield Monitor">
+			<ImageRef image="wheel" />
+			<ImageRef image="payload6" xflip="NeverFlip" yflip="NeverFlip">
+				<Offset X="0" Y="-21" />
+			</ImageRef>
+		</Subtype>
+		<Subtype id="07" name="Single Vertical Spike">
+			<ImageRef image="wheel" />
+			<ImageRef image="payload7" xflip="NeverFlip" yflip="NeverFlip">
+				<Offset X="0" Y="-15" />
+			</ImageRef>
+		</Subtype>
+	</Subtypes>
+	<Properties>
+		<BitsProperty name="Payload" type="WheelPayload" startbit="0" length="4" description="Mount from WheelPayloads. Payload facing is fixed by the table; the carrier's X flip changes its initial travel direction." />
+	</Properties>
+	<Enums>
+		<Enum name="WheelPayload">
+			<EnumMember name="Red Up Spring" />
+			<EnumMember name="Yellow Up Spring" />
+			<EnumMember name="Red Side Spring" />
+			<EnumMember name="Yellow Side Spring" />
+			<EnumMember name="Red Diagonal Spring" />
+			<EnumMember name="Ring Monitor" />
+			<EnumMember name="Shield Monitor" />
+			<EnumMember name="Single Vertical Spike" />
+		</Enum>
+	</Enums>
+	<Display>
+		<DisplayOption>
+			<Condition property="Payload" value="Red Up Spring" />
+			<ImageRef image="wheel" />
+			<ImageRef image="payload0" xflip="NeverFlip" yflip="NeverFlip">
+				<Offset X="0" Y="-16" />
+			</ImageRef>
+		</DisplayOption>
+		<DisplayOption>
+			<Condition property="Payload" value="Yellow Up Spring" />
+			<ImageRef image="wheel" />
+			<ImageRef image="payload1" xflip="NeverFlip" yflip="NeverFlip">
+				<Offset X="0" Y="-16" />
+			</ImageRef>
+		</DisplayOption>
+		<DisplayOption>
+			<Condition property="Payload" value="Red Side Spring" />
+			<ImageRef image="wheel" />
+			<ImageRef image="payload2" xflip="NeverFlip" yflip="NeverFlip">
+				<Offset X="0" Y="-16" />
+			</ImageRef>
+		</DisplayOption>
+		<DisplayOption>
+			<Condition property="Payload" value="Yellow Side Spring" />
+			<ImageRef image="wheel" />
+			<ImageRef image="payload3" xflip="AlwaysFlip" yflip="NeverFlip">
+				<Offset X="0" Y="-16" />
+			</ImageRef>
+		</DisplayOption>
+		<DisplayOption>
+			<Condition property="Payload" value="Red Diagonal Spring" />
+			<ImageRef image="wheel" />
+			<ImageRef image="payload4" xflip="NeverFlip" yflip="NeverFlip">
+				<Offset X="0" Y="-16" />
+			</ImageRef>
+		</DisplayOption>
+		<DisplayOption>
+			<Condition property="Payload" value="Ring Monitor" />
+			<ImageRef image="wheel" />
+			<ImageRef image="payload5" xflip="NeverFlip" yflip="NeverFlip">
+				<Offset X="0" Y="-21" />
+			</ImageRef>
+		</DisplayOption>
+		<DisplayOption>
+			<Condition property="Payload" value="Shield Monitor" />
+			<ImageRef image="wheel" />
+			<ImageRef image="payload6" xflip="NeverFlip" yflip="NeverFlip">
+				<Offset X="0" Y="-21" />
+			</ImageRef>
+		</DisplayOption>
+		<DisplayOption>
+			<Condition property="Payload" value="Single Vertical Spike" />
+			<ImageRef image="wheel" />
+			<ImageRef image="payload7" xflip="NeverFlip" yflip="NeverFlip">
+				<Offset X="0" Y="-15" />
+			</ImageRef>
+		</DisplayOption>
+	</Display>
 </ObjDef>

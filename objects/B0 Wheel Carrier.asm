@@ -175,5 +175,5 @@ WheelPayloads:
         dc.b 6,0               ; shield monitor
         dc.l Obj36
         dc.w -15
-        dc.b 0,0               ; upward spikes
+		dc.b	$A0,0		; single S1 upward spike
 WheelPayload_Count = (*-WheelPayloads)/8
