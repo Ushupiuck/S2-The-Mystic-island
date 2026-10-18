@@ -20,7 +20,9 @@ Aquis/Skyhorse and Eggman are read from `main.asm`.
 
 Select an object to see its named settings in the property grid. The raw
 **Subtype** field remains available. Settings preserve unrelated subtype bits
-and placement flags. Invisible objects have outlined trigger/collision bounds;
+and placement flags. Path switchers use SonLVL's S3&K numbered, directional
+marker art, repeated across the full trigger length. Its 0/1 labels show the
+primary/secondary path on each side. Other invisible objects have outlined bounds;
 moving platforms, saws and lifts have debug travel guides. Transport pipes show
 their route when debug overlays are enabled.
 
@@ -80,7 +82,8 @@ previews do not alter runtime art loading.
 `build_tools/check_sonlvl_objects.cs` uses the real SonLVL API to load every act,
 compile definitions, render all advertised subtypes and all placed objects with
 all four flips, check property round trips and verify byte-exact placement
-serialization. It also checks the path switcher's bit preservation and sizes.
+serialization. It also rejects duplicate C# cache names and fallback definitions,
+and checks the path switcher's bit preservation, sizes and numbered markers.
 Optional contact sheets show each zone's object picker previews.
 
 Compile the checker beside `SonLVLAPI.dll` and its dependencies, then run:
@@ -91,8 +94,13 @@ check_sonlvl_objects.exe "path/to/SonLVL INI Files/SonLVL.ini" "optional-preview
 ```
 
 Keep the API DLL and codec dependencies beside the checker executable. On Linux,
-run it with Mono, libgdiplus and an X display. Prefer an API Debug build so object
-definition initialization errors fail directly.
+run it with Mono, libgdiplus and an X display. Test with a distributed Release
+build and a fresh `dllcache` directory: Release builds compile object definitions
+in parallel, unlike Debug builds. Each C# object ID deliberately has its own
+`codetype` wrapper in `Common/RuntimeObject.cs` so concurrent compiles write to
+different cache files. Zone overrides reuse their ID's type after list merging.
+The marker art in `Common/pathswapper-art.nem` comes from SonLVL's S3&K INIs;
+it is editor-only and does not change the game's graphics.
 
 The saved `Emerald Hill Zone Act 1.sls` section and `EHZ/AnimatedBlocks.bin` are
 still used by SonLVL. Stale definitions and private copies of runtime maps/chunks

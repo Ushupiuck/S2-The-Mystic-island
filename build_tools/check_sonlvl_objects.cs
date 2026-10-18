@@ -1,4 +1,4 @@
-// Compile alongside a current SonLVLAPI.dll; see SonLVL INI Files/README.md.
+// Compile alongside a released SonLVLAPI.dll; see SonLVL INI Files/README.md.
 // Loads the actual editor definitions, including XML and CodeDOM compilation.
 using System;
 using System.Collections.Generic;
@@ -35,7 +35,7 @@ class CheckSonLVLObjects
 
 	static void RoundTripProperties(ObjectDefinition definition, byte id)
 	{
-		IEnumerable<byte> values = definition.GetType().FullName == "MysticIsland.ObjectDefinitions.RuntimeObject"
+		IEnumerable<byte> values = definition.GetType().Namespace == "MysticIsland.ObjectDefinitions"
 			? Enumerable.Range(0, 256).Select(i => (byte)i) : definition.Subtypes;
 		foreach (byte subtype in values)
 			foreach (PropertySpec property in definition.CustomProperties)
@@ -91,6 +91,7 @@ class CheckSonLVLObjects
 	{
 		var entry = new SonicRetro.SonLVL.API.S3K.S3KObjectEntry { ID = 3, SubType = 0xE9, XFlip = true };
 		ObjectDefinition definition = LevelData.ObjTypes[3];
+		if (definition.CustomProperties.Length != 7) Fail("Switcher settings did not load.");
 		definition.CustomProperties.Single(p => p.Name == "Direction").SetValue(entry, 1);
 		if (entry.SubType != 0xED || !entry.XFlip) Fail("Switcher direction overwrote unrelated flags.");
 		definition.CustomProperties.Single(p => p.Name == "Ground only").SetValue(entry, 0);
@@ -101,6 +102,38 @@ class CheckSonLVLObjects
 			if (definition.GetSprite(entry).Height != 64 << size) Fail("Incorrect vertical switcher size.");
 			entry.SubType |= 4;
 			if (definition.GetSprite(entry).Width != 64 << size) Fail("Incorrect horizontal switcher size.");
+		}
+		for (int subtype = 0; subtype < 256; subtype++)
+		{
+			entry.SubType = (byte)subtype;
+			Sprite marker = definition.GetSprite(entry);
+			if (marker.X != -marker.Width / 2 || marker.Y != -marker.Height / 2) Fail("Switcher marker is not centered.");
+			if (marker.Strips.Any(strip => !strip.Priority)) Fail("Switcher marker can be hidden behind foreground art.");
+			byte[] pixels = marker.GetBitmap().Bits;
+			entry.XFlip = !entry.XFlip;
+			entry.YFlip = !entry.YFlip;
+			if (!pixels.SequenceEqual(definition.GetSprite(entry).GetBitmap().Bits)) Fail("Unused placement flips changed a switcher marker.");
+			foreach (byte pathBit in new byte[] { 8, 16 })
+			{
+				entry.SubType = (byte)(subtype ^ pathBit);
+				if (pixels.SequenceEqual(definition.GetSprite(entry).GetBitmap().Bits)) Fail("Switcher path numbers did not change with their bit.");
+			}
+		}
+	}
+
+	static void CheckDefinitionTypes()
+	{
+		var cacheNames = new HashSet<string>();
+		foreach (var item in LevelData.INIObjDefs)
+		{
+			byte id;
+			if (!byte.TryParse(item.Key, System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out id)
+				|| item.Value.CodeFile == null) continue;
+			string expected = item.Value.CodeType;
+			if (!cacheNames.Add(expected)) Fail("Multiple objects compile into the same DLL cache: " + expected);
+			ObjectDefinition definition;
+			if (!LevelData.ObjTypes.TryGetValue(id, out definition) || definition.GetType().FullName != expected)
+				Fail("Custom definition fell back or failed to load: $" + id.ToString("X2") + " expected " + expected);
 		}
 	}
 
@@ -130,6 +163,7 @@ class CheckSonLVLObjects
 		LevelData.LoadLevel(name, true);
 		foreach (string line in logs)
 			if (line.Contains("Error") || line.Contains("failed") || line.Contains("not found")) Fail(line);
+		CheckDefinitionTypes();
 		foreach (var item in LevelData.ObjTypes)
 		{
 			ObjectDefinition definition = item.Value;
@@ -174,7 +208,7 @@ class CheckSonLVLObjects
 		if (args.Length == 0) { Console.Error.WriteLine("Usage: check_sonlvl_objects.exe SonLVL.ini [preview-directory]"); return 2; }
 		string ini = Path.GetFullPath(args[0]);
 		string previewDirectory = args.Length > 1 ? Path.GetFullPath(args[1]) : null;
-		LevelData.LogEvent += lines => logs.AddRange(lines);
+		LevelData.LogEvent += lines => { lock (logs) logs.AddRange(lines); };
 		LevelData.LoadGame(ini);
 		foreach (string name in LevelData.Game.Levels.Keys)
 		{

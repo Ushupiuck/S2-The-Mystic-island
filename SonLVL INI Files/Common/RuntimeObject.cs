@@ -46,6 +46,7 @@ namespace MysticIsland.ObjectDefinitions
 			switch (behavior)
 			{
 				case "PathSwapper":
+					LoadPathSwapperMarkers();
 					Bits("Length", 0, 3, "Full length; the runtime tests half this distance on either side of the origin.", "64 pixels", "128 pixels", "256 pixels", "512 pixels");
 					Bits("Direction", 2, 1, "Placement flip flags are not used by the runtime.", "Vertical (cross left/right)", "Horizontal (cross up/down)");
 					Bits("Right / down path", 3, 1, "Collision path after crossing right or down.", "Primary ($C / $D)", "Secondary ($E / $F)");
@@ -234,13 +235,30 @@ namespace MysticIsland.ObjectDefinitions
 			bitmap.DrawLine(LevelData.ColorWhite, width / 2, height / 2 - 3, width / 2, height / 2 + 3);
 			return new Sprite(bitmap, -width / 2, -height / 2);
 		}
+		private void LoadPathSwapperMarkers()
+		{
+			// SonLVL's S3&K marker art numbers each side's collision path.
+			// Repeat the 64-pixel unit to show the full runtime trigger length.
+			byte[] art = ObjectHelper.OpenArtFile("Common/pathswapper-art.nem", CompressionType.Nemesis);
+			frames = new Sprite[32];
+			for (int subtype = 0; subtype < frames.Length; subtype++)
+			{
+				byte[] tile = art.Skip((subtype & 0x1C) << 5).Take(128).ToArray();
+				BitmapBits unit = ObjectHelper.MapASMToBmp(tile, "../mappings/sprite/obj03.asm", subtype & 4, 0).GetBitmap();
+				bool horizontal = (subtype & 4) != 0;
+				int repeat = 1 << (subtype & 3);
+				BitmapBits marker = new BitmapBits(unit.Width * (horizontal ? repeat : 1), unit.Height * (horizontal ? 1 : repeat));
+				for (int i = 0; i < repeat; i++) marker.DrawBitmap(unit, horizontal ? i * unit.Width : 0, horizontal ? 0 : i * unit.Height);
+				frames[subtype] = new Sprite(marker, true, -marker.Width / 2, -marker.Height / 2);
+			}
+		}
 
 		private Sprite Preview(byte subtype, int x, int y, bool yflip)
 		{
 			List<Sprite> pieces;
 			switch (behavior)
 			{
-				case "PathSwapper": return Outline((subtype & 4) == 0 ? 16 : 64 << (subtype & 3), (subtype & 4) == 0 ? 64 << (subtype & 3) : 16);
+				case "PathSwapper": return frames[subtype & 0x1F];
 				case "Bridge":
 					pieces = new List<Sprite>();
 					int count = Math.Max(1, (int)subtype);
@@ -306,6 +324,7 @@ namespace MysticIsland.ObjectDefinitions
 		public override bool RememberState { get { return data.RememberState; } }
 		public override byte DefaultSubtype { get { return data.DefaultSubtype; } }
 		public override bool Debug { get { return data.Debug; } }
+		public override int GetDepth(ObjectEntry obj) { return behavior == "PathSwapper" ? 5 : data.Depth; }
 		public override PropertySpec[] CustomProperties { get { return properties.ToArray(); } }
 		public override ReadOnlyCollection<byte> Subtypes { get { return new ReadOnlyCollection<byte>(data.Subtypes ?? new byte[] { data.DefaultSubtype }); } }
 		public override string SubtypeName(byte subtype)
@@ -372,4 +391,59 @@ namespace MysticIsland.ObjectDefinitions
 			return new Sprite(bitmap, left, top);
 		}
 	}
+
+	// Release SonLVL compiles definitions in parallel and names cached DLLs
+	// after CodeType. Every object ID needs a distinct type/cache filename,
+	// even though its implementation is shared here. Zone overrides keep the
+	// same type because they replace that ID before definitions are loaded.
+	public sealed class PathSwapper : RuntimeObject { }
+	public sealed class BubbleGenerator : RuntimeObject { }
+	public sealed class TiltingPlatform : RuntimeObject { }
+	public sealed class FlappingDoor : RuntimeObject { }
+	public sealed class DiagonalLift : RuntimeObject { }
+	public sealed class SwingingPlatform : RuntimeObject { }
+	public sealed class Platform : RuntimeObject { }
+	public sealed class ChemicalPlantPlatform : RuntimeObject { }
+	public sealed class CollapsingLedge : RuntimeObject { }
+	public sealed class CollapsingFloor : RuntimeObject { }
+	public sealed class Scenery : RuntimeObject { }
+	public sealed class Bridge : RuntimeObject { }
+	public sealed class HiddenPalaceWaterfall : RuntimeObject { }
+	public sealed class Ballhog : RuntimeObject { }
+	public sealed class Chopper : RuntimeObject { }
+	public sealed class Jaws : RuntimeObject { }
+	public sealed class VerticalDoor : RuntimeObject { }
+	public sealed class BreakableWall : RuntimeObject { }
+	public sealed class Eggman : RuntimeObject { }
+	public sealed class Capsule : RuntimeObject { }
+	public sealed class Newtron : RuntimeObject { }
+	public sealed class EdgeWall : RuntimeObject { }
+	public sealed class EmeraldHillWaterfall : RuntimeObject { }
+	public sealed class BBat : RuntimeObject { }
+	public sealed class Gator : RuntimeObject { }
+	public sealed class Aquis : RuntimeObject { }
+	public sealed class Skyhorse : RuntimeObject { }
+	public sealed class Piranha : RuntimeObject { }
+	public sealed class Caterkiller : RuntimeObject { }
+	public sealed class Unused71 : RuntimeObject { }
+	public sealed class Checkpoint : RuntimeObject { }
+	public sealed class HiddenBonus : RuntimeObject { }
+	public sealed class Signpost : RuntimeObject { }
+	public sealed class Junction : RuntimeObject { }
+	public sealed class RunningDisc : RuntimeObject { }
+	public sealed class Conveyor : RuntimeObject { }
+	public sealed class SpinTrap : RuntimeObject { }
+	public sealed class Saw : RuntimeObject { }
+	public sealed class Stomper : RuntimeObject { }
+	public sealed class VanishingPlatform : RuntimeObject { }
+	public sealed class Flamethrower : RuntimeObject { }
+	public sealed class Electrocuter : RuntimeObject { }
+	public sealed class ConveyorPlatformGroup : RuntimeObject { }
+	public sealed class MovingGirder : RuntimeObject { }
+	public sealed class TransportPipe : RuntimeObject { }
+	public sealed class InvisibleSolid : RuntimeObject { }
+	public sealed class MovingBlock : RuntimeObject { }
+	public sealed class Bomb : RuntimeObject { }
+	public sealed class Button : RuntimeObject { }
+
 }
