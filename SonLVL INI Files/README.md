@@ -143,3 +143,10 @@ state limit, and measured 68000 cycles. `--baseline --rom <old-ROM> --listing
 the native placements, both players' attacks on every piece, art surviving the
 indoor animation update, and controller-driven Debug placement of all three
 variants together. The engine's shared `$4E`-byte object stride is unchanged.
+
+`python build_tools/check_wheel_carriers.py --core path/to/genesis_plus_gx_libretro.so --output path/to/wheel-results`
+checks all eight carrier payloads against walls in both directions, low/high
+overhangs, airborne contact, both monitor riders, consumed-payload clearance,
+and native bumps/slopes/curves. Add `--pal` for PAL or `--probe` to record an older
+ROM's failures. Payload wall bounds are configured in `WheelPayloads` alongside
+the mount offset, subtype and facing flags.
