@@ -48,6 +48,7 @@ their route when debug overlays are enabled.
 | `$50`, `$51` | Aquis / Skyhorse | Patrol interval; Aquis also has a firing interval in the high nibble. |
 | `$52` | Piranha | Low nibble: patrol interval; high nibble: jump interval. |
 | `$5E` | Seesaw | Zero: spawn ball; any nonzero subtype: omit ball. |
+| `$60` | Caterkiller / Kemusi | `$00`: Caterkiller; `$01`: intact Kemusi; `$02`: damaged Kemusi, with a vulnerable body and half speed. SMZ Act 1 loads Caterkiller; Act 2 keeps Caterkiller and adds Kemusi in the unused smoke banks. All three have four-piece previews; Act 2's picker defaults to Kemusi. |
 | `$79` | Checkpoint | Full byte: checkpoint number. |
 | `$7D` | Hidden bonus | `$01`: 10000; `$02`: 1000; `$03`: 100 points. |
 | `$A0` | Junction | Low nibble: reversing switch number. |
@@ -65,6 +66,7 @@ their route when debug overlays are enabled.
 | `$AF` | Button | Low nibble: switch number. |
 | `$B0` | Wheel carrier | Low nibble: one of eight mounts. Preview includes the spring, monitor or spikes with the runtime offset/facing. |
 | `$B1–B5` | Palmtree Panic badniks | Bit 0: normal/damaged variant. |
+| `$B7` | Metallic Madness propeller obstacle | Subtype unused. X flip reverses the initial patrol; Y flip is ignored. Preview includes the mast and both blade assemblies. |
 
 Movement distances are determined by the selected runtime routine, rather than
 an independent distance field. The current `$18` mapping sets have two frames;
@@ -127,3 +129,39 @@ bumps, slopes through 45 degrees, stepped rectangles, and all 20 actual Scrap
 Madness Act 2 placements. Traversal tests compare each moving-belt frame with an
 otherwise identical zero-speed frame and require complete rectangle coverage.
 Use `--before-ref <commit-before-migration>` to also verify the layout conversion.
+
+Caterkiller and both Kemusi variants have real-core regression fixtures:
+
+```text
+python build_tools/check_caterkiller.py --core path/to/genesis_plus_gx_libretro.so --output path/to/caterkiller-results
+python build_tools/check_kemusi.py --core path/to/genesis_plus_gx_libretro.so --output path/to/kemusi-results
+```
+
+Both support `--pal`. The first checks the 16-entry encoded trail, independent
+landing, slopes/curves/steps/gaps, chain lifetimes, the original `$40`-byte private
+state limit, and measured 68000 cycles. `--baseline --rom <old-ROM> --listing
+<old-listing>` records the older Caterkiller for comparison. The second checks
+the native placements, both players' attacks on every piece, art surviving the
+indoor animation update, and controller-driven Debug placement of all three
+variants together. The engine's shared `$4E`-byte object stride is unchanged.
+
+`python build_tools/check_wheel_carriers.py --core path/to/genesis_plus_gx_libretro.so --output path/to/wheel-results`
+checks all eight carrier payloads against walls in both directions, low/high
+overhangs, airborne contact, both monitor riders, consumed-payload clearance,
+and native bumps/slopes/curves. Add `--pal` for PAL or `--probe` to record an older
+ROM's failures. Payload wall bounds are configured in `WheelPayloads` alongside
+the mount offset, subtype and facing flags.
+
+`python build_tools/check_propeller.py --core path/to/genesis_plus_gx_libretro.so --output path/to/propeller-results`
+checks the propeller's original CD timing/frame sequence, both players' standing
+and rolling contacts, invincibility, real Debug placement, loading/reloading,
+pool exhaustion/reused slots, and native bumps/slopes/curves. Add `--pal` for PAL.
+The 49-tile art bank is resident alongside the PP enemies in LV0A; Act 1 has a
+sample placement at X `$0640`. Other levels need the corresponding PLC entry
+before using the obstacle. Its three SSTs keep private state within `$40` bytes.
+
+`build_tools/import_propeller.py --source path/to/scddisasm` reproduces its art
+and mappings from the pinned test-branch source. Three copies of the shaft tile
+reduce the mast from nine hardware sprites to four, with an indexed-pixel
+equality check against both original base frames. The blade phase table replaces
+CD's nine-state dispatch while retaining every original frame and damage toggle.

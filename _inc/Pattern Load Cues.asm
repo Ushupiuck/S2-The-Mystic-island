@@ -69,6 +69,7 @@ ptr_PLC_Capsule:	dc.w PLC_Capsule-ArtLoadCues
 ptr_PLC_GHZBoss:	dc.w PLC_GHZBoss-ArtLoadCues
 ptr_PLC_SMZ: dc.w PLC_SMZ-ArtLoadCues
 ptr_PLC_SMZ2: dc.w PLC_SMZ2-ArtLoadCues
+ptr_PLC_SMZIndoor: dc.w PLC_SMZIndoor-ArtLoadCues
 ptr_PLC_PP: dc.w PLC_PP-ArtLoadCues
 ptr_PLC_LivesSonic:	dc.w PLC_LivesSonic-ArtLoadCues
 ptr_PLC_LivesTails:	dc.w PLC_LivesTails-ArtLoadCues
@@ -1030,11 +1031,17 @@ mkplcid_Misc11:		equ (ptr_KPLC_11-KosMLoadCues)/2		; $4E
 mkplcid_Misc12:		equ (ptr_KPLC_12-KosMLoadCues)/2		; $4F
 mkplcid_Misc13:		equ (ptr_KPLC_13-KosMLoadCues)/2		; $50
 
-; 501 static sprite tiles; junction DPLCs use twelve tiles at $4A8-$4B3.
-PLC_SMZ: dc.w 1
-        plcm Nem_SMZAtlas, ArtTile_SMZ_Atlas
-        plcm Nem_Wheel, ArtTile_Wheel
+; Act 2 adds Kemusi in the unused 24-tile smoke bank. Caterkiller remains
+; resident in the shared atlas, so both families can coexist through Debug.
+PLC_SMZ:	dc.w (PLC_SMZ_End-PLC_SMZ-2)/6-1
+		plcm Nem_SMZAtlas, ArtTile_SMZ_Atlas
+		plcm Nem_Wheel, ArtTile_Wheel
 PLC_SMZ_End:
+PLC_SMZIndoor:	dc.w (PLC_SMZIndoor_End-PLC_SMZIndoor-2)/6-1
+		plcm Nem_SMZAtlas, ArtTile_SMZ_Atlas
+		plcm Nem_Wheel, ArtTile_Wheel
+		plcm Nem_Kemusi, ArtTile_SMZ_Kemusi
+PLC_SMZIndoor_End:
 PLC_SMZ2: dc.w 2
         plcm Nem_DSpring, ArtTile_Spring_Diagonal
         plcm Nem_VSpring2, ArtTile_Spring_Vertical
@@ -1043,6 +1050,7 @@ PLC_SMZ2_End:
 
 plcid_SMZ: equ (ptr_PLC_SMZ-ArtLoadCues)/2
 plcid_SMZ2: equ (ptr_PLC_SMZ2-ArtLoadCues)/2
+plcid_SMZIndoor: equ (ptr_PLC_SMZIndoor-ArtLoadCues)/2
 
 PLCKosM_SMZ: dc.w -1
 
@@ -1053,5 +1061,6 @@ PLC_PP: dc.w (PLC_PP_End-PLC_PP-2)/6-1
         plcm Nem_PP_PataBata, ArtTile_PP_PataBata
         plcm Nem_PP_TagaTaga, ArtTile_PP_TagaTaga
         plcm Nem_PP_Tamabboh, ArtTile_PP_Tamabboh
+		plcm Nem_MM_Propeller, ArtTile_Propeller
         plcm Nem_Wheel, ArtTile_Wheel
 PLC_PP_End:

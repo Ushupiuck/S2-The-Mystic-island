@@ -95,6 +95,10 @@ namespace MysticIsland.ObjectDefinitions
 				case "Newtron":
 					alternate = Load("../art/moduled kosinski/Enemy Newtron.kospm", CompressionType.KosinskiPlusM, "Newtron.asm", 1);
 					Bits("Behavior", 0, 255, "Custom third variant uses Newtron_Type03.", "Blue: ground runner", "Green: missile, then vanish", "Green: hybrid"); break;
+				case "Caterkiller":
+					alternate = Load("../art/nemesis/Enemy Kemusi.nem", CompressionType.Nemesis, "Kemusi.bin", 1);
+					Bits("Variant", 0, 255, "The level must load the matching art bank. Scrap Madness Act 1 loads Caterkiller; Act 2 loads both families. Damaged Kemusi has a vulnerable body and moves at half speed.", "Caterkiller", "Kemusi", "Damaged Kemusi");
+					break;
 				case "Chopper": Bits("Jump velocity", 0, 255, "Index into the eight-entry jump-speed table.", "-$400", "-$480", "-$500", "-$580", "-$600", "-$680", "-$700", "-$780"); break;
 				case "Jaws": Bits("Turn interval", 0, 255, "Subtype * 64 - 1 frames; zero wraps to $FFFF."); break;
 				case "Piranha": Bits("Patrol interval", 0, 15, "Low nibble * 64 - 1 frames."); Bits("Jump interval", 4, 15, "High nibble * 64 frames."); break;
@@ -306,8 +310,9 @@ namespace MysticIsland.ObjectDefinitions
 					for (int i = 0; i < 4; i++) pieces.Add(LevelData.MapTileToBmp(art, new MappingsTile(-8, (short)(i * 16 - 32), 2, 2, (ushort)(cap ? 0xC1 : i == 0 && (subtype & 15) == 0 ? 0 : 4), cap, false, 0, false), 2));
 					return new Sprite(pieces);
 				case "Caterkiller":
-					pieces = new List<Sprite> { new Sprite(frames[0]) };
-					for (int i = 1; i < 4; i++) pieces.Add(new Sprite(At(frames, 8), i * 12, 0));
+					bool kemusi = subtype != 0, damaged = subtype >= 2;
+					pieces = new List<Sprite> { new Sprite(kemusi ? alternate[1] : frames[0]) };
+					for (int i = 1; i < 4; i++) pieces.Add(new Sprite(kemusi ? alternate[damaged ? 3 : 2] : At(frames, 8), i * 12, kemusi ? (damaged ? 5 : 1) : 0));
 					return new Sprite(pieces);
 				case "Junction": return new Sprite(frames[0], At(frames, 16));
 				case "Eggman": return new Sprite(frames[0], At(frames, 1));
