@@ -1061,5 +1061,6 @@ PLC_PP: dc.w (PLC_PP_End-PLC_PP-2)/6-1
         plcm Nem_PP_PataBata, ArtTile_PP_PataBata
         plcm Nem_PP_TagaTaga, ArtTile_PP_TagaTaga
         plcm Nem_PP_Tamabboh, ArtTile_PP_Tamabboh
+		plcm Nem_MM_Propeller, ArtTile_Propeller
         plcm Nem_Wheel, ArtTile_Wheel
 PLC_PP_End:

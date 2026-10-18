@@ -8364,7 +8364,7 @@ ptr_ObjB3:		dc.l PP_PataBata
 ptr_ObjB4:		dc.l PP_TagaTaga
 ptr_ObjB5:		dc.l PP_Tamabboh
 ptr_ObjB6:		dc.l PP_TamabbohMissile
-ptr_ObjB7:		dc.l ObjNull
+ptr_ObjB7:		dc.l MM_Propeller
 ptr_ObjB8:		dc.l ObjNull
 ptr_ObjB9:		dc.l ObjNull
 ptr_ObjBA:		dc.l ObjNull
@@ -13136,6 +13136,8 @@ Touch_Sizes:	dc.b $14,$14
 		dc.b $48,  8
 Touch_Size_KemusiBody:
 		dc.b 8, $C
+Touch_Size_Propeller:
+		dc.b $20, 4
 ; ---------------------------------------------------------------------------
 
 Touch_Height:
@@ -15482,6 +15484,7 @@ Kospm_Crabmeat:	binclude	"art/moduled kosinski/Enemy Crabmeat.kospm"
 		include "objects/Enemies/B3 PP Pata-Bata.asm"
 		include "objects/Enemies/B4 PP Taga-Taga.asm"
 		include "objects/Enemies/B5 PP Tamabboh.asm"
+		include "objects/B7 MM Propeller.asm"
 
 
 Kospm_Buzz:	binclude	"art/moduled kosinski/Enemy Buzz Bomber.kospm"
@@ -15539,6 +15542,9 @@ Nem_Monitors:	binclude	"art/nemesis/Monitor and contents.nem"
 Nem_Lamppost:	binclude	"art/nemesis/Lamppost.nem"
 		even
 Nem_Wheel:	binclude	"art/nemesis/Wheel carrier.nem"
+		even
+Nem_MM_Propeller:
+		binclude	"art/nemesis/MM Propeller.nem"
 		even
 Nem_HSpring2:	binclude	"art/nemesis/Horizontal spring.nem"
 		even

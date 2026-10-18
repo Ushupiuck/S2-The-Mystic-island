@@ -201,6 +201,7 @@ Debug_PP: dc.w (Debug_PP_End-Debug_PP-2)/DebugEntry_size
         dbug Map_PP_TagaTaga2,PP_TagaTaga,1,0,ArtTile_PP_TagaTaga
         dbug Map_PP_Tamabboh1,PP_Tamabboh,0,0,ArtTile_PP_Tamabboh
         dbug Map_PP_Tamabboh2,PP_Tamabboh,1,0,ArtTile_PP_Tamabboh
+		dbug	Map_MM_PropellerBase,MM_Propeller,0,0,ArtTile_Propeller
         dbug Map_Ring,Obj12,0,0,make_art_tile(ArtTile_Ring,1,0)
         dbug Map_Obj26,Obj26,4,0,ArtTile_Monitor
         dbug Map_obj41,Obj41,0,0,ArtTile_Spring_Vertical

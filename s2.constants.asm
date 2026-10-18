@@ -1991,3 +1991,5 @@ ArtTile_SMZ_Smoke2: equ $4C9
 ArtTile_SMZ_Kemusi: equ ArtTile_SMZ_Smoke1 ; 22 tiles; Act 2 has no smoke animation
 
 	include "_inc/PalmtreeArtTiles.asm"
+ArtTile_Propeller: equ ArtTile_PP_End	; 49 tiles, after the LV0A enemies
+ArtTile_Propeller_End: equ ArtTile_Propeller+49
