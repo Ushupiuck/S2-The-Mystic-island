@@ -13134,6 +13134,8 @@ Touch_Sizes:	dc.b $14,$14
 		dc.b $18,$18
 		dc.b  $C,$18
 		dc.b $48,  8
+Touch_Size_KemusiBody:
+		dc.b 8, $C
 ; ---------------------------------------------------------------------------
 
 Touch_Height:
@@ -14327,7 +14329,7 @@ Offs_AniPLC:	dc.w Dynamic_Null-Offs_AniFunc		; GHZ
 		dc.w Dynamic_Null-Offs_AniFunc		; 06
 		dc.w Dynamic_Null-Offs_AniFunc		; 07
 		dc.w Dynamic_Null-Offs_AniFunc		; 07
-		dc.w Dynamic_Normal-Offs_AniFunc	; 08
+		dc.w Animate_SMZ-Offs_AniFunc		; 08
 		dc.w AnimCue_SMZ-Offs_AniFunc		; 08
 		dc.w Dynamic_Null-Offs_AniFunc		; 09
 		dc.w Dynamic_Null-Offs_AniFunc		; 09
@@ -14352,6 +14354,10 @@ Dynamic_Null:
 Dynamic_NullGHZ:
 		rts
 ; ===========================================================================
+
+Animate_SMZ:
+		cmpi.b	#1,(Current_Act).w	; indoor Act 2 reuses the smoke bank for Kemusi
+		beq.w	Dynamic_Null
 
 Dynamic_Normal:
 		lea	(Anim_Counters).w,a3
@@ -17825,6 +17831,8 @@ Map_Octus:	binclude	"mappings/sprite/Octus.bin"			; $63
 		even
 Map_Cat:	binclude	"mappings/sprite/Caterkiller.bin"		; $78
 		even
+Map_Kemusi:	binclude	"mappings/sprite/Kemusi.bin"
+		even
 Map_Obj79:	binclude	"mappings/sprite/Checkpoint.bin"
 		even
 Map_SpecialWarp:binclude	"mappings/sprite/Special Stage Warp.bin"
@@ -17873,6 +17881,8 @@ Map_SMZ_Swing: binclude "mappings/sprite/SMZ Swing.bin"
         even
 Nem_SMZAtlas: binclude "art/nemesis/SMZ Sprite Atlas.nem"
         even
+Nem_Kemusi:	binclude	"art/nemesis/Enemy Kemusi.nem"
+		even
 Nem_S3LevelSelect: binclude "art/nemesis/S3 Level Select.nem"
         even
 Eni_S3LevelSelect: binclude "mappings/misc/S3 Level Select.eni"

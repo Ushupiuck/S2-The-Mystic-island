@@ -81,7 +81,7 @@ LevelArtPointers:
 
 		; LV8 placeholder
 		levartptrs plcid_SMZ, plcid_SMZ2, palid_SMZ1, Kosp_LV8, Map16_LV8, Map128_LV8	; LV8Z	; ACT 1
-		levartptrs plcid_SMZ, plcid_SMZ2, palid_SMZ2, Kosp_LV8, Map16_LV8, Map128_LV8	; LV8Z	; ACT 2
+		levartptrs plcid_SMZIndoor, plcid_SMZ2, palid_SMZ2, Kosp_LV8, Map16_LV8, Map128_LV8	; LV8Z	; ACT 2
 		levartptrs plcid_SMZ, plcid_SMZ2, palid_SMZ1, Kosp_LV8, Map16_LV8, Map128_SMZBlank	; LV8Z	; ACT 3
 		levartptrs plcid_SMZ, plcid_SMZ2, palid_SMZ1, Kosp_LV8, Map16_LV8, Map128_SMZBlank	; LV8Z	; ACT 4
 

@@ -48,6 +48,7 @@ their route when debug overlays are enabled.
 | `$50`, `$51` | Aquis / Skyhorse | Patrol interval; Aquis also has a firing interval in the high nibble. |
 | `$52` | Piranha | Low nibble: patrol interval; high nibble: jump interval. |
 | `$5E` | Seesaw | Zero: spawn ball; any nonzero subtype: omit ball. |
+| `$60` | Caterkiller / Kemusi | `$00`: Caterkiller; `$01`: intact Kemusi; `$02`: damaged Kemusi, with a vulnerable body and half speed. SMZ Act 1 loads Caterkiller; Act 2 keeps Caterkiller and adds Kemusi in the unused smoke banks. All three have four-piece previews; Act 2's picker defaults to Kemusi. |
 | `$79` | Checkpoint | Full byte: checkpoint number. |
 | `$7D` | Hidden bonus | `$01`: 10000; `$02`: 1000; `$03`: 100 points. |
 | `$A0` | Junction | Low nibble: reversing switch number. |
@@ -127,3 +128,18 @@ bumps, slopes through 45 degrees, stepped rectangles, and all 20 actual Scrap
 Madness Act 2 placements. Traversal tests compare each moving-belt frame with an
 otherwise identical zero-speed frame and require complete rectangle coverage.
 Use `--before-ref <commit-before-migration>` to also verify the layout conversion.
+
+Caterkiller and both Kemusi variants have real-core regression fixtures:
+
+```text
+python build_tools/check_caterkiller.py --core path/to/genesis_plus_gx_libretro.so --output path/to/caterkiller-results
+python build_tools/check_kemusi.py --core path/to/genesis_plus_gx_libretro.so --output path/to/kemusi-results
+```
+
+Both support `--pal`. The first checks the 16-entry encoded trail, independent
+landing, slopes/curves/steps/gaps, chain lifetimes, the original `$40`-byte private
+state limit, and measured 68000 cycles. `--baseline --rom <old-ROM> --listing
+<old-listing>` records the older Caterkiller for comparison. The second checks
+the native placements, both players' attacks on every piece, art surviving the
+indoor animation update, and controller-driven Debug placement of all three
+variants together. The engine's shared `$4E`-byte object stride is unchanged.

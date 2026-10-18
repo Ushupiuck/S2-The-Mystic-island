@@ -7,7 +7,7 @@ DebugList:
 		dc.w Debug_HTZ-DebugList,Debug_HTZ-DebugList,Debug_HTZ-DebugList,Debug_HTZ-DebugList
 		dc.w Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList
 		dc.w Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList
-		dc.w Debug_SMZ-DebugList,Debug_SMZ-DebugList,Debug_SMZ-DebugList,Debug_SMZ-DebugList
+		dc.w Debug_SMZ-DebugList,Debug_SMZIndoor-DebugList,Debug_SMZ-DebugList,Debug_SMZ-DebugList
 		dc.w Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList
 		dc.w Debug_PP-DebugList,Debug_PP-DebugList,Debug_PP-DebugList,Debug_PP-DebugList
 		dc.w Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList
@@ -161,22 +161,33 @@ Debug_HPZ:	dc.w (Debug_HPZ_End-Debug_HPZ-2)/DebugEntry_size
 	dbug	Map_GiantRing,	GiantRing,	0,	0,	make_art_tile(ArtTile_Giant_Ring,1,0)
 Debug_HPZ_End:
 
-Debug_SMZ: dc.w (Debug_SMZ_End-Debug_SMZ-2)/DebugEntry_size
-        dbug Map_Ring,Obj12,0,0,make_art_tile(ArtTile_Ring,1,0)
-        dbug Map_Obj26,Obj26,4,0,make_art_tile(ArtTile_Monitor,0,0)
-        dbug Map_obj41,Obj41,0,0,make_art_tile(ArtTile_Spring_Vertical,0,0)
-        dbug Map_SMZ_Spin,SMZ_SpinPlatform,$80,0,ArtTile_SMZ_Spin
-        dbug Map_SMZ_Saw,SMZ_Saws,0,0,ArtTile_SMZ_Saw|$4000
-        dbug Map_SMZ_VanP,SMZ_VanishPlatform,0,0,ArtTile_SMZ_VanP|$4000
-        dbug Map_MovSpring,WheelCarrier,0,0,ArtTile_Wheel
-        dbug Map_MovSpring,WheelCarrier,1,0,ArtTile_Wheel
-        dbug Map_MovSpring,WheelCarrier,2,0,ArtTile_Wheel
-        dbug Map_MovSpring,WheelCarrier,3,0,ArtTile_Wheel
-        dbug Map_MovSpring,WheelCarrier,4,0,ArtTile_Wheel
-        dbug Map_MovSpring,WheelCarrier,5,0,ArtTile_Wheel
-        dbug Map_MovSpring,WheelCarrier,6,0,ArtTile_Wheel
-        dbug Map_MovSpring,WheelCarrier,7,0,ArtTile_Wheel
+Debug_SMZObjects:	macro
+		dbug	Map_Ring,Obj12,0,0,make_art_tile(ArtTile_Ring,1,0)
+		dbug	Map_Obj26,Obj26,4,0,make_art_tile(ArtTile_Monitor,0,0)
+		dbug	Map_obj41,Obj41,0,0,make_art_tile(ArtTile_Spring_Vertical,0,0)
+		dbug	Map_SMZ_Spin,SMZ_SpinPlatform,$80,0,ArtTile_SMZ_Spin
+		dbug	Map_SMZ_Saw,SMZ_Saws,0,0,ArtTile_SMZ_Saw|$4000
+		dbug	Map_SMZ_VanP,SMZ_VanishPlatform,0,0,ArtTile_SMZ_VanP|$4000
+		dbug	Map_MovSpring,WheelCarrier,0,0,ArtTile_Wheel
+		dbug	Map_MovSpring,WheelCarrier,1,0,ArtTile_Wheel
+		dbug	Map_MovSpring,WheelCarrier,2,0,ArtTile_Wheel
+		dbug	Map_MovSpring,WheelCarrier,3,0,ArtTile_Wheel
+		dbug	Map_MovSpring,WheelCarrier,4,0,ArtTile_Wheel
+		dbug	Map_MovSpring,WheelCarrier,5,0,ArtTile_Wheel
+		dbug	Map_MovSpring,WheelCarrier,6,0,ArtTile_Wheel
+		dbug	Map_MovSpring,WheelCarrier,7,0,ArtTile_Wheel
+		dbug	Map_SMZ_Cat,Caterkiller,0,0,ArtTile_SMZ_Atlas
+		endm
+
+Debug_SMZ:	dc.w (Debug_SMZ_End-Debug_SMZ-2)/DebugEntry_size
+		Debug_SMZObjects
 Debug_SMZ_End:
+
+Debug_SMZIndoor:	dc.w (Debug_SMZIndoor_End-Debug_SMZIndoor-2)/DebugEntry_size
+		Debug_SMZObjects
+		dbug	Map_Kemusi,Caterkiller,1,2,make_art_tile(ArtTile_SMZ_Kemusi,1,0)
+		dbug	Map_Kemusi,Caterkiller,2,3,make_art_tile(ArtTile_SMZ_Kemusi,1,0)
+Debug_SMZIndoor_End:
 
 ; LV0A is an editable asset/behavior library, not a port of the PP stage.
 Debug_PP: dc.w (Debug_PP_End-Debug_PP-2)/DebugEntry_size
