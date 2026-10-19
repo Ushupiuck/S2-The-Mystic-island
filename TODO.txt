@@ -33,6 +33,9 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
+Reserve a universal 16-tile water DPLC bank at $2A8, preserve the paused two-phase waves and all terrain/platform pixels, retain the displaced SMZ terrain in static atlas padding, and move the capsule to $4A7 < DONE
+Correct hidden-bonus blue/red/gold palette slots, running-disc corner capture, horizontal spring top height, and tail/carrier update order < DONE
+Keep wrapped camera displacement signed after ducking/jumping and resolve first-closing-frame trapdoor foot overlaps without changing ordinary closed sides or underside contact < DONE
 Enable all $10 zone slots / 64 acts, use the existing zone names, repair MTZ2-4 and provide valid editable blank-act templates through LV0F; extend headers, timezones, layouts, bounds, music, collision, debug, starts, rings, exits and SonLVL < DONE
 Replace level select with S3&K art/layout and two pages, NEXT/PREVIOUS immediately before SOUND TEST on both pages, all four acts, and C to choose Sonic & Tails / Sonic / Tails; boot all 64 selections in NTSC/PAL < DONE
 Import actual S1 Scrap Brain acts 1/2 as ID $08 Scrap Madness, including 548 placements, collision, rings and missing objects at $A0-$AF; pack 516 sprite tiles without changing adapted indexed pixels, and keep both actors independent in solid objects/transports < DONE

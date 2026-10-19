@@ -75,18 +75,20 @@ positions, ordering, flips, adapted indexed pixels, palettes and priority.
 Complete sprite rectangles share identical art and overlapping tile sequences;
 pieces are never subdivided. All objects share one bank in both acts.
 
-The static atlas occupies 501 tiles at `$2B0-$4A4`. The junction's changing
-edge uses a twelve-tile DPLC buffer at `$4A8-$4B3`; its centre and outer ring
+The static atlas occupies 501 tiles at `$2B8-$4AC`. Its final padding slot,
+`$4AF`, retains one terrain tile displaced by the universal water bank.
+The junction's changing edge uses a twelve-tile DPLC buffer at `$4B0-$4BB`; its centre and outer ring
 stay in the static atlas. Each angle uploads one 4-12-tile run when it changes,
 through the existing atomic S3&K loader. Its two placements have disjoint loading
 windows. Collision, switch reversal, capture/release and rotation timing remain
 independent of the upload. A full DMA queue hides the rotating sprite for that
 frame and retries; it never caches or displays a partial upload.
 
-Both acts retain every object family in the same allocation. Terrain art,
-blocks, chunks, layouts and collision data are unchanged. The striped barrier
+Both acts retain every object family in the same allocation. Terrain block
+pixels, chunks, layouts and collision data are unchanged; two block tile words
+now reference the retained terrain tile at `$4AF`. The striped barrier
 at Final Zone's entrance uses source terrain tiles `$25F-$263`. The wheel bank
-remains at `$4B4-$4BB`, and two smoke strips remain at `$4BD-$4D4`.
+occupies `$4BC-$4C4`, and two smoke strips occupy `$4C5-$4DC`.
 The plane-A tile-table range `$600-$67F` remains unavailable for sprite art.
 
 Grounded ducking uses the rolling/spindash diameter for solid-object head

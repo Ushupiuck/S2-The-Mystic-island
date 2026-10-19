@@ -7,7 +7,7 @@
       {"name":"Invincibility monitor", "id":"26", "x":640, "y":1264, "subtype":7},
       {"name":"Speed monitor", "id":"26", "x":768, "y":1264, "subtype":5},
       {"name":"Bubble maker", "id":"09", "x":880, "y":1256,"subtype":128}],
-      "art":[["nem","Nem_Monitors","ArtTile_Monitor"],["nem","Nem_Lamppost","ArtTile_Lamppost"],["nem","Nem_WaterBubbles","ArtTile_Bubbles"],["nem","Nem_Water","ArtTile_Water_Surface"]]},
+      "art":[["nem","Nem_Monitors","ArtTile_Monitor"],["nem","Nem_Lamppost","ArtTile_Lamppost"],["nem","Nem_WaterBubbles","ArtTile_Bubbles"]]},
     {"name":"Springs and spikes", "objects":[
       {"name":"Up spring", "id":"41", "x":256, "y":1264},
       {"name":"Side spring", "id":"41", "x":384, "y":1264, "subtype":16},
@@ -78,7 +78,7 @@
     {"name":"Octus Skyhorse and water", "objects":[
       {"name":"Octus", "id":"63", "x":256, "y":1248},
       {"name":"Skyhorse", "id":"51", "x":512, "y":1200,"subtype":34}],
-      "art":[["nem","Nem_Octus","ArtTile_Octus"],["nem","Nem_Aquis","ArtTile_Aquis"],["nem","Nem_Aquis","ArtTile_Aquis_Child"],["nem","Nem_Water","ArtTile_Water_Surface"]]},
+      "art":[["nem","Nem_Octus","ArtTile_Octus"],["nem","Nem_Aquis","ArtTile_Aquis"],["nem","Nem_Aquis","ArtTile_Aquis_Child"]]},
     {"name":"Bumper seesaw and flapdoor", "objects":[
       {"name":"Bumper", "id":"47", "x":256, "y":1184},
       {"name":"Seesaw", "id":"5E", "x":512, "y":1248},

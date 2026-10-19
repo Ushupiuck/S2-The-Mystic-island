@@ -24,6 +24,7 @@ SMZ_disc_spot_distance:	equ objoff_34		; radius distance for the small moving sp
 SMZ_disc_spot_speed:	equ objoff_36		; small spot rotation speed
 SMZ_disc_triggersize:	equ objoff_38		; trigger distance for Sonic to latch onto gear
 SMZ_disc_sonic_attached:	equ objoff_3A		; flag set while Sonic is attached to gear
+SMZ_disc_radius_squared:	equ objoff_3C		; circular capture limit, after the quick square test
 ; ===========================================================================
 
 SMZ_Disc_Main:	; Routine 0
@@ -39,6 +40,7 @@ SMZ_Disc_Main:	; Routine 0
 		move.w	obY(a0),SMZ_disc_origY(a0)			; remember initial Y-position
 		move.b	#$18,SMZ_disc_spot_distance(a0)		; set radius distance for the small moving spot inside gear
 		move.b	#$48,SMZ_disc_triggersize(a0)		; set trigger distance for Sonic to latch onto gear
+		move.w	#$48*$48,SMZ_disc_radius_squared(a0)
 
 		; This is a leftover from the prototype, where it was planned to also
 		; have smaller sized gears. In the final game, only large gears exist.
@@ -47,6 +49,7 @@ SMZ_Disc_Main:	; Routine 0
 		beq.s	.setupSmallDot				; branch if 0 (it always is)
 		move.b	#$10,SMZ_disc_spot_distance(a0)		; use smaller spot radius
 		move.b	#$38,SMZ_disc_triggersize(a0)		; use shorter trigger distance
+		move.w	#$38*$38,SMZ_disc_radius_squared(a0)
 
 	.setupSmallDot:
 		move.b	obSubtype(a0),d1			; get object subtype again
@@ -98,6 +101,16 @@ SMZ_Disc_MoveSonic:
 		add.w	d2,d1					; add trigger distance
 		cmp.w	d3,d1					; is Sonic vertically within trigger distance?
 		bhs.s	SMZ_Disc_DetachSonic			; if not, branch
+
+		; The square's corners extend beyond the circular gear. Falling
+		; beside it must not acquire its minimum ground speed on contact.
+		sub.w	d2,d0
+		sub.w	d2,d1
+		muls.w	d0,d0
+		muls.w	d1,d1
+		add.w	d1,d0			; bounded deltas keep the sum within a word
+		cmp.w	SMZ_disc_radius_squared(a0),d0
+		bhs.s	SMZ_Disc_DetachSonic
 
 		btst	#status.player.in_air,obStatus(a1)		; is Sonic on the ground?
 		beq.s	SMZ_Disc_AttachSonic			; if yes, attach Sonic to gear

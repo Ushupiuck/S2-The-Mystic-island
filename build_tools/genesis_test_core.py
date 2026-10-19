@@ -20,14 +20,14 @@ class Variable(C.Structure):
 
 
 class Genesis:
-    def __init__(self, core, rom, listing, output, pal=False):
+    def __init__(self, core, rom, listing, output, pal=False, core_options=None, system_directory=None):
         self.s = {name:int(value,16) for name,value in re.findall(
             r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]',listing.read_text())}
         self.output = output
         output.mkdir(parents=True,exist_ok=True)
         self.frame, self.buttons, self.buttons2 = 0, set(), set()
         self.video, self.pixel_format = None, 0
-        self.directory = str(output).encode()
+        self.directory = str(system_directory or output).encode()
         self.region = b'pal' if pal else b'ntsc-u'
         self.core = C.CDLL(str(core))
         ENV = C.CFUNCTYPE(C.c_bool,C.c_uint,C.c_void_p)
@@ -46,7 +46,7 @@ class Genesis:
                 return True
             if cmd == 15:
                 var = C.cast(data,C.POINTER(Variable)).contents
-                var.value = self.region if var.key == b'genesis_plus_gx_region_detect' else None
+                var.value = self.region if var.key == b'genesis_plus_gx_region_detect' else (core_options or {}).get(var.key)
                 return var.value is not None
             if cmd == 17:
                 C.cast(data,C.POINTER(C.c_bool))[0] = False

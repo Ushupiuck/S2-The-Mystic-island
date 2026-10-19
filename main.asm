@@ -5666,7 +5666,10 @@ ScrollVertical:
 		sub.w	(a1),d0
 		tst.w	(Camera_Min_Y_pos).w
 		bpl.s	.no_wrap
-		andi.w	#Level_YWrapMask,d0
+		; Signed 11-bit distance: looking down can put the jumping player
+		; above the camera. An unsigned mask makes that look nearly $800 below.
+		lsl.w	#5,d0
+		asr.w	#5,d0
 .no_wrap:
 		btst	#2,obStatus(a0)
 		beq.s	loc_6598
@@ -8139,7 +8142,15 @@ byte_B292:	dc.b   2,  0,  1, $B,afBack,  1
 ; ObjectsLoad:
 ExecuteObjects:
 		lea	(v_objspace).w,a0
-		moveq	#(v_objend-v_objspace)/object_size-1,d7	; run every slot in the object pool
+		moveq	#(v_player2tails-v_objspace)/object_size-1,d7
+		bsr.s	RunObject
+		lea	(v_player2tails+object_size).w,a0
+		moveq	#(v_objend-v_player2tails)/object_size-2,d7
+		bsr.s	RunObject
+		; Carriers move the body after its normal update. Animate and queue
+		; the separate tail last, using the body's final position and state.
+		lea	(v_player2tails).w,a0
+		moveq	#0,d7
 		; Objects deliberately continue running after the primary player dies.
 
 ; ---------------------------------------------------------------------------
@@ -15559,7 +15570,8 @@ Nem_Bumper:	binclude	"art/nemesis/Bumper.nem"
 		even
 Nem_Button:	binclude	"art/nemesis/Button.nem"
 		even
-Nem_Water:	binclude	"art/nemesis/Water Surface.nem"
+Art_Water_Surface:	binclude	"art/uncompressed/Water Surface.unc"
+		even
 		even
 Nem_WaterBubbles:
 		binclude	"art/nemesis/Water bubbles.nem"
