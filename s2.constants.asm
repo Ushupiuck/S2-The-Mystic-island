@@ -1337,7 +1337,9 @@ v_timemin		= v_time+1			; time - minutes
 v_timesec		= v_time+2			; time - seconds
 v_timecent		= v_time+3			; time - centiseconds
 v_score:		ds.l	1			; score
-			ds.b	3			; unused former global power-up flags
+MCD_status:		ds.b	1			; 0 absent, 1 ready, $FF failed
+MCD_dma_pending:	ds.b	1			; queued Word-RAM transfer
+			ds.b	1			; unused former global power-up flag
 Super_Sonic_flag:	ds.b	1
 
 v_lastlamp:		ds.b	2			; number of the last lamppost you hit

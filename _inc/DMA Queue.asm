@@ -46,6 +46,7 @@
 ;   space for both pieces (both pieces queued)
 ;
 ; Setting UseVIntSafeDMA to 1 adds 46(6/1) cycles to all times.
+; MegaCDMode1 adds 46 cycles per queued transfer (56 for Word RAM).
 ;
 ; Setting AssumeSourceAddressInBytes to 0 reduces all times by 10(1/0) cycles,
 ; but only if the DMA is not entirely discarded. However, all callers must be
@@ -186,7 +187,7 @@ QueueSlotCount = (VDP_Command_Buffer_Slot-VDP_Command_Buffer)/DMAEntry.len
 	ifndef DMAfunctions_defined
 		equ	DMAfunctions_defined,1
 dmaSource function addr,((addr>>1)&$7FFFFF)
-dmaLength function len,((len>>1)&$7FFF)
+dmaLength function len,((len>>1)&$FFFF)
 	endif
 ; ---------------------------------------------------------------------------
 	ifndef QueueStaticDMA_defined
@@ -217,6 +218,9 @@ QueueStaticDMA macro src,length,dest
 	movea.w	(VDP_Command_Buffer_Slot).w,a1
 	cmpa.w	#VDP_Command_Buffer_Slot,a1
 	beq.s	.done												; Return if there's no more room in the buffer
+	if MegaCDMode1&(((src)&$E00000)==$600000)
+		st.b	(MCD_dma_pending).w
+	endif
 	move.b	#(dmaLength(length)>>8)&$FF,DMAEntry.SizeH(a1)		; Write top byte of size/2
 	move.l	#((dmaLength(length)&$FF)<<24)|dmaSource(src),d0	; Set d0 to bottom byte of size/2 and the low 3 bytes of source/2
 	movep.l	d0,DMAEntry.SizeL(a1)								; Write it all to the queue
@@ -236,6 +240,9 @@ QueueStaticDMA macro src,length,dest
 ; ---------------------------------------------------------------------------
 ResetDMAQueue macro
 	move.w	#VDP_Command_Buffer,(VDP_Command_Buffer_Slot).w
+	if MegaCDMode1
+		clr.b	(MCD_dma_pending).w
+	endif
 	endm
 ; ===========================================================================
 
@@ -258,6 +265,14 @@ QueueDMATransfer:
 	if UseRAMSourceSafeDMA<>0
 		bclr.l	#23,d1										; Make sure bit 23 is clear (68k->VDP DMA flag)
 	endif	; UseRAMSourceSafeDMA
+	if MegaCDMode1
+		move.l	d1,d0
+		andi.l	#$700000,d0
+		cmpi.l	#$300000,d0
+		bne.s	.notWordRAM
+		st.b	(MCD_dma_pending).w
+.notWordRAM:
+	endif
 	movep.l	d1,DMAEntry.Source(a1)							; Write source address; the useless top byte will be overwritten later
 	moveq	#0,d0											; We need a zero on d0
 
@@ -345,6 +360,10 @@ QueueDMATransfer:
 ; sub_14AC: CopyToVRAM: IssueVDPCommands: Process_DMA:
 Process_DMA_Queue:
 ProcessDMAQueue:
+	if MegaCDMode1
+		tst.b	(MCD_dma_pending).w
+		bne.w	ProcessDMAQueue_WordRAM
+	endif
 	movea.w	(VDP_Command_Buffer_Slot).w,a1
 	jmp	.jump_table-VDP_Command_Buffer(a1)
 ; ---------------------------------------------------------------------------
@@ -399,3 +418,72 @@ InitDMAQueue:
 ; End of function ProcessDMAQueue
 ; ===========================================================================
 
+
+; Keep the unrolled ordinary queue above. Only a queue containing Word RAM
+; takes this path. Preserve the original contract: only a1/a5 are trashed.
+	if MegaCDMode1
+ProcessDMAQueue_WordRAM:
+	movem.l	d0-d3/a0/a2,-(sp)
+	lea	(vdp_control_port).l,a5
+	lea	(VDP_Command_Buffer).w,a1
+	movea.w	(VDP_Command_Buffer_Slot).w,a2
+.next:
+	cmpa.l	a2,a1
+	bhs.w	.done
+	move.b	DMAEntry.SrcH(a1),d0
+	andi.b	#$70,d0
+	cmpi.b	#$30,d0
+	beq.s	.wordRAM
+	move.l	(a1)+,(a5)
+	move.l	(a1)+,(a5)
+	move.l	(a1)+,(a5)
+	move.w	(a1)+,(a5)
+	bra.s	.next
+.wordRAM:
+	movep.l	DMAEntry.Source(a1),d1
+	move.l	d1,d2
+	andi.l	#$7FFFFF,d2
+	add.l	d2,d2
+	movea.l	d2,a0
+	move.l	DMAEntry.Command(a1),d0
+	moveq	#0,d3
+	move.b	DMAEntry.SizeH(a1),d3
+	lsl.w	#8,d3
+	move.b	DMAEntry.SizeL(a1),d3
+	cmpi.w	#1,d3
+	beq.s	.single
+	addq.l	#1,d1			; source bias; retain SizeL in the high byte
+	movep.l	d1,DMAEntry.Source(a1)
+	move.l	(a1)+,(a5)
+	move.l	(a1)+,(a5)
+	move.l	(a1)+,(a5)
+	move.w	(a1)+,(a5)
+	tst.w	d3
+	beq.w	.next			; 65536 words overwrite the bad word after wrap
+	cmpi.w	#$8000,d3
+	bhi.w	.next
+	bra.s	.repair
+.single:
+	lea	DMAEntry.len(a1),a1
+.repair:
+	bclr	#7,d0
+	move.l	d0,(a5)
+	move.w	(a0),(vdp_data_port).l
+	; Restore the ordinary end address, including destination wrap.
+	move.l	d0,d2
+	swap	d2
+	andi.w	#$3FFF,d2
+	move.w	d0,d1
+	andi.w	#3,d1
+	ror.w	#2,d1
+	or.w	d1,d2
+	add.w	d3,d3
+	add.w	d3,d2
+	vdpCommReg d2,VRAM,WRITE,1
+	move.l	d2,(a5)
+	bra.w	.next
+.done:
+	ResetDMAQueue
+	movem.l	(sp)+,d0-d3/a0/a2
+	rts
+	endif

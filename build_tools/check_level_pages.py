@@ -10,8 +10,9 @@ p = argparse.ArgumentParser(description=__doc__)
 for name in ('rom', 'listing', 'core', 'output'):
 	p.add_argument('--' + name, type=Path, required=True)
 p.add_argument('--pal', action='store_true')
+p.add_argument('--system-directory', type=Path, help='Optional BIOS directory for Mode 1 checks')
 args = p.parse_args()
-g = Genesis(args.core, args.rom, args.listing, args.output, args.pal)
+g = Genesis(args.core, args.rom, args.listing, args.output, args.pal, system_directory=args.system_directory)
 UP, DOWN, LEFT, RIGHT, A, B, C_BUTTON, START = 4, 5, 6, 7, 1, 0, 8, 3
 PAGE, BONUS, SOUND = [g.s['LevelSelect_' + name + 'Item'] for name in ('Page', 'Bonus', 'Sound')]
 
@@ -73,6 +74,9 @@ def wait_level(zone, act):
 
 
 title()
+cd_status = g.read("MCD_status")
+if args.system_directory:
+	assert cd_status == 1, "Mode 1 bootstrap failed"
 enter_menu()
 item(0)
 expect_text(1, 1, 'TWILIGHT HILL')
@@ -199,6 +203,7 @@ for zone in range(16):
 		press(START)
 		wait_level(zone, act)
 		step(15); item(selected)
+		assert g.read("MCD_status") == cd_status
 		checks.append({'zone': zone, 'act': act + 1, 'passed': True})
 	print('Four-act launch checks passed for zone ' + str(zone), flush=True)
 print('Menu controls, layout, sound, return memory, special stage and all 64 act boots pass.', flush=True)

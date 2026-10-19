@@ -1,5 +1,5 @@
 ; ===========================================================================
-; Sonic the Mystic Island Project -- For the Mega Drive
+; Sonic the Mystic Island Project -- Mega Drive / Mega-CD Mode 1
 ; ===========================================================================
 
 FixBugs			= 1	; change to 1 to enable bugfixes
@@ -9,10 +9,13 @@ BackupSRAM		= 1
 AddressSRAM		= 3	; 0 = odd+even; 2 = even only; 3 = odd only
 TimeTravel		= 1	; if 1, allows time-travel mechanics (W.I.P)
 
+MegaCDMode1		= 1	; cartridge boot with optional Mega-CD hardware
+
 	CPU 68000
 	include	"s2.macrosetup.asm"
 	include	"s2.macros.asm"
 	include	"s2.constants.asm"
+	include	"_inc/Mega CD Constants.asm"
 	include	"_inc/Sprite Bounds.asm"
 	include	"sound/_smps2asm_inc.asm"
  if AdvancedHandler
@@ -46,7 +49,11 @@ Vectors:
 		dc.b "SONIC THE HEDGEHOG: EGGMAN ATTACKS              " ; International name
 		dc.b "GM 00004049-01"			; Version (leftover from Sonic 1)
 Checksum:	dc.w $0000				; Checksum (patched later if incorrect)
-		dc.b "J               "			; I/O support
+	if MegaCDMode1
+		dc.b "JC              "	; joypad and Mega-CD cartridge support
+	else
+		dc.b "J               "
+	endif			; I/O support
 		dc.l StartOfRom				; Start address of ROM
 ROMEndLoc:	dc.l EndOfRom-1				; End address of ROM
 		dc.l v_start&$FFFFFF			; Start address of RAM
@@ -232,6 +239,9 @@ GameProgram:
 
 		bsr.w	InitDMAQueue
 		bsr.w	VDPSetupGame
+	if MegaCDMode1
+		bsr.w	MCD_Init
+	endif
 		; Load the Sound Driver
 		stopZ80
 		resetZ80
@@ -1247,6 +1257,9 @@ KosPlusArt_To_VDP:
 ; ===========================================================================
 		include "_inc/KosinskiPlus.asm"
 		include "_inc/DMA Queue.asm"
+	if MegaCDMode1
+		include "_inc/Mega CD.asm"
+	endif
 ; ===========================================================================
 
 ; ---------------------------------------------------------------------------
@@ -2141,6 +2154,7 @@ Sega_GoToTitleScreen:
 ; ===========================================================================
 
 TitleScreen:
+		bsr.w	ResetMusicTempo
 		move.b	#bgm_Stop,d0
 		bsr.w	PlaySound_Special ; stop music
 		bsr.w	ClearPLC
@@ -2426,6 +2440,7 @@ Demo:		tst.w	(f_demo).w		; are we on an ending demo?
 
 Level_NoMusicFade:
 		bsr.w	Pal_FadeToBlack
+		bsr.w	ResetMusicTempo
 		bsr.w	ClearPLC
 		bset	#7,(v_gamemode).w	; GameModeFlag_TitleCard
 		tst.w	(f_demo).w	; are we on an ending demo?
@@ -3456,6 +3471,20 @@ ChangeMusicTempo:
 		enable_ints
 		rts
 ; ---------------------------------------------------------------------------
+; New scenes clear the players' power-ups. Clear both audio contexts too:
+; new songs retain speed shoes for invincibility music, and a pending 1-up
+; restoration must not resurrect the previous level's speed-up flag.
+; ---------------------------------------------------------------------------
+ResetMusicTempo:
+		disable_ints
+		stopZ80
+		waitZ80
+		clr.b	(Z80_RAM+zAbsVar.SpeedUpFlag).l
+		clr.b	(Z80_RAM+zSaveVar.SpeedUpFlag).l
+		clr.b	(Z80_RAM+zAbsVar.TempoTurbo).l
+		clr.b	(Z80_RAM+zSaveVar.TempoTurbo).l
+		bra.s	ChangeMusicTempo.resume
+; ---------------------------------------------------------------------------
 ; play a sound in alternating speakers (as in the ring collection sound)
 
 PlaySoundStereo:
@@ -3486,6 +3515,7 @@ PlaySound:	disable_ints
 ; Sonic 1 Special Stage
 ; GameMode10:
 BonusStage:
+		bsr.w	ResetMusicTempo
 		move.w	#sfx_EnterSS,d0
 		bsr.w	PlaySound_Special
 		clearRAM Kos_decomp_queue_count, Kos_module_queue_End		; clear the KosPlusM bytes
@@ -17898,6 +17928,10 @@ Art_S3LevelSelectBackground: binclude "art/uncompressed/S3 Level Select Backgrou
 Art_SMZSmoke: binclude "art/uncompressed/SMZ Smoke.bin"
         even
 
+	if MegaCDMode1
+		include "_inc/Mega CD Sub CPU.asm"
+	endif
+
  if AdvancedHandler=1
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -17919,6 +17953,9 @@ Art_SMZSmoke: binclude "art/uncompressed/SMZ Smoke.bin"
 		even
  endif
 EndOfRom:
+	if MegaCDMode1&(EndOfRom>$400000)
+		fatal "Mode 1 cartridge overlaps the Mega-CD mapping above $400000"
+	endif
 	if MOMPASS=2
 		; "About" because it will be off by the same amount that Size_of_Snd_driver_guess is incorrect (if you changed it), and because I may have missed a small amount of internal padding somewhere
 		message "ROM size is $\{EndOfRom-StartOfRom} bytes (\{(EndOfRom-StartOfRom)/1024.0} KiB). About $\{paddingSoFar} bytes are padding. "
