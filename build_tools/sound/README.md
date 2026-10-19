@@ -7,8 +7,8 @@ now lives here; rebuilding the tools no longer depends on an unavailable project
 
 The normal `build.bat`/`build.lua` build runs both tools before assembling the
 ROM. The packer uses the AS assembler and `p2bin` in the platform's `build_tools`
-directory, rather than the old `win32` toolchain. Windows runs the prebuilt EXEs
-directly; Linux/BSD require Mono. Python and a C# compiler are only needed when
+directory. The obsolete `win32` toolchain has been removed. Windows runs the
+prebuilt EXEs directly; Linux/BSD require Mono. Python and a C# compiler are only needed when
 rebuilding or checking the tools themselves.
 
 ## Rebuilding

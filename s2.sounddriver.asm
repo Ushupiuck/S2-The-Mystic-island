@@ -254,7 +254,7 @@ SFX_PSG_TRACK_COUNT = (zSFX_PSGEnd-zSFX_PSGStart)/zTrack.len
     ; both the phased and unphased PCs must be within the target processor's range,
     ; which means phase is useless here despite being designed to fix this problem...
     ; oh well, I set it up to fix this later when processing the .p file
-    !org 0 ; Z80 code starting at address 0 has special meaning to s2p2bin.exe
+    !org 0 ; Z80 code at address 0 is compressed by p2bin's -z=0 pass
 
     CPU Z80UNDOC
     listing purecode
