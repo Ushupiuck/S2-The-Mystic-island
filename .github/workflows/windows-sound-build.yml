@@ -3,6 +3,18 @@ name: Windows sound build
 on:
   push:
     branches: [test/rebuilt-kehmusic]
+    paths:
+      - .github/workflows/windows-sound-build.yml
+      - build.bat
+      - build.lua
+      - build_tools/lua/**
+      - build_tools/sound/build.py
+      - build_tools/sound/**/*.cs
+      - build_tools/check_sound_tools.py
+      - build_tools/Windows-*/**
+      - KEHmusic.exe
+      - KEHsfx.exe
+      - '*.dll'
 
 permissions:
   contents: read

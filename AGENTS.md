@@ -1,10 +1,9 @@
 # Development environment
 
-Mystic Island's primary working copy lives in the owner's Windows 10 virtual
-machine. This is chiefly for convenience: most Sonic ROM hacking tools target
-Windows. Treat Windows as the primary supported development environment.
+Mystic Island's primary working copy lives in the owner's Windows 10 VM,
+mainly because most Sonic ROM hacking tools target Windows.
 
-For build-tool changes, verify the normal Windows launcher on native Windows,
-including a project path containing spaces. A successful Linux build alone does
-not establish Windows compatibility. The Windows sound build workflow provides
-this check on the sound-tool test branch.
+Run native Windows build checks only when changes could affect compatibility:
+compiler flags, launch commands, tools/libraries, or OS-specific code. Include
+a project path containing spaces. Routine game code, art, and documentation
+edits do not require duplicate Windows and Linux builds.
