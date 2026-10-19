@@ -73,6 +73,7 @@ ptr_PLC_SMZIndoor: dc.w PLC_SMZIndoor-ArtLoadCues
 ptr_PLC_PP: dc.w PLC_PP-ArtLoadCues
 ptr_PLC_LivesSonic:	dc.w PLC_LivesSonic-ArtLoadCues
 ptr_PLC_LivesTails:	dc.w PLC_LivesTails-ArtLoadCues
+		include "_inc/Act PLC Index.asm"
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Standard 1 - loaded for every level
@@ -114,60 +115,78 @@ PLC_GameOver_End:
 ; PATTERN LOAD REQUEST LIST
 ; Green Hill Zone primary
 ; ---------------------------------------------------------------------------
-PLC_GHZ:	dc.w ((PLC_GHZ_End-PLC_GHZ)/6)-1
+PLC_GHZ_Art: macro
 		plcm	Nem_GHZ_Bridge,	ArtTile_GHZ_Bridge
 		plcm	Nem_Swing, ArtTile_GHZ_MZ_Swing
 		plcm	Nem_GHZ_Ball,	ArtTile_GHZ_Giant_Ball		; giant ball
 		plcm	Nem_GHZ_Rock,	ArtTile_GHZ_Purple_Rock
 		plcm	Nem_GroundExplosion,	ArtTile_Ground_Explosion
+		endm
+PLC_GHZ: dc.w (PLC_GHZ_End-PLC_GHZ-2)/6-1
+		PLC_GHZ_Art
 PLC_GHZ_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Green Hill Zone secondary
 ; ---------------------------------------------------------------------------
-PLC_GHZ2:	dc.w ((PLC_GHZ2_End-PLC_GHZ2)/6)-1
+PLC_GHZ2_Art: macro
 		plcm	Nem_HSpring2,	ArtTile_S1_Spring_Horizontal
 		plcm	Nem_VSpring2,	ArtTile_S1_Spring_Vertical
 		plcm	Nem_GHZ_SWall,	ArtTile_GHZ_Edge_Wall
+		endm
+PLC_GHZ2: dc.w (PLC_GHZ2_End-PLC_GHZ2-2)/6-1
+		PLC_GHZ2_Art
 PLC_GHZ2_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Labyrinth Zone primary
 ; ---------------------------------------------------------------------------
-PLC_LZ:		dc.w ((PLC_LZ_End-PLC_LZ)/6)-1
+PLC_LZ_Art: macro
 		plcm	Nem_MorphingPlatform,	ArtTile_MorphingOrbs	; without a filler entry, this crashes
 		plcm	Nem_WaterBubbles,	ArtTile_Bubbles
+		endm
+PLC_LZ: dc.w (PLC_LZ_End-PLC_LZ-2)/6-1
+		PLC_LZ_Art
 PLC_LZ_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Labyrinth Zone secondary
 ; ---------------------------------------------------------------------------
-PLC_LZ2:	dc.w ((PLC_LZ2_End-PLC_LZ2)/6)-1
+PLC_LZ2_Art: macro
 		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
 		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
 		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		endm
+PLC_LZ2: dc.w (PLC_LZ2_End-PLC_LZ2-2)/6-1
+		PLC_LZ2_Art
 PLC_LZ2_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Chemical Plant Zone primary
 ; ---------------------------------------------------------------------------
-PLC_CPZ:	dc.w ((PLC_CPZ_End-PLC_CPZ)/6)-1
+PLC_CPZ_Art: macro
 		plcm	Nem_CPZ_Platform1,	ArtTile_CPZ_Platform
+		endm
+PLC_CPZ: dc.w (PLC_CPZ_End-PLC_CPZ-2)/6-1
+		PLC_CPZ_Art
 PLC_CPZ_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Chemical Plant Zone secondary
 ; ---------------------------------------------------------------------------
-PLC_CPZ2:	dc.w ((PLC_CPZ2_End-PLC_CPZ2)/6)-1
+PLC_CPZ2_Art: macro
 		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
 		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
 		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		endm
+PLC_CPZ2: dc.w (PLC_CPZ2_End-PLC_CPZ2-2)/6-1
+		PLC_CPZ2_Art
 PLC_CPZ2_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Emerald Hill Zone primary
 ; ---------------------------------------------------------------------------
-PLC_EHZ:	dc.w ((PLC_EHZ_End-PLC_EHZ)/6)-1
+PLC_EHZ_Art: macro
 		plcm	Nem_EHZ_Fireball,	ArtTile_Fireball
 		plcm	Nem_EHZ_Waterfall,	ArtTile_Waterfall
 		plcm	Nem_EHZ_Bridge,	ArtTile_EHZ_Bridge
@@ -175,58 +194,76 @@ PLC_EHZ:	dc.w ((PLC_EHZ_End-PLC_EHZ)/6)-1
 		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
 		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
 		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		endm
+PLC_EHZ: dc.w (PLC_EHZ_End-PLC_EHZ-2)/6-1
+		PLC_EHZ_Art
 PLC_EHZ_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Emerald Hill Zone secondary
 ; ---------------------------------------------------------------------------
-PLC_EHZ2:	dc.w ((PLC_EHZ2_End-PLC_EHZ2)/6)-1
+PLC_EHZ2_Art: macro
 		plcm	Nem_Buzzer,	ArtTile_Buzzer
 		plcm	Nem_Snail,	ArtTile_Snail
 		plcm	Nem_Masher,	ArtTile_Masher
+		endm
+PLC_EHZ2: dc.w (PLC_EHZ2_End-PLC_EHZ2-2)/6-1
+		PLC_EHZ2_Art
 PLC_EHZ2_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Hidden Palace Zone primary
 ; ---------------------------------------------------------------------------
-PLC_HPZ:	dc.w ((PLC_HPZ_End-PLC_HPZ)/6)-1
+PLC_HPZ_Art: macro
 		plcm	Nem_HPZ_Bridge,	ArtTile_HPZ_Bridge
 		plcm	Nem_HPZ_Waterfall,	ArtTile_HPZ_Waterfall
 		plcm	Nem_HPZ_Platform,	ArtTile_HPZ_Platform
 		plcm	Nem_HPZ_PulsingBall,	ArtTile_HPZ_Orb
 		plcm	Nem_WaterBubbles,	ArtTile_Bubbles
+		endm
+PLC_HPZ: dc.w (PLC_HPZ_End-PLC_HPZ-2)/6-1
+		PLC_HPZ_Art
 PLC_HPZ_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Hidden Palace Zone secondary
 ; ---------------------------------------------------------------------------
-PLC_HPZ2:	dc.w ((PLC_HPZ2_End-PLC_HPZ2)/6)-1
+PLC_HPZ2_Art: macro
 		plcm	Nem_HPZ_Various,	$37C
 		plcm	Nem_HPZ_Emerald,	ArtTile_HPZ_Emerald
 		plcm Nem_DSpring, ArtTile_Spring_Diagonal
 		plcm Nem_VSpring2, ArtTile_Spring_Vertical
 		plcm Nem_HSpring2, ArtTile_Spring_Horizontal
+		endm
+PLC_HPZ2: dc.w (PLC_HPZ2_End-PLC_HPZ2-2)/6-1
+		PLC_HPZ2_Art
 PLC_HPZ2_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Hill Top Zone primary
 ; ---------------------------------------------------------------------------
-PLC_HTZ:	dc.w ((PLC_HTZ_End-PLC_HTZ)/6)-1
+PLC_HTZ_Art: macro
 		plcm	Nem_EHZ_Fireball,	ArtTile_Fireball
 		plcm	Nem_HTZ_Fireball,	ArtTile_HTZ_Fireball
 		plcm	Nem_HTZ_AutomaticDoor,	ArtTile_HTZ_AutomaticDoor
 		plcm	Nem_DSpring,		ArtTile_Spring_Diagonal
 		plcm	Nem_VSpring2,		ArtTile_Spring_Vertical
 		plcm	Nem_HSpring2,		ArtTile_Spring_Horizontal
+		endm
+PLC_HTZ: dc.w (PLC_HTZ_End-PLC_HTZ-2)/6-1
+		PLC_HTZ_Art
 PLC_HTZ_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Hill Top Zone secondary
 ; ---------------------------------------------------------------------------
-PLC_HTZ2:	dc.w ((PLC_HTZ2_End-PLC_HTZ2)/6)-1
+PLC_HTZ2_Art: macro
 		plcm	Nem_HTZ_Lift,	ArtTile_HtzZipline
 		plcm	Nem_EHZ_Bridge,	ArtTile_EHZ_Bridge
 		plcm	Nem_HTZ_Seesaw,	ArtTile_HTZ_Seesaw
+		endm
+PLC_HTZ2: dc.w (PLC_HTZ2_End-PLC_HTZ2-2)/6-1
+		PLC_HTZ2_Art
 PLC_HTZ2_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
@@ -336,17 +373,23 @@ PLC_SpeStResult_End:
 ; PATTERN LOAD REQUEST LIST
 ; Filler
 ; ---------------------------------------------------------------------------
-PLC_Filler:	dc.w ((PLC_Filler_End-PLC_Filler-2)/6)-1
+PLC_Filler_Art: macro
+		endm
+PLC_Filler: dc.w (PLC_Filler_End-PLC_Filler-2)/6-1
+		PLC_Filler_Art
 PLC_Filler_End:
 
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Filler 2
 ; ---------------------------------------------------------------------------
-PLC_Filler2:	dc.w ((PLC_Filler2_End-PLC_Filler2-2)/6)-1
+PLC_Filler2_Art: macro
 		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
 		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
 		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		endm
+PLC_Filler2: dc.w (PLC_Filler2_End-PLC_Filler2-2)/6-1
+		PLC_Filler2_Art
 PLC_Filler2_End:
 
 ; ---------------------------------------------------------------------------
@@ -420,10 +463,10 @@ ptr_KPLC_AWZ3:	dc.w PLCKosM_AWZ3-KosMLoadCues ; $02 Act 3
 ptr_KPLC_AWZ4:	dc.w PLCKosM_AWZ4-KosMLoadCues ; $02 Act 4
 ; ---------------------------------------------------------------------------
 ; Level Slot $03: Emerald Hill Zone
-ptr_KPLC_EHZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $03 Act 1
-ptr_KPLC_EHZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $03 Act 2
-ptr_KPLC_EHZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $03 Act 3
-ptr_KPLC_EHZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $03 Act 4
+ptr_KPLC_EHZ1:	dc.w PLCKosM_EHZ1-KosMLoadCues ; $03 Act 1
+ptr_KPLC_EHZ2:	dc.w PLCKosM_EHZ2-KosMLoadCues ; $03 Act 2
+ptr_KPLC_EHZ3:	dc.w PLCKosM_EHZ3-KosMLoadCues ; $03 Act 3
+ptr_KPLC_EHZ4:	dc.w PLCKosM_EHZ4-KosMLoadCues ; $03 Act 4
 ; ---------------------------------------------------------------------------
 ; Level Slot $04: Crystal Valley Zone [WILL BE REPLACED] [HPZ]
 ptr_KPLC_CVZ1:	dc.w PLCKosM_CVZ1-KosMLoadCues  ; $04 Act 1
@@ -432,76 +475,76 @@ ptr_KPLC_CVZ3:	dc.w PLCKosM_CVZ3-KosMLoadCues  ; $04 Act 3
 ptr_KPLC_CVZ4:	dc.w PLCKosM_CVZ4-KosMLoadCues  ; $04 Act 4
 ; ---------------------------------------------------------------------------
 ; Level Slot $05: Egg Mountain Zone [TO BE REMIXED] [HTZ]
-ptr_KPLC_EMZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $05 Act 1
-ptr_KPLC_EMZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $05 Act 2
-ptr_KPLC_EMZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $05 Act 3
-ptr_KPLC_EMZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $05 Act 4
+ptr_KPLC_EMZ1:	dc.w PLCKosM_HTZ1-KosMLoadCues ; $05 Act 1
+ptr_KPLC_EMZ2:	dc.w PLCKosM_HTZ2-KosMLoadCues ; $05 Act 2
+ptr_KPLC_EMZ3:	dc.w PLCKosM_HTZ3-KosMLoadCues ; $05 Act 3
+ptr_KPLC_EMZ4:	dc.w PLCKosM_HTZ4-KosMLoadCues ; $05 Act 4
 ; ---------------------------------------------------------------------------
 ; Level Slot $06: Metropolis Zone [TO BE ADDED]
-ptr_KPLC_MZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $06 Act 1
-ptr_KPLC_MZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $06 Act 2
-ptr_KPLC_MZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $06 Act 3
-ptr_KPLC_MZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $06 Act 4
+ptr_KPLC_MZ1:	dc.w PLCKosM_LV61-KosMLoadCues ; $06 Act 1
+ptr_KPLC_MZ2:	dc.w PLCKosM_LV62-KosMLoadCues ; $06 Act 2
+ptr_KPLC_MZ3:	dc.w PLCKosM_LV63-KosMLoadCues ; $06 Act 3
+ptr_KPLC_MZ4:	dc.w PLCKosM_LV64-KosMLoadCues ; $06 Act 4
 ; ---------------------------------------------------------------------------
 ; Level Slot $07: Shocking Blizzard Zone [TO BE ADDED]
-ptr_KPLC_SBZ1:	dc.w PLCKosM_SMZ-KosMLoadCues ; $08 Act 1
-ptr_KPLC_SBZ2:	dc.w PLCKosM_SMZ-KosMLoadCues ; $08 Act 2
-ptr_KPLC_SBZ3:	dc.w PLCKosM_SMZ-KosMLoadCues ; $08 Act 3
-ptr_KPLC_SBZ4:	dc.w PLCKosM_SMZ-KosMLoadCues ; $08 Act 4
+ptr_KPLC_SBZ1:	dc.w PLCKosM_LV71-KosMLoadCues ; $08 Act 1
+ptr_KPLC_SBZ2:	dc.w PLCKosM_LV72-KosMLoadCues ; $08 Act 2
+ptr_KPLC_SBZ3:	dc.w PLCKosM_LV73-KosMLoadCues ; $08 Act 3
+ptr_KPLC_SBZ4:	dc.w PLCKosM_LV74-KosMLoadCues ; $08 Act 4
 ; ---------------------------------------------------------------------------
 ; Level Slot $08: Scrap Madness Zone [TO BE ADDED]
-ptr_KPLC_SMZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $07 Act 1
-ptr_KPLC_SMZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $07 Act 2
-ptr_KPLC_SMZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $07 Act 3
-ptr_KPLC_SMZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $07 Act 4
+ptr_KPLC_SMZ1:	dc.w PLCKosM_SMZ1-KosMLoadCues ; $07 Act 1
+ptr_KPLC_SMZ2:	dc.w PLCKosM_SMZ2-KosMLoadCues ; $07 Act 2
+ptr_KPLC_SMZ3:	dc.w PLCKosM_SMZ3-KosMLoadCues ; $07 Act 3
+ptr_KPLC_SMZ4:	dc.w PLCKosM_SMZ4-KosMLoadCues ; $07 Act 4
 ; ---------------------------------------------------------------------------
 ; Level Slot $09: Death Egg Zone [TO BE ADDED]
-ptr_KPLC_DEZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $09 Act 1
-ptr_KPLC_DEZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $09 Act 2
-ptr_KPLC_DEZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $09 Act 3
-ptr_KPLC_DEZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $09 Act 4
+ptr_KPLC_DEZ1:	dc.w PLCKosM_LV91-KosMLoadCues ; $09 Act 1
+ptr_KPLC_DEZ2:	dc.w PLCKosM_LV92-KosMLoadCues ; $09 Act 2
+ptr_KPLC_DEZ3:	dc.w PLCKosM_LV93-KosMLoadCues ; $09 Act 3
+ptr_KPLC_DEZ4:	dc.w PLCKosM_LV94-KosMLoadCues ; $09 Act 4
 ; ---------------------------------------------------------------------------
 ; Level Slot $0A: Empty
-ptr_KPLC_L0AZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $0A Act 1
-ptr_KPLC_L0AZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $0A Act 2
-ptr_KPLC_L0AZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $0A Act 3
-ptr_KPLC_L0AZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $0A Act 4
+ptr_KPLC_L0AZ1:	dc.w PLCKosM_PP1-KosMLoadCues ; $0A Act 1
+ptr_KPLC_L0AZ2:	dc.w PLCKosM_PP2-KosMLoadCues ; $0A Act 2
+ptr_KPLC_L0AZ3:	dc.w PLCKosM_PP3-KosMLoadCues ; $0A Act 3
+ptr_KPLC_L0AZ4:	dc.w PLCKosM_PP4-KosMLoadCues ; $0A Act 4
 ; ---------------------------------------------------------------------------
 ; Level Slot $0B: Empty
-ptr_KPLC_L0BZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $0B Act 1
-ptr_KPLC_L0BZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $0B Act 2
-ptr_KPLC_L0BZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $0B Act 3
-ptr_KPLC_L0BZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $0B Act 4
+ptr_KPLC_L0BZ1:	dc.w PLCKosM_LVB1-KosMLoadCues ; $0B Act 1
+ptr_KPLC_L0BZ2:	dc.w PLCKosM_LVB2-KosMLoadCues ; $0B Act 2
+ptr_KPLC_L0BZ3:	dc.w PLCKosM_LVB3-KosMLoadCues ; $0B Act 3
+ptr_KPLC_L0BZ4:	dc.w PLCKosM_LVB4-KosMLoadCues ; $0B Act 4
 ; ---------------------------------------------------------------------------
 ; Level Slot $0C: Empty
-ptr_KPLC_L0CZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $0C Act 1
-ptr_KPLC_L0CZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $0C Act 2
-ptr_KPLC_L0CZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $0C Act 3
-ptr_KPLC_L0CZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $0C Act 4
+ptr_KPLC_L0CZ1:	dc.w PLCKosM_LVC1-KosMLoadCues ; $0C Act 1
+ptr_KPLC_L0CZ2:	dc.w PLCKosM_LVC2-KosMLoadCues ; $0C Act 2
+ptr_KPLC_L0CZ3:	dc.w PLCKosM_LVC3-KosMLoadCues ; $0C Act 3
+ptr_KPLC_L0CZ4:	dc.w PLCKosM_LVC4-KosMLoadCues ; $0C Act 4
 ; ---------------------------------------------------------------------------
 ; Level Slot $0D: Empty
-ptr_KPLC_L0DZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $0D Act 1
-ptr_KPLC_L0DZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $0D Act 2
-ptr_KPLC_L0DZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $0D Act 3
-ptr_KPLC_L0DZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $0D Act 4
+ptr_KPLC_L0DZ1:	dc.w PLCKosM_LVD1-KosMLoadCues ; $0D Act 1
+ptr_KPLC_L0DZ2:	dc.w PLCKosM_LVD2-KosMLoadCues ; $0D Act 2
+ptr_KPLC_L0DZ3:	dc.w PLCKosM_LVD3-KosMLoadCues ; $0D Act 3
+ptr_KPLC_L0DZ4:	dc.w PLCKosM_LVD4-KosMLoadCues ; $0D Act 4
 ; ---------------------------------------------------------------------------
 ; Level Slot $0E: Empty
-ptr_KPLC_L0EZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $0E Act 1
-ptr_KPLC_L0EZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $0E Act 2
-ptr_KPLC_L0EZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $0E Act 3
-ptr_KPLC_L0EZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $0E Act 4
+ptr_KPLC_L0EZ1:	dc.w PLCKosM_LVE1-KosMLoadCues ; $0E Act 1
+ptr_KPLC_L0EZ2:	dc.w PLCKosM_LVE2-KosMLoadCues ; $0E Act 2
+ptr_KPLC_L0EZ3:	dc.w PLCKosM_LVE3-KosMLoadCues ; $0E Act 3
+ptr_KPLC_L0EZ4:	dc.w PLCKosM_LVE4-KosMLoadCues ; $0E Act 4
 ; ---------------------------------------------------------------------------
 ; Level Slot $0F: Empty
-ptr_KPLC_L0FZ1:	dc.w PLCKosM_Null-KosMLoadCues ; $0F Act 1
-ptr_KPLC_L0FZ2:	dc.w PLCKosM_Null-KosMLoadCues ; $0F Act 2
-ptr_KPLC_L0FZ3:	dc.w PLCKosM_Null-KosMLoadCues ; $0F Act 3
-ptr_KPLC_L0FZ4:	dc.w PLCKosM_Null-KosMLoadCues ; $0F Act 4
+ptr_KPLC_L0FZ1:	dc.w PLCKosM_LVF1-KosMLoadCues ; $0F Act 1
+ptr_KPLC_L0FZ2:	dc.w PLCKosM_LVF2-KosMLoadCues ; $0F Act 2
+ptr_KPLC_L0FZ3:	dc.w PLCKosM_LVF3-KosMLoadCues ; $0F Act 3
+ptr_KPLC_L0FZ4:	dc.w PLCKosM_LVF4-KosMLoadCues ; $0F Act 4
 ; ---------------------------------------------------------------------------
 ; Level Slot $10: Empty
-ptr_KPLC_L10Z1:	dc.w PLCKosM_Null-KosMLoadCues ; $10 Act 1
-ptr_KPLC_L10Z2:	dc.w PLCKosM_Null-KosMLoadCues ; $10 Act 2
-ptr_KPLC_L10Z3:	dc.w PLCKosM_Null-KosMLoadCues ; $10 Act 3
-ptr_KPLC_L10Z4:	dc.w PLCKosM_Null-KosMLoadCues ; $10 Act 4
+ptr_KPLC_L10Z1:	dc.w PLCKosM_LV101-KosMLoadCues ; $10 Act 1
+ptr_KPLC_L10Z2:	dc.w PLCKosM_LV102-KosMLoadCues ; $10 Act 2
+ptr_KPLC_L10Z3:	dc.w PLCKosM_LV103-KosMLoadCues ; $10 Act 3
+ptr_KPLC_L10Z4:	dc.w PLCKosM_LV104-KosMLoadCues ; $10 Act 4
 ; ---------------------------------------------------------------------------
 ; Misc. PLC's [May change. Names here are potential entries]
 ; Note: the ptr names here are temporary.
@@ -1032,19 +1075,26 @@ mkplcid_Misc13:		equ (ptr_KPLC_13-KosMLoadCues)/2		; $50
 
 ; Act 2 adds Kemusi in the unused 24-tile smoke bank. Caterkiller remains
 ; resident in the shared atlas, so both families can coexist through Debug.
-PLC_SMZ:	dc.w (PLC_SMZ_End-PLC_SMZ-2)/6-1
+PLC_SMZ_Art: macro
 		plcm Nem_SMZAtlas, ArtTile_SMZ_Atlas
-		plcm Nem_Wheel, ArtTile_Wheel
+		endm
+PLC_SMZ: dc.w (PLC_SMZ_End-PLC_SMZ-2)/6-1
+		PLC_SMZ_Art
 PLC_SMZ_End:
-PLC_SMZIndoor:	dc.w (PLC_SMZIndoor_End-PLC_SMZIndoor-2)/6-1
+PLC_SMZIndoor_Art: macro
 		plcm Nem_SMZAtlas, ArtTile_SMZ_Atlas
-		plcm Nem_Wheel, ArtTile_Wheel
 		plcm Nem_Kemusi, ArtTile_SMZ_Kemusi
+		endm
+PLC_SMZIndoor: dc.w (PLC_SMZIndoor_End-PLC_SMZIndoor-2)/6-1
+		PLC_SMZIndoor_Art
 PLC_SMZIndoor_End:
-PLC_SMZ2: dc.w 2
+PLC_SMZ2_Art: macro
         plcm Nem_DSpring, ArtTile_Spring_Diagonal
         plcm Nem_VSpring2, ArtTile_Spring_Vertical
         plcm Nem_HSpring2, ArtTile_Spring_Horizontal
+		endm
+PLC_SMZ2: dc.w (PLC_SMZ2_End-PLC_SMZ2-2)/6-1
+		PLC_SMZ2_Art
 PLC_SMZ2_End:
 
 plcid_SMZ: equ (ptr_PLC_SMZ-ArtLoadCues)/2
@@ -1054,7 +1104,7 @@ plcid_SMZIndoor: equ (ptr_PLC_SMZIndoor-ArtLoadCues)/2
 PLCKosM_SMZ: dc.w -1
 
 plcid_PP: equ (ptr_PLC_PP-ArtLoadCues)/2
-PLC_PP: dc.w (PLC_PP_End-PLC_PP-2)/6-1
+PLC_PP_Art: macro
         plcm Nem_PP_Anton, ArtTile_PP_Anton
         plcm Nem_PP_Mosqui, ArtTile_PP_Mosqui
         plcm Nem_PP_PataBata, ArtTile_PP_PataBata
@@ -1062,4 +1112,63 @@ PLC_PP: dc.w (PLC_PP_End-PLC_PP-2)/6-1
         plcm Nem_PP_Tamabboh, ArtTile_PP_Tamabboh
 		plcm Nem_MM_Propeller, ArtTile_Propeller
         plcm Nem_Wheel, ArtTile_Wheel
+		endm
+PLC_PP: dc.w (PLC_PP_End-PLC_PP-2)/6-1
+		PLC_PP_Art
 PLC_PP_End:
+
+		include "_inc/Act Pattern Load Cues.asm"
+
+; Independent empty Kosinski module lists; ready for act-specific imports.
+PLCKosM_EHZ1: dc.w -1
+PLCKosM_EHZ2: dc.w -1
+PLCKosM_EHZ3: dc.w -1
+PLCKosM_EHZ4: dc.w -1
+PLCKosM_HTZ1: dc.w -1
+PLCKosM_HTZ2: dc.w -1
+PLCKosM_HTZ3: dc.w -1
+PLCKosM_HTZ4: dc.w -1
+PLCKosM_LV61: dc.w -1
+PLCKosM_LV62: dc.w -1
+PLCKosM_LV63: dc.w -1
+PLCKosM_LV64: dc.w -1
+PLCKosM_LV71: dc.w -1
+PLCKosM_LV72: dc.w -1
+PLCKosM_LV73: dc.w -1
+PLCKosM_LV74: dc.w -1
+PLCKosM_SMZ1: dc.w -1
+PLCKosM_SMZ2: dc.w -1
+PLCKosM_SMZ3: dc.w -1
+PLCKosM_SMZ4: dc.w -1
+PLCKosM_LV91: dc.w -1
+PLCKosM_LV92: dc.w -1
+PLCKosM_LV93: dc.w -1
+PLCKosM_LV94: dc.w -1
+PLCKosM_PP1: dc.w -1
+PLCKosM_PP2: dc.w -1
+PLCKosM_PP3: dc.w -1
+PLCKosM_PP4: dc.w -1
+PLCKosM_LVB1: dc.w -1
+PLCKosM_LVB2: dc.w -1
+PLCKosM_LVB3: dc.w -1
+PLCKosM_LVB4: dc.w -1
+PLCKosM_LVC1: dc.w -1
+PLCKosM_LVC2: dc.w -1
+PLCKosM_LVC3: dc.w -1
+PLCKosM_LVC4: dc.w -1
+PLCKosM_LVD1: dc.w -1
+PLCKosM_LVD2: dc.w -1
+PLCKosM_LVD3: dc.w -1
+PLCKosM_LVD4: dc.w -1
+PLCKosM_LVE1: dc.w -1
+PLCKosM_LVE2: dc.w -1
+PLCKosM_LVE3: dc.w -1
+PLCKosM_LVE4: dc.w -1
+PLCKosM_LVF1: dc.w -1
+PLCKosM_LVF2: dc.w -1
+PLCKosM_LVF3: dc.w -1
+PLCKosM_LVF4: dc.w -1
+PLCKosM_LV101: dc.w -1
+PLCKosM_LV102: dc.w -1
+PLCKosM_LV103: dc.w -1
+PLCKosM_LV104: dc.w -1

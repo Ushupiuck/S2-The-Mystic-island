@@ -156,12 +156,19 @@ def remap_player_art(name, raw, lookup):
         return raw[:8*32] + remap_pixels(raw[8*32:], lookup)
     if name == 'SBZ Flaming Pipe':
         # Flames use line 1; both pipe ends use stage line 3.
-        return remap_pixels(raw[:20*32], lookup) + raw[20*32:]
+        # S1's yellow core uses the light orange/cream already in slot $A;
+        # leave the global player palette and the pipe's stage colors intact.
+        flame_lookup = list(lookup)
+        flame_lookup[15] = 10
+        return remap_pixels(raw[:20*32], flame_lookup) + raw[20*32:]
     return remap_pixels(raw, lookup)
 
 
 def geometry(source):
     words = enigma((source/'map16/SBZ.eni').read_bytes(), 0)
+    # Animated smoke lives above the wheel, below the spring bank.
+    words = [(word & 0xF800) | (0x4C5 + (word & 0x7FF)-0x448)
+             if 0x448 <= word & 0x7FF < 0x460 else word for word in words]
     blocks = struct.pack('>'+str(len(words))+'H', *words)
     old = classic_kosinski((source/'map256/SBZ (REV01).kos').read_bytes())
     assert len(old) % 512 == 0 and len(blocks) <= 0x1800

@@ -1267,7 +1267,7 @@ KosPlusArt_To_VDP:
 ; ===========================================================================
 
 ; ---------------------------------------------------------------------------
-; Subroutine to queue Moduled Kosinski PLC's per level
+; Subroutine to queue Moduled Kosinski PLCs per act
 ; ---------------------------------------------------------------------------
 
 LoadKosPLC:

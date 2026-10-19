@@ -164,19 +164,37 @@ def main():
 
     # Level and boss PLCs must leave both effect banks intact. Game-over
     # lettering deliberately replaces the dead primary player's bank.
-    for label in ('PLC_Main', 'PLC_Main2', 'PLC_Explode', 'PLC_Boss', 'PLC_Capsule') + tuple(
+    act_lists = tuple(label for label in symbols
+                      if re.fullmatch(r'PLC_[A-Z0-9]+[1-4]_(Main|Extra)', label))
+    assert len(act_lists) == 68 * 2
+    expected_ids = None
+    for table in ('LevelArtPointers', 'LevelArtPointersP', 'LevelArtPointersGF', 'LevelArtPointersBF'):
+        ids = [rom[symbols[table]+act*12+offset] for act in range(68) for offset in (0,4)]
+        targets = [symbols['ArtLoadCues'] + struct.unpack_from(
+            '>h', rom, symbols['ArtLoadCues']+ident*2)[0] for ident in ids]
+        assert len(set(ids)) == len(set(targets)) == 136, table
+        assert set(targets) == {symbols[label] for label in act_lists}, table
+        assert expected_ids is None or ids == expected_ids, table
+        expected_ids = ids
+    module_targets = [symbols['KosMLoadCues'] + struct.unpack_from(
+        '>h', rom, symbols['KosMLoadCues']+act*2)[0] for act in range(68)]
+    assert len(set(module_targets)) == 68
+    for label in act_lists + ('PLC_Main', 'PLC_Main2', 'PLC_Explode', 'PLC_Boss', 'PLC_Capsule') + tuple(
             'PLC_' + zone + suffix for zone in ('GHZ', 'LZ', 'CPZ', 'EHZ', 'HPZ', 'HTZ')
             for suffix in ('', '2', 'Animals')):
         base = symbols[label]
-        count = struct.unpack_from('>H', rom, base)[0] + 1
+        count = struct.unpack_from('>h', rom, base)[0] + 1
+        assert 0 <= count <= 16, (label, count)
+        if label.endswith('_Main'):
+            assert count + symbols['ActPLC_Main_Reserve'] <= 16, (label, count)
         for i in range(count):
             source, low = struct.unpack_from('>IH', rom, base + 2 + i * 6)
             high = low + (struct.unpack_from('>H', rom, source)[0] & 0x7FFF) * 32
             assert all(high <= a or low >= b for a, b in effect_banks + points_banks), (label, hex(low), hex(high))
     for label, base in symbols.items():
-        if not re.fullmatch(r'PLCKosM_[A-Z]+[1-4]', label):
+        if not re.fullmatch(r'PLCKosM_[A-Z0-9]+[1-4]', label):
             continue
-        count = struct.unpack_from('>H', rom, base)[0] + 1
+        count = struct.unpack_from('>h', rom, base)[0] + 1
         for i in range(count):
             source, low = struct.unpack_from('>IH', rom, base + 2 + i * 6)
             high = low + struct.unpack_from('>H', rom, source)[0]

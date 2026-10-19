@@ -168,14 +168,6 @@ Debug_SMZObjects:	macro
 		dbug	Map_SMZ_Spin,SMZ_SpinPlatform,$80,0,ArtTile_SMZ_Spin
 		dbug	Map_SMZ_Saw,SMZ_Saws,0,0,ArtTile_SMZ_Saw|$4000
 		dbug	Map_SMZ_VanP,SMZ_VanishPlatform,0,0,ArtTile_SMZ_VanP|$4000
-		dbug	Map_MovSpring,WheelCarrier,0,0,ArtTile_Wheel
-		dbug	Map_MovSpring,WheelCarrier,1,0,ArtTile_Wheel
-		dbug	Map_MovSpring,WheelCarrier,2,0,ArtTile_Wheel
-		dbug	Map_MovSpring,WheelCarrier,3,0,ArtTile_Wheel
-		dbug	Map_MovSpring,WheelCarrier,4,0,ArtTile_Wheel
-		dbug	Map_MovSpring,WheelCarrier,5,0,ArtTile_Wheel
-		dbug	Map_MovSpring,WheelCarrier,6,0,ArtTile_Wheel
-		dbug	Map_MovSpring,WheelCarrier,7,0,ArtTile_Wheel
 		dbug	Map_SMZ_Cat,Caterkiller,0,0,ArtTile_SMZ_Atlas
 		endm
 
