@@ -1686,7 +1686,7 @@ ArtTile_Newtron:		equ ArtTile_Ball_HogH+$2F ; 85 tiles, including tail and exhau
 ArtTile_Chopper:		equ ArtTile_Newtron+$55 ; 32 tiles; GHZ has no diagonal springs
 ArtTile_S1_Spring_Vertical:	equ ArtTile_Spring_Vertical ; 16 tiles
 ArtTile_S1_Spring_Horizontal:	equ ArtTile_Spring_Horizontal
-ArtTile_Wheel:	equ $4BC ; loaded with the SMZ sprite atlas
+ArtTile_Wheel:	equ $4BC ; LV0A carrier bank; absent from SMZ
 ArtTile_SMZ_BallHog: equ ArtTile_SMZ_Atlas
 ArtTile_SMZ_Junction: equ ArtTile_SMZ_Atlas
 ArtTile_SMZ_Disc: equ ArtTile_SMZ_Atlas

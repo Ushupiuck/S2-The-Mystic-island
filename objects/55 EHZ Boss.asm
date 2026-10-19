@@ -6,6 +6,7 @@
 ; final choreography when this boss is used as the existing MZ placeholder.
 ; $49 remains the universal display half-height; collision radii are separate.
 ; ---------------------------------------------------------------------------
+EHZBoss_flash_color = objoff_36	; original hit-flash color; unused word before child pointer
 EHZBoss_origin_x = objoff_44
 EHZBoss_origin_y = objoff_46
 EHZBoss_LandingX = $29D0
@@ -501,16 +502,17 @@ EHZBoss_CheckHits:	; routine to handle hits
 	bne.s	EHZBoss_return_2F4EC	; not 0, i.e. boss not hit
 	tst.b	objoff_42(a0)
 	bne.s	EHZBoss_loc_2F4D0	; boss already invincibile
+	move.w	(v_palette+$22).w,EHZBoss_flash_color(a0)
 	move.b	#$20,objoff_42(a0)	; boss invincibility timer
 	move.w	#sfx_HitBoss,d0
 	jsr	(PlaySound).l	; play boss hit sound
 
 EHZBoss_loc_2F4D0:
 	lea	(v_palette+$20+2).w,a1
-	moveq	#0,d0	; black
-	tst.w	(a1)
-	bne.s	EHZBoss_loc_2F4DE	; already not black (i.e. white)?
-	move.w	#$EEE,d0	; white
+	move.w	EHZBoss_flash_color(a0),d0
+	btst	#0,objoff_42(a0)
+	bne.s	EHZBoss_loc_2F4DE	; odd frames restore the original shade
+	move.w	#$EEE,d0	; even frames flash white; final frame restores
 
 EHZBoss_loc_2F4DE:
 	move.w	d0,(a1)	; set respective color

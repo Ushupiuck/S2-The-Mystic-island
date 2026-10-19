@@ -103,7 +103,7 @@ atlas_base = art_tile('ArtTile_SMZ_Atlas')
 gap_base = art_tile('ArtTile_SMZ_Junction_Gap')
 gap_offset = gap_base-atlas_base
 capacity = gap_offset
-assert max(count for first, count in gap_runs) <= m.s['ArtTile_Wheel']-gap_base
+assert max(count for first, count in gap_runs) <= m.s['ArtTile_SMZ_Smoke1']-gap_base
 patterns = []
 for name, (rs, base) in inputs.items():
     for i, row in enumerate(rs):

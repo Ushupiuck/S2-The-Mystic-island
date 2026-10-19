@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stress the actual imported SBZ acts, both actors and generic wheel payloads.
+"""Stress the actual imported SBZ acts, both actors and their native stage objects.
 
 Start routes use controller input. Later fixtures position initial actors at
 real placements and retain the stage's terrain, objects, collision and camera.
@@ -67,17 +67,6 @@ for act in (1,2):
   parents=run('act-1-platform-by-platform',[('first-tap',(7,8),5),('first-steer',(7,),10),('first-landing',(),40),('second-tap',(7,8),5),('second-steer',(7,),24),('second-landing',(),30),('wait',(),80)])
   assert (g.s['SMZ_SpinPlatform'],576) in parents and (g.s['SMZ_Invisibarrier'],656) in parents,parents
   g.restore(base)
-  for preset in range(8):
-   g.restore(base);a=spawn(g,'WheelCarrier',270,1208,preset);g.run(24);child=g.read(a+g.s['wheel_child'],4)&65535
-   assert child and g.get(child,'code') and not g.read('v_errortype'),preset
-   assert g.get(child,'obX',2)==g.get(a,'obX',2)
-   if preset==5:
-    x,y=g.get(child,'obX',2),g.get(child,'obY',2);place(g,'v_player',x,y-36);place(g,'v_player2',x-8,y-32);reset_cpu(g);prime_history();both=0;first=x
-    for _ in range(90):
-     g.run();both+=bool(g.get('v_player','obStatus')&8 and g.get('v_player2','obStatus')&8)
-    assert both>=60 and g.get('v_player','obX',2)>first+80,(both,first,row())
-    report.append({'case':'wheel-monitor-carries-both','rider_frames':both,'passed':True});g.video.save(args.output/'wheel-both-riders.png')
-   report.append({'case':f'wheel-payload-{preset}','passed':True})
  # Contact tests use objects at their original stage positions.
  g.restore(base)
  if act==1:
