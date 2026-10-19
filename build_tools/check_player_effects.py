@@ -14,9 +14,11 @@ def main():
     for name in ('rom', 'listing', 'core', 'output'):
         p.add_argument('--' + name, type=Path, required=True)
     p.add_argument('--pal', action='store_true')
+    p.add_argument('--system-directory', type=Path)
     p.add_argument('--player', type=int, choices=(0, 2), default=0)
     args = p.parse_args()
-    g = Genesis(args.core, args.rom, args.listing, args.output, args.pal)
+    g = Genesis(args.core, args.rom, args.listing, args.output, args.pal,
+                system_directory=args.system_directory)
     boot_level(g, item=0, player=args.player)
     rom = args.rom.read_bytes()
     slots = range(g.s['v_lvlobjspace'] & 0xFFFF, g.s['v_lvlobjend'] & 0xFFFF, g.s['object_size'])
@@ -74,11 +76,14 @@ def main():
     reward(7)
     g.run(5)
     stars = rom[g.s['Art_Invincibility']:g.s['Art_Invincibility_End']]
+    star_colors = {n for byte in stars for n in (byte >> 4, byte & 15)}
+    assert star_colors == {0, 6, 7, 8, 9}, ('Stars must use the shared gray ramp', star_colors)
     assert vram(g.s['ArtTile_Invincibility'] * 32, len(stars)) == stars
     star_sprites = [i for i in range(g.read('v_spritecount'))
                    if g.s['ArtTile_Invincibility'] <= g.read(g.s['Sprite_Table'] + i * 8 + 4, 2) & 0x7FF
                    < g.s['ArtTile_Invincibility'] + len(stars) // 32]
     assert star_sprites, 'Stars never reached the sprite table'
+    assert all(g.read(g.s['Sprite_Table']+i*8+4, 2) >> 13 & 3 == 0 for i in star_sprites)
     g.video.save(args.output / 'stars.png')
     for player in ('v_player', 'v_player2'):
         g.put(player, 'obStatusSecondary', g.get(player, 'obStatusSecondary') & ~2)

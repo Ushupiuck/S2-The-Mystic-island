@@ -72,7 +72,21 @@ Monitor_SolidCharacter:
 		tst.l	code(a1)
 		beq.s	.return
 		btst	d6,obStatus(a0)
-		bne.s	.standing
+		beq.s	.contact
+		; A retained monitor must not snap a former rider back onto its top.
+		; Both sides of the standing relationship must still name each other.
+		btst	#status.player.on_object,obStatus(a1)
+		beq.s	.stale
+		moveq	#0,d0
+		move.b	standonobject(a1),d0
+		mulu.w	#object_size,d0
+		addi.w	#v_objspace,d0
+		move.w	a0,d5
+		cmp.w	d5,d0
+		beq.s	.standing
+.stale:
+		bclr	d6,obStatus(a0)
+.contact:
 		cmpi.b	#AniIDSonAni_Roll,obAnim(a1)
 		beq.s	.return
 		; A held charge is solid: it can land on a monitor without breaking it.

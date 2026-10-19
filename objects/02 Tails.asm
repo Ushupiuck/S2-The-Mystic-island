@@ -1981,7 +1981,7 @@ Tails_Jump:
 		move.b	#tails_roll_width,obWidth(a0)
 		move.b	#AniIDSonAni_Roll,obAnim(a0)
 		bset	#2,obStatus(a0)
-		addq.w	#5,obY(a0)
+		addq.w	#tails_height-tails_roll_height,obY(a0)
 .return:	rts
 ; ---------------------------------------------------------------------------
 
