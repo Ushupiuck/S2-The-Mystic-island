@@ -53,10 +53,10 @@ for name, source_name, target in (('SonicRetro.KensSharp.Saxman', 'KensSharp.Sax
 		flags.append('/reference:' + str(ROOT / 'SonicRetro.KensSharp.Saxman.dll'))
 	source = Path(__file__).resolve().parent / source_name
 	print('Building', name, flush=True)
+	# Regenerate symbols rather than reuse a different compiler's PDB format.
+	(ROOT / (name + '.pdb')).unlink(missing_ok=True)
 	subprocess.run(command + flags + [str(f) for f in sorted(source.glob('*.cs'))],
 		cwd=ROOT, check=True)
-	if mcs:
-		(ROOT / (name + '.pdb')).unlink(missing_ok=True)
 
 if args.check:
 	temporary = ROOT / '.sound-build/checks'
