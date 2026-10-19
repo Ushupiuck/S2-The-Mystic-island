@@ -5714,7 +5714,11 @@ ScrollVertical:
 .no_wrap:
 		btst	#2,obStatus(a0)
 		beq.s	loc_6598
-		subq.w	#5,d0
+		; Keep the standing camera anchor when the player curls up.
+		; Sonic shrinks by five pixels; Tails only shrinks by one.
+		move.b	default_y_radius(a0),d1
+		sub.b	obHeight(a0),d1
+		sub.w	d1,d0
 
 loc_6598:
 		btst	#1,obStatus(a0)

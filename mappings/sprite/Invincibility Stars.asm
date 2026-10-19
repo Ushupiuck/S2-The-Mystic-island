@@ -1,4 +1,5 @@
-; S2 invincibility-star mappings for the existing 34-tile Stars.nem art.
+; S2 invincibility-star mappings for the 34-tile Invincibility.unc art.
+; Pixels use the shared white/gray ramp ($6-$9), as in S3&K.
 ; Frame 0 is blank; each visible star uses one VDP sprite.
 		dc.w .blank-Map_InvincibilityStars
 		dc.w .star1-Map_InvincibilityStars
