@@ -13,6 +13,7 @@ Surf_Index:	dc.w WaterSurface_Init-Surf_Index
 
 surf_origX = objoff_34		; original x-axis position
 surf_freeze = objoff_36		; flag to freeze animation
+surf_loaded = objoff_37		; shared DPLC cache in v_watersurface1
 ; ===========================================================================
 
 WaterSurface_Init:
@@ -39,7 +40,7 @@ WaterSurface_Main:
 		beq.s	loc_15540		; if not, branch
 		addq.b	#3,obFrame(a0)
 		move.b	#1,surf_freeze(a0)
-		bra.w	DisplaySprite
+		bra.s	WaterSurface_Display
 ; ---------------------------------------------------------------------------
 
 WaterSurface_Animate:
@@ -56,7 +57,23 @@ loc_15540:
 		addq.b	#1,obAniFrame(a0)
 		andi.b	#$3F,obAniFrame(a0)
 WaterSurface_Display:
+		; Both reserved surface objects use the same phase and VRAM bank.
+		; Frame zero in the DPLC table is empty, so a cleared cache uploads.
+		moveq	#0,d0
+		move.b	obFrame(a0),d0
+		addq.w	#1,d0
+		lea	DPLC_Water_Surface(pc),a2
+		lea	(v_watersurface1+surf_loaded).w,a3
+		move.w	#ArtTile_Water_Surface*tile_size,d4
+		move.l	#Art_Water_Surface,d6
+		jsr	(Load_DynamicPLC).l
+		bcs.s	.return			; retry a full queue without showing stale art
 		bra.w	DisplaySprite
+.return:
+		rts
+; ===========================================================================
+DPLC_Water_Surface:
+		include	"mappings/spriteDPLC/Water Surface.asm"
 ; ===========================================================================
 ; water sprite animation 'script' (custom format for this object)
 Obj07_FrameData:

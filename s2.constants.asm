@@ -1688,7 +1688,7 @@ ArtTile_Newtron:		equ ArtTile_Ball_HogH+$2F ; 85 tiles, including tail and exhau
 ArtTile_Chopper:		equ ArtTile_Newtron+$55 ; 32 tiles; GHZ has no diagonal springs
 ArtTile_S1_Spring_Vertical:	equ ArtTile_Spring_Vertical ; 16 tiles
 ArtTile_S1_Spring_Horizontal:	equ ArtTile_Spring_Horizontal
-ArtTile_Wheel: equ $4B4 ; loaded with the SMZ sprite atlas
+ArtTile_Wheel:	equ $4BC ; loaded with the SMZ sprite atlas
 ArtTile_SMZ_BallHog: equ ArtTile_SMZ_Atlas
 ArtTile_SMZ_Junction: equ ArtTile_SMZ_Atlas
 ArtTile_SMZ_Disc: equ ArtTile_SMZ_Atlas
@@ -1827,7 +1827,7 @@ ArtTile_Points_2:		equ ArtTile_Points+2 ; $6F5 / $DEA0; two tiles for the compan
 ArtTile_Lives_Counter:		equ $7D4
 ArtTile_Sonic_Dust:		equ $7E0
 ArtTile_Tails_Dust:		equ $7F0
-ArtTile_Water_Surface:		equ $400
+ArtTile_Water_Surface:		equ $2A8	; 16 DPLC tiles, reserved in every level's terrain
 
 ; Eggman
 ArtTile_Eggman:			equ $400
@@ -1840,7 +1840,7 @@ ArtTile_Eggman_Exhaust:		equ ArtTile_Eggman_Weapons+$2A ; 17 tiles, after 42 wea
 ; End of Level
 ArtTile_Giant_Ring:		equ $400
 ArtTile_Giant_Ring_Flash:	equ $462
-ArtTile_Prison_Capsule:		equ $508	; boss/capsule PLCs replace general level-object art
+ArtTile_Prison_Capsule:		equ $4A7	; immediately after Eggman's exhaust
 ArtTile_Hidden_Points:		equ ArtTile_Signpost+$1A ; 28 tiles after the signpost DPLC bank; below Tails's life icon
 ArtTile_Warp:			equ $541
 ArtTile_Mini_Tails:		equ $535
@@ -1954,7 +1954,7 @@ ArtTile_BossExplosion:	equ $581	; 100 tiles; replaced by animals/normal explosio
 ArtTile_CPZ_Platform:		equ $400
 
 ; HPZ
-ArtTile_Splats:			equ ArtTile_Water_Surface+$18 ; 29 tiles, after 24 water tiles
+ArtTile_Splats:			equ $418	; 29 tiles; independent of the streamed water surface
 ArtTile_BBat:			equ ArtTile_Bubbles+$38 ; 58 tiles after bubbles, below common level sprites
 
 ; HTZ
@@ -1986,10 +1986,11 @@ ArtTile_ArtNem_S1EndPig:	equ $580;$0593
 ArtTile_ArtNem_S1EndChicken:	equ $592;$0565
 ArtTile_ArtNem_S1EndSquirrel:	equ $580;$05B3
 
-ArtTile_SMZ_Atlas: equ $2B0 ; original sprite rectangles, shared by both acts
-ArtTile_SMZ_Junction_Gap: equ $4A8 ; twelve streamed tiles, below the wheel bank
-ArtTile_SMZ_Smoke1: equ $4BD
-ArtTile_SMZ_Smoke2: equ $4C9
+ArtTile_SMZ_Atlas:	equ $2B8 ; original sprite rectangles, shared by both acts
+ArtTile_SMZ_Terrain_Tile:	equ ArtTile_SMZ_Atlas+$1F7 ; static terrain in the atlas's last padding tile
+ArtTile_SMZ_Junction_Gap:	equ $4B0 ; twelve streamed tiles, below the wheel bank
+ArtTile_SMZ_Smoke1:	equ $4C5
+ArtTile_SMZ_Smoke2:	equ $4D1
 ArtTile_SMZ_Kemusi: equ ArtTile_SMZ_Smoke1 ; 22 tiles; Act 2 has no smoke animation
 
 	include "_inc/PalmtreeArtTiles.asm"

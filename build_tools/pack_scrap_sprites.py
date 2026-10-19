@@ -112,6 +112,12 @@ for name, (rs, base) in inputs.items():
                         for j, (y, size, tile, x) in enumerate(row)
                         if name != 'Jun' or i == 16 or j >= 2)
 atlas_tiles = pack_rectangles(patterns)
+# The universal water bank displaced one static SMZ terrain tile. Keep it
+# in the atlas's final padding slot, which neither act animates/overwrites.
+terrain = kosinski_plus_decode((R/'art/kosinski/level/SMZ Terrain Tile.kosp').read_bytes())[0]
+assert len(terrain) == 32 and len(atlas_tiles) < capacity
+assert m.s['ArtTile_SMZ_Terrain_Tile'] == atlas_base+capacity-1
+atlas_tiles += (bytes(32),)*(capacity-1-len(atlas_tiles)) + (terrain,)
 atlas = b''.join(atlas_tiles)
 assert len(atlas_tiles) <= capacity, (len(atlas_tiles), capacity)
 out = {}

@@ -192,8 +192,8 @@ loc_E3EA:
 ; loc_E3F4:
 Obj41_Horizontal:
         moveq #19,d1
-        moveq #14,d2
-        moveq #15,d3
+		moveq	#15,d2
+		moveq	#16,d3
         move.w obX(a0),d4
         lea .actor(pc),a5
         bsr.w Obj41_TestBoth

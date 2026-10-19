@@ -194,7 +194,6 @@ PLC_HPZ:	dc.w ((PLC_HPZ_End-PLC_HPZ)/6)-1
 		plcm	Nem_HPZ_Waterfall,	ArtTile_HPZ_Waterfall
 		plcm	Nem_HPZ_Platform,	ArtTile_HPZ_Platform
 		plcm	Nem_HPZ_PulsingBall,	ArtTile_HPZ_Orb
-		plcm	Nem_Water,		ArtTile_Water_Surface
 		plcm	Nem_WaterBubbles,	ArtTile_Bubbles
 PLC_HPZ_End:
 ; ---------------------------------------------------------------------------

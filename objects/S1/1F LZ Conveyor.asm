@@ -8,7 +8,7 @@ LabyrinthConvey:
 		move.w	LCon_Index(pc,d0.w),d1
 		jsr	LCon_Index(pc,d1.w)
 		out_of_range.s	loc_1236A,objoff_34(a0)
-LCon_Display:	bra.w	DisplaySprite
+LCon_Display:	jmp	(DisplaySprite).l
 ; ===========================================================================
 
 loc_1236A:

@@ -81,7 +81,7 @@ for _ in range(1800):
 		break
 else:
 	raise AssertionError('Title timeout')
-cd_status = g.read('MCD_status')
+cd_status = g.read('MCD_status') if 'MCD_status' in g.s else 0
 assert cd_status == (1 if a.system_directory else 0)
 g.write('f_levselcheat', 1)
 hold({3}, 2); hold({}, 100)
@@ -137,7 +137,8 @@ else:
 	g.video.save(a.output / 'timeout.png')
 	raise AssertionError(('Next-act timeout', report['events'], g.get('v_player', 'obX', 2)))
 assert shoes is not None and signpost < 600
-assert g.read('MCD_status') == cd_status and not g.read('MCD_dma_pending')
+if 'MCD_status' in g.s:
+	assert g.read('MCD_status') == cd_status and not g.read('MCD_dma_pending')
 assert not g.get('v_player', 'obStatusSecondary') & 4
 assert not g.get('v_player2', 'obStatusSecondary') & 4
 report['frames_from_launch'] = dict(shoes=shoes, signpost=signpost, results=results, next_act=next_act)

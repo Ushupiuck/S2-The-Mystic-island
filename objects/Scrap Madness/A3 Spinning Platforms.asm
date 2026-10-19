@@ -19,6 +19,7 @@ SMZ_spin_timer:	equ objoff_30	; counter for time until event
 SMZ_spin_timelen:	equ objoff_32	; time between changes (general)
 SMZ_spin_spinning:	equ objoff_34	; flag set while platform is spinning
 SMZ_spin_syncmask:	equ objoff_36	; level frame counter synchronization bit mask to check if platform should start spinning
+SMZ_trap_prevframe:	equ SMZ_spin_spinning ; trapdoors do not use the spinner's flag
 ; ===========================================================================
 
 SMZ_Spin_Main:	; Routine 0
@@ -74,6 +75,7 @@ SMZ_Spin_Trapdoor:	; Routine 2
 		jsr	(PlaySound_Special).l				; play it
 
 	.animate:
+		move.b	obFrame(a0),SMZ_trap_prevframe(a0)
 		lea	(SMZ_Ani_Spin).l,a1				; load animation scripts
 		jsr	(AnimateSprite).l			; (animations stay on last trapdoor frame indefinitely)
 
@@ -84,6 +86,19 @@ SMZ_Spin_Trapdoor:	; Routine 2
 		move.w	d2,d3					; collision height (stood-on)
 		addq.w	#1,d3					; +1px for stood-on height
 		move.w	obX(a0),d4				; collision X-position (stood-on)
+		tst.b	SMZ_trap_prevframe(a0)
+		beq.s	.normalSolid
+		; A closing door can materialize around feet beyond the normal
+		; landing tolerance. Resolve those overlaps upwards on this frame.
+		movem.l	d1-d4,-(sp)
+		lea	(v_player).w,a1
+		moveq	#status.npc.p1_standing,d6
+		bsr.w	SMZ_Trapdoor_CloseActor
+		lea	(v_player2).w,a1
+		moveq	#status.npc.p2_standing,d6
+		bsr.w	SMZ_Trapdoor_CloseActor
+		movem.l	(sp)+,d1-d4
+.normalSolid:
 		; On closure, feet near the top must land before the full solid
 		; resolves a shallow edge overlap as a wall. Keep underside solidity.
 		movem.l	d1-d4,-(sp)
@@ -98,6 +113,39 @@ SMZ_Spin_Trapdoor:	; Routine 2
 .notSolid:
         jsr (SMZ_ReleaseRiders).l
         jmp (RememberState).l
+
+; Only the first closed frame gets this extra overlap resolution. Ordinary
+; closed sides and rising underside contacts retain full-solid behavior.
+SMZ_Trapdoor_CloseActor:
+		tst.l	code(a1)
+		beq.s	.return
+		tst.b	obControl(a1)
+		bmi.s	.return
+		cmpi.b	#6,obRoutine(a1)
+		bhs.s	.return
+		tst.w	obVelY(a1)
+		bmi.s	.return
+		tst.b	(f_playerctrl).w
+		bmi.s	.return
+		tst.w	(Debug_placement_mode).w
+		bne.s	.return
+		move.w	obX(a1),d0
+		sub.w	obX(a0),d0
+		addi.w	#64+sonic_solid_width,d0
+		cmpi.w	#(64+sonic_solid_width)*2,d0
+		bhs.s	.return
+		moveq	#0,d2
+		move.b	obHeight(a1),d2
+		add.w	obY(a1),d2
+		sub.w	obY(a0),d2
+		addi.w	#12,d2			; feet below the closed door's top
+		cmpi.w	#24,d2
+		bhs.s	.return
+		sub.w	d2,obY(a1)
+		subq.w	#1,obY(a1)
+		jmp	(RideObject_SetRide).l
+.return:
+		rts
 
 SMZ_Spin_Spinner:	; Routine 4
 		move.w	(v_framecount).w,d0			; get current level frame counter
