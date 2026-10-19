@@ -1,0 +1,27 @@
+name: Windows sound build
+
+on:
+  push:
+    branches: [test/rebuilt-kehmusic]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: cmd
+        working-directory: Windows build check
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: Windows build check
+      - name: Build ROM with distributed sound tools
+        run: build_tools\lua\lua.exe build.lua
+      - name: Rebuild and check sound tools
+        run: python build_tools\sound\build.py --check
+      - name: Build ROM with rebuilt sound tools
+        run: build_tools\lua\lua.exe build.lua

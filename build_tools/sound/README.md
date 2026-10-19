@@ -140,6 +140,10 @@ music/DAC data also fails the build instead of producing a partial playlist.
 
 ## Validation
 
+The `Windows sound build` workflow checks the shipped Lua launcher and ROM build
+from a directory containing spaces, then rebuilds the tools, runs their checks,
+and builds the ROM again on a native Windows runner.
+
 ```sh
 python3 build_tools/sound/build.py --check
 python3 build_tools/check_sound_playback.py --core /path/to/genesis_plus_gx_libretro.so \
