@@ -27,6 +27,12 @@ mcs = Path(compiler).name in ('mcs', 'dmcs', 'mcs.exe')
 help_text = subprocess.run(command + ['/help'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True).stdout.lower()
 deterministic = 'deterministic' in help_text
 debug = 'portable' if 'portable' in help_text else 'pdbonly'
+# /noconfig disables csc.rsp, so supply the framework references explicitly.
+if args.framework:
+	framework_flags = ['/nostdlib+'] + ['/reference:' + str(args.framework / f)
+		for f in ('mscorlib.dll', 'System.dll', 'System.Core.dll')]
+else:
+	framework_flags = ['/reference:System.dll', '/reference:System.Core.dll']
 
 for name, source_name, target in (('SonicRetro.KensSharp.Saxman', 'KensSharp.Saxman', 'library'),
 	('KEHmusic', 'KEHmusic', 'exe'), ('KEHsfx', 'KEHsfx', 'exe')):
@@ -38,9 +44,7 @@ for name, source_name, target in (('SonicRetro.KensSharp.Saxman', 'KensSharp.Sax
 		flags.append('/debug:' + debug)
 	if deterministic:
 		flags += ['/deterministic+', '/pathmap:' + str(ROOT) + '=.']
-	if args.framework:
-		flags += ['/nostdlib+'] + ['/reference:' + str(args.framework / f)
-			for f in ('mscorlib.dll', 'System.dll', 'System.Core.dll')]
+	flags += framework_flags
 	if target == 'library':
 		flags.append('/reference:' + str(ROOT / 'SonicRetro.KensSharp.Common.dll'))
 	else:
@@ -59,9 +63,7 @@ if args.check:
 	temporary.mkdir(parents=True, exist_ok=True)
 	flags = ['/nologo', '/noconfig', '/target:exe', '/debug-', '/out:' + str(temporary / 'SaxmanCheck.exe'),
 		'/reference:' + str(ROOT / 'SonicRetro.KensSharp.Saxman.dll')]
-	if args.framework:
-		flags += ['/nostdlib+'] + ['/reference:' + str(args.framework / f)
-			for f in ('mscorlib.dll', 'System.dll', 'System.Core.dll')]
+	flags += framework_flags
 	subprocess.run(command + flags + [str(Path(__file__).resolve().parent / 'tests/SaxmanCheck.cs')], check=True)
 	for name in ('Saxman', 'Common'):
 		shutil.copyfile(ROOT / ('SonicRetro.KensSharp.' + name + '.dll'), temporary / ('SonicRetro.KensSharp.' + name + '.dll'))
