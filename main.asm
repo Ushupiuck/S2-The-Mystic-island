@@ -2136,6 +2136,7 @@ Sega_WaitEnd:
 		beq.s	Sega_WaitEnd
 
 Sega_GoToTitleScreen:
+		bsr.w	ResetMusicTempo
 		move.w	#TitleScreen,(v_gamemode).w
 		rts
 ; ===========================================================================
@@ -2426,6 +2427,7 @@ Demo:		tst.w	(f_demo).w		; are we on an ending demo?
 
 Level_NoMusicFade:
 		bsr.w	Pal_FadeToBlack
+		bsr.w	ResetMusicTempo
 		bsr.w	ClearPLC
 		bset	#7,(v_gamemode).w	; GameModeFlag_TitleCard
 		tst.w	(f_demo).w	; are we on an ending demo?
@@ -3456,6 +3458,20 @@ ChangeMusicTempo:
 		enable_ints
 		rts
 ; ---------------------------------------------------------------------------
+; New scenes clear the players' power-ups. Clear both audio contexts too:
+; new songs retain speed shoes for invincibility music, and a pending 1-up
+; restoration must not resurrect the previous level's speed-up flag.
+; ---------------------------------------------------------------------------
+ResetMusicTempo:
+		disable_ints
+		stopZ80
+		waitZ80
+		clr.b	(Z80_RAM+zAbsVar.SpeedUpFlag).l
+		clr.b	(Z80_RAM+zSaveVar.SpeedUpFlag).l
+		clr.b	(Z80_RAM+zAbsVar.TempoTurbo).l
+		clr.b	(Z80_RAM+zSaveVar.TempoTurbo).l
+		bra.s	ChangeMusicTempo.resume
+; ---------------------------------------------------------------------------
 ; play a sound in alternating speakers (as in the ring collection sound)
 
 PlaySoundStereo:
@@ -3486,6 +3502,7 @@ PlaySound:	disable_ints
 ; Sonic 1 Special Stage
 ; GameMode10:
 BonusStage:
+		bsr.w	ResetMusicTempo
 		move.w	#sfx_EnterSS,d0
 		bsr.w	PlaySound_Special
 		clearRAM Kos_decomp_queue_count, Kos_module_queue_End		; clear the KosPlusM bytes
