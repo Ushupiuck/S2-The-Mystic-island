@@ -202,7 +202,7 @@ elif args.case == 'normal':
     report.update(signpost_frames=sorted(seen),signpost_final_frame=expected_frame,portrait_preserved=True,
                   time_bonus=g.read('v_timebonus',2),ring_bonus=g.read('v_ringbonus',2),act=args.act+1)
 else:
-    menu();g.write('v_levselitem',34,2)
+    menu();g.write('v_levselitem',g.s['LevelSelect_BonusItem'],2)
     g.buttons={3};step(2);g.buttons=set()
     for _ in range(800):
         step()

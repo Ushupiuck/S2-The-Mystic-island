@@ -1384,7 +1384,7 @@ v_limitbtmdb:		ds.w	1			; level bottom boundary, buffered for debug mode
 v_timingvariables_end:
 
 v_levseldelay:		ds.w	1			; level select - time until change when up/down is held
-v_levselitem:		ds.w	1			; level select - item selected
+v_levselitem:		ds.w	1			; level select - remembered page (high byte) and item (low byte)
 v_levselsound:		ds.w	1			; level select - sound selected
 v_scorelife:		ds.l	1			; points required for an extra life (JP1 only)
 

@@ -73,7 +73,7 @@ g.buttons = {3}
 step(2)
 g.buttons = set()
 step(100)
-g.write('v_levselitem', 33, 2)
+g.write('v_levselitem', g.s['LevelSelect_SoundItem'], 2)
 step(5)
 g.video.save(output / 'sound-test.png')
 menu = g.save()
@@ -103,7 +103,7 @@ for index, name in enumerate(ini.sections(), 1):
 	assert values.size > av.timing.sample_rate * 2, ('No audio callback output', name)
 	assert np.count_nonzero(values) > 1000, ('Silent music', name)
 	assert before != after, ('Game stalled', name)
-	assert g.read('v_levselitem', 2) == 33, ('Sound test exited', name)
+	assert g.read('v_levselitem', 2) == g.s['LevelSelect_SoundItem'], ('Sound test exited', name)
 	bank, low, high, flags = rom[g.s['zMasterPlaylist'] + (index - 1) * 4:g.s['zMasterPlaylist'] + index * 4]
 	entry = {'id': index, 'name': name, 'title': ini[name]['Title'], 'bank': bank, 'compressed_to_z80_ram': not bool(flags & 0x10), 'frames': args.frames, 'pcm_sha256': hashlib.sha256(pcm).hexdigest(), 'sample_frames': len(pcm) // 4, 'rms': float(np.sqrt(np.mean(values * values))), 'peak': int(np.max(np.abs(values))), 'nonzero_samples': int(np.count_nonzero(values))}
 	report['songs'].append(entry)

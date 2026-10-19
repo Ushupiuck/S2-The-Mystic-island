@@ -27,7 +27,7 @@ def boot_level(g,item=10,player=0,zone=None,act=0):
              (1,0),(1,1),(1,2),(3,0),(3,1),(3,2),(5,0),(5,1),(1,3),(5,2))
         if zone is None:
             if item < len(old): zone,act=old[item]
-            else: item=34 if item==19 else 33
+            else: item=g.s['LevelSelect_BonusItem' if item==19 else 'LevelSelect_SoundItem']
         if zone is not None: item=(zone//8)*256+(zone%8)*4+act
     elif zone is not None:
         raise AssertionError('Explicit zone boot needs the two-page menu')
