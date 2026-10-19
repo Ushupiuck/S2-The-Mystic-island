@@ -6639,7 +6639,12 @@ DrawBlocks_TB_2:
 		andi.w	#$E,d5
 		add.w	d4,d3
 		add.w	d5,d3
+	if MegaCDMode1
+		lea	(Chunk_Table).l,a0
+		adda.w	d3,a0
+	else
 		movea.l	d3,a0
+	endif
 		movem.l	(sp)+,d4-d5
 
 loc_6D18:
@@ -6674,7 +6679,12 @@ loc_6D18:
 		andi.w	#$E,d5
 		add.w	d4,d3
 		add.w	d5,d3
+	if MegaCDMode1
+		lea	(Chunk_Table).l,a0
+		adda.w	d3,a0
+	else
 		movea.l	d3,a0
+	endif
 		movem.l	(sp)+,d4-d5
 
 loc_6D48:
@@ -6735,7 +6745,12 @@ loc_6D94:
 		andi.w	#$E,d5
 		add.w	d4,d3
 		add.w	d5,d3
+	if MegaCDMode1
+		lea	(Chunk_Table).l,a0
+		adda.w	d3,a0
+	else
 		movea.l	d3,a0
+	endif
 		movem.l	(sp)+,d4-d5
 
 loc_6DB2:
@@ -6780,7 +6795,12 @@ loc_6DD4:
 		andi.w	#$E,d5
 		add.w	d4,d3
 		add.w	d5,d3
+	if MegaCDMode1
+		lea	(Chunk_Table).l,a0
+		adda.w	d3,a0
+	else
 		movea.l	d3,a0
+	endif
 		movem.l	(sp)+,d4-d5
 
 loc_6DE4:

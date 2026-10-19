@@ -100,7 +100,9 @@ preserves the original register contract (only `a1/a5` trashed).
 
 `check_cd_chunks.py --core <core> --system-directory <fixture> --output <dir>`
 checks every one of the 256 x 64 chunk/block addresses through both assembled
-collision and rendering routines. It also runs 600 controller-driven level
+collision and rendering routines. It also checks actual VDP plane words from
+the inline row/column writers for all 256 chunk IDs, all flips and chunk-edge
+crossings. It runs 600 controller-driven level
 frames and a rotating bonus stage while checking a canary across all freed
 MD RAM. Add `--pal` for PAL. `check_level_pages.py` additionally compares each
 act's CD-resident chunk bytes to its decompressed ROM data and checks that the

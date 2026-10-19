@@ -73,6 +73,44 @@ for chunk in range(256):
         count += 1
 passed('All 256 chunks x 64 blocks use CD RAM in collision and rendering', addresses=count)
 
+# These streaming writers inline their chunk lookup instead of calling
+# GetBlockData. Check the actual plane words, including the lookup after a
+# chunk boundary, rather than treating GetBlockData as the whole renderer.
+g.restore(stage)
+act('MCD_AcquireProgramRAM')
+for i, byte in enumerate(bytes.fromhex('33FC811400C0000433FC8F0200C000044E75')):
+    g.write(0xFF7C00+i, byte)
+g.s['ProbeVDPSetup'] = 0xFF7C00
+act('ProbeVDPSetup')
+g.write('Camera_X_pos', 0, 4)
+g.write('Camera_Y_pos', 0, 4)
+tiles = (0x0123, 0x2456, 0x4789, 0x6ABC)
+g.write(g.s['v_16x16']+8, int.from_bytes(b''.join(t.to_bytes(2, 'big') for t in tiles), 'big'), 8)
+for chunk in range(256):
+    # All four layout cells around (112,112) select this chunk. Three-block
+    # writes cross its right/bottom edge and execute both inline lookups.
+    for cell in (0, 1, 256, 257):
+        g.write(g.s['v_lvllayout']+cell, chunk)
+    for flip in (0, 0x400, 0x800, 0xC00):
+        for block in (0, 1, 7, 8, 15, 56, 57, 63):
+            g.write(g.s['Chunk_Table']+chunk*128+block*2, 1 | flip, 2)
+        expected = list(tiles)
+        if flip & 0x400:
+            expected = [expected[i] ^ 0x800 for i in (1, 0, 3, 2)]
+        if flip & 0x800:
+            expected = [expected[i] ^ 0x1000 for i in (2, 3, 0, 1)]
+        for label, vertical in (('DrawBlocks_LR_2', False), ('DrawBlocks_TB_2', True)):
+            act(label, {0:0x30000+0x71C, 2:0x4000, 4:112, 5:112, 6:2,
+                        11:g.s['Camera_RAM'], 12:g.s['v_lvllayout'],
+                        13:0xC00004, 14:0xC00000})
+            for index in range(3):
+                dest = 0xC71C + index*(0x100 if vertical else 4)
+                actual = [int.from_bytes(bytes(g.vram[(dest+off+j)^1] for j in range(2)), 'big')
+                          for off in (0, 2, 0x80, 0x82)]
+                assert actual == expected, (label, chunk, flip, index, actual, expected)
+passed('Inline row and column writers render all chunk IDs and flips across boundaries',
+       transfers=256*4*2)
+
 canary = bytes((i * 37 + 19) & 255 for i in range(0x8000))
 g.restore(stage)
 g.ram[:0x8000] = canary
