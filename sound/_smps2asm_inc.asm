@@ -1,6 +1,22 @@
 ; =============================================================================================
 ; Created by Flamewing, based on S1SMPS2ASM version 1.1 by Marc Gordon (AKA Cinossu)
 ; =============================================================================================
+; Permission to use, copy, modify, and/or distribute this software for any
+; purpose with or without fee is hereby granted.
+;
+; THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+; WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+; MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+; ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+; WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+; ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
+; OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+; KeH driver adaptation from MainMemory/s2-sound-driver-plus, 57edda88.
+; Format-1 instruments and current macro names follow sonicretro/s2disasm,
+; 4ef457c1. Keep KeH's relative music pointers and compact SFX headers:
+; these are different from the stock Sonic 2 binary format.
+
+SMPS2ASMVer	= 1
 
 byteswap function x,(x)<<8&$FF00|(x)>>8&$FF
 
@@ -16,12 +32,24 @@ psgdelta	EQU 12
 	enum smpsPitch10hi=$78
 ; ---------------------------------------------------------------------------------------------
 ; Note Equates
-	enum nRst=$80+0,nC0,nCs0,nD0,nEb0,nE0,nF0,nFs0,nG0,nAb0,nA0,nBb0,nB0,nC1,nCs1,nD1
-	enum nEb1=nD1+1,nE1,nF1,nFs1,nG1,nAb1,nA1,nBb1,nB1,nC2,nCs2,nD2,nEb2,nE2,nF2,nFs2
-	enum nG2=nFs2+1,nAb2,nA2,nBb2,nB2,nC3,nCs3,nD3,nEb3,nE3,nF3,nFs3,nG3,nAb3,nA3,nBb3
-	enum nB3=nBb3+1,nC4,nCs4,nD4,nEb4,nE4,nF4,nFs4,nG4,nAb4,nA4,nBb4,nB4,nC5,nCs5,nD5
-	enum nEb5=nD5+1,nE5,nF5,nFs5,nG5,nAb5,nA5,nBb5,nB5,nC6,nCs6,nD6,nEb6,nE6,nF6,nFs6
-	enum nG6=nFs6+1,nAb6,nA6,nBb6,nB6,nC7,nCs7,nD7,nEb7,nE7,nF7,nFs7,nG7,nAb7,nA7,nBb7
+	enumconf	1
+	enum		nRst=$80
+	nextenum	nC0,nCs0,nDb0=nCs0,nD0,nDs0,nEb0=nDs0,nE0,nFb0=nE0,nEs0,nF0=nEs0
+	nextenum	nFs0,nGb0=nFs0,nG0,nGs0,nAb0=nGs0,nA0,nAs0,nBb0=nAs0,nB0,nCb1=nB0,nBs0
+	nextenum	nC1=nBs0,nCs1,nDb1=nCs1,nD1,nDs1,nEb1=nDs1,nE1,nFb1=nE1,nEs1,nF1=nEs1
+	nextenum	nFs1,nGb1=nFs1,nG1,nGs1,nAb1=nGs1,nA1,nAs1,nBb1=nAs1,nB1,nCb2=nB1,nBs1
+	nextenum	nC2=nBs1,nCs2,nDb2=nCs2,nD2,nDs2,nEb2=nDs2,nE2,nFb2=nE2,nEs2,nF2=nEs2
+	nextenum	nFs2,nGb2=nFs2,nG2,nGs2,nAb2=nGs2,nA2,nAs2,nBb2=nAs2,nB2,nCb3=nB2,nBs2
+	nextenum	nC3=nBs2,nCs3,nDb3=nCs3,nD3,nDs3,nEb3=nDs3,nE3,nFb3=nE3,nEs3,nF3=nEs3
+	nextenum	nFs3,nGb3=nFs3,nG3,nGs3,nAb3=nGs3,nA3,nAs3,nBb3=nAs3,nB3,nCb4=nB3,nBs3
+	nextenum	nC4=nBs3,nCs4,nDb4=nCs4,nD4,nDs4,nEb4=nDs4,nE4,nFb4=nE4,nEs4,nF4=nEs4
+	nextenum	nFs4,nGb4=nFs4,nG4,nGs4,nAb4=nGs4,nA4,nAs4,nBb4=nAs4,nB4,nCb5=nB4,nBs4
+	nextenum	nC5=nBs4,nCs5,nDb5=nCs5,nD5,nDs5,nEb5=nDs5,nE5,nFb5=nE5,nEs5,nF5=nEs5
+	nextenum	nFs5,nGb5=nFs5,nG5,nGs5,nAb5=nGs5,nA5,nAs5,nBb5=nAs5,nB5,nCb6=nB5,nBs5
+	nextenum	nC6=nBs5,nCs6,nDb6=nCs6,nD6,nDs6,nEb6=nDs6,nE6,nFb6=nE6,nEs6,nF6=nEs6
+	nextenum	nFs6,nGb6=nFs6,nG6,nGs6,nAb6=nGs6,nA6,nAs6,nBb6=nAs6,nB6,nCb7=nB6,nBs6
+	nextenum	nC7=nBs6,nCs7,nDb7=nCs7,nD7,nDs7,nEb7=nDs7,nE7,nFb7=nE7,nEs7,nF7=nEs7
+	nextenum	nFs7,nGb7=nFs7,nG7,nGs7,nAb7=nGs7,nA7,nAs7,nBb7=nAs7
 ; SMPS2ASM uses nMaxPSG for songs from S1/S2 drivers.
 ; nMaxPSG1 and nMaxPSG2 are used only for songs from S3/S&K/S3D drivers.
 ; The use of psgdelta is intended to undo the effects of PSGPitchConvert
@@ -120,14 +148,27 @@ PSGPitchConvert macro pitch
 	endm
 ; ---------------------------------------------------------------------------------------------
 ; Header Macros
-smpsHeaderStartSong macro ver
+smpsHeaderStartSong macro ver,sourcesmps2asmver
 SourceDriver set ver
+	if "sourcesmps2asmver"<>""
+SourceSMPS2ASM set sourcesmps2asmver
+	else
+SourceSMPS2ASM set 0
+	endif
+	if SourceSMPS2ASM>SMPS2ASMVer
+		fatal "This song needs a newer SMPS2ASM format than this macro set supports."
+	endif
+; Instrument state must not leak from the preceding song or voice bank.
+vcUnusedBits set 0
+vcD1R1Unk set 0
+vcD1R2Unk set 0
+vcD1R3Unk set 0
+vcD1R4Unk set 0
 songStart set *
 	endm
 
-smpsHeaderStartSongConvert macro ver
-SourceDriver set ver
-songStart set *
+smpsHeaderStartSongConvert macro
+	smpsHeaderStartSong ALLARGS
 	endm
 
 smpsHeaderVoiceNull macro
@@ -135,6 +176,10 @@ smpsHeaderVoiceNull macro
 		fatal "Missing smpsHeaderStartSong or smpsHeaderStartSongConvert"
 	endif
 	dc.w	$0000
+	endm
+
+smpsHeaderVoiceUVB macro
+	fatal "KeH requires a local FM voice bank; universal voice banks are unsupported."
 	endm
 
 ; Header - Set up Voice Location
@@ -266,9 +311,12 @@ sNA	EQU smpsNoAttack
 ; E8xx - Set note fill to xx
 smpsNoteFill macro val
 	if SourceDriver>=3
+; KeH's FA command multiplies by the channel tempo divider. Do not follow
+; it with E8: that would immediately overwrite the converted duration.
 		dc.b	$FA,val
+	else
+		dc.b	$E8,val
 	endif
-	dc.b	$E8,val
 	endm
 
 ; Add xx to channel pitch
@@ -315,6 +363,9 @@ smpsStopSpecial macro
 
 ; EFxx[yy] - Set Voice of FM channel to xx; xx < 0 means yy present
 smpsSetvoice macro voice,songID
+	if "songID"<>""
+		fatal "KeH cannot select instruments from another song; copy this instrument locally."
+	endif
 	dc.b	$EF,voice
 	endm
 
@@ -323,6 +374,8 @@ smpsModSet macro wait,speed,change,step
 	dc.b	$F0
 	if SourceDriver>=3
 		dc.b	wait-1,speed,change,conv0To256(step)/conv0To256(speed)-1
+	elseif SourceDriver==1
+		dc.b	wait+1,speed,change,step
 	else
 		dc.b	wait,speed,change,step
 	endif
@@ -375,7 +428,12 @@ smpsCall macro loc
 ; ---------------------------------------------------------------------------------------------
 ; Alter Volume
 smpsFMAlterVol macro val1,val2
-	dc.b	$E6,val1
+	if "val2"<>""
+; In the S3K two-argument command, only the second byte affects FM.
+		dc.b	$E6,val2
+	else
+		dc.b	$E6,val1
+	endif
 	endm
 
 ; ---------------------------------------------------------------------------------------------
@@ -396,8 +454,19 @@ smpsVcAlgorithm macro val
 vcAlgorithm set val
 	endm
 
-smpsVcUnusedBits macro val
+smpsVcUnusedBits macro val,d1r1,d1r2,d1r3,d1r4
 vcUnusedBits set val
+	if ("d1r1"<>"")&&("d1r2"<>"")&&("d1r3"<>"")&&("d1r4"<>"")
+vcD1R1Unk set d1r1<<5
+vcD1R2Unk set d1r2<<5
+vcD1R3Unk set d1r3<<5
+vcD1R4Unk set d1r4<<5
+	else
+vcD1R1Unk set 0
+vcD1R2Unk set 0
+vcD1R3Unk set 0
+vcD1R4Unk set 0
+	endif
 	endm
 
 ; Voices - Detune
@@ -434,10 +503,18 @@ vcAR4 set op4
 
 ; Voices - Amplitude Modulation
 smpsVcAmpMod macro op1,op2,op3,op4
-vcAM1 set op1
-vcAM2 set op2
-vcAM3 set op3
-vcAM4 set op4
+	if SourceSMPS2ASM==0
+vcAM1 set op1<<5
+vcAM2 set op2<<5
+vcAM3 set op3<<5
+vcAM4 set op4<<5
+	else
+; Format 1 stores the AM enable as a single bit, rather than bits 5-7.
+vcAM1 set op1<<7
+vcAM2 set op2<<7
+vcAM3 set op3<<7
+vcAM4 set op4<<7
+	endif
 	endm
 
 ; Voices - First Decay Rate
@@ -481,15 +558,41 @@ vcTL4 set op4
 	dc.b	(vcUnusedBits<<6)+(vcFeedback<<3)+vcAlgorithm
 ;   0     1     2     3     4     5     6     7
 ;%1000,%1000,%1000,%1000,%1010,%1110,%1110,%1111
+	if SourceSMPS2ASM==0
 vcTLMask4 set ((vcAlgorithm==7)<<7)
 vcTLMask3 set ((vcAlgorithm>=4)<<7)
 vcTLMask2 set ((vcAlgorithm>=5)<<7)
 vcTLMask1 set $80
+	else
+; KeH uses zVolTLMaskTbl to select carriers from the algorithm. Unlike
+; stock SMPS Z80 drivers, it does not require TL marker bits to match it.
+vcTLMask4 set 0
+vcTLMask3 set 0
+vcTLMask2 set 0
+vcTLMask1 set 0
+	endif
 	dc.b	(vcDT4<<4)+vcCF4 ,(vcDT2<<4)+vcCF2 ,(vcDT3<<4)+vcCF3 ,(vcDT1<<4)+vcCF1
 	dc.b	(vcRS4<<6)+vcAR4 ,(vcRS2<<6)+vcAR2 ,(vcRS3<<6)+vcAR3 ,(vcRS1<<6)+vcAR1
-	dc.b	(vcAM4<<5)+vcD1R4,(vcAM2<<5)+vcD1R2,(vcAM3<<5)+vcD1R3,(vcAM1<<5)+vcD1R1
+	dc.b	vcAM4|vcD1R4|vcD1R4Unk,vcAM2|vcD1R2|vcD1R2Unk,vcAM3|vcD1R3|vcD1R3Unk,vcAM1|vcD1R1|vcD1R1Unk
 	dc.b	vcD2R4           ,vcD2R2           ,vcD2R3           ,vcD2R1
 	dc.b	(vcDL4<<4)+vcRR4 ,(vcDL2<<4)+vcRR2 ,(vcDL3<<4)+vcRR3 ,(vcDL1<<4)+vcRR1
 	dc.b	vcTL4|vcTLMask4  ,vcTL2|vcTLMask2  ,vcTL3|vcTLMask3  ,vcTL1|vcTLMask1
+	endm
+
+; Current SMPS2ASM names; retain the KeH command encodings above.
+smpsDcb macro
+	dc.b ALLARGS
+	endm
+
+smpsFMvoice macro
+	smpsSetvoice ALLARGS
+	endm
+
+smpsMaxRelRate macro
+	smpsWeirdD1LRR ALLARGS
+	endm
+
+smpsPSGAlterVolS2 macro
+	smpsAlterVol ALLARGS
 	endm
 

@@ -20,6 +20,10 @@ local advanced_error_handler = false
 
 local common = require "build_tools.lua.common"
 
+if not require("build_tools.lua.sound").build() then
+	os.exit(false, true)
+end
+
 -- Produce PCM and DPCM data.
 --common.convert_pcm_files_in_directory("sound/dac/pcm")
 --common.convert_dpcm_files_in_directory("sound/dac/dpcm")

@@ -15280,6 +15280,7 @@ zmakePlaylistEntry macro addr,val
 	endif
 	endm
 
+	include "_inc/Sound Bank Assets.asm"
 	include "musicbanks.gen.asm"
 
 zSoundIndexEntry macro pointer, priority
@@ -15342,6 +15343,7 @@ DACSample	macro	pPtr,pDelay,pFlags
 
 	even
 
+	SoundBankAssets SFX,1
 	finishBank
 
 ; -------------------------------------------------------------------------------
@@ -15366,8 +15368,6 @@ Snd_Sega_End:		even
 ; -------------------------------------------------------------------------------
 Kosp_Title:		binclude	"art/kosinski/level/8x8 - Title.kosp"
 Nem_TitleSonicTails:	binclude	"art/nemesis/Title Sonic and Tails.nem"
-			even
-Nem_SegaLogo:		binclude	"art/nemesis/Sega Logo (JP1).nem"
 			even
 ; ---------------------------------------------------------------------------
 ; Misc. compressed data - Tilemaps
@@ -15565,8 +15565,6 @@ Nem_WaterBubbles:
 		binclude	"art/nemesis/Water bubbles.nem"
 		even
 Nem_Bonus:	binclude	"art/nemesis/S1/Hidden Bonuses.nem"
-		even
-Nem_HUD:	binclude	"art/nemesis/HUD.nem"
 		even
 Nem_Lives:	binclude	"art/nemesis/Sonic lives counter.nem"
 		even
