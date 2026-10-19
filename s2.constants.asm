@@ -858,6 +858,9 @@ bgm_Stop =		MusID_Stop
 ; ---------------------------------------------------------------------------
 ; Main RAM
 ; ---------------------------------------------------------------------------
+	if MegaCDMode1
+		include "_inc/Mega CD RAM.asm"
+	endif
 	phase	ramaddr($FFFE0000)
 RAM_debug_start:		ds.b	$10000
 RAM_debug_end:
@@ -865,8 +868,16 @@ RAM_debug_end:
 v_start:
 RAM_Start:
 
+	if MegaCDMode1
+; Keep short-addressed engine RAM in $FF8000-$FFFFFF. The lower half is
+; genuinely free; future allocations there must use long addressing.
+Free_Chunk_RAM_Start:
+		ds.b $8000	; free space: no resident chunk storage
+Free_Chunk_RAM_End:
+	else
 Chunk_Table:			ds.w	$40*$100	; 128x128 tile mappings ($8000 bytes)
 Chunk_Table_End:
+	endif
 v_128x128:=	Chunk_Table
 v_128x128_end:=	Chunk_Table_End
 Level_Layout:			ds.b	$1000		; level layout buffer ($1000 bytes)
@@ -1423,7 +1434,7 @@ v_end:
 	endif
 
 	if MOMPASS=1
-		message "The current RAM available $\{0-*} bytes."
+		message "The current RAM available $\{0-*+MegaCDMode1*$8000} bytes."
 	endif
 	dephase
 

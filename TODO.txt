@@ -33,6 +33,7 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
+Move the $8000 chunk table and scene/bonus overlays to bank-0 CD PRG RAM at $6000, reserve the conventional BIOS area, retain short-addressed MD globals, and free $FF0000-$FF7FFF < DONE
 Reserve a universal 16-tile water DPLC bank at $2A8, preserve the paused two-phase waves and all terrain/platform pixels, retain the displaced SMZ terrain in static atlas padding, and move the capsule to $4A7 < DONE
 Correct hidden-bonus blue/red/gold palette slots, running-disc corner capture, horizontal spring top height, and tail/carrier update order < DONE
 Keep wrapped camera displacement signed after ducking/jumping and resolve first-closing-frame trapdoor foot overlaps without changing ordinary closed sides or underside contact < DONE

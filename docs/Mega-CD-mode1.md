@@ -3,21 +3,33 @@
 `test/rebuilt-kehmusic` boots from the cartridge, uploads a real sub-CPU
 program, verifies the upload and requires a fresh command reply before marking
 the CD ready. `MegaCDMode1 = 1` in `main.asm` enables the bootstrap and the
-`JC` cartridge header. The cartridge also boots without a CD add-on.
+`JC` cartridge header. The default build now requires the CD add-on: chunk
+storage and the scratch maps that share it reside in PRG RAM. Missing/failed hardware shows
+`MEGA CD REQUIRED` before any CD RAM access. Set `MegaCDMode1 = 0` for
+a separately built ordinary-Mega-Drive version with its original RAM table.
 The ROM must fit below `$400000`; assembly rejects an overlap with CD space.
 
 The application initializes the Gate Array and owns the sub-CPU directly.
-It executes no BIOS routines, reserves no BIOS workspace, and needs no disc or
-MMD modules. The raw subprogram is 384 bytes, including its 64 vectors. Its
-stack starts at the top of 512 KB PRG RAM. PCM channels and interrupts start
+It executes no BIOS routines and needs no disc or MMD modules. The conventional
+`$000000-$005FFF` BIOS area is now reserved in the PRG-RAM layout; the current
+raw subprogram still occupies its initial 384 bytes. Reserving this area does
+not load or initialize Sega's BIOS. Its 64 vectors are part of that raw
+subprogram. Its stack starts at the top of 512 KB PRG RAM. PCM channels and interrupts start
 disabled. Disc access, CDDA, backup-RAM services and graphics jobs are separate
-future work. Existing game assets and the Z80 sound driver retain their
-current storage; this commit does not migrate them into CD RAM.
+future work. The Z80 sound driver retains its current storage.
 
-Hardware detection and every startup/command wait are bounded. An ordinary
-Mega Drive still runs the cartridge; absent hardware gives `MCD_status = 0`,
+The chunk table is the first user allocation at sub-CPU `$006000-$00DFFF`, visible to the main CPU
+at `$426000-$42DFFF` in PRG-RAM bank 0. Its startup/title/menu scratch and
+Sonic 1 bonus-stage overlays move with it. `_inc/Mega CD RAM.asm` owns this
+layout. The former MD range `$FF0000-$FF7FFF` is free for reuse; all other
+engine variables retain their addresses. New allocations in that lower half
+must use long addressing.
+
+Hardware detection and every startup/command wait are bounded.
+Absent hardware gives `MCD_status = 0`,
 a verified running service gives `1`, and failed initialization gives `$FF`.
-The game currently uses no CD-resident assets, so failure can safely fall back.
+The default CD build cannot fall back after reclaiming its MD chunk buffer;
+initialization failure reaches the requirement screen instead.
 The status and pending-DMA bytes reuse two unused former global-power-up
 bytes. There is no increase in the existing work-RAM allocation.
 
@@ -28,6 +40,8 @@ bytes. There is no increase in the existing work-RAM allocation.
 | Cartridge | `$000000-$3FFFFF` | No direct cartridge mapping |
 | CD BIOS window | `$400000` | No BIOS services used |
 | 512 KB PRG RAM | Banked 128 KB window at `$420000-$43FFFF`; hold sub-CPU bus request | `$000000-$07FFFF` |
+| Reserved BIOS area | `$420000-$425FFF` (bank 0) | `$000000-$005FFF` |
+| Chunk table / scene overlays | `$426000-$42DFFF` (bank 0) | `$006000-$00DFFF` |
 | 256 KB Word RAM, 2M mode | `$600000-$63FFFF` while owned; mirrors through `$7FFFFF` | `$080000-$0BFFFF` while owned |
 | Communication registers | `$A12010-$A1202F` | `$FF8010-$FF802F` |
 
@@ -49,10 +63,18 @@ Call `MCD_AcquireWordRAM` before accessing or queuing Word RAM. It can clobber
 `d0-d3`; carry reports failure. Keep ownership until `ProcessDMAQueue` consumes
 the transfers. `MCD_ReleaseWordRAM` rejects a handoff while CD DMA is queued,
 and masks interrupts around that check and handoff. These helpers currently
-support 2M mode. No ownership wait is introduced into VBlank.
+support 2M mode. Word-RAM acquisition is never performed in VBlank.
 
-For PRG-RAM DMA, callers must retain the bus request and selected bank through
-queue consumption. Splitting a DMA does not switch the PRG-RAM window's bank.
+The main CPU owns PRG-RAM bank 0 while doing game work. `WaitForVint`
+releases the sub-CPU; `V_Int` reacquires the bus and selects bank 0 before
+any chunk readers or queued DMA execute. `MCD_Command` masks interrupts,
+runs the request with the bus released, then reacquires bank 0 before returning.
+This gives the service CPU the frame-wait intervals without allowing VBlank
+to interrupt a request and steal its bus. Future background jobs must respect
+this scheduling and leave the chunk allocation intact.
+
+For PRG-RAM DMA, retain the bus request and selected bank through queue
+consumption. Splitting a DMA does not switch the PRG-RAM window's bank.
 
 ## DMA
 
@@ -75,6 +97,14 @@ Word RAM. Only a queue containing Word RAM uses the repair processor, which
 preserves the original register contract (only `a1/a5` trashed).
 
 ## Validation
+
+`check_cd_chunks.py --core <core> --system-directory <fixture> --output <dir>`
+checks every one of the 256 x 64 chunk/block addresses through both assembled
+collision and rendering routines. It also runs 600 controller-driven level
+frames and a rotating bonus stage while checking a canary across all freed
+MD RAM. Add `--pal` for PAL. `check_level_pages.py` additionally compares each
+act's CD-resident chunk bytes to its decompressed ROM data and checks that the
+freed MD RAM survives all 64 launches.
 
 `build_tools/check_mode1.py` creates a zero-filled identification fixture with
 only the `SEGA` identifier. Genesis Plus GX uses it to enable its CD hardware

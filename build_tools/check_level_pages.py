@@ -4,6 +4,8 @@ from pathlib import Path
 import argparse
 import ctypes as C
 import json
+import struct
+from convert_s1_ss_background import kosinski_plus_decode
 from genesis_test_core import Genesis
 
 p = argparse.ArgumentParser(description=__doc__)
@@ -195,14 +197,26 @@ else:
 	raise AssertionError('Special stage did not start')
 item(BONUS)
 checks = []
+rom = args.rom.read_bytes()
+cd_chunks = g.s['Chunk_Table'] == 0x426000
+free_canary = bytes((i * 37 + 19) & 255 for i in range(0x8000))
 for zone in range(16):
 	for act in range(4):
 		g.restore(menu)
+		if cd_chunks:
+			g.ram[:0x8000] = free_canary
 		selected = (zone // 8) * 256 + (zone % 8) * 4 + act
 		g.write('v_levselitem', selected, 2)
 		press(START)
 		wait_level(zone, act)
 		step(15); item(selected)
+		if cd_chunks:
+			header = g.s['LevelArtPointers'] + (zone * 4 + act) * 12
+			source = struct.unpack_from('>I', rom, header + 8)[0] & 0xFFFFFF
+			expected = kosinski_plus_decode(rom[source:])[0]
+			actual = bytes(g.read(g.s['Chunk_Table'] + i) for i in range(len(expected)))
+			assert actual == expected, (zone, act, 'CD chunks differ from decompressed ROM')
+			assert bytes(g.ram[:0x8000]) == free_canary, (zone, act, 'freed MD RAM was touched')
 		assert g.read("MCD_status") == cd_status
 		checks.append({'zone': zone, 'act': act + 1, 'passed': True})
 	print('Four-act launch checks passed for zone ' + str(zone), flush=True)

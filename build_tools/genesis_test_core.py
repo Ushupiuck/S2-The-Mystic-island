@@ -19,6 +19,18 @@ class Variable(C.Structure):
     _fields_ = [('key', C.c_char_p), ('value', C.c_char_p)]
 
 
+class MemoryDescriptor(C.Structure):
+    _fields_ = [('flags', C.c_uint64), ('ptr', C.c_void_p),
+                ('offset', C.c_size_t), ('start', C.c_size_t),
+                ('select', C.c_size_t), ('disconnect', C.c_size_t),
+                ('length', C.c_size_t), ('addrspace', C.c_char_p)]
+
+
+class RetroMemoryMap(C.Structure):
+    _fields_ = [('descriptors', C.POINTER(MemoryDescriptor)),
+                ('num_descriptors', C.c_uint)]
+
+
 class Genesis:
     def __init__(self, core, rom, listing, output, pal=False, core_options=None, system_directory=None):
         self.s = {name:int(value,16) for name,value in re.findall(
@@ -28,6 +40,7 @@ class Genesis:
         self.frame, self.buttons, self.buttons2 = 0, set(), set()
         self.video, self.pixel_format = None, 0
         self.directory = str(system_directory or output).encode()
+        self.memory_domains = {}
         self.region = b'pal' if pal else b'ntsc-u'
         self.core = C.CDLL(str(core))
         ENV = C.CFUNCTYPE(C.c_bool,C.c_uint,C.c_void_p)
@@ -38,6 +51,14 @@ class Genesis:
         INPUT = C.CFUNCTYPE(C.c_int16,C.c_uint,C.c_uint,C.c_uint,C.c_uint)
 
         def environment(cmd,data):
+            if cmd == (36 | 0x10000):  # RETRO_ENVIRONMENT_SET_MEMORY_MAPS
+                maps = C.cast(data, C.POINTER(RetroMemoryMap)).contents
+                for i in range(maps.num_descriptors):
+                    desc = maps.descriptors[i]
+                    if desc.ptr and desc.addrspace:
+                        self.memory_domains[desc.addrspace.decode()] = (
+                            C.c_uint8 * desc.length).from_address(desc.ptr + desc.offset)
+                return True
             if cmd in (9,31,30):
                 C.cast(data,C.POINTER(C.c_char_p))[0] = self.directory
                 return True
@@ -98,14 +119,22 @@ class Genesis:
         self.core.retro_serialize.restype = C.c_bool
         self.core.retro_unserialize.restype = C.c_bool
 
+    def memory(self, name):
+        address = (self.s[name] if isinstance(name, str) else name) & 0xFFFFFF
+        if 0x420000 <= address < 0x440000:
+            if 'PRGRAM' not in self.memory_domains:
+                raise AssertionError('CD PRG-RAM access requires the CD hardware model')
+            return self.memory_domains['PRGRAM'], address - 0x420000
+        return self.ram, address & 65535
+
     def read(self, name, size=1):
-        address = (self.s[name] if isinstance(name,str) else name)&65535
-        return int.from_bytes(bytes(self.ram[(address+i)^1] for i in range(size)),'big')
+        memory, address = self.memory(name)
+        return int.from_bytes(bytes(memory[(address+i)^1] for i in range(size)), 'big')
 
     def write(self, name, value, size=1):
-        address = (self.s[name] if isinstance(name,str) else name)&65535
+        memory, address = self.memory(name)
         for i,b in enumerate((value&((1<<(size*8))-1)).to_bytes(size,'big')):
-            self.ram[(address+i)^1] = b
+            memory[(address+i)^1] = b
 
     def get(self,actor,field,size=1):
         projected=field=='layout_id'

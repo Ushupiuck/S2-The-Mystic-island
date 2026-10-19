@@ -9,13 +9,13 @@ BackupSRAM		= 1
 AddressSRAM		= 3	; 0 = odd+even; 2 = even only; 3 = odd only
 TimeTravel		= 1	; if 1, allows time-travel mechanics (W.I.P)
 
-MegaCDMode1		= 1	; cartridge boot with optional Mega-CD hardware
+MegaCDMode1		= 1	; cartridge boot; CD PRG RAM holds chunks
 
 	CPU 68000
 	include	"s2.macrosetup.asm"
 	include	"s2.macros.asm"
-	include	"s2.constants.asm"
 	include	"_inc/Mega CD Constants.asm"
+	include	"s2.constants.asm"
 	include	"_inc/Sprite Bounds.asm"
 	include	"sound/_smps2asm_inc.asm"
  if AdvancedHandler
@@ -241,6 +241,7 @@ GameProgram:
 		bsr.w	VDPSetupGame
 	if MegaCDMode1
 		bsr.w	MCD_Init
+		bsr.w	MCD_RequireProgramRAM
 	endif
 		; Load the Sound Driver
 		stopZ80
@@ -269,7 +270,10 @@ MainGameLoop:
 ; vertical and horizontal interrupt handlers
 
 V_Int:
-		movem.l	d0-a6,-(sp)		; save all the registers to the stack
+		movem.l	d0-a6,-(sp)		; save all registers
+	if MegaCDMode1
+		bsr.w	MCD_RequireProgramRAM
+	endif
 		lea	(vdp_data_port).l,a6
 		lea	vdp_control_port-vdp_data_port(a6),a5
 		tst.b	(v_vbla_counter).w
@@ -1877,6 +1881,11 @@ Pal_WZCyc:	binclude "palette/WZ Cycle.bin"
 
 ; DelayProgram:
 WaitForVint:
+	if MegaCDMode1
+		disable_ints
+		; Sub-CPU runs while the main CPU waits; V_Int reacquires bank 0.
+		move.b	#1,(MCD_SubControl+1).l
+	endif
 		lea	(v_vbla_counter).w,a0
 		move.b	#1,(a0)
 		enable_ints
@@ -3353,7 +3362,8 @@ LoadZone:
 		move.l	a2,-(sp)	; keep the remaining header across RunPLC_RAM
 		lea	(Chunk_Table).l,a1
 		bsr.w	KosPlusDec	; temporarily decompress raw art into chunk RAM
-		move.w	a1,d2
+		move.l	a1,d2
+		subi.l	#Chunk_Table,d2	; byte count, independent of the buffer base
 		subq.w	#1,d2		; last byte, so exact $1000 multiples use a full DMA
 		move.w	d2,d3
 		andi.w	#$FFF,d3
@@ -3362,8 +3372,9 @@ LoadZone:
 		andi.w	#$F000,d2	; VRAM offset of the last $1000-byte block
 
 .upload_art:
-		move.l	#Chunk_Table,d1
+		moveq	#0,d1
 		move.w	d2,d1
+		addi.l	#Chunk_Table,d1
 		move.w	d2,-(sp)	; preserve the offset across DMA/PLC processing
 		bsr.w	QueueDMATransfer
 		move.w	#Vint_TitleCard,(v_vbla_routine).w
@@ -6971,7 +6982,12 @@ GetBlockData:
 		andi.w	#$E,d5
 		add.w	d4,d3
 		add.w	d5,d3
+	if MegaCDMode1
+		lea	(Chunk_Table).l,a0
+		adda.w	d3,a0
+	else
 		movea.l	d3,a0
+	endif
 		move.w	(a0),d3
 		andi.w	#$3FF,d3
 		lsl.w	#3,d3
@@ -10719,7 +10735,7 @@ Floor_ChkTile:
 		andi.w	#$7F,d1
 		add.w	d1,d0		; d0 is relevant chunk ID now
 		moveq	#-1,d1
-		clr.w	d1		; d1 is now $FFFF0000 = Chunk_Table
+		clr.w	d1		; legacy high word; CD lookup adds its explicit base
 		lea	(v_lvllayout).w,a1
 		move.b	(a1,d0.w),d1	; move 128*128 chunk ID to d1
 		add.w	d1,d1
@@ -10729,7 +10745,12 @@ Floor_ChkTile:
 		add.w	d0,d1
 		andi.w	#$E,d4		; x_pos/8
 		add.w	d4,d1
+	if MegaCDMode1
+		lea	(Chunk_Table).l,a1
+		adda.w	d1,a1		; offset within the CD-resident chunk table
+	else
 		movea.l	d1,a1		; address of block ID
+	endif
 		rts
 ; End of function Floor_ChkTile
 ; ===========================================================================

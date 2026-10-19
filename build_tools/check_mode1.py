@@ -186,6 +186,15 @@ assert vram() == written(before,0xFFFA,rom[0x1FFFA:0x2001A])
 passed('Ordinary ROM boundary split')
 g.close()
 g=Genesis(a.core,a.rom,a.listing,a.output/'no-cd',a.pal,core_options={b'genesis_plus_gx_add_on':b'none'})
-title();assert C.c_uint8.in_dll(g.core,'system_hw').value != 0x84 and g.read('MCD_status') == 0
-g.close();passed('Mega Drive fallback without CD hardware')
+for _ in range(120):
+    g.run()
+    if g.core.m68k_get_reg(16) == g.s['MCD_Unavailable.halt']:
+        break
+else:
+    raise AssertionError('Missing-CD guard not reached')
+assert C.c_uint8.in_dll(g.core,'system_hw').value != 0x84
+assert g.read('MCD_status') == 0 and not g.read('v_errortype')
+g.run(2)
+g.video.save(a.output/'no-cd'/'required.png')
+g.close();passed('Missing CD hardware shows requirement screen before accessing CD RAM')
 (a.output/'report.json').write_text(json.dumps({'pal':a.pal,'checks':checks,'bios':'Zero-filled identification fixture, no Sega BIOS code executed','limits':'Emulation only; physical hardware/BIOS revisions untested'},indent=2)+'\n')

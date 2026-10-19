@@ -50,6 +50,6 @@ MCD_SubError:
 		even
 		dephase
 MCD_SubProgramEnd:
-		if (MCD_SubProgramEnd-MCD_SubProgram)>$20000
-			fatal "Mode 1 bootstrap exceeds its bank-0 upload window"
+		if (MCD_SubProgramEnd-MCD_SubProgram)>MCD_BIOS_RAM_End
+			fatal "Mode 1 bootstrap overlaps the first user PRG-RAM allocation"
 		endif

@@ -68,7 +68,7 @@ MCD_Init:
 		move.w	d2,(MCD_MainToken).l
 		move.b	#1,(a1)
 		move.w	#MCD_WaitLimit,d3
-		bsr.w	MCD_Command.wait
+		bsr.w	MCD_WaitReply
 		bcs.s	.failed
 		cmpi.w	#MCD_Ready,d0
 		bne.s	.failed
@@ -81,10 +81,40 @@ MCD_Init:
 		move.b	#MCD_StatusFailed,(MCD_status).w
 		rts
 
+; Main owns PRG-RAM bank 0 during work. WaitForVint releases the sub-CPU;
+; V_Int takes the bus back before any queued PRG-RAM DMA or chunk readers.
+; Keep the bank fixed: chunks occupy physical $6000-$DFFF.
+; d3 is scratch; carry reports failure. The caller masks interrupts.
+MCD_AcquireProgramRAM:
+		cmpi.b	#MCD_StatusReady,(MCD_status).w
+		bne.s	.failed
+		move.b	#3,(MCD_SubControl+1).l
+		move.w	#MCD_WaitLimit,d3
+.wait:
+		btst	#1,(MCD_SubControl+1).l
+		bne.s	.ready
+		dbf	d3,.wait
+.failed:
+		ori	#1,ccr
+		rts
+.ready:
+		andi.b	#$3F,(MCD_MemoryMode+1).l ; select PRG-RAM bank 0
+		andi	#$FE,ccr
+		rts
+
+MCD_RequireProgramRAM:
+		bsr.w	MCD_AcquireProgramRAM
+		bcs.w	MCD_Unavailable
+		rts
+
 ; Serialized main->sub request. Publish token last, acknowledge result last.
+; Release PRG-RAM while the service runs and reacquire before returning.
+; IRQs stay masked so VBlank cannot steal the bus during the handshake.
 ; In: d0.w command, d1.w argument. Out: d0.w result, carry on failure/busy.
 ; Clobbers d2-d3. The fresh token complements the previous acknowledgement.
 MCD_Command:
+		move.w	sr,-(sp)
+		disable_ints
 		cmpi.b	#MCD_StatusReady,(MCD_status).w
 		bne.s	.failed
 		move.w	(MCD_MainToken).l,d2
@@ -95,11 +125,28 @@ MCD_Command:
 		move.w	d0,(MCD_MainCommand).l
 		move.w	d1,(MCD_MainArgument).l
 		move.w	d2,(MCD_MainToken).l
+		move.b	#1,(MCD_SubControl+1).l
 		move.w	#MCD_WaitLimit,d3
-.wait:
+		bsr.s	MCD_WaitReply
+		bcs.s	.reclaimFailed
+		bsr.w	MCD_AcquireProgramRAM
+		bcs.w	MCD_Unavailable
+		move.w	(sp)+,sr
+		andi	#$FE,ccr
+		rts
+.reclaimFailed:
+		bsr.w	MCD_AcquireProgramRAM
+		bcs.w	MCD_Unavailable
+.failed:
+		move.w	(sp)+,sr
+		ori	#1,ccr
+		rts
+
+; Also used during the initial boot, before MCD_status becomes ready.
+MCD_WaitReply:
 		cmp.w	(MCD_SubAck).l,d2
 		beq.s	.acknowledged
-		dbf	d3,.wait
+		dbf	d3,MCD_WaitReply
 .failed:
 		ori	#1,ccr
 		rts
@@ -120,7 +167,7 @@ MCD_AcquireWordRAM:
 		btst	#0,(MCD_MemoryMode+1).l
 		bne.s	.ready
 		moveq	#MCD_CommandReturnRAM,d0
-		bsr.s	MCD_Command
+		bsr.w	MCD_Command
 		bcs.s	.failed
 		btst	#0,(MCD_MemoryMode+1).l
 		beq.s	.failed
@@ -148,3 +195,39 @@ MCD_ReleaseWordRAM:
 		move.w	(sp)+,sr
 		ori	#1,ccr
 		rts
+
+; This build uses CD RAM even for startup scratch maps. Fail before touching
+; that storage if the hardware is missing or initialization failed.
+MCD_Unavailable:
+		disable_ints
+		bsr.w	ClearScreen
+		lea	(vdp_data_port).l,a6
+		locVRAM ArtTile_Level_Select_Font*tile_size
+		lea	(Art_Text).l,a0
+		move.w	#bytesToWcnt(Art_Text_End-Art_Text),d1
+.font:
+		move.w	(a0)+,(a6)
+		dbf	d1,.font
+		move.l	#vdpComm($1E,CRAM,WRITE),(vdp_control_port).l
+		move.w	#$0EEE,(a6)
+		locVRAM vram_fg+12*128+12*2
+		lea	.text(pc),a0
+		moveq	#16-1,d1
+.textLoop:
+		moveq	#0,d0
+		move.b	(a0)+,d0
+		cmpi.b	#' ',d0
+		beq.s	.blank
+		addi.w	#ArtTile_Level_Select_Font-'0',d0
+		bra.s	.write
+.blank:
+		moveq	#0,d0
+.write:
+		move.w	d0,(a6)
+		dbf	d1,.textLoop
+		move.w	#$8144,(vdp_control_port).l ; display on; IRQs stay masked
+.halt:
+		bra.s	.halt
+.text:
+		dc.b "MEGA CD REQUIRED"
+		even
