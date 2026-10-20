@@ -77,7 +77,10 @@ original Star Light platform behavior. SonLVL exposes both families.
 
 The button retains only its gray/blue up and down frames. Its four unused
 red source tiles and unused mappings are omitted by both the importer and
-atlas packer; the obsolete standalone button art/code is removed.
+atlas packer. The separate `objects/W.I.P Objects/32 Button.asm` rework,
+its standalone `art/nemesis/Button.nem` asset, `Nem_Button` entry and
+`ArtTile_Button` placeholder are preserved for future development. The W.I.P
+source is not included in the running game.
 
 The SMZ atlas preserves all 133 retained source frames' original piece counts, sizes,
 positions, ordering, flips, adapted indexed pixels, palettes and priority.
