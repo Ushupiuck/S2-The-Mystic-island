@@ -2416,24 +2416,7 @@ Demo_Levels:
 
 		include "_inc/LevelSelect.asm"
 
-MusicList:
-		dc.b	bgm_GHZ
-		dc.b	bgm_LZ
-		dc.b	bgm_MZ
-		dc.b	bgm_SLZ
-		dc.b	bgm_SYZ
-		dc.b	bgm_HTZ
-		dc.b	MusID_MTZ
-		dc.b	bgm_GHZ
-		dc.b	bgm_SBZ
-		dc.b	bgm_GHZ
-		dc.b	bgm_GHZ
-		dc.b	bgm_GHZ
-		dc.b	bgm_GHZ
-		dc.b	bgm_GHZ
-		dc.b	bgm_GHZ
-		dc.b	bgm_GHZ
-		even
+		include "_inc/Level Music.asm"
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Level
@@ -2501,20 +2484,9 @@ Level_ClrRam:
 		bsr.w	CheckLevelForWater
 		tst.w	(f_demo).w	; are we on an ending demo?
 		bmi.s	Level_SkipTtlCard	; if so, branch
-		moveq	#0,d0
-		move.b	(Current_Zone).w,d0
-;		cmpi.w	#(id_LZ<<8)+3,(Current_ZoneAndAct).w
-;		bne.s	Level_BgmNotLZ4
-;		moveq	#5,d0
-
-;Level_BgmNotLZ4:
-;		cmpi.w	#(id_SBZ<<8)+2,(Current_ZoneAndAct).w
-;		bne.s	Level_PlayBgm
-;		moveq	#6,d0
 
 Level_PlayBgm:
-		lea	MusicList(pc),a1	; load music playlist
-		move.b	(a1,d0.w),d0
+		bsr.w	GetLevelMusic
 		bsr.w	PlaySound		; play music
 		move.l	#TitleCards,(v_titlecard).w	; load title card object
 
@@ -10392,10 +10364,7 @@ KillCharacter:
 ResumeMusic:
 		cmpi.w	#12,(v_air).w
 		bhi.s	loc_12310
-		moveq	#0,d0
-		move.b	(Current_Zone).w,d0
-		lea	(MusicList).l,a1
-		move.b	(a1,d0.w),d0
+		jsr	(GetLevelMusic).l
 
 loc_122F6:
 		move.b	(v_player+obStatusSecondary).w,d1
