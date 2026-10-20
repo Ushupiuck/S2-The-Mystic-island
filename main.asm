@@ -15625,6 +15625,8 @@ Nem_VSpikes:	binclude	"art/nemesis/Spikes.nem"
 		even
 Nem_Bumper:	binclude	"art/nemesis/Bumper.nem"
 		even
+Nem_Button:	binclude	"art/nemesis/Button.nem"
+		even
 Art_Water_Surface:	binclude	"art/uncompressed/Water Surface.unc"
 		even
 		even
