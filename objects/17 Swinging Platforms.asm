@@ -9,8 +9,9 @@
 ;   2X = static
 ;   3X = bounce right
 ;   4X = trap
-;   5X = swinging giant ball
+;   5X = swinging giant ball (solid top, harmful underside)
 ;   6X = detach
+;   7X = swinging spikeball (harmful from every side, no solid top)
 ; ---------------------------------------------------------------------------
 
 ; local object scratch aliases
@@ -49,7 +50,7 @@ SwingingPtfm_Index:
 		dc.w	SwingingPtfm_SetSolid-SwingingPtfm_Index	; 02
 		dc.w	SwingingPtfm_Display-SwingingPtfm_Index		; 04
 		dc.w	SwingingPtfm_DetachCheck-SwingingPtfm_Index	; 06
-		dc.w	SwingingPtfm_PostDetach-SwingingPtfm_Index	; 08
+		dc.w	SwingingPtfm_PostDetach-SwingingPtfm_Index	; 08: motion only (spikeball or detached chain)
 		dc.w	SwingingPtfm_Falling-SwingingPtfm_Index		; 0A
 		dc.w	SwingingPtfm_Floating-SwingingPtfm_Index	; 0C
 ; ---------------------------------------------------------------------------
@@ -183,6 +184,8 @@ SwingingPtfm_Init:
 		cmpi.b	#$40,d4
 		beq.s	.makeBall
 		cmpi.b	#$50,d4
+		beq.s	.makeBall
+		cmpi.b	#$70,d4
 		bne.s	.done
 
 .makeBall:
@@ -196,10 +199,19 @@ SwingingPtfm_Init:
 .smzBall:
         clr.b obFrame(a0)
 .ballReady:
+        move.b #$99,obColType(a0)	; existing solid-top / harmful-underside ball
+        cmpi.b #$70,d4
+        bne.s .ballCollisionReady
+        ; The full spikeball family swings without platform collision.
+        move.b #8,obRoutine(a0)
+        move.b #$81,obColType(a0)	; S1 giant ball: 40x40 hurt box
+        cmpi.b #id_SMZ,(Current_Zone).w
+        bne.s .ballCollisionReady
+        move.b #$86,obColType(a0)	; S1 SBZ ball: 32x32 hurt box
+.ballCollisionReady:
         move.w #$100,obPriority(a0)
         move.b #sprite_bound($18,Map_GBall_width),obActWid(a0)
         move.b #$18,obHeight(a0)
-        move.b #$99,obColType(a0)
 .done:		rts
 ; ---------------------------------------------------------------------------
 
@@ -393,6 +405,7 @@ SwingingPtfm_MotionIndex:
 		dc.w	SwingingPtfm_Motion_Trap-SwingingPtfm_MotionIndex		; 4X
 		dc.w	SwingingPtfm_Motion_Normal-SwingingPtfm_MotionIndex		; 5X
 		dc.w	SwingingPtfm_Motion_Normal-SwingingPtfm_MotionIndex		; 6X
+		dc.w	SwingingPtfm_Motion_Normal-SwingingPtfm_MotionIndex		; 7X
 ; ---------------------------------------------------------------------------
 
 SwingingPtfm_Motion_Normal:

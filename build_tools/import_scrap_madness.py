@@ -89,9 +89,11 @@ def number(text):
     return eval(text, {'__builtins__': {}}, {})
 
 
-def mapping(source):
+def mapping(source, frame_count=None):
     """Read the numeric S1 sprite macros and emit the normal six-byte ABI."""
     entries = re.findall(r'mappingsTableEntry\.w\s+(\.[\w]+)', source)
+    if frame_count is not None:
+        entries = entries[:frame_count]
     frames = {}
     for label, body in re.findall(r'^(\.[\w]+):\s*spriteHeader(.*?)(?=^\.[\w]+_End)',
                                  source, re.M | re.S):
@@ -150,6 +152,10 @@ def remap_pixels(raw, lookup):
 
 def remap_player_art(name, raw, lookup):
     """Keep stage-palette parts intact in art shared with player-palette FX."""
+    if name == 'SBZ Button':
+        # Discard S1's four unused red tiles; retain the gray/blue up/down art.
+        assert len(raw) == 12*32
+        return remap_pixels(raw[4*32:], lookup)
     if name == 'SBZ Electrocuter':
         # First eight tiles: line 4 cyan dome and line 3 body. Only the
         # remaining discharge tiles use the shared player palette.
@@ -249,7 +255,7 @@ def placements(source):
                 continue
             assert oid in OBJECTS, hex(oid)
             if oid == 0x15:
-                subtype = 0x50 | (subtype & 15)
+                subtype = 0x70 | (subtype & 15)  # full spikeball; $5x retains a solid top
             if oid == 0x26:
                 # S1 has unused high-nibble monitor variants; decode the item.
                 subtype = {0:0,1:3,2:2,3:5,4:6,5:7,6:4,7:0,8:0}[subtype & 15]
@@ -303,7 +309,8 @@ def main():
           'Invisible Barriers':'Invis','Moving Blocks (MZ and SBZ)':'MBlock',
           'Bomb Enemy':'Bomb','Button':'But'}
     for filename,label in maps.items():
-        (ROOT/f'mappings/sprite/SMZ {label}.bin').write_bytes(mapping((source/f'_maps/{filename}.asm').read_text()))
+        (ROOT/f'mappings/sprite/SMZ {label}.bin').write_bytes(mapping((source/f'_maps/{filename}.asm').read_text(),
+                    frame_count=2 if label == 'But' else None))
     art_names=('SBZ Running Disc','SBZ Junction Wheel','SBZ Pizza Cutter',
                'SBZ Stomper','SBZ Spinning Platform','SBZ Trapdoor',
                'SBZ Collapsing Floor','SBZ Electrocuter','SBZ Vanishing Block',

@@ -30,10 +30,14 @@ for name,base in [('Stomper',0x2c0),('Small Vertical Door',0x2e8),('Crushing Gir
   raw=remap_pixels(raw[:0x18*32],lookup)+raw[0x18*32:0x20*32]+remap_pixels(raw[0x20*32:],lookup)
  fill(base,raw)
  if name=='Collapsing Floor':fill(base+4,raw)
-fill(0x400,dec(R/'art/nemesis/S1/Enemy Bomb.nem'));fill(0x332,dec(R/'art/nemesis/S1/SBZ Button.nem'))
+fill(0x400,dec(R/'art/nemesis/S1/Enemy Bomb.nem'))
+button = dec(R/'art/nemesis/S1/SBZ Button.nem')
+assert len(button) == 8*32, 'Re-import the gray/blue-only button art first.'
+fill(0x336,button)
 for name,base in [('Enemy Caterkiller',0x2b0),('Enemy Ballhog (Horizontal)',0x620)]:fill(base,kosinski_plus_decode((R/f'art/moduled kosinski/{name}.kospm').read_bytes()[2:])[0])
 sources={'Jun':'Rotating Junction','Disc':'Running Disc','Trap':'Trapdoor','Spin':'SBZ Spinning Platforms','Saw':'Saws and Pizza Cutters','Stomp':'SBZ Stomper and Door','VanP':'SBZ Vanishing Platforms','Flame':'Flamethrower','Elec':'Electrocuter','Gird':'Girder Block','Bomb':'Bomb Enemy','But':'Button'}
-inputs={name:(frames(mapping((S/f'_maps/{sources[name]}.asm').read_text())),base) for name,base in [('Jun',0x4348),('Disc',0xc344),('Trap',0x4492),('Spin',0x302),('Saw',0x43b5),('Stomp',0x22c0),('VanP',0x4429),('Flame',0x83d9),('Elec',0x47e),('Gird',0x42f0),('Bomb',0x400),('But',0x336)]}
+inputs={name:(frames(mapping((S/f'_maps/{sources[name]}.asm').read_text(),
+                                    frame_count=2 if name == 'But' else None)),base) for name,base in [('Jun',0x4348),('Disc',0xc344),('Trap',0x4492),('Spin',0x302),('Saw',0x43b5),('Stomp',0x22c0),('VanP',0x4429),('Flame',0x83d9),('Elec',0x47e),('Gird',0x42f0),('Bomb',0x400),('But',0x336)]}
 inputs['Stomp']=(inputs['Stomp'][0][:4]+[inputs['Stomp'][0][0]],0x22c0)
 mb=frames(mapping((S/'_maps/Moving Blocks (MZ and SBZ).asm').read_text()));mb=[mb[2],mb[2],mb[2],mb[3],mb[2]];inputs['MBlock']=(mb,lambda i:0x4460 if i==3 else 0x22c0)
 for name,label,base in [('Floor','Map_Obj1B',0x43f5),('Door','Map_obj30',0x42e8),('Cat','Map_Cat',0x22b0),('Hog','Map_BallHogH',0x2620)]:
@@ -112,6 +116,7 @@ for name, (rs, base) in inputs.items():
                         for j, (y, size, tile, x) in enumerate(row)
                         if name != 'Jun' or i == 16 or j >= 2)
 atlas_tiles = pack_rectangles(patterns)
+packed_count = len(atlas_tiles)
 # The universal water bank displaced one static SMZ terrain tile. Keep it
 # in the atlas's final padding slot, which neither act animates/overwrites.
 terrain = kosinski_plus_decode((R/'art/kosinski/level/SMZ Terrain Tile.kosp').read_bytes())[0]
@@ -177,7 +182,7 @@ for name, data in out.items():
 (R/'art/uncompressed/SMZ Sprite Atlas.unc').write_bytes(atlas)
 (R/'art/uncompressed/SMZ Junction Gap.unc').write_bytes(gap_art)
 (R/'mappings/spriteDPLC/SMZ Junction.asm').write_text('\n'.join(dplc)+'\n')
-print('Atlas:', len(atlas_tiles), 'tiles; capacity:', capacity,
+print('Atlas:', packed_count, 'used tiles; capacity:', capacity,
       '; original rectangles retained in all', sum(len(rs) for rs,_ in inputs.values()), 'frames')
 print('Junction DPLC:', max(count for first,count in gap_runs),
       'resident tiles;', len(gap_art)//32, 'source tiles; terrain unchanged')

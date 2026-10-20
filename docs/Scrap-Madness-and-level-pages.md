@@ -70,12 +70,21 @@ objects use long routine pointers, the `$4E` SST layout, six-byte mappings and
 S3&K placement/respawn ownership. No high-ID mirror bit is used. Collision
 indices are translated by dimensions rather than copied between games.
 
-The SMZ atlas preserves all 135 source frames' original piece counts, sizes,
+SMZ's twelve swinging spikeballs use family `$7x`: all-side damage with no
+standing surface. The low nibble still selects chain length. Family `$5x`
+keeps its solid top and harmful underside for other levels, as does the
+original Star Light platform behavior. SonLVL exposes both families.
+
+The button retains only its gray/blue up and down frames. Its four unused
+red source tiles and unused mappings are omitted by both the importer and
+atlas packer; the obsolete standalone button art/code is removed.
+
+The SMZ atlas preserves all 133 retained source frames' original piece counts, sizes,
 positions, ordering, flips, adapted indexed pixels, palettes and priority.
 Complete sprite rectangles share identical art and overlapping tile sequences;
 pieces are never subdivided. All objects share one bank in both acts.
 
-The static atlas occupies 501 tiles at `$2B8-$4AC`. Its final padding slot,
+The static atlas uses 497 tiles at `$2B8-$4A8`. Its final padding slot,
 `$4AF`, retains one terrain tile displaced by the universal water bank.
 The junction's changing edge uses a twelve-tile DPLC buffer at `$4B0-$4BB`; its centre and outer ring
 stay in the static atlas. Each angle uploads one 4-12-tile run when it changes,
