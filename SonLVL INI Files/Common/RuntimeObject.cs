@@ -77,7 +77,7 @@ namespace MysticIsland.ObjectDefinitions
 					break;
 				case "Swing":
 					Bits("Chain length", 0, 15, "Number of 16-pixel links; suspended object rests 8 pixels beyond the chain.");
-					Bits("Family", 4, 15, "Custom movement families in objects/17 Swinging Platforms.asm.", "Normal", "Bounce left", "Static", "Bounce right", "Trap", "Giant spiked ball", "Detachable");
+					Bits("Family", 4, 15, "Custom movement families in objects/17 Swinging Platforms.asm.", "Normal", "Bounce left", "Static", "Bounce right", "Trap", "Ball with solid top", "Detachable", "Full spikeball");
 					if (Setting("atlas", "false") != "true") alternate = Load("../art/nemesis/S1/GHZ Giant Ball.nem", CompressionType.Nemesis, "Giant Ball.bin", 2);
 					break;
 				case "Scenery":
@@ -282,7 +282,7 @@ namespace MysticIsland.ObjectDefinitions
 					pieces = new List<Sprite> { new Sprite(At(frames, 2)) };
 					int links = subtype & 15;
 					for (int i = 1; i < links; i++) pieces.Add(new Sprite(At(frames, 1), 0, i * 16));
-					pieces.Add(new Sprite(alternate != null && (subtype & 0xE0) == 0x40 ? At(alternate, 1) : frames[0], 0, links * 16 + 8));
+					pieces.Add(new Sprite(alternate != null && ((subtype & 0xE0) == 0x40 || (subtype & 0xF0) == 0x70) ? At(alternate, 1) : frames[0], 0, links * 16 + 8));
 					return new Sprite(pieces);
 				case "Platform":
 				case "CPZPlatform":

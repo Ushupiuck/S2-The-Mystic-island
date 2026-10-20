@@ -1795,7 +1795,6 @@ ArtTile_Yadrin:			equ $47B
 ArtTile_Jaws:			equ $486
 ArtTile_Burrobot:		equ $4A6
 ArtTile_Basaran:		equ $385
-ArtTile_Button:			equ $50F	; TO BE CHANGED
 ArtTile_Shield:			equ $79C	; $F380; shared with primary invincibility
 ArtTile_Shield_2:			equ $56F ; 18 tiles; follows the enlarged horizontal-spring/common banks
 ArtTile_Shield_2_End:		equ ArtTile_Shield_2+$12 ; $B000; exclusive end of this bank
