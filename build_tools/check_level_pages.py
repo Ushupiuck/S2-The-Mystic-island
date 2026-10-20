@@ -199,12 +199,14 @@ item(BONUS)
 checks = []
 rom = args.rom.read_bytes()
 cd_chunks = g.s['Chunk_Table'] == 0x426000
-free_canary = bytes((i * 37 + 19) & 255 for i in range(0x8000))
+free_start = g.s.get('Free_Chunk_RAM_Start', 0) & 0xFFFF
+free_end = 0x8000
+free_canary = bytes((i * 37 + 19) & 255 for i in range(free_end-free_start))
 for zone in range(16):
 	for act in range(4):
 		g.restore(menu)
 		if cd_chunks:
-			g.ram[:0x8000] = free_canary
+			g.ram[free_start:free_end] = free_canary
 		selected = (zone // 8) * 256 + (zone % 8) * 4 + act
 		g.write('v_levselitem', selected, 2)
 		press(START)
@@ -216,7 +218,7 @@ for zone in range(16):
 			expected = kosinski_plus_decode(rom[source:])[0]
 			actual = bytes(g.read(g.s['Chunk_Table'] + i) for i in range(len(expected)))
 			assert actual == expected, (zone, act, 'CD chunks differ from decompressed ROM')
-			assert bytes(g.ram[:0x8000]) == free_canary, (zone, act, 'freed MD RAM was touched')
+			assert bytes(g.ram[free_start:free_end]) == free_canary, (zone, act, 'freed MD RAM was touched')
 		assert g.read("MCD_status") == cd_status
 		checks.append({'zone': zone, 'act': act + 1, 'passed': True})
 	print('Four-act launch checks passed for zone ' + str(zone), flush=True)

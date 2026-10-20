@@ -13,6 +13,8 @@ MCD_SubAck:		equ $A1202E
 MCD_Ready:		equ $4D31	; "M1"
 MCD_CommandPing:	equ 1
 MCD_CommandReturnRAM:	equ 2
+MCD_CommandRingTick:	equ 3
+MCD_CommandRingReset:	equ 4
 MCD_StatusAbsent:	equ 0
 MCD_StatusReady:	equ 1
 MCD_StatusFailed:	equ $FF

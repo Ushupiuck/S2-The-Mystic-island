@@ -24,8 +24,13 @@ g = Genesis(a.core, ROOT/'s2built.bin', ROOT/'main.lst', a.output,
             a.pal, system_directory=a.system_directory)
 assert g.s['Chunk_Table'] == g.s['MCD_ProgramRAM'] + g.s['MCD_BIOS_RAM_End'] == 0x426000
 assert g.s['Chunk_Table_End'] - g.s['Chunk_Table'] == 0x8000
-assert (g.s['Free_Chunk_RAM_Start'] & 0xFFFFFF) == 0xFF0000
-assert g.s['Free_Chunk_RAM_End'] - g.s['Free_Chunk_RAM_Start'] == 0x8000
+assert g.s['MCD_ChunkTable_SubStart'] == 0x6000
+assert g.s['MCD_ChunkTable_SubEnd'] == 0x26000
+assert g.s['MCD_ChunkTable_Size'] == 0x20000
+free_start = g.s['Free_Chunk_RAM_Start'] & 0xFFFF
+free_end = 0x8000
+assert (g.s['Free_Chunk_RAM_End'] & 0xFFFFFF) == 0xFF8000
+assert g.s['MCD_MainWorkEnd'] == g.s['Free_Chunk_RAM_Start']
 assert g.s['v_ssbg_end'] <= g.s['Chunk_Table_End']
 boot_level(g, zone=0, act=0)
 assert g.read('MCD_status') == 1
@@ -111,15 +116,15 @@ for chunk in range(256):
 passed('Inline row and column writers render all chunk IDs and flips across boundaries',
        transfers=256*4*2)
 
-canary = bytes((i * 37 + 19) & 255 for i in range(0x8000))
+canary = bytes((i * 37 + 19) & 255 for i in range(free_end-free_start))
 g.restore(stage)
-g.ram[:0x8000] = canary
+g.ram[free_start:free_end] = canary
 for tick in range(600):
     g.buttons = {7} | ({0} if tick % 120 < 20 else set())
     g.run()
     assert not g.read('v_errortype')
     assert g.read('MCD_status') == 1
-    assert bytes(g.ram[:0x8000]) == canary, tick
+    assert bytes(g.ram[free_start:free_end]) == canary, tick
 passed('600 controller-driven level frames preserve all freed MD RAM')
 g.video.save(a.output/'level.png')
 g.close()
@@ -133,7 +138,7 @@ for _ in range(1800):
         break
 else:
     raise AssertionError('Title timeout')
-g.ram[:0x8000] = canary
+g.ram[free_start:free_end] = canary
 g.write('f_levselcheat', 1)
 g.buttons = {3}; g.run(2); g.buttons = set(); g.run(100)
 g.write('v_levselitem', g.s['LevelSelect_BonusItem'], 2)
@@ -148,7 +153,7 @@ first_angle = g.read('v_ssangle', 2)
 for _ in range(180):
     g.run()
     assert not g.read('v_errortype')
-    assert bytes(g.ram[:0x8000]) == canary
+    assert bytes(g.ram[free_start:free_end]) == canary
 assert g.read('v_ssangle', 2) != first_angle
 assert any(g.vram)
 g.video.save(a.output/'bonus'/'stage.png')

@@ -2682,6 +2682,9 @@ Level_SkipScroll:
 		bsr.w	OscillateNumDo
 		bsr.w	ChangeRingFrame
 		bsr.w	SignpostArtLoad
+	if MegaCDMode1
+		jsr	(MCD_FinishRingJob).l
+	endif
 		jsr	(Render_Sprites).l
 		jsr	(ObjectsManager).l
 		cmpi.w	#Demo,(v_gamemode).w
@@ -9197,6 +9200,9 @@ loc_D8AE:
 ; ===========================================================================
 ; RPL_Next:
 RingsManager_Main:
+	if MegaCDMode1
+		jsr	(MCD_BeginRingJob).l
+	else
 		lea	(Ring_Positions).w,a1
 		move.w	#255-1,d1			; do 255 rings
 
@@ -9215,6 +9221,7 @@ loc_D8CC:
 loc_D8EA:
 		lea	6(a1),a1
 		dbf	d1,loc_D8CC
+	endif
 
 		; update ring start and end addresses
 		movea.w	(Ring_start_addr).w,a1
@@ -9284,7 +9291,7 @@ Touch_Rings:
 		cmpa.l	a1,a2
 		beq.w	locret_DA36
 		cmpi.w	#90,flashtime(a0)
-		bhs.s	locret_DA36
+		bhs.w	locret_DA36
 		move.w	obX(a0),d2
 		move.w	obY(a0),d3
 		subq.w	#8,d2
@@ -9342,6 +9349,9 @@ loc_DA1E:
 
 loc_DA24:
 		move.w	#$601,(a1)
+	if MegaCDMode1
+		jsr	(MCD_RecordRingCollection).l
+	endif
 		jsr	(CollectRing).l
 
 loc_DA2C:
@@ -9365,6 +9375,9 @@ locret_DA36:
 
 ; RingsManager2:
 RingsManager_Setup:
+	if MegaCDMode1
+		jsr	(MCD_ResetRingAnimations).l
+	endif
 		clearRAM Ring_Positions, Ring_Positions_End
 		moveq	#0,d0
 		move.w	(Current_ZoneAndAct).w,d0

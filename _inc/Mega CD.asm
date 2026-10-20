@@ -2,6 +2,9 @@
 ; Clobbers d0-d3/a0-a1. Absent/failed hardware leaves the game in MD RAM.
 MCD_Init:
 		clr.b	(MCD_status).w
+		clr.w	(MCD_RingEventCount).l
+		clr.w	(MCD_RingActiveCount).l
+		clr.w	(MCD_RingJobPending).l
 		btst	#5,(HW_Version).l
 		beq.s	.present
 		cmpi.l	#"SEGA",(MCD_BootROM+$100).l
@@ -231,3 +234,5 @@ MCD_Unavailable:
 .text:
 		dc.b "MEGA CD REQUIRED"
 		even
+
+		include "_inc/Mega CD Ring Jobs.asm"

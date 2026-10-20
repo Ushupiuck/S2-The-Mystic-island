@@ -870,9 +870,15 @@ RAM_Start:
 
 	if MegaCDMode1
 ; Keep short-addressed engine RAM in $FF8000-$FFFFFF. The lower half is
-; genuinely free; future allocations there must use long addressing.
+; available for reuse. Job queues there must use long addressing.
+MCD_MainWorkStart:
+MCD_RingEvents:		ds.w MCD_RingSlots
+MCD_RingEventCount:	ds.w 1
+MCD_RingActiveCount:	ds.w 1
+MCD_RingJobPending:	ds.w 1
+MCD_MainWorkEnd:
 Free_Chunk_RAM_Start:
-		ds.b $8000	; free space: no resident chunk storage
+		ds.b $8000-(MCD_MainWorkEnd-MCD_MainWorkStart)
 Free_Chunk_RAM_End:
 	else
 Chunk_Table:			ds.w	$40*$100	; 128x128 tile mappings ($8000 bytes)
