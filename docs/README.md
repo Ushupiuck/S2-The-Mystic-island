@@ -1,7 +1,7 @@
 # Developer documentation
 
 These guides describe the current implementation. Source definitions in
-`s2.constants.asm`, the relevant ASM module, and generated sprite bounds take
+`_definitions/s2.constants.asm`, the relevant ASM module, and generated sprite bounds take
 precedence when changing allocations or formats. Run commands from the repository
 root. Windows is the primary development environment; see [AGENTS.md](../AGENTS.md).
 
@@ -20,6 +20,19 @@ root. Windows is the primary development environment; see [AGENTS.md](../AGENTS.
 property definitions and subtype options. [KeH sound tools](../build_tools/sound/README.md)
 own song/SFX importing, packer formats and sound-tool builds.
 [TODO.txt](../TODO.txt) is the development backlog, rather than implemented behavior.
+
+## Source organization
+
+`_definitions/` groups the shared constants, RAM declarations, assembler setup
+and macros, debugger definitions, and generated sprite bounds. Constants and RAM
+variables remain together in `_definitions/s2.constants.asm`; the CD build adds
+its hardware and physical RAM definitions alongside it. Preserve include order
+when moving definitions: some depend on macros or earlier allocations.
+
+`_inc/` holds engine subsystems and substantial tables. Keep small helpers and
+local macros with their owner; split a routine out when it makes the subsystem
+easier to find and maintain. Generated audio tables belong under `sound/`, as
+described in the [sound guide](../build_tools/sound/README.md).
 
 ## Branch scope
 

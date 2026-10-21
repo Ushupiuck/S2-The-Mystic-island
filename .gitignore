@@ -10,6 +10,7 @@ build_tools/sound/**/obj/
 main.p
 main.lst
 main.log
+sprite-bounds-pass.bin
 
 # Built ROMs.
 s2built.bin

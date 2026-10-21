@@ -103,7 +103,7 @@ nMaxPSG2			EQU nA5+psgdelta
 	enum sTone_27=fTone_01
 ; ---------------------------------------------------------------------------------------------
 ; DAC Equates
-	include "dacids.gen.asm"
+	include "sound/dacids.gen.asm"
 ; ---------------------------------------------------------------------------------------------
 ; Channel IDs for SFX
 cPSG1				EQU $80

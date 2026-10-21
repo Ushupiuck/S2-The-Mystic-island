@@ -12,14 +12,14 @@ TimeTravel		= 1	; if 1, allows time-travel mechanics (W.I.P)
 MegaCDMode1		= 1	; cartridge boot; CD PRG RAM holds chunks
 
 	CPU 68000
-	include	"s2.macrosetup.asm"
-	include	"s2.macros.asm"
-	include	"_inc/Mega CD Constants.asm"
-	include	"s2.constants.asm"
-	include	"_inc/Sprite Bounds.asm"
-	include	"sound/_smps2asm_inc.asm"
+	include	"_definitions/s2.macrosetup.asm"
+	include	"_definitions/s2.macros.asm"
+	include	"_definitions/Mega CD Constants.asm"
+	include	"_definitions/s2.constants.asm"
+	include	"_definitions/Sprite Bounds.asm"
+	include	"_definitions/_smps2asm_inc.asm"
  if AdvancedHandler
-	include	"Debugger.asm"
+	include	"_definitions/Debugger.asm"
  endif
 
 StartOfRom:
@@ -15446,8 +15446,8 @@ zmakePlaylistEntry macro addr,val
 	endif
 	endm
 
-	include "_inc/Sound Bank Assets.asm"
-	include "musicbanks.gen.asm"
+	include "_definitions/Sound Bank Assets.asm"
+	include "sound/musicbanks.gen.asm"
 
 zSoundIndexEntry macro pointer, priority
 	rom_ptr_z80	pointer
@@ -15459,7 +15459,7 @@ zSoundIndexEntry macro pointer, priority
 ; ------------------------------------------------------------------------------
 SndSFX1_Start:	startBank
 
-	include "sfxbank.gen.asm"
+	include "sound/sfxbank.gen.asm"
 
 	; something else for DAC sounds
 	; First byte selects one of the DAC samples.  The number that
@@ -15504,8 +15504,8 @@ DACSample	macro	pPtr,pDelay,pFlags
 	dc.b	pFlags
 	endm
 
-	include "dacinfo.gen.asm"
-	include "musicinfo.gen.asm"
+	include "sound/dacinfo.gen.asm"
+	include "sound/musicinfo.gen.asm"
 
 	even
 
@@ -15529,7 +15529,7 @@ Snd_Sega_End:		even
 ; ---------------------------------------------------------------------------
 ; DAC samples
 ; ---------------------------------------------------------------------------
-	include "dacbanks.gen.asm"
+	include "sound/dacbanks.gen.asm"
 		even
 ; -------------------------------------------------------------------------------
 Kosp_Title:		binclude	"art/kosinski/level/8x8 - Title.kosp"

@@ -751,8 +751,8 @@ VRAM_Menu_Plane_B_Name_Table             = $E000	; Extends until $EFFF
 VRAM_Menu_Plane_Table_Size               = $1000	; 64 cells x 32 cells x 2 bytes per cell
 ; ===========================================================================
 ; Sound and Music tables
-	include "musicids.gen.asm"
-	include "sfxids.gen.asm"
+	include "sound/musicids.gen.asm"
+	include "sound/sfxids.gen.asm"
 
 ; Sound command IDs
 offset :=	zCommandIndex
@@ -860,7 +860,7 @@ bgm_Stop =		MusID_Stop
 ; Main RAM
 ; ---------------------------------------------------------------------------
 	if MegaCDMode1
-		include "_inc/Mega CD RAM.asm"
+		include "_definitions/Mega CD RAM.asm"
 	endif
 	phase	ramaddr($FFFE0000)
 RAM_debug_start:		ds.b	$10000

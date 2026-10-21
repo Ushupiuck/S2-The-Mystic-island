@@ -63,7 +63,7 @@ passed('Upload verification, fresh sub-CPU reply and title')
 names = ('MegaCDMode1', 'vdp_control_port', 'VDP_control_port', 'vdp_data_port', 'v_dma_thunk',
 	'VDP_Command_Buffer', 'VDP_Command_Buffer_Slot', 'MCD_dma_pending', 'InitDMAQueue',
 	'ProcessDMAQueue', 'QueueDMATransfer', 'MCD_Init', 'MCD_Command', 'MCD_AcquireWordRAM', 'MCD_ReleaseWordRAM')
-prefix = '\tCPU 68000\n\tinclude "s2.macrosetup.asm"\n\tinclude "s2.macros.asm"\n'
+prefix = '\tCPU 68000\n\tinclude "_definitions/s2.macrosetup.asm"\n\tinclude "_definitions/s2.macros.asm"\n'
 for k in names:
 	v = g.s[k] & 0xFFFFFFFF
 	prefix += f'{k} equ {v - 0x100000000 if v >= 0x80000000 else v}\n'

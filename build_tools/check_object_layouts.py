@@ -18,7 +18,7 @@ def check_named_sst_fields(symbols):
     interior cache can legitimately use an odd displacement to reach an even
     word, as Points does. Only bare field(aN) operands are checked here.
     """
-    constants = (ROOT / 's2.constants.asm').read_text().split('; Animation flags')[0]
+    constants = (ROOT / '_definitions/s2.constants.asm').read_text().split('; Animation flags')[0]
     names = set(re.findall(r'^\s*(\w+)\s*:?\s*(?:equ|=)\s*(?:\$[0-9A-Fa-f]+|\w+)',
                            constants, re.M))
     fields = {name: offset for name, offset in symbols.items()
@@ -103,7 +103,7 @@ def main():
     assert symbols['code'] == 0 and symbols['object_size'] == 0x4E
     # Legacy code sometimes addressed an SST base directly instead of obID.
     # Cover those absolute references as well as symbolic code(aN) accesses.
-    constants = (ROOT / 's2.constants.asm').read_text()
+    constants = (ROOT / '_definitions/s2.constants.asm').read_text()
     slots = re.findall(r'^(v_\w+)\s*=\s*v_objspace(?:\+object_size\*\d+)?\b', constants, re.M)
     slots += ['v_objspace', 'v_lvlobjspace']
     # Include reserved-slot aliases, such as the seven result-card children.

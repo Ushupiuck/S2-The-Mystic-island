@@ -2271,7 +2271,7 @@ zPlayDACSFX:
 	ld	d,80h		; This is a DAC SFX
 	jp	zPlayDAC
 
-	include "dacsfxlist.gen.asm"
+	include "sound/dacsfxlist.gen.asm"
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 

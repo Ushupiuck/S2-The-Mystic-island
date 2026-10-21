@@ -58,7 +58,7 @@ Obj16_SubIndex:	dc.w Obj16_Wait-Obj16_SubIndex		; 0
 
 Obj16_Wait:
 		move.b	obStatus(a0),d0	; get the status flags
-		andi.b	#$18,d0		; is one of the players standing on it? (standing mask, to be added to s2.constants.asm)
+		andi.b	#$18,d0		; is one of the players standing on it? (standing mask, to be added to _definitions/s2.constants.asm)
 		beq.s	.return		; if not, branch
 		addq.b	#2,ob2ndRout(a0)
 		move.w	#$200,obVelX(a0)

@@ -100,7 +100,7 @@ for row in inputs['Jun'][0][:16]:
     assert gap_first <= first < last <= gap_end
     gap_runs.append((first-gap_first, last-first))
 
-constants = (R/'s2.constants.asm').read_text()
+constants = (R/'_definitions/s2.constants.asm').read_text()
 def art_tile(name):
     return int(re.search(r'^'+name+r':\s+equ\s+\$([\dA-Fa-f]+)',
                          constants, re.M)[1], 16)

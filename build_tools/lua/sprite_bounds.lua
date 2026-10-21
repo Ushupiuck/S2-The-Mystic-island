@@ -1,7 +1,7 @@
 -- Derive display bounds with the project's assembler. Resolving the complete
 -- source also handles mapping aliases, shared frames and inline mapping tables.
 local bounds = {}
-local generated_path = "_inc/Sprite Bounds.asm"
+local generated_path = "_definitions/Sprite Bounds.asm"
 local pass_rom = "sprite-bounds-pass.bin"
 local pass_listing = "sprite-bounds-pass.lst"
 local header = [[; ---------------------------------------------------------------------------

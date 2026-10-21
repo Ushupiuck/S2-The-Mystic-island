@@ -35,6 +35,18 @@ deterministic output and portable PDBs when available. Older compilers use their
 supported debug format instead. `--check` runs the compressor and macro/packer
 checks after compilation.
 
+## Generated files
+
+The packers write aggregate bank lists, playlists/sample tables, ID constants
+and name tables to `sound/*.gen.asm`. Per-bank includes stay in
+`sound/generated/`. Run the tools from the project root; all ASM include paths
+are relative to that root. Shared sound macros live in
+`_definitions/_smps2asm_inc.asm`, alongside the other shared definitions.
+
+Rebuild the distributed `KEHmusic.exe` and `KEHsfx.exe` after changing their
+source; the build script invokes those binaries. Do not hand-edit generated
+outputs or keep duplicate copies at the project root.
+
 ## Importing music
 
 Add the song to `sound/music/music.ini`. For modern SMPS2ASM instrument data,
@@ -94,7 +106,7 @@ been removed.
 
 ## Reusing bank padding
 
-Edit `_inc/Sound Bank Assets.asm`. `SoundBankAssets kind,bank` is expanded after
+Edit `_definitions/Sound Bank Assets.asm`. `SoundBankAssets kind,bank` is expanded after
 each bank's sound data and before `finishBank` checks its size. `kind` is
 `Music`, `DAC`, or `SFX`; `bank` is one-based within that category. The macro uses
 `GLOBALSYMBOLS` so ordinary asset labels remain accessible from the game.
@@ -117,7 +129,7 @@ Each generated bank also has an independent include:
 	include "sound/generated/music-bank-3.gen.asm"
 ```
 
-`musicbanks.gen.asm` and `dacbanks.gen.asm` include the individual files for the
+`sound/musicbanks.gen.asm` and `sound/dacbanks.gen.asm` include the individual files for the
 default layout. For a custom layout, replace the corresponding aggregate include
 in `main.asm` with individual includes and place other data between them. Every
 bank aligns itself; playlist and DAC table entries use the labels' actual ROM

@@ -2,7 +2,7 @@ name: Windows sound build
 
 on:
   push:
-    branches: [test/rebuilt-kehmusic]
+    branches: [test/rebuilt-kehmusic, Mystic-Island]
     paths:
       - .github/workflows/windows-sound-build.yml
       - build.bat
@@ -12,6 +12,8 @@ on:
       - build_tools/sound/**/*.cs
       - build_tools/check_sound_tools.py
       - build_tools/Windows-*/**
+      - _definitions/**
+      - sound/*.gen.asm
       - KEHmusic.exe
       - KEHsfx.exe
       - '*.dll'

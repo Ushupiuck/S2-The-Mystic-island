@@ -6,7 +6,7 @@ import re
 import struct
 
 ROOT = Path(__file__).resolve().parent.parent
-BOUNDS = ROOT / '_inc/Sprite Bounds.asm'
+BOUNDS = ROOT / '_definitions/Sprite Bounds.asm'
 
 
 def mapping_bounds(rom, address, frames):
