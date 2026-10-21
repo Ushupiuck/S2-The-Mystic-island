@@ -67,10 +67,10 @@ ptr_PLC_Filler:		dc.w PLC_Filler-ArtLoadCues		; Placeholder
 ptr_PLC_Filler2:	dc.w PLC_Filler2-ArtLoadCues		; Placeholder
 ptr_PLC_Capsule:	dc.w PLC_Capsule-ArtLoadCues
 ptr_PLC_GHZBoss:	dc.w PLC_GHZBoss-ArtLoadCues
-ptr_PLC_SMZ: dc.w PLC_SMZ-ArtLoadCues
-ptr_PLC_SMZ2: dc.w PLC_SMZ2-ArtLoadCues
-ptr_PLC_SMZIndoor: dc.w PLC_SMZIndoor-ArtLoadCues
-ptr_PLC_PP: dc.w PLC_PP-ArtLoadCues
+ptr_PLC_SMZ:		dc.w PLC_SMZ-ArtLoadCues
+ptr_PLC_SMZ2:		dc.w PLC_SMZ2-ArtLoadCues
+ptr_PLC_SMZIndoor:	dc.w PLC_SMZIndoor-ArtLoadCues
+ptr_PLC_PP:		dc.w PLC_PP-ArtLoadCues
 ptr_PLC_LivesSonic:	dc.w PLC_LivesSonic-ArtLoadCues
 ptr_PLC_LivesTails:	dc.w PLC_LivesTails-ArtLoadCues
 		include "_inc/Act PLC Index.asm"
@@ -375,7 +375,7 @@ PLC_SpeStResult_End:
 ; ---------------------------------------------------------------------------
 PLC_Filler_Art: macro
 		endm
-PLC_Filler: dc.w (PLC_Filler_End-PLC_Filler-2)/6-1
+PLC_Filler:	dc.w (PLC_Filler_End-PLC_Filler-2)/6-1
 		PLC_Filler_Art
 PLC_Filler_End:
 
