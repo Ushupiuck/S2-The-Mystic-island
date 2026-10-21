@@ -126,7 +126,7 @@ ObjectsManager_Main:
 		bpl.s	.bounds_ready
 		moveq	#0,d3
 .bounds_ready:
-		move.w	#omYMask,d5
+		move.w	#ObjectLayout_YCoordinateMask,d5
 		bsr.w	FindFreeObj		; one search, then continue past each occupied SST
 		cmp.w	(Camera_X_pos_coarse).w,d6
 		beq.w	ObjectsManager_CheckY

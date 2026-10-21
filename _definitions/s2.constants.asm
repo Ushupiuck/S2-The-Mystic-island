@@ -14,10 +14,10 @@ omID:		equ	4
 omSubtype:	equ	5
 omSize:		equ	6
 ; ---------------------------------------------------------------------------
-; Object placement Y coordinate mask and flags (not record fields)
+; Masks for the level-placement Y/flags word (omY), not record fields
 ; Bits 13/14 mirror X/Y; bit 15 loads the object at any Y.
-omYMask:		equ	$FFF
-omLoadAtAnyY:	equ	$8000
+ObjectLayout_YCoordinateMask:	equ	$0FFF	; omY bits 0-11: Y coordinate
+ObjectLayout_LoadAtAnyYMask:	equ	$8000	; omY bit 15: bypass vertical load band
 ; ---------------------------------------------------------------------------
 ; Debug placement record offsets
 ; Debug entries carry direct routine/mapping pointers; placement files do not.
