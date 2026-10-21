@@ -2396,7 +2396,6 @@ Demo_Levels:
 
 ; Per-act music IDs. Each row is one zone, with acts 1, 2, 3 and 4.
 ; Use any MusID_* / bgm_* entry; defaults preserve the existing zone music.
-; The FZ row covers the separate zone after the sixteen four-act zones.
 ; Both level entry and drowning recovery use this lookup.
 GetLevelMusic:
         move.w (Current_ZoneAndAct).w,d0
@@ -2424,10 +2423,9 @@ MusicList:
         dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0D
         dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0E
         dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0F
-        dc.b bgm_FZ, bgm_FZ, bgm_FZ, bgm_FZ ; FZ
 MusicList_End:
-        if MusicList_End-MusicList<>(LevelCount+1)*4
-            fatal "MusicList must contain four entries for every zone, including FZ"
+        if MusicList_End-MusicList<>LevelActCount
+            fatal "MusicList must contain four entries for every zone"
         endif
         even
 ; ===========================================================================
@@ -3592,7 +3590,7 @@ SS_MainLoop:
 		cmpi.w	#BonusStage,(v_gamemode).w ; is game mode $10 (special stage)?
 		beq.w	SS_MainLoop	; if yes, branch
 		move.w	#Level,(v_gamemode).w ; set screen mode to $0C (level)
-		cmpi.w	#LevelCount<<8,(Current_ZoneAndAct).w ; is level number higher than FZ?
+		cmpi.w	#LevelCount<<8,(Current_ZoneAndAct).w ; is the zone outside $00-$0F?
 		blo.s	SS_Finish	; if not, branch
 		clr.w	(Current_ZoneAndAct).w	; set to GHZ1
 
@@ -16290,25 +16288,6 @@ GMap128_LVF:	equ Map128_Blank
 BKosp_LVF:	equ Kosp_GHZ
 BMap16_LVF:	equ Map16_GHZ
 BMap128_LVF:	equ Map128_Blank
- endif
-; ===========================================================================
-; Zone $10
-Kosp_LV10:	equ Kosp_GHZ
-Map16_LV10:	equ Map16_GHZ
-Map128_LV10:	equ Map128_Blank
- if TimeTravel=1
-; Past
-PKosp_LV10:	equ Kosp_GHZ
-PMap16_LV10:	equ Map16_GHZ
-PMap128_LV10:	equ Map128_Blank
-; Good Future
-GKosp_LV10:	equ Kosp_GHZ
-GMap16_LV10:	equ Map16_GHZ
-GMap128_LV10:	equ Map128_Blank
-; Bad Future
-BKosp_LV10:	equ Kosp_GHZ
-BMap16_LV10:	equ Map16_GHZ
-BMap128_LV10:	equ Map128_Blank
  endif
 		even
 ; ---------------------------------------------------------------------------

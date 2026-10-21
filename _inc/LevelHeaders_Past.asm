@@ -120,9 +120,7 @@ LevelArtPointersP:
 		levartptrs plcid_LVF2_Main, plcid_LVF2_Extra, palid_GHZ, PKosp_LVF, PMap16_LVF, PMap128_LVF	; LVFZ	; ACT 2
 		levartptrs plcid_LVF3_Main, plcid_LVF3_Extra, palid_GHZ, PKosp_LVF, PMap16_LVF, PMap128_LVF	; LVFZ	; ACT 3
 		levartptrs plcid_LVF4_Main, plcid_LVF4_Extra, palid_GHZ, PKosp_LVF, PMap16_LVF, PMap128_LVF	; LVFZ	; ACT 4
-
-		; LV10 placeholder
-		levartptrs plcid_LV101_Main, plcid_LV101_Extra, palid_GHZ, PKosp_LV10, PMap16_LV10, PMap128_LV10	; LV10Z	; ACT 1
-		levartptrs plcid_LV102_Main, plcid_LV102_Extra, palid_GHZ, PKosp_LV10, PMap16_LV10, PMap128_LV10	; LV10Z	; ACT 2
-		levartptrs plcid_LV103_Main, plcid_LV103_Extra, palid_GHZ, PKosp_LV10, PMap16_LV10, PMap128_LV10	; LV10Z	; ACT 3
-		levartptrs plcid_LV104_Main, plcid_LV104_Extra, palid_GHZ, PKosp_LV10, PMap16_LV10, PMap128_LV10	; LV10Z	; ACT 4
+LevelArtPointersP_End:
+		if LevelArtPointersP_End-LevelArtPointersP<>LevelActCount*12
+			fatal "Level art headers must cover every act"
+		endif

@@ -510,8 +510,9 @@ id_HTZ:		equ 5
 id_EndZ:	equ 6
 id_SS:		equ 7
 
-LevelCount: equ $10
+LevelCount: equ $10	; number of zones; valid IDs are $00-$0F
 ActsPerZone: equ 4
+LevelActCount: equ LevelCount*ActsPerZone
 id_MTZ: equ $06
 id_BLZ: equ $07 ; Shocking Blizzard (SBZ is a legacy Hill Top alias)
 id_SMZ: equ $08

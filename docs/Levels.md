@@ -2,9 +2,8 @@
 
 The level select exposes zones `$00-$0F`, four acts each, over two pages.
 NEXT/PREVIOUS sits above SOUND TEST. Directions select entries, A/B/START
-activates, and C cycles Sonic & Tails, Sonic, and Tails. Final Zone (`$10`)
-has its separate header/music entries. Starter acts have valid data and goals;
-they remain level-design templates.
+activates, and C cycles Sonic & Tails, Sonic, and Tails. Starter acts have valid
+data and goals; they remain level-design templates.
 
 | ID | Name | Current content |
 | --- | --- | --- |
@@ -21,7 +20,7 @@ they remain level-design templates.
 | 0A | LEVEL 0A | Starters; act 1 tests PP enemies, wheel and propeller |
 | 0B-0F | LEVEL 0B-0F | Starters |
 
-All 64 ordinary act entries have headers, placements, starts, bounds, collision,
+All 64 act entries have headers, placements, starts, bounds, collision,
 cards, Debug lists and progression. SonLVL has matching present-day sections.
 Timezone headers/layouts are prepared copies; time travel and timezone-specific
 placement/generator suppression remain unfinished.
@@ -29,7 +28,7 @@ placement/generator suppression remain unfinished.
 ## Per-act art
 
 `_inc/Pattern Load Cues.asm` contains the pointer table, IDs, and separate
-Nemesis Main/Extra lists for every act, including unused slots and Final Zone.
+Nemesis Main/Extra lists for all 64 acts, including starter slots.
 Each has an independent **unsigned-byte** ID; IDs above `$7F` are valid.
 The four `LevelHeaders*.asm` tables choose act IDs independently.
 
@@ -60,9 +59,9 @@ Edit `MusicList` in `main.asm`: each zone row holds four independent IDs in act
         dc.b MusID_GHZ, MusID_EHZ, MusID_GRGZ1, MusID_GRGZ2 ; GHZ
 ```
 
-Defaults repeat each zone's existing song; the Final Zone row uses `bgm_FZ`.
-Assembly checks all 68 entries. Level entry and drowning recovery share
-`GetLevelMusic`, preserving act selection. Invincibility/boss music retains
+Defaults repeat each zone's existing song. Assembly checks all 64 entries
+against `LevelActCount` (`LevelCount * ActsPerZone`). Level entry and drowning
+recovery share `GetLevelMusic`, preserving act selection. Invincibility/boss music retains
 priority; one-up jingles restore the driver's saved context. Sound formats
 and importing belong in [the sound guide](../build_tools/sound/README.md).
 
