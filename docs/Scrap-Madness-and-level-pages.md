@@ -82,6 +82,11 @@ its standalone `art/nemesis/Button.nem` asset, `Nem_Button` entry and
 `ArtTile_Button` placeholder are preserved for future development. The W.I.P
 source is not included in the running game.
 
+The flamethrower's inner highlight maps Sonic 1's palette-0 `$F` yellow
+(`$0EE`) to the shared palette's `$E` golden orange (`$0AE`). Its previous
+`$A` (`$8CE`) cream was a skin tone. Only flame-core pixels are remapped;
+the red/dark-red outline, pipe ends and shared palette colors are retained.
+
 The SMZ atlas preserves all 133 retained source frames' original piece counts, sizes,
 positions, ordering, flips, adapted indexed pixels, palettes and priority.
 Complete sprite rectangles share identical art and overlapping tile sequences;
