@@ -2416,7 +2416,42 @@ Demo_Levels:
 
 		include "_inc/LevelSelect.asm"
 
-		include "_inc/Level Music.asm"
+; Per-act music IDs. Each row is one zone, with acts 1, 2, 3 and 4.
+; Use any MusID_* / bgm_* entry; defaults preserve the existing zone music.
+; The FZ row covers the separate zone after the sixteen four-act zones.
+; Both level entry and drowning recovery use this lookup.
+GetLevelMusic:
+        move.w (Current_ZoneAndAct).w,d0
+        ror.b #2,d0
+        lsr.w #6,d0              ; index = Zone*4 + Act (Act is 0-3)
+        lea MusicList(pc),a1
+        move.b (a1,d0.w),d0      ; d0.w music ID; clobbers d0/a1/CCR
+        rts
+
+MusicList:
+;               Act 1,       Act 2,       Act 3,       Act 4
+        dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; GHZ
+        dc.b bgm_LZ, bgm_LZ, bgm_LZ, bgm_LZ ; LZ
+        dc.b bgm_MZ, bgm_MZ, bgm_MZ, bgm_MZ ; CPZ
+        dc.b bgm_SLZ, bgm_SLZ, bgm_SLZ, bgm_SLZ ; EHZ
+        dc.b bgm_SYZ, bgm_SYZ, bgm_SYZ, bgm_SYZ ; HPZ
+        dc.b bgm_HTZ, bgm_HTZ, bgm_HTZ, bgm_HTZ ; HTZ
+        dc.b MusID_MTZ, MusID_MTZ, MusID_MTZ, MusID_MTZ ; LV6
+        dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV7
+        dc.b bgm_SBZ, bgm_SBZ, bgm_SBZ, bgm_SBZ ; SMZ
+        dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV9
+        dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0A
+        dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0B
+        dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0C
+        dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0D
+        dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0E
+        dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0F
+        dc.b bgm_FZ, bgm_FZ, bgm_FZ, bgm_FZ ; FZ
+MusicList_End:
+        if MusicList_End-MusicList<>(LevelCount+1)*4
+            fatal "MusicList must contain four entries for every zone, including FZ"
+        endif
+        even
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Level
@@ -10357,9 +10392,6 @@ ExitPlatform:
 		include	"objects/07 Water Surface.asm"
 		include	"objects/08 Water Splash.asm"
 		include	"_inc/Dynamic Sprite Art.asm"
-		include	"_inc/Card Art.asm"
-		include	"_inc/Player Effect Art.asm"
-		include	"_inc/Player Water Art.asm"
 		include	"objects/0E Spindash Dust.asm"
 		include	"objects/09 Bubbles.asm"
 		include	"objects/0A Drowning Countdown.asm"
@@ -13581,7 +13613,76 @@ loc_1B214:
 		jmp	(PlaySound).l
 ; End of function AddPoints
 
-		include "_inc/Tails Flight Attack.asm"
+; ---------------------------------------------------------------------------
+; S3&K's angle quantization for the flight attack sector. The general CalcAngle
+; rounds the 45-degree boundary down; keep the stock table for this contact test.
+; Input: d1.w = player X - enemy X, d2.w = player Y - enemy Y; d0.w = angle.
+; From skdisasm 73de97c6b55055bcb8089c1d55d006b02136f163, GetArcTan.
+; ---------------------------------------------------------------------------
+Tails_CalcFlightAttackAngle:
+		movem.l d3-d4,-(sp)
+		moveq   #0,d3
+		moveq   #0,d4
+		move.w  d1,d3
+		move.w  d2,d4
+		or.w    d3,d4
+		beq.s   .zero
+		move.w  d2,d4
+		tst.w   d3
+		bpl.s   .x_positive
+		neg.w   d3
+.x_positive:
+		tst.w   d4
+		bpl.s   .y_positive
+		neg.w   d4
+.y_positive:
+		cmp.w   d3,d4
+		bhs.s   .y_larger
+		lsl.l   #8,d4
+		divu.w  d3,d4
+		moveq   #0,d0
+		move.b  Tails_FlightArcTanTable(pc,d4.w),d0
+		bra.s   .quadrant
+.y_larger:
+		lsl.l   #8,d3
+		divu.w  d4,d3
+		moveq   #$40,d0
+		sub.b   Tails_FlightArcTanTable(pc,d3.w),d0
+.quadrant:
+		tst.w   d1
+		bpl.s   .x_quadrant
+		neg.w   d0
+		addi.w  #$80,d0
+.x_quadrant:
+		tst.w   d2
+		bpl.s   .return
+		neg.w   d0
+		addi.w  #$100,d0
+.return:
+		movem.l (sp)+,d3-d4
+		rts
+.zero:
+		move.w  #$40,d0
+		bra.s   .return
+Tails_FlightArcTanTable:
+		dc.b $00,$00,$00,$00,$01,$01,$01,$01,$01,$01,$02,$02,$02,$02,$02,$02
+		dc.b $03,$03,$03,$03,$03,$03,$03,$04,$04,$04,$04,$04,$04,$05,$05,$05
+		dc.b $05,$05,$05,$06,$06,$06,$06,$06,$06,$06,$07,$07,$07,$07,$07,$07
+		dc.b $08,$08,$08,$08,$08,$08,$08,$09,$09,$09,$09,$09,$09,$0A,$0A,$0A
+		dc.b $0A,$0A,$0A,$0A,$0B,$0B,$0B,$0B,$0B,$0B,$0B,$0C,$0C,$0C,$0C,$0C
+		dc.b $0C,$0C,$0D,$0D,$0D,$0D,$0D,$0D,$0D,$0E,$0E,$0E,$0E,$0E,$0E,$0E
+		dc.b $0F,$0F,$0F,$0F,$0F,$0F,$0F,$10,$10,$10,$10,$10,$10,$10,$11,$11
+		dc.b $11,$11,$11,$11,$11,$11,$12,$12,$12,$12,$12,$12,$12,$13,$13,$13
+		dc.b $13,$13,$13,$13,$13,$14,$14,$14,$14,$14,$14,$14,$14,$15,$15,$15
+		dc.b $15,$15,$15,$15,$15,$15,$16,$16,$16,$16,$16,$16,$16,$16,$17,$17
+		dc.b $17,$17,$17,$17,$17,$17,$17,$18,$18,$18,$18,$18,$18,$18,$18,$18
+		dc.b $19,$19,$19,$19,$19,$19,$19,$19,$19,$19,$1A,$1A,$1A,$1A,$1A,$1A
+		dc.b $1A,$1A,$1A,$1B,$1B,$1B,$1B,$1B,$1B,$1B,$1B,$1B,$1B,$1C,$1C,$1C
+		dc.b $1C,$1C,$1C,$1C,$1C,$1C,$1C,$1C,$1D,$1D,$1D,$1D,$1D,$1D,$1D,$1D
+		dc.b $1D,$1D,$1D,$1E,$1E,$1E,$1E,$1E,$1E,$1E,$1E,$1E,$1E,$1E,$1F,$1F
+		dc.b $1F,$1F,$1F,$1F,$1F,$1F,$1F,$1F,$1F,$1F,$20,$20,$20,$20,$20,$20
+		dc.b $20,$00
+		even
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -14352,7 +14453,6 @@ Art_Text_End:	even
 
 		include	"_inc/Debug Mode.asm"
 
-		include	"_inc/Set Sprite Bounds.asm"
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------

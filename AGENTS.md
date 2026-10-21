@@ -20,3 +20,12 @@ ROM hashes and coverage matrices into `docs/`. Use explicit test-output
 directories (`test-results/` is ignored). Preserve useful reproduction steps,
 source provenance and known validation limits in the canonical testing guide.
 W.I.P./unassembled sources are development work, not disposable unused code.
+
+# Source organization
+
+Keep small helpers with their owning subsystem. Reuse the existing source
+files and their formatting; a new ASM include should represent a cohesive
+subsystem or substantial generated data, not a single helper or a few constants.
+Keep editable tables direct. Use macros for real shared work or validation,
+not empty recipes or wrappers around one use. Art allocations belong in
+`s2.constants.asm`; importers must verify their expected banks.
