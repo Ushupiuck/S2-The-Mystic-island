@@ -1168,7 +1168,7 @@ v_pfade_size:		ds.b	1			; palette fading - number of colours
 
 v_misc_variables:
 Lag_frame_count:	ds.w	1			; more specifically, the number of times V-int routine 0 has run. Reset at the end of a normal frame
-v_vbla_counter:		ds.b	1			; VBlank - routine counter
+v_vbla_counter:		ds.b	1			; 0 = foreground, 1 = waiting, $FF = VBlank admitted
 v_spritecount:		ds.b	1			; number of sprites on-screen
 v_vbla_routine:		ds.w	1
 f_doupdatesinhblank:	ds.b	1			; defers performing various tasks to the Horizontal Interrupt (H-Blank)
