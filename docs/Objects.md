@@ -72,6 +72,10 @@ Clearing/copying must include the final word after the longwords.
 
 ## Placement format and ownership
 
+The `om*` offsets describe the six-byte ROM placement record, not an SST.
+They remain explicit `equ` offsets; the Y coordinate mask and placement flags
+are separate from its fields. Debug entries have their own record definition.
+
 Top-level `level/objects/*.bin` files use six-byte S3&K records:
 
 | Offset | Bytes | Meaning |
