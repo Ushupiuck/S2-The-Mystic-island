@@ -44,7 +44,7 @@ SMZ_spinc_targetdata:	equ objoff_3C	; pointer to corner data for group
 ; One layout placement owns the complete loop, as in Sonic 1. Reserve no
 ; helpers until the whole group fits, so a full pool can retry next frame.
 ; Only the original SST retains respawn_addr; all members use the same base X.
-; The layout sets omLoadAtAnyY, since members can be far from the spawner's Y.
+; The layout sets ObjectLayout_LoadAtAnyYMask, since members can be far from the spawner's Y.
 SMZ_SpinC_Spawn:
 		move.w	obX(a0),SMZ_spinc_baseX(a0)
 		out_of_range2	UnloadObject,SMZ_spinc_baseX(a0)
