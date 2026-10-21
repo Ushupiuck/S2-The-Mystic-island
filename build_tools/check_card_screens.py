@@ -23,8 +23,9 @@ p.add_argument('--act',type=int,choices=range(4),default=0)
 p.add_argument('--emeralds',type=int,choices=range(7),default=0)
 p.add_argument('--rings',type=int,default=122)
 p.add_argument('--pal',action='store_true')
+p.add_argument('--system-directory',type=Path)
 args=p.parse_args()
-g=Genesis(args.core,args.rom,args.listing,args.output,args.pal)
+g=Genesis(args.core,args.rom,args.listing,args.output,args.pal,system_directory=args.system_directory)
 rom=args.rom.read_bytes()
 report={'case':args.case,'player_mode':args.player,'pal':args.pal,
         'natural_playthrough':False,'companion_ai_run':False}

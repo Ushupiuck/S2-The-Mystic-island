@@ -72,7 +72,7 @@ before reusing them with an unrelated baseline.
 
 CD boot needs a supplied system directory. Only runners exposing
 `--system-directory` support that setup directly (including level pages, act
-music, visual follow-up, fast clear, player effects and swing families).
+music, visual follow-up, fast clear, player effects, card screens and swing families).
 Older water/companion/shared runners lack it and target the ordinary cartridge
 ROM. Do not describe all existing fixtures as CD-aware or apply flags universally.
 
