@@ -16,7 +16,10 @@ jobs remain future work; Z80 sound remains on its existing storage.
 
 ## Memory and ownership
 
-Ranges below are inclusive. `_definitions/Mega CD RAM.asm` owns physical allocations.
+Ranges below are inclusive. `_definitions/Mega CD RAM.asm` declares physical
+allocations with `phase`/`dephase` and typed `ds.*` fields. Hardware boundaries
+and buffer capacities live in `_definitions/Mega CD Constants.asm`. Bank-window
+aliases translate physical addresses; they do not allocate another copy.
 
 | Resource | Main CPU | Sub-CPU / physical PRG RAM |
 | --- | --- | --- |

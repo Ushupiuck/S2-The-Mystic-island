@@ -5,25 +5,30 @@ Size_of_DAC_samples		= $2F00
 Size_of_SEGA_sound		= $6978
 Size_of_Snd_driver_guess	= $F64 ; approximate post-compressed size of the Z80 sound driver
 ; ---------------------------------------------------------------------------
-; Object variables
+; Object placement record offsets
 ; ---------------------------------------------------------------------------
-; S3&K object placement: X word, Y/flags word, ID byte, subtype byte.
-; Y flags: bit 13 = X flip, bit 14 = Y flip, bit 15 = load at any Y.
-; ---------------------------------------------------------------------------
+; S3&K placement: X word, Y/flags word, ID byte, subtype byte.
 omX:		equ	0
 omY:		equ	2
 omID:		equ	4
 omSubtype:	equ	5
 omSize:		equ	6
+; ---------------------------------------------------------------------------
+; Object placement Y coordinate mask and flags (not record fields)
+; Bits 13/14 mirror X/Y; bit 15 loads the object at any Y.
 omYMask:		equ	$FFF
 omLoadAtAnyY:	equ	$8000
+; ---------------------------------------------------------------------------
+; Debug placement record offsets
 ; Debug entries carry direct routine/mapping pointers; placement files do not.
-DebugEntry_code:         equ $00
-DebugEntry_mappings:     equ $04
-DebugEntry_subtype:      equ $08
-DebugEntry_frame:        equ $09
-DebugEntry_art_tile:     equ $0A
-DebugEntry_size:         equ $0C
+DebugEntry_code:		equ	$00
+DebugEntry_mappings:	equ	$04
+DebugEntry_subtype:	equ	$08
+DebugEntry_frame:		equ	$09
+DebugEntry_art_tile:	equ	$0A
+DebugEntry_size:		equ	$0C
+; ---------------------------------------------------------------------------
+; Object loading distances
 Object_Load_BandSize:	equ $80
 Object_Load_CoarseMask:	equ -Object_Load_BandSize
 Object_Load_XBehind:	equ Object_Load_BandSize
@@ -873,13 +878,13 @@ RAM_Start:
 ; Keep short-addressed engine RAM in $FF8000-$FFFFFF. The lower half is
 ; available for reuse. Job queues there must use long addressing.
 MCD_MainWorkStart:
-MCD_RingEvents:		ds.w MCD_RingSlots
-MCD_RingEventCount:	ds.w 1
-MCD_RingActiveCount:	ds.w 1
-MCD_RingJobPending:	ds.w 1
+MCD_RingEvents:		ds.w	MCD_RingSlots
+MCD_RingEventCount:	ds.w	1
+MCD_RingActiveCount:	ds.w	1
+MCD_RingJobPending:	ds.w	1
 MCD_MainWorkEnd:
 Free_Chunk_RAM_Start:
-		ds.b $8000-(MCD_MainWorkEnd-MCD_MainWorkStart)
+		ds.b	$8000-(MCD_MainWorkEnd-MCD_MainWorkStart)
 Free_Chunk_RAM_End:
 	else
 Chunk_Table:			ds.w	$40*$100	; 128x128 tile mappings ($8000 bytes)
