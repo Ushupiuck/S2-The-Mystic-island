@@ -4,7 +4,6 @@ from pathlib import Path
 import argparse
 import hashlib
 import json
-import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser(description=__doc__)
@@ -12,10 +11,8 @@ parser.add_argument('--rom', type=Path, required=True)
 parser.add_argument('--listing', type=Path, required=True)
 parser.add_argument('--output', type=Path)
 args = parser.parse_args()
-sys.argv = ['native', '--rom', str(args.rom), '--listing', str(args.listing)]
-ns = {'__file__': str(ROOT / 'build_tools/check_object_manager.py')}
-exec((ROOT / 'build_tools/check_object_manager.py').read_text().split('m=Manager()')[0], ns)
-m = ns['Native']()
+import native_test_core as m68k
+m = m68k.Native(args.rom, args.listing)
 obj = m.s['v_lvlobjspace']
 checks = []
 roles = [('sonic', 'v_player', 1), ('tails', 'v_player', 2),

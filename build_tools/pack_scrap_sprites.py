@@ -5,7 +5,7 @@ Requires import_scrap_madness.py first. The reference ROM supplies the
 unchanged shared mapping tables, not a different or synthetic level.
 """
 from pathlib import Path
-import sys,struct,re,collections
+import struct,re,collections
 R=Path(__file__).resolve().parents[1]
 import argparse
 p=argparse.ArgumentParser(description='Pack SBZ sprites without changing their visible indexed pixels.')
@@ -13,12 +13,14 @@ p.add_argument('--source',type=Path,required=True)
 p.add_argument('--rom',type=Path,required=True)
 p.add_argument('--listing',type=Path,required=True)
 args=p.parse_args();S=args.source
-sys.path.insert(0,str(R/'build_tools'));from check_sprite_assets import frames
+from check_sprite_assets import frames
 from import_scrap_madness import mapping,nemesis_inline,remap_pixels,palette_lookup
 from convert_s1_ss_background import kosinski_plus_decode
-sys.argv=['atlas','--rom',str(args.rom),'--listing',str(args.listing)];ns={'__file__':str(R/'build_tools/check_object_manager.py')};exec((R/'build_tools/check_object_manager.py').read_text().split('m=Manager()')[0],ns);m=ns['Native']();rom=args.rom.read_bytes()
+import native_test_core as m68k
+m = m68k.Native(args.rom, args.listing)
+rom = args.rom.read_bytes()
 def dec(path):
- d=path.read_bytes();n=struct.unpack_from('>H',d)[0]&32767;m.cpu.mem_write(0x300000,d);m.act('NemDecToRAM',limit=2000000,regs={ns['UC_M68K_REG_A0']:0x300000,ns['UC_M68K_REG_A4']:0xff0000});return bytes(m.cpu.mem_read(0xff0000,n*32))
+ d=path.read_bytes();n=struct.unpack_from('>H',d)[0]&32767;m.cpu.mem_write(0x300000,d);m.act('NemDecToRAM',limit=2000000,regs={m68k.UC_M68K_REG_A0:0x300000,m68k.UC_M68K_REG_A4:0xff0000});return bytes(m.cpu.mem_read(0xff0000,n*32))
 bank={}
 def fill(base,raw):
  for i in range(len(raw)//32):bank[base+i]=raw[i*32:(i+1)*32]

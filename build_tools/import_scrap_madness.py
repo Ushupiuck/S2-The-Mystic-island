@@ -11,7 +11,6 @@ import argparse
 import json
 import re
 import struct
-import sys
 from convert_s1_ss_background import enigma, kosinski_plus, kosinski_plus_decode
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -284,18 +283,16 @@ def main():
     args=p.parse_args()
     source=args.source
     # Execute the hack's real decoder instead of depending on a third-party codec.
-    sys.argv=['decode','--rom',str(args.rom),'--listing',str(args.listing)]
-    namespace={'__file__':str(ROOT/'build_tools/check_object_manager.py')}
-    exec((ROOT/'build_tools/check_object_manager.py').read_text().split('m=Manager()')[0],namespace)
-    machine=namespace['Native']()
+    import native_test_core as m68k
+    machine=m68k.Native(args.rom, args.listing)
 
     def nemesis(path):
         data=path.read_bytes()
         count=struct.unpack_from('>H',data)[0]&32767
         assert count*32 < 0x8000
         machine.cpu.mem_write(0x300000,data)
-        machine.act('NemDecToRAM',limit=1000000,regs={namespace['UC_M68K_REG_A0']:0x300000,
-                                      namespace['UC_M68K_REG_A4']:0xFF0000})
+        machine.act('NemDecToRAM',limit=1000000,regs={m68k.UC_M68K_REG_A0:0x300000,
+                                      m68k.UC_M68K_REG_A4:0xFF0000})
         return bytes(machine.cpu.mem_read(0xFF0000,count*32))
 
     report=geometry(source)

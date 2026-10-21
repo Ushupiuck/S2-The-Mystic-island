@@ -68,33 +68,35 @@ def main():
         p.add_argument('--'+name, type=Path, required=True)
     args = p.parse_args()
     # Reuse the native decompressor harness without executing its tests.
-    old = sys.argv
-    sys.argv = ['nemesis', '--rom', str(args.rom), '--listing', str(args.listing)]
-    ns = {'__file__': str(ROOT/'build_tools/check_object_manager.py')}
-    exec((ROOT/'build_tools/check_object_manager.py').read_text().split('m=Manager()')[0], ns)
-    native = ns['Native']()
-    sys.argv = old
+    import native_test_core as m68k
+    native = m68k.Native(args.rom, args.listing)
     source = args.source/'Level/Palmtree Panic'
     pal = struct.unpack('>16H', (source/'Data/Palette (Present).bin').read_bytes()[:32])
     target = struct.unpack('>16H', (ROOT/'palette/SonicAndTails.bin').read_bytes()[:32])
     lut = palette_lookup(pal, target)
+    art = {name: (source/f'Objects/{name}/Data/Art.nem').read_bytes() for name in NAMES}
     cursor = 0x32B  # first tile after the LV0A GHZ terrain
-    for name in NAMES:
+    # Validate every fixed bank before replacing any generated art or mappings.
+    for name, original in art.items():
+        label = name.replace('-', '')
+        assert native.s[f'ArtTile_PP_{label}'] == cursor, (
+            'Update the PP art allocations in s2.constants.asm and rebuild first', label, hex(cursor))
+        cursor += int.from_bytes(original[:2], 'big') & 0x7FFF
+    assert cursor <= 0x4B4, 'Keep the generic wheel and common sprite banks free'
+    assert native.s['ArtTile_PP_End'] == cursor, (
+        'Update ArtTile_PP_End in s2.constants.asm and rebuild first', hex(cursor))
+    for name, original in art.items():
         directory = source/f'Objects/{name}/Data'
-        original = (directory/'Art.nem').read_bytes()
         count = int.from_bytes(original[:2], 'big') & 0x7FFF
         native.cpu.mem_write(0x300000, original)
-        native.act('NemDecToRAM', limit=2000000, regs={ns['UC_M68K_REG_A0']: 0x300000,
-                                                    ns['UC_M68K_REG_A4']: 0xFF0000})
+        native.act('NemDecToRAM', limit=2000000, regs={m68k.UC_M68K_REG_A0: 0x300000,
+                                                    m68k.UC_M68K_REG_A4: 0xFF0000})
         raw = remap_pixels(bytes(native.cpu.mem_read(0xFF0000, count*32)), lut)
         for folder in ('art/nemesis', 'art/uncompressed'):
             (ROOT/folder).mkdir(exist_ok=True)
         (ROOT/f'art/nemesis/PP {name}.nem').write_bytes(nemesis_inline(raw))
         (ROOT/f'art/uncompressed/PP {name}.unc').write_bytes(raw)
         label = name.replace('-', '')
-        assert native.s[f'ArtTile_PP_{label}'] == cursor, (
-            'Update the PP art allocations in s2.constants.asm and rebuild first', label, hex(cursor))
-        cursor += count
         mappings = []
         if name == 'Anton':
             mappings = [('Mappings.asm', '.Map', name)]
@@ -115,9 +117,6 @@ def main():
             for frame in frames(data):
                 for _, size, tile, _ in frame:
                     assert (tile & 0x7FF) + ((size >> 2)+1)*((size & 3)+1) <= count
-    assert cursor <= 0x4B4, 'Keep the generic wheel and common sprite banks free'
-    assert native.s['ArtTile_PP_End'] == cursor, (
-        'Update ArtTile_PP_End in s2.constants.asm and rebuild first', hex(cursor))
     print(f'PP: {cursor-0x32B} tiles at $32B-${cursor:X}; palette remap {lut}; 9 enemy mapping sets + missile')
 
 

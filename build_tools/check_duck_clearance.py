@@ -7,7 +7,6 @@ object checks. No companion AI or natural playthrough is run here.
 from pathlib import Path
 import argparse
 import json
-import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 p = argparse.ArgumentParser(description=__doc__)
@@ -15,10 +14,8 @@ p.add_argument('--rom', type=Path, required=True)
 p.add_argument('--listing', type=Path, required=True)
 p.add_argument('--output', type=Path)
 args = p.parse_args()
-sys.argv = ['native', '--rom', str(args.rom), '--listing', str(args.listing)]
-ns = {'__file__': str(ROOT/'build_tools/check_object_manager.py')}
-exec((ROOT/'build_tools/check_object_manager.py').read_text().split('m=Manager()')[0], ns)
-m = ns['Native']()
+import native_test_core as m68k
+m = m68k.Native(args.rom, args.listing)
 obj = m.s['v_lvlobjspace']
 
 
@@ -44,10 +41,10 @@ def setup(pose, x=4096, y=4096):
 
 
 def solid():
-    m.act('SolidObject', obj, regs={ns['UC_M68K_REG_D1']:107,
-                                  ns['UC_M68K_REG_D2']:24,
-                                  ns['UC_M68K_REG_D3']:25,
-                                  ns['UC_M68K_REG_D4']:m.get(obj,'obX',2)})
+    m.act('SolidObject', obj, regs={m68k.UC_M68K_REG_D1:107,
+                                  m68k.UC_M68K_REG_D2:24,
+                                  m68k.UC_M68K_REG_D3:25,
+                                  m68k.UC_M68K_REG_D4:m.get(obj,'obX',2)})
 
 
 checks = []
