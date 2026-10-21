@@ -2,7 +2,8 @@
 """Pack the S1 card font into per-screen DPLCs and generate their mappings.
 
 The original 128-tile sheet is the authoritative source for existing pixels,
-including K and U. V/W retain its serif proportions, palette and drop shadow;
+including K and U and the clean blue results-marker edges. V/W retain its
+serif proportions, palette and drop shadow;
 zero shares O's shape. ACT 4 follows the original 16x24 yellow digits.
 No decompression buffer is required: DPLCs read the raw art directly from ROM.
 """
@@ -29,7 +30,7 @@ OVAL = [(-28, 12, 0x70, -12), (-28, 2, 0x74, 20),
         (-4, 8, 0x7C, -12), (4, 12, 0x7C, -20),
         (12, 8, 0x7C, -20)]
 ACT = (0x90, 0x5A, 0x60, 0x8A)  # 1 padded to six tiles; 2/3; new 4
-SS_SCORE, SS_BONUS = 150, 160
+SS_SCORE, SS_BONUS, SS_OVAL = 150, 160, 168
 
 
 def tiles(pixels):
@@ -169,7 +170,13 @@ def main():
     labels = (ROOT/'art/uncompressed/SS Results Labels.unc').read_bytes()
     assert len(labels) == 18*32
     raw += labels
-    assert len(raw) == 168*32
+    assert len(raw) == SS_OVAL*32
+    # Special results use a different palette: the blue oval's outline slots
+    # are gray there. Give the same shape a dark-gold rim and yellow fill.
+    oval_colors = {0: 0, 1: 10, 2: 12, 3: 3}
+    oval = raw[0x6E*32:0x70*32]
+    raw += bytes(oval_colors[b >> 4] << 4 | oval_colors[b & 15] for b in oval)
+    assert len(raw) == (SS_OVAL+2)*32
     (ROOT/'art/uncompressed/Card Font.unc').write_bytes(raw)
 
     scenes = []
@@ -213,17 +220,18 @@ Map_Results_ContinueText = ArtTile_Mini_Sonic-ArtTile_Title_Card
         letters = lookup[SS_SCORE] if special else 'Map_Results_ScoreLetters'
         final_e = lookup[SS_SCORE+8] if special else 'Map_Results_ScoreE'
         bonus_letters = lookup[SS_BONUS] if special else lookup[0x66] | 0x2000
+        oval = lookup[SS_OVAL if special else 0x6E]
         score = [row(-8,13,letters,-80),
                  row(-8,1,final_e,-48),
                  row(-8,9,'Map_Results_ScoreDigits',24),
                  row(-8,13,'Map_Results_ScoreDigits+6',48),
-                 row(-9,4,lookup[0x6E],-51), row(-1,4,lookup[0x6E] | 0x1800,-51)]
+                 row(-9,4,oval,-51), row(-1,4,oval | 0x1800,-51)]
         def bonus(time):
             icon = (row(-8,13,'Map_Results_TimeLetters',-80) if time else
                     row(-8,5,'Map_SSResults_RingTile' if special else 'Map_Results_RingTile',-64))
             return [icon, row(-8,13,bonus_letters,-39),
                     row(-8,1,letters,-7),
-                    row(-9,4,lookup[0x6E],-10), row(-1,4,lookup[0x6E] | 0x1800,-10),
+                    row(-9,4,oval,-10), row(-1,4,oval | 0x1800,-10),
                     row(-8,13,'Map_Results_TimeDigits' if time else 'Map_Results_RingDigits',40),
                     row(-8,1,'Map_Results_Zero',72)]
         return score, bonus
@@ -249,7 +257,8 @@ Map_Results_ContinueText = ArtTile_Mini_Sonic-ArtTile_Title_Card
             normal_output.append(emit_table('Map_Got_Tails' if tails else 'Map_Obj3A',frames,name))
     (ROOT/'mappings/sprite/Got_Through.asm').write_text(''.join(normal_output))
 
-    special_common = sorted(used(OVAL+[row(-9,4,0x6E,0),
+    # Keep the two marker tiles first, preserving every existing mapping slot.
+    special_common = [SS_OVAL, SS_OVAL+1] + sorted(used(OVAL+[
         row(-8,13,SS_SCORE,0),row(-8,1,SS_SCORE+8,0),row(-8,13,SS_BONUS,0)]))
     special_output = [header]
     for state in range(3):

@@ -159,7 +159,10 @@ Resident bubble art is separate. See [player behavior](Players-and-effects.md#wa
 
 Cards/results stream scene-specific glyphs at tile `$581` rather than loading
 the whole raw font. `build_card_art.py` owns their mappings/DPLCs, including
-act 4, V/W and the wide W metrics. `build_signpost_art.py` owns the streamed
+act 4, V/W and the wide W metrics. Small results markers use blue-only shading
+from `Title Cards Base.unc`; the generator supplies a separate gold/yellow
+version for the special-results palette, keeping gray out of their edges. Both
+versions retain the same two-tile scene allocation. `build_signpost_art.py` owns the streamed
 signpost and monitor arrangement. Tails's portrait is the final four monitor
 tiles (`$561-$564`); signpost frames stay below it. Sonic's life art remains
 separate and is shared with Sonic monitors. HUD score uses ten-point units,
