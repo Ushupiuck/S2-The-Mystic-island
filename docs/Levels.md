@@ -28,16 +28,17 @@ placement/generator suppression remain unfinished.
 
 ## Per-act art
 
-`_inc/Act Pattern Load Cues.asm` defines separate Nemesis Main and Extra lists
-for every act, including unused slots and Final Zone. Each has an independent
-**unsigned-byte** ID in `_inc/Act PLC Index.asm`; IDs above `$7F` are valid.
+`_inc/Pattern Load Cues.asm` contains the pointer table, IDs, and separate
+Nemesis Main/Extra lists for every act, including unused slots and Final Zone.
+Each has an independent **unsigned-byte** ID; IDs above `$7F` are valid.
 The four `LevelHeaders*.asm` tables choose act IDs independently.
 
-Add `plcm ArtLabel, ArtTile_Destination` to the desired act list. Shared
-`PLC_*_Art` macros in `_inc/Pattern Load Cues.asm` provide defaults; extending
-one act's recipe affects that act, while changing the common macro affects all
-callers. Art, mappings and [VRAM lifetimes](Sprites-and-VRAM.md) must agree.
-SMZ act 2's Kemusi load is an example of a differing act recipe.
+Edit the desired act's `plcm ArtLabel, ArtTile_Destination` entries directly.
+Each list follows the ordinary count/entries/end-label format; `plccheck`
+checks its queue budget. Empty lists use `dc.w -1`; when adding their first
+entry, use the computed count header shown by the populated lists.
+Art, mappings and [VRAM lifetimes](Sprites-and-VRAM.md) must agree.
+SMZ act 2's Kemusi load is an example of a differing act list.
 
 Main loads during the title card; Extra loads after terrain. Main reserves
 five of the 16 request slots for shared requests, leaving 11 for its act list.

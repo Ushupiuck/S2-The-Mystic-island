@@ -28,8 +28,8 @@ def main():
             result.append((source, dest, dest + length))
         return result
 
-    common = sum((cues(label) for label in ('PLC_Main2', 'PLC_GHZ', 'PLC_GHZ2',
-                                          'PLC_Explode', 'PLC_GHZAnimals')), [])
+    common = sum((cues(label) for label in ('PLC_Main2', 'PLC_Explode',
+                                          'PLC_GHZAnimals')), [])
     # GHZ's 32-tile Chopper occupies the diagonal-spring bank plus four tiles
     # before it. The shared spring banks themselves have no gaps.
     expected = {
@@ -79,7 +79,8 @@ def main():
     level_end = len((ROOT / 'art/kosinski/level/8x8 - GHZ.unc').read_bytes())
     assert level_end == symbols['ArtTile_GHZ_Bridge'] * 32
     for act in range(1, 5):
-        loaded = common + cues(f'PLCKosM_THZ{act}')
+        loaded = (common + cues(f'PLC_GHZ{act}_Main') + cues(f'PLC_GHZ{act}_Extra')
+                  + cues(f'PLCKosM_THZ{act}'))
         for i, (_, low, high) in enumerate(loaded):
             assert low >= level_end, ('GHZ terrain overwritten', act, hex(low))
             assert all(high <= a or low >= b for _, a, b in loaded[:i]), (
@@ -103,13 +104,23 @@ def main():
     # General-object slots coexist with the other live zone loads too. Boss
     # and capsule lists are intentionally excluded: they reuse these slots.
     shared = cues('PLC_Main2')
-    for label in ('PLC_LZ', 'PLC_LZ2', 'PLC_CPZ', 'PLC_CPZ2', 'PLC_EHZ', 'PLC_EHZ2',
-                  'PLC_HPZ', 'PLC_HPZ2', 'PLC_HTZ', 'PLC_HTZ2',
-                  'PLCKosM_CVZ1', 'PLCKosM_CVZ2', 'PLCKosM_CVZ3', 'PLCKosM_CVZ4'):
+    act_lists = [name for name in symbols if re.fullmatch(r'PLC_\w+_(Main|Extra)', name)]
+    assert len(act_lists) == (symbols['LevelCount'] + 1) * 4 * 2
+    assert len({symbols[name] for name in act_lists}) == len(act_lists), 'Acts share physical PLC lists'
+    for label in act_lists:
+        count = len(cues(label))
+        reserved = symbols['ActPLC_Main_Reserve'] if label.endswith('_Main') else 0
+        assert count + reserved <= 16, ('Act request queue overflow', label, count, reserved)
+        index = symbols['plcid_' + label[4:]]
+        assert 0 <= index <= 255, ('PLC ID exceeds header byte', label, index)
+        ptr = symbols['ArtLoadCues'] + index * 2
+        assert symbols['ArtLoadCues'] + struct.unpack_from('>h', rom, ptr)[0] == symbols[label], (
+            'PLC ID resolves to another list', label, index)
+    for label in act_lists + [f'PLCKosM_CVZ{act}' for act in range(1, 5)]:
         for source, low, high in cues(label):
             assert all(source == s or high <= a or low >= b for s, a, b in shared), (
                 'common sprite bank overwritten', label, hex(low), hex(high))
-    hpz = cues('PLC_HPZ') + cues('PLC_HPZ2') + cues('PLCKosM_CVZ1') + shared
+    hpz = cues('PLC_HPZ1_Main') + cues('PLC_HPZ1_Extra') + cues('PLCKosM_CVZ1') + shared
     for i, (_, low, high) in enumerate(hpz):
         assert all(high <= a or low >= b for _, a, b in hpz[:i]), (
             'HPZ art overlap', hex(low), hex(high))
@@ -123,7 +134,7 @@ def main():
             'GHZ boss/capsule overlap', hex(low), hex(high))
         assert all(high <= a or low >= b for a, b in protected), (
             'GHZ boss overwrote fixed bank', hex(low), hex(high))
-    resident = [(a, b) for _, a, b in boss + cues('PLC_GHZ')]
+    resident = [(a, b) for _, a, b in boss + cues('PLC_GHZ3_Main')]
     for mapping, base in (('Map_Eggman', 'ArtTile_Eggman'),
                           ('Map_BossItems', 'ArtTile_Eggman_Weapons'),
                           ('Map_GBall', 'ArtTile_GHZ_Giant_Ball'),
