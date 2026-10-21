@@ -40,8 +40,11 @@ allocation is not a contiguous main-CPU pointer, and jobs cannot use its tail.
 [The planned mixed-size layout](Levels.md#planned-layout-format) is not implemented.
 
 The former MD chunk area holds a 516-byte event queue/control block at
-`$FF0000-$FF0203`. `$FF0204-$FF7FFF` is free; upper-half variables retain their
-addresses. Access these lower-half allocations with long addressing.
+`$FF0000-$FF0203`, followed by the [decompressed player-art sources](Sprites-and-VRAM.md#mode-1-ram-art)
+through `$FF0DA3`. `$FF0DA4-$FF7FFF` remains free (`$725C` bytes); upper-half
+variables retain their addresses. Access these lower-half allocations with
+long addressing. These are level allocations: the S2-style special-stage RAM
+overlay reuses this area, so level entry rebuilds the art before any upload.
 
 The main CPU owns PRG bank 0 during game work. `WaitForVint` releases the
 sub-CPU; `V_Int` reacquires the bus/selects bank 0 before chunk readers or queued

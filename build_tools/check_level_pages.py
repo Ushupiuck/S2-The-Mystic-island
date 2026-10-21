@@ -207,6 +207,10 @@ for zone in range(16):
 		g.restore(menu)
 		if cd_chunks:
 			g.ram[free_start:free_end] = free_canary
+			if 'Player_Art_Buffer_Start' in g.s:
+				start = g.s['Player_Art_Buffer_Start'] & 0xFFFF
+				end = g.s['Player_Art_Buffer_End'] & 0xFFFF
+				g.ram[start:end] = bytes([0xA5]) * (end-start)
 		selected = (zone // 8) * 256 + (zone % 8) * 4 + act
 		g.write('v_levselitem', selected, 2)
 		press(START)
@@ -219,6 +223,10 @@ for zone in range(16):
 			actual = bytes(g.read(g.s['Chunk_Table'] + i) for i in range(len(expected)))
 			assert actual == expected, (zone, act, 'CD chunks differ from decompressed ROM')
 			assert bytes(g.ram[free_start:free_end]) == free_canary, (zone, act, 'freed MD RAM was touched')
+			if 'Player_Art_Buffer_Start' in g.s:
+				for label, name in [('Art_Shield', 'Shield.unc'), ('Art_Invincibility', 'Invincibility.unc'), ('Art_Ring', 'Ring.bin')]:
+					data = (Path(__file__).resolve().parents[1] / 'art/uncompressed' / name).read_bytes()
+					assert bytes(g.read(g.s[label]+i) for i in range(len(data))) == data, (zone, act, label)
 		assert g.read("MCD_status") == cd_status
 		checks.append({'zone': zone, 'act': act + 1, 'passed': True})
 	print('Four-act launch checks passed for zone ' + str(zone), flush=True)

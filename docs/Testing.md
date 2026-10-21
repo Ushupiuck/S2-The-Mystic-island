@@ -90,7 +90,14 @@ python build_tools/check_cd_ring_jobs.py --core /path/to/genesis_plus_gx_libretr
 Each offers `--pal`. `check_cd_chunks.py` uses the root `s2built.bin`/`main.lst`
 directly; it has no ROM/listing flags. It checks all 256x64 chunk/block addresses,
 row/column plane writes/flips/edges, ordinary frames and a rotating stage, with
-freed-MD-RAM canaries. Ring tests cover sparse/all-active lifetimes, staggered
+remaining-free-MD-RAM canaries. It also poisons the player-art cache before
+entering the rotating stage, checks that stage's RAM-to-VRAM ring upload, then
+returns through results and verifies all three level sources are rebuilt.
+`check_player_effects.py` compares RAM sources and actual VRAM against editable
+art, including all eight regular/lost-ring frames and shield/star transitions.
+Run `python build_tools/build_player_effect_art.py --check` after source-art edits.
+The unfinished S2-style stage is not a full gameplay test target.
+Ring tests cover sparse/all-active lifetimes, staggered
 collection, bank pauses, reset, expanded-tail guards and HPZ/SMZ gameplay in both
 character modes. To measure the previous CD implementation, pass its ROM/listing
 with `--baseline` to the ring runner; it is a boolean mode, not a path argument.

@@ -2545,6 +2545,9 @@ Level_TtlCardLoop:
 Level_SkipTtlCard:
 		moveq	#palid_SonicTails,d0
 		bsr.w	PalLoad1
+	if MegaCDMode1
+		jsr	(LoadPlayerEffectArt).l	; rebuild RAM sources after any scene overlay
+	endif
 		bsr.w	InitRingFrame
 		bsr.w	LevelSizeLoad
 		bsr.w	DeformBGLayer
@@ -3563,6 +3566,9 @@ BonusStage:
 		bsr.w	QuickKosPLC
 		lea	(PLC_S1SpecialStage).l,a1
 		bsr.w	QuickPLC
+	if MegaCDMode1
+		jsr	(LoadRingArt).l		; this stage streams rings, but uses no shields/stars
+	endif
 		bsr.w	InitRingFrame
 		sf	(f_wtr_state).w
 		clr.w	(Level_Inactive_flag).w
@@ -15825,10 +15831,17 @@ Art_AirCountdown:	binclude "art/uncompressed/Drowning countdown.unc"
 Art_AirCountdown_End:
 Art_Points:		binclude	"art/uncompressed/Points.unc"
 Art_Points_End:
+	if MegaCDMode1
+Nem_Shield_Dynamic:	binclude "art/nemesis/Shield Dynamic.nem"
+		even
+Nem_Invincibility:	binclude "art/nemesis/Invincibility.nem"
+		even
+	else
 Art_Shield:		binclude "art/uncompressed/Shield.unc"
 Art_Shield_End:
 Art_Invincibility:	binclude "art/uncompressed/Invincibility.unc"
 Art_Invincibility_End:
+	endif
 		if (Art_Invincibility_End-Art_Invincibility)>((VRAM_Sprite_Attribute_Table/tile_size-ArtTile_Invincibility)*tile_size)
 			fatal "Invincibility art exceeds the primary effect bank."
 		endif
@@ -15837,7 +15850,13 @@ Art_CardFont:	binclude	"art/uncompressed/Card Font.unc"
 Art_CardFont_End:
 Art_Signpost:	binclude	"art/uncompressed/Signpost.unc"
 Art_Signpost_End:
+	if MegaCDMode1
+Nem_Ring:	binclude	"art/nemesis/Ring.nem"
+		even
+	else
 Art_Ring:	binclude	"art/uncompressed/Ring.bin"
+Art_Ring_End:
+	endif
 ; Same eight ring frames, with 6 -> E, C -> C, D -> B and E -> A for palette 0.
 Art_SSResultsRing:	binclude	"art/uncompressed/SS Results Ring.bin"
 Art_BigRing:	binclude	"art/uncompressed/Giant Ring.bin"

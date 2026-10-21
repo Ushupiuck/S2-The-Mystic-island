@@ -44,6 +44,35 @@ Sonic/Tails/body/tail/dust use this service. Some dedicated UI loaders, includin
 the signpost, retain their own cue encoding; do not assume every DPLC file uses
 one format. SonLVL's overrides are documented in [its guide](../SonLVL%20INI%20Files/README.md).
 
+### Mode 1 RAM art
+
+On `test/rebuilt-kehmusic`, shield, invincibility and normal/lost-ring art is
+Nemesis-compressed in ROM and decompressed into the freed MD chunk area.
+`Art_Shield`, `Art_Invincibility` and `Art_Ring` are RAM source addresses on this
+branch; cartridge builds retain their uncompressed ROM sources. The existing
+shield DPLCs, resident-star upload and eight-frame ring uploader use those
+addresses without changing mappings, frame selection or VRAM banks.
+
+| RAM bytes, end exclusive | Source | Size |
+| --- | --- | --- |
+| `$FF0204-$FF0564` | Shield | `$360` |
+| `$FF0564-$FF09A4` | Invincibility stars | `$440` |
+| `$FF09A4-$FF0DA4` | Normal/lost rings | `$400` |
+
+The cache occupies `$BA0` bytes after the CD ring event queue. `LoadPlayerEffectArt`
+decompresses all three after level clears/PLCs and before `InitRingFrame`;
+it also runs on death restarts and returns from other scenes. Never assume
+these bytes survive the S2-style special-stage RAM overlay. The rotating S1
+stage loads its ring source independently with `LoadRingArt` before its first
+upload to `$2940`; it needs no shield/star source. Its palette-remapped results
+ring remains a separate ROM asset. Decompression runs outside VBlank.
+
+Keep the editable files in `art/uncompressed/`; SonLVL continues reading the
+raw ring. After editing these sources, run
+`python build_tools/build_player_effect_art.py`, then use `--check` to verify
+the committed packed copies. The old `art/nemesis/Shield.nem` is unrelated
+to this dynamic art and is preserved.
+
 ## Shared level allocations
 
 These apply during ordinary level play. Zone-specific terrain/badnik and boss

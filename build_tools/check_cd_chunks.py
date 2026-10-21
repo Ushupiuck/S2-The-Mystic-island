@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise CD chunk addresses and prove the former MD buffer stays free.
+"""Exercise CD chunks, cached player art and the remaining free MD RAM.
 
 Runs assembled renderer/collision routines in Genesis Plus GX, including every
 chunk/block combination. The controller sequence and bonus stage execute whole
@@ -30,7 +30,8 @@ assert g.s['MCD_ChunkTable_Size'] == 0x20000
 free_start = g.s['Free_Chunk_RAM_Start'] & 0xFFFF
 free_end = 0x8000
 assert (g.s['Free_Chunk_RAM_End'] & 0xFFFFFF) == 0xFF8000
-assert g.s['MCD_MainWorkEnd'] == g.s['Free_Chunk_RAM_Start']
+assert g.s['MCD_MainWorkEnd'] == g.s['Player_Art_Buffer_Start']
+assert g.s['Player_Art_Buffer_End'] == g.s['Free_Chunk_RAM_Start']
 assert g.s['v_ssbg_end'] <= g.s['Chunk_Table_End']
 boot_level(g, zone=0, act=0)
 assert g.read('MCD_status') == 1
@@ -139,6 +140,11 @@ for _ in range(1800):
 else:
     raise AssertionError('Title timeout')
 g.ram[free_start:free_end] = canary
+# Simulate a scene overlay reclaiming the level-only art. The rotating stage
+# must restore its ring source independently of a preceding ordinary level.
+art_start = g.s['Player_Art_Buffer_Start'] & 0xFFFF
+art_end = g.s['Player_Art_Buffer_End'] & 0xFFFF
+g.ram[art_start:art_end] = bytes([0xA5]) * (art_end-art_start)
 g.write('f_levselcheat', 1)
 g.buttons = {3}; g.run(2); g.buttons = set(); g.run(100)
 g.write('v_levselitem', g.s['LevelSelect_BonusItem'], 2)
@@ -150,14 +156,37 @@ for _ in range(800):
 else:
     raise AssertionError('Bonus-stage timeout')
 first_angle = g.read('v_ssangle', 2)
+ring_art = (ROOT/'art/uncompressed/Ring.bin').read_bytes()
+assert bytes(g.read(g.s['Art_Ring']+i) for i in range(len(ring_art))) == ring_art
 for _ in range(180):
     g.run()
     assert not g.read('v_errortype')
     assert bytes(g.ram[free_start:free_end]) == canary
 assert g.read('v_ssangle', 2) != first_angle
 assert any(g.vram)
+frame = g.read('v_ani1_prev')
+bank = g.s['ArtTile_SS_Rings'] * 32
+assert bytes(g.vram[(bank+i)^1] for i in range(128)) == ring_art[frame*128:(frame+1)*128]
 g.video.save(a.output/'bonus'/'stage.png')
-passed('Bonus-stage rotation, buffers and rendering use CD RAM; MD RAM stays free')
+passed('Bonus stage restores its RAM ring source and streams to its own VRAM bank')
+
+# Exit through the real results path and return to the level. The poisoned
+# shield/star source regions must be rebuilt rather than treated as resident.
+g.write('v_gamemode', g.s['Level'], 2)
+for _ in range(2400):
+    g.run()
+    assert not g.read('v_errortype')
+    if (g.read('v_vbla_routine', 2) == g.s['Vint_Level']
+            and g.read('v_gamemode', 2) == g.s['Level'] and g.read('f_timecount')):
+        break
+else:
+    raise AssertionError('Special-stage results did not return to a level')
+for label, source in [('Art_Shield', 'Shield.unc'), ('Art_Invincibility', 'Invincibility.unc'),
+                      ('Art_Ring', 'Ring.bin')]:
+    expected = (ROOT/'art/uncompressed'/source).read_bytes()
+    assert bytes(g.read(g.s[label]+i) for i in range(len(expected))) == expected, label
+assert bytes(g.ram[free_start:free_end]) == canary
+passed('Special-stage results return rebuilds every level art source; free RAM stays intact')
 g.close()
 a.output.mkdir(parents=True, exist_ok=True)
 (a.output/'report.json').write_text(json.dumps(dict(

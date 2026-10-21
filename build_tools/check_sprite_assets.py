@@ -57,6 +57,16 @@ def main():
             'Art_Points', 'Art_Shield', 'Art_Invincibility', 'Art_Ring',
             'Art_SSResultsRing', 'Art_BigRing', 'Art_BigFlash'):
         assert symbols[label] % 2 == 0, f'{label}: DMA source needs word alignment'
+    if 'Player_Art_Buffer_Start' in symbols:
+        for label, packed, source in (
+                ('Art_Shield', 'Nem_Shield_Dynamic', 'Shield.unc'),
+                ('Art_Invincibility', 'Nem_Invincibility', 'Invincibility.unc'),
+                ('Art_Ring', 'Nem_Ring', 'Ring.bin')):
+            size = (ROOT / 'art/uncompressed' / source).stat().st_size
+            assert symbols[label + '_End'] - symbols[label] == size, label
+            assert (struct.unpack_from('>H', rom, symbols[packed])[0] & 0x7FFF) * 32 == size
+            assert 0xFF0000 <= symbols[label] & 0xFFFFFF < 0xFF8000
+        assert symbols['Player_Art_Buffer_End'] == symbols['Free_Chunk_RAM_Start']
     assert symbols['code'] == 0 and symbols['height_pixels'] == 6
     assert symbols['object_size'] == 0x4E
     assert symbols['vram_hscroll'] == 0xF000

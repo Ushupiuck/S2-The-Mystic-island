@@ -876,15 +876,28 @@ RAM_Start:
 
 	if MegaCDMode1
 ; Keep short-addressed engine RAM in $FF8000-$FFFFFF. The lower half is
-; available for reuse. Job queues there must use long addressing.
+; reused for job queues and decompressed art. Access it with long addressing.
 MCD_MainWorkStart:
 MCD_RingEvents:		ds.w	MCD_RingSlots
 MCD_RingEventCount:	ds.w	1
 MCD_RingActiveCount:	ds.w	1
 MCD_RingJobPending:	ds.w	1
 MCD_MainWorkEnd:
+; Uncompressed sources for the existing effect DPLCs and ring-frame uploads.
+; Reload effects on level entry, and rings on either level or S1 stage entry.
+Player_Art_Buffer_Start:
+Art_Shield:		ds.b	$360
+Art_Shield_End:
+Art_Invincibility:	ds.b	$440
+Art_Invincibility_End:
+Art_Ring:		ds.b	$400
+Art_Ring_End:
+Player_Art_Buffer_End:
+	if Player_Art_Buffer_End-RAM_Start>$8000
+		fatal "Player art exceeds the former MD chunk buffer."
+	endif
 Free_Chunk_RAM_Start:
-		ds.b	$8000-(MCD_MainWorkEnd-MCD_MainWorkStart)
+		ds.b	$8000-(Player_Art_Buffer_End-MCD_MainWorkStart)
 Free_Chunk_RAM_End:
 	else
 Chunk_Table:			ds.w	$40*$100	; 128x128 tile mappings ($8000 bytes)
