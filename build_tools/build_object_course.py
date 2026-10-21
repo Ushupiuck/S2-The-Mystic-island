@@ -200,7 +200,6 @@ def main():
     text = constants.read_text()
     for symbol, value in [('ArtTile_BFish', '$400'), ('ArtTile_Aquis', '$350'),
                           ('ArtTile_Aquis_Child', '$390'), ('ArtTile_Octus','$440'),
-                          ('ArtTile_Water_Surface','$294'),
                           ('ArtTile_Splats','$418')]:
         text, count = re.subn(r'('+symbol+r':\s*equ\s+)[^;\n]+',r'\g<1>'+value+' ',text)
         assert count == 1, symbol

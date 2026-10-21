@@ -52,7 +52,7 @@ is not a source of free level VRAM.
 
 | Bytes, end exclusive | Tile base | Use |
 | --- | --- | --- |
-| `$5500-$5700` | `$2A8` | Streamed water surface: 16 tiles, reserved in terrain sets |
+| `$0020-$0220` | `$001` | Streamed water surface: 16 tiles immediately after transparent tile zero |
 | `$9BA0-$9F20` | `$4DD` | Diagonal springs, 28 tiles; GHZ reuses this space for Chopper |
 | `$9F20-$A120` | `$4F9` | Vertical springs, 16 tiles |
 | `$A120-$A320` | `$509` | Horizontal springs, 16 tiles |
@@ -92,7 +92,7 @@ see [the EHZ example](Importing-objects.md#arena-and-art-lifetime).
 GHZ packs its bridge/scenery/badnik art after its terrain. Newtron uses one
 complete 85-tile bank; Chopper starts at `$4D9` and occupies the diagonal-spring
 space. Adding diagonal springs to GHZ needs a new allocation. Wall caps reuse
-terrain tile `$C1`. HPZ keeps `ArtTile_Splats = $418`, resident bubbles at
+terrain tile `$D1`. HPZ keeps `ArtTile_Splats = $418`, resident bubbles at
 `$45C-$493`, and BBat at `$494-$4CD` (bytes `$9280-$99C0`), below the spring bank.
 Use the actual PLCs/constants for other zone banks, not an older address table.
 SMZ's atlas, junction and smoke lifetimes are in [Levels](Levels.md#scrap-madness).
