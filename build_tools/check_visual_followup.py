@@ -114,11 +114,12 @@ for tick in range(260):
             if total>>13&3: continue
             data = vram((total&2047)*32,((size>>2)+1)*((size&3)+1)*32)
             flame_colors.update(n for byte in data for n in (byte>>4,byte&15))
-            if (10 in flame_colors and g.get(obj,'obRender')&128
+            if (14 in flame_colors and g.get(obj,'obRender')&128
                     and g.get(obj,'obFrame') in (10,21) and tick>60 and not visible):
                 g.video.save(a.output/'sbz1-flame.png');visible = True
-assert visible and 10 in flame_colors and 14 not in flame_colors, flame_colors
-passed('Visible SBZ flames use the lighter orange core without changing global colors')
+assert visible and 14 in flame_colors and 10 not in flame_colors, flame_colors
+assert g.read(g.s['v_palette']+14*2, 2) == 0x0AE
+passed('Visible SBZ flames use the golden orange core without changing global colors')
 
 restart(8,1)
 kemusi = vram(g.s['ArtTile_SMZ_Kemusi']*32,22*32)

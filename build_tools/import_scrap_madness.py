@@ -162,10 +162,11 @@ def remap_player_art(name, raw, lookup):
         return raw[:8*32] + remap_pixels(raw[8*32:], lookup)
     if name == 'SBZ Flaming Pipe':
         # Flames use line 1; both pipe ends use stage line 3.
-        # S1's yellow core uses the light orange/cream already in slot $A;
-        # leave the global player palette and the pipe's stage colors intact.
+        # S1's $0EE yellow core uses our nearest existing golden orange,
+        # $0AE in slot $E. Slot $A ($8CE) is skin-tone cream, not fire orange.
+        # Pipe ends retain their stage-palette pixels.
         flame_lookup = list(lookup)
-        flame_lookup[15] = 10
+        flame_lookup[15] = 14
         return remap_pixels(raw[:20*32], flame_lookup) + raw[20*32:]
     return remap_pixels(raw, lookup)
 
