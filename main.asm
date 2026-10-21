@@ -263,7 +263,7 @@ V_Int:
 		lea	(vdp_data_port).l,a6
 		lea	vdp_control_port-vdp_data_port(a6),a5
 		tst.b	(v_vbla_counter).w
-		beq.s	Vint_Lag_Main
+		ble.s	Vint_Lag_Main		; only the pending wait ($01) admits full work
 .wait		moveq	#8,d0
 		and.w	vdp_control_port-vdp_control_port(a5),d0
 		beq.s	.wait
@@ -290,6 +290,8 @@ Vint_Lag:
 
 Vint_Lag_Main:
 		addq.w	#1,(Lag_frame_count).w
+		tst.b	(v_vbla_counter).w
+		bmi.w	VintRet			; $FF: previous handler still owns the VDP
 		; branch if a level or demo is running
 		move.w	(v_gamemode).w,d0
 		andi.w	#$7FFF,d0		; ignore the title-card/loading flag

@@ -41,6 +41,25 @@ python build_tools/check_card_art.py --rom s2built.bin --listing main.lst
 
 ## Runtime checks
 
+`check_level_lag.py` loads GHZ, CPZ and HPZ in order, waits at least five seconds
+in each, and uses Debug Start+A between levels. It then traverses HPZ in Debug
+while comparing the loaded block definitions, chunks and complete layout every
+frame. `--zone 2` stops in dry CPZ instead. `--delay 0` uses the unmodified ROM;
+the default inserts a register/CCR-preserving guest CPU delay into block drawing
+in a disposable ROM under the output directory. This deliberately amplifies lag
+while retaining normal IRQ/VDP/CD scheduling. It is a deterministic stress check,
+not proof that every intermittent corruption report has the same cause.
+
+```sh
+python build_tools/check_level_lag.py --core /path/to/genesis_plus_gx_libretro.so --rom s2built.bin --listing main.lst --output test-results/level-lag
+```
+
+Add `--system-directory /path/to/bios` for CD builds, or `--pal` for PAL. See
+[VBlank ownership](Sprites-and-VRAM.md#mapping-and-rendering-abi) for the wait
+latch and nested-interrupt contract. The pre-fix handler can recursively consume
+the stack under this load and overwrite the last loaded block definitions;
+correct decompression on entry does not rule that out.
+
 Example for the shared visual regressions (life art, SMZ smoke/flame and boss flash):
 
 ```sh

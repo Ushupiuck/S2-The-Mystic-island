@@ -31,6 +31,15 @@ separately. SAT links are initialized on clear; the renderer repairs the previou
 terminator and writes a new hidden terminator, retaining the 80-sprite limit.
 The S1 stage appends to the same link chain. There is no star-specific renderer path.
 
+The VBlank wait latch has three states: `$00` while foreground code runs, `$01`
+when `WaitForVint` requests work, and `$FF` once VBlank admits that request.
+Only `$01` starts the full screen handler. A second VBlank arriving while the
+first handler still runs must count lag and return without touching the VDP;
+re-entering the handler can exhaust the stack and overwrite the end of the block
+table. Ordinary foreground lag (`$00`) retains its water-palette refresh path.
+The [lag check](Testing.md#runtime-checks) exercises this distinction with real
+emulated interrupts and watches terrain RAM throughout traversal.
+
 ## Dynamic art
 
 `_inc/Dynamic Sprite Art.asm` implements `Load_DynamicPLC`: word run count, then
