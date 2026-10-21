@@ -9,7 +9,6 @@ from pathlib import Path
 import argparse
 import json
 import struct
-import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 p = argparse.ArgumentParser(description=__doc__)
@@ -17,27 +16,25 @@ p.add_argument('--rom',type=Path,required=True)
 p.add_argument('--listing',type=Path,required=True)
 p.add_argument('--output',type=Path)
 args = p.parse_args()
-sys.argv = ['native','--rom',str(args.rom),'--listing',str(args.listing)]
-ns = {'__file__':str(ROOT/'build_tools/check_object_manager.py')}
-exec((ROOT/'build_tools/check_object_manager.py').read_text().split('m=Manager()')[0],ns)
+import native_test_core as m68k
 from check_sprite_assets import frames
 
 
-class ArtNative(ns['Native']):
+class ArtNative(m68k.Native):
     def hook(self,cpu,address,size,unused):
         if address == self.s['QueueDMATransfer']:
-            source,dest,words = (cpu.reg_read(ns['UC_M68K_REG_'+n]) for n in ('D1','D2','D3'))
+            source,dest,words = (cpu.reg_read(getattr(m68k, 'UC_M68K_REG_'+n)) for n in ('D1','D2','D3'))
             self.uploads.append((source,dest & 0xFFFF,words & 0xFFFF))
             entries = 1 + int((source & 0x1FFFF)+(words & 0xFFFF)*2 > 0x20000)
             slot = self.read('VDP_Command_Buffer_Slot',2)+entries*self.s['DMAEntry.len']
             assert slot <= self.s['VDP_Command_Buffer_Slot'] & 0xFFFF
             self.write('VDP_Command_Buffer_Slot',slot,2)
-            for reg in ns['DATA']:
+            for reg in m68k.DATA:
                 cpu.reg_write(reg,0xDEADC0DE)
-            cpu.reg_write(ns['UC_M68K_REG_A1'],0xFFFFBABA)
+            cpu.reg_write(m68k.UC_M68K_REG_A1,0xFFFFBABA)
 
 
-m = ArtNative()
+m = ArtNative(args.rom, args.listing)
 rom = args.rom.read_bytes()
 obj = m.s['v_titlecard']
 base = m.s['ArtTile_Title_Card']*32
@@ -71,18 +68,18 @@ def payload(table,index,art,end):
 
 for scene in range(78):
     reset(full=True)
-    regs={ns['UC_M68K_REG_D0']:scene,ns['UC_M68K_REG_D4']:base,
-          ns['UC_M68K_REG_D7']:0x1976}
+    regs={m68k.UC_M68K_REG_D0:scene,m68k.UC_M68K_REG_D4:base,
+          m68k.UC_M68K_REG_D7:0x1976}
     m.act('Load_CardDPLC',obj,regs)
-    assert not m.uploads and m.cpu.reg_read(ns['UC_M68K_REG_SR']) & 1
+    assert not m.uploads and m.cpu.reg_read(m68k.UC_M68K_REG_SR) & 1
     assert m.get(obj,'card_dplc_left',2) == len(runs('DPLC_Cards',scene))
     # Leave most of the first queue occupied to force a real resume path.
     for tick in range(6):
         m.write('VDP_Command_Buffer_Slot',(m.s['VDP_Command_Buffer']+(12*m.s['DMAEntry.len'] if tick == 0 else 0)) & 0xFFFF,2)
         old = len(m.uploads)
         m.act('Load_CardDPLC',obj,regs)
-        assert m.cpu.reg_read(ns['UC_M68K_REG_D7']) == 0x1976
-        if not m.cpu.reg_read(ns['UC_M68K_REG_SR']) & 1:
+        assert m.cpu.reg_read(m68k.UC_M68K_REG_D7) == 0x1976
+        if not m.cpu.reg_read(m68k.UC_M68K_REG_SR) & 1:
             assert len(m.uploads) == old, 'Card became visible before its last DMA VBlank'
             break
     else:
@@ -111,8 +108,8 @@ for mode in (0,1,2):
         reset()
         m.write('Player_mode',mode,2);m.write('Current_Act',act)
         m.act('Get_NormalCardScene')
-        assert m.cpu.reg_read(ns['UC_M68K_REG_D0']) == 64+act*2+(mode == 2)
-        table=m.cpu.reg_read(ns['UC_M68K_REG_A3'])
+        assert m.cpu.reg_read(m68k.UC_M68K_REG_D0) == 64+act*2+(mode == 2)
+        table=m.cpu.reg_read(m68k.UC_M68K_REG_A3)
         rows=frames(rom,table,10)
         for frame,tile in ((3,m.s['ArtTile_Bonuses']),(4,m.s['ArtTile_Bonuses']+8)):
             assert (rows[frame][5][2]+m.s['ArtTile_Title_Card']) & 0xFFFF == tile
@@ -125,8 +122,8 @@ for mode in (0,1,2):
         m.act('Get_SpecialCardScene')
         state=0 if not emeralds else 2 if emeralds == 6 else 1
         scene=72+state*2+(mode == 2)
-        assert m.cpu.reg_read(ns['UC_M68K_REG_D0']) == scene
-        rows=frames(rom,m.cpu.reg_read(ns['UC_M68K_REG_A3']),7)
+        assert m.cpu.reg_read(m68k.UC_M68K_REG_D0) == scene
+        rows=frames(rom,m.cpu.reg_read(m68k.UC_M68K_REG_A3),7)
         assert (rows[2][5][2]+m.s['ArtTile_Title_Card']) & 0xFFFF == m.s['ArtTile_Bonuses']+8
         mini=m.s['ArtTile_Mini_Tails'] if mode == 2 else m.s['ArtTile_Mini_Sonic']+18
         assert (rows[4][-1][2]+m.s['ArtTile_Title_Card']) & 0xFFFF == 0x2000+mini
@@ -154,16 +151,16 @@ source=(ROOT/'art/uncompressed/Signpost.unc').read_bytes()
 for frame in range(6):
     reset(full=True)
     m.put(obj,'signpost_loaded',255)
-    regs={ns['UC_M68K_REG_D0']:frame,ns['UC_M68K_REG_A2']:m.s['DPLC_Signpost'],
-          ns['UC_M68K_REG_A3']:(obj+m.s['signpost_loaded']) & 0xFFFFFF,
-          ns['UC_M68K_REG_D4']:m.s['ArtTile_Signpost']*32,
-          ns['UC_M68K_REG_D6']:m.s['Art_Signpost'],ns['UC_M68K_REG_D7']:0x1976}
+    regs={m68k.UC_M68K_REG_D0:frame,m68k.UC_M68K_REG_A2:m.s['DPLC_Signpost'],
+          m68k.UC_M68K_REG_A3:(obj+m.s['signpost_loaded']) & 0xFFFFFF,
+          m68k.UC_M68K_REG_D4:m.s['ArtTile_Signpost']*32,
+          m68k.UC_M68K_REG_D6:m.s['Art_Signpost'],m68k.UC_M68K_REG_D7:0x1976}
     m.act('Load_DynamicPLC',obj,regs)
     assert m.get(obj,'signpost_loaded') == 255 and not m.uploads
     m.write('VDP_Command_Buffer_Slot',m.s['VDP_Command_Buffer'] & 0xFFFF,2)
     m.act('Load_DynamicPLC',obj,regs)
     assert m.get(obj,'signpost_loaded') == frame
-    assert m.cpu.reg_read(ns['UC_M68K_REG_D7']) == 0x1976
+    assert m.cpu.reg_read(m68k.UC_M68K_REG_D7) == 0x1976
     loaded=b''.join(rom[src:src+words*2] for src,_,words in m.uploads)
     assert len(loaded) <= 26*32
     assert render(loaded,dynamic[frame]) == render(source,original[frame])
@@ -179,7 +176,7 @@ for mode in (0,1,2):
     m.act('Signpost_Spin',obj)
     assert m.get(obj,'obRoutine') == 6
     assert m.get(obj,'obAnim') == (4 if mode == 2 else 3)
-    m.act('AnimateSprite',obj,{ns['UC_M68K_REG_A1']:m.s['Ani_Signpost']})
+    m.act('AnimateSprite',obj,{m68k.UC_M68K_REG_A1:m.s['Ani_Signpost']})
     assert m.get(obj,'obFrame') == (1 if mode == 2 else 0)
     checks.append({'case':'signpost-final-character','mode':mode,'frame':m.get(obj,'obFrame')})
 

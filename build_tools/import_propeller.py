@@ -10,7 +10,6 @@ Requires the optional Unicorn dependency used by the other CD importers.
 from pathlib import Path
 import argparse
 import struct
-import sys
 
 from import_palmtree_enemies import mapping
 from import_scrap_madness import nemesis_inline, palette_lookup, remap_pixels
@@ -39,15 +38,13 @@ def main():
 	p.add_argument('--rom', type=Path, default=ROOT/'s2built.bin')
 	p.add_argument('--listing', type=Path, default=ROOT/'main.lst')
 	args = p.parse_args()
-	sys.argv = ['native', '--rom', str(args.rom), '--listing', str(args.listing)]
-	ns = {'__file__': str(ROOT/'build_tools/check_object_manager.py')}
-	exec((ROOT/'build_tools/check_object_manager.py').read_text().split('m=Manager()')[0], ns)
-	m = ns['Native']()
+	import native_test_core as m68k
+	m = m68k.Native(args.rom, args.listing)
 	packed = (args.source/'src/gfx/r8/propeller.nem').read_bytes()
 	assert int.from_bytes(packed[:2], 'big') & 0x7FFF == 46
 	m.cpu.mem_write(0x300000, packed)
 	m.act('NemDecToRAM', limit=2000000, regs={
-		ns['UC_M68K_REG_A0']: 0x300000, ns['UC_M68K_REG_A4']: 0xFF0000})
+		m68k.UC_M68K_REG_A0: 0x300000, m68k.UC_M68K_REG_A4: 0xFF0000})
 	raw = bytes(m.cpu.mem_read(0xFF0000, 46*32))
 	source = struct.unpack('>16H', (args.source/'src/palettes/player.pal').read_bytes())
 	target = struct.unpack('>16H', (ROOT/'palette/SonicAndTails.bin').read_bytes()[:32])

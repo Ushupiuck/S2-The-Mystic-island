@@ -1,0 +1,178 @@
+"""Reusable 68000 ROM fixtures for native checks and asset importers.
+
+Importing this module does not parse arguments or run regressions. Pass the
+matching ROM and listing to Native/Manager; defaults use this checkout's build.
+Only sound/DMA/VDP boundaries documented by the fixtures are stubbed.
+"""
+from pathlib import Path
+import re
+import struct
+
+try:
+    from unicorn import (Uc, UC_ARCH_M68K, UC_MODE_BIG_ENDIAN, UC_HOOK_CODE,
+                         UC_HOOK_MEM_READ, UC_HOOK_MEM_WRITE,
+                         UC_HOOK_MEM_READ_UNMAPPED, UC_MEM_READ)
+    from unicorn.m68k_const import *
+except ImportError:
+    raise SystemExit('This optional ROM test requires the unicorn Python package.')
+
+ROOT = Path(__file__).resolve().parent.parent
+STOP, STACK = 0x3FFF00, 0xFF8000
+DATA = [UC_M68K_REG_D0, UC_M68K_REG_D1, UC_M68K_REG_D2, UC_M68K_REG_D3]
+
+
+class Native:
+    def __init__(self, rom=None, listing=None):
+        rom = Path(rom) if rom is not None else ROOT / 's2built.bin'
+        listing = Path(listing) if listing is not None else ROOT / 'main.lst'
+        data = rom.read_bytes()
+        listing = listing.read_text()
+        assert 'Symbol Table' in listing, 'Build must finish before testing its listing'
+        self.s = {name: int(value, 16) for name, value in re.findall(
+            r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]', listing)}
+        self.cpu = Uc(UC_ARCH_M68K, UC_MODE_BIG_ENDIAN)
+        self.cpu.ctl_set_cpu_model(UC_CPU_M68K_M68000)
+        self.cpu.mem_map(0, 0x400000)
+        self.cpu.mem_map(0xFF0000, 0x10000)
+        self.cpu.mem_map(0xFFFF0000, 0x10000)
+        self.cpu.mem_write(0, data)
+        # layout_id is a test-only projection through the placement pointer table.
+        # The engine stores and tests the full code pointer, never that byte ID.
+        self.object_codes = [0] + list(struct.unpack_from(
+            '>255I', data, self.s['Obj_Index']))
+        self.ids_by_code = {pointer: oid for oid, pointer in
+                            enumerate(self.object_codes[1:], 1)}
+        for label in ('QueueDMATransfer', 'PlayMusic', 'PlaySound', 'PlaySound_Special'):
+            self.cpu.mem_write(self.s[label], bytes.fromhex('4E75'))
+        self.cpu.hook_add(UC_HOOK_MEM_READ | UC_HOOK_MEM_WRITE, self.bus)
+        self.cpu.hook_add(UC_HOOK_MEM_READ_UNMAPPED, self.alias)
+        self.cpu.hook_add(UC_HOOK_CODE, self.hook)
+        self.uploads = []
+
+    def bus(self, cpu, access, address, size, value, unused):
+        physical = address & 0xFFFFFF
+        if access != UC_MEM_READ:
+            assert physical >= 0xFF0000, f'Unexpected CPU write outside RAM: {address:X}'
+        if address != physical and physical >= 0xFF0000:
+            if access == UC_MEM_READ:
+                cpu.mem_write(address, bytes(cpu.mem_read(physical, size)))
+            else:
+                cpu.mem_write(physical, value.to_bytes(size, 'big'))
+
+    def alias(self, cpu, access, address, size, value, unused):
+        # Real 68000 addresses are 24-bit. Caterkiller stores a trail index
+        # above its parent pointer.
+        if address <= 0xFFFFFF:
+            return False
+        page = address & ~0xFFF
+        physical = page & 0xFFFFFF
+        if not (physical < 0x400000 or physical >= 0xFF0000):
+            return False
+        cpu.mem_map(page, 0x1000)
+        cpu.mem_write(page, bytes(cpu.mem_read(physical, 0x1000)))
+        return True
+
+    def hook(self, cpu, address, size, unused):
+        if address == self.s['QueueDMATransfer']:
+            self.uploads.append(tuple(cpu.reg_read(reg) for reg in DATA[1:]))
+            for reg in DATA:
+                cpu.reg_write(reg, 0xDEADC0DE)
+            cpu.reg_write(UC_M68K_REG_A1, 0xFFFFBABA)
+
+    def write(self, name, value, size=1):
+        self.cpu.mem_write(self.s[name] & 0xFFFFFF, value.to_bytes(size, 'big'))
+
+    def read(self, name, size=1):
+        return int.from_bytes(self.cpu.mem_read(self.s[name] & 0xFFFFFF, size), 'big')
+
+    def put(self, obj, field, value, size=1):
+        if field == 'layout_id':
+            field, value, size = 'code', self.object_codes[value], 4
+        elif field in ('code', 'obID'):
+            size = 4
+        if isinstance(obj, str):
+            obj = self.s[obj]
+        self.cpu.mem_write((obj + self.s[field]) & 0xFFFFFF,
+                          (value & ((1 << (8 * size)) - 1)).to_bytes(size, 'big'))
+
+    def get(self, obj, field, size=1):
+        projected = field == 'layout_id'
+        if projected:
+            field, size = 'code', 4
+        elif field in ('code', 'obID'):
+            size = 4
+        if isinstance(obj, str):
+            obj = self.s[obj]
+        value = int.from_bytes(self.cpu.mem_read((obj + self.s[field]) & 0xFFFFFF, size), 'big')
+        return self.ids_by_code.get(value, value) if projected else value
+
+    def act(self, routine, obj=None, regs=None, limit=100000):
+        self.cpu.reg_write(UC_M68K_REG_SR, 0x2000)
+        for reg in DATA:
+            self.cpu.reg_write(reg, 0xA5A51234)
+        if obj is not None:
+            address = self.s[obj] if isinstance(obj, str) else obj | 0xFF000000
+            self.cpu.reg_write(UC_M68K_REG_A0, address)
+        for reg, value in (regs or {}).items():
+            self.cpu.reg_write(reg, value)
+        self.cpu.reg_write(UC_M68K_REG_A7, STACK)
+        self.cpu.mem_write(STACK, struct.pack('>I', STOP))
+        self.cpu.emu_start(self.s[routine], STOP, count=limit)
+        assert self.cpu.reg_read(UC_M68K_REG_PC) == STOP, routine
+        assert self.cpu.reg_read(UC_M68K_REG_A7) == STACK + 4, routine
+
+    def start(self):
+        self.cpu.mem_write(0xFF0000, bytes(0x10000))
+        self.cpu.mem_write(0xFFFF0000, bytes(0x10000))
+        self.write('v_gamemode', self.s['Level'], 2)
+        self.write('v_air', 30, 2)
+        self.act('Init_SpriteTable')
+        for obj, object_id in [('v_player', 1), ('v_player2', 2)]:
+            for field, value, size in [('layout_id', object_id, 1), ('obRoutine', 2, 1),
+                    ('obRender', 0x84, 1), ('obHeight', 19, 1), ('obWidth', 9, 1),
+                    ('default_y_radius', 19, 1), ('default_x_radius', 9, 1),
+                    ('obX', 600, 2), ('obY', 116, 2), ('obTopSolidBit', 12, 1),
+                    ('obLRBSolidBit', 13, 1)]:
+                self.put(obj, field, value, size)
+
+class Manager(Native):
+    def pool(self):
+        return range(self.s['v_lvlobjspace'],self.s['v_lvlobjend'],self.s['object_size'])
+    def live(self):
+        return {self.get(a,'respawn_addr',2):a for a in self.pool() if self.get(a,'layout_id') and self.get(a,'respawn_addr',2)}
+    def rows(self,name):
+        return list(struct.iter_unpack('>HHBB',(ROOT/'level/objects'/name).read_bytes()[:-6]))
+    def cam(self,x,y):
+        self.write('Camera_X_pos',x,2)
+        self.write('Camera_Y_pos',y&65535,2)
+    def fixture(self,rows):
+        # Replace this level's relative pointer with a small ROM fixture near the
+        # real index. Keep the leading sentinel and real six-byte placement format.
+        self.start()
+        i=self.s['ObjPos_Index']
+        base=i+0x7000
+        self.cpu.mem_write(i,struct.pack('>h',base-i))
+        self.cpu.mem_write(base-6,bytes.fromhex('FFFF00000000'))
+        self.cpu.mem_write(base,b''.join(struct.pack('>HHBB',*r) for r in rows)+bytes.fromhex('FFFF00000000'))
+        return base
+    def verify(self,rows,base=None):
+        table=self.s['Object_Respawn_Table']&65535
+        live=self.live()
+        ptrs=[self.get(a,'respawn_addr',2) for a in self.pool() if self.get(a,'layout_id') and self.get(a,'respawn_addr',2)]
+        assert len(ptrs)==len(set(ptrs)),('duplicate placement',ptrs)
+        for ptr,a in live.items():
+            idx=(ptr-table)&65535
+            assert idx<len(rows),(hex(ptr),idx,len(rows))
+            x,y,obj,sub=rows[idx]
+            assert self.get(a,'obX',2)==x and self.get(a,'obY',2)==y&0xFFF
+            assert self.get(a,'code')==self.object_codes[obj]
+            assert self.get(a,'obSubtype')==sub
+            assert self.get(a,'obStatus')==self.get(a,'obRender')==(y>>13)&3
+            assert self.cpu.mem_read(0xFF0000+ptr,1)[0]&128
+        if base is not None:
+            for side in ('front','back'):
+                lp=self.read('Object_load_addr_'+side,4)
+                rp=self.read('Object_respawn_index_'+side,2)
+                assert lp>=base and (lp-base)%6==0 and (lp-base)//6<=len(rows)
+                assert rp==table+(lp-base)//6,(side,hex(lp),hex(rp))
+        return live

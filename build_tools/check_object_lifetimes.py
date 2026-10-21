@@ -21,10 +21,8 @@ checks = []
 if args.game_zone is not None and not args.core:
     p.error('--game-zone requires --core')
 if args.game_zone is None:
-    sys.argv = ['native', '--rom', str(args.rom), '--listing', str(args.listing)]
-    ns = {'__file__': str(ROOT/'build_tools/check_object_manager.py')}
-    exec((ROOT/'build_tools/check_object_manager.py').read_text().split('m=Manager()')[0], ns)
-    m = ns['Manager']()
+    import native_test_core as m68k
+    m = m68k.Manager(args.rom, args.listing)
     pool = list(m.pool())
 
 
@@ -42,13 +40,13 @@ if args.game_zone is None:
             obj = next(iter(m.live().values()))
             pointer = m.get(obj, 'respawn_addr', 2)
             m.put(obj, 'obX', x, 2)
-            m.act(routine, obj, {ns['UC_M68K_REG_D0']: x & 65535})
+            m.act(routine, obj, {m68k.UC_M68K_REG_D0: x & 65535})
             assert m.get(obj, 'code') == m.s['Ballhog'], (routine, x, 'premature unload')
             assert m.cpu.mem_read(0xFF0000+pointer, 1)[0] == 128
             # Once both the object and its spawn point are outside, release it.
             m.cam(4096, 0)
             m.act('ObjectsManager')
-            m.act(routine, obj, {ns['UC_M68K_REG_D0']: x & 65535})
+            m.act(routine, obj, {m68k.UC_M68K_REG_D0: x & 65535})
             assert not m.get(obj, 'code')
             assert m.cpu.mem_read(0xFF0000+pointer, 1)[0] == 0
             checks.append([routine, x, 'placement lifetime and real unload'])
@@ -77,7 +75,7 @@ if args.game_zone is None:
         obj = pool[0]
         m.put(obj, 'code', m.s['Ballhog'], 4)
         m.put(obj, 'obX', 2000, 2)
-        m.act(routine, obj, {ns['UC_M68K_REG_D0']: 2000})
+        m.act(routine, obj, {m68k.UC_M68K_REG_D0: 2000})
         assert not m.get(obj, 'code')
         checks.append([routine, 'dynamic object unload'])
     base = m.fixture([(611, 128, 0x21, 0x10)])
@@ -116,8 +114,8 @@ if args.game_zone is None:
 
     for group, (x, y) in enumerate(bases):
         parent, pointer = group_fixture(group)
-        m.act('SMZ_SpinConvey', parent, {ns['UC_M68K_REG_D7']: 0x12345678})
-        assert m.cpu.reg_read(ns['UC_M68K_REG_D7']) == 0x12345678
+        m.act('SMZ_SpinConvey', parent, {m68k.UC_M68K_REG_D7: 0x12345678})
+        assert m.cpu.reg_read(m68k.UC_M68K_REG_D7) == 0x12345678
         members = owners()
         actual = sorted((m.get(a, 'obX', 2), m.get(a, 'obY', 2),
                          m.get(a, 'obSubtype')) for a in members)

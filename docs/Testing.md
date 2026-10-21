@@ -30,6 +30,9 @@ compiled PLC allocations. The SST scan cannot prove register aliases
 or runtime array indices. `check_object_manager.py` adds native execution of
 loading, dispatch/deletion, packed records, Debug, collisions and effect-bank logic.
 Use a matching ROM/listing pair; options/defaults differ, so inspect `--help`.
+Reusable `Native`/`Manager` fixtures live in `build_tools/native_test_core.py`.
+Pass ROM/listing paths explicitly; importing that module neither parses CLI
+arguments nor runs the manager regression suite.
 Card data and queue backpressure also have a native check (requires Unicorn):
 
 ```sh
