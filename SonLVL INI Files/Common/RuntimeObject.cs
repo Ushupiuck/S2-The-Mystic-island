@@ -35,9 +35,10 @@ namespace MysticIsland.ObjectDefinitions
 				byte[] pixels = art.ToArray();
 				if (behavior == "Junction")
 				{
-					// Gap angle 0 streams four tiles at $4A8, relative to atlas $2B0.
-					Array.Resize(ref pixels, (0x1F8 + 4) * 32);
-					Array.Copy(File.ReadAllBytes("../art/uncompressed/SMZ Junction Gap.unc"), 0, pixels, 0x1F8 * 32, 4 * 32);
+					// Gap angle 0 starts immediately after the padded static atlas.
+					int gapOffset = pixels.Length;
+					Array.Resize(ref pixels, gapOffset + 4 * 32);
+					Array.Copy(File.ReadAllBytes("../art/uncompressed/SMZ Junction Gap.unc"), 0, pixels, gapOffset, 4 * 32);
 				}
 				frames = Render(pixels, map, data.Palette, dplc, data.DPLCVersion, int.Parse(Setting("mapframes", "0")));
 			}
@@ -307,7 +308,7 @@ namespace MysticIsland.ObjectDefinitions
 					pieces = new List<Sprite>();
 					bool cap = (subtype & 15) == 2;
 					byte[] art = cap ? ObjectHelper.LevelArt : ObjectHelper.OpenArtFile("../art/nemesis/S1/GHZ Edge Wall.nem", CompressionType.Nemesis);
-					for (int i = 0; i < 4; i++) pieces.Add(LevelData.MapTileToBmp(art, new MappingsTile(-8, (short)(i * 16 - 32), 2, 2, (ushort)(cap ? 0xC1 : i == 0 && (subtype & 15) == 0 ? 0 : 4), cap, false, 0, false), 2));
+					for (int i = 0; i < 4; i++) pieces.Add(LevelData.MapTileToBmp(art, new MappingsTile(-8, (short)(i * 16 - 32), 2, 2, (ushort)(cap ? 0xD1 : i == 0 && (subtype & 15) == 0 ? 0 : 4), cap, false, 0, false), 2));
 					return new Sprite(pieces);
 				case "Caterkiller":
 					bool kemusi = subtype != 0, damaged = subtype >= 2;

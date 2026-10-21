@@ -119,8 +119,8 @@ On Windows use equivalent absolute external output paths. Sweep/contacts support
 Instrumentation records actual entry-point execution; `layout_id` is only a
 test-side projection of routine pointers, not the SST dispatch format.
 
-Course-only allocations are intentional exceptions: water surface starts at tile
-`$294`; prototype enemy banks move. A legacy wall uses `$590`, overlapping normal
+The diagnostic course keeps the ordinary water-surface bank at `$001`; only
+prototype enemy banks move. A legacy wall uses `$590`, overlapping normal
 explosion art, only in its isolated section. Fresh snapshots restore explosion
 art for enemy/effect cases. This cannot certify that allocation in a populated
 level. Bundled test-only S1 floor/door art has provenance in

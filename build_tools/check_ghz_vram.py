@@ -77,7 +77,7 @@ def main():
             pos += 6
 
     level_end = len((ROOT / 'art/kosinski/level/8x8 - GHZ.unc').read_bytes())
-    assert level_end == symbols['ArtTile_GHZ_Bridge'] * 32
+    assert level_end <= symbols['ArtTile_GHZ_Bridge'] * 32
     for act in range(1, 5):
         loaded = (common + cues(f'PLC_GHZ{act}_Main') + cues(f'PLC_GHZ{act}_Extra')
                   + cues(f'PLCKosM_THZ{act}'))

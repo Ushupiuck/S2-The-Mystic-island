@@ -11,6 +11,7 @@ import argparse
 import json
 import re
 import struct
+from collections import Counter
 from convert_s1_ss_background import enigma, kosinski_plus, kosinski_plus_decode
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -175,6 +176,9 @@ def geometry(source):
     # Animated smoke lives above the wheel, below the spring bank.
     words = [(word & 0xF800) | (0x4C5 + (word & 0x7FF)-0x448)
              if 0x448 <= word & 0x7FF < 0x460 else word for word in words]
+    # Keep tile zero transparent; reserve the next sixteen tiles for water.
+    words = [(word & 0xF800) | ((word & 0x7FF) + 16)
+             if 0 < word & 0x7FF < 0x2A9 else word for word in words]
     blocks = struct.pack('>'+str(len(words))+'H', *words)
     old = classic_kosinski((source/'map256/SBZ (REV01).kos').read_bytes())
     assert len(old) % 512 == 0 and len(blocks) <= 0x1800
@@ -275,6 +279,48 @@ def placements(source):
     return report
 
 
+
+def _nemesis_encode(raw,xor):
+ data=raw
+ if xor:
+  prev=0;d=bytearray()
+  for v, in struct.iter_unpack('>I',raw):d.extend((prev^v).to_bytes(4,'big'));prev=v
+  data=bytes(d)
+ ns=[n for b in data for n in (b>>4,b&15)];runs=[]
+ for n in ns:
+  if runs and runs[-1][0]==n and runs[-1][1]<8:runs[-1]=(n,runs[-1][1]+1)
+  else:runs.append((n,1))
+ freq=Counter(runs);tokens=sorted(freq);steps=[];cost={0:0}
+ # Reserve the 111111 inline prefix: codewords consume <=252/256 leaves.
+ for token in tokens:
+  new={};back={}
+  for unit,c in cost.items():
+   for length in range(1,9):
+    u=unit+(1<<(8-length));v=c+freq[token]*length
+    if u<=252 and v<new.get(u,10**20):new[u]=v;back[u]=(unit,length)
+  cost=new;steps.append(back)
+ u=min(cost,key=cost.get);lengths={}
+ for token,back in zip(tokens[::-1],steps[::-1]):u,L=back[u];lengths[token]=L
+ code=0;previous=0;codes={}
+ for token in sorted(tokens,key=lambda t:(lengths[t],t)):
+  L=lengths[token];code <<= L-previous;assert code < 1<<L
+  assert L<6 or code>>(L-6)!=63
+  codes[token]=format(code,'0'+str(L)+'b');code+=1;previous=L
+ table=bytearray();nibble=None
+ for token in tokens:
+  n,count=token
+  if n!=nibble:table.append(0x80|n);nibble=n
+  table.extend([((count-1)<<4)|lengths[token],int(codes[token],2)])
+ table.append(255)
+ bits=''.join(codes[t] for t in runs);bits+='0'*(-len(bits)%8)
+ return struct.pack('>H',len(raw)//32|(0x8000 if xor else 0))+table+bytes(int(bits[i:i+8],2) for i in range(0,len(bits),8))+b'\0\0'
+
+
+def nemesis_compress(raw):
+    """Choose ordinary or XOR canonical prefix codes for the game decoder."""
+    return min((_nemesis_encode(raw,False),_nemesis_encode(raw,True)),key=len)
+
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--source',type=Path,required=True)
@@ -298,6 +344,8 @@ def main():
     report=geometry(source)
     report['acts']=placements(source)
     art=nemesis(source/'artnem/8x8 - SBZ.nem')
+    assert not any(art[:32]) and len(art)==0x2A9*32
+    art=art[:32]+bytes(16*32)+art[32:]
     pack('art/kosinski/level/8x8 - SMZ.kosp',art)
     (ROOT/'art/kosinski/level/8x8 - SMZ.unc').write_bytes(art)
     maps={'Rotating Junction':'Jun','Running Disc':'Disc','Trapdoor':'Trap',

@@ -1845,7 +1845,7 @@ ArtTile_Points_2:		equ ArtTile_Points+2 ; $6F5 / $DEA0; two tiles for the compan
 ArtTile_Lives_Counter:		equ $7D4
 ArtTile_Sonic_Dust:		equ $7E0
 ArtTile_Tails_Dust:		equ $7F0
-ArtTile_Water_Surface:		equ $2A8	; 16 DPLC tiles, reserved in every level's terrain
+ArtTile_Water_Surface:		equ $001	; 16 DPLC tiles immediately after transparent terrain tile zero
 
 ; Eggman
 ArtTile_Eggman:			equ $400
@@ -2004,8 +2004,7 @@ ArtTile_ArtNem_S1EndPig:	equ $580;$0593
 ArtTile_ArtNem_S1EndChicken:	equ $592;$0565
 ArtTile_ArtNem_S1EndSquirrel:	equ $580;$05B3
 
-ArtTile_SMZ_Atlas:	equ $2B8 ; original sprite rectangles, shared by both acts
-ArtTile_SMZ_Terrain_Tile:	equ ArtTile_SMZ_Atlas+$1F7 ; static terrain in the atlas's last padding tile
+ArtTile_SMZ_Atlas:	equ $2B9 ; original sprite rectangles, shared by both acts
 ArtTile_SMZ_Junction_Gap:	equ $4B0 ; twelve streamed tiles, below the wheel bank
 ArtTile_SMZ_Smoke1:	equ $4C5
 ArtTile_SMZ_Smoke2:	equ $4D1

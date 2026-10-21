@@ -1,6 +1,6 @@
 ; S3&K mapping records. Cross-bank tile offsets follow the VRAM constants.
 ; The cap reuses an exact, X-flipped 16x16 pattern in GHZ level art.
-Map_GHZ_EdgeCap = ArtTile_Level+$C1+$800-ArtTile_GHZ_Edge_Wall
+Map_GHZ_EdgeCap = ArtTile_Level+$D1+$800-ArtTile_GHZ_Edge_Wall
 Map_GHZ_Edges_internal:
 		dc.w .frame0-Map_GHZ_Edges_internal
 		dc.w .frame1-Map_GHZ_Edges_internal

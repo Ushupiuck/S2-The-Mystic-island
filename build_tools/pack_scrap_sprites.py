@@ -14,7 +14,7 @@ p.add_argument('--rom',type=Path,required=True)
 p.add_argument('--listing',type=Path,required=True)
 args=p.parse_args();S=args.source
 from check_sprite_assets import frames
-from import_scrap_madness import mapping,nemesis_inline,remap_pixels,palette_lookup
+from import_scrap_madness import mapping,nemesis_compress,remap_pixels,palette_lookup
 from convert_s1_ss_background import kosinski_plus_decode
 import native_test_core as m68k
 m = m68k.Native(args.rom, args.listing)
@@ -119,12 +119,8 @@ for name, (rs, base) in inputs.items():
                         if name != 'Jun' or i == 16 or j >= 2)
 atlas_tiles = pack_rectangles(patterns)
 packed_count = len(atlas_tiles)
-# The universal water bank displaced one static SMZ terrain tile. Keep it
-# in the atlas's final padding slot, which neither act animates/overwrites.
-terrain = kosinski_plus_decode((R/'art/kosinski/level/SMZ Terrain Tile.kosp').read_bytes())[0]
-assert len(terrain) == 32 and len(atlas_tiles) < capacity
-assert m.s['ArtTile_SMZ_Terrain_Tile'] == atlas_base+capacity-1
-atlas_tiles += (bytes(32),)*(capacity-1-len(atlas_tiles)) + (terrain,)
+# Pad only the unused end of the static atlas; terrain stays in its own set.
+atlas_tiles += (bytes(32),)*(capacity-len(atlas_tiles))
 atlas = b''.join(atlas_tiles)
 assert len(atlas_tiles) <= capacity, (len(atlas_tiles), capacity)
 out = {}
@@ -180,7 +176,7 @@ for i, (first, count) in enumerate(gap_runs):
 
 for name, data in out.items():
     (R/f'mappings/sprite/SMZ {name}.bin').write_bytes(data)
-(R/'art/nemesis/SMZ Sprite Atlas.nem').write_bytes(nemesis_inline(atlas))
+(R/'art/nemesis/SMZ Sprite Atlas.nem').write_bytes(nemesis_compress(atlas))
 (R/'art/uncompressed/SMZ Sprite Atlas.unc').write_bytes(atlas)
 (R/'art/uncompressed/SMZ Junction Gap.unc').write_bytes(gap_art)
 (R/'mappings/spriteDPLC/SMZ Junction.asm').write_text('\n'.join(dplc)+'\n')

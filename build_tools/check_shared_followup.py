@@ -19,7 +19,8 @@ p=argparse.ArgumentParser(description=__doc__)
 for key in ('core','output'):p.add_argument('--'+key,type=Path,required=True)
 p.add_argument('--rom',type=Path,default=ROOT/'s2built.bin')
 p.add_argument('--listing',type=Path,default=ROOT/'main.lst')
-p.add_argument('--reference',default='fb61a2e75a59471fb446e83815cd5fc2fa3acf7b')
+p.add_argument('--reference',default='1749b38b24af145c9c3634fefc7395faec1a00c7')
+p.add_argument('--system-directory',type=Path)
 p.add_argument('--pal',action='store_true');p.add_argument('--probe',action='store_true')
 a=p.parse_args();rows=[]
 def record(case,ok=True,**detail):
@@ -35,38 +36,51 @@ if not a.probe:
   bm=kosinski_plus_decode(old(mp))[0];am=kosinski_plus_decode((ROOT/mp).read_bytes())[0]
   assert len(bm)==len(am)
   assert (ROOT/ap.with_suffix('.unc')).read_bytes()==after
+  assert not any(after[:17*32]), (zone,'transparent tile / water prefix changed')
   for (ow,),(nw,) in zip(struct.iter_unpack('>H',bm),struct.iter_unpack('>H',am)):
    assert ow&0xF800==nw&0xF800,(zone,'tile flags changed')
    ot,nt=ow&2047,nw&2047
-   assert not 0x2A8<=nt<0x2B8,(zone,'terrain still uses water tiles',nt)
-   if ot*32>=len(before):assert ot==nt;continue  # separate animated art
+   assert not 1<=nt<17,(zone,'terrain still uses water tiles',nt)
+   if zone=='SMZ' and ot==0x4AF:
+    previous=kosinski_plus_decode(old('art/kosinski/level/SMZ Terrain Tile.kosp'))[0]
+   elif ot*32>=len(before):
+    assert ot==nt;continue  # separate animated art
+   else:previous=before[ot*32:(ot+1)*32]
    current=after[nt*32:(nt+1)*32]
-   if zone=='SMZ' and nt==0x4AF:
-    current=kosinski_plus_decode((ROOT/'art/kosinski/level/SMZ Terrain Tile.kosp').read_bytes())[0]
-   assert before[ot*32:(ot+1)*32]==current,(zone,hex(ot),hex(nt),'pixels changed')
+   assert previous==current,(zone,hex(ot),hex(nt),'pixels changed')
   record(zone+' all block pixels preserved',blocks=len(bm)//8)
  atlas=(ROOT/'art/uncompressed/SMZ Sprite Atlas.unc').read_bytes()
- assert atlas[:501*32]==old('art/uncompressed/SMZ Sprite Atlas.unc')
- assert atlas[503*32:]==kosinski_plus_decode(old('art/kosinski/level/8x8 - SMZ.kosp'))[0][-32:]
- record('SMZ static sprite rectangles preserved; displaced terrain retained')
+ assert atlas[:497*32]==old('art/uncompressed/SMZ Sprite Atlas.unc')[:497*32]
+ assert len(atlas)==503*32 and not any(atlas[497*32:])
+ record('SMZ sprite pixels preserved; displaced tile restored to terrain')
+ assert len(kosinski_plus_decode((ROOT/'art/kosinski/level/8x8 - GHZ.kosp').read_bytes())[0])==0x321*32
+ record('Ten unused GHZ slots reclaimed into contiguous terrain capacity')
 
- # Ordinary platforms and fragments use terrain tiles too. Compare complete
- # original sprite rectangles, preserving every mapping piece and its flags.
- for zone,names in [('GHZ',('18 - GHZ platform mappings','GHZ Collapsing Ledge')),('EHZ',('18 - EHZ platform mappings',))]:
+ # Compare visible indexed pixels; CPZ trims only an empty top-row column.
+ def sprite_pixels(row,art):
+  pixels={}
+  for y,size,tile,x in row:
+   w,h=(size>>2)+1,(size&3)+1;base=tile&2047
+   for px in range(w*8):
+    for py in range(h*8):
+     sx=w*8-1-px if tile&0x800 else px;sy=h*8-1-py if tile&0x1000 else py
+     address=(base+(sx//8)*h+sy//8)*32+(sy%8)*4+(sx%8)//2
+     byte=art[address];colour=byte>>4 if sx%2==0 else byte&15
+     if colour:pixels[x+px,y+py]=(tile&0xe000,colour)
+  return pixels
+ for zone,names in [('GHZ',('18 - GHZ platform mappings','GHZ Collapsing Ledge')),
+                    ('EHZ',('18 - EHZ platform mappings',)),('CPZ',('Tilting Platform',))]:
   artpath=Path(f'art/kosinski/level/8x8 - {zone}.kosp')
   before=kosinski_plus_decode(old(artpath))[0];after=kosinski_plus_decode((ROOT/artpath).read_bytes())[0]
   for name in names:
    path=Path('mappings/sprite')/(name+'.bin')
-   for of,nf in zip(frames(old(path)),frames((ROOT/path).read_bytes())):
-    assert len(of)==len(nf)
-    for (y,size,t,x),(ny,ns,nt,nx) in zip(of,nf):
-     assert (y,size,t&0xF800,x)==(ny,ns,nt&0xF800,nx)
-     n=((size>>2)+1)*((size&3)+1)*32
-     assert before[(t&2047)*32:(t&2047)*32+n]==after[(nt&2047)*32:(nt&2047)*32+n],name
-   record(name+' sprite rectangles preserved')
- assert before  # all checks above must execute
+   oldframes,newframes=frames(old(path)),frames((ROOT/path).read_bytes())
+   assert len(oldframes)==len(newframes)
+   for of,nf in zip(oldframes,newframes):assert sprite_pixels(of,before)==sprite_pixels(nf,after),name
+   record(name+' shared terrain pixels preserved')
 
-g=Genesis(a.core,a.rom,a.listing,a.output,a.pal)
+g=Genesis(a.core,a.rom,a.listing,a.output,a.pal,system_directory=a.system_directory)
+assert g.s['ArtTile_Water_Surface']==1
 g.core.m68k_set_reg.argtypes=[C.c_int,C.c_uint];g.core.m68k_run.argtypes=[C.c_uint]
 cpu=CpuPrefix.in_dll(g.core,'m68k');rom=a.rom.read_bytes()
 def act(label,obj=None,regs=None):
@@ -121,10 +135,9 @@ try:
    g.write('v_jpadpress1',g.s['btnStart']);clear_queue();water_pair()
    assert queued_bytes()==512;act('ProcessDMAQueue');g.run()
    resident=vram(g.s['ArtTile_Water_Surface']*32,512)
-   for oldpiece,newpiece in zip(oldmap[phase+3],newmap[phase+3]):
-    y,size,t,x=oldpiece;ny,ns,nt,nx=newpiece
-    assert (y,size,x)==(ny,ns,nx)
-    assert surf[t*32:(t+8)*32]==resident[nt*32:(nt+8)*32]
+   assert oldmap[phase+3]==newmap[phase+3]
+   other=2 if phase==1 else 1
+   assert resident==surf[phase*256:(phase+1)*256]+surf[other*256:(other+1)*256]
    g.write('f_pause',1,2);g.write('v_jpadpress1',0);clear_queue();water_pair()
    assert queued_bytes()==0,'paused waves uploaded again'
    record('paused wave '+str(phase)+' unchanged',bytes_on_pause=512)

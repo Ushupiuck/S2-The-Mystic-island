@@ -82,10 +82,13 @@ Source `.unc` and Kosinski Plus block files contain these definitions. SonLVL's
 `animtiles` entries provide first-frame art at the same slots. Both collision
 paths and upper chunk flags must be preserved when rebasing block references.
 
-All terrain sets reserve the shared water-surface range `$2A8-$2B7`, including
-sprite-only terrain rectangles. Static tile relocation preserves block pixels,
-palette and flips. SMZ retains a displaced terrain tile at `$4AF`; it is atlas
-padding with a live terrain use, not available sprite capacity.
+All terrain sets start with transparent tile `$000`, the 16 shared water-surface
+slots `$001-$010`, then editable terrain at `$011` onward. No reservation cuts
+through the middle of the sheet. Static relocation preserves block pixels,
+palette and flips; ledges and platforms keep sharing terrain art. GHZ reclaims
+ten unused interior slots into terrain, leaving ten more tiles of contiguous
+capacity before its object bank at `$32B`. SMZ's former atlas-hosted terrain tile
+is back in the terrain set at `$2B8`.
 
 ## Scrap Madness
 
@@ -117,7 +120,7 @@ Pipe ends, red/dark-red outlines and global palette colors remain intact.
 The static sprite atlas shares whole identical/overlapping rectangles, retaining
 piece sizes, ordering, geometry, flips, adapted pixels, palette and priority.
 It never subdivides pieces or changes the renderer. Its 497 used tiles start at
-`$2B8`; the padded allocation ends at `$4AF`, including the terrain tile there.
+`$2B9`; six padding tiles bring the allocation through `$4AF`.
 The junction's rotating edge streams 4-12 tiles into `$4B0-$4BB`; center/outer
 ring stay resident. Its placements have disjoint load windows. Failed queue
 reservation hides the rotating sprite and retries without displaying partial art.
