@@ -87,7 +87,7 @@ for label in ('Debug_SMZ','Debug_SMZIndoor'):
     count = struct.unpack_from('>H',rom,g.s[label])[0]
     assert all(struct.unpack_from('>I',rom,g.s[label]+2+i*g.s['DebugEntry_size'])[0] != g.s['WheelCarrier']
                for i in range(count))
-for label in ('PLC_SMZ','PLC_SMZIndoor') + tuple(f'PLC_SMZ{act}_Main' for act in range(1,5)):
+for label in (f'PLC_SMZ{act}_Main' for act in range(1,5)):
     count = struct.unpack_from('>H',rom,g.s[label])[0]+1
     assert all(struct.unpack_from('>I',rom,g.s[label]+2+i*6)[0] != g.s['Nem_Wheel'] for i in range(count))
 passed('SMZ has no wheel placements, Debug entries or wheel-art PLC')

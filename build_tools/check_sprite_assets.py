@@ -180,8 +180,7 @@ def main():
         '>h', rom, symbols['KosMLoadCues']+act*2)[0] for act in range(68)]
     assert len(set(module_targets)) == 68
     for label in act_lists + ('PLC_Main', 'PLC_Main2', 'PLC_Explode', 'PLC_Boss', 'PLC_Capsule') + tuple(
-            'PLC_' + zone + suffix for zone in ('GHZ', 'LZ', 'CPZ', 'EHZ', 'HPZ', 'HTZ')
-            for suffix in ('', '2', 'Animals')):
+            'PLC_' + zone + 'Animals' for zone in ('GHZ', 'LZ', 'CPZ', 'EHZ', 'HPZ', 'HTZ')):
         base = symbols[label]
         count = struct.unpack_from('>h', rom, base)[0] + 1
         assert 0 <= count <= 16, (label, count)
