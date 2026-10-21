@@ -1,6 +1,7 @@
 SonLVL INI Files/SonLVL.log
 *~
 .sound-build/
+/test-results/
 build_tools/**/__pycache__/
 build_tools/sound/**/bin/
 build_tools/sound/**/obj/

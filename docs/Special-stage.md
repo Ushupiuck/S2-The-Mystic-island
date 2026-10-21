@@ -1,0 +1,79 @@
+# Rotating S1 special stage
+
+This mode retains its own item/update records and byte-count, five-byte-piece
+S1 mappings. Ordinary [SST objects](Objects.md) use a different ABI. Its rings,
+background, overlays and free VRAM must not be treated as ordinary-level allocations.
+
+## Background pipeline
+
+The background uses 163 ordinary `v_16x16` blocks (four tile words each) and
+20 chunks in the first `$A00` bytes of `Chunk_Table`. Each chunk is an 8x8 array
+of block-index words. Five 4x2 chunk layouts describe opaque foreground,
+bird/fish checkers, clouds and bubbles. No runtime block-definition patch runs.
+
+`S1SS_AnimateTiles` enters `Dynamic_Normal` with ordinary `zoneanimdecl` scripts
+and a private counter. Birds/fish share one 64-tile bank; the original palette
+clock determines frame timing and long holds. Foreground maps change only when
+entering/leaving checker arrangements. New background maps and the next family's
+first art frame are prepared under the opaque transition.
+
+The main loop constructs four block rows per iteration; completed maps transfer
+in VBlank. Background-map and animated-art uploads never share a frame. Pause
+retains the displayed frame; exit fades use the frozen results VBlank.
+
+## VRAM
+
+Ranges are **end exclusive**, during stage play before results PLCs load.
+
+| Bytes | Use |
+| --- | --- |
+| `$0000-$0A20` | Clouds, 81 tiles |
+| `$0A20-$0B40` | Opaque transition, nine tiles |
+| `$0B40-$1340` | Shared bird/fish animation, 64 tiles |
+| `$1340-$2940` | Fixed stage art, walls through emeralds |
+| `$2940-$29C0` | Stage rings; palette-0 ring copy during results |
+| `$29C0-$2A40` | Ring sparkles |
+| `$2A40-$C000` | Free in this mode |
+| `$C000-$D000` | Live foreground map, 64x32 tiles |
+| `$D000-$D400` | Sonic allocation; rolling art uses its first `$200` bytes |
+| `$D400-$E000` | Free in this mode |
+| `$E000-$F000` | Live background map, 64x32 tiles |
+| `$F000-$F380` | Horizontal scroll table |
+| `$F380-$F800` | Free in this mode |
+| `$F800-$FA80` | Hardware sprite table |
+| `$FA80-$10000` | Free in this mode; lives/dust inactive |
+
+Stage PLCs, rotating-wall uploads and palette animation use `ArtTile_SS_*`.
+Emerald art is separate from the live maps. Results replace the stage ring at
+`$2940` without touching the ordinary ring bank at `$D720`.
+
+## RAM and regeneration
+
+The rotating-stage overlay begins at `Chunk_Table+$A00`, keeping item updates,
+transform grid, layout and scroll state together. Two `$1000` plane buffers
+follow the animation state. `v_ssbg_end` is `Chunk_Table+$6A34`:
+
+| Build | `Chunk_Table` | Overlay end, exclusive |
+| --- | --- | --- |
+| Cartridge (`Mystic-Island`) | `$FF0000` | `$FF6A34` |
+| CD (`test/rebuilt-kehmusic`) | `$426000` | `$42CA34` |
+
+Assembly guards the active `Chunk_Table_End`, which remains a 32 KiB working
+range even though [CD physical storage](Mega-CD.md) is larger.
+
+Run `python build_tools/convert_s1_ss_background.py` to regenerate compressed
+blocks/chunks, layouts, transition art and six raw animation frames. Original
+Enigma maps and compressed cloud/bird/fish art remain conversion sources. The
+converter bakes original animated flips into pixels, preserves palette, and
+retains static tile-word attributes. Keep these indices aligned with constants.
+
+## Debug and movement
+
+Stage Debug selects its own list without replacing the return level's zone.
+Start+A follows the normal fade/results path. Results VBlank advances the fade
+even with wall rotation stopped; clearing objects also clears Debug placement
+state. Start+A on results retains the existing title shortcut. Normal movement's
+quantization and bumper collision contracts are in
+[Players and effects](Players-and-effects.md#input-locks-and-stage-exits).
+Background cycles, pause, item callbacks and returns have dedicated checks in
+[Testing](Testing.md); arbitrary Debug placement can still put the player in walls.
