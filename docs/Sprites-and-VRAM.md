@@ -1,6 +1,6 @@
 # Sprites, dynamic art and VRAM
 
-`s2.constants.asm` defines allocation symbols; the tables below use **end-exclusive**
+`_definitions/s2.constants.asm` defines allocation symbols; the tables below use **end-exclusive**
 byte ranges. A tile is 32 bytes. Object-specific act loads are selected through
 [per-act PLCs](Levels.md#per-act-art); fixed addresses do not replace those loads.
 
@@ -15,7 +15,7 @@ The rotating S1 stage deliberately retains [its separate format](Special-stage.m
 For size byte `s`, width is `((s >> 2)+1)*8`, height is `((s & 3)+1)*8`.
 `build.lua` invokes `build_tools/lua/sprite_bounds.lua`, which finds included
 `Map*_height`, `Map*_width` and `Map*_frames` references, assembles an intermediate
-image, and regenerates `_inc/Sprite Bounds.asm`. Aliases, binary/shared frames and
+image, and regenerates `_definitions/Sprite Bounds.asm`. Aliases, binary/shared frames and
 backward frame references are supported. There is no manual mapping registry.
 A failed bounds pass restores previous constants and leaves the playable ROM intact.
 

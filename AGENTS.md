@@ -28,4 +28,9 @@ files and their formatting; a new ASM include should represent a cohesive
 subsystem or substantial generated data, not a single helper or a few constants.
 Keep editable tables direct. Use macros for real shared work or validation,
 not empty recipes or wrappers around one use. Art allocations belong in
-`s2.constants.asm`; importers must verify their expected banks.
+`_definitions/s2.constants.asm`; importers must verify their expected banks.
+
+Keep shared constants, RAM declarations and macro files in `_definitions/`.
+Keep generated audio tables in `sound/` and per-bank audio includes in
+`sound/generated/`; update generators and consumers together when relocating
+outputs. Small local macros may stay with their owning subsystem.

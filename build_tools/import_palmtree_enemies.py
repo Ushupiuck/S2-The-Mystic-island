@@ -80,11 +80,11 @@ def main():
     for name, original in art.items():
         label = name.replace('-', '')
         assert native.s[f'ArtTile_PP_{label}'] == cursor, (
-            'Update the PP art allocations in s2.constants.asm and rebuild first', label, hex(cursor))
+            'Update the PP art allocations in _definitions/s2.constants.asm and rebuild first', label, hex(cursor))
         cursor += int.from_bytes(original[:2], 'big') & 0x7FFF
     assert cursor <= 0x4B4, 'Keep the generic wheel and common sprite banks free'
     assert native.s['ArtTile_PP_End'] == cursor, (
-        'Update ArtTile_PP_End in s2.constants.asm and rebuild first', hex(cursor))
+        'Update ArtTile_PP_End in _definitions/s2.constants.asm and rebuild first', hex(cursor))
     for name, original in art.items():
         directory = source/f'Objects/{name}/Data'
         count = int.from_bytes(original[:2], 'big') & 0x7FFF

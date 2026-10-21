@@ -196,7 +196,7 @@ def main():
     instrument_entries(root)
     # These prototype water enemies still use old banks which overlap today's
     # universal assets. Relocate their art only in the disposable course ROM.
-    constants = root/'s2.constants.asm'
+    constants = root/'_definitions/s2.constants.asm'
     text = constants.read_text()
     for symbol, value in [('ArtTile_BFish', '$400'), ('ArtTile_Aquis', '$350'),
                           ('ArtTile_Aquis_Child', '$390'), ('ArtTile_Octus','$440'),

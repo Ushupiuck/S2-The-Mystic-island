@@ -94,7 +94,7 @@ namespace KEHmusic
 		static string BuildHash(string filename, MusicBinaryFormat format)
 		{
 			var files = new HashSet<string>(StringComparer.Ordinal);
-			foreach (string input in new[] { filename, "s2.macros.asm", "sound/_smps2asm_inc.asm",
+			foreach (string input in new[] { filename, "_definitions/s2.macros.asm", "_definitions/_smps2asm_inc.asm",
 				assembler, converter, Assembly.GetExecutingAssembly().Location,
 				"SonicRetro.KensSharp.Saxman.dll", "SonicRetro.KensSharp.Common.dll" })
 				AddDependencies(files, input, Path.GetExtension(input).Equals(".asm", StringComparison.OrdinalIgnoreCase) ||
@@ -141,8 +141,8 @@ namespace KEHmusic
 				writer.WriteLine("\tpadding off");
 				writer.WriteLine("kehmusic = 1");
 				writer.WriteLine("allOptimizations = 1");
-				writer.WriteLine("\tinclude \"s2.macros.asm\"");
-				writer.WriteLine("\tinclude \"sound/_smps2asm_inc.asm\"");
+				writer.WriteLine("\tinclude \"_definitions/s2.macros.asm\"");
+				writer.WriteLine("\tinclude \"_definitions/_smps2asm_inc.asm\"");
 				writer.WriteLine("\tinclude \"{0}\"", filename.Replace('\\', '/'));
 			}
 			RunTool(assembler, "-xx -n -q -A -U -E -i . -o .sound-build/music.p .sound-build/music.asm", ".sound-build/music.p");
@@ -269,7 +269,7 @@ namespace KEHmusic
 				}
 			}
 			var samplenums = new Dictionary<string, string>();
-			using (var layout = new StreamWriter("dacbanks.gen.asm", false, Encoding.ASCII))
+			using (var layout = new StreamWriter("sound/dacbanks.gen.asm", false, Encoding.ASCII))
 			{
 				for (int b = 0; b < dacbanks.Count; b++)
 				{
@@ -292,7 +292,7 @@ namespace KEHmusic
 				}
 			}
 			List<string> dacids = new List<string>(dacs.Count);
-			using (StreamWriter sw = new StreamWriter("dacinfo.gen.asm", false, Encoding.ASCII))
+			using (StreamWriter sw = new StreamWriter("sound/dacinfo.gen.asm", false, Encoding.ASCII))
 			{
 				sw.WriteLine("zDACMasterPlaylist:");
 				sw.WriteLine();
@@ -308,7 +308,7 @@ namespace KEHmusic
 					dacids.Add(item.Key);
 				}
 			}
-			using (StreamWriter sw = new StreamWriter("dacids.gen.asm", false, Encoding.ASCII))
+			using (StreamWriter sw = new StreamWriter("sound/dacids.gen.asm", false, Encoding.ASCII))
 			{
 				string last = "$81";
 				for (int i = 0; i < dacids.Count; i++)
@@ -368,7 +368,7 @@ namespace KEHmusic
 					banksizes.Add(item.Value.Size);
 				}
 			}
-			using (var layout = new StreamWriter("musicbanks.gen.asm", false, Encoding.ASCII))
+			using (var layout = new StreamWriter("sound/musicbanks.gen.asm", false, Encoding.ASCII))
 			{
 				for (int i = 0; i < banks.Count; i++)
 				{
@@ -389,7 +389,7 @@ namespace KEHmusic
 					}
 				}
 			}
-			using (StreamWriter sw = new StreamWriter("musicinfo.gen.asm", false, Encoding.ASCII))
+			using (StreamWriter sw = new StreamWriter("sound/musicinfo.gen.asm", false, Encoding.ASCII))
 			{
 				sw.WriteLine("zMasterPlaylist:");
 				foreach (var item in songs)
@@ -405,7 +405,7 @@ namespace KEHmusic
 					sw.WriteLine();
 				}
 			}
-			using (StreamWriter sw = new StreamWriter("musicids.gen.asm", false, Encoding.ASCII))
+			using (StreamWriter sw = new StreamWriter("sound/musicids.gen.asm", false, Encoding.ASCII))
 			{
 				List<string> musids = new List<string>(songs.Keys) { "_End" };
 				sw.WriteLine("MusID__First = 1");
@@ -423,7 +423,7 @@ namespace KEHmusic
 					}
 				}
 			}
-			using (StreamWriter sw = new StreamWriter("musicnames.gen.asm", false, Encoding.ASCII))
+			using (StreamWriter sw = new StreamWriter("sound/musicnames.gen.asm", false, Encoding.ASCII))
 			{
 				sw.WriteLine("SongNames:\toffsetTable");
 				sw.WriteLine("\toffsetTableEntry.w\tMusNam_Null");

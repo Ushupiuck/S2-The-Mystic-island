@@ -70,11 +70,12 @@ def main():
 		assert (result.returncode == 0) == okay, result.stdout
 		return result.stdout
 
-	with tempfile.TemporaryDirectory(prefix='keh-sound-') as temporary:
+	with tempfile.TemporaryDirectory(prefix='keh sound ') as temporary:
 		d = Path(temporary)
 		(d / 'sound/music').mkdir(parents=True)
 		(d / 'sound/DAC').mkdir()
-		for name in ['KEHmusic.exe', 'IniFile.dll', 'SonicRetro.KensSharp.Saxman.dll', 'SonicRetro.KensSharp.Common.dll', 's2.macros.asm', 'dacids.gen.asm', 'sound/_smps2asm_inc.asm']:
+		(d / '_definitions').mkdir()
+		for name in ['KEHmusic.exe', 'KEHsfx.exe', 'IniFile.dll', 'SonicRetro.KensSharp.Saxman.dll', 'SonicRetro.KensSharp.Common.dll', '_definitions/s2.macros.asm', 'sound/dacids.gen.asm', '_definitions/_smps2asm_inc.asm']:
 			shutil.copyfile(ROOT / name, d / name)
 		(d / 'main.asm').write_text('; Temporary packer fixture\n')
 		(d / 'sound/DAC/sample.bin').write_bytes(b'\x80')
@@ -83,7 +84,7 @@ def main():
 
 		def assemble(body, origin=0, music=True, okay=True):
 			(d / 'fixture.asm').write_text('\tCPU 68000\n\tpadding off\n' + ('kehmusic = 1\n' if music else '') +
-				'allOptimizations = 1\n\tinclude "s2.macros.asm"\n\tinclude "sound/_smps2asm_inc.asm"\n' + f'\torg ${origin:X}\n' + body)
+				'allOptimizations = 1\n\tinclude "_definitions/s2.macros.asm"\n\tinclude "_definitions/_smps2asm_inc.asm"\n' + f'\torg ${origin:X}\n' + body)
 			(d / 'fixture.p').unlink(missing_ok=True)
 			try:
 				message = run([asl, '-xx', '-n', '-q', '-A', '-U', '-E', '-i', '.', '-o', 'fixture.p', 'fixture.asm'], d, okay)
@@ -93,6 +94,15 @@ def main():
 				return re.sub(r'\s+', ' ', message + (d / 'fixture.log').read_text())
 			run([p2bin, 'fixture.p', 'fixture.bin'], d)
 			return (d / 'fixture.bin').read_bytes()[origin:]
+
+		# SFX output follows the same sound/ convention as the music packer.
+		(d / 'sound/SFX').mkdir()
+		(d / 'sound/SFX/SFX.ini').write_text('')
+		(d / 'sound/SFX/DACSFX.ini').write_text('')
+		run(([args.mono] if os.name != 'nt' else []) + [d / 'KEHsfx.exe'], d)
+		for name in ('sfxbank', 'dacsfxlist', 'sfxids', 'sfxnames'):
+			assert (d / ('sound/' + name + '.gen.asm')).is_file(), name
+		assert not list(d.glob('*.gen.asm')), 'Generated sound tables leaked into project root'
 
 		# Old and new syntax must retain KeH's relocatable pointer format.
 		header = '\tsmpsHeaderStartSong 2,1\n\tsmpsHeaderVoice Voice\n\tsmpsHeaderChan 1,0\n\tsmpsHeaderTempo 1,$80\n\tsmpsHeaderFM Track,0,0\nTrack:\n\tsmpsFMvoice 0\n\tsmpsCall Sub\n\tsmpsLoop 0,2,Track\n\tsmpsJump Track\nSub:\n\tsmpsReturn\nVoice:\n\tdc.b $12\n'
@@ -141,7 +151,7 @@ def main():
 		with (d / 'sound/music/notes.inc').open('a') as f:
 			f.write('; Nested dependency change\n')
 		assert 'Building song' in run(packer, d)
-		with (d / 'sound/_smps2asm_inc.asm').open('a') as f:
+		with (d / '_definitions/_smps2asm_inc.asm').open('a') as f:
 			f.write('; Shared macro change\n')
 		assert 'Building song' in run(packer, d)
 		(d / 'sound/music/notes.inc').write_text('\tINVALID_SOUND_INSTRUCTION\n')
@@ -152,7 +162,10 @@ def main():
 		(d / 'sound/music/raw.bin').write_bytes(bytes(range(256)) * 128)
 		ini.write_text('[Raw]\nTitle=Raw binary\nFile=raw.bin\n')
 		run(packer, d)
-		assert 'musprop_uncompressed' in (d / 'musicinfo.gen.asm').read_text()
+		for name in ('dacbanks', 'dacinfo', 'dacids', 'musicbanks', 'musicinfo', 'musicids', 'musicnames'):
+			assert (d / ('sound/' + name + '.gen.asm')).is_file(), name
+		assert not list(d.glob('*.gen.asm')), 'Generated sound tables leaked into project root'
+		assert 'musprop_uncompressed' in (d / 'sound/musicinfo.gen.asm').read_text()
 		assert '$8000 bytes' in (d / 'sound/generated/music-bank-1.gen.asm').read_text()
 		(d / 'sound/music/raw.bin').write_bytes(bytes(0x8001))
 		assert '$8000' in run(packer, d, False)
@@ -169,19 +182,18 @@ def main():
 		(d / 'sound/music/raw.bin').write_bytes(bytes(range(256)) * 128)
 		ini.write_text('[Raw]\nTitle=Raw binary\nFile=raw.bin\n')
 		run(packer, d)
-		layout = '\tinclude "_inc/Sound Bank Assets.asm"\n\tinclude "sound/generated/music-bank-1.gen.asm"\n\tdc.b $A5\n\tinclude "sound/generated/dac-bank-1.gen.asm"\n'
-		(d / '_inc').mkdir()
-		(d / '_inc/Sound Bank Assets.asm').write_text('SoundBankAssets macro kind,bank,{GLOBALSYMBOLS}\n\tendm\n')
+		layout = '\tinclude "_definitions/Sound Bank Assets.asm"\n\tinclude "sound/generated/music-bank-1.gen.asm"\n\tdc.b $A5\n\tinclude "sound/generated/dac-bank-1.gen.asm"\n'
+		(d / '_definitions/Sound Bank Assets.asm').write_text('SoundBankAssets macro kind,bank,{GLOBALSYMBOLS}\n\tendm\n')
 		data = assemble(layout)
 		assert data[0x8000] == 0xA5 and data[0x10000] == 0x80
-		(d / '_inc/Sound Bank Assets.asm').write_text('SoundBankAssets macro kind,bank,{GLOBALSYMBOLS}\n\tdc.b 0\n\tendm\n')
+		(d / '_definitions/Sound Bank Assets.asm').write_text('SoundBankAssets macro kind,bank,{GLOBALSYMBOLS}\n\tdc.b 0\n\tendm\n')
 		assert 'must fit in $8000' in assemble(layout, okay=False)
 		print('Banks: independent placement works; asset overflow is caught by finishBank.')
 
 	# Check every packed song against a fresh assembly with an independent decoder.
 		music = configparser.ConfigParser(interpolation=None)
 		music.read(ROOT / 'sound/music/music.ini')
-		shutil.copyfile(ROOT / 'dacids.gen.asm', d / 'dacids.gen.asm')
+		shutil.copyfile(ROOT / 'sound/dacids.gen.asm', d / 'sound/dacids.gen.asm')
 		for name in music.sections():
 			if music[name].getboolean('IsCompressed', fallback=False):
 				raw = saxman((ROOT / 'sound/music' / music[name]['OutputFile']).read_bytes())

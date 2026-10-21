@@ -1,6 +1,6 @@
 # Objects, loading and Debug
 
-The layout constants and aliases live in `s2.constants.asm`; loading lives in
+The layout constants and aliases live in `_definitions/s2.constants.asm`; loading lives in
 `_inc/Objects Manager.asm`, and execution/rendering in `main.asm`. The loader
 is adapted from S3&K `Load_Sprites`, using skdisasm
 `73de97c6b55055bcb8089c1d55d006b02136f163`. `ObjectsManager` and `Load_Sprites`
