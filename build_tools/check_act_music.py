@@ -30,7 +30,7 @@ def main():
     import re
     symbols = {name: int(value, 16) for name, value in re.findall(
         r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]', args.listing.read_text())}
-    count = (symbols['LevelCount'] + 1) * 4
+    count = symbols['LevelActCount']
     assert symbols['MusicList_End'] - symbols['MusicList'] == count
     ids = list(range(1, count + 1))
     ids[:2] = [symbols['MusID_GHZ'], symbols['MusID_LBZ2_S3']]

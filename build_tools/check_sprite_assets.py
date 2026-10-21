@@ -166,19 +166,23 @@ def main():
     # lettering deliberately replaces the dead primary player's bank.
     act_lists = tuple(label for label in symbols
                       if re.fullmatch(r'PLC_[A-Z0-9]+[1-4]_(Main|Extra)', label))
-    assert len(act_lists) == 68 * 2
+    act_count = symbols['LevelActCount']
+    assert act_count == symbols['LevelCount'] * symbols['ActsPerZone']
+    assert len(act_lists) == act_count * 2
     expected_ids = None
     for table in ('LevelArtPointers', 'LevelArtPointersP', 'LevelArtPointersGF', 'LevelArtPointersBF'):
-        ids = [rom[symbols[table]+act*12+offset] for act in range(68) for offset in (0,4)]
+        assert symbols[table + '_End'] - symbols[table] == act_count * 12, table
+        ids = [rom[symbols[table]+act*12+offset] for act in range(act_count) for offset in (0,4)]
         targets = [symbols['ArtLoadCues'] + struct.unpack_from(
             '>h', rom, symbols['ArtLoadCues']+ident*2)[0] for ident in ids]
-        assert len(set(ids)) == len(set(targets)) == 136, table
+        assert len(set(ids)) == len(set(targets)) == act_count * 2, table
         assert set(targets) == {symbols[label] for label in act_lists}, table
         assert expected_ids is None or ids == expected_ids, table
         expected_ids = ids
+    assert symbols['KosMLevelCues_End'] - symbols['KosMLoadCues'] == act_count * 2
     module_targets = [symbols['KosMLoadCues'] + struct.unpack_from(
-        '>h', rom, symbols['KosMLoadCues']+act*2)[0] for act in range(68)]
-    assert len(set(module_targets)) == 68
+        '>h', rom, symbols['KosMLoadCues']+act*2)[0] for act in range(act_count)]
+    assert len(set(module_targets)) == act_count
     for label in act_lists + ('PLC_Main', 'PLC_Main2', 'PLC_Explode', 'PLC_Boss', 'PLC_Capsule') + tuple(
             'PLC_' + zone + 'Animals' for zone in ('GHZ', 'LZ', 'CPZ', 'EHZ', 'HPZ', 'HTZ')):
         base = symbols[label]

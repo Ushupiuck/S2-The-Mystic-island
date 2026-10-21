@@ -60,6 +60,7 @@ ptr_PLC_LivesSonic:	dc.w PLC_LivesSonic-ArtLoadCues
 ptr_PLC_LivesTails:	dc.w PLC_LivesTails-ArtLoadCues
 ; ---------------------------------------------------------------------------
 ; Level slot $00: Twilight Hill
+ActLoadCues:
 ptr_PLC_GHZ1_Main:	dc.w PLC_GHZ1_Main-ArtLoadCues
 ptr_PLC_GHZ1_Extra:	dc.w PLC_GHZ1_Extra-ArtLoadCues
 ptr_PLC_GHZ2_Main:	dc.w PLC_GHZ2_Main-ArtLoadCues
@@ -219,17 +220,10 @@ ptr_PLC_LVF3_Extra:	dc.w PLC_LVF3_Extra-ArtLoadCues
 ptr_PLC_LVF4_Main:	dc.w PLC_LVF4_Main-ArtLoadCues
 ptr_PLC_LVF4_Extra:	dc.w PLC_LVF4_Extra-ArtLoadCues
 ; ---------------------------------------------------------------------------
-; Level slot $10: Final Zone
-ptr_PLC_LV101_Main:	dc.w PLC_LV101_Main-ArtLoadCues
-ptr_PLC_LV101_Extra:	dc.w PLC_LV101_Extra-ArtLoadCues
-ptr_PLC_LV102_Main:	dc.w PLC_LV102_Main-ArtLoadCues
-ptr_PLC_LV102_Extra:	dc.w PLC_LV102_Extra-ArtLoadCues
-ptr_PLC_LV103_Main:	dc.w PLC_LV103_Main-ArtLoadCues
-ptr_PLC_LV103_Extra:	dc.w PLC_LV103_Extra-ArtLoadCues
-ptr_PLC_LV104_Main:	dc.w PLC_LV104_Main-ArtLoadCues
-ptr_PLC_LV104_Extra:	dc.w PLC_LV104_Extra-ArtLoadCues
-; ---------------------------------------------------------------------------
 ArtLoadCues_End:
+		if ArtLoadCues_End-ActLoadCues<>LevelActCount*4
+			fatal "Act PLC index must contain Main and Extra for every act"
+		endif
 		if (ArtLoadCues_End-ArtLoadCues)/2>$100
 			fatal "PLC IDs no longer fit level-header bytes"
 		endif
@@ -1368,58 +1362,6 @@ PLC_LVF4_Extra:		dc.w (PLC_LVF4_Extra_End-PLC_LVF4_Extra-2)/6-1
 PLC_LVF4_Extra_End:	plccheck PLC_LVF4_Extra,0
 
 ; ---------------------------------------------------------------------------
-; PATTERN LOAD REQUEST LISTS
-; Final Zone - Act 1
-; ---------------------------------------------------------------------------
-PLC_LV101_Main:		dc.w -1
-PLC_LV101_Main_End:	plccheck PLC_LV101_Main,ActPLC_Main_Reserve
-
-PLC_LV101_Extra:	dc.w (PLC_LV101_Extra_End-PLC_LV101_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
-PLC_LV101_Extra_End:	plccheck PLC_LV101_Extra,0
-
-; ---------------------------------------------------------------------------
-; PATTERN LOAD REQUEST LISTS
-; Final Zone - Act 2
-; ---------------------------------------------------------------------------
-PLC_LV102_Main:		dc.w -1
-PLC_LV102_Main_End:	plccheck PLC_LV102_Main,ActPLC_Main_Reserve
-
-PLC_LV102_Extra:	dc.w (PLC_LV102_Extra_End-PLC_LV102_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
-PLC_LV102_Extra_End:	plccheck PLC_LV102_Extra,0
-
-; ---------------------------------------------------------------------------
-; PATTERN LOAD REQUEST LISTS
-; Final Zone - Act 3
-; ---------------------------------------------------------------------------
-PLC_LV103_Main:		dc.w -1
-PLC_LV103_Main_End:	plccheck PLC_LV103_Main,ActPLC_Main_Reserve
-
-PLC_LV103_Extra:	dc.w (PLC_LV103_Extra_End-PLC_LV103_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
-PLC_LV103_Extra_End:	plccheck PLC_LV103_Extra,0
-
-; ---------------------------------------------------------------------------
-; PATTERN LOAD REQUEST LISTS
-; Final Zone - Act 4
-; ---------------------------------------------------------------------------
-PLC_LV104_Main:		dc.w -1
-PLC_LV104_Main_End:	plccheck PLC_LV104_Main,ActPLC_Main_Reserve
-
-PLC_LV104_Extra:	dc.w (PLC_LV104_Extra_End-PLC_LV104_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
-PLC_LV104_Extra_End:	plccheck PLC_LV104_Extra,0
-
-; ---------------------------------------------------------------------------
 ; Pattern load cue IDs
 ; ---------------------------------------------------------------------------
 plcid_Main:		equ (ptr_PLC_Main-ArtLoadCues)/2
@@ -1607,16 +1549,6 @@ plcid_LVF3_Extra:	equ (ptr_PLC_LVF3_Extra-ArtLoadCues)/2
 plcid_LVF4_Main:	equ (ptr_PLC_LVF4_Main-ArtLoadCues)/2
 plcid_LVF4_Extra:	equ (ptr_PLC_LVF4_Extra-ArtLoadCues)/2
 ; ---------------------------------------------------------------------------
-; Level slot $10: Final Zone
-plcid_LV101_Main:	equ (ptr_PLC_LV101_Main-ArtLoadCues)/2
-plcid_LV101_Extra:	equ (ptr_PLC_LV101_Extra-ArtLoadCues)/2
-plcid_LV102_Main:	equ (ptr_PLC_LV102_Main-ArtLoadCues)/2
-plcid_LV102_Extra:	equ (ptr_PLC_LV102_Extra-ArtLoadCues)/2
-plcid_LV103_Main:	equ (ptr_PLC_LV103_Main-ArtLoadCues)/2
-plcid_LV103_Extra:	equ (ptr_PLC_LV103_Extra-ArtLoadCues)/2
-plcid_LV104_Main:	equ (ptr_PLC_LV104_Main-ArtLoadCues)/2
-plcid_LV104_Extra:	equ (ptr_PLC_LV104_Extra-ArtLoadCues)/2
-; ---------------------------------------------------------------------------
 ; Moduled Kosinski pattern load request lists
 ; ---------------------------------------------------------------------------
 KosMLoadCues:
@@ -1716,12 +1648,10 @@ ptr_KPLC_L0FZ2:	dc.w PLCKosM_LVF2-KosMLoadCues ; $0F Act 2
 ptr_KPLC_L0FZ3:	dc.w PLCKosM_LVF3-KosMLoadCues ; $0F Act 3
 ptr_KPLC_L0FZ4:	dc.w PLCKosM_LVF4-KosMLoadCues ; $0F Act 4
 ; ---------------------------------------------------------------------------
-; Level Slot $10: Empty
-ptr_KPLC_L10Z1:	dc.w PLCKosM_LV101-KosMLoadCues ; $10 Act 1
-ptr_KPLC_L10Z2:	dc.w PLCKosM_LV102-KosMLoadCues ; $10 Act 2
-ptr_KPLC_L10Z3:	dc.w PLCKosM_LV103-KosMLoadCues ; $10 Act 3
-ptr_KPLC_L10Z4:	dc.w PLCKosM_LV104-KosMLoadCues ; $10 Act 4
-; ---------------------------------------------------------------------------
+KosMLevelCues_End:
+		if KosMLevelCues_End-KosMLoadCues<>LevelActCount*2
+			fatal "Kosinski module index must cover every act"
+		endif
 ; Misc. PLC's [May change. Names here are potential entries]
 ; Note: the ptr names here are temporary.
 ptr_KPLC_1:	dc.w PLCKosM_Null-KosMLoadCues ; Cutscene assets
@@ -2076,21 +2006,6 @@ PLCKosM_CVZ4_End
 ; Act 4
 
 ; ---------------------------------------------------------------------------
-; KOSM PATTERN LOAD REQUEST LIST
-; LV10 Zone
-; ---------------------------------------------------------------------------
-; Act 1
-
-; ---------------------------------------------------------------------------
-; Act 2
-
-; ---------------------------------------------------------------------------
-; Act 3
-
-; ---------------------------------------------------------------------------
-; Act 4
-
-; ---------------------------------------------------------------------------
 ; MISC PATTERN LOAD REQUEST LIST
 ;
 ; ---------------------------------------------------------------------------
@@ -2230,24 +2145,20 @@ mkplcid_L0FZ2:		equ (ptr_KPLC_L0FZ2-KosMLoadCues)/2		; $3D
 mkplcid_L0FZ3:		equ (ptr_KPLC_L0FZ3-KosMLoadCues)/2		; $3E
 mkplcid_L0FZ4:		equ (ptr_KPLC_L0FZ4-KosMLoadCues)/2		; $3F
 
-mkplcid_L10Z1:		equ (ptr_KPLC_L10Z1-KosMLoadCues)/2		; $40
-mkplcid_L10Z2:		equ (ptr_KPLC_L10Z2-KosMLoadCues)/2		; $41
-mkplcid_L10Z3:		equ (ptr_KPLC_L10Z3-KosMLoadCues)/2		; $42
-mkplcid_L10Z4:		equ (ptr_KPLC_L10Z4-KosMLoadCues)/2		; $43
 ; end of unused level slots
-mkplcid_Misc1:		equ (ptr_KPLC_1-KosMLoadCues)/2			; $44
-mkplcid_Misc2:		equ (ptr_KPLC_2-KosMLoadCues)/2			; $45
-mkplcid_Misc3:		equ (ptr_KPLC_3-KosMLoadCues)/2			; $46
-mkplcid_Misc4:		equ (ptr_KPLC_4-KosMLoadCues)/2			; $47
-mkplcid_Misc5:		equ (ptr_KPLC_5-KosMLoadCues)/2			; $48
-mkplcid_Misc6:		equ (ptr_KPLC_6-KosMLoadCues)/2			; $49
-mkplcid_Misc7:		equ (ptr_KPLC_7-KosMLoadCues)/2			; $4A
-mkplcid_Misc8:		equ (ptr_KPLC_8-KosMLoadCues)/2			; $4B
-mkplcid_Misc9:		equ (ptr_KPLC_9-KosMLoadCues)/2			; $4C
-mkplcid_Misc10:		equ (ptr_KPLC_10-KosMLoadCues)/2		; $4D
-mkplcid_Misc11:		equ (ptr_KPLC_11-KosMLoadCues)/2		; $4E
-mkplcid_Misc12:		equ (ptr_KPLC_12-KosMLoadCues)/2		; $4F
-mkplcid_Misc13:		equ (ptr_KPLC_13-KosMLoadCues)/2		; $50
+mkplcid_Misc1:		equ (ptr_KPLC_1-KosMLoadCues)/2			; $40
+mkplcid_Misc2:		equ (ptr_KPLC_2-KosMLoadCues)/2			; $41
+mkplcid_Misc3:		equ (ptr_KPLC_3-KosMLoadCues)/2			; $42
+mkplcid_Misc4:		equ (ptr_KPLC_4-KosMLoadCues)/2			; $43
+mkplcid_Misc5:		equ (ptr_KPLC_5-KosMLoadCues)/2			; $44
+mkplcid_Misc6:		equ (ptr_KPLC_6-KosMLoadCues)/2			; $45
+mkplcid_Misc7:		equ (ptr_KPLC_7-KosMLoadCues)/2			; $46
+mkplcid_Misc8:		equ (ptr_KPLC_8-KosMLoadCues)/2			; $47
+mkplcid_Misc9:		equ (ptr_KPLC_9-KosMLoadCues)/2			; $48
+mkplcid_Misc10:		equ (ptr_KPLC_10-KosMLoadCues)/2		; $49
+mkplcid_Misc11:		equ (ptr_KPLC_11-KosMLoadCues)/2		; $4A
+mkplcid_Misc12:		equ (ptr_KPLC_12-KosMLoadCues)/2		; $4B
+mkplcid_Misc13:		equ (ptr_KPLC_13-KosMLoadCues)/2		; $4C
 
 ; Independent empty Kosinski module lists; ready for act-specific imports.
 PLCKosM_EHZ1: dc.w -1
@@ -2298,7 +2209,3 @@ PLCKosM_LVF1: dc.w -1
 PLCKosM_LVF2: dc.w -1
 PLCKosM_LVF3: dc.w -1
 PLCKosM_LVF4: dc.w -1
-PLCKosM_LV101: dc.w -1
-PLCKosM_LV102: dc.w -1
-PLCKosM_LV103: dc.w -1
-PLCKosM_LV104: dc.w -1

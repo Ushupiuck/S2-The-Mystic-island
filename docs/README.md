@@ -26,7 +26,7 @@ own song/SFX importing, packer formats and sound-tool builds.
 `Mystic-Island` is the ordinary cartridge build. `test/rebuilt-kehmusic` adds
 required Mega-CD RAM and selective sub-CPU work. Shared guides apply to both;
 the Mega-CD guide explicitly describes the CD branch. Sixteen four-act zones
-are exposed, with a separate Final Zone entry; editable starter acts are not
+are exposed (`$00-$0F`); editable starter acts are not
 finished levels. Planned mixed-size SonLVL authoring is listed under
 [future layout work](Levels.md#planned-layout-format), not as a current feature.
 

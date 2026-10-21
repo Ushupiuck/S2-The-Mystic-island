@@ -105,7 +105,7 @@ def main():
     # and capsule lists are intentionally excluded: they reuse these slots.
     shared = cues('PLC_Main2')
     act_lists = [name for name in symbols if re.fullmatch(r'PLC_\w+_(Main|Extra)', name)]
-    assert len(act_lists) == (symbols['LevelCount'] + 1) * 4 * 2
+    assert len(act_lists) == symbols['LevelActCount'] * 2
     assert len({symbols[name] for name in act_lists}) == len(act_lists), 'Acts share physical PLC lists'
     for label in act_lists:
         count = len(cues(label))
