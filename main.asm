@@ -386,8 +386,6 @@ Vint_Title:
 Vint_Pause:
 		cmpi.w	#BonusStage,(v_gamemode).w
 		beq.w	Vint_S1SS
-		cmpi.w	#SpecialStage,(v_gamemode).w
-		beq.w	Vint_S2SS	; Branch if we're in either a bonus or Special stage
 ; loc_CE2: VintSub8:
 Vint_Level:
 		stopZ80
@@ -447,165 +445,6 @@ Do_Updates:
 ; End of function Do_Updates
 
 ; ---------------------------------------------------------------------------
-Vint_Pause_specialStage:
-		stopZ80
-		waitZ80
-		bsr.w	ReadJoypads
-		tst.b	(SS_Last_Alternate_HorizScroll_Buf).w
-		beq.s	+
-		dma68kToVDP SS_Horiz_Scroll_Buf_2,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
-		bra.s	++
-+
-		dma68kToVDP SS_Horiz_Scroll_Buf_1,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
-+
-		startZ80
-		rts
-; ===========================================================================
-
-Vint_S2SS:
-		stopZ80
-		waitZ80
-		bsr.w	ReadJoypads
-		move.w	(vdp_control_port).l,d0		; These 3 lines used to be a branch to "SSSet_VScroll"
-		move.l	#vdpComm($0000,VSRAM,WRITE),(vdp_control_port).l	; Now part of the routine itself
-		move.l	(Vscroll_Factor).w,(vdp_data_port).l	; (As a minor optimization)
-		dma68kToVDP Normal_palette,$0000,palette_line_size*4,CRAM
-		dma68kToVDP Sprite_Table,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
-		tst.b	(SS_Alternate_HorizScroll_Buf).w
-		beq.s	.loc_906
-		dma68kToVDP SS_Horiz_Scroll_Buf_2,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
-		bra.s	.loc_92A
-; ---------------------------------------------------------------------------
-
-.loc_906:
-		dma68kToVDP SS_Horiz_Scroll_Buf_1,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
-
-.loc_92A:
-		tst.b	(SSTrack_Orientation).w		; Is the current track frame flipped?
-		beq.s	++				; Branch if not
-		moveq	#0,d0
-		move.b	(SSTrack_drawing_index).w,d0	; Get drawing position
-		cmpi.b	#4,d0				; Have we finished drawing and streaming track frame?
-		bge.s	++				; Branch if yes (nothing to draw)
-		add.b	d0,d0				; Convert to index
-		tst.b	(SS_Alternate_PNT).w		; [(SSTrack_drawing_index) * 2] = subroutine
-		beq.s	+				; Branch if not using the alternate Plane A name table
-		addi_.w	#8,d0				; ([(SSTrack_drawing_index) * 2] + 8) = subroutine
-+
-		move.w	SS_PNTA_Transfer_Table(pc,d0.w),d0
-		jsr	SS_PNTA_Transfer_Table(pc,d0.w)
-+
-		bsr.w	SSRun_Animation_Timers
-		addi_.b	#1,(SSTrack_drawing_index).w	; Run track timer
-		move.b	(SSTrack_drawing_index).w,d0	; Get new timer value
-		cmp.b	d1,d0				; Is it less than the player animation timer?
-		blt.s	+++				; Branch if so
-		clr.b	(SSTrack_drawing_index).w	; Start drawing new frame
-		lea	(vdp_control_port).l,a6
-		tst.b	(SS_Alternate_PNT).w		; Are we using the alternate address for plane A?
-		beq.s	+				; Branch if not
-		move.w	#$8200|(VRAM_SS_Plane_A_Name_Table1/$400),(a6)	; Set PNT A base to $C000
-		bra.s	++
-; ===========================================================================
-;off_97A
-SS_PNTA_Transfer_Table:	offsetTable
-		offsetTableEntry.w loc_A50	; 0
-		offsetTableEntry.w loc_A76	; 1
-		offsetTableEntry.w loc_A9C	; 2
-		offsetTableEntry.w loc_AC2	; 3
-		offsetTableEntry.w loc_9B8	; 4
-		offsetTableEntry.w loc_9DE	; 5
-		offsetTableEntry.w loc_A04	; 6
-		offsetTableEntry.w loc_A2A	; 7
-; ===========================================================================
-+
-		move.w	#$8200|(VRAM_SS_Plane_A_Name_Table2/$400),(a6)	; Set PNT A base to $8000
-+
-		eori.b	#1,(SS_Alternate_PNT).w		; Toggle flag
-+
-		bsr.w	ProcessDMAQueue
-		startZ80
-		bsr.w	ProcessDPLC2
-		tst.w	(v_generictimer).w
-		beq.w	Set_Kos_Bookmark
-		subq.w	#1,(v_generictimer).w
-		bra.w	Set_Kos_Bookmark
-; ---------------------------------------------------------------------------
-; (!)
-; Each of these functions copies one fourth of pattern name table A into VRAM
-; from a buffer in main RAM. $700 bytes are copied each frame, with the target
-; area in VRAM depending on the current drawing position.
-loc_9B8:
-		dma68kToVDP PNT_Buffer,VRAM_SS_Plane_A_Name_Table1 + 0 * (PNT_Buffer_End-PNT_Buffer),PNT_Buffer_End-PNT_Buffer,VRAM
-		rts
-; ---------------------------------------------------------------------------
-loc_9DE:
-		dma68kToVDP PNT_Buffer,VRAM_SS_Plane_A_Name_Table1 + 1 * (PNT_Buffer_End-PNT_Buffer),PNT_Buffer_End-PNT_Buffer,VRAM
-		rts
-; ---------------------------------------------------------------------------
-loc_A04:
-		dma68kToVDP PNT_Buffer,VRAM_SS_Plane_A_Name_Table1 + 2 * (PNT_Buffer_End-PNT_Buffer),PNT_Buffer_End-PNT_Buffer,VRAM
-		rts
-; ---------------------------------------------------------------------------
-loc_A2A:
-		dma68kToVDP PNT_Buffer,VRAM_SS_Plane_A_Name_Table1 + 3 * (PNT_Buffer_End-PNT_Buffer),PNT_Buffer_End-PNT_Buffer,VRAM
-		rts
-; ---------------------------------------------------------------------------
-loc_A50:
-		dma68kToVDP PNT_Buffer,VRAM_SS_Plane_A_Name_Table2 + 0 * (PNT_Buffer_End-PNT_Buffer),PNT_Buffer_End-PNT_Buffer,VRAM
-		rts
-; ---------------------------------------------------------------------------
-loc_A76:
-		dma68kToVDP PNT_Buffer,VRAM_SS_Plane_A_Name_Table2 + 1 * (PNT_Buffer_End-PNT_Buffer),PNT_Buffer_End-PNT_Buffer,VRAM
-		rts
-; ---------------------------------------------------------------------------
-loc_A9C:
-		dma68kToVDP PNT_Buffer,VRAM_SS_Plane_A_Name_Table2 + 2 * (PNT_Buffer_End-PNT_Buffer),PNT_Buffer_End-PNT_Buffer,VRAM
-		rts
-; ---------------------------------------------------------------------------
-loc_AC2:
-		dma68kToVDP PNT_Buffer,VRAM_SS_Plane_A_Name_Table2 + 3 * (PNT_Buffer_End-PNT_Buffer),PNT_Buffer_End-PNT_Buffer,VRAM
-		rts
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
-;sub_B02
-SSRun_Animation_Timers:
-		move.w	(SS_Cur_Speed_Factor).w,d0		; Get current speed factor
-		cmp.w	(SS_New_Speed_Factor).w,d0		; Has the speed factor changed?
-		beq.s	+					; Branch if yes
-		move.l	(SS_New_Speed_Factor).w,(SS_Cur_Speed_Factor).w	; Save new speed factor
-		clr.b	(SSTrack_duration_timer).w		; Reset timer
-+
-		subi_.b	#1,(SSTrack_duration_timer).w		; Run track timer
-		bgt.s	+					; Branch if not expired yet
-		lea	(SSAnim_Base_Duration).l,a0
-		move.w	(SS_Cur_Speed_Factor).w,d0		; The current speed factor is an index
-		lsr.w	#1,d0
-		move.b	(a0,d0.w),d1
-		move.b	d1,(SS_player_anim_frame_timer).w	; New player animation length (later halved)
-		move.b	d1,(SSTrack_duration_timer).w		; New track timer
-		subq.b	#1,(SS_player_anim_frame_timer).w	; Subtract one
-		rts
-; ---------------------------------------------------------------------------
-+
-		move.b	(SS_player_anim_frame_timer).w,d1	; Get current player animation length
-		addq.b	#1,d1					; Increase it
-		rts
-; End of function SSRun_Animation_Timers
-
-; ===========================================================================
-;byte_B46
-SSAnim_Base_Duration:
-		dc.b 60
-		dc.b 30	; 1
-		dc.b 15	; 2
-		dc.b 10	; 3
-		dc.b  8	; 4
-		dc.b  6	; 5
-		dc.b  5	; 6
-		dc.b  0	; 7
-		even
-; ===========================================================================
 ;VintSub1A
 Vint_CtrlDMA:
 		stopZ80
@@ -935,26 +774,6 @@ PlaneMapToVRAM_H40:
 ; End of function PlaneMapToVRAM_H40
 
 ; ---------------------------------------------------------------------------
-; Alternate subroutine to transfer a plane map to VRAM
-; (used for Special Stage background)
-; ---------------------------------------------------------------------------
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
-; sub_142E: ShowVDPGraphics2: PlaneMapToVRAM2:
-PlaneMapToVRAM_H80_SpecialStage:
-		lea	(vdp_data_port).l,a6
-		move.l	#vdpCommDelta(planeLoc(128,0,1)),d4	; $1000000
--		move.l	d0,vdp_control_port-vdp_data_port(a6)	; move d0 to VDP_control_port
-		move.w	d1,d3
--		move.w	(a1)+,(a6)	; from source address to destination in VDP
-		dbf	d3,-		; next tile
-		add.l	d4,d0		; increase destination address by $80 (1 line)
-		dbf	d2,--		; next line
-		rts
-; End of function PlaneMapToVRAM_H80_SpecialStage
-
-; ===========================================================================
 ; MM: this routine and the table below control what PCM sample plays on the Sega screen
 ChangeSegaSound:
 		stopZ80
@@ -4540,48 +4359,6 @@ Map_SS_Bump:	binclude	"mappings/sprite/S1/SS Bumper.bin"
 		include	"mappings/sprite/S1/SS Chaos Emeralds.asm"
 		include	"objects/Bonus & Special Stages/04 Player in Bonus Stage.asm"
 ; ---------------------------------------------------------------------------
-SpecialStage:
-	;	cmpi.b	#7,(Current_Special_Stage).w
-	;	blo.s	+
-	;	move.b	#0,(Current_Special_Stage).w
-;+
-		move.w	#sfx_EnterSS,d0
-		bsr.w	PlaySound_Special
-		bsr.w	Pal_MakeFlash
-		disable_ints
-		lea	(vdp_control_port).l,a6
-		move.w	#$8B03,(a6)		; EXT-INT disabled, V scroll by screen, H scroll by line
-		move.w	#$8004,(a6)		; H-INT disabled
-		move.w	#$8ADF,(v_hbla_hreg).w	; H-INT every 224th scanline
-		move.w	#$8200|(VRAM_SS_Plane_A_Name_Table1/$400),(a6)	; PNT A base: $C000
-		move.w	#$8400|(VRAM_SS_Plane_B_Name_Table/$2000),(a6)	; PNT B base: $A000
-		move.w	#$8C08,(a6)		; H res 32 cells, no interlace, S/H enabled
-		move.w	#$9003,(a6)		; Scroll table size: 128x32
-		move.w	#$8700,(a6)		; Background palette/color: 0/0
-		move.w	#$8D00|(VRAM_Horiz_Scroll_Table/$400),(a6)		; H scroll table base: $F000
-		move.w	#$8500|(VRAM_Sprite_Attribute_Table/$200),(a6)	; Sprite attribute table base: $F800
-		move.w	(v_vdp_buffer1).w,d0
-		andi.b	#$BF,d0
-		move.w	d0,(vdp_control_port).l
-
-; /------------------------------------------------------------------------\
-; | We're gonna zero-fill a bunch of VRAM regions. This was done by macro, |
-; | so there's gonna be a lot of wasted cycles.                            |
-; \------------------------------------------------------------------------/
-
-		fillVRAM 0,VRAM_SS_Plane_A_Name_Table2,VRAM_SS_Plane_Table_Size ; clear Plane A pattern name table 1
-		fillVRAM 0,VRAM_SS_Plane_A_Name_Table1,VRAM_SS_Plane_Table_Size ; clear Plane A pattern name table 2
-		fillVRAM 0,VRAM_SS_Plane_B_Name_Table,VRAM_SS_Plane_Table_Size ; clear Plane B pattern name table
-		fillVRAM 0,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size  ; clear Horizontal scroll table
-		clr.l	(Vscroll_Factor).w	; v_scrposy_vdp
-		clr.b	(SpecialStage_Started).w
-		jsr	(Init_SpriteTable).l	; S3&K fixed SAT links, initialized only on a clear
-		clearRAM SS_Horiz_Scroll_Buf_1,$280
-		clearRAM PNT_Buffer,SS_Offset_Y
-		rts
-; =============== S U B R O U T I N E =======================================
-
-
 LevelSizeLoad:
 		clr.w	(Scroll_flags).w
 		clr.w	(Scroll_flags_BG).w
@@ -15898,9 +15675,6 @@ Nem_EndStH:		binclude	"art/nemesis/S1/Ending - StH Logo.nem"
 ; ---------------------------------------------------------------------------
 ; Bonus & Special Stage data
 ; ---------------------------------------------------------------------------
-		binclude	"Bonus & Special Stages/Special stage layouts.kosp"
-		binclude	"Bonus & Special Stages/Special stage object layout.kosp"
-		binclude	"Bonus & Special Stages/Special stage object perspective data.kosp"
 BS_RowLUT:	binclude	"Bonus & Special Stages/BS Precalculated Rows.bin"
 BS_ColLUT:	binclude	"Bonus & Special Stages/BS Precalculated Columns.bin"
 BS_1:		binclude	"Bonus & Special Stages/1.kosp"
@@ -15943,126 +15717,6 @@ Nem_Warp:		binclude	"art/Bonus & Special Stage/Bonus Stage Flash.nem" ; bonus st
 			even
 Nem_ResultEm:		binclude	"art/Bonus & Special Stage/Bonus Stage Result Emeralds.nem" ; chaos emeralds on special stage results screen
 			even
-; ---------------------------------------------------------------------------
-; Half-Pipe Special Stage
-; ---------------------------------------------------------------------------
-Nem_SpecialBack:	binclude	"art/Bonus & Special Stage/Background art for special stage.nem"
-			even
-Nem_SpecialHUD:		binclude	"art/Bonus & Special Stage/Sonic and Miles number text from special stage.nem"
-			even
-Nem_SpecialStart:	binclude	"art/Bonus & Special Stage/Start text from special stage.nem" ; Also includes checkered flag
-			even
-Nem_SpecialStars:	binclude	"art/Bonus & Special Stage/Stars in special stage.nem"
-			even
-Nem_SpecialRings:	binclude	"art/Bonus & Special Stage/Special stage ring art.nem"
-			even
-Nem_SpecialFlatShadow:	binclude	"art/Bonus & Special Stage/Horizontal shadow from special stage.nem"
-			even
-Nem_SpecialDiagShadow:	binclude	"art/Bonus & Special Stage/Diagonal shadow from special stage.nem"
-			even
-Nem_SpecialSideShadow:	binclude	"art/Bonus & Special Stage/Vertical shadow from special stage.nem"
-			even
-Nem_SpecialExplosion:	binclude	"art/Bonus & Special Stage/Explosion from special stage.nem"
-			even
-Nem_SpecialBomb:	binclude	"art/Bonus & Special Stage/Bomb from special stage.nem"
-			even
-Nem_SpecialEmerald:	binclude	"art/Bonus & Special Stage/Emerald from special stage.nem"
-			even
-Nem_SpecialMessages:	binclude	"art/Bonus & Special Stage/Special stage messages and icons.nem"
-			even
-Nem_SpecialSonicTails:	binclude	"art/Bonus & Special Stage/Sonic and Tails animation frames in special stage.nem" ; [fixBugs] In this file, Tails' arms are tan instead of orange.
-			even
-Nem_SpecialTailsText:	binclude	"art/Bonus & Special Stage/Tails text patterns from special stage.nem"
-			even
-; ---------------------------------------------------------------------------
-; Special stage level patterns
-; Note: Only one line of each tile is stored in this archive. The other 7 lines are
-;  the same as this one line, so to get the full tiles, each line needs to be
-;  duplicated 7 times over.
-; ---------------------------------------------------------------------------
-Nem_Special:		binclude	"art/Bonus & Special Stage/Special Half Pipe.nem"
-			even
-; ---------------------------------------------------------------------------
-; Special Stage Assets
-; ---------------------------------------------------------------------------
-Eni_SpecialBack:
-		binclude	"tilemaps/Main background mappings for special stage.eni"
-Eni_SpecialBackBottom:
-		binclude	"tilemaps/Lower background mappings for special stage.eni"
-; ---------------------------------------------------------------------------
-; Exit curve + slope up
-; ---------------------------------------------------------------------------
-MapSpec_Rise1:		binclude	"mappings/special stage/Slope up - Frame 1.bin"
-MapSpec_Rise2:		binclude	"mappings/special stage/Slope up - Frame 2.bin"
-MapSpec_Rise3:		binclude	"mappings/special stage/Slope up - Frame 3.bin"
-MapSpec_Rise4:		binclude	"mappings/special stage/Slope up - Frame 4.bin"
-MapSpec_Rise5:		binclude	"mappings/special stage/Slope up - Frame 5.bin"
-MapSpec_Rise6:		binclude	"mappings/special stage/Slope up - Frame 6.bin"
-MapSpec_Rise7:		binclude	"mappings/special stage/Slope up - Frame 7.bin"
-MapSpec_Rise8:		binclude	"mappings/special stage/Slope up - Frame 8.bin"
-MapSpec_Rise9:		binclude	"mappings/special stage/Slope up - Frame 9.bin"
-MapSpec_Rise10:		binclude	"mappings/special stage/Slope up - Frame 10.bin"
-MapSpec_Rise11:		binclude	"mappings/special stage/Slope up - Frame 11.bin"
-MapSpec_Rise12:		binclude	"mappings/special stage/Slope up - Frame 12.bin"
-MapSpec_Rise13:		binclude	"mappings/special stage/Slope up - Frame 13.bin"
-MapSpec_Rise14:		binclude	"mappings/special stage/Slope up - Frame 14.bin"
-MapSpec_Rise15:		binclude	"mappings/special stage/Slope up - Frame 15.bin"
-MapSpec_Rise16:		binclude	"mappings/special stage/Slope up - Frame 16.bin"
-MapSpec_Rise17:		binclude	"mappings/special stage/Slope up - Frame 17.bin"
-; ---------------------------------------------------------------------------
-; Straight path
-; ---------------------------------------------------------------------------
-MapSpec_Straight1:	binclude	"mappings/special stage/Straight path - Frame 1.bin"
-MapSpec_Straight2:	binclude	"mappings/special stage/Straight path - Frame 2.bin"
-MapSpec_Straight3:	binclude	"mappings/special stage/Straight path - Frame 3.bin"
-MapSpec_Straight4:	binclude	"mappings/special stage/Straight path - Frame 4.bin"
-; ---------------------------------------------------------------------------
-; Exit curve + slope down
-; ---------------------------------------------------------------------------
-MapSpec_Drop1:		binclude	"mappings/special stage/Slope down - Frame 1.bin"
-MapSpec_Drop2:		binclude	"mappings/special stage/Slope down - Frame 2.bin"
-MapSpec_Drop3:		binclude	"mappings/special stage/Slope down - Frame 3.bin"
-MapSpec_Drop4:		binclude	"mappings/special stage/Slope down - Frame 4.bin"
-MapSpec_Drop5:		binclude	"mappings/special stage/Slope down - Frame 5.bin"
-MapSpec_Drop6:		binclude	"mappings/special stage/Slope down - Frame 6.bin"
-MapSpec_Drop7:		binclude	"mappings/special stage/Slope down - Frame 7.bin"
-MapSpec_Drop8:		binclude	"mappings/special stage/Slope down - Frame 8.bin"
-MapSpec_Drop9:		binclude	"mappings/special stage/Slope down - Frame 9.bin"
-MapSpec_Drop10:		binclude	"mappings/special stage/Slope down - Frame 10.bin"
-MapSpec_Drop11:		binclude	"mappings/special stage/Slope down - Frame 11.bin"
-MapSpec_Drop12:		binclude	"mappings/special stage/Slope down - Frame 12.bin"
-MapSpec_Drop13:		binclude	"mappings/special stage/Slope down - Frame 13.bin"
-MapSpec_Drop14:		binclude	"mappings/special stage/Slope down - Frame 14.bin"
-MapSpec_Drop15:		binclude	"mappings/special stage/Slope down - Frame 15.bin"
-MapSpec_Drop16:		binclude	"mappings/special stage/Slope down - Frame 16.bin"
-MapSpec_Drop17:		binclude	"mappings/special stage/Slope down - Frame 17.bin"
-; ---------------------------------------------------------------------------
-; Curved path
-; ---------------------------------------------------------------------------
-MapSpec_Turning1:	binclude	"mappings/special stage/Curve right - Frame 1.bin"
-MapSpec_Turning2:	binclude	"mappings/special stage/Curve right - Frame 2.bin"
-MapSpec_Turning3:	binclude	"mappings/special stage/Curve right - Frame 3.bin"
-MapSpec_Turning4:	binclude	"mappings/special stage/Curve right - Frame 4.bin"
-MapSpec_Turning5:	binclude	"mappings/special stage/Curve right - Frame 5.bin"
-MapSpec_Turning6:	binclude	"mappings/special stage/Curve right - Frame 6.bin"
-; ---------------------------------------------------------------------------
-; Exit curve
-; ---------------------------------------------------------------------------
-MapSpec_Unturn1:	binclude	"mappings/special stage/Curve right - Frame 7.bin"
-MapSpec_Unturn2:	binclude	"mappings/special stage/Curve right - Frame 8.bin"
-MapSpec_Unturn3:	binclude	"mappings/special stage/Curve right - Frame 9.bin"
-MapSpec_Unturn4:	binclude	"mappings/special stage/Curve right - Frame 10.bin"
-MapSpec_Unturn5:	binclude	"mappings/special stage/Curve right - Frame 11.bin"
-; ---------------------------------------------------------------------------
-; Enter curve
-; ---------------------------------------------------------------------------
-MapSpec_Turn1:		binclude	"mappings/special stage/Begin curve right - Frame 1.bin"
-MapSpec_Turn2:		binclude	"mappings/special stage/Begin curve right - Frame 2.bin"
-MapSpec_Turn3:		binclude	"mappings/special stage/Begin curve right - Frame 3.bin"
-MapSpec_Turn4:		binclude	"mappings/special stage/Begin curve right - Frame 4.bin"
-MapSpec_Turn5:		binclude	"mappings/special stage/Begin curve right - Frame 5.bin"
-MapSpec_Turn6:		binclude	"mappings/special stage/Begin curve right - Frame 6.bin"
-MapSpec_Turn7:		binclude	"mappings/special stage/Begin curve right - Frame 7.bin"
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - primary patterns and block mappings
 ; ---------------------------------------------------------------------------

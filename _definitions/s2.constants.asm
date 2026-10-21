@@ -733,11 +733,6 @@ VRAM_SegaScr_Plane_A_Name_Table          = $C000	; Extends until $DFFF
 VRAM_SegaScr_Plane_B_Name_Table          = $A000	; Extends until $BFFF
 VRAM_SegaScr_Plane_Table_Size            = $2000	; 128 cells x 32 cells x 2 bytes per cell
 
-; VRAM Reserved regions, Special Stage.
-VRAM_SS_Plane_A_Name_Table1              = $C000	; Extends until $DFFF
-VRAM_SS_Plane_A_Name_Table2              = $8000	; Extends until $9FFF
-VRAM_SS_Plane_B_Name_Table               = $A000	; Extends until $BFFF
-VRAM_SS_Plane_Table_Size                 = $2000	; 128 cells x 32 cells x 2 bytes per cell
 
 ; VRAM Reserved regions, Title screen.
 VRAM_TtlScr_Plane_A_Name_Table           = $C000	; Extends until $CFFF
@@ -1509,113 +1504,6 @@ v_ssbg_end		= v_ssbg_bg_buffer+plane_size_64x32
 		fatal "S1 special-stage RAM exceeds the chunk table."
 	endif
 
-; ---------------------------------------------------------------------------
-; RAM variables - Special stage
-	phase	RAM_Start	; Move back to start of RAM
-PNT_Buffer:			ds.b	$700
-PNT_Buffer_End:
-SSRAM_ArtNem_SpecialSonicAndTails:
-				ds.b	tiles_to_bytes($353)	; $353 art blocks
-SSRAM_MiscKoz_SpecialPerspective:
-				ds.b	$1AFC
-SSRAM_MiscNem_SpecialLevelLayout:
-				ds.b	$180
-				ds.b	$9C	; padding
-SSRAM_MiscKoz_SpecialObjectLocations:
-				ds.b	$1AE0
-	;dephase			; Ends Deep in the block table; roughly $600 bytes before "TempArray_LayerDef"
-; ---------------------------------------------------------------------------
-	;phase (v_16x16+$1300)
-		; The special stage mode also uses the rest of the RAM for
-		; different purposes.
-SSTrack_mappings_bitflags:		ds.l	1
-SSTrack_mappings_uncompressed:		ds.l	1
-SSTrack_anim:				ds.b	1
-SSTrack_last_anim_frame:		ds.b	1
-SpecialStage_CurrentSegment:		ds.b	1
-SSTrack_anim_frame:			ds.b	1
-SS_Alternate_PNT:			ds.b	1
-SSTrack_drawing_index:			ds.b	1
-SSTrack_Orientation:			ds.b	1
-SS_Alternate_HorizScroll_Buf:		ds.b	1
-SSTrack_mapping_frame:			ds.b	1
-SS_Last_Alternate_HorizScroll_Buf:	ds.b	1
-SS_New_Speed_Factor:			ds.l	1
-SS_Cur_Speed_Factor:			ds.l	1
-SSTrack_duration_timer:			ds.b	1
-SS_player_anim_frame_timer:		ds.b	1
-SpecialStage_LastSegment:		ds.b	1
-SpecialStage_Started:			ds.b	1
-SSTrack_last_mappings_copy:		ds.l	1
-SSTrack_last_mappings:			ds.l	1
-SSTrack_LastVScroll:			ds.w	1
-SpecialStage_LastSegment2:		ds.b	1
-SSTrack_last_mapping_frame:		ds.b	1
-SSTrack_mappings_RLE:			ds.l	1
-SSDrawRegBuffer:			ds.w	6
-SSDrawRegBuffer_End
-SS_Ctrl_Record_Buf:			ds.w	$10
-SS_Ctrl_Record_Buf_End
-SS_CurrentPerspective:			ds.l	1
-SS_Check_Rings_flag:			ds.b	1
-SS_Pause_Only_flag:			ds.b	1
-SS_CurrentLevelObjectLocations:		ds.l	1
-SS_Ring_Requirement:			ds.w	1
-SS_CurrentLevelLayout:			ds.l	1
-SS_2P_BCD_Score:			ds.b	1
-SS_NoCheckpoint_flag:			ds.b	1
-SS_Checkpoint_Rainbow_flag:		ds.b	1
-SS_Rainbow_palette:			ds.b	1
-SS_Perfect_rings_left:			ds.w	1
-SS_Star_color_1:			ds.b	1
-SS_Star_color_2:			ds.b	1
-SS_NoCheckpointMsg_flag:		ds.b	1
-SS_HideRingsToGo:			ds.b	1
-SS_NoRingsTogoLifetime:			ds.w	1
-SS_RingsToGoBCD:			ds.w	1
-SS_TriggerRingsToGo:			ds.b	1
-SS_Swap_Positions_Flag:			ds.b	1
-SS_Offset_X:				ds.w	1
-SS_Offset_Y:				ds.w	1
-	dephase
-; ---------------------------------------------------------------------------
-	phase	ramaddr(v_hscrolltablebuffer)	; Still in SS RAM
-SS_Horiz_Scroll_Buf_1		= v_hscrolltablebuffer
-	dephase
-
-	phase (Ring_Positions)
-SS_Horiz_Scroll_Buf_2		= v_hscrolltablebuffer
-	dephase
-; ---------------------------------------------------------------------------
-; RAM variables - Special stage Object RAM
-	phase	v_objspace	; Move back to the object RAM
-				ds.b	object_size
-				ds.b	object_size
-SpecialStageHUD:		; HUD in the special stage
-				ds.b	object_size
-SpecialStageStartBanner:
-				ds.b	object_size
-SpecialStageNumberOfRings:
-				ds.b	object_size
-SpecialStageShadow_Sonic:
-				ds.b	object_size
-SpecialStageShadow_Tails:
-				ds.b	object_size
-SpecialStageTails_Tails:
-				ds.b	object_size
-SS_Dynamic_Object_RAM:
-				ds.b	$18*object_size
-SpecialStageResults:
-				ds.b	object_size
-				ds.b	$C*object_size
-SpecialStageResults2:
-				ds.b	object_size
-				ds.b	v_objspace_end-object_size-*	; fill remaining slots; keep the final slot spare as before
-SS_Dynamic_Object_RAM_End:
-    if * > v_objspace_end
-	fatal "Special stage objects go past end of object RAM buffer."
-    endif
-	dephase
 ; ---------------------------------------------------------------------------
 	phase (v_palette_water_fading)
 Underwater_target_palette:		ds.b palette_line_size	; This is used by the screen-fading subroutines.

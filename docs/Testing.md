@@ -115,7 +115,6 @@ returns through results and verifies all three level sources are rebuilt.
 `check_player_effects.py` compares RAM sources and actual VRAM against editable
 art, including all eight regular/lost-ring frames and shield/star transitions.
 Run `python build_tools/build_player_effect_art.py --check` after source-art edits.
-The unfinished S2-style stage is not a full gameplay test target.
 Ring tests cover sparse/all-active lifetimes, staggered
 collection, bank pauses, reset, expanded-tail guards and HPZ/SMZ gameplay in both
 character modes. To measure the previous CD implementation, pass its ROM/listing
