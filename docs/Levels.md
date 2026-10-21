@@ -53,7 +53,7 @@ these PLCs do not dynamically allocate object VRAM or encode allocation in mappi
 
 ## Per-act music
 
-Edit `_inc/Level Music.asm`: each zone row holds four independent IDs in act
+Edit `MusicList` in `main.asm`: each zone row holds four independent IDs in act
 1-4 order. Use existing `MusID_*` names or `bgm_*` aliases. For example:
 
 ```asm

@@ -1798,7 +1798,7 @@ ArtTile_Basaran:		equ $385
 ArtTile_Button:			equ $50F	; TO BE CHANGED
 ArtTile_Shield:			equ $79C	; $F380; shared with primary invincibility
 ArtTile_Shield_2:			equ $56F ; 18 tiles; follows the enlarged horizontal-spring/common banks
-ArtTile_Shield_2_End:		equ ArtTile_Shield_2+$12 ; $B000; exclusive end of this bank
+ArtTile_Shield_2_End:		equ ArtTile_Shield_2+$12 ; $B020; exclusive end of this bank
 ArtTile_Invincibility:		equ ArtTile_Shield
 ArtTile_Game_Over:		equ ArtTile_Shield ; replaces the dead primary player's effects, as in S3&K
 ArtTile_Title_Card:	equ $581 ; per-card DPLCs; at most 84 tiles, preserving both shield banks
@@ -1991,6 +1991,12 @@ ArtTile_SMZ_Smoke1:	equ $4C5
 ArtTile_SMZ_Smoke2:	equ $4D1
 ArtTile_SMZ_Kemusi: equ ArtTile_SMZ_Smoke1 ; 22 tiles; Act 2 has no smoke animation
 
-	include "_inc/PalmtreeArtTiles.asm"
+; Resident LV0A enemy art; verified by import_palmtree_enemies.py.
+ArtTile_PP_Anton: equ $32B ; 22 tiles
+ArtTile_PP_Mosqui: equ $341 ; 70 tiles
+ArtTile_PP_PataBata: equ $387 ; 50 tiles
+ArtTile_PP_TagaTaga: equ $3B9 ; 45 tiles
+ArtTile_PP_Tamabboh: equ $3E6 ; 59 tiles
+ArtTile_PP_End: equ $421
 ArtTile_Propeller: equ ArtTile_PP_End	; 49 tiles, after the LV0A enemies
 ArtTile_Propeller_End: equ ArtTile_Propeller+49
