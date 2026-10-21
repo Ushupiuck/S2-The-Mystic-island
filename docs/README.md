@@ -1,0 +1,43 @@
+# Developer documentation
+
+These guides describe the current implementation. Source definitions in
+`s2.constants.asm`, the relevant ASM module, and generated sprite bounds take
+precedence when changing allocations or formats. Run commands from the repository
+root. Windows is the primary development environment; see [AGENTS.md](../AGENTS.md).
+
+| Guide | Owns |
+| --- | --- |
+| [Objects](Objects.md) | SST fields, placement/loading ownership, composites and Debug |
+| [Importing objects](Importing-objects.md) | Import workflow and the EHZ boss example |
+| [Sprites and VRAM](Sprites-and-VRAM.md) | Mapping/DPLC formats, renderer, shared art allocations and caches |
+| [Players and effects](Players-and-effects.md) | Character behavior, companion AI, monitors, water and input locks |
+| [Levels](Levels.md) | Zone status, per-act PLCs/music, tile animation, SMZ and asset regeneration |
+| [Special stage](Special-stage.md) | Rotating S1 stage, its separate ABI, overlays and screen-specific VRAM |
+| [Mega-CD](Mega-CD.md) | Mode 1 branch, CPU ownership, banked RAM, jobs and DMA |
+| [Testing](Testing.md) | Dependencies, commands, disposable course, report generation and limits |
+
+[SonLVL's own guide](../SonLVL%20INI%20Files/README.md) owns editor setup,
+property definitions and subtype options. [KeH sound tools](../build_tools/sound/README.md)
+own song/SFX importing, packer formats and sound-tool builds.
+[TODO.txt](../TODO.txt) is the development backlog, rather than implemented behavior.
+
+## Branch scope
+
+`Mystic-Island` is the ordinary cartridge build. `test/rebuilt-kehmusic` adds
+required Mega-CD RAM and selective sub-CPU work. Shared guides apply to both;
+the Mega-CD guide explicitly describes the CD branch. Sixteen four-act zones
+are exposed, with a separate Final Zone entry; editable starter acts are not
+finished levels. Planned mixed-size SonLVL authoring is listed under
+[future layout work](Levels.md#planned-layout-format), not as a current feature.
+
+## Maintaining these guides
+
+Update the existing guide when its subsystem changes. Put a fact in one guide
+and link to it elsewhere. Keep current constraints, reproduction steps, asset
+provenance and known limits; Git history preserves implementation narratives.
+Do not add a new follow-up document for each fix or commit build-specific
+hashes, screenshot digests, coverage matrices or generated result JSON here.
+Write those to an explicit test-output directory instead; see [Testing](Testing.md).
+
+Source files that are W.I.P. or not assembled are development work, not
+permission to delete them during documentation or unused-code cleanup.
