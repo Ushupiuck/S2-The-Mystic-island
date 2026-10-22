@@ -23,13 +23,15 @@ p.add_argument('--output', type=Path)
 p.add_argument('--effects', action='store_true')
 p.add_argument('--jingles', action='store_true')
 p.add_argument('--pal', action='store_true')
+p.add_argument('--system-directory', type=Path)
 p.add_argument('--songs', nargs='*')
 p.add_argument('--frames', type=int, default=600)
 args = p.parse_args()
 source = project
 output = args.output or project / '.sound-build' / ('playback-pal' if args.pal else 'playback-ntsc')
 output.mkdir(parents=True, exist_ok=True)
-g = Genesis(args.core, args.rom, args.listing, output, args.pal)
+g = Genesis(args.core, args.rom, args.listing, output, args.pal,
+            system_directory=args.system_directory)
 
 class Geometry(C.Structure):
 	_fields_ = [('base_width', C.c_uint), ('base_height', C.c_uint), ('max_width', C.c_uint), ('max_height', C.c_uint), ('aspect_ratio', C.c_float)]

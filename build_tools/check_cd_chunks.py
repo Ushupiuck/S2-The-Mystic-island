@@ -121,7 +121,19 @@ passed('All 256 chunks x 64 blocks use resident CD collision and rendering', add
 # Give CD Word RAM and inspect every ordered stream record. Actual MD VDP
 # consumption is covered separately by check_cd_terrain.
 g.restore(stage)
+if 'MCD_FlushDecodeDMA' in g.s:
+    # A frame snapshot may have a decoded-art DMA queued for the next VBlank.
+    # Let the real scheduler consume it before taking Word RAM for a probe.
+    for _ in range(1200):
+        if not g.read('MCD_dma_pending'):
+            break
+        g.run()
+    else:
+        raise AssertionError('Prepared-art DMA never drained')
+    act('MCD_FinishTerrainJob')
+    act('MCD_FinishRingJob')
 act('MCD_ReleaseWordRAM')
+assert not g.core.m68k_get_reg(17) & 1, 'Fixture failed to hand Word RAM to CD'
 tiles = (0x0123, 0x2456, 0x4789, 0x6ABC)
 subwrite('MCD_TerrainCamera_Sub', 0, 8)
 subwrite(g.s['MCD_TerrainBlocks_Sub']+8, int.from_bytes(b''.join(t.to_bytes(2,'big') for t in tiles),'big'),8)

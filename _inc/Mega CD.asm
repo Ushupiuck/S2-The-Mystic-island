@@ -6,6 +6,10 @@ MCD_Init:
 		clr.b	(MCD_TerrainReady).l
 		clr.w	(MCD_TerrainPending).l
 		clr.w	(MCD_ObjectReplyPending).l
+		clr.l	(MCD_DecompCachedStart).l
+		clr.l	(MCD_DecompCachedEnd).l
+		clr.w	(MCD_KosDMAWords).l
+		clr.w	(MCD_PLCPrepared).l
 		clr.w	(MCD_RingEventCount).l
 		clr.w	(MCD_RingActiveCount).l
 		clr.w	(MCD_RingJobPending).l

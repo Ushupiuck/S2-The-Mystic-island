@@ -303,20 +303,38 @@ MCD_LayoutRequest:
 ; Copy only a camera/flag snapshot. The CD uses resident geometry and returns
 ; an ordered strip stream. Main can render sprites and process loaders meanwhile.
 MCD_BeginTerrainJob:
-		tst.b	(MCD_TerrainReady).l
-		beq.w	.return
 		tst.w	(MCD_TerrainPending).l
 		bne.w	.return
+		tst.b	(MCD_TerrainReady).l
+		bne.s	.level
+		; Non-level scenes still run bounded CD PLC work through the same
+		; Word-RAM frame transport, without reading uninitialized terrain.
+		jsr	(MCD_PreparePLCBudget).l
+		tst.b	(MCD_PLCBudget).l
+		beq.s	.return
+		move.w	sr,-(sp)
+		disable_ints
+		moveq	#0,d1
+		moveq	#MCD_CommandArtFrame,d0
+		bsr.w	MCD_StartTerrainDraw
+		move.w	(sp)+,sr
+		rts
+.level:
 		jsr	(MCD_ObjectsNeedJob).l
+		move.l	d0,-(sp)
+		jsr	(MCD_PreparePLCBudget).l
+		move.l	(sp)+,d0
+		or.b	(MCD_PLCBudget).l,d0
 		or.l	(Scroll_flags).w,d0
 		or.l	(Scroll_flags_BG2).w,d0
 		or.b	(Screen_redraw_flag).w,d0
 		tst.l	d0			; scroll flags occupy high bytes of their words
-		beq.w	.return
+		beq.s	.return
 		move.w	sr,-(sp)
 		disable_ints
 		bsr.w	MCD_PrepareTerrainFrame
 		moveq	#0,d1
+		moveq	#MCD_CommandTerrainDraw,d0
 		bsr.w	MCD_StartTerrainDraw
 		move.w	(sp)+,sr
 .return:
@@ -335,6 +353,7 @@ MCD_PrepareTerrainFrame:
 		move.b	(Current_Zone).w,(a0)+
 		move.b	(Screen_redraw_flag).w,(a0)+
 		jsr	(MCD_PrepareObjectFrame).l
+		jsr	(MCD_PreparePLCBudget).l
 		clr.l	(Scroll_flags).w
 		clr.l	(Scroll_flags_BG2).w
 		clr.b	(Screen_redraw_flag).w
@@ -345,17 +364,25 @@ MCD_StartTerrainDraw:
 		jcs	MCD_Unavailable
 		move.w	(MCD_SubAck).l,d2
 		not.w	d2
-		move.w	#MCD_CommandTerrainDraw,(MCD_MainCommand).l
+		move.w	d0,(MCD_MainCommand).l
 		move.w	d1,(MCD_MainArgument).l
 		move.w	d2,(MCD_MainToken).l
 		move.w	#1,(MCD_TerrainPending).l
+		cmpi.w	#MCD_CommandArtFrame,d0
+		bne.s	.terrain
+		move.w	#3,(MCD_TerrainPending).l
+.terrain:
 		move.b	#1,(MCD_SubControl+1).l
 		rts
 
 ; Finish before requesting a full VBlank, never wait for CD in the VDP handler.
 MCD_FinishTerrainJob:
-		cmpi.w	#1,(MCD_TerrainPending).l
+		move.w	(MCD_TerrainPending).l,d1
+		cmpi.w	#1,d1
+		beq.s	.working
+		cmpi.w	#3,d1
 		bne.s	.return
+.working:
 		move.w	sr,-(sp)
 		disable_ints
 		move.w	(MCD_MainToken).l,d2
@@ -363,8 +390,16 @@ MCD_FinishTerrainJob:
 		move.w	#MCD_WaitLimit,d3
 		jsr	(MCD_WaitReply).l
 		jcs	MCD_Unavailable
+		clr.w	(MCD_TerrainPending).l
+		cmpi.w	#3,d1
+		beq.s	.art
 		move.w	d0,(MCD_TerrainStreamBytes).l
 		move.w	#2,(MCD_TerrainPending).l
+.art:
+		move.w	(MCD_SubResult+4).l,d0
+		beq.s	.ready
+		move.w	d0,(MCD_PLCPrepared).l
+.ready:
 		move.w	(sp)+,sr
 .return:
 		rts
@@ -402,6 +437,7 @@ LoadTilesFromStart:
 		disable_ints
 		bsr.w	MCD_PrepareTerrainFrame
 		moveq	#1,d1
+		moveq	#MCD_CommandTerrainDraw,d0
 		bsr.w	MCD_StartTerrainDraw
 		bsr.w	MCD_FinishTerrainJob
 		bsr.w	LoadTilesAsYouMove
@@ -416,6 +452,8 @@ MCD_StopTerrain:
 		clr.b	(MCD_TerrainReady).l
 		clr.w	(MCD_TerrainPending).l
 		clr.w	(MCD_ObjectReplyPending).l
+		clr.w	(MCD_KosDMAWords).l
+		clr.w	(MCD_PLCPrepared).l
 		jsr	(MCD_AcquireWordRAM).l
 		jcs	MCD_Unavailable
 		jmp	(MCD_RequireProgramRAM).l

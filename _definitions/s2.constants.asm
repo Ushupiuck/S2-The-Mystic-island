@@ -884,10 +884,15 @@ MCD_RingActiveCount:	ds.w	1
 MCD_RingJobPending:	ds.w	1
 MCD_TerrainReady:	ds.b	1
 			ds.b	1
-MCD_TerrainPending:	ds.w	1	; 0 idle, 1 CD building, 2 MD-owned strip stream
+MCD_TerrainPending:	ds.w	1	; 0 idle, 1 CD frame, 2 MD strip stream, 3 CD art-only frame
 MCD_TerrainStreamBytes:	ds.w	1
 MCD_TerrainIndexBytes:	ds.w	1	; level-load index size derived from decoded blocks
 MCD_ObjectReplyPending:	ds.w	1
+MCD_DecompCachedStart:	ds.l	1
+MCD_DecompCachedEnd:	ds.l	1
+MCD_KosDMAWords:		ds.w	1
+MCD_KosDMADest:		ds.w	1
+MCD_PLCPrepared:		ds.w	1
 MCD_MainWorkEnd:
 ; Uncompressed sources for the existing effect DPLCs and ring-frame uploads.
 ; Rebuild effects on level entry, and rings on either level or S1 stage entry.
@@ -921,8 +926,8 @@ Level_Layout_End:
 v_lvllayout:=			Level_Layout
 v_lvllayout_end:=		Level_Layout_End
 v_lvllayoutbg:=			Level_Layout+$80
-Kos_decomp_buffer:		ds.b	$1000		; Moduled Kosinski+ decompression buffer
-Kos_decomp_buffer_End:
+Kos_decomp_buffer:		equ	MCD_DecompOutput
+Kos_decomp_buffer_End:		equ	MCD_DecompOutput+$1000
 ; ---------------------------------------------------------------------------
     if object_size*object_slot_count > object_ram_size
 	fatal "Object slots exceed the reserved object RAM growth area."
@@ -1023,8 +1028,8 @@ Sprite_Table:			ds.b	Sprite_Table_Max*8		; Sprite attribute table buffer
 Sprite_Table_end:
 System_Stack_Start:		ds.b	$140		; stack grows down from v_systemstack
 v_systemstack:
-v_ngfx_buffer:			ds.b	$200		; Nemesis graphics decompression buffer
-v_ngfx_buffer_end:
+v_ssbg_sines:			ds.l	10		; S1 stage background: sine offset/phase word pairs
+v_ssbg_sines_end:
 
 Error_Handler_Buffer:		ds.b	$45		; register/SP/error-type overlay below
 				ds.b	1		; align the Debug snapshot after the error buffer
@@ -1187,22 +1192,11 @@ v_misc_variables_end:
 
 v_plc_buffer:			ds.b	6*16		; pattern load cues buffer (maximum $10 PLCs)
 v_plc_buffer_only_end:
-v_plc_ptrnemcode:		ds.l	1		; pointer for nemesis decompression code ($1502 or $150C)
-v_plc_repeatcount:		ds.l	1
-v_plc_paletteindex:		ds.l	1
-v_plc_previousrow:		ds.l	1
-v_plc_dataword:			ds.l	1
-v_plc_shiftvalue:		ds.l	1
 v_plc_patternsleft:		ds.w	1
 v_plc_framepatternsleft:	ds.w	1
 v_plc_buffer_end:
 
-Kos_decomp_queue_count:		ds.w	1		; the number of pieces of data on the queue. Sign bit set indicates a decompression is in progress
-Kos_decomp_stored_Wregisters:	ds.w	6
-Kos_decomp_stored_Lregisters:	ds.w	6
-Kos_decomp_stored_SR:		ds.w	1
-Kos_decomp_bookmark:		ds.l	1		; the address within the Kosinski queue processor at which processing is to be resumed
-Kos_description_field:		ds.w	1		; used by the Kosinski queue processor the same way the stack is used by the normal Kosinski decompression routine
+Kos_decomp_queue_count:		ds.w	1		; number of pending CD decompression requests
 Kos_decomp_queue:		ds.l	2*4		; 2 longwords per entry, first is source location and second is decompression location
 Kos_decomp_source =		Kos_decomp_queue	; long ; the compressed data location for the first entry in the queue
 Kos_decomp_destination =	Kos_decomp_queue+4	; long ; the decompression location for the first entry in the queue

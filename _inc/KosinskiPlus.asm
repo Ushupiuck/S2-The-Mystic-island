@@ -16,7 +16,8 @@
 ; OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ; ---------------------------------------------------------------------------
 ; FUNCTION:
-; 	KosPlusDec
+; 	MCD_SubKosPlusDec
+; 	Executes on the Mega-CD sub-68000; the MD wrapper owns cartridge staging.
 ;
 ; DESCRIPTION
 ; 	Kosinski+ Decompressor
@@ -38,7 +39,7 @@ _KosPlus_ReadBit macro
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 ; ---------------------------------------------------------------------------
-KosPlusDec:
+MCD_SubKosPlusDec:
 	include "KosinskiPlus_internal.asm"			; The internal file for your compression algorithm
 	rts
 ; ===========================================================================

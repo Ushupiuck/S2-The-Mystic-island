@@ -45,6 +45,10 @@ Extra has 16 slots. Assembly rejects overflow; an empty list has count `-1`.
 Shared HUD, monitors, checkpoints, life art and boss PLCs retain their own
 lifecycle. The Kosinski module index also has separately named act lists,
 including distinct empty recipes ready for later additions.
+The CD branch decodes both on the sub-CPU and queues prepared RAM output for
+DMA. Its resumable PLC and module ownership contracts live in
+[Mega-CD](Mega-CD.md#asset-decompression-and-plcs); the editable lists keep their
+existing format.
 
 Objects still select named art bases in their own code. A per-act logical
 asset-to-tile binding/allocation system was discussed but is not implemented;

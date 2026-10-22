@@ -148,13 +148,15 @@ class Native:
         kind = command & 255
         if kind in (7, 8, 11) or kind >= 0x20:
             self.refresh_terrain()
-        if kind in (5, 6, 12):
+        if kind in (5, 6, 12, 14, 15, 16, 17, 18):
             sub.mem_write(0x80000, bytes(cpu.mem_read(0x600000, 0x40000)))
         sub.mem_write(0xFF800E, bytes(cpu.mem_read(0xA1200E, 0x22)))
         sub.mem_write(s['MCD_SubMainCommand'], struct.pack('>H', command))
         sub.mem_write(s['MCD_SubOwnFlags'], bytes((s['MCD_ServiceReady'],)))
         routine = {5: 'MCD_SubTerrainLoad', 6: 'MCD_SubTerrainDraw', 12: 'MCD_SubObjectsLoad',
-                   13: 'MCD_SubObjectState', 7: 'MCD_SubTerrainProbe', 8: 'MCD_SubTerrainProbe',
+                   13: 'MCD_SubObjectState', 14: 'MCD_SubDecompress',
+                   15: 'MCD_SubDecompress', 16: 'MCD_SubDecompress', 17: 'MCD_SubDecompress',
+                   18: 'MCD_SubArtFrame', 7: 'MCD_SubTerrainProbe', 8: 'MCD_SubTerrainProbe',
                    9: 'MCD_SubTerrainLayout', 10: 'MCD_SubTerrainLayout',
                    11: 'MCD_SubTerrainAir'}.get(kind, 'MCD_SubTerrainObject')
         stop, stack = 0x7FBF0, s['MCD_SubStack_Top'] - 4
@@ -170,7 +172,7 @@ class Native:
         cpu.mem_write(0xA12020, bytes(sub.mem_read(0xFF8020, 0x10)))
         cpu.mem_write(0xA1200F, bytes(sub.mem_read(0xFF800F, 1)))
         cpu.reg_write(UC_M68K_REG_D0, result)
-        if kind in (5, 6, 12):
+        if kind in (5, 6, 12, 14, 15, 16, 17, 18):
             cpu.mem_write(0x600000, bytes(sub.mem_read(0x80000, 0x40000)))
 
     def placement_handle(self, index):

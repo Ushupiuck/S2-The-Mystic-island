@@ -7,11 +7,11 @@
 
 ; ---------------------------------------------------------------------------
 ; Level-load transfer. MD prepared the selected S1/S2 collision bank once.
-; The chunk decoder already wrote the resident chunk allocation during loading.
+; CD decoding already wrote resident blocks, layout and chunks during loading.
 MCD_SubTerrainLoad:
-		lea	(MCD_TerrainStage_Sub).l,a0
-		lea	(MCD_TerrainData_Sub).l,a1
-		move.w	#bytesToLcnt(MCD_TerrainData_SubEnd-MCD_TerrainData_Sub),d1
+		lea	(MCD_TerrainStage_Sub+$2800).l,a0
+		lea	(MCD_TerrainIndex_Sub).l,a1
+		move.w	#bytesToLcnt(MCD_TerrainData_SubEnd-MCD_TerrainIndex_Sub),d1
 .copy:
 		move.l	(a0)+,(a1)+
 		dbf	d1,.copy
@@ -149,6 +149,7 @@ MCD_SubTerrainDraw:
 		bhi.w	MCD_SubError
 		move.w	d0,(MCD_ObjectStreamBytes_Sub).l
 		bsr.w	MCD_SubObjectsFrame
+		bsr.w	MCD_SubPLCStep
 		moveq	#0,d0
 		move.w	(MCD_ObjectStreamBytes_Sub).l,d0
 		bset	#0,(MCD_SubMemoryMode).l

@@ -28,7 +28,11 @@ def main():
         assert address('Player_Art_Buffer_End') == address('Main_RAM_Start')
         assert address('Main_RAM_Start') >= 0xFF8000
         assert address('Main_RAM_End') == 0
-    assert address('Kos_decomp_buffer_End') == address('v_objspace')
+    if 'MCD_SubDecompress' in symbols:
+        assert address('Kos_decomp_buffer') == symbols['MCD_DecompOutput']
+        assert address('v_objspace') == address('Main_RAM_Start')
+    else:
+        assert address('Kos_decomp_buffer_End') == address('v_objspace')
     assert address('v_objspace_end') == address('TempArray_LayerDef' if symbols['MegaCDMode1'] else 'v_16x16')
     if symbols['MegaCDMode1']:
         assert address('v_16x16') == symbols['MCD_TerrainBlockStage']

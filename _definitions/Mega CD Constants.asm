@@ -22,6 +22,7 @@ MCD_StatusReady:	equ	1
 MCD_StatusFailed:	equ	$FF
 MCD_WaitLimit:		equ	$FFFF
 MCD_SubMemoryMode:	equ	$FF8003
+MCD_SubStopwatch:	equ	$FF800C	; 12-bit counter, one tick per 384 sub-CPU clocks
 MCD_SubMainCommand:	equ	$FF8010
 MCD_SubMainArgument:	equ	$FF8012
 MCD_SubMainToken:	equ	$FF801E
@@ -76,3 +77,17 @@ MCD_CommandObjectState:		equ	13
 MCD_ObjectPlacementCount:	equ	$300
 MCD_ObjectPlacementCapacity:	equ	(MCD_ObjectPlacementCount+2)*omSize
 MCD_ObjectSpawnSize:		equ	12
+MCD_CommandKosPlus:		equ	14
+MCD_CommandNemesis:		equ	15
+MCD_CommandEnigma:		equ	16
+MCD_DecompInputSize:		equ	$8000
+MCD_DecompOutputSize:		equ	$10000
+MCD_CommandPLCInit:		equ	17
+MCD_CommandArtFrame:		equ	18
+; PLC decoding runs outside VBlank. Bound CPU time independently of the tile
+; cap: simple art can exceed the old 3/9-tile limits without a complex asset
+; monopolizing the shared terrain/object service. One final tile may overrun.
+MCD_PLCTilesLevel:		equ	48
+MCD_PLCTilesLoading:		equ	96
+MCD_PLCTicksLevel:		equ	64	; about 2 ms at 12.5 MHz
+MCD_PLCTicksLoading:		equ	256	; about 8 ms at 12.5 MHz

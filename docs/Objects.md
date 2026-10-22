@@ -163,7 +163,7 @@ format are separate too (stage update entries are eight bytes).
 CD ring-animation ownership is in [Mega-CD](Mega-CD.md).
 
 The retired state-buffer reservation has been reclaimed. `Error_Handler_Buffer`
-follows `v_ngfx_buffer_end`; the Debug snapshot then immediately precedes
+follows the scroll scratch area (`v_ssbg_sines_end` on the CD branch); the Debug snapshot then immediately precedes
 `Object_Display_Lists`. Use the declared boundaries rather than old absolute
 addresses. Test-only object-course coverage uses `Free_RAM_Start` with a capacity
 check, and is absent from ordinary builds.

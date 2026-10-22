@@ -24,6 +24,9 @@ first art frame are prepared under the opaque transition.
 The main loop constructs four block rows per iteration; completed maps transfer
 in VBlank. Background-map and animated-art uploads never share a frame. Pause
 retains the displayed frame; exit fades use the frozen results VBlank.
+On the CD branch, `v_ssbg_sines` holds the ten offset/phase word pairs used by
+the sine scroll. It occupies 40 bytes of MD RAM, independently of the CD decoder
+tables; the former 512-byte Nemesis scratch allocation is no longer needed.
 
 ## VRAM
 

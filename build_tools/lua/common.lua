@@ -753,6 +753,8 @@ local function assemble_file(input_filename, output_filename, as_arguments, p2bi
 
 		-- Delete the object file, so that we can use its presence to detect a successful build later on.
 		os.remove(object_filename)
+		-- AS leaves an old error log behind after a successful retry.
+		os.remove(log_filename)
 
 		-- Assemble the ROM, producing an object file.
 		-- '-xx'  - shows the most detailed error output

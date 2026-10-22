@@ -77,6 +77,14 @@ MCD_SubEntry:
 		movem.l	d6-d7,-(sp)
 		bsr.w	MCD_SubTerrainObject
 		bra.s	.terrainDone
+.artFrame:
+		movem.l	d6-d7,-(sp)
+		bsr.w	MCD_SubArtFrame
+		bra.s	.terrainDone
+.decompress:
+		movem.l	d6-d7,-(sp)
+		bsr.w	MCD_SubDecompress
+		bra.s	.terrainDone
 .terrainAir:
 		movem.l	d6-d7,-(sp)
 		bsr.w	MCD_SubTerrainAir
@@ -92,7 +100,8 @@ MCD_SubEntry:
 		dc.l	.terrainLoad,.terrainDraw,.terrainProbe,.terrainProbe
 		dc.l	.layout,.layout,.terrainAir
 		dc.l	.objectsLoad,.objectState
-		rept	$20-14
+		dc.l	.decompress,.decompress,.decompress,.decompress,.artFrame
+		rept	$20-19
 		dc.l	.unknown
 		endm
 		rept	MCD_TerrainObjectLast-MCD_TerrainAnglePos+1
@@ -180,3 +189,5 @@ MCD_SubRingTick:
 		even
 		include "_inc/Mega CD Terrain.asm"
 		include "_inc/Mega CD Objects.asm"
+
+		include "_inc/Mega CD Decompression.asm"

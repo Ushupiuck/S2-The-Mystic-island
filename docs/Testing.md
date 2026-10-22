@@ -90,7 +90,7 @@ index handles/resident state from cartridge pointers. The emulator checks below 
 
 CD boot needs a supplied system directory. Only runners exposing
 `--system-directory` support that setup directly (including level pages, act
-music, visual follow-up, fast clear, player effects, card screens and swing families).
+music, sound playback, visual follow-up, fast clear, player effects, card screens and swing families).
 Older water/companion/shared runners lack it and target the ordinary cartridge
 ROM. Do not describe all existing fixtures as CD-aware or apply flags universally.
 
@@ -132,6 +132,27 @@ with `--baseline` to the ring runner; it is a boolean mode, not a path argument.
 
 The identification fixture contains only the `SEGA` marker, not BIOS code.
 See [Mega-CD](Mega-CD.md) for ownership contracts and hardware-test limits.
+
+For codec equivalence, retain a ROM/listing pair from before CD decompression
+offload, then run:
+
+```sh
+python build_tools/check_cd_decompression.py --baseline /path/to/old.bin --baseline-listing /path/to/old.lst --output test-results/cd-codecs
+```
+
+This executes every linked compressed span with the original MD decoder and
+the new CD executor in Unicorn, including every Kosinski module, Nemesis XOR,
+and Enigma base-tile attributes. It checks source spans, lengths, consumed input
+and output guards. Resumed PLC batches also run an unrelated general decode
+between steps and force time-budget yields across stopwatch wrap. This proves
+codec/state behavior, not hardware bus scheduling. Pair it with Mode 1, act
+launch, ring and player-effect checks. `check_sound_playback.py` accepts
+`--system-directory` to validate the CD-decoded Z80 driver through actual music,
+effects and jingle restoration.
+Add `--core /path/to/genesis_plus_gx_libretro.so --system-directory ...`
+to the codec runner for actual queued PLC uploads while HPZ's early water
+HBlank split is active; it compares VRAM with the old decoder and checks
+resident blocks and the entire expanded chunk allocation for changes.
 
 ## Disposable object course
 

@@ -17,18 +17,20 @@ jobs remain future work; Z80 sound remains on its existing storage.
 ## CPU source boundary
 
 `md-main.asm` contains the Mega Drive vectors, entry point and game. It includes
-`_inc/Mega CD.asm`, `_inc/Mega CD Ring Jobs.asm` and
-`_inc/Mega CD Terrain Jobs.asm` and `_inc/Objects Manager.asm`: despite their CD-related
+`_inc/Mega CD.asm`, `_inc/Mega CD Ring Jobs.asm`,
+`_inc/Mega CD Terrain Jobs.asm`, `_inc/Mega CD Decompression Jobs.asm` and
+`_inc/Objects Manager.asm`: despite their CD-related
 names, these are **main-CPU** loaders, bus/DMA helpers and mailbox callers.
 
 `mcd-main.asm` contains the **sub-CPU** vectors, `MCD_SubEntry`, command service
-and ring/terrain/object-loading executors. The MD entry point embeds it between `MCD_SubProgram` and
+and ring/terrain/object-loading/decompression executors. The MD entry point embeds it between `MCD_SubProgram` and
 `MCD_SubProgramEnd`, using `phase 0` to assemble its CD execution addresses.
 The existing bootstrap uploads those bytes to PRG RAM. This is one cartridge
 build, not two separately linked ROMs. Shared hardware/RAM definitions remain
 in `_definitions/`; subsystem includes inherit their entry point's CPU owner.
 Normal-level terrain lookup, collision scans, ground attachment, airborne
-collision resolution and tilemap construction execute on CD. Camera motion,
+collision resolution, tilemap construction, and Kosinski+/Nemesis/Enigma decoding
+execute on CD. Camera motion,
 object control, VDP output and sound still execute on MD.
 
 ## Memory and ownership
@@ -49,6 +51,7 @@ aliases translate physical addresses; they do not allocate another copy.
 | Ring job storage | `$426000-$426E0F`, bank 1 | `$026000-$026E0F` |
 | Resident terrain and work state | No normal-frame PRG access | `$026E10-$02BE17` |
 | Resident object placements and loader state | No normal-frame PRG access | `$02BE18-$02D3FB` |
+| Decoder tables, resident PLC input and resumable state | No normal-frame PRG access | `$02D3FC-$035823` |
 | 256 KiB Word RAM, 2M mode | `$600000-$63FFFF` while owned | `$080000-$0BFFFF` while owned |
 | Communication registers | `$A12010-$A1202F` | `$FF8010-$FF802F` |
 
@@ -60,25 +63,23 @@ allocation is not a contiguous main-CPU pointer, and jobs cannot use its tail.
 
 MD work RAM is packed against the top of its 64 KiB address space. The single
 free allocation is `Free_RAM_Start` through `Free_RAM_End` (end exclusive):
-`$FF0000-$FFA0AD`, **`$A0AE` bytes (41,134)**. Terrain migration removes
-MD layout/block storage and the old camera/scroll copies and block cache,
-with eight new control bytes: a net gain of 10,400 bytes. Object loading moves
-its 768-byte respawn table and cursor storage to CD, reclaiming another 778
-bytes after its reply control. Current live ranges:
+`$FF0000-$FFB2AF`, **`$B2B0` bytes (45,744)**. Terrain, placement loading and
+decompression work storage live with their CD executors. Current live ranges:
 
 | Allocation | MD address, inclusive | Size |
 | --- | --- | --- |
-| Ring/terrain event and control state | `$FFA0AE-$FFA2BB` | `$20E` |
-| [Decompressed player art](Sprites-and-VRAM.md#mode-1-ram-art) | `$FFA2BC-$FFAE5B` | `$BA0` |
-| Engine variables and work buffers | `$FFAE5C-$FFFFFF` | `$51A4` |
+| Ring/terrain events and CD job controls | `$FFB2B0-$FFB4CB` | `$21C` |
+| [Decompressed player art](Sprites-and-VRAM.md#mode-1-ram-art) | `$FFB4CC-$FFC06B` | `$BA0` |
+| Engine variables and work buffers | `$FFC06C-$FFFFFF` | `$3F94` |
 
 `_definitions/s2.constants.asm` derives the engine's start from its own declared
 size, then places CD work/art immediately below it. Allocation changes move the
 boundary automatically; there is no address-preserving free hole. Assembly
 checks keep short-addressed engine storage in `$FF8000-$FFFFFF`. CD event/art
-accesses use long addressing. The Kosinski module and Nemesis buffers, scroll
-spill area and `$140`-byte system stack remain live allocations; they are not
-free RAM. The stack has explicit `System_Stack_Start`/`v_systemstack` bounds.
+accesses use long addressing. The old MD Kosinski module buffer, Nemesis code
+table and decoder bookmarks are gone; queued requests and DMA controls remain.
+The scroll spill area and `$140`-byte system stack are live allocations. The
+stack has explicit `System_Stack_Start`/`v_systemstack` bounds.
 The rotating S1 stage uses its separate CD chunk-table overlay.
 
 Active levels leave PRG RAM with CD. Terrain calls transfer compact mailbox
@@ -87,12 +88,23 @@ copy sparse changes, restore bank 0 and release CD again. Loading and non-level
 scenes explicitly acquire bank 0 for their existing scratch and PRG DMA paths.
 Retain that bus/bank through PRG DMA consumption.
 
-Word RAM holds a 44-byte frame snapshot at `$600000`, a shared header through `$60003F`, a strip stream from
-`$600040` to `$60DFFF`, object spawn replies from `$60E000`, and level staging
-from `$610000`. `v_16x16` and
-`Level_Layout` name staging aliases; gameplay uses the resident CD copies.
-`MCD_LoadTerrain` copies blocks, layout, collision indices and the selected
-S1/S2 height/width/angle bank once on level entry. Chunks already reside on CD.
+Word RAM has these disjoint regions; add `$80000-$600000` to translate an MD
+address to the CD view:
+
+| MD range, inclusive | Use |
+| --- | --- |
+| `$600000-$60003F` | Frame snapshot, free object slots, PLC tile/time budgets |
+| `$600040-$60DFFF` | Terrain VDP records |
+| `$60E000-$60E43B` | Object reply header and up to 90 spawn records |
+| `$610000-$614EFF` | Level collision-bank staging / non-level overlays |
+| `$618000-$61FFFF` | Compressed cartridge input cache |
+| `$620000-$62FFFF` | General decoded output / Kosinski module DMA source |
+| `$630000-$63FFFF` | PLC decoded output, retained until DMA consumption |
+
+`v_16x16` and `Level_Layout` name staging aliases; gameplay uses resident CD
+data. CD decodes blocks, layout and chunks directly into their PRG allocations.
+`MCD_LoadTerrain` installs collision indices and the selected S1/S2
+height/width/angle bank once on level entry.
 The rotating S1 stage retains its separate MD renderer and staging/PRG overlays.
 
 After scrolling, CD constructs changed tile strips while MD renders sprites
@@ -167,6 +179,11 @@ its complete first request before starting the sub-CPU, avoiding warm-reset race
 | `MCD_CommandTerrainAir` (11) | Whole airborne collision pass |
 | `MCD_CommandObjectsLoad` (12) | Install an act placement list, return Word RAM |
 | `MCD_CommandObjectState` (13) | Persistent state / original placement X |
+| `MCD_CommandKosPlus` (14) | Decode Kosinski+ / one moduled archive member |
+| `MCD_CommandNemesis` (15) | Decode Nemesis to RAM |
+| `MCD_CommandEnigma` (16) | Decode Enigma with a base-tile argument |
+| `MCD_CommandPLCInit` (17) | Install resident compressed PLC input and initialize its decoder |
+| `MCD_CommandArtFrame` (18) | Decode a bounded PLC batch without a terrain scene |
 | `$20-$2D` | Ground attachment and complete object/sensor operations |
 | Other | `$FFFF` |
 
@@ -174,6 +191,44 @@ its complete first request before starting the sub-CPU, avoiding warm-reset race
 carry. Acquire before accessing/queuing Word RAM, outside VBlank; retain it until
 `ProcessDMAQueue` consumes transfers. `MCD_ReleaseWordRAM` rejects a handoff with
 CD DMA pending and masks interrupts across the check/handoff.
+
+## Asset decompression and PLCs
+
+`_inc/Mega CD Decompression.asm` owns the three CD codecs and resumable PLC
+state. MD public wrappers preserve their original callers' register contracts.
+CD cannot read cartridge ROM: `build_tools/lua/compressed_assets.lua` derives
+exact compressed spans from the include graph, generating
+`_definitions/Compressed Assets.asm`. Adding a linked compressed `binclude`
+requires no second hand-maintained asset list. A span must fit the 32 KiB input
+cache. Interior Kosinski module pointers reuse that cache until another asset
+replaces it. The compressed Z80 driver has its own explicit start/end span.
+
+Terrain decodes straight into resident CD PRG RAM. General MD destinations use
+the Word-RAM output bank followed by a result copy; Z80 destinations require
+byte writes. This moves startup driver decompression, not sound sequencing:
+the current sound driver, music and Saxman handling remain on Z80/MD.
+
+PLCs keep a separate compressed archive and code table in PRG RAM, so general
+decodes cannot damage a suspended PLC. Frame commands combine terrain, placement
+loading and PLC work in one Word-RAM handoff. Non-level scenes use command 18.
+The loader yields at a complete tile using the free-running CD stopwatch; it
+does not reset that timer. Current limits are about 2 ms/48 tiles for gameplay
+and about 8 ms/96 tiles for title/loading/fade/results handlers. Both limits
+apply; one final tile can exceed the time allowance. Counts vary with asset
+complexity, instead of inheriting the MD loader's fixed 3/9-tile limit.
+
+`WaitForVint` finishes the CD job and publishes prepared art into the ordinary
+DMA queue before requesting VBlank. A prepared or queued batch prevents the
+next PLC write; a full queue retries without advancing the cue. VBlank only
+consumes DMA and updates queue bookkeeping, with no decoder or CD wait.
+Kosinski modules use a separate stable output bank and the same publication
+boundary. Direct scene loaders use a DMA-only VBlank before reusing output.
+
+Active-level waits permit palette interrupts. Before handing Word RAM to CD,
+the transport completes any previous deferred HBlank terrain writes; those
+writes may not read the stream while CD owns it. Non-level callers retain their
+explicit bank-0 PRG-bus contract after a decode. Scene teardown drains jobs and
+DMA before clearing their controls.
 
 ## DMA
 
@@ -205,3 +260,9 @@ Implementation references retained from the port:
 - [Genesis Plus GX source](https://github.com/ekeeke/Genesis-Plus-GX):
   `core/loadrom.c`, `core/mem68k.c`, `core/cd_hw/scd.c`, `core/vdp_ctrl.c`.
 - [Word-RAM DMA discussion](https://gendev.spritesmind.net/forum/viewtopic.php?start=15&t=1645).
+- [Sonic CD's PLC routines](https://github.com/AlexField442/scddisasm/blob/main/src/Level/Functions%20%28General%29.asm):
+  `ProcessPLCs`, `DecompPLCFast` (18 tiles), and `DecompPLCSlow` (3, or 18 with
+  scrolling locked). Those decode directly to the VDP on MD; our CD/RAM/DMA
+  pipeline uses independent CPU-time and tile limits.
+- [Sega's Mega-CD hardware manual](https://segaretro.org/images/5/51/Mega-CD_Hardware_Manual.pdf):
+  the 12-bit stopwatch advances every 30.72 microseconds and wraps at 4096.

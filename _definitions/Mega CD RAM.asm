@@ -71,6 +71,20 @@ MCD_ObjectKeep_Sub:	ds.b	1
 			ds.b	1
 MCD_ObjectFreeSlots_Sub:	ds.w	MCD_ObjectSlotCount
 MCD_Objects_SubEnd:
+MCD_DecompCodeTable_Sub:	ds.b	$200
+MCD_DecompOutSize_Sub:	ds.l	1
+MCD_DecompOutBase_Sub:	ds.l	1
+MCD_PLCInput_Sub:	ds.b	MCD_DecompInputSize
+MCD_PLCTable_Sub:	ds.b	$200
+MCD_PLCSource_Sub:	ds.l	1
+MCD_PLCWriter_Sub:	ds.l	1
+MCD_PLCRepeat_Sub:	ds.l	1
+MCD_PLCPalette_Sub:	ds.l	1
+MCD_PLCPrevious_Sub:	ds.l	1
+MCD_PLCData_Sub:		ds.l	1
+MCD_PLCShift_Sub:	ds.l	1
+MCD_PLCRemaining_Sub:	ds.w	1
+MCD_PLCProduced_Sub:	ds.w	1
 MCD_SubUserRAM_End:
 	dephase
 
@@ -121,7 +135,9 @@ MCD_ObjectFrameMinY:	ds.w	1
 MCD_ObjectFrameEnabled:	ds.b	1
 			ds.b	1
 MCD_ObjectFrameSlots:	ds.b	MCD_ObjectSlotBytes
-			ds.b	$40-(MCD_TerrainFrame_SubEnd-MCD_TerrainCamera_Sub)-4-MCD_ObjectSlotBytes
+MCD_PLCBudget:		ds.b	1
+			ds.b	1
+MCD_PLCTimeLimit:	ds.w	1
 MCD_TerrainStream:	ds.b	$E000-$40
 MCD_ObjectReply:	ds.w	2
 MCD_ObjectSpawns:	ds.b	MCD_ObjectSlotCount*MCD_ObjectSpawnSize
@@ -134,7 +150,16 @@ MCD_TerrainHeightStage:	ds.b	$1000
 MCD_TerrainWidthStage:	ds.b	$1000
 MCD_TerrainAngleStage:	ds.b	$100
 MCD_TerrainStage_End:
+			ds.b	$18000-(MCD_TerrainStage_End-MCD_WordRAM)
+MCD_DecompInput:	ds.b	MCD_DecompInputSize
+MCD_DecompOutput:	ds.b	MCD_DecompOutputSize
+MCD_DecompPLC:		ds.b	MCD_DecompOutputSize
 	dephase
+MCD_PLCBudget_Sub:	equ	MCD_SubWordRAM+(MCD_PLCBudget-MCD_WordRAM)
+MCD_PLCTimeLimit_Sub:	equ	MCD_SubWordRAM+(MCD_PLCTimeLimit-MCD_WordRAM)
+MCD_DecompInput_Sub:	equ	MCD_SubWordRAM+(MCD_DecompInput-MCD_WordRAM)
+MCD_DecompOutput_Sub:	equ	MCD_SubWordRAM+(MCD_DecompOutput-MCD_WordRAM)
+MCD_DecompPLC_Sub:	equ	MCD_SubWordRAM+(MCD_DecompPLC-MCD_WordRAM)
 MCD_TerrainFrame_Sub:	equ	MCD_SubWordRAM
 MCD_TerrainStream_Sub:	equ	MCD_SubWordRAM+(MCD_TerrainStream-MCD_WordRAM)
 MCD_TerrainStage_Sub:	equ	MCD_SubWordRAM+(MCD_TerrainStage-MCD_WordRAM)
@@ -147,4 +172,7 @@ MCD_ObjectReply_Sub:	equ	MCD_SubWordRAM+(MCD_ObjectReply-MCD_WordRAM)
 	endif
 	if MCD_TerrainStage_End>MCD_WordRAM+$40000
 		fatal "Terrain transport exceeds 2M Word RAM"
+	endif
+	if MCD_TerrainStream-MCD_TerrainFrame<>$40
+		fatal "CD frame header must occupy exactly $40 bytes"
 	endif

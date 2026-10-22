@@ -37,8 +37,8 @@ Only `$01` starts the full screen handler. A second VBlank arriving while the
 first handler still runs must count lag and return without touching the VDP;
 re-entering the handler can exhaust the stack and overwrite the end of the block
 table. Ordinary foreground lag (`$00`) retains its water-palette refresh path.
-The [lag check](Testing.md#runtime-checks) exercises this distinction with real
-emulated interrupts and watches terrain RAM throughout traversal.
+The old [Twizzler lag investigation](Testing.md#runtime-checks) exercised this
+distinction; it is not part of current decompressor migration checks.
 
 ## Dynamic art
 
@@ -56,7 +56,8 @@ one format. SonLVL's overrides are documented in [its guide](../SonLVL%20INI%20F
 ### Mode 1 RAM art
 
 On `test/rebuilt-kehmusic`, shield, invincibility and normal/lost-ring art is
-Nemesis-compressed in ROM and decompressed into the packed MD work area.
+Nemesis-compressed in ROM. The CD CPU decodes it into Word RAM, then MD copies
+the results into its packed work area; see [the decoder boundary](Mega-CD.md#asset-decompression-and-plcs).
 `Art_Shield`, `Art_Invincibility` and `Art_Ring` are RAM source addresses on this
 branch; cartridge builds retain their uncompressed ROM sources. The existing
 shield DPLCs, resident-star upload and eight-frame ring uploader use those
@@ -64,9 +65,9 @@ addresses without changing mappings, frame selection or VRAM banks.
 
 | RAM bytes, end exclusive | Source | Size |
 | --- | --- | --- |
-| `$FFA2BC-$FFA61C` | Shield | `$360` |
-| `$FFA61C-$FFAA5C` | Invincibility stars | `$440` |
-| `$FFAA5C-$FFAE5C` | Normal/lost rings | `$400` |
+| `$FFB4CC-$FFB82C` | Shield | `$360` |
+| `$FFB82C-$FFBC6C` | Invincibility stars | `$440` |
+| `$FFBC6C-$FFC06C` | Normal/lost rings | `$400` |
 
 The cache occupies `$BA0` bytes after the CD ring event queue. `LoadPlayerEffectArt`
 decompresses all three after level clears/PLCs and before `InitRingFrame`;

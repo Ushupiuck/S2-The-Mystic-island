@@ -303,6 +303,8 @@ VintRet:
 		addq.l	#1,(Vint_runcount).w
 		movem.l	(sp)+,d0-a6
 		rte
+Vint_Done:
+		rts
 ; ===========================================================================
 ; loc_B86: VintSub0:
 Vint_Lag:
@@ -353,9 +355,9 @@ VInt_0_Water_Cont:
 Vint_SEGA:
 		bsr.w	Do_ControllerPal
 		tst.w	(v_generictimer).w
-		beq.w	Set_Kos_Bookmark
+		beq.w	Vint_Done
 		subq.w	#1,(v_generictimer).w
-		bra.w	Set_Kos_Bookmark
+		bra.w	Vint_Done
 ;		beq.s	.end
 ;		subq.w	#1,(v_generictimer).w
 ;.end:		rts
@@ -372,18 +374,18 @@ Vint_PCM:
 		startZ80
 +
 		tst.w	(v_generictimer).w
-		beq.w	Set_Kos_Bookmark
+		beq.w	Vint_Done
 		subq.w	#1,(v_generictimer).w
-		bra.w	Set_Kos_Bookmark
+		bra.w	Vint_Done
 ; ===========================================================================
 ; loc_CBC: VintSub4:
 Vint_Title:
 		bsr.w	Do_ControllerPal
 		bsr.w	ProcessDPLC
 		tst.w	(v_generictimer).w
-		beq.w	Set_Kos_Bookmark
+		beq.w	Vint_Done
 		subq.w	#1,(v_generictimer).w
-		bra.w	Set_Kos_Bookmark
+		bra.w	Vint_Done
 ;		beq.s	.end
 ;		subq.w	#1,(v_generictimer).w
 ;.end:		rts
@@ -417,13 +419,13 @@ Vint_Level:
 		bhs.s	Do_Updates
 		st	(f_doupdatesinhblank).w
 	;	addq.l	#4,sp
-	;	bsr.w	Set_Kos_Bookmark	; rather than always branching to "VintRet",
+	;	bsr.w	Vint_Done	; rather than always branching to "VintRet",
 	;	addq.l	#1,(Vint_runcount).w	; we'll optimize by copying it here.
 	;	movem.l	(sp)+,d0-a6
 	;	rte
-		bra.w	Set_Kos_Bookmark
+		bra.w	Vint_Done
 ;+
-	;	pea	(Set_Kos_Bookmark).w
+	;	pea	(Vint_Done).w
 ; ---------------------------------------------------------------------------
 ; Subroutine to run a demo for an amount of time
 ; ---------------------------------------------------------------------------
@@ -438,9 +440,9 @@ Do_Updates:
 		clr.w	(Lag_frame_count).w
 		bsr.w	ProcessDPLC2
 		tst.w	(v_generictimer).w
-		beq.w	Set_Kos_Bookmark
+		beq.w	Vint_Done
 		subq.w	#1,(v_generictimer).w
-		bra.w	Set_Kos_Bookmark
+		bra.w	Vint_Done
 ;		beq.s	.end
 ;		subq.w	#1,(v_generictimer).w
 ;.end:		rts
@@ -484,9 +486,9 @@ Vint_S1SS:
 		move.w	#(16*tile_size)/2,d3		; 16 tiles * 32 bytes = $200 bytes = $100 words
 		bsr.w	QueueDMATransfer
 		tst.w	(v_generictimer).w
-		beq.w	Set_Kos_Bookmark
+		beq.w	Vint_Done
 		subq.w	#1,(v_generictimer).w
-		bra.w	Set_Kos_Bookmark
+		bra.w	Vint_Done
 ; ===========================================================================
 ; loc_EA2: VintSubC: VintSub18:
 Vint_TitleCard:
@@ -510,7 +512,7 @@ Vint_TitleCard:
 	;	jsr	(LoadTilesAsYouMove).l
 		jsr	(HudUpdate).l
 		bsr.w	ProcessDPLC
-		bra.w	Set_Kos_Bookmark
+		bra.w	Vint_Done
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; First level VBlank after loading: enable the water split with a valid counter.
@@ -562,9 +564,9 @@ Vint_SSResults:
 		bsr.w	QueueDMATransfer
 .timer:
 		tst.w	(v_generictimer).w
-		beq.w	Set_Kos_Bookmark
+		beq.w	Vint_Done
 		subq.w	#1,(v_generictimer).w
-		bra.w	Set_Kos_Bookmark
+		bra.w	Vint_Done
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
@@ -901,6 +903,7 @@ NewPLC:
 ; Clear the pattern load queue and its decompressor state.
 
 ClearPLC:
+		clr.w	(MCD_PLCPrepared).l
 		lea	(v_plc_buffer).w,a2
 		moveq	#bytesToLcnt(v_plc_buffer_end-v_plc_buffer),d0
 
@@ -923,101 +926,29 @@ RunPLC_RAM:
 		beq.s	.return
 		tst.w	(v_plc_patternsleft).w
 		bne.s	.return
+		tst.w	(v_plc_framepatternsleft).w
+		bne.s	.return
 		movea.l	(v_plc_buffer).w,a0
-		lea	NemPCD_WriteRowToVDP(pc),a3
-		nop
-		lea	(v_ngfx_buffer).w,a1
-		move.w	(a0)+,d2
-		bpl.s	+
-		adda.w	#NemPCD_WriteRowToVDP_XOR-NemPCD_WriteRowToVDP,a3
-+
-		andi.w	#$7FFF,d2
-		bsr.w	NemDec_BuildCodeTable
-		move.b	(a0)+,d5
-		asl.w	#8,d5
-		move.b	(a0)+,d5
-		moveq	#$10,d6
-		moveq	#0,d0
-		move.l	a0,(v_plc_buffer).w
-		move.l	a3,(v_plc_ptrnemcode).w
-		move.l	d0,(v_plc_repeatcount).w
-		move.l	d0,(v_plc_paletteindex).w
-		move.l	d0,(v_plc_previousrow).w
-		move.l	d5,(v_plc_dataword).w
-		move.l	d6,(v_plc_shiftvalue).w
-		move.w	d2,(v_plc_patternsleft).w
-
+		lea	(MCD_DecompPLC_Sub).l,a1
+		jsr	(MCD_InitPLC).l
+		move.w	(a0),d0
+		andi.w	#$7FFF,d0
+		move.w	d0,(v_plc_patternsleft).w
 .return:
 		rts
-; End of function RunPLC_RAM
 
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-; Process one PLC from the queue
-
-; sub_1732:
+; Foreground prepared/queued the art. ProcessDMAQueue has consumed it before
+; this VBlank bookkeeping runs. No decoder or CD wait executes in an IRQ.
 ProcessDPLC:
-		tst.w	(v_plc_patternsleft).w		; Is there anything to decompress?
-		beq.w	ProcessDPLC_Done		; If not, branch
-
-ProcessDPLC_Large:
-		move.w	#9,(v_plc_framepatternsleft).w	; 9 patterns are decompressed every frame
-		moveq	#0,d0				; Get VRAM address
-		move.w	(v_plc_buffer+4).w,d0
-		addi.w	#9*$20,(v_plc_buffer+4).w	; increment by 9 patterns's worth of data
-		bra.s	ProcessDPLC_Main
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-; Process one PLC from the queue
-
-; loc_174E:
 ProcessDPLC2:
-		tst.w	(v_plc_patternsleft).w		; Is there anything to decompress?
-		beq.s	ProcessDPLC_Done		; If not, branch
-	;	tst.b	(f_lockscreen).w		; Is the screen locked?
-	;	bne.s	ProcessDPLC_Large		; If so, go with the large batch instead
-		move.w	#3,(v_plc_framepatternsleft).w	; 6 patterns are decompressed every frame
-		moveq	#0,d0				; Get VRAM address
-		move.w	(v_plc_buffer+4).w,d0
-		addi.w	#3*$20,(v_plc_buffer+4).w	; increment by 9 patterns's worth of data
-; loc_1766:
-ProcessDPLC_Main:
-		lea	(vdp_control_port).l,a4		; Set VDP write command
-		lsl.l	#2,d0
-		lsr.w	#2,d0
-		ori.w	#$4000,d0
-		swap	d0
-		move.l	d0,(a4)
-		subq.w	#4,a4				; Prepare data port
-		movea.l	(v_plc_buffer).w,a0		; Get decompression registers
-		movea.l	(v_plc_ptrnemcode).w,a3
-		move.l	(v_plc_repeatcount).w,d0
-		move.l	(v_plc_paletteindex).w,d1
-		move.l	(v_plc_previousrow).w,d2
-		move.l	(v_plc_dataword).w,d5
-		move.l	(v_plc_shiftvalue).w,d6
-		lea	(v_ngfx_buffer).w,a1
-
-.Decomp:
-		movea.w	#8,a5				; Store decompressed tile in VRAM
-		bsr.w	NemPCD_NewRow
-		subq.w	#1,(v_plc_patternsleft).w	; Decrement total tile count
-		beq.s	ProcessDPLC_Pop			; If this art is finished being decompressed, branch
-		subq.w	#1,(v_plc_framepatternsleft).w	; Decrement number of tiles left to decompress in this batch
-		bne.s	.Decomp				; If we are not done, branch
-		move.l	a0,(v_plc_buffer).w
-		move.l	a3,(v_plc_ptrnemcode).w
-		move.l	d0,(v_plc_repeatcount).w
-		move.l	d1,(v_plc_paletteindex).w
-		move.l	d2,(v_plc_previousrow).w
-		move.l	d5,(v_plc_dataword).w
-		move.l	d6,(v_plc_shiftvalue).w
-
-ProcessDPLC_Done:
+		tst.w	(v_plc_framepatternsleft).w
+		beq.s	.return
+		clr.w	(v_plc_framepatternsleft).w
+		tst.w	(v_plc_patternsleft).w
+		beq.s	ProcessDPLC_Pop
+.return:
 		rts
-; ===========================================================================
-; pop one request off the buffer so that the next one can be filled
-; loc_17CC:
+
 ProcessDPLC_Pop:
 		lea	(v_plc_buffer).w,a0
 		moveq	#bytesToLcnt(v_plc_buffer_only_end-v_plc_buffer-6),d0
@@ -1043,21 +974,16 @@ loc_17D2:
 
 QuickPLC:
 		move.w	(a1)+,d1
-.load:		movea.l	(a1)+,a0
-		moveq	#0,d0
-		move.w	(a1)+,d0
-		lsl.l	#2,d0
-		lsr.w	#2,d0
-		ori.w	#$4000,d0
-		swap	d0
-		move.l	d0,(vdp_control_port).l
-		bsr.s	NemDec
+.load:
+		movea.l	(a1)+,a0
+		move.w	(a1)+,d2
+		bsr.w	NemDec
 		dbf	d1,.load
 		rts
 ; End of function QuickPLC
 
 ; ===========================================================================
-		include "_inc/Nemesis Decompression.asm"
+
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 
@@ -1078,7 +1004,7 @@ KosPlusArt_To_VDP:
 		movea.l	a3,a1		; restore a1
 		rts
 ; ===========================================================================
-		include "_inc/KosinskiPlus.asm"
+		include "_inc/Mega CD Decompression Jobs.asm"
 		include "_inc/DMA Queue.asm"
 	if MegaCDMode1
 		include "_inc/Mega CD.asm"
@@ -1133,7 +1059,7 @@ QuickKosPLC:
 
 ; ===========================================================================
 		include "_inc/KosinkiPlus_Moduled.asm"
-		include "_inc/Enigma Decompression.asm"
+
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Subroutine to fade in from black
@@ -1702,8 +1628,12 @@ Pal_WZCyc:	binclude "palette/WZ Cycle.bin"
 WaitForVint:
 	if MegaCDMode1
 		movem.l	d0-d3/a1,-(sp)	; callers retain loop counters across the wait
+		tst.b	(MCD_dma_pending).w
+		bne.s	.dmaOwnsWordRAM
 		jsr	(MCD_BeginTerrainJob).l
+.dmaOwnsWordRAM:
 		jsr	(MCD_FinishTerrainJob).l
+		jsr	(MCD_PublishDecompressionDMA).l
 		movem.l	(sp)+,d0-d3/a1
 		disable_ints
 		; Active terrain leaves PRG RAM on CD throughout the frame.
@@ -1932,7 +1862,7 @@ SegaScreen:
 		andi.b	#$BF,d0
 		move.w	d0,(vdp_control_port).l
 		bsr.w	ClearScreen
-		locVRAM ArtTile_Sega_Tiles*tile_size
+		move.w	#ArtTile_Sega_Tiles*tile_size,d2
 		lea	(Nem_SegaLogo).l,a0
 		bsr.w	NemDec
 		lea	(Chunk_Table).l,a1
@@ -2024,14 +1954,11 @@ TitleScreen:
 		lea	(Chunk_Table).l,a1
 		move.w	#tiles_to_bytes(ArtTile_Title_Foreground),a2
 		bsr.w	KosPlusArt_To_VDP
-		locVRAM	ArtTile_Title_Sonic_And_Tails*tile_size
-		; This uses Nemesis Compression for two reasons:
-		; First, the speed tradeoff plays against us in this case, Making the previous screen
-		; Banish too early. Secondly, it's one of the few cases were
-		; it compresses worse in Kosp/Kospm
+		move.w	#ArtTile_Title_Sonic_And_Tails*tile_size,d2
+		; Title art retains its Nemesis format; decoding executes on CD.
 		lea	(Nem_TitleSonicTails).l,a0
-		bsr.w	NemDec		; Would be too fast (making the previous screen banish too early)
-		lea	(vdp_data_port).l,a6	; and waste space
+		bsr.w	NemDec
+		lea	(vdp_data_port).l,a6
 		locVRAM	ArtTile_Level_Select_Font*tile_size,4(a6)
 		lea	(Art_Text).l,a5
 		move.w	#bytesToWcnt(Art_Text_End-Art_Text),d1
@@ -3230,19 +3157,19 @@ LoadZone:
 		move.l	(a2)+,d0
 		andi.l	#$FFFFFF,d0	; pointer to block mappings
 		movea.l	d0,a0
-		lea	(v_16x16).l,a1
-		bsr.w	KosPlusDec	; load block maps
+		lea	(MCD_TerrainBlocks_Sub).l,a1
+		jsr	(MCD_KosToCD).l	; load block maps
 	if MegaCDMode1
 		move.l	a1,d0
-		subi.l	#v_16x16,d0
+		subi.l	#MCD_TerrainBlocks_Sub,d0
 		lsr.w	#2,d0		; two collision-index bytes per eight-byte block
 		move.w	d0,(MCD_TerrainIndexBytes).l
 	endif
 		move.l	(a2),d0
 		andi.l	#$FFFFFF,d0	; pointer to chunk mappings
 		movea.l	d0,a0
-		lea	(v_128x128).l,a1
-		bsr.w	KosPlusDec
+		lea	(MCD_ChunkTable_SubStart).l,a1
+		jsr	(MCD_KosToCD).l
 		bsr.s	LevelLayoutLoad	; also preserves a2 (palette+chunks)
 		moveq	#0,d0
 		move.b	-4(a2),d0	; PLC2 ID
@@ -3272,8 +3199,8 @@ LevelLayoutLoad:
 		movea.l	LevelLayout_TimezoneTable(pc,d1.w),a0
 		move.w	(a0,d0.w),d0
 		adda.l	d0,a0
-		lea	(v_lvllayout).l,a1
-		bra.w	KosPlusDec
+		lea	(MCD_TerrainLayout_Sub).l,a1
+		jmp	(MCD_KosToCD).l
 
 ; End of function LevelLayoutLoad
 
@@ -3380,7 +3307,7 @@ BonusStage:
 		clearRAM v_objspace,v_objend
 		clearRAM v_levelvariables,v_levelvariables_end
 		clearRAM v_timingvariables,v_timingvariables_end
-		clearRAM v_ngfx_buffer,v_ngfx_buffer_end
+		clearRAM v_ssbg_sines,v_ssbg_sines_end
 		bsr.w	Pal_MakeFlash
 		disable_ints
 		lea	(vdp_control_port).l,a6
@@ -3716,7 +3643,7 @@ loc_5634:
 
 loc_564E:
 		lea	byte_5709(pc),a1
-		lea	(v_ngfx_buffer).w,a3
+		lea	(v_ssbg_sines).w,a3
 		moveq	#10-1,d3
 
 loc_5664:
@@ -3729,7 +3656,7 @@ loc_5664:
 		move.w	(a1)+,d2
 		add.w	d2,(a3)+
 		dbf	d3,loc_5664
-		lea	(v_ngfx_buffer).w,a3
+		lea	(v_ssbg_sines).w,a3
 		lea	byte_56F6(pc),a2
 		bra.s	loc_56BC
 ; ---------------------------------------------------------------------------
@@ -15428,6 +15355,7 @@ Art_SMZSmoke: binclude "art/uncompressed/SMZ Smoke.bin"
 ; Embed the separate CD-CPU program at its execution address. The MD loader
 ; copies this ROM image to CD PRG RAM before starting MCD_SubEntry.
 	if MegaCDMode1
+		include "_definitions/Compressed Assets.asm"
 MCD_SubProgram:
 		phase	0
 		include "mcd-main.asm"

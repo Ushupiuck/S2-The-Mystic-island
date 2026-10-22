@@ -1,3 +1,4 @@
+; Mega-CD sub-68000 core. Returns output end in a1 for the job ABI.
 ; ---------------------------------------------------------------------------
 ; Enigma decompression subroutine by Devon Artmeier
 ; Inputs:
@@ -10,7 +11,7 @@
 
 ; =============== S U B R O U T I N E =======================================
 
-EniDec:
+MCD_SubEniDec:
 		pea	(a1)									; save current RAM buffer (we save RAM buffer so that we don't duplicate it after decompressing is done)
 		movea.w	d0,a2									; save base tile properties
 		moveq	#0,d4									; get number of tile bits
@@ -25,7 +26,7 @@ EniDec:
 		move.w	(a0)+,d5								; get first word
 		moveq	#16,d6
 
-EniDec_GetCode:
+MCD_SubEniDec_GetCode:
 		subq.w	#1,d6									; does the next code involve using an inline tile?
 		rol.w	d5
 		blo.s	.InlineTileCode								; if so, branch
@@ -68,7 +69,7 @@ EniDec_GetCode:
 		addq.w	#8,d6
 
 .GoToNextCode
-		bra.s	EniDec_GetCode								; process next code
+		bra.s	MCD_SubEniDec_GetCode								; process next code
 ; ---------------------------------------------------------------------------
 
 .InlineTileCode
@@ -93,27 +94,27 @@ EniDec_GetCode:
 .HandleCode
 		add.w	d1,d1									; handle code
 		jsr	.InlineCodes(pc,d1.w)
-		bra.s	EniDec_GetCode								; process next code
+		bra.s	MCD_SubEniDec_GetCode								; process next code
 ; ---------------------------------------------------------------------------
 
 .InlineCodes
-		bra.s	EniDec_InlineMode00
-		bra.s	EniDec_InlineMode01
-		bra.s	EniDec_InlineMode10
+		bra.s	MCD_SubEniDec_InlineMode00
+		bra.s	MCD_SubEniDec_InlineMode01
+		bra.s	MCD_SubEniDec_InlineMode10
 ; ---------------------------------------------------------------------------
 
 		; InlineMode11
 		cmpi.w	#$F,d0									; are we at the end?
-		beq.s	EniDec_Done								; if so, branch
+		beq.s	MCD_SubEniDec_Done								; if so, branch
 
 .Copy
-		bsr.s	EniDec_GetInlineTile							; get tile
+		bsr.s	MCD_SubEniDec_GetInlineTile							; get tile
 		move.w	d1,(a1)+								; store tile
 		dbf	d0,.Copy								; loop until enough is copied
 		rts
 ; ---------------------------------------------------------------------------
 
-EniDec_Done:
+MCD_SubEniDec_Done:
 		addq.w	#4,sp									; discard return address
 		subq.w	#1,a0									; discard trailing byte
 		cmpi.w	#16,d6									; are there 2 trailing bytes?
@@ -121,12 +122,12 @@ EniDec_Done:
 		subq.w	#1,a0									; if so, discard the other byte
 
 .End
-		movea.l	(sp)+,a1								; return saved RAM buffer
+		addq.w	#4,sp								; discard original RAM pointer; a1 returns output end
 		rts
 ; ---------------------------------------------------------------------------
 
-EniDec_InlineMode00:
-		bsr.s	EniDec_GetInlineTile							; get tile
+MCD_SubEniDec_InlineMode00:
+		bsr.s	MCD_SubEniDec_GetInlineTile							; get tile
 
 .Copy
 		move.w	d1,(a1)+								; copy tile
@@ -134,8 +135,8 @@ EniDec_InlineMode00:
 		rts
 ; ---------------------------------------------------------------------------
 
-EniDec_InlineMode01:
-		bsr.s	EniDec_GetInlineTile							; get tile
+MCD_SubEniDec_InlineMode01:
+		bsr.s	MCD_SubEniDec_GetInlineTile							; get tile
 
 .Copy
 		move.w	d1,(a1)+								; copy tile
@@ -144,8 +145,8 @@ EniDec_InlineMode01:
 		rts
 ; ---------------------------------------------------------------------------
 
-EniDec_InlineMode10:
-		bsr.s	EniDec_GetInlineTile							; get tile
+MCD_SubEniDec_InlineMode10:
+		bsr.s	MCD_SubEniDec_GetInlineTile							; get tile
 
 .Copy
 		move.w	d1,(a1)+								; copy tile
@@ -154,7 +155,7 @@ EniDec_InlineMode10:
 		rts
 ; ---------------------------------------------------------------------------
 
-EniDec_GetInlineTile:
+MCD_SubEniDec_GetInlineTile:
 		move.w	a3,d7									; get tile flags
 		move.w	a2,d3									; get base tile properties
 		add.b	d7,d7									; is the priority flag set?
