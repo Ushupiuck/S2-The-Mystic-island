@@ -177,7 +177,7 @@ LevelOrder: ; Don't be fooled: the 2nd byte is the act you're transitioning TO
 		; Twilight Hill Zone
 		dc.b id_GHZ, 1	; Act 1 -> Act 2
 		dc.b id_GHZ, 2	; Act 2 -> Act 3
-		dc.b id_GHZ, 3	; Act 3 -> Act 4
+		dc.b id_SMZ, 1	; Act 3 -> SMZ Act 1
 		dc.b id_LZ, 0	; Act 4 -> Rustic Ruins Zone Act 1
 
 		; Rustic Ruins Zone
@@ -225,7 +225,7 @@ LevelOrder: ; Don't be fooled: the 2nd byte is the act you're transitioning TO
 		; Scrap Madness Zone
 		dc.b id_SMZ, 1	; Act 1 -> Act 2
 		dc.b id_SMZ, 2	; Act 2 -> Act 3
-		dc.b id_SMZ, 3	; Act 3 -> Act 4
+		dc.b id_EHZ, 1	; Act 3 -> EHZ Act 1
 		dc.b id_DEZ, 0	; Act 4 -> Death Egg Zone Act 1
 
 		; Death Egg Zone

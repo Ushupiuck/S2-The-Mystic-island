@@ -2170,31 +2170,31 @@ Demo_Levels:
 ; Use any MusID_* / bgm_* entry; defaults preserve the existing zone music.
 ; Level entry and music restoration share this lookup.
 GetLevelMusic:
-        move.w (Current_ZoneAndAct).w,d0
-        ror.b #2,d0
-        lsr.w #6,d0              ; index = Zone*4 + Act (Act is 0-3)
-        lea MusicList(pc),a1
-        move.b (a1,d0.w),d0      ; d0.w music ID; clobbers d0/a1/CCR
-        rts
+		move.w	(Current_ZoneAndAct).w,d0
+		ror.b	#2,d0
+		lsr.w	#6,d0		; index = Zone*4 + Act (Act is 0-3)
+		lea	MusicList(pc),a1
+		move.b	(a1,d0.w),d0	; d0.w music ID; clobbers d0/a1/CCR
+		rts
 
 MusicList:
-;               Act 1,       Act 2,       Act 3,       Act 4
-        dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; GHZ
-        dc.b bgm_LZ, bgm_LZ, bgm_LZ, bgm_LZ ; LZ
-        dc.b bgm_MZ, bgm_MZ, bgm_MZ, bgm_MZ ; CPZ
-        dc.b bgm_SLZ, bgm_SLZ, bgm_SLZ, bgm_SLZ ; EHZ
-        dc.b bgm_SYZ, bgm_SYZ, bgm_SYZ, bgm_SYZ ; HPZ
-        dc.b bgm_HTZ, bgm_HTZ, bgm_HTZ, bgm_HTZ ; HTZ
-        dc.b MusID_MTZ, MusID_MTZ, MusID_MTZ, MusID_MTZ ; LV6
-        dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV7
-        dc.b bgm_SBZ, bgm_SBZ, bgm_SBZ, bgm_SBZ ; SMZ
-        dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV9
-        dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0A
-        dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0B
-        dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0C
-        dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0D
-        dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0E
-        dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0F
+;		     Act 1,   Act 2,   Act 3,   Act 4
+		dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; GHZ
+		dc.b bgm_LZ, bgm_LZ, bgm_LZ, bgm_LZ ; LZ
+		dc.b bgm_MZ, bgm_MZ, bgm_MZ, bgm_MZ ; CPZ
+		dc.b bgm_SLZ, bgm_SLZ, bgm_SLZ, bgm_SLZ ; EHZ
+		dc.b bgm_SYZ, bgm_SYZ, bgm_SYZ, bgm_SYZ ; HPZ
+		dc.b MusID_HTZ, MusID_HTZ, MusID_TestSong1, MusID_Boss3 ; HTZ
+		dc.b MusID_MTZ, MusID_MTZ, MusID_MTZ, MusID_MTZ ; LV6
+		dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV7
+		dc.b bgm_SBZ, MusID_GGZ1, MusID_GGZ2, bgm_SBZ ; SMZ
+		dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV9
+		dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0A
+		dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0B
+		dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0C
+		dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0D
+		dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0E
+		dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0F
 MusicList_End:
         if MusicList_End-MusicList<>LevelActCount
             fatal "MusicList must contain four entries for every zone"
@@ -6216,10 +6216,10 @@ DynResize_EHZ2_Routine2:
 DynResize_EHZ2_Routine3:
 		; Wait for either vertical approach to finish before starting the fight.
 		cmpi.w	#EHZBoss_CameraY,(Camera_Y_pos).w
-		bne.s	.return
+		bne.s	DynResize_EHZ2_Routine4.return
 		jsr	(FindFreeObj).l
-		bne.s	.return			; retry until a controller slot is available
-		move.l	#EHZBoss,code(a1)	; load EHZ Boss object
+		bne.s	DynResize_EHZ2_Routine4.return	; retry until a controller slot is available
+		move.l	#EHZBoss,code(a1)		; load EHZ Boss object
 		move.b	#$81,obSubtype(a1)
 		move.w	#EHZBoss_LandingX,obX(a1)
 		move.w	#EHZBoss_LandingY+8,obY(a1)
@@ -6227,7 +6227,6 @@ DynResize_EHZ2_Routine3:
 		addq.b	#2,(Dynamic_Resize_Routine).w ; => DynResize_EHZ2_Routine4
 		move.w	#bgm_Boss,d0
 		bra.w	PlaySound
-.return:	rts
 ; ---------------------------------------------------------------------------
 
 DynResize_EHZ2_Routine4:
@@ -6236,6 +6235,7 @@ DynResize_EHZ2_Routine4:
 		move.w	(Camera_X_pos).w,(Camera_Min_X_pos).w
 		move.w	(Camera_Max_X_pos).w,(Tails_Max_X_pos).w
 		move.w	(Camera_X_pos).w,(Tails_Min_X_pos).w
+		move.w	#SegaScreen,(v_gamemode).w	; And for now, that's the end of the Demo, so return to the SEGA Screen!
 .return:	rts
 ; ---------------------------------------------------------------------------
 

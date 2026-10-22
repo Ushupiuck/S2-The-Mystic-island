@@ -399,6 +399,7 @@ PLC_GHZ1_Main_End:	plccheck PLC_GHZ1_Main,ActPLC_Main_Reserve
 PLC_GHZ1_Extra:		dc.w (PLC_GHZ1_Extra_End-PLC_GHZ1_Extra-2)/6-1
 		plcm	Nem_HSpring2,	ArtTile_S1_Spring_Horizontal
 		plcm	Nem_VSpring2,	ArtTile_S1_Spring_Vertical
+		plcm	Nem_GHZ_BWall,	ArtTile_GHZ_SLZ_Smashable_Wall
 		plcm	Nem_GHZ_SWall,	ArtTile_GHZ_Edge_Wall
 PLC_GHZ1_Extra_End:	plccheck PLC_GHZ1_Extra,0
 
@@ -417,6 +418,7 @@ PLC_GHZ2_Main_End:	plccheck PLC_GHZ2_Main,ActPLC_Main_Reserve
 PLC_GHZ2_Extra:		dc.w (PLC_GHZ2_Extra_End-PLC_GHZ2_Extra-2)/6-1
 		plcm	Nem_HSpring2,	ArtTile_S1_Spring_Horizontal
 		plcm	Nem_VSpring2,	ArtTile_S1_Spring_Vertical
+		plcm	Nem_GHZ_BWall,	ArtTile_GHZ_SLZ_Smashable_Wall
 		plcm	Nem_GHZ_SWall,	ArtTile_GHZ_Edge_Wall
 PLC_GHZ2_Extra_End:	plccheck PLC_GHZ2_Extra,0
 
@@ -435,6 +437,7 @@ PLC_GHZ3_Main_End:	plccheck PLC_GHZ3_Main,ActPLC_Main_Reserve
 PLC_GHZ3_Extra:		dc.w (PLC_GHZ3_Extra_End-PLC_GHZ3_Extra-2)/6-1
 		plcm	Nem_HSpring2,	ArtTile_S1_Spring_Horizontal
 		plcm	Nem_VSpring2,	ArtTile_S1_Spring_Vertical
+		plcm	Nem_GHZ_BWall,	ArtTile_GHZ_SLZ_Smashable_Wall
 		plcm	Nem_GHZ_SWall,	ArtTile_GHZ_Edge_Wall
 PLC_GHZ3_Extra_End:	plccheck PLC_GHZ3_Extra,0
 
@@ -453,6 +456,7 @@ PLC_GHZ4_Main_End:	plccheck PLC_GHZ4_Main,ActPLC_Main_Reserve
 PLC_GHZ4_Extra:		dc.w (PLC_GHZ4_Extra_End-PLC_GHZ4_Extra-2)/6-1
 		plcm	Nem_HSpring2,	ArtTile_S1_Spring_Horizontal
 		plcm	Nem_VSpring2,	ArtTile_S1_Spring_Vertical
+		plcm	Nem_GHZ_BWall,	ArtTile_GHZ_SLZ_Smashable_Wall
 		plcm	Nem_GHZ_SWall,	ArtTile_GHZ_Edge_Wall
 PLC_GHZ4_Extra_End:	plccheck PLC_GHZ4_Extra,0
 

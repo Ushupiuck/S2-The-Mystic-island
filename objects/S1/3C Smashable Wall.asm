@@ -40,7 +40,7 @@ Smash_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj3C,obMap(a0)
 		move.b	#Map_Obj3C_height,height_pixels(a0)
-		move.w	#make_art_tile($590,2,0),obGfx(a0)
+		move.w	#make_art_tile(ArtTile_GHZ_SLZ_Smashable_Wall,2,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.b	#sprite_bound($10,Map_Obj3C_width),obActWid(a0)
 		move.w	#$200,obPriority(a0)
