@@ -29,25 +29,34 @@ symbols = {key: int(value, 16) for key, value in re.findall(
 rom = a.rom.read_bytes()
 a.output.mkdir(parents=True, exist_ok=True)
 test_rom = a.rom
+sub_patch = None
 if a.delay:
-    target = symbols['loc_6DB2']
-    displaced = rom[target:target + 8]
+    on_cd = 'MCD_Subloc_6DB2' in symbols
+    target = symbols['MCD_Subloc_6DB2' if on_cd else 'loc_6DB2']
+    rom_target = target + (symbols['MCD_SubProgram'] if on_cd else 0)
+    displaced = rom[rom_target:rom_target + 8]
     assert displaced.hex() == '3610024303ffe74b', 'Review the displaced block-index instructions'
-    cave = (len(rom) + 0xFFF) & ~0xFFF
+    cave = symbols['MCD_SubStack_Start'] - 0x100 if on_cd else (len(rom) + 0xFFF) & ~0xFFF
     # Save CCR/D7, burn real 68000 cycles, restore, execute displaced code,
     # then jump back. No test RAM flag or source-data write is introduced.
     delay = (bytes.fromhex('40e72f073e3c') + struct.pack('>H', a.delay)
              + bytes.fromhex('51cffffe2e1f44df') + displaced
              + bytes.fromhex('4ef9') + struct.pack('>I', target + 8))
-    patched = bytearray(rom)
-    patched.extend(b'\xFF' * (cave + len(delay) - len(patched)))
-    patched[cave:] = delay
-    patched[target:target + 8] = bytes.fromhex('4ef9') + struct.pack('>I', cave) + bytes.fromhex('4e71')
-    struct.pack_into('>I', patched, 0x1A4, len(patched) - 1)
-    checksum = sum(struct.unpack('>' + str((len(patched) - 0x200) // 2) + 'H', patched[0x200:])) & 0xFFFF
-    struct.pack_into('>H', patched, 0x18E, checksum)
-    test_rom = a.output / 'lag-fixture.bin'
-    test_rom.write_bytes(patched)
+    jump = bytes.fromhex('4ef9') + struct.pack('>I', cave) + bytes.fromhex('4e71')
+    if on_cd:
+        # Install after the genuine upload/verification. Burn CD cycles in the
+        # relocated renderer without changing its data or mailbox algorithm.
+        sub_patch = ((cave, delay), (target, jump))
+    else:
+        patched = bytearray(rom)
+        patched.extend(b'\xFF' * (cave + len(delay) - len(patched)))
+        patched[cave:] = delay
+        patched[target:target + 8] = jump
+        struct.pack_into('>I', patched, 0x1A4, len(patched) - 1)
+        checksum = sum(struct.unpack('>' + str((len(patched) - 0x200) // 2) + 'H', patched[0x200:])) & 0xFFFF
+        struct.pack_into('>H', patched, 0x18E, checksum)
+        test_rom = a.output / 'lag-fixture.bin'
+        test_rom.write_bytes(patched)
 
 g = Genesis(a.core, test_rom, a.listing, a.output, a.pal, system_directory=a.system_directory)
 watch = []
@@ -57,7 +66,9 @@ min_sp = g.s['v_systemstack'] & 0xFFFFFF
 
 def data_at(base, count):
     address = base & 0xFFFFFF
-    if 0x420000 <= address < 0x440000:
+    if 'MCD_TerrainData_Sub' in g.s and address < 0x80000:
+        memory, offset = g.memory_domains['PRGRAM'], address
+    elif 0x420000 <= address < 0x440000:
         memory, offset = g.memory(base)
     else:
         memory, offset = g.ram, address & 0xFFFF
@@ -113,13 +124,15 @@ def menu():
 
 
 def decode(pointer):
-    if 'TwimDec' in g.s:
-        from twizzler.codec import unpack
-        return unpack(rom[pointer + (4 if 'MCD_SubTwizDec' in g.s else 0):])
     return kosinski_plus_decode(rom[pointer:])[0]
 
 
 title()
+if sub_patch:
+    prg = g.memory_domains['PRGRAM']
+    for address, data in sub_patch:
+        for i, byte in enumerate(data):
+            prg[(address+i)^1] = byte
 menu()
 for zone in (0, 2, 4):
     g.write('v_levselitem', zone * 4, 2)
@@ -137,12 +150,13 @@ for zone in (0, 2, 4):
     for name, offset, label in (('blocks', 4, 'v_16x16'), ('chunks', 8, 'Chunk_Table')):
         pointer = struct.unpack_from('>I', rom, header + offset)[0] & 0xFFFFFF
         expected = bus_order(decode(pointer))
-        base = g.s[label]
+        base = g.s[{'v_16x16':'MCD_TerrainBlocks_Sub', 'Chunk_Table':'MCD_ChunkTable_SubStart'}[label]] if 'MCD_TerrainData_Sub' in g.s else g.s[label]
         assert data_at(base, len(expected)) == expected, (zone, name, 'incorrect load')
         loaded.append((name, base, expected))
     run(250 if a.pal else 300)
     if zone == a.zone:
-        watch = loaded + [('layout', g.s['Level_Layout'], data_at(g.s['Level_Layout'], 0x1000))]
+        base = g.s['MCD_TerrainLayout_Sub'] if 'MCD_TerrainData_Sub' in g.s else g.s['Level_Layout']
+        watch = loaded + [('layout', base, data_at(base, 0x1000))]
         break
     g.write('f_slomocheat', 1)
     press(3)

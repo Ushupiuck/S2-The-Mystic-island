@@ -3,7 +3,7 @@
 ; sub PRG RAM owns the active timers. Collections are queued during physics,
 ; submitted after scrolling, and applied before sprite rendering that frame.
 ; Bank 1 is selected ONLY while interrupts are masked; every return restores
-; bank 0 so collision, scrolling and PRG-RAM DMA keep their original contract.
+; bank 0 for scene/loader DMA. Active levels then release the sub-CPU again.
 
 ; a1 = collected Ring_Positions entry. Preserve the collision loop registers.
 ; A status word prevents the second player queuing the same ring twice.
@@ -63,8 +63,8 @@ MCD_BeginRingJob:
 .idle:
 		rts
 
-; Call before Render_Sprites. VBlank may have paused an in-flight service;
-; release the sub CPU again before waiting, then reacquire for sparse output.
+; Call before Render_Sprites. Scene VBlank may have paused an in-flight job;
+; release CD before waiting, then acquire briefly for sparse output.
 MCD_FinishRingJob:
 		tst.w	(MCD_RingJobPending).l
 		beq.s	.idle
@@ -91,6 +91,10 @@ MCD_FinishRingJob:
 .copied:
 		andi.b	#$3F,(MCD_MemoryMode+1).l
 		clr.w	(MCD_RingJobPending).l
+		tst.b	(MCD_TerrainReady).l
+		beq.s	.stopped
+		move.b	#1,(MCD_SubControl+1).l
+.stopped:
 		move.w	(sp)+,sr
 .idle:
 		rts

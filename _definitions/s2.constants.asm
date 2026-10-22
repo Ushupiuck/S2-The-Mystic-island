@@ -880,6 +880,11 @@ MCD_RingEvents:		ds.w	MCD_RingSlots
 MCD_RingEventCount:	ds.w	1
 MCD_RingActiveCount:	ds.w	1
 MCD_RingJobPending:	ds.w	1
+MCD_TerrainReady:	ds.b	1
+			ds.b	1
+MCD_TerrainPending:	ds.w	1	; 0 idle, 1 CD building, 2 MD-owned strip stream
+MCD_TerrainStreamBytes:	ds.w	1
+MCD_TerrainIndexBytes:	ds.w	1	; level-load index size derived from decoded blocks
 MCD_MainWorkEnd:
 ; Uncompressed sources for the existing effect DPLCs and ring-frame uploads.
 ; Rebuild effects on level entry, and rings on either level or S1 stage entry.
@@ -901,8 +906,14 @@ Chunk_Table_End:
 Main_RAM_Start:
 v_128x128:=	Chunk_Table
 v_128x128_end:=	Chunk_Table_End
-Level_Layout:			ds.b	$1000		; level layout buffer ($1000 bytes)
+	if MegaCDMode1
+; Level-load staging only. Live terrain layout and blocks are CD-owned.
+Level_Layout:			equ	MCD_TerrainLayoutStage
+Level_Layout_End:		equ	MCD_TerrainLayoutStage+$1000
+	else
+Level_Layout:			ds.b	$1000
 Level_Layout_End:
+	endif
 
 v_lvllayout:=			Level_Layout
 v_lvllayout_end:=		Level_Layout_End
@@ -990,8 +1001,13 @@ v_endeggman	= v_objspace+object_size*2		; object variable space for Eggman after
 v_tryagain	= v_objspace+object_size*3		; object variable space for the "TRY AGAIN" text (1 SST)
 v_eggmanchaos	= v_objspace+object_size*32		; object variable space for the emeralds juggled by Eggman (6 SSTs)
 ; ---------------------------------------------------------------------------
-v_16x16:			ds.b	$1800		; $1800 bytes
+	if MegaCDMode1
+v_16x16:			equ	MCD_TerrainBlockStage
+v_16x16_End:			equ	MCD_TerrainBlockStage+$1800
+	else
+v_16x16:			ds.b	$1800
 v_16x16_End:
+	endif
 
 TempArray_LayerDef:		ds.b	$200		; background scroll buffer
 v_bgscroll_buffer:=		TempArray_LayerDef
@@ -1061,20 +1077,6 @@ Scroll_flags_BG2:		ds.w	1	; bitfield ; essentially unused; bit 0 = redraw left-m
 Scroll_flags_BG3:		ds.w	1	; bitfield ; for CPZ; bits 0-3 as Scroll_flags_BG but using Y-dependent BG camera; bits 4-5 = bits 2-3; bits 6-7 = bits 2-3
 Scroll_Flags_All_End:
 
-Camera_Positions_Copy:
-Camera_RAM_copy:		ds.l	2	; copied over every V-int
-Camera_BG_copy:			ds.l	2	; copied over every V-int
-Camera_BG2_copy:		ds.l	2	; copied over every V-int
-Camera_BG3_copy:		ds.l	2	; copied over every V-int
-Camera_Positions_Copy_End:
-
-Scroll_Flags_Copy_All:
-Scroll_flags_copy:		ds.w	1	; copied over every V-int
-Scroll_flags_BG_copy:		ds.w	1	; copied over every V-int
-Scroll_flags_BG2_copy:		ds.w	1	; copied over every V-int
-Scroll_flags_BG3_copy:		ds.w	1	; copied over every V-int
-Scroll_Flags_Copy_All_End:
-
 Camera_Difference:
 Camera_X_pos_diff:		ds.w	1	; (new X pos - old X pos) * 256
 Camera_Y_pos_diff:		ds.w	1	; (new Y pos - old Y pos) * 256
@@ -1132,7 +1134,6 @@ Camera_Boundaries_P2_End:
 Camera_RAM_End:
 ; ---------------------------------------------------------------------------
 
-Block_cache:		ds.w	512/16*2		; Width of plane in blocks, with each block getting two words.
 
 v_gamemode:		ds.w	1			; game mode - Pointer to the current Gamemode IN-ROM
 Ctrl_1_Logical:

@@ -93,13 +93,13 @@ def main():
     def canaries():
         prg[0xE000:0x26000] = tail
         if not args.baseline:
-            end = g.s['MCD_RingJob_SubEnd']
+            end = g.s['MCD_SubUserRAM_End']
             prg[end:end+64] = guard
 
     def intact():
         assert bytes(prg[0xE000:0x26000]) == tail, 'Expanded chunk tail was overwritten'
         if not args.baseline:
-            end = g.s['MCD_RingJob_SubEnd']
+            end = g.s['MCD_SubUserRAM_End']
             assert bytes(prg[end:end+64]) == guard, 'Ring job wrote past its allocation'
 
     def prepare():

@@ -204,6 +204,9 @@ Obj_CreateBossExplosion <--- CHECKLATER
 ; ---------------------------------------------------------------------------
 To-Do:
 
+After the CD terrain/object/decompression migration: investigate remapping GHZ's
+collision indices to the S2 height/angle table, preserving all terrain shapes.
+
 ObjAnimal < ---- Optional: Edit Ending animals to load as normal objects (aka reload when you approach them); this has to do with ObjAnimal_ChkDel
 
 Obj_StarPost_MakeSpecialStars

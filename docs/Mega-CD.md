@@ -10,23 +10,26 @@ absent, one for ready, `$FF` for failed initialization. ROM must fit below `$400
 The application initializes the Gate Array and owns the sub-CPU directly.
 It calls no BIOS routines and needs no disc or MMD modules. The conventional
 `$000000-$005FFF` BIOS area is reserved; the raw subprogram and its 64 vectors
-occupy its beginning. This does not load Sega's BIOS. Stack starts at `$80000`;
+occupy its beginning. This does not load Sega's BIOS. Stack top is `$7FFF0`, with a 16-byte bus-read guard below Word RAM;
 PCM and sub-CPU interrupts start disabled. Disc, CDDA, backup RAM and graphics
 jobs remain future work; Z80 sound remains on its existing storage.
 
 ## CPU source boundary
 
 `md-main.asm` contains the Mega Drive vectors, entry point and game. It includes
-`_inc/Mega CD.asm` and `_inc/Mega CD Ring Jobs.asm`: despite their CD-related
+`_inc/Mega CD.asm`, `_inc/Mega CD Ring Jobs.asm` and
+`_inc/Mega CD Terrain Jobs.asm`: despite their CD-related
 names, these are **main-CPU** loaders, bus/DMA helpers and mailbox callers.
 
 `mcd-main.asm` contains the **sub-CPU** vectors, `MCD_SubEntry`, command service
-and ring executors. The MD entry point embeds it between `MCD_SubProgram` and
+and ring/terrain executors. The MD entry point embeds it between `MCD_SubProgram` and
 `MCD_SubProgramEnd`, using `phase 0` to assemble its CD execution addresses.
 The existing bootstrap uploads those bytes to PRG RAM. This is one cartridge
 build, not two separately linked ROMs. Shared hardware/RAM definitions remain
 in `_definitions/`; subsystem includes inherit their entry point's CPU owner.
-Renaming the sources does not move collision, scrolling or sound execution.
+Normal-level terrain lookup, collision scans, ground attachment, airborne
+collision resolution and tilemap construction execute on CD. Camera motion,
+object control, VDP output and sound still execute on MD.
 
 ## Memory and ownership
 
@@ -44,6 +47,7 @@ aliases translate physical addresses; they do not allocate another copy.
 | Expanded chunk buffer | Crosses banks 0/1 | `$006000-$025FFF`, 128 KiB |
 | Currently used chunks/scene overlays | `$426000-$42DFFF`, bank 0 | `$006000-$00DFFF`, 32 KiB |
 | Ring job storage | `$426000-$426E0F`, bank 1 | `$026000-$026E0F` |
+| Resident terrain and work state | No normal-frame PRG access | `$026E10-$02BE17` |
 | 256 KiB Word RAM, 2M mode | `$600000-$63FFFF` while owned | `$080000-$0BFFFF` while owned |
 | Communication registers | `$A12010-$A1202F` | `$FF8010-$FF802F` |
 
@@ -55,15 +59,15 @@ allocation is not a contiguous main-CPU pointer, and jobs cannot use its tail.
 
 MD work RAM is packed against the top of its 64 KiB address space. The single
 free allocation is `Free_RAM_Start` through `Free_RAM_End` (end exclusive):
-`$FF0000-$FF7503`, **`$7504` bytes (29,956)**. This includes the former 580-byte
-object-state reservation, 98 bytes of tail padding and the retired two-byte
-CPU-object pointer slot. One byte remains for word alignment. The current live ranges are:
+`$FF0000-$FF9DA3`, **`$9DA4` bytes (40,356)**. Terrain migration removes
+MD layout/block storage and the old camera/scroll copies and block cache,
+with eight new control bytes: a net gain of 10,400 bytes. Current live ranges:
 
 | Allocation | MD address, inclusive | Size |
 | --- | --- | --- |
-| Ring event queue/control | `$FF7504-$FF7707` | `$204` |
-| [Decompressed player art](Sprites-and-VRAM.md#mode-1-ram-art) | `$FF7708-$FF82A7` | `$BA0` |
-| Engine variables and work buffers | `$FF82A8-$FFFFFF` | `$7D58` |
+| Ring/terrain event and control state | `$FF9DA4-$FF9FAF` | `$20C` |
+| [Decompressed player art](Sprites-and-VRAM.md#mode-1-ram-art) | `$FF9FB0-$FFAB4F` | `$BA0` |
+| Engine variables and work buffers | `$FFAB50-$FFFFFF` | `$54B0` |
 
 `_definitions/s2.constants.asm` derives the engine's start from its own declared
 size, then places CD work/art immediately below it. Allocation changes move the
@@ -74,11 +78,32 @@ spill area and `$140`-byte system stack remain live allocations; they are not
 free RAM. The stack has explicit `System_Stack_Start`/`v_systemstack` bounds.
 The rotating S1 stage uses its separate CD chunk-table overlay.
 
-The main CPU owns PRG bank 0 during game work. `WaitForVint` releases the
-sub-CPU; `V_Int` reacquires the bus/selects bank 0 before chunk readers or queued
-DMA. Synchronous commands mask interrupts, run with the bus released and restore
-bank 0 before returning. Bank-1 copies also mask interrupts and restore bank 0.
-Retain the bus/bank through PRG DMA consumption; splitting DMA does not switch banks.
+Active levels leave PRG RAM with CD. Terrain calls transfer compact mailbox
+arguments, never stop CD for a chunk read. Ring updates briefly acquire bank 1,
+copy sparse changes, restore bank 0 and release CD again. Loading and non-level
+scenes explicitly acquire bank 0 for their existing scratch and PRG DMA paths.
+Retain that bus/bank through PRG DMA consumption.
+
+Word RAM holds a 44-byte frame snapshot at `$600000`, a strip stream from
+`$600040` to `$60FFFF`, and level staging from `$610000`. `v_16x16` and
+`Level_Layout` name staging aliases; gameplay uses the resident CD copies.
+`MCD_LoadTerrain` copies blocks, layout, collision indices and the selected
+S1/S2 height/width/angle bank once on level entry. Chunks already reside on CD.
+The rotating S1 stage retains its separate MD renderer and staging/PRG overlays.
+
+After scrolling, CD constructs changed tile strips while MD renders sprites
+and finishes other work. Foreground `MCD_FinishTerrainJob` waits before requesting
+a full VBlank. The VDP handler only drains stable, MD-owned records; it never
+waits for the terrain executor. Each record is a VDP command long, a count word
+of data longs, then those data. Word RAM remains MD-owned until consumption.
+Restarts and scene changes drain jobs before clearing their controls.
+
+Paired sensors and the complete Sonic/Tails airborne collision pass execute
+on CD. MD sends only the required coordinates, radii, velocity and flags, then
+applies the result and any character-specific landing callback. Ground attachment
+also executes on CD; object behavior and motion remain MD-owned. Small single
+probes pay mailbox overhead: clock speed alone does not guarantee a gain.
+The terrain runner measures complete calls, including waits.
 
 ## CPU work and ring jobs
 
@@ -89,7 +114,7 @@ PLC/module and oscillator work. `MCD_FinishRingJob` waits/copies active status
 words before rendering. Collision, rewards, sound and rendering stay on MD.
 No job is submitted without events or active animations; no idle 255-slot scan runs.
 
-VBlank may pause the job for bank 0; finishing releases it again before waiting.
+Non-level VBlank may pause the job for bank 0; finishing releases it again before waiting.
 Pause freezes animation, and restart drains/resets job state before level clears.
 Normal sparse work benefits from offload; a synthetic 255-simultaneous-animation
 case can cost more because of copying/waits. The runner measures the whole
@@ -103,7 +128,10 @@ that owns it** together; moving RAM alone is not a CPU offload.
 
 `MCD_Command`: command word in `d0`, argument in `d1`, result in `d0`; carry
 signals absent/busy/failure, `d2-d3` are clobbered. A complemented token serializes
-requests; request/result data precede token/ack publication. Bootstrap publishes
+requests; request/result data precede token/ack publication. The low command
+byte selects the handler; terrain operations use its high byte for compact
+inputs. The sub-CPU flags byte carries ready/error and airborne-result flags.
+Result word `$22` is available to terrain, rather than a permanent ready marker. Bootstrap publishes
 its complete first request before starting the sub-CPU, avoiding warm-reset races.
 
 | Command | Result |
@@ -113,6 +141,12 @@ its complete first request before starting the sub-CPU, avoiding warm-reset race
 | `MCD_CommandReturnRAM` (2) | Return 2M Word RAM to MD, zero |
 | `MCD_CommandRingTick` (3) | Active animation count |
 | `MCD_CommandRingReset` (4) | Clear animation state, zero |
+| `MCD_CommandTerrainLoad` (5) | Install resident level data, return Word RAM |
+| `MCD_CommandTerrainDraw` (6) | Construct changed strips / initial planes |
+| `MCD_CommandTerrainFloor/Wall` (7/8) | Complete explicit-coordinate sensor scan |
+| `MCD_CommandLayoutRead/Write` (9/10) | Level-script byte access |
+| `MCD_CommandTerrainAir` (11) | Whole airborne collision pass |
+| `$20-$2D` | Ground attachment and complete object/sensor operations |
 | Other | `$FFFF` |
 
 `MCD_AcquireWordRAM` supports 2M mode, clobbers `d0-d3` and reports failure in

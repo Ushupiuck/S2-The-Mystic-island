@@ -29,7 +29,12 @@ def main():
         assert address('Main_RAM_Start') >= 0xFF8000
         assert address('Main_RAM_End') == 0
     assert address('Kos_decomp_buffer_End') == address('v_objspace')
-    assert address('v_objspace_end') == address('v_16x16')
+    assert address('v_objspace_end') == address('TempArray_LayerDef' if symbols['MegaCDMode1'] else 'v_16x16')
+    if symbols['MegaCDMode1']:
+        assert address('v_16x16') == symbols['MCD_TerrainBlockStage']
+        assert address('Level_Layout') == symbols['MCD_TerrainLayoutStage']
+        assert symbols['MCD_Terrain_SubEnd'] <= symbols['MCD_SubStack_Start']
+        assert symbols['MCD_SubStack_Top'] < 0x80000
     assert address('Debug_saved_height') + 1 == address('Object_Display_Lists')
     for palette in ('v_palette', 'v_palette_fading', 'v_palette_water', 'v_palette_water_fading'):
         for line in (2, 3, 4):

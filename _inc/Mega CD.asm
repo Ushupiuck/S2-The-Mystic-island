@@ -3,6 +3,8 @@
 ; Clobbers d0-d3/a0-a1. Absent/failed hardware leaves the game in MD RAM.
 MCD_Init:
 		clr.b	(MCD_status).w
+		clr.b	(MCD_TerrainReady).l
+		clr.w	(MCD_TerrainPending).l
 		clr.w	(MCD_RingEventCount).l
 		clr.w	(MCD_RingActiveCount).l
 		clr.w	(MCD_RingJobPending).l
@@ -85,9 +87,9 @@ MCD_Init:
 		move.b	#MCD_StatusFailed,(MCD_status).w
 		rts
 
-; Main owns PRG-RAM bank 0 during work. WaitForVint releases the sub-CPU;
-; V_Int takes the bus back before any queued PRG-RAM DMA or chunk readers.
-; Keep the bank fixed: chunks occupy physical $6000-$DFFF.
+; Loading/scene code acquires bank 0 explicitly. During active levels the CD
+; keeps PRG RAM, including the chunk table and every terrain executor. VBlank
+; only acquires this bus for scenes that still use PRG-RAM scratch/DMA.
 ; d3 is scratch; carry reports failure. The caller masks interrupts.
 MCD_AcquireProgramRAM:
 		cmpi.b	#MCD_StatusReady,(MCD_status).w
@@ -112,7 +114,9 @@ MCD_RequireProgramRAM:
 		rts
 
 ; Serialized main->sub request. Publish token last, acknowledge result last.
-; Release PRG-RAM while the service runs and reacquire before returning.
+; Release PRG-RAM for the service; loading/scenes reacquire it on return.
+; Active levels leave the CD running. Terrain calls use the compact caller
+; in Mega CD Terrain Jobs.asm and never acquire PRG RAM.
 ; IRQs stay masked so VBlank cannot steal the bus during the handshake.
 ; In: d0.w command, d1.w argument. Out: d0.w result, carry on failure/busy.
 ; Clobbers d2-d3. The fresh token complements the previous acknowledgement.
@@ -133,8 +137,11 @@ MCD_Command:
 		move.w	#MCD_WaitLimit,d3
 		bsr.s	MCD_WaitReply
 		bcs.s	.reclaimFailed
+		tst.b	(MCD_TerrainReady).l
+		bne.s	.complete
 		bsr.w	MCD_AcquireProgramRAM
 		bcs.w	MCD_Unavailable
+.complete:
 		move.w	(sp)+,sr
 		andi	#$FE,ccr
 		rts
@@ -155,7 +162,9 @@ MCD_WaitReply:
 		ori	#1,ccr
 		rts
 .acknowledged:
-		cmpi.w	#MCD_Ready,(MCD_SubStatus).l
+		move.b	(MCD_SubFlags).l,d0
+		andi.b	#MCD_ServiceReady|MCD_ServiceError,d0
+		cmpi.b	#MCD_ServiceReady,d0
 		bne.s	.failed
 		move.w	(MCD_SubResult).l,d0
 		andi	#$FE,ccr

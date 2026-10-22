@@ -2,7 +2,8 @@
 
 Importing this module does not parse arguments or run regressions. Pass the
 matching ROM and listing to Native/Manager; defaults use this checkout's build.
-Only sound/DMA/VDP boundaries documented by the fixtures are stubbed.
+Sound/DMA/VDP boundaries are stubbed. CD terrain requests execute the assembled
+executor in a second 68000; hardware scheduling is covered by libretro checks.
 """
 from pathlib import Path
 import re
@@ -38,6 +39,16 @@ class Native:
         # Hardware ownership and bank switching belong to the emulator checks.
         if self.s['MegaCDMode1']:
             self.cpu.mem_map(0x420000, 0x20000)
+        if 'MCD_TerrainRequest' in self.s:
+            self.cpu.mem_map(0x600000, 0x40000)
+            self.cpu.mem_map(0xA12000, 0x1000)
+            self.sub = Uc(UC_ARCH_M68K, UC_MODE_BIG_ENDIAN)
+            self.sub.ctl_set_cpu_model(UC_CPU_M68K_M68000)
+            self.sub.mem_map(0, 0xC0000)
+            self.sub.mem_map(0xFF0000, 0x10000)
+            self.sub.mem_map(0xFFFF0000, 0x10000)
+            begin, end = self.s['MCD_SubProgram'], self.s['MCD_SubProgramEnd']
+            self.sub.mem_write(0, data[begin:end])
         self.cpu.mem_map(0xFF0000, 0x10000)
         self.cpu.mem_map(0xFFFF0000, 0x10000)
         self.cpu.mem_write(0, data)
@@ -51,13 +62,16 @@ class Native:
             self.cpu.mem_write(self.s[label], bytes.fromhex('4E75'))
         self.cpu.hook_add(UC_HOOK_MEM_READ | UC_HOOK_MEM_WRITE, self.bus)
         self.cpu.hook_add(UC_HOOK_MEM_READ_UNMAPPED, self.alias)
-        self.cpu.hook_add(UC_HOOK_CODE, self.hook)
+        self.cpu.hook_add(UC_HOOK_CODE, self.dispatch_hook)
         self.uploads = []
 
     def bus(self, cpu, access, address, size, value, unused):
         physical = address & 0xFFFFFF
         if access != UC_MEM_READ:
-            assert physical >= 0xFF0000 or (self.s['MegaCDMode1'] and 0x420000 <= physical < 0x440000), f'Unexpected CPU write outside RAM: {address:X}'
+            assert (physical >= 0xFF0000 or
+                    (self.s['MegaCDMode1'] and 0x420000 <= physical < 0x440000) or
+                    ('MCD_TerrainRequest' in self.s and
+                     (0x600000 <= physical < 0x640000 or 0xA12000 <= physical < 0xA13000))), f'Unexpected CPU write outside RAM: {address:X}'
         if address != physical and physical >= 0xFF0000:
             if access == UC_MEM_READ:
                 cpu.mem_write(address, bytes(cpu.mem_read(physical, size)))
@@ -83,6 +97,71 @@ class Native:
             for reg in DATA:
                 cpu.reg_write(reg, 0xDEADC0DE)
             cpu.reg_write(UC_M68K_REG_A1, 0xFFFFBABA)
+
+    def dispatch_hook(self, cpu, address, size, unused):
+        if address == self.s.get('MCD_TerrainRequest'):
+            self.terrain_request()
+            stack = cpu.reg_read(UC_M68K_REG_A7) & 0xFFFFFF
+            target = int.from_bytes(cpu.mem_read(stack, 4), 'big')
+            cpu.reg_write(UC_M68K_REG_A7, stack + 4)
+            cpu.reg_write(UC_M68K_REG_PC, target)
+            return
+        self.hook(cpu, address, size, unused)
+
+    def terrain_request(self):
+        """Transfer fixture inputs and run the real CD geometry, never a model.
+
+        Existing native fixtures edit MD staging directly. Refresh resident CD
+        data here to preserve that fixture interface; real boot/transport and
+        ownership are tested with both CPUs under Genesis Plus GX.
+        """
+        s, sub, cpu = self.s, self.sub, self.cpu
+        for source, dest, length in (
+                ('Chunk_Table', 'MCD_ChunkTable_SubStart', 0x8000),
+                ('v_16x16', 'MCD_TerrainBlocks_Sub', 0x1800),
+                ('v_lvllayout', 'MCD_TerrainLayout_Sub', 0x1000)):
+            sub.mem_write(s[dest], bytes(cpu.mem_read(s[source] & 0xFFFFFF, length)))
+        zone = self.read('Current_Zone')
+        prefix = 'S1_' if zone in (0, 1, s['id_SMZ']) else ''
+        for source, dest, length in (
+                ('ColArray1', 'MCD_TerrainHeights_Sub', 0x1000),
+                ('ColArray2', 'MCD_TerrainWidths_Sub', 0x1000),
+                ('AngleMap', 'MCD_TerrainAngles_Sub', 0x100)):
+            sub.mem_write(s[dest], bytes(cpu.mem_read(s[prefix + source], length)))
+        for i in (1, 2):
+            pointer = self.read('v_colladdr' + str(i), 4) & 0xFFFFFF
+            # Preserve independently supplied fixture paths, including offsets.
+            dest = s['MCD_TerrainIndex_Sub'] + (i - 1) * s['MCD_TerrainIndexCapacity']
+            # The ordinary allocation is interleaved. The fixture's second
+            # table lives in otherwise unused PRG RAM for independent paths.
+            if i == 2:
+                dest = 0x70000
+            sub.mem_write(dest, bytes(cpu.mem_read(pointer, s['MCD_TerrainIndexCapacity'])))
+            sub.mem_write(s['MCD_TerrainPath' + str(i) + '_Sub'], struct.pack('>I', dest))
+        path = 2 if self.read('Collision_addr', 4) == self.read('v_colladdr2', 4) else 1
+        sub.mem_write(s['MCD_TerrainPath_Sub'], bytes(sub.mem_read(s['MCD_TerrainPath' + str(path) + '_Sub'], 4)))
+        sub.mem_write(s['MCD_TerrainPrimary_Sub'], bytes((self.read('Primary_Angle'), self.read('Secondary_Angle'))))
+        sub.mem_write(0xFF800E, bytes(cpu.mem_read(0xA1200E, 0x22)))
+        command = cpu.reg_read(UC_M68K_REG_D0) & 65535
+        sub.mem_write(s['MCD_SubMainCommand'], struct.pack('>H', command))
+        sub.mem_write(s['MCD_SubOwnFlags'], bytes((s['MCD_ServiceReady'],)))
+        kind = command & 255
+        routine = {7: 'MCD_SubTerrainProbe', 8: 'MCD_SubTerrainProbe',
+                   9: 'MCD_SubTerrainLayout', 10: 'MCD_SubTerrainLayout',
+                   11: 'MCD_SubTerrainAir'}.get(kind, 'MCD_SubTerrainObject')
+        stop, stack = 0x7FBF0, s['MCD_SubStack_Top'] - 4
+        sub.mem_write(stack, struct.pack('>I', stop))
+        sub.reg_write(UC_M68K_REG_SR, 0x2700)
+        sub.reg_write(UC_M68K_REG_A7, stack)
+        sub.reg_write(UC_M68K_REG_D0, command)
+        sub.emu_start(s[routine], stop, count=100000)
+        assert sub.reg_read(UC_M68K_REG_PC) == stop, routine
+        assert sub.reg_read(UC_M68K_REG_A7) == stack + 4, routine
+        result = sub.reg_read(UC_M68K_REG_D0) & 65535
+        sub.mem_write(s['MCD_SubOwnResult'], struct.pack('>H', result))
+        cpu.mem_write(0xA12020, bytes(sub.mem_read(0xFF8020, 0x10)))
+        cpu.mem_write(0xA1200F, bytes(sub.mem_read(0xFF800F, 1)))
+        cpu.reg_write(UC_M68K_REG_D0, result)
 
     def write(self, name, value, size=1):
         self.cpu.mem_write(self.s[name] & 0xFFFFFF, value.to_bytes(size, 'big'))

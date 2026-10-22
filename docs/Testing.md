@@ -52,9 +52,10 @@ python build_tools/check_card_art.py --rom s2built.bin --listing md-main.lst
 `check_level_lag.py` loads GHZ, CPZ and HPZ in order, waits at least five seconds
 in each, and uses Debug Start+A between levels. It then traverses HPZ in Debug
 while comparing the loaded block definitions, chunks and complete layout every
-frame. `--zone 2` stops in dry CPZ instead. `--delay 0` uses the unmodified ROM;
-the default inserts a register/CCR-preserving guest CPU delay into block drawing
-in a disposable ROM under the output directory. This deliberately amplifies lag
+frame, using resident CD tables on the terrain-offload build. `--zone 2` stops in dry CPZ instead. `--delay 0` uses the unmodified ROM;
+the default inserts a register/CCR-preserving guest CPU delay into block drawing.
+On the terrain-offload build it patches uploaded CD code in unused PRG RAM;
+on the cartridge build it creates a disposable ROM under the output directory. This deliberately amplifies lag
 while retaining normal IRQ/VDP/CD scheduling. It is a deterministic stress check,
 not proof that every intermittent corruption report has the same cause.
 
@@ -96,8 +97,9 @@ that offer it. Most primary-player selectors use `--player 0` (Sonic) or `2`
 Several runners compare with a specific earlier revision; their baseline is
 part of the fixture, not automatically the parent commit. Check their CLI/source
 before reusing them with an unrelated baseline. Native fixtures use the declared
-system stack and map the CD bank-0 chunk/scene window on Mode 1 builds; they do
-not emulate CD ownership. The emulator checks below cover that hardware path.
+system stack, map staging and execute CD terrain requests in a second Unicorn
+68000. Fixture data is copied to its resident tables at the mailbox boundary;
+this tests the assembled algorithms and caller ABI, not CD bus scheduling. The emulator checks below cover that hardware path.
 
 CD boot needs a supplied system directory. Only runners exposing
 `--system-directory` support that setup directly (including level pages, act
@@ -112,13 +114,24 @@ then create the emulator identification fixture and use its directory:
 
 ```sh
 python build_tools/check_mode1.py --core /path/to/genesis_plus_gx_libretro.so --rom s2built.bin --listing md-main.lst --output test-results/mode1
+python build_tools/check_cd_terrain.py --core /path/to/genesis_plus_gx_libretro.so --system-directory test-results/mode1/identification-fixture --output test-results/cd-terrain
 python build_tools/check_cd_chunks.py --core /path/to/genesis_plus_gx_libretro.so --system-directory test-results/mode1/identification-fixture --output test-results/cd-chunks
 python build_tools/check_cd_ring_jobs.py --core /path/to/genesis_plus_gx_libretro.so --system-directory test-results/mode1/identification-fixture --rom s2built.bin --listing md-main.lst --output test-results/cd-rings
 ```
 
-Each offers `--pal`. `check_cd_chunks.py` uses the root `s2built.bin`/`md-main.lst`
+Each offers `--pal`. For an old/new terrain comparison, run the previous ROM
+with `check_cd_terrain.py --baseline --rom ... --listing ...`, then pass its
+`report.json` as `--reference` to the current build. Use separate output folders.
+`--zone 0` exercises the S1 height bank and `--zone 2` the S2 bank. It compares
+1,216 full actor/sensor calls, six complete plane constructions and controller
+walking against the reference. It also checks 600 jumping frames and free-RAM
+canaries; these are not asserted frame-identical to the previous engine because
+scene scheduling can shift NPC/random phases. Reported CPU costs include the
+mailbox wait, not just the CD routine.
+
+ `check_cd_chunks.py` uses the root `s2built.bin`/`md-main.lst`
 directly; it has no ROM/listing flags. It checks all 256x64 chunk/block addresses,
-row/column plane writes/flips/edges, ordinary frames and a rotating stage, with
+CD row/column stream records/flips/edges, ordinary frames and a rotating stage, with
 remaining-free-MD-RAM canaries. It also poisons the player-art cache before
 entering the rotating stage, checks that stage's RAM-to-VRAM ring upload, then
 returns through results and verifies all three level sources are rebuilt.
