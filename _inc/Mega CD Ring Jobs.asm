@@ -1,3 +1,4 @@
+; Mega Drive main-68000 code, included by md-main.asm.
 ; Sparse ring animation service. Main RAM keeps the visible status words;
 ; sub PRG RAM owns the active timers. Collections are queued during physics,
 ; submitted after scrolling, and applied before sprite rendering that frame.

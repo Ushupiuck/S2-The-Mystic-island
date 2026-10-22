@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--core', type=Path, required=True)
 parser.add_argument('--rom', type=Path, default=ROOT / 's2built.bin')
-parser.add_argument('--listing', type=Path, default=ROOT / 'main.lst')
+parser.add_argument('--listing', type=Path, default=ROOT / 'md-main.lst')
 parser.add_argument('--output', type=Path)
 args = parser.parse_args()
 checks = []

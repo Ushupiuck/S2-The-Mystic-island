@@ -5,7 +5,7 @@ Run commands from the repository root. Windows is the primary environment:
 the matching bundled native tools and Mono for the sound packers. Sound-tool
 rebuilds and native Windows checks are covered by
 [the sound guide](../build_tools/sound/README.md) and [AGENTS.md](../AGENTS.md).
-The build produces `s2built.bin`, `main.lst` and generated sprite bounds.
+The build produces `s2built.bin`, `md-main.lst` and generated sprite bounds.
 
 Python checks require Python 3. Native 68000 fixtures additionally need Unicorn;
 emulator runners need NumPy, Pillow and a Genesis Plus GX libretro shared
@@ -44,7 +44,7 @@ arguments nor runs the manager regression suite.
 Card data and queue backpressure also have a native check (requires Unicorn):
 
 ```sh
-python build_tools/check_card_art.py --rom s2built.bin --listing main.lst
+python build_tools/check_card_art.py --rom s2built.bin --listing md-main.lst
 ```
 
 ## Runtime checks
@@ -59,7 +59,7 @@ while retaining normal IRQ/VDP/CD scheduling. It is a deterministic stress check
 not proof that every intermittent corruption report has the same cause.
 
 ```sh
-python build_tools/check_level_lag.py --core /path/to/genesis_plus_gx_libretro.so --rom s2built.bin --listing main.lst --output test-results/level-lag
+python build_tools/check_level_lag.py --core /path/to/genesis_plus_gx_libretro.so --rom s2built.bin --listing md-main.lst --output test-results/level-lag
 ```
 
 Add `--system-directory /path/to/bios` for CD builds, or `--pal` for PAL. See
@@ -71,7 +71,7 @@ correct decompression on entry does not rule that out.
 Example for the shared visual regressions (life art, SMZ smoke/flame and boss flash):
 
 ```sh
-python build_tools/check_visual_followup.py --core /path/to/genesis_plus_gx_libretro.so --rom s2built.bin --listing main.lst --output test-results/visual
+python build_tools/check_visual_followup.py --core /path/to/genesis_plus_gx_libretro.so --rom s2built.bin --listing md-main.lst --output test-results/visual
 ```
 
 Use distinct output directories per ROM/region/player. Add `--pal` only to runners
@@ -111,12 +111,12 @@ Check out `test/rebuilt-kehmusic` for the CD-specific scripts. Build normally,
 then create the emulator identification fixture and use its directory:
 
 ```sh
-python build_tools/check_mode1.py --core /path/to/genesis_plus_gx_libretro.so --rom s2built.bin --listing main.lst --output test-results/mode1
+python build_tools/check_mode1.py --core /path/to/genesis_plus_gx_libretro.so --rom s2built.bin --listing md-main.lst --output test-results/mode1
 python build_tools/check_cd_chunks.py --core /path/to/genesis_plus_gx_libretro.so --system-directory test-results/mode1/identification-fixture --output test-results/cd-chunks
-python build_tools/check_cd_ring_jobs.py --core /path/to/genesis_plus_gx_libretro.so --system-directory test-results/mode1/identification-fixture --rom s2built.bin --listing main.lst --output test-results/cd-rings
+python build_tools/check_cd_ring_jobs.py --core /path/to/genesis_plus_gx_libretro.so --system-directory test-results/mode1/identification-fixture --rom s2built.bin --listing md-main.lst --output test-results/cd-rings
 ```
 
-Each offers `--pal`. `check_cd_chunks.py` uses the root `s2built.bin`/`main.lst`
+Each offers `--pal`. `check_cd_chunks.py` uses the root `s2built.bin`/`md-main.lst`
 directly; it has no ROM/listing flags. It checks all 256x64 chunk/block addresses,
 row/column plane writes/flips/edges, ordinary frames and a rotating stage, with
 remaining-free-MD-RAM canaries. It also poisons the player-art cache before

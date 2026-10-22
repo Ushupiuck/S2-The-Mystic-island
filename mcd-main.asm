@@ -1,8 +1,12 @@
-; Raw cartridge-resident program uploaded into PRG-RAM bank 0. No BIOS
-; services are executed. This code occupies the conventional BIOS area;
-; chunk/job allocations follow it. Disc/BRAM drivers come later.
-MCD_SubProgram:
-		phase	0
+; ===========================================================================
+; Sonic the Mystic Island Project -- Mega-CD sub-68000 program
+; ===========================================================================
+; Runs in CD PRG RAM from address 0; MCD_SubEntry is its reset entry point.
+; md-main.asm embeds/uploads this program and supplies the shared _definitions.
+; Only CD-CPU code belongs here or in its subsystem includes. Main-CPU bus,
+; DMA and mailbox callers remain on the Mega Drive side.
+
+	CPU 68000
 		dc.l	$80000,MCD_SubEntry
 		rept	24
 		dc.l	MCD_SubError
@@ -125,8 +129,3 @@ MCD_SubRingTick:
 		move.w	d4,d0
 		rts
 		even
-		dephase
-MCD_SubProgramEnd:
-		if (MCD_SubProgramEnd-MCD_SubProgram)>MCD_BIOS_RAM_End
-			fatal "Mode 1 bootstrap overlaps the first user PRG-RAM allocation"
-		endif

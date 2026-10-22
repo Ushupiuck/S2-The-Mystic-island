@@ -1,5 +1,5 @@
 ; ===========================================================================
-; Sonic the Mystic Island Project -- Mega Drive / Mega-CD Mode 1
+; Sonic the Mystic Island Project -- Mega Drive main-68000 program
 ; ===========================================================================
 
 FixBugs			= 1	; change to 1 to enable bugfixes
@@ -17721,8 +17721,17 @@ Art_S3LevelSelectBackground: binclude "art/uncompressed/S3 Level Select Backgrou
 Art_SMZSmoke: binclude "art/uncompressed/SMZ Smoke.bin"
         even
 
+; Embed the separate CD-CPU program at its execution address. The MD loader
+; copies this ROM image to CD PRG RAM before starting MCD_SubEntry.
 	if MegaCDMode1
-		include "_inc/Mega CD Sub CPU.asm"
+MCD_SubProgram:
+		phase	0
+		include "mcd-main.asm"
+		dephase
+MCD_SubProgramEnd:
+		if (MCD_SubProgramEnd-MCD_SubProgram)>MCD_BIOS_RAM_End
+			fatal "Mode 1 bootstrap overlaps the first user PRG-RAM allocation"
+		endif
 	endif
 
  if AdvancedHandler=1

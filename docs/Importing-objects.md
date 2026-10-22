@@ -6,7 +6,7 @@ offsets. [Objects](Objects.md) owns the SST, loading, dispatch and respawn ABI;
 
 ## Import checklist
 
-1. Include the implementation/mappings through `main.asm` and connect the
+1. Include the implementation/mappings through `md-main.asm` and connect the
    placement ID in `Obj_Index`, or the event that creates it. Dynamic creation
    writes `move.l #ObjectEntry,code(a1)`; initialize the complete pointer.
 2. Convert mappings to the ordinary six-byte format before generating bounds.

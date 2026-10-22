@@ -13,7 +13,7 @@ def main():
     rom = (ROOT / 's2built.bin').read_bytes()
     symbols = {name: int(value, 16) for name, value in re.findall(
         r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]',
-        (ROOT / 'main.lst').read_text())}
+        (ROOT / 'md-main.lst').read_text())}
 
     def cues(label):
         start = symbols[label]

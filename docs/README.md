@@ -23,6 +23,12 @@ own song/SFX importing, packer formats and sound-tool builds.
 
 ## Source organization
 
+`md-main.asm` is the Mega Drive main-68000 entry point. `mcd-main.asm` is the
+Mega-CD sub-68000 program, embedded in the same cartridge ROM and uploaded into
+CD PRG RAM at startup. Both CPUs are 68000s; distinguish code by its owner,
+not by instruction set. See [Mega-CD](Mega-CD.md#cpu-source-boundary) for the
+assembly and mailbox boundary.
+
 `_definitions/` groups the shared constants, RAM declarations, assembler setup
 and macros, debugger definitions, and generated sprite bounds. Constants and RAM
 variables remain together in `_definitions/s2.constants.asm`; the CD build adds

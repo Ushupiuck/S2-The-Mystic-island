@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 p = argparse.ArgumentParser(description=__doc__)
 p.add_argument('--core', type=Path, required=True)
 p.add_argument('--rom', type=Path, default=ROOT/'s2built.bin')
-p.add_argument('--listing', type=Path, default=ROOT/'main.lst')
+p.add_argument('--listing', type=Path, default=ROOT/'md-main.lst')
 p.add_argument('--output', type=Path)
 p.add_argument('--wheel', type=int, help='Check only this zero-based placement')
 p.add_argument('--player', type=int, choices=(1, 2), help=argparse.SUPPRESS)

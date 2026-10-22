@@ -24,7 +24,7 @@ DATA = [UC_M68K_REG_D0, UC_M68K_REG_D1, UC_M68K_REG_D2, UC_M68K_REG_D3]
 class Native:
     def __init__(self, rom=None, listing=None):
         rom = Path(rom) if rom is not None else ROOT / 's2built.bin'
-        listing = Path(listing) if listing is not None else ROOT / 'main.lst'
+        listing = Path(listing) if listing is not None else ROOT / 'md-main.lst'
         data = rom.read_bytes()
         listing = listing.read_text()
         assert 'Symbol Table' in listing, 'Build must finish before testing its listing'

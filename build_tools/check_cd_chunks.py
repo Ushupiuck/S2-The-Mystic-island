@@ -20,7 +20,7 @@ for name in ('core', 'output', 'system-directory'):
     p.add_argument('--' + name, type=Path, required=True)
 p.add_argument('--pal', action='store_true')
 a = p.parse_args()
-g = Genesis(a.core, ROOT/'s2built.bin', ROOT/'main.lst', a.output,
+g = Genesis(a.core, ROOT/'s2built.bin', ROOT/'md-main.lst', a.output,
             a.pal, system_directory=a.system_directory)
 assert g.s['Chunk_Table'] == g.s['MCD_ProgramRAM'] + g.s['MCD_BIOS_RAM_End'] == 0x426000
 assert g.s['Chunk_Table_End'] - g.s['Chunk_Table'] == 0x8000
@@ -134,7 +134,7 @@ g.video.save(a.output/'level.png')
 g.close()
 
 # Menu -> rotating bonus stage uses the same storage for its live buffers.
-g = Genesis(a.core, ROOT/'s2built.bin', ROOT/'main.lst', a.output/'bonus',
+g = Genesis(a.core, ROOT/'s2built.bin', ROOT/'md-main.lst', a.output/'bonus',
             a.pal, system_directory=a.system_directory)
 for _ in range(1800):
     g.run()

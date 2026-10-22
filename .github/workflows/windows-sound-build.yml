@@ -7,6 +7,8 @@ on:
       - .github/workflows/windows-sound-build.yml
       - build.bat
       - build.lua
+      - md-main.asm
+      - mcd-main.asm
       - build_tools/lua/**
       - build_tools/sound/build.py
       - build_tools/sound/**/*.cs

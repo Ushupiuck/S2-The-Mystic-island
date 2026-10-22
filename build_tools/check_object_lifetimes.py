@@ -12,7 +12,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 p = argparse.ArgumentParser(description=__doc__)
 p.add_argument('--rom', type=Path, default=ROOT/'s2built.bin')
-p.add_argument('--listing', type=Path, default=ROOT/'main.lst')
+p.add_argument('--listing', type=Path, default=ROOT/'md-main.lst')
 p.add_argument('--output', type=Path)
 p.add_argument('--core', type=Path, help='Also check real in-game camera travel with Genesis Plus GX')
 p.add_argument('--game-zone', type=int, choices=(0, 8), help=argparse.SUPPRESS)

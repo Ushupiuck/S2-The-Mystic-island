@@ -49,7 +49,7 @@ def main():
     rom = (ROOT / 's2built.bin').read_bytes()
     symbols = {name: int(value, 16) for name, value in re.findall(
         r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]',
-        (ROOT / 'main.lst').read_text())}
+        (ROOT / 'md-main.lst').read_text())}
     # The VDP DMA source is a word address; an odd ROM pointer silently
     # uploads the preceding byte and shifts every pixel in the frame.
     for label in ('Art_Sonic', 'Art_Tails', 'Art_Tails_Extra', 'Art_Tails_Tails',

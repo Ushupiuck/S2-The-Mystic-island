@@ -131,7 +131,7 @@ Each generated bank also has an independent include:
 
 `sound/musicbanks.gen.asm` and `sound/dacbanks.gen.asm` include the individual files for the
 default layout. For a custom layout, replace the corresponding aggregate include
-in `main.asm` with individual includes and place other data between them. Every
+in `md-main.asm` with individual includes and place other data between them. Every
 bank aligns itself; playlist and DAC table entries use the labels' actual ROM
 addresses. The runtime does not require consecutive music/DAC banks. Do not edit
 the generated files themselves.

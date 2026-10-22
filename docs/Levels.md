@@ -52,7 +52,7 @@ these PLCs do not dynamically allocate object VRAM or encode allocation in mappi
 
 ## Per-act music
 
-Edit `MusicList` in `main.asm`: each zone row holds four independent IDs in act
+Edit `MusicList` in `md-main.asm`: each zone row holds four independent IDs in act
 1-4 order. Use existing `MusID_*` names or `bgm_*` aliases. For example:
 
 ```asm
@@ -146,10 +146,10 @@ run it only when deliberately regenerating those assets. The atlas packer follow
 the importer. PP's converter validates rectangles and adapts opaque colors.
 
 ```sh
-python build_tools/import_scrap_madness.py --source /path/to/s1disasm --rom s2built.bin --listing main.lst
-python build_tools/pack_scrap_sprites.py --source /path/to/s1disasm --rom s2built.bin --listing main.lst
-python build_tools/import_palmtree_enemies.py --source /path/to/scddisasm/src --rom s2built.bin --listing main.lst
-python build_tools/import_propeller.py --source /path/to/scddisasm --rom s2built.bin --listing main.lst
+python build_tools/import_scrap_madness.py --source /path/to/s1disasm --rom s2built.bin --listing md-main.lst
+python build_tools/pack_scrap_sprites.py --source /path/to/s1disasm --rom s2built.bin --listing md-main.lst
+python build_tools/import_palmtree_enemies.py --source /path/to/scddisasm/src --rom s2built.bin --listing md-main.lst
+python build_tools/import_propeller.py --source /path/to/scddisasm --rom s2built.bin --listing md-main.lst
 python build_tools/build_card_art.py
 python build_tools/build_signpost_art.py
 ```

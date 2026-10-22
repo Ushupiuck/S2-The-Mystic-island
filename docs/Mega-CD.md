@@ -14,6 +14,20 @@ occupy its beginning. This does not load Sega's BIOS. Stack starts at `$80000`;
 PCM and sub-CPU interrupts start disabled. Disc, CDDA, backup RAM and graphics
 jobs remain future work; Z80 sound remains on its existing storage.
 
+## CPU source boundary
+
+`md-main.asm` contains the Mega Drive vectors, entry point and game. It includes
+`_inc/Mega CD.asm` and `_inc/Mega CD Ring Jobs.asm`: despite their CD-related
+names, these are **main-CPU** loaders, bus/DMA helpers and mailbox callers.
+
+`mcd-main.asm` contains the **sub-CPU** vectors, `MCD_SubEntry`, command service
+and ring executors. The MD entry point embeds it between `MCD_SubProgram` and
+`MCD_SubProgramEnd`, using `phase 0` to assemble its CD execution addresses.
+The existing bootstrap uploads those bytes to PRG RAM. This is one cartridge
+build, not two separately linked ROMs. Shared hardware/RAM definitions remain
+in `_definitions/`; subsystem includes inherit their entry point's CPU owner.
+Renaming the sources does not move collision, scrolling or sound execution.
+
 ## Memory and ownership
 
 Ranges below are inclusive. `_definitions/Mega CD RAM.asm` declares physical

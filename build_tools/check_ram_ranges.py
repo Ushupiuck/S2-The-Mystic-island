@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--listing', type=Path, default=ROOT / 'main.lst')
+    p.add_argument('--listing', type=Path, default=ROOT / 'md-main.lst')
     p.add_argument('--output', type=Path, default=ROOT / 'test-results/ram-ranges')
     args = p.parse_args()
     symbols = {name: int(value, 16) for name, value in re.findall(

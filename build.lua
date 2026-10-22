@@ -36,7 +36,7 @@ local sprite_bounds = require "build_tools.lua.sprite_bounds"
 if not sprite_bounds.generate(common, "", p2bin_arguments, repository) then
 	os.exit(false, true)
 end
-local message, abort = common.build_rom("main", "s2built", "", p2bin_arguments, false, repository)
+local message, abort = common.build_rom("md-main", "s2built", "", p2bin_arguments, false, repository)
 
 if message then
 	exit_code = false
@@ -49,7 +49,7 @@ end
 if advanced_error_handler then   
    -- Buld DEBUG ROM
    compression = improved_dac_driver_compression and "kosinskiplus" or "kosinski"
-   message, abort = common.build_rom("main", "s2built.debug", "-D __DEBUG__ -OLIST main.debug.lst", "-p=FF -z=0," .. compression .. ",Size_of_DAC_driver_guess,after", false, "https://github.com/sonicretro/s1disasm")
+   message, abort = common.build_rom("md-main", "s2built.debug", "-D __DEBUG__ -OLIST md-main.debug.lst", "-p=FF -z=0," .. compression .. ",Size_of_DAC_driver_guess,after", false, "https://github.com/sonicretro/s1disasm")
    
    if message then
        exit_code = false
@@ -64,8 +64,8 @@ if advanced_error_handler then
    if not extra_tools then
        os.exit(false)
    end
-   os.execute(extra_tools.convsym .. " main.lst s2built.bin -input as_lst -range 0 FFFFFF -exclude -filter \"z[A-Z].+\" -a")
-   os.execute(extra_tools.convsym .. " main.debug.lst s2built.debug.bin -input as_lst -range 0 FFFFFF -exclude -filter \"z[A-Z].+\" -a")
+   os.execute(extra_tools.convsym .. " md-main.lst s2built.bin -input as_lst -range 0 FFFFFF -exclude -filter \"z[A-Z].+\" -a")
+   os.execute(extra_tools.convsym .. " md-main.debug.lst s2built.debug.bin -input as_lst -range 0 FFFFFF -exclude -filter \"z[A-Z].+\" -a")
 end   
 
 -- Correct the ROM's header with a proper checksum and end-of-ROM value.

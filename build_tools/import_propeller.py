@@ -36,7 +36,7 @@ def main():
 	p = argparse.ArgumentParser(description=__doc__)
 	p.add_argument('--source', type=Path, required=True)
 	p.add_argument('--rom', type=Path, default=ROOT/'s2built.bin')
-	p.add_argument('--listing', type=Path, default=ROOT/'main.lst')
+	p.add_argument('--listing', type=Path, default=ROOT/'md-main.lst')
 	args = p.parse_args()
 	import native_test_core as m68k
 	m = m68k.Native(args.rom, args.listing)

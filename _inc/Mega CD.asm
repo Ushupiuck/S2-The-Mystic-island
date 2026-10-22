@@ -1,3 +1,4 @@
+; Mega Drive main-68000 code, included by md-main.asm.
 ; Cartridge-side cold/warm startup with interrupts masked.
 ; Clobbers d0-d3/a0-a1. Absent/failed hardware leaves the game in MD RAM.
 MCD_Init:

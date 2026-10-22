@@ -77,7 +77,7 @@ def main():
 		(d / '_definitions').mkdir()
 		for name in ['KEHmusic.exe', 'KEHsfx.exe', 'IniFile.dll', 'SonicRetro.KensSharp.Saxman.dll', 'SonicRetro.KensSharp.Common.dll', '_definitions/s2.macros.asm', 'sound/dacids.gen.asm', '_definitions/_smps2asm_inc.asm']:
 			shutil.copyfile(ROOT / name, d / name)
-		(d / 'main.asm').write_text('; Temporary packer fixture\n')
+		(d / 'md-main.asm').write_text('; Temporary packer fixture\n')
 		(d / 'sound/DAC/sample.bin').write_bytes(b'\x80')
 		(d / 'sound/DAC/DAC.ini').write_text('[dKick]\nFile=sample.bin\nRate=8000\n')
 		packer = ([args.mono] if os.name != 'nt' else []) + [d / 'KEHmusic.exe', '--tools-dir', tools]

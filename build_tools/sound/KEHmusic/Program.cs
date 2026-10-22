@@ -227,8 +227,8 @@ namespace KEHmusic
 				else
 					throw new ArgumentException("Unknown or incomplete argument: " + args[i]);
 			}
-			if (!File.Exists("main.asm"))
-				throw new FileNotFoundException("Run KEHmusic from the project directory containing main.asm.");
+			if (!File.Exists("md-main.asm"))
+				throw new FileNotFoundException("Run KEHmusic from the project directory containing md-main.asm.");
 			toolsDirectory = overrideDirectory ?? FindToolsDirectory();
 			bool windows = Path.DirectorySeparatorChar == '\\';
 			assembler = Path.Combine(toolsDirectory, windows ? "asw.exe" : "asl");

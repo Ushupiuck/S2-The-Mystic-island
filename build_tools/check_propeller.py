@@ -50,7 +50,7 @@ def main():
 	p = argparse.ArgumentParser(description=__doc__)
 	p.add_argument('--core', type=Path, required=True)
 	p.add_argument('--rom', type=Path, default=ROOT/'s2built.bin')
-	p.add_argument('--listing', type=Path, default=ROOT/'main.lst')
+	p.add_argument('--listing', type=Path, default=ROOT/'md-main.lst')
 	p.add_argument('--output', type=Path, required=True)
 	p.add_argument('--pal', action='store_true')
 	args = p.parse_args()

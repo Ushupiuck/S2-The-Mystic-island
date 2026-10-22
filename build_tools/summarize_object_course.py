@@ -40,7 +40,7 @@ def main():
         name,path=item.split('=',1);j=json.loads(Path(path).read_text())
         assert len(j['demos'])==4 and all(not d['ended_on_death'] for d in j['demos']),name
         demos.append({'name':name,**j})
-    source=(ROOT/'main.asm').read_text()
+    source=(ROOT/'md-main.asm').read_text()
     includes=set(re.findall(r'include\s+"([^"]+)"',source,re.I))
     pointers=dict(re.findall(r'ptr_Obj([0-9A-F]{2}):\s+dc.l\s+(\w+)',source))
     rows=[]

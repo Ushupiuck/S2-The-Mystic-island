@@ -30,6 +30,11 @@ W.I.P./unassembled sources are development work, not disposable unused code.
 
 # Source organization
 
+- Keep CPU ownership explicit: `md-main.asm` owns Mega Drive main-68000 code;
+  `mcd-main.asm` owns Mega-CD sub-68000 code. Shared declarations stay in
+  `_definitions/`. Subsystem includes inherit the owning entry point; CD bus,
+  DMA and command callers execute on MD, while the subprogram's executors run
+  on CD. Keep that distinction visible in include headers and documentation.
 - Keep small helpers and local macros with their owning subsystem. Reuse the
   existing files and their formatting. A new ASM include should represent a
   cohesive subsystem or substantial table, not one helper or a few constants.

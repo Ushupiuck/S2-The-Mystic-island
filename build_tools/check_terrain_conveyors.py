@@ -379,7 +379,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--core', type=Path, required=True)
     parser.add_argument('--rom', type=Path, default=ROOT / 's2built.bin')
-    parser.add_argument('--listing', type=Path, default=ROOT / 'main.lst')
+    parser.add_argument('--listing', type=Path, default=ROOT / 'md-main.lst')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--before-ref', help='Compare migrated layouts with this previous git commit')
     parser.add_argument('--part', choices=('matrix', 'sonic', 'tails', 'both', 'smz'), help=argparse.SUPPRESS)

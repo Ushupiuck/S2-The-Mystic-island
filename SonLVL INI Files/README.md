@@ -3,7 +3,7 @@
 Open `SonLVL.ini` with a current Sonic Retro SonLVL build that supports
 Kosinski Plus and moduled Kosinski Plus. This project uses S3&K six-byte
 object placements and sprite mappings. Its object IDs come from `Obj_Index`
-in `main.asm`, rather than an original game's table.
+in `md-main.asm`, rather than an original game's table.
 
 `obj.ini` supplies shared objects and imported enemies. The zone lists override
 objects whose art or mappings depend on the zone: bridges, Chopper/Masher,
@@ -14,7 +14,7 @@ Definitions use the game's current graphics and mappings. Nemesis and moduled
 Kosinski Plus art have explicit compression settings. The signpost's streamed
 preview applies its current DPLCs; those use the S2/player-style cue encoding,
 even though its mappings use S3&K format. Inline mappings for BBat, Gator,
-Aquis/Skyhorse and Eggman are read from `main.asm`.
+Aquis/Skyhorse and Eggman are read from `md-main.asm`.
 
 ## Editing subtypes
 

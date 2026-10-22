@@ -19,7 +19,7 @@ from native_test_core import (Native, Manager, UC_M68K_REG_A0, UC_M68K_REG_A1,
 ROOT = Path(__file__).resolve().parent.parent
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--rom', type=Path, default=ROOT / 's2built.bin')
-parser.add_argument('--listing', type=Path, default=ROOT / 'main.lst')
+parser.add_argument('--listing', type=Path, default=ROOT / 'md-main.lst')
 args = parser.parse_args()
 
 

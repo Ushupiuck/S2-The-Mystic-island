@@ -18,7 +18,7 @@ from genesis_test_core import Genesis
 p = argparse.ArgumentParser(description='Play music, effects and 1-up restoration on a Genesis Plus GX libretro core.')
 p.add_argument('--core', type=Path, required=True)
 p.add_argument('--rom', type=Path, default=project / 's2built.bin')
-p.add_argument('--listing', type=Path, default=project / 'main.lst')
+p.add_argument('--listing', type=Path, default=project / 'md-main.lst')
 p.add_argument('--output', type=Path)
 p.add_argument('--effects', action='store_true')
 p.add_argument('--jingles', action='store_true')

@@ -27,7 +27,7 @@ def replace_once(text, before, after):
 
 def instrument_entries(root):
     """Stamp real routine entries without adding an ID lookup to RunObject."""
-    main = root / 'main.asm'
+    main = root / 'md-main.asm'
     text = main.read_text()
     entries = {}
     for oid, label in re.findall(r'^ptr_Obj([0-9A-F]{2}):\s*dc\.l\s+(\w+)', text, re.M):
@@ -177,7 +177,7 @@ def main():
     shutil.copytree(ROOT, root, ignore=shutil.ignore_patterns(
         '.git', '*.lst', 's2built*.bin', '*-pass.bin', '__pycache__'))
     banks = generate(root, json.loads(COURSE.read_text())['banks'])
-    mainfile = root/'main.asm'
+    mainfile = root/'md-main.asm'
     source = mainfile.read_text()
     source = replace_once(source, 'LevelLayoutLoad:\n', 'LevelLayoutLoad:\n'
         '\t\tcmpi.w #$0101,(Current_ZoneAndAct).w\n'
@@ -208,8 +208,8 @@ def main():
     # gameplay ROM paired with fresh placement metadata/listing.
     build=root/'build.lua'
     script=build.read_text().replace('"s2built"','"object-course"').replace('"s2built.bin"','"object-course.bin"')
-    script=script.replace('common.build_rom("main", "object-course", "",',
-                          'common.build_rom("main", "object-course", "-OLIST object-course.lst",')
+    script=script.replace('common.build_rom("md-main", "object-course", "",',
+                          'common.build_rom("md-main", "object-course", "-OLIST object-course.lst",')
     build.write_text(script)
     for name in ('object-course.bin','object-course.lst'):
         (root/name).unlink(missing_ok=True)

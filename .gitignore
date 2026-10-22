@@ -7,9 +7,9 @@ build_tools/sound/**/bin/
 build_tools/sound/**/obj/
 
 # Misc. compiler output.
-main.p
-main.lst
-main.log
+md-main.p
+md-main.lst
+md-main.log
 sprite-bounds-pass.bin
 
 # Built ROMs.
@@ -19,7 +19,7 @@ s2built.prev.bin
 # Hivebrains comment utility
 Comment.bat
 Comment.exe
-main.debug.lst
+md-main.debug.lst
 s2built.debug.bin
 s2built.debug.prev.bin
 sound/dac/dpcm/generated/hashes.lua

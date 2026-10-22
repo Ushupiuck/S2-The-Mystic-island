@@ -45,7 +45,7 @@ def main():
     parser.add_argument('--s2disasm', type=Path)
     args = parser.parse_args()
     rom = (ROOT / 's2built.bin').read_bytes()
-    sym = symbols(ROOT / 'main.lst')
+    sym = symbols(ROOT / 'md-main.lst')
     art_tiles = lambda name: struct.unpack_from('>H', rom, sym[name])[0] & 0x7FFF
     cues = []
     for label in ('PLC_Boss', 'PLC_Capsule'):

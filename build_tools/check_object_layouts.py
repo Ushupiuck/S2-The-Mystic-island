@@ -24,7 +24,7 @@ def check_named_sst_fields(symbols):
     fields = {name: offset for name, offset in symbols.items()
               if name in names and 0 <= offset <= symbols['object_size']}
     count = 0
-    sources = [ROOT / 'main.asm', *sorted((ROOT / 'objects').rglob('*.asm'))]
+    sources = [ROOT / 'md-main.asm', *sorted((ROOT / 'objects').rglob('*.asm'))]
     for source in sources:
         text = source.read_text(encoding='latin1')
         local = fields.copy()
@@ -48,7 +48,7 @@ def check_named_sst_fields(symbols):
                     continue
                 assert offset + size <= symbols['object_size'], f'{source}:{line}: {name} crosses SST boundary'
                 assert size == 1 or not offset & 1, f'{source}:{line}: odd word/long SST field {name}'
-    print(f'Checked {count} named SST operands in all {len(sources)-1} object files and main.asm.')
+    print(f'Checked {count} named SST operands in all {len(sources)-1} object files and md-main.asm.')
 
 
 def placements(path, capacity):
@@ -69,7 +69,7 @@ def placements(path, capacity):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--rom', type=Path, default=ROOT / 's2built.bin')
-    parser.add_argument('--listing', type=Path, default=ROOT / 'main.lst')
+    parser.add_argument('--listing', type=Path, default=ROOT / 'md-main.lst')
     args = parser.parse_args()
     listing = args.listing.read_text()
     assert 'Symbol Table' in listing, 'Build must finish before checking its listing'
@@ -115,7 +115,7 @@ def main():
     pointer = r'(?:\((?:' + absolute + r')(?:\+code)?\)|(?:code|obID)\(a[0-6]\))'
     narrow = re.compile(r'\b_?(?:movea?|cmpa?|cmpi|clr|tst|andi|ori|eori)\.[bw]\b[^;\n]*' + pointer)
     numeric_id = re.compile(r'\b_?(?:move|cmpi)\.l\s+#id_\w+\s*,\s*' + pointer)
-    for source in [ROOT / 'main.asm', *(ROOT / 'objects').rglob('*.asm'), *(ROOT / '_inc').rglob('*.asm')]:
+    for source in [ROOT / 'md-main.asm', *(ROOT / 'objects').rglob('*.asm'), *(ROOT / '_inc').rglob('*.asm')]:
         for line, text in enumerate(source.read_text(errors='replace').splitlines(), 1):
             active = text.split(';')[0]
             assert not narrow.search(active), f'{source}:{line}: byte/word access to code pointer'
