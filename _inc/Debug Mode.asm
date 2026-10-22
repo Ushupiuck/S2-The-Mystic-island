@@ -203,6 +203,7 @@ Debug_ExitDebugMode:
 		clr.w	(Debug_placement_mode).w
 		disable_ints
 		jsr	(HUD_Base).l
+		jsr	(HUD_Time).l
 		move.b	#1,(f_scorecount).w
 		move.b	#$80,(f_ringcount).w
 		enable_ints

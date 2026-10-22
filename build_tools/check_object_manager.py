@@ -398,6 +398,7 @@ report['vertical_wrap_redraw_and_hidden_water']=True
 # Exercise actual player entry, initialized placement, list cycling, spawning,
 # complete restoration, and frame count wrapping for both playable characters.
 m.cpu.mem_write(m.s['HUD_Base'],bytes.fromhex('203CDEADC0DE4E75'))
+m.cpu.mem_write(m.s['HUD_Time'],bytes.fromhex('4E75'))
 for who,objid,mode,mapname,h,w in [('Sonic',1,1,'Map_Sonic',19,9),('Tails',2,2,'Map_Tails',15,9)]:
     m.start()
     m.write('Player_mode',mode,2)
@@ -451,6 +452,18 @@ for who,objid,mode,mapname,h,w in [('Sonic',1,1,'Map_Sonic',19,9),('Tails',2,2,'
     m.act('DebugMode','v_player')
     assert m.read('Debug_placement_mode',2)==0
 report['primary_character_debug_restore_and_frame_cycle']=2
+
+# S3&K's HUD guard must not restart an existing death fall at Time Over.
+for routine in (6,8):
+    m.start()
+    m.put('v_player','obRoutine',routine)
+    m.put('v_player','obVelY',0x1234,2)
+    m.write('f_timecount',1)
+    m.act('TimeOver','v_player')
+    assert m.get('v_player','obRoutine')==routine
+    assert m.get('v_player','obVelY',2)==0x1234
+    assert m.read('f_timecount')==0 and m.read('f_timeover')==1
+report['time_over_preserves_existing_death_fall']=2
 
 # Entry belongs before the player-state dispatch, so B also works during
 # recoil and death. C+B keeps the existing frame-cycle entry in each state.

@@ -13535,91 +13535,57 @@ Tails_FlightArcTanTable:
 HudUpdate:
 		nop
 		lea	(vdp_data_port).l,a6
-		tst.b	(Debug_mode_flag).w	; is debug mode on?
-		bne.w	HudUpdate_Debug	; if yes, branch
+		cmpi.b	#DebugType_Placement,(Debug_placement_type).w
+		beq.w	HudUpdate_Debug	; coordinates/counters only during placement
 		tst.b	(f_scorecount).w	; does the score need updating?
-		beq.s	loc_1B266	; if not, branch
+		beq.s	Hud_ChkTime	; if not, branch
 		clr.b	(f_scorecount).w
 		locVRAM	ArtTile_HUD_Numbers*tile_size,d0	; set VRAM address
 		move.l	(v_score).w,d1	; load score
 		bsr.w	HUD_Score
 
-loc_1B266:
-		tst.b	(f_ringcount).w	; does the ring counter need updating?
-		beq.s	Hud_ChkTime	; if not, branch
-		bpl.s	loc_1B272
-		bsr.w	HUD_LoadZero
-
-loc_1B272:
-		clr.b	(f_ringcount).w
-		locVRAM	(ArtTile_HUD_Numbers+$16)*tile_size,d0	; set VRAM address
-		moveq	#0,d1
-		move.w	(v_rings).w,d1
-		bsr.w	HUD_Rings
-
 Hud_ChkTime:
 		tst.b	(f_timecount).w
 		bpl.s	.continue
 		move.b	#1,(f_timecount).w
-		bra.s	+
+		bra.s	.draw
 ; ---------------------------------------------------------------------------
 
 .continue:
-		beq.s	Hud_ChkLives
+		beq.w	Hud_UpdateCounters
 		tst.w	(f_pause).w
-		bne.s	Hud_ChkLives
+		bne.w	Hud_UpdateCounters
 		lea	(v_time).w,a1
 		cmpi.l	#9<<16|59<<8|59,(a1)+		; if the timer has passed 9:59...
 		beq.s	TimeOver			; ...Branch & kill the characters
 		addq.b	#1,-(a1)
 		cmpi.b	#60,(a1)
-		blo.s	Hud_ChkLives
+		blo.w	Hud_UpdateCounters
 		clr.b	(a1)
 		addq.b	#1,-(a1)
 		cmpi.b	#60,(a1)
-		blo.s	+
+		blo.s	.draw
 		clr.b	(a1)
 		addq.b	#1,-(a1)
 		cmpi.b	#9,(a1)
-		blo.s	+
+		blo.s	.draw
 		move.b	#9,(a1)
-+
-		locVRAM	(ArtTile_HUD_Numbers+$E)*tile_size,d0
-		moveq	#0,d1
-		move.b	(v_timemin).w,d1
-		bsr.w	HUD_Mins
-		locVRAM	(ArtTile_HUD_Numbers+$12)*tile_size,d0
-		moveq	#0,d1
-		move.b	(v_timesec).w,d1
-		bsr.w	HUD_Secs
-
-Hud_ChkLives:
-		tst.b	(f_lifecount).w
-		beq.s	loc_1B2F0
-		clr.b	(f_lifecount).w
-		bsr.w	HUD_Lives	; bsr to bra
-
-loc_1B2F0:	; for special stages, for some reason? if commented out, numbers won't load
-		tst.b	(f_endactbonus).w
-		beq.s	TimeOver.return
-		clr.b	(f_endactbonus).w
-		locVRAM	ArtTile_Bonuses*tile_size
-		moveq	#0,d1
-		move.w	(v_timebonus).w,d1
-		bsr.w	HUD_TimeRingBonus
-		moveq	#0,d1
-		move.w	(v_ringbonus).w,d1
-	;	moveq	#0,d1
-	;	move.w	(Bonus_Countdown_3).w,d1	 ; load perfect bonus
-		bra.w	HUD_TimeRingBonus
+.draw:
+		bsr.w	HUD_Time
+		bra.w	Hud_UpdateCounters
 ; ===========================================================================
 ; kills the player if the time has reached 9:59
 TimeOver:
 		clr.b	(f_timecount).w
 		lea	(v_player).w,a0
+		cmpi.b	#6,obRoutine(a0)	; S3&K: do not restart an existing death fall
+		bhs.s	.set_flag
+		clr.w	(Debug_placement_mode).w	; frame cycling follows normal timer rules
 		movea.l	a0,a2
 		bsr.w	KillSonic
+.set_flag:
 		move.b	#1,(f_timeover).w
+		bra.w	Hud_UpdateCounters
 
 .return:
 		rts
@@ -13627,35 +13593,48 @@ TimeOver:
 
 HudUpdate_Debug:
 		bsr.w	HUDDebug_XY
-		tst.b	(f_ringcount).w
-		beq.s	loc_1B354
-		bpl.s	loc_1B340
-		bsr.w	HUD_LoadZero
-
-loc_1B340:
-		clr.b	(f_ringcount).w
-		locVRAM	(ArtTile_HUD_Numbers+$16)*tile_size,d0	; set VRAM address
-		moveq	#0,d1
-		move.w	(v_rings).w,d1
-		bsr.w	HUD_Rings
-
-loc_1B354:
-;		locVRAM	(ArtTile_HUD_Numbers+$E)*tile_size,d0
-;		moveq	#0,d1
-;		move.w	(Lag_frame_count).w,d1
-;		bsr.w	HUD_Mins
 		locVRAM	(ArtTile_HUD_Numbers+$12)*tile_size,d0	; set VRAM address
 		moveq	#0,d1
 		move.b	(v_spritecount).w,d1
 		bsr.w	HUD_Secs
+
+Hud_DebugTime:
+		tst.w	(f_pause).w
+		bne.s	Hud_UpdateCounters
+		lea	(v_timecent+1).w,a1	; predecrement starts at the frame counter
+		addq.b	#1,-(a1)
+		cmpi.b	#60,(a1)
+		blo.s	Hud_UpdateCounters
+		clr.b	(a1)
+		addq.b	#1,-(a1)
+		cmpi.b	#60,(a1)
+		blo.s	Hud_UpdateCounters
+		clr.b	(a1)
+		addq.b	#1,-(a1)
+		cmpi.b	#9,(a1)
+		blo.s	Hud_UpdateCounters
+		move.b	#9,(a1)
+
+; Both HUD displays share the same ring, life and result-bonus update flags.
+Hud_UpdateCounters:
+		tst.b	(f_ringcount).w
+		beq.s	.lives
+		bpl.s	.rings
+		bsr.w	HUD_LoadZero
+.rings:
+		clr.b	(f_ringcount).w
+		locVRAM	(ArtTile_HUD_Numbers+$16)*tile_size,d0
+		moveq	#0,d1
+		move.w	(v_rings).w,d1
+		bsr.w	HUD_Rings
+.lives:
 		tst.b	(f_lifecount).w
-		beq.s	+
+		beq.s	.bonuses
 		clr.b	(f_lifecount).w
 		bsr.w	HUD_Lives
-
-+		; for special stages, for some reason? if commented out, numbers won't load
+.bonuses:
 		tst.b	(f_endactbonus).w
-		beq.s	+
+		beq.s	.return
 		clr.b	(f_endactbonus).w
 		locVRAM	ArtTile_Bonuses*tile_size
 		moveq	#0,d1
@@ -13663,27 +13642,8 @@ loc_1B354:
 		bsr.w	HUD_TimeRingBonus
 		moveq	#0,d1
 		move.w	(v_ringbonus).w,d1
-	;	moveq	#0,d1
-	;	move.w	(Bonus_Countdown_3).w,d1	 ; load perfect bonus
-		bsr.w	HUD_TimeRingBonus
-
-loc_1B372:
-		tst.w	(f_pause).w
-		bne.s	+
-		lea	(v_time).w,a1
-		addq.b	#1,-(a1)
-		cmpi.b	#60,(a1)
-		blo.s	+
-		clr.b	(a1)
-		addq.b	#1,-(a1)
-		cmpi.b	#60,(a1)
-		blo.s	+
-		clr.b	(a1)
-		addq.b	#1,-(a1)
-		cmpi.b	#9,(a1)
-		blo.s	+
-		move.b	#9,(a1)
-+
+		bra.w	HUD_TimeRingBonus
+.return:
 		rts
 ; End of function HudUpdate
 
@@ -13694,7 +13654,7 @@ loc_1B372:
 HUD_LoadZero:
 		locVRAM	(ArtTile_HUD_Numbers+$16)*tile_size
 		lea	HUD_TilesZero(pc),a2
-		moveq	#3-1,d2
+		moveq	#HUD_TilesEnd-HUD_TilesZero-1,d2
 		bra.s	loc_1B3CC
 ; End of function HUD_LoadZero
 
@@ -13707,7 +13667,7 @@ HUD_Base:
 		bsr.w	HUD_Lives
 		locVRAM	ArtTile_HUD_Numbers*tile_size
 		lea	HUD_TilesBase(pc),a2
-		moveq	#$E-1,d2
+		moveq	#HUD_TilesEnd-HUD_TilesBase-1,d2
 
 loc_1B3CC:
 		lea	Art_HUD(pc),a1
@@ -13735,8 +13695,15 @@ loc_1B3EC:
 ; End of function HUD_Base
 
 ; ---------------------------------------------------------------------------
-HUD_TilesBase:	dc.b $FF,$FF,$FF,$FF,$FF,$FF,  0,  0,$14,  0,  0
-HUD_TilesZero:	dc.b $FF,$FF,  0,  0
+		; S3&K's readable digit table, using this project's glyph indices.
+		charset ' ',$FF
+		charset '0',0
+		charset ':',$14
+HUD_TilesBase:	dc.b "      0"	; score is stored in ten-point units
+		dc.b "0:00"
+HUD_TilesZero:	dc.b "  0"
+HUD_TilesEnd:
+		charset
 		even
 
 ; =============== S U B R O U T I N E =======================================
@@ -13759,17 +13726,12 @@ HUDDebug_XY:
 
 HUDDebug_XY2:
 		moveq	#8-1,d6
-		lea	Art_Text(pc),a1
+		lea	Art_DebugDigits(pc),a1
 
 loc_1B430:
 		rol.w	#4,d1
 		move.w	d1,d2
 		andi.w	#$F,d2
-		cmpi.w	#$A,d2
-		blo.s	loc_1B442
-		addq.w	#7,d2
-
-loc_1B442:
 		lsl.w	#5,d2
 		lea	(a1,d2.w),a3
 		move.l	(a3)+,(a6)
@@ -13912,6 +13874,18 @@ HUD_1:		dc.l 1
 
 ; =============== S U B R O U T I N E =======================================
 
+
+; Draw the current time without advancing it or changing its running flag.
+; Debug return also needs this when the clock was stopped before placement.
+HUD_Time:
+		locVRAM	(ArtTile_HUD_Numbers+$E)*tile_size,d0
+		moveq	#0,d1
+		move.b	(v_timemin).w,d1
+		bsr.s	HUD_Mins
+		locVRAM	(ArtTile_HUD_Numbers+$12)*tile_size,d0
+		moveq	#0,d1
+		move.b	(v_timesec).w,d1
+		bra.s	HUD_Secs
 
 HUD_Mins:
 		lea	HUD_1(pc),a2
@@ -14286,6 +14260,8 @@ ErrorText.line1111:	dc.b "LINE 1111 EMULATOR "
 Art_HUD:	binclude	"art/uncompressed/HUD Numbers.bin"
 		even
 Art_LivesNums:	binclude	"art/uncompressed/Lives Counter Numbers.bin"
+		even
+Art_DebugDigits:	binclude	"art/uncompressed/Debug Digits.bin"	; generated from Art_Text by build.lua
 		even
 Art_Text:	binclude	"art/uncompressed/Level select and Debug Mode text.bin"
 Art_Text_End:	even

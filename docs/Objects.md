@@ -174,6 +174,13 @@ to the input locks in [Players and effects](Players-and-effects.md#input-locks-a
 | Hold A, press C | Previous object |
 | C | Place selected object |
 
+Enabling the cheat leaves the ordinary HUD and timer rules active. Only
+placement replaces the score with player/camera coordinates and the seconds
+with the sprite count, and lets the internal clock advance without Time Over.
+Leaving placement redraws the current score, rings and time immediately,
+preserving whether the clock was running or stopped. Frame cycling keeps the
+ordinary HUD and timer rules.
+
 A Debug entry is 12 bytes: routine long, mappings long, subtype byte, frame byte,
 art word. Lists have four pointers per zone; acts may share a list. Placement
 writes a routine pointer, saves/restores mappings/art/bounds, restores standing

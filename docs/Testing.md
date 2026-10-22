@@ -111,7 +111,7 @@ that offer it. Most primary-player selectors use `--player 0` (Sonic) or `2`
 | Act data, menus, animation, music | `check_level_pages.py`, `check_act_music.py` | Actual act launches/loaded data; all 64 music selections/restores, expiry priorities and live EHZ/SMZ invincibility restoration |
 | Cards, progression and scene transitions | `check_card_screens.py`, `check_fast_clear.py` | Intro/results art; real shoes-monitor to signpost/results/next-act path |
 | Player effects and water | `check_player_effects.py`, `check_water_effects.py`, `check_shared_followup.py` | Shields/stars, splash/countdown, normal/paused surface, DMA retries and shared art |
-| Monitor state and primary Debug | `check_monitor_state.py`, `check_monitor_edges.py`, `check_debug_states.py` | Rider/collector ownership, contact boundaries and Debug restoration |
+| Monitor state and primary Debug | `check_monitor_state.py`, `check_monitor_edges.py`, `check_debug_states.py` | Rider/collector ownership, contact boundaries, Debug HUD switching, stopped/running clock restoration and Time Over |
 | Object lifetime and stage entry | `check_object_lifetimes.py`, `check_giant_ring_entry.py`, `check_object_contexts.py` | Unload/deletion, giant rings and mode-specific objects |
 | Companion | `check_companion_followup.py`, `check_companion_hpz.py`, `check_companion_sbz.py` | Ledges, collapse/bridge/manual takeover; actual HPZ routes; 64-phase SMZ transfer and captured catch-up |
 | Input locks and rotating stage | `check_over_screen_input.py`, `check_drowning_input.py`, `check_special_stage_overlap.py` | Real deaths/drowning; normal bumper/item callbacks and embedding regressions |
@@ -128,6 +128,8 @@ before reusing them with an unrelated baseline.
 CD boot needs a supplied system directory. Only runners exposing
 `--system-directory` support that setup directly (including level pages, act
 music, visual follow-up, fast clear, player effects, card screens and swing families).
+`check_debug_states.py` also accepts this directory for both primary characters'
+HUD and hurt/death Debug checks on Mode 1.
 Older water/companion/shared runners lack it and target the ordinary cartridge
 ROM. Do not describe all existing fixtures as CD-aware or apply flags universally.
 
