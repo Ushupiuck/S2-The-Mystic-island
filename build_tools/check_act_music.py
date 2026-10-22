@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify per-act lookup, both callers, music priorities and live playback.
+"""Verify per-act music selection, restoration priorities and live playback.
 
 A disposable ROM assigns distinct IDs across acts; the source ROM is unchanged.
 Native calls execute actual 68000 code and stop before the audio dispatch.
@@ -34,6 +34,12 @@ def main():
     assert symbols['MusicList_End'] - symbols['MusicList'] == count
     ids = list(range(1, count + 1))
     ids[:2] = [symbols['MusID_GHZ'], symbols['MusID_LBZ2_S3']]
+    # Live cases use looping songs: default EHZ/SMZ music in act 1 and a
+    # deliberately different, valid song in act 2. Other IDs are lookup probes.
+    for zone, songs in (('id_EHZ', ('bgm_SLZ', 'MusID_LBZ2_S3')),
+                        ('id_SMZ', ('bgm_SBZ', 'MusID_EHZ'))):
+        start = symbols[zone] * symbols['ActsPerZone']
+        ids[start:start+2] = [symbols[song] for song in songs]
     rom = bytearray(args.rom.read_bytes())
     rom[symbols['MusicList']:symbols['MusicList_End']] = bytes(ids)
     test_rom = args.output / 'different-act-music.bin'
@@ -46,9 +52,11 @@ def main():
     g.core.m68k_set_reg.argtypes = [C.c_int, C.c_uint]
     g.core.m68k_run.argtypes = [C.c_uint]
 
-    def act(label, stop=None):
+    def act(label, stop=None, actor=None):
         g.core.m68k_set_reg(17, 0x2700)
         g.core.m68k_set_reg(0, 0x1234)
+        if actor:
+            g.core.m68k_set_reg(8, g.s[actor] & 0xFFFFFF)
         g.write(0x7E00, 0xFF7F00, 4)
         g.write(0x7F00, 0x60FE, 2)
         g.core.m68k_set_reg(15, 0xFF7E00)
@@ -72,6 +80,37 @@ def main():
             pc, result = act(routine, stop)
             assert result == expected, (routine, index, expected, result)
             assert pc == (g.s[stop] if stop else 0xFF7F00)
+        for who in ('v_player', 'v_player2'):
+            g.restore(base)
+            g.write('Current_ZoneAndAct', (index // 4) * 256 + index % 4, 2)
+            g.write('v_air', 30, 2)
+            g.write('f_lockscreen', 0)
+            g.write('Super_Sonic_flag', 0)
+            for player in ('v_player', 'v_player2'):
+                g.put(player, 'obStatusSecondary', 2 if player == who else 0)
+            g.put(who, 'invtime', 1, 2)
+            actual = act('Player_ChkInvincibility', 'PlayMusic', who)
+            assert actual == (g.s['PlayMusic'], expected), ('Invincibility restore', index, who, expected, actual)
+            assert not g.get(who, 'invtime', 2)
+            assert not g.get(who, 'obStatusSecondary') & 2
+        g.restore(base)
+        g.write('Current_ZoneAndAct', (index // 4) * 256 + index % 4, 2)
+        g.write('f_lockscreen', 1)
+        assert act('EHZBoss_PlayLevelMusic', 'PlayMusic') == (g.s['PlayMusic'], expected)
+        assert not g.read('f_lockscreen')
+
+    # Expiry must not interrupt the partner, boss, Super or drowning themes.
+    guards = ('partner', 'boss', 'super', 'drowning', 'timer_active', 'timer_zero', 'no_effect')
+    for who, other in (('v_player', 'v_player2'), ('v_player2', 'v_player')):
+        for guard in guards:
+            g.restore(base)
+            g.write('v_air', 12 if guard == 'drowning' else 30, 2)
+            g.write('f_lockscreen', int(guard == 'boss'))
+            g.write('Super_Sonic_flag', int(guard == 'super'))
+            g.put(who, 'obStatusSecondary', 0 if guard == 'no_effect' else 2)
+            g.put(other, 'obStatusSecondary', 2 if guard == 'partner' else 0)
+            g.put(who, 'invtime', {'timer_active': 2, 'timer_zero': 0}.get(guard, 1), 2)
+            assert act('Player_ChkInvincibility', 'PlayMusic', who)[0] == 0xFF7F00, (who, guard)
     for invincible, boss, expected in ((True, False, g.s['bgm_Invincible']),
                                       (False, True, g.s['bgm_Boss']),
                                       (True, True, g.s['bgm_Boss'])):
@@ -87,6 +126,16 @@ def main():
     # Resume complete emulator frames only from a genuine frame boundary.
     g.restore(base)
     zram = (C.c_uint8 * 8192).in_dll(g.core, 'zram')
+
+    def playing_song():
+        bank = g.s['zBGMLoad_BankLoadInstruction'] + 1
+        address = g.s['zBGMLoad_AddressLoadInstruction'] + 1
+        return bytes((zram[bank], zram[address], zram[address+1]))
+
+    def song_entry(music_id):
+        offset = g.s['zMasterPlaylist'] + (music_id-g.s['MusID__First']) * 4
+        return bytes(rom[offset:offset+3])
+
     banks = []
     for act_number in (0, 1):
         if act_number:
@@ -101,9 +150,44 @@ def main():
         assert not g.read('v_errortype')
         banks.append(actual_bank)
     assert ids[0] != ids[1]
+    restores = []
+    for zone in (g.s['id_EHZ'], g.s['id_SMZ']):
+        for act_number in (0, 1):
+            for player_mode in (0, g.s['PlayerMode_Tails']):
+                g.write('v_gamemode', g.s['SegaScreen'], 2)
+                g.run()
+                boot_level(g, zone=zone, act=act_number, player=player_mode)
+                expected = ids[zone*4+act_number]
+                for who in ('v_player', 'v_player2'):
+                    if g.get(who, 'code'):
+                        g.put(who, 'obControl', 1)
+                # A real monitor reward starts the effect and its music.
+                slots = range(g.s['v_lvlobjspace'] & 65535,
+                              g.s['v_lvlobjend'] & 65535, g.s['object_size'])
+                obj = next(a for a in slots if not g.get(a, 'code'))
+                for field, value, size in (
+                        ('code', g.s['Obj29'], 4), ('obAnim', 7, 1),
+                        ('obX', g.get('v_player', 'obX', 2), 2),
+                        ('obY', g.get('v_player', 'obY', 2), 2),
+                        ('obParent', g.s['v_player'] & 65535, 2)):
+                    g.put(obj, field, value, size)
+                g.run(40)
+                assert g.get('v_player', 'obStatusSecondary') & 2
+                assert playing_song() == song_entry(g.s['bgm_Invincible'])
+                for who in ('v_player', 'v_player2'):
+                    if g.get(who, 'code'):
+                        g.put(who, 'invtime', 1, 2)
+                g.run(30)
+                assert not g.read('v_errortype')
+                assert not g.get('v_player', 'obStatusSecondary') & 2
+                assert playing_song() == song_entry(expected), (zone, act_number, player_mode, expected, playing_song())
+                assert zram[g.s['zSongFM1.PlaybackControl']] & 0x80
+                restores.append(dict(zone=zone, act=act_number+1, player=player_mode, music_id=expected))
     g.close()
-    report = dict(region='PAL' if args.pal else 'NTSC', lookup_and_callers=count * 3,
-                  priority_cases=4, live_act_music_ids=ids[:2], live_act_music_banks=banks)
+    report = dict(region='PAL' if args.pal else 'NTSC', lookup_and_callers=count * 4,
+                  invincibility_expiry_cases=count * 2, expiry_priority_cases=len(guards) * 2,
+                  priority_cases=4, live_act_music_ids=ids[:2], live_act_music_banks=banks,
+                  live_invincibility_restores=restores)
     (args.output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
     print(report, flush=True)
 

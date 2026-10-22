@@ -64,8 +64,9 @@ Edit `MusicList` in `md-main.asm`: each zone row holds four independent IDs in a
 ```
 
 Defaults repeat each zone's existing song. Assembly checks all 64 entries
-against `LevelActCount` (`LevelCount * ActsPerZone`). Level entry and drowning
-recovery share `GetLevelMusic`, preserving act selection. Invincibility/boss music retains
+against `LevelActCount` (`LevelCount * ActsPerZone`). Level entry, drowning
+recovery, invincibility expiry and EHZ boss cleanup share `GetLevelMusic`,
+preserving act selection. Invincibility/boss music retains
 priority; one-up jingles restore the driver's saved context. Sound formats
 and importing belong in [the sound guide](../build_tools/sound/README.md).
 

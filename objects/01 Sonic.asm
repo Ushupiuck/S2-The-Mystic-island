@@ -170,10 +170,7 @@ Player_ChkInvincibility:
 		bne.s	Player_ChkSpeedShoes.return
 		cmpi.w	#12,(v_air).w
 		bls.s	Player_ChkSpeedShoes.return
-		moveq	#0,d0
-		move.b	(Current_Zone).w,d0
-		lea	(MusicList).l,a1
-		move.b	(a1,d0.w),d0
+		jsr	(GetLevelMusic).l
 		jmp	(PlayMusic).l
 
 ; ---------------------------------------------------------------------------
