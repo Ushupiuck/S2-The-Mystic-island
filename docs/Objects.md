@@ -151,6 +151,10 @@ Other packed layouts require their own audit when changing fields:
 | Shield | Parent word `$42-$43`, disjoint from bank caches |
 | Caterkiller | Trail `$30-$3B`, packed parent long `$3C-$3F`, inertia `$40-$41`, distance `$42-$43` |
 | W.I.P. staircase | Timer `$30-$31`, slot/touch `$32-$33`, origins `$34-$37`, four offset words `$38-$3F`, parent `$40-$43` |
+| GHZ ship | Saved flash color `$2E-$2F`, weapon-ready byte `$30`, base X/Y longs `$34/$3C`, timer `$40-$41`, flash/bob bytes `$42/$43` |
+| GHZ chain root | Five word child pointers `$2E-$37`, ship long `$38`, drop/radius words `$3C/$3E`, acceleration/flicker bytes `$40/$41`, angular velocity `$42-$43`, piece index `$44` |
+| GHZ chain children | Root word `$2E`, ship long `$38`, drop/radius words `$3C/$3E`, flicker byte `$41`, piece index `$44` |
+| Boss burst controller | Parameter bytes `$2E-$31`, countdown/main-routine bytes `$32/$33`, expected parent code long `$34`, parent long `$38`; parent reserves started byte `$4C` |
 
 Caterkiller's packed parent high byte holds a segment index, relying on 68000
 24-bit addressing. Combined animation/velocity writes and private records are
@@ -200,3 +204,38 @@ return shortcuts are covered in [Special stage](Special-stage.md).
 
 Reverse-gravity Debug support is not implemented. For object imports, start
 with [the worked example](Importing-objects.md); for checks, use [Testing](Testing.md).
+
+## GHZ boss and boss explosions
+
+`objects/S1/3D Boss - Green Hill.asm` retains the classic ship, faces, eight-hit
+fight and escape. Its active patrol travels one pixel/frame between the center
+X ±32, reversing immediately while the ball keeps swinging. Only initial weapon
+deployment waits: each of the six pieces drops two pixels/frame to its own stop,
+then the root signals readiness. The mount ends 32 pixels below the ship and the
+ball's radius remains 96 pixels. The S1 weighted pendulum uses one sine call for
+all links. The ship and weapon constructors retry insufficient SST capacity.
+
+On defeat, the mount, four links and ball become independent harmless debris,
+using Sky Sanctuary's indexed launch velocities and `$38` gravity every frame.
+Alternating drawing never gates movement. Detached pieces stop reading their
+parent; faces/exhaust validate the ship before following it. Hit flashing saves
+and restores the actual palette word, and escape uses `GetLevelMusic`.
+
+`objects/FC, FD & FE Explosions.asm` owns the shared boss burst controller and
+its visual object. Both GHZ and EHZ call `BossExplosion_Start` during their
+exploding phase. The helper retries a full pool and creates one controller per
+boss; byte `$4C` is reserved in both parent SSTs. The parameter rows give the
+finite counter (bit 7 means continuous), X/Y half-ranges and parent phase.
+Spreads must be nonzero powers of two. The controller follows a validated
+parent, stops when that phase ends, and emits every three frames. Low/high RNG
+words independently place bursts in `[-range,range-1]` on each axis. Animation,
+art and timing are described in [Sprites and VRAM](Sprites-and-VRAM.md#boss-explosions).
+
+Deployment, breakup and burst cadence/RNG come from skdisasm
+`73de97c6b55055bcb8089c1d55d006b02136f163`, `Obj_SSZGHZBoss`,
+`Child_Draw_Sprite_FlickerMove`, `Set_IndexedVelocity` and
+`Obj_CreateBossExplosion`. The Sky Sanctuary stop-and-wait flight pattern is
+not used. `objects/W.I.P Objects/Death Egg Explosion Wall.asm` preserves the
+original DEZ3 moving four-emitter sequence and `$16/$18` profiles as an
+unassembled reference for a future level. Its S3&K interfaces and cutscene
+transition, including the fixed-slot fallback, still need porting before use.

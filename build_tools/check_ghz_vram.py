@@ -9,6 +9,31 @@ from check_sprite_assets import frames
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def check_boss(rom, symbols, cues):
+    boss = cues('PLC_GHZBoss')
+    assert [source for source, _, _ in boss] == [symbols[name] for name in (
+        'Nem_OldEggPod', 'Nem_Weapons', 'Nem_Exhaust', 'Nem_Prison', 'Nem_BossExplosion')]
+    protected = [(symbols['ArtTile_Shield_2'] * 32, symbols['ArtTile_Shield_2_End'] * 32),
+                 (symbols['vram_fg'], 0x10000)]
+    for i, (_, low, high) in enumerate(boss):
+        assert all(high <= a or low >= b for _, a, b in boss[:i]), (
+            'GHZ boss/capsule overlap', hex(low), hex(high))
+        assert all(high <= a or low >= b for a, b in protected), (
+            'GHZ boss overwrote fixed bank', hex(low), hex(high))
+    resident = [(a, b) for _, a, b in boss + cues('PLC_GHZ3_Main')]
+    for mapping, base in (('Map_Eggman', 'ArtTile_Eggman'),
+                          ('Map_BossItems', 'ArtTile_Eggman_Weapons'),
+                          ('Map_GBall', 'ArtTile_GHZ_Giant_Ball'),
+                          ('Map_BossExplosion', 'ArtTile_BossExplosion'),
+                          ('Map_Pri', 'ArtTile_Prison_Capsule')):
+        for row in frames(rom, symbols[mapping]):
+            for _, size, tile, _ in row:
+                low = ((symbols[base] + tile) & 0x7FF) * 32
+                high = low + ((size >> 2) + 1) * ((size & 3) + 1) * 32
+                assert any(a <= low < high <= b for a, b in resident), (
+                    'unloaded GHZ boss art', mapping, hex(low), hex(high))
+
+
 def main():
     rom = (ROOT / 's2built.bin').read_bytes()
     symbols = {name: int(value, 16) for name, value in re.findall(
@@ -27,6 +52,9 @@ def main():
             assert length and length % 32 == 0 and dest % 32 == 0, (label, hex(dest), length)
             result.append((source, dest, dest + length))
         return result
+
+    check_boss(rom, symbols, cues)
+    print('GHZ boss/capsule art, protected banks and mappings pass.', flush=True)
 
     common = sum((cues(label) for label in ('PLC_Main2', 'PLC_Explode',
                                           'PLC_GHZAnimals')), [])
@@ -81,8 +109,14 @@ def main():
     for act in range(1, 5):
         loaded = (common + cues(f'PLC_GHZ{act}_Main') + cues(f'PLC_GHZ{act}_Extra')
                   + cues(f'PLCKosM_THZ{act}'))
-        for i, (_, low, high) in enumerate(loaded):
-            assert low >= level_end, ('GHZ terrain overwritten', act, hex(low))
+        for i, (source, low, high) in enumerate(loaded):
+            # Dry GHZ acts intentionally lend the surface bank to the wall.
+            # check_ghz_boss executes the real water initializer for all acts;
+            # enabling water requires relocating this borrowed allocation.
+            borrowed_surface = (source == symbols['Nem_GHZ_BWall'] and
+                                symbols['ArtTile_Water_Surface'] * 32 <= low < high <=
+                                (symbols['ArtTile_Water_Surface'] + 16) * 32)
+            assert low >= level_end or borrowed_surface, ('GHZ terrain overwritten', act, hex(low))
             assert all(high <= a or low >= b for _, a, b in loaded[:i]), (
                 'GHZ art overlap', act, hex(low), hex(high))
             assert high <= symbols['ArtTile_Shield_2'] * 32 or (
@@ -124,27 +158,6 @@ def main():
     for i, (_, low, high) in enumerate(hpz):
         assert all(high <= a or low >= b for _, a, b in hpz[:i]), (
             'HPZ art overlap', hex(low), hex(high))
-    boss = cues('PLC_GHZBoss')
-    assert [source for source, _, _ in boss] == [symbols[name] for name in (
-        'Nem_OldEggPod', 'Nem_Weapons', 'Nem_Exhaust', 'Nem_Prison')]
-    protected = [(symbols['ArtTile_Shield_2'] * 32, symbols['ArtTile_Shield_2_End'] * 32),
-                 (symbols['vram_fg'], 0x10000)]
-    for i, (_, low, high) in enumerate(boss):
-        assert all(high <= a or low >= b for _, a, b in boss[:i]), (
-            'GHZ boss/capsule overlap', hex(low), hex(high))
-        assert all(high <= a or low >= b for a, b in protected), (
-            'GHZ boss overwrote fixed bank', hex(low), hex(high))
-    resident = [(a, b) for _, a, b in boss + cues('PLC_GHZ3_Main')]
-    for mapping, base in (('Map_Eggman', 'ArtTile_Eggman'),
-                          ('Map_BossItems', 'ArtTile_Eggman_Weapons'),
-                          ('Map_GBall', 'ArtTile_GHZ_Giant_Ball'),
-                          ('Map_Pri', 'ArtTile_Prison_Capsule')):
-        for row in frames(rom, symbols[mapping]):
-            for _, size, tile, _ in row:
-                low = ((symbols[base] + tile) & 0x7FF) * 32
-                high = low + ((size >> 2) + 1) * ((size & 3) + 1) * 32
-                assert any(a <= low < high <= b for a, b in resident), (
-                    'unloaded GHZ boss art', mapping, hex(low), hex(high))
     print('Checked all four GHZ acts, cross-bank mappings, GHZ boss/capsule, HPZ art and common sprite banks across live zone PLCs.')
 
 

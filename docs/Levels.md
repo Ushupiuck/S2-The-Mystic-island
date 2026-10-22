@@ -65,7 +65,7 @@ Edit `MusicList` in `md-main.asm`: each zone row holds four independent IDs in a
 
 Defaults repeat each zone's existing song. Assembly checks all 64 entries
 against `LevelActCount` (`LevelCount * ActsPerZone`). Level entry, drowning
-recovery, invincibility expiry and EHZ boss cleanup share `GetLevelMusic`,
+recovery, invincibility expiry and GHZ/EHZ boss cleanup share `GetLevelMusic`,
 preserving act selection. Invincibility/boss music retains
 priority; one-up jingles restore the driver's saved context. Sound formats
 and importing belong in [the sound guide](../build_tools/sound/README.md).
@@ -141,6 +141,13 @@ palette and flips; ledges and platforms keep sharing terrain art. GHZ reclaims
 ten unused interior slots into terrain, leaving ten more tiles of contiguous
 capacity before its object bank at `$32B`. SMZ's former atlas-hosted terrain tile
 is back in the terrain set at `$2B8`.
+
+Dry acts may reuse the surface slots until water is enabled. GHZ intentionally
+loads its smashable wall into `$001-$00C` through the Extra PLCs, using
+`ArtTile_GHZ_SLZ_Smashable_Wall = $001`. Relocate that allocation when enabling
+water in an affected act. The VRAM check permits this deliberate borrowing;
+the boss regression executes the actual water-selection code for all four
+GHZ acts to guard the contract.
 
 ## Scrap Madness
 

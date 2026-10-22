@@ -2244,6 +2244,7 @@ Level_ClrRam:
 		clearRAM v_timingvariables,v_timingvariables_end
 		move.b	d2,(Current_Timezone).w	; clearRAM only changes d0-d1/a1
 		; TODO switch for a proper water table
+Level_WaterFlagInit:
 		moveq	#0,d0
 		moveq	#0,d1
 		move.b	(Current_Zone).w,d0
@@ -2253,6 +2254,7 @@ Level_ClrRam:
 		seq.b	d0		; if so, set
 		or.b	d1,d0		; it's either one or the other
 		move.b	d0,(Water_flag).w
+Level_WaterFlagInit_End:
 		bsr.w	ClearScreen
 		lea	(vdp_control_port).l,a6
 		move.w	#$8B00+3,(a6)	; set horizontal scrolling single pixel rows mode
@@ -6001,12 +6003,11 @@ loc_7672:
 		cmpi.w	#$2960,(Camera_RAM).w
 		blo.s	DynResize_GHZ3_Main.return
 		jsr	(FindFreeObj).l
-		bne.s	loc_7692
+		bne.w	DynResize_GHZ3_Main.return
 		move.l	#Obj3D,code(a1)
 		move.w	#$2A60,obX(a1)
 		move.w	#$280,obY(a1)
 
-loc_7692:
 		move.w	#bgm_Boss,d0
 		bsr.w	PlaySound
 		move.b	#1,(f_lockscreen).w
@@ -10550,31 +10551,6 @@ word_194B4:	dc.w 2
 word_194C6:	dc.w 2
 		dc.w $1804, $201C, 0	; yellow claws use palette line 2
 		dc.w	$B, $201E, $10
-
-; =============== S U B R O U T I N E =======================================
-
-
-BossDefeated:
-		move.b	(Vint_runcount+3).w,d0
-		andi.b	#7,d0
-		bne.s	.return
-		jsr	(FindFreeObj).l
-		bne.s	.return
-		move.l	#FieryExplosion,code(a1)
-		move.w	obX(a0),obX(a1)
-		move.w	obY(a0),obY(a1)
-		jsr	(RandomNumber).l
-		move.w	d0,d1
-		moveq	#0,d1
-		move.b	d0,d1
-		lsr.b	#2,d1
-		subi.w	#$20,d1
-		add.w	d1,obX(a1)
-		lsr.w	#8,d0
-		lsr.b	#3,d0
-		add.w	d0,obY(a1)
-.return:	rts
-; End of function BossDefeated
 
 ; ---------------------------------------------------------------------------
 		include "objects/3E Prison Capsule.asm"

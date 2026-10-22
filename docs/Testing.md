@@ -132,6 +132,28 @@ HUD and hurt/death Debug checks on Mode 1.
 Older water/companion/shared runners lack it and target the ordinary cartridge
 ROM. Do not describe all existing fixtures as CD-aware or apply flags universally.
 
+## Boss runtime checks
+
+```sh
+python build_tools/check_ghz_boss.py --rom s2built.bin --listing md-main.lst --output test-results/ghz-boss
+```
+
+The native pass covers fragmented/full pools and retries, end-of-pool parents,
+dry-act water-bank borrowing, staged deployment, continuous patrol, recycled
+child slots, actual hit response,
+palette restoration, scoring, independent debris physics on every frame, burst
+cadence/RNG, animation duration and act-selected escape music. Rendering/audio
+boundaries are stubbed only in these native fixtures.
+
+Add `--core /path/to/genesis_plus_gx_libretro.so` for the real GHZ3 arena. It
+uses explicit player positioning, then eight actual rolling collisions with
+the boss. It observes breakup, explosions, escape, ordinary-art restoration and
+the capsule switch/animal release. `--player 2` selects Tails and `--pal`
+selects PAL. Mode 1 accepts `--system-directory /path/to/bios-directory`.
+Screenshots and the JSON report belong in the selected output directory.
+The native burst tests cover both GHZ/EHZ profiles; this arena run covers GHZ,
+not a controller-only playthrough or EHZ's entire fight.
+
 ## Mega-CD checks
 
 Check out `test/rebuilt-kehmusic` for the CD-specific scripts. Build normally,

@@ -1875,7 +1875,7 @@ ArtTile_Art_EHZMountains:	equ $500
 ArtTile_ArtNem_Eggpod_1:	equ $3A0
 ArtTile_ArtNem_EHZBoss:		equ $400
 ArtTile_ArtNem_EggChoppers:	equ $480
-ArtTile_BossExplosion:	equ $581	; 100 tiles; replaced by animals/normal explosions after escape
+ArtTile_BossExplosion:	equ $581	; 100 S2 tiles; replaced by animals/normal explosions after escape
 
 ; CPZ
 ArtTile_CPZ_Platform:		equ $400

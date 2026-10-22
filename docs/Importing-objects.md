@@ -43,7 +43,7 @@ requires suitable bounds, or maxima covering every set the object uses.
 | `Map_EHZBoss_Vehicle` | 7 | `$20` | `$28` |
 | `Map_EHZBoss_Ground` | 8 | `$30` | `$10` |
 | `Map_EHZBoss_Propeller` | 7 | `$52` | `$28` |
-| `Map_BossExplosion` | 7 | `$10` | `$10` |
+| `Map_BossExplosion` (shared S2 fiery effect) | 7 | `$10` | `$10` |
 
 The propeller's rightmost piece begins at X=50 and is 32 pixels wide, requiring
 82 pixels (`$52`), beyond the old `$40` minimum. The ship's display half-height
@@ -73,7 +73,7 @@ capsule. Origin deltas at `$44/$46` also support the existing MZ placeholder.
 | `$8000-$9000` | Car/wheels/drill, `ArtTile_ArtNem_EHZBoss`, 128 tiles |
 | `$9000-$9280` | Propeller, `ArtTile_ArtNem_EggChoppers`, 20 tiles |
 | `$94E0-$9F80` | Capsule, `ArtTile_Prison_Capsule`, 85 tiles; loaded at defeat |
-| `$B020-$BCA0` | Large explosion, `ArtTile_BossExplosion`, 100 tiles |
+| `$B020-$BCA0` | Shared S2 fiery boss explosion, `ArtTile_BossExplosion`, 100 tiles |
 
 Boss/capsule phases replace general object art. They preserve both shield
 banks; normal explosions and animals replace large-explosion art after escape.
@@ -84,5 +84,8 @@ extending an arena's object set.
 
 `check_ehz_boss.py` validates converted geometry, art indices, compiled PLC
 lifetimes and capsule records. Its optional `--s2disasm /path/to/s2disasm`
-compares with a built source checkout. Runtime fight checks belong in the
+compares the vehicle and explosion mappings with a built source checkout.
+The faster shared explosion controller is covered by
+[the boss checks](Testing.md#boss-runtime-checks).
+Runtime fight checks belong in the
 normal arena; a lifecycle fixture alone does not establish boss/capsule behavior.

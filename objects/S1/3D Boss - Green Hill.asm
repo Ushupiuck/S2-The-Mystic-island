@@ -1,6 +1,26 @@
 ; ---------------------------------------------------------------------------
 ; Object 3D - Eggman (GHZ)
+; Classic ship, expressions and escape; staged weapon deployment and breakup
+; adapted from S3&K's Sky Sanctuary boss. Active flight never waits for a swing.
 ; ---------------------------------------------------------------------------
+BGHZ_FlashColor = objoff_2E	; word: palette color saved before a hit
+BGHZ_WeaponReady = objoff_30	; byte: set by the fully extended chain
+BGHZ_BaseX = objoff_34		; longs: ObjectMove_Reserved2's unbobbed position
+BGHZ_Parent = objoff_38		; long: face/exhaust -> ship
+BGHZ_BaseY = objoff_3C
+BGHZ_Timer = objoff_40		; word: defeat/recovery timer
+BGHZ_FlashTimer = objoff_42	; byte: remaining invulnerable frames
+BGHZ_BobAngle = objoff_43		; byte: vertical sine phase
+
+BGHZ_Approach = 2
+BGHZ_Deploy = 4
+BGHZ_Patrol = 6
+BGHZ_Explode = 8
+BGHZ_Recover = $A
+BGHZ_Escape = $C
+BGHZ_CenterX = boss_ghz_x+$A0
+BGHZ_LeftTurn = BGHZ_CenterX-$20
+BGHZ_RightTurn = BGHZ_CenterX+$20
 
 Obj3D:
 		moveq	#0,d0
@@ -13,27 +33,41 @@ BGHZ_Index:	dc.w BGHZ_Main-BGHZ_Index
 		dc.w BGHZ_FaceMain-BGHZ_Index
 		dc.w BGHZ_FlameMain-BGHZ_Index
 
-BGHZ_ObjData:	dc.b 2,	0		; routine counter, animation
-		dc.b 4,	1
-		dc.b 6,	7
+BGHZ_ObjData:	dc.b 2,0		; routine, animation
+		dc.b 4,1
+		dc.b 6,7
+BGHZ_ObjData_End:
 ; ===========================================================================
 
 BGHZ_Main:	; Routine 0
+		; Reserve the face and exhaust together. A full pool retries next frame.
+		lea	object_size(a0),a1
+		moveq	#(BGHZ_ObjData_End-BGHZ_ObjData)/2-2,d1
+.find_slot:
+		cmpa.w	#v_lvlobjend,a1
+		bhs.s	.return
+		tst.l	code(a1)
+		bne.s	.next_slot
+		dbf	d1,.next_slot
+		bra.s	.slots_ready
+.next_slot:
+		lea	object_size(a1),a1
+		bra.s	.find_slot
+.return:
+		rts
+.slots_ready:
 		lea	BGHZ_ObjData(pc),a2
 		movea.l	a0,a1
-		moveq	#2,d1
+		moveq	#(BGHZ_ObjData_End-BGHZ_ObjData)/2-1,d1
 		bra.s	BGHZ_LoadBoss
-; ===========================================================================
 
 BGHZ_Loop:
 		jsr	(FindNextFreeObj).l
-		bne.s	loc_18D70
-
 BGHZ_LoadBoss:
 		move.b	(a2)+,obRoutine(a1)
 		move.l	#Obj3D,code(a1)
-		move.w	obX(a0),obX(a1)
-		move.w	obY(a0),obY(a1)
+		move.l	obX(a0),obX(a1)
+		move.l	obY(a0),obY(a1)
 		move.l	#Map_Eggman,obMap(a1)
 		move.b	#Map_Eggman_height,height_pixels(a1)
 		move.w	#make_art_tile(ArtTile_Eggman,0,0),obGfx(a1)
@@ -41,308 +75,264 @@ BGHZ_LoadBoss:
 		move.b	#sprite_bound($20,Map_Eggman_width),obActWid(a1)
 		move.w	#$180,obPriority(a1)
 		move.b	(a2)+,obAnim(a1)
-		move.l	a0,objoff_38(a1)
-		dbf	d1,BGHZ_Loop	; repeat sequence 2 more times
-
-loc_18D70:
-		move.w	obX(a0),objoff_34(a0)
-		move.w	obY(a0),objoff_3C(a0)
+		move.l	a0,BGHZ_Parent(a1)
+		dbf	d1,BGHZ_Loop
+		move.l	obX(a0),BGHZ_BaseX(a0)
+		move.l	obY(a0),BGHZ_BaseY(a0)
 		move.b	#$F,obColType(a0)
-		move.b	#8,obColProp(a0) ; set number of hits to 8
+		move.b	#8,obColProp(a0)
 
 BGHZ_ShipMain:	; Routine 2
 		moveq	#0,d0
 		move.b	ob2ndRout(a0),d0
 		move.w	BGHZ_ShipIndex(pc,d0.w),d1
 		jsr	BGHZ_ShipIndex(pc,d1.w)
-		lea	Ani_Eggman(pc),a1
-		jsr	(AnimateSprite).l
-		move.b	obStatus(a0),d0
-		andi.b	#3,d0
-		andi.b	#$FC,obRender(a0)
-		or.b	d0,obRender(a0)
-		jmp	(DisplaySprite).l
-; ===========================================================================
-BGHZ_ShipIndex:	dc.w BGHZ_ShipStart-BGHZ_ShipIndex
-		dc.w BGHZ_MakeBall-BGHZ_ShipIndex
-		dc.w BGHZ_ShipMove-BGHZ_ShipIndex
-		dc.w loc_17954-BGHZ_ShipIndex
-		dc.w loc_1797A-BGHZ_ShipIndex
-		dc.w loc_179AC-BGHZ_ShipIndex
-		dc.w loc_179F6-BGHZ_ShipIndex
-; ===========================================================================
-
-BGHZ_ShipStart:
-		move.w	#$100,obVelY(a0) ; move ship down
-		jsr	(ObjectMove_Reserved2).l
-		cmpi.w	#boss_ghz_y+$38,objoff_3C(a0)
-		bne.s	loc_177E6
-		clr.w	obVelY(a0)	; stop ship
-		addq.b	#2,ob2ndRout(a0) ; goto next routine
-
-loc_177E6:
-		move.b	objoff_43(a0),d0
-		jsr	(CalcSine).l
-		asr.w	#6,d0
-		add.w	objoff_3C(a0),d0
-		move.w	d0,obY(a0)
-		move.w	objoff_34(a0),obX(a0)
-		addq.b	#2,objoff_43(a0)
-		cmpi.b	#8,ob2ndRout(a0)
-		bhs.s	.return
-		tst.b	obStatus(a0)
-		bmi.s	loc_1784C
-		tst.b	obColType(a0)
-		bne.s	.return
-		tst.b	objoff_42(a0)
-		bne.s	.BGHZ_ShipFlash
-		move.b	#$20,objoff_42(a0)	; set number of	times for ship to flash
-		move.w	#sfx_HitBoss,d0
-		jsr	(PlaySound_Special).l	; play boss damage sound
-
-.BGHZ_ShipFlash:
-		lea	(v_palette+$22).w,a1 ; load 2nd palette, 2nd entry
-		moveq	#0,d0		; move 0 (black) to d0
-		tst.w	(a1)
-		bne.s	.loc_1783C
-		move.w	#cWhite,d0	; move 0EEE (white) to d0
-
-.loc_1783C:
-		move.w	d0,(a1)		; load colour stored in	d0
-		subq.b	#1,objoff_42(a0)
-		bne.s	.return
-		move.w	#$222,(v_palette+$22).w	; move 0EEE (white) to d0
-		move.b	#$F,obColType(a0)
-
+		tst.l	code(a0)		; the escape state may have deleted the ship
+		beq.s	.return
+		bsr.w	BGHZ_UpdatePosition
+		bsr.w	BGHZ_CheckHits
+		bra.w	BGHZ_Animate
 .return:
 		rts
 ; ===========================================================================
-
-loc_1784C:
-		moveq	#100,d0
-		jsr	(AddPoints).l
-		move.b	#8,ob2ndRout(a0)
-		move.w	#$B3,objoff_40(a0)
-		rts
+BGHZ_ShipIndex:	dc.w BGHZ_ShipStart-BGHZ_ShipIndex
+		dc.w BGHZ_MakeBall-BGHZ_ShipIndex
+		dc.w BGHZ_WaitForWeapon-BGHZ_ShipIndex
+		dc.w BGHZ_ShipMove-BGHZ_ShipIndex
+		dc.w BGHZ_ShipExplode-BGHZ_ShipIndex
+		dc.w BGHZ_ShipRecover-BGHZ_ShipIndex
+		dc.w BGHZ_ShipEscape-BGHZ_ShipIndex
 ; ===========================================================================
 
+BGHZ_ShipStart:
+		move.w	#$100,obVelY(a0)
+		jsr	(ObjectMove_Reserved2).l
+		cmpi.w	#boss_ghz_y+$38,BGHZ_BaseY(a0)
+		blo.s	.return
+		clr.w	obVelY(a0)
+		move.b	#BGHZ_Approach,ob2ndRout(a0)
+.return:
+		rts
+; ---------------------------------------------------------------------------
+
 BGHZ_MakeBall:
+		cmpi.w	#BGHZ_CenterX,BGHZ_BaseX(a0)
+		bls.s	.make_ball
 		move.w	#-$100,obVelX(a0)
 		move.w	#-$40,obVelY(a0)
 		jsr	(ObjectMove_Reserved2).l
-		cmpi.w	#boss_ghz_x+$A0,objoff_34(a0)
-		bne.w	loc_177E6
+		cmpi.w	#BGHZ_CenterX,BGHZ_BaseX(a0)
+		bhi.s	.return
+.make_ball:
+		move.w	#BGHZ_CenterX,BGHZ_BaseX(a0)
 		clr.w	obVelX(a0)
 		clr.w	obVelY(a0)
-		addq.b	#2,ob2ndRout(a0)
 		jsr	(FindNextFreeObj).l
-		bne.s	loc_17910
-		move.l	#Obj48,code(a1) ; load swinging ball object
-		move.w	objoff_34(a0),obX(a1)
-		move.w	objoff_3C(a0),obY(a1)
-		move.l	a0,objoff_38(a1)
+		bne.s	.return			; stay at the anchor and retry
+		move.l	#Obj48,code(a1)
+		move.w	BGHZ_BaseX(a0),obX(a1)
+		move.w	BGHZ_BaseY(a0),obY(a1)
+		move.l	a0,BGHZ_Parent(a1)
+		move.b	#BGHZ_Deploy,ob2ndRout(a0)
+.return:
+		rts
+; ---------------------------------------------------------------------------
 
-loc_17910:
-		move.w	#$77,objoff_40(a0)
-		bra.w	loc_177E6
-; ===========================================================================
+BGHZ_WaitForWeapon:
+		tst.b	BGHZ_WeaponReady(a0)
+		beq.s	.return
+		move.b	#BGHZ_Patrol,ob2ndRout(a0)
+		move.w	#-$100,obVelX(a0)
+.return:
+		rts
+; ---------------------------------------------------------------------------
 
 BGHZ_ShipMove:
-		subq.w	#1,objoff_40(a0)
-		bpl.s	BGHZ_Reverse
-		addq.b	#2,ob2ndRout(a0)
-		move.w	#$40-1,objoff_40(a0)
-		move.w	#$100,obVelX(a0) ; move the ship sideways
-		cmpi.w	#boss_ghz_x+$A0,objoff_34(a0)
-		bne.s	BGHZ_Reverse
-		move.w	#($40*2)-1,objoff_40(a0)
-		move.w	#$40,obVelX(a0)
-
-BGHZ_Reverse:
-		btst	#0,obStatus(a0)
-		bne.w	loc_177E6
-		neg.w	obVelX(a0)	; reverse direction of the ship
-		bra.w	loc_177E6
-; ===========================================================================
-
-loc_17954:
-		subq.w	#1,objoff_40(a0)
-		bmi.s	loc_17960
 		jsr	(ObjectMove_Reserved2).l
-		bra.w	loc_177E6
-; ===========================================================================
+		tst.w	obVelX(a0)
+		bpl.s	.moving_right
+		cmpi.w	#BGHZ_LeftTurn,BGHZ_BaseX(a0)
+		bhi.s	.return
+		bra.s	.turn
+.moving_right:
+		cmpi.w	#BGHZ_RightTurn,BGHZ_BaseX(a0)
+		blo.s	.return
+.turn:
+		neg.w	obVelX(a0)
+		bchg	#0,obStatus(a0)		; turn immediately; no end-of-swing wait
+.return:
+		rts
+; ---------------------------------------------------------------------------
 
-loc_17960:
-		bchg	#0,obStatus(a0)
-		move.w	#$40-1,objoff_40(a0)
-		subq.b	#2,ob2ndRout(a0)
+BGHZ_UpdatePosition:
+		move.b	BGHZ_BobAngle(a0),d0
+		jsr	(CalcSine).l
+		asr.w	#6,d0
+		add.w	BGHZ_BaseY(a0),d0
+		move.w	d0,obY(a0)
+		move.w	BGHZ_BaseX(a0),obX(a0)
+		addq.b	#2,BGHZ_BobAngle(a0)
+		rts
+; ---------------------------------------------------------------------------
+
+BGHZ_CheckHits:
+		cmpi.b	#BGHZ_Explode,ob2ndRout(a0)
+		bhs.s	.return
+		tst.b	obStatus(a0)
+		bmi.s	BGHZ_Defeat
+		tst.b	obColType(a0)
+		bne.s	.return
+		tst.b	BGHZ_FlashTimer(a0)
+		bne.s	.flash
+		move.w	(v_palette+$22).w,BGHZ_FlashColor(a0)
+		move.b	#$20,BGHZ_FlashTimer(a0)
+		move.w	#sfx_HitBoss,d0
+		jsr	(PlaySound_Special).l
+.flash:
+		move.w	BGHZ_FlashColor(a0),d0
+		btst	#0,BGHZ_FlashTimer(a0)
+		bne.s	.set_color
+		move.w	#cWhite,d0
+.set_color:
+		move.w	d0,(v_palette+$22).w
+		subq.b	#1,BGHZ_FlashTimer(a0)
+		bne.s	.return
+		move.b	#$F,obColType(a0)	; final flash frame restored the saved color
+.return:
+		rts
+; ---------------------------------------------------------------------------
+
+BGHZ_Defeat:
+		; A lethal hit or forced defeat must not leave the level palette white.
+		tst.b	BGHZ_FlashTimer(a0)
+		beq.s	.palette_ready
+		move.w	BGHZ_FlashColor(a0),(v_palette+$22).w
+		clr.b	BGHZ_FlashTimer(a0)
+.palette_ready:
+		clr.b	obColType(a0)
 		clr.w	obVelX(a0)
-		bra.w	loc_177E6
-; ===========================================================================
+		clr.w	obVelY(a0)
+		moveq	#100,d0
+		jsr	(AddPoints).l
+		move.b	#BGHZ_Explode,ob2ndRout(a0)
+		move.w	#$B3,BGHZ_Timer(a0)
+		rts
+; ---------------------------------------------------------------------------
 
-loc_1797A:
-		subq.w	#1,objoff_40(a0)
-		bmi.s	loc_17984
-		bra.w	BossDefeated
-; ===========================================================================
-
-loc_17984:
+BGHZ_ShipExplode:
+		subq.w	#1,BGHZ_Timer(a0)
+		bmi.s	.recover
+		moveq	#BossExplosion_GHZ,d0
+		jmp	(BossExplosion_Start).l
+.recover:
 		bset	#0,obStatus(a0)
 		bclr	#7,obStatus(a0)
-		clr.w	obVelX(a0)
-		addq.b	#2,ob2ndRout(a0)
-		move.w	#-$26,objoff_40(a0)
-		tst.b	(Boss_defeated_flag).w
-		bne.s	locret_179AA
+		move.b	#BGHZ_Recover,ob2ndRout(a0)
+		move.w	#-$26,BGHZ_Timer(a0)
 		move.b	#1,(Boss_defeated_flag).w
+		rts
+; ---------------------------------------------------------------------------
 
-locret_179AA:
-		rts	
-; ===========================================================================
-
-loc_179AC:
-		addq.w	#1,objoff_40(a0)
-		beq.s	loc_179BC
-		bpl.s	loc_179C2
+BGHZ_ShipRecover:
+		addq.w	#1,BGHZ_Timer(a0)
+		beq.s	.stop
+		bpl.s	.rise
 		addi.w	#$18,obVelY(a0)
-		jsr	(ObjectMove_Reserved2).l
-		bra.w	loc_177E6
-; ===========================================================================
-
-loc_179BC:
-		clr.w	obVelY(a0)
-		jsr	(ObjectMove_Reserved2).l
-		bra.w	loc_177E6
-; ===========================================================================
-
-loc_179C2:
-		cmpi.w	#$30,objoff_40(a0)
-		blo.s	loc_179DA
-		beq.s	loc_179E0
-		cmpi.w	#$38,objoff_40(a0)
-		blo.s	loc_179EE
-		addq.b	#2,ob2ndRout(a0)
-		jsr	(ObjectMove_Reserved2).l
-		bra.w	loc_177E6
-; ===========================================================================
-
-loc_179DA:
+		jmp	(ObjectMove_Reserved2).l
+.rise:
+		cmpi.w	#$30,BGHZ_Timer(a0)
+		blo.s	.accelerate
+		beq.s	.music
+		cmpi.w	#$38,BGHZ_Timer(a0)
+		blo.s	.move
+		move.b	#BGHZ_Escape,ob2ndRout(a0)
+		bra.s	.move
+.accelerate:
 		subq.w	#8,obVelY(a0)
-		jsr	(ObjectMove_Reserved2).l
-		bra.w	loc_177E6
-; ===========================================================================
-
-loc_179E0:
+		bra.s	.move
+.music:
+		moveq	#plcid_Explode,d0
+		jsr	(LoadPLC).l		; capsule explosions reuse the ordinary bank
+		moveq	#plcid_GHZAnimals,d0
+		jsr	(LoadPLC).l		; the large effect also overlaps animal bank 1
+		clr.b	(f_lockscreen).w
+		jsr	(GetLevelMusic).l
+		jsr	(PlayMusic).l
+.stop:
 		clr.w	obVelY(a0)
-		move.w	#bgm_GHZ,d0
-		jsr	(PlaySound).l		; play GHZ music
+.move:
+		jmp	(ObjectMove_Reserved2).l
+; ---------------------------------------------------------------------------
 
-loc_179EE:
-		jsr	(ObjectMove_Reserved2).l
-		bra.w	loc_177E6
-; ===========================================================================
-
-loc_179F6:
+BGHZ_ShipEscape:
 		move.w	#$400,obVelX(a0)
 		move.w	#-$40,obVelY(a0)
 		cmpi.w	#boss_ghz_end,(v_limitright2).w
-		beq.s	loc_17A10
+		bhs.s	.check_visible
 		addq.w	#2,(v_limitright2).w
-		jsr	(ObjectMove_Reserved2).l
-		bra.w	loc_177E6
-; ===========================================================================
-
-loc_17A10:
+		jmp	(ObjectMove_Reserved2).l
+.check_visible:
 		tst.b	obRender(a0)
-		bpl.s	BGHZ_ShipDel
-		jsr	(ObjectMove_Reserved2).l
-		bra.w	loc_177E6
-; ===========================================================================
-
-BGHZ_ShipDel:
-		addq.l	#4,sp
-		jmp	(DeleteObject).l
+		bpl.w	BGHZ_Delete
+		jmp	(ObjectMove_Reserved2).l
 ; ===========================================================================
 
 BGHZ_FaceMain:	; Routine 4
-		moveq	#0,d0
-		moveq	#1,d1
-		movea.l	objoff_38(a0),a1
-		move.b	ob2ndRout(a1),d0
-		subq.b	#4,d0
-		bne.s	loc_17A3E
-		cmpi.w	#boss_ghz_x+$A0,objoff_34(a1)
-		bne.s	loc_17A46
-		moveq	#4,d1
-
-loc_17A3E:
-		subq.b	#6,d0
-		bmi.s	loc_17A46
-		moveq	#$A,d1
-		move.b	d1,obAnim(a0)
-		subq.b	#2,d0
-		bne.s	BGHZ_Display
-		move.b	#6,obAnim(a0)
-		tst.b	obRender(a0)
-		bpl.s	BGHZ_Del
-		bra.s	BGHZ_Display
-; ===========================================================================
-
-loc_17A46:
-		tst.b	obColType(a1)
-		bne.s	loc_17A50
-		moveq	#5,d1
-		move.b	d1,obAnim(a0)
-		subq.b	#2,d0
-		bne.s	BGHZ_Display
-		move.b	#6,obAnim(a0)
-		tst.b	obRender(a0)
-		bpl.s	BGHZ_Del
-		bra.s	BGHZ_Display
-; ===========================================================================
-
-loc_17A50:
+		movea.l	BGHZ_Parent(a0),a1
+		cmpi.l	#Obj3D,code(a1)
+		bne.w	BGHZ_Delete
+		cmpi.b	#2,obRoutine(a1)
+		bne.w	BGHZ_Delete
+		moveq	#1,d1			; idle
+		cmpi.b	#BGHZ_Explode,ob2ndRout(a1)
+		bhs.s	.defeated
+		tst.b	BGHZ_FlashTimer(a1)
+		bne.s	.hurt
+		cmpi.b	#BGHZ_Deploy,ob2ndRout(a1)
+		beq.s	.laugh
 		cmpi.b	#4,(v_player+obRoutine).w
-		blo.s	loc_17A5A
+		bhs.s	.laugh
+		tst.l	(v_player2+code).w
+		beq.s	.animate
+		cmpi.b	#4,(v_player2+obRoutine).w
+		blo.s	.animate
+.laugh:
 		moveq	#4,d1
-
-loc_17A5A:
+		bra.s	.animate
+.hurt:
+		moveq	#5,d1
+		bra.s	.animate
+.defeated:
+		moveq	#6,d1
+		cmpi.b	#BGHZ_Recover,ob2ndRout(a1)
+		bne.s	.animate
+		moveq	#$A,d1
+.animate:
 		move.b	d1,obAnim(a0)
-		subq.b	#2,d0
-		bne.s	BGHZ_Display
-		move.b	#6,obAnim(a0)
-		tst.b	obRender(a0)
-		bpl.s	BGHZ_Del
 		bra.s	BGHZ_Display
-; ===========================================================================
-
-BGHZ_Del:
-		jmp	(DeleteObject).l
-; ===========================================================================
+; ---------------------------------------------------------------------------
 
 BGHZ_FlameMain:	; Routine 6
-		move.b	#7,obAnim(a0)
-		movea.l	objoff_38(a0),a1
-		cmpi.b	#$C,ob2ndRout(a1)
-		bne.s	loc_17A96
-		move.b	#$B,obAnim(a0)
-		tst.b	obRender(a0)
-		bpl.s	BGHZ_Del
-		bra.s	BGHZ_Display
-; ===========================================================================
-
-loc_17A96:
-		move.w	obVelX(a1),d0
+		movea.l	BGHZ_Parent(a0),a1
+		cmpi.l	#Obj3D,code(a1)
+		bne.s	BGHZ_Delete
+		cmpi.b	#2,obRoutine(a1)
+		bne.s	BGHZ_Delete
+		move.b	#7,obAnim(a0)		; no thrust
+		cmpi.b	#BGHZ_Escape,ob2ndRout(a1)
+		beq.s	.escape
+		tst.w	obVelX(a1)
 		beq.s	BGHZ_Display
 		move.b	#8,obAnim(a0)
-	; Fall through
-; ===========================================================================
+		bra.s	BGHZ_Display
+.escape:
+		move.b	#$B,obAnim(a0)
 
 BGHZ_Display:
-		movea.l	objoff_38(a0),a1
 		move.w	obX(a1),obX(a0)
 		move.w	obY(a1),obY(a0)
 		move.b	obStatus(a1),obStatus(a0)
+BGHZ_Animate:
 		lea	Ani_Eggman(pc),a1
 		jsr	(AnimateSprite).l
 		move.b	obStatus(a0),d0
@@ -350,3 +340,7 @@ BGHZ_Display:
 		andi.b	#$FC,obRender(a0)
 		or.b	d0,obRender(a0)
 		jmp	(DisplaySprite).l
+; ---------------------------------------------------------------------------
+
+BGHZ_Delete:
+		jmp	(DeleteObject).l
