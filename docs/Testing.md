@@ -49,25 +49,10 @@ python build_tools/check_card_art.py --rom s2built.bin --listing md-main.lst
 
 ## Runtime checks
 
-`check_level_lag.py` loads GHZ, CPZ and HPZ in order, waits at least five seconds
-in each, and uses Debug Start+A between levels. It then traverses HPZ in Debug
-while comparing the loaded block definitions, chunks and complete layout every
-frame, using resident CD tables on the terrain-offload build. `--zone 2` stops in dry CPZ instead. `--delay 0` uses the unmodified ROM;
-the default inserts a register/CCR-preserving guest CPU delay into block drawing.
-On the terrain-offload build it patches uploaded CD code in unused PRG RAM;
-on the cartridge build it creates a disposable ROM under the output directory. This deliberately amplifies lag
-while retaining normal IRQ/VDP/CD scheduling. It is a deterministic stress check,
-not proof that every intermittent corruption report has the same cause.
-
-```sh
-python build_tools/check_level_lag.py --core /path/to/genesis_plus_gx_libretro.so --rom s2built.bin --listing md-main.lst --output test-results/level-lag
-```
-
-Add `--system-directory /path/to/bios` for CD builds, or `--pal` for PAL. See
-[VBlank ownership](Sprites-and-VRAM.md#mapping-and-rendering-abi) for the wait
-latch and nested-interrupt contract. The pre-fix handler can recursively consume
-the stack under this load and overwrite the last loaded block definitions;
-correct decompression on entry does not rule that out.
+The old `check_level_lag.py` GHZ → CPZ → HPZ sequence is a historical
+Twizzler investigation, not current decompressor validation. Do not include it
+in routine migration checks. [VBlank ownership](Sprites-and-VRAM.md#mapping-and-rendering-abi)
+documents the retained wait-latch/nested-interrupt fix.
 
 Example for the shared visual regressions (life art, SMZ smoke/flame and boss flash):
 
@@ -97,9 +82,11 @@ that offer it. Most primary-player selectors use `--player 0` (Sonic) or `2`
 Several runners compare with a specific earlier revision; their baseline is
 part of the fixture, not automatically the parent commit. Check their CLI/source
 before reusing them with an unrelated baseline. Native fixtures use the declared
-system stack, map staging and execute CD terrain requests in a second Unicorn
+system stack, map staging and execute CD terrain and placement requests in a second Unicorn
 68000. Fixture data is copied to its resident tables at the mailbox boundary;
-this tests the assembled algorithms and caller ABI, not CD bus scheduling. The emulator checks below cover that hardware path.
+this tests the assembled algorithms, loading/apply boundary and caller ABI,
+not CD bus scheduling. Object fixtures use placement helpers to distinguish CD
+index handles/resident state from cartridge pointers. The emulator checks below cover that hardware path.
 
 CD boot needs a supplied system directory. Only runners exposing
 `--system-directory` support that setup directly (including level pages, act

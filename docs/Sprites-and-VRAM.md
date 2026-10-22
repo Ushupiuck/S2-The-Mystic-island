@@ -64,9 +64,9 @@ addresses without changing mappings, frame selection or VRAM banks.
 
 | RAM bytes, end exclusive | Source | Size |
 | --- | --- | --- |
-| `$FF9FB0-$FFA310` | Shield | `$360` |
-| `$FFA310-$FFA750` | Invincibility stars | `$440` |
-| `$FFA750-$FFAB50` | Normal/lost rings | `$400` |
+| `$FFA2BC-$FFA61C` | Shield | `$360` |
+| `$FFA61C-$FFAA5C` | Invincibility stars | `$440` |
+| `$FFAA5C-$FFAE5C` | Normal/lost rings | `$400` |
 
 The cache occupies `$BA0` bytes after the CD ring event queue. `LoadPlayerEffectArt`
 decompresses all three after level clears/PLCs and before `InitRingFrame`;

@@ -77,7 +77,7 @@ def main():
 				g.write('Camera_X_pos', camera, 2)
 				g.write('Camera_X_pos_coarse_back', (camera-128) & 0xFF80, 2)
 				g.write('Camera_Y_pos', max(0, min(0x720, py-112)), 2)
-				tag = (g.s['Object_Respawn_Table'] + index) & 65535
+				tag = g.placement_handle(index)
 				head = None
 				for _ in range(180):
 					g.run()
@@ -144,8 +144,8 @@ def main():
 					# Native placements are checked above. Keep their spawn flags
 					# set here so the manager cannot reuse a defeated fixture's
 					# slots for a different, freshly loaded Kemusi.
-					length = g.s['Object_Respawn_Table_end'] - g.s['Object_Respawn_Table']
-					g.write('Object_Respawn_Table', int.from_bytes(b'\x80'*length, 'big'), length)
+					length = g.placement_capacity()
+					g.placement_write(0, int.from_bytes(b'\x80'*length, 'big'), length)
 					for other in ('v_player', 'v_player2'):
 						place(g, other, 0x500, 0x640); g.put(other, 'obControl', 0x81)
 					g.write('Camera_X_pos', 0x4A0, 2)

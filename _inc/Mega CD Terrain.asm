@@ -147,6 +147,10 @@ MCD_SubTerrainDraw:
 		subi.l	#MCD_TerrainStream_Sub,d0
 		cmpi.l	#MCD_TerrainStreamCapacity-$40,d0
 		bhi.w	MCD_SubError
+		move.w	d0,(MCD_ObjectStreamBytes_Sub).l
+		bsr.w	MCD_SubObjectsFrame
+		moveq	#0,d0
+		move.w	(MCD_ObjectStreamBytes_Sub).l,d0
 		bset	#0,(MCD_SubMemoryMode).l
 		rts
 

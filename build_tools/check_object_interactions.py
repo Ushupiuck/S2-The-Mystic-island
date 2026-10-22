@@ -78,7 +78,7 @@ def main():
         player(g.get(a,'obX',2),g.get(a,'obY',2)-28,rolling=True)
         g.run(100)
         assert g.get('v_player','obStatusSecondary')&(1<<bit),(name,g.get('v_player','obStatusSecondary'),snapshot(g,a))
-        assert g.read(g.s['Object_Respawn_Table']+obj['index'])&1,'monitor state not recorded'
+        assert g.placement_read(obj['index'])&1,'monitor state not recorded'
         position(g,obj['world_x']+0x700);g.run(90)
         position(g,obj['world_x']-64);g.run(90)
         actors=owner(g,obj);assert len(actors)==1,'monitor duplicate or absent'
@@ -92,7 +92,7 @@ def main():
         player(g.get(a,'obX',2),g.get(a,'obY',2)-16,vy=0)
         g.run(5)
         assert g.read('v_lastlamp')==1,g.read('v_lastlamp')
-        assert g.read(g.s['Object_Respawn_Table']+obj['index'])&1
+        assert g.placement_read(obj['index'])&1
         position(g,obj['world_x']+0x700);g.run(90)
         position(g,obj['world_x']-64);g.run(90)
         assert len(owner(g,obj))==1

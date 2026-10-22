@@ -145,7 +145,7 @@ def main():
         x,y,oid,sub=struct.unpack_from('>HHBB',records,i*6)
         if oid<0xB1:continue
         g.restore(stage)
-        tag=(g.s['Object_Respawn_Table']+i)&65535
+        tag=g.placement_handle(i)
         def visit(px):
             # Reopen the camera range after visits to the template's goal area.
             # This fixture tests backtracking ownership, not the signpost lock.

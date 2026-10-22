@@ -1701,8 +1701,10 @@ Pal_WZCyc:	binclude "palette/WZ Cycle.bin"
 ; DelayProgram:
 WaitForVint:
 	if MegaCDMode1
+		movem.l	d0-d3/a1,-(sp)	; callers retain loop counters across the wait
 		jsr	(MCD_BeginTerrainJob).l
 		jsr	(MCD_FinishTerrainJob).l
+		movem.l	(sp)+,d0-d3/a1
 		disable_ints
 		; Active terrain leaves PRG RAM on CD throughout the frame.
 		move.b	#1,(MCD_SubControl+1).l
@@ -7765,39 +7767,30 @@ MarkObjGone3:
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
-; Moving objects must not unload while their placement is still retained:
-; the loader only revisits it after an X/Y boundary crossing. This fallback
-; runs only after the object's own X check fails. Recover the placement from
-; the paired front cursors, without adding an original-X field to each SST.
-; Return the range flags; preserve registers and the caller's X delta.
+; Moving objects retain their original loading window. CD owns the placement
+; data; query its X only after the object's own X lifetime check has failed.
 Object_CheckSpawnXRange:
 		movem.l	d0-d1/a1,-(sp)
 		move.w	respawn_addr(a0),d1
 		beq.s	.dynamic
-		tst.l	(Object_load_addr_front).w
-		beq.s	.dynamic
-		sub.w	(Object_respawn_index_front).w,d1
-		muls.w	#omSize,d1
-		movea.l	(Object_load_addr_front).w,a1
-		move.w	omX(a1,d1.l),d1
-		andi.w	#Object_Load_CoarseMask,d1
-		sub.w	(Camera_X_pos_coarse_back).w,d1
-		cmpi.w	#128+320+192,d1
+		move.w	d1,d0
+		jsr	(MCD_ReadPlacementX).l
+		andi.w	#Object_Load_CoarseMask,d0
+		sub.w	(Camera_X_pos_coarse_back).w,d0
+		cmpi.w	#128+320+192,d0
 		movem.l	(sp)+,d0-d1/a1
 		rts
 .dynamic:
-		cmpi.w	#128+320+192,d0	; no placement: keep the normal X lifetime
+		cmpi.w	#128+320+192,d0
 		movem.l	(sp)+,d0-d1/a1
 		rts
 
-; Only parents loaded from a layout own a respawn entry. Dynamic helpers,
-; Debug objects and consumed objects use DeleteObject without releasing it.
+; Dynamic helpers have handle zero; CD guards it before touching placement state.
 UnloadObject:
 loc_CEB0:
 		move.w	respawn_addr(a0),d0
 		beq.s	DeleteObject
-		movea.w	d0,a2
-		bclr	#7,(a2)
+		jsr	(MCD_RespawnRelease).l
 
 ; ---------------------------------------------------------------------------
 ; Subroutine to delete an object

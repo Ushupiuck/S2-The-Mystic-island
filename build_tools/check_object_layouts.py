@@ -75,7 +75,7 @@ def main():
     assert 'Symbol Table' in listing, 'Build must finish before checking its listing'
     symbols = {name: int(value, 16) & 0xFFFFFF for name, value in re.findall(
         r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]', listing)}
-    capacity = symbols['Object_Respawn_Table_end'] - symbols['Object_Respawn_Table']
+    capacity = symbols['MCD_ObjectPlacementCount'] if 'MCD_SubObjects' in symbols else symbols['Object_Respawn_Table_end'] - symbols['Object_Respawn_Table']
     assert capacity == 0x300
     layouts = {path.name: placements(path, capacity)
                for path in sorted((ROOT / 'level/objects').glob('*.bin'))}
@@ -122,7 +122,7 @@ def main():
             assert not numeric_id.search(active), f'{source}:{line}: numeric placement ID used as a routine pointer'
     assert symbols['height_pixels'] == 6 and symbols['DebugEntry_size'] == 12
     assert symbols['v_lvlobjend'] - symbols['v_lvlobjspace'] == 90 * 0x4E
-    assert symbols['v_16x16'] == symbols['v_objspace_end']
+    assert symbols['TempArray_LayerDef' if symbols.get('MegaCDMode1') else 'v_16x16'] == symbols['v_objspace_end']
     assert symbols['v_16x16_End'] - symbols['v_16x16'] == 0x1800
     assert symbols['System_Stack_Start'] == symbols['Sprite_Table_end']
     assert symbols['v_systemstack'] - symbols['System_Stack_Start'] == 0x140

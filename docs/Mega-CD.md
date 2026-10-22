@@ -18,11 +18,11 @@ jobs remain future work; Z80 sound remains on its existing storage.
 
 `md-main.asm` contains the Mega Drive vectors, entry point and game. It includes
 `_inc/Mega CD.asm`, `_inc/Mega CD Ring Jobs.asm` and
-`_inc/Mega CD Terrain Jobs.asm`: despite their CD-related
+`_inc/Mega CD Terrain Jobs.asm` and `_inc/Objects Manager.asm`: despite their CD-related
 names, these are **main-CPU** loaders, bus/DMA helpers and mailbox callers.
 
 `mcd-main.asm` contains the **sub-CPU** vectors, `MCD_SubEntry`, command service
-and ring/terrain executors. The MD entry point embeds it between `MCD_SubProgram` and
+and ring/terrain/object-loading executors. The MD entry point embeds it between `MCD_SubProgram` and
 `MCD_SubProgramEnd`, using `phase 0` to assemble its CD execution addresses.
 The existing bootstrap uploads those bytes to PRG RAM. This is one cartridge
 build, not two separately linked ROMs. Shared hardware/RAM definitions remain
@@ -48,6 +48,7 @@ aliases translate physical addresses; they do not allocate another copy.
 | Currently used chunks/scene overlays | `$426000-$42DFFF`, bank 0 | `$006000-$00DFFF`, 32 KiB |
 | Ring job storage | `$426000-$426E0F`, bank 1 | `$026000-$026E0F` |
 | Resident terrain and work state | No normal-frame PRG access | `$026E10-$02BE17` |
+| Resident object placements and loader state | No normal-frame PRG access | `$02BE18-$02D3FB` |
 | 256 KiB Word RAM, 2M mode | `$600000-$63FFFF` while owned | `$080000-$0BFFFF` while owned |
 | Communication registers | `$A12010-$A1202F` | `$FF8010-$FF802F` |
 
@@ -59,15 +60,17 @@ allocation is not a contiguous main-CPU pointer, and jobs cannot use its tail.
 
 MD work RAM is packed against the top of its 64 KiB address space. The single
 free allocation is `Free_RAM_Start` through `Free_RAM_End` (end exclusive):
-`$FF0000-$FF9DA3`, **`$9DA4` bytes (40,356)**. Terrain migration removes
+`$FF0000-$FFA0AD`, **`$A0AE` bytes (41,134)**. Terrain migration removes
 MD layout/block storage and the old camera/scroll copies and block cache,
-with eight new control bytes: a net gain of 10,400 bytes. Current live ranges:
+with eight new control bytes: a net gain of 10,400 bytes. Object loading moves
+its 768-byte respawn table and cursor storage to CD, reclaiming another 778
+bytes after its reply control. Current live ranges:
 
 | Allocation | MD address, inclusive | Size |
 | --- | --- | --- |
-| Ring/terrain event and control state | `$FF9DA4-$FF9FAF` | `$20C` |
-| [Decompressed player art](Sprites-and-VRAM.md#mode-1-ram-art) | `$FF9FB0-$FFAB4F` | `$BA0` |
-| Engine variables and work buffers | `$FFAB50-$FFFFFF` | `$54B0` |
+| Ring/terrain event and control state | `$FFA0AE-$FFA2BB` | `$20E` |
+| [Decompressed player art](Sprites-and-VRAM.md#mode-1-ram-art) | `$FFA2BC-$FFAE5B` | `$BA0` |
+| Engine variables and work buffers | `$FFAE5C-$FFFFFF` | `$51A4` |
 
 `_definitions/s2.constants.asm` derives the engine's start from its own declared
 size, then places CD work/art immediately below it. Allocation changes move the
@@ -84,8 +87,9 @@ copy sparse changes, restore bank 0 and release CD again. Loading and non-level
 scenes explicitly acquire bank 0 for their existing scratch and PRG DMA paths.
 Retain that bus/bank through PRG DMA consumption.
 
-Word RAM holds a 44-byte frame snapshot at `$600000`, a strip stream from
-`$600040` to `$60FFFF`, and level staging from `$610000`. `v_16x16` and
+Word RAM holds a 44-byte frame snapshot at `$600000`, a shared header through `$60003F`, a strip stream from
+`$600040` to `$60DFFF`, object spawn replies from `$60E000`, and level staging
+from `$610000`. `v_16x16` and
 `Level_Layout` name staging aliases; gameplay uses the resident CD copies.
 `MCD_LoadTerrain` copies blocks, layout, collision indices and the selected
 S1/S2 height/width/angle bank once on level entry. Chunks already reside on CD.
@@ -120,9 +124,24 @@ Normal sparse work benefits from offload; a synthetic 255-simultaneous-animation
 case can cost more because of copying/waits. The runner measures the whole
 post-scroll section, including overhead, rather than claiming a game-wide speedup.
 
-`ObjectsManager`/`Load_Sprites`, `ExecuteObjects`, player physics and companion
-AI still run on MD. Future migrations must move working state **and the executor
-that owns it** together; moving RAM alone is not a CPU offload.
+`ObjectsManager`/`Load_Sprites` is now an MD transport/application boundary.
+The actual placement manager and loader execute in `_inc/Mega CD Objects.asm`,
+with resident placements, front/back cursors, loading bands and respawn state.
+MD copies each act's placement list once. On a band change or a full-pool retry,
+it supplies twelve free-slot bytes through the existing terrain frame job.
+CD selects placements and emits twelve-byte records: SST handle, X, Y, render
+flags/subtype, object ID, and placement handle. MD resolves its own routine
+pointers and writes the SSTs after the reply. Idle frames do not scan/copy SSTs.
+
+`respawn_addr` now holds placement index + 1; zero still denotes a dynamic or
+Debug object. Rare state changes and original-X lifetime queries use the
+mailbox. There is no MD respawn-table mirror. The MD coarse-camera values are
+request caches/lifetime inputs, not duplicate CD cursors.
+
+`ExecuteObjects`, ordinary object state machines, player motion and companion
+AI still execute on MD. This port moves the placement manager/loader, not all
+object behavior. Future migrations must move working state and its executor
+together.
 
 ## Commands and Word RAM
 
@@ -146,6 +165,8 @@ its complete first request before starting the sub-CPU, avoiding warm-reset race
 | `MCD_CommandTerrainFloor/Wall` (7/8) | Complete explicit-coordinate sensor scan |
 | `MCD_CommandLayoutRead/Write` (9/10) | Level-script byte access |
 | `MCD_CommandTerrainAir` (11) | Whole airborne collision pass |
+| `MCD_CommandObjectsLoad` (12) | Install an act placement list, return Word RAM |
+| `MCD_CommandObjectState` (13) | Persistent state / original placement X |
 | `$20-$2D` | Ground attachment and complete object/sensor operations |
 | Other | `$FFFF` |
 

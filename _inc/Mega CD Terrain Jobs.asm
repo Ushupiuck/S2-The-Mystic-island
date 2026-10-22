@@ -307,7 +307,8 @@ MCD_BeginTerrainJob:
 		beq.w	.return
 		tst.w	(MCD_TerrainPending).l
 		bne.w	.return
-		move.l	(Scroll_flags).w,d0
+		jsr	(MCD_ObjectsNeedJob).l
+		or.l	(Scroll_flags).w,d0
 		or.l	(Scroll_flags_BG2).w,d0
 		or.b	(Screen_redraw_flag).w,d0
 		tst.l	d0			; scroll flags occupy high bytes of their words
@@ -333,6 +334,7 @@ MCD_PrepareTerrainFrame:
 		move.w	(Camera_BG_Y_pos).w,(a0)+
 		move.b	(Current_Zone).w,(a0)+
 		move.b	(Screen_redraw_flag).w,(a0)+
+		jsr	(MCD_PrepareObjectFrame).l
 		clr.l	(Scroll_flags).w
 		clr.l	(Scroll_flags_BG2).w
 		clr.b	(Screen_redraw_flag).w
@@ -413,6 +415,7 @@ MCD_StopTerrain:
 		jsr	(MCD_FinishRingJob).l
 		clr.b	(MCD_TerrainReady).l
 		clr.w	(MCD_TerrainPending).l
+		clr.w	(MCD_ObjectReplyPending).l
 		jsr	(MCD_AcquireWordRAM).l
 		jcs	MCD_Unavailable
 		jmp	(MCD_RequireProgramRAM).l

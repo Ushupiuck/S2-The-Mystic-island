@@ -56,6 +56,12 @@ MCD_SubEntry:
 .terrainLoad:
 		bsr.w	MCD_SubTerrainLoad
 		bra.w	.done
+.objectsLoad:
+		bsr.w	MCD_SubObjectsLoad
+		bra.w	.done
+.objectState:
+		bsr.w	MCD_SubObjectState
+		bra.w	.done
 .layout:
 		bsr.w	MCD_SubTerrainLayout
 		bra.w	.done
@@ -85,7 +91,8 @@ MCD_SubEntry:
 		dc.l	.done,.ping,.returnRAM,.ringTick,.ringReset
 		dc.l	.terrainLoad,.terrainDraw,.terrainProbe,.terrainProbe
 		dc.l	.layout,.layout,.terrainAir
-		rept	$20-12
+		dc.l	.objectsLoad,.objectState
+		rept	$20-14
 		dc.l	.unknown
 		endm
 		rept	MCD_TerrainObjectLast-MCD_TerrainAnglePos+1
@@ -172,3 +179,4 @@ MCD_SubRingTick:
 		rts
 		even
 		include "_inc/Mega CD Terrain.asm"
+		include "_inc/Mega CD Objects.asm"

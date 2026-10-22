@@ -31,8 +31,8 @@ def main():
 	try:
 		boot_level(g, zone=0, act=0)
 		isolate(g)
-		length = g.s['Object_Respawn_Table_end']-g.s['Object_Respawn_Table']
-		g.write('Object_Respawn_Table', int.from_bytes(b'\x80'*length, 'big'), length)
+		length = g.placement_capacity()
+		g.placement_write(0, int.from_bytes(b'\x80'*length, 'big'), length)
 		stage = g.save()
 
 		def setup(x, y, payload, facing, course=False, phase=0, wall_rows=(0, 1, 2, 3)):

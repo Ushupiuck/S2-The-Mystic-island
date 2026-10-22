@@ -62,7 +62,7 @@ def objects(g,oid=None):
 
 
 def owner(g,obj):
-    pointer=(g.s['Object_Respawn_Table']+obj['index'])&65535
+    pointer=g.placement_handle(obj['index'])
     return [a for a in objects(g) if not g.get(a,'obRender')&0x40 and g.get(a,'respawn_addr',2)==pointer]
 
 
@@ -132,7 +132,7 @@ def main():
                 position(g,obj['world_x']-64)
                 g.run(120)
                 entry['owners_after_revisit']=len(owner(g,obj))
-                entry['respawn_state']=g.read(g.s['Object_Respawn_Table']+obj['index'])
+                entry['respawn_state']=g.placement_read(obj['index'])
                 if entry['owners_after_leaving']:
                     report['failures'].append({'name':obj['name'],'reason':'owner survived outside X window'})
                 if entry['owners_after_revisit']>1:

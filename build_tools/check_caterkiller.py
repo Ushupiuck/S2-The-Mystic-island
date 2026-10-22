@@ -320,11 +320,11 @@ def lifecycle(f):
 		pool = list(f.pool())
 		for a in pool[free+1:]:
 			g.put(a, 'code', g.s['SpindashDust'])
-		owner = g.s['Object_Respawn_Table'] & 65535
-		g.write(owner, 0x80)
+		owner = g.placement_handle(0)
+		g.placement_write(0, 0x80)
 		g.put(head, 'respawn_addr', owner, 2)
 		f.frame(head)
-		assert g.get(head, 'obRoutine') == 10 and not g.read(owner) & 128
+		assert g.get(head, 'obRoutine') == 10 and not g.placement_read() & 128
 		f.frame(head)
 		assert all(g.get(a, 'code') != g.s['Caterkiller'] for a in pool)
 		f.finish(f'partial-allocation-{free}')

@@ -137,7 +137,7 @@ for act in (1,2):
    for _ in range(100):
     g.run();assert not g.read('v_errortype'),(act,index,hex(oid),x,py)
     # Remembered records retain their manager tag; children can share it.
-    owners=[a for a in objects(g) if g.get(a,'respawn_addr',2)==((g.s['Object_Respawn_Table']+index)&65535)]
+    owners=[a for a in objects(g) if g.get(a,'respawn_addr',2)==g.placement_handle(index)]
     found|=bool(owners);visible|=any(g.get(a,'obRender')&128 for a in owners)
    assert found,(act,index,hex(oid),'placement not loaded')
    if oid not in seen:g.video.save(args.output/f'act-{act}-object-{oid:02X}.png')

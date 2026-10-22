@@ -75,7 +75,7 @@ obTimeFrame:            equ $1E     ; byte; animation frame timer
 obAniFrame:             equ $1F     ; byte; position in animation script
 obAnim:                 equ $20     ; byte; current animation
 obPrevAni:              equ $21     ; byte; previous animation
-respawn_addr:           equ $22     ; word; placement respawn-byte pointer; zero for dynamic/Debug objects
+respawn_addr:           equ $22     ; word; placement index+1 on CD; zero for dynamic/Debug objects
 obRoutine:              equ $24     ; byte; main routine
 ob2ndRout:              equ $25     ; byte; secondary routine
 obAngle:                equ $26     ; byte; angle about the Z axis
@@ -217,6 +217,8 @@ object_size_bits:       equ 6      ; allocator lookup buckets, not SST stride
 object_size:            equ $4E    ; 78 bytes; player flight energy ends at $4C
 reserved_object_slots: equ 23
 dynamic_object_slots:  equ 90
+MCD_ObjectSlotCount:		equ	dynamic_object_slots
+MCD_ObjectSlotBytes:		equ	(MCD_ObjectSlotCount+7)/8
 object_slot_count:      equ reserved_object_slots+dynamic_object_slots
 object_ram_size:        equ object_size*object_slot_count ; $226E; keep all 113 slots
 next_object =           object_size
@@ -885,6 +887,7 @@ MCD_TerrainReady:	ds.b	1
 MCD_TerrainPending:	ds.w	1	; 0 idle, 1 CD building, 2 MD-owned strip stream
 MCD_TerrainStreamBytes:	ds.w	1
 MCD_TerrainIndexBytes:	ds.w	1	; level-load index size derived from decoded blocks
+MCD_ObjectReplyPending:	ds.w	1
 MCD_MainWorkEnd:
 ; Uncompressed sources for the existing effect DPLCs and ring-frame uploads.
 ; Rebuild effects on level entry, and rings on either level or S1 stage entry.
@@ -1047,8 +1050,6 @@ Ring_Positions_Active_End:	equ Ring_Positions_End-6	; final six-byte record is t
 VDP_Command_Buffer:		ds.w	7*$12		; stores 18 ($12) VDP commands to issue the next time ProcessDMAQueue is called
 VDP_Command_Buffer_Slot:	ds.w	1		; stores the address of the next open slot for a queued VDP command
 
-Object_Respawn_Table:		ds.b	$300	; S3&K: one byte per placement (loaded bit + local state)
-Object_Respawn_Table_end:
 Camera_RAM:
 Camera_Positions:
 Camera_X_pos:			ds.l	1
@@ -1254,11 +1255,6 @@ Camera_X_pos_coarse_back_End:
 Camera_X_pos_coarse_P2:	ds.w	1
 Camera_X_pos_coarse_P2_End:
 
-Object_Manager_Addresses:
-Object_load_addr_front:	ds.l	1			; first placement beyond the right loading edge
-Object_load_addr_back:	ds.l	1			; first placement inside the left loading edge
-Object_Manager_Addresses_End:
-
 Object_Manager_Addresses_P2:
 Obj_load_addr_right_P2:	ds.l	1
 Obj_load_addr_left_P2:	ds.l	1
@@ -1441,8 +1437,6 @@ v_ani3_prev:		ds.b	1			; synchronised sprite animation 3 - previous frame
 Respawn_table_keep:	ds.b	1	; preserve placement state when reinitializing the same live layout
 Camera_Y_pos_coarse:	ds.w	1	; last processed camera Y, rounded down to $80
 Camera_Y_pos_coarse_back:	ds.w	1	; (Camera_Y_pos - $80) & $FF80
-Object_respawn_index_front:	ds.w	1	; RAM address paired with Object_load_addr_front
-Object_respawn_index_back:	ds.w	1	; RAM address paired with Object_load_addr_back
 Object_load_retry:	ds.b	1	; an eligible placement could not get an SST this frame
 
 			ds.b	1			; align the following allocation boundary

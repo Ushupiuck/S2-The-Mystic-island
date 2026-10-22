@@ -67,5 +67,12 @@ MCD_TerrainObjectLeft:		equ	$2C
 MCD_TerrainObjectCeiling:		equ	$2D
 MCD_TerrainObjectLast:		equ	MCD_TerrainObjectCeiling
 MCD_TerrainIndexCapacity:		equ	$600
-MCD_TerrainStreamCapacity:	equ	$10000
+MCD_TerrainStreamCapacity:	equ	$E000
 MCD_SubWordRAM:			equ	$80000
+
+; Object placements and shared frame transport.
+MCD_CommandObjectsLoad:		equ	12
+MCD_CommandObjectState:		equ	13
+MCD_ObjectPlacementCount:	equ	$300
+MCD_ObjectPlacementCapacity:	equ	(MCD_ObjectPlacementCount+2)*omSize
+MCD_ObjectSpawnSize:		equ	12

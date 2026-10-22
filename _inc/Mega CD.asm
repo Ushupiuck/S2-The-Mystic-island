@@ -5,6 +5,7 @@ MCD_Init:
 		clr.b	(MCD_status).w
 		clr.b	(MCD_TerrainReady).l
 		clr.w	(MCD_TerrainPending).l
+		clr.w	(MCD_ObjectReplyPending).l
 		clr.w	(MCD_RingEventCount).l
 		clr.w	(MCD_RingActiveCount).l
 		clr.w	(MCD_RingJobPending).l

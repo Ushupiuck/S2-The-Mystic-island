@@ -1,7 +1,9 @@
 # Objects, loading and Debug
 
-The layout constants and aliases live in `_definitions/s2.constants.asm`; loading lives in
-`_inc/Objects Manager.asm`, and execution/rendering in `md-main.asm`. The loader
+The layout constants and aliases live in `_definitions/s2.constants.asm`; the MD loading boundary lives in
+`_inc/Objects Manager.asm`, and execution/rendering in `md-main.asm`. On the CD
+branch, `_inc/Mega CD Objects.asm` owns placement selection and its working
+state; see [Mega-CD](Mega-CD.md#cpu-work-and-ring-jobs). The loader
 is adapted from S3&K `Load_Sprites`, using skdisasm
 `73de97c6b55055bcb8089c1d55d006b02136f163`. `ObjectsManager` and `Load_Sprites`
 name the same entry. Execution continues after the primary character dies.
@@ -10,7 +12,8 @@ name the same entry. Execution continues after the primary character dies.
 
 Each object status table (SST) is `$4E` bytes. The pool contains 23 reserved and
 90 dynamic slots, bounded by `v_objspace`/`v_objspace_end`; dynamic slots start
-at `v_lvlobjspace`. `v_16x16` immediately follows the pool. Absolute addresses
+at `v_lvlobjspace`. `TempArray_LayerDef` follows the pool on the CD branch; terrain blocks live
+in CD PRG RAM, with Word-RAM load staging named `v_16x16`. Absolute addresses
 depend on the branch's RAM map; see [Mega-CD](Mega-CD.md#memory-and-ownership).
 Use `object_size` for pointer arithmetic;
 `object_size_bits` describes allocator buckets, not the actual slot stride.
@@ -31,7 +34,7 @@ Use `object_size` for pointer arithmetic;
 | `$1C`, `$1D` | 1 each | `obHeight`, `obWidth`: collision radii |
 | `$1E`, `$1F` | 1 each | `obTimeFrame`, `obAniFrame` |
 | `$20`, `$21` | 1 each | `obAnim`, `obPrevAni` |
-| `$22` | 2 | `respawn_addr`: placement-state pointer |
+| `$22` | 2 | `respawn_addr`: placement-state handle (CD), pointer (cartridge) |
 | `$24`, `$25` | 1 each | `obRoutine`, `ob2ndRout` |
 | `$26` | 1 | `obAngle` |
 | `$28`, `$29` | 1 each | `obColType`, `obColProp` for NPCs |
@@ -104,16 +107,19 @@ and respawn pointers. A full pool schedules a stationary retry. Normal object
 lifetime checks remain X-based: vertical filtering does not add automatic
 Y-based deletion to every object.
 
-`Object_Respawn_Table` has `$300` bytes, ending at `Object_Respawn_Table_end`.
-Every placement has one entry; bit 7 marks loaded/consumed, with seven local-state bits. `respawn_addr`
-is its low-word pointer, loaded with `movea.w`; zero means dynamic/Debug-owned.
+On the CD branch, `MCD_ObjectRespawn_Sub` has `$300` bytes, one per placement:
+bit 7 marks loaded/consumed, with seven local-state bits. `respawn_addr` stores
+index + 1, and zero means dynamic/Debug-owned. Use `MCD_RespawnRead`,
+`MCD_RespawnConsume`, `MCD_RespawnRelease` and `MCD_RespawnBump`; never convert
+a CD placement handle to an MD pointer. The cartridge branch retains its
+low-word pointer into `Object_Respawn_Table`.
 
-- Preserve the pointer on initialization and leave its loaded bit set.
+- Preserve the handle on initialization and leave its loaded bit set.
 - `UnloadObject` releases the loaded bit and deletes a reusable out-of-range SST.
 - `DeleteObject` consumes a destroyed/collected placement until the table resets.
-- Check the pointer for zero before accessing state; Debug objects have no entry.
+- Check for zero before using persistent state; Debug objects have no entry.
 - Children do not share the parent's respawn ownership. Delete packed helper SSTs
-  directly: their overlaid `$22` bytes are child data, not a placement pointer.
+  directly: their overlaid `$22` bytes are child data, not a placement handle.
 
 Normal level entry clears placement state. `Respawn_table_keep` supports
 reinitializing the same live layout. Timezone-specific object placement remains

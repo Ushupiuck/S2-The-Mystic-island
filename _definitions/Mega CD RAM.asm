@@ -48,6 +48,29 @@ MCD_TerrainSecondary_Sub:	ds.b	1
 MCD_TerrainObject_Sub:	ds.b	object_size
 MCD_TerrainCache_Sub:	ds.l	32
 MCD_Terrain_SubEnd:
+; Loader working state, beyond the expanded chunks and resident terrain.
+MCD_ObjectBoundary_Sub:	ds.b	omSize
+MCD_ObjectPlacements_Sub:	ds.b	(MCD_ObjectPlacementCount+1)*omSize
+MCD_ObjectRespawn_Sub:	ds.b	MCD_ObjectPlacementCount
+MCD_ObjectRespawn_SubEnd:
+MCD_ObjectFront_Sub:	ds.l	1
+MCD_ObjectBack_Sub:	ds.l	1
+MCD_ObjectRespawnFront_Sub:	ds.l	1
+MCD_ObjectRespawnBack_Sub:	ds.l	1
+MCD_ObjectCoarseX_Sub:	ds.w	1
+MCD_ObjectCoarseY_Sub:	ds.w	1
+MCD_ObjectXBehind_Sub:	ds.w	1
+MCD_ObjectYAbove_Sub:	ds.w	1
+MCD_ObjectMinY_Sub:	ds.w	1
+MCD_ObjectFreeCount_Sub:	ds.w	1
+MCD_ObjectSpawnCount_Sub:	ds.w	1
+MCD_ObjectStreamBytes_Sub:	ds.w	1
+MCD_ObjectRoutine_Sub:	ds.b	1
+MCD_ObjectRetry_Sub:	ds.b	1
+MCD_ObjectKeep_Sub:	ds.b	1
+			ds.b	1
+MCD_ObjectFreeSlots_Sub:	ds.w	MCD_ObjectSlotCount
+MCD_Objects_SubEnd:
 MCD_SubUserRAM_End:
 	dephase
 
@@ -94,8 +117,15 @@ MCD_RingUpdateCount_Bank1:	equ	MCD_ProgramRAM+(MCD_RingUpdateCount_Sub&$1FFFF)
 ; These aliases name the same 2M RAM viewed by each CPU, not extra allocations.
 	phase	MCD_WordRAM
 MCD_TerrainFrame:	ds.b	MCD_TerrainFrame_SubEnd-MCD_TerrainCamera_Sub
-			ds.b	$40-(MCD_TerrainFrame_SubEnd-MCD_TerrainCamera_Sub)
-MCD_TerrainStream:	ds.b	MCD_TerrainStreamCapacity-$40
+MCD_ObjectFrameMinY:	ds.w	1
+MCD_ObjectFrameEnabled:	ds.b	1
+			ds.b	1
+MCD_ObjectFrameSlots:	ds.b	MCD_ObjectSlotBytes
+			ds.b	$40-(MCD_TerrainFrame_SubEnd-MCD_TerrainCamera_Sub)-4-MCD_ObjectSlotBytes
+MCD_TerrainStream:	ds.b	$E000-$40
+MCD_ObjectReply:	ds.w	2
+MCD_ObjectSpawns:	ds.b	MCD_ObjectSlotCount*MCD_ObjectSpawnSize
+			ds.b	$10000-($E000+4+MCD_ObjectSlotCount*MCD_ObjectSpawnSize)
 MCD_TerrainStage:
 MCD_TerrainBlockStage:	ds.b	$1800
 MCD_TerrainLayoutStage:	ds.b	$1000
@@ -108,8 +138,12 @@ MCD_TerrainStage_End:
 MCD_TerrainFrame_Sub:	equ	MCD_SubWordRAM
 MCD_TerrainStream_Sub:	equ	MCD_SubWordRAM+(MCD_TerrainStream-MCD_WordRAM)
 MCD_TerrainStage_Sub:	equ	MCD_SubWordRAM+(MCD_TerrainStage-MCD_WordRAM)
-	if MCD_Terrain_SubEnd>MCD_SubStack_Start
-		fatal "CD terrain leaves insufficient sub-CPU stack space"
+MCD_ObjectFrameMinY_Sub:	equ	MCD_SubWordRAM+(MCD_ObjectFrameMinY-MCD_WordRAM)
+MCD_ObjectFrameEnabled_Sub:	equ	MCD_SubWordRAM+(MCD_ObjectFrameEnabled-MCD_WordRAM)
+MCD_ObjectFrameSlots_Sub:	equ	MCD_SubWordRAM+(MCD_ObjectFrameSlots-MCD_WordRAM)
+MCD_ObjectReply_Sub:	equ	MCD_SubWordRAM+(MCD_ObjectReply-MCD_WordRAM)
+	if MCD_SubUserRAM_End>MCD_SubStack_Start
+		fatal "CD working storage overlaps the sub-CPU stack"
 	endif
 	if MCD_TerrainStage_End>MCD_WordRAM+$40000
 		fatal "Terrain transport exceeds 2M Word RAM"

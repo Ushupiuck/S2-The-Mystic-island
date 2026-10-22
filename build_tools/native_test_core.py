@@ -31,6 +31,7 @@ class Native:
         assert 'Symbol Table' in listing, 'Build must finish before testing its listing'
         self.s = {name: int(value, 16) for name, value in re.findall(
             r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]', listing)}
+        self.respawn_base = 1 if 'MCD_SubObjects' in self.s else self.s['Object_Respawn_Table'] & 65535
         self.stack = (self.s['v_systemstack'] & 0xFFFFFF) - 4
         self.cpu = Uc(UC_ARCH_M68K, UC_MODE_BIG_ENDIAN)
         self.cpu.ctl_set_cpu_model(UC_CPU_M68K_M68000)
@@ -99,22 +100,23 @@ class Native:
             cpu.reg_write(UC_M68K_REG_A1, 0xFFFFBABA)
 
     def dispatch_hook(self, cpu, address, size, unused):
-        if address == self.s.get('MCD_TerrainRequest'):
-            self.terrain_request()
+        if address in (self.s.get('MCD_TerrainRequest'), self.s.get('MCD_WaitReply')):
+            waiting = address == self.s.get('MCD_WaitReply')
+            command = int.from_bytes(cpu.mem_read(0xA12010, 2), 'big') if waiting else cpu.reg_read(UC_M68K_REG_D0) & 65535
+            self.cd_request(command)
+            if waiting:
+                cpu.mem_write(0xA1202E, bytes(cpu.mem_read(0xA1201E, 2)))
             stack = cpu.reg_read(UC_M68K_REG_A7) & 0xFFFFFF
             target = int.from_bytes(cpu.mem_read(stack, 4), 'big')
+            cpu.reg_write(UC_M68K_REG_SR, cpu.reg_read(UC_M68K_REG_SR) & ~1)
             cpu.reg_write(UC_M68K_REG_A7, stack + 4)
             cpu.reg_write(UC_M68K_REG_PC, target)
             return
         self.hook(cpu, address, size, unused)
 
-    def terrain_request(self):
-        """Transfer fixture inputs and run the real CD geometry, never a model.
-
-        Existing native fixtures edit MD staging directly. Refresh resident CD
-        data here to preserve that fixture interface; real boot/transport and
-        ownership are tested with both CPUs under Genesis Plus GX.
-        """
+    def refresh_terrain(self):
+        # Legacy native fixtures edit MD staging. Refresh CD tables only for
+        # geometry calls; hardware boot/ownership is checked under libretro.
         s, sub, cpu = self.s, self.sub, self.cpu
         for source, dest, length in (
                 ('Chunk_Table', 'MCD_ChunkTable_SubStart', 0x8000),
@@ -141,12 +143,18 @@ class Native:
         path = 2 if self.read('Collision_addr', 4) == self.read('v_colladdr2', 4) else 1
         sub.mem_write(s['MCD_TerrainPath_Sub'], bytes(sub.mem_read(s['MCD_TerrainPath' + str(path) + '_Sub'], 4)))
         sub.mem_write(s['MCD_TerrainPrimary_Sub'], bytes((self.read('Primary_Angle'), self.read('Secondary_Angle'))))
+    def cd_request(self, command):
+        s, sub, cpu = self.s, self.sub, self.cpu
+        kind = command & 255
+        if kind in (7, 8, 11) or kind >= 0x20:
+            self.refresh_terrain()
+        if kind in (5, 6, 12):
+            sub.mem_write(0x80000, bytes(cpu.mem_read(0x600000, 0x40000)))
         sub.mem_write(0xFF800E, bytes(cpu.mem_read(0xA1200E, 0x22)))
-        command = cpu.reg_read(UC_M68K_REG_D0) & 65535
         sub.mem_write(s['MCD_SubMainCommand'], struct.pack('>H', command))
         sub.mem_write(s['MCD_SubOwnFlags'], bytes((s['MCD_ServiceReady'],)))
-        kind = command & 255
-        routine = {7: 'MCD_SubTerrainProbe', 8: 'MCD_SubTerrainProbe',
+        routine = {5: 'MCD_SubTerrainLoad', 6: 'MCD_SubTerrainDraw', 12: 'MCD_SubObjectsLoad',
+                   13: 'MCD_SubObjectState', 7: 'MCD_SubTerrainProbe', 8: 'MCD_SubTerrainProbe',
                    9: 'MCD_SubTerrainLayout', 10: 'MCD_SubTerrainLayout',
                    11: 'MCD_SubTerrainAir'}.get(kind, 'MCD_SubTerrainObject')
         stop, stack = 0x7FBF0, s['MCD_SubStack_Top'] - 4
@@ -154,7 +162,7 @@ class Native:
         sub.reg_write(UC_M68K_REG_SR, 0x2700)
         sub.reg_write(UC_M68K_REG_A7, stack)
         sub.reg_write(UC_M68K_REG_D0, command)
-        sub.emu_start(s[routine], stop, count=100000)
+        sub.emu_start(s[routine], stop, count=300000)
         assert sub.reg_read(UC_M68K_REG_PC) == stop, routine
         assert sub.reg_read(UC_M68K_REG_A7) == stack + 4, routine
         result = sub.reg_read(UC_M68K_REG_D0) & 65535
@@ -162,6 +170,26 @@ class Native:
         cpu.mem_write(0xA12020, bytes(sub.mem_read(0xFF8020, 0x10)))
         cpu.mem_write(0xA1200F, bytes(sub.mem_read(0xFF800F, 1)))
         cpu.reg_write(UC_M68K_REG_D0, result)
+        if kind in (5, 6, 12):
+            cpu.mem_write(0x600000, bytes(sub.mem_read(0x80000, 0x40000)))
+
+    def placement_handle(self, index):
+        return self.respawn_base + index
+
+    def placement_read(self, index=0, size=1):
+        return int.from_bytes(self.placement_data(size, index), 'big')
+
+    def placement_data(self, size, index=0):
+        if 'MCD_SubObjects' in self.s:
+            return bytes(self.sub.mem_read(self.s['MCD_ObjectRespawn_Sub'] + index, size))
+        return bytes(self.cpu.mem_read((self.s['Object_Respawn_Table'] & 0xFFFFFF) + index, size))
+
+    def placement_write(self, index, value, size=1):
+        data = value if isinstance(value, bytes) else value.to_bytes(size, 'big')
+        if 'MCD_SubObjects' in self.s:
+            self.sub.mem_write(self.s['MCD_ObjectRespawn_Sub'] + index, data)
+        else:
+            self.cpu.mem_write((self.s['Object_Respawn_Table'] & 0xFFFFFF) + index, data)
 
     def write(self, name, value, size=1):
         self.cpu.mem_write(self.s[name] & 0xFFFFFF, value.to_bytes(size, 'big'))
@@ -210,6 +238,12 @@ class Native:
             self.cpu.mem_write(0x420000, bytes(0x20000))
         self.cpu.mem_write(0xFF0000, bytes(0x10000))
         self.cpu.mem_write(0xFFFF0000, bytes(0x10000))
+        if 'MCD_TerrainRequest' in self.s:
+            self.sub.mem_write(self.s['MCD_ChunkTable_SubStart'], bytes(self.s['MCD_SubUserRAM_End'] - self.s['MCD_ChunkTable_SubStart']))
+            self.cpu.mem_write(0xA12000, bytes(0x1000))
+            self.cpu.mem_write(0xA12003, b'\1')
+            self.write('MCD_status', 1)
+            self.write('MCD_TerrainReady', 1)
         self.write('v_gamemode', self.s['Level'], 2)
         self.write('v_air', 30, 2)
         self.act('Init_SpriteTable')
@@ -222,6 +256,13 @@ class Native:
                 self.put(obj, field, value, size)
 
 class Manager(Native):
+    def act(self, routine, obj=None, regs=None, limit=100000):
+        if routine == 'ObjectsManager' and 'MCD_SubObjects' in self.s:
+            # Native fixtures call successive loading frames without VBlank.
+            # Consume the previous frame's empty stream at the real boundary.
+            if self.read('MCD_TerrainPending', 2) == 2:
+                super().act('LoadTilesAsYouMove')
+        return super().act(routine, obj, regs, limit)
     def pool(self):
         return range(self.s['v_lvlobjspace'],self.s['v_lvlobjend'],self.s['object_size'])
     def live(self):
@@ -242,7 +283,7 @@ class Manager(Native):
         self.cpu.mem_write(base,b''.join(struct.pack('>HHBB',*r) for r in rows)+bytes.fromhex('FFFF00000000'))
         return base
     def verify(self,rows,base=None):
-        table=self.s['Object_Respawn_Table']&65535
+        table=self.respawn_base
         live=self.live()
         ptrs=[self.get(a,'respawn_addr',2) for a in self.pool() if self.get(a,'layout_id') and self.get(a,'respawn_addr',2)]
         assert len(ptrs)==len(set(ptrs)),('duplicate placement',ptrs)
@@ -254,11 +295,18 @@ class Manager(Native):
             assert self.get(a,'code')==self.object_codes[obj]
             assert self.get(a,'obSubtype')==sub
             assert self.get(a,'obStatus')==self.get(a,'obRender')==(y>>13)&3
-            assert self.cpu.mem_read(0xFF0000+ptr,1)[0]&128
+            assert self.placement_read(idx)&128
         if base is not None:
             for side in ('front','back'):
-                lp=self.read('Object_load_addr_'+side,4)
-                rp=self.read('Object_respawn_index_'+side,2)
-                assert lp>=base and (lp-base)%6==0 and (lp-base)//6<=len(rows)
-                assert rp==table+(lp-base)//6,(side,hex(lp),hex(rp))
+                if 'MCD_SubObjects' in self.s:
+                    suffix = side.title() + '_Sub'
+                    lp = int.from_bytes(self.sub.mem_read(self.s['MCD_Object' + suffix],4),'big')
+                    rp = int.from_bytes(self.sub.mem_read(self.s['MCD_ObjectRespawn' + suffix],4),'big')
+                    first, state = self.s['MCD_ObjectPlacements_Sub'], self.s['MCD_ObjectRespawn_Sub']
+                else:
+                    lp=self.read('Object_load_addr_'+side,4)
+                    rp=self.read('Object_respawn_index_'+side,2)
+                    first,state=base,table
+                assert lp>=first and (lp-first)%6==0 and (lp-first)//6<=len(rows)
+                assert rp==state+(lp-first)//6,(side,hex(lp),hex(rp))
         return live

@@ -92,8 +92,8 @@ def main():
 		finish('resident-art-and-mapping-bounds', tiles=49, mast_sprites=4)
 
 		isolate(g)
-		length = g.s['Object_Respawn_Table_end']-g.s['Object_Respawn_Table']
-		g.write('Object_Respawn_Table', int.from_bytes(b'\x80'*length, 'big'), length)
+		length = g.placement_capacity()
+		g.placement_write(0, int.from_bytes(b'\x80'*length, 'big'), length)
 		for actor in ('v_player', 'v_player2'):
 			place(g, actor, 560, 312)
 			g.put(actor, 'obControl', 0x81)
