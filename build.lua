@@ -20,6 +20,30 @@ local advanced_error_handler = false
 
 local common = require "build_tools.lua.common"
 
+-- Keep the HUD's hexadecimal digits in sync with the shared menu/error font.
+-- Pack only 0-F and adapt its foreground to the HUD's white palette slot.
+do
+	local source = assert(io.open("art/uncompressed/Level select and Debug Mode text.bin", "rb"))
+	local font = source:read("*a"); source:close()
+	assert(#font >= 23 * 32, "Shared font is missing hexadecimal glyphs")
+	local digits = font:sub(1, 10 * 32) .. font:sub(17 * 32 + 1, 23 * 32)
+	digits = digits:gsub(".", function(byte)
+		local value = byte:byte()
+		local high, low = value >> 4, value & 0xF
+		assert((high == 0 or high == 0xF) and (low == 0 or low == 0xF),
+			"Shared font must use transparent $0 and foreground $F")
+		return string.char(value & 0x66)
+	end)
+	local path = "art/uncompressed/Debug Digits.bin"
+	local previous = io.open(path, "rb")
+	local old = previous and previous:read("*a")
+	if previous then previous:close() end
+	if old ~= digits then
+		local output = assert(io.open(path, "wb"))
+		output:write(digits); output:close()
+	end
+end
+
 if not require("build_tools.lua.sound").build() then
 	os.exit(false, true)
 end

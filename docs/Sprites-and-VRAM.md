@@ -177,6 +177,21 @@ tiles (`$561-$564`); signpost frames stay below it. Sonic's life art remains
 separate and is shared with Sonic monitors. HUD score uses ten-point units,
 with maximum display 9,999,990.
 
+`HudUpdate` shares ring, life and result-bonus updates between its ordinary and
+placement displays. Its initial digit table uses S3&K-style readable strings,
+with list bounds determining the upload counts. `HUD_Time` draws the current
+time without advancing or enabling the clock, allowing an immediate Debug
+return redraw. Time Over does not restart a player already in the death/over
+routines. See [Debug](Objects.md#debug) for the placement-only HUD/timer rules.
+
+`build.lua` generates `art/uncompressed/Debug Digits.bin` from the shared
+`Level select and Debug Mode text.bin`, preserving the owner's Ristar glyphs.
+It packs source tiles `0-9` and `17-22` into sixteen hexadecimal tiles, ordered
+`0-F`, and changes foreground `$F` to HUD white `$6`; background `$0` stays
+transparent. Edit the shared source, then rebuild to regenerate the HUD copy.
+The existing coordinate VRAM range and menu/error font palette indices remain
+unchanged.
+
 ## Palette adaptation
 
 Runtime player art uses `palette/SonicAndTails.bin`. The S&K source index order

@@ -42,8 +42,8 @@ Render_Sprites:
 
 		; Inlined HUD setup and unflipped S3&K mapping loop.
 		moveq	#0,d0
-		tst.b	(Debug_mode_flag).w
-		beq.s	.hud_blink
+		cmpi.b	#DebugType_Placement,(Debug_placement_type).w
+		bne.s	.hud_blink
 		moveq	#2,d0
 .hud_blink:
 		btst	#3,(Timer_frames+1).w
