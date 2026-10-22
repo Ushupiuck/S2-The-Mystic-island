@@ -7182,7 +7182,7 @@ DynResize_Index:
 		dc.w DynResize_SBZ-DynResize_Index
 		dc.w DynResize_MTZ-DynResize_Index
 		dc.w DynResize_MTZ4-DynResize_Index
-		dc.w DynResize_MTZ4-DynResize_Index
+		dc.w DynResize_SBZ-DynResize_Index
 		dc.w DynResize_MTZ4-DynResize_Index
 		dc.w DynResize_MTZ4-DynResize_Index
 		dc.w DynResize_MTZ4-DynResize_Index
