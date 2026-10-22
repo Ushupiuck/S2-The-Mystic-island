@@ -71,6 +71,17 @@ and importing belong in [the sound guide](../build_tools/sound/README.md).
 
 ## Terrain and tile animation
 
+GHZ, LZ and Scrap Madness currently select the S1 height/width/angle bank;
+the other zones select the S2 bank. The two byte indices per block still use
+the shared S3K collision-index format. SonLVL's corresponding overrides and
+the CD level loader must select the same bank.
+
+GHZ has not already been converted to S2 collision. A lossless index-only
+remap to the unchanged S2 bank is insufficient: 44 distinct profiles referenced
+by its chunk definitions have no exact height/width/angle match. Converting it
+requires collision-data work, rather than changing the zone selector or
+approximating the existing slopes. Keep current terrain behavior until that work.
+
 `LoadZone` loads complete ordinary 16x16 block definitions. Animation blocks
 already reference their final VRAM slots; there is no initialization patch
 table. Raw animation pixels remain uncompressed in ROM. `Dynamic_Normal`
