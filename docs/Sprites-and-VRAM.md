@@ -156,6 +156,15 @@ frames last 2, 2, 3, 3, 3, 4 and 4 game frames: S3&K's 21-tick lifetime fitted
 to the S2 sequence. Ordinary bomb, enemy and capsule explosions retain their
 separate art/timing.
 
+The optional advancing wall loads `PLC_ExplosionWall`: the same large art plus
+`Nem_Explosion` relocated to `ArtTile_ExplosionWall_Small = ArtTile_Eggman`
+(`$8000-$8BC0`, 94 tiles). This is an alias of inactive ship space, not a new
+permanent reservation. Its normal bursts use `Map_Explosion` without animals,
+with S3&K's short first frame and high-priority flag. This lets both sizes
+coexist despite the ordinary default bank overlapping the large effect.
+The invoking level must keep both wall banks free of other users until all
+visuals finish, then restore any art it needs. No act currently invokes the wall.
+
 ### Player effects and UI
 
 Both eight-star trails share 34 resident tiles at `$F380`. Their gray ramp

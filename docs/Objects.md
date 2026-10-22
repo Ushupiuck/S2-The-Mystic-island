@@ -235,7 +235,16 @@ Deployment, breakup and burst cadence/RNG come from skdisasm
 `73de97c6b55055bcb8089c1d55d006b02136f163`, `Obj_SSZGHZBoss`,
 `Child_Draw_Sprite_FlickerMove`, `Set_IndexedVelocity` and
 `Obj_CreateBossExplosion`. The Sky Sanctuary stop-and-wait flight pattern is
-not used. `objects/W.I.P Objects/Death Egg Explosion Wall.asm` preserves the
-original DEZ3 moving four-emitter sequence and `$16/$18` profiles as an
-unassembled reference for a future level. Its S3&K interfaces and cutscene
-transition, including the fixed-slot fallback, still need porting before use.
+not used.
+
+The same module includes the assembled, currently unplaced `BossExplosion_Wall`
+entry point. Queue `plcid_ExplosionWall`, wait for the PLC queue to finish, then
+allocate a normal SST and set its `code` to `BossExplosion_Wall`. The constructor
+retries until four emitter slots are available. Its anchor starts at camera
+X −128 / Y +128 and advances two pixels/frame until it passes camera X +128.
+The two large and two normal emitters follow it, each emitting every three
+frames within ±128 pixels. These retain DEZ3's `$16/$18` profiles: large emitters
+run continuously; normal emitters count down to 127 bursts, or end with the wall
+sooner. The wall deletes itself and its emitters stop; already spawned visuals
+finish independently. The DEZ ending transition is left to the invoking level.
+Art requirements are in [Sprites and VRAM](Sprites-and-VRAM.md#boss-explosions).
