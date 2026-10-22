@@ -103,7 +103,7 @@ address to the CD view:
 
 `v_16x16` and `Level_Layout` name staging aliases; gameplay uses resident CD
 data. CD decodes blocks, layout and chunks directly into their PRG allocations.
-`MCD_LoadTerrain` installs collision indices and the selected S1/S2
+`MCD_LoadTerrain` installs collision indices and the single shared
 height/width/angle bank once on level entry.
 The rotating S1 stage retains its separate MD renderer and staging/PRG overlays.
 

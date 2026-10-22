@@ -23,15 +23,6 @@ MCD_LoadTerrain:
 		lea	(ColArray1).l,a0
 		lea	(ColArray2).l,a2
 		lea	(AngleMap).l,a3
-		cmpi.b	#id_SMZ,(Current_Zone).w
-		beq.s	.s1
-		cmpi.b	#id_LZ,(Current_Zone).w
-		bne.s	.tables
-.s1:
-		lea	(S1_ColArray1).l,a0
-		lea	(S1_ColArray2).l,a2
-		lea	(S1_AngleMap).l,a3
-.tables:
 		lea	(MCD_TerrainHeightStage).l,a1
 		move.w	#$1000,d0
 		bsr.s	.copy

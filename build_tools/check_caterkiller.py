@@ -39,6 +39,7 @@ class Fixture:
 		self.args = args
 		self.g = g = Genesis(args.core, args.rom, args.listing, args.output, args.pal)
 		self.cpu = CpuPrefix.in_dll(g.core, 'm68k')
+		self.subcpu = CpuPrefix.in_dll(g.core, 's68k') if 'MCD_SubObjects' in g.s else None
 		g.core.m68k_set_reg.argtypes = [C.c_int, C.c_uint]
 		g.core.m68k_run.argtypes = [C.c_uint]
 		boot_level(g, zone=0, act=0, player=0)
@@ -58,6 +59,10 @@ class Fixture:
 
 	def act(self, routine, obj=None, regs=None):
 		g, cpu = self.g, self.cpu
+		if self.subcpu is not None:
+			for core_cpu in (cpu, self.subcpu):
+				core_cpu.cycles = 0
+				core_cpu.poll[0] = core_cpu.poll[1] = 0
 		g.core.m68k_set_reg(17, 0x2700)  # isolate calls from IRQs
 		g.core.m68k_set_reg(7, 0x3579006F)
 		if obj is not None:
@@ -142,27 +147,32 @@ class Fixture:
 		collision = g.read('Collision_addr', 4) & 0xFFFFFF
 		shapes = {}
 		for shape in range(1, 256):
-			profile = rom[g.s['S1_ColArray1'] + shape*16:g.s['S1_ColArray1'] + (shape+1)*16]
+			profile = rom[g.s['ColArray1'] + shape*16:g.s['ColArray1'] + (shape+1)*16]
 			for height in (8, 16):
 				if profile == bytes([height])*16:
 					shapes.setdefault(height, shape)
 		assert len(shapes) == 2, shapes
-		# Clone the index into disposable chunk RAM; GHZ does not assign a
-		# block to every S1 collision shape. The shapes themselves stay in ROM.
-		g.write(0x7000, int.from_bytes(rom[collision:collision+0x800], 'big'), 0x800)
-		g.write(0x7000 + 0x3FE*2, shapes[8])
-		g.write(0x7000 + 0x3FF*2, shapes[16])
-		g.write('Collision_addr', 0xFF7000, 4)
+		# Use spare entries in the live CD index, or clone the ROM index into
+		# disposable MD chunk RAM. The actual collision profiles stay intact.
+		if 'MCD_TerrainIndex_Sub' in g.s:
+			index = 0x420000 + g.s['MCD_TerrainIndex_Sub']
+		else:
+			index = 0xFF7000
+			g.write(index, int.from_bytes(rom[collision:collision+0x800], 'big'), 0x800)
+			g.write('Collision_addr', index, 4)
+		for block, height in ((0x3FE, 8), (0x3FF, 16)):
+			g.write(index + block*2, shapes[height]*0x101, 2)
+		layout, chunks = g.terrain_address('layout'), g.terrain_address('chunks')
 		blocks = {8: 0xF3FE, 16: 0xF3FF}
 		for row in range(16):
 			for col in range(3, 11):
-				g.write(g.s['v_lvllayout'] + row*256 + col, 0)
+				g.write(layout + row*256 + col, 0)
 		for col in range(4, 8):
-			g.write(g.s['v_lvllayout'] + 6*256 + col, 255)
+			g.write(layout + 6*256 + col, 255)
 		for by in range(8):
 			for bx in range(8):
 				block = 0 if by < 3 else blocks[8 if by == 3 and bx >= 4 else 16]
-				g.write(0x7F80 + by*16 + bx*2, block, 2)
+				g.write(chunks + 255*128 + by*16 + bx*2, block, 2)
 
 
 def encoding_and_spacing(f):

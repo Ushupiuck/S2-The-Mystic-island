@@ -13664,13 +13664,6 @@ BMap128_LVF:	equ Map128_Blank
  endif
 		even
 ; ---------------------------------------------------------------------------
-S1_AngleMap:	binclude	"collision/S1/Angle Map.bin"
-		even
-S1_ColArray1:	binclude	"collision/S1/Collision Array (Normal).bin"
-		even
-S1_ColArray2:	binclude	"collision/S1/Collision Array (Rotated).bin"
-		even
-; ---------------------------------------------------------------------------
 AngleMap:	binclude	"collision/Curve and resistance mapping.bin"
 		even
 ColArray1:	binclude	"collision/Collision array 1.bin"

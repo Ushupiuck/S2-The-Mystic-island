@@ -13,6 +13,7 @@ import re
 import struct
 from collections import Counter
 from convert_s1_ss_background import enigma, kosinski_plus, kosinski_plus_decode
+from terrain_collision import read_bank, remap_geometry, S1_BANK_FILES
 
 ROOT = Path(__file__).resolve().parents[1]
 SENTINEL = bytes.fromhex('FFFF00000000')
@@ -218,13 +219,21 @@ def geometry(source):
         layouts.append(bytes(layout))
         pack(f'level/layout/SMZ_{act}.kosp', layout)
     assert len(chunks) <= 256, len(chunks)
-    pack('mappings/16x16/SMZ.kosp', blocks)
-    pack('mappings/128x128/SMZ.kosp', b''.join(chunks))
     collisions = (source/'collide/SBZ.bin').read_bytes()
     # The last two source blocks are background-only and have no collision entry.
     assert len(collisions) <= len(blocks)//8
     collisions += bytes(len(blocks)//8-len(collisions))
-    (ROOT/'collision/present/SMZ.bin').write_bytes(b''.join(bytes((v,v)) for v in collisions))
+    indices = b''.join(bytes((v,v)) for v in collisions)
+    blocks, chunk_data, (indices,), _ = remap_geometry(
+        blocks, b''.join(chunks), [indices],
+        read_bank(source/'collide', S1_BANK_FILES), read_bank(ROOT/'collision'),
+        max_angle_change=4)
+    for size, raw in (('16x16', blocks), ('128x128', chunk_data)):
+        (ROOT/f'mappings/{size}/SMZ.unc').write_bytes(raw)
+        pack(f'mappings/{size}/SMZ.kosp', raw)
+    for timezone in ('present', 'past', 'good Future', 'bad future'):
+        for act in range(1, 5):
+            (ROOT/f'collision/{timezone}/SMZ{act}.bin').write_bytes(indices)
     for act in (1,2):
         (ROOT/f'startpos/SMZ_{act}.bin').write_bytes((source/f'startpos/sbz{act}.bin').read_bytes())
         palette = bytearray((source/f'palette/SBZ Act {act}.bin').read_bytes())

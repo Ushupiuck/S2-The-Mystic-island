@@ -171,8 +171,8 @@ def matrix(g, initial):
 
     # Clone one unused GHZ chunk in RAM and insert a 32x32 full collision wall.
     # Vary only its solidity bits to exercise both actual collision paths.
-    layout = g.s['Level_Layout'] & 65535
-    chunks = g.s['Chunk_Table'] & 65535
+    layout = g.terrain_address('layout')
+    chunks = g.terrain_address('chunks')
 
     def wall_chunk(solidity):
         ids = {g.read(layout + i) for i in range(g.s['Level_Layout_End'] - g.s['Level_Layout'])}
@@ -186,7 +186,7 @@ def matrix(g, initial):
         word = g.read(chunks + ground_chunk * 128 + 7 * 16, 2)
         rom = bytes(g.rom)
         shape = rom[g.read('v_colladdr1', 4) + (word & 0x3FF) * 2]
-        assert set(rom[g.s['S1_ColArray2'] + shape * 16:g.s['S1_ColArray2'] + shape * 16 + 16]) == {16}
+        assert set(rom[g.s['ColArray2'] + shape * 16:g.s['ColArray2'] + shape * 16 + 16]) == {16}
         for row in (0, 1):
             for column in (4, 5):
                 g.write(chunks + unused * 128 + row * 16 + column * 2,

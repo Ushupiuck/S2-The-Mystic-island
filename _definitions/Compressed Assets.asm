@@ -216,7 +216,7 @@ MCD_CompressedAssets:
 	dc.l BLevel_SMZ4,BLevel_SMZ4+$40	; level/layout/bad future/SMZ_4.kosp
 	endif
 	if defined(BMap128_CPZ)
-	dc.l BMap128_CPZ,BMap128_CPZ+$17F6	; mappings/128x128/CPZ.kosp
+	dc.l BMap128_CPZ,BMap128_CPZ+$17FA	; mappings/128x128/CPZ.kosp
 	endif
 	if defined(BMap128_EHZ)
 	dc.l BMap128_EHZ,BMap128_EHZ+$2D4C	; mappings/128x128/EHZ.kosp
@@ -225,34 +225,34 @@ MCD_CompressedAssets:
 	dc.l BMap128_GHZ,BMap128_GHZ+$1EE8	; mappings/128x128/GHZ.kosp
 	endif
 	if defined(BMap128_HPZ)
-	dc.l BMap128_HPZ,BMap128_HPZ+$1C98	; mappings/128x128/HPZ.kosp
+	dc.l BMap128_HPZ,BMap128_HPZ+$1C1E	; mappings/128x128/HPZ.kosp
 	endif
 	if defined(BMap128_HTZ)
 	dc.l BMap128_HTZ,BMap128_HTZ+$28D0	; mappings/128x128/HTZ.kosp
 	endif
 	if defined(BMap128_LZ)
-	dc.l BMap128_LZ,BMap128_LZ+$1EEA	; mappings/128x128/LZ.kosp
+	dc.l BMap128_LZ,BMap128_LZ+$1EEE	; mappings/128x128/LZ.kosp
 	endif
 	if defined(BMap128_MTZ)
 	dc.l BMap128_MTZ,BMap128_MTZ+$2A8C	; mappings/128x128/MTZ.kosp
 	endif
 	if defined(BMap16_CPZ)
-	dc.l BMap16_CPZ,BMap16_CPZ+$E1A	; mappings/16x16/CPZ.kosp
+	dc.l BMap16_CPZ,BMap16_CPZ+$DFC	; mappings/16x16/CPZ.kosp
 	endif
 	if defined(BMap16_EHZ)
-	dc.l BMap16_EHZ,BMap16_EHZ+$CAC	; mappings/16x16/EHZ.kosp
+	dc.l BMap16_EHZ,BMap16_EHZ+$C94	; mappings/16x16/EHZ.kosp
 	endif
 	if defined(BMap16_GHZ)
-	dc.l BMap16_GHZ,BMap16_GHZ+$B0E	; mappings/16x16/GHZ.kosp
+	dc.l BMap16_GHZ,BMap16_GHZ+$B10	; mappings/16x16/GHZ.kosp
 	endif
 	if defined(BMap16_HPZ)
-	dc.l BMap16_HPZ,BMap16_HPZ+$F36	; mappings/16x16/HPZ.kosp
+	dc.l BMap16_HPZ,BMap16_HPZ+$EEE	; mappings/16x16/HPZ.kosp
 	endif
 	if defined(BMap16_HTZ)
 	dc.l BMap16_HTZ,BMap16_HTZ+$B0D	; mappings/16x16/HTZ.kosp
 	endif
 	if defined(BMap16_LZ)
-	dc.l BMap16_LZ,BMap16_LZ+$585	; mappings/16x16/LZ.kosp
+	dc.l BMap16_LZ,BMap16_LZ+$58A	; mappings/16x16/LZ.kosp
 	endif
 	if defined(BMap16_MTZ)
 	dc.l BMap16_MTZ,BMap16_MTZ+$B8A	; mappings/16x16/MTZ.kosp
@@ -498,7 +498,7 @@ MCD_CompressedAssets:
 	dc.l GLevel_SMZ4,GLevel_SMZ4+$40	; level/layout/good future/SMZ_4.kosp
 	endif
 	if defined(GMap128_CPZ)
-	dc.l GMap128_CPZ,GMap128_CPZ+$17F6	; mappings/128x128/CPZ.kosp
+	dc.l GMap128_CPZ,GMap128_CPZ+$17FA	; mappings/128x128/CPZ.kosp
 	endif
 	if defined(GMap128_EHZ)
 	dc.l GMap128_EHZ,GMap128_EHZ+$2D4C	; mappings/128x128/EHZ.kosp
@@ -507,34 +507,34 @@ MCD_CompressedAssets:
 	dc.l GMap128_GHZ,GMap128_GHZ+$1EE8	; mappings/128x128/GHZ.kosp
 	endif
 	if defined(GMap128_HPZ)
-	dc.l GMap128_HPZ,GMap128_HPZ+$1C98	; mappings/128x128/HPZ.kosp
+	dc.l GMap128_HPZ,GMap128_HPZ+$1C1E	; mappings/128x128/HPZ.kosp
 	endif
 	if defined(GMap128_HTZ)
 	dc.l GMap128_HTZ,GMap128_HTZ+$28D0	; mappings/128x128/HTZ.kosp
 	endif
 	if defined(GMap128_LZ)
-	dc.l GMap128_LZ,GMap128_LZ+$1EEA	; mappings/128x128/LZ.kosp
+	dc.l GMap128_LZ,GMap128_LZ+$1EEE	; mappings/128x128/LZ.kosp
 	endif
 	if defined(GMap128_MTZ)
 	dc.l GMap128_MTZ,GMap128_MTZ+$2A8C	; mappings/128x128/MTZ.kosp
 	endif
 	if defined(GMap16_CPZ)
-	dc.l GMap16_CPZ,GMap16_CPZ+$E1A	; mappings/16x16/CPZ.kosp
+	dc.l GMap16_CPZ,GMap16_CPZ+$DFC	; mappings/16x16/CPZ.kosp
 	endif
 	if defined(GMap16_EHZ)
-	dc.l GMap16_EHZ,GMap16_EHZ+$CAC	; mappings/16x16/EHZ.kosp
+	dc.l GMap16_EHZ,GMap16_EHZ+$C94	; mappings/16x16/EHZ.kosp
 	endif
 	if defined(GMap16_GHZ)
-	dc.l GMap16_GHZ,GMap16_GHZ+$B0E	; mappings/16x16/GHZ.kosp
+	dc.l GMap16_GHZ,GMap16_GHZ+$B10	; mappings/16x16/GHZ.kosp
 	endif
 	if defined(GMap16_HPZ)
-	dc.l GMap16_HPZ,GMap16_HPZ+$F36	; mappings/16x16/HPZ.kosp
+	dc.l GMap16_HPZ,GMap16_HPZ+$EEE	; mappings/16x16/HPZ.kosp
 	endif
 	if defined(GMap16_HTZ)
 	dc.l GMap16_HTZ,GMap16_HTZ+$B0D	; mappings/16x16/HTZ.kosp
 	endif
 	if defined(GMap16_LZ)
-	dc.l GMap16_LZ,GMap16_LZ+$585	; mappings/16x16/LZ.kosp
+	dc.l GMap16_LZ,GMap16_LZ+$58A	; mappings/16x16/LZ.kosp
 	endif
 	if defined(GMap16_MTZ)
 	dc.l GMap16_MTZ,GMap16_MTZ+$B8A	; mappings/16x16/MTZ.kosp
@@ -864,7 +864,7 @@ MCD_CompressedAssets:
 	dc.l Map128_Blank,Map128_Blank+$E	; mappings/128x128/Blank.kosp
 	endif
 	if defined(Map128_CPZ)
-	dc.l Map128_CPZ,Map128_CPZ+$17F6	; mappings/128x128/CPZ.kosp
+	dc.l Map128_CPZ,Map128_CPZ+$17FA	; mappings/128x128/CPZ.kosp
 	endif
 	if defined(Map128_EHZ)
 	dc.l Map128_EHZ,Map128_EHZ+$2D4C	; mappings/128x128/EHZ.kosp
@@ -873,13 +873,13 @@ MCD_CompressedAssets:
 	dc.l Map128_GHZ,Map128_GHZ+$1EE8	; mappings/128x128/GHZ.kosp
 	endif
 	if defined(Map128_HPZ)
-	dc.l Map128_HPZ,Map128_HPZ+$1C98	; mappings/128x128/HPZ.kosp
+	dc.l Map128_HPZ,Map128_HPZ+$1C1E	; mappings/128x128/HPZ.kosp
 	endif
 	if defined(Map128_HTZ)
 	dc.l Map128_HTZ,Map128_HTZ+$28D0	; mappings/128x128/HTZ.kosp
 	endif
 	if defined(Map128_LZ)
-	dc.l Map128_LZ,Map128_LZ+$1EEA	; mappings/128x128/LZ.kosp
+	dc.l Map128_LZ,Map128_LZ+$1EEE	; mappings/128x128/LZ.kosp
 	endif
 	if defined(Map128_MTZ)
 	dc.l Map128_MTZ,Map128_MTZ+$2A8C	; mappings/128x128/MTZ.kosp
@@ -888,34 +888,34 @@ MCD_CompressedAssets:
 	dc.l Map128_MTZBlank,Map128_MTZBlank+$E	; mappings/128x128/MTZ Blank.kosp
 	endif
 	if defined(Map128_SMZ)
-	dc.l Map128_SMZ,Map128_SMZ+$2C1D	; mappings/128x128/SMZ.kosp
+	dc.l Map128_SMZ,Map128_SMZ+$290C	; mappings/128x128/SMZ.kosp
 	endif
 	if defined(Map128_SMZBlank)
 	dc.l Map128_SMZBlank,Map128_SMZBlank+$E	; mappings/128x128/SMZ Blank.kosp
 	endif
 	if defined(Map16_CPZ)
-	dc.l Map16_CPZ,Map16_CPZ+$E1A	; mappings/16x16/CPZ.kosp
+	dc.l Map16_CPZ,Map16_CPZ+$DFC	; mappings/16x16/CPZ.kosp
 	endif
 	if defined(Map16_EHZ)
-	dc.l Map16_EHZ,Map16_EHZ+$CAC	; mappings/16x16/EHZ.kosp
+	dc.l Map16_EHZ,Map16_EHZ+$C94	; mappings/16x16/EHZ.kosp
 	endif
 	if defined(Map16_GHZ)
-	dc.l Map16_GHZ,Map16_GHZ+$B0E	; mappings/16x16/GHZ.kosp
+	dc.l Map16_GHZ,Map16_GHZ+$B10	; mappings/16x16/GHZ.kosp
 	endif
 	if defined(Map16_HPZ)
-	dc.l Map16_HPZ,Map16_HPZ+$F36	; mappings/16x16/HPZ.kosp
+	dc.l Map16_HPZ,Map16_HPZ+$EEE	; mappings/16x16/HPZ.kosp
 	endif
 	if defined(Map16_HTZ)
 	dc.l Map16_HTZ,Map16_HTZ+$B0D	; mappings/16x16/HTZ.kosp
 	endif
 	if defined(Map16_LZ)
-	dc.l Map16_LZ,Map16_LZ+$585	; mappings/16x16/LZ.kosp
+	dc.l Map16_LZ,Map16_LZ+$58A	; mappings/16x16/LZ.kosp
 	endif
 	if defined(Map16_MTZ)
 	dc.l Map16_MTZ,Map16_MTZ+$B8A	; mappings/16x16/MTZ.kosp
 	endif
 	if defined(Map16_SMZ)
-	dc.l Map16_SMZ,Map16_SMZ+$D60	; mappings/16x16/SMZ.kosp
+	dc.l Map16_SMZ,Map16_SMZ+$D62	; mappings/16x16/SMZ.kosp
 	endif
 	if defined(Nem_Aquis)
 	dc.l Nem_Aquis,Nem_Aquis+$438	; art/nemesis/Enemy Aquis.nem
@@ -1440,7 +1440,7 @@ MCD_CompressedAssets:
 	dc.l PLevel_SMZ4,PLevel_SMZ4+$40	; level/layout/past/SMZ_4.kosp
 	endif
 	if defined(PMap128_CPZ)
-	dc.l PMap128_CPZ,PMap128_CPZ+$17F6	; mappings/128x128/CPZ.kosp
+	dc.l PMap128_CPZ,PMap128_CPZ+$17FA	; mappings/128x128/CPZ.kosp
 	endif
 	if defined(PMap128_EHZ)
 	dc.l PMap128_EHZ,PMap128_EHZ+$2D4C	; mappings/128x128/EHZ.kosp
@@ -1449,34 +1449,34 @@ MCD_CompressedAssets:
 	dc.l PMap128_GHZ,PMap128_GHZ+$1EE8	; mappings/128x128/GHZ.kosp
 	endif
 	if defined(PMap128_HPZ)
-	dc.l PMap128_HPZ,PMap128_HPZ+$1C98	; mappings/128x128/HPZ.kosp
+	dc.l PMap128_HPZ,PMap128_HPZ+$1C1E	; mappings/128x128/HPZ.kosp
 	endif
 	if defined(PMap128_HTZ)
 	dc.l PMap128_HTZ,PMap128_HTZ+$28D0	; mappings/128x128/HTZ.kosp
 	endif
 	if defined(PMap128_LZ)
-	dc.l PMap128_LZ,PMap128_LZ+$1EEA	; mappings/128x128/LZ.kosp
+	dc.l PMap128_LZ,PMap128_LZ+$1EEE	; mappings/128x128/LZ.kosp
 	endif
 	if defined(PMap128_MTZ)
 	dc.l PMap128_MTZ,PMap128_MTZ+$2A8C	; mappings/128x128/MTZ.kosp
 	endif
 	if defined(PMap16_CPZ)
-	dc.l PMap16_CPZ,PMap16_CPZ+$E1A	; mappings/16x16/CPZ.kosp
+	dc.l PMap16_CPZ,PMap16_CPZ+$DFC	; mappings/16x16/CPZ.kosp
 	endif
 	if defined(PMap16_EHZ)
-	dc.l PMap16_EHZ,PMap16_EHZ+$CAC	; mappings/16x16/EHZ.kosp
+	dc.l PMap16_EHZ,PMap16_EHZ+$C94	; mappings/16x16/EHZ.kosp
 	endif
 	if defined(PMap16_GHZ)
-	dc.l PMap16_GHZ,PMap16_GHZ+$B0E	; mappings/16x16/GHZ.kosp
+	dc.l PMap16_GHZ,PMap16_GHZ+$B10	; mappings/16x16/GHZ.kosp
 	endif
 	if defined(PMap16_HPZ)
-	dc.l PMap16_HPZ,PMap16_HPZ+$F36	; mappings/16x16/HPZ.kosp
+	dc.l PMap16_HPZ,PMap16_HPZ+$EEE	; mappings/16x16/HPZ.kosp
 	endif
 	if defined(PMap16_HTZ)
 	dc.l PMap16_HTZ,PMap16_HTZ+$B0D	; mappings/16x16/HTZ.kosp
 	endif
 	if defined(PMap16_LZ)
-	dc.l PMap16_LZ,PMap16_LZ+$585	; mappings/16x16/LZ.kosp
+	dc.l PMap16_LZ,PMap16_LZ+$58A	; mappings/16x16/LZ.kosp
 	endif
 	if defined(PMap16_MTZ)
 	dc.l PMap16_MTZ,PMap16_MTZ+$B8A	; mappings/16x16/MTZ.kosp

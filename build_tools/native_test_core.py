@@ -123,13 +123,14 @@ class Native:
                 ('v_16x16', 'MCD_TerrainBlocks_Sub', 0x1800),
                 ('v_lvllayout', 'MCD_TerrainLayout_Sub', 0x1000)):
             sub.mem_write(s[dest], bytes(cpu.mem_read(s[source] & 0xFFFFFF, length)))
-        zone = self.read('Current_Zone')
-        prefix = 'S1_' if zone in (1, s['id_SMZ']) else ''
+        # Older ROMs remain usable as comparison baselines.
+        legacy = ('S1_' if 'S1_ColArray1' in s and
+                  self.read('Current_Zone') in (1, s['id_SMZ']) else '')
         for source, dest, length in (
                 ('ColArray1', 'MCD_TerrainHeights_Sub', 0x1000),
                 ('ColArray2', 'MCD_TerrainWidths_Sub', 0x1000),
                 ('AngleMap', 'MCD_TerrainAngles_Sub', 0x100)):
-            sub.mem_write(s[dest], bytes(cpu.mem_read(s[prefix + source], length)))
+            sub.mem_write(s[dest], bytes(cpu.mem_read(s[legacy + source], length)))
         for i in (1, 2):
             pointer = self.read('v_colladdr' + str(i), 4) & 0xFFFFFF
             # Preserve independently supplied fixture paths, including offsets.

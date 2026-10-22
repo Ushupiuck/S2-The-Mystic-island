@@ -121,11 +121,18 @@ class Genesis:
 
     def memory(self, name):
         address = (self.s[name] if isinstance(name, str) else name) & 0xFFFFFF
-        if 0x420000 <= address < 0x440000:
+        # Fixture-only address window for all 512 KiB of physical PRG RAM.
+        if 0x420000 <= address < 0x4A0000:
             if 'PRGRAM' not in self.memory_domains:
                 raise AssertionError('CD PRG-RAM access requires the CD hardware model')
             return self.memory_domains['PRGRAM'], address - 0x420000
         return self.ram, address & 65535
+
+    def terrain_address(self, table):
+        """Address the live table explicitly, without redirecting MD staging."""
+        main, sub = {'layout': ('Level_Layout', 'MCD_TerrainLayout_Sub'),
+                     'chunks': ('Chunk_Table', 'MCD_ChunkTable_SubStart')}[table]
+        return 0x420000 + self.s[sub] if sub in self.s else self.s[main]
 
     def read(self, name, size=1):
         memory, address = self.memory(name)
