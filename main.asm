@@ -10771,17 +10771,8 @@ loc_12DCC:
 		move.b	(a2,d0.w),d0
 		andi.w	#$FF,d0
 		beq.s	loc_12DBE
-	;	cmpi.b	#6,(Current_Zone).w
-	;	beq.s	+
-		cmpi.b	#id_SMZ,(Current_Zone).w
-		beq.s	+
-		cmpi.b	#1,(Current_Zone).w
-		beq.s	+
 		lea	(AngleMap).l,a2
-		bra.s	++
-+
-		lea	(S1_AngleMap).l,a2
-+		move.b	(a2,d0.w),(a4)
+		move.b	(a2,d0.w),(a4)
 		lsl.w	#4,d0
 		move.w	d3,d1
 		btst	#$A,d4
@@ -10797,17 +10788,8 @@ loc_12DCC:
 +
 		andi.w	#$F,d1
 		add.w	d0,d1
-	;	cmpi.b	#6,(Current_Zone).w
-	;	beq.s	+
-		cmpi.b	#id_SMZ,(Current_Zone).w
-		beq.s	+
-		cmpi.b	#1,(Current_Zone).w
-		beq.s	+
 		lea	(ColArray1).l,a2
-		bra.s	++
-+
-		lea	(S1_ColArray1).l,a2
-+		move.b	(a2,d1.w),d0
+		move.b	(a2,d1.w),d0
 		ext.w	d0
 		eor.w	d6,d4
 		btst	#$B,d4
@@ -10868,17 +10850,8 @@ loc_12E72:
 		move.b	(a2,d0.w),d0
 		andi.w	#$FF,d0
 		beq.s	loc_12E64
-	;	cmpi.b	#6,(Current_Zone).w
-	;	beq.s	+
-		cmpi.b	#id_SMZ,(Current_Zone).w
-		beq.s	+
-		cmpi.b	#1,(Current_Zone).w
-		beq.s	+
 		lea	(AngleMap).l,a2
-		bra.s	++
-+
-		lea	(S1_AngleMap).l,a2
-+		move.b	(a2,d0.w),(a4)
+		move.b	(a2,d0.w),(a4)
 		lsl.w	#4,d0
 		move.w	d3,d1
 		btst	#$A,d4
@@ -10896,17 +10869,8 @@ loc_12E96:
 loc_12EA6:
 		andi.w	#$F,d1
 		add.w	d0,d1
-	;	cmpi.b	#6,(Current_Zone).w
-	;	beq.s	+
-		cmpi.b	#id_SMZ,(Current_Zone).w
-		beq.s	+
-		cmpi.b	#1,(Current_Zone).w
-		beq.s	+
 		lea	(ColArray1).l,a2
-		bra.s	++
-+
-		lea	(S1_ColArray1).l,a2
-+		move.b	(a2,d1.w),d0
+		move.b	(a2,d1.w),d0
 		ext.w	d0
 		eor.w	d6,d4
 		btst	#$B,d4
@@ -10961,17 +10925,8 @@ loc_12F08:
 		move.b	(a2,d0.w),d0
 		andi.w	#$FF,d0
 		beq.s	loc_12EFA
-	;	cmpi.b	#6,(Current_Zone).w
-	;	beq.s	+
-		cmpi.b	#id_SMZ,(Current_Zone).w
-		beq.s	+
-		cmpi.b	#1,(Current_Zone).w
-		beq.s	+
 		lea	(AngleMap).l,a2
-		bra.s	++
-+
-		lea	(S1_AngleMap).l,a2
-+		move.b	(a2,d0.w),(a4)
+		move.b	(a2,d0.w),(a4)
 		lsl.w	#4,d0
 		move.w	d2,d1
 		btst	#$B,d4
@@ -10989,17 +10944,8 @@ loc_12F34:
 loc_12F3C:
 		andi.w	#$F,d1
 		add.w	d0,d1
-	;	cmpi.b	#6,(Current_Zone).w
-	;	beq.s	+
-		cmpi.b	#id_SMZ,(Current_Zone).w
-		beq.s	+
-		cmpi.b	#1,(Current_Zone).w
-		beq.s	+
 		lea	(ColArray2).l,a2
-		bra.s	++
-+
-		lea	(S1_ColArray2).l,a2
-+		move.b	(a2,d1.w),d0
+		move.b	(a2,d1.w),d0
 		ext.w	d0
 		eor.w	d6,d4
 		btst	#$A,d4
@@ -11061,17 +11007,8 @@ loc_12FAE:
 		move.b	(a2,d0.w),d0
 		andi.w	#$FF,d0
 		beq.s	loc_12FA0
-	;	cmpi.b	#6,(Current_Zone).w
-	;	beq.s	+
-		cmpi.b	#id_SMZ,(Current_Zone).w
-		beq.s	+
-		cmpi.b	#1,(Current_Zone).w
-		beq.s	+
 		lea	(AngleMap).l,a2
-		bra.s	++
-+
-		lea	(S1_AngleMap).l,a2
-+		move.b	(a2,d0.w),(a4)
+		move.b	(a2,d0.w),(a4)
 		lsl.w	#4,d0
 		move.w	d2,d1
 		btst	#$B,d4
@@ -11089,17 +11026,8 @@ loc_12FDA:
 loc_12FE2:
 		andi.w	#$F,d1
 		add.w	d0,d1
-	;	cmpi.b	#6,(Current_Zone).w
-	;	beq.s	+
-		cmpi.b	#id_SMZ,(Current_Zone).w
-		beq.s	+
-		cmpi.b	#1,(Current_Zone).w
-		beq.s	+
 		lea	(ColArray2).l,a2
-		bra.s	++
-+
-		lea	(S1_ColArray2).l,a2
-+		move.b	(a2,d1.w),d0
+		move.b	(a2,d1.w),d0
 		ext.w	d0
 		eor.w	d6,d4
 		btst	#$A,d4
@@ -16275,13 +16203,6 @@ BKosp_LVF:	equ Kosp_GHZ
 BMap16_LVF:	equ Map16_GHZ
 BMap128_LVF:	equ Map128_Blank
  endif
-		even
-; ---------------------------------------------------------------------------
-S1_AngleMap:	binclude	"collision/S1/Angle Map.bin"
-		even
-S1_ColArray1:	binclude	"collision/S1/Collision Array (Normal).bin"
-		even
-S1_ColArray2:	binclude	"collision/S1/Collision Array (Rotated).bin"
 		even
 ; ---------------------------------------------------------------------------
 AngleMap:	binclude	"collision/Curve and resistance mapping.bin"

@@ -45,11 +45,11 @@ def main():
 			g.write('Camera_Y_pos', max(0, y-112), 2)
 			g.write('Collision_addr', g.read('v_colladdr1', 4), 4)
 			if course:
-				layout, chunks = g.s['v_lvllayout'], g.s['v_128x128']
+				layout, chunks = g.terrain_address('layout'), g.terrain_address('chunks')
 				ground = g.read(layout+7*256+2)
 				block = g.read(chunks+ground*128+7*16, 2) | 0xF000
 				shape = bytes(g.rom)[g.read('v_colladdr1', 4)+(block & 0x3FF)*2]
-				assert set(bytes(g.rom)[g.s['S1_ColArray2']+shape*16:g.s['S1_ColArray2']+(shape+1)*16]) == {16}
+				assert set(bytes(g.rom)[g.s['ColArray2']+shape*16:g.s['ColArray2']+(shape+1)*16]) == {16}
 				g.write(layout+6*256+4, 255)
 				for row in range(8):
 					for col in range(8):

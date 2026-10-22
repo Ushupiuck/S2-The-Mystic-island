@@ -25,19 +25,41 @@ python build_tools/check_ghz_vram.py
 python build_tools/check_ehz_boss.py
 ```
 
-To compare GHZ's collision remap against a Git revision before the conversion:
+To compare terrain edits against a Git revision before the change:
 
 ```sh
-python build_tools/check_ghz_collision.py --reference OLD_REF --output test-results/ghz-collision
+python build_tools/check_terrain_collision.py --reference OLD_REF --max-angle-change 6 --output test-results/terrain-collision
 ```
 
-It checks all editable blocks with four flips, both height/width silhouettes,
-all sixteen act/timezone indices and every chunk cell's tile words. Existing
-S2 shapes and their other users must remain untouched. Add `--core ...` and,
-for Mode 1, `--system-directory ...` to launch all four acts with Sonic/Tails
-and run both characters through the loop to a grounded exit. `--pal` selects
-PAL. Matching `.unc` and Kosinski+ sources and SonLVL bank/act selection are
-also checked.
+It checks all eight editable terrain sets with four flips, both height/width
+silhouettes, all sixteen act/timezone indices per set and every available chunk
+cell's tile words, including the starter chunk sets. Both paths must share one
+block orientation across all variants. Pre-existing chunk cells beyond a source block sheet must remain
+verbatim; they cannot be reconstructed visually from absent definitions and
+are counted separately. Protected `$FB-$FF` solids must remain unchanged, and no
+shared index may reference an empty row. Legacy S1 banks are read from the Git baseline when
+needed; current files must use the single shared bank. The default angle
+tolerance is zero; use a larger value only for an intentional, reviewed angle
+normalization. The report records actual angle differences separately from
+geometry preservation. Add `--previous-rom ... --previous-listing ...` to
+compare the actual old/new floor and wall routines around each distinct affected
+placed block orientation, with both paths, scan directions and solidity bits.
+
+Add `--core ...` and, for Mode 1, `--system-directory ...` to launch all four
+GHZ acts, both imported Scrap Madness acts and act 1 of the other terrain sets
+with Sonic/Tails, then run both characters through GHZ's loop to a grounded exit. `--pal` selects PAL.
+Matching `.unc`/Kosinski+ sources and GHZ/LZ/SMZ SonLVL bank/act selection are
+also checked. `--zones GHZ --reference-ghz-bank S1` supports comparison with a
+revision before GHZ switched banks; its reviewed angle tolerance must be
+supplied separately. Entrance/loop routes do not exercise every level segment.
+
+With a matching pre-edit build, add `--previous-rom ... --previous-listing ...`
+to execute both ROMs' real floor/wall routines around each affected chunk cell.
+The native comparison covers both paths, both scan directions and positions
+inside and across tile boundaries. Distances must match exactly; effective
+angles use the explicitly supplied tolerance and must preserve odd-marker
+semantics. CD calls execute the real sub-CPU executor through the native
+fixture; full hardware scheduling remains the libretro check's responsibility.
 
 These cover named SST operands/pointer access, mapping geometry, art/DPLC ranges,
 compiled PLC allocations. The SST scan cannot prove register aliases

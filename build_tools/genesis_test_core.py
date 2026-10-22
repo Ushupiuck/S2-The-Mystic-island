@@ -98,6 +98,10 @@ class Genesis:
         self.core.retro_serialize.restype = C.c_bool
         self.core.retro_unserialize.restype = C.c_bool
 
+    def terrain_address(self, table):
+        """Address the cartridge's live terrain table."""
+        return self.s[{'layout': 'Level_Layout', 'chunks': 'Chunk_Table'}[table]]
+
     def read(self, name, size=1):
         address = (self.s[name] if isinstance(name,str) else name)&65535
         return int.from_bytes(bytes(self.ram[(address+i)^1] for i in range(size)),'big')

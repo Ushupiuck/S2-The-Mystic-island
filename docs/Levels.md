@@ -67,19 +67,52 @@ and importing belong in [the sound guide](../build_tools/sound/README.md).
 
 ## Terrain and tile animation
 
-GHZ uses the shared S2 height/width/angle bank. Mirrored S2 profiles replace
-the corresponding S1 loop/ceiling shapes; block-art flips cancel the new chunk
-flips, preserving the displayed tiles and both collision silhouettes. The 22
-remaining GHZ profiles occupy formerly empty S2 rows `$DF-$F4`, within the
-existing 256-entry allocation. Existing S2 profiles keep their data and angles.
-GHZ uses the standard S2 angles for reused profiles.
+All ordinary levels share one 256-entry height/width/angle bank in
+`collision/`. LZ and Scrap Madness use that bank too; there is no runtime S1
+bank or zone-dependent bank selector. The two byte indices per block retain
+the S3K collision-index format. SonLVL inherits the shared bank and uses each
+act's corresponding collision-index file, matching runtime.
 
-LZ and Scrap Madness still select the S1 bank. The two byte indices per block
-retain the shared S3K collision-index format. SonLVL inherits the S2 bank for
-GHZ and uses each act's corresponding collision-index file, matching runtime;
-the S1 zones retain explicit overrides. Source `.unc` blocks/chunks and the
-uncompressed collision `.bin` files are editable inputs. Recompress changed
-block/chunk sources with Kosinski+ alongside their source edits.
+Profiles were consolidated under X/Y flips, retaining every shape referenced
+by the committed block definitions, including unplaced editor blocks. A changed
+profile orientation is cancelled in block art and chunk flags: displayed tiles
+and both collision silhouettes are preserved. Both paths of a block must share
+one compensating orientation across every act/timezone. The bank has 16 empty,
+unreferenced slots: `$CC-$D0`, `$D8-$DC` and `$F5-$FA`. Unreferenced shapes from
+the original full-game banks are not part of this runtime catalog.
+
+Retained S2 profiles keep their data and angles. The four CPZ blocks
+`$192/$196/$19D/$1A1` normalize their effective even angles by 6/6/2/2 units;
+reused LZ/SMZ curves differ by at most 4 units (one unit is 1/256 turn).
+Odd angles retain their generic-angle marker semantics. `$FB-$FE` retain their
+full-solid geometry and distinct directional angles; `$FF` retains its generic
+full solid. Matching silhouettes alone is not permission to discard these roles.
+
+Source `.unc` blocks/chunks and uncompressed collision `.bin` files are editable
+inputs. Recompress changed block/chunk sources with Kosinski+ alongside their
+source edits. The Scrap Madness importer translates S1 source profiles into the
+existing shared bank, updates all four acts/timezones, and writes matching raw
+geometry sources. It rejects missing shapes rather than silently allocating a
+new bank. Add a deliberate shared-bank definition before importing new terrain.
+
+Collision references include S1, S2, CD and standalone S3; S3&K provides an
+additional engine/table comparison. Identical silhouettes can carry different
+angles even within one game, so compare the intended curve, both height/width
+maps and angle-marker semantics before merging profiles. CD's floor probe also
+has direction-dependent negative-height handling, while S3&K combines optional
+foreground/background probes and gravity-aware response. Importing their
+profiles does not install those engine behaviors.
+CD's SSZ cylinders toggle global `stage_layer`; its block lookup substitutes
+whole 256-pixel chunks for the alternate path. That mechanism is separate from
+this engine's two collision indices per block.
+
+Importing all desired tunnel/curve families remains future work. The complete
+four-game table union contains 562 distinct height/width geometries
+under X/Y flips, before preserving angle variants and shared-path orientation
+constraints. It cannot fit the current byte-index format unchanged. Selective
+imports can use the available slots; a complete union requires wider indices
+and coordinated runtime/SonLVL support. No collision-index format change is
+implemented by this consolidation.
 
 `LoadZone` loads complete ordinary 16x16 block definitions. Animation blocks
 already reference their final VRAM slots; there is no initialization patch
@@ -149,10 +182,13 @@ act 2 adds Kemusi. These lifetimes must remain exclusive.
 | Source | Pinned revision | Use |
 | --- | --- | --- |
 | sonicretro/s1disasm | `2c51d46a0b0682133834db2093292d41da872ecf` (REV01) | SBZ geometry/art/objects and S1 arrangements |
-| sonicretro/skdisasm | `73de97c6b55055bcb8089c1d55d006b02136f163` | S3&K players, effects, springs, loading and menu references |
+| sonicretro/skdisasm | `73de97c6b55055bcb8089c1d55d006b02136f163` | S3/S3&K collision and player response, effects, springs, loading and menus |
 | sonicretro/scddisasm | `f8cf3f0af7bf419d18182ba98554f09307ad3cc6` | Wheel and PP enemies |
-| sonicretro/scddisasm | `791253ba1922d7c4142a40975860d1b3bb37b9f7` | MM propeller |
+| sonicretro/scddisasm | `791253ba1922d7c4142a40975860d1b3bb37b9f7` (test) | MM propeller, shared collision tables and SSZ path-swap reference |
 | sonicretro/s2disasm | `15e9fd52a65318bec3d5e746ce48dba6db6910db` | EHZ boss and Tails HUD-name source |
+| sonicretro/s1disasm | `15dfa3a6ee4c53aeb482233e493755c84b4f3479` | Collision-table and contact-routine reference |
+| sonicretro/s2disasm | `4ef457c18fc4902396c43ab06fabc119ac6ecb64` | Collision-table and contact-routine reference |
+| AlexField442/scddisasm | `eaf7424a61204fc5bd8592e7b23e7f2f3c43b936` | Collision tables, chunk lookup and floor/wall probes |
 
 Use read-only source checkouts and a normal built ROM/listing. The full SMZ
 import writes source-derived geometry and placements, overwriting editor changes;
