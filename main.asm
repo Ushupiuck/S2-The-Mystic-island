@@ -10777,8 +10777,6 @@ loc_12DCC:
 		beq.s	+
 		cmpi.b	#1,(Current_Zone).w
 		beq.s	+
-		tst.b	(Current_Zone).w
-		beq.s	+
 		lea	(AngleMap).l,a2
 		bra.s	++
 +
@@ -10804,8 +10802,6 @@ loc_12DCC:
 		cmpi.b	#id_SMZ,(Current_Zone).w
 		beq.s	+
 		cmpi.b	#1,(Current_Zone).w
-		beq.s	+
-		tst.b	(Current_Zone).w
 		beq.s	+
 		lea	(ColArray1).l,a2
 		bra.s	++
@@ -10878,8 +10874,6 @@ loc_12E72:
 		beq.s	+
 		cmpi.b	#1,(Current_Zone).w
 		beq.s	+
-		tst.b	(Current_Zone).w
-		beq.s	+
 		lea	(AngleMap).l,a2
 		bra.s	++
 +
@@ -10907,8 +10901,6 @@ loc_12EA6:
 		cmpi.b	#id_SMZ,(Current_Zone).w
 		beq.s	+
 		cmpi.b	#1,(Current_Zone).w
-		beq.s	+
-		tst.b	(Current_Zone).w
 		beq.s	+
 		lea	(ColArray1).l,a2
 		bra.s	++
@@ -10975,8 +10967,6 @@ loc_12F08:
 		beq.s	+
 		cmpi.b	#1,(Current_Zone).w
 		beq.s	+
-		tst.b	(Current_Zone).w
-		beq.s	+
 		lea	(AngleMap).l,a2
 		bra.s	++
 +
@@ -11004,8 +10994,6 @@ loc_12F3C:
 		cmpi.b	#id_SMZ,(Current_Zone).w
 		beq.s	+
 		cmpi.b	#1,(Current_Zone).w
-		beq.s	+
-		tst.b	(Current_Zone).w
 		beq.s	+
 		lea	(ColArray2).l,a2
 		bra.s	++
@@ -11079,8 +11067,6 @@ loc_12FAE:
 		beq.s	+
 		cmpi.b	#1,(Current_Zone).w
 		beq.s	+
-		tst.b	(Current_Zone).w
-		beq.s	+
 		lea	(AngleMap).l,a2
 		bra.s	++
 +
@@ -11108,8 +11094,6 @@ loc_12FE2:
 		cmpi.b	#id_SMZ,(Current_Zone).w
 		beq.s	+
 		cmpi.b	#1,(Current_Zone).w
-		beq.s	+
-		tst.b	(Current_Zone).w
 		beq.s	+
 		lea	(ColArray2).l,a2
 		bra.s	++

@@ -25,6 +25,20 @@ python build_tools/check_ghz_vram.py
 python build_tools/check_ehz_boss.py
 ```
 
+To compare GHZ's collision remap against a Git revision before the conversion:
+
+```sh
+python build_tools/check_ghz_collision.py --reference OLD_REF --output test-results/ghz-collision
+```
+
+It checks all editable blocks with four flips, both height/width silhouettes,
+all sixteen act/timezone indices and every chunk cell's tile words. Existing
+S2 shapes and their other users must remain untouched. Add `--core ...` and,
+for Mode 1, `--system-directory ...` to launch all four acts with Sonic/Tails
+and run both characters through the loop to a grounded exit. `--pal` selects
+PAL. Matching `.unc` and Kosinski+ sources and SonLVL bank/act selection are
+also checked.
+
 These cover named SST operands/pointer access, mapping geometry, art/DPLC ranges,
 compiled PLC allocations. The SST scan cannot prove register aliases
 or runtime array indices. `check_object_manager.py` adds native execution of

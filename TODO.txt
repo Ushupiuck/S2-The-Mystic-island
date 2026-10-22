@@ -204,6 +204,9 @@ Obj_CreateBossExplosion <--- CHECKLATER
 ; ---------------------------------------------------------------------------
 To-Do:
 
+Remap GHZ to the shared S2 collision bank, preserving both paths and rendered
+terrain, including mirrored loop pieces and SonLVL act selection < DONE
+
 ObjAnimal < ---- Optional: Edit Ending animals to load as normal objects (aka reload when you approach them); this has to do with ObjAnimal_ChkDel
 
 Obj_StarPost_MakeSpecialStars
