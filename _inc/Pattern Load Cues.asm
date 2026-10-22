@@ -289,6 +289,7 @@ PLC_GHZBoss:	dc.w ((PLC_GHZBoss_End-PLC_GHZBoss)/6)-1
 		plcm	Nem_Weapons,	ArtTile_Eggman_Weapons
 		plcm	Nem_Exhaust,	ArtTile_Eggman_Exhaust
 		plcm	Nem_Prison,	ArtTile_Prison_Capsule
+		plcm	Nem_BossExplosion,	ArtTile_BossExplosion
 PLC_GHZBoss_End:
 ; Capsule art can coexist with the boss during its defeat/escape sequence.
 PLC_Capsule:	dc.w ((PLC_Capsule_End-PLC_Capsule)/6)-1

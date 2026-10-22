@@ -108,6 +108,27 @@ SMZ's atlas, junction and smoke lifetimes are in [Levels](Levels.md#scrap-madnes
 
 ## Effects and UI ownership
 
+### Boss explosions
+
+GHZ and EHZ share Sonic 2 final's seven-frame fiery boss explosion through
+both boss PLCs at `ArtTile_BossExplosion = $581`. Its 100 tiles occupy
+`$B020-$BCA0`, replacing ordinary explosion art and the first five tiles of
+animal bank 1 during the fight. Keep that bank live until every burst finishes.
+GHZ reloads ordinary explosions and animals during recovery; EHZ does so after
+its escape delay, before the capsule opens. The controller and parent SST
+contract are in [Objects](Objects.md#ghz-boss-and-boss-explosions).
+
+`art/uncompressed/Large explosion.unc` is the editable pixel source;
+recompress it to `art/nemesis/Large explosion.nem` using mdcomp's
+`nemcmp "art/uncompressed/Large explosion.unc" "art/nemesis/Large explosion.nem"`.
+The art and `mappings/sprite/Boss Explosion.asm` retain the Sonic 2 final import
+from s2disasm `15e9fd52a65318bec3d5e746ce48dba6db6910db`. The seven mapping
+frames last 2, 2, 3, 3, 3, 4 and 4 game frames: S3&K's 21-tick lifetime fitted
+to the S2 sequence. Ordinary bomb, enemy and capsule explosions retain their
+separate art/timing.
+
+### Player effects and UI
+
 Both eight-star trails share 34 resident tiles at `$F380`. Their gray ramp
 uses the shared palette, while each player owns independent animation/lifetime.
 The primary has a reserved SST; companion stars allocate one dynamic SST and

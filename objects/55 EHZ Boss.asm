@@ -4,7 +4,7 @@
 ; and propeller. Children use ordinary S3&K mappings, not packed composites.
 ; Stage/placement X,Y specify the landing anchor; origin deltas preserve the
 ; final choreography when this boss is used as the existing MZ placeholder.
-; $49 remains the universal display half-height; collision radii are separate.
+; Display half-height uses height_pixels; collision radii are separate.
 ; ---------------------------------------------------------------------------
 EHZBoss_flash_color = objoff_36	; original hit-flash color; unused word before child pointer
 EHZBoss_origin_x = objoff_44
@@ -360,7 +360,8 @@ EHZBoss_Drive:	; EHZBoss_VehicleMain_Sub4:
 EHZBoss_FallDefeated:	; EHZBoss_VehicleMain_Sub6:
 	subq.w	#1,objoff_40(a0)	; timer set after defeat
 	bmi.s	EHZBoss_loc_2F35C	; if countdown finished
-	bsr.w	EHZBoss_LoadExplosion
+	moveq	#BossExplosion_EHZ,d0
+	jsr	(BossExplosion_Start).l
 	jsr	(ObjectMoveAndFall).l
 	jsr	(ObjHitFloor).l
 	tst.w	d1
@@ -1030,52 +1031,3 @@ EHZBoss_AnimalCues:
 	dc.b plcid_GHZAnimals,plcid_LZAnimals,plcid_CPZAnimals,plcid_EHZAnimals
 	dc.b plcid_HPZAnimals,plcid_HTZAnimals,plcid_GHZAnimals
 	even
-
-; Final's large boss explosions have their own seven-frame object. Keep the
-; ordinary five-frame bomb/monitor explosions and their art bank independent.
-EHZBoss_LoadExplosion:
-	move.b	(Vint_runcount+3).w,d0
-	andi.b	#7,d0
-	bne.s	.return
-	jsr	(FindFreeObj).l
-	bne.s	.return
-	move.l	#BossExplosion,code(a1)
-	move.w	obX(a0),obX(a1)
-	move.w	obY(a0),obY(a1)
-	jsr	(RandomNumber).l
-	moveq	#0,d1
-	move.b	d0,d1
-	lsr.b	#2,d1
-	subi.w	#$20,d1
-	add.w	d1,obX(a1)
-	lsr.w	#8,d0
-	lsr.b	#2,d0
-	subi.w	#$20,d0
-	add.w	d0,obY(a1)
-.return:	rts
-
-BossExplosion:
-	tst.b	obRoutine(a0)
-	bne.s	.animate
-	move.b	#2,obRoutine(a0)
-	move.l	#Map_BossExplosion,obMap(a0)
-	move.b	#Map_BossExplosion_height,height_pixels(a0)
-	move.b	#Map_BossExplosion_width,width_pixels(a0)
-	move.w	#make_art_tile(ArtTile_BossExplosion,0,1),obGfx(a0)
-	move.b	#4,obRender(a0)
-	clr.w	obPriority(a0)
-	clr.b	obColType(a0)
-	move.b	#7,obTimeFrame(a0)
-	clr.b	obFrame(a0)
-	move.w	#SndID_BossExplosion,d0
-	jmp	(PlaySound).l
-.animate:
-	subq.b	#1,obTimeFrame(a0)
-	bpl.s	.display
-	move.b	#7,obTimeFrame(a0)
-	addq.b	#1,obFrame(a0)
-	cmpi.b	#Map_BossExplosion_frames,obFrame(a0)
-	beq.w	EHZBoss_Delete
-.display:	jmp	(DisplaySprite).l
-
-	include "mappings/sprite/Boss Explosion.asm"
