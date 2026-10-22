@@ -2398,7 +2398,7 @@ Demo_Levels:
 
 ; Per-act music IDs. Each row is one zone, with acts 1, 2, 3 and 4.
 ; Use any MusID_* / bgm_* entry; defaults preserve the existing zone music.
-; Both level entry and drowning recovery use this lookup.
+; Level entry and music restoration share this lookup.
 GetLevelMusic:
         move.w (Current_ZoneAndAct).w,d0
         ror.b #2,d0
