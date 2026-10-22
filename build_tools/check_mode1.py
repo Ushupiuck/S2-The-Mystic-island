@@ -86,7 +86,7 @@ def probe(body, restore=True, safe=True):
 	assert len(code) < 0x7000
 	for i, v in enumerate(code):
 		g.ram[i ^ 1] = v
-	for reg, value in ((17, 0x2700), (15, 0xFFE400), (16, 0xFF0000)):
+	for reg, value in ((17, 0x2700), (15, (g.s['v_systemstack'] & 0xFFFFFF) - 4), (16, 0xFF0000)):
 		g.core.m68k_set_reg(reg, value)
 	for _ in range(100):
 		g.run()

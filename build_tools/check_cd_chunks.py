@@ -27,11 +27,11 @@ assert g.s['Chunk_Table_End'] - g.s['Chunk_Table'] == 0x8000
 assert g.s['MCD_ChunkTable_SubStart'] == 0x6000
 assert g.s['MCD_ChunkTable_SubEnd'] == 0x26000
 assert g.s['MCD_ChunkTable_Size'] == 0x20000
-free_start = g.s['Free_Chunk_RAM_Start'] & 0xFFFF
-free_end = 0x8000
-assert (g.s['Free_Chunk_RAM_End'] & 0xFFFFFF) == 0xFF8000
+free_start = g.s['Free_RAM_Start'] & 0xFFFF
+free_end = g.s['Free_RAM_End'] & 0xFFFF
+assert g.s['Free_RAM_End'] == g.s['MCD_MainWorkStart']
 assert g.s['MCD_MainWorkEnd'] == g.s['Player_Art_Buffer_Start']
-assert g.s['Player_Art_Buffer_End'] == g.s['Free_Chunk_RAM_Start']
+assert g.s['Player_Art_Buffer_End'] == g.s['Main_RAM_Start']
 assert g.s['v_ssbg_end'] <= g.s['Chunk_Table_End']
 boot_level(g, zone=0, act=0)
 assert g.read('MCD_status') == 1
@@ -46,17 +46,20 @@ cpu = CpuPrefix.in_dll(g.core, 'm68k')
 g.core.m68k_set_reg.argtypes = [C.c_int, C.c_uint]
 g.core.m68k_run.argtypes = [C.c_uint]
 
+probe_stop = g.s['Free_RAM_Start'] & 0xFFFFFF
+probe_stack = (g.s['v_systemstack'] & 0xFFFFFF) - 4
+
 def act(label, regs=None):
     g.core.m68k_set_reg(17, 0x2700)
     for reg, value in (regs or {}).items():
         g.core.m68k_set_reg(reg, value & 0xFFFFFFFF)
-    g.write(0x7E00, 0xFF7F00, 4)
-    g.write(0x7F00, 0x60FE, 2)
-    g.core.m68k_set_reg(15, 0xFF7E00)
+    g.write(probe_stack, probe_stop, 4)
+    g.write(probe_stop, 0x60FE, 2)
+    g.core.m68k_set_reg(15, probe_stack)
     g.core.m68k_set_reg(16, g.s[label])
     for _ in range(20000):
-        if g.core.m68k_get_reg(16) == 0xFF7F00:
-            assert g.core.m68k_get_reg(15) == 0xFF7E04, label
+        if g.core.m68k_get_reg(16) == probe_stop:
+            assert g.core.m68k_get_reg(15) == probe_stack + 4, label
             return
         g.core.m68k_run(cpu.cycles + 1)
     raise AssertionError((label, hex(g.core.m68k_get_reg(16))))
@@ -85,8 +88,8 @@ passed('All 256 chunks x 64 blocks use CD RAM in collision and rendering', addre
 g.restore(stage)
 act('MCD_AcquireProgramRAM')
 for i, byte in enumerate(bytes.fromhex('33FC811400C0000433FC8F0200C000044E75')):
-    g.write(0xFF7C00+i, byte)
-g.s['ProbeVDPSetup'] = 0xFF7C00
+    g.write(probe_stop+2+i, byte)
+g.s['ProbeVDPSetup'] = probe_stop+2
 act('ProbeVDPSetup')
 g.write('Camera_X_pos', 0, 4)
 g.write('Camera_Y_pos', 0, 4)
@@ -140,7 +143,7 @@ for _ in range(1800):
 else:
     raise AssertionError('Title timeout')
 g.ram[free_start:free_end] = canary
-# Simulate a scene overlay reclaiming the level-only art. The rotating stage
+# Poison the level art to verify independent stage entry. The rotating stage
 # must restore its ring source independently of a preceding ordinary level.
 art_start = g.s['Player_Art_Buffer_Start'] & 0xFFFF
 art_end = g.s['Player_Art_Buffer_End'] & 0xFFFF

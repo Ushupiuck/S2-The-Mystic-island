@@ -63,7 +63,7 @@ MCD_SubError:
 ; remain on the main CPU. d6/d7 belong to the mailbox and must be preserved.
 MCD_SubRingReset:
 		lea	(MCD_RingState_Sub).l,a0
-		move.w	#$600/4-1,d1
+		move.w	#bytesToLcnt(MCD_RingState_SubEnd-MCD_RingState_Sub),d1
 .clear:
 		clr.l	(a0)+
 		dbf	d1,.clear

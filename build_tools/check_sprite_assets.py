@@ -65,8 +65,8 @@ def main():
             size = (ROOT / 'art/uncompressed' / source).stat().st_size
             assert symbols[label + '_End'] - symbols[label] == size, label
             assert (struct.unpack_from('>H', rom, symbols[packed])[0] & 0x7FFF) * 32 == size
-            assert 0xFF0000 <= symbols[label] & 0xFFFFFF < 0xFF8000
-        assert symbols['Player_Art_Buffer_End'] == symbols['Free_Chunk_RAM_Start']
+            assert 0xFF0000 <= symbols[label] & 0xFFFFFF < symbols['Main_RAM_Start'] & 0xFFFFFF
+        assert symbols['Player_Art_Buffer_End'] == symbols['Main_RAM_Start']
     assert symbols['code'] == 0 and symbols['height_pixels'] == 6
     assert symbols['object_size'] == 0x4E
     assert symbols['vram_hscroll'] == 0xF000

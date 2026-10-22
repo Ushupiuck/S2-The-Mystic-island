@@ -868,10 +868,13 @@ RAM_debug_end:
 
 v_start:
 RAM_Start:
+	dephase
 
 	if MegaCDMode1
-; Keep short-addressed engine RAM in $FF8000-$FFFFFF. The lower half is
-; reused for job queues and decompressed art. Access it with long addressing.
+; Pack the engine against the top of RAM, with long-addressed CD work/art
+; immediately below it. Forward differences are allocation sizes, so adding
+; a field moves the boundary automatically rather than leaving address holes.
+	phase	Main_RAM_Start-(Player_Art_Buffer_End-MCD_MainWorkStart)
 MCD_MainWorkStart:
 MCD_RingEvents:		ds.w	MCD_RingSlots
 MCD_RingEventCount:	ds.w	1
@@ -879,7 +882,7 @@ MCD_RingActiveCount:	ds.w	1
 MCD_RingJobPending:	ds.w	1
 MCD_MainWorkEnd:
 ; Uncompressed sources for the existing effect DPLCs and ring-frame uploads.
-; Reload effects on level entry, and rings on either level or S1 stage entry.
+; Rebuild effects on level entry, and rings on either level or S1 stage entry.
 Player_Art_Buffer_Start:
 Art_Shield:		ds.b	$360
 Art_Shield_End:
@@ -888,16 +891,14 @@ Art_Invincibility_End:
 Art_Ring:		ds.b	$400
 Art_Ring_End:
 Player_Art_Buffer_End:
-	if Player_Art_Buffer_End-RAM_Start>$8000
-		fatal "Player art exceeds the former MD chunk buffer."
-	endif
-Free_Chunk_RAM_Start:
-		ds.b	$8000-(Player_Art_Buffer_End-MCD_MainWorkStart)
-Free_Chunk_RAM_End:
+	dephase
+	phase	-(Main_RAM_End-Main_RAM_Start)
 	else
+	phase	RAM_Start
 Chunk_Table:			ds.w	$40*$100	; 128x128 tile mappings ($8000 bytes)
 Chunk_Table_End:
 	endif
+Main_RAM_Start:
 v_128x128:=	Chunk_Table
 v_128x128_end:=	Chunk_Table_End
 Level_Layout:			ds.b	$1000		; level layout buffer ($1000 bytes)
@@ -907,6 +908,7 @@ v_lvllayout:=			Level_Layout
 v_lvllayout_end:=		Level_Layout_End
 v_lvllayoutbg:=			Level_Layout+$80
 Kos_decomp_buffer:		ds.b	$1000		; Moduled Kosinski+ decompression buffer
+Kos_decomp_buffer_End:
 ; ---------------------------------------------------------------------------
     if object_size*object_slot_count > object_ram_size
 	fatal "Object slots exceed the reserved object RAM growth area."
@@ -988,8 +990,8 @@ v_endeggman	= v_objspace+object_size*2		; object variable space for Eggman after
 v_tryagain	= v_objspace+object_size*3		; object variable space for the "TRY AGAIN" text (1 SST)
 v_eggmanchaos	= v_objspace+object_size*32		; object variable space for the emeralds juggled by Eggman (6 SSTs)
 ; ---------------------------------------------------------------------------
-				ds.b	object_ram_size-(v_objspace_end-v_objspace)	; unused object RAM budget, if any
 v_16x16:			ds.b	$1800		; $1800 bytes
+v_16x16_End:
 
 TempArray_LayerDef:		ds.b	$200		; background scroll buffer
 v_bgscroll_buffer:=		TempArray_LayerDef
@@ -1000,7 +1002,7 @@ v_hscrolltablebuffer_end_padded:
 Sprite_Table_Max:		equ 80
 Sprite_Table:			ds.b	Sprite_Table_Max*8		; Sprite attribute table buffer
 Sprite_Table_end:
-				ds.b	$140		; stack
+System_Stack_Start:		ds.b	$140		; stack grows down from v_systemstack
 v_systemstack:
 v_ngfx_buffer:			ds.b	$200		; Nemesis graphics decompression buffer
 v_ngfx_buffer_end:
@@ -1011,11 +1013,6 @@ Debug_saved_mappings:		ds.l	1
 Debug_saved_art_tile:		ds.w	1
 Debug_saved_width:		ds.b	1
 Debug_saved_height:		ds.b	1
-	if object_ram_size-$2200>$2B2
-		fatal "Object RAM growth exceeds the retired state-buffer budget"
-	endif
-Free_LegacyObjectState:		ds.b	$2B2-(object_ram_size-$2200)	; retain later RAM addresses after SST growth
-Free_LegacyObjectState_end:
 Object_Display_Lists:		ds.b	$400		; sprite display queue, in order of priority
 Object_Display_Lists_End:
 v_spritequeue:=		Object_Display_Lists
@@ -1029,6 +1026,7 @@ Tails_Pos_Record_Buf:		ds.b	$100
 Tails_Pos_Record_Buf_End:
 Ring_Positions:			ds.b	$600
 Ring_Positions_End:
+Ring_Positions_Active_End:	equ Ring_Positions_End-6	; final six-byte record is the sentinel
 
 VDP_Command_Buffer:		ds.w	7*$12		; stores 18 ($12) VDP commands to issue the next time ProcessDMAQueue is called
 VDP_Command_Buffer_Slot:	ds.w	1		; stores the address of the next open slot for a queued VDP command
@@ -1218,7 +1216,6 @@ v_levelvariables:					; variables that are reset between levels
 word_F700:		ds.w	1			; Tails' logical controller (held/pressed)
 Tails_control_counter:	ds.w	1
 Tails_respawn_counter:	ds.w	1
-word_F706:		ds.w	1		; free; CPU object code lives in the tail SST
 Tails_CPU_routine:	ds.w	1
 
 Rings_manager_routine:	ds.b	1
@@ -1304,27 +1301,27 @@ Anim_Counters:		ds.b	$10
 v_levelvariables_end:
 
 v_palette_water_fading: ds.b	palette_size		; duplicate underwater palette, used for transitions ($80 bytes)
-v_palette_water_fading_line_2 =	palette_size+$20
-v_palette_water_fading_line_3 =	palette_size+$40
-v_palette_water_fading_line_4 =	palette_size+$60
+v_palette_water_fading_line_2 =	v_palette_water_fading+$20
+v_palette_water_fading_line_3 =	v_palette_water_fading+$40
+v_palette_water_fading_line_4 =	v_palette_water_fading+$60
 v_palette_water_fading_end:
 
 v_palette_water:	ds.b	palette_size		; main underwater palette
-v_palette_water_line_2 =	palette_size+$20
-v_palette_water_line_3 =	palette_size+$40
-v_palette_water_line_4 =	palette_size+$60
+v_palette_water_line_2 =	v_palette_water+$20
+v_palette_water_line_3 =	v_palette_water+$40
+v_palette_water_line_4 =	v_palette_water+$60
 v_palette_water_end:
 
 v_palette:		ds.b	palette_size		; main palette
-v_palette_line_2 =	palette_size+$20
-v_palette_line_3 =	palette_size+$40
-v_palette_line_4 =	palette_size+$60
+v_palette_line_2 =	v_palette+$20
+v_palette_line_3 =	v_palette+$40
+v_palette_line_4 =	v_palette+$60
 v_palette_end:
 
 v_palette_fading:	ds.b	palette_size		; duplicate palette, used for transitions
-v_palette_fading_line_2 =	palette_size+$20
-v_palette_fading_line_3 =	palette_size+$40
-v_palette_fading_line_4 =	palette_size+$60
+v_palette_fading_line_2 =	v_palette_fading+$20
+v_palette_fading_line_3 =	v_palette_fading+$40
+v_palette_fading_line_4 =	v_palette_fading+$60
 v_palette_fading_end:
 
 v_crossresetram:					; RAM beyond this point is only cleared on a cold-boot
@@ -1333,7 +1330,7 @@ Level_frame_counter:	; For compatibility
 v_framecount:		; For compatibility
 Timer_frames:		ds.w	1			; the number of frames which have elapsed since the level started
 Debug_object:		ds.b	1			; the current position in the debug mode object list
-f_conveyrev:		ds.b	1			; unused
+f_conveyrev:		ds.b	1			; reverse conveyor direction
 Debug_placement_mode =	*			; routine/type word; nonzero while either mode is active
 Debug_placement_routine:	ds.b	1			; placement init/main (0/2)
 Debug_placement_type:	ds.b	1			; DebugType_*
@@ -1350,7 +1347,7 @@ Current_Zone:		ds.b	1			; (1 byte)
 Current_Act =		*
 v_act:			ds.b	1			; (1 byte)
 v_lives:		ds.b	1			; (1 byte)
-			ds.b	1			; unused
+			ds.b	1			; align v_air after the lives byte
 v_air:			ds.w	1			; air remaining while underwater
 v_airbyte =		v_air+1				; low byte for air
 v_lastbonus:		ds.b	1			; last bonus stage number
@@ -1370,7 +1367,7 @@ v_timecent		= v_time+3			; time - centiseconds
 v_score:		ds.l	1			; score
 MCD_status:		ds.b	1			; 0 absent, 1 ready, $FF failed
 MCD_dma_pending:	ds.b	1			; queued Word-RAM transfer
-			ds.b	1			; unused former global power-up flag
+			ds.b	1			; align Super_Sonic_flag with the following word
 Super_Sonic_flag:	ds.b	1
 
 v_lastlamp:		ds.b	2			; number of the last lamppost you hit
@@ -1439,7 +1436,7 @@ v_ani1_prev:		ds.b	1			; synchronised sprite animation 1 - previous frame
 v_ani2_prev:		ds.b	1			; synchronised sprite animation 2 - previous frame
 v_ani3_prev:		ds.b	1			; synchronised sprite animation 3 - previous frame
 
-; S3&K object-manager additions fit in the existing tail padding.
+; S3&K object-manager state.
 Respawn_table_keep:	ds.b	1	; preserve placement state when reinitializing the same live layout
 Camera_Y_pos_coarse:	ds.w	1	; last processed camera Y, rounded down to $80
 Camera_Y_pos_coarse_back:	ds.w	1	; (Camera_Y_pos - $80) & $FF80
@@ -1447,15 +1444,32 @@ Object_respawn_index_front:	ds.w	1	; RAM address paired with Object_load_addr_fr
 Object_respawn_index_back:	ds.w	1	; RAM address paired with Object_load_addr_back
 Object_load_retry:	ds.b	1	; an eligible placement could not get an SST this frame
 
-			ds.b	$63			; free (99 bytes)
-v_end:
-	if * > 0	; don't declare more space than the RAM can contain!
-		fatal "The RAM variable declarations are too large by $\{*} bytes."
-	endif
+			ds.b	1			; align the following allocation boundary
+Main_RAM_End:
+	dephase
 
-	if MOMPASS=1
-		message "The current RAM available $\{0-*+MegaCDMode1*$8000} bytes."
+	if MegaCDMode1
+	if (MOMPASS>1)&&((Main_RAM_Start&$FF8000)<>$FF8000)
+		fatal "Short-addressed engine RAM exceeds the upper 32 KB."
 	endif
+	if (MOMPASS>1)&&(MCD_MainWorkStart<RAM_Start)
+		fatal "Live MD allocations exceed 64 KB."
+	endif
+	phase	RAM_Start
+Free_RAM_Start:		ds.b	MCD_MainWorkStart-RAM_Start
+Free_RAM_End:
+	if Free_RAM_End<>MCD_MainWorkStart
+		fatal "Free RAM must end at the first live allocation."
+	endif
+	else
+	phase	Main_RAM_End
+Free_RAM_Start:		ds.b	-Main_RAM_End
+Free_RAM_End:
+	endif
+	dephase
+	phase	0
+v_end:
+
 	dephase
 
 ; Sonic 1 camera variables

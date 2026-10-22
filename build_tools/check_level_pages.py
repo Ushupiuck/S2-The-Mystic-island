@@ -199,8 +199,8 @@ item(BONUS)
 checks = []
 rom = args.rom.read_bytes()
 cd_chunks = g.s['Chunk_Table'] == 0x426000
-free_start = g.s.get('Free_Chunk_RAM_Start', 0) & 0xFFFF
-free_end = 0x8000
+free_start = g.s.get('Free_RAM_Start', 0) & 0xFFFF
+free_end = g.s['Free_RAM_End'] & 0xFFFF
 free_canary = bytes((i * 37 + 19) & 255 for i in range(free_end-free_start))
 for zone in range(16):
 	for act in range(4):

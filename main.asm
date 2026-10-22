@@ -900,7 +900,7 @@ NewPLC:
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
-; Clear the pattern load queue ($FFF680 - $FFF700)
+; Clear the pattern load queue and its decompressor state.
 
 ClearPLC:
 		lea	(v_plc_buffer).w,a2
@@ -4651,7 +4651,7 @@ Deform_SMZ:
         swap d0
         move.w d1,d0
         lea (v_hscrolltablebuffer).w,a1
-        move.w #224-1,d1
+        move.w #bytesToLcnt(v_hscrolltablebuffer_end-v_hscrolltablebuffer),d1
 .loop:
         move.l d0,(a1)+
         dbf d1,.loop
@@ -4909,7 +4909,7 @@ Deform_LZ:
 		add.w	(Camera_Y_pos).w,d3
 		andi.w	#$FF,d3
 		lea	(v_hscrolltablebuffer).w,a1
-		move.w	#224-1,d1
+		move.w	#bytesToLcnt(v_hscrolltablebuffer_end-v_hscrolltablebuffer),d1
 		move.w	(Camera_RAM).w,d0
 		neg.w	d0
 		move.w	d0,d6
@@ -4972,7 +4972,7 @@ Deform_CPZ:
 		bsr.w	ScrollBlock1
 		move.w	(Camera_BG_Y_pos).w,(v_bgscrposy_vdp).w
 		lea	(v_hscrolltablebuffer).w,a1
-		move.w	#224-1,d1
+		move.w	#bytesToLcnt(v_hscrolltablebuffer_end-v_hscrolltablebuffer),d1
 		move.w	(Camera_RAM).w,d0
 		neg.w	d0
 		swap	d0
@@ -9022,7 +9022,7 @@ RingsManager_Main:
 		jsr	(MCD_BeginRingJob).l
 	else
 		lea	(Ring_Positions).w,a1
-		move.w	#255-1,d1			; do 255 rings
+		move.w	#bytesToXcnt(Ring_Positions_Active_End-Ring_Positions,6),d1	; exclude the sentinel
 
 loc_D8CC:
 		move.b	(a1),d0				; is there a ring in this slot?
@@ -9244,7 +9244,7 @@ RingsMgr_SortRings:
 		moveq	#-1,d0
 		move.l	d0,(a2)+
 		lea	(Ring_Positions+2).w,a1
-		move.w	#255-1,d3
+		move.w	#bytesToXcnt(Ring_Positions_Active_End-Ring_Positions,6),d3
 
 loc_DBD8:
 		move.w	d3,d4
@@ -14579,7 +14579,7 @@ AfterBoss_AIZ1:
 	;	lea	(Pal_AIZ).l,a1
 		lea	(Pal_GHZ).l,a1
 		lea	(v_palette_line_2).w,a2
-		moveq	#bytesToLcnt($60),d0
+		moveq	#bytesToLcnt(v_palette_end-v_palette_line_2),d0
 
 .loop:
 		move.l	(a1)+,(a2)+
@@ -14608,7 +14608,7 @@ AfterBoss_None:
 
 PalLoad_Line1:
 		lea	(v_palette_line_2).w,a2
-		moveq	#bytesToLcnt($20),d0
+		moveq	#bytesToLcnt(palette_line_size),d0
 
 .loop:
 		move.l	(a1)+,(a2)+
@@ -14621,7 +14621,7 @@ PalLoad_Line1:
 
 PalLoad_Water_Line1:
 		lea	(v_palette_water_line_2).w,a2
-		moveq	#bytesToLcnt($20),d0
+		moveq	#bytesToLcnt(palette_line_size),d0
 
 .loop:
 		move.l	(a1)+,(a2)+

@@ -17,7 +17,7 @@ except ImportError:
     raise SystemExit('This optional ROM test requires the unicorn Python package.')
 
 ROOT = Path(__file__).resolve().parent.parent
-STOP, STACK = 0x3FFF00, 0xFF8000
+STOP = 0x3FFF00
 DATA = [UC_M68K_REG_D0, UC_M68K_REG_D1, UC_M68K_REG_D2, UC_M68K_REG_D3]
 
 
@@ -30,9 +30,14 @@ class Native:
         assert 'Symbol Table' in listing, 'Build must finish before testing its listing'
         self.s = {name: int(value, 16) for name, value in re.findall(
             r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]', listing)}
+        self.stack = (self.s['v_systemstack'] & 0xFFFFFF) - 4
         self.cpu = Uc(UC_ARCH_M68K, UC_MODE_BIG_ENDIAN)
         self.cpu.ctl_set_cpu_model(UC_CPU_M68K_M68000)
         self.cpu.mem_map(0, 0x400000)
+        # Model the MD-visible bank-0 chunk/scene storage for native fixtures.
+        # Hardware ownership and bank switching belong to the emulator checks.
+        if self.s['MegaCDMode1']:
+            self.cpu.mem_map(0x420000, 0x20000)
         self.cpu.mem_map(0xFF0000, 0x10000)
         self.cpu.mem_map(0xFFFF0000, 0x10000)
         self.cpu.mem_write(0, data)
@@ -52,7 +57,7 @@ class Native:
     def bus(self, cpu, access, address, size, value, unused):
         physical = address & 0xFFFFFF
         if access != UC_MEM_READ:
-            assert physical >= 0xFF0000, f'Unexpected CPU write outside RAM: {address:X}'
+            assert physical >= 0xFF0000 or (self.s['MegaCDMode1'] and 0x420000 <= physical < 0x440000), f'Unexpected CPU write outside RAM: {address:X}'
         if address != physical and physical >= 0xFF0000:
             if access == UC_MEM_READ:
                 cpu.mem_write(address, bytes(cpu.mem_read(physical, size)))
@@ -115,13 +120,15 @@ class Native:
             self.cpu.reg_write(UC_M68K_REG_A0, address)
         for reg, value in (regs or {}).items():
             self.cpu.reg_write(reg, value)
-        self.cpu.reg_write(UC_M68K_REG_A7, STACK)
-        self.cpu.mem_write(STACK, struct.pack('>I', STOP))
+        self.cpu.reg_write(UC_M68K_REG_A7, self.stack)
+        self.cpu.mem_write(self.stack, struct.pack('>I', STOP))
         self.cpu.emu_start(self.s[routine], STOP, count=limit)
         assert self.cpu.reg_read(UC_M68K_REG_PC) == STOP, routine
-        assert self.cpu.reg_read(UC_M68K_REG_A7) == STACK + 4, routine
+        assert self.cpu.reg_read(UC_M68K_REG_A7) == self.stack + 4, routine
 
     def start(self):
+        if self.s['MegaCDMode1']:
+            self.cpu.mem_write(0x420000, bytes(0x20000))
         self.cpu.mem_write(0xFF0000, bytes(0x10000))
         self.cpu.mem_write(0xFFFF0000, bytes(0x10000))
         self.write('v_gamemode', self.s['Level'], 2)

@@ -18,6 +18,7 @@ Core-based fixtures do not require a graphical frontend.
 After a normal build:
 
 ```sh
+python build_tools/check_ram_ranges.py
 python build_tools/check_object_layouts.py
 python build_tools/check_sprite_bounds.py
 python build_tools/check_sprite_assets.py
@@ -25,8 +26,15 @@ python build_tools/check_ghz_vram.py
 python build_tools/check_ehz_boss.py
 ```
 
-These cover named SST operands/pointer access, mapping geometry, art/DPLC ranges,
-compiled PLC allocations. The SST scan cannot prove register aliases
+`check_ram_ranges.py` checks the packed RAM boundaries and palette aliases, then
+assembles the real `clearRAM` macro and executes 38 cases in Unicorn: both
+addressing forms, odd starts, one-to-nine-byte tails and whole-RAM clears.
+Canaries outside each range must remain unchanged. DBF memory counts use declared
+start/end labels and their transfer stride; algorithmic/timing counts retain
+their own meaning. An empty longword section must not enter a DBF loop with `-1`.
+
+The other checks cover named SST operands/pointer access, mapping geometry,
+art/DPLC ranges and compiled PLC allocations. The SST scan cannot prove register aliases
 or runtime array indices. `check_object_manager.py` adds native execution of
 loading, dispatch/deletion, packed records, Debug, collisions and effect-bank logic.
 Use a matching ROM/listing pair; options/defaults differ, so inspect `--help`.
@@ -87,7 +95,9 @@ that offer it. Most primary-player selectors use `--player 0` (Sonic) or `2`
 `check_companion_sbz.py` has `--probe` for older-ROM failures, but no PAL flag.
 Several runners compare with a specific earlier revision; their baseline is
 part of the fixture, not automatically the parent commit. Check their CLI/source
-before reusing them with an unrelated baseline.
+before reusing them with an unrelated baseline. Native fixtures use the declared
+system stack and map the CD bank-0 chunk/scene window on Mode 1 builds; they do
+not emulate CD ownership. The emulator checks below cover that hardware path.
 
 CD boot needs a supplied system directory. Only runners exposing
 `--system-directory` support that setup directly (including level pages, act

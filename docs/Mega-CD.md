@@ -39,12 +39,26 @@ is the active 32 KiB end used by existing clears and scene overlays;
 allocation is not a contiguous main-CPU pointer, and jobs cannot use its tail.
 [The planned mixed-size layout](Levels.md#planned-layout-format) is not implemented.
 
-The former MD chunk area holds a 516-byte event queue/control block at
-`$FF0000-$FF0203`, followed by the [decompressed player-art sources](Sprites-and-VRAM.md#mode-1-ram-art)
-through `$FF0DA3`. `$FF0DA4-$FF7FFF` remains free (`$725C` bytes); upper-half
-variables retain their addresses. Access these lower-half allocations with
-long addressing. These are level allocations: the S2-style special-stage RAM
-overlay reuses this area, so level entry rebuilds the art before any upload.
+MD work RAM is packed against the top of its 64 KiB address space. The single
+free allocation is `Free_RAM_Start` through `Free_RAM_End` (end exclusive):
+`$FF0000-$FF7503`, **`$7504` bytes (29,956)**. This includes the former 580-byte
+object-state reservation, 98 bytes of tail padding and the retired two-byte
+CPU-object pointer slot. One byte remains for word alignment. The current live ranges are:
+
+| Allocation | MD address, inclusive | Size |
+| --- | --- | --- |
+| Ring event queue/control | `$FF7504-$FF7707` | `$204` |
+| [Decompressed player art](Sprites-and-VRAM.md#mode-1-ram-art) | `$FF7708-$FF82A7` | `$BA0` |
+| Engine variables and work buffers | `$FF82A8-$FFFFFF` | `$7D58` |
+
+`_definitions/s2.constants.asm` derives the engine's start from its own declared
+size, then places CD work/art immediately below it. Allocation changes move the
+boundary automatically; there is no address-preserving free hole. Assembly
+checks keep short-addressed engine storage in `$FF8000-$FFFFFF`. CD event/art
+accesses use long addressing. The Kosinski module and Nemesis buffers, scroll
+spill area and `$140`-byte system stack remain live allocations; they are not
+free RAM. The stack has explicit `System_Stack_Start`/`v_systemstack` bounds.
+The rotating S1 stage uses its separate CD chunk-table overlay.
 
 The main CPU owns PRG bank 0 during game work. `WaitForVint` releases the
 sub-CPU; `V_Int` reacquires the bus/selects bank 0 before chunk readers or queued

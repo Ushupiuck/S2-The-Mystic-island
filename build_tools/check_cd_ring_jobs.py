@@ -49,18 +49,21 @@ def main():
     g.core.s68k_get_reg.restype = C.c_uint
     checks, costs, courses = [], [], []
 
+    probe_stop = g.s['Free_RAM_Start'] & 0xFFFFFF
+    probe_stack = (g.s['v_systemstack'] & 0xFFFFFF) - 4
+
     def act(label, regs=None, stop=None):
         g.core.m68k_set_reg(17, 0x2700)
         for reg, value in (regs or {}).items():
             g.core.m68k_set_reg(reg, value & 0xFFFFFFFF)
-        g.write(0x7E00, 0xFF7F00, 4)
-        g.write(0x7F00, 0x60FE, 2)
-        g.core.m68k_set_reg(15, 0xFF7E00)
+        g.write(probe_stack, probe_stop, 4)
+        g.write(probe_stop, 0x60FE, 2)
+        g.core.m68k_set_reg(15, probe_stack)
         g.core.m68k_set_reg(16, g.s[label])
         start = cpu.cycles
         for _ in range(200000):
             pc = g.core.m68k_get_reg(16)
-            if pc == (g.s[stop] if stop else 0xFF7F00):
+            if pc == (g.s[stop] if stop else probe_stop):
                 return (cpu.cycles-start)//7
             g.core.m68k_run(cpu.cycles+1)
         raise AssertionError((label, hex(g.core.m68k_get_reg(16))))

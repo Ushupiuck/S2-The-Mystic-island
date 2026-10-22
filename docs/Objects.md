@@ -9,8 +9,10 @@ name the same entry. Execution continues after the primary character dies.
 ## SST and dispatch
 
 Each object status table (SST) is `$4E` bytes. The pool contains 23 reserved and
-90 dynamic slots, `$FFA000-$FFC26D`; dynamic slots start at `$FFA702`.
-`v_16x16` follows at `$FFC26E`. Use `object_size` for pointer arithmetic;
+90 dynamic slots, bounded by `v_objspace`/`v_objspace_end`; dynamic slots start
+at `v_lvlobjspace`. `v_16x16` immediately follows the pool. Absolute addresses
+depend on the branch's RAM map; see [Mega-CD](Mega-CD.md#memory-and-ownership).
+Use `object_size` for pointer arithmetic;
 `object_size_bits` describes allocator buckets, not the actual slot stride.
 
 | Offset | Bytes | Shared field |
@@ -102,8 +104,8 @@ and respawn pointers. A full pool schedules a stationary retry. Normal object
 lifetime checks remain X-based: vertical filtering does not add automatic
 Y-based deletion to every object.
 
-`Object_Respawn_Table` has `$300` bytes at `$FFF6BE`. Every placement has one
-entry; bit 7 marks loaded/consumed, with seven local-state bits. `respawn_addr`
+`Object_Respawn_Table` has `$300` bytes, ending at `Object_Respawn_Table_end`.
+Every placement has one entry; bit 7 marks loaded/consumed, with seven local-state bits. `respawn_addr`
 is its low-word pointer, loaded with `movea.w`; zero means dynamic/Debug-owned.
 
 - Preserve the pointer on initialization and leave its loaded bit set.
@@ -154,9 +156,11 @@ not use the SST ABI. The S1 special stage's item/update records and mapping
 format are separate too (stage update entries are eight bytes).
 CD ring-animation ownership is in [Mega-CD](Mega-CD.md).
 
-The retired state-buffer remainder is `Free_LegacyObjectState` (580 bytes).
-`Error_Handler_Buffer` is `$FFE62E`, display lists start at `$FFE8C0`; assembly
-checks protect their allocation. Do not infer free RAM from an old pool size.
+The retired state-buffer reservation has been reclaimed. `Error_Handler_Buffer`
+follows `v_ngfx_buffer_end`; the Debug snapshot then immediately precedes
+`Object_Display_Lists`. Use the declared boundaries rather than old absolute
+addresses. Test-only object-course coverage uses `Free_RAM_Start` with a capacity
+check, and is absent from ordinary builds.
 
 ## Debug
 

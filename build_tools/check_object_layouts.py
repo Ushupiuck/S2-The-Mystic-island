@@ -122,13 +122,19 @@ def main():
             assert not numeric_id.search(active), f'{source}:{line}: numeric placement ID used as a routine pointer'
     assert symbols['height_pixels'] == 6 and symbols['DebugEntry_size'] == 12
     assert symbols['v_lvlobjend'] - symbols['v_lvlobjspace'] == 90 * 0x4E
-    assert symbols['v_16x16'] == 0xFFC26E
-    assert symbols['Error_Handler_Buffer'] == symbols['v_regbuffer'] == 0xFFE62E
-    assert symbols['Object_Display_Lists'] == 0xFFE8C0
-    assert symbols['Free_LegacyObjectState_end'] == symbols['Object_Display_Lists']
-    assert symbols['Free_LegacyObjectState_end'] - symbols['Free_LegacyObjectState'] == 0x244
+    assert symbols['v_16x16'] == symbols['v_objspace_end']
+    assert symbols['v_16x16_End'] - symbols['v_16x16'] == 0x1800
+    assert symbols['System_Stack_Start'] == symbols['Sprite_Table_end']
+    assert symbols['v_systemstack'] - symbols['System_Stack_Start'] == 0x140
+    assert symbols['Error_Handler_Buffer'] == symbols['v_regbuffer'] == symbols['v_ngfx_buffer_end']
+    assert symbols['Object_Display_Lists'] == symbols['Debug_saved_height'] + 1
     assert not symbols['Debug_saved_mappings'] & 1
-    assert symbols['Debug_saved_height'] + 1 == symbols['Free_LegacyObjectState']
+    if symbols.get('MegaCDMode1'):
+        assert symbols['Free_RAM_Start'] == symbols['RAM_Start']
+        assert symbols['Free_RAM_End'] == symbols['MCD_MainWorkStart']
+        assert symbols['Player_Art_Buffer_End'] == symbols['Main_RAM_Start']
+        assert symbols['Main_RAM_Start'] & 0xFFFFFF >= 0xFF8000
+        assert symbols['Main_RAM_End'] == 0
     assert symbols['Debug_placement_type'] == symbols['Debug_placement_routine'] + 1
     assert symbols['Debug_placement_mode'] == symbols['Debug_placement_routine']
     check_named_sst_fields(symbols)

@@ -36,10 +36,11 @@ cat_kemusi_body_col = $80+((Touch_Size_KemusiBody-Touch_Sizes)/2)+1
 ; All private state fits the original $40-byte SST. The engine's larger stride
 ; is shared with other objects; Caterkiller does not use its bytes $40 onward.
 ; Word links require the object pool to remain in the upper 32K of work RAM.
-	if (v_objspace&$FF8000)<>$FF8000
+; The packed RAM base is a forward size expression; validate after pass 1.
+	if (MOMPASS>1)&&((v_objspace&$FF8000)<>$FF8000)
 		fatal "Caterkiller word links require object RAM above $FF8000"
 	endif
-	if ((v_objend-1)&$FF8000)<>$FF8000
+	if (MOMPASS>1)&&(((v_objend-1)&$FF8000)<>$FF8000)
 		fatal "Caterkiller word links must stay in work RAM"
 	endif
 ; ===========================================================================
