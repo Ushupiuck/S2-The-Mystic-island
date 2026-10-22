@@ -224,7 +224,8 @@ LevelOrder: ; Don't be fooled: the 2nd byte is the act you're transitioning TO
 
 		; Scrap Madness Zone
 		dc.b id_SMZ, 1	; Act 1 -> Act 2
-		dc.b id_SMZ, 2	; Act 2 -> Act 3
+		dc.b id_EHZ, 0	; Act 2 -> EHZ Act 1	; Sorry, no act 3 yet!
+	;	dc.b id_SMZ, 2	; Act 2 -> Act 3
 		dc.b id_EHZ, 0	; Act 3 -> EHZ Act 1
 		dc.b id_DEZ, 0	; Act 4 -> Death Egg Zone Act 1
 
