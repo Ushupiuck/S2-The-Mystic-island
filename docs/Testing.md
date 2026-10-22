@@ -26,6 +26,20 @@ python build_tools/check_ghz_vram.py
 python build_tools/check_ehz_boss.py
 ```
 
+To compare GHZ's collision remap against a Git revision before the conversion:
+
+```sh
+python build_tools/check_ghz_collision.py --reference OLD_REF --output test-results/ghz-collision
+```
+
+It checks all editable blocks with four flips, both height/width silhouettes,
+all sixteen act/timezone indices and every chunk cell's tile words. Existing
+S2 shapes and their other users must remain untouched. Add `--core ...` and,
+for Mode 1, `--system-directory ...` to launch all four acts with Sonic/Tails
+and run both characters through the loop to a grounded exit. `--pal` selects
+PAL. Matching `.unc` and Kosinski+ sources and SonLVL bank/act selection are
+also checked.
+
 `check_ram_ranges.py` checks the packed RAM boundaries and palette aliases, then
 assembles the real `clearRAM` macro and executes 38 cases in Unicorn: both
 addressing forms, odd starts, one-to-nine-byte tails and whole-RAM clears.
@@ -109,7 +123,9 @@ python build_tools/check_cd_ring_jobs.py --core /path/to/genesis_plus_gx_libretr
 Each offers `--pal`. For an old/new terrain comparison, run the previous ROM
 with `check_cd_terrain.py --baseline --rom ... --listing ...`, then pass its
 `report.json` as `--reference` to the current build. Use separate output folders.
-`--zone 0` exercises the S1 height bank and `--zone 2` the S2 bank. It compares
+`--zone 1` exercises the S1 height bank and `--zone 0` or `2` the S2 bank. Use
+a reference with the same collision assets for executor comparisons; the GHZ
+remap uses the shape comparison above. The terrain runner compares
 1,216 full actor/sensor calls, six complete plane constructions and controller
 walking against the reference. It also checks 600 jumping frames and free-RAM
 canaries; these are not asserted frame-identical to the previous engine because

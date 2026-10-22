@@ -124,7 +124,7 @@ class Native:
                 ('v_lvllayout', 'MCD_TerrainLayout_Sub', 0x1000)):
             sub.mem_write(s[dest], bytes(cpu.mem_read(s[source] & 0xFFFFFF, length)))
         zone = self.read('Current_Zone')
-        prefix = 'S1_' if zone in (0, 1, s['id_SMZ']) else ''
+        prefix = 'S1_' if zone in (1, s['id_SMZ']) else ''
         for source, dest, length in (
                 ('ColArray1', 'MCD_TerrainHeights_Sub', 0x1000),
                 ('ColArray2', 'MCD_TerrainWidths_Sub', 0x1000),

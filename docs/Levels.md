@@ -71,16 +71,19 @@ and importing belong in [the sound guide](../build_tools/sound/README.md).
 
 ## Terrain and tile animation
 
-GHZ, LZ and Scrap Madness currently select the S1 height/width/angle bank;
-the other zones select the S2 bank. The two byte indices per block still use
-the shared S3K collision-index format. SonLVL's corresponding overrides and
-the CD level loader must select the same bank.
+GHZ uses the shared S2 height/width/angle bank. Mirrored S2 profiles replace
+the corresponding S1 loop/ceiling shapes; block-art flips cancel the new chunk
+flips, preserving the displayed tiles and both collision silhouettes. The 22
+remaining GHZ profiles occupy formerly empty S2 rows `$DF-$F4`, within the
+existing 256-entry allocation. Existing S2 profiles keep their data and angles.
+GHZ uses the standard S2 angles for reused profiles.
 
-GHZ has not already been converted to S2 collision. A lossless index-only
-remap to the unchanged S2 bank is insufficient: 44 distinct profiles referenced
-by its chunk definitions have no exact height/width/angle match. Converting it
-requires collision-data work, rather than changing the zone selector or
-approximating the existing slopes. Keep current terrain behavior until that work.
+LZ and Scrap Madness still select the S1 bank. The two byte indices per block
+retain the shared S3K collision-index format. SonLVL inherits the S2 bank for
+GHZ and uses each act's corresponding collision-index file, matching runtime;
+the S1 zones retain explicit overrides. Source `.unc` blocks/chunks and the
+uncompressed collision `.bin` files are editable inputs. Recompress changed
+block/chunk sources with Kosinski+ alongside their source edits.
 
 `LoadZone` loads complete ordinary 16x16 block definitions. Animation blocks
 already reference their final VRAM slots; there is no initialization patch

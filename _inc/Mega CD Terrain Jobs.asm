@@ -26,8 +26,6 @@ MCD_LoadTerrain:
 		cmpi.b	#id_SMZ,(Current_Zone).w
 		beq.s	.s1
 		cmpi.b	#id_LZ,(Current_Zone).w
-		beq.s	.s1
-		tst.b	(Current_Zone).w
 		bne.s	.tables
 .s1:
 		lea	(S1_ColArray1).l,a0
