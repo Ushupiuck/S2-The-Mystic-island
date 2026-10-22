@@ -1953,6 +1953,7 @@ ArtTile_ArtNem_Eggpod_1:	equ $3A0
 ArtTile_ArtNem_EHZBoss:		equ $400
 ArtTile_ArtNem_EggChoppers:	equ $480
 ArtTile_BossExplosion:	equ $581	; 100 S2 tiles; replaced by animals/normal explosions after escape
+ArtTile_ExplosionWall_Small:	equ ArtTile_Eggman ; 94 normal/fiery tiles replace inactive ship art during the wall
 
 ; CPZ
 ArtTile_CPZ_Platform:		equ $400

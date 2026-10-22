@@ -58,6 +58,7 @@ ptr_PLC_Capsule:	dc.w PLC_Capsule-ArtLoadCues
 ptr_PLC_GHZBoss:	dc.w PLC_GHZBoss-ArtLoadCues
 ptr_PLC_LivesSonic:	dc.w PLC_LivesSonic-ArtLoadCues
 ptr_PLC_LivesTails:	dc.w PLC_LivesTails-ArtLoadCues
+ptr_PLC_ExplosionWall:	dc.w PLC_ExplosionWall-ArtLoadCues
 ; ---------------------------------------------------------------------------
 ; Level slot $00: Twilight Hill
 ActLoadCues:
@@ -295,6 +296,14 @@ PLC_GHZBoss_End:
 PLC_Capsule:	dc.w ((PLC_Capsule_End-PLC_Capsule)/6)-1
 		plcm	Nem_Prison,	ArtTile_Prison_Capsule
 PLC_Capsule_End:
+; ---------------------------------------------------------------------------
+; PATTERN LOAD REQUEST LIST
+; Advancing explosion wall - both sizes must coexist; replaces inactive ship art
+; ---------------------------------------------------------------------------
+PLC_ExplosionWall:	dc.w (PLC_ExplosionWall_End-PLC_ExplosionWall-2)/6-1
+		plcm	Nem_BossExplosion,	ArtTile_BossExplosion
+		plcm	Nem_Explosion,	ArtTile_ExplosionWall_Small
+PLC_ExplosionWall_End:	plccheck PLC_ExplosionWall,0
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; End of level signpost
@@ -1393,6 +1402,7 @@ plcid_Capsule:		equ (ptr_PLC_Capsule-ArtLoadCues)/2
 plcid_GHZBoss:		equ (ptr_PLC_GHZBoss-ArtLoadCues)/2
 plcid_LivesSonic:	equ (ptr_PLC_LivesSonic-ArtLoadCues)/2
 plcid_LivesTails:	equ (ptr_PLC_LivesTails-ArtLoadCues)/2
+plcid_ExplosionWall:	equ (ptr_PLC_ExplosionWall-ArtLoadCues)/2
 ; ---------------------------------------------------------------------------
 ; Level slot $00: Twilight Hill
 plcid_GHZ1_Main:	equ (ptr_PLC_GHZ1_Main-ArtLoadCues)/2

@@ -145,6 +145,9 @@ child slots, actual hit response,
 palette restoration, scoring, independent debris physics on every frame, burst
 cadence/RNG, animation duration and act-selected escape music. Rendering/audio
 boundaries are stubbed only in these native fixtures.
+The wall checks cover both PLC banks, four-emitter allocation under a fragmented
+pool, movement at the level origin and with a moving camera, finite/continuous
+burst counts, the normal burst animation and parent/deletion cleanup.
 
 Add `--core /path/to/genesis_plus_gx_libretro.so` for the real GHZ3 arena. It
 uses explicit player positioning, then eight actual rolling collisions with
@@ -154,6 +157,11 @@ selects PAL. Mode 1 accepts `--system-directory /path/to/bios-directory`.
 Screenshots and the JSON report belong in the selected output directory.
 The native burst tests cover both GHZ/EHZ profiles; this arena run covers GHZ,
 not a controller-only playthrough or EHZ's entire fight.
+
+Add `--explosion-wall` with `--core` to run the unused wall entry point instead
+of the boss fight. This fixture queues its compiled PLC and allocates the wall
+in EHZ1, checks that both effect sizes render with matching art banks, and waits
+for the wall, emitters and visuals to finish without producing animals.
 
 ## Mega-CD checks
 

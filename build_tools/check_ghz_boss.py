@@ -20,6 +20,106 @@ def signed(value, bits=16):
     return value - (1 << bits) if value & (1 << (bits - 1)) else value
 
 
+def wall_checks(m, pool, rom):
+    from native_test_core import UC_M68K_REG_D0
+    from check_sprite_assets import frames
+    s = m.s
+    m.start()
+    m.act('LoadPLC', regs={UC_M68K_REG_D0: s['plcid_ExplosionWall']})
+    plc = s['PLC_ExplosionWall']
+    count = struct.unpack_from('>h', rom, plc)[0] + 1
+    assert count == 2
+    assert bytes(m.cpu.mem_read(s['v_plc_buffer'] & 0xFFFFFF, count * 6)) == rom[plc + 2:plc + 2 + count * 6]
+    banks = []
+    for i, mapping in enumerate(('Map_BossExplosion', 'Map_Explosion')):
+        source, low = struct.unpack_from('>IH', rom, plc + 2 + i * 6)
+        tiles = struct.unpack_from('>H', rom, source)[0] & 0x7FFF
+        high = low + tiles * 32
+        assert all(high <= a or low >= b for a, b in banks)
+        assert high <= s['ArtTile_Shield_2'] * 32 or low >= s['ArtTile_Shield_2_End'] * 32
+        assert high <= s['vram_fg']
+        for frame in frames(rom, s[mapping]):
+            for _, size, tile, _ in frame:
+                first = tile & 0x7FF
+                assert first + ((size >> 2) + 1) * ((size & 3) + 1) <= tiles
+        banks.append((low, high))
+    assert banks[1][0] == s['ArtTile_ExplosionWall_Small'] * 32
+
+    # A parent at the final SST can reserve four earlier fragmented slots.
+    m.start()
+    wall = pool[-1]
+    for a in pool:
+        m.put(a, 'code', 0x123456)
+    m.put(wall, 'code', s['BossExplosion_Wall'])
+    for a in pool[:6:2]:
+        m.put(a, 'code', 0)
+    before = bytes(m.cpu.mem_read(pool[0] & 0xFFFFFF, s['v_lvlobjend'] - pool[0]))
+    m.act('BossExplosion_Wall', wall)
+    assert bytes(m.cpu.mem_read(pool[0] & 0xFFFFFF, len(before))) == before
+    m.put(pool[7], 'code', 0)
+    m.cam(0, 200)  # also exercise a negative starting X near the level origin
+    m.act('BossExplosion_Wall', wall)
+    assert m.get(wall, 'obRoutine') == 2
+    assert signed(m.get(wall, 'obX', 2)) == -128
+    assert m.get(wall, 'obY', 2) == 328
+    kinds = ('BossExplosion_Controller', 'BossExplosion_NormalController')
+    emitters = {a: next((k for k in kinds if m.get(a, 'code') == s[k]), None) for a in pool}
+    emitters = {a: k for a, k in emitters.items() if k}
+    assert Counter(emitters.values()) == dict.fromkeys(kinds, 2)
+    for a in pool:
+        if a != wall and a not in emitters:
+            m.put(a, 'code', 0)
+    emitted = Counter()
+    for tick in range(390):
+        m.cam(tick * 2, 200)
+        m.act('BossExplosion_Wall', wall)
+        assert signed(m.get(wall, 'obX', 2) - tick * 2) == -126
+        for control, kind in emitters.items():
+            if not m.get(control, 'code'):
+                continue
+            m.act(kind, control)
+            visual = 'BossExplosion' if kind == kinds[0] else 'BossExplosion_Small'
+            for a in pool:
+                if m.get(a, 'code') != s[visual]:
+                    continue
+                assert tick % 3 == 0
+                assert -128 <= signed(m.get(a, 'obX', 2) - m.get(wall, 'obX', 2)) < 128
+                assert -128 <= signed(m.get(a, 'obY', 2) - m.get(wall, 'obY', 2)) < 128
+                emitted[control] += 1
+                m.act('DeleteObject', a)
+    assert all(emitted[a] == (130 if k == kinds[0] else 127) for a, k in emitters.items())
+    for _ in range(129):
+        m.act('BossExplosion_Wall', wall)
+        if not m.get(wall, 'code'):
+            break
+    assert not m.get(wall, 'code')
+    for a, kind in emitters.items():
+        if m.get(a, 'code'):
+            m.act(kind, a)
+        assert not m.get(a, 'code')
+
+    m.start()
+    m.put(wall, 'code', s['BossExplosion_Wall'])
+    m.act('BossExplosion_Wall', wall)
+    m.put(wall, 'code', s['Obj26'])
+    before = bytes(m.cpu.mem_read(wall & 0xFFFFFF, s['object_size']))
+    for a in pool[:-1]:
+        if m.get(a, 'code') in (s[kinds[0]], s[kinds[1]]):
+            m.act(next(k for k in kinds if m.get(a, 'code') == s[k]), a)
+            assert not m.get(a, 'code')
+    assert bytes(m.cpu.mem_read(wall & 0xFFFFFF, s['object_size'])) == before
+    small = pool[0]
+    m.put(small, 'code', s['BossExplosion_Small'])
+    seen = []
+    for _ in range(40):
+        m.act('BossExplosion_Small', small)
+        if not m.get(small, 'code'):
+            break
+        seen.append(m.get(small, 'obFrame'))
+    assert Counter(seen) == dict(enumerate((3, 8, 8, 8, 8)))
+    return 'callable mixed wall: PLC banks, full-pool retry, moving camera/origin, 4 emitters, cadence, finite/continuous counts and cleanup'
+
+
 def native_checks(args):
     from native_test_core import (Manager, UC_M68K_REG_A0, UC_M68K_REG_A1,
                                   UC_M68K_REG_A4, UC_M68K_REG_A7,
@@ -236,6 +336,8 @@ def native_checks(args):
         assert not m.get(control, 'code')
     results.append('both burst profiles: full-pool retry, one controller, 3-frame cadence and centered RNG')
 
+    results.append(wall_checks(m, pool, args.rom.read_bytes()))
+
     start()
     visual = pool[1]
     m.put(visual, 'code', s['BossExplosion'])
@@ -428,6 +530,77 @@ def live_checks(args, decoded):
                 ordinary_explosion_art_restored=True)
 
 
+def live_wall_checks(args, decoded):
+    from genesis_test_core import Genesis
+    from check_object_course import boot_level, objects
+    g = Genesis(args.core, args.rom, args.listing, args.output, args.pal,
+                system_directory=args.system_directory)
+    s = g.s
+    boot_level(g, zone=s['id_EHZ'], act=0, player=args.player)
+    g.put('v_player', 'obControl', 1)
+    g.put('v_player2', 'code', 0)
+    for _ in range(600):
+        g.run()
+        if not g.read('v_plc_buffer', 4) and not g.read('v_plc_patternsleft', 2):
+            break
+    else:
+        raise AssertionError('Initial level PLCs did not finish')
+    pool = range(s['v_lvlobjspace'] & 65535, s['v_lvlobjend'] & 65535, s['object_size'])
+    for address in range(pool.start, pool.stop):
+        g.write(address, 0)
+    # Simulate a level trigger queuing the compiled PLC and creating the wall.
+    # Native checks above also execute LoadPLC and verify this exact queue data.
+    rom = args.rom.read_bytes()
+    plc = s['PLC_ExplosionWall']
+    count = struct.unpack_from('>h', rom, plc)[0] + 1
+    assert not g.read('v_plc_buffer', 4)
+    for i, value in enumerate(rom[plc + 2:plc + 2 + count * 6] + bytes(6)):
+        g.write(s['v_plc_buffer'] + i, value)
+    for _ in range(300):
+        g.run()
+        if not g.read('v_plc_buffer', 4) and not g.read('v_plc_patternsleft', 2):
+            break
+    else:
+        raise AssertionError('Wall PLC did not finish')
+    banks = (('Nem_BossExplosion', 'ArtTile_BossExplosion'),
+             ('Nem_Explosion', 'ArtTile_ExplosionWall_Small'))
+
+    def check_art():
+        for label, tile in banks:
+            bank = s[tile] * 32
+            assert bytes(g.vram[(bank + i) ^ 1] for i in range(len(decoded[label]))) == decoded[label], label
+
+    check_art()
+    wall = pool[0]
+    g.put(wall, 'code', s['BossExplosion_Wall'])
+    maximum = dict(large=0, small=0)
+    for tick in range(200):
+        g.run()
+        assert not g.read('v_errortype'), hex(g.core.m68k_get_reg(16))
+        assert g.read('v_gamemode', 2) == s['Level']
+        if tick == 2:
+            assert g.get(wall, 'obRoutine') == 2
+            for label in ('BossExplosion_Controller', 'BossExplosion_NormalController'):
+                assert sum(g.get(a, 'code') == s[label] for a in objects(g)) == 2
+        for kind, code in (('large', 'BossExplosion'), ('small', 'BossExplosion_Small')):
+            bursts = [a for a in objects(g) if g.get(a, 'code') == s[code]]
+            maximum[kind] = max(maximum[kind], len(bursts))
+        if tick in (32, 64, 100, 128):
+            check_art()
+            g.video.save(args.output / f'wall-{tick:03}.png')
+    assert maximum['large'] >= 10 and maximum['small'] >= 18, maximum
+    codes = {s[label] for label in ('BossExplosion_Wall', 'BossExplosion_Controller',
+                                   'BossExplosion_NormalController', 'BossExplosion',
+                                   'BossExplosion_Small', 'Flicky')}
+    assert not [a for a in objects(g) if g.get(a, 'code') in codes]
+    check_art()
+    g.close()
+    return dict(player='Tails' if args.player == 2 else 'Sonic',
+                region='PAL' if args.pal else 'NTSC', maximum_bursts=maximum,
+                both_art_banks_match=True, wall_and_emitters_deleted=True,
+                all_visuals_finished=True, no_animals=True)
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--rom', type=Path, default=ROOT / 's2built.bin')
@@ -437,6 +610,8 @@ def main():
     p.add_argument('--system-directory', type=Path)
     p.add_argument('--pal', action='store_true')
     p.add_argument('--player', type=int, choices=(0, 2), default=0)
+    p.add_argument('--explosion-wall', action='store_true',
+                   help='Run the currently unplaced wall in an EHZ1 trigger fixture instead of the GHZ fight')
     args = p.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     results, decoded = native_checks(args)
@@ -444,8 +619,12 @@ def main():
     for result in report['native']:
         print(result + ': passed', flush=True)
     if args.core:
-        report['runtime'] = live_checks(args, decoded)
-        print('GHZ3: eight real hits, breakup, bursts, escape and capsule passed', flush=True)
+        if args.explosion_wall:
+            report['runtime'] = live_wall_checks(args, decoded)
+            print('Mixed explosion wall: both sizes, live PLC loading and complete cleanup passed', flush=True)
+        else:
+            report['runtime'] = live_checks(args, decoded)
+            print('GHZ3: eight real hits, breakup, bursts, escape and capsule passed', flush=True)
     (args.output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
 
 
