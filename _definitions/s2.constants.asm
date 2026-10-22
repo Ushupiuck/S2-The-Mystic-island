@@ -21,12 +21,12 @@ ObjectLayout_LoadAtAnyYMask:	equ	$8000	; omY bit 15: bypass vertical load band
 ; ---------------------------------------------------------------------------
 ; Debug placement record offsets
 ; Debug entries carry direct routine/mapping pointers; placement files do not.
-DebugEntry_code:		equ	$00
+DebugEntry_code:	equ	$00
 DebugEntry_mappings:	equ	$04
 DebugEntry_subtype:	equ	$08
-DebugEntry_frame:		equ	$09
+DebugEntry_frame:	equ	$09
 DebugEntry_art_tile:	equ	$0A
-DebugEntry_size:		equ	$0C
+DebugEntry_size:	equ	$0C
 ; ---------------------------------------------------------------------------
 ; Object loading distances
 Object_Load_BandSize:	equ $80
@@ -35,7 +35,7 @@ Object_Load_XBehind:	equ Object_Load_BandSize
 Object_Load_XAhead:	equ $280	; screen plus two preload bands
 Object_Load_YAbove:	equ Object_Load_BandSize
 Object_Load_YBelow:	equ $200	; screen plus vertical preload margin
-Level_YWrapMask:		equ $7FF	; the existing camera wraps at $800 pixels
+Level_YWrapMask:	equ $7FF	; the existing camera wraps at $800 pixels
 ; ---------------------------------------------------------------------------
 ; Object Status Table offsets (for everything between Object_RAM and Primary_Collision)
 ; ---------------------------------------------------------------------------
@@ -1678,21 +1678,22 @@ ArtTile_Tails_Life:	equ ArtTile_Monitor+$38
 ArtTile_Lamppost:	equ ArtTile_Monitor+$3C ; 10 tiles; ends at $AD9F
 
 ; GHZ's packed objects/badniks, starting immediately after its 811 level tiles.
-ArtTile_GHZ_Bridge:	equ $32B	; $6560
-ArtTile_GHZ_MZ_Swing:	equ ArtTile_GHZ_Bridge+$A
-ArtTile_GHZ_Giant_Ball:	equ ArtTile_GHZ_MZ_Swing+$E
+ArtTile_GHZ_SLZ_Smashable_Wall	equ $001	; Temporary location; suits it well
+ArtTile_GHZ_Bridge:		equ $32B	; $6560
+ArtTile_GHZ_MZ_Swing:		equ ArtTile_GHZ_Bridge+$A
+ArtTile_GHZ_Giant_Ball:		equ ArtTile_GHZ_MZ_Swing+$E
 ArtTile_GHZ_Purple_Rock:	equ ArtTile_GHZ_Giant_Ball+$26
 ArtTile_Ground_Explosion:	equ ArtTile_GHZ_Purple_Rock+$18
-ArtTile_Buzz_Bomber:	equ ArtTile_Ground_Explosion+$24
-ArtTile_Crabmeat:	equ ArtTile_Buzz_Bomber+$37
-ArtTile_Moto_Bug:	equ ArtTile_Crabmeat+$44
-ArtTile_Ball_HogV:	equ ArtTile_Moto_Bug+$1D
-ArtTile_Ball_HogH:	equ ArtTile_Ball_HogV+$18
+ArtTile_Buzz_Bomber:		equ ArtTile_Ground_Explosion+$24
+ArtTile_Crabmeat:		equ ArtTile_Buzz_Bomber+$37
+ArtTile_Moto_Bug:		equ ArtTile_Crabmeat+$44
+ArtTile_Ball_HogV:		equ ArtTile_Moto_Bug+$1D
+ArtTile_Ball_HogH:		equ ArtTile_Ball_HogV+$18
 ArtTile_Newtron:		equ ArtTile_Ball_HogH+$2F ; 85 tiles, including tail and exhaust
 ArtTile_Chopper:		equ ArtTile_Newtron+$55 ; 32 tiles; GHZ has no diagonal springs
 ArtTile_S1_Spring_Vertical:	equ ArtTile_Spring_Vertical ; 16 tiles
 ArtTile_S1_Spring_Horizontal:	equ ArtTile_Spring_Horizontal
-ArtTile_Wheel:	equ $4BC ; LV0A carrier bank; absent from SMZ
+ArtTile_Wheel:			equ $4BC ; LV0A carrier bank; absent from SMZ
 ArtTile_SMZ_BallHog: equ ArtTile_SMZ_Atlas
 ArtTile_SMZ_Junction: equ ArtTile_SMZ_Atlas
 ArtTile_SMZ_Disc: equ ArtTile_SMZ_Atlas
@@ -1705,7 +1706,6 @@ ArtTile_GHZ_Edge_Wall:	equ $6F7	; eight tiles in the HUD/points gap; cap uses le
 
 ; Shared
 ArtTile_MZ_SYZ_Caterkiller:	equ $3D0
-ArtTile_GHZ_SLZ_Smashable_Wall:	equ $50F
 ArtTile_Bumper:			equ $380
 
 ; Green Hill Zone
