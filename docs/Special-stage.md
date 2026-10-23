@@ -1,5 +1,9 @@
 # Rotating S1 special stage
 
+The Sonic 2 half-pipe stage, its private RAM/VRAM definitions, VBlank path and
+exclusive assets have been removed. The rotating Sonic 1 stage remains the
+available special stage; no replacement stage is implemented.
+
 This mode retains its own item/update records and byte-count, five-byte-piece
 S1 mappings. Ordinary [SST objects](Objects.md) use a different ABI. Its rings,
 background, overlays and free VRAM must not be treated as ordinary-level allocations.
