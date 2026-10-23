@@ -205,7 +205,9 @@ CD DMA pending and masks interrupts across the check/handoff.
 ## Asset decompression and PLCs
 
 `_inc/Mega CD Decompression.asm` owns the three CD codecs and resumable PLC
-state. MD public wrappers preserve their original callers' register contracts.
+state. MD public wrappers preserve their documented register contracts. Direct
+`NemDec` calls pass the VRAM byte destination in `d2`; selecting the VDP address with
+`locVRAM` does not set the destination for this queued-DMA wrapper.
 CD cannot read cartridge ROM: `build_tools/lua/compressed_assets.lua` derives
 exact compressed spans from the include graph, generating
 `_definitions/Compressed Assets.asm`. Adding a linked compressed `binclude`

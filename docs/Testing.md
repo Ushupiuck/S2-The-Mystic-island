@@ -114,6 +114,11 @@ that offer it. Most primary-player selectors use `--player 0` (Sonic) or `2`
 | Imported enemies/obstacles | `check_palmtree_enemies.py`, `check_propeller.py`, `check_caterkiller.py`, `check_kemusi.py`, `check_terrain_conveyors.py`, `check_wheel_carriers.py` | Both-actor triggers, motion, damage, unload/reload and source-specific regressions |
 | Audio | `check_sound_playback.py`, `sound/build.py --check` | Actual sound paths; encoding/macro/packer checks |
 
+`check_level_pages.py` also compares the uploaded menu font pixel-for-pixel
+against independently decoded Nemesis art and checks that blank tile zero stays
+transparent, on both pages and after returning from a level. Correct text tile
+numbers alone do not establish that the font was uploaded to the right place.
+
 `check_companion_sbz.py` has `--probe` for older-ROM failures, but no PAL flag.
 Several runners compare with a specific earlier revision; their baseline is
 part of the fixture, not automatically the parent commit. Check their CLI/source

@@ -44,6 +44,62 @@ def enter_menu():
 	g.write('f_levselcheat', 1)
 	press(START)
 	step(110)
+	expect_menu_art()
+
+
+def nemesis_art(data):
+	"""Decode reference pixels independently of the game's upload path."""
+	header = int.from_bytes(data[:2], 'big')
+	position, color, table = 2, 0, {}
+	while data[position] != 0xFF:
+		entry = data[position]
+		position += 1
+		if entry & 0x80:
+			color = entry & 15
+			entry = data[position]
+			position += 1
+		table[entry & 15, data[position]] = (color, (entry >> 4) + 1)
+		position += 1
+	position = (position + 1) * 8
+
+	def bits(count):
+		nonlocal position
+		value = 0
+		for _ in range(count):
+			value = (value << 1) | ((data[position // 8] >> (7 - position % 8)) & 1)
+			position += 1
+		return value
+
+	pixels, target = [], (header & 0x7FFF) * 64
+	while len(pixels) < target:
+		code = 0
+		for length in range(1, 9):
+			code = (code << 1) | bits(1)
+			if length == 6 and code == 63:
+				count, color = bits(3) + 1, bits(4)
+				break
+			if (length, code) in table:
+				color, count = table[length, code]
+				break
+		else:
+			raise AssertionError('Invalid Nemesis code')
+		pixels.extend([color] * count)
+	assert len(pixels) == target
+	raw = bytes((a << 4) | b for a, b in zip(pixels[::2], pixels[1::2]))
+	if header & 0x8000:
+		previous, rows = 0, bytearray()
+		for row, in struct.iter_unpack('>I', raw):
+			previous ^= row
+			rows.extend(previous.to_bytes(4, 'big'))
+		raw = bytes(rows)
+	return raw
+
+
+def expect_menu_art():
+	font = nemesis_art(args.rom.read_bytes()[g.s['Nem_S3LevelSelect']:])
+	assert bytes(g.vram[:32]) == bytes(32), 'Level-select blank tile was overwritten'
+	actual = bytes(g.vram[(0x200 + i) ^ 1] for i in range(len(font)))
+	assert actual == font, 'Level-select font pixels differ or use the wrong VRAM destination'
 
 
 def expect_text(row, column, text):
@@ -93,6 +149,7 @@ for page in (0, 0x100):
 		change_page()
 		expect_text(1, 1, 'SCRAP MADNESS')
 		expect_text(22, 1, 'PREVIOUS')
+	expect_menu_art()
 	item(page)
 	for selected in range(1, SOUND + 2):
 		press(DOWN)

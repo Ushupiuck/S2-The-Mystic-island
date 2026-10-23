@@ -24,7 +24,7 @@ LevelSelect_Init:
 		move.w	#$9001,(a6)
 		move.w	#$8B00,(a6)
 		clr.l	(v_scrposy_vdp).w
-		locVRAM	$200
+		move.w	#$200,d2
 		lea	(Nem_S3LevelSelect).l,a0
 		bsr.w	NemDec
 		lea	(Eni_S3LevelSelect).l,a0
