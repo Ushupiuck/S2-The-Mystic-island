@@ -1014,10 +1014,10 @@ Camera_X_pos:			ds.l	1
 Camera_Y_pos:			ds.l	1
 Camera_BG_X_pos:		ds.l	1	; only used sometimes as the layer deformation makes it sort of redundant
 Camera_BG_Y_pos:		ds.l	1
-Camera_BG2_X_pos:		ds.l	1	; used in CPZ
-Camera_BG2_Y_pos:		ds.l	1	; used in CPZ
-Camera_BG3_X_pos:		ds.l	1	; unused (only initialised at beginning of level)?
-Camera_BG3_Y_pos:		ds.l	1	; unused (only initialised at beginning of level)?
+Camera_BG2_X_pos:		ds.l	1	; secondary parallax camera
+Camera_BG2_Y_pos:		ds.l	1
+Camera_BG3_X_pos:		ds.l	1	; third parallax camera
+Camera_BG3_Y_pos:		ds.l	1
 Camera_Positions_End:
 
 Block_Crossed_Flags:
@@ -1032,7 +1032,7 @@ Block_Crossed_Flags_End:
 Scroll_Flags_All:
 Scroll_flags:			ds.w	1	; bitfield ; bit 0 = redraw top row, bit 1 = redraw bottom row, bit 2 = redraw left-most column, bit 3 = redraw right-most column
 Scroll_flags_BG:		ds.w	1	; bitfield ; bits 0-3 as above, bit 4 = redraw top row (except leftmost block), bit 5 = redraw bottom row (except leftmost block), bits 6-7 = as bits 0-1
-Scroll_flags_BG2:		ds.w	1	; bitfield ; essentially unused; bit 0 = redraw left-most column, bit 1 = redraw right-most column
+Scroll_flags_BG2:		ds.w	1	; SMZ row-selected layers: bits 0/1 = Y; 2/3, 4/5, 6/7 = each layer's left/right
 Scroll_flags_BG3:		ds.w	1	; bitfield ; for CPZ; bits 0-3 as Scroll_flags_BG but using Y-dependent BG camera; bits 4-5 = bits 2-3; bits 6-7 = bits 2-3
 Scroll_Flags_All_End:
 

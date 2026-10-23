@@ -10,7 +10,7 @@ https://tcrf.net/Proto:Sonic_the_Hedgehog_2_(Genesis)
 
 TODO:
 Design distinct terrain/art/objects for the newly enabled zone slots and four-act templates; MTZ1 remains the existing unfinished test stage, MTZ2-4 and SMZ3-4 are safe editable starters, and LV0A1 currently showcases imported PP enemies < NEXT level-content work
-Complete Scrap Madness presentation (full S1 REV01 background parallax and an intentional act-2 ending/cutscene); the current port has the original act-1/2 terrain, hazards, industrial background tiles, smoke and palette cycles
+Design an intentional Scrap Madness act-2 ending/cutscene; the current port uses the normal signpost
 Add inverse-gravity player physics/collision before enabling S3&K's Debug gravity-reversal cheat < FUTURE engine feature
 Add cached DMA switching between interleaved S3 horizontal spike art and linear S1 horizontal spike art in the shared bank, after the S3&K object-manager migration; handle preloading, backtracking and visible-bank ownership < FUTURE, separate task
 Implement time-travel transitions and replace the dummy timezone asset/layout tables with distinct data; header/layout selection already supports four timezones and four acts
@@ -40,6 +40,7 @@ Keep wrapped camera displacement signed after ducking/jumping and resolve first-
 Enable all $10 zone slots / 64 acts, use the existing zone names, repair MTZ2-4 and provide valid editable blank-act templates through LV0F; extend headers, timezones, layouts, bounds, music, collision, debug, starts, rings, exits and SonLVL < DONE
 Replace level select with S3&K art/layout and two pages, NEXT/PREVIOUS immediately before SOUND TEST on both pages, all four acts, and C to choose Sonic & Tails / Sonic / Tails; boot all 64 selections in NTSC/PAL < DONE
 Import actual S1 Scrap Brain acts 1/2 as ID $08 Scrap Madness, including 548 placements, collision, rings and missing objects at $A0-$AF; pack 516 sprite tiles without changing adapted indexed pixels, and keep both actors independent in solid objects/transports < DONE
+Finish S1 REV01 Scrap Madness background parallax, including act-1 cloud/building layers, act-2 XY scrolling and matching initial/streamed background rows < DONE
 Replace vertical, horizontal and diagonal spring art/mappings with palette-adapted S3&K versions; share per-direction callbacks across both actors, preserve airborne side contacts, and protect common VRAM/results/title banks < DONE
 Import the Sonic CD wheel as independent $B0 carrier with editable ordinary-object mounts, eight spring/monitor/spike presets, allocation retry, consumed-payload and rider/unload ownership < DONE
 Keep companion Tails inside a stationary lead player's ridden platform and discard stale horizontal history there; preserve normal platform jumps, slow-ramp spindash recovery, manual controller-2 input and bounded flight recovery; stress actual SBZ1/2 and HPZ1 in NTSC/PAL < DONE

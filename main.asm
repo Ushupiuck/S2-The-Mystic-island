@@ -4608,23 +4608,142 @@ BgScroll_Index:
 ; ---------------------------------------------------------------------------
 
 BgScroll_SMZ:
-        clr.l (Camera_BG_X_pos).w
-        clr.l (Camera_BG_Y_pos).w
-        rts
+		tst.b	(v_lastlamp).w		; retain all restored parallax cameras
+		bne.s	.return
+		andi.w	#$7F8,d0
+		lsr.w	#3,d0
+		addq.w	#1,d0
+		move.w	d0,(Camera_BG_Y_pos).w
+		move.w	d0,(Camera_BG2_Y_pos).w
+		move.w	d0,(Camera_BG3_Y_pos).w
+.return:
+		rts
+; ---------------------------------------------------------------------------
+
 Deform_SMZ:
-        clr.w (v_bgscrposy_vdp).w
-        move.w (Camera_RAM).w,d0
-        neg.w d0
-        move.w d0,d1
-        asr.w #3,d1
-        swap d0
-        move.w d1,d0
-        lea (v_hscrolltablebuffer).w,a1
-        move.w #bytesToLcnt(v_hscrolltablebuffer_end-v_hscrolltablebuffer),d1
-.loop:
-        move.l d0,(a1)+
-        dbf d1,.loop
-        rts
+; S1 REV01: cloud gradient and three independently streamed building layers.
+
+		tst.b	(Current_Act).w				; is this SMZ act 1?
+		bne.w	Deform_SMZ_Act2				; if not, branch
+
+		; block 1 - lower black buildings
+		move.w	(Camera_X_pos_diff).w,d4			; get camera x pos change since last frame
+		ext.l	d4
+		asl.l	#7,d4					; multiply by $80
+		moveq	#2,d6
+		bsr.w	ScrollBlock4
+
+		; block 3 - distant brown buildings
+		move.w	(Camera_X_pos_diff).w,d4			; get camera x pos change since last frame
+		ext.l	d4
+		asl.l	#6,d4					; multiply by $40
+		moveq	#6,d6
+		bsr.w	ScrollBlock6
+
+		; block 2 - upper black buildings
+		move.w	(Camera_X_pos_diff).w,d4			; get camera x pos change since last frame
+		ext.l	d4
+		asl.l	#5,d4
+		move.l	d4,d1
+		asl.l	#1,d4
+		add.l	d1,d4					; multiply by $60
+		moveq	#4,d6
+		bsr.w	ScrollBlock5
+
+		; vertical scrolling
+		move.w	(Camera_Y_pos_diff).w,d5
+		ext.l	d5
+		asl.l	#5,d5
+		moveq	#0,d6				; vertical row flags
+		bsr.w	ScrollBlock2
+
+		move.w	(Camera_BG_Y_pos).w,d0
+		move.w	d0,(Camera_BG2_Y_pos).w
+		move.w	d0,(Camera_BG3_Y_pos).w
+		move.w	d0,(v_bgscrposy_vdp).w
+		move.b	(Scroll_flags_BG).w,d0
+		or.b	(Scroll_flags_BG3).w,d0
+		or.b	d0,(Scroll_flags_BG2).w
+		clr.b	(Scroll_flags_BG).w
+		clr.b	(Scroll_flags_BG3).w
+
+		; calculate background scroll buffer
+		lea	(v_bgscroll_buffer).w,a1
+		move.w	(Camera_X_pos).w,d2
+		neg.w	d2
+		asr.w	#2,d2
+		move.w	d2,d0
+		asr.w	#1,d0
+		sub.w	d2,d0
+		ext.l	d0
+		asl.l	#5,d0				; *8 /4 *$1000 = *$2000
+		asl.l	#8,d0
+		moveq	#0,d3
+		move.w	d2,d3
+		move.w	#4-1,d1
+	.cloudLoop:
+		move.w	d3,(a1)+
+		swap	d3
+		add.l	d0,d3
+		swap	d3
+		dbf	d1,.cloudLoop
+
+		move.w	(Camera_BG3_X_pos).w,d0
+		neg.w	d0
+		move.w	#10-1,d1
+	.buildingLoop1:						; distant brown buildings
+		move.w	d0,(a1)+
+		dbf	d1,.buildingLoop1
+
+		move.w	(Camera_BG2_X_pos).w,d0
+		neg.w	d0
+		move.w	#7-1,d1
+	.buildingLoop2:						; upper black buildings
+		move.w	d0,(a1)+
+		dbf	d1,.buildingLoop2
+
+		move.w	(Camera_BG_X_pos).w,d0
+		neg.w	d0
+		move.w	#11-1,d1
+	.buildingLoop3:						; lower black buildings
+		move.w	d0,(a1)+
+		dbf	d1,.buildingLoop3
+
+		lea	(v_bgscroll_buffer).w,a2
+		move.w	(Camera_BG_Y_pos).w,d0
+		move.w	d0,d2
+		andi.w	#$1F0,d0
+		lsr.w	#3,d0
+		lea	(a2,d0.w),a2
+		bra.w	Bg_Scroll_X
+; ---------------------------------------------------------------------------
+
+Deform_SMZ_Act2:
+		; plain background deformation
+		move.w	(Camera_X_pos_diff).w,d4
+		ext.l	d4
+		asl.l	#6,d4
+		move.w	(Camera_Y_pos_diff).w,d5
+		ext.l	d5
+		asl.l	#5,d5
+		bsr.w	ScrollBlock1
+		move.w	(Camera_BG_Y_pos).w,(v_bgscrposy_vdp).w
+
+		; copy fg & bg x-position to h-scroll table
+		lea	(v_hscrolltablebuffer).w,a1
+		move.w	#224-1,d1
+		move.w	(Camera_X_pos).w,d0
+		neg.w	d0
+		swap	d0
+		move.w	(Camera_BG_X_pos).w,d0
+		neg.w	d0
+	.loop_hscroll:
+		move.l	d0,(a1)+
+		dbf	d1,.loop_hscroll
+		rts
+; End of function Deform_SMZ
+; ---------------------------------------------------------------------------
+
 BgScroll_GHZ:
 		clr.l	(Camera_BG_X_pos).w
 		clr.l	(Camera_BG_Y_pos).w
@@ -6161,8 +6280,8 @@ locret_6A80:
 DrawBGScrollBlock2:
 		tst.b	(a2)
 		beq.w	locret_6ACE
-		cmpi.b	#id_SBZ,(Current_Zone).w
-		beq.w	Draw_SBz
+		cmpi.b	#id_SMZ,(Current_Zone).w
+		beq.w	Draw_SMZ
 		bclr	#0,(a2)
 		beq.s	loc_6AAE
 		move.w	#224/2,d4
@@ -6187,14 +6306,15 @@ loc_6AAE:
 locret_6ACE:
 		rts
 ; ---------------------------------------------------------------------------
-byte_6AD0:
+SMZ_BGScrollBlocks:
 		dc.b   0
 		dc.b   0,  0,  0,  0,  6,  6,  6,  6,  6,  6,  6,  6,  6,  6,  4,  4
 		dc.b   4,  4,  4,  4,  4,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2
+		dc.b   0		; trailing off-screen row
 		even
 ; ---------------------------------------------------------------------------
 
-Draw_SBz:
+Draw_SMZ:
 		moveq	#-16,d4
 		bclr	#0,(a2)
 		bne.s	loc_6B04
@@ -6203,7 +6323,7 @@ Draw_SBz:
 		move.w	#224,d4
 
 loc_6B04:
-		lea	byte_6AD0+1(pc),a0
+		lea	SMZ_BGScrollBlocks+1(pc),a0
 		move.w	(Camera_BG_Y_pos).w,d0
 		add.w	d4,d0
 		andi.w	#$1F0,d0
@@ -6245,7 +6365,7 @@ loc_6B52:
 		move.w	#320,d5
 
 loc_6B66:
-		lea	byte_6AD0(pc),a0
+		lea	SMZ_BGScrollBlocks(pc),a0
 		move.w	(Camera_BG_Y_pos).w,d0
 		andi.w	#$1F0,d0
 		lsr.w	#4,d0
@@ -6791,6 +6911,8 @@ LoadTilesFromStart:
 		move.w	#$6000,d2
 		tst.b	(Current_Zone).w
 		beq.s	Draw_GHz_Bg
+		cmpi.w	#id_SMZ<<8,(Current_ZoneAndAct).w
+		beq.w	Draw_SMZ_Bg
 ; End of function LoadTilesFromStart
 
 
@@ -6855,13 +6977,13 @@ loc_71DE:
 		dbf	d6,loc_71DE
 		rts
 ; ---------------------------------------------------------------------------
-; Draw_SBz_Bg:
+Draw_SMZ_Bg:
 		moveq	#-16,d4
 		moveq	#((224+16+16)/16)-1,d6
 
 loc_7206:
 		movem.l	d4-d6,-(sp)
-		lea	byte_6AD0+1(pc),a0
+		lea	SMZ_BGScrollBlocks+1(pc),a0
 		move.w	(Camera_BG_Y_pos).w,d0
 		add.w	d4,d0
 		andi.w	#$1F0,d0

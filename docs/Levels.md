@@ -149,8 +149,14 @@ GHZ acts to guard the contract.
 
 Acts 1/2 retain S1 SBZ foreground, industrial backgrounds, collision and hazards.
 The S1 converter deduplicates 256-pixel chunks into the current 128-pixel format.
-Full REV01 parallax and a bespoke act-2 ending remain unfinished; act 2 currently
-uses the normal signpost. Imported families `$A0-$AF` cover the junction, disc,
+Act 1 uses the REV01 cloud gradient and three building layers scrolling at
+1/4, 3/8 and 1/2 foreground speed. All layers follow vertical movement at 1/8
+speed; act 2 uses a uniform 1/4 horizontal and 1/8 vertical speed. Initial draws
+and streamed strips share the original row-to-camera table, and checkpoint
+reloads retain the saved background cameras. A bespoke act-2 ending remains
+unfinished; act 2 currently uses the normal signpost.
+
+Imported families `$A0-$AF` cover the junction, disc,
 belts, trapdoors, saws, stompers, vanishing platforms, flames, electricity,
 conveyor groups, girders, transport pipes, barriers, floors, bombs and button.
 Their IDs/subtypes/editor definitions are maintained in
