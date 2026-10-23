@@ -71,7 +71,8 @@ def act_four():
     body = [[False]*16 for _ in range(24)]
     for y in range(23):
         for x in range(15):
-            body[y][x] = (9 <= x <= 12 or 13 <= y <= 16 or
+            # Join the crossbar to the diagonal without a left-hand overhang.
+            body[y][x] = (9 <= x <= 12 or 13 <= y <= 16 and x >= 2 or
                           y < 14 and 8-y//2 <= x <= 11-y//2)
     out = [[0]*16 for _ in range(24)]
     for y in range(23):

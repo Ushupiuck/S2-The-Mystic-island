@@ -198,7 +198,8 @@ Resident bubble art is separate. See [player behavior](Players-and-effects.md#wa
 
 Cards/results stream scene-specific glyphs at tile `$581` rather than loading
 the whole raw font. `build_card_art.py` owns their mappings/DPLCs, including
-act 4, V/W and the wide W metrics. Small results markers use blue-only shading
+act 4, V/W and the wide W metrics. Its `act_four()` draws the digit into the
+existing six-tile (16x24) slot. Small results markers use blue-only shading
 from `Title Cards Base.unc`; the generator supplies a separate gold/yellow
 version for the special-results palette, keeping gray out of their edges. Both
 versions retain the same two-tile scene allocation. `build_signpost_art.py` owns the streamed
