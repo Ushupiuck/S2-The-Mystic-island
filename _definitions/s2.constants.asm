@@ -1026,7 +1026,7 @@ v_hscrolltablebuffer_end_padded:
 Sprite_Table_Max:		equ 80
 Sprite_Table:			ds.b	Sprite_Table_Max*8		; Sprite attribute table buffer
 Sprite_Table_end:
-System_Stack_Start:		ds.b	$140		; stack grows down from v_systemstack
+System_Stack_Start:		ds.b	$200		; stack grows down from v_systemstack
 v_systemstack:
 v_ssbg_sines:			ds.l	10		; S1 stage background: sine offset/phase word pairs
 v_ssbg_sines_end:

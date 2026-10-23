@@ -19,6 +19,7 @@ p = argparse.ArgumentParser(description=__doc__)
 for name in ('core', 'rom', 'listing', 'output'):
 	p.add_argument('--' + name, type=Path, required=True)
 p.add_argument('--pal', action='store_true')
+p.add_argument('--stack-gameplay', action='store_true', help='Watermark the MD stack through HPZ loading/gameplay/water')
 p.add_argument('--assembler', type=Path)
 p.add_argument('--p2bin', type=Path)
 a = p.parse_args()
@@ -37,6 +38,7 @@ g.core.m68k_set_reg.argtypes = [C.c_int, C.c_uint]
 g.core.s68k_get_reg.argtypes = [C.c_int]
 g.core.s68k_get_reg.restype = C.c_uint
 checks = []
+stack_watermarks = []
 
 
 def passed(name):
@@ -60,6 +62,48 @@ assert g.s['MCD_SubEntry'] <= g.core.s68k_get_reg(16) < g.s['MCD_SubProgramEnd']
 g.video.save(a.output / 'mode1-title.png')
 base = g.save()
 passed('Upload verification, fresh sub-CPU reply and title')
+if a.stack_gameplay:
+	from check_object_course import boot_level
+	# Preserve the live return frames. Only unused stack space receives the
+	# watermark; sample writes and SP each frame, including inside boot_level.
+	original_run = g.run
+	for player in (0, 2):
+		g.restore(base)
+		bottom = g.s['System_Stack_Start'] & 0xFFFFFF
+		top = g.s['v_systemstack'] & 0xFFFFFF
+		sp = g.core.m68k_get_reg(15) & 0xFFFFFF
+		assert bottom < sp <= top
+		pattern = bytes((i * 73 + 0xA5) & 255 for i in range(sp - bottom))
+		for i, byte in enumerate(pattern):
+			g.ram[((bottom + i) & 65535) ^ 1] = byte
+		watermark = dict(player_mode=player, capacity=top-bottom, maximum_written_depth=top-sp)
+		def stack_run(frames=1):
+			for _ in range(frames):
+				original_run()
+				assert not g.read('v_errortype') and g.read('MCD_status') == 1
+				current_sp = g.core.m68k_get_reg(15) & 0xFFFFFF
+				assert bottom <= current_sp <= top, ('MD stack pointer', hex(current_sp))
+				actual = bytes(g.ram[((bottom + i) & 65535) ^ 1] for i in range(len(pattern)))
+				assert actual[:32] == pattern[:32], 'MD stack reached its lower 32-byte guard'
+				first = next((i for i, (x,y) in enumerate(zip(actual,pattern)) if x != y), len(pattern))
+				watermark['maximum_written_depth'] = max(watermark['maximum_written_depth'], top-bottom-first, top-current_sp)
+		g.run = stack_run
+		boot_level(g, zone=4, act=0, player=player)
+		g.buttons = {7};g.run(120);g.buttons = set()
+		water = g.read('v_waterpos1',2)
+		for field,value in (('obX',0xE00),('obY',water+64),('obVelX',0),('obVelY',0)):
+			g.put('v_player',field,value,2)
+		g.put('v_player','obControl',1)
+		g.put('v_player','obRoutine',2)
+		for field in ('Camera_Y_pos','Camera_Min_Y_pos','Camera_Max_Y_pos','Camera_Max_Y_pos_target'):
+			g.write(field,water-64,2)
+		g.run(120)
+		assert g.read('Water_flag') and 0 < g.read('v_hbla_line') < 92
+		g.video.save(a.output/f'hpz-stack-player-{player}.png')
+		stack_watermarks.append(watermark)
+		g.run = original_run
+	g.restore(base)
+	passed('MD stack watermark survives HPZ loading, Sonic/Tails gameplay and water HBlank')
 names = ('MegaCDMode1', 'vdp_control_port', 'VDP_control_port', 'vdp_data_port', 'v_dma_thunk',
 	'VDP_Command_Buffer', 'VDP_Command_Buffer_Slot', 'MCD_dma_pending', 'InitDMAQueue',
 	'ProcessDMAQueue', 'QueueDMATransfer', 'MCD_Init', 'MCD_Command', 'MCD_AcquireWordRAM', 'MCD_ReleaseWordRAM')
@@ -197,4 +241,4 @@ assert g.read('MCD_status') == 0 and not g.read('v_errortype')
 g.run(2)
 g.video.save(a.output/'no-cd'/'required.png')
 g.close();passed('Missing CD hardware shows requirement screen before accessing CD RAM')
-(a.output/'report.json').write_text(json.dumps({'pal':a.pal,'checks':checks,'bios':'Zero-filled identification fixture, no Sega BIOS code executed','limits':'Emulation only; physical hardware/BIOS revisions untested'},indent=2)+'\n')
+(a.output/'report.json').write_text(json.dumps({'pal':a.pal,'checks':checks,'stack_watermarks':stack_watermarks,'bios':'Zero-filled identification fixture, no Sega BIOS code executed','limits':'Emulation only; physical hardware/BIOS revisions untested. Stack watermarks cover the selected fixtures, not every possible call path.'},indent=2)+'\n')

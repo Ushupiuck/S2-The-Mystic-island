@@ -125,7 +125,7 @@ def main():
     assert symbols['TempArray_LayerDef' if symbols.get('MegaCDMode1') else 'v_16x16'] == symbols['v_objspace_end']
     assert symbols['v_16x16_End'] - symbols['v_16x16'] == 0x1800
     assert symbols['System_Stack_Start'] == symbols['Sprite_Table_end']
-    assert symbols['v_systemstack'] - symbols['System_Stack_Start'] == 0x140
+    assert symbols['v_systemstack'] - symbols['System_Stack_Start'] == 0x200
     scroll_end=symbols.get('v_ssbg_sines_end',symbols.get('v_ngfx_buffer_end'))
     assert symbols['Error_Handler_Buffer'] == symbols['v_regbuffer'] == scroll_end
     if 'v_ssbg_sines' in symbols:

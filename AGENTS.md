@@ -111,6 +111,9 @@ W.I.P./unassembled sources are development work, not disposable unused code.
   art or claiming savings. Moving working RAM to the CD is not CPU offloading:
   move its executor too, with explicit bus ownership and buffer lifetimes. See
   [Mega-CD](docs/Mega-CD.md) for that subsystem's contracts.
+- In hot 68000 paths, weigh branch and setup costs against code size. Explicit
+  duplication or unrolling is worthwhile when it saves enough cycles; compare
+  complete paths before replacing it with shared helpers or self-modifying code.
 
 # Scope, verification and handoff
 

@@ -13,9 +13,9 @@ from genesis_test_core import Genesis
 
 def boot_level(g,item=10,player=0,zone=None,act=0):
     for _ in range(1800):
-        g.run()
         if g.read('v_vbla_routine',2)==g.s['Vint_Title'] and g.read('v_generictimer',2)==375:
             break
+        g.run()
     else:
         raise AssertionError('Title did not start')
     g.write('f_levselcheat',1)

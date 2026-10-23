@@ -174,7 +174,26 @@ python build_tools/check_cd_chunks.py --core /path/to/genesis_plus_gx_libretro.s
 python build_tools/check_cd_ring_jobs.py --core /path/to/genesis_plus_gx_libretro.so --system-directory test-results/mode1/identification-fixture --rom s2built.bin --listing md-main.lst --output test-results/cd-rings
 ```
 
-Each offers `--pal`. For an old/new terrain comparison, run the previous ROM
+`check_cd_dispatch.py --rom s2built.bin --listing md-main.lst` executes the real
+service loop in Unicorn with job stubs that destroy all registers except SP
+and their result. It covers 1,536 requests: every command byte with three high
+bytes, immediate and delayed requests, token complements, result/flag publication,
+stack balance and guards. Add `--core ... --system-directory ... --output report.json`
+for isolated sub-CPU timing, optionally with `--baseline-rom ... --baseline-listing ...`.
+Timing freezes MD execution and uses fixed jobs; it measures dispatcher overhead,
+not complete RPC latency or game-wide performance. Compared with the unrolled
+service, ordinary jobs save 12 cycles and former two-register-preserving jobs
+save 64; no-op/ping/return-RAM/unknown replies cost 22 more cycles. Idle polling
+retains its read/compare/conditional-branch loop.
+
+Add `--stack-gameplay` to `check_mode1.py` to watermark unused MD stack space
+without overwriting live return frames. It covers HPZ loading, Sonic+Tails and
+solo Tails gameplay, and underwater HBlank in the selected region, preserving
+a lower 32-byte guard. These written-depth samples and frame-boundary SP checks
+are fixture coverage, not a proof of worst-case depth on every path.
+
+The four emulator runners in the command block offer `--pal`. For an old/new
+terrain comparison, run the previous ROM
 with `check_cd_terrain.py --baseline --rom ... --listing ...`, then pass its
 `report.json` as `--reference` to the current build. Use separate output folders.
 `--zone 1` exercises LZ and `--zone 0` or `2` GHZ/CPZ; all use the shared bank. Use

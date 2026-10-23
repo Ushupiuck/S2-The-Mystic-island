@@ -63,14 +63,14 @@ allocation is not a contiguous main-CPU pointer, and jobs cannot use its tail.
 
 MD work RAM is packed against the top of its 64 KiB address space. The single
 free allocation is `Free_RAM_Start` through `Free_RAM_End` (end exclusive):
-`$FF0000-$FFB2AF`, **`$B2B0` bytes (45,744)**. Terrain, placement loading and
+`$FF0000-$FFB1EF`, **`$B1F0` bytes (45,552)**. Terrain, placement loading and
 decompression work storage live with their CD executors. Current live ranges:
 
 | Allocation | MD address, inclusive | Size |
 | --- | --- | --- |
-| Ring/terrain events and CD job controls | `$FFB2B0-$FFB4CB` | `$21C` |
-| [Decompressed player art](Sprites-and-VRAM.md#mode-1-ram-art) | `$FFB4CC-$FFC06B` | `$BA0` |
-| Engine variables and work buffers | `$FFC06C-$FFFFFF` | `$3F94` |
+| Ring/terrain events and CD job controls | `$FFB1F0-$FFB40B` | `$21C` |
+| [Decompressed player art](Sprites-and-VRAM.md#mode-1-ram-art) | `$FFB40C-$FFBFAB` | `$BA0` |
+| Engine variables and work buffers | `$FFBFAC-$FFFFFF` | `$4054` |
 
 `_definitions/s2.constants.asm` derives the engine's start from its own declared
 size, then places CD work/art immediately below it. Allocation changes move the
@@ -78,8 +78,9 @@ boundary automatically; there is no address-preserving free hole. Assembly
 checks keep short-addressed engine storage in `$FF8000-$FFFFFF`. CD event/art
 accesses use long addressing. The old MD Kosinski module buffer, Nemesis code
 table and decoder bookmarks are gone; queued requests and DMA controls remain.
-The scroll spill area and `$140`-byte system stack are live allocations. The
-stack has explicit `System_Stack_Start`/`v_systemstack` bounds.
+The scroll spill area and `$200`-byte (512-byte) MD system stack are live
+allocations. The stack has explicit `System_Stack_Start`/`v_systemstack` bounds;
+its size is independent of the CD stack's `$3F0` bytes plus upper bus-read guard.
 The rotating S1 stage uses its separate CD chunk-table overlay.
 
 Active levels leave PRG RAM with CD. Terrain calls transfer compact mailbox
@@ -157,6 +158,15 @@ together.
 
 ## Commands and Word RAM
 
+The sub-CPU service reads each command word once and selects its executor from
+an explicit 256-entry table using the unsigned low byte. The full word reaches
+the executor, including high-byte arguments. A single `jsr (a0)` returns into
+one completion path. Only the in-flight token word is saved on the CD stack;
+executors may clobber all data/address registers except SP, and return their
+result in `d0`. Completion restores the token into the acknowledgement cache
+and publishes the result before the acknowledgement. Result flags survive
+until the next command. No per-command self-modifying call patch is needed.
+
 `MCD_Command`: command word in `d0`, argument in `d1`, result in `d0`; carry
 signals absent/busy/failure, `d2-d3` are clobbered. A complemented token serializes
 requests; request/result data precede token/ack publication. The low command
@@ -167,7 +177,7 @@ its complete first request before starting the sub-CPU, avoiding warm-reset race
 
 | Command | Result |
 | --- | --- |
-| `0` | No-op, zero |
+| `0` | No-op, returns the command word (normally zero) |
 | `MCD_CommandPing` (1) | Echo argument |
 | `MCD_CommandReturnRAM` (2) | Return 2M Word RAM to MD, zero |
 | `MCD_CommandRingTick` (3) | Active animation count |
