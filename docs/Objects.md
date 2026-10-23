@@ -9,8 +9,10 @@ name the same entry. Execution continues after the primary character dies.
 ## SST and dispatch
 
 Each object status table (SST) is `$4E` bytes. The pool contains 23 reserved and
-90 dynamic slots, `$FFA000-$FFC26D`; dynamic slots start at `$FFA702`.
-`v_16x16` follows at `$FFC26E`. Use `object_size` for pointer arithmetic;
+90 dynamic slots, bounded by `v_objspace`/`v_objspace_end`; dynamic slots start
+at `v_lvlobjspace`. `v_16x16` immediately follows the pool. Their addresses
+follow the packed [cartridge RAM layout](#cartridge-ram-layout).
+Use `object_size` for pointer arithmetic;
 `object_size_bits` describes allocator buckets, not the actual slot stride.
 
 | Offset | Bytes | Shared field |
@@ -102,7 +104,7 @@ and respawn pointers. A full pool schedules a stationary retry. Normal object
 lifetime checks remain X-based: vertical filtering does not add automatic
 Y-based deletion to every object.
 
-`Object_Respawn_Table` has `$300` bytes at `$FFF6BE`. Every placement has one
+`Object_Respawn_Table` has `$300` bytes, ending at `Object_Respawn_Table_end`. Every placement has one
 entry; bit 7 marks loaded/consumed, with seven local-state bits. `respawn_addr`
 is its low-word pointer, loaded with `movea.w`; zero means dynamic/Debug-owned.
 
@@ -158,9 +160,27 @@ not use the SST ABI. The S1 special stage's item/update records and mapping
 format are separate too (stage update entries are eight bytes).
 CD ring-animation ownership is in [Mega-CD](Mega-CD.md).
 
-The retired state-buffer remainder is `Free_LegacyObjectState` (580 bytes).
-`Error_Handler_Buffer` is `$FFE62E`, display lists start at `$FFE8C0`; assembly
-checks protect their allocation. Do not infer free RAM from an old pool size.
+### Cartridge RAM layout
+
+`Mystic-Island` keeps its `$8000`-byte `Chunk_Table` at `$FF0000-$FF7FFF`.
+The live engine allocations are packed against the top of RAM: `Main_RAM_Start`
+begins with the `$1000` layout and `$1000` Kosinski module buffers, followed by
+the SST pool, blocks, scroll/VDP buffers, stack, queues and game state.
+Shield, invincibility and ring art retain their uncompressed ROM sources.
+
+`Free_RAM_Start`/`Free_RAM_End` bound one free block between the chunk workspace
+and the engine. It currently spans `$FF8000-$FF82A9` (`$2AA` / 682 bytes).
+The end is exclusive in the symbols; `Free_RAM_Size` derives the byte count.
+Adding live fields moves the boundary automatically, with an assembly guard
+against overlap. The CD branch has a different ownership map; see
+[Mega-CD](Mega-CD.md#memory-and-ownership).
+
+The retired state-buffer hole, unused Tails word, obsolete power-up bytes and
+tail padding have been consolidated into that block. Required word alignment
+is retained. `Error_Handler_Buffer` follows `v_ngfx_buffer_end`; the Debug
+snapshot immediately precedes `Object_Display_Lists`. Use these boundaries
+instead of historical addresses. Disposable object-course instrumentation uses
+the same free block with a capacity check and is absent from ordinary builds.
 
 ## Debug
 

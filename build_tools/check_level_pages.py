@@ -14,12 +14,18 @@ args = p.parse_args()
 g = Genesis(args.core, args.rom, args.listing, args.output, args.pal)
 UP, DOWN, LEFT, RIGHT, A, B, C_BUTTON, START = 4, 5, 6, 7, 1, 0, 8, 3
 PAGE, BONUS, SOUND = [g.s['LevelSelect_' + name + 'Item'] for name in ('Page', 'Bonus', 'Sound')]
+free_start = g.s['Free_RAM_Start'] & 0xFFFF
+free_end = g.s['Free_RAM_End'] & 0xFFFF
+free_canary = bytes((i * 37 + 19) & 255 for i in range(free_end-free_start))
+check_free_ram = False
 
 
 def step(frames=1):
 	for _ in range(frames):
 		g.run()
 		assert not g.read('v_errortype'), ('CPU exception', g.frame)
+		if check_free_ram:
+			assert bytes(g.ram[free_start:free_end]) == free_canary, 'Contiguous free RAM was touched'
 
 
 def press(button):
@@ -78,6 +84,8 @@ item(0)
 expect_text(1, 1, 'TWILIGHT HILL')
 for row, text in ((22, 'NEXT'), (23, 'SPECIAL STAGE'), (24, 'SOUND TEST'), (25, '00 SONIC AND TAILS')):
 	expect_text(row, 1, text)
+g.ram[free_start:free_end] = free_canary
+check_free_ram = True
 menu = g.save()
 
 # Up/Down must visit all 32 acts column-first, then each option, on both pages.
@@ -202,5 +210,8 @@ for zone in range(16):
 		checks.append({'zone': zone, 'act': act + 1, 'passed': True})
 	print('Four-act launch checks passed for zone ' + str(zone), flush=True)
 print('Menu controls, layout, sound, return memory, special stage and all 64 act boots pass.', flush=True)
-(args.output / 'report.json').write_text(json.dumps({'pal': args.pal, 'return_memory': returns, 'checks': checks}, indent=2) + '\n')
+print(f'{len(free_canary)} contiguous free bytes remain untouched through all checked scenes.', flush=True)
+(args.output / 'report.json').write_text(json.dumps({'pal': args.pal, 'return_memory': returns, 'checks': checks,
+    'free_ram': {'start': free_start | 0xFF0000, 'end_exclusive': free_end | 0xFF0000,
+                 'bytes': len(free_canary), 'canary_preserved': True}}, indent=2) + '\n')
 g.close()

@@ -42,7 +42,7 @@ def instrument_entries(root):
             pattern = r'^' + re.escape(label) + r':[ \t]*([^\n]*)\n'
             def hook(match):
                 seen.add(label)
-                stamps = ''.join('\tmove.b #1,(ObjectTest_Executed+$%02X).w\n' % oid
+                stamps = ''.join('\tst (ObjectTest_Executed+$%02X).l\n' % oid
                                  for oid in ids)
                 suffix = match[1]
                 return label + ':\n' + stamps + ('\t' + suffix + '\n' if suffix else '')
@@ -55,20 +55,20 @@ def instrument_entries(root):
 def generate(root, banks):
     records = []
     asm = ["; Generated test-only LZ2 course. Not included by normal builds.",
-           "ObjectTest_Executed = Free_LegacyObjectState",
+           "ObjectTest_Executed = Free_RAM_Start",
            "ObjectTest_Bank = ObjectTest_Executed+$100",
            "ObjectTest_Active = ObjectTest_Bank+1",
            "ObjectTest_Enable = ObjectTest_Bank+2",
-           "\tif ObjectTest_Enable+1>Free_LegacyObjectState_end",
+           "\tif ObjectTest_Enable+1>Free_RAM_End",
            "\t\tfatal \"Object course coverage exceeds the free RAM area.\"",
            "\tendif",
            "ObjectTest_FloorY = $500",
            "ObjectTest_Initialize:",
-           "\tmove.b #1,(ObjectTest_Active).w",
-           "\tmove.b #1,(ObjectTest_Enable).w",
-           "\tmove.b #$FF,(ObjectTest_Bank).w",
+           "\tmove.b #1,(ObjectTest_Active).l",
+           "\tmove.b #1,(ObjectTest_Enable).l",
+           "\tmove.b #$FF,(ObjectTest_Bank).l",
            "\tlea (v_lvllayout).w,a1",
-           "\tmove.w #$1000/4-1,d0",
+           "\tmove.w #bytesToLcnt(Level_Layout_End-Level_Layout),d0",
            ".clear_layout: clr.l (a1)+",
            "\tdbf d0,.clear_layout",
            "\tlea (v_128x128).l,a1",
@@ -88,15 +88,15 @@ def generate(root, banks):
            "\tdbf d1,.row",
            "\trts",
            "ObjectTest_Dynamic:",
-           "\ttst.b (ObjectTest_Enable).w",
+           "\ttst.b (ObjectTest_Enable).l",
            "\tbeq.s .return",
            "\tmove.w (Camera_X_pos).w,d0",
            "\tlsr.w #8,d0",
            "\tlsr.w #2,d0 ; $400 bytes of horizontal course per art bank",
            "\tandi.w #$F,d0",
-           "\tcmp.b (ObjectTest_Bank).w,d0",
+           "\tcmp.b (ObjectTest_Bank).l,d0",
            "\tbeq.s .return",
-           "\tmove.b d0,(ObjectTest_Bank).w",
+           "\tmove.b d0,(ObjectTest_Bank).l",
            "\tlsl.w #2,d0",
            "\tmove.l d0,-(sp)",
            "\tjsr (ClearPLC).l",
@@ -109,7 +109,7 @@ def generate(root, banks):
            "\tmovea.l (a1,d0.w),a6",
            "\tjsr (QuickKosPLC).l",
            "\tmoveq #0,d0",
-           "\tmove.b (ObjectTest_Bank).w,d0",
+           "\tmove.b (ObjectTest_Bank).l,d0",
            "\tlsl.w #2,d0",
            "\tlea ObjectTest_RawLists(pc),a1",
            "\tmovea.l (a1,d0.w),a4",

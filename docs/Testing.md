@@ -18,12 +18,26 @@ Core-based fixtures do not require a graphical frontend.
 After a normal build:
 
 ```sh
+python build_tools/check_ram_ranges.py
 python build_tools/check_object_layouts.py
 python build_tools/check_sprite_bounds.py
 python build_tools/check_sprite_assets.py
 python build_tools/check_ghz_vram.py
 python build_tools/check_ehz_boss.py
 ```
+
+`check_ram_ranges.py` checks the cartridge's contiguous free block, live buffer
+boundaries and palette aliases. It assembles the real `clearRAM` macro and
+executes 38 native cases: both addressing forms, odd starts, small tails and
+whole-RAM clears, with canaries outside each range. An empty longword section
+must not enter a DBF loop with `-1`. Memory-loop counts derive from the declared
+allocation and transfer stride; timing and algorithmic counts keep their own
+meaning. Native fixtures use the declared system stack.
+
+`check_level_pages.py` fills the free block with a canary after the title screen,
+then checks it every frame during menu navigation, sound tests, level/title
+returns, rotating-stage entry and all 64 act launches. This verifies the tested
+scene paths; it is not an exhaustive traversal of every level.
 
 To compare terrain edits against a Git revision before the change:
 
