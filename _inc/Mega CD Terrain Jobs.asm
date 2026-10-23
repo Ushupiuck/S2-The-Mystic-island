@@ -338,9 +338,9 @@ MCD_PrepareTerrainFrame:
 		dbf	d0,.camera
 		move.l	(Scroll_flags).w,(a0)+
 		move.l	(Scroll_flags_BG2).w,(a0)+
-		move.w	(Camera_BG_Y_pos).w,(a0)+
-		move.b	(Current_Zone).w,(a0)+
+		move.w	(Current_ZoneAndAct).w,(a0)+
 		move.b	(Screen_redraw_flag).w,(a0)+
+		clr.b	(a0)+			; keep the frame header longword-aligned
 		jsr	(MCD_PrepareObjectFrame).l
 		jsr	(MCD_PreparePLCBudget).l
 		clr.l	(Scroll_flags).w

@@ -429,8 +429,8 @@ MCD_Sublocret_6A80:
 MCD_SubDrawBGScrollBlock2:
 		tst.b	(a2)
 		beq.w	MCD_Sublocret_6ACE
-		cmpi.b	#id_SBZ,(MCD_TerrainZone_Sub).l
-		beq.w	MCD_SubDraw_SBz
+		cmpi.b	#id_SMZ,(MCD_TerrainZone_Sub).l
+		beq.w	MCD_SubDraw_SMZ
 		bclr	#0,(a2)
 		beq.s	MCD_Subloc_6AAE
 		move.w	#224/2,d4
@@ -455,14 +455,15 @@ MCD_Subloc_6AAE:
 MCD_Sublocret_6ACE:
 		rts
 ; ---------------------------------------------------------------------------
-MCD_Subbyte_6AD0:
+MCD_SubSMZ_BGScrollBlocks:
 		dc.b   0
 		dc.b   0,  0,  0,  0,  6,  6,  6,  6,  6,  6,  6,  6,  6,  6,  4,  4
 		dc.b   4,  4,  4,  4,  4,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2
+		dc.b   0		; trailing off-screen row
 		even
 ; ---------------------------------------------------------------------------
 
-MCD_SubDraw_SBz:
+MCD_SubDraw_SMZ:
 		moveq	#-16,d4
 		bclr	#0,(a2)
 		bne.s	MCD_Subloc_6B04
@@ -471,7 +472,7 @@ MCD_SubDraw_SBz:
 		move.w	#224,d4
 
 MCD_Subloc_6B04:
-		lea	MCD_Subbyte_6AD0+1(pc),a0
+		lea	MCD_SubSMZ_BGScrollBlocks+1(pc),a0
 		move.w	(MCD_TerrainBGY_Sub).l,d0
 		add.w	d4,d0
 		andi.w	#$1F0,d0
@@ -514,7 +515,7 @@ MCD_Subloc_6B52:
 		move.w	#320,d5
 
 MCD_Subloc_6B66:
-		lea	MCD_Subbyte_6AD0(pc),a0
+		lea	MCD_SubSMZ_BGScrollBlocks(pc),a0
 		move.w	(MCD_TerrainBGY_Sub).l,d0
 		andi.w	#$1F0,d0
 		lsr.w	#4,d0
@@ -1114,6 +1115,8 @@ MCD_SubLoadTilesFromStart:
 		move.w	#$6000,d2
 		tst.b	(MCD_TerrainZone_Sub).l
 		beq.s	MCD_SubDraw_GHz_Bg
+		cmpi.w	#id_SMZ<<8,(MCD_TerrainZone_Sub).l
+		beq.w	MCD_SubDraw_SMZ_Bg
 ; End of function MCD_SubLoadTilesFromStart
 
 
@@ -1176,13 +1179,13 @@ MCD_Subloc_71DE:
 		dbf	d6,MCD_Subloc_71DE
 		rts
 ; ---------------------------------------------------------------------------
-; Draw_SBz_Bg:
+MCD_SubDraw_SMZ_Bg:
 		moveq	#-16,d4
 		moveq	#((224+16+16)/16)-1,d6
 
 MCD_Subloc_7206:
 		movem.l	d4-d6,-(sp)
-		lea	MCD_Subbyte_6AD0+1(pc),a0
+		lea	MCD_SubSMZ_BGScrollBlocks+1(pc),a0
 		move.w	(MCD_TerrainBGY_Sub).l,d0
 		add.w	d4,d0
 		andi.w	#$1F0,d0

@@ -29,16 +29,18 @@ MCD_TerrainWidths_Sub:	ds.b	$1000
 MCD_TerrainAngles_Sub:	ds.b	$100
 MCD_TerrainData_SubEnd:
 MCD_TerrainCamera_Sub:	ds.l	2
-MCD_TerrainBG_Sub:	ds.l	2
+MCD_TerrainBG_Sub:	ds.l	1
+MCD_TerrainBGY_Sub:	ds.l	1
 MCD_TerrainBG2_Sub:	ds.l	2
 MCD_TerrainBG3_Sub:	ds.l	2
 MCD_TerrainFlags_Sub:	ds.w	1
 MCD_TerrainBGFlags_Sub:	ds.w	1
 MCD_TerrainBG2Flags_Sub:	ds.w	1
 MCD_TerrainBG3Flags_Sub:	ds.w	1
-MCD_TerrainBGY_Sub:	ds.w	1
 MCD_TerrainZone_Sub:	ds.b	1
+MCD_TerrainAct_Sub:	ds.b	1
 MCD_TerrainRedraw_Sub:	ds.b	1
+			ds.b	1
 MCD_TerrainFrame_SubEnd:
 MCD_TerrainPath_Sub:	ds.l	1
 MCD_TerrainPath1_Sub:	ds.l	1

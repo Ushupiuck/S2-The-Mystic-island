@@ -109,7 +109,11 @@ height/width/angle bank once on level entry.
 The rotating S1 stage retains its separate MD renderer and staging/PRG overlays.
 
 After scrolling, CD constructs changed tile strips while MD renders sprites
-and finishes other work. Foreground `MCD_FinishTerrainJob` waits before requesting
+and finishes other work. The frame snapshot includes zone and act; its primary
+background camera supplies Y directly, without a duplicate coordinate. SMZ act 1
+uses its row-to-camera table for both initial drawing and streaming on CD.
+The packet retains its existing size and uses no additional handoff.
+Foreground `MCD_FinishTerrainJob` waits before requesting
 a full VBlank. The VDP handler only drains stable, MD-owned records; it never
 waits for the terrain executor. Each record is a VDP command long, a count word
 of data longs, then those data. Word RAM remains MD-owned until consumption.

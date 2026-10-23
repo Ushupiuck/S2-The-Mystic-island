@@ -109,7 +109,7 @@ that offer it. Most primary-player selectors use `--player 0` (Sonic) or `2`
 | Object lifetime and stage entry | `check_object_lifetimes.py`, `check_giant_ring_entry.py`, `check_object_contexts.py` | Unload/deletion, giant rings and mode-specific objects |
 | Companion | `check_companion_followup.py`, `check_companion_hpz.py`, `check_companion_sbz.py` | Ledges, collapse/bridge/manual takeover; actual HPZ routes; 64-phase SMZ transfer and captured catch-up |
 | Input locks and rotating stage | `check_over_screen_input.py`, `check_drowning_input.py`, `check_special_stage_overlap.py` | Real deaths/drowning; normal bumper/item callbacks and embedding regressions |
-| SMZ solids and hazards | `check_scrap_madness.py`, `check_sbz_discs.py`, `check_smz_vanishing.py`, `check_swing_families.py`, `check_sbz_doors.py` | Placed-object lifecycle, transport/ride boundaries and harmful spikeball subtypes |
+| SMZ backgrounds, solids and hazards | `check_smz_background.py`, `check_scrap_madness.py`, `check_sbz_discs.py`, `check_smz_vanishing.py`, `check_swing_families.py`, `check_sbz_doors.py` | REV01 parallax/streaming, placed-object lifecycle, transport/ride boundaries and harmful spikeball subtypes |
 | Compact clearance/closing doors | `check_duck_clearance.py`, `check_smz_trapdoor.py` | Native 68000 collision fixtures |
 | Imported enemies/obstacles | `check_palmtree_enemies.py`, `check_propeller.py`, `check_caterkiller.py`, `check_kemusi.py`, `check_terrain_conveyors.py`, `check_wheel_carriers.py` | Both-actor triggers, motion, damage, unload/reload and source-specific regressions |
 | Audio | `check_sound_playback.py`, `sound/build.py --check` | Actual sound paths; encoding/macro/packer checks |
@@ -118,6 +118,14 @@ that offer it. Most primary-player selectors use `--player 0` (Sonic) or `2`
 against independently decoded Nemesis art and checks that blank tile zero stays
 transparent, on both pages and after returning from a level. Correct text tile
 numbers alone do not establish that the font was uploaded to the right place.
+
+`check_smz_background.py` checks the VDP's live horizontal/vertical scroll values
+and visible background tile words against the S1 REV01 rates and editable SMZ
+geometry. It enters both acts, uses ordinary input, then freezes the lead actor
+at successive camera targets to cross plane wraps and layer boundaries in both
+directions. It covers pause/resume and saves rendered views. Use `--player 0`
+or `--player 2`, `--pal` for PAL, and `--system-directory` for Mode 1. The sweeps
+are streaming fixtures, not complete controller-only playthroughs.
 
 `check_companion_sbz.py` has `--probe` for older-ROM failures, but no PAL flag.
 Several runners compare with a specific earlier revision; their baseline is
