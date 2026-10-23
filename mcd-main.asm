@@ -37,64 +37,276 @@ MCD_SubEntry:
 		move.w	(MCD_SubMainCommand).l,d0
 		move.b	#MCD_ServiceReady,(MCD_SubOwnFlags).l
 		jmp	(a0)
+; ===========================================================================
 .unknown:
 		moveq	#-1,d0
-		bra.w	.done
-.ping:
-		move.w	(MCD_SubMainArgument).l,d0
-		bra.w	.done
-.returnRAM:
-		bset	#0,(MCD_SubMemoryMode).l
-		moveq	#0,d0
-		bra.w	.done
-.ringTick:
-		bsr.w	MCD_SubRingTick
-		bra.w	.done
-.ringReset:
-		bsr.w	MCD_SubRingReset
-		bra.w	.done
-.terrainLoad:
-		bsr.w	MCD_SubTerrainLoad
-		bra.w	.done
-.objectsLoad:
-		bsr.w	MCD_SubObjectsLoad
-		bra.w	.done
-.objectState:
-		bsr.w	MCD_SubObjectState
-		bra.w	.done
-.layout:
-		bsr.w	MCD_SubTerrainLayout
-		bra.w	.done
-.terrainDraw:
-		movem.l	d6-d7,-(sp)
-		bsr.w	MCD_SubTerrainDraw
-		bra.w	.terrainDone
-.terrainProbe:
-		movem.l	d6-d7,-(sp)
-		bsr.w	MCD_SubTerrainProbe
-		bra.w	.terrainDone
-.terrainObject:
-		movem.l	d6-d7,-(sp)
-		bsr.w	MCD_SubTerrainObject
-		bra.s	.terrainDone
-.artFrame:
-		movem.l	d6-d7,-(sp)
-		bsr.w	MCD_SubArtFrame
-		bra.s	.terrainDone
-.decompress:
-		movem.l	d6-d7,-(sp)
-		bsr.w	MCD_SubDecompress
-		bra.s	.terrainDone
-.terrainAir:
-		movem.l	d6-d7,-(sp)
-		bsr.w	MCD_SubTerrainAir
-.terrainDone:
-		movem.l	(sp)+,d6-d7
-.done:
 		move.w	d0,(MCD_SubOwnResult).l
 		move.w	d6,d7
 		move.w	d7,(MCD_SubOwnAck).l
-		bra.w	.wait
+		move.w	(MCD_SubMainToken).l,d6
+		cmp.w	d6,d7
+		beq.w	.wait
+		moveq	#0,d0
+		move.b	(MCD_SubMainCommand+1).l,d0
+		lsl.w	#2,d0
+		lea	.handlers(pc),a0
+		movea.l	(a0,d0.w),a0
+		move.w	(MCD_SubMainCommand).l,d0
+		move.b	#MCD_ServiceReady,(MCD_SubOwnFlags).l
+		jmp	(a0)
+; ===========================================================================
+.ping:
+		move.w	(MCD_SubMainArgument).l,d0
+		move.w	d0,(MCD_SubOwnResult).l
+		move.w	d6,d7
+		move.w	d7,(MCD_SubOwnAck).l
+		move.w	(MCD_SubMainToken).l,d6
+		cmp.w	d6,d7
+		beq.w	.wait
+		moveq	#0,d0
+		move.b	(MCD_SubMainCommand+1).l,d0
+		lsl.w	#2,d0
+		lea	.handlers(pc),a0
+		movea.l	(a0,d0.w),a0
+		move.w	(MCD_SubMainCommand).l,d0
+		move.b	#MCD_ServiceReady,(MCD_SubOwnFlags).l
+		jmp	(a0)
+; ===========================================================================
+.returnRAM:
+		bset	#0,(MCD_SubMemoryMode).l
+		moveq	#0,d0
+		move.w	d0,(MCD_SubOwnResult).l
+		move.w	d6,d7
+		move.w	d7,(MCD_SubOwnAck).l
+		move.w	(MCD_SubMainToken).l,d6
+		cmp.w	d6,d7
+		beq.w	.wait
+		moveq	#0,d0
+		move.b	(MCD_SubMainCommand+1).l,d0
+		lsl.w	#2,d0
+		lea	.handlers(pc),a0
+		movea.l	(a0,d0.w),a0
+		move.w	(MCD_SubMainCommand).l,d0
+		move.b	#MCD_ServiceReady,(MCD_SubOwnFlags).l
+		jmp	(a0)
+; ===========================================================================
+.ringTick:
+		bsr.w	MCD_SubRingTick
+		move.w	d0,(MCD_SubOwnResult).l
+		move.w	d6,d7
+		move.w	d7,(MCD_SubOwnAck).l
+		move.w	(MCD_SubMainToken).l,d6
+		cmp.w	d6,d7
+		beq.w	.wait
+		moveq	#0,d0
+		move.b	(MCD_SubMainCommand+1).l,d0
+		lsl.w	#2,d0
+		lea	.handlers(pc),a0
+		movea.l	(a0,d0.w),a0
+		move.w	(MCD_SubMainCommand).l,d0
+		move.b	#MCD_ServiceReady,(MCD_SubOwnFlags).l
+		jmp	(a0)
+; ===========================================================================
+.ringReset:
+		bsr.w	MCD_SubRingReset
+		move.w	d0,(MCD_SubOwnResult).l
+		move.w	d6,d7
+		move.w	d7,(MCD_SubOwnAck).l
+		move.w	(MCD_SubMainToken).l,d6
+		cmp.w	d6,d7
+		beq.w	.wait
+		moveq	#0,d0
+		move.b	(MCD_SubMainCommand+1).l,d0
+		lsl.w	#2,d0
+		lea	.handlers(pc),a0
+		movea.l	(a0,d0.w),a0
+		move.w	(MCD_SubMainCommand).l,d0
+		move.b	#MCD_ServiceReady,(MCD_SubOwnFlags).l
+		jmp	(a0)
+; ===========================================================================
+.terrainLoad:
+		bsr.w	MCD_SubTerrainLoad
+		move.w	d0,(MCD_SubOwnResult).l
+		move.w	d6,d7
+		move.w	d7,(MCD_SubOwnAck).l
+		move.w	(MCD_SubMainToken).l,d6
+		cmp.w	d6,d7
+		beq.w	.wait
+		moveq	#0,d0
+		move.b	(MCD_SubMainCommand+1).l,d0
+		lsl.w	#2,d0
+		lea	.handlers(pc),a0
+		movea.l	(a0,d0.w),a0
+		move.w	(MCD_SubMainCommand).l,d0
+		move.b	#MCD_ServiceReady,(MCD_SubOwnFlags).l
+		jmp	(a0)
+; ===========================================================================
+.objectsLoad:
+		bsr.w	MCD_SubObjectsLoad
+		move.w	d0,(MCD_SubOwnResult).l
+		move.w	d6,d7
+		move.w	d7,(MCD_SubOwnAck).l
+		move.w	(MCD_SubMainToken).l,d6
+		cmp.w	d6,d7
+		beq.w	.wait
+		moveq	#0,d0
+		move.b	(MCD_SubMainCommand+1).l,d0
+		lsl.w	#2,d0
+		lea	.handlers(pc),a0
+		movea.l	(a0,d0.w),a0
+		move.w	(MCD_SubMainCommand).l,d0
+		move.b	#MCD_ServiceReady,(MCD_SubOwnFlags).l
+		jmp	(a0)
+; ===========================================================================
+.objectState:
+		bsr.w	MCD_SubObjectState
+		move.w	d0,(MCD_SubOwnResult).l
+		move.w	d6,d7
+		move.w	d7,(MCD_SubOwnAck).l
+		move.w	(MCD_SubMainToken).l,d6
+		cmp.w	d6,d7
+		beq.w	.wait
+		moveq	#0,d0
+		move.b	(MCD_SubMainCommand+1).l,d0
+		lsl.w	#2,d0
+		lea	.handlers(pc),a0
+		movea.l	(a0,d0.w),a0
+		move.w	(MCD_SubMainCommand).l,d0
+		move.b	#MCD_ServiceReady,(MCD_SubOwnFlags).l
+		jmp	(a0)
+; ===========================================================================
+.layout:
+		bsr.w	MCD_SubTerrainLayout
+		move.w	d0,(MCD_SubOwnResult).l
+		move.w	d6,d7
+		move.w	d7,(MCD_SubOwnAck).l
+		move.w	(MCD_SubMainToken).l,d6
+		cmp.w	d6,d7
+		beq.w	.wait
+		moveq	#0,d0
+		move.b	(MCD_SubMainCommand+1).l,d0
+		lsl.w	#2,d0
+		lea	.handlers(pc),a0
+		movea.l	(a0,d0.w),a0
+		move.w	(MCD_SubMainCommand).l,d0
+		move.b	#MCD_ServiceReady,(MCD_SubOwnFlags).l
+		jmp	(a0)
+; ===========================================================================
+.terrainDraw:
+		movem.l	d6-d7,-(sp)
+		bsr.w	MCD_SubTerrainDraw
+		movem.l	(sp)+,d6-d7
+		move.w	d0,(MCD_SubOwnResult).l
+		move.w	d6,d7
+		move.w	d7,(MCD_SubOwnAck).l
+		move.w	(MCD_SubMainToken).l,d6
+		cmp.w	d6,d7
+		beq.w	.wait
+		moveq	#0,d0
+		move.b	(MCD_SubMainCommand+1).l,d0
+		lsl.w	#2,d0
+		lea	.handlers(pc),a0
+		movea.l	(a0,d0.w),a0
+		move.w	(MCD_SubMainCommand).l,d0
+		move.b	#MCD_ServiceReady,(MCD_SubOwnFlags).l
+		jmp	(a0)
+
+; ===========================================================================
+.terrainProbe:
+		movem.l	d6-d7,-(sp)
+		bsr.w	MCD_SubTerrainProbe
+		movem.l	(sp)+,d6-d7
+		move.w	d0,(MCD_SubOwnResult).l
+		move.w	d6,d7
+		move.w	d7,(MCD_SubOwnAck).l
+		move.w	(MCD_SubMainToken).l,d6
+		cmp.w	d6,d7
+		beq.w	.wait
+		moveq	#0,d0
+		move.b	(MCD_SubMainCommand+1).l,d0
+		lsl.w	#2,d0
+		lea	.handlers(pc),a0
+		movea.l	(a0,d0.w),a0
+		move.w	(MCD_SubMainCommand).l,d0
+		move.b	#MCD_ServiceReady,(MCD_SubOwnFlags).l
+		jmp	(a0)
+; ===========================================================================
+.terrainObject:
+		movem.l	d6-d7,-(sp)
+		bsr.w	MCD_SubTerrainObject
+		movem.l	(sp)+,d6-d7
+		move.w	d0,(MCD_SubOwnResult).l
+		move.w	d6,d7
+		move.w	d7,(MCD_SubOwnAck).l
+		move.w	(MCD_SubMainToken).l,d6
+		cmp.w	d6,d7
+		beq.w	.wait
+		moveq	#0,d0
+		move.b	(MCD_SubMainCommand+1).l,d0
+		lsl.w	#2,d0
+		lea	.handlers(pc),a0
+		movea.l	(a0,d0.w),a0
+		move.w	(MCD_SubMainCommand).l,d0
+		move.b	#MCD_ServiceReady,(MCD_SubOwnFlags).l
+		jmp	(a0)
+; ===========================================================================
+.artFrame:
+		movem.l	d6-d7,-(sp)
+		bsr.w	MCD_SubArtFrame
+		movem.l	(sp)+,d6-d7
+		move.w	d0,(MCD_SubOwnResult).l
+		move.w	d6,d7
+		move.w	d7,(MCD_SubOwnAck).l
+		move.w	(MCD_SubMainToken).l,d6
+		cmp.w	d6,d7
+		beq.w	.wait
+		moveq	#0,d0
+		move.b	(MCD_SubMainCommand+1).l,d0
+		lsl.w	#2,d0
+		lea	.handlers(pc),a0
+		movea.l	(a0,d0.w),a0
+		move.w	(MCD_SubMainCommand).l,d0
+		move.b	#MCD_ServiceReady,(MCD_SubOwnFlags).l
+		jmp	(a0)
+; ===========================================================================
+.decompress:
+		movem.l	d6-d7,-(sp)
+		bsr.w	MCD_SubDecompress
+		movem.l	(sp)+,d6-d7
+		move.w	d0,(MCD_SubOwnResult).l
+		move.w	d6,d7
+		move.w	d7,(MCD_SubOwnAck).l
+		move.w	(MCD_SubMainToken).l,d6
+		cmp.w	d6,d7
+		beq.w	.wait
+		moveq	#0,d0
+		move.b	(MCD_SubMainCommand+1).l,d0
+		lsl.w	#2,d0
+		lea	.handlers(pc),a0
+		movea.l	(a0,d0.w),a0
+		move.w	(MCD_SubMainCommand).l,d0
+		move.b	#MCD_ServiceReady,(MCD_SubOwnFlags).l
+		jmp	(a0)
+; ===========================================================================
+.terrainAir:
+		movem.l	d6-d7,-(sp)
+		bsr.w	MCD_SubTerrainAir
+		movem.l	(sp)+,d6-d7
+.done:		move.w	d0,(MCD_SubOwnResult).l
+		move.w	d6,d7
+		move.w	d7,(MCD_SubOwnAck).l
+		move.w	(MCD_SubMainToken).l,d6
+		cmp.w	d6,d7
+		beq.w	.wait
+		moveq	#0,d0
+		move.b	(MCD_SubMainCommand+1).l,d0
+		lsl.w	#2,d0
+		lea	.handlers(pc),a0
+		movea.l	(a0,d0.w),a0
+		move.w	(MCD_SubMainCommand).l,d0
+		move.b	#MCD_ServiceReady,(MCD_SubOwnFlags).l
+		jmp	(a0)
+; ===========================================================================
 .handlers:
 		dc.l	.done,.ping,.returnRAM,.ringTick,.ringReset
 		dc.l	.terrainLoad,.terrainDraw,.terrainProbe,.terrainProbe
@@ -114,6 +326,7 @@ MCD_SubEntry:
 		if .handlersEnd-.handlers<>$100*4
 			fatal "CD command dispatch must cover all byte commands"
 		endif
+; ===========================================================================
 MCD_SubIRQ2:
 		rte
 MCD_SubError:
