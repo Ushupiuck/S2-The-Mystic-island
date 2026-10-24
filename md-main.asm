@@ -934,7 +934,7 @@ RunPLC_RAM:
 		move.w	(a0),d0
 		andi.w	#$7FFF,d0
 		move.w	d0,(v_plc_patternsleft).w
-		bra.s	ProcessDPLC_Done
+		rts
 
 ; Foreground prepared/queued the art. ProcessDMAQueue has consumed it before
 ; this VBlank bookkeeping runs. No decoder or CD wait executes in an IRQ.
