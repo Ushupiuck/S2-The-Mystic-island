@@ -177,6 +177,15 @@ LZ4/SBZ3 lift. Restoring its original object would also need the missing art;
 the current sheet is not a complete stock-S1 bank. The restored LZ1 conveyors
 use their separate object-art bank and preserve this terrain/background work.
 
+S1's ancient lift (`ScrapStomp`, object `$6B`, `.bigdoor` mapping) references
+104 tile slots at offsets `$00-$67`, reused across 216 drawn tile positions in
+14 sprite pieces. Its `$1F0` base places it at VRAM `$3E00-$4AFF`: the final
+tile starts at `$4AE0`, and `$4B00` is the exclusive end. That is `$D00` bytes
+(3.25 KiB), about 5.1% of all VRAM. These figures come from s1disasm
+`15dfa3a6ee4c53aeb482233e493755c84b4f3479`, `_maps/SBZ Stomper and Door.asm`
+and `_incObj/6B SBZ Stomper and Sliding Door.asm`; they count referenced slots,
+not a claim that every tile's pixels are unique.
+
 ## Scrap Madness
 
 Acts 1/2 retain S1 SBZ foreground, industrial backgrounds, collision and hazards.
