@@ -237,6 +237,9 @@ complexity, instead of inheriting the MD loader's fixed 3/9-tile limit.
 DMA queue before requesting VBlank. A prepared or queued batch prevents the
 next PLC write; a full queue retries without advancing the cue. VBlank only
 consumes DMA and updates queue bookkeeping, with no decoder or CD wait.
+`ProcessDPLC` and `ProcessDPLC2` share one bookkeeping entry; a consumed final
+batch falls through to the queue-pop loop. `RunPLC_RAM` shares that loop's final
+return without entering the VBlank bookkeeping path.
 Kosinski modules use a separate stable output bank and the same publication
 boundary. Direct scene loaders use a DMA-only VBlank before reusing output.
 

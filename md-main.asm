@@ -923,31 +923,28 @@ ClearPLC:
 ; RunPLC:
 RunPLC_RAM:
 		tst.l	(v_plc_buffer).w
-		beq.s	.return
+		beq.s	ProcessDPLC_Done
 		tst.w	(v_plc_patternsleft).w
-		bne.s	.return
+		bne.s	ProcessDPLC_Done
 		tst.w	(v_plc_framepatternsleft).w
-		bne.s	.return
+		bne.s	ProcessDPLC_Done
 		movea.l	(v_plc_buffer).w,a0
 		lea	(MCD_DecompPLC_Sub).l,a1
-		jsr	(MCD_InitPLC).l
+		bsr.w	MCD_InitPLC
 		move.w	(a0),d0
 		andi.w	#$7FFF,d0
 		move.w	d0,(v_plc_patternsleft).w
-.return:
-		rts
+		bra.s	ProcessDPLC_Done
 
 ; Foreground prepared/queued the art. ProcessDMAQueue has consumed it before
 ; this VBlank bookkeeping runs. No decoder or CD wait executes in an IRQ.
 ProcessDPLC:
 ProcessDPLC2:
 		tst.w	(v_plc_framepatternsleft).w
-		beq.s	.return
+		beq.s	ProcessDPLC_Done
 		clr.w	(v_plc_framepatternsleft).w
 		tst.w	(v_plc_patternsleft).w
-		beq.s	ProcessDPLC_Pop
-.return:
-		rts
+		bne.s	ProcessDPLC_Done
 
 ProcessDPLC_Pop:
 		lea	(v_plc_buffer).w,a0
@@ -960,6 +957,8 @@ loc_17D2:
 		move.w	6(a0),(a0)
 	endif
 		clr.l	(v_plc_buffer_only_end-6).w
+
+ProcessDPLC_Done:
 		rts
 ; End of function ProcessDPLC
 
