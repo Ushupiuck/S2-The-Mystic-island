@@ -143,6 +143,23 @@ namespace MysticIsland.ObjectDefinitions
 					groups = ReadWordTable("../objects/Scrap Madness/A9 Spin Conveyor.asm", "SMZ_SpinC_Placements");
 					Bits("Group", 0, 127, "Absolute-position group 0 to 5. Moving the spawner does not move the runtime's hardcoded group.");
 					Bits("Group spawner", 7, 1, "Set for level placements; clear is an individual moving child.", "Individual child", "Eight-platform group"); break;
+				case "LabyrinthConveyor":
+					groups = ReadWordTable("../objects/S1/1F LZ Conveyor.asm", "LCon_Placements");
+					routes = ReadWordTable("../objects/S1/1F LZ Conveyor.asm", "LCon_Data");
+					alternate = Load("../art/moduled kosinski/LZ conveyor.kospm", CompressionType.KosinskiPlusM, "LZ conveyor.asm", 0);
+					properties.Add(new PropertySpec("Mode", typeof(int), "Object settings", "$80-$87 create complete relative groups; $7F is the decorative wheel.", null,
+						Choices("Individual platform", "Complete group", "Wheel"), obj => LConMode(obj.SubType),
+						(obj, value) => { int mode = (int)value; if (mode != LConMode(obj.SubType)) obj.SubType = mode == 2 ? (byte)0x7F : mode == 1 ? (byte)(0x80 | ((obj.SubType >> 4) & 7)) : (byte)((obj.SubType & 7) << 4); }));
+					properties.Add(new PropertySpec("Route / group", typeof(int), "Object settings", "0-5: original LZ routes. 6-7: rounded Lava Reef routes. Offsets follow the placement origin; X flip reverses travel without mirroring the path.", null,
+						obj => (obj.SubType & 0x80) != 0 ? obj.SubType & 0x3F : obj.SubType >> 4,
+						(obj, value) => { if (obj.SubType != 0x7F) obj.SubType = (obj.SubType & 0x80) != 0 ? (byte)((obj.SubType & 0xC0) | ((int)value & 0x3F)) : (byte)((obj.SubType & 15) | (((int)value & 7) << 4)); }));
+					properties.Add(new PropertySpec("Underside spikes", typeof(bool), "Object settings", "Complete groups: bit 6 adds downward spikes while keeping the upper surface safe. Individual recipe members can set bit 0 in the subtype word's upper byte.", false,
+						obj => (obj.SubType & 0xC0) == 0xC0,
+						(obj, value) => { if ((obj.SubType & 0x80) != 0) obj.SubType = (byte)((obj.SubType & ~0x40) | ((bool)value ? 0x40 : 0)); }));
+					properties.Add(new PropertySpec("Initial corner", typeof(int), "Object settings", "Individual platforms only; invalid corners fall back to corner 0. Switch E reverses travel permanently, as in Sonic 1.", null,
+						obj => LConMode(obj.SubType) == 0 ? obj.SubType & 15 : 0,
+						(obj, value) => { if (LConMode(obj.SubType) == 0) obj.SubType = (byte)((obj.SubType & 0xF0) | ((int)value & 15)); }));
+					break;
 				case "Teleporter":
 					routes = ReadWordTable("../objects/Scrap Madness/AB Teleporter.asm", "SMZ_PipeData");
 					Bits("Route", 0, 7, "SMZ_PipeData uses absolute destinations; route 7 requires 50 rings.", "Route 0", "Route 1", "Route 2", "Route 3", "Route 4", "Route 5", "Route 6", "Route 7 (50 rings)"); break;
@@ -184,6 +201,7 @@ namespace MysticIsland.ObjectDefinitions
 			// carry: its moving mode also includes the upper $9F-$FF range.
 			return subtype < 0x10 ? 0 : subtype == 0x10 ? 1 : ((subtype - 0x1F) & 0x80) == 0 ? 3 : 2;
 		}
+		private static int LConMode(byte subtype) { return subtype == 0x7F ? 2 : (subtype & 0x80) != 0 ? 1 : 0; }
 		private static double BombSeconds(int subtype)
 		{
 			int mode = HogMode(subtype);
@@ -239,6 +257,7 @@ namespace MysticIsland.ObjectDefinitions
 			if (split > 0) return WordValue(value.Substring(0, split), labels) - WordValue(value.Substring(split + 1), labels);
 			if ((split = value.IndexOf('+')) > 0) return WordValue(value.Substring(0, split), labels) + WordValue(value.Substring(split + 1), labels);
 			if ((split = value.IndexOf('*')) > 0) return WordValue(value.Substring(0, split), labels) * WordValue(value.Substring(split + 1), labels);
+			if (value.StartsWith("-")) return -WordValue(value.Substring(1), labels);
 			int result;
 			return labels.TryGetValue(value, out result) ? result : value.StartsWith("$") ? Convert.ToInt32(value.Substring(1), 16) : int.Parse(value);
 		}
@@ -334,6 +353,19 @@ namespace MysticIsland.ObjectDefinitions
 					pieces = new List<Sprite>();
 					for (int i = 0; i < members; i++) { int entry = offset + 2 + i * 6; pieces.Add(new Sprite(frames[0], ByteConverter.ToUInt16(groups, entry) - x, ByteConverter.ToUInt16(groups, entry + 2) - y)); }
 					return new Sprite(pieces);
+				case "LabyrinthConveyor":
+					if (subtype == 0x7F) return alternate[0];
+					if ((subtype & 0x80) == 0)
+					{
+						int route = ByteConverter.ToUInt16(routes, (subtype >> 4) * 2), phase = (subtype & 15) * 4;
+						if (phase >= ByteConverter.ToUInt16(routes, route)) phase = 0;
+						return new Sprite(frames[4], LConSigned(routes, route + 6 + phase), LConSigned(routes, route + 8 + phase));
+					}
+					if ((subtype & 0x3F) >= 8) return frames[4];
+					int group = ByteConverter.ToUInt16(groups, (subtype & 0x3F) * 2), countLCon = ByteConverter.ToUInt16(groups, group) + 1;
+					pieces = new List<Sprite>();
+					for (int i = 0; i < countLCon; i++) { int entry = group + 2 + i * 6; bool spikes = (subtype & 0x40) != 0 || (ByteConverter.ToUInt16(groups, entry + 4) & 0x100) != 0; pieces.Add(new Sprite(frames[spikes ? 5 : 4], LConSigned(groups, entry), LConSigned(groups, entry + 2))); }
+					return new Sprite(pieces);
 				default: return At(frames, data.Frame);
 			}
 		}
@@ -365,11 +397,26 @@ namespace MysticIsland.ObjectDefinitions
 		{
 			Sprite sprite = new Sprite(Preview(obj.SubType, obj.X, obj.Y, obj.YFlip));
 			if (behavior == "Teleporter") sprite.Flip(obj.XFlip, false);
-			else if (behavior != "SpinGroup" && behavior != "InvisibleSolid" && behavior != "Conveyor" && behavior != "PathSwapper") sprite.Flip(obj.XFlip, obj.YFlip);
+			else if (behavior != "SpinGroup" && behavior != "LabyrinthConveyor" && behavior != "InvisibleSolid" && behavior != "Conveyor" && behavior != "PathSwapper") sprite.Flip(obj.XFlip, obj.YFlip);
 			return sprite;
 		}
 		public override Sprite GetDebugOverlay(ObjectEntry obj)
 		{
+			if (behavior == "LabyrinthConveyor")
+			{
+				if (obj.SubType == 0x7F) return null;
+				int routeLCon = obj.SubType >> 4;
+				if ((obj.SubType & 0x80) != 0)
+				{
+					if ((obj.SubType & 0x3F) >= 8) return null;
+					int group = ByteConverter.ToUInt16(groups, (obj.SubType & 0x3F) * 2);
+					routeLCon = (ByteConverter.ToUInt16(groups, group + 6) & 0x7F) >> 4;
+				}
+				int route = ByteConverter.ToUInt16(routes, routeLCon * 2), cornersLCon = ByteConverter.ToUInt16(routes, route) / 4;
+				List<Sprite> segments = new List<Sprite>();
+				for (int i = 0; i < cornersLCon; i++) { int a = route + 6 + i * 4, b = route + 6 + ((i + 1) % cornersLCon) * 4; segments.Add(Travel(LConSigned(routes, a), LConSigned(routes, a + 2), LConSigned(routes, b), LConSigned(routes, b + 2))); }
+				return new Sprite(segments);
+			}
 			int movement = obj.SubType & 15;
 			if (behavior == "Platform")
 			{
@@ -407,6 +454,7 @@ namespace MysticIsland.ObjectDefinitions
 			bitmap.DrawRectangle(LevelData.ColorYellow, x2 - left - 2, y2 - top - 2, 4, 4);
 			return new Sprite(bitmap, left, top);
 		}
+		private static int LConSigned(byte[] data, int offset) { return unchecked((short)ByteConverter.ToUInt16(data, offset)); }
 	}
 
 	// Release SonLVL compiles definitions in parallel and names cached DLLs
@@ -414,6 +462,7 @@ namespace MysticIsland.ObjectDefinitions
 	// even though its implementation is shared here. Zone overrides keep the
 	// same type because they replace that ID before definitions are loaded.
 	public sealed class PathSwapper : RuntimeObject { }
+	public sealed class LabyrinthConveyor : RuntimeObject { }
 	public sealed class BubbleGenerator : RuntimeObject { }
 	public sealed class TiltingPlatform : RuntimeObject { }
 	public sealed class FlappingDoor : RuntimeObject { }

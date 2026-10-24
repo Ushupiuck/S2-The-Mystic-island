@@ -11,7 +11,7 @@ ROOT=Path(__file__).resolve().parent.parent
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
-    for kind in ('run','boss','demo'):
+    for kind in ('run','boss','demo','conveyor'):
         p.add_argument('--'+kind,action='append',default=[],help='name=report.json')
     p.add_argument('--output', type=Path, required=True,
                    help='Directory for report.json and coverage.md (outside docs)')
@@ -20,7 +20,7 @@ def main():
     docs=(ROOT/'docs').resolve()
     if output == docs or docs in output.parents:
         p.error('Generated reports must be written outside docs')
-    ids=set();runs=[];bosses=[];demos=[]
+    ids=set();runs=[];bosses=[];demos=[];conveyors=[]
     for item in args.run:
         name,path=item.split('=',1);j=json.loads(Path(path).read_text())
         assert not j.get('failures'),(name,j.get('failures'))
@@ -40,6 +40,12 @@ def main():
         name,path=item.split('=',1);j=json.loads(Path(path).read_text())
         assert len(j['demos'])==4 and all(not d['ended_on_death'] for d in j['demos']),name
         demos.append({'name':name,**j})
+    for item in args.conveyor:
+        name,path=item.split('=',1);j=json.loads(Path(path).read_text())
+        assert j['real_lz1_group']==8 and j['carried_pixels']==40,name
+        assert all(j[k] for k in ('switch_reversal_persists','controller_jump_detaches','whole_group_unload_reload','vram_sheet_matches')),name
+        assert j['underside_response']==('hurt' if j['spiked'] else 'harmless'),name
+        conveyors.append({'name':name,**j});ids.add('1F')
     source=(ROOT/'md-main.asm').read_text()
     includes=set(re.findall(r'include\s+"([^"]+)"',source,re.I))
     pointers=dict(re.findall(r'ptr_Obj([0-9A-F]{2}):\s+dc.l\s+(\w+)',source))
@@ -49,7 +55,6 @@ def main():
         labels=set(re.findall(r'^(\w+):',text,re.M))
         object_ids=[i for i,label in pointers.items() if label in labels]
         if rel not in includes:status='inactive source'
-        elif rel.endswith('1F LZ Conveyor.asm'):status='excluded by request'
         elif rel.endswith('92 Title screen palette handler.asm'):status='unfinished, not spawned'
         elif '/Empty Slots/' in rel and not object_ids:status='empty placeholder'
         elif rel.endswith(('sub ChkObjectVisible.asm', 'sub SmashObject.asm')):
@@ -60,7 +65,7 @@ def main():
         rows.append({'file':rel,'ids':object_ids,'status':status})
     inactive=sum(r['status']=='inactive source' for r in rows)
     placeholders=sum(r['status']=='empty placeholder' for r in rows)
-    result={'runs':runs,'bosses':bosses,'demos':demos,'files':rows,
+    result={'runs':runs,'bosses':bosses,'demos':demos,'conveyors':conveyors,'files':rows,
             'executed_ids':sorted(ids),'limitations':[
                 'Inventory reflects current source; supplied reports must come from its matching ROM/listing. This tool does not verify that provenance.',
                 'Representative subtypes/contacts with scripted positioning, not exhaustive combinations or a controller-only playthrough.',

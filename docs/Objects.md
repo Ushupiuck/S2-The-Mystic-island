@@ -210,6 +210,49 @@ return shortcuts are covered in [Special stage](Special-stage.md).
 Reverse-gravity Debug support is not implemented. For object imports, start
 with [the worked example](Importing-objects.md); for checks, use [Testing](Testing.md).
 
+## Labyrinth conveyor
+
+`objects/S1/1F LZ Conveyor.asm` implements placement `$1F` using S1 `$63`'s
+six LZ shapes/wheel, S2 `$6C`'s relative origins, and S3&K Lava Reef's corner
+movement and full solidity. Both actors can land, ride and jump off. X flip
+reverses travel without mirroring the route. Switch `$E` reverses both normal
+and spiked members once; its latch survives release and unload/reload, as in S1.
+
+| Subtype | Meaning |
+| --- | --- |
+| `$00-$7E` | Individual: high nibble = route, low nibble = initial corner |
+| `$7F` | Decorative wheel, following the switch latch |
+| `$80-$87` | Complete group 0-7 at the placement origin |
+| `$C0-$C7` | The same groups, with safe tops and harmful spiked undersides |
+
+`LCon_Data` is the editable relative route table: point-byte count, leftmost
+and rightmost X, then signed X/Y pairs. `LCon_Placements` supplies a count minus
+one and six-byte members: signed X, signed Y, settings/subtype word. Its low
+byte selects route/corner; upper-byte bit 0 adds spikes to an individual member.
+The parent passes settings to its children, following the W.I.P. button's
+parent-supplied-settings approach. Groups 0-5 preserve S1 spacing; 6-7 are the
+short/long rounded Lava Reef loops. Invalid corners use 0; invalid groups unload.
+
+One placement owns a group. Allocation preflights all helpers and retries
+unchanged when full. Children have no respawn handle; all members retain the
+complete horizontal path, including wide LZ3 shapes. Use any-Y group loading.
+LZ1 restores its two conveyor groups and eleven wheels, retaining unrelated
+placements. Group Y values now name their true relative origins. Other LZ
+object restoration remains separate.
+
+Private fields: origin X/Y `$30/$32`, target X/Y `$34/$36`, corner/count bytes
+`$38/$39`, signed step/reversal bytes `$3A/$3B`, path long `$3C`, rightmost X
+and retention-width words `$40/$42`, member/settings bytes `$44/$45`.
+Underside damage shares `Spike_HurtCharacter`, including both-player hit masks,
+invincibility and the full-word flashing timer. Tops and sides stay harmless.
+See [Sprites and VRAM](Sprites-and-VRAM.md) for its sheet and mapping sources.
+
+Comparisons use s1disasm `15dfa3a6ee4c53aeb482233e493755c84b4f3479`, s2disasm
+`4ef457c18fc4902396c43ab06fabc119ac6ecb64`, and skdisasm
+`73de97c6b55055bcb8089c1d55d006b02136f163` (`Obj_LRZChainedPlatforms`). FBZ's
+yellow orbs, `Obj_FBZSnakePlatform` (`$75`), use a separate delayed-train
+waypoint runner, rather than this relative-path constructor.
+
 ## GHZ boss and boss explosions
 
 `objects/S1/3D Boss - Green Hill.asm` retains the classic ship, faces, eight-hit

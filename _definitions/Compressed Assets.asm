@@ -624,7 +624,7 @@ MCD_CompressedAssets:
 	dc.l Kospm_Jaws,Kospm_Jaws+$1DA	; art/moduled kosinski/Enemy Jaws.kospm
 	endif
 	if defined(Kospm_LzWheel)
-	dc.l Kospm_LzWheel,Kospm_LzWheel+$438	; art/moduled kosinski/LZ conveyor.kospm
+	dc.l Kospm_LzWheel,Kospm_LzWheel+$486	; art/moduled kosinski/LZ conveyor.kospm
 	endif
 	if defined(Kospm_MiniSonic)
 	dc.l Kospm_MiniSonic,Kospm_MiniSonic+$1A4	; art/moduled kosinski/Mini Sonic Continue.kospm

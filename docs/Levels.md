@@ -169,6 +169,14 @@ water in an affected act. The VRAM check permits this deliberate borrowing;
 the boss regression executes the actual water-selection code for all four
 GHZ acts to guard the contract.
 
+## Labyrinth art
+
+Rustic Ruins/LZ uses a Tidal Tempest background with its edited LZ terrain art.
+Many tiles removed from the end of S1's original sheet belonged to the enormous
+LZ4/SBZ3 lift. Restoring its original object would also need the missing art;
+the current sheet is not a complete stock-S1 bank. The restored LZ1 conveyors
+use their separate object-art bank and preserve this terrain/background work.
+
 ## Scrap Madness
 
 Acts 1/2 retain S1 SBZ foreground, industrial backgrounds, collision and hazards.

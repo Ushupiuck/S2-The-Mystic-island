@@ -158,6 +158,19 @@ catch residual hardcoded zone/act assumptions. For example:
 python build_tools/check_water_tables.py --rom s2built.bin --listing md-main.lst --output test-results/water-tables/native.json
 ```
 
+`check_lz_conveyor.py` executes all eight constructors, two circuits per route,
+relative translation, allocation retries in fragmented/full pools, whole-path
+unload/reload, both riders, switch reversal for normal/spiked groups, per-member
+settings, and safe-top/side versus underside-damage/invulnerability cases.
+
+`check_lz_conveyor_game.py` boots the restored LZ1 placements and checks real
+boarding/carrying, controller jumping, switch reversal, unload/reload and the
+complete live VRAM sheet. It accepts `--player 2`, `--pal` and
+`--system-directory`. `--spiked` changes the first group's subtype in an
+output-only ROM fixture; gameplay sources and the normal level remain normal.
+Its underside contact fixture checks damage/harmlessness for the selected mode.
+These use scripted positioning around real placements, not a complete route.
+
 ## Boss runtime checks
 
 ```sh
@@ -319,12 +332,13 @@ python build_tools/summarize_object_course.py --run Sonic-NTSC=test-results/cour
 
 This minimal example fails if the supplied reports leave live implementations
 uncovered. Repeat `--run name=path`, `--boss GHZ-name=path` / `EHZ-name=path`, and
-`--demo name=path` as needed. Successful output is `report.json` and `coverage.md`
+`--demo name=path` as needed. Include `--conveyor name=path` with a matching
+`check_lz_conveyor_game.py` report for `$1F`. Successful output is `report.json` and `coverage.md`
 in the selected directory. Helpers receive no inferred runtime certification
 from object IDs; inactive/W.I.P. sources are inventoried, not gameplay-tested.
 
-Known limits remain explicit: the excluded LZ conveyor is unfinished; Gator
-lifecycle/rendering does not certify its broken gameplay; the compiled title
+Known limits remain explicit: Gator lifecycle/rendering does not certify its
+broken gameplay; the compiled title
 palette handler is unfinished/unspawned. Representative subtypes and positioned
 fixtures are not exhaustive/controller-only playthroughs. Rare monitor-route
 reproduction and full revised companion routes remain incomplete. SonLVL paths

@@ -14378,88 +14378,6 @@ ObjPos_Null:	binclude	"level/objects/S1_Ending.bin"
 		ObjectLayoutBoundary
 		even
 ; ---------------------------------------------------------------------------
-; ===========================================================================
-; Conveyor belt corner target coordinate definitions.
-; Each group corresponds to the lower nybble of the given subtype.
-; Format:
-; 	dc.w number of entries, times 4
-; 	dc.w base X position (used for out_of_range check)
-; 	dc.w entries...
-; Entries consist of a target X position and target Y position.
-; ===========================================================================
-
-LCon_Data:	dc.w .group0-LCon_Data
-		dc.w .group1-LCon_Data
-		dc.w .group2-LCon_Data
-		dc.w .group3-LCon_Data
-		dc.w .group4-LCon_Data
-		dc.w .group5-LCon_Data
-
-.group0:
-		.baseX_0: = $1070
-		.baseY_0: = $2F0
-		dc.w 6*4
-		dc.w .baseX_0
-		dc.w .baseX_0+$08, .baseY_0-$D6
-		dc.w .baseX_0+$4E, .baseY_0-$90
-		dc.w .baseX_0+$4E, .baseY_0+$A3
-		dc.w .baseX_0+$1C, .baseY_0+$D5
-		dc.w .baseX_0-$4E, .baseY_0+$A0
-		dc.w .baseX_0-$4E, .baseY_0-$AC
-
-.group1:
-		.baseX_1: = $1280
-		.baseY_1: = $377
-		dc.w 5*4
-		dc.w .baseX_1
-		dc.w .baseX_1-$02, .baseY_1-$F7
-		dc.w .baseX_1+$4E, .baseY_1-$A7
-		dc.w .baseX_1+$4E, .baseY_1+$F7
-		dc.w .baseX_1-$4E, .baseY_1+$A9
-		dc.w .baseX_1-$4E, .baseY_1-$AB
-
-.group2:
-		.baseX_2: = $D68
-		.baseY_2: = $530
-		dc.w 4*4
-		dc.w .baseX_2
-		dc.w .baseX_2-$46, .baseY_2-$AE
-		dc.w .baseX_2-$46, .baseY_2+$AE
-		dc.w .baseX_2+$46, .baseY_2+$AE
-		dc.w .baseX_2+$46, .baseY_2-$AE
-
-.group3:
-		.baseX_3: = $DA0
-		.baseY_3: = $440
-		dc.w 4*4
-		dc.w .baseX_3
-		dc.w .baseX_3-$3E, .baseY_3-$9E
-		dc.w .baseX_3+$4E, .baseY_3-$9E
-		dc.w .baseX_3+$4E, .baseY_3+$9E
-		dc.w .baseX_3-$3E, .baseY_3+$9E
-
-.group4:
-		.baseX_4: = $D00
-		.baseY_4: = $310
-		dc.w 5*4
-		dc.w .baseX_4
-		dc.w .baseX_4-$54, .baseY_4-$CE
-		dc.w .baseX_4+$DE, .baseY_4-$CE
-		dc.w .baseX_4+$DE, .baseY_4+$CE
-		dc.w .baseX_4-$AE, .baseY_4+$CE
-		dc.w .baseX_4-$AE, .baseY_4-$74
-
-.group5:
-		.baseX_5: = $1300
-		.baseY_5: = $264
-		dc.w 4*4
-		dc.w .baseX_5
-		dc.w .baseX_5-$AE, .baseY_5-$5A
-		dc.w .baseX_5+$DE, .baseY_5-$5A
-		dc.w .baseX_5+$DE, .baseY_5+$5A
-		dc.w .baseX_5-$AE, .baseY_5+$5A
-		even
-; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Ring layouts; one entry per act, four entries per zone
 ; ---------------------------------------------------------------------------
@@ -15264,7 +15182,7 @@ Map_HPZ_Bridge:	binclude	"mappings/sprite/obj1D_HPZ.bin"
 		even
 Map_Waterfall2:	binclude	"mappings/sprite/HPZ Waterfall.bin"		; $1E
 		even
-Map_LConv:	binclude	"mappings/sprite/LZ conveyor.bin"		; $1F
+		include	"mappings/sprite/LZ conveyor.asm"		; $1F
 		even
 Map_Mplat:	binclude	"mappings/sprite/Morphing Platform.bin"		; $20
 		even

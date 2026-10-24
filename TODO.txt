@@ -249,3 +249,8 @@ $12 Tiles
 Chicken, Eagle, Flicky, Seal:
 $E  Tiles
 ; ---------------------------------------------------------------------------
+
+Compare S3&K Flying Battery's floating platforms (Obj_FBZFloatingPlatform)
+with our existing floating platforms. Beyond hovering up/down, are they an
+evolved version of the same object? Inspect movement variants, rider/solid
+handling and activation behavior before deciding what is worth reusing.

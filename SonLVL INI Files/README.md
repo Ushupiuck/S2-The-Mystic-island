@@ -39,6 +39,7 @@ their route when debug overlays are enabled.
 | `$1C` | Scenery | Low nibble: appearance; high nibble: animation. Zone lists supply suitable defaults. |
 | `$1D` | Bridge | Full byte: number of 16-pixel logs. Preview includes every log. |
 | `$1E` | HPZ waterfall | Full byte: height; `$10` and above add a second stream. |
+| `$1F` | LZ conveyor | `$80-$87`: complete relative groups; `$C0-$C7`: the same groups with harmful undersides. `$00-$7E`: individual route/corner; `$7F`: wheel. X flip reverses travel; switch E reverses normal/spiked groups permanently. The property grid exposes mode, route/group, spikes and individual corner. Previews/route overlays read the live ASM tables. |
 | `$21` | Ballhog | `$00–0F`: horizontal; `$10`: timed vertical; `$11–1E` and `$9F–FF`: moving vertical; `$1F–9E`: stationary vertical. Bomb lifetime is editable, including extended timers. `$1F` underflows to 255 seconds. The extended moving range comes from the handler's byte comparison / signed branch. |
 | `$2B` | Chopper / Masher | Eight jump velocities, `$00–07`. |
 | `$2C` | Jaws | Full byte: turning interval in 64-frame units. |

@@ -139,6 +139,15 @@ terrain tile `$D1`. HPZ keeps `ArtTile_Splats = $418`, resident bubbles at
 Use the actual PLCs/constants for other zone banks, not an older address table.
 SMZ's atlas, junction and smoke lifetimes are in [Levels](Levels.md#scrap-madness).
 
+LZ's conveyor uses 80 tiles at `$3ED-$43C`, ending immediately before Ball Hog V.
+The first 72 tiles retain the four original wheels and platform; the final
+eight form a visibly spiked platform with the same safe top and bounds.
+Edit `art/moduled kosinski/LZ conveyor.unc`, then run
+`python build_tools/build_lz_conveyor_art.py` to rebuild its moduled Kosinski+
+archive. `mappings/sprite/LZ conveyor.asm` owns frames 0-3 (wheels), 4 (normal)
+and 5 (spiked). Normal builds derive their display bounds. LZ's per-act module
+lists load this bank; using the object in another zone also needs that art.
+
 ## Effects and UI ownership
 
 ### Boss explosions
