@@ -51,6 +51,11 @@ remain valid. Existence/deletion checks must access the full longword: the high
 byte of a live ROM pointer is usually zero. Test helpers' `layout_id` is only a
 reverse projection for fixtures.
 
+On the CD branch, Snailbot's animation tails push `MarkObjGone(pc)` with `pea`,
+then branch to `AnimateSprite`; animation returns into the lifetime/display service.
+Both helpers consume ordinary return frames. Do not use that continuation form
+with a helper that discards or rewrites its caller's frame.
+
 Player meanings overlay the same SST. The complete player map is in the constants;
 notable shared-service fields are:
 

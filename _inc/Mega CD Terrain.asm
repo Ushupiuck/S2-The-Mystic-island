@@ -58,8 +58,7 @@ MCD_SubTerrainProbe:
 .wall:
 		bsr.w	MCD_SubFindWall
 .result:
-		bsr.w	MCD_SubTerrainResult
-		rts
+		bra.w	MCD_SubTerrainResult
 
 ; Six words supply only the fields used by terrain, rather than copying an SST.
 ; Player paired sensors, distance selection and ground attachment all run here.
@@ -1213,8 +1212,7 @@ MCD_Subsub_7232:
 		movem.l	d4-d5,-(sp)
 		bsr.w	MCD_SubCalc_VRAM_Pos
 		movem.l	(sp)+,d4-d5
-		bsr.w	MCD_SubDrawBlocks_LR
-		rts
+		bra.w	MCD_SubDrawBlocks_LR
 ; ---------------------------------------------------------------------------
 
 MCD_Subloc_725A:

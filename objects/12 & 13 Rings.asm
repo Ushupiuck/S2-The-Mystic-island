@@ -169,7 +169,6 @@ loc_A9FA:
 		tst.b	obRender(a0)
 		bpl.s	loc_AA34
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.s	loc_AA34
 		add.w	d1,obY(a0)
 		move.w	obVelY(a0),d0

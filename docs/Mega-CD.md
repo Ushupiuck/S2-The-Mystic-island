@@ -126,6 +126,10 @@ also executes on CD; object behavior and motion remain MD-owned. Small single
 probes pay mailbox overhead: clock speed alone does not guarantee a gain.
 The terrain runner measures complete calls, including waits.
 
+MD distance-query wrappers return `d1.w` with N/Z describing that distance and
+V/C cleared, including floor, ceiling and wall queries. Callers can branch on
+those flags directly; a second `tst.w d1` is unnecessary on this branch.
+
 ## CPU work and ring jobs
 
 The sub-CPU actually executes `MCD_SubRingTick`, owning resident animation
@@ -170,6 +174,11 @@ executors may clobber all data/address registers except SP, and return their
 result in `d0`. Completion restores the token into the acknowledgement cache
 and publishes the result before the acknowledgement. Result flags survive
 until the next command. No per-command self-modifying call patch is needed.
+
+The service loop addresses its fixed `$FF80xx` mailbox registers with absolute
+short operands. Sign extension still reaches the same registers on the 24-bit
+CD bus. MD-side `$A120xx` mailbox accesses retain their long addresses. These
+address forms do not change token ordering or the dispatcher mechanism.
 
 `MCD_Command`: command word in `d0`, argument in `d1`, result in `d0`; carry
 signals absent/busy/failure, `d2-d3` are clobbered. A complemented token serializes

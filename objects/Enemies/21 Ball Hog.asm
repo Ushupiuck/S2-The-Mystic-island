@@ -39,7 +39,6 @@ Ballhog_Main:
 		move.b	#8,obWidth(a0)
 		bsr.w	ObjectMoveAndFall
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.s	.return
 		add.w	d1,obY(a0)
 		move.w	#0,obVelY(a0)
@@ -460,20 +459,17 @@ Ballhog_NormalBomb:
 		bsr.w	ObjectMoveAndFall
 		moveq	#$6,d3
 		jsr	(ObjHitWallRight).l
-		tst.w	d1
 		bpl.s	+
 		neg.w	obVelX(a0)
 +
 		moveq	#-$6,d3
 		jsr	(ObjHitWallLeft).l
-		tst.w	d1
 		bpl.s	+		; delete if the	fireball hits a	wall
 		neg.w	obVelX(a0)
 +
 		tst.w	obVelY(a0)
 		bmi.s	.moving_up
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.s	.moving_up
 		add.w	d1,obY(a0)
 		move.w	#-$300,obVelY(a0)
@@ -523,7 +519,6 @@ Ballhog_ProtoBomb:
 		tst.w	hog_launchflag(a0)
 		bne.s	.dont_react_floor
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.s	.not_in_floor
 		add.w	d1,obY(a0)
 

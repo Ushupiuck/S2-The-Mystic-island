@@ -36,7 +36,6 @@ WheelCarrier:
 		bsr.w	.wall
 		bmi.s	.reverse
         jsr (ObjHitFloor).l
-        tst.w d1
         bpl.s .mount
         add.w d1,obY(a0)
         clr.w obVelY(a0)

@@ -193,10 +193,14 @@ and their result. It covers 1,536 requests: every command byte with three high
 bytes, immediate and delayed requests, token complements, result/flag publication,
 stack balance and guards. Add `--core ... --system-directory ... --output report.json`
 for isolated sub-CPU timing, optionally with `--baseline-rom ... --baseline-listing ...`.
+The native fixture mirrors sign-extended absolute-short mailbox accesses onto
+their physical 24-bit addresses, as the real sub-CPU bus does.
 Timing freezes MD execution and uses fixed jobs; it measures dispatcher overhead,
 not complete RPC latency or game-wide performance. Compared with the unrolled
-service, ordinary jobs save 12 cycles and former two-register-preserving jobs
-save 64; no-op/ping/return-RAM/unknown replies cost 22 more cycles. Idle polling
+service with long mailbox operands, ordinary jobs save 32 cycles and former
+two-register-preserving jobs save 84; no-op/ping/return-RAM/unknown replies cost
+2 more cycles. The short mailbox operands save 20 cycles per serviced command
+against the previous compact loop. Idle polling
 retains its read/compare/conditional-branch loop.
 
 Add `--stack-gameplay` to `check_mode1.py` to watermark unused MD stack space

@@ -29,20 +29,20 @@ MCD_SubEntry:
 ; A job may clobber every data/address register except SP. Keep only its
 ; in-flight token on the CD stack; publish the result before acknowledging it.
 .complete:
-		move.w	d0,(MCD_SubOwnResult).l
+		move.w	d0,(MCD_SubOwnResult).w
 		move.w	(sp)+,d7
-		move.w	d7,(MCD_SubOwnAck).l
+		move.w	d7,(MCD_SubOwnAck).w
 .wait:
-		move.w	(MCD_SubMainToken).l,d6
+		move.w	(MCD_SubMainToken).w,d6
 		cmp.w	d6,d7
 		beq.s	.wait
 		move.w	d6,-(sp)
-		move.w	(MCD_SubMainCommand).l,d0
+		move.w	(MCD_SubMainCommand).w,d0
 		moveq	#0,d1
 		move.b	d0,d1
 		lsl.w	#2,d1
 		movea.l	.handlers(pc,d1.w),a0
-		move.b	#MCD_ServiceReady,(MCD_SubOwnFlags).l
+		move.b	#MCD_ServiceReady,(MCD_SubOwnFlags).w
 		jsr	(a0)
 		bra.s	.complete
 ; ===========================================================================

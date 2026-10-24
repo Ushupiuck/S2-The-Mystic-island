@@ -355,12 +355,10 @@ VInt_0_Water_Cont:
 Vint_SEGA:
 		bsr.w	Do_ControllerPal
 		tst.w	(v_generictimer).w
-		beq.w	Vint_Done
+		beq.s	.return
 		subq.w	#1,(v_generictimer).w
-		bra.w	Vint_Done
-;		beq.s	.end
-;		subq.w	#1,(v_generictimer).w
-;.end:		rts
+.return:
+		rts
 ; ===========================================================================
 ; loc_CAE: VintSub14:
 Vint_PCM:
@@ -374,21 +372,20 @@ Vint_PCM:
 		startZ80
 +
 		tst.w	(v_generictimer).w
-		beq.w	Vint_Done
+		beq.s	.return
 		subq.w	#1,(v_generictimer).w
-		bra.w	Vint_Done
+.return:
+		rts
 ; ===========================================================================
 ; loc_CBC: VintSub4:
 Vint_Title:
 		bsr.w	Do_ControllerPal
 		bsr.w	ProcessDPLC
 		tst.w	(v_generictimer).w
-		beq.w	Vint_Done
+		beq.s	.return
 		subq.w	#1,(v_generictimer).w
-		bra.w	Vint_Done
-;		beq.s	.end
-;		subq.w	#1,(v_generictimer).w
-;.end:		rts
+.return:
+		rts
 ; ===========================================================================
 ; loc_CD8: VintSub10:
 Vint_Pause:
@@ -418,14 +415,7 @@ Vint_Level:
 		cmpi.b	#92,(v_hbla_line).w
 		bhs.s	Do_Updates
 		st	(f_doupdatesinhblank).w
-	;	addq.l	#4,sp
-	;	bsr.w	Vint_Done	; rather than always branching to "VintRet",
-	;	addq.l	#1,(Vint_runcount).w	; we'll optimize by copying it here.
-	;	movem.l	(sp)+,d0-a6
-	;	rte
-		bra.w	Vint_Done
-;+
-	;	pea	(Vint_Done).w
+		rts
 ; ---------------------------------------------------------------------------
 ; Subroutine to run a demo for an amount of time
 ; ---------------------------------------------------------------------------
@@ -440,12 +430,10 @@ Do_Updates:
 		clr.w	(Lag_frame_count).w
 		bsr.w	ProcessDPLC2
 		tst.w	(v_generictimer).w
-		beq.w	Vint_Done
+		beq.s	.return
 		subq.w	#1,(v_generictimer).w
-		bra.w	Vint_Done
-;		beq.s	.end
-;		subq.w	#1,(v_generictimer).w
-;.end:		rts
+.return:
+		rts
 ; End of function Do_Updates
 
 ; ---------------------------------------------------------------------------
@@ -486,9 +474,10 @@ Vint_S1SS:
 		move.w	#(16*tile_size)/2,d3		; 16 tiles * 32 bytes = $200 bytes = $100 words
 		bsr.w	QueueDMATransfer
 		tst.w	(v_generictimer).w
-		beq.w	Vint_Done
+		beq.s	.return
 		subq.w	#1,(v_generictimer).w
-		bra.w	Vint_Done
+.return:
+		rts
 ; ===========================================================================
 ; loc_EA2: VintSubC: VintSub18:
 Vint_TitleCard:
@@ -511,8 +500,7 @@ Vint_TitleCard:
 		jsr	(LoadTilesAsYouMove).l
 	;	jsr	(LoadTilesAsYouMove).l
 		jsr	(HudUpdate).l
-		bsr.w	ProcessDPLC
-		bra.w	Vint_Done
+		bra.w	ProcessDPLC
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; First level VBlank after loading: enable the water split with a valid counter.
@@ -564,9 +552,10 @@ Vint_SSResults:
 		bsr.w	QueueDMATransfer
 .timer:
 		tst.w	(v_generictimer).w
-		beq.w	Vint_Done
+		beq.s	.return
 		subq.w	#1,(v_generictimer).w
-		bra.w	Vint_Done
+.return:
+		rts
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
@@ -1455,7 +1444,7 @@ loc_23A0:
 
 ; PalLoad_Fade
 PalLoad1:
-		lea	(PalPointers).l,a1
+		lea	PalPointers(pc),a1
 		lsl.w	#3,d0
 		adda.w	d0,a1
 		movea.l	(a1)+,a2	; get palette data address
@@ -1474,7 +1463,7 @@ PalLoad1:
 
 
 PalLoad2:
-		lea	(PalPointers).l,a1
+		lea	PalPointers(pc),a1
 		lsl.w	#3,d0
 		adda.w	d0,a1
 		movea.l	(a1)+,a2
@@ -1492,7 +1481,7 @@ PalLoad2:
 
 
 PalLoad3_Water:
-		lea	(PalPointers).l,a1
+		lea	PalPointers(pc),a1
 		lsl.w	#3,d0
 		adda.w	d0,a1
 		movea.l	(a1)+,a2
@@ -1511,7 +1500,7 @@ PalLoad3_Water:
 
 
 PalLoad4_Water:
-		lea	(PalPointers).l,a1
+		lea	PalPointers(pc),a1
 		lsl.w	#3,d0
 		adda.w	d0,a1
 		movea.l	(a1)+,a2
@@ -9570,7 +9559,6 @@ Obj50_Routine08:
 
 sub_16228:
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.s	loc_16242
 		add.w	d1,obY(a0)
 		move.w	obVelY(a0),d0
@@ -10357,7 +10345,6 @@ Obj4E_Init:
 		move.b	#8,obWidth(a0)
 		jsr	(ObjectMoveAndFall).l
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.s	.return
 		add.w	d1,obY(a0)
 		clr.w	obVelY(a0)

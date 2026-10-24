@@ -337,7 +337,6 @@ Tails_Water:
 		cmpa.w	#v_player,a0
 		bne.s	.companion
 		move.b	(v_air+1).w,air_left(a0)
-		bra.s	.return
 .companion:
 		rts
 .out:
@@ -455,8 +454,7 @@ Tails_FlySwim_Unknown:
 		move.w	#0,obX(a0)
 		move.w	#0,obY(a0)
 		move.b	#Tails_FlightBudget,tails_flight_energy(a0)
-		bsr.w	Tails_Set_Flying_Animation
-		rts
+		bra.w	Tails_Set_Flying_Animation
 ; ---------------------------------------------------------------------------
 
 TailS3_loc_13C3A:
@@ -2204,8 +2202,8 @@ TailPhysics_loc_104F6:
 
 ; Sonic_Floor:
 Tails_DoLevelCollision:
-		pea	(Tails_ResetOnFloor).l
-		jmp	(MCD_PlayerAirCollision).l
+		pea	Tails_ResetOnFloor(pc)
+		bra.w	MCD_PlayerAirCollision
 ; End of function Tails_DoLevelCollision
 
 

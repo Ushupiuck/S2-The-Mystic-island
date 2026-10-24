@@ -62,7 +62,6 @@ PP_Tamabboh_Position:
 	move.l	#$10000,d0
 	add.l	d0,obY(a0)
 	jsr	(ObjHitFloor).l
-	tst.w	d1
 	bpl.s	.End
 	add.w	d1,obY(a0)
 	addq.b	#2,obRoutine(a0)
@@ -284,7 +283,6 @@ PP_TamabbohMissile_Main:
 
 .Action:
 	jsr	(ObjHitFloor).l
-	tst.w	d1
 	bpl.s	.MoveAnim
 	jmp	(DeleteObject).l
 

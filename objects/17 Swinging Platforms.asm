@@ -371,7 +371,6 @@ SwingingPtfm_Floating:
 		moveq	#0,d3
 		move.b	obActWid(a0),d3
 		jsr	(ObjHitWallRight).l
-		tst.w	d1
 		bpl.s	.solid
 		add.w	d1,obX(a0)
 		clr.w	obVelX(a0)

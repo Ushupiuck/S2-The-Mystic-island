@@ -78,8 +78,7 @@ SMZ_Bom_Action_Walking:
 
 		subq.w	#1,SMZ_bom_time(a0)				; decrement time delay before stopping to walk
 		bmi.s	.stopWalking				; if time expired, branch
-		jsr (SpeedToPos).l				; update SMZ_Bomb's position
-		rts						; return
+		jmp	(SpeedToPos).l				; update SMZ_Bomb's position
 ; ---------------------------------------------------------------------------
 
 	.stopWalking:
@@ -167,8 +166,7 @@ SMZ_Bom_Fuse:	; Routine 4
 SMZ_Bom_BurnFuseAndExplode:
 		subq.w	#1,SMZ_bom_time(a0)				; decrement fuse timer
 		bmi.s	.fuseExpired				; if timer expired, branch
-		jsr (SpeedToPos).l				; update fuse's position
-		rts						; return
+		jmp	(SpeedToPos).l				; update fuse's position
 ; ---------------------------------------------------------------------------
 
 .fuseExpired:

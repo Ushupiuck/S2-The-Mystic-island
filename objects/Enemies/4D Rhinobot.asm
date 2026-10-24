@@ -25,7 +25,6 @@ Obj4D_Init:
 		move.b	#$18,obWidth(a0)
 		jsr	(ObjectMoveAndFall).l
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.s	.return
 		add.w	d1,obY(a0)
 		clr.w	obVelY(a0)

@@ -124,7 +124,6 @@ SMZ_MBlock_LeftRight:
 SMZ_MBlock_NextWhenStoodOn:
 		move.b obStatus(a0),d0
 		andi.b #$18,d0
-		tst.b d0			; is Sonic standing on the platform?
 		beq.s	.return					; if neither actor stands on it, wait
 		addq.b	#1,obSubtype(a0)			; if yes, go to next subtype in list
 
@@ -137,7 +136,6 @@ SMZ_MBlock_Right_StopOnWall:
 		moveq	#0,d3					; clear d3
 		move.b	obActWid(a0),d3				; use platform half-width as pixels to look ahead
 		jsr (ObjHitWallRight).l				; get distance to platform right edge and nearest wall
-		tst.w	d1					; has the platform hit a wall?
 		bmi.s	.stopPlatform				; if yes, branch
 		addq.w	#1,obX(a0)				; move platform to the right at 1px/frame
 		move.w	obX(a0),SMZ_mblock_origX(a0)		; update initial X-position as platform moves
@@ -154,7 +152,6 @@ SMZ_MBlock_Right_FallOnWall:
 		moveq	#0,d3					; clear d3
 		move.b	obActWid(a0),d3				; use platform half-width as pixels to look ahead
 		jsr (ObjHitWallRight).l				; get distance to platform right edge and nearest wall
-		tst.w	d1					; has the platform hit a wall?
 		bmi.s	.fallDown				; if yes, branch
 		addq.w	#1,obX(a0)				; move platform to the right at 1px/frame
 		move.w	obX(a0),SMZ_mblock_origX(a0)		; update initial X-position as platform moves
@@ -172,7 +169,6 @@ SMZ_MBlock_FallingDown:
 		addi.w	#$18,obVelY(a0)				; make the platform fall faster
 
 		jsr (ObjHitFloor).l				; get distance to floor
-		tst.w	d1					; has platform hit the floor?
 		bpl.w	.return					; if not, branch
 		add.w	d1,obY(a0)				; align platform to floor
 		clr.w	obVelY(a0)				; stop platform falling

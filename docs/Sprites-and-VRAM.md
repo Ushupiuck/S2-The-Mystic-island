@@ -40,6 +40,10 @@ table. Ordinary foreground lag (`$00`) retains its water-palette refresh path.
 The old [Twizzler lag investigation](Testing.md#runtime-checks) exercised this
 distinction; it is not part of current decompressor migration checks.
 
+On the CD branch, screen handlers return directly to the outer VBlank restore.
+Timer tails use local short conditional exits, and the title-card handler tail-calls its final
+PLC bookkeeping routine. Preserve the outer register restore and `rte` once.
+
 ## Dynamic art
 
 `_inc/Dynamic Sprite Art.asm` implements `Load_DynamicPLC`: word run count, then

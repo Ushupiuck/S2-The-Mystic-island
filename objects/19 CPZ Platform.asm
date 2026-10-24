@@ -106,7 +106,6 @@ loc_153AC:
 		moveq	#0,d3
 		move.b	obActWid(a0),d3
 		jsr	(ObjHitWallRight).l
-		tst.w	d1
 		bmi.s	loc_153C6
 		addq.w	#1,obX(a0)
 		move.w	obX(a0),objoff_34(a0)
@@ -122,7 +121,6 @@ loc_153CC:
 		moveq	#0,d3
 		move.b	obActWid(a0),d3
 		jsr	(ObjHitWallRight).l
-		tst.w	d1
 		bmi.s	loc_153E6
 		addq.w	#1,obX(a0)
 		move.w	obX(a0),objoff_34(a0)
@@ -138,7 +136,6 @@ loc_153EC:
 		jsr	(ObjectMove).l
 		addi.w	#$18,obVelY(a0)
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.w	locret_1540C
 		add.w	d1,obY(a0)
 		clr.w	obVelY(a0)

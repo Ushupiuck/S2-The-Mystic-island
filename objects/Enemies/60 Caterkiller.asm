@@ -493,7 +493,6 @@ Cat_FallPart:
 .floor:
 		bsr.w	ObjectFall
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.s	.return
 		add.w	d1,obY(a0)
 		clr.w	obYSub(a0)
@@ -710,7 +709,6 @@ Cat_Scatter:	; Routine $C
 		tst.w	obVelY(a0)
 		bmi.s	loc_16CE0
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.s	loc_16CE0
 		add.w	d1,obY(a0)
 		move.w	#-$400,obVelY(a0)

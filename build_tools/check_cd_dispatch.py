@@ -11,7 +11,8 @@ import argparse
 import json
 import re
 import struct
-from unicorn import Uc, UC_ARCH_M68K, UC_MODE_BIG_ENDIAN, UC_HOOK_CODE, UC_HOOK_MEM_WRITE
+from unicorn import (Uc, UC_ARCH_M68K, UC_MODE_BIG_ENDIAN, UC_HOOK_CODE,
+                     UC_HOOK_MEM_READ, UC_HOOK_MEM_WRITE)
 from unicorn import m68k_const as reg
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -119,6 +120,7 @@ def main():
         cpu.ctl_set_cpu_model(reg.UC_CPU_M68K_M68000)
         cpu.mem_map(0, 0xC0000)
         cpu.mem_map(0xFF0000, 0x10000)
+        cpu.mem_map(0xFFFF0000, 0x10000)
         cpu.mem_write(0, program)
         job_return = s['MCD_SubStack_Start'] - 0x100
         cpu.mem_write(job_return, bytes.fromhex('4E75'))
@@ -165,7 +167,17 @@ def main():
                 c.mem_write(s['MCD_SubOwnFlags'], b'\x83')
             c.reg_write(reg.UC_M68K_REG_PC, job_return)
 
+        def read_alias(c, access, address, size, value, unused):
+            physical = address & 0xFFFFFF
+            if address != physical:
+                c.mem_write(address, bytes(c.mem_read(physical, size)))
+
         def wrote(c, access, address, size, value, unused):
+            # Absolute-short operands sign-extend; the real bus is 24-bit.
+            physical = address & 0xFFFFFF
+            if address != physical:
+                c.mem_write(physical, value.to_bytes(size, 'big'))
+            address = physical
             if address == s['MCD_SubOwnResult']:
                 state['result'] = True
             if address != s['MCD_SubOwnAck']:
@@ -194,6 +206,7 @@ def main():
 
         publish()
         cpu.hook_add(UC_HOOK_CODE, code)
+        cpu.hook_add(UC_HOOK_MEM_READ, read_alias)
         cpu.hook_add(UC_HOOK_MEM_WRITE, wrote)
         cpu.reg_write(reg.UC_M68K_REG_SR, 0x2700)
         cpu.reg_write(reg.UC_M68K_REG_A7, top)

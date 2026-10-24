@@ -243,7 +243,6 @@ Flicky_ChkFloor:
 		tst.w	obVelY(a0)
 		bmi.w	DisplaySprite
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.w	DisplaySprite
 		add.w	d1,obY(a0)
 		move.w	animal_x_vel(a0),obVelX(a0)
@@ -270,7 +269,6 @@ Flicky_Walk:
 		bmi.s	+
 		clr.b	obFrame(a0)
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.s	+
 		add.w	d1,obY(a0)
 		move.w	animal_y_vel(a0),obVelY(a0)
@@ -288,7 +286,6 @@ Flicky_Fly:
 		tst.w	obVelY(a0)
 		bmi.s	+
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.s	+
 		add.w	d1,obY(a0)
 		move.w	animal_y_vel(a0),obVelY(a0)
@@ -375,7 +372,6 @@ Flicky_DoubleBounce:
 		bmi.w	Flicky_ChkDel
 		clr.b	obFrame(a0)
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.w	Flicky_ChkDel
 		not.b	animal_direction(a0) ; used to be objoff_2D in Sonic 1/2; in sonic 3, 29 is a "convention followed by many objects", so it was changed
 		bne.s	+
@@ -407,7 +403,6 @@ Flicky_SingleBounce:
 		bmi.w	Flicky_ChkDel
 		clr.b	obFrame(a0)
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.w	Flicky_ChkDel
 		neg.w	obVelX(a0)
 		bchg	#0,obRender(a0)
@@ -424,7 +419,6 @@ Flicky_FlyBounce:
 		tst.w	obVelY(a0)
 		bmi.s	++
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.s	++
 		not.b	animal_direction(a0) ; used to be objoff_2D in Sonic 1/2; in sonic 3, 29 is a "convention followed by many objects", so it was changed
 		bne.s	+
@@ -450,7 +444,6 @@ AnimalJump:
 		bmi.s	+
 		clr.b	obFrame(a0)
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.s	+
 		add.w	d1,obY(a0)
 		move.w	animal_y_vel(a0),obVelY(a0)

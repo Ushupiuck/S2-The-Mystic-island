@@ -86,7 +86,6 @@ MM_Propeller:
 .land:
 		addq.w	#1,obY(a0)
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.s	.landed
 		add.w	d1,obY(a0)
 		move.b	#4,obRoutine(a0)

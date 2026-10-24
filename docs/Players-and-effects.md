@@ -7,6 +7,10 @@ Sonic. Imported player/effect art follows the palette and bank ownership in
 Super forms, Insta-Shield and the unfinished homing hook are not complete
 features. The old rolling-jump steering lock was deliberately removed.
 
+On Mode 1, Sonic and Tails push their landing callbacks with PC-relative `pea`
+before branching to the shared airborne collision transport. The transport
+invokes the callback on landing and discards it while the actor remains airborne.
+
 ## Tails and companion control
 
 Manual controller 2 input takes precedence over following AI for ten seconds.
