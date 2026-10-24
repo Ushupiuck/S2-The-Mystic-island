@@ -77,6 +77,18 @@ retains static tile-word attributes. Keep these indices aligned with constants.
 ## Debug and movement
 
 Stage Debug selects its own list without replacing the return level's zone.
+C places a real stage ring (`$3A`) in the layout, without allocating an ordinary
+SST. The cursor snaps to the nearest 24-pixel cell using its full fixed-point
+position; exact horizontal/vertical ties prefer left/up. If that cell is
+occupied, a clockwise spiral starting to its right finds the next free cell.
+Repeated presses continue filling the spiral without moving the cursor.
+
+Placement is restricted to the authored 64x64 cells inside the padded layout.
+Occupied cells and row padding are preserved; a full grid or a cursor outside
+that grid makes placement a no-op. The bounded search needs no persistent RAM
+and preserves the object dispatch counter. The list currently offers only a
+ring; other stage items need their own entries and matching previews.
+
 Start+A follows the normal fade/results path. Results VBlank advances the fade
 even with wall rotation stopped; clearing objects also clears Debug placement
 state. Start+A on results retains the existing title shortcut. Normal movement's

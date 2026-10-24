@@ -192,9 +192,12 @@ for i in range(8):
 # Arithmetic in a PLC macro argument needs parentheses before << 5.
 tails_plc=m.s['PLC_LivesTails']
 assert struct.unpack_from('>H',rom,tails_plc+2+6+4)[0] == (m.s['ArtTile_Lives_Counter']+4)*32
+# Preserve the authored GHZ -> imported SMZ -> EHZ route as well as templates.
+# These detours predate the eight-byte placement and special-stage Debug work.
+detours = {(0, 2): (8, 0), (8, 1): (3, 0), (8, 2): (3, 0)}
 assert rom[m.s['LevelOrder']:m.s['LevelOrder']+128] == bytes(
     v for zone in range(16) for act in range(4)
-    for v in ((zone,act+1) if act<3 else ((zone+1)%16,0)))
+    for v in detours.get((zone, act), (zone,act+1) if act<3 else ((zone+1)%16,0)))
 
 report={'passed':True,'checks':checks,'companion_ai_run':False,
         'card_scenes':78,'signpost_frames':6,'tails_icon_tile':m.s['ArtTile_Tails_Life']}

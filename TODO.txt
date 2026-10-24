@@ -9,8 +9,6 @@ https://tcrf.net/Proto:Sonic_the_Hedgehog_2_(Genesis)
 ; ---------------------------------------------------------------------------
 
 TODO:
-Fix rotating special-stage Debug to place real grid items, snap to cells and spiral through free authored cells without overwriting occupied cells or padding < IN PROGRESS
-Clean special-stage results oval trim against the current shared palette < IN PROGRESS
 Design distinct terrain/art/objects for the newly enabled zone slots and four-act templates; MTZ1 remains the existing unfinished test stage, MTZ2-4 and SMZ3-4 are safe editable starters, and LV0A1 currently showcases imported PP enemies < NEXT level-content work
 Design an intentional Scrap Madness act-2 ending/cutscene; the current port uses the normal signpost
 Add inverse-gravity player physics/collision before enabling S3&K's Debug gravity-reversal cheat < FUTURE engine feature
@@ -35,6 +33,8 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
+Fix rotating special-stage Debug to place real grid rings, snap to cells with left/up ties and spiral through free authored cells without overwriting occupied cells or padding; verify full-grid/full-SST cases and actual NTSC/PAL placement/collection < DONE
+Brighten the special-stage results' tiny oval rims with the existing gold/yellow ramp, preserving their shape and shared palette; inspect the rendered results screen < DONE
 Expand object placements to XXXX YYYY OOTT SSSS and every object subtype access to words at the existing $2C-$2D pair; preserve all universals/$4E SSTs, convert layouts/Debug/payloads, implement CD era masks/state and custom SonLVL word properties, and verify native/runtime/editor paths < DONE
 Give all 64 acts explicit water-enable, initial-height and dynamic-routine entries; preserve LZ/HPZ behavior and verify primary/companion Tails water crossings, countdown and resurfacing in NTSC/PAL < DONE
 Apply and publish the tested PLC/VBlank/collision/continuation optimizations and shorter CD mailbox accesses; retain direct returns and verify actual dispatcher timings and gameplay < DONE

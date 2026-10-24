@@ -509,11 +509,13 @@ m.write('v_jpadpress1',0)
 m.act('DebugMode','v_player')
 assert m.read('Current_ZoneAndAct',2)==0x301
 assert m.get('v_player','obGfx',2)==m.s['ArtTile_SS_Rings']|0x2000
+m.put('v_player','obX',1000,2)
+m.put('v_player','obY',1000,2)
 m.write('v_jpadpress1',m.s['btnC'])
 m.act('DebugMode','v_player')
-stage_ring=next(a for a in pool() if m.get(a,'layout_id')==0x12)
-m.act('Obj12',stage_ring)
-assert m.get(stage_ring,'obGfx',2)==m.s['ArtTile_SS_Rings']|0x2000
+grid_cell=m.s['v_ssbuffer1']+((1000+79)//24)*128+(1000+31)//24
+assert m.cpu.mem_read(grid_cell&0xFFFFFF,1)==bytes([m.s['S1SS_RingItem']])
+assert not any(m.get(a,'layout_id')==0x12 for a in pool())
 m.write('v_jpadpress1',m.s['btnB'])
 m.act('DebugMode','v_player')
 assert m.get('v_player','obHeight')==14 and m.get('v_player','obWidth')==7

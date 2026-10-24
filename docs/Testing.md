@@ -102,6 +102,16 @@ Card data and queue backpressure also have a native check (requires Unicorn):
 python build_tools/check_card_art.py --rom s2built.bin --listing md-main.lst
 ```
 
+`check_ss_debug.py` executes rotating-stage placement with exact fixed-point
+ties, repeated presses, all grid corners, a sole distant free cell, a full grid,
+and cursors outside the authored cells. It checks padding and existing cells,
+preserves the dispatch counter, places with a full ordinary SST pool, and
+collects the inserted ring through the real item handler.
+
+```sh
+python build_tools/check_ss_debug.py
+```
+
 ## Runtime checks
 
 The old `check_level_lag.py` GHZ → CPZ → HPZ sequence is a historical
@@ -128,6 +138,7 @@ that offer it. Most primary-player selectors use `--player 0` (Sonic) or `2`
 | Object lifetime and stage entry | `check_object_lifetimes.py`, `check_giant_ring_entry.py`, `check_object_contexts.py` | Unload/deletion, giant rings and mode-specific objects |
 | Companion | `check_companion_followup.py`, `check_companion_hpz.py`, `check_companion_sbz.py` | Ledges, collapse/bridge/manual takeover; actual HPZ routes; 64-phase SMZ transfer and captured catch-up |
 | Input locks and rotating stage | `check_over_screen_input.py`, `check_drowning_input.py`, `check_special_stage_overlap.py` | Real deaths/drowning; normal bumper/item callbacks and embedding regressions |
+| Rotating-stage Debug | `check_ss_debug_game.py` | Actual controller placement, occupied-cell skipping, ring rendering and collection after leaving Debug in NTSC/PAL |
 | SMZ backgrounds, solids and hazards | `check_smz_background.py`, `check_scrap_madness.py`, `check_sbz_discs.py`, `check_smz_vanishing.py`, `check_swing_families.py`, `check_sbz_doors.py` | REV01 parallax/streaming, placed-object lifecycle, transport/ride boundaries and harmful spikeball subtypes |
 | Compact clearance/closing doors | `check_duck_clearance.py`, `check_smz_trapdoor.py` | Native 68000 collision fixtures |
 | Imported enemies/obstacles | `check_palmtree_enemies.py`, `check_propeller.py`, `check_caterkiller.py`, `check_kemusi.py`, `check_terrain_conveyors.py`, `check_wheel_carriers.py` | Both-actor triggers, motion, damage, unload/reload and source-specific regressions |
@@ -161,6 +172,10 @@ CD boot needs a supplied system directory. Only runners exposing
 music, sound playback, visual follow-up, fast clear, player effects, card screens and swing families).
 `check_debug_states.py` also accepts this directory for both primary characters'
 HUD and hurt/death Debug checks on Mode 1.
+`check_ss_debug_game.py` accepts `--rom`, `--listing`, `--core`, `--output`,
+`--system-directory` and `--pal`. It launches the rotating stage through level
+select, places twelve rings without moving the cursor, compares every authored
+cell after each press, and resumes normal play to collect an inserted ring.
 `check_water_effects.py` also accepts `--system-directory`; it covers actual
 entry/exit splashes, countdown uploads/rendering and air/number cleanup. Use
 `--player 2` for primary Tails, or `--companion` for following Tails, and `--pal`

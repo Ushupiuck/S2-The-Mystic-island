@@ -224,6 +224,10 @@ to the input locks in [Players and effects](Players-and-effects.md#input-locks-a
 | Hold A, press C | Previous object |
 | C | Place selected object |
 
+In the rotating S1 stage, C writes to its own item grid. See the snapping and
+free-cell search rules in [Special stage](Special-stage.md#debug-and-movement).
+Normal levels continue spawning ordinary objects with word subtypes.
+
 Enabling the cheat leaves the ordinary HUD and timer rules active. Only
 placement replaces the score with player/camera coordinates and the seconds
 with the sprite count, and lets the internal clock advance without Time Over.
@@ -231,8 +235,8 @@ Leaving placement redraws the current score, rings and time immediately,
 preserving whether the clock was running or stopped. Frame cycling keeps the
 ordinary HUD and timer rules.
 
-A Debug entry is 12 bytes: routine long, mappings long, subtype byte, frame byte,
-art word. Lists have four pointers per zone; acts may share a list. Placement
+A Debug entry is 14 bytes: routine long, mappings long, subtype word, frame byte,
+padding byte, art word. Lists have four pointers per zone; acts may share a list. Placement
 writes a routine pointer, saves/restores mappings/art/bounds, restores standing
 radii, and clears stale motion/ride/carry/flight state while preserving powerups.
 Frame cycling resumes the paused state. The stage-specific ring preview and

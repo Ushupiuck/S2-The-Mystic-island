@@ -1489,6 +1489,11 @@ v_limitbtm2:=		Camera_Max_Y_pos
 ; S1 bonus stage: background chunks, rotating playfield and plane buffers
 ; all share the normal chunk table. The normal block table stays at v_16x16.
 SSBG_Chunk_RAM_Size	= $A00
+S1SS_LayoutWidth		= $40
+S1SS_LayoutHeight	= $40
+S1SS_LayoutStride	= $80
+S1SS_CellSize		= 24
+S1SS_RingItem		= $3A
 v_ssbuffer1		= Chunk_Table+SSBG_Chunk_RAM_Size
 v_ssblockbuffer		= v_ssbuffer1+$1020		; $1020 bytes -- layout padded from the top and sides
 v_ssblockbuffer_end	= v_ssblockbuffer+$80*$40	; ($2000 bytes)

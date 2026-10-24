@@ -225,8 +225,10 @@ the whole raw font. `build_card_art.py` owns their mappings/DPLCs, including
 act 4, V/W and the wide W metrics. Its `act_four()` draws the digit into the
 existing six-tile (16x24) slot. Small results markers use blue-only shading
 from `Title Cards Base.unc`; the generator supplies a separate gold/yellow
-version for the special-results palette, keeping gray out of their edges. Both
-versions retain the same two-tile scene allocation. `build_signpost_art.py` owns the streamed
+version for the special-results palette. Its outer rim uses existing gold slot
+`$B`, the lighter edge uses `$C`, and the fill uses bright yellow `$3`. The shared
+palette, oval shape and two-tile scene allocation are unchanged.
+`build_signpost_art.py` owns the streamed
 signpost and monitor arrangement. Tails's portrait is the final four monitor
 tiles (`$561-$564`); signpost frames stay below it. Sonic's life art remains
 separate and is shared with Sonic monitors. HUD score uses ten-point units,

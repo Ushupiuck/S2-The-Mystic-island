@@ -176,6 +176,8 @@ LoadDebugObjectSprite:
 Debug_SpawnObject:
 		btst	#bitC,(v_jpadpress1).w
 		beq.s	Debug_ExitDebugMode
+		cmpi.w	#BonusStage,(v_gamemode).w
+		beq.w	DebugSS_Place
 		jsr	(FindFreeObj).l
 		bne.s	Debug_ExitDebugMode
 		move.w	obX(a0),obX(a1)
@@ -292,10 +294,111 @@ Debug_FrameCycle:
 ; bank; the rotating layout itself still uses its dedicated S1 mapping ABI.
 Debug_SS:
 		dc.w 1
-		dc.l Obj12,Map_Ring
-		dc.w 0
+		dc.l 0,Map_Ring		; grid items have no SST routine
+		dc.w S1SS_RingItem		; actual rotating-stage ring, not Obj12
 		dc.b 0,0
 		dc.w make_art_tile(ArtTile_SS_Rings,1,0)
+
+; Place directly into the authored 64x64 cells, whose physical rows have
+; 64 padding bytes. Never allocate an ordinary SST or write into the padding.
+; Player coordinates use the same +32/+80 grid origin as SSS_ChkItems.
+; Subtract one subpixel before rounding so exact ties prefer left/up.
+DebugSS_Place:
+		movem.l	d0-d7/a1-a4,-(sp)
+		moveq	#0,d0
+		move.b	(Debug_object).w,d0
+		mulu.w	#DebugEntry_size,d0
+		move.w	DebugEntry_subtype(a2,d0.w),d6
+		beq.w	.done
+		cmpi.w	#$4E,d6
+		bhi.w	.done
+		movea.w	d6,a4
+		move.l	obX(a0),d0
+		addi.l	#(32<<16)-1,d0
+		swap	d0
+		andi.l	#$FFFF,d0
+		divu.w	#S1SS_CellSize,d0
+		subi.w	#(v_ssblockbuffer-v_ssbuffer1)&(S1SS_LayoutStride-1),d0
+		cmpi.w	#S1SS_LayoutWidth,d0
+		bhs.w	.done
+		move.l	obY(a0),d1
+		addi.l	#(80<<16)-1,d1
+		swap	d1
+		andi.l	#$FFFF,d1
+		divu.w	#S1SS_CellSize,d1
+		subi.w	#(v_ssblockbuffer-v_ssbuffer1)/S1SS_LayoutStride,d1
+		cmpi.w	#S1SS_LayoutHeight,d1
+		bhs.w	.done
+		lea	(v_ssblockbuffer).l,a3
+		bsr.w	.try_cell
+		bcc.s	.done
+
+		; The furthest corner bounds the entire search. This includes every
+		; authored cell even when the cursor starts at an edge or a corner.
+		move.w	#S1SS_LayoutWidth-1,d7
+		sub.w	d0,d7
+		cmp.w	d0,d7
+		bhs.s	.x_radius
+		move.w	d0,d7
+.x_radius:
+		cmp.w	d1,d7
+		bhs.s	.y_radius
+		move.w	d1,d7
+.y_radius:
+		move.w	#S1SS_LayoutHeight-1,d6
+		sub.w	d1,d6
+		cmp.w	d6,d7
+		bhs.s	.radius_ready
+		move.w	d6,d7
+.radius_ready:
+		add.w	d7,d7
+		addq.w	#1,d7
+		mulu.w	d7,d7
+		subq.w	#2,d7			; center tested; DBF counts remaining candidates
+		moveq	#1,d2			; right, down, left, up; lengths 1,1,2,2,3,3...
+		moveq	#0,d3
+		moveq	#1,d4
+		moveq	#1,d5
+.spiral:
+		add.w	d2,d0
+		add.w	d3,d1
+		bsr.s	.try_cell
+		bcc.s	.done
+		subq.w	#1,d5
+		bne.s	.next
+		move.w	d2,d6
+		move.w	d3,d2
+		neg.w	d2
+		move.w	d6,d3
+		bne.s	.segment
+		addq.w	#1,d4
+.segment:
+		move.w	d4,d5
+.next:
+		dbf	d7,.spiral
+.done:
+		movem.l	(sp)+,d0-d7/a1-a4
+		rts
+
+; Carry clear = placed. Out-of-range and occupied cells are simply skipped.
+.try_cell:
+		cmpi.w	#S1SS_LayoutWidth,d0
+		bhs.s	.occupied
+		cmpi.w	#S1SS_LayoutHeight,d1
+		bhs.s	.occupied
+		move.w	d1,d6
+		lsl.w	#7,d6
+		add.w	d0,d6
+		lea	(a3,d6.w),a1
+		tst.b	(a1)
+		bne.s	.occupied
+		move.w	a4,d6
+		move.b	d6,(a1)
+		andi.b	#$FE,ccr
+		rts
+.occupied:
+		ori.b	#1,ccr
+		rts
 
 ; ---------------------------------------------------------------------------
 ; Initialize a dynamically selected debug mapping. Normal objects use constant
