@@ -931,8 +931,10 @@ Level_Layout_End:
 v_lvllayout:=			Level_Layout
 v_lvllayout_end:=		Level_Layout_End
 v_lvllayoutbg:=			Level_Layout+$80
+	if MegaCDMode1
 Kos_decomp_buffer:		equ	MCD_DecompOutput
 Kos_decomp_buffer_End:		equ	MCD_DecompOutput+$1000
+	endif
 ; ---------------------------------------------------------------------------
     if object_size*object_slot_count > object_ram_size
 	fatal "Object slots exceed the reserved object RAM growth area."
@@ -1443,6 +1445,9 @@ Camera_Y_pos_coarse_back:	ds.w	1	; (Camera_Y_pos - $80) & $FF80
 Object_load_retry:	ds.b	1	; an eligible placement could not get an SST this frame
 
 			ds.b	1			; align the following allocation boundary
+	if MegaCDMode1=0
+		include "md-only/RAM.asm"
+	endif
 Main_RAM_End:
 	dephase
 
@@ -1460,6 +1465,9 @@ Free_RAM_End:
 		fatal "Free RAM must end at the first live allocation."
 	endif
 	else
+	if (MOMPASS>1)&&(Main_RAM_End>0)
+		fatal "Cartridge work RAM exceeds 64 KB; reduce level/placement data or work buffers"
+	endif
 	phase	Main_RAM_End
 Free_RAM_Start:		ds.b	-Main_RAM_End
 Free_RAM_End:

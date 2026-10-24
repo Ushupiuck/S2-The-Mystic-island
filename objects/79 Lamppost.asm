@@ -26,7 +26,7 @@ Obj79_Init:
 		; Scripted/Debug checkpoints have no placement entry.
 		; Guard the handle before reading or writing persistent state.
 		beq.s	Obj79_Main
-		jsr	(MCD_RespawnRead).l
+		jsr	(Object_RespawnRead).l
 		btst	#0,d0
 		bne.s	+
 		move.b	(v_lastlamp).w,d1
@@ -37,7 +37,7 @@ Obj79_Init:
 		blo.s	Obj79_Main
 +
 		move.w	respawn_addr(a0),d0
-		jsr	(MCD_RespawnConsume).l
+		jsr	(Object_RespawnConsume).l
 		move.b	#4,obRoutine(a0)
 		rts
 ; ---------------------------------------------------------------------------
@@ -57,7 +57,7 @@ Obj79_Main:
 		; Scripted/Debug checkpoints have no placement entry.
 		; Guard the handle before reading or writing persistent state.
 		beq.s	.return
-		jsr	(MCD_RespawnConsume).l
+		jsr	(Object_RespawnConsume).l
 		move.b	#4,obRoutine(a0)
 .return:	rts
 ; ---------------------------------------------------------------------------
@@ -81,7 +81,7 @@ Obj79_HitLamp:
 		; Scripted/Debug checkpoints have no placement entry.
 		; Guard the handle before reading or writing persistent state.
 		beq.s	.return
-		jsr	(MCD_RespawnConsume).l
+		jsr	(Object_RespawnConsume).l
 .return:	rts
 ; ---------------------------------------------------------------------------
 

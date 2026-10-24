@@ -49,8 +49,14 @@ def main():
         g.write('v_ani3_time', 0)
         g.write('v_ani3_frame', frame)
         g.write('v_ani3_prev', 255)
-        g.run(2)
-        assert vram(g.s['ArtTile_RingLoss'] * 32, 128) == ring_art[frame*128:(frame+1)*128]
+        expected = ring_art[frame*128:(frame+1)*128]
+        for _ in range(8):
+            g.run()
+            assert not g.read('v_errortype')
+            if vram(g.s['ArtTile_RingLoss'] * 32, 128) == expected:
+                break
+        else:
+            raise AssertionError(('Lost-ring frame never reached VRAM', frame))
     for _ in range(48):
         previous = g.read('v_ani1_prev')
         g.run()

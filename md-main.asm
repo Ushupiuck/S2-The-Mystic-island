@@ -300,6 +300,9 @@ V_Int:
 		jsr	(a0)
 
 VintRet:
+	if MegaCDMode1=0
+		bsr.w	Set_Kos_Bookmark	; resumable cartridge decompression owns this IRQ hook
+	endif
 		addq.l	#1,(Vint_runcount).w
 		movem.l	(sp)+,d0-a6
 		rte
@@ -347,6 +350,9 @@ VInt_0_FullyUnderwater:
 VInt_0_Water_Cont:
 		move.w	(v_hbla_hreg).w,(a5)
 		startZ80	; rather than always branching to "VintRet",
+	if MegaCDMode1=0
+		bsr.w	Set_Kos_Bookmark
+	endif
 		addq.l	#1,(Vint_runcount).w	; we'll optimize by copying it here.
 		movem.l	(sp)+,d0-a6
 		rte
@@ -409,6 +415,9 @@ Vint_Level:
 		writeVRAM	Sprite_Table,vram_sprites
 		bsr.w	ProcessDMAQueue
 		startZ80
+	if MegaCDMode1=0
+		jsr	(MD_SaveTileState).l
+	endif
 		enable_ints
 		tst.b	(Water_flag).w
 		beq.s	Do_Updates
@@ -497,6 +506,9 @@ Vint_TitleCard:
 		writeVRAM	Sprite_Table,vram_sprites
 		bsr.w	ProcessDMAQueue
 		startZ80
+	if MegaCDMode1=0
+		jsr	(MD_SaveTileState).l
+	endif
 		jsr	(LoadTilesAsYouMove).l
 	;	jsr	(LoadTilesAsYouMove).l
 		jsr	(HudUpdate).l
@@ -891,6 +903,7 @@ NewPLC:
 
 ; Clear the pattern load queue and its decompressor state.
 
+	if MegaCDMode1
 ClearPLC:
 		clr.w	(MCD_PLCPrepared).l
 		lea	(v_plc_buffer).w,a2
@@ -960,6 +973,10 @@ ProcessDPLC_Done:
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 
+	else
+		include "md-only/Pattern Load Cues.asm"
+	endif
+
 QuickPLC:
 		move.w	(a1)+,d1
 .load:
@@ -980,7 +997,11 @@ QuickPLC:
 
 KosPlusArt_To_VDP:
 		movea.l	a1,a3		; a1 will be changed by KosPlusDec, so we're backing it up to a3
+	if MegaCDMode1
 		bsr.s	KosPlusDec
+	else
+		bsr.w	KosPlusDec
+	endif
 		move.l	a3,d1		; move the backed-up a1 to d1
 		andi.l	#$FFFFFF,d1	; d1 will be used in the DMA transfer as the Source Address
 		move.l	a1,d3		; move end address of decompressed art to d3
@@ -992,7 +1013,13 @@ KosPlusArt_To_VDP:
 		movea.l	a3,a1		; restore a1
 		rts
 ; ===========================================================================
+	if MegaCDMode1
 		include "_inc/Mega CD Decompression Jobs.asm"
+	else
+		include "md-only/Nemesis Decompression.asm"
+		include "md-only/KosinskiPlus.asm"
+		include "md-only/Enigma Decompression.asm"
+	endif
 		include "_inc/DMA Queue.asm"
 	if MegaCDMode1
 		include "_inc/Mega CD.asm"
@@ -1046,7 +1073,11 @@ QuickKosPLC:
 ; ---------------------------------------------------------------------------
 
 ; ===========================================================================
+	if MegaCDMode1
 		include "_inc/KosinkiPlus_Moduled.asm"
+	else
+		include "md-only/KosinskiPlus Modules.asm"
+	endif
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -3143,8 +3174,13 @@ LoadZone:
 		move.l	(a2)+,d0
 		andi.l	#$FFFFFF,d0	; pointer to block mappings
 		movea.l	d0,a0
+	if MegaCDMode1
 		lea	(MCD_TerrainBlocks_Sub).l,a1
 		jsr	(MCD_KosToCD).l	; load block maps
+	else
+		lea	(v_16x16).l,a1
+		bsr.w	KosPlusDec
+	endif
 	if MegaCDMode1
 		move.l	a1,d0
 		subi.l	#MCD_TerrainBlocks_Sub,d0
@@ -3154,8 +3190,13 @@ LoadZone:
 		move.l	(a2),d0
 		andi.l	#$FFFFFF,d0	; pointer to chunk mappings
 		movea.l	d0,a0
+	if MegaCDMode1
 		lea	(MCD_ChunkTable_SubStart).l,a1
 		jsr	(MCD_KosToCD).l
+	else
+		lea	(Chunk_Table).l,a1
+		bsr.w	KosPlusDec
+	endif
 		bsr.s	LevelLayoutLoad	; also preserves a2 (palette+chunks)
 		moveq	#0,d0
 		move.b	-4(a2),d0	; PLC2 ID
@@ -3185,8 +3226,13 @@ LevelLayoutLoad:
 		movea.l	LevelLayout_TimezoneTable(pc,d1.w),a0
 		move.w	(a0,d0.w),d0
 		adda.l	d0,a0
+	if MegaCDMode1
 		lea	(MCD_TerrainLayout_Sub).l,a1
 		jmp	(MCD_KosToCD).l
+	else
+		lea	(v_lvllayout).l,a1
+		jmp	(KosPlusDec).l
+	endif
 
 ; End of function LevelLayoutLoad
 
@@ -4288,6 +4334,10 @@ Map_SS_Bump:	binclude	"mappings/sprite/S1/SS Bumper.bin"
 		include	"objects/Bonus & Special Stages/04 Player in Bonus Stage.asm"
 ; ---------------------------------------------------------------------------
 LevelSizeLoad:
+	if MegaCDMode1=0
+		clr.l	(Scroll_flags_copy).w
+		clr.l	(Scroll_flags_BG2_copy).w
+	endif
 		clr.w	(Scroll_flags).w
 		clr.w	(Scroll_flags_BG).w
 		clr.w	(Scroll_flags_BG2).w
@@ -5959,6 +6009,10 @@ loc_6818:
 ; =============== S U B R O U T I N E =======================================
 
 
+	if MegaCDMode1=0
+		include "md-only/Tile Streaming.asm"
+	endif
+
 DynScreenResizeLoad:
 		moveq	#0,d0
 		move.b	(Current_Zone).w,d0
@@ -6154,12 +6208,12 @@ DynResize_LZ3:
 		tst.b	(f_switch+$F).w
 		beq.s	loc_76EA
 		move.w	#$206,d0
-		jsr	(MCD_ReadLayout).l
+		jsr	(Layout_Read).l
 		cmpi.b	#7,d0
 		beq.s	loc_76EA
 		move.w	#$206,d0
 		moveq	#7,d1
-		jsr	(MCD_WriteLayout).l
+		jsr	(Layout_Write).l
 		move.w	#sfx_Rumbling,d0
 		bsr.w	PlaySound_Special
 
@@ -7805,7 +7859,7 @@ Object_CheckSpawnXRange:
 		move.w	respawn_addr(a0),d1
 		beq.s	.dynamic
 		move.w	d1,d0
-		jsr	(MCD_ReadPlacementX).l
+		jsr	(Object_PlacementX).l
 		andi.w	#Object_Load_CoarseMask,d0
 		sub.w	(Camera_X_pos_coarse_back).w,d0
 		cmpi.w	#128+320+192,d0
@@ -7821,7 +7875,7 @@ UnloadObject:
 loc_CEB0:
 		move.w	respawn_addr(a0),d0
 		beq.s	DeleteObject
-		jsr	(MCD_RespawnRelease).l
+		jsr	(Object_RespawnRelease).l
 
 ; ---------------------------------------------------------------------------
 ; Subroutine to delete an object
@@ -8263,7 +8317,11 @@ loc_DBF2:
 MapUnc_Rings:	include	"mappings/sprite/Ring.asm"
 
 ; ===========================================================================
+	if MegaCDMode1
 		include	"_inc/Objects Manager.asm"
+	else
+		include	"md-only/Objects Manager.asm"
+	endif
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -9210,7 +9268,11 @@ loc_12310:
 
 ; =============== S U B R O U T I N E =======================================
 
+	if MegaCDMode1
 		include "_inc/Mega CD Terrain Jobs.asm"
+	else
+		include "md-only/Terrain Collision.asm"
+	endif
 
 		include	"objects/S1/1F LZ Conveyor.asm"
 		include	"objects/47 Bumper.asm"
@@ -14251,135 +14313,135 @@ ObjPos_Index:
 		dc.w ObjPos_LV0F4-ObjPos_Index
 
 		ObjectLayoutBoundary
-ObjPos_GHZ1:	binclude	"level/objects/GHZ_1.bin"
+ObjPos_GHZ1:	ObjectLayoutFile "level/objects/GHZ_1.bin"
 		ObjectLayoutBoundary
-ObjPos_GHZ2:	binclude	"level/objects/GHZ_2.bin"
+ObjPos_GHZ2:	ObjectLayoutFile "level/objects/GHZ_2.bin"
 		ObjectLayoutBoundary
-ObjPos_GHZ3:	binclude	"level/objects/GHZ_3.bin"
+ObjPos_GHZ3:	ObjectLayoutFile "level/objects/GHZ_3.bin"
 		ObjectLayoutBoundary
-ObjPos_GHZ4:	binclude	"level/objects/GHZ_4.bin"
+ObjPos_GHZ4:	ObjectLayoutFile "level/objects/GHZ_4.bin"
 		ObjectLayoutBoundary
-ObjPos_LZ1:	binclude	"level/objects/LZ_1.bin"
+ObjPos_LZ1:	ObjectLayoutFile "level/objects/LZ_1.bin"
 		ObjectLayoutBoundary
-ObjPos_LZ2:	binclude	"level/objects/LZ_2.bin"
+ObjPos_LZ2:	ObjectLayoutFile "level/objects/LZ_2.bin"
 		ObjectLayoutBoundary
-ObjPos_LZ3:	binclude	"level/objects/LZ_3.bin"
+ObjPos_LZ3:	ObjectLayoutFile "level/objects/LZ_3.bin"
 		ObjectLayoutBoundary
-ObjPos_LZ4:	binclude	"level/objects/LZ_4.bin"
+ObjPos_LZ4:	ObjectLayoutFile "level/objects/LZ_4.bin"
 		ObjectLayoutBoundary
-ObjPos_CPZ1:	binclude	"level/objects/CPZ_1.bin"
+ObjPos_CPZ1:	ObjectLayoutFile "level/objects/CPZ_1.bin"
 		ObjectLayoutBoundary
-ObjPos_CPZ2:	binclude	"level/objects/CPZ_2.bin"
+ObjPos_CPZ2:	ObjectLayoutFile "level/objects/CPZ_2.bin"
 		ObjectLayoutBoundary
-ObjPos_CPZ3:	binclude	"level/objects/CPZ_3.bin"
+ObjPos_CPZ3:	ObjectLayoutFile "level/objects/CPZ_3.bin"
 		ObjectLayoutBoundary
-ObjPos_CPZ4:	binclude	"level/objects/CPZ_4.bin"
+ObjPos_CPZ4:	ObjectLayoutFile "level/objects/CPZ_4.bin"
 		ObjectLayoutBoundary
-ObjPos_EHZ1:	binclude	"level/objects/EHZ_1.bin"
+ObjPos_EHZ1:	ObjectLayoutFile "level/objects/EHZ_1.bin"
 		ObjectLayoutBoundary
-ObjPos_EHZ2:	binclude	"level/objects/EHZ_2.bin"
+ObjPos_EHZ2:	ObjectLayoutFile "level/objects/EHZ_2.bin"
 		ObjectLayoutBoundary
-ObjPos_EHZ3:	binclude	"level/objects/EHZ_3.bin"
+ObjPos_EHZ3:	ObjectLayoutFile "level/objects/EHZ_3.bin"
 		ObjectLayoutBoundary
-ObjPos_EHZ4:	binclude	"level/objects/EHZ_4.bin"
+ObjPos_EHZ4:	ObjectLayoutFile "level/objects/EHZ_4.bin"
 		ObjectLayoutBoundary
-ObjPos_HPZ1:	binclude	"level/objects/HPZ_1.bin"
+ObjPos_HPZ1:	ObjectLayoutFile "level/objects/HPZ_1.bin"
 		ObjectLayoutBoundary
-ObjPos_HPZ2:	binclude	"level/objects/HPZ_2.bin"
+ObjPos_HPZ2:	ObjectLayoutFile "level/objects/HPZ_2.bin"
 		ObjectLayoutBoundary
-ObjPos_HPZ3:	binclude	"level/objects/HPZ_3.bin"
+ObjPos_HPZ3:	ObjectLayoutFile "level/objects/HPZ_3.bin"
 		ObjectLayoutBoundary
-ObjPos_HPZ4:	binclude	"level/objects/HPZ_4.bin"
+ObjPos_HPZ4:	ObjectLayoutFile "level/objects/HPZ_4.bin"
 		ObjectLayoutBoundary
-ObjPos_HTZ1:	binclude	"level/objects/HTZ_1.bin"
+ObjPos_HTZ1:	ObjectLayoutFile "level/objects/HTZ_1.bin"
 		ObjectLayoutBoundary
-ObjPos_HTZ2:	binclude	"level/objects/HTZ_2.bin"
+ObjPos_HTZ2:	ObjectLayoutFile "level/objects/HTZ_2.bin"
 		ObjectLayoutBoundary
-ObjPos_HTZ3:	binclude	"level/objects/HTZ_3.bin"
+ObjPos_HTZ3:	ObjectLayoutFile "level/objects/HTZ_3.bin"
 		ObjectLayoutBoundary
-ObjPos_HTZ4:	binclude	"level/objects/HTZ_4.bin"
+ObjPos_HTZ4:	ObjectLayoutFile "level/objects/HTZ_4.bin"
 		ObjectLayoutBoundary
-ObjPos_MTZ1:	binclude	"level/objects/MTZ_1.bin"
+ObjPos_MTZ1:	ObjectLayoutFile "level/objects/MTZ_1.bin"
 		ObjectLayoutBoundary
-ObjPos_MTZ2:	binclude	"level/objects/MTZ_2.bin"
+ObjPos_MTZ2:	ObjectLayoutFile "level/objects/MTZ_2.bin"
 		ObjectLayoutBoundary
-ObjPos_MTZ3:	binclude	"level/objects/MTZ_3.bin"
+ObjPos_MTZ3:	ObjectLayoutFile "level/objects/MTZ_3.bin"
 		ObjectLayoutBoundary
-ObjPos_MTZ4:	binclude	"level/objects/MTZ_4.bin"
+ObjPos_MTZ4:	ObjectLayoutFile "level/objects/MTZ_4.bin"
 		ObjectLayoutBoundary
-ObjPos_LV071:	binclude	"level/objects/LV07_1.bin"
+ObjPos_LV071:	ObjectLayoutFile "level/objects/LV07_1.bin"
 		ObjectLayoutBoundary
-ObjPos_LV072:	binclude	"level/objects/LV07_2.bin"
+ObjPos_LV072:	ObjectLayoutFile "level/objects/LV07_2.bin"
 		ObjectLayoutBoundary
-ObjPos_LV073:	binclude	"level/objects/LV07_3.bin"
+ObjPos_LV073:	ObjectLayoutFile "level/objects/LV07_3.bin"
 		ObjectLayoutBoundary
-ObjPos_LV074:	binclude	"level/objects/LV07_4.bin"
+ObjPos_LV074:	ObjectLayoutFile "level/objects/LV07_4.bin"
 		ObjectLayoutBoundary
-ObjPos_SMZ1:	binclude	"level/objects/SMZ_1.bin"
+ObjPos_SMZ1:	ObjectLayoutFile "level/objects/SMZ_1.bin"
 		ObjectLayoutBoundary
-ObjPos_SMZ2:	binclude	"level/objects/SMZ_2.bin"
+ObjPos_SMZ2:	ObjectLayoutFile "level/objects/SMZ_2.bin"
 		ObjectLayoutBoundary
-ObjPos_SMZ3:	binclude	"level/objects/SMZ_3.bin"
+ObjPos_SMZ3:	ObjectLayoutFile "level/objects/SMZ_3.bin"
 		ObjectLayoutBoundary
-ObjPos_SMZ4:	binclude	"level/objects/SMZ_4.bin"
+ObjPos_SMZ4:	ObjectLayoutFile "level/objects/SMZ_4.bin"
 		ObjectLayoutBoundary
-ObjPos_LV091:	binclude	"level/objects/LV09_1.bin"
+ObjPos_LV091:	ObjectLayoutFile "level/objects/LV09_1.bin"
 		ObjectLayoutBoundary
-ObjPos_LV092:	binclude	"level/objects/LV09_2.bin"
+ObjPos_LV092:	ObjectLayoutFile "level/objects/LV09_2.bin"
 		ObjectLayoutBoundary
-ObjPos_LV093:	binclude	"level/objects/LV09_3.bin"
+ObjPos_LV093:	ObjectLayoutFile "level/objects/LV09_3.bin"
 		ObjectLayoutBoundary
-ObjPos_LV094:	binclude	"level/objects/LV09_4.bin"
+ObjPos_LV094:	ObjectLayoutFile "level/objects/LV09_4.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0A1:	binclude	"level/objects/LV0A_1.bin"
+ObjPos_LV0A1:	ObjectLayoutFile "level/objects/LV0A_1.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0A2:	binclude	"level/objects/LV0A_2.bin"
+ObjPos_LV0A2:	ObjectLayoutFile "level/objects/LV0A_2.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0A3:	binclude	"level/objects/LV0A_3.bin"
+ObjPos_LV0A3:	ObjectLayoutFile "level/objects/LV0A_3.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0A4:	binclude	"level/objects/LV0A_4.bin"
+ObjPos_LV0A4:	ObjectLayoutFile "level/objects/LV0A_4.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0B1:	binclude	"level/objects/LV0B_1.bin"
+ObjPos_LV0B1:	ObjectLayoutFile "level/objects/LV0B_1.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0B2:	binclude	"level/objects/LV0B_2.bin"
+ObjPos_LV0B2:	ObjectLayoutFile "level/objects/LV0B_2.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0B3:	binclude	"level/objects/LV0B_3.bin"
+ObjPos_LV0B3:	ObjectLayoutFile "level/objects/LV0B_3.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0B4:	binclude	"level/objects/LV0B_4.bin"
+ObjPos_LV0B4:	ObjectLayoutFile "level/objects/LV0B_4.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0C1:	binclude	"level/objects/LV0C_1.bin"
+ObjPos_LV0C1:	ObjectLayoutFile "level/objects/LV0C_1.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0C2:	binclude	"level/objects/LV0C_2.bin"
+ObjPos_LV0C2:	ObjectLayoutFile "level/objects/LV0C_2.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0C3:	binclude	"level/objects/LV0C_3.bin"
+ObjPos_LV0C3:	ObjectLayoutFile "level/objects/LV0C_3.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0C4:	binclude	"level/objects/LV0C_4.bin"
+ObjPos_LV0C4:	ObjectLayoutFile "level/objects/LV0C_4.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0D1:	binclude	"level/objects/LV0D_1.bin"
+ObjPos_LV0D1:	ObjectLayoutFile "level/objects/LV0D_1.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0D2:	binclude	"level/objects/LV0D_2.bin"
+ObjPos_LV0D2:	ObjectLayoutFile "level/objects/LV0D_2.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0D3:	binclude	"level/objects/LV0D_3.bin"
+ObjPos_LV0D3:	ObjectLayoutFile "level/objects/LV0D_3.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0D4:	binclude	"level/objects/LV0D_4.bin"
+ObjPos_LV0D4:	ObjectLayoutFile "level/objects/LV0D_4.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0E1:	binclude	"level/objects/LV0E_1.bin"
+ObjPos_LV0E1:	ObjectLayoutFile "level/objects/LV0E_1.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0E2:	binclude	"level/objects/LV0E_2.bin"
+ObjPos_LV0E2:	ObjectLayoutFile "level/objects/LV0E_2.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0E3:	binclude	"level/objects/LV0E_3.bin"
+ObjPos_LV0E3:	ObjectLayoutFile "level/objects/LV0E_3.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0E4:	binclude	"level/objects/LV0E_4.bin"
+ObjPos_LV0E4:	ObjectLayoutFile "level/objects/LV0E_4.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0F1:	binclude	"level/objects/LV0F_1.bin"
+ObjPos_LV0F1:	ObjectLayoutFile "level/objects/LV0F_1.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0F2:	binclude	"level/objects/LV0F_2.bin"
+ObjPos_LV0F2:	ObjectLayoutFile "level/objects/LV0F_2.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0F3:	binclude	"level/objects/LV0F_3.bin"
+ObjPos_LV0F3:	ObjectLayoutFile "level/objects/LV0F_3.bin"
 		ObjectLayoutBoundary
-ObjPos_LV0F4:	binclude	"level/objects/LV0F_4.bin"
+ObjPos_LV0F4:	ObjectLayoutFile "level/objects/LV0F_4.bin"
 		ObjectLayoutBoundary
-ObjPos_Null:	binclude	"level/objects/S1_Ending.bin"
+ObjPos_Null:	ObjectLayoutFile "level/objects/S1_Ending.bin"
 		ObjectLayoutBoundary
 		even
 ; ---------------------------------------------------------------------------

@@ -493,6 +493,26 @@ ObjectLayoutBoundary macro
 		dc.w	$FFFF,$0000,$0000,$0000
     endm
 
+; Include and validate an eight-byte placement list against its state capacity.
+; Its surrounding ObjectLayoutBoundary remains explicit in the data table.
+ObjectLayoutFile macro filename
+.start:
+	binclude filename
+.end:
+	if ((.end-.start)&(omSize-1))<>0
+		fatal "Object layout is not a whole number of placement records"
+	endif
+	if MegaCDMode1
+		if (.end-.start)/omSize-1>MCD_ObjectPlacementCount
+			fatal "Object layout exceeds Mode 1 placement-state capacity"
+		endif
+	else
+		if (.end-.start)/omSize-1>MD_ObjectPlacementCount
+			fatal "Object layout exceeds cartridge placement-state capacity"
+		endif
+	endif
+	endm
+
 ; macro to move the absolute value of the source in the destination
 mvabs macro source,destination
 	move.ATTRIBUTE	source,destination

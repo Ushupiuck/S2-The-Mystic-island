@@ -1494,7 +1494,7 @@ loc_104F6:
 ; Sonic_Floor:
 Sonic_DoLevelCollision:
 		pea	Sonic_ResetOnFloor(pc)
-		bra.w	MCD_PlayerAirCollision
+		bra.w	Player_AirCollision
 ; End of function Sonic_DoLevelCollision
 
 

@@ -514,7 +514,7 @@ WaterSlides:
 		move.b	obX(a1),d1
 		andi.w	#$7F,d1
 		add.w	d1,d0
-		jsr	(MCD_ReadLayout).l
+		jsr	(Layout_Read).l
 		lea	Slide_Chunks_End(pc),a2
 		moveq	#Slide_Chunks_End-Slide_Chunks-1,d1
 

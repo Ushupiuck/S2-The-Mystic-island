@@ -31,7 +31,8 @@ if args.before_listing:
                           'obStatus', 'obSubtype', 'obControl', 'obStatusSecondary']:
         assert m.s[name] == before[name], (name, hex(before[name]), hex(m.s[name]))
 assert m.s['object_size'] == 0x4E and m.s['obSubtype'] == 0x2C
-assert m.s['MCD_ObjectSpawnSize'] == 12
+if m.s['MegaCDMode1']:
+    assert m.s['MCD_ObjectSpawnSize'] == 12
 rom = (ROOT / 's2built.bin').read_bytes()
 for label, filename in [('Art_WaterSplash', 'art/uncompressed/Water splash.unc'),
                         ('Art_LConWheels', 'art/uncompressed/LZ conveyor wheels.unc')]:

@@ -112,6 +112,38 @@ collects the inserted ring through the real item handler.
 python build_tools/check_ss_debug.py
 ```
 
+## KEH build configurations
+
+Keep `MegaCDMode1 = 1` as the normal configuration. Test `0` in an isolated
+checkout, using the same `build.lua` command; restore `1` before publishing.
+Keep each ROM with its matching listing and use separate output folders.
+Shared assets stay in their existing paths; [backend selection](Mega-CD.md#cartridge-build-dependencies)
+describes the cartridge-only dependencies and RAM/placement limits.
+
+For either build, run `check_ram_ranges.py`, `check_word_subtypes.py` and
+`check_object_manager.py` after assembly. The manager exercises the selected
+variant's entire placement-state capacity, including entries above 255.
+`check_level_pages.py` enters all 64 acts and the rotating special stage;
+run NTSC and PAL. `check_smz_background.py`, `check_player_effects.py`,
+`check_water_effects.py` and `check_ss_debug_game.py` also support cartridge
+ROMs without a system directory. Effect-upload checks allow bounded scheduling
+latency before comparing actual VRAM pixels.
+
+`check_cd_decompression.py` can use the freshly built cartridge ROM/listing as
+its `--baseline` pair to compare all linked codecs with the Mode 1 executors.
+`check_cd_terrain.py` accepts either configuration: record a report per build,
+compare `cases` and `planes`, and inspect controller routes separately when
+CPU load changes the number of gameplay updates per video frame. Its full-plane
+fixture drains prepared CD art DMA through VBlank before taking Word RAM.
+It checks the complete free-RAM range even when that range ends at `$1000000`.
+`check_md_kos_queue.py --rom ... --listing ... --core ... --output ...`
+constructs exception/register frames at six decoder instruction boundaries per
+IRQ exit, then executes the cartridge's actual normal/underwater VBlank return,
+RTE, bookmark and resume code. It clobbers foreground registers between slices
+and compares the full 32 KiB result with an independent Kosinski+ decoder.
+
+These are emulator/native checks, not real-console verification.
+
 ## Runtime checks
 
 The old `check_level_lag.py` GHZ → CPZ → HPZ sequence is a historical
@@ -164,8 +196,9 @@ before reusing them with an unrelated baseline. Native fixtures use the declared
 system stack, map staging and execute CD terrain and placement requests in a second Unicorn
 68000. Fixture data is copied to its resident tables at the mailbox boundary;
 this tests the assembled algorithms, loading/apply boundary and caller ABI,
-not CD bus scheduling. Object fixtures use placement helpers to distinguish CD
-index handles/resident state from cartridge pointers. The emulator checks below cover that hardware path.
+not CD bus scheduling. Object fixtures use placement helpers for index handles in either KEH build,
+selecting the active era bank on CD or MD. Older cartridge pointer fixtures
+remain readable for historical comparisons. The emulator checks below cover that hardware path.
 
 CD boot needs a supplied system directory. Only runners exposing
 `--system-directory` support that setup directly (including level pages, act

@@ -35,6 +35,11 @@ variables remain together in `_definitions/s2.constants.asm`; the CD build adds
 its hardware and physical RAM definitions alongside it. Preserve include order
 when moving definitions: some depend on macros or earlier allocations.
 
+`md-only/` contains the cartridge-specific backends selected by
+`MegaCDMode1 = 0`: direct codecs and streaming, collision, placement loading and
+their private RAM. Mode 1 remains the default. Shared assets and engine sources
+keep their existing paths; see [build dependencies](Mega-CD.md#cartridge-build-dependencies).
+
 `_inc/` holds engine subsystems and substantial tables. Keep small helpers and
 local macros with their owner; split a routine out when it makes the subsystem
 easier to find and maintain. Generated audio tables belong under `sound/`, as
@@ -42,9 +47,11 @@ described in the [sound guide](../build_tools/sound/README.md).
 
 ## Branch scope
 
-`Mystic-Island` is the ordinary cartridge build. `test/rebuilt-kehmusic` adds
-required Mega-CD RAM and selective sub-CPU work. Shared guides apply to both;
-the Mega-CD guide explicitly describes the CD branch. Sixteen four-act zones
+`Mystic-Island` is the ordinary cartridge branch. `test/rebuilt-kehmusic` primarily
+targets Mode 1, with required Mega-CD RAM and selective sub-CPU work when
+`MegaCDMode1 = 1`. Setting it to `0` selects the self-contained cartridge
+dependencies in the same source tree. Shared guides apply to both; the Mega-CD
+guide describes the KEH branch and its build selection. Sixteen four-act zones
 are exposed (`$00-$0F`); editable starter acts are not
 finished levels. Planned mixed-size SonLVL authoring is listed under
 [future layout work](Levels.md#planned-layout-format), not as a current feature.

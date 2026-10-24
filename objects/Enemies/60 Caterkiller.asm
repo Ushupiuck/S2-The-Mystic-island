@@ -232,7 +232,7 @@ Cat_Head:	; Routine 2
 Cat_ChkGone:
 		move.w	respawn_addr(a0),d0
 		beq.s	.delete
-		jsr	(MCD_RespawnRelease).l
+		jsr	(Object_RespawnRelease).l
 
 .delete:	move.b	#$A,obRoutine(a0)	; goto Cat_Delete next
 		rts

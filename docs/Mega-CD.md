@@ -33,6 +33,36 @@ collision resolution, tilemap construction, and Kosinski+/Nemesis/Enigma decodin
 execute on CD. Camera motion,
 object control, VDP output and sound still execute on MD.
 
+## Cartridge build dependencies
+
+`MegaCDMode1` in `md-main.asm` selects the backend at assembly time. The primary
+configuration is `1`; `0` builds a standalone Mega Drive ROM without the CD
+bootstrap, subprogram, mailboxes or CD-owned buffers. Shared objects, level
+layouts, art, palettes, mappings, sound and editor files keep their usual paths.
+Only cartridge-specific implementations live in `md-only/`:
+
+| File | Cartridge responsibility |
+| --- | --- |
+| `Nemesis Decompression.asm`, `Enigma Decompression.asm`, `KosinskiPlus.asm` | Direct decoding; `NemDec` takes its VRAM destination in `d2` in either build |
+| `KosinskiPlus Modules.asm` | Interruptible module/decoder queues, using the existing shared codec core and queue helpers |
+| `Pattern Load Cues.asm` | Prepare Nemesis state in foreground, emit bounded tile batches in VBlank |
+| `Tile Streaming.asm` | Direct VDP rows/columns and layout reads/writes, including SMZ parallax |
+| `Terrain Collision.asm` | Current interleaved collision banks, projected movement probes and whole airborne contact resolution |
+| `Objects Manager.asm` | Eight-byte placements, word subtypes, era filtering and persistent state |
+| `RAM.asm` | Private codec buffers, VBlank camera snapshots and placement state, appended by the main RAM declaration |
+
+The cartridge retains the `$8000`-byte chunk table in the lower half of its
+64 KiB RAM. Its three placement-state banks hold `$180` (384) entries apiece;
+Mode 1 retains `$300` (768). The largest current authored list contains 263.
+`ObjectLayoutFile` checks each included list against the selected capacity,
+and assembly rejects total RAM overflow. This is a cartridge resource limit,
+not a different placement format. Both configurations use index-plus-one
+handles and the [same object-facing state API](Objects.md#placement-format-and-ownership).
+
+The cartridge queue's VBlank bookmark runs on both ordinary and underwater lag
+returns. Codecs, terrain buffers and state tables are absent from MD RAM in the
+Mode 1 build; changing the toggle does not silently select obsolete object data.
+
 ## Memory and ownership
 
 Ranges below are inclusive. `_definitions/Mega CD RAM.asm` declares physical
@@ -76,8 +106,8 @@ decompression work storage live with their CD executors. Current live ranges:
 size, then places CD work/art immediately below it. Allocation changes move the
 boundary automatically; there is no address-preserving free hole. Assembly
 checks keep short-addressed engine storage in `$FF8000-$FFFFFF`. CD event/art
-accesses use long addressing. The old MD Kosinski module buffer, Nemesis code
-table and decoder bookmarks are gone; queued requests and DMA controls remain.
+accesses use long addressing. In Mode 1, the old MD Kosinski module buffer, Nemesis code
+table and decoder bookmarks are absent; queued requests and DMA controls remain.
 The scroll spill area and `$200`-byte (512-byte) MD system stack are live
 allocations. The stack has explicit `System_Stack_Start`/`v_systemstack` bounds;
 its size is independent of the CD stack's `$3F0` bytes plus upper bus-read guard.

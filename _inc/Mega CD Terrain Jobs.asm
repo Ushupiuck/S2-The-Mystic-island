@@ -52,6 +52,7 @@ MCD_LoadTerrain:
 ; Preserve d7, which was not scratch in the original collision ABI. Each entry
 ; submits one whole operation; paired player sensors never make separate calls.
 ; Sonic/Tails push their own landing callback before entering this shared pass.
+Player_AirCollision:
 MCD_PlayerAirCollision:
 		move.l	a5,-(sp)
 		move.w	sr,-(sp)
@@ -272,12 +273,14 @@ MCD_TerrainRequest:
 
 ; Level-script layout access. d0.w offset, d1.b new value for a write.
 ; d0.w returns the byte; d2-d3 are scratch, matching the mailbox service.
+Layout_Read:
 MCD_ReadLayout:
 		move.w	sr,-(sp)
 		disable_ints
 		move.w	d0,(MCD_MainArgument).l
 		moveq	#MCD_CommandLayoutRead,d0
 		bra.s	MCD_LayoutRequest
+Layout_Write:
 MCD_WriteLayout:
 		move.w	sr,-(sp)
 		disable_ints

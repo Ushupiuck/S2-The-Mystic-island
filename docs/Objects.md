@@ -139,13 +139,17 @@ and respawn pointers. A full pool schedules a stationary retry. Normal object
 lifetime checks remain X-based: vertical filtering does not add automatic
 Y-based deletion to every object.
 
-On the CD branch, `MCD_ObjectRespawn_Sub` has three `$300`-byte banks, one for
+In the KEH branch, both build configurations use three state banks, one for
 each era, with one byte per placement. Good and Bad Future share the third
-bank. Bit 7 marks loaded/consumed, with seven local-state bits. `respawn_addr` stores
-index + 1, and zero means dynamic/Debug-owned. Use `MCD_RespawnRead`,
-`MCD_RespawnConsume`, `MCD_RespawnRelease` and `MCD_RespawnBump`; never convert
-a CD placement handle to an MD pointer. The cartridge branch retains its
-low-word pointer into `Object_Respawn_Table`.
+bank. Mode 1 stores three `$300`-byte banks at `MCD_ObjectRespawn_Sub`;
+cartridge mode stores three `$180`-byte banks at `Object_Respawn_Table`.
+Bit 7 marks loaded/consumed, with seven local-state bits. `respawn_addr` stores
+index + 1, and zero means dynamic/Debug-owned. Use `Object_RespawnRead`,
+`Object_RespawnConsume`, `Object_RespawnRelease` and `Object_RespawnBump`;
+`Object_PlacementX` retrieves the original placement X. Never reinterpret a
+handle as an MD pointer. The Mode 1 `MCD_*` labels remain same-address aliases
+for existing diagnostics. The [build selection](Mega-CD.md#cartridge-build-dependencies)
+changes storage and execution, while preserving the object-facing contract.
 
 - Preserve the handle on initialization and leave its loaded bit set.
 - `UnloadObject` releases the loaded bit and deletes a reusable out-of-range SST.

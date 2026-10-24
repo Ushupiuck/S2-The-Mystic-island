@@ -2203,7 +2203,7 @@ TailPhysics_loc_104F6:
 ; Sonic_Floor:
 Tails_DoLevelCollision:
 		pea	Tails_ResetOnFloor(pc)
-		bra.w	MCD_PlayerAirCollision
+		bra.w	Player_AirCollision
 ; End of function Tails_DoLevelCollision
 
 

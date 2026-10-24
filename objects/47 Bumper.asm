@@ -83,7 +83,7 @@ Bumper_bump:
 		jsr	(PlaySound_Special).l	; play bumper sound
 		move.w	respawn_addr(a0),d0
 		beq.s	.addscore
-		jsr	(MCD_RespawnBump).l
+		jsr	(Object_RespawnBump).l
 		bmi.s	.return
 
 .addscore:

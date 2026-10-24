@@ -153,22 +153,27 @@ MCD_ApplyObjectReply:
 
 ; Rare persistent-state operations. Preserve the object's registers; d0 is the
 ; only result. No PRG-RAM bus request or state-table mirror is needed on MD.
+Object_RespawnRead:
 MCD_RespawnRead:
 		move.l	d1,-(sp)
 		move.w	#MCD_CommandObjectState,d1
 		bra.s	MCD_RespawnRequest
+Object_RespawnConsume:
 MCD_RespawnConsume:
 		move.l	d1,-(sp)
 		move.w	#$100|MCD_CommandObjectState,d1
 		bra.s	MCD_RespawnRequest
+Object_RespawnRelease:
 MCD_RespawnRelease:
 		move.l	d1,-(sp)
 		move.w	#$200|MCD_CommandObjectState,d1
 		bra.s	MCD_RespawnRequest
+Object_RespawnBump:
 MCD_RespawnBump:
 		move.l	d1,-(sp)
 		move.w	#$300|MCD_CommandObjectState,d1
 		bra.s	MCD_RespawnRequest
+Object_PlacementX:
 MCD_ReadPlacementX:
 		move.l	d1,-(sp)
 		move.w	#$400|MCD_CommandObjectState,d1

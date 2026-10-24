@@ -32,7 +32,7 @@ class Native:
         assert 'Symbol Table' in listing, 'Build must finish before testing its listing'
         self.s = {name: int(value, 16) for name, value in re.findall(
             r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]', listing)}
-        self.respawn_base = 1 if 'MCD_SubObjects' in self.s else self.s['Object_Respawn_Table'] & 65535
+        self.respawn_base = 1 if 'MCD_SubObjects' in self.s or 'Object_Respawn_Base' in self.s else self.s['Object_Respawn_Table'] & 65535
         self.stack = (self.s['v_systemstack'] & 0xFFFFFF) - 4
         self.cpu = Uc(UC_ARCH_M68K, UC_MODE_BIG_ENDIAN)
         self.cpu.ctl_set_cpu_model(UC_CPU_M68K_M68000)
@@ -187,7 +187,8 @@ class Native:
         if 'MCD_SubObjects' in self.s:
             base=int.from_bytes(self.sub.mem_read(self.s['MCD_ObjectRespawnBase_Sub'],4),'big') or self.s['MCD_ObjectRespawn_Sub']
             return bytes(self.sub.mem_read(base + index, size))
-        return bytes(self.cpu.mem_read((self.s['Object_Respawn_Table'] & 0xFFFFFF) + index, size))
+        base = (self.read('Object_Respawn_Base', 4) if 'Object_Respawn_Base' in self.s else 0) or self.s['Object_Respawn_Table']
+        return bytes(self.cpu.mem_read((base & 0xFFFFFF) + index, size))
 
     def placement_write(self, index, value, size=1):
         data = value if isinstance(value, bytes) else value.to_bytes(size, 'big')
@@ -195,7 +196,8 @@ class Native:
             base=int.from_bytes(self.sub.mem_read(self.s['MCD_ObjectRespawnBase_Sub'],4),'big') or self.s['MCD_ObjectRespawn_Sub']
             self.sub.mem_write(base + index, data)
         else:
-            self.cpu.mem_write((self.s['Object_Respawn_Table'] & 0xFFFFFF) + index, data)
+            base = (self.read('Object_Respawn_Base', 4) if 'Object_Respawn_Base' in self.s else 0) or self.s['Object_Respawn_Table']
+            self.cpu.mem_write((base & 0xFFFFFF) + index, data)
 
     def write(self, name, value, size=1):
         self.cpu.mem_write(self.s[name] & 0xFFFFFF, value.to_bytes(size, 'big'))
@@ -255,6 +257,8 @@ class Native:
             self.cpu.mem_write(0xA12003, b'\1')
             self.write('MCD_status', 1)
             self.write('MCD_TerrainReady', 1)
+        if 'Object_Respawn_Base' in self.s:
+            self.write('Object_Respawn_Base', self.s['Object_Respawn_Table'] & 0xFFFFFF, 4)
         self.write('v_gamemode', self.s['Level'], 2)
         self.write('v_air', 30, 2)
         self.act('Init_SpriteTable')
@@ -318,7 +322,8 @@ class Manager(Native):
                 else:
                     lp=self.read('Object_load_addr_'+side,4)
                     rp=self.read('Object_respawn_index_'+side,2)
-                    first,state=base,table
+                    first = base
+                    state = (self.read('Object_Respawn_Base', 4) & 65535) if 'Object_Respawn_Base' in self.s else table
                 assert lp>=first and (lp-first)%SIZE==0 and (lp-first)//SIZE<=len(rows)
                 assert rp==state+(lp-first)//SIZE,(side,hex(lp),hex(rp))
         return live

@@ -32,7 +32,13 @@ def main():
         assert address('Kos_decomp_buffer') == symbols['MCD_DecompOutput']
         assert address('v_objspace') == address('Main_RAM_Start')
     else:
-        assert address('Kos_decomp_buffer_End') == address('v_objspace')
+        assert address('v_objspace') == address('Level_Layout_End')
+        assert address('MD_WorkRAM_Start') <= address('Kos_decomp_buffer')
+        assert address('Kos_decomp_buffer_End') - address('Kos_decomp_buffer') == 0x1000
+        assert address('MD_WorkRAM_End') == address('Main_RAM_End')
+        assert address('Free_RAM_Start') == address('Main_RAM_End')
+        assert address('Free_RAM_End') == 0
+        assert address('Main_RAM_End') >= 0xFF8000
     assert address('v_objspace_end') == address('TempArray_LayerDef' if symbols['MegaCDMode1'] else 'v_16x16')
     if symbols['MegaCDMode1']:
         assert address('v_16x16') == symbols['MCD_TerrainBlockStage']

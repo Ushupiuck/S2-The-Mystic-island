@@ -22,8 +22,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    for n in ('core', 'system-directory', 'output'):
+    for n in ('core', 'output'):
         p.add_argument('--' + n, type=Path, required=True)
+    p.add_argument('--system-directory', type=Path)
     p.add_argument('--rom', type=Path, default=ROOT / 's2built.bin')
     p.add_argument('--listing', type=Path, default=ROOT / 'md-main.lst')
     p.add_argument('--baseline', action='store_true')
@@ -38,8 +39,10 @@ def main():
     maincpu = CpuPrefix.in_dll(g.core, 'm68k')
     subcpu = CpuPrefix.in_dll(g.core, 's68k')
     g.core.m68k_set_reg.argtypes = [C.c_int, C.c_uint]
+    g.core.s68k_set_reg.argtypes = [C.c_int, C.c_uint]
     g.core.m68k_run.argtypes = [C.c_uint]
-    prg = g.memory_domains['PRGRAM']
+    cd = bool(g.s['MegaCDMode1'])
+    prg = g.memory_domains.get('PRGRAM')
     stop = g.s['Free_RAM_Start'] & 0xFFFFFF
     stack = (g.s['v_systemstack'] & 0xFFFFFF) - 4
 
@@ -101,12 +104,17 @@ def main():
             g.write('Collision_addr', g.read('v_colladdr1', 4), 4)
             g.write('Primary_Angle', 3)
             g.write('Secondary_Angle', 3)
-            if args.baseline:
+            if args.baseline and cd:
                 act('MCD_AcquireProgramRAM')
-            else:
+            elif cd:
                 subwrite('MCD_TerrainPrimary_Sub', 0x0303, 2)
                 subwrite('MCD_TerrainPath_Sub', g.s['MCD_TerrainIndex_Sub'], 4)
-            total += act(label, {0: (i % 4) * 64, 3: x, 7: 0x24681357, 8: actor})
+            # These internal-style entries inherit d5's solidity bit from the
+            # surrounding contact pass. Set it on the executing CPU explicitly;
+            # a standalone probe must not inherit the previous method's d5.
+            if label in ('Sonic_DontRunOnWalls', 'sub_132EE', 'Sonic_HitWall') and cd:
+                g.core.s68k_set_reg(5, 13)
+            total += act(label, {0: (i % 4) * 64, 3: x, 5: 13, 7: 0x24681357, 8: actor})
             assert g.core.m68k_get_reg(7) == 0x24681357, label
             row = {f: g.get(actor, f, z) for f, z in (
                 ('obX', 2), ('obY', 2), ('obAngle', 1), ('obStatus', 1), ('obPrevAni', 1),
@@ -138,8 +146,13 @@ def main():
         g.write('Scroll_flags', 0, 4)
         g.write('Scroll_flags_BG2', 0, 4)
         g.write('Screen_redraw_flag', 0)
-        code = bytes.fromhex('33FC811400C0000433FC8F0200C00004')
-        if args.baseline:
+        code = b''
+        if cd and 'MCD_FlushDecodeDMA' in g.s:
+            # Frame snapshots can hold a prepared art DMA. Keep V-int enabled
+            # until its real VBlank consumes Word RAM, then disable it for drawing.
+            code += bytes.fromhex('33FC813400C000044EB9') + struct.pack('>I', g.s['MCD_FlushDecodeDMA'])
+        code += bytes.fromhex('33FC811400C0000433FC8F0200C00004')
+        if args.baseline and cd:
             code += bytes.fromhex('4EB9') + struct.pack('>I', g.s['MCD_RequireProgramRAM'])
         code += bytes.fromhex('4EB9') + struct.pack('>I', g.s['LoadTilesFromStart'])
         done = stop + len(code)
@@ -175,7 +188,7 @@ def main():
         walking.append([g.get('v_player', 'obX', 2), g.get('v_player', 'obY', 2),
                         hashlib.sha256(bytes(g.vram[0xC000:0xD000]) + bytes(g.vram[0xE000:0xF000])).hexdigest()])
     g.restore(stage)
-    free = slice(g.s['Free_RAM_Start'] & 65535, g.s['Free_RAM_End'] & 65535)
+    free = slice(g.s['Free_RAM_Start'] & 65535, (g.s['Free_RAM_End'] & 65535) or 0x10000)
     canary = bytes((i * 37 + 19) & 255 for i in range(free.stop - free.start))
     g.ram[free] = canary
     gameplay = []

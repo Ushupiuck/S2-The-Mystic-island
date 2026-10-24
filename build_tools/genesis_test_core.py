@@ -144,27 +144,33 @@ class Genesis:
             memory[(address+i)^1] = b
 
     def placement_handle(self, index):
-        return index + 1 if 'MCD_SubObjects' in self.s else (self.s['Object_Respawn_Table'] + index) & 65535
+        return index + 1 if 'MCD_SubObjects' in self.s or 'Object_Respawn_Base' in self.s else (self.s['Object_Respawn_Table'] + index) & 65535
 
     def placement_read(self, index=0, size=1):
         if 'MCD_SubObjects' not in self.s:
-            return self.read(self.s['Object_Respawn_Table'] + index, size)
+            base = (self.read('Object_Respawn_Base', 4) if 'Object_Respawn_Base' in self.s else 0) or self.s['Object_Respawn_Table']
+            return self.read(base + index, size)
         memory = self.memory_domains['PRGRAM']
-        address = self.s['MCD_ObjectRespawn_Sub'] + index
+        pointer = self.s['MCD_ObjectRespawnBase_Sub']
+        base = int.from_bytes(bytes(memory[(pointer+i)^1] for i in range(4)), 'big')
+        address = (base or self.s['MCD_ObjectRespawn_Sub']) + index
         return int.from_bytes(bytes(memory[(address+i)^1] for i in range(size)), 'big')
 
     def placement_write(self, index, value, size=1):
         if 'MCD_SubObjects' not in self.s:
-            return self.write(self.s['Object_Respawn_Table'] + index, value, size)
+            base = (self.read('Object_Respawn_Base', 4) if 'Object_Respawn_Base' in self.s else 0) or self.s['Object_Respawn_Table']
+            return self.write(base + index, value, size)
         memory = self.memory_domains['PRGRAM']
-        address = self.s['MCD_ObjectRespawn_Sub'] + index
+        pointer = self.s['MCD_ObjectRespawnBase_Sub']
+        base = int.from_bytes(bytes(memory[(pointer+i)^1] for i in range(4)), 'big')
+        address = (base or self.s['MCD_ObjectRespawn_Sub']) + index
         for i, byte in enumerate(value.to_bytes(size, 'big')):
             memory[(address+i)^1] = byte
 
     def placement_capacity(self):
         if 'MCD_SubObjects' in self.s:
             return self.s['MCD_ObjectPlacementCount']
-        return self.s['Object_Respawn_Table_end'] - self.s['Object_Respawn_Table']
+        return self.s.get('MD_ObjectPlacementCount', self.s['Object_Respawn_Table_end'] - self.s['Object_Respawn_Table'])
 
     def get(self,actor,field,size=1):
         projected=field=='layout_id'

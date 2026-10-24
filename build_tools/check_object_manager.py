@@ -115,10 +115,11 @@ for a in list(m.live().values())[:5]:
 m.act('ObjectsManager')
 assert len(m.verify(rows,base))==90 and not m.read('Object_load_retry')
 report['pool_exhaustion_stationary_retry']=True
-# No byte-index wrap at placement 255. All 768 reserved entries are addressable.
-rows=[(i*16,128,0x41,0) for i in range(768)]
+# No byte-index wrap at placement 255. Exercise the complete variant capacity.
+capacity = m.s['MCD_ObjectPlacementCount' if m.s['MegaCDMode1'] else 'MD_ObjectPlacementCount']
+rows=[(i*16,128,0x41,0) for i in range(capacity)]
 base=m.fixture(rows)
-for x in range(0,12288,128):
+for x in range(0,capacity*16,128):
     m.cam(x,0)
     m.write('Camera_X_pos_coarse_back',(x-128)&0xFF80,2)
     for a in list(m.live().values()):
@@ -127,18 +128,18 @@ for x in range(0,12288,128):
     live=m.verify(rows,base)
     loaded={(p-m.respawn_base)&65535 for p in live}
     assert eligible(rows,x,0)<=loaded,(x,eligible(rows,x,0)-loaded)
-report['full_768_placement_table']=True
+report['full_placement_table']=capacity
 # A preserved table survives reinitialization, and a normal new layout clears it.
 m.start()
-m.placement_write(0,b'\x21'*768)
+m.placement_write(0,b'\x21'*capacity)
 m.write('Respawn_table_keep',1)
 m.cam(0,0)
 m.act('ObjectsManager')
-assert m.placement_data(768)[-1]==0x21
+assert m.placement_data(capacity)[-1]==0x21
 m.write('Obj_placement_routine',0)
 m.write('Respawn_table_keep',0)
 m.act('ObjectsManager')
-assert m.placement_data(768)[-1]==0
+assert m.placement_data(capacity)[-1]==0
 report['reset_keep_state']=True
 print(report,flush=True)
 
