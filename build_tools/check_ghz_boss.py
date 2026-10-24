@@ -275,7 +275,8 @@ def native_checks(args):
 
     def frame():
         for a in pool:
-            label = {s['Obj3D']: 'Obj3D', s['Obj48']: 'Obj48'}.get(m.get(a, 'code'))
+            label = {s[name]: name for name in (
+                'Obj3D', 'Obj48', 'BossExplosion_Controller', 'BossExplosion')}.get(m.get(a, 'code'))
             if label:
                 m.act(label, a)
 
@@ -419,8 +420,25 @@ def native_checks(args):
     debris = parts('Obj48')
     assert len(debris) == 6
     for a in debris:
-        assert m.get(a, 'obRoutine') == s['GBall_DebrisRoutine']
+        assert m.get(a, 'obRoutine') != s['GBall_DebrisRoutine']
         assert not m.get(a, 'obColType')
+    assert not parts('BossExplosion')
+    first_burst = None
+    for tick in range(1, 70):
+        frame()
+        if parts('BossExplosion') and first_burst is None:
+            first_burst = tick
+        detached = [m.get(a, 'obRoutine') == s['GBall_DebrisRoutine'] for a in debris]
+        assert len(set(detached)) == 1, 'Chain pieces must release together'
+        assert all(not m.get(a, 'obColType') for a in debris)
+        if all(detached):
+            assert first_burst is not None and tick - first_burst == 64
+            assert m.get(body, 'BGHZ_BreakTimer') == 64
+            break
+        assert m.get(debris[0], 'obX', 2) == m.get(body, 'obX', 2)
+        assert m.get(debris[0], 'obY', 2) == m.get(body, 'obY', 2) + 32
+    else:
+        raise AssertionError('Chain did not break after its explosion delay')
     # Deleting the ship cannot stop already detached debris. Test each visible
     # and invisible frame against its previous velocity, including fractions.
     m.put(body, 'code', 0)
@@ -442,6 +460,60 @@ def native_checks(args):
         m.act('Obj3D', a)
         assert not m.get(a, 'code')
     results.append('hit restoration, one score award, independent full-speed debris and cleanup')
+
+    # A controller with no free visual slot must not start the breakup clock.
+    start()
+    for _ in range(500):
+        frame()
+        if m.get(body, 'ob2ndRout') == s['BGHZ_Patrol']:
+            break
+    else:
+        raise AssertionError('Weapon never became ready')
+    weapon = parts('Obj48')
+    for a in pool:
+        if not m.get(a, 'code'):
+            m.put(a, 'code', 0x123456)
+    m.put(body, 'obColProp', 1)
+    m.put('v_player', 'obAnim', s['AniIDSonAni_Roll'])
+    m.act('Touch_Enemy', 'v_player', {UC_M68K_REG_A1: body})
+    for _ in range(10):
+        frame()
+    assert not m.get(body, 'BossBurst_Started')
+    m.put(pool[-1], 'code', 0)
+    for _ in range(20):
+        frame()
+    assert m.get(body, 'BossBurst_Started') == 1
+    assert not m.get(body, 'BGHZ_BreakTimer')
+    assert all(not m.get(a, 'obColType') and
+               m.get(a, 'obRoutine') != s['GBall_DebrisRoutine'] for a in weapon)
+    m.put(pool[-2], 'code', 0)
+    for _ in range(3):  # wait for the controller's next scheduled burst attempt
+        frame()
+        if m.get(body, 'BossBurst_Started') & 0x80:
+            break
+    assert m.get(body, 'BossBurst_Started') & 0x80
+    for _ in range(64):
+        frame()
+    assert all(m.get(a, 'obRoutine') == s['GBall_DebrisRoutine'] for a in weapon)
+    results.append('harmless attached chain waits for an actual burst under a full pool, then releases after 64 boss updates')
+
+    # Recovery clears the old defeated bit; pending pieces must still retire.
+    start()
+    m.act('Obj3D', body)
+    m.put(body, 'ob2ndRout', s['BGHZ_Approach'])
+    m.put(body, 'BGHZ_BaseX', s['BGHZ_CenterX'] << 16, 4)
+    m.act('Obj3D', body)
+    root = parts('Obj48')[0]
+    m.act('Obj48', root)
+    weapon = parts('Obj48')
+    assert len(weapon) == 6
+    m.put(body, 'ob2ndRout', s['BGHZ_Recover'])
+    assert not m.get(body, 'BossBurst_Started')
+    for a in weapon:
+        m.act('Obj48', a)
+        assert m.get(a, 'obRoutine') == s['GBall_DebrisRoutine']
+        assert not m.get(a, 'obColType')
+    results.append('recovery releases pending parts even without a burst or the defeated bit')
 
     # Both boss profiles use the imported three-frame burst scheduler.
     for profile, parent_code, phase in (('GHZ', 'Obj3D', s['BGHZ_Explode']),
@@ -634,15 +706,32 @@ def live_checks(args, decoded):
             assert g.get(body, 'obColType') == 0xF
     assert hits == list(range(7, -1, -1))
     assert g.read('v_score', 4) == score + 100
-    assert all(g.get(a, 'obRoutine') == s['GBall_DebrisRoutine'] and
+    assert all(g.get(a, 'obRoutine') != s['GBall_DebrisRoutine'] and
                not g.get(a, 'obColType') for a in weapon)
     burst_count = 0
+    first_burst = breakup = None
     for tick in range(600):
         g.run()
         valid()
-        burst_count = max(burst_count, len([a for a in objects(g) if g.get(a, 'code') == s['BossExplosion']]))
-        if tick in (5, 13, 25, 50, 300):
+        visible_bursts = [a for a in objects(g) if g.get(a, 'code') == s['BossExplosion']]
+        burst_count = max(burst_count, len(visible_bursts))
+        if visible_bursts and first_burst is None:
+            first_burst = tick
+        if breakup is None:
+            detached = [g.get(a, 'obRoutine') == s['GBall_DebrisRoutine'] for a in weapon]
+            assert len(set(detached)) == 1, 'Chain pieces did not release together'
+            assert all(not g.get(a, 'obColType') for a in weapon)
+            if all(detached):
+                breakup = tick
+                assert first_burst is not None and 63 <= breakup - first_burst <= 64
+                assert g.get(body, 'BGHZ_BreakTimer') == 64
+                g.video.save(args.output / 'chain-breakup.png')
+            else:
+                assert g.get(weapon[0], 'obX', 2) == g.get(body, 'obX', 2)
+                assert g.get(weapon[0], 'obY', 2) == g.get(body, 'obY', 2) + 32
+        if tick in (5, 13, 25, 50, 63, 65, 300):
             g.video.save(args.output / f'defeat-{tick:03}.png')
+    assert first_burst is not None and breakup is not None
     assert burst_count >= 6
     assert not objects(g, 0x3D) and not objects(g, 0x48)
     assert not [a for a in objects(g) if g.get(a, 'code') in (s['BossExplosion'], s['BossExplosion_Controller'])]
@@ -679,6 +768,7 @@ def live_checks(args, decoded):
     return dict(player='Tails' if args.player == 2 else 'Sonic',
                 region='PAL' if args.pal else 'NTSC', hits=hits,
                 patrol_frames=len(xs), maximum_simultaneous_bursts=burst_count,
+                first_burst_tick=first_burst, chain_breakup_tick=breakup,
                 boss_deleted=True, harmless_debris=True, capsule_open=True,
                 ordinary_explosion_art_restored=True)
 

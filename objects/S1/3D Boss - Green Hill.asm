@@ -5,6 +5,7 @@
 ; ---------------------------------------------------------------------------
 BGHZ_FlashColor = objoff_2E	; word: palette color saved before a hit
 BGHZ_WeaponReady = objoff_30	; byte: set by the fully extended chain
+BGHZ_BreakTimer = objoff_31	; byte: boss updates since the first explosion was created
 BGHZ_BaseX = objoff_34		; longs: ObjectMove_Reserved2's unbobbed position
 BGHZ_Parent = objoff_38		; long: face/exhaust -> ship
 BGHZ_BaseY = objoff_3C
@@ -19,6 +20,7 @@ BGHZ_Explode = 8
 BGHZ_Recover = $A
 BGHZ_Escape = $C
 BGHZ_CenterX = boss_ghz_x+$A0
+BGHZ_ChainBreakDelay = 64		; HCZ/MGZ/CNZ-style defeat wait before releasing attached parts
 
 Obj3D:
 		moveq	#0,d0
@@ -218,6 +220,7 @@ BGHZ_Defeat:
 		clr.b	BGHZ_FlashTimer(a0)
 .palette_ready:
 		clr.b	obColType(a0)
+		clr.b	BGHZ_BreakTimer(a0)
 		clr.w	obVelX(a0)
 		clr.w	obVelY(a0)
 		moveq	#100,d0
@@ -228,6 +231,12 @@ BGHZ_Defeat:
 ; ---------------------------------------------------------------------------
 
 BGHZ_ShipExplode:
+		tst.b	BossBurst_Started(a0)	; bit 7: a burst was actually created
+		bpl.s	.explode
+		cmpi.b	#BGHZ_ChainBreakDelay,BGHZ_BreakTimer(a0)
+		bhs.s	.explode
+		addq.b	#1,BGHZ_BreakTimer(a0)
+.explode:
 		subq.w	#1,BGHZ_Timer(a0)
 		bmi.s	.recover
 		moveq	#BossExplosion_GHZ,d0

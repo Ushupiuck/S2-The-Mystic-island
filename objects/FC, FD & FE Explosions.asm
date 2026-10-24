@@ -115,10 +115,10 @@ MDis_Animate:	; Routine 2
 ; ---------------------------------------------------------------------------
 ; Boss explosion controller, adapted from S3&K's Obj_CreateBossExplosion.
 ; Each boss keeps its defeat timer; a separate SST handles cadence and spread.
-; Parent bosses reserve byte $4C as the controller-started flag. Repeated calls
+; Parent bosses reserve byte $4C for controller/first-burst flags. Repeated calls
 ; retry a full pool, then become no-ops after successful creation.
 ; ---------------------------------------------------------------------------
-BossBurst_Started = objoff_4C	; parent only: byte
+BossBurst_Started = objoff_4C	; parent only: bit 0 = controller started, bit 7 = burst created
 BossBurst_Count = objoff_2E	; controller: counter; large bursts use bit 7 = continuous
 BossBurst_RangeX = objoff_2F	; byte: power-of-two half-width
 BossBurst_RangeY = objoff_30	; byte: power-of-two half-height
@@ -192,6 +192,8 @@ BossExplosion_FollowParent:
 		move.b	#2,BossBurst_Timer(a0)
 		jsr	(FindFreeObj).l
 		bne.s	.return
+		movea.l	BossBurst_Parent(a0),a2
+		bset	#7,BossBurst_Started(a2)	; allocation success, rather than just an active controller
 		move.l	#BossExplosion,code(a1)
 		tst.b	d3
 		beq.s	.position

@@ -1,6 +1,6 @@
 ; ---------------------------------------------------------------------------
 ; Object 48 - GHZ boss's chain and wrecking ball
-; S3&K-style staged drop and full-speed scattering on defeat; S1's weighted
+; Staged drop and delayed full-speed scattering on defeat; S1's weighted
 ; pendulum is retained. One sine calculation positions the whole live chain.
 ; ---------------------------------------------------------------------------
 GBall_Children = objoff_2E	; root only: five word SST pointers, ending at $37
@@ -23,11 +23,15 @@ Obj48:
 		bne.w	GBall_Delete
 		cmpi.b	#2,obRoutine(a1)
 		bne.w	GBall_Delete
-		tst.b	obStatus(a1)
-		bpl.s	.dispatch
+		cmpi.b	#BGHZ_Explode,ob2ndRout(a1)
+		blo.s	.dispatch
+		clr.b	obColType(a0)		; harmless immediately, still attached during the delay
 		tst.b	obRoutine(a0)		; an uninitialized weapon has no visible pieces
 		beq.w	GBall_Delete
-		bra.w	GBall_BreakApart
+		cmpi.b	#BGHZ_Recover,ob2ndRout(a1)
+		bhs.w	GBall_BreakApart		; finish cleanup even if no burst slot was available
+		cmpi.b	#BGHZ_ChainBreakDelay,BGHZ_BreakTimer(a1)
+		bhs.w	GBall_BreakApart
 .dispatch:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0

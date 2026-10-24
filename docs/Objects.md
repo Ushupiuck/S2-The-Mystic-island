@@ -187,7 +187,7 @@ Other packed layouts require their own audit when changing fields:
 | Shield | Parent word `$42-$43`, disjoint from bank caches |
 | Caterkiller | Trail `$30-$3B`, packed parent long `$3C-$3F`, inertia `$40-$41`, distance `$42-$43` |
 | W.I.P. staircase | Timer `$30-$31`, slot/touch `$32-$33`, origins `$34-$37`, four offset words `$38-$3F`, parent `$40-$43` |
-| GHZ ship | Saved flash color `$2E-$2F`, weapon-ready byte `$30`, base X/Y longs `$34/$3C`, timer `$40-$41`, flash/bob bytes `$42/$43` |
+| GHZ ship | Saved flash color `$2E-$2F`, weapon-ready byte `$30`, breakup clock `$31`, base X/Y longs `$34/$3C`, timer `$40-$41`, flash/bob bytes `$42/$43` |
 | GHZ chain root | Five word child pointers `$2E-$37`, ship long `$38`, drop/radius words `$3C/$3E`, acceleration/flicker bytes `$40/$41`, angular velocity `$42-$43`, piece index `$44` |
 | GHZ chain children | Root word `$2E`, ship long `$38`, drop/radius words `$3C/$3E`, flicker byte `$41`, piece index `$44` |
 | Boss burst controller | Parameter bytes `$2E-$31`, countdown/main-routine bytes `$32/$33`, expected parent code long `$34`, parent long `$38`; parent reserves started byte `$4C` |
@@ -363,8 +363,13 @@ keeps swinging during subsequent pauses. One sine call positions all links.
 The ship and weapon constructors retry insufficient SST capacity; flight waits
 at the anchor until the complete weapon is ready, without wrapping its timer.
 
-On defeat, the mount, four links and ball become independent harmless debris,
-using Sky Sanctuary's indexed launch velocities and `$38` gravity every frame.
+Defeat immediately makes the attached weapon harmless. After the first boss
+burst is created, a shared clock waits 64 boss updates before releasing the
+mount, four links and ball together as independent debris. The clock occupies
+the ship's previously unused private byte `$31`; no SST or global allocation
+grows. If no burst slot becomes available during the defeat phase, recovery
+still releases the pieces. Debris uses Sky Sanctuary's indexed launch velocities
+and `$38` gravity every frame.
 Alternating drawing never gates movement. Detached pieces stop reading their
 parent; faces/exhaust validate the ship before following it. Hit flashing saves
 and restores the actual palette word, and escape uses `GetLevelMusic`.
@@ -372,7 +377,9 @@ and restores the actual palette word, and escape uses `GetLevelMusic`.
 `objects/FC, FD & FE Explosions.asm` owns the shared boss burst controller and
 its visual object. Both GHZ and EHZ call `BossExplosion_Start` during their
 exploding phase. The helper retries a full pool and creates one controller per
-boss; byte `$4C` is reserved in both parent SSTs. The parameter rows give the
+boss; byte `$4C` is reserved in both parent SSTs. Bit 0 marks controller creation;
+bit 7 is set only after a burst allocation succeeds, so GHZ's breakup clock
+does not run while a controller is waiting for a free visual slot. The parameter rows give the
 finite counter (bit 7 means continuous), X/Y half-ranges and parent phase.
 Spreads must be nonzero powers of two. The controller follows a validated
 parent, stops when that phase ends, and emits every three frames. Low/high RNG
@@ -386,6 +393,14 @@ Deployment, breakup and burst cadence/RNG come from skdisasm
 `15dfa3a6ee4c53aeb482233e493755c84b4f3479`,
 [`3D, 48 Boss - GHZ Main and Wrecking Ball.asm`](https://github.com/sonicretro/s1disasm/blob/15dfa3a6ee4c53aeb482233e493755c84b4f3479/_incObj/3D%2C%2048%20Boss%20-%20GHZ%20Main%20and%20Wrecking%20Ball.asm)
 and `15 Swinging Platforms.asm`, rather than Sky Sanctuary's flight logic.
+
+The later breakup follows the HCZ, MGZ drill and CNZ end bosses' defeat sequence:
+`BossDefeated` sets a `$3F` counter, `Wait_FadeToLevelMusic` waits 64 updates,
+then the callback sets bit 4 of the parent's `$38` flags to release its parts.
+CNZ's `sub_6ED4C` separately disables collision on the defeated bit and scatters
+on that later flag. Mecha GHZ uses `Child_Draw_Sprite_FlickerMove`'s immediate
+defeated-bit test instead. Our clock starts at the first burst allocation so
+pool pressure cannot spend this delay before any explosion is created.
 
 The same module includes the assembled, currently unplaced `BossExplosion_Wall`
 entry point. Queue `plcid_ExplosionWall`, wait for the PLC queue to finish, then

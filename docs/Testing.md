@@ -225,6 +225,11 @@ child slots, actual hit response,
 palette restoration, scoring, independent debris physics on every frame, burst
 cadence/RNG, animation duration and act-selected escape music. Rendering/audio
 boundaries are stubbed only in these native fixtures.
+Breakup checks require a harmless attached chain before any burst, a shared
+64-update release after the first burst allocation, and independent debris
+afterward. A full-pool case separately delays controller creation and visual
+allocation; neither may advance the breakup clock. Recovery cleanup also works
+when no explosion could be allocated.
 Add `--s1disasm /path/to/s1disasm` for an independent 2,400-frame comparison
 against assembled S1 instructions. Use the revision cited in
 [Objects](Objects.md#ghz-boss-and-boss-explosions). It reads the original GHZ
@@ -245,6 +250,10 @@ timed return sweeps with exact subpixel deltas, then lands eight actual rolling
 collisions with the boss. It observes breakup, explosions, escape, ordinary-art restoration and
 the capsule switch/animal release. `--player 2` selects Tails and `--pal`
 selects PAL. Mode 1 accepts `--system-directory /path/to/bios-directory`.
+The report records the first burst and breakup ticks; all pieces must stay
+attached and harmless during the wait and release in the same frame. The first
+burst-to-release interval is 63-64 rendered frames depending on SST update order,
+with exactly 64 parent-clock updates before release.
 Screenshots and the JSON report belong in the selected output directory.
 The native burst tests cover both GHZ/EHZ profiles; this arena run covers GHZ,
 not a controller-only playthrough or EHZ's entire fight.
