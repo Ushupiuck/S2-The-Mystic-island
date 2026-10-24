@@ -255,6 +255,63 @@ Comparisons use s1disasm `15dfa3a6ee4c53aeb482233e493755c84b4f3479`, s2disasm
 yellow orbs, `Obj_FBZSnakePlatform` (`$75`), use a separate delayed-train
 waypoint runner, rather than this relative-path constructor.
 
+## Ordinary platforms and Flying Battery's hovering platform
+
+Our `objects/18 Platforms.asm` is the S1 ordinary-platform family with S2
+additions. S3&K still has a separate ordinary `Obj_FloatingPlatform` for
+AIZ/HCZ/MGZ: it retains the four-pixel rider sag and uses the shared
+`FloatingPlatformIndex` movement table. FBZ's jet-powered platform,
+`Obj_FBZFloatingPlatform` (`$71`), has its own five-entry movement table.
+Treat it as a specialized relative; it does not replace every existing mode.
+
+| Behavior | Current `$18` platform | S3&K FBZ `$71` |
+| --- | --- | --- |
+| Resting motion | Stationary, sagging up to 4 px under either rider | Continuous eight-pixel sine bob above/below its saved Y |
+| Repeating travel | Horizontal 128 px; vertical 64/96/128 px; reversed variants | Vertical 64/128 px; circle of radius 64 px with 16 initial phases |
+| Activation | Primary-player fall trigger; switch-0 delayed 512 px rise | Either player triggers one vertical trip, then bobbing at the destination |
+| Solidity | Top-only `PlatformObject`; both players can ride/jump off | `SolidObjectFull_Offset` for both players, with the solid deck offset above its origin |
+| Damage/animation | No platform hurtbox; static mapping frame | Separate central 40-by-32-pixel hurtbox (`$8C`); three-frame engine animation |
+
+FBZ's trigger waits for a bob zero crossing before starting the trip. Its
+speed increases/decreases by four accumulator units per frame, producing
+acceleration and braking rather than our fixed-speed switch rise. X flip
+selects upward instead of downward travel. On arrival it saves the new Y and
+switches permanently to ordinary bobbing until the object reloads. Leaving
+the platform does not cancel or reverse that trip. Our `$19` CPZ platform
+already has either-player movement triggers, so rider activation itself is
+not a missing engine capability.
+
+FBZ decodes its subtype differently from our shape/high-nibble and
+movement/low-nibble convention:
+
+| FBZ subtype | Movement | Low nibble / X flip |
+| --- | --- | --- |
+| `$00-$0F` | Idle bob, 256-frame period | Low nibble unused |
+| `$10-$1F` | Vertical, 64 px total travel | X flip reverses oscillator displacement |
+| `$20-$2F` | Vertical, 128 px total travel | X flip reverses oscillator displacement |
+| `$30-$3F` | Circle, 64 px radius | Low nibble selects phase in sixteenths; X flip reverses direction |
+| `$40-$4F` | Rider-triggered vertical trip | Low nibble selects distance; X flip selects upward travel |
+
+The sixteen actual trip distances are 315, 324, 342, 361, 380, 390, 410, 420,
+441, 451, 473, 484, 506, 517, 540 and 552 pixels. These are integer-motion
+results, also recorded by the reference SonLVL definition, rather than a
+uniform distance step. Movement bits `$50-$70` index beyond the five-entry
+table and are invalid. Runtime masks out subtype bit 7; the editor's `$B0`
+clockwise choice is a property value that sets X flip, not a runtime bit-7
+direction flag.
+
+Useful reuse candidates are the circle and the eased, one-shot relocation,
+with harmless/harmful engine behavior made explicit. Preserve our existing
+sag, falling and switch modes when extending ordinary platforms. The generic
+S3&K table also supplies diagonal, square and longer horizontal motion; it is
+the closer comparison for a general platform upgrade. No FBZ platform code
+or assets have been imported.
+
+Reference: skdisasm `73de97c6b55055bcb8089c1d55d006b02136f163`,
+[`Obj_FloatingPlatform`, `FloatingPlatformIndex`, `Obj_FBZFloatingPlatform`
+and collision helpers](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/sonic3k.asm),
+plus its [FBZ SonLVL definition](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/SonLVL%20INI%20Files/FBZ/FloatingPlatform.cs).
+
 ## GHZ boss and boss explosions
 
 `objects/S1/3D Boss - Green Hill.asm` retains the classic ship, faces, eight-hit

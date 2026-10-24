@@ -37,6 +37,7 @@ Give all 64 acts explicit water-enable, initial-height and dynamic-routine entri
 Apply and publish the tested PLC/VBlank/collision/continuation optimizations and shorter CD mailbox accesses; retain direct returns and verify actual dispatcher timings and gameplay < DONE
 Finish the LZ conveyor with S2/S3&K relative paths/full solidity, complete-group allocation retry, original LZ spacing, optional spiked undersides and switch-E reversal for both variants; restore only its LZ1 groups/wheels and add editor/runtime checks < DONE
 Share every LZ wheel through one 16-tile DPLC bank and animation clock; free 48 VRAM tiles, preserve switch reversal, retry full queues atomically, retain the old six-byte RAM reservation and verify one versus 70 wheels plus live NTSC/PAL phases < DONE
+Compare FBZ's hovering platform with our ordinary platforms: document its separate movement family, circle, eased either-player lift, full deck solidity and engine hurtbox; distinguish the closer generic S3&K platform successor and retain existing modes in any future extension (docs/Objects.md) < DONE; comparison only, no port
 Move the $8000 chunk table and scene/bonus overlays to bank-0 CD PRG RAM at $6000, reserve the conventional BIOS area, retain short-addressed MD globals, and free $FF0000-$FF7FFF < DONE
 Reserve a universal 16-tile water DPLC bank at $2A8, preserve the paused two-phase waves and all terrain/platform pixels, retain the displaced SMZ terrain in static atlas padding, and move the capsule to $4A7 < DONE
 Correct hidden-bonus blue/red/gold palette slots, running-disc corner capture, horizontal spring top height, and tail/carrier update order < DONE
@@ -253,8 +254,3 @@ $12 Tiles
 Chicken, Eagle, Flicky, Seal:
 $E  Tiles
 ; ---------------------------------------------------------------------------
-
-Compare S3&K Flying Battery's floating platforms (Obj_FBZFloatingPlatform)
-with our existing floating platforms. Beyond hovering up/down, are they an
-evolved version of the same object? Inspect movement variants, rider/solid
-handling and activation behavior before deciding what is worth reusing.
