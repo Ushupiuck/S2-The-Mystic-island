@@ -111,6 +111,9 @@ GBall_ChildCount = GBall_DropOffsets_End-GBall_DropOffsets
 ; ===========================================================================
 
 GBall_Deploy:	; Routine 2
+		movea.l	GBall_Parent(a0),a1
+		tst.b	BGHZ_WeaponReady(a1)
+		bne.s	.wait_for_ship
 		movea.l	a0,a1
 		bsr.w	GBall_DropPiece
 		lea	GBall_Children(a0),a2
@@ -136,9 +139,12 @@ GBall_Deploy:	; Routine 2
 		subi.w	#GBall_MountDistance,GBall_Distance(a1)
 .next_radius:
 		dbf	d6,.set_radius
-		move.b	#4,obRoutine(a0)
 		movea.l	GBall_Parent(a0),a1
 		move.b	#1,BGHZ_WeaponReady(a1)
+.wait_for_ship:
+		cmpi.b	#BGHZ_Patrol,ob2ndRout(a1)
+		bne.w	GBall_PositionSwing	; S1 starts swinging with the first ship pass
+		move.b	#4,obRoutine(a0)
 		bra.w	GBall_PositionSwing
 ; ---------------------------------------------------------------------------
 

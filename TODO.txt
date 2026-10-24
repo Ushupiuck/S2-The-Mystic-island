@@ -33,6 +33,7 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
+Restore the GHZ boss's S1 flight timers, slow opening pass, pauses and pendulum phase while retaining staged deployment/breakup; match 2,400 frames against assembled S1 routines and verify eight return sweeps, full fights and capsules in Sonic/NTSC and Tails/PAL < DONE
 Fix rotating special-stage Debug to place real grid rings, snap to cells with left/up ties and spiral through free authored cells without overwriting occupied cells or padding; verify full-grid/full-SST cases and actual NTSC/PAL placement/collection < DONE
 Brighten the special-stage results' tiny oval rims with the existing gold/yellow ramp, preserving their shape and shared palette; inspect the rendered results screen < DONE
 Expand object placements to XXXX YYYY OOTT SSSS and every object subtype access to words at the existing $2C-$2D pair; preserve all universals/$4E SSTs, convert layouts/Debug/payloads, implement CD era masks/state and custom SonLVL word properties, and verify native/runtime/editor paths < DONE

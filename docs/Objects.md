@@ -350,12 +350,18 @@ plus its [FBZ SonLVL definition](https://github.com/sonicretro/skdisasm/blob/73d
 ## GHZ boss and boss explosions
 
 `objects/S1/3D Boss - Green Hill.asm` retains the classic ship, faces, eight-hit
-fight and escape. Its active patrol travels one pixel/frame between the center
-X ±32, reversing immediately while the ball keeps swinging. Only initial weapon
-deployment waits: each of the six pieces drops two pixels/frame to its own stop,
-then the root signals readiness. The mount ends 32 pixels below the ship and the
-ball's radius remains 96 pixels. The S1 weighted pendulum uses one sine call for
-all links. The ship and weapon constructors retry insufficient SST capacity.
+fight and escape. Flight follows S1's timed pattern: a 120-frame opening pause,
+a quarter-pixel/frame first pass from the center, then one-pixel/frame return
+passes separated by the original wait counter. The predecremented `$7F`/`$3F`
+movement timers preserve S1's exact subpixel endpoints, rather than reversing
+at invented coordinate bounds. Vertical bobbing continues through pauses.
+
+Each of the six weapon pieces drops two pixels/frame to its own stop, then the
+root signals readiness. The mount ends 32 pixels below the ship and the ball's
+radius remains 96 pixels. The pendulum waits for the first flight pass, then
+keeps swinging during subsequent pauses. One sine call positions all links.
+The ship and weapon constructors retry insufficient SST capacity; flight waits
+at the anchor until the complete weapon is ready, without wrapping its timer.
 
 On defeat, the mount, four links and ball become independent harmless debris,
 using Sky Sanctuary's indexed launch velocities and `$38` gravity every frame.
@@ -376,8 +382,10 @@ art and timing are described in [Sprites and VRAM](Sprites-and-VRAM.md#boss-expl
 Deployment, breakup and burst cadence/RNG come from skdisasm
 `73de97c6b55055bcb8089c1d55d006b02136f163`, `Obj_SSZGHZBoss`,
 `Child_Draw_Sprite_FlickerMove`, `Set_IndexedVelocity` and
-`Obj_CreateBossExplosion`. The Sky Sanctuary stop-and-wait flight pattern is
-not used.
+`Obj_CreateBossExplosion`. Ship flight and pendulum phase follow s1disasm
+`15dfa3a6ee4c53aeb482233e493755c84b4f3479`,
+[`3D, 48 Boss - GHZ Main and Wrecking Ball.asm`](https://github.com/sonicretro/s1disasm/blob/15dfa3a6ee4c53aeb482233e493755c84b4f3479/_incObj/3D%2C%2048%20Boss%20-%20GHZ%20Main%20and%20Wrecking%20Ball.asm)
+and `15 Swinging Platforms.asm`, rather than Sky Sanctuary's flight logic.
 
 The same module includes the assembled, currently unplaced `BossExplosion_Wall`
 entry point. Queue `plcid_ExplosionWall`, wait for the PLC queue to finish, then

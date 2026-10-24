@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check GHZ deployment, continuous flight, hits, breakup and boss explosions.
+"""Check GHZ deployment, original timed flight, hits, breakup and explosions.
 
 Native fixtures execute the built 68000 routines with drawing/audio boundaries
 stubbed. --core additionally enters GHZ3 and lands eight real collision hits,
@@ -10,7 +10,10 @@ import argparse
 from collections import Counter
 import json
 from pathlib import Path
+import platform
+import re
 import struct
+import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -18,6 +21,125 @@ ROOT = Path(__file__).resolve().parents[1]
 def signed(value, bits=16):
     value &= (1 << bits) - 1
     return value - (1 << bits) if value & (1 << (bits - 1)) else value
+
+
+def s1_patrol_steps():
+    # Upstream decrements before moving: $7F gives 127 quarter-pixel steps,
+    # $3F gives 63 full-pixel steps. The turn plus wait occupy 65 still frames.
+    steps = [-0x4000] * 127
+    for direction in (1, -1) * 4:
+        steps += [0] * 65 + [direction * 0x10000] * 63
+    return steps
+
+
+def s1_reference_motion(args):
+    """Execute upstream movement instructions, with only allocation/hits omitted.
+
+    The reference keeps its own BossMove, CalcSine/table and pendulum positioning.
+    Field aliases adapt its scratch layout; none of its movement instructions or
+    timers are rewritten. Deployment intentionally differs, so compare the chain
+    only once our faster staged drop has finished.
+    """
+    from native_test_core import Manager, UC_M68K_REG_D0
+    original = args.s1disasm / '_incObj'
+    ship = (original / '3D, 48 Boss - GHZ Main and Wrecking Ball.asm').read_text()
+    swing = (original / '15 Swinging Platforms.asm').read_text()
+    move = (original / 'sub BossDefeated & BossMove.asm').read_text()
+    sine = (original / 'sub CalcSine.asm').read_text()
+    actual, reference = (Manager(args.rom, args.listing) for _ in range(2))
+    s = actual.s
+    aliases = {name: s[name] for name in (
+        'obX', 'obY', 'obVelX', 'obVelY', 'obStatus', 'ob2ndRout', 'obAngle',
+        'boss_ghz_x', 'boss_ghz_y')}
+    aliases.update(obBossX=s['BGHZ_BaseX'], obBossY=s['BGHZ_BaseY'],
+                   BGHZ_BossGenericTimer=s['BGHZ_Timer'],
+                   BGHZ_SineCounter=s['BGHZ_BobAngle'], BGHZ_ParentObj=0x38,
+                   obID=0, id_BossBall=0x48, status_xflip_bit=0,
+                   swing_children=0x2E, swing_origX=0x38, swing_origY=0x3A,
+                   swing_radius=0x3C, GBall_Swing_Direction=0x40,
+                   GBall_Swing_Speed=0x42, object_size_bits=6, v_objspace=0xFF0200)
+    begin = ship.index('\nBGHZ_ShipStart:')
+    end = ship.index('\t\tcmpi.b\t#8,ob2ndRout(a0)', begin)
+    bob = ship[begin:end] + '\t\trts\n'
+    flight = ship[ship.index('\nBGHZ_MakeBall:'):ship.index('\nBGHZ_Explode:')]
+    # _move is upstream's optional instruction-encoding macro, not game logic.
+    flight = flight.replace('_move.b', 'move.b')
+    pendulum = swing[swing.index('\nGBall_Move:'):swing.index('\nSwing_ChkDel:')]
+    source = ['\tCPU 68000', f'\tinclude "{(ROOT / "_definitions/s2.macrosetup.asm").as_posix()}"',
+              '\t!org 0', '\tphase $300000']
+    source += [f'{name} equ ${value:X}' for name, value in aliases.items()]
+    source += ['Ref_Step:', '\tmoveq #0,d0', '\tmove.b ob2ndRout(a0),d0',
+               '\tmove.w Ref_Index(pc,d0.w),d1', '\tjsr Ref_Index(pc,d1.w)', '\trts',
+               'Ref_Index:', '\tdc.w BGHZ_ShipStart-Ref_Index,BGHZ_MakeBall-Ref_Index',
+               '\tdc.w BGHZ_ShipMove-Ref_Index,BGHZ_ChgDir-Ref_Index',
+               bob, flight, move[move.index('\nBossMove:'):], pendulum, sine,
+               'FindNextFreeObj:', '\tmovea.l #$FF0180,a1', '\tmoveq #0,d0',
+               '\trts', '\tdephase']
+    asm = args.output.resolve() / 's1-motion-reference.asm'
+    asm.write_text('\n'.join(source) + '\n')
+    win = platform.system() == 'Windows'
+    tools = ROOT / 'build_tools' / ('Windows-x86' if win else 'Linux-' + platform.machine())
+    for command in (
+            [str(tools / ('asw.exe' if win else 'asl')), '-xx', '-n', '-q', '-A', '-L', '-U', str(asm)],
+            [str(tools / ('p2bin.exe' if win else 'p2bin')), '-p=FF', str(asm.with_suffix('.p')),
+             str(asm.with_suffix('.bin'))]):
+        result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
+        assert result.returncode == 0, result.stdout + result.stderr
+    labels = {name: int(value, 16) for name, value in re.findall(
+        r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]', asm.with_suffix('.lst').read_text())}
+    reference.s.update(labels)
+    reference.cpu.mem_write(0x300000, asm.with_suffix('.bin').read_bytes())
+    for machine in (actual, reference):
+        machine.cpu.mem_write(s['DisplaySprite'], bytes.fromhex('4E75'))
+        machine.start()
+    pool = list(actual.pool())
+    body, ref_body, ref_root = pool[0], 0xFF0100, 0xFF0200
+    actual.put(body, 'code', s['Obj3D'])
+    for machine, obj in ((actual, body), (reference, ref_body)):
+        machine.put(obj, 'obX', s['boss_ghz_x'] + 0x100, 2)
+        machine.put(obj, 'obY', s['boss_ghz_y'] - 0x80, 2)
+    reference.put(ref_body, 'BGHZ_BaseX', (s['boss_ghz_x'] + 0x100) << 16, 4)
+    reference.put(ref_body, 'BGHZ_BaseY', (s['boss_ghz_y'] - 0x80) << 16, 4)
+    reference.put(ref_root, 'obAngle', 0x4080, 2)
+    reference.put(ref_root, 'GBall_SwingVelocity', -0x200, 2)
+    reference.cpu.mem_write(ref_root + 0x2E, bytes((5, 0, 1, 2, 3, 4, 5)))
+    for index, radius in enumerate((0, 16, 32, 48, 64, 96)):
+        reference.cpu.mem_write(ref_root + index * 64 + 0x3C, bytes((radius,)))
+    fields = (('BGHZ_BaseX', 4), ('BGHZ_BaseY', 4), ('obX', 2), ('obY', 2),
+              ('obVelX', 2), ('obVelY', 2), ('BGHZ_Timer', 2), ('ob2ndRout', 1),
+              ('obStatus', 1), ('BGHZ_BobAngle', 1))
+    started, trace = False, []
+    for tick in range(2400):
+        for obj in pool:
+            code = actual.get(obj, 'code')
+            if code in (s['Obj3D'], s['Obj48']):
+                actual.act('Obj3D' if code == s['Obj3D'] else 'Obj48', obj)
+        reference.act('Ref_Step', ref_body)
+        expected = {field: reference.get(ref_body, field, size) for field, size in fields}
+        observed = {field: actual.get(body, field, size) for field, size in fields}
+        assert observed == expected, ('S1 flight differs', tick, observed, expected)
+        reference.cpu.mem_write(ref_root + 0x38, struct.pack('>HH',
+            expected['obX'], expected['obY'] + 32))
+        if started:
+            reference.act('GBall_Move', ref_root)
+        else:
+            reference.act('Swing_UpdateSwingPosition', ref_root,
+                          {UC_M68K_REG_D0: reference.get(ref_root, 'obAngle', 2) >> 8})
+            started = expected['ob2ndRout'] == 6
+        roots = [a for a in pool if actual.get(a, 'code') == s['Obj48']]
+        if roots and actual.get(body, 'BGHZ_WeaponReady'):
+            root = roots[0]
+            for field, size in (('obAngle', 2), ('GBall_SwingVelocity', 2),
+                                ('GBall_SwingDirection', 1)):
+                assert actual.get(root, field, size) == reference.get(ref_root, field, size), (
+                    'S1 pendulum differs', tick, field)
+            for index, piece in enumerate(roots):
+                for field in ('obX', 'obY'):
+                    assert actual.get(piece, field, 2) == reference.get(ref_root + index * 64, field, 2), (
+                        'S1 chain position differs', tick, index, field)
+        trace.append(expected)
+    (args.output / 's1-motion-trace.json').write_text(json.dumps(trace) + '\n')
+    return '2400 frames match assembled S1 flight/bob/pendulum instructions and every fully deployed chain piece'
 
 
 def wall_checks(m, pool, rom):
@@ -132,6 +254,8 @@ def native_checks(args):
     pool = list(m.pool())
     body = pool[0]
     results = []
+    if args.s1disasm:
+        results.append(s1_reference_motion(args))
 
     def palette(value=None):
         address = (s['v_palette'] + 0x22) & 0xFFFFFF
@@ -193,10 +317,25 @@ def native_checks(args):
         m.put(a, 'code', 0)
     m.act('Obj48', root)
     assert m.get(root, 'obRoutine') == 0 and parts('Obj48') == [root]
+    for _ in range(180):
+        m.act('Obj3D', body)
+        m.act('Obj48', root)
+        assert m.get(body, 'ob2ndRout') == s['BGHZ_Deploy']
+        assert m.get(body, 'BGHZ_BaseX', 2) == s['BGHZ_CenterX']
+        assert not m.get(body, 'obVelX', 2)
+    assert m.get(body, 'BGHZ_Timer', 2) == 0  # no signed-timer wrap while allocation retries
     m.put(pool[-1], 'code', 0)
     m.act('Obj48', root)
     assert len(parts('Obj48')) == 6 and m.get(root, 'obRoutine') == 2
-    results.append('full/fragmented pools retry without partial ship or chain')
+    for _ in range(65):
+        frame()
+        if m.get(body, 'ob2ndRout') == s['BGHZ_Patrol']:
+            break
+    else:
+        raise AssertionError('Ship did not resume after delayed chain allocation')
+    assert m.get(root, 'obAngle', 2) == 0x4080
+    assert m.get(body, 'BGHZ_Timer', 2) == 127
+    results.append('full/fragmented pools retry without partial ship/chain, timer wrap or an early pass')
 
     # End-of-pool parents must not read/write beyond the dynamic SST allocation.
     start()
@@ -215,6 +354,7 @@ def native_checks(args):
         raise AssertionError('Weapon never spawned')
     root, *children = parts('Obj48')
     previous = {a: 0 for a in (root, *children)}
+    opening_wait = 0
     while not m.get(body, 'BGHZ_WeaponReady'):
         for a in previous:
             distance = m.get(a, 'GBall_Distance', 2)
@@ -223,25 +363,29 @@ def native_checks(args):
             assert m.get(a, 'obY', 2) - m.get(body, 'obY', 2) == distance
             previous[a] = distance
         frame()
+        opening_wait += 1
+        assert opening_wait <= 120, 'Weapon deployment stalled'
     assert [m.get(a, 'GBall_Distance', 2) for a in children] == [16, 32, 48, 64, 96]
     assert m.get(root, 'obY', 2) - m.get(body, 'obY', 2) == 32
     assert m.get(children[-1], 'obY', 2) - m.get(body, 'obY', 2) == 128
-    frame()  # enter patrol; flight starts on the following tick
-    turns = 0
-    previous_x = m.get(body, 'obX', 2)
-    previous_step = -1
-    for _ in range(512):
+    while m.get(body, 'ob2ndRout') != s['BGHZ_Patrol']:
+        assert m.get(root, 'obAngle', 2) == 0x4080, 'Pendulum started before the first pass'
         frame()
+        opening_wait += 1
+        assert opening_wait <= 120, 'Opening pause stalled'
+    assert opening_wait == 120 and m.get(body, 'BGHZ_Timer', 2) == 127
+    assert m.get(root, 'obAngle', 2) == 0x4080
+    previous_x = m.get(body, 'BGHZ_BaseX', 4)
+    for step in s1_patrol_steps():
+        frame()
+        fixed_x = m.get(body, 'BGHZ_BaseX', 4)
+        assert fixed_x - previous_x == step, ('S1 timed pass differs', fixed_x, previous_x, step)
+        previous_x = fixed_x
         x = m.get(body, 'obX', 2)
-        delta = x - previous_x
-        assert abs(delta) == 1, ('Flight paused', x, previous_x)
-        assert s['BGHZ_LeftTurn'] <= x <= s['BGHZ_RightTurn']
-        turns += delta != previous_step
-        previous_x, previous_step = x, delta
+        assert s['BGHZ_CenterX'] - 32 <= x <= s['BGHZ_CenterX'] + 31
         assert m.get(root, 'obX', 2) == x
         assert m.get(root, 'obY', 2) == m.get(body, 'obY', 2) + 32
-    assert turns >= 7
-    results.append('staged two-pixel drop and eight continuous patrol sweeps')
+    results.append('staged drop, original 120-frame opening, quarter-speed first pass and eight timed return sweeps')
 
     # A recycled child slot is never repositioned by its old root.
     reused = children[1]
@@ -437,16 +581,25 @@ def live_checks(args, decoded):
     weapon = objects(g, 0x48)
     assert len(weapon) == 6
     g.video.save(args.output / 'deployed.png')
-    previous_x = g.get(body, 'obX', 2)
+    assert g.get(body, 'BGHZ_Timer', 2) == 127
+    assert g.get(body, 'BGHZ_BaseX', 4) == s['BGHZ_CenterX'] << 16
+    previous_x = g.get(body, 'BGHZ_BaseX', 4)
     xs = []
-    for _ in range(256):
+    motion = []
+    for tick, step in enumerate(s1_patrol_steps()):
         g.run()
         valid()
+        fixed_x = g.get(body, 'BGHZ_BaseX', 4)
+        assert fixed_x - previous_x == step, ('Live S1 timed pass differs', tick, fixed_x, previous_x, step)
+        previous_x = fixed_x
         x = g.get(body, 'obX', 2)
-        assert abs(x - previous_x) == 1
-        previous_x = x
         xs.append(x)
-    assert min(xs) == s['BGHZ_LeftTurn'] and max(xs) == s['BGHZ_RightTurn']
+        motion.append([fixed_x, g.get(body, 'obY', 2), g.get(body, 'ob2ndRout'),
+                       g.get(body, 'BGHZ_Timer', 2), g.get(body, 'obStatus')])
+        if tick in (0, 126, 160, 254, 288, 382):
+            g.video.save(args.output / f'flight-{tick:03}.png')
+    assert min(xs) == s['BGHZ_CenterX'] - 32 and max(xs) == s['BGHZ_CenterX'] + 31
+    (args.output / 'live-flight-trace.json').write_text(json.dumps(motion) + '\n')
     g.video.save(args.output / 'swing.png')
     art = (ROOT / 'art/uncompressed/Large explosion.unc').read_bytes()
     bank = s['ArtTile_BossExplosion'] * 32
@@ -610,6 +763,8 @@ def main():
     p.add_argument('--system-directory', type=Path)
     p.add_argument('--pal', action='store_true')
     p.add_argument('--player', type=int, choices=(0, 2), default=0)
+    p.add_argument('--s1disasm', type=Path,
+                   help='Compare motion against assembled upstream S1 boss, swing, BossMove and CalcSine sources')
     p.add_argument('--explosion-wall', action='store_true',
                    help='Run the currently unplaced wall in an EHZ1 trigger fixture instead of the GHZ fight')
     args = p.parse_args()

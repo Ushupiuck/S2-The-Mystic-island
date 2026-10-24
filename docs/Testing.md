@@ -219,18 +219,30 @@ python build_tools/check_ghz_boss.py --rom s2built.bin --listing md-main.lst --o
 ```
 
 The native pass covers fragmented/full pools and retries, end-of-pool parents,
-dry-act water-bank borrowing, staged deployment, continuous patrol, recycled
+dry-act water-bank borrowing, staged deployment, the original opening delay,
+quarter-speed first pass and timed return sweeps, recycled
 child slots, actual hit response,
 palette restoration, scoring, independent debris physics on every frame, burst
 cadence/RNG, animation duration and act-selected escape music. Rendering/audio
 boundaries are stubbed only in these native fixtures.
+Add `--s1disasm /path/to/s1disasm` for an independent 2,400-frame comparison
+against assembled S1 instructions. Use the revision cited in
+[Objects](Objects.md#ghz-boss-and-boss-explosions). It reads the original GHZ
+boss, swinging-platform, `BossMove` and `CalcSine` sources under `_incObj`,
+assembles a small reference fixture with this project's assembler, and checks
+ship positions/subpixels, velocities, timers, facing and bobbing every frame.
+It also checks the pendulum state and every chain piece after deployment.
+Only allocation and hit handling are omitted from that reference; the original
+movement instructions and sine table remain intact. The reference's slower
+deployment is deliberately excluded from chain-position equality.
 The wall checks cover both PLC banks, four-emitter allocation under a fragmented
 pool, movement at the level origin and with a moving camera, finite/continuous
 burst counts, the normal burst animation and parent/deletion cleanup.
 
 Add `--core /path/to/genesis_plus_gx_libretro.so` for the real GHZ3 arena. It
-uses explicit player positioning, then eight actual rolling collisions with
-the boss. It observes breakup, explosions, escape, ordinary-art restoration and
+uses explicit player positioning, observes the original opening pass and eight
+timed return sweeps with exact subpixel deltas, then lands eight actual rolling
+collisions with the boss. It observes breakup, explosions, escape, ordinary-art restoration and
 the capsule switch/animal release. `--player 2` selects Tails and `--pal`
 selects PAL. Mode 1 accepts `--system-directory /path/to/bios-directory`.
 Screenshots and the JSON report belong in the selected output directory.
