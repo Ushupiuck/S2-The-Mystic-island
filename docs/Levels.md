@@ -70,6 +70,26 @@ preserving act selection. Invincibility/boss music retains
 priority; one-up jingles restore the driver's saved context. Sound formats
 and importing belong in [the sound guide](../build_tools/sound/README.md).
 
+## Water configuration
+
+`_inc/WaterFeatures.asm` owns three explicit tables covering all 64 acts:
+`WaterFlags` enables water, `WaterHeight` supplies the initial surface Y, and
+`DynWater_Index` selects the target-height routine. Each zone has four entries
+in act order. This provides the full-table coverage of s2disasm's
+`useFullWaterTables`, adapted to this project's sixteen four-act zones; there
+is no reduced-table build mode. Level entry, height initialization and dynamic
+dispatch all use the same zone/act index. Assembly checks every table's length.
+
+LZ and HPZ retain their previous four heights and dynamic routines. Other
+slots start dry, with editable `$600` heights and `DynWater_Null`. Enabling a
+slot also enables its water surface, palette split and player water behavior;
+choose a suitable underwater palette/art allocation before designing that act.
+LZ act 4 selects the SBZ3 underwater character palette. Checkpoints retain
+the existing saved water state and height behavior.
+
+Dry GHZ acts borrow water-surface VRAM for their smashable walls; relocate that
+art before enabling their water, as described below.
+
 ## Terrain and tile animation
 
 All ordinary levels share one 256-entry height/width/angle bank in

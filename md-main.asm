@@ -2231,17 +2231,12 @@ Level_ClrRam:
 		clearRAM v_misc_variables,v_misc_variables_end
 		clearRAM v_timingvariables,v_timingvariables_end
 		move.b	d2,(Current_Timezone).w	; clearRAM only changes d0-d1/a1
-		; TODO switch for a proper water table
 Level_WaterFlagInit:
-		moveq	#0,d0
-		moveq	#0,d1
-		move.b	(Current_Zone).w,d0
-		cmpi.b	#id_LZ,d0	; are we on Labyrinth Zone?
-		seq.b	d1		; if so, set
-		cmpi.b	#id_HPZ,d0	; are we on Hidden Palace Zone?
-		seq.b	d0		; if so, set
-		or.b	d1,d0		; it's either one or the other
-		move.b	d0,(Water_flag).w
+		move.w	(Current_ZoneAndAct).w,d0
+		ror.b	#2,d0
+		lsr.w	#6,d0			; zone * ActsPerZone + act
+		lea	(WaterFlags).l,a1
+		move.b	(a1,d0.w),(Water_flag).w
 Level_WaterFlagInit_End:
 		bsr.w	ClearScreen
 		lea	(vdp_control_port).l,a6

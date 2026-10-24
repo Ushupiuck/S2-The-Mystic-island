@@ -142,8 +142,21 @@ CD boot needs a supplied system directory. Only runners exposing
 music, sound playback, visual follow-up, fast clear, player effects, card screens and swing families).
 `check_debug_states.py` also accepts this directory for both primary characters'
 HUD and hurt/death Debug checks on Mode 1.
-Older water/companion/shared runners lack it and target the ordinary cartridge
-ROM. Do not describe all existing fixtures as CD-aware or apply flags universally.
+`check_water_effects.py` also accepts `--system-directory`; it covers actual
+entry/exit splashes, countdown uploads/rendering and air/number cleanup. Use
+`--player 2` for primary Tails, or `--companion` for following Tails, and `--pal`
+for PAL. Both roles have passed in NTSC and PAL on Mode 1's HPZ water.
+Older companion/shared runners lack the directory option and target the ordinary
+cartridge ROM. Do not apply flags universally.
+
+`check_water_tables.py` executes the assembled water-enable, initial-height and
+dynamic-routine selection for every zone/act, including all dry slots. It also
+enables the final slot with a distinct height in its disposable ROM fixture to
+catch residual hardcoded zone/act assumptions. For example:
+
+```sh
+python build_tools/check_water_tables.py --rom s2built.bin --listing md-main.lst --output test-results/water-tables/native.json
+```
 
 ## Boss runtime checks
 
