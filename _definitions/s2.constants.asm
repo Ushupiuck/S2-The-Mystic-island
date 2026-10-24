@@ -1419,7 +1419,7 @@ v_scorelife:		ds.l	1			; points required for an extra life (JP1 only)
 f_levselcheat:		ds.b	1			; level select cheat flag
 f_slomocheat:		ds.b	1			; slow motion & frame advance cheat flag
 f_debugcheat:		ds.b	1			; debug mode cheat flag
-			ds.b	1
+v_debugcheat_count:	ds.b	1			; level-select sound-code progress; former padding
 Debug_mode_flag:	ds.b	1
 v_megadrive:		ds.b	1			; Megadrive machine type
 v_title_dcount:		ds.w	1			; number of times the d-pad is pressed on title screen

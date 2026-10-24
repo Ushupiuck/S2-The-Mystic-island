@@ -2050,18 +2050,21 @@ TitleScreen_Loop:
 		addq.w	#1,(v_title_dcount).w
 		tst.b	d0
 		bne.s	Title_Cheat_CountC
-		lea	(f_levselcheat).w,a0
+Title_Cheat_Unlock:
 		move.w	(v_title_ccount).w,d1
 		lsr.w	#1,d1
 		andi.w	#3,d1
-		beq.s	Title_Cheat_PlayRing
+		beq.s	Title_Cheat_LevelSelect
+		cmpi.w	#1,d1
+		beq.s	Title_Cheat_SlowMotion
 		tst.b	(v_megadrive).w
-		bpl.s	Title_Cheat_PlayRing
-		moveq	#1,d1
-		move.b	d1,1(a0,d1.w)
-
+		bpl.s	Title_Cheat_CountC
+Title_Cheat_SlowMotion:
+		move.b	#1,(f_slomocheat).w
+		bra.s	Title_Cheat_PlayRing
+Title_Cheat_LevelSelect:
+		move.b	#1,(f_levselcheat).w
 Title_Cheat_PlayRing:
-		move.b	#1,(a0,d1.w)
 		move.b	#sfx_Ring,d0
 		bsr.w	PlaySound_Special
 		bra.s	Title_Cheat_CountC

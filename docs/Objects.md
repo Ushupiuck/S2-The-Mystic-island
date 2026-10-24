@@ -215,7 +215,14 @@ check, and is absent from ordinary builds.
 ## Debug
 
 Only the initialized primary player enters Debug; controller 2/companion AI
-retain their ordinary precedence. Enable the existing debug cheat first.
+retain their ordinary precedence. In level select's SOUND TEST, play `01`, `03`,
+`05`, `07` in order using B, C or START. Completing the code plays the ring
+jingle and unlocks Debug without changing level select. Wrong sounds reset the
+sequence; playing `01` starts another attempt. Moving the selector does not
+count. Hold A while launching a normal level or the rotating S1 stage to enable
+Debug there. The old title-screen Debug variant is retired; the title's
+level-select and slow-motion cheats remain.
+
 Entry is checked before player state dispatch, including hurt/death, subject
 to the input locks in [Players and effects](Players-and-effects.md#input-locks-and-stage-exits).
 

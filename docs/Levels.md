@@ -5,6 +5,9 @@ NEXT/PREVIOUS sits above SOUND TEST. Directions select entries, A/B/START
 activates, and C cycles Sonic & Tails, Sonic, and Tails. Starter acts have valid
 data and goals; they remain level-design templates.
 
+On SOUND TEST, play `01`, `03`, `05`, `07` to unlock Debug with the ring jingle.
+See [Debug controls](Objects.md#debug) for level-entry activation.
+
 | ID | Name | Current content |
 | --- | --- | --- |
 | 00 | Twilight Hill | GHZ-based acts |

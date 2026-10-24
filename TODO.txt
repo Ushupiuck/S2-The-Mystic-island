@@ -33,6 +33,7 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
+Retire title-screen Debug variants and unlock Debug by playing 01,03,05,07 in level select with the ring jingle; preserve level-select/slow-motion cheats, reserved RAM and hold-A level entry, and verify both characters and build configurations < DONE
 Restore the KEH cartridge build behind MegaCDMode1=0 with MD-only codecs, streaming, terrain, eight-byte era-aware loading and private RAM in md-only/; preserve shared paths and the default Mode 1 ROM, and verify both configurations < DONE
 Delay GHZ chain breakup until 64 boss updates after the first burst, following HCZ/MGZ/CNZ's later part-release pattern; keep attached pieces harmless, preserve SST/global RAM, and verify full-pool ordering, recovery cleanup and full Sonic/NTSC plus Tails/PAL fights < DONE
 Restore the GHZ boss's S1 flight timers, slow opening pass, pauses and pendulum phase while retaining staged deployment/breakup; match 2,400 frames against assembled S1 routines and verify eight return sweeps, full fights and capsules in Sonic/NTSC and Tails/PAL < DONE

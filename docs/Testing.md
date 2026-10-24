@@ -144,6 +144,13 @@ and compares the full 32 KiB result with an independent Kosinski+ decoder.
 
 These are emulator/native checks, not real-console verification.
 
+`check_debug_cheat.py --output test-results/debug-cheat` checks the played-ID
+sequence, restarts, repeated confirmation, exact ring-jingle requests and every
+retired title variant in both regional paths. Add `--core ...` and optionally
+`--system-directory ...` / `--pal` to enter level select through the actual title
+code, play the sequence with all three playback buttons, verify held-button and
+page-switch behavior, then launch directly into Debug with Sonic and Tails.
+
 ## Runtime checks
 
 The old `check_level_lag.py` GHZ → CPZ → HPZ sequence is a historical

@@ -33,6 +33,7 @@ LevelSelect_Init:
 		bsr.w	EniDec
 		copyTilemap	Chunk_Table,vram_bg,40,28
 		clr.w	(v_levseldelay).w
+		clr.b	(v_debugcheat_count).w
 		clr.w	(v_title_dcount).w
 		clr.w	(v_title_ccount).w
 		bsr.w	LevelSelect_AnimateBackground
@@ -97,8 +98,7 @@ LevelSelect_Loop:
 .sound:
 		andi.b	#btnB+btnC+btnStart,d1
 		beq.w	LevelSelect_Loop
-		move.w	(v_levselsound).w,d0
-		jsr	(PlaySound_Special).l
+		bsr.w	LevelSelect_PlaySound
 		bra.w	LevelSelect_Loop
 .bonus:
 		move.w	#BonusStage,(v_gamemode).w
@@ -110,6 +110,35 @@ LevelSelect_Loop:
 		move.l	d0,(v_score).w
 		move.l	#5000,(v_scorelife).w
 		rts
+
+; Play requests, rather than cursor changes, advance the Debug unlock code.
+LevelSelect_PlaySound:
+		move.w	(v_levselsound).w,d0
+		jsr	(PlaySound_Special).l
+		moveq	#0,d0
+		move.b	(v_debugcheat_count).w,d0
+		move.w	(v_levselsound).w,d1
+		lea	LevelSelect_DebugCode(pc),a0
+		cmp.b	(a0,d0.w),d1
+		bne.s	.restart
+		addq.b	#1,(v_debugcheat_count).w
+		cmpi.b	#LevelSelect_DebugCode_End-LevelSelect_DebugCode,(v_debugcheat_count).w
+		bne.s	.return
+		clr.b	(v_debugcheat_count).w
+		move.b	#1,(f_debugcheat).w
+		move.w	#sfx_Ring,d0
+		jmp	(PlaySound_Special).l
+.restart:
+		clr.b	(v_debugcheat_count).w
+		cmp.b	LevelSelect_DebugCode(pc),d1	; the first sound starts another attempt
+		bne.s	.return
+		addq.b	#1,(v_debugcheat_count).w
+.return:
+		rts
+LevelSelect_DebugCode:
+		dc.b	1,3,5,7
+LevelSelect_DebugCode_End:
+		even
 
 LevelSelect_Controls:
 		move.b	(v_jpadpress1).w,d1
