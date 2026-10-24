@@ -33,6 +33,10 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
+Give all 64 acts explicit water-enable, initial-height and dynamic-routine entries; preserve LZ/HPZ behavior and verify primary/companion Tails water crossings, countdown and resurfacing in NTSC/PAL < DONE
+Apply and publish the tested PLC/VBlank/collision/continuation optimizations and shorter CD mailbox accesses; retain direct returns and verify actual dispatcher timings and gameplay < DONE
+Finish the LZ conveyor with S2/S3&K relative paths/full solidity, complete-group allocation retry, original LZ spacing, optional spiked undersides and switch-E reversal for both variants; restore only its LZ1 groups/wheels and add editor/runtime checks < DONE
+Share every LZ wheel through one 16-tile DPLC bank and animation clock; free 48 VRAM tiles, preserve switch reversal, retry full queues atomically, retain the old six-byte RAM reservation and verify one versus 70 wheels plus live NTSC/PAL phases < DONE
 Move the $8000 chunk table and scene/bonus overlays to bank-0 CD PRG RAM at $6000, reserve the conventional BIOS area, retain short-addressed MD globals, and free $FF0000-$FF7FFF < DONE
 Reserve a universal 16-tile water DPLC bank at $2A8, preserve the paused two-phase waves and all terrain/platform pixels, retain the displaced SMZ terrain in static atlas padding, and move the capsule to $4A7 < DONE
 Correct hidden-bonus blue/red/gold palette slots, running-disc corner capture, horizontal spring top height, and tail/carrier update order < DONE
@@ -61,7 +65,7 @@ Align streamed Points/Shield/Invincibility art after the odd-sized bubble file; 
 Convert the SST code field to a longword routine pointer, group the shared display header, retain byte placement IDs and all 113 slots in $4E-byte SSTs; adapt Debug, objects/children/composites and tests, and fix the two-rider bridge offset regression < DONE
 Fix Sonic double-life monitor icon mappings and SonLVL art offset; grounded rolling attacks break monitors on slopes for either player while rising airborne underside hits retain their lift behavior < DONE
 Restore S3&K splash and streamed drowning numbers in the per-player $FC00/$FE00 banks, resident bubbles at $8B80, palette remapping, shared source/frame caching and safe DMA retry; retain separate dust/splash objects and independent air supplies < DONE
-Audit every object source through an isolated 16-section LZ2 course, context-specific screens and GHZ/EHZ combat; record 93-file coverage, exclude the broken conveyor, preserve known gator limitations and intentional demo timing, fix closed-door fallthrough/giant-ring mapping phases/primary warp identity, and add reproducible ROM regressions < DONE
+Audit every object source through an isolated 16-section LZ2 course, context-specific screens and GHZ/EHZ combat; record 93-file coverage, preserve known gator limitations and intentional demo timing, fix closed-door fallthrough/giant-ring mapping phases/primary warp identity, and add reproducible ROM regressions; the initially excluded LZ conveyor is now covered by its dedicated LZ1 runner < DONE
 Port the S3&K level object manager with six-byte placements, word respawn pointers, X/Y preloading, full-pool retry and safe multipart ownership; convert all 30 ordinary layouts and SonLVL, preserve object updates after player death < DONE
 Bring Debug controls/restoration to S3&K behavior, add mapping-frame cycling and per-act lists, support both Sonic and Tails as player 1, exclude companion Tails, and preserve S1-stage/results shortcuts < DONE
 Give GHZ's S1 boss a separate matching Eggpod/weapons/exhaust/capsule PLC; preserve the resident ball and chain, place exhaust after weapons and derive its mapping offsets to coexist with the capsule < DONE
@@ -178,7 +182,7 @@ Create_New_Sprite3 = FindNextFreeObj from Sonic 1.
 
 loc_8160A <---- Super mappings in DDZ
 
-sub_24280 <---- Something to do with shields
+sub_24280 <---- S3&K solid-contact hurt helper: checks invincibility/flashing, restores pre-collision Y and calls HurtCharacter (used by LRZ's spiked lift undersides)
 
 sub_86180 <---- ObjectMove Variant?
 

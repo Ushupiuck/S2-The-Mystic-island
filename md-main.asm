@@ -2231,6 +2231,7 @@ Level_ClrRam:
 		clearRAM v_misc_variables,v_misc_variables_end
 		clearRAM v_timingvariables,v_timingvariables_end
 		move.b	d2,(Current_Timezone).w	; clearRAM only changes d0-d1/a1
+		jsr	(LCon_ResetWheels).l
 Level_WaterFlagInit:
 		move.w	(Current_ZoneAndAct).w,d0
 		ror.b	#2,d0
@@ -13291,6 +13292,9 @@ Art_WaterSplash:	binclude "art/uncompressed/Water splash.unc"
 Art_WaterSplash_End:
 Art_AirCountdown:	binclude "art/uncompressed/Drowning countdown.unc"
 Art_AirCountdown_End:
+		even
+Art_LConWheels:	binclude "art/uncompressed/LZ conveyor wheels.unc"
+Art_LConWheels_End:
 Art_Points:		binclude	"art/uncompressed/Points.unc"
 Art_Points_End:
 	if MegaCDMode1

@@ -88,27 +88,43 @@ assert g.get(platform, 'obStatus') & mask == mask, (
     [(a, g.get(a, 'obStatus'), g.get(a, 'obY', 2), g.get(a, 'obHeight')) for a in actors])
 offsets = {a: (g.get(a, 'obX', 2) - g.get(platform, 'obX', 2),
                g.get(a, 'obY', 2) - g.get(platform, 'obY', 2)) for a in actors}
-# Verify the complete live conveyor bank, including its final tile, against
-# the editable sheet. The old allocation overlapped Ball Hog V by one tile.
+# Verify the resident platforms and one complete shared wheel frame. All
+# four source wheel frames use the same physical 16-tile VRAM allocation.
 raw = (Path(__file__).resolve().parents[1] / 'art/moduled kosinski/LZ conveyor.unc').read_bytes()
 bank = g.s['ArtTile_LZ_Conveyor_Belt'] * 32
-assert bytes(g.vram[(bank + i) ^ 1] for i in range(len(raw))) == raw
+assert bytes(g.vram[(bank + 512 + i) ^ 1] for i in range(512)) == raw[2048:]
+wheel = bytes(g.vram[(bank + i) ^ 1] for i in range(512))
+wheel_art = [raw[i * 512:(i + 1) * 512] for i in range(4)]
+assert wheel in wheel_art
+wheel_changes = [wheel_art.index(wheel)]
 g.video.save(args.output / 'boarding.png')
 start_y = g.get(platform, 'obY', 2)
 for tick in range(40):
     run()
+    wheel_frame = wheel_art.index(bytes(g.vram[(bank + i) ^ 1] for i in range(512)))
+    if wheel_frame != wheel_changes[-1]:
+        wheel_changes.append(wheel_frame)
     assert g.get(platform, 'obStatus') & mask == mask, ('lost rider', tick)
     for actor in actors:
         actual = (g.get(actor, 'obX', 2) - g.get(platform, 'obX', 2),
                   g.get(actor, 'obY', 2) - g.get(platform, 'obY', 2))
         assert actual == offsets[actor], ('carry offset', actor, tick, offsets[actor], actual)
 assert g.get(platform, 'obY', 2) - start_y == -40
+assert set(wheel_changes) == set(range(4)), wheel_changes
+assert all((b - a) & 3 == 1 for a, b in zip(wheel_changes, wheel_changes[1:])), wheel_changes
 g.video.save(args.output / 'riding.png')
 
 # Feed the same flag written by switch E, retaining real motion/collision and
 # the original S1 one-way latch. Native tests cover the flag/phase combinations.
 g.write(g.s['f_switch'] + 14, 1)
-run(12)
+reverse_changes = [wheel_changes[-1]]
+for tick in range(12):
+    run()
+    wheel_frame = wheel_art.index(bytes(g.vram[(bank + i) ^ 1] for i in range(512)))
+    if wheel_frame != reverse_changes[-1]:
+        reverse_changes.append(wheel_frame)
+assert len(reverse_changes) >= 3, reverse_changes
+assert all((a - b) & 3 == 1 for a, b in zip(reverse_changes, reverse_changes[1:])), reverse_changes
 assert g.read('f_conveyrev') == 1
 assert {g.get(a, 'LCon_increment') for a in platforms()} == {0xFC}
 assert g.get(platform, 'obStatus') & mask == mask
@@ -173,6 +189,7 @@ report = {'region': 'PAL' if args.pal else 'NTSC', 'player_mode': args.player,
           'real_lz1_group': 8, 'riders': actors, 'carried_pixels': 40,
           'switch_reversal_persists': True, 'controller_jump_detaches': True,
           'whole_group_unload_reload': True, 'spiked': args.spiked,
-          'underside_response': 'hurt' if args.spiked else 'harmless', 'vram_sheet_matches': True}
+          'underside_response': 'hurt' if args.spiked else 'harmless', 'vram_sheet_matches': True,
+          'shared_wheel_frames': wheel_changes, 'shared_wheel_reverse': reverse_changes}
 (args.output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
 print(report)

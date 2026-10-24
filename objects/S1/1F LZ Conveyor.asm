@@ -43,6 +43,7 @@ LCon_Init:
 		cmpi.b	#$7F,d0
 		bne.s	.platform
 		move.b	#4,obRoutine(a0)
+		clr.b	obFrame(a0)
 		move.w	#make_art_tile(ArtTile_LZ_Conveyor_Belt,0,0),obGfx(a0)
 		move.w	#$80,obPriority(a0)
 		bra.w	LCon_Wheel
@@ -200,21 +201,52 @@ LCon_Spawn:
 		bra.s	.make_platform
 ; ---------------------------------------------------------------------------
 LCon_Wheel:
-		move.w	(v_framecount).w,d0
-		andi.w	#3,d0
-		bne.s	.display
-		moveq	#1,d1
-		move.b	(f_conveyrev).w,d0
-		move.b	obStatus(a0),d2
-		eor.b	d2,d0
-		btst	#0,d0
-		beq.s	.animate
-		neg.b	d1
-.animate:
-		add.b	d1,obFrame(a0)
-		andi.b	#3,obFrame(a0)
-.display:
+		bsr.s	LCon_UpdateWheels
 		jmp	(RememberState).l
+; ---------------------------------------------------------------------------
+; One shared clock/cache for every wheel. Queue at most once per game frame,
+; and let the common atomic DPLC loader retry a failed upload next frame.
+LCon_ResetWheels:
+		clr.l	(v_lcon_wheel_frame).w
+		clr.w	(v_lcon_wheel_updated).w
+		st	(v_lcon_wheel_artframe).w
+		rts
+LCon_UpdateWheels:
+		move.w	(v_framecount).w,d0
+		tst.b	(v_lcon_wheel_updated).w
+		beq.s	.update
+		cmp.w	(v_lcon_wheel_updateframe).w,d0
+		beq.s	.return
+.update:
+		move.w	d0,(v_lcon_wheel_updateframe).w
+		st	(v_lcon_wheel_updated).w
+		andi.w	#3,d0
+		bne.s	.load
+		moveq	#1,d0
+		tst.b	(f_conveyrev).w
+		beq.s	.advance
+		neg.b	d0
+.advance:
+		add.b	d0,(v_lcon_wheel_frame).w
+		andi.b	#3,(v_lcon_wheel_frame).w
+.load:
+		moveq	#0,d0
+		move.b	(v_lcon_wheel_frame).w,d0
+		lea	DPLC_LConWheels(pc),a2
+		lea	(v_lcon_wheel_artframe).w,a3
+		move.w	#ArtTile_LZ_Conveyor_Belt*tile_size,d4
+		move.l	#Art_LConWheels,d6
+		jmp	(Load_DynamicPLC).l
+.return:
+		rts
+; S3&K DPLC format: one 16-tile run for each source wheel frame.
+DPLC_LConWheels:
+		dc.w .frame0-DPLC_LConWheels, .frame1-DPLC_LConWheels
+		dc.w .frame2-DPLC_LConWheels, .frame3-DPLC_LConWheels
+.frame0:	dc.w 1, $F000
+.frame1:	dc.w 1, $F010
+.frame2:	dc.w 1, $F020
+.frame3:	dc.w 1, $F030
 ; ---------------------------------------------------------------------------
 LCon_Move:
 		tst.b	(f_switch+$E).w

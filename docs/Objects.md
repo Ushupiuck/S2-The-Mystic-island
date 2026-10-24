@@ -217,6 +217,8 @@ six LZ shapes/wheel, S2 `$6C`'s relative origins, and S3&K Lava Reef's corner
 movement and full solidity. Both actors can land, ride and jump off. X flip
 reverses travel without mirroring the route. Switch `$E` reverses both normal
 and spiked members once; its latch survives release and unload/reload, as in S1.
+All decorative wheels share one DPLC-driven animation/bank; their number does
+not multiply art uploads. The switch latch reverses this shared clock too.
 
 | Subtype | Meaning |
 | --- | --- |

@@ -1422,7 +1422,11 @@ f_demo:			ds.w	1			; demo mode flag (0 = no; 1 = yes; $8001 = ending)
 v_demonum:		ds.w	1			; demo level number (not the same as the level number)
 v_creditsnum:		ds.w	1			; credits index number
 Super_Sonic_frame_count:	ds.w	1
-v_obj1F:		ds.b	6			; conveyor belt (Object 1F) variables
+v_lcon_wheel_frame:	ds.b	1			; shared requested wheel frame
+v_lcon_wheel_artframe:	ds.b	1			; cached DPLC frame; $FF invalid
+v_lcon_wheel_updateframe:	ds.w	1			; last object-pass frame processed
+v_lcon_wheel_updated:	ds.b	1			; updateframe is valid
+			ds.b	1			; retain the old six-byte reservation
 v_ani1_prev:		ds.b	1			; synchronised sprite animation 1 - previous frame
 v_ani2_prev:		ds.b	1			; synchronised sprite animation 2 - previous frame
 v_ani3_prev:		ds.b	1			; synchronised sprite animation 3 - previous frame
@@ -1671,7 +1675,8 @@ ArtTile_LZ_Harpoon:		equ $3CC
 ArtTile_LZ_Pole:		equ $3DE
 ArtTile_LZ_Push_Block:		equ $3DE
 ArtTile_LZ_Blocks:		equ $3E6
-ArtTile_LZ_Conveyor_Belt:	equ $3ED	; 80 tiles, ending before Ball Hog V at $43D
+ArtTile_LZ_Conveyor_Belt:	equ $3ED	; shared 16-tile wheel + two 8-tile platforms
+ArtTile_LZ_Conveyor_Belt_End: equ ArtTile_LZ_Conveyor_Belt+$20
 ArtTile_LZ_Rising_Platform:	equ ArtTile_LZ_Blocks+$69
 ArtTile_LZ_Orbinaut:		equ $467
 ArtTile_LZ_Cork:		equ ArtTile_LZ_Blocks+$11A

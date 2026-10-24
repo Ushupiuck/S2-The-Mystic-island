@@ -16,8 +16,9 @@ m = c.Manager(args.rom, args.listing)
 pool = list(m.pool())
 checks = []
 expected_counts = (8, 8, 8, 8, 12, 9, 4, 8)
-sheet = c.ROOT / 'art/moduled kosinski/LZ conveyor.unc'
-assert m.s['ArtTile_LZ_Conveyor_Belt'] + sheet.stat().st_size // 32 <= m.s['ArtTile_Ball_HogV']
+sheet = c.ROOT / 'art/moduled kosinski/LZ conveyor.kospm'
+tiles = int.from_bytes(sheet.read_bytes()[:2], 'big') // 32
+assert m.s['ArtTile_LZ_Conveyor_Belt'] + tiles == m.s['ArtTile_LZ_Conveyor_Belt_End'] <= m.s['ArtTile_Ball_HogV']
 
 
 def members():
@@ -255,11 +256,14 @@ m.put(obj, 'obX', 0x1000, 2)
 m.put(obj, 'obY', 0x400, 2)
 m.put(obj, 'obSubtype', 0x7F)
 m.write('Camera_X_pos_coarse_back', 0xF00, 2)
+m.act('LCon_ResetWheels')
 m.act('LabyrinthConvey', obj)
-assert m.get(obj, 'obRoutine') == 4 and m.get(obj, 'obFrame') == 1
+assert m.get(obj, 'obRoutine') == 4 and m.get(obj, 'obFrame') == 0
+assert m.read('v_lcon_wheel_frame') == 1
 m.write('f_conveyrev', 1)
+m.write('v_framecount', 4, 2)
 m.act('LabyrinthConvey', obj)
-assert m.get(obj, 'obFrame') == 0
+assert m.read('v_lcon_wheel_frame') == 0
 checks.append(['invalid groups and decorative wheel'])
 
 if args.output:

@@ -171,6 +171,13 @@ output-only ROM fixture; gameplay sources and the normal level remain normal.
 Its underside contact fixture checks damage/harmlessness for the selected mode.
 These use scripted positioning around real placements, not a complete route.
 
+`check_lz_wheel_dplc.py` compares one and 70 wheels through forward/reverse
+animation, checks their exact queued source/destination/length and register
+preservation, then exercises queue pressure, next-frame retry, timestamp wrap
+and level-entry invalidation. It checks the compact resident bank and all four
+raw source frames against the editable sheet. The live conveyor runner verifies
+all four wheel phases in VRAM, their reversed order, and both resident platforms.
+
 ## Boss runtime checks
 
 ```sh

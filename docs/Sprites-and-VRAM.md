@@ -139,14 +139,25 @@ terrain tile `$D1`. HPZ keeps `ArtTile_Splats = $418`, resident bubbles at
 Use the actual PLCs/constants for other zone banks, not an older address table.
 SMZ's atlas, junction and smoke lifetimes are in [Levels](Levels.md#scrap-madness).
 
-LZ's conveyor uses 80 tiles at `$3ED-$43C`, ending immediately before Ball Hog V.
-The first 72 tiles retain the four original wheels and platform; the final
-eight form a visibly spiked platform with the same safe top and bounds.
-Edit `art/moduled kosinski/LZ conveyor.unc`, then run
-`python build_tools/build_lz_conveyor_art.py` to rebuild its moduled Kosinski+
-archive. `mappings/sprite/LZ conveyor.asm` owns frames 0-3 (wheels), 4 (normal)
-and 5 (spiked). Normal builds derive their display bounds. LZ's per-act module
-lists load this bank; using the object in another zone also needs that art.
+LZ's conveyor uses 32 tiles at `$3ED-$40C`: one shared 16-tile wheel, then
+eight tiles each for normal and spiked platforms. This releases `$40D-$43C`
+(48 tiles / 1,536 bytes). All wheels share one animation clock and DPLC cache;
+the first wheel processed in a game frame services the bank. Animation advances
+every four active frames; wheel count does not multiply uploads. Switch reversal
+changes the shared clock's direction. The common atomic loader reserves both
+possible DMA entries; a full queue preserves the cached art and retries on the
+next frame. Level entry invalidates the cache. Its six global bytes replace
+the obsolete six-byte conveyor group flags; no extra RAM is allocated.
+
+Edit the complete 80-tile source `art/moduled kosinski/LZ conveyor.unc`, then
+run `python build_tools/build_lz_conveyor_art.py`. It generates the 32-tile
+moduled Kosinski+ seed/resident archive and the four raw wheel frames in
+`art/uncompressed/LZ conveyor wheels.unc`. The raw ROM source trades ROM space
+and periodic DMA for reduced VRAM. It uses the ordinary DMA queue, with no
+decoder or CD wait in an interrupt.
+`mappings/sprite/LZ conveyor.asm` aliases wheel frames 0-3 to one mapping;
+frames 4/5 are normal/spiked platforms. Normal builds derive their bounds.
+LZ's per-act module lists load the resident bank; another zone must load it too.
 
 ## Effects and UI ownership
 
