@@ -18,7 +18,8 @@ SMZ_Junction:
         move.b #4,obRender(a0)
         move.w #$200,obPriority(a0)
         move.b #1,smz_jun_direction(a0)
-        move.b obSubtype(a0),smz_jun_switch(a0)
+        move.w	obSubtype(a0),d0
+        move.b	d0,smz_jun_switch(a0)
         jsr (FindFreeObj).l
         bne.w .ready
         move.l #SMZ_Junction,code(a1)

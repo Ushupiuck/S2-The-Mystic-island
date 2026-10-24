@@ -5,6 +5,7 @@ Start routes use controller input. Later fixtures position initial actors at
 real placements and retain the stage's terrain, objects, collision and camera.
 The lifecycle sweep never substitutes an artificial course or object layout.
 """
+from object_layout import decode
 from pathlib import Path
 import argparse,json,struct
 from genesis_test_core import Genesis
@@ -128,7 +129,7 @@ for act in (1,2):
     report.append({'case':f'airborne-side-spring-{subtype:02X}','passed':True})
  g.buttons=g.buttons2=set()
  if not args.skip_sweep:
-  rows=list(struct.iter_unpack('>HHBB',(ROOT/f'level/objects/SMZ_{act}.bin').read_bytes()[:-6]));seen=set();count=0
+  rows=[(x,y,oid,sub) for x,y,oid,eras,sub in decode((ROOT/f'level/objects/SMZ_{act}.bin').read_bytes())];seen=set();count=0
   for index,(x,y,oid,subtype) in enumerate(rows):
    g.restore(base);py=y&0xfff
    for a,offset in [('v_player',64),('v_player2',96)]:place(g,a,max(0,x-offset),max(32,py-64));g.put(a,'obControl',0x81)

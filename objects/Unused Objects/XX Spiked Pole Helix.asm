@@ -27,20 +27,20 @@ Hel_Main:
 		move.l	code(a0),d4
 		lea	obSubtype(a0),a2	; move helix length to a2
 		moveq	#0,d1
-		move.b	(a2),d1			; move helix length to d1
-		clr.b	(a2)+			; clear subtype
+		move.w	(a2),d1			; move helix length to d1
+		clr.w	(a2)+			; clear subtype
 		move.w	d1,d0
 		lsr.w	#1,d0
 		lsl.w	#4,d0
 		sub.w	d0,d3		; d3 is x-axis position of leftmost spike
-		subq.b	#2,d1
+		subq.w	#2,d1
 		bcs.s	Hel_Action	; skip to action if length is only 1
 		moveq	#0,d6
 
 Hel_Build:
 		bsr.w	FindNextFreeObj
 		bne.s	Hel_Action
-		addq.b	#1,obSubtype(a0)
+		addq.w	#1,obSubtype(a0)
 		move.w	a1,d5
 		subi.w	#v_objspace,d5
 		andi.l	#$FFFF,d5	; DIVU reads a long dividend; ignore the old high word
@@ -66,7 +66,7 @@ Hel_Build:
 		addq.b	#1,d6
 		andi.b	#7,d6
 		addi.w	#$10,d3			; skip to next spike
-		addq.b	#1,obSubtype(a0)
+		addq.w	#1,obSubtype(a0)
 
 Hel_NotCentre:
 		dbf	d1,Hel_Build	; repeat d1 times (helix length)
@@ -80,8 +80,8 @@ Hel_Action:
 Hel_DelAll:
 		moveq	#0,d2
 		lea	obSubtype(a0),a2	; move helix length to a2
-		move.b	(a2)+,d2		; move helix length to d2
-		subq.b	#2,d2
+		move.w	(a2)+,d2		; move helix length to d2
+		subq.w	#2,d2
 		bcs.w	DeleteObject
 
 -		moveq	#0,d0

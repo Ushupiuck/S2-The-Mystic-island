@@ -7,12 +7,18 @@ Size_of_Snd_driver_guess	= $F64 ; approximate post-compressed size of the Z80 so
 ; ---------------------------------------------------------------------------
 ; Object placement record offsets
 ; ---------------------------------------------------------------------------
-; S3&K placement: X word, Y/flags word, ID byte, subtype byte.
+; Mystic Island placement: X/Y words, ID/time-mask bytes, subtype word.
 omX:		equ	0
 omY:		equ	2
 omID:		equ	4
-omSubtype:	equ	5
-omSize:		equ	6
+omTimeZones:	equ	5
+omSubtype:	equ	6
+omSize:		equ	8
+; Sonic CD time-presence bits. Both future variants share the Future bit.
+ObjectTime_Past:		equ	$20
+ObjectTime_Present:	equ	$40
+ObjectTime_Future:	equ	$80
+ObjectTime_All:		equ	ObjectTime_Past|ObjectTime_Present|ObjectTime_Future
 ; ---------------------------------------------------------------------------
 ; Masks for the level-placement Y/flags word (omY), not record fields
 ; Bits 13/14 mirror X/Y; bit 15 loads the object at any Y.
@@ -24,9 +30,9 @@ ObjectLayout_LoadAtAnyYMask:	equ	$8000	; omY bit 15: bypass vertical load band
 DebugEntry_code:	equ	$00
 DebugEntry_mappings:	equ	$04
 DebugEntry_subtype:	equ	$08
-DebugEntry_frame:	equ	$09
-DebugEntry_art_tile:	equ	$0A
-DebugEntry_size:	equ	$0C
+DebugEntry_frame:	equ	$0A
+DebugEntry_art_tile:	equ	$0C
+DebugEntry_size:	equ	$0E
 ; ---------------------------------------------------------------------------
 ; Object loading distances
 Object_Load_BandSize:	equ $80
@@ -82,8 +88,7 @@ obAngle:                equ $26     ; byte; angle about the Z axis
 obColType:              equ $28     ; byte; NPC collision response type
 obColProp:              equ $29     ; byte; NPC collision property
 obStatus:               equ $2A     ; byte; meaning depends on object type
-obSubtype:              equ $2C     ; byte; primary subtype
-ob2ndSubtype:           equ $2D     ; byte; optional secondary subtype, currently unused
+obSubtype:              equ $2C     ; word; complete placement subtype
 ; Animation delay counters remain local to the objects that need them.
 ; ---------------------------------------------------------------------------
 ; Player meanings. These bytes are private scratch in other object types.

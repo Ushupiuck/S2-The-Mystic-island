@@ -7,6 +7,7 @@ place real conveyor actors over the complete tested route. A cloned RAM chunk
 supplies isolated left/right walls for collision-path tests. No ROM code is
 patched. These focused fixtures are separate from companion AI playthroughs.
 """
+from object_layout import decode, convert_s3k
 from pathlib import Path
 import argparse
 import hashlib
@@ -57,11 +58,13 @@ def check_layouts(reference):
     before = subprocess.check_output([
         'git', 'show', reference + ':level/objects/SMZ_2.bin'], cwd=ROOT)
     after = (ROOT / 'level/objects/SMZ_2.bin').read_bytes()
-    assert len(before) == len(after)
+    before_rows = decode(convert_s3k(before))
+    after_rows = decode(after)
+    assert len(before_rows) == len(after_rows)
     migrated = []
-    for offset in range(0, len(before), 6):
-        old = struct.unpack_from('>HHBB', before, offset)
-        new = struct.unpack_from('>HHBB', after, offset)
+    for offset, (old_record, new_record) in enumerate(zip(before_rows, after_rows)):
+        old = old_record[:3] + old_record[4:]
+        new = new_record[:3] + new_record[4:]
         if old[2] != 0xA2:
             assert old == new, ('Unrelated placement changed', offset)
             continue
@@ -344,8 +347,7 @@ def traversal(g, initial, role, output):
 
 def placed_belts(g, initial):
     checks = []
-    rows = [(x, y, sub) for x, y, oid, sub in struct.iter_unpack(
-        '>HHBB', (ROOT / 'level/objects/SMZ_2.bin').read_bytes()[:-6]) if oid == 0xA2]
+    rows = [(x, y, sub) for x, y, oid, sub in ((x,y,oid,sub) for x,y,oid,eras,sub in decode((ROOT / 'level/objects/SMZ_2.bin').read_bytes())) if oid == 0xA2]
     for x, y, sub in rows:
         g.restore(initial)
         g.put('v_player2', 'code', 0)

@@ -20,7 +20,7 @@ Wanderer_Index:
 
 MotoBug_Init:
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		move.w	d0,d1
 		lsl.w	#3,d0				; d0*8
 		add.w	d1,d0
@@ -76,7 +76,7 @@ MotoBug_Main:
 		jsr	MotoBug_Main_Index(pc,d1.w)
 		; select animation table by subtype
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		add.w	d0,d0
 		move.w	Wanderer_AniIndex(pc,d0.w),d0
 		lea	Wanderer_AniIndex(pc,d0.w),a1
@@ -99,7 +99,7 @@ MotoBug_Move:
 		addq.b	#2,ob2ndRout(a0)
 		; load speed from table indexed by subtype
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		add.w	d0,d0
 		move.w	Wanderer_SpeedTable(pc,d0.w),obVelX(a0)
 		move.b	#1,obAnim(a0)
@@ -125,7 +125,7 @@ MotoBug_Floor:
 		add.w	d1,obY(a0)
 		; subtype-specific floor behaviour
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		bne.s	.notmotobug			; subtype 0 only: smoke
 		subq.b	#1,objoff_37(a0)		; countdown to next smoke puff
 		bpl.s	.return

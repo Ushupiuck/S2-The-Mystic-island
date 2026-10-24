@@ -30,7 +30,7 @@ SMZ_Bom_Main:	; Routine 0
 		move.w #$180,obPriority(a0)			; set sprite priority
 		move.b	#24/2,obActWid(a0)			; set sprite display width
 
-		move.b	obSubtype(a0),d0			; get subtype (0 = normal badnik, 4 = fuse, 6 = shrapnel)
+		move.w	obSubtype(a0),d0			; get subtype (0 = normal badnik, 4 = fuse, 6 = shrapnel)
 		beq.s	.normalBadnik				; if normal badnik, branch
 		move.b	d0,obRoutine(a0)			; directly set alternate routine from subtype
 		rts						; go there on next run
@@ -134,7 +134,7 @@ SMZ_Bom_CheckStartFuse:
 		move.w	obY(a0),obY(a1)				; copy Y-position
 		move.w	obY(a0),SMZ_bom_origY(a1)			; remember original Y-position when making shrapnel
 		move.b	obStatus(a0),obStatus(a1)		; copy X/Y-flip flags
-		move.b	#4,obSubtype(a1)			; set fuse to use SMZ_Bom_Fuse routine
+		move.w	#4,obSubtype(a1)			; set fuse to use SMZ_Bom_Fuse routine
 		move.b	#3,obAnim(a1)				; set to fuse animation
 
 		move.w	#$10,obVelY(a1)				; make fuse slowly move down
@@ -191,7 +191,7 @@ SMZ_Bom_BurnFuseAndExplode:
 		move.l #SMZ_Bomb,code(a1)			; load shrapnel object
 		move.w	obX(a0),obX(a1)				; copy X-position
 		move.w	obY(a0),obY(a1)				; copy Y-position
-		move.b	#6,obSubtype(a1)			; set shrapnel to use SMZ_Bom_Shrapnel routine
+		move.w	#6,obSubtype(a1)			; set shrapnel to use SMZ_Bom_Shrapnel routine
 		move.b	#4,obAnim(a1)				; use shrapnel animation
 		move.w	(a2)+,obVelX(a1)			; get next X-velocity from speed data
 		move.w	(a2)+,obVelY(a1)			; get next Y-velocity from speed data

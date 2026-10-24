@@ -56,7 +56,7 @@ Scen_Conf:	; Organized in the following format:
 
 Scen_Init:	; FromSubtype
 		addq.b	#2,obRoutine(a0)
-		move.b	obSubtype(a0),d0	; Use the low nibble to determine which configuration to load
+		move.w	obSubtype(a0),d0	; Use the low nibble to determine which configuration to load
 		andi.w	#$F,d0
 		move.w	d0,d1
 		add.w	d0,d0
@@ -70,12 +70,12 @@ Scen_Init:	; FromSubtype
 		move.b	(a1)+,obActWid(a0)
 		move.w	(a1)+,obPriority(a0)
 		move.b	(a1),height_pixels(a0)
-		move.b	obSubtype(a0),d0	; we gotta process subtype one more time!
+		move.w	obSubtype(a0),d0	; we gotta process subtype one more time!
 		andi.w	#$F0,d0			; high nibble this time
 		beq.s	Scen_Display		; if 0, don't bother. Otherwise keep going, we gotta animate
 		addq.b	#2,obRoutine(a0)
-		lsr.b	#4,d0
-		subq.b	#1,d0
+		lsr.w	#4,d0
+		subq.w	#1,d0
 		move.b	d0,obAnim(a0)
 		; fall through to the next subroutine
 ; ---------------------------------------------------------------------------

@@ -32,7 +32,7 @@ SMZ_VanP_Main:	; Routine 0
 		move.w #$200,obPriority(a0)			; set sprite priority
 
 		moveq	#0,d0					; clear d0
-		move.b	obSubtype(a0),d0			; get object subtype
+		move.w	obSubtype(a0),d0			; get object subtype
 		andi.w	#$0F,d0					; read only the lower digit
 		addq.w	#1,d0					; make value 1-based
 		lsl.w	#7,d0					; multiply by $80
@@ -42,7 +42,7 @@ SMZ_VanP_Main:	; Routine 0
 		move.w	d0,SMZ_vanp_timelen(a0)			; also store as base reset time
 
 		moveq	#0,d0					; clear d0
-		move.b	obSubtype(a0),d0			; get object subtype again
+		move.w	obSubtype(a0),d0			; get object subtype again
 		andi.w	#$F0,d0					; read only the upper digit
 		addi.w	#$80,d1					; add a static $80 to earlier result
 		mulu.w	d1,d0					; multiply upper subtype digit by lower one (multiples of $80)

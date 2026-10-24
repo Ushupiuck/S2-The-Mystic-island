@@ -24,7 +24,8 @@ Fan_Main:	; Routine 0
 		move.b	#4,obPriority(a0)
 
 Fan_Delay:	; Routine 2
-		btst	#1,obSubtype(a0) ; is object type 02/03 (always on)?
+		move.w	obSubtype(a0),d1
+		btst	#1,d1 ; is object type 02/03 (always on)?
 		bne.s	.blow		; if yes, branch
 		subq.w	#1,fan_time(a0)	; subtract 1 from time delay
 		bpl.s	.blow		; if time remains, branch
@@ -67,7 +68,8 @@ Fan_Delay:	; Routine 2
 .right:
 		neg.b	d0
 		asr.w	#4,d0
-		btst	#0,obSubtype(a0)
+		move.w	obSubtype(a0),d1
+		btst	#0,d1
 		beq.s	.movesonic
 		neg.w	d0
 
@@ -85,7 +87,8 @@ Fan_Delay:	; Routine 2
 
 .noreset:
 		moveq	#0,d0
-		btst	#0,obSubtype(a0)
+		move.w	obSubtype(a0),d1
+		btst	#0,d1
 		beq.s	.noflip
 		moveq	#2,d0
 

@@ -77,6 +77,25 @@ Use a matching ROM/listing pair; options/defaults differ, so inspect `--help`.
 Reusable `Native`/`Manager` fixtures live in `build_tools/native_test_core.py`.
 Pass ROM/listing paths explicitly; importing that module neither parses CLI
 arguments nor runs the manager regression suite.
+
+`check_word_subtypes.py` executes the eight-byte loader in both CPUs, all era
+mask combinations, independent era state, word-valued handler parameters and
+Debug spawning. It also rejects byte subtype operands in every live/W.I.P.
+object and verifies that moved raw-art labels agree with the ROM. Run it after
+a fresh build; a newer listing beside an older ROM is not a valid test pair.
+Optional `--before-listing` compares every existing MD RAM symbol/SST field
+with a pre-migration build, and `--before-ref` checks the six-to-eight-byte
+conversion against a Git revision. Those optional checks are migration evidence,
+not a rule preventing later level edits.
+
+```sh
+python build_tools/check_word_subtypes.py
+```
+
+The released SonLVL checker exercises the custom layout class, 16-bit hex
+property converter, all presence masks, full-byte IDs, and property round trips
+with both zero and nonzero upper subtype bits. `check_wheel_carriers.py` accepts
+`--system-directory` for its Mode 1 payload-table checks.
 Card data and queue backpressure also have a native check (requires Unicorn):
 
 ```sh

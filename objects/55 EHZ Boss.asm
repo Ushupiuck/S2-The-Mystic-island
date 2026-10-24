@@ -77,7 +77,7 @@ EHZBoss_Init:
 	move.b	#Map_EHZBoss_Vehicle_height,height_pixels(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_Eggpod_1,1,0),obGfx(a0) ; vehicle with ability to fly, bottom part
 	ori.b	#1<<obRender.level_fg,obRender(a0)
-	move.b	#$81,obSubtype(a0)
+	move.w	#$81,obSubtype(a0)
 	move.w	EHZBoss_origin_x(a0),d0
 	addi.w	#EHZBoss_LandingX,d0
 	move.w	d0,obX(a0)
@@ -187,7 +187,7 @@ EHZBoss_MakeGroundParts:
 	move.b	#4,obFrame(a1)
 	move.b	#1,obAnim(a1)
 	move.w	#$A,objoff_2E(a1)
-	move.b	#0,obSubtype(a1)
+	move.w	#0,obSubtype(a1)
 +
 	jsr	(FindNextFreeObj).l	; second foreground wheel
 	bne.w	+
@@ -214,7 +214,7 @@ EHZBoss_MakeGroundParts:
 	move.b	#4,obFrame(a1)
 	move.b	#1,obAnim(a1)
 	move.w	#$A,objoff_2E(a1)
-	move.b	#1,obSubtype(a1)
+	move.w	#1,obSubtype(a1)
 +
 	jsr	(FindNextFreeObj).l	; background wheel
 	bne.w	+
@@ -241,7 +241,7 @@ EHZBoss_MakeGroundParts:
 	move.b	#6,obFrame(a1)
 	move.b	#2,obAnim(a1)
 	move.w	#$A,objoff_2E(a1)
-	move.b	#2,obSubtype(a1)
+	move.w	#2,obSubtype(a1)
 +
 	jsr	(FindNextFreeObj).l	; Spike
 	bne.w	+
@@ -666,7 +666,7 @@ EHZBoss_loc_2F67C:	; EHZBoss_Wheel_Sub0:
 	cmpi.w	#EHZBoss_CameraLeft,d0
 	blo.w	EHZBoss_Display
 	move.w	#$100,obVelY(a0)
-	cmpi.b	#1,obSubtype(a0)	; wheel number (0-2)
+	cmpi.w	#1,obSubtype(a0)	; wheel number (0-2)
 	bgt.s	EHZBoss_loc_2F6B6	; background wheel
 	beq.s	EHZBoss_loc_2F6A6	; second foreground wheel
 ; ---------------------------------------------------------------------------

@@ -141,8 +141,8 @@ def main():
 
     # Native S3&K placement ownership must unload and reload every imported row.
     records=(ROOT/'level/objects/LV0A_1.bin').read_bytes()
-    for i in range(len(records)//6-1):
-        x,y,oid,sub=struct.unpack_from('>HHBB',records,i*6)
+    for i in range(len(records)//8-1):
+        x,y,oid,eras,sub=struct.unpack_from('>HHBBH',records,i*8)
         if oid<0xB1:continue
         g.restore(stage)
         tag=g.placement_handle(i)

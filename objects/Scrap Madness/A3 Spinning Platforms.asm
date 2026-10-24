@@ -31,14 +31,15 @@ SMZ_Spin_Main:	; Routine 0
 		move.b	#128/2,obActWid(a0)			; set sprite display width (corrected)
 
 		moveq	#0,d0					; clear d0
-		move.b	obSubtype(a0),d0			; get object subtype
+		move.w	obSubtype(a0),d0			; get object subtype
 		andi.w	#$0F,d0					; read only the lower digit
 		mulu.w	#60,d0					; multiply by 60 frames (1 second)
 		move.w	d0,SMZ_spin_timelen(a0)			; set trapdoor open/close delay timer
 
 	; Set up spinning platforms...
-		tst.b	obSubtype(a0)				; is subtype at least $80? (spinning platforms)
-		bpl.s	SMZ_Spin_Trapdoor				; if not, branch (object is a trapdoor)
+		move.w	obSubtype(a0),d0				; is subtype at least $80? (spinning platforms)
+		btst	#7,d0
+		beq.s	SMZ_Spin_Trapdoor				; if not, branch (object is a trapdoor)
 		addq.b	#2,obRoutine(a0)			; advance to SMZ_Spin_Spinner
 		move.l	#Map_SMZ_Spin,obMap(a0)
 		move.b #Map_SMZ_Spin_height,height_pixels(a0)			; set alternate mappings
@@ -47,7 +48,7 @@ SMZ_Spin_Main:	; Routine 0
 		move.b	#2,obAnim(a0)				; use spinning platforms animations
 
 		moveq	#0,d0					; clear d0
-		move.b	obSubtype(a0),d0			; get object subtype
+		move.w	obSubtype(a0),d0			; get object subtype
 		move.w	d0,d1					; backup subtype for below
 		andi.w	#$0F,d0					; read only the lower digit
 		mulu.w	#6,d0					; multiply by 6 frames

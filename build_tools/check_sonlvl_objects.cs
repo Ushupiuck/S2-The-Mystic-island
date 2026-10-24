@@ -28,6 +28,17 @@ class CheckSonLVLObjects
 		public void OnComponentChanged() { }
 	}
 
+	static SonicRetro.SonLVL.API.S3K.S3KObjectEntry NewEntry(byte id, ushort subtype, bool xflip = false, bool yflip = false, bool anyY = false)
+	{
+		ObjectEntry entry = LevelData.ObjectFormat.CreateObject();
+		entry.ID = id;
+		entry.GetType().GetProperty("FullSubType").SetValue(entry, subtype, null);
+		entry.XFlip = xflip;
+		entry.YFlip = yflip;
+		((SonicRetro.SonLVL.API.S3K.S3KObjectEntry)entry).LoadAtAnyYPos = anyY;
+		return (SonicRetro.SonLVL.API.S3K.S3KObjectEntry)entry;
+	}
+
 	static void Fail(string message)
 	{
 		Console.Error.WriteLine(current + ": " + message);
@@ -50,7 +61,7 @@ class CheckSonLVLObjects
 	{
 		// Exercise the same descriptor/converter path as the property grid.
 		// Direct getter/setter checks alone miss invalid enum converters.
-		ObjectEntry gridEntry = new SonicRetro.SonLVL.API.S3K.S3KObjectEntry { ID = id, SubType = definition.DefaultSubtype };
+		ObjectEntry gridEntry = NewEntry(id, definition.DefaultSubtype);
 		PropertyDescriptorCollection descriptors = TypeDescriptor.GetProperties(gridEntry);
 		foreach (PropertySpec property in definition.CustomProperties)
 		{
@@ -67,10 +78,11 @@ class CheckSonLVLObjects
 		}
 		IEnumerable<byte> values = definition.GetType().Namespace == "MysticIsland.ObjectDefinitions"
 			? Enumerable.Range(0, 256).Select(i => (byte)i) : definition.Subtypes;
+		foreach (int upper in new[] { 0, 0xA500 })
 		foreach (byte subtype in values)
 			foreach (PropertySpec property in definition.CustomProperties)
 			{
-				ObjectEntry entry = new SonicRetro.SonLVL.API.S3K.S3KObjectEntry { ID = id, SubType = subtype, XFlip = true, YFlip = true, LoadAtAnyYPos = true };
+				ObjectEntry entry = NewEntry(id, (ushort)(upper | subtype), true, true, true);
 				byte[] before = entry.GetBytes();
 				object value = property.GetValue(entry);
 				property.SetValue(entry, value);
@@ -119,7 +131,7 @@ class CheckSonLVLObjects
 
 	static void CheckSwitcher()
 	{
-		var entry = new SonicRetro.SonLVL.API.S3K.S3KObjectEntry { ID = 3, SubType = 0xE9, XFlip = true };
+		var entry = NewEntry(3, 0xE9, true);
 		ObjectDefinition definition = LevelData.ObjTypes[3];
 		if (definition.CustomProperties.Length != 7) Fail("Switcher settings did not load.");
 		definition.CustomProperties.Single(p => p.Name == "Direction").SetValue(entry, 1);
@@ -176,7 +188,7 @@ class CheckSonLVLObjects
 			int width = ((subtype & 15) + 1) * 16, height = (subtype & 128) == 0 ? 48 : 112;
 			if (area.Bounds != new Rectangle(-width / 2, -height, width, height)) Fail("Incorrect terrain-conveyor area.");
 		}
-		var entry = new SonicRetro.SonLVL.API.S3K.S3KObjectEntry { ID = 0xA2, SubType = 0xAF, YFlip = true, LoadAtAnyYPos = true };
+		var entry = NewEntry(0xA2, 0xAF, false, true, true);
 		definition.CustomProperties.Single(p => p.Name == "Width").SetValue(entry, 6);
 		if (entry.SubType != 0xA6) Fail("Conveyor width changed its height or speed.");
 		definition.CustomProperties.Single(p => p.Name == "Direction").SetValue(entry, 1);
@@ -188,18 +200,18 @@ class CheckSonLVLObjects
 		ObjectDefinition definition = LevelData.ObjTypes[0x21];
 		PropertySpec mode = definition.CustomProperties.Single(p => p.Name == "Behavior");
 		PropertySpec lifetime = definition.CustomProperties.Single(p => p.Name == "Bomb lifetime (seconds)");
-		// Boundary cases include the CMP.B/BPL extended range and $1F wrap.
+		// Boundary cases include the word CMP/BPL range and word timer wrap.
 		int[] values = { 0x0F, 0x10, 0x1E, 0x1F, 0x20, 0x30, 0x9E, 0x9F, 0xFF };
-		int[] modes = { 0, 1, 2, 3, 3, 3, 3, 2, 2 };
-		double[] seconds = { 15, 255 / 60.0, 14, 255, 0, 16, 126, 143, 239 };
+		int[] modes = { 0, 1, 2, 3, 3, 3, 3, 3, 3 };
+		double[] seconds = { 15, 255 / 60.0, 14, 65476 / 60.0, 0, 16, 126, 127, 223 };
 		for (int i = 0; i < values.Length; i++)
 		{
-			ObjectEntry entry = new SonicRetro.SonLVL.API.S3K.S3KObjectEntry { ID = 0x21, SubType = (byte)values[i] };
+			ObjectEntry entry = NewEntry(0x21, (ushort)values[i]);
 			if ((int)mode.GetValue(entry) != modes[i] || (double)lifetime.GetValue(entry) != seconds[i]) Fail("Incorrect Ballhog settings for $" + values[i].ToString("X2"));
 		}
-		ObjectEntry moving = new SonicRetro.SonLVL.API.S3K.S3KObjectEntry { ID = 0x21, SubType = 0x11 };
+		ObjectEntry moving = NewEntry(0x21, 0x11);
 		lifetime.SetValue(moving, 143.0);
-		if (moving.SubType != 0x9F) Fail("Extended moving Ballhog lifetime did not encode correctly.");
+		if (moving.SubType != 0x1E) Fail("Moving Ballhog lifetime did not respect its packed mode range.");
 	}
 
 	static void CheckLevel(string name, string previewDirectory)
@@ -231,7 +243,8 @@ class CheckSonLVLObjects
 			if (!LevelData.ObjTypes.TryGetValue(entry.ID, out definition)) { Fail("Undefined placement $" + entry.ID.ToString("X2")); continue; }
 			for (int flip = 0; flip < 4; flip++)
 			{
-				ObjectEntry copy = new SonicRetro.SonLVL.API.S3K.S3KObjectEntry(entry.GetBytes(), 0);
+				ObjectEntry copy = LevelData.ObjectFormat.CreateObject();
+				copy.FromBytes(entry.GetBytes());
 				copy.XFlip = (flip & 1) != 0;
 				copy.YFlip = (flip & 2) != 0;
 				CheckImage(definition.GetSprite(copy), "$" + entry.ID.ToString("X2") + "/$" + entry.SubType.ToString("X2"));
@@ -246,8 +259,33 @@ class CheckSonLVLObjects
 		CheckSwitcher();
 		CheckBallhog();
 		CheckConveyor();
+		CheckWordLayout();
 		if (previewDirectory != null) Preview(previewDirectory);
 		Console.WriteLine("PASS " + name + " (" + LevelData.Objects.Count + " placements)");
+	}
+
+	static void CheckWordLayout()
+	{
+		foreach (ushort subtype in new ushort[] { 0, 0xFF, 0x100, 0x1234, 0x8000, 0xFFFF })
+		foreach (int era in Enumerable.Range(0, 8))
+		{
+			ObjectEntry entry = NewEntry(0xFC, subtype, true, true, true);
+			var type = entry.GetType();
+			type.GetProperty("ShowPresent").SetValue(entry, (era & 2) != 0, null);
+			type.GetProperty("ShowPast").SetValue(entry, (era & 1) != 0, null);
+			type.GetProperty("ShowFuture").SetValue(entry, (era & 4) != 0, null);
+			byte[] bytes = entry.GetBytes();
+			if (bytes.Length != 8 || bytes[4] != 0xFC || bytes[5] != era << 5 || bytes[6] != subtype >> 8 || bytes[7] != (subtype & 255))
+				Fail("Incorrect eight-byte word subtype / timezone encoding.");
+			bool terminator;
+			var rows = LevelData.ObjectFormat.ReadLayout(LevelData.ObjectFormat.WriteLayout(new List<ObjectEntry> { entry }), out terminator);
+			if (!terminator || rows.Count != 1 || !rows[0].GetBytes().SequenceEqual(bytes)) Fail("Word subtype did not round trip through layout I/O.");
+			PropertyDescriptor field = TypeDescriptor.GetProperties(entry)["FullSubType"];
+			var context = new GridContext(entry, field);
+			string text = field.Converter.ConvertToString(context, CultureInfo.InvariantCulture, field.GetValue(entry));
+			field.SetValue(entry, field.Converter.ConvertFromString(context, CultureInfo.InvariantCulture, text));
+			if (!entry.GetBytes().SequenceEqual(bytes)) Fail("The 16-bit subtype property grid lost data.");
+		}
 	}
 
 	static int Main(string[] args)

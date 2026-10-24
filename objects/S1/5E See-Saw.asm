@@ -35,7 +35,7 @@ See_Main:
 		move.w	#$200,obPriority(a0)
 		move.b	#sprite_bound($30,Map_obj5E_width),obActWid(a0)
 		move.w	obX(a0),see_origX(a0)
-		tst.b	obSubtype(a0)	; is object type 00 ?
+		tst.w	obSubtype(a0)	; is object type 00 ?
 		bne.s	.noball		; if not, branch
 
 		bsr.w	FindNextFreeObj

@@ -29,8 +29,9 @@ Bub_Main:
 		move.b	#$84,obRender(a0)
 		move.b	#sprite_bound($10,Map_Bubbles_width),obActWid(a0)
 		move.w	#$80,obPriority(a0)
-		move.b	obSubtype(a0),d0	; get bubble type
-		bpl.s	.bubble			; if type is $0-$7F, branch
+		move.w	obSubtype(a0),d0	; get bubble type
+		btst	#7,d0
+		beq.s	.bubble			; if type is $0-$7F, branch
 		addq.b	#8,obRoutine(a0)	; goto Bub_BblMaker next
 		andi.w	#$7F,d0			; read only last 7 bits (deduct $80)
 		move.b	d0,bub_time(a0)
@@ -186,7 +187,9 @@ Bub_BblMaker:	; Routine $A
 		moveq	#0,d0
 		move.b	objoff_38(a0),d0
 		movea.l	objoff_40(a0),a2
-		move.b	(a2,d0.w),obSubtype(a1)
+		move.b	(a2,d0.w),d0
+		andi.w	#$FF,d0
+		move.w	d0,obSubtype(a1)
 		btst	#7,objoff_3A(a0)
 		beq.s	.fail
 		jsr	(RandomNumber).l
@@ -194,14 +197,14 @@ Bub_BblMaker:	; Routine $A
 		bne.s	.loc_buh
 		bset	#6,objoff_3A(a0)
 		bne.s	.fail
-		move.b	#2,obSubtype(a1)
+		move.w	#2,obSubtype(a1)
 
 .loc_buh:
 		tst.b	objoff_38(a0)
 		bne.s	.fail
 		bset	#6,objoff_3A(a0)
 		bne.s	.fail
-		move.b	#2,obSubtype(a1)
+		move.w	#2,obSubtype(a1)
 
 .fail:
 		subq.b	#1,objoff_38(a0)

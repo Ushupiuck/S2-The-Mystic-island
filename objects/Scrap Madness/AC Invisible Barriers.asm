@@ -22,7 +22,7 @@ SMZ_Invis_Main:	; Routine 0
 		move.w	#ArtTile_Monitor|$8000,obGfx(a0) ; set art tile and priority bit (debug mode only)
 		ori.b	#4,obRender(a0)	; set to playfield-positioned mode
 
-		move.b	obSubtype(a0),d0		; get width/height settings for block
+		move.w	obSubtype(a0),d0		; get width/height settings for block
 		move.b	d0,d1				; copy for height
 		andi.w	#$F0,d0				; read only the 1st byte
 		addi.w	#$10,d0				; settings are 0-based, actual sizes are 1-based

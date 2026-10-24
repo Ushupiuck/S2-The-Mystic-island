@@ -28,7 +28,7 @@ SMZ_Elec_Main:	; Routine 0
 		; Zap intervals are defined through the subtype, which must always be a power of 2.
 		; This value will get ANDed with the current level frame counter, and zap if it's 0.
 		moveq	#0,d0					; clear d0, frequency is a word
-		move.b	obSubtype(a0),d0			; read zapper subtype
+		move.w	obSubtype(a0),d0			; read zapper subtype
 		lsl.w	#4,d0					; multiply by $10
 		subq.w	#1,d0					; sub 1 to get andable value (e.g. $1F, $3F, $7F)
 		move.w	d0,SMZ_elec_freq(a0)			; set result as frequency

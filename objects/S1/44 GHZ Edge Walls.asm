@@ -21,7 +21,8 @@ Edge_Main:	; Routine 0
 		ori.b	#4,obRender(a0)
 		move.b	#sprite_bound(8,Map_obj44_width),obActWid(a0)
 		move.w	#$300,obPriority(a0)
-		move.b	obSubtype(a0),obFrame(a0)	; copy object type number to frame number
+		move.w	obSubtype(a0),d0
+		move.b	d0,obFrame(a0)	; copy object type number to frame number
 		bclr	#4,obFrame(a0)		; clear	4th bit	(deduct	$10)
 		beq.s	Edge_Solid		; make object solid if 4th bit = 0
 		addq.b	#2,obRoutine(a0)

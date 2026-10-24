@@ -15,7 +15,7 @@ SMZ_Teleport:
         bne.s .ready
         move.b #2,obRoutine(a0)
         moveq #0,d0
-        move.b obSubtype(a0),d0
+        move.w obSubtype(a0),d0
         andi.w #7,d0
         add.w d0,d0
         lea SMZ_PipeData(pc),a2
@@ -63,7 +63,7 @@ SMZ_Teleport:
         addi.w #32,d0
         cmpi.w #64,d0
         bhs.s .return
-        cmpi.b #7,obSubtype(a0)
+        cmpi.w #7,obSubtype(a0)
         bne.s .start
         cmpi.w #50,(v_rings).w
         blo.s .return

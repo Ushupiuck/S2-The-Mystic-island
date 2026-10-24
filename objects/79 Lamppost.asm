@@ -31,7 +31,7 @@ Obj79_Init:
 		bne.s	+
 		move.b	(v_lastlamp).w,d1
 		andi.b	#$7F,d1
-		move.b	obSubtype(a0),d2
+		move.w	obSubtype(a0),d2
 		andi.b	#$7F,d2
 		cmp.b	d2,d1
 		blo.s	Obj79_Main
@@ -49,7 +49,7 @@ Obj79_Main:
 		bmi.s	.return
 		move.b	(v_lastlamp).w,d1
 		andi.b	#$7F,d1
-		move.b	obSubtype(a0),d2
+		move.w	obSubtype(a0),d2
 		andi.b	#$7F,d2
 		cmp.b	d2,d1
 		blo.s	Obj79_HitLamp
@@ -97,7 +97,8 @@ Obj79_AfterHit:
 
 
 Lamppost_StoreInfo:
-		move.b	obSubtype(a0),(v_lastlamp).w
+		move.w	obSubtype(a0),d0
+		move.b	d0,(v_lastlamp).w
 		move.b	(v_lastlamp).w,(v_lastlamp+1).w
 		move.w	obX(a0),(v_lamp_xpos).w
 		move.w	obY(a0),(v_lamp_ypos).w

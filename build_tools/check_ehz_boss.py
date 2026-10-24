@@ -86,12 +86,12 @@ def main():
             assert frames == pieces(stock, stock_sym[original], len(frames), 8), label
         total += len(frames)
 
-    # This manager consumes six-byte records; preserve the sorted list and its
+    # This manager consumes eight-byte records; preserve the sorted list and its
     # sentinel. The button rests 38 pixels above the body: its stem ends at
     # +7 and the body's visible cap starts at -30 (two transparent art rows).
     placements = (ROOT / 'level/objects/EHZ_2.bin').read_bytes()
-    assert len(placements) % 6 == 0 and placements[-6:] == bytes.fromhex('FFFF00000000')
-    records = list(struct.iter_unpack('>HHBB', placements[:-6]))
+    assert len(placements) % 8 == 0 and placements[-8:] == bytes.fromhex('FFFF000000000000')
+    records = [(x,y,oid,sub) for x,y,oid,eras,sub in struct.iter_unpack('>HHBBH', placements[:-8])]
     assert [x for x, *_ in records] == sorted(x for x, *_ in records)
     capsule = [r for r in records if r[2] == sym['id_Obj3E'] and r[0] == 0x2B50]
     assert capsule == [(0x2B50, 0x422, sym['id_Obj3E'], 0),

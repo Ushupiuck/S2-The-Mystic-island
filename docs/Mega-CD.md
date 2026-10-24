@@ -50,8 +50,8 @@ aliases translate physical addresses; they do not allocate another copy.
 | Currently used chunks/scene overlays | `$426000-$42DFFF`, bank 0 | `$006000-$00DFFF`, 32 KiB |
 | Ring job storage | `$426000-$426E0F`, bank 1 | `$026000-$026E0F` |
 | Resident terrain and work state | No normal-frame PRG access | `$026E10-$02BE17` |
-| Resident object placements and loader state | No normal-frame PRG access | `$02BE18-$02D3FB` |
-| Decoder tables, resident PLC input and resumable state | No normal-frame PRG access | `$02D3FC-$035823` |
+| Resident object placements and loader state | No normal-frame PRG access | `$02BE18-$02E005` |
+| Decoder tables, resident PLC input and resumable state | No normal-frame PRG access | `$02E006-$03642D` |
 | 256 KiB Word RAM, 2M mode | `$600000-$63FFFF` while owned | `$080000-$0BFFFF` while owned |
 | Communication registers | `$A12010-$A1202F` | `$FF8010-$FF802F` |
 
@@ -150,8 +150,10 @@ The actual placement manager and loader execute in `_inc/Mega CD Objects.asm`,
 with resident placements, front/back cursors, loading bands and respawn state.
 MD copies each act's placement list once. On a band change or a full-pool retry,
 it supplies twelve free-slot bytes through the existing terrain frame job.
-CD selects placements and emits twelve-byte records: SST handle, X, Y, render
-flags/subtype, object ID, and placement handle. MD resolves its own routine
+CD selects era-eligible placements and emits twelve-byte records: SST handle,
+X, Y, render-flags byte, full-ID byte, subtype word, and placement handle. The
+new subtype fits the existing reply size by packing flags and ID together.
+MD resolves its own routine
 pointers and writes the SSTs after the reply. Idle frames do not scan/copy SSTs.
 
 `respawn_addr` now holds placement index + 1; zero still denotes a dynamic or

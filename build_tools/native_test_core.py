@@ -8,6 +8,7 @@ executor in a second 68000; hardware scheduling is covered by libretro checks.
 from pathlib import Path
 import re
 import struct
+from object_layout import decode, encode, with_timezones, SIZE, TERMINATOR
 
 try:
     from unicorn import (Uc, UC_ARCH_M68K, UC_MODE_BIG_ENDIAN, UC_HOOK_CODE,
@@ -184,13 +185,15 @@ class Native:
 
     def placement_data(self, size, index=0):
         if 'MCD_SubObjects' in self.s:
-            return bytes(self.sub.mem_read(self.s['MCD_ObjectRespawn_Sub'] + index, size))
+            base=int.from_bytes(self.sub.mem_read(self.s['MCD_ObjectRespawnBase_Sub'],4),'big') or self.s['MCD_ObjectRespawn_Sub']
+            return bytes(self.sub.mem_read(base + index, size))
         return bytes(self.cpu.mem_read((self.s['Object_Respawn_Table'] & 0xFFFFFF) + index, size))
 
     def placement_write(self, index, value, size=1):
         data = value if isinstance(value, bytes) else value.to_bytes(size, 'big')
         if 'MCD_SubObjects' in self.s:
-            self.sub.mem_write(self.s['MCD_ObjectRespawn_Sub'] + index, data)
+            base=int.from_bytes(self.sub.mem_read(self.s['MCD_ObjectRespawnBase_Sub'],4),'big') or self.s['MCD_ObjectRespawn_Sub']
+            self.sub.mem_write(base + index, data)
         else:
             self.cpu.mem_write((self.s['Object_Respawn_Table'] & 0xFFFFFF) + index, data)
 
@@ -203,6 +206,8 @@ class Native:
     def put(self, obj, field, value, size=1):
         if field == 'layout_id':
             field, value, size = 'code', self.object_codes[value], 4
+        elif field == 'obSubtype':
+            size = 2
         elif field in ('code', 'obID'):
             size = 4
         if isinstance(obj, str):
@@ -214,6 +219,8 @@ class Native:
         projected = field == 'layout_id'
         if projected:
             field, size = 'code', 4
+        elif field == 'obSubtype':
+            size = 2
         elif field in ('code', 'obID'):
             size = 4
         if isinstance(obj, str):
@@ -243,6 +250,7 @@ class Native:
         self.cpu.mem_write(0xFFFF0000, bytes(0x10000))
         if 'MCD_TerrainRequest' in self.s:
             self.sub.mem_write(self.s['MCD_ChunkTable_SubStart'], bytes(self.s['MCD_SubUserRAM_End'] - self.s['MCD_ChunkTable_SubStart']))
+            self.sub.mem_write(self.s['MCD_ObjectRespawnBase_Sub'],struct.pack('>I',self.s['MCD_ObjectRespawn_Sub']))
             self.cpu.mem_write(0xA12000, bytes(0x1000))
             self.cpu.mem_write(0xA12003, b'\1')
             self.write('MCD_status', 1)
@@ -271,19 +279,19 @@ class Manager(Native):
     def live(self):
         return {self.get(a,'respawn_addr',2):a for a in self.pool() if self.get(a,'layout_id') and self.get(a,'respawn_addr',2)}
     def rows(self,name):
-        return list(struct.iter_unpack('>HHBB',(ROOT/'level/objects'/name).read_bytes()[:-6]))
+        return decode((ROOT/'level/objects'/name).read_bytes())
     def cam(self,x,y):
         self.write('Camera_X_pos',x,2)
         self.write('Camera_Y_pos',y&65535,2)
     def fixture(self,rows):
         # Replace this level's relative pointer with a small ROM fixture near the
-        # real index. Keep the leading sentinel and real six-byte placement format.
+        # real index. Keep the leading sentinel and eight-byte placement format.
         self.start()
         i=self.s['ObjPos_Index']
         base=i+0x7000
         self.cpu.mem_write(i,struct.pack('>h',base-i))
-        self.cpu.mem_write(base-6,bytes.fromhex('FFFF00000000'))
-        self.cpu.mem_write(base,b''.join(struct.pack('>HHBB',*r) for r in rows)+bytes.fromhex('FFFF00000000'))
+        self.cpu.mem_write(base-SIZE,TERMINATOR)
+        self.cpu.mem_write(base,encode(with_timezones(r) for r in rows))
         return base
     def verify(self,rows,base=None):
         table=self.respawn_base
@@ -293,7 +301,7 @@ class Manager(Native):
         for ptr,a in live.items():
             idx=(ptr-table)&65535
             assert idx<len(rows),(hex(ptr),idx,len(rows))
-            x,y,obj,sub=rows[idx]
+            x,y,obj,timezones,sub=with_timezones(rows[idx])
             assert self.get(a,'obX',2)==x and self.get(a,'obY',2)==y&0xFFF
             assert self.get(a,'code')==self.object_codes[obj]
             assert self.get(a,'obSubtype')==sub
@@ -305,11 +313,12 @@ class Manager(Native):
                     suffix = side.title() + '_Sub'
                     lp = int.from_bytes(self.sub.mem_read(self.s['MCD_Object' + suffix],4),'big')
                     rp = int.from_bytes(self.sub.mem_read(self.s['MCD_ObjectRespawn' + suffix],4),'big')
-                    first, state = self.s['MCD_ObjectPlacements_Sub'], self.s['MCD_ObjectRespawn_Sub']
+                    first = self.s['MCD_ObjectPlacements_Sub']
+                    state = int.from_bytes(self.sub.mem_read(self.s['MCD_ObjectRespawnBase_Sub'],4),'big')
                 else:
                     lp=self.read('Object_load_addr_'+side,4)
                     rp=self.read('Object_respawn_index_'+side,2)
                     first,state=base,table
-                assert lp>=first and (lp-first)%6==0 and (lp-first)//6<=len(rows)
-                assert rp==state+(lp-first)//6,(side,hex(lp),hex(rp))
+                assert lp>=first and (lp-first)%SIZE==0 and (lp-first)//SIZE<=len(rows)
+                assert rp==state+(lp-first)//SIZE,(side,hex(lp),hex(rp))
         return live

@@ -75,6 +75,7 @@ MCD_SubWordRAM:			equ	$80000
 MCD_CommandObjectsLoad:		equ	12
 MCD_CommandObjectState:		equ	13
 MCD_ObjectPlacementCount:	equ	$300
+MCD_ObjectTimeCount:		equ	3	; Present, Past, Future (good/bad share state)
 MCD_ObjectPlacementCapacity:	equ	(MCD_ObjectPlacementCount+2)*omSize
 MCD_ObjectSpawnSize:		equ	12
 MCD_CommandKosPlus:		equ	14

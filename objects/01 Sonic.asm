@@ -314,7 +314,7 @@ Sonic_Water:
 
 		bsr.w	ResumeMusic
 		move.l	#Obj0A,(v_sonicbubbles).w		; load Sonic's breathing bubbles
-		move.b	#$81,(v_sonicbubbles+obSubtype).w
+		move.w	#$81,(v_sonicbubbles+obSubtype).w
 		movea.l	a0,a2
 		bsr.w	Player_UpdateSpeed
 		tst.b	obControl(a0)

@@ -6324,7 +6324,7 @@ DynResize_EHZ2_Routine3:
 		jsr	(FindFreeObj).l
 		bne.s	DynResize_EHZ2_Routine4.return	; retry until a controller slot is available
 		move.l	#EHZBoss,code(a1)		; load EHZ Boss object
-		move.b	#$81,obSubtype(a1)
+		move.w	#$81,obSubtype(a1)
 		move.w	#EHZBoss_LandingX,obX(a1)
 		move.w	#EHZBoss_LandingY+8,obY(a1)
 		move.b	#1,(f_lockscreen).w	; keep power-up music changes on the boss track
@@ -7038,7 +7038,7 @@ RunObject:
 ; ---------------------------------------------------------------------------
 ; OBJECT POINTER ARRAY ; object pointers ; sprite pointers ; object list ; sprite list
 ;
-; Byte IDs in the six-byte placement records resolve through this array once,
+; Byte IDs in the eight-byte placement records resolve through this array once,
 ; when loaded. Dynamically created objects store their code pointer directly.
 ; ---------------------------------------------------------------------------
 Obj_Index_Zero:		dc.l ObjNull
@@ -9249,7 +9249,7 @@ Obj49_Main:
 		move.w	d1,d2
 		subi.w	#$40,d1
 		addi.w	#$40,d2
-		move.b	obSubtype(a0),d3
+		move.w	obSubtype(a0),d3
 		clr.b	obFrame(a0)
 		move.w	(v_player+obX).w,d0
 		cmp.w	d1,d0
@@ -9305,7 +9305,7 @@ Obj50_Init:
 		move.w	#$200,obPriority(a0)
 		move.b	#sprite_bound($10,Map_Obj50_width),obActWid(a0)
 		move.w	#-$100,obVelX(a0)
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		move.b	d0,d1
 		andi.w	#$F0,d1
 		lsl.w	#4,d1
@@ -9791,7 +9791,7 @@ loc_1653E:
 		move.w	#$200,obPriority(a0)
 		move.b	#sprite_bound($10,Map_Obj50_width),obActWid(a0)
 		move.b	#6,obAnim(a0)
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		andi.w	#$F,d0
 		move.w	d0,d1
 		lsl.w	#5,d1
@@ -12318,7 +12318,7 @@ PalLoad_Water_Line1:
 
 Set_IndexedVelocity:
 		moveq	#0,d1
-		move.b	obSubtype(a0),d1
+		move.w	obSubtype(a0),d1
 		add.w	d1,d1
 		add.w	d1,d0
 		lea	Obj_VelocityIndex(pc,d0.w),a1
@@ -12756,8 +12756,9 @@ Change_FlipXUseParent:
 
 
 AutoTunnel_GetPath:	; In Sonic 2, this is found at loc_27310
-		move.b	obSubtype(a0),d0
-		bpl.s	loc_297D6
+		move.w	obSubtype(a0),d0
+		btst	#7,d0
+		beq.s	loc_297D6
 		andi.w	#$1F,d0			; If negative, then the path is reversed
 		add.w	d0,d0
 		add.w	d0,d0

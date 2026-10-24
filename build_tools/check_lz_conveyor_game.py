@@ -23,10 +23,10 @@ if args.spiked:
     data = bytearray(rom.read_bytes())
     pos = symbols['ObjPos_LZ1']
     while struct.unpack_from('>H', data, pos)[0] != 0xFFFF:
-        if data[pos + 4:pos + 6] == bytes((0x1F, 0x80)):
-            data[pos + 5] = 0xC0
+        if data[pos + 4] == 0x1F and struct.unpack_from('>H',data,pos+6)[0] == 0x80:
+            struct.pack_into('>H',data,pos+6,0xC0)
             break
-        pos += 6
+        pos += symbols['omSize']
     else:
         raise AssertionError('No LZ1 group-0 placement')
     struct.pack_into('>H', data, 0x18E, sum(struct.unpack_from('>H', data, i)[0] for i in range(0x200, len(data), 2)) & 65535)

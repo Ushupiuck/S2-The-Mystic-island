@@ -39,7 +39,7 @@ Use `object_size` for pointer arithmetic;
 | `$26` | 1 | `obAngle` |
 | `$28`, `$29` | 1 each | `obColType`, `obColProp` for NPCs |
 | `$2A` | 1 | `obStatus` |
-| `$2C`, `$2D` | 1 each | `obSubtype`, `ob2ndSubtype` |
+| `$2C` | 2 | `obSubtype`: complete word; no universal secondary-subtype byte |
 
 Screen-space Y uses `obScreenY` at `$12`. Display bounds are independent of
 collision radii. Fields are conventions, not separately allocated storage:
@@ -80,26 +80,53 @@ Word/long operands must be even and fit within `$4E`. Object-private `objoff_XX`
 aliases name actual offsets; check the services using them before adding state.
 Clearing/copying must include the final word after the longwords.
 
+All object subtype reads, writes, comparisons, updates and child copies use
+words. The word occupies the former `$2C-$2D` pair without moving other fields
+or changing the slot size. A handler may define primary/secondary settings
+inside that word; its masks and shifts belong to that object. Existing packed
+bit-7 flags are tested explicitly after a word load, rather than relying on
+the word sign bit. Animation/frame bytes remain byte fields: load the subtype
+word into a register before selecting such a field. The W.I.P. button's external
+override is also a word, at its private `$3C`; its `$38` validity and `$3A` used
+flags retain their positions.
+
 ## Placement format and ownership
 
-The `om*` offsets describe the six-byte ROM placement record, not an SST.
+The `om*` offsets describe the eight-byte ROM placement record, not an SST.
 They remain explicit `equ` offsets. Separately, `ObjectLayout_YCoordinateMask`
 (`$0FFF`) extracts bits 0-11 of the word at `omY`;
 `ObjectLayout_LoadAtAnyYMask` (`$8000`) selects its vertical-load-bypass bit 15.
 These masks are neither offsets nor record sizes. Debug has its own record.
 
-Top-level `level/objects/*.bin` files use six-byte S3&K records:
+Top-level `level/objects/*.bin` files use the custom Mystic Island format:
 
 | Offset | Bytes | Meaning |
 | --- | ---: | --- |
 | `$00` | 2 | X, sorted ascending |
 | `$02` | 2 | Y in bits 0-11; X flip bit 13, Y flip bit 14, any-Y loading bit 15 |
 | `$04` | 1 | Full `$01-$FF` object ID; bit 7 is not a remember flag |
-| `$05` | 1 | Subtype |
+| `$05` | 1 | Sonic CD presence mask: Past `$20`, Present `$40`, Future `$80` |
+| `$06` | 2 | Big-endian subtype word |
 
-End each file with `FFFF 0000 0000`. `ObjectLayoutBoundary` adds a backward
+End each file with `FFFF 0000 0000 0000`. `ObjectLayoutBoundary` adds a backward
 boundary outside the editable data. Empty acts still require the end record.
-Act selection uses four pointers per zone. SonLVL uses `objectfmt=S3K`.
+Act selection uses four pointers per zone. All converted placements use `$E0`,
+appearing in every era. Zero presence bits disable a placement. Good and Bad
+Future share the Future bit, as in Sonic CD. Project `Current_Timezone` values
+remain Present=0, Past=1, Good Future=2, Bad Future=3.
+The mask and three-bank ownership follow scddisasm
+[`CheckObjTimeZone` and `SpawnObject`](https://github.com/sonicretro/scddisasm/blob/f8cf3f0af7bf419d18182ba98554f09307ad3cc6/src/Level/Object%20Spawner.asm);
+our full IDs and Y flags retain their S3&K meanings.
+
+SonLVL uses `objectfmt=Custom` with `Common/ObjectLayout.cs`. It preserves
+full-byte IDs, our Y flags, the complete subtype and timezone mask. Its raw
+Subtype field is a 16-bit hex value; named object properties operate on their
+own fields without discarding other bits. See the [editor guide](../SonLVL%20INI%20Files/README.md).
+`build_tools/object_layout.py` owns the tools' binary codec and an explicit
+`--from-s3k` conversion command. Original-game importers decode their original
+source format and emit the new format; do not reinterpret original S1/S2 data
+as already converted records. Debug's separate records are now 14 bytes and
+also carry a word subtype, including the bonus-stage ring entry.
 
 The camera is rounded into `$80`-pixel loading bands. The retained X interval
 runs from one band behind to `$280` ahead; the Y range is `$80` above through
@@ -112,8 +139,9 @@ and respawn pointers. A full pool schedules a stationary retry. Normal object
 lifetime checks remain X-based: vertical filtering does not add automatic
 Y-based deletion to every object.
 
-On the CD branch, `MCD_ObjectRespawn_Sub` has `$300` bytes, one per placement:
-bit 7 marks loaded/consumed, with seven local-state bits. `respawn_addr` stores
+On the CD branch, `MCD_ObjectRespawn_Sub` has three `$300`-byte banks, one for
+each era, with one byte per placement. Good and Bad Future share the third
+bank. Bit 7 marks loaded/consumed, with seven local-state bits. `respawn_addr` stores
 index + 1, and zero means dynamic/Debug-owned. Use `MCD_RespawnRead`,
 `MCD_RespawnConsume`, `MCD_RespawnRelease` and `MCD_RespawnBump`; never convert
 a CD placement handle to an MD pointer. The cartridge branch retains its
@@ -126,9 +154,12 @@ low-word pointer into `Object_Respawn_Table`.
 - Children do not share the parent's respawn ownership. Delete packed helper SSTs
   directly: their overlaid `$22` bytes are child data, not a placement handle.
 
-Normal level entry clears placement state. `Respawn_table_keep` supports
-reinitializing the same live layout. Timezone-specific object placement remains
-future work. Constructors must handle helper-allocation failure without leaking
+Normal level entry clears all era banks. `Respawn_table_keep` supports
+reinitializing the same live layout. Era changes select the corresponding bank
+and rescan the loading window, even with a stationary camera. Time-warp cleanup
+of already active objects and generator/Good Future suppression remain future
+work; the placement filter does not implement a time-travel transition.
+Constructors must handle helper-allocation failure without leaking
 partial parents or loaded bits.
 
 ## Composites and other records

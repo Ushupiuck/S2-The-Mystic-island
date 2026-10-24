@@ -153,10 +153,10 @@ Flicky_EndingProperties:
 ; ---------------------------------------------------------------------------
 
 Flicky_Init:
-		tst.b	obSubtype(a0)
+		tst.w	obSubtype(a0)
 		beq.s	FlickyRandom
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		add.w	d0,d0
 		move.b	d0,obRoutine(a0)
 		subi.w	#$14,d0		; d0 = (subtype-$A)*2
@@ -273,7 +273,7 @@ Flicky_Walk:
 		add.w	d1,obY(a0)
 		move.w	animal_y_vel(a0),obVelY(a0)
 +
-		tst.b	obSubtype(a0)
+		tst.w	obSubtype(a0)
 		bne.s	Flicky_ChkDel
 		tst.b	obRender(a0)
 		bpl.w	DeleteObject
@@ -289,9 +289,9 @@ Flicky_Fly:
 		bpl.s	+
 		add.w	d1,obY(a0)
 		move.w	animal_y_vel(a0),obVelY(a0)
-		tst.b	obSubtype(a0)
+		tst.w	obSubtype(a0)
 		beq.s	+
-		cmpi.b	#$A,obSubtype(a0)
+		cmpi.w	#$A,obSubtype(a0)
 		beq.s	+
 		neg.w	obVelX(a0)
 		bchg	#0,obRender(a0)
@@ -302,7 +302,7 @@ Flicky_Fly:
 		addq.b	#1,obFrame(a0)
 		andi.b	#1,obFrame(a0)
 +
-		tst.b	obSubtype(a0)
+		tst.w	obSubtype(a0)
 		bne.s	Flicky_ChkDel
 		tst.b	obRender(a0)
 		bpl.w	DeleteObject

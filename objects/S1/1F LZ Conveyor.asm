@@ -32,8 +32,9 @@ LCon_Index:	dc.w LCon_Init-LCon_Index
 		dc.w LCon_Wheel-LCon_Index
 ; ---------------------------------------------------------------------------
 LCon_Init:
-		move.b	obSubtype(a0),d0
-		bmi.w	LCon_Spawn
+		move.w	obSubtype(a0),d0
+		btst	#7,d0
+		bne.w	LCon_Spawn
 		move.l	#Map_LConv,obMap(a0)
 		move.b	#Map_LConv_height,height_pixels(a0)
 		move.b	#sprite_bound($10,Map_LConv_width),obActWid(a0)
@@ -147,7 +148,7 @@ LCon_Spawn:
 		out_of_range2	UnloadObject,obX(a0)
 		; out_of_range2 changes d0, so reload the actual group number.
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		andi.w	#$3F,d0			; group selector excludes the damage modifier
 		cmpi.w	#LCon_GroupCount,d0
 		bhs.s	LCon_Unload
@@ -170,7 +171,7 @@ LCon_Spawn:
 		rts
 .spawn:
 		moveq	#0,d4
-		move.b	obSubtype(a0),d4
+		move.w	obSubtype(a0),d4
 		andi.w	#$40,d4
 		lsr.w	#6,d4			; pass the group's damage flag to every child
 		move.w	obX(a0),d2
@@ -187,7 +188,7 @@ LCon_Spawn:
 		move.w	d2,LCon_originX(a1)
 		move.w	d3,LCon_originY(a1)
 		move.w	(a2)+,d0
-		move.b	d0,obSubtype(a1)
+		move.w	d0,obSubtype(a1)
 		lsr.w	#8,d0			; recipe upper byte supplies extra settings
 		or.b	d4,d0
 		move.b	d0,LCon_settings(a1)

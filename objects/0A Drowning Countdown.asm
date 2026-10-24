@@ -31,8 +31,9 @@ Obj0A_Init:
 		move.b	#$84,obRender(a0)
 		move.b	#sprite_bound($10,Map_Bubbles_width),obActWid(a0)
 		move.w	#$80,obPriority(a0)
-		move.b	obSubtype(a0),d0
-		bpl.s	loc_11ECC
+		move.w	obSubtype(a0),d0
+		btst	#7,d0
+		beq.s	loc_11ECC
 		addq.b	#8,obRoutine(a0)
 		andi.w	#$7F,d0
 		move.b	d0,objoff_37(a0)
@@ -274,7 +275,7 @@ loc_1220C:
 loc_12242:
 		add.w	d0,obX(a1)
 		move.w	obY(a2),obY(a1)
-		move.b	#6,obSubtype(a1)
+		move.w	#6,obSubtype(a1)
 		tst.w	objoff_30(a0)
 		beq.s	loc_1228E
 		andi.w	#7,objoff_3E(a0)
@@ -286,7 +287,7 @@ loc_12242:
 		move.w	(Timer_frames).w,d0
 		andi.b	#3,d0
 		bne.s	+
-		move.b	#$E,obSubtype(a1)
+		move.w	#$E,obSubtype(a1)
 +
 		subq.b	#1,objoff_38(a0)
 		bpl.s	.return
@@ -305,7 +306,7 @@ loc_1228E:
 		bne.s	loc_122BA
 		bset	#6,objoff_3A(a0)
 		bne.s	loc_122D2
-		move.b	d2,obSubtype(a1)
+		move.w	d2,obSubtype(a1)
 		move.w	#$1C,objoff_3C(a1)
 
 loc_122BA:
@@ -313,7 +314,7 @@ loc_122BA:
 		bne.s	loc_122D2
 		bset	#6,objoff_3A(a0)
 		bne.s	loc_122D2
-		move.b	d2,obSubtype(a1)
+		move.w	d2,obSubtype(a1)
 		move.w	#$1C,objoff_3C(a1)
 
 loc_122D2:

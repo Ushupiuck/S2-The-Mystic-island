@@ -22,7 +22,7 @@ Obj92_Index:
 Obj92_Init:
 		addq.b	#2,obRoutine(a0)
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		nop
 		nop
 	;	lea	(PaletteChangerDataIndex).l,a1

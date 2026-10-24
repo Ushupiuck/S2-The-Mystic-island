@@ -18,7 +18,7 @@ MotoBug_Index:
 ; ===========================================================================
 
 MotoBug_Init:
-		tst.b	obSubtype(a0)			; MotoBug or Redz?
+		tst.w	obSubtype(a0)			; MotoBug or Redz?
 		bne.s	.redz
 		; MotoBug-specific init
 		move.l	#Map_obj40,obMap(a0)
@@ -64,7 +64,7 @@ MotoBug_Main:
 		move.b	ob2ndRout(a0),d0
 		move.w	MotoBug_Main_Index(pc,d0.w),d1
 		jsr	MotoBug_Main_Index(pc,d1.w)
-		tst.b	obSubtype(a0)			; MotoBug or Redz?
+		tst.w	obSubtype(a0)			; MotoBug or Redz?
 		bne.s	.redz
 		lea	Ani_MotoBug(pc),a1
 		bsr.w	AnimateSprite
@@ -84,7 +84,7 @@ MotoBug_Move:
 		bpl.s	.return				; if so, branch
 		addq.b	#2,ob2ndRout(a0)
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0		; 0=MotoBug, 1=Redz
+		move.w	obSubtype(a0),d0		; 0=MotoBug, 1=Redz
 		neg.b	d0				; 0?0, 1?$FF
 		andi.b	#$80,d0				; 0?0, $FF?$80
 		move.w	#-$100,obVelX(a0)		; base: MotoBug speed
@@ -104,7 +104,7 @@ MotoBug_Floor:
 		cmpi.w	#$C,d1
 		bge.s	MotoBug_StopMoving
 		add.w	d1,obY(a0)
-		tst.b	obSubtype(a0)			; is this a Redz? (no smoke)
+		tst.w	obSubtype(a0)			; is this a Redz? (no smoke)
 		bne.s	.return
 		subq.b	#1,objoff_37(a0)		; countdown to next smoke puff
 		bpl.s	.return

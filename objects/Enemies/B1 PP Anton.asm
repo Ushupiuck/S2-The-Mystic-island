@@ -33,7 +33,7 @@ PP_Anton_Init:
 	move.b	#$12,obColType(a0)
 	move.w	obX(a0),objoff_34(a0)
 	move.w	#ArtTile_PP_Anton,obGfx(a0)
-	tst.b	obSubtype(a0)
+	tst.w	obSubtype(a0)
 	bne.w	.Damaged
 	move.l	#-$10000,d0
 	moveq	#0,d1

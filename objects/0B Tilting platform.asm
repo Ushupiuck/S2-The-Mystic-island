@@ -26,7 +26,7 @@ Obj0B_Init:
 		move.b	#sprite_bound($10,Map_Obj0B_width),obActWid(a0)
 		move.w	#$200,obPriority(a0)
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		andi.w	#$F0,d0
 		addi.w	#$10,d0
 		move.w	d0,d1
@@ -34,7 +34,7 @@ Obj0B_Init:
 		move.w	d0,tilt_timer(a0)
 		move.w	d0,tilt_duration(a0)
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		andi.w	#$F,d0
 		addq.w	#1,d0
 		lsl.w	#4,d0

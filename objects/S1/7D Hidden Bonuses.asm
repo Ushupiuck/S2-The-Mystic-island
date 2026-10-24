@@ -48,12 +48,13 @@ Obj7D_Main:
 		move.w	#make_art_tile(ArtTile_Hidden_Points,0,1),obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#sprite_bound($10,Map_Obj7D_width),obActWid(a0)
-		move.b	obSubtype(a0),obFrame(a0)
+		move.w	obSubtype(a0),d0
+		move.b	d0,obFrame(a0)
 		move.w	#(60*2)-1,objoff_34(a0)
 		move.w	#sfx_Bonus,d0
 		jsr	(PlaySound_Special).l
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		add.w	d0,d0
 		move.w	Obj7D_Points(pc,d0.w),d0
 		jsr	(AddPoints).l

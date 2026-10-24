@@ -44,8 +44,8 @@ Ballhog_Main:
 		move.w	#0,obVelY(a0)
 
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0	; move subtype to d0
-		subi.b	#$10,d0			; substract $0F. If more, means timed mode (yay, high byte recycling)
+		move.w	obSubtype(a0),d0	; move subtype to d0
+		subi.w	#$10,d0			; substract $0F. If more, means timed mode (yay, high byte recycling)
 		beq.s	.timed
 		bls.s	.normalmode		; subtypes $00-$0F are horizontal
 
@@ -58,7 +58,7 @@ Ballhog_Main:
 		move.w	#make_art_tile(ArtTile_Ball_HogV,1,0),obGfx(a0) ; and art pointer
 		move.b	#4,ob2ndRout(a0)	; set to timed mode
 
-		cmpi.b	#$F,d0
+		cmpi.w	#$F,d0
 		bpl.s	.stationary_proto
 		sf	ob2ndRout(a0)		; Normal mode
 		add.w	d0,d0			; multiply by 60 frames (1 second)
@@ -76,7 +76,7 @@ Ballhog_Main:
 ; ---------------------------------------------------------------------------
 
 .stationary_proto
-		subi.b	#$10,d0
+		subi.w	#$10,d0
 		add.w	d0,d0			; multiply by 60 frames (1 second)
 		add.w	d0,d0
 		move.w	d0,d1
@@ -141,7 +141,7 @@ Ballhog_MakeBall:
 		move.b	#$87,obColType(a1)
 		move.b	#sprite_bound(8,Map_BallHogH_width),obActWid(a1)
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0	; move subtype to d0
+		move.w	obSubtype(a0),d0	; move subtype to d0
 		add.w	d0,d0			; multiply by 60 frames (1 second)
 		add.w	d0,d0
 		move.w	d0,d1
@@ -159,7 +159,7 @@ Ballhog_MakeBall:
 		move.w	d2,obVelX(a1)
 		add.w	d0,obX(a1)
 		addi.w	#$C,obY(a1)
-		move.b	obSubtype(a0),obSubtype(a1)	; copy object type from Ball Hog
+		move.w	obSubtype(a0),obSubtype(a1)	; copy object type from Ball Hog
 
 .no_free_ram:
 		bra.w	MarkObjGone

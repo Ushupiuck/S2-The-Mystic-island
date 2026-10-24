@@ -1,5 +1,5 @@
 ; ---------------------------------------------------------------------------
-; S3&K Debug controls, with routine-pointer SSTs and twelve-byte Debug entries.
+; S3&K Debug controls, with routine-pointer SSTs and fourteen-byte Debug entries.
 ; Only player 1 enters here. B: placement; hold C + press B: frame cycling.
 ; Placement: A next, hold A + press C previous, C place, B return to play.
 ; The existing full-height Debug travel range is retained for arena testing.
@@ -167,10 +167,7 @@ Debug_CycleObjects:
 LoadDebugObjectSprite:
 		moveq	#0,d0
 		move.b	(Debug_object).w,d0
-		move.w	d0,d1
-		add.w	d0,d0
-		add.w	d1,d0
-		lsl.w	#2,d0			; entry * 12
+		mulu.w	#DebugEntry_size,d0
 		move.l	DebugEntry_mappings(a2,d0.w),obMap(a0)
 		move.w	DebugEntry_art_tile(a2,d0.w),obGfx(a0)
 		move.b	DebugEntry_frame(a2,d0.w),obFrame(a0)
@@ -189,12 +186,9 @@ Debug_SpawnObject:
 		move.b	d0,obStatus(a1)
 		moveq	#0,d0
 		move.b	(Debug_object).w,d0
-		move.w	d0,d1
-		add.w	d0,d0
-		add.w	d1,d0
-		lsl.w	#2,d0			; entry * 12
+		mulu.w	#DebugEntry_size,d0
 		move.l	DebugEntry_code(a2,d0.w),code(a1)
-		move.b	DebugEntry_subtype(a2,d0.w),obSubtype(a1)
+		move.w	DebugEntry_subtype(a2,d0.w),obSubtype(a1)
 		rts				; cleared SST => respawn_addr = 0
 
 Debug_ExitDebugMode:
@@ -299,6 +293,7 @@ Debug_FrameCycle:
 Debug_SS:
 		dc.w 1
 		dc.l Obj12,Map_Ring
+		dc.w 0
 		dc.b 0,0
 		dc.w make_art_tile(ArtTile_SS_Rings,1,0)
 

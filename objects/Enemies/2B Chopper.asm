@@ -29,7 +29,7 @@ Chop_Main:	; Routine 0
 		move.w	#$200,obPriority(a0)
 		move.b	#9,obColType(a0)
 		move.b	#sprite_bound($10,sprite_bound(Map_Obj2B_width,Map_obj2B_1_width)),obActWid(a0)
-		move.b	obSubtype(a0),d1	; get subtype (for vertical speed)
+		move.w	obSubtype(a0),d1	; get subtype (for vertical speed)
 		add.w	d1,d1			; filter out which entry it is
 		move.w	Chopper_JumpHeights(pc,d1.w),obVelY(a0)		; and store the vertical speed
 		move.w	obY(a0),chop_origY(a0)	; save original position
@@ -43,7 +43,7 @@ Chop_ChgSpeed:	; Routine 2
 		cmp.w	obY(a0),d0		; has Chopper returned to its original position?
 		bcc.s	.chganimation		; if not, branch
 		move.w	d0,obY(a0)
-		move.b	obSubtype(a0),d1	; get subtype (for vertical speed)
+		move.w	obSubtype(a0),d1	; get subtype (for vertical speed)
 		add.w	d1,d1			; filter out which entry it is
 		move.w	Chopper_JumpHeights(pc,d1.w),obVelY(a0)		; and store the vertical speed
 

@@ -35,7 +35,7 @@ PP_Tamabboh_Init:
 	move.b	#$F,obHeight(a0)
 	move.w	obX(a0),objoff_30(a0)
 	move.w	#ArtTile_PP_Tamabboh,obGfx(a0)
-	tst.b	obSubtype(a0)
+	tst.w	obSubtype(a0)
 	bne.w	.AltMaps
 	lea	Map_PP_Tamabboh1(pc),a1
 	lea	Ani_PP_Tamabboh1(pc),a2
@@ -75,7 +75,7 @@ PP_Tamabboh_Position:
 PP_Tamabboh_Main:
 	tst.w	(Debug_placement_mode).w
 	bne.w	.SkipRange
-	tst.b	obSubtype(a0)
+	tst.w	obSubtype(a0)
 	bne.w	.SkipRange
 	tst.w	objoff_3A(a0)
 	beq.w	.DoRange
@@ -170,7 +170,7 @@ PP_Tamabboh_Fire:
 	move.b	#4,obRoutine(a0)
 	move.b	#0,obAnim(a0)
 	move.w	#$78,objoff_3A(a0)
-	tst.b	obSubtype(a0)
+	tst.w	obSubtype(a0)
 	bne.w	.End
 	jsr	(FindFreeObj).l
 	bne.w	.End
@@ -195,7 +195,7 @@ PP_Tamabboh_Fire:
 
 PP_Tamabboh_InitMissile:
 	move.l	#PP_TamabbohMissile,code(a1)
-	move.b	#1,obSubtype(a1)
+	move.w	#1,obSubtype(a1)
 	move.w	obGfx(a0),obGfx(a1)
 	move.w	obPriority(a0),obPriority(a1)
 	addi.w	#$80,obPriority(a1)

@@ -27,7 +27,7 @@ Obj23_Init:
 		move.w	#$180,obPriority(a0)
 		move.b	#sprite_bound(8,Map_obj23_width),obActWid(a0)
 		andi.b	#3,obStatus(a0)
-		tst.b	obSubtype(a0)			; was the object created by a Newtron?
+		tst.w	obSubtype(a0)			; was the object created by a Newtron?
 		beq.s	Obj23_Animate			; if not, branch
 		move.b	#8,obRoutine(a0)
 		move.b	#$87,obColType(a0)

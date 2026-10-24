@@ -490,7 +490,7 @@ dma68kToVDPChunk macro source,dest,length,type
 
 ; Macro for marking the boundaries of an object layout file
 ObjectLayoutBoundary macro
-		dc.w	$FFFF,$0000,$0000
+		dc.w	$FFFF,$0000,$0000,$0000
     endm
 
 ; macro to move the absolute value of the source in the destination

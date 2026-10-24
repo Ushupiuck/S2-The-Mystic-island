@@ -53,8 +53,9 @@ MCD_Terrain_SubEnd:
 ; Loader working state, beyond the expanded chunks and resident terrain.
 MCD_ObjectBoundary_Sub:	ds.b	omSize
 MCD_ObjectPlacements_Sub:	ds.b	(MCD_ObjectPlacementCount+1)*omSize
-MCD_ObjectRespawn_Sub:	ds.b	MCD_ObjectPlacementCount
+MCD_ObjectRespawn_Sub:	ds.b	MCD_ObjectPlacementCount*MCD_ObjectTimeCount
 MCD_ObjectRespawn_SubEnd:
+MCD_ObjectRespawnBase_Sub:	ds.l	1	; selected era's state bank
 MCD_ObjectFront_Sub:	ds.l	1
 MCD_ObjectBack_Sub:	ds.l	1
 MCD_ObjectRespawnFront_Sub:	ds.l	1
@@ -70,6 +71,8 @@ MCD_ObjectStreamBytes_Sub:	ds.w	1
 MCD_ObjectRoutine_Sub:	ds.b	1
 MCD_ObjectRetry_Sub:	ds.b	1
 MCD_ObjectKeep_Sub:	ds.b	1
+MCD_ObjectTimeZone_Sub:	ds.b	1	; cached Current_Timezone, $FF forces selection
+MCD_ObjectTimeMask_Sub:	ds.b	1
 			ds.b	1
 MCD_ObjectFreeSlots_Sub:	ds.w	MCD_ObjectSlotCount
 MCD_Objects_SubEnd:
@@ -135,7 +138,7 @@ MCD_RingUpdateCount_Bank1:	equ	MCD_ProgramRAM+(MCD_RingUpdateCount_Sub&$1FFFF)
 MCD_TerrainFrame:	ds.b	MCD_TerrainFrame_SubEnd-MCD_TerrainCamera_Sub
 MCD_ObjectFrameMinY:	ds.w	1
 MCD_ObjectFrameEnabled:	ds.b	1
-			ds.b	1
+MCD_ObjectFrameTimeZone:	ds.b	1
 MCD_ObjectFrameSlots:	ds.b	MCD_ObjectSlotBytes
 MCD_PLCBudget:		ds.b	1
 			ds.b	1
@@ -167,6 +170,7 @@ MCD_TerrainStream_Sub:	equ	MCD_SubWordRAM+(MCD_TerrainStream-MCD_WordRAM)
 MCD_TerrainStage_Sub:	equ	MCD_SubWordRAM+(MCD_TerrainStage-MCD_WordRAM)
 MCD_ObjectFrameMinY_Sub:	equ	MCD_SubWordRAM+(MCD_ObjectFrameMinY-MCD_WordRAM)
 MCD_ObjectFrameEnabled_Sub:	equ	MCD_SubWordRAM+(MCD_ObjectFrameEnabled-MCD_WordRAM)
+MCD_ObjectFrameTimeZone_Sub:	equ	MCD_SubWordRAM+(MCD_ObjectFrameTimeZone-MCD_WordRAM)
 MCD_ObjectFrameSlots_Sub:	equ	MCD_SubWordRAM+(MCD_ObjectFrameSlots-MCD_WordRAM)
 MCD_ObjectReply_Sub:	equ	MCD_SubWordRAM+(MCD_ObjectReply-MCD_WordRAM)
 	if MCD_SubUserRAM_End>MCD_SubStack_Start

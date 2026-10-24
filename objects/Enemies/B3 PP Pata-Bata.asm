@@ -21,7 +21,7 @@ PP_PataBata:
 	move.w	obY(a0),objoff_32(a0)
 	move.w	#$8000,objoff_34(a0)
 	move.w	#ArtTile_PP_PataBata,obGfx(a0)
-	tst.b	obSubtype(a0)
+	tst.w	obSubtype(a0)
 	bne.w	.Damaged
 	move.l	#-$8000,d0
 	move.w	#-$200,d1

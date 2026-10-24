@@ -22,8 +22,9 @@ data and goals; they remain level-design templates.
 
 All 64 act entries have headers, placements, starts, bounds, collision,
 cards, Debug lists and progression. SonLVL has matching present-day sections.
-Timezone headers/layouts are prepared copies; time travel and timezone-specific
-placement/generator suppression remain unfinished.
+Timezone headers/layouts are prepared copies. Object placements have Sonic CD
+era-presence masks and per-era state; time travel and generator/Good Future
+suppression remain unfinished. See [placement ownership](Objects.md#placement-format-and-ownership).
 
 ## Per-act art
 

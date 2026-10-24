@@ -9,12 +9,14 @@ https://tcrf.net/Proto:Sonic_the_Hedgehog_2_(Genesis)
 ; ---------------------------------------------------------------------------
 
 TODO:
+Fix rotating special-stage Debug to place real grid items, snap to cells and spiral through free authored cells without overwriting occupied cells or padding < IN PROGRESS
+Clean special-stage results oval trim against the current shared palette < IN PROGRESS
 Design distinct terrain/art/objects for the newly enabled zone slots and four-act templates; MTZ1 remains the existing unfinished test stage, MTZ2-4 and SMZ3-4 are safe editable starters, and LV0A1 currently showcases imported PP enemies < NEXT level-content work
 Design an intentional Scrap Madness act-2 ending/cutscene; the current port uses the normal signpost
 Add inverse-gravity player physics/collision before enabling S3&K's Debug gravity-reversal cheat < FUTURE engine feature
 Add cached DMA switching between interleaved S3 horizontal spike art and linear S1 horizontal spike art in the shared bank, after the S3&K object-manager migration; handle preloading, backtracking and visible-bank ownership < FUTURE, separate task
 Implement time-travel transitions and replace the dummy timezone asset/layout tables with distinct data; header/layout selection already supports four timezones and four acts
-Port Sonic CD's timezone-aware object placement from the experimental branch; adapt the S3&K loader/respawn interface where useful < LONG TERM; separate from LoadZone and its asset/layout tables
+Complete time-warp cleanup of active objects and Sonic CD generator/Good Future suppression; eight-byte era-aware placements and per-era respawn state are implemented < LONG TERM; separate from LoadZone and its asset/layout tables
 Port remaining level animated-art/block setup to S1/S3&K style through Animate_Tiles and AniPLC scripts; replace make_block_tile mapping patches with regular block data < FUTURE, separate from the S1 bonus-stage background conversion
 Compare remaining S3&K power-up behavior and timer layout with the current per-player implementation
 Compare S3&K's byte timers (150 ticks, decremented every 8 frames), expiry/cleanup and music-tempo handling; retain shared Sonic/Tails invincibility and one star composite SST per live player, with shared art
@@ -33,6 +35,7 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 
 ; ---------------------------------------------------------------------------
 Finished:
+Expand object placements to XXXX YYYY OOTT SSSS and every object subtype access to words at the existing $2C-$2D pair; preserve all universals/$4E SSTs, convert layouts/Debug/payloads, implement CD era masks/state and custom SonLVL word properties, and verify native/runtime/editor paths < DONE
 Give all 64 acts explicit water-enable, initial-height and dynamic-routine entries; preserve LZ/HPZ behavior and verify primary/companion Tails water crossings, countdown and resurfacing in NTSC/PAL < DONE
 Apply and publish the tested PLC/VBlank/collision/continuation optimizations and shorter CD mailbox accesses; retain direct returns and verify actual dispatcher timings and gameplay < DONE
 Finish the LZ conveyor with S2/S3&K relative paths/full solidity, complete-group allocation retry, original LZ spacing, optional spiked undersides and switch-E reversal for both variants; restore only its LZ1 groups/wheels and add editor/runtime checks < DONE

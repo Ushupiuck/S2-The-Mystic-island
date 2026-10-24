@@ -36,6 +36,7 @@ MCD_LoadObjectPlacements:
 		move.w	(a0)+,d0
 		move.w	d0,(a1)+
 		move.l	(a0)+,(a1)+
+		move.w	(a0)+,(a1)+
 		addq.w	#omSize,d1
 		cmpi.w	#omSize,d1		; the first $FFFF is the backward boundary
 		beq.s	.next
@@ -73,6 +74,9 @@ MCD_ObjectsNeedJob:
 		andi.w	#Object_Load_CoarseMask,d1
 		cmp.w	(Camera_Y_pos_coarse).w,d1
 		bne.s	.needed
+		move.b	(Current_Timezone).w,d1
+		cmp.b	(MCD_ObjectFrameTimeZone).l,d1
+		bne.s	.needed
 		tst.b	(Object_load_retry).w
 		beq.s	.return
 .needed:
@@ -87,6 +91,7 @@ MCD_PrepareObjectFrame:
 		move.b	d0,(MCD_ObjectFrameEnabled).l
 		beq.s	.return
 		move.w	(Camera_Min_Y_pos).w,(MCD_ObjectFrameMinY).l
+		move.b	(Current_Timezone).w,(MCD_ObjectFrameTimeZone).l
 		move.w	(Camera_X_pos).w,d0
 		andi.w	#Object_Load_CoarseMask,d0
 		move.w	d0,(Camera_X_pos_coarse).w
@@ -136,8 +141,9 @@ MCD_ApplyObjectReply:
 		move.b	(a2)+,d0
 		move.b	d0,obRender(a1)
 		move.b	d0,obStatus(a1)
-		move.b	(a2)+,obSubtype(a1)
-		move.w	(a2)+,d0
+		moveq	#0,d0
+		move.b	(a2)+,d0		; full byte ID beside flags; reply stays 12 bytes
+		move.w	(a2)+,obSubtype(a1)
 		lsl.w	#2,d0
 		move.l	(a3,d0.w),code(a1)
 		move.w	(a2)+,respawn_addr(a1)

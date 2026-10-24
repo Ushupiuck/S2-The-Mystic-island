@@ -24,7 +24,7 @@ Obj03_Init:
 		move.b	#4,obRender(a0)
 		move.b	#sprite_bound($10,Map_Obj03_width),obActWid(a0)
 		move.w	#$280,obPriority(a0)
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		btst	#2,d0
 		beq.s	loc_13EA4
 		addq.b	#2,obRoutine(a0)
@@ -86,8 +86,9 @@ loc_13F10:
 		tst.w	d5
 		bpl.w	loc_13FA8
 		swap	d0
-		move.b	obSubtype(a0),d0
-		bpl.s	loc_13F26
+		move.w	obSubtype(a0),d0
+		btst	#7,d0
+		beq.s	loc_13F26
 		btst	#1,obStatus(a1)
 		bne.s	loc_13FA2
 
@@ -186,8 +187,9 @@ loc_14012:
 		tst.w	d5
 		bpl.w	loc_140AA
 		swap	d0
-		move.b	obSubtype(a0),d0
-		bpl.s	loc_14028
+		move.w	obSubtype(a0),d0
+		btst	#7,d0
+		beq.s	loc_14028
 		btst	#1,obStatus(a1)
 		bne.s	loc_140A4
 

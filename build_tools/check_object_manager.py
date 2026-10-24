@@ -3,7 +3,7 @@
 
 Build first with build.lua. This executes the ROM's 68000 instructions; only
 external sound, DMA hardware, and the HUD's VDP writer are stubbed. Fixtures
-use the real six-byte placement records and an independent window model.
+use the real eight-byte placement records and an independent window model.
 """
 from pathlib import Path
 import argparse

@@ -31,7 +31,7 @@ Pri_Init:	; Routine 0
 		move.b	#4,obRender(a0)
 		move.w	obY(a0),pri_origY(a0)
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		add.w	d0,d0
 		add.w	d0,d0
 		lea	Pri_Var(pc,d0.w),a1

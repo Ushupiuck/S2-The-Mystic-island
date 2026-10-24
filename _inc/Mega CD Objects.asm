@@ -19,6 +19,7 @@ MCD_SubObjectsLoad:
 		dbf	d1,.copy
 		move.b	(MCD_SubMainCommand).l,(MCD_ObjectKeep_Sub).l
 		clr.b	(MCD_ObjectRoutine_Sub).l
+		st	(MCD_ObjectTimeZone_Sub).l
 		bset	#0,(MCD_SubMemoryMode).l
 		moveq	#0,d0
 		rts
@@ -26,8 +27,27 @@ MCD_SubObjectsLoad:
 ; Called as part of the terrain frame job, sharing its one Word-RAM handoff.
 MCD_SubObjectsFrame:
 		tst.b	(MCD_ObjectFrameEnabled_Sub).l
-		beq.s	.return
+		beq.w	.return
 		move.w	(MCD_ObjectFrameMinY_Sub).l,(MCD_ObjectMinY_Sub).l
+		moveq	#0,d0
+		move.b	(MCD_ObjectFrameTimeZone_Sub).l,d0
+		cmp.b	(MCD_ObjectTimeZone_Sub).l,d0
+		beq.s	.slots_ready
+		cmpi.w	#4,d0
+		bhs.w	MCD_SubError
+		move.b	d0,(MCD_ObjectTimeZone_Sub).l
+		lea	.time_masks(pc),a0
+		move.b	(a0,d0.w),(MCD_ObjectTimeMask_Sub).l
+		cmpi.w	#3,d0
+		bne.s	.time_bank
+		moveq	#2,d0			; good/bad Future share Sonic CD's Future state
+.time_bank:
+		mulu.w	#MCD_ObjectPlacementCount,d0
+		lea	(MCD_ObjectRespawn_Sub).l,a0
+		adda.w	d0,a0
+		move.l	a0,(MCD_ObjectRespawnBase_Sub).l
+		clr.b	(MCD_ObjectRoutine_Sub).l	; rescan this era even with a stationary camera
+.slots_ready:
 		lea	(MCD_ObjectFrameSlots_Sub).l,a2
 		lea	(MCD_ObjectFreeSlots_Sub).l,a1
 		moveq	#0,d0
@@ -55,6 +75,8 @@ MCD_SubObjectsFrame:
 		move.w	d0,(MCD_ObjectReply_Sub+2).l
 .return:
 		rts
+.time_masks:
+		dc.b ObjectTime_Present,ObjectTime_Past,ObjectTime_Future,ObjectTime_Future
 
 ; Persistent-state service: index+1 in argument, operation in command high byte.
 ; 0 read, 1 set consumed bit, 2 release loaded bit, 3 capped bumper increment,
@@ -66,7 +88,7 @@ MCD_SubObjectState:
 		subq.w	#1,d1
 		cmpi.w	#MCD_ObjectPlacementCount,d1
 		bhs.w	MCD_SubError
-		lea	(MCD_ObjectRespawn_Sub).l,a2
+		movea.l	(MCD_ObjectRespawnBase_Sub).l,a2
 		move.b	(MCD_SubMainCommand).l,d2
 		beq.s	.read
 		subq.b	#1,d2
@@ -113,10 +135,11 @@ MCD_SubObjects_Init:
 		move.l	d0,(a0)+
 		dbf	d1,.clear
 .layout:
+		st	(MCD_ObjectKeep_Sub).l	; subsequent era changes retain all three banks
 		lea	(MCD_ObjectPlacements_Sub).l,a0
 		move.l	a0,(MCD_ObjectFront_Sub).l
 		move.l	a0,(MCD_ObjectBack_Sub).l
-		lea	(MCD_ObjectRespawn_Sub).l,a3
+		movea.l	(MCD_ObjectRespawnBase_Sub).l,a3
 		move.w	(MCD_TerrainCamera_Sub).l,d6
 		subi.w	#Object_Load_XBehind,d6
 		bcc.s	.front
@@ -133,7 +156,7 @@ MCD_SubObjects_Init:
 		move.l	a0,(MCD_ObjectFront_Sub).l
 		move.l	a3,(MCD_ObjectRespawnFront_Sub).l
 		movea.l	(MCD_ObjectBack_Sub).l,a0
-		lea	(MCD_ObjectRespawn_Sub).l,a3
+		movea.l	(MCD_ObjectRespawnBase_Sub).l,a3
 		subi.w	#Object_Load_XBehind,d6
 		bcs.s	.back_ready
 .seek_back:
@@ -338,6 +361,9 @@ MCD_SubObjects_CheckY:
 ; with a0 in the caller, and leave d0/a1 as the continuing free-slot search.
 ; ---------------------------------------------------------------------------
 MCD_SubObjects_LoadWrapped:
+		move.b	omTimeZones(a0),d1
+		and.b	(MCD_ObjectTimeMask_Sub).l,d1
+		beq.w	MCD_SubObjects_Skip
 		tst.b	(a3)
 		bmi.w	MCD_SubObjects_Skip
 		move.w	omY(a0),d2
@@ -352,6 +378,9 @@ MCD_SubObjects_LoadWrapped:
 		bra.s	MCD_SubObjects_Skip
 
 MCD_SubObjects_LoadInRange:
+		move.b	omTimeZones(a0),d1
+		and.b	(MCD_ObjectTimeMask_Sub).l,d1
+		beq.s	MCD_SubObjects_Skip
 		tst.b	(a3)
 		bmi.s	MCD_SubObjects_Skip
 		move.w	omY(a0),d2
@@ -373,12 +402,11 @@ MCD_SubObjects_Load:
 		rol.w	#3,d2
 		andi.b	#3,d2
 		move.b	d2,(a4)+
-		move.b	omSubtype(a0),(a4)+
-		moveq	#0,d1
-		move.b	omID(a0),d1
-		move.w	d1,(a4)+
+		move.b	omID(a0),(a4)+
+		move.w	omSubtype(a0),(a4)+
 		move.l	a3,d1
-		subi.l	#MCD_ObjectRespawn_Sub-1,d1
+		sub.l	(MCD_ObjectRespawnBase_Sub).l,d1
+		addq.w	#1,d1
 		move.w	d1,(a4)+		; index + 1; zero denotes dynamic objects
 		addq.w	#1,(MCD_ObjectSpawnCount_Sub).l
 		addq.w	#omSize,a0

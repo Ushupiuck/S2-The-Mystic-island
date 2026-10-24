@@ -25,7 +25,7 @@ Jaws_Main:	; Routine 0
 		move.w	#$200,obPriority(a0)
 		move.b	#sprite_bound($10,Map_Jaws_width),obActWid(a0)
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0 ; load object subtype number
+		move.w	obSubtype(a0),d0 ; load object subtype number
 		lsl.w	#6,d0		; multiply d0 by 64
 		subq.w	#1,d0
 		move.w	d0,jaws_timecount(a0) ; set turn delay time

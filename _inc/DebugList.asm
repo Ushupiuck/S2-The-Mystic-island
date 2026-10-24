@@ -18,7 +18,8 @@ DebugList:
 
 dbug:	macro map,object,subtype,frame,vram
 	dc.l object,map
-	dc.b subtype,frame
+	dc.w subtype
+	dc.b frame,0
 	dc.w vram
 	endm
 

@@ -316,12 +316,12 @@ Tails_Water:
 		bne.s	.bubbles
 		jsr	(ResumeMusic).l
 		move.l	#Obj0A,(v_sonicbubbles).w
-		move.b	#$81,(v_sonicbubbles+obSubtype).w
+		move.w	#$81,(v_sonicbubbles+obSubtype).w
 		bra.s	.drag
 .bubbles:
 		move.l	#Obj0A,(v_tailsbubbles).w
 		clr.b	(v_tailsbubbles+obRoutine).w
-		move.b	#$81,(v_tailsbubbles+obSubtype).w
+		move.w	#$81,(v_tailsbubbles+obSubtype).w
 		move.w	a0,(v_tailsbubbles+obParent).w
 .drag:
 		tst.b	obControl(a0)

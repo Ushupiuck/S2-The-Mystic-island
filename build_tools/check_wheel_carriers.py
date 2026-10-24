@@ -25,8 +25,9 @@ def main():
 	p.add_argument('--output', type=Path, required=True)
 	p.add_argument('--pal', action='store_true')
 	p.add_argument('--probe', action='store_true')
+	p.add_argument('--system-directory', type=Path, help='Optional BIOS directory for Mode 1 checks')
 	args = p.parse_args()
-	g = Genesis(args.core, args.rom, args.listing, args.output, args.pal)
+	g = Genesis(args.core, args.rom, args.listing, args.output, args.pal, system_directory=args.system_directory)
 	checks = []
 	try:
 		boot_level(g, zone=0, act=0)

@@ -44,16 +44,16 @@ SMZ_Disc_Main:	; Routine 0
 
 		; This is a leftover from the prototype, where it was planned to also
 		; have smaller sized gears. In the final game, only large gears exist.
-		move.b	obSubtype(a0),d1			; get object subtype
-		andi.b	#$0F,d1					; read only the lower digit
+		move.w	obSubtype(a0),d1			; get object subtype
+		andi.w	#$0F,d1					; read only the lower digit
 		beq.s	.setupSmallDot				; branch if 0 (it always is)
 		move.b	#$10,SMZ_disc_spot_distance(a0)		; use smaller spot radius
 		move.b	#$38,SMZ_disc_triggersize(a0)		; use shorter trigger distance
 		move.w	#$38*$38,SMZ_disc_radius_squared(a0)
 
 	.setupSmallDot:
-		move.b	obSubtype(a0),d1			; get object subtype again
-		andi.b	#$F0,d1					; read only the upper digit
+		move.w	obSubtype(a0),d1			; get object subtype again
+		andi.w	#$F0,d1					; read only the upper digit
 		ext.w	d1					; extend to word
 		asl.w	#3,d1					; multiply by 8
 		move.w	d1,SMZ_disc_spot_speed(a0)			; set result as rotation speed for the small spot

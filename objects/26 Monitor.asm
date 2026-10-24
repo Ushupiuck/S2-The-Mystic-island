@@ -38,7 +38,8 @@ loc_AE70:
 
 loc_AECA:
 		move.b	#$46,obColType(a0)
-		move.b	obSubtype(a0),obAnim(a0)
+		move.w	obSubtype(a0),d0
+		move.b	d0,obAnim(a0)
 
 loc_AED6:
 		tst.b	ob2ndRout(a0)

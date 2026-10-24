@@ -63,7 +63,7 @@ WheelCarrier:
         jsr (FindFreeObj).l
         bne.w .draw
         moveq #0,d0
-        move.b obSubtype(a0),d0
+        move.w obSubtype(a0),d0
         andi.w #15,d0
         cmpi.w #WheelPayload_Count,d0
         blo.s .config
@@ -77,9 +77,10 @@ WheelCarrier:
         move.l d0,wheel_type(a0)
         move.l a1,wheel_child(a0)
         move.w (a2)+,wheel_offset(a0)
-        move.b (a2)+,obSubtype(a1)
+        move.w (a2)+,obSubtype(a1)
         move.b (a2),obStatus(a1)
         move.b (a2)+,obRender(a1)
+        addq.w #1,a2              ; explicit pad keeps payload bounds word aligned
 		move.w	(a2)+,wheel_payload_x(a0)
 		move.w	(a2),wheel_payload_y(a0)
         move.w respawn_addr(a0),respawn_addr(a1)
@@ -239,38 +240,46 @@ WheelCarrier:
 ; Routine, Y offset, subtype, facing flags, then the payload's collision box
 ; relative to its center (left/right/top/bottom). Right/bottom are exclusive.
 ; Bounds include the table's facing flags; the carrier's flip only steers it.
-WheelPayload_size = 12
+WheelPayload_size = 14
 WheelPayloads:
         dc.l Obj41
         dc.w -16
-        dc.b $00,0             ; red up spring
+        dc.w $00
+        dc.b 0,0; red up spring
 		dc.b	-16,16,-8,8
         dc.l Obj41
         dc.w -16
-        dc.b $02,0             ; yellow up spring
+        dc.w $02
+        dc.b 0,0; yellow up spring
 		dc.b	-16,16,-8,8
         dc.l Obj41
         dc.w -16
-        dc.b $10,0             ; red side spring
+        dc.w $10
+        dc.b 0,0; red side spring
 		dc.b	-8,8,-16,16
         dc.l Obj41
         dc.w -16
-        dc.b $12,1             ; yellow side spring facing left
+        dc.w $12
+        dc.b 1,0; yellow side spring facing left
 		dc.b	-8,8,-16,16
         dc.l Obj41
         dc.w -16
-        dc.b $30,0             ; red diagonal spring
+        dc.w $30
+        dc.b 0,0; red diagonal spring
 		dc.b	-21,11,-15,17
         dc.l Obj26
         dc.w -21
-        dc.b 4,0               ; ring monitor
+        dc.w 4
+        dc.b 0,0; ring monitor
 		dc.b	-16,16,-17,15
         dc.l Obj26
         dc.w -21
-        dc.b 6,0               ; shield monitor
+        dc.w 6
+        dc.b 0,0; shield monitor
 		dc.b	-16,16,-17,15
         dc.l Obj36
         dc.w -15
-		dc.b	$A0,0		; single S1 upward spike
+		dc.w $A0
+		dc.b 0,0; single S1 upward spike
 		dc.b	-4,4,-16,16
 WheelPayload_Count = (*-WheelPayloads)/WheelPayload_size

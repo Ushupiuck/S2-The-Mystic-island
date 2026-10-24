@@ -1,8 +1,8 @@
 # Mystic Island SonLVL definitions
 
 Open `SonLVL.ini` with a current Sonic Retro SonLVL build that supports
-Kosinski Plus and moduled Kosinski Plus. This project uses S3&K six-byte
-object placements and sprite mappings. Its object IDs come from `Obj_Index`
+Kosinski Plus and moduled Kosinski Plus. This project uses custom eight-byte
+object placements and S3&K sprite mappings. Its object IDs come from `Obj_Index`
 in `md-main.asm`, rather than an original game's table.
 
 `obj.ini` supplies shared objects and imported enemies. The zone lists override
@@ -19,12 +19,22 @@ Aquis/Skyhorse and Eggman are read from `md-main.asm`.
 ## Editing subtypes
 
 Select an object to see its named settings in the property grid. The raw
-**Subtype** field remains available. Settings preserve unrelated subtype bits
+**Subtype** field accepts all 16 bits. Settings preserve unrelated subtype bits
 and placement flags. Path switchers use SonLVL's S3&K numbered, directional
 marker art, repeated across the full trigger length. Its 0/1 labels show the
 primary/secondary path on each side. Other invisible objects have outlined bounds;
 moving platforms, saws and lifts have debug travel guides. Transport pipes show
 their route when debug overlays are enabled.
+
+`Common/ObjectLayout.cs` is the custom layout reader/writer, selected by
+`objectfmt=Custom`, `objectcodefile` and `objectcodetype` in `SonLVL.ini`.
+Records are `XXXX YYYY OOTT SSSS`: coordinates/our existing Y flags, full-byte
+object ID, Sonic CD timezone mask, word subtype. The property grid exposes
+Show in Past/Present/Future; Future includes both variants. New placements
+default to all three. This supplies presence filtering, not a time-warp engine.
+The stock picker's byte selector can choose its advertised presets; use the
+16-bit Subtype property for extended values. Project C# definitions read/write
+the complete serialized word, including when calculating movement overlays.
 
 | ID | Object | Subtype settings |
 |---|---|---|
@@ -40,7 +50,7 @@ their route when debug overlays are enabled.
 | `$1D` | Bridge | Full byte: number of 16-pixel logs. Preview includes every log. |
 | `$1E` | HPZ waterfall | Full byte: height; `$10` and above add a second stream. |
 | `$1F` | LZ conveyor | `$80-$87`: complete relative groups; `$C0-$C7`: the same groups with harmful undersides. `$00-$7E`: individual route/corner; `$7F`: wheel. X flip reverses travel; switch E reverses normal/spiked groups permanently. The property grid exposes mode, route/group, spikes and individual corner. Previews/route overlays read the live ASM tables. |
-| `$21` | Ballhog | `$00–0F`: horizontal; `$10`: timed vertical; `$11–1E` and `$9F–FF`: moving vertical; `$1F–9E`: stationary vertical. Bomb lifetime is editable, including extended timers. `$1F` underflows to 255 seconds. The extended moving range comes from the handler's byte comparison / signed branch. |
+| `$21` | Ballhog | `$0000–000F`: horizontal; `$0010`: timed vertical; `$0011–001E` and `$801F–FFFF`: moving vertical; `$001F–801E`: stationary vertical. The handler's signed comparison and delay arithmetic now use words. The editor reports actual delay after 16-bit frame-timer wrap, including `$001F`. |
 | `$2B` | Chopper / Masher | Eight jump velocities, `$00–07`. |
 | `$2C` | Jaws | Full byte: turning interval in 64-frame units. |
 | `$3E` | Capsule | `$00`: body; `$01`: button. |

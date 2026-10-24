@@ -4,6 +4,7 @@
 Uses Genesis Plus GX and the assembled game. Player positioning is fixture
 setup; loading, Debug entry/selection/spawning and collision use normal frames.
 """
+from object_layout import decode
 from pathlib import Path
 import argparse
 import hashlib
@@ -60,7 +61,7 @@ def main():
 
 		# All native Caterkiller/Kemusi placements must initialize and crawl.
 		for act in (1, 2):
-			rows = list(struct.iter_unpack('>HHBB', (ROOT/f'level/objects/SMZ_{act}.bin').read_bytes()))
+			rows = [(x,y,oid,sub) for x,y,oid,eras,sub in decode((ROOT/f'level/objects/SMZ_{act}.bin').read_bytes())]
 			variants = set()
 			for index, (x, y, oid, subtype) in enumerate(rows):
 				if oid != 0x60:

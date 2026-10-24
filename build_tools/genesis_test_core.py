@@ -169,12 +169,14 @@ class Genesis:
     def get(self,actor,field,size=1):
         projected=field=='layout_id'
         if projected: field,size='code',4
+        elif field=='obSubtype': size=2
         elif field in ('code','obID'): size=4
         value=self.read((self.s[actor] if isinstance(actor,str) else actor)+self.s[field],size)
         return self.ids_by_code.get(value,value) if projected else value
 
     def put(self,actor,field,value,size=1):
         if field=='layout_id': field,value,size='code',self.object_codes[value],4
+        elif field=='obSubtype': size=2
         elif field in ('code','obID'): size=4
         self.write((self.s[actor] if isinstance(actor,str) else actor)+self.s[field],value,size)
 

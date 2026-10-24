@@ -27,7 +27,7 @@ Obj18_Conf:
 Plat_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		lsr.w	#3,d0
 		andi.w	#$1E,d0
 		lea	Obj18_Conf(pc,d0.w),a2
@@ -48,10 +48,11 @@ Plat_Main:	; Routine 0
 		move.w	obY(a0),objoff_38(a0)
 		move.w	obX(a0),objoff_36(a0)
 		move.w	#$80,obAngle(a0)
-		tst.b	obSubtype(a0)	; From Sonic 2
-		bpl.s	++
+		move.w	obSubtype(a0),d0	; From Sonic 2
+		btst	#7,d0
+		beq.s	++
 		addq.b	#6,obRoutine(a0)
-		andi.b	#$F,obSubtype(a0)
+		andi.w	#$F,obSubtype(a0)
 		move.b	#$30,obHeight(a0)
 	nop;	cmpi.b	#aquatic_ruin_zone,(Current_Zone).w	; is this aquatic ruin?
 	nop;	bne.s	+					; if not, skip
@@ -61,7 +62,7 @@ Plat_Main:	; Routine 0
 		bra.w	Plat_Solid2
 ; ===========================================================================
 +
-		andi.b	#$F,obSubtype(a0)
+		andi.w	#$F,obSubtype(a0)
 
 Plat_Solid:	; Routine 2
 		move.b	obStatus(a0),d0
@@ -158,7 +159,7 @@ Plat_Nudge:
 
 Plat_Move:
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		andi.w	#$F,d0
 		add.w	d0,d0
 		move.w	.index(pc,d0.w),d1
@@ -263,7 +264,7 @@ Plat_Move:
 		subq.w	#1,objoff_3E(a0)	; subtract 1 from time delay
 		bne.s	+			; keep waiting until we hit 0
 		move.w	#$20,objoff_3E(a0)
-		addq.b	#1,obSubtype(a0)	; change to type 04 (falling)
+		addq.w	#1,obSubtype(a0)	; change to type 04 (falling)
 +		rts
 ; ---------------------------------------------------------------------------
 
@@ -311,7 +312,7 @@ Plat_Move:
 		bne.s	.type07_wait		; if yes, branch
 		lea	(f_switch).w,a2		; load switch statuses
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0	; move object type ($x7) to d0
+		move.w	obSubtype(a0),d0	; move object type ($x7) to d0
 		lsr.w	#4,d0			; divide d0 by 8, round down
 		tst.b	(a2,d0.w)		; has switch no. d0 been pressed?
 		beq.s	+			; if not, branch
@@ -322,7 +323,7 @@ Plat_Move:
 .type07_wait:
 		subq.w	#1,objoff_3E(a0)	; subtract 1 from time delay
 		bne.s	+			; keep waiting until we hit 0
-		addq.b	#1,obSubtype(a0)	; change type to 08
+		addq.w	#1,obSubtype(a0)	; change type to 08
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -332,7 +333,7 @@ Plat_Move:
 		subi.w	#$200,d0
 		cmp.w	objoff_30(a0),d0	; has the platform moved $200 pixels?
 		bne.s	+			; keep going until it has
-		clr.b	obSubtype(a0)		; then change to type 00 (stop moving)
+		clr.w	obSubtype(a0)		; then change to type 00 (stop moving)
 +		rts
 ; ---------------------------------------------------------------------------
 

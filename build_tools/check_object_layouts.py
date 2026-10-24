@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Check S3&K placements, their assembled pointers, and manager/Debug RAM."""
+"""Check eight-byte placements, their assembled pointers, and manager/Debug RAM."""
 import argparse
 from pathlib import Path
 import re
 import struct
 
 ROOT = Path(__file__).resolve().parent.parent
-SENTINEL = bytes.fromhex('FFFF00000000')
+from object_layout import decode, SIZE, TERMINATOR as SENTINEL
 ZONES = ('GHZ', 'LZ', 'CPZ', 'EHZ', 'HPZ', 'HTZ', 'MTZ', 'LV07', 'SMZ', 'LV09', 'LV0A', 'LV0B',
          'LV0C', 'LV0D', 'LV0E', 'LV0F')
 
@@ -53,12 +53,10 @@ def check_named_sst_fields(symbols):
 
 def placements(path, capacity):
     data = path.read_bytes()
-    assert len(data) >= 6 and len(data) % 6 == 0, f'{path.name}: incomplete record'
-    assert data[-6:] == SENTINEL, f'{path.name}: missing terminator'
-    rows = list(struct.iter_unpack('>HHBB', data[:-6]))
+    rows = decode(data)
     assert len(rows) <= capacity, f'{path.name}: respawn table overflow'
     last_x = 0
-    for x, y, object_id, subtype in rows:
+    for x, y, object_id, timezones, subtype in rows:
         assert last_x <= x < 0xFFFF, f'{path.name}: unordered X or interior terminator'
         assert not y & 0x1000, f'{path.name}: reserved Y flag set'
         assert object_id != 0, f'{path.name}: empty object ID'
@@ -88,7 +86,7 @@ def main():
             address = index + struct.unpack_from('>h', rom, index + offset)[0]
             data, _ = layouts[f'{name}_{act + 1}.bin']
             assert address == symbols[f'ObjPos_{name}{act + 1}']
-            assert rom[address - 6:address] == SENTINEL, 'Missing backward boundary'
+            assert rom[address - SIZE:address] == SENTINEL, 'Missing backward boundary'
             assert rom[address:address + len(data)] == data
             debug_address = debug + struct.unpack_from('>h', rom, debug + offset)[0]
             count = struct.unpack_from('>H', rom, debug_address)[0]
@@ -98,7 +96,7 @@ def main():
                     debug_address + 2 + entry * symbols['DebugEntry_size'])
                 assert code and not code & 1 and code < len(rom), 'Bad Debug code pointer'
                 assert mapping < len(rom), 'Bad Debug mapping address'
-    assert symbols['omSize'] == 6
+    assert symbols['omSize'] == SIZE
     assert symbols['respawn_addr'] == 0x22
     assert symbols['code'] == 0 and symbols['object_size'] == 0x4E
     # Legacy code sometimes addressed an SST base directly instead of obID.
@@ -120,7 +118,7 @@ def main():
             active = text.split(';')[0]
             assert not narrow.search(active), f'{source}:{line}: byte/word access to code pointer'
             assert not numeric_id.search(active), f'{source}:{line}: numeric placement ID used as a routine pointer'
-    assert symbols['height_pixels'] == 6 and symbols['DebugEntry_size'] == 12
+    assert symbols['height_pixels'] == 6 and symbols['DebugEntry_size'] == 14
     assert symbols['v_lvlobjend'] - symbols['v_lvlobjspace'] == 90 * 0x4E
     assert symbols['TempArray_LayerDef' if symbols.get('MegaCDMode1') else 'v_16x16'] == symbols['v_objspace_end']
     assert symbols['v_16x16_End'] - symbols['v_16x16'] == 0x1800
@@ -141,7 +139,7 @@ def main():
     assert symbols['Debug_placement_type'] == symbols['Debug_placement_routine'] + 1
     assert symbols['Debug_placement_mode'] == symbols['Debug_placement_routine']
     check_named_sst_fields(symbols)
-    print(f'Checked {len(layouts)} S3&K layouts / {sum(n for _, n in layouts.values())} '
+    print(f'Checked {len(layouts)} eight-byte layouts / {sum(n for _, n in layouts.values())} '
           f'placements, all 64 act pointers and Debug lists, and manager/Debug RAM.')
 
 

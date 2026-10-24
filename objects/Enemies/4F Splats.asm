@@ -25,7 +25,7 @@ Splats_Init:
 		move.b	#sprite_bound($C,Map_Splats_width),obActWid(a0)		; set width
 		move.b	#$14,obHeight(a0)		; set height
 		move.b	#2,obColType(a0)		; set coltype to badnik
-	;	tst.b	obSubtype(a0)			; is subtype anything but zero?
+	;	tst.w	obSubtype(a0)			; is subtype anything but zero?
 	;	beq.s	Splats_Wait			; if not, branch
 		move.w	#$300,d2			; set trigger zone to start moving to be significantly larger
 	;	bra.s	Splats_Wait.triggerzoneset	; skip

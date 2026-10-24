@@ -146,9 +146,9 @@ def generate(root, banks):
                 asm.extend(f'\tdc.l {a[1]}\n\tdc.w ({a[2]})*32,{a[3]}/2' for a in entries)
                 asm.append('\tdc.l 0')
     placements = ['ObjectTest_Placements:']
-    placements.extend(f'\tdc.w ${x:04X},${y:04X}\n\tdc.b ${oid:02X},${sub:02X}'
+    placements.extend(f'\tdc.w ${x:04X},${y:04X}\n\tdc.b ${oid:02X},ObjectTime_All\n\tdc.w ${sub:04X}'
                       for x,y,oid,sub in sorted(records))
-    placements.append('\tdc.w $FFFF,0,0')
+    placements.append('\tdc.w $FFFF,0,0,0')
     (root / '_inc/Object Test Placements.asm').write_text('\n'.join(placements)+'\n')
     asm.extend([
                 'ObjectTest_DoorArt: binclude "build_tools/object_course_art/door.nem"',
@@ -231,8 +231,8 @@ def main():
         raise SystemExit(f'Build failed; see {output}/build.log')
     symbols={n:int(v,16) for n,v in re.findall(r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]',(root/'object-course.lst').read_text())}
     image=(root/'object-course.bin').read_bytes()
-    expected=b''.join(struct.pack('>HHBB',o['world_x'],o.get('y',0x4C0)|o.get('flags',0),
-                       int(o['id'],16),o.get('subtype',0)) for b in banks for o in b['objects'])+bytes.fromhex('FFFF00000000')
+    expected=b''.join(struct.pack('>HHBBH',o['world_x'],o.get('y',0x4C0)|o.get('flags',0),
+                       int(o['id'],16),0xE0,o.get('subtype',0)) for b in banks for o in b['objects'])+bytes.fromhex('FFFF000000000000')
     base=symbols['ObjPos_LZ2']
     assert image[base:base+len(expected)]==expected,'Built ROM does not match course placements'
     assert len(image)>=symbols['EndOfRom'],'Built ROM does not match its listing extent'

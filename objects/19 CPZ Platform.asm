@@ -25,7 +25,7 @@ Obj19_Init:
 		move.w	#make_art_tile(ArtTile_CPZ_Platform,3,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		lsr.w	#3,d0
 		andi.w	#$1E,d0
 		lea	Obj19_WidthArray(pc,d0.w),a2
@@ -34,7 +34,7 @@ Obj19_Init:
 		move.w	#$200,obPriority(a0)
 		move.w	obX(a0),objoff_34(a0)
 		move.w	obY(a0),objoff_36(a0)
-		andi.b	#$F,obSubtype(a0)
+		andi.w	#$F,obSubtype(a0)
 
 Obj19_Main:
 		move.w	obX(a0),-(sp)
@@ -52,7 +52,7 @@ Obj19_Main:
 
 Obj19_Modes:
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		andi.w	#$F,d0
 		add.w	d0,d0
 		move.w	Obj19_SubIndex(pc,d0.w),d1
@@ -96,7 +96,7 @@ loc_1539C:
 		move.b	obStatus(a0),d0
 		andi.b	#$18,d0
 		beq.s	locret_153AA
-		addq.b	#1,obSubtype(a0)
+		addq.w	#1,obSubtype(a0)
 
 locret_153AA:
 		rts
@@ -113,7 +113,7 @@ loc_153AC:
 ; ---------------------------------------------------------------------------
 
 loc_153C6:
-		clr.b	obSubtype(a0)
+		clr.w	obSubtype(a0)
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -128,7 +128,7 @@ loc_153CC:
 ; ---------------------------------------------------------------------------
 
 loc_153E6:
-		addq.b	#1,obSubtype(a0)
+		addq.w	#1,obSubtype(a0)
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -139,7 +139,7 @@ loc_153EC:
 		bpl.w	locret_1540C
 		add.w	d1,obY(a0)
 		clr.w	obVelY(a0)
-		clr.b	obSubtype(a0)
+		clr.w	obSubtype(a0)
 
 locret_1540C:
 		rts
@@ -148,7 +148,7 @@ locret_1540C:
 loc_1540E:
 		tst.b	(f_switch+2).w
 		beq.s	loc_15418
-		subq.b	#3,obSubtype(a0)
+		subq.w	#3,obSubtype(a0)
 
 loc_15418:
 		addq.l	#6,sp
@@ -212,5 +212,5 @@ loc_15492:
 
 loc_154A2:
 		clr.w	objoff_3A(a0)
-		subq.b	#1,obSubtype(a0)
+		subq.w	#1,obSubtype(a0)
 		rts

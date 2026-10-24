@@ -97,7 +97,7 @@ if args.game_zone is None:
                (103, -81, 1), (111, -24, 2), (41, 11, 3),
                (-29, 46, 3), (-100, 81, 3)]
     spawner_y = (0x380, 0x300, 0x280, 0x500, 0x600, 0x580)
-    placements = [(x, y, sub) for x, y, oid, sub in m.rows('SMZ_1.bin') if oid == 0xA9]
+    placements = [(x, y, sub) for x, y, oid, eras, sub in m.rows('SMZ_1.bin') if oid == 0xA9]
     assert sorted(placements) == sorted((x, spawner_y[i] | 0x8000, 0x80+i)
                                        for i, (x, _) in enumerate(bases))
     checks.append(['real layout has all six S1 spawners with whole-loop Y loading'])
