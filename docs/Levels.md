@@ -29,6 +29,12 @@ Timezone headers/layouts are prepared copies. Object placements have Sonic CD
 era-presence masks and per-era state; time travel and generator/Good Future
 suppression remain unfinished. See [placement ownership](Objects.md#placement-format-and-ownership).
 
+GHZ4 retains its sparse authored object layout for useful object-testing terrain.
+Its loop at chunk origin `$1000,$0300` now has Act 3's matching three pathswappers
+(`$1080,$0350/$0091`, `$1108,$0340/$0011`, `$1108,$03A0/$0010`), present in
+all eras. Runtime object fixtures stay disposable; they do not populate the
+published act with a permanent test course.
+
 ## Per-act art
 
 `_inc/Pattern Load Cues.asm` contains the pointer table, IDs, and separate

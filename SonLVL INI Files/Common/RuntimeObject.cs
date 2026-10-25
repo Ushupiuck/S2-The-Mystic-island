@@ -58,9 +58,12 @@ namespace MysticIsland.ObjectDefinitions
 					break;
 				case "Bridge": Bits("Length", 0, 255, "Number of 16-pixel bridge logs. Existing layouts use 8 to 16."); break;
 				case "Platform":
-					Bits("Movement", 0, 15, "Movement table in objects/18 Platforms.asm. Distances are full travel. Type 3 waits 30 frames before falling; type 7 waits 60 frames after switch 0.", "Stationary", "Horizontal (128 px)", "Vertical (128 px)", "Fall when stood on (30-frame delay)", "Falling (internal)", "Horizontal (128 px), reversed", "Vertical (128 px), reversed", "Switch 0: rise 512 px", "Rising 512 px (internal)", "Stationary (type 9)", "Vertical (64 px)", "Vertical (64 px), reversed", "Vertical (96 px)", "Vertical (96 px), reversed");
+					Bits("Movement", 0, 15, "S3&K movement profiles, with centred S1 vertical travel. Horizontal and diagonal origins are endpoints; square origins are centres. Falling waits 30 frames, then carries riders for 32 frames. Switch rising waits 60 frames.", "Stationary", "Horizontal (64 px)", "Horizontal (128 px)", "Vertical (64 px)", "Vertical (128 px)", "Diagonal up (128 by 64 px)", "Diagonal down (128 by 64 px)", "Rising ceiling trap", "Square (32 px)", "Square (96 px)", "Square (160 px)", "Square (224 px)", "Horizontal (256 px, eased)", "Vertical (96 px)", "Fall when stood on", "Switch: rise 512 px");
 					Bits("Shape", 4, 7, "Mapping / collision configuration. Choose only frames present in this zone's mapping set.", Enumerable.Range(0, Math.Min(5, frames.Length)).Select(i => "Frame " + i).ToArray());
-					Bits("Alternate solidity", 7, 1, "Selects the tall platform routine. Note: the current initialization also includes this bit in its shape index.", "Off", "On");
+					Bits("Solidity", 7, 1, "Sonic 2 collision: top surface only, or a solid body with 48-pixel vertical radius. Both players can ride either variant.", "Top only", "Full body");
+					Bits("Rider sag", 8, 1, "Independent of movement: depress up to 4 pixels under either rider. The rising ceiling trap always ignores sag.", "Rigid", "Sag");
+					Bits("Phase / corner", 9, 3, "XOR with placement X/Y flips. Oscillation and long horizontal motion use bit 0 for the opposite phase; squares use both bits for their initial corner.", "0", "1", "2", "3");
+					Bits("Switch channel", 12, 15, "Switch-triggered rise only: one of the 16 button channels. Independent of shape, solidity, sag and phase.");
 					break;
 				case "MovingBlock":
 				case "CPZPlatform":
@@ -314,7 +317,7 @@ namespace MysticIsland.ObjectDefinitions
 					for (int i = 1; i < links; i++) pieces.Add(new Sprite(At(frames, 1), 0, i * 16));
 					pieces.Add(new Sprite(alternate != null && ((subtype & 0xE0) == 0x40 || (subtype & 0xF0) == 0x70) ? At(alternate, 1) : frames[0], 0, links * 16 + 8));
 					return new Sprite(pieces);
-				case "Platform":
+				case "Platform": return At(frames, ((subtype >> 4) & 7) < Math.Min(5, frames.Length) ? (subtype >> 4) & 7 : 0);
 				case "CPZPlatform":
 				case "MovingBlock": return At(frames, subtype >> 4);
 				case "HPZWaterfall":
@@ -431,11 +434,20 @@ namespace MysticIsland.ObjectDefinitions
 			int movement = Subtype(obj) & 15;
 			if (behavior == "Platform")
 			{
-				if (movement == 1 || movement == 5) return Travel(-64, 0, 64, 0);
-				if (movement == 2 || movement == 6) return Travel(0, -64, 0, 64);
-				if (movement == 10 || movement == 11) return Travel(0, -32, 0, 32);
-				if (movement == 12 || movement == 13) return Travel(0, -48, 0, 48);
-				if (movement == 7 || movement == 8) return Travel(0, -512, 0, 0);
+				if (movement == 1) return Travel(0, 0, 64, 0);
+				if (movement == 2) return Travel(0, 0, 128, 0);
+				if (movement == 3) return Travel(0, -32, 0, 32);
+				if (movement == 4) return Travel(0, -64, 0, 64);
+				if (movement == 5) return Travel(0, 0, 128, -64);
+				if (movement == 6) return Travel(0, -64, 128, 0);
+				if (movement >= 8 && movement <= 11)
+				{
+					int half = new[] { 16, 48, 80, 112 }[movement - 8];
+					return new Sprite(Travel(-half, -half, half, -half), Travel(half, -half, half, half), Travel(half, half, -half, half), Travel(-half, half, -half, -half));
+				}
+				if (movement == 12) { bool reverse = ((((Subtype(obj) >> 9) & 1) != 0) ^ obj.XFlip); return Travel(reverse ? -128 : 0, 0, reverse ? 127 : 255, 0); }
+				if (movement == 13) return Travel(0, -48, 0, 48);
+				if (movement == 15) return Travel(0, -512, 0, 0);
 			}
 			if (behavior == "CPZPlatform" || behavior == "MovingBlock")
 			{

@@ -259,9 +259,35 @@ class CheckSonLVLObjects
 		CheckSwitcher();
 		CheckBallhog();
 		CheckConveyor();
+		CheckPlatform();
 		CheckWordLayout();
 		if (previewDirectory != null) Preview(previewDirectory);
 		Console.WriteLine("PASS " + name + " (" + LevelData.Objects.Count + " placements)");
+	}
+
+	static void CheckPlatform()
+	{
+		ObjectDefinition definition;
+		if (!LevelData.ObjTypes.TryGetValue(0x18, out definition) || !definition.CustomProperties.Any(p => p.Name == "Switch channel")) return;
+		var entry = NewEntry(0x18, 0xA39F, true, true, true);
+		byte[] original = entry.GetBytes();
+		byte[] image = definition.GetSprite(entry).GetBitmap().Bits;
+		string[] names = { "Switch channel", "Rider sag", "Phase / corner", "Solidity", "Movement" };
+		int[] values = { 15, 0, 3, 0, 5 };
+		ushort[] words = { 0xF39F, 0xF29F, 0xF69F, 0xF61F, 0xF615 };
+		for (int i = 0; i < names.Length; i++)
+		{
+			definition.CustomProperties.Single(p => p.Name == names[i]).SetValue(entry, values[i]);
+			byte[] actual = entry.GetBytes();
+			if (SonicRetro.SonLVL.API.ByteConverter.ToUInt16(actual, 6) != words[i] || !actual.Take(6).SequenceEqual(original.Take(6))) Fail("Platform settings overlap: " + names[i]);
+			if (!definition.GetSprite(entry).GetBitmap().Bits.SequenceEqual(image)) Fail("Platform settings changed its shape: " + names[i]);
+		}
+		for (int shape = 2; shape < 8; shape++)
+		{
+			var invalid = NewEntry(0x18, (ushort)(0xF180 | (shape << 4)));
+			var fallback = NewEntry(0x18, 0xF180);
+			if (!definition.GetSprite(invalid).GetBitmap().Bits.SequenceEqual(definition.GetSprite(fallback).GetBitmap().Bits)) Fail("Invalid platform shape differs from runtime fallback.");
+		}
 	}
 
 	static void CheckWordLayout()

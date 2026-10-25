@@ -48,7 +48,7 @@ described in the [sound guide](../build_tools/sound/README.md).
 ## Branch scope
 
 `Mystic-Island` is the default development branch and includes the former KEH
-baseline. `test/rebuilt-kehmusic` is synchronized with it. Both configurations
+baseline. `Mystic-Island-(Experimental)` is the experimental branch. Both configurations
 live in the same source tree: the default `MegaCDMode1 = 1` uses required
 Mega-CD RAM and selective sub-CPU work; `0` selects the standalone cartridge
 dependencies. These guides describe the shared baseline and identify behavior

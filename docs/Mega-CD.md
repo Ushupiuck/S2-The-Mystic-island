@@ -1,7 +1,7 @@
 # Mega-CD Mode 1
 
 Mega-CD Mode 1 is the primary configuration on the default **`Mystic-Island`**
-branch and the synchronized `test/rebuilt-kehmusic` branch. The default
+branch; `Mystic-Island-(Experimental)` holds experimental development. The default
 `MegaCDMode1 = 1` and `JC` header
 enable cartridge boot, raw subprogram upload, verification and a fresh handshake.
 Its chunk storage requires the add-on; absence/failure reaches `MEGA CD REQUIRED`

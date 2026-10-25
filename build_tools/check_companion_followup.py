@@ -98,8 +98,11 @@ def main():
             {f:g.get('v_player',f,n) for f,n in [('obX',2),('obY',2),('obStatus',1)]},
             {f:g.get(platform,f,n) for f,n in [('obX',2),('obY',2),('obActWid',1),('obSubtype',1),('obRoutine',1),('obStatus',1)]})
         if subtype:
-            g.put(platform, 'obSubtype', subtype & 15)
-            g.run(1)  # start the actual moving subtype after establishing its rider
+            g.put(platform, 'obSubtype', 0x302)
+            g.put(platform, 'Plat_originX', px - 64, 2)
+            g.put(platform, 'Plat_phase', 1)
+            g.put(platform, 'Plat_movement', g.s['Plat_Horizontal128'], 4)
+            g.run(1)  # start cached horizontal motion after establishing its rider
             tx = g.get('v_player', 'obX', 2) - 32
         place(g, 'v_player2', tx, 948)
         reset_cpu(g)
@@ -238,7 +241,12 @@ def main():
     place(g, 'v_player2', 160, 900)
     reset_cpu(g)
     before = g.read('v_score', 4)
-    g.run(1)
+    # A video frame can precede the next object pass when the level is lagging.
+    # Wait for the real collection transition, then verify its single award.
+    for _ in range(4):
+        g.run(1)
+        if g.get(bonus, 'obRoutine') == 2:
+            break
     awarded = g.read('v_score', 4) - before
     g.run(10)
     finish('companion-hidden-bonus', awarded == 10 and
@@ -281,7 +289,13 @@ def main():
         g.write('Tails_CPU_idle_timer', 120, 2)
         g.run(settle)
         if entry == 'riding':
-            assert all(g.get(a, 'obStatus') & 8 for a in ('v_player', 'v_player2'))
+            for _ in range(8):
+                if all(g.get(a, 'obStatus') & 8 for a in ('v_player', 'v_player2')):
+                    break
+                g.run(1)
+            assert all(g.get(a, 'obStatus') & 8 for a in ('v_player', 'v_player2')), {
+                a: {f: g.get(a, f, n) for f, n in (('obX', 2), ('obY', 2), ('obStatus', 1))}
+                for a in ('v_player', 'v_player2')}
         start = g.save()
         cases = []
         for speed in (0, 0x100, 0x300, 0x600):

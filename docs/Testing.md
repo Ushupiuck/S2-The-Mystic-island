@@ -252,6 +252,48 @@ and level-entry invalidation. It checks the compact resident bank and all four
 raw source frames against the editable sheet. The live conveyor runner verifies
 all four wheel phases in VRAM, their reversed order, and both resident platforms.
 
+## Ordinary platforms and GHZ4 loops
+
+```sh
+python build_tools/check_floating_platforms.py --rom s2built.bin --listing md-main.lst --output test-results/platforms/native
+python build_tools/check_floating_platforms_game.py --rom s2built.bin --listing md-main.lst --core /path/to/genesis_plus_gx_libretro.so --output test-results/platforms/game
+python build_tools/check_ghz4_loops.py --rom s2built.bin --listing md-main.lst --core /path/to/genesis_plus_gx_libretro.so --output test-results/platforms/loops
+```
+
+The native platform pass checks independent word settings, absent-frame bounds,
+both collision modes/riders, sag on each applicable movement, exact fall and
+switch timers, all 16 switch channels, rising-trap acceleration/crushing/ceiling
+correction against actual GHZ4 terrain, and long-path ownership/unload/reload.
+`--before-ref` additionally audits the placement conversion against Git history.
+`--s3-source /path/to/skdisasm/sonic3k.asm` verifies upstream blob
+`0f10a373ff0e3d5c0033ed7d13c678bcb927c7b0` from skdisasm `73de97c6`, then
+assembles its unchanged horizontal, vertical, diagonal, square and oscillator
+code into an isolated fixture region. It compares 45,056 motion samples and
+the seven used shared oscillator profiles. This optional reference assembler
+step currently uses the bundled Linux x86-64 tools. Other oscillator rows are
+outside this object's migration and are not replaced.
+
+The game runner defaults to GHZ4 and checks all 16 movement families plus full
+solidity/full falling/reversed long motion through normal object execution,
+both-player boarding/carrying, switch rise and rendered output. `--placements`
+with `--zone`/`--act` instead sweeps the selected real object layout; all 72
+converted platforms across GHZ1–3, EHZ1–2 and HTZ1 were visited. It uses scripted
+fixture positioning, rather than a complete controller-only level playthrough.
+The SonLVL checker separately verifies that platform flags/channels preserve
+shape, placement flags and each other, including unsupported-frame fallback.
+The companion follow-up fixture starts its moving ledge through the cached
+movement pointer, and waits for actual collection/boarding transitions instead
+of assuming that one video frame always includes an object update. Its platform,
+bridge, bonus, signpost and 72 real GHZ1 double-ledge runs pass on the cartridge
+build.
+
+Both game runners accept `--pal`, `--player 2` and `--system-directory` for
+Mode 1's identification fixture. Native checks and the 19 platform fixtures
+pass in Mode 1/NTSC and cartridge/PAL. The loop runner verifies GHZ4's matching
+Act-3 terrain/pathswapper recipe, then runs controller-driven Sonic/Tails
+through all four angle quadrants, both collision paths and a grounded exit.
+Screenshots and trajectories remain in the supplied ignored output directory.
+
 ## Boss runtime checks
 
 ```sh

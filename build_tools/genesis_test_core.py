@@ -107,6 +107,10 @@ class Genesis:
             '>255I', rom.read_bytes(), self.s['Obj_Index']))
         self.ids_by_code = {pointer: oid for oid, pointer in
                             enumerate(self.object_codes[1:], 1)}
+        # Test-only identity survives the platform's direct update transitions.
+        for label in ('Plat_Top', 'Plat_Full', 'Plat_FallingIntangible'):
+            if label in self.s:
+                self.ids_by_code[self.s[label]] = self.ids_by_code[self.s['Obj18']]
         info = GameInfo(str(rom).encode(),C.cast(self.rom,C.c_void_p),len(self.rom)-1,None)
         assert self.core.retro_load_game(C.byref(info))
         self.ram = (C.c_uint8*65536).in_dll(self.core,'work_ram')

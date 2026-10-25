@@ -9,7 +9,8 @@ https://tcrf.net/Proto:Sonic_the_Hedgehog_2_(Genesis)
 ; ---------------------------------------------------------------------------
 
 TODO:
-Replace ordinary Obj18 with the S3&K floating-platform movement core after reviewing the missing-mode table in docs/Objects.md; preserve original fast 64/128px timing, delayed fall, switch rise, slow 96px motion, phases, moving-platform sag and optional S2 full solidity, restore selectable switch IDs, and fix the reproduced trigger/shape/fall-through defects; migrate word subtypes, 72 placements, Debug and SonLVL together < REVIEW BEFORE ADDING MISSING MODES
+Replace ordinary Obj18 with the reviewed S3&K/S1/S2 hybrid: S3&K oscillator profiles/horizontal/extra paths and direct updates/lifetime, S1 centred vertical distances, configurable sag except traps, S2 solidity, delayed fall and word-selected switch channels; fix trigger/shape/fall-through defects and migrate 72 placements, Debug and SonLVL < DONE
+Use GHZ4's sparse object layout for disposable runtime fixtures; restore the matching Act-3 loop's three pathswappers in the authored layout and verify Sonic/Tails traversal < DONE
 Design distinct terrain/art/objects for the newly enabled zone slots and four-act templates; MTZ1 remains the existing unfinished test stage, MTZ2-4 and SMZ3-4 are safe editable starters, and LV0A1 currently showcases imported PP enemies < NEXT level-content work
 Design an intentional Scrap Madness act-2 ending/cutscene; the current port uses the normal signpost
 Add inverse-gravity player physics/collision before enabling S3&K's Debug gravity-reversal cheat < FUTURE engine feature

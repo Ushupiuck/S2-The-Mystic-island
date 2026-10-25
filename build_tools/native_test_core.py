@@ -60,6 +60,11 @@ class Native:
             '>255I', data, self.s['Obj_Index']))
         self.ids_by_code = {pointer: oid for oid, pointer in
                             enumerate(self.object_codes[1:], 1)}
+        # Ordinary platforms replace their constructor pointer after spawning.
+        # Keep the fixture-only ID projection useful throughout their lifetime.
+        for label in ('Plat_Top', 'Plat_Full', 'Plat_FallingIntangible'):
+            if label in self.s:
+                self.ids_by_code[self.s[label]] = self.ids_by_code[self.s['Obj18']]
         for label in ('QueueDMATransfer', 'PlayMusic', 'PlaySound', 'PlaySound_Special'):
             self.cpu.mem_write(self.s[label], bytes.fromhex('4E75'))
         self.cpu.hook_add(UC_HOOK_MEM_READ | UC_HOOK_MEM_WRITE, self.bus)
