@@ -306,11 +306,70 @@ waypoint runner, rather than this relative-path constructor.
 ## Ordinary platforms and Flying Battery's hovering platform
 
 Our `objects/18 Platforms.asm` is the S1 ordinary-platform family with S2
-additions. S3&K still has a separate ordinary `Obj_FloatingPlatform` for
-AIZ/HCZ/MGZ: it retains the four-pixel rider sag and uses the shared
-`FloatingPlatformIndex` movement table. FBZ's jet-powered platform,
-`Obj_FBZFloatingPlatform` (`$71`), has its own five-entry movement table.
-Treat it as a specialized relative; it does not replace every existing mode.
+additions. The following comparison is against S2 Final's `Obj18` and S3&K's
+ordinary `Obj_FloatingPlatform` for AIZ/HCZ/MGZ, not the separate FBZ object.
+No ordinary-platform replacement or additional movement subtype is implemented.
+
+| Behavior | Current `$18` | S2 Final `$18` | S3&K generic floating platform |
+| --- | --- | --- | --- |
+| Horizontal oscillation, nominal total travel | 128 px, two phases | Same | 64/128 px plus a separate 256 px eased movement |
+| Vertical oscillation, nominal total travel | 64/96/128 px, two phases | Same | 64/128 px; X flip selects the opposite phase |
+| Other repeating paths | None | None | Two diagonals, 128 by 64 px; squares with 32/96/160/224 px sides |
+| Rider sag | Up to 4 px on all normal movement modes | Same | Stationary mode only; sine is scaled with `asr.w #6` instead of a multiply/swap |
+| Triggered movement | Primary-player fall; switch-0 rise | Either-player fall; switch-0 rise | Either-player ceiling-crusher rise; the shared LBZ variant also has falling modes |
+| Collision | Top-only; alternate route is broken | Top-only or full-body solidity via bit 7 | Top-only; full-body solidity is not a generic-object improvement |
+| Update/lifetime | Byte routine dispatcher; fixed origin-based range | Same basic structure | Direct update code pointer, cached movement index, square-phase initialization and extended lifetime range for the long horizontal path |
+
+The S3&K movement family is a better base for richer movement, but its generic
+index is not a behavioral superset. Before implementing extensions, retain this
+inventory of absent S1/S2 movement families:
+
+| Family | Current/S2 movement nibble | S1 counterpart | What S3&K generic lacks |
+| --- | --- | --- | --- |
+| Fall after standing | `$03`, then internal `$04` | `$03` / `$04` | A 30-update trigger delay, then 32 updates of riding before detaching both riders with inherited downward velocity. S3&K already supplies suitable shared LBZ falling handlers. |
+| Switch-triggered rise | `$07`, then internal `$08` | `$07` / `$08` | A 60-update delay followed by a 512 px rise at 2 px/update, then a stop. Generic S3&K `$07` is a different, rider-triggered ceiling crusher. |
+| Slow 96 px vertical oscillation | `$0C` / `$0D` | `$0B` / `$0C` | Both phases of the separate slow oscillator. These are not the 64/128 px movements at a different starting phase. |
+
+The reversed 64/128 px motions have S3&K equivalents through phase selection;
+they do not require duplicate movement handlers. `$09` is a stationary alias,
+and falling/rising internal states are not additional authored movement families.
+Also preserve sag on moving platforms and S2's optional full-body solidity.
+S1's selectable switch channel is worth restoring: S2 and our initializer erase
+its selector, leaving only switch 0. This is a parameter of the switch-rise mode.
+
+Native instruction probes reproduced three current defects: only standing bit 3
+starts `$03`; the falling detach helper falls through into the switch handler
+(with both riders and switch 0 pressed it reloads the fall timer to 59); and
+subtype `$0080` indexes past `Obj18_Conf`, producing mapping frame `$28`.
+The alternate routine also calls `PlatformObject` instead of `SolidObject`.
+S2 Final masks the shape independently of bit 7 and calls full solidity there.
+These findings are fixes for the proposed port, not features to preserve.
+
+The S3&K ceiling-crusher handler closely matches S1's separate `LabyrinthBlock`
+rising trap (`$61`, subtype `$13` followed by `$14`): integrate Y velocity,
+accelerate upward by 8/256 px per update, probe the ceiling, correct penetration
+and stop. This strongly suggests reused lineage rather than an independent
+motion concept. S3&K activates from either rider without S1's 30-update delay,
+ceases acceleration after rising 128 px and explicitly checks both riders'
+heads for crushing. An exact S1 timing/profile option would also need that
+original delay and continuous acceleration; it remains an additional design
+choice rather than an implemented subtype. See [S1 LZ blocks](https://github.com/sonicretro/s1disasm/blob/15dfa3a6ee4c53aeb482233e493755c84b4f3479/_incObj/61%20LZ%20Blocks.asm).
+
+A replacement must keep word subtype accesses, `$4E` SSTs and universal offsets;
+reuse the current GHZ/EHZ mappings and art; and migrate placement/Debug/editor
+values together. The current layouts contain 72 ordinary platforms in six acts.
+Their IDs cannot be reinterpreted as the raw S3&K table: current `$03` means
+falling, whereas S3&K `$03` means vertical motion. The table above is the review
+checkpoint before adding missing modes.
+
+References: [S1 ordinary platforms](https://github.com/sonicretro/s1disasm/blob/15dfa3a6ee4c53aeb482233e493755c84b4f3479/_incObj/18%20Platforms.asm),
+[S2 Final constructor and full-solid path](https://github.com/sonicretro/s2disasm/blob/4ef457c18fc4902396c43ab06fabc119ac6ecb64/s2.asm#L23221),
+[S2 movement table](https://github.com/sonicretro/s2disasm/blob/4ef457c18fc4902396c43ab06fabc119ac6ecb64/s2.asm#L23386),
+and [S3&K shared movement tables and handlers](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/sonic3k.asm#L50198).
+
+FBZ's jet-powered `Obj_FBZFloatingPlatform` (`$71`) has its own five-entry
+movement table. Treat it as a specialized relative; it does not replace every
+ordinary-platform mode:
 
 | Behavior | Current `$18` platform | S3&K FBZ `$71` |
 | --- | --- | --- |
