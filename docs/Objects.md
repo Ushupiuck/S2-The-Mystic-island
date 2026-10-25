@@ -313,7 +313,7 @@ No ordinary-platform replacement or additional movement subtype is implemented.
 | Behavior | Current `$18` | S2 Final `$18` | S3&K generic floating platform |
 | --- | --- | --- | --- |
 | Horizontal oscillation, nominal total travel | 128 px, two phases | Same | 64/128 px plus a separate 256 px eased movement |
-| Vertical oscillation, nominal total travel | 64/96/128 px, two phases | Same | 64/128 px; X flip selects the opposite phase |
+| Vertical oscillation, nominal total travel | 64/96/128 px, two phases | Same | 64/128 px with slower oscillator profiles; X flip selects the opposite phase |
 | Other repeating paths | None | None | Two diagonals, 128 by 64 px; squares with 32/96/160/224 px sides |
 | Rider sag | Up to 4 px on all normal movement modes | Same | Stationary mode only; sine is scaled with `asr.w #6` instead of a multiply/swap |
 | Triggered movement | Primary-player fall; switch-0 rise | Either-player fall; switch-0 rise | Either-player ceiling-crusher rise; the shared LBZ variant also has falling modes |
@@ -326,12 +326,14 @@ inventory of absent S1/S2 movement families:
 
 | Family | Current/S2 movement nibble | S1 counterpart | What S3&K generic lacks |
 | --- | --- | --- | --- |
+| Original 64/128 px timing | `$01/$05`, `$02/$06`, `$0A/$0B` | `$01/$05`, `$02/$06`, `$0A` | The existing faster profiles: 128 px uses oscillator acceleration 8 versus S3&K's 4; old 64 px motion halves that 128 px oscillator, while S3&K selects a separate 64 px oscillator with acceleration 2. Equal travel does not preserve timing. |
 | Fall after standing | `$03`, then internal `$04` | `$03` / `$04` | A 30-update trigger delay, then 32 updates of riding before detaching both riders with inherited downward velocity. S3&K already supplies suitable shared LBZ falling handlers. |
 | Switch-triggered rise | `$07`, then internal `$08` | `$07` / `$08` | A 60-update delay followed by a 512 px rise at 2 px/update, then a stop. Generic S3&K `$07` is a different, rider-triggered ceiling crusher. |
 | Slow 96 px vertical oscillation | `$0C` / `$0D` | `$0B` / `$0C` | Both phases of the separate slow oscillator. These are not the 64/128 px movements at a different starting phase. |
 
-The reversed 64/128 px motions have S3&K equivalents through phase selection;
-they do not require duplicate movement handlers. `$09` is a stationary alias,
+The reversed 64/128 px motions have S3&K direction/phase counterparts; keep
+the original oscillator choice as well as the selected phase. This needs a
+timing parameter or profile, not duplicate movement handlers. `$09` is a stationary alias,
 and falling/rising internal states are not additional authored movement families.
 Also preserve sag on moving platforms and S2's optional full-body solidity.
 S1's selectable switch channel is worth restoring: S2 and our initializer erase
