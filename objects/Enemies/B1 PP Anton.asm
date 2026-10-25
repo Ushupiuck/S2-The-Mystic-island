@@ -33,7 +33,7 @@ PP_Anton_Init:
 	move.b	#$12,obColType(a0)
 	move.w	obX(a0),objoff_34(a0)
 	move.w	#ArtTile_PP_Anton,obGfx(a0)
-	tst.b	obSubtype(a0)
+	tst.w	obSubtype(a0)
 	bne.w	.Damaged
 	move.l	#-$10000,d0
 	moveq	#0,d1
@@ -56,7 +56,6 @@ PP_Anton_Place:
 	move.l	#$10000,d0
 	add.l	d0,obY(a0)
 	jsr	(ObjHitFloor).l
-	tst.w	d1
 	bpl.s	.End
 	add.w	d1,obY(a0)
 	addq.b	#2,obRoutine(a0)

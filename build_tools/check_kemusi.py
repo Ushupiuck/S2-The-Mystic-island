@@ -4,6 +4,7 @@
 Uses Genesis Plus GX and the assembled game. Player positioning is fixture
 setup; loading, Debug entry/selection/spawning and collision use normal frames.
 """
+from object_layout import decode
 from pathlib import Path
 import argparse
 import hashlib
@@ -28,7 +29,7 @@ def group(g, head):
 def main():
 	p = argparse.ArgumentParser(description=__doc__)
 	p.add_argument('--rom', type=Path, default=ROOT/'s2built.bin')
-	p.add_argument('--listing', type=Path, default=ROOT/'main.lst')
+	p.add_argument('--listing', type=Path, default=ROOT/'md-main.lst')
 	p.add_argument('--core', type=Path, required=True)
 	p.add_argument('--output', type=Path, required=True)
 	p.add_argument('--pal', action='store_true')
@@ -60,7 +61,7 @@ def main():
 
 		# All native Caterkiller/Kemusi placements must initialize and crawl.
 		for act in (1, 2):
-			rows = list(struct.iter_unpack('>HHBB', (ROOT/f'level/objects/SMZ_{act}.bin').read_bytes()))
+			rows = [(x,y,oid,sub) for x,y,oid,eras,sub in decode((ROOT/f'level/objects/SMZ_{act}.bin').read_bytes())]
 			variants = set()
 			for index, (x, y, oid, subtype) in enumerate(rows):
 				if oid != 0x60:
@@ -77,7 +78,7 @@ def main():
 				g.write('Camera_X_pos', camera, 2)
 				g.write('Camera_X_pos_coarse_back', (camera-128) & 0xFF80, 2)
 				g.write('Camera_Y_pos', max(0, min(0x720, py-112)), 2)
-				tag = (g.s['Object_Respawn_Table'] + index) & 65535
+				tag = g.placement_handle(index)
 				head = None
 				for _ in range(180):
 					g.run()
@@ -144,8 +145,8 @@ def main():
 					# Native placements are checked above. Keep their spawn flags
 					# set here so the manager cannot reuse a defeated fixture's
 					# slots for a different, freshly loaded Kemusi.
-					length = g.s['Object_Respawn_Table_end'] - g.s['Object_Respawn_Table']
-					g.write('Object_Respawn_Table', int.from_bytes(b'\x80'*length, 'big'), length)
+					length = g.placement_capacity()
+					g.placement_write(0, int.from_bytes(b'\x80'*length, 'big'), length)
 					for other in ('v_player', 'v_player2'):
 						place(g, other, 0x500, 0x640); g.put(other, 'obControl', 0x81)
 					g.write('Camera_X_pos', 0x4A0, 2)

@@ -30,7 +30,8 @@ Ledge_Main:	; Routine 0
 		move.w	#$200,obPriority(a0)
 		move.b	#sprite_bound($30,Map_Obj1A_width),obActWid(a0)	; Default width
 		move.b	#7,ledge_timedelay(a0)	; set time delay for collapse
-		move.b	obSubtype(a0),obFrame(a0)
+		move.w	obSubtype(a0),d0
+		move.b	d0,obFrame(a0)
 		cmpi.b	#id_HPZ,(Current_Zone).w
 		bne.s	+
 		move.l	#Map_Obj1A_HPZ,obMap(a0)

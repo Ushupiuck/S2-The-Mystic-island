@@ -17,7 +17,7 @@ SMZ_Button:
         move.w obX(a0),d4
         jsr (SolidObject).l
         moveq #0,d0
-        move.b obSubtype(a0),d0
+        move.w obSubtype(a0),d0
         andi.w #15,d0
         lea (f_switch).w,a3
         adda.w d0,a3

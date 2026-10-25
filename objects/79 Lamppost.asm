@@ -24,19 +24,20 @@ Obj79_Init:
 		move.w	#$280,obPriority(a0)
 		move.w	respawn_addr(a0),d0
 		; Scripted/Debug checkpoints have no placement entry.
-		; Guard the pointer before reading or writing persistent state.
+		; Guard the handle before reading or writing persistent state.
 		beq.s	Obj79_Main
-		movea.w	d0,a2
-		btst	#0,(a2)
+		jsr	(Object_RespawnRead).l
+		btst	#0,d0
 		bne.s	+
 		move.b	(v_lastlamp).w,d1
 		andi.b	#$7F,d1
-		move.b	obSubtype(a0),d2
+		move.w	obSubtype(a0),d2
 		andi.b	#$7F,d2
 		cmp.b	d2,d1
 		blo.s	Obj79_Main
 +
-		bset	#0,(a2)
+		move.w	respawn_addr(a0),d0
+		jsr	(Object_RespawnConsume).l
 		move.b	#4,obRoutine(a0)
 		rts
 ; ---------------------------------------------------------------------------
@@ -48,16 +49,15 @@ Obj79_Main:
 		bmi.s	.return
 		move.b	(v_lastlamp).w,d1
 		andi.b	#$7F,d1
-		move.b	obSubtype(a0),d2
+		move.w	obSubtype(a0),d2
 		andi.b	#$7F,d2
 		cmp.b	d2,d1
 		blo.s	Obj79_HitLamp
 		move.w	respawn_addr(a0),d0
 		; Scripted/Debug checkpoints have no placement entry.
-		; Guard the pointer before reading or writing persistent state.
+		; Guard the handle before reading or writing persistent state.
 		beq.s	.return
-		movea.w	d0,a2
-		bset	#0,(a2)
+		jsr	(Object_RespawnConsume).l
 		move.b	#4,obRoutine(a0)
 .return:	rts
 ; ---------------------------------------------------------------------------
@@ -79,10 +79,9 @@ Obj79_HitLamp:
 		bsr.s	Lamppost_StoreInfo
 		move.w	respawn_addr(a0),d0
 		; Scripted/Debug checkpoints have no placement entry.
-		; Guard the pointer before reading or writing persistent state.
+		; Guard the handle before reading or writing persistent state.
 		beq.s	.return
-		movea.w	d0,a2
-		bset	#0,(a2)
+		jsr	(Object_RespawnConsume).l
 .return:	rts
 ; ---------------------------------------------------------------------------
 
@@ -98,7 +97,8 @@ Obj79_AfterHit:
 
 
 Lamppost_StoreInfo:
-		move.b	obSubtype(a0),(v_lastlamp).w
+		move.w	obSubtype(a0),d0
+		move.b	d0,(v_lastlamp).w
 		move.b	(v_lastlamp).w,(v_lastlamp+1).w
 		move.w	obX(a0),(v_lamp_xpos).w
 		move.w	obY(a0),(v_lamp_ypos).w

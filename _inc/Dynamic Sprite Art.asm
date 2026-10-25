@@ -1,4 +1,24 @@
 ; ---------------------------------------------------------------------------
+; Mode 1 keeps compressed ROM art and streams from the former MD chunk RAM.
+; Decompress outside VBlank, after scene clears/PLCs and before the first DMA.
+; Level entry reloads all three sources; S1 stage entry needs only the ring.
+; Other special-stage overlays may reclaim this RAM until the next level load.
+; ---------------------------------------------------------------------------
+	if MegaCDMode1
+LoadPlayerEffectArt:
+		lea	(Nem_Shield_Dynamic).l,a0
+		lea	(Art_Shield).l,a4
+		jsr	(NemDecToRAM).l
+		lea	(Nem_Invincibility).l,a0
+		lea	(Art_Invincibility).l,a4
+		jsr	(NemDecToRAM).l
+LoadRingArt:
+		lea	(Nem_Ring).l,a0
+		lea	(Art_Ring).l,a4
+		jmp	(NemDecToRAM).l
+	endif
+
+; ---------------------------------------------------------------------------
 ; S3&K dynamic pattern loading: word count, then one packed word per run.
 ; d0 = frame, a2 = DPLC table, a3 = cached-frame byte, d4 = VRAM destination,
 ; d6 = uncompressed art. Preserve a0 and d7 (the object-loop counter).

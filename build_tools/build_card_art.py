@@ -173,8 +173,9 @@ def main():
     raw += labels
     assert len(raw) == SS_OVAL*32
     # Special results use a different palette: the blue oval's outline slots
-    # are gray there. Give the same shape a dark-gold rim and yellow fill.
-    oval_colors = {0: 0, 1: 10, 2: 12, 3: 3}
+    # are gray there. Use the existing $B/$C gold ramp around yellow $3;
+    # $A is the much darker reddish brown used by the old rim.
+    oval_colors = {0: 0, 1: 11, 2: 12, 3: 3}
     oval = raw[0x6E*32:0x70*32]
     raw += bytes(oval_colors[b >> 4] << 4 | oval_colors[b & 15] for b in oval)
     assert len(raw) == (SS_OVAL+2)*32

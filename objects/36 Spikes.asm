@@ -59,7 +59,7 @@ Spike_Init:
 		ori.b	#4,obRender(a0)
 		move.w	#$200,obPriority(a0)
 		move.l	#Map_Obj36,obMap(a0)
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		andi.w	#$F0,d0
 		lsr.w	#3,d0
 		lea	Obj36_Conf(pc,d0.w),a1
@@ -77,10 +77,10 @@ Spike_Init:
 		move.w	#spikes_travel,spikes_push_distance(a0)
 		move.w	obX(a0),spikes_base_x_pos(a0)
 		move.w	obY(a0),spikes_base_y_pos(a0)
-		move.b	obSubtype(a0),d0
-		andi.b	#3,d0
-		add.b	d0,d0
-		move.b	d0,obSubtype(a0)		; movement table byte offset
+		move.w	obSubtype(a0),d0
+		andi.w	#3,d0
+		add.w	d0,d0
+		move.w	d0,obSubtype(a0)		; movement table byte offset
 		rts
 ; ---------------------------------------------------------------------------
 Spike_Floor:
@@ -154,7 +154,7 @@ Spike_HurtCharacter:
 ; ---------------------------------------------------------------------------
 MoveSpikes:
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		move.w	.index(pc,d0.w),d1
 		jmp	.index(pc,d1.w)
 .index:	dc.w .return-.index, .vertical-.index, .horizontal-.index

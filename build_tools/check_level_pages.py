@@ -4,28 +4,25 @@ from pathlib import Path
 import argparse
 import ctypes as C
 import json
+import struct
+from convert_s1_ss_background import kosinski_plus_decode
 from genesis_test_core import Genesis
 
 p = argparse.ArgumentParser(description=__doc__)
 for name in ('rom', 'listing', 'core', 'output'):
 	p.add_argument('--' + name, type=Path, required=True)
 p.add_argument('--pal', action='store_true')
+p.add_argument('--system-directory', type=Path, help='Optional BIOS directory for Mode 1 checks')
 args = p.parse_args()
-g = Genesis(args.core, args.rom, args.listing, args.output, args.pal)
+g = Genesis(args.core, args.rom, args.listing, args.output, args.pal, system_directory=args.system_directory)
 UP, DOWN, LEFT, RIGHT, A, B, C_BUTTON, START = 4, 5, 6, 7, 1, 0, 8, 3
 PAGE, BONUS, SOUND = [g.s['LevelSelect_' + name + 'Item'] for name in ('Page', 'Bonus', 'Sound')]
-free_start = g.s['Free_RAM_Start'] & 0xFFFF
-free_end = g.s['Free_RAM_End'] & 0xFFFF
-free_canary = bytes((i * 37 + 19) & 255 for i in range(free_end-free_start))
-check_free_ram = False
 
 
 def step(frames=1):
 	for _ in range(frames):
 		g.run()
 		assert not g.read('v_errortype'), ('CPU exception', g.frame)
-		if check_free_ram:
-			assert bytes(g.ram[free_start:free_end]) == free_canary, 'Contiguous free RAM was touched'
 
 
 def press(button):
@@ -47,6 +44,62 @@ def enter_menu():
 	g.write('f_levselcheat', 1)
 	press(START)
 	step(110)
+	expect_menu_art()
+
+
+def nemesis_art(data):
+	"""Decode reference pixels independently of the game's upload path."""
+	header = int.from_bytes(data[:2], 'big')
+	position, color, table = 2, 0, {}
+	while data[position] != 0xFF:
+		entry = data[position]
+		position += 1
+		if entry & 0x80:
+			color = entry & 15
+			entry = data[position]
+			position += 1
+		table[entry & 15, data[position]] = (color, (entry >> 4) + 1)
+		position += 1
+	position = (position + 1) * 8
+
+	def bits(count):
+		nonlocal position
+		value = 0
+		for _ in range(count):
+			value = (value << 1) | ((data[position // 8] >> (7 - position % 8)) & 1)
+			position += 1
+		return value
+
+	pixels, target = [], (header & 0x7FFF) * 64
+	while len(pixels) < target:
+		code = 0
+		for length in range(1, 9):
+			code = (code << 1) | bits(1)
+			if length == 6 and code == 63:
+				count, color = bits(3) + 1, bits(4)
+				break
+			if (length, code) in table:
+				color, count = table[length, code]
+				break
+		else:
+			raise AssertionError('Invalid Nemesis code')
+		pixels.extend([color] * count)
+	assert len(pixels) == target
+	raw = bytes((a << 4) | b for a, b in zip(pixels[::2], pixels[1::2]))
+	if header & 0x8000:
+		previous, rows = 0, bytearray()
+		for row, in struct.iter_unpack('>I', raw):
+			previous ^= row
+			rows.extend(previous.to_bytes(4, 'big'))
+		raw = bytes(rows)
+	return raw
+
+
+def expect_menu_art():
+	font = nemesis_art(args.rom.read_bytes()[g.s['Nem_S3LevelSelect']:])
+	assert bytes(g.vram[:32]) == bytes(32), 'Level-select blank tile was overwritten'
+	actual = bytes(g.vram[(0x200 + i) ^ 1] for i in range(len(font)))
+	assert actual == font, 'Level-select font pixels differ or use the wrong VRAM destination'
 
 
 def expect_text(row, column, text):
@@ -79,13 +132,14 @@ def wait_level(zone, act):
 
 
 title()
+cd_status = g.read("MCD_status")
+if args.system_directory:
+	assert cd_status == 1, "Mode 1 bootstrap failed"
 enter_menu()
 item(0)
 expect_text(1, 1, 'TWILIGHT HILL')
 for row, text in ((22, 'NEXT'), (23, 'SPECIAL STAGE'), (24, 'SOUND TEST'), (25, '00 SONIC AND TAILS')):
 	expect_text(row, 1, text)
-g.ram[free_start:free_end] = free_canary
-check_free_ram = True
 menu = g.save()
 
 # Up/Down must visit all 32 acts column-first, then each option, on both pages.
@@ -95,6 +149,7 @@ for page in (0, 0x100):
 		change_page()
 		expect_text(1, 1, 'SCRAP MADNESS')
 		expect_text(22, 1, 'PREVIOUS')
+	expect_menu_art()
 	item(page)
 	for selected in range(1, SOUND + 2):
 		press(DOWN)
@@ -199,19 +254,39 @@ else:
 	raise AssertionError('Special stage did not start')
 item(BONUS)
 checks = []
+rom = args.rom.read_bytes()
+cd_chunks = g.s['Chunk_Table'] == 0x426000
+free_start = g.s.get('Free_RAM_Start', 0) & 0xFFFF
+free_end = g.s['Free_RAM_End'] & 0xFFFF
+free_canary = bytes((i * 37 + 19) & 255 for i in range(free_end-free_start))
 for zone in range(16):
 	for act in range(4):
 		g.restore(menu)
+		if cd_chunks:
+			g.ram[free_start:free_end] = free_canary
+			if 'Player_Art_Buffer_Start' in g.s:
+				start = g.s['Player_Art_Buffer_Start'] & 0xFFFF
+				end = g.s['Player_Art_Buffer_End'] & 0xFFFF
+				g.ram[start:end] = bytes([0xA5]) * (end-start)
 		selected = (zone // 8) * 256 + (zone % 8) * 4 + act
 		g.write('v_levselitem', selected, 2)
 		press(START)
 		wait_level(zone, act)
 		step(15); item(selected)
+		if cd_chunks:
+			header = g.s['LevelArtPointers'] + (zone * 4 + act) * 12
+			source = struct.unpack_from('>I', rom, header + 8)[0] & 0xFFFFFF
+			expected = kosinski_plus_decode(rom[source:])[0]
+			actual = bytes(g.read(g.s['Chunk_Table'] + i) for i in range(len(expected)))
+			assert actual == expected, (zone, act, 'CD chunks differ from decompressed ROM')
+			assert bytes(g.ram[free_start:free_end]) == free_canary, (zone, act, 'freed MD RAM was touched')
+			if 'Player_Art_Buffer_Start' in g.s:
+				for label, name in [('Art_Shield', 'Shield.unc'), ('Art_Invincibility', 'Invincibility.unc'), ('Art_Ring', 'Ring.bin')]:
+					data = (Path(__file__).resolve().parents[1] / 'art/uncompressed' / name).read_bytes()
+					assert bytes(g.read(g.s[label]+i) for i in range(len(data))) == data, (zone, act, label)
+		assert g.read("MCD_status") == cd_status
 		checks.append({'zone': zone, 'act': act + 1, 'passed': True})
 	print('Four-act launch checks passed for zone ' + str(zone), flush=True)
 print('Menu controls, layout, sound, return memory, special stage and all 64 act boots pass.', flush=True)
-print(f'{len(free_canary)} contiguous free bytes remain untouched through all checked scenes.', flush=True)
-(args.output / 'report.json').write_text(json.dumps({'pal': args.pal, 'return_memory': returns, 'checks': checks,
-    'free_ram': {'start': free_start | 0xFF0000, 'end_exclusive': free_end | 0xFF0000,
-                 'bytes': len(free_canary), 'canary_preserved': True}}, indent=2) + '\n')
+(args.output / 'report.json').write_text(json.dumps({'pal': args.pal, 'return_memory': returns, 'checks': checks}, indent=2) + '\n')
 g.close()

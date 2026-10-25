@@ -21,18 +21,19 @@ def main():
 	p = argparse.ArgumentParser(description=__doc__)
 	p.add_argument('--core', type=Path, required=True)
 	p.add_argument('--rom', type=Path, default=ROOT/'s2built.bin')
-	p.add_argument('--listing', type=Path, default=ROOT/'main.lst')
+	p.add_argument('--listing', type=Path, default=ROOT/'md-main.lst')
 	p.add_argument('--output', type=Path, required=True)
 	p.add_argument('--pal', action='store_true')
 	p.add_argument('--probe', action='store_true')
+	p.add_argument('--system-directory', type=Path, help='Optional BIOS directory for Mode 1 checks')
 	args = p.parse_args()
-	g = Genesis(args.core, args.rom, args.listing, args.output, args.pal)
+	g = Genesis(args.core, args.rom, args.listing, args.output, args.pal, system_directory=args.system_directory)
 	checks = []
 	try:
 		boot_level(g, zone=0, act=0)
 		isolate(g)
-		length = g.s['Object_Respawn_Table_end']-g.s['Object_Respawn_Table']
-		g.write('Object_Respawn_Table', int.from_bytes(b'\x80'*length, 'big'), length)
+		length = g.placement_capacity()
+		g.placement_write(0, int.from_bytes(b'\x80'*length, 'big'), length)
 		stage = g.save()
 
 		def setup(x, y, payload, facing, course=False, phase=0, wall_rows=(0, 1, 2, 3)):

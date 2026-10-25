@@ -13,9 +13,9 @@ from genesis_test_core import Genesis
 
 def boot_level(g,item=10,player=0,zone=None,act=0):
     for _ in range(1800):
-        g.run()
         if g.read('v_vbla_routine',2)==g.s['Vint_Title'] and g.read('v_generictimer',2)==375:
             break
+        g.run()
     else:
         raise AssertionError('Title did not start')
     g.write('f_levselcheat',1)
@@ -62,7 +62,7 @@ def objects(g,oid=None):
 
 
 def owner(g,obj):
-    pointer=(g.s['Object_Respawn_Table']+obj['index'])&65535
+    pointer=g.placement_handle(obj['index'])
     return [a for a in objects(g) if not g.get(a,'obRender')&0x40 and g.get(a,'respawn_addr',2)==pointer]
 
 
@@ -132,7 +132,7 @@ def main():
                 position(g,obj['world_x']-64)
                 g.run(120)
                 entry['owners_after_revisit']=len(owner(g,obj))
-                entry['respawn_state']=g.read(g.s['Object_Respawn_Table']+obj['index'])
+                entry['respawn_state']=g.placement_read(obj['index'])
                 if entry['owners_after_leaving']:
                     report['failures'].append({'name':obj['name'],'reason':'owner survived outside X window'})
                 if entry['owners_after_revisit']>1:

@@ -41,7 +41,7 @@ Obj78_StateIndex:	offsetTable
 Obj78_Init:
 		addq.b	#2,obRoutine(a0)
 		ori.b	#4,obRender(a0)
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		andi.w	#7,d0
 		cmpi.w	#4,d0
 		blo.s	+
@@ -76,7 +76,7 @@ Obj78_LoadBlock:
 		move.b	obRender(a0),obRender(a1)
 		move.w	#$180,obPriority(a1)
 		move.b	#$10,obActWid(a1)
-		move.b	obSubtype(a0),obSubtype(a1)
+		move.w	obSubtype(a0),obSubtype(a1)
 		move.w	d2,obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.w	obX(a0),stair_origX(a1)
@@ -89,7 +89,7 @@ Obj78_LoadBlock:
 ; ===========================================================================
 Obj78_Main:
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		andi.w	#7,d0					; read subtype bits 0-2 only
 		add.w	d0,d0
 		move.w	Obj78_ModeIndex(pc,d0.w),d1
@@ -134,7 +134,7 @@ Obj78_WaitTopTrigger:
 .countdown:
 		subq.w	#1,stair_wait_time(a0)
 		bne.s	.return
-		addq.b	#1,obSubtype(a0)
+		addq.w	#1,obSubtype(a0)
 .return:	rts
 ; ===========================================================================
 ; Wait for bottom contact, then delay before advancing to next subtype.
@@ -151,7 +151,7 @@ Obj78_WaitBottomTrigger:
 .countdown:
 		subq.w	#1,stair_wait_time(a0)
 		bne.s	.jiggle
-		addq.b	#1,obSubtype(a0)
+		addq.w	#1,obSubtype(a0)
 		rts
 
 .jiggle:

@@ -141,13 +141,7 @@ locVRAM:	macro loc,controlport
 ; ---------------------------------------------------------------------------
 
 writeVRAM:	macro source,destination
-		lea	(vdp_control_port).l,a5
-		move.l	#$94000000+((((source_end-source)>>1)&$FF00)<<8)+$9300+(((source_end-source)>>1)&$FF),(a5)
-		move.l	#$96000000+(((source>>1)&$FF00)<<8)+$9500+((source>>1)&$FF),(a5)
-		move.w	#$9700+((((source>>1)&$FF0000)>>16)&$7F),(a5)
-		move.w	#$4000+((destination)&$3FFF),(a5)
-		move.w	#$80+(((destination)&$C000)>>14),(v_dma_thunk).w
-		move.w	(v_dma_thunk).w,(a5)
+		dma68kToVDP source,destination,source_end-source,VRAM
 		endm
 
 ; ---------------------------------------------------------------------------
@@ -156,13 +150,7 @@ writeVRAM:	macro source,destination
 ; ---------------------------------------------------------------------------
 
 writeCRAM:	macro source,destination
-		lea	(vdp_control_port).l,a5
-		move.l	#$94000000+((((source_end-source)>>1)&$FF00)<<8)+$9300+(((source_end-source)>>1)&$FF),(a5)
-		move.l	#$96000000+(((source>>1)&$FF00)<<8)+$9500+((source>>1)&$FF),(a5)
-		move.w	#$9700+((((source>>1)&$FF0000)>>16)&$7F),(a5)
-		move.w	#$C000+(destination&$3FFF),(a5)
-		move.w	#$80+((destination&$C000)>>14),(v_dma_thunk).w
-		move.w	(v_dma_thunk).w,(a5)
+		dma68kToVDP source,destination,source_end-source,CRAM
 		endm
 
 ; ---------------------------------------------------------------------------
@@ -458,21 +446,72 @@ copyTilemap:	macro source,destination,width,height
 		bsr.w	PlaneMapToVRAM_H40
 		endm
 
-; tells the VDP to copy a region of 68k memory to VRAM or CRAM or VSRAM
+; Copy fixed 68K data to VRAM/CRAM/VSRAM, splitting actual 128 KB crossings.
+; The engine uses autoincrement 2. Word RAM must stay owned until completion.
 dma68kToVDP macro source,dest,length,type
-	lea	(VDP_control_port).l,a5
-	move.l	#(($9400|((((length)>>1)&$FF00)>>8))<<16)|($9300|(((length)>>1)&$FF)),(a5)
-	move.l	#(($9600|((((source)>>1)&$FF00)>>8))<<16)|($9500|(((source)>>1)&$FF)),(a5)
-	move.w	#$9700|(((((source)>>1)&$FF0000)>>16)&$7F),(a5)
-	move.w	#((vdpComm(dest,type,DMA)>>16)&$FFFF),(a5)
-	move.w	#(vdpComm(dest,type,DMA)&$FFFF),(v_dma_thunk).w
-	move.w	(v_dma_thunk).w,(a5)
-    endm
+	if MOMPASS>1
+		if ((source)&1)|((length)&1)|((length)<=0)
+			fatal "DMA requires an even source and a positive even byte length"
+		endif
+	endif
+	if (((source)&$1FFFF)+(length))>$20000
+		dma68kToVDP source,dest,$20000-((source)&$1FFFF),type
+		dma68kToVDP (source)+$20000-((source)&$1FFFF),(dest)+$20000-((source)&$1FFFF),(length)-($20000-((source)&$1FFFF)),type
+	else
+		dma68kToVDPChunk source,dest,length,type
+	endif
+	endm
+
+dma68kToVDPChunk macro source,dest,length,type
+	lea	(vdp_control_port).l,a5
+	set .cdwordram,0
+	ifdef MegaCDMode1
+		if MegaCDMode1&(((source)&$E00000)==$600000)
+			set .cdwordram,1
+		endif
+	endif
+	if (.cdwordram==0)|((length)>2)
+		move.l	#(($9400|((((length)>>1)&$FF00)>>8))<<16)|($9300|(((length)>>1)&$FF)),(a5)
+		move.l	#(($9600|(((((source)>>1)+.cdwordram)&$FF00)>>8))<<16)|($9500|((((source)>>1)+.cdwordram)&$FF)),(a5)
+		move.w	#$9700|((((((source)>>1)+.cdwordram)&$FF0000)>>16)&$7F),(a5)
+		move.w	#((vdpComm(dest,type,DMA)>>16)&$FFFF),(a5)
+		move.w	#(vdpComm(dest,type,DMA)&$FFFF),(v_dma_thunk).w
+		move.w	(v_dma_thunk).w,(a5)
+	endif
+	if .cdwordram&((((type)==VRAM)&((length)<=$10000))|(((type)<>VRAM)&((length)<=$80)))
+		; Bias source by one word, then repair the first word with the CPU.
+		; One-word copies use the CPU alone, including at a source bank edge.
+		; A destination wrap already replaces the bad word with later data.
+		move.l	#vdpComm(dest,type,WRITE),(a5)
+		move.w	(source).l,(vdp_data_port).l
+		move.l	#vdpComm((dest)+(length),type,WRITE),(a5)
+	endif
+	endm
 
 ; Macro for marking the boundaries of an object layout file
 ObjectLayoutBoundary macro
-		dc.w	$FFFF,$0000,$0000
+		dc.w	$FFFF,$0000,$0000,$0000
     endm
+
+; Include and validate an eight-byte placement list against its state capacity.
+; Its surrounding ObjectLayoutBoundary remains explicit in the data table.
+ObjectLayoutFile macro filename
+.start:
+	binclude filename
+.end:
+	if ((.end-.start)&(omSize-1))<>0
+		fatal "Object layout is not a whole number of placement records"
+	endif
+	if MegaCDMode1
+		if (.end-.start)/omSize-1>MCD_ObjectPlacementCount
+			fatal "Object layout exceeds Mode 1 placement-state capacity"
+		endif
+	else
+		if (.end-.start)/omSize-1>MD_ObjectPlacementCount
+			fatal "Object layout exceeds cartridge placement-state capacity"
+		endif
+	endif
+	endm
 
 ; macro to move the absolute value of the source in the destination
 mvabs macro source,destination

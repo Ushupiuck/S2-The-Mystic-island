@@ -59,9 +59,9 @@ cat_diag_cost	= $16A			; sqrt(2) pixels, rounded to 8.8
 ; ===========================================================================
 
 Cat_Main:	; Routine 0
-		cmpi.b	#2,obSubtype(a0)	; 0 = Caterkiller, 1 = Kemusi, 2 = damaged Kemusi
+		cmpi.w	#2,obSubtype(a0)	; 0 = Caterkiller, 1 = Kemusi, 2 = damaged Kemusi
 		bls.s	.subtype
-		move.b	#2,obSubtype(a0)
+		move.w	#2,obSubtype(a0)
 .subtype:
 		move.b	#7,obHeight(a0)
 		move.b	#8,obWidth(a0)
@@ -86,7 +86,7 @@ Cat_Main:	; Routine 0
 .catAtlasReady:
 		move.b	#sprite_bound(8,Map_Cat_width),obActWid(a0)
 		move.b	#$B,obColType(a0)
-		tst.b	obSubtype(a0)
+		tst.w	obSubtype(a0)
 		beq.s	.artready
 		move.l	#Map_Kemusi,obMap(a0)
 		move.b	#Map_Kemusi_height,height_pixels(a0)
@@ -148,11 +148,11 @@ Cat_Loop:
 		move.b	obStatus(a0),obStatus(a1)
 		move.b	obStatus(a0),obRender(a1)
 		move.b	#8,obFrame(a1)
-		move.b	obSubtype(a0),obSubtype(a1)
+		move.w	obSubtype(a0),obSubtype(a1)
 		beq.s	.bodyready
 		move.b	#3,obFrame(a1)
 		move.b	#$B,obColType(a1)	; the damaged, unarmored body can be attacked
-		cmpi.b	#2,obSubtype(a1)
+		cmpi.w	#2,obSubtype(a1)
 		beq.s	.bodyready
 		move.b	#2,obFrame(a1)
 		move.b	#11,obHeight(a1)
@@ -175,7 +175,7 @@ Cat_Loop:
 		clr.b	ob2ndRout(a0)
 
 Cat_Head:	; Routine 2
-		tst.b	obSubtype(a0)
+		tst.w	obSubtype(a0)
 		beq.s	.head
 		; Kemusi's damaged body is also a weak point. A defeat anywhere
 		; consumes the group, while a lost/unloaded piece releases its owner.
@@ -196,7 +196,7 @@ Cat_Head:	; Routine 2
 		lea	Cat_Index2(pc),a1
 		move.w	(a1,d0.w),d1
 		jsr	(a1,d1.w)
-		tst.b	obSubtype(a0)
+		tst.w	obSubtype(a0)
 		bne.s	.kemusianim
 		move.b	cat_mode(a0),d1
 		bpl.s	.display
@@ -232,8 +232,7 @@ Cat_Head:	; Routine 2
 Cat_ChkGone:
 		move.w	respawn_addr(a0),d0
 		beq.s	.delete
-		movea.w	d0,a2
-		bclr	#7,(a2)
+		jsr	(Object_RespawnRelease).l
 
 .delete:	move.b	#$A,obRoutine(a0)	; goto Cat_Delete next
 		rts
@@ -293,7 +292,7 @@ Cat_Index2:
 		addq.b	#2,ob2ndRout(a0)
 		move.b	#$10,cat_wait_time(a0)
 		move.w	#-$C0,obVelX(a0)
-		cmpi.b	#2,obSubtype(a0)
+		cmpi.w	#2,obSubtype(a0)
 		bne.s	.phase
 		move.w	#-$60,obVelX(a0)
 .phase:
@@ -407,7 +406,7 @@ Cat_Body:	; Routines 4, 6, 8
 		bne.s	Cat_BodySeg1
 
 Cat_BodySeg2:
-		tst.b	obSubtype(a0)
+		tst.w	obSubtype(a0)
 		bne.s	Cat_BodySeg1
 		tst.b	cat_mode(a0)
 		bpl.s	Cat_BodySeg1
@@ -494,7 +493,6 @@ Cat_FallPart:
 .floor:
 		bsr.w	ObjectFall
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.s	.return
 		add.w	d1,obY(a0)
 		clr.w	obYSub(a0)
@@ -523,7 +521,7 @@ Cat_StartCrawl:
 		lea	cat_start_children(a5),a2
 		moveq	#2,d0
 		move.w	#$C0,d2
-		cmpi.b	#2,obSubtype(a5)
+		cmpi.w	#2,obSubtype(a5)
 		bne.s	.startbody
 		lsr.w	#1,d2
 .startbody:
@@ -711,7 +709,6 @@ Cat_Scatter:	; Routine $C
 		tst.w	obVelY(a0)
 		bmi.s	loc_16CE0
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.s	loc_16CE0
 		add.w	d1,obY(a0)
 		move.w	#-$400,obVelY(a0)

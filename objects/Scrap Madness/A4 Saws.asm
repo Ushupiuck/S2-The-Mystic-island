@@ -30,14 +30,14 @@ SMZ_Saw_Main:	; Routine 0
 		move.w	obX(a0),SMZ_saw_origX(a0)			; remember initial X-position
 		move.w	obY(a0),SMZ_saw_origY(a0)			; remember initial Y-position
 
-		cmpi.b	#3,obSubtype(a0)			; is object a pizza cutter? (subtype 0-2)
+		cmpi.w	#3,obSubtype(a0)			; is object a pizza cutter? (subtype 0-2)
 		bhs.s	SMZ_Saw_Action				; if not, branch (speeding saw, subtype 3-4)
 		move.b	#$22|$80,obColType(a0)	; make pizza cutter harmful on touch
 ; ---------------------------------------------------------------------------
 
 SMZ_Saw_Action:	; Routine 2
 		moveq	#0,d0					; clear d0
-		move.b	obSubtype(a0),d0			; get saw subtype (0-4)
+		move.w	obSubtype(a0),d0			; get saw subtype (0-4)
 		andi.w	#7,d0					; limit to sane values
 		add.w	d0,d0					; double for word-based indexing
 		move.w	SMZ_Saw_Types(pc,d0.w),d1			; find behavior type for current saw

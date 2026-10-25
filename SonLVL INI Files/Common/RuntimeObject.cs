@@ -69,12 +69,12 @@ namespace MysticIsland.ObjectDefinitions
 					break;
 				case "BallHog":
 					alternate = Load("../art/moduled kosinski/Enemy Ballhog (Vertical).kospm", CompressionType.KosinskiPlusM, "Vertical Ballhog.bin", 1);
-					properties.Add(new PropertySpec("Behavior", typeof(int), "Ballhog", "$00-$0F horizontal; $10 timed vertical; $11-$1E and $9F-$FF moving vertical; $1F-$9E stationary vertical. $1F is a runtime underflow edge case.", null,
-						Choices("Horizontal", "Vertical, timed", "Vertical, moving", "Vertical, stationary"), obj => HogMode(obj.SubType),
-						(obj, value) => { int mode = (int)value; if (mode != HogMode(obj.SubType)) obj.SubType = HogSubtype(mode, Convert.ToInt32(BombSeconds(obj.SubType))); }));
-					properties.Add(new PropertySpec("Bomb lifetime (seconds)", typeof(double), "Ballhog", "Delay * 60 frames. Timed mode $10 uses a fixed 255-frame value; $1F underflows to 255 seconds.", null,
-						obj => BombSeconds(obj.SubType),
-						(obj, value) => { int mode = HogMode(obj.SubType); if (mode != 1 && Convert.ToDouble(value) != BombSeconds(obj.SubType)) obj.SubType = HogSubtype(mode, Convert.ToInt32(value)); }));
+					properties.Add(new PropertySpec("Behavior", typeof(int), "Ballhog", "$00-$0F horizontal; $10 timed vertical; $11-$1E and $801F-$FFFF moving vertical; $1F-$801E stationary vertical. Comparisons and timer wrap use words.", null,
+						Choices("Horizontal", "Vertical, timed", "Vertical, moving", "Vertical, stationary"), obj => HogMode(Subtype(obj)),
+						(obj, value) => { int mode = (int)value; if (mode != HogMode(Subtype(obj))) SetSubtype(obj, HogSubtype(mode, Convert.ToInt32(BombSeconds(Subtype(obj))))); }));
+					properties.Add(new PropertySpec("Bomb lifetime (seconds)", typeof(double), "Ballhog", "Delay * 60 frames. Timed mode $10 uses 255 frames. Other delays wrap in the runtime's 16-bit frame timer.", null,
+						obj => BombSeconds(Subtype(obj)),
+						(obj, value) => { int mode = HogMode(Subtype(obj)); if (mode != 1 && Convert.ToDouble(value) != BombSeconds(Subtype(obj))) SetSubtype(obj, HogSubtype(mode, Convert.ToInt32(value))); }));
 					break;
 				case "Swing":
 					Bits("Chain length", 0, 15, "Number of 16-pixel links; suspended object rests 8 pixels beyond the chain.");
@@ -111,10 +111,10 @@ namespace MysticIsland.ObjectDefinitions
 				case "Capsule": Bits("Part", 0, 255, "Body and button are separate placements.", "Body", "Button"); break;
 				case "Checkpoint": Bits("Checkpoint number", 0, 255, "Identifier stored when activated."); break;
 				case "Bonus": Bits("Points", 0, 255, "End-of-level hidden bonus.", "No points", "10000 points", "1000 points", "100 points"); break;
-				case "Lift": Bits("Travel duration", 0, 255, "Subtype * 8 frames: moves 16 * subtype pixels horizontally and 8 * subtype pixels down before falling. X flip reverses horizontal travel."); break;
+				case "Lift": Bits("Travel duration", 0, 65535, "Subtype * 8 frames: moves 16 * subtype pixels horizontally and 8 * subtype pixels down before falling. X flip reverses horizontal travel."); break;
 				case "HPZWaterfall": Bits("Height", 0, 255, "Waterfall top = origin Y - 120 + subtype * 16 pixels, clamped to water. Values $10 and above add a second stream."); break;
 				case "EHZWaterfall": Bits("Configuration", 0, 255, "Waterfall configuration from object 49."); break;
-				case "FlapDoor": Bits("Interval (seconds)", 0, 255, "The entire subtype is multiplied by 60 frames between opening and closing."); break;
+				case "FlapDoor": Bits("Interval (seconds)", 0, 65535, "The entire subtype is multiplied by 60 frames between opening and closing."); break;
 				case "Tilt": Bits("Duration", 4, 15, "Tilt duration = (value + 1) * 16 frames."); Bits("Phase", 0, 15, "Initial phase = (value + 1) * 16 frames."); break;
 				case "Bubbles": Bits("Generator", 7, 1, "Set for a bubble generator; clear for an individual bubble.", "Individual bubble", "Generator"); Bits("Frequency / size", 0, 127, "Generator frequency, or animation ID for an individual bubble."); break;
 				case "Junction": Bits("Switch number", 0, 15, "Button that reverses junction rotation."); break;
@@ -143,12 +143,39 @@ namespace MysticIsland.ObjectDefinitions
 					groups = ReadWordTable("../objects/Scrap Madness/A9 Spin Conveyor.asm", "SMZ_SpinC_Placements");
 					Bits("Group", 0, 127, "Absolute-position group 0 to 5. Moving the spawner does not move the runtime's hardcoded group.");
 					Bits("Group spawner", 7, 1, "Set for level placements; clear is an individual moving child.", "Individual child", "Eight-platform group"); break;
+				case "LabyrinthConveyor":
+					groups = ReadWordTable("../objects/S1/1F LZ Conveyor.asm", "LCon_Placements");
+					routes = ReadWordTable("../objects/S1/1F LZ Conveyor.asm", "LCon_Data");
+					alternate = Load("../art/moduled kosinski/LZ conveyor.kospm", CompressionType.KosinskiPlusM, "LZ conveyor.asm", 0);
+					properties.Add(new PropertySpec("Mode", typeof(int), "Object settings", "$80-$87 create complete relative groups; $7F is the decorative wheel.", null,
+						Choices("Individual platform", "Complete group", "Wheel"), obj => LConMode(Subtype(obj)),
+						(obj, value) => { int mode = (int)value; if (mode != LConMode(Subtype(obj))) SetSubtype(obj, (Subtype(obj) & 0xFF00) | (mode == 2 ? (byte)0x7F : mode == 1 ? (byte)(0x80 | ((Subtype(obj) >> 4) & 7)) : (byte)((Subtype(obj) & 7) << 4))); }));
+					properties.Add(new PropertySpec("Route / group", typeof(int), "Object settings", "0-5: original LZ routes. 6-7: rounded Lava Reef routes. Offsets follow the placement origin; X flip reverses travel without mirroring the path.", null,
+						obj => (Subtype(obj) & 0x80) != 0 ? Subtype(obj) & 0x3F : (Subtype(obj) >> 4) & 7,
+						(obj, value) => { if (Subtype(obj) != 0x7F) SetSubtype(obj, (Subtype(obj) & 0xFF00) | ((Subtype(obj) & 0x80) != 0 ? (byte)((Subtype(obj) & 0xC0) | ((int)value & 0x3F)) : (byte)((Subtype(obj) & 15) | (((int)value & 7) << 4)))); }));
+					properties.Add(new PropertySpec("Underside spikes", typeof(bool), "Object settings", "Complete groups: bit 6 adds downward spikes while keeping the upper surface safe. Individual recipe members can set bit 0 in the subtype word's upper byte.", false,
+						obj => (Subtype(obj) & 0xC0) == 0xC0,
+						(obj, value) => { if ((Subtype(obj) & 0x80) != 0) SetSubtype(obj, (ushort)((Subtype(obj) & ~0x40) | ((bool)value ? 0x40 : 0))); }));
+					properties.Add(new PropertySpec("Initial corner", typeof(int), "Object settings", "Individual platforms only; invalid corners fall back to corner 0. Switch E reverses travel permanently, as in Sonic 1.", null,
+						obj => LConMode(Subtype(obj)) == 0 ? Subtype(obj) & 15 : 0,
+						(obj, value) => { if (LConMode(Subtype(obj)) == 0) SetSubtype(obj, (ushort)((Subtype(obj) & ~15) | ((int)value & 15))); }));
+					break;
 				case "Teleporter":
 					routes = ReadWordTable("../objects/Scrap Madness/AB Teleporter.asm", "SMZ_PipeData");
 					Bits("Route", 0, 7, "SMZ_PipeData uses absolute destinations; route 7 requires 50 rings.", "Route 0", "Route 1", "Route 2", "Route 3", "Route 4", "Route 5", "Route 6", "Route 7 (50 rings)"); break;
 				case "InvisibleSolid": Bits("Width", 4, 15, "Full width = (value + 1) * 16 pixels."); Bits("Height", 0, 15, "Full height = (value + 1) * 16 pixels."); break;
 				case "Button": Bits("Switch number", 0, 15, "Sets the corresponding f_switch entry."); break;
 			}
+		}
+
+		// Definitions are compiled separately from the custom layout class. Read
+		// its binary contract rather than depending on that assembly's type.
+		private static int Subtype(ObjectEntry obj) { return ByteConverter.ToUInt16(obj.GetBytes(), 6); }
+		private static void SetSubtype(ObjectEntry obj, int subtype)
+		{
+			byte[] data = obj.GetBytes();
+			ByteConverter.GetBytes((ushort)subtype).CopyTo(data, 6);
+			obj.FromBytes(data);
 		}
 
 		private string Setting(string key, string fallback)
@@ -164,8 +191,8 @@ namespace MysticIsland.ObjectDefinitions
 		}
 		private void Bits(string name, int shift, int mask, string description, params string[] names)
 		{
-			Func<ObjectEntry, object> get = obj => (obj.SubType >> shift) & mask;
-			Action<ObjectEntry, object> set = (obj, value) => obj.SubType = (byte)((obj.SubType & ~(mask << shift)) | (((int)value & mask) << shift));
+			Func<ObjectEntry, object> get = obj => (Subtype(obj) >> shift) & mask;
+			Action<ObjectEntry, object> set = (obj, value) => SetSubtype(obj, (ushort)((Subtype(obj) & ~(mask << shift)) | (((int)value & mask) << shift)));
 			// The enum overload always installs StringEnumConverter, even for a
 			// null dictionary. Numeric fields need the ordinary int converter.
 			properties.Add(names.Length == 0
@@ -175,26 +202,27 @@ namespace MysticIsland.ObjectDefinitions
 		private void SignedNibble(string name, string description)
 		{
 			properties.Add(new PropertySpec(name, typeof(int), "Object settings", description, null,
-				obj => ((obj.SubType >> 4) & 7) - ((obj.SubType >> 4) & 8),
-				(obj, value) => obj.SubType = (byte)((obj.SubType & 15) | (((int)value & 15) << 4))));
+				obj => ((Subtype(obj) >> 4) & 7) - ((Subtype(obj) >> 4) & 8),
+				(obj, value) => SetSubtype(obj, (ushort)((Subtype(obj) & ~0xF0) | (((int)value & 15) << 4)))));
 		}
 		private static int HogMode(int subtype)
 		{
-			// The handler branches on N after a byte CMP, rather than unsigned
-			// carry: its moving mode also includes the upper $9F-$FF range.
-			return subtype < 0x10 ? 0 : subtype == 0x10 ? 1 : ((subtype - 0x1F) & 0x80) == 0 ? 3 : 2;
+			// Match the handler's word CMP/BPL, including its signed upper range.
+			return subtype < 0x10 ? 0 : subtype == 0x10 ? 1 : ((subtype - 0x1F) & 0x8000) == 0 ? 3 : 2;
 		}
+		private static int LConMode(int subtype) { return subtype == 0x7F ? 2 : (subtype & 0x80) != 0 ? 1 : 0; }
 		private static double BombSeconds(int subtype)
 		{
 			int mode = HogMode(subtype);
-			return mode == 0 ? subtype : mode == 1 ? 255 / 60.0 : mode == 2 ? subtype - 0x10 : (subtype - 0x20) & 255;
+			int delay = mode == 0 ? subtype : mode == 2 ? (subtype - 0x10) : (subtype - 0x20) & 65535;
+			return mode == 1 ? 255 / 60.0 : ((delay * 60) & 65535) / 60.0;
 		}
-		private static byte HogSubtype(int mode, int seconds)
+		private static ushort HogSubtype(int mode, int seconds)
 		{
 			if (mode == 0) return (byte)Math.Max(0, Math.Min(15, seconds));
 			if (mode == 1) return 0x10;
-			if (mode == 2) return (byte)(0x10 + (seconds >= 143 ? Math.Min(239, seconds) : Math.Max(1, Math.Min(14, seconds))));
-			return seconds == 255 ? (byte)0x1F : (byte)(0x20 + Math.Max(0, Math.Min(126, seconds)));
+			if (mode == 2) return (ushort)(0x10 + Math.Max(1, Math.Min(14, seconds)));
+			return (ushort)(0x20 + Math.Max(0, Math.Min(1092, seconds)));
 		}
 		private static Sprite[] Render(byte[] art, byte[] mappings, int palette, byte[] dplc, EngineVersion dplcVersion = EngineVersion.S2, int frameCount = 0)
 		{
@@ -239,6 +267,7 @@ namespace MysticIsland.ObjectDefinitions
 			if (split > 0) return WordValue(value.Substring(0, split), labels) - WordValue(value.Substring(split + 1), labels);
 			if ((split = value.IndexOf('+')) > 0) return WordValue(value.Substring(0, split), labels) + WordValue(value.Substring(split + 1), labels);
 			if ((split = value.IndexOf('*')) > 0) return WordValue(value.Substring(0, split), labels) * WordValue(value.Substring(split + 1), labels);
+			if (value.StartsWith("-")) return -WordValue(value.Substring(1), labels);
 			int result;
 			return labels.TryGetValue(value, out result) ? result : value.StartsWith("$") ? Convert.ToInt32(value.Substring(1), 16) : int.Parse(value);
 		}
@@ -268,7 +297,7 @@ namespace MysticIsland.ObjectDefinitions
 			}
 		}
 
-		private Sprite Preview(byte subtype, int x, int y, bool yflip)
+		private Sprite Preview(int subtype, int x, int y, bool yflip)
 		{
 			List<Sprite> pieces;
 			switch (behavior)
@@ -334,6 +363,19 @@ namespace MysticIsland.ObjectDefinitions
 					pieces = new List<Sprite>();
 					for (int i = 0; i < members; i++) { int entry = offset + 2 + i * 6; pieces.Add(new Sprite(frames[0], ByteConverter.ToUInt16(groups, entry) - x, ByteConverter.ToUInt16(groups, entry + 2) - y)); }
 					return new Sprite(pieces);
+				case "LabyrinthConveyor":
+					if (subtype == 0x7F) return alternate[0];
+					if ((subtype & 0x80) == 0)
+					{
+						int route = ByteConverter.ToUInt16(routes, (subtype >> 4) * 2), phase = (subtype & 15) * 4;
+						if (phase >= ByteConverter.ToUInt16(routes, route)) phase = 0;
+						return new Sprite(frames[4], LConSigned(routes, route + 6 + phase), LConSigned(routes, route + 8 + phase));
+					}
+					if ((subtype & 0x3F) >= 8) return frames[4];
+					int group = ByteConverter.ToUInt16(groups, (subtype & 0x3F) * 2), countLCon = ByteConverter.ToUInt16(groups, group) + 1;
+					pieces = new List<Sprite>();
+					for (int i = 0; i < countLCon; i++) { int entry = group + 2 + i * 6; bool spikes = (subtype & 0x40) != 0 || (ByteConverter.ToUInt16(groups, entry + 4) & 0x100) != 0; pieces.Add(new Sprite(frames[spikes ? 5 : 4], LConSigned(groups, entry), LConSigned(groups, entry + 2))); }
+					return new Sprite(pieces);
 				default: return At(frames, data.Frame);
 			}
 		}
@@ -346,7 +388,8 @@ namespace MysticIsland.ObjectDefinitions
 		public override ReadOnlyCollection<byte> Subtypes { get { return new ReadOnlyCollection<byte>(data.Subtypes ?? new byte[] { data.DefaultSubtype }); } }
 		public override string SubtypeName(byte subtype)
 		{
-			ObjectEntry entry = new SonicRetro.SonLVL.API.S3K.S3KObjectEntry { SubType = subtype };
+			ObjectEntry entry = LevelData.ObjectFormat.CreateObject();
+			SetSubtype(entry, subtype);
 			List<string> settings = new List<string>();
 			foreach (PropertySpec property in properties.Take(2))
 			{
@@ -363,14 +406,29 @@ namespace MysticIsland.ObjectDefinitions
 		public override Sprite SubtypeImage(byte subtype) { return behavior == "SpinGroup" ? frames[0] : Preview(subtype, 0, 0, false); }
 		public override Sprite GetSprite(ObjectEntry obj)
 		{
-			Sprite sprite = new Sprite(Preview(obj.SubType, obj.X, obj.Y, obj.YFlip));
+			Sprite sprite = new Sprite(Preview(Subtype(obj), obj.X, obj.Y, obj.YFlip));
 			if (behavior == "Teleporter") sprite.Flip(obj.XFlip, false);
-			else if (behavior != "SpinGroup" && behavior != "InvisibleSolid" && behavior != "Conveyor" && behavior != "PathSwapper") sprite.Flip(obj.XFlip, obj.YFlip);
+			else if (behavior != "SpinGroup" && behavior != "LabyrinthConveyor" && behavior != "InvisibleSolid" && behavior != "Conveyor" && behavior != "PathSwapper") sprite.Flip(obj.XFlip, obj.YFlip);
 			return sprite;
 		}
 		public override Sprite GetDebugOverlay(ObjectEntry obj)
 		{
-			int movement = obj.SubType & 15;
+			if (behavior == "LabyrinthConveyor")
+			{
+				if (Subtype(obj) == 0x7F) return null;
+				int routeLCon = Subtype(obj) >> 4;
+				if ((Subtype(obj) & 0x80) != 0)
+				{
+					if ((Subtype(obj) & 0x3F) >= 8) return null;
+					int group = ByteConverter.ToUInt16(groups, (Subtype(obj) & 0x3F) * 2);
+					routeLCon = (ByteConverter.ToUInt16(groups, group + 6) & 0x7F) >> 4;
+				}
+				int route = ByteConverter.ToUInt16(routes, routeLCon * 2), cornersLCon = ByteConverter.ToUInt16(routes, route) / 4;
+				List<Sprite> segments = new List<Sprite>();
+				for (int i = 0; i < cornersLCon; i++) { int a = route + 6 + i * 4, b = route + 6 + ((i + 1) % cornersLCon) * 4; segments.Add(Travel(LConSigned(routes, a), LConSigned(routes, a + 2), LConSigned(routes, b), LConSigned(routes, b + 2))); }
+				return new Sprite(segments);
+			}
+			int movement = Subtype(obj) & 15;
 			if (behavior == "Platform")
 			{
 				if (movement == 1 || movement == 5) return Travel(-64, 0, 64, 0);
@@ -383,14 +441,14 @@ namespace MysticIsland.ObjectDefinitions
 			{
 				if (movement == 1) return Travel(-96, 0, 0, 0);
 				if (movement == 8) return Travel(0, -128, 0, 0);
-				if (movement == 9 || movement == 10) return Travel(0, 0, (obj.XFlip ? -1 : 1) * (frames[(obj.SubType >> 4) % frames.Length].Width), 0);
+				if (movement == 9 || movement == 10) return Travel(0, 0, (obj.XFlip ? -1 : 1) * (frames[(Subtype(obj) >> 4) % frames.Length].Width), 0);
 			}
-			if (behavior == "Lift") return Travel(0, 0, (obj.XFlip ? -1 : 1) * obj.SubType * 16, obj.SubType * 8);
+			if (behavior == "Lift") return Travel(0, 0, (obj.XFlip ? -1 : 1) * Subtype(obj) * 16, Subtype(obj) * 8);
 			if (behavior == "Saw" && movement == 1) return Travel(-96, 0, 0, 0);
 			if (behavior == "Saw" && movement == 2) return Travel(0, obj.XFlip ? -128 : -48, 0, obj.XFlip ? -80 : 0);
 			if (behavior == "RunningDisc") return Outline((movement == 0 ? 72 : 56) * 2, (movement == 0 ? 72 : 56) * 2);
 			if (behavior != "Teleporter") return null;
-			int offset = ByteConverter.ToUInt16(routes, (obj.SubType & 7) * 2), count = ByteConverter.ToUInt16(routes, offset) / 4;
+			int offset = ByteConverter.ToUInt16(routes, (Subtype(obj) & 7) * 2), count = ByteConverter.ToUInt16(routes, offset) / 4;
 			List<Point> points = new List<Point> { Point.Empty };
 			for (int i = 0; i < count; i++) points.Add(new Point(ByteConverter.ToUInt16(routes, offset + 2 + i * 4) - obj.X, ByteConverter.ToInt16(routes, offset + 4 + i * 4) - obj.Y));
 			int left = points.Min(p => p.X), top = points.Min(p => p.Y);
@@ -407,6 +465,7 @@ namespace MysticIsland.ObjectDefinitions
 			bitmap.DrawRectangle(LevelData.ColorYellow, x2 - left - 2, y2 - top - 2, 4, 4);
 			return new Sprite(bitmap, left, top);
 		}
+		private static int LConSigned(byte[] data, int offset) { return unchecked((short)ByteConverter.ToUInt16(data, offset)); }
 	}
 
 	// Release SonLVL compiles definitions in parallel and names cached DLLs
@@ -414,6 +473,7 @@ namespace MysticIsland.ObjectDefinitions
 	// even though its implementation is shared here. Zone overrides keep the
 	// same type because they replace that ID before definitions are loaded.
 	public sealed class PathSwapper : RuntimeObject { }
+	public sealed class LabyrinthConveyor : RuntimeObject { }
 	public sealed class BubbleGenerator : RuntimeObject { }
 	public sealed class TiltingPlatform : RuntimeObject { }
 	public sealed class FlappingDoor : RuntimeObject { }

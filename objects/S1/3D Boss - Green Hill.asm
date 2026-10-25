@@ -1,14 +1,15 @@
 ; ---------------------------------------------------------------------------
 ; Object 3D - Eggman (GHZ)
-; Classic ship, expressions and escape; staged weapon deployment and breakup
-; adapted from S3&K's Sky Sanctuary boss. Active flight never waits for a swing.
+; S1 timed flight, pendulum and escape; staged weapon deployment and breakup
+; adapted from S3&K's Sky Sanctuary boss.
 ; ---------------------------------------------------------------------------
 BGHZ_FlashColor = objoff_2E	; word: palette color saved before a hit
 BGHZ_WeaponReady = objoff_30	; byte: set by the fully extended chain
+BGHZ_BreakTimer = objoff_31	; byte: boss updates since the first explosion was created
 BGHZ_BaseX = objoff_34		; longs: ObjectMove_Reserved2's unbobbed position
 BGHZ_Parent = objoff_38		; long: face/exhaust -> ship
 BGHZ_BaseY = objoff_3C
-BGHZ_Timer = objoff_40		; word: defeat/recovery timer
+BGHZ_Timer = objoff_40		; word: flight/wait/defeat/recovery timer
 BGHZ_FlashTimer = objoff_42	; byte: remaining invulnerable frames
 BGHZ_BobAngle = objoff_43		; byte: vertical sine phase
 
@@ -19,8 +20,7 @@ BGHZ_Explode = 8
 BGHZ_Recover = $A
 BGHZ_Escape = $C
 BGHZ_CenterX = boss_ghz_x+$A0
-BGHZ_LeftTurn = BGHZ_CenterX-$20
-BGHZ_RightTurn = BGHZ_CenterX+$20
+BGHZ_ChainBreakDelay = 64		; HCZ/MGZ/CNZ-style defeat wait before releasing attached parts
 
 Obj3D:
 		moveq	#0,d0
@@ -97,7 +97,7 @@ BGHZ_ShipMain:	; Routine 2
 ; ===========================================================================
 BGHZ_ShipIndex:	dc.w BGHZ_ShipStart-BGHZ_ShipIndex
 		dc.w BGHZ_MakeBall-BGHZ_ShipIndex
-		dc.w BGHZ_WaitForWeapon-BGHZ_ShipIndex
+		dc.w BGHZ_ShipWait-BGHZ_ShipIndex
 		dc.w BGHZ_ShipMove-BGHZ_ShipIndex
 		dc.w BGHZ_ShipExplode-BGHZ_ShipIndex
 		dc.w BGHZ_ShipRecover-BGHZ_ShipIndex
@@ -134,33 +134,43 @@ BGHZ_MakeBall:
 		move.w	BGHZ_BaseY(a0),obY(a1)
 		move.l	a0,BGHZ_Parent(a1)
 		move.b	#BGHZ_Deploy,ob2ndRout(a0)
+		move.w	#120-1,BGHZ_Timer(a0)	; S1's opening pause includes weapon deployment
 .return:
 		rts
 ; ---------------------------------------------------------------------------
 
-BGHZ_WaitForWeapon:
+BGHZ_ShipWait:
+		subq.w	#1,BGHZ_Timer(a0)
+		bpl.s	.return
 		tst.b	BGHZ_WeaponReady(a0)
-		beq.s	.return
+		bne.s	.start_pass
+		clr.w	BGHZ_Timer(a0)		; a full chain pool can retry indefinitely
+		rts
+.start_pass:
 		move.b	#BGHZ_Patrol,ob2ndRout(a0)
-		move.w	#-$100,obVelX(a0)
+		move.w	#64-1,BGHZ_Timer(a0)
+		move.w	#$100,obVelX(a0)
+		cmpi.w	#BGHZ_CenterX,BGHZ_BaseX(a0)
+		bne.s	.face_direction
+		move.w	#128-1,BGHZ_Timer(a0)	; first pass: quarter speed from the center
+		move.w	#$40,obVelX(a0)
+.face_direction:
+		btst	#0,obStatus(a0)
+		bne.s	.return
+		neg.w	obVelX(a0)
 .return:
 		rts
 ; ---------------------------------------------------------------------------
 
 BGHZ_ShipMove:
-		jsr	(ObjectMove_Reserved2).l
-		tst.w	obVelX(a0)
-		bpl.s	.moving_right
-		cmpi.w	#BGHZ_LeftTurn,BGHZ_BaseX(a0)
-		bhi.s	.return
-		bra.s	.turn
-.moving_right:
-		cmpi.w	#BGHZ_RightTurn,BGHZ_BaseX(a0)
-		blo.s	.return
+		subq.w	#1,BGHZ_Timer(a0)
+		bmi.s	.turn
+		jmp	(ObjectMove_Reserved2).l
 .turn:
-		neg.w	obVelX(a0)
-		bchg	#0,obStatus(a0)		; turn immediately; no end-of-swing wait
-.return:
+		bchg	#0,obStatus(a0)
+		move.w	#64-1,BGHZ_Timer(a0)
+		move.b	#BGHZ_Deploy,ob2ndRout(a0)
+		clr.w	obVelX(a0)
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -210,6 +220,7 @@ BGHZ_Defeat:
 		clr.b	BGHZ_FlashTimer(a0)
 .palette_ready:
 		clr.b	obColType(a0)
+		clr.b	BGHZ_BreakTimer(a0)
 		clr.w	obVelX(a0)
 		clr.w	obVelY(a0)
 		moveq	#100,d0
@@ -220,6 +231,12 @@ BGHZ_Defeat:
 ; ---------------------------------------------------------------------------
 
 BGHZ_ShipExplode:
+		tst.b	BossBurst_Started(a0)	; bit 7: a burst was actually created
+		bpl.s	.explode
+		cmpi.b	#BGHZ_ChainBreakDelay,BGHZ_BreakTimer(a0)
+		bhs.s	.explode
+		addq.b	#1,BGHZ_BreakTimer(a0)
+.explode:
 		subq.w	#1,BGHZ_Timer(a0)
 		bmi.s	.recover
 		moveq	#BossExplosion_GHZ,d0
@@ -289,7 +306,10 @@ BGHZ_FaceMain:	; Routine 4
 		tst.b	BGHZ_FlashTimer(a1)
 		bne.s	.hurt
 		cmpi.b	#BGHZ_Deploy,ob2ndRout(a1)
-		beq.s	.laugh
+		bne.s	.check_player
+		cmpi.w	#BGHZ_CenterX,BGHZ_BaseX(a1)
+		beq.s	.laugh			; laugh during the opening pause, not every turn
+.check_player:
 		cmpi.b	#4,(v_player+obRoutine).w
 		bhs.s	.laugh
 		tst.l	(v_player2+code).w

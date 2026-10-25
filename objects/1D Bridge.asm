@@ -49,7 +49,7 @@ Bridge_Init:
 		move.w	obX(a0),d3
 		lea	obSubtype(a0),a2
 		moveq	#0,d1
-		move.b	(a2),d1
+		move.w	(a2),d1
 		move.w	d1,d0
 		lsl.w	#3,d0
 		sub.w	d0,d3
@@ -149,7 +149,7 @@ loc_7D06:
 
 loc_7D0A:
 		moveq	#0,d1
-		move.b	obSubtype(a0),d1
+		move.w	obSubtype(a0),d1
 		lsl.w	#3,d1
 		move.w	d1,d2
 		addq.w	#8,d1
@@ -166,7 +166,7 @@ loc_7D22:
 loc_7D3E:
 		movea.l	Bridge_child1(a0),a1
 		bsr.w	DeleteObject2
-		cmpi.b	#8,obSubtype(a0)
+		cmpi.w	#8,obSubtype(a0)
 		bls.s	+
 		movea.l	Bridge_child2(a0),a1
 		bsr.w	DeleteObject2
@@ -205,7 +205,7 @@ loc_7D9C:
 
 loc_7DA0:
 		moveq	#0,d1
-		move.b	obSubtype(a0),d1
+		move.w	obSubtype(a0),d1
 		lsl.w	#3,d1
 		move.w	d1,d2
 		addq.w	#8,d1
@@ -336,7 +336,7 @@ loc_7EAE:
 		lea	sub9_mapframe+next_subspr(a1),a2
 		lea	sub2_mapframe(a1),a1
 		moveq	#0,d1
-		move.b	obSubtype(a0),d1
+		move.w	obSubtype(a0),d1
 		subq.b	#1,d1
 		moveq	#0,d5
 
@@ -397,7 +397,7 @@ Bridge_Depress:
 		move.w	d0,d4
 		lea	(Bridge_BendData2).l,a4
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		lsl.w	#4,d0
 		moveq	#0,d3
 		move.b	objoff_43(a0),d3
@@ -429,7 +429,7 @@ Bridge_Depress:
 +		dbf	d2,-
 
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		moveq	#0,d3
 		move.b	objoff_43(a0),d3
 		addq.b	#1,d3

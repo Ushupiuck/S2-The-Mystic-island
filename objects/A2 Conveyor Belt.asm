@@ -27,8 +27,9 @@ Conv_Index:	dc.w Conv_Main-Conv_Index
 Conv_Main:
 		addq.b	#2,obRoutine(a0)
 		moveq	#48,d1
-		move.b	obSubtype(a0),d0
-		bpl.s	.height
+		move.w	obSubtype(a0),d0
+		btst	#7,d0
+		beq.s	.height
 		moveq	#112,d1
 .height:
 		move.w	d1,conv_height(a0)
@@ -37,7 +38,7 @@ Conv_Main:
 		lsl.w	#3,d0
 		move.w	d0,conv_width(a0)
 		moveq	#0,d1
-		move.b	obSubtype(a0),d1
+		move.w	obSubtype(a0),d1
 		andi.w	#$70,d1
 		lsr.w	#4,d1
 		btst	#0,obStatus(a0)

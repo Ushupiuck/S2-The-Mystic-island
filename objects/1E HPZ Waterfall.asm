@@ -43,7 +43,7 @@ loc_1446C:
 		move.l	a1,objoff_3C(a0)
 		move.w	obY(a0),objoff_38(a0)
 		move.w	obY(a0),objoff_3A(a0)
-		cmpi.b	#$10,obSubtype(a0)
+		cmpi.w	#$10,obSubtype(a0)
 		blo.s	loc_14518
 
 		jsr	(FindNextFreeObj).l
@@ -65,7 +65,7 @@ loc_1446C:
 
 loc_14518:
 		moveq	#0,d1
-		move.b	obSubtype(a0),d1
+		move.w	obSubtype(a0),d1
 		move.w	objoff_38(a0),d0
 		subi.w	#$78,d0
 		lsl.w	#4,d1
@@ -95,7 +95,7 @@ loc_1454A:
 
 loc_14564:
 		move.b	d0,obFrame(a1)
-		cmpi.b	#$10,obSubtype(a0)
+		cmpi.w	#$10,obSubtype(a0)
 		blo.s	loc_14584
 		movea.l	objoff_40(a0),a1
 		subi.w	#$F,d1

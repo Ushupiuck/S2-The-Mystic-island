@@ -84,11 +84,11 @@ SwingingPtfm_Init:
         move.w #ArtTile_SMZ_Atlas,obGfx(a0)
 .swingAtlasReady:
 		moveq	#0,d1
-		move.b	obSubtype(a0),d1
+		move.w	obSubtype(a0),d1
 
 .family:
-		move.b	d1,d4
-		andi.b	#$F0,d4				; keep behavior family
+		move.w	d1,d4
+		andi.w	#$F0,d4				; keep behavior family
 		cmpi.b	#$60,d4
 		bne.s	.notDetach
 		addq.b	#4,obRoutine(a0)		; 6X starts at detach watcher
@@ -172,7 +172,7 @@ SwingingPtfm_Init:
 		move.l	a1,swing_helper_ptr(a0)
 
 .noHelper:
-		move.b	d4,obSubtype(a0)
+		move.w	d4,obSubtype(a0)
 
 		; normal initial resting position: straight down from the anchor
 		move.w	swing_orig_x(a0),obX(a0)
@@ -371,7 +371,6 @@ SwingingPtfm_Floating:
 		moveq	#0,d3
 		move.b	obActWid(a0),d3
 		jsr	(ObjHitWallRight).l
-		tst.w	d1
 		bpl.s	.solid
 		add.w	d1,obX(a0)
 		clr.w	obVelX(a0)
@@ -391,8 +390,8 @@ SwingingPtfm_Floating:
 
 SwingingPtfm_UpdateMotion:
 		moveq	#0,d1
-		move.b	obSubtype(a0),d1
-		lsr.b	#4,d1				; family 0-6
+		move.w	obSubtype(a0),d1
+		lsr.w	#4,d1				; family 0-6
 		add.w	d1,d1				; word index
 		move.w	SwingingPtfm_MotionIndex(pc,d1.w),d1
 		jmp	SwingingPtfm_MotionIndex(pc,d1.w)

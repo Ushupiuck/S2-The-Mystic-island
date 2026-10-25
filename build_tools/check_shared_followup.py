@@ -18,7 +18,7 @@ ROOT=Path(__file__).resolve().parents[1]
 p=argparse.ArgumentParser(description=__doc__)
 for key in ('core','output'):p.add_argument('--'+key,type=Path,required=True)
 p.add_argument('--rom',type=Path,default=ROOT/'s2built.bin')
-p.add_argument('--listing',type=Path,default=ROOT/'main.lst')
+p.add_argument('--listing',type=Path,default=ROOT/'md-main.lst')
 p.add_argument('--reference',default='1749b38b24af145c9c3634fefc7395faec1a00c7')
 p.add_argument('--system-directory',type=Path)
 p.add_argument('--pal',action='store_true');p.add_argument('--probe',action='store_true')

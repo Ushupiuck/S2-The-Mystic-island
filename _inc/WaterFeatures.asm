@@ -5,10 +5,10 @@ CheckLevelForWater:
 		beq.w	ChangeWaterSurfacePos.return
 		; Keep H-int disabled while the title card and initial tiles are loaded.
 		; Vint_LevelLoad enables the water split during the first level VBlank.
-		moveq	#0,d0
-		move.b	(Current_Act).w,d0
-		add.w	d0,d0
-		lea	(WaterHeight).l,a1
+		move.w	(Current_ZoneAndAct).w,d0
+		ror.b	#2,d0
+		lsr.w	#5,d0			; (zone * ActsPerZone + act) * 2
+		lea	WaterHeight(pc),a1
 		move.w	(a1,d0.w),d0
 		move.w	d0,(v_waterpos1).w
 		move.w	d0,(v_waterpos2).w
@@ -18,7 +18,7 @@ CheckLevelForWater:
 		move.b	#1,(Water_flag).w
 		move.w	#30,(v_air).w
 		moveq	#palid_LZSonWater,d0
-		cmpi.b	#103,(Current_ZoneAndAct).w	; Labyrinth act 4?
+		cmpi.w	#id_LZ*$100+3,(Current_ZoneAndAct).w ; Labyrinth act 4?
 		bne.s	.loadpalette			; if not, load from lampost
 		moveq	#palid_SBZ3SonWat,d0
 
@@ -97,13 +97,54 @@ WaterEffects:
 ; End of function WaterEffects
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Initial water heights
+; Water settings cover every zone and act, including currently dry slots.
+; Four entries per zone, in act 1-4 order. Enable flags before choosing heights.
+; Nonzero enables water; initialization selects its usual 1-pixel/frame speed.
 ; ---------------------------------------------------------------------------
-WaterHeight:	dc.w $600	; Hidden Palace 1
-		dc.w $328	; Labyrinth 2
-		dc.w $900	; Labyrinth 3
-		dc.w $228	; Scrap Brain 3
+WaterFlags:
+		dc.b 0, 0, 0, 0	; GHZ
+		dc.b 1, 1, 1, 1	; LZ
+		dc.b 0, 0, 0, 0	; CPZ
+		dc.b 0, 0, 0, 0	; EHZ
+		dc.b 1, 1, 1, 1	; HPZ
+		dc.b 0, 0, 0, 0	; HTZ
+		dc.b 0, 0, 0, 0	; MTZ
+		dc.b 0, 0, 0, 0	; LV07
+		dc.b 0, 0, 0, 0	; SMZ
+		dc.b 0, 0, 0, 0	; LV09
+		dc.b 0, 0, 0, 0	; LV0A
+		dc.b 0, 0, 0, 0	; LV0B
+		dc.b 0, 0, 0, 0	; LV0C
+		dc.b 0, 0, 0, 0	; LV0D
+		dc.b 0, 0, 0, 0	; LV0E
+		dc.b 0, 0, 0, 0	; LV0F
+WaterFlags_End:
+	if WaterFlags_End-WaterFlags<>LevelActCount
+		fatal "Water flags must cover every act"
+	endif
 		even
+
+WaterHeight:
+		dc.w $600, $600, $600, $600	; GHZ
+		dc.w $600, $328, $900, $228	; LZ
+		dc.w $600, $600, $600, $600	; CPZ
+		dc.w $600, $600, $600, $600	; EHZ
+		dc.w $600, $328, $900, $228	; HPZ
+		dc.w $600, $600, $600, $600	; HTZ
+		dc.w $600, $600, $600, $600	; MTZ
+		dc.w $600, $600, $600, $600	; LV07
+		dc.w $600, $600, $600, $600	; SMZ
+		dc.w $600, $600, $600, $600	; LV09
+		dc.w $600, $600, $600, $600	; LV0A
+		dc.w $600, $600, $600, $600	; LV0B
+		dc.w $600, $600, $600, $600	; LV0C
+		dc.w $600, $600, $600, $600	; LV0D
+		dc.w $600, $600, $600, $600	; LV0E
+		dc.w $600, $600, $600, $600	; LV0F
+WaterHeight_End:
+	if (WaterHeight_End-WaterHeight)/2<>LevelActCount
+		fatal "Water heights must cover every act"
+	endif
 ; ===========================================================================
 
 ; ---------------------------------------------------------------------------
@@ -111,11 +152,12 @@ WaterHeight:	dc.w $600	; Hidden Palace 1
 ; ---------------------------------------------------------------------------
 
 DynamicWaterHeight:
-		moveq	#0,d0
-		move.b	(Current_Act).w,d0
-		add.w	d0,d0
-		move.w	DynWater_Index(pc,d0.w),d0
-		jsr	DynWater_Index(pc,d0.w)
+		move.w	(Current_ZoneAndAct).w,d0
+		ror.b	#2,d0
+		lsr.w	#5,d0
+		lea	DynWater_Index(pc),a1
+		move.w	(a1,d0.w),d0
+		jsr	(a1,d0.w)
 		moveq	#0,d1
 		move.b	(Water_flag).w,d1
 		move.w	(v_waterpos3).w,d0
@@ -129,24 +171,32 @@ DynamicWaterHeight:
 ; End of function DynamicWaterHeight
 
 ; ---------------------------------------------------------------------------
-DynWater_Index:	; 4 entries per level; 1 per act
-;		dc.w DynWater_Null-DynWater_Index	; 0
-;		dc.w DynWater_Null-DynWater_Index
-;		dc.w DynWater_Null-DynWater_Index
-;		dc.w DynWater_Null-DynWater_Index
-		dc.w DynWater_Debug-DynWater_Index
-		dc.w DynWater_LZ2-DynWater_Index	; leftover from Sonic 1's LZ2
-		dc.w DynWater_LZ3-DynWater_Index	; leftover from Sonic 1's LZ3
-		dc.w DynWater_LZ4-DynWater_Index	; leftover from Sonic 1's LZ4
-;		dc.w DynWater_Null-DynWater_Index	; 1
-;		dc.w DynWater_Null-DynWater_Index
-;		dc.w DynWater_Null-DynWater_Index
-;		dc.w DynWater_Null-DynWater_Index
-;		dc.w DynWater_Null-DynWater_Index	; 2
-;		dc.w DynWater_Null-DynWater_Index
-;		dc.w DynWater_Null-DynWater_Index
-;		dc.w DynWater_Null-DynWater_Index
+; Four relative routine offsets per zone; dry slots can be enabled independently.
+DynWater_Index:
+		dc.w DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index	; GHZ
+		dc.w DynWater_Debug-DynWater_Index, DynWater_LZ2-DynWater_Index, DynWater_LZ3-DynWater_Index, DynWater_LZ4-DynWater_Index	; LZ
+		dc.w DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index	; CPZ
+		dc.w DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index	; EHZ
+		dc.w DynWater_Debug-DynWater_Index, DynWater_LZ2-DynWater_Index, DynWater_LZ3-DynWater_Index, DynWater_LZ4-DynWater_Index	; HPZ
+		dc.w DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index	; HTZ
+		dc.w DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index	; MTZ
+		dc.w DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index	; LV07
+		dc.w DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index	; SMZ
+		dc.w DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index	; LV09
+		dc.w DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index	; LV0A
+		dc.w DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index	; LV0B
+		dc.w DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index	; LV0C
+		dc.w DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index	; LV0D
+		dc.w DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index	; LV0E
+		dc.w DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index, DynWater_Null-DynWater_Index	; LV0F
+DynWater_Index_End:
+	if (DynWater_Index_End-DynWater_Index)/2<>LevelActCount
+		fatal "Dynamic water routines must cover every act"
+	endif
 ; ---------------------------------------------------------------------------
+
+DynWater_Null:
+		rts
 
 DynWater_Debug:						; This uses the 2nd controller to make the water level move up or down
 		btst	#bitUp,(v_jpadhold2).w		; is UP being held by player 2?
@@ -464,8 +514,7 @@ WaterSlides:
 		move.b	obX(a1),d1
 		andi.w	#$7F,d1
 		add.w	d1,d0
-		lea	(v_lvllayout).w,a2
-		move.b	(a2,d0.w),d0
+		jsr	(Layout_Read).l
 		lea	Slide_Chunks_End(pc),a2
 		moveq	#Slide_Chunks_End-Slide_Chunks-1,d1
 

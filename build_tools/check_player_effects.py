@@ -21,6 +21,13 @@ def main():
                 system_directory=args.system_directory)
     boot_level(g, item=0, player=args.player)
     rom = args.rom.read_bytes()
+    art_root = Path(__file__).resolve().parents[1] / 'art/uncompressed'
+    shield_art = (art_root / 'Shield.unc').read_bytes()
+    stars = (art_root / 'Invincibility.unc').read_bytes()
+    if 'Player_Art_Buffer_Start' in g.s:
+        for label, data in [('Art_Shield', shield_art), ('Art_Invincibility', stars),
+                            ('Art_Ring', (art_root / 'Ring.bin').read_bytes())]:
+            assert bytes(g.read(g.s[label] + i) for i in range(len(data))) == data, label
     slots = range(g.s['v_lvlobjspace'] & 0xFFFF, g.s['v_lvlobjend'] & 0xFFFF, g.s['object_size'])
     # Isolate the effects fixture from nearby level objects and their temporary
     # test-zone art allocations; retain the live player dust controllers.
@@ -33,6 +40,31 @@ def main():
 
     def vram(address, length):
         return bytes(g.vram[(address + i) ^ 1] for i in range(length))
+
+    # Keep the existing regular/lost-ring frame uploader honest with a RAM
+    # source too. Lost-ring timing is held while each source frame is selected.
+    ring_art = (art_root / 'Ring.bin').read_bytes()
+    seen_rings = set()
+    for frame in range(8):
+        g.write('v_ani3_time', 0)
+        g.write('v_ani3_frame', frame)
+        g.write('v_ani3_prev', 255)
+        expected = ring_art[frame*128:(frame+1)*128]
+        for _ in range(8):
+            g.run()
+            assert not g.read('v_errortype')
+            if vram(g.s['ArtTile_RingLoss'] * 32, 128) == expected:
+                break
+        else:
+            raise AssertionError(('Lost-ring frame never reached VRAM', frame))
+    for _ in range(48):
+        previous = g.read('v_ani1_prev')
+        g.run()
+        frame = g.read('v_ani1_prev')
+        if frame == previous:
+            assert vram(g.s['ArtTile_Ring'] * 32, 128) == ring_art[frame*128:(frame+1)*128]
+            seen_rings.add(frame)
+    assert seen_rings == set(range(8)), seen_rings
 
     def reward(kind):
         obj = next(a for a in slots if not g.get(a, 'code'))
@@ -60,9 +92,9 @@ def main():
                 expected = bytearray()
                 for i in range(count):
                     run = struct.unpack_from('>H', rom, pos + 2 + i * 2)[0]
-                    source = g.s['Art_Shield'] + (run & 0xFFF) * 32
+                    source = (run & 0xFFF) * 32
                     size = ((run >> 12) + 1) * 32
-                    expected.extend(rom[source:source + size])
+                    expected.extend(shield_art[source:source + size])
                 assert vram(bank, len(expected)) == expected, (name, frame, hex(bank))
                 seen[name].add(frame)
                 if name == banks[0][0] and frame == 2 and not captured:
@@ -75,7 +107,6 @@ def main():
     first = shields('shields.png')
     reward(7)
     g.run(5)
-    stars = rom[g.s['Art_Invincibility']:g.s['Art_Invincibility_End']]
     star_colors = {n for byte in stars for n in (byte >> 4, byte & 15)}
     assert star_colors == {0, 6, 7, 8, 9}, ('Stars must use the shared gray ramp', star_colors)
     assert vram(g.s['ArtTile_Invincibility'] * 32, len(stars)) == stars
@@ -90,6 +121,7 @@ def main():
         g.put(player, 'invtime', 0, 2)
     resumed = shields('shields-restored.png')
     report = {'region': 'PAL' if args.pal else 'NTSC', 'primary': 'Tails' if args.player else 'Sonic',
+              'regular_and_lost_ring_frames': len(seen_rings),
               'shield_uploads': first, 'resident_star_tiles_match': len(stars) // 32,
               'star_sprites': len(star_sprites), 'shield_uploads_after_stars': resumed}
     (args.output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')

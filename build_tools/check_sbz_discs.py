@@ -5,6 +5,7 @@ Debug positions each solo character above a real placement, then switches off.
 Damage flashing isolates the wheel from nearby hazards. These focused scenes
 are separate from the paused controller-only Tails AI route samples.
 """
+from object_layout import decode
 from pathlib import Path
 import argparse
 import hashlib
@@ -21,13 +22,12 @@ ROOT = Path(__file__).resolve().parents[1]
 p = argparse.ArgumentParser(description=__doc__)
 p.add_argument('--core', type=Path, required=True)
 p.add_argument('--rom', type=Path, default=ROOT/'s2built.bin')
-p.add_argument('--listing', type=Path, default=ROOT/'main.lst')
+p.add_argument('--listing', type=Path, default=ROOT/'md-main.lst')
 p.add_argument('--output', type=Path)
 p.add_argument('--wheel', type=int, help='Check only this zero-based placement')
 p.add_argument('--player', type=int, choices=(1, 2), help=argparse.SUPPRESS)
 args = p.parse_args()
-rows = [(x, y & 0xFFF) for x, y, oid, sub in struct.iter_unpack(
-    '>HHBB', (ROOT/'level/objects/SMZ_2.bin').read_bytes()[:-6]) if oid == 0xA1]
+rows = [(x, y & 0xFFF) for x, y, oid, sub in ((x,y,oid,sub) for x,y,oid,eras,sub in decode((ROOT/'level/objects/SMZ_2.bin').read_bytes())) if oid == 0xA1]
 checks = []
 
 

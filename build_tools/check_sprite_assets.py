@@ -49,7 +49,7 @@ def main():
     rom = (ROOT / 's2built.bin').read_bytes()
     symbols = {name: int(value, 16) for name, value in re.findall(
         r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]',
-        (ROOT / 'main.lst').read_text())}
+        (ROOT / 'md-main.lst').read_text())}
     # The VDP DMA source is a word address; an odd ROM pointer silently
     # uploads the preceding byte and shifts every pixel in the frame.
     for label in ('Art_Sonic', 'Art_Tails', 'Art_Tails_Extra', 'Art_Tails_Tails',
@@ -57,6 +57,16 @@ def main():
             'Art_Points', 'Art_Shield', 'Art_Invincibility', 'Art_Ring',
             'Art_SSResultsRing', 'Art_BigRing', 'Art_BigFlash'):
         assert symbols[label] % 2 == 0, f'{label}: DMA source needs word alignment'
+    if 'Player_Art_Buffer_Start' in symbols:
+        for label, packed, source in (
+                ('Art_Shield', 'Nem_Shield_Dynamic', 'Shield.unc'),
+                ('Art_Invincibility', 'Nem_Invincibility', 'Invincibility.unc'),
+                ('Art_Ring', 'Nem_Ring', 'Ring.bin')):
+            size = (ROOT / 'art/uncompressed' / source).stat().st_size
+            assert symbols[label + '_End'] - symbols[label] == size, label
+            assert (struct.unpack_from('>H', rom, symbols[packed])[0] & 0x7FFF) * 32 == size
+            assert 0xFF0000 <= symbols[label] & 0xFFFFFF < symbols['Main_RAM_Start'] & 0xFFFFFF
+        assert symbols['Player_Art_Buffer_End'] == symbols['Main_RAM_Start']
     assert symbols['code'] == 0 and symbols['height_pixels'] == 6
     assert symbols['object_size'] == 0x4E
     assert symbols['vram_hscroll'] == 0xF000

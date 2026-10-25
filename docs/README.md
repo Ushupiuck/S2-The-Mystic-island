@@ -13,7 +13,7 @@ root. Windows is the primary development environment; see [AGENTS.md](../AGENTS.
 | [Players and effects](Players-and-effects.md) | Character behavior, companion AI, monitors, water and input locks |
 | [Levels](Levels.md) | Zone status, per-act PLCs/music, tile animation, SMZ and asset regeneration |
 | [Special stage](Special-stage.md) | Rotating S1 stage, its separate ABI, overlays and screen-specific VRAM |
-| [Mega-CD](Mega-CD.md) | Mode 1 branch, CPU ownership, banked RAM, jobs and DMA |
+| [Mega-CD](Mega-CD.md) | Mode 1 build, CPU ownership, banked RAM, jobs and DMA |
 | [Testing](Testing.md) | Dependencies, commands, disposable course, report generation and limits |
 
 [SonLVL's own guide](../SonLVL%20INI%20Files/README.md) owns editor setup,
@@ -23,11 +23,22 @@ own song/SFX importing, packer formats and sound-tool builds.
 
 ## Source organization
 
+`md-main.asm` is the Mega Drive main-68000 entry point. `mcd-main.asm` is the
+Mega-CD sub-68000 program, embedded in the same cartridge ROM and uploaded into
+CD PRG RAM at startup. Both CPUs are 68000s; distinguish code by its owner,
+not by instruction set. See [Mega-CD](Mega-CD.md#cpu-source-boundary) for the
+assembly and mailbox boundary.
+
 `_definitions/` groups the shared constants, RAM declarations, assembler setup
 and macros, debugger definitions, and generated sprite bounds. Constants and RAM
 variables remain together in `_definitions/s2.constants.asm`; the CD build adds
 its hardware and physical RAM definitions alongside it. Preserve include order
 when moving definitions: some depend on macros or earlier allocations.
+
+`md-only/` contains the cartridge-specific backends selected by
+`MegaCDMode1 = 0`: direct codecs and streaming, collision, placement loading and
+their private RAM. Mode 1 remains the default. Shared assets and engine sources
+keep their existing paths; see [build dependencies](Mega-CD.md#cartridge-build-dependencies).
 
 `_inc/` holds engine subsystems and substantial tables. Keep small helpers and
 local macros with their owner; split a routine out when it makes the subsystem
@@ -36,11 +47,13 @@ described in the [sound guide](../build_tools/sound/README.md).
 
 ## Branch scope
 
-`Mystic-Island` is the ordinary cartridge build. `test/rebuilt-kehmusic` adds
-required Mega-CD RAM and selective sub-CPU work. Shared guides apply to both;
-the Mega-CD guide explicitly describes the CD branch. Sixteen four-act zones
-are exposed (`$00-$0F`); editable starter acts are not
-finished levels. Planned mixed-size SonLVL authoring is listed under
+`Mystic-Island` is the default development branch and includes the former KEH
+baseline. `test/rebuilt-kehmusic` is synchronized with it. Both configurations
+live in the same source tree: the default `MegaCDMode1 = 1` uses required
+Mega-CD RAM and selective sub-CPU work; `0` selects the standalone cartridge
+dependencies. These guides describe the shared baseline and identify behavior
+by build configuration. Sixteen four-act zones are exposed (`$00-$0F`);
+editable starter acts are not finished levels. Planned mixed-size SonLVL authoring is listed under
 [future layout work](Levels.md#planned-layout-format), not as a current feature.
 
 ## Maintaining these guides

@@ -5,7 +5,7 @@ Run commands from the repository root. Windows is the primary environment:
 the matching bundled native tools and Mono for the sound packers. Sound-tool
 rebuilds and native Windows checks are covered by
 [the sound guide](../build_tools/sound/README.md) and [AGENTS.md](../AGENTS.md).
-The build produces `s2built.bin`, `main.lst` and generated sprite bounds.
+The build produces `s2built.bin`, `md-main.lst` and generated sprite bounds.
 
 Python checks require Python 3. Native 68000 fixtures additionally need Unicorn;
 emulator runners need NumPy, Pillow and a Genesis Plus GX libretro shared
@@ -25,19 +25,6 @@ python build_tools/check_sprite_assets.py
 python build_tools/check_ghz_vram.py
 python build_tools/check_ehz_boss.py
 ```
-
-`check_ram_ranges.py` checks the cartridge's contiguous free block, live buffer
-boundaries and palette aliases. It assembles the real `clearRAM` macro and
-executes 38 native cases: both addressing forms, odd starts, small tails and
-whole-RAM clears, with canaries outside each range. An empty longword section
-must not enter a DBF loop with `-1`. Memory-loop counts derive from the declared
-allocation and transfer stride; timing and algorithmic counts keep their own
-meaning. Native fixtures use the declared system stack.
-
-`check_level_pages.py` fills the free block with a canary after the title screen,
-then checks it every frame during menu navigation, sound tests, level/title
-returns, rotating-stage entry and all 64 act launches. This verifies the tested
-scene paths; it is not an exhaustive traversal of every level.
 
 To compare terrain edits against a Git revision before the change:
 
@@ -75,45 +62,106 @@ angles use the explicitly supplied tolerance and must preserve odd-marker
 semantics. CD calls execute the real sub-CPU executor through the native
 fixture; full hardware scheduling remains the libretro check's responsibility.
 
-These cover named SST operands/pointer access, mapping geometry, art/DPLC ranges,
-compiled PLC allocations. The SST scan cannot prove register aliases
+`check_ram_ranges.py` checks the packed RAM boundaries and palette aliases, then
+assembles the real `clearRAM` macro and executes 38 cases in Unicorn: both
+addressing forms, odd starts, one-to-nine-byte tails and whole-RAM clears.
+Canaries outside each range must remain unchanged. DBF memory counts use declared
+start/end labels and their transfer stride; algorithmic/timing counts retain
+their own meaning. An empty longword section must not enter a DBF loop with `-1`.
+
+The other checks cover named SST operands/pointer access, mapping geometry,
+art/DPLC ranges and compiled PLC allocations. The SST scan cannot prove register aliases
 or runtime array indices. `check_object_manager.py` adds native execution of
 loading, dispatch/deletion, packed records, Debug, collisions and effect-bank logic.
 Use a matching ROM/listing pair; options/defaults differ, so inspect `--help`.
 Reusable `Native`/`Manager` fixtures live in `build_tools/native_test_core.py`.
 Pass ROM/listing paths explicitly; importing that module neither parses CLI
 arguments nor runs the manager regression suite.
+
+`check_word_subtypes.py` executes the eight-byte loader in both CPUs, all era
+mask combinations, independent era state, word-valued handler parameters and
+Debug spawning. It also rejects byte subtype operands in every live/W.I.P.
+object and verifies that moved raw-art labels agree with the ROM. Run it after
+a fresh build; a newer listing beside an older ROM is not a valid test pair.
+Optional `--before-listing` compares every existing MD RAM symbol/SST field
+with a pre-migration build, and `--before-ref` checks the six-to-eight-byte
+conversion against a Git revision. Those optional checks are migration evidence,
+not a rule preventing later level edits.
+
+```sh
+python build_tools/check_word_subtypes.py
+```
+
+The released SonLVL checker exercises the custom layout class, 16-bit hex
+property converter, all presence masks, full-byte IDs, and property round trips
+with both zero and nonzero upper subtype bits. `check_wheel_carriers.py` accepts
+`--system-directory` for its Mode 1 payload-table checks.
 Card data and queue backpressure also have a native check (requires Unicorn):
 
 ```sh
-python build_tools/check_card_art.py --rom s2built.bin --listing main.lst
+python build_tools/check_card_art.py --rom s2built.bin --listing md-main.lst
 ```
+
+`check_ss_debug.py` executes rotating-stage placement with exact fixed-point
+ties, repeated presses, all grid corners, a sole distant free cell, a full grid,
+and cursors outside the authored cells. It checks padding and existing cells,
+preserves the dispatch counter, places with a full ordinary SST pool, and
+collects the inserted ring through the real item handler.
+
+```sh
+python build_tools/check_ss_debug.py
+```
+
+## Build configurations
+
+Keep `MegaCDMode1 = 1` as the normal configuration. Test `0` in an isolated
+checkout, using the same `build.lua` command; restore `1` before publishing.
+Keep each ROM with its matching listing and use separate output folders.
+Shared assets stay in their existing paths; [backend selection](Mega-CD.md#cartridge-build-dependencies)
+describes the cartridge-only dependencies and RAM/placement limits.
+
+For either build, run `check_ram_ranges.py`, `check_word_subtypes.py` and
+`check_object_manager.py` after assembly. The manager exercises the selected
+variant's entire placement-state capacity, including entries above 255.
+`check_level_pages.py` enters all 64 acts and the rotating special stage;
+run NTSC and PAL. `check_smz_background.py`, `check_player_effects.py`,
+`check_water_effects.py` and `check_ss_debug_game.py` also support cartridge
+ROMs without a system directory. Effect-upload checks allow bounded scheduling
+latency before comparing actual VRAM pixels.
+
+`check_cd_decompression.py` can use the freshly built cartridge ROM/listing as
+its `--baseline` pair to compare all linked codecs with the Mode 1 executors.
+`check_cd_terrain.py` accepts either configuration: record a report per build,
+compare `cases` and `planes`, and inspect controller routes separately when
+CPU load changes the number of gameplay updates per video frame. Its full-plane
+fixture drains prepared CD art DMA through VBlank before taking Word RAM.
+It checks the complete free-RAM range even when that range ends at `$1000000`.
+`check_md_kos_queue.py --rom ... --listing ... --core ... --output ...`
+constructs exception/register frames at six decoder instruction boundaries per
+IRQ exit, then executes the cartridge's actual normal/underwater VBlank return,
+RTE, bookmark and resume code. It clobbers foreground registers between slices
+and compares the full 32 KiB result with an independent Kosinski+ decoder.
+
+These are emulator/native checks, not real-console verification.
+
+`check_debug_cheat.py --output test-results/debug-cheat` checks the played-ID
+sequence, restarts, repeated confirmation, exact ring-jingle requests and every
+retired title variant in both regional paths. Add `--core ...` and optionally
+`--system-directory ...` / `--pal` to enter level select through the actual title
+code, play the sequence with all three playback buttons, verify held-button and
+page-switch behavior, then launch directly into Debug with Sonic and Tails.
 
 ## Runtime checks
 
-`check_level_lag.py` loads GHZ, CPZ and HPZ in order, waits at least five seconds
-in each, and uses Debug Start+A between levels. It then traverses HPZ in Debug
-while comparing the loaded block definitions, chunks and complete layout every
-frame. `--zone 2` stops in dry CPZ instead. `--delay 0` uses the unmodified ROM;
-the default inserts a register/CCR-preserving guest CPU delay into block drawing
-in a disposable ROM under the output directory. This deliberately amplifies lag
-while retaining normal IRQ/VDP/CD scheduling. It is a deterministic stress check,
-not proof that every intermittent corruption report has the same cause.
-
-```sh
-python build_tools/check_level_lag.py --core /path/to/genesis_plus_gx_libretro.so --rom s2built.bin --listing main.lst --output test-results/level-lag
-```
-
-Add `--system-directory /path/to/bios` for CD builds, or `--pal` for PAL. See
-[VBlank ownership](Sprites-and-VRAM.md#mapping-and-rendering-abi) for the wait
-latch and nested-interrupt contract. The pre-fix handler can recursively consume
-the stack under this load and overwrite the last loaded block definitions;
-correct decompression on entry does not rule that out.
+The old `check_level_lag.py` GHZ → CPZ → HPZ sequence is a historical
+Twizzler investigation, not current decompressor validation. Do not include it
+in routine migration checks. [VBlank ownership](Sprites-and-VRAM.md#mapping-and-rendering-abi)
+documents the retained wait-latch/nested-interrupt fix.
 
 Example for the shared visual regressions (life art, SMZ smoke/flame and boss flash):
 
 ```sh
-python build_tools/check_visual_followup.py --core /path/to/genesis_plus_gx_libretro.so --rom s2built.bin --listing main.lst --output test-results/visual
+python build_tools/check_visual_followup.py --core /path/to/genesis_plus_gx_libretro.so --rom s2built.bin --listing md-main.lst --output test-results/visual
 ```
 
 Use distinct output directories per ROM/region/player. Add `--pal` only to runners
@@ -129,10 +177,16 @@ that offer it. Most primary-player selectors use `--player 0` (Sonic) or `2`
 | Object lifetime and stage entry | `check_object_lifetimes.py`, `check_giant_ring_entry.py`, `check_object_contexts.py` | Unload/deletion, giant rings and mode-specific objects |
 | Companion | `check_companion_followup.py`, `check_companion_hpz.py`, `check_companion_sbz.py` | Ledges, collapse/bridge/manual takeover; actual HPZ routes; 64-phase SMZ transfer and captured catch-up |
 | Input locks and rotating stage | `check_over_screen_input.py`, `check_drowning_input.py`, `check_special_stage_overlap.py` | Real deaths/drowning; normal bumper/item callbacks and embedding regressions |
+| Rotating-stage Debug | `check_ss_debug_game.py` | Actual controller placement, occupied-cell skipping, ring rendering and collection after leaving Debug in NTSC/PAL |
 | SMZ backgrounds, solids and hazards | `check_smz_background.py`, `check_scrap_madness.py`, `check_sbz_discs.py`, `check_smz_vanishing.py`, `check_swing_families.py`, `check_sbz_doors.py` | REV01 parallax/streaming, placed-object lifecycle, transport/ride boundaries and harmful spikeball subtypes |
 | Compact clearance/closing doors | `check_duck_clearance.py`, `check_smz_trapdoor.py` | Native 68000 collision fixtures |
 | Imported enemies/obstacles | `check_palmtree_enemies.py`, `check_propeller.py`, `check_caterkiller.py`, `check_kemusi.py`, `check_terrain_conveyors.py`, `check_wheel_carriers.py` | Both-actor triggers, motion, damage, unload/reload and source-specific regressions |
 | Audio | `check_sound_playback.py`, `sound/build.py --check` | Actual sound paths; encoding/macro/packer checks |
+
+`check_level_pages.py` also compares the uploaded menu font pixel-for-pixel
+against independently decoded Nemesis art and checks that blank tile zero stays
+transparent, on both pages and after returning from a level. Correct text tile
+numbers alone do not establish that the font was uploaded to the right place.
 
 `check_smz_background.py` checks the VDP's live horizontal/vertical scroll values
 and visible background tile words against the S1 REV01 rates and editable SMZ
@@ -145,37 +199,101 @@ are streaming fixtures, not complete controller-only playthroughs.
 `check_companion_sbz.py` has `--probe` for older-ROM failures, but no PAL flag.
 Several runners compare with a specific earlier revision; their baseline is
 part of the fixture, not automatically the parent commit. Check their CLI/source
-before reusing them with an unrelated baseline.
+before reusing them with an unrelated baseline. Native fixtures use the declared
+system stack, map staging and execute CD terrain and placement requests in a second Unicorn
+68000. Fixture data is copied to its resident tables at the mailbox boundary;
+this tests the assembled algorithms, loading/apply boundary and caller ABI,
+not CD bus scheduling. Object fixtures use placement helpers for index handles in either build configuration,
+selecting the active era bank on CD or MD. Older cartridge pointer fixtures
+remain readable for historical comparisons. The emulator checks below cover that hardware path.
 
 CD boot needs a supplied system directory. Only runners exposing
 `--system-directory` support that setup directly (including level pages, act
-music, visual follow-up, fast clear, player effects, card screens and swing families).
+music, sound playback, visual follow-up, fast clear, player effects, card screens and swing families).
 `check_debug_states.py` also accepts this directory for both primary characters'
 HUD and hurt/death Debug checks on Mode 1.
-Older water/companion/shared runners lack it and target the ordinary cartridge
-ROM. Do not describe all existing fixtures as CD-aware or apply flags universally.
+`check_ss_debug_game.py` accepts `--rom`, `--listing`, `--core`, `--output`,
+`--system-directory` and `--pal`. It launches the rotating stage through level
+select, places twelve rings without moving the cursor, compares every authored
+cell after each press, and resumes normal play to collect an inserted ring.
+`check_water_effects.py` also accepts `--system-directory`; it covers actual
+entry/exit splashes, countdown uploads/rendering and air/number cleanup. Use
+`--player 2` for primary Tails, or `--companion` for following Tails, and `--pal`
+for PAL. Both roles have passed in NTSC and PAL on Mode 1's HPZ water.
+Older companion/shared runners lack the directory option and target the ordinary
+cartridge ROM. Do not apply flags universally.
+
+`check_water_tables.py` executes the assembled water-enable, initial-height and
+dynamic-routine selection for every zone/act, including all dry slots. It also
+enables the final slot with a distinct height in its disposable ROM fixture to
+catch residual hardcoded zone/act assumptions. For example:
+
+```sh
+python build_tools/check_water_tables.py --rom s2built.bin --listing md-main.lst --output test-results/water-tables/native.json
+```
+
+`check_lz_conveyor.py` executes all eight constructors, two circuits per route,
+relative translation, allocation retries in fragmented/full pools, whole-path
+unload/reload, both riders, switch reversal for normal/spiked groups, per-member
+settings, and safe-top/side versus underside-damage/invulnerability cases.
+
+`check_lz_conveyor_game.py` boots the restored LZ1 placements and checks real
+boarding/carrying, controller jumping, switch reversal, unload/reload and the
+complete live VRAM sheet. It accepts `--player 2`, `--pal` and
+`--system-directory`. `--spiked` changes the first group's subtype in an
+output-only ROM fixture; gameplay sources and the normal level remain normal.
+Its underside contact fixture checks damage/harmlessness for the selected mode.
+These use scripted positioning around real placements, not a complete route.
+
+`check_lz_wheel_dplc.py` compares one and 70 wheels through forward/reverse
+animation, checks their exact queued source/destination/length and register
+preservation, then exercises queue pressure, next-frame retry, timestamp wrap
+and level-entry invalidation. It checks the compact resident bank and all four
+raw source frames against the editable sheet. The live conveyor runner verifies
+all four wheel phases in VRAM, their reversed order, and both resident platforms.
 
 ## Boss runtime checks
 
 ```sh
-python build_tools/check_ghz_boss.py --rom s2built.bin --listing main.lst --output test-results/ghz-boss
+python build_tools/check_ghz_boss.py --rom s2built.bin --listing md-main.lst --output test-results/ghz-boss
 ```
 
 The native pass covers fragmented/full pools and retries, end-of-pool parents,
-dry-act water-bank borrowing, staged deployment, continuous patrol, recycled
+dry-act water-bank borrowing, staged deployment, the original opening delay,
+quarter-speed first pass and timed return sweeps, recycled
 child slots, actual hit response,
 palette restoration, scoring, independent debris physics on every frame, burst
 cadence/RNG, animation duration and act-selected escape music. Rendering/audio
 boundaries are stubbed only in these native fixtures.
+Breakup checks require a harmless attached chain before any burst, a shared
+64-update release after the first burst allocation, and independent debris
+afterward. A full-pool case separately delays controller creation and visual
+allocation; neither may advance the breakup clock. Recovery cleanup also works
+when no explosion could be allocated.
+Add `--s1disasm /path/to/s1disasm` for an independent 2,400-frame comparison
+against assembled S1 instructions. Use the revision cited in
+[Objects](Objects.md#ghz-boss-and-boss-explosions). It reads the original GHZ
+boss, swinging-platform, `BossMove` and `CalcSine` sources under `_incObj`,
+assembles a small reference fixture with this project's assembler, and checks
+ship positions/subpixels, velocities, timers, facing and bobbing every frame.
+It also checks the pendulum state and every chain piece after deployment.
+Only allocation and hit handling are omitted from that reference; the original
+movement instructions and sine table remain intact. The reference's slower
+deployment is deliberately excluded from chain-position equality.
 The wall checks cover both PLC banks, four-emitter allocation under a fragmented
 pool, movement at the level origin and with a moving camera, finite/continuous
 burst counts, the normal burst animation and parent/deletion cleanup.
 
 Add `--core /path/to/genesis_plus_gx_libretro.so` for the real GHZ3 arena. It
-uses explicit player positioning, then eight actual rolling collisions with
-the boss. It observes breakup, explosions, escape, ordinary-art restoration and
+uses explicit player positioning, observes the original opening pass and eight
+timed return sweeps with exact subpixel deltas, then lands eight actual rolling
+collisions with the boss. It observes breakup, explosions, escape, ordinary-art restoration and
 the capsule switch/animal release. `--player 2` selects Tails and `--pal`
 selects PAL. Mode 1 accepts `--system-directory /path/to/bios-directory`.
+The report records the first burst and breakup ticks; all pieces must stay
+attached and harmless during the wait and release in the same frame. The first
+burst-to-release interval is 63-64 rendered frames depending on SST update order,
+with exactly 64 parent-clock updates before release.
 Screenshots and the JSON report belong in the selected output directory.
 The native burst tests cover both GHZ/EHZ profiles; this arena run covers GHZ,
 not a controller-only playthrough or EHZ's entire fight.
@@ -187,25 +305,89 @@ for the wall, emitters and visuals to finish without producing animals.
 
 ## Mega-CD checks
 
-Check out `test/rebuilt-kehmusic` for the CD-specific scripts. Build normally,
-then create the emulator identification fixture and use its directory:
+The default `Mystic-Island` checkout includes the CD-specific scripts. Build
+with the default `MegaCDMode1 = 1`, then create the emulator identification
+fixture and use its directory:
 
 ```sh
-python build_tools/check_mode1.py --core /path/to/genesis_plus_gx_libretro.so --rom s2built.bin --listing main.lst --output test-results/mode1
+python build_tools/check_mode1.py --core /path/to/genesis_plus_gx_libretro.so --rom s2built.bin --listing md-main.lst --output test-results/mode1
+python build_tools/check_cd_terrain.py --core /path/to/genesis_plus_gx_libretro.so --system-directory test-results/mode1/identification-fixture --output test-results/cd-terrain
 python build_tools/check_cd_chunks.py --core /path/to/genesis_plus_gx_libretro.so --system-directory test-results/mode1/identification-fixture --output test-results/cd-chunks
-python build_tools/check_cd_ring_jobs.py --core /path/to/genesis_plus_gx_libretro.so --system-directory test-results/mode1/identification-fixture --rom s2built.bin --listing main.lst --output test-results/cd-rings
+python build_tools/check_cd_ring_jobs.py --core /path/to/genesis_plus_gx_libretro.so --system-directory test-results/mode1/identification-fixture --rom s2built.bin --listing md-main.lst --output test-results/cd-rings
 ```
 
-Each offers `--pal`. `check_cd_chunks.py` uses the root `s2built.bin`/`main.lst`
+`check_cd_dispatch.py --rom s2built.bin --listing md-main.lst` executes the real
+service loop in Unicorn with job stubs that destroy all registers except SP
+and their result. It covers 1,536 requests: every command byte with three high
+bytes, immediate and delayed requests, token complements, result/flag publication,
+stack balance and guards. Add `--core ... --system-directory ... --output report.json`
+for isolated sub-CPU timing, optionally with `--baseline-rom ... --baseline-listing ...`.
+The native fixture mirrors sign-extended absolute-short mailbox accesses onto
+their physical 24-bit addresses, as the real sub-CPU bus does.
+Timing freezes MD execution and uses fixed jobs; it measures dispatcher overhead,
+not complete RPC latency or game-wide performance. Compared with the unrolled
+service with long mailbox operands, ordinary jobs save 32 cycles and former
+two-register-preserving jobs save 84; no-op/ping/return-RAM/unknown replies cost
+2 more cycles. The short mailbox operands save 20 cycles per serviced command
+against the previous compact loop. Idle polling
+retains its read/compare/conditional-branch loop.
+
+Add `--stack-gameplay` to `check_mode1.py` to watermark unused MD stack space
+without overwriting live return frames. It covers HPZ loading, Sonic+Tails and
+solo Tails gameplay, and underwater HBlank in the selected region, preserving
+a lower 32-byte guard. These written-depth samples and frame-boundary SP checks
+are fixture coverage, not a proof of worst-case depth on every path.
+
+The four emulator runners in the command block offer `--pal`. For an old/new
+terrain comparison, run the previous ROM
+with `check_cd_terrain.py --baseline --rom ... --listing ...`, then pass its
+`report.json` as `--reference` to the current build. Use separate output folders.
+`--zone 1` exercises LZ and `--zone 0` or `2` GHZ/CPZ; all use the shared bank. Use
+a reference with the same collision assets for executor comparisons; the GHZ
+remap uses the shape comparison above. The terrain runner compares
+1,216 full actor/sensor calls, six complete plane constructions and controller
+walking against the reference. It also checks 600 jumping frames and free-RAM
+canaries; these are not asserted frame-identical to the previous engine because
+scene scheduling can shift NPC/random phases. Reported CPU costs include the
+mailbox wait, not just the CD routine.
+
+ `check_cd_chunks.py` uses the root `s2built.bin`/`md-main.lst`
 directly; it has no ROM/listing flags. It checks all 256x64 chunk/block addresses,
-row/column plane writes/flips/edges, ordinary frames and a rotating stage, with
-freed-MD-RAM canaries. Ring tests cover sparse/all-active lifetimes, staggered
+CD row/column stream records/flips/edges, ordinary frames and a rotating stage, with
+remaining-free-MD-RAM canaries. It also poisons the player-art cache before
+entering the rotating stage, checks that stage's RAM-to-VRAM ring upload, then
+returns through results and verifies all three level sources are rebuilt.
+`check_player_effects.py` compares RAM sources and actual VRAM against editable
+art, including all eight regular/lost-ring frames and shield/star transitions.
+Run `python build_tools/build_player_effect_art.py --check` after source-art edits.
+Ring tests cover sparse/all-active lifetimes, staggered
 collection, bank pauses, reset, expanded-tail guards and HPZ/SMZ gameplay in both
 character modes. To measure the previous CD implementation, pass its ROM/listing
 with `--baseline` to the ring runner; it is a boolean mode, not a path argument.
 
 The identification fixture contains only the `SEGA` marker, not BIOS code.
 See [Mega-CD](Mega-CD.md) for ownership contracts and hardware-test limits.
+
+For codec equivalence, retain a ROM/listing pair from before CD decompression
+offload, then run:
+
+```sh
+python build_tools/check_cd_decompression.py --baseline /path/to/old.bin --baseline-listing /path/to/old.lst --output test-results/cd-codecs
+```
+
+This executes every linked compressed span with the original MD decoder and
+the new CD executor in Unicorn, including every Kosinski module, Nemesis XOR,
+and Enigma base-tile attributes. It checks source spans, lengths, consumed input
+and output guards. Resumed PLC batches also run an unrelated general decode
+between steps and force time-budget yields across stopwatch wrap. This proves
+codec/state behavior, not hardware bus scheduling. Pair it with Mode 1, act
+launch, ring and player-effect checks. `check_sound_playback.py` accepts
+`--system-directory` to validate the CD-decoded Z80 driver through actual music,
+effects and jingle restoration.
+Add `--core /path/to/genesis_plus_gx_libretro.so --system-directory ...`
+to the codec runner for actual queued PLC uploads while HPZ's early water
+HBlank split is active; it compares VRAM with the old decoder and checks
+resident blocks and the entire expanded chunk allocation for changes.
 
 ## Disposable object course
 
@@ -253,12 +435,13 @@ python build_tools/summarize_object_course.py --run Sonic-NTSC=test-results/cour
 
 This minimal example fails if the supplied reports leave live implementations
 uncovered. Repeat `--run name=path`, `--boss GHZ-name=path` / `EHZ-name=path`, and
-`--demo name=path` as needed. Successful output is `report.json` and `coverage.md`
+`--demo name=path` as needed. Include `--conveyor name=path` with a matching
+`check_lz_conveyor_game.py` report for `$1F`. Successful output is `report.json` and `coverage.md`
 in the selected directory. Helpers receive no inferred runtime certification
 from object IDs; inactive/W.I.P. sources are inventoried, not gameplay-tested.
 
-Known limits remain explicit: the excluded LZ conveyor is unfinished; Gator
-lifecycle/rendering does not certify its broken gameplay; the compiled title
+Known limits remain explicit: Gator lifecycle/rendering does not certify its
+broken gameplay; the compiled title
 palette handler is unfinished/unspawned. Representative subtypes and positioned
 fixtures are not exhaustive/controller-only playthroughs. Rare monitor-route
 reproduction and full revised companion routes remain incomplete. SonLVL paths

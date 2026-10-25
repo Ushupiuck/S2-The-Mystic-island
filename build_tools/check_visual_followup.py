@@ -4,6 +4,7 @@
 Uses real level loads, DMA, animation and sprite output. Boss-hit fixtures call
 its assembled damage handler; they leave collision/drawing code unchanged.
 """
+from object_layout import decode
 from pathlib import Path
 import argparse
 import ctypes as C
@@ -22,7 +23,7 @@ p = argparse.ArgumentParser(description=__doc__)
 p.add_argument('--core', type=Path, required=True)
 p.add_argument('--output', type=Path, required=True)
 p.add_argument('--rom', type=Path, default=ROOT/'s2built.bin')
-p.add_argument('--listing', type=Path, default=ROOT/'main.lst')
+p.add_argument('--listing', type=Path, default=ROOT/'md-main.lst')
 p.add_argument('--system-directory', type=Path)
 p.add_argument('--pal', action='store_true')
 a = p.parse_args()
@@ -81,7 +82,7 @@ g.video.save(a.output/'sbz1-smoke.png')
 passed('Both smoke vents complete every frame; atlas and springs stay intact', frames=800)
 
 for act in range(1,5):
-    rows = struct.iter_unpack('>HHBB',(ROOT/f'level/objects/SMZ_{act}.bin').read_bytes()[:-6])
+    rows = ((x,y,oid,sub) for x,y,oid,eras,sub in decode((ROOT/f'level/objects/SMZ_{act}.bin').read_bytes()))
     assert all(oid != 0xB0 for _,_,oid,_ in rows)
 for label in ('Debug_SMZ','Debug_SMZIndoor'):
     count = struct.unpack_from('>H',rom,g.s[label])[0]
@@ -95,7 +96,7 @@ passed('SMZ has no wheel placements, Debug entries or wheel-art PLC')
 # At a real flame placement, let the stage's ordinary animation/render pass
 # produce every frame and inspect only the flame's player-palette pieces.
 g.restore(base)
-x,y,oid,sub = next(row for row in struct.iter_unpack('>HHBB',(ROOT/'level/objects/SMZ_1.bin').read_bytes()[:-6]) if row[2]==0xA7)
+x,y,oid,sub = next(row for row in ((x,y,oid,sub) for x,y,oid,eras,sub in decode((ROOT/'level/objects/SMZ_1.bin').read_bytes())) if row[2]==0xA7)
 y &= 0xFFF
 for actor in ('v_player','v_player2'):
     place(g,actor,x-80,max(64,y-80));g.put(actor,'obControl',0x81)

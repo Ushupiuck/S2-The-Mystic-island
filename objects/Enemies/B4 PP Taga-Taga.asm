@@ -34,7 +34,7 @@ PP_TagaTaga_Init:
 	move.w	obX(a0),objoff_30(a0)
 	move.w	obY(a0),objoff_32(a0)
 	move.w	#ArtTile_PP_TagaTaga,obGfx(a0)
-	tst.b	obSubtype(a0)
+	tst.w	obSubtype(a0)
 	bne.w	.Damaged
 	lea	Map_PP_TagaTaga1(pc),a1
 	lea	Ani_PP_TagaTaga1(pc),a2

@@ -36,7 +36,7 @@ SMZ_Sto_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)			; advance to SMZ_Sto_Action
 
 		moveq	#0,d0					; clear d0
-		move.b	obSubtype(a0),d0			; get object subtype
+		move.w	obSubtype(a0),d0			; get object subtype
 		lsr.w	#2,d0					; read only upper digit, multiplied by 4 bytes per entry
 		andi.w	#$1C,d0					; limit to upper digits 0-7
 		lea	SMZ_Sto_Var(pc,d0.w),a3			; load setup array
@@ -59,16 +59,19 @@ SMZ_Sto_Main:	; Routine 0
 		move.w	d0,SMZ_sto_offset_max(a0)			; store it
 
 		moveq	#0,d0					; clear d0
-		move.b	obSubtype(a0),d0			; get object subtype
-		bpl.s	SMZ_Sto_Action				; is subtype $80 or above (extending sliding platform)? if not, branch
-		andi.b	#$F,d0					; read only lower digit
+		move.w	obSubtype(a0),d0			; get object subtype
+		btst	#7,d0
+		beq.s	SMZ_Sto_Action				; is subtype $80 or above (extending sliding platform)? if not, branch
+		andi.w	#$F,d0					; read only lower digit
 		move.b	d0,SMZ_sto_switch(a0)			; store switch ID that will trigger platform behavior
-		move.b	(a3),obSubtype(a0)			; set action type number
+		moveq	#0,d0
+		move.b	(a3),d0
+		move.w	d0,obSubtype(a0)			; set action type number
 
 SMZ_Sto_Action:	; Routine 2
 		move.w	obX(a0),-(sp)				; backup previous X-position before executing behavior
 		moveq	#0,d0					; clear d0
-		move.b	obSubtype(a0),d0			; get action type (set from SMZ_Sto_Var)
+		move.w	obSubtype(a0),d0			; get action type (set from SMZ_Sto_Var)
 		andi.w	#$F,d0					; only read lower digit
 		add.w	d0,d0					; double for word-based indexing
 		move.w	SMZ_Sto_TypeIndex(pc,d0.w),d1		; find entry in jump table
@@ -141,7 +144,7 @@ SMZ_Sto_SlidingPlatform_Extend:
 
 ; .loc_15DE0:
 .stopPlatform:
-		addq.b	#1,obSubtype(a0)			; change to SMZ_Sto_SlidingPlatform_Retract (delay and retract again)
+		addq.w	#1,obSubtype(a0)			; change to SMZ_Sto_SlidingPlatform_Retract (delay and retract again)
 		move.w	#3*60,SMZ_sto_delay(a0)			; set delay before retracting to 3 seconds
 		clr.b	SMZ_sto_active(a0)				; clear activation flag
 
@@ -176,7 +179,7 @@ SMZ_Sto_SlidingPlatform_Retract:
 
 ; .loc_15E3C:
 .stopPlatform:
-		subq.b	#1,obSubtype(a0)			; change back to SMZ_Sto_SlidingPlatform_Extend (extend on switch press)
+		subq.w	#1,obSubtype(a0)			; change back to SMZ_Sto_SlidingPlatform_Extend (extend on switch press)
 		clr.b	SMZ_sto_active(a0)				; clear activation flag
 
 		bra.s .updatePosition

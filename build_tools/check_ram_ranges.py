@@ -15,24 +15,36 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--listing', type=Path, default=ROOT / 'main.lst')
+    p.add_argument('--listing', type=Path, default=ROOT / 'md-main.lst')
     p.add_argument('--output', type=Path, default=ROOT / 'test-results/ram-ranges')
     args = p.parse_args()
     symbols = {name: int(value, 16) for name, value in re.findall(
         r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]', args.listing.read_text())}
     address = lambda name: symbols[name] & 0xFFFFFF
-    assert address('Chunk_Table') == 0xFF0000
-    assert address('Chunk_Table_End') == address('Free_RAM_Start') == 0xFF8000
-    assert address('Free_RAM_End') == address('Main_RAM_Start')
-    assert address('Main_RAM_Start') >= 0xFF8000
-    assert address('Main_RAM_End') == 0
-    free_size = address('Free_RAM_End') - address('Free_RAM_Start')
-    assert free_size == symbols['Free_RAM_Size'] and free_size > 0
-    assert not address('Free_RAM_End') & 1
-    assert address('Level_Layout') == address('Main_RAM_Start')
-    assert address('Level_Layout_End') == address('Kos_decomp_buffer')
-    assert address('Kos_decomp_buffer_End') == address('v_objspace')
-    assert address('v_objspace_end') == address('v_16x16')
+    if symbols['MegaCDMode1']:
+        assert address('Free_RAM_Start') == 0xFF0000
+        assert address('Free_RAM_End') == address('MCD_MainWorkStart')
+        assert address('MCD_MainWorkEnd') == address('Player_Art_Buffer_Start')
+        assert address('Player_Art_Buffer_End') == address('Main_RAM_Start')
+        assert address('Main_RAM_Start') >= 0xFF8000
+        assert address('Main_RAM_End') == 0
+    if 'MCD_SubDecompress' in symbols:
+        assert address('Kos_decomp_buffer') == symbols['MCD_DecompOutput']
+        assert address('v_objspace') == address('Main_RAM_Start')
+    else:
+        assert address('v_objspace') == address('Level_Layout_End')
+        assert address('MD_WorkRAM_Start') <= address('Kos_decomp_buffer')
+        assert address('Kos_decomp_buffer_End') - address('Kos_decomp_buffer') == 0x1000
+        assert address('MD_WorkRAM_End') == address('Main_RAM_End')
+        assert address('Free_RAM_Start') == address('Main_RAM_End')
+        assert address('Free_RAM_End') == 0
+        assert address('Main_RAM_End') >= 0xFF8000
+    assert address('v_objspace_end') == address('TempArray_LayerDef' if symbols['MegaCDMode1'] else 'v_16x16')
+    if symbols['MegaCDMode1']:
+        assert address('v_16x16') == symbols['MCD_TerrainBlockStage']
+        assert address('Level_Layout') == symbols['MCD_TerrainLayoutStage']
+        assert symbols['MCD_Terrain_SubEnd'] <= symbols['MCD_SubStack_Start']
+        assert symbols['MCD_SubStack_Top'] < 0x80000
     assert address('Debug_saved_height') + 1 == address('Object_Display_Lists')
     for palette in ('v_palette', 'v_palette_fading', 'v_palette_water', 'v_palette_water_fading'):
         for line in (2, 3, 4):
@@ -83,8 +95,7 @@ def main():
         # ramaddr emits sign-extended addresses in both operand forms.
         assert bytes(cpu.mem_read(0xFFFF0000, 0x10000)) == expected, (start, size, 'boundary write')
         assert cpu.reg_read(UC_M68K_REG_A1) & 0xFFFFFF == (start+size) & 0xFFFFFF
-    print(f'Packed cartridge RAM: ${free_size:X} ({free_size}) contiguous free bytes; '
-          f'palette aliases and {len(cases)} native clearRAM cases pass.')
+    print(f'Packed RAM boundaries, palette aliases and {len(cases)} native clearRAM cases pass.')
 
 
 if __name__ == '__main__':

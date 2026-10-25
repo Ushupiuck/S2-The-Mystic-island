@@ -8,7 +8,7 @@
 
 S1_SSBGLoad:
 		lea	SSBG_Blocks(pc),a0
-		lea	(v_16x16).w,a1
+		lea	(v_16x16).l,a1
 		bsr.w	KosPlusDec
 		lea	SSBG_Chunks(pc),a0
 		lea	(Chunk_Table).l,a1
@@ -39,7 +39,7 @@ S1SS_BgDrawRows:
 		move.w	d6,d0
 		lsl.w	#8,d0
 		adda.w	d0,a1
-		lea	(v_16x16).w,a4
+		lea	(v_16x16).l,a4
 		lea	(Chunk_Table).l,a5
 .row:
 		move.w	d6,d0
@@ -84,7 +84,7 @@ S1SS_BgPrepare:
 		lea	(v_ssbg_bg_buffer).l,a1
 		move.w	(v_ssbg_bg_build_row).l,d6
 		moveq	#4-1,d4		; keep map construction inside the frame budget
-		bsr.s	S1SS_BgDrawRows
+		bsr.w	S1SS_BgDrawRows
 		move.w	d6,(v_ssbg_bg_build_row).l
 		cmpi.w	#16,d6
 		blo.s	.foreground

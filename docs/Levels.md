@@ -5,6 +5,9 @@ NEXT/PREVIOUS sits above SOUND TEST. Directions select entries, A/B/START
 activates, and C cycles Sonic & Tails, Sonic, and Tails. Starter acts have valid
 data and goals; they remain level-design templates.
 
+On SOUND TEST, play `01`, `03`, `05`, `07` to unlock Debug with the ring jingle.
+See [Debug controls](Objects.md#debug) for level-entry activation.
+
 | ID | Name | Current content |
 | --- | --- | --- |
 | 00 | Twilight Hill | GHZ-based acts |
@@ -22,8 +25,9 @@ data and goals; they remain level-design templates.
 
 All 64 act entries have headers, placements, starts, bounds, collision,
 cards, Debug lists and progression. SonLVL has matching present-day sections.
-Timezone headers/layouts are prepared copies; time travel and timezone-specific
-placement/generator suppression remain unfinished.
+Timezone headers/layouts are prepared copies. Object placements have Sonic CD
+era-presence masks and per-era state; time travel and generator/Good Future
+suppression remain unfinished. See [placement ownership](Objects.md#placement-format-and-ownership).
 
 ## Per-act art
 
@@ -45,6 +49,10 @@ Extra has 16 slots. Assembly rejects overflow; an empty list has count `-1`.
 Shared HUD, monitors, checkpoints, life art and boss PLCs retain their own
 lifecycle. The Kosinski module index also has separately named act lists,
 including distinct empty recipes ready for later additions.
+The Mode 1 build decodes both on the sub-CPU and queues prepared RAM output for
+DMA. Its resumable PLC and module ownership contracts live in
+[Mega-CD](Mega-CD.md#asset-decompression-and-plcs); the editable lists keep their
+existing format.
 
 Objects still select named art bases in their own code. A per-act logical
 asset-to-tile binding/allocation system was discussed but is not implemented;
@@ -52,7 +60,7 @@ these PLCs do not dynamically allocate object VRAM or encode allocation in mappi
 
 ## Per-act music
 
-Edit `MusicList` in `main.asm`: each zone row holds four independent IDs in act
+Edit `MusicList` in `md-main.asm`: each zone row holds four independent IDs in act
 1-4 order. Use existing `MusID_*` names or `bgm_*` aliases. For example:
 
 ```asm
@@ -65,6 +73,26 @@ recovery, invincibility expiry and GHZ/EHZ boss cleanup share `GetLevelMusic`,
 preserving act selection. Invincibility/boss music retains
 priority; one-up jingles restore the driver's saved context. Sound formats
 and importing belong in [the sound guide](../build_tools/sound/README.md).
+
+## Water configuration
+
+`_inc/WaterFeatures.asm` owns three explicit tables covering all 64 acts:
+`WaterFlags` enables water, `WaterHeight` supplies the initial surface Y, and
+`DynWater_Index` selects the target-height routine. Each zone has four entries
+in act order. This provides the full-table coverage of s2disasm's
+`useFullWaterTables`, adapted to this project's sixteen four-act zones; there
+is no reduced-table build mode. Level entry, height initialization and dynamic
+dispatch all use the same zone/act index. Assembly checks every table's length.
+
+LZ and HPZ retain their previous four heights and dynamic routines. Other
+slots start dry, with editable `$600` heights and `DynWater_Null`. Enabling a
+slot also enables its water surface, palette split and player water behavior;
+choose a suitable underwater palette/art allocation before designing that act.
+LZ act 4 selects the SBZ3 underwater character palette. Checkpoints retain
+the existing saved water state and height behavior.
+
+Dry GHZ acts borrow water-surface VRAM for their smashable walls; relocate that
+art before enabling their water, as described below.
 
 ## Terrain and tile animation
 
@@ -145,6 +173,23 @@ water in an affected act. The VRAM check permits this deliberate borrowing;
 the boss regression executes the actual water-selection code for all four
 GHZ acts to guard the contract.
 
+## Labyrinth art
+
+Rustic Ruins/LZ uses a Tidal Tempest background with its edited LZ terrain art.
+Many tiles removed from the end of S1's original sheet belonged to the enormous
+LZ4/SBZ3 lift. Restoring its original object would also need the missing art;
+the current sheet is not a complete stock-S1 bank. The restored LZ1 conveyors
+use their separate object-art bank and preserve this terrain/background work.
+
+S1's ancient lift (`ScrapStomp`, object `$6B`, `.bigdoor` mapping) references
+104 tile slots at offsets `$00-$67`, reused across 216 drawn tile positions in
+14 sprite pieces. Its `$1F0` base places it at VRAM `$3E00-$4AFF`: the final
+tile starts at `$4AE0`, and `$4B00` is the exclusive end. That is `$D00` bytes
+(3.25 KiB), about 5.1% of all VRAM. These figures come from s1disasm
+`15dfa3a6ee4c53aeb482233e493755c84b4f3479`, `_maps/SBZ Stomper and Door.asm`
+and `_incObj/6B SBZ Stomper and Sliding Door.asm`; they count referenced slots,
+not a claim that every tile's pixels are unique.
+
 ## Scrap Madness
 
 Acts 1/2 retain S1 SBZ foreground, industrial backgrounds, collision and hazards.
@@ -210,10 +255,10 @@ run it only when deliberately regenerating those assets. The atlas packer follow
 the importer. PP's converter validates rectangles and adapts opaque colors.
 
 ```sh
-python build_tools/import_scrap_madness.py --source /path/to/s1disasm --rom s2built.bin --listing main.lst
-python build_tools/pack_scrap_sprites.py --source /path/to/s1disasm --rom s2built.bin --listing main.lst
-python build_tools/import_palmtree_enemies.py --source /path/to/scddisasm/src --rom s2built.bin --listing main.lst
-python build_tools/import_propeller.py --source /path/to/scddisasm --rom s2built.bin --listing main.lst
+python build_tools/import_scrap_madness.py --source /path/to/s1disasm --rom s2built.bin --listing md-main.lst
+python build_tools/pack_scrap_sprites.py --source /path/to/s1disasm --rom s2built.bin --listing md-main.lst
+python build_tools/import_palmtree_enemies.py --source /path/to/scddisasm/src --rom s2built.bin --listing md-main.lst
+python build_tools/import_propeller.py --source /path/to/scddisasm --rom s2built.bin --listing md-main.lst
 python build_tools/build_card_art.py
 python build_tools/build_signpost_art.py
 ```
@@ -234,7 +279,7 @@ flag disappears, and two collision paths are required. The current engine alread
 has two collision paths; the new format must preserve them. Custom SonLVL format
 support is needed; whether a fork is required remains undecided.
 
-The CD branch has already expanded physical chunk storage to 128 KiB, first after
+Mode 1 has already expanded physical chunk storage to 128 KiB, first after
 the BIOS area. That fits 1,024 distinct 128-pixel chunks, equivalent to 256 complete
 256-pixel definitions without reuse; 16-bit IDs do not mean all 65,536 chunks fit.
 Only the first 32 KiB is used by the current format. See [Mega-CD](Mega-CD.md).

@@ -37,14 +37,14 @@ SMZ_MBlock_Main:	; Routine 0
 		move.l	#Map_SMZ_MBlock,obMap(a0)
 		move.b #Map_SMZ_MBlock_height,height_pixels(a0)			; MZ-specific mappings
 		move.w #ArtTile_SMZ_Atlas,obGfx(a0)	; short SBZ blocks
-		cmpi.b #$28,obSubtype(a0)
+		cmpi.w #$28,obSubtype(a0)
 		beq.s .continueSetup
 		move.w #ArtTile_SMZ_Atlas,obGfx(a0)
 .continueSetup:
 		move.b	#4,obRender(a0)		; set to playfield-positioned mode
 
 		moveq	#0,d0					; clear d0
-		move.b	obSubtype(a0),d0			; get platform subtype
+		move.w	obSubtype(a0),d0			; get platform subtype
 		lsr.w	#3,d0					; read only lower digit, multiplied by 2 bytes per entry
 		andi.w	#$1E,d0					; mask out upper subtype digit
 		lea	SMZ_MBlock_Var(pc,d0.w),a2			; load setup array
@@ -54,7 +54,7 @@ SMZ_MBlock_Main:	; Routine 0
 		move.w #$200,obPriority(a0)			; set sprite priority
 		move.w	obX(a0),SMZ_mblock_origX(a0)		; remember initial X-position
 		move.w	obY(a0),SMZ_mblock_origY(a0)		; remember initial Y-position
-		andi.b	#$F,obSubtype(a0)			; mask out upper subtype digit
+		andi.w	#$F,obSubtype(a0)			; mask out upper subtype digit
 ; ---------------------------------------------------------------------------
 
 SMZ_MBlock_Platform:
@@ -79,7 +79,7 @@ SMZ_MBlock_DisplayOrDelete:
 
 SMZ_MBlock_Move:
 		moveq	#0,d0					; clear d0
-		move.b	obSubtype(a0),d0			; get platform subtype
+		move.w	obSubtype(a0),d0			; get platform subtype
 		andi.w	#$F,d0					; limit to lower digit (redundant, it's already been cleared earlier)
 		add.w	d0,d0					; double for word-based indexing
 		move.w	SMZ_MBlock_TypeIndex(pc,d0.w),d1		; find entry in jump table
@@ -124,9 +124,8 @@ SMZ_MBlock_LeftRight:
 SMZ_MBlock_NextWhenStoodOn:
 		move.b obStatus(a0),d0
 		andi.b #$18,d0
-		tst.b d0			; is Sonic standing on the platform?
 		beq.s	.return					; if neither actor stands on it, wait
-		addq.b	#1,obSubtype(a0)			; if yes, go to next subtype in list
+		addq.w	#1,obSubtype(a0)			; if yes, go to next subtype in list
 
 	.return:
 		rts						; return
@@ -137,7 +136,6 @@ SMZ_MBlock_Right_StopOnWall:
 		moveq	#0,d3					; clear d3
 		move.b	obActWid(a0),d3				; use platform half-width as pixels to look ahead
 		jsr (ObjHitWallRight).l				; get distance to platform right edge and nearest wall
-		tst.w	d1					; has the platform hit a wall?
 		bmi.s	.stopPlatform				; if yes, branch
 		addq.w	#1,obX(a0)				; move platform to the right at 1px/frame
 		move.w	obX(a0),SMZ_mblock_origX(a0)		; update initial X-position as platform moves
@@ -145,7 +143,7 @@ SMZ_MBlock_Right_StopOnWall:
 ; ---------------------------------------------------------------------------
 
 	.stopPlatform:
-		clr.b	obSubtype(a0)				; change to type 00 (non-moving type)
+		clr.w	obSubtype(a0)				; change to type 00 (non-moving type)
 		rts						; return
 ; ===========================================================================
 
@@ -154,7 +152,6 @@ SMZ_MBlock_Right_FallOnWall:
 		moveq	#0,d3					; clear d3
 		move.b	obActWid(a0),d3				; use platform half-width as pixels to look ahead
 		jsr (ObjHitWallRight).l				; get distance to platform right edge and nearest wall
-		tst.w	d1					; has the platform hit a wall?
 		bmi.s	.fallDown				; if yes, branch
 		addq.w	#1,obX(a0)				; move platform to the right at 1px/frame
 		move.w	obX(a0),SMZ_mblock_origX(a0)		; update initial X-position as platform moves
@@ -162,7 +159,7 @@ SMZ_MBlock_Right_FallOnWall:
 ; ---------------------------------------------------------------------------
 
 	.fallDown:
-		addq.b	#1,obSubtype(a0)			; change to type 06 (falling down)
+		addq.w	#1,obSubtype(a0)			; change to type 06 (falling down)
 		rts						; return
 ; ===========================================================================
 
@@ -172,11 +169,10 @@ SMZ_MBlock_FallingDown:
 		addi.w	#$18,obVelY(a0)				; make the platform fall faster
 
 		jsr (ObjHitFloor).l				; get distance to floor
-		tst.w	d1					; has platform hit the floor?
 		bpl.w	.return					; if not, branch
 		add.w	d1,obY(a0)				; align platform to floor
 		clr.w	obVelY(a0)				; stop platform falling
-		clr.b	obSubtype(a0)				; change to type 00 (non-moving type)
+		clr.w	obSubtype(a0)				; change to type 00 (non-moving type)
 
 	.return:
 		rts						; return
@@ -186,7 +182,7 @@ SMZ_MBlock_FallingDown:
 SMZ_MBlock_SecretLZ1Raft:
 		tst.b	(f_switch+2).w				; has switch number 02 been pressed?
 		beq.s	.hidePlatform				; if not, branch
-		subq.b	#3,obSubtype(a0)			; change platform to type 04 (stationary, moves right when stood on, drops on wall hit)
+		subq.w	#3,obSubtype(a0)			; change platform to type 04 (stationary, moves right when stood on, drops on wall hit)
 
 	.hidePlatform:
 		; This line, combined with the coordinate being pushed
@@ -257,7 +253,7 @@ SMZ_MBlock_SlideFast:
 
 .reset:
 		clr.w	SMZ_mblock_slide_goback(a0)			; set platform as moved back to its original position
-		subq.b	#1,obSubtype(a0)			; change type back to 09 to wait for Sonic to step on platform again
+		subq.w	#1,obSubtype(a0)			; change type back to 09 to wait for Sonic to step on platform again
 		rts						; return
 ; End of function SMZ_MBlock_Move
 

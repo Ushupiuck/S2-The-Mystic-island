@@ -82,7 +82,7 @@ local function discover()
 			if include then visit(include) end
 		end
 	end
-	visit("main.asm")
+	visit("md-main.asm")
 	local maps = {}
 	for reference in pairs(references) do
 		maps[reference:gsub("_height$", ""):gsub("_width$", ""):gsub("_frames$", "")] = true
@@ -133,7 +133,7 @@ function bounds.generate(common, as_arguments, p2bin_arguments, repository)
 		write_file(generated_path, constants(labels, {}))
 		os.remove(pass_rom)
 		os.remove(pass_listing)
-		local message, abort = common.assemble_file("main.asm", pass_rom,
+		local message, abort = common.assemble_file("md-main.asm", pass_rom,
 			as_arguments .. " -OLIST " .. pass_listing, p2bin_arguments, false, repository)
 		assert(not abort, "Mapping assembly pass failed")
 		local image = assert(read_file(pass_rom), "Mapping assembly produced no ROM")

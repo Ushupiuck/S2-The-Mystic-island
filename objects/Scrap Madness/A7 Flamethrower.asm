@@ -30,13 +30,13 @@ SMZ_Flame_Main:	; Routine 0
 		move.w	obY(a0),SMZ_flame_timer(a0)			; store obY (pointless, gets overwritten below)
 		move.b	#24/2,obActWid(a0)			; set sprite display width
 
-		move.b	obSubtype(a0),d0			; get object subtype
+		move.w	obSubtype(a0),d0			; get object subtype
 		andi.w	#$F0,d0					; read upper digit of object subtype
 		add.w	d0,d0					; multiply by 2 frames
 		move.w	d0,SMZ_flame_timer(a0)			; set as initial timer value
 		move.w	d0,SMZ_flame_firetime(a0)			; store base flaming time
 
-		move.b	obSubtype(a0),d0			; get object subtype again
+		move.w	obSubtype(a0),d0			; get object subtype again
 		andi.w	#$0F,d0					; read lower digit of object subtype
 		lsl.w	#5,d0					; multiply by 32 frames
 		move.w	d0,SMZ_flame_pausetime(a0)			; store base pause time

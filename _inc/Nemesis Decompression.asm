@@ -1,3 +1,4 @@
+; Mega-CD sub-68000 RAM-output decoder; no VDP access.
 ; ==============================================================================
 ; ------------------------------------------------------------------------------
 ; Nemesis decompression routine
@@ -6,34 +7,28 @@
 ; Modified for Sonic 2 by MainMemory
 ; ------------------------------------------------------------------------------
 
-NemDecToRAM:
+MCD_SubNemDecToRAM:
 	movem.l	d0-a1/a3-a6,-(sp)
-	lea	NemDec_WriteAndAdvance(pc),a3
-	bra.s	NemDec_Main
+	lea	MCD_SubNemDec_WriteAndAdvance(pc),a3
 
 ; ------------------------------------------------------------------------------
-NemDec:
-	movem.l	d0-a1/a3-a6,-(sp)
-	lea	(vdp_data_port).l,a4		; load VDP Data Port
-	lea	NemPCD_WriteRowToVDP(pc),a3
-
-NemDec_Main:
-	lea	(v_ngfx_buffer).w,a1		; load Nemesis decompression buffer
+MCD_SubNemDec_Main:
+	lea	(MCD_DecompCodeTable_Sub).l,a1		; load Nemesis decompression buffer
 	move.w	(a0)+,d2		; get number of patterns
 	bpl.s	+			; are we in Mode 0?
-	lea	$A(a3),a3		; if not, use Mode 1
+	adda.w	#MCD_SubNemDec_WriteAndAdvance_XOR-MCD_SubNemDec_WriteAndAdvance,a3		; if not, use Mode 1
 +
 	lsl.w	#3,d2
 	movea.w	d2,a5
 	moveq	#7,d3
 	moveq	#0,d2
 	moveq	#0,d4
-	bsr.w	NemDec_BuildCodeTable
+	bsr.w	MCD_SubNemDec_BuildCodeTable
 	move.b	(a0)+,d5		; get first byte of compressed data
 	asl.w	#8,d5			; shift up by a byte
 	move.b	(a0)+,d5		; get second byte of compressed data
 	move.w	#$10,d6			; set initial shift value
-	bsr.s	NemDec2
+	bsr.s	MCD_SubNemDec2
 	movem.l	(sp)+,d0-a1/a3-a6
 	rts
 
@@ -41,13 +36,13 @@ NemDec_Main:
 ; Part of the Nemesis decompressor, processes the actual compressed data
 ; ---------------------------------------------------------------------------
 
-NemDec2:
+MCD_SubNemDec2:
 	move.w	d6,d7
 	subq.w	#8,d7			; get shift value
 	move.w	d5,d1
 	lsr.w	d7,d1			; shift so that high bit of the code is in bit position 7
 	cmpi.b	#%11111100,d1		; are the high 6 bits set?
-	bcc.s	NemDec_InlineData	; if they are, it signifies inline data
+	bcc.s	MCD_SubNemDec_InlineData	; if they are, it signifies inline data
 	andi.w	#$FF,d1
 	add.w	d1,d1
 	sub.b	(a1,d1.w),d6		; ~~ subtract from shift value so that the next code is read next time around
@@ -62,26 +57,26 @@ NemDec2:
 	andi.w	#$F,d1			; get palette index for pixel
 	andi.w	#$F0,d0
 
-NemDec_GetRepeatCount:
+MCD_SubNemDec_GetRepeatCount:
 	lsr.w	#4,d0			; get repeat count
 
-NemDec_WritePixel:
+MCD_SubNemDec_WritePixel:
 	lsl.l	#4,d4			; shift up by a nybble
 	or.b	d1,d4			; write pixel
-	dbf	d3,NemDec_WritePixelLoop; ~~
+	dbf	d3,MCD_SubNemDec_WritePixelLoop; ~~
 	jmp	(a3)			; otherwise, write the row to its destination
 ; ---------------------------------------------------------------------------
 
-NemPCD_NewRow:
+MCD_SubNemPCD_NewRow:
 	moveq	#0,d4			; reset row
 	moveq	#7,d3			; reset nybble counter
 
-NemDec_WritePixelLoop:
-	dbf	d0,NemDec_WritePixel
-	bra.s	NemDec2
+MCD_SubNemDec_WritePixelLoop:
+	dbf	d0,MCD_SubNemDec_WritePixel
+	bra.s	MCD_SubNemDec2
 ; ---------------------------------------------------------------------------
 
-NemDec_InlineData:
+MCD_SubNemDec_InlineData:
 	subq.w	#6,d6			; 6 bits needed to signal inline data
 	cmpi.w	#9,d6
 	bcc.s	+
@@ -96,55 +91,38 @@ NemDec_InlineData:
 	andi.w	#$F,d1			; get palette index for pixel
 	andi.w	#$70,d0			; high nybble is repeat count for pixel
 	cmpi.w	#9,d6
-	bcc.s	NemDec_GetRepeatCount
+	bcc.s	MCD_SubNemDec_GetRepeatCount
 	addq.w	#8,d6
 	asl.w	#8,d5
 	move.b	(a0)+,d5
-	bra.s	NemDec_GetRepeatCount
+	bra.s	MCD_SubNemDec_GetRepeatCount
 
 ; ---------------------------------------------------------------------------
 ; Subroutines to output decompressed entry
 ; Selected depending on current decompression mode
 ; ---------------------------------------------------------------------------
 ; loc_1502
-NemPCD_WriteRowToVDP:
-	move.l	d4,(a4)			; write 8-pixel row
-	subq.w	#1,a5
-	move.w	a5,d4			; have all the 8-pixel rows been written?
-	bne.s	NemPCD_NewRow			; if not, branch
-	rts
-; ---------------------------------------------------------------------------
-
-NemPCD_WriteRowToVDP_XOR:
-	eor.l	d4,d2			; XOR the previous row by the current row
-	move.l	d2,(a4)			; and write the result
-	subq.w	#1,a5
-	move.w	a5,d4
-	bne.s	NemPCD_NewRow
-	rts
-; ---------------------------------------------------------------------------
-
-NemDec_WriteAndAdvance:
+MCD_SubNemDec_WriteAndAdvance:
 	move.l	d4,(a4)+		; write 8-pixel row
 	subq.w	#1,a5
 	move.w	a5,d4			; have all the 8-pixel rows been written?
-	bne.s	NemPCD_NewRow			; if not, branch
+	bne.s	MCD_SubNemPCD_NewRow			; if not, branch
 	rts
 ; ---------------------------------------------------------------------------
 
-NemDec_WriteAndAdvance_XOR:
+MCD_SubNemDec_WriteAndAdvance_XOR:
 	eor.l	d4,d2			; XOR the previous row by the current row
 	move.l	d2,(a4)+		; and write the result
 	subq.w	#1,a5
 	move.w	a5,d4
-	bne.s	NemPCD_NewRow
+	bne.s	MCD_SubNemPCD_NewRow
 	rts
 
 ; ---------------------------------------------------------------------------
 ; Part of the Nemesis decompressor, builds the code table (in RAM)
 ; ---------------------------------------------------------------------------
 
-NemDec_BuildCodeTable:
+MCD_SubNemDec_BuildCodeTable:
 	move.b	(a0)+,d0		; read first byte
 
 .ChkEnd:

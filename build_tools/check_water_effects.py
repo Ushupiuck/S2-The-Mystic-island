@@ -9,6 +9,7 @@ p.add_argument('--rom',type=Path,required=True);p.add_argument('--listing',type=
 p.add_argument('--core',type=Path,required=True);p.add_argument('--output',type=Path,required=True)
 p.add_argument('--pal',action='store_true');p.add_argument('--player',type=int,choices=(0,2),default=0)
 p.add_argument('--course',action='store_true');p.add_argument('--companion',action='store_true')
+p.add_argument('--system-directory',type=Path,help='Optional BIOS directory for Mode 1 checks')
 args=p.parse_args();pal=args.pal;mode=args.player;course=args.course
 assert not args.companion or mode==0
 player='v_player2' if args.companion else 'v_player'
@@ -16,7 +17,7 @@ splash='v_tsplash' if args.companion else 'v_splash'
 breath='v_tailsbubbles' if args.companion else 'v_sonicbubbles'
 bank=0xFE00 if args.companion else 0xFC00
 label='Companion Tails' if args.companion else ('Tails' if mode else 'Sonic')
-g=Genesis(args.core,args.rom,args.listing,args.output,pal)
+g=Genesis(args.core,args.rom,args.listing,args.output,pal,system_directory=args.system_directory)
 boot_level(g,item=10 if course else 6,player=mode)
 if not args.companion:g.put('v_player2','layout_id',0)
 rom=args.rom.read_bytes()

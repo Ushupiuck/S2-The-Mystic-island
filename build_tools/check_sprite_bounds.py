@@ -29,7 +29,7 @@ def mapping_bounds(rom, address, frames):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--rom', type=Path, default=ROOT / 's2built.bin')
-    parser.add_argument('--listing', type=Path, default=ROOT / 'main.lst')
+    parser.add_argument('--listing', type=Path, default=ROOT / 'md-main.lst')
     args = parser.parse_args()
     source = BOUNDS.read_text()
     expected = {}

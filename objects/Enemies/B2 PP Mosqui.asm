@@ -34,7 +34,7 @@ PP_Mosqui_Init:
 	move.b	#$1A,obColType(a0)
 	move.w	obX(a0),objoff_30(a0)
 	move.w	#ArtTile_PP_Mosqui,obGfx(a0)
-	tst.b	obSubtype(a0)
+	tst.w	obSubtype(a0)
 	bne.w	.Damaged
 	lea	Map_PP_Mosqui1(pc),a1
 	lea	Ani_PP_Mosqui1(pc),a2

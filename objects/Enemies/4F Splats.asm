@@ -25,7 +25,7 @@ Splats_Init:
 		move.b	#sprite_bound($C,Map_Splats_width),obActWid(a0)		; set width
 		move.b	#$14,obHeight(a0)		; set height
 		move.b	#2,obColType(a0)		; set coltype to badnik
-	;	tst.b	obSubtype(a0)			; is subtype anything but zero?
+	;	tst.w	obSubtype(a0)			; is subtype anything but zero?
 	;	beq.s	Splats_Wait			; if not, branch
 		move.w	#$300,d2			; set trigger zone to start moving to be significantly larger
 	;	bra.s	Splats_Wait.triggerzoneset	; skip
@@ -63,7 +63,6 @@ Splats_Bounce:
 		bmi.s	.chkwall			; if yes, branch
 		clr.b	obFrame(a0)			; set frame to 0 (standard, long ears)
 		bsr.w	ObjHitFloor			; get object distance to floor
-		tst.w	d1				; is object above floor?
 		bpl.s	.chkwall			; if yes, branch
 		; The following codeis for the Special interaction in Marble zone
 	;	move.w	(a1),d0				; get floor block object is standing on
@@ -105,14 +104,12 @@ Obj_ChkWall:	; this routine is shared with Yadrin
 		tst.w	obVelX(a0)		; is object moving to the left?
 		bmi.s	.checkleftwall		; if so, branch
 		bsr.w	ObjHitWallRight		; get distance to nearest right wall
-		tst.w	d1			; did object hit wall?
 		smi	d0			; d0=$FF if hit, 0 if not
 		rts
 ; ===========================================================================
 .checkleftwall:
 		not.w	d3			; invert object width to make it work for left wall col
 		bsr.w	ObjHitWallLeft		; get distance to nearest left wall
-		tst.w	d1			; did object hit wall?
 		smi	d0			; d0=$FF if hit, 0 if not
 		rts
 

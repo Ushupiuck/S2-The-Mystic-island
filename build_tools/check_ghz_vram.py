@@ -38,7 +38,7 @@ def main():
     rom = (ROOT / 's2built.bin').read_bytes()
     symbols = {name: int(value, 16) for name, value in re.findall(
         r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]',
-        (ROOT / 'main.lst').read_text())}
+        (ROOT / 'md-main.lst').read_text())}
 
     def cues(label):
         start = symbols[label]
@@ -99,10 +99,10 @@ def main():
     for act in range(1, 5):
         pos = symbols[f'ObjPos_GHZ{act}']
         while struct.unpack_from('>H', rom, pos)[0] != 0xFFFF:
-            _, _, obj, subtype = struct.unpack_from('>HHBB', rom, pos)
+            _, _, obj, eras, subtype = struct.unpack_from('>HHBBH', rom, pos)
             if obj == symbols['id_Obj36']:
                 assert subtype >> 4 < len(spike_frames), ('GHZ spike arrangement', act, hex(subtype))
-            pos += 6
+            pos += symbols['omSize']
 
     level_end = len((ROOT / 'art/kosinski/level/8x8 - GHZ.unc').read_bytes())
     assert level_end <= symbols['ArtTile_GHZ_Bridge'] * 32

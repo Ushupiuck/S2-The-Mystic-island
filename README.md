@@ -4,9 +4,14 @@ A Sonic 2 Nick Arcade ROM hack with expanded level slots, adapted S3&K
 object loading and rendering, Sonic/Tails gameplay, imported level objects,
 a rotating S1 special stage, and the KeH enhanced sound driver.
 
-`Mystic-Island` builds an ordinary Mega Drive cartridge ROM.
-`test/rebuilt-kehmusic` adds required Mega-CD Mode 1 RAM and selective
-sub-CPU processing. Level content includes unfinished acts and editable starters.
+`Mystic-Island` is the default branch and includes the former KEH branch's
+engine, tools and assets. Mega-CD Mode 1 is the primary configuration, with
+required CD RAM and selective sub-CPU processing. `test/rebuilt-kehmusic` is
+synchronized with this baseline.
+
+Set `MegaCDMode1 = 0` in `md-main.asm` for a standalone Mega Drive build using
+`md-only/`. Shared assets keep their usual paths; see [build configurations](docs/Mega-CD.md#cartridge-build-dependencies).
+Level content includes unfinished acts and editable starters.
 
 Build from the repository root with `build.bat` on Windows, or `lua build.lua`
 on Linux/BSD with the matching native tools and Mono. Output is `s2built.bin`.

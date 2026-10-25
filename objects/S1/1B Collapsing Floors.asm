@@ -101,7 +101,8 @@ loc_8E2E:
 
 loc_8E3E:
 		lea	byte_8F17(pc),a4
-		btst	#0,obSubtype(a0)
+		move.w	obSubtype(a0),d0
+		btst	#0,d0
 		beq.s	loc_8E52
 		lea	byte_8F1F(pc),a4
 

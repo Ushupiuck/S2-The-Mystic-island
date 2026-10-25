@@ -153,10 +153,10 @@ Flicky_EndingProperties:
 ; ---------------------------------------------------------------------------
 
 Flicky_Init:
-		tst.b	obSubtype(a0)
+		tst.w	obSubtype(a0)
 		beq.s	FlickyRandom
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		add.w	d0,d0
 		move.b	d0,obRoutine(a0)
 		subi.w	#$14,d0		; d0 = (subtype-$A)*2
@@ -243,7 +243,6 @@ Flicky_ChkFloor:
 		tst.w	obVelY(a0)
 		bmi.w	DisplaySprite
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.w	DisplaySprite
 		add.w	d1,obY(a0)
 		move.w	animal_x_vel(a0),obVelX(a0)
@@ -270,12 +269,11 @@ Flicky_Walk:
 		bmi.s	+
 		clr.b	obFrame(a0)
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.s	+
 		add.w	d1,obY(a0)
 		move.w	animal_y_vel(a0),obVelY(a0)
 +
-		tst.b	obSubtype(a0)
+		tst.w	obSubtype(a0)
 		bne.s	Flicky_ChkDel
 		tst.b	obRender(a0)
 		bpl.w	DeleteObject
@@ -288,13 +286,12 @@ Flicky_Fly:
 		tst.w	obVelY(a0)
 		bmi.s	+
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.s	+
 		add.w	d1,obY(a0)
 		move.w	animal_y_vel(a0),obVelY(a0)
-		tst.b	obSubtype(a0)
+		tst.w	obSubtype(a0)
 		beq.s	+
-		cmpi.b	#$A,obSubtype(a0)
+		cmpi.w	#$A,obSubtype(a0)
 		beq.s	+
 		neg.w	obVelX(a0)
 		bchg	#0,obRender(a0)
@@ -305,7 +302,7 @@ Flicky_Fly:
 		addq.b	#1,obFrame(a0)
 		andi.b	#1,obFrame(a0)
 +
-		tst.b	obSubtype(a0)
+		tst.w	obSubtype(a0)
 		bne.s	Flicky_ChkDel
 		tst.b	obRender(a0)
 		bpl.w	DeleteObject
@@ -375,7 +372,6 @@ Flicky_DoubleBounce:
 		bmi.w	Flicky_ChkDel
 		clr.b	obFrame(a0)
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.w	Flicky_ChkDel
 		not.b	animal_direction(a0) ; used to be objoff_2D in Sonic 1/2; in sonic 3, 29 is a "convention followed by many objects", so it was changed
 		bne.s	+
@@ -407,7 +403,6 @@ Flicky_SingleBounce:
 		bmi.w	Flicky_ChkDel
 		clr.b	obFrame(a0)
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.w	Flicky_ChkDel
 		neg.w	obVelX(a0)
 		bchg	#0,obRender(a0)
@@ -424,7 +419,6 @@ Flicky_FlyBounce:
 		tst.w	obVelY(a0)
 		bmi.s	++
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.s	++
 		not.b	animal_direction(a0) ; used to be objoff_2D in Sonic 1/2; in sonic 3, 29 is a "convention followed by many objects", so it was changed
 		bne.s	+
@@ -450,7 +444,6 @@ AnimalJump:
 		bmi.s	+
 		clr.b	obFrame(a0)
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.s	+
 		add.w	d1,obY(a0)
 		move.w	animal_y_vel(a0),obVelY(a0)

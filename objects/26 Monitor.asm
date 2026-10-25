@@ -28,8 +28,8 @@ loc_AE70:
 		move.b	#sprite_bound($F,Map_Obj26_width),obActWid(a0)
 		move.w	respawn_addr(a0),d0
 		beq.s	loc_AECA			; Debug/scripted monitors have no placement state
-		movea.w	d0,a2
-		btst	#0,(a2)
+		jsr	(Object_RespawnRead).l
+		btst	#0,d0
 		beq.s	loc_AECA
 		move.b	#8,obRoutine(a0)
 		move.b	#$B,obFrame(a0)
@@ -38,14 +38,14 @@ loc_AE70:
 
 loc_AECA:
 		move.b	#$46,obColType(a0)
-		move.b	obSubtype(a0),obAnim(a0)
+		move.w	obSubtype(a0),d0
+		move.b	d0,obAnim(a0)
 
 loc_AED6:
 		tst.b	ob2ndRout(a0)
 		beq.s	Monitor_Solid
 		bsr.w	ObjectMoveAndFall
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.s	Monitor_Solid
 		add.w	d1,obY(a0)
 		clr.w	obVelY(a0)
@@ -143,8 +143,7 @@ loc_B004:
 loc_B020:
 		move.w	respawn_addr(a0),d0
 		beq.s	.no_state
-		movea.w	d0,a2
-		bset	#0,(a2)
+		jsr	(Object_RespawnConsume).l
 .no_state:
 		move.b	#$A,obAnim(a0)
 		bra.w	DisplaySprite

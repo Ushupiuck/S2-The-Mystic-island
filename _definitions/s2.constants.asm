@@ -7,12 +7,18 @@ Size_of_Snd_driver_guess	= $F64 ; approximate post-compressed size of the Z80 so
 ; ---------------------------------------------------------------------------
 ; Object placement record offsets
 ; ---------------------------------------------------------------------------
-; S3&K placement: X word, Y/flags word, ID byte, subtype byte.
+; Mystic Island placement: X/Y words, ID/time-mask bytes, subtype word.
 omX:		equ	0
 omY:		equ	2
 omID:		equ	4
-omSubtype:	equ	5
-omSize:		equ	6
+omTimeZones:	equ	5
+omSubtype:	equ	6
+omSize:		equ	8
+; Sonic CD time-presence bits. Both future variants share the Future bit.
+ObjectTime_Past:		equ	$20
+ObjectTime_Present:	equ	$40
+ObjectTime_Future:	equ	$80
+ObjectTime_All:		equ	ObjectTime_Past|ObjectTime_Present|ObjectTime_Future
 ; ---------------------------------------------------------------------------
 ; Masks for the level-placement Y/flags word (omY), not record fields
 ; Bits 13/14 mirror X/Y; bit 15 loads the object at any Y.
@@ -24,9 +30,9 @@ ObjectLayout_LoadAtAnyYMask:	equ	$8000	; omY bit 15: bypass vertical load band
 DebugEntry_code:	equ	$00
 DebugEntry_mappings:	equ	$04
 DebugEntry_subtype:	equ	$08
-DebugEntry_frame:	equ	$09
-DebugEntry_art_tile:	equ	$0A
-DebugEntry_size:	equ	$0C
+DebugEntry_frame:	equ	$0A
+DebugEntry_art_tile:	equ	$0C
+DebugEntry_size:	equ	$0E
 ; ---------------------------------------------------------------------------
 ; Object loading distances
 Object_Load_BandSize:	equ $80
@@ -75,15 +81,14 @@ obTimeFrame:            equ $1E     ; byte; animation frame timer
 obAniFrame:             equ $1F     ; byte; position in animation script
 obAnim:                 equ $20     ; byte; current animation
 obPrevAni:              equ $21     ; byte; previous animation
-respawn_addr:           equ $22     ; word; placement respawn-byte pointer; zero for dynamic/Debug objects
+respawn_addr:           equ $22     ; word; placement index+1 on CD; zero for dynamic/Debug objects
 obRoutine:              equ $24     ; byte; main routine
 ob2ndRout:              equ $25     ; byte; secondary routine
 obAngle:                equ $26     ; byte; angle about the Z axis
 obColType:              equ $28     ; byte; NPC collision response type
 obColProp:              equ $29     ; byte; NPC collision property
 obStatus:               equ $2A     ; byte; meaning depends on object type
-obSubtype:              equ $2C     ; byte; primary subtype
-ob2ndSubtype:           equ $2D     ; byte; optional secondary subtype, currently unused
+obSubtype:              equ $2C     ; word; complete placement subtype
 ; Animation delay counters remain local to the objects that need them.
 ; ---------------------------------------------------------------------------
 ; Player meanings. These bytes are private scratch in other object types.
@@ -217,6 +222,8 @@ object_size_bits:       equ 6      ; allocator lookup buckets, not SST stride
 object_size:            equ $4E    ; 78 bytes; player flight energy ends at $4C
 reserved_object_slots: equ 23
 dynamic_object_slots:  equ 90
+MCD_ObjectSlotCount:		equ	dynamic_object_slots
+MCD_ObjectSlotBytes:		equ	(MCD_ObjectSlotCount+7)/8
 object_slot_count:      equ reserved_object_slots+dynamic_object_slots
 object_ram_size:        equ object_size*object_slot_count ; $226E; keep all 113 slots
 next_object =           object_size
@@ -859,31 +866,75 @@ bgm_Stop =		MusID_Stop
 ; ---------------------------------------------------------------------------
 ; Main RAM
 ; ---------------------------------------------------------------------------
+	if MegaCDMode1
+		include "_definitions/Mega CD RAM.asm"
+	endif
 	phase	ramaddr($FFFE0000)
 RAM_debug_start:		ds.b	$10000
 RAM_debug_end:
 
 v_start:
 RAM_Start:
-
-Chunk_Table:			ds.w	$40*$100	; 128x128 tile mappings ($8000 bytes)
-Chunk_Table_End:
 	dephase
 
-; Keep the chunk workspace fixed for levels and the rotating S1 stage. Pack
-; all short-addressed engine allocations against the top of cartridge RAM.
+	if MegaCDMode1
+; Pack the engine against the top of RAM, with long-addressed CD work/art
+; immediately below it. Forward differences are allocation sizes, so adding
+; a field moves the boundary automatically rather than leaving address holes.
+	phase	Main_RAM_Start-(Player_Art_Buffer_End-MCD_MainWorkStart)
+MCD_MainWorkStart:
+MCD_RingEvents:		ds.w	MCD_RingSlots
+MCD_RingEventCount:	ds.w	1
+MCD_RingActiveCount:	ds.w	1
+MCD_RingJobPending:	ds.w	1
+MCD_TerrainReady:	ds.b	1
+			ds.b	1
+MCD_TerrainPending:	ds.w	1	; 0 idle, 1 CD frame, 2 MD strip stream, 3 CD art-only frame
+MCD_TerrainStreamBytes:	ds.w	1
+MCD_TerrainIndexBytes:	ds.w	1	; level-load index size derived from decoded blocks
+MCD_ObjectReplyPending:	ds.w	1
+MCD_DecompCachedStart:	ds.l	1
+MCD_DecompCachedEnd:	ds.l	1
+MCD_KosDMAWords:		ds.w	1
+MCD_KosDMADest:		ds.w	1
+MCD_PLCPrepared:		ds.w	1
+MCD_MainWorkEnd:
+; Uncompressed sources for the existing effect DPLCs and ring-frame uploads.
+; Rebuild effects on level entry, and rings on either level or S1 stage entry.
+Player_Art_Buffer_Start:
+Art_Shield:		ds.b	$360
+Art_Shield_End:
+Art_Invincibility:	ds.b	$440
+Art_Invincibility_End:
+Art_Ring:		ds.b	$400
+Art_Ring_End:
+Player_Art_Buffer_End:
+	dephase
 	phase	-(Main_RAM_End-Main_RAM_Start)
+	else
+	phase	RAM_Start
+Chunk_Table:			ds.w	$40*$100	; 128x128 tile mappings ($8000 bytes)
+Chunk_Table_End:
+	endif
 Main_RAM_Start:
 v_128x128:=	Chunk_Table
 v_128x128_end:=	Chunk_Table_End
-Level_Layout:			ds.b	$1000		; level layout buffer ($1000 bytes)
+	if MegaCDMode1
+; Level-load staging only. Live terrain layout and blocks are CD-owned.
+Level_Layout:			equ	MCD_TerrainLayoutStage
+Level_Layout_End:		equ	MCD_TerrainLayoutStage+$1000
+	else
+Level_Layout:			ds.b	$1000
 Level_Layout_End:
+	endif
 
 v_lvllayout:=			Level_Layout
 v_lvllayout_end:=		Level_Layout_End
 v_lvllayoutbg:=			Level_Layout+$80
-Kos_decomp_buffer:		ds.b	$1000		; Moduled Kosinski+ decompression buffer
-Kos_decomp_buffer_End:
+	if MegaCDMode1
+Kos_decomp_buffer:		equ	MCD_DecompOutput
+Kos_decomp_buffer_End:		equ	MCD_DecompOutput+$1000
+	endif
 ; ---------------------------------------------------------------------------
     if object_size*object_slot_count > object_ram_size
 	fatal "Object slots exceed the reserved object RAM growth area."
@@ -965,8 +1016,13 @@ v_endeggman	= v_objspace+object_size*2		; object variable space for Eggman after
 v_tryagain	= v_objspace+object_size*3		; object variable space for the "TRY AGAIN" text (1 SST)
 v_eggmanchaos	= v_objspace+object_size*32		; object variable space for the emeralds juggled by Eggman (6 SSTs)
 ; ---------------------------------------------------------------------------
-v_16x16:			ds.b	$1800		; $1800 bytes
+	if MegaCDMode1
+v_16x16:			equ	MCD_TerrainBlockStage
+v_16x16_End:			equ	MCD_TerrainBlockStage+$1800
+	else
+v_16x16:			ds.b	$1800
 v_16x16_End:
+	endif
 
 TempArray_LayerDef:		ds.b	$200		; background scroll buffer
 v_bgscroll_buffer:=		TempArray_LayerDef
@@ -977,10 +1033,10 @@ v_hscrolltablebuffer_end_padded:
 Sprite_Table_Max:		equ 80
 Sprite_Table:			ds.b	Sprite_Table_Max*8		; Sprite attribute table buffer
 Sprite_Table_end:
-System_Stack_Start:		ds.b	$140		; stack grows down from v_systemstack
+System_Stack_Start:		ds.b	$200		; stack grows down from v_systemstack
 v_systemstack:
-v_ngfx_buffer:			ds.b	$200		; Nemesis graphics decompression buffer
-v_ngfx_buffer_end:
+v_ssbg_sines:			ds.l	10		; S1 stage background: sine offset/phase word pairs
+v_ssbg_sines_end:
 
 Error_Handler_Buffer:		ds.b	$45		; register/SP/error-type overlay below
 				ds.b	1		; align the Debug snapshot after the error buffer
@@ -1006,8 +1062,6 @@ Ring_Positions_Active_End:	equ Ring_Positions_End-6	; final six-byte record is t
 VDP_Command_Buffer:		ds.w	7*$12		; stores 18 ($12) VDP commands to issue the next time ProcessDMAQueue is called
 VDP_Command_Buffer_Slot:	ds.w	1		; stores the address of the next open slot for a queued VDP command
 
-Object_Respawn_Table:		ds.b	$300	; S3&K: one byte per placement (loaded bit + local state)
-Object_Respawn_Table_end:
 Camera_RAM:
 Camera_Positions:
 Camera_X_pos:			ds.l	1
@@ -1035,20 +1089,6 @@ Scroll_flags_BG:		ds.w	1	; bitfield ; bits 0-3 as above, bit 4 = redraw top row 
 Scroll_flags_BG2:		ds.w	1	; SMZ row-selected layers: bits 0/1 = Y; 2/3, 4/5, 6/7 = each layer's left/right
 Scroll_flags_BG3:		ds.w	1	; bitfield ; for CPZ; bits 0-3 as Scroll_flags_BG but using Y-dependent BG camera; bits 4-5 = bits 2-3; bits 6-7 = bits 2-3
 Scroll_Flags_All_End:
-
-Camera_Positions_Copy:
-Camera_RAM_copy:		ds.l	2	; copied over every V-int
-Camera_BG_copy:			ds.l	2	; copied over every V-int
-Camera_BG2_copy:		ds.l	2	; copied over every V-int
-Camera_BG3_copy:		ds.l	2	; copied over every V-int
-Camera_Positions_Copy_End:
-
-Scroll_Flags_Copy_All:
-Scroll_flags_copy:		ds.w	1	; copied over every V-int
-Scroll_flags_BG_copy:		ds.w	1	; copied over every V-int
-Scroll_flags_BG2_copy:		ds.w	1	; copied over every V-int
-Scroll_flags_BG3_copy:		ds.w	1	; copied over every V-int
-Scroll_Flags_Copy_All_End:
 
 Camera_Difference:
 Camera_X_pos_diff:		ds.w	1	; (new X pos - old X pos) * 256
@@ -1107,7 +1147,6 @@ Camera_Boundaries_P2_End:
 Camera_RAM_End:
 ; ---------------------------------------------------------------------------
 
-Block_cache:		ds.w	512/16*2		; Width of plane in blocks, with each block getting two words.
 
 v_gamemode:		ds.w	1			; game mode - Pointer to the current Gamemode IN-ROM
 Ctrl_1_Logical:
@@ -1160,22 +1199,11 @@ v_misc_variables_end:
 
 v_plc_buffer:			ds.b	6*16		; pattern load cues buffer (maximum $10 PLCs)
 v_plc_buffer_only_end:
-v_plc_ptrnemcode:		ds.l	1		; pointer for nemesis decompression code ($1502 or $150C)
-v_plc_repeatcount:		ds.l	1
-v_plc_paletteindex:		ds.l	1
-v_plc_previousrow:		ds.l	1
-v_plc_dataword:			ds.l	1
-v_plc_shiftvalue:		ds.l	1
 v_plc_patternsleft:		ds.w	1
 v_plc_framepatternsleft:	ds.w	1
 v_plc_buffer_end:
 
-Kos_decomp_queue_count:		ds.w	1		; the number of pieces of data on the queue. Sign bit set indicates a decompression is in progress
-Kos_decomp_stored_Wregisters:	ds.w	6
-Kos_decomp_stored_Lregisters:	ds.w	6
-Kos_decomp_stored_SR:		ds.w	1
-Kos_decomp_bookmark:		ds.l	1		; the address within the Kosinski queue processor at which processing is to be resumed
-Kos_description_field:		ds.w	1		; used by the Kosinski queue processor the same way the stack is used by the normal Kosinski decompression routine
+Kos_decomp_queue_count:		ds.w	1		; number of pending CD decompression requests
 Kos_decomp_queue:		ds.l	2*4		; 2 longwords per entry, first is source location and second is decompression location
 Kos_decomp_source =		Kos_decomp_queue	; long ; the compressed data location for the first entry in the queue
 Kos_decomp_destination =	Kos_decomp_queue+4	; long ; the decompression location for the first entry in the queue
@@ -1227,11 +1255,6 @@ Camera_X_pos_coarse_back:	ds.w	1			; (Camera_X_pos - $80) & $FF80, for object de
 Camera_X_pos_coarse_back_End:
 Camera_X_pos_coarse_P2:	ds.w	1
 Camera_X_pos_coarse_P2_End:
-
-Object_Manager_Addresses:
-Object_load_addr_front:	ds.l	1			; first placement beyond the right loading edge
-Object_load_addr_back:	ds.l	1			; first placement inside the left loading edge
-Object_Manager_Addresses_End:
 
 Object_Manager_Addresses_P2:
 Obj_load_addr_right_P2:	ds.l	1
@@ -1322,7 +1345,7 @@ Current_Zone:		ds.b	1			; (1 byte)
 Current_Act =		*
 v_act:			ds.b	1			; (1 byte)
 v_lives:		ds.b	1			; (1 byte)
-			ds.b	1			; unused
+			ds.b	1			; align v_air after the lives byte
 v_air:			ds.w	1			; air remaining while underwater
 v_airbyte =		v_air+1				; low byte for air
 v_lastbonus:		ds.b	1			; last bonus stage number
@@ -1340,7 +1363,9 @@ v_timemin		= v_time+1			; time - minutes
 v_timesec		= v_time+2			; time - seconds
 v_timecent		= v_time+3			; time - centiseconds
 v_score:		ds.l	1			; score
-			ds.b	1			; align the checkpoint words after Super_Sonic_flag
+MCD_status:		ds.b	1			; 0 absent, 1 ready, $FF failed
+MCD_dma_pending:	ds.b	1			; queued Word-RAM transfer
+			ds.b	1			; align Super_Sonic_flag with the following word
 Super_Sonic_flag:	ds.b	1
 
 v_lastlamp:		ds.b	2			; number of the last lamppost you hit
@@ -1394,7 +1419,7 @@ v_scorelife:		ds.l	1			; points required for an extra life (JP1 only)
 f_levselcheat:		ds.b	1			; level select cheat flag
 f_slomocheat:		ds.b	1			; slow motion & frame advance cheat flag
 f_debugcheat:		ds.b	1			; debug mode cheat flag
-			ds.b	1
+v_debugcheat_count:	ds.b	1			; level-select sound-code progress; former padding
 Debug_mode_flag:	ds.b	1
 v_megadrive:		ds.b	1			; Megadrive machine type
 v_title_dcount:		ds.w	1			; number of times the d-pad is pressed on title screen
@@ -1404,7 +1429,11 @@ f_demo:			ds.w	1			; demo mode flag (0 = no; 1 = yes; $8001 = ending)
 v_demonum:		ds.w	1			; demo level number (not the same as the level number)
 v_creditsnum:		ds.w	1			; credits index number
 Super_Sonic_frame_count:	ds.w	1
-v_obj1F:		ds.b	6			; conveyor belt (Object 1F) variables
+v_lcon_wheel_frame:	ds.b	1			; shared requested wheel frame
+v_lcon_wheel_artframe:	ds.b	1			; cached DPLC frame; $FF invalid
+v_lcon_wheel_updateframe:	ds.w	1			; last object-pass frame processed
+v_lcon_wheel_updated:	ds.b	1			; updateframe is valid
+			ds.b	1			; retain the old six-byte reservation
 v_ani1_prev:		ds.b	1			; synchronised sprite animation 1 - previous frame
 v_ani2_prev:		ds.b	1			; synchronised sprite animation 2 - previous frame
 v_ani3_prev:		ds.b	1			; synchronised sprite animation 3 - previous frame
@@ -1413,30 +1442,40 @@ v_ani3_prev:		ds.b	1			; synchronised sprite animation 3 - previous frame
 Respawn_table_keep:	ds.b	1	; preserve placement state when reinitializing the same live layout
 Camera_Y_pos_coarse:	ds.w	1	; last processed camera Y, rounded down to $80
 Camera_Y_pos_coarse_back:	ds.w	1	; (Camera_Y_pos - $80) & $FF80
-Object_respawn_index_front:	ds.w	1	; RAM address paired with Object_load_addr_front
-Object_respawn_index_back:	ds.w	1	; RAM address paired with Object_load_addr_back
 Object_load_retry:	ds.b	1	; an eligible placement could not get an SST this frame
 
-			ds.b	1			; align the end of the live engine allocations
+			ds.b	1			; align the following allocation boundary
+	if MegaCDMode1=0
+		include "md-only/RAM.asm"
+	endif
 Main_RAM_End:
 	dephase
 
-	phase	Chunk_Table_End
-Free_RAM_Start:		ds.b	Main_RAM_Start-Chunk_Table_End
+	if MegaCDMode1
+	if (MOMPASS>1)&&((Main_RAM_Start&$FF8000)<>$FF8000)
+		fatal "Short-addressed engine RAM exceeds the upper 32 KB."
+	endif
+	if (MOMPASS>1)&&(MCD_MainWorkStart<RAM_Start)
+		fatal "Live MD allocations exceed 64 KB."
+	endif
+	phase	RAM_Start
+Free_RAM_Start:		ds.b	MCD_MainWorkStart-RAM_Start
 Free_RAM_End:
-Free_RAM_Size:		equ Free_RAM_End-Free_RAM_Start
-	if MOMPASS>1
-		if (Main_RAM_Start<Chunk_Table_End)||(Main_RAM_End<>0)
-			fatal "Cartridge RAM allocations overlap chunks or exceed the top of RAM."
-		endif
-		if Free_RAM_End<>Main_RAM_Start
-			fatal "Free RAM must end at the first live engine allocation."
-		endif
-		message "Contiguous free cartridge RAM: $\{Free_RAM_Size} bytes."
+	if Free_RAM_End<>MCD_MainWorkStart
+		fatal "Free RAM must end at the first live allocation."
+	endif
+	else
+	if (MOMPASS>1)&&(Main_RAM_End>0)
+		fatal "Cartridge work RAM exceeds 64 KB; reduce level/placement data or work buffers"
+	endif
+	phase	Main_RAM_End
+Free_RAM_Start:		ds.b	-Main_RAM_End
+Free_RAM_End:
 	endif
 	dephase
 	phase	0
 v_end:
+
 	dephase
 
 ; Sonic 1 camera variables
@@ -1458,6 +1497,11 @@ v_limitbtm2:=		Camera_Max_Y_pos
 ; S1 bonus stage: background chunks, rotating playfield and plane buffers
 ; all share the normal chunk table. The normal block table stays at v_16x16.
 SSBG_Chunk_RAM_Size	= $A00
+S1SS_LayoutWidth		= $40
+S1SS_LayoutHeight	= $40
+S1SS_LayoutStride	= $80
+S1SS_CellSize		= 24
+S1SS_RingItem		= $3A
 v_ssbuffer1		= Chunk_Table+SSBG_Chunk_RAM_Size
 v_ssblockbuffer		= v_ssbuffer1+$1020		; $1020 bytes -- layout padded from the top and sides
 v_ssblockbuffer_end	= v_ssblockbuffer+$80*$40	; ($2000 bytes)
@@ -1649,7 +1693,8 @@ ArtTile_LZ_Harpoon:		equ $3CC
 ArtTile_LZ_Pole:		equ $3DE
 ArtTile_LZ_Push_Block:		equ $3DE
 ArtTile_LZ_Blocks:		equ $3E6
-ArtTile_LZ_Conveyor_Belt:	equ $3F6
+ArtTile_LZ_Conveyor_Belt:	equ $3ED	; shared 16-tile wheel + two 8-tile platforms
+ArtTile_LZ_Conveyor_Belt_End: equ ArtTile_LZ_Conveyor_Belt+$20
 ArtTile_LZ_Rising_Platform:	equ ArtTile_LZ_Blocks+$69
 ArtTile_LZ_Orbinaut:		equ $467
 ArtTile_LZ_Cork:		equ ArtTile_LZ_Blocks+$11A

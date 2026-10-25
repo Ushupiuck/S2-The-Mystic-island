@@ -44,7 +44,8 @@ Smash_Main:	; Routine 0
 		move.b	#4,obRender(a0)
 		move.b	#sprite_bound($10,Map_Obj3C_width),obActWid(a0)
 		move.w	#$200,obPriority(a0)
-		move.b	obSubtype(a0),obFrame(a0)
+		move.w	obSubtype(a0),d0
+		move.b	d0,obFrame(a0)
 
 Smash_Solid:	; Routine 2
 		move.w	(v_player+obVelX).w,smash_speed(a0) ; load Sonic's horizontal speed

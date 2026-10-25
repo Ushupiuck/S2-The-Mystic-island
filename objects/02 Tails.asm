@@ -316,12 +316,12 @@ Tails_Water:
 		bne.s	.bubbles
 		jsr	(ResumeMusic).l
 		move.l	#Obj0A,(v_sonicbubbles).w
-		move.b	#$81,(v_sonicbubbles+obSubtype).w
+		move.w	#$81,(v_sonicbubbles+obSubtype).w
 		bra.s	.drag
 .bubbles:
 		move.l	#Obj0A,(v_tailsbubbles).w
 		clr.b	(v_tailsbubbles+obRoutine).w
-		move.b	#$81,(v_tailsbubbles+obSubtype).w
+		move.w	#$81,(v_tailsbubbles+obSubtype).w
 		move.w	a0,(v_tailsbubbles+obParent).w
 .drag:
 		tst.b	obControl(a0)
@@ -337,7 +337,6 @@ Tails_Water:
 		cmpa.w	#v_player,a0
 		bne.s	.companion
 		move.b	(v_air+1).w,air_left(a0)
-		bra.s	.return
 .companion:
 		rts
 .out:
@@ -455,8 +454,7 @@ Tails_FlySwim_Unknown:
 		move.w	#0,obX(a0)
 		move.w	#0,obY(a0)
 		move.b	#Tails_FlightBudget,tails_flight_energy(a0)
-		bsr.w	Tails_Set_Flying_Animation
-		rts
+		bra.w	Tails_Set_Flying_Animation
 ; ---------------------------------------------------------------------------
 
 TailS3_loc_13C3A:
@@ -2204,228 +2202,8 @@ TailPhysics_loc_104F6:
 
 ; Sonic_Floor:
 Tails_DoLevelCollision:
-		move.l	(v_colladdr1).w,(Collision_addr).w
-		cmpi.b	#$C,obTopSolidBit(a0)
-		beq.s	+
-		move.l	(v_colladdr2).w,(Collision_addr).w
-+
-		move.b	obLRBSolidBit(a0),d5
-		move.w	obVelX(a0),d0				; get X speed
-		move.w	obVelY(a0),d1				; get Y speed
-		bpl.s	TailPhysics_SonAirCol_PosY				; if it's positive, branch
-		cmp.w	d0,d1					; are we moving towards the left?
-		bgt.w	Tails_FloorLeft				; if so, branch
-		neg.w	d0					; negate for right cheeck
-		cmp.w	d0,d1					; are we moving towards the right?
-		bge.w	Tails_FloorRight			; if so, branch
-		bra.w	Tails_FloorUp				; we are moving upwards
-; ===========================================================================
-
-TailPhysics_SonAirCol_PosY:
-		cmp.w	d0,d1					; are we moving towards the right?
-		blt.w	Tails_FloorRight			; if so, branch
-		neg.w	d0					; negate for left check
-		cmp.w	d0,d1					; are we moving towards the left?
-		ble.w	Tails_FloorLeft				; if so, branch
-		bsr.w	Sonic_HitWall
-		tst.w	d1
-		bpl.s	+
-		sub.w	d1,obX(a0)
-		clr.w	obVelX(a0)
-+
-		bsr.w	sub_132EE
-		tst.w	d1
-		bpl.s	+
-		add.w	d1,obX(a0)
-		clr.w	obVelX(a0)
-+
-		bsr.w	loc_13146
-		tst.w	d1
-		bpl.s	.return
-		move.b	obVelY(a0),d2
-		addq.b	#8,d2
-		neg.b	d2
-		cmp.b	d2,d1
-		bge.s	+
-		cmp.b	d2,d0
-		blt.s	.return
-+
-		add.w	d1,obY(a0)
-		move.b	d3,obAngle(a0)
-		bsr.w	Tails_ResetOnFloor
-		move.b	d3,d0
-		addi.b	#$20,d0
-		andi.b	#$40,d0
-		bne.s	TailPhysics_loc_105C0
-		move.b	d3,d0
-		addi.b	#$10,d0
-		andi.b	#$20,d0
-		beq.s	TailPhysics_loc_105B2
-		asr	obVelY(a0)
-		move.w	obVelY(a0),obInertia(a0)
-		tst.b	d3
-		bpl.s	.return
-		neg.w	obInertia(a0)
-
-.return:
-		rts
-; ---------------------------------------------------------------------------
-
-TailPhysics_loc_105B2:
-		clr.w	obVelY(a0)
-		move.w	obVelX(a0),obInertia(a0)
-		rts
-; ---------------------------------------------------------------------------
-
-TailPhysics_loc_105C0:
-		clr.w	obVelX(a0)
-		cmpi.w	#$FC0,obVelY(a0)
-		ble.s	TailPhysics_loc_105D4
-		move.w	#$FC0,obVelY(a0)
-
-TailPhysics_loc_105D4:
-		move.w	obVelY(a0),obInertia(a0)
-		tst.b	d3
-		bpl.s	.return
-		neg.w	obInertia(a0)
-
-.return:
-		rts
-; ---------------------------------------------------------------------------
-
-Tails_FloorLeft:
-		bsr.w	Sonic_HitWall
-		tst.w	d1
-		bpl.s	TailPhysics_loc_105FE
-		sub.w	d1,obX(a0)
-		clr.w	obVelX(a0)
-		move.w	obVelY(a0),obInertia(a0)
-		rts
-; ---------------------------------------------------------------------------
-
-TailPhysics_loc_105FE:
-		bsr.w	Sonic_DontRunOnWalls
-		tst.w	d1
-		bpl.s	TailPhysics_loc_10618
-		neg.w	d1
-		cmpi.w	#Sonic_CeilingPenetrationLimit,d1
-		bhs.s	Tails_FloorLeft_OppositeWall
-		add.w	d1,obY(a0)
-		tst.w	obVelY(a0)
-		bpl.s	.return
-		clr.w	obVelY(a0)
-
-.return:
-		rts
-; ---------------------------------------------------------------------------
-
-Tails_FloorLeft_OppositeWall:
-		bsr.w	sub_132EE
-		tst.w	d1
-		bpl.s	.return
-		add.w	d1,obX(a0)
-		clr.w	obVelX(a0)
-.return:
-		rts
-
-TailPhysics_loc_10618:
-		tst.b	(f_wtunnelmode).w
-		bne.s	.checkfloor
-		tst.w	obVelY(a0)
-		bmi.s	.return
-.checkfloor:
-		bsr.w	loc_13146
-		tst.w	d1
-		bpl.s	.return
-		add.w	d1,obY(a0)
-		move.b	d3,obAngle(a0)
-		bsr.w	Tails_ResetOnFloor
-		clr.w	obVelY(a0)
-		move.w	obVelX(a0),obInertia(a0)
-
-.return:
-		rts
-; ---------------------------------------------------------------------------
-
-Tails_FloorUp:
-		bsr.w	Sonic_HitWall
-		tst.w	d1
-		bpl.s	TailPhysics_loc_10658
-		sub.w	d1,obX(a0)
-		clr.w	obVelX(a0)
-
-TailPhysics_loc_10658:
-		bsr.w	sub_132EE
-		tst.w	d1
-		bpl.s	TailPhysics_loc_1066A
-		add.w	d1,obX(a0)
-		clr.w	obVelX(a0)
-
-TailPhysics_loc_1066A:
-		bsr.w	Sonic_DontRunOnWalls
-		tst.w	d1
-		bpl.s	.return
-		sub.w	d1,obY(a0)
-		move.b	d3,d0
-		addi.b	#$20,d0
-		andi.b	#$40,d0
-		bne.s	TailPhysics_loc_1068A
-		clr.w	obVelY(a0)
-.return:	rts
-; ---------------------------------------------------------------------------
-
-TailPhysics_loc_1068A:
-		move.b	d3,obAngle(a0)
-		bsr.w	Tails_ResetOnFloor
-		move.w	obVelY(a0),obInertia(a0)
-		tst.b	d3
-		bpl.s	.return
-		neg.w	obInertia(a0)
-
-.return:
-		rts
-; ---------------------------------------------------------------------------
-
-Tails_FloorRight:
-		bsr.w	sub_132EE
-		tst.w	d1
-		bpl.s	TailPhysics_loc_106BC
-		add.w	d1,obX(a0)
-		clr.w	obVelX(a0)
-		move.w	obVelY(a0),obInertia(a0)
-		rts
-; ---------------------------------------------------------------------------
-
-TailPhysics_loc_106BC:
-		bsr.w	Sonic_DontRunOnWalls
-		tst.w	d1
-		bpl.s	TailPhysics_loc_106D6
-		sub.w	d1,obY(a0)
-		tst.w	obVelY(a0)
-		bpl.s	.return
-		clr.w	obVelY(a0)
-
-.return:
-		rts
-; ---------------------------------------------------------------------------
-
-TailPhysics_loc_106D6:
-		tst.b	(f_wtunnelmode).w
-		bne.s	.checkfloor
-		tst.w	obVelY(a0)
-		bmi.s	.return
-.checkfloor:
-		bsr.w	loc_13146
-		tst.w	d1
-		bpl.s	.return
-		add.w	d1,obY(a0)
-		move.b	d3,obAngle(a0)
-		bsr.w	Tails_ResetOnFloor
-		clr.w	obVelY(a0)
-		move.w	obVelX(a0),obInertia(a0)
-
-.return:
-		rts
+		pea	Tails_ResetOnFloor(pc)
+		bra.w	Player_AirCollision
 ; End of function Tails_DoLevelCollision
 
 

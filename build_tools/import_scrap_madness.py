@@ -16,7 +16,7 @@ from convert_s1_ss_background import enigma, kosinski_plus, kosinski_plus_decode
 from terrain_collision import read_bank, remap_geometry, S1_BANK_FILES
 
 ROOT = Path(__file__).resolve().parents[1]
-SENTINEL = bytes.fromhex('FFFF00000000')
+from object_layout import encode, with_timezones
 # Source IDs which already have a compatible Mystic Island implementation.
 OBJECTS = {0x0D: 0x7E, 0x15: 0x17, 0x1E: 0x21, 0x26: 0x26,
            0x2A: 0x30, 0x32: 0xAF, 0x41: 0x41, 0x52: 0xAD,
@@ -281,7 +281,7 @@ def placements(source):
         assert len(rings) <= 254, len(rings)
         assert len(objects) <= 768
         (ROOT/f'level/objects/SMZ_{act}.bin').write_bytes(
-            b''.join(struct.pack('>HHBB',*row) for row in objects) + SENTINEL)
+            encode(with_timezones(row) for row in objects))
         (ROOT/f'level/rings/SMZ_{act}.bin').write_bytes(
             b''.join(struct.pack('>HH',*row) for row in rings) + b'\xFF\xFF')
         report.append({'act':act,'objects':len(objects),'rings':len(rings)})

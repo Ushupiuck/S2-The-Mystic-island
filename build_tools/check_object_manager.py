@@ -3,7 +3,7 @@
 
 Build first with build.lua. This executes the ROM's 68000 instructions; only
 external sound, DMA hardware, and the HUD's VDP writer are stubbed. Fixtures
-use the real six-byte placement records and an independent window model.
+use the real eight-byte placement records and an independent window model.
 """
 from pathlib import Path
 import argparse
@@ -19,7 +19,7 @@ from native_test_core import (Native, Manager, UC_M68K_REG_A0, UC_M68K_REG_A1,
 ROOT = Path(__file__).resolve().parent.parent
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--rom', type=Path, default=ROOT / 's2built.bin')
-parser.add_argument('--listing', type=Path, default=ROOT / 'main.lst')
+parser.add_argument('--listing', type=Path, default=ROOT / 'md-main.lst')
 args = parser.parse_args()
 
 
@@ -51,7 +51,7 @@ for z,n in enumerate(names):
         rows=m.rows(f'{n}_{act+1}.bin')
         base=m.s[f'ObjPos_{n}{act+1}']
         live=m.verify(rows,base)
-        ids={(p-(m.s['Object_Respawn_Table']&65535))&65535 for p in live}
+        ids={(p-m.respawn_base)&65535 for p in live}
         assert ids==eligible(rows,0,0),(n,act,ids,eligible(rows,0,0))
         m.act('ObjectsManager')
         m.verify(rows,base)
@@ -73,7 +73,7 @@ for x,y in [(128,0),(256,128),(384,256),(512,384),(768,512),(1024,0),(128,768),(
         m.act('MarkObjGone2',a)
     m.act('ObjectsManager')
     live=m.verify(rows,base)
-    loaded={(p-(m.s['Object_Respawn_Table']&65535))&65535 for p in live}
+    loaded={(p-m.respawn_base)&65535 for p in live}
     assert eligible(rows,x,y)<=loaded,(x,y,eligible(rows,x,y)-loaded)
     m.act('ObjectsManager')
     assert live==m.verify(rows,base)
@@ -87,7 +87,7 @@ for wrap in (False,True):
         m.cam(256,y)
         m.act('ObjectsManager')
         live=m.verify(rows,base)
-        loaded={(p-(m.s['Object_Respawn_Table']&65535))&65535 for p in live}
+        loaded={(p-m.respawn_base)&65535 for p in live}
         assert eligible(rows,256,y,wrap)<=loaded,(wrap,y,eligible(rows,256,y,wrap)-loaded)
 report['vertical_bands_jumps_and_wrap']=True
 # Exhausted pool: no flag may be set without a real SST. Retry even if the
@@ -99,7 +99,7 @@ for a in m.pool():
 m.cam(0,0)
 m.act('ObjectsManager')
 assert not m.live() and m.read('Object_load_retry')
-assert bytes(m.cpu.mem_read(m.s['Object_Respawn_Table']&0xFFFFFF,95))==bytes(95)
+assert m.placement_data(95)==bytes(95)
 for a in list(m.pool())[::2]:
     m.act('DeleteObject',a)
 m.act('ObjectsManager')
@@ -115,30 +115,31 @@ for a in list(m.live().values())[:5]:
 m.act('ObjectsManager')
 assert len(m.verify(rows,base))==90 and not m.read('Object_load_retry')
 report['pool_exhaustion_stationary_retry']=True
-# No byte-index wrap at placement 255. All 768 reserved entries are addressable.
-rows=[(i*16,128,0x41,0) for i in range(768)]
+# No byte-index wrap at placement 255. Exercise the complete variant capacity.
+capacity = m.s['MCD_ObjectPlacementCount' if m.s['MegaCDMode1'] else 'MD_ObjectPlacementCount']
+rows=[(i*16,128,0x41,0) for i in range(capacity)]
 base=m.fixture(rows)
-for x in range(0,12288,128):
+for x in range(0,capacity*16,128):
     m.cam(x,0)
     m.write('Camera_X_pos_coarse_back',(x-128)&0xFF80,2)
     for a in list(m.live().values()):
         m.act('MarkObjGone2',a)
     m.act('ObjectsManager')
     live=m.verify(rows,base)
-    loaded={(p-(m.s['Object_Respawn_Table']&65535))&65535 for p in live}
+    loaded={(p-m.respawn_base)&65535 for p in live}
     assert eligible(rows,x,0)<=loaded,(x,eligible(rows,x,0)-loaded)
-report['full_768_placement_table']=True
+report['full_placement_table']=capacity
 # A preserved table survives reinitialization, and a normal new layout clears it.
 m.start()
-m.cpu.mem_write(m.s['Object_Respawn_Table']&0xFFFFFF,b'\x21'*768)
+m.placement_write(0,b'\x21'*capacity)
 m.write('Respawn_table_keep',1)
 m.cam(0,0)
 m.act('ObjectsManager')
-assert m.cpu.mem_read(m.s['Object_Respawn_Table']&0xFFFFFF,768)[-1]==0x21
+assert m.placement_data(capacity)[-1]==0x21
 m.write('Obj_placement_routine',0)
 m.write('Respawn_table_keep',0)
 m.act('ObjectsManager')
-assert m.cpu.mem_read(m.s['Object_Respawn_Table']&0xFFFFFF,768)[-1]==0
+assert m.placement_data(capacity)[-1]==0
 report['reset_keep_state']=True
 print(report,flush=True)
 
@@ -150,49 +151,49 @@ def pool():
 def setup(objid,sub=0,state=0x80):
     m.start()
     obj=pool()[0]
-    ptr=m.s['Object_Respawn_Table']&65535
+    ptr=m.respawn_base
     for f,v,n in [('layout_id',objid,1),('obX',240,2),('obY',240,2),('obSubtype',sub,1),('respawn_addr',ptr,2)]:
         m.put(obj,f,v,n)
-    m.write('Object_Respawn_Table',state)
+    m.placement_write(0,state)
     return obj,ptr
 # Loaded tags stay set during initialization, and persistent state survives unload.
 for state in (0x80,0x81):
     obj,ptr=setup(0x26,0,state)
     m.act('Obj26',obj)
-    assert m.read('Object_Respawn_Table')==state
+    assert m.placement_read()==state
     assert (m.get(obj,'obRoutine')==8)==bool(state&1)
     m.write('Camera_X_pos_coarse_back',0x1000,2)
     m.act('Obj26',obj)
-    assert m.get(obj,'layout_id')==0 and m.read('Object_Respawn_Table')==state&127
+    assert m.get(obj,'layout_id')==0 and m.placement_read()==state&127
 obj,ptr=setup(0x26)
 m.act('Obj26',obj)
 m.put(obj,'obRoutine',4)
 m.act('Obj26',obj)
-assert m.read('Object_Respawn_Table')==0x81
+assert m.placement_read()==0x81
 for state in (0x80,0x81):
     obj,ptr=setup(0x79,1,state)
     m.act('Obj79',obj)
-    assert m.read('Object_Respawn_Table')==state
+    assert m.placement_read()==state
     m.act('UnloadObject',obj)
-    assert m.read('Object_Respawn_Table')==state&127
+    assert m.placement_read()==state&127
 # Zero respawn pointers must not alter a real placement's state.
 for objid,routine in ((0x26,'Obj26'),(0x79,'Obj79'),(0x47,'Obj47')):
     obj,ptr=setup(objid)
     m.put(obj,'respawn_addr',0,2)
     m.act(routine,obj)
     m.act('UnloadObject',obj)
-    assert m.read('Object_Respawn_Table')==0x80
+    assert m.placement_read()==0x80
 report['monitor_checkpoint_and_zero_pointer_state']=True
 # Bumper score cap remains local to one placement, even after unloading.
 obj,ptr=setup(0x47,state=0x89)
 m.act('Obj47',obj)
 m.act('Bumper_bump',obj,{UC_M68K_REG_A1:m.s['v_player']})
-assert m.read('Object_Respawn_Table')==0x8A
+assert m.placement_read()==0x8A
 score=m.read('v_score',4)
 m.act('Bumper_bump',obj,{UC_M68K_REG_A1:m.s['v_player']})
 assert m.read('v_score',4)==score
 m.act('UnloadObject',obj)
-assert m.read('Object_Respawn_Table')==10
+assert m.placement_read()==10
 report['bumper_cap_persists']=True
 # Compound initializers must handle zero/one remaining helper slots atomically.
 for objid,sub,routine,fields,needed in [(0x1D,16,'Bridge',('Bridge_child1','Bridge_child2'),2),(0x1E,0x10,'HPZ_Waterfall',('objoff_3C','objoff_40'),2),(0x50,0x11,'Obj50',('objoff_3A',),1)]:
@@ -203,7 +204,7 @@ for objid,sub,routine,fields,needed in [(0x1D,16,'Bridge',('Bridge_child1','Brid
         for a in pool()[1:1+free]:
             m.put(a,'layout_id',0)
         m.act(routine,obj)
-        assert m.get(obj,'obRoutine')==0 and m.read('Object_Respawn_Table')==0x80,(routine,free)
+        assert m.get(obj,'obRoutine')==0 and m.placement_read()==0x80,(routine,free)
         assert all(m.get(obj,f,4)==0 for f in fields),(routine,'half parent')
         assert sum(m.get(a,'layout_id')==0 for a in pool()[1:])==free,(routine,'leak')
         for a in pool()[1:1+needed]:
@@ -347,7 +348,7 @@ report['signpost_and_result_card_use_full_pointer_existence']=True
 # Dynamic objects do not consume a placement; explicit destruction does.
 obj,ptr=setup(0x22,state=0x85)
 m.act('DeleteObject',obj)
-assert m.read('Object_Respawn_Table')==0x85
+assert m.placement_read()==0x85
 report['destruction_keeps_consumed_tag']=True
 # Caterkiller's existing failed-allocation path retires its head and lets its
 # partial chain clean itself up; only the head releases the placement byte.
@@ -359,7 +360,7 @@ for free in (0,1,2):
         m.put(a,'layout_id',0)
     m.act('Caterkiller',obj)
     assert m.get(obj,'obRoutine')==10
-    assert m.read('Object_Respawn_Table')==5
+    assert m.placement_read()==5
     children=[a for a in pool()[1:] if m.get(a,'layout_id')==0x60]
     assert len(children)==free and all(m.get(a,'respawn_addr',2)==0 for a in children)
     m.act('Cat_Delete',obj)
@@ -371,7 +372,7 @@ obj,ptr=setup(0x1A,state=0x83)
 m.put(obj,'obRoutine',4)
 m.put(obj,'obRender',4)
 m.act('Obj1A',obj)
-assert m.read('Object_Respawn_Table')==3 and m.get(obj,'layout_id')==0
+assert m.placement_read()==3 and m.get(obj,'layout_id')==0
 report['collapsed_scenery_releases_placement']=True
 # Natural top/bottom wrapping keeps a small camera delta and redraws the row.
 for camera,player,target,flag,delta in [(0xFF00,0x75F,0x6FF,1,0xFF00),(0x7FF,0x61,1,2,0x200)]:
@@ -509,11 +510,13 @@ m.write('v_jpadpress1',0)
 m.act('DebugMode','v_player')
 assert m.read('Current_ZoneAndAct',2)==0x301
 assert m.get('v_player','obGfx',2)==m.s['ArtTile_SS_Rings']|0x2000
+m.put('v_player','obX',1000,2)
+m.put('v_player','obY',1000,2)
 m.write('v_jpadpress1',m.s['btnC'])
 m.act('DebugMode','v_player')
-stage_ring=next(a for a in pool() if m.get(a,'layout_id')==0x12)
-m.act('Obj12',stage_ring)
-assert m.get(stage_ring,'obGfx',2)==m.s['ArtTile_SS_Rings']|0x2000
+grid_cell=m.s['v_ssbuffer1']+((1000+79)//24)*128+(1000+31)//24
+assert m.cpu.mem_read(grid_cell&0xFFFFFF,1)==bytes([m.s['S1SS_RingItem']])
+assert not any(m.get(a,'layout_id')==0x12 for a in pool())
 m.write('v_jpadpress1',m.s['btnB'])
 m.act('DebugMode','v_player')
 assert m.get('v_player','obHeight')==14 and m.get('v_player','obWidth')==7

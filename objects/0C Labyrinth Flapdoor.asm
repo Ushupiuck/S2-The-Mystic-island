@@ -23,7 +23,7 @@ Flap_Main:	; Routine 0
 		ori.b	#4,obRender(a0)
 		move.b	#sprite_bound($28,Map_Flap_width),obActWid(a0)
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0						; move subtype to d0
+		move.w	obSubtype(a0),d0						; move subtype to d0
 		add.w	d0,d0								; multiply by 60 frames (1 second)
 		add.w	d0,d0
 		move.w	d0,d1

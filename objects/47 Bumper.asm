@@ -83,10 +83,8 @@ Bumper_bump:
 		jsr	(PlaySound_Special).l	; play bumper sound
 		move.w	respawn_addr(a0),d0
 		beq.s	.addscore
-		movea.w	d0,a2
-		cmpi.b	#$8A,(a2)
-		bhs.s	.return
-		addq.b	#1,(a2)
+		jsr	(Object_RespawnBump).l
+		bmi.s	.return
 
 .addscore:
 		move.w	a1,-(sp)			; save the player before FindFreeObj replaces a1

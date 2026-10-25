@@ -31,7 +31,6 @@ Crab_Main:	; Routine 0
 		move.b	#sprite_bound($15,Map_Crab_width),obActWid(a0)
 		bsr.w	ObjectMoveAndFall
 		jsr	(ObjHitFloor).l	; find floor
-		tst.w	d1
 		bpl.s	.floornotfound
 		add.w	d1,obY(a0)
 		move.b	d3,obAngle(a0)

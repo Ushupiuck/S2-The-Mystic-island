@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Check S3&K placements, their assembled pointers, and manager/Debug RAM."""
+"""Check eight-byte placements, their assembled pointers, and manager/Debug RAM."""
 import argparse
 from pathlib import Path
 import re
 import struct
 
 ROOT = Path(__file__).resolve().parent.parent
-SENTINEL = bytes.fromhex('FFFF00000000')
+from object_layout import decode, SIZE, TERMINATOR as SENTINEL
 ZONES = ('GHZ', 'LZ', 'CPZ', 'EHZ', 'HPZ', 'HTZ', 'MTZ', 'LV07', 'SMZ', 'LV09', 'LV0A', 'LV0B',
          'LV0C', 'LV0D', 'LV0E', 'LV0F')
 
@@ -24,7 +24,7 @@ def check_named_sst_fields(symbols):
     fields = {name: offset for name, offset in symbols.items()
               if name in names and 0 <= offset <= symbols['object_size']}
     count = 0
-    sources = [ROOT / 'main.asm', *sorted((ROOT / 'objects').rglob('*.asm'))]
+    sources = [ROOT / 'md-main.asm', *sorted((ROOT / 'objects').rglob('*.asm'))]
     for source in sources:
         text = source.read_text(encoding='latin1')
         local = fields.copy()
@@ -48,17 +48,15 @@ def check_named_sst_fields(symbols):
                     continue
                 assert offset + size <= symbols['object_size'], f'{source}:{line}: {name} crosses SST boundary'
                 assert size == 1 or not offset & 1, f'{source}:{line}: odd word/long SST field {name}'
-    print(f'Checked {count} named SST operands in all {len(sources)-1} object files and main.asm.')
+    print(f'Checked {count} named SST operands in all {len(sources)-1} object files and md-main.asm.')
 
 
 def placements(path, capacity):
     data = path.read_bytes()
-    assert len(data) >= 6 and len(data) % 6 == 0, f'{path.name}: incomplete record'
-    assert data[-6:] == SENTINEL, f'{path.name}: missing terminator'
-    rows = list(struct.iter_unpack('>HHBB', data[:-6]))
+    rows = decode(data)
     assert len(rows) <= capacity, f'{path.name}: respawn table overflow'
     last_x = 0
-    for x, y, object_id, subtype in rows:
+    for x, y, object_id, timezones, subtype in rows:
         assert last_x <= x < 0xFFFF, f'{path.name}: unordered X or interior terminator'
         assert not y & 0x1000, f'{path.name}: reserved Y flag set'
         assert object_id != 0, f'{path.name}: empty object ID'
@@ -69,13 +67,13 @@ def placements(path, capacity):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--rom', type=Path, default=ROOT / 's2built.bin')
-    parser.add_argument('--listing', type=Path, default=ROOT / 'main.lst')
+    parser.add_argument('--listing', type=Path, default=ROOT / 'md-main.lst')
     args = parser.parse_args()
     listing = args.listing.read_text()
     assert 'Symbol Table' in listing, 'Build must finish before checking its listing'
     symbols = {name: int(value, 16) & 0xFFFFFF for name, value in re.findall(
         r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]', listing)}
-    capacity = symbols['Object_Respawn_Table_end'] - symbols['Object_Respawn_Table']
+    capacity = symbols['MCD_ObjectPlacementCount'] if 'MCD_SubObjects' in symbols else symbols['Object_Respawn_Table_end'] - symbols['Object_Respawn_Table']
     assert capacity == 0x300
     layouts = {path.name: placements(path, capacity)
                for path in sorted((ROOT / 'level/objects').glob('*.bin'))}
@@ -88,7 +86,7 @@ def main():
             address = index + struct.unpack_from('>h', rom, index + offset)[0]
             data, _ = layouts[f'{name}_{act + 1}.bin']
             assert address == symbols[f'ObjPos_{name}{act + 1}']
-            assert rom[address - 6:address] == SENTINEL, 'Missing backward boundary'
+            assert rom[address - SIZE:address] == SENTINEL, 'Missing backward boundary'
             assert rom[address:address + len(data)] == data
             debug_address = debug + struct.unpack_from('>h', rom, debug + offset)[0]
             count = struct.unpack_from('>H', rom, debug_address)[0]
@@ -98,7 +96,7 @@ def main():
                     debug_address + 2 + entry * symbols['DebugEntry_size'])
                 assert code and not code & 1 and code < len(rom), 'Bad Debug code pointer'
                 assert mapping < len(rom), 'Bad Debug mapping address'
-    assert symbols['omSize'] == 6
+    assert symbols['omSize'] == SIZE
     assert symbols['respawn_addr'] == 0x22
     assert symbols['code'] == 0 and symbols['object_size'] == 0x4E
     # Legacy code sometimes addressed an SST base directly instead of obID.
@@ -115,29 +113,33 @@ def main():
     pointer = r'(?:\((?:' + absolute + r')(?:\+code)?\)|(?:code|obID)\(a[0-6]\))'
     narrow = re.compile(r'\b_?(?:movea?|cmpa?|cmpi|clr|tst|andi|ori|eori)\.[bw]\b[^;\n]*' + pointer)
     numeric_id = re.compile(r'\b_?(?:move|cmpi)\.l\s+#id_\w+\s*,\s*' + pointer)
-    for source in [ROOT / 'main.asm', *(ROOT / 'objects').rglob('*.asm'), *(ROOT / '_inc').rglob('*.asm')]:
+    for source in [ROOT / 'md-main.asm', *(ROOT / 'objects').rglob('*.asm'), *(ROOT / '_inc').rglob('*.asm')]:
         for line, text in enumerate(source.read_text(errors='replace').splitlines(), 1):
             active = text.split(';')[0]
             assert not narrow.search(active), f'{source}:{line}: byte/word access to code pointer'
             assert not numeric_id.search(active), f'{source}:{line}: numeric placement ID used as a routine pointer'
-    assert symbols['height_pixels'] == 6 and symbols['DebugEntry_size'] == 12
+    assert symbols['height_pixels'] == 6 and symbols['DebugEntry_size'] == 14
     assert symbols['v_lvlobjend'] - symbols['v_lvlobjspace'] == 90 * 0x4E
-    assert symbols['v_16x16'] == symbols['v_objspace_end']
+    assert symbols['TempArray_LayerDef' if symbols.get('MegaCDMode1') else 'v_16x16'] == symbols['v_objspace_end']
     assert symbols['v_16x16_End'] - symbols['v_16x16'] == 0x1800
     assert symbols['System_Stack_Start'] == symbols['Sprite_Table_end']
-    assert symbols['v_systemstack'] - symbols['System_Stack_Start'] == 0x140
-    assert symbols['Error_Handler_Buffer'] == symbols['v_regbuffer'] == symbols['v_ngfx_buffer_end']
+    assert symbols['v_systemstack'] - symbols['System_Stack_Start'] == 0x200
+    scroll_end=symbols.get('v_ssbg_sines_end',symbols.get('v_ngfx_buffer_end'))
+    assert symbols['Error_Handler_Buffer'] == symbols['v_regbuffer'] == scroll_end
+    if 'v_ssbg_sines' in symbols:
+        assert symbols['v_ssbg_sines_end']-symbols['v_ssbg_sines']==10*4
     assert symbols['Object_Display_Lists'] == symbols['Debug_saved_height'] + 1
     assert not symbols['Debug_saved_mappings'] & 1
-    assert symbols['Chunk_Table'] == 0xFF0000
-    assert symbols['Chunk_Table_End'] == symbols['Free_RAM_Start'] == 0xFF8000
-    assert symbols['Free_RAM_End'] == symbols['Main_RAM_Start']
-    assert symbols['Free_RAM_Size'] == symbols['Free_RAM_End'] - symbols['Free_RAM_Start']
-    assert symbols['Main_RAM_Start'] >= 0xFF8000 and symbols['Main_RAM_End'] == 0
+    if symbols.get('MegaCDMode1'):
+        assert symbols['Free_RAM_Start'] == symbols['RAM_Start']
+        assert symbols['Free_RAM_End'] == symbols['MCD_MainWorkStart']
+        assert symbols['Player_Art_Buffer_End'] == symbols['Main_RAM_Start']
+        assert symbols['Main_RAM_Start'] & 0xFFFFFF >= 0xFF8000
+        assert symbols['Main_RAM_End'] == 0
     assert symbols['Debug_placement_type'] == symbols['Debug_placement_routine'] + 1
     assert symbols['Debug_placement_mode'] == symbols['Debug_placement_routine']
     check_named_sst_fields(symbols)
-    print(f'Checked {len(layouts)} S3&K layouts / {sum(n for _, n in layouts.values())} '
+    print(f'Checked {len(layouts)} eight-byte layouts / {sum(n for _, n in layouts.values())} '
           f'placements, all 64 act pointers and Debug lists, and manager/Debug RAM.')
 
 

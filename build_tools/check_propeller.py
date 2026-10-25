@@ -50,7 +50,7 @@ def main():
 	p = argparse.ArgumentParser(description=__doc__)
 	p.add_argument('--core', type=Path, required=True)
 	p.add_argument('--rom', type=Path, default=ROOT/'s2built.bin')
-	p.add_argument('--listing', type=Path, default=ROOT/'main.lst')
+	p.add_argument('--listing', type=Path, default=ROOT/'md-main.lst')
 	p.add_argument('--output', type=Path, required=True)
 	p.add_argument('--pal', action='store_true')
 	args = p.parse_args()
@@ -92,8 +92,8 @@ def main():
 		finish('resident-art-and-mapping-bounds', tiles=49, mast_sprites=4)
 
 		isolate(g)
-		length = g.s['Object_Respawn_Table_end']-g.s['Object_Respawn_Table']
-		g.write('Object_Respawn_Table', int.from_bytes(b'\x80'*length, 'big'), length)
+		length = g.placement_capacity()
+		g.placement_write(0, int.from_bytes(b'\x80'*length, 'big'), length)
 		for actor in ('v_player', 'v_player2'):
 			place(g, actor, 560, 312)
 			g.put(actor, 'obControl', 0x81)

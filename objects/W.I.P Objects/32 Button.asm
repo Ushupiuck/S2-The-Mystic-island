@@ -13,7 +13,7 @@
 ; ---------------------------------------------------------------------------
 
 capsule_triggered	= objoff_38
-external_settings	= objoff_39	; byte, subtype override from parent object
+external_settings	= objoff_3C	; word, subtype override from parent object
 
 Button:
 		moveq	#0,d0
@@ -44,13 +44,13 @@ But_Pressed:	; Routine 2
 		move.w	obX(a0),d4
 		bsr.w	SolidObject
 		clr.b	obFrame(a0)				; use "unpressed" frame
-		move.b	obSubtype(a0),d1			; get subtype of button
+		move.w	obSubtype(a0),d1			; get subtype of button
 		tst.b	capsule_triggered(a0)			; are external settings empty?
 		beq.s	.skip					; if so, skip
-		move.b	external_settings(a0),d1		; override subtype
+		move.w	external_settings(a0),d1		; override subtype
 .skip:
-		move.b	d1,d0
-		andi.b	#$F0,d1					; filter out high nybble in d1
+		move.w	d1,d0
+		andi.w	#$F0,d1					; filter out high nybble in d1
 		move.b	d1,ob2ndRout(a0)			; store behaviour
 		andi.w	#$F,d0					; now, filter out lower nybble in d0
 		lea	(f_switch).w,a3				; load button status array

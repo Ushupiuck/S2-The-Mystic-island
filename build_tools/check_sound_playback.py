@@ -18,18 +18,20 @@ from genesis_test_core import Genesis
 p = argparse.ArgumentParser(description='Play music, effects and 1-up restoration on a Genesis Plus GX libretro core.')
 p.add_argument('--core', type=Path, required=True)
 p.add_argument('--rom', type=Path, default=project / 's2built.bin')
-p.add_argument('--listing', type=Path, default=project / 'main.lst')
+p.add_argument('--listing', type=Path, default=project / 'md-main.lst')
 p.add_argument('--output', type=Path)
 p.add_argument('--effects', action='store_true')
 p.add_argument('--jingles', action='store_true')
 p.add_argument('--pal', action='store_true')
+p.add_argument('--system-directory', type=Path)
 p.add_argument('--songs', nargs='*')
 p.add_argument('--frames', type=int, default=600)
 args = p.parse_args()
 source = project
 output = args.output or project / '.sound-build' / ('playback-pal' if args.pal else 'playback-ntsc')
 output.mkdir(parents=True, exist_ok=True)
-g = Genesis(args.core, args.rom, args.listing, output, args.pal)
+g = Genesis(args.core, args.rom, args.listing, output, args.pal,
+            system_directory=args.system_directory)
 
 class Geometry(C.Structure):
 	_fields_ = [('base_width', C.c_uint), ('base_height', C.c_uint), ('max_width', C.c_uint), ('max_height', C.c_uint), ('aspect_ratio', C.c_float)]

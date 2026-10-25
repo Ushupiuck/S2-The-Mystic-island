@@ -54,7 +54,7 @@ loc_E22A:
 		ori.b	#4,obRender(a0)
 		move.b	#sprite_bound($10,sprite_bound(Map_obj41_GHZ_width,sprite_bound(Map_obj41_width,Map_obj41a_width))),obActWid(a0)
 		move.w	#$200,obPriority(a0)
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		lsr.w	#3,d0
 		andi.w	#$E,d0
 		move.w	Obj41_Init_Subtypes(pc,d0.w),d0
@@ -102,7 +102,7 @@ Obj41_Init_DiagDown:
 		bset	#1,obStatus(a0)
 ; loc_E2D0:
 Obj41_Init_Common:
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		andi.w	#2,d0
 		move.w	Obj41_Strengths(pc,d0.w),objoff_34(a0)
 		btst	#1,d0
@@ -148,8 +148,9 @@ sub_E34E:
 		bclr	#3,obStatus(a1)
 		move.b	#$10,obAnim(a1)
 		move.b	#2,obRoutine(a1)
-		move.b	obSubtype(a0),d0
-		bpl.s	loc_E382
+		move.w	obSubtype(a0),d0
+		btst	#7,d0
+		beq.s	loc_E382
 		move.w	#0,obVelX(a1)
 
 loc_E382:
@@ -239,8 +240,9 @@ loc_E4A2:
 		clr.b	obAnim(a1)
 
 loc_E4BC:
-		move.b	obSubtype(a0),d0
-		bpl.s	loc_E4C8
+		move.w	obSubtype(a0),d0
+		btst	#7,d0
+		beq.s	loc_E4C8
 		clr.w	obVelY(a1)
 
 loc_E4C8:
@@ -380,8 +382,9 @@ sub_E64E:
 		subq.w	#8,obY(a1)
 		move.w	objoff_34(a0),obVelY(a1)
 		neg.w	obVelY(a1)
-		move.b	obSubtype(a0),d0
-		bpl.s	loc_E66E
+		move.w	obSubtype(a0),d0
+		btst	#7,d0
+		beq.s	loc_E66E
 		clr.w	obVelX(a1)
 
 loc_E66E:
@@ -483,7 +486,7 @@ loc_E79A:
 		bclr	#3,obStatus(a1)
 		move.b	#$10,obAnim(a1)
 		move.b	#2,obRoutine(a1)
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		btst	#0,d0
 		beq.s	loc_E7F6
 		move.w	#1,obInertia(a1)
@@ -561,7 +564,7 @@ loc_E8AC:
 		bset	#1,obStatus(a1)
 		bclr	#3,obStatus(a1)
 		move.b	#2,obRoutine(a1)
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		btst	#0,d0
 		beq.s	loc_E902
 		move.w	#1,obInertia(a1)

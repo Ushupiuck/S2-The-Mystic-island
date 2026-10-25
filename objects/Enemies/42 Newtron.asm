@@ -57,13 +57,13 @@ Newtron_ChkDistance:
 		bhs.s	.return
 		addq.b	#2,ob2ndRout(a0)
 		move.b	#1,obAnim(a0)
-		tst.b	obSubtype(a0)
+		tst.w	obSubtype(a0)
 		beq.s	Newtron_Type00
 		move.w	#make_art_tile(ArtTile_Newtron,1,0),obGfx(a0)
 	;	cmpi.b	#id_MZ,(v_zone).w
 	;	bne.s	.skip
 	;	move.w	#make_art_tile(ArtTile_MZ_Newtron,1,0),obGfx(a0)
-.skip:		cmpi.b	#2,obSubtype(a0)
+.skip:		cmpi.w	#2,obSubtype(a0)
 		beq.s	.hybrid
 		move.b	#6,ob2ndRout(a0)
 		move.b	#3,obAnim(a0)
@@ -93,7 +93,6 @@ Newtron_Fall:
 +
 		bsr.w	ObjectMoveAndFall
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.s	.return
 		add.w	d1,obY(a0)
 		clr.w	obVelY(a0)
@@ -144,7 +143,7 @@ Newtron_FireMissile:
 +
 		add.w	d0,obX(a1)
 		move.b	obStatus(a0),obStatus(a1)
-		move.b	#1,obSubtype(a1)
+		move.w	#1,obSubtype(a1)
 .return:	rts
 ; ===========================================================================
 ; loc_ED6E:
@@ -180,7 +179,7 @@ Newtron_FireMissile2:
 +
 		add.w	d0,obX(a1)
 		move.b	obStatus(a0),obStatus(a1)
-		move.b	#1,obSubtype(a1)
+		move.w	#1,obSubtype(a1)
 .return:	rts
 ; ===========================================================================
 Ani_Newtron:	dc.w ani_newt_blank-Ani_Newtron

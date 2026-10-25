@@ -29,7 +29,6 @@ Octus_Init:
 		move.b	#8,obWidth(a0)
 		jsr	(ObjectMoveAndFall).l
 		jsr	(ObjHitFloor).l
-		tst.w	d1
 		bpl.s	+
 		add.w	d1,obY(a0)
 		clr.w	obVelY(a0)

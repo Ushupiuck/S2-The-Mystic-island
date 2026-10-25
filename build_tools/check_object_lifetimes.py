@@ -12,7 +12,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 p = argparse.ArgumentParser(description=__doc__)
 p.add_argument('--rom', type=Path, default=ROOT/'s2built.bin')
-p.add_argument('--listing', type=Path, default=ROOT/'main.lst')
+p.add_argument('--listing', type=Path, default=ROOT/'md-main.lst')
 p.add_argument('--output', type=Path)
 p.add_argument('--core', type=Path, help='Also check real in-game camera travel with Genesis Plus GX')
 p.add_argument('--game-zone', type=int, choices=(0, 8), help=argparse.SUPPRESS)
@@ -42,13 +42,13 @@ if args.game_zone is None:
             m.put(obj, 'obX', x, 2)
             m.act(routine, obj, {m68k.UC_M68K_REG_D0: x & 65535})
             assert m.get(obj, 'code') == m.s['Ballhog'], (routine, x, 'premature unload')
-            assert m.cpu.mem_read(0xFF0000+pointer, 1)[0] == 128
+            assert m.placement_read(pointer-m.respawn_base) == 128
             # Once both the object and its spawn point are outside, release it.
             m.cam(4096, 0)
             m.act('ObjectsManager')
             m.act(routine, obj, {m68k.UC_M68K_REG_D0: x & 65535})
             assert not m.get(obj, 'code')
-            assert m.cpu.mem_read(0xFF0000+pointer, 1)[0] == 0
+            assert m.placement_read(pointer-m.respawn_base) == 0
             checks.append([routine, x, 'placement lifetime and real unload'])
 
     # Cursor arithmetic must work on both sides of a placement and beyond byte
@@ -60,7 +60,7 @@ if args.game_zone is None:
         m.act('ObjectsManager')
         for obj in list(m.live().values()):
             pointer = m.get(obj, 'respawn_addr', 2)
-            index = pointer-(m.s['Object_Respawn_Table'] & 65535)
+            index = pointer-m.respawn_base
             spawn_x = rows[index][0]
             m.put(obj, 'obX', 30000, 2)
             m.act('MarkObjGone2', obj)
@@ -84,7 +84,7 @@ if args.game_zone is None:
     obj = next(iter(m.live().values()))
     pointer = m.get(obj, 'respawn_addr', 2)
     m.act('DeleteObject', obj)
-    assert m.cpu.mem_read(0xFF0000+pointer, 1)[0] == 128
+    assert m.placement_read(pointer-m.respawn_base) == 128
     m.act('ObjectsManager')
     assert not m.live()
     checks.append(['destroyed enemy stays consumed'])
@@ -97,7 +97,7 @@ if args.game_zone is None:
                (103, -81, 1), (111, -24, 2), (41, 11, 3),
                (-29, 46, 3), (-100, 81, 3)]
     spawner_y = (0x380, 0x300, 0x280, 0x500, 0x600, 0x580)
-    placements = [(x, y, sub) for x, y, oid, sub in m.rows('SMZ_1.bin') if oid == 0xA9]
+    placements = [(x, y, sub) for x, y, oid, eras, sub in m.rows('SMZ_1.bin') if oid == 0xA9]
     assert sorted(placements) == sorted((x, spawner_y[i] | 0x8000, 0x80+i)
                                        for i, (x, _) in enumerate(bases))
     checks.append(['real layout has all six S1 spawners with whole-loop Y loading'])
@@ -139,7 +139,7 @@ if args.game_zone is None:
         m.act('ObjectsManager')
         for obj in members:
             m.act('SMZ_SpinConvey', obj)
-        assert not owners() and m.cpu.mem_read(0xFF0000+pointer, 1)[0] == 0
+        assert not owners() and m.placement_read(pointer-m.respawn_base) == 0
         m.cam(x-384, y)
         m.act('ObjectsManager')
         parent = next(iter(m.live().values()))
@@ -166,7 +166,7 @@ if args.game_zone is None:
             m.act('SMZ_SpinConvey', parent)
             assert owners() == [parent] and m.get(parent, 'obSubtype') == 0x83
             assert m.get(parent, 'obRoutine') == 0
-            assert m.cpu.mem_read(0xFF0000+pointer, 1)[0] == 128
+            assert m.placement_read(pointer-m.respawn_base) == 128
             assert sum(not m.get(a, 'code') for a in pool) == free_count
             for a in helpers:
                 m.put(a, 'code', 0, 4)
@@ -183,7 +183,7 @@ if args.game_zone is None:
     m.cam(6000, 1368)
     m.act('ObjectsManager')
     m.act('SMZ_SpinConvey', parent)
-    assert not owners() and m.cpu.mem_read(0xFF0000+pointer, 1)[0] == 0
+    assert not owners() and m.placement_read(pointer-m.respawn_base) == 0
     checks.append(['pending group unloads without leaking helpers'])
 
 if args.core:
@@ -227,7 +227,7 @@ if args.core:
                     # omission, then approach without killing any of the hogs.
                     g.run(120)
                     travel(600, 944)
-                    table = g.s['Object_Respawn_Table'] & 65535
+                    table = g.placement_handle(0)
                     expected = {table+i for i in (0, 2, 3, 4)}
                     for x in (600, 2000, 600):
                         travel(x, 944)

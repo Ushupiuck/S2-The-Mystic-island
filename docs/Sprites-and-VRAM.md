@@ -37,8 +37,12 @@ Only `$01` starts the full screen handler. A second VBlank arriving while the
 first handler still runs must count lag and return without touching the VDP;
 re-entering the handler can exhaust the stack and overwrite the end of the block
 table. Ordinary foreground lag (`$00`) retains its water-palette refresh path.
-The [lag check](Testing.md#runtime-checks) exercises this distinction with real
-emulated interrupts and watches terrain RAM throughout traversal.
+The old [Twizzler lag investigation](Testing.md#runtime-checks) exercised this
+distinction; it is not part of current decompressor migration checks.
+
+In Mode 1, screen handlers return directly to the outer VBlank restore.
+Timer tails use local short conditional exits, and the title-card handler tail-calls its final
+PLC bookkeeping routine. Preserve the outer register restore and `rte` once.
 
 ## Dynamic art
 
@@ -52,6 +56,35 @@ display partially uploaded art. No decompression runs in VBlank.
 Sonic/Tails/body/tail/dust use this service. Some dedicated UI loaders, including
 the signpost, retain their own cue encoding; do not assume every DPLC file uses
 one format. SonLVL's overrides are documented in [its guide](../SonLVL%20INI%20Files/README.md).
+
+### Mode 1 RAM art
+
+With `MegaCDMode1 = 1`, shield, invincibility and normal/lost-ring art is
+Nemesis-compressed in ROM. The CD CPU decodes it into Word RAM, then MD copies
+the results into its packed work area; see [the decoder boundary](Mega-CD.md#asset-decompression-and-plcs).
+`Art_Shield`, `Art_Invincibility` and `Art_Ring` are RAM source addresses in this
+configuration; cartridge builds retain their uncompressed ROM sources. The existing
+shield DPLCs, resident-star upload and eight-frame ring uploader use those
+addresses without changing mappings, frame selection or VRAM banks.
+
+| RAM bytes, end exclusive | Source | Size |
+| --- | --- | --- |
+| `$FFB40C-$FFB76C` | Shield | `$360` |
+| `$FFB76C-$FFBBAC` | Invincibility stars | `$440` |
+| `$FFBBAC-$FFBFAC` | Normal/lost rings | `$400` |
+
+The cache occupies `$BA0` bytes after the CD ring event queue. `LoadPlayerEffectArt`
+decompresses all three after level clears/PLCs and before `InitRingFrame`;
+it also runs on death restarts and returns from other scenes. The rotating S1
+stage loads its ring source independently with `LoadRingArt` before its first
+upload to `$2940`; it needs no shield/star source. Its palette-remapped results
+ring remains a separate ROM asset. Decompression runs outside VBlank.
+
+Keep the editable files in `art/uncompressed/`; SonLVL continues reading the
+raw ring. After editing these sources, run
+`python build_tools/build_player_effect_art.py`, then use `--check` to verify
+the committed packed copies. The old `art/nemesis/Shield.nem` is unrelated
+to this dynamic art and is preserved.
 
 ## Shared level allocations
 
@@ -105,6 +138,26 @@ terrain tile `$D1`. HPZ keeps `ArtTile_Splats = $418`, resident bubbles at
 `$45C-$493`, and BBat at `$494-$4CD` (bytes `$9280-$99C0`), below the spring bank.
 Use the actual PLCs/constants for other zone banks, not an older address table.
 SMZ's atlas, junction and smoke lifetimes are in [Levels](Levels.md#scrap-madness).
+
+LZ's conveyor uses 32 tiles at `$3ED-$40C`: one shared 16-tile wheel, then
+eight tiles each for normal and spiked platforms. This releases `$40D-$43C`
+(48 tiles / 1,536 bytes). All wheels share one animation clock and DPLC cache;
+the first wheel processed in a game frame services the bank. Animation advances
+every four active frames; wheel count does not multiply uploads. Switch reversal
+changes the shared clock's direction. The common atomic loader reserves both
+possible DMA entries; a full queue preserves the cached art and retries on the
+next frame. Level entry invalidates the cache. Its six global bytes replace
+the obsolete six-byte conveyor group flags; no extra RAM is allocated.
+
+Edit the complete 80-tile source `art/moduled kosinski/LZ conveyor.unc`, then
+run `python build_tools/build_lz_conveyor_art.py`. It generates the 32-tile
+moduled Kosinski+ seed/resident archive and the four raw wheel frames in
+`art/uncompressed/LZ conveyor wheels.unc`. The raw ROM source trades ROM space
+and periodic DMA for reduced VRAM. It uses the ordinary DMA queue, with no
+decoder or CD wait in an interrupt.
+`mappings/sprite/LZ conveyor.asm` aliases wheel frames 0-3 to one mapping;
+frames 4/5 are normal/spiked platforms. Normal builds derive their bounds.
+LZ's per-act module lists load the resident bank; another zone must load it too.
 
 ## Effects and UI ownership
 
@@ -172,8 +225,10 @@ the whole raw font. `build_card_art.py` owns their mappings/DPLCs, including
 act 4, V/W and the wide W metrics. Its `act_four()` draws the digit into the
 existing six-tile (16x24) slot. Small results markers use blue-only shading
 from `Title Cards Base.unc`; the generator supplies a separate gold/yellow
-version for the special-results palette, keeping gray out of their edges. Both
-versions retain the same two-tile scene allocation. `build_signpost_art.py` owns the streamed
+version for the special-results palette. Its outer rim uses existing gold slot
+`$B`, the lighter edge uses `$C`, and the fill uses bright yellow `$3`. The shared
+palette, oval shape and two-tile scene allocation are unchanged.
+`build_signpost_art.py` owns the streamed
 signpost and monitor arrangement. Tails's portrait is the final four monitor
 tiles (`$561-$564`); signpost frames stay below it. Sonic's life art remains
 separate and is shared with Sonic monitors. HUD score uses ten-point units,

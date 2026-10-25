@@ -25,7 +25,7 @@ Obj16_Init:
 		move.b	#$40,obHeight(a0)
 		bset	#4,obRender(a0)
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0	; subtype determines how far we descend
+		move.w	obSubtype(a0),d0	; subtype determines how far we descend
 		lsl.w	#3,d0
 		move.w	d0,objoff_30(a0)
 
@@ -90,7 +90,7 @@ Obj16_Slide:
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.b	obRender(a0),obRender(a1)
-		move.b	#6,obSubtype(a1)	; (it only exists as a placeholder within Obj1C)
+		move.w	#6,obSubtype(a1)	; (it only exists as a placeholder within Obj1C)
 .return:	rts
 ; ---------------------------------------------------------------------------
 

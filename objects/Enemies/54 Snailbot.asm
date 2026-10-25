@@ -50,8 +50,8 @@ Obj54_Move:
 		bge.s	Obj54_BeginTurnAround
 		add.w	d1,obY(a0)
 		lea	Ani_Obj54(pc),a1
-		jsr	(AnimateSprite).l
-		jmp	(MarkObjGone).l
+		pea	MarkObjGone(pc)
+		bra.w	AnimateSprite
 ; ===========================================================================
 
 Obj54_BeginTurnAround:
@@ -59,8 +59,8 @@ Obj54_BeginTurnAround:
 		move.w	#$14,snail_turn_timer(a0)
 		st	snail_turning(a0)
 		lea	Ani_Obj54(pc),a1
-		jsr	(AnimateSprite).l
-		jmp	(MarkObjGone).l
+		pea	MarkObjGone(pc)
+		bra.w	AnimateSprite
 
 ; =============== S U B R O U T I N E =======================================
 ; Check for player ahead; if found, quadruple speed and spawn flame trail
@@ -127,8 +127,8 @@ Obj54_FlameTrail:
 Obj54_FlameOffset:
 		add.w	d0,obX(a0)
 		lea	(Ani_obj4B).l,a1
-		jsr	(AnimateSprite).l
-		jmp	(MarkObjGone).l
+		pea	MarkObjGone(pc)
+		bra.w	AnimateSprite
 ; ---------------------------------------------------------------------------
 
 Obj54_TurnAround:

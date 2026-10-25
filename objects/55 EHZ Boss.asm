@@ -77,7 +77,7 @@ EHZBoss_Init:
 	move.b	#Map_EHZBoss_Vehicle_height,height_pixels(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_Eggpod_1,1,0),obGfx(a0) ; vehicle with ability to fly, bottom part
 	ori.b	#1<<obRender.level_fg,obRender(a0)
-	move.b	#$81,obSubtype(a0)
+	move.w	#$81,obSubtype(a0)
 	move.w	EHZBoss_origin_x(a0),d0
 	addi.w	#EHZBoss_LandingX,d0
 	move.w	d0,obX(a0)
@@ -187,7 +187,7 @@ EHZBoss_MakeGroundParts:
 	move.b	#4,obFrame(a1)
 	move.b	#1,obAnim(a1)
 	move.w	#$A,objoff_2E(a1)
-	move.b	#0,obSubtype(a1)
+	move.w	#0,obSubtype(a1)
 +
 	jsr	(FindNextFreeObj).l	; second foreground wheel
 	bne.w	+
@@ -214,7 +214,7 @@ EHZBoss_MakeGroundParts:
 	move.b	#4,obFrame(a1)
 	move.b	#1,obAnim(a1)
 	move.w	#$A,objoff_2E(a1)
-	move.b	#1,obSubtype(a1)
+	move.w	#1,obSubtype(a1)
 +
 	jsr	(FindNextFreeObj).l	; background wheel
 	bne.w	+
@@ -241,7 +241,7 @@ EHZBoss_MakeGroundParts:
 	move.b	#6,obFrame(a1)
 	move.b	#2,obAnim(a1)
 	move.w	#$A,objoff_2E(a1)
-	move.b	#2,obSubtype(a1)
+	move.w	#2,obSubtype(a1)
 +
 	jsr	(FindNextFreeObj).l	; Spike
 	bne.w	+
@@ -364,7 +364,6 @@ EHZBoss_FallDefeated:	; EHZBoss_VehicleMain_Sub6:
 	jsr	(BossExplosion_Start).l
 	jsr	(ObjectMoveAndFall).l
 	jsr	(ObjHitFloor).l
-	tst.w	d1
 	bpl.w	EHZBoss_Display
 	add.w	d1,obY(a0)
 	move.w	#0,obVelY(a0)	; set to ground and stand still
@@ -461,7 +460,7 @@ EHZBoss_loc_2F460:
 	bhs.s	EHZBoss_loc_2F46E
 	addq.w	#2,(Camera_Max_X_pos).w
 	move.w	(Camera_Max_X_pos).w,(Tails_Max_X_pos).w
-	bra.s	EHZBoss_return_2F482
+	rts
 ; ===========================================================================
 
 EHZBoss_loc_2F46E:
@@ -667,7 +666,7 @@ EHZBoss_loc_2F67C:	; EHZBoss_Wheel_Sub0:
 	cmpi.w	#EHZBoss_CameraLeft,d0
 	blo.w	EHZBoss_Display
 	move.w	#$100,obVelY(a0)
-	cmpi.b	#1,obSubtype(a0)	; wheel number (0-2)
+	cmpi.w	#1,obSubtype(a0)	; wheel number (0-2)
 	bgt.s	EHZBoss_loc_2F6B6	; background wheel
 	beq.s	EHZBoss_loc_2F6A6	; second foreground wheel
 ; ---------------------------------------------------------------------------
@@ -719,7 +718,6 @@ EHZBoss_loc_2F6DE:	; background wheel
 EHZBoss_loc_2F6E8:	; routine for all wheels
 	jsr	(ObjectMoveAndFall).l
 	jsr	(ObjHitFloor).l
-	tst.w	d1
 	bpl.s	EHZBoss_loc_2F6FA
 	add.w	d1,obY(a0)	; reset on floor
 
@@ -765,7 +763,6 @@ EHZBoss_loc_2F768:
 	bsr.w	EHZBoss_CheckDirection	; position check, sets direction
 	jsr	(ObjectMoveAndFall).l
 	jsr	(ObjHitFloor).l
-	tst.w	d1
 	bpl.s	EHZBoss_loc_2F77E
 	add.w	d1,obY(a0)	; reset on floor
 
@@ -800,7 +797,6 @@ EHZBoss_loc_2F7D2:	; EHZBoss_Wheel_Sub8:
 	bpl.w	EHZBoss_Display
 	jsr	(ObjectMoveAndFall).l
 	jsr	(ObjHitFloor).l
-	tst.w	d1
 	bpl.s	BranchTo_JmpTo36_MarkObjGone
 	move.w	#-$200,obVelY(a0)	; negative velocity to have bouncing effect
 	add.w	d1,obY(a0)	; reset on floor

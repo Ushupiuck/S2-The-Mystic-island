@@ -23,7 +23,7 @@ Piranha_Init:
 		move.w	#$200,obPriority(a0)
 		move.b	#sprite_bound($10,Map_Piranha_width),obActWid(a0)
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		move.b	d0,d1
 		andi.w	#$F0,d1
 		add.w	d1,d1

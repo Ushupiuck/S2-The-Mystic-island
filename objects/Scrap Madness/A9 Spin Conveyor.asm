@@ -8,8 +8,9 @@
 ; ---------------------------------------------------------------------------
 
 SMZ_SpinConvey:
-		tst.b	obSubtype(a0)
-		bmi.w	SMZ_SpinC_Spawn
+		move.w	obSubtype(a0),d0
+		btst	#7,d0
+		bne.w	SMZ_SpinC_Spawn
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	SMZ_SpinC_Index(pc,d0.w),d1
@@ -49,7 +50,7 @@ SMZ_SpinC_Spawn:
 		move.w	obX(a0),SMZ_spinc_baseX(a0)
 		out_of_range2	UnloadObject,SMZ_spinc_baseX(a0)
 		moveq	#0,d0
-		move.b	obSubtype(a0),d0
+		move.w	obSubtype(a0),d0
 		andi.w	#$7F,d0
 		add.w	d0,d0
 		lea	SMZ_SpinC_Placements(pc),a2
@@ -74,7 +75,7 @@ SMZ_SpinC_Spawn:
 		move.w	(a2)+,obX(a1)
 		move.w	(a2)+,obY(a1)
 		move.w	(a2)+,d0
-		move.b	d0,obSubtype(a1)
+		move.w	d0,obSubtype(a1)
 		dbf	d6,.allocate
 		rts
 .allocate:
@@ -93,7 +94,7 @@ SMZ_SpinC_Main:	; Routine 0
 		move.w #$200,obPriority(a0)			; set sprite priority
 
 		moveq	#0,d0					; clear d0
-		move.b	obSubtype(a0),d0			; get subtype of platform (stored in custom objpos data)
+		move.w	obSubtype(a0),d0			; get subtype of platform (stored in custom objpos data)
 		move.w	d0,d1					; backup for later
 		lsr.w	#3,d0					; read only upper digit, multiplied by 2
 		andi.w	#$1E,d0					; limit to sane values
