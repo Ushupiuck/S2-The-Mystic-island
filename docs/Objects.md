@@ -349,16 +349,24 @@ replacement:
 | S3&K object | Useful behavior | Difference / cost |
 | --- | --- | --- |
 | `Obj_SOZSwingingPlatform` | Closest continuation of S2's packed pendulum: vertical as well as horizontal movement mirroring, and a rider-triggered accelerating swing with a rider-dependent pause | Its trigger still tests primary standing bit 3. Its chain geometry/attachment offsets differ from ours, so importing its raw placement values would not preserve our geometry. |
+| `Obj_DEZLiftPad` | Closely related packed-segment lift: rider-triggered, eased quarter-turn movement, orientation choices and a rider-dependent 30-update pause | Uses the same sine/cosine/cached-angle approach as SOZ, with a smaller angular sweep. Its trigger also tests primary standing bit 3; it is a reusable additional motion style. |
 | `Obj_MGZSwingingPlatform` | Continuous full rotation, independent starting angle, direction and 256-update period | Fixed 80 px radius/four packed links; top-only collision. It supplies another path, rather than replacing S2's movement families. |
 | `Obj_ICZSwingingPlatform` | Either rider can impart horizontal momentum; capped angular velocity, a returning pendulum, optional breakaway launch, terrain bounce, slide/friction and chain breakup | Full solidity through separate collision children. Its normal construction uses a controller plus three children; the elaborate ice platform is a different gameplay mechanism from the automatic S1/S2 swing. |
 | MGZ/LRZ swinging spikeballs | Further rotating hazard paths and, in MGZ, swing sounds | Hazard siblings rather than ordinary safe-top platforms; not a substitute for all S1/S2 variants. |
 
 A useful future design keeps our existing S1/S2 motion choices and the packed
 helper, makes motion/collision/detachment independent within the subtype word,
-and adds selected S3&K mechanisms explicitly. SOZ is the closest motion-code
-relative; ICZ offers the richest additional interaction. The existing `$4E`
+and adds selected S3&K mechanisms explicitly. SOZ and DEZ Lift Pad are close motion-code
+relatives; ICZ offers the richest additional interaction. The existing `$4E`
 SST and all universal offsets stay fixed. Sensible link counts remain essential;
 this comparison does not propose expanding SSTs or their packed storage.
+
+DEZ's quarter-turn `Obj_DEZLiftPad` should be distinguished from
+`Obj_DEZHangCarrier`: the latter attaches players beneath a grip, accelerates
+upward until a ceiling probe stops it, then travels horizontally at 2 px/update
+for `subtype*4` updates (`subtype*8` pixels). The grip moves through a right-angle
+route; Lift Pad moves its rigid segmented arm through a quarter-circle. Both
+are lifts by function, but their movement and attachment code differ.
 
 ### Confirmed current boundaries and defects
 
@@ -397,6 +405,8 @@ References: [our implementation](../objects/17%20Swinging%20Platforms.asm),
 [S2 Final `$15`](https://github.com/sonicretro/s2disasm/blob/4ef457c18fc4902396c43ab06fabc119ac6ecb64/s2.asm#L22487),
 [S3&K MGZ](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/sonic3k.asm#L70499),
 [SOZ](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/sonic3k.asm#L86365),
+[DEZ Lift Pad](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/sonic3k.asm#L93132),
+[DEZ Hang Carrier](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/sonic3k.asm#L92885),
 and [ICZ](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/sonic3k.asm#L188968).
 
 ## Ordinary platforms and Flying Battery's hovering platform
