@@ -314,12 +314,12 @@ chain length from bits 0–3 and an exclusive family from bits 4–7.
 | Current family | Behavior | Original counterpart / differences |
 | --- | --- | --- |
 | `$0n` | Ordinary pendulum | S1 `$15` / S2 `$15`; shared fast oscillator, X-flipped phase, radius `16*n+8` |
-| `$1n/$3n` | Left/right half-swing with a stop at the bottom | S2 motion `$10/$30`; our clamp positions match, but the platform-knock sound calls were omitted |
+| `$1n/$3n` | Left/right half-swing with a stop at the bottom | S2 motion `$10/$30`; our clamp positions match. The omitted platform-knock sound is optional: any future sound choice must suit the zone/material and allow silence. |
 | `$2n` | Static hanging platform at a chosen length | S2 `$20` uses a special fixed rope mapping and a 136 px drop regardless of the low nibble; ours generalizes length, so raw `$20` now drops only 8 px |
-| `$4n` | Proximity-triggered accelerating trap, 60-update endpoint waits | S2 `$40` motion; ours draws the giant ball and uses its collision rather than S2's OOZ trap art/hurtbox. The primary character's X proximity triggers it; companion-only proximity does not. |
-| `$5n` | Swinging giant ball with safe platform top and harmful underside/sides | Custom extension of the S1 SLZ-style safe-top ball. The SLZ constructor branch also retains its smaller ball configuration; it is a zone choice, not another family. |
+| `$4n` | Proximity-triggered accelerating trap, 60-update endpoint waits | S2 `$40` motion; the giant-ball art/hurtbox is an intentional placeholder, not a missing OOZ-art requirement. The primary character's X proximity triggers it; companion-only proximity does not. |
+| `$5n` | Swinging giant ball with safe platform top and harmful underside/sides | Custom extension of the S1 SLZ-style safe-top ball; its current giant-ball appearance is intentional. The SLZ constructor branch also retains its smaller ball configuration; it is a zone choice, not another family. |
 | `$6n` | Detachable normal swing | Re-encodes S2's bit-7 detachment as a separate family, losing its combinations with the other motion families |
-| `$7n` | Fully harmful pendulum ball, no platform top | S1 SBZ-style hazard, made explicitly selectable; SMZ uses its resident atlas |
+| `$7n` | Fully harmful pendulum ball, no platform top | S1 SBZ-style motion/collision, made explicitly selectable; SMZ uses its resident atlas. This hazard role is useful outside SBZ too, including Labyrinth. |
 
 S1's ordinary platform and zone-specific SLZ/SBZ balls use separate SSTs for
 links and anchor: a length-`n` ordinary swing needs `n+2` objects in total.
@@ -368,6 +368,40 @@ for `subtype*4` updates (`subtype*8` pixels). The grip moves through a right-ang
 route; Lift Pad moves its rigid segmented arm through a quarter-circle. Both
 are lifts by function, but their movement and attachment code differ.
 
+### Agreed extension direction (not implemented)
+
+Keep sound, appearance and collision choices distinct from the movement path.
+The current `$4n/$5n` giant balls are intentional; their artwork does not need
+to be replaced to preserve the S2 movement. A half-swing impact sound should
+be optional and chosen for the zone/material rather than always playing a
+wooden knock.
+
+| Mechanism | Planned treatment |
+| --- | --- |
+| Left/right half-swings | Combine both under one half-swing family only if an upper subtype-byte direction setting preserves both existing clamp functions and their timing. `$3n` remains bounce-right until that consolidation and the Debug/editor migration are implemented and verified. |
+| MGZ continuous rotation | May use `$3n` after that consolidation; otherwise use a genuinely free family. No authored placement currently selects `$3n`, but GHZ Debug's `$35` and SonLVL's bounce-right choice still do. Keep configurable length, rotation direction and starting phase. |
+| SOZ swing elevator | Its original rider-triggered path has vertically separated endpoints and horizontal curvature. Add a quarter-turn of the movement angle for horizontally separated endpoints; mirroring selects the side of the arc, including an upward or downward curve. Either live rider must be able to trigger/hold it. |
+| DEZ quarter-turn lift | Retain the eased, rider-triggered smaller angular sweep as another motion choice with configurable orientation. |
+| ICZ momentum swing | Retain rider-imparted motion, with optional breakaway. Share the detached-body update with the S2-style release where practical; each trigger supplies its own release velocity and chain response. |
+
+The shared detached body should use gravity and the first actual environmental
+contact: terrain leads to a bounce and friction/slide; crossing an enabled water
+surface from above leads to floating, bobbing and drift. Check the current act's
+`Water_flag` and live water height, not its zone ID or S2's fixed `$0720` floor.
+A floor above the water must win over the surface below it. Chain retention or
+breakup remains a release-style choice; sharing the body controller does not
+require identical launch or chain behavior.
+
+S1 Labyrinth's original `SpikeBall` (`$57`, shared with SYZ) is a useful further
+hazard reference: it continuously rotates rather than pendulum-swinging, and
+its LZ chain is harmless while the tip hurts. A rotating path and a fully
+harmful body should therefore be combinable without making every chain link
+harmful or forcing the current `$7n` pendulum to change its path.
+
+These are design constraints, not a new subtype bit allocation or implemented
+modes. Keep the existing `$4E` SST/universal offsets and sensible packed link
+counts throughout the extension.
+
 ### Confirmed current boundaries and defects
 
 Native execution against the current Mode 1 ROM reproduced these cases:
@@ -407,7 +441,8 @@ References: [our implementation](../objects/17%20Swinging%20Platforms.asm),
 [SOZ](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/sonic3k.asm#L86365),
 [DEZ Lift Pad](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/sonic3k.asm#L93132),
 [DEZ Hang Carrier](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/sonic3k.asm#L92885),
-and [ICZ](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/sonic3k.asm#L188968).
+[ICZ](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/sonic3k.asm#L188968),
+and [S1 SYZ/LZ `$57`](https://github.com/sonicretro/s1disasm/blob/15dfa3a6ee4c53aeb482233e493755c84b4f3479/_incObj/57%20SYZ,%20LZ%20Spiked%20Ball%20and%20Chain.asm).
 
 ## Ordinary platforms and Flying Battery's hovering platform
 
