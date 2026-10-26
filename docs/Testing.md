@@ -197,6 +197,13 @@ or `--player 2`, `--pal` for PAL, and `--system-directory` for Mode 1. The sweep
 are streaming fixtures, not complete controller-only playthroughs.
 
 `check_companion_sbz.py` has `--probe` for older-ROM failures, but no PAL flag.
+`check_swing_families.py` checks both actors' platform tops and hazard contact
+plus momentary switches; its 70 NTSC checks pass on the current baseline. This
+is not complete swinging-platform motion, detachment or allocation coverage.
+The [swing comparison](Objects.md#swinging-platforms-s1s2-coverage-and-s3k-variants)
+records separately reproduced packed-chain, stale Debug selector, allocation,
+placement-ownership and angle-cache defects; those remain pending fixes.
+
 Several runners compare with a specific earlier revision; their baseline is
 part of the fixture, not automatically the parent commit. Check their CLI/source
 before reusing them with an unrelated baseline. Native fixtures use the declared

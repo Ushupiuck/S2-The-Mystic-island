@@ -303,6 +303,102 @@ Comparisons use s1disasm `15dfa3a6ee4c53aeb482233e493755c84b4f3479`, s2disasm
 yellow orbs, `Obj_FBZSnakePlatform` (`$75`), use a separate delayed-train
 waypoint runner, rather than this relative-path constructor.
 
+## Swinging platforms: S1/S2 coverage and S3&K variants
+
+`objects/17 Swinging Platforms.asm` already combines S2's packed-chain movement
+with S1-style platform/ball art and collision. This is a comparison of the
+current implementation, not a completed replacement. The upper subtype word
+byte is discarded during initialization; the current placement parser takes
+chain length from bits 0–3 and an exclusive family from bits 4–7.
+
+| Current family | Behavior | Original counterpart / differences |
+| --- | --- | --- |
+| `$0n` | Ordinary pendulum | S1 `$15` / S2 `$15`; shared fast oscillator, X-flipped phase, radius `16*n+8` |
+| `$1n/$3n` | Left/right half-swing with a stop at the bottom | S2 motion `$10/$30`; our clamp positions match, but the platform-knock sound calls were omitted |
+| `$2n` | Static hanging platform at a chosen length | S2 `$20` uses a special fixed rope mapping and a 136 px drop regardless of the low nibble; ours generalizes length, so raw `$20` now drops only 8 px |
+| `$4n` | Proximity-triggered accelerating trap, 60-update endpoint waits | S2 `$40` motion; ours draws the giant ball and uses its collision rather than S2's OOZ trap art/hurtbox. The primary character's X proximity triggers it; companion-only proximity does not. |
+| `$5n` | Swinging giant ball with safe platform top and harmful underside/sides | Custom extension of the S1 SLZ-style safe-top ball. The SLZ constructor branch also retains its smaller ball configuration; it is a zone choice, not another family. |
+| `$6n` | Detachable normal swing | Re-encodes S2's bit-7 detachment as a separate family, losing its combinations with the other motion families |
+| `$7n` | Fully harmful pendulum ball, no platform top | S1 SBZ-style hazard, made explicitly selectable; SMZ uses its resident atlas |
+
+S1's ordinary platform and zone-specific SLZ/SBZ balls use separate SSTs for
+links and anchor: a length-`n` ordinary swing needs `n+2` objects in total.
+The unused S1 `$1n` flag selects GHZ giant-ball art/a 40-by-40 hurtbox; S1 does
+not globally disable platform collision for this flag as it does for SBZ.
+Our S2-style packed helper keeps the normal chain at two SSTs total and computes
+one sine/cosine pair for all links. Retaining that is already a substantial
+improvement over the S1 per-link movement/objects.
+
+The unification is not a complete S2 behavioral superset:
+
+- S2's bit 7 is independent of its `$00/$10/$20/$30/$40` motion selector.
+  Thus `$96` can combine left-bouncing with detachment, while our `$6n` can
+  only detach a normal swing. `$50/$60/$70` in S2 are normal-motion aliases,
+  not the ball/detach/hazard families assigned by our format.
+- S2 chooses detached state `$0C` in ARZ: fall to the live water level, float,
+  drift and stop against a wall. Our floating handler exists, but the detach
+  constructor always chooses state `$0A`; no live transition selects `$0C`.
+  The reachable falling state retains S2's level-specific fixed Y `$0720`.
+- Original S2 OOZ/MCZ/ARZ visual/size configurations are not all selectable in
+  our GHZ/SLZ/SMZ constructor. Keeping each motion concept does not preserve
+  every original raw subtype or appearance.
+
+S3&K splits the family into specialized objects instead of one universal
+replacement:
+
+| S3&K object | Useful behavior | Difference / cost |
+| --- | --- | --- |
+| `Obj_SOZSwingingPlatform` | Closest continuation of S2's packed pendulum: vertical as well as horizontal movement mirroring, and a rider-triggered accelerating swing with a rider-dependent pause | Its trigger still tests primary standing bit 3. Its chain geometry/attachment offsets differ from ours, so importing its raw placement values would not preserve our geometry. |
+| `Obj_MGZSwingingPlatform` | Continuous full rotation, independent starting angle, direction and 256-update period | Fixed 80 px radius/four packed links; top-only collision. It supplies another path, rather than replacing S2's movement families. |
+| `Obj_ICZSwingingPlatform` | Either rider can impart horizontal momentum; capped angular velocity, a returning pendulum, optional breakaway launch, terrain bounce, slide/friction and chain breakup | Full solidity through separate collision children. Its normal construction uses a controller plus three children; the elaborate ice platform is a different gameplay mechanism from the automatic S1/S2 swing. |
+| MGZ/LRZ swinging spikeballs | Further rotating hazard paths and, in MGZ, swing sounds | Hazard siblings rather than ordinary safe-top platforms; not a substitute for all S1/S2 variants. |
+
+A useful future design keeps our existing S1/S2 motion choices and the packed
+helper, makes motion/collision/detachment independent within the subtype word,
+and adds selected S3&K mechanisms explicitly. SOZ is the closest motion-code
+relative; ICZ offers the richest additional interaction. The existing `$4E`
+SST and all universal offsets stay fixed. Sensible link counts remain essential;
+this comparison does not propose expanding SSTs or their packed storage.
+
+### Confirmed current boundaries and defects
+
+Native execution against the current Mode 1 ROM reproduced these cases:
+
+- Child records begin at `$18` and occupy six bytes each. Nine raw records
+  happen to end exactly at `$4E`, although the declared composite layout and
+  fixed helper bounds cover eight. Ten links overwrite six bytes of the next
+  SST; `$F` links overwrite 36. The subsprite count field itself is a byte;
+  its numeric capacity is not additional record storage. Authored swings use
+  at most eight links (17 placements across GHZ2/3 and SMZ2).
+- Debug still advertises `$85`, an old S2 detachable value. The current parser
+  retains family 8 and indexes beyond its eight-entry motion table; it reads
+  instruction word `$7000` as a movement offset.
+- If helper allocation fails, the nominal single-body fallback is not reached
+  reliably: `movea.l helper,a1` does not update condition codes before `beq`.
+  The tested full-pool motion attempted a write at ROM address `$18`.
+- If detached-child allocation fails, the parent still advances to non-solid
+  state 8 and clears its standing flags without producing a falling child.
+- A successful detached copy inherits the parent's placement handle. Excluding
+  packed helpers (whose overlaid `$22` bytes are not handles), two objects own
+  the same placement. Unloading the child clears the loaded bit while the
+  hanging parent remains live.
+- At the trap's positive endpoint, an early return leaves cached angle `$7F`
+  while logical angle is reset to `$8000`; a five-link ball remains 2 px below
+  the exact endpoint throughout its 60-update wait. The negative endpoint
+  correctly applies its new angle. The zero-angle startup cache also initially
+  preserves the constructor's straight-down pose instead of angle-zero geometry;
+  that cache behavior is inherited from S2.
+
+These findings are pending fixes. The existing contact runner verifies safe
+platform tops and harmful sides/undersides, not every motion/allocation path.
+
+References: [our implementation](../objects/17%20Swinging%20Platforms.asm),
+[S1 `$15`](https://github.com/sonicretro/s1disasm/blob/15dfa3a6ee4c53aeb482233e493755c84b4f3479/_incObj/15%20Swinging%20Platforms.asm),
+[S2 Final `$15`](https://github.com/sonicretro/s2disasm/blob/4ef457c18fc4902396c43ab06fabc119ac6ecb64/s2.asm#L22487),
+[S3&K MGZ](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/sonic3k.asm#L70499),
+[SOZ](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/sonic3k.asm#L86365),
+and [ICZ](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/sonic3k.asm#L188968).
+
 ## Ordinary platforms and Flying Battery's hovering platform
 
 `objects/18 Platforms.asm` combines S3&K's ordinary floating-platform movement
