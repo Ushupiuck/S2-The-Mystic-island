@@ -15226,6 +15226,9 @@ Map_Animals5:	binclude	"mappings/sprite/Map - Rabbit Penguin.bin"	; $0D
 		even
 Map_Obj16:	binclude	"mappings/sprite/HTZ Descending lift.bin"
 		even
+Map_SwingRail: binclude "mappings/sprite/Swinging platform rail.bin"
+Map_SwingRail_SLZ: binclude "mappings/sprite/SLZ Swinging Platform rail.bin"
+Map_SwingRail_SMZ: binclude "mappings/sprite/SMZ Swing rail.bin"
 Map_Obj17:	binclude	"mappings/sprite/Swinging platform.bin"
 		even
 Map_Obj17_SLZ:	binclude	"mappings/sprite/SLZ Swinging Platform.bin"

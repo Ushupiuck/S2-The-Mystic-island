@@ -44,6 +44,13 @@ In Mode 1, screen handlers return directly to the outer VBlank restore.
 Timer tails use local short conditional exits, and the title-card handler tail-calls its final
 PLC bookkeeping routine. Preserve the outer register restore and `rte` once.
 
+Obj17's ICZ-style side rails reuse the platform and link tiles already loaded
+for GHZ/SLZ/SMZ. `python build_tools/build_swing_rails.py` builds the three
+`* rail.bin` mappings from their ordinary platform mapping files; those inputs
+and the generator's explicit rail offsets are the editable source. Re-run the
+generator after changing the source mappings. The normal bounds pass derives
+all three rail bounds. No extra tile art, palette or VRAM allocation is added.
+
 ## Dynamic art
 
 `_inc/Dynamic Sprite Art.asm` implements `Load_DynamicPLC`: word run count, then

@@ -42,7 +42,7 @@ the complete serialized word, including when calculating movement overlays.
 | `$0B` | Tilting platform | High nibble: duration; low nibble: initial phase, both in 16-frame units. |
 | `$0C` | Flapping door | Full byte: interval in seconds. |
 | `$16` | Diagonal lift | Full byte: duration in 8-frame units. Travels twice as far horizontally as vertically, then falls. |
-| `$17` | Swinging platform / ball | Low nibble: chain length. High nibble: normal, bounce left, static, bounce right, trap, giant ball, detachable. |
+| `$17` | Swinging platform / ball | Word `PPDR SIII MMMM LLLL`: quarter orientation, detach, relay, material sound, eight interaction profiles, eight movement modes and 0–8 links. See [runtime settings](../docs/Objects.md#swinging-platforms-s1s2-coverage-and-s3k-variants). |
 | `$18` | GHZ/EHZ platform | Word `CCCC 0PPS FTTT MMMM`: movement, shape, full solidity, independent sag, phase/corner and switch channel. S3&K horizontal/diagonal/square/trap paths plus centred 64/96/128 px vertical motion, falling and switch rise. See [runtime settings](../docs/Objects.md#ordinary-platforms-and-flying-batterys-hovering-platform). |
 | `$19`, `$AD` | CPZ platform / SMZ moving block | Low nibble: movement, wall stop/fall, switch-2 raft, vertical motion or triggered fast slide. High nibble: shape. |
 | `$1A`, `$3C` | Collapsing ledge / breakable wall | Full byte: mapping frame. |
@@ -178,9 +178,13 @@ reduce the mast from nine hardware sprites to four, with an indexed-pixel
 equality check against both original base frames. The blade phase table replaces
 CD's nine-state dispatch while retaining every original frame and damage toggle.
 
-Swinging platforms (`$17`) use `$1n` for both half-swings: X-flip selects the
-right half while preserving their alternating shared-oscillator timing.
-`$PP3n` selects continuous rotation; the upper subtype byte is its initial angle
-before X-flip. The definition exposes this phase and renders its initial chain
-pose from the engine sine table. Other swing families retain their existing
-settings.
+Swinging platforms (`$17`) expose the complete word as independent properties:
+movement, interaction, chain length, quarter-turn orientation, material sound,
+detachment and relay participation. Movement 4 is the ICZ momentum swing; 5/6
+are SOZ/DEZ lifts and 7 is the retained proximity trap. The object picker creates
+safe byte presets; choose the interaction property for a ball/hazard and the
+Detachable property for release. Existing SMZ hazards retain their migrated
+word settings. Preview uses the engine sine table and exact mirror/rotation order,
+shows every supported link and the ICZ rail, and clamps reserved lengths 9-F to
+8 like the game. The authored word remains intact at runtime. Carrying and
+multi-body chained platforms are deliberately outside this format.

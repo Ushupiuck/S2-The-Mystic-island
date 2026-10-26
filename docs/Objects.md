@@ -305,145 +305,134 @@ waypoint runner, rather than this relative-path constructor.
 
 ## Swinging platforms: S1/S2 coverage and S3&K variants
 
-`objects/17 Swinging Platforms.asm` already combines S2's packed-chain movement
-with S1-style platform/ball art and collision. This is a comparison of the
-current implementation, with the consolidated half-swing and MGZ-style rotation
-now implemented. Bits 0–3 select chain length and bits 4–7 select the family.
-For family 3, bits 8–15 seed its private starting angle before the constructor
-reduces the stored subtype to the family; other families ignore those bits.
+`objects/17 Swinging Platforms.asm` owns the single-body swing object `$17`.
+Its full subtype word stays intact throughout construction and state changes.
+The `$4E` SST, universal offsets, and normal two-SST body/packed-helper design
+are unchanged. Carrying other objects and multi-body chained platforms are
+separate future work; neither is encoded by this object.
 
-| Current family | Behavior | Original counterpart / differences |
+The word is **`PPDR SIII MMMM LLLL`**:
+
+| Bits | Field | Meaning |
 | --- | --- | --- |
-| `$0n` | Ordinary pendulum | S1 `$15` / S2 `$15`; shared fast oscillator, X-flipped phase, radius `16*n+8` |
-| `$1n` | Left/right half-swing with a stop at the bottom | X-flip selects the right half. Pre-reflecting the oscillator before clamping preserves S2 `$10/$30` timing, including the alternating active/waiting intervals. Sound remains optional and must suit the zone/material. |
-| `$2n` | Static hanging platform at a chosen length | S2 `$20` uses a special fixed rope mapping and a 136 px drop regardless of the low nibble; ours generalizes length, so raw `$20` now drops only 8 px |
-| `$PP3n` | Continuous full rotation | MGZ-style one angle unit/update (256 updates/revolution), with our configurable `16*n+8` radius. `PP` is the starting angle: `$00` right, `$40` down, `$80` left, `$C0` up; X-flip mirrors the starting pose and reverses rotation. |
-| `$4n` | Proximity-triggered accelerating trap, 60-update endpoint waits | S2 `$40` motion; the giant-ball art/hurtbox is an intentional placeholder, not a missing OOZ-art requirement. The primary character's X proximity triggers it; companion-only proximity does not. |
-| `$5n` | Swinging giant ball with safe platform top and harmful underside/sides | Custom extension of the S1 SLZ-style safe-top ball; its current giant-ball appearance is intentional. The SLZ constructor branch also retains its smaller ball configuration; it is a zone choice, not another family. |
-| `$6n` | Detachable normal swing | Re-encodes S2's bit-7 detachment as a separate family, losing its combinations with the other motion families |
-| `$7n` | Fully harmful pendulum ball, no platform top | S1 SBZ-style motion/collision, made explicitly selectable; SMZ uses its resident atlas. This hazard role is useful outside SBZ too, including Labyrinth. |
+| 0–3 | Links | 0–8 inclusive; the radius is `16*links+8` pixels. Reserved 9–15 clamp to 8 before allocating/writing packed records. These values do not select a payload. |
+| 4–7 | Movement | Table below; reserved 8–15 safely select normal motion. |
+| 8–10 | Interaction | Eight independent collision/surface profiles below. |
+| 11 | Material sound | Optional half-swing stop, lift activation and trap endpoint sound. `SwingingPtfm_Sounds` is the authoritative per-zone sound table; zero means silent. |
+| 12 | Detachable | Movement-specific release condition; independent of collision. |
+| 13 | Impulse relay | Opt-in physical body contact exchanges a signed impulse. Both participants must enable it. |
+| 14–15 | Orientation / phase | Rotate the complete movement by 0/90/180/270 degrees after placement X/Y mirroring. This also selects the rotator's initial quarter-phase. |
 
-S1's ordinary platform and zone-specific SLZ/SBZ balls use separate SSTs for
-links and anchor: a length-`n` ordinary swing needs `n+2` objects in total.
-The unused S1 `$1n` flag selects GHZ giant-ball art/a 40-by-40 hurtbox; S1 does
-not globally disable platform collision for this flag as it does for SBZ.
-Our S2-style packed helper keeps the normal chain at two SSTs total and computes
-one sine/cosine pair for all links. Retaining that is already a substantial
-improvement over the S1 per-link movement/objects.
+This replaces the former collision/detach families and rotation-exclusive full
+upper-byte phase. Arbitrary 256-step phase is no longer an authored field;
+quarter-phase and placement mirrors provide the independent orientation choices.
 
-The unification is not a complete S2 behavioral superset:
-
-- S2's bit 7 is independent of its `$00/$10/$20/$30/$40` motion selector.
-  Thus `$96` can combine left-bouncing with detachment, while our `$6n` can
-  only detach a normal swing. `$50/$60/$70` in S2 are normal-motion aliases,
-  not the ball/detach/hazard families assigned by our format.
-- S2 chooses detached state `$0C` in ARZ: fall to the live water level, float,
-  drift and stop against a wall. Our floating handler exists, but the detach
-  constructor always chooses state `$0A`; no live transition selects `$0C`.
-  The reachable falling state retains S2's level-specific fixed Y `$0720`.
-- Original S2 OOZ/MCZ/ARZ visual/size configurations are not all selectable in
-  our GHZ/SLZ/SMZ constructor. Keeping each motion concept does not preserve
-  every original raw subtype or appearance.
-
-S3&K splits the family into specialized objects instead of one universal
-replacement:
-
-| S3&K object | Useful behavior | Difference / cost |
-| --- | --- | --- |
-| `Obj_SOZSwingingPlatform` | Closest continuation of S2's packed pendulum: vertical as well as horizontal movement mirroring, and a rider-triggered accelerating swing with a rider-dependent pause | Its trigger still tests primary standing bit 3. Its chain geometry/attachment offsets differ from ours, so importing its raw placement values would not preserve our geometry. |
-| `Obj_DEZLiftPad` | Closely related packed-segment lift: rider-triggered, eased quarter-turn movement, orientation choices and a rider-dependent 30-update pause | Uses the same sine/cosine/cached-angle approach as SOZ, with a smaller angular sweep. Its trigger also tests primary standing bit 3; it is a reusable additional motion style. |
-| `Obj_MGZSwingingPlatform` | Continuous full rotation, independent starting angle, direction and 256-update period | Fixed 80 px radius/four packed links; top-only collision. It supplies another path, rather than replacing S2's movement families. |
-| `Obj_ICZSwingingPlatform` | Either rider can impart horizontal momentum; capped angular velocity, a returning pendulum, optional breakaway launch, terrain bounce, slide/friction and chain breakup | Full solidity through separate collision children. Its normal construction uses a controller plus three children; the elaborate ice platform is a different gameplay mechanism from the automatic S1/S2 swing. |
-| MGZ/LRZ swinging spikeballs | Further rotating hazard paths and, in MGZ, swing sounds | Hazard siblings rather than ordinary safe-top platforms; not a substitute for all S1/S2 variants. |
-
-A useful future design keeps our existing S1/S2 motion choices and the packed
-helper, makes motion/collision/detachment independent within the subtype word,
-and adds selected S3&K mechanisms explicitly. SOZ and DEZ Lift Pad are close motion-code
-relatives; ICZ offers the richest additional interaction. The existing `$4E`
-SST and all universal offsets stay fixed. Sensible link counts remain essential;
-this comparison does not propose expanding SSTs or their packed storage.
-
-DEZ's quarter-turn `Obj_DEZLiftPad` should be distinguished from
-`Obj_DEZHangCarrier`: the latter attaches players beneath a grip, accelerates
-upward until a ceiling probe stops it, then travels horizontally at 2 px/update
-for `subtype*4` updates (`subtype*8` pixels). The grip moves through a right-angle
-route; Lift Pad moves its rigid segmented arm through a quarter-circle. Both
-are lifts by function, but their movement and attachment code differ.
-
-The Mystic Cave half-swings coordinate through the shared oscillator; they do
-not exchange pointers or activation signals. One waits at angle `$40` while the
-other moves. The unified `$1n` computes `128-max(128-angle,64)` when flipped,
-which equals the old right-half `min(angle,64)`, rather than merely mirroring
-the left half at the same phase. No authored placement used the former `$3n`;
-GHZ Debug's `$35` now previews/places the rotator and its stale `$85` detachable
-entry is corrected to `$65`. SonLVL exposes the new rotation phase and draws
-all chain links using the engine's sine table. One-link chains keep their anchor
-art at the pivot. The `$4E` SST and universal offsets are unchanged.
-
-### Remaining extension direction (not implemented)
-
-Keep sound, appearance and collision choices distinct from the movement path.
-The current `$4n/$5n` giant balls are intentional; their artwork does not need
-to be replaced to preserve the S2 movement. A half-swing impact sound should
-be optional and chosen for the zone/material rather than always playing a
-wooden knock.
-
-| Mechanism | Planned treatment |
+| Movement | Behavior |
 | --- | --- |
-| SOZ swing elevator | Its original rider-triggered path has vertically separated endpoints and horizontal curvature. Add a quarter-turn of the movement angle for horizontally separated endpoints; mirroring selects the side of the arc, including an upward or downward curve. Either live rider must be able to trigger/hold it. |
-| DEZ quarter-turn lift | Retain the eased, rider-triggered smaller angular sweep as another motion choice with configurable orientation. |
-| ICZ momentum swing | Retain rider-imparted motion, with optional breakaway. Share the detached-body update with the S2-style release where practical; each trigger supplies its own release velocity and chain response. |
+| `$0` | Ordinary pendulum, preserving the existing shared oscillator timing. |
+| `$1` | Unified Mystic Cave half-swing. X flip preserves the opposite active/waiting phase, using `128-max(128-angle,64)` for the former right half. |
+| `$2` | Stationary hanging body. Relay participation forwards an incoming impulse without moving it. |
+| `$3` | MGZ continuous rotation: one angle unit/update, 256 updates/revolution, configurable radius. X/Y mirrors reverse direction; orientation selects the initial quarter-phase. |
+| `$4` | ICZ player-powered swing. Either character running into its side rail at speed at least `$200` supplies angular velocity. The initial impulse is half running speed, capped at `$400`; an already-standing rider contributes half that amount. Torque `$10` returns it to rest. The visible excursion caps at `$6E` angle units while the internal angular state continues, reproducing the pause near maximum reach. Walls can hold the outward motion while momentum dissipates. |
+| `$5` | SOZ rider-triggered half-circle elevator. Original `$4000` initial angle, `$8000` midpoint and torque 8. Either rider can start it; the 30-update endpoint pause stays held while either remains. Orientation selects vertical/horizontal endpoints; mirrors select the curve. |
+| `$6` | DEZ Lift Pad's rider-triggered quarter-circle. Original zero initial angle, `$2000` midpoint and torque 8, with the same either-rider 30-update held pause. Orientation and mirrors select the corner/curve. |
+| `$7` | Retained S2 proximity trap, now triggered by either live player. It accelerates to each endpoint and waits 60 updates. |
 
-The shared detached body should use gravity and the first actual environmental
-contact: terrain leads to a bounce and friction/slide; crossing an enabled water
-surface from above leads to floating, bobbing and drift. Check the current act's
-`Water_flag` and live water height, not its zone ID or S2's fixed `$0720` floor.
-A floor above the water must win over the surface below it. Chain retention or
-breakup remains a release-style choice; sharing the body controller does not
-require identical launch or chain behavior.
+SOZ/DEZ reuse our editable chain length and body geometry rather than importing
+their fixed art-specific attachment offsets. They are movement ports, not raw
+placement-format or artwork replacements. `Obj_DEZHangCarrier`, which carries
+players below a grip and takes a straight vertical/horizontal route, remains a
+separate object from the quarter-circle Lift Pad.
 
-S1 Labyrinth's original `SpikeBall` (`$57`, shared with SYZ) is a useful further
-hazard reference: it continuously rotates rather than pendulum-swinging, and
-its LZ chain is harmless while the tip hurts. A rotating path and a fully
-harmful body should therefore be combinable without making every chain link
-harmful or forcing the current `$7n` pendulum to change its path.
+| Interaction | Physical response | Damage / surface |
+| --- | --- | --- |
+| `$0` | Top solid | Safe |
+| `$1` | Full solid | Safe |
+| `$2` | Full solid | Harmful bottom; safe top and sides |
+| `$3` | Top solid | Conveyor top, 2 px/update |
+| `$4` | Full solid | Conveyor top, 2 px/update |
+| `$5` | Full solid | Conveyor top and harmful bottom |
+| `$6` | Non-solid | Harmful from every side |
+| `$7` | Full solid | Harmful from every side |
 
-These are design constraints, not a new subtype bit allocation or implemented
-modes. Keep the existing `$4E` SST/universal offsets and sensible packed link
-counts throughout the extension.
+Conveyor direction follows X flip and uses the engine's per-player conveyor
+marker to avoid duplicate application. All solidity/damage paths handle both
+players. Full-solid damage remains solid under stars or damage invulnerability,
+allowing riding; normal solid-object crushing still applies. Bottom damage uses
+`Spike_HurtCharacter` and its full-word flashing timer. Whole-body damage uses
+the body's actual collision box, independent of the NPC touch table.
 
-### Confirmed current boundaries and defects
+The constructor retains zone-specific GHZ/SLZ/SMZ art. Interactions 2/5/6/7
+use the existing ball appearance; the giant-ball placeholder remains intentional.
+Safe ICZ bodies add a visible side rail using existing link tiles, generated by
+`python build_tools/build_swing_rails.py`; no additional art or VRAM bank is used.
+The rail's direction follows X flip. Non-solid harmful bodies cannot supply
+rider input; relay can impart their momentum instead. This is a physical railing, not the ICZ art
+port. Unsupported raw editor values remain editable and preview the runtime's
+safe length/movement fallback.
 
-Native execution against the current Mode 1 ROM reproduced these cases:
+### Detachment, relay and lifetime
 
-- Child records begin at `$18` and occupy six bytes each. Nine raw records
-  happen to end exactly at `$4E`, although the declared composite layout and
-  fixed helper bounds cover eight. Ten links overwrite six bytes of the next
-  SST; `$F` links overwrite 36. The subsprite count field itself is a byte;
-  its numeric capacity is not additional record storage. Authored swings use
-  at most eight links (17 placements across GHZ2/3 and SMZ2).
-- If detached-child allocation fails, the parent still advances to non-solid
-  state 8 and clears its standing flags without producing a falling child.
-- A successful detached copy inherits the parent's placement handle. Excluding
-  packed helpers (whose overlaid `$22` bytes are not handles), two objects own
-  the same placement. Unloading the child clears the loaded bit while the
-  hanging parent remains live.
+Detachment no longer monopolizes a movement family. Normal swings release
+at the zero-angle endpoint under a rider; half-swings retain the shared
+oscillator-zero release while waiting at the bottom; rotation releases at its zero angle;
+stationary bodies wait 30 standing updates; SOZ/DEZ/traps release at an endpoint
+pause. Relay-activated pendulums can also release without a rider. ICZ requires
+at least `$4800` displacement and `$200` remaining angular speed, then launches
+the body at X velocity `+/-$400`, Y velocity `-$600`. Other release styles use
+X velocity `+/-$200`, Y zero. X flip selects launch direction.
 
-These findings are pending fixes. Null-helper motion/deletion, zero-angle
-startup and the trap's positive endpoint cache are repaired. The motion runner
-checks both half-swings, rotation and these boundaries; the contact runner
-checks safe tops and harmful sides/undersides. Neither establishes complete
-detachment/allocation coverage.
+Allocation failure leaves the original body solid and attached for retry. The
+hanging object owns the placement; the released body has a zero respawn handle,
+and mutual SST references identify that body for rider transfer and cleanup.
+S2-style release retains the moving packed chain. ICZ turns the packed helper
+into 60-update chain debris, using its existing records without per-link SSTs;
+the hanging placement owner becomes invisible. Reused child slots are validated
+by code and their back-reference before cleanup. Unloading releases riders.
 
-References: [our implementation](../objects/17%20Swinging%20Platforms.asm),
-[S1 `$15`](https://github.com/sonicretro/s1disasm/blob/15dfa3a6ee4c53aeb482233e493755c84b4f3479/_incObj/15%20Swinging%20Platforms.asm),
-[S2 Final `$15`](https://github.com/sonicretro/s2disasm/blob/4ef457c18fc4902396c43ab06fabc119ac6ecb64/s2.asm#L22487),
-[S3&K MGZ](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/sonic3k.asm#L70499),
+Released bodies share the same controller. Gravity is `$18`; descending terrain
+contact produces a quarter-speed vertical bounce, then friction `$10` and wall
+stops. Crossing an enabled act's live water surface from above selects floating,
+bobbing and directional drift. A terrain surface above the water wins; the old
+fixed `$0720` landing floor and zone-specific ARZ test are gone. Floating tracks
+live water height and returns to falling if water is disabled. Bodies falling
+below the act release their riders and delete instead of retaining an offscreen
+owner indefinitely.
+
+Relay checks touching opted-in bodies, rather than inferring links from placement
+order or nearest distance. A stationary member forwards the impulse, while a
+normal/half/ICZ body uses a private momentum swing; SOZ/DEZ/traps activate their
+existing movement. An already-running rotator continues its motion. Contact
+latching, the source reference and an eight-update cooldown prevent immediate
+feedback. The impulse is a bounded gameplay signal, not an elastic rigid-body
+simulation or an authored group/channel system.
+
+Lifetime covers the pivot plus full radius and any owned released body still
+inside the loading window. All helper records stay inside their SST; zero links,
+full pools and missing helpers are valid. `swing_max_links` is the supported
+capacity, not the subsprite count byte's numeric maximum.
+
+Existing placements were migrated once: old `$6n` becomes `$100n` (detachable
+normal), and old `$7n` becomes `$060n` (harmful normal). GHZ2's detachable and
+SMZ2's twelve hazards are converted; normal placements are unchanged. Debug
+exposes the new motions and retains the intentional ball presets. SonLVL owns
+separate movement, interaction, sound, detachment, relay and orientation fields.
+
+Examples: `$0045` is a five-link player-powered safe platform; `$1045` adds
+breakaway; `$4616` is a six-link half-swing, harmful everywhere, rotated 90
+degrees; `$0155` is a five-link SOZ lift with safe full solidity. These are
+ordinary subtype words, not carried-object or multi-body arrangement selectors.
+
+Source comparisons use s1disasm `15dfa3a6ee4c53aeb482233e493755c84b4f3479`,
+s2disasm `4ef457c18fc4902396c43ab06fabc119ac6ecb64`, and skdisasm
+`73de97c6b55055bcb8089c1d55d006b02136f163`:
+[MGZ](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/sonic3k.asm#L70499),
 [SOZ](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/sonic3k.asm#L86365),
-[DEZ Lift Pad](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/sonic3k.asm#L93132),
-[DEZ Hang Carrier](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/sonic3k.asm#L92885),
-[ICZ](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/sonic3k.asm#L188968),
-and [S1 SYZ/LZ `$57`](https://github.com/sonicretro/s1disasm/blob/15dfa3a6ee4c53aeb482233e493755c84b4f3479/_incObj/57%20SYZ,%20LZ%20Spiked%20Ball%20and%20Chain.asm).
+[DEZ](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/sonic3k.asm#L93132),
+[ICZ](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/sonic3k.asm#L188968).
+The native checker compares the unchanged assembled SOZ/DEZ state integrators;
+full-frame tests cover both riders and real land/water responses. See
+[Testing](Testing.md) for commands and validation limits.
 
 ## Ordinary platforms and Flying Battery's hovering platform
 

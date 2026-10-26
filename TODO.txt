@@ -9,7 +9,8 @@ https://tcrf.net/Proto:Sonic_the_Hedgehog_2_(Genesis)
 ; ---------------------------------------------------------------------------
 
 TODO:
-Finish the remaining Obj17 direction in docs/Objects.md: optional zone/material half-swing sounds, intentional $4n/$5n ball art, SOZ elevators with configurable axis/curve, DEZ quarter-turn and ICZ rider momentum; share S2/ICZ detached-body land/water responses where practical. Repair detached-child allocation failure, copied placement ownership and unsafe packed-chain lengths; retain $4E SSTs/universal offsets < IN PROGRESS; X-flip half-swing consolidation and $3n continuous rotation DONE
+Finish Obj17's independent word encoding, eight interaction profiles, MGZ rotation, ICZ rail/momentum/breakaway, SOZ/DEZ oriented either-rider lifts, opt-in relay and shared detached land/water responses; migrate placements/Debug/editor, bound packed links, repair allocation/ownership and preserve $4E SSTs/universals < DONE
+Design the separate multi-body chained-platform object; revisit generic single-body carrying only after its encoding proposal. Neither belongs in the completed Obj17 format < FUTURE, explicitly deferred
 Replace ordinary Obj18 with the reviewed S3&K/S1/S2 hybrid: S3&K oscillator profiles/horizontal/extra paths and direct updates/lifetime, S1 centred vertical distances, configurable sag except traps, S2 solidity, delayed fall and word-selected switch channels; fix trigger/shape/fall-through defects and migrate 72 placements, Debug and SonLVL < DONE
 Use GHZ4's sparse object layout for disposable runtime fixtures; restore the matching Act-3 loop's three pathswappers in the authored layout and verify Sonic/Tails traversal < DONE
 Design distinct terrain/art/objects for the newly enabled zone slots and four-act templates; MTZ1 remains the existing unfinished test stage, MTZ2-4 and SMZ3-4 are safe editable starters, and LV0A1 currently showcases imported PP enemies < NEXT level-content work

@@ -56,45 +56,28 @@ def main():
         rows.append(row)
         assert passed, row
 
-    for zone, family in ((8, 0x76), (8, 0x77), (0, 0x76), (8, 0x56),
-                         (0, 0x46), (0, 0x56), (3, 0x06), (0, 0x06)):
-        g.restore(base)
-        isolate(g)
-        g.write('Current_Zone', zone)
-        obj = spawn(g, 'SwingingPtfm', 250, 950, family)
-        g.write(g.s['v_oscillate'] + 0x1A, 0x40)
-        act('SwingingPtfm', obj)
-        act('SwingingPtfm', obj)
-        node = g.save()
-        hazard = family >> 4 == 7
-        for who in ('v_player', 'v_player2'):
-            g.restore(node)
-            other = 'v_player2' if who == 'v_player' else 'v_player'
-            g.put(other, 'code', 0)
-            x, y = g.get(obj, 'obX', 2), g.get(obj, 'obY', 2)
-            radius = g.get(who, 'default_y_radius')
-            place(g, who, x, y - g.get(obj, 'obHeight') - 1 - radius + 4)
-            g.put(who, 'obVelY', 0x300, 2)
-            g.write('v_rings', 40, 2)
-            act('SwingingPtfm', obj)
-            standing = bool(g.get(who, 'obStatus') & 8)
-            record(f'top-{zone}-{family:02X}-{who}', standing != hazard,
-                   standing=standing)
-            act('TouchResponse', g.s[who])
-            record(f'top-clearance-{zone}-{family:02X}-{who}',
-                   g.get(who, 'obRoutine') == 2)
-            contacts = (('top', 0, -20), ('bottom', 0, 20),
-                        ('left', -16, 0), ('right', 16, 0)) if hazard else (
-                            ('bottom', 0, 16),)
-            for side, dx, dy in contacts:
-                g.restore(node)
-                g.put(other, 'code', 0)
-                place(g, who, x + dx, y + dy)
-                g.write('v_rings', 40, 2)
-                act('TouchResponse', g.s[who])
-                expected_hurt = bool(g.get(obj, 'obColType'))
-                record(f'hurt-{zone}-{family:02X}-{who}-{side}',
-                       (g.get(who, 'obRoutine') == 4) == expected_hurt)
+    for zone in (0,8):
+        for profile in range(8):
+            for who in ('v_player','v_player2'):
+                for immune in (False,True):
+                    g.restore(base);isolate(g);g.write('Current_Zone',zone)
+                    obj=spawn(g,'SwingingPtfm',250,950,(profile<<8)|0x26)
+                    act('SwingingPtfm',obj)
+                    other='v_player2' if who=='v_player' else 'v_player'
+                    g.put(other,'code',0)
+                    x,y=g.get(obj,'obX',2),g.get(obj,'obY',2)
+                    place(g,who,x,y-g.get(obj,'obHeight')-g.get(who,'default_y_radius')+3)
+                    g.put(who,'obVelY',0x100,2)
+                    g.put(who,'flashtime',0x100 if immune else 0,2)
+                    g.put(who,'obStatusSecondary',0)
+                    g.write('v_rings',40,2)
+                    g.put(obj,'obRender',0x84)
+                    act('SwingingPtfm_Interact',obj)
+                    standing=bool(g.get(who,'obStatus')&8)
+                    record(f'top-{zone}-{profile}-{who}-{immune}',
+                           standing==(profile!=6 and (profile!=7 or immune)))
+                    record(f'damage-{zone}-{profile}-{who}-{immune}',
+                           (g.get(who,'obRoutine')==4)==(profile>=6 and not immune))
 
     for who in ('v_player', 'v_player2'):
         g.restore(base)  # resume whole frames only from the original boundary

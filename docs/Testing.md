@@ -197,21 +197,40 @@ or `--player 2`, `--pal` for PAL, and `--system-directory` for Mode 1. The sweep
 are streaming fixtures, not complete controller-only playthroughs.
 
 `check_companion_sbz.py` has `--probe` for older-ROM failures, but no PAL flag.
-`check_swing_families.py` checks both actors' platform tops and hazard contact
-plus momentary switches; its 70 NTSC checks pass on the current baseline. This
-is not complete swinging-platform motion, detachment or allocation coverage.
-The [swing comparison](Objects.md#swinging-platforms-s1s2-coverage-and-s3k-variants)
-records the remaining packed-chain and detached-child allocation/ownership
-defects. `check_swing_motion.py` checks the consolidated `$1n` half-swings and
-`$PP3n` rotation. Add `--before-rom` and `--before-listing` from the pre-change
-build for 4,806 exact half-swing pose/cache comparisons. Its 46,260 rotation
-samples cover lengths 0–8, both directions, ten starting phases and full periods;
-it also checks null-helper fallback/deletion, the one-link anchor, the trap's
-positive endpoint and the SST ABI. `--core`, optionally `--system-directory`
-and `--pal`, run paired logs plus two rotators in disposable GHZ4 fixtures for
-540 frames each, including both-player boarding/carrying and rendered snapshots.
-These pass in Mode 1/NTSC and cartridge/PAL; they do not cover the planned
-momentum/relay mechanisms or the remaining detached-child defects.
+`check_swing_motion.py` owns the current Obj17 word settings and eight collision
+profiles. It checks full-pool/missing-helper safety, reserved lengths/movements,
+word preservation, both players' solid/damaging contacts under stars and full-word
+flashing immunity, speed-scaled ICZ rail input/return, release retry/sole placement
+ownership/rider transfer, packed ICZ breakup and contact relay through a static
+member. `--before-rom`/`--before-listing` accept the immediately previous unified
+half-swing build for 4,644 exact parent-position comparisons. Quarter orientations,
+both placement mirrors and lengths 0–8 produce 37,008 exact rotator pose samples.
+
+```sh
+python build_tools/check_swing_motion.py --output test-results/swings/native --s3-source /path/to/skdisasm/sonic3k.asm
+python build_tools/check_swing_motion.py --output test-results/swings/game --core /path/to/genesis_plus_gx_libretro.so --system-directory /path/to/mode1-fixture
+```
+
+The optional pinned upstream source assembles unchanged SOZ/DEZ integrators and
+compares 8,400 angle/velocity/direction/activation/pause samples, adapting the
+reference's primary-rider flag to each selected live rider. `--core` adds paired
+half-swings, both-player rotator rides, SOZ/DEZ boarding/held pauses/return in all
+four orientations for either rider, weak/full-speed ICZ rides, an outward swing stopped by GHZ4's actual arch wall until momentum dissipates, and real GHZ4
+terrain bounce/slide versus enabled live-water floating. A floor above water is
+checked separately. RAM writes establish disposable fixtures; these are not
+controller-only complete level playthroughs. Terrain services and object code
+are unmodified in emulator fixtures. Use `--pal` and select a cartridge ROM/listing
+for the second build. Each emulator suite starts a fresh process because this
+core cannot reliably unload/reload a cartridge in one process.
+`check_swing_families.py` checks the same eight profiles under the live core
+in GHZ/SMZ contexts, with both players and flashing immunity, plus actual
+momentary-switch press/release checks. It uses the current word encoding.
+
+The rail mapping generator `build_swing_rails.py` reuses each zone's existing
+platform/link mappings. Re-running it must reproduce the three checked-in rail
+maps. Sprite bounds checks include them; the SonLVL pass covers all 64 acts and
+word-property round trips. No multi-body assembly or carried-object behavior is
+claimed by these checks.
 
 Several runners compare with a specific earlier revision; their baseline is
 part of the fixture, not automatically the parent commit. Check their CLI/source

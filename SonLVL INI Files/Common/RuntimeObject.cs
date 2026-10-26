@@ -81,9 +81,13 @@ namespace MysticIsland.ObjectDefinitions
 					break;
 				case "Swing":
 					swingSine = File.ReadAllBytes("../misc/sinewave.bin");
-					Bits("Chain length", 0, 15, "Number of 16-pixel links; suspended object rests 8 pixels beyond the chain.");
-					Bits("Family", 4, 15, "Custom movement families in objects/17 Swinging Platforms.asm.", "Normal", "Half-swing (X-flip selects right)", "Static", "Continuous rotation", "Trap", "Ball with solid top", "Detachable", "Full spikeball");
-					Bits("Rotation starting angle", 8, 255, "Family 3 only. 0=right, 64=down, 128=left, 192=up, before X-flip; X-flip mirrors phase and reverses direction.");
+					Bits("Chain length", 0, 15, "0-8 links; reserved values 9-F safely clamp to 8. The body rests 8 pixels beyond the chain.", Enumerable.Range(0, 9).Select(i => i + " links").ToArray());
+					Bits("Movement", 4, 15, "Independent of collision and detachment. Either player activates the lifts. X flip selects the half-swing side / momentum rail side.", "Normal swing", "Half-swing", "Stationary", "Continuous rotation", "ICZ player momentum", "SOZ half-circle lift", "DEZ quarter-circle lift", "Proximity trap");
+					Bits("Interaction", 8, 7, "Collision and conveyor surface. Invulnerability permits standing on the harmful full-solid variant; crushing remains physical.", "Safe: top solid", "Safe: full solid", "Safe top: harmful bottom", "Conveyor: top solid", "Conveyor: full solid", "Conveyor: harmful bottom", "Harmful", "Harmful: full solid");
+					Bits("Material sound", 11, 1, "Optional impact/lift sound from SwingingPtfm_Sounds; silent entries remain silent.", "Silent", "Enabled");
+					Bits("Detachable", 12, 1, "Release at the movement's endpoint. ICZ uses its fast breakaway; detached bodies bounce/slide on terrain or float on enabled water.", "Attached", "Detachable");
+					Bits("Impulse relay", 13, 1, "Physical contact transfers an impulse between opted-in bodies. Stationary members forward it without moving.", "Disabled", "Enabled");
+					Bits("Orientation / phase", 14, 3, "Rotate the entire movement by quarter turns; placement X/Y flips independently mirror the path. SOZ supports vertical or horizontal endpoints and either curve.", "0 degrees", "90 degrees", "180 degrees", "270 degrees");
 					if (Setting("atlas", "false") != "true") alternate = Load("../art/nemesis/S1/GHZ Giant Ball.nem", CompressionType.Nemesis, "Giant Ball.bin", 2);
 					break;
 				case "Scenery":
@@ -302,7 +306,7 @@ namespace MysticIsland.ObjectDefinitions
 			}
 		}
 
-		private Sprite Preview(int subtype, int x, int y, bool yflip)
+		private Sprite Preview(int subtype, int x, int y, bool yflip, bool xflip = false)
 		{
 			List<Sprite> pieces;
 			switch (behavior)
@@ -315,12 +319,20 @@ namespace MysticIsland.ObjectDefinitions
 					return new Sprite(pieces);
 				case "Swing":
 					pieces = new List<Sprite> { new Sprite(At(frames, 2)) };
-					int links = subtype & 15;
-					int swingAngle = (subtype & 0xF0) == 0x30 ? (subtype >> 8) & 255 : 64;
+					int links = Math.Min(8, subtype & 15);
+					int movement = (subtype >> 4) & 15, interaction = (subtype >> 8) & 7;
+					int swingAngle = movement == 3 ? 0 : movement == 6 || movement == 7 ? 128 : 64;
+					if (xflip) swingAngle = 128 - swingAngle;
+					if (yflip) swingAngle = -swingAngle;
+					swingAngle = (swingAngle + ((subtype >> 14) * 64)) & 255;
 					int swingSin = ByteConverter.ToInt16(swingSine, swingAngle * 2);
 					int swingCos = ByteConverter.ToInt16(swingSine, swingAngle * 2 + 128);
 					for (int i = 1; i <= links; i++) pieces.Add(new Sprite(At(frames, 1), (swingCos * i * 16) >> 8, (swingSin * i * 16) >> 8));
-					pieces.Add(new Sprite(alternate != null && ((subtype & 0xE0) == 0x40 || (subtype & 0xF0) == 0x70) ? At(alternate, 1) : frames[0], (swingCos * (links * 16 + 8)) >> 8, (swingSin * (links * 16 + 8)) >> 8));
+					bool ball = interaction == 2 || interaction >= 5;
+					Sprite swingBody = new Sprite(ball && alternate != null ? At(alternate, 1) : frames[0]);
+					swingBody.Flip(xflip && movement == 4 && !ball, false);
+					pieces.Add(new Sprite(swingBody, (swingCos * (links * 16 + 8)) >> 8, (swingSin * (links * 16 + 8)) >> 8));
+					if (movement == 4 && !ball) pieces.Add(new Sprite(At(frames, 1), ((swingCos * (links * 16 + 8)) >> 8) + (xflip ? -1 : 1) * (frames[0].Width > 48 ? 24 : 16), ((swingSin * (links * 16 + 8)) >> 8) + (Setting("atlas", "false") == "true" ? -32 : frames[0].Height > 16 ? -24 : -16)));
 					return new Sprite(pieces);
 				case "Platform": return At(frames, ((subtype >> 4) & 7) < Math.Min(5, frames.Length) ? (subtype >> 4) & 7 : 0);
 				case "CPZPlatform":
@@ -414,9 +426,9 @@ namespace MysticIsland.ObjectDefinitions
 		public override Sprite SubtypeImage(byte subtype) { return behavior == "SpinGroup" ? frames[0] : Preview(subtype, 0, 0, false); }
 		public override Sprite GetSprite(ObjectEntry obj)
 		{
-			Sprite sprite = new Sprite(Preview(Subtype(obj), obj.X, obj.Y, obj.YFlip));
+			Sprite sprite = new Sprite(Preview(Subtype(obj), obj.X, obj.Y, obj.YFlip, obj.XFlip));
 			if (behavior == "Teleporter") sprite.Flip(obj.XFlip, false);
-			else if (behavior != "SpinGroup" && behavior != "LabyrinthConveyor" && behavior != "InvisibleSolid" && behavior != "Conveyor" && behavior != "PathSwapper") sprite.Flip(obj.XFlip, obj.YFlip);
+			else if (behavior != "Swing" && behavior != "SpinGroup" && behavior != "LabyrinthConveyor" && behavior != "InvisibleSolid" && behavior != "Conveyor" && behavior != "PathSwapper") sprite.Flip(obj.XFlip, obj.YFlip);
 			return sprite;
 		}
 		public override Sprite GetDebugOverlay(ObjectEntry obj)
