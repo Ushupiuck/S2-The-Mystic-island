@@ -177,3 +177,10 @@ and mappings from the pinned test-branch source. Three copies of the shaft tile
 reduce the mast from nine hardware sprites to four, with an indexed-pixel
 equality check against both original base frames. The blade phase table replaces
 CD's nine-state dispatch while retaining every original frame and damage toggle.
+
+Swinging platforms (`$17`) use `$1n` for both half-swings: X-flip selects the
+right half while preserving their alternating shared-oscillator timing.
+`$PP3n` selects continuous rotation; the upper subtype byte is its initial angle
+before X-flip. The definition exposes this phase and renders its initial chain
+pose from the engine sine table. Other swing families retain their existing
+settings.

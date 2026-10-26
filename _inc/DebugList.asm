@@ -36,7 +36,7 @@ Debug_GHZ:	dc.w (Debug_GHZ_End-Debug_GHZ-2)/DebugEntry_size
 	dbug	Map_Obj17,	SwingingPtfm,	$35,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
 	dbug	Map_GBall,	SwingingPtfm,	$45,	0,	make_art_tile(ArtTile_GHZ_Giant_Ball,2,0)
 	dbug	Map_GBall,	SwingingPtfm,	$55,	0,	make_art_tile(ArtTile_GHZ_Giant_Ball,2,0)
-	dbug	Map_Obj17,	SwingingPtfm,	$85,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
+	dbug	Map_Obj17,	SwingingPtfm,	$65,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
 ;	dbug	Map_Obj17,	id_Obj17,	8,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
 	dbug	Map_Crab,	Crabmeat,	0,	0,	make_art_tile(ArtTile_Crabmeat,0,0)
 	dbug	Map_obj22,	Obj22,	0,	0,	make_art_tile(ArtTile_Buzz_Bomber,0,0)

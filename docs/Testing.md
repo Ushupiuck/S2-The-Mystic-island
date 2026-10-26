@@ -201,8 +201,17 @@ are streaming fixtures, not complete controller-only playthroughs.
 plus momentary switches; its 70 NTSC checks pass on the current baseline. This
 is not complete swinging-platform motion, detachment or allocation coverage.
 The [swing comparison](Objects.md#swinging-platforms-s1s2-coverage-and-s3k-variants)
-records separately reproduced packed-chain, stale Debug selector, allocation,
-placement-ownership and angle-cache defects; those remain pending fixes.
+records the remaining packed-chain and detached-child allocation/ownership
+defects. `check_swing_motion.py` checks the consolidated `$1n` half-swings and
+`$PP3n` rotation. Add `--before-rom` and `--before-listing` from the pre-change
+build for 4,806 exact half-swing pose/cache comparisons. Its 46,260 rotation
+samples cover lengths 0–8, both directions, ten starting phases and full periods;
+it also checks null-helper fallback/deletion, the one-link anchor, the trap's
+positive endpoint and the SST ABI. `--core`, optionally `--system-directory`
+and `--pal`, run paired logs plus two rotators in disposable GHZ4 fixtures for
+540 frames each, including both-player boarding/carrying and rendered snapshots.
+These pass in Mode 1/NTSC and cartridge/PAL; they do not cover the planned
+momentum/relay mechanisms or the remaining detached-child defects.
 
 Several runners compare with a specific earlier revision; their baseline is
 part of the fixture, not automatically the parent commit. Check their CLI/source

@@ -5,9 +5,9 @@
 ;   low  nibble = chain length
 ;
 ;   0X = normal swing
-;   1X = bounce left
+;   1X = half-swing (X-flip selects right half; shared oscillator timing)
 ;   2X = static
-;   3X = bounce right
+;   3X = continuous rotation; upper subtype byte = starting angle before X-flip
 ;   4X = trap
 ;   5X = swinging giant ball (solid top, harmful underside)
 ;   6X = detach
@@ -16,14 +16,14 @@
 
 ; local object scratch aliases
 swing_helper_ptr	= objoff_30	; 4 bytes
-swing_last_angle	= obAniFrame	; 1 byte; SST 1B
-swing_mode_started	= obAnim	; 1 byte; SST 1C
+swing_last_angle	= obAniFrame	; 1 byte; SST $1F
+swing_mode_started	= obAnim	; 1 byte; SST $20
 swing_mode_timer	= objoff_34	; 2 bytes
 swing_ang_vel		= objoff_36	; 2 bytes
 swing_orig_y		= objoff_38	; 2 bytes
 swing_orig_x		= objoff_3A	; 2 bytes
 swing_radius		= objoff_3C	; 2 bytes
-swing_dir_flag		= obPrevAni	; 1 byte; SST 1D
+swing_dir_flag		= obPrevAni	; 1 byte; SST $21
 
 ; local status helpers (keep them local and honest)
 status_p1_standing_bit	= 3
@@ -102,10 +102,18 @@ SwingingPtfm_Init:
 
 		moveq	#0,d0
 		move.l	d0,swing_helper_ptr(a0)
-		move.b	d0,swing_last_angle(a0)		; $1B is odd; clear the frame cache as a byte
+		move.b	#-1,swing_last_angle(a0)		; force the first oscillator pose
 		move.w	d0,swing_mode_started(a0)		; aligned clear of the mode and direction flags
 		move.l	d0,swing_mode_timer(a0)		; clear the timer and angular velocity
 		move.w	#$8000,obAngle(a0)
+		cmpi.w	#$30,d4
+		bne.s	.angleReady
+		move.w	obSubtype(a0),d0
+		lsr.w	#8,d0
+		move.b	d0,obAngle(a0)			; rotation starts at the authored phase
+		not.b	d0
+		move.b	d0,swing_last_angle(a0)		; invalid for every possible starting angle
+.angleReady:
 
 		; spawn a helper multi-sprite object for the chain
 		bsr.w	FindNextFreeObj
@@ -151,6 +159,11 @@ SwingingPtfm_Init:
 
 
 .helperShortInit:
+		cmpi.w	#1,d0
+		bne.s	.shortFramesReady
+		move.b	#2,mainspr_mapframe(a1)	; one-link helper stays at the anchor
+		move.b	#1,sub2_mapframe(a1)
+.shortFramesReady:
 		move.w	-6(a2),obX(a1)
 		move.w	-4(a2),obY(a1)
 		move.w	d2,-6(a2)
@@ -212,7 +225,10 @@ SwingingPtfm_Init:
         move.w #$100,obPriority(a0)
         move.b #sprite_bound($18,Map_GBall_width),obActWid(a0)
         move.b #$18,obHeight(a0)
-.done:		rts
+.done:
+		cmpi.w	#$30,d4
+		beq.w	SwingingPtfm_Motion_Rotate	; place the first rotation pose immediately
+		rts
 ; ---------------------------------------------------------------------------
 
 SwingingPtfm_SetSolid:
@@ -391,16 +407,16 @@ SwingingPtfm_Floating:
 SwingingPtfm_UpdateMotion:
 		moveq	#0,d1
 		move.w	obSubtype(a0),d1
-		lsr.w	#4,d1				; family 0-6
+		lsr.w	#4,d1				; family 0-7
 		add.w	d1,d1				; word index
 		move.w	SwingingPtfm_MotionIndex(pc,d1.w),d1
 		jmp	SwingingPtfm_MotionIndex(pc,d1.w)
 ; ---------------------------------------------------------------------------
 SwingingPtfm_MotionIndex:
 		dc.w	SwingingPtfm_Motion_Normal-SwingingPtfm_MotionIndex		; 0X
-		dc.w	SwingingPtfm_Motion_BounceLeft-SwingingPtfm_MotionIndex	; 1X
+		dc.w	SwingingPtfm_Motion_Half-SwingingPtfm_MotionIndex	; 1X
 		dc.w	SwingingPtfm_Motion_Static-SwingingPtfm_MotionIndex		; 2X
-		dc.w	SwingingPtfm_Motion_BounceRight-SwingingPtfm_MotionIndex	; 3X
+		dc.w	SwingingPtfm_Motion_Rotate-SwingingPtfm_MotionIndex		; 3X
 		dc.w	SwingingPtfm_Motion_Trap-SwingingPtfm_MotionIndex		; 4X
 		dc.w	SwingingPtfm_Motion_Normal-SwingingPtfm_MotionIndex		; 5X
 		dc.w	SwingingPtfm_Motion_Normal-SwingingPtfm_MotionIndex		; 6X
@@ -413,13 +429,22 @@ SwingingPtfm_Motion_Normal:
 		bra.w	SwingingPtfm_ApplyAngle
 ; ---------------------------------------------------------------------------
 
-SwingingPtfm_Motion_BounceLeft:
+SwingingPtfm_Motion_Half:
 		moveq	#0,d0
 		move.b	(v_oscillate+$1A).w,d0
+		; Pre-reflect the oscillator before clamping. ApplyAngle reflects it
+		; again for X-flip: 128-max(128-angle,64) = min(angle,64).
+		; Thus the right half retains S2's opposite active/waiting interval.
+		btst	#0,obStatus(a0)
+		beq.s	.clamp
+		neg.w	d0
+		addi.w	#$80,d0
+.clamp:
 		cmpi.b	#$40,d0
-		bhs.s	+
+		bhs.s	.apply
 		moveq	#$40,d0
-+		bra.w	SwingingPtfm_ApplyAngle
+.apply:
+		bra.w	SwingingPtfm_ApplyAngle
 ; ---------------------------------------------------------------------------
 
 SwingingPtfm_Motion_Static:
@@ -427,13 +452,11 @@ SwingingPtfm_Motion_Static:
 		bra.w	SwingingPtfm_ApplyAngle
 ; ---------------------------------------------------------------------------
 
-SwingingPtfm_Motion_BounceRight:
+SwingingPtfm_Motion_Rotate:
 		moveq	#0,d0
-		move.b	(v_oscillate+$1A).w,d0
-		cmpi.b	#$40,d0
-		blo.s	+
-		moveq	#$40,d0
-+		bra.w	SwingingPtfm_ApplyAngle
+		move.b	obAngle(a0),d0
+		addi.w	#$100,obAngle(a0)		; one angle unit/update, 256 updates/revolution
+		bra.w	SwingingPtfm_ApplyAngle		; X-flip mirrors phase and reverses direction
 ; ---------------------------------------------------------------------------
 ; trap family ($40)
 ; ---------------------------------------------------------------------------
@@ -471,7 +494,7 @@ SwingingPtfm_Motion_Trap:
 		move.w	#$8000,obAngle(a0)
 		clr.b	swing_dir_flag(a0)
 		move.w	#60,swing_mode_timer(a0)
-		rts
+		bra.s	.done
 
 .negative:
 		move.w	swing_ang_vel(a0),d0
@@ -505,8 +528,9 @@ SwingingPtfm_ApplyAngle:
 		bsr.w	CalcSine
 		move.w	swing_orig_y(a0),d2
 		move.w	swing_orig_x(a0),d3
-		movea.l	swing_helper_ptr(a0),a1
+		move.l	swing_helper_ptr(a0),d6
 		beq.w	.fallbackSingle
+		movea.l	d6,a1
 		; convert sine/cosine to 16px fixed-point step
 		asl.w	#4,d0
 		asl.w	#4,d1
@@ -629,8 +653,9 @@ SwingingPtfm_Display:
 ; ---------------------------------------------------------------------------
 
 SwingingPtfm_DelAll:
-		movea.l	swing_helper_ptr(a0),a1
+		move.l	swing_helper_ptr(a0),d0
 		beq.s	.noHelper
+		movea.l	d0,a1
 		bsr.w	DeleteObject2
 .noHelper:	bra.w	UnloadObject
 ; ===========================================================================

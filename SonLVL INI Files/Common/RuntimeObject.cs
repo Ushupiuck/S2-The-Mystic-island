@@ -15,7 +15,7 @@ namespace MysticIsland.ObjectDefinitions
 		private ObjectData data;
 		private string behavior;
 		private Sprite[] frames, alternate, scenery;
-		private byte[] groups, routes;
+		private byte[] groups, routes, swingSine;
 		private readonly List<PropertySpec> properties = new List<PropertySpec>();
 
 		public override void Init(ObjectData definition)
@@ -80,8 +80,10 @@ namespace MysticIsland.ObjectDefinitions
 						(obj, value) => { int mode = HogMode(Subtype(obj)); if (mode != 1 && Convert.ToDouble(value) != BombSeconds(Subtype(obj))) SetSubtype(obj, HogSubtype(mode, Convert.ToInt32(value))); }));
 					break;
 				case "Swing":
+					swingSine = File.ReadAllBytes("../misc/sinewave.bin");
 					Bits("Chain length", 0, 15, "Number of 16-pixel links; suspended object rests 8 pixels beyond the chain.");
-					Bits("Family", 4, 15, "Custom movement families in objects/17 Swinging Platforms.asm.", "Normal", "Bounce left", "Static", "Bounce right", "Trap", "Ball with solid top", "Detachable", "Full spikeball");
+					Bits("Family", 4, 15, "Custom movement families in objects/17 Swinging Platforms.asm.", "Normal", "Half-swing (X-flip selects right)", "Static", "Continuous rotation", "Trap", "Ball with solid top", "Detachable", "Full spikeball");
+					Bits("Rotation starting angle", 8, 255, "Family 3 only. 0=right, 64=down, 128=left, 192=up, before X-flip; X-flip mirrors phase and reverses direction.");
 					if (Setting("atlas", "false") != "true") alternate = Load("../art/nemesis/S1/GHZ Giant Ball.nem", CompressionType.Nemesis, "Giant Ball.bin", 2);
 					break;
 				case "Scenery":
@@ -314,8 +316,11 @@ namespace MysticIsland.ObjectDefinitions
 				case "Swing":
 					pieces = new List<Sprite> { new Sprite(At(frames, 2)) };
 					int links = subtype & 15;
-					for (int i = 1; i < links; i++) pieces.Add(new Sprite(At(frames, 1), 0, i * 16));
-					pieces.Add(new Sprite(alternate != null && ((subtype & 0xE0) == 0x40 || (subtype & 0xF0) == 0x70) ? At(alternate, 1) : frames[0], 0, links * 16 + 8));
+					int swingAngle = (subtype & 0xF0) == 0x30 ? (subtype >> 8) & 255 : 64;
+					int swingSin = ByteConverter.ToInt16(swingSine, swingAngle * 2);
+					int swingCos = ByteConverter.ToInt16(swingSine, swingAngle * 2 + 128);
+					for (int i = 1; i <= links; i++) pieces.Add(new Sprite(At(frames, 1), (swingCos * i * 16) >> 8, (swingSin * i * 16) >> 8));
+					pieces.Add(new Sprite(alternate != null && ((subtype & 0xE0) == 0x40 || (subtype & 0xF0) == 0x70) ? At(alternate, 1) : frames[0], (swingCos * (links * 16 + 8)) >> 8, (swingSin * (links * 16 + 8)) >> 8));
 					return new Sprite(pieces);
 				case "Platform": return At(frames, ((subtype >> 4) & 7) < Math.Min(5, frames.Length) ? (subtype >> 4) & 7 : 0);
 				case "CPZPlatform":

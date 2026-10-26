@@ -307,15 +307,17 @@ waypoint runner, rather than this relative-path constructor.
 
 `objects/17 Swinging Platforms.asm` already combines S2's packed-chain movement
 with S1-style platform/ball art and collision. This is a comparison of the
-current implementation, not a completed replacement. The upper subtype word
-byte is discarded during initialization; the current placement parser takes
-chain length from bits 0–3 and an exclusive family from bits 4–7.
+current implementation, with the consolidated half-swing and MGZ-style rotation
+now implemented. Bits 0–3 select chain length and bits 4–7 select the family.
+For family 3, bits 8–15 seed its private starting angle before the constructor
+reduces the stored subtype to the family; other families ignore those bits.
 
 | Current family | Behavior | Original counterpart / differences |
 | --- | --- | --- |
 | `$0n` | Ordinary pendulum | S1 `$15` / S2 `$15`; shared fast oscillator, X-flipped phase, radius `16*n+8` |
-| `$1n/$3n` | Left/right half-swing with a stop at the bottom | S2 motion `$10/$30`; our clamp positions match. The omitted platform-knock sound is optional: any future sound choice must suit the zone/material and allow silence. |
+| `$1n` | Left/right half-swing with a stop at the bottom | X-flip selects the right half. Pre-reflecting the oscillator before clamping preserves S2 `$10/$30` timing, including the alternating active/waiting intervals. Sound remains optional and must suit the zone/material. |
 | `$2n` | Static hanging platform at a chosen length | S2 `$20` uses a special fixed rope mapping and a 136 px drop regardless of the low nibble; ours generalizes length, so raw `$20` now drops only 8 px |
+| `$PP3n` | Continuous full rotation | MGZ-style one angle unit/update (256 updates/revolution), with our configurable `16*n+8` radius. `PP` is the starting angle: `$00` right, `$40` down, `$80` left, `$C0` up; X-flip mirrors the starting pose and reverses rotation. |
 | `$4n` | Proximity-triggered accelerating trap, 60-update endpoint waits | S2 `$40` motion; the giant-ball art/hurtbox is an intentional placeholder, not a missing OOZ-art requirement. The primary character's X proximity triggers it; companion-only proximity does not. |
 | `$5n` | Swinging giant ball with safe platform top and harmful underside/sides | Custom extension of the S1 SLZ-style safe-top ball; its current giant-ball appearance is intentional. The SLZ constructor branch also retains its smaller ball configuration; it is a zone choice, not another family. |
 | `$6n` | Detachable normal swing | Re-encodes S2's bit-7 detachment as a separate family, losing its combinations with the other motion families |
@@ -368,7 +370,17 @@ for `subtype*4` updates (`subtype*8` pixels). The grip moves through a right-ang
 route; Lift Pad moves its rigid segmented arm through a quarter-circle. Both
 are lifts by function, but their movement and attachment code differ.
 
-### Agreed extension direction (not implemented)
+The Mystic Cave half-swings coordinate through the shared oscillator; they do
+not exchange pointers or activation signals. One waits at angle `$40` while the
+other moves. The unified `$1n` computes `128-max(128-angle,64)` when flipped,
+which equals the old right-half `min(angle,64)`, rather than merely mirroring
+the left half at the same phase. No authored placement used the former `$3n`;
+GHZ Debug's `$35` now previews/places the rotator and its stale `$85` detachable
+entry is corrected to `$65`. SonLVL exposes the new rotation phase and draws
+all chain links using the engine's sine table. One-link chains keep their anchor
+art at the pivot. The `$4E` SST and universal offsets are unchanged.
+
+### Remaining extension direction (not implemented)
 
 Keep sound, appearance and collision choices distinct from the movement path.
 The current `$4n/$5n` giant balls are intentional; their artwork does not need
@@ -378,8 +390,6 @@ wooden knock.
 
 | Mechanism | Planned treatment |
 | --- | --- |
-| Left/right half-swings | Combine both under one half-swing family only if an upper subtype-byte direction setting preserves both existing clamp functions and their timing. `$3n` remains bounce-right until that consolidation and the Debug/editor migration are implemented and verified. |
-| MGZ continuous rotation | May use `$3n` after that consolidation; otherwise use a genuinely free family. No authored placement currently selects `$3n`, but GHZ Debug's `$35` and SonLVL's bounce-right choice still do. Keep configurable length, rotation direction and starting phase. |
 | SOZ swing elevator | Its original rider-triggered path has vertically separated endpoints and horizontal curvature. Add a quarter-turn of the movement angle for horizontally separated endpoints; mirroring selects the side of the arc, including an upward or downward curve. Either live rider must be able to trigger/hold it. |
 | DEZ quarter-turn lift | Retain the eased, rider-triggered smaller angular sweep as another motion choice with configurable orientation. |
 | ICZ momentum swing | Retain rider-imparted motion, with optional breakaway. Share the detached-body update with the S2-style release where practical; each trigger supplies its own release velocity and chain response. |
@@ -412,27 +422,18 @@ Native execution against the current Mode 1 ROM reproduced these cases:
   SST; `$F` links overwrite 36. The subsprite count field itself is a byte;
   its numeric capacity is not additional record storage. Authored swings use
   at most eight links (17 placements across GHZ2/3 and SMZ2).
-- Debug still advertises `$85`, an old S2 detachable value. The current parser
-  retains family 8 and indexes beyond its eight-entry motion table; it reads
-  instruction word `$7000` as a movement offset.
-- If helper allocation fails, the nominal single-body fallback is not reached
-  reliably: `movea.l helper,a1` does not update condition codes before `beq`.
-  The tested full-pool motion attempted a write at ROM address `$18`.
 - If detached-child allocation fails, the parent still advances to non-solid
   state 8 and clears its standing flags without producing a falling child.
 - A successful detached copy inherits the parent's placement handle. Excluding
   packed helpers (whose overlaid `$22` bytes are not handles), two objects own
   the same placement. Unloading the child clears the loaded bit while the
   hanging parent remains live.
-- At the trap's positive endpoint, an early return leaves cached angle `$7F`
-  while logical angle is reset to `$8000`; a five-link ball remains 2 px below
-  the exact endpoint throughout its 60-update wait. The negative endpoint
-  correctly applies its new angle. The zero-angle startup cache also initially
-  preserves the constructor's straight-down pose instead of angle-zero geometry;
-  that cache behavior is inherited from S2.
 
-These findings are pending fixes. The existing contact runner verifies safe
-platform tops and harmful sides/undersides, not every motion/allocation path.
+These findings are pending fixes. Null-helper motion/deletion, zero-angle
+startup and the trap's positive endpoint cache are repaired. The motion runner
+checks both half-swings, rotation and these boundaries; the contact runner
+checks safe tops and harmful sides/undersides. Neither establishes complete
+detachment/allocation coverage.
 
 References: [our implementation](../objects/17%20Swinging%20Platforms.asm),
 [S1 `$15`](https://github.com/sonicretro/s1disasm/blob/15dfa3a6ee4c53aeb482233e493755c84b4f3479/_incObj/15%20Swinging%20Platforms.asm),
