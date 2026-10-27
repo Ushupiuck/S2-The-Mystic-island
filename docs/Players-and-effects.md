@@ -132,8 +132,9 @@ Points popups similarly use separate per-player banks, including primary Tails.
 
 ## Input locks and stage exits
 
-The signpost's logical held-right input overrides both manual controller 2
-and companion AI. Game/Time Over's high-bit `f_lockctrl` lock clears both
+The classic signpost's logical held-right input overrides both manual controller 2
+and companion AI. The [falling signpost](Objects.md#signpost) uses the same shared
+lock with neutral input after landing instead of forcing an offscreen run. Game/Time Over's high-bit `f_lockctrl` lock clears both
 logical controls and blocks Debug, while retaining raw A/B/C for the card.
 Sega/current Continue placeholder and level restart release it. Objects keep
 updating after primary death.

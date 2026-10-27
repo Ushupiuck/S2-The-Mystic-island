@@ -277,3 +277,5 @@ $12 Tiles
 Chicken, Eagle, Flicky, Seal:
 $E  Tiles
 ; ---------------------------------------------------------------------------
+
+Keep normal and S3&K falling signpost entries at $7E, launch normal signs on fast grounded crossings, and verify both-player airborne hits/points, sparkle art, wall/floor motion and results in MD/Mode1 NTSC/PAL < DONE

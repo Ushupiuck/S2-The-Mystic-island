@@ -15,6 +15,27 @@ Core-based fixtures do not require a graphical frontend.
 
 ## Source and asset checks
 
+Signpost checks use matching ROM/listing pairs:
+
+```sh
+python build_tools/check_signpost.py --rom s2built.bin --listing md-main.lst --output test-results/signpost/native.json
+python build_tools/check_signpost_game.py --rom s2built.bin --listing md-main.lst --core /path/to/genesis_plus_gx_libretro.so --system-directory /path/to/mode1-fixture --output test-results/signpost/game
+```
+
+The native pass covers both entry modes, skipped-window/threshold crossings,
+both players' hit boundaries and simultaneous awards, popup ownership,
+32-update cooldown, exhausted object pools, camera/terrain wall reflections,
+landing exclusions/timing, character portraits and orbit sparkle lifetime,
+map-frame bounds and depth. Terrain distances, sound and DMA are stubbed.
+The emulator pass boots GHZ1 and establishes focused scenes in RAM, then runs
+real actor movement, hits, terrain landing, sparkle rendering, DPLC uploads and
+results. The short near-start fast-crossing fixture disables the unrelated
+end-of-act art-approach service by stopping the clock before crossing; this is
+not an authored-level playthrough. Add `--player 2 --pal` for primary Tails/PAL,
+and omit `--system-directory` for a cartridge build. `check_card_screens.py
+--case normal` retains the slow, classic finish/results regression.
+
+
 Hanging-surface checks use the assembled D9 code, player art and shared solidity:
 
 ```sh

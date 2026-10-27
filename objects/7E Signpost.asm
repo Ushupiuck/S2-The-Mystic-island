@@ -1,5 +1,9 @@
 ; ---------------------------------------------------------------------------
 ; Object 7E - End of level signpost
+; Subtype bit 0: 0 = placed / run past, 1 = drop from above the camera.
+; Airborne physics/hits/landing adapted from skdisasm
+; 73de97c6b55055bcb8089c1d55d006b02136f163, Obj_EndSign.
+; Both entry modes share the same airborne state after a fast crossing.
 ; ---------------------------------------------------------------------------
 
 Signpost:
@@ -22,7 +26,11 @@ Signpost:
 .return:
 		rts
 
-signpost_loaded = objoff_3A
+signpost_loaded = objoff_3A	; byte: DPLC cache
+signpost_hit_delay = objoff_30	; byte: shared 32-update hit cooldown
+signpost_previous_x = objoff_3C	; word: detect a crossing that skips the 32px window
+Signpost_LaunchSpeed = $600	; 6px/update, rightward ground speed
+Signpost_LaunchY = -$400		; upward launch in place; later hits may move it sideways
 ; ===========================================================================
 
 Signpost_Index:	dc.w Signpost_Init-Signpost_Index
@@ -30,6 +38,9 @@ Signpost_Index:	dc.w Signpost_Init-Signpost_Index
 		dc.w Signpost_Spin-Signpost_Index
 		dc.w Signpost_EndLevel-Signpost_Index
 		dc.w Signpost_Sparkle.return-Signpost_Index
+		dc.w Signpost_Fall-Signpost_Index
+		dc.w Signpost_Landed-Signpost_Index
+		dc.w Signpost_FallingResults-Signpost_Index
 ; ===========================================================================
 ; loc_EFD6:
 Signpost_Init:
@@ -41,18 +52,53 @@ Signpost_Init:
 		move.b	#4,obRender(a0)
 		move.b	#sprite_bound($18,Map_Signpost_width),obActWid(a0)
 		move.w	#$200,obPriority(a0)
+		move.b	#$1E,obHeight(a0)
+		move.b	#$18,obWidth(a0)
+		move.w	(v_player+obX).w,signpost_previous_x(a0)
+		move.w	obSubtype(a0),d0
+		btst	#0,d0
+		beq.s	Signpost_Main
+		move.w	(Camera_Y_pos).w,d0
+		subi.w	#$20,d0
+		move.w	d0,obY(a0)
+		; A boss/event may spawn this anywhere, not only at the act's end.
+		move.w	(Camera_X_pos).w,(Camera_Max_X_pos).w
+		bsr.s	Signpost_Activate
+		bra.s	Signpost_StartFall
 ; loc_EFFE:
 Signpost_Main:
 		move.w	(v_player+obX).w,d0
+		move.w	signpost_previous_x(a0),d1
+		move.w	d0,signpost_previous_x(a0)
 		sub.w	obX(a0),d0
 		blo.w	Signpost_Sparkle.return
 		cmpi.w	#32,d0
+		blo.s	.crossed
+		cmp.w	obX(a0),d1
 		bhs.w	Signpost_Sparkle.return
+.crossed:
+		bsr.s	Signpost_Activate
+		btst	#status.player.in_air,(v_player+obStatus).w
+		bne.s	.classic
+		cmpi.w	#Signpost_LaunchSpeed,(v_player+obInertia).w
+		blt.s	.classic
+		move.w	#Signpost_LaunchY,obVelY(a0)
+		ori.w	#1,obSubtype(a0)		; enter the falling mode without respawning
+		bra.s	Signpost_StartFall
+.classic:
+		move.b	#4,obRoutine(a0)
+		rts
+
+Signpost_Activate:
 		clr.b	(f_timecount).w
 		move.w	(Camera_Max_X_pos).w,(Camera_Min_X_pos).w
-		addq.b	#2,obRoutine(a0)
 		move.w	#sfx_Signpost,d0
 		jmp	(PlaySound).l
+
+Signpost_StartFall:
+		move.b	#10,obRoutine(a0)
+		move.b	#1,obAnim(a0)
+		rts
 ; ===========================================================================
 Signpost_RingSparklePositions:
 		dc.b -$18,-$10		; x-position, y-position
@@ -196,3 +242,187 @@ Ani_Signpost:	dc.w	.eggman-Ani_Signpost
 .sonic:		dc.b	$F,0,afEnd
 .tails:		dc.b	$F,1,afEnd
 		even
+
+; ===========================================================================
+; Airborne states use the existing art (its post is already in every frame).
+; Unlike the S3&K event controller, normal placement owns no boss cleanup.
+Signpost_Fall:
+		move.b	(Vint_runcount+3).w,d0
+		andi.b	#3,d0
+		bne.s	.physics
+		bsr.w	Signpost_SpawnAirSparkle
+.physics:
+		bsr.w	Signpost_CheckPlayerHit
+		addi.w	#$C,obVelY(a0)
+		jsr	(ObjectMove).l
+		bsr.w	Signpost_CheckWall
+		move.w	(Camera_Y_pos).w,d0
+		addi.w	#$50,d0
+		cmp.w	obY(a0),d0
+		bhi.s	.return
+		tst.w	obVelY(a0)
+		bmi.s	.return
+		jsr	(ObjHitFloor).l
+		tst.w	d1
+		bpl.s	.return
+		add.w	d1,obY(a0)
+		move.b	#12,obRoutine(a0)
+		move.w	#$40,objoff_34(a0)
+.return:
+		rts
+
+Signpost_Landed:
+		subq.w	#1,objoff_34(a0)
+		bpl.s	.return
+		clr.l	obVelX(a0)
+		move.b	#14,obRoutine(a0)
+		move.b	#3,obAnim(a0)
+		cmpi.w	#PlayerMode_Tails,(Player_mode).w
+		bne.s	.lock
+		addq.b	#1,obAnim(a0)
+.lock:
+		move.b	#PlayerInputLock_Automatic,(f_lockctrl).w
+		clr.w	(v_jpadholdlogical).w
+.return:
+		rts
+
+Signpost_FallingResults:
+		tst.w	(Debug_placement_mode).w
+		bne.s	.return
+		btst	#status.player.in_air,(v_player+obStatus).w
+		bne.s	.return
+		move.b	#8,obRoutine(a0)
+		jmp	(Load_EndOfAct).l
+.return:
+		rts
+
+; Check both actors independently. The S3&K FixBugs version preserves the
+; second address across the first award; here each player is explicit instead.
+Signpost_CheckPlayerHit:
+		tst.b	signpost_hit_delay(a0)
+		beq.s	.players
+		subq.b	#1,signpost_hit_delay(a0)
+		rts
+.players:
+		lea	(v_player).w,a2
+		bsr.s	Signpost_HitCharacter
+		lea	(v_player2).w,a2
+Signpost_HitCharacter:
+		tst.l	code(a2)
+		beq.s	.return
+		cmpi.b	#4,obRoutine(a2)
+		bhs.s	.return
+		cmpi.b	#AniIDSonAni_Roll,obAnim(a2)
+		bne.s	.return
+		tst.w	obVelY(a2)
+		bpl.s	.return
+		move.w	obX(a2),d0
+		sub.w	obX(a0),d0
+		addi.w	#$20,d0
+		cmpi.w	#$40,d0
+		bhs.s	.return
+		move.w	obY(a2),d0
+		sub.w	obY(a0),d0
+		addi.w	#$18,d0
+		cmpi.w	#$30,d0
+		blo.s	.hit
+.return:
+		rts
+.hit:
+		move.b	#$20,signpost_hit_delay(a0)
+		move.w	obX(a0),d0
+		sub.w	obX(a2),d0
+		bne.s	.offset
+		moveq	#8,d0
+.offset:
+		lsl.w	#4,d0
+		move.w	d0,obVelX(a0)
+		move.w	#-$200,obVelY(a0)
+		; Allocation and sound/score services may clobber a1-a3 and d0-d3.
+		move.l	a2,-(sp)
+		jsr	(FindFreeObj).l
+		bne.s	.score
+		move.l	#Points,code(a1)
+		move.w	obX(a0),obX(a1)
+		move.w	obY(a0),obY(a1)
+		move.w	2(sp),points_parent(a1)	; low word of saved player address
+.score:
+		move.w	#sfx_Signpost,d0
+		jsr	(PlaySound).l
+		moveq	#10,d0			; score counter stores tens: 100 points
+		jsr	(AddPoints).l
+		movea.l	(sp)+,a2
+		rts
+
+Signpost_CheckWall:
+		move.w	(Camera_X_pos).w,d0
+		tst.w	obVelX(a0)
+		bmi.s	.left
+		addi.w	#$128,d0
+		cmp.w	obX(a0),d0
+		blo.s	.bounce
+		moveq	#$20,d3
+		jsr	(ObjHitWallRight).l
+		tst.w	d1
+		bmi.s	.bounce
+		rts
+.left:
+		addi.w	#$18,d0
+		cmp.w	obX(a0),d0
+		bhi.s	.bounce
+		moveq	#-$20,d3
+		jsr	(ObjHitWallLeft).l
+		tst.w	d1
+		bpl.s	.return
+.bounce:
+		neg.w	obVelX(a0)
+.return:
+		rts
+
+Signpost_SpawnAirSparkle:
+		jsr	(FindFreeObj).l
+		bne.s	.return
+		move.l	#Signpost_AirSparkle,code(a1)
+		move.w	obX(a0),obX(a1)
+		move.w	obX(a0),objoff_34(a1)
+		move.w	obY(a0),obY(a1)
+		jsr	(RandomNumber).l
+		andi.w	#$1F,d0
+		subi.w	#$10,d0
+		add.w	d0,obY(a1)
+		move.l	#Map_Ring,obMap(a1)
+		move.b	#Map_Ring_height,height_pixels(a1)
+		move.b	#sprite_bound(8,Map_Ring_width),obActWid(a1)
+		move.w	#make_art_tile(ArtTile_Ring,1,0),obGfx(a1)
+		move.b	#4,obRender(a1)
+		move.w	#$1000,obVelX(a1)
+		move.w	#$20,objoff_36(a1)
+.return:
+		rts
+
+Signpost_AirSparkle:
+		move.w	#$400,d0
+		move.w	obX(a0),d1
+		cmp.w	objoff_34(a0),d1
+		blo.s	.accelerate
+		neg.w	d0
+.accelerate:
+		move.w	#$280,d1
+		add.w	d0,obVelX(a0)
+		bpl.s	.move
+		move.w	#$380,d1
+.move:
+		move.w	d1,obPriority(a0)
+		jsr	(ObjectMove).l
+		lea	Ani_SignpostAirSparkle(pc),a1
+		jsr	(AnimateSprite).l
+		subq.w	#1,objoff_36(a0)
+		jmi	(DeleteObject).l
+		jmp	(DisplaySprite).l
+
+Ani_SignpostAirSparkle:
+		dc.w	.frames-Ani_SignpostAirSparkle
+.frames:
+		dc.b	1,1,2,3,4,afEnd
+		even
+; ===========================================================================

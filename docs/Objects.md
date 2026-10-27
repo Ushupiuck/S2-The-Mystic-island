@@ -167,6 +167,47 @@ work; the placement filter does not implement a time-travel transition.
 Constructors must handle helper-allocation failure without leaking
 partial parents or loaded bits.
 
+## Signpost
+
+Object `$7E` uses subtype bit 0: `$0000` is the ordinary placed signpost;
+`$0001` starts 32 pixels above the current camera and drops into its arena.
+Other subtype bits are preserved and reserved. The editor exposes **Entry**.
+A sky-drop locks horizontal scrolling at the camera's current X and stops
+the act clock immediately; create it after any boss escape/arena cleanup.
+This subtype does not perform boss-specific cleanup or act transitions.
+
+A placed signpost retains the normal crossing/spin/run-offscreen finish.
+Crossing it grounded with rightward inertia at least `$0600` (6 pixels per
+update) instead launches it vertically at `-$0400`, with zero horizontal speed,
+and enters the falling mode. Crossing detection also handles skipping the
+old 32-pixel trigger window. Jumping past or moving slower keeps the ordinary
+finish. `Signpost_LaunchSpeed` and `Signpost_LaunchY` are the editable constants.
+
+The airborne path ports `Obj_EndSign` from skdisasm
+[`73de97c6b55055bcb8089c1d55d006b02136f163`](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/sonic3k.asm#L176192):
+gravity `$000C`, upward rolling hits from either live character, `-$0200`
+vertical rebounds, horizontal rebound proportional to the hit offset, shared
+32-update cooldown, 100 points and a popup owned by the hitter. Simultaneous
+hits preserve both actors' awards. Allocation failure suppresses only the
+popup/sparkle. Camera edges and terrain walls reflect horizontal movement.
+Orbiting sparkles spawn every four VInts, use the resident ring art, alternate
+depth and expire after 32 updates. Our existing signpost mappings already
+include the post, so no separate stub/art allocation is needed.
+
+Landing requires downward motion, terrain penetration and Y at least camera
+Y + `$50`. The sign keeps spinning for `$40` countdown updates (65 calls before
+the negative-timer transition), then selects the primary character's portrait,
+locks neutral logical input and waits for the primary to reach the ground
+before loading the existing results. It stays in place instead of forcing
+an offscreen run. The classic finish still supports the giant-ring exit.
+No SST fields, RAM reservations or VRAM allocations grow.
+
+S3&K's buried-monitor controller is a separate object and is not imported
+here. Its signpost-triggered reveal would need a compatible art allocation:
+our ordinary monitor and signpost banks overlap. SOZ sand coordinates and
+DEZ's disappearing-floor aftermath are also level-specific source code,
+rather than generic signpost behavior.
+
 ## Composites and other records
 
 A composite has main frame `$05`, group bounds `$06/$07`, child count `$16`,

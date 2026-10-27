@@ -56,6 +56,9 @@ namespace MysticIsland.ObjectDefinitions
 					Bits("Left / up priority", 6, 1, "Sprite priority after crossing left or up.", "Low", "High");
 					Bits("Ground only", 7, 1, "Ignore airborne characters.", "No", "Yes");
 					break;
+				case "Signpost":
+					Bits("Entry", 0, 1, "Placed signs spin on crossing; at 6px/update rightward ground speed they launch into the shared airborne behavior. Falling signs start 32px above the camera and lock the current arena.", "Placed", "Falling from sky");
+					break;
 				case "Bridge": Bits("Length", 0, 255, "Number of 16-pixel bridge logs. Existing layouts use 8 to 16."); break;
 				case "Hanging":
 					Bits("Grip count / span", 0, 63, "Traversable: 1-63 metal handholds, 32 pixels apart; zero means one. Classic: span in 32-pixel units, zero means 56 pixels.");
