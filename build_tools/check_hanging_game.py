@@ -213,12 +213,15 @@ def main():
                     g.write('Camera_X_pos',0x360,2);g.write('Camera_Y_pos',0x190,2)
                     g.write('Camera_X_pos_coarse_back',0x300,2)
                     settings=(profile<<8)|(0x81 if family=='regular' else 0x25)
-                    platform=spawn(g,'Obj18' if family=='regular' else 'SwingingPtfm',0x400,0x200 if family=='regular' else 0x1A8,settings)
-                    field='Plat_hanger' if family=='regular' else 'swing_hanger'
+                    controller=spawn(g,'Obj18' if family=='regular' else 'SwingingPtfm',0x400,0x200 if family=='regular' else 0x1A8,settings)
+                    platform=controller if family=='regular' else 0
+                    field='Plat_hanger'
                     for actor in actors:place(g,actor,0x400,0x180);g.put(actor,'obControl',1)
                     for _ in range(8):
                         run()
-                        if g.get(platform,field,2):break
+                        if family=='swing':platform=g.get(controller,'swing_body',2)
+                        if platform and g.get(platform,field,2):break
+                    assert platform
                     child=g.get(platform,field,2);assert child
                     place(g,bottom,g.get(child,'obX',2),g.get(child,'obY',2)+30)
                     place(g,top,g.get(platform,'obX',2),g.get(platform,'obY',2)-g.get(platform,'obHeight')-g.get(top,'obHeight')+2)
@@ -279,17 +282,22 @@ def main():
                     g.write('Camera_X_pos',0x360,2);g.write('Camera_Y_pos',0x1D0,2);g.write('Camera_X_pos_coarse_back',0x300,2)
                     for actor in actors:place(g,actor,0x480,0x180);g.put(actor,'obControl',1)
                     settings=(profile<<8)|(0x1000 if family=='regular' else 0x1025)
-                    parent=spawn(g,'Obj18' if family=='regular' else 'SwingingPtfm',0x400,0x180,settings)
-                    field='Plat_hanger' if family=='regular' else 'swing_hanger'
+                    controller=spawn(g,'Obj18' if family=='regular' else 'SwingingPtfm',0x400,0x180,settings)
+                    parent=controller if family=='regular' else 0
+                    field='Plat_hanger'
                     for _ in range(8):
                         run()
-                        if g.get(parent,field,2):break
+                        if family=='swing':parent=g.get(controller,'swing_body',2)
+                        if parent and g.get(parent,field,2):break
+                    assert parent
                     child=g.get(parent,field,2);assert child
                     delta=terrain_floor[bottom]-(g.get(child,'obY',2)+36+g.get(bottom,'obHeight'))-12
                     g.put(parent,'obY',g.get(parent,'obY',2)+delta,2)
                     if family=='regular':
                         for name in ('Plat_rawY','Plat_originY'):g.put(parent,name,g.get(parent,name,2)+delta,2)
-                    else:g.put(parent,'swing_orig_y',g.get(parent,'swing_orig_y',2)+delta,2)
+                    else:
+                        g.put(controller,'obY',g.get(controller,'obY',2)+delta,2)
+                        g.put(controller,'swing_orig_y',g.get(controller,'swing_orig_y',2)+delta,2)
                     run(2)
                     place(g,bottom,g.get(child,'obX',2),g.get(child,'obY',2)+30)
                     place(g,top,g.get(parent,'obX',2),g.get(parent,'obY',2)-g.get(parent,'obHeight')-g.get(top,'obHeight')+2)
@@ -298,7 +306,7 @@ def main():
                     g.put(bottom,'obStatusSecondary',2);g.put(bottom,'invtime',600,2)
                     run(5)
                     assert g.get(bottom,'obControl')==3,(family,profile,bottom,'pre-crush grip',terrain_floor,delta,g.get(parent,'obY',2),g.get(child,'obY',2),[(a,g.get(a,'obX',2),g.get(a,'obY',2),g.get(a,'obHeight'),g.get(a,'obStatus'),g.get(a,'obRoutine'),g.get(a,'obControl')) for a in actors])
-                    if family=='swing':g.put(parent,'swing_mode_timer',29,2)
+                    if family=='swing':g.put(controller,'swing_mode_timer',29,2)
                     dead=False;landed=False
                     for _ in range(130):
                         run()

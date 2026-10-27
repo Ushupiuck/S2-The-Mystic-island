@@ -42,8 +42,8 @@ the complete serialized word, including when calculating movement overlays.
 | `$0B` | Tilting platform | High nibble: duration; low nibble: initial phase, both in 16-frame units. |
 | `$0C` | Flapping door | Full byte: interval in seconds. |
 | `$16` | Diagonal lift | Full byte: duration in 8-frame units. Travels twice as far horizontally as vertically, then falls. |
-| `$17` | Swinging platform / ball | Word `PPDR IIII SMMM LLLL`: quarter orientation, detach, relay, material sound, twelve shared interaction profiles, eight movement modes and 0–8 links. See [runtime settings](../docs/Objects.md#swinging-platforms-s1s2-coverage-and-s3k-variants). |
-| `$18` | GHZ/EHZ platform | Word `CCCF IIII STTT MMMM`: movement, shape, sag, shared interaction menu, falling, and phase/corner or switch channel. Profiles 6–9 add a classic underside grip; 8/9 also convey standing riders. See [runtime settings](../docs/Objects.md#ordinary-platforms-and-flying-batterys-hovering-platform). |
+| `$17` | Swinging platform / ball | Word `PPDR IIII SMMM LLLL`: quarter orientation, detach, relay, material sound, twelve body presets, eight movement modes and 0–8 links. See [runtime settings](../docs/Objects.md#swinging-platforms-s1s2-coverage-and-s3k-variants). |
+| `$18` | Regular platform | Word `CCCF IIII STTT MMMM`: movement, shape, sag, shared interaction menu, falling, and phase/corner or switch channel. Profiles 6–9 add a classic underside grip; 8/9 also convey standing riders. See [runtime settings](../docs/Objects.md#ordinary-platforms-and-flying-batterys-hovering-platform). |
 | `$19`, `$AD` | CPZ platform / SMZ moving block | Low nibble: movement, wall stop/fall, switch-2 raft, vertical motion or triggered fast slide. High nibble: shape. |
 | `$1A`, `$3C` | Collapsing ledge / breakable wall | Full byte: mapping frame. |
 | `$1C` | Scenery | Low nibble: appearance; high nibble: animation. Zone lists supply suitable defaults. |
@@ -181,17 +181,19 @@ equality check against both original base frames. The blade phase table replaces
 CD's nine-state dispatch while retaining every original frame and damage toggle.
 
 Swinging platforms (`$17`) expose the complete word as independent properties:
-movement, interaction, chain length, quarter-turn orientation, material sound,
+movement, body preset, chain length, quarter-turn orientation, material sound,
 detachment and relay participation. Movement 4 is the ICZ momentum swing; 5/6
 are SOZ/DEZ lifts and 7 is the retained proximity trap. The object picker creates
-safe byte presets; choose the interaction property for a ball/hazard and the
+safe byte presets; choose Body preset for a ball/hazard and the
 Detachable property for release. Existing SMZ hazards retain their migrated
 word settings. Preview uses the engine sine table and exact mirror/rotation order,
 shows every supported link and the ICZ rail, and clamps reserved lengths 9-F to
 8 like the game. The authored word remains intact at runtime. Carrying and
-multi-body chained platforms are deliberately outside this format.
+multi-body chained platforms remain separate future work.
 
-Both `$17` and `$18` expose the same Interaction menu: safe top/full, harmful
+`$18` exposes Interaction; `$17` Body preset selects the corresponding full
+ordinary-platform word from `Platform_SwingPresets` in Obj18. The current menu
+is: safe top/full, harmful
 bottom, conveyor top/full/harmful bottom, hanging top/full, conveyor+hanging
 top/full, then harmful non-solid/full-solid. C–F are reserved safe-top fallbacks.
 Falling on `$18` is bit 12, matching `$17` detachment. Either standing rider
@@ -202,3 +204,8 @@ Switch channel and Phase/corner on `$18` deliberately edit the same upper field;
 only the one selected by Movement is used. Changing either property preserves
 the interaction, shape, sag and movement fields. Sound on `$17` uses bit 7;
 movement uses bits 4–6. Existing layouts and Debug words are converted together.
+
+Regular-platform shapes 0/1 retain terrain frames; 2 is the swing body, 3 its
+railed variant and 4 the large spikeball. Shapes 5–7 preview the runtime fallback
+to terrain frame 0. The GHZ/SLZ/SMZ material selects the existing body art; the
+act PLC must load that bank. Swing previews read the runtime body-preset table.

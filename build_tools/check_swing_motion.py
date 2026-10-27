@@ -31,6 +31,19 @@ def fixture(m, subtype, flip=0, full=False):
     return obj
 
 
+def physical(m, o):
+    if m.get(o,'code')==m.s['SwingingPtfm']:
+        pointer=m.get(o,'swing_body',2)
+        return (pointer|0xFF0000) if pointer else 0
+    return o
+
+
+def visible(m,o,flags):
+    m.put(o,'obRender',flags)
+    body=physical(m,o)
+    if body:m.put(body,'obRender',flags)
+
+
 def position(m,o):
     return m.get(o,'obX',2),m.get(o,'obY',2)
 
@@ -91,6 +104,56 @@ def native(args):
         assert not m.get(o,'code')
     checks.append('128 independent constructors; reserved lengths and interactions; full-pool/null-helper boundaries')
 
+    # The body may occupy an earlier slot. Its own executor must not apply a
+    # competing movement, and the parent must update it exactly once after pose.
+    m.start();pool=list(m.pool());o=pool[10]
+    for a in pool:
+        if a not in (pool[0],pool[1],o):m.put(a,'code',m.s['ObjNull'])
+    m.write('Camera_X_pos_coarse_back',0x1700,2)
+    for f,v,n in [('code',m.s['SwingingPtfm'],4),('obX',0x1800,2),('obY',0x400,2),('obSubtype',0x36,2)]:m.put(o,f,v,n)
+    m.act('SwingingPtfm',o);b=physical(m,o)
+    assert b&0xFFFFFF==pool[0]&0xFFFFFF
+    assert m.get(o,'swing_helper_ptr',4)&0xFFFFFF==pool[1]&0xFFFFFF
+    word=0x40A2
+    m.put(b,'obSubtype',word);m.put(b,'Plat_movement',m.s['Plat_Horizontal128'],4)
+    m.put(b,'Plat_originX',0x100,2);m.put(b,'Plat_flags',0x11)
+    m.put('v_player2','code',0)
+    x,y=position(m,b)
+    for f,v,n in [('obX',x,2),('obY',y-8-19,2),('obStatus',8,1),('standonobject',(b-(m.s['v_objspace']&0xFFFFFF))//m.s['object_size'],1)]:m.put('v_player',f,v,n)
+    m.put(b,'obStatus',8);visible(m,o,0x94)
+    for _ in range(80):
+        before=position(m,b);m.act('Platform_SuspendedBody',b);assert position(m,b)==before
+        m.act('SwingingPtfm_SetSolid',o)
+        assert m.get(b,'obSubtype')==word
+        assert m.get(b,'obX',2)==m.get(o,'obX',2)
+        assert 0<=m.get(b,'obY',2)-m.get(o,'obY',2)<=4
+    assert m.get(b,'obY',2)-m.get(o,'obY',2)==4
+    m.act('SwingingPtfm_DelAll',o);assert not m.get(b,'code')
+    checks.append('earlier body slot: one parent-driven update, own horizontal motion paused, complete word retained and rider sag applied')
+
+    # A reused packed-helper SST must never receive chain-coordinate writes.
+    o=fixture(m,0x36);h=m.get(o,'swing_helper_ptr',4)&0xFFFFFF
+    m.put(h,'code',m.s['ObjNull']);guard=bytes(m.cpu.mem_read(h,m.s['object_size']))
+    m.act('SwingingPtfm_UpdateMotion',o)
+    assert bytes(m.cpu.mem_read(h,m.s['object_size']))==guard
+    assert not m.get(o,'swing_helper_ptr',4)
+    m.act('SwingingPtfm_DelAll',o);assert m.get(h,'code')==m.s['ObjNull']
+    checks.append('reused helper is protected from pose writes and group deletion')
+
+    for released in (False,True):
+        o=fixture(m,0x1026);b=physical(m,o)
+        if released:
+            m.put(o,'obStatus',8);m.put(o,'swing_mode_timer',30,2)
+            m.act('SwingingPtfm_DetachCheck',o)
+            assert m.get(b,'obRoutine')==10
+        m.act('DeleteObject',o);m.act('Platform_SuspendedBody',b)
+        assert not m.get(b,'code')
+    o=fixture(m,0x26);b=physical(m,o)
+    m.put(b,'code',m.s['ObjNull']);guard=bytes(m.cpu.mem_read(b,m.s['object_size']))
+    m.act('SwingingPtfm_Interact',o);m.act('SwingingPtfm_DelAll',o)
+    assert bytes(m.cpu.mem_read(b,m.s['object_size']))==guard
+    checks.append('attached/released orphan bodies retire; reused body slots survive old-parent interaction and cleanup')
+
     contacts=0
     for kind in ('swing', 'ordinary'):
         for profile in range(12):
@@ -111,7 +174,7 @@ def native(args):
                         m.put(who,'obY',y-height-19+3 if side=='top' else y+height+14 if side=='bottom' else y,2)
                         m.put(who,'obVelY',0x100 if side=='top' else 0xFF00,2);m.put(who,'obStatus',2)
                         m.put(who,'flashtime',max(0,inv),2);m.put(who,'obStatusSecondary',2 if inv<0 else 0)
-                        m.write('v_rings',40,2);m.put(o,'obRender',0x94)
+                        m.write('v_rings',40,2);visible(m,o,0x94)
                         m.act(entry,o)
                         hurt=(profile>=10 or (side=='bottom' and profile in (2,5))) and not inv
                         assert (m.get(who,'obRoutine')==4)==hurt,(kind,side,profile,who,inv,'damage')
@@ -137,7 +200,7 @@ def native(args):
                 x,y=position(m,o);radius=m.get(o,'obHeight')
                 for who in ('v_player','v_player2'):
                     m.put(who,'obX',x,2);m.put(who,'obY',y-radius-19+2,2);m.put(who,'obVelY',0x100,2);m.put(who,'obStatus',2)
-                m.put(o,'obRender',0x94);m.act(entry,o)
+                visible(m,o,0x94);m.act(entry,o)
                 for who in ('v_player','v_player2'):
                     assert m.get(who,'obX',2)==x+(-2 if flip else 2),(kind,profile,who,'belt direction')
                     assert m.get(who,'conveyor_applied')==1
@@ -158,12 +221,12 @@ def native(args):
                 m.put(who,'obX',x+(-16 if flip else 16),2)
                 m.put(who,'obY',y-8-19,2)
                 m.put(who,'obVelX',(-speed if flip else speed)&65535,2)
-                m.act('SwingingPtfm_MomentumInput',o)
+                m.act('Platform_SwingMomentumInput',o)
                 assert bool(m.get(o,'swing_mode_started'))==(speed>=0x200)
                 peak=0
                 # Stub returns a clear wall while retaining the real momentum
                 # and position code. Save/restore it around this one test.
-                address=m.s['SwingingPtfm_Wall'];saved=bytes(m.cpu.mem_read(address,4))
+                address=m.s['Platform_BodyWall'];saved=bytes(m.cpu.mem_read(address,4))
                 m.cpu.mem_write(address,bytes.fromhex('727F4E75'))
                 for tick in range(150):
                     m.act('SwingingPtfm_UpdateMotion',o)
@@ -175,32 +238,31 @@ def native(args):
             assert reaches==sorted(reaches) and len(set(reaches))==4,reaches
     checks.append('either-player ICZ rail: mirrored speed threshold, scaled excursion, gravity return')
 
-    # Full pool must leave an attached platform intact and retry next update.
-    o=fixture(m,0x1026)
+    # Release needs no allocation and retains the original physical SST.
+    o=fixture(m,0x1026);child=physical(m,o)
     m.put(o,'obStatus',8)
-    pool=list(m.pool())
-    for a in pool[2:]:m.put(a,'code',m.s['ObjNull'])
-    m.put(o,'swing_mode_timer',30,2)
-    m.act('SwingingPtfm_DetachCheck',o)
-    assert m.get(o,'obRoutine')==2 and m.get(o,'obStatus')&8
-    m.put(pool[2],'code',0)
-    m.put(o,'respawn_addr',1,2)
+    for a in m.pool():
+        if not m.get(a,'code'):m.put(a,'code',m.s['ObjNull'])
+    before=[m.get(a,'code') for a in m.pool()]
+    m.put(o,'swing_mode_timer',30,2);m.put(o,'respawn_addr',1,2);m.put(child,'obStatus',8)
     m.put('v_player','obStatus',8)
-    m.put('v_player','standonobject',(o-m.s['v_objspace'])//m.s['object_size'])
+    stand=(child-(m.s['v_objspace']&0xFFFFFF))//m.s['object_size']
+    m.put('v_player','standonobject',stand)
     m.act('SwingingPtfm_DetachCheck',o)
-    child=m.get(o,'swing_relative',2)|0xFF0000
-    assert m.get(o,'obRoutine')==8 and m.get(child,'obRoutine')==10
+    assert m.get(o,'obRoutine')==4 and m.get(child,'obRoutine')==10
+    assert physical(m,o)==child and m.get(child,'code')==m.s['Platform_SuspendedBody']
     assert m.get(o,'respawn_addr',2)==1 and m.get(child,'respawn_addr',2)==0
-    assert m.get('v_player','standonobject')==(child-(m.s['v_objspace']&0xFFFFFF))//m.s['object_size']
+    assert m.get('v_player','standonobject')==stand
+    assert [m.get(a,'code') for a in m.pool()]==before
     m.act('SwingingPtfm_DelAll',o)
     assert not m.get(child,'code') and not m.get(o,'code')
-    checks.append('detach allocation retry, sole placement owner, rider transfer and group cleanup')
+    checks.append('full-pool detachment: same Obj18 SST, same standing index, no allocation/copy, sole placement owner and cleanup')
     o=fixture(m,0x1048)
     h=m.get(o,'swing_helper_ptr',4)&0xFFFFFF
     m.put(o,'obAngle',0x4900,2);m.put(o,'swing_ang_vel',0x300,2)
     m.put(o,'swing_mode_started',1)
     m.act('SwingingPtfm_DetachCheck',o)
-    child=m.get(o,'swing_relative',2)|0xFF0000
+    child=m.get(o,'swing_body',2)|0xFF0000
     assert m.get(child,'obVelX',2)==0x400 and m.get(child,'obVelY',2)==0xFA00
     assert m.get(h,'code')==m.s['SwingingPtfm_ChainDebris']
     assert not m.get(o,'swing_helper_ptr',4) and m.get(o,'ob2ndRout')==1
@@ -212,11 +274,11 @@ def native(args):
         m.put(o,'obStatus',flip|8)
         m.cpu.mem_write((m.s['v_oscillate']+0x1A)&0xFFFFFF,bytes([0]))
         m.act('SwingingPtfm_DetachCheck',o)
-        assert m.get(o,'obRoutine')==8,('half release',flip)
+        assert m.get(o,'obRoutine')==4,('half release',flip)
     checks.append('both detachable half-swings release at the original oscillator endpoint')
     o=fixture(m,0x26)
-    m.put(o,'obStatus',8);m.put('v_player','obStatus',8)
-    m.put('v_player','standonobject',(o-m.s['v_objspace'])//m.s['object_size'])
+    m.put(o,'obStatus',8);m.put(physical(m,o),'obStatus',8);m.put('v_player','obStatus',8)
+    m.put('v_player','standonobject',(physical(m,o)-(m.s['v_objspace']&0xFFFFFF))//m.s['object_size'])
     m.act('SwingingPtfm_DelAll',o)
     assert m.get('v_player','obStatus')&0xA==2
     checks.append('unloading an attached platform releases its actual rider')
@@ -230,7 +292,7 @@ def native(args):
     # Make a second stationary receiver then an ICZ receiver, all touching.
     members=[o]
     for index,sub in enumerate((0x2020,0x2040),1):
-        a=list(m.pool())[index*2]
+        a=next(a for a in m.pool() if not m.get(a,'code'))
         for f,v,n in [('code',m.s['SwingingPtfm'],4),('obSubtype',sub,2),('obX',0x1800+index*40,2),('obY',0x400,2)]:m.put(a,f,v,n)
         m.act('SwingingPtfm',a);members.append(a)
     m.put(o,'swing_impulse',0x600,2)
@@ -244,7 +306,7 @@ def native(args):
     assert not m.get(o,'swing_impulse',2)
     assert fixed==[position(m,a) for a in members[:2]]
     receiver=members[2]
-    address=m.s['SwingingPtfm_Wall'];saved=bytes(m.cpu.mem_read(address,4))
+    address=m.s['Platform_BodyWall'];saved=bytes(m.cpu.mem_read(address,4))
     m.cpu.mem_write(address,bytes.fromhex('727F4E75'))
     for tick in range(150):m.act('SwingingPtfm_UpdateMotion',receiver)
     m.cpu.mem_write(address,saved)
@@ -437,10 +499,10 @@ def extended_game(args):
         released=False;body=0
         for tick in range(360):
             run()
-            if g.get(o,'obRoutine')==8:
-                body=g.get(o,'swing_relative',2)
+            if g.get(o,'obRoutine')==4:
+                body=g.get(o,'swing_body',2)
                 released=True;break
-        assert released and body and g.get(body,'code')==g.s['SwingingPtfm'],('release',sub)
+        assert released and body and g.get(body,'code')==g.s['Platform_SuspendedBody'],('release',sub)
         assert not g.get(body,'respawn_addr',2)
         run(75)
         assert g.get('v_player','obRoutine')<6
@@ -463,7 +525,10 @@ def extended_game(args):
     # Same real GHZ4 floor: dry bounce/slide, water above it, and floor above
     # water. These fixtures exercise actual cartridge/CD terrain services.
     for water in (None,0x300,0x380):
-        o=setup(0x26,x=0x400,y=0x280)
+        controller=setup(0x26,x=0x400,y=0x280)
+        o=physical(g,controller)&65535
+        g.put(controller,'obRoutine',4)
+        g.put(o,'Plat_flags',g.get(o,'Plat_flags')&~16)
         g.put(o,'obRoutine',10);g.put(o,'obVelX',0,2);g.put(o,'obVelY',0x300,2)
         g.write('Water_flag',int(water is not None))
         if water is not None:
@@ -473,7 +538,7 @@ def extended_game(args):
             run();assert g.get(o,'code'), ('body unloaded',water,tick,g.read('Camera_X_pos',2))
             floated|=g.get(o,'obRoutine')==12
             bounced|=bool(g.get(o,'obVelY',2)&0x8000)
-            landed|=g.get(o,'swing_body_state')==1
+            landed|=g.get(o,'Plat_state')==1
         assert floated==(water==0x300),(water,floated,bounced,landed,g.get(o,'obY',2))
         if water!=0x300:assert bounced and landed
         g.video.save(args.output/'extended-game'/f'detached-water-{water}.png')

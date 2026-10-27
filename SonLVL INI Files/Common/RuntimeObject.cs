@@ -14,8 +14,8 @@ namespace MysticIsland.ObjectDefinitions
 	{
 		private ObjectData data;
 		private string behavior;
-		private Sprite[] frames, alternate, scenery;
-		private byte[] groups, routes, swingSine;
+		private Sprite[] frames, alternate, scenery, platformBodies;
+		private byte[] groups, routes, swingSine, swingPresets;
 		private readonly List<PropertySpec> properties = new List<PropertySpec>();
 
 		public override void Init(ObjectData definition)
@@ -73,13 +73,14 @@ namespace MysticIsland.ObjectDefinitions
 					Bits("Support release", 13, 1, "Release onto actual terrain or solid-object support, as with D9.", "Enabled", "Disabled");
 					break;
 				case "Platform":
+					LoadPlatformBodies();
 					properties.Add(new PropertySpec("Movement", typeof(int), "Object settings", "S3&K movement with centred S1 vertical travel. Falling is a separate option: an occupied platform completes its current trip before falling.", null,
 						Choices("Stationary", "Horizontal (64 px)", "Horizontal (128 px)", "Vertical (64 px)", "Vertical (128 px)", "Diagonal up (128 by 64 px)", "Diagonal down (128 by 64 px)", "Rising ceiling trap", "Square (32 px)", "Square (96 px)", "Square (160 px)", "Square (224 px)", "Horizontal (256 px, eased)", "Vertical (96 px)", "Switch: rise 512 px"),
 						obj => Math.Min(Subtype(obj) & 15, 14), (obj, value) => {
 							int word = Subtype(obj), mode = Convert.ToInt32(value);
 							SetSubtype(obj, (word & ~15) | (mode == 14 ? ((word & 15) == 14 ? 14 : 15) : mode));
 						}));
-					Bits("Shape", 4, 7, "Mapping / collision configuration. Choose only frames present in this zone's mapping set.", Enumerable.Range(0, Math.Min(5, frames.Length)).Select(i => "Frame " + i).ToArray());
+					Bits("Shape", 4, 7, "Body appearance and dimensions. The act must load its art bank. Reserved 5-7 use terrain frame 0.", "Terrain frame 0", "Terrain frame 1", "Swing platform", "Swing platform with rail", "Large spikeball");
 					PlatformInteraction();
 					Bits("Rider sag", 7, 1, "Independent of movement: depress up to 4 pixels under either rider. The rising ceiling trap always ignores sag.", "Rigid", "Sag");
 					Bits("Phase / corner", 13, 3, "Non-switch movements only. XOR with placement X/Y flips; squares use all four corners, other oscillations use bit 0.", "0", "1", "2", "3");
@@ -106,15 +107,16 @@ namespace MysticIsland.ObjectDefinitions
 						(obj, value) => { int mode = HogMode(Subtype(obj)); if (mode != 1 && Convert.ToDouble(value) != BombSeconds(Subtype(obj))) SetSubtype(obj, HogSubtype(mode, Convert.ToInt32(value))); }));
 					break;
 				case "Swing":
+					LoadPlatformBodies();
+					swingPresets = ReadWordTable("../objects/18 Platforms.asm", "Platform_SwingPresets", "Platform_SwingPresets_End");
 					swingSine = File.ReadAllBytes("../misc/sinewave.bin");
 					Bits("Chain length", 0, 15, "0-8 links; reserved values 9-F safely clamp to 8. The body rests 8 pixels beyond the chain.", Enumerable.Range(0, 9).Select(i => i + " links").ToArray());
 					Bits("Movement", 4, 7, "Independent of collision and detachment. Either player activates the lifts. X flip selects the half-swing side / momentum rail side.", "Normal swing", "Half-swing", "Stationary", "Continuous rotation", "ICZ player momentum", "SOZ half-circle lift", "DEZ quarter-circle lift", "Proximity trap");
-					PlatformInteraction();
+					Bits("Body preset", 8, 15, "Spawn one regular-platform body using Platform_SwingPresets. Its art, collision and grip belong to that body. Reserved presets C-F use 0.", "Platform: top solid", "Platform: full solid", "Ball: harmful bottom", "Platform: conveyor top", "Platform: conveyor full", "Ball: conveyor/harmful bottom", "Platform: hanging top", "Platform: hanging full", "Platform: conveyor/hanging top", "Platform: conveyor/hanging full", "Ball: harmful", "Ball: harmful/full solid");
 					Bits("Material sound", 7, 1, "Optional impact/lift sound from SwingingPtfm_Sounds; silent entries remain silent.", "Silent", "Enabled");
 					Bits("Detachable", 12, 1, "Release at the movement's endpoint. ICZ uses its fast breakaway; detached bodies bounce/slide on terrain or float on enabled water.", "Attached", "Detachable");
 					Bits("Impulse relay", 13, 1, "Physical contact transfers an impulse between opted-in bodies. Stationary members forward it without moving.", "Disabled", "Enabled");
 					Bits("Orientation / phase", 14, 3, "Rotate the entire movement by quarter turns; placement X/Y flips independently mirror the path. SOZ supports vertical or horizontal endpoints and either curve.", "0 degrees", "90 degrees", "180 degrees", "270 degrees");
-					if (Setting("atlas", "false") != "true") alternate = Load("../art/nemesis/S1/GHZ Giant Ball.nem", CompressionType.Nemesis, "Giant Ball.bin", 2);
 					break;
 				case "Scenery":
 					scenery = new[] {
@@ -206,6 +208,17 @@ namespace MysticIsland.ObjectDefinitions
 		// Definitions are compiled separately from the custom layout class. Read
 		// its binary contract rather than depending on that assembly's type.
 		private static int Subtype(ObjectEntry obj) { return ByteConverter.ToUInt16(obj.GetBytes(), 6); }
+		private void LoadPlatformBodies()
+		{
+			bool smz = Setting("platformmaterial", "") == "SMZ" || Setting("atlas", "false") == "true";
+			bool slz = Setting("platformmaterial", "") == "SLZ";
+			string art = smz ? "../art/nemesis/SMZ Sprite Atlas.nem" : slz ? "../art/nemesis/S1/SLZ Swinging Platform.nem" : "../art/nemesis/S1/GHZ Swinging Platform.nem";
+			string map = smz ? "SMZ Swing.bin" : slz ? "SLZ Swinging Platform.bin" : "Swinging platform.bin";
+			string rail = smz ? "SMZ Swing rail.bin" : slz ? "SLZ Swinging Platform rail.bin" : "Swinging platform rail.bin";
+			int palette = slz ? 2 : 0;
+			platformBodies = new[] { Load(art, CompressionType.Nemesis, map, palette)[0], Load(art, CompressionType.Nemesis, rail, palette)[0], smz ? Load(art, CompressionType.Nemesis, map, palette)[0] : Load("../art/nemesis/S1/GHZ Giant Ball.nem", CompressionType.Nemesis, "Giant Ball.bin", 2)[1] };
+		}
+
 		private void PlatformInteraction()
 		{
 			Bits("Interaction", 8, 15, "Shared by regular and swinging platforms. Conveyors move riders 2 px/update; X flip reverses direction. Hanging profiles permit standing above and hanging below. Harmful full-solid bodies remain physical during invulnerability. Reserved C-F use safe top solidity.",
@@ -286,7 +299,7 @@ namespace MysticIsland.ObjectDefinitions
 		// SonLVL's mapping parser treats numeric subtraction as a label offset and
 		// cannot evaluate multiplication. These runtime tables use both (8-1, 7*4).
 		// Read their word directives directly so editor previews follow ASM edits.
-		private static byte[] ReadWordTable(string filename, string startLabel)
+		private static byte[] ReadWordTable(string filename, string startLabel, string endLabel = null)
 		{
 			Dictionary<string, int> labels = new Dictionary<string, int>();
 			List<string> words = new List<string>();
@@ -294,6 +307,7 @@ namespace MysticIsland.ObjectDefinitions
 			foreach (string source in File.ReadAllLines(filename))
 			{
 				string line = source.Split(';')[0].Trim();
+				if (started && endLabel != null && line.StartsWith(endLabel + ":")) break;
 				if (!started) { if (!line.StartsWith(startLabel + ":")) continue; started = true; }
 				int colon = line.IndexOf(':');
 				if (colon >= 0) { labels.Add(line.Substring(0, colon), words.Count * 2); line = line.Substring(colon + 1).Trim(); }
@@ -362,13 +376,19 @@ namespace MysticIsland.ObjectDefinitions
 					int swingSin = ByteConverter.ToInt16(swingSine, swingAngle * 2);
 					int swingCos = ByteConverter.ToInt16(swingSine, swingAngle * 2 + 128);
 					for (int i = 1; i <= links; i++) pieces.Add(new Sprite(At(frames, 1), (swingCos * i * 16) >> 8, (swingSin * i * 16) >> 8));
-					bool ball = interaction == 2 || interaction == 5 || interaction == 10 || interaction == 11;
-					Sprite swingBody = new Sprite(ball && alternate != null ? At(alternate, 1) : frames[0]);
-					swingBody.Flip(xflip && movement == 4 && !ball, false);
+					int recipe = interaction < swingPresets.Length / 2 ? interaction : 0;
+					int bodyWord = ByteConverter.ToUInt16(swingPresets, recipe * 2), bodyShape = (bodyWord >> 4) & 7;
+					if (movement == 4 && bodyShape == 2) bodyShape = 3;
+					Sprite swingBody = new Sprite(platformBodies[bodyShape - 2]);
+					swingBody.Flip(xflip && bodyShape == 3, false);
 					pieces.Add(new Sprite(swingBody, (swingCos * (links * 16 + 8)) >> 8, (swingSin * (links * 16 + 8)) >> 8));
-					if (movement == 4 && !ball) pieces.Add(new Sprite(At(frames, 1), ((swingCos * (links * 16 + 8)) >> 8) + (xflip ? -1 : 1) * (frames[0].Width > 48 ? 24 : 16), ((swingSin * (links * 16 + 8)) >> 8) + (Setting("atlas", "false") == "true" ? -32 : frames[0].Height > 16 ? -24 : -16)));
+
 					return new Sprite(pieces);
-				case "Platform": return At(frames, ((subtype >> 4) & 7) < Math.Min(5, frames.Length) ? (subtype >> 4) & 7 : 0);
+				case "Platform":
+					int platformShape = (subtype >> 4) & 7;
+					Sprite platform = new Sprite(platformShape >= 2 && platformShape <= 4 ? platformBodies[platformShape - 2] : At(frames, platformShape == 1 ? 1 : 0));
+					platform.Flip(platformShape == 3 && xflip, false);
+					return platform;
 				case "CPZPlatform":
 				case "MovingBlock": return At(frames, subtype >> 4);
 				case "HPZWaterfall":
@@ -481,7 +501,7 @@ namespace MysticIsland.ObjectDefinitions
 		{
 			Sprite sprite = new Sprite(Preview(Subtype(obj), obj.X, obj.Y, obj.YFlip, obj.XFlip));
 			if (behavior == "Teleporter") sprite.Flip(obj.XFlip, false);
-			else if (behavior != "Swing" && behavior != "SpinGroup" && behavior != "LabyrinthConveyor" && behavior != "InvisibleSolid" && behavior != "Conveyor" && behavior != "PathSwapper" && behavior != "Hanging" && behavior != "PullChain") sprite.Flip(obj.XFlip, obj.YFlip);
+			else if (behavior != "Platform" && behavior != "Swing" && behavior != "SpinGroup" && behavior != "LabyrinthConveyor" && behavior != "InvisibleSolid" && behavior != "Conveyor" && behavior != "PathSwapper" && behavior != "Hanging" && behavior != "PullChain") sprite.Flip(obj.XFlip, obj.YFlip);
 			return sprite;
 		}
 		public override Sprite GetDebugOverlay(ObjectEntry obj)

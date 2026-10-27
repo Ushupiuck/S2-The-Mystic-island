@@ -282,7 +282,7 @@ class CheckSonLVLObjects
 			if (SonicRetro.SonLVL.API.ByteConverter.ToUInt16(actual, 6) != words[i] || !actual.Take(6).SequenceEqual(original.Take(6))) Fail("Platform settings overlap: " + names[i]);
 			if (!definition.GetSprite(entry).GetBitmap().Bits.SequenceEqual(image)) Fail("Platform settings changed its shape: " + names[i]);
 		}
-		for (int shape = 2; shape < 8; shape++)
+		for (int shape = 5; shape < 8; shape++)
 		{
 			var invalid = NewEntry(0x18, (ushort)(0xF180 | (shape << 4)));
 			var fallback = NewEntry(0x18, 0xF180);

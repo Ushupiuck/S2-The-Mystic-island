@@ -72,7 +72,7 @@ if args.placements:
             g.video.save(args.output / f'placement-{index}.png')
         checks.append({'placement': index, 'subtype': subtype})
 else:
-    cases = list(range(16)) + [0x100, 0x1100, 0x200C, 0x1000, 0x1001, 0x1004, 0x1005, 0x1008, 0x100C, 0x100F]
+    cases = list(range(16)) + [0x100, 0x1100, 0x200C, 0x1000, 0x1001, 0x1004, 0x1005, 0x1008, 0x100C, 0x100F, 0x20, 0x30, 0x40, 0x120, 0x130, 0x140]
     for settings in cases:
         g.restore(base)
         # Clear dynamic objects so this fixture owns its interaction surface.
@@ -91,7 +91,7 @@ else:
             g.put(actor, 'obX', 0x40, 2)
         run(1)
         x, y = g.get(platform, 'obX', 2), g.get(platform, 'obY', 2)
-        radius = 48 if settings & 0x100 else 8
+        radius = g.get(platform,'obHeight')
         position(x, y - radius - g.get('v_player', 'obHeight'))
         for actor in actors:
             g.put(actor, 'obY', y - radius - g.get(actor, 'obHeight'), 2)

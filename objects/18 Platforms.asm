@@ -27,15 +27,27 @@ Plat_loadwidth:	equ objoff_44	; word: horizontal retention interval
 Plat_cullX:	equ objoff_46	; word: rightmost retained origin
 Plat_hanger:	equ objoff_48	; word: spawned D9 child; 0 = retry allocation
 Plat_fall_check:	equ objoff_4A	; byte: oscillator rate offset, or endpoint selector
+Plat_parent:	equ objoff_4C	; word: suspension owner; zero on ordinary placements
+Plat_oldstatus:	equ obTimeFrame	; byte: previous riders for the ICZ physical rail
+Plat_attached_bit = 4              ; private Plat_flags bit; parent drives one update
 
 Obj18:
+		bsr.w	Plat_Init
+		bra.w	Plat_Top
+
+Plat_Init:
+		move.b	#4,obRender(a0)
+		move.w	#$200,obPriority(a0)
 		move.w	obSubtype(a0),d0
-		lsr.w	#3,d0
-		andi.w	#$E,d0		; shape is independent of full solidity
-		cmpi.w	#min(Obj18_Conf_End-Obj18_Conf,2*min(Map_Obj18_GHZ_frames,Map_Obj18_EHZ_frames)),d0
+		lsr.w	#4,d0
+		andi.w	#7,d0
+		cmpi.w	#5,d0
 		blo.s	.shape_ready
-		moveq	#0,d0			; invalid shape uses the first configuration
+		moveq	#0,d0
 .shape_ready:
+		cmpi.w	#2,d0
+		bhs.s	.body_art
+		add.w	d0,d0
 		lea	Obj18_Conf(pc),a2
 		adda.w	d0,a2
 		move.b	(a2)+,obActWid(a0)
@@ -43,13 +55,16 @@ Obj18:
 		move.l	#Map_Obj18_GHZ,obMap(a0)
 		move.b	#Map_Obj18_GHZ_height,height_pixels(a0)
 		cmpi.b	#id_EHZ,(Current_Zone).w
-		bne.s	.art_ready
+		bne.s	.level_art
 		move.l	#Map_Obj18_EHZ,obMap(a0)
 		move.b	#Map_Obj18_EHZ_height,height_pixels(a0)
-.art_ready:
+.level_art:
 		move.w	#make_art_tile(ArtTile_Level,2,0),obGfx(a0)
-		move.b	#4,obRender(a0)
-		move.w	#$200,obPriority(a0)
+		move.b	#8,obHeight(a0)
+		bra.s	.art_ready
+.body_art:
+		bsr.w	Platform_SetBodyArt
+.art_ready:
 		move.w	obX(a0),Plat_originX(a0)
 		move.l	obY(a0),Plat_rawY(a0)
 		move.w	obY(a0),Plat_originY(a0)
@@ -72,13 +87,20 @@ Obj18:
 		move.b	obStatus(a0),d2
 		eor.b	d2,d1
 		move.b	d1,Plat_phase(a0)
-		move.b	#8,obHeight(a0)
 		move.l	#Plat_Top,code(a0)
 		bsr.w	Platform_Profile
 		lea	Platform_ProfileFlags(pc),a1
 		btst	#0,(a1,d0.w)
 		beq.s	.solidity_ready
+		move.w	obSubtype(a0),d0
+		andi.w	#$70,d0
+		cmpi.w	#$20,d0
+		blo.s	.terrain_full
+		cmpi.w	#$50,d0
+		blo.s	.full_body
+.terrain_full:
 		move.b	#$30,obHeight(a0)
+.full_body:
 		bset	#4,obRender(a0)
 .solidity_ready:
 		move.w	obSubtype(a0),d0
@@ -115,13 +137,11 @@ Obj18:
 		move.w	(a1,d0.w),d0
 		adda.w	d0,a1
 		move.l	a1,Plat_movement(a0)
-		movea.l	code(a0),a1
-		jmp	(a1)
+		rts
 ; ---------------------------------------------------------------------------
 Obj18_Conf:
-		; Half-width, frame. Retain the additional S1/S2 configurations for art
-		; expansion; the current two-frame mapping sets clamp missing shapes to 0.
-		dc.b $20,0, $20,1, $20,2, $40,3, $30,4
+		; Terrain-art shapes 0/1. Shapes 2/3/4 belong to Platform_SetBodyArt.
+		dc.b $20,0, $20,1
 Obj18_Conf_End:
 
 Plat_Top:
@@ -156,21 +176,7 @@ Plat_UpdateHanging:
 		moveq	#0,d1
 		move.b	obActWid(a0),d1
 		subq.w	#4,d1			; keep the grip inside the platform ends
-		moveq	#0,d2
-		move.b	obHeight(a0),d2
-		moveq	#0,d3
-		move.b	obFrame(a0),d3
-		add.w	d3,d3
-		lea	Plat_HangingBottoms(pc),a3
-		cmpi.b	#id_EHZ,(Current_Zone).w
-		bne.s	.bottom
-		addq.w	#4,a3
-.bottom:
-		cmp.w	(a3,d3.w),d2
-		bge.s	.offset
-		move.w	(a3,d3.w),d2
-.offset:
-		subi.w	#10,d2			; hands meet the deeper art/solid underside
+		bsr.w	Platform_HangingOffset
 		jsr	(Hanging_SpawnChild).l
 		bcs.s	.return
 .existing:
@@ -227,9 +233,9 @@ Plat_Move:
 		movea.l	Plat_movement(a0),a1
 		jsr	(a1)
 		btst	#2,Plat_flags(a0)
-		beq.s	.render_y
+		beq.s	Plat_ApplyY
 		bsr.w	Plat_CheckFalling
-.render_y:
+Plat_ApplyY:
 		move.w	Plat_rawY(a0),obY(a0)
 		btst	#0,Plat_flags(a0)
 		beq.s	.return
@@ -766,3 +772,446 @@ Platform_HurtOverlap:
 		jmp	Spike_HurtCharacter
 .return:
 		rts
+
+; Shapes 2/3/4: ordinary swing body, ICZ rail body, large spikeball.
+; Body graphics belong here; the suspension only owns its anchor/link artwork.
+Platform_SetBodyArt:
+		move.w	d0,-(sp)
+		move.l	#Map_Obj17,obMap(a0)
+		move.b	#Map_Obj17_height,height_pixels(a0)
+		move.w	#make_art_tile(ArtTile_GHZ_MZ_Swing,0,0),obGfx(a0)
+		move.w	#$180,obPriority(a0)
+		move.b	#sprite_bound($18,Map_Obj17_width),obActWid(a0)
+		move.b	#8,obHeight(a0)
+		clr.b	obFrame(a0)
+		cmpi.b	#id_SLZ,(Current_Zone).w
+		bne.s	.smz
+		move.l	#Map_Obj17_SLZ,obMap(a0)
+		move.b	#Map_Obj17_SLZ_height,height_pixels(a0)
+		move.w	#make_art_tile(ArtTile_SLZ_Swing,2,0),obGfx(a0)
+		move.b	#sprite_bound($20,Map_Obj17_SLZ_width),obActWid(a0)
+		move.b	#$10,obHeight(a0)
+.smz:
+		cmpi.b	#id_SMZ,(Current_Zone).w
+		bne.s	.kind
+		move.l	#Map_SMZ_Swing,obMap(a0)
+		move.b	#Map_SMZ_Swing_height,height_pixels(a0)
+		move.w	#ArtTile_SMZ_Atlas,obGfx(a0)
+.kind:
+		move.w	(sp)+,d0
+		cmpi.w	#4,d0
+		beq.s	.ball
+		cmpi.w	#3,d0
+		bne.s	.return
+		move.l	#Map_SwingRail,obMap(a0)
+		move.b	#Map_SwingRail_height,height_pixels(a0)
+		cmpi.b	#id_SLZ,(Current_Zone).w
+		bne.s	.rail_smz
+		move.l	#Map_SwingRail_SLZ,obMap(a0)
+		move.b	#Map_SwingRail_SLZ_height,height_pixels(a0)
+.rail_smz:
+		cmpi.b	#id_SMZ,(Current_Zone).w
+		bne.s	.rail_facing
+		move.l	#Map_SwingRail_SMZ,obMap(a0)
+		move.b	#Map_SwingRail_SMZ_height,height_pixels(a0)
+.rail_facing:
+		move.b	obStatus(a0),d0
+		andi.b	#1,d0
+		or.b	d0,obRender(a0)
+.return:
+		rts
+.ball:
+		cmpi.b	#id_SMZ,(Current_Zone).w
+		beq.s	.ball_size
+		move.l	#Map_GBall,obMap(a0)
+		move.b	#Map_GBall_height,height_pixels(a0)
+		move.w	#make_art_tile(ArtTile_GHZ_Giant_Ball,2,0),obGfx(a0)
+		move.b	#1,obFrame(a0)
+.ball_size:
+		move.b	#$18,obHeight(a0)
+		move.b	#sprite_bound($18,Map_GBall_width),obActWid(a0)
+		rts
+
+Platform_HangingOffset:
+		move.w	obSubtype(a0),d2
+		andi.w	#$70,d2
+		cmpi.w	#$20,d2
+		blo.s	.terrain
+		cmpi.w	#$50,d2
+		bhs.s	.terrain
+		cmpi.w	#$40,d2
+		beq.s	.ball
+		moveq	#8,d2
+		cmpi.b	#id_SLZ,(Current_Zone).w
+		bne.s	.grip_smz
+		moveq	#32,d2
+.grip_smz:
+		cmpi.b	#id_SMZ,(Current_Zone).w
+		bne.s	.height
+.ball:
+		moveq	#24,d2
+		bra.s	.height
+.terrain:
+		moveq	#0,d3
+		move.b	obFrame(a0),d3
+		add.w	d3,d3
+		lea	Plat_HangingBottoms(pc),a3
+		cmpi.b	#id_EHZ,(Current_Zone).w
+		bne.s	.bottom
+		addq.w	#4,a3
+.bottom:
+		move.w	(a3,d3.w),d2
+.height:
+		moveq	#0,d3
+		move.b	obHeight(a0),d3
+		cmp.w	d3,d2
+		bge.s	.offset
+		move.w	d3,d2
+.offset:
+		subi.w	#10,d2
+		rts
+
+; Obj17 body recipes: independent Obj18 subtype words, not collision code in
+; the chain. One body per existing recipe; multi-body arrangements are deferred.
+Platform_SwingPresets:
+		dc.w $0020,$0120,$0240,$0320,$0420,$0540,$0620,$0720,$0820,$0920,$0A40,$0B40
+Platform_SwingPresets_End:
+Platform_SwingPresetCount = (Platform_SwingPresets_End-Platform_SwingPresets)/2
+
+; a0 suspension -> a1 body. Carry set = no free SST, retry on a later update.
+Platform_CreateSwingBody:
+		jsr	(FindFreeObj).l
+		bne.w	.full
+		moveq	#0,d0
+		move.b	swing_preset(a0),d0
+		add.w	d0,d0
+		lea	Platform_SwingPresets(pc),a2
+		move.w	(a2,d0.w),d0
+		move.w	obSubtype(a0),d1
+		andi.w	#$70,d1
+		cmpi.w	#$40,d1
+		bne.s	.settings
+		move.w	d0,d1
+		andi.w	#$70,d1
+		cmpi.w	#$20,d1
+		bne.s	.settings
+		addi.w	#$10,d0		; the body owns the momentum swing's rail
+.settings:
+		move.w	d0,obSubtype(a1)
+		move.l	obX(a0),obX(a1)
+		move.l	obY(a0),obY(a1)
+		move.b	obStatus(a0),obStatus(a1)
+		andi.b	#3,obStatus(a1)
+		move.l	a0,-(sp)
+		movea.l	a1,a0
+		bsr.w	Plat_Init
+		movea.l	(sp),a2
+		move.w	a2,Plat_parent(a0)
+		bset	#Plat_attached_bit,Plat_flags(a0)
+		move.b	#2,obRoutine(a0)
+		clr.w	respawn_addr(a0)
+		move.l	#Platform_SuspendedBody,code(a0)
+		movea.l	a0,a1
+		movea.l	(sp)+,a0
+		move.w	a1,swing_body(a0)
+		andi.b	#$FE,ccr
+		rts
+.full:
+		ori.b	#1,ccr
+		rts
+
+; A suspended body has a stable code pointer across release. Its parent drives
+; attached physics once after moving; its own slot only validates ownership.
+Platform_SuspendedBody:
+		bsr.w	Platform_SuspendedParent
+		bne.w	Platform_DeleteBody
+		btst	#Plat_attached_bit,Plat_flags(a0)
+		beq.s	.released
+		rts
+.released:
+		cmpi.b	#$C,obRoutine(a0)
+		beq.w	Platform_FloatingBody
+		bra.w	Platform_FreeBody
+
+Platform_SuspendedParent:
+		movea.w	Plat_parent(a0),a1
+		cmpi.l	#SwingingPtfm,code(a1)
+		bne.s	.return
+		move.w	a0,d0
+		cmp.w	swing_body(a1),d0
+.return:
+		rts
+
+Platform_UpdateSuspended:
+		bsr.w	Platform_SuspendedParent
+		bne.w	Platform_DeleteBody
+		move.b	obStatus(a0),Plat_oldstatus(a0)
+		move.w	obX(a0),Plat_position(a0)
+		move.w	obY(a0),Plat_speed(a0)
+		move.w	obX(a1),obX(a0)
+		move.l	obY(a1),Plat_rawY(a0)
+		bsr.w	Plat_ApplyY
+		move.w	Plat_position(a0),d4
+		bsr.w	Platform_Interact
+		bsr.w	Plat_UpdateHanging
+		jmp	(DisplaySprite).l
+
+; a0 physical body, d0/d1 launch X/Y. Reuse this SST and its grip/player refs.
+Platform_ReleaseSuspended:
+		bclr	#Plat_attached_bit,Plat_flags(a0)
+		move.w	d0,obVelX(a0)
+		move.w	d1,obVelY(a0)
+		move.w	obX(a0),Plat_originX(a0)
+		move.w	obY(a0),Plat_originY(a0)
+		clr.b	Plat_state(a0)
+		move.b	#$A,obRoutine(a0)
+		rts
+
+Platform_DeleteBody:
+		bsr.w	Plat_RemoveHanging
+		jsr	(SMZ_ReleaseRiders).l
+		bsr.w	Platform_SuspendedParent
+		bne.s	.delete
+		clr.w	swing_body(a1)
+.delete:
+		jmp	(DeleteObject).l
+
+Platform_SwingMomentumInput:
+		tst.w	swing_body(a0)
+		beq.s	.entry_return
+		movea.w	swing_body(a0),a1
+		cmpi.l	#Platform_SuspendedBody,code(a1)
+		bne.s	.entry_return
+		move.l	a0,-(sp)
+		movea.l	a0,a2
+		movea.l	a1,a0
+		bsr.w	Platform_Profile
+		cmpi.b	#platform_hurt,d0
+		beq.s	.restore
+		tst.w	(Debug_placement_mode).w
+		bne.s	.restore
+		lea	(v_player).w,a1
+		moveq	#3,d6
+		bsr.s	.player
+		lea	(v_player2).w,a1
+		moveq	#4,d6
+		bsr.s	.player
+.restore:
+		movea.l	(sp)+,a0
+.entry_return:
+		rts
+.player:
+		cmpi.b	#4,obRoutine(a1)
+		bhs.w	.return
+		move.w	obVelX(a1),d3
+		btst	#0,obStatus(a0)
+		beq.s	.direction
+		neg.w	d3
+.direction:
+		tst.w	d3
+		ble.w	.return
+		move.w	obY(a1),d0
+		moveq	#0,d1
+		move.b	obHeight(a1),d1
+		add.w	d1,d0
+		sub.w	obY(a0),d0
+		moveq	#0,d1
+		move.b	obHeight(a0),d1
+		add.w	d1,d0
+		addi.w	#12,d0
+		cmpi.w	#24,d0
+		bhi.w	.return
+		move.w	obX(a1),d0
+		sub.w	obX(a0),d0
+		btst	#0,obStatus(a0)
+		beq.s	.railSide
+		neg.w	d0
+.railSide:
+		moveq	#0,d1
+		move.b	obActWid(a0),d1
+		subi.w	#12,d1
+		cmp.w	d1,d0
+		blt.s	.return
+		addi.w	#28,d1
+		cmp.w	d1,d0
+		bgt.s	.return
+		tst.b	swing_mode_started(a2)
+		bne.s	.blockRail
+		cmpi.w	#$200,d3
+		blt.s	.blockRail
+		btst	d6,Plat_oldstatus(a0)
+		beq.s	.newRider
+		asr.w	#1,d3
+.newRider:
+		asr.w	#1,d3
+		cmpi.w	#$400,d3
+		ble.s	.impulse
+		move.w	#$400,d3
+.impulse:
+		move.w	d3,swing_ang_vel(a2)
+		move.b	#1,swing_mode_started(a2)
+.blockRail:
+		moveq	#0,d0
+		move.b	obActWid(a0),d0
+		subi.w	#12,d0
+		btst	#0,obStatus(a0)
+		beq.s	.railPosition
+		neg.w	d0
+.railPosition:
+		add.w	obX(a0),d0
+		move.w	d0,obX(a1)
+		clr.w	obVelX(a1)
+		clr.w	obInertia(a1)
+.return:
+		rts
+
+
+; Shared S2/ICZ free body: terrain first when above water, quarter-speed bounce,
+; friction, directional wall stops, then enabled live-water floating and drift.
+Platform_FreeBody:
+		move.l	Plat_rawY(a0),obY(a0)
+		move.w	obX(a0),Plat_position(a0)
+		move.w	obY(a0),Plat_speed(a0)
+		jsr	(ObjectMove).l
+		move.w	(Camera_Max_Y_pos).w,d0
+		addi.w	#$100,d0
+		cmp.w	obY(a0),d0
+		blo.w	Platform_DeleteBody
+		tst.b	Plat_state(a0)
+		bne.w	.slide
+		addi.w	#$18,obVelY(a0)
+		tst.w	obVelY(a0)
+		bmi.w	.collision
+		jsr	(ObjHitFloor).l
+		move.w	d1,d5
+		tst.b	(Water_flag).w
+		beq.s	.floor
+		move.w	(v_waterpos2).w,d0
+		cmp.w	Plat_speed(a0),d0
+		blo.s	.floor
+		cmp.w	obY(a0),d0
+		bhi.s	.floor
+		tst.w	d5
+		bpl.s	.water
+		move.w	obY(a0),d1
+		add.w	d5,d1
+		cmp.w	d0,d1
+		blt.s	.floor
+.water:
+		move.w	d0,obY(a0)
+		move.b	#$C,obRoutine(a0)
+		clr.w	obVelY(a0)
+		move.w	#$100,d0
+		tst.w	obVelX(a0)
+		bpl.s	.drift
+		neg.w	d0
+.drift:
+		move.w	d0,obVelX(a0)
+		bra.w	.collision
+.floor:
+		tst.w	d5
+		bpl.w	.collision
+		add.w	d5,obY(a0)
+		move.w	obVelY(a0),d0
+		cmpi.w	#$100,d0
+		blo.s	.land
+		asr.w	#2,d0
+		neg.w	d0
+		move.w	d0,obVelY(a0)
+		bra.s	.wall
+.land:
+		clr.w	obVelY(a0)
+		move.b	#1,Plat_state(a0)
+.slide:
+		jsr	(ObjHitFloor).l
+		cmpi.w	#12,d1
+		bgt.s	.edge
+		add.w	d1,obY(a0)
+.friction:
+		move.w	obVelX(a0),d0
+		beq.s	.wall
+		move.w	#$10,d1
+		tst.w	d0
+		bpl.s	.slow
+		neg.w	d1
+.slow:
+		move.w	d0,d2
+		sub.w	d1,d0
+		eor.w	d0,d2
+		bpl.s	.speed
+		moveq	#0,d0
+.speed:
+		move.w	d0,obVelX(a0)
+		bra.s	.wall
+.edge:
+		clr.b	Plat_state(a0)
+.wall:
+		move.w	obVelX(a0),d0
+		beq.s	.collision
+		bsr.w	Platform_BodyWall
+		tst.w	d1
+		bpl.s	.collision
+		tst.w	obVelX(a0)
+		bpl.s	.right
+		sub.w	d1,obX(a0)
+		bra.s	.stopped
+.right:
+		add.w	d1,obX(a0)
+.stopped:
+		clr.w	obVelX(a0)
+.collision:
+		move.l	obY(a0),Plat_rawY(a0)
+		bsr.w	Plat_ApplyY
+		move.w	Plat_position(a0),d4
+		bsr.w	Platform_Interact
+		bsr.w	Plat_UpdateHanging
+		bra.w	Platform_BodyDisplay
+
+Platform_FloatingBody:
+		move.l	Plat_rawY(a0),obY(a0)
+		move.w	obX(a0),Plat_position(a0)
+		move.w	obY(a0),Plat_speed(a0)
+		tst.b	(Water_flag).w
+		bne.s	.water
+		move.b	#$A,obRoutine(a0)
+		clr.b	Plat_state(a0)
+		bra.w	Platform_FreeBody
+.water:
+		jsr	(ObjectMove).l
+		moveq	#0,d0
+		move.b	(v_oscillate+$14).w,d0
+		lsr.w	#2,d0
+		subq.w	#4,d0
+		add.w	(v_waterpos2).w,d0
+		move.w	d0,obY(a0)
+		move.w	obVelX(a0),d0
+		beq.s	.solid
+		bsr.s	Platform_BodyWall
+		tst.w	d1
+		bpl.s	.solid
+		move.w	Plat_position(a0),obX(a0)
+		clr.w	obVelX(a0)
+.solid:
+		move.l	obY(a0),Plat_rawY(a0)
+		bsr.w	Plat_ApplyY
+		move.w	Plat_position(a0),d4
+		bsr.w	Platform_Interact
+		bsr.w	Plat_UpdateHanging
+		bra.w	Platform_BodyDisplay
+
+; Input d0 sign is the direction to probe. Returned d1 is signed distance.
+Platform_BodyWall:
+		move.w	d0,-(sp)
+		moveq	#0,d3
+		move.b	obActWid(a0),d3
+		tst.w	(sp)+
+		bmi.s	.left
+		jmp	ObjHitWallRight
+.left:
+		not.w	d3
+		jmp	ObjHitWallLeft
+
+
+Platform_BodyDisplay:
+		out_of_range.w	Platform_DeleteBody
+		jmp	(DisplaySprite).l

@@ -190,8 +190,9 @@ try:
  x,y=g.get(swing,'obX',2),g.get(swing,'obY',2)
  place(g,'v_player',x+32,y-30,False);g.put('v_player','obControl',1)
  place(g,'v_player2',x,y-9-g.get('v_player2','obHeight'),False)
- g.put('v_player2','obStatus',8);g.put('v_player2','standonobject',(swing-(g.s['v_objspace']&65535))//g.s['object_size'])
- g.put(swing,'obStatus',g.get(swing,'obStatus')|16);g.write('Tails_CPU_idle_timer',6000,2)
+ swingbody=g.get(swing,'swing_body',2)
+ g.put('v_player2','obStatus',8);g.put('v_player2','standonobject',(swingbody-(g.s['v_objspace']&65535))//g.s['object_size'])
+ g.put(swingbody,'obStatus',g.get(swingbody,'obStatus')|16);g.write('Tails_CPU_idle_timer',6000,2)
  mismatches=riding=moving=0;previous=None
  for tick in range(160):
   clear_queue();g.write('v_spritequeue',0,g.s['v_spritequeue_end']-g.s['v_spritequeue'])

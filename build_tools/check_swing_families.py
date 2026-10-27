@@ -72,6 +72,7 @@ def main():
                     g.put(who,'obStatusSecondary',0)
                     g.write('v_rings',40,2)
                     g.put(obj,'obRender',0x84)
+                    g.put(g.get(obj,'swing_body',2),'obRender',0x84)
                     act('SwingingPtfm_Interact',obj)
                     standing=bool(g.get(who,'obStatus')&8)
                     record(f'top-{zone}-{profile}-{who}-{immune}',

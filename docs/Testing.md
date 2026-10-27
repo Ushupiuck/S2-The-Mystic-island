@@ -229,10 +229,10 @@ are streaming fixtures, not complete controller-only playthroughs.
 `check_swing_motion.py` owns the current Obj17 word settings and twelve shared platform interaction
 profiles. It checks full-pool/missing-helper safety, reserved lengths/interactions,
 word preservation, both players' solid/damaging contacts under stars and full-word
-flashing immunity, speed-scaled ICZ rail input/return, release retry/sole placement
-ownership/rider transfer, packed ICZ breakup and contact relay through a static
+flashing immunity, speed-scaled ICZ rail input/return, physical-body allocation retry/sole placement
+ownership/same-SST release, packed ICZ breakup and contact relay through a static
 member. `--before-rom`/`--before-listing` accept the immediately previous unified
-half-swing build for 4,644 exact parent-position comparisons. Quarter orientations,
+single-body swing build for 4,644 exact parent-position comparisons. Quarter orientations,
 both placement mirrors and lengths 0–8 produce 37,008 exact rotator pose samples.
 
 ```sh
@@ -561,8 +561,12 @@ The platform-parity checks exercise both `$17` and `$18` through the shared
 collision code: all twelve profiles, both players, upward/top/side contact,
 full-word flashing immunity and stars, and one conveyor push per update in both
 directions. Hanging fixtures cover each top/full/conveyor grip, simultaneous
-standing/hanging, allocation retry, parent cleanup and transfer to a detached
-swing body. The falling-conveyor/grip fixture checks the ordinary platform's
+standing/hanging, allocation retry, parent cleanup and unchanged body/grip
+ownership across release. Native fixtures also test an earlier body slot, paused
+body movement with active sag, full-pool release without allocation or rider-index
+changes, reused body/helper protection, orphan cleanup before/after release,
+and all three new body appearances against GHZ/SLZ/SMZ mapping bottoms.
+The falling-conveyor/grip fixture checks the ordinary platform's
 stationary 30-update delay, rider carry and eventual grip release. Migration comparison
 uses `check_floating_platforms.py --before-ref` against the preceding platform
 encoding; coordinates, placement flags, eras and unrelated objects must match.
@@ -576,3 +580,17 @@ request after a rider leaves, oscillator-rate/corner/long-path endpoints, all
 sixteen switch channels and a real ceiling stop. `check_floating_platforms_game.py`
 combines the bit-12 option with stationary, horizontal, vertical, diagonal,
 square, long eased and switch-rise motion under the normal object executor.
+
+The ordinary-platform core fixtures include standalone body, rail and ball
+shapes with top/full solidity. The swing comparison accepts a matching
+`--before-rom`/`--before-listing` pair from before the suspension/body split.
+Attached body execution is parent-driven; released body execution is autonomous
+with the retained ballistic/terrain/water controller. Custom post-release motion
+recipes and multi-body chain arrangements are not covered or implemented.
+
+The older `check_shared_followup.py` swing/tail fixture resolves the physical
+body before assigning standing indices. Its direct `m68k_run` calls advance
+only the main CPU: run this fixture with the cartridge build, since Mode 1
+terrain requests otherwise wait for an unstepped sub-CPU. Use the relevant
+pre-change `--reference` when comparing assets; its default predates subsequent
+terrain edits. The full-frame swing suites cover Mode 1 hardware scheduling.

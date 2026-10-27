@@ -108,7 +108,7 @@ class Genesis:
         self.ids_by_code = {pointer: oid for oid, pointer in
                             enumerate(self.object_codes[1:], 1)}
         # Test-only identity survives the platform's direct update transitions.
-        for label in ('Plat_Top', 'Plat_Full', 'Plat_FallingIntangible'):
+        for label in ('Plat_Top', 'Plat_Full', 'Plat_FallingIntangible', 'Platform_SuspendedBody'):
             if label in self.s:
                 self.ids_by_code[self.s[label]] = self.ids_by_code[self.s['Obj18']]
         info = GameInfo(str(rom).encode(),C.cast(self.rom,C.c_void_p),len(self.rom)-1,None)

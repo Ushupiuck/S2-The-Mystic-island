@@ -54,8 +54,9 @@ def main():
         for flags in (0, 0x100, 0x80, 0x180, 0x6000, 0x6180):
             fixture((shape << 4) | flags)
             assert m.get(obj, 'obSubtype') == (shape << 4) | flags
-            assert m.get(obj, 'obFrame') == (shape if shape < 2 else 0)
-            assert m.get(obj, 'obActWid') == 32
+            assert m.get(obj, 'obFrame') == (shape if shape < 2 else 1 if shape == 4 else 0)
+            assert m.get(obj, 'obActWid') == (24 if shape in (2,3,4) else 32)
+            assert m.get(obj, 'obHeight') == (24 if shape == 4 else 8 if shape in (2,3) or not flags & 0x100 else 48)
             assert m.get(obj, 'code') == m.s['Plat_Full' if flags & 0x100 else 'Plat_Top']
             assert m.get(obj, 'Plat_flags') == bool(flags & 0x80)
     assert m.s['object_size'] == 0x4E and m.s['obSubtype'] == 0x2C

@@ -164,54 +164,56 @@ def native(args):
     assert not m.get(child,'code') and not m.get('v_player','obControl')
     rows.append('externally deleted parent retires its orphan and releases the hanging player')
 
+    # Every new body skin is an ordinary platform appearance. Grips clear the
+    # actual visible bottom and its collision box in each material's bank.
     from check_sprite_assets import frames
+    from check_swing_motion import physical,visible
     rom=(args.rom or c.ROOT/'s2built.bin').read_bytes()
-    for zone,index,mapping,rail in [(0,0,'Map_Obj17','Map_SwingRail'),(6,1,'Map_Obj17_SLZ','Map_SwingRail_SLZ'),(8,2,'Map_SMZ_Swing','Map_SwingRail_SMZ')]:
-        # Use engine zone constants rather than assuming the classic SLZ ID.
-        if index==1:zone=m.s['id_SLZ']
-        if index==2:zone=m.s['id_SMZ']
-        bottom=int.from_bytes(m.cpu.mem_read(m.s['SwingingPtfm_HangingBottoms']+index,1),'big')
-        for label in (mapping,rail):
-            assert bottom==max(y+((size&3)+1)*8 for y,size,_,_ in frames(rom,m.s[label])[0]),label
-        m.start();m.write('Current_Zone',zone);m.write('Camera_X_pos_coarse_back',0x700,2)
-        for f,v,n in [('code',m.s['SwingingPtfm'],4),('obX',0x800,2),('obY',0x180,2),('obSubtype',0x625,2)]:m.put(o,f,v,n)
-        m.act('SwingingPtfm',o);m.act('SwingingPtfm_Interact',o)
-        child=m.get(o,'swing_hanger',2)|0xFFFF0000
-        assert m.get(child,'Hang_yoffset',2)==(bottom-10)&65535
-    rows.append('GHZ/SLZ/SMZ grip heights match body and ICZ-rail mapping bottoms')
+    for zone in (0,m.s['id_SLZ'],m.s['id_SMZ']):
+        for shape in (2,3,4):
+            m.start();m.write('Current_Zone',zone);m.write('Camera_X_pos_coarse_back',0x700,2)
+            for f,v,n in [('code',m.s['Obj18'],4),('obX',0x800,2),('obY',0x180,2),('obSubtype',0x600|(shape<<4),2)]:m.put(o,f,v,n)
+            m.act('Obj18',o);child=m.get(o,'Plat_hanger',2)|0xFFFF0000
+            pieces=frames(rom,m.get(o,'obMap',4))[m.get(o,'obFrame')]
+            bottom=max(y+((size&3)+1)*8 for y,size,_,_ in pieces)
+            assert m.get(child,'Hang_yoffset',2)==(max(bottom,m.get(o,'obHeight'))-10)&65535
+    rows.append('ordinary platform body/rail/ball skins: GHZ/SLZ/SMZ art and exact grip clearance')
 
-    # Swinging grip profiles keep packed links and an independent two-player
-    # controller. The same child follows the released physical body.
     for profile in (6,7,8,9):
         for bottom,top in [('v_player','v_player2'),('v_player2','v_player')]:
             m.start();m.write('Camera_X_pos_coarse_back',0x700,2)
-            for f,v,n in [('code',m.s['SwingingPtfm'],4),('obX',0x800,2),('obY',0x180,2),('obSubtype',(profile<<8)|0x1025,2)]:m.put(o,f,v,n)
+            settings=(profile<<8)|0x1025
+            for f,v,n in [('code',m.s['SwingingPtfm'],4),('obX',0x800,2),('obY',0x180,2),('obSubtype',settings,2)]:m.put(o,f,v,n)
             m.act('SwingingPtfm',o);m.act('SwingingPtfm_Interact',o)
-            child=m.get(o,'swing_hanger',2)|0xFFFF0000
-            assert child&65535
+            body=physical(m,o);child=m.get(body,'Plat_hanger',2)|0xFF0000
+            assert child&65535 and not m.get(body,'respawn_addr',2)
+            assert m.get(body,'obSubtype')==(profile<<8)|0x20
             m.put(bottom,'obStatus',2);m.put(bottom,'obX',m.get(child,'obX',2),2);m.put(bottom,'obY',m.get(child,'obY',2)+30,2)
-            m.put(top,'obStatus',2);m.put(top,'obX',m.get(o,'obX',2),2);m.put(top,'obY',m.get(o,'obY',2)-m.get(o,'obHeight')-19+2,2);m.put(top,'obVelY',0x100,2)
-            m.put(o,'obRender',0x94);m.act('SwingingPtfm_Interact',o)
+            m.put(top,'obStatus',2);m.put(top,'obX',m.get(body,'obX',2),2);m.put(top,'obY',m.get(body,'obY',2)-m.get(body,'obHeight')-19+2,2);m.put(top,'obVelY',0x100,2)
+            visible(m,o,0x94);m.act('SwingingPtfm_Interact',o)
             assert m.get(bottom,'obControl')==3 and m.get(top,'obStatus')&8,(profile,bottom,'swing grab')
-            m.put(o,'swing_mode_timer',29,2);m.act('SwingingPtfm_DetachCheck',o)
-            body=m.get(o,'swing_relative',2)|0xFFFF0000
-            assert body&65535 and m.get(body,'code')==m.s['SwingingPtfm']
-            assert not m.get(o,'swing_hanger',2) and m.get(body,'swing_hanger',2)==child&65535
+            stand=m.get(top,'standonobject');m.put(o,'swing_mode_timer',29,2)
+            m.act('SwingingPtfm_DetachCheck',o)
+            assert physical(m,o)==body and m.get(body,'code')==m.s['Platform_SuspendedBody']
+            assert m.get(body,'Plat_hanger',2)==child&65535 and m.get(top,'standonobject')==stand
             assert m.get(child,'Hang_parent',2)==body&65535
-            assert m.get(child,'Hang_parentlink',2)==(body+m.s['swing_hanger'])&65535
-            m.put(body,'obY',m.get(body,'obY',2)+12,2);m.act('SwingingPtfm_UpdateHanging',body)
+            assert m.get(child,'Hang_parentlink',2)==(body+m.s['Plat_hanger'])&65535
+            m.put(body,'obY',m.get(body,'obY',2)+12,2);m.act('Plat_UpdateHanging',body)
             assert m.get(bottom,'obControl')==3 and m.get(bottom,'obY',2)==m.get(child,'obY',2)+36
             m.act('SwingingPtfm_DelAll',o)
             assert not m.get(child,'code') and not m.get(bottom,'obControl')
-    rows.append('swing top/full/conveyor grips: both rider arrangements, detach transfers one child, group deletion releases it')
+    rows.append('swing top/full/conveyor grips: both actor arrangements; same body, standing index and D9 owner survive release')
     m.start();m.write('Camera_X_pos_coarse_back',0x700,2)
     for obj in m.pool():m.put(obj,'code',m.s['ObjNull'])
     for f,v,n in [('code',m.s['SwingingPtfm'],4),('obX',0x800,2),('obY',0x180,2),('obSubtype',0x625,2)]:m.put(o,f,v,n)
-    m.act('SwingingPtfm',o);m.act('SwingingPtfm_Interact',o);assert not m.get(o,'swing_hanger',2)
-    free=o+m.s['object_size'];m.put(free,'code',0);m.act('SwingingPtfm_Interact',o)
-    assert m.get(o,'swing_hanger',2)==free&65535
-    m.act('DeleteObject',o);m.act('Hanging_Child',free);assert not m.get(free,'code')
-    rows.append('swing grip allocation retries with a full pool; external parent deletion retires orphan')
+    m.act('SwingingPtfm',o);assert not m.get(o,'swing_body',2)
+    free=o+m.s['object_size'];m.put(free,'code',0);m.act('SwingingPtfm_SetSolid',o)
+    body=physical(m,o);assert (body&0xFFFFFF)==(free&0xFFFFFF) and not m.get(body,'Plat_hanger',2)
+    spare=free+m.s['object_size'];m.put(spare,'code',0);m.act('SwingingPtfm_Interact',o)
+    assert m.get(body,'Plat_hanger',2)==spare&65535
+    m.act('DeleteObject',o);m.act('Platform_SuspendedBody',body)
+    assert not m.get(body,'code') and not m.get(spare,'code')
+    rows.append('full pool retries physical body then grip; externally deleted suspension retires both')
 
     for profile in (8,9):
         m.start();m.write('Camera_X_pos_coarse_back',0x700,2);m.write('Camera_Max_Y_pos',0x1000,2)
