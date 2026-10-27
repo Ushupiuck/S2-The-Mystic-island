@@ -1587,6 +1587,10 @@ Pal_SMZ2:	binclude	"palette/SMZ2.bin"
 		even
 Pal_LZ4Water:	binclude	"palette/LZ4 Underwater.bin"
 		even
+Pal_GHZ4Water:	binclude	"palette/GHZ4 Underwater.bin"
+		even
+Pal_GHZ4WaterCyc: binclude "palette/GHZ4 Underwater Cycle.bin"
+		even
 Pal_HPZWater:	binclude	"palette/HPZ Underwater.bin"
 		even
 Pal_HPZSonWat:	binclude	"palette/HPZ Sonic Underwater.bin"
@@ -2416,6 +2420,9 @@ Level_Demo:
 Level_ChkWaterPal:
 		tst.b	(Water_flag).w
 		beq.s	Level_Delay
+		moveq	#palid_GHZ4Water,d0
+		cmpi.w	#3,(Current_ZoneAndAct).w
+		beq.s	Level_WtrNotHtz
 		moveq	#palid_HPZWater,d0
 		cmpi.w	#(id_LZ<<8)+3,(Current_ZoneAndAct).w ; is level SBZ3 (LZ4) ?
 		bne.s	Level_WtrNotHtz
@@ -4369,7 +4376,7 @@ LevelSizeArray:
 		dc.w $0000, $24BF, $0000, $0300	; GHZ1
 		dc.w $0000, $1EBF, $0000, $0300	; GHZ2
 		dc.w $0000, $2960, $0000, $0300	; GHZ3
-		dc.w $0000, $2ABF, $0000, $0300	; GHZ4
+		dc.w $0000, $2ABF, $0000, $0500	; GHZ4: reach the water below the entrance gap
 		dc.w $0000, $3FFF, $0000, $0720	; LZ1
 		dc.w $0000, $3FFF, $0000, $0720	; LZ2
 		dc.w $0000, $3FFF, $0000, $0800	; LZ3

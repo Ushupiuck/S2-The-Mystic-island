@@ -293,7 +293,10 @@ def native_checks(args):
         m.write('Current_ZoneAndAct', s['id_GHZ'] * 256 + act, 2)
         m.cpu.emu_start(s['Level_WaterFlagInit'], s['Level_WaterFlagInit_End'], count=10000)
         assert m.cpu.reg_read(UC_M68K_REG_PC) == s['Level_WaterFlagInit_End']
-        assert not m.read('Water_flag') or wall + 12 <= surface or wall >= surface + 16
+        plc=s[f'PLC_GHZ{act+1}_Extra']
+        count=int.from_bytes(m.cpu.mem_read(plc,2),'big',signed=True)+1
+        borrows=any(int.from_bytes(m.cpu.mem_read(plc+2+i*6,4),'big')==s['Nem_GHZ_BWall'] for i in range(count))
+        assert not (m.read('Water_flag') and borrows) or wall + 12 <= surface or wall >= surface + 16
     results.append('dry-act wall borrowing agrees with actual water selection in all GHZ acts')
 
     # Pool exhaustion must preserve initialization and retry at the same anchor.

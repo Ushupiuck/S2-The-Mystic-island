@@ -318,6 +318,20 @@ def native(args):
     assert m.get(receiver,'swing_mode_started')==0
 
     checks.append('contact relay through stationary member into ICZ; no feedback or stationary motion')
+    # Run the complete real oscillator, including signed rate reversals. The
+    # float must use the position at $12, not its adjacent velocity at $14.
+    o=fixture(m,0x26);body=physical(m,o)
+    m.put(o,'obRoutine',4);m.put(body,'obRoutine',12)
+    m.put(body,'Plat_flags',m.get(body,'Plat_flags')&~16)
+    m.put(body,'obVelX',0,2);m.write('Water_flag',1);m.write('v_waterpos2',0x500,2)
+    m.act('OscillateNumInit');positions=[]
+    for tick in range(1024):
+        m.act('OscillateNumDo');m.act('Platform_FloatingBody',body)
+        y=m.get(body,'obY',2);positions.append(y)
+        assert abs(y-0x500)<=5, ('float amplitude',tick,y)
+        if len(positions)>1:assert abs(y-positions[-2])<=2, ('float discontinuity',tick,y,positions[-2])
+    assert max(positions)-min(positions)>=7
+    checks.append('1024 real oscillator updates: smooth centred floating bob through rate sign reversals')
     assert m.s['object_size']==0x4E and m.s['obSubtype']==0x2C
     if args.s3_source:checks+=compare_upstream(m,args)
     return dict(checks=checks)

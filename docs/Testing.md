@@ -641,3 +641,26 @@ hanging and wheel-carrier regressions when changing shared payload handlers.
 The ICZ swing fixtures explicitly choose the rail-art constructor: movement no
 longer silently selects artwork. Relay tests preserve the executor's D7 counter
 on every active exit.
+
+## GHZ4 water playtest
+
+`check_ghz4_playtest.py` boots the authored Act-4 placements and water tables.
+Its entrance route uses controller inputs only after boot: jump over the two
+existing monitors, land/brake on the carried button, detach and ride the same
+body into the entrance-gap water, where its terrain bank stops the drift. Focused visits position actors in RAM to
+exercise the actual placed red/yellow springs, momentum-platform monitor,
+moving spikes, and Sonic-above/Tails-below detachment into water. Those visits
+retain the live placement manager, collision and object executor.
+
+```sh
+python build_tools/check_ghz4_playtest.py --rom s2built.bin --listing md-main.lst --core /path/to/genesis_plus_gx_test_libretro.so --output test-results/ghz4-water/play
+```
+
+Mode 1 needs `--system-directory /path/to/BIOS-fixture`. Use `--player 2` for
+primary Tails, or `--pal` for PAL timing. The runner checks all four underwater
+palette lines and all four waterfall phases, and saves route/station captures
+and a controller-route trace. `check_swing_motion.py` additionally runs 1,024
+real oscillator updates to catch float-position/rate confusion and sign-wrap
+jumps. Re-running `build_ghz4_water_palette.py` must reproduce both palette files.
+GHZ4 reserves the normal water-surface bank; its lower camera limit allows the
+water to be reached before death. GHZ1-3 remain dry and keep their wall borrowing.

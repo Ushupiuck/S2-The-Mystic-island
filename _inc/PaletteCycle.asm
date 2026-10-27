@@ -42,6 +42,12 @@ PalCycle_GHZ:
 		lea	(v_palette+$50).w,a1
 		move.l	(a0,d0.w),(a1)+
 		move.l	4(a0,d0.w),(a1)
+		cmpi.w	#3,(Current_ZoneAndAct).w
+		bne.s	.return
+		lea	(Pal_GHZ4WaterCyc).l,a0
+		lea	(v_palette_water+$50).w,a1
+		move.l	(a0,d0.w),(a1)+
+		move.l	4(a0,d0.w),(a1)
 .return:	rts
 ; ===========================================================================
 

@@ -57,7 +57,7 @@ MCD_CompressedAssets:
 	dc.l BLevel_GHZ3,BLevel_GHZ3+$1DE	; level/layout/bad future/GHZ_3.kosp
 	endif
 	if defined(BLevel_GHZ4)
-	dc.l BLevel_GHZ4,BLevel_GHZ4+$1DE	; level/layout/bad future/GHZ_4.kosp
+	dc.l BLevel_GHZ4,BLevel_GHZ4+$1FC	; level/layout/bad future/GHZ_4.kosp
 	endif
 	if defined(BLevel_HPZ1)
 	dc.l BLevel_HPZ1,BLevel_HPZ1+$2AE	; level/layout/bad future/HPZ_1.kosp
@@ -222,7 +222,7 @@ MCD_CompressedAssets:
 	dc.l BMap128_EHZ,BMap128_EHZ+$2D4C	; mappings/128x128/EHZ.kosp
 	endif
 	if defined(BMap128_GHZ)
-	dc.l BMap128_GHZ,BMap128_GHZ+$1EE8	; mappings/128x128/GHZ.kosp
+	dc.l BMap128_GHZ,BMap128_GHZ+$2284	; mappings/128x128/GHZ.kosp
 	endif
 	if defined(BMap128_HPZ)
 	dc.l BMap128_HPZ,BMap128_HPZ+$1C1E	; mappings/128x128/HPZ.kosp
@@ -339,7 +339,7 @@ MCD_CompressedAssets:
 	dc.l GLevel_GHZ3,GLevel_GHZ3+$1DE	; level/layout/good future/GHZ_3.kosp
 	endif
 	if defined(GLevel_GHZ4)
-	dc.l GLevel_GHZ4,GLevel_GHZ4+$1DE	; level/layout/good future/GHZ_4.kosp
+	dc.l GLevel_GHZ4,GLevel_GHZ4+$1FC	; level/layout/good future/GHZ_4.kosp
 	endif
 	if defined(GLevel_HPZ1)
 	dc.l GLevel_HPZ1,GLevel_HPZ1+$2AE	; level/layout/good future/HPZ_1.kosp
@@ -504,7 +504,7 @@ MCD_CompressedAssets:
 	dc.l GMap128_EHZ,GMap128_EHZ+$2D4C	; mappings/128x128/EHZ.kosp
 	endif
 	if defined(GMap128_GHZ)
-	dc.l GMap128_GHZ,GMap128_GHZ+$1EE8	; mappings/128x128/GHZ.kosp
+	dc.l GMap128_GHZ,GMap128_GHZ+$2284	; mappings/128x128/GHZ.kosp
 	endif
 	if defined(GMap128_HPZ)
 	dc.l GMap128_HPZ,GMap128_HPZ+$1C1E	; mappings/128x128/HPZ.kosp
@@ -702,7 +702,7 @@ MCD_CompressedAssets:
 	dc.l Level_GHZ3,Level_GHZ3+$1EC	; level/layout/GHZ_3.kosp
 	endif
 	if defined(Level_GHZ4)
-	dc.l Level_GHZ4,Level_GHZ4+$1DE	; level/layout/GHZ_4.kosp
+	dc.l Level_GHZ4,Level_GHZ4+$1FC	; level/layout/GHZ_4.kosp
 	endif
 	if defined(Level_HPZ1)
 	dc.l Level_HPZ1,Level_HPZ1+$2AE	; level/layout/HPZ_1.kosp
@@ -870,7 +870,7 @@ MCD_CompressedAssets:
 	dc.l Map128_EHZ,Map128_EHZ+$2D4C	; mappings/128x128/EHZ.kosp
 	endif
 	if defined(Map128_GHZ)
-	dc.l Map128_GHZ,Map128_GHZ+$1EE8	; mappings/128x128/GHZ.kosp
+	dc.l Map128_GHZ,Map128_GHZ+$2284	; mappings/128x128/GHZ.kosp
 	endif
 	if defined(Map128_HPZ)
 	dc.l Map128_HPZ,Map128_HPZ+$1C1E	; mappings/128x128/HPZ.kosp
@@ -1287,7 +1287,7 @@ MCD_CompressedAssets:
 	dc.l PLevel_GHZ3,PLevel_GHZ3+$1DE	; level/layout/past/GHZ_3.kosp
 	endif
 	if defined(PLevel_GHZ4)
-	dc.l PLevel_GHZ4,PLevel_GHZ4+$1DE	; level/layout/past/GHZ_4.kosp
+	dc.l PLevel_GHZ4,PLevel_GHZ4+$1FC	; level/layout/past/GHZ_4.kosp
 	endif
 	if defined(PLevel_HPZ1)
 	dc.l PLevel_HPZ1,PLevel_HPZ1+$2AE	; level/layout/past/HPZ_1.kosp
@@ -1452,7 +1452,7 @@ MCD_CompressedAssets:
 	dc.l PMap128_EHZ,PMap128_EHZ+$2D4C	; mappings/128x128/EHZ.kosp
 	endif
 	if defined(PMap128_GHZ)
-	dc.l PMap128_GHZ,PMap128_GHZ+$1EE8	; mappings/128x128/GHZ.kosp
+	dc.l PMap128_GHZ,PMap128_GHZ+$2284	; mappings/128x128/GHZ.kosp
 	endif
 	if defined(PMap128_HPZ)
 	dc.l PMap128_HPZ,PMap128_HPZ+$1C1E	; mappings/128x128/HPZ.kosp

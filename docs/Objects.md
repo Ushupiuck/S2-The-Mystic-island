@@ -441,7 +441,9 @@ Released bodies execute their own free/floating controller in Obj18. Gravity is
 `$18`; descending terrain
 contact produces a quarter-speed vertical bounce, then friction `$10` and wall
 stops. Crossing an enabled act's live water surface from above selects floating,
-bobbing and directional drift. A terrain surface above the water wins; the old
+bobbing and directional drift. Bobbing reads the oscillator position at
+`v_oscillate+$12`, divided by eight for a centred eight-pixel span; the adjacent
+signed rate is not a displacement. A terrain surface above the water wins; the old
 fixed `$0720` landing floor and zone-specific ARZ test are gone. Floating tracks
 live water height and returns to falling if water is disabled. Bodies falling
 below the act release their riders and delete instead of retaining an offscreen

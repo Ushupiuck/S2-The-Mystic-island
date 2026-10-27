@@ -30,20 +30,21 @@ for zone in range(m.s['LevelCount']):
         m.start()
         m.write('Current_ZoneAndAct', zone * 256 + act, 2)
         m.act('Level_WaterFlagInit')
-        wet = zone in (m.s['id_LZ'], m.s['id_HPZ'])
+        ghz4 = zone == 0 and act == 3
+        wet = ghz4 or zone in (m.s['id_LZ'], m.s['id_HPZ'])
         assert bool(m.read('Water_flag')) == wet, (zone, act)
         m.write('v_waterpos1', 0x5A5A, 2)
         m.act('CheckLevelForWater')
         if wet:
-            height = (0x600, 0x328, 0x900, 0x228)[act]
+            height = 0x400 if ghz4 else (0x600, 0x328, 0x900, 0x228)[act]
             assert [m.read('v_waterpos' + str(i), 2) for i in (1, 2, 3)] == [height] * 3
-            palette = m.s['palid_SBZ3SonWat'] if zone == m.s['id_LZ'] and act == 3 else m.s['palid_LZSonWater']
+            palette = m.s['palid_GHZ4Water'] if ghz4 else m.s['palid_SBZ3SonWat'] if zone == m.s['id_LZ'] and act == 3 else m.s['palid_LZSonWater']
             assert m.cpu.reg_read(m68k.UC_M68K_REG_D0) == palette
         else:
             assert m.read('v_waterpos1', 2) == 0x5A5A
         visited.clear()
         m.act('DynamicWaterHeight')
-        expected = ('Debug', 'LZ2', 'LZ3', 'LZ4')[act] if wet else 'Null'
+        expected = ('Debug', 'LZ2', 'LZ3', 'LZ4')[act] if wet and not ghz4 else 'Null'
         assert visited == [expected], (zone, act, visited)
         checks.append([zone, act, wet, expected])
 

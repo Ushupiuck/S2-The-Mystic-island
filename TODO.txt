@@ -9,6 +9,7 @@ https://tcrf.net/Proto:Sonic_the_Hedgehog_2_(Genesis)
 ; ---------------------------------------------------------------------------
 
 TODO:
+Playtest GHZ4 with four authored platform/payload stations, a full teal water palette/cycle and reachable entrance-gap water; verify both builds/characters, standing and hanging through detachment, loop paths, and fix floating oscillator-rate sign-wrap jumps < DONE
 Port standalone D9 classic/traversable hanging surfaces with both-player state, S3&K release/traversal animation, terrain/solid support handoff and Obj18-spawned children; preserve word settings/SSTs and test MD/Mode1/editor < DONE
 Unify Obj17/Obj18 collision profiles, including conveyor+hanging top/full solidity, physical crushing and detached grip ownership; migrate word settings/Debug/editor without growing SSTs < DONE
 Make regular-platform falling a bit-12 option like swing detachment: either standing rider arms it, finish the current trip before descent, retain stationary delay/all 16 switch channels and migrate editor/layout words < DONE

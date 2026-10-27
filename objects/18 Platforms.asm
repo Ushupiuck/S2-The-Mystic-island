@@ -1165,8 +1165,8 @@ Platform_FloatingBody:
 		move.w	obY(a0),Plat_speed(a0)
 		jsr	(ObjectMove).l
 		moveq	#0,d0
-		move.b	(v_oscillate+$14).w,d0
-		lsr.w	#2,d0
+		move.b	(v_oscillate+$12).w,d0	; 0-63 position, not the following signed rate
+		lsr.w	#3,d0
 		subq.w	#4,d0
 		add.w	(v_waterpos2).w,d0
 		move.w	d0,obY(a0)

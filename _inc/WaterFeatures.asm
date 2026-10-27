@@ -17,6 +17,9 @@ CheckLevelForWater:
 		sf	(f_wtr_state).w
 		move.b	#1,(Water_flag).w
 		move.w	#30,(v_air).w
+		moveq	#palid_GHZ4Water,d0
+		cmpi.w	#3,(Current_ZoneAndAct).w
+		beq.s	.loadpalette
 		moveq	#palid_LZSonWater,d0
 		cmpi.w	#id_LZ*$100+3,(Current_ZoneAndAct).w ; Labyrinth act 4?
 		bne.s	.loadpalette			; if not, load from lampost
@@ -102,7 +105,7 @@ WaterEffects:
 ; Nonzero enables water; initialization selects its usual 1-pixel/frame speed.
 ; ---------------------------------------------------------------------------
 WaterFlags:
-		dc.b 0, 0, 0, 0	; GHZ
+		dc.b 0, 0, 0, 1	; GHZ (act 4 platform/water test basin)
 		dc.b 1, 1, 1, 1	; LZ
 		dc.b 0, 0, 0, 0	; CPZ
 		dc.b 0, 0, 0, 0	; EHZ
@@ -125,7 +128,7 @@ WaterFlags_End:
 		even
 
 WaterHeight:
-		dc.w $600, $600, $600, $600	; GHZ
+		dc.w $600, $600, $600, $400	; GHZ
 		dc.w $600, $328, $900, $228	; LZ
 		dc.w $600, $600, $600, $600	; CPZ
 		dc.w $600, $600, $600, $600	; EHZ
