@@ -79,6 +79,7 @@ the complete serialized word, including when calculating movement overlays.
 | `$B1–B5` | Palmtree Panic badniks | Bit 0: normal/damaged variant. |
 | `$B7` | Metallic Madness propeller obstacle | Subtype unused. X flip reverses the initial patrol; Y flip is ignored. Preview includes the mast and both blade assemblies. |
 | `$D9` | Hanging surface | Low six bits: traversable grip count 1–63 (zero means one), or classic span ×32 px (zero means 56 px). Bit 6: drop at final grip; bit 7: traversable; bit 8: disable support release; bit 9: silent; bit 10: hide metal handholds. X flip selects the left release end. Preview repeats the actual handhold art; invisible modes outline the grab region. Visible rows require the act's handhold PLC. See [hanging surfaces](../docs/Objects.md#hanging-surfaces). |
+| `$DA` | Pull-chain grapple | Bits 0–6: travel ×8 px; bit 7: start lowered / rise while held; bits 8–11: resting 16px links; bit 12: silent; bit 13: disable support release. Origin is the fixed ceiling anchor; flips are unused. `$0410` lowers 128px with four resting links; `$0490` raises instead. Preview uses the shared primary-palette handhold/chain art. See [runtime behavior](../docs/Objects.md#pull-chain-grapple). |
 
 Movement distances are determined by the selected runtime routine, rather than
 an independent distance field. The current `$18` mapping sets have two frames;

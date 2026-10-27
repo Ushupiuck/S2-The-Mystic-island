@@ -20,6 +20,7 @@ Hang_oldY:		equ objoff_36	; word
 Hang_parentcode:	equ objoff_38	; long: expected live owner controller
 Hang_parentlink:	equ objoff_3C	; word: address of owner's child-pointer word
 Hang_display:		equ obVelX	; word: unused velocity holds one display helper
+Hang_snapX:		equ obVelY	; byte: parent requests a centred classic grab (pull chain)
 Hang_p1:		equ objoff_3E	; eight bytes per player, ends at object_size
 Hang_p2:		equ objoff_46
 Hang_active:		equ 0
@@ -236,6 +237,10 @@ Hanging_TryGrab:
 		add.w	obX(a0),d1
 		move.w	d1,obX(a1)
 .grab:
+		tst.b	Hang_snapX(a0)
+		beq.s	.keepX
+		move.w	obX(a0),obX(a1)
+.keepX:
 		clr.w	obVelX(a1)
 		clr.w	obVelY(a1)
 		clr.w	obInertia(a1)

@@ -293,7 +293,7 @@ def native(args):
     rows.append('display pool failure/retry, orphan deletion and reused-slot protection')
 
     bank=m.s['ArtTile_HangingSurface']*32
-    assert struct.unpack_from('>H',rom,m.s['Nem_HangingSurface'])[0]&0x7FFF==10
+    assert struct.unpack_from('>H',rom,m.s['Nem_HangingSurface'])[0]&0x7FFF==12
     def loads(label,module=False):
         pos=m.s[label]
         for i in range(struct.unpack_from('>h',rom,pos)[0]+1):
@@ -305,8 +305,87 @@ def native(args):
         loaded=list(loads('PLC_'+zone+str(act)+'_Main'))+list(loads('PLC_'+zone+str(act)+'_Extra'))+list(loads('PLCKosM_'+module+str(act),True))
         assert sum(src==m.s['Nem_HangingSurface'] and dest==bank for src,dest,end in loaded)==1
         for src,start,end in loaded:
-            assert src==m.s['Nem_HangingSurface'] or end<=bank or start>=bank+320,(zone,act,hex(src))
+            assert src==m.s['Nem_HangingSurface'] or end<=bank or start>=bank+384,(zone,act,hex(src))
     rows.append('GHZ4 and four LZ acts: resident handhold PLC and non-overlapping live object banks')
+
+    def chain_fixture(subtype=0x410, grab=True):
+        m.start();m.write('Camera_X_pos',0x780,2);m.write('Camera_X_pos_coarse_back',0x700,2)
+        m.write('Camera_Y_pos',0x180,2)
+        m.put(o,'code',m.s['PullChain']);m.put(o,'obX',0x800,2)
+        m.put(o,'obY',0x200,2);m.put(o,'obSubtype',subtype)
+        m.act('PullChain',o)
+        child=m.get(o,'Pull_hanger',2)|0xFFFF0000
+        assert m.get(child,'code')==m.s['Hanging_Child']
+        assert m.get(child,'Hang_snapX')==1
+        if grab:
+            for actor,dx in [('v_player',-8),('v_player2',8)]:
+                m.put(actor,'obMap',m.s['Map_Tails' if actor=='v_player2' else 'Map_Sonic'],4)
+                m.put(actor,'character_id',int(actor=='v_player2'))
+                m.put(actor,'obStatus',2);m.put(actor,'obX',0x800+dx,2)
+                m.put(actor,'obY',m.get(child,'obY',2)+30,2)
+            m.act('PullChain',o)
+            assert all(m.get(actor,'obControl')==3 and m.get(actor,'obX',2)==0x800 for actor in ('v_player','v_player2'))
+        return child
+
+    for reverse in (False,True):
+        child=chain_fixture(0x410|(0x80 if reverse else 0))
+        assert m.get(o,'Pull_extension',2)==(128 if reverse else 0)
+        for frame in range(1,13):
+            m.act('PullChain',o)
+            assert m.get(o,'Pull_extension',2)==(128-frame*2 if reverse else frame*2)
+            for actor in ('v_player','v_player2'):
+                assert m.get(actor,'obY',2)==0x200+64+m.get(o,'Pull_extension',2)+60
+        m.write('v_jpadholdlogical',0x10,2);m.act('PullChain',o);m.write('v_jpadholdlogical',0,2)
+        assert not m.get('v_player','obControl') and m.get('v_player2','obControl')==3
+        before=m.get(o,'Pull_extension',2)
+        for _ in range(8):m.act('PullChain',o)
+        assert m.get(o,'Pull_extension',2)==before+(-16 if reverse else 16)
+        m.write('v_jpadholdlogical2',0x10,2);m.act('PullChain',o);m.write('v_jpadholdlogical2',0,2)
+        for actor in ('v_player','v_player2'):m.put(actor,'obX',0x900,2)
+        before=m.get(o,'Pull_extension',2);m.act('PullChain',o)
+        assert m.get(o,'Pull_extension',2)==before+(2 if reverse else -2)
+        for _ in range(80):m.act('PullChain',o)
+        assert m.get(o,'Pull_extension',2)==(128 if reverse else 0)
+        assert m.get(o,'Pull_anchorY',2)==0x200
+    rows.append('DA: centred two-player grabs, exact 2px lowering/raising, one-player release and return only after both leave')
+
+    for sub in (0,0xF490):
+        child=chain_fixture(sub)
+        assert m.get(o,'obSubtype')==sub
+        assert m.get(child,'obSubtype')==(0x300 if sub else 0)
+        m.act('PullChain_Unload',o)
+        assert not m.get(o,'code') and not m.get(child,'code')
+        assert all(not m.get(actor,'obControl') for actor in ('v_player','v_player2'))
+    child=chain_fixture();m.act('DeleteObject',o);m.act('Hanging_Child',child)
+    assert not m.get(child,'code') and not m.get('v_player','obControl')
+    m.start();m.write('Camera_X_pos_coarse_back',0x700,2)
+    for obj in m.pool():m.put(obj,'code',m.s['ObjNull'])
+    m.put(o,'code',m.s['PullChain']);m.put(o,'obX',0x800,2);m.put(o,'obY',0x200,2);m.put(o,'obSubtype',0x410)
+    m.act('PullChain',o);assert not m.get(o,'Pull_hanger',2)
+    m.put(o+m.s['object_size'],'code',0);m.act('PullChain',o)
+    assert m.get(o,'Pull_hanger',2)==(o+m.s['object_size'])&65535
+    rows.append('DA: stationary grip, word flags, full-pool retry, cull and externally deleted parent cleanup')
+
+    chain_maps=frames(rom,m.s['Map_PullChain'],30)
+    for length in (0,2,16,18,64,128,240,1016,1256):
+        for camera in (0x160,0x1FF,0x200,0x201,0x280,0x380,0x600):
+            m.start();m.write('Camera_Y_pos',camera,2)
+            m.put(o,'code',m.s['PullChain']);m.put(o,'obX',0x800,2)
+            m.put(o,'obPriority',0x80,2)
+            m.put(o,'Pull_anchorY',0x200,2);m.put(o,'Pull_extension',length,2)
+            m.act('PullChain_Draw',o)
+            top=0x200+length;total=(length+15)//16
+            expected=[top-total*16+i*16 for i in range(total) if camera-15<=top-total*16+i*16<=camera+223]
+            grip=camera-39<=top<=camera+223
+            queued=int.from_bytes(m.cpu.mem_read((m.s['v_spritequeue']+0x80)&0xFFFFFF,2),'big')
+            assert bool(queued)==bool(expected or grip),(length,camera,'visibility')
+            if queued:
+                pieces=chain_maps[m.get(o,'obFrame')];cy=m.get(o,'obY',2)
+                actual=[cy+y for y,size,tile,x in pieces if tile==10]
+                assert actual==expected,(length,camera,actual,expected)
+                assert [(cy+y,tile) for y,size,tile,x in pieces if tile!=10]==([(top,0),(top+16,4)] if grip else [])
+                assert len(pieces)<=17
+    rows.append('DA: exact chain/grip mappings and viewport clipping through the maximum 1256px chain')
     return rows
 
 

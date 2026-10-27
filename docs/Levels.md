@@ -34,6 +34,21 @@ Its loop at chunk origin `$1000,$0300` now has Act 3's matching three pathswappe
 (`$1080,$0350/$0091`, `$1108,$0340/$0011`, `$1108,$03A0/$0010`), present in
 all eras. Runtime object fixtures stay disposable; they do not populate the
 published act with a permanent test course.
+Its act-specific art kit loads only the swinging platform/ball, vertical and
+horizontal springs, and the shared handhold/chain bank, in addition to common
+HUD/monitor/spike/effect/animal/player art. Its module list is explicitly empty;
+bridge, rock, wall, ground-explosion and badnik loads from Acts 1–3 are omitted.
+`Debug_GHZ4` lists the matching test objects independently of the earlier acts.
+Add further art and Debug entries to this act's own lists when extending it.
+
+LZ1's six Ballhog placements were temporary bomb/wall test fixtures and are
+removed. The thirteen conveyor/wheel placements retain their original bytes.
+All four LZ module lists omit the copied horizontal/vertical Ballhog loads;
+the entries remain commented out for convenient act-specific reuse. GHZ1's four
+starting Ballhog test placements are also removed, with its Ballhog module,
+ground-explosion and shared Debug test entries commented out. Scrap Madness's
+ten authored Ballhogs, their code and atlas are unchanged. Those two enemy banks total
+71 tiles (`$43D-$483`, 2,272 bytes), available for a future LZ act recipe.
 
 ## Per-act art
 

@@ -26,16 +26,23 @@ The native runner exercises both actors, word settings, exact FBZ step offsets,
 grab/release, shared solid-object landing, parent ownership and pool retry.
 It also checks all 64 grip-count encodings against visible mapping placement,
 camera-edge clipping, helper allocation retry, orphan cleanup and reused slots.
+DA checks exercise both movement directions and both players together, centred
+grabs, exact two-pixel movement, return after the final release, stationary
+chains, word settings, pool retry/unload/orphan cleanup, and precise clipped
+mapping coordinates through the 1256-pixel maximum chain.
 The game runner boots GHZ4 and tests real neutral-jump/regrab physics, traversal
 and uploaded poses, terrain and rising-object support, and both simultaneous
 standing/hanging arrangements on moving/sagging platforms. It verifies the actual handhold PLC upload,
 SAT piece counts/spacing for 1/2/3/8 grips, and camera views across a 63-grip row.
+The game pass also checks DA's uploaded chain pixels, both lift directions with
+independent releases, and three camera views through the longest chain.
 Add `--pal` or `--player 2` for PAL or primary Tails. RAM writes construct disposable scenes;
 these are not a controller-only playthrough of authored placements. MD builds
 omit `--system-directory`. Use separate processes when changing ROMs/regions.
 Source references are skdisasm `73de97c6b55055bcb8089c1d55d006b02136f163`,
 the LBZ unused bar, FBZ chain/array controller and SOZ light switch. This import
-does not add the lowering chain, lights or controller-to-controller handover.
+adds the lowering/raising chain through DA and LBZ's reversible movement, but
+does not add SOZ lighting or controller-to-controller handover.
 
 After a normal build:
 
@@ -300,6 +307,9 @@ complete live VRAM sheet. It accepts `--player 2`, `--pal` and
 `--system-directory`. `--spiked` changes the first group's subtype in an
 output-only ROM fixture; gameplay sources and the normal level remain normal.
 Its underside contact fixture checks damage/harmlessness for the selected mode.
+Reversal waits for the actual latch and observes any already-queued wheel DMA
+before checking the reversed frame sequence; a switch press cannot cancel an
+upload submitted by the previous foreground pass.
 These use scripted positioning around real placements, not a complete route.
 
 `check_lz_wheel_dplc.py` compares one and 70 wheels through forward/reverse

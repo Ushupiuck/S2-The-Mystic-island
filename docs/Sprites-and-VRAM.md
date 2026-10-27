@@ -77,13 +77,21 @@ avoids expanding each handhold into ten hardware sprites.
 
 Run `python build_tools/build_hanging_surface_art.py` after editing that raw
 source. It regenerates the Nemesis art and 1–11 visible-row mappings; `--check`
-verifies both outputs. The controller clips its full 1–63-grip span before
+verifies all outputs. The controller clips its full 1–63-grip span before
 selecting the mapping. Grips are 32 pixels apart and end at the controller's Y.
 
-`ArtTile_HangingSurface = $40D` occupies `$81A0-$82E0` (ten tiles). All four LZ
-Extra PLCs load it in space released by the conveyor. GHZ4 loads it too and omits
-its unused Crabmeat module, whose bank would overlap; that act has no Crabmeat
-placements. Other GHZ acts retain their complete badnik loads. Other acts must
+DA reuses this handhold and appends two 8×8 chain tiles, forming one 8×16 repeat.
+The editable source is `art/uncompressed/Hanging chain.unc`: FBZ Misc Art 1
+tiles `$EE-$EF`, with source indices `0,1,7,8,9,A,B` remapped to primary line
+`0,6,F,D,4,B,1`. This is the approved orange/red chain and gray handhold preview;
+neither image needs a level palette edit. The generator also builds DA's thirty
+viewport mappings and the combined `art/uncompressed/Pull chain.unc` editor
+atlas. Edit the separate handhold/chain sources, not that generated atlas.
+
+`ArtTile_HangingSurface = $40D` occupies `$81A0-$8320` (twelve tiles). All four LZ
+Extra PLCs load it in space released by the conveyor. GHZ4 loads it in its own
+sparse test kit, with an empty badnik module list. Other GHZ acts retain their
+complete badnik loads. Other acts must
 load/reserve this art explicitly before using visible rows; hide-art bit `$0400`
 requires no handhold bank. Classic/platform-spawned grips remain invisible.
 
@@ -190,7 +198,7 @@ SMZ's atlas, junction and smoke lifetimes are in [Levels](Levels.md#scrap-madnes
 
 LZ's conveyor uses 32 tiles at `$3ED-$40C`: one shared 16-tile wheel, then
 eight tiles each for normal and spiked platforms. This releases `$40D-$43C`
-(48 tiles / 1,536 bytes); the hanging handholds now occupy its first ten tiles.
+(48 tiles / 1,536 bytes); the hanging handhold/chain bank now occupies its first twelve tiles.
 All wheels share one animation clock and DPLC cache;
 the first wheel processed in a game frame services the bank. Animation advances
 every four active frames; wheel count does not multiply uploads. Switch reversal

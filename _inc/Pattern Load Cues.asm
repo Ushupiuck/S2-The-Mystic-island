@@ -403,7 +403,7 @@ PLC_GHZ1_Main:		dc.w (PLC_GHZ1_Main_End-PLC_GHZ1_Main-2)/6-1
 		plcm	Nem_Swing,	ArtTile_GHZ_MZ_Swing
 		plcm	Nem_GHZ_Ball,	ArtTile_GHZ_Giant_Ball ; giant ball
 		plcm	Nem_GHZ_Rock,	ArtTile_GHZ_Purple_Rock
-		plcm	Nem_GroundExplosion,	ArtTile_Ground_Explosion
+;		plcm	Nem_GroundExplosion,	ArtTile_Ground_Explosion ; Ballhog test effect
 PLC_GHZ1_Main_End:	plccheck PLC_GHZ1_Main,ActPLC_Main_Reserve
 
 PLC_GHZ1_Extra:		dc.w (PLC_GHZ1_Extra_End-PLC_GHZ1_Extra-2)/6-1
@@ -456,18 +456,13 @@ PLC_GHZ3_Extra_End:	plccheck PLC_GHZ3_Extra,0
 ; Twilight Hill - Act 4
 ; ---------------------------------------------------------------------------
 PLC_GHZ4_Main:		dc.w (PLC_GHZ4_Main_End-PLC_GHZ4_Main-2)/6-1
-		plcm	Nem_GHZ_Bridge,	ArtTile_GHZ_Bridge
 		plcm	Nem_Swing,	ArtTile_GHZ_MZ_Swing
 		plcm	Nem_GHZ_Ball,	ArtTile_GHZ_Giant_Ball ; giant ball
-		plcm	Nem_GHZ_Rock,	ArtTile_GHZ_Purple_Rock
-		plcm	Nem_GroundExplosion,	ArtTile_Ground_Explosion
 PLC_GHZ4_Main_End:	plccheck PLC_GHZ4_Main,ActPLC_Main_Reserve
 
 PLC_GHZ4_Extra:		dc.w (PLC_GHZ4_Extra_End-PLC_GHZ4_Extra-2)/6-1
 		plcm	Nem_HSpring2,	ArtTile_S1_Spring_Horizontal
 		plcm	Nem_VSpring2,	ArtTile_S1_Spring_Vertical
-		plcm	Nem_GHZ_BWall,	ArtTile_GHZ_SLZ_Smashable_Wall
-		plcm	Nem_GHZ_SWall,	ArtTile_GHZ_Edge_Wall
 		plcm	Nem_HangingSurface,	ArtTile_HangingSurface
 PLC_GHZ4_Extra_End:	plccheck PLC_GHZ4_Extra,0
 
@@ -1712,8 +1707,8 @@ PLCKosM_THZ1:	plrKosMlistheader
 	plreqKosM	ArtTile_Crabmeat, Kospm_Crabmeat
 	plreqKosM	ArtTile_Chopper, Kospm_Chopper
 	plreqKosM	ArtTile_Moto_Bug, Kospm_Motobug
-	plreqKosM	ArtTile_Ball_HogV, Kospm_BallhogV
-	plreqKosM	ArtTile_Ball_HogH, Kospm_BallhogH
+;	plreqKosM	ArtTile_Ball_HogV, Kospm_BallhogV ; retired test load
+;	plreqKosM	ArtTile_Ball_HogH, Kospm_BallhogH ; retired test load
 	plreqKosM	ArtTile_Newtron, Kospm_Newtron
 PLCKosM_THZ1_End
 ; ---------------------------------------------------------------------------
@@ -1740,12 +1735,7 @@ PLCKosM_THZ3:	plrKosMlistheader
 PLCKosM_THZ3_End
 ; ---------------------------------------------------------------------------
 ; Act 4
-PLCKosM_THZ4:	plrKosMlistheader
-	plreqKosM	ArtTile_Buzz_Bomber, Kospm_Buzz
-	; No Crabmeat placements in Act 4; its former bank hosts the hanging art.
-	plreqKosM	ArtTile_Chopper, Kospm_Chopper
-	plreqKosM	ArtTile_Moto_Bug, Kospm_Motobug
-	plreqKosM	ArtTile_Newtron, Kospm_Newtron
+PLCKosM_THZ4:	dc.w -1	; GHZ4 is the sparse object test act; no copied badnik bank
 PLCKosM_THZ4_End
 ; ---------------------------------------------------------------------------
 ; KOSM PATTERN LOAD REQUEST LIST
@@ -1755,8 +1745,8 @@ PLCKosM_THZ4_End
 PLCKosM_RRZ1:	plrKosMlistheader
 	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
 	plreqKosM	ArtTile_LZ_Conveyor_Belt, Kospm_LzWheel
-	plreqKosM	ArtTile_Ball_HogV, Kospm_BallhogV
-	plreqKosM	ArtTile_Ball_HogH, Kospm_BallhogH
+;	plreqKosM	ArtTile_Ball_HogV, Kospm_BallhogV ; retired test load
+;	plreqKosM	ArtTile_Ball_HogH, Kospm_BallhogH ; retired test load
 	plreqKosM	ArtTile_Basaran, Kospm_Basaran
 PLCKosM_RRZ1_End
 ; ---------------------------------------------------------------------------
@@ -1764,8 +1754,8 @@ PLCKosM_RRZ1_End
 PLCKosM_RRZ2:	plrKosMlistheader
 	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
 	plreqKosM	ArtTile_LZ_Conveyor_Belt, Kospm_LzWheel
-	plreqKosM	ArtTile_Ball_HogV, Kospm_BallhogV
-	plreqKosM	ArtTile_Ball_HogH, Kospm_BallhogH
+;	plreqKosM	ArtTile_Ball_HogV, Kospm_BallhogV ; retired test load
+;	plreqKosM	ArtTile_Ball_HogH, Kospm_BallhogH ; retired test load
 	plreqKosM	ArtTile_Basaran, Kospm_Basaran
 PLCKosM_RRZ2_End
 ; ---------------------------------------------------------------------------
@@ -1773,8 +1763,8 @@ PLCKosM_RRZ2_End
 PLCKosM_RRZ3:	plrKosMlistheader
 	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
 	plreqKosM	ArtTile_LZ_Conveyor_Belt, Kospm_LzWheel
-	plreqKosM	ArtTile_Ball_HogV, Kospm_BallhogV
-	plreqKosM	ArtTile_Ball_HogH, Kospm_BallhogH
+;	plreqKosM	ArtTile_Ball_HogV, Kospm_BallhogV ; retired test load
+;	plreqKosM	ArtTile_Ball_HogH, Kospm_BallhogH ; retired test load
 	plreqKosM	ArtTile_Basaran, Kospm_Basaran
 PLCKosM_RRZ3_End
 ; ---------------------------------------------------------------------------
@@ -1782,8 +1772,8 @@ PLCKosM_RRZ3_End
 PLCKosM_RRZ4:	plrKosMlistheader
 	plreqKosM	ArtTile_LZ_Flapping_Door, Kospm_FlapDoor
 	plreqKosM	ArtTile_LZ_Conveyor_Belt, Kospm_LzWheel
-	plreqKosM	ArtTile_Ball_HogV, Kospm_BallhogV
-	plreqKosM	ArtTile_Ball_HogH, Kospm_BallhogH
+;	plreqKosM	ArtTile_Ball_HogV, Kospm_BallhogV ; retired test load
+;	plreqKosM	ArtTile_Ball_HogH, Kospm_BallhogH ; retired test load
 	plreqKosM	ArtTile_Basaran, Kospm_Basaran
 PLCKosM_RRZ4_End
 ; ---------------------------------------------------------------------------

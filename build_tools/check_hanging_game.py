@@ -87,6 +87,63 @@ def main():
     assert not g.get(h,'Hang_display',2)
     checks.append('63-grip row: camera views near both ends and centre, clipped SAT output and hide-art cleanup')
 
+    chain_art=(Path(__file__).resolve().parents[1]/'art/uncompressed/Hanging chain.unc').read_bytes()
+    assert bytes(g.vram[(bank+320+i)^1] for i in range(64))==chain_art
+    for reverse in (False,True):
+        g.restore(base);isolate(g)
+        g.write('Tails_CPU_idle_timer',600,2)
+        g.write('Camera_X_pos',0x360,2);g.write('Camera_Y_pos',0x190,2)
+        g.write('Camera_X_pos_coarse_back',0x300,2)
+        for actor in actors:
+            place(g,actor,0x400,0x180);g.put(actor,'obControl',1)
+        chain=spawn(g,'PullChain',0x400,0x1A0,0x208|(0x80 if reverse else 0))
+        for _ in range(8):
+            run()
+            if g.get(chain,'Pull_hanger',2):break
+        child=g.get(chain,'Pull_hanger',2);assert child
+        for i,actor in enumerate(actors):place(g,actor,0x3F8+i*16,g.get(child,'obY',2)+30)
+        for _ in range(8):
+            run()
+            if all(g.get(actor,'obControl')==3 for actor in actors):break
+        assert all(g.get(actor,'obControl')==3 and g.get(actor,'obX',2)==0x400 for actor in actors)
+        for _ in range(100):
+            before=g.get(chain,'Pull_extension',2);run();after=g.get(chain,'Pull_extension',2)
+            assert after-before in ((-2,0) if reverse else (0,2)),('chain step',reverse,before,after)
+            assert all(g.get(actor,'obControl')==3 for actor in actors)
+            if after==(0 if reverse else 64):break
+        assert after==(0 if reverse else 64)
+        g.video.save(args.output/('pull-chain-'+('raise' if reverse else 'lower')+'.png'))
+        # Releasing one player cannot send the other back to the resting end.
+        for actor in actors:
+            buttons='buttons2' if actor=='v_player2' else 'buttons'
+            setattr(g,buttons,{0})
+            for _ in range(6):
+                run()
+                if not g.get(actor,'obControl'):break
+            setattr(g,buttons,set());assert not g.get(actor,'obControl')
+            g.put(actor,'obControl',1);g.put(actor,'obX',0x480,2)
+            if actor!=actors[-1]:
+                run(8);assert g.get(chain,'Pull_extension',2)==(0 if reverse else 64)
+        for _ in range(100):
+            run()
+            if g.get(chain,'Pull_extension',2)==(64 if reverse else 0):break
+        assert g.get(chain,'Pull_extension',2)==(64 if reverse else 0)
+        assert g.get(chain,'Pull_anchorY',2)==0x1A0
+    checks.append('DA: both movement directions, centred independent players, 2px steps and return after the final release')
+
+    g.restore(base);isolate(g)
+    g.write('Camera_X_pos',0x360,2);g.write('Camera_X_pos_coarse_back',0x300,2)
+    chain=spawn(g,'PullChain',0x400,0x1A0,0xFFF)
+    for camera in (0x190,0x400,0x600):
+        g.write('Camera_Y_pos',camera,2);g.write('Camera_Max_Y_pos',0x720,2)
+        for actor in actors:place(g,actor,0x400,camera+100);g.put(actor,'obControl',1)
+        run(4)
+        assert g.get(chain,'Pull_extension',2)==1016
+        assert g.get(chain,'obFrame')<30
+        assert g.get(chain,'Pull_hanger',2)
+        g.video.save(args.output/('pull-chain-long-%04X.png'%camera))
+    checks.append('DA: maximum 1256px chain draws through three camera heights without moving its physical anchor')
+
     for who in actors:
         h=fixture(who)
         run(30)

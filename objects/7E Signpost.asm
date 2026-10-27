@@ -86,7 +86,7 @@ Signpost_Sparkle:
 		addq.b	#2,objoff_38(a0)
 		andi.b	#$E,objoff_38(a0)
 		lea	Signpost_RingSparklePositions(pc,d0.w),a2
-		bsr.w	FindFreeObj
+		jsr	(FindFreeObj).l
 		bne.s	.return
 		move.l	#Obj12,code(a1)
 		move.b	#6,obRoutine(a1)

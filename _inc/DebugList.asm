@@ -1,5 +1,5 @@
 DebugList:
-		dc.w Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList
+		dc.w Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ4-DebugList
 		dc.w Debug_LZ-DebugList,Debug_LZ-DebugList,Debug_LZ-DebugList,Debug_LZ-DebugList
 		dc.w Debug_CPZ-DebugList,Debug_CPZ-DebugList,Debug_CPZ-DebugList,Debug_CPZ-DebugList
 		dc.w Debug_EHZ-DebugList,Debug_EHZ-DebugList,Debug_EHZ-DebugList,Debug_EHZ-DebugList
@@ -44,15 +44,14 @@ Debug_GHZ:	dc.w (Debug_GHZ_End-Debug_GHZ-2)/DebugEntry_size
 	dbug	Map_Crab,	Crabmeat,	0,	0,	make_art_tile(ArtTile_Crabmeat,0,0)
 	dbug	Map_obj22,	Obj22,	0,	0,	make_art_tile(ArtTile_Buzz_Bomber,0,0)
 	dbug	Map_Obj2B,	Obj2B,	7,	0,	make_art_tile(ArtTile_Chopper,0,0)
-	dbug	Map_BallHogV,	Ballhog,	$12,	0,	make_art_tile(ArtTile_Ball_HogV,1,0)
-	dbug	Map_BallHogV,	Ballhog,	$13,	0,	make_art_tile(ArtTile_Ball_HogV,1,0)
-	dbug	Map_BallHogH,	Ballhog,	$00,	0,	make_art_tile(ArtTile_Ball_HogH,1,0)
-	dbug	Map_BallHogH,	Ballhog,	$06,	0,	make_art_tile(ArtTile_Ball_HogH,1,0)
+;	dbug	Map_BallHogV,	Ballhog,	$12,	0,	make_art_tile(ArtTile_Ball_HogV,1,0)
+;	dbug	Map_BallHogV,	Ballhog,	$13,	0,	make_art_tile(ArtTile_Ball_HogV,1,0)
+;	dbug	Map_BallHogH,	Ballhog,	$00,	0,	make_art_tile(ArtTile_Ball_HogH,1,0)
+;	dbug	Map_BallHogH,	Ballhog,	$06,	0,	make_art_tile(ArtTile_Ball_HogH,1,0)
 	dbug	Map_Obj36,	Obj36,	0,	0,	make_art_tile(ArtTile_Spikes,0,0)
 	dbug	Map_Obj18_GHZ,	Obj18,	$100,	0,	make_art_tile(ArtTile_Level,2,0)
 	dbug	Map_Obj18_GHZ,	Obj18,	$0801,	0,	make_art_tile(ArtTile_Level,2,0)
 	dbug	Map_Ring,	HangingSurface,	$0000,	0,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Ring,	HangingSurface,	$0084,	0,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_PRock,	Obj3B,	0,	0,	make_art_tile(ArtTile_GHZ_Purple_Rock,3,0)
 	dbug	Map_obj40,	MotoBug,	0,	0,	make_art_tile(ArtTile_Moto_Bug,0,0)
 	dbug	Map_obj41_GHZ,	Obj41,	0,	0,	make_art_tile(ArtTile_S1_Spring_Vertical,0,0)
@@ -62,6 +61,33 @@ Debug_GHZ:	dc.w (Debug_GHZ_End-Debug_GHZ-2)/DebugEntry_size
 	dbug	Map_Obj79,	Obj79,	1,	0,	make_art_tile(ArtTile_Lamppost,1,0)
 	dbug	Map_GiantRing,	GiantRing,	0,	0,	make_art_tile(ArtTile_Giant_Ring,1,0)
 Debug_GHZ_End:
+
+Debug_GHZ4:	dc.w (Debug_GHZ4_End-Debug_GHZ4-2)/DebugEntry_size
+; Act-specific kit: these are the art banks loaded by GHZ4's PLCs.
+	dbug	Map_Ring,	Obj12,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj26,	Obj26,	0,	0,	make_art_tile(ArtTile_Monitor,0,0)
+	dbug	Map_Obj03,	Obj03,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj03,	Obj03,	9,	1,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj03,	Obj03,	$D,	5,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj17,	SwingingPtfm,	5,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
+	dbug	Map_Obj17,	SwingingPtfm,	$15,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
+	dbug	Map_Obj17,	SwingingPtfm,	$25,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
+	dbug	Map_Obj17,	SwingingPtfm,	$35,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
+	dbug	Map_SwingRail,	SwingingPtfm,	$45,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
+	dbug	Map_Obj17,	SwingingPtfm,	$55,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
+	dbug	Map_Obj17,	SwingingPtfm,	$65,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
+	dbug	Map_GBall,	SwingingPtfm,	$275,	1,	make_art_tile(ArtTile_GHZ_Giant_Ball,2,0)
+	dbug	Map_GBall,	SwingingPtfm,	$205,	1,	make_art_tile(ArtTile_GHZ_Giant_Ball,2,0)
+	dbug	Map_Obj17,	SwingingPtfm,	$1005,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
+	dbug	Map_Obj36,	Obj36,	0,	0,	make_art_tile(ArtTile_Spikes,0,0)
+	dbug	Map_Obj18_GHZ,	Obj18,	$100,	0,	make_art_tile(ArtTile_Level,2,0)
+	dbug	Map_Obj18_GHZ,	Obj18,	$0801,	0,	make_art_tile(ArtTile_Level,2,0)
+	dbug	Map_Ring,	HangingSurface,	$0000,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_HangingSurface,	HangingSurface,	$0084,	3,	make_art_tile(ArtTile_HangingSurface,0,0)
+	dbug	Map_PullChain,	PullChain,	$0410,	4,	make_art_tile(ArtTile_HangingSurface,0,0)
+	dbug	Map_PullChain,	PullChain,	$0490,	4,	make_art_tile(ArtTile_HangingSurface,0,0)
+	dbug	Map_obj41_GHZ,	Obj41,	0,	0,	make_art_tile(ArtTile_S1_Spring_Vertical,0,0)
+Debug_GHZ4_End:
 
 Debug_LZ:	dc.w (Debug_LZ_End-Debug_LZ-2)/DebugEntry_size
 ;		mappings	object		subtype	frame	VRAM setting

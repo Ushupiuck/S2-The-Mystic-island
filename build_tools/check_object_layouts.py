@@ -73,8 +73,11 @@ def main():
     assert 'Symbol Table' in listing, 'Build must finish before checking its listing'
     symbols = {name: int(value, 16) & 0xFFFFFF for name, value in re.findall(
         r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]', listing)}
-    capacity = symbols['MCD_ObjectPlacementCount'] if 'MCD_SubObjects' in symbols else symbols['Object_Respawn_Table_end'] - symbols['Object_Respawn_Table']
-    assert capacity == 0x300
+    mode1 = bool(symbols['MegaCDMode1'])
+    capacity = symbols['MCD_ObjectPlacementCount' if mode1 else 'MD_ObjectPlacementCount']
+    assert capacity == (0x300 if mode1 else 0x180)
+    if not mode1:
+        assert symbols['Object_Respawn_Table_end'] - symbols['Object_Respawn_Table'] == capacity * 3
     layouts = {path.name: placements(path, capacity)
                for path in sorted((ROOT / 'level/objects').glob('*.bin'))}
     rom = args.rom.read_bytes()

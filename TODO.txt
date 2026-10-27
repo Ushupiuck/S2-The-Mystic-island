@@ -11,10 +11,13 @@ https://tcrf.net/Proto:Sonic_the_Hedgehog_2_(Genesis)
 TODO:
 Port standalone D9 classic/traversable hanging surfaces with both-player state, S3&K release/traversal animation, terrain/solid support handoff and Obj18-spawned children; preserve word settings/SSTs and test MD/Mode1/editor < DONE
 Draw D9's configurable 1-63 FBZ handholds at fixed 32px spacing; share art, clip long rows before rendering, preview the full row in SonLVL and verify both builds < DONE
+Port the adjacent DA pull-chain grapple with LBZ reversible movement, the approved primary-palette FBZ chain, D9 player interaction, editor/Debug support and both-build checks < DONE
 Finish Obj17's independent word encoding, eight interaction profiles, MGZ rotation, ICZ rail/momentum/breakaway, SOZ/DEZ oriented either-rider lifts, opt-in relay and shared detached land/water responses; migrate placements/Debug/editor, bound packed links, repair allocation/ownership and preserve $4E SSTs/universals < DONE
 Design the separate multi-body chained-platform object; revisit generic single-body carrying only after its encoding proposal. Neither belongs in the completed Obj17 format < FUTURE, explicitly deferred
 Replace ordinary Obj18 with the reviewed S3&K/S1/S2 hybrid: S3&K oscillator profiles/horizontal/extra paths and direct updates/lifetime, S1 centred vertical distances, configurable sag except traps, S2 solidity, delayed fall and word-selected switch channels; fix trigger/shape/fall-through defects and migrate 72 placements, Debug and SonLVL < DONE
 Use GHZ4's sparse object layout for disposable runtime fixtures; restore the matching Act-3 loop's three pathswappers in the authored layout and verify Sonic/Tails traversal < DONE
+Give GHZ4 its own minimal object-test PLC/Debug kit instead of the copied Act 1-3 scenery/badnik loads; preserve the authored layout and terrain < DONE
+Retire LZ1's six and GHZ1's four temporary Ballhog placements; comment out the test PLC/Debug entries while preserving Scrap Madness's ten authored Ballhogs and their assets < DONE
 Design distinct terrain/art/objects for the newly enabled zone slots and four-act templates; MTZ1 remains the existing unfinished test stage, MTZ2-4 and SMZ3-4 are safe editable starters, and LV0A1 currently showcases imported PP enemies < NEXT level-content work
 Design an intentional Scrap Madness act-2 ending/cutscene; the current port uses the normal signpost
 Add inverse-gravity player physics/collision before enabling S3&K's Debug gravity-reversal cheat < FUTURE engine feature

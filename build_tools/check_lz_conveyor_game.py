@@ -117,7 +117,22 @@ g.video.save(args.output / 'riding.png')
 # Feed the same flag written by switch E, retaining real motion/collision and
 # the original S1 one-way latch. Native tests cover the flag/phase combinations.
 g.write(g.s['f_switch'] + 14, 1)
-reverse_changes = [wheel_changes[-1]]
+# A foreground upload can already be queued after the last VBlank. Wait for
+# the actual reversal latch, then observe that queued frame before measuring
+# the reversed sequence. This still checks its arrival and every later step.
+for _ in range(8):
+    run()
+    if g.read('f_conveyrev'):
+        break
+assert g.read('f_conveyrev') == 1
+pending_frame = g.read('v_lcon_wheel_artframe')
+for _ in range(4):
+    uploaded = wheel_art.index(bytes(g.vram[(bank + i) ^ 1] for i in range(512)))
+    if uploaded == pending_frame:
+        break
+    run()
+assert uploaded == pending_frame, ('pending wheel DMA', pending_frame, uploaded)
+reverse_changes = [uploaded]
 for tick in range(12):
     run()
     wheel_frame = wheel_art.index(bytes(g.vram[(bank + i) ^ 1] for i in range(512)))

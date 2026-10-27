@@ -7331,7 +7331,7 @@ ptr_ObjD6:		dc.l ObjNull
 ptr_ObjD7:		dc.l ObjNull
 ptr_ObjD8:		dc.l ObjNull
 ptr_ObjD9:		dc.l HangingSurface	; classic grip / configurable row of traversable handholds
-ptr_ObjDA:		dc.l ObjNull
+ptr_ObjDA:		dc.l PullChain	; reversible hanging chain
 ptr_ObjDB:		dc.l ObjNull
 ptr_ObjDC:		dc.l ObjNull
 ptr_ObjDD:		dc.l ObjNull
@@ -8425,6 +8425,7 @@ Map_MovSpring:	binclude	"mappings/sprite/Wheel for the moving spring.bin"
 
 		include	"objects/0B Tilting platform.asm"
 		include	"objects/0C Labyrinth Flapdoor.asm"
+		include	"objects/DA Pull Chain.asm"
 		include	"objects/S1/44 GHZ Edge Walls.asm"
 ; ===========================================================================
 ; ---------------------------------------------------------------------------

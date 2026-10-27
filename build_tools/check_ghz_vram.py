@@ -126,15 +126,39 @@ def main():
         # Check actual sprite tile references against resident banks, including
         # the complete Newtron and the wall cap borrowed from terrain.
         available = [(0, level_end)] + [(a, b) for _, a, b in loaded]
-        for mapping, base in (('Map_Newtron', 'ArtTile_Newtron'),
-                              ('Map_obj44', 'ArtTile_GHZ_Edge_Wall'),
-                              ('Map_Obj36', 'ArtTile_Spikes')):
+        mappings = [('Map_Obj36', 'ArtTile_Spikes')]
+        if act < 4:
+            mappings += [('Map_Newtron', 'ArtTile_Newtron'),
+                         ('Map_obj44', 'ArtTile_GHZ_Edge_Wall')]
+        else:
+            assert not cues('PLCKosM_THZ4')
+            assert [src for src, _, _ in cues('PLC_GHZ4_Main')] == [symbols['Nem_Swing'], symbols['Nem_GHZ_Ball']]
+            assert [src for src, _, _ in cues('PLC_GHZ4_Extra')] == [symbols[n] for n in ('Nem_HSpring2','Nem_VSpring2','Nem_HangingSurface')]
+            mappings += [('Map_PullChain','ArtTile_HangingSurface'),
+                         ('Map_HangingSurface','ArtTile_HangingSurface')]
+        for mapping, base in mappings:
             for row in frames(rom, symbols[mapping]):
                 for _, size, tile, _ in row:
                     low = ((symbols[base] + tile) & 0x7FF) * 32
                     high = low + ((size >> 2) + 1) * ((size & 3) + 1) * 32
                     assert any(a <= low < high <= b for a, b in available), (
                         'unloaded mapping art', act, mapping, hex(low), hex(high))
+        if act == 4:
+            # The act's curated Debug entries must use art its own PLCs load.
+            available += [(symbols['ArtTile_Ring']*32, symbols['ArtTile_HUD']*32)]
+            assert struct.unpack_from('>h',rom,symbols['DebugList']+6)[0]+symbols['DebugList']==symbols['Debug_GHZ4']
+            pos=symbols['Debug_GHZ4']
+            count=struct.unpack_from('>H',rom,pos)[0]
+            for i in range(count):
+                obj,mapping,sub,frame,unused,gfx=struct.unpack_from('>IIHBBH',rom,pos+2+i*symbols['DebugEntry_size'])
+                assert obj not in (symbols['Crabmeat'],symbols['Newtron'],symbols['MotoBug'],symbols['Obj22'],symbols['Obj2B'])
+                offset=struct.unpack_from('>h',rom,mapping+frame*2)[0]
+                pieces=struct.unpack_from('>H',rom,mapping+offset)[0]
+                for j in range(pieces):
+                    y,size,tile,x=struct.unpack_from('>bBHh',rom,mapping+offset+2+j*6)
+                    low=((gfx+tile)&0x7FF)*32
+                    high=low+((size>>2)+1)*((size&3)+1)*32
+                    assert any(a<=low<high<=b for a,b in available),('GHZ4 Debug art',i,hex(low),hex(high))
     # General-object slots coexist with the other live zone loads too. Boss
     # and capsule lists are intentionally excluded: they reuse these slots.
     shared = cues('PLC_Main2')
@@ -158,6 +182,18 @@ def main():
     for i, (_, low, high) in enumerate(hpz):
         assert all(high <= a or low >= b for _, a, b in hpz[:i]), (
             'HPZ art overlap', hex(low), hex(high))
+    # Retired LZ Ballhog fixtures do not reserve either of its art banks.
+    assert not {src for src,_,_ in cues('PLCKosM_THZ1')}&{symbols['Kospm_BallhogV'],symbols['Kospm_BallhogH']}
+    pos=symbols['ObjPos_GHZ1']
+    while struct.unpack_from('>H',rom,pos)[0]!=0xFFFF:
+        assert rom[pos+4]!=0x21,'temporary GHZ1 Ballhog placement'
+        pos+=symbols['omSize']
+    for act in range(1,5):
+        assert not {src for src,_,_ in cues(f'PLCKosM_RRZ{act}')}&{symbols['Kospm_BallhogV'],symbols['Kospm_BallhogH']}
+        pos=symbols[f'ObjPos_LZ{act}']
+        while struct.unpack_from('>H',rom,pos)[0]!=0xFFFF:
+            assert rom[pos+4]!=0x21,('temporary LZ Ballhog placement',act)
+            pos+=symbols['omSize']
     print('Checked all four GHZ acts, cross-bank mappings, GHZ boss/capsule, HPZ art and common sprite banks across live zone PLCs.')
 
 

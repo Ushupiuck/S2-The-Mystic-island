@@ -626,6 +626,8 @@ at `$18` (unused X velocity), parent word
 expected parent code long `$38`, reciprocal-link address word `$3C`, then two
 eight-byte player records at `$3E/$46` (active, cooldown, step, timer, direction,
 alternating hand, requested pose and padding).
+Private byte `$1A` (unused Y velocity) lets a parent request a centred grab;
+ordinary D9 placements and platform children preserve the grabbed X as before.
 
 Ordinary platform `$18` uses its formerly reserved bit 11 (`$0800`) to spawn a
 classic child. Its usable half-width is platform half-width minus 4; the child
@@ -648,9 +650,59 @@ widths should be multiples of 16 pixels (a whole number of 32-pixel grips).
 
 Source reference: skdisasm `73de97c6b55055bcb8089c1d55d006b02136f163`,
 `Obj_LBZUnusedBarPlatform`, `Obj_FBZChainLink` and `Obj_SOZLightSwitch`.
-The lowering-chain movement, lighting effect and FBZ chain/array handover are
-not part of these two surface modes. Player-art adaptation is documented in
+Lowering-chain movement belongs to the adjacent `$DA` object below; lighting
+effects and FBZ chain/array handover are not implemented. Player-art adaptation is documented in
 [Sprites and VRAM](Sprites-and-VRAM.md#hanging-animation).
+
+## Pull-chain grapple
+
+`objects/DA Pull Chain.asm` supplies placement `$DA`, adjacent to D9 in the
+object pointer table. It uses LBZ's working reversible lowering-grapple motion,
+FBZ's chain/handhold artwork, and one parent-driven D9 classic child for both
+players. It needs two SSTs, independent of chain length; no SST or universal
+field grows. The placement origin is the fixed ceiling anchor. Placement flips
+are ignored, as in the source grapple.
+Enable the placement's any-Y loading flag when a long chain can be visible
+while its ceiling anchor lies outside the manager's vertical loading window.
+
+| Word mask | Setting |
+| --- | --- |
+| `$007F` | Travel in 8-pixel units: 0–1016 pixels. Zero gives a stationary chain. |
+| `$0080` | Start at the lower end and rise while occupied. Clear starts raised and lowers while occupied. |
+| `$0F00` | Resting chain links, 0–15, each 16 pixels. The handhold follows this resting length. |
+| `$1000` | Silence the grab sound. |
+| `$2000` | Disable automatic terrain/solid-top support release. |
+| `$C000` | Reserved, preserved in the authored word. |
+
+For example, `$0410` has four resting links and 128 pixels of downward travel;
+`$0490` starts lowered and pulls upward instead. Either player activates the
+motion, at two pixels per update. It returns only after the final rider leaves.
+The original update ordering is retained: a new grab/release affects movement
+on the next object update. The D9 child centres the grabbed character on the
+handle and supplies rolling jump release, cooldowns, actual foot support,
+animation and hurt/Debug cleanup. Its origin is grip-top+24, pinning the player
+at grip-top+60 (20 pixels below the artwork's bottom), as in FBZ.
+
+The main object draws the viewport's visible chain links and handhold directly;
+there is no per-link SST or separate display helper. Ordinary generated mappings
+cover 0–14 visible links plus the handhold, or 1–15 links when the handhold is
+below the viewport. The fixed anchor, travel limit/current extension and resting
+length live at `$30/$32/$34/$36`, with the owned child word at `$2E`.
+`obY` is only the current display centre; physical movement and child placement
+always use the saved anchor. Full-pool spawning retries without deleting the
+placement; unload releases both players and deletes the child. Reciprocal
+ownership also retires an orphan if its parent is externally deleted.
+
+The shared handhold/chain PLC is loaded in GHZ4 and all LZ acts; other acts must
+reserve/load that bank before using DA. Its editor preview draws the complete
+resting configuration, including the initially extended variant. GHZ4's own
+Debug list exposes both directions beside the swing/platform tests.
+
+Sources: s2disasm `15e9fd52a65318bec3d5e746ce48dba6db6910db` object `$80`
+(MCZ moving vine and WFZ hook share `Obj80_Action`); skdisasm
+`73de97c6b55055bcb8089c1d55d006b02136f163` `Obj_LBZLoweringGrapple`,
+`Obj_FBZChainLink` and `Obj_SOZLightSwitch`. SOZ's darkness timer and LBZ's
+separate `Obj_LBZRideGrapple` zip-line are not part of this generic object.
 
 ## GHZ boss and boss explosions
 
