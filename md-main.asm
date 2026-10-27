@@ -6885,6 +6885,7 @@ loc_79D6:
 DynResize_SLZ4:
 		rts
 ; ===========================================================================
+		include	"objects/Platform Mounts.asm"
 		include	"objects/0D Animals.asm"
 		include	"objects/12 & 13 Rings.asm"
 		include	"objects/Empty Slots/14.asm"
@@ -7332,10 +7333,10 @@ ptr_ObjD7:		dc.l ObjNull
 ptr_ObjD8:		dc.l ObjNull
 ptr_ObjD9:		dc.l HangingSurface	; classic grip / configurable row of traversable handholds
 ptr_ObjDA:		dc.l PullChain	; reversible hanging chain
-ptr_ObjDB:		dc.l ObjNull
-ptr_ObjDC:		dc.l ObjNull
-ptr_ObjDD:		dc.l ObjNull
-ptr_ObjDE:		dc.l ObjNull
+ptr_ObjDB:		dc.l SwingingPtfm_ArtTerrain0
+ptr_ObjDC:		dc.l SwingingPtfm_ArtTerrain1
+ptr_ObjDD:		dc.l SwingingPtfm_ArtRail
+ptr_ObjDE:		dc.l SwingingPtfm_ArtBall
 ptr_ObjDF:		dc.l ObjNull
 
 ptr_ObjE0:		dc.l ObjNull
@@ -13273,6 +13274,8 @@ Nem_DSpring:	binclude	"art/nemesis/Diagonal spring.nem"
 Nem_VSpikes:	binclude	"art/nemesis/Spikes.nem"
 		even
 Nem_Bumper:	binclude	"art/nemesis/Bumper.nem"
+		even
+Nem_PlatformButton: binclude "art/nemesis/Platform button.nem"
 		even
 Nem_Button:	binclude	"art/nemesis/Button.nem"
 		even

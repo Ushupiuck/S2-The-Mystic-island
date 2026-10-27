@@ -3,6 +3,10 @@
 ; ---------------------------------------------------------------------------
 
 Obj26:
+		tst.w	Mount_parent(a0)
+		beq.s	Obj26_Behavior
+		jmp	(PlatformMount_Child).l
+Obj26_Behavior:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	Obj26_Index(pc,d0.w),d1
@@ -37,6 +41,15 @@ loc_AE70:
 ; ---------------------------------------------------------------------------
 
 loc_AECA:
+		tst.w	Mount_parent(a0)
+		beq.s	.live
+		movea.w	Mount_parent(a0),a2
+		btst	#1,PlatformMount_flags(a2)
+		beq.s	.live
+		move.b	#8,obRoutine(a0)
+		move.b	#$B,obFrame(a0)
+		rts
+.live:
 		move.b	#$46,obColType(a0)
 		move.w	obSubtype(a0),d0
 		move.b	d0,obAnim(a0)
@@ -103,7 +116,7 @@ Mon_Animate:
 		bsr.w	AnimateSprite
 
 loc_AFC4:
-		out_of_range.w	UnloadObject
+		out_of_range2	PlatformMount_CullChild
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 

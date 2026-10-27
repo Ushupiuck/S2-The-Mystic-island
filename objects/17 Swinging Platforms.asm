@@ -1,15 +1,16 @@
 ; ---------------------------------------------------------------------------
 ; Object 17 - pendulums, rotating platforms and S3&K swing lifts (MD CPU).
-; Word: PPDR IIII SMMM LLLL
+; Word: PPRD IIII SMMM LLLL
 ; PP = quarter-turn orientation/phase; D = detachable; R = impulse relay;
-; S = optional material sound; IIII = platform-body recipe;
+; S = optional material sound; IIII = shared platform interaction;
 ; MMM = movement 0 normal, 1 half, 2 static, 3 rotate, 4 ICZ momentum,
 ;                5 SOZ half-circle lift, 6 DEZ quarter-circle lift, 7 S2 trap.
 ; 0-8 links are supported. 9-F are reserved, clamped to 8, never payloads.
 ; ---------------------------------------------------------------------------
 swing_max_links = 8              ; declared packed capacity, including 0 links
 swing_orientation = objoff_2E     ; byte: quarter-turn angle
-swing_preset = objoff_2F          ; byte: body recipe 0-11; reserved values use 0
+swing_body_shape = obTimeFrame     ; byte: independently selected Obj18 art, 0-4
+swing_preset = objoff_2F          ; byte: interaction 0-11; reserved values use 0
 swing_helper_ptr = objoff_30      ; long: packed decorative chain
 swing_mode_timer = objoff_34      ; word: endpoint pause / static release delay
 swing_ang_vel = objoff_36         ; word: 8.8 angular velocity
@@ -52,7 +53,24 @@ SwingingPtfm_HelperDisplay:
 .orphan:
 		jmp	(DeleteObject).l
 
+SwingingPtfm_ArtTerrain0:
+		moveq	#0,d0
+		bra.s	SwingingPtfm_InitArt
+SwingingPtfm_ArtTerrain1:
+		moveq	#1,d0
+		bra.s	SwingingPtfm_InitArt
+SwingingPtfm_ArtRail:
+		moveq	#3,d0
+		bra.s	SwingingPtfm_InitArt
+SwingingPtfm_ArtBall:
+		moveq	#4,d0
+		bra.s	SwingingPtfm_InitArt
+SwingingPtfm_ArtEnd:
 SwingingPtfm_Init:
+		moveq	#2,d0
+SwingingPtfm_InitArt:
+		move.b	d0,swing_body_shape(a0)
+		move.l	#SwingingPtfm,code(a0)
 		move.b	#2,obRoutine(a0)
 		move.l	#Map_Obj17,obMap(a0)
 		move.b	#Map_Obj17_height,height_pixels(a0)
@@ -226,6 +244,7 @@ SwingingPtfm_Interact:
 		movea.l	(sp)+,a0
 		movea.w	swing_body(a0),a1
 		move.b	obStatus(a1),d0
+		or.b	PlatformMount_standing(a1),d0
 		andi.b	#status_standing_mask,d0
 		andi.b	#$E7,obStatus(a0)
 		or.b	d0,obStatus(a0)
@@ -759,10 +778,14 @@ SwingingPtfm_ChainDebris:
 ; moving. A source pointer and eight-update cooldown stop feedback through them.
 SwingingPtfm_Relay:
 		tst.w	swing_body(a0)
-		beq.w	.return
+		beq.s	.inactive
 		move.w	obSubtype(a0),d0
 		btst	#13,d0
-		beq.w	.return
+		bne.s	.active
+.inactive:
+		rts
+.active:
+		move.l	d7,-(sp)
 		move.w	swing_impulse(a0),d7
 		clr.w	swing_impulse(a0)
 		tst.b	swing_cooldown(a0)
@@ -839,10 +862,12 @@ SwingingPtfm_Relay:
 		tst.w	d5
 		beq.s	.clearContact
 		move.w	d5,swing_contact(a0)
+		move.l	(sp)+,d7
 		rts
 .clearContact:
 		clr.w	swing_contact(a0)
 .return:
+		move.l	(sp)+,d7
 		rts
 
 SwingingPtfm_ReceiveImpulse:

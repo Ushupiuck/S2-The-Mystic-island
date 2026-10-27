@@ -137,10 +137,11 @@ def main():
                          ('Map_obj44', 'ArtTile_GHZ_Edge_Wall')]
         else:
             assert not cues('PLCKosM_THZ4')
-            assert [src for src, _, _ in cues('PLC_GHZ4_Main')] == [symbols['Nem_Swing'], symbols['Nem_GHZ_Ball']]
+            assert [src for src, _, _ in cues('PLC_GHZ4_Main')] == [symbols[n] for n in ('Nem_Swing','Nem_GHZ_Ball','Nem_PlatformButton')]
             assert [src for src, _, _ in cues('PLC_GHZ4_Extra')] == [symbols[n] for n in ('Nem_HSpring2','Nem_VSpring2','Nem_HangingSurface')]
             mappings += [('Map_PullChain','ArtTile_HangingSurface'),
-                         ('Map_HangingSurface','ArtTile_HangingSurface')]
+                         ('Map_HangingSurface','ArtTile_HangingSurface'),
+                         ('Map_PlatformButton','ArtTile_PlatformButton')]
         for mapping, base in mappings:
             for row in frames(rom, symbols[mapping]):
                 for _, size, tile, _ in row:

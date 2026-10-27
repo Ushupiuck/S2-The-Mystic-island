@@ -51,6 +51,7 @@ namespace MysticIsland.ObjectLayouts
 		public const int RecordSize = 8;
 		private ushort fullSubType;
 		private byte timeZones = 0xE0;
+		private bool mountHigh;
 
 		// The stock picker uses the base API's byte property.
 		// They must preserve the extended settings when changing a named property.
@@ -94,6 +95,7 @@ namespace MysticIsland.ObjectLayouts
 		public override byte[] GetBytes()
 		{
 			ushort y = (ushort)(Y & 0xFFF);
+			if (mountHigh) y |= 0x1000;
 			if (XFlip) y |= 0x2000;
 			if (YFlip) y |= 0x4000;
 			if (LoadAtAnyYPos) y |= 0x8000;
@@ -112,6 +114,7 @@ namespace MysticIsland.ObjectLayouts
 			X = ByteConverter.ToUInt16(data, 0);
 			ushort y = ByteConverter.ToUInt16(data, 2);
 			Y = (ushort)(y & 0xFFF);
+			mountHigh = (y & 0x1000) != 0;
 			XFlip = (y & 0x2000) != 0;
 			YFlip = (y & 0x4000) != 0;
 			LoadAtAnyYPos = (y & 0x8000) != 0;
@@ -127,6 +130,7 @@ namespace MysticIsland.ObjectLayouts
 			if (result == 0) result = ID.CompareTo(other.ID);
 			if (result == 0) result = fullSubType.CompareTo(other is Entry ? ((Entry)other).FullSubType : other.SubType);
 			if (result == 0 && other is Entry) result = timeZones.CompareTo(((Entry)other).timeZones);
+			if (result == 0 && other is Entry) result = mountHigh.CompareTo(((Entry)other).mountHigh);
 			return result;
 		}
 	}

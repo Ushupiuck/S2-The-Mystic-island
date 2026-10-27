@@ -80,7 +80,8 @@ MCD_SubObjectsFrame:
 
 ; Persistent-state service: index+1 in argument, operation in command high byte.
 ; 0 read, 1 set consumed bit, 2 release loaded bit, 3 capped bumper increment,
-; 4 original placement X. Dynamic handle zero has no state and returns zero.
+; 4 original placement X, 5 consume mounted monitor (bit 1).
+; Dynamic handle zero has no state and returns zero.
 MCD_SubObjectState:
 		moveq	#0,d0
 		move.w	(MCD_SubMainArgument).l,d1
@@ -90,6 +91,9 @@ MCD_SubObjectState:
 		bhs.w	MCD_SubError
 		movea.l	(MCD_ObjectRespawnBase_Sub).l,a2
 		move.b	(MCD_SubMainCommand).l,d2
+		cmpi.b	#5,d2
+		beq.s	.mount_consumed
+		tst.b	d2
 		beq.s	.read
 		subq.b	#1,d2
 		beq.s	.consume
@@ -101,6 +105,9 @@ MCD_SubObjectState:
 		lea	(MCD_ObjectPlacements_Sub).l,a2
 		move.w	(a2,d1.w),d0
 		rts
+.mount_consumed:
+		bset	#1,(a2,d1.w)
+		bra.s	.read
 .consume:
 		bset	#0,(a2,d1.w)
 		bra.s	.read
@@ -401,6 +408,15 @@ MCD_SubObjects_Load:
 		move.w	d1,(a4)+
 		rol.w	#3,d2
 		andi.b	#3,d2
+		moveq	#0,d1
+		move.b	omTimeZones(a0),d1
+		andi.w	#ObjectLayout_MountLowMask,d1
+		lsl.b	#2,d1
+		or.b	d1,d2
+		move.w	omY(a0),d1
+		andi.w	#ObjectLayout_MountHighMask,d1
+		lsr.w	#5,d1
+		or.b	d1,d2
 		move.b	d2,(a4)+
 		move.b	omID(a0),(a4)+
 		move.w	omSubtype(a0),(a4)+

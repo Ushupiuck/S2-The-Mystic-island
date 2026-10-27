@@ -21,8 +21,10 @@ ObjectTime_Future:	equ	$80
 ObjectTime_All:		equ	ObjectTime_Past|ObjectTime_Present|ObjectTime_Future
 ; ---------------------------------------------------------------------------
 ; Masks for the level-placement Y/flags word (omY), not record fields
-; Bits 13/14 mirror X/Y; bit 15 loads the object at any Y.
+; Bit 12 is platform-mount bit 5; 13/14 mirror X/Y; 15 bypasses the Y band.
 ObjectLayout_YCoordinateMask:	equ	$0FFF	; omY bits 0-11: Y coordinate
+ObjectLayout_MountHighMask:	equ	$1000	; mount bit 5, only interpreted by Obj17/18
+ObjectLayout_MountLowMask:	equ	$1F	; remaining mount bits in omTimeZones
 ObjectLayout_LoadAtAnyYMask:	equ	$8000	; omY bit 15: bypass vertical load band
 ; ---------------------------------------------------------------------------
 ; Debug placement record offsets
@@ -1792,6 +1794,7 @@ ArtTile_Lives_Counter:		equ $7D4
 ArtTile_Sonic_Dust:		equ $7E0
 ArtTile_Tails_Dust:		equ $7F0
 ArtTile_Water_Surface:		equ $001	; 16 DPLC tiles immediately after transparent terrain tile zero
+ArtTile_PlatformButton:		equ $419	; optional act bank; GHZ4 reserves the absent Crabmeat area
 ArtTile_HangingSurface:		equ $40D	; 12 tiles: handhold + chain; LZ free space / GHZ4's absent Crabmeat
 
 ; Eggman

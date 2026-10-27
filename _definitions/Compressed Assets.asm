@@ -1136,6 +1136,9 @@ MCD_CompressedAssets:
 	if defined(Nem_Pig)
 	dc.l Nem_Pig,Nem_Pig+$136	; art/nemesis/Flicky/Pig.nem
 	endif
+	if defined(Nem_PlatformButton)
+	dc.l Nem_PlatformButton,Nem_PlatformButton+$A2	; art/nemesis/Platform button.nem
+	endif
 	if defined(Nem_Prison)
 	dc.l Nem_Prison,Nem_Prison+$5F2	; art/nemesis/Prison Capsule.nem
 	endif

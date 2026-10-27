@@ -233,6 +233,8 @@ class Native:
         if isinstance(obj, str):
             obj = self.s[obj]
         value = int.from_bytes(self.cpu.mem_read((obj + self.s[field]) & 0xFFFFFF, size), 'big')
+        if projected and value == self.s.get('SwingingPtfm') and 'swing_body_shape' in self.s and self.get(obj, 'obRoutine'):
+            return {0: 0xDB, 1: 0xDC, 2: 0x17, 3: 0xDD, 4: 0xDE}[self.get(obj, 'swing_body_shape')]
         return self.ids_by_code.get(value, value) if projected else value
 
     def act(self, routine, obj=None, regs=None, limit=100000):

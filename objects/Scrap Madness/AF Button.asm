@@ -1,5 +1,9 @@
 ; Original SBZ momentary switches, using both engine rider bits.
 SMZ_Button:
+		tst.w	Mount_parent(a0)
+		beq.s	SMZ_Button_Behavior
+		jmp	(PlatformMount_Child).l
+SMZ_Button_Behavior:
         tst.b obRoutine(a0)
         bne.s .active
         move.b #2,obRoutine(a0)
@@ -9,6 +13,11 @@ SMZ_Button:
         move.w #ArtTile_SMZ_Atlas,obGfx(a0)
         move.b #4,obRender(a0)
         move.w #$200,obPriority(a0)
+		cmpi.b	#id_SMZ,(Current_Zone).w
+		beq.s	.art_ready
+		move.l	#Map_PlatformButton,obMap(a0)
+		move.w	#ArtTile_PlatformButton,obGfx(a0)
+.art_ready:
         addq.w #3,obY(a0)
 .active:
         moveq #27,d1
@@ -32,8 +41,18 @@ SMZ_Button:
 .on:
         bset #0,(a3)
         move.b #1,obFrame(a0)
-        jmp (RememberState).l
+        bra.w SMZ_Button_Display
 .off:
         bclr #0,(a3)
-        jmp (RememberState).l
+        bra.w SMZ_Button_Display
+
+SMZ_Button_Display:
+		tst.w	Mount_parent(a0)
+		beq.s	.ordinary
+		jmp	(DisplaySprite).l
+.ordinary:
+		jmp	(RememberState).l
+
+Map_PlatformButton: binclude "mappings/sprite/Platform button.bin"
+
 Map_SMZ_But: binclude "mappings/sprite/SMZ But.bin"

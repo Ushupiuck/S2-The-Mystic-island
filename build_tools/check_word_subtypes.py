@@ -12,10 +12,12 @@ from object_layout import decode, convert_s3k
 
 ROOT = Path(__file__).resolve().parent.parent
 parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--rom', type=Path, default=ROOT / 's2built.bin')
+parser.add_argument('--listing', type=Path, default=ROOT / 'md-main.lst')
 parser.add_argument('--before-listing', type=Path, help='Optional matching listing from before migration')
 parser.add_argument('--before-ref', help='Optional original six-byte layout revision for conversion verification')
 args = parser.parse_args()
-m = Manager()
+m = Manager(args.rom, args.listing)
 fixed = []
 if args.before_listing:
     before = {n: int(v, 16) for n, v in re.findall(
@@ -33,7 +35,7 @@ if args.before_listing:
 assert m.s['object_size'] == 0x4E and m.s['obSubtype'] == 0x2C
 if m.s['MegaCDMode1']:
     assert m.s['MCD_ObjectSpawnSize'] == 12
-rom = (ROOT / 's2built.bin').read_bytes()
+rom = args.rom.read_bytes()
 for label, filename in [('Art_WaterSplash', 'art/uncompressed/Water splash.unc'),
                         ('Art_LConWheels', 'art/uncompressed/LZ conveyor wheels.unc')]:
     raw = (ROOT / filename).read_bytes()

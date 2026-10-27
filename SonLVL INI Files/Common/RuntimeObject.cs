@@ -74,13 +74,14 @@ namespace MysticIsland.ObjectDefinitions
 					break;
 				case "Platform":
 					LoadPlatformBodies();
+					PlatformMountProperties();
 					properties.Add(new PropertySpec("Movement", typeof(int), "Object settings", "S3&K movement with centred S1 vertical travel. Falling is a separate option: an occupied platform completes its current trip before falling.", null,
 						Choices("Stationary", "Horizontal (64 px)", "Horizontal (128 px)", "Vertical (64 px)", "Vertical (128 px)", "Diagonal up (128 by 64 px)", "Diagonal down (128 by 64 px)", "Rising ceiling trap", "Square (32 px)", "Square (96 px)", "Square (160 px)", "Square (224 px)", "Horizontal (256 px, eased)", "Vertical (96 px)", "Switch: rise 512 px"),
 						obj => Math.Min(Subtype(obj) & 15, 14), (obj, value) => {
 							int word = Subtype(obj), mode = Convert.ToInt32(value);
 							SetSubtype(obj, (word & ~15) | (mode == 14 ? ((word & 15) == 14 ? 14 : 15) : mode));
 						}));
-					Bits("Shape", 4, 7, "Body appearance and dimensions. The act must load its art bank. Reserved 5-7 use terrain frame 0.", "Terrain frame 0", "Terrain frame 1", "Swing platform", "Swing platform with rail", "Large spikeball");
+					Bits("Artwork", 4, 7, "Body appearance and dimensions. The act must load its art bank. Reserved 5-7 use terrain frame 0.", "Terrain frame 0", "Terrain frame 1", "Swing platform", "Swing platform with rail", "Large spikeball");
 					PlatformInteraction();
 					Bits("Rider sag", 7, 1, "Independent of movement: depress up to 4 pixels under either rider. The rising ceiling trap always ignores sag.", "Rigid", "Sag");
 					Bits("Phase / corner", 13, 3, "Non-switch movements only. XOR with placement X/Y flips; squares use all four corners, other oscillations use bit 0.", "0", "1", "2", "3");
@@ -108,11 +109,15 @@ namespace MysticIsland.ObjectDefinitions
 					break;
 				case "Swing":
 					LoadPlatformBodies();
+					PlatformMountProperties();
 					swingPresets = ReadWordTable("../objects/18 Platforms.asm", "Platform_SwingPresets", "Platform_SwingPresets_End");
 					swingSine = File.ReadAllBytes("../misc/sinewave.bin");
 					Bits("Chain length", 0, 15, "0-8 links; reserved values 9-F safely clamp to 8. The body rests 8 pixels beyond the chain.", Enumerable.Range(0, 9).Select(i => i + " links").ToArray());
 					Bits("Movement", 4, 7, "Independent of collision and detachment. Either player activates the lifts. X flip selects the half-swing side / momentum rail side.", "Normal swing", "Half-swing", "Stationary", "Continuous rotation", "ICZ player momentum", "SOZ half-circle lift", "DEZ quarter-circle lift", "Proximity trap");
-					Bits("Body preset", 8, 15, "Spawn one regular-platform body using Platform_SwingPresets. Its art, collision and grip belong to that body. Reserved presets C-F use 0.", "Platform: top solid", "Platform: full solid", "Ball: harmful bottom", "Platform: conveyor top", "Platform: conveyor full", "Ball: conveyor/harmful bottom", "Platform: hanging top", "Platform: hanging full", "Platform: conveyor/hanging top", "Platform: conveyor/hanging full", "Ball: harmful", "Ball: harmful/full solid");
+					PlatformInteraction();
+					properties.Add(new PropertySpec("Artwork", typeof(int), "Object settings", "Independent body appearance. The editor selects the matching swinging-platform object variant; subtype and payload settings stay intact.", null,
+						Choices("Terrain frame 0", "Terrain frame 1", "Swing platform", "Swing platform with rail", "Large spikeball"),
+						obj => SwingArt(obj.ID), (obj, value) => { obj.ID = new byte[] { 0xDB, 0xDC, 0x17, 0xDD, 0xDE }[Convert.ToInt32(value)]; }));
 					Bits("Material sound", 7, 1, "Optional impact/lift sound from SwingingPtfm_Sounds; silent entries remain silent.", "Silent", "Enabled");
 					Bits("Detachable", 12, 1, "Release at the movement's endpoint. ICZ uses its fast breakaway; detached bodies bounce/slide on terrain or float on enabled water.", "Attached", "Detachable");
 					Bits("Impulse relay", 13, 1, "Physical contact transfers an impulse between opted-in bodies. Stationary members forward it without moving.", "Disabled", "Enabled");
@@ -217,6 +222,70 @@ namespace MysticIsland.ObjectDefinitions
 			string rail = smz ? "SMZ Swing rail.bin" : slz ? "SLZ Swinging Platform rail.bin" : "Swinging platform rail.bin";
 			int palette = slz ? 2 : 0;
 			platformBodies = new[] { Load(art, CompressionType.Nemesis, map, palette)[0], Load(art, CompressionType.Nemesis, rail, palette)[0], smz ? Load(art, CompressionType.Nemesis, map, palette)[0] : Load("../art/nemesis/S1/GHZ Giant Ball.nem", CompressionType.Nemesis, "Giant Ball.bin", 2)[1] };
+		}
+
+		private static int SwingArt(byte id) { return id == 0xDB ? 0 : id == 0xDC ? 1 : id == 0xDD ? 3 : id == 0xDE ? 4 : 2; }
+		private static int MountSettings(ObjectEntry obj)
+		{
+			byte[] data = obj.GetBytes();
+			return (data[5] & 31) | ((data[2] & 16) << 1);
+		}
+		private static void SetMount(ObjectEntry obj, int value)
+		{
+			byte[] data = obj.GetBytes();
+			data[5] = (byte)((data[5] & 224) | (value & 31));
+			data[2] = (byte)((data[2] & 239) | ((value & 32) >> 1));
+			obj.FromBytes(data);
+		}
+		private static int MountGroup(int value)
+		{
+			return value == 0 ? 0 : value <= 16 ? 1 : value <= 20 ? 2 : value == 21 ? 3 : value <= 33 ? 4 : 5;
+		}
+		private void PlatformMountProperties()
+		{
+			properties.Add(new PropertySpec("Carries", typeof(int), "Mounted object", "Payload follows the platform, including after detachment. Encoded in placement flags independently of both subtype words. Button art needs its act PLC outside SMZ.", null,
+				Choices("Nothing", "Button", "Two vertical springs", "Three S1 spikes", "Monitor", "Reserved"),
+				obj => MountGroup(MountSettings(obj)), (obj, value) => {
+					int group = Convert.ToInt32(value);
+					if (group != MountGroup(MountSettings(obj)) && group < 5) SetMount(obj, new[] { 0, 1, 17, 21, 22 }[group]);
+				}));
+			properties.Add(new PropertySpec("Button channel", typeof(int), "Mounted object", "Button only: switch channel 0-15.", null, Choices(Enumerable.Range(0, 16).Select(i => i.ToString("X")).ToArray()),
+				obj => MountGroup(MountSettings(obj)) == 1 ? MountSettings(obj) - 1 : 0,
+				(obj, value) => { if (MountGroup(MountSettings(obj)) == 1) SetMount(obj, 1 + (Convert.ToInt32(value) & 15)); }));
+			properties.Add(new PropertySpec("Left spring", typeof(int), "Mounted object", "Spring pair only: the two colors are independent.", null, Choices("Red", "Yellow"),
+				obj => MountGroup(MountSettings(obj)) == 2 ? (MountSettings(obj) - 17) >> 1 : 0,
+				(obj, value) => { int old = MountSettings(obj); if (MountGroup(old) == 2) SetMount(obj, 17 + ((old - 17) & 1) + ((Convert.ToInt32(value) & 1) << 1)); }));
+			properties.Add(new PropertySpec("Right spring", typeof(int), "Mounted object", "Spring pair only: right-hand color.", null, Choices("Red", "Yellow"),
+				obj => MountGroup(MountSettings(obj)) == 2 ? (MountSettings(obj) - 17) & 1 : 0,
+				(obj, value) => { int old = MountSettings(obj); if (MountGroup(old) == 2) SetMount(obj, 17 + ((old - 17) & 2) + (Convert.ToInt32(value) & 1)); }));
+			properties.Add(new PropertySpec("Monitor contents", typeof(int), "Mounted object", "Monitor only: retains the normal monitor behavior, including currently unfinished reward types.", null,
+				Choices("Static", "Sonic life", "Tails life", "Eggman", "Rings", "Speed shoes", "Shield", "Invincibility", "Water shield (WIP)", "Fire shield (WIP)", "Electric shield (WIP)", "Super (WIP)"),
+				obj => MountGroup(MountSettings(obj)) == 4 ? MountSettings(obj) - 22 : 0,
+				(obj, value) => { if (MountGroup(MountSettings(obj)) == 4) SetMount(obj, 22 + Math.Max(0, Math.Min(11, Convert.ToInt32(value)))); }));
+		}
+		private static Sprite PayloadSprite(byte id, int subtype)
+		{
+			ObjectEntry entry = LevelData.ObjectFormat.CreateObject();
+			byte[] data = entry.GetBytes();
+			data[4] = id;
+			ByteConverter.GetBytes((ushort)subtype).CopyTo(data, 6);
+			entry.FromBytes(data);
+			return LevelData.ObjTypes[id].GetSprite(entry);
+		}
+		private Sprite MountedPreview(Sprite body, int settings, int shape, int interaction, int x = 0, int y = 0)
+		{
+			if (settings == 0 || settings >= 34) return body;
+			int height = shape == 4 ? 24 : shape == 2 || shape == 3 ? (Setting("platformmaterial", "") == "SLZ" ? 16 : 8) : new[] { 1, 2, 4, 5, 7, 9, 11 }.Contains(interaction) ? 48 : 8;
+			List<Sprite> pieces = new List<Sprite> { body };
+			if (settings <= 16) pieces.Add(new Sprite(Load("../art/nemesis/Platform button.nem", CompressionType.Nemesis, "Platform button.bin", 0)[0], x, y - height - 5));
+			else if (settings <= 20)
+			{
+				pieces.Add(new Sprite(PayloadSprite(0x41, ((settings - 17) >> 1) * 2), x - 16, y - height - 8));
+				pieces.Add(new Sprite(PayloadSprite(0x41, ((settings - 17) & 1) * 2), x + 16, y - height - 8));
+			}
+			else if (settings == 21) pieces.Add(new Sprite(PayloadSprite(0x36, 0x80), x, y - height - 16));
+			else pieces.Add(new Sprite(PayloadSprite(0x26, settings - 22), x, y - height - 15));
+			return new Sprite(pieces);
 		}
 
 		private void PlatformInteraction()
@@ -354,7 +423,7 @@ namespace MysticIsland.ObjectDefinitions
 			}
 		}
 
-		private Sprite Preview(int subtype, int x, int y, bool yflip, bool xflip = false)
+		private Sprite Preview(int subtype, int x, int y, bool yflip, bool xflip = false, int mount = 0, int bodyArt = 2)
 		{
 			List<Sprite> pieces;
 			switch (behavior)
@@ -377,18 +446,17 @@ namespace MysticIsland.ObjectDefinitions
 					int swingCos = ByteConverter.ToInt16(swingSine, swingAngle * 2 + 128);
 					for (int i = 1; i <= links; i++) pieces.Add(new Sprite(At(frames, 1), (swingCos * i * 16) >> 8, (swingSin * i * 16) >> 8));
 					int recipe = interaction < swingPresets.Length / 2 ? interaction : 0;
-					int bodyWord = ByteConverter.ToUInt16(swingPresets, recipe * 2), bodyShape = (bodyWord >> 4) & 7;
-					if (movement == 4 && bodyShape == 2) bodyShape = 3;
-					Sprite swingBody = new Sprite(platformBodies[bodyShape - 2]);
+					int bodyWord = ByteConverter.ToUInt16(swingPresets, recipe * 2), bodyShape = bodyArt;
+					Sprite swingBody = new Sprite(PayloadSprite(0x18, bodyWord | (bodyShape << 4)));
 					swingBody.Flip(xflip && bodyShape == 3, false);
 					pieces.Add(new Sprite(swingBody, (swingCos * (links * 16 + 8)) >> 8, (swingSin * (links * 16 + 8)) >> 8));
 
-					return new Sprite(pieces);
+					return MountedPreview(new Sprite(pieces), mount, bodyShape, (bodyWord >> 8) & 15, (swingCos * (links * 16 + 8)) >> 8, (swingSin * (links * 16 + 8)) >> 8);
 				case "Platform":
 					int platformShape = (subtype >> 4) & 7;
 					Sprite platform = new Sprite(platformShape >= 2 && platformShape <= 4 ? platformBodies[platformShape - 2] : At(frames, platformShape == 1 ? 1 : 0));
 					platform.Flip(platformShape == 3 && xflip, false);
-					return platform;
+					return MountedPreview(platform, mount, platformShape < 5 ? platformShape : 0, (subtype >> 8) & 15);
 				case "CPZPlatform":
 				case "MovingBlock": return At(frames, subtype >> 4);
 				case "HPZWaterfall":
@@ -499,7 +567,7 @@ namespace MysticIsland.ObjectDefinitions
 		public override Sprite SubtypeImage(byte subtype) { return behavior == "SpinGroup" ? frames[0] : Preview(subtype, 0, 0, false); }
 		public override Sprite GetSprite(ObjectEntry obj)
 		{
-			Sprite sprite = new Sprite(Preview(Subtype(obj), obj.X, obj.Y, obj.YFlip, obj.XFlip));
+			Sprite sprite = new Sprite(Preview(Subtype(obj), obj.X, obj.Y, obj.YFlip, obj.XFlip, behavior == "Platform" || behavior == "Swing" ? MountSettings(obj) : 0, SwingArt(obj.ID)));
 			if (behavior == "Teleporter") sprite.Flip(obj.XFlip, false);
 			else if (behavior != "Platform" && behavior != "Swing" && behavior != "SpinGroup" && behavior != "LabyrinthConveyor" && behavior != "InvisibleSolid" && behavior != "Conveyor" && behavior != "PathSwapper" && behavior != "Hanging" && behavior != "PullChain") sprite.Flip(obj.XFlip, obj.YFlip);
 			return sprite;
@@ -581,6 +649,10 @@ namespace MysticIsland.ObjectDefinitions
 	public sealed class FlappingDoor : RuntimeObject { }
 	public sealed class DiagonalLift : RuntimeObject { }
 	public sealed class SwingingPlatform : RuntimeObject { }
+	public sealed class SwingTerrain0 : RuntimeObject { }
+	public sealed class SwingTerrain1 : RuntimeObject { }
+	public sealed class SwingRail : RuntimeObject { }
+	public sealed class SwingBall : RuntimeObject { }
 	public sealed class Platform : RuntimeObject { }
 	public sealed class HangingSurface : RuntimeObject { }
 	public sealed class PullChain : RuntimeObject { }

@@ -182,6 +182,8 @@ class Genesis:
         elif field=='obSubtype': size=2
         elif field in ('code','obID'): size=4
         value=self.read((self.s[actor] if isinstance(actor,str) else actor)+self.s[field],size)
+        if projected and value == self.s.get('SwingingPtfm') and 'swing_body_shape' in self.s and self.get(actor, 'obRoutine'):
+            return {0: 0xDB, 1: 0xDC, 2: 0x17, 3: 0xDD, 4: 0xDE}[self.get(actor, 'swing_body_shape')]
         return self.ids_by_code.get(value,value) if projected else value
 
     def put(self,actor,field,value,size=1):

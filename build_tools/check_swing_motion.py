@@ -27,7 +27,9 @@ def fixture(m, subtype, flip=0, full=False):
     for f,v,n in [('code',m.s['SwingingPtfm'],4),('obX',0x1800,2),('obY',0x400,2),
                   ('obSubtype',subtype,2),('obStatus',flip,1)]:
         m.put(obj,f,v,n)
-    m.act('SwingingPtfm',obj)
+    entry = 'SwingingPtfm_ArtRail' if (subtype & 0x70) == 0x40 and 'swing_body_shape' in m.s else 'SwingingPtfm'
+    m.put(obj, 'code', m.s[entry])
+    m.act(entry,obj)
     return obj
 
 
@@ -297,11 +299,14 @@ def native(args):
         m.act('SwingingPtfm',a);members.append(a)
     m.put(o,'swing_impulse',0x600,2)
     fixed=[position(m,a) for a in members[:2]]
-    m.act('SwingingPtfm_Relay',o)
+    m.act('SwingingPtfm_Relay',o,{c.UC_M68K_REG_D7:0x3579006F})
+    assert m.cpu.reg_read(c.UC_M68K_REG_D7)==0x3579006F
     assert m.get(members[1],'swing_impulse',2)==0x600
-    m.act('SwingingPtfm_Relay',members[1])
+    m.act('SwingingPtfm_Relay',members[1],{c.UC_M68K_REG_D7:0x3579006F})
+    assert m.cpu.reg_read(c.UC_M68K_REG_D7)==0x3579006F
     assert m.get(members[2],'swing_impulse',2)==0x600
-    m.act('SwingingPtfm_Relay',members[2])
+    m.act('SwingingPtfm_Relay',members[2],{c.UC_M68K_REG_D7:0x3579006F})
+    assert m.cpu.reg_read(c.UC_M68K_REG_D7)==0x3579006F
     assert m.get(members[2],'swing_ang_vel',2)==0x300
     assert not m.get(o,'swing_impulse',2)
     assert fixed==[position(m,a) for a in members[:2]]
@@ -436,7 +441,7 @@ def extended_game(args):
         g.buttons2={4};g.write('Tails_CPU_idle_timer',6000,2)
         g.write('Camera_X_pos',max(0,x-160),2);g.write('Camera_Y_pos',max(0,y-120),2)
         o=pool[0]
-        for f,v,n in [('code',g.s['SwingingPtfm'],4),('obX',x,2),('obY',y,2),('obSubtype',sub,2)]:g.put(o,f,v,n)
+        for f,v,n in [('code',g.s['SwingingPtfm_ArtRail' if (sub & 0x70) == 0x40 and 'swing_body_shape' in g.s else 'SwingingPtfm'],4),('obX',x,2),('obY',y,2),('obSubtype',sub,2)]:g.put(o,f,v,n)
         for _ in range(6):
             run(1)
             if g.get(o,'obRoutine')==2:break

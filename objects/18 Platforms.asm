@@ -152,6 +152,7 @@ Plat_Full:
 		bsr.w	Platform_Interact
 
 Plat_Display:
+		bsr.w	PlatformMount_Update
 		bsr.w	Plat_UpdateHanging
 		move.w	Plat_cullX(a0),d0
 		andi.w	#$FF80,d0
@@ -216,6 +217,7 @@ Platform_RemoveHanging:
 .return:
 		rts
 Plat_Unload:
+		bsr.w	PlatformMount_Delete
 		bsr.s	Plat_RemoveHanging
 		jsr	(SMZ_ReleaseRiders).l
 		jmp	(UnloadObject).l
@@ -238,6 +240,7 @@ Plat_ApplyY:
 		btst	#0,Plat_flags(a0)
 		beq.s	.return
 		move.b	obStatus(a0),d0
+		or.b	PlatformMount_standing(a0),d0
 		andi.b	#$18,d0
 		bne.s	.occupied
 		tst.b	Plat_sag(a0)
@@ -464,6 +467,7 @@ Plat_CheckFalling:
 		btst	#3,Plat_flags(a0)
 		bne.s	.armed
 		move.b	obStatus(a0),d0
+		or.b	PlatformMount_standing(a0),d0
 		andi.b	#$18,d0		; either standing rider latches the request
 		beq.s	.return
 		bset	#3,Plat_flags(a0)
@@ -586,6 +590,7 @@ Plat_RisingTrap:
 		tst.b	Plat_state(a0)
 		bne.s	.rise
 		move.b	obStatus(a0),d0
+		or.b	PlatformMount_standing(a0),d0
 		andi.b	#$18,d0
 		beq.s	.return
 		move.b	#1,Plat_state(a0)
@@ -859,10 +864,10 @@ Platform_HangingOffset:
 		subi.w	#10,d2
 		rts
 
-; Obj17 body recipes: independent Obj18 subtype words, not collision code in
-; the chain. One body per existing recipe; multi-body arrangements are deferred.
+; Obj17 interaction seeds: independent Obj18 words, with artwork supplied by
+; the suspension constructor ID. Multi-body arrangements remain deferred.
 Platform_SwingPresets:
-		dc.w $0020,$0120,$0240,$0320,$0420,$0540,$0620,$0720,$0820,$0920,$0A40,$0B40
+		dc.w $0000,$0100,$0200,$0300,$0400,$0500,$0600,$0700,$0800,$0900,$0A00,$0B00
 Platform_SwingPresets_End:
 Platform_SwingPresetCount = (Platform_SwingPresets_End-Platform_SwingPresets)/2
 
@@ -875,15 +880,10 @@ Platform_CreateSwingBody:
 		add.w	d0,d0
 		lea	Platform_SwingPresets(pc),a2
 		move.w	(a2,d0.w),d0
-		move.w	obSubtype(a0),d1
-		andi.w	#$70,d1
-		cmpi.w	#$40,d1
-		bne.s	.settings
-		move.w	d0,d1
-		andi.w	#$70,d1
-		cmpi.w	#$20,d1
-		bne.s	.settings
-		addi.w	#$10,d0		; the body owns the momentum swing's rail
+		moveq	#0,d1
+		move.b	swing_body_shape(a0),d1
+		lsl.w	#4,d1
+		or.w	d1,d0
 .settings:
 		move.w	d0,obSubtype(a1)
 		move.l	obX(a0),obX(a1)
@@ -895,6 +895,7 @@ Platform_CreateSwingBody:
 		bsr.w	Plat_Init
 		movea.l	(sp),a2
 		move.w	a2,Plat_parent(a0)
+		move.b	PlatformMount_settings(a2),PlatformMount_settings(a0)
 		bset	#Plat_attached_bit,Plat_flags(a0)
 		move.b	#2,obRoutine(a0)
 		clr.w	respawn_addr(a0)
@@ -941,6 +942,7 @@ Platform_UpdateSuspended:
 		bsr.w	Plat_ApplyY
 		move.w	Plat_position(a0),d4
 		bsr.w	Platform_Interact
+		bsr.w	PlatformMount_Update
 		bsr.w	Plat_UpdateHanging
 		jmp	(DisplaySprite).l
 
@@ -956,6 +958,7 @@ Platform_ReleaseSuspended:
 		rts
 
 Platform_DeleteBody:
+		bsr.w	PlatformMount_Delete
 		bsr.w	Plat_RemoveHanging
 		jsr	(SMZ_ReleaseRiders).l
 		bsr.w	Platform_SuspendedParent
@@ -1180,6 +1183,7 @@ Platform_BodyInteract:
 		bsr.w	Plat_ApplyY
 		move.w	Plat_position(a0),d4
 		bsr.w	Platform_Interact
+		bsr.w	PlatformMount_Update
 		bsr.w	Plat_UpdateHanging
 Platform_BodyDisplay:
 		out_of_range.w	Platform_DeleteBody

@@ -19,7 +19,7 @@ def decode(data):
     rows = list(RECORD.iter_unpack(data[:-SIZE]))
     previous = 0
     for x, y, object_id, timezones, subtype in rows:
-        if not previous <= x < 0xFFFF or y & 0x1000 or not object_id:
+        if not previous <= x < 0xFFFF or (y & 0x1000 and object_id not in (0x17, 0x18, 0xDB, 0xDC, 0xDD, 0xDE)) or not object_id:
             raise ValueError('Invalid coordinate, ordering, Y flags or object ID')
         previous = x
     return rows
@@ -45,6 +45,19 @@ def convert_s3k(data):
     if len(data) < 6 or len(data) % 6 or data[-6:] != bytes.fromhex('FFFF00000000'):
         raise ValueError('Input is not a terminated six-byte S3&K layout')
     return encode(with_timezones(row) for row in struct.iter_unpack('>HHBB', data[:-6]))
+
+
+def mount_settings(row):
+    """Six platform payload bits; presence and coordinates retain their masks."""
+    _, y, oid, eras, _ = row
+    return ((eras & 31) | ((y & 0x1000) >> 7)) if oid in (0x17, 0x18, 0xDB, 0xDC, 0xDD, 0xDE) else 0
+
+
+def with_mount(row, settings):
+    x, y, oid, eras, subtype = row
+    if oid not in (0x17, 0x18, 0xDB, 0xDC, 0xDD, 0xDE) or not 0 <= settings < 64:
+        raise ValueError('Mount settings require a platform and a six-bit value')
+    return x, (y & ~0x1000) | ((settings & 32) << 7), oid, (eras & 0xE0) | (settings & 31), subtype
 
 
 if __name__ == '__main__':

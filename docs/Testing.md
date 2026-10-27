@@ -611,3 +611,33 @@ python build_tools/check_swing_costs.py --rom after.bin --listing after.lst --co
 The core counter uses master clocks; the checker divides by seven for 68000
 cycles. These are isolated emulator instruction costs, excluding whole-frame
 VDP/audio work and physical hardware timing. Keep reports in `test-results/`.
+
+## Platform-mounted objects
+
+Use matching completed ROM/listing pairs. Both checks accept standalone MD or
+Mode 1 builds; the latter core run needs `--system-directory /path/to/BIOS-fixture`.
+
+```sh
+python build_tools/check_platform_mounts.py --rom s2built.bin --listing md-main.lst --output test-results/platform-mounts/native
+python build_tools/check_platform_mounts_game.py --rom s2built.bin --listing md-main.lst --core /path/to/genesis_plus_gx_test_libretro.so --output test-results/platform-mounts/game
+```
+
+The native pass exercises all six platform constructor IDs, all 64 mount values,
+all eras and existing placement flags; every independent swing artwork/interaction/
+payload constructor; full and partial pools; reused slots and orphans; either
+player riding a payload, spring strengths, falling/sag, no-allocation detach,
+button-channel cleanup and persistent broken monitors. The core pass boots GHZ4,
+checks the portable button's actual PLC bytes, then runs moving regular/swing
+payloads with either SST allocation order and both-character button landings, monitor breaks/collector rewards and spike damage.
+It saves scene captures for visual inspection. Fixtures position actors/objects
+in RAM; this is not a controller-only playthrough of authored levels.
+
+`check_sonlvl_objects.cs` verifies mount selection and era/flip/any-Y/full-word
+preservation through properties and layout I/O, including reserved codes and
+independent artwork IDs. `check_ghz_vram.py` covers the optional GHZ4 button bank
+and mappings. `build_platform_button.py` must reproduce its three outputs from
+the resident SMZ source atlas/mappings. Repeat the swing, floating-platform,
+hanging and wheel-carrier regressions when changing shared payload handlers.
+The ICZ swing fixtures explicitly choose the rail-art constructor: movement no
+longer silently selects artwork. Relay tests preserve the executor's D7 counter
+on every active exit.

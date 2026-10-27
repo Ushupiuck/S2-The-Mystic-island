@@ -139,6 +139,8 @@ MCD_ApplyObjectReply:
 		move.w	(a2)+,obX(a1)
 		move.w	(a2)+,obY(a1)
 		move.b	(a2)+,d0
+		move.b	d0,d1
+		andi.b	#3,d0
 		move.b	d0,obRender(a1)
 		move.b	d0,obStatus(a1)
 		moveq	#0,d0
@@ -147,12 +149,17 @@ MCD_ApplyObjectReply:
 		lsl.w	#2,d0
 		move.l	(a3,d0.w),code(a1)
 		move.w	(a2)+,respawn_addr(a1)
+		jsr	(PlatformMount_ApplyReply).l
 		dbf	d7,.spawn
 .return:
 		rts
 
 ; Rare persistent-state operations. Preserve the object's registers; d0 is the
 ; only result. No PRG-RAM bus request or state-table mirror is needed on MD.
+Object_RespawnMountConsume:
+		move.l	d1,-(sp)
+		move.w	#$500|MCD_CommandObjectState,d1
+		bra.s	MCD_RespawnRequest
 Object_RespawnRead:
 MCD_RespawnRead:
 		move.l	d1,-(sp)

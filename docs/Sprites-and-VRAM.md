@@ -315,3 +315,19 @@ The imported blue/gray ramps and warm skin colors are intentional. Adapt
 individual imported pixels instead of changing global player colors to fix
 one object. The current SMZ flame and protected button draft are described in
 [Levels](Levels.md#scrap-madness). Check [Testing](Testing.md) after art changes.
+
+## Platform-mounted button art
+
+Mounted buttons reuse the live SMZ switch. In SMZ, its existing atlas/mappings
+stay resident. Outside SMZ, `ArtTile_PlatformButton = $419` is an optional eight-tile
+bank (`$8320-$8420`, end exclusive), immediately after the twelve handhold tiles.
+Only GHZ4 currently loads `Nem_PlatformButton`; other acts need an explicit PLC
+entry and a compatible VRAM allocation before using carried buttons. This bank
+is not globally free: some other acts use it for badnik art.
+
+`python build_tools/build_platform_button.py` extracts the eight referenced tiles
+from the authoritative `SMZ Sprite Atlas.unc` / `SMZ But.bin`, reindexes mappings
+and produces the portable uncompressed/Nemesis art and mappings. It retains the
+primary palette and both switch frames. Edit the atlas source, then regenerate;
+do not patch only the extracted outputs. Springs, spikes and monitors keep their
+existing common art banks. Swing artwork remains subject to each act's body-bank PLC.

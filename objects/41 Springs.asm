@@ -28,11 +28,15 @@ Ani_MovSpring:	dc.w	.frame1-Ani_MovSpring
 ; ---------------------------------------------------------------------------
 
 Obj41:
+		tst.w	Mount_parent(a0)
+		beq.s	Obj41_Behavior
+		jmp	(PlatformMount_Child).l
+Obj41_Behavior:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	Obj41_Index(pc,d0.w),d1
 		jsr	Obj41_Index(pc,d1.w)
-		out_of_range.w	UnloadObject
+		out_of_range2	PlatformMount_CullChild
 		bra.w	DisplaySprite
 ; ===========================================================================
 Obj41_Index:

@@ -21,6 +21,10 @@ spikes_move_delay	= 60
 spikes_push_delay	= $10
 
 Obj36:
+		tst.w	Mount_parent(a0)
+		beq.s	Obj36_Behavior
+		jmp	(PlatformMount_Child).l
+Obj36_Behavior:
 		tst.b	obRoutine(a0)
 		beq.w	Spike_Init
 		bsr.w	MoveSpikes
@@ -97,6 +101,8 @@ Spike_Floor:
 		lea	(v_player2).w,a1
 		bsr.w	Spike_HurtCharacter
 Spike_Display:
+		tst.w	Mount_parent(a0)
+		bne.w	DisplaySprite
 		move.w	spikes_base_x_pos(a0),d0
 		bra.w	MarkObjGone3		; clear the respawn flag when the base goes out of range
 ; ---------------------------------------------------------------------------

@@ -306,7 +306,7 @@ ObjectsManager_LoadWrapped:
 		bhs.s	ObjectsManager_Load
 		cmp.w	d4,d1
 		bls.s	ObjectsManager_Load
-		bra.s	ObjectsManager_Skip
+		bra.w	ObjectsManager_Skip
 
 ObjectsManager_LoadInRange:
 		move.b	omTimeZones(a0),d1
@@ -339,6 +339,7 @@ ObjectsManager_Load:
 		add.w	d1,d1
 		lea	(Obj_Index-4).l,a4
 		move.l	(a4,d1.w),code(a1)		; resolve only at creation
+		jsr	(PlatformMount_LoadSettings).l
 		move.w	omSubtype(a0),obSubtype(a1)
 		move.w	a3,d1
 		sub.w	(Object_Respawn_Base+2).w,d1
@@ -361,6 +362,10 @@ ObjectsManager_Skip:
 		rts
 
 ; Persistent-state operations preserve the object's registers; d0 is the result.
+Object_RespawnMountConsume:
+		move.l	d1,-(sp)
+		moveq	#5,d1
+		bra.s	MD_ObjectState
 Object_RespawnRead:
 		move.l	d1,-(sp)
 		moveq	#0,d1
@@ -391,6 +396,8 @@ MD_ObjectState:
 		beq.s	.original_x
 		movea.l	(Object_Respawn_Base).w,a1
 		adda.w	d0,a1
+		cmpi.b	#5,d1
+		beq.s	.mount_consumed
 		tst.b	d1
 		beq.s	.read
 		subq.b	#1,d1
@@ -403,6 +410,9 @@ MD_ObjectState:
 		bra.s	.done
 .increment:
 		addq.b	#1,(a1)
+		bra.s	.read
+.mount_consumed:
+		bset	#1,(a1)
 		bra.s	.read
 .consume:
 		bset	#0,(a1)

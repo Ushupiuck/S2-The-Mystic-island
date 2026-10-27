@@ -58,7 +58,7 @@ def placements(path, capacity):
     last_x = 0
     for x, y, object_id, timezones, subtype in rows:
         assert last_x <= x < 0xFFFF, f'{path.name}: unordered X or interior terminator'
-        assert not y & 0x1000, f'{path.name}: reserved Y flag set'
+        assert not y & 0x1000 or object_id in (0x17, 0x18, 0xDB, 0xDC, 0xDD, 0xDE), f'{path.name}: mount flag on unsupported object'
         assert object_id != 0, f'{path.name}: empty object ID'
         last_x = x
     return data, len(rows)

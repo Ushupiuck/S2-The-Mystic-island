@@ -42,7 +42,7 @@ the complete serialized word, including when calculating movement overlays.
 | `$0B` | Tilting platform | High nibble: duration; low nibble: initial phase, both in 16-frame units. |
 | `$0C` | Flapping door | Full byte: interval in seconds. |
 | `$16` | Diagonal lift | Full byte: duration in 8-frame units. Travels twice as far horizontally as vertically, then falls. |
-| `$17` | Swinging platform / ball | Word `PPDR IIII SMMM LLLL`: quarter orientation, detach, relay, material sound, twelve body presets, eight movement modes and 0–8 links. See [runtime settings](../docs/Objects.md#swinging-platforms-s1s2-coverage-and-s3k-variants). |
+| `$17` | Swinging platform / ball | Word `PPRD IIII SMMM LLLL`: quarter orientation, detach, relay, material sound, twelve interaction profiles, eight movement modes and 0–8 links. See [runtime settings](../docs/Objects.md#swinging-platforms-s1s2-coverage-and-s3k-variants). |
 | `$18` | Regular platform | Word `CCCF IIII STTT MMMM`: movement, shape, sag, shared interaction menu, falling, and phase/corner or switch channel. Profiles 6–9 add a classic underside grip; 8/9 also convey standing riders. See [runtime settings](../docs/Objects.md#ordinary-platforms-and-flying-batterys-hovering-platform). |
 | `$19`, `$AD` | CPZ platform / SMZ moving block | Low nibble: movement, wall stop/fall, switch-2 raft, vertical motion or triggered fast slide. High nibble: shape. |
 | `$1A`, `$3C` | Collapsing ledge / breakable wall | Full byte: mapping frame. |
@@ -181,18 +181,18 @@ equality check against both original base frames. The blade phase table replaces
 CD's nine-state dispatch while retaining every original frame and damage toggle.
 
 Swinging platforms (`$17`) expose the complete word as independent properties:
-movement, body preset, chain length, quarter-turn orientation, material sound,
+movement, artwork, interaction, carried object, chain length, quarter-turn orientation, material sound,
 detachment and relay participation. Movement 4 is the ICZ momentum swing; 5/6
 are SOZ/DEZ lifts and 7 is the retained proximity trap. The object picker creates
-safe byte presets; choose Body preset for a ball/hazard and the
+safe byte presets; choose Artwork for the body/rail/ball, Interaction for
+solidity/damage, Carries for a payload and the
 Detachable property for release. Existing SMZ hazards retain their migrated
 word settings. Preview uses the engine sine table and exact mirror/rotation order,
-shows every supported link and the ICZ rail, and clamps reserved lengths 9-F to
-8 like the game. The authored word remains intact at runtime. Carrying and
-multi-body chained platforms remain separate future work.
+shows every supported link and the selected rail, and clamps reserved lengths 9-F to
+8 like the game. The authored word remains intact at runtime. Multi-body chained platforms remain separate future work.
 
-`$18` exposes Interaction; `$17` Body preset selects the corresponding full
-ordinary-platform word from `Platform_SwingPresets` in Obj18. The current menu
+`$18` and the swing variants expose the same Interaction menu. Swing entries
+read its independent seed words from `Platform_SwingPresets` in Obj18. The current menu
 is: safe top/full, harmful
 bottom, conveyor top/full/harmful bottom, hanging top/full, conveyor+hanging
 top/full, then harmful non-solid/full-solid. C–F are reserved safe-top fallbacks.
@@ -208,4 +208,15 @@ movement uses bits 4–6. Existing layouts and Debug words are converted togethe
 Regular-platform shapes 0/1 retain terrain frames; 2 is the swing body, 3 its
 railed variant and 4 the large spikeball. Shapes 5–7 preview the runtime fallback
 to terrain frame 0. The GHZ/SLZ/SMZ material selects the existing body art; the
-act PLC must load that bank. Swing previews read the runtime body-preset table.
+act PLC must load that bank. Swing artwork selects IDs 17/DB/DC/DD/DE (swing/terrain 0/terrain 1/rail/ball),
+all entering the same suspension code. Movement 4 needs an explicitly selected
+rail to receive player input. The editor preserves raw subtype/mount flags
+when changing artwork.
+
+Both platform types have a Carries dropdown and contextual channel, spring-color
+and monitor-contents controls. The six-bit selection uses TT low five bits and
+Y bit 12; full subtype words, eras, flips and any-Y survive serialization.
+See [mounted-object codes and ownership](../docs/Objects.md#mounted-platform-objects).
+The preview combines the selected body and payload. Button art is resident in
+SMZ; GHZ4 explicitly loads its portable bank. Other acts need their own PLC
+and VRAM allocation before using buttons.

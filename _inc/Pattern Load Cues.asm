@@ -458,6 +458,7 @@ PLC_GHZ3_Extra_End:	plccheck PLC_GHZ3_Extra,0
 PLC_GHZ4_Main:		dc.w (PLC_GHZ4_Main_End-PLC_GHZ4_Main-2)/6-1
 		plcm	Nem_Swing,	ArtTile_GHZ_MZ_Swing
 		plcm	Nem_GHZ_Ball,	ArtTile_GHZ_Giant_Ball ; giant ball
+		plcm	Nem_PlatformButton,	ArtTile_PlatformButton
 PLC_GHZ4_Main_End:	plccheck PLC_GHZ4_Main,ActPLC_Main_Reserve
 
 PLC_GHZ4_Extra:		dc.w (PLC_GHZ4_Extra_End-PLC_GHZ4_Extra-2)/6-1

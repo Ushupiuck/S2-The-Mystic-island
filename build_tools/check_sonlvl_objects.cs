@@ -261,6 +261,7 @@ class CheckSonLVLObjects
 		CheckConveyor();
 		CheckPlatform();
 		CheckWordLayout();
+		CheckPlatformMounts();
 		if (previewDirectory != null) Preview(previewDirectory);
 		Console.WriteLine("PASS " + name + " (" + LevelData.Objects.Count + " placements)");
 	}
@@ -287,6 +288,33 @@ class CheckSonLVLObjects
 			var invalid = NewEntry(0x18, (ushort)(0xF180 | (shape << 4)));
 			var fallback = NewEntry(0x18, 0xF180);
 			if (!definition.GetSprite(invalid).GetBitmap().Bits.SequenceEqual(definition.GetSprite(fallback).GetBitmap().Bits)) Fail("Invalid platform shape differs from runtime fallback.");
+		}
+	}
+
+	static void CheckPlatformMounts()
+	{
+		foreach (byte id in new byte[] { 0x17, 0x18, 0xDB, 0xDC, 0xDD, 0xDE })
+		{
+			ObjectDefinition definition;
+			if (!LevelData.ObjTypes.TryGetValue(id, out definition) || !definition.CustomProperties.Any(p => p.Name == "Carries")) continue;
+			for (int mount = 0; mount < 64; mount++)
+			for (int era = 0; era < 8; era++)
+			{
+				ObjectEntry entry = NewEntry(id, id != 0x18 ? (ushort)0x1026 : (ushort)0xF1A2, true, true, true);
+				byte[] bytes = entry.GetBytes();
+				bytes[5] = (byte)((era << 5) | (mount & 31));
+				bytes[2] = (byte)((bytes[2] & 239) | ((mount & 32) >> 1));
+				entry.FromBytes(bytes);
+				foreach (PropertySpec property in definition.CustomProperties)
+				{
+					property.SetValue(entry, property.GetValue(entry));
+					if (!entry.GetBytes().SequenceEqual(bytes)) Fail("Mount/property round trip changed " + property.Name);
+				}
+				bool terminator;
+				var rows = LevelData.ObjectFormat.ReadLayout(LevelData.ObjectFormat.WriteLayout(new List<ObjectEntry> { entry }), out terminator);
+				if (!terminator || rows.Count != 1 || !rows[0].GetBytes().SequenceEqual(bytes)) Fail("Mount bits lost in layout I/O");
+				if (era == 7) CheckImage(definition.GetSprite(entry), "mounted platform $" + mount.ToString("X2"));
+			}
 		}
 	}
 

@@ -182,8 +182,10 @@ with resident placements, front/back cursors, loading bands and respawn state.
 MD copies each act's placement list once. On a band change or a full-pool retry,
 it supplies twelve free-slot bytes through the existing terrain frame job.
 CD selects era-eligible placements and emits twelve-byte records: SST handle,
-X, Y, render-flags byte, full-ID byte, subtype word, and placement handle. The
-new subtype fits the existing reply size by packing flags and ID together.
+X, Y, packed flags byte, full-ID byte, subtype word, and placement handle.
+Flags bits 0–1 carry flips; bits 2–7 carry the optional platform mount selection.
+MD masks flips before writing render/status and applies mount metadata only to
+platform constructors. The reply remains twelve bytes.
 MD resolves its own routine
 pointers and writes the SSTs after the reply. Idle frames do not scan/copy SSTs.
 
