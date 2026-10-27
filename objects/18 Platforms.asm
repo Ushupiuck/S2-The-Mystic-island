@@ -2,10 +2,11 @@
 ; Object 18 - ordinary platforms (MD main CPU)
 ; S3&K movement core, S1 vertical travel/fall/switch rise, S2 full solidity.
 ;
-; Subtype word: CCCC 0PPS FTTT MMMM
+; Subtype word: CCCC HPPS FTTT MMMM
 ;   M = movement (Plat_Movements), T = shape, F = full solidity,
 ;   S = rider sag (ignored by the rising trap), PP = phase/corner,
 ;   C = switch channel, used only by switch-triggered rising platforms.
+;   H = spawn/own a classic hanging child beneath the body.
 ; Placement X/Y flips XOR the phase/corner. Vertical paths are centred on Y;
 ; horizontal/diagonal paths use S3&K's endpoint origin. Squares use the centre.
 ; ---------------------------------------------------------------------------
@@ -23,6 +24,7 @@ Plat_position:	equ objoff_40	; word: long-horizontal 8.8 position
 Plat_speed:	equ objoff_42	; word: long-horizontal 8.8 speed
 Plat_loadwidth:	equ objoff_44	; word: horizontal retention interval
 Plat_cullX:	equ objoff_46	; word: rightmost retained origin
+Plat_hanger:	equ objoff_48	; word: spawned D9 child; 0 = retry allocation
 
 Obj18:
 		move.w	obSubtype(a0),d0
@@ -137,12 +139,89 @@ Plat_Full:
 		jsr	(SolidObject).l		; both characters, including sides/underside
 
 Plat_Display:
+		bsr.w	Plat_UpdateHanging
 		move.w	Plat_cullX(a0),d0
 		andi.w	#$FF80,d0
 		sub.w	(Camera_X_pos_coarse_back).w,d0
 		cmp.w	Plat_loadwidth(a0),d0
-		bhi.w	UnloadObject
+		bhi.w	Plat_Unload
 		bra.w	DisplaySprite
+; ---------------------------------------------------------------------------
+Plat_UpdateHanging:
+		move.w	obSubtype(a0),d0
+		btst	#11,d0
+		beq.w	.return
+		btst	#1,Plat_flags(a0)
+		bne.w	Plat_RemoveHanging
+		tst.w	Plat_hanger(a0)
+		bne.s	.existing
+		lea	Plat_hanger(a0),a2
+		moveq	#0,d0			; classic mode, support release and grab sound
+		moveq	#0,d1
+		move.b	obActWid(a0),d1
+		subq.w	#4,d1			; keep the grip inside the platform ends
+		moveq	#0,d2
+		move.b	obHeight(a0),d2
+		moveq	#0,d3
+		move.b	obFrame(a0),d3
+		add.w	d3,d3
+		lea	Plat_HangingBottoms(pc),a3
+		cmpi.b	#id_EHZ,(Current_Zone).w
+		bne.s	.bottom
+		addq.w	#4,a3
+.bottom:
+		cmp.w	(a3,d3.w),d2
+		bge.s	.offset
+		move.w	(a3,d3.w),d2
+.offset:
+		subi.w	#10,d2			; hands meet the deeper art/solid underside
+		jsr	(Hanging_SpawnChild).l
+		bcs.s	.return
+.existing:
+		movea.w	Plat_hanger(a0),a1
+		cmpi.l	#Hanging_Child,code(a1)
+		bne.s	.lost
+		move.w	a0,d0
+		cmp.w	Hang_parent(a1),d0
+		bne.s	.lost
+		move.w	obX(a0),obX(a1)
+		move.w	Hang_yoffset(a1),d0
+		add.w	obY(a0),d0
+		move.w	d0,obY(a1)
+		move.l	a0,-(sp)
+		movea.l	a1,a0
+		jsr	(Hanging_Update).l
+		movea.l	(sp)+,a0
+.return:
+		rts
+.lost:
+		clr.w	Plat_hanger(a0)		; don't touch a consumed/reused slot
+		rts
+Plat_RemoveHanging:
+		tst.w	Plat_hanger(a0)
+		beq.s	.return
+		movea.w	Plat_hanger(a0),a1
+		clr.w	Plat_hanger(a0)
+		cmpi.l	#Hanging_Child,code(a1)
+		bne.s	.return
+		move.w	a0,d0
+		cmp.w	Hang_parent(a1),d0
+		bne.s	.return
+		move.l	a0,-(sp)
+		movea.l	a1,a0
+		jsr	(Hanging_DeleteChild).l
+		movea.l	(sp)+,a0
+.return:
+		rts
+Plat_Unload:
+		bsr.s	Plat_RemoveHanging
+		jsr	(SMZ_ReleaseRiders).l
+		jmp	(UnloadObject).l
+; Mapping frame bottoms, checked against actual GHZ/EHZ mapping pieces.
+; Keep these editable alongside the shapes; the solid body can extend farther.
+Plat_HangingBottoms:
+		dc.w 20,132			; GHZ frames 0/1
+		dc.w 20,84			; EHZ frames 0/1
 ; ---------------------------------------------------------------------------
 ; The object manager calls Plat_Top/Plat_Full directly after construction.
 ; The selected movement is cached once, rather than redispatched from subtype.

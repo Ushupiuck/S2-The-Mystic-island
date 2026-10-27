@@ -43,7 +43,7 @@ the complete serialized word, including when calculating movement overlays.
 | `$0C` | Flapping door | Full byte: interval in seconds. |
 | `$16` | Diagonal lift | Full byte: duration in 8-frame units. Travels twice as far horizontally as vertically, then falls. |
 | `$17` | Swinging platform / ball | Word `PPDR SIII MMMM LLLL`: quarter orientation, detach, relay, material sound, eight interaction profiles, eight movement modes and 0–8 links. See [runtime settings](../docs/Objects.md#swinging-platforms-s1s2-coverage-and-s3k-variants). |
-| `$18` | GHZ/EHZ platform | Word `CCCC 0PPS FTTT MMMM`: movement, shape, full solidity, independent sag, phase/corner and switch channel. S3&K horizontal/diagonal/square/trap paths plus centred 64/96/128 px vertical motion, falling and switch rise. See [runtime settings](../docs/Objects.md#ordinary-platforms-and-flying-batterys-hovering-platform). |
+| `$18` | GHZ/EHZ platform | Word `CCCC HPPS FTTT MMMM`: movement, shape, full solidity, independent sag, phase/corner, hanging child and switch channel. Bit 11 (`$0800`) spawns/owns a classic hanging grip below the body. See [runtime settings](../docs/Objects.md#ordinary-platforms-and-flying-batterys-hovering-platform). |
 | `$19`, `$AD` | CPZ platform / SMZ moving block | Low nibble: movement, wall stop/fall, switch-2 raft, vertical motion or triggered fast slide. High nibble: shape. |
 | `$1A`, `$3C` | Collapsing ledge / breakable wall | Full byte: mapping frame. |
 | `$1C` | Scenery | Low nibble: appearance; high nibble: animation. Zone lists supply suitable defaults. |
@@ -78,6 +78,7 @@ the complete serialized word, including when calculating movement overlays.
 | `$B0` | Wheel carrier | Low nibble: one of eight mounts. Preview includes the spring, monitor or spikes with the runtime offset/facing. |
 | `$B1–B5` | Palmtree Panic badniks | Bit 0: normal/damaged variant. |
 | `$B7` | Metallic Madness propeller obstacle | Subtype unused. X flip reverses the initial patrol; Y flip is ignored. Preview includes the mast and both blade assemblies. |
+| `$D9` | Invisible hanging surface | Low six bits: span ×32 px (zero defaults to classic 56 px / traversable 32 px). Bit 6: drop at final grip; bit 7: traversable; bit 8: disable support release; bit 9: silent. X flip selects the left release end. Preview outlines the actual grab region. See [hanging surfaces](../docs/Objects.md#hanging-surfaces). |
 
 Movement distances are determined by the selected runtime routine, rather than
 an independent distance field. The current `$18` mapping sets have two frames;

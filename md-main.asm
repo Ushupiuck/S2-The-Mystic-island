@@ -6891,6 +6891,7 @@ DynResize_SLZ4:
 		include	"objects/Empty Slots/15.asm"
 		include	"objects/17 Swinging Platforms.asm"
 		include	"objects/18 Platforms.asm"
+		include	"objects/D9 Hanging Surface.asm"
 		include	"objects/1A Collapsing Platforms.asm"
 		include	"objects/S1/1B Collapsing Floors.asm"
 		include	"objects/1C Scenery.asm"
@@ -7329,7 +7330,7 @@ ptr_ObjD5:		dc.l ObjNull
 ptr_ObjD6:		dc.l ObjNull
 ptr_ObjD7:		dc.l ObjNull
 ptr_ObjD8:		dc.l ObjNull
-ptr_ObjD9:		dc.l ObjNull
+ptr_ObjD9:		dc.l HangingSurface	; invisible classic / traversable hanging surface
 ptr_ObjDA:		dc.l ObjNull
 ptr_ObjDB:		dc.l ObjNull
 ptr_ObjDC:		dc.l ObjNull
@@ -8857,6 +8858,11 @@ SolidObject_Squash:
 ; ===========================================================================
 
 SolidObject_Landed:
+		cmpi.b	#3,obControl(a1)
+		bne.s	.hanging_checked
+		jsr	(Hanging_AllowLanding).l
+		bcs.w	SolidObject_Miss
+.hanging_checked:
 		subq.w	#4,d3
 		moveq	#0,d1
 		move.b	obActWid(a0),d1
@@ -9092,6 +9098,11 @@ loc_F8BC:
 		sub.w	d3,d0
 
 PlatformObject_ChkYRange:
+		cmpi.b	#3,obControl(a1)
+		bne.s	.hanging_checked
+		jsr	(Hanging_AllowLanding).l
+		bcs.w	loc_F916.return
+.hanging_checked:
 		tst.b	obControl(a1)
 		bmi.w	loc_F916.return
 		move.w	obY(a1),d2
@@ -9112,6 +9123,10 @@ PlatformObject_ChkYRange:
 		move.w	d2,obY(a1)
 ; sub_F8F8:
 RideObject_SetRide:
+		cmpi.b	#3,obControl(a1)
+		bne.s	.hanging_checked
+		jsr	(Hanging_ReleaseForLanding).l
+.hanging_checked:
 		btst	#3,obStatus(a1)
 		beq.s	loc_F916
 		moveq	#0,d0
@@ -13345,6 +13360,8 @@ Nem_GroundExplosion:
 	;	align $100
 	;	align $8000
 Art_Sonic:	binclude	"art/uncompressed/Sonic's art.unc"
+		even
+Art_HangingSonic:	binclude "art/uncompressed/Sonic hanging.unc"
 	;	align $100
 	;	align $8000
 ; S&K body/extra/tail pixels are remapped to Pal_SonicTails' slot order.

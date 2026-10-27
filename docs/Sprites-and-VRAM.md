@@ -64,6 +64,27 @@ Sonic/Tails/body/tail/dust use this service. Some dedicated UI loaders, includin
 the signpost, retain their own cue encoding; do not assume every DPLC file uses
 one format. SonLVL's overrides are documented in [its guide](../SonLVL%20INI%20Files/README.md).
 
+### Hanging animation
+
+D9 uses seven original FBZ hanging/traversal poses. Tails already has the S3&K
+frames `$80-$85/$91`. Sonic's existing 251-frame table uses different IDs and
+remains unchanged: while hanging he uses `Map_HangingSonic`, its seven-entry
+DPLC table and the compact `art/uncompressed/Sonic hanging.unc` source. They
+stream into the ordinary Sonic bank, with a maximum 21 tiles per pose. No new
+resident level bank or PLC is required. Bounds cover both mapping sets.
+
+`python build_tools/import_hanging_art.py --source /path/to/skdisasm` reproduces
+the imported raw art and the two `Sonic hanging.asm` files from skdisasm
+`73de97c6b55055bcb8089c1d55d006b02136f163`. The importer selects only the seven
+poses, compacts their DPLC runs and applies the common player palette mapping.
+After import, the raw pixels and mapping ASM are directly editable sources.
+
+Object control suppresses ordinary player animation while the controller
+selects each pose and requests its complete DMA. A full queue keeps the previous
+mapping/frame and retries. Entering/leaving the alternate Sonic mapping invalidates
+the ordinary per-player art cache; release restores normal mappings and art.
+Tails retains his original mapping and separate-tail animation throughout.
+
 ### Mode 1 RAM art
 
 With `MegaCDMode1 = 1`, shield, invincibility and normal/lost-ring art is

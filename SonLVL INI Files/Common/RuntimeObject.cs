@@ -57,6 +57,13 @@ namespace MysticIsland.ObjectDefinitions
 					Bits("Ground only", 7, 1, "Ignore airborne characters.", "No", "Yes");
 					break;
 				case "Bridge": Bits("Length", 0, 255, "Number of 16-pixel bridge logs. Existing layouts use 8 to 16."); break;
+				case "Hanging":
+					Bits("Span", 0, 63, "Full width in 32-pixel units. Zero: classic 56 pixels, traversable 32 pixels.");
+					Bits("Final grip", 6, 1, "Traversable only: release on reaching the final grip. X flip selects the left end.", "Stay hanging", "Drop at end");
+					Bits("Mode", 7, 1, "Invisible interaction; terrain or decorative sprites supply the visible grip.", "Classic", "Traversable");
+					Bits("Support release", 8, 1, "Release on actual foot contact with terrain or an object's solid top; positive floor-probe distances never release.", "Enabled", "Disabled");
+					Bits("Sound", 9, 1, "Grab and hand-over-hand sound.", "Enabled", "Silent");
+					break;
 				case "Platform":
 					Bits("Movement", 0, 15, "S3&K movement profiles, with centred S1 vertical travel. Horizontal and diagonal origins are endpoints; square origins are centres. Falling waits 30 frames, then carries riders for 32 frames. Switch rising waits 60 frames.", "Stationary", "Horizontal (64 px)", "Horizontal (128 px)", "Vertical (64 px)", "Vertical (128 px)", "Diagonal up (128 by 64 px)", "Diagonal down (128 by 64 px)", "Rising ceiling trap", "Square (32 px)", "Square (96 px)", "Square (160 px)", "Square (224 px)", "Horizontal (256 px, eased)", "Vertical (96 px)", "Fall when stood on", "Switch: rise 512 px");
 					Bits("Shape", 4, 7, "Mapping / collision configuration. Choose only frames present in this zone's mapping set.", Enumerable.Range(0, Math.Min(5, frames.Length)).Select(i => "Frame " + i).ToArray());
@@ -64,6 +71,7 @@ namespace MysticIsland.ObjectDefinitions
 					Bits("Rider sag", 8, 1, "Independent of movement: depress up to 4 pixels under either rider. The rising ceiling trap always ignores sag.", "Rigid", "Sag");
 					Bits("Phase / corner", 9, 3, "XOR with placement X/Y flips. Oscillation and long horizontal motion use bit 0 for the opposite phase; squares use both bits for their initial corner.", "0", "1", "2", "3");
 					Bits("Switch channel", 12, 15, "Switch-triggered rise only: one of the 16 button channels. Independent of shape, solidity, sag and phase.");
+					Bits("Hanging child", 11, 1, "Spawn an invisible classic grip beneath the platform. Independent players can stand above and hang below. Retries allocation when full.", "None", "Spawn classic grip");
 					break;
 				case "MovingBlock":
 				case "CPZPlatform":
@@ -374,6 +382,12 @@ namespace MysticIsland.ObjectDefinitions
 					int height = (subtype & 0x80) == 0 ? 48 : 112;
 					Sprite belt = Outline(((subtype & 15) + 1) * 16, height); belt.Offset(0, -height / 2); return belt;
 				case "InvisibleSolid": return Outline(((subtype >> 4) + 1) * 16, ((subtype & 15) + 1) * 16);
+				case "Hanging":
+					int span = (subtype & 63) * 32;
+					if (span == 0) span = (subtype & 128) == 0 ? 56 : 32;
+					Sprite grip = Outline(span, 24);
+					grip.Offset(0, (subtype & 128) == 0 ? 36 : 12);
+					return grip;
 				case "Teleporter":
 					Sprite trigger = Outline(16, 64); trigger.Offset(8, 0); return trigger;
 				case "Unused": return Outline(32, 32);
@@ -509,6 +523,7 @@ namespace MysticIsland.ObjectDefinitions
 	public sealed class DiagonalLift : RuntimeObject { }
 	public sealed class SwingingPlatform : RuntimeObject { }
 	public sealed class Platform : RuntimeObject { }
+	public sealed class HangingSurface : RuntimeObject { }
 	public sealed class ChemicalPlantPlatform : RuntimeObject { }
 	public sealed class CollapsingLedge : RuntimeObject { }
 	public sealed class CollapsingFloor : RuntimeObject { }

@@ -456,7 +456,7 @@ switch-rise transitions replace that cached pointer without changing settings.
 | `$E` | Fall after standing | Either rider starts a 30-update delay; carry 32 updates, then detach both with inherited velocity |
 | `$F` | Switch-triggered rise | Selected channel; 60-update delay, rise 512 px at 2 px/update, stop |
 
-The complete subtype word is `CCCC 0PPS FTTT MMMM`:
+The complete subtype word is `CCCC HPPS FTTT MMMM`:
 
 | Bits | Meaning |
 | --- | --- |
@@ -465,13 +465,14 @@ The complete subtype word is `CCCC 0PPS FTTT MMMM`:
 | 7 | Full S2 body solidity; clear means a one-way top. Full body uses a 48-pixel vertical radius and both-player side/underside response. |
 | 8 | Rider sag: either rider depresses the platform by up to 4 px. Independent of movement; ignored by the ceiling trap. |
 | 9–10 | Phase / initial square corner, XOR with placement X/Y flips. Oscillation and long horizontal motion use bit 0; squares use both. |
-| 11 | Reserved |
+| 11 | Spawn a classic hanging child beneath the platform; see D9 below. |
 | 12–15 | Switch channel 0–15, used only by movement `$F` |
 
 For example, `$A19F` is switch-A rising, shape 1, full solidity and sag.
 Full solidity, shape, sag and channel no longer compete for subtype bits.
 The authored word remains intact throughout runtime state transitions. Private
-state uses `$2E-$47`; all universal fields and `$4E` SST stride remain fixed.
+state uses `$2E-$49`, including the hanging-child word at `$48`; all universal
+fields and `$4E` SST stride remain fixed.
 
 The selected S3&K oscillator rows already exist in the shared engine table:
 64 px uses `$0A`, 128 px uses `$1E`, 96 px uses `$0E`, and square movement uses
@@ -558,6 +559,80 @@ Reference: skdisasm `73de97c6b55055bcb8089c1d55d006b02136f163`,
 [`Obj_FloatingPlatform`, `FloatingPlatformIndex`, `Obj_FBZFloatingPlatform`
 and collision helpers](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/sonic3k.asm),
 plus its [FBZ SonLVL definition](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/SonLVL%20INI%20Files/FBZ/FloatingPlatform.cs).
+
+## Hanging surfaces
+
+`objects/D9 Hanging Surface.asm` supplies placement `$D9`: one invisible SST
+with independent state for both player slots. Classic mode retains the grabbed
+horizontal position; traversable mode uses FBZ's alternating four-pose steps,
+32-pixel grip spacing and eight-update pose timers. The final pose immediately
+allows the next step to begin. Terrain/decorative objects supply visible handles;
+the controller itself adds no solidity or resident level art.
+
+| Word mask | Setting |
+| --- | --- |
+| `$003F` | Full span in 32-pixel units. Zero defaults to 56 pixels in classic mode, 32 pixels in traversable mode. |
+| `$0040` | Traversable only: drop at the final grip and exclude that end from initial grabs. X flip selects the left end; otherwise the right. |
+| `$0080` | Traversable mode; clear selects classic. |
+| `$0100` | Disable automatic release onto terrain or an object's solid top. Clear enables both. |
+| `$0200` | Silence grabbing/traversal. |
+| `$FC00` | Reserved; retained in the authored word. |
+
+Classic catches character origins 24–47 pixels below the placement and pins Y
+at origin+36. Traversable catches 0–23 and pins Y at origin+18; it snaps X to
+the nearest containing 32-pixel grip cell's centre, measured from the array's
+left edge. These are local offsets, with no zone/world-coordinate dependence.
+`$0000` is the default classic grip; `$0084` is four traversable grips over
+128 pixels; `$00C4` also drops at the final grip. Placement Y flip has no effect.
+
+An A/B/C press releases with Y velocity `-$380`; held left/right adds X velocity
+`±$200`. Release sets jumping, airborne/rolling state and rolling radii. Regrab
+delay is 18 updates for a neutral jump, 60 with directional input. Grabs reject
+other object control, grounded players, hurt/death, offscreen players and Debug.
+Hurt/death, lost control, Debug and unload retire the old hanging state without
+clearing an unrelated controller's control flags.
+
+Automatic support release uses the player's paired foot probes and selected
+terrain path. Only contact/penetration (distance `-16..0`) releases; finding a
+floor farther down the probe does not. Solid-object support comes from the
+shared engine's actual top-landing boundary, with its normal landing tolerance.
+It releases before `RideObject_SetRide` assigns the new standing owner, without
+a jump impulse. Objects merely passing below never trigger it. Disabling the
+option suppresses terrain release and top-landing takeover while still hanging.
+
+The player's existing `standonobject` index identifies the hanging controller,
+but the standing status bit stays clear. Ownership resolution validates the
+controller code and that player's active record before releasing it. No player
+field, universal offset or SST allocation grows. Private state: parent word
+`$2E`, half-width `$30`, parent-relative Y `$32`, previous origin `$34/$36`,
+expected parent code long `$38`, reciprocal-link address word `$3C`, then two
+eight-byte player records at `$3E/$46` (active, cooldown, step, timer, direction,
+alternating hand, requested pose and padding).
+
+Ordinary platform `$18` uses its formerly reserved bit 11 (`$0800`) to spawn a
+classic child. Its usable half-width is platform half-width minus 4; the child
+origin is parent Y+max(visible frame bottom, collision half-height)−10.
+`Plat_HangingBottoms` records the two GHZ/EHZ frame bottoms and is checked
+against the mappings. Both players can independently
+stand above/hang below, including the opposite arrangement. Movement/sag update
+the child before its interaction pass. The parent drives that pass once, so an
+earlier free slot cannot cause a frame of lag. Its child executor checks lifetime.
+Allocation retries when full; the platform keeps functioning. Unload/intangible
+falling deletes the child and releases hanging players. The parent is the sole
+placement owner; the child's respawn handle is zero. Reciprocal pointers and the
+expected parent code protect against slot reuse and externally deleted parents.
+
+`Hanging_SpawnChild` is also available to other platform constructors: a0 is the
+owner, a2 points to its child-pointer word, d0 is the complete hanging settings,
+d1 the half-width and d2 the signed origin Y offset. The caller drives
+`Hanging_Update` after moving the child and owns explicit cleanup. Traversable
+widths should be multiples of 16 pixels (a whole number of 32-pixel grips).
+
+Source reference: skdisasm `73de97c6b55055bcb8089c1d55d006b02136f163`,
+`Obj_LBZUnusedBarPlatform`, `Obj_FBZChainLink` and `Obj_SOZLightSwitch`.
+The lowering-chain movement, lighting effect and FBZ chain/array handover are
+not part of these two surface modes. Player-art adaptation is documented in
+[Sprites and VRAM](Sprites-and-VRAM.md#hanging-animation).
 
 ## GHZ boss and boss explosions
 

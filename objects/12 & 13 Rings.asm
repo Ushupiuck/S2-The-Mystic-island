@@ -109,7 +109,7 @@ loc_A946:
 ; ---------------------------------------------------------------------------
 
 loc_A94E:
-		bsr.w	FindFreeObj
+		jsr	(FindFreeObj).l
 		bne.w	loc_A9DE
 
 loc_A956:
