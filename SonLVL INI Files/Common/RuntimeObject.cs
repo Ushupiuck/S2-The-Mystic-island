@@ -58,11 +58,12 @@ namespace MysticIsland.ObjectDefinitions
 					break;
 				case "Bridge": Bits("Length", 0, 255, "Number of 16-pixel bridge logs. Existing layouts use 8 to 16."); break;
 				case "Hanging":
-					Bits("Span", 0, 63, "Full width in 32-pixel units. Zero: classic 56 pixels, traversable 32 pixels.");
+					Bits("Grip count / span", 0, 63, "Traversable: 1-63 metal handholds, 32 pixels apart; zero means one. Classic: span in 32-pixel units, zero means 56 pixels.");
 					Bits("Final grip", 6, 1, "Traversable only: release on reaching the final grip. X flip selects the left end.", "Stay hanging", "Drop at end");
-					Bits("Mode", 7, 1, "Invisible interaction; terrain or decorative sprites supply the visible grip.", "Classic", "Traversable");
+					Bits("Mode", 7, 1, "Classic is an invisible fixed grip. Traversable draws a repeated FBZ row; the act must load Nem_HangingSurface at ArtTile_HangingSurface.", "Classic", "Traversable");
 					Bits("Support release", 8, 1, "Release on actual foot contact with terrain or an object's solid top; positive floor-probe distances never release.", "Enabled", "Disabled");
 					Bits("Sound", 9, 1, "Grab and hand-over-hand sound.", "Enabled", "Silent");
+					Bits("Handhold art", 10, 1, "Traversable only: hide the metal row when terrain or parent art already supplies the handles.", "Draw metal handholds", "Invisible controller");
 					break;
 				case "Platform":
 					Bits("Movement", 0, 15, "S3&K movement profiles, with centred S1 vertical travel. Horizontal and diagonal origins are endpoints; square origins are centres. Falling waits 30 frames, then carries riders for 32 frames. Switch rising waits 60 frames.", "Stationary", "Horizontal (64 px)", "Horizontal (128 px)", "Vertical (64 px)", "Vertical (128 px)", "Diagonal up (128 by 64 px)", "Diagonal down (128 by 64 px)", "Rising ceiling trap", "Square (32 px)", "Square (96 px)", "Square (160 px)", "Square (224 px)", "Horizontal (256 px, eased)", "Vertical (96 px)", "Fall when stood on", "Switch: rise 512 px");
@@ -385,6 +386,12 @@ namespace MysticIsland.ObjectDefinitions
 				case "Hanging":
 					int span = (subtype & 63) * 32;
 					if (span == 0) span = (subtype & 128) == 0 ? 56 : 32;
+					if ((subtype & 0x480) == 0x80)
+					{
+						pieces = new List<Sprite>();
+						for (int i = 0; i < span / 32; i++) pieces.Add(new Sprite(frames[0], 16 - span / 2 + i * 32, -20));
+						return new Sprite(pieces);
+					}
 					Sprite grip = Outline(span, 24);
 					grip.Offset(0, (subtype & 128) == 0 ? 36 : 12);
 					return grip;
@@ -442,7 +449,7 @@ namespace MysticIsland.ObjectDefinitions
 		{
 			Sprite sprite = new Sprite(Preview(Subtype(obj), obj.X, obj.Y, obj.YFlip, obj.XFlip));
 			if (behavior == "Teleporter") sprite.Flip(obj.XFlip, false);
-			else if (behavior != "Swing" && behavior != "SpinGroup" && behavior != "LabyrinthConveyor" && behavior != "InvisibleSolid" && behavior != "Conveyor" && behavior != "PathSwapper") sprite.Flip(obj.XFlip, obj.YFlip);
+			else if (behavior != "Swing" && behavior != "SpinGroup" && behavior != "LabyrinthConveyor" && behavior != "InvisibleSolid" && behavior != "Conveyor" && behavior != "PathSwapper" && behavior != "Hanging") sprite.Flip(obj.XFlip, obj.YFlip);
 			return sprite;
 		}
 		public override Sprite GetDebugOverlay(ObjectEntry obj)

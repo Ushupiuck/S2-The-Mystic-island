@@ -66,12 +66,33 @@ one format. SonLVL's overrides are documented in [its guide](../SonLVL%20INI%20F
 
 ### Hanging animation
 
+D9's traversable row reuses the original FBZ handhold: sixteen by forty pixels,
+two mapping pieces and ten resident tiles for any number of grips. The editable
+`art/uncompressed/Hanging surface.unc` keeps the first ten tiles of skdisasm's
+`Levels/FBZ/Nemesis Art/Misc Art 1.nem`, revision
+`73de97c6b55055bcb8089c1d55d006b02136f163`. Source indices `0,1,2,3,4,5,F`
+map to shared palette-0 indices `0,6,7,8,9,9,1`; no zone palette change is needed.
+Although flips reduce the source to two unique tiles, retaining its arrangement
+avoids expanding each handhold into ten hardware sprites.
+
+Run `python build_tools/build_hanging_surface_art.py` after editing that raw
+source. It regenerates the Nemesis art and 1–11 visible-row mappings; `--check`
+verifies both outputs. The controller clips its full 1–63-grip span before
+selecting the mapping. Grips are 32 pixels apart and end at the controller's Y.
+
+`ArtTile_HangingSurface = $40D` occupies `$81A0-$82E0` (ten tiles). All four LZ
+Extra PLCs load it in space released by the conveyor. GHZ4 loads it too and omits
+its unused Crabmeat module, whose bank would overlap; that act has no Crabmeat
+placements. Other GHZ acts retain their complete badnik loads. Other acts must
+load/reserve this art explicitly before using visible rows; hide-art bit `$0400`
+requires no handhold bank. Classic/platform-spawned grips remain invisible.
+
 D9 uses seven original FBZ hanging/traversal poses. Tails already has the S3&K
 frames `$80-$85/$91`. Sonic's existing 251-frame table uses different IDs and
 remains unchanged: while hanging he uses `Map_HangingSonic`, its seven-entry
 DPLC table and the compact `art/uncompressed/Sonic hanging.unc` source. They
 stream into the ordinary Sonic bank, with a maximum 21 tiles per pose. No new
-resident level bank or PLC is required. Bounds cover both mapping sets.
+resident level bank or PLC is required for the player poses. Bounds cover both mapping sets.
 
 `python build_tools/import_hanging_art.py --source /path/to/skdisasm` reproduces
 the imported raw art and the two `Sonic hanging.asm` files from skdisasm
@@ -169,7 +190,8 @@ SMZ's atlas, junction and smoke lifetimes are in [Levels](Levels.md#scrap-madnes
 
 LZ's conveyor uses 32 tiles at `$3ED-$40C`: one shared 16-tile wheel, then
 eight tiles each for normal and spiked platforms. This releases `$40D-$43C`
-(48 tiles / 1,536 bytes). All wheels share one animation clock and DPLC cache;
+(48 tiles / 1,536 bytes); the hanging handholds now occupy its first ten tiles.
+All wheels share one animation clock and DPLC cache;
 the first wheel processed in a game frame services the bank. Animation advances
 every four active frames; wheel count does not multiply uploads. Switch reversal
 changes the shared clock's direction. The common atomic loader reserves both

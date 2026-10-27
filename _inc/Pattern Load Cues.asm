@@ -468,6 +468,7 @@ PLC_GHZ4_Extra:		dc.w (PLC_GHZ4_Extra_End-PLC_GHZ4_Extra-2)/6-1
 		plcm	Nem_VSpring2,	ArtTile_S1_Spring_Vertical
 		plcm	Nem_GHZ_BWall,	ArtTile_GHZ_SLZ_Smashable_Wall
 		plcm	Nem_GHZ_SWall,	ArtTile_GHZ_Edge_Wall
+		plcm	Nem_HangingSurface,	ArtTile_HangingSurface
 PLC_GHZ4_Extra_End:	plccheck PLC_GHZ4_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -483,6 +484,7 @@ PLC_LZ1_Extra:		dc.w (PLC_LZ1_Extra_End-PLC_LZ1_Extra-2)/6-1
 		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
 		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
 		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_HangingSurface,	ArtTile_HangingSurface
 PLC_LZ1_Extra_End:	plccheck PLC_LZ1_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -498,6 +500,7 @@ PLC_LZ2_Extra:		dc.w (PLC_LZ2_Extra_End-PLC_LZ2_Extra-2)/6-1
 		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
 		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
 		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_HangingSurface,	ArtTile_HangingSurface
 PLC_LZ2_Extra_End:	plccheck PLC_LZ2_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -513,6 +516,7 @@ PLC_LZ3_Extra:		dc.w (PLC_LZ3_Extra_End-PLC_LZ3_Extra-2)/6-1
 		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
 		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
 		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_HangingSurface,	ArtTile_HangingSurface
 PLC_LZ3_Extra_End:	plccheck PLC_LZ3_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -528,6 +532,7 @@ PLC_LZ4_Extra:		dc.w (PLC_LZ4_Extra_End-PLC_LZ4_Extra-2)/6-1
 		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
 		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
 		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_HangingSurface,	ArtTile_HangingSurface
 PLC_LZ4_Extra_End:	plccheck PLC_LZ4_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -1737,7 +1742,7 @@ PLCKosM_THZ3_End
 ; Act 4
 PLCKosM_THZ4:	plrKosMlistheader
 	plreqKosM	ArtTile_Buzz_Bomber, Kospm_Buzz
-	plreqKosM	ArtTile_Crabmeat, Kospm_Crabmeat
+	; No Crabmeat placements in Act 4; its former bank hosts the hanging art.
 	plreqKosM	ArtTile_Chopper, Kospm_Chopper
 	plreqKosM	ArtTile_Moto_Bug, Kospm_Motobug
 	plreqKosM	ArtTile_Newtron, Kospm_Newtron

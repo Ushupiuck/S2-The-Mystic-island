@@ -78,7 +78,7 @@ the complete serialized word, including when calculating movement overlays.
 | `$B0` | Wheel carrier | Low nibble: one of eight mounts. Preview includes the spring, monitor or spikes with the runtime offset/facing. |
 | `$B1–B5` | Palmtree Panic badniks | Bit 0: normal/damaged variant. |
 | `$B7` | Metallic Madness propeller obstacle | Subtype unused. X flip reverses the initial patrol; Y flip is ignored. Preview includes the mast and both blade assemblies. |
-| `$D9` | Invisible hanging surface | Low six bits: span ×32 px (zero defaults to classic 56 px / traversable 32 px). Bit 6: drop at final grip; bit 7: traversable; bit 8: disable support release; bit 9: silent. X flip selects the left release end. Preview outlines the actual grab region. See [hanging surfaces](../docs/Objects.md#hanging-surfaces). |
+| `$D9` | Hanging surface | Low six bits: traversable grip count 1–63 (zero means one), or classic span ×32 px (zero means 56 px). Bit 6: drop at final grip; bit 7: traversable; bit 8: disable support release; bit 9: silent; bit 10: hide metal handholds. X flip selects the left release end. Preview repeats the actual handhold art; invisible modes outline the grab region. Visible rows require the act's handhold PLC. See [hanging surfaces](../docs/Objects.md#hanging-surfaces). |
 
 Movement distances are determined by the selected runtime routine, rather than
 an independent distance field. The current `$18` mapping sets have two frames;

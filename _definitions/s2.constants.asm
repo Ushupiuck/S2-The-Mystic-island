@@ -1778,6 +1778,7 @@ ArtTile_Lives_Counter:		equ $7D4
 ArtTile_Sonic_Dust:		equ $7E0
 ArtTile_Tails_Dust:		equ $7F0
 ArtTile_Water_Surface:		equ $001	; 16 DPLC tiles immediately after transparent terrain tile zero
+ArtTile_HangingSurface:		equ $40D	; 10 tiles; released LZ conveyor space / GHZ4's absent Crabmeat
 
 ; Eggman
 ArtTile_Eggman:			equ $400

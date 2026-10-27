@@ -562,21 +562,38 @@ plus its [FBZ SonLVL definition](https://github.com/sonicretro/skdisasm/blob/73d
 
 ## Hanging surfaces
 
-`objects/D9 Hanging Surface.asm` supplies placement `$D9`: one invisible SST
+`objects/D9 Hanging Surface.asm` supplies placement `$D9`: one controller SST
 with independent state for both player slots. Classic mode retains the grabbed
 horizontal position; traversable mode uses FBZ's alternating four-pose steps,
 32-pixel grip spacing and eight-update pose timers. The final pose immediately
-allows the next step to begin. Terrain/decorative objects supply visible handles;
-the controller itself adds no solidity or resident level art.
+allows the next step to begin. Classic mode is invisible. Traversable mode draws
+one FBZ metal handhold per grip, or can remain invisible over existing terrain
+or parent artwork. Neither mode adds solidity.
 
 | Word mask | Setting |
 | --- | --- |
-| `$003F` | Full span in 32-pixel units. Zero defaults to 56 pixels in classic mode, 32 pixels in traversable mode. |
+| `$003F` | Traversable handhold count, 1–63 (zero means one), at 32-pixel spacing. Classic: full span in 32-pixel units, zero defaults to 56 pixels. |
 | `$0040` | Traversable only: drop at the final grip and exclude that end from initial grabs. X flip selects the left end; otherwise the right. |
 | `$0080` | Traversable mode; clear selects classic. |
 | `$0100` | Disable automatic release onto terrain or an object's solid top. Clear enables both. |
 | `$0200` | Silence grabbing/traversal. |
-| `$FC00` | Reserved; retained in the authored word. |
+| `$0400` | Hide traversable handhold graphics; keep the complete interaction span. |
+| `$F800` | Reserved; retained in the authored word. |
+
+`$0081/$0082/$0088` draw one/two/eight handholds; `$0488` keeps the eight-grip
+controller invisible. All rows share the same ten resident tiles. The act must
+load `Nem_HangingSurface` at `ArtTile_HangingSurface`; current loads cover GHZ4
+and all four LZ acts. See [the art allocation](Sprites-and-VRAM.md#hanging-animation).
+Other acts need their own compatible PLC entry and free destination bank.
+
+The visible row uses one display-only helper, regardless of count. The controller
+keeps its physical origin/word-width span and selects the intersecting grip cells
+before queueing the helper. At most eleven grips intersect a 320-pixel viewport;
+the helper chooses a 1–11 mapping with byte-sized bounds. This prevents offscreen
+pieces consuming SAT entries or wrapping by 512 pixels. The ordinary renderer is
+unchanged. A full pool leaves interaction active and retries allocation later.
+The controller queues its helper after positioning it, independent of slot order;
+reciprocal pointers protect cleanup against slot reuse and external deletion.
 
 Classic catches character origins 24–47 pixels below the placement and pins Y
 at origin+36. Traversable catches 0–23 and pins Y at origin+18; it snaps X to
@@ -603,7 +620,8 @@ option suppresses terrain release and top-landing takeover while still hanging.
 The player's existing `standonobject` index identifies the hanging controller,
 but the standing status bit stays clear. Ownership resolution validates the
 controller code and that player's active record before releasing it. No player
-field, universal offset or SST allocation grows. Private state: parent word
+field, universal offset or SST size grows. Private state: display-helper word
+at `$18` (unused X velocity), parent word
 `$2E`, half-width `$30`, parent-relative Y `$32`, previous origin `$34/$36`,
 expected parent code long `$38`, reciprocal-link address word `$3C`, then two
 eight-byte player records at `$3E/$46` (active, cooldown, step, timer, direction,

@@ -7330,7 +7330,7 @@ ptr_ObjD5:		dc.l ObjNull
 ptr_ObjD6:		dc.l ObjNull
 ptr_ObjD7:		dc.l ObjNull
 ptr_ObjD8:		dc.l ObjNull
-ptr_ObjD9:		dc.l HangingSurface	; invisible classic / traversable hanging surface
+ptr_ObjD9:		dc.l HangingSurface	; classic grip / configurable row of traversable handholds
 ptr_ObjDA:		dc.l ObjNull
 ptr_ObjDB:		dc.l ObjNull
 ptr_ObjDC:		dc.l ObjNull
@@ -13345,6 +13345,8 @@ Nem_EggChopper:	binclude	"art/nemesis/Chopper blades for EHZ boss.nem"
 Nem_CPZ_Boss:	binclude	"art/nemesis/CPZ boss.nem"
 		even
 Nem_Smoke:	binclude	"art/nemesis/Smoke trail from CPZ boss.nem"
+		even
+Nem_HangingSurface:	binclude "art/nemesis/Hanging surface.nem"
 		even
 Nem_Explosion:	binclude	"art/nemesis/Explosion.nem"
 		even

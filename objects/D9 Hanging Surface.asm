@@ -1,13 +1,15 @@
 ; ---------------------------------------------------------------------------
-; D9 - invisible hanging surface (MD main CPU).
+; D9 - hanging surface (MD main CPU).
 ; S3&K LBZ fixed grip / FBZ hand-over-hand traversal, with SOZ floor release.
 ; Low 6 bits: span in 32px units (0 = classic 56px / traversable 32px).
 ; Bit 6: drop at the final grip (X flip selects the left end).
 ; Bit 7: traversable. Bit 8: disable support release. Bit 9: silent.
+; Bit 10: hide the traversable handholds (use terrain / parent art instead).
 ; Other bits reserved. The complete authored subtype word is preserved.
 ;
 ; Standalone origin follows the original controllers: classic centre Y+36,
-; traversable centre Y+18. No art/solidity is supplied by this object.
+; traversable centre Y+18. Classic grips remain invisible; no solidity.
+; Traversable art: load Nem_HangingSurface at ArtTile_HangingSurface in the act.
 ; Parent-driven children update once from their owner, regardless of slot order.
 ; ---------------------------------------------------------------------------
 Hang_parent:		equ objoff_2E	; word: owner SST, 0 for standalone
@@ -17,6 +19,7 @@ Hang_oldX:		equ objoff_34	; word: last processed origin
 Hang_oldY:		equ objoff_36	; word
 Hang_parentcode:	equ objoff_38	; long: expected live owner controller
 Hang_parentlink:	equ objoff_3C	; word: address of owner's child-pointer word
+Hang_display:		equ obVelX	; word: unused velocity holds one display helper
 Hang_p1:		equ objoff_3E	; eight bytes per player, ends at object_size
 Hang_p2:		equ objoff_46
 Hang_active:		equ 0
@@ -28,6 +31,7 @@ Hang_phase:		equ 5		; 0/4: alternate hand
 Hang_frame:		equ 6		; requested pose, 0-6
 Hang_NoSupportBit:	equ 8
 Hang_SilentBit:		equ 9
+Hang_HideArtBit:	equ 10
 
 HangingSurface:
 		tst.b	obRoutine(a0)
@@ -136,6 +140,7 @@ Hanging_Update:
 		lea	Hang_p2(a0),a2
 		lea	(v_player2).w,a1
 		move.w	(v_jpadholdlogical2).w,d0
+		pea	Hanging_Display(pc)	; player 2 returns straight into the display pass
 
 Hanging_Player:
 		move.w	obSubtype(a0),d5
@@ -577,8 +582,112 @@ Hanging_ReleaseForLanding:
 		movem.l	(sp)+,d0-d7/a0-a6
 		rts
 
+; Only the intersecting handholds reach the ordinary renderer. Eleven grips
+; cover a 320px viewport, including the partial grip at either edge. Selecting
+; a 1..11 mapping keeps byte-sized bounds and prevents 512px sprite wrap.
+; The controller retains its physical origin and full word-width span.
+Hanging_Display:
+		move.w	obSubtype(a0),d0
+		btst	#7,d0
+		beq.w	Hanging_RemoveDisplay
+		btst	#Hang_HideArtBit,d0
+		bne.w	Hanging_RemoveDisplay
+		move.w	Hang_halfwidth(a0),d2
+		move.w	obX(a0),d4
+		sub.w	d2,d4
+		addi.w	#16,d4		; first grip centre
+		lsr.w	#4,d2		; total grips, including zero's one-grip default
+		move.w	(Camera_X_pos).w,d0
+		subq.w	#7,d0
+		sub.w	d4,d0
+		bpl.s	.first
+		moveq	#0,d0
+.first:
+		addi.w	#31,d0
+		lsr.w	#5,d0		; first cell whose right edge reaches the viewport
+		sub.w	d0,d2
+		ble.w	.return
+		lsl.w	#5,d0
+		add.w	d0,d4
+		move.w	(Camera_X_pos).w,d0
+		addi.w	#327,d0
+		sub.w	d4,d0
+		bmi.w	.return
+		lsr.w	#5,d0
+		addq.w	#1,d0
+		cmp.w	d0,d2
+		bls.s	.count
+		move.w	d0,d2
+.count:
+		; d2 visible grip count; d4 first centre. No state is stored per grip.
+		move.w	Hang_display(a0),d0
+		beq.s	.allocate
+		movea.w	d0,a1
+		cmpi.l	#Hanging_DisplayHelper,code(a1)
+		bne.s	.allocate
+		move.w	a0,d0
+		cmp.w	Hang_parent(a1),d0
+		beq.s	.draw
+.allocate:
+		clr.w	Hang_display(a0)
+		movem.l	d2/d4,-(sp)
+		jsr	(FindFreeObj).l
+		movem.l	(sp)+,d2/d4
+		bne.s	.return		; retain interaction and retry the display later
+		move.l	#Hanging_DisplayHelper,code(a1)
+		move.w	a0,Hang_parent(a1)
+		move.w	a1,Hang_display(a0)
+		move.l	#Map_HangingSurface,obMap(a1)
+		move.w	#make_art_tile(ArtTile_HangingSurface,0,0),obGfx(a1)
+		move.w	#$80,obPriority(a1)
+		move.b	#Map_HangingSurface_height,height_pixels(a1)
+		move.b	#4,obRender(a1)
+.draw:
+		move.w	d2,d0
+		subq.w	#1,d0
+		move.b	d0,obFrame(a1)
+		lsl.w	#4,d0
+		add.w	d4,d0
+		move.w	d0,obX(a1)
+		lsl.w	#4,d2
+		subq.w	#8,d2
+		move.b	d2,width_pixels(a1)
+		move.w	obY(a0),d0
+		subi.w	#20,d0
+		move.w	d0,obY(a1)
+		jmp	(DisplaySprite2).l	; parent queues it after positioning, irrespective of slot order
+.return:
+		rts
+
+Hanging_DisplayHelper:
+		movea.w	Hang_parent(a0),a1
+		cmpi.l	#HangingSurface,code(a1)
+		beq.s	.owner
+		cmpi.l	#Hanging_Child,code(a1)
+		bne.w	DeleteObject
+.owner:
+		move.w	a0,d0
+		cmp.w	Hang_display(a1),d0
+		bne.w	DeleteObject
+		rts
+
+Hanging_RemoveDisplay:
+		move.w	Hang_display(a0),d0
+		beq.s	.return
+		clr.w	Hang_display(a0)
+		movea.w	d0,a1
+		cmpi.l	#Hanging_DisplayHelper,code(a1)
+		bne.s	.return
+		move.w	a0,d0
+		cmp.w	Hang_parent(a1),d0
+		bne.s	.return
+		jmp	(DeleteObject2).l
+.return:
+		rts
+
 Hanging_ReleaseAll:
 		movem.l	d0-d7/a0-a6,-(sp)
+		bsr.s	Hanging_RemoveDisplay
 		lea	Hang_p1(a0),a2
 		lea	(v_player).w,a1
 		bsr.s	.player
@@ -598,4 +707,7 @@ Hanging_ReleaseAll:
 		rts
 
 		include "mappings/sprite/Sonic hanging.asm"
+
+Map_HangingSurface:
+		binclude "mappings/sprite/Hanging surface.bin"
 		include "mappings/spriteDPLC/Sonic hanging.asm"

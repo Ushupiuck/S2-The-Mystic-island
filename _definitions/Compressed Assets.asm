@@ -1073,6 +1073,9 @@ MCD_CompressedAssets:
 	if defined(Nem_HUD)
 	dc.l Nem_HUD,Nem_HUD+$B4	; art/nemesis/HUD.nem
 	endif
+	if defined(Nem_HangingSurface)
+	dc.l Nem_HangingSurface,Nem_HangingSurface+$74	; art/nemesis/Hanging surface.nem
+	endif
 	if defined(Nem_Invincibility)
 	dc.l Nem_Invincibility,Nem_Invincibility+$EE	; art/nemesis/Invincibility.nem
 	endif

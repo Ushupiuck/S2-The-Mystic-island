@@ -238,6 +238,75 @@ def native(args):
         for _,size,tile,_ in pieces:assert (tile&2047)+((size>>2)+1)*((size&3)+1)<=loaded
     assert m.s['Art_HangingSonic']%2==0
     rows.append('seven Sonic poses: complete DPLC sources, mapping bounds and unchanged 32-tile destination')
+
+    # One helper renders a viewport-sized subset of the full authored row.
+    # Exercise every count, edge alignments and a camera far from the origin.
+    grip_maps=frames(rom,m.s['Map_HangingSurface'],11)
+    for n,pieces in enumerate(grip_maps,1):
+        assert len(pieces)==n*2
+        assert [(x+8,y,size,tile) for y,size,tile,x in pieces] == [
+            (16-n*16+i*32,y,size,tile) for i in range(n)
+            for y,size,tile in ((-20,5,0),(-4,6,4))]
+    for count in range(64):
+        n=count or 1
+        centres=[0x1000-n*16+16+i*32 for i in range(n)]
+        for camera in (centres[0]-328,centres[0]-327,centres[0]-160,
+                       centres[0]+7,centres[0]+8,0x1000,centres[-1]+8):
+            m.start();m.write('Camera_X_pos',camera,2)
+            m.write('Camera_X_pos_coarse_back',camera&0xFF80,2)
+            m.put(o,'code',m.s['HangingSurface']);m.put(o,'obX',0x1000,2)
+            m.put(o,'obY',0x200,2);m.put(o,'obSubtype',0x80|count)
+            # Views intentionally outside the retained loading interval still
+            # exercise Display directly, independently of lifetime culling.
+            m.act('HangingSurface',o)
+            if not m.get(o,'code'):
+                m.put(o,'code',m.s['HangingSurface']);m.put(o,'obSubtype',0x80|count)
+                m.put(o,'obX',0x1000,2);m.put(o,'obY',0x200,2)
+                m.put(o,'Hang_halfwidth',n*16,2)
+            m.act('Hanging_Display',o)
+            visible=[x for x in centres if camera-7<=x<=camera+327]
+            if visible:
+                helper=m.get(o,'Hang_display',2)|0xFFFF0000
+                assert m.get(helper,'code')==m.s['Hanging_DisplayHelper']
+                assert m.get(helper,'obFrame')==len(visible)-1,(count,camera,visible)
+                assert m.get(helper,'obX',2)==(visible[0]+visible[-1])//2
+                assert m.get(helper,'obY',2)==0x200-20
+                assert m.get(o,'obX',2)==0x1000
+                assert sum(bool(m.get(obj,'code')) for obj in m.pool())==2
+                m.put(o,'obSubtype',0x480|count);m.act('Hanging_Display',o)
+                assert not m.get(o,'Hang_display',2) and not m.get(helper,'code')
+    rows.append('all 64 count encodings: repeated mappings, viewport clipping and hidden-art cleanup; two SSTs total')
+
+    m.start();m.write('Camera_X_pos',0xF80,2);m.write('Camera_X_pos_coarse_back',0xF00,2)
+    for obj in m.pool():m.put(obj,'code',m.s['ObjNull'])
+    m.put(o,'code',m.s['HangingSurface']);m.put(o,'obX',0x1000,2)
+    m.put(o,'obY',0x200,2);m.put(o,'obSubtype',0x88)
+    m.act('HangingSurface',o);assert not m.get(o,'Hang_display',2)
+    free=o+m.s['object_size'];m.put(free,'code',0)
+    m.act('HangingSurface',o);assert m.get(o,'Hang_display',2)==free&65535
+    m.act('DeleteObject',o);m.act('Hanging_DisplayHelper',free)
+    assert not m.get(free,'code')
+    # A reused helper slot belongs to its new object and must survive cleanup.
+    fixture(0x88);helper=m.get(o,'Hang_display',2)|0xFFFF0000
+    m.put(helper,'code',m.s['ObjNull']);m.act('Hanging_ReleaseAll',o)
+    assert m.get(helper,'code')==m.s['ObjNull']
+    rows.append('display pool failure/retry, orphan deletion and reused-slot protection')
+
+    bank=m.s['ArtTile_HangingSurface']*32
+    assert struct.unpack_from('>H',rom,m.s['Nem_HangingSurface'])[0]&0x7FFF==10
+    def loads(label,module=False):
+        pos=m.s[label]
+        for i in range(struct.unpack_from('>h',rom,pos)[0]+1):
+            src,dest=struct.unpack_from('>IH',rom,pos+2+i*6)
+            size=struct.unpack_from('>H',rom,src)[0]
+            if not module:size=(size&0x7FFF)*32
+            yield src,dest,dest+size
+    for zone,act,module in [('GHZ',4,'THZ')]+[('LZ',a,'RRZ') for a in range(1,5)]:
+        loaded=list(loads('PLC_'+zone+str(act)+'_Main'))+list(loads('PLC_'+zone+str(act)+'_Extra'))+list(loads('PLCKosM_'+module+str(act),True))
+        assert sum(src==m.s['Nem_HangingSurface'] and dest==bank for src,dest,end in loaded)==1
+        for src,start,end in loaded:
+            assert src==m.s['Nem_HangingSurface'] or end<=bank or start>=bank+320,(zone,act,hex(src))
+    rows.append('GHZ4 and four LZ acts: resident handhold PLC and non-overlapping live object banks')
     return rows
 
 

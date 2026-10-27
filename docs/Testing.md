@@ -24,10 +24,13 @@ python build_tools/check_hanging_game.py --rom s2built.bin --listing md-main.lst
 
 The native runner exercises both actors, word settings, exact FBZ step offsets,
 grab/release, shared solid-object landing, parent ownership and pool retry.
+It also checks all 64 grip-count encodings against visible mapping placement,
+camera-edge clipping, helper allocation retry, orphan cleanup and reused slots.
 The game runner boots GHZ4 and tests real neutral-jump/regrab physics, traversal
 and uploaded poses, terrain and rising-object support, and both simultaneous
-standing/hanging arrangements on moving/sagging platforms. Add `--pal` or
-`--player 2` for PAL or primary Tails. RAM writes construct disposable scenes;
+standing/hanging arrangements on moving/sagging platforms. It verifies the actual handhold PLC upload,
+SAT piece counts/spacing for 1/2/3/8 grips, and camera views across a 63-grip row.
+Add `--pal` or `--player 2` for PAL or primary Tails. RAM writes construct disposable scenes;
 these are not a controller-only playthrough of authored placements. MD builds
 omit `--system-directory`. Use separate processes when changing ROMs/regions.
 Source references are skdisasm `73de97c6b55055bcb8089c1d55d006b02136f163`,

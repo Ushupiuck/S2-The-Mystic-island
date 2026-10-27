@@ -46,6 +46,47 @@ def main():
         assert g.get(who,'obControl')==3,('grab',who,sub,hex(g.get(h,'code')),hex(g.get(who,'obY',2)),hex(g.read('Camera_X_pos_coarse_back',2)),g.get(who,'obRoutine'))
         return h
 
+    # Actual PLC upload and SAT output, rather than a mapping-only preview.
+    hand_art=(Path(__file__).resolve().parents[1]/'art/uncompressed/Hanging surface.unc').read_bytes()
+    bank=g.s['ArtTile_HangingSurface']*32
+    assert bytes(g.vram[(bank+i)^1] for i in range(len(hand_art)))==hand_art
+
+    def drawn_grips(h):
+        helper=g.get(h,'Hang_display',2)
+        assert helper and g.get(helper,'code')==g.s['Hanging_DisplayHelper']
+        count=g.get(helper,'obFrame')+1
+        sat=[]
+        for i in range(g.read('v_spritecount')):
+            p=g.s['Sprite_Table']+i*8
+            tile=g.read(p+4,2)&0x7FF
+            if tile in (g.s['ArtTile_HangingSurface'],g.s['ArtTile_HangingSurface']+4):
+                sat.append((g.read(p+6,2),tile))
+        assert len(sat)==count*2,('handhold SAT count',count,sat)
+        assert all(sat[i+2][0]-sat[i][0]==32 for i in range(0,len(sat)-2,2))
+        return count
+
+    for count in (1,2,3,8):
+        h=fixture('v_player',0x80|count)
+        run(8)
+        assert drawn_grips(h)==count
+        assert g.get('v_player','obControl')==3
+        g.video.save(args.output/('handholds-%02d.png'%count))
+    checks.append('1/2/3/8 handholds: real act PLC pixels, two SAT pieces per grip and 32px spacing')
+
+    h=fixture('v_player',0xBF)
+    for camera in (0x40,0x360,0x680):
+        for actor in actors:
+            g.put(actor,'obControl',1);g.put(actor,'obX',camera+160,2)
+            g.put(actor,'obVelX',0,2);g.put(actor,'obInertia',0,2)
+        g.write('Camera_X_pos',camera,2);g.write('Camera_X_pos_coarse_back',camera&0xFF80,2)
+        run(4)
+        assert 9<=drawn_grips(h)<=11
+        assert g.get(h,'Hang_halfwidth',2)==63*16
+        g.video.save(args.output/('handholds-63-camera-%04X.png'%camera))
+    g.put(h,'obSubtype',0x4BF,2);run(4)
+    assert not g.get(h,'Hang_display',2)
+    checks.append('63-grip row: camera views near both ends and centre, clipped SAT output and hide-art cleanup')
+
     for who in actors:
         h=fixture(who)
         run(30)
