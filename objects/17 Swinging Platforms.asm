@@ -1,17 +1,15 @@
 ; ---------------------------------------------------------------------------
 ; Object 17 - pendulums, rotating platforms and S3&K swing lifts (MD CPU).
-; Word: PPDR SIII MMMM LLLL
+; Word: PPDR IIII SMMM LLLL
 ; PP = quarter-turn orientation/phase; D = detachable; R = impulse relay;
-; S = optional material sound; III = interaction; MMMM = movement; L = links.
-; Movement: 0 normal, 1 half, 2 static, 3 rotate, 4 ICZ momentum,
-;           5 SOZ half-circle lift, 6 DEZ quarter-circle lift, 7 S2 trap.
-; Interaction: 0 top, 1 full, 2 full/hurt bottom, 3 conveyor top,
-;              4 conveyor full, 5 conveyor/hurt bottom, 6 hurt, 7 hurt/full.
+; S = optional material sound; IIII = shared platform interaction;
+; MMM = movement 0 normal, 1 half, 2 static, 3 rotate, 4 ICZ momentum,
+;                5 SOZ half-circle lift, 6 DEZ quarter-circle lift, 7 S2 trap.
 ; 0-8 links are supported. 9-F are reserved, clamped to 8, never payloads.
 ; ---------------------------------------------------------------------------
 swing_max_links = 8              ; declared packed capacity, including 0 links
 swing_orientation = objoff_2E     ; byte: quarter-turn angle
-swing_profile = objoff_2F         ; byte: interaction 0-7
+swing_profile = objoff_2F         ; byte: shared interaction 0-11
 swing_helper_ptr = objoff_30      ; long: packed decorative chain
 swing_mode_timer = objoff_34      ; word: endpoint pause / static release delay
 swing_ang_vel = objoff_36         ; word: 8.8 angular velocity
@@ -26,7 +24,9 @@ swing_cooldown = objoff_48        ; byte: relay feedback guard
 swing_body_state = objoff_49      ; byte: detached 0 airborne / 1 sliding
 swing_impulse = objoff_4A         ; word: pending signed world impulse
 swing_relative = objoff_4C        ; word: detached body / hanging owner
-swing_last_angle = obAniFrame
+swing_hanger = obTimeFrame       ; word: owned D9; no animation timer is used
+swing_last_angle = obColProp     ; byte: last angle; no NPC touch property
+swing_previous_status = obWidth ; byte: previous riders; width uses obActWid
 swing_mode_started = obAnim      ; 0 idle/global, 1 active, 2 relay active, 3 relay rest
 swing_dir_flag = obPrevAni
 status_standing_mask = $18
@@ -81,7 +81,11 @@ SwingingPtfm_Init:
 		move.w	d4,d0
 		lsr.w	#8,d0
 		move.w	d0,d1
-		andi.w	#7,d0
+		andi.w	#$F,d0
+		cmpi.w	#platform_profile_count,d0
+		blo.s	.profile_ready
+		moveq	#platform_top,d0
+.profile_ready:
 		move.b	d0,swing_profile(a0)
 		lsr.w	#6,d1
 		lsl.w	#6,d1
@@ -92,6 +96,7 @@ SwingingPtfm_Init:
 		move.w	d0,swing_contact(a0)
 		move.l	d0,swing_cooldown(a0)
 		move.w	d0,swing_relative(a0)
+		move.w	d0,swing_hanger(a0)
 		move.w	d0,swing_mode_started(a0)
 		move.b	#$FF,swing_last_angle(a0)
 		move.w	d4,d0
@@ -131,11 +136,7 @@ SwingingPtfm_Init:
 		move.l	a1,swing_helper_ptr(a0)
 .movement:
 		move.w	d4,d0
-		andi.w	#$F0,d0
-		cmpi.w	#$70,d0
-		bls.s	.valid
-		moveq	#0,d0               ; reserved movement IDs are normal swings
-.valid:
+		andi.w	#$70,d0
 		lsr.w	#3,d0
 		lea	SwingingPtfm_MotionIndex(pc),a1
 		move.w	(a1,d0.w),d0
@@ -154,7 +155,9 @@ SwingingPtfm_Init:
 		move.b	swing_profile(a0),d0
 		cmpi.b	#2,d0
 		beq.s	.ball
-		cmpi.b	#5,d0
+		cmpi.b	#platform_conveyor_hurt_bottom,d0
+		beq.s	.ball
+		cmpi.b	#platform_hurt,d0
 		bhs.s	.ball
 		bra.s	.firstPose
 .ball:
@@ -173,7 +176,9 @@ SwingingPtfm_Init:
 		move.b	swing_profile(a0),d0
 		cmpi.b	#2,d0
 		beq.s	.poseReady
-		cmpi.b	#5,d0
+		cmpi.b	#platform_conveyor_hurt_bottom,d0
+		beq.s	.poseReady
+		cmpi.b	#platform_hurt,d0
 		bhs.s	.poseReady
 		move.l	#Map_SwingRail,obMap(a0)
 		move.b	#Map_SwingRail_height,height_pixels(a0)
@@ -198,7 +203,7 @@ SwingingPtfm_Init:
 		rts
 
 SwingingPtfm_SetSolid:
-		move.b	obStatus(a0),obTimeFrame(a0)
+		move.b	obStatus(a0),swing_previous_status(a0)
 		bsr.w	SwingingPtfm_UpdateMotion
 		bsr.s	SwingingPtfm_Interact
 		cmpi.l	#SwingingPtfm_Motion_Momentum,swing_movement(a0)
@@ -211,106 +216,14 @@ SwingingPtfm_SetSolid:
 
 ; Collision remains independent of movement, release and optional sounds.
 SwingingPtfm_Interact:
-		cmpi.b	#6,swing_profile(a0)
-		bne.s	.solid
-		bra.w	SwingingPtfm_HurtOverlap
-.solid:
-		cmpi.b	#7,swing_profile(a0)
-		bne.s	.dimensions
-		bsr.w	SwingingPtfm_HurtOverlap
-.dimensions:
-		moveq	#0,d1
-		moveq	#0,d2
-		moveq	#0,d3
-		move.b	obActWid(a0),d1
-		move.b	obHeight(a0),d2
-		move.w	d2,d3
-		addq.w	#1,d3
 		move.w	swing_previous_x(a0),d4
-		move.b	swing_profile(a0),d0
-		beq.s	.top
-		cmpi.b	#3,d0
-		beq.s	.top
-		addi.w	#sonic_solid_width,d1
-		jsr	(SolidObject).l
-		cmpi.b	#2,swing_profile(a0)
-		beq.s	.underside
-		cmpi.b	#5,swing_profile(a0)
-		bne.s	.belt
-.underside:
-		swap	d6
-		btst	#2,d6
-		beq.s	.partnerHurt
-		lea	(v_player).w,a1
-		jsr	(Spike_HurtCharacter).l
-.partnerHurt:
-		btst	#3,d6
-		beq.s	.belt
-		lea	(v_player2).w,a1
-		jsr	(Spike_HurtCharacter).l
-		bra.s	.belt
-.top:
-		jsr	(PlatformObject2).l
-.belt:
-		move.b	swing_profile(a0),d0
-		subq.b	#3,d0
-		cmpi.b	#2,d0
-		bhi.s	.return
-		lea	(v_player).w,a1
-		moveq	#3,d6
-		bsr.s	.conveyor
-		lea	(v_player2).w,a1
-		moveq	#4,d6
-.conveyor:
-		btst	d6,obStatus(a0)
-		beq.s	.return
-		tst.b	conveyor_applied(a1)
-		bne.s	.return
-		moveq	#2,d0
-		btst	#0,obStatus(a0)
-		beq.s	.move
-		neg.w	d0
-.move:
-		add.w	d0,obX(a1)
-		move.b	#1,conveyor_applied(a1)
-.return:
-		rts
-
-SwingingPtfm_HurtOverlap:
-		lea	(v_player).w,a1
-		bsr.s	.player
-		lea	(v_player2).w,a1
-.player:
-		tst.l	code(a1)
-		beq.s	.return
-		moveq	#0,d1
-		move.b	obActWid(a0),d1
-		addq.w	#8,d1
-		move.w	obX(a1),d0
-		sub.w	obX(a0),d0
-		bpl.s	.xAbs
-		neg.w	d0
-.xAbs:
-		cmp.w	d1,d0
-		bhi.s	.return
-		moveq	#0,d1
-		move.b	obHeight(a0),d1
-		add.b	obHeight(a1),d1
-		move.w	obY(a1),d0
-		sub.w	obY(a0),d0
-		bpl.s	.yAbs
-		neg.w	d0
-.yAbs:
-		cmp.w	d1,d0
-		bhi.s	.return
-		jmp	Spike_HurtCharacter
-.return:
-		rts
+		jsr	(Platform_Interact).l
+		bra.w	SwingingPtfm_UpdateHanging
 
 ; Either player can push into the visible rail. Existing riders contribute
 ; half the initial impulse, as in ICZ. Physics uses local, unmirrored angles.
 SwingingPtfm_MomentumInput:
-		cmpi.b	#6,swing_profile(a0)
+		cmpi.b	#platform_hurt,swing_profile(a0)
 		beq.w	.return
 		tst.w	(Debug_placement_mode).w
 		bne.w	.return
@@ -358,7 +271,7 @@ SwingingPtfm_MomentumInput:
 		bne.s	.blockRail
 		cmpi.w	#$200,d3
 		blt.s	.blockRail
-		btst	d6,obTimeFrame(a0)
+		btst	d6,swing_previous_status(a0)
 		beq.s	.newRider
 		asr.w	#1,d3
 .newRider:
@@ -718,7 +631,7 @@ SwingingPtfm_ApplyAngle:
 ; Optional sound bit, with an editable zone/material table. Zero is silent.
 SwingingPtfm_Sound:
 		move.w	obSubtype(a0),d0
-		btst	#11,d0
+		btst	#7,d0
 		beq.s	.return
 		moveq	#0,d0
 		move.b	(Current_Zone).w,d0
@@ -797,6 +710,14 @@ SwingingPtfm_DetachCheck:
 		clr.l	swing_helper_ptr(a1)
 		clr.w	swing_impulse(a1)
 		clr.w	swing_cooldown(a1)
+		tst.w	swing_hanger(a1)
+		beq.s	.no_hanger
+		movea.w	swing_hanger(a1),a2
+		move.w	a1,Hang_parent(a2)
+		lea	swing_hanger(a1),a3
+		move.w	a3,Hang_parentlink(a2)
+		clr.w	swing_hanger(a0)
+.no_hanger:
 		move.b	#$A,obRoutine(a1)
 		move.w	#$200,obVelX(a1)
 		clr.w	obVelY(a1)
@@ -954,7 +875,7 @@ SwingingPtfm_Falling:
 		clr.w	obVelX(a0)
 .collision:
 		bsr.w	SwingingPtfm_Interact
-		jmp	(MarkObjGone).l
+		bra.w	SwingingPtfm_BodyDisplay
 
 SwingingPtfm_Floating:
 		move.w	obX(a0),swing_previous_x(a0)
@@ -981,9 +902,10 @@ SwingingPtfm_Floating:
 		clr.w	obVelX(a0)
 .solid:
 		bsr.w	SwingingPtfm_Interact
-		jmp	(MarkObjGone).l
+		bra.w	SwingingPtfm_BodyDisplay
 
 SwingingPtfm_LostBody:
+		bsr.w	SwingingPtfm_RemoveHanging
 		jsr	(SMZ_ReleaseRiders).l
 		jmp	DeleteObject
 
@@ -1186,6 +1108,7 @@ SwingingPtfm_ChkDel:
 SwingingPtfm_Display:
 		jmp	DisplaySprite
 SwingingPtfm_DelAll:
+		bsr.w	SwingingPtfm_RemoveHanging
 		jsr	(SMZ_ReleaseRiders).l
 		move.l	swing_helper_ptr(a0),d0
 		beq.s	.body
@@ -1202,9 +1125,69 @@ SwingingPtfm_DelAll:
 		bne.s	.unload
 		movem.l	a0,-(sp)
 		movea.l	a1,a0
+		bsr.w	SwingingPtfm_RemoveHanging
 		jsr	(SMZ_ReleaseRiders).l
 		movea.l	a0,a1
 		movem.l	(sp)+,a0
 		jsr	(DeleteObject2).l
 .unload:
 		jmp	UnloadObject
+
+; Detached bodies no longer own placement state, but still own their grip.
+SwingingPtfm_BodyDisplay:
+		out_of_range.w	SwingingPtfm_LostBody
+		jmp	(DisplaySprite).l
+
+SwingingPtfm_UpdateHanging:
+		move.b	swing_profile(a0),d0
+		subi.b	#platform_hang_top,d0
+		cmpi.b	#3,d0
+		bhi.w	.return
+		tst.w	swing_hanger(a0)
+		bne.s	.existing
+		lea	swing_hanger(a0),a2
+		moveq	#0,d0
+		moveq	#0,d1
+		move.b	obActWid(a0),d1
+		subq.w	#4,d1
+		moveq	#0,d2
+		move.b	SwingingPtfm_HangingBottoms(pc),d2
+		cmpi.b	#id_SLZ,(Current_Zone).w
+		bne.s	.grip_smz
+		move.b	SwingingPtfm_HangingBottoms+1(pc),d2
+.grip_smz:
+		cmpi.b	#id_SMZ,(Current_Zone).w
+		bne.s	.grip_offset
+		move.b	SwingingPtfm_HangingBottoms+2(pc),d2
+.grip_offset:
+		subi.w	#10,d2		; hands meet the visible body's underside
+		jsr	(Hanging_SpawnChild).l
+		bcs.s	.return
+.existing:
+		movea.w	swing_hanger(a0),a1
+		cmpi.l	#Hanging_Child,code(a1)
+		bne.s	.lost
+		move.w	a0,d0
+		cmp.w	Hang_parent(a1),d0
+		bne.s	.lost
+		move.w	obX(a0),obX(a1)
+		move.w	Hang_yoffset(a1),d0
+		add.w	obY(a0),d0
+		move.w	d0,obY(a1)
+		move.l	a0,-(sp)
+		movea.l	a1,a0
+		jsr	(Hanging_Update).l
+		movea.l	(sp)+,a0
+.return:
+		rts
+.lost:
+		clr.w	swing_hanger(a0)
+		rts
+
+SwingingPtfm_RemoveHanging:
+		lea	swing_hanger(a0),a2
+		jmp	(Platform_RemoveHanging).l
+; GHZ, SLZ and SMZ body/rail bottoms; checked against both mapping variants.
+SwingingPtfm_HangingBottoms:
+		dc.b 8,32,24
+		even

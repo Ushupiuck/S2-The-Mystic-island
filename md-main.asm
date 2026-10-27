@@ -6947,7 +6947,7 @@ loc_8E70:
 
 +		bsr.w	DisplaySprite
 		move.w	#sfx_Collapse,d0
-		bra.w	PlaySound_Special
+		jmp	(PlaySound_Special).l
 ; ---------------------------------------------------------------------------
 byte_8EF2:	dc.b $1C,$18,$14,$10
 		dc.b $1A,$16,$12, $E

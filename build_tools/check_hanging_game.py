@@ -21,7 +21,7 @@ def main():
     args=p.parse_args()
     g=Genesis(args.core,args.rom,args.listing,args.output,args.pal,system_directory=args.system_directory)
     boot_level(g,zone=0,act=3,player=args.player)
-    base=g.save();checks=[]
+    base=g.save();checks=[];terrain_floor={}
     actors=['v_player','v_player2'] if args.player==0 else ['v_player']
 
     def run(n=1):
@@ -201,36 +201,114 @@ def main():
         assert not g.get(who,'obControl'),('terrain did not release',who)
         assert not g.get(who,'obStatus')&2
         g.video.save(args.output/(who+'-terrain-support.png'))
+        terrain_floor[who]=g.get(who,'obY',2)+g.get(who,'obHeight')
         checks.append(who+': real terrain contact releases; distant terrain does not')
 
     if len(actors)==2:
-        for bottom,top in [('v_player','v_player2'),('v_player2','v_player')]:
-            g.restore(base);isolate(g)
-            g.write('Tails_CPU_idle_timer',600,2)
-            g.write('Camera_X_pos',0x360,2);g.write('Camera_Y_pos',0x190,2)
-            g.write('Camera_X_pos_coarse_back',0x300,2)
-            platform=spawn(g,'Obj18',0x400,0x240,0x0901)
-            for actor in actors:place(g,actor,0x400,0x200);g.put(actor,'obControl',1)
+        for family in ('regular','swing'):
+            for profile in (6,7,8,9):
+                for bottom,top in [('v_player','v_player2'),('v_player2','v_player')]:
+                    g.restore(base);isolate(g)
+                    g.write('Tails_CPU_idle_timer',600,2)
+                    g.write('Camera_X_pos',0x360,2);g.write('Camera_Y_pos',0x190,2)
+                    g.write('Camera_X_pos_coarse_back',0x300,2)
+                    settings=(profile<<8)|(0x81 if family=='regular' else 0x25)
+                    platform=spawn(g,'Obj18' if family=='regular' else 'SwingingPtfm',0x400,0x200 if family=='regular' else 0x1A8,settings)
+                    field='Plat_hanger' if family=='regular' else 'swing_hanger'
+                    for actor in actors:place(g,actor,0x400,0x180);g.put(actor,'obControl',1)
+                    for _ in range(8):
+                        run()
+                        if g.get(platform,field,2):break
+                    child=g.get(platform,field,2);assert child
+                    place(g,bottom,g.get(child,'obX',2),g.get(child,'obY',2)+30)
+                    place(g,top,g.get(platform,'obX',2),g.get(platform,'obY',2)-g.get(platform,'obHeight')-g.get(top,'obHeight')+2)
+                    g.put(top,'obVelY',0x100,2)
+                    # Belt riders are expected to walk off if they stand still;
+                    # check the simultaneous interaction before reaching the edge.
+                    run(8 if profile>=8 else 30)
+                    assert g.get(bottom,'obControl')==3,(family,profile,bottom,'hanging')
+                    assert g.get(top,'obStatus')&8,(family,profile,top,'standing')
+                    assert g.get(bottom,'obY',2)==g.get(child,'obY',2)+36
+                    if profile>=8:assert g.get(top,'obX',2)>g.get(platform,'obX',2),(family,profile,'belt did not carry')
+                    else:
+                        dx=g.get(bottom,'obX',2)-g.get(platform,'obX',2)
+                        for _ in range(50):
+                            run()
+                            assert g.get(bottom,'obControl')==3 and g.get(top,'obStatus')&8
+                            assert g.get(bottom,'obX',2)-g.get(platform,'obX',2)==dx
+                    g.video.save(args.output/(family+'-%X-'%profile+bottom+'-below-'+top+'.png'))
+                    checks.append(family+' profile %X: '%profile+bottom+' hangs while '+top+' stands/conveys')
+
+        # The requested falling conveyor/bar combination, using the normal
+        # object executor and real player collision for both solidity variants.
+        for profile in (8,9):
+            g.restore(base);isolate(g);g.write('Tails_CPU_idle_timer',600,2)
+            g.write('Camera_X_pos',0x360,2);g.write('Camera_Y_pos',0x100,2);g.write('Camera_X_pos_coarse_back',0x300,2)
+            for actor in actors:place(g,actor,0x400,0x100);g.put(actor,'obControl',1)
+            platform=spawn(g,'Obj18',0x400,0x1A0,(profile<<8)|0x1080)
             for _ in range(8):
                 run()
                 if g.get(platform,'Plat_hanger',2):break
-            child=g.get(platform,'Plat_hanger',2)
-            assert child
-            place(g,bottom,g.get(child,'obX',2),g.get(child,'obY',2)+30)
-            place(g,top,g.get(platform,'obX',2),g.get(platform,'obY',2)-27+2)
-            g.put(top,'obVelY',0x100,2)
-            for _ in range(30):run()
-            assert g.get(bottom,'obControl')==3,(bottom,'hanging')
-            assert g.get(top,'obStatus')&8,(top,'standing')
-            dx=g.get(bottom,'obX',2)-g.get(platform,'obX',2)
-            for _ in range(80):
+            child=g.get(platform,'Plat_hanger',2);assert child
+            place(g,'v_player',0x400,g.get(platform,'obY',2)-g.get(platform,'obHeight')-g.get('v_player','obHeight')+2)
+            place(g,'v_player2',0x400,g.get(child,'obY',2)+30)
+            g.put('v_player','obVelY',0x100,2)
+            run(8)
+            assert g.get('v_player','obStatus')&8 and g.get('v_player2','obControl')==3
+            assert g.get('v_player','obX',2)>g.get(platform,'obX',2)
+            g.video.save(args.output/('falling-conveyor-%X-before.png'%profile))
+            falling=False;released=False
+            for _ in range(100):
                 run()
-                assert g.get(bottom,'obControl')==3
-                assert g.get(top,'obStatus')&8
-                assert g.get(bottom,'obX',2)-g.get(platform,'obX',2)==dx
-            assert (g.s['v_objspace']+g.get(top,'standonobject')*g.s['object_size'])&65535==platform,('wrong standing owner',top)
-            g.video.save(args.output/(bottom+'-below-'+top+'.png'))
-            checks.append(bottom+' hangs below while '+top+' rides the moving/sagging parent')
+                falling|=g.get(platform,'Plat_movement',4)==g.s['Plat_Falling']
+                if g.get(platform,'code')==g.s['Plat_FallingIntangible']:
+                    released=True;break
+            assert falling and released and not g.get(child,'code')
+            assert not g.get('v_player2','obControl')
+            g.video.save(args.output/('falling-conveyor-%X-after.png'%profile))
+            checks.append('falling conveyor/grip %X: delay, belt carry, hanging descent and release on intangible transition'%profile)
+
+        # A grip must not turn full solidity into a free escape from crushing.
+        # Put the real GHZ4 floor twelve pixels beneath the hanging feet; the
+        # normal floor-release path runs before the descending body closes it.
+        for family in ('regular','swing'):
+            for profile in (6,7,8,9):
+                for bottom in actors:
+                    top='v_player2' if bottom=='v_player' else 'v_player'
+                    g.restore(base);isolate(g);g.write('Tails_CPU_idle_timer',600,2)
+                    g.write('Camera_X_pos',0x360,2);g.write('Camera_Y_pos',0x1D0,2);g.write('Camera_X_pos_coarse_back',0x300,2)
+                    for actor in actors:place(g,actor,0x480,0x180);g.put(actor,'obControl',1)
+                    settings=(profile<<8)|(0x1000 if family=='regular' else 0x1025)
+                    parent=spawn(g,'Obj18' if family=='regular' else 'SwingingPtfm',0x400,0x180,settings)
+                    field='Plat_hanger' if family=='regular' else 'swing_hanger'
+                    for _ in range(8):
+                        run()
+                        if g.get(parent,field,2):break
+                    child=g.get(parent,field,2);assert child
+                    delta=terrain_floor[bottom]-(g.get(child,'obY',2)+36+g.get(bottom,'obHeight'))-12
+                    g.put(parent,'obY',g.get(parent,'obY',2)+delta,2)
+                    if family=='regular':
+                        for name in ('Plat_rawY','Plat_originY'):g.put(parent,name,g.get(parent,name,2)+delta,2)
+                    else:g.put(parent,'swing_orig_y',g.get(parent,'swing_orig_y',2)+delta,2)
+                    run(2)
+                    place(g,bottom,g.get(child,'obX',2),g.get(child,'obY',2)+30)
+                    place(g,top,g.get(parent,'obX',2),g.get(parent,'obY',2)-g.get(parent,'obHeight')-g.get(top,'obHeight')+2)
+                    g.put(top,'obVelY',0x100,2)
+                    # Stars protect against damage, never against physical crushing.
+                    g.put(bottom,'obStatusSecondary',2);g.put(bottom,'invtime',600,2)
+                    run(5)
+                    assert g.get(bottom,'obControl')==3,(family,profile,bottom,'pre-crush grip',terrain_floor,delta,g.get(parent,'obY',2),g.get(child,'obY',2),[(a,g.get(a,'obX',2),g.get(a,'obY',2),g.get(a,'obHeight'),g.get(a,'obStatus'),g.get(a,'obRoutine'),g.get(a,'obControl')) for a in actors])
+                    if family=='swing':g.put(parent,'swing_mode_timer',29,2)
+                    dead=False;landed=False
+                    for _ in range(130):
+                        run()
+                        landed|=not g.get(bottom,'obStatus')&2 and not g.get(bottom,'obControl')
+                        dead|=g.get(bottom,'obRoutine')>=6
+                        if dead:break
+                    assert dead==(profile in (7,9)),(family,profile,bottom,'crush',dead,landed,g.get(bottom,'obY',2),g.get(parent,'obY',2))
+                    assert landed or dead,(family,profile,bottom,'never landed',g.get(bottom,'obControl'),g.get(bottom,'obRoutine'),g.get(bottom,'obX',2),g.get(bottom,'obY',2),g.get(parent,'obRoutine'),g.get(parent,'obY',2))
+                    g.video.save(args.output/('crush-'+family+'-%X-'%profile+bottom+'.png'))
+                    checks.append(family+' profile %X: '%profile+bottom+(' crushed against real floor despite stars' if profile in (7,9) else ' lands safely as top-only body passes'))
 
     (args.output/'game.json').write_text(json.dumps({'pal':args.pal,'player':args.player,'checks':checks},indent=2)+'\n')
     g.close();print('\n'.join('PASS '+row for row in checks))

@@ -57,7 +57,7 @@ def main():
         assert passed, row
 
     for zone in (0,8):
-        for profile in range(8):
+        for profile in range(12):
             for who in ('v_player','v_player2'):
                 for immune in (False,True):
                     g.restore(base);isolate(g);g.write('Current_Zone',zone)
@@ -75,9 +75,9 @@ def main():
                     act('SwingingPtfm_Interact',obj)
                     standing=bool(g.get(who,'obStatus')&8)
                     record(f'top-{zone}-{profile}-{who}-{immune}',
-                           standing==(profile!=6 and (profile!=7 or immune)))
+                           standing==(profile!=10 and (profile!=11 or immune)))
                     record(f'damage-{zone}-{profile}-{who}-{immune}',
-                           (g.get(who,'obRoutine')==4)==(profile>=6 and not immune))
+                           (g.get(who,'obRoutine')==4)==(profile>=10 and not immune))
 
     for who in ('v_player', 'v_player2'):
         g.restore(base)  # resume whole frames only from the original boundary

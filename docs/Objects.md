@@ -303,6 +303,44 @@ Comparisons use s1disasm `15dfa3a6ee4c53aeb482233e493755c84b4f3479`, s2disasm
 yellow orbs, `Obj_FBZSnakePlatform` (`$75`), use a separate delayed-train
 waypoint runner, rather than this relative-path constructor.
 
+## Shared platform interactions
+
+Ordinary `$18` and swinging `$17` platforms use the same interaction nibble in
+bits 8–11 (`$0F00`) and the same MD collision/surface routine, `Platform_Interact`.
+Movement, shape/links and the other options remain separate. Settings C–F safely
+use profile 0 without changing the authored word.
+
+| Interaction | Physical response | Damage / surface |
+| --- | --- | --- |
+| `$0` | Top solid | Safe |
+| `$1` | Full solid | Safe |
+| `$2` | Full solid | Harmful bottom; safe top and sides |
+| `$3` | Top solid | Conveyor top, 2 px/update |
+| `$4` | Full solid | Conveyor top, 2 px/update |
+| `$5` | Full solid | Conveyor top and harmful bottom |
+| `$6` | Top solid | Safe top and underside hanging grip |
+| `$7` | Full solid | Safe top and underside hanging grip |
+| `$8` | Top solid | Conveyor top and underside hanging grip |
+| `$9` | Full solid | Conveyor top and underside hanging grip |
+| `$A` | Non-solid | Harmful from every side |
+| `$B` | Full solid | Harmful from every side |
+
+Conveyor direction follows placement X flip. The per-player conveyor marker
+prevents duplicate pushes, including overlapping terrain conveyors. All paths
+handle both players. Full-solid damage stays physical under stars or damage
+invulnerability, allowing standing while retaining normal solid-object crushing.
+Bottom damage uses `Spike_HurtCharacter` and its full-word flashing timer.
+Whole-body damage uses the actual collision box, outside the NPC touch table.
+Underside hanging and underside damage are separate profiles: a grip is not
+silently combined with spikes. Art does not change the collision contract;
+ordinary platforms keep their existing zone shapes, including for hazards.
+
+Profiles 6–9 own one invisible D9 child: either player can stand above while the
+other hangs below. A swinging body transfers the same child to its detached
+physical body; an ordinary falling platform releases the child when its body
+becomes intangible after the existing carry interval. Allocation failure leaves
+the platform working and retries later. See [hanging surfaces](#hanging-surfaces).
+
 ## Swinging platforms: S1/S2 coverage and S3&K variants
 
 `objects/17 Swinging Platforms.asm` owns the single-body swing object `$17`.
@@ -311,14 +349,14 @@ The `$4E` SST, universal offsets, and normal two-SST body/packed-helper design
 are unchanged. Carrying other objects and multi-body chained platforms are
 separate future work; neither is encoded by this object.
 
-The word is **`PPDR SIII MMMM LLLL`**:
+The word is **`PPDR IIII SMMM LLLL`**:
 
 | Bits | Field | Meaning |
 | --- | --- | --- |
 | 0–3 | Links | 0–8 inclusive; the radius is `16*links+8` pixels. Reserved 9–15 clamp to 8 before allocating/writing packed records. These values do not select a payload. |
-| 4–7 | Movement | Table below; reserved 8–15 safely select normal motion. |
-| 8–10 | Interaction | Eight independent collision/surface profiles below. |
-| 11 | Material sound | Optional half-swing stop, lift activation and trap endpoint sound. `SwingingPtfm_Sounds` is the authoritative per-zone sound table; zero means silent. |
+| 4–6 | Movement | Eight movement modes below. |
+| 7 | Material sound | Optional half-swing stop, lift activation and trap endpoint sound. `SwingingPtfm_Sounds` is the authoritative per-zone sound table; zero means silent. |
+| 8–11 | Interaction | Shared twelve-profile menu above; C–F safely use top solidity. |
 | 12 | Detachable | Movement-specific release condition; independent of collision. |
 | 13 | Impulse relay | Opt-in physical body contact exchanges a signed impulse. Both participants must enable it. |
 | 14–15 | Orientation / phase | Rotate the complete movement by 0/90/180/270 degrees after placement X/Y mirroring. This also selects the rotator's initial quarter-phase. |
@@ -344,25 +382,9 @@ placement-format or artwork replacements. `Obj_DEZHangCarrier`, which carries
 players below a grip and takes a straight vertical/horizontal route, remains a
 separate object from the quarter-circle Lift Pad.
 
-| Interaction | Physical response | Damage / surface |
-| --- | --- | --- |
-| `$0` | Top solid | Safe |
-| `$1` | Full solid | Safe |
-| `$2` | Full solid | Harmful bottom; safe top and sides |
-| `$3` | Top solid | Conveyor top, 2 px/update |
-| `$4` | Full solid | Conveyor top, 2 px/update |
-| `$5` | Full solid | Conveyor top and harmful bottom |
-| `$6` | Non-solid | Harmful from every side |
-| `$7` | Full solid | Harmful from every side |
+Solidity, conveyor and damage use the [shared interaction menu](#shared-platform-interactions).
 
-Conveyor direction follows X flip and uses the engine's per-player conveyor
-marker to avoid duplicate application. All solidity/damage paths handle both
-players. Full-solid damage remains solid under stars or damage invulnerability,
-allowing riding; normal solid-object crushing still applies. Bottom damage uses
-`Spike_HurtCharacter` and its full-word flashing timer. Whole-body damage uses
-the body's actual collision box, independent of the NPC touch table.
-
-The constructor retains zone-specific GHZ/SLZ/SMZ art. Interactions 2/5/6/7
+The constructor retains zone-specific GHZ/SLZ/SMZ art. Interactions 2/5/A/B
 use the existing ball appearance; the giant-ball placeholder remains intentional.
 Safe ICZ bodies add a visible side rail using existing link tiles, generated by
 `python build_tools/build_swing_rails.py`; no additional art or VRAM bank is used.
@@ -413,13 +435,17 @@ full pools and missing helpers are valid. `swing_max_links` is the supported
 capacity, not the subsprite count byte's numeric maximum.
 
 Existing placements were migrated once: old `$6n` becomes `$100n` (detachable
-normal), and old `$7n` becomes `$060n` (harmful normal). GHZ2's detachable and
+normal), and old `$7n` becomes `$0A0n` (harmful normal). GHZ2's detachable and
 SMZ2's twelve hazards are converted; normal placements are unchanged. Debug
 exposes the new motions and retains the intentional ball presets. SonLVL owns
 separate movement, interaction, sound, detachment, relay and orientation fields.
 
+Private word `$1E` owns the hanging child; previous-rider state uses byte `$1D`
+and last angle byte `$29`. These are object-local overlays of unused animation,
+width and NPC fields; the universal offsets and SST stride are unchanged.
+
 Examples: `$0045` is a five-link player-powered safe platform; `$1045` adds
-breakaway; `$4616` is a six-link half-swing, harmful everywhere, rotated 90
+breakaway; `$4A16` is a six-link half-swing, harmful everywhere, rotated 90
 degrees; `$0155` is a five-link SOZ lift with safe full solidity. These are
 ordinary subtype words, not carried-object or multi-body arrangement selectors.
 
@@ -438,8 +464,8 @@ full-frame tests cover both riders and real land/water responses. See
 
 `objects/18 Platforms.asm` combines S3&K's ordinary floating-platform movement
 core with S1's centred vertical distances and switch rise, the shared S3&K LBZ
-fall, and S2's optional full-body solidity. Existing GHZ/EHZ art and mappings
-stay in use. `ExecuteObjects` calls the chosen top/full update pointer directly;
+fall, and the shared platform interaction menu above. Existing GHZ/EHZ art and mappings
+stay in use. `ExecuteObjects` calls its update pointer directly;
 the constructor also caches its movement routine pointer. Internal falling and
 switch-rise transitions replace that cached pointer without changing settings.
 
@@ -453,26 +479,48 @@ switch-rise transitions replace that cached pointer without changing settings.
 | `$8/$9/$A/$B` | Squares, 32/96/160/224 px sides | S3&K centre origin, edge stepping and reload phase |
 | `$C` | Eased horizontal 256 px | S3&K local acceleration/braking, extended lifetime |
 | `$D` | Vertical 96 px | S1 centre origin and the corresponding shared oscillator |
-| `$E` | Fall after standing | Either rider starts a 30-update delay; carry 32 updates, then detach both with inherited velocity |
-| `$F` | Switch-triggered rise | Selected channel; 60-update delay, rise 512 px at 2 px/update, stop |
+| `$E/$F` | Switch-triggered rise | Channels 8–15 / 0–7 respectively; 60-update delay, rise 512 px at 2 px/update, stop |
 
-The complete subtype word is `CCCC HPPS FTTT MMMM`:
+The complete subtype word is `CCCF IIII STTT MMMM`:
 
 | Bits | Meaning |
 | --- | --- |
 | 0–3 | Movement above |
 | 4–6 | Shape/frame; the current two-frame mappings expose shapes 0/1; absent shapes fall back to 0 |
-| 7 | Full S2 body solidity; clear means a one-way top. Full body uses a 48-pixel vertical radius and both-player side/underside response. |
-| 8 | Rider sag: either rider depresses the platform by up to 4 px. Independent of movement; ignored by the ceiling trap. |
-| 9–10 | Phase / initial square corner, XOR with placement X/Y flips. Oscillation and long horizontal motion use bit 0; squares use both. |
-| 11 | Spawn a classic hanging child beneath the platform; see D9 below. |
-| 12–15 | Switch channel 0–15, used only by movement `$F` |
+| 7 | Rider sag: either rider depresses the platform by up to 4 px. Ignored by the ceiling trap. |
+| 8–11 | Shared platform interaction above, including solidity, conveyors, hanging and damage |
+| 12 | Falling option: either standing rider arms it; complete the current trip before falling |
+| 13–15 | Low three switch-channel bits for movement `$E/$F`; otherwise bits 13–14 select phase/corner and bit 15 is reserved |
 
-For example, `$A19F` is switch-A rising, shape 1, full solidity and sag.
-Full solidity, shape, sag and channel no longer compete for subtype bits.
+Phase/corner XORs with placement X/Y flips. Oscillation and long horizontal motion
+use its bit 0; squares use both bits. Switch rise does not use phase. Its channel
+is `((subtype >> 13) & 7) + (movement == E ? 8 : 0)`: the two movement codes
+preserve all sixteen channels without competing with the falling flag. SonLVL
+shows one switch-rise movement and one 0–15 channel property. Full solid profiles retain S2's 48-pixel body
+radius and both-player side/underside response; top-only profiles use 8 pixels.
+`Plat_Top` and `Plat_Full` name the same shared update entry; dimensions/profile
+select the response. The movement routine remains cached separately.
+
+For example, `$419E` is switch-A rising, shape 1, full solidity and sag; `$519E`
+adds falling after the rise. `$1981` is a sagging 64px horizontal conveyor with
+full solidity and an underside grip, falling after its current trip. `$1880`
+is its top-only stationary counterpart, with a 30-update delay.
 The authored word remains intact throughout runtime state transitions. Private
-state uses `$2E-$49`, including the hanging-child word at `$48`; all universal
+state uses `$2E-$4A`, including the hanging-child word at `$48` and endpoint
+selector byte at `$4A`; all universal
 fields and `$4E` SST stride remain fixed.
+
+Falling is bit 12, matching swinging-platform detachment, rather than a movement
+subtype. Either standing rider permanently arms the request. Oscillating linear
+and diagonal paths finish their current leg at zero oscillator rate; squares
+finish the next corner; the long eased path finishes its turnaround. A ceiling
+trap must reach actual ceiling contact, and switch rising must finish all 512 px.
+Stationary platforms alone wait 30 updates. No rider means no armed fall.
+Moving platforms retain their arrival position for that update, then begin the
+shared gravity fall on the next update. Falling carries standing/hanging riders
+for the existing 32-update interval, then releases them and becomes intangible.
+Full solidity can crush a released hanging player against the floor before that
+transition. The authored word and movement options are never rewritten.
 
 The selected S3&K oscillator rows already exist in the shared engine table:
 64 px uses `$0A`, 128 px uses `$1E`, 96 px uses `$0E`, and square movement uses
@@ -629,7 +677,7 @@ alternating hand, requested pose and padding).
 Private byte `$1A` (unused Y velocity) lets a parent request a centred grab;
 ordinary D9 placements and platform children preserve the grabbed X as before.
 
-Ordinary platform `$18` uses its formerly reserved bit 11 (`$0800`) to spawn a
+Ordinary platform `$18` uses shared interaction profiles 6–9 to spawn a
 classic child. Its usable half-width is platform half-width minus 4; the child
 origin is parent Y+max(visible frame bottom, collision half-height)−10.
 `Plat_HangingBottoms` records the two GHZ/EHZ frame bottoms and is checked
@@ -641,6 +689,12 @@ Allocation retries when full; the platform keeps functioning. Unload/intangible
 falling deletes the child and releases hanging players. The parent is the sole
 placement owner; the child's respawn handle is zero. Reciprocal pointers and the
 expected parent code protect against slot reuse and externally deleted parents.
+
+Swinging platform `$17` uses the same profiles. Its child points to the physical
+body, including after detachment; the old chain owner clears its child pointer.
+The grip follows the body each update and is released on explicit or external
+deletion. Chain links remain packed subsprites; hanging adds one SST per body,
+not one per link.
 
 `Hanging_SpawnChild` is also available to other platform constructors: a0 is the
 owner, a2 points to its child-pointer word, d0 is the complete hanging settings,

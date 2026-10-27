@@ -89,6 +89,20 @@ obColType:              equ $28     ; byte; NPC collision response type
 obColProp:              equ $29     ; byte; NPC collision property
 obStatus:               equ $2A     ; byte; meaning depends on object type
 obSubtype:              equ $2C     ; word; complete placement subtype
+; Shared ordinary/swinging platform interaction nibble, subtype bits 8-11.
+platform_top = 0
+platform_full = 1
+platform_hurt_bottom = 2
+platform_conveyor_top = 3
+platform_conveyor_full = 4
+platform_conveyor_hurt_bottom = 5
+platform_hang_top = 6
+platform_hang_full = 7
+platform_conveyor_hang_top = 8
+platform_conveyor_hang_full = 9
+platform_hurt = 10
+platform_hurt_full = 11
+platform_profile_count = 12
 ; Animation delay counters remain local to the objects that need them.
 ; ---------------------------------------------------------------------------
 ; Player meanings. These bytes are private scratch in other object types.

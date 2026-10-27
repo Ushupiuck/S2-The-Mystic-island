@@ -75,53 +75,76 @@ def native(args):
                 assert m.get(o,'obSubtype')==sub
     checks.append(f'{rotations} exact rotated/mirrored poses and 256-update periods')
     # Invalid lengths never become packed records; all setting words survive.
-    for profile in range(8):
-        for mode in range(16):
-            sub=0xF800|(profile<<8)|(mode<<4)|15
+    for profile in range(16):
+        for mode in range(8):
+            sub=0xF080|(profile<<8)|(mode<<4)|15
             o=fixture(m,sub)
             h=m.get(o,'swing_helper_ptr',4)&0xFFFFFF
             assert m.get(o,'obSubtype')==sub
             assert m.get(h,'mainspr_childsprites')==8
             assert m.get(h+m.s['object_size'],'code')==0
-    for sub in (6,0x36,0x46,0xF806):
+    for sub in (6,0x36,0x46,0xF086):
         o=fixture(m,sub,full=True)
         assert not m.get(o,'swing_helper_ptr',4)
         m.act('SwingingPtfm_UpdateMotion',o)
         m.act('SwingingPtfm_DelAll',o)
         assert not m.get(o,'code')
-    checks.append('128 independent constructors; reserved lengths and movements; full-pool/null-helper boundaries')
+    checks.append('128 independent constructors; reserved lengths and interactions; full-pool/null-helper boundaries')
 
     contacts=0
-    for profile in range(8):
-        for who,other in [('v_player','v_player2'),('v_player2','v_player')]:
-            for inv in (0,0x100,-1):
-                o=fixture(m,(profile<<8)|0x26)
-                m.put(other,'code',0)
-                x,y=position(m,o);height=m.get(o,'obHeight')
-                m.put(who,'obX',x,2);m.put(who,'obY',y-height-19+3,2)
-                m.put(who,'obVelY',0x100,2);m.put(who,'obStatus',2)
-                m.put(who,'flashtime',max(0,inv),2);m.put(who,'obStatusSecondary',2 if inv<0 else 0);m.write('v_rings',40,2)
-                m.put(o,'obRender',0x84)
-                m.act('SwingingPtfm_Interact',o)
-                standing=bool(m.get(who,'obStatus')&8)
-                assert standing==(profile!=6 and (profile!=7 or bool(inv))),('top',profile,who,inv,standing)
-                assert (m.get(who,'obRoutine')==4)==(profile>=6 and not inv)
-                contacts+=1
-    # Full bodies block upward movement; harmful undersides honour word flash.
-    for profile in (0,1,2,3,4,5):
-        for who,other in [('v_player','v_player2'),('v_player2','v_player')]:
-            for inv in (0,0x100,-1):
-                o=fixture(m,(profile<<8)|0x26)
-                m.put(other,'code',0);x,y=position(m,o)
-                m.put(who,'obX',x,2);m.put(who,'obY',y+m.get(o,'obHeight')+14,2)
-                m.put(who,'obVelY',0xFF00,2);m.put(who,'obStatus',2)
-                m.put(who,'flashtime',max(0,inv),2);m.put(who,'obStatusSecondary',2 if inv<0 else 0);m.write('v_rings',40,2);m.put(o,'obRender',0x84)
-                m.act('SwingingPtfm_Interact',o)
-                assert (m.get(who,'obRoutine')==4)==(profile in (2,5) and not inv),('bottom',profile,who,inv)
-                if inv or profile not in (2,5):
-                    assert m.get(who,'obVelY',2)==(0xFF00 if profile in (0,3) else 0)
-                contacts+=1
-    checks.append(f'{contacts} native top/underside contacts: both players, eight profiles, word invulnerability')
+    for kind in ('swing', 'ordinary'):
+        for profile in range(12):
+            for who,other in [('v_player','v_player2'),('v_player2','v_player')]:
+                for inv in (0,0x100,-1):
+                    def body():
+                        if kind == 'swing':
+                            return fixture(m,(profile<<8)|0x26), 'SwingingPtfm_Interact'
+                        m.start();o=next(iter(m.pool()))
+                        m.write('Camera_X_pos_coarse_back',0x1700,2)
+                        for f,v,n in [('code',m.s['Obj18'],4),('obSubtype',profile<<8,2),('obX',0x1800,2),('obY',0x400,2)]:m.put(o,f,v,n)
+                        m.act('Obj18',o)
+                        return o,'Plat_Top'
+                    for side in ('top','bottom','side'):
+                        o,entry=body();m.put(other,'code',0)
+                        x,y=position(m,o);height=m.get(o,'obHeight')
+                        m.put(who,'obX',x+(m.get(o,'obActWid')+6 if side=='side' else 0),2)
+                        m.put(who,'obY',y-height-19+3 if side=='top' else y+height+14 if side=='bottom' else y,2)
+                        m.put(who,'obVelY',0x100 if side=='top' else 0xFF00,2);m.put(who,'obStatus',2)
+                        m.put(who,'flashtime',max(0,inv),2);m.put(who,'obStatusSecondary',2 if inv<0 else 0)
+                        m.write('v_rings',40,2);m.put(o,'obRender',0x94)
+                        m.act(entry,o)
+                        hurt=(profile>=10 or (side=='bottom' and profile in (2,5))) and not inv
+                        assert (m.get(who,'obRoutine')==4)==hurt,(kind,side,profile,who,inv,'damage')
+                        if side=='top':
+                            standing=bool(m.get(who,'obStatus')&8)
+                            assert standing==(profile!=10 and (profile!=11 or bool(inv))),(kind,profile,who,inv,'standing')
+                        elif side=='bottom' and not hurt and profile not in (6,7,8,9):
+                            assert m.get(who,'obVelY',2)==(0xFF00 if profile in (0,3,10) else 0),(kind,profile,who,inv,'underside')
+                        elif side=='side' and not hurt:
+                            assert (m.get(who,'obX',2)>x+m.get(o,'obActWid')+6)==(profile in (1,2,4,5,7,9,11)),(kind,profile,who,inv,'side solidity')
+                        contacts+=1
+    checks.append(f'{contacts} native contacts: both objects, twelve shared profiles, both players, word flash and stars')
+
+    belts=0
+    for kind in ('swing','ordinary'):
+        for profile in (3,4,5,8,9):
+            for flip in (0,1):
+                if kind=='swing':o=fixture(m,(profile<<8)|0x26,flip);entry='SwingingPtfm_Interact'
+                else:
+                    m.start();o=next(iter(m.pool()));m.write('Camera_X_pos_coarse_back',0x1700,2)
+                    for f,v,n in [('code',m.s['Obj18'],4),('obSubtype',profile<<8,2),('obStatus',flip,1),('obX',0x1800,2),('obY',0x400,2)]:m.put(o,f,v,n)
+                    m.act('Obj18',o);entry='Plat_Top'
+                x,y=position(m,o);radius=m.get(o,'obHeight')
+                for who in ('v_player','v_player2'):
+                    m.put(who,'obX',x,2);m.put(who,'obY',y-radius-19+2,2);m.put(who,'obVelY',0x100,2);m.put(who,'obStatus',2)
+                m.put(o,'obRender',0x94);m.act(entry,o)
+                for who in ('v_player','v_player2'):
+                    assert m.get(who,'obX',2)==x+(-2 if flip else 2),(kind,profile,who,'belt direction')
+                    assert m.get(who,'conveyor_applied')==1
+                m.act(entry,o)
+                for who in ('v_player','v_player2'):assert m.get(who,'obX',2)==x+(-2 if flip else 2),'duplicate conveyor push'
+                belts+=1
+    checks.append(f'{belts} conveyor combinations: both objects, both riders/directions, hanging included, no duplicate push')
 
     # Momentum must originate at the rail, with the expected speed threshold,
     # input scaling and either-player support. Geometry calls are stubbed only

@@ -42,8 +42,8 @@ the complete serialized word, including when calculating movement overlays.
 | `$0B` | Tilting platform | High nibble: duration; low nibble: initial phase, both in 16-frame units. |
 | `$0C` | Flapping door | Full byte: interval in seconds. |
 | `$16` | Diagonal lift | Full byte: duration in 8-frame units. Travels twice as far horizontally as vertically, then falls. |
-| `$17` | Swinging platform / ball | Word `PPDR SIII MMMM LLLL`: quarter orientation, detach, relay, material sound, eight interaction profiles, eight movement modes and 0–8 links. See [runtime settings](../docs/Objects.md#swinging-platforms-s1s2-coverage-and-s3k-variants). |
-| `$18` | GHZ/EHZ platform | Word `CCCC HPPS FTTT MMMM`: movement, shape, full solidity, independent sag, phase/corner, hanging child and switch channel. Bit 11 (`$0800`) spawns/owns a classic hanging grip below the body. See [runtime settings](../docs/Objects.md#ordinary-platforms-and-flying-batterys-hovering-platform). |
+| `$17` | Swinging platform / ball | Word `PPDR IIII SMMM LLLL`: quarter orientation, detach, relay, material sound, twelve shared interaction profiles, eight movement modes and 0–8 links. See [runtime settings](../docs/Objects.md#swinging-platforms-s1s2-coverage-and-s3k-variants). |
+| `$18` | GHZ/EHZ platform | Word `CCCF IIII STTT MMMM`: movement, shape, sag, shared interaction menu, falling, and phase/corner or switch channel. Profiles 6–9 add a classic underside grip; 8/9 also convey standing riders. See [runtime settings](../docs/Objects.md#ordinary-platforms-and-flying-batterys-hovering-platform). |
 | `$19`, `$AD` | CPZ platform / SMZ moving block | Low nibble: movement, wall stop/fall, switch-2 raft, vertical motion or triggered fast slide. High nibble: shape. |
 | `$1A`, `$3C` | Collapsing ledge / breakable wall | Full byte: mapping frame. |
 | `$1C` | Scenery | Low nibble: appearance; high nibble: animation. Zone lists supply suitable defaults. |
@@ -190,3 +190,15 @@ word settings. Preview uses the engine sine table and exact mirror/rotation orde
 shows every supported link and the ICZ rail, and clamps reserved lengths 9-F to
 8 like the game. The authored word remains intact at runtime. Carrying and
 multi-body chained platforms are deliberately outside this format.
+
+Both `$17` and `$18` expose the same Interaction menu: safe top/full, harmful
+bottom, conveyor top/full/harmful bottom, hanging top/full, conveyor+hanging
+top/full, then harmful non-solid/full-solid. C–F are reserved safe-top fallbacks.
+Falling on `$18` is bit 12, matching `$17` detachment. Either standing rider
+arms it; it finishes the current trip/corner before falling. Stationary platforms
+retain the 30-update delay. Switch rise uses raw movement E/F for channels 8–15
+and 0–7; the editor presents one movement and all sixteen channel values.
+Switch channel and Phase/corner on `$18` deliberately edit the same upper field;
+only the one selected by Movement is used. Changing either property preserves
+the interaction, shape, sag and movement fields. Sound on `$17` uses bit 7;
+movement uses bits 4–6. Existing layouts and Debug words are converted together.

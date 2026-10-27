@@ -73,13 +73,23 @@ namespace MysticIsland.ObjectDefinitions
 					Bits("Support release", 13, 1, "Release onto actual terrain or solid-object support, as with D9.", "Enabled", "Disabled");
 					break;
 				case "Platform":
-					Bits("Movement", 0, 15, "S3&K movement profiles, with centred S1 vertical travel. Horizontal and diagonal origins are endpoints; square origins are centres. Falling waits 30 frames, then carries riders for 32 frames. Switch rising waits 60 frames.", "Stationary", "Horizontal (64 px)", "Horizontal (128 px)", "Vertical (64 px)", "Vertical (128 px)", "Diagonal up (128 by 64 px)", "Diagonal down (128 by 64 px)", "Rising ceiling trap", "Square (32 px)", "Square (96 px)", "Square (160 px)", "Square (224 px)", "Horizontal (256 px, eased)", "Vertical (96 px)", "Fall when stood on", "Switch: rise 512 px");
+					properties.Add(new PropertySpec("Movement", typeof(int), "Object settings", "S3&K movement with centred S1 vertical travel. Falling is a separate option: an occupied platform completes its current trip before falling.", null,
+						Choices("Stationary", "Horizontal (64 px)", "Horizontal (128 px)", "Vertical (64 px)", "Vertical (128 px)", "Diagonal up (128 by 64 px)", "Diagonal down (128 by 64 px)", "Rising ceiling trap", "Square (32 px)", "Square (96 px)", "Square (160 px)", "Square (224 px)", "Horizontal (256 px, eased)", "Vertical (96 px)", "Switch: rise 512 px"),
+						obj => Math.Min(Subtype(obj) & 15, 14), (obj, value) => {
+							int word = Subtype(obj), mode = Convert.ToInt32(value);
+							SetSubtype(obj, (word & ~15) | (mode == 14 ? ((word & 15) == 14 ? 14 : 15) : mode));
+						}));
 					Bits("Shape", 4, 7, "Mapping / collision configuration. Choose only frames present in this zone's mapping set.", Enumerable.Range(0, Math.Min(5, frames.Length)).Select(i => "Frame " + i).ToArray());
-					Bits("Solidity", 7, 1, "Sonic 2 collision: top surface only, or a solid body with 48-pixel vertical radius. Both players can ride either variant.", "Top only", "Full body");
-					Bits("Rider sag", 8, 1, "Independent of movement: depress up to 4 pixels under either rider. The rising ceiling trap always ignores sag.", "Rigid", "Sag");
-					Bits("Phase / corner", 9, 3, "XOR with placement X/Y flips. Oscillation and long horizontal motion use bit 0 for the opposite phase; squares use both bits for their initial corner.", "0", "1", "2", "3");
-					Bits("Switch channel", 12, 15, "Switch-triggered rise only: one of the 16 button channels. Independent of shape, solidity, sag and phase.");
-					Bits("Hanging child", 11, 1, "Spawn an invisible classic grip beneath the platform. Independent players can stand above and hang below. Retries allocation when full.", "None", "Spawn classic grip");
+					PlatformInteraction();
+					Bits("Rider sag", 7, 1, "Independent of movement: depress up to 4 pixels under either rider. The rising ceiling trap always ignores sag.", "Rigid", "Sag");
+					Bits("Phase / corner", 13, 3, "Non-switch movements only. XOR with placement X/Y flips; squares use all four corners, other oscillations use bit 0.", "0", "1", "2", "3");
+					Bits("Falling", 12, 1, "Either standing rider arms it. Finish the current leg/corner, switch rise or ceiling trip before falling. Stationary platforms wait 30 updates. Falling carries for 32 updates, then releases riders and grips.", "Disabled", "After arriving");
+					properties.Add(new PropertySpec("Switch channel", typeof(int), "Object settings", "Switch-rise movement only; channel 0-15, independent of Falling.", null,
+						obj => ((Subtype(obj) >> 13) & 7) | ((Subtype(obj) & 15) == 14 ? 8 : 0),
+						(obj, value) => {
+							int word = Subtype(obj), channel = Convert.ToInt32(value) & 15;
+							if ((word & 15) >= 14) SetSubtype(obj, (word & ~0xE00F) | ((channel & 7) << 13) | (channel >= 8 ? 14 : 15));
+						}));
 					break;
 				case "MovingBlock":
 				case "CPZPlatform":
@@ -98,9 +108,9 @@ namespace MysticIsland.ObjectDefinitions
 				case "Swing":
 					swingSine = File.ReadAllBytes("../misc/sinewave.bin");
 					Bits("Chain length", 0, 15, "0-8 links; reserved values 9-F safely clamp to 8. The body rests 8 pixels beyond the chain.", Enumerable.Range(0, 9).Select(i => i + " links").ToArray());
-					Bits("Movement", 4, 15, "Independent of collision and detachment. Either player activates the lifts. X flip selects the half-swing side / momentum rail side.", "Normal swing", "Half-swing", "Stationary", "Continuous rotation", "ICZ player momentum", "SOZ half-circle lift", "DEZ quarter-circle lift", "Proximity trap");
-					Bits("Interaction", 8, 7, "Collision and conveyor surface. Invulnerability permits standing on the harmful full-solid variant; crushing remains physical.", "Safe: top solid", "Safe: full solid", "Safe top: harmful bottom", "Conveyor: top solid", "Conveyor: full solid", "Conveyor: harmful bottom", "Harmful", "Harmful: full solid");
-					Bits("Material sound", 11, 1, "Optional impact/lift sound from SwingingPtfm_Sounds; silent entries remain silent.", "Silent", "Enabled");
+					Bits("Movement", 4, 7, "Independent of collision and detachment. Either player activates the lifts. X flip selects the half-swing side / momentum rail side.", "Normal swing", "Half-swing", "Stationary", "Continuous rotation", "ICZ player momentum", "SOZ half-circle lift", "DEZ quarter-circle lift", "Proximity trap");
+					PlatformInteraction();
+					Bits("Material sound", 7, 1, "Optional impact/lift sound from SwingingPtfm_Sounds; silent entries remain silent.", "Silent", "Enabled");
 					Bits("Detachable", 12, 1, "Release at the movement's endpoint. ICZ uses its fast breakaway; detached bodies bounce/slide on terrain or float on enabled water.", "Attached", "Detachable");
 					Bits("Impulse relay", 13, 1, "Physical contact transfers an impulse between opted-in bodies. Stationary members forward it without moving.", "Disabled", "Enabled");
 					Bits("Orientation / phase", 14, 3, "Rotate the entire movement by quarter turns; placement X/Y flips independently mirror the path. SOZ supports vertical or horizontal endpoints and either curve.", "0 degrees", "90 degrees", "180 degrees", "270 degrees");
@@ -196,6 +206,14 @@ namespace MysticIsland.ObjectDefinitions
 		// Definitions are compiled separately from the custom layout class. Read
 		// its binary contract rather than depending on that assembly's type.
 		private static int Subtype(ObjectEntry obj) { return ByteConverter.ToUInt16(obj.GetBytes(), 6); }
+		private void PlatformInteraction()
+		{
+			Bits("Interaction", 8, 15, "Shared by regular and swinging platforms. Conveyors move riders 2 px/update; X flip reverses direction. Hanging profiles permit standing above and hanging below. Harmful full-solid bodies remain physical during invulnerability. Reserved C-F use safe top solidity.",
+				"Safe: top solid", "Safe: full solid", "Safe top: harmful bottom",
+				"Conveyor: top solid", "Conveyor: full solid", "Conveyor: harmful bottom",
+				"Hanging: top solid", "Hanging: full solid", "Conveyor + hanging: top solid", "Conveyor + hanging: full solid", "Harmful", "Harmful: full solid");
+		}
+
 		private static void SetSubtype(ObjectEntry obj, int subtype)
 		{
 			byte[] data = obj.GetBytes();
@@ -336,7 +354,7 @@ namespace MysticIsland.ObjectDefinitions
 				case "Swing":
 					pieces = new List<Sprite> { new Sprite(At(frames, 2)) };
 					int links = Math.Min(8, subtype & 15);
-					int movement = (subtype >> 4) & 15, interaction = (subtype >> 8) & 7;
+					int movement = (subtype >> 4) & 7, interaction = (subtype >> 8) & 15;
 					int swingAngle = movement == 3 ? 0 : movement == 6 || movement == 7 ? 128 : 64;
 					if (xflip) swingAngle = 128 - swingAngle;
 					if (yflip) swingAngle = -swingAngle;
@@ -344,7 +362,7 @@ namespace MysticIsland.ObjectDefinitions
 					int swingSin = ByteConverter.ToInt16(swingSine, swingAngle * 2);
 					int swingCos = ByteConverter.ToInt16(swingSine, swingAngle * 2 + 128);
 					for (int i = 1; i <= links; i++) pieces.Add(new Sprite(At(frames, 1), (swingCos * i * 16) >> 8, (swingSin * i * 16) >> 8));
-					bool ball = interaction == 2 || interaction >= 5;
+					bool ball = interaction == 2 || interaction == 5 || interaction == 10 || interaction == 11;
 					Sprite swingBody = new Sprite(ball && alternate != null ? At(alternate, 1) : frames[0]);
 					swingBody.Flip(xflip && movement == 4 && !ball, false);
 					pieces.Add(new Sprite(swingBody, (swingCos * (links * 16 + 8)) >> 8, (swingSin * (links * 16 + 8)) >> 8));
@@ -497,9 +515,9 @@ namespace MysticIsland.ObjectDefinitions
 					int half = new[] { 16, 48, 80, 112 }[movement - 8];
 					return new Sprite(Travel(-half, -half, half, -half), Travel(half, -half, half, half), Travel(half, half, -half, half), Travel(-half, half, -half, -half));
 				}
-				if (movement == 12) { bool reverse = ((((Subtype(obj) >> 9) & 1) != 0) ^ obj.XFlip); return Travel(reverse ? -128 : 0, 0, reverse ? 127 : 255, 0); }
+				if (movement == 12) { bool reverse = ((((Subtype(obj) >> 13) & 1) != 0) ^ obj.XFlip); return Travel(reverse ? -128 : 0, 0, reverse ? 127 : 255, 0); }
 				if (movement == 13) return Travel(0, -48, 0, 48);
-				if (movement == 15) return Travel(0, -512, 0, 0);
+				if (movement >= 14) return Travel(0, -512, 0, 0);
 			}
 			if (behavior == "CPZPlatform" || behavior == "MovingBlock")
 			{

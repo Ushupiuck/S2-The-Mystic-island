@@ -269,12 +269,12 @@ class CheckSonLVLObjects
 	{
 		ObjectDefinition definition;
 		if (!LevelData.ObjTypes.TryGetValue(0x18, out definition) || !definition.CustomProperties.Any(p => p.Name == "Switch channel")) return;
-		var entry = NewEntry(0x18, 0xA39F, true, true, true);
+		var entry = NewEntry(0x18, 0x419E, true, true, true);
 		byte[] original = entry.GetBytes();
 		byte[] image = definition.GetSprite(entry).GetBitmap().Bits;
-		string[] names = { "Switch channel", "Rider sag", "Phase / corner", "Solidity", "Movement" };
-		int[] values = { 15, 0, 3, 0, 5 };
-		ushort[] words = { 0xF39F, 0xF29F, 0xF69F, 0xF61F, 0xF615 };
+		string[] names = { "Switch channel", "Rider sag", "Phase / corner", "Interaction", "Movement", "Falling" };
+		int[] values = { 15, 0, 3, 0, 5, 1 };
+		ushort[] words = { 0xE19E, 0xE11E, 0xE11E, 0xE01E, 0xE015, 0xF015 };
 		for (int i = 0; i < names.Length; i++)
 		{
 			definition.CustomProperties.Single(p => p.Name == names[i]).SetValue(entry, values[i]);

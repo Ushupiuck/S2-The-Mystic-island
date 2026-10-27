@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Check built GHZ art loads, cross-bank mappings and common sprite banks."""
+import argparse
 from pathlib import Path
 import re
 import struct
@@ -35,10 +36,14 @@ def check_boss(rom, symbols, cues):
 
 
 def main():
-    rom = (ROOT / 's2built.bin').read_bytes()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--rom', type=Path, default=ROOT / 's2built.bin')
+    parser.add_argument('--listing', type=Path, default=ROOT / 'md-main.lst')
+    args = parser.parse_args()
+    rom = args.rom.read_bytes()
     symbols = {name: int(value, 16) for name, value in re.findall(
         r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]',
-        (ROOT / 'md-main.lst').read_text())}
+        args.listing.read_text())}
 
     def cues(label):
         start = symbols[label]

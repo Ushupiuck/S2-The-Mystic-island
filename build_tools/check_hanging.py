@@ -92,7 +92,7 @@ def native(args):
                 m.put(platform, 'code', m.s['Obj18'])
                 m.put(platform, 'obX', 0x800, 2)
                 m.put(platform, 'obY', foot+gap+(49 if full else 9), 2)
-                m.put(platform, 'obSubtype', 0x80 if full else 0)
+                m.put(platform, 'obSubtype', 0x100 if full else 0)
                 m.act('Obj18', platform)
                 if full:
                     # Full-body radius is 48, while the constructor defaults to
@@ -112,7 +112,7 @@ def native(args):
     for bottom, top in [('v_player', 'v_player2'), ('v_player2', 'v_player')]:
         m.start();m.write('Camera_X_pos_coarse_back',0x700,2)
         m.write('Camera_Max_Y_pos',0x1000,2)
-        for f,v,n in [('code',m.s['Obj18'],4),('obSubtype',0x901,2),('obX',0x800,2),('obY',0x200,2)]:m.put(o,f,v,n)
+        for f,v,n in [('code',m.s['Obj18'],4),('obSubtype',0x681,2),('obX',0x800,2),('obY',0x200,2)]:m.put(o,f,v,n)
         m.act('Obj18',o)
         child=m.get(o,'Plat_hanger',2)|0xFFFF0000
         assert child & 65535
@@ -131,7 +131,7 @@ def native(args):
         rows.append(bottom+': child follows moving/sagging platform while other actor rides above; cull releases both')
     m.start();m.write('Camera_X_pos_coarse_back',0x700,2)
     for obj in m.pool():m.put(obj,'code',m.s['ObjNull'])
-    m.put(o,'code',m.s['Obj18']);m.put(o,'obX',0x800,2);m.put(o,'obY',0x200,2);m.put(o,'obSubtype',0x800)
+    m.put(o,'code',m.s['Obj18']);m.put(o,'obX',0x800,2);m.put(o,'obY',0x200,2);m.put(o,'obSubtype',0x600)
     m.act('Obj18',o);assert not m.get(o,'Plat_hanger',2)
     free=o+m.s['object_size'];m.put(free,'code',0)
     m.act('Plat_Top',o);assert m.get(o,'Plat_hanger',2)==free&65535
@@ -142,7 +142,7 @@ def native(args):
             for full in (False,True):
                 m.start();m.write('Current_Zone',zone);m.write('Camera_X_pos_coarse_back',0x700,2)
                 m.put(o,'code',m.s['Obj18']);m.put(o,'obX',0x800,2);m.put(o,'obY',0x200,2)
-                m.put(o,'obSubtype',0x800|(shape<<4)|(0x80 if full else 0))
+                m.put(o,'obSubtype',(0x700 if full else 0x600)|(shape<<4))
                 m.act('Obj18',o);child=m.get(o,'Plat_hanger',2)|0xFFFF0000
                 from check_sprite_assets import frames
                 rom=(args.rom or c.ROOT/'s2built.bin').read_bytes()
@@ -155,7 +155,7 @@ def native(args):
 
     # An owner removed outside its normal unload path cannot leave a live grip.
     m.start();m.write('Camera_X_pos_coarse_back',0x700,2)
-    m.put(o,'code',m.s['Obj18']);m.put(o,'obX',0x800,2);m.put(o,'obY',0x200,2);m.put(o,'obSubtype',0x800)
+    m.put(o,'code',m.s['Obj18']);m.put(o,'obX',0x800,2);m.put(o,'obY',0x200,2);m.put(o,'obSubtype',0x600)
     m.act('Obj18',o);child=m.get(o,'Plat_hanger',2)|0xFFFF0000
     m.put('v_player','obStatus',2);m.put('v_player','obX',0x800,2)
     m.put('v_player','obY',m.get(child,'obY',2)+30,2)
@@ -163,6 +163,74 @@ def native(args):
     m.act('DeleteObject',o);m.act('Hanging_Child',child)
     assert not m.get(child,'code') and not m.get('v_player','obControl')
     rows.append('externally deleted parent retires its orphan and releases the hanging player')
+
+    from check_sprite_assets import frames
+    rom=(args.rom or c.ROOT/'s2built.bin').read_bytes()
+    for zone,index,mapping,rail in [(0,0,'Map_Obj17','Map_SwingRail'),(6,1,'Map_Obj17_SLZ','Map_SwingRail_SLZ'),(8,2,'Map_SMZ_Swing','Map_SwingRail_SMZ')]:
+        # Use engine zone constants rather than assuming the classic SLZ ID.
+        if index==1:zone=m.s['id_SLZ']
+        if index==2:zone=m.s['id_SMZ']
+        bottom=int.from_bytes(m.cpu.mem_read(m.s['SwingingPtfm_HangingBottoms']+index,1),'big')
+        for label in (mapping,rail):
+            assert bottom==max(y+((size&3)+1)*8 for y,size,_,_ in frames(rom,m.s[label])[0]),label
+        m.start();m.write('Current_Zone',zone);m.write('Camera_X_pos_coarse_back',0x700,2)
+        for f,v,n in [('code',m.s['SwingingPtfm'],4),('obX',0x800,2),('obY',0x180,2),('obSubtype',0x625,2)]:m.put(o,f,v,n)
+        m.act('SwingingPtfm',o);m.act('SwingingPtfm_Interact',o)
+        child=m.get(o,'swing_hanger',2)|0xFFFF0000
+        assert m.get(child,'Hang_yoffset',2)==(bottom-10)&65535
+    rows.append('GHZ/SLZ/SMZ grip heights match body and ICZ-rail mapping bottoms')
+
+    # Swinging grip profiles keep packed links and an independent two-player
+    # controller. The same child follows the released physical body.
+    for profile in (6,7,8,9):
+        for bottom,top in [('v_player','v_player2'),('v_player2','v_player')]:
+            m.start();m.write('Camera_X_pos_coarse_back',0x700,2)
+            for f,v,n in [('code',m.s['SwingingPtfm'],4),('obX',0x800,2),('obY',0x180,2),('obSubtype',(profile<<8)|0x1025,2)]:m.put(o,f,v,n)
+            m.act('SwingingPtfm',o);m.act('SwingingPtfm_Interact',o)
+            child=m.get(o,'swing_hanger',2)|0xFFFF0000
+            assert child&65535
+            m.put(bottom,'obStatus',2);m.put(bottom,'obX',m.get(child,'obX',2),2);m.put(bottom,'obY',m.get(child,'obY',2)+30,2)
+            m.put(top,'obStatus',2);m.put(top,'obX',m.get(o,'obX',2),2);m.put(top,'obY',m.get(o,'obY',2)-m.get(o,'obHeight')-19+2,2);m.put(top,'obVelY',0x100,2)
+            m.put(o,'obRender',0x94);m.act('SwingingPtfm_Interact',o)
+            assert m.get(bottom,'obControl')==3 and m.get(top,'obStatus')&8,(profile,bottom,'swing grab')
+            m.put(o,'swing_mode_timer',29,2);m.act('SwingingPtfm_DetachCheck',o)
+            body=m.get(o,'swing_relative',2)|0xFFFF0000
+            assert body&65535 and m.get(body,'code')==m.s['SwingingPtfm']
+            assert not m.get(o,'swing_hanger',2) and m.get(body,'swing_hanger',2)==child&65535
+            assert m.get(child,'Hang_parent',2)==body&65535
+            assert m.get(child,'Hang_parentlink',2)==(body+m.s['swing_hanger'])&65535
+            m.put(body,'obY',m.get(body,'obY',2)+12,2);m.act('SwingingPtfm_UpdateHanging',body)
+            assert m.get(bottom,'obControl')==3 and m.get(bottom,'obY',2)==m.get(child,'obY',2)+36
+            m.act('SwingingPtfm_DelAll',o)
+            assert not m.get(child,'code') and not m.get(bottom,'obControl')
+    rows.append('swing top/full/conveyor grips: both rider arrangements, detach transfers one child, group deletion releases it')
+    m.start();m.write('Camera_X_pos_coarse_back',0x700,2)
+    for obj in m.pool():m.put(obj,'code',m.s['ObjNull'])
+    for f,v,n in [('code',m.s['SwingingPtfm'],4),('obX',0x800,2),('obY',0x180,2),('obSubtype',0x625,2)]:m.put(o,f,v,n)
+    m.act('SwingingPtfm',o);m.act('SwingingPtfm_Interact',o);assert not m.get(o,'swing_hanger',2)
+    free=o+m.s['object_size'];m.put(free,'code',0);m.act('SwingingPtfm_Interact',o)
+    assert m.get(o,'swing_hanger',2)==free&65535
+    m.act('DeleteObject',o);m.act('Hanging_Child',free);assert not m.get(free,'code')
+    rows.append('swing grip allocation retries with a full pool; external parent deletion retires orphan')
+
+    for profile in (8,9):
+        m.start();m.write('Camera_X_pos_coarse_back',0x700,2);m.write('Camera_Max_Y_pos',0x1000,2)
+        for f,v,n in [('code',m.s['Obj18'],4),('obX',0x800,2),('obY',0x200,2),('obSubtype',(profile<<8)|0x1080,2)]:m.put(o,f,v,n)
+        m.act('Obj18',o);child=m.get(o,'Plat_hanger',2)|0xFFFF0000
+        for who,y in [('v_player',m.get(o,'obY',2)-m.get(o,'obHeight')-19+2),('v_player2',m.get(child,'obY',2)+30)]:
+            m.put(who,'obX',m.get(o,'obX',2),2);m.put(who,'obY',y,2);m.put(who,'obStatus',2);m.put(who,'obVelY',0x100,2)
+        m.put(o,'obRender',0x94);m.act('Plat_Top',o)
+        assert m.get('v_player','obStatus')&8 and m.get('v_player2','obControl')==3
+        for frame in range(80):
+            for who in ('v_player','v_player2'):m.put(who,'conveyor_applied',0)
+            m.act('Plat_Top',o)
+            if m.get(o,'code')==m.s['Plat_FallingIntangible']:break
+            assert m.get('v_player2','obControl')==3,(profile,frame,'early grip release')
+            # Keep the upper rider on the belt for this isolated falling test.
+            m.put('v_player','obX',m.get(o,'obX',2),2)
+        assert m.get(o,'code')==m.s['Plat_FallingIntangible'] and not m.get(child,'code')
+        assert not m.get('v_player2','obControl') and not m.get('v_player','obStatus')&8
+    rows.append('falling conveyor with underside grip: both solidity variants carry standing/hanging players, then release at intangible transition')
 
     for who, record in [('v_player', 'Hang_p1'), ('v_player2', 'Hang_p2')]:
         for flip in (0, 1):

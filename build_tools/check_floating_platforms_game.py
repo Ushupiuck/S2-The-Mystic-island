@@ -72,7 +72,7 @@ if args.placements:
             g.video.save(args.output / f'placement-{index}.png')
         checks.append({'placement': index, 'subtype': subtype})
 else:
-    cases = list(range(16)) + [0x80, 0x8E, 0x20C]
+    cases = list(range(16)) + [0x100, 0x1100, 0x200C, 0x1000, 0x1001, 0x1004, 0x1005, 0x1008, 0x100C, 0x100F]
     for settings in cases:
         g.restore(base)
         # Clear dynamic objects so this fixture owns its interaction surface.
@@ -80,7 +80,8 @@ else:
             g.write(a, 0, g.s['object_size'])
         platform = pool[0]
         mode = settings & 15
-        subtype = settings | (0x100 if mode % 2 == 0 or mode == 7 else 0) | (0xA000 if mode == 15 else 0)
+        subtype = settings | (0x80 if mode % 2 == 0 or mode == 7 else 0) | (0x4000 if mode == 14 else 0x6000 if mode == 15 else 0)
+        falling=bool(subtype&0x1000)
         for field, value, size in (('code', g.s['Obj18'], 4), ('obX', 0x180, 2),
                                     ('obY', 0x2C0, 2), ('obSubtype', subtype, 2)):
             g.put(platform, field, value, size)
@@ -90,7 +91,7 @@ else:
             g.put(actor, 'obX', 0x40, 2)
         run(1)
         x, y = g.get(platform, 'obX', 2), g.get(platform, 'obY', 2)
-        radius = 48 if settings & 0x80 else 8
+        radius = 48 if settings & 0x100 else 8
         position(x, y - radius - g.get('v_player', 'obHeight'))
         for actor in actors:
             g.put(actor, 'obY', y - radius - g.get(actor, 'obHeight'), 2)
@@ -98,16 +99,16 @@ else:
         run(2)
         mask = 0x18 if len(actors) == 2 else 8
         assert g.get(platform, 'obStatus') & mask == mask, ('boarding', hex(subtype), [(a, g.get(a, 'obY', 2), g.get(a, 'obStatus')) for a in actors])
-        if mode == 15:
-            g.write(g.s['f_switch'] + 10, 1)
+        if mode >= 14:
+            g.write(g.s['f_switch'] + (10 if mode==14 else 3), 1)
         offsets = {a: g.get(a, 'obX', 2) - g.get(platform, 'obX', 2) for a in actors}
         trace = []
         detached = False
-        duration = 96 if mode in (7, 14) else 320 if mode in (12, 15) else 180
+        duration = 900 if falling and mode else 96 if mode == 7 else 400 if mode>=14 else 320 if mode==12 else 180
         for tick in range(duration):
             run(1)
             code = g.get(platform, 'code')
-            if not code and mode == 14:
+            if not code and falling:
                 assert detached
                 break  # normal deletion below the level, after detaching riders
             assert code, ('platform unexpectedly unloaded', hex(subtype), tick)
@@ -118,10 +119,10 @@ else:
                     assert g.get(actor, 'obX', 2) - g.get(platform, 'obX', 2) == offsets[actor]
             if tick in (0, 30, 90, duration - 1):
                 trace.append([tick, g.get(platform, 'obX', 2), g.get(platform, 'obY', 2), code])
-        if mode == 14:
+        if falling:
             assert g.get(platform, 'code') in (0, g.s['Plat_FallingIntangible'])
             assert not g.get(platform, 'obStatus') & 0x18
-        if mode == 15:
+        if mode >= 14 and not falling:
             assert g.get(platform, 'Plat_rawY', 2) == 0xC0
             assert g.get(platform, 'Plat_movement', 4) == g.s['Plat_Stationary']
         if mode == 7:

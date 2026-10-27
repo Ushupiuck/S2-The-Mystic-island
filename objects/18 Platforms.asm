@@ -2,11 +2,12 @@
 ; Object 18 - ordinary platforms (MD main CPU)
 ; S3&K movement core, S1 vertical travel/fall/switch rise, S2 full solidity.
 ;
-; Subtype word: CCCC HPPS FTTT MMMM
-;   M = movement (Plat_Movements), T = shape, F = full solidity,
-;   S = rider sag (ignored by the rising trap), PP = phase/corner,
-;   C = switch channel, used only by switch-triggered rising platforms.
-;   H = spawn/own a classic hanging child beneath the body.
+; Subtype word: CCCF IIII STTT MMMM
+;   M = movement, T = shape, S = rider sag (ignored by the rising trap),
+;   I = shared platform interaction (top/full/conveyor/hanging/harmful).
+;   F = fall after arriving, once either standing rider arms it.
+;   C = switch-channel low bits for E/F; otherwise bits 13-14 select phase/corner.
+;   E/F select switch channels 8-F / 0-7 respectively.
 ; Placement X/Y flips XOR the phase/corner. Vertical paths are centred on Y;
 ; horizontal/diagonal paths use S3&K's endpoint origin. Squares use the centre.
 ; ---------------------------------------------------------------------------
@@ -19,12 +20,13 @@ Plat_phase:	equ objoff_3A	; byte: phase/corner, combined with placement flips
 Plat_sag:	equ objoff_3B	; byte: sine angle, 0-$40
 Plat_timer:	equ objoff_3C	; word: fall/switch delay
 Plat_state:	equ objoff_3E	; byte: rising/long-horizontal state
-Plat_flags:	equ objoff_3F	; byte: bit 0 sag, bit 1 intangible
+Plat_flags:	equ objoff_3F	; byte: bit 0 sag, 1 intangible, 2 fall enabled, 3 armed
 Plat_position:	equ objoff_40	; word: long-horizontal 8.8 position
 Plat_speed:	equ objoff_42	; word: long-horizontal 8.8 speed
 Plat_loadwidth:	equ objoff_44	; word: horizontal retention interval
 Plat_cullX:	equ objoff_46	; word: rightmost retained origin
 Plat_hanger:	equ objoff_48	; word: spawned D9 child; 0 = retry allocation
+Plat_fall_check:	equ objoff_4A	; byte: oscillator rate offset, or endpoint selector
 
 Obj18:
 		move.w	obSubtype(a0),d0
@@ -54,23 +56,32 @@ Obj18:
 		move.w	#$280,Plat_loadwidth(a0)
 		move.w	obX(a0),Plat_cullX(a0)
 		move.w	obSubtype(a0),d0
-		move.w	d0,d1
-		lsr.w	#8,d1
+		moveq	#0,d1
+		btst	#7,d0
+		beq.s	.sag_ready
+		moveq	#1,d1
+.sag_ready:
 		move.b	d1,Plat_flags(a0)
-		andi.b	#1,Plat_flags(a0)	; sag is an independent authored option
-		lsr.w	#1,d1
+		btst	#12,d0
+		beq.s	.fall_ready
+		bset	#2,Plat_flags(a0)
+.fall_ready:
+		move.w	d0,d1
+		rol.w	#3,d1
+		andi.b	#3,d1
 		move.b	obStatus(a0),d2
 		eor.b	d2,d1
-		andi.b	#3,d1
 		move.b	d1,Plat_phase(a0)
 		move.b	#8,obHeight(a0)
 		move.l	#Plat_Top,code(a0)
-		btst	#7,d0
+		bsr.w	Platform_Profile
+		lea	Platform_ProfileFlags(pc),a1
+		btst	#0,(a1,d0.w)
 		beq.s	.solidity_ready
 		move.b	#$30,obHeight(a0)
 		bset	#4,obRender(a0)
-		move.l	#Plat_Full,code(a0)
 .solidity_ready:
+		move.w	obSubtype(a0),d0
 		andi.w	#$F,d0
 		cmpi.w	#7,d0
 		bne.s	.check_square
@@ -97,6 +108,8 @@ Obj18:
 .long_range:
 		add.w	d1,Plat_cullX(a0)
 .movement_ready:
+		lea	Plat_FallChecks(pc),a1
+		move.b	(a1,d0.w),Plat_fall_check(a0)
 		add.w	d0,d0
 		lea	Plat_Movements(pc),a1
 		move.w	(a1,d0.w),d0
@@ -112,31 +125,13 @@ Obj18_Conf:
 Obj18_Conf_End:
 
 Plat_Top:
-		move.w	obX(a0),-(sp)
-		bsr.w	Plat_Move
-		move.w	(sp)+,d4
-		btst	#1,Plat_flags(a0)
-		bne.s	Plat_Display		; the falling timer detached riders this update
-		moveq	#0,d1
-		move.b	obActWid(a0),d1
-		moveq	#8,d3
-		jsr	(PlatformObject).l
-		bra.s	Plat_Display
-; ---------------------------------------------------------------------------
 Plat_Full:
 		move.w	obX(a0),-(sp)
 		bsr.w	Plat_Move
 		move.w	(sp)+,d4
 		btst	#1,Plat_flags(a0)
 		bne.s	Plat_Display
-		moveq	#0,d1
-		move.b	obActWid(a0),d1
-		addi.w	#sonic_solid_width,d1
-		moveq	#0,d2
-		move.b	obHeight(a0),d2
-		move.w	d2,d3
-		addq.w	#1,d3
-		jsr	(SolidObject).l		; both characters, including sides/underside
+		bsr.w	Platform_Interact
 
 Plat_Display:
 		bsr.w	Plat_UpdateHanging
@@ -148,9 +143,10 @@ Plat_Display:
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 Plat_UpdateHanging:
-		move.w	obSubtype(a0),d0
-		btst	#11,d0
-		beq.w	.return
+		bsr.w	Platform_Profile
+		subi.b	#platform_hang_top,d0
+		cmpi.b	#3,d0
+		bhi.w	.return
 		btst	#1,Plat_flags(a0)
 		bne.w	Plat_RemoveHanging
 		tst.w	Plat_hanger(a0)
@@ -198,10 +194,12 @@ Plat_UpdateHanging:
 		clr.w	Plat_hanger(a0)		; don't touch a consumed/reused slot
 		rts
 Plat_RemoveHanging:
-		tst.w	Plat_hanger(a0)
+		lea	Plat_hanger(a0),a2
+Platform_RemoveHanging:
+		tst.w	(a2)
 		beq.s	.return
-		movea.w	Plat_hanger(a0),a1
-		clr.w	Plat_hanger(a0)
+		movea.w	(a2),a1
+		clr.w	(a2)
 		cmpi.l	#Hanging_Child,code(a1)
 		bne.s	.return
 		move.w	a0,d0
@@ -228,6 +226,10 @@ Plat_HangingBottoms:
 Plat_Move:
 		movea.l	Plat_movement(a0),a1
 		jsr	(a1)
+		btst	#2,Plat_flags(a0)
+		beq.s	.render_y
+		bsr.w	Plat_CheckFalling
+.render_y:
 		move.w	Plat_rawY(a0),obY(a0)
 		btst	#0,Plat_flags(a0)
 		beq.s	.return
@@ -265,8 +267,8 @@ Plat_Movements:
 		dc.w Plat_Square224-Plat_Movements	; B
 		dc.w Plat_Horizontal256-Plat_Movements	; C
 		dc.w Plat_Vertical96-Plat_Movements	; D (S1/S2 additional distance)
-		dc.w Plat_FallingDelayed-Plat_Movements	; E (shared S3&K LBZ fall)
-		dc.w Plat_SwitchWait-Plat_Movements	; F (S1/S2 switch-triggered rise)
+		dc.w Plat_SwitchWait-Plat_Movements	; E (switch channels 8-F)
+		dc.w Plat_SwitchWait-Plat_Movements	; F (switch channels 0-7)
 ; ---------------------------------------------------------------------------
 Plat_Stationary:
 		rts
@@ -448,19 +450,59 @@ Plat_Horizontal256:
 		move.w	d0,obX(a0)
 		rts
 ; ---------------------------------------------------------------------------
-Plat_FallingDelayed:
-		tst.w	Plat_timer(a0)
-		bne.s	.wait
+Plat_FallChecks:
+		; 0 stationary delay; positive = shared oscillator's rate word.
+		; -1 ceiling stop, -2 long-path turnaround, -3 completed switch rise.
+		dc.b 0,$0C,$20,$0C,$20,$20,$20,-1,$2C,$30,$34,$38,-2,$10,-3,-3
+		even
+
+Plat_CheckFalling:
+		btst	#3,Plat_flags(a0)
+		bne.s	.armed
 		move.b	obStatus(a0),d0
-		andi.b	#$18,d0		; either rider starts the delay
+		andi.b	#$18,d0		; either standing rider latches the request
 		beq.s	.return
-		move.w	#30,Plat_timer(a0)
+		bset	#3,Plat_flags(a0)
+.armed:
+		moveq	#0,d0
+		move.b	Plat_fall_check(a0),d0
+		beq.s	.stationary
+		bmi.s	.special
+		lea	(v_oscillate).w,a1
+		tst.w	(a1,d0.w)		; zero rate marks the current leg's destination
+		beq.s	Plat_StartFalling
 .return:
 		rts
-.wait:
+.stationary:
+		bclr	#2,Plat_flags(a0)
+		move.w	#30,Plat_timer(a0)
+		move.l	#Plat_FallingDelayed,Plat_movement(a0)
+		rts
+.special:
+		addq.b	#1,d0
+		beq.s	.trap
+		addq.b	#1,d0
+		beq.s	.long
+		cmpi.l	#Plat_Stationary,Plat_movement(a0)
+		beq.s	Plat_StartFalling
+		rts
+.trap:
+		tst.b	Plat_state(a0)
+		beq.s	Plat_StartFalling
+		rts
+.long:
+		tst.w	Plat_speed(a0)
+		beq.s	Plat_StartFalling
+		rts
+; ---------------------------------------------------------------------------
+Plat_FallingDelayed:
 		subq.w	#1,Plat_timer(a0)
-		bne.s	.return
+		beq.s	Plat_StartFalling
+		rts
+Plat_StartFalling:
+		andi.b	#$F3,Plat_flags(a0)
 		move.w	#32,Plat_timer(a0)
+		clr.w	obVelY(a0)
 		move.l	#Plat_Falling,Plat_movement(a0)
 		rts
 ; ---------------------------------------------------------------------------
@@ -507,8 +549,14 @@ Plat_SwitchWait:
 		tst.w	Plat_timer(a0)
 		bne.s	.wait
 		move.w	obSubtype(a0),d0
-		rol.w	#4,d0
-		andi.w	#$F,d0		; independent channel in bits 12-15
+		rol.w	#3,d0
+		andi.w	#7,d0		; low channel bits in 13-15
+		move.w	obSubtype(a0),d1
+		andi.w	#$F,d1
+		cmpi.w	#$E,d1
+		bne.s	.channel_ready
+		addq.w	#8,d0
+.channel_ready:
 		lea	(f_switch).w,a1
 		tst.b	(a1,d0.w)
 		beq.s	.return
@@ -595,4 +643,126 @@ Plat_CheckCrush:
 		jsr	(KillCharacter).l
 .return:
 		movem.l	(sp)+,a0/a2
+		rts
+
+; Shared MD collision/surface implementation for Obj17 and Obj18.
+; a0 body; d4 previous X. Settings, dimensions and player state stay per object.
+Platform_Profile:
+		move.w	obSubtype(a0),d0
+		lsr.w	#8,d0
+		andi.w	#$F,d0
+		cmpi.w	#platform_profile_count,d0
+		blo.s	.return
+		moveq	#platform_top,d0
+.return:
+		rts
+Platform_ProfileFlags:
+		dc.b 0,1,1,0,1,1,0,1,0,1,0,1
+		even
+
+Platform_Interact:
+		bsr.w	Platform_Profile
+		cmpi.b	#platform_hurt,d0
+		bne.s	.solid
+		bra.w	Platform_HurtOverlap
+.solid:
+		cmpi.b	#platform_hurt_full,d0
+		bne.s	.dimensions
+		bsr.w	Platform_HurtOverlap
+.dimensions:
+		moveq	#0,d1
+		moveq	#0,d2
+		moveq	#0,d3
+		move.b	obActWid(a0),d1
+		move.b	obHeight(a0),d2
+		move.w	d2,d3
+		bsr.w	Platform_Profile
+		tst.w	d0
+		beq.s	.top
+		cmpi.b	#platform_conveyor_top,d0
+		beq.s	.top
+		cmpi.b	#platform_hang_top,d0
+		beq.s	.top
+		cmpi.b	#platform_conveyor_hang_top,d0
+		beq.s	.top
+		addi.w	#sonic_solid_width,d1
+		addq.w	#1,d3
+		jsr	(SolidObject).l
+		bsr.w	Platform_Profile
+		cmpi.b	#platform_hurt_bottom,d0
+		beq.s	.underside
+		cmpi.b	#platform_conveyor_hurt_bottom,d0
+		bne.s	.belt
+.underside:
+		swap	d6
+		btst	#2,d6
+		beq.s	.partnerHurt
+		lea	(v_player).w,a1
+		jsr	(Spike_HurtCharacter).l
+.partnerHurt:
+		btst	#3,d6
+		beq.s	.belt
+		lea	(v_player2).w,a1
+		jsr	(Spike_HurtCharacter).l
+		bra.s	.belt
+.top:
+		jsr	(PlatformObject).l
+.belt:
+		bsr.w	Platform_Profile
+		subq.b	#platform_conveyor_top,d0
+		cmpi.b	#2,d0
+		bls.s	.belt_ready
+		subq.b	#5,d0
+		cmpi.b	#1,d0
+		bhi.s	.return
+.belt_ready:
+		lea	(v_player).w,a1
+		moveq	#3,d6
+		bsr.s	.conveyor
+		lea	(v_player2).w,a1
+		moveq	#4,d6
+.conveyor:
+		btst	d6,obStatus(a0)
+		beq.s	.return
+		tst.b	conveyor_applied(a1)
+		bne.s	.return
+		moveq	#2,d0
+		btst	#0,obStatus(a0)
+		beq.s	.move
+		neg.w	d0
+.move:
+		add.w	d0,obX(a1)
+		move.b	#1,conveyor_applied(a1)
+.return:
+		rts
+
+Platform_HurtOverlap:
+		lea	(v_player).w,a1
+		bsr.s	.player
+		lea	(v_player2).w,a1
+.player:
+		tst.l	code(a1)
+		beq.s	.return
+		moveq	#0,d1
+		move.b	obActWid(a0),d1
+		addq.w	#8,d1
+		move.w	obX(a1),d0
+		sub.w	obX(a0),d0
+		bpl.s	.xAbs
+		neg.w	d0
+.xAbs:
+		cmp.w	d1,d0
+		bhi.s	.return
+		moveq	#0,d1
+		move.b	obHeight(a0),d1
+		add.b	obHeight(a1),d1
+		move.w	obY(a1),d0
+		sub.w	obY(a0),d0
+		bpl.s	.yAbs
+		neg.w	d0
+.yAbs:
+		cmp.w	d1,d0
+		bhi.s	.return
+		jmp	Spike_HurtCharacter
+.return:
 		rts
