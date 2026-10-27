@@ -594,3 +594,20 @@ only the main CPU: run this fixture with the cartridge build, since Mode 1
 terrain requests otherwise wait for an unstepped sub-CPU. Use the relevant
 pre-change `--reference` when comparing assets; its default predates subsequent
 terrain edits. The full-frame swing suites cover Mode 1 hardware scheduling.
+
+
+`check_swing_costs.py` measures isolated 68000 calls against a matching cartridge
+ROM/listing and records resulting body/player/link state. Run the old and new
+ROMs in separate processes, then pass the old report with `--compare` to require
+identical fixture state and no cycle regressions. Coverage includes constructors,
+0/1/4/8-link poses, cached poses, attached updates, active momentum, all sixteen
+interaction values, empty sag, wall probes, liquid disable/floating and culling.
+
+```sh
+python build_tools/check_swing_costs.py --rom before.bin --listing before.lst --core /path/to/genesis_plus_gx_libretro.so --output test-results/swing-costs/before
+python build_tools/check_swing_costs.py --rom after.bin --listing after.lst --core /path/to/genesis_plus_gx_libretro.so --compare test-results/swing-costs/before/costs.json --output test-results/swing-costs/after
+```
+
+The core counter uses master clocks; the checker divides by seven for 68000
+cycles. These are isolated emulator instruction costs, excluding whole-frame
+VDP/audio work and physical hardware timing. Keep reports in `test-results/`.

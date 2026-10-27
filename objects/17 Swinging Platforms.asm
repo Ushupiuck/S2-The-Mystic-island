@@ -89,8 +89,7 @@ SwingingPtfm_Init:
 		moveq	#platform_top,d0
 .profile_ready:
 		move.b	d0,swing_preset(a0)
-		lsr.w	#6,d1
-		lsl.w	#6,d1
+		andi.w	#$C0,d1
 		move.b	d1,swing_orientation(a0)
 		moveq	#0,d0
 		move.l	d0,swing_helper_ptr(a0)
@@ -106,10 +105,9 @@ SwingingPtfm_Init:
 		bls.s	.length
 		moveq	#swing_max_links,d0
 .length:
-		move.w	d0,d1
-		lsl.w	#4,d1
-		addq.w	#8,d1
-		move.w	d1,swing_radius(a0)
+		lsl.w	#4,d0
+		addq.w	#8,d0
+		move.w	d0,swing_radius(a0)
 .movement:
 		move.w	d4,d0
 		andi.w	#$70,d0
@@ -142,12 +140,15 @@ SwingingPtfm_TryHelper:
 		bne.s	.lost
 		move.w	a0,d0
 		cmp.w	swing_helper_owner(a1),d0
-		beq.w	.return
+		beq.s	.return
 .lost:
 		clr.l	swing_helper_ptr(a0)
 .spawn:
 		jsr	(FindFreeObj).l
-		bne.s	.return
+		beq.s	.create
+.return:
+		rts
+.create:
 		move.l	#SwingingPtfm_HelperDisplay,code(a1)
 		move.l	obMap(a0),obMap(a1)
 		move.w	obGfx(a0),obGfx(a1)
@@ -166,7 +167,7 @@ SwingingPtfm_TryHelper:
 		subq.w	#1,d0
 		bmi.s	.helperReady
 .links:
-		clr.l	(a2)+
+		addq.w	#4,a2			; ApplyAngle immediately writes both coordinates
 		move.w	#1,(a2)+
 		dbf	d0,.links
 .helperReady:
@@ -175,9 +176,7 @@ SwingingPtfm_TryHelper:
 		moveq	#0,d0
 		move.b	swing_last_angle(a0),d0
 		not.b	swing_last_angle(a0)
-		bsr.w	SwingingPtfm_ApplyAngle	; new helper needs the current pose now
-.return:
-		rts
+		bra.w	SwingingPtfm_ApplyAngle	; tail-call the new helper's initial pose
 SwingingPtfm_TryBody:
 		tst.w	swing_body(a0)
 		beq.s	.spawn
@@ -264,11 +263,8 @@ SwingingPtfm_Motion_Half:
 		addi.w	#$80,d0
 .clamp:
 		cmpi.b	#$40,d0
-		bhs.s	.apply
+		bhi.s	.angle
 		moveq	#$40,d0
-.apply:
-		cmpi.b	#$40,d0
-		bne.s	.angle
 		cmpi.b	#$40,swing_last_angle(a0)
 		beq.s	.angle
 		cmpi.b	#$FF,swing_last_angle(a0)
@@ -307,16 +303,8 @@ SwingingPtfm_Motion_Momentum:
 .advance:
 		move.w	d1,swing_ang_vel(a0)
 		add.w	d1,d2
-		tst.w	d3
-		bmi.s	.fromLeft
-		tst.w	d2
-		bmi.s	.rest
-		bra.s	.store
-.fromLeft:
-		tst.w	d2
-		bpl.s	.rest
-
-		bra.s	.store
+		eor.w	d2,d3			; opposite signs mean the swing crossed its rest angle
+		bpl.s	.store
 .rest:
 		moveq	#0,d2
 		clr.w	swing_ang_vel(a0)
@@ -352,9 +340,9 @@ SwingingPtfm_Motion_Momentum:
 		move.w	obX(a0),d0
 		sub.w	swing_previous_x(a0),d0
 		beq.s	.return
-		movem.w	d3,-(sp)
+		move.w	d3,-(sp)
 		jsr	(Platform_BodyWall).l
-		movem.w	(sp)+,d3
+		move.w	(sp)+,d3
 		tst.w	d1
 		bpl.s	.return
 		move.w	d3,obAngle(a0)
@@ -370,11 +358,11 @@ SwingingPtfm_Motion_Momentum:
 ; 30-update endpoint pause held while either rider remains on the platform.
 SwingingPtfm_Motion_SOZ:
 		move.w	#$8000,d5
-		moveq	#0,d6
+		moveq	#0,d6			; pose phase, added after converting the angle to a byte
 		bra.s	SwingingPtfm_Lift
 SwingingPtfm_Motion_DEZ:
 		move.w	#$2000,d5
-		moveq	#0,d6
+		move.w	#$80,d6
 SwingingPtfm_Lift:
 		tst.w	swing_mode_timer(a0)
 		beq.s	.trigger
@@ -422,11 +410,8 @@ SwingingPtfm_Lift:
 		clr.b	swing_dir_flag(a0)
 .pose:
 		move.w	obAngle(a0),d0
-		add.w	d6,d0
 		lsr.w	#8,d0
-		cmpi.l	#SwingingPtfm_Motion_DEZ,swing_movement(a0)
-		bne.w	SwingingPtfm_ApplyAngle
-		addi.w	#$80,d0
+		add.w	d6,d0
 		bra.w	SwingingPtfm_ApplyAngle
 
 SwingingPtfm_Motion_Trap:
@@ -533,15 +518,15 @@ SwingingPtfm_ApplyAngle:
 .links:
 		add.l	d0,d4
 		add.l	d1,d5
-		movem.l	d4-d5,-(sp)
-		swap	d4
-		swap	d5
-		add.w	swing_orig_y(a0),d4
-		add.w	swing_orig_x(a0),d5
-		move.w	d5,(a2)+
-		move.w	d4,(a2)+
+		move.l	d4,d2			; retain the fixed-point accumulators in registers
+		move.l	d5,d3
+		swap	d2
+		swap	d3
+		add.w	swing_orig_y(a0),d2
+		add.w	swing_orig_x(a0),d3
+		move.w	d3,(a2)+
+		move.w	d2,(a2)+
 		addq.w	#2,a2
-		movem.l	(sp)+,d4-d5
 		dbf	d6,.links
 .body:
 		; Reuse the final chain position plus half a link. No per-frame
@@ -680,11 +665,62 @@ SwingingPtfm_DetachCheck:
 
 SwingingPtfm_PostDetach:
 		tst.b	ob2ndRout(a0)
-		bne.s	.display
+		bne.s	SwingingPtfm_ChkDel
 		bsr.w	SwingingPtfm_TryHelper
 		bsr.w	SwingingPtfm_UpdateMotion
-.display:
-		bra.w	SwingingPtfm_ChkDel
+
+SwingingPtfm_ChkDel:
+		move.w	swing_orig_x(a0),d0
+		add.w	swing_radius(a0),d0
+		addi.w	#$80,d0
+		sub.w	(Camera_X_pos_coarse_back).w,d0
+		move.w	swing_radius(a0),d1
+		add.w	d1,d1
+		addi.w	#$300,d1
+		cmp.w	d1,d0
+		bhi.s	.body
+.return:
+		rts
+.body:
+		tst.w	swing_body(a0)
+		beq.s	SwingingPtfm_DelAll
+		movea.w	swing_body(a0),a1
+		cmpi.l	#Platform_SuspendedBody,code(a1)
+		bne.s	SwingingPtfm_DelAll
+		move.w	a0,d0
+		cmp.w	Plat_parent(a1),d0
+		bne.s	SwingingPtfm_DelAll
+		move.w	obX(a1),d0
+		sub.w	(Camera_X_pos_coarse_back).w,d0
+		addi.w	#$80,d0
+		cmpi.w	#$300,d0
+		bls.s	.return
+
+SwingingPtfm_DelAll:
+		move.l	swing_helper_ptr(a0),d0
+		beq.s	.body
+		movea.l	d0,a1
+		cmpi.l	#SwingingPtfm_HelperDisplay,code(a1)
+		bne.s	.body
+		move.w	a0,d0
+		cmp.w	swing_helper_owner(a1),d0
+		bne.s	.body
+		jsr	(DeleteObject2).l
+.body:
+		tst.w	swing_body(a0)
+		beq.s	.unload
+		movea.w	swing_body(a0),a1
+		cmpi.l	#Platform_SuspendedBody,code(a1)
+		bne.s	.unload
+		move.w	a0,d0
+		cmp.w	Plat_parent(a1),d0
+		bne.s	.unload
+		move.l	a0,-(sp)
+		movea.l	a1,a0
+		jsr	(Platform_DeleteBody).l
+		movea.l	(sp)+,a0
+.unload:
+		jmp	(UnloadObject).l
 
 ; The helper retains its eight six-byte records. An elapsed-time velocity
 ; function supplies breakup motion without growing records or allocating links.
@@ -850,57 +886,3 @@ SwingingPtfm_ReceiveImpulse:
 		move.b	#1,swing_mode_started(a0)
 .return:
 		rts
-
-SwingingPtfm_ChkDel:
-		move.w	swing_orig_x(a0),d0
-		add.w	swing_radius(a0),d0
-		addi.w	#$80,d0
-		sub.w	(Camera_X_pos_coarse_back).w,d0
-		move.w	swing_radius(a0),d1
-		add.w	d1,d1
-		addi.w	#$300,d1
-		cmp.w	d1,d0
-		bls.s	.return
-		tst.w	swing_body(a0)
-		beq.s	.delete
-		movea.w	swing_body(a0),a1
-		cmpi.l	#Platform_SuspendedBody,code(a1)
-		bne.s	.delete
-		move.w	a0,d0
-		cmp.w	Plat_parent(a1),d0
-		bne.s	.delete
-		move.w	obX(a1),d0
-		sub.w	(Camera_X_pos_coarse_back).w,d0
-		addi.w	#$80,d0
-		cmpi.w	#$300,d0
-		bls.s	.return
-.delete:
-		bra.s	SwingingPtfm_DelAll
-.return:
-		rts
-
-SwingingPtfm_DelAll:
-		move.l	swing_helper_ptr(a0),d0
-		beq.s	.body
-		movea.l	d0,a1
-		cmpi.l	#SwingingPtfm_HelperDisplay,code(a1)
-		bne.s	.body
-		move.w	a0,d0
-		cmp.w	swing_helper_owner(a1),d0
-		bne.s	.body
-		jsr	(DeleteObject2).l
-.body:
-		tst.w	swing_body(a0)
-		beq.s	.unload
-		movea.w	swing_body(a0),a1
-		cmpi.l	#Platform_SuspendedBody,code(a1)
-		bne.s	.unload
-		move.w	a0,d0
-		cmp.w	Plat_parent(a1),d0
-		bne.s	.unload
-		move.l	a0,-(sp)
-		movea.l	a1,a0
-		jsr	(Platform_DeleteBody).l
-		movea.l	(sp)+,a0
-.unload:
-		jmp	(UnloadObject).l

@@ -31,10 +31,6 @@ Plat_parent:	equ objoff_4C	; word: suspension owner; zero on ordinary placements
 Plat_oldstatus:	equ obTimeFrame	; byte: previous riders for the ICZ physical rail
 Plat_attached_bit = 4              ; private Plat_flags bit; parent drives one update
 
-Obj18:
-		bsr.w	Plat_Init
-		bra.w	Plat_Top
-
 Plat_Init:
 		move.b	#4,obRender(a0)
 		move.w	#$200,obPriority(a0)
@@ -144,6 +140,8 @@ Obj18_Conf:
 		dc.b $20,0, $20,1
 Obj18_Conf_End:
 
+Obj18:
+		bsr.w	Plat_Init
 Plat_Top:
 Plat_Full:
 		move.w	obX(a0),-(sp)
@@ -243,7 +241,7 @@ Plat_ApplyY:
 		andi.b	#$18,d0
 		bne.s	.occupied
 		tst.b	Plat_sag(a0)
-		beq.s	.apply
+		beq.s	.return
 		subq.b	#4,Plat_sag(a0)
 		bra.s	.apply
 .occupied:
@@ -663,15 +661,17 @@ Platform_Profile:
 .return:
 		rts
 Platform_ProfileFlags:
-		dc.b 0,1,1,0,1,1,0,1,0,1,0,1
+		; Bits: 0 full solid, 1 harmful underside, 2 conveyor top.
+		dc.b 0,1,3,4,5,7,0,1,4,5,0,1
 		even
 
 Platform_Interact:
 		bsr.w	Platform_Profile
 		cmpi.b	#platform_hurt,d0
-		bne.s	.solid
-		bra.w	Platform_HurtOverlap
-.solid:
+		beq.w	Platform_HurtOverlap
+		lea	Platform_ProfileFlags(pc),a1
+		move.b	(a1,d0.w),d1
+		move.w	d1,-(sp)		; collision/damage may clobber every data register
 		cmpi.b	#platform_hurt_full,d0
 		bne.s	.dimensions
 		bsr.w	Platform_HurtOverlap
@@ -682,23 +682,15 @@ Platform_Interact:
 		move.b	obActWid(a0),d1
 		move.b	obHeight(a0),d2
 		move.w	d2,d3
-		bsr.w	Platform_Profile
-		tst.w	d0
-		beq.s	.top
-		cmpi.b	#platform_conveyor_top,d0
-		beq.s	.top
-		cmpi.b	#platform_hang_top,d0
-		beq.s	.top
-		cmpi.b	#platform_conveyor_hang_top,d0
+		move.w	(sp),d0
+		btst	#0,d0
 		beq.s	.top
 		addi.w	#sonic_solid_width,d1
 		addq.w	#1,d3
 		jsr	(SolidObject).l
-		bsr.w	Platform_Profile
-		cmpi.b	#platform_hurt_bottom,d0
-		beq.s	.underside
-		cmpi.b	#platform_conveyor_hurt_bottom,d0
-		bne.s	.belt
+		move.w	(sp),d0
+		btst	#1,d0
+		beq.s	.belt
 .underside:
 		swap	d6
 		btst	#2,d6
@@ -714,13 +706,9 @@ Platform_Interact:
 .top:
 		jsr	(PlatformObject).l
 .belt:
-		bsr.w	Platform_Profile
-		subq.b	#platform_conveyor_top,d0
-		cmpi.b	#2,d0
-		bls.s	.belt_ready
-		subq.b	#5,d0
-		cmpi.b	#1,d0
-		bhi.s	.return
+		move.w	(sp)+,d0
+		btst	#2,d0
+		beq.s	.return
 .belt_ready:
 		lea	(v_player).w,a1
 		moveq	#3,d6
@@ -942,9 +930,9 @@ Platform_SuspendedParent:
 .return:
 		rts
 
+; Internal entry: SwingingPtfm_Interact has validated code and reciprocal ownership.
 Platform_UpdateSuspended:
-		bsr.w	Platform_SuspendedParent
-		bne.w	Platform_DeleteBody
+		movea.w	Plat_parent(a0),a1
 		move.b	obStatus(a0),Plat_oldstatus(a0)
 		move.w	obX(a0),Plat_position(a0)
 		move.w	obY(a0),Plat_speed(a0)
@@ -1160,23 +1148,18 @@ Platform_FreeBody:
 .stopped:
 		clr.w	obVelX(a0)
 .collision:
-		move.l	obY(a0),Plat_rawY(a0)
-		bsr.w	Plat_ApplyY
-		move.w	Plat_position(a0),d4
-		bsr.w	Platform_Interact
-		bsr.w	Plat_UpdateHanging
-		bra.w	Platform_BodyDisplay
+		bra.s	Platform_BodyInteract
 
 Platform_FloatingBody:
-		move.l	Plat_rawY(a0),obY(a0)
-		move.w	obX(a0),Plat_position(a0)
-		move.w	obY(a0),Plat_speed(a0)
 		tst.b	(Water_flag).w
 		bne.s	.water
 		move.b	#$A,obRoutine(a0)
 		clr.b	Plat_state(a0)
 		bra.w	Platform_FreeBody
 .water:
+		move.l	Plat_rawY(a0),obY(a0)
+		move.w	obX(a0),Plat_position(a0)
+		move.w	obY(a0),Plat_speed(a0)
 		jsr	(ObjectMove).l
 		moveq	#0,d0
 		move.b	(v_oscillate+$14).w,d0
@@ -1192,26 +1175,23 @@ Platform_FloatingBody:
 		move.w	Plat_position(a0),obX(a0)
 		clr.w	obVelX(a0)
 .solid:
+Platform_BodyInteract:
 		move.l	obY(a0),Plat_rawY(a0)
 		bsr.w	Plat_ApplyY
 		move.w	Plat_position(a0),d4
 		bsr.w	Platform_Interact
 		bsr.w	Plat_UpdateHanging
-		bra.w	Platform_BodyDisplay
+Platform_BodyDisplay:
+		out_of_range.w	Platform_DeleteBody
+		jmp	(DisplaySprite).l
 
 ; Input d0 sign is the direction to probe. Returned d1 is signed distance.
 Platform_BodyWall:
-		move.w	d0,-(sp)
 		moveq	#0,d3
 		move.b	obActWid(a0),d3
-		tst.w	(sp)+
+		tst.w	d0
 		bmi.s	.left
 		jmp	ObjHitWallRight
 .left:
 		not.w	d3
 		jmp	ObjHitWallLeft
-
-
-Platform_BodyDisplay:
-		out_of_range.w	Platform_DeleteBody
-		jmp	(DisplaySprite).l

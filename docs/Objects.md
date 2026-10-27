@@ -327,6 +327,10 @@ without changing the authored word.
 | `$A` | Non-solid | Harmful from every side |
 | `$B` | Full solid | Harmful from every side |
 
+`Platform_ProfileFlags` records full solidity, harmful undersides and conveyor
+tops for this menu. `Platform_Interact` decodes it once and preserves those
+flags across the collision/damage calls, which may clobber data registers.
+
 Conveyor direction follows placement X flip. The per-player conveyor marker
 prevents duplicate pushes, including overlapping terrain conveyors. All paths
 handle both players. Full-solid damage stays physical under stars or damage
@@ -418,6 +422,11 @@ Detachment needs no allocation: the same body SST, complete subtype, art,
 standing indices and D9 grip remain in place. The body keeps a stable
 `Platform_SuspendedBody` code pointer, including after release, so the grip
 never needs reparenting. Only the suspension owns the placement respawn handle.
+The suspension validates the body code and reciprocal reference before calling
+`Platform_UpdateSuspended`; that internal update reuses the established owner.
+The body's independent executor still validates its parent, including after release.
+Packed-link positioning keeps its fixed-point accumulators in registers. Free
+and floating bodies share one collision/grip/display tail.
 S2-style release retains the moving packed chain. ICZ turns the packed helper
 into 60-update chain debris, using its existing records without per-link SSTs;
 the hanging placement owner becomes invisible. Reused child slots are validated
