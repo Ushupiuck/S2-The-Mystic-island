@@ -234,8 +234,18 @@ Act 1 uses the REV01 cloud gradient and three building layers scrolling at
 1/4, 3/8 and 1/2 foreground speed. All layers follow vertical movement at 1/8
 speed; act 2 uses a uniform 1/4 horizontal and 1/8 vertical speed. Initial draws
 and streamed strips share the original row-to-camera table, and checkpoint
-reloads retain the saved background cameras. A bespoke act-2 ending remains
-unfinished; act 2 currently uses the normal signpost.
+reloads retain the saved background cameras. Act 2 uses the Mecha Sonic
+trap/fight at its original signpost position
+`$1EE0,$05A4` (subtype `$0002`). Camera X locks at `$1E40`, Y at `$0500`.
+`build_smz2_mecha_arena.py` makes three private chunk copies: inside
+`$1E40..$1F7F`, raised steps above `$05C0` are cleared and existing steel
+block 5 supplies a flat, fully solid floor on both collision paths. The
+approach before `$1E40`, other acts and shared blocks/profiles are unchanged.
+All four time variants receive the floor; the SMZ importer reapplies it.
+The last room's pipe backdrop contains high-priority tiles, so its actors,
+tails and sign are drawn above that backdrop. The original foreground still
+supplies the floor. Defeat restores the stage palette, then the real falling
+sign invokes the existing SMZ2 results/next-act route.
 
 Imported families `$A0-$AF` cover the junction, disc,
 belts, trapdoors, saws, stompers, vanishing platforms, flames, electricity,

@@ -57,7 +57,7 @@ namespace MysticIsland.ObjectDefinitions
 					Bits("Ground only", 7, 1, "Ignore airborne characters.", "No", "Yes");
 					break;
 				case "Signpost":
-					Bits("Entry", 0, 1, "Placed signs spin on crossing; at 6px/update rightward ground speed they launch into the shared airborne behavior. Falling signs start 32px above the camera and lock the current arena.", "Placed", "Falling from sky");
+					Bits("Entry", 0, 3, "Placed signs can launch on a fast crossing. Falling signs start above the camera. The SMZ2 Mecha trap spins to Mecha, is destroyed, and gives the real sign only after the fight.", "Placed", "Falling from sky", "SMZ2 Mecha trap");
 					break;
 				case "Bridge": Bits("Length", 0, 255, "Number of 16-pixel bridge logs. Existing layouts use 8 to 16."); break;
 				case "Hanging":

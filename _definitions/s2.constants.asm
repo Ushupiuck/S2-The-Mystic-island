@@ -1976,6 +1976,9 @@ ArtTile_SMZ_Junction_Gap:	equ $4B0 ; twelve streamed tiles, below the wheel bank
 ArtTile_SMZ_Smoke1:	equ $4C5
 ArtTile_SMZ_Smoke2:	equ $4D1
 ArtTile_SMZ_Kemusi: equ ArtTile_SMZ_Smoke1 ; 22 tiles; Act 2 has no smoke animation
+; SMZ2 ambush/fight replaces the otherwise inactive atlas window here.
+ArtTile_MechaSonic:	equ $400 ; 39 streamed tiles, through $426
+ArtTile_MechaEffects:	equ $427 ; 22 resident jet/spark tiles, through $43C
 
 ; Resident LV0A enemy art; verified by import_palmtree_enemies.py.
 ArtTile_PP_Anton: equ $32B ; 22 tiles

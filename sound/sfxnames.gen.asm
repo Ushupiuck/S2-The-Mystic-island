@@ -82,6 +82,9 @@ SndNames:	offsetTable
 	offsetTableEntry.w	SndNam_TailsGrab
 	offsetTableEntry.w	SndNam_TailsFlying
 	offsetTableEntry.w	SndNam_TailsFlyingTired
+	offsetTableEntry.w	SndNam_MechaLand
+	offsetTableEntry.w	SndNam_MechaSpark
+	offsetTableEntry.w	SndNam_Thump
 
 SndNam_Jump:	songtext	"JUMP"
 SndNam_Checkpoint:	songtext	"CHECKPOINT"
@@ -166,4 +169,7 @@ SndNam_Goal:	songtext	"GOAL"
 SndNam_TailsGrab:	songtext	"TAILS GRAB"
 SndNam_TailsFlying:	songtext	"TAILS FLYING"
 SndNam_TailsFlyingTired:	songtext	"TAILS FLYING TIRED"
+SndNam_MechaLand:	songtext	"MECHA SONIC LANDING"
+SndNam_MechaSpark:	songtext	"MECHA SONIC SPARK"
+SndNam_Thump:	songtext	"MECHA SONIC BOUNCE"
 	even

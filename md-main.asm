@@ -3095,6 +3095,11 @@ SetLevelEndType:
 
 
 SignpostArtLoad:
+		cmpi.w	#(id_SMZ<<8)+1,(Current_ZoneAndAct).w
+		bne.s	.normal
+		tst.b	(Dynamic_Resize_Routine).w
+		bne.w	SetLevelEndType.return
+.normal:
 		tst.w	(Debug_placement_mode).w
 		bne.w	SetLevelEndType.return
 		cmpi.w	#$301,(Current_ZoneAndAct).w
@@ -6524,6 +6529,10 @@ DynResize_SBZ1:
 ; ---------------------------------------------------------------------------
 
 DynResize_SBZ2:
+		cmpi.b	#id_SMZ,(Current_Zone).w
+		bne.s	.legacy
+		jmp	(MechaSonic_LevelEvents).l
+.legacy:
 		moveq	#0,d0
 		move.b	(Dynamic_Resize_Routine).w,d0
 		move.w	DynResize_SBZ2_Index(pc,d0.w),d0
@@ -9366,6 +9375,7 @@ loc_12310:
 		include	"objects/79 Lamppost.asm"
 		include	"objects/S1/7D Hidden Bonuses.asm"
 		include	"objects/7E Signpost.asm"
+		include "objects/Mecha Sonic.asm"
 ; ---------------------------------------------------------------------------
 ; Object 49 - EHZ waterfalls
 ; ---------------------------------------------------------------------------
@@ -11003,6 +11013,12 @@ Touch_Size_KemusiBody:
 		dc.b 8, $C
 Touch_Size_Propeller:
 		dc.b $20, 4
+Touch_Size_MechaHead:
+		dc.b $C,4
+Touch_Size_MechaFront:
+		dc.b $10,$40
+Touch_Size_MechaHead_ID = (Touch_Size_MechaHead-Touch_Sizes)/2+1
+Touch_Size_MechaFront_ID = (Touch_Size_MechaFront-Touch_Sizes)/2+1
 ; ---------------------------------------------------------------------------
 
 Touch_Height:
@@ -13356,6 +13372,21 @@ Nem_HTZ_Seesaw:		binclude	"art/nemesis/See-saw in HTZ.nem"
 ; ---------------------------------------------------------------------------
 ; Scrap Madness Zone stage assets
 ; ---------------------------------------------------------------------------
+Map_MechaSonic:	binclude "mappings/sprite/Mecha Sonic.bin"
+		even
+Map_MechaEffects:	binclude "mappings/sprite/Mecha Sonic effects.bin"
+		even
+Map_MechaSignDebris:	binclude "mappings/sprite/Mecha signpost debris.bin"
+		even
+		include "mappings/spriteDPLC/Mecha Sonic.asm"
+Art_MechaSonic:	binclude "art/uncompressed/Mecha Sonic.unc"
+		even
+Nem_MechaEffects:	binclude "art/nemesis/Mecha Sonic effects.nem"
+		even
+Pal_MechaFlash1:	binclude "palette/Mecha Sonic Flash 1.bin"
+		even
+Pal_MechaFlash2:	binclude "palette/Mecha Sonic Flash 2.bin"
+		even
 Nem_Swing2:		binclude	"art/nemesis/S1/SLZ Swinging Platform.nem"
 			even
 Nem_MorphingPlatform:	binclude	"art/nemesis/Morphing Orbs.nem"

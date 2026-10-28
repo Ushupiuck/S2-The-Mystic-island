@@ -241,7 +241,9 @@ def geometry(source):
         # The first imported row is palette line 2, shared by terrain/objects.
         palette[14:20] = (ROOT/'palette/SonicAndTails.bin').read_bytes()[14:20]
         (ROOT/f'palette/SMZ{act}.bin').write_bytes(palette)
-    return {'blocks':len(blocks)//8,'chunks':len(chunks)}
+    from build_smz2_mecha_arena import build as build_mecha_arena
+    arena_chunks=build_mecha_arena()
+    return {'blocks':len(blocks)//8,'chunks':arena_chunks}
 
 
 def placements(source):
@@ -274,6 +276,8 @@ def placements(source):
                 subtype = {0:0,1:3,2:2,3:5,4:6,5:7,6:4,7:0,8:0}[subtype & 15]
             if oid == 0x32:
                 subtype &= 15   # original SBZ switches use normal press behavior
+            if act == 2 and oid == 0x0D:
+                subtype = 2     # SMZ2's original sign now starts the Mecha trap
             # S1 flags are Y bits 14/15; S3&K uses bits 13/14.
             objects.append((x,(y&0xFFF)|((y&0xC000)>>1),OBJECTS[oid],subtype))
         objects.sort()

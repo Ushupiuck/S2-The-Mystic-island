@@ -82,6 +82,9 @@ SoundIndex:
 	zSoundIndexEntry	Snd_TailsGrab,$70
 	zSoundIndexEntry	Snd_TailsFlying,$70
 	zSoundIndexEntry	Snd_TailsFlyingTired,$70
+	zSoundIndexEntry	Snd_MechaLand,$70
+	zSoundIndexEntry	Snd_MechaSpark,$70
+	zSoundIndexEntry	Snd_Thump,$70
 
 Snd_Jump:	include "sound/SFX/Sound20.asm"
 Snd_Checkpoint:	include "sound/SFX/Sound21.asm"
@@ -166,4 +169,7 @@ Snd_Goal:	include "sound/SFX/SndA8 - SS Goal.asm"
 Snd_TailsGrab:	include "sound/SFX/Tails Grab.asm"
 Snd_TailsFlying:	include "sound/SFX/Tails Flying.asm"
 Snd_TailsFlyingTired:	include "sound/SFX/Tails Flying Tired.asm"
+Snd_MechaLand:	include "sound/SFX/Mecha Land.asm"
+Snd_MechaSpark:	include "sound/SFX/Mecha Spark.asm"
+Snd_Thump:	include "sound/SFX/Mecha Thump.asm"
 

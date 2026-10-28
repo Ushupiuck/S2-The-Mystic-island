@@ -71,11 +71,30 @@ not an authored-level playthrough. Add `--player 2 --pal` for primary Tails/PAL,
 and omit `--system-directory` for a cartridge build. `check_card_screens.py
 --case normal` retains the slow, classic finish/results regression.
 
-`check_card_art.py` additionally executes all seven signpost DPLC frames with
+`check_card_art.py` additionally executes all eleven signpost DPLC frames with
 queue backpressure, checks their source pixels and palette attributes, and
 calls the real palette loader to confirm Mecha's palette changes only line two.
 The signpost game fixture displays animation 5 with that palette as an explicit
 scene setup, then returns to the ordinary portraits to check art-cache changes.
+
+Mecha's standard fight and SMZ2 trap use:
+
+```sh
+python build_tools/check_mecha_sonic.py --rom s2built.bin --listing md-main.lst --output test-results/mecha/native --native --skdisasm /path/to/skdisasm
+python build_tools/check_mecha_sonic.py --rom s2built.bin --listing md-main.lst --output test-results/mecha/game --core /path/to/genesis_plus_gx_libretro.so --system-directory /path/to/mode1-fixture
+```
+
+The optional source oracle assembles the original attack states, raw-animation
+interpreter and callbacks, comparing 8,400 updates of positions, velocities,
+frames, timers, flags and RNG. Sound/child effects and a flat floor are fixture
+boundaries. Native checks also exhaust the pool at construction and reward.
+The emulator uses the real SMZ2 placement; controller input crosses the trap,
+then all attacks run on the authored arena. Focused actor positioning supplies
+eight real jumping hits through touch collision; no boss HP is edited. It
+checks the destroyed sign, no early results/reward, defeat and falling-sign
+results. `--companion` uses the second actor for hits; `--player 2 --pal` uses
+primary Tails/PAL. Omit the system directory for the cartridge build. These
+are focused gameplay fixtures, not a controller-only full-level playthrough.
 
 
 Hanging-surface checks use the assembled D9 code, player art and shared solidity:

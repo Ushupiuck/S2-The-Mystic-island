@@ -152,11 +152,13 @@ BossExplosion_InitController:
 BossExplosion_Parameters:
 BossExplosion_Parameters_GHZ:	dc.b $80,$20,$20,BGHZ_Explode
 BossExplosion_Parameters_EHZ:	dc.b $80,$20,$20,6
+BossExplosion_Parameters_Mecha:	dc.b $80,$20,$20,MS_Defeat
 BossExplosion_Parameters_WallLarge:	dc.b $80,$80,$80,0
 BossExplosion_Parameters_WallSmall:	dc.b $80,$80,$80,0
 BossExplosion_Parameters_End:
 BossExplosion_GHZ = BossExplosion_Parameters_GHZ-BossExplosion_Parameters
 BossExplosion_EHZ = BossExplosion_Parameters_EHZ-BossExplosion_Parameters
+BossExplosion_Mecha = BossExplosion_Parameters_Mecha-BossExplosion_Parameters
 BossExplosion_WallLarge = BossExplosion_Parameters_WallLarge-BossExplosion_Parameters
 BossExplosion_WallSmall = BossExplosion_Parameters_WallSmall-BossExplosion_Parameters
 ; ---------------------------------------------------------------------------

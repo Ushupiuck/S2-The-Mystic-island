@@ -61,7 +61,7 @@ the complete serialized word, including when calculating movement overlays.
 | `$5E` | Seesaw | Zero: spawn ball; any nonzero subtype: omit ball. |
 | `$60` | Caterkiller / Kemusi | `$00`: Caterkiller; `$01`: intact Kemusi; `$02`: damaged Kemusi, with a vulnerable body and half speed. SMZ Act 1 loads Caterkiller; Act 2 keeps Caterkiller and adds Kemusi in the unused smoke banks. All three have four-piece previews; Act 2's picker defaults to Kemusi. |
 | `$79` | Checkpoint | Full byte: checkpoint number. |
-| `$7E` | Signpost | Bit 0: placed / sky drop. A placed sign launches into the falling mode on a grounded rightward crossing at 6px/update or faster. Other bits remain reserved. |
+| `$7E` | Signpost | Bit 0: placed / sky drop. A placed sign launches into the falling mode on a grounded rightward crossing at 6px/update or faster. Bit 1 selects the SMZ2 Mecha trap; its true falling sign appears after the fight. Higher bits remain reserved. |
 | `$7D` | Hidden bonus | `$01`: 10000; `$02`: 1000; `$03`: 100 points. |
 | `$A0` | Junction | Low nibble: reversing switch number. |
 | `$A1` | Running disc | Low nibble: radius; signed high nibble: rotation speed. |

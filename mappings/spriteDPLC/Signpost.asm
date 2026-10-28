@@ -7,6 +7,10 @@ DPLC_Signpost:
 		dc.w	DPLC_Signpost_4-DPLC_Signpost
 		dc.w	DPLC_Signpost_5-DPLC_Signpost
 		dc.w	DPLC_Signpost_6-DPLC_Signpost
+		dc.w	DPLC_Signpost_7-DPLC_Signpost
+		dc.w	DPLC_Signpost_8-DPLC_Signpost
+		dc.w	DPLC_Signpost_9-DPLC_Signpost
+		dc.w	DPLC_Signpost_10-DPLC_Signpost
 DPLC_Signpost_0:	dc.w	3
 		dc.w	$F000,$7010,$1044
 DPLC_Signpost_1:	dc.w	2
@@ -14,11 +18,19 @@ DPLC_Signpost_1:	dc.w	2
 DPLC_Signpost_2:	dc.w	2
 		dc.w	$B024,$1044
 DPLC_Signpost_3:	dc.w	2
-		dc.w	$F030,$1044
+		dc.w	$1044,$F05E
 DPLC_Signpost_4:	dc.w	1
 		dc.w	$5040
 DPLC_Signpost_5:	dc.w	2
-		dc.w	$F030,$1044
+		dc.w	$1044,$F05E
 DPLC_Signpost_6:	dc.w	2
 		dc.w	$F044,$9054
+DPLC_Signpost_7:	dc.w	2
+		dc.w	$1044,$F06E
+DPLC_Signpost_8:	dc.w	2
+		dc.w	$1044,$F06E
+DPLC_Signpost_9:	dc.w	3
+		dc.w	$1044,$F07E,$608E
+DPLC_Signpost_10:	dc.w	3
+		dc.w	$1044,$F07E,$608E
 		even

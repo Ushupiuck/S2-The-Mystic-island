@@ -207,7 +207,7 @@ MCD_CompressedAssets:
 	dc.l BLevel_SMZ1,BLevel_SMZ1+$292	; level/layout/bad future/SMZ_1.kosp
 	endif
 	if defined(BLevel_SMZ2)
-	dc.l BLevel_SMZ2,BLevel_SMZ2+$29D	; level/layout/bad future/SMZ_2.kosp
+	dc.l BLevel_SMZ2,BLevel_SMZ2+$29F	; level/layout/bad future/SMZ_2.kosp
 	endif
 	if defined(BLevel_SMZ3)
 	dc.l BLevel_SMZ3,BLevel_SMZ3+$40	; level/layout/bad future/SMZ_3.kosp
@@ -489,7 +489,7 @@ MCD_CompressedAssets:
 	dc.l GLevel_SMZ1,GLevel_SMZ1+$292	; level/layout/good future/SMZ_1.kosp
 	endif
 	if defined(GLevel_SMZ2)
-	dc.l GLevel_SMZ2,GLevel_SMZ2+$29D	; level/layout/good future/SMZ_2.kosp
+	dc.l GLevel_SMZ2,GLevel_SMZ2+$29F	; level/layout/good future/SMZ_2.kosp
 	endif
 	if defined(GLevel_SMZ3)
 	dc.l GLevel_SMZ3,GLevel_SMZ3+$40	; level/layout/good future/SMZ_3.kosp
@@ -852,7 +852,7 @@ MCD_CompressedAssets:
 	dc.l Level_SMZ1,Level_SMZ1+$292	; level/layout/SMZ_1.kosp
 	endif
 	if defined(Level_SMZ2)
-	dc.l Level_SMZ2,Level_SMZ2+$29D	; level/layout/SMZ_2.kosp
+	dc.l Level_SMZ2,Level_SMZ2+$29F	; level/layout/SMZ_2.kosp
 	endif
 	if defined(Level_SMZ3)
 	dc.l Level_SMZ3,Level_SMZ3+$40	; level/layout/SMZ_3.kosp
@@ -888,7 +888,7 @@ MCD_CompressedAssets:
 	dc.l Map128_MTZBlank,Map128_MTZBlank+$E	; mappings/128x128/MTZ Blank.kosp
 	endif
 	if defined(Map128_SMZ)
-	dc.l Map128_SMZ,Map128_SMZ+$290C	; mappings/128x128/SMZ.kosp
+	dc.l Map128_SMZ,Map128_SMZ+$2C7E	; mappings/128x128/SMZ.kosp
 	endif
 	if defined(Map128_SMZBlank)
 	dc.l Map128_SMZBlank,Map128_SMZBlank+$E	; mappings/128x128/SMZ Blank.kosp
@@ -1096,6 +1096,9 @@ MCD_CompressedAssets:
 	endif
 	if defined(Nem_Masher)
 	dc.l Nem_Masher,Nem_Masher+$1F7	; art/nemesis/Enemy Masher.nem
+	endif
+	if defined(Nem_MechaEffects)
+	dc.l Nem_MechaEffects,Nem_MechaEffects+$219	; art/nemesis/Mecha Sonic effects.nem
 	endif
 	if defined(Nem_Monitors)
 	dc.l Nem_Monitors,Nem_Monitors+$9F0	; art/nemesis/Monitor and contents.nem
@@ -1437,7 +1440,7 @@ MCD_CompressedAssets:
 	dc.l PLevel_SMZ1,PLevel_SMZ1+$292	; level/layout/past/SMZ_1.kosp
 	endif
 	if defined(PLevel_SMZ2)
-	dc.l PLevel_SMZ2,PLevel_SMZ2+$29D	; level/layout/past/SMZ_2.kosp
+	dc.l PLevel_SMZ2,PLevel_SMZ2+$29F	; level/layout/past/SMZ_2.kosp
 	endif
 	if defined(PLevel_SMZ3)
 	dc.l PLevel_SMZ3,PLevel_SMZ3+$40	; level/layout/past/SMZ_3.kosp

@@ -18,7 +18,7 @@ p.add_argument('--output',type=Path)
 args = p.parse_args()
 import native_test_core as m68k
 from check_sprite_assets import frames
-from build_signpost_art import mecha_panel
+from build_signpost_art import signpost_frames
 
 
 class ArtNative(m68k.Native):
@@ -146,14 +146,11 @@ def render(data,pieces):
     return bytes(canvas)
 
 
-original=frames((ROOT/'mappings/sprite/Signpost.bin').read_bytes())
 source=(ROOT/'art/uncompressed/Signpost.unc').read_bytes()
-extra,mecha=mecha_panel(source)
-source+=extra
-original.append(mecha)
+source,original=signpost_frames(source)
 dynamic=frames(rom,m.s['Map_Signpost'],m.s['Map_Signpost_frames'])
-assert len(dynamic)==len(original)==7
-assert [word & 0x6000 for _,_,word,_ in dynamic[6]] == [0x2000,0x2000,0,0,0]
+assert len(dynamic)==len(original)==11
+assert [word & 0x6000 for _,_,word,_ in dynamic[6]] == [0x2000]*4+[0]*9
 for frame in range(len(dynamic)):
     reset(full=True)
     m.put(obj,'signpost_loaded',255)
@@ -188,7 +185,7 @@ for mode in (0,1,2):
     reset()
     m.write('Player_mode',mode,2)
     m.put(obj,'obRoutine',4)
-    m.put(obj,'obAnim',2)
+    m.put(obj,'obAnim',8 if mode==2 else 2)
     m.put(obj,'objoff_36',12,2)
     m.act('Signpost_Spin',obj)
     assert m.get(obj,'obRoutine') == 6

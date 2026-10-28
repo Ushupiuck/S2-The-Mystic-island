@@ -59,6 +59,7 @@ ptr_PLC_GHZBoss:	dc.w PLC_GHZBoss-ArtLoadCues
 ptr_PLC_LivesSonic:	dc.w PLC_LivesSonic-ArtLoadCues
 ptr_PLC_LivesTails:	dc.w PLC_LivesTails-ArtLoadCues
 ptr_PLC_ExplosionWall:	dc.w PLC_ExplosionWall-ArtLoadCues
+ptr_PLC_MechaSonic:	dc.w PLC_MechaSonic-ArtLoadCues
 ; ---------------------------------------------------------------------------
 ; Level slot $00: Twilight Hill
 ActLoadCues:
@@ -284,6 +285,10 @@ PLC_Boss:	dc.w ((PLC_Boss_End-PLC_Boss)/6)-1
 		plcm	Nem_EggChopper,	ArtTile_ArtNem_EggChoppers
 		plcm	Nem_BossExplosion,	ArtTile_BossExplosion
 PLC_Boss_End:
+PLC_MechaSonic:	dc.w (PLC_MechaSonic_End-PLC_MechaSonic-2)/6-1
+		plcm	Nem_MechaEffects,	ArtTile_MechaEffects
+		plcm	Nem_BossExplosion,	ArtTile_BossExplosion
+PLC_MechaSonic_End:	plccheck PLC_MechaSonic,0
 ; GHZ retains its S1 boss mappings; its ball and chain are already resident.
 PLC_GHZBoss:	dc.w ((PLC_GHZBoss_End-PLC_GHZBoss)/6)-1
 		plcm	Nem_OldEggPod,	ArtTile_Eggman
@@ -1380,6 +1385,7 @@ PLC_LVF4_Extra_End:	plccheck PLC_LVF4_Extra,0
 ; Pattern load cue IDs
 ; ---------------------------------------------------------------------------
 plcid_Main:		equ (ptr_PLC_Main-ArtLoadCues)/2
+plcid_MechaSonic:	equ (ptr_PLC_MechaSonic-ArtLoadCues)/2
 plcid_Main2:		equ (ptr_PLC_Main2-ArtLoadCues)/2
 plcid_Explode:		equ (ptr_PLC_Explode-ArtLoadCues)/2
 plcid_GameOver:		equ (ptr_PLC_GameOver-ArtLoadCues)/2

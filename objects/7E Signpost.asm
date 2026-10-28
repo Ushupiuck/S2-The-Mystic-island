@@ -4,6 +4,7 @@
 ; Airborne physics/hits/landing adapted from skdisasm
 ; 73de97c6b55055bcb8089c1d55d006b02136f163, Obj_EndSign.
 ; Both entry modes share the same airborne state after a fast crossing.
+; Subtype bit 1 selects the SMZ2 Mecha trap instead of the usual finish.
 ; ---------------------------------------------------------------------------
 
 Signpost:
@@ -31,6 +32,9 @@ signpost_hit_delay = objoff_30	; byte: shared 32-update hit cooldown
 signpost_previous_x = objoff_3C	; word: detect a crossing that skips the 32px window
 Signpost_LaunchSpeed = $600	; 6px/update, rightward ground speed
 Signpost_LaunchY = -$400		; upward launch in place; later hits may move it sideways
+Signpost_Ani_MechaSpin = 6
+Signpost_Ani_TailsSpin1 = 7
+Signpost_Ani_TailsSpin2 = 8
 ; ===========================================================================
 
 Signpost_Index:	dc.w Signpost_Init-Signpost_Index
@@ -41,6 +45,8 @@ Signpost_Index:	dc.w Signpost_Init-Signpost_Index
 		dc.w Signpost_Fall-Signpost_Index
 		dc.w Signpost_Landed-Signpost_Index
 		dc.w Signpost_FallingResults-Signpost_Index
+		dc.w Signpost_TrapSpin-Signpost_Index
+		dc.w Signpost_Sparkle.return-Signpost_Index
 ; ===========================================================================
 ; loc_EFD6:
 Signpost_Init:
@@ -49,6 +55,10 @@ Signpost_Init:
 		move.l	#Map_Signpost,obMap(a0)
 		move.b	#Map_Signpost_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Signpost,0,0),obGfx(a0)
+		cmpi.w	#(id_SMZ<<8)+1,(Current_ZoneAndAct).w
+		bne.s	.priority_ready
+		bset	#7,obGfx(a0)
+.priority_ready:
 		move.b	#4,obRender(a0)
 		move.b	#sprite_bound($18,Map_Signpost_width),obActWid(a0)
 		move.w	#$200,obPriority(a0)
@@ -77,6 +87,12 @@ Signpost_Main:
 		cmp.w	obX(a0),d1
 		bhs.w	Signpost_Sparkle.return
 .crossed:
+		move.w	obSubtype(a0),d0
+		btst	#1,d0
+		beq.s	.normal_crossing
+		cmpi.w	#(id_SMZ<<8)+1,(Current_ZoneAndAct).w
+		beq.w	Signpost_TrapTrigger
+.normal_crossing:
 		bsr.s	Signpost_Activate
 		btst	#status.player.in_air,(v_player+obStatus).w
 		bne.s	.classic
@@ -98,6 +114,10 @@ Signpost_Activate:
 Signpost_StartFall:
 		move.b	#10,obRoutine(a0)
 		move.b	#1,obAnim(a0)
+		cmpi.w	#PlayerMode_Tails,(Player_mode).w
+		bne.s	.return
+		move.b	#Signpost_Ani_TailsSpin1,obAnim(a0)
+.return:
 		rts
 ; ===========================================================================
 Signpost_RingSparklePositions:
@@ -115,13 +135,25 @@ Signpost_Spin:
 		subq.w	#1,objoff_34(a0)
 		bpl.s	Signpost_Sparkle
 		move.w	#60,objoff_34(a0)
+		cmpi.w	#PlayerMode_Tails,(Player_mode).w
+		bne.s	.sonic
+		cmpi.b	#Signpost_Ani_TailsSpin1,obAnim(a0)
+		blo.s	.tails_first
+		beq.s	.tails_second
+		move.b	#6,obRoutine(a0)
+		move.b	#4,obAnim(a0)
+		bra.s	Signpost_Sparkle
+.tails_first:
+		move.b	#Signpost_Ani_TailsSpin1,obAnim(a0)
+		bra.s	Signpost_Sparkle
+.tails_second:
+		move.b	#Signpost_Ani_TailsSpin2,obAnim(a0)
+		bra.s	Signpost_Sparkle
+.sonic:
 		addq.b	#1,obAnim(a0)
 		cmpi.b	#3,obAnim(a0)
 		bne.s	Signpost_Sparkle
 		addq.b	#2,obRoutine(a0)
-		cmpi.w	#PlayerMode_Tails,(Player_mode).w
-		bne.s	Signpost_Sparkle
-		addq.b	#1,obAnim(a0)		; solo Tails finishes on his own portrait
 ; loc_F044:
 Signpost_Sparkle:
 		subq.w	#1,objoff_36(a0)
@@ -237,12 +269,18 @@ Ani_Signpost:	dc.w	.eggman-Ani_Signpost
 		dc.w	.sonic-Ani_Signpost
 		dc.w	.tails-Ani_Signpost
 		dc.w	.mecha-Ani_Signpost
+		dc.w	.mecha_spin-Ani_Signpost
+		dc.w	.tails_spin1-Ani_Signpost
+		dc.w	.tails_spin2-Ani_Signpost
 .eggman:	dc.b	$F,2,afEnd
-.spin1:	dc.b	1,2,3,4,5,1,3,4,5,0,3,4,5,afEnd
-.spin2:	dc.b	1,2,3,4,5,1,3,4,5,0,3,4,5,afEnd
+.spin1:	dc.b	1,2,3,4,5,0,3,4,5,0,3,4,5,afEnd
+.spin2:	dc.b	1,2,3,4,5,0,3,4,5,0,3,4,5,afEnd
 .sonic:		dc.b	$F,0,afEnd
 .tails:		dc.b	$F,1,afEnd
 .mecha:		dc.b	$F,6,afEnd	; event-selected portrait; load palid_MechaSonic first
+.mecha_spin:	dc.b 1,2,9,4,10,6,9,4,10,6,9,4,10,afEnd
+.tails_spin1:	dc.b 1,2,7,4,8,1,7,4,8,1,7,4,8,afEnd
+.tails_spin2:	dc.b 1,2,7,4,8,1,7,4,8,1,7,4,8,afEnd
 		even
 
 ; ===========================================================================

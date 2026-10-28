@@ -292,24 +292,60 @@ tiles (`$561-$564`); signpost frames stay below it. Sonic's life art remains
 separate and is shared with Sonic monitors. HUD score uses ten-point units,
 with maximum display 9,999,990.
 
-Signpost frame `$06` is Mecha Sonic's head from skdisasm
-`73de97c6b55055bcb8089c1d55d006b02136f163`, main body frame `$0A`.
-`art/uncompressed/Mecha Sonic signpost.unc` is the editable left 24×32 half,
-mirrored for the right. The portrait enlarges the original head and raises its
-visor, shortening the forehead and extending the muzzle for a forward gaze.
-It retains the source palette indices and omits the shoulders.
+Signpost frame `$06` uses Mecha Sonic's original head and upper body in skdisasm
+`73de97c6b55055bcb8089c1d55d006b02136f163`, main body frame `$00`.
+`art/uncompressed/Mecha Sonic signpost.unc` is the editable 40×32 portrait.
+The source crop is X `-12..27`, Y `-32..-5`, including the shoulders.
+Place the crop three pixels below the canvas top,
+then flip it horizontally to face right. The original pixels, dimensions
+and palette indices are preserved. The portrait sits four pixels left and
+two pixels above the panel centre to balance the face against its back spines.
+The body ends at panel Y `12`, immediately above the lower rim at Y `13`.
 `palette/Mecha Sonic.bin` is the original `Palettes/Main.bin`.
-The generator blanks the existing Eggman panel and reconstructs the straight
+The generator fills the existing Eggman panel with primary palette slot `$4`
+(`$004`, Tails's red background before `16a378c`) and reconstructs the straight
 gray rim where his moustache cut into it, then appends that
 panel and the head to `Signpost extra.unc`, and rebuilds the packed/editor art,
-mappings and DPLCs. The new frame uses 26 resident tiles, within the existing
-26-tile buffer; no VRAM allocation moves.
+mappings and DPLCs. Four portrait rectangles omit the five transparent tiles;
+the board's inner columns share their lower three tiles. The frame uses
+26 resident tiles and 13 hardware sprites, within the existing 26-tile
+buffer; no VRAM allocation moves.
 
-Only the head's mapping pieces select palette line two (attribute `$2000`);
+Only the portrait's mapping pieces select palette line two (attribute `$2000`);
 the board and post retain the primary line. Event code can load
 `palid_MechaSonic` with `PalLoad2`, then select signpost animation 5 (`.mecha`).
 The event owns that line's lifetime and any restoration; ordinary signposts
 do not replace a level palette or select this portrait automatically.
+
+The generator also rebuilds the checkerboard/compressed turning panels from
+the current finished portraits and the original S3&K gray rim. Sonic uses
+frames `$03/$05`; Tails has `$07/$08`; Mecha has `$09/$0A`. Tails's placed and
+falling animations use his own pair, and the trap uses only Eggman/Mecha.
+No Sonic face is sampled into either of those characters' intermediates.
+Mecha's intermediate is 24 pixels wide, with a separate line-two overlay;
+the other two keep the original 32-pixel turning silhouette. All eleven
+signpost frames fit the existing 26-tile bank. The trap's thirteen debris
+frames reference the same loaded bust tiles, retiring before the reward
+sign reuses that bank.
+
+### Mecha Sonic standard fight
+
+`import_mecha_sonic.py --source /path/to/skdisasm --extra-raw /path/to/decoded/Mecha_Sonic_Extra.unc`
+imports all 22 body frames, converts the original DPLCs to `Load_DynamicPLC`,
+and retains the eight effect mapping entries used by the standard fight.
+The decoded extra source is the pinned `Mecha Sonic Extra Art.kosm`; only
+its first 22 tiles are resident for jets/electric sparks. Raw body/effect art
+and mappings remain directly editable. The original Main/Flash 1/Flash 2
+palettes and Mecha Land/Spark/Thump sounds retain their source data.
+
+During the SMZ2 fight, `$400-$426` is Mecha's 39-tile streamed bank;
+`$427-$43C` holds the 22 resident effect tiles. This replaces an inactive
+portion of the SMZ object atlas after the last hazards have left the window.
+The boss-explosion PLC uses the existing `$581` bank; player/effect, signpost,
+terrain, HUD and plane allocations are preserved. The body caches a frame
+only after its complete DMA is queued and hides/retries on backpressure.
+Palette line two belongs to Mecha until defeat; the act's palette is restored
+before the ordinary falling sign is spawned.
 
 `HudUpdate` shares ring, life and result-bonus updates between its ordinary and
 placement displays. Its initial digit table uses S3&K-style readable strings,

@@ -44,7 +44,7 @@ def main():
         for who in ('v_player','v_player2'):
             for f,v,n in [('code',m.s['Obj01'],4),('obX',px,2),('obY',0x300,2),('obRoutine',2,1),('obAnim',2,1),('obVelY',0xFF00,2)]:m.put(who,f,v,n)
         return obj
-    for word in (0,0xFFFE):
+    for word in (0,0xFFFC):
         obj=setup(word);act('Signpost_Init',obj)
         assert m.get(obj,'obRoutine')==2 and m.get(obj,'obY',2)==0x300 and m.read('f_timecount')
         m.put('v_player','obX',0x801,2);act('Signpost_Main',obj)

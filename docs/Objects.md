@@ -221,7 +221,8 @@ sparse scenes save work, while dense scans retain a small guard/probe overhead.
 
 Object `$7E` uses subtype bit 0: `$0000` is the ordinary placed signpost;
 `$0001` starts 32 pixels above the current camera and drops into its arena.
-Other subtype bits are preserved and reserved. The editor exposes **Entry**.
+`$0002` selects the SMZ2 Mecha trap; higher subtype bits remain preserved.
+The editor exposes **Entry**.
 A sky-drop locks horizontal scrolling at the camera's current X and stops
 the act clock immediately; create it after any boss escape/arena cleanup.
 This subtype does not perform boss-specific cleanup or act transitions.
@@ -251,6 +252,31 @@ locks neutral logical input and waits for the primary to reach the ground
 before loading the existing results. It stays in place instead of forcing
 an offscreen run. The classic finish still supports the giant-ring exit.
 No SST fields, RAM reservations or VRAM allocations grow.
+
+SMZ2's trap spins from Eggman through its own mixed frames to Mecha's bust.
+The act clock resumes for the fight; the normal sign-art approach loader is
+suppressed while the trap owns the arena, so it cannot repeatedly replace the
+boss PLC queue. Mecha enters from the right, breaks the existing sign into
+mapping-piece debris, and begins the complete standard Sky Sanctuary fight.
+The trap bypasses both the high-speed launch and ordinary results handoff.
+
+`objects/Mecha Sonic.asm` ports `Obj_SSZEndBoss` from the same pinned skdisasm
+revision: the rolling sweep, both landing choices, accelerating ground dash,
+eight-jump attack selection, air dash, high bounce and rebound/dash sequence.
+It retains eight hits, the 32-update hit flash, frame-specific body collision,
+the invisible moving head/back-spike hitbox, paired jets, landing sound,
+defeat bursts, collapse and electrical palette/sparks. Original private state
+is mapped into the existing SST; the hitbox and jets validate their owner.
+The dispatcher registers the invisible collider, including an earlier child
+slot updated after its own turn. Full-pool constructors, jets and the final
+reward retry; reused slots are not deleted as children.
+
+After the defeat sequence, Mecha restores the act palette and creates one
+ordinary `$0001` falling sign. Only that sign can award the act-clear results.
+The separate `Obj_SSZ2_Boss` Master Emerald-powered Knuckles rematch and SSZ's
+ending cinematics are different source sequences, not this encounter.
+See [the arena](Levels.md#scrap-madness) and
+[boss art](Sprites-and-VRAM.md#mecha-sonic-standard-fight).
 
 S3&K's buried-monitor controller is a separate object and is not imported
 here. Its signpost-triggered reveal would need a compatible art allocation:
