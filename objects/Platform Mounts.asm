@@ -217,6 +217,8 @@ PlatformMount_Update:
 		jsr	(a1)
 		movea.l	a0,a2
 		movem.l	(sp)+,d7/a0
+		movea.l	a2,a1
+		jsr	(Touch_RegisterEarlierObject).l
 		move.b	obStatus(a2),d0
 		andi.b	#$18,d0
 		or.b	d0,PlatformMount_standing(a0)

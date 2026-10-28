@@ -125,6 +125,7 @@ loc_A956:
 		move.b	#4,obRender(a1)
 		move.w	#$180,obPriority(a1)
 		move.b	#$47,obColType(a1)
+		jsr	(Touch_RegisterEarlierObject).l
 		move.b	#sprite_bound(8,Map_Ring_width),obActWid(a1)
 		tst.w	d4
 		bmi.s	+

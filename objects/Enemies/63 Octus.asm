@@ -110,6 +110,7 @@ Octus_MoveUpAndFire:
 		move.b	obStatus(a0),obStatus(a1)
 		move.b	#2,obAnim(a1)
 		move.b	#$98,obColType(a1)
+		jsr	(Touch_RegisterEarlierObject).l
 		move.w	#-$200,obVelX(a1)
 		btst	#0,obRender(a1)
 		beq.s	.return

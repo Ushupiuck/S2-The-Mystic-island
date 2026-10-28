@@ -159,9 +159,9 @@ def main():
         assert any(g.get(a,'respawn_addr',2)==tag for a in range(g.s['v_lvlobjspace']&65535,
                    g.s['v_lvlobjend']&65535,g.s['object_size'])), (i,'not loaded')
         visit(1400 if x<900 else 80)
-        assert not g.read(tag)&128, (i,'respawn flag not released',g.read('Camera_X_pos',2),g.get('v_player','obX',2),[(snapshot(g,a),g.get(a,'objoff_30',2)) for a in range(g.s['v_lvlobjspace']&65535,g.s['v_lvlobjend']&65535,g.s['object_size']) if g.get(a,'respawn_addr',2)==tag])
+        assert not g.placement_read(i)&128, (i,'respawn flag not released',g.read('Camera_X_pos',2),g.get('v_player','obX',2),[(snapshot(g,a),g.get(a,'objoff_30',2)) for a in range(g.s['v_lvlobjspace']&65535,g.s['v_lvlobjend']&65535,g.s['object_size']) if g.get(a,'respawn_addr',2)==tag])
         visit(x)
-        assert g.read(tag)&128, (i,'not reloaded')
+        assert g.placement_read(i)&128, (i,'not reloaded')
         finish(f'placement-{oid:02X}-{sub}-reload')
 
     (args.output/'report.json').write_text(json.dumps({'region':'PAL' if args.pal else 'NTSC',

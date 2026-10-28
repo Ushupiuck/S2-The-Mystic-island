@@ -167,6 +167,56 @@ work; the placement filter does not implement a time-travel transition.
 Constructors must handle helper-allocation failure without leaking
 partial parents or loaded bits.
 
+## Touch-collision candidates
+
+The touch response iterator is adapted from skdisasm
+[`73de97c6b55055bcb8089c1d55d006b02136f163`](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/sonic3k.asm#L20646),
+`Touch_Process`, `Add_SpriteToCollisionResponseList` and
+`Obj_ResetCollisionResponseList`. This replaces the ordinary per-player full
+pool scan with a shared pointer queue in sparse scenes. It retains our
+collision-size table, ducking rectangle, monitor rules, Tails flight attacks
+and response callbacks. Terrain and full/top-solid collision remain separate.
+
+`ExecuteObjects` lets both player slots consume the previous object pass's
+candidates before resetting the queue. `RunTouchObject` automatically registers
+live dynamic hitboxes after their update; reserved SSTs and composite groups
+are excluded. Visibility/display queuing does not control eligibility. Do not
+add an explicit registration call to each imported object's ordinary update.
+The dispatcher already supplies it. Its usual increasing-slot append is inline;
+external insertion uses the sorted/unique helper. Each player rechecks live
+collision flags/composite state, and actual contact checks the full code pointer.
+Thus deletion, disabled hitboxes and composite overlays cannot become phantom
+responses. Touch still processes the earliest overlapping eligible slot.
+
+A constructor that directly initializes an already-passed child slot calls
+`Touch_RegisterEarlierObject` with owner `a0`, child `a1`. It preserves the
+constructor's registers and only queues earlier dynamic slots. Aquis, Skyhorse,
+Octus and scattered-ring constructors need it; `FindNextFreeObj` constructors
+always run later and need no hook. Mounted payloads use it after the parent's
+behavior call, including enabling a formerly dormant monitor. This preserves
+first-eligible-frame contact independently of child/parent slot order.
+
+The queue occupies **50 bytes**: signed pointer-byte count plus 24 word
+addresses. Source S3&K's 63-entry cap is not carried over as a collision limit.
+A 25th unique candidate sets the count to `-1`, selecting a complete scan of all
+90 dynamic slots. The rest of that object's dispatch pass uses the ordinary
+loop without registration. Dense scenes keep that path and probe the queue
+again every 16 level updates; density can fall back below the threshold
+without changing the scene. Neither overflow nor a full object pool drops hits.
+The two rectangle loops intentionally share the existing response handlers
+rather than adding a mode branch to every rejected candidate.
+
+`Collision_response_list` is allocated in previously free RAM: at `RAM_Start`
+for Mode 1 and immediately after `Main_RAM_End` for cartridge builds. Existing
+engine globals, backend storage and SST fields do not move. `Free_RAM_Start`
+now follows the new allocation. Mode 1 uses long addressing for the low-RAM
+queue. Scene entry clears its count before either player can consume old data.
+Capacity and probe interval are named constants in `s2.constants.asm`.
+
+The list is a workload tradeoff, not a claim that every scene costs less.
+Queue construction is included in the [CPU comparison](Testing.md#touch-response-checks);
+sparse scenes save work, while dense scans retain a small guard/probe overhead.
+
 ## Signpost
 
 Object `$7E` uses subtype bit 0: `$0000` is the ordinary placed signpost;

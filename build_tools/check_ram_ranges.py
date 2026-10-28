@@ -22,7 +22,8 @@ def main():
         r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]', args.listing.read_text())}
     address = lambda name: symbols[name] & 0xFFFFFF
     if symbols['MegaCDMode1']:
-        assert address('Free_RAM_Start') == 0xFF0000
+        assert address('Collision_response_list') == 0xFF0000
+        assert address('Free_RAM_Start') == address('Collision_response_list_end')
         assert address('Free_RAM_End') == address('MCD_MainWorkStart')
         assert address('MCD_MainWorkEnd') == address('Player_Art_Buffer_Start')
         assert address('Player_Art_Buffer_End') == address('Main_RAM_Start')
@@ -36,7 +37,8 @@ def main():
         assert address('MD_WorkRAM_Start') <= address('Kos_decomp_buffer')
         assert address('Kos_decomp_buffer_End') - address('Kos_decomp_buffer') == 0x1000
         assert address('MD_WorkRAM_End') == address('Main_RAM_End')
-        assert address('Free_RAM_Start') == address('Main_RAM_End')
+        assert address('Collision_response_list') == address('Main_RAM_End')
+        assert address('Free_RAM_Start') == address('Collision_response_list_end')
         assert address('Free_RAM_End') == 0
         assert address('Main_RAM_End') >= 0xFF8000
     assert address('v_objspace_end') == address('TempArray_LayerDef' if symbols['MegaCDMode1'] else 'v_16x16')

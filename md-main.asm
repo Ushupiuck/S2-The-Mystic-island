@@ -1958,6 +1958,7 @@ TitleScreen:
 		bsr.w	ClearScreen
 		clearRAM v_spritequeue,v_spritequeue_end
 		clearRAM v_objspace,v_objend
+		clr.w	(Collision_response_list).l
 		clearRAM v_levelvariables,v_levelvariables_end
 		clearRAM Camera_RAM,Camera_RAM_End
 		clearRAM v_palette_fading,v_palette_fading_end
@@ -2265,6 +2266,7 @@ Level_ClrRam:
 		move.b	(Current_Timezone).w,d2	; level selection survives clearing transient RAM
 		clearRAM v_spritequeue,v_spritequeue_end
 		clearRAM v_objspace,v_objend
+		clr.w	(Collision_response_list).l
 		clearRAM v_levelvariables,v_levelvariables_end
 		clearRAM v_misc_variables,v_misc_variables_end
 		clearRAM v_timingvariables,v_timingvariables_end
@@ -3347,6 +3349,7 @@ BonusStage:
 		bsr.w	PlaySound_Special
 		clearRAM Kos_decomp_queue_count, Kos_module_queue_End		; clear the KosPlusM bytes
 		clearRAM v_objspace,v_objend
+		clr.w	(Collision_response_list).l
 		clearRAM v_levelvariables,v_levelvariables_end
 		clearRAM v_timingvariables,v_timingvariables_end
 		clearRAM v_ssbg_sines,v_ssbg_sines_end
@@ -3485,6 +3488,7 @@ loc_5214:
 		bsr.w	PlaySound_Special	; play end-of-level music
 		clr.w	(Debug_placement_mode).w	; the stage's Debug object is about to be removed
 		clearRAM v_objspace,v_objend	; clear object RAM
+		clr.w	(Collision_response_list).l
 		move.l	#BonusGotThrough,(v_endcard).w	; load results screen object
 
 SS_NormalExit:
@@ -7071,30 +7075,83 @@ ExecuteObjects:
 		lea	(v_objspace).w,a0
 		moveq	#(v_player2tails-v_objspace)/object_size-1,d7
 		bsr.s	RunObject
+		; Both players consume the previous object pass's candidates first.
+		; S3&K does this reset from Reserved_object_3; keep our UI slots free.
+		tst.w	(Collision_response_list).l
+		bpl.s	.build_list
+		; Dense scenes stay on the direct scan; periodically recheck density.
+		move.b	(Timer_frames+1).w,d0
+		andi.b	#Collision_response_probe_mask,d0
+		bne.s	.reserved
+.build_list:
+		clr.w	(Collision_response_list).l
+.reserved:
 		lea	(v_player2tails+object_size).w,a0
-		moveq	#(v_objend-v_player2tails)/object_size-2,d7
+		moveq	#(v_lvlobjspace-v_player2tails)/object_size-2,d7
 		bsr.s	RunObject
+		moveq	#Collision_response_capacity-1,d7
+		tst.w	(Collision_response_list).l
+		bmi.s	.dense
+		bsr.s	RunTouchObject
+		bra.s	.tail
+.dense:
+		bsr.s	RunObject
+.tail:
 		; Carriers move the body after its normal update. Animate and queue
 		; the separate tail last, using the body's final position and state.
 		lea	(v_player2tails).w,a0
 		moveq	#0,d7
 		; Objects deliberately continue running after the primary player dies.
 
-; ---------------------------------------------------------------------------
-; This is THE place where each individual object's code gets called from
-; ---------------------------------------------------------------------------
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
-; sub_CB44:
+; Ordinary reserved slots never expose their overlaid bytes as NPC hitboxes.
 RunObject:
-		move.l	code(a0),d0			; zero longword = empty slot
+		move.l	code(a0),d0
 		beq.s	.skip
 		movea.l	d0,a1
-		jsr	(a1)				; call the SST's routine directly
-
+		jsr	(a1)
 .skip:
-		lea	object_size(a0),a0		; load obj address
+		lea	object_size(a0),a0
+		dbf	d7,RunObject
+		rts
+
+; Register after updating, including invisible hitboxes and newly initialized
+; objects. Composite records overlay obColType and are never touch candidates.
+RunTouchObject:
+		move.l	code(a0),d0
+		beq.s	.skip
+		movea.l	d0,a1
+		jsr	(a1)
+		tst.b	obColType(a0)
+		beq.s	.skip
+		btst	#obRender.multi_sprite,obRender(a0)
+		bne.s	.skip
+		; Normal execution registers in increasing-slot order. Append here
+		; without another JSR/RTS; the rare external insertion stays shared.
+		lea	(Collision_response_list).l,a1
+		move.w	(a1),d0
+		cmpi.w	#Collision_response_bytes,d0
+		bhs.s	.dense
+		move.w	a0,d1
+		tst.w	d0
+		beq.s	.append
+		cmp.w	(a1,d0.w),d1
+		bls.s	.insert
+.append:
+		addq.w	#2,d0
+		move.w	d0,(a1)
+		move.w	a0,(a1,d0.w)
+.skip:
+		lea	object_size(a0),a0
+		dbf	d7,RunTouchObject
+		rts
+.insert:
+		jsr	(Add_SpriteToCollisionResponseList.validated).l
+		tst.w	(Collision_response_list).l
+		bpl.s	.skip
+.dense:
+		move.w	#-1,(Collision_response_list).l
+		; Finish a crowded probe without further registration overhead.
+		lea	object_size(a0),a0
 		dbf	d7,RunObject
 		rts
 ; ---------------------------------------------------------------------------
@@ -9571,6 +9628,7 @@ loc_16086:
 		ori.b	#4,obRender(a1)
 		move.w	#$180,obPriority(a1)
 		move.b	#$E5,obColType(a1)
+		jsr	(Touch_RegisterEarlierObject).l
 		move.b	#2,obAnim(a1)
 		move.w	#$C,d0
 		move.w	#$10,d1
@@ -10006,6 +10064,7 @@ loc_1669E:
 		move.w	#$180,obPriority(a1)
 		move.b	#2,obAnim(a1)
 		move.b	#$E5,obColType(a1)
+		jsr	(Touch_RegisterEarlierObject).l
 		move.w	#$C,d0
 		move.w	#$10,d1
 		move.w	#-$300,d2
@@ -10748,6 +10807,77 @@ word_194C6:	dc.w 2
 ; =============== S U B R O U T I N E =======================================
 
 
+; ---------------------------------------------------------------------------
+; S3&K Add_SpriteToCollisionResponseList / Touch_Process, skdisasm
+; 73de97c6b55055bcb8089c1d55d006b02136f163. Keep the fast pointer format.
+; A full queue selects a complete pool scan, never drops a collision candidate.
+; a0 candidate; scratch d0-d2/a1-a2. d7 is the object-loop counter, not scratch.
+Add_SpriteToCollisionResponseList:
+		tst.l	code(a0)
+		beq.s	.return
+		tst.b	obColType(a0)
+		beq.s	.return
+		btst	#obRender.multi_sprite,obRender(a0)
+		bne.s	.return
+.validated:
+		lea	(Collision_response_list).l,a1
+		move.w	(a1),d0
+		bmi.s	.return
+		move.w	a0,d1
+		tst.w	d0
+		beq.s	.append
+		cmp.w	(a1,d0.w),d1
+		beq.s	.return
+		bhi.s	.append
+		lea	2(a1),a2
+		move.w	d0,d2
+.find:
+		cmp.w	(a2),d1
+		beq.s	.return
+		blo.s	.insert
+		addq.w	#2,a2
+		subq.w	#2,d2
+		bne.s	.find
+.append:
+		cmpi.w	#Collision_response_bytes,d0
+		bhs.s	.dense
+		addq.w	#2,d0
+		move.w	d0,(a1)
+		move.w	a0,(a1,d0.w)
+.return:
+		rts
+.insert:
+		cmpi.w	#Collision_response_bytes,d0
+		bhs.s	.dense
+		addq.w	#2,(a1)
+		lea	2(a1,d0.w),a1
+.shift:
+		cmpa.l	a2,a1
+		bls.s	.store
+		move.w	-(a1),2(a1)
+		bra.s	.shift
+.store:
+		move.w	d1,(a2)
+		rts
+.dense:
+		move.w	#-1,(a1)
+		rts
+
+; a0 updating owner, a1 child. Earlier slots have already had their turn.
+; Also used after parent-driven payload behavior enables a dormant hitbox.
+; Preserve constructor registers; callers do not use the returned CCR.
+Touch_RegisterEarlierObject:
+		cmpa.w	a0,a1
+		bhs.s	.return
+		cmpa.w	#v_lvlobjspace,a1
+		blo.s	.return
+		movem.l	d0-d2/a0-a2,-(sp)
+		movea.l	a1,a0
+		bsr.w	Add_SpriteToCollisionResponseList
+		movem.l	(sp)+,d0-d2/a0-a2
+.return:
+		rts
+
 TouchResponse:
 		jsr	(Touch_Rings).l
 		move.w	obX(a0),d2
@@ -10765,18 +10895,71 @@ TouchResponse:
 loc_19812:
 		move.w	#$10,d4
 		add.w	d5,d5
-		lea	(v_lvlobjspace).w,a1
-		move.w	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d6
-
+		lea	(Collision_response_list).l,a4
+		move.w	(a4)+,d6
+		bmi.w	Touch_Dense
+		beq.s	Touch_Return
 loc_19820:
+		movea.w	(a4)+,a1
 		move.b	obColType(a1),d0
-		bne.s	Touch_Height
-
+		bne.w	Touch_Height
 loc_19826:
-		lea	object_size(a1),a1
-		dbf	d6,loc_19820
+		subq.w	#2,d6
+		bne.s	loc_19820
+Touch_Return:
 		moveq	#0,d0
 		rts
+
+; A crowded scene can make registration cost more than the scan it replaces.
+; Keep this tight loop separate: no per-candidate iterator-mode branch.
+Touch_Dense:
+		lea	(v_lvlobjspace).w,a1
+		move.w	#Collision_response_capacity-1,d6
+.loop:
+		move.b	obColType(a1),d0
+		beq.s	.next
+		btst	#obRender.multi_sprite,obRender(a1)
+		bne.s	.next
+		andi.w	#$3F,d0
+		beq.s	.next
+		add.w	d0,d0
+		lea	Touch_Sizes-2(pc,d0.w),a2
+		moveq	#0,d1
+		move.b	(a2)+,d1
+		move.w	obX(a1),d0
+		sub.w	d1,d0
+		sub.w	d2,d0
+		bhs.s	.right
+		add.w	d1,d1
+		add.w	d1,d0
+		blo.s	.height
+		bra.s	.next
+.right:
+		cmp.w	d4,d0
+		bhi.s	.next
+.height:
+		moveq	#0,d1
+		move.b	(a2)+,d1
+		move.w	obY(a1),d0
+		sub.w	d1,d0
+		sub.w	d3,d0
+		bhs.s	.bottom
+		add.w	d1,d1
+		add.w	d1,d0
+		blo.w	loc_198C0
+		bra.s	.next
+.bottom:
+		cmp.w	d5,d0
+		bls.w	loc_198C0
+.next:
+		lea	object_size(a1),a1
+		dbf	d6,.loop
+		moveq	#0,d0
+		rts
+Touch_DeletedCandidate:
+		tst.w	(Collision_response_list).l
+		bmi.w	Touch_Dense.next
+		bra.w	loc_19826
 ; ---------------------------------------------------------------------------
 Touch_Sizes:	dc.b $14,$14
 		dc.b  $C,$14
@@ -10824,8 +11007,9 @@ Touch_Height:
 		; Composite child records overlay NPC collision fields. Their
 		; visual groups have no touch hitbox; normal parents handle contact.
 		btst	#obRender.multi_sprite,obRender(a1)
-		bne.s	loc_19826
+		bne.w	loc_19826
 		andi.w	#$3F,d0
+		beq.w	loc_19826
 		add.w	d0,d0
 		lea	Touch_Sizes-2(pc,d0.w),a2
 		moveq	#0,d1
@@ -10862,6 +11046,8 @@ loc_198BA:
 		bhi.w	loc_19826
 
 loc_198C0:
+		tst.l	code(a1)
+		beq.w	Touch_DeletedCandidate
 		move.b	obColType(a1),d1
 		andi.b	#$C0,d1
 		beq.w	Touch_Enemy

@@ -13,6 +13,42 @@ library exporting the RAM/VRAM and CPU symbols used by `genesis_test_core.py`.
 A normal distributed core is not guaranteed to expose these test interfaces.
 Core-based fixtures do not require a graphical frontend.
 
+## Touch-response checks
+
+```sh
+python build_tools/check_collision_response.py --rom s2built.bin --listing md-main.lst --previous-rom /path/to/before.bin --previous-listing /path/to/before.lst --output test-results/collision-list/native.json
+python build_tools/check_collision_response_game.py --rom s2built.bin --listing md-main.lst --core /path/to/genesis_plus_gx_libretro.so --system-directory /path/to/mode1-fixture --output test-results/collision-list/game
+python build_tools/check_collision_costs.py --rom before-md.bin --listing before-md.lst --core /path/to/genesis_plus_gx_libretro.so --output test-results/collision-list/before
+python build_tools/check_collision_costs.py --rom after-md.bin --listing after-md.lst --core /path/to/genesis_plus_gx_libretro.so --output test-results/collision-list/after --compare test-results/collision-list/before/costs.json
+```
+
+The native pass covers duplicate/sorted insertion, queue overflow without
+truncation, all 90 slots, both player slots before reset, invisible hitboxes,
+composite/deleted/disabled rejection, late earlier children and dense re-probes.
+With previous ROM/listing inputs it compares every existing size at inside,
+touching and outside boundaries, ducking/rolling and both actors, plus ordinary
+response categories, in both list and dense modes. Sound/DMA boundaries are
+stubbed. Existing upper-RAM symbols are checked against the previous build;
+only `Free_RAM_Start` changes because the queue consumes formerly free memory.
+
+The game runner establishes focused scenes in GHZ4, then runs the actual
+object dispatcher, primary/companion collision, final-slot ring collection,
+invisible hazards and hitbox enable/disable transitions. Add `--player 2 --pal`
+for primary Tails/PAL; omit `--system-directory` for the cartridge backend.
+These are RAM-established fixtures, not controller-only level playthroughs.
+`check_platform_mounts_game.py`, `check_palmtree_enemies.py`,
+`check_monitor_edges.py` and `check_ghz_boss.py --core ...` cover real mounted
+monitors, enemies/projectiles, rewards and boss hits through the shared path.
+
+CPU timing requires cartridge builds and separate processes for before/after.
+It includes `ExecuteObjects`, one/two actual `TouchResponse` calls, registration,
+reset and the rest of the object pool. It reports steady dense frames and their
+periodic re-probe separately. Fixtures vary collidable and merely occupied
+slots; dummy objects do no drawing or movement. These are Genesis Plus GX
+68000 instruction costs, not whole-game frame-rate or physical-console claims.
+Keep emitted JSON/logs in `test-results/`; do not infer a universal speedup from
+the sparse cases or omit the measured dense/probe overhead.
+
 ## Source and asset checks
 
 Signpost checks use matching ROM/listing pairs:

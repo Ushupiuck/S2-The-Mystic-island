@@ -782,6 +782,9 @@ for camera,partner_x in ((0,160),(1600,600)):
         m.act('Obj35',partner)
         effects=[m.s['v_starsobj'],partner]
         before=[bytes(m.cpu.mem_read(a&0xFFFFFF,m.s['object_size'])) for a in effects]
+        for effect in effects:
+            m.act('Add_SpriteToCollisionResponseList',effect)
+        assert m.read('Collision_response_list',2)==0
         for actor in ('v_player','v_player2'):
             player_before=bytes(m.cpu.mem_read(m.s[actor]&0xFFFFFF,m.s['object_size']))
             m.act('TouchResponse',actor)
@@ -804,6 +807,7 @@ for actor in ('v_player','v_player2'):
         m.put(target,'code',m.s['Crabmeat'] if kind=='enemy' else m.s['Obj26'])
         m.put(target,'obRender',4);m.put(target,'obX',160,2);m.put(target,'obY',112,2)
         m.put(target,'obColType',9 if kind=='enemy' else 0x46)
+        m.act('Add_SpriteToCollisionResponseList',target)
         m.act('TouchResponse',actor)
         if kind=='enemy':
             assert m.get(target,'code')==m.s['Explosion'] and m.read('v_score',4)>0

@@ -94,18 +94,20 @@ allocation is not a contiguous main-CPU pointer, and jobs cannot use its tail.
 
 MD work RAM is packed against the top of its 64 KiB address space. The single
 free allocation is `Free_RAM_Start` through `Free_RAM_End` (end exclusive):
-`$FF0000-$FFB1EF`, **`$B1F0` bytes (45,552)**. Terrain, placement loading and
+`$FF0032-$FFB1EF`, **`$B1BE` bytes (45,502)**. Terrain, placement loading and
 decompression work storage live with their CD executors. Current live ranges:
 
 | Allocation | MD address, inclusive | Size |
 | --- | --- | --- |
+| [Touch-collision candidates](Objects.md#touch-collision-candidates) | `$FF0000-$FF0031` | `$32` |
 | Ring/terrain events and CD job controls | `$FFB1F0-$FFB40B` | `$21C` |
 | [Decompressed player art](Sprites-and-VRAM.md#mode-1-ram-art) | `$FFB40C-$FFBFAB` | `$BA0` |
 | Engine variables and work buffers | `$FFBFAC-$FFFFFF` | `$4054` |
 
 `_definitions/s2.constants.asm` derives the engine's start from its own declared
 size, then places CD work/art immediately below it. Allocation changes move the
-boundary automatically; there is no address-preserving free hole. Assembly
+boundary automatically. The touch-collision queue instead reserves its 50 bytes
+from the bottom of free RAM, preserving existing live addresses. Assembly
 checks keep short-addressed engine storage in `$FF8000-$FFFFFF`. CD event/art
 accesses use long addressing. In Mode 1, the old MD Kosinski module buffer, Nemesis code
 table and decoder bookmarks are absent; queued requests and DMA controls remain.

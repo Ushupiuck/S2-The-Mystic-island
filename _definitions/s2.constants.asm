@@ -1467,25 +1467,41 @@ Object_load_retry:	ds.b	1	; an eligible placement could not get an SST this fram
 Main_RAM_End:
 	dephase
 
+; Touch-response candidates live in previously free RAM. Keep every existing
+; engine global/SST address fixed in both builds; Mode 1 uses long addressing.
+Collision_response_capacity = (v_lvlobjend-v_lvlobjspace)/object_size
+Collision_response_list_capacity = 24 ; 50 bytes fits the cartridge's 54 free bytes
+Collision_response_bytes = Collision_response_list_capacity*2
+Collision_response_probe_mask = $F ; retry the list every 16 dense updates
+	if MegaCDMode1
+	phase RAM_Start
+	else
+	phase Main_RAM_End
+	endif
+Collision_response_list:	ds.w	1	; pointer bytes; -1 = dense-scene full scan
+Collision_response_entries:	ds.w	Collision_response_list_capacity
+Collision_response_list_end:
+	dephase
+
 	if MegaCDMode1
 	if (MOMPASS>1)&&((Main_RAM_Start&$FF8000)<>$FF8000)
 		fatal "Short-addressed engine RAM exceeds the upper 32 KB."
 	endif
-	if (MOMPASS>1)&&(MCD_MainWorkStart<RAM_Start)
+	if (MOMPASS>1)&&(MCD_MainWorkStart<Collision_response_list_end)
 		fatal "Live MD allocations exceed 64 KB."
 	endif
-	phase	RAM_Start
-Free_RAM_Start:		ds.b	MCD_MainWorkStart-RAM_Start
+	phase	Collision_response_list_end
+Free_RAM_Start:		ds.b	MCD_MainWorkStart-Collision_response_list_end
 Free_RAM_End:
 	if Free_RAM_End<>MCD_MainWorkStart
 		fatal "Free RAM must end at the first live allocation."
 	endif
 	else
-	if (MOMPASS>1)&&(Main_RAM_End>0)
+	if (MOMPASS>1)&&(Collision_response_list_end>0)
 		fatal "Cartridge work RAM exceeds 64 KB; reduce level/placement data or work buffers"
 	endif
-	phase	Main_RAM_End
-Free_RAM_Start:		ds.b	-Main_RAM_End
+	phase	Collision_response_list_end
+Free_RAM_Start:		ds.b	-Collision_response_list_end
 Free_RAM_End:
 	endif
 	dephase
