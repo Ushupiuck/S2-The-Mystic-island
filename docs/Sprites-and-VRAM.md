@@ -294,14 +294,15 @@ with maximum display 9,999,990.
 
 Signpost frame `$06` is Mecha Sonic's head from skdisasm
 `73de97c6b55055bcb8089c1d55d006b02136f163`, main body frame `$0A`.
-`art/uncompressed/Mecha Sonic signpost.unc` is the editable left 16×32 half,
-mirrored for the right. It keeps the source palette indices. The import takes
-head coordinates X `-16..15`, Y `-32..-5`; below Y `-11`, only X `-9..8`
-belongs to the head, excluding the shoulders. The remaining bottom rows are
-transparent. `palette/Mecha Sonic.bin` is the original `Palettes/Main.bin`.
-The generator blanks the existing Eggman panel inside its border, appends that
+`art/uncompressed/Mecha Sonic signpost.unc` is the editable left 24×32 half,
+mirrored for the right. The portrait enlarges the original head and raises its
+visor, shortening the forehead and extending the muzzle for a forward gaze.
+It retains the source palette indices and omits the shoulders.
+`palette/Mecha Sonic.bin` is the original `Palettes/Main.bin`.
+The generator blanks the existing Eggman panel and reconstructs the straight
+gray rim where his moustache cut into it, then appends that
 panel and the head to `Signpost extra.unc`, and rebuilds the packed/editor art,
-mappings and DPLCs. The new frame uses 22 resident tiles, within the existing
+mappings and DPLCs. The new frame uses 26 resident tiles, within the existing
 26-tile buffer; no VRAM allocation moves.
 
 Only the head's mapping pieces select palette line two (attribute `$2000`);

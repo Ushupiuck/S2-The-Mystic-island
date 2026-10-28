@@ -20,5 +20,5 @@ DPLC_Signpost_4:	dc.w	1
 DPLC_Signpost_5:	dc.w	2
 		dc.w	$F030,$1044
 DPLC_Signpost_6:	dc.w	2
-		dc.w	$F044,$5054
+		dc.w	$F044,$9054
 		even

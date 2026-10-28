@@ -70,14 +70,14 @@ def main():
         offset=0xF800+i*8+4
         word=int.from_bytes(bytes(g.vram[(offset+j)^1] for j in range(2)),'big')
         tile=(word & 0x7FF)-g.s['ArtTile_Signpost']
-        if 0<=tile<22:attributes.append((tile,word & 0x6000))
+        if 0<=tile<26:attributes.append((tile,word & 0x6000))
     assert (14,0x2000) in attributes and (2,0) in attributes and (0,0) in attributes,attributes
     g.video.save(args.output/'mecha-portrait.png')
     for animation,frame in [(3,0),(5,6),(4,1),(0,2)]:
         g.put(sign,'obAnim',animation);run(6)
         assert g.get(sign,'obFrame')==frame and g.get(sign,'signpost_loaded')==frame
         verify_dplc(sign)
-    checks.append('Mecha head: line-two palette/SAT attributes, 22-tile DMA, and portrait cache transitions')
+    checks.append('Mecha head: line-two palette/SAT attributes, 26-tile DMA, and portrait cache transitions')
 
     sign=fixture()
     for _ in range(4):

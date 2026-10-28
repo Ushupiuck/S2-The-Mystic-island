@@ -4,7 +4,7 @@
 Sonic and the turning frames use S3&K art. Eggman retains that game's shape
 with S1's dark moustache grooves; the NA Tails portrait keeps its drawing.
 Frame 6 adds Mecha Sonic's front-facing head on palette line two. Its editable
-eight-tile half is mirrored; the board and post retain the primary palette.
+twelve-tile half is mirrored; the board and post retain the primary palette.
 
 Monitor contents keep their 60-tile allocation. Move the Tails portrait from
 tiles 28-31 to 56-59 so the 26-tile signpost buffer cannot overwrite it.
@@ -40,13 +40,17 @@ def mecha_panel(art):
             # Moustache tips reach the rim; retain only its neutral colours.
             row.append(1 if x >= 3 and 3 <= y < 29 or
                        colour not in (0,1,6,7,8,9) else colour)
+        # Eggman's moustache also cuts holes into the gray rim. Reconstruct
+        # that straight edge, rather than retaining those silhouette notches.
+        if 8 <= y < 29:
+            row[:3] = [9,8,7]
         pixels.append(row)
     head = (ROOT/'art/uncompressed/Mecha Sonic signpost.unc').read_bytes()
-    assert len(head) == 8*32
+    assert len(head) == 12*32
     # Front-facing panels use the same post at source tiles 68-69.
     first = len(art)//32
     portrait = first+12
-    pieces = [(-15,7,0x2000|portrait,-16), (-15,7,0x2800|portrait,0),
+    pieces = [(-16,11,0x2000|portrait,-24), (-16,11,0x2800|portrait,0),
               (-16,11,first,-24), (-16,11,0x800|first,0), (16,1,68,-4)]
     return tiles(pixels)+head, pieces
 
