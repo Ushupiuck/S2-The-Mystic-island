@@ -292,6 +292,24 @@ tiles (`$561-$564`); signpost frames stay below it. Sonic's life art remains
 separate and is shared with Sonic monitors. HUD score uses ten-point units,
 with maximum display 9,999,990.
 
+Signpost frame `$06` is Mecha Sonic's head from skdisasm
+`73de97c6b55055bcb8089c1d55d006b02136f163`, main body frame `$0A`.
+`art/uncompressed/Mecha Sonic signpost.unc` is the editable left 16×32 half,
+mirrored for the right. It keeps the source palette indices. The import takes
+head coordinates X `-16..15`, Y `-32..-5`; below Y `-11`, only X `-9..8`
+belongs to the head, excluding the shoulders. The remaining bottom rows are
+transparent. `palette/Mecha Sonic.bin` is the original `Palettes/Main.bin`.
+The generator blanks the existing Eggman panel inside its border, appends that
+panel and the head to `Signpost extra.unc`, and rebuilds the packed/editor art,
+mappings and DPLCs. The new frame uses 22 resident tiles, within the existing
+26-tile buffer; no VRAM allocation moves.
+
+Only the head's mapping pieces select palette line two (attribute `$2000`);
+the board and post retain the primary line. Event code can load
+`palid_MechaSonic` with `PalLoad2`, then select signpost animation 5 (`.mecha`).
+The event owns that line's lifetime and any restoration; ordinary signposts
+do not replace a level palette or select this portrait automatically.
+
 `HudUpdate` shares ring, life and result-bonus updates between its ordinary and
 placement displays. Its initial digit table uses S3&K-style readable strings,
 with list bounds determining the upload counts. `HUD_Time` draws the current

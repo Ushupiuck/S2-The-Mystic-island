@@ -71,6 +71,12 @@ not an authored-level playthrough. Add `--player 2 --pal` for primary Tails/PAL,
 and omit `--system-directory` for a cartridge build. `check_card_screens.py
 --case normal` retains the slow, classic finish/results regression.
 
+`check_card_art.py` additionally executes all seven signpost DPLC frames with
+queue backpressure, checks their source pixels and palette attributes, and
+calls the real palette loader to confirm Mecha's palette changes only line two.
+The signpost game fixture displays animation 5 with that palette as an explicit
+scene setup, then returns to the ordinary portraits to check art-cache changes.
+
 
 Hanging-surface checks use the assembled D9 code, player art and shared solidity:
 

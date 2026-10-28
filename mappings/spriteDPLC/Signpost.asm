@@ -6,6 +6,7 @@ DPLC_Signpost:
 		dc.w	DPLC_Signpost_3-DPLC_Signpost
 		dc.w	DPLC_Signpost_4-DPLC_Signpost
 		dc.w	DPLC_Signpost_5-DPLC_Signpost
+		dc.w	DPLC_Signpost_6-DPLC_Signpost
 DPLC_Signpost_0:	dc.w	3
 		dc.w	$F000,$7010,$1044
 DPLC_Signpost_1:	dc.w	2
@@ -18,4 +19,6 @@ DPLC_Signpost_4:	dc.w	1
 		dc.w	$5040
 DPLC_Signpost_5:	dc.w	2
 		dc.w	$F030,$1044
+DPLC_Signpost_6:	dc.w	2
+		dc.w	$F044,$5054
 		even

@@ -1560,6 +1560,8 @@ Pal_LevelSel:	binclude	"palette/Level Select.bin"
 		even
 Pal_SonicTails:	binclude	"palette/SonicAndTails.bin"
 		even
+Pal_MechaSonic:	binclude	"palette/Mecha Sonic.bin"
+		even
 ; Loaded with Pal_SonicTails for title cards, as Sonic 2 loads two lines.
 ; Only the ACT-number yellow is needed before the level palette is available.
 Pal_TitleCardYellow:
@@ -13597,6 +13599,7 @@ Art_Invincibility_End:
 Art_CardFont:	binclude	"art/uncompressed/Card Font.unc"
 Art_CardFont_End:
 Art_Signpost:	binclude	"art/uncompressed/Signpost.unc"
+		binclude	"art/uncompressed/Signpost extra.unc"
 Art_Signpost_End:
 	if MegaCDMode1
 Nem_Ring:	binclude	"art/nemesis/Ring.nem"

@@ -3,14 +3,16 @@
 
 Sonic and the turning frames use S3&K art. Eggman retains that game's shape
 with S1's dark moustache grooves; the NA Tails portrait keeps its drawing.
+Frame 6 adds Mecha Sonic's front-facing head on palette line two. Its editable
+eight-tile half is mirrored; the board and post retain the primary palette.
 
 Monitor contents keep their 60-tile allocation. Move the Tails portrait from
 tiles 28-31 to 56-59 so the 26-tile signpost buffer cannot overwrite it.
-The original Signpost.bin remains available to SonLVL with its static art.
+The original Signpost.bin is the editable source for the first six frames.
 """
 from pathlib import Path
 import struct
-from build_card_art import dplc, used, mapped
+from build_card_art import dplc, used, mapped, tiles
 from check_sprite_assets import frames
 from import_scrap_madness import nemesis_inline
 
@@ -26,10 +28,37 @@ def mapping_file(rows):
     return data
 
 
+def mecha_panel(art):
+    """Blank Eggman's left panel; preserve its border, then mirror the right."""
+    panel = art[36*32:48*32]
+    pixels = []
+    for y in range(32):
+        row = []
+        for x in range(24):
+            byte = panel[((x//8)*4+y//8)*32+(y%8)*4+(x%8)//2]
+            colour = (byte >> (4 if not x%2 else 0)) & 15
+            # Moustache tips reach the rim; retain only its neutral colours.
+            row.append(1 if x >= 3 and 3 <= y < 29 or
+                       colour not in (0,1,6,7,8,9) else colour)
+        pixels.append(row)
+    head = (ROOT/'art/uncompressed/Mecha Sonic signpost.unc').read_bytes()
+    assert len(head) == 8*32
+    # Front-facing panels use the same post at source tiles 68-69.
+    first = len(art)//32
+    portrait = first+12
+    pieces = [(-15,7,0x2000|portrait,-16), (-15,7,0x2800|portrait,0),
+              (-16,11,first,-24), (-16,11,0x800|first,0), (16,1,68,-4)]
+    return tiles(pixels)+head, pieces
+
+
 def main():
     original = frames((ROOT/'mappings/sprite/Signpost.bin').read_bytes())
     art = (ROOT/'art/uncompressed/Signpost.unc').read_bytes()
     assert len(art) == 70*32 and len(original) == 6
+    extra, mecha = mecha_panel(art)
+    (ROOT/'art/uncompressed/Signpost extra.unc').write_bytes(extra)
+    art += extra
+    original.append(mecha)
     dynamic, runs = [], []
     for pieces in original:
         order = sorted(used(pieces))
@@ -67,7 +96,9 @@ def main():
     (ROOT/'art/nemesis/Monitor and contents.nem').write_bytes(nemesis_inline(raw))
     maximum = max(sum((x>>12)+1 for x in r) for r in runs)
     assert maximum == 26 and maximum <= 56
-    print(f'Signpost: 70 source tiles, {maximum} VRAM tiles; Tails portrait: monitor tiles 56-59')
+    mecha_tiles = sum((x>>12)+1 for x in runs[-1])
+    print(f'Signpost: {len(art)//32} source tiles, {len(original)} frames, '
+          f'{maximum} VRAM tiles; Mecha: {mecha_tiles} VRAM tiles; Tails portrait: monitor tiles 56-59')
 
 
 if __name__ == '__main__':

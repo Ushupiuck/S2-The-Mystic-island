@@ -236,11 +236,13 @@ Ani_Signpost:	dc.w	.eggman-Ani_Signpost
 		dc.w	.spin2-Ani_Signpost
 		dc.w	.sonic-Ani_Signpost
 		dc.w	.tails-Ani_Signpost
+		dc.w	.mecha-Ani_Signpost
 .eggman:	dc.b	$F,2,afEnd
 .spin1:	dc.b	1,2,3,4,5,1,3,4,5,0,3,4,5,afEnd
 .spin2:	dc.b	1,2,3,4,5,1,3,4,5,0,3,4,5,afEnd
 .sonic:		dc.b	$F,0,afEnd
 .tails:		dc.b	$F,1,afEnd
+.mecha:		dc.b	$F,6,afEnd	; event-selected portrait; load palid_MechaSonic first
 		even
 
 ; ===========================================================================

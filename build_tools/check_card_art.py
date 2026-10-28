@@ -18,6 +18,7 @@ p.add_argument('--output',type=Path)
 args = p.parse_args()
 import native_test_core as m68k
 from check_sprite_assets import frames
+from build_signpost_art import mecha_panel
 
 
 class ArtNative(m68k.Native):
@@ -132,7 +133,7 @@ for mode in (0,1,2):
 
 def render(data,pieces):
     canvas=bytearray(96*80)
-    for y,size,word,x in pieces:
+    for y,size,word,x in reversed(pieces):
         w,h=(size>>2)+1,(size&3)+1
         for py in range(h*8):
             for px in range(w*8):
@@ -146,9 +147,14 @@ def render(data,pieces):
 
 
 original=frames((ROOT/'mappings/sprite/Signpost.bin').read_bytes())
-dynamic=frames(rom,m.s['Map_Signpost'],6)
 source=(ROOT/'art/uncompressed/Signpost.unc').read_bytes()
-for frame in range(6):
+extra,mecha=mecha_panel(source)
+source+=extra
+original.append(mecha)
+dynamic=frames(rom,m.s['Map_Signpost'],m.s['Map_Signpost_frames'])
+assert len(dynamic)==len(original)==7
+assert [word & 0x6000 for _,_,word,_ in dynamic[6]] == [0x2000,0x2000,0,0,0]
+for frame in range(len(dynamic)):
     reset(full=True)
     m.put(obj,'signpost_loaded',255)
     regs={m68k.UC_M68K_REG_D0:frame,m68k.UC_M68K_REG_A2:m.s['DPLC_Signpost'],
@@ -166,6 +172,17 @@ for frame in range(6):
     assert render(loaded,dynamic[frame]) == render(source,original[frame])
     n=len(m.uploads);m.act('Load_DynamicPLC',obj,regs);assert len(m.uploads) == n
     checks.append({'case':'signpost-pixels-and-cache','frame':frame,'tiles':len(loaded)//32})
+
+reset()
+m.cpu.mem_write(m.s['v_palette'] & 0xFFFFFF,bytes([0x5A])*128)
+m.act('PalLoad2',obj,{m68k.UC_M68K_REG_D0:m.s['palid_MechaSonic']})
+palette=bytes(m.cpu.mem_read(m.s['v_palette'] & 0xFFFFFF,128))
+assert palette[:32]==bytes([0x5A])*32 and palette[64:]==bytes([0x5A])*64
+assert palette[32:64]==(ROOT/'palette/Mecha Sonic.bin').read_bytes()
+m.put(obj,'obAnim',5)
+m.act('AnimateSprite',obj,{m68k.UC_M68K_REG_A1:m.s['Ani_Signpost']})
+assert m.get(obj,'obFrame')==6
+checks.append({'case':'mecha-signpost-palette-line-two-and-animation'})
 
 for mode in (0,1,2):
     reset()
@@ -200,7 +217,7 @@ assert rom[m.s['LevelOrder']:m.s['LevelOrder']+128] == bytes(
     for v in detours.get((zone, act), (zone,act+1) if act<3 else ((zone+1)%16,0)))
 
 report={'passed':True,'checks':checks,'companion_ai_run':False,
-        'card_scenes':78,'signpost_frames':6,'tails_icon_tile':m.s['ArtTile_Tails_Life']}
+        'card_scenes':78,'signpost_frames':len(dynamic),'tails_icon_tile':m.s['ArtTile_Tails_Life']}
 if args.output:
     args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_text(json.dumps(report,indent=2)+'\n')
