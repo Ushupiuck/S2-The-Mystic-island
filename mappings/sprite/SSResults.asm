@@ -53,12 +53,12 @@ Map_SSR_0_0_4: dc.w 4
 		dc.w $F80D, Map_Results_ContinueText, $FFB0
 		dc.w $F80D, Map_Results_ContinueText+8, $FFD0
 		dc.w $F801, Map_Results_ContinueText+16, $FFF0
-		dc.w $F806, make_art_tile(ArtTile_Mini_Sonic+18,1,0)-ArtTile_Title_Card, $0040
+		dc.w $F806, make_art_tile(ArtTile_Mini_Sonic+18,1,0)-ArtTile_Results_Card, $0040
 Map_SSR_0_0_5: dc.w 4
 		dc.w $F80D, Map_Results_ContinueText, $FFB0
 		dc.w $F80D, Map_Results_ContinueText+8, $FFD0
 		dc.w $F801, Map_Results_ContinueText+16, $FFF0
-		dc.w $F806, make_art_tile(ArtTile_Mini_Sonic+18+6,1,0)-ArtTile_Title_Card, $0040
+		dc.w $F806, make_art_tile(ArtTile_Mini_Sonic+18+6,1,0)-ArtTile_Results_Card, $0040
 Map_SSR_0_0_6: dc.w 3
 		dc.w $F80D, Map_Results_ContinueText, $FFB0
 		dc.w $F80D, Map_Results_ContinueText+8, $FFD0
@@ -118,12 +118,12 @@ Map_SSR_0_1_4: dc.w 4
 		dc.w $F80D, Map_Results_ContinueText, $FFB0
 		dc.w $F80D, Map_Results_ContinueText+8, $FFD0
 		dc.w $F801, Map_Results_ContinueText+16, $FFF0
-		dc.w $F806, make_art_tile(ArtTile_Mini_Tails,1,0)-ArtTile_Title_Card, $0040
+		dc.w $F806, make_art_tile(ArtTile_Mini_Tails,1,0)-ArtTile_Results_Card, $0040
 Map_SSR_0_1_5: dc.w 4
 		dc.w $F80D, Map_Results_ContinueText, $FFB0
 		dc.w $F80D, Map_Results_ContinueText+8, $FFD0
 		dc.w $F801, Map_Results_ContinueText+16, $FFF0
-		dc.w $F806, make_art_tile(ArtTile_Mini_Tails+6,1,0)-ArtTile_Title_Card, $0040
+		dc.w $F806, make_art_tile(ArtTile_Mini_Tails+6,1,0)-ArtTile_Results_Card, $0040
 Map_SSR_0_1_6: dc.w 3
 		dc.w $F80D, Map_Results_ContinueText, $FFB0
 		dc.w $F80D, Map_Results_ContinueText+8, $FFD0
@@ -184,12 +184,12 @@ Map_SSR_1_0_4: dc.w 4
 		dc.w $F80D, Map_Results_ContinueText, $FFB0
 		dc.w $F80D, Map_Results_ContinueText+8, $FFD0
 		dc.w $F801, Map_Results_ContinueText+16, $FFF0
-		dc.w $F806, make_art_tile(ArtTile_Mini_Sonic+18,1,0)-ArtTile_Title_Card, $0040
+		dc.w $F806, make_art_tile(ArtTile_Mini_Sonic+18,1,0)-ArtTile_Results_Card, $0040
 Map_SSR_1_0_5: dc.w 4
 		dc.w $F80D, Map_Results_ContinueText, $FFB0
 		dc.w $F80D, Map_Results_ContinueText+8, $FFD0
 		dc.w $F801, Map_Results_ContinueText+16, $FFF0
-		dc.w $F806, make_art_tile(ArtTile_Mini_Sonic+18+6,1,0)-ArtTile_Title_Card, $0040
+		dc.w $F806, make_art_tile(ArtTile_Mini_Sonic+18+6,1,0)-ArtTile_Results_Card, $0040
 Map_SSR_1_0_6: dc.w 3
 		dc.w $F80D, Map_Results_ContinueText, $FFB0
 		dc.w $F80D, Map_Results_ContinueText+8, $FFD0
@@ -250,12 +250,12 @@ Map_SSR_1_1_4: dc.w 4
 		dc.w $F80D, Map_Results_ContinueText, $FFB0
 		dc.w $F80D, Map_Results_ContinueText+8, $FFD0
 		dc.w $F801, Map_Results_ContinueText+16, $FFF0
-		dc.w $F806, make_art_tile(ArtTile_Mini_Tails,1,0)-ArtTile_Title_Card, $0040
+		dc.w $F806, make_art_tile(ArtTile_Mini_Tails,1,0)-ArtTile_Results_Card, $0040
 Map_SSR_1_1_5: dc.w 4
 		dc.w $F80D, Map_Results_ContinueText, $FFB0
 		dc.w $F80D, Map_Results_ContinueText+8, $FFD0
 		dc.w $F801, Map_Results_ContinueText+16, $FFF0
-		dc.w $F806, make_art_tile(ArtTile_Mini_Tails+6,1,0)-ArtTile_Title_Card, $0040
+		dc.w $F806, make_art_tile(ArtTile_Mini_Tails+6,1,0)-ArtTile_Results_Card, $0040
 Map_SSR_1_1_6: dc.w 3
 		dc.w $F80D, Map_Results_ContinueText, $FFB0
 		dc.w $F80D, Map_Results_ContinueText+8, $FFD0
@@ -318,12 +318,12 @@ Map_SSR_2_0_4: dc.w 4
 		dc.w $F80D, Map_Results_ContinueText, $FFB0
 		dc.w $F80D, Map_Results_ContinueText+8, $FFD0
 		dc.w $F801, Map_Results_ContinueText+16, $FFF0
-		dc.w $F806, make_art_tile(ArtTile_Mini_Sonic+18,1,0)-ArtTile_Title_Card, $0040
+		dc.w $F806, make_art_tile(ArtTile_Mini_Sonic+18,1,0)-ArtTile_Results_Card, $0040
 Map_SSR_2_0_5: dc.w 4
 		dc.w $F80D, Map_Results_ContinueText, $FFB0
 		dc.w $F80D, Map_Results_ContinueText+8, $FFD0
 		dc.w $F801, Map_Results_ContinueText+16, $FFF0
-		dc.w $F806, make_art_tile(ArtTile_Mini_Sonic+18+6,1,0)-ArtTile_Title_Card, $0040
+		dc.w $F806, make_art_tile(ArtTile_Mini_Sonic+18+6,1,0)-ArtTile_Results_Card, $0040
 Map_SSR_2_0_6: dc.w 3
 		dc.w $F80D, Map_Results_ContinueText, $FFB0
 		dc.w $F80D, Map_Results_ContinueText+8, $FFD0
@@ -386,12 +386,12 @@ Map_SSR_2_1_4: dc.w 4
 		dc.w $F80D, Map_Results_ContinueText, $FFB0
 		dc.w $F80D, Map_Results_ContinueText+8, $FFD0
 		dc.w $F801, Map_Results_ContinueText+16, $FFF0
-		dc.w $F806, make_art_tile(ArtTile_Mini_Tails,1,0)-ArtTile_Title_Card, $0040
+		dc.w $F806, make_art_tile(ArtTile_Mini_Tails,1,0)-ArtTile_Results_Card, $0040
 Map_SSR_2_1_5: dc.w 4
 		dc.w $F80D, Map_Results_ContinueText, $FFB0
 		dc.w $F80D, Map_Results_ContinueText+8, $FFD0
 		dc.w $F801, Map_Results_ContinueText+16, $FFF0
-		dc.w $F806, make_art_tile(ArtTile_Mini_Tails+6,1,0)-ArtTile_Title_Card, $0040
+		dc.w $F806, make_art_tile(ArtTile_Mini_Tails+6,1,0)-ArtTile_Results_Card, $0040
 Map_SSR_2_1_6: dc.w 3
 		dc.w $F80D, Map_Results_ContinueText, $FFB0
 		dc.w $F80D, Map_Results_ContinueText+8, $FFD0

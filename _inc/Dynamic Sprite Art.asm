@@ -168,14 +168,13 @@ Load_LifeArtPLC:
 ; ---------------------------------------------------------------------------
 ; The two shield SSTs cache the two physical banks, independently of their
 ; owners. Zero means empty, shield frames use DPLC indices 1-4, and $80 means
-; resident stars in the primary bank. $FE reserves a bank for results/game
-; over; $FF invalidates it. Both players share the resident star pixels.
+; resident stars in the primary bank. $FE reserves the dead primary
+; player's bank for Game Over; $FF invalidates it. Both players share star pixels.
 effect_loaded_frame = objoff_34
 ; DPLC_Shield entry 0 is cache-only; entry 1 is the invisible mapping frame 0.
 PlayerEffects_ShieldFrameBias = 1
 PlayerEffects_StarsLoaded = $80
 PlayerEffects_GameOverLoaded = $FE
-PlayerEffects_ResultsLoaded = PlayerEffects_GameOverLoaded
 
 ; a3 = bank cache byte, d4 = VRAM destination. Called only when switching
 ; to stars. Reserve both possible DMA entries before caching the upload;

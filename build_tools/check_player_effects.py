@@ -120,10 +120,61 @@ def main():
         g.put(player, 'obStatusSecondary', g.get(player, 'obStatusSecondary') & ~2)
         g.put(player, 'invtime', 0, 2)
     resumed = shields('shields-restored.png')
+    # Use a real sky-drop sign to retain both actors on screen during results
+    # and observe concurrent shield, glyph and bonus-digit uploads.
+    from check_companion_followup import place
+    actors=['v_player'] if args.player else ['v_player','v_player2']
+    for i,actor in enumerate(actors):
+        place(g,actor,80+i*96,940,False);g.put(actor,'obControl',1)
+        assert g.get(actor,'obStatusSecondary')&1
+    for field in ('Camera_X_pos','Camera_Min_X_pos','Camera_Max_X_pos'):
+        g.write(field,0,2)
+    g.write('v_rings',123,2);g.write('v_timemin',0);g.write('v_timesec',30)
+    g.write('f_ringcount',1)
+    sign=next(a for a in slots if not g.get(a,'code'))
+    for field,value,size in [('code',g.s['Signpost'],4),('obSubtype',1,2),('obX',248,2),('obY',930,2)]:
+        g.put(sign,field,value,size)
+    for _ in range(600):
+        g.run();assert not g.read('v_errortype')
+        if g.get('v_endcard','code')==g.s['GotThrough'] and g.get('v_endcard','obRoutine'):
+            break
+    else:raise AssertionError('Falling sign never reached results')
+    during_results=shields('results-shields.png')
+    assert all(g.get(actor,'obStatusSecondary')&1 for actor in actors)
+    assert all(g.get(name,'code')==g.s['Obj38'] for name,_ in banks)
+    root=g.s['DPLC_Cards'];scene=64+(args.player==2)
+    cue=root+struct.unpack_from('>h',rom,root+scene*2)[0];glyphs=bytearray()
+    for i in range(struct.unpack_from('>H',rom,cue)[0]):
+        word=struct.unpack_from('>H',rom,cue+2+i*2)[0]
+        source=g.s['Art_CardFont']+(word&4095)*32
+        glyphs+=rom[source:source+((word>>12)+1)*32]
+    assert vram(g.s['ArtTile_Results_Card']*32,len(glyphs))==glyphs
+    # Reach the real tally, then allow shield and numeric uploads together.
+    original_bonus=g.read('v_timebonus',2)+g.read('v_ringbonus',2)
+    for _ in range(400):
+        g.run();assert not g.read('v_errortype')
+        if g.read('v_timebonus',2)+g.read('v_ringbonus',2)<original_bonus:break
+    else:raise AssertionError('Results tally did not start')
+    tally_shields=shields('results-tally-shields.png')
+    font=(art_root/'HUD Numbers.bin').read_bytes()
+    for offset,name in ((0,'v_timebonus'),(8,'v_ringbonus')):
+        # Numeric state can be one frame ahead of DMA, so sample a stable pair.
+        matched=False
+        for _ in range(8):
+            value=g.read(name,2);leading=True;expected=bytearray()
+            for digit in f'{value:04d}':
+                leading=leading and digit=='0'
+                expected+=bytes(64) if leading else font[int(digit)*64:(int(digit)+1)*64]
+            g.run();assert not g.read('v_errortype')
+            if vram((g.s['ArtTile_Bonuses']+offset)*32,256)==expected:
+                matched=True;break
+        assert matched,(name,'bonus digits overlap shield or glyph DMA')
+    assert vram(g.s['ArtTile_Results_Card']*32,len(glyphs))==glyphs
     report = {'region': 'PAL' if args.pal else 'NTSC', 'primary': 'Tails' if args.player else 'Sonic',
               'regular_and_lost_ring_frames': len(seen_rings),
               'shield_uploads': first, 'resident_star_tiles_match': len(stars) // 32,
-              'star_sprites': len(star_sprites), 'shield_uploads_after_stars': resumed}
+              'star_sprites': len(star_sprites), 'shield_uploads_after_stars': resumed,
+              'results_shields':during_results,'tally_shields':tally_shields,'results_glyphs_and_bonus_digits_match':True}
     (args.output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
     print(report, flush=True)
     g.close()

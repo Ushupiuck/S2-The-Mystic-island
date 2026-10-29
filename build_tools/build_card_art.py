@@ -206,16 +206,16 @@ def main():
         header+emit_table('Map_Cards', intro_frames, '16 names, ZONE, ACT 1-4, oval'))
 
     result_constants = '''; HUD and dynamic bonus references are relative to the current card bank.
-Map_Results_ScoreLetters = make_art_tile(ArtTile_HUD,1,0)-ArtTile_Title_Card
-Map_Results_TimeLetters = make_art_tile(ArtTile_HUD+8,1,0)-ArtTile_Title_Card
-Map_Results_ScoreE = make_art_tile(ArtTile_HUD_E,1,0)-ArtTile_Title_Card
-Map_Results_ScoreDigits = ArtTile_HUD_Numbers-ArtTile_Title_Card
-Map_Results_Zero = ArtTile_HUD_Numbers+$C-ArtTile_Title_Card
-Map_Results_TimeDigits = ArtTile_Bonuses-ArtTile_Title_Card
-Map_Results_RingDigits = ArtTile_Bonuses+8-ArtTile_Title_Card
-Map_Results_RingTile = make_art_tile(ArtTile_Ring,1,0)-ArtTile_Title_Card
-Map_SSResults_RingTile = ArtTile_SS_Rings-ArtTile_Title_Card
-Map_Results_ContinueText = ArtTile_Mini_Sonic-ArtTile_Title_Card
+Map_Results_ScoreLetters = make_art_tile(ArtTile_HUD,1,0)-ArtTile_Results_Card
+Map_Results_TimeLetters = make_art_tile(ArtTile_HUD+8,1,0)-ArtTile_Results_Card
+Map_Results_ScoreE = make_art_tile(ArtTile_HUD_E,1,0)-ArtTile_Results_Card
+Map_Results_ScoreDigits = ArtTile_HUD_Numbers-ArtTile_Results_Card
+Map_Results_Zero = ArtTile_HUD_Numbers+$C-ArtTile_Results_Card
+Map_Results_TimeDigits = ArtTile_Bonuses-ArtTile_Results_Card
+Map_Results_RingDigits = ArtTile_Bonuses+8-ArtTile_Results_Card
+Map_Results_RingTile = make_art_tile(ArtTile_Ring,1,0)-ArtTile_Results_Card
+Map_SSResults_RingTile = ArtTile_SS_Rings-ArtTile_Results_Card
+Map_Results_ContinueText = ArtTile_Mini_Sonic-ArtTile_Results_Card
 '''
 
     def fixed(lookup, special=False, tails=False):
@@ -276,8 +276,8 @@ Map_Results_ContinueText = ArtTile_Mini_Sonic-ArtTile_Title_Card
                          row(-8,13,'Map_Results_ContinueText+8',-48),
                          row(-8,1,'Map_Results_ContinueText+16',-16)]
             frames = [mapped(text,lookup),score,bonus(False),mapped(OVAL,lookup),
-                      continues+[row(-8,6,f'make_art_tile({mini},1,0)-ArtTile_Title_Card',64)],
-                      continues+[row(-8,6,f'make_art_tile({mini}+6,1,0)-ArtTile_Title_Card',64)],
+                      continues+[row(-8,6,f'make_art_tile({mini},1,0)-ArtTile_Results_Card',64)],
+                      continues+[row(-8,6,f'make_art_tile({mini}+6,1,0)-ArtTile_Results_Card',64)],
                       continues]
             special_output.append(emit_table(f'Map_SSR_{state}_{int(tails)}',frames,name))
     special_output.append('Card_SS_MapPointers:\n')
@@ -297,6 +297,14 @@ Map_Results_ContinueText = ArtTile_Mini_Sonic-ArtTile_Title_Card
         lines.append(f'DPLC_Card_{i}: dc.w {len(runs)}\n')
         lines.append('\t\tdc.w '+','.join(f'${run:04X}' for run in runs)+'\n')
     lines.append('\t\teven\n')
+    # Check the live scene payloads against the banks that coexist with them.
+    for name,limit,maximum in (
+            ('Intro', 'ArtTile_Animal_1-ArtTile_Title_Card', max(len(x[1]) for x in scenes[:64])),
+            ('NormalResult', 'ArtTile_Animal_1-ArtTile_Results_Card', max(len(x[1]) for x in scenes[64:72])),
+            ('SpecialResult', 'vram_fg/tile_size-ArtTile_Results_Card', max(len(x[1]) for x in scenes[72:]))):
+        lines.append(f'\tif {maximum}>{limit}\n\t\tfatal "{name} glyphs exceed their VRAM lifetime bank"\n\tendif\n')
+    lines.append('\tif ArtTile_Bonuses<ArtTile_Shield_2_End\n\t\tfatal "Results bonus digits overlap the auxiliary shield"\n\tendif\n')
+    lines.append('\tif ArtTile_Bonuses+$10>ArtTile_Results_Card\n\t\tfatal "Results glyphs overlap bonus digits"\n\tendif\n')
     (ROOT/'mappings/spriteDPLC/Cards.asm').write_text(''.join(lines))
     life_text = (ROOT/'art/uncompressed/Tails Life Text Source.unc').read_bytes()
     assert len(life_text) == 8*32

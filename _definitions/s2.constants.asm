@@ -1838,7 +1838,8 @@ ArtTile_Hidden_Points:		equ ArtTile_Signpost+$1A ; 28 tiles after the signpost D
 ArtTile_Warp:			equ $541
 ArtTile_Mini_Tails:		equ $535
 ArtTile_Mini_Sonic:		equ $551
-ArtTile_Bonuses:		equ $570
+ArtTile_Bonuses:		equ ArtTile_Title_Card ; 16 numeric tiles, clear of both shield banks
+ArtTile_Results_Card:	equ ArtTile_Bonuses+$10 ; scene glyphs follow the bonus digits
 ArtTile_Signpost:		equ ArtTile_Monitor	; 26-tile DPLC buffer; stops before Tails's life icon
 
 ; Sega Screen

@@ -38,7 +38,6 @@ class ArtNative(m68k.Native):
 m = ArtNative(args.rom, args.listing)
 rom = args.rom.read_bytes()
 obj = m.s['v_titlecard']
-base = m.s['ArtTile_Title_Card']*32
 checks = []
 
 
@@ -68,6 +67,7 @@ def payload(table,index,art,end):
 
 
 for scene in range(78):
+    base = m.s['ArtTile_Results_Card' if scene >= 64 else 'ArtTile_Title_Card']*32
     reset(full=True)
     regs={m68k.UC_M68K_REG_D0:scene,m68k.UC_M68K_REG_D4:base,
           m68k.UC_M68K_REG_D7:0x1976}
@@ -113,7 +113,7 @@ for mode in (0,1,2):
         table=m.cpu.reg_read(m68k.UC_M68K_REG_A3)
         rows=frames(rom,table,10)
         for frame,tile in ((3,m.s['ArtTile_Bonuses']),(4,m.s['ArtTile_Bonuses']+8)):
-            assert (rows[frame][5][2]+m.s['ArtTile_Title_Card']) & 0xFFFF == tile
+            assert (rows[frame][5][2]+m.s['ArtTile_Results_Card']) & 0xFFFF == tile
         checks.append({'case':'normal-character-and-bonus-addresses','mode':mode,'act':act+1})
 
 for mode in (0,1,2):
@@ -125,9 +125,9 @@ for mode in (0,1,2):
         scene=72+state*2+(mode == 2)
         assert m.cpu.reg_read(m68k.UC_M68K_REG_D0) == scene
         rows=frames(rom,m.cpu.reg_read(m68k.UC_M68K_REG_A3),7)
-        assert (rows[2][5][2]+m.s['ArtTile_Title_Card']) & 0xFFFF == m.s['ArtTile_Bonuses']+8
+        assert (rows[2][5][2]+m.s['ArtTile_Results_Card']) & 0xFFFF == m.s['ArtTile_Bonuses']+8
         mini=m.s['ArtTile_Mini_Tails'] if mode == 2 else m.s['ArtTile_Mini_Sonic']+18
-        assert (rows[4][-1][2]+m.s['ArtTile_Title_Card']) & 0xFFFF == 0x2000+mini
+        assert (rows[4][-1][2]+m.s['ArtTile_Results_Card']) & 0xFFFF == 0x2000+mini
         checks.append({'case':'special-heading-and-character-addresses','mode':mode,'emeralds':emeralds})
 
 
@@ -169,6 +169,13 @@ for frame in range(len(dynamic)):
     assert render(loaded,dynamic[frame]) == render(source,original[frame])
     n=len(m.uploads);m.act('Load_DynamicPLC',obj,regs);assert len(m.uploads) == n
     checks.append({'case':'signpost-pixels-and-cache','frame':frame,'tiles':len(loaded)//32})
+
+reset()
+m.act('PalLoad2',obj,{m68k.UC_M68K_REG_D0:m.s['palid_TitleCard']})
+assert bytes(m.cpu.mem_read(m.s['v_palette'] & 0xFFFFFF,32))==(ROOT/'palette/SonicAndTails.bin').read_bytes()
+assert bytes(m.cpu.mem_read((m.s['v_palette']+32)&0xFFFFFF,32))==rom[m.s['Pal_TitleCardYellow']:m.s['Pal_TitleCardYellow']+32]
+assert m.read('v_palette',2) == 0
+checks.append({'case':'title-card-two-line-palette-pair'})
 
 reset()
 m.cpu.mem_write(m.s['v_palette'] & 0xFFFFFF,bytes([0x5A])*128)

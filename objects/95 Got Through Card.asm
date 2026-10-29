@@ -26,7 +26,7 @@ Got_ChkPLC:	; Routine 0
 		tst.l	(v_plc_buffer).w ; are the pattern load cues empty?
 		bne.s	.return
 		jsr	(Get_NormalCardScene).l
-		move.w	#ArtTile_Title_Card*tile_size,d4
+		move.w	#ArtTile_Results_Card*tile_size,d4
 		jsr	(Load_CardDPLC).l
 		bcc.s	Got_Main
 .return:
@@ -55,7 +55,7 @@ loc_BB94:
 		move.b	d0,obFrame(a1)
 		move.l	a3,obMap(a1)
 		move.b	#Map_Obj3A_height,height_pixels(a1)
-		move.w	#make_art_tile(ArtTile_Title_Card,0,1),obGfx(a1)
+		move.w	#make_art_tile(ArtTile_Results_Card,0,1),obGfx(a1)
 		sf	obRender(a1)
 		lea	object_size(a1),a1
 		dbf	d1,Got_Loop	; repeat 6 times

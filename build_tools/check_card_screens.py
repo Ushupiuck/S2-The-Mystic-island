@@ -54,7 +54,7 @@ def card_data(scene):
 
 def assert_card(scene):
     data=card_data(scene)
-    assert vram(g.s['ArtTile_Title_Card']*32,len(data)) == data,('card VRAM',scene)
+    assert vram(g.s['ArtTile_Results_Card' if scene>=64 else 'ArtTile_Title_Card']*32,len(data)) == data,('card VRAM',scene)
 
 
 def assert_ink_color(actor, frame, pieces, count, expected=0x0EE):
@@ -173,7 +173,8 @@ elif args.case == 'normal':
         raise AssertionError(('Signpost did not finish spinning',
                               {n:g.get(actor,n,z) for n,z in [('obRoutine',1),('obFrame',1),('obAnim',1),('objoff_34',2),('obX',2),('obY',2)]},
                               'player',g.get('v_player','obX',2),'seen',sorted(seen)))
-    assert seen==set(range(6)),seen
+    expected_spin={1,2,4,7,8} if args.player==2 else {0,2,3,4,5}
+    assert seen==expected_spin,seen
     expected_frame=1 if args.player==2 else 0
     assert g.get(actor,'obAnim')==(4 if args.player==2 else 3), 'Wrong signpost final animation'
     assert g.get(actor,'obFrame')==expected_frame, 'Wrong signpost final portrait'
@@ -193,10 +194,13 @@ elif args.case == 'normal':
     expected=g.s['Map_Got_Tails'] if args.player==2 else g.s['Map_Obj3A']
     assert g.get('v_endcard','obMap',4)==expected
     assert g.get('v_endcardact','obFrame')==6+args.act
-    assert_ink_color('v_endcard',2,(0,1),10)
-    assert_ink_color('v_endcard',3,(0,1,2),10)
-    assert_ink_color('v_endcard',4,(1,2),10)
-    assert_ink_color('v_endcardact',6+args.act,(1,),10)
+    # Normal labels use the level's authored line-two foreground slot C;
+    # GHZ4's water sample deliberately has a different color from GHZ1.
+    normal_ink=g.read(g.s['v_palette']+0x20+12*2,2)
+    assert_ink_color('v_endcard',2,(0,1),10,normal_ink)
+    assert_ink_color('v_endcard',3,(0,1,2),10,normal_ink)
+    assert_ink_color('v_endcard',4,(1,2),10,normal_ink)
+    assert_ink_color('v_endcardact',6+args.act,(1,),10,normal_ink)
     assert vram(g.s['ArtTile_Tails_Life']*32,4*32)==portrait
     g.video.save(args.output/'results.png')
     assert g.get(actor,'obFrame')==expected_frame, 'Signpost portrait changed during results'

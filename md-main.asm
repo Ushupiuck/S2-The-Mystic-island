@@ -1617,13 +1617,16 @@ Pal_LevelSel:	binclude	"palette/Level Select.bin"
 		even
 Pal_SonicTails:	binclude	"palette/SonicAndTails.bin"
 		even
-Pal_MechaSonic:	binclude	"palette/Mecha Sonic.bin"
-		even
 ; Loaded with Pal_SonicTails for title cards, as Sonic 2 loads two lines.
 ; Only the ACT-number yellow is needed before the level palette is available.
 Pal_TitleCardYellow:
 		dc.l	0,0,0,0,0,0
 		dc.w	$0EE,0,0,0
+		if Pal_TitleCardYellow-Pal_SonicTails<>palette_line_size
+			fatal "Title-card palette must follow the player palette"
+		endif
+Pal_MechaSonic:	binclude	"palette/Mecha Sonic.bin"
+		even
 Pal_GHZ:	binclude	"palette/GHZ.bin"
 		even
 Pal_LZ:		binclude	"palette/LZ.bin"

@@ -61,7 +61,7 @@ Obj38_Shield:
 ; ===========================================================================
 ; Remove this player's shield effect; the partner's effect is independent.
 ; These SSTs are reserved: retain their physical-bank cache when retiring
-; the object, including the game-over/results reservation stored there.
+; the object, including the Game Over reservation stored there.
 ; ---------------------------------------------------------------------------
 Obj38_Delete:
 		clr.l	code(a0)
@@ -82,7 +82,7 @@ Shield_LoadArt:
 		beq.s	.cache_ready
 		lea	(v_shieldobj2+effect_loaded_frame).w,a3
 .cache_ready:
-		cmpi.b	#PlayerEffects_ResultsLoaded,(a3)
+		cmpi.b	#PlayerEffects_GameOverLoaded,(a3)
 		beq.w	Load_DynamicPLC.full_return	; no frame was pushed by this caller
 		move.l	#Art_Shield,d6
 		jmp	(Load_DynamicPLC).l

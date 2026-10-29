@@ -27,7 +27,7 @@ SSR_ChkPLC:	; Routine 0
 		tst.l	(v_plc_buffer).w ; are the pattern load cues empty?
 		bne.s	.wait
 		jsr	(Get_SpecialCardScene).l
-		move.w	#ArtTile_Title_Card*tile_size,d4
+		move.w	#ArtTile_Results_Card*tile_size,d4
 		jsr	(Load_CardDPLC).l
 		bcc.s	SSR_Main
 .wait:
@@ -52,7 +52,7 @@ SSR_Loop:
 		move.b	(a2)+,obFrame(a1)
 		move.l	a3,obMap(a1)
 		move.b	#Map_SSR_height,height_pixels(a1)
-		move.w	#make_art_tile(ArtTile_Title_Card,0,1),obGfx(a1)
+		move.w	#make_art_tile(ArtTile_Results_Card,0,1),obGfx(a1)
 		sf	obRender(a1)
 		lea	object_size(a1),a1
 		dbf	d1,SSR_Loop	; repeat sequence 3 or 4 times

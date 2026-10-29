@@ -231,3 +231,18 @@ DPLC_Card_76: dc.w 10
 DPLC_Card_77: dc.w 10
 		dc.w $10A8,$F070,$F096,$10A6,$3000,$3010,$9018,$7026,$3032,$703E
 		even
+	if 84>ArtTile_Animal_1-ArtTile_Title_Card
+		fatal "Intro glyphs exceed their VRAM lifetime bank"
+	endif
+	if 74>ArtTile_Animal_1-ArtTile_Results_Card
+		fatal "NormalResult glyphs exceed their VRAM lifetime bank"
+	endif
+	if 82>vram_fg/tile_size-ArtTile_Results_Card
+		fatal "SpecialResult glyphs exceed their VRAM lifetime bank"
+	endif
+	if ArtTile_Bonuses<ArtTile_Shield_2_End
+		fatal "Results bonus digits overlap the auxiliary shield"
+	endif
+	if ArtTile_Bonuses+$10>ArtTile_Results_Card
+		fatal "Results glyphs overlap bonus digits"
+	endif

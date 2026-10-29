@@ -62,7 +62,7 @@ def card(scene):
 		word = struct.unpack_from('>H', rom, ptr + 2 + i * 2)[0]
 		src = g.s['Art_CardFont'] + (word & 0xFFF) * 32
 		expected += rom[src:src + ((word >> 12) + 1) * 32]
-	start = g.s['ArtTile_Title_Card'] * 32
+	start = g.s['ArtTile_Results_Card' if scene>=64 else 'ArtTile_Title_Card'] * 32
 	assert bytes(g.vram[(start + i) ^ 1] for i in range(len(expected))) == expected, ('Card DMA', scene)
 
 

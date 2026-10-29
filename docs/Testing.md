@@ -258,7 +258,9 @@ variant's entire placement-state capacity, including entries above 255.
 run NTSC and PAL. `check_smz_background.py`, `check_player_effects.py`,
 `check_water_effects.py` and `check_ss_debug_game.py` also support cartridge
 ROMs without a system directory. Effect-upload checks allow bounded scheduling
-latency before comparing actual VRAM pixels.
+latency before comparing actual VRAM pixels. `check_player_effects.py` also
+finishes through a real falling sign, checks both shield banks during results
+and bonus tally, and compares the relocated digits and glyphs with their sources.
 
 `check_cd_decompression.py` can use the freshly built cartridge ROM/listing as
 its `--baseline` pair to compare all linked codecs with the Mode 1 executors.

@@ -182,8 +182,8 @@ extend into the tail area. The largest body/tail uploads are 24/nine tiles,
 ending before ring tile `$6B9`; they are not independent full banks.
 
 **Check the symbols before allocating around `$B000`.** `ArtTile_Shield_2_End`
-is `$581` (`$B020`), not `$580`. Cards and large boss explosions start at
-`ArtTile_Title_Card` / `ArtTile_BossExplosion = $581`; the 84-tile maximum card
+is `$581` (`$B020`), not `$580`. Title cards and large boss explosions start at
+`ArtTile_Title_Card` / `ArtTile_BossExplosion = $581`; the 84-tile maximum intro
 fits before animal art. Do not reuse the former claim that two tiles at `$B000`
 are free. Boss/capsule loading deliberately replaces general object art;
 see [the EHZ example](Importing-objects.md#arena-and-art-lifetime).
@@ -263,9 +263,9 @@ when both invincibility timers end. Frame zero is invisible. The DPLC's extra
 empty entry reserves cache value zero; `PlayerEffects_ShieldFrameBias` selects it.
 
 Effect cache values are zero for empty, 1-4 for shield cues, `$80` for stars,
-`$FE` for results/Game Over reservation, and `$FF` for invalid. Retirement retains
-physical-bank cache state. Act clear reserves both banks before its UI reuses
-that region; Game/Time Over protects the dead primary's bank from companion stars.
+`$FE` for Game Over reservation, and `$FF` for invalid. Retirement retains
+physical-bank cache state. Act clear preserves both shield banks and their
+uploads; Game/Time Over still protects the dead primary's bank from companion stars.
 
 Each player has one visible points popup, with at most two uploaded tiles.
 A new award replaces that player's predecessor only after the complete upload
@@ -279,8 +279,15 @@ share the separate per-player banks shown above and cache both art kind and fram
 A live splash takes precedence; numbers have their own screen-space draw path.
 Resident bubble art is separate. See [player behavior](Players-and-effects.md#water-and-shared-effects).
 
-Cards/results stream scene-specific glyphs at tile `$581` rather than loading
-the whole raw font. `build_card_art.py` owns their mappings/DPLCs, including
+Title cards stream scene glyphs at tile `$581`. Results begin at that same
+tile with sixteen time/ring bonus digit tiles (`ArtTile_Bonuses`), then stream
+their glyphs at `$591` (`ArtTile_Results_Card`). Normal results use at most 74
+glyph tiles and stay below animal bank 1; special results use at most 82 and
+have no live level animals. Both shield banks remain disjoint from the complete
+results allocation. The generator checks these lifetimes at assembly time.
+Scene DPLCs avoid loading the whole raw font. `Pal_TitleCardYellow` must
+immediately follow `Pal_SonicTails`: the title-card loader copies them as one
+two-line palette. Assembly and the native palette-loader check guard that pair. `build_card_art.py` owns their mappings/DPLCs, including
 act 4, V/W and the wide W metrics. Its `act_four()` draws the digit into the
 existing six-tile (16x24) slot. Small results markers use blue-only shading
 from `Title Cards Base.unc`; the generator supplies a separate gold/yellow

@@ -218,10 +218,6 @@ Load_EndOfAct:
 		bclr	#obStatusSecondary_isInvincible,(v_player2+obStatusSecondary).w
 		clr.w	(v_player+invtime).w
 		clr.w	(v_player2+invtime).w
-		; Keep shield state, but stop effect uploads while act-clear bonus
-		; digits reuse the auxiliary bank. A fresh level clears both caches.
-		move.b	#PlayerEffects_ResultsLoaded,(v_shieldobj+effect_loaded_frame).w
-		move.b	#PlayerEffects_ResultsLoaded,(v_shieldobj2+effect_loaded_frame).w
 		clr.b	(f_timecount).w
 		move.l	#GotThrough,(v_endcard).w
 		moveq	#plcid_TitleCard,d0
