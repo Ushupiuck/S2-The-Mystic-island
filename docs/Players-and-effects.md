@@ -56,9 +56,18 @@ resumes following; a lead fall ends the tagged flight.
 
 Local pursuit is bounded to six horizontal and one vertical pixel per update.
 Ordinary respawn flight uses its original horizontal pursuit and vertical
-`min(abs(dy)/16+1,6)`, without overshoot. Takeoff clears standing/rider state;
-negative `obControl` prevents catch-up flight becoming a platform rider.
+`min(abs(dy)/16+1,6)`, without overshoot.
+In vertically wrapping acts, flight uses the shortest signed Y distance across
+the `$800` seam. This keeps repeated near-zero respawns in SMZ2's 50-ring secret
+route from circling the whole level while chasing a moving lead player.
+Takeoff clears standing/rider state; negative `obControl` prevents catch-up flight becoming a platform rider.
 Bridge landing uses the selected log's depressed height.
+
+Lost rings normalize Y after movement when the top camera boundary enables
+wrapping, before probing terrain. Their independent 255-update lifetime uses
+object byte `$2E`, rather than the X fractional position; horizontal movement
+cannot change the timer. Wrapping retains ordinary expiry and the final-80-update
+blink. Non-wrapping acts retain deletion below the lower camera boundary.
 
 Focused HPZ/SMZ and collapse fixtures exist in [Testing](Testing.md). Historical
 full-route samples predate the revised AI; complete revised-AI low/normal/high

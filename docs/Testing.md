@@ -842,3 +842,20 @@ real oscillator updates to catch float-position/rate confusion and sign-wrap
 jumps. Re-running `build_ghz4_water_palette.py` must reproduce both palette files.
 GHZ4 reserves the normal water-surface bank; its lower camera limit allows the
 water to be reached before death. GHZ1-3 remain dry and keep their wall borrowing.
+
+## Companion recovery and lost rings at the Y seam
+
+`check_y_wrap.py --rom ROM --listing LISTING --output OUTPUT` runs the real
+68000 pursuit code with 72 wrapping/non-wrapping source/target pairs. It checks
+ten signed-velocity ring trajectories, canonical wrapped positions, independent
+255-update expiry/blinking, all 32 scatter timers, collection/sparkle cleanup
+and ordinary non-wrapping bottom culling. It needs the optional Unicorn package.
+
+Add `--core CORE --system-directory BIOS` for the live Mode 1 fixture. It uses
+SMZ2's actual subtype-7 transporter: 49 rings must fail, 50 must enter the secret
+route. It first rejoins Tails from below, then repeats direct recovery,
+offscreen-flight timeout, staged death and another recovery. This retains game
+scheduling and AI, while explicitly staging the offscreen/death states. It also
+scatters 32 rings at both sides of the seam with real terrain probes, suppressing
+collection afterward to isolate movement/expiry. `--pal` selects PAL;
+`--probe` records an old build's failures without treating them as a pass.

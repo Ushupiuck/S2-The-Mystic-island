@@ -526,6 +526,16 @@ TailS3_loc_13CBA:
 TailS3_loc_13CBE:
 		move.w	obY(a0),d1
 		sub.w	(Tails_CPU_target_Y).w,d1
+		tst.w	(Camera_Min_Y_pos).w
+		bpl.s	.vertical_distance_ready
+		; Follow the shortest signed distance across the level's Y seam.
+		; Otherwise a respawn above a near-zero target flies through the
+		; entire level and can time out before reaching a moving Sonic.
+		addi.w	#(Level_YWrapMask+1)/2,d1
+		andi.w	#Level_YWrapMask,d1
+		subi.w	#(Level_YWrapMask+1)/2,d1
+.vertical_distance_ready:
+		tst.w	d1
 		beq.s	TailS3_loc_13CD2
 		moveq	#1,d2
 		cmpi.w	#Tails_CPU_CrumbleFlight,(Tails_CPU_reach_state).w

@@ -78,7 +78,7 @@ CollectRing:
 ; ---------------------------------------------------------------------------
 ; Object 13 - Rings flying out of you when you get hit
 ;----------------------------------------------------------------------------
-obDelayAni	= obXSub	; time to delay animation
+obDelayAni	= objoff_2E	; lost-ring lifetime; keep X subpixels independent
 
 Obj13:
 		moveq	#0,d0
@@ -115,6 +115,7 @@ loc_A94E:
 loc_A956:
 		move.l	#Obj13,code(a1)
 		addq.b	#2,obRoutine(a1)
+		move.b	#255,obDelayAni(a1)	; each scattered ring owns its full lifetime
 		move.b	#8,obHeight(a1)
 		move.b	#8,obWidth(a1)
 		move.w	obX(a0),obX(a1)
@@ -154,13 +155,16 @@ loc_A9DE:
 		move.b	#$80,(f_ringcount).w
 		clr.b	(v_lifecount).w
 		moveq	#-1,d0			; Move 255 to d0
-		move.b	d0,obDelayAni(a0)	; Move d0 to new timer
 		move.b	d0,(v_ani3_time).w	; Move d0 to old timer (for animated purposes)
 		moveq	#sfx_RingLoss,d0
 		jsr	(PlaySound_Special).l
 
 loc_A9FA:
 		bsr.w	ObjectMove
+		tst.w	(Camera_Min_Y_pos).w
+		bpl.s	.no_wrap
+		andi.w	#Level_YWrapMask,obY(a0)
+.no_wrap:
 		addi.w	#$18,obVelY(a0)
 		bmi.s	loc_AA34
 		move.b	(Vint_runcount+3).w,d0
@@ -172,6 +176,10 @@ loc_A9FA:
 		jsr	(ObjHitFloor).l
 		bpl.s	loc_AA34
 		add.w	d1,obY(a0)
+		tst.w	(Camera_Min_Y_pos).w
+		bpl.s	.bounce
+		andi.w	#Level_YWrapMask,obY(a0)
+.bounce:
 		move.w	obVelY(a0),d0
 		asr.w	#2,d0
 		sub.w	d0,obVelY(a0)
@@ -181,11 +189,12 @@ loc_AA34:
 		subq.b	#1,obDelayAni(a0)	; Subtract 1
 		beq.w	DeleteObject		; If 0, delete
 		tst.w	(v_limittop2).w		; is vertical wrapping enabled?
-		bmi.w	DisplaySprite		; if so, don't delete rings by boundary
+		bmi.s	.blink			; wrapping keeps the ordinary lifetime/blink
 		move.w	(Camera_Max_Y_pos).w,d0
 		addi.w	#224,d0
 		cmp.w	obY(a0),d0
 		bcs.w	DeleteObject
+.blink:
 		btst	#0,obDelayAni(a0)	; Test the first bit of the timer, so rings flash every other frame.
 		beq.w	DisplaySprite		; If the bit is 0, the ring will appear.
 		cmpi.b	#80,obDelayAni(a0)	; Rings will flash during last 80 steps of their life.
