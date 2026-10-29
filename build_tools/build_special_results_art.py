@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the results screen's own palette, emeralds and continue portraits.
+"""Build the results screen's own palette, emeralds and continue sprites.
 
 The rotating stage keeps every original palette and asset. Results use a dark
 blue backdrop, the shared player row, aligned gold/gray UI colors and two rows
@@ -12,7 +12,8 @@ from import_ehz2_pp_background import nemesis
 from import_scrap_madness import nemesis_compress
 from build_end_art import pack_moduled
 from build_signpost_art import mapping_file
-from build_card_art import tiles
+from build_hud_art import lettering
+from convert_s1_ss_background import kosinski_plus_decode
 from sprite_palette import remap_pixels
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -50,28 +51,23 @@ def main():
     (ROOT/'art/uncompressed/Results emeralds.unc').write_bytes(raw)
     (ROOT/'art/nemesis/Results emeralds.nem').write_bytes(nemesis_compress(raw))
     (ROOT/'mappings/sprite/SSR Emeralds.bin').write_bytes(mapping_file(rows))
-    # The results continue badge uses the same correctly colored portraits as
-    # the life counter, with a blank third tile row in its existing 16x24 slot.
-    sonic = nemesis((ROOT/'art/nemesis/Sonic lives counter.nem').read_bytes())[:128]
-    tails = (ROOT/'art/nemesis/Monitor and contents.unc').read_bytes()[-128:]
-    def portrait(raw):
-        return raw[:64] + bytes(32) + raw[64:] + bytes(32)
-    font = (ROOT/'art/uncompressed/Level select and Debug Mode text.bin').read_bytes()
-    text_pixels = [[0]*72 for _ in range(16)]
-    for column, letter in enumerate('CONTINUE'):
-        glyph = font[(ord(letter)-ord('A')+17)*32:(ord(letter)-ord('A')+18)*32]
-        assert len(glyph) == 32
-        for y in range(8):
-            for x in range(8):
-                value = glyph[y*4+x//2] >> (0 if x&1 else 4) & 15
-                text_pixels[y+4][column*8+x] = 6 if value else 0
-    text = tiles(text_pixels)
-    for name, data in (('Sonic',text+portrait(sonic)*2),('Tails',portrait(tails)*2)):
+    # Retain both original 16x24 continue poses. These older S2 banks use four
+    # blue shades and the original orange slots, not today's shared indices.
+    continue_from_s2 = (0,1,12,11,10,10,6,7,8,9,5,2,13,14,4,3)
+    def poses(filename, skip=0):
+        packed = (ROOT/f'art/moduled kosinski/{filename}.kospm').read_bytes()
+        raw = kosinski_plus_decode(packed[2:])[0][skip*32:]
+        assert len(raw) == 12*32
+        return remap_pixels(raw,continue_from_s2)
+    sonic = poses('Mini Sonic Continue',18)
+    tails = poses('Mini Tails continue')
+    text = lettering('CONTINUE',width=72)
+    for name, data in (('Sonic',text+sonic),('Tails',tails)):
         (ROOT/f'art/uncompressed/Results continue {name}.unc').write_bytes(data)
         (ROOT/f'art/moduled kosinski/Results continue {name}.kospm').write_bytes(pack_moduled(data))
     # Both game/results ring copies now use aligned gold on the second line.
     (ROOT/'art/uncompressed/SS Results Ring.bin').write_bytes((ROOT/'art/uncompressed/Ring.bin').read_bytes())
-    print('Independent results: navy/white/gold UI, six four-tile emeralds, current life portraits.')
+    print('Independent results: navy/white/gold UI, six four-tile emeralds, original animated continue sprites.')
 
 
 if __name__ == '__main__':

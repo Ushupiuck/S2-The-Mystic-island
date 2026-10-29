@@ -867,6 +867,14 @@ collection afterward to isolate movement/expiry. `--pal` selects PAL;
 
 ## Shared palette migration
 
+For the shared small UI font, run `build_hud_art.py`, then
+`build_card_art.py` and `build_special_results_art.py` before building.
+`check_card_screens.py --case special --rings 50` checks both distinct continue
+poses against their six-tile VRAM payloads; run Sonic and Tails selections.
+The normal-results and Debug-HUD checks also cover the shared counters.
+For LZ water colors, inspect the same background above and below the waterline:
+correct palette bytes alone do not establish that imported shading ramps work.
+
 Run `python build_tools/check_sprite_palettes.py --reference <pre-migration-commit> --output test-results/palettes/report.json`.
 It checks level rows, spring piece attributes, underwater regeneration, results
 emeralds and decoded terrain RGB. EHZ2 background readaptation is excluded

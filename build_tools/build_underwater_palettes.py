@@ -23,7 +23,7 @@ def tint(raw, cast):
 
 
 def lz_palette():
-    """Transfer S1 LZ's authored color changes to current FG and TT scenery."""
+    """Adapt S1 LZ's water colors; TT scenery owns its separate authored row."""
     def words(path):
         raw = (ROOT / path).read_bytes()
         return list(struct.unpack('>'+str(len(raw)//2)+'H', raw))
@@ -33,7 +33,7 @@ def lz_palette():
     def rgb(w):
         return tuple(w >> sh & 7 for sh in (1,5,9))
     result = []
-    for line in range(4):
+    for line in range(3):
         old = normal[line*16:(line+1)*16]
         below = water[line*16:(line+1)*16]
         for slot, value in enumerate(current[line*16:(line+1)*16]):
@@ -48,6 +48,12 @@ def lz_palette():
         source_slot = slot-1
         result[16+slot] = water[16+source_slot]
     result[0] = water[0]
+    # This imported scenery has different color roles from S1's final row.
+    # Preserve its purple masonry and distinct shadows with an explicit row;
+    # nearest-color deltas collapse dark reds and turn highlights green.
+    background = words('palette/LZ Background Underwater.bin')
+    assert len(background) == 16
+    result += background
     return struct.pack('>64H',*result)
 
 

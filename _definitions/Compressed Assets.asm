@@ -678,10 +678,10 @@ MCD_CompressedAssets:
 	dc.l Kospm_Prison,Kospm_Prison+$590	; art/moduled kosinski/Prison Capsule.kospm
 	endif
 	if defined(Kospm_ResultsContinueSonic)
-	dc.l Kospm_ResultsContinueSonic,Kospm_ResultsContinueSonic+$EE	; art/moduled kosinski/Results continue Sonic.kospm
+	dc.l Kospm_ResultsContinueSonic,Kospm_ResultsContinueSonic+$133	; art/moduled kosinski/Results continue Sonic.kospm
 	endif
 	if defined(Kospm_ResultsContinueTails)
-	dc.l Kospm_ResultsContinueTails,Kospm_ResultsContinueTails+$69	; art/moduled kosinski/Results continue Tails.kospm
+	dc.l Kospm_ResultsContinueTails,Kospm_ResultsContinueTails+$C1	; art/moduled kosinski/Results continue Tails.kospm
 	endif
 	if defined(Kospm_Rhinobot)
 	dc.l Kospm_Rhinobot,Kospm_Rhinobot+$346	; art/moduled kosinski/Enemy Rhinobot.kospm
@@ -1107,7 +1107,7 @@ MCD_CompressedAssets:
 	dc.l Nem_HTZ_Seesaw,Nem_HTZ_Seesaw+$1BA	; art/nemesis/See-saw in HTZ.nem
 	endif
 	if defined(Nem_HUD)
-	dc.l Nem_HUD,Nem_HUD+$C9	; art/nemesis/HUD.nem
+	dc.l Nem_HUD,Nem_HUD+$B2	; art/nemesis/HUD.nem
 	endif
 	if defined(Nem_HangingSurface)
 	dc.l Nem_HangingSurface,Nem_HangingSurface+$AC	; art/nemesis/Hanging surface.nem

@@ -374,6 +374,16 @@ transparent. Edit the shared source, then rebuild to regenerate the HUD copy.
 The existing coordinate VRAM range and menu/error font palette indices remain
 unchanged.
 
+`python build_tools/build_hud_art.py` rebuilds SCORE/TIME and the 8x16
+score, timer, ring and results-bonus digit cells from that same Ristar font
+(also used by the small CONTINUE label). Labels retain yellow/red blinking;
+white counters have a black one-pixel shadow. The timer colon is an authored
+pair of square dots matching the font's stroke weight. Cell sizes, mappings,
+VRAM allocations and all life-HUD sources remain unchanged. It also generates
+`SS Results Labels.unc`; run `build_card_art.py` afterwards to update the small
+SCORE/BONUS labels on both results screens. Large title/result headings retain
+their separate card font.
+
 ## Palette adaptation
 
 Runtime player art uses `palette/SonicAndTails.bin`, identical to the owner's
@@ -392,8 +402,13 @@ and 18 diagonal tiles; `build_spring_art.py` packs them. Their VRAM bases stay
 fixed; the 18 released slots remain gaps rather than new global allocations.
 
 `build_special_results_art.py` builds the independent navy/white/gold results
-palette, six four-tile emeralds at tile $500 on lines three/four, and current
-life-portrait continue badges at the existing mini-character banks. Its ring
+palette, six four-tile emeralds at tile $500 on lines three/four, and the
+original two-frame 16x24 continue sprites at the existing mini-character banks.
+The retained Mini Sonic/Tails compressed sources supply the poses; Sonic's
+old CONTINUE tiles are replaced by lettering from the shared Ristar font.
+Their original S2 blue/orange slots are adapted offline to the current player
+row (the four-source-shade blue ramp shares the three available blue slots).
+Its ring
 selects the second-line gold ramp. `build_card_art.py` generates matching labels
 and blue markers. The rotating stage retains its original palette and private
 copies of its formerly shared bumper/ring/sparkle banks.

@@ -516,8 +516,12 @@ four-row teal generator. Regenerate these after editing character colors.
 
 Rustic Ruins Acts 1–3 use a dedicated full `LZ Underwater.bin`; Act 4 retains
 its SBZ3 selection. The generator transfers S1 LZ's per-color normal-to-water
-changes to the current foreground and Tidal Tempest Present background palette,
-then enforces shared gray/yellow roles. Source binaries live in `palette/sources/`:
+changes to the current foreground and sprite rows, then enforces shared
+gray/yellow roles. Tidal Tempest Present's background uses the separately
+editable 16-color `palette/LZ Background Underwater.bin` at its existing final
+row. Its blue/purple ramps retain distinct red/purple masonry shadows; do not
+apply S1's unrelated final-row color deltas to this imported scenery.
+Source binaries live in `palette/sources/`:
 S1 Sonic blob 5135434b6ab82242a1b4daa19bbc00571f9a97dc,
 LZ normal 0c09d23e36ae5dda5f8d11b4cbce5259e7e62edb, underwater
 b4b9c1db02663e7ce82f7d9bc7f9d1ad3b212a0e (sonicretro/s1disasm AS).

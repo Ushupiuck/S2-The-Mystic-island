@@ -244,10 +244,18 @@ else:
     g.video.save(args.output/'results.png')
     poses=set()
     if args.rings>=50:
+        character='Tails' if args.player==2 else 'Sonic'
+        continue_art=(ROOT/f'art/uncompressed/Results continue {character}.unc').read_bytes()
+        sprite_start=0 if args.player==2 else 18
+        sprite_art=continue_art[sprite_start*32:]
+        assert len(sprite_art)==12*32 and sprite_art[:6*32]!=sprite_art[6*32:], 'Continue lost its two distinct poses'
         for _ in range(800):
             step()
             frame=g.get('v_ssrescontinue','obFrame')
             if frame in (4,5):
+                tile=g.s[f'ArtTile_Mini_{character}']+sprite_start+(frame-4)*6
+                expected=sprite_art[(frame-4)*6*32:(frame-3)*6*32]
+                assert vram(tile*32,6*32)==expected,('Continue sprite VRAM',character,frame)
                 if frame not in poses:
                     step()  # The video callback presents the preceding SAT.
                     g.video.save(args.output/f'continue-{frame-4}.png')
