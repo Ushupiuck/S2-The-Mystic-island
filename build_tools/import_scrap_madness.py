@@ -13,6 +13,7 @@ import re
 import struct
 from collections import Counter
 from convert_s1_ss_background import enigma, kosinski_plus, kosinski_plus_decode
+from sprite_palette import ENEMY_FROM_LEGACY, remap_line
 from terrain_collision import read_bank, remap_geometry, S1_BANK_FILES
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -171,7 +172,7 @@ def remap_player_art(name, raw, lookup):
         # $0AE in slot $E. Slot $A ($8CE) is skin-tone cream, not fire orange.
         # Pipe ends retain their stage-palette pixels.
         flame_lookup = list(lookup)
-        flame_lookup[15] = 14
+        flame_lookup[15] = 4
         return remap_pixels(raw[:20*32], flame_lookup) + raw[20*32:]
     return remap_pixels(raw, lookup)
 
@@ -285,6 +286,7 @@ def geometry(source):
         assert len(palette) == 96
         # The first imported row is palette line 2, shared by terrain/objects.
         palette[14:20] = (ROOT/'palette/SonicAndTails.bin').read_bytes()[14:20]
+        palette[:32] = struct.pack('>16H', *remap_line(struct.unpack('>16H', palette[:32]), ENEMY_FROM_LEGACY))
         (ROOT/f'palette/SMZ{act}.bin').write_bytes(palette)
     return blocks, chunk_data, indices, layouts
 
@@ -403,6 +405,8 @@ def main():
     art=nemesis(source/'artnem/8x8 - SBZ.nem')
     assert not any(art[:32]) and len(art)==0x2A9*32
     art=art[:32]+bytes(16*32)+art[32:]
+    from sprite_palette import remap_tile_bank
+    art, blocks = remap_tile_bank(art, blocks, {1:ENEMY_FROM_LEGACY})
     era_dirs=('', 'past/', 'good future/', 'bad future/')
     act_layouts={act:{f'level/layout/{era}SMZ_{act}.kosp':layouts[act-1]
                      for era in era_dirs} for act in (1,2)}
@@ -443,6 +447,8 @@ def main():
             target = struct.unpack('>16H', (ROOT/'palette/SonicAndTails.bin').read_bytes()[:32])
             data = nemesis_inline(remap_player_art(name, nemesis(path),
                                                  palette_lookup(original, target)))
+        if name in ('SBZ Stomper', 'SBZ Vanishing Block'):
+            data = nemesis_inline(remap_pixels(nemesis(path), ENEMY_FROM_LEGACY))
         (ROOT/f'art/nemesis/S1/{name}.nem').write_bytes(data)
     print(json.dumps(report,indent=2))
 

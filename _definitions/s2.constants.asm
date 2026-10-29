@@ -1910,7 +1910,7 @@ ArtTile_SS_Rings:		equ $14A	; $2940; stage ring and palette-0 results copy
 ArtTile_SS_Sparkles:		equ ArtTile_SS_Rings+4
 
 ; Special Stage Results
-ArtTile_SS_Results_Emeralds:	equ $541
+ArtTile_SS_Results_Emeralds:	equ $500	; 24 private results tiles, below continue icons
 
 ; Font
 ArtTile_Credits_Font:		equ $5A0

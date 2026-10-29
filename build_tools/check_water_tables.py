@@ -36,9 +36,9 @@ for zone in range(m.s['LevelCount']):
         m.write('v_waterpos1', 0x5A5A, 2)
         m.act('CheckLevelForWater')
         if wet:
-            height = 0x400 if ghz4 else (0x600, 0x328, 0x900, 0x228)[act]
+            height = 0x600 if ghz4 else (0x600, 0x328, 0x900, 0x228)[act]
             assert [m.read('v_waterpos' + str(i), 2) for i in (1, 2, 3)] == [height] * 3
-            palette = m.s['palid_GHZ4Water'] if ghz4 else m.s['palid_SBZ3SonWat'] if zone == m.s['id_LZ'] and act == 3 else m.s['palid_LZSonWater']
+            palette = m.s['palid_GHZ4Water'] if ghz4 else m.s['palid_SBZ3Water'] if zone == m.s['id_LZ'] and act == 3 else m.s['palid_LZWater'] if zone == m.s['id_LZ'] else m.s['palid_HPZWater']
             assert m.cpu.reg_read(m68k.UC_M68K_REG_D0) == palette
         else:
             assert m.read('v_waterpos1', 2) == 0x5A5A

@@ -243,3 +243,7 @@ See [mounted-object codes and ownership](../docs/Objects.md#mounted-platform-obj
 The preview combines the selected body and payload. Button art is resident in
 SMZ; GHZ4 explicitly loads its portable bank. Other acts need their own PLC
 and VRAM allocation before using buttons.
+
+Shared sprites follow the [palette slot contract](../docs/Sprites-and-VRAM.md#palette-adaptation).
+Yellow springs share cap pixels and select palette 1 per piece; mechanisms use
+palette 0. LZ conveyor/morphing previews use palette 0, matching the runtime.

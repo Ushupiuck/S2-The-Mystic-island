@@ -127,7 +127,8 @@ PalCycle_EHZ:
 		andi.w	#3,d0
 		lsl.w	#3,d0
 		move.l	(a0,d0.w),(v_palette+$26).w
-		move.l	4(a0,d0.w),(v_palette+$3C).w
+		move.w	4(a0,d0.w),(v_palette+$36).w
+		move.w	6(a0,d0.w),(v_palette+$3E).w
 .return:	rts
 ; ===========================================================================
 
@@ -143,7 +144,8 @@ PalCycle_HTZ:
                 move.b	(a1,d0.w),(v_pcyc_time+1).w
 		lsl.w	#3,d0
 		move.l	(a0,d0.w),(v_palette+$26).w
-		move.l	4(a0,d0.w),(v_palette+$3C).w
+		move.w	4(a0,d0.w),(v_palette+$36).w
+		move.w	6(a0,d0.w),(v_palette+$3E).w
 .return:	rts
 ; ===========================================================================
 

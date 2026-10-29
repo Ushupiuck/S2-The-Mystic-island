@@ -31,7 +31,7 @@ def check_hud(g, rom, output):
         # EHZ2's private scenery palette must preserve shared HUD ink/shading.
         # Read live colors after the real palette loader, not the importer report.
         palette = struct.unpack('>48H', (Path(__file__).resolve().parents[1]/'palette/EHZ.bin').read_bytes())
-        for index in (1, 6, 7, 8, 12, 13, 14):
+        for index in (1, 6, 7, 8, 9, 13, 14, 15):
             assert g.read(g.s['v_palette']+(16+index)*2, 2) == palette[index], (
                 'EHZ2 background overwrote a shared HUD color', index)
     art = rom[g.s['Art_HUD']:]

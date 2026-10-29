@@ -128,8 +128,8 @@ if args.case == 'intro':
                     assert_ink_color('v_ttlcardact',17+act,(1,),22)
                 if g.read('Water_flag') and g.read('v_vbla_routine',2) in (
                         g.s['Vint_LevelLoad'],g.s['Vint_Level'],g.s['Vint_Fade']):
-                    actual=g.read(g.s['v_palette_water']+0x38,2)
-                    target=g.read(g.s['v_palette_water_fading']+0x38,2)
+                    actual=g.read(g.s['v_palette_water']+0x3A,2)
+                    target=g.read(g.s['v_palette_water_fading']+0x3A,2)
                     assert actual==target,('underwater ACT color during fade',zone,act,actual,target)
                 if (g.read('v_gamemode',2)==g.s['Level'] and
                     g.read('v_vbla_routine',2)==g.s['Vint_Level'] and g.read('f_timecount')):
@@ -196,7 +196,7 @@ elif args.case == 'normal':
     assert g.get('v_endcardact','obFrame')==6+args.act
     # Normal labels use the level's authored line-two foreground slot C;
     # GHZ4's water sample deliberately has a different color from GHZ1.
-    normal_ink=g.read(g.s['v_palette']+0x20+12*2,2)
+    normal_ink=g.read(g.s['v_palette']+0x20+13*2,2)
     assert_ink_color('v_endcard',2,(0,1),10,normal_ink)
     assert_ink_color('v_endcard',3,(0,1,2),10,normal_ink)
     assert_ink_color('v_endcard',4,(1,2),10,normal_ink)
@@ -238,7 +238,7 @@ else:
     state=0 if not args.emeralds else 2 if args.emeralds==6 else 1
     assert_card(72+state*2+(args.player==2));assert_bonus();assert_score()
     assert g.get('v_endcard','obMap',4)==g.s[f'Map_SSR_{state}_{int(args.player==2)}']
-    ink=int.from_bytes((ROOT/'palette/Special Stage Results.bin').read_bytes()[30:32],'big')
+    ink=int.from_bytes((ROOT/'palette/Special Stage Results.bin').read_bytes()[58:60],'big')
     assert_ink_color('v_endcard',1,(0,1),7,ink)
     assert_ink_color('v_endcard',2,(1,2),7,ink)
     g.video.save(args.output/'results.png')
@@ -255,7 +255,7 @@ else:
                 if poses=={4,5}:
                     break
         assert poses=={4,5},poses
-        assert_ink_color('v_endcard',4,(0,),7,ink)
+        assert_ink_color('v_endcard',4,(0,),7,0xEEE)
     report.update(emeralds=args.emeralds,rings=args.rings,continue_poses=sorted(poses))
 
 report['passed']=True

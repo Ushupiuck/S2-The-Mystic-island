@@ -47,9 +47,9 @@ restart(8)
 base = g.save()
 portrait = vram(g.s['ArtTile_Lives_Counter']*32, 4*32)
 colors = {n for b in portrait for n in (b>>4, b&15)}
-assert 4 not in colors and {5,12,13} <= colors, colors
-assert g.read(g.s['v_palette']+24, 2) == 0xE
-assert g.read(g.s['v_palette']+26, 2) == 8
+assert 15 not in colors and {10,13,14} <= colors, colors
+assert g.read(g.s['v_palette']+26, 2) == 0xE
+assert g.read(g.s['v_palette']+28, 2) == 8
 sat = bytes(g.read(g.s['Sprite_Table']+i) for i in range(80*8))
 icons = [struct.unpack_from('>H', sat, i+4)[0] for i in range(0,len(sat),8)
          if struct.unpack_from('>H', sat, i+4)[0]&2047 == g.s['ArtTile_Lives_Counter']]
@@ -115,11 +115,11 @@ for tick in range(260):
             if total>>13&3: continue
             data = vram((total&2047)*32,((size>>2)+1)*((size&3)+1)*32)
             flame_colors.update(n for byte in data for n in (byte>>4,byte&15))
-            if (14 in flame_colors and g.get(obj,'obRender')&128
+            if (4 in flame_colors and g.get(obj,'obRender')&128
                     and g.get(obj,'obFrame') in (10,21) and tick>60 and not visible):
                 g.video.save(a.output/'sbz1-flame.png');visible = True
-assert visible and 14 in flame_colors and 10 not in flame_colors, flame_colors
-assert g.read(g.s['v_palette']+14*2, 2) == 0x0AE
+assert visible and 4 in flame_colors and 5 not in flame_colors, flame_colors
+assert g.read(g.s['v_palette']+4*2, 2) == 0x0AE
 passed('Visible SBZ flames use the golden orange core without changing global colors')
 
 restart(8,1)

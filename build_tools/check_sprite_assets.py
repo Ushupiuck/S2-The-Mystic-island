@@ -10,7 +10,7 @@ import re
 import struct
 
 ROOT = Path(__file__).resolve().parents[1]
-TAILS_PALETTE_REMAP = (0, 6, 5, 3, 2, 4, 12, 13, 14, 15, 10, 11, 7, 8, 9, 1)
+from sprite_palette import PLAYER_FROM_SK as TAILS_PALETTE_REMAP
 
 
 def frames(data, base=0, count=None):

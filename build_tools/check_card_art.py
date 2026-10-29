@@ -127,7 +127,7 @@ for mode in (0,1,2):
         rows=frames(rom,m.cpu.reg_read(m68k.UC_M68K_REG_A3),7)
         assert (rows[2][5][2]+m.s['ArtTile_Results_Card']) & 0xFFFF == m.s['ArtTile_Bonuses']+8
         mini=m.s['ArtTile_Mini_Tails'] if mode == 2 else m.s['ArtTile_Mini_Sonic']+18
-        assert (rows[4][-1][2]+m.s['ArtTile_Results_Card']) & 0xFFFF == 0x2000+mini
+        assert (rows[4][-1][2]+m.s['ArtTile_Results_Card']) & 0xFFFF == mini
         checks.append({'case':'special-heading-and-character-addresses','mode':mode,'emeralds':emeralds})
 
 

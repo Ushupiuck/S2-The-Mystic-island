@@ -13,7 +13,7 @@ import struct
 ROOT = Path(__file__).resolve().parents[1]
 REVISION = '73de97c6b55055bcb8089c1d55d006b02136f163'
 POSES = (0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x91)
-REMAP = (0, 6, 5, 3, 2, 4, 12, 13, 14, 15, 10, 11, 7, 8, 9, 1)
+from sprite_palette import PLAYER_FROM_SK as REMAP
 
 
 def records(path):

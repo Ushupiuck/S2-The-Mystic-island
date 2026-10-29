@@ -9,6 +9,7 @@ from pathlib import Path
 import argparse,re,struct
 from build_signpost_art import mapping_file
 from build_end_art import pack_moduled
+from sprite_palette import MECHA_FROM_SK, remap_pixels, remap_line
 ROOT=Path(__file__).resolve().parents[1]
 
 def blocks(path):
@@ -36,12 +37,13 @@ def maps(path):
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--source',type=Path,required=True);p.add_argument('--extra-raw',type=Path,required=True);a=p.parse_args()
     src=a.source/'General/Sprites/Mecha Sonic'
-    art=(src/'Mecha Sonic.unc').read_bytes();(ROOT/'art/uncompressed/Mecha Sonic.unc').write_bytes(art)
+    art=remap_pixels((src/'Mecha Sonic.unc').read_bytes(),MECHA_FROM_SK);(ROOT/'art/uncompressed/Mecha Sonic.unc').write_bytes(art)
     rows=maps(src/'Map - Mecha Sonic.asm');assert len(rows)==22
     (ROOT/'mappings/sprite/Mecha Sonic.bin').write_bytes(mapping_file(rows))
     effects=maps(src/'Map - Mecha Sonic Extra.asm')[:8]
     (ROOT/'mappings/sprite/Mecha Sonic effects.bin').write_bytes(mapping_file(effects))
     extra=a.extra_raw.read_bytes()[:22*32];assert len(extra)==22*32
+    extra=extra[:9*32]+remap_pixels(extra[9*32:],MECHA_FROM_SK)
     (ROOT/'art/uncompressed/Mecha Sonic effects.unc').write_bytes(extra)
     (ROOT/'art/moduled kosinski/Mecha Sonic effects.kospm').write_bytes(pack_moduled(extra))
     b=blocks(src/'DPLC - Mecha Sonic.asm');base=next(iter(b));runs=[]
@@ -53,8 +55,8 @@ def main():
     for i in range(len(runs)):text.append(f'\tdc.w .frame{i:02X}-DPLC_MechaSonic\n')
     for i,run in enumerate(runs):text.append(f'.frame{i:02X}:\tdc.w {len(run)}\n\tdc.w '+','.join(f'${w:04X}' for w in run)+'\n')
     (ROOT/'mappings/spriteDPLC/Mecha Sonic.asm').write_text(''.join(text)+'\teven\n')
-    for name in ('Flash 1','Flash 2'):(ROOT/f'palette/Mecha Sonic {name}.bin').write_bytes((src/f'Palettes/{name}.bin').read_bytes())
-    (ROOT/'palette/Mecha Sonic.bin').write_bytes((src/'Palettes/Main.bin').read_bytes())
+    for name in ('Flash 1','Flash 2'):(ROOT/f'palette/Mecha Sonic {name}.bin').write_bytes(struct.pack('>16H',*remap_line(struct.unpack('>16H',(src/f'Palettes/{name}.bin').read_bytes()),MECHA_FROM_SK)))
+    (ROOT/'palette/Mecha Sonic.bin').write_bytes(struct.pack('>16H',*remap_line(struct.unpack('>16H',(src/'Palettes/Main.bin').read_bytes()),MECHA_FROM_SK)))
     for short,file,prefix in [('Land','96 - Mecha Land.asm','Sound_96'),('Spark','5C - Mecha Spark.asm','Sound_5C'),('Thump','49 - Thump.asm','Sound_49')]:
         text=(a.source/'Sound/SFX'/file).read_text().replace(prefix,'Mecha'+short)
         (ROOT/f'sound/SFX/Mecha {short}.asm').write_text('; From pinned skdisasm; legacy SMPS voice format 0.\n'+text.rstrip()+'\n')

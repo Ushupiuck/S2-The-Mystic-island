@@ -5,6 +5,7 @@ SoundBankAssets macro kind,bank,{GLOBALSYMBOLS}
 	if ("kind"="Music")&&(bank=3)
 		even
 Nem_SegaLogo:	binclude "art/nemesis/Sega Logo (JP1).nem"
+		even
 Nem_HUD:	binclude "art/nemesis/HUD.nem"
 		even
 	endif

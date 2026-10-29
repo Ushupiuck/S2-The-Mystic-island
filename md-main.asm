@@ -1621,7 +1621,7 @@ Pal_SonicTails:	binclude	"palette/SonicAndTails.bin"
 ; Only the ACT-number yellow is needed before the level palette is available.
 Pal_TitleCardYellow:
 		dc.l	0,0,0,0,0,0
-		dc.w	$0EE,0,0,0
+		dc.w	0,$0EE,$088,$044
 		if Pal_TitleCardYellow-Pal_SonicTails<>palette_line_size
 			fatal "Title-card palette must follow the player palette"
 		endif
@@ -1654,6 +1654,8 @@ Pal_LZ4Water:	binclude	"palette/LZ4 Underwater.bin"
 Pal_GHZ4Water:	binclude	"palette/GHZ4 Underwater.bin"
 		even
 Pal_GHZ4WaterCyc: binclude "palette/GHZ4 Underwater Cycle.bin"
+		even
+Pal_LZWater:	binclude "palette/LZ Underwater.bin"
 		even
 Pal_HPZWater:	binclude	"palette/HPZ Underwater.bin"
 		even
@@ -2486,13 +2488,7 @@ Level_Demo:
 Level_ChkWaterPal:
 		tst.b	(Water_flag).w
 		beq.s	Level_Delay
-		moveq	#palid_GHZ4Water,d0
-		cmpi.w	#3,(Current_ZoneAndAct).w
-		beq.s	Level_WtrNotHtz
-		moveq	#palid_HPZWater,d0
-		cmpi.w	#(id_LZ<<8)+3,(Current_ZoneAndAct).w ; is level SBZ3 (LZ4) ?
-		bne.s	Level_WtrNotHtz
-		moveq	#palid_SBZ3Water,d0
+		bsr.w	GetWaterPaletteID
 
 Level_WtrNotHtz:
 		bsr.w	PalLoad4_Water
@@ -2500,7 +2496,7 @@ Level_WtrNotHtz:
 Level_Delay:
 		tst.b	(Water_flag).w
 		beq.s	.palette_ready
-		move.w	(v_palette_water_fading+$38).w,(v_palette_water+$38).w ; underwater ACT color
+		move.w	(v_palette_water_fading+$3A).w,(v_palette_water+$3A).w ; underwater ACT color
 .palette_ready:
 		move.w	#Vint_LevelLoad,(v_vbla_routine).w	; safely enable the water split on the first frame
 		moveq	#4-1,d1
@@ -3444,7 +3440,7 @@ BonusStage:
 		lea	(PLC_S1SpecialStage).l,a1
 		bsr.w	QuickPLC
 	if MegaCDMode1
-		jsr	(LoadRingArt).l		; this stage streams rings, but uses no shields/stars
+		jsr	(LoadSpecialStageRingArt).l	; unchanged rotating-stage palette
 	endif
 		bsr.w	InitRingFrame
 		sf	(f_wtr_state).w
@@ -13400,21 +13396,22 @@ Kosp_TitleBg2:	binclude	"tilemaps/Title Background - 2.kosp"
 Nem_Stalk:	binclude	"art/nemesis/S1/GHZ Flower Stalk.nem"
 		even
 Nem_Swing:	binclude	"art/nemesis/S1/GHZ Swinging Platform.nem"
-		even		; Already even, uncomment if an edit makes it odd
+		even
 Nem_GHZ_Bridge:	binclude	"art/nemesis/S1/GHZ Bridge.nem"
 		even
 Nem_GHZ_Ball:	binclude	"art/nemesis/S1/GHZ Giant Ball.nem"
-	;	even		; Already even, uncomment if an edit makes it odd
+		even
 Nem_GHZ_Rock:	binclude	"art/nemesis/S1/GHZ Purple Rock.nem"
-	;	even		; Already even, uncomment if an edit makes it odd
+		even
 Nem_GHZ_BWall:	binclude	"art/nemesis/S1/GHZ Breakable Wall.nem"
-	;	even		; Already even, uncomment if an edit makes it odd
+		even
 Nem_GHZ_SWall:	binclude	"art/nemesis/S1/GHZ Edge Wall.nem"
-	;	even		; Already even, uncomment if an edit makes it odd
+		even
 ; ---------------------------------------------------------------------------
 ; Rustic Ruins Zone stage assets
 ; ---------------------------------------------------------------------------
 Kospm_FlapDoor:	binclude	"art/moduled kosinski/Flapping Door.kospm"
+		even
 Kospm_LzWheel:	binclude	"art/moduled kosinski/LZ conveyor.kospm"
 		even
 ; ---------------------------------------------------------------------------
@@ -13486,12 +13483,17 @@ Nem_MorphingPlatform:	binclude	"art/nemesis/Morphing Orbs.nem"
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - enemies
 ; ---------------------------------------------------------------------------
-		; Kosinski art in general is even by default
+		; Keep each independently addressed module archive word aligned.
 Kospm_BallhogV:	binclude	"art/moduled kosinski/Enemy Ballhog (Vertical).kospm"
+		even
 Kospm_BallhogH:	binclude	"art/moduled kosinski/Enemy Ballhog (Horizontal).kospm"
+		even
 Kospm_Chopper:	binclude	"art/moduled kosinski/Enemy Chopper.kospm"
+		even
 Kospm_Motobug:	binclude	"art/moduled kosinski/Enemy Motobug.kospm"
+		even
 Kospm_Crabmeat:	binclude	"art/moduled kosinski/Enemy Crabmeat.kospm"
+		even
 		include "objects/Scrap Madness/A1 Running Disc.asm"
 		include "objects/A2 Conveyor Belt.asm"
 		include "objects/Scrap Madness/A3 Spinning Platforms.asm"
@@ -13520,17 +13522,29 @@ Kospm_Crabmeat:	binclude	"art/moduled kosinski/Enemy Crabmeat.kospm"
 
 
 Kospm_Buzz:	binclude	"art/moduled kosinski/Enemy Buzz Bomber.kospm"
+		even
 Kospm_Newtron:	binclude	"art/moduled kosinski/Enemy Newtron.kospm"
+		even
 Kospm_Burrobot:	binclude	"art/moduled kosinski/Enemy Burrobot.kospm"
+		even
 Kospm_Jaws:	binclude	"art/moduled kosinski/Enemy Jaws.kospm"
+		even
 Kospm_Yadrin:	binclude	"art/moduled kosinski/Enemy Yadrin.kospm"
+		even
 Kospm_Basaran:	binclude	"art/moduled kosinski/Enemy Basaran.kospm"
+		even
 Kospm_Splats:	binclude	"art/moduled kosinski/Enemy Splats.kospm"
+		even
 Kospm_Bomb:	binclude	"art/moduled kosinski/Enemy Bomb.kospm"
+		even
 Kospm_Orbinaut:	binclude	"art/moduled kosinski/Enemy Orbinaut.kospm"
+		even
 Kospm_Cater:	binclude	"art/moduled kosinski/Enemy Caterkiller.kospm"
+		even
 Kospm_BBat:	binclude	"art/moduled kosinski/Enemy BBat.kospm"
+		even
 Kospm_Rhinobot:	binclude	"art/moduled kosinski/Enemy Rhinobot.kospm"
+		even
 Nem_Gator:	binclude	"art/nemesis/Enemy Gator.nem"
 		even
 Nem_Buzzer:	binclude	"art/nemesis/Enemy Buzzer.nem"
@@ -13567,6 +13581,12 @@ Nem_PP_Tamabboh:
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - various
 ; ---------------------------------------------------------------------------
+Nem_SpecialStageBumper:	binclude "art/nemesis/Special stage bumper.nem"
+		even
+Nem_SpecialStageSparkles:	binclude "art/nemesis/Special stage sparkles.nem"
+		even
+Nem_SpecialStageRings:	binclude "art/nemesis/Special stage rings.nem"
+		even
 Nem_Sparkles:	binclude	"art/nemesis/Ring Sparkles.nem"
 		even
 Nem_Monitors:	binclude	"art/nemesis/Monitor and contents.nem"
@@ -13680,6 +13700,10 @@ Nem_GroundExplosion:
 	;	align $8000
 Art_Sonic:	binclude	"art/uncompressed/Sonic's art.unc"
 		even
+Art_SpecialStageSonic:	binclude "art/uncompressed/Special stage Sonic.unc"
+		even
+DPLC_SpecialStageSonic:	binclude "mappings/spriteDPLC/Special stage Sonic.bin"
+		even
 Art_HangingSonic:	binclude "art/uncompressed/Sonic hanging.unc"
 	;	align $100
 	;	align $8000
@@ -13726,7 +13750,7 @@ Nem_Ring:	binclude	"art/nemesis/Ring.nem"
 Art_Ring:	binclude	"art/uncompressed/Ring.bin"
 Art_Ring_End:
 	endif
-; Same eight ring frames, with 6 -> E, C -> C, D -> B and E -> A for palette 0.
+; Results retain their own source/cache, using the aligned second-line gold ramp.
 Art_SSResultsRing:	binclude	"art/uncompressed/SS Results Ring.bin"
 Art_BigRing:	binclude	"art/uncompressed/Giant Ring.bin"
 Art_BigFlash:	binclude	"art/uncompressed/Giant Ring Flash.bin"
@@ -13746,9 +13770,17 @@ Art_HPZPulseOrb:	binclude	"art/uncompressed/Pulsing orb (HPZ).bin"
 ; ---------------------------------------------------------------------------
 ; These files are already even, so...
 Kospm_ContSonic:	binclude	"art/moduled kosinski/Continue Screen Sonic.kospm"
+		even
 Kospm_ContTails:	binclude	"art/moduled kosinski/Continue screen Tails.kospm"
+		even
+Kospm_ResultsContinueSonic:	binclude "art/moduled kosinski/Results continue Sonic.kospm"
+		even
+Kospm_ResultsContinueTails:	binclude "art/moduled kosinski/Results continue Tails.kospm"
+		even
 Kospm_MiniSonic:	binclude	"art/moduled kosinski/Mini Sonic Continue.kospm"
+		even
 Kospm_MiniTails:	binclude	"art/moduled kosinski/Mini Tails continue.kospm"
+		even
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - Ending (Leftover placeholder - to be re-used)
 ; ---------------------------------------------------------------------------
@@ -13757,9 +13789,12 @@ Nem_EndEm:		binclude	"art/nemesis/S1/Ending - Emeralds.nem"
 Nem_EndSonic:		binclude	"art/nemesis/S1/Ending - Sonic.nem"
 			even
 Kospm_EndFlowers:	binclude	"art/moduled kosinski/Ending - Flowers.kospm"
+		even
 Kospm_EndStalk:		binclude	"art/moduled kosinski/Ending - Flower Stalk.kospm"
+		even
 Kosp_CreditText:	binclude	"art/kosinski/Ending - Credits.kosp"
 Kospm_TryAgain:		binclude	"art/moduled kosinski/Ending - Try Again.kospm"
+		even
 Nem_EndStH:		binclude	"art/nemesis/S1/Ending - StH Logo.nem"
 			even
 ; ---------------------------------------------------------------------------
@@ -13785,8 +13820,11 @@ Art_S1SSBGBirds:		binclude	"art/uncompressed/S1 Special Stage BG Animation.bin"
 Art_S1SSBGFish	= Art_S1SSBGBirds+3*$800
 		even
 Kospm_SSBgCloud:	binclude	"art/Bonus & Special Stage/Bonus Clouds.kospm" ; bonus stage clouds background
+		even
 Kospm_SSGhost:		binclude	"art/Bonus & Special Stage/Bonus Stage Ghost.kospm" ; bonus stage ghost block
+		even
 Kospm_SS1UpBlock:	binclude	"art/Bonus & Special Stage/Bonus Stage 1UP.kospm" ; bonus stage 1UP block
+		even
 Nem_SSRedWhite:		binclude	"art/Bonus & Special Stage/Bonus Stage Red-White.nem" ; bonus stage red/white block
 			even
 Kospm_SSUpDown:		binclude	"art/Bonus & Special Stage/Bonus Stage UP-DOWN.kospm" ; bonus stage UP/DOWN block
@@ -13805,7 +13843,7 @@ Nem_SSEmStars:		binclude	"art/Bonus & Special Stage/Bonus Stage Emerald Twinkle.
 			even
 Nem_Warp:		binclude	"art/Bonus & Special Stage/Bonus Stage Flash.nem" ; bonus stage entry flash (Leftover from Sonic 1 beta; TO BE RESTORED)
 			even
-Nem_ResultEm:		binclude	"art/Bonus & Special Stage/Bonus Stage Result Emeralds.nem" ; chaos emeralds on special stage results screen
+Nem_ResultEm:		binclude	"art/nemesis/Results emeralds.nem" ; chaos emeralds on special stage results screen
 			even
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - primary patterns and block mappings

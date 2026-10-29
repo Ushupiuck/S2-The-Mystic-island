@@ -10,6 +10,7 @@ import argparse
 import re
 import struct
 
+from sprite_palette import ENEMY_FROM_LEGACY
 from import_scrap_madness import nemesis_inline, palette_lookup, remap_pixels
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -33,7 +34,7 @@ def main():
 	target = struct.unpack('>16H', (ROOT/'palette/SMZ2.bin').read_bytes()[:32])
 	lookup = palette_lookup(source, target)
 	# Keep the three magenta shades distinct, and retain the S3 gray ramp.
-	lookup[5], lookup[10], lookup[11] = 2, 4, 5
+	lookup[5], lookup[10], lookup[11] = (ENEMY_FROM_LEGACY[i] for i in (2, 4, 5))
 	raw = remap_pixels(raw, lookup)
 	(ROOT/'art/uncompressed/Enemy Kemusi.unc').write_bytes(raw)
 	(ROOT/'art/nemesis/Enemy Kemusi.nem').write_bytes(nemesis_inline(raw))

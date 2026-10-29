@@ -54,7 +54,7 @@ BonusPlayer_ChkDebug:	; Routine 2
 		andi.w	#2,d0				; read air bit of status (d0 = 0 or 2)
 		move.w	BonusPlayer_Modes(pc,d0.w),d1
 		jsr	BonusPlayer_Modes(pc,d1.w)
-		jsr	(LoadSonicDynPLC).l		; update Sonic's gfx
+		jsr	(LoadSpecialStageSonicPLC).l		; update Sonic's gfx
 		lea	(v_spritequeue).w,a1
 		adda.w	obPriority(a0),a1
 		move.w	(a1),d0
@@ -321,7 +321,7 @@ BonusPlayer_ExitStage:
 		add.w	(v_ssrotate).l,d0
 		move.w	d0,(v_ssangle).l
 		jsr	(Sonic_Animate).l
-		jsr	(LoadSonicDynPLC).l
+		jsr	(LoadSpecialStageSonicPLC).l
 		bsr.s	S1SS_FixCamera
 		lea	(v_spritequeue).w,a1
 		adda.w	obPriority(a0),a1
@@ -782,3 +782,13 @@ SSS_ChkGlass:
 SSS_ChkItems_End:
 		rts
 ; End of function SSS_ChkItems2
+
+; Only the rotating stage uses this compact, original-palette rolling source.
+LoadSpecialStageSonicPLC:
+		moveq	#0,d0
+		move.b	obFrame(a0),d0
+		lea	(DPLC_SpecialStageSonic).l,a2
+		lea	(Sonic_LastLoadedDPLC).w,a3
+		move.w	#ArtTile_Sonic*tile_size,d4
+		move.l	#Art_SpecialStageSonic,d6
+		jmp	(Load_DynamicPLC).l

@@ -307,10 +307,10 @@ PLC_S1TitleCard_End:
 ; ---------------------------------------------------------------------------
 PLC_S1SpecialStage:
 		dc.w ((PLC_S1SpecialStage_End-PLC_S1SpecialStage)/6)-1
-		plcm	Nem_Bumper,	ArtTile_SS_Bumper		; bumper
+		plcm	Nem_SpecialStageBumper,	ArtTile_SS_Bumper		; bumper
 		plcm	Nem_SSGOAL,	ArtTile_SS_Goal			; GOAL block
 		plcm	Nem_SSRBlock,	ArtTile_SS_R_Block		; R block
-		plcm	Nem_Sparkles,	ArtTile_SS_Sparkles		; Ring sparkle
+		plcm	Nem_SpecialStageSparkles,	ArtTile_SS_Sparkles		; Ring sparkle
 		plcm	Nem_SSEmStars,	ArtTile_SS_Emerald_Sparkle	; emerald collection stars
 		plcm	Nem_SSRedWhite,	ArtTile_SS_Red_White_Block	; red and white block
 		plcm	Nem_SSWBlock,	ArtTile_SS_W_Block		; W block
@@ -2093,8 +2093,8 @@ PLCKosM_SSBackground_End
 ; ---------------------------------------------------------------------------
 ; 7
 PLCKosM_SSResult:	plrKosMlistheader
-	plreqKosM	ArtTile_Mini_Tails, Kospm_MiniTails		; mini Tails
-	plreqKosM	ArtTile_Mini_Sonic, Kospm_MiniSonic		; mini Sonic
+	plreqKosM	ArtTile_Mini_Tails, Kospm_ResultsContinueTails		; mini Tails
+	plreqKosM	ArtTile_Mini_Sonic, Kospm_ResultsContinueSonic		; mini Sonic
 PLCKosM_SSResult_End
 ; ---------------------------------------------------------------------------
 ; 8

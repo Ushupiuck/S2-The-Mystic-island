@@ -476,7 +476,7 @@ MS_DefeatPalette:
         lea     (Pal_MechaFlash2).l,a2
 .copy:  bsr.w   MS_CopyPalette
 .sparks:
-        cmpi.w  #$E88,(v_palette+$32).w
+        cmpi.w  #$E88,(v_palette+$36).w
         bne.w   MS_Return
         jsr     (FindFreeObj).l
         bne.w   MS_Return
@@ -524,7 +524,7 @@ MS_FlashColours:
         move.w  (a2)+,(a3,d0.w)
         dbf     d1,.loop
         rts
-MS_FlashOffsets:dc.b $28,$34,$36,$38,$3C
+MS_FlashOffsets:dc.b $28,$38,$30,$32,$22
         even
 MS_HitColours:dc.w 8,$A24,$624,$422,$20,$888,$666,$888,$AAA,$EEE
 MS_DefeatColours:dc.b 50,0,2,2,1,1,5,0,2,2,1,1,50,0,2,2,1,1,20,0,2,2,1,1

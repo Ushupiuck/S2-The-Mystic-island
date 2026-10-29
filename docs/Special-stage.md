@@ -96,3 +96,7 @@ quantization and bumper collision contracts are in
 [Players and effects](Players-and-effects.md#input-locks-and-stage-exits).
 Background cycles, pause, item callbacks and returns have dedicated checks in
 [Testing](Testing.md); arbitrary Debug placement can still put the player in walls.
+
+The rotating stage retains its original palette and private original-index
+Sonic rolling, bumper, ring and sparkle sources. Results have independent
+palette/emerald art; see [ownership](Sprites-and-VRAM.md#palette-adaptation).

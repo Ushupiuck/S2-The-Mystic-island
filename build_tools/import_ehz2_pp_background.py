@@ -140,7 +140,7 @@ def build(source, output):
         assert distance(original_pal[index], palette[index]) <= 4
     # Slots unused by EHZ2's foreground, flower frames, bridge, platforms and HUD.
     # Other foreground/object colors and all palette indices remain fixed.
-    additions = {5:0xE86, 9:0xEEC, 10:0xEC8,
+    additions = {4:0xEEC, 5:0xEC8,
                  16+8:0x0A6, 16+13:0x064,
                  32+1:0xEEA, 32+2:0xE64, 32+3:0xCC6, 32+4:0x06A, 32+10:0x024}
     used = set()
@@ -170,7 +170,7 @@ def build(source, output):
         hud_colors.update(tile_pixels(raw))
     hud_colors.update(tile_pixels(nemesis((ROOT/'art/nemesis/Sonic lives counter.nem').read_bytes())[4*32:]))
     used |= hud_colors - {0}
-    assert not any(i in used and original_pal[i] != value for i,value in additions.items()), 'Palette addition overwrites an EHZ2 foreground/object/HUD color'
+    assert not any(i in used and original_pal[i] != value for i,value in additions.items()), ('Palette addition overwrites an EHZ2 foreground/object/HUD color', [(i,hex(original_pal[i]),hex(value)) for i,value in additions.items() if i in used and original_pal[i] != value])
     for i,value in additions.items(): palette[i] = value
     for i in (0,16,32): palette[i] = 0xA00  # PP sky backdrop; pixel zero remains transparent.
     (ROOT/'palette/EHZ2 PP.bin').write_bytes(struct.pack('>48H',*palette))

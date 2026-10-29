@@ -864,3 +864,19 @@ scheduling and AI, while explicitly staging the offscreen/death states. It also
 scatters 32 rings at both sides of the seam with real terrain probes, suppressing
 collection afterward to isolate movement/expiry. `--pal` selects PAL;
 `--probe` records an old build's failures without treating them as a pass.
+
+## Shared palette migration
+
+Run `python build_tools/check_sprite_palettes.py --reference <pre-migration-commit> --output test-results/palettes/report.json`.
+It checks level rows, spring piece attributes, underwater regeneration, results
+emeralds and decoded terrain RGB. EHZ2 background readaptation is excluded
+from exact RGB equality; its foreground remains exact. CPZ explicitly accounts
+for original red/brown restoration. Original rotating-stage palette/private
+source pixels, including all five Sonic rolling poses, must remain exact.
+
+Regenerate life, spring, player-effect, hanging, conveyor, signpost, card,
+special-results and underwater outputs with their owning build tools. Verify
+matching ROM/listing pairs with sprite assets/bounds, card art, end art and
+Mecha native checks, plus GX HUD, cards, effects and plane streaming checks.
+Positioned camera/actor screenshots are diagnostic captures, not controller-only
+playthroughs. RGB preservation alone cannot detect a preserved historical bug.

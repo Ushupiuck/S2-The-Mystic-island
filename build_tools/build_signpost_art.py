@@ -42,7 +42,7 @@ def mecha_panel(art):
             colour = (byte >> (4 if not x%2 else 0)) & 15
             # Reconstruct the old panel's fill and rim before translating
             # those roles into Mecha's own palette below.
-            row.append(4 if x >= 3 and 3 <= y < 29 or
+            row.append(15 if x >= 3 and 3 <= y < 29 or
                        colour not in (0,1,6,7,8,9) else colour)
         # Eggman's moustache also cuts holes into the gray rim. Reconstruct
         # that straight edge, rather than retaining those silhouette notches.
@@ -52,7 +52,7 @@ def mecha_panel(art):
     # The complete red panel belongs to Mecha's line, including behind his
     # transparent pixels. Use its native dark-red slot and metallic ramp;
     # do not leave primary-line red underneath a separately paletted head.
-    panel_remap = {0:0, 1:12, 4:7, 6:1, 7:13, 8:8, 9:9}
+    panel_remap = {0:0, 1:9, 15:5, 6:6, 7:7, 8:10, 9:11}
     pixels = [[panel_remap[colour] for colour in row] for row in pixels]
     board_art = tiles(pixels)
     board_tiles = [board_art[i:i+32] for i in range(0,12*32,32)]

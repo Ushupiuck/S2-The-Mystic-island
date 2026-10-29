@@ -16,6 +16,10 @@ LoadRingArt:
 		lea	(Nem_Ring).l,a0
 		lea	(Art_Ring).l,a4
 		jmp	(NemDecToRAM).l
+LoadSpecialStageRingArt:
+		lea	(Nem_SpecialStageRings).l,a0
+		lea	(Art_Ring).l,a4
+		jmp	(NemDecToRAM).l
 	endif
 
 ; ---------------------------------------------------------------------------

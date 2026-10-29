@@ -10,6 +10,7 @@ No decompression buffer is required: DPLCs read the raw art directly from ROM.
 from pathlib import Path
 import json
 from import_scrap_madness import nemesis_inline
+from sprite_palette import PLAYER_FROM_LEGACY, remap_pixels
 
 ROOT = Path(__file__).resolve().parents[1]
 NAMES = ('TWILIGHT HILL', 'RUSTIC RUINS', 'ANCIENT WORKBENCH',
@@ -166,18 +167,18 @@ def main():
     colors = list(range(16))
     colors[4], colors[15] = 5, 12
     raw = bytearray(colors[b >> 4] << 4 | colors[b & 15] for b in raw)
+    raw = bytearray(remap_pixels(raw, PLAYER_FROM_LEGACY))
     # S1 special results use their own cyan/green scheme. Its small labels
     # retain ink $F rather than borrowing the normal results' yellow.
     labels = (ROOT/'art/uncompressed/SS Results Labels.unc').read_bytes()
     assert len(labels) == 18*32
+    # Gold labels use the results UI row; retain their black shadow.
+    labels = bytes((1 if b>>4 == 1 else 13 if b>>4 else 0)<<4 |
+                   (1 if b&15 == 1 else 13 if b&15 else 0) for b in labels)
     raw += labels
     assert len(raw) == SS_OVAL*32
-    # Special results use a different palette: the blue oval's outline slots
-    # are gray there. Use the existing $B/$C gold ramp around yellow $3;
-    # $A is the much darker reddish brown used by the old rim.
-    oval_colors = {0: 0, 1: 11, 2: 12, 3: 3}
-    oval = raw[0x6E*32:0x70*32]
-    raw += bytes(oval_colors[b >> 4] << 4 | oval_colors[b & 15] for b in oval)
+    # The results palette shares the player's blue ramp.
+    raw += raw[0x6E*32:0x70*32]
     assert len(raw) == (SS_OVAL+2)*32
     (ROOT/'art/uncompressed/Card Font.unc').write_bytes(raw)
 
@@ -219,9 +220,9 @@ Map_Results_ContinueText = ArtTile_Mini_Sonic-ArtTile_Results_Card
 '''
 
     def fixed(lookup, special=False, tails=False):
-        letters = lookup[SS_SCORE] if special else 'Map_Results_ScoreLetters'
-        final_e = lookup[SS_SCORE+8] if special else 'Map_Results_ScoreE'
-        bonus_letters = lookup[SS_BONUS] if special else lookup[0x66] | 0x2000
+        letters = lookup[SS_SCORE] | 0x2000 if special else 'Map_Results_ScoreLetters'
+        final_e = lookup[SS_SCORE+8] | 0x2000 if special else 'Map_Results_ScoreE'
+        bonus_letters = lookup[SS_BONUS] | 0x2000 if special else lookup[0x66] | 0x2000
         oval = lookup[SS_OVAL if special else 0x6E]
         score = [row(-8,13,letters,-80),
                  row(-8,1,final_e,-48),
@@ -230,7 +231,7 @@ Map_Results_ContinueText = ArtTile_Mini_Sonic-ArtTile_Results_Card
                  row(-9,4,oval,-51), row(-1,4,oval | 0x1800,-51)]
         def bonus(time):
             icon = (row(-8,13,'Map_Results_TimeLetters',-80) if time else
-                    row(-8,5,'Map_SSResults_RingTile' if special else 'Map_Results_RingTile',-64))
+                    row(-8,5,'Map_SSResults_RingTile+$2000' if special else 'Map_Results_RingTile',-64))
             return [icon, row(-8,13,bonus_letters,-39),
                     row(-8,1,letters,-7),
                     row(-9,4,oval,-10), row(-1,4,oval | 0x1800,-10),
@@ -276,8 +277,8 @@ Map_Results_ContinueText = ArtTile_Mini_Sonic-ArtTile_Results_Card
                          row(-8,13,'Map_Results_ContinueText+8',-48),
                          row(-8,1,'Map_Results_ContinueText+16',-16)]
             frames = [mapped(text,lookup),score,bonus(False),mapped(OVAL,lookup),
-                      continues+[row(-8,6,f'make_art_tile({mini},1,0)-ArtTile_Results_Card',64)],
-                      continues+[row(-8,6,f'make_art_tile({mini}+6,1,0)-ArtTile_Results_Card',64)],
+                      continues+[row(-8,6,f'make_art_tile({mini},0,0)-ArtTile_Results_Card',64)],
+                      continues+[row(-8,6,f'make_art_tile({mini}+6,0,0)-ArtTile_Results_Card',64)],
                       continues]
             special_output.append(emit_table(f'Map_SSR_{state}_{int(tails)}',frames,name))
     special_output.append('Card_SS_MapPointers:\n')

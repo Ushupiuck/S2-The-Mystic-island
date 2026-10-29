@@ -1,5 +1,5 @@
 ; Straight/diagonal springs: S3&K mappings, shared two-player contact dispatch.
-; All zones use the shared sprite palette, including yellow caps.
+; Cap pixels are shared: red uses line 1, yellow selects line 2 per piece.
 ; One contact dispatcher handles both characters in all five orientations.
 ; Launch strengths/subtype flips and collision paths follow S3&K's model.
 ; animation scripts - Spring & Spring wheel

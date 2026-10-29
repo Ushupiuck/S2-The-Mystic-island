@@ -6,7 +6,7 @@ MCD_CompressedAssets:
 	dc.l BKosp_CPZ,BKosp_CPZ+$2B4A	; art/kosinski/level/8x8 - CPZ.kosp
 	endif
 	if defined(BKosp_EHZ)
-	dc.l BKosp_EHZ,BKosp_EHZ+$2E6A	; art/kosinski/level/8x8 - EHZ.kosp
+	dc.l BKosp_EHZ,BKosp_EHZ+$2E4F	; art/kosinski/level/8x8 - EHZ.kosp
 	endif
 	if defined(BKosp_GHZ)
 	dc.l BKosp_GHZ,BKosp_GHZ+$257E	; art/kosinski/level/8x8 - GHZ.kosp
@@ -15,13 +15,13 @@ MCD_CompressedAssets:
 	dc.l BKosp_HPZ,BKosp_HPZ+$2B52	; art/kosinski/level/8x8 - HPZ.kosp
 	endif
 	if defined(BKosp_HTZ)
-	dc.l BKosp_HTZ,BKosp_HTZ+$20C9	; art/kosinski/level/8x8 - HTZ.kosp
+	dc.l BKosp_HTZ,BKosp_HTZ+$20CB	; art/kosinski/level/8x8 - HTZ.kosp
 	endif
 	if defined(BKosp_LZ)
 	dc.l BKosp_LZ,BKosp_LZ+$1BCA	; art/kosinski/level/8x8 - LZ.kosp
 	endif
 	if defined(BKosp_MTZ)
-	dc.l BKosp_MTZ,BKosp_MTZ+$2BBA	; art/kosinski/level/8x8 - MTZ.kosp
+	dc.l BKosp_MTZ,BKosp_MTZ+$2CB5	; art/kosinski/level/8x8 - MTZ.kosp
 	endif
 	if defined(BLevel_CPZ1)
 	dc.l BLevel_CPZ1,BLevel_CPZ1+$454	; level/layout/bad future/CPZ_1.kosp
@@ -237,25 +237,25 @@ MCD_CompressedAssets:
 	dc.l BMap128_MTZ,BMap128_MTZ+$2A8C	; mappings/128x128/MTZ.kosp
 	endif
 	if defined(BMap16_CPZ)
-	dc.l BMap16_CPZ,BMap16_CPZ+$DFC	; mappings/16x16/CPZ.kosp
+	dc.l BMap16_CPZ,BMap16_CPZ+$E28	; mappings/16x16/CPZ.kosp
 	endif
 	if defined(BMap16_EHZ)
-	dc.l BMap16_EHZ,BMap16_EHZ+$C94	; mappings/16x16/EHZ.kosp
+	dc.l BMap16_EHZ,BMap16_EHZ+$CAE	; mappings/16x16/EHZ.kosp
 	endif
 	if defined(BMap16_GHZ)
-	dc.l BMap16_GHZ,BMap16_GHZ+$B10	; mappings/16x16/GHZ.kosp
+	dc.l BMap16_GHZ,BMap16_GHZ+$B1C	; mappings/16x16/GHZ.kosp
 	endif
 	if defined(BMap16_HPZ)
-	dc.l BMap16_HPZ,BMap16_HPZ+$EEE	; mappings/16x16/HPZ.kosp
+	dc.l BMap16_HPZ,BMap16_HPZ+$F3E	; mappings/16x16/HPZ.kosp
 	endif
 	if defined(BMap16_HTZ)
 	dc.l BMap16_HTZ,BMap16_HTZ+$B0D	; mappings/16x16/HTZ.kosp
 	endif
 	if defined(BMap16_LZ)
-	dc.l BMap16_LZ,BMap16_LZ+$58A	; mappings/16x16/LZ.kosp
+	dc.l BMap16_LZ,BMap16_LZ+$593	; mappings/16x16/LZ.kosp
 	endif
 	if defined(BMap16_MTZ)
-	dc.l BMap16_MTZ,BMap16_MTZ+$B8A	; mappings/16x16/MTZ.kosp
+	dc.l BMap16_MTZ,BMap16_MTZ+$B89	; mappings/16x16/MTZ.kosp
 	endif
 	if defined(BS_1)
 	dc.l BS_1,BS_1+$21E	; Bonus & Special Stages/1.kosp
@@ -288,7 +288,7 @@ MCD_CompressedAssets:
 	dc.l GKosp_CPZ,GKosp_CPZ+$2B4A	; art/kosinski/level/8x8 - CPZ.kosp
 	endif
 	if defined(GKosp_EHZ)
-	dc.l GKosp_EHZ,GKosp_EHZ+$2E6A	; art/kosinski/level/8x8 - EHZ.kosp
+	dc.l GKosp_EHZ,GKosp_EHZ+$2E4F	; art/kosinski/level/8x8 - EHZ.kosp
 	endif
 	if defined(GKosp_GHZ)
 	dc.l GKosp_GHZ,GKosp_GHZ+$257E	; art/kosinski/level/8x8 - GHZ.kosp
@@ -297,13 +297,13 @@ MCD_CompressedAssets:
 	dc.l GKosp_HPZ,GKosp_HPZ+$2B52	; art/kosinski/level/8x8 - HPZ.kosp
 	endif
 	if defined(GKosp_HTZ)
-	dc.l GKosp_HTZ,GKosp_HTZ+$20C9	; art/kosinski/level/8x8 - HTZ.kosp
+	dc.l GKosp_HTZ,GKosp_HTZ+$20CB	; art/kosinski/level/8x8 - HTZ.kosp
 	endif
 	if defined(GKosp_LZ)
 	dc.l GKosp_LZ,GKosp_LZ+$1BCA	; art/kosinski/level/8x8 - LZ.kosp
 	endif
 	if defined(GKosp_MTZ)
-	dc.l GKosp_MTZ,GKosp_MTZ+$2BBA	; art/kosinski/level/8x8 - MTZ.kosp
+	dc.l GKosp_MTZ,GKosp_MTZ+$2CB5	; art/kosinski/level/8x8 - MTZ.kosp
 	endif
 	if defined(GLevel_CPZ1)
 	dc.l GLevel_CPZ1,GLevel_CPZ1+$454	; level/layout/good future/CPZ_1.kosp
@@ -519,25 +519,25 @@ MCD_CompressedAssets:
 	dc.l GMap128_MTZ,GMap128_MTZ+$2A8C	; mappings/128x128/MTZ.kosp
 	endif
 	if defined(GMap16_CPZ)
-	dc.l GMap16_CPZ,GMap16_CPZ+$DFC	; mappings/16x16/CPZ.kosp
+	dc.l GMap16_CPZ,GMap16_CPZ+$E28	; mappings/16x16/CPZ.kosp
 	endif
 	if defined(GMap16_EHZ)
-	dc.l GMap16_EHZ,GMap16_EHZ+$C94	; mappings/16x16/EHZ.kosp
+	dc.l GMap16_EHZ,GMap16_EHZ+$CAE	; mappings/16x16/EHZ.kosp
 	endif
 	if defined(GMap16_GHZ)
-	dc.l GMap16_GHZ,GMap16_GHZ+$B10	; mappings/16x16/GHZ.kosp
+	dc.l GMap16_GHZ,GMap16_GHZ+$B1C	; mappings/16x16/GHZ.kosp
 	endif
 	if defined(GMap16_HPZ)
-	dc.l GMap16_HPZ,GMap16_HPZ+$EEE	; mappings/16x16/HPZ.kosp
+	dc.l GMap16_HPZ,GMap16_HPZ+$F3E	; mappings/16x16/HPZ.kosp
 	endif
 	if defined(GMap16_HTZ)
 	dc.l GMap16_HTZ,GMap16_HTZ+$B0D	; mappings/16x16/HTZ.kosp
 	endif
 	if defined(GMap16_LZ)
-	dc.l GMap16_LZ,GMap16_LZ+$58A	; mappings/16x16/LZ.kosp
+	dc.l GMap16_LZ,GMap16_LZ+$593	; mappings/16x16/LZ.kosp
 	endif
 	if defined(GMap16_MTZ)
-	dc.l GMap16_MTZ,GMap16_MTZ+$B8A	; mappings/16x16/MTZ.kosp
+	dc.l GMap16_MTZ,GMap16_MTZ+$B89	; mappings/16x16/MTZ.kosp
 	endif
 	if defined(Kosp_CPZ)
 	dc.l Kosp_CPZ,Kosp_CPZ+$2B4A	; art/kosinski/level/8x8 - CPZ.kosp
@@ -546,10 +546,10 @@ MCD_CompressedAssets:
 	dc.l Kosp_CreditText,Kosp_CreditText+$4F1	; art/kosinski/Ending - Credits.kosp
 	endif
 	if defined(Kosp_EHZ)
-	dc.l Kosp_EHZ,Kosp_EHZ+$2E6A	; art/kosinski/level/8x8 - EHZ.kosp
+	dc.l Kosp_EHZ,Kosp_EHZ+$2E4F	; art/kosinski/level/8x8 - EHZ.kosp
 	endif
 	if defined(Kosp_EHZ2)
-	dc.l Kosp_EHZ2,Kosp_EHZ2+$29F3	; art/kosinski/level/8x8 - EHZ2.kosp
+	dc.l Kosp_EHZ2,Kosp_EHZ2+$29E4	; art/kosinski/level/8x8 - EHZ2.kosp
 	endif
 	if defined(Kosp_GHZ)
 	dc.l Kosp_GHZ,Kosp_GHZ+$257E	; art/kosinski/level/8x8 - GHZ.kosp
@@ -558,19 +558,19 @@ MCD_CompressedAssets:
 	dc.l Kosp_HPZ,Kosp_HPZ+$2B52	; art/kosinski/level/8x8 - HPZ.kosp
 	endif
 	if defined(Kosp_HTZ)
-	dc.l Kosp_HTZ,Kosp_HTZ+$20C9	; art/kosinski/level/8x8 - HTZ.kosp
+	dc.l Kosp_HTZ,Kosp_HTZ+$20CB	; art/kosinski/level/8x8 - HTZ.kosp
 	endif
 	if defined(Kosp_LZ)
 	dc.l Kosp_LZ,Kosp_LZ+$1BCA	; art/kosinski/level/8x8 - LZ.kosp
 	endif
 	if defined(Kosp_MTZ)
-	dc.l Kosp_MTZ,Kosp_MTZ+$2BBA	; art/kosinski/level/8x8 - MTZ.kosp
+	dc.l Kosp_MTZ,Kosp_MTZ+$2CB5	; art/kosinski/level/8x8 - MTZ.kosp
 	endif
 	if defined(Kosp_SMZ1)
 	dc.l Kosp_SMZ1,Kosp_SMZ1+$169E	; art/kosinski/level/8x8 - SMZ1.kosp
 	endif
 	if defined(Kosp_SMZ2)
-	dc.l Kosp_SMZ2,Kosp_SMZ2+$19E5	; art/kosinski/level/8x8 - SMZ2.kosp
+	dc.l Kosp_SMZ2,Kosp_SMZ2+$19E7	; art/kosinski/level/8x8 - SMZ2.kosp
 	endif
 	if defined(Kosp_Title)
 	dc.l Kosp_Title,Kosp_Title+$166C	; art/kosinski/level/8x8 - Title.kosp
@@ -582,19 +582,19 @@ MCD_CompressedAssets:
 	dc.l Kosp_TitleBg2,Kosp_TitleBg2+$142	; tilemaps/Title Background - 2.kosp
 	endif
 	if defined(Kospm_BBat)
-	dc.l Kospm_BBat,Kospm_BBat+$338	; art/moduled kosinski/Enemy BBat.kospm
+	dc.l Kospm_BBat,Kospm_BBat+$361	; art/moduled kosinski/Enemy BBat.kospm
 	endif
 	if defined(Kospm_BallhogH)
-	dc.l Kospm_BallhogH,Kospm_BallhogH+$32C	; art/moduled kosinski/Enemy Ballhog (Horizontal).kospm
+	dc.l Kospm_BallhogH,Kospm_BallhogH+$33F	; art/moduled kosinski/Enemy Ballhog (Horizontal).kospm
 	endif
 	if defined(Kospm_BallhogV)
-	dc.l Kospm_BallhogV,Kospm_BallhogV+$16A	; art/moduled kosinski/Enemy Ballhog (Vertical).kospm
+	dc.l Kospm_BallhogV,Kospm_BallhogV+$171	; art/moduled kosinski/Enemy Ballhog (Vertical).kospm
 	endif
 	if defined(Kospm_Basaran)
-	dc.l Kospm_Basaran,Kospm_Basaran+$33E	; art/moduled kosinski/Enemy Basaran.kospm
+	dc.l Kospm_Basaran,Kospm_Basaran+$35B	; art/moduled kosinski/Enemy Basaran.kospm
 	endif
 	if defined(Kospm_Bomb)
-	dc.l Kospm_Bomb,Kospm_Bomb+$1F2	; art/moduled kosinski/Enemy Bomb.kospm
+	dc.l Kospm_Bomb,Kospm_Bomb+$206	; art/moduled kosinski/Enemy Bomb.kospm
 	endif
 	if defined(Kospm_Bonus)
 	dc.l Kospm_Bonus,Kospm_Bonus+$1BC	; art/moduled kosinski/Hidden bonus.kospm
@@ -603,16 +603,16 @@ MCD_CompressedAssets:
 	dc.l Kospm_BossExplosion,Kospm_BossExplosion+$762	; art/moduled kosinski/Large explosion.kospm
 	endif
 	if defined(Kospm_Burrobot)
-	dc.l Kospm_Burrobot,Kospm_Burrobot+$60A	; art/moduled kosinski/Enemy Burrobot.kospm
+	dc.l Kospm_Burrobot,Kospm_Burrobot+$634	; art/moduled kosinski/Enemy Burrobot.kospm
 	endif
 	if defined(Kospm_Buzz)
-	dc.l Kospm_Buzz,Kospm_Buzz+$32C	; art/moduled kosinski/Enemy Buzz Bomber.kospm
+	dc.l Kospm_Buzz,Kospm_Buzz+$340	; art/moduled kosinski/Enemy Buzz Bomber.kospm
 	endif
 	if defined(Kospm_Cater)
-	dc.l Kospm_Cater,Kospm_Cater+$13C	; art/moduled kosinski/Enemy Caterkiller.kospm
+	dc.l Kospm_Cater,Kospm_Cater+$13E	; art/moduled kosinski/Enemy Caterkiller.kospm
 	endif
 	if defined(Kospm_Chopper)
-	dc.l Kospm_Chopper,Kospm_Chopper+$244	; art/moduled kosinski/Enemy Chopper.kospm
+	dc.l Kospm_Chopper,Kospm_Chopper+$252	; art/moduled kosinski/Enemy Chopper.kospm
 	endif
 	if defined(Kospm_ContSonic)
 	dc.l Kospm_ContSonic,Kospm_ContSonic+$29E	; art/moduled kosinski/Continue Screen Sonic.kospm
@@ -621,7 +621,7 @@ MCD_CompressedAssets:
 	dc.l Kospm_ContTails,Kospm_ContTails+$2BE	; art/moduled kosinski/Continue screen Tails.kospm
 	endif
 	if defined(Kospm_Crabmeat)
-	dc.l Kospm_Crabmeat,Kospm_Crabmeat+$46A	; art/moduled kosinski/Enemy Crabmeat.kospm
+	dc.l Kospm_Crabmeat,Kospm_Crabmeat+$487	; art/moduled kosinski/Enemy Crabmeat.kospm
 	endif
 	if defined(Kospm_EHZ_Boss)
 	dc.l Kospm_EHZ_Boss,Kospm_EHZ_Boss+$74D	; art/moduled kosinski/EHZ boss.kospm
@@ -630,7 +630,7 @@ MCD_CompressedAssets:
 	dc.l Kospm_EggChopper,Kospm_EggChopper+$C6	; art/moduled kosinski/Chopper blades for EHZ boss.kospm
 	endif
 	if defined(Kospm_EggPod)
-	dc.l Kospm_EggPod,Kospm_EggPod+$595	; art/moduled kosinski/Boss Ship.kospm
+	dc.l Kospm_EggPod,Kospm_EggPod+$592	; art/moduled kosinski/Boss Ship.kospm
 	endif
 	if defined(Kospm_EndFlowers)
 	dc.l Kospm_EndFlowers,Kospm_EndFlowers+$556	; art/moduled kosinski/Ending - Flowers.kospm
@@ -645,10 +645,10 @@ MCD_CompressedAssets:
 	dc.l Kospm_Explosion,Kospm_Explosion+$6CC	; art/moduled kosinski/Explosion.kospm
 	endif
 	if defined(Kospm_FlapDoor)
-	dc.l Kospm_FlapDoor,Kospm_FlapDoor+$152	; art/moduled kosinski/Flapping Door.kospm
+	dc.l Kospm_FlapDoor,Kospm_FlapDoor+$165	; art/moduled kosinski/Flapping Door.kospm
 	endif
 	if defined(Kospm_Jaws)
-	dc.l Kospm_Jaws,Kospm_Jaws+$1DA	; art/moduled kosinski/Enemy Jaws.kospm
+	dc.l Kospm_Jaws,Kospm_Jaws+$1DF	; art/moduled kosinski/Enemy Jaws.kospm
 	endif
 	if defined(Kospm_LzWheel)
 	dc.l Kospm_LzWheel,Kospm_LzWheel+$206	; art/moduled kosinski/LZ conveyor.kospm
@@ -669,16 +669,22 @@ MCD_CompressedAssets:
 	dc.l Kospm_Newtron,Kospm_Newtron+$4CC	; art/moduled kosinski/Enemy Newtron.kospm
 	endif
 	if defined(Kospm_OldEggPod)
-	dc.l Kospm_OldEggPod,Kospm_OldEggPod+$675	; art/moduled kosinski/Old Eggpod.kospm
+	dc.l Kospm_OldEggPod,Kospm_OldEggPod+$674	; art/moduled kosinski/Old Eggpod.kospm
 	endif
 	if defined(Kospm_Orbinaut)
-	dc.l Kospm_Orbinaut,Kospm_Orbinaut+$19A	; art/moduled kosinski/Enemy Orbinaut.kospm
+	dc.l Kospm_Orbinaut,Kospm_Orbinaut+$1A6	; art/moduled kosinski/Enemy Orbinaut.kospm
 	endif
 	if defined(Kospm_Prison)
 	dc.l Kospm_Prison,Kospm_Prison+$590	; art/moduled kosinski/Prison Capsule.kospm
 	endif
+	if defined(Kospm_ResultsContinueSonic)
+	dc.l Kospm_ResultsContinueSonic,Kospm_ResultsContinueSonic+$EE	; art/moduled kosinski/Results continue Sonic.kospm
+	endif
+	if defined(Kospm_ResultsContinueTails)
+	dc.l Kospm_ResultsContinueTails,Kospm_ResultsContinueTails+$69	; art/moduled kosinski/Results continue Tails.kospm
+	endif
 	if defined(Kospm_Rhinobot)
-	dc.l Kospm_Rhinobot,Kospm_Rhinobot+$33C	; art/moduled kosinski/Enemy Rhinobot.kospm
+	dc.l Kospm_Rhinobot,Kospm_Rhinobot+$346	; art/moduled kosinski/Enemy Rhinobot.kospm
 	endif
 	if defined(Kospm_SS1UpBlock)
 	dc.l Kospm_SS1UpBlock,Kospm_SS1UpBlock+$E0	; art/Bonus & Special Stage/Bonus Stage 1UP.kospm
@@ -696,7 +702,7 @@ MCD_CompressedAssets:
 	dc.l Kospm_SSUpDown,Kospm_SSUpDown+$1A4	; art/Bonus & Special Stage/Bonus Stage UP-DOWN.kospm
 	endif
 	if defined(Kospm_Splats)
-	dc.l Kospm_Splats,Kospm_Splats+$190	; art/moduled kosinski/Enemy Splats.kospm
+	dc.l Kospm_Splats,Kospm_Splats+$197	; art/moduled kosinski/Enemy Splats.kospm
 	endif
 	if defined(Kospm_TryAgain)
 	dc.l Kospm_TryAgain,Kospm_TryAgain+$7FE	; art/moduled kosinski/Ending - Try Again.kospm
@@ -705,7 +711,7 @@ MCD_CompressedAssets:
 	dc.l Kospm_Weapons,Kospm_Weapons+$2F0	; art/moduled kosinski/Boss weapons.kospm
 	endif
 	if defined(Kospm_Yadrin)
-	dc.l Kospm_Yadrin,Kospm_Yadrin+$38C	; art/moduled kosinski/Enemy Yadrin.kospm
+	dc.l Kospm_Yadrin,Kospm_Yadrin+$3AB	; art/moduled kosinski/Enemy Yadrin.kospm
 	endif
 	if defined(Level_CPZ1)
 	dc.l Level_CPZ1,Level_CPZ1+$454	; level/layout/CPZ_1.kosp
@@ -939,28 +945,28 @@ MCD_CompressedAssets:
 	dc.l Map128_SMZBlank,Map128_SMZBlank+$E	; mappings/128x128/SMZ Blank.kosp
 	endif
 	if defined(Map16_CPZ)
-	dc.l Map16_CPZ,Map16_CPZ+$DFC	; mappings/16x16/CPZ.kosp
+	dc.l Map16_CPZ,Map16_CPZ+$E28	; mappings/16x16/CPZ.kosp
 	endif
 	if defined(Map16_EHZ)
-	dc.l Map16_EHZ,Map16_EHZ+$C94	; mappings/16x16/EHZ.kosp
+	dc.l Map16_EHZ,Map16_EHZ+$CAE	; mappings/16x16/EHZ.kosp
 	endif
 	if defined(Map16_EHZ2)
 	dc.l Map16_EHZ2,Map16_EHZ2+$B92	; mappings/16x16/EHZ2.kosp
 	endif
 	if defined(Map16_GHZ)
-	dc.l Map16_GHZ,Map16_GHZ+$B10	; mappings/16x16/GHZ.kosp
+	dc.l Map16_GHZ,Map16_GHZ+$B1C	; mappings/16x16/GHZ.kosp
 	endif
 	if defined(Map16_HPZ)
-	dc.l Map16_HPZ,Map16_HPZ+$EEE	; mappings/16x16/HPZ.kosp
+	dc.l Map16_HPZ,Map16_HPZ+$F3E	; mappings/16x16/HPZ.kosp
 	endif
 	if defined(Map16_HTZ)
 	dc.l Map16_HTZ,Map16_HTZ+$B0D	; mappings/16x16/HTZ.kosp
 	endif
 	if defined(Map16_LZ)
-	dc.l Map16_LZ,Map16_LZ+$58A	; mappings/16x16/LZ.kosp
+	dc.l Map16_LZ,Map16_LZ+$593	; mappings/16x16/LZ.kosp
 	endif
 	if defined(Map16_MTZ)
-	dc.l Map16_MTZ,Map16_MTZ+$B8A	; mappings/16x16/MTZ.kosp
+	dc.l Map16_MTZ,Map16_MTZ+$B89	; mappings/16x16/MTZ.kosp
 	endif
 	if defined(Map16_SMZ1)
 	dc.l Map16_SMZ1,Map16_SMZ1+$830	; mappings/16x16/SMZ1.kosp
@@ -969,61 +975,61 @@ MCD_CompressedAssets:
 	dc.l Map16_SMZ2,Map16_SMZ2+$93B	; mappings/16x16/SMZ2.kosp
 	endif
 	if defined(Nem_Aquis)
-	dc.l Nem_Aquis,Nem_Aquis+$438	; art/nemesis/Enemy Aquis.nem
+	dc.l Nem_Aquis,Nem_Aquis+$45F	; art/nemesis/Enemy Aquis.nem
 	endif
 	if defined(Nem_BFish)
-	dc.l Nem_BFish,Nem_BFish+$4E4	; art/nemesis/Enemy BFish.nem
+	dc.l Nem_BFish,Nem_BFish+$51C	; art/nemesis/Enemy BFish.nem
 	endif
 	if defined(Nem_Bear)
-	dc.l Nem_Bear,Nem_Bear+$123	; art/nemesis/Flicky/Bear.nem
+	dc.l Nem_Bear,Nem_Bear+$13A	; art/nemesis/Flicky/Bear.nem
 	endif
 	if defined(Nem_Bubbler)
-	dc.l Nem_Bubbler,Nem_Bubbler+$202	; art/nemesis/Enemy Bubbler.nem
+	dc.l Nem_Bubbler,Nem_Bubbler+$235	; art/nemesis/Enemy Bubbler.nem
 	endif
 	if defined(Nem_Bumper)
-	dc.l Nem_Bumper,Nem_Bumper+$207	; art/nemesis/Bumper.nem
+	dc.l Nem_Bumper,Nem_Bumper+$255	; art/nemesis/Bumper.nem
 	endif
 	if defined(Nem_Bunny)
-	dc.l Nem_Bunny,Nem_Bunny+$145	; art/nemesis/Flicky/Rabbit.nem
+	dc.l Nem_Bunny,Nem_Bunny+$15C	; art/nemesis/Flicky/Rabbit.nem
 	endif
 	if defined(Nem_Button)
 	dc.l Nem_Button,Nem_Button+$CD	; art/nemesis/Button.nem
 	endif
 	if defined(Nem_Buzzer)
-	dc.l Nem_Buzzer,Nem_Buzzer+$1F0	; art/nemesis/Enemy Buzzer.nem
+	dc.l Nem_Buzzer,Nem_Buzzer+$21F	; art/nemesis/Enemy Buzzer.nem
 	endif
 	if defined(Nem_CPZ_Boss)
 	dc.l Nem_CPZ_Boss,Nem_CPZ_Boss+$54F	; art/nemesis/CPZ boss.nem
 	endif
 	if defined(Nem_CPZ_Platform1)
-	dc.l Nem_CPZ_Platform1,Nem_CPZ_Platform1+$144	; art/nemesis/CPZ Floating Platform.nem
+	dc.l Nem_CPZ_Platform1,Nem_CPZ_Platform1+$16E	; art/nemesis/CPZ Floating Platform.nem
 	endif
 	if defined(Nem_Chicken)
-	dc.l Nem_Chicken,Nem_Chicken+$140	; art/nemesis/Flicky/Chicken.nem
+	dc.l Nem_Chicken,Nem_Chicken+$157	; art/nemesis/Flicky/Chicken.nem
 	endif
 	if defined(Nem_Crawl)
-	dc.l Nem_Crawl,Nem_Crawl+$36C	; art/nemesis/Enemy Crawl.nem
+	dc.l Nem_Crawl,Nem_Crawl+$3B1	; art/nemesis/Enemy Crawl.nem
 	endif
 	if defined(Nem_DSpring)
-	dc.l Nem_DSpring,Nem_DSpring+$429	; art/nemesis/Diagonal spring.nem
+	dc.l Nem_DSpring,Nem_DSpring+$15E	; art/nemesis/Diagonal spring.nem
 	endif
 	if defined(Nem_EHZ_Bridge)
-	dc.l Nem_EHZ_Bridge,Nem_EHZ_Bridge+$C8	; art/nemesis/EHZ bridge.nem
+	dc.l Nem_EHZ_Bridge,Nem_EHZ_Bridge+$E1	; art/nemesis/EHZ bridge.nem
 	endif
 	if defined(Nem_EHZ_Fireball)
 	dc.l Nem_EHZ_Fireball,Nem_EHZ_Fireball+$11D	; art/nemesis/Fireball 1.nem
 	endif
 	if defined(Nem_EHZ_Waterfall)
-	dc.l Nem_EHZ_Waterfall,Nem_EHZ_Waterfall+$FF	; art/nemesis/Waterfall tiles.nem
+	dc.l Nem_EHZ_Waterfall,Nem_EHZ_Waterfall+$F5	; art/nemesis/Waterfall tiles.nem
 	endif
 	if defined(Nem_Eagle)
-	dc.l Nem_Eagle,Nem_Eagle+$119	; art/nemesis/Flicky/Eagle.nem
+	dc.l Nem_Eagle,Nem_Eagle+$13E	; art/nemesis/Flicky/Eagle.nem
 	endif
 	if defined(Nem_EggPodJets)
-	dc.l Nem_EggPodJets,Nem_EggPodJets+$76	; art/nemesis/Boss Ship Boost.nem
+	dc.l Nem_EggPodJets,Nem_EggPodJets+$85	; art/nemesis/Boss Ship Boost.nem
 	endif
 	if defined(Nem_Eggman)
-	dc.l Nem_Eggman,Nem_Eggman+$817	; art/nemesis/S1/Boss - Eggman in SBZ2 & FZ.nem
+	dc.l Nem_Eggman,Nem_Eggman+$8AF	; art/nemesis/S1/Boss - Eggman in SBZ2 & FZ.nem
 	endif
 	if defined(Nem_EndEm)
 	dc.l Nem_EndEm,Nem_EndEm+$1ED	; art/nemesis/S1/Ending - Emeralds.nem
@@ -1035,58 +1041,58 @@ MCD_CompressedAssets:
 	dc.l Nem_EndStH,Nem_EndStH+$275	; art/nemesis/S1/Ending - StH Logo.nem
 	endif
 	if defined(Nem_Flicky)
-	dc.l Nem_Flicky,Nem_Flicky+$126	; art/nemesis/Flicky/Flicky.nem
+	dc.l Nem_Flicky,Nem_Flicky+$13A	; art/nemesis/Flicky/Flicky.nem
 	endif
 	if defined(Nem_FzBoss)
 	dc.l Nem_FzBoss,Nem_FzBoss+$74D	; art/nemesis/S1/Boss - Final Zone.nem
 	endif
 	if defined(Nem_FzEggman)
-	dc.l Nem_FzEggman,Nem_FzEggman+$56E	; art/nemesis/S1/Boss - Eggman after FZ Fight.nem
+	dc.l Nem_FzEggman,Nem_FzEggman+$5BF	; art/nemesis/S1/Boss - Eggman after FZ Fight.nem
 	endif
 	if defined(Nem_GHZ_BWall)
-	dc.l Nem_GHZ_BWall,Nem_GHZ_BWall+$90	; art/nemesis/S1/GHZ Breakable Wall.nem
+	dc.l Nem_GHZ_BWall,Nem_GHZ_BWall+$AB	; art/nemesis/S1/GHZ Breakable Wall.nem
 	endif
 	if defined(Nem_GHZ_Ball)
-	dc.l Nem_GHZ_Ball,Nem_GHZ_Ball+$192	; art/nemesis/S1/GHZ Giant Ball.nem
+	dc.l Nem_GHZ_Ball,Nem_GHZ_Ball+$1B4	; art/nemesis/S1/GHZ Giant Ball.nem
 	endif
 	if defined(Nem_GHZ_Bridge)
-	dc.l Nem_GHZ_Bridge,Nem_GHZ_Bridge+$DD	; art/nemesis/S1/GHZ Bridge.nem
+	dc.l Nem_GHZ_Bridge,Nem_GHZ_Bridge+$FB	; art/nemesis/S1/GHZ Bridge.nem
 	endif
 	if defined(Nem_GHZ_Rock)
-	dc.l Nem_GHZ_Rock,Nem_GHZ_Rock+$126	; art/nemesis/S1/GHZ Purple Rock.nem
+	dc.l Nem_GHZ_Rock,Nem_GHZ_Rock+$149	; art/nemesis/S1/GHZ Purple Rock.nem
 	endif
 	if defined(Nem_GHZ_SWall)
 	dc.l Nem_GHZ_SWall,Nem_GHZ_SWall+$15C	; art/nemesis/S1/GHZ Edge Wall.nem
 	endif
 	if defined(Nem_GameOver)
-	dc.l Nem_GameOver,Nem_GameOver+$181	; art/nemesis/Game Over.nem
+	dc.l Nem_GameOver,Nem_GameOver+$196	; art/nemesis/Game Over.nem
 	endif
 	if defined(Nem_Gator)
-	dc.l Nem_Gator,Nem_Gator+$391	; art/nemesis/Enemy Gator.nem
+	dc.l Nem_Gator,Nem_Gator+$3C5	; art/nemesis/Enemy Gator.nem
 	endif
 	if defined(Nem_GroundExplosion)
-	dc.l Nem_GroundExplosion,Nem_GroundExplosion+$1E6	; art/nemesis/Explosion - Ground.nem
+	dc.l Nem_GroundExplosion,Nem_GroundExplosion+$1FF	; art/nemesis/Explosion - Ground.nem
 	endif
 	if defined(Nem_HPZ_Bridge)
-	dc.l Nem_HPZ_Bridge,Nem_HPZ_Bridge+$16C	; art/nemesis/HPZ bridge.nem
+	dc.l Nem_HPZ_Bridge,Nem_HPZ_Bridge+$18E	; art/nemesis/HPZ bridge.nem
 	endif
 	if defined(Nem_HPZ_Emerald)
-	dc.l Nem_HPZ_Emerald,Nem_HPZ_Emerald+$256	; art/nemesis/HPZ Emerald.nem
+	dc.l Nem_HPZ_Emerald,Nem_HPZ_Emerald+$294	; art/nemesis/HPZ Emerald.nem
 	endif
 	if defined(Nem_HPZ_Platform)
-	dc.l Nem_HPZ_Platform,Nem_HPZ_Platform+$B0	; art/nemesis/HPZ Platform.nem
+	dc.l Nem_HPZ_Platform,Nem_HPZ_Platform+$E6	; art/nemesis/HPZ Platform.nem
 	endif
 	if defined(Nem_HPZ_PulsingBall)
-	dc.l Nem_HPZ_PulsingBall,Nem_HPZ_PulsingBall+$225	; art/nemesis/HPZ Pulsing Ball.nem
+	dc.l Nem_HPZ_PulsingBall,Nem_HPZ_PulsingBall+$24C	; art/nemesis/HPZ Pulsing Ball.nem
 	endif
 	if defined(Nem_HPZ_Various)
 	dc.l Nem_HPZ_Various,Nem_HPZ_Various+$189	; art/nemesis/HPZ Various.nem
 	endif
 	if defined(Nem_HPZ_Waterfall)
-	dc.l Nem_HPZ_Waterfall,Nem_HPZ_Waterfall+$348	; art/nemesis/HPZ waterfall.nem
+	dc.l Nem_HPZ_Waterfall,Nem_HPZ_Waterfall+$37A	; art/nemesis/HPZ waterfall.nem
 	endif
 	if defined(Nem_HSpring2)
-	dc.l Nem_HSpring2,Nem_HSpring2+$3A9	; art/nemesis/Horizontal spring.nem
+	dc.l Nem_HSpring2,Nem_HSpring2+$F0	; art/nemesis/Horizontal spring.nem
 	endif
 	if defined(Nem_HTZ_AutomaticDoor)
 	dc.l Nem_HTZ_AutomaticDoor,Nem_HTZ_AutomaticDoor+$70	; art/nemesis/HTZ Autodoor.nem
@@ -1095,13 +1101,13 @@ MCD_CompressedAssets:
 	dc.l Nem_HTZ_Fireball,Nem_HTZ_Fireball+$137	; art/nemesis/Fireball 2.nem
 	endif
 	if defined(Nem_HTZ_Lift)
-	dc.l Nem_HTZ_Lift,Nem_HTZ_Lift+$2E5	; art/nemesis/HTZ zip-line platform.nem
+	dc.l Nem_HTZ_Lift,Nem_HTZ_Lift+$30C	; art/nemesis/HTZ zip-line platform.nem
 	endif
 	if defined(Nem_HTZ_Seesaw)
-	dc.l Nem_HTZ_Seesaw,Nem_HTZ_Seesaw+$18D	; art/nemesis/See-saw in HTZ.nem
+	dc.l Nem_HTZ_Seesaw,Nem_HTZ_Seesaw+$1BA	; art/nemesis/See-saw in HTZ.nem
 	endif
 	if defined(Nem_HUD)
-	dc.l Nem_HUD,Nem_HUD+$B4	; art/nemesis/HUD.nem
+	dc.l Nem_HUD,Nem_HUD+$C9	; art/nemesis/HUD.nem
 	endif
 	if defined(Nem_HangingSurface)
 	dc.l Nem_HangingSurface,Nem_HangingSurface+$AC	; art/nemesis/Hanging surface.nem
@@ -1110,64 +1116,64 @@ MCD_CompressedAssets:
 	dc.l Nem_Invincibility,Nem_Invincibility+$EE	; art/nemesis/Invincibility.nem
 	endif
 	if defined(Nem_Kemusi)
-	dc.l Nem_Kemusi,Nem_Kemusi+$3D8	; art/nemesis/Enemy Kemusi.nem
+	dc.l Nem_Kemusi,Nem_Kemusi+$1BA	; art/nemesis/Enemy Kemusi.nem
 	endif
 	if defined(Nem_Lamppost)
-	dc.l Nem_Lamppost,Nem_Lamppost+$9C	; art/nemesis/Lamppost.nem
+	dc.l Nem_Lamppost,Nem_Lamppost+$C3	; art/nemesis/Lamppost.nem
 	endif
 	if defined(Nem_Lives)
 	dc.l Nem_Lives,Nem_Lives+$204	; art/nemesis/Sonic lives counter.nem
 	endif
 	if defined(Nem_MBubbler)
-	dc.l Nem_MBubbler,Nem_MBubbler+$213	; art/nemesis/Enemy Bubbler's Mother.nem
+	dc.l Nem_MBubbler,Nem_MBubbler+$25B	; art/nemesis/Enemy Bubbler's Mother.nem
 	endif
 	if defined(Nem_MM_Propeller)
-	dc.l Nem_MM_Propeller,Nem_MM_Propeller+$A6D	; art/nemesis/MM Propeller.nem
+	dc.l Nem_MM_Propeller,Nem_MM_Propeller+$34F	; art/nemesis/MM Propeller.nem
 	endif
 	if defined(Nem_Masher)
-	dc.l Nem_Masher,Nem_Masher+$1F7	; art/nemesis/Enemy Masher.nem
+	dc.l Nem_Masher,Nem_Masher+$217	; art/nemesis/Enemy Masher.nem
 	endif
 	if defined(Nem_Monitors)
 	dc.l Nem_Monitors,Nem_Monitors+$9F0	; art/nemesis/Monitor and contents.nem
 	endif
 	if defined(Nem_Monkey)
-	dc.l Nem_Monkey,Nem_Monkey+$12B	; art/nemesis/Flicky/Monkey.nem
+	dc.l Nem_Monkey,Nem_Monkey+$13F	; art/nemesis/Flicky/Monkey.nem
 	endif
 	if defined(Nem_MorphingPlatform)
-	dc.l Nem_MorphingPlatform,Nem_MorphingPlatform+$A7	; art/nemesis/Morphing Orbs.nem
+	dc.l Nem_MorphingPlatform,Nem_MorphingPlatform+$BF	; art/nemesis/Morphing Orbs.nem
 	endif
 	if defined(Nem_Mouse)
-	dc.l Nem_Mouse,Nem_Mouse+$126	; art/nemesis/Flicky/Mouse.nem
+	dc.l Nem_Mouse,Nem_Mouse+$13D	; art/nemesis/Flicky/Mouse.nem
 	endif
 	if defined(Nem_Octus)
-	dc.l Nem_Octus,Nem_Octus+$311	; art/nemesis/Enemy Octus.nem
+	dc.l Nem_Octus,Nem_Octus+$333	; art/nemesis/Enemy Octus.nem
 	endif
 	if defined(Nem_PP_Anton)
-	dc.l Nem_PP_Anton,Nem_PP_Anton+$417	; art/nemesis/PP Anton.nem
+	dc.l Nem_PP_Anton,Nem_PP_Anton+$1C4	; art/nemesis/PP Anton.nem
 	endif
 	if defined(Nem_PP_Mosqui)
-	dc.l Nem_PP_Mosqui,Nem_PP_Mosqui+$92D	; art/nemesis/PP Mosqui.nem
+	dc.l Nem_PP_Mosqui,Nem_PP_Mosqui+$341	; art/nemesis/PP Mosqui.nem
 	endif
 	if defined(Nem_PP_PataBata)
-	dc.l Nem_PP_PataBata,Nem_PP_PataBata+$5D3	; art/nemesis/PP Pata-Bata.nem
+	dc.l Nem_PP_PataBata,Nem_PP_PataBata+$2AF	; art/nemesis/PP Pata-Bata.nem
 	endif
 	if defined(Nem_PP_TagaTaga)
-	dc.l Nem_PP_TagaTaga,Nem_PP_TagaTaga+$709	; art/nemesis/PP Taga-Taga.nem
+	dc.l Nem_PP_TagaTaga,Nem_PP_TagaTaga+$326	; art/nemesis/PP Taga-Taga.nem
 	endif
 	if defined(Nem_PP_Tamabboh)
-	dc.l Nem_PP_Tamabboh,Nem_PP_Tamabboh+$94D	; art/nemesis/PP Tamabboh.nem
+	dc.l Nem_PP_Tamabboh,Nem_PP_Tamabboh+$453	; art/nemesis/PP Tamabboh.nem
 	endif
 	if defined(Nem_Penguin)
-	dc.l Nem_Penguin,Nem_Penguin+$167	; art/nemesis/Flicky/Penguin.nem
+	dc.l Nem_Penguin,Nem_Penguin+$18D	; art/nemesis/Flicky/Penguin.nem
 	endif
 	if defined(Nem_Pig)
-	dc.l Nem_Pig,Nem_Pig+$136	; art/nemesis/Flicky/Pig.nem
+	dc.l Nem_Pig,Nem_Pig+$150	; art/nemesis/Flicky/Pig.nem
 	endif
 	if defined(Nem_PlatformButton)
 	dc.l Nem_PlatformButton,Nem_PlatformButton+$A2	; art/nemesis/Platform button.nem
 	endif
 	if defined(Nem_ResultEm)
-	dc.l Nem_ResultEm,Nem_ResultEm+$175	; art/Bonus & Special Stage/Bonus Stage Result Emeralds.nem
+	dc.l Nem_ResultEm,Nem_ResultEm+$236	; art/nemesis/Results emeralds.nem
 	endif
 	if defined(Nem_Ring)
 	dc.l Nem_Ring,Nem_Ring+$1E8	; art/nemesis/Ring.nem
@@ -1176,7 +1182,7 @@ MCD_CompressedAssets:
 	dc.l Nem_S3LevelSelect,Nem_S3LevelSelect+$574	; art/nemesis/S3 Level Select.nem
 	endif
 	if defined(Nem_SMZAtlas)
-	dc.l Nem_SMZAtlas,Nem_SMZAtlas+$1DC9	; art/nemesis/SMZ Sprite Atlas.nem
+	dc.l Nem_SMZAtlas,Nem_SMZAtlas+$1E53	; art/nemesis/SMZ Sprite Atlas.nem
 	endif
 	if defined(Nem_SSEmStars)
 	dc.l Nem_SSEmStars,Nem_SSEmStars+$5B	; art/Bonus & Special Stage/Bonus Stage Emerald Twinkle.nem
@@ -1200,7 +1206,7 @@ MCD_CompressedAssets:
 	dc.l Nem_SSWBlock,Nem_SSWBlock+$CE	; art/Bonus & Special Stage/Bonus Stage W.nem
 	endif
 	if defined(Nem_Seal)
-	dc.l Nem_Seal,Nem_Seal+$109	; art/nemesis/Flicky/Seal.nem
+	dc.l Nem_Seal,Nem_Seal+$121	; art/nemesis/Flicky/Seal.nem
 	endif
 	if defined(Nem_SegaLogo)
 	dc.l Nem_SegaLogo,Nem_SegaLogo+$45A	; art/nemesis/Sega Logo (JP1).nem
@@ -1209,25 +1215,34 @@ MCD_CompressedAssets:
 	dc.l Nem_Shield_Dynamic,Nem_Shield_Dynamic+$196	; art/nemesis/Shield Dynamic.nem
 	endif
 	if defined(Nem_Smoke)
-	dc.l Nem_Smoke,Nem_Smoke+$D7	; art/nemesis/Smoke trail from CPZ boss.nem
+	dc.l Nem_Smoke,Nem_Smoke+$F0	; art/nemesis/Smoke trail from CPZ boss.nem
 	endif
 	if defined(Nem_Snail)
-	dc.l Nem_Snail,Nem_Snail+$20A	; art/nemesis/Enemy Snail.nem
+	dc.l Nem_Snail,Nem_Snail+$238	; art/nemesis/Enemy Snail.nem
 	endif
 	if defined(Nem_Sparkles)
-	dc.l Nem_Sparkles,Nem_Sparkles+$41	; art/nemesis/Ring Sparkles.nem
+	dc.l Nem_Sparkles,Nem_Sparkles+$47	; art/nemesis/Ring Sparkles.nem
+	endif
+	if defined(Nem_SpecialStageBumper)
+	dc.l Nem_SpecialStageBumper,Nem_SpecialStageBumper+$207	; art/nemesis/Special stage bumper.nem
+	endif
+	if defined(Nem_SpecialStageRings)
+	dc.l Nem_SpecialStageRings,Nem_SpecialStageRings+$1E8	; art/nemesis/Special stage rings.nem
+	endif
+	if defined(Nem_SpecialStageSparkles)
+	dc.l Nem_SpecialStageSparkles,Nem_SpecialStageSparkles+$41	; art/nemesis/Special stage sparkles.nem
 	endif
 	if defined(Nem_Squirrel)
-	dc.l Nem_Squirrel,Nem_Squirrel+$14D	; art/nemesis/Flicky/Squirrel.nem
+	dc.l Nem_Squirrel,Nem_Squirrel+$169	; art/nemesis/Flicky/Squirrel.nem
 	endif
 	if defined(Nem_Stalk)
 	dc.l Nem_Stalk,Nem_Stalk+$3F	; art/nemesis/S1/GHZ Flower Stalk.nem
 	endif
 	if defined(Nem_Swing)
-	dc.l Nem_Swing,Nem_Swing+$100	; art/nemesis/S1/GHZ Swinging Platform.nem
+	dc.l Nem_Swing,Nem_Swing+$122	; art/nemesis/S1/GHZ Swinging Platform.nem
 	endif
 	if defined(Nem_Swing2)
-	dc.l Nem_Swing2,Nem_Swing2+$1D1	; art/nemesis/S1/SLZ Swinging Platform.nem
+	dc.l Nem_Swing2,Nem_Swing2+$24C	; art/nemesis/S1/SLZ Swinging Platform.nem
 	endif
 	if defined(Nem_TailsLifeText)
 	dc.l Nem_TailsLifeText,Nem_TailsLifeText+$10D	; art/nemesis/Tails Life Text.nem
@@ -1236,28 +1251,28 @@ MCD_CompressedAssets:
 	dc.l Nem_TitleSonicTails,Nem_TitleSonicTails+$B23	; art/nemesis/Title Sonic and Tails.nem
 	endif
 	if defined(Nem_Turtle)
-	dc.l Nem_Turtle,Nem_Turtle+$197	; art/nemesis/Flicky/Turtle.nem
+	dc.l Nem_Turtle,Nem_Turtle+$1C1	; art/nemesis/Flicky/Turtle.nem
 	endif
 	if defined(Nem_VSpikes)
-	dc.l Nem_VSpikes,Nem_VSpikes+$2A5	; art/nemesis/Spikes.nem
+	dc.l Nem_VSpikes,Nem_VSpikes+$EC	; art/nemesis/Spikes.nem
 	endif
 	if defined(Nem_VSpring2)
-	dc.l Nem_VSpring2,Nem_VSpring2+$24A	; art/nemesis/Vertical spring.nem
+	dc.l Nem_VSpring2,Nem_VSpring2+$123	; art/nemesis/Vertical spring.nem
 	endif
 	if defined(Nem_Warp)
-	dc.l Nem_Warp,Nem_Warp+$23D	; art/Bonus & Special Stage/Bonus Stage Flash.nem
+	dc.l Nem_Warp,Nem_Warp+$248	; art/Bonus & Special Stage/Bonus Stage Flash.nem
 	endif
 	if defined(Nem_WaterBubbles)
-	dc.l Nem_WaterBubbles,Nem_WaterBubbles+$7D7	; art/nemesis/Water bubbles.nem
+	dc.l Nem_WaterBubbles,Nem_WaterBubbles+$2AD	; art/nemesis/Water bubbles.nem
 	endif
 	if defined(Nem_Wheel)
-	dc.l Nem_Wheel,Nem_Wheel+$146	; art/nemesis/Wheel carrier.nem
+	dc.l Nem_Wheel,Nem_Wheel+$8C	; art/nemesis/Wheel carrier.nem
 	endif
 	if defined(PKosp_CPZ)
 	dc.l PKosp_CPZ,PKosp_CPZ+$2B4A	; art/kosinski/level/8x8 - CPZ.kosp
 	endif
 	if defined(PKosp_EHZ)
-	dc.l PKosp_EHZ,PKosp_EHZ+$2E6A	; art/kosinski/level/8x8 - EHZ.kosp
+	dc.l PKosp_EHZ,PKosp_EHZ+$2E4F	; art/kosinski/level/8x8 - EHZ.kosp
 	endif
 	if defined(PKosp_GHZ)
 	dc.l PKosp_GHZ,PKosp_GHZ+$257E	; art/kosinski/level/8x8 - GHZ.kosp
@@ -1266,13 +1281,13 @@ MCD_CompressedAssets:
 	dc.l PKosp_HPZ,PKosp_HPZ+$2B52	; art/kosinski/level/8x8 - HPZ.kosp
 	endif
 	if defined(PKosp_HTZ)
-	dc.l PKosp_HTZ,PKosp_HTZ+$20C9	; art/kosinski/level/8x8 - HTZ.kosp
+	dc.l PKosp_HTZ,PKosp_HTZ+$20CB	; art/kosinski/level/8x8 - HTZ.kosp
 	endif
 	if defined(PKosp_LZ)
 	dc.l PKosp_LZ,PKosp_LZ+$1BCA	; art/kosinski/level/8x8 - LZ.kosp
 	endif
 	if defined(PKosp_MTZ)
-	dc.l PKosp_MTZ,PKosp_MTZ+$2BBA	; art/kosinski/level/8x8 - MTZ.kosp
+	dc.l PKosp_MTZ,PKosp_MTZ+$2CB5	; art/kosinski/level/8x8 - MTZ.kosp
 	endif
 	if defined(PLevel_CPZ1)
 	dc.l PLevel_CPZ1,PLevel_CPZ1+$454	; level/layout/past/CPZ_1.kosp
@@ -1488,25 +1503,25 @@ MCD_CompressedAssets:
 	dc.l PMap128_MTZ,PMap128_MTZ+$2A8C	; mappings/128x128/MTZ.kosp
 	endif
 	if defined(PMap16_CPZ)
-	dc.l PMap16_CPZ,PMap16_CPZ+$DFC	; mappings/16x16/CPZ.kosp
+	dc.l PMap16_CPZ,PMap16_CPZ+$E28	; mappings/16x16/CPZ.kosp
 	endif
 	if defined(PMap16_EHZ)
-	dc.l PMap16_EHZ,PMap16_EHZ+$C94	; mappings/16x16/EHZ.kosp
+	dc.l PMap16_EHZ,PMap16_EHZ+$CAE	; mappings/16x16/EHZ.kosp
 	endif
 	if defined(PMap16_GHZ)
-	dc.l PMap16_GHZ,PMap16_GHZ+$B10	; mappings/16x16/GHZ.kosp
+	dc.l PMap16_GHZ,PMap16_GHZ+$B1C	; mappings/16x16/GHZ.kosp
 	endif
 	if defined(PMap16_HPZ)
-	dc.l PMap16_HPZ,PMap16_HPZ+$EEE	; mappings/16x16/HPZ.kosp
+	dc.l PMap16_HPZ,PMap16_HPZ+$F3E	; mappings/16x16/HPZ.kosp
 	endif
 	if defined(PMap16_HTZ)
 	dc.l PMap16_HTZ,PMap16_HTZ+$B0D	; mappings/16x16/HTZ.kosp
 	endif
 	if defined(PMap16_LZ)
-	dc.l PMap16_LZ,PMap16_LZ+$58A	; mappings/16x16/LZ.kosp
+	dc.l PMap16_LZ,PMap16_LZ+$593	; mappings/16x16/LZ.kosp
 	endif
 	if defined(PMap16_MTZ)
-	dc.l PMap16_MTZ,PMap16_MTZ+$B8A	; mappings/16x16/MTZ.kosp
+	dc.l PMap16_MTZ,PMap16_MTZ+$B89	; mappings/16x16/MTZ.kosp
 	endif
 	if defined(SSBG_Blocks)
 	dc.l SSBG_Blocks,SSBG_Blocks+$373	; mappings/16x16/S1 Special Stage BG.kosp

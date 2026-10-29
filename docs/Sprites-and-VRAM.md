@@ -152,9 +152,9 @@ is not a source of free level VRAM.
 | Bytes, end exclusive | Tile base | Use |
 | --- | --- | --- |
 | `$0020-$0220` | `$001` | Streamed water surface: 16 tiles immediately after transparent tile zero |
-| `$9BA0-$9F20` | `$4DD` | Diagonal springs, 28 tiles; GHZ reuses this space for Chopper |
-| `$9F20-$A120` | `$4F9` | Vertical springs, 16 tiles |
-| `$A120-$A320` | `$509` | Horizontal springs, 16 tiles |
+| `$9BA0-$9DE0` | `$4DD` | Diagonal springs, 18 tiles; GHZ reuses this space for Chopper |
+| `$9F20-$A0A0` | `$4F9` | Vertical springs, 12 tiles |
+| `$A120-$A2A0` | `$509` | Horizontal springs, 12 tiles |
 | `$A320-$A520` | `$519` | Floor/side spikes, 16 tiles |
 | `$A520-$ACA0` | `$529` | Monitor/signpost bank, 60 tiles |
 | `$ACA0-$ADE0` | `$565` | Checkpoint, 10 tiles |
@@ -290,10 +290,8 @@ immediately follow `Pal_SonicTails`: the title-card loader copies them as one
 two-line palette. Assembly and the native palette-loader check guard that pair. `build_card_art.py` owns their mappings/DPLCs, including
 act 4, V/W and the wide W metrics. Its `act_four()` draws the digit into the
 existing six-tile (16x24) slot. Small results markers use blue-only shading
-from `Title Cards Base.unc`; the generator supplies a separate gold/yellow
-version for the special-results palette. Its outer rim uses existing gold slot
-`$B`, the lighter edge uses `$C`, and the fill uses bright yellow `$3`. The shared
-palette, oval shape and two-tile scene allocation are unchanged.
+from `Title Cards Base.unc`; normal and special results use the same blue
+ramp. Special results use the aligned palette contract below.
 `build_signpost_art.py` owns the streamed
 signpost and monitor arrangement. Tails's portrait is the final four monitor
 tiles (`$561-$564`); signpost frames stay below it. Sonic's life art remains
@@ -306,11 +304,11 @@ Signpost frame `$06` uses Mecha Sonic's original head and upper body in skdisasm
 The source crop is X `-12..27`, Y `-32..-5`, including the shoulders.
 Place the crop three pixels below the canvas top,
 then flip it horizontally to face right. The original pixels, dimensions
-and palette indices are preserved. The portrait sits four pixels left and
+are preserved; palette indices follow the shared slot remap. The portrait sits four pixels left and
 two pixels above the panel centre to balance the face against its back spines.
 The body ends at panel Y `12`, immediately above the lower rim at Y `13`.
-`palette/Mecha Sonic.bin` is the original `Palettes/Main.bin`.
-The generator fills the existing Eggman panel with Mecha palette slot `$7`
+`palette/Mecha Sonic.bin` retains the original colors in remapped slots.
+The generator fills the existing Eggman panel with Mecha palette slot `$5`
 (`$004`) and reconstructs the metallic rim where his moustache cut into it,
 then appends that
 panel and the head to `Signpost extra.unc`, and rebuilds the packed/editor art,
@@ -321,7 +319,7 @@ buffer; no VRAM allocation moves.
 
 The portrait and red board select palette line two (attribute `$2000`);
 only the post retains the primary line. The board's red uses Mecha's native
-slot `$7`; its rim is adapted to his white/blue-gray metal ramp. No temporary
+slot `$5`; its rim is adapted to his white/blue-gray metal ramp. No temporary
 palette override or extra tiles are needed. Event code can load
 `palid_MechaSonic` with `PalLoad2`, then select signpost animation 5 (`.mecha`).
 The event owns that line's lifetime and any restoration; ordinary signposts
@@ -350,7 +348,7 @@ The decoded extra source is the pinned `Mecha Sonic Extra Art.kosm`; only
 its first 22 tiles are resident for jets/electric sparks. Raw body/effect art
 and mappings remain directly editable. Resident effects use moduled Kosinski+;
 the body remains raw ROM data for frame-by-frame DPLC DMA. The original
-Main/Flash 1/Flash 2 palettes and Mecha Land/Spark/Thump sounds retain their source data.
+Main/Flash palettes retain source colors in remapped slots; hit/defeat offsets follow them. Mecha sounds retain their source data.
 
 During the SMZ2 fight, `$400-$426` is Mecha's 39-tile streamed bank;
 `$427-$43C` holds the 22 resident effect tiles. This replaces an inactive
@@ -378,12 +376,29 @@ unchanged.
 
 ## Palette adaptation
 
-Runtime player art uses `palette/SonicAndTails.bin`. The S&K source index order
-maps to `0 6 5 3 2 4 C D E F A B 7 8 9 1`; transparency is preserved.
-The imported blue/gray ramps and warm skin colors are intentional. Adapt
-individual imported pixels instead of changing global player colors to fix
-one object. The current SMZ flame and protected button draft are described in
-[Levels](Levels.md#scrap-madness). Check [Testing](Testing.md) after art changes.
+Runtime player art uses `palette/SonicAndTails.bin`, identical to the owner's
+alternate `Sonic and Tails.bin`. Slots 2–5 are orange/skin, 6–9 white through
+dark gray, A–C blue, D–F red. The second level row aligns its gray and D–F yellow
+ramps; other slots are per-act enemy colors. S&K indices map to
+`0 6 A B C F D E 4 3 5 2 7 8 9 1`. `sprite_palette.py` owns offline import
+conversions; editable runtime art already uses the new slots. No runtime pixel
+conversion is performed. Keep every compressed archive followed by `even`.
+
+Springs retain S3&K mechanisms/geometry, with Sonic CD straight caps from
+scddisasm `f8cf3f0af7bf419d18182ba98554f09307ad3cc6` (normal spring tiles 0–3
+and 18–21). Both colors share the cap tiles, selecting a palette per piece.
+The editable `* spring S3.unc` files now contain 12 vertical, 12 horizontal
+and 18 diagonal tiles; `build_spring_art.py` packs them. Their VRAM bases stay
+fixed; the 18 released slots remain gaps rather than new global allocations.
+
+`build_special_results_art.py` builds the independent navy/white/gold results
+palette, six four-tile emeralds at tile $500 on lines three/four, and current
+life-portrait continue badges at the existing mini-character banks. Its ring
+selects the second-line gold ramp. `build_card_art.py` generates matching labels
+and blue markers. The rotating stage retains its original palette and private
+copies of its formerly shared bumper/ring/sparkle banks.
+`build_special_sonic_art.py` extracts only its five original-index rolling
+poses (80 source tiles) from the editable player art.
 
 ## Platform-mounted button art
 

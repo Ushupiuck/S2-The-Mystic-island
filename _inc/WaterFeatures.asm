@@ -17,16 +17,23 @@ CheckLevelForWater:
 		sf	(f_wtr_state).w
 		move.b	#1,(Water_flag).w
 		move.w	#30,(v_air).w
-		moveq	#palid_GHZ4Water,d0
-		cmpi.w	#3,(Current_ZoneAndAct).w
-		beq.s	.loadpalette
-		moveq	#palid_LZSonWater,d0
-		cmpi.w	#id_LZ*$100+3,(Current_ZoneAndAct).w ; Labyrinth act 4?
-		bne.s	.loadpalette			; if not, load from lampost
-		moveq	#palid_SBZ3SonWat,d0
+		bsr.w	GetWaterPaletteID
 
 .loadpalette:	move.b	(v_lamp_wtrstat).w,(f_wtr_state).w
 		bra.w	PalLoad3_Water
+; ---------------------------------------------------------------------------
+GetWaterPaletteID:
+		moveq	#palid_GHZ4Water,d0
+		cmpi.w	#3,(Current_ZoneAndAct).w
+		beq.s	.return
+		moveq	#palid_HPZWater,d0
+		cmpi.b	#id_LZ,(Current_Zone).w
+		bne.s	.return
+		moveq	#palid_LZWater,d0
+		cmpi.b	#3,(Current_Act).w
+		bne.s	.return
+		moveq	#palid_SBZ3Water,d0
+.return:	rts
 ; ---------------------------------------------------------------------------
 ; Subroutine to move the water or oil surface sprites to where the screen is at
 ; (the closest match I could find to this subroutine in Sonic 1 is Obj1B_Action)
