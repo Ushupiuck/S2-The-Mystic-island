@@ -292,7 +292,10 @@ removed. Stable foreground IDs preserve objects that reuse level art without
 adding per-act object mappings. The independent source sheets remain editable;
 regeneration deliberately rebuilds them from shared EHZ and the pinned CD source.
 
-PP's cloud/water colors fit exactly in unused palette slots. Five near-matching
+The importer reserves shared HUD, life-text, points and ring colors in level
+palette line 1, including shadow `$1` and digit highlights `$7/$8`; absence from
+foreground tiles does not make these slots free. PP uses the remaining free
+slots and the nearest available per-tile colors. Five near-matching
 foreground shades are blended with PP's equivalents: each changes just one MD
 channel by one hardware step. Their midpoint lies between representable colors,
 so equal choices select the PP endpoint. This also aligns the wood/grass colors

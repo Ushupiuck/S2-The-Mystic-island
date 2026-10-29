@@ -7,6 +7,7 @@ damage, button handling, Debug entry and restoration use the real ROM code.
 from pathlib import Path
 import argparse
 import json
+import struct
 
 from genesis_test_core import Genesis
 from check_object_course import boot_level
@@ -26,6 +27,13 @@ def press_debug(g, debug_type):
 
 def check_hud(g, rom, output):
     baseline = g.save()
+    if g.read('Current_ZoneAndAct', 2) == 0x0301:
+        # EHZ2's private scenery palette must preserve shared HUD ink/shading.
+        # Read live colors after the real palette loader, not the importer report.
+        palette = struct.unpack('>48H', (Path(__file__).resolve().parents[1]/'palette/EHZ.bin').read_bytes())
+        for index in (1, 6, 7, 8, 12, 13, 14):
+            assert g.read(g.s['v_palette']+(16+index)*2, 2) == palette[index], (
+                'EHZ2 background overwrote a shared HUD color', index)
     art = rom[g.s['Art_HUD']:]
     font = rom[g.s['Art_DebugDigits']:g.s['Art_DebugDigits'] + 16 * 32]
     glyphs = [font[i:i + 32] for i in range(0, len(font), 32)]
@@ -127,11 +135,13 @@ def main():
         p.add_argument('--' + name, type=Path, required=True)
     p.add_argument('--pal', action='store_true')
     p.add_argument('--player', type=int, choices=(0, 2), default=0)
+    p.add_argument('--zone', type=int, default=0)
+    p.add_argument('--act', type=int, choices=range(1, 5), default=1)
     p.add_argument('--system-directory', type=Path)
     args = p.parse_args()
     g = Genesis(args.core, args.rom, args.listing, args.output, args.pal,
                 system_directory=args.system_directory)
-    boot_level(g, item=0, player=args.player)
+    boot_level(g, zone=args.zone, act=args.act-1, player=args.player)
     g.put('v_player2', 'code', 0)
     baseline = g.save()
     slots = range(g.s['v_lvlobjspace'] & 0xFFFF,

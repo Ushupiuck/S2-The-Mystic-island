@@ -138,11 +138,11 @@ def build(source, output):
     for index, target in blend_targets.items():
         palette[index] = midpoint(original_pal[index], target)
         assert distance(original_pal[index], palette[index]) <= 4
-    # Slots unused by EHZ2's foreground, flower frames, bridge and platforms.
+    # Slots unused by EHZ2's foreground, flower frames, bridge, platforms and HUD.
     # Other foreground/object colors and all palette indices remain fixed.
-    additions = {1:0xEEA, 5:0xE86, 7:0xCC6, 8:0xE64, 9:0xEEC, 10:0xEC8,
+    additions = {5:0xE86, 9:0xEEC, 10:0xEC8,
                  16+8:0x0A6, 16+13:0x064,
-                 32+1:0xEEA, 32+3:0xCC6, 32+4:0x06A, 32+10:0x024}
+                 32+1:0xEEA, 32+2:0xE64, 32+3:0xCC6, 32+4:0x06A, 32+10:0x024}
     used = set()
     for w in fg_words:
         tid, line = w & 2047, (w >> 13) & 3
@@ -157,7 +157,20 @@ def build(source, output):
         used |= {16+i for i in tile_pixels(art[tid*32:(tid+1)*32]) if i}
     for filename,line in (('EHZ bridge.nem',2),('Waterfall tiles.nem',1)):
         used |= {(line-1)*16+i for i in tile_pixels(nemesis((ROOT/'art/nemesis'/filename).read_bytes())) if i}
-    assert not any(i in used and original_pal[i] != value for i,value in additions.items()), 'Palette addition overwrites an EHZ2 foreground/object color'
+    # The shared HUD selects level palette line 1. Its shadow and gray digit
+    # highlights are live even when no terrain tile references those slots.
+    hud_colors = set()
+    for filename in ('art/nemesis/HUD.nem', 'art/uncompressed/HUD Numbers.bin',
+                     'art/uncompressed/Lives Counter Numbers.bin',
+                     'art/uncompressed/Points.unc', 'art/uncompressed/Ring.bin',
+                     'art/nemesis/Tails Life Text.nem'):
+        raw = (ROOT/filename).read_bytes()
+        if filename.endswith('.nem'):
+            raw = nemesis(raw)
+        hud_colors.update(tile_pixels(raw))
+    hud_colors.update(tile_pixels(nemesis((ROOT/'art/nemesis/Sonic lives counter.nem').read_bytes())[4*32:]))
+    used |= hud_colors - {0}
+    assert not any(i in used and original_pal[i] != value for i,value in additions.items()), 'Palette addition overwrites an EHZ2 foreground/object/HUD color'
     for i,value in additions.items(): palette[i] = value
     for i in (0,16,32): palette[i] = 0xA00  # PP sky backdrop; pixel zero remains transparent.
     (ROOT/'palette/EHZ2 PP.bin').write_bytes(struct.pack('>48H',*palette))
@@ -234,7 +247,7 @@ def build(source, output):
     for era in ('present','past','good Future','bad future'):
         path=ROOT/f'collision/{era}/EHZ2.bin';original=path.read_bytes()
         path.write_bytes(b''.join(original[i*2:i*2+2] if i in fg_blocks else bytes(2) for i in range(len(block_data))))
-    result=dict(source_revision=SOURCE_REVISION,source_crop=[0,CROP_Y,512,512],tiles=len(tiles),blocks=len(block_data),chunks=len(chunk_data),background_dimensions=[4,4],foreground_and_platform_pixels_preserved=True,foreground_palette_blends=[dict(index=index+16,original=original_pal[index],pp=target,result=palette[index]) for index,target in blend_targets.items()],unique_tile_pixel_error_histogram=dict(sorted(errors.items())))
+    result=dict(source_revision=SOURCE_REVISION,source_crop=[0,CROP_Y,512,512],tiles=len(tiles),blocks=len(block_data),chunks=len(chunk_data),background_dimensions=[4,4],foreground_and_platform_pixels_preserved=True,hud_palette_slots_preserved=sorted(hud_colors-{0}),foreground_palette_blends=[dict(index=index+16,original=original_pal[index],pp=target,result=palette[index]) for index,target in blend_targets.items()],unique_tile_pixel_error_histogram=dict(sorted(errors.items())))
     output.parent.mkdir(parents=True,exist_ok=True);output.write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps(result,indent=2))
 

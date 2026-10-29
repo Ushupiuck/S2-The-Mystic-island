@@ -450,6 +450,10 @@ CD boot needs a supplied system directory. Only runners exposing
 music, sound playback, visual follow-up, fast clear, player effects, card screens and swing families).
 `check_debug_states.py` also accepts this directory for both primary characters'
 HUD and hurt/death Debug checks on Mode 1.
+Use `--zone 3 --act 2` to exercise the private EHZ2/PP palette: this checks
+the live HUD shadow/highlight colors as well as score/time/ring tile uploads,
+Debug entry/exit and stopped/running clock restoration. `--player 2 --pal`
+selects primary Tails in PAL.
 `check_ss_debug_game.py` accepts `--rom`, `--listing`, `--core`, `--output`,
 `--system-directory` and `--pal`. It launches the rotating stage through level
 select, places twelve rings without moving the cursor, compares every authored
