@@ -254,6 +254,10 @@ an offscreen run. The classic finish still supports the giant-ring exit.
 No SST fields, RAM reservations or VRAM allocations grow.
 
 SMZ2's trap spins from Eggman through its own mixed frames to Mecha's bust.
+After it settles and the final portrait DPLC is queued, a separate two-second
+warning holds the sign before Mecha enters: 120 updates on NTSC, 100 on PAL,
+plus one update to admit the portrait's first DMA/VBlank. Spin and loading
+time cannot consume this warning. Players retain control during the hold.
 The act clock resumes for the fight; the normal sign-art approach loader is
 suppressed while the trap owns the arena, so it cannot repeatedly replace the
 boss PLC queue. Mecha enters from the right, breaks the existing sign into

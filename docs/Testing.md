@@ -107,8 +107,9 @@ The optional source oracle assembles the original attack states, raw-animation
 interpreter and callbacks, comparing 8,400 updates of positions, velocities,
 frames, timers, flags and RNG. Sound/child effects and a flat floor are fixture
 boundaries. Native checks also exhaust the pool at construction and reward.
-The emulator uses the real SMZ2 placement; controller input crosses the trap,
-then all attacks run on the authored arena. Focused actor positioning supplies
+The emulator uses the real SMZ2 placement; controller input crosses the trap.
+It verifies the final portrait in VRAM and at least two seconds of warning
+before entry on NTSC/PAL, then all attacks run on the authored arena. Focused actor positioning supplies
 eight real jumping hits through touch collision; no boss HP is edited. It
 checks the destroyed sign, no early results/reward, defeat and falling-sign
 results. `--companion` uses the second actor for hits; `--player 2 --pal` uses

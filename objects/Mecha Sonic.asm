@@ -27,6 +27,7 @@ MS_jet2 = obSubtype              ; word: second jet; boss is event-spawned
 MS_parent = objoff_38            ; word: child -> validated MechaSonic owner
 MS_Fight = 4
 MS_Defeat = 5
+MS_RevealSeconds = 2		; hold the settled portrait before the entry dash
 
 ; Called only after a crossing of subtype bit 1. A full pool retries without
 ; consuming the crossing or entering results. The sign owns its placement.
@@ -119,12 +120,29 @@ MS_Loading:
         tst.l   (v_plc_buffer).w
         bne.w   MS_Return
         move.b  #2,MS_phase(a0)
+        clr.w   MS_timer(a0)
 MS_AwaitPortrait:
         movea.w MS_sign(a0),a1
         cmpi.l  #Signpost,code(a1)
         bne.w   MS_Abort
         cmpi.b  #18,obRoutine(a1)
         bne.w   MS_Return
+		cmpi.b	#6,obFrame(a1)
+		bne.w	MS_Return
+		cmpi.b	#6,signpost_loaded(a1)
+		bne.w	MS_Return
+		tst.w	MS_timer(a0)
+		bne.s	.reveal_wait
+		; Arm only after the final portrait's complete DPLC is queued.
+		; One extra update allows its first DMA/VBlank before the full hold.
+		move.w	#MS_RevealSeconds*60+1,MS_timer(a0)
+		btst	#6,(v_megadrive).w
+		beq.w	MS_Return
+		move.w	#MS_RevealSeconds*50+1,MS_timer(a0)
+		rts
+.reveal_wait:
+		subq.w	#1,MS_timer(a0)
+		bne.w	MS_Return
         move.b  #3,MS_phase(a0)
         move.b  #2,obFrame(a0)
         move.w  (Camera_X_pos).w,d0

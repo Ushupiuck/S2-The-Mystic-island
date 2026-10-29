@@ -82,6 +82,27 @@ def native(args):
         m.put(pool[index],'code',0);m.act('MS_MaintainJets',body)
         assert m.get(body,field,2)==pool[index]&65535 and m.get(pool[index],'code')==m.s['MS_Jet']
     checks.append('jet pairs recover from partial allocation without writing beyond the pool')
+    for pal,ticks in ((0,120),(0x40,100)):
+        m.start();body,sign=pool[:2]
+        m.put(body,'code',m.s['MechaSonic']);m.put(body,'MS_phase',2)
+        m.put(body,'MS_sign',sign,2);m.put(body,'MS_sign_y',0x5A4,2)
+        m.put(sign,'code',m.s['Signpost']);m.put(sign,'obRoutine',16)
+        m.put(sign,'obFrame',6);m.put(sign,'signpost_loaded',6)
+        m.write('v_megadrive',pal)
+        for _ in range(ticks+10):m.act('MS_AwaitPortrait',body)
+        assert not m.get(body,'MS_timer',2) and m.get(body,'MS_phase')==2
+        m.put(sign,'obRoutine',18);m.put(sign,'signpost_loaded',255)
+        m.act('MS_AwaitPortrait',body);assert not m.get(body,'MS_timer',2)
+        m.put(sign,'signpost_loaded',6);m.put(sign,'obFrame',4)
+        m.act('MS_AwaitPortrait',body);assert not m.get(body,'MS_timer',2)
+        m.put(sign,'obFrame',6);m.act('MS_AwaitPortrait',body)
+        assert m.get(body,'MS_timer',2)==ticks+1
+        for _ in range(ticks):
+            m.act('MS_AwaitPortrait',body)
+            assert m.get(body,'MS_phase')==2 and not m.get(body,'obVelX',2)
+        m.act('MS_AwaitPortrait',body)
+        assert m.get(body,'MS_phase')==3 and m.get(body,'obVelX',2)==0xF800
+    checks.append('settled final portrait/DPLC gates a separate two-second NTSC/PAL warning plus first-DMA grace')
     if args.skdisasm:
         ref=Machine(args.rom,args.listing);labels,data=reference(m,args);ref.s.update(labels);ref.cpu.mem_write(0x300000,data)
         m.start();ref.start()
@@ -122,21 +143,40 @@ def game(args):
     sign=signs[0];assert g.get(sign,'obSubtype')==2 and g.get(sign,'obFrame')==2
     g.video.save(args.output/'game/before.png')
     g.put('v_player','obControl',0);g.put('v_player','obVelX',0x600,2);g.put('v_player','obInertia',0x600,2);g.buttons={7};spin=set();seen=set();broken=False;boss=None
+    settled=None;entry=None;warning_ticks=100 if args.pal else 120
+    root=g.s['DPLC_Signpost'];cue=root+struct.unpack_from('>h',args.rom.read_bytes(),root+12)[0]
+    rom=args.rom.read_bytes();portrait=bytearray()
+    for i in range(struct.unpack_from('>H',rom,cue)[0]):
+        word=struct.unpack_from('>H',rom,cue+2+i*2)[0]
+        start=g.s['Art_Signpost']+(word&4095)*32
+        portrait+=rom[start:start+((word>>12)+1)*32]
     for t in range(400):
         run()
         if t==120:g.buttons=set()
         assert not g.get('v_endcard','code'),'premature act results'
-        if g.get(sign,'code')==g.s['Signpost']:spin.add(g.get(sign,'obFrame'))
+        if g.get(sign,'code')==g.s['Signpost']:
+            spin.add(g.get(sign,'obFrame'))
+            if settled is None and g.get(sign,'obRoutine')==18 and g.get(sign,'obFrame')==6 and g.get(sign,'signpost_loaded')==6:
+                actual=bytes(g.vram[(g.s['ArtTile_Signpost']*32+i)^1] for i in range(len(portrait)))
+                if actual==portrait:
+                    settled=g.frame;g.video.save(args.output/'game/settled-warning.png')
         if objects('MechaSonic'):
             boss=objects('MechaSonic')[0];g.buttons=set();seen.add(g.get(boss,'MS_phase'))
+            if g.get(boss,'MS_phase')>=3 and entry is None:
+                entry=g.frame
+                assert settled is not None and entry-settled>=warning_ticks,(settled,entry,warning_ticks)
+            if settled is not None and g.frame-settled<warning_ticks:
+                assert g.get(boss,'MS_phase')<3 and not objects('MS_SignDebris')
             if objects('MS_SignDebris') and not broken:g.video.save(args.output/'game/sign-destroyed.png');broken=True
             if g.get(boss,'MS_phase')==4:break
     assert boss and {2,4,6,9,10}<=spin and broken,(boss,spin,seen,broken,{f:g.get('v_player',f,z) for f,z in [('obX',2),('obY',2),('obVelX',2),('obStatus',1),('obControl',1),('obRoutine',1)]})
+    assert entry is not None and settled is not None
     assert g.get(sign,'code')!=g.s['Signpost']
     assert g.get(boss,'obColProp')==8
     assert g.read('Camera_Min_X_pos',2)==g.read('Camera_Max_X_pos',2)==0x1E40
     assert not objects('Signpost')
     checks=['authored SMZ2 sign: controller crossing, Eggman/Mecha mixed frames, side entry, debris and no early results']
+    checks.append(f'settled visible portrait gets {entry-settled} frames before Mecha enters; minimum {warning_ticks}')
     for actor in actors:
         place(g,actor,0x1E60,0x4D0);g.put(actor,'obControl',1)
     states=set()
