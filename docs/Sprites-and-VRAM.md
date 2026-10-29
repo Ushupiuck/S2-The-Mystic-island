@@ -230,8 +230,9 @@ its escape delay, before the capsule opens. The controller and parent SST
 contract are in [Objects](Objects.md#ghz-boss-and-boss-explosions).
 
 `art/uncompressed/Large explosion.unc` is the editable pixel source;
-recompress it to `art/nemesis/Large explosion.nem` using mdcomp's
-`nemcmp "art/uncompressed/Large explosion.unc" "art/nemesis/Large explosion.nem"`.
+run `python build_tools/build_end_art.py` to regenerate its moduled Kosinski+
+archive and the other resident end-of-act banks from their editable `.unc`
+sources. Every ROM include retains `even`, including odd-length archives.
 The art and `mappings/sprite/Boss Explosion.asm` retain the Sonic 2 final import
 from s2disasm `15e9fd52a65318bec3d5e746ce48dba6db6910db`. The seven mapping
 frames last 2, 2, 3, 3, 3, 4 and 4 game frames: S3&K's 21-tick lifetime fitted
@@ -239,7 +240,7 @@ to the S2 sequence. Ordinary bomb, enemy and capsule explosions retain their
 separate art/timing.
 
 The optional advancing wall loads `PLC_ExplosionWall`: the same large art plus
-`Nem_Explosion` relocated to `ArtTile_ExplosionWall_Small = ArtTile_Eggman`
+`Kospm_Explosion` relocated to `ArtTile_ExplosionWall_Small = ArtTile_Eggman`
 (`$8000-$8BC0`, 94 tiles). This is an alias of inactive ship space, not a new
 permanent reservation. Its normal bursts use `Map_Explosion` without animals,
 with S3&K's short first frame and high-priority flag. This lets both sizes
@@ -302,17 +303,19 @@ and palette indices are preserved. The portrait sits four pixels left and
 two pixels above the panel centre to balance the face against its back spines.
 The body ends at panel Y `12`, immediately above the lower rim at Y `13`.
 `palette/Mecha Sonic.bin` is the original `Palettes/Main.bin`.
-The generator fills the existing Eggman panel with primary palette slot `$4`
-(`$004`, Tails's red background before `16a378c`) and reconstructs the straight
-gray rim where his moustache cut into it, then appends that
+The generator fills the existing Eggman panel with Mecha palette slot `$7`
+(`$004`) and reconstructs the metallic rim where his moustache cut into it,
+then appends that
 panel and the head to `Signpost extra.unc`, and rebuilds the packed/editor art,
 mappings and DPLCs. Four portrait rectangles omit the five transparent tiles;
 the board's inner columns share their lower three tiles. The frame uses
 26 resident tiles and 13 hardware sprites, within the existing 26-tile
 buffer; no VRAM allocation moves.
 
-Only the portrait's mapping pieces select palette line two (attribute `$2000`);
-the board and post retain the primary line. Event code can load
+The portrait and red board select palette line two (attribute `$2000`);
+only the post retains the primary line. The board's red uses Mecha's native
+slot `$7`; its rim is adapted to his white/blue-gray metal ramp. No temporary
+palette override or extra tiles are needed. Event code can load
 `palid_MechaSonic` with `PalLoad2`, then select signpost animation 5 (`.mecha`).
 The event owns that line's lifetime and any restoration; ordinary signposts
 do not replace a level palette or select this portrait automatically.
@@ -324,7 +327,10 @@ falling animations use his own pair, and the trap uses only Eggman/Mecha.
 No Sonic face is sampled into either of those characters' intermediates.
 Mecha's intermediate is 24 pixels wide, with a separate line-two overlay;
 the other two keep the original 32-pixel turning silhouette. All eleven
-signpost frames fit the existing 26-tile bank. The trap's thirteen debris
+signpost frames fit the existing 26-tile bank. `Signpost.kospm` is the packed
+SonLVL archive; the live frame DPLCs read the raw sources directly. Compressing
+those runtime sources would require stable decoded RAM across frame uploads.
+The trap's thirteen debris
 frames reference the same loaded bust tiles, retiring before the reward
 sign reuses that bank.
 
@@ -335,8 +341,9 @@ imports all 22 body frames, converts the original DPLCs to `Load_DynamicPLC`,
 and retains the eight effect mapping entries used by the standard fight.
 The decoded extra source is the pinned `Mecha Sonic Extra Art.kosm`; only
 its first 22 tiles are resident for jets/electric sparks. Raw body/effect art
-and mappings remain directly editable. The original Main/Flash 1/Flash 2
-palettes and Mecha Land/Spark/Thump sounds retain their source data.
+and mappings remain directly editable. Resident effects use moduled Kosinski+;
+the body remains raw ROM data for frame-by-frame DPLC DMA. The original
+Main/Flash 1/Flash 2 palettes and Mecha Land/Spark/Thump sounds retain their source data.
 
 During the SMZ2 fight, `$400-$426` is Mecha's 39-tile streamed bank;
 `$427-$43C` holds the 22 resident effect tiles. This replaces an inactive

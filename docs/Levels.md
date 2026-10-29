@@ -74,8 +74,12 @@ SMZ act 2's Kemusi load is an example of a differing act list.
 Main loads during the title card; Extra loads after terrain. Main reserves
 five of the 16 request slots for shared requests, leaving 11 for its act list.
 Extra has 16 slots. Assembly rejects overflow; an empty list has count `-1`.
-Shared HUD, monitors, checkpoints, life art and boss PLCs retain their own
-lifecycle. The Kosinski module index also has separately named act lists,
+Shared HUD, monitors and checkpoints retain their own lifecycle. Resident boss,
+capsule, explosion, signpost bonus and Mecha effect art use the named
+`PLCKosM_Boss`, `GHZBoss`, `Capsule`, `Explode`, `ExplosionWall`, `Signpost` and
+`MechaSonic` lists in the same file. Edit their explicit `plreqKosM` entries.
+The old `plcid_*` event IDs still address these lists through typed index entries;
+there is one payload per list, with `PLC_*` labels retained as address aliases. The Kosinski module index also has separately named act lists,
 including distinct empty recipes ready for later additions.
 The Mode 1 build decodes both on the sub-CPU and queues prepared RAM output for
 DMA. Its resumable PLC and module ownership contracts live in

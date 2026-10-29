@@ -77,6 +77,25 @@ calls the real palette loader to confirm Mecha's palette changes only line two.
 The signpost game fixture displays animation 5 with that palette as an explicit
 scene setup, then returns to the ordinary portraits to check art-cache changes.
 
+Resident end-of-act codecs and their typed PLC path use:
+
+```sh
+python build_tools/build_end_art.py
+python build_tools/check_end_art.py --rom s2built.bin --listing md-main.lst --output test-results/end-art/native --native
+python build_tools/check_end_art.py --rom s2built.bin --listing md-main.lst --output test-results/end-art/game --core /path/to/genesis_plus_gx_libretro.so --system-directory /path/to/mode1-fixture
+```
+
+The native pass checks codec tags, D1/D7 preservation, busy module admission,
+repeated same-frame calls, final-DMA VInt ownership and counter wrap. Every bank
+must match its editable pixels and have an even ROM address. Its decompression
+completion is a fixture boundary; the game pass invokes `LoadPLC` through the
+actual object dispatcher and checks all seven lists against exact VRAM output.
+Use `--pal`; omit the system directory for a cartridge build. Importing the old
+Nemesis banks is optional and requires an older matching ROM/listing; normal
+regeneration uses only the checked-in `.unc` sources. GHZ's native KosM expected
+bytes come from the independent Python decoder; its game pass verifies the
+owning CPU's actual upload and fight/recovery path.
+
 Mecha's standard fight and SMZ2 trap use:
 
 ```sh

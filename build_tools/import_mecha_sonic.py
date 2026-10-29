@@ -8,7 +8,7 @@ rematch is not selected by this standard-fight import.
 from pathlib import Path
 import argparse,re,struct
 from build_signpost_art import mapping_file
-from import_scrap_madness import nemesis_inline
+from build_end_art import pack_moduled
 ROOT=Path(__file__).resolve().parents[1]
 
 def blocks(path):
@@ -43,7 +43,7 @@ def main():
     (ROOT/'mappings/sprite/Mecha Sonic effects.bin').write_bytes(mapping_file(effects))
     extra=a.extra_raw.read_bytes()[:22*32];assert len(extra)==22*32
     (ROOT/'art/uncompressed/Mecha Sonic effects.unc').write_bytes(extra)
-    (ROOT/'art/nemesis/Mecha Sonic effects.nem').write_bytes(nemesis_inline(extra))
+    (ROOT/'art/moduled kosinski/Mecha Sonic effects.kospm').write_bytes(pack_moduled(extra))
     b=blocks(src/'DPLC - Mecha Sonic.asm');base=next(iter(b));runs=[]
     for line in b[base]:
         ref=re.match(r'dc.w\s+(\w+)-',line)[1];v=[num(x.split(None,1)[1]) for x in b[ref]]

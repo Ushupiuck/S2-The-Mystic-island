@@ -44,7 +44,7 @@ def runtime(a, outputs):
     terrain=resident(g.s['MCD_ChunkTable_SubStart'],g.s['MCD_ChunkTable_Size'])
     blocks=resident(g.s['MCD_TerrainBlocks_Sub'],0x1800)
     cases=[]
-    for label in ('Nem_MM_Propeller','Nem_Monitors','Nem_EggPod'):
+    for label in ('Nem_MM_Propeller','Nem_Monitors','Nem_HUD'):
         g.restore(clean)
         for _ in range(120):
             if not g.read('v_plc_buffer',4) and not g.read('v_plc_patternsleft',2):break
@@ -152,7 +152,7 @@ def main():
             if moduled:assert produced==expected_total,(label,produced,expected_total)
         if kind==15:
             expected=bytes(old.mem_read(0x500000,produced))
-            if label in ('Nem_MM_Propeller','Nem_Monitors','Nem_EggPod'):outputs[label]=expected
+            if label in ('Nem_MM_Propeller','Nem_Monitors','Nem_HUD'):outputs[label]=expected
             sub.mem_write(s['MCD_DecompInput_Sub'],blob+bytes(16))
             sub.mem_write(s['MCD_SubMainCommand'],struct.pack('>H',17))
             sub.mem_write(s['MCD_SubMainArgument'],struct.pack('>IHHH',s['MCD_DecompPLC_Sub'],0,0,len(blob)))

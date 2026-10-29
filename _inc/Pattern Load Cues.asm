@@ -2,7 +2,7 @@
 ; PATTERN LOAD REQUEST LISTS
 ;
 ; Pattern load request lists are simple structures used to load
-; Nemesis-compressed art for sprites.
+; Nemesis or moduled Kosinski+ sprite art. Typed event entries select the codec.
 ;
 ; The decompressor predictably moves down the list, so request 0 is processed first, etc.
 ; This only matters if your addresses are bad and you overwrite art loaded in a previous request.
@@ -29,6 +29,8 @@ plccheck:	macro list,reserved
 	endif
 	endm
 ; ---------------------------------------------------------------------------
+; Index offsets are even for Nemesis; bit 0 selects a KosM list.
+; LoadPLC/NewPLC stage module requests with bit 31 set in the art pointer.
 ; Table of pattern load request lists. Remember to use word-length data
 ; When adding lists. Otherwise you'll break the array.
 ; ---------------------------------------------------------------------------
@@ -36,11 +38,11 @@ plccheck:	macro list,reserved
 ArtLoadCues:
 ptr_PLC_Main:		dc.w PLC_Main-ArtLoadCues
 ptr_PLC_Main2:		dc.w PLC_Main2-ArtLoadCues
-ptr_PLC_Explode:	dc.w PLC_Explode-ArtLoadCues
+ptr_PLC_Explode:	dc.w PLCKosM_Explode-ArtLoadCues+PLCKos_IndexFlag
 ptr_PLC_GameOver:	dc.w PLC_GameOver-ArtLoadCues
 ptr_PLC_TitleCard:	dc.w PLC_S1TitleCard-ArtLoadCues
-ptr_PLC_Boss:		dc.w PLC_Boss-ArtLoadCues
-ptr_PLC_Signpost:	dc.w PLC_Signpost-ArtLoadCues
+ptr_PLC_Boss:		dc.w PLCKosM_Boss-ArtLoadCues+PLCKos_IndexFlag
+ptr_PLC_Signpost:	dc.w PLCKosM_Signpost-ArtLoadCues+PLCKos_IndexFlag
 ptr_PLC_Warp:		dc.w PLC_S1SpecialStage-ArtLoadCues
 ptr_PLC_SpecialStage:	dc.w PLC_S1SpecialStage-ArtLoadCues
 ptr_PLC_GHZAnimals:	dc.w PLC_GHZAnimals-ArtLoadCues
@@ -52,14 +54,14 @@ ptr_PLC_HTZAnimals:	dc.w PLC_HTZAnimals-ArtLoadCues
 ptr_PLC_SSResult:	dc.w PLC_SSResult-ArtLoadCues
 ptr_PLC_Ending:		dc.w PLC_S1SpecialStage-ArtLoadCues
 ptr_PLC_TryAgain:	dc.w PLC_S1SpecialStage-ArtLoadCues
-ptr_PLC_EggmanSBZ2:	dc.w PLC_Boss-ArtLoadCues
-ptr_PLC_FZBoss:		dc.w PLC_Boss-ArtLoadCues
-ptr_PLC_Capsule:	dc.w PLC_Capsule-ArtLoadCues
-ptr_PLC_GHZBoss:	dc.w PLC_GHZBoss-ArtLoadCues
+ptr_PLC_EggmanSBZ2:	dc.w PLCKosM_Boss-ArtLoadCues+PLCKos_IndexFlag
+ptr_PLC_FZBoss:		dc.w PLCKosM_Boss-ArtLoadCues+PLCKos_IndexFlag
+ptr_PLC_Capsule:	dc.w PLCKosM_Capsule-ArtLoadCues+PLCKos_IndexFlag
+ptr_PLC_GHZBoss:	dc.w PLCKosM_GHZBoss-ArtLoadCues+PLCKos_IndexFlag
 ptr_PLC_LivesSonic:	dc.w PLC_LivesSonic-ArtLoadCues
 ptr_PLC_LivesTails:	dc.w PLC_LivesTails-ArtLoadCues
-ptr_PLC_ExplosionWall:	dc.w PLC_ExplosionWall-ArtLoadCues
-ptr_PLC_MechaSonic:	dc.w PLC_MechaSonic-ArtLoadCues
+ptr_PLC_ExplosionWall:	dc.w PLCKosM_ExplosionWall-ArtLoadCues+PLCKos_IndexFlag
+ptr_PLC_MechaSonic:	dc.w PLCKosM_MechaSonic-ArtLoadCues+PLCKos_IndexFlag
 ; ---------------------------------------------------------------------------
 ; Level slot $00: Twilight Hill
 ActLoadCues:
@@ -258,9 +260,8 @@ PLC_Main2_End:
 ; PATTERN LOAD REQUEST LIST
 ; Explosion - loaded for every level AFTER the title card
 ; ---------------------------------------------------------------------------
-PLC_Explode:	dc.w ((PLC_Explode_End-PLC_Explode)/6)-1
-		plcm	Nem_Explosion,	ArtTile_Explosion
-PLC_Explode_End:
+; Resident Explode art is in PLCKosM_Explode below.
+
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Game/Time over
@@ -279,43 +280,28 @@ PLC_S1TitleCard_End:
 ; PATTERN LOAD REQUEST LIST
 ; End of zone bosses
 ; ---------------------------------------------------------------------------
-PLC_Boss:	dc.w ((PLC_Boss_End-PLC_Boss)/6)-1
-		plcm	Nem_EggPod,	ArtTile_ArtNem_Eggpod_1
-		plcm	Nem_EHZ_Boss,	ArtTile_ArtNem_EHZBoss
-		plcm	Nem_EggChopper,	ArtTile_ArtNem_EggChoppers
-		plcm	Nem_BossExplosion,	ArtTile_BossExplosion
-PLC_Boss_End:
-PLC_MechaSonic:	dc.w (PLC_MechaSonic_End-PLC_MechaSonic-2)/6-1
-		plcm	Nem_MechaEffects,	ArtTile_MechaEffects
-		plcm	Nem_BossExplosion,	ArtTile_BossExplosion
-PLC_MechaSonic_End:	plccheck PLC_MechaSonic,0
+; Resident Boss art is in PLCKosM_Boss below.
+
+; Resident MechaSonic art is in PLCKosM_MechaSonic below.
+
 ; GHZ retains its S1 boss mappings; its ball and chain are already resident.
-PLC_GHZBoss:	dc.w ((PLC_GHZBoss_End-PLC_GHZBoss)/6)-1
-		plcm	Nem_OldEggPod,	ArtTile_Eggman
-		plcm	Nem_Weapons,	ArtTile_Eggman_Weapons
-		plcm	Nem_Exhaust,	ArtTile_Eggman_Exhaust
-		plcm	Nem_Prison,	ArtTile_Prison_Capsule
-		plcm	Nem_BossExplosion,	ArtTile_BossExplosion
-PLC_GHZBoss_End:
+; Resident GHZBoss art is in PLCKosM_GHZBoss below.
+
 ; Capsule art can coexist with the boss during its defeat/escape sequence.
-PLC_Capsule:	dc.w ((PLC_Capsule_End-PLC_Capsule)/6)-1
-		plcm	Nem_Prison,	ArtTile_Prison_Capsule
-PLC_Capsule_End:
+; Resident Capsule art is in PLCKosM_Capsule below.
+
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Advancing explosion wall - both sizes must coexist; replaces inactive ship art
 ; ---------------------------------------------------------------------------
-PLC_ExplosionWall:	dc.w (PLC_ExplosionWall_End-PLC_ExplosionWall-2)/6-1
-		plcm	Nem_BossExplosion,	ArtTile_BossExplosion
-		plcm	Nem_Explosion,	ArtTile_ExplosionWall_Small
-PLC_ExplosionWall_End:	plccheck PLC_ExplosionWall,0
+; Resident ExplosionWall art is in PLCKosM_ExplosionWall below.
+
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; End of level signpost
 ; ---------------------------------------------------------------------------
-PLC_Signpost:	dc.w ((PLC_Signpost_End-PLC_Signpost)/6)-1
-		plcm	Nem_Bonus,	ArtTile_Hidden_Points
-PLC_Signpost_End:
+; Resident Signpost art is in PLCKosM_Signpost below.
+
 ; ---------------------------------------------------------------------------
 ; Pattern load cues - special stage
 ; ---------------------------------------------------------------------------
@@ -1674,6 +1660,13 @@ KosMLevelCues_End:
 		if KosMLevelCues_End-KosMLoadCues<>LevelActCount*2
 			fatal "Kosinski module index must cover every act"
 		endif
+ptr_KPLC_Explode:	dc.w PLCKosM_Explode-KosMLoadCues
+ptr_KPLC_Boss:	dc.w PLCKosM_Boss-KosMLoadCues
+ptr_KPLC_MechaSonic:	dc.w PLCKosM_MechaSonic-KosMLoadCues
+ptr_KPLC_GHZBoss:	dc.w PLCKosM_GHZBoss-KosMLoadCues
+ptr_KPLC_Capsule:	dc.w PLCKosM_Capsule-KosMLoadCues
+ptr_KPLC_ExplosionWall:	dc.w PLCKosM_ExplosionWall-KosMLoadCues
+ptr_KPLC_Signpost:	dc.w PLCKosM_Signpost-KosMLoadCues
 ; Misc. PLC's [May change. Names here are potential entries]
 ; Note: the ptr names here are temporary.
 ptr_KPLC_1:	dc.w PLCKosM_Null-KosMLoadCues ; Cutscene assets
@@ -1704,6 +1697,54 @@ plreqKosM macro toVRAMaddr,fromROMaddr
 	dc.w	tiles_to_bytes(toVRAMaddr)
     endm
 
+; ---------------------------------------------------------------------------
+; RESIDENT END-OF-ACT ART
+; Also addressable through the typed ArtLoadCues entries above.
+; Staging serializes these with Nemesis requests and drains each final DMA.
+; ---------------------------------------------------------------------------
+PLC_Explode:	; legacy label for the same module list
+PLCKosM_Explode:	plrKosMlistheader
+	plreqKosM	ArtTile_Explosion, Kospm_Explosion
+PLCKosM_Explode_End:	plccheck PLCKosM_Explode,0
+
+PLC_Boss:	; legacy label for the same module list
+PLCKosM_Boss:	plrKosMlistheader
+	plreqKosM	ArtTile_ArtNem_Eggpod_1, Kospm_EggPod
+	plreqKosM	ArtTile_ArtNem_EHZBoss, Kospm_EHZ_Boss
+	plreqKosM	ArtTile_ArtNem_EggChoppers, Kospm_EggChopper
+	plreqKosM	ArtTile_BossExplosion, Kospm_BossExplosion
+PLCKosM_Boss_End:	plccheck PLCKosM_Boss,0
+
+PLC_MechaSonic:	; legacy label for the same module list
+PLCKosM_MechaSonic:	plrKosMlistheader
+	plreqKosM	ArtTile_MechaEffects, Kospm_MechaEffects
+	plreqKosM	ArtTile_BossExplosion, Kospm_BossExplosion
+PLCKosM_MechaSonic_End:	plccheck PLCKosM_MechaSonic,0
+
+PLC_GHZBoss:	; legacy label for the same module list
+PLCKosM_GHZBoss:	plrKosMlistheader
+	plreqKosM	ArtTile_Eggman, Kospm_OldEggPod
+	plreqKosM	ArtTile_Eggman_Weapons, Kospm_Weapons
+	plreqKosM	ArtTile_Eggman_Exhaust, Kospm_Exhaust
+	plreqKosM	ArtTile_Prison_Capsule, Kospm_Prison
+	plreqKosM	ArtTile_BossExplosion, Kospm_BossExplosion
+PLCKosM_GHZBoss_End:	plccheck PLCKosM_GHZBoss,0
+
+PLC_Capsule:	; legacy label for the same module list
+PLCKosM_Capsule:	plrKosMlistheader
+	plreqKosM	ArtTile_Prison_Capsule, Kospm_Prison
+PLCKosM_Capsule_End:	plccheck PLCKosM_Capsule,0
+
+PLC_ExplosionWall:	; legacy label for the same module list
+PLCKosM_ExplosionWall:	plrKosMlistheader
+	plreqKosM	ArtTile_BossExplosion, Kospm_BossExplosion
+	plreqKosM	ArtTile_ExplosionWall_Small, Kospm_Explosion
+PLCKosM_ExplosionWall_End:	plccheck PLCKosM_ExplosionWall,0
+
+PLC_Signpost:	; legacy label for the same module list
+PLCKosM_Signpost:	plrKosMlistheader
+	plreqKosM	ArtTile_Hidden_Points, Kospm_Bonus
+PLCKosM_Signpost_End:	plccheck PLCKosM_Signpost,0
 ; ---------------------------------------------------------------------------
 ; KOSM PATTERN LOAD REQUEST LIST
 ; LV00 - Twilight Hill Zone

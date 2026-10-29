@@ -151,11 +151,13 @@ def wall_checks(m, pool, rom):
     plc = s['PLC_ExplosionWall']
     count = struct.unpack_from('>h', rom, plc)[0] + 1
     assert count == 2
-    assert bytes(m.cpu.mem_read(s['v_plc_buffer'] & 0xFFFFFF, count * 6)) == rom[plc + 2:plc + 2 + count * 6]
+    expected = bytearray(rom[plc + 2:plc + 2 + count * 6])
+    for i in range(count): expected[i*6] |= 0x80
+    assert bytes(m.cpu.mem_read(s['v_plc_buffer'] & 0xFFFFFF, count * 6)) == bytes(expected)
     banks = []
     for i, mapping in enumerate(('Map_BossExplosion', 'Map_Explosion')):
         source, low = struct.unpack_from('>IH', rom, plc + 2 + i * 6)
-        tiles = struct.unpack_from('>H', rom, source)[0] & 0x7FFF
+        tiles = struct.unpack_from('>H', rom, source)[0] // 32
         high = low + tiles * 32
         assert all(high <= a or low >= b for a, b in banks)
         assert high <= s['ArtTile_Shield_2'] * 32 or low >= s['ArtTile_Shield_2_End'] * 32
@@ -596,7 +598,15 @@ def native_checks(args):
     # The initial title-card bank is not a valid ordinary-explosion oracle.
     rom = args.rom.read_bytes()
     decoded = {}
-    for label in ('Nem_Explosion', 'Nem_BossExplosion', 'Nem_Bunny', 'Nem_Flicky'):
+    for label in ('Kospm_Explosion', 'Kospm_BossExplosion', 'Nem_Bunny', 'Nem_Flicky'):
+        if label.startswith('Kospm_'):
+            from convert_s1_ss_background import kosinski_plus_decode
+            count=struct.unpack_from('>H',rom,s[label])[0]
+            output=bytearray();offset=s[label]+2
+            while len(output)<count:
+                block,offset=kosinski_plus_decode(rom,offset);output+=block
+            decoded[label]=bytes(output)
+            continue
         count = (struct.unpack_from('>H', rom, s[label])[0] & 0x7FFF) * 32
         if hasattr(m, 'sub'):
             cpu = m.sub
@@ -613,8 +623,8 @@ def native_checks(args):
             cpu, output = m.cpu, 0xFF0000
             m.act('NemDecToRAM', regs={UC_M68K_REG_A0: s[label], UC_M68K_REG_A4: output}, limit=2000000)
         decoded[label] = bytes(cpu.mem_read(output, count))
-    assert decoded['Nem_BossExplosion'] == art
-    results.append('owning CPU decodes boss art exactly to its editable pixel source')
+    assert decoded['Kospm_BossExplosion'] == art
+    results.append('independent decoded boss pixels match the editable source; owning-CPU DMA is checked by the game pass')
     return results, decoded
 
 
@@ -740,7 +750,7 @@ def live_checks(args, decoded):
     assert not [a for a in objects(g) if g.get(a, 'code') in (s['BossExplosion'], s['BossExplosion_Controller'])]
     assert g.read('Boss_defeated_flag') == 1
     assert g.read('v_limitright2', 2) >= s['boss_ghz_end']
-    for label, tile in (('Nem_Explosion', 'ArtTile_Explosion'),
+    for label, tile in (('Kospm_Explosion', 'ArtTile_Explosion'),
                         ('Nem_Bunny', 'ArtTile_Animal_1'), ('Nem_Flicky', 'ArtTile_Animal_2')):
         bank = s[tile] * 32
         assert bytes(g.vram[(bank + i) ^ 1] for i in range(len(decoded[label]))) == decoded[label], label
@@ -800,7 +810,9 @@ def live_wall_checks(args, decoded):
     plc = s['PLC_ExplosionWall']
     count = struct.unpack_from('>h', rom, plc)[0] + 1
     assert not g.read('v_plc_buffer', 4)
-    for i, value in enumerate(rom[plc + 2:plc + 2 + count * 6] + bytes(6)):
+    payload=bytearray(rom[plc + 2:plc + 2 + count * 6] + bytes(6))
+    for i in range(count):payload[i*6]|=0x80
+    for i, value in enumerate(payload):
         g.write(s['v_plc_buffer'] + i, value)
     for _ in range(300):
         g.run()
@@ -808,8 +820,8 @@ def live_wall_checks(args, decoded):
             break
     else:
         raise AssertionError('Wall PLC did not finish')
-    banks = (('Nem_BossExplosion', 'ArtTile_BossExplosion'),
-             ('Nem_Explosion', 'ArtTile_ExplosionWall_Small'))
+    banks = (('Kospm_BossExplosion', 'ArtTile_BossExplosion'),
+             ('Kospm_Explosion', 'ArtTile_ExplosionWall_Small'))
 
     def check_art():
         for label, tile in banks:

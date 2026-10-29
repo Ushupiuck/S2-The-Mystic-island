@@ -270,6 +270,17 @@ the Word-RAM output bank followed by a result copy; Z80 destinations require
 byte writes. This moves startup driver decompression, not sound sequencing:
 the current sound driver, music and Saxman handling remain on Z80/MD.
 
+`ArtLoadCues` index offsets use bit 0 to identify a KosM list. `LoadPLC` and
+`NewPLC` strip that bit and tag each staged source's high byte; the low 24 bits
+remain the ROM address. Untagged `LoadPLC_Raw` callers retain their existing ABI.
+`RunPLC_KosModule` submits one archive only when the module queue is idle, holds
+the staging entry through decompression, then records the low five VInt bits
+and waits for a later VInt before retiring it. This preserves ordering, the
+seven-slot module limit and existing `v_plc_buffer` completion waits without
+new RAM. Repeated foreground calls in one frame cannot release a DMA source.
+Both backends use this scheduler; only the existing decoder/DMA transport differs.
+The direct `QuickKosPLC` path retains its ordinary untagged list format.
+
 PLCs keep a separate compressed archive and code table in PRG RAM, so general
 decodes cannot damage a suspended PLC. Frame commands combine terrain, placement
 loading and PLC work in one Word-RAM handoff. Non-level scenes use command 18.

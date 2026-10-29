@@ -30,7 +30,7 @@ DPLC_Signpost_7:	dc.w	2
 DPLC_Signpost_8:	dc.w	2
 		dc.w	$1044,$F06E
 DPLC_Signpost_9:	dc.w	3
-		dc.w	$1044,$F07E,$608E
+		dc.w	$1044,$F07E,$708E
 DPLC_Signpost_10:	dc.w	3
-		dc.w	$1044,$F07E,$608E
+		dc.w	$1044,$F07E,$708E
 		even

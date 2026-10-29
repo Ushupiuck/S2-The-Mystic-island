@@ -831,13 +831,25 @@ UnpauseSoundDriver:
 
 ; PLCLoad:
 LoadPLC:
-		movem.l	a1-a2,-(sp)		; Save registers
+		movem.l	d1/a1-a2,-(sp)		; Save registers
 		lea	(ArtLoadCues).l,a1	; Prepare PLC list index
 		add.w	d0,d0			; Get pointer to PLC list
 		move.w	(a1,d0.w),d0
+		moveq	#0,d1
+		btst	#0,d0			; odd offset tags a KosM list
+		beq.s	.nemesis
+		subq.w	#PLCKos_IndexFlag,d0
+		bset	#PLCKos_SourceBit,d1
+.nemesis:
 		lea	(a1,d0.w),a1
 
+		bra.s	LoadPLC_Copy
+
+; Raw callers have already saved a1-a2; keep their untagged-list ABI.
 LoadPLC_Raw:
+		move.l	d1,-(sp)
+		moveq	#0,d1
+LoadPLC_Copy:
 		lea	(v_plc_buffer).w,a2	; Prepare PLC buffer
 
 .loop:
@@ -851,14 +863,15 @@ LoadPLC_Raw:
 		bmi.s	.end			; If it's 0 (or less), branch
 
 .load:
-		move.l	(a1)+,(a2)+		; Copy art pointer
+		move.l	(a1)+,(a2)		; Copy art pointer
+		or.l	d1,(a2)+		; preserve the codec in the staging queue
 		move.w	(a1)+,(a2)+		; Copy VRAM location
 		dbf	d0,.load		; Loop until all entries are queued
 		moveq	#0,d0
 		move.l	d0,(a2)+		; clear the last cue to avoid overcopying it
 		move.w	d0,(a2)+
 .end:
-		movem.l	(sp)+,a1-a2		; Restore registers
+		movem.l	(sp)+,d1/a1-a2		; Restore registers
 		rts
 ; End of function LoadPLC
 
@@ -875,18 +888,25 @@ LoadPLC_Raw:
 ;         (or if you change the size of v_plc_buffer, the limit becomes (v_plc_buffer_Only_End-v_plc_buffer)/6)
 
 NewPLC:
-		movem.l	a1-a2,-(sp)		; Save registers
+		movem.l	d1/a1-a2,-(sp)		; Save registers
 		lea	(ArtLoadCues).l,a1	; Prepare PLC list index
 		add.w	d0,d0
 		move.w	(a1,d0.w),d0
+		moveq	#0,d1
+		btst	#0,d0			; odd offset tags a KosM list
+		beq.s	.nemesis
+		subq.w	#PLCKos_IndexFlag,d0
+		bset	#PLCKos_SourceBit,d1
+.nemesis:
 		lea	(a1,d0.w),a1
-		bsr.s	ClearPLC		; Clear PLCs
+		bsr.w	ClearPLC		; Clear PLCs
 		lea	(v_plc_buffer).w,a2	; Prepare PLC buffer
 		move.w	(a1)+,d0		; Get number of PLC entries
 		bmi.s	.end			; If it's 0 (or less), branch
 
 .load:
-		move.l	(a1)+,(a2)+		; Copy art pointer
+		move.l	(a1)+,(a2)		; Copy art pointer
+		or.l	d1,(a2)+		; preserve the codec in the staging queue
 		move.w	(a1)+,(a2)+		; Copy VRAM location
 		dbf	d0,.load		; Loop until all entries are queued
 		moveq	#0,d0
@@ -894,7 +914,7 @@ NewPLC:
 		move.w	d0,(a2)+
 
 .end:
-		movem.l	(sp)+,a1-a2		; Restore registers
+		movem.l	(sp)+,d1/a1-a2		; Restore registers
 		rts
 ; End of function NewPLC
 
@@ -902,6 +922,42 @@ NewPLC:
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 ; Clear the pattern load queue and its decompressor state.
+
+; Tagged KosM requests retain their staging entry until the module DMA has
+; passed a VBlank. Existing callers can still wait on v_plc_buffer. No decoder
+; runs in an IRQ, and admission waits for the module queue to be empty, so an
+; event cannot overflow its seven slots or overtake an earlier level request.
+; Source high byte: KosM/submitted/drain flags, then the low five VInt bits.
+; The 24-bit source address is intact; only the scheduler owns its tag byte.
+RunPLC_KosModule:
+		btst	#PLCKos_SubmittedBit,(v_plc_buffer).w
+		bne.s	.active
+		tst.w	(Kos_modules_left).w
+		bne.s	.return
+		move.l	(v_plc_buffer).w,d0
+		andi.l	#$FFFFFF,d0
+		movea.l	d0,a1
+		move.w	(v_plc_buffer+4).w,d2
+		bsr.w	Queue_Kos_Module
+		bset	#PLCKos_SubmittedBit,(v_plc_buffer).w
+.return:	rts
+.active:
+		tst.w	(Kos_modules_left).w
+		bne.s	.return
+		btst	#PLCKos_DrainBit,(v_plc_buffer).w
+		bne.s	.draining
+		move.b	(Timer_frames+1).w,d0
+		andi.b	#PLCKos_FrameMask,d0
+		ori.b	#PLCKos_DrainFlags,d0
+		move.b	d0,(v_plc_buffer).w	; remember the final DMA's VInt
+		rts
+.draining:
+		move.b	(Timer_frames+1).w,d0
+		sub.b	(v_plc_buffer).w,d0
+		andi.b	#PLCKos_FrameMask,d0
+		beq.s	.return		; repeated calls in one frame cannot retire it
+		bsr.w	ProcessDPLC_Pop
+		bra.w	RunPLC_RAM
 
 	if MegaCDMode1
 ClearPLC:
@@ -926,6 +982,7 @@ ClearPLC:
 RunPLC_RAM:
 		tst.l	(v_plc_buffer).w
 		beq.s	ProcessDPLC_Done
+		bmi.w	RunPLC_KosModule
 		tst.w	(v_plc_patternsleft).w
 		bne.s	ProcessDPLC_Done
 		tst.w	(v_plc_framepatternsleft).w
@@ -13381,7 +13438,7 @@ Map_MechaSignDebris:	binclude "mappings/sprite/Mecha signpost debris.bin"
 		include "mappings/spriteDPLC/Mecha Sonic.asm"
 Art_MechaSonic:	binclude "art/uncompressed/Mecha Sonic.unc"
 		even
-Nem_MechaEffects:	binclude "art/nemesis/Mecha Sonic effects.nem"
+Kospm_MechaEffects:	binclude "art/moduled kosinski/Mecha Sonic effects.kospm"
 		even
 Pal_MechaFlash1:	binclude "palette/Mecha Sonic Flash 1.bin"
 		even
@@ -13511,7 +13568,7 @@ Art_Water_Surface:	binclude	"art/uncompressed/Water Surface.unc"
 Nem_WaterBubbles:
 		binclude	"art/nemesis/Water bubbles.nem"
 		even
-Nem_Bonus:	binclude	"art/nemesis/S1/Hidden Bonuses.nem"
+Kospm_Bonus:	binclude "art/moduled kosinski/Hidden bonus.kospm"
 		even
 Nem_Lives:	binclude	"art/nemesis/Sonic lives counter.nem"
 		even
@@ -13550,27 +13607,27 @@ Nem_Bunny:	binclude	"art/nemesis/Flicky/Rabbit.nem"
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - Bosses and explosions
 ; ---------------------------------------------------------------------------
-Nem_OldEggPod:	binclude	"art/nemesis/S1/Boss - Main.nem"
+Kospm_OldEggPod:	binclude "art/moduled kosinski/Old Eggpod.kospm"
 		even
 Nem_FzEggman:	binclude	"art/nemesis/S1/Boss - Eggman after FZ Fight.nem"	; Ruined Eggpod tiles
 		even
 Nem_Eggman:	binclude	"art/nemesis/S1/Boss - Eggman in SBZ2 & FZ.nem"		; Walking/Running/Jumping frames
 		even
-Nem_Weapons:	binclude	"art/nemesis/S1/Boss - Weapons.nem"			; Anti-hedgehog measures
+Kospm_Weapons:	binclude "art/moduled kosinski/Boss weapons.kospm"
 		even
 Nem_FzBoss:	binclude	"art/nemesis/S1/Boss - Final Zone.nem"			; This boss might be reused
 		even
-Nem_Exhaust:	binclude	"art/nemesis/S1/Boss - Exhaust Flame.nem"		; Old exhaust flame -- looks cooler, might be reused
+Kospm_Exhaust:	binclude "art/moduled kosinski/Boss exhaust.kospm"
 		even
-Nem_Prison:	binclude	"art/nemesis/Prison Capsule.nem"			; From Sonic 1. Again, will be reused (looks better)
+Kospm_Prison:	binclude "art/moduled kosinski/Prison Capsule.kospm"
 		even
-Nem_EggPod:	binclude	"art/nemesis/Boss Ship.nem"
+Kospm_EggPod:	binclude "art/moduled kosinski/Boss Ship.kospm"
 		even
 Nem_EggPodJets:	binclude	"art/nemesis/Boss Ship Boost.nem"
 		even
-Nem_EHZ_Boss:	binclude	"art/nemesis/EHZ boss.nem"
+Kospm_EHZ_Boss:	binclude "art/moduled kosinski/EHZ boss.kospm"
 		even
-Nem_EggChopper:	binclude	"art/nemesis/Chopper blades for EHZ boss.nem"
+Kospm_EggChopper:	binclude "art/moduled kosinski/Chopper blades for EHZ boss.kospm"
 		even
 Nem_CPZ_Boss:	binclude	"art/nemesis/CPZ boss.nem"
 		even
@@ -13578,10 +13635,9 @@ Nem_Smoke:	binclude	"art/nemesis/Smoke trail from CPZ boss.nem"
 		even
 Nem_HangingSurface:	binclude "art/nemesis/Hanging surface.nem"
 		even
-Nem_Explosion:	binclude	"art/nemesis/Explosion.nem"
+Kospm_Explosion:	binclude "art/moduled kosinski/Explosion.kospm"
 		even
-Nem_BossExplosion:
-		binclude	"art/nemesis/Large explosion.nem"
+Kospm_BossExplosion:	binclude "art/moduled kosinski/Large explosion.kospm"
 		even
 Nem_GroundExplosion:
 		binclude	"art/nemesis/Explosion - Ground.nem"

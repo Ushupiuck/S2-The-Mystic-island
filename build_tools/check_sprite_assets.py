@@ -50,6 +50,7 @@ def main():
     symbols = {name: int(value, 16) for name, value in re.findall(
         r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]',
         (ROOT / 'md-main.lst').read_text())}
+    module_sources = {value for name,value in symbols.items() if name.startswith("Kospm_")}
     # The VDP DMA source is a word address; an odd ROM pointer silently
     # uploads the preceding byte and shifts every pixel in the frame.
     for label in ('Art_Sonic', 'Art_Tails', 'Art_Tails_Extra', 'Art_Tails_Tails',
@@ -117,7 +118,7 @@ def main():
     # End-of-level bonuses replace unused monitor contents. The signpost's
     # largest DPLC and Tails's permanent life icon must survive beside them.
     bonus_first = symbols['ArtTile_Hidden_Points']
-    bonus_tiles = struct.unpack_from('>H', rom, symbols['Nem_Bonus'])[0] & 0x7FFF
+    bonus_tiles = struct.unpack_from('>H', rom, symbols['Kospm_Bonus'])[0] // 32
     bonus_end = bonus_first + bonus_tiles
     signpost_table = symbols['DPLC_Signpost']
     for frame in range(symbols['Map_Signpost_frames']):
@@ -202,7 +203,8 @@ def main():
             assert count + symbols['ActPLC_Main_Reserve'] <= 16, (label, count)
         for i in range(count):
             source, low = struct.unpack_from('>IH', rom, base + 2 + i * 6)
-            high = low + (struct.unpack_from('>H', rom, source)[0] & 0x7FFF) * 32
+            header = struct.unpack_from('>H', rom, source)[0]
+            high = low + (header if source in module_sources else (header & 0x7FFF) * 32)
             assert all(high <= a or low >= b for a, b in effect_banks + points_banks), (label, hex(low), hex(high))
     for label, base in symbols.items():
         if not re.fullmatch(r'PLCKosM_[A-Z0-9]+[1-4]', label):
@@ -226,9 +228,10 @@ def main():
         count = struct.unpack_from('>H', rom, base)[0] + 1
         for i in range(count):
             source, low = struct.unpack_from('>IH', rom, base + 2 + i * 6)
-            high = low + (struct.unpack_from('>H', rom, source)[0] & 0x7FFF) * 32
+            header = struct.unpack_from('>H', rom, source)[0]
+            high = low + (header if source in module_sources else (header & 0x7FFF) * 32)
             assert low in group_limits and high <= group_limits[low], (label, hex(low), hex(high))
-    explosion_tiles = struct.unpack_from('>H', rom, symbols['Nem_Explosion'])[0] & 0x7FFF
+    explosion_tiles = struct.unpack_from('>H', rom, symbols['Kospm_Explosion'])[0] // 32
     for label in ('Map_Explosion', 'Map_FExplosion'):
         for frame, row in enumerate(frames(rom, symbols[label])):
             for _, size, tile, _ in row:

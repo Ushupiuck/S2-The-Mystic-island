@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def check_boss(rom, symbols, cues):
     boss = cues('PLC_GHZBoss')
     assert [source for source, _, _ in boss] == [symbols[name] for name in (
-        'Nem_OldEggPod', 'Nem_Weapons', 'Nem_Exhaust', 'Nem_Prison', 'Nem_BossExplosion')]
+        'Kospm_OldEggPod', 'Kospm_Weapons', 'Kospm_Exhaust', 'Kospm_Prison', 'Kospm_BossExplosion')]
     protected = [(symbols['ArtTile_Shield_2'] * 32, symbols['ArtTile_Shield_2_End'] * 32),
                  (symbols['vram_fg'], 0x10000)]
     for i, (_, low, high) in enumerate(boss):
@@ -45,6 +45,8 @@ def main():
         r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]',
         args.listing.read_text())}
 
+    module_sources = {value for name,value in symbols.items() if name.startswith("Kospm_")}
+
     def cues(label):
         start = symbols[label]
         count = struct.unpack_from('>h', rom, start)[0] + 1
@@ -53,7 +55,7 @@ def main():
         for i in range(count):
             source, dest = struct.unpack_from('>IH', rom, start + 2 + i * 6)
             header = struct.unpack_from('>H', rom, source)[0]
-            length = header if label.startswith('PLCKosM') else (header & 0x7FFF) * 32
+            length = header if source in module_sources else (header & 0x7FFF) * 32
             assert length and length % 32 == 0 and dest % 32 == 0, (label, hex(dest), length)
             result.append((source, dest, dest + length))
         return result

@@ -11,10 +11,10 @@ import struct
 
 ROOT = Path(__file__).resolve().parents[1]
 MAPS = (
-    ('Map_EHZBoss_Vehicle', 'Nem_EggPod', 'Obj56_MapUnc_2FAF8'),
-    ('Map_EHZBoss_Ground', 'Nem_EHZ_Boss', 'Obj56_MapUnc_2FA58'),
-    ('Map_EHZBoss_Propeller', 'Nem_EggChopper', 'Obj56_MapUnc_2F970'),
-    ('Map_BossExplosion', 'Nem_BossExplosion', 'Obj58_MapUnc_2D50A'),
+    ('Map_EHZBoss_Vehicle', 'Kospm_EggPod', 'Obj56_MapUnc_2FAF8'),
+    ('Map_EHZBoss_Ground', 'Kospm_EHZ_Boss', 'Obj56_MapUnc_2FA58'),
+    ('Map_EHZBoss_Propeller', 'Kospm_EggChopper', 'Obj56_MapUnc_2F970'),
+    ('Map_BossExplosion', 'Kospm_BossExplosion', 'Obj58_MapUnc_2D50A'),
 )
 
 
@@ -46,14 +46,14 @@ def main():
     args = parser.parse_args()
     rom = (ROOT / 's2built.bin').read_bytes()
     sym = symbols(ROOT / 'md-main.lst')
-    art_tiles = lambda name: struct.unpack_from('>H', rom, sym[name])[0] & 0x7FFF
+    art_tiles = lambda name: struct.unpack_from('>H', rom, sym[name])[0] // 32
     cues = []
     for label in ('PLC_Boss', 'PLC_Capsule'):
         base = sym[label]
         count = struct.unpack_from('>H', rom, base)[0] + 1
         for i in range(count):
             source, dest = struct.unpack_from('>IH', rom, base + 2 + i * 6)
-            length = (struct.unpack_from('>H', rom, source)[0] & 0x7FFF) * 32
+            length = struct.unpack_from('>H', rom, source)[0]
             cues.append((label, dest, dest + length))
 
     # Both star trails share the primary bank. The auxiliary shield bank

@@ -45,6 +45,15 @@ Object_Load_YAbove:	equ Object_Load_BandSize
 Object_Load_YBelow:	equ $200	; screen plus vertical preload margin
 Level_YWrapMask:	equ $7FF	; the existing camera wraps at $800 pixels
 ; ---------------------------------------------------------------------------
+; Pattern load cue codec tags (index offsets and the staging source high byte)
+; Source bits 0-23 remain the ROM address. The high byte is scheduler-owned.
+PLCKos_IndexFlag:	equ 1
+PLCKos_SourceBit:	equ 31
+PLCKos_SubmittedBit:	equ 6
+PLCKos_DrainBit:		equ 5
+PLCKos_FrameMask:	equ $1F
+PLCKos_DrainFlags:	equ $E0
+; ---------------------------------------------------------------------------
 ; Object Status Table offsets (for everything between Object_RAM and Primary_Collision)
 ; ---------------------------------------------------------------------------
 ; Shared display/dispatch header, $00-$17. All normal object fields use

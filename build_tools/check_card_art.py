@@ -150,7 +150,7 @@ source=(ROOT/'art/uncompressed/Signpost.unc').read_bytes()
 source,original=signpost_frames(source)
 dynamic=frames(rom,m.s['Map_Signpost'],m.s['Map_Signpost_frames'])
 assert len(dynamic)==len(original)==11
-assert [word & 0x6000 for _,_,word,_ in dynamic[6]] == [0x2000]*4+[0]*9
+assert [word & 0x6000 for _,_,word,_ in dynamic[6]] == [0x2000]*12+[0]
 for frame in range(len(dynamic)):
     reset(full=True)
     m.put(obj,'signpost_loaded',255)

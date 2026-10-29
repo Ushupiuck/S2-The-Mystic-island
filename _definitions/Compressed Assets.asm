@@ -590,6 +590,12 @@ MCD_CompressedAssets:
 	if defined(Kospm_Bomb)
 	dc.l Kospm_Bomb,Kospm_Bomb+$1F2	; art/moduled kosinski/Enemy Bomb.kospm
 	endif
+	if defined(Kospm_Bonus)
+	dc.l Kospm_Bonus,Kospm_Bonus+$1BC	; art/moduled kosinski/Hidden bonus.kospm
+	endif
+	if defined(Kospm_BossExplosion)
+	dc.l Kospm_BossExplosion,Kospm_BossExplosion+$762	; art/moduled kosinski/Large explosion.kospm
+	endif
 	if defined(Kospm_Burrobot)
 	dc.l Kospm_Burrobot,Kospm_Burrobot+$60A	; art/moduled kosinski/Enemy Burrobot.kospm
 	endif
@@ -611,11 +617,26 @@ MCD_CompressedAssets:
 	if defined(Kospm_Crabmeat)
 	dc.l Kospm_Crabmeat,Kospm_Crabmeat+$46A	; art/moduled kosinski/Enemy Crabmeat.kospm
 	endif
+	if defined(Kospm_EHZ_Boss)
+	dc.l Kospm_EHZ_Boss,Kospm_EHZ_Boss+$74D	; art/moduled kosinski/EHZ boss.kospm
+	endif
+	if defined(Kospm_EggChopper)
+	dc.l Kospm_EggChopper,Kospm_EggChopper+$C6	; art/moduled kosinski/Chopper blades for EHZ boss.kospm
+	endif
+	if defined(Kospm_EggPod)
+	dc.l Kospm_EggPod,Kospm_EggPod+$595	; art/moduled kosinski/Boss Ship.kospm
+	endif
 	if defined(Kospm_EndFlowers)
 	dc.l Kospm_EndFlowers,Kospm_EndFlowers+$556	; art/moduled kosinski/Ending - Flowers.kospm
 	endif
 	if defined(Kospm_EndStalk)
 	dc.l Kospm_EndStalk,Kospm_EndStalk+$25C	; art/moduled kosinski/Ending - Flower Stalk.kospm
+	endif
+	if defined(Kospm_Exhaust)
+	dc.l Kospm_Exhaust,Kospm_Exhaust+$132	; art/moduled kosinski/Boss exhaust.kospm
+	endif
+	if defined(Kospm_Explosion)
+	dc.l Kospm_Explosion,Kospm_Explosion+$6CC	; art/moduled kosinski/Explosion.kospm
 	endif
 	if defined(Kospm_FlapDoor)
 	dc.l Kospm_FlapDoor,Kospm_FlapDoor+$152	; art/moduled kosinski/Flapping Door.kospm
@@ -625,6 +646,9 @@ MCD_CompressedAssets:
 	endif
 	if defined(Kospm_LzWheel)
 	dc.l Kospm_LzWheel,Kospm_LzWheel+$206	; art/moduled kosinski/LZ conveyor.kospm
+	endif
+	if defined(Kospm_MechaEffects)
+	dc.l Kospm_MechaEffects,Kospm_MechaEffects+$DF	; art/moduled kosinski/Mecha Sonic effects.kospm
 	endif
 	if defined(Kospm_MiniSonic)
 	dc.l Kospm_MiniSonic,Kospm_MiniSonic+$1A4	; art/moduled kosinski/Mini Sonic Continue.kospm
@@ -638,8 +662,14 @@ MCD_CompressedAssets:
 	if defined(Kospm_Newtron)
 	dc.l Kospm_Newtron,Kospm_Newtron+$4CC	; art/moduled kosinski/Enemy Newtron.kospm
 	endif
+	if defined(Kospm_OldEggPod)
+	dc.l Kospm_OldEggPod,Kospm_OldEggPod+$675	; art/moduled kosinski/Old Eggpod.kospm
+	endif
 	if defined(Kospm_Orbinaut)
 	dc.l Kospm_Orbinaut,Kospm_Orbinaut+$19A	; art/moduled kosinski/Enemy Orbinaut.kospm
+	endif
+	if defined(Kospm_Prison)
+	dc.l Kospm_Prison,Kospm_Prison+$590	; art/moduled kosinski/Prison Capsule.kospm
 	endif
 	if defined(Kospm_Rhinobot)
 	dc.l Kospm_Rhinobot,Kospm_Rhinobot+$33C	; art/moduled kosinski/Enemy Rhinobot.kospm
@@ -664,6 +694,9 @@ MCD_CompressedAssets:
 	endif
 	if defined(Kospm_TryAgain)
 	dc.l Kospm_TryAgain,Kospm_TryAgain+$7FE	; art/moduled kosinski/Ending - Try Again.kospm
+	endif
+	if defined(Kospm_Weapons)
+	dc.l Kospm_Weapons,Kospm_Weapons+$2F0	; art/moduled kosinski/Boss weapons.kospm
 	endif
 	if defined(Kospm_Yadrin)
 	dc.l Kospm_Yadrin,Kospm_Yadrin+$38C	; art/moduled kosinski/Enemy Yadrin.kospm
@@ -926,12 +959,6 @@ MCD_CompressedAssets:
 	if defined(Nem_Bear)
 	dc.l Nem_Bear,Nem_Bear+$123	; art/nemesis/Flicky/Bear.nem
 	endif
-	if defined(Nem_Bonus)
-	dc.l Nem_Bonus,Nem_Bonus+$230	; art/nemesis/S1/Hidden Bonuses.nem
-	endif
-	if defined(Nem_BossExplosion)
-	dc.l Nem_BossExplosion,Nem_BossExplosion+$66C	; art/nemesis/Large explosion.nem
-	endif
 	if defined(Nem_Bubbler)
 	dc.l Nem_Bubbler,Nem_Bubbler+$202	; art/nemesis/Enemy Bubbler.nem
 	endif
@@ -962,9 +989,6 @@ MCD_CompressedAssets:
 	if defined(Nem_DSpring)
 	dc.l Nem_DSpring,Nem_DSpring+$429	; art/nemesis/Diagonal spring.nem
 	endif
-	if defined(Nem_EHZ_Boss)
-	dc.l Nem_EHZ_Boss,Nem_EHZ_Boss+$7D6	; art/nemesis/EHZ boss.nem
-	endif
 	if defined(Nem_EHZ_Bridge)
 	dc.l Nem_EHZ_Bridge,Nem_EHZ_Bridge+$C8	; art/nemesis/EHZ bridge.nem
 	endif
@@ -976,12 +1000,6 @@ MCD_CompressedAssets:
 	endif
 	if defined(Nem_Eagle)
 	dc.l Nem_Eagle,Nem_Eagle+$119	; art/nemesis/Flicky/Eagle.nem
-	endif
-	if defined(Nem_EggChopper)
-	dc.l Nem_EggChopper,Nem_EggChopper+$E8	; art/nemesis/Chopper blades for EHZ boss.nem
-	endif
-	if defined(Nem_EggPod)
-	dc.l Nem_EggPod,Nem_EggPod+$727	; art/nemesis/Boss Ship.nem
 	endif
 	if defined(Nem_EggPodJets)
 	dc.l Nem_EggPodJets,Nem_EggPodJets+$76	; art/nemesis/Boss Ship Boost.nem
@@ -997,12 +1015,6 @@ MCD_CompressedAssets:
 	endif
 	if defined(Nem_EndStH)
 	dc.l Nem_EndStH,Nem_EndStH+$275	; art/nemesis/S1/Ending - StH Logo.nem
-	endif
-	if defined(Nem_Exhaust)
-	dc.l Nem_Exhaust,Nem_Exhaust+$112	; art/nemesis/S1/Boss - Exhaust Flame.nem
-	endif
-	if defined(Nem_Explosion)
-	dc.l Nem_Explosion,Nem_Explosion+$646	; art/nemesis/Explosion.nem
 	endif
 	if defined(Nem_Flicky)
 	dc.l Nem_Flicky,Nem_Flicky+$126	; art/nemesis/Flicky/Flicky.nem
@@ -1097,9 +1109,6 @@ MCD_CompressedAssets:
 	if defined(Nem_Masher)
 	dc.l Nem_Masher,Nem_Masher+$1F7	; art/nemesis/Enemy Masher.nem
 	endif
-	if defined(Nem_MechaEffects)
-	dc.l Nem_MechaEffects,Nem_MechaEffects+$219	; art/nemesis/Mecha Sonic effects.nem
-	endif
 	if defined(Nem_Monitors)
 	dc.l Nem_Monitors,Nem_Monitors+$9F0	; art/nemesis/Monitor and contents.nem
 	endif
@@ -1114,9 +1123,6 @@ MCD_CompressedAssets:
 	endif
 	if defined(Nem_Octus)
 	dc.l Nem_Octus,Nem_Octus+$311	; art/nemesis/Enemy Octus.nem
-	endif
-	if defined(Nem_OldEggPod)
-	dc.l Nem_OldEggPod,Nem_OldEggPod+$856	; art/nemesis/S1/Boss - Main.nem
 	endif
 	if defined(Nem_PP_Anton)
 	dc.l Nem_PP_Anton,Nem_PP_Anton+$417	; art/nemesis/PP Anton.nem
@@ -1141,9 +1147,6 @@ MCD_CompressedAssets:
 	endif
 	if defined(Nem_PlatformButton)
 	dc.l Nem_PlatformButton,Nem_PlatformButton+$A2	; art/nemesis/Platform button.nem
-	endif
-	if defined(Nem_Prison)
-	dc.l Nem_Prison,Nem_Prison+$5F2	; art/nemesis/Prison Capsule.nem
 	endif
 	if defined(Nem_ResultEm)
 	dc.l Nem_ResultEm,Nem_ResultEm+$175	; art/Bonus & Special Stage/Bonus Stage Result Emeralds.nem
@@ -1228,9 +1231,6 @@ MCD_CompressedAssets:
 	endif
 	if defined(Nem_WaterBubbles)
 	dc.l Nem_WaterBubbles,Nem_WaterBubbles+$7D7	; art/nemesis/Water bubbles.nem
-	endif
-	if defined(Nem_Weapons)
-	dc.l Nem_Weapons,Nem_Weapons+$2E2	; art/nemesis/S1/Boss - Weapons.nem
 	endif
 	if defined(Nem_Wheel)
 	dc.l Nem_Wheel,Nem_Wheel+$146	; art/nemesis/Wheel carrier.nem

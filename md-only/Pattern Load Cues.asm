@@ -21,6 +21,7 @@ ClearPLC:
 RunPLC_RAM:
 		tst.l	(v_plc_buffer).w
 		beq.s	.return
+		bmi.w	RunPLC_KosModule
 		tst.w	(v_plc_patternsleft).w
 		bne.s	.return
 		movea.l	(v_plc_buffer).w,a0
