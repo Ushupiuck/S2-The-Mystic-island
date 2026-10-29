@@ -280,7 +280,9 @@ def native(args):
             fixture(0x100 if disabled else 0,who,x=0x400,y=0x2F0)
             for symbol,file in [('Chunk_Table','mappings/128x128/GHZ.kosp'),
                                 ('v_lvllayout','level/layout/GHZ_4.kosp')]:
-                m.cpu.mem_write(m.s[symbol]&0xFFFFFF,kosinski_plus_decode((c.ROOT/file).read_bytes())[0])
+                from level_layout import project_s2
+                data = kosinski_plus_decode((c.ROOT/file).read_bytes())[0]
+                m.cpu.mem_write(m.s[symbol]&0xFFFFFF,project_s2(data) if symbol=='v_lvllayout' else data)
             for label,value in [('v_colladdr1',m.s['Col_GHZ4']),('v_colladdr2',m.s['Col_GHZ4']+1),('Collision_addr',m.s['Col_GHZ4'])]:m.write(label,value,4)
             tick(actor=who)
             assert m.get(who,'obControl')==3,'distant terrain released grip'

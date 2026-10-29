@@ -4,7 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
-from convert_s1_ss_background import kosinski_plus_decode
+from level_layout import load, to_s2
 from object_layout import decode
 from genesis_test_core import Genesis
 from check_object_course import boot_level
@@ -17,7 +17,7 @@ p.add_argument('--system-directory', type=Path)
 p.add_argument('--pal', action='store_true')
 p.add_argument('--player', type=int, choices=(0, 2), default=0)
 args = p.parse_args()
-layouts = [kosinski_plus_decode((ROOT / f'level/layout/GHZ_{act}.kosp').read_bytes())[0] for act in (3, 4)]
+layouts = [to_s2(*load(ROOT / f'level/layout/GHZ_{act}.kosp')) for act in (3, 4)]
 loops = []
 for y in range(15):
     for x in range(127):

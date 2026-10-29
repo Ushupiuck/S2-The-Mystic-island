@@ -23,6 +23,17 @@ preview applies its current DPLCs; those use the S2/player-style cue encoding,
 even though its mappings use S3&K format. Inline mappings for BBat, Gator,
 Aquis/Skyhorse and Eggman are read from `md-main.asm`.
 
+## Terrain layouts
+
+`Common/LevelLayout.cs` supports the current Mode 1 independent-plane format.
+Resize FG and BG separately, up to 256 by 32 chunks each within a combined
+32-KiB file. IDs are words, with 1,024 chunks in the CD allocation. Saving
+regenerates relative lookup tables automatically; do not hand-edit their offsets.
+FG outside its rectangle is empty and BG repeats. The frozen cartridge layout
+copies are separate and are not updated by the editor. See the
+[format and runtime contracts](../docs/Levels.md#mode-1-plane-engine).
+Mixed 128/256-pixel editor stamping remains future work.
+
 ## Editing subtypes
 
 Select an object to see its named settings in the property grid. The raw

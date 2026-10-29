@@ -53,8 +53,9 @@ live in the same source tree: the default `MegaCDMode1 = 1` uses required
 Mega-CD RAM and selective sub-CPU work; `0` selects the standalone cartridge
 dependencies. These guides describe the shared baseline and identify behavior
 by build configuration. Sixteen four-act zones are exposed (`$00-$0F`);
-editable starter acts are not finished levels. Planned mixed-size SonLVL authoring is listed under
-[future layout work](Levels.md#planned-layout-format), not as a current feature.
+editable starter acts are not finished levels. Mode 1 uses the
+[independent-plane engine](Levels.md#mode-1-plane-engine); cartridge development
+is paused. Mixed-size SonLVL stamping remains [future work](Levels.md#planned-layout-format).
 
 ## Maintaining these guides
 

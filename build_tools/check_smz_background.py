@@ -15,6 +15,7 @@ import struct
 from genesis_test_core import Genesis
 from check_object_course import boot_level
 from convert_s1_ss_background import kosinski_plus_decode
+from level_layout import load as load_layout, to_s2
 
 ROOT = Path(__file__).resolve().parents[1]
 p = argparse.ArgumentParser(description=__doc__)
@@ -49,7 +50,7 @@ for act in (0, 1):
     assert start_x <= 160, 'Reference X origin assumes the original left-edge start'
     initial_y = max(0, min(0x720, start_y - 96))
     initial_bg_y = ((initial_y & 0x7F8) >> 3) + 1
-    layout = kosinski_plus_decode((ROOT / f'level/layout/SMZ_{act + 1}.kosp').read_bytes())[0]
+    layout = to_s2(*load_layout(ROOT / f'level/layout/SMZ_{act + 1}.kosp'))
 
     @lru_cache(maxsize=None)
     def tile(tx, ty):

@@ -212,7 +212,8 @@ def main():
     from convert_s1_ss_background import kosinski_plus_decode
     def ghz4_terrain():
         chunks = kosinski_plus_decode((c.ROOT / 'mappings/128x128/GHZ.kosp').read_bytes())[0]
-        layout = kosinski_plus_decode((c.ROOT / 'level/layout/GHZ_4.kosp').read_bytes())[0]
+        from level_layout import load, to_s2
+        layout = to_s2(*load(c.ROOT / 'level/layout/GHZ_4.kosp'))
         m.cpu.mem_write(m.s['Chunk_Table'] & 0xFFFFFF, chunks)
         m.cpu.mem_write(m.s['v_lvllayout'] & 0xFFFFFF, layout)
         for label, value in (('v_colladdr1', m.s['Col_GHZ4']), ('v_colladdr2', m.s['Col_GHZ4'] + 1), ('Collision_addr', m.s['Col_GHZ4'])):

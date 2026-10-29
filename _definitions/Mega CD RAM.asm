@@ -1,9 +1,8 @@
 ; ---------------------------------------------------------------------------
 ; Physical sub-CPU PRG RAM
 ; The chunk table is the first user allocation after the conventional BIOS area.
-; $100 editor-sized 256x256 chunks occupy $20000 bytes. The current byte-indexed
-; layout still uses $8000; word IDs, two collision paths and SonLVL conversion
-; remain future work.
+; 1024 runtime 128x128 chunks occupy $20000 bytes. Word layout IDs address
+; the complete allocation on CD; blocks remain mutable in resident PRG RAM.
 ; ---------------------------------------------------------------------------
 	phase	MCD_BIOS_RAM_End
 MCD_ChunkTable_SubStart:	ds.b	MCD_ChunkTable_Size
@@ -22,7 +21,7 @@ MCD_RingJob_SubEnd:
 ; Terrain tables are resident here. No normal-frame MD PRG-RAM reader remains.
 MCD_TerrainData_Sub:
 MCD_TerrainBlocks_Sub:	ds.b	$1800
-MCD_TerrainLayout_Sub:	ds.b	$1000
+MCD_TerrainLayout_Sub:	ds.b	PlaneLayout_Capacity
 MCD_TerrainIndex_Sub:	ds.b	MCD_TerrainIndexCapacity
 MCD_TerrainHeights_Sub:	ds.b	$1000
 MCD_TerrainWidths_Sub:	ds.b	$1000
@@ -41,6 +40,10 @@ MCD_TerrainZone_Sub:	ds.b	1
 MCD_TerrainAct_Sub:	ds.b	1
 MCD_TerrainRedraw_Sub:	ds.b	1
 			ds.b	1
+MCD_TerrainVScroll_Sub:	ds.w	1
+			ds.w	1
+MCD_TerrainFGDraw_Sub:	ds.l	1
+MCD_TerrainBGDraw_Sub:	ds.l	1
 MCD_TerrainFrame_SubEnd:
 MCD_TerrainPath_Sub:	ds.l	1
 MCD_TerrainPath1_Sub:	ds.l	1
@@ -48,6 +51,8 @@ MCD_TerrainPath2_Sub:	ds.l	1
 MCD_TerrainPrimary_Sub:	ds.b	1
 MCD_TerrainSecondary_Sub:	ds.b	1
 MCD_TerrainObject_Sub:	ds.b	object_size
+MCD_PlaneFGCache_Sub:	ds.b	PlaneCache_Bytes
+MCD_PlaneBGCache_Sub:	ds.b	PlaneCache_Bytes
 MCD_TerrainCache_Sub:	ds.l	32
 MCD_Terrain_SubEnd:
 ; Loader working state, beyond the expanded chunks and resident terrain.
@@ -143,7 +148,7 @@ MCD_ObjectFrameSlots:	ds.b	MCD_ObjectSlotBytes
 MCD_PLCBudget:		ds.b	1
 			ds.b	1
 MCD_PLCTimeLimit:	ds.w	1
-MCD_TerrainStream:	ds.b	$E000-$40
+MCD_TerrainStream:	ds.b	$E000-(*-MCD_WordRAM)
 MCD_ObjectReply:	ds.w	2
 MCD_ObjectSpawns:	ds.b	MCD_ObjectSlotCount*MCD_ObjectSpawnSize
 			ds.b	$10000-($E000+4+MCD_ObjectSlotCount*MCD_ObjectSpawnSize)
@@ -179,6 +184,6 @@ MCD_ObjectReply_Sub:	equ	MCD_SubWordRAM+(MCD_ObjectReply-MCD_WordRAM)
 	if MCD_TerrainStage_End>MCD_WordRAM+$40000
 		fatal "Terrain transport exceeds 2M Word RAM"
 	endif
-	if MCD_TerrainStream-MCD_TerrainFrame<>$40
-		fatal "CD frame header must occupy exactly $40 bytes"
+	if MCD_TerrainStream-MCD_TerrainFrame<>$4C
+		fatal "CD frame header must occupy exactly $4C bytes"
 	endif

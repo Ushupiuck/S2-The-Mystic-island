@@ -9,20 +9,21 @@ Run after importing SMZ geometry; repeated runs reuse identical chunk copies.
 from pathlib import Path
 import struct
 from convert_s1_ss_background import kosinski_plus, kosinski_plus_decode
+from level_layout import load as load_layout, save as save_layout
 ROOT=Path(__file__).resolve().parents[1]
 
 def build():
     path=ROOT/'mappings/128x128/SMZ2.unc';raw=path.read_bytes()
     chunks=[raw[i:i+128] for i in range(0,len(raw),128)]
-    primary=bytearray(kosinski_plus_decode((ROOT/'level/layout/SMZ_2.kosp').read_bytes())[0])
+    primary=load_layout(ROOT/'level/layout/SMZ_2.kosp')[0]
     paths=list((ROOT/'level/layout').rglob('SMZ_2.kosp'))
     assert len(paths)==4
     for file in paths:
-        layout=bytearray(kosinski_plus_decode(file.read_bytes())[0])
+        layout,bg=load_layout(file)
         for cx in range(0x1E40//128,(0x1F80-1)//128+1):
-            slot=(0x580//128)*256+cx;old=layout[slot]
+            row=0x580//128;old=layout[row][cx]
             # A fresh geometry import has no previous generated tail chunks.
-            if old>=len(chunks):old=primary[slot]
+            if old>=len(chunks):old=primary[row][cx]
             values=list(struct.unpack('>64H',chunks[old]))
             for by in range(5):
                 for bx in range(8):
@@ -30,9 +31,9 @@ def build():
                     if 0x1E40<=x<0x1F80:values[by*8+bx]=0 if by<4 else 0xF005
             chunk=struct.pack('>64H',*values)
             if chunk not in chunks:chunks.append(chunk)
-            layout[slot]=chunks.index(chunk)
-        assert len(chunks)<=256
-        file.write_bytes(kosinski_plus(layout))
+            layout[row][cx]=chunks.index(chunk)
+        assert len(chunks)<=1024
+        save_layout(file,layout,bg)
     raw=b''.join(chunks);path.write_bytes(raw)
     path.with_suffix('.kosp').write_bytes(kosinski_plus(raw))
     return len(chunks)

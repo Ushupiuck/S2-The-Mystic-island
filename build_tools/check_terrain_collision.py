@@ -15,6 +15,7 @@ import struct
 import subprocess
 
 import numpy as np
+from level_layout import project_s2
 from convert_s1_ss_background import kosinski_plus_decode
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -150,8 +151,8 @@ def native_probes(args, old, old_paths):
             source = (geometry_source(prior_name, '128x128', old, old_paths),
                       geometry_source(f'SMZ{act}', '128x128'))
             path = f'level/layout/SMZ_{act}.kosp'
-            layouts = (kosinski_plus_decode(old(path))[0],
-                       kosinski_plus_decode((ROOT/path).read_bytes())[0])
+            layouts = (project_s2(kosinski_plus_decode(old(path))[0]),
+                       project_s2(kosinski_plus_decode((ROOT/path).read_bytes())[0]))
             pairs = sorted(set(zip(*layouts)))
             chunks = tuple(b''.join(raw[pair[n]*128:(pair[n]+1)*128] for pair in pairs)
                            for n, raw in enumerate(source))

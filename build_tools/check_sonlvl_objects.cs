@@ -261,9 +261,27 @@ class CheckSonLVLObjects
 		CheckConveyor();
 		CheckPlatform();
 		CheckWordLayout();
+		CheckTerrainLayout();
 		CheckPlatformMounts();
 		if (previewDirectory != null) Preview(previewDirectory);
 		Console.WriteLine("PASS " + name + " (" + LevelData.Objects.Count + " placements)");
+	}
+
+	static void CheckTerrainLayout()
+	{
+		if (LevelData.LayoutFormat.GetType().FullName != "MysticIsland.LevelLayouts.Layout") return;
+		var format = (LayoutFormatCombined)LevelData.LayoutFormat;
+		byte[] original = Compression.Decompress(LevelData.Level.Layout, LevelData.Level.LayoutCompression);
+		byte[] saved; format.WriteLayout(LevelData.Layout, out saved);
+		if (!original.SequenceEqual(saved)) Fail("Terrain layout bytes did not round trip.");
+		var probe = new LayoutData { FGLayout = new ushort[37, 25], BGLayout = new ushort[7, 3] };
+		probe.FGLayout[36, 24] = 1023; probe.BGLayout[6, 2] = 768;
+		format.WriteLayout(probe, out saved);
+		var copy = new LayoutData(); format.ReadLayout(saved, copy);
+		if (copy.FGLayout.GetLength(0) != 37 || copy.FGLayout.GetLength(1) != 25 ||
+			copy.BGLayout.GetLength(0) != 7 || copy.BGLayout.GetLength(1) != 3 ||
+			copy.FGLayout[36, 24] != 1023 || copy.BGLayout[6, 2] != 768)
+			Fail("Independent terrain dimensions/word IDs did not round trip.");
 	}
 
 	static void CheckPlatform()

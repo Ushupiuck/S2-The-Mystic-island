@@ -14,6 +14,7 @@ import struct
 import subprocess
 
 from convert_s1_ss_background import kosinski_plus_decode
+from level_layout import project_s2
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -67,7 +68,7 @@ def audit(reference):
         for layout_dir, collision_dir in (('', 'present'), ('past/', 'past'),
                                           ('good future/', 'good Future'), ('bad future/', 'bad future')):
             path = f'level/layout/{layout_dir}SMZ_{act}.kosp'
-            layouts = [kosinski_plus_decode(read(path, prior))[0] for prior in (True,False)]
+            layouts = [project_s2(kosinski_plus_decode(read(path, prior))[0]) for prior in (True,False)]
             assert len(layouts[0]) == len(layouts[1]) == 4096
             columns = [read(f'collision/{collision_dir}/SMZ{act}.bin', prior) for prior in (True,False)]
             assert len(columns[1]) == len(blocks)//4

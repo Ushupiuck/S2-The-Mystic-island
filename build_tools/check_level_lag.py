@@ -156,7 +156,8 @@ for zone in (0, 2, 4):
     run(250 if a.pal else 300)
     if zone == a.zone:
         base = g.s['MCD_TerrainLayout_Sub'] if 'MCD_TerrainData_Sub' in g.s else g.s['Level_Layout']
-        watch = loaded + [('layout', base, data_at(base, 0x1000))]
+        layout_bytes = g.s.get('PlaneLayout_Capacity', 0x1000) if g.s['MegaCDMode1'] else 0x1000
+        watch = loaded + [('layout', base, data_at(base, layout_bytes))]
         break
     g.write('f_slomocheat', 1)
     press(3)

@@ -52,6 +52,7 @@ end
 --common.convert_pcm_files_in_directory("sound/dac/pcm")
 --common.convert_dpcm_files_in_directory("sound/dac/dpcm")
 
+require("build_tools.lua.level_layout").validate()
 require("build_tools.lua.compressed_assets").generate()
 
 -- Build the ROM.

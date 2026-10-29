@@ -67,6 +67,7 @@ def generate(root, banks):
            "\tmove.b #1,(ObjectTest_Active).l",
            "\tmove.b #1,(ObjectTest_Enable).l",
            "\tmove.b #$FF,(ObjectTest_Bank).l",
+           "\tif MegaCDMode1=0",
            "\tlea (v_lvllayout).w,a1",
            "\tmove.w #bytesToLcnt(Level_Layout_End-Level_Layout),d0",
            ".clear_layout: clr.l (a1)+",
@@ -86,6 +87,7 @@ def generate(root, banks):
            "\tdbf d0,.fill",
            "\tlea $80(a1),a1 ; skip background half-row",
            "\tdbf d1,.row",
+           "\tendif",
            "\trts",
            "ObjectTest_Dynamic:",
            "\ttst.b (ObjectTest_Enable).l",
@@ -177,14 +179,27 @@ def main():
     shutil.copytree(ROOT, root, ignore=shutil.ignore_patterns(
         '.git', '*.lst', 's2built*.bin', '*-pass.bin', '__pycache__'))
     banks = generate(root, json.loads(COURSE.read_text())['banks'])
+    # Prepare real CD decoder inputs; MD staging is not resident terrain.
+    from level_layout import save
+    from convert_s1_ss_background import kosinski_plus_decode, kosinski_plus
+    fg = [[255 if y >= 10 else 0 for _ in range(128)] for y in range(16)]
+    for path in (root/'level/layout').rglob('LZ_2.kosp'):
+        save(path, fg, [[0]])
+    path = root/'mappings/128x128/LZ.kosp'
+    chunks = bytearray(kosinski_plus_decode(path.read_bytes())[0])
+    chunks.extend(bytes(max(0,32768-len(chunks))))
+    chunks[:128] = bytes(128)
+    chunks[255*128:256*128] = bytes.fromhex('F001')*64
+    path.write_bytes(kosinski_plus(bytes(chunks)))
+    path.with_suffix('.unc').write_bytes(chunks)
     mainfile = root/'md-main.asm'
     source = mainfile.read_text()
     source = replace_once(source, 'LevelLayoutLoad:\n', 'LevelLayoutLoad:\n'
         '\t\tcmpi.w #$0101,(Current_ZoneAndAct).w\n'
-        '\t\tbne.s +\n\t\tjmp (ObjectTest_Initialize).l\n+\n')
+        '\t\tbne.s +\n\tif MegaCDMode1\n\t\tjsr (ObjectTest_Initialize).l\n\telse\n\t\tjmp (ObjectTest_Initialize).l\n\tendif\n+\n')
     source = replace_once(source, 'DynResize_LZ2:\n\t\trts',
                           'DynResize_LZ2:\n\t\tjmp (ObjectTest_Dynamic).l')
-    source = replace_once(source, 'ObjPos_LZ2:\tbinclude\t"level/objects/LZ_2.bin"',
+    source = replace_once(source, 'ObjPos_LZ2:\tObjectLayoutFile "level/objects/LZ_2.bin"',
                           'ObjPos_LZ2:\tinclude "_inc/Object Test Placements.asm"')
     source = replace_once(source, 'RingPos_LZ2:\tbinclude\t"level/rings/LZ_2.bin"',
                           'RingPos_LZ2:\tdc.w $FFFF,0')

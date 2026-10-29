@@ -38,8 +38,9 @@ object control, VDP output and sound still execute on MD.
 
 `MegaCDMode1` in `md-main.asm` selects the backend at assembly time. The primary
 configuration is `1`; `0` builds a standalone Mega Drive ROM without the CD
-bootstrap, subprogram, mailboxes or CD-owned buffers. Shared objects, level
-layouts, art, palettes, mappings, sound and editor files keep their usual paths.
+bootstrap, subprogram, mailboxes or CD-owned buffers. Shared objects, art, palettes, mappings, sound and editor files keep their usual
+paths. Cartridge layouts are frozen in `md-only/layout/` while development and
+the independent-plane migration target Mode 1.
 Only cartridge-specific implementations live in `md-only/`:
 
 | File | Cartridge responsibility |
@@ -50,6 +51,7 @@ Only cartridge-specific implementations live in `md-only/`:
 | `Tile Streaming.asm` | Direct VDP rows/columns and layout reads/writes, including SMZ parallax |
 | `Terrain Collision.asm` | Current interleaved collision banks, projected movement probes and whole airborne contact resolution |
 | `Objects Manager.asm` | Eight-byte placements, word subtypes, era filtering and persistent state |
+| `layout/` | Frozen byte-layout inputs for the paused cartridge backend |
 | `RAM.asm` | Private codec buffers, VBlank camera snapshots and placement state, appended by the main RAM declaration |
 
 The cartridge retains the `$8000`-byte chunk table in the lower half of its
@@ -78,19 +80,20 @@ aliases translate physical addresses; they do not allocate another copy.
 | 512 KiB PRG RAM | Banked 128 KiB window `$420000-$43FFFF`, while bus held | `$000000-$07FFFF` |
 | Reserved BIOS area | `$420000-$425FFF`, bank 0 | `$000000-$005FFF` |
 | Expanded chunk buffer | Crosses banks 0/1 | `$006000-$025FFF`, 128 KiB |
-| Currently used chunks/scene overlays | `$426000-$42DFFF`, bank 0 | `$006000-$00DFFF`, 32 KiB |
+| Scene overlay / legacy chunk window | `$426000-$42DFFF`, bank 0 | `$006000-$00DFFF`, 32 KiB |
 | Ring job storage | `$426000-$426E0F`, bank 1 | `$026000-$026E0F` |
-| Resident terrain and work state | No normal-frame PRG access | `$026E10-$02BE17` |
-| Resident object placements and loader state | No normal-frame PRG access | `$02BE18-$02E005` |
-| Decoder tables, resident PLC input and resumable state | No normal-frame PRG access | `$02E006-$03642D` |
+| Resident terrain and work state | No normal-frame PRG access | `$026E10-$032EA3` |
+| Resident object placements and loader state | No normal-frame PRG access | `$032EA4-$035091` |
+| Decoder tables, resident PLC input and resumable state | No normal-frame PRG access | `$035092-$03D4B9` |
 | 256 KiB Word RAM, 2M mode | `$600000-$63FFFF` while owned | `$080000-$0BFFFF` while owned |
 | Communication registers | `$A12010-$A1202F` | `$FF8010-$FF802F` |
 
 Chunks are the first allocation after the BIOS area. `Chunk_Table_End=$42E000`
-is the active 32 KiB end used by existing clears and scene overlays;
+is the 32 KiB end used by legacy aliases and scene overlays;
 `MCD_ChunkTable_SubEnd=$26000` ends the entire physical buffer. The expanded
 allocation is not a contiguous main-CPU pointer, and jobs cannot use its tail.
-[The planned mixed-size layout](Levels.md#planned-layout-format) is not implemented.
+The Mode 1 [plane engine](Levels.md#mode-1-plane-engine) addresses the full
+allocation with word IDs. Mixed-size editor stamping remains future work.
 
 MD work RAM is packed against the top of its 64 KiB address space. The single
 free allocation is `Free_RAM_Start` through `Free_RAM_End` (end exclusive):
@@ -127,8 +130,8 @@ address to the CD view:
 
 | MD range, inclusive | Use |
 | --- | --- |
-| `$600000-$60003F` | Frame snapshot, free object slots, PLC tile/time budgets |
-| `$600040-$60DFFF` | Terrain VDP records |
+| `$600000-$60004B` | Camera/provider snapshot, free object slots, PLC tile/time budgets |
+| `$60004C-$60DFFF` | Terrain VDP records |
 | `$60E000-$60E43B` | Object reply header and up to 90 spawn records |
 | `$610000-$614EFF` | Level collision-bank staging / non-level overlays |
 | `$618000-$61FFFF` | Compressed cartridge input cache |
@@ -142,10 +145,14 @@ height/width/angle bank once on level entry.
 The rotating S1 stage retains its separate MD renderer and staging/PRG overlays.
 
 After scrolling, CD constructs changed tile strips while MD renders sprites
-and finishes other work. The frame snapshot includes zone and act; its primary
-background camera supplies Y directly, without a duplicate coordinate. SMZ act 1
-uses its row-to-camera table for both initial drawing and streaming on CD.
-The packet retains its existing size and uses no additional handoff.
+and finishes other work. The frame snapshot includes zone/act, each plane
+provider and the actual background VDP Y coordinate, which can differ from its
+primary camera. The position caches and shared initial/streamed constructor
+live in `_inc/Mega CD Plane Drawing.asm`. SMZ1 and GHZ use fixed-width cloud
+bands plus independently scrolling building/mountain bands. The snapshot grows
+by twelve bytes within the existing Word-RAM handoff; the reply stays at `$E000`.
+Blocks occupy `$026E10-$02860F` and remain writable. The 32-KiB layout allocation
+starts at `$028610`; collision indices/profiles follow at `$030610`.
 Foreground `MCD_FinishTerrainJob` waits before requesting
 a full VBlank. The VDP handler only drains stable, MD-owned records; it never
 waits for the terrain executor. Each record is a VDP command long, a count word

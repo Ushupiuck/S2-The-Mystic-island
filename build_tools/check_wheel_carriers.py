@@ -47,11 +47,11 @@ def main():
 			g.write('Collision_addr', g.read('v_colladdr1', 4), 4)
 			if course:
 				layout, chunks = g.terrain_address('layout'), g.terrain_address('chunks')
-				ground = g.read(layout+7*256+2)
+				ground = g.layout_cell(7,2)
 				block = g.read(chunks+ground*128+7*16, 2) | 0xF000
 				shape = bytes(g.rom)[g.read('v_colladdr1', 4)+(block & 0x3FF)*2]
 				assert set(bytes(g.rom)[g.s['ColArray2']+shape*16:g.s['ColArray2']+(shape+1)*16]) == {16}
-				g.write(layout+6*256+4, 255)
+				g.layout_cell(6,4,255)
 				for row in range(8):
 					for col in range(8):
 						g.write(chunks+255*128+row*16+col*2, block if row >= 4 or (col in (0, 7) and row in wall_rows) else 0, 2)

@@ -24,196 +24,196 @@ MCD_CompressedAssets:
 	dc.l BKosp_MTZ,BKosp_MTZ+$2BBA	; art/kosinski/level/8x8 - MTZ.kosp
 	endif
 	if defined(BLevel_CPZ1)
-	dc.l BLevel_CPZ1,BLevel_CPZ1+$2E2	; level/layout/bad future/CPZ_1.kosp
+	dc.l BLevel_CPZ1,BLevel_CPZ1+$454	; level/layout/bad future/CPZ_1.kosp
 	endif
 	if defined(BLevel_CPZ2)
-	dc.l BLevel_CPZ2,BLevel_CPZ2+$2D0	; level/layout/bad future/CPZ_2.kosp
+	dc.l BLevel_CPZ2,BLevel_CPZ2+$454	; level/layout/bad future/CPZ_2.kosp
 	endif
 	if defined(BLevel_CPZ3)
-	dc.l BLevel_CPZ3,BLevel_CPZ3+$2D0	; level/layout/bad future/CPZ_3.kosp
+	dc.l BLevel_CPZ3,BLevel_CPZ3+$454	; level/layout/bad future/CPZ_3.kosp
 	endif
 	if defined(BLevel_CPZ4)
-	dc.l BLevel_CPZ4,BLevel_CPZ4+$2D0	; level/layout/bad future/CPZ_4.kosp
+	dc.l BLevel_CPZ4,BLevel_CPZ4+$454	; level/layout/bad future/CPZ_4.kosp
 	endif
 	if defined(BLevel_EHZ1)
-	dc.l BLevel_EHZ1,BLevel_EHZ1+$1AA	; level/layout/bad future/EHZ_1.kosp
+	dc.l BLevel_EHZ1,BLevel_EHZ1+$2F2	; level/layout/bad future/EHZ_1.kosp
 	endif
 	if defined(BLevel_EHZ2)
-	dc.l BLevel_EHZ2,BLevel_EHZ2+$1B8	; level/layout/bad future/EHZ_2.kosp
+	dc.l BLevel_EHZ2,BLevel_EHZ2+$310	; level/layout/bad future/EHZ_2.kosp
 	endif
 	if defined(BLevel_EHZ3)
-	dc.l BLevel_EHZ3,BLevel_EHZ3+$1B8	; level/layout/bad future/EHZ_3.kosp
+	dc.l BLevel_EHZ3,BLevel_EHZ3+$310	; level/layout/bad future/EHZ_3.kosp
 	endif
 	if defined(BLevel_EHZ4)
-	dc.l BLevel_EHZ4,BLevel_EHZ4+$1B8	; level/layout/bad future/EHZ_4.kosp
+	dc.l BLevel_EHZ4,BLevel_EHZ4+$310	; level/layout/bad future/EHZ_4.kosp
 	endif
 	if defined(BLevel_GHZ1)
-	dc.l BLevel_GHZ1,BLevel_GHZ1+$1A0	; level/layout/bad future/GHZ_1.kosp
+	dc.l BLevel_GHZ1,BLevel_GHZ1+$2F1	; level/layout/bad future/GHZ_1.kosp
 	endif
 	if defined(BLevel_GHZ2)
-	dc.l BLevel_GHZ2,BLevel_GHZ2+$1BA	; level/layout/bad future/GHZ_2.kosp
+	dc.l BLevel_GHZ2,BLevel_GHZ2+$2F7	; level/layout/bad future/GHZ_2.kosp
 	endif
 	if defined(BLevel_GHZ3)
-	dc.l BLevel_GHZ3,BLevel_GHZ3+$1DE	; level/layout/bad future/GHZ_3.kosp
+	dc.l BLevel_GHZ3,BLevel_GHZ3+$35E	; level/layout/bad future/GHZ_3.kosp
 	endif
 	if defined(BLevel_GHZ4)
-	dc.l BLevel_GHZ4,BLevel_GHZ4+$1FC	; level/layout/bad future/GHZ_4.kosp
+	dc.l BLevel_GHZ4,BLevel_GHZ4+$364	; level/layout/bad future/GHZ_4.kosp
 	endif
 	if defined(BLevel_HPZ1)
-	dc.l BLevel_HPZ1,BLevel_HPZ1+$2AE	; level/layout/bad future/HPZ_1.kosp
+	dc.l BLevel_HPZ1,BLevel_HPZ1+$44D	; level/layout/bad future/HPZ_1.kosp
 	endif
 	if defined(BLevel_HPZ2)
-	dc.l BLevel_HPZ2,BLevel_HPZ2+$298	; level/layout/bad future/HPZ_2.kosp
+	dc.l BLevel_HPZ2,BLevel_HPZ2+$43C	; level/layout/bad future/HPZ_2.kosp
 	endif
 	if defined(BLevel_HPZ3)
-	dc.l BLevel_HPZ3,BLevel_HPZ3+$298	; level/layout/bad future/HPZ_3.kosp
+	dc.l BLevel_HPZ3,BLevel_HPZ3+$43C	; level/layout/bad future/HPZ_3.kosp
 	endif
 	if defined(BLevel_HPZ4)
-	dc.l BLevel_HPZ4,BLevel_HPZ4+$298	; level/layout/bad future/HPZ_4.kosp
+	dc.l BLevel_HPZ4,BLevel_HPZ4+$43C	; level/layout/bad future/HPZ_4.kosp
 	endif
 	if defined(BLevel_HTZ1)
-	dc.l BLevel_HTZ1,BLevel_HTZ1+$278	; level/layout/bad future/HTZ_1.kosp
+	dc.l BLevel_HTZ1,BLevel_HTZ1+$421	; level/layout/bad future/HTZ_1.kosp
 	endif
 	if defined(BLevel_HTZ2)
-	dc.l BLevel_HTZ2,BLevel_HTZ2+$386	; level/layout/bad future/HTZ_2.kosp
+	dc.l BLevel_HTZ2,BLevel_HTZ2+$579	; level/layout/bad future/HTZ_2.kosp
 	endif
 	if defined(BLevel_HTZ3)
-	dc.l BLevel_HTZ3,BLevel_HTZ3+$386	; level/layout/bad future/HTZ_3.kosp
+	dc.l BLevel_HTZ3,BLevel_HTZ3+$579	; level/layout/bad future/HTZ_3.kosp
 	endif
 	if defined(BLevel_HTZ4)
-	dc.l BLevel_HTZ4,BLevel_HTZ4+$386	; level/layout/bad future/HTZ_4.kosp
+	dc.l BLevel_HTZ4,BLevel_HTZ4+$579	; level/layout/bad future/HTZ_4.kosp
 	endif
 	if defined(BLevel_LV071)
-	dc.l BLevel_LV071,BLevel_LV071+$40	; level/layout/bad future/LV07_1.kosp
+	dc.l BLevel_LV071,BLevel_LV071+$82	; level/layout/bad future/LV07_1.kosp
 	endif
 	if defined(BLevel_LV072)
-	dc.l BLevel_LV072,BLevel_LV072+$40	; level/layout/bad future/LV07_2.kosp
+	dc.l BLevel_LV072,BLevel_LV072+$82	; level/layout/bad future/LV07_2.kosp
 	endif
 	if defined(BLevel_LV073)
-	dc.l BLevel_LV073,BLevel_LV073+$40	; level/layout/bad future/LV07_3.kosp
+	dc.l BLevel_LV073,BLevel_LV073+$82	; level/layout/bad future/LV07_3.kosp
 	endif
 	if defined(BLevel_LV074)
-	dc.l BLevel_LV074,BLevel_LV074+$40	; level/layout/bad future/LV07_4.kosp
+	dc.l BLevel_LV074,BLevel_LV074+$82	; level/layout/bad future/LV07_4.kosp
 	endif
 	if defined(BLevel_LV091)
-	dc.l BLevel_LV091,BLevel_LV091+$40	; level/layout/bad future/LV09_1.kosp
+	dc.l BLevel_LV091,BLevel_LV091+$82	; level/layout/bad future/LV09_1.kosp
 	endif
 	if defined(BLevel_LV092)
-	dc.l BLevel_LV092,BLevel_LV092+$40	; level/layout/bad future/LV09_2.kosp
+	dc.l BLevel_LV092,BLevel_LV092+$82	; level/layout/bad future/LV09_2.kosp
 	endif
 	if defined(BLevel_LV093)
-	dc.l BLevel_LV093,BLevel_LV093+$40	; level/layout/bad future/LV09_3.kosp
+	dc.l BLevel_LV093,BLevel_LV093+$82	; level/layout/bad future/LV09_3.kosp
 	endif
 	if defined(BLevel_LV094)
-	dc.l BLevel_LV094,BLevel_LV094+$40	; level/layout/bad future/LV09_4.kosp
+	dc.l BLevel_LV094,BLevel_LV094+$82	; level/layout/bad future/LV09_4.kosp
 	endif
 	if defined(BLevel_LV0A1)
-	dc.l BLevel_LV0A1,BLevel_LV0A1+$40	; level/layout/bad future/LV0A_1.kosp
+	dc.l BLevel_LV0A1,BLevel_LV0A1+$82	; level/layout/bad future/LV0A_1.kosp
 	endif
 	if defined(BLevel_LV0A2)
-	dc.l BLevel_LV0A2,BLevel_LV0A2+$40	; level/layout/bad future/LV0A_2.kosp
+	dc.l BLevel_LV0A2,BLevel_LV0A2+$82	; level/layout/bad future/LV0A_2.kosp
 	endif
 	if defined(BLevel_LV0A3)
-	dc.l BLevel_LV0A3,BLevel_LV0A3+$40	; level/layout/bad future/LV0A_3.kosp
+	dc.l BLevel_LV0A3,BLevel_LV0A3+$82	; level/layout/bad future/LV0A_3.kosp
 	endif
 	if defined(BLevel_LV0A4)
-	dc.l BLevel_LV0A4,BLevel_LV0A4+$40	; level/layout/bad future/LV0A_4.kosp
+	dc.l BLevel_LV0A4,BLevel_LV0A4+$82	; level/layout/bad future/LV0A_4.kosp
 	endif
 	if defined(BLevel_LV0B1)
-	dc.l BLevel_LV0B1,BLevel_LV0B1+$40	; level/layout/bad future/LV0B_1.kosp
+	dc.l BLevel_LV0B1,BLevel_LV0B1+$82	; level/layout/bad future/LV0B_1.kosp
 	endif
 	if defined(BLevel_LV0B2)
-	dc.l BLevel_LV0B2,BLevel_LV0B2+$40	; level/layout/bad future/LV0B_2.kosp
+	dc.l BLevel_LV0B2,BLevel_LV0B2+$82	; level/layout/bad future/LV0B_2.kosp
 	endif
 	if defined(BLevel_LV0B3)
-	dc.l BLevel_LV0B3,BLevel_LV0B3+$40	; level/layout/bad future/LV0B_3.kosp
+	dc.l BLevel_LV0B3,BLevel_LV0B3+$82	; level/layout/bad future/LV0B_3.kosp
 	endif
 	if defined(BLevel_LV0B4)
-	dc.l BLevel_LV0B4,BLevel_LV0B4+$40	; level/layout/bad future/LV0B_4.kosp
+	dc.l BLevel_LV0B4,BLevel_LV0B4+$82	; level/layout/bad future/LV0B_4.kosp
 	endif
 	if defined(BLevel_LV0C1)
-	dc.l BLevel_LV0C1,BLevel_LV0C1+$40	; level/layout/bad future/LV0C_1.kosp
+	dc.l BLevel_LV0C1,BLevel_LV0C1+$82	; level/layout/bad future/LV0C_1.kosp
 	endif
 	if defined(BLevel_LV0C2)
-	dc.l BLevel_LV0C2,BLevel_LV0C2+$40	; level/layout/bad future/LV0C_2.kosp
+	dc.l BLevel_LV0C2,BLevel_LV0C2+$82	; level/layout/bad future/LV0C_2.kosp
 	endif
 	if defined(BLevel_LV0C3)
-	dc.l BLevel_LV0C3,BLevel_LV0C3+$40	; level/layout/bad future/LV0C_3.kosp
+	dc.l BLevel_LV0C3,BLevel_LV0C3+$82	; level/layout/bad future/LV0C_3.kosp
 	endif
 	if defined(BLevel_LV0C4)
-	dc.l BLevel_LV0C4,BLevel_LV0C4+$40	; level/layout/bad future/LV0C_4.kosp
+	dc.l BLevel_LV0C4,BLevel_LV0C4+$82	; level/layout/bad future/LV0C_4.kosp
 	endif
 	if defined(BLevel_LV0D1)
-	dc.l BLevel_LV0D1,BLevel_LV0D1+$40	; level/layout/bad future/LV0D_1.kosp
+	dc.l BLevel_LV0D1,BLevel_LV0D1+$82	; level/layout/bad future/LV0D_1.kosp
 	endif
 	if defined(BLevel_LV0D2)
-	dc.l BLevel_LV0D2,BLevel_LV0D2+$40	; level/layout/bad future/LV0D_2.kosp
+	dc.l BLevel_LV0D2,BLevel_LV0D2+$82	; level/layout/bad future/LV0D_2.kosp
 	endif
 	if defined(BLevel_LV0D3)
-	dc.l BLevel_LV0D3,BLevel_LV0D3+$40	; level/layout/bad future/LV0D_3.kosp
+	dc.l BLevel_LV0D3,BLevel_LV0D3+$82	; level/layout/bad future/LV0D_3.kosp
 	endif
 	if defined(BLevel_LV0D4)
-	dc.l BLevel_LV0D4,BLevel_LV0D4+$40	; level/layout/bad future/LV0D_4.kosp
+	dc.l BLevel_LV0D4,BLevel_LV0D4+$82	; level/layout/bad future/LV0D_4.kosp
 	endif
 	if defined(BLevel_LV0E1)
-	dc.l BLevel_LV0E1,BLevel_LV0E1+$40	; level/layout/bad future/LV0E_1.kosp
+	dc.l BLevel_LV0E1,BLevel_LV0E1+$82	; level/layout/bad future/LV0E_1.kosp
 	endif
 	if defined(BLevel_LV0E2)
-	dc.l BLevel_LV0E2,BLevel_LV0E2+$40	; level/layout/bad future/LV0E_2.kosp
+	dc.l BLevel_LV0E2,BLevel_LV0E2+$82	; level/layout/bad future/LV0E_2.kosp
 	endif
 	if defined(BLevel_LV0E3)
-	dc.l BLevel_LV0E3,BLevel_LV0E3+$40	; level/layout/bad future/LV0E_3.kosp
+	dc.l BLevel_LV0E3,BLevel_LV0E3+$82	; level/layout/bad future/LV0E_3.kosp
 	endif
 	if defined(BLevel_LV0E4)
-	dc.l BLevel_LV0E4,BLevel_LV0E4+$40	; level/layout/bad future/LV0E_4.kosp
+	dc.l BLevel_LV0E4,BLevel_LV0E4+$82	; level/layout/bad future/LV0E_4.kosp
 	endif
 	if defined(BLevel_LV0F1)
-	dc.l BLevel_LV0F1,BLevel_LV0F1+$40	; level/layout/bad future/LV0F_1.kosp
+	dc.l BLevel_LV0F1,BLevel_LV0F1+$82	; level/layout/bad future/LV0F_1.kosp
 	endif
 	if defined(BLevel_LV0F2)
-	dc.l BLevel_LV0F2,BLevel_LV0F2+$40	; level/layout/bad future/LV0F_2.kosp
+	dc.l BLevel_LV0F2,BLevel_LV0F2+$82	; level/layout/bad future/LV0F_2.kosp
 	endif
 	if defined(BLevel_LV0F3)
-	dc.l BLevel_LV0F3,BLevel_LV0F3+$40	; level/layout/bad future/LV0F_3.kosp
+	dc.l BLevel_LV0F3,BLevel_LV0F3+$82	; level/layout/bad future/LV0F_3.kosp
 	endif
 	if defined(BLevel_LV0F4)
-	dc.l BLevel_LV0F4,BLevel_LV0F4+$40	; level/layout/bad future/LV0F_4.kosp
+	dc.l BLevel_LV0F4,BLevel_LV0F4+$82	; level/layout/bad future/LV0F_4.kosp
 	endif
 	if defined(BLevel_LZ1)
-	dc.l BLevel_LZ1,BLevel_LZ1+$19A	; level/layout/bad future/LZ_1.kosp
+	dc.l BLevel_LZ1,BLevel_LZ1+$2B9	; level/layout/bad future/LZ_1.kosp
 	endif
 	if defined(BLevel_LZ2)
-	dc.l BLevel_LZ2,BLevel_LZ2+$148	; level/layout/bad future/LZ_2.kosp
+	dc.l BLevel_LZ2,BLevel_LZ2+$1FD	; level/layout/bad future/LZ_2.kosp
 	endif
 	if defined(BLevel_LZ3)
-	dc.l BLevel_LZ3,BLevel_LZ3+$22E	; level/layout/bad future/LZ_3.kosp
+	dc.l BLevel_LZ3,BLevel_LZ3+$3A1	; level/layout/bad future/LZ_3.kosp
 	endif
 	if defined(BLevel_LZ4)
-	dc.l BLevel_LZ4,BLevel_LZ4+$1C6	; level/layout/bad future/LZ_4.kosp
+	dc.l BLevel_LZ4,BLevel_LZ4+$2C5	; level/layout/bad future/LZ_4.kosp
 	endif
 	if defined(BLevel_MTZ1)
-	dc.l BLevel_MTZ1,BLevel_MTZ1+$86	; level/layout/bad future/MTZ_1.kosp
+	dc.l BLevel_MTZ1,BLevel_MTZ1+$F2	; level/layout/bad future/MTZ_1.kosp
 	endif
 	if defined(BLevel_MTZ2)
-	dc.l BLevel_MTZ2,BLevel_MTZ2+$40	; level/layout/bad future/MTZ_2.kosp
+	dc.l BLevel_MTZ2,BLevel_MTZ2+$82	; level/layout/bad future/MTZ_2.kosp
 	endif
 	if defined(BLevel_MTZ3)
-	dc.l BLevel_MTZ3,BLevel_MTZ3+$40	; level/layout/bad future/MTZ_3.kosp
+	dc.l BLevel_MTZ3,BLevel_MTZ3+$82	; level/layout/bad future/MTZ_3.kosp
 	endif
 	if defined(BLevel_MTZ4)
-	dc.l BLevel_MTZ4,BLevel_MTZ4+$40	; level/layout/bad future/MTZ_4.kosp
+	dc.l BLevel_MTZ4,BLevel_MTZ4+$82	; level/layout/bad future/MTZ_4.kosp
 	endif
 	if defined(BLevel_SMZ1)
-	dc.l BLevel_SMZ1,BLevel_SMZ1+$292	; level/layout/bad future/SMZ_1.kosp
+	dc.l BLevel_SMZ1,BLevel_SMZ1+$3C3	; level/layout/bad future/SMZ_1.kosp
 	endif
 	if defined(BLevel_SMZ2)
-	dc.l BLevel_SMZ2,BLevel_SMZ2+$29F	; level/layout/bad future/SMZ_2.kosp
+	dc.l BLevel_SMZ2,BLevel_SMZ2+$412	; level/layout/bad future/SMZ_2.kosp
 	endif
 	if defined(BLevel_SMZ3)
-	dc.l BLevel_SMZ3,BLevel_SMZ3+$40	; level/layout/bad future/SMZ_3.kosp
+	dc.l BLevel_SMZ3,BLevel_SMZ3+$82	; level/layout/bad future/SMZ_3.kosp
 	endif
 	if defined(BLevel_SMZ4)
-	dc.l BLevel_SMZ4,BLevel_SMZ4+$40	; level/layout/bad future/SMZ_4.kosp
+	dc.l BLevel_SMZ4,BLevel_SMZ4+$82	; level/layout/bad future/SMZ_4.kosp
 	endif
 	if defined(BMap128_CPZ)
 	dc.l BMap128_CPZ,BMap128_CPZ+$17FA	; mappings/128x128/CPZ.kosp
@@ -306,196 +306,196 @@ MCD_CompressedAssets:
 	dc.l GKosp_MTZ,GKosp_MTZ+$2BBA	; art/kosinski/level/8x8 - MTZ.kosp
 	endif
 	if defined(GLevel_CPZ1)
-	dc.l GLevel_CPZ1,GLevel_CPZ1+$2E2	; level/layout/good future/CPZ_1.kosp
+	dc.l GLevel_CPZ1,GLevel_CPZ1+$454	; level/layout/good future/CPZ_1.kosp
 	endif
 	if defined(GLevel_CPZ2)
-	dc.l GLevel_CPZ2,GLevel_CPZ2+$2D0	; level/layout/good future/CPZ_2.kosp
+	dc.l GLevel_CPZ2,GLevel_CPZ2+$454	; level/layout/good future/CPZ_2.kosp
 	endif
 	if defined(GLevel_CPZ3)
-	dc.l GLevel_CPZ3,GLevel_CPZ3+$2D0	; level/layout/good future/CPZ_3.kosp
+	dc.l GLevel_CPZ3,GLevel_CPZ3+$454	; level/layout/good future/CPZ_3.kosp
 	endif
 	if defined(GLevel_CPZ4)
-	dc.l GLevel_CPZ4,GLevel_CPZ4+$2D0	; level/layout/good future/CPZ_4.kosp
+	dc.l GLevel_CPZ4,GLevel_CPZ4+$454	; level/layout/good future/CPZ_4.kosp
 	endif
 	if defined(GLevel_EHZ1)
-	dc.l GLevel_EHZ1,GLevel_EHZ1+$1AA	; level/layout/good future/EHZ_1.kosp
+	dc.l GLevel_EHZ1,GLevel_EHZ1+$2F2	; level/layout/good future/EHZ_1.kosp
 	endif
 	if defined(GLevel_EHZ2)
-	dc.l GLevel_EHZ2,GLevel_EHZ2+$1B8	; level/layout/good future/EHZ_2.kosp
+	dc.l GLevel_EHZ2,GLevel_EHZ2+$310	; level/layout/good future/EHZ_2.kosp
 	endif
 	if defined(GLevel_EHZ3)
-	dc.l GLevel_EHZ3,GLevel_EHZ3+$1B8	; level/layout/good future/EHZ_3.kosp
+	dc.l GLevel_EHZ3,GLevel_EHZ3+$310	; level/layout/good future/EHZ_3.kosp
 	endif
 	if defined(GLevel_EHZ4)
-	dc.l GLevel_EHZ4,GLevel_EHZ4+$1B8	; level/layout/good future/EHZ_4.kosp
+	dc.l GLevel_EHZ4,GLevel_EHZ4+$310	; level/layout/good future/EHZ_4.kosp
 	endif
 	if defined(GLevel_GHZ1)
-	dc.l GLevel_GHZ1,GLevel_GHZ1+$1A0	; level/layout/good future/GHZ_1.kosp
+	dc.l GLevel_GHZ1,GLevel_GHZ1+$2F1	; level/layout/good future/GHZ_1.kosp
 	endif
 	if defined(GLevel_GHZ2)
-	dc.l GLevel_GHZ2,GLevel_GHZ2+$1BA	; level/layout/good future/GHZ_2.kosp
+	dc.l GLevel_GHZ2,GLevel_GHZ2+$2F7	; level/layout/good future/GHZ_2.kosp
 	endif
 	if defined(GLevel_GHZ3)
-	dc.l GLevel_GHZ3,GLevel_GHZ3+$1DE	; level/layout/good future/GHZ_3.kosp
+	dc.l GLevel_GHZ3,GLevel_GHZ3+$35E	; level/layout/good future/GHZ_3.kosp
 	endif
 	if defined(GLevel_GHZ4)
-	dc.l GLevel_GHZ4,GLevel_GHZ4+$1FC	; level/layout/good future/GHZ_4.kosp
+	dc.l GLevel_GHZ4,GLevel_GHZ4+$364	; level/layout/good future/GHZ_4.kosp
 	endif
 	if defined(GLevel_HPZ1)
-	dc.l GLevel_HPZ1,GLevel_HPZ1+$2AE	; level/layout/good future/HPZ_1.kosp
+	dc.l GLevel_HPZ1,GLevel_HPZ1+$44D	; level/layout/good future/HPZ_1.kosp
 	endif
 	if defined(GLevel_HPZ2)
-	dc.l GLevel_HPZ2,GLevel_HPZ2+$298	; level/layout/good future/HPZ_2.kosp
+	dc.l GLevel_HPZ2,GLevel_HPZ2+$43C	; level/layout/good future/HPZ_2.kosp
 	endif
 	if defined(GLevel_HPZ3)
-	dc.l GLevel_HPZ3,GLevel_HPZ3+$298	; level/layout/good future/HPZ_3.kosp
+	dc.l GLevel_HPZ3,GLevel_HPZ3+$43C	; level/layout/good future/HPZ_3.kosp
 	endif
 	if defined(GLevel_HPZ4)
-	dc.l GLevel_HPZ4,GLevel_HPZ4+$298	; level/layout/good future/HPZ_4.kosp
+	dc.l GLevel_HPZ4,GLevel_HPZ4+$43C	; level/layout/good future/HPZ_4.kosp
 	endif
 	if defined(GLevel_HTZ1)
-	dc.l GLevel_HTZ1,GLevel_HTZ1+$278	; level/layout/good future/HTZ_1.kosp
+	dc.l GLevel_HTZ1,GLevel_HTZ1+$421	; level/layout/good future/HTZ_1.kosp
 	endif
 	if defined(GLevel_HTZ2)
-	dc.l GLevel_HTZ2,GLevel_HTZ2+$386	; level/layout/good future/HTZ_2.kosp
+	dc.l GLevel_HTZ2,GLevel_HTZ2+$579	; level/layout/good future/HTZ_2.kosp
 	endif
 	if defined(GLevel_HTZ3)
-	dc.l GLevel_HTZ3,GLevel_HTZ3+$386	; level/layout/good future/HTZ_3.kosp
+	dc.l GLevel_HTZ3,GLevel_HTZ3+$579	; level/layout/good future/HTZ_3.kosp
 	endif
 	if defined(GLevel_HTZ4)
-	dc.l GLevel_HTZ4,GLevel_HTZ4+$386	; level/layout/good future/HTZ_4.kosp
+	dc.l GLevel_HTZ4,GLevel_HTZ4+$579	; level/layout/good future/HTZ_4.kosp
 	endif
 	if defined(GLevel_LV071)
-	dc.l GLevel_LV071,GLevel_LV071+$40	; level/layout/good future/LV07_1.kosp
+	dc.l GLevel_LV071,GLevel_LV071+$82	; level/layout/good future/LV07_1.kosp
 	endif
 	if defined(GLevel_LV072)
-	dc.l GLevel_LV072,GLevel_LV072+$40	; level/layout/good future/LV07_2.kosp
+	dc.l GLevel_LV072,GLevel_LV072+$82	; level/layout/good future/LV07_2.kosp
 	endif
 	if defined(GLevel_LV073)
-	dc.l GLevel_LV073,GLevel_LV073+$40	; level/layout/good future/LV07_3.kosp
+	dc.l GLevel_LV073,GLevel_LV073+$82	; level/layout/good future/LV07_3.kosp
 	endif
 	if defined(GLevel_LV074)
-	dc.l GLevel_LV074,GLevel_LV074+$40	; level/layout/good future/LV07_4.kosp
+	dc.l GLevel_LV074,GLevel_LV074+$82	; level/layout/good future/LV07_4.kosp
 	endif
 	if defined(GLevel_LV091)
-	dc.l GLevel_LV091,GLevel_LV091+$40	; level/layout/good future/LV09_1.kosp
+	dc.l GLevel_LV091,GLevel_LV091+$82	; level/layout/good future/LV09_1.kosp
 	endif
 	if defined(GLevel_LV092)
-	dc.l GLevel_LV092,GLevel_LV092+$40	; level/layout/good future/LV09_2.kosp
+	dc.l GLevel_LV092,GLevel_LV092+$82	; level/layout/good future/LV09_2.kosp
 	endif
 	if defined(GLevel_LV093)
-	dc.l GLevel_LV093,GLevel_LV093+$40	; level/layout/good future/LV09_3.kosp
+	dc.l GLevel_LV093,GLevel_LV093+$82	; level/layout/good future/LV09_3.kosp
 	endif
 	if defined(GLevel_LV094)
-	dc.l GLevel_LV094,GLevel_LV094+$40	; level/layout/good future/LV09_4.kosp
+	dc.l GLevel_LV094,GLevel_LV094+$82	; level/layout/good future/LV09_4.kosp
 	endif
 	if defined(GLevel_LV0A1)
-	dc.l GLevel_LV0A1,GLevel_LV0A1+$40	; level/layout/good future/LV0A_1.kosp
+	dc.l GLevel_LV0A1,GLevel_LV0A1+$82	; level/layout/good future/LV0A_1.kosp
 	endif
 	if defined(GLevel_LV0A2)
-	dc.l GLevel_LV0A2,GLevel_LV0A2+$40	; level/layout/good future/LV0A_2.kosp
+	dc.l GLevel_LV0A2,GLevel_LV0A2+$82	; level/layout/good future/LV0A_2.kosp
 	endif
 	if defined(GLevel_LV0A3)
-	dc.l GLevel_LV0A3,GLevel_LV0A3+$40	; level/layout/good future/LV0A_3.kosp
+	dc.l GLevel_LV0A3,GLevel_LV0A3+$82	; level/layout/good future/LV0A_3.kosp
 	endif
 	if defined(GLevel_LV0A4)
-	dc.l GLevel_LV0A4,GLevel_LV0A4+$40	; level/layout/good future/LV0A_4.kosp
+	dc.l GLevel_LV0A4,GLevel_LV0A4+$82	; level/layout/good future/LV0A_4.kosp
 	endif
 	if defined(GLevel_LV0B1)
-	dc.l GLevel_LV0B1,GLevel_LV0B1+$40	; level/layout/good future/LV0B_1.kosp
+	dc.l GLevel_LV0B1,GLevel_LV0B1+$82	; level/layout/good future/LV0B_1.kosp
 	endif
 	if defined(GLevel_LV0B2)
-	dc.l GLevel_LV0B2,GLevel_LV0B2+$40	; level/layout/good future/LV0B_2.kosp
+	dc.l GLevel_LV0B2,GLevel_LV0B2+$82	; level/layout/good future/LV0B_2.kosp
 	endif
 	if defined(GLevel_LV0B3)
-	dc.l GLevel_LV0B3,GLevel_LV0B3+$40	; level/layout/good future/LV0B_3.kosp
+	dc.l GLevel_LV0B3,GLevel_LV0B3+$82	; level/layout/good future/LV0B_3.kosp
 	endif
 	if defined(GLevel_LV0B4)
-	dc.l GLevel_LV0B4,GLevel_LV0B4+$40	; level/layout/good future/LV0B_4.kosp
+	dc.l GLevel_LV0B4,GLevel_LV0B4+$82	; level/layout/good future/LV0B_4.kosp
 	endif
 	if defined(GLevel_LV0C1)
-	dc.l GLevel_LV0C1,GLevel_LV0C1+$40	; level/layout/good future/LV0C_1.kosp
+	dc.l GLevel_LV0C1,GLevel_LV0C1+$82	; level/layout/good future/LV0C_1.kosp
 	endif
 	if defined(GLevel_LV0C2)
-	dc.l GLevel_LV0C2,GLevel_LV0C2+$40	; level/layout/good future/LV0C_2.kosp
+	dc.l GLevel_LV0C2,GLevel_LV0C2+$82	; level/layout/good future/LV0C_2.kosp
 	endif
 	if defined(GLevel_LV0C3)
-	dc.l GLevel_LV0C3,GLevel_LV0C3+$40	; level/layout/good future/LV0C_3.kosp
+	dc.l GLevel_LV0C3,GLevel_LV0C3+$82	; level/layout/good future/LV0C_3.kosp
 	endif
 	if defined(GLevel_LV0C4)
-	dc.l GLevel_LV0C4,GLevel_LV0C4+$40	; level/layout/good future/LV0C_4.kosp
+	dc.l GLevel_LV0C4,GLevel_LV0C4+$82	; level/layout/good future/LV0C_4.kosp
 	endif
 	if defined(GLevel_LV0D1)
-	dc.l GLevel_LV0D1,GLevel_LV0D1+$40	; level/layout/good future/LV0D_1.kosp
+	dc.l GLevel_LV0D1,GLevel_LV0D1+$82	; level/layout/good future/LV0D_1.kosp
 	endif
 	if defined(GLevel_LV0D2)
-	dc.l GLevel_LV0D2,GLevel_LV0D2+$40	; level/layout/good future/LV0D_2.kosp
+	dc.l GLevel_LV0D2,GLevel_LV0D2+$82	; level/layout/good future/LV0D_2.kosp
 	endif
 	if defined(GLevel_LV0D3)
-	dc.l GLevel_LV0D3,GLevel_LV0D3+$40	; level/layout/good future/LV0D_3.kosp
+	dc.l GLevel_LV0D3,GLevel_LV0D3+$82	; level/layout/good future/LV0D_3.kosp
 	endif
 	if defined(GLevel_LV0D4)
-	dc.l GLevel_LV0D4,GLevel_LV0D4+$40	; level/layout/good future/LV0D_4.kosp
+	dc.l GLevel_LV0D4,GLevel_LV0D4+$82	; level/layout/good future/LV0D_4.kosp
 	endif
 	if defined(GLevel_LV0E1)
-	dc.l GLevel_LV0E1,GLevel_LV0E1+$40	; level/layout/good future/LV0E_1.kosp
+	dc.l GLevel_LV0E1,GLevel_LV0E1+$82	; level/layout/good future/LV0E_1.kosp
 	endif
 	if defined(GLevel_LV0E2)
-	dc.l GLevel_LV0E2,GLevel_LV0E2+$40	; level/layout/good future/LV0E_2.kosp
+	dc.l GLevel_LV0E2,GLevel_LV0E2+$82	; level/layout/good future/LV0E_2.kosp
 	endif
 	if defined(GLevel_LV0E3)
-	dc.l GLevel_LV0E3,GLevel_LV0E3+$40	; level/layout/good future/LV0E_3.kosp
+	dc.l GLevel_LV0E3,GLevel_LV0E3+$82	; level/layout/good future/LV0E_3.kosp
 	endif
 	if defined(GLevel_LV0E4)
-	dc.l GLevel_LV0E4,GLevel_LV0E4+$40	; level/layout/good future/LV0E_4.kosp
+	dc.l GLevel_LV0E4,GLevel_LV0E4+$82	; level/layout/good future/LV0E_4.kosp
 	endif
 	if defined(GLevel_LV0F1)
-	dc.l GLevel_LV0F1,GLevel_LV0F1+$40	; level/layout/good future/LV0F_1.kosp
+	dc.l GLevel_LV0F1,GLevel_LV0F1+$82	; level/layout/good future/LV0F_1.kosp
 	endif
 	if defined(GLevel_LV0F2)
-	dc.l GLevel_LV0F2,GLevel_LV0F2+$40	; level/layout/good future/LV0F_2.kosp
+	dc.l GLevel_LV0F2,GLevel_LV0F2+$82	; level/layout/good future/LV0F_2.kosp
 	endif
 	if defined(GLevel_LV0F3)
-	dc.l GLevel_LV0F3,GLevel_LV0F3+$40	; level/layout/good future/LV0F_3.kosp
+	dc.l GLevel_LV0F3,GLevel_LV0F3+$82	; level/layout/good future/LV0F_3.kosp
 	endif
 	if defined(GLevel_LV0F4)
-	dc.l GLevel_LV0F4,GLevel_LV0F4+$40	; level/layout/good future/LV0F_4.kosp
+	dc.l GLevel_LV0F4,GLevel_LV0F4+$82	; level/layout/good future/LV0F_4.kosp
 	endif
 	if defined(GLevel_LZ1)
-	dc.l GLevel_LZ1,GLevel_LZ1+$19A	; level/layout/good future/LZ_1.kosp
+	dc.l GLevel_LZ1,GLevel_LZ1+$2B9	; level/layout/good future/LZ_1.kosp
 	endif
 	if defined(GLevel_LZ2)
-	dc.l GLevel_LZ2,GLevel_LZ2+$148	; level/layout/good future/LZ_2.kosp
+	dc.l GLevel_LZ2,GLevel_LZ2+$1FD	; level/layout/good future/LZ_2.kosp
 	endif
 	if defined(GLevel_LZ3)
-	dc.l GLevel_LZ3,GLevel_LZ3+$22E	; level/layout/good future/LZ_3.kosp
+	dc.l GLevel_LZ3,GLevel_LZ3+$3A1	; level/layout/good future/LZ_3.kosp
 	endif
 	if defined(GLevel_LZ4)
-	dc.l GLevel_LZ4,GLevel_LZ4+$1C6	; level/layout/good future/LZ_4.kosp
+	dc.l GLevel_LZ4,GLevel_LZ4+$2C5	; level/layout/good future/LZ_4.kosp
 	endif
 	if defined(GLevel_MTZ1)
-	dc.l GLevel_MTZ1,GLevel_MTZ1+$86	; level/layout/good future/MTZ_1.kosp
+	dc.l GLevel_MTZ1,GLevel_MTZ1+$F2	; level/layout/good future/MTZ_1.kosp
 	endif
 	if defined(GLevel_MTZ2)
-	dc.l GLevel_MTZ2,GLevel_MTZ2+$40	; level/layout/good future/MTZ_2.kosp
+	dc.l GLevel_MTZ2,GLevel_MTZ2+$82	; level/layout/good future/MTZ_2.kosp
 	endif
 	if defined(GLevel_MTZ3)
-	dc.l GLevel_MTZ3,GLevel_MTZ3+$40	; level/layout/good future/MTZ_3.kosp
+	dc.l GLevel_MTZ3,GLevel_MTZ3+$82	; level/layout/good future/MTZ_3.kosp
 	endif
 	if defined(GLevel_MTZ4)
-	dc.l GLevel_MTZ4,GLevel_MTZ4+$40	; level/layout/good future/MTZ_4.kosp
+	dc.l GLevel_MTZ4,GLevel_MTZ4+$82	; level/layout/good future/MTZ_4.kosp
 	endif
 	if defined(GLevel_SMZ1)
-	dc.l GLevel_SMZ1,GLevel_SMZ1+$292	; level/layout/good future/SMZ_1.kosp
+	dc.l GLevel_SMZ1,GLevel_SMZ1+$3C3	; level/layout/good future/SMZ_1.kosp
 	endif
 	if defined(GLevel_SMZ2)
-	dc.l GLevel_SMZ2,GLevel_SMZ2+$29F	; level/layout/good future/SMZ_2.kosp
+	dc.l GLevel_SMZ2,GLevel_SMZ2+$412	; level/layout/good future/SMZ_2.kosp
 	endif
 	if defined(GLevel_SMZ3)
-	dc.l GLevel_SMZ3,GLevel_SMZ3+$40	; level/layout/good future/SMZ_3.kosp
+	dc.l GLevel_SMZ3,GLevel_SMZ3+$82	; level/layout/good future/SMZ_3.kosp
 	endif
 	if defined(GLevel_SMZ4)
-	dc.l GLevel_SMZ4,GLevel_SMZ4+$40	; level/layout/good future/SMZ_4.kosp
+	dc.l GLevel_SMZ4,GLevel_SMZ4+$82	; level/layout/good future/SMZ_4.kosp
 	endif
 	if defined(GMap128_CPZ)
 	dc.l GMap128_CPZ,GMap128_CPZ+$17FA	; mappings/128x128/CPZ.kosp
@@ -705,196 +705,196 @@ MCD_CompressedAssets:
 	dc.l Kospm_Yadrin,Kospm_Yadrin+$38C	; art/moduled kosinski/Enemy Yadrin.kospm
 	endif
 	if defined(Level_CPZ1)
-	dc.l Level_CPZ1,Level_CPZ1+$2E2	; level/layout/CPZ_1.kosp
+	dc.l Level_CPZ1,Level_CPZ1+$454	; level/layout/CPZ_1.kosp
 	endif
 	if defined(Level_CPZ2)
-	dc.l Level_CPZ2,Level_CPZ2+$2D0	; level/layout/CPZ_2.kosp
+	dc.l Level_CPZ2,Level_CPZ2+$454	; level/layout/CPZ_2.kosp
 	endif
 	if defined(Level_CPZ3)
-	dc.l Level_CPZ3,Level_CPZ3+$2D0	; level/layout/CPZ_3.kosp
+	dc.l Level_CPZ3,Level_CPZ3+$454	; level/layout/CPZ_3.kosp
 	endif
 	if defined(Level_CPZ4)
-	dc.l Level_CPZ4,Level_CPZ4+$2D0	; level/layout/CPZ_4.kosp
+	dc.l Level_CPZ4,Level_CPZ4+$454	; level/layout/CPZ_4.kosp
 	endif
 	if defined(Level_EHZ1)
-	dc.l Level_EHZ1,Level_EHZ1+$1AA	; level/layout/EHZ_1.kosp
+	dc.l Level_EHZ1,Level_EHZ1+$2F2	; level/layout/EHZ_1.kosp
 	endif
 	if defined(Level_EHZ2)
-	dc.l Level_EHZ2,Level_EHZ2+$1B8	; level/layout/EHZ_2.kosp
+	dc.l Level_EHZ2,Level_EHZ2+$310	; level/layout/EHZ_2.kosp
 	endif
 	if defined(Level_EHZ3)
-	dc.l Level_EHZ3,Level_EHZ3+$1B8	; level/layout/EHZ_3.kosp
+	dc.l Level_EHZ3,Level_EHZ3+$310	; level/layout/EHZ_3.kosp
 	endif
 	if defined(Level_EHZ4)
-	dc.l Level_EHZ4,Level_EHZ4+$1B8	; level/layout/EHZ_4.kosp
+	dc.l Level_EHZ4,Level_EHZ4+$310	; level/layout/EHZ_4.kosp
 	endif
 	if defined(Level_GHZ1)
-	dc.l Level_GHZ1,Level_GHZ1+$1A0	; level/layout/GHZ_1.kosp
+	dc.l Level_GHZ1,Level_GHZ1+$2F1	; level/layout/GHZ_1.kosp
 	endif
 	if defined(Level_GHZ2)
-	dc.l Level_GHZ2,Level_GHZ2+$1BA	; level/layout/GHZ_2.kosp
+	dc.l Level_GHZ2,Level_GHZ2+$2F7	; level/layout/GHZ_2.kosp
 	endif
 	if defined(Level_GHZ3)
-	dc.l Level_GHZ3,Level_GHZ3+$1EC	; level/layout/GHZ_3.kosp
+	dc.l Level_GHZ3,Level_GHZ3+$36F	; level/layout/GHZ_3.kosp
 	endif
 	if defined(Level_GHZ4)
-	dc.l Level_GHZ4,Level_GHZ4+$1FC	; level/layout/GHZ_4.kosp
+	dc.l Level_GHZ4,Level_GHZ4+$364	; level/layout/GHZ_4.kosp
 	endif
 	if defined(Level_HPZ1)
-	dc.l Level_HPZ1,Level_HPZ1+$2AE	; level/layout/HPZ_1.kosp
+	dc.l Level_HPZ1,Level_HPZ1+$44D	; level/layout/HPZ_1.kosp
 	endif
 	if defined(Level_HPZ2)
-	dc.l Level_HPZ2,Level_HPZ2+$298	; level/layout/HPZ_2.kosp
+	dc.l Level_HPZ2,Level_HPZ2+$43C	; level/layout/HPZ_2.kosp
 	endif
 	if defined(Level_HPZ3)
-	dc.l Level_HPZ3,Level_HPZ3+$298	; level/layout/HPZ_3.kosp
+	dc.l Level_HPZ3,Level_HPZ3+$43C	; level/layout/HPZ_3.kosp
 	endif
 	if defined(Level_HPZ4)
-	dc.l Level_HPZ4,Level_HPZ4+$298	; level/layout/HPZ_4.kosp
+	dc.l Level_HPZ4,Level_HPZ4+$43C	; level/layout/HPZ_4.kosp
 	endif
 	if defined(Level_HTZ1)
-	dc.l Level_HTZ1,Level_HTZ1+$278	; level/layout/HTZ_1.kosp
+	dc.l Level_HTZ1,Level_HTZ1+$421	; level/layout/HTZ_1.kosp
 	endif
 	if defined(Level_HTZ2)
-	dc.l Level_HTZ2,Level_HTZ2+$386	; level/layout/HTZ_2.kosp
+	dc.l Level_HTZ2,Level_HTZ2+$579	; level/layout/HTZ_2.kosp
 	endif
 	if defined(Level_HTZ3)
-	dc.l Level_HTZ3,Level_HTZ3+$386	; level/layout/HTZ_3.kosp
+	dc.l Level_HTZ3,Level_HTZ3+$579	; level/layout/HTZ_3.kosp
 	endif
 	if defined(Level_HTZ4)
-	dc.l Level_HTZ4,Level_HTZ4+$386	; level/layout/HTZ_4.kosp
+	dc.l Level_HTZ4,Level_HTZ4+$579	; level/layout/HTZ_4.kosp
 	endif
 	if defined(Level_LV071)
-	dc.l Level_LV071,Level_LV071+$40	; level/layout/LV07_1.kosp
+	dc.l Level_LV071,Level_LV071+$82	; level/layout/LV07_1.kosp
 	endif
 	if defined(Level_LV072)
-	dc.l Level_LV072,Level_LV072+$40	; level/layout/LV07_2.kosp
+	dc.l Level_LV072,Level_LV072+$82	; level/layout/LV07_2.kosp
 	endif
 	if defined(Level_LV073)
-	dc.l Level_LV073,Level_LV073+$40	; level/layout/LV07_3.kosp
+	dc.l Level_LV073,Level_LV073+$82	; level/layout/LV07_3.kosp
 	endif
 	if defined(Level_LV074)
-	dc.l Level_LV074,Level_LV074+$40	; level/layout/LV07_4.kosp
+	dc.l Level_LV074,Level_LV074+$82	; level/layout/LV07_4.kosp
 	endif
 	if defined(Level_LV091)
-	dc.l Level_LV091,Level_LV091+$40	; level/layout/LV09_1.kosp
+	dc.l Level_LV091,Level_LV091+$82	; level/layout/LV09_1.kosp
 	endif
 	if defined(Level_LV092)
-	dc.l Level_LV092,Level_LV092+$40	; level/layout/LV09_2.kosp
+	dc.l Level_LV092,Level_LV092+$82	; level/layout/LV09_2.kosp
 	endif
 	if defined(Level_LV093)
-	dc.l Level_LV093,Level_LV093+$40	; level/layout/LV09_3.kosp
+	dc.l Level_LV093,Level_LV093+$82	; level/layout/LV09_3.kosp
 	endif
 	if defined(Level_LV094)
-	dc.l Level_LV094,Level_LV094+$40	; level/layout/LV09_4.kosp
+	dc.l Level_LV094,Level_LV094+$82	; level/layout/LV09_4.kosp
 	endif
 	if defined(Level_LV0A1)
-	dc.l Level_LV0A1,Level_LV0A1+$40	; level/layout/LV0A_1.kosp
+	dc.l Level_LV0A1,Level_LV0A1+$82	; level/layout/LV0A_1.kosp
 	endif
 	if defined(Level_LV0A2)
-	dc.l Level_LV0A2,Level_LV0A2+$40	; level/layout/LV0A_2.kosp
+	dc.l Level_LV0A2,Level_LV0A2+$82	; level/layout/LV0A_2.kosp
 	endif
 	if defined(Level_LV0A3)
-	dc.l Level_LV0A3,Level_LV0A3+$40	; level/layout/LV0A_3.kosp
+	dc.l Level_LV0A3,Level_LV0A3+$82	; level/layout/LV0A_3.kosp
 	endif
 	if defined(Level_LV0A4)
-	dc.l Level_LV0A4,Level_LV0A4+$40	; level/layout/LV0A_4.kosp
+	dc.l Level_LV0A4,Level_LV0A4+$82	; level/layout/LV0A_4.kosp
 	endif
 	if defined(Level_LV0B1)
-	dc.l Level_LV0B1,Level_LV0B1+$40	; level/layout/LV0B_1.kosp
+	dc.l Level_LV0B1,Level_LV0B1+$82	; level/layout/LV0B_1.kosp
 	endif
 	if defined(Level_LV0B2)
-	dc.l Level_LV0B2,Level_LV0B2+$40	; level/layout/LV0B_2.kosp
+	dc.l Level_LV0B2,Level_LV0B2+$82	; level/layout/LV0B_2.kosp
 	endif
 	if defined(Level_LV0B3)
-	dc.l Level_LV0B3,Level_LV0B3+$40	; level/layout/LV0B_3.kosp
+	dc.l Level_LV0B3,Level_LV0B3+$82	; level/layout/LV0B_3.kosp
 	endif
 	if defined(Level_LV0B4)
-	dc.l Level_LV0B4,Level_LV0B4+$40	; level/layout/LV0B_4.kosp
+	dc.l Level_LV0B4,Level_LV0B4+$82	; level/layout/LV0B_4.kosp
 	endif
 	if defined(Level_LV0C1)
-	dc.l Level_LV0C1,Level_LV0C1+$40	; level/layout/LV0C_1.kosp
+	dc.l Level_LV0C1,Level_LV0C1+$82	; level/layout/LV0C_1.kosp
 	endif
 	if defined(Level_LV0C2)
-	dc.l Level_LV0C2,Level_LV0C2+$40	; level/layout/LV0C_2.kosp
+	dc.l Level_LV0C2,Level_LV0C2+$82	; level/layout/LV0C_2.kosp
 	endif
 	if defined(Level_LV0C3)
-	dc.l Level_LV0C3,Level_LV0C3+$40	; level/layout/LV0C_3.kosp
+	dc.l Level_LV0C3,Level_LV0C3+$82	; level/layout/LV0C_3.kosp
 	endif
 	if defined(Level_LV0C4)
-	dc.l Level_LV0C4,Level_LV0C4+$40	; level/layout/LV0C_4.kosp
+	dc.l Level_LV0C4,Level_LV0C4+$82	; level/layout/LV0C_4.kosp
 	endif
 	if defined(Level_LV0D1)
-	dc.l Level_LV0D1,Level_LV0D1+$40	; level/layout/LV0D_1.kosp
+	dc.l Level_LV0D1,Level_LV0D1+$82	; level/layout/LV0D_1.kosp
 	endif
 	if defined(Level_LV0D2)
-	dc.l Level_LV0D2,Level_LV0D2+$40	; level/layout/LV0D_2.kosp
+	dc.l Level_LV0D2,Level_LV0D2+$82	; level/layout/LV0D_2.kosp
 	endif
 	if defined(Level_LV0D3)
-	dc.l Level_LV0D3,Level_LV0D3+$40	; level/layout/LV0D_3.kosp
+	dc.l Level_LV0D3,Level_LV0D3+$82	; level/layout/LV0D_3.kosp
 	endif
 	if defined(Level_LV0D4)
-	dc.l Level_LV0D4,Level_LV0D4+$40	; level/layout/LV0D_4.kosp
+	dc.l Level_LV0D4,Level_LV0D4+$82	; level/layout/LV0D_4.kosp
 	endif
 	if defined(Level_LV0E1)
-	dc.l Level_LV0E1,Level_LV0E1+$40	; level/layout/LV0E_1.kosp
+	dc.l Level_LV0E1,Level_LV0E1+$82	; level/layout/LV0E_1.kosp
 	endif
 	if defined(Level_LV0E2)
-	dc.l Level_LV0E2,Level_LV0E2+$40	; level/layout/LV0E_2.kosp
+	dc.l Level_LV0E2,Level_LV0E2+$82	; level/layout/LV0E_2.kosp
 	endif
 	if defined(Level_LV0E3)
-	dc.l Level_LV0E3,Level_LV0E3+$40	; level/layout/LV0E_3.kosp
+	dc.l Level_LV0E3,Level_LV0E3+$82	; level/layout/LV0E_3.kosp
 	endif
 	if defined(Level_LV0E4)
-	dc.l Level_LV0E4,Level_LV0E4+$40	; level/layout/LV0E_4.kosp
+	dc.l Level_LV0E4,Level_LV0E4+$82	; level/layout/LV0E_4.kosp
 	endif
 	if defined(Level_LV0F1)
-	dc.l Level_LV0F1,Level_LV0F1+$40	; level/layout/LV0F_1.kosp
+	dc.l Level_LV0F1,Level_LV0F1+$82	; level/layout/LV0F_1.kosp
 	endif
 	if defined(Level_LV0F2)
-	dc.l Level_LV0F2,Level_LV0F2+$40	; level/layout/LV0F_2.kosp
+	dc.l Level_LV0F2,Level_LV0F2+$82	; level/layout/LV0F_2.kosp
 	endif
 	if defined(Level_LV0F3)
-	dc.l Level_LV0F3,Level_LV0F3+$40	; level/layout/LV0F_3.kosp
+	dc.l Level_LV0F3,Level_LV0F3+$82	; level/layout/LV0F_3.kosp
 	endif
 	if defined(Level_LV0F4)
-	dc.l Level_LV0F4,Level_LV0F4+$40	; level/layout/LV0F_4.kosp
+	dc.l Level_LV0F4,Level_LV0F4+$82	; level/layout/LV0F_4.kosp
 	endif
 	if defined(Level_LZ1)
-	dc.l Level_LZ1,Level_LZ1+$19A	; level/layout/LZ_1.kosp
+	dc.l Level_LZ1,Level_LZ1+$2B9	; level/layout/LZ_1.kosp
 	endif
 	if defined(Level_LZ2)
-	dc.l Level_LZ2,Level_LZ2+$148	; level/layout/LZ_2.kosp
+	dc.l Level_LZ2,Level_LZ2+$1FD	; level/layout/LZ_2.kosp
 	endif
 	if defined(Level_LZ3)
-	dc.l Level_LZ3,Level_LZ3+$22E	; level/layout/LZ_3.kosp
+	dc.l Level_LZ3,Level_LZ3+$3A1	; level/layout/LZ_3.kosp
 	endif
 	if defined(Level_LZ4)
-	dc.l Level_LZ4,Level_LZ4+$1C6	; level/layout/LZ_4.kosp
+	dc.l Level_LZ4,Level_LZ4+$2C5	; level/layout/LZ_4.kosp
 	endif
 	if defined(Level_MTZ1)
-	dc.l Level_MTZ1,Level_MTZ1+$86	; level/layout/MTZ_1.kosp
+	dc.l Level_MTZ1,Level_MTZ1+$F2	; level/layout/MTZ_1.kosp
 	endif
 	if defined(Level_MTZ2)
-	dc.l Level_MTZ2,Level_MTZ2+$40	; level/layout/MTZ_2.kosp
+	dc.l Level_MTZ2,Level_MTZ2+$82	; level/layout/MTZ_2.kosp
 	endif
 	if defined(Level_MTZ3)
-	dc.l Level_MTZ3,Level_MTZ3+$40	; level/layout/MTZ_3.kosp
+	dc.l Level_MTZ3,Level_MTZ3+$82	; level/layout/MTZ_3.kosp
 	endif
 	if defined(Level_MTZ4)
-	dc.l Level_MTZ4,Level_MTZ4+$40	; level/layout/MTZ_4.kosp
+	dc.l Level_MTZ4,Level_MTZ4+$82	; level/layout/MTZ_4.kosp
 	endif
 	if defined(Level_SMZ1)
-	dc.l Level_SMZ1,Level_SMZ1+$292	; level/layout/SMZ_1.kosp
+	dc.l Level_SMZ1,Level_SMZ1+$3C3	; level/layout/SMZ_1.kosp
 	endif
 	if defined(Level_SMZ2)
-	dc.l Level_SMZ2,Level_SMZ2+$29F	; level/layout/SMZ_2.kosp
+	dc.l Level_SMZ2,Level_SMZ2+$412	; level/layout/SMZ_2.kosp
 	endif
 	if defined(Level_SMZ3)
-	dc.l Level_SMZ3,Level_SMZ3+$40	; level/layout/SMZ_3.kosp
+	dc.l Level_SMZ3,Level_SMZ3+$82	; level/layout/SMZ_3.kosp
 	endif
 	if defined(Level_SMZ4)
-	dc.l Level_SMZ4,Level_SMZ4+$40	; level/layout/SMZ_4.kosp
+	dc.l Level_SMZ4,Level_SMZ4+$82	; level/layout/SMZ_4.kosp
 	endif
 	if defined(Map128_Blank)
 	dc.l Map128_Blank,Map128_Blank+$E	; mappings/128x128/Blank.kosp
@@ -1266,196 +1266,196 @@ MCD_CompressedAssets:
 	dc.l PKosp_MTZ,PKosp_MTZ+$2BBA	; art/kosinski/level/8x8 - MTZ.kosp
 	endif
 	if defined(PLevel_CPZ1)
-	dc.l PLevel_CPZ1,PLevel_CPZ1+$2E2	; level/layout/past/CPZ_1.kosp
+	dc.l PLevel_CPZ1,PLevel_CPZ1+$454	; level/layout/past/CPZ_1.kosp
 	endif
 	if defined(PLevel_CPZ2)
-	dc.l PLevel_CPZ2,PLevel_CPZ2+$2D0	; level/layout/past/CPZ_2.kosp
+	dc.l PLevel_CPZ2,PLevel_CPZ2+$454	; level/layout/past/CPZ_2.kosp
 	endif
 	if defined(PLevel_CPZ3)
-	dc.l PLevel_CPZ3,PLevel_CPZ3+$2D0	; level/layout/past/CPZ_3.kosp
+	dc.l PLevel_CPZ3,PLevel_CPZ3+$454	; level/layout/past/CPZ_3.kosp
 	endif
 	if defined(PLevel_CPZ4)
-	dc.l PLevel_CPZ4,PLevel_CPZ4+$2D0	; level/layout/past/CPZ_4.kosp
+	dc.l PLevel_CPZ4,PLevel_CPZ4+$454	; level/layout/past/CPZ_4.kosp
 	endif
 	if defined(PLevel_EHZ1)
-	dc.l PLevel_EHZ1,PLevel_EHZ1+$1AA	; level/layout/past/EHZ_1.kosp
+	dc.l PLevel_EHZ1,PLevel_EHZ1+$2F2	; level/layout/past/EHZ_1.kosp
 	endif
 	if defined(PLevel_EHZ2)
-	dc.l PLevel_EHZ2,PLevel_EHZ2+$1B8	; level/layout/past/EHZ_2.kosp
+	dc.l PLevel_EHZ2,PLevel_EHZ2+$310	; level/layout/past/EHZ_2.kosp
 	endif
 	if defined(PLevel_EHZ3)
-	dc.l PLevel_EHZ3,PLevel_EHZ3+$1B8	; level/layout/past/EHZ_3.kosp
+	dc.l PLevel_EHZ3,PLevel_EHZ3+$310	; level/layout/past/EHZ_3.kosp
 	endif
 	if defined(PLevel_EHZ4)
-	dc.l PLevel_EHZ4,PLevel_EHZ4+$1B8	; level/layout/past/EHZ_4.kosp
+	dc.l PLevel_EHZ4,PLevel_EHZ4+$310	; level/layout/past/EHZ_4.kosp
 	endif
 	if defined(PLevel_GHZ1)
-	dc.l PLevel_GHZ1,PLevel_GHZ1+$1A0	; level/layout/past/GHZ_1.kosp
+	dc.l PLevel_GHZ1,PLevel_GHZ1+$2F1	; level/layout/past/GHZ_1.kosp
 	endif
 	if defined(PLevel_GHZ2)
-	dc.l PLevel_GHZ2,PLevel_GHZ2+$1BA	; level/layout/past/GHZ_2.kosp
+	dc.l PLevel_GHZ2,PLevel_GHZ2+$2F7	; level/layout/past/GHZ_2.kosp
 	endif
 	if defined(PLevel_GHZ3)
-	dc.l PLevel_GHZ3,PLevel_GHZ3+$1DE	; level/layout/past/GHZ_3.kosp
+	dc.l PLevel_GHZ3,PLevel_GHZ3+$35E	; level/layout/past/GHZ_3.kosp
 	endif
 	if defined(PLevel_GHZ4)
-	dc.l PLevel_GHZ4,PLevel_GHZ4+$1FC	; level/layout/past/GHZ_4.kosp
+	dc.l PLevel_GHZ4,PLevel_GHZ4+$364	; level/layout/past/GHZ_4.kosp
 	endif
 	if defined(PLevel_HPZ1)
-	dc.l PLevel_HPZ1,PLevel_HPZ1+$2AE	; level/layout/past/HPZ_1.kosp
+	dc.l PLevel_HPZ1,PLevel_HPZ1+$44D	; level/layout/past/HPZ_1.kosp
 	endif
 	if defined(PLevel_HPZ2)
-	dc.l PLevel_HPZ2,PLevel_HPZ2+$298	; level/layout/past/HPZ_2.kosp
+	dc.l PLevel_HPZ2,PLevel_HPZ2+$43C	; level/layout/past/HPZ_2.kosp
 	endif
 	if defined(PLevel_HPZ3)
-	dc.l PLevel_HPZ3,PLevel_HPZ3+$298	; level/layout/past/HPZ_3.kosp
+	dc.l PLevel_HPZ3,PLevel_HPZ3+$43C	; level/layout/past/HPZ_3.kosp
 	endif
 	if defined(PLevel_HPZ4)
-	dc.l PLevel_HPZ4,PLevel_HPZ4+$298	; level/layout/past/HPZ_4.kosp
+	dc.l PLevel_HPZ4,PLevel_HPZ4+$43C	; level/layout/past/HPZ_4.kosp
 	endif
 	if defined(PLevel_HTZ1)
-	dc.l PLevel_HTZ1,PLevel_HTZ1+$278	; level/layout/past/HTZ_1.kosp
+	dc.l PLevel_HTZ1,PLevel_HTZ1+$421	; level/layout/past/HTZ_1.kosp
 	endif
 	if defined(PLevel_HTZ2)
-	dc.l PLevel_HTZ2,PLevel_HTZ2+$386	; level/layout/past/HTZ_2.kosp
+	dc.l PLevel_HTZ2,PLevel_HTZ2+$579	; level/layout/past/HTZ_2.kosp
 	endif
 	if defined(PLevel_HTZ3)
-	dc.l PLevel_HTZ3,PLevel_HTZ3+$386	; level/layout/past/HTZ_3.kosp
+	dc.l PLevel_HTZ3,PLevel_HTZ3+$579	; level/layout/past/HTZ_3.kosp
 	endif
 	if defined(PLevel_HTZ4)
-	dc.l PLevel_HTZ4,PLevel_HTZ4+$386	; level/layout/past/HTZ_4.kosp
+	dc.l PLevel_HTZ4,PLevel_HTZ4+$579	; level/layout/past/HTZ_4.kosp
 	endif
 	if defined(PLevel_LV071)
-	dc.l PLevel_LV071,PLevel_LV071+$40	; level/layout/past/LV07_1.kosp
+	dc.l PLevel_LV071,PLevel_LV071+$82	; level/layout/past/LV07_1.kosp
 	endif
 	if defined(PLevel_LV072)
-	dc.l PLevel_LV072,PLevel_LV072+$40	; level/layout/past/LV07_2.kosp
+	dc.l PLevel_LV072,PLevel_LV072+$82	; level/layout/past/LV07_2.kosp
 	endif
 	if defined(PLevel_LV073)
-	dc.l PLevel_LV073,PLevel_LV073+$40	; level/layout/past/LV07_3.kosp
+	dc.l PLevel_LV073,PLevel_LV073+$82	; level/layout/past/LV07_3.kosp
 	endif
 	if defined(PLevel_LV074)
-	dc.l PLevel_LV074,PLevel_LV074+$40	; level/layout/past/LV07_4.kosp
+	dc.l PLevel_LV074,PLevel_LV074+$82	; level/layout/past/LV07_4.kosp
 	endif
 	if defined(PLevel_LV091)
-	dc.l PLevel_LV091,PLevel_LV091+$40	; level/layout/past/LV09_1.kosp
+	dc.l PLevel_LV091,PLevel_LV091+$82	; level/layout/past/LV09_1.kosp
 	endif
 	if defined(PLevel_LV092)
-	dc.l PLevel_LV092,PLevel_LV092+$40	; level/layout/past/LV09_2.kosp
+	dc.l PLevel_LV092,PLevel_LV092+$82	; level/layout/past/LV09_2.kosp
 	endif
 	if defined(PLevel_LV093)
-	dc.l PLevel_LV093,PLevel_LV093+$40	; level/layout/past/LV09_3.kosp
+	dc.l PLevel_LV093,PLevel_LV093+$82	; level/layout/past/LV09_3.kosp
 	endif
 	if defined(PLevel_LV094)
-	dc.l PLevel_LV094,PLevel_LV094+$40	; level/layout/past/LV09_4.kosp
+	dc.l PLevel_LV094,PLevel_LV094+$82	; level/layout/past/LV09_4.kosp
 	endif
 	if defined(PLevel_LV0A1)
-	dc.l PLevel_LV0A1,PLevel_LV0A1+$40	; level/layout/past/LV0A_1.kosp
+	dc.l PLevel_LV0A1,PLevel_LV0A1+$82	; level/layout/past/LV0A_1.kosp
 	endif
 	if defined(PLevel_LV0A2)
-	dc.l PLevel_LV0A2,PLevel_LV0A2+$40	; level/layout/past/LV0A_2.kosp
+	dc.l PLevel_LV0A2,PLevel_LV0A2+$82	; level/layout/past/LV0A_2.kosp
 	endif
 	if defined(PLevel_LV0A3)
-	dc.l PLevel_LV0A3,PLevel_LV0A3+$40	; level/layout/past/LV0A_3.kosp
+	dc.l PLevel_LV0A3,PLevel_LV0A3+$82	; level/layout/past/LV0A_3.kosp
 	endif
 	if defined(PLevel_LV0A4)
-	dc.l PLevel_LV0A4,PLevel_LV0A4+$40	; level/layout/past/LV0A_4.kosp
+	dc.l PLevel_LV0A4,PLevel_LV0A4+$82	; level/layout/past/LV0A_4.kosp
 	endif
 	if defined(PLevel_LV0B1)
-	dc.l PLevel_LV0B1,PLevel_LV0B1+$40	; level/layout/past/LV0B_1.kosp
+	dc.l PLevel_LV0B1,PLevel_LV0B1+$82	; level/layout/past/LV0B_1.kosp
 	endif
 	if defined(PLevel_LV0B2)
-	dc.l PLevel_LV0B2,PLevel_LV0B2+$40	; level/layout/past/LV0B_2.kosp
+	dc.l PLevel_LV0B2,PLevel_LV0B2+$82	; level/layout/past/LV0B_2.kosp
 	endif
 	if defined(PLevel_LV0B3)
-	dc.l PLevel_LV0B3,PLevel_LV0B3+$40	; level/layout/past/LV0B_3.kosp
+	dc.l PLevel_LV0B3,PLevel_LV0B3+$82	; level/layout/past/LV0B_3.kosp
 	endif
 	if defined(PLevel_LV0B4)
-	dc.l PLevel_LV0B4,PLevel_LV0B4+$40	; level/layout/past/LV0B_4.kosp
+	dc.l PLevel_LV0B4,PLevel_LV0B4+$82	; level/layout/past/LV0B_4.kosp
 	endif
 	if defined(PLevel_LV0C1)
-	dc.l PLevel_LV0C1,PLevel_LV0C1+$40	; level/layout/past/LV0C_1.kosp
+	dc.l PLevel_LV0C1,PLevel_LV0C1+$82	; level/layout/past/LV0C_1.kosp
 	endif
 	if defined(PLevel_LV0C2)
-	dc.l PLevel_LV0C2,PLevel_LV0C2+$40	; level/layout/past/LV0C_2.kosp
+	dc.l PLevel_LV0C2,PLevel_LV0C2+$82	; level/layout/past/LV0C_2.kosp
 	endif
 	if defined(PLevel_LV0C3)
-	dc.l PLevel_LV0C3,PLevel_LV0C3+$40	; level/layout/past/LV0C_3.kosp
+	dc.l PLevel_LV0C3,PLevel_LV0C3+$82	; level/layout/past/LV0C_3.kosp
 	endif
 	if defined(PLevel_LV0C4)
-	dc.l PLevel_LV0C4,PLevel_LV0C4+$40	; level/layout/past/LV0C_4.kosp
+	dc.l PLevel_LV0C4,PLevel_LV0C4+$82	; level/layout/past/LV0C_4.kosp
 	endif
 	if defined(PLevel_LV0D1)
-	dc.l PLevel_LV0D1,PLevel_LV0D1+$40	; level/layout/past/LV0D_1.kosp
+	dc.l PLevel_LV0D1,PLevel_LV0D1+$82	; level/layout/past/LV0D_1.kosp
 	endif
 	if defined(PLevel_LV0D2)
-	dc.l PLevel_LV0D2,PLevel_LV0D2+$40	; level/layout/past/LV0D_2.kosp
+	dc.l PLevel_LV0D2,PLevel_LV0D2+$82	; level/layout/past/LV0D_2.kosp
 	endif
 	if defined(PLevel_LV0D3)
-	dc.l PLevel_LV0D3,PLevel_LV0D3+$40	; level/layout/past/LV0D_3.kosp
+	dc.l PLevel_LV0D3,PLevel_LV0D3+$82	; level/layout/past/LV0D_3.kosp
 	endif
 	if defined(PLevel_LV0D4)
-	dc.l PLevel_LV0D4,PLevel_LV0D4+$40	; level/layout/past/LV0D_4.kosp
+	dc.l PLevel_LV0D4,PLevel_LV0D4+$82	; level/layout/past/LV0D_4.kosp
 	endif
 	if defined(PLevel_LV0E1)
-	dc.l PLevel_LV0E1,PLevel_LV0E1+$40	; level/layout/past/LV0E_1.kosp
+	dc.l PLevel_LV0E1,PLevel_LV0E1+$82	; level/layout/past/LV0E_1.kosp
 	endif
 	if defined(PLevel_LV0E2)
-	dc.l PLevel_LV0E2,PLevel_LV0E2+$40	; level/layout/past/LV0E_2.kosp
+	dc.l PLevel_LV0E2,PLevel_LV0E2+$82	; level/layout/past/LV0E_2.kosp
 	endif
 	if defined(PLevel_LV0E3)
-	dc.l PLevel_LV0E3,PLevel_LV0E3+$40	; level/layout/past/LV0E_3.kosp
+	dc.l PLevel_LV0E3,PLevel_LV0E3+$82	; level/layout/past/LV0E_3.kosp
 	endif
 	if defined(PLevel_LV0E4)
-	dc.l PLevel_LV0E4,PLevel_LV0E4+$40	; level/layout/past/LV0E_4.kosp
+	dc.l PLevel_LV0E4,PLevel_LV0E4+$82	; level/layout/past/LV0E_4.kosp
 	endif
 	if defined(PLevel_LV0F1)
-	dc.l PLevel_LV0F1,PLevel_LV0F1+$40	; level/layout/past/LV0F_1.kosp
+	dc.l PLevel_LV0F1,PLevel_LV0F1+$82	; level/layout/past/LV0F_1.kosp
 	endif
 	if defined(PLevel_LV0F2)
-	dc.l PLevel_LV0F2,PLevel_LV0F2+$40	; level/layout/past/LV0F_2.kosp
+	dc.l PLevel_LV0F2,PLevel_LV0F2+$82	; level/layout/past/LV0F_2.kosp
 	endif
 	if defined(PLevel_LV0F3)
-	dc.l PLevel_LV0F3,PLevel_LV0F3+$40	; level/layout/past/LV0F_3.kosp
+	dc.l PLevel_LV0F3,PLevel_LV0F3+$82	; level/layout/past/LV0F_3.kosp
 	endif
 	if defined(PLevel_LV0F4)
-	dc.l PLevel_LV0F4,PLevel_LV0F4+$40	; level/layout/past/LV0F_4.kosp
+	dc.l PLevel_LV0F4,PLevel_LV0F4+$82	; level/layout/past/LV0F_4.kosp
 	endif
 	if defined(PLevel_LZ1)
-	dc.l PLevel_LZ1,PLevel_LZ1+$19A	; level/layout/past/LZ_1.kosp
+	dc.l PLevel_LZ1,PLevel_LZ1+$2B9	; level/layout/past/LZ_1.kosp
 	endif
 	if defined(PLevel_LZ2)
-	dc.l PLevel_LZ2,PLevel_LZ2+$148	; level/layout/past/LZ_2.kosp
+	dc.l PLevel_LZ2,PLevel_LZ2+$1FD	; level/layout/past/LZ_2.kosp
 	endif
 	if defined(PLevel_LZ3)
-	dc.l PLevel_LZ3,PLevel_LZ3+$22E	; level/layout/past/LZ_3.kosp
+	dc.l PLevel_LZ3,PLevel_LZ3+$3A1	; level/layout/past/LZ_3.kosp
 	endif
 	if defined(PLevel_LZ4)
-	dc.l PLevel_LZ4,PLevel_LZ4+$1C6	; level/layout/past/LZ_4.kosp
+	dc.l PLevel_LZ4,PLevel_LZ4+$2C5	; level/layout/past/LZ_4.kosp
 	endif
 	if defined(PLevel_MTZ1)
-	dc.l PLevel_MTZ1,PLevel_MTZ1+$86	; level/layout/past/MTZ_1.kosp
+	dc.l PLevel_MTZ1,PLevel_MTZ1+$F2	; level/layout/past/MTZ_1.kosp
 	endif
 	if defined(PLevel_MTZ2)
-	dc.l PLevel_MTZ2,PLevel_MTZ2+$40	; level/layout/past/MTZ_2.kosp
+	dc.l PLevel_MTZ2,PLevel_MTZ2+$82	; level/layout/past/MTZ_2.kosp
 	endif
 	if defined(PLevel_MTZ3)
-	dc.l PLevel_MTZ3,PLevel_MTZ3+$40	; level/layout/past/MTZ_3.kosp
+	dc.l PLevel_MTZ3,PLevel_MTZ3+$82	; level/layout/past/MTZ_3.kosp
 	endif
 	if defined(PLevel_MTZ4)
-	dc.l PLevel_MTZ4,PLevel_MTZ4+$40	; level/layout/past/MTZ_4.kosp
+	dc.l PLevel_MTZ4,PLevel_MTZ4+$82	; level/layout/past/MTZ_4.kosp
 	endif
 	if defined(PLevel_SMZ1)
-	dc.l PLevel_SMZ1,PLevel_SMZ1+$292	; level/layout/past/SMZ_1.kosp
+	dc.l PLevel_SMZ1,PLevel_SMZ1+$3C3	; level/layout/past/SMZ_1.kosp
 	endif
 	if defined(PLevel_SMZ2)
-	dc.l PLevel_SMZ2,PLevel_SMZ2+$29F	; level/layout/past/SMZ_2.kosp
+	dc.l PLevel_SMZ2,PLevel_SMZ2+$412	; level/layout/past/SMZ_2.kosp
 	endif
 	if defined(PLevel_SMZ3)
-	dc.l PLevel_SMZ3,PLevel_SMZ3+$40	; level/layout/past/SMZ_3.kosp
+	dc.l PLevel_SMZ3,PLevel_SMZ3+$82	; level/layout/past/SMZ_3.kosp
 	endif
 	if defined(PLevel_SMZ4)
-	dc.l PLevel_SMZ4,PLevel_SMZ4+$40	; level/layout/past/SMZ_4.kosp
+	dc.l PLevel_SMZ4,PLevel_SMZ4+$82	; level/layout/past/SMZ_4.kosp
 	endif
 	if defined(PMap128_CPZ)
 	dc.l PMap128_CPZ,PMap128_CPZ+$17FA	; mappings/128x128/CPZ.kosp

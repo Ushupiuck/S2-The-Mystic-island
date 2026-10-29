@@ -78,6 +78,10 @@ def classic_kosinski(data):
 
 
 def pack(path, raw):
+    if str(path).startswith("level/layout/"):
+        from level_layout import from_s2, save
+        save(ROOT/path, *from_s2(raw))
+        return
     packed = bytes(kosinski_plus(raw))
     assert kosinski_plus_decode(packed)[0] == raw
     (ROOT/path).parent.mkdir(parents=True, exist_ok=True)

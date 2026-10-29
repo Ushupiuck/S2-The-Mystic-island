@@ -134,6 +134,68 @@ The initial full palette and fade destination select the same descriptor.
 Dry GHZ acts borrow water-surface VRAM for their smashable walls; relocate that
 art before enabling their water, as described below.
 
+## Mode 1 plane engine
+
+Mode 1 uses independent foreground/background rectangles on the existing
+128-pixel chunk grid. Each plane can be 1..256 chunks wide and 1..32 high;
+the combined decoded file must fit 32 KiB. Chunk IDs are unsigned words,
+with 1,024 physical chunks available in CD PRG RAM. Blocks remain a mutable
+6-KiB RAM table; neither the renderer nor collision reads block definitions
+from ROM during gameplay. Live block edits therefore retain their existing
+storage and editing advantages.
+
+`_inc/Level Plane Events.asm` contains one explicit six-long record per act:
+FG initialization, BG initialization, FG event, BG event, CD FG source provider,
+and CD BG source provider. Edit that act's record to select its behavior.
+Camera/deformation events execute on MD; drawing providers execute on CD.
+GHZ and SMZ1 retain their banded backgrounds, including GHZ's split hill/water
+row (scrolling upper eight pixels, fixed lower eight). Other acts can independently
+select or add providers. Art/blocks/chunks still use the ordinary per-act
+headers. Shared/act-exclusive art banks and smooth act transitions are separate
+resource choices, not prerequisites for this engine.
+
+`level/layout/**/*.kosp` is the authoritative editable Mode 1 layout set,
+including all four eras. SonLVL's `Common/LevelLayout.cs` reads and saves the
+same format and supports resizing FG and BG independently. Saving generates
+relative lookup offsets; it never embeds RAM addresses. The Python codec is
+`build_tools/level_layout.py`, and the normal Lua build validates every file
+before assembly. Each compressed archive is followed by `even`, keeping
+subsequent word tables aligned. Foreground cells outside the authored rectangle select empty
+chunk 0; background cells repeat using precomputed row/column tables, including
+non-power-of-two dimensions. Runtime coordinates wrap at 256 by 32 chunks.
+
+Old repeated strips and outer padding have been reduced to one complete
+background span: GHZ is 64x2 chunks, CPZ 6x6, EHZ 4x2, and HPZ 8x9.
+Unique HTZ background cells, including its distant draft arrangements, are
+retained. `python build_tools/compact_level_backgrounds.py` reports further
+reductions; add `--write` only when deliberately removing old workaround copies
+and padding. Normal builds and SonLVL saves preserve authored dimensions and
+empty margins. The SMZ importer retains its already compact backgrounds.
+
+Decoded format, all words big-endian:
+
+| Offset | Contents |
+| --- | --- |
+| `$0000` | Magic `$504C` (`PL`), version 2 |
+| `$0004` | FG width/height, BG width/height, four words |
+| `$000C` | FG lookup record: 32 row offsets, 256 column offsets |
+| `$024C` | BG lookup record, same structure |
+| `$048C` | Word chunk cells; FG rows include one empty column and a final empty row |
+
+Offsets are relative to their own plane record. Row plus column lookup directly
+addresses a cell; loading requires no relocation, multiplication or in-game
+validation. External validation checks dimensions, capacity, IDs and every
+precomputed offset. Layout scripts use `Layout_Read`/`Layout_Write` with
+`d0.w = row<<8 | column`; reads return `d0.w`, writes take a word ID in `d1.w`.
+After changing visible terrain, set `Screen_redraw_flag` to rebuild both planes.
+CD drawing tracks rounded source positions per physical 16-pixel row, producing
+only newly exposed rows/columns in Word RAM. A stationary scene emits no terrain
+records. VBlank consumes the completed records; it does not construct terrain.
+
+The cartridge backend is paused at its former byte layout format. Its frozen
+inputs live in `md-only/layout/`; editing a Mode 1 layout does not update them.
+The current migration and validation target Mode 1 only.
+
 ## Terrain and tile animation
 
 All ordinary levels share one 256-entry height/width/angle bank in
@@ -349,12 +411,13 @@ four constituent cells, including at an odd starting cell on either axis;
 individual 128-pixel placements can replace any quadrant. Saving bakes a uniform
 128-pixel runtime layout while retaining reusable editor-side 256-pixel definitions.
 
-Runtime chunk IDs become words (`$0000-$FFFF` theoretical range), the old looping
-flag disappears, and two collision paths are required. The current engine already
-has two collision paths; the new format must preserve them. Custom SonLVL format
-support is needed; whether a fork is required remains undecided.
+Mode 1 already uses word chunk IDs, custom SonLVL layout support and two
+collision paths. Mixed-size editor stamping is the remaining future feature;
+the runtime still draws uniform 128-pixel chunks. The theoretical word-ID range
+is not a promise that all 65,536 chunks fit RAM.
 
 Mode 1 has already expanded physical chunk storage to 128 KiB, first after
 the BIOS area. That fits 1,024 distinct 128-pixel chunks, equivalent to 256 complete
 256-pixel definitions without reuse; 16-bit IDs do not mean all 65,536 chunks fit.
-Only the first 32 KiB is used by the current format. See [Mega-CD](Mega-CD.md).
+The plane engine addresses all 128 KiB on CD. Scene overlays retain their
+separate 32-KiB view. See [Mega-CD](Mega-CD.md).

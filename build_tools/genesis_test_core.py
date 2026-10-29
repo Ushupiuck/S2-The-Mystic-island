@@ -138,6 +138,19 @@ class Genesis:
                      'chunks': ('Chunk_Table', 'MCD_ChunkTable_SubStart')}[table]
         return 0x420000 + self.s[sub] if sub in self.s else self.s[main]
 
+    def layout_cell(self, row, column, value=None, background=False):
+        """Read/edit an authored cell in the live layout, with word IDs in Mode 1."""
+        base = self.terrain_address('layout')
+        if self.s['MegaCDMode1'] and 'PlaneLayout_FG' in self.s:
+            table = base + self.s['PlaneLayout_BG' if background else 'PlaneLayout_FG']
+            address = table + self.read(table+row*2,2) + self.read(table+64+column*2,2)
+            size = 2
+        else:
+            address, size = base+row*256+column+(128 if background else 0), 1
+        if value is not None:
+            self.write(address,value,size)
+        return self.read(address,size)
+
     def read(self, name, size=1):
         memory, address = self.memory(name)
         return int.from_bytes(bytes(memory[(address+i)^1] for i in range(size)), 'big')

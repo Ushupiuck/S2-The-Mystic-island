@@ -271,8 +271,8 @@ MCD_TerrainRequest:
 		jcs	MCD_Unavailable
 		rts
 
-; Level-script layout access. d0.w offset, d1.b new value for a write.
-; d0.w returns the byte; d2-d3 are scratch, matching the mailbox service.
+; Level-script layout access. d0.w = chunk row<<8 | column, d1.w = new ID.
+; d0.w returns the word ID; d2-d3 are scratch, matching the mailbox service.
 Layout_Read:
 MCD_ReadLayout:
 		move.w	sr,-(sp)
@@ -317,11 +317,6 @@ MCD_BeginTerrainJob:
 		jsr	(MCD_PreparePLCBudget).l
 		move.l	(sp)+,d0
 		or.b	(MCD_PLCBudget).l,d0
-		or.l	(Scroll_flags).w,d0
-		or.l	(Scroll_flags_BG2).w,d0
-		or.b	(Screen_redraw_flag).w,d0
-		tst.l	d0			; scroll flags occupy high bytes of their words
-		beq.s	.return
 		move.w	sr,-(sp)
 		disable_ints
 		bsr.w	MCD_PrepareTerrainFrame
@@ -344,6 +339,13 @@ MCD_PrepareTerrainFrame:
 		move.w	(Current_ZoneAndAct).w,(a0)+
 		move.b	(Screen_redraw_flag).w,(a0)+
 		clr.b	(a0)+			; keep the frame header longword-aligned
+		move.w	(v_bgscrposy_vdp).w,(a0)+
+		clr.w	(a0)+
+		move.l	a0,-(sp)
+		jsr	(GetLevelPlaneRecord).l
+		movea.l	(sp)+,a0
+		move.l	16(a2),(a0)+
+		move.l	20(a2),(a0)+
 		jsr	(MCD_PrepareObjectFrame).l
 		jsr	(MCD_PreparePLCBudget).l
 		clr.l	(Scroll_flags).w

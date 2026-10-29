@@ -208,6 +208,33 @@ angles use the explicitly supplied tolerance and must preserve odd-marker
 semantics. CD calls execute the real sub-CPU executor through the native
 fixture; full hardware scheduling remains the libretro check's responsibility.
 
+The Mode 1 plane engine has a dedicated native audit:
+
+```sh
+python build_tools/check_plane_engine.py --rom s2built.bin --listing md-main.lst --output test-results/planes/report.json
+```
+
+It executes all 256 real act/era layout selections and 64 plane-record selections,
+checks compressed source spans against the built ROM and checks the selected
+chunk banks. The assembled CD constructor is compared with an independent
+world-coordinate tile oracle, covering unequal/non-power-of-two planes, word
+IDs across the entire PRG chunk allocation, all block flips/attributes, row and
+column reversals, large camera jumps, fixed 512-pixel bands, blank FG borders,
+cache reuse and live block/layout edits. Collision's lookup is checked separately.
+`--legacy-equivalence` additionally compares the foreground and one complete background
+span with the frozen cartridge files; use it for migration evidence, not after
+intentional Mode 1 layout edits. Repeated background copies and outer empty
+padding are intentionally excluded. Normal builds independently run the Lua file/offset validator.
+The SonLVL checker round-trips real layout bytes and probes unequal dimensions
+and IDs 768/1023 through the released editor API. `check_plane_streaming.py` checks live visible FG/BG tile words across all eight
+authored terrain sets during horizontal/vertical camera excursions, including
+GHZ's split hill/water row. `--legacy-visible` uses the old padded layout as
+the visible-cell oracle when checking background compaction. It takes the same ROM/listing/core/system-directory/
+output options as the SMZ runner. The focused SMZ sweeps check exact parallax
+rates, both acts, pause and PAL timing. Native tests do not model those buses.
+The plane migration has been checked on Linux/Mono; a native Windows build in a
+path containing spaces remains an environment-dependent compatibility check.
+
 `check_ram_ranges.py` checks the packed RAM boundaries and palette aliases, then
 assembles the real `clearRAM` macro and executes 38 cases in Unicorn: both
 addressing forms, odd starts, one-to-nine-byte tails and whole-RAM clears.

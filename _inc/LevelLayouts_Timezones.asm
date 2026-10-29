@@ -68,71 +68,455 @@ Level_Index_Past:
 		dc.w PLevel_LV0F3-Level_Index_Past
 		dc.w PLevel_LV0F4-Level_Index_Past
 
-PLevel_GHZ1:	binclude	"level/layout/past/GHZ_1.kosp"
-PLevel_GHZ2:	binclude	"level/layout/past/GHZ_2.kosp"
-PLevel_GHZ3:	binclude	"level/layout/past/GHZ_3.kosp"
-PLevel_GHZ4:	binclude	"level/layout/past/GHZ_4.kosp"
-PLevel_LZ1:	binclude	"level/layout/past/LZ_1.kosp"
-PLevel_LZ2:	binclude	"level/layout/past/LZ_2.kosp"
-PLevel_LZ3:	binclude	"level/layout/past/LZ_3.kosp"
-PLevel_LZ4:	binclude	"level/layout/past/LZ_4.kosp"
-PLevel_CPZ1:	binclude	"level/layout/past/CPZ_1.kosp"
-PLevel_CPZ2:	binclude	"level/layout/past/CPZ_2.kosp"
-PLevel_CPZ3:	binclude	"level/layout/past/CPZ_3.kosp"
-PLevel_CPZ4:	binclude	"level/layout/past/CPZ_4.kosp"
-PLevel_EHZ1:	binclude	"level/layout/past/EHZ_1.kosp"
-PLevel_EHZ2:	binclude	"level/layout/past/EHZ_2.kosp"
-PLevel_EHZ3:	binclude	"level/layout/past/EHZ_3.kosp"
-PLevel_EHZ4:	binclude	"level/layout/past/EHZ_4.kosp"
-PLevel_HPZ1:	binclude	"level/layout/past/HPZ_1.kosp"
-PLevel_HPZ2:	binclude	"level/layout/past/HPZ_2.kosp"
-PLevel_HPZ3:	binclude	"level/layout/past/HPZ_3.kosp"
-PLevel_HPZ4:	binclude	"level/layout/past/HPZ_4.kosp"
-PLevel_HTZ1:	binclude	"level/layout/past/HTZ_1.kosp"
-PLevel_HTZ2:	binclude	"level/layout/past/HTZ_2.kosp"
-PLevel_HTZ3:	binclude	"level/layout/past/HTZ_3.kosp"
-PLevel_HTZ4:	binclude	"level/layout/past/HTZ_4.kosp"
-PLevel_MTZ1:	binclude	"level/layout/past/MTZ_1.kosp"
-PLevel_MTZ2:	binclude	"level/layout/past/MTZ_2.kosp"
-PLevel_MTZ3:	binclude	"level/layout/past/MTZ_3.kosp"
-PLevel_MTZ4:	binclude	"level/layout/past/MTZ_4.kosp"
+PLevel_GHZ1:
+ if MegaCDMode1
+		binclude "level/layout/past/GHZ_1.kosp"
+ else
+		binclude "md-only/layout/past/GHZ_1.kosp"
+ endif
+		even
+PLevel_GHZ2:
+ if MegaCDMode1
+		binclude "level/layout/past/GHZ_2.kosp"
+ else
+		binclude "md-only/layout/past/GHZ_2.kosp"
+ endif
+		even
+PLevel_GHZ3:
+ if MegaCDMode1
+		binclude "level/layout/past/GHZ_3.kosp"
+ else
+		binclude "md-only/layout/past/GHZ_3.kosp"
+ endif
+		even
+PLevel_GHZ4:
+ if MegaCDMode1
+		binclude "level/layout/past/GHZ_4.kosp"
+ else
+		binclude "md-only/layout/past/GHZ_4.kosp"
+ endif
+		even
+PLevel_LZ1:
+ if MegaCDMode1
+		binclude "level/layout/past/LZ_1.kosp"
+ else
+		binclude "md-only/layout/past/LZ_1.kosp"
+ endif
+		even
+PLevel_LZ2:
+ if MegaCDMode1
+		binclude "level/layout/past/LZ_2.kosp"
+ else
+		binclude "md-only/layout/past/LZ_2.kosp"
+ endif
+		even
+PLevel_LZ3:
+ if MegaCDMode1
+		binclude "level/layout/past/LZ_3.kosp"
+ else
+		binclude "md-only/layout/past/LZ_3.kosp"
+ endif
+		even
+PLevel_LZ4:
+ if MegaCDMode1
+		binclude "level/layout/past/LZ_4.kosp"
+ else
+		binclude "md-only/layout/past/LZ_4.kosp"
+ endif
+		even
+PLevel_CPZ1:
+ if MegaCDMode1
+		binclude "level/layout/past/CPZ_1.kosp"
+ else
+		binclude "md-only/layout/past/CPZ_1.kosp"
+ endif
+		even
+PLevel_CPZ2:
+ if MegaCDMode1
+		binclude "level/layout/past/CPZ_2.kosp"
+ else
+		binclude "md-only/layout/past/CPZ_2.kosp"
+ endif
+		even
+PLevel_CPZ3:
+ if MegaCDMode1
+		binclude "level/layout/past/CPZ_3.kosp"
+ else
+		binclude "md-only/layout/past/CPZ_3.kosp"
+ endif
+		even
+PLevel_CPZ4:
+ if MegaCDMode1
+		binclude "level/layout/past/CPZ_4.kosp"
+ else
+		binclude "md-only/layout/past/CPZ_4.kosp"
+ endif
+		even
+PLevel_EHZ1:
+ if MegaCDMode1
+		binclude "level/layout/past/EHZ_1.kosp"
+ else
+		binclude "md-only/layout/past/EHZ_1.kosp"
+ endif
+		even
+PLevel_EHZ2:
+ if MegaCDMode1
+		binclude "level/layout/past/EHZ_2.kosp"
+ else
+		binclude "md-only/layout/past/EHZ_2.kosp"
+ endif
+		even
+PLevel_EHZ3:
+ if MegaCDMode1
+		binclude "level/layout/past/EHZ_3.kosp"
+ else
+		binclude "md-only/layout/past/EHZ_3.kosp"
+ endif
+		even
+PLevel_EHZ4:
+ if MegaCDMode1
+		binclude "level/layout/past/EHZ_4.kosp"
+ else
+		binclude "md-only/layout/past/EHZ_4.kosp"
+ endif
+		even
+PLevel_HPZ1:
+ if MegaCDMode1
+		binclude "level/layout/past/HPZ_1.kosp"
+ else
+		binclude "md-only/layout/past/HPZ_1.kosp"
+ endif
+		even
+PLevel_HPZ2:
+ if MegaCDMode1
+		binclude "level/layout/past/HPZ_2.kosp"
+ else
+		binclude "md-only/layout/past/HPZ_2.kosp"
+ endif
+		even
+PLevel_HPZ3:
+ if MegaCDMode1
+		binclude "level/layout/past/HPZ_3.kosp"
+ else
+		binclude "md-only/layout/past/HPZ_3.kosp"
+ endif
+		even
+PLevel_HPZ4:
+ if MegaCDMode1
+		binclude "level/layout/past/HPZ_4.kosp"
+ else
+		binclude "md-only/layout/past/HPZ_4.kosp"
+ endif
+		even
+PLevel_HTZ1:
+ if MegaCDMode1
+		binclude "level/layout/past/HTZ_1.kosp"
+ else
+		binclude "md-only/layout/past/HTZ_1.kosp"
+ endif
+		even
+PLevel_HTZ2:
+ if MegaCDMode1
+		binclude "level/layout/past/HTZ_2.kosp"
+ else
+		binclude "md-only/layout/past/HTZ_2.kosp"
+ endif
+		even
+PLevel_HTZ3:
+ if MegaCDMode1
+		binclude "level/layout/past/HTZ_3.kosp"
+ else
+		binclude "md-only/layout/past/HTZ_3.kosp"
+ endif
+		even
+PLevel_HTZ4:
+ if MegaCDMode1
+		binclude "level/layout/past/HTZ_4.kosp"
+ else
+		binclude "md-only/layout/past/HTZ_4.kosp"
+ endif
+		even
+PLevel_MTZ1:
+ if MegaCDMode1
+		binclude "level/layout/past/MTZ_1.kosp"
+ else
+		binclude "md-only/layout/past/MTZ_1.kosp"
+ endif
+		even
+PLevel_MTZ2:
+ if MegaCDMode1
+		binclude "level/layout/past/MTZ_2.kosp"
+ else
+		binclude "md-only/layout/past/MTZ_2.kosp"
+ endif
+		even
+PLevel_MTZ3:
+ if MegaCDMode1
+		binclude "level/layout/past/MTZ_3.kosp"
+ else
+		binclude "md-only/layout/past/MTZ_3.kosp"
+ endif
+		even
+PLevel_MTZ4:
+ if MegaCDMode1
+		binclude "level/layout/past/MTZ_4.kosp"
+ else
+		binclude "md-only/layout/past/MTZ_4.kosp"
+ endif
+		even
 
-PLevel_LV071: binclude "level/layout/past/LV07_1.kosp"
-PLevel_LV072: binclude "level/layout/past/LV07_2.kosp"
-PLevel_LV073: binclude "level/layout/past/LV07_3.kosp"
-PLevel_LV074: binclude "level/layout/past/LV07_4.kosp"
-PLevel_SMZ1: binclude "level/layout/past/SMZ_1.kosp"
-PLevel_SMZ2: binclude "level/layout/past/SMZ_2.kosp"
-PLevel_SMZ3: binclude "level/layout/past/SMZ_3.kosp"
-PLevel_SMZ4: binclude "level/layout/past/SMZ_4.kosp"
-PLevel_LV091: binclude "level/layout/past/LV09_1.kosp"
-PLevel_LV092: binclude "level/layout/past/LV09_2.kosp"
-PLevel_LV093: binclude "level/layout/past/LV09_3.kosp"
-PLevel_LV094: binclude "level/layout/past/LV09_4.kosp"
-PLevel_LV0A1: binclude "level/layout/past/LV0A_1.kosp"
-PLevel_LV0A2: binclude "level/layout/past/LV0A_2.kosp"
-PLevel_LV0A3: binclude "level/layout/past/LV0A_3.kosp"
-PLevel_LV0A4: binclude "level/layout/past/LV0A_4.kosp"
-PLevel_LV0B1: binclude "level/layout/past/LV0B_1.kosp"
-PLevel_LV0B2: binclude "level/layout/past/LV0B_2.kosp"
-PLevel_LV0B3: binclude "level/layout/past/LV0B_3.kosp"
-PLevel_LV0B4: binclude "level/layout/past/LV0B_4.kosp"
-PLevel_LV0C1: binclude "level/layout/past/LV0C_1.kosp"
-PLevel_LV0C2: binclude "level/layout/past/LV0C_2.kosp"
-PLevel_LV0C3: binclude "level/layout/past/LV0C_3.kosp"
-PLevel_LV0C4: binclude "level/layout/past/LV0C_4.kosp"
-PLevel_LV0D1: binclude "level/layout/past/LV0D_1.kosp"
-PLevel_LV0D2: binclude "level/layout/past/LV0D_2.kosp"
-PLevel_LV0D3: binclude "level/layout/past/LV0D_3.kosp"
-PLevel_LV0D4: binclude "level/layout/past/LV0D_4.kosp"
-PLevel_LV0E1: binclude "level/layout/past/LV0E_1.kosp"
-PLevel_LV0E2: binclude "level/layout/past/LV0E_2.kosp"
-PLevel_LV0E3: binclude "level/layout/past/LV0E_3.kosp"
-PLevel_LV0E4: binclude "level/layout/past/LV0E_4.kosp"
-PLevel_LV0F1: binclude "level/layout/past/LV0F_1.kosp"
-PLevel_LV0F2: binclude "level/layout/past/LV0F_2.kosp"
-PLevel_LV0F3: binclude "level/layout/past/LV0F_3.kosp"
-PLevel_LV0F4: binclude "level/layout/past/LV0F_4.kosp"
+PLevel_LV071:
+ if MegaCDMode1
+		binclude "level/layout/past/LV07_1.kosp"
+ else
+		binclude "md-only/layout/past/LV07_1.kosp"
+ endif
+		even
+PLevel_LV072:
+ if MegaCDMode1
+		binclude "level/layout/past/LV07_2.kosp"
+ else
+		binclude "md-only/layout/past/LV07_2.kosp"
+ endif
+		even
+PLevel_LV073:
+ if MegaCDMode1
+		binclude "level/layout/past/LV07_3.kosp"
+ else
+		binclude "md-only/layout/past/LV07_3.kosp"
+ endif
+		even
+PLevel_LV074:
+ if MegaCDMode1
+		binclude "level/layout/past/LV07_4.kosp"
+ else
+		binclude "md-only/layout/past/LV07_4.kosp"
+ endif
+		even
+PLevel_SMZ1:
+ if MegaCDMode1
+		binclude "level/layout/past/SMZ_1.kosp"
+ else
+		binclude "md-only/layout/past/SMZ_1.kosp"
+ endif
+		even
+PLevel_SMZ2:
+ if MegaCDMode1
+		binclude "level/layout/past/SMZ_2.kosp"
+ else
+		binclude "md-only/layout/past/SMZ_2.kosp"
+ endif
+		even
+PLevel_SMZ3:
+ if MegaCDMode1
+		binclude "level/layout/past/SMZ_3.kosp"
+ else
+		binclude "md-only/layout/past/SMZ_3.kosp"
+ endif
+		even
+PLevel_SMZ4:
+ if MegaCDMode1
+		binclude "level/layout/past/SMZ_4.kosp"
+ else
+		binclude "md-only/layout/past/SMZ_4.kosp"
+ endif
+		even
+PLevel_LV091:
+ if MegaCDMode1
+		binclude "level/layout/past/LV09_1.kosp"
+ else
+		binclude "md-only/layout/past/LV09_1.kosp"
+ endif
+		even
+PLevel_LV092:
+ if MegaCDMode1
+		binclude "level/layout/past/LV09_2.kosp"
+ else
+		binclude "md-only/layout/past/LV09_2.kosp"
+ endif
+		even
+PLevel_LV093:
+ if MegaCDMode1
+		binclude "level/layout/past/LV09_3.kosp"
+ else
+		binclude "md-only/layout/past/LV09_3.kosp"
+ endif
+		even
+PLevel_LV094:
+ if MegaCDMode1
+		binclude "level/layout/past/LV09_4.kosp"
+ else
+		binclude "md-only/layout/past/LV09_4.kosp"
+ endif
+		even
+PLevel_LV0A1:
+ if MegaCDMode1
+		binclude "level/layout/past/LV0A_1.kosp"
+ else
+		binclude "md-only/layout/past/LV0A_1.kosp"
+ endif
+		even
+PLevel_LV0A2:
+ if MegaCDMode1
+		binclude "level/layout/past/LV0A_2.kosp"
+ else
+		binclude "md-only/layout/past/LV0A_2.kosp"
+ endif
+		even
+PLevel_LV0A3:
+ if MegaCDMode1
+		binclude "level/layout/past/LV0A_3.kosp"
+ else
+		binclude "md-only/layout/past/LV0A_3.kosp"
+ endif
+		even
+PLevel_LV0A4:
+ if MegaCDMode1
+		binclude "level/layout/past/LV0A_4.kosp"
+ else
+		binclude "md-only/layout/past/LV0A_4.kosp"
+ endif
+		even
+PLevel_LV0B1:
+ if MegaCDMode1
+		binclude "level/layout/past/LV0B_1.kosp"
+ else
+		binclude "md-only/layout/past/LV0B_1.kosp"
+ endif
+		even
+PLevel_LV0B2:
+ if MegaCDMode1
+		binclude "level/layout/past/LV0B_2.kosp"
+ else
+		binclude "md-only/layout/past/LV0B_2.kosp"
+ endif
+		even
+PLevel_LV0B3:
+ if MegaCDMode1
+		binclude "level/layout/past/LV0B_3.kosp"
+ else
+		binclude "md-only/layout/past/LV0B_3.kosp"
+ endif
+		even
+PLevel_LV0B4:
+ if MegaCDMode1
+		binclude "level/layout/past/LV0B_4.kosp"
+ else
+		binclude "md-only/layout/past/LV0B_4.kosp"
+ endif
+		even
+PLevel_LV0C1:
+ if MegaCDMode1
+		binclude "level/layout/past/LV0C_1.kosp"
+ else
+		binclude "md-only/layout/past/LV0C_1.kosp"
+ endif
+		even
+PLevel_LV0C2:
+ if MegaCDMode1
+		binclude "level/layout/past/LV0C_2.kosp"
+ else
+		binclude "md-only/layout/past/LV0C_2.kosp"
+ endif
+		even
+PLevel_LV0C3:
+ if MegaCDMode1
+		binclude "level/layout/past/LV0C_3.kosp"
+ else
+		binclude "md-only/layout/past/LV0C_3.kosp"
+ endif
+		even
+PLevel_LV0C4:
+ if MegaCDMode1
+		binclude "level/layout/past/LV0C_4.kosp"
+ else
+		binclude "md-only/layout/past/LV0C_4.kosp"
+ endif
+		even
+PLevel_LV0D1:
+ if MegaCDMode1
+		binclude "level/layout/past/LV0D_1.kosp"
+ else
+		binclude "md-only/layout/past/LV0D_1.kosp"
+ endif
+		even
+PLevel_LV0D2:
+ if MegaCDMode1
+		binclude "level/layout/past/LV0D_2.kosp"
+ else
+		binclude "md-only/layout/past/LV0D_2.kosp"
+ endif
+		even
+PLevel_LV0D3:
+ if MegaCDMode1
+		binclude "level/layout/past/LV0D_3.kosp"
+ else
+		binclude "md-only/layout/past/LV0D_3.kosp"
+ endif
+		even
+PLevel_LV0D4:
+ if MegaCDMode1
+		binclude "level/layout/past/LV0D_4.kosp"
+ else
+		binclude "md-only/layout/past/LV0D_4.kosp"
+ endif
+		even
+PLevel_LV0E1:
+ if MegaCDMode1
+		binclude "level/layout/past/LV0E_1.kosp"
+ else
+		binclude "md-only/layout/past/LV0E_1.kosp"
+ endif
+		even
+PLevel_LV0E2:
+ if MegaCDMode1
+		binclude "level/layout/past/LV0E_2.kosp"
+ else
+		binclude "md-only/layout/past/LV0E_2.kosp"
+ endif
+		even
+PLevel_LV0E3:
+ if MegaCDMode1
+		binclude "level/layout/past/LV0E_3.kosp"
+ else
+		binclude "md-only/layout/past/LV0E_3.kosp"
+ endif
+		even
+PLevel_LV0E4:
+ if MegaCDMode1
+		binclude "level/layout/past/LV0E_4.kosp"
+ else
+		binclude "md-only/layout/past/LV0E_4.kosp"
+ endif
+		even
+PLevel_LV0F1:
+ if MegaCDMode1
+		binclude "level/layout/past/LV0F_1.kosp"
+ else
+		binclude "md-only/layout/past/LV0F_1.kosp"
+ endif
+		even
+PLevel_LV0F2:
+ if MegaCDMode1
+		binclude "level/layout/past/LV0F_2.kosp"
+ else
+		binclude "md-only/layout/past/LV0F_2.kosp"
+ endif
+		even
+PLevel_LV0F3:
+ if MegaCDMode1
+		binclude "level/layout/past/LV0F_3.kosp"
+ else
+		binclude "md-only/layout/past/LV0F_3.kosp"
+ endif
+		even
+PLevel_LV0F4:
+ if MegaCDMode1
+		binclude "level/layout/past/LV0F_4.kosp"
+ else
+		binclude "md-only/layout/past/LV0F_4.kosp"
+ endif
+		even
 
 ; ---------------------------------------------------------------------------
 Level_Index_GoodFuture:
@@ -202,71 +586,455 @@ Level_Index_GoodFuture:
 		dc.w GLevel_LV0F3-Level_Index_GoodFuture
 		dc.w GLevel_LV0F4-Level_Index_GoodFuture
 
-GLevel_GHZ1:	binclude	"level/layout/good future/GHZ_1.kosp"
-GLevel_GHZ2:	binclude	"level/layout/good future/GHZ_2.kosp"
-GLevel_GHZ3:	binclude	"level/layout/good future/GHZ_3.kosp"
-GLevel_GHZ4:	binclude	"level/layout/good future/GHZ_4.kosp"
-GLevel_LZ1:	binclude	"level/layout/good future/LZ_1.kosp"
-GLevel_LZ2:	binclude	"level/layout/good future/LZ_2.kosp"
-GLevel_LZ3:	binclude	"level/layout/good future/LZ_3.kosp"
-GLevel_LZ4:	binclude	"level/layout/good future/LZ_4.kosp"
-GLevel_CPZ1:	binclude	"level/layout/good future/CPZ_1.kosp"
-GLevel_CPZ2:	binclude	"level/layout/good future/CPZ_2.kosp"
-GLevel_CPZ3:	binclude	"level/layout/good future/CPZ_3.kosp"
-GLevel_CPZ4:	binclude	"level/layout/good future/CPZ_4.kosp"
-GLevel_EHZ1:	binclude	"level/layout/good future/EHZ_1.kosp"
-GLevel_EHZ2:	binclude	"level/layout/good future/EHZ_2.kosp"
-GLevel_EHZ3:	binclude	"level/layout/good future/EHZ_3.kosp"
-GLevel_EHZ4:	binclude	"level/layout/good future/EHZ_4.kosp"
-GLevel_HPZ1:	binclude	"level/layout/good future/HPZ_1.kosp"
-GLevel_HPZ2:	binclude	"level/layout/good future/HPZ_2.kosp"
-GLevel_HPZ3:	binclude	"level/layout/good future/HPZ_3.kosp"
-GLevel_HPZ4:	binclude	"level/layout/good future/HPZ_4.kosp"
-GLevel_HTZ1:	binclude	"level/layout/good future/HTZ_1.kosp"
-GLevel_HTZ2:	binclude	"level/layout/good future/HTZ_2.kosp"
-GLevel_HTZ3:	binclude	"level/layout/good future/HTZ_3.kosp"
-GLevel_HTZ4:	binclude	"level/layout/good future/HTZ_4.kosp"
-GLevel_MTZ1:	binclude	"level/layout/good future/MTZ_1.kosp"
-GLevel_MTZ2:	binclude	"level/layout/good future/MTZ_2.kosp"
-GLevel_MTZ3:	binclude	"level/layout/good future/MTZ_3.kosp"
-GLevel_MTZ4:	binclude	"level/layout/good future/MTZ_4.kosp"
+GLevel_GHZ1:
+ if MegaCDMode1
+		binclude "level/layout/good future/GHZ_1.kosp"
+ else
+		binclude "md-only/layout/good future/GHZ_1.kosp"
+ endif
+		even
+GLevel_GHZ2:
+ if MegaCDMode1
+		binclude "level/layout/good future/GHZ_2.kosp"
+ else
+		binclude "md-only/layout/good future/GHZ_2.kosp"
+ endif
+		even
+GLevel_GHZ3:
+ if MegaCDMode1
+		binclude "level/layout/good future/GHZ_3.kosp"
+ else
+		binclude "md-only/layout/good future/GHZ_3.kosp"
+ endif
+		even
+GLevel_GHZ4:
+ if MegaCDMode1
+		binclude "level/layout/good future/GHZ_4.kosp"
+ else
+		binclude "md-only/layout/good future/GHZ_4.kosp"
+ endif
+		even
+GLevel_LZ1:
+ if MegaCDMode1
+		binclude "level/layout/good future/LZ_1.kosp"
+ else
+		binclude "md-only/layout/good future/LZ_1.kosp"
+ endif
+		even
+GLevel_LZ2:
+ if MegaCDMode1
+		binclude "level/layout/good future/LZ_2.kosp"
+ else
+		binclude "md-only/layout/good future/LZ_2.kosp"
+ endif
+		even
+GLevel_LZ3:
+ if MegaCDMode1
+		binclude "level/layout/good future/LZ_3.kosp"
+ else
+		binclude "md-only/layout/good future/LZ_3.kosp"
+ endif
+		even
+GLevel_LZ4:
+ if MegaCDMode1
+		binclude "level/layout/good future/LZ_4.kosp"
+ else
+		binclude "md-only/layout/good future/LZ_4.kosp"
+ endif
+		even
+GLevel_CPZ1:
+ if MegaCDMode1
+		binclude "level/layout/good future/CPZ_1.kosp"
+ else
+		binclude "md-only/layout/good future/CPZ_1.kosp"
+ endif
+		even
+GLevel_CPZ2:
+ if MegaCDMode1
+		binclude "level/layout/good future/CPZ_2.kosp"
+ else
+		binclude "md-only/layout/good future/CPZ_2.kosp"
+ endif
+		even
+GLevel_CPZ3:
+ if MegaCDMode1
+		binclude "level/layout/good future/CPZ_3.kosp"
+ else
+		binclude "md-only/layout/good future/CPZ_3.kosp"
+ endif
+		even
+GLevel_CPZ4:
+ if MegaCDMode1
+		binclude "level/layout/good future/CPZ_4.kosp"
+ else
+		binclude "md-only/layout/good future/CPZ_4.kosp"
+ endif
+		even
+GLevel_EHZ1:
+ if MegaCDMode1
+		binclude "level/layout/good future/EHZ_1.kosp"
+ else
+		binclude "md-only/layout/good future/EHZ_1.kosp"
+ endif
+		even
+GLevel_EHZ2:
+ if MegaCDMode1
+		binclude "level/layout/good future/EHZ_2.kosp"
+ else
+		binclude "md-only/layout/good future/EHZ_2.kosp"
+ endif
+		even
+GLevel_EHZ3:
+ if MegaCDMode1
+		binclude "level/layout/good future/EHZ_3.kosp"
+ else
+		binclude "md-only/layout/good future/EHZ_3.kosp"
+ endif
+		even
+GLevel_EHZ4:
+ if MegaCDMode1
+		binclude "level/layout/good future/EHZ_4.kosp"
+ else
+		binclude "md-only/layout/good future/EHZ_4.kosp"
+ endif
+		even
+GLevel_HPZ1:
+ if MegaCDMode1
+		binclude "level/layout/good future/HPZ_1.kosp"
+ else
+		binclude "md-only/layout/good future/HPZ_1.kosp"
+ endif
+		even
+GLevel_HPZ2:
+ if MegaCDMode1
+		binclude "level/layout/good future/HPZ_2.kosp"
+ else
+		binclude "md-only/layout/good future/HPZ_2.kosp"
+ endif
+		even
+GLevel_HPZ3:
+ if MegaCDMode1
+		binclude "level/layout/good future/HPZ_3.kosp"
+ else
+		binclude "md-only/layout/good future/HPZ_3.kosp"
+ endif
+		even
+GLevel_HPZ4:
+ if MegaCDMode1
+		binclude "level/layout/good future/HPZ_4.kosp"
+ else
+		binclude "md-only/layout/good future/HPZ_4.kosp"
+ endif
+		even
+GLevel_HTZ1:
+ if MegaCDMode1
+		binclude "level/layout/good future/HTZ_1.kosp"
+ else
+		binclude "md-only/layout/good future/HTZ_1.kosp"
+ endif
+		even
+GLevel_HTZ2:
+ if MegaCDMode1
+		binclude "level/layout/good future/HTZ_2.kosp"
+ else
+		binclude "md-only/layout/good future/HTZ_2.kosp"
+ endif
+		even
+GLevel_HTZ3:
+ if MegaCDMode1
+		binclude "level/layout/good future/HTZ_3.kosp"
+ else
+		binclude "md-only/layout/good future/HTZ_3.kosp"
+ endif
+		even
+GLevel_HTZ4:
+ if MegaCDMode1
+		binclude "level/layout/good future/HTZ_4.kosp"
+ else
+		binclude "md-only/layout/good future/HTZ_4.kosp"
+ endif
+		even
+GLevel_MTZ1:
+ if MegaCDMode1
+		binclude "level/layout/good future/MTZ_1.kosp"
+ else
+		binclude "md-only/layout/good future/MTZ_1.kosp"
+ endif
+		even
+GLevel_MTZ2:
+ if MegaCDMode1
+		binclude "level/layout/good future/MTZ_2.kosp"
+ else
+		binclude "md-only/layout/good future/MTZ_2.kosp"
+ endif
+		even
+GLevel_MTZ3:
+ if MegaCDMode1
+		binclude "level/layout/good future/MTZ_3.kosp"
+ else
+		binclude "md-only/layout/good future/MTZ_3.kosp"
+ endif
+		even
+GLevel_MTZ4:
+ if MegaCDMode1
+		binclude "level/layout/good future/MTZ_4.kosp"
+ else
+		binclude "md-only/layout/good future/MTZ_4.kosp"
+ endif
+		even
 
-GLevel_LV071: binclude "level/layout/good future/LV07_1.kosp"
-GLevel_LV072: binclude "level/layout/good future/LV07_2.kosp"
-GLevel_LV073: binclude "level/layout/good future/LV07_3.kosp"
-GLevel_LV074: binclude "level/layout/good future/LV07_4.kosp"
-GLevel_SMZ1: binclude "level/layout/good future/SMZ_1.kosp"
-GLevel_SMZ2: binclude "level/layout/good future/SMZ_2.kosp"
-GLevel_SMZ3: binclude "level/layout/good future/SMZ_3.kosp"
-GLevel_SMZ4: binclude "level/layout/good future/SMZ_4.kosp"
-GLevel_LV091: binclude "level/layout/good future/LV09_1.kosp"
-GLevel_LV092: binclude "level/layout/good future/LV09_2.kosp"
-GLevel_LV093: binclude "level/layout/good future/LV09_3.kosp"
-GLevel_LV094: binclude "level/layout/good future/LV09_4.kosp"
-GLevel_LV0A1: binclude "level/layout/good future/LV0A_1.kosp"
-GLevel_LV0A2: binclude "level/layout/good future/LV0A_2.kosp"
-GLevel_LV0A3: binclude "level/layout/good future/LV0A_3.kosp"
-GLevel_LV0A4: binclude "level/layout/good future/LV0A_4.kosp"
-GLevel_LV0B1: binclude "level/layout/good future/LV0B_1.kosp"
-GLevel_LV0B2: binclude "level/layout/good future/LV0B_2.kosp"
-GLevel_LV0B3: binclude "level/layout/good future/LV0B_3.kosp"
-GLevel_LV0B4: binclude "level/layout/good future/LV0B_4.kosp"
-GLevel_LV0C1: binclude "level/layout/good future/LV0C_1.kosp"
-GLevel_LV0C2: binclude "level/layout/good future/LV0C_2.kosp"
-GLevel_LV0C3: binclude "level/layout/good future/LV0C_3.kosp"
-GLevel_LV0C4: binclude "level/layout/good future/LV0C_4.kosp"
-GLevel_LV0D1: binclude "level/layout/good future/LV0D_1.kosp"
-GLevel_LV0D2: binclude "level/layout/good future/LV0D_2.kosp"
-GLevel_LV0D3: binclude "level/layout/good future/LV0D_3.kosp"
-GLevel_LV0D4: binclude "level/layout/good future/LV0D_4.kosp"
-GLevel_LV0E1: binclude "level/layout/good future/LV0E_1.kosp"
-GLevel_LV0E2: binclude "level/layout/good future/LV0E_2.kosp"
-GLevel_LV0E3: binclude "level/layout/good future/LV0E_3.kosp"
-GLevel_LV0E4: binclude "level/layout/good future/LV0E_4.kosp"
-GLevel_LV0F1: binclude "level/layout/good future/LV0F_1.kosp"
-GLevel_LV0F2: binclude "level/layout/good future/LV0F_2.kosp"
-GLevel_LV0F3: binclude "level/layout/good future/LV0F_3.kosp"
-GLevel_LV0F4: binclude "level/layout/good future/LV0F_4.kosp"
+GLevel_LV071:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV07_1.kosp"
+ else
+		binclude "md-only/layout/good future/LV07_1.kosp"
+ endif
+		even
+GLevel_LV072:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV07_2.kosp"
+ else
+		binclude "md-only/layout/good future/LV07_2.kosp"
+ endif
+		even
+GLevel_LV073:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV07_3.kosp"
+ else
+		binclude "md-only/layout/good future/LV07_3.kosp"
+ endif
+		even
+GLevel_LV074:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV07_4.kosp"
+ else
+		binclude "md-only/layout/good future/LV07_4.kosp"
+ endif
+		even
+GLevel_SMZ1:
+ if MegaCDMode1
+		binclude "level/layout/good future/SMZ_1.kosp"
+ else
+		binclude "md-only/layout/good future/SMZ_1.kosp"
+ endif
+		even
+GLevel_SMZ2:
+ if MegaCDMode1
+		binclude "level/layout/good future/SMZ_2.kosp"
+ else
+		binclude "md-only/layout/good future/SMZ_2.kosp"
+ endif
+		even
+GLevel_SMZ3:
+ if MegaCDMode1
+		binclude "level/layout/good future/SMZ_3.kosp"
+ else
+		binclude "md-only/layout/good future/SMZ_3.kosp"
+ endif
+		even
+GLevel_SMZ4:
+ if MegaCDMode1
+		binclude "level/layout/good future/SMZ_4.kosp"
+ else
+		binclude "md-only/layout/good future/SMZ_4.kosp"
+ endif
+		even
+GLevel_LV091:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV09_1.kosp"
+ else
+		binclude "md-only/layout/good future/LV09_1.kosp"
+ endif
+		even
+GLevel_LV092:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV09_2.kosp"
+ else
+		binclude "md-only/layout/good future/LV09_2.kosp"
+ endif
+		even
+GLevel_LV093:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV09_3.kosp"
+ else
+		binclude "md-only/layout/good future/LV09_3.kosp"
+ endif
+		even
+GLevel_LV094:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV09_4.kosp"
+ else
+		binclude "md-only/layout/good future/LV09_4.kosp"
+ endif
+		even
+GLevel_LV0A1:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV0A_1.kosp"
+ else
+		binclude "md-only/layout/good future/LV0A_1.kosp"
+ endif
+		even
+GLevel_LV0A2:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV0A_2.kosp"
+ else
+		binclude "md-only/layout/good future/LV0A_2.kosp"
+ endif
+		even
+GLevel_LV0A3:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV0A_3.kosp"
+ else
+		binclude "md-only/layout/good future/LV0A_3.kosp"
+ endif
+		even
+GLevel_LV0A4:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV0A_4.kosp"
+ else
+		binclude "md-only/layout/good future/LV0A_4.kosp"
+ endif
+		even
+GLevel_LV0B1:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV0B_1.kosp"
+ else
+		binclude "md-only/layout/good future/LV0B_1.kosp"
+ endif
+		even
+GLevel_LV0B2:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV0B_2.kosp"
+ else
+		binclude "md-only/layout/good future/LV0B_2.kosp"
+ endif
+		even
+GLevel_LV0B3:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV0B_3.kosp"
+ else
+		binclude "md-only/layout/good future/LV0B_3.kosp"
+ endif
+		even
+GLevel_LV0B4:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV0B_4.kosp"
+ else
+		binclude "md-only/layout/good future/LV0B_4.kosp"
+ endif
+		even
+GLevel_LV0C1:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV0C_1.kosp"
+ else
+		binclude "md-only/layout/good future/LV0C_1.kosp"
+ endif
+		even
+GLevel_LV0C2:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV0C_2.kosp"
+ else
+		binclude "md-only/layout/good future/LV0C_2.kosp"
+ endif
+		even
+GLevel_LV0C3:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV0C_3.kosp"
+ else
+		binclude "md-only/layout/good future/LV0C_3.kosp"
+ endif
+		even
+GLevel_LV0C4:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV0C_4.kosp"
+ else
+		binclude "md-only/layout/good future/LV0C_4.kosp"
+ endif
+		even
+GLevel_LV0D1:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV0D_1.kosp"
+ else
+		binclude "md-only/layout/good future/LV0D_1.kosp"
+ endif
+		even
+GLevel_LV0D2:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV0D_2.kosp"
+ else
+		binclude "md-only/layout/good future/LV0D_2.kosp"
+ endif
+		even
+GLevel_LV0D3:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV0D_3.kosp"
+ else
+		binclude "md-only/layout/good future/LV0D_3.kosp"
+ endif
+		even
+GLevel_LV0D4:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV0D_4.kosp"
+ else
+		binclude "md-only/layout/good future/LV0D_4.kosp"
+ endif
+		even
+GLevel_LV0E1:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV0E_1.kosp"
+ else
+		binclude "md-only/layout/good future/LV0E_1.kosp"
+ endif
+		even
+GLevel_LV0E2:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV0E_2.kosp"
+ else
+		binclude "md-only/layout/good future/LV0E_2.kosp"
+ endif
+		even
+GLevel_LV0E3:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV0E_3.kosp"
+ else
+		binclude "md-only/layout/good future/LV0E_3.kosp"
+ endif
+		even
+GLevel_LV0E4:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV0E_4.kosp"
+ else
+		binclude "md-only/layout/good future/LV0E_4.kosp"
+ endif
+		even
+GLevel_LV0F1:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV0F_1.kosp"
+ else
+		binclude "md-only/layout/good future/LV0F_1.kosp"
+ endif
+		even
+GLevel_LV0F2:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV0F_2.kosp"
+ else
+		binclude "md-only/layout/good future/LV0F_2.kosp"
+ endif
+		even
+GLevel_LV0F3:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV0F_3.kosp"
+ else
+		binclude "md-only/layout/good future/LV0F_3.kosp"
+ endif
+		even
+GLevel_LV0F4:
+ if MegaCDMode1
+		binclude "level/layout/good future/LV0F_4.kosp"
+ else
+		binclude "md-only/layout/good future/LV0F_4.kosp"
+ endif
+		even
 
 ; ---------------------------------------------------------------------------
 Level_Index_BadFuture:
@@ -336,68 +1104,452 @@ Level_Index_BadFuture:
 		dc.w BLevel_LV0F3-Level_Index_BadFuture
 		dc.w BLevel_LV0F4-Level_Index_BadFuture
 
-BLevel_GHZ1:	binclude	"level/layout/bad future/GHZ_1.kosp"
-BLevel_GHZ2:	binclude	"level/layout/bad future/GHZ_2.kosp"
-BLevel_GHZ3:	binclude	"level/layout/bad future/GHZ_3.kosp"
-BLevel_GHZ4:	binclude	"level/layout/bad future/GHZ_4.kosp"
-BLevel_LZ1:	binclude	"level/layout/bad future/LZ_1.kosp"
-BLevel_LZ2:	binclude	"level/layout/bad future/LZ_2.kosp"
-BLevel_LZ3:	binclude	"level/layout/bad future/LZ_3.kosp"
-BLevel_LZ4:	binclude	"level/layout/bad future/LZ_4.kosp"
-BLevel_CPZ1:	binclude	"level/layout/bad future/CPZ_1.kosp"
-BLevel_CPZ2:	binclude	"level/layout/bad future/CPZ_2.kosp"
-BLevel_CPZ3:	binclude	"level/layout/bad future/CPZ_3.kosp"
-BLevel_CPZ4:	binclude	"level/layout/bad future/CPZ_4.kosp"
-BLevel_EHZ1:	binclude	"level/layout/bad future/EHZ_1.kosp"
-BLevel_EHZ2:	binclude	"level/layout/bad future/EHZ_2.kosp"
-BLevel_EHZ3:	binclude	"level/layout/bad future/EHZ_3.kosp"
-BLevel_EHZ4:	binclude	"level/layout/bad future/EHZ_4.kosp"
-BLevel_HPZ1:	binclude	"level/layout/bad future/HPZ_1.kosp"
-BLevel_HPZ2:	binclude	"level/layout/bad future/HPZ_2.kosp"
-BLevel_HPZ3:	binclude	"level/layout/bad future/HPZ_3.kosp"
-BLevel_HPZ4:	binclude	"level/layout/bad future/HPZ_4.kosp"
-BLevel_HTZ1:	binclude	"level/layout/bad future/HTZ_1.kosp"
-BLevel_HTZ2:	binclude	"level/layout/bad future/HTZ_2.kosp"
-BLevel_HTZ3:	binclude	"level/layout/bad future/HTZ_3.kosp"
-BLevel_HTZ4:	binclude	"level/layout/bad future/HTZ_4.kosp"
-BLevel_MTZ1:	binclude	"level/layout/bad future/MTZ_1.kosp"
-BLevel_MTZ2:	binclude	"level/layout/bad future/MTZ_2.kosp"
-BLevel_MTZ3:	binclude	"level/layout/bad future/MTZ_3.kosp"
-BLevel_MTZ4:	binclude	"level/layout/bad future/MTZ_4.kosp"
+BLevel_GHZ1:
+ if MegaCDMode1
+		binclude "level/layout/bad future/GHZ_1.kosp"
+ else
+		binclude "md-only/layout/bad future/GHZ_1.kosp"
+ endif
+		even
+BLevel_GHZ2:
+ if MegaCDMode1
+		binclude "level/layout/bad future/GHZ_2.kosp"
+ else
+		binclude "md-only/layout/bad future/GHZ_2.kosp"
+ endif
+		even
+BLevel_GHZ3:
+ if MegaCDMode1
+		binclude "level/layout/bad future/GHZ_3.kosp"
+ else
+		binclude "md-only/layout/bad future/GHZ_3.kosp"
+ endif
+		even
+BLevel_GHZ4:
+ if MegaCDMode1
+		binclude "level/layout/bad future/GHZ_4.kosp"
+ else
+		binclude "md-only/layout/bad future/GHZ_4.kosp"
+ endif
+		even
+BLevel_LZ1:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LZ_1.kosp"
+ else
+		binclude "md-only/layout/bad future/LZ_1.kosp"
+ endif
+		even
+BLevel_LZ2:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LZ_2.kosp"
+ else
+		binclude "md-only/layout/bad future/LZ_2.kosp"
+ endif
+		even
+BLevel_LZ3:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LZ_3.kosp"
+ else
+		binclude "md-only/layout/bad future/LZ_3.kosp"
+ endif
+		even
+BLevel_LZ4:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LZ_4.kosp"
+ else
+		binclude "md-only/layout/bad future/LZ_4.kosp"
+ endif
+		even
+BLevel_CPZ1:
+ if MegaCDMode1
+		binclude "level/layout/bad future/CPZ_1.kosp"
+ else
+		binclude "md-only/layout/bad future/CPZ_1.kosp"
+ endif
+		even
+BLevel_CPZ2:
+ if MegaCDMode1
+		binclude "level/layout/bad future/CPZ_2.kosp"
+ else
+		binclude "md-only/layout/bad future/CPZ_2.kosp"
+ endif
+		even
+BLevel_CPZ3:
+ if MegaCDMode1
+		binclude "level/layout/bad future/CPZ_3.kosp"
+ else
+		binclude "md-only/layout/bad future/CPZ_3.kosp"
+ endif
+		even
+BLevel_CPZ4:
+ if MegaCDMode1
+		binclude "level/layout/bad future/CPZ_4.kosp"
+ else
+		binclude "md-only/layout/bad future/CPZ_4.kosp"
+ endif
+		even
+BLevel_EHZ1:
+ if MegaCDMode1
+		binclude "level/layout/bad future/EHZ_1.kosp"
+ else
+		binclude "md-only/layout/bad future/EHZ_1.kosp"
+ endif
+		even
+BLevel_EHZ2:
+ if MegaCDMode1
+		binclude "level/layout/bad future/EHZ_2.kosp"
+ else
+		binclude "md-only/layout/bad future/EHZ_2.kosp"
+ endif
+		even
+BLevel_EHZ3:
+ if MegaCDMode1
+		binclude "level/layout/bad future/EHZ_3.kosp"
+ else
+		binclude "md-only/layout/bad future/EHZ_3.kosp"
+ endif
+		even
+BLevel_EHZ4:
+ if MegaCDMode1
+		binclude "level/layout/bad future/EHZ_4.kosp"
+ else
+		binclude "md-only/layout/bad future/EHZ_4.kosp"
+ endif
+		even
+BLevel_HPZ1:
+ if MegaCDMode1
+		binclude "level/layout/bad future/HPZ_1.kosp"
+ else
+		binclude "md-only/layout/bad future/HPZ_1.kosp"
+ endif
+		even
+BLevel_HPZ2:
+ if MegaCDMode1
+		binclude "level/layout/bad future/HPZ_2.kosp"
+ else
+		binclude "md-only/layout/bad future/HPZ_2.kosp"
+ endif
+		even
+BLevel_HPZ3:
+ if MegaCDMode1
+		binclude "level/layout/bad future/HPZ_3.kosp"
+ else
+		binclude "md-only/layout/bad future/HPZ_3.kosp"
+ endif
+		even
+BLevel_HPZ4:
+ if MegaCDMode1
+		binclude "level/layout/bad future/HPZ_4.kosp"
+ else
+		binclude "md-only/layout/bad future/HPZ_4.kosp"
+ endif
+		even
+BLevel_HTZ1:
+ if MegaCDMode1
+		binclude "level/layout/bad future/HTZ_1.kosp"
+ else
+		binclude "md-only/layout/bad future/HTZ_1.kosp"
+ endif
+		even
+BLevel_HTZ2:
+ if MegaCDMode1
+		binclude "level/layout/bad future/HTZ_2.kosp"
+ else
+		binclude "md-only/layout/bad future/HTZ_2.kosp"
+ endif
+		even
+BLevel_HTZ3:
+ if MegaCDMode1
+		binclude "level/layout/bad future/HTZ_3.kosp"
+ else
+		binclude "md-only/layout/bad future/HTZ_3.kosp"
+ endif
+		even
+BLevel_HTZ4:
+ if MegaCDMode1
+		binclude "level/layout/bad future/HTZ_4.kosp"
+ else
+		binclude "md-only/layout/bad future/HTZ_4.kosp"
+ endif
+		even
+BLevel_MTZ1:
+ if MegaCDMode1
+		binclude "level/layout/bad future/MTZ_1.kosp"
+ else
+		binclude "md-only/layout/bad future/MTZ_1.kosp"
+ endif
+		even
+BLevel_MTZ2:
+ if MegaCDMode1
+		binclude "level/layout/bad future/MTZ_2.kosp"
+ else
+		binclude "md-only/layout/bad future/MTZ_2.kosp"
+ endif
+		even
+BLevel_MTZ3:
+ if MegaCDMode1
+		binclude "level/layout/bad future/MTZ_3.kosp"
+ else
+		binclude "md-only/layout/bad future/MTZ_3.kosp"
+ endif
+		even
+BLevel_MTZ4:
+ if MegaCDMode1
+		binclude "level/layout/bad future/MTZ_4.kosp"
+ else
+		binclude "md-only/layout/bad future/MTZ_4.kosp"
+ endif
+		even
 
-BLevel_LV071: binclude "level/layout/bad future/LV07_1.kosp"
-BLevel_LV072: binclude "level/layout/bad future/LV07_2.kosp"
-BLevel_LV073: binclude "level/layout/bad future/LV07_3.kosp"
-BLevel_LV074: binclude "level/layout/bad future/LV07_4.kosp"
-BLevel_SMZ1: binclude "level/layout/bad future/SMZ_1.kosp"
-BLevel_SMZ2: binclude "level/layout/bad future/SMZ_2.kosp"
-BLevel_SMZ3: binclude "level/layout/bad future/SMZ_3.kosp"
-BLevel_SMZ4: binclude "level/layout/bad future/SMZ_4.kosp"
-BLevel_LV091: binclude "level/layout/bad future/LV09_1.kosp"
-BLevel_LV092: binclude "level/layout/bad future/LV09_2.kosp"
-BLevel_LV093: binclude "level/layout/bad future/LV09_3.kosp"
-BLevel_LV094: binclude "level/layout/bad future/LV09_4.kosp"
-BLevel_LV0A1: binclude "level/layout/bad future/LV0A_1.kosp"
-BLevel_LV0A2: binclude "level/layout/bad future/LV0A_2.kosp"
-BLevel_LV0A3: binclude "level/layout/bad future/LV0A_3.kosp"
-BLevel_LV0A4: binclude "level/layout/bad future/LV0A_4.kosp"
-BLevel_LV0B1: binclude "level/layout/bad future/LV0B_1.kosp"
-BLevel_LV0B2: binclude "level/layout/bad future/LV0B_2.kosp"
-BLevel_LV0B3: binclude "level/layout/bad future/LV0B_3.kosp"
-BLevel_LV0B4: binclude "level/layout/bad future/LV0B_4.kosp"
-BLevel_LV0C1: binclude "level/layout/bad future/LV0C_1.kosp"
-BLevel_LV0C2: binclude "level/layout/bad future/LV0C_2.kosp"
-BLevel_LV0C3: binclude "level/layout/bad future/LV0C_3.kosp"
-BLevel_LV0C4: binclude "level/layout/bad future/LV0C_4.kosp"
-BLevel_LV0D1: binclude "level/layout/bad future/LV0D_1.kosp"
-BLevel_LV0D2: binclude "level/layout/bad future/LV0D_2.kosp"
-BLevel_LV0D3: binclude "level/layout/bad future/LV0D_3.kosp"
-BLevel_LV0D4: binclude "level/layout/bad future/LV0D_4.kosp"
-BLevel_LV0E1: binclude "level/layout/bad future/LV0E_1.kosp"
-BLevel_LV0E2: binclude "level/layout/bad future/LV0E_2.kosp"
-BLevel_LV0E3: binclude "level/layout/bad future/LV0E_3.kosp"
-BLevel_LV0E4: binclude "level/layout/bad future/LV0E_4.kosp"
-BLevel_LV0F1: binclude "level/layout/bad future/LV0F_1.kosp"
-BLevel_LV0F2: binclude "level/layout/bad future/LV0F_2.kosp"
-BLevel_LV0F3: binclude "level/layout/bad future/LV0F_3.kosp"
-BLevel_LV0F4: binclude "level/layout/bad future/LV0F_4.kosp"
+BLevel_LV071:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV07_1.kosp"
+ else
+		binclude "md-only/layout/bad future/LV07_1.kosp"
+ endif
+		even
+BLevel_LV072:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV07_2.kosp"
+ else
+		binclude "md-only/layout/bad future/LV07_2.kosp"
+ endif
+		even
+BLevel_LV073:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV07_3.kosp"
+ else
+		binclude "md-only/layout/bad future/LV07_3.kosp"
+ endif
+		even
+BLevel_LV074:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV07_4.kosp"
+ else
+		binclude "md-only/layout/bad future/LV07_4.kosp"
+ endif
+		even
+BLevel_SMZ1:
+ if MegaCDMode1
+		binclude "level/layout/bad future/SMZ_1.kosp"
+ else
+		binclude "md-only/layout/bad future/SMZ_1.kosp"
+ endif
+		even
+BLevel_SMZ2:
+ if MegaCDMode1
+		binclude "level/layout/bad future/SMZ_2.kosp"
+ else
+		binclude "md-only/layout/bad future/SMZ_2.kosp"
+ endif
+		even
+BLevel_SMZ3:
+ if MegaCDMode1
+		binclude "level/layout/bad future/SMZ_3.kosp"
+ else
+		binclude "md-only/layout/bad future/SMZ_3.kosp"
+ endif
+		even
+BLevel_SMZ4:
+ if MegaCDMode1
+		binclude "level/layout/bad future/SMZ_4.kosp"
+ else
+		binclude "md-only/layout/bad future/SMZ_4.kosp"
+ endif
+		even
+BLevel_LV091:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV09_1.kosp"
+ else
+		binclude "md-only/layout/bad future/LV09_1.kosp"
+ endif
+		even
+BLevel_LV092:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV09_2.kosp"
+ else
+		binclude "md-only/layout/bad future/LV09_2.kosp"
+ endif
+		even
+BLevel_LV093:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV09_3.kosp"
+ else
+		binclude "md-only/layout/bad future/LV09_3.kosp"
+ endif
+		even
+BLevel_LV094:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV09_4.kosp"
+ else
+		binclude "md-only/layout/bad future/LV09_4.kosp"
+ endif
+		even
+BLevel_LV0A1:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV0A_1.kosp"
+ else
+		binclude "md-only/layout/bad future/LV0A_1.kosp"
+ endif
+		even
+BLevel_LV0A2:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV0A_2.kosp"
+ else
+		binclude "md-only/layout/bad future/LV0A_2.kosp"
+ endif
+		even
+BLevel_LV0A3:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV0A_3.kosp"
+ else
+		binclude "md-only/layout/bad future/LV0A_3.kosp"
+ endif
+		even
+BLevel_LV0A4:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV0A_4.kosp"
+ else
+		binclude "md-only/layout/bad future/LV0A_4.kosp"
+ endif
+		even
+BLevel_LV0B1:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV0B_1.kosp"
+ else
+		binclude "md-only/layout/bad future/LV0B_1.kosp"
+ endif
+		even
+BLevel_LV0B2:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV0B_2.kosp"
+ else
+		binclude "md-only/layout/bad future/LV0B_2.kosp"
+ endif
+		even
+BLevel_LV0B3:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV0B_3.kosp"
+ else
+		binclude "md-only/layout/bad future/LV0B_3.kosp"
+ endif
+		even
+BLevel_LV0B4:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV0B_4.kosp"
+ else
+		binclude "md-only/layout/bad future/LV0B_4.kosp"
+ endif
+		even
+BLevel_LV0C1:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV0C_1.kosp"
+ else
+		binclude "md-only/layout/bad future/LV0C_1.kosp"
+ endif
+		even
+BLevel_LV0C2:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV0C_2.kosp"
+ else
+		binclude "md-only/layout/bad future/LV0C_2.kosp"
+ endif
+		even
+BLevel_LV0C3:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV0C_3.kosp"
+ else
+		binclude "md-only/layout/bad future/LV0C_3.kosp"
+ endif
+		even
+BLevel_LV0C4:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV0C_4.kosp"
+ else
+		binclude "md-only/layout/bad future/LV0C_4.kosp"
+ endif
+		even
+BLevel_LV0D1:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV0D_1.kosp"
+ else
+		binclude "md-only/layout/bad future/LV0D_1.kosp"
+ endif
+		even
+BLevel_LV0D2:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV0D_2.kosp"
+ else
+		binclude "md-only/layout/bad future/LV0D_2.kosp"
+ endif
+		even
+BLevel_LV0D3:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV0D_3.kosp"
+ else
+		binclude "md-only/layout/bad future/LV0D_3.kosp"
+ endif
+		even
+BLevel_LV0D4:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV0D_4.kosp"
+ else
+		binclude "md-only/layout/bad future/LV0D_4.kosp"
+ endif
+		even
+BLevel_LV0E1:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV0E_1.kosp"
+ else
+		binclude "md-only/layout/bad future/LV0E_1.kosp"
+ endif
+		even
+BLevel_LV0E2:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV0E_2.kosp"
+ else
+		binclude "md-only/layout/bad future/LV0E_2.kosp"
+ endif
+		even
+BLevel_LV0E3:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV0E_3.kosp"
+ else
+		binclude "md-only/layout/bad future/LV0E_3.kosp"
+ endif
+		even
+BLevel_LV0E4:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV0E_4.kosp"
+ else
+		binclude "md-only/layout/bad future/LV0E_4.kosp"
+ endif
+		even
+BLevel_LV0F1:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV0F_1.kosp"
+ else
+		binclude "md-only/layout/bad future/LV0F_1.kosp"
+ endif
+		even
+BLevel_LV0F2:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV0F_2.kosp"
+ else
+		binclude "md-only/layout/bad future/LV0F_2.kosp"
+ endif
+		even
+BLevel_LV0F3:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV0F_3.kosp"
+ else
+		binclude "md-only/layout/bad future/LV0F_3.kosp"
+ endif
+		even
+BLevel_LV0F4:
+ if MegaCDMode1
+		binclude "level/layout/bad future/LV0F_4.kosp"
+ else
+		binclude "md-only/layout/bad future/LV0F_4.kosp"
+ endif
+		even

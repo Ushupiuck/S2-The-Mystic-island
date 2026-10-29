@@ -128,7 +128,13 @@ class Native:
                 ('Chunk_Table', 'MCD_ChunkTable_SubStart', 0x8000),
                 ('v_16x16', 'MCD_TerrainBlocks_Sub', 0x1800),
                 ('v_lvllayout', 'MCD_TerrainLayout_Sub', 0x1000)):
-            sub.mem_write(s[dest], bytes(cpu.mem_read(s[source] & 0xFFFFFF, length)))
+            if getattr(self, 'resident_terrain', False):
+                continue
+            data = bytes(cpu.mem_read(s[source] & 0xFFFFFF, length))
+            if source == 'v_lvllayout' and 'PlaneLayout_FG' in s:
+                from level_layout import encode, from_s2
+                data = encode(*from_s2(data))
+            sub.mem_write(s[dest], data)
         # Older ROMs remain usable as comparison baselines.
         legacy = ('S1_' if 'S1_ColArray1' in s and
                   self.read('Current_Zone') in (1, s['id_SMZ']) else '')

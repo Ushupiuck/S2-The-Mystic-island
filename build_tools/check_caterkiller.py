@@ -166,9 +166,9 @@ class Fixture:
 		blocks = {8: 0xF3FE, 16: 0xF3FF}
 		for row in range(16):
 			for col in range(3, 11):
-				g.write(layout + row*256 + col, 0)
+				g.layout_cell(row,col,0)
 		for col in range(4, 8):
-			g.write(layout + 6*256 + col, 255)
+			g.layout_cell(6,col,255)
 		for by in range(8):
 			for bx in range(8):
 				block = 0 if by < 3 else blocks[8 if by == 3 and bx >= 4 else 16]

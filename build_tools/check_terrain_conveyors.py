@@ -178,14 +178,13 @@ def matrix(g, initial):
     chunks = g.terrain_address('chunks')
 
     def wall_chunk(solidity):
-        ids = {g.read(layout + i) for i in range(g.s['Level_Layout_End'] - g.s['Level_Layout'])}
+        ids = {g.layout_cell(y,x,background=bg) for bg in (False,True) for y in range(16) for x in range(128)}
         unused = next(i for i in range(255, 0, -1) if i not in ids)
-        cell = 3 * 256 + 2  # world $100-$17F, $180-$1FF
-        source = g.read(layout + cell)
+        source = g.layout_cell(3,2)
         g.write(chunks + unused * 128, g.read(chunks + source * 128, 128), 128)
-        g.write(layout + cell, unused)
+        g.layout_cell(3,2,unused)
         # Take a real full block below GHZ1's initial ground surface.
-        ground_chunk = g.read(layout + 7 * 256 + 2)
+        ground_chunk = g.layout_cell(7,2)
         word = g.read(chunks + ground_chunk * 128 + 7 * 16, 2)
         rom = bytes(g.rom)
         shape = rom[g.read('v_colladdr1', 4) + (word & 0x3FF) * 2]

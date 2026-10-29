@@ -519,10 +519,10 @@ WaterSlides:
 		add.w	d1,d0
 		jsr	(Layout_Read).l
 		lea	Slide_Chunks_End(pc),a2
-		moveq	#Slide_Chunks_End-Slide_Chunks-1,d1
+		moveq	#(Slide_Chunks_End-Slide_Chunks)/2-1,d1
 
 .loop:
-		cmp.b	-(a2),d0
+		cmp.w	-(a2),d0
 		dbeq	d1,.loop
 		beq.s	Slide_Move
 
@@ -560,6 +560,6 @@ loc_4430:
 ; ---------------------------------------------------------------------------
 Slide_Speeds:	dc.b 10, -11, 10, -10, -11, -12, 11
 		even
-Slide_Chunks:	dc.b 2, 7, 3, $4C, $4B, 8, 4
+Slide_Chunks:	dc.w 2, 7, 3, $4C, $4B, 8, 4
 Slide_Chunks_End:
 		even

@@ -5,6 +5,20 @@ Size_of_DAC_samples		= $2F00
 Size_of_SEGA_sound		= $6978
 Size_of_Snd_driver_guess	= $F64 ; approximate post-compressed size of the Z80 sound driver
 ; ---------------------------------------------------------------------------
+; Mode 1 independent planes. Editable files contain relative lookups, never RAM addresses.
+PlaneLayout_FG = 12
+PlaneLayout_Rows = 32
+PlaneLayout_Columns = 256
+PlaneLayout_ColumnTable = PlaneLayout_Rows*2
+PlaneLayout_PlaneSize = PlaneLayout_ColumnTable+PlaneLayout_Columns*2
+PlaneLayout_BG = PlaneLayout_FG+PlaneLayout_PlaneSize
+PlaneLayout_Data = PlaneLayout_BG+PlaneLayout_PlaneSize
+PlaneLayout_Capacity = $8000
+PlaneLayout_ChunkCount = MCD_ChunkTable_Size/$80
+PlaneCache_Bytes = 16*4
+PlaneDraw_MaxRecordBytes = 2*16*(32*8+4*6) ; both planes, full rows and wrap headers
+LevelPlane_RecordSize = 6*4
+; ---------------------------------------------------------------------------
 ; Object placement record offsets
 ; ---------------------------------------------------------------------------
 ; Mystic Island placement: X/Y words, ID/time-mask bytes, subtype word.

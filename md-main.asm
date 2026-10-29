@@ -4666,14 +4666,27 @@ BgScrollSpeed:
 		move.w	d1,(Camera_BG3_X_pos).w
 
 .skip:
+ if MegaCDMode1
+		movem.w	d0-d1,-(sp)
+		bsr.w	GetLevelPlaneRecord
+		movea.l	(a2),a0
+		movem.l	a2,-(sp)
+		jsr	(a0)
+		movea.l	(sp)+,a2
+		movea.l	4(a2),a0
+		movem.w	(sp)+,d0-d1
+		jmp	(a0)
+ else
 		moveq	#0,d2
 		move.b	(Current_Zone).w,d2
 		add.w	d2,d2
 		move.w	BgScroll_Index(pc,d2.w),d2
 		jmp	BgScroll_Index(pc,d2.w)
+ endif
 ; End of function BgScrollSpeed
 
 ; ---------------------------------------------------------------------------
+ if MegaCDMode1=0
 BgScroll_Index:
 		dc.w BgScroll_GHZ-BgScroll_Index
 		dc.w BgScroll_LZ-BgScroll_Index
@@ -4691,6 +4704,7 @@ BgScroll_Index:
 		dc.w BgScroll_GHZ-BgScroll_Index
 		dc.w BgScroll_GHZ-BgScroll_Index
 		dc.w BgScroll_GHZ-BgScroll_Index
+ endif
 ; ---------------------------------------------------------------------------
 
 BgScroll_SMZ:
@@ -4915,6 +4929,9 @@ BgScroll_S1Ending:
 
 ; DeformLayers:
 DeformBGLayer:
+ if MegaCDMode1
+		jmp	LevelPlane_Events
+ else
 		tst.b	(Deform_lock).w
 		bne.s	-
 		clr.w	(Scroll_flags).w
@@ -4945,9 +4962,11 @@ DeformBGLayer:
 		add.w	d0,d0
 		move.w	Deform_Index(pc,d0.w),d0
 		jmp	Deform_Index(pc,d0.w)
+ endif
 ; End of function DeformBGLayer
 
 ; ---------------------------------------------------------------------------
+ if MegaCDMode1=0
 Deform_Index:	dc.w Deform_GHZ-Deform_Index
 		dc.w Deform_LZ-Deform_Index
 		dc.w Deform_CPZ-Deform_Index
@@ -4964,6 +4983,7 @@ Deform_Index:	dc.w Deform_GHZ-Deform_Index
 		dc.w Deform_GHZ-Deform_Index
 		dc.w Deform_GHZ-Deform_Index
 		dc.w Deform_GHZ-Deform_Index
+ endif
 ; ---------------------------------------------------------------------------
 
 Deform_GHZ:
@@ -6090,7 +6110,9 @@ loc_6818:
 ; =============== S U B R O U T I N E =======================================
 
 
-	if MegaCDMode1=0
+	if MegaCDMode1
+		include "_inc/Level Plane Events.asm"
+	else
 		include "md-only/Tile Streaming.asm"
 	endif
 
@@ -6290,7 +6312,7 @@ DynResize_LZ3:
 		beq.s	loc_76EA
 		move.w	#$206,d0
 		jsr	(Layout_Read).l
-		cmpi.b	#7,d0
+		cmpi.w	#7,d0
 		beq.s	loc_76EA
 		move.w	#$206,d0
 		moveq	#7,d1
@@ -14448,85 +14470,469 @@ Level_Index:
 		dc.w Level_LV0F3-Level_Index
 		dc.w Level_LV0F4-Level_Index
 
-Level_GHZ1:	binclude	"level/layout/GHZ_1.kosp"
-Level_GHZ2:	binclude	"level/layout/GHZ_2.kosp"
-Level_GHZ3:	binclude	"level/layout/GHZ_3.kosp"
-Level_GHZ4:	binclude	"level/layout/GHZ_4.kosp"
+Level_GHZ1:
+ if MegaCDMode1
+		binclude "level/layout/GHZ_1.kosp"
+ else
+		binclude "md-only/layout/GHZ_1.kosp"
+ endif
+		even
+Level_GHZ2:
+ if MegaCDMode1
+		binclude "level/layout/GHZ_2.kosp"
+ else
+		binclude "md-only/layout/GHZ_2.kosp"
+ endif
+		even
+Level_GHZ3:
+ if MegaCDMode1
+		binclude "level/layout/GHZ_3.kosp"
+ else
+		binclude "md-only/layout/GHZ_3.kosp"
+ endif
+		even
+Level_GHZ4:
+ if MegaCDMode1
+		binclude "level/layout/GHZ_4.kosp"
+ else
+		binclude "md-only/layout/GHZ_4.kosp"
+ endif
+		even
 
-Level_LZ1:	binclude	"level/layout/LZ_1.kosp"
-Level_LZ2:	binclude	"level/layout/LZ_2.kosp"
-Level_LZ3:	binclude	"level/layout/LZ_3.kosp"
-Level_LZ4:	binclude	"level/layout/LZ_4.kosp"
+Level_LZ1:
+ if MegaCDMode1
+		binclude "level/layout/LZ_1.kosp"
+ else
+		binclude "md-only/layout/LZ_1.kosp"
+ endif
+		even
+Level_LZ2:
+ if MegaCDMode1
+		binclude "level/layout/LZ_2.kosp"
+ else
+		binclude "md-only/layout/LZ_2.kosp"
+ endif
+		even
+Level_LZ3:
+ if MegaCDMode1
+		binclude "level/layout/LZ_3.kosp"
+ else
+		binclude "md-only/layout/LZ_3.kosp"
+ endif
+		even
+Level_LZ4:
+ if MegaCDMode1
+		binclude "level/layout/LZ_4.kosp"
+ else
+		binclude "md-only/layout/LZ_4.kosp"
+ endif
+		even
 
-Level_CPZ1:	binclude	"level/layout/CPZ_1.kosp"
-Level_CPZ2:	binclude	"level/layout/CPZ_2.kosp"
-Level_CPZ3:	binclude	"level/layout/CPZ_3.kosp"
-Level_CPZ4:	binclude	"level/layout/CPZ_4.kosp"
+Level_CPZ1:
+ if MegaCDMode1
+		binclude "level/layout/CPZ_1.kosp"
+ else
+		binclude "md-only/layout/CPZ_1.kosp"
+ endif
+		even
+Level_CPZ2:
+ if MegaCDMode1
+		binclude "level/layout/CPZ_2.kosp"
+ else
+		binclude "md-only/layout/CPZ_2.kosp"
+ endif
+		even
+Level_CPZ3:
+ if MegaCDMode1
+		binclude "level/layout/CPZ_3.kosp"
+ else
+		binclude "md-only/layout/CPZ_3.kosp"
+ endif
+		even
+Level_CPZ4:
+ if MegaCDMode1
+		binclude "level/layout/CPZ_4.kosp"
+ else
+		binclude "md-only/layout/CPZ_4.kosp"
+ endif
+		even
 
-Level_EHZ1:	binclude	"level/layout/EHZ_1.kosp"
-Level_EHZ2:	binclude	"level/layout/EHZ_2.kosp"
-Level_EHZ3:	binclude	"level/layout/EHZ_3.kosp"
-Level_EHZ4:	binclude	"level/layout/EHZ_4.kosp"
+Level_EHZ1:
+ if MegaCDMode1
+		binclude "level/layout/EHZ_1.kosp"
+ else
+		binclude "md-only/layout/EHZ_1.kosp"
+ endif
+		even
+Level_EHZ2:
+ if MegaCDMode1
+		binclude "level/layout/EHZ_2.kosp"
+ else
+		binclude "md-only/layout/EHZ_2.kosp"
+ endif
+		even
+Level_EHZ3:
+ if MegaCDMode1
+		binclude "level/layout/EHZ_3.kosp"
+ else
+		binclude "md-only/layout/EHZ_3.kosp"
+ endif
+		even
+Level_EHZ4:
+ if MegaCDMode1
+		binclude "level/layout/EHZ_4.kosp"
+ else
+		binclude "md-only/layout/EHZ_4.kosp"
+ endif
+		even
 
-Level_HPZ1:	binclude	"level/layout/HPZ_1.kosp"
-Level_HPZ2:	binclude	"level/layout/HPZ_2.kosp"
-Level_HPZ3:	binclude	"level/layout/HPZ_3.kosp"
-Level_HPZ4:	binclude	"level/layout/HPZ_4.kosp"
+Level_HPZ1:
+ if MegaCDMode1
+		binclude "level/layout/HPZ_1.kosp"
+ else
+		binclude "md-only/layout/HPZ_1.kosp"
+ endif
+		even
+Level_HPZ2:
+ if MegaCDMode1
+		binclude "level/layout/HPZ_2.kosp"
+ else
+		binclude "md-only/layout/HPZ_2.kosp"
+ endif
+		even
+Level_HPZ3:
+ if MegaCDMode1
+		binclude "level/layout/HPZ_3.kosp"
+ else
+		binclude "md-only/layout/HPZ_3.kosp"
+ endif
+		even
+Level_HPZ4:
+ if MegaCDMode1
+		binclude "level/layout/HPZ_4.kosp"
+ else
+		binclude "md-only/layout/HPZ_4.kosp"
+ endif
+		even
 
-Level_HTZ1:	binclude	"level/layout/HTZ_1.kosp"
-Level_HTZ2:	binclude	"level/layout/HTZ_2.kosp"
-Level_HTZ3:	binclude	"level/layout/HTZ_3.kosp"
-Level_HTZ4:	binclude	"level/layout/HTZ_4.kosp"
+Level_HTZ1:
+ if MegaCDMode1
+		binclude "level/layout/HTZ_1.kosp"
+ else
+		binclude "md-only/layout/HTZ_1.kosp"
+ endif
+		even
+Level_HTZ2:
+ if MegaCDMode1
+		binclude "level/layout/HTZ_2.kosp"
+ else
+		binclude "md-only/layout/HTZ_2.kosp"
+ endif
+		even
+Level_HTZ3:
+ if MegaCDMode1
+		binclude "level/layout/HTZ_3.kosp"
+ else
+		binclude "md-only/layout/HTZ_3.kosp"
+ endif
+		even
+Level_HTZ4:
+ if MegaCDMode1
+		binclude "level/layout/HTZ_4.kosp"
+ else
+		binclude "md-only/layout/HTZ_4.kosp"
+ endif
+		even
 
-Level_MTZ1:	binclude	"level/layout/MTZ_1.kosp"
-Level_MTZ2:	binclude	"level/layout/MTZ_2.kosp"
-Level_MTZ3:	binclude	"level/layout/MTZ_3.kosp"
-Level_MTZ4:	binclude	"level/layout/MTZ_4.kosp"
+Level_MTZ1:
+ if MegaCDMode1
+		binclude "level/layout/MTZ_1.kosp"
+ else
+		binclude "md-only/layout/MTZ_1.kosp"
+ endif
+		even
+Level_MTZ2:
+ if MegaCDMode1
+		binclude "level/layout/MTZ_2.kosp"
+ else
+		binclude "md-only/layout/MTZ_2.kosp"
+ endif
+		even
+Level_MTZ3:
+ if MegaCDMode1
+		binclude "level/layout/MTZ_3.kosp"
+ else
+		binclude "md-only/layout/MTZ_3.kosp"
+ endif
+		even
+Level_MTZ4:
+ if MegaCDMode1
+		binclude "level/layout/MTZ_4.kosp"
+ else
+		binclude "md-only/layout/MTZ_4.kosp"
+ endif
+		even
 
-Level_LV071:	binclude	"level/layout/LV07_1.kosp"
-Level_LV072:	binclude	"level/layout/LV07_2.kosp"
-Level_LV073:	binclude	"level/layout/LV07_3.kosp"
-Level_LV074:	binclude	"level/layout/LV07_4.kosp"
+Level_LV071:
+ if MegaCDMode1
+		binclude "level/layout/LV07_1.kosp"
+ else
+		binclude "md-only/layout/LV07_1.kosp"
+ endif
+		even
+Level_LV072:
+ if MegaCDMode1
+		binclude "level/layout/LV07_2.kosp"
+ else
+		binclude "md-only/layout/LV07_2.kosp"
+ endif
+		even
+Level_LV073:
+ if MegaCDMode1
+		binclude "level/layout/LV07_3.kosp"
+ else
+		binclude "md-only/layout/LV07_3.kosp"
+ endif
+		even
+Level_LV074:
+ if MegaCDMode1
+		binclude "level/layout/LV07_4.kosp"
+ else
+		binclude "md-only/layout/LV07_4.kosp"
+ endif
+		even
 
-Level_SMZ1:	binclude	"level/layout/SMZ_1.kosp"
-Level_SMZ2:	binclude	"level/layout/SMZ_2.kosp"
-Level_SMZ3:	binclude	"level/layout/SMZ_3.kosp"
-Level_SMZ4:	binclude	"level/layout/SMZ_4.kosp"
+Level_SMZ1:
+ if MegaCDMode1
+		binclude "level/layout/SMZ_1.kosp"
+ else
+		binclude "md-only/layout/SMZ_1.kosp"
+ endif
+		even
+Level_SMZ2:
+ if MegaCDMode1
+		binclude "level/layout/SMZ_2.kosp"
+ else
+		binclude "md-only/layout/SMZ_2.kosp"
+ endif
+		even
+Level_SMZ3:
+ if MegaCDMode1
+		binclude "level/layout/SMZ_3.kosp"
+ else
+		binclude "md-only/layout/SMZ_3.kosp"
+ endif
+		even
+Level_SMZ4:
+ if MegaCDMode1
+		binclude "level/layout/SMZ_4.kosp"
+ else
+		binclude "md-only/layout/SMZ_4.kosp"
+ endif
+		even
 
-Level_LV091:	binclude	"level/layout/LV09_1.kosp"
-Level_LV092:	binclude	"level/layout/LV09_2.kosp"
-Level_LV093:	binclude	"level/layout/LV09_3.kosp"
-Level_LV094:	binclude	"level/layout/LV09_4.kosp"
+Level_LV091:
+ if MegaCDMode1
+		binclude "level/layout/LV09_1.kosp"
+ else
+		binclude "md-only/layout/LV09_1.kosp"
+ endif
+		even
+Level_LV092:
+ if MegaCDMode1
+		binclude "level/layout/LV09_2.kosp"
+ else
+		binclude "md-only/layout/LV09_2.kosp"
+ endif
+		even
+Level_LV093:
+ if MegaCDMode1
+		binclude "level/layout/LV09_3.kosp"
+ else
+		binclude "md-only/layout/LV09_3.kosp"
+ endif
+		even
+Level_LV094:
+ if MegaCDMode1
+		binclude "level/layout/LV09_4.kosp"
+ else
+		binclude "md-only/layout/LV09_4.kosp"
+ endif
+		even
 
-Level_LV0A1:	binclude	"level/layout/LV0A_1.kosp"
-Level_LV0A2:	binclude	"level/layout/LV0A_2.kosp"
-Level_LV0A3:	binclude	"level/layout/LV0A_3.kosp"
-Level_LV0A4:	binclude	"level/layout/LV0A_4.kosp"
+Level_LV0A1:
+ if MegaCDMode1
+		binclude "level/layout/LV0A_1.kosp"
+ else
+		binclude "md-only/layout/LV0A_1.kosp"
+ endif
+		even
+Level_LV0A2:
+ if MegaCDMode1
+		binclude "level/layout/LV0A_2.kosp"
+ else
+		binclude "md-only/layout/LV0A_2.kosp"
+ endif
+		even
+Level_LV0A3:
+ if MegaCDMode1
+		binclude "level/layout/LV0A_3.kosp"
+ else
+		binclude "md-only/layout/LV0A_3.kosp"
+ endif
+		even
+Level_LV0A4:
+ if MegaCDMode1
+		binclude "level/layout/LV0A_4.kosp"
+ else
+		binclude "md-only/layout/LV0A_4.kosp"
+ endif
+		even
 
-Level_LV0B1:	binclude	"level/layout/LV0B_1.kosp"
-Level_LV0B2:	binclude	"level/layout/LV0B_2.kosp"
-Level_LV0B3:	binclude	"level/layout/LV0B_3.kosp"
-Level_LV0B4:	binclude	"level/layout/LV0B_4.kosp"
+Level_LV0B1:
+ if MegaCDMode1
+		binclude "level/layout/LV0B_1.kosp"
+ else
+		binclude "md-only/layout/LV0B_1.kosp"
+ endif
+		even
+Level_LV0B2:
+ if MegaCDMode1
+		binclude "level/layout/LV0B_2.kosp"
+ else
+		binclude "md-only/layout/LV0B_2.kosp"
+ endif
+		even
+Level_LV0B3:
+ if MegaCDMode1
+		binclude "level/layout/LV0B_3.kosp"
+ else
+		binclude "md-only/layout/LV0B_3.kosp"
+ endif
+		even
+Level_LV0B4:
+ if MegaCDMode1
+		binclude "level/layout/LV0B_4.kosp"
+ else
+		binclude "md-only/layout/LV0B_4.kosp"
+ endif
+		even
 
-Level_LV0C1:	binclude	"level/layout/LV0C_1.kosp"
-Level_LV0C2:	binclude	"level/layout/LV0C_2.kosp"
-Level_LV0C3:	binclude	"level/layout/LV0C_3.kosp"
-Level_LV0C4:	binclude	"level/layout/LV0C_4.kosp"
+Level_LV0C1:
+ if MegaCDMode1
+		binclude "level/layout/LV0C_1.kosp"
+ else
+		binclude "md-only/layout/LV0C_1.kosp"
+ endif
+		even
+Level_LV0C2:
+ if MegaCDMode1
+		binclude "level/layout/LV0C_2.kosp"
+ else
+		binclude "md-only/layout/LV0C_2.kosp"
+ endif
+		even
+Level_LV0C3:
+ if MegaCDMode1
+		binclude "level/layout/LV0C_3.kosp"
+ else
+		binclude "md-only/layout/LV0C_3.kosp"
+ endif
+		even
+Level_LV0C4:
+ if MegaCDMode1
+		binclude "level/layout/LV0C_4.kosp"
+ else
+		binclude "md-only/layout/LV0C_4.kosp"
+ endif
+		even
 
-Level_LV0D1:	binclude	"level/layout/LV0D_1.kosp"
-Level_LV0D2:	binclude	"level/layout/LV0D_2.kosp"
-Level_LV0D3:	binclude	"level/layout/LV0D_3.kosp"
-Level_LV0D4:	binclude	"level/layout/LV0D_4.kosp"
+Level_LV0D1:
+ if MegaCDMode1
+		binclude "level/layout/LV0D_1.kosp"
+ else
+		binclude "md-only/layout/LV0D_1.kosp"
+ endif
+		even
+Level_LV0D2:
+ if MegaCDMode1
+		binclude "level/layout/LV0D_2.kosp"
+ else
+		binclude "md-only/layout/LV0D_2.kosp"
+ endif
+		even
+Level_LV0D3:
+ if MegaCDMode1
+		binclude "level/layout/LV0D_3.kosp"
+ else
+		binclude "md-only/layout/LV0D_3.kosp"
+ endif
+		even
+Level_LV0D4:
+ if MegaCDMode1
+		binclude "level/layout/LV0D_4.kosp"
+ else
+		binclude "md-only/layout/LV0D_4.kosp"
+ endif
+		even
 
-Level_LV0E1:	binclude	"level/layout/LV0E_1.kosp"
-Level_LV0E2:	binclude	"level/layout/LV0E_2.kosp"
-Level_LV0E3:	binclude	"level/layout/LV0E_3.kosp"
-Level_LV0E4:	binclude	"level/layout/LV0E_4.kosp"
+Level_LV0E1:
+ if MegaCDMode1
+		binclude "level/layout/LV0E_1.kosp"
+ else
+		binclude "md-only/layout/LV0E_1.kosp"
+ endif
+		even
+Level_LV0E2:
+ if MegaCDMode1
+		binclude "level/layout/LV0E_2.kosp"
+ else
+		binclude "md-only/layout/LV0E_2.kosp"
+ endif
+		even
+Level_LV0E3:
+ if MegaCDMode1
+		binclude "level/layout/LV0E_3.kosp"
+ else
+		binclude "md-only/layout/LV0E_3.kosp"
+ endif
+		even
+Level_LV0E4:
+ if MegaCDMode1
+		binclude "level/layout/LV0E_4.kosp"
+ else
+		binclude "md-only/layout/LV0E_4.kosp"
+ endif
+		even
 
-Level_LV0F1:	binclude	"level/layout/LV0F_1.kosp"
-Level_LV0F2:	binclude	"level/layout/LV0F_2.kosp"
-Level_LV0F3:	binclude	"level/layout/LV0F_3.kosp"
-Level_LV0F4:	binclude	"level/layout/LV0F_4.kosp"
+Level_LV0F1:
+ if MegaCDMode1
+		binclude "level/layout/LV0F_1.kosp"
+ else
+		binclude "md-only/layout/LV0F_1.kosp"
+ endif
+		even
+Level_LV0F2:
+ if MegaCDMode1
+		binclude "level/layout/LV0F_2.kosp"
+ else
+		binclude "md-only/layout/LV0F_2.kosp"
+ endif
+		even
+Level_LV0F3:
+ if MegaCDMode1
+		binclude "level/layout/LV0F_3.kosp"
+ else
+		binclude "md-only/layout/LV0F_3.kosp"
+ endif
+		even
+Level_LV0F4:
+ if MegaCDMode1
+		binclude "level/layout/LV0F_4.kosp"
+ else
+		binclude "md-only/layout/LV0F_4.kosp"
+ endif
+		even
 Level_Null:	dc.l	0
  if TimeTravel=1
 		include	"_inc/LevelLayouts_Timezones.asm"
