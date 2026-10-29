@@ -79,11 +79,11 @@ LevelArtPointers:
 		levartptrs plcid_LV73_Main, plcid_LV73_Extra, palid_GHZ, Kosp_LV7, Map16_LV7, Map128_LV7	; LV7Z	; ACT 3
 		levartptrs plcid_LV74_Main, plcid_LV74_Extra, palid_GHZ, Kosp_LV7, Map16_LV7, Map128_LV7	; LV7Z	; ACT 4
 
-		; LV8 placeholder
-		levartptrs plcid_SMZ1_Main, plcid_SMZ1_Extra, palid_SMZ1, Kosp_LV8, Map16_LV8, Map128_LV8	; LV8Z	; ACT 1
-		levartptrs plcid_SMZ2_Main, plcid_SMZ2_Extra, palid_SMZ2, Kosp_LV8, Map16_LV8, Map128_LV8	; LV8Z	; ACT 2
-		levartptrs plcid_SMZ3_Main, plcid_SMZ3_Extra, palid_SMZ1, Kosp_LV8, Map16_LV8, Map128_SMZBlank	; LV8Z	; ACT 3
-		levartptrs plcid_SMZ4_Main, plcid_SMZ4_Extra, palid_SMZ1, Kosp_LV8, Map16_LV8, Map128_SMZBlank	; LV8Z	; ACT 4
+		; Scrap Madness
+		levartptrs plcid_SMZ1_Main, plcid_SMZ1_Extra, palid_SMZ1, Kosp_SMZ1, Map16_SMZ1, Map128_SMZ1	; SMZ	; ACT 1
+		levartptrs plcid_SMZ2_Main, plcid_SMZ2_Extra, palid_SMZ2, Kosp_SMZ2, Map16_SMZ2, Map128_SMZ2	; SMZ	; ACT 2
+		levartptrs plcid_SMZ3_Main, plcid_SMZ3_Extra, palid_SMZ1, Kosp_SMZ1, Map16_SMZ1, Map128_SMZBlank	; SMZ	; ACT 3
+		levartptrs plcid_SMZ4_Main, plcid_SMZ4_Extra, palid_SMZ1, Kosp_SMZ1, Map16_SMZ1, Map128_SMZBlank	; SMZ	; ACT 4
 
 		; LV9 placeholder
 		levartptrs plcid_LV91_Main, plcid_LV91_Extra, palid_GHZ, Kosp_LV9, Map16_LV9, Map128_LV9	; LV9Z	; ACT 1

@@ -58,7 +58,7 @@ assert (frames(rom,g.s['Map_Obj26'])[2][0][2]+g.s['ArtTile_Monitor'])&2047 == g.
 g.video.save(a.output/'sbz1-start.png')
 passed('HUD and Sonic monitor share the corrected portrait, blue and both reds')
 
-blocks = kosinski_plus_decode((ROOT/'mappings/16x16/SMZ.kosp').read_bytes())[0]
+blocks = kosinski_plus_decode((ROOT/'mappings/16x16/SMZ1.kosp').read_bytes())[0]
 refs = {word&2047 for word, in struct.iter_unpack('>H', blocks)}
 assert set(range(g.s['ArtTile_SMZ_Smoke1'], g.s['ArtTile_SMZ_Smoke2']+12)) <= refs
 assert not set(range(0x4BD,0x4C5)) & refs

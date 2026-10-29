@@ -141,15 +141,30 @@ def native_probes(args, old, old_paths):
     for m in machines:
         m.start()
     report = {}
-    for zone in args.zones:
-        chunks = (geometry_source(zone, '128x128', old, old_paths),
-                  geometry_source(zone, '128x128'))
-        columns = (old(f'collision/present/{zone}1.bin'),
-                   (ROOT/f'collision/present/{zone}1.bin').read_bytes())
+    for zone, act in ((zone, act) for zone in args.zones
+                      for act in ((1, 2) if zone == 'SMZ' else (1,))):
+        if zone == 'SMZ':
+            # Pair the actual layout cells before probing: independent banks
+            # need not retain either chunk IDs or block IDs from the baseline.
+            prior_name = f'SMZ{act}' if f'mappings/128x128/SMZ{act}.unc' in old_paths else 'SMZ'
+            source = (geometry_source(prior_name, '128x128', old, old_paths),
+                      geometry_source(f'SMZ{act}', '128x128'))
+            path = f'level/layout/SMZ_{act}.kosp'
+            layouts = (kosinski_plus_decode(old(path))[0],
+                       kosinski_plus_decode((ROOT/path).read_bytes())[0])
+            pairs = sorted(set(zip(*layouts)))
+            chunks = tuple(b''.join(raw[pair[n]*128:(pair[n]+1)*128] for pair in pairs)
+                           for n, raw in enumerate(source))
+        else:
+            chunks = (geometry_source(zone, '128x128', old, old_paths),
+                      geometry_source(zone, '128x128'))
+        columns = (old(f'collision/present/{zone}{act}.bin'),
+                   (ROOT/f'collision/present/{zone}{act}.bin').read_bytes())
         for revision, m in enumerate(machines):
             m.write('Current_Zone', ZONE_IDS[zone])
+            m.write('Current_Act', act-1)
             m.cpu.mem_write(m.s['Chunk_Table'] & 0xFFFFFF, chunks[revision])
-            ptr = m.s[f'Col_{zone}1']
+            ptr = m.s[f'Col_{zone}{act}']
             m.write('v_colladdr1', ptr, 4)
             m.write('v_colladdr2', ptr+1, 4)
         cases = 0
@@ -196,8 +211,9 @@ def native_probes(args, old, old_paths):
                                 assert delta <= args.max_angle_change, ('Native angle changed', results)
                                 differences[delta] += 1
                                 cases += 1
-        report[zone] = dict(probes=cases, angle_differences=dict(sorted(differences.items())))
-        print(zone, report[zone], flush=True)
+        name = zone+str(act) if zone == 'SMZ' else zone
+        report[name] = dict(probes=cases, angle_differences=dict(sorted(differences.items())))
+        print(name, report[name], flush=True)
     return report
 
 
@@ -264,6 +280,10 @@ def main():
 
     results = {}
     for zone in args.zones:
+        if zone == 'SMZ':
+            from check_smz_art import audit
+            results[zone] = dict(independent_acts=audit(args.reference))
+            continue
         bank = 'S1' if legacy and zone in ('LZ', 'SMZ') else 'S2'
         if zone == 'GHZ' and args.reference_ghz_bank == 'S1':
             bank = 'S1'

@@ -12,7 +12,7 @@ from convert_s1_ss_background import kosinski_plus, kosinski_plus_decode
 ROOT=Path(__file__).resolve().parents[1]
 
 def build():
-    path=ROOT/'mappings/128x128/SMZ.unc';raw=path.read_bytes()
+    path=ROOT/'mappings/128x128/SMZ2.unc';raw=path.read_bytes()
     chunks=[raw[i:i+128] for i in range(0,len(raw),128)]
     primary=bytearray(kosinski_plus_decode((ROOT/'level/layout/SMZ_2.kosp').read_bytes())[0])
     paths=list((ROOT/'level/layout').rglob('SMZ_2.kosp'))

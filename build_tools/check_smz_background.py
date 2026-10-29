@@ -27,8 +27,6 @@ args = p.parse_args()
 g = Genesis(args.core, args.rom, args.listing, args.output, args.pal,
             system_directory=args.system_directory)
 vsram = (C.c_uint8 * 128).in_dll(g.core, 'vsram')
-chunks = (ROOT / 'mappings/128x128/SMZ.unc').read_bytes()
-blocks = (ROOT / 'mappings/16x16/SMZ.unc').read_bytes()
 rom = args.rom.read_bytes()
 report = []
 tile_samples = scroll_samples = 0
@@ -43,6 +41,8 @@ def camera():
 
 
 for act in (0, 1):
+    chunks = (ROOT / f'mappings/128x128/SMZ{act+1}.unc').read_bytes()
+    blocks = (ROOT / f'mappings/16x16/SMZ{act+1}.unc').read_bytes()
     boot_level(g, zone=g.s['id_SMZ'], act=act, player=args.player)
     start_x, start_y = struct.unpack_from('>HH', rom,
         g.s['StartLocArray'] + g.s['id_SMZ'] * 16 + act * 4)

@@ -30,20 +30,33 @@ def old(path):return subprocess.check_output(['git','show',a.reference+':'+str(p
 
 if not a.probe:
  # Compare every block, including blocks not currently placed in any chunk.
- for zone in ('GHZ','LZ','CPZ','EHZ','HPZ','HTZ','MTZ','SMZ'):
+ for zone in ('GHZ','LZ','CPZ','EHZ','HPZ','HTZ','MTZ','SMZ1','SMZ2'):
   ap=Path(f'art/kosinski/level/8x8 - {zone}.kosp');mp=Path(f'mappings/16x16/{zone}.kosp')
-  before=kosinski_plus_decode(old(ap))[0];after=kosinski_plus_decode((ROOT/ap).read_bytes())[0]
-  bm=kosinski_plus_decode(old(mp))[0];am=kosinski_plus_decode((ROOT/mp).read_bytes())[0]
-  assert len(bm)==len(am)
+  prior='SMZ' if zone.startswith('SMZ') else zone
+  before=kosinski_plus_decode(old(Path(f'art/kosinski/level/8x8 - {prior}.kosp')))[0];after=kosinski_plus_decode((ROOT/ap).read_bytes())[0]
+  bm=kosinski_plus_decode(old(Path(f'mappings/16x16/{prior}.kosp')))[0];am=kosinski_plus_decode((ROOT/mp).read_bytes())[0]
   assert (ROOT/ap.with_suffix('.unc')).read_bytes()==after
   assert not any(after[:17*32]), (zone,'transparent tile / water prefix changed')
+  def block_pixels(data,art,prior=False):
+   out=[]
+   for word, in struct.iter_unpack('>H',data):
+    tile=word&2047
+    if zone.startswith('SMZ') and prior and tile==0x4AF:
+     pixels=kosinski_plus_decode(old('art/kosinski/level/SMZ Terrain Tile.kosp'))[0]
+    else:pixels=art[tile*32:(tile+1)*32]
+    out.append((word&0xF800,pixels or tile))
+   return tuple(out)
+  if zone.startswith('SMZ'):
+   original={block_pixels(bm[i:i+8],before,True) for i in range(0,len(bm),8)}
+   assert all(block_pixels(am[i:i+8],after) in original for i in range(0,len(am),8)),zone
+   record(zone+' retained block pixels preserved',blocks=len(am)//8)
+   continue
+  assert len(bm)==len(am)
   for (ow,),(nw,) in zip(struct.iter_unpack('>H',bm),struct.iter_unpack('>H',am)):
    assert ow&0xF800==nw&0xF800,(zone,'tile flags changed')
    ot,nt=ow&2047,nw&2047
    assert not 1<=nt<17,(zone,'terrain still uses water tiles',nt)
-   if zone=='SMZ' and ot==0x4AF:
-    previous=kosinski_plus_decode(old('art/kosinski/level/SMZ Terrain Tile.kosp'))[0]
-   elif ot*32>=len(before):
+   if ot*32>=len(before):
     assert ot==nt;continue  # separate animated art
    else:previous=before[ot*32:(ot+1)*32]
    current=after[nt*32:(nt+1)*32]

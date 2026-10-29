@@ -204,7 +204,8 @@ through the middle of the sheet. Static relocation preserves block pixels,
 palette and flips; ledges and platforms keep sharing terrain art. GHZ reclaims
 ten unused interior slots into terrain, leaving ten more tiles of contiguous
 capacity before its object bank at `$32B`. SMZ's former atlas-hosted terrain tile
-is back in the terrain set at `$2B8`.
+is included in each act's compact terrain sheet; its sprite atlas still starts
+at `$2B9`.
 
 Dry acts may reuse the surface slots until water is enabled. GHZ intentionally
 loads its smashable wall into `$001-$00C` through the Extra PLCs, using
@@ -234,6 +235,30 @@ not a claim that every tile's pixels are unique.
 
 Acts 1/2 retain S1 SBZ foreground, industrial backgrounds, collision and hazards.
 The S1 converter deduplicates 256-pixel chunks into the current 128-pixel format.
+Each act has independent editable `8x8 - SMZ1/SMZ2.unc` tiles and
+`SMZ1/SMZ2.unc` block/chunk sheets, with matching Kosinski+ archives. Act 1
+contains its outside background; Act 2 contains its inside background. Each
+bank keeps the foreground and background chunks used by that act in any era,
+then compacts their blocks and static tiles. All four era headers and SonLVL
+select the corresponding bank. Collision indices are remapped with the blocks;
+the shared profiles, chunk flips/solidity and tile palette/priority/flips remain
+unchanged. The source sheets remain ordinary editable inputs, not outputs
+regenerated during a normal build. Recompress an edited `.unc` sheet alongside
+the edit. A full S1 import deliberately rebuilds and splits them again.
+
+| Act | Static tiles, including reserved prefix | Blocks | Chunks | Static upload saved versus the shared 697-tile bank |
+| --- | ---: | ---: | ---: | ---: |
+| 1 | 469 | 374 | 166 | 228 tiles / 7,296 bytes |
+| 2 | 474 | 383 | 175 | 223 tiles / 7,136 bytes |
+
+Tile zero and water slots `$001-$010` retain their fixed positions. External
+smoke, junction and sprite banks do not move. The reclaimed space is contiguous
+before the resident atlas; object allocations are unchanged. Splitting duplicates
+some shared foreground data in ROM, while reducing each act's decode/upload work
+and resident terrain. Starter acts 3/4 use Act 1's tiles/blocks and retain their
+separate `SMZ Blank.kosp` chunks. Blocks 0..5 keep their IDs: block 0 is empty,
+block 1 supplies the starter floor and block 5 supplies the Mecha arena floor.
+
 Act 1 uses the REV01 cloud gradient and three building layers scrolling at
 1/4, 3/8 and 1/2 foreground speed. All layers follow vertical movement at 1/8
 speed; act 2 uses a uniform 1/4 horizontal and 1/8 vertical speed. Initial draws
@@ -244,7 +269,7 @@ trap/fight at its original signpost position
 `build_smz2_mecha_arena.py` makes three private chunk copies: inside
 `$1E40..$1F7F`, raised steps above `$05C0` are cleared and existing steel
 block 5 supplies a flat, fully solid floor on both collision paths. The
-approach before `$1E40`, other acts and shared blocks/profiles are unchanged.
+approach before `$1E40`, other acts and the act's blocks/shared profiles are unchanged.
 All four time variants receive the floor; the SMZ importer reapplies it.
 The last room's pipe backdrop contains high-priority tiles, so its actors,
 tails and sign are drawn above that backdrop. The original foreground still

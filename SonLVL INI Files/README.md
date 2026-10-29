@@ -10,6 +10,11 @@ objects whose art or mappings depend on the zone: bridges, Chopper/Masher,
 platforms, rocks, and the Scrap Madness sprite atlas. All 64 act sections name
 an object list and placement file. HTZ acts 2–4 are included.
 
+Scrap Madness Acts 1/2 use independent terrain tiles, blocks and chunks named
+`SMZ1` and `SMZ2`. Their outside/inside backgrounds and per-act collision indices
+match the runtime headers. Acts 3/4 share Act 1's tiles/blocks with the separate
+starter chunk bank. See [terrain editing and regeneration](../docs/Levels.md#scrap-madness).
+
 Definitions use the game's current graphics and mappings. Nemesis and moduled
 Kosinski Plus art have explicit compression settings. Capsule and resident boss
 previews use the same current moduled archives as the game. The streamed

@@ -49,7 +49,7 @@ def prime_history():
 
 for act in (1,2):
  boot_level(g,zone=8,act=act-1);assert g.read('Current_ZoneAndAct',2)==0x800+act-1;base=g.save()
- terrain=(ROOT/'art/kosinski/level/8x8 - SMZ.unc').read_bytes();actual=bytes(g.vram[i^1] for i in range(len(terrain)));assert terrain==actual,'terrain art overwritten'
+ terrain=(ROOT/f'art/kosinski/level/8x8 - SMZ{act}.unc').read_bytes();actual=bytes(g.vram[i^1] for i in range(len(terrain)));assert terrain==actual,'terrain art overwritten'
  slow=[('approach',(7,),72),('brake',(6,),24),('full-stop',(),80),('restart',(7,),30),('tap-jump',(7,8),5),('release',(),44),('land',(),15)]
  run(f'act-{act}-slow-stop-restart',slow)
  g.restore(base);run(f'act-{act}-fast',[('run',(7,),90),('jump',(7,8),18),('run-on',(7,),45),('stop',(),140)],alive=False)

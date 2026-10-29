@@ -563,8 +563,11 @@ MCD_CompressedAssets:
 	if defined(Kosp_MTZ)
 	dc.l Kosp_MTZ,Kosp_MTZ+$2BBA	; art/kosinski/level/8x8 - MTZ.kosp
 	endif
-	if defined(Kosp_SMZ)
-	dc.l Kosp_SMZ,Kosp_SMZ+$24B6	; art/kosinski/level/8x8 - SMZ.kosp
+	if defined(Kosp_SMZ1)
+	dc.l Kosp_SMZ1,Kosp_SMZ1+$169E	; art/kosinski/level/8x8 - SMZ1.kosp
+	endif
+	if defined(Kosp_SMZ2)
+	dc.l Kosp_SMZ2,Kosp_SMZ2+$19E5	; art/kosinski/level/8x8 - SMZ2.kosp
 	endif
 	if defined(Kosp_Title)
 	dc.l Kosp_Title,Kosp_Title+$166C	; art/kosinski/level/8x8 - Title.kosp
@@ -920,8 +923,11 @@ MCD_CompressedAssets:
 	if defined(Map128_MTZBlank)
 	dc.l Map128_MTZBlank,Map128_MTZBlank+$E	; mappings/128x128/MTZ Blank.kosp
 	endif
-	if defined(Map128_SMZ)
-	dc.l Map128_SMZ,Map128_SMZ+$2C7E	; mappings/128x128/SMZ.kosp
+	if defined(Map128_SMZ1)
+	dc.l Map128_SMZ1,Map128_SMZ1+$1EFC	; mappings/128x128/SMZ1.kosp
+	endif
+	if defined(Map128_SMZ2)
+	dc.l Map128_SMZ2,Map128_SMZ2+$1EDC	; mappings/128x128/SMZ2.kosp
 	endif
 	if defined(Map128_SMZBlank)
 	dc.l Map128_SMZBlank,Map128_SMZBlank+$E	; mappings/128x128/SMZ Blank.kosp
@@ -947,8 +953,11 @@ MCD_CompressedAssets:
 	if defined(Map16_MTZ)
 	dc.l Map16_MTZ,Map16_MTZ+$B8A	; mappings/16x16/MTZ.kosp
 	endif
-	if defined(Map16_SMZ)
-	dc.l Map16_SMZ,Map16_SMZ+$D62	; mappings/16x16/SMZ.kosp
+	if defined(Map16_SMZ1)
+	dc.l Map16_SMZ1,Map16_SMZ1+$830	; mappings/16x16/SMZ1.kosp
+	endif
+	if defined(Map16_SMZ2)
+	dc.l Map16_SMZ2,Map16_SMZ2+$93B	; mappings/16x16/SMZ2.kosp
 	endif
 	if defined(Nem_Aquis)
 	dc.l Nem_Aquis,Nem_Aquis+$438	; art/nemesis/Enemy Aquis.nem

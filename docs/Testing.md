@@ -177,6 +177,21 @@ geometry preservation. Add `--previous-rom ... --previous-listing ...` to
 compare the actual old/new floor and wall routines around each distinct affected
 placed block orientation, with both paths, scan directions and solidity bits.
 
+SMZ's independent act banks use `check_smz_art.py` through the same terrain
+checker. It pairs old/new chunks through every layout position in all four eras,
+then checks each retained cell's pixels, palette/flips/priority, chunk flags and
+both collision indices. It also checks archive/source equality, the water prefix,
+starter banks and SonLVL selections. This supports a baseline with the former
+shared bank or the independent banks. The split requires an unchanged shared
+collision-profile bank. To check the assembled act/era selector as well:
+
+```sh
+python build_tools/check_smz_art.py --reference OLD_REF --rom s2built.bin --listing md-main.lst --output test-results/smz-art/report.json
+```
+
+The optional native floor/wall comparison pairs SMZ chunks through the actual
+layouts and probes both act banks despite their different numeric IDs.
+
 Add `--core ...` and, for Mode 1, `--system-directory ...` to launch all four
 GHZ acts, both imported Scrap Madness acts and act 1 of the other terrain sets
 with Sonic/Tails, then run both characters through GHZ's loop to a grounded exit. `--pal` selects PAL.

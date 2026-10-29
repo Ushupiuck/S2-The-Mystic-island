@@ -13919,10 +13919,6 @@ BMap128_MTZ:	binclude	"mappings/128x128/MTZ.kosp"
 ; From here onwards, filler data for the NEW levels.
 ; ===========================================================================
 ; Zone 07
-Kosp_SMZ:	binclude	"art/kosinski/level/8x8 - SMZ.kosp"
-Map16_SMZ:	binclude	"mappings/16x16/SMZ.kosp"
-Map128_SMZ:	binclude	"mappings/128x128/SMZ.kosp"
-Map128_SMZBlank:	binclude	"mappings/128x128/SMZ Blank.kosp"
 Map128_MTZBlank:	binclude	"mappings/128x128/MTZ Blank.kosp"
 Kosp_LV7:	equ Kosp_GHZ
 Map16_LV7:	equ Map16_GHZ
@@ -13942,24 +13938,20 @@ BMap16_LV7:	equ Map16_GHZ
 BMap128_LV7:	equ Map128_Blank
  endif
 ; ===========================================================================
-; Zone 08
-Kosp_LV8:	equ Kosp_SMZ
-Map16_LV8:	equ Map16_SMZ
-Map128_LV8:	equ Map128_SMZ
- if TimeTravel=1
-; Past
-PKosp_LV8:	equ Kosp_SMZ
-PMap16_LV8:	equ Map16_SMZ
-PMap128_LV8:	equ Map128_SMZ
-; Good Future
-GKosp_LV8:	equ Kosp_SMZ
-GMap16_LV8:	equ Map16_SMZ
-GMap128_LV8:	equ Map128_SMZ
-; Bad Future
-BKosp_LV8:	equ Kosp_SMZ
-BMap16_LV8:	equ Map16_SMZ
-BMap128_LV8:	equ Map128_SMZ
- endif
+; Zone 08 - Scrap Madness, independent per-act terrain banks
+Kosp_SMZ1:	binclude	"art/kosinski/level/8x8 - SMZ1.kosp"
+		even
+Map16_SMZ1:	binclude	"mappings/16x16/SMZ1.kosp"
+		even
+Map128_SMZ1:	binclude	"mappings/128x128/SMZ1.kosp"
+		even
+Kosp_SMZ2:	binclude	"art/kosinski/level/8x8 - SMZ2.kosp"
+		even
+Map16_SMZ2:	binclude	"mappings/16x16/SMZ2.kosp"
+		even
+Map128_SMZ2:	binclude	"mappings/128x128/SMZ2.kosp"
+		even
+Map128_SMZBlank:	binclude	"mappings/128x128/SMZ Blank.kosp"
 ; ===========================================================================
 ; Zone 09
 Kosp_LV9:	equ Kosp_GHZ

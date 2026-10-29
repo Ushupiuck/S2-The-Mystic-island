@@ -172,6 +172,54 @@ def remap_player_art(name, raw, lookup):
     return remap_pixels(raw, lookup)
 
 
+def split_art(art, blocks, chunks, layouts, collisions, blank):
+    """Write independent act banks, keeping every cell used in any era.
+
+    This is an import operation, not a normal build step. The resulting .unc
+    sheets, layouts and collision indices are the editable sources. Tile zero
+    and water slots 1..16 stay fixed, as do external animation/sprite banks.
+    Blocks 0..5 retain their IDs for the starter floor and Mecha arena tool.
+    """
+    report = []
+    for act in (1, 2):
+        selected = sorted(set().union(*(set(data) for data in layouts[act].values())))
+        assert selected[0] == 0 and len(selected) <= 256
+        chunk_map = {old: new for new, old in enumerate(selected)}
+        cells = [struct.unpack_from('>64H', chunks, old*128) for old in selected]
+        block_ids = sorted(set(range(6)) | {word & 0x3FF for row in cells for word in row})
+        block_map = {old: new for new, old in enumerate(block_ids)}
+        words = [struct.unpack_from('>4H', blocks, old*8) for old in block_ids]
+        tile_ids = sorted(set(range(17)) | {
+            word & 0x7FF for row in words for word in row if (word & 0x7FF)*32 < len(art)})
+        tile_map = {old: new for new, old in enumerate(tile_ids)}
+        def tile(word):
+            old = word & 0x7FF
+            return (word & 0xF800) | tile_map.get(old, old)
+        act_art = b''.join(art[old*32:(old+1)*32] for old in tile_ids)
+        act_blocks = b''.join(struct.pack('>4H', *(tile(w) for w in row)) for row in words)
+        act_chunks = b''.join(struct.pack('>64H', *(
+            (w & 0xFC00) | block_map[w & 0x3FF] for w in row)) for row in cells)
+        for path, raw in ((f'art/kosinski/level/8x8 - SMZ{act}', act_art),
+                          (f'mappings/16x16/SMZ{act}', act_blocks),
+                          (f'mappings/128x128/SMZ{act}', act_chunks)):
+            (ROOT/(path+'.unc')).write_bytes(raw)
+            pack(path+'.kosp', raw)
+        for path, data in layouts[act].items():
+            pack(path, bytes(chunk_map[n] for n in data))
+        for path, data in collisions[act].items():
+            (ROOT/path).write_bytes(b''.join(data[n*2:n*2+2] for n in block_ids))
+        if act == 1:
+            # The starter chunks share Act 1's block definitions, not its layout.
+            values = [(w & 0xFC00) | block_map[w & 0x3FF]
+                      for w, in struct.iter_unpack('>H', blank)]
+            pack('mappings/128x128/SMZ Blank.kosp', struct.pack('>'+str(len(values))+'H', *values))
+            for starter in (3, 4):
+                for path, data in collisions[starter].items():
+                    (ROOT/path).write_bytes(b''.join(data[n*2:n*2+2] for n in block_ids))
+        report.append(dict(act=act, tiles=len(tile_ids), blocks=len(block_ids), chunks=len(selected)))
+    return report
+
+
 def geometry(source):
     words = enigma((source/'map16/SBZ.eni').read_bytes(), 0)
     # Animated smoke lives above the wheel, below the spring bank.
@@ -217,7 +265,6 @@ def geometry(source):
                         halves[key] = chunk_ids[chunk]
                     layout[cy*256 + (128 if bg else 0) + cx] = halves[key]
         layouts.append(bytes(layout))
-        pack(f'level/layout/SMZ_{act}.kosp', layout)
     assert len(chunks) <= 256, len(chunks)
     collisions = (source/'collide/SBZ.bin').read_bytes()
     # The last two source blocks are background-only and have no collision entry.
@@ -228,12 +275,6 @@ def geometry(source):
         blocks, b''.join(chunks), [indices],
         read_bank(source/'collide', S1_BANK_FILES), read_bank(ROOT/'collision'),
         max_angle_change=4)
-    for size, raw in (('16x16', blocks), ('128x128', chunk_data)):
-        (ROOT/f'mappings/{size}/SMZ.unc').write_bytes(raw)
-        pack(f'mappings/{size}/SMZ.kosp', raw)
-    for timezone in ('present', 'past', 'good Future', 'bad future'):
-        for act in range(1, 5):
-            (ROOT/f'collision/{timezone}/SMZ{act}.bin').write_bytes(indices)
     for act in (1,2):
         (ROOT/f'startpos/SMZ_{act}.bin').write_bytes((source/f'startpos/sbz{act}.bin').read_bytes())
         palette = bytearray((source/f'palette/SBZ Act {act}.bin').read_bytes())
@@ -241,9 +282,7 @@ def geometry(source):
         # The first imported row is palette line 2, shared by terrain/objects.
         palette[14:20] = (ROOT/'palette/SonicAndTails.bin').read_bytes()[14:20]
         (ROOT/f'palette/SMZ{act}.bin').write_bytes(palette)
-    from build_smz2_mecha_arena import build as build_mecha_arena
-    arena_chunks=build_mecha_arena()
-    return {'blocks':len(blocks)//8,'chunks':arena_chunks}
+    return blocks, chunk_data, indices, layouts
 
 
 def placements(source):
@@ -354,13 +393,24 @@ def main():
                                       m68k.UC_M68K_REG_A4:0xFF0000})
         return bytes(machine.cpu.mem_read(0xFF0000,count*32))
 
-    report=geometry(source)
+    blocks,chunks,indices,layouts=geometry(source)
+    report={}
     report['acts']=placements(source)
     art=nemesis(source/'artnem/8x8 - SBZ.nem')
     assert not any(art[:32]) and len(art)==0x2A9*32
     art=art[:32]+bytes(16*32)+art[32:]
-    pack('art/kosinski/level/8x8 - SMZ.kosp',art)
-    (ROOT/'art/kosinski/level/8x8 - SMZ.unc').write_bytes(art)
+    era_dirs=('', 'past/', 'good future/', 'bad future/')
+    act_layouts={act:{f'level/layout/{era}SMZ_{act}.kosp':layouts[act-1]
+                     for era in era_dirs} for act in (1,2)}
+    act_collisions={act:{f'collision/{era}/SMZ{act}.bin':indices
+                        for era in ('present','past','good Future','bad future')}
+                    for act in range(1,5)}
+    blank=kosinski_plus_decode((ROOT/'mappings/128x128/SMZ Blank.kosp').read_bytes())[0]
+    # Starter blocks 0/1 retain their source IDs, so the editable blank bank
+    # works both after a previous split and after a fresh import.
+    report['art']=split_art(art,blocks,chunks,act_layouts,act_collisions,blank)
+    from build_smz2_mecha_arena import build as build_mecha_arena
+    report['arena_chunks']=build_mecha_arena()
     maps={'Rotating Junction':'Jun','Running Disc':'Disc','Trapdoor':'Trap',
           'SBZ Spinning Platforms':'Spin','Saws and Pizza Cutters':'Saw',
           'SBZ Stomper and Door':'Stomp','SBZ Vanishing Platforms':'VanP',
