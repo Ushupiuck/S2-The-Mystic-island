@@ -272,7 +272,10 @@ for zone in range(16):
 		g.write('v_levselitem', selected, 2)
 		press(START)
 		wait_level(zone, act)
-		step(15); item(selected)
+		for frame in range(90):
+			step()
+			assert g.get('v_player','obRoutine') < 6, (zone,act,frame,'death during idle level entry')
+		item(selected)
 		if cd_chunks:
 			header = g.s['LevelArtPointers'] + (zone * 4 + act) * 12
 			source = struct.unpack_from('>I', rom, header + 8)[0] & 0xFFFFFF

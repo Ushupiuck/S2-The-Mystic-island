@@ -27,8 +27,8 @@ def main():
     rows=decode((ROOT/'level/objects/GHZ_4.bin').read_bytes())
     pool=range(g.s['v_lvlobjspace']&65535,g.s['v_lvlobjend']&65535,g.s['object_size'])
     base=g.save();checks=[];trace=[]
-    assert g.read('Water_flag') and g.read('v_waterpos2',2)==0x400
-    assert g.read('Camera_Max_Y_pos',2)==0x500
+    assert g.read('Water_flag') and g.read('v_waterpos2',2)==0x600
+    assert g.read('Camera_Max_Y_pos',2)==0x700
 
     def run(n=1):
         for _ in range(n):
@@ -106,7 +106,7 @@ def main():
     actors=['v_player'] if args.player==2 else ['v_player','v_player2']
     for who in actors:
         for local_x,strength in ((-16,0xF000),(16,0xF600)):
-            root,b,group=visit(0x400,0x280)
+            root,b,group=visit(0x400,0x480)
             child=next(a for a in group if g.get(a,'Mount_x',2)==local_x&65535)
             place(g,who,g.get(child,'obX',2),g.get(child,'obY',2)-g.get(who,'default_y_radius')-10)
             g.put(who,'obVelY',0x100,2)
@@ -116,7 +116,7 @@ def main():
                 if launched:break
             assert launched, ('spring launch',who,local_x)
             g.video.save(args.output/f'spring-{who}-{local_x}.png')
-        root,b,group=visit(0x680,0x1E8);child=group[0]
+        root,b,group=visit(0x680,0x3E8);child=group[0]
         place(g,who,g.get(child,'obX',2),g.get(child,'obY',2)-70)
         for f,v,n in [('obStatus',6,1),('obAnim',g.s['AniIDSonAni_Roll'],1),('obHeight',14,1),('obWidth',7,1),('obVelY',0x100,2)]:g.put(who,f,v,n)
         g.write('v_rings',40,2);run(100)
@@ -131,7 +131,7 @@ def main():
         for _ in range(12):
             run();started|=bool(g.get(root,'swing_mode_started'))
         assert started, ('authored momentum rail',who)
-        root,b,group=visit(0x900,0x280);child=group[0]
+        root,b,group=visit(0x900,0x480);child=group[0]
         place(g,who,g.get(child,'obX',2),g.get(child,'obY',2)-g.get(who,'default_y_radius')-20)
         g.put(who,'obVelY',0x100,2);g.put(who,'obStatusSecondary',0);g.put(who,'invtime',0,2)
         g.write('v_rings',40,2);hurt=False
@@ -142,7 +142,7 @@ def main():
     if args.player==0:
         # Both arrangements use the same physical body through detachment.
         for top,bottom in (('v_player','v_player2'),('v_player2','v_player')):
-            root,b,group=visit(0x180,0x388);button=group[0];grip=g.get(b,'Plat_hanger',2)
+            root,b,group=visit(0x180,0x588);button=group[0];grip=g.get(b,'Plat_hanger',2)
             assert grip
             place(g,top,g.get(button,'obX',2),g.get(button,'obY',2)-45)
             g.put(top,'obVelY',0x100,2)

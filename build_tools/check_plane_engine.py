@@ -126,6 +126,31 @@ class Drawing:
         return len(raw)
 
 
+def camera_checks(rom, listing):
+    from native_test_core import (UC_M68K_REG_A1, UC_M68K_REG_A2,
+                                  UC_M68K_REG_A3, UC_M68K_REG_A4)
+    m = Native(rom, listing)
+    wrap = m.s['Level_YWrapMask']+1
+    cases = ((0xFF00,wrap-0x100,0xFF00,wrap-0xA1,wrap-0x101),
+             (0xFF00,wrap-0x100,wrap-1,0x61,1),
+             (0x300,0xA20,0xA1F,0xAA0,0xA20),
+             (0x300,0xA20,0x301,0x340,0x300))
+    for minimum,maximum,camera,player,expected in cases:
+        m.start()
+        for field,value in (('Camera_Min_Y_pos',minimum),('Camera_Max_Y_pos',maximum),
+                            ('Camera_Y_pos',camera),('Camera_Y_pos_bias',96)):
+            m.write(field,value,2)
+        m.put('v_player','obY',player,2)
+        m.cpu.mem_write(0xFF9000,bytes(4))
+        m.act('ScrollVertical','v_player',
+              {UC_M68K_REG_A1:m.s['Camera_Y_pos'],UC_M68K_REG_A2:0xFF9000,
+               UC_M68K_REG_A3:0xFF9002,UC_M68K_REG_A4:m.s['Camera_Y_pos_diff']})
+        assert m.read('Camera_Y_pos',2)==expected, (
+            'Camera must wrap only in wrapping acts, otherwise clamp',minimum,maximum,camera,
+            hex(m.read('Camera_Y_pos',2)),hex(expected))
+    return len(cases)
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--rom', type=Path, default=ROOT/'s2built.bin')
@@ -208,6 +233,7 @@ def main():
     d.call('MCD_SubTerrainLayout')
     assert d.cpu.reg_read(UC_M68K_REG_D0)==1023
     result = dict(layouts=files, draws=len(d.bytes), tile_samples=d.samples, max_record_bytes=max(d.bytes),
+                  camera_wrap_and_clamp_cases=camera_checks(args.rom,args.listing),
                   word_ids=True, independent_dimensions=True, mutable_blocks=True, act_era_selections=256, collision_lookups=1000)
     args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_text(json.dumps(result,indent=2)+'\n')

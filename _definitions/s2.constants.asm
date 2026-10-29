@@ -1640,7 +1640,7 @@ HW_Expansion_SCtrl:		equ $A1001F
 ; The main values are based on where the camera boundaries mainly lie
 ; The end values are where the camera scrolls towards after defeat
 boss_ghz_x:	equ $2960		; Green Hill Zone
-boss_ghz_y:	equ $300
+boss_ghz_y:	equ $500
 boss_ghz_end:	equ boss_ghz_x+$160
 
 boss_lz_x:	equ $1DE0		; Labyrinth Zone

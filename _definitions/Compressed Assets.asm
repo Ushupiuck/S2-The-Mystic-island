@@ -36,28 +36,28 @@ MCD_CompressedAssets:
 	dc.l BLevel_CPZ4,BLevel_CPZ4+$454	; level/layout/bad future/CPZ_4.kosp
 	endif
 	if defined(BLevel_EHZ1)
-	dc.l BLevel_EHZ1,BLevel_EHZ1+$2F2	; level/layout/bad future/EHZ_1.kosp
+	dc.l BLevel_EHZ1,BLevel_EHZ1+$30F	; level/layout/bad future/EHZ_1.kosp
 	endif
 	if defined(BLevel_EHZ2)
-	dc.l BLevel_EHZ2,BLevel_EHZ2+$31F	; level/layout/bad future/EHZ_2.kosp
+	dc.l BLevel_EHZ2,BLevel_EHZ2+$33A	; level/layout/bad future/EHZ_2.kosp
 	endif
 	if defined(BLevel_EHZ3)
-	dc.l BLevel_EHZ3,BLevel_EHZ3+$310	; level/layout/bad future/EHZ_3.kosp
+	dc.l BLevel_EHZ3,BLevel_EHZ3+$32C	; level/layout/bad future/EHZ_3.kosp
 	endif
 	if defined(BLevel_EHZ4)
-	dc.l BLevel_EHZ4,BLevel_EHZ4+$310	; level/layout/bad future/EHZ_4.kosp
+	dc.l BLevel_EHZ4,BLevel_EHZ4+$32C	; level/layout/bad future/EHZ_4.kosp
 	endif
 	if defined(BLevel_GHZ1)
-	dc.l BLevel_GHZ1,BLevel_GHZ1+$2F1	; level/layout/bad future/GHZ_1.kosp
+	dc.l BLevel_GHZ1,BLevel_GHZ1+$301	; level/layout/bad future/GHZ_1.kosp
 	endif
 	if defined(BLevel_GHZ2)
-	dc.l BLevel_GHZ2,BLevel_GHZ2+$2F7	; level/layout/bad future/GHZ_2.kosp
+	dc.l BLevel_GHZ2,BLevel_GHZ2+$306	; level/layout/bad future/GHZ_2.kosp
 	endif
 	if defined(BLevel_GHZ3)
-	dc.l BLevel_GHZ3,BLevel_GHZ3+$35E	; level/layout/bad future/GHZ_3.kosp
+	dc.l BLevel_GHZ3,BLevel_GHZ3+$372	; level/layout/bad future/GHZ_3.kosp
 	endif
 	if defined(BLevel_GHZ4)
-	dc.l BLevel_GHZ4,BLevel_GHZ4+$364	; level/layout/bad future/GHZ_4.kosp
+	dc.l BLevel_GHZ4,BLevel_GHZ4+$377	; level/layout/bad future/GHZ_4.kosp
 	endif
 	if defined(BLevel_HPZ1)
 	dc.l BLevel_HPZ1,BLevel_HPZ1+$44D	; level/layout/bad future/HPZ_1.kosp
@@ -192,7 +192,7 @@ MCD_CompressedAssets:
 	dc.l BLevel_LZ4,BLevel_LZ4+$2C5	; level/layout/bad future/LZ_4.kosp
 	endif
 	if defined(BLevel_MTZ1)
-	dc.l BLevel_MTZ1,BLevel_MTZ1+$F2	; level/layout/bad future/MTZ_1.kosp
+	dc.l BLevel_MTZ1,BLevel_MTZ1+$10F	; level/layout/bad future/MTZ_1.kosp
 	endif
 	if defined(BLevel_MTZ2)
 	dc.l BLevel_MTZ2,BLevel_MTZ2+$82	; level/layout/bad future/MTZ_2.kosp
@@ -318,28 +318,28 @@ MCD_CompressedAssets:
 	dc.l GLevel_CPZ4,GLevel_CPZ4+$454	; level/layout/good future/CPZ_4.kosp
 	endif
 	if defined(GLevel_EHZ1)
-	dc.l GLevel_EHZ1,GLevel_EHZ1+$2F2	; level/layout/good future/EHZ_1.kosp
+	dc.l GLevel_EHZ1,GLevel_EHZ1+$30F	; level/layout/good future/EHZ_1.kosp
 	endif
 	if defined(GLevel_EHZ2)
-	dc.l GLevel_EHZ2,GLevel_EHZ2+$31F	; level/layout/good future/EHZ_2.kosp
+	dc.l GLevel_EHZ2,GLevel_EHZ2+$33A	; level/layout/good future/EHZ_2.kosp
 	endif
 	if defined(GLevel_EHZ3)
-	dc.l GLevel_EHZ3,GLevel_EHZ3+$310	; level/layout/good future/EHZ_3.kosp
+	dc.l GLevel_EHZ3,GLevel_EHZ3+$32C	; level/layout/good future/EHZ_3.kosp
 	endif
 	if defined(GLevel_EHZ4)
-	dc.l GLevel_EHZ4,GLevel_EHZ4+$310	; level/layout/good future/EHZ_4.kosp
+	dc.l GLevel_EHZ4,GLevel_EHZ4+$32C	; level/layout/good future/EHZ_4.kosp
 	endif
 	if defined(GLevel_GHZ1)
-	dc.l GLevel_GHZ1,GLevel_GHZ1+$2F1	; level/layout/good future/GHZ_1.kosp
+	dc.l GLevel_GHZ1,GLevel_GHZ1+$301	; level/layout/good future/GHZ_1.kosp
 	endif
 	if defined(GLevel_GHZ2)
-	dc.l GLevel_GHZ2,GLevel_GHZ2+$2F7	; level/layout/good future/GHZ_2.kosp
+	dc.l GLevel_GHZ2,GLevel_GHZ2+$306	; level/layout/good future/GHZ_2.kosp
 	endif
 	if defined(GLevel_GHZ3)
-	dc.l GLevel_GHZ3,GLevel_GHZ3+$35E	; level/layout/good future/GHZ_3.kosp
+	dc.l GLevel_GHZ3,GLevel_GHZ3+$372	; level/layout/good future/GHZ_3.kosp
 	endif
 	if defined(GLevel_GHZ4)
-	dc.l GLevel_GHZ4,GLevel_GHZ4+$364	; level/layout/good future/GHZ_4.kosp
+	dc.l GLevel_GHZ4,GLevel_GHZ4+$377	; level/layout/good future/GHZ_4.kosp
 	endif
 	if defined(GLevel_HPZ1)
 	dc.l GLevel_HPZ1,GLevel_HPZ1+$44D	; level/layout/good future/HPZ_1.kosp
@@ -474,7 +474,7 @@ MCD_CompressedAssets:
 	dc.l GLevel_LZ4,GLevel_LZ4+$2C5	; level/layout/good future/LZ_4.kosp
 	endif
 	if defined(GLevel_MTZ1)
-	dc.l GLevel_MTZ1,GLevel_MTZ1+$F2	; level/layout/good future/MTZ_1.kosp
+	dc.l GLevel_MTZ1,GLevel_MTZ1+$10F	; level/layout/good future/MTZ_1.kosp
 	endif
 	if defined(GLevel_MTZ2)
 	dc.l GLevel_MTZ2,GLevel_MTZ2+$82	; level/layout/good future/MTZ_2.kosp
@@ -720,28 +720,28 @@ MCD_CompressedAssets:
 	dc.l Level_CPZ4,Level_CPZ4+$454	; level/layout/CPZ_4.kosp
 	endif
 	if defined(Level_EHZ1)
-	dc.l Level_EHZ1,Level_EHZ1+$2F2	; level/layout/EHZ_1.kosp
+	dc.l Level_EHZ1,Level_EHZ1+$30F	; level/layout/EHZ_1.kosp
 	endif
 	if defined(Level_EHZ2)
-	dc.l Level_EHZ2,Level_EHZ2+$31F	; level/layout/EHZ_2.kosp
+	dc.l Level_EHZ2,Level_EHZ2+$33A	; level/layout/EHZ_2.kosp
 	endif
 	if defined(Level_EHZ3)
-	dc.l Level_EHZ3,Level_EHZ3+$310	; level/layout/EHZ_3.kosp
+	dc.l Level_EHZ3,Level_EHZ3+$32C	; level/layout/EHZ_3.kosp
 	endif
 	if defined(Level_EHZ4)
-	dc.l Level_EHZ4,Level_EHZ4+$310	; level/layout/EHZ_4.kosp
+	dc.l Level_EHZ4,Level_EHZ4+$32C	; level/layout/EHZ_4.kosp
 	endif
 	if defined(Level_GHZ1)
-	dc.l Level_GHZ1,Level_GHZ1+$2F1	; level/layout/GHZ_1.kosp
+	dc.l Level_GHZ1,Level_GHZ1+$301	; level/layout/GHZ_1.kosp
 	endif
 	if defined(Level_GHZ2)
-	dc.l Level_GHZ2,Level_GHZ2+$2F7	; level/layout/GHZ_2.kosp
+	dc.l Level_GHZ2,Level_GHZ2+$306	; level/layout/GHZ_2.kosp
 	endif
 	if defined(Level_GHZ3)
-	dc.l Level_GHZ3,Level_GHZ3+$36F	; level/layout/GHZ_3.kosp
+	dc.l Level_GHZ3,Level_GHZ3+$381	; level/layout/GHZ_3.kosp
 	endif
 	if defined(Level_GHZ4)
-	dc.l Level_GHZ4,Level_GHZ4+$364	; level/layout/GHZ_4.kosp
+	dc.l Level_GHZ4,Level_GHZ4+$377	; level/layout/GHZ_4.kosp
 	endif
 	if defined(Level_HPZ1)
 	dc.l Level_HPZ1,Level_HPZ1+$44D	; level/layout/HPZ_1.kosp
@@ -876,7 +876,7 @@ MCD_CompressedAssets:
 	dc.l Level_LZ4,Level_LZ4+$2C5	; level/layout/LZ_4.kosp
 	endif
 	if defined(Level_MTZ1)
-	dc.l Level_MTZ1,Level_MTZ1+$F2	; level/layout/MTZ_1.kosp
+	dc.l Level_MTZ1,Level_MTZ1+$10F	; level/layout/MTZ_1.kosp
 	endif
 	if defined(Level_MTZ2)
 	dc.l Level_MTZ2,Level_MTZ2+$82	; level/layout/MTZ_2.kosp
@@ -1287,28 +1287,28 @@ MCD_CompressedAssets:
 	dc.l PLevel_CPZ4,PLevel_CPZ4+$454	; level/layout/past/CPZ_4.kosp
 	endif
 	if defined(PLevel_EHZ1)
-	dc.l PLevel_EHZ1,PLevel_EHZ1+$2F2	; level/layout/past/EHZ_1.kosp
+	dc.l PLevel_EHZ1,PLevel_EHZ1+$30F	; level/layout/past/EHZ_1.kosp
 	endif
 	if defined(PLevel_EHZ2)
-	dc.l PLevel_EHZ2,PLevel_EHZ2+$31F	; level/layout/past/EHZ_2.kosp
+	dc.l PLevel_EHZ2,PLevel_EHZ2+$33A	; level/layout/past/EHZ_2.kosp
 	endif
 	if defined(PLevel_EHZ3)
-	dc.l PLevel_EHZ3,PLevel_EHZ3+$310	; level/layout/past/EHZ_3.kosp
+	dc.l PLevel_EHZ3,PLevel_EHZ3+$32C	; level/layout/past/EHZ_3.kosp
 	endif
 	if defined(PLevel_EHZ4)
-	dc.l PLevel_EHZ4,PLevel_EHZ4+$310	; level/layout/past/EHZ_4.kosp
+	dc.l PLevel_EHZ4,PLevel_EHZ4+$32C	; level/layout/past/EHZ_4.kosp
 	endif
 	if defined(PLevel_GHZ1)
-	dc.l PLevel_GHZ1,PLevel_GHZ1+$2F1	; level/layout/past/GHZ_1.kosp
+	dc.l PLevel_GHZ1,PLevel_GHZ1+$301	; level/layout/past/GHZ_1.kosp
 	endif
 	if defined(PLevel_GHZ2)
-	dc.l PLevel_GHZ2,PLevel_GHZ2+$2F7	; level/layout/past/GHZ_2.kosp
+	dc.l PLevel_GHZ2,PLevel_GHZ2+$306	; level/layout/past/GHZ_2.kosp
 	endif
 	if defined(PLevel_GHZ3)
-	dc.l PLevel_GHZ3,PLevel_GHZ3+$35E	; level/layout/past/GHZ_3.kosp
+	dc.l PLevel_GHZ3,PLevel_GHZ3+$372	; level/layout/past/GHZ_3.kosp
 	endif
 	if defined(PLevel_GHZ4)
-	dc.l PLevel_GHZ4,PLevel_GHZ4+$364	; level/layout/past/GHZ_4.kosp
+	dc.l PLevel_GHZ4,PLevel_GHZ4+$377	; level/layout/past/GHZ_4.kosp
 	endif
 	if defined(PLevel_HPZ1)
 	dc.l PLevel_HPZ1,PLevel_HPZ1+$44D	; level/layout/past/HPZ_1.kosp
@@ -1443,7 +1443,7 @@ MCD_CompressedAssets:
 	dc.l PLevel_LZ4,PLevel_LZ4+$2C5	; level/layout/past/LZ_4.kosp
 	endif
 	if defined(PLevel_MTZ1)
-	dc.l PLevel_MTZ1,PLevel_MTZ1+$F2	; level/layout/past/MTZ_1.kosp
+	dc.l PLevel_MTZ1,PLevel_MTZ1+$10F	; level/layout/past/MTZ_1.kosp
 	endif
 	if defined(PLevel_MTZ2)
 	dc.l PLevel_MTZ2,PLevel_MTZ2+$82	; level/layout/past/MTZ_2.kosp

@@ -106,14 +106,14 @@ def runtime(args):
     for player, base in loop_bases.items():
         g.restore(base)
         height = g.get('v_player', 'obHeight')
-        for field, value, size in (('obX', 0x14A0, 2), ('obY', 0x2C0-height-1, 2),
+        for field, value, size in (('obX', 0x14A0, 2), ('obY', 0x4C0-height-1, 2),
                                     ('obVelX', 0xB00, 2), ('obVelY', 0, 2),
                                     ('obInertia', 0xB00, 2), ('obAngle', 0, 1),
                                     ('obStatus', 0, 1), ('obAnim', 0, 1),
                                     ('obRoutine', 2, 1), ('obControl', 0, 1)):
             g.put('v_player', field, value, size)
         g.write('Camera_X_pos', 0x14A0-160, 2)
-        g.write('Camera_Y_pos', 0x2C0-112, 2)
+        g.write('Camera_Y_pos', 0x4C0-112, 2)
         g.write('Screen_redraw_flag', 1)
         quadrants = set()
         for frame in range(100):

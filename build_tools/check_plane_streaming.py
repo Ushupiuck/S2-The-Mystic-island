@@ -67,11 +67,12 @@ for zone,name in ((0,'GHZ'),(1,'LZ'),(2,'CPZ'),(3,'EHZ'),(4,'HPZ'),(5,'HTZ'),(6,
                     assert actual==expected,(name,g.frame,plane,(sx,sy),(source_x,wy),hex(actual),hex(expected))
                     samples+=1
     check();g.video.save(a.output/f'{name}-act-{a.act}-start.png');initial_y=g.read('Camera_Y_pos',2)
-    for index,(tx,ty) in enumerate(((0x600,initial_y),(0x600,min(initial_y+384,0x720)),(0,initial_y))):
+    min_y=g.read('Camera_Min_Y_pos',2);max_y=g.read('Camera_Max_Y_pos',2)
+    for index,(tx,ty) in enumerate(((0x600,initial_y),(0x600,min(initial_y+384,max_y)),(0,initial_y))):
         for tick in range(100):
             for field,value,size in (('obX',tx+160,2),('obY',ty+96,2),('obVelX',0,2),('obVelY',0,2),('obInertia',0,2),('obControl',0x81,1),('obRoutine',2,1),('obStatus',0,1),('invtime',6000,2)):
                 g.put('v_player',field,value,size)
-            g.write('Camera_Min_Y_pos',0,2);g.write('Camera_Max_Y_pos',0x720,2);g.write('Camera_Max_Y_pos_target',0x720,2)
+            g.write('Camera_Min_Y_pos',min_y,2);g.write('Camera_Max_Y_pos',max_y,2);g.write('Camera_Max_Y_pos_target',max_y,2)
             g.run()
             if tick%4==0:check()
         check();g.video.save(a.output/f'{name}-{index}.png')

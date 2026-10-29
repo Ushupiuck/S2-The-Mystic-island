@@ -220,7 +220,9 @@ chunk banks. The assembled CD constructor is compared with an independent
 world-coordinate tile oracle, covering unequal/non-power-of-two planes, word
 IDs across the entire PRG chunk allocation, all block flips/attributes, row and
 column reversals, large camera jumps, fixed 512-pixel bands, blank FG borders,
-cache reuse and live block/layout edits. Collision's lookup is checked separately.
+cache reuse and live block/layout edits. It also executes both camera seams and
+ordinary upper/lower clamps beyond `$800`, independently of the tile constructor.
+Collision's lookup is checked separately.
 `--legacy-equivalence` additionally compares the foreground and one complete background
 span with the frozen cartridge files; use it for migration evidence, not after
 intentional Mode 1 layout edits. Repeated background copies and outer empty
@@ -368,17 +370,7 @@ that offer it. Most primary-player selectors use `--player 0` (Sonic) or `2`
 | Player effects and water | `check_player_effects.py`, `check_water_effects.py`, `check_shared_followup.py` | Shields/stars, splash/countdown, normal/paused surface, DMA retries and shared art |
 | Monitor state and primary Debug | `check_monitor_state.py`, `check_monitor_edges.py`, `check_debug_states.py` | Rider/collector ownership, contact boundaries, Debug HUD switching, stopped/running clock restoration and Time Over |
 | Object lifetime and stage entry | `check_object_lifetimes.py`, `check_giant_ring_entry.py`, `check_object_contexts.py` | Unload/deletion, giant rings and mode-specific objects |
-| Companion | `check_companion_followup.py`, `check_companion_hpz.py`, `check_plane_streaming.py --zone 3 --act 2` checks the private EHZ2/PP bank
-through actual Mode 1 rendering. Use `--pal` for PAL; the default act remains 1.
-The importer verifies foreground/platform tile bytes, block/chunk definitions,
-flower frames and protected object palette uses, bounds the five deliberate
-foreground palette blends to one MD channel step each, and reports the imported
-background's per-color quantization error. Run it twice to verify regeneration
-is byte-stable. The SonLVL checker loads the private Act-2 art and palette with
-all 64 editor sections. Neither the camera excursions nor entrance visits are
-complete controller-only Act-2 playthroughs.
-
-`check_companion_sbz.py` | Ledges, collapse/bridge/manual takeover; actual HPZ routes; 64-phase SMZ transfer and captured catch-up |
+| Companion | `check_companion_followup.py`, `check_companion_hpz.py`, `check_companion_sbz.py` | Ledges, collapse/bridge/manual takeover; actual HPZ routes; 64-phase SMZ transfer and captured catch-up |
 | Input locks and rotating stage | `check_over_screen_input.py`, `check_drowning_input.py`, `check_special_stage_overlap.py` | Real deaths/drowning; normal bumper/item callbacks and embedding regressions |
 | Rotating-stage Debug | `check_ss_debug_game.py` | Actual controller placement, occupied-cell skipping, ring rendering and collection after leaving Debug in NTSC/PAL |
 | SMZ backgrounds, solids and hazards | `check_smz_background.py`, `check_scrap_madness.py`, `check_sbz_discs.py`, `check_smz_vanishing.py`, `check_swing_families.py`, `check_sbz_doors.py` | REV01 parallax/streaming, placed-object lifecycle, transport/ride boundaries and harmful spikeball subtypes |
@@ -386,10 +378,23 @@ complete controller-only Act-2 playthroughs.
 | Imported enemies/obstacles | `check_palmtree_enemies.py`, `check_propeller.py`, `check_caterkiller.py`, `check_kemusi.py`, `check_terrain_conveyors.py`, `check_wheel_carriers.py` | Both-actor triggers, motion, damage, unload/reload and source-specific regressions |
 | Audio | `check_sound_playback.py`, `sound/build.py --check` | Actual sound paths; encoding/macro/packer checks |
 
+`check_plane_streaming.py --zone 3 --act 2` checks the private EHZ2/PP bank
+through actual Mode 1 rendering. Use `--pal` for PAL; the default act remains 1.
+Camera excursions respect the selected act's authored vertical bounds, including
+the relocated GHZ/EHZ foregrounds. The importer verifies foreground/platform
+tile bytes, block/chunk definitions, flower frames and protected object/HUD
+palette uses, bounds the five deliberate foreground palette blends to one MD
+channel step each, and reports imported background color error. Run it twice
+to verify regeneration is byte-stable. The SonLVL checker loads the private Act-2
+art and palette with all 64 editor sections. Neither the camera excursions nor
+entrance visits are complete controller-only Act-2 playthroughs.
+
 `check_level_pages.py` also compares the uploaded menu font pixel-for-pixel
 against independently decoded Nemesis art and checks that blank tile zero stays
 transparent, on both pages and after returning from a level. Correct text tile
 numbers alone do not establish that the font was uploaded to the right place.
+Every one of its 64 act launches also runs 90 idle gameplay frames and rejects
+a primary-player death, catching terrain/start/death-boundary mismatches.
 
 `check_smz_background.py` checks the VDP's live horizontal/vertical scroll values
 and visible background tile words against the S1 REV01 rates and editable SMZ

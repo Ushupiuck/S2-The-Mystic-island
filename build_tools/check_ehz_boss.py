@@ -94,8 +94,8 @@ def main():
     records = [(x,y,oid,sub) for x,y,oid,eras,sub in struct.iter_unpack('>HHBBH', placements[:-8])]
     assert [x for x, *_ in records] == sorted(x for x, *_ in records)
     capsule = [r for r in records if r[2] == sym['id_Obj3E'] and r[0] == 0x2B50]
-    assert capsule == [(0x2B50, 0x422, sym['id_Obj3E'], 0),
-                       (0x2B50, 0x3FC, sym['id_Obj3E'], 1)], capsule
+    assert capsule == [(0x2B50, 0x722, sym['id_Obj3E'], 0),
+                       (0x2B50, 0x6FC, sym['id_Obj3E'], 1)], capsule
     print(f'{total} boss/explosion mapping frames, {len(cues)} disjoint art banks '
           'and the capsule placements pass.')
     if stock:

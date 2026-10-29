@@ -30,13 +30,13 @@ era-presence masks and per-era state; time travel and generator/Good Future
 suppression remain unfinished. See [placement ownership](Objects.md#placement-format-and-ownership).
 
 GHZ4 retains its sparse authored object layout for useful object-testing terrain.
-Its loop at chunk origin `$1000,$0300` now has Act 3's matching three pathswappers
-(`$1080,$0350/$0091`, `$1108,$0340/$0011`, `$1108,$03A0/$0010`), present in
+Its loop at chunk origin `$1000,$0500` now has Act 3's matching three pathswappers
+(`$1080,$0550/$0091`, `$1108,$0540/$0011`, `$1108,$05A0/$0010`), present in
 all eras. The act also has four authored platform test stations: detachable
-conveyor/grip/button at `$0180,$0320`, moving mixed spring pair at `$0400,$0280`,
-ICZ rail/monitor swing at `$0680,$0180`, and square-moving spike platform at
-`$0900,$0280`. These are ordinary SonLVL-editable placements; detailed stress
-fixtures remain disposable. Act 4's lower camera limit is `$0500`, allowing
+conveyor/grip/button at `$0180,$0520`, moving mixed spring pair at `$0400,$0480`,
+ICZ rail/monitor swing at `$0680,$0380`, and square-moving spike platform at
+`$0900,$0480`. These are ordinary SonLVL-editable placements; detailed stress
+fixtures remain disposable. Act 4's lower camera limit is `$0700`, allowing
 the entrance-gap water to be reached before the death plane. Its banks use
 spare chunks `$C4-$C7/$E6-$E7` with side collision on the solid fill below the old wall
 edge, preventing rafts from entering decorative terrain interiors. All four
@@ -56,6 +56,36 @@ starting Ballhog test placements are also removed, with its Ballhog module,
 ground-explosion and shared Debug test entries commented out. Scrap Madness's
 ten authored Ballhogs, their code and atlas are unchanged. Those two enemy banks total
 71 tiles (`$43D-$483`, 2,272 bytes), available for a future LZ act recipe.
+
+## Foreground vertical placement
+
+All four GHZ acts have moved down `$200` pixels (four 128-pixel rows); all four
+EHZ acts have moved down `$300` (six rows). MTZ1 has moved down `$500` (ten rows),
+using its existing `startpos/006_1.bin` source. All era foregrounds, object/ring
+placements and starts use those authored coordinates. Camera bounds, dynamic
+GHZ limits, boss anchors and GHZ4's water basin/editor height move with them.
+Foreground top bounds are now `$200` for GHZ and `$300` for EHZ. Background
+layouts remain independent; EHZ2's 1/8 vertical parallax exposes up to 96 more pixels
+of its PP panorama at the equivalent route position.
+
+`build_tools/shift_level_foreground.py LEVEL... --dy 0x80` previews a relative
+translation of binary foreground/placement/ring/start sources; `--write` applies
+it after validating the complete selection. It preserves packed Y flags and
+ring-group counts, all X coordinates and background cells. Coordinate-dependent
+ASM events, water and editor settings must be updated alongside the binary data;
+the tool does not infer them. Do not repeat an already-applied shift.
+Use `--start-file startpos/006_1.bin` for MTZ1's differently named start source.
+
+All 64 acts were surveyed. LZ, CPZ, HPZ, HTZ and SMZ1/2 already have authored
+terrain reaching row 15. The remaining starter acts fill rows 3–15 with solid
+terrain chunks; those rows are not empty padding. They retain their coordinates.
+
+Camera seam arithmetic uses `Level_YWrapMask` consistently. A negative top bound
+enables the existing `$0800` seam (including SMZ2); ordinary acts clamp at their
+authored bounds, even beyond `$0800`. The 32-row Mode 1 layout capacity is
+independent of whether a particular act wraps.
+The paused cartridge backend retains its frozen layouts and is not the target
+of this Mode 1 layout work.
 
 ## Per-act art
 
@@ -117,7 +147,7 @@ is no reduced-table build mode. Level entry, height initialization and dynamic
 dispatch all use the same zone/act index. Assembly checks every table's length.
 
 LZ and HPZ retain their previous four heights and dynamic routines. GHZ4
-enables a stationary target at `$0400` for its entrance-gap raft test. Other
+enables a stationary target at `$0600` for its entrance-gap raft test. Other
 slots start dry, with editable `$600` heights and `DynWater_Null`. Enabling a
 slot also enables its water surface, palette split and player water behavior;
 choose a suitable underwater palette/art allocation before designing that act.

@@ -128,7 +128,7 @@ WaterFlags_End:
 		even
 
 WaterHeight:
-		dc.w $600, $600, $600, $400	; GHZ
+		dc.w $600, $600, $600, $600	; GHZ (act 4 basin)
 		dc.w $600, $328, $900, $228	; LZ
 		dc.w $600, $600, $600, $600	; CPZ
 		dc.w $600, $600, $600, $600	; EHZ

@@ -4446,10 +4446,10 @@ LevelSizeArray:
 		;    |      |------------------------------Right boundary
 		;    |      |      |-----------------------Top boundary
 		;    |      |      |      |----------------Bottom boundary
-		dc.w $0000, $24BF, $0000, $0300	; GHZ1
-		dc.w $0000, $1EBF, $0000, $0300	; GHZ2
-		dc.w $0000, $2960, $0000, $0300	; GHZ3
-		dc.w $0000, $2ABF, $0000, $0500	; GHZ4: reach the water below the entrance gap
+		dc.w $0000, $24BF, $0200, $0500	; GHZ1
+		dc.w $0000, $1EBF, $0200, $0500	; GHZ2
+		dc.w $0000, $2960, $0200, $0500	; GHZ3
+		dc.w $0000, $2ABF, $0200, $0700	; GHZ4: reach the water below the entrance gap
 		dc.w $0000, $3FFF, $0000, $0720	; LZ1
 		dc.w $0000, $3FFF, $0000, $0720	; LZ2
 		dc.w $0000, $3FFF, $0000, $0800	; LZ3
@@ -4458,10 +4458,10 @@ LevelSizeArray:
 		dc.w $0000, $3FFF, $0000, $0720	; CPZ2 (MZ2)
 		dc.w $0000, $3FFF, $0000, $0720	; CPZ3 (MZ3)
 		dc.w $0000, $3FFF, $0000, $0720	; CPZ4 (MZ4)
-		dc.w $0000, $29A0, $0000, $0320	; EHZ1 (SLZ1)
-		dc.w $0000, $2940, $0000, $0420	; EHZ2 (SLZ2)
-		dc.w $0000, $25C0, $0000, $0720	; EHZ3 (SLZ3)
-		dc.w $0000, $3FFF, $0000, $0720	; EHZ4 (SLZ4)
+		dc.w $0000, $29A0, $0300, $0620	; EHZ1
+		dc.w $0000, $2940, $0300, $0720	; EHZ2
+		dc.w $0000, $25C0, $0300, $0A20	; EHZ3
+		dc.w $0000, $3FFF, $0300, $0A20	; EHZ4
 		dc.w $0000, $3FFF, $0000, $0720	; HPZ1 (SYZ1)
 		dc.w $0000, $3FFF, $0000, $0720	; HPZ2 (SYZ2)
 		dc.w $0000, $3FFF, $0000, $0720	; HPZ3 (SYZ3)
@@ -4470,7 +4470,7 @@ LevelSizeArray:
 		dc.w $0000, $1E40, $FF00, $0720	; HTZ2 (SBZ2)
 		dc.w $0000, $3FFF, $0510, $0720	; HTZ3 (SBZ3)
 		dc.w $0000, $3FFF, $0000, $0720	; HTZ4 (SBZ4)
-		dc.w $0000, $3FFF, $0000, $0110	; ZONE 6  1 (Was S1 Good Ending)
+		dc.w $0000, $3FFF, $0500, $0610	; MTZ1 (Was S1 Good Ending)
 		dc.w $0000, $0600, $0000, $0200 ; $06 act 2
 		dc.w $0000, $0600, $0000, $0200 ; $06 act 3
 		dc.w $0000, $0600, $0000, $0200 ; $06 act 4
@@ -4518,8 +4518,8 @@ LevelSizeArray:
 ; ===========================================================================
 
 S1EndingStartLoc:
-		dc.w  $50,   $3B0, $EA0,  $46C, $1750, $BD,  $A00,  $62C
-		dc.w  $BB0,  $4C,  $1570, $16C, $1B0,  $72C, $1400, $2AC
+		dc.w  $50,   $5B0, $EA0,  $46C, $1750, $BD,  $A00,  $62C
+		dc.w  $BB0,  $34C, $1570, $16C, $1B0,  $72C, $1400, $4AC
 ; ===========================================================================
 
 LevelSize_CheckLamp:
@@ -5805,9 +5805,11 @@ loc_662A:
 loc_6634:
 		cmp.w	(Camera_Min_Y_pos).w,d1
 		bgt.s	+
+		tst.w	(Camera_Min_Y_pos).w
+		bpl.s	loc_6656		; ordinary acts clamp, even beyond the old wrap height
 		cmpi.w	#$FF00,d1
 		bgt.s	loc_6656
-		andi.w	#$7FF,d1
+		andi.w	#Level_YWrapMask,d1
 		bset	#0,(a3)			; wrap seam: redraw the entering top row
 		andi.w	#Level_YWrapMask,(a1)
 		andi.w	#$3FF,obX(a1)
@@ -5872,7 +5874,9 @@ loc_665C:
 loc_6664:
 		cmp.w	(Camera_Max_Y_pos).w,d1
 		blt.s	+
-		subi.w	#$800,d1
+		tst.w	(Camera_Min_Y_pos).w
+		bpl.s	loc_6682		; only a negative top bound enables the Y seam
+		subi.w	#Level_YWrapMask+1,d1
 		blo.s	loc_6682
 		bset	#1,(a3)			; wrap seam: redraw the entering bottom row
 		subi.w	#Level_YWrapMask+1,(a1)
@@ -6197,24 +6201,24 @@ DynResize_GHZ_Index:
 ; ---------------------------------------------------------------------------
 
 DynResize_GHZ1:
-		move.w	#$300,(Camera_Max_Y_pos_target).w
+		move.w	#$500,(Camera_Max_Y_pos_target).w
 		cmpi.w	#$1780,(Camera_RAM).w
 		blo.s	.return
-		move.w	#$400,(Camera_Max_Y_pos_target).w
+		move.w	#$600,(Camera_Max_Y_pos_target).w
 .return:	rts
 ; ---------------------------------------------------------------------------
 
 DynResize_GHZ2:
-		move.w	#$300,(Camera_Max_Y_pos_target).w
+		move.w	#$500,(Camera_Max_Y_pos_target).w
 		cmpi.w	#$ED0,(Camera_RAM).w
 		blo.s	.return
-		move.w	#$200,(Camera_Max_Y_pos_target).w
+		move.w	#$400,(Camera_Max_Y_pos_target).w
 		cmpi.w	#$1600,(Camera_RAM).w
 		blo.s	.return
-		move.w	#$400,(Camera_Max_Y_pos_target).w
+		move.w	#$600,(Camera_Max_Y_pos_target).w
 		cmpi.w	#$1D60,(Camera_RAM).w
 		blo.s	.return
-		move.w	#$300,(Camera_Max_Y_pos_target).w
+		move.w	#$500,(Camera_Max_Y_pos_target).w
 .return:	rts
 ; ---------------------------------------------------------------------------
 
@@ -6231,19 +6235,19 @@ DynResize_GHZ3_Index:
 ; ---------------------------------------------------------------------------
 
 DynResize_GHZ3_Main:
-		move.w	#$300,(Camera_Max_Y_pos_target).w
+		move.w	#$500,(Camera_Max_Y_pos_target).w
 		cmpi.w	#$380,(Camera_RAM).w
 		blo.s	.return
-		move.w	#$310,(Camera_Max_Y_pos_target).w
+		move.w	#$510,(Camera_Max_Y_pos_target).w
 		cmpi.w	#$960,(Camera_RAM).w
 		blo.s	.return
-		cmpi.w	#$280,(Camera_Y_pos).w
+		cmpi.w	#$480,(Camera_Y_pos).w
 		blo.s	loc_765A
-		move.w	#$400,(Camera_Max_Y_pos_target).w
+		move.w	#$600,(Camera_Max_Y_pos_target).w
 		cmpi.w	#$1380,(Camera_RAM).w
 		bhs.s	+
-		move.w	#$4C0,(Camera_Max_Y_pos_target).w
-		move.w	#$4C0,(Camera_Max_Y_pos).w
+		move.w	#$6C0,(Camera_Max_Y_pos_target).w
+		move.w	#$6C0,(Camera_Max_Y_pos).w
 
 +		cmpi.w	#$1700,(Camera_RAM).w
 		bhs.s	loc_765A
@@ -6251,7 +6255,7 @@ DynResize_GHZ3_Main:
 ; ---------------------------------------------------------------------------
 
 loc_765A:
-		move.w	#$300,(Camera_Max_Y_pos_target).w
+		move.w	#$500,(Camera_Max_Y_pos_target).w
 		addq.b	#2,(Dynamic_Resize_Routine).w
 		rts
 ; ---------------------------------------------------------------------------
@@ -6268,7 +6272,7 @@ loc_7672:
 		bne.w	DynResize_GHZ3_Main.return
 		move.l	#Obj3D,code(a1)
 		move.w	#$2A60,obX(a1)
-		move.w	#$280,obY(a1)
+		move.w	#boss_ghz_y-$80,obY(a1)
 
 		move.w	#bgm_Boss,d0
 		bsr.w	PlaySound

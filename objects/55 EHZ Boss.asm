@@ -10,14 +10,14 @@ EHZBoss_flash_color = objoff_36	; original hit-flash color; unused word before c
 EHZBoss_origin_x = objoff_44
 EHZBoss_origin_y = objoff_46
 EHZBoss_LandingX = $29D0
-EHZBoss_LandingY = $41E
+EHZBoss_LandingY = $71E
 EHZBoss_ApproachX = EHZBoss_LandingX+$120
 EHZBoss_ApproachY = EHZBoss_LandingY-$126
 EHZBoss_LeftTurn = $28A0
 EHZBoss_RightTurn = $2B08
 EHZBoss_CameraLeft = $28F0
 EHZBoss_CameraFightRight = $2940
-EHZBoss_CameraY = $390
+EHZBoss_CameraY = $690
 EHZBoss_CameraExitRight = $2AB0
 
 Obj55:
