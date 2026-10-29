@@ -1822,11 +1822,16 @@ ArtTile_Ring:			equ $6B9	; $D720; Tails body/tail uploads stop at $6B7/$6B8
 ArtTile_RingLoss:		equ ArtTile_Ring+4
 ArtTile_Sparkles:		equ ArtTile_Ring+8
 ArtTile_HUD:			equ ArtTile_Sparkles+4 ; $6C5 / $D8A0; contiguous with rings/sparkles
-ArtTile_HUD_E:			equ ArtTile_HUD+$E	; SCORE shares TIME's static E
-ArtTile_HUD_Debug_Numbers:	equ ArtTile_HUD+$10	; First two tiles are used only by debug coordinates
-ArtTile_HUD_Numbers:		equ ArtTile_HUD_Debug_Numbers+2 ; 28 tiles for score, time and ring digits
+ArtTile_HUD_Debug_Numbers:	equ ArtTile_HUD+10	; 16 coordinate tiles; final seven overlap the score
+ArtTile_HUD_Numbers:		equ ArtTile_HUD_Debug_Numbers+9 ; seven score tiles, four timer tiles, three ring tiles
+ArtTile_HUD_Time:		equ ArtTile_HUD_Numbers+7
+ArtTile_HUD_Rings:		equ ArtTile_HUD_Time+4
+ArtTile_HUD_End:			equ ArtTile_HUD_Rings+3 ; $6E6 / $DCC0; 13 tiles free before points
 ArtTile_Points:			equ $6F3	; $DE60; two tiles for the primary player's popup
 ArtTile_Points_2:		equ ArtTile_Points+2 ; $6F5 / $DEA0; two tiles for the companion
+	if ArtTile_HUD_End>ArtTile_Points
+		fatal "HUD counters overlap points art"
+	endif
 
 
 ArtTile_Lives_Counter:		equ $7D4
@@ -1852,8 +1857,8 @@ ArtTile_Hidden_Points:		equ ArtTile_Signpost+$1A ; 28 tiles after the signpost D
 ArtTile_Warp:			equ $541
 ArtTile_Mini_Tails:		equ $535
 ArtTile_Mini_Sonic:		equ $551
-ArtTile_Bonuses:		equ ArtTile_Title_Card ; 16 numeric tiles, clear of both shield banks
-ArtTile_Results_Card:	equ ArtTile_Bonuses+$10 ; scene glyphs follow the bonus digits
+ArtTile_Bonuses:		equ ArtTile_Title_Card ; eight numeric tiles, clear of both shield banks
+ArtTile_Results_Card:	equ ArtTile_Bonuses+8 ; scene glyphs follow the bonus digits
 ArtTile_Signpost:		equ ArtTile_Monitor	; 26-tile DPLC buffer; stops before Tails's life icon
 
 ; Sega Screen
@@ -1906,7 +1911,7 @@ ArtTile_SS_Ghost_Block:		equ ArtTile_SS_Red_White_Block+9
 ArtTile_SS_W_Block:		equ ArtTile_SS_Ghost_Block+9
 ArtTile_SS_Glass:		equ ArtTile_SS_W_Block+9
 ArtTile_SS_Emerald:		equ ArtTile_SS_Glass+9	; away from the live BG plane
-ArtTile_SS_Rings:		equ $14A	; $2940; stage ring and palette-0 results copy
+ArtTile_SS_Rings:		equ $14A	; $2940; rotating-stage rings only
 ArtTile_SS_Sparkles:		equ ArtTile_SS_Rings+4
 
 ; Special Stage Results

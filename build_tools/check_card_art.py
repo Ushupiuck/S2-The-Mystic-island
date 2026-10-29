@@ -112,8 +112,8 @@ for mode in (0,1,2):
         assert m.cpu.reg_read(m68k.UC_M68K_REG_D0) == 64+act*2+(mode == 2)
         table=m.cpu.reg_read(m68k.UC_M68K_REG_A3)
         rows=frames(rom,table,10)
-        for frame,tile in ((3,m.s['ArtTile_Bonuses']),(4,m.s['ArtTile_Bonuses']+8)):
-            assert (rows[frame][5][2]+m.s['ArtTile_Results_Card']) & 0xFFFF == tile
+        for frame,tile in ((3,m.s['ArtTile_Bonuses']),(4,m.s['ArtTile_Bonuses']+4)):
+            assert (rows[frame][-2][2]+m.s['ArtTile_Results_Card']) & 0xFFFF == tile
         checks.append({'case':'normal-character-and-bonus-addresses','mode':mode,'act':act+1})
 
 for mode in (0,1,2):
@@ -125,7 +125,7 @@ for mode in (0,1,2):
         scene=72+state*2+(mode == 2)
         assert m.cpu.reg_read(m68k.UC_M68K_REG_D0) == scene
         rows=frames(rom,m.cpu.reg_read(m68k.UC_M68K_REG_A3),7)
-        assert (rows[2][5][2]+m.s['ArtTile_Results_Card']) & 0xFFFF == m.s['ArtTile_Bonuses']+8
+        assert (rows[2][-2][2]+m.s['ArtTile_Results_Card']) & 0xFFFF == m.s['ArtTile_Bonuses']+4
         mini=m.s['ArtTile_Mini_Tails'] if mode == 2 else m.s['ArtTile_Mini_Sonic']+18
         assert (rows[4][-1][2]+m.s['ArtTile_Results_Card']) & 0xFFFF == mini
         checks.append({'case':'special-heading-and-character-addresses','mode':mode,'emeralds':emeralds})

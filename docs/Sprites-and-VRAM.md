@@ -166,7 +166,8 @@ is not a source of free level VRAM.
 | `$D000-$D400` | `$680` | Sonic body allocation |
 | `$D400`, `$D600` | `$6A0`, `$6B0` | Tails body/tail upload bases; see overlap rule below |
 | `$D720-$D8A0` | `$6B9` | Ring, lost ring and sparkles |
-| `$D8A0-$DE60` | `$6C5` | HUD, debug glyphs and counters |
+| `$D8A0-$DCC0` | `$6C5` | Packed HUD, debug glyphs and counters, 33 tiles |
+| `$DCC0-$DE60` | `$6E6` | Free, 13 tiles |
 | `$DE60-$DEA0`, `$DEA0-$DEE0` | `$6F3`, `$6F5` | Per-player points, two tiles each |
 | `$DEE0-$DFE0` | `$6F7` | GHZ wall art, eight tiles |
 | `$DFE0-$E000` | `$6FF` | One free level tile |
@@ -280,9 +281,9 @@ A live splash takes precedence; numbers have their own screen-space draw path.
 Resident bubble art is separate. See [player behavior](Players-and-effects.md#water-and-shared-effects).
 
 Title cards stream scene glyphs at tile `$581`. Results begin at that same
-tile with sixteen time/ring bonus digit tiles (`ArtTile_Bonuses`), then stream
-their glyphs at `$591` (`ArtTile_Results_Card`). Normal results use at most 74
-glyph tiles and stay below animal bank 1; special results use at most 82 and
+tile with eight time/ring bonus digit tiles (`ArtTile_Bonuses`), then stream
+their glyphs at `$589` (`ArtTile_Results_Card`). Normal results use at most 70
+glyph tiles and stay below animal bank 1; special results use at most 68 and
 have no live level animals. Both shield banks remain disjoint from the complete
 results allocation. The generator checks these lifetimes at assembly time.
 Scene DPLCs avoid loading the whole raw font. `Pal_TitleCardYellow` must
@@ -371,18 +372,26 @@ routines. See [Debug](Objects.md#debug) for the placement-only HUD/timer rules.
 It packs source tiles `0-9` and `17-22` into sixteen hexadecimal tiles, ordered
 `0-F`, and changes foreground `$F` to HUD white `$6`; background `$0` stays
 transparent. Edit the shared source, then rebuild to regenerate the HUD copy.
-The existing coordinate VRAM range and menu/error font palette indices remain
-unchanged.
+The coordinate tiles overlay the normal score bank; placement/frame-cycle
+switching restores the score, timer and ring counters. Menu/error font palette
+indices remain unchanged.
 
-`python build_tools/build_hud_art.py` rebuilds SCORE/TIME and the 8x16
+`python build_tools/build_hud_art.py` rebuilds SCORE/TIME/RINGS and the 8x8
 score, timer, ring and results-bonus digit cells from that same Ristar font
 (also used by the small CONTINUE label). Labels retain yellow/red blinking;
 white counters have a black one-pixel shadow. The timer colon is an authored
-pair of square dots matching the font's stroke weight. Cell sizes, mappings,
-VRAM allocations and all life-HUD sources remain unchanged. It also generates
-`SS Results Labels.unc`; run `build_card_art.py` afterwards to update the small
-SCORE/BONUS labels on both results screens. Large title/result headings retain
-their separate card font.
+pair of square dots matching the font's stroke weight. The resident label bank
+contains only `SCORTIMENG` (ten unique letters); short shared runs limit sprite
+count while avoiding duplicate letters. Normal counters occupy fourteen tiles;
+Debug needs nine extra tiles before the seven score cells, making 33 reserved
+tiles instead of 46. The freed `$DCC0-$DE60` range is unused by HUD uploads and
+mappings. All life-HUD sources and pieces retain their original cells.
+The generator also owns `obj21.asm` and the four-tile private BONU label in
+`SS Results Labels.unc`; run `build_card_art.py` afterwards. Both results
+screens share the resident SCORE/TIME/RINGS letters, use eight bonus digit
+tiles, and select their own glyph/marker banks. Large title/result headings
+retain their separate card font. The special-results ring copy and animation
+are removed; rotating-stage rings keep their original assets and loader.
 
 ## Palette adaptation
 

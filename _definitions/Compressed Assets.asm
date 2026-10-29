@@ -1107,7 +1107,7 @@ MCD_CompressedAssets:
 	dc.l Nem_HTZ_Seesaw,Nem_HTZ_Seesaw+$1BA	; art/nemesis/See-saw in HTZ.nem
 	endif
 	if defined(Nem_HUD)
-	dc.l Nem_HUD,Nem_HUD+$B2	; art/nemesis/HUD.nem
+	dc.l Nem_HUD,Nem_HUD+$B5	; art/nemesis/HUD.nem
 	endif
 	if defined(Nem_HangingSurface)
 	dc.l Nem_HangingSurface,Nem_HangingSurface+$AC	; art/nemesis/Hanging surface.nem

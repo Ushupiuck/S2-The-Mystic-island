@@ -56,7 +56,7 @@ def main():
     for label in ('Art_Sonic', 'Art_Tails', 'Art_Tails_Extra', 'Art_Tails_Tails',
             'Art_SpindashDust', 'Art_WaterSplash', 'Art_AirCountdown',
             'Art_Points', 'Art_Shield', 'Art_Invincibility', 'Art_Ring',
-            'Art_SSResultsRing', 'Art_BigRing', 'Art_BigFlash'):
+            'Art_BigRing', 'Art_BigFlash'):
         assert symbols[label] % 2 == 0, f'{label}: DMA source needs word alignment'
     if 'Player_Art_Buffer_Start' in symbols:
         for label, packed, source in (
@@ -112,7 +112,17 @@ def main():
     points_banks = [(symbols['ArtTile_Points'] * 32, (symbols['ArtTile_Points'] + 2) * 32),
                     (symbols['ArtTile_Points_2'] * 32, (symbols['ArtTile_Points_2'] + 2) * 32)]
     assert points_banks == [(0xDE60, 0xDEA0), (0xDEA0, 0xDEE0)]
-    assert symbols['ArtTile_HUD_Numbers'] + 28 == symbols['ArtTile_Points']
+    assert symbols['ArtTile_HUD_Numbers'] + 14 == symbols['ArtTile_HUD_End']
+    assert symbols['ArtTile_HUD_End'] + 13 == symbols['ArtTile_Points']
+    assert symbols['ArtTile_HUD_Debug_Numbers'] + 16 == symbols['ArtTile_HUD_Time']
+    assert struct.unpack_from('>H', rom, symbols['Nem_HUD'])[0] & 0x7FFF == 10, 'HUD must load only its ten label letters'
+    assert (ROOT/'art/uncompressed/HUD Numbers.bin').stat().st_size == 11*32
+    for row in frames(rom, symbols['Map_obj21'], 8):
+        for _, size, word, _ in row:
+            tile = (symbols['ArtTile_HUD']+word) & 0x7FF
+            if symbols['ArtTile_HUD'] <= tile < symbols['ArtTile_Points']:
+                assert tile+((size>>2)+1)*((size&3)+1) <= symbols['ArtTile_HUD_End'], 'HUD mapping enters reclaimed VRAM'
+    assert 'Art_SSResultsRing' not in symbols
     assert points_banks[-1][1] <= symbols['vram_bg']
 
     # End-of-level bonuses replace unused monitor contents. The signpost's

@@ -71,13 +71,13 @@ def assert_ink_color(actor, frame, pieces, count, expected=0x0EE):
 
 def assert_bonus():
     source=(ROOT/'art/uncompressed/HUD Numbers.bin').read_bytes()
-    for offset,name in ((0,'v_timebonus'),(8,'v_ringbonus')):
+    for offset,name in ((0,'v_timebonus'),(4,'v_ringbonus')):
         value=g.read(name,2)
         leading=True;expected=bytearray()
         for digit in f'{value:04d}':
             leading=leading and digit=='0'
-            expected += bytes(64) if leading else source[int(digit)*64:(int(digit)+1)*64]
-        actual=vram((g.s['ArtTile_Bonuses']+offset)*32,8*32)
+            expected += bytes(32) if leading else source[int(digit)*32:(int(digit)+1)*32]
+        actual=vram((g.s['ArtTile_Bonuses']+offset)*32,4*32)
         assert actual == expected,(name,value,'numeric VRAM')
 
 
@@ -86,7 +86,7 @@ def assert_score():
     leading=True;expected=bytearray()
     for digit in f"{g.read('v_score',4):06d}":
         leading=leading and digit=='0'
-        expected += bytes(64) if leading else source[int(digit)*64:(int(digit)+1)*64]
+        expected += bytes(32) if leading else source[int(digit)*32:(int(digit)+1)*32]
     assert vram(g.s['ArtTile_HUD_Numbers']*32,len(expected))==expected, 'score VRAM'
 
 
@@ -199,7 +199,7 @@ elif args.case == 'normal':
     normal_ink=g.read(g.s['v_palette']+0x20+13*2,2)
     assert_ink_color('v_endcard',2,(0,1),10,normal_ink)
     assert_ink_color('v_endcard',3,(0,1,2),10,normal_ink)
-    assert_ink_color('v_endcard',4,(1,2),10,normal_ink)
+    assert_ink_color('v_endcard',4,(0,1,2,3,4,5),10,normal_ink)
     assert_ink_color('v_endcardact',6+args.act,(1,),10,normal_ink)
     assert vram(g.s['ArtTile_Tails_Life']*32,4*32)==portrait
     g.video.save(args.output/'results.png')
@@ -240,7 +240,7 @@ else:
     assert g.get('v_endcard','obMap',4)==g.s[f'Map_SSR_{state}_{int(args.player==2)}']
     ink=int.from_bytes((ROOT/'palette/Special Stage Results.bin').read_bytes()[58:60],'big')
     assert_ink_color('v_endcard',1,(0,1),7,ink)
-    assert_ink_color('v_endcard',2,(1,2),7,ink)
+    assert_ink_color('v_endcard',2,(0,1,2,3,4,5),7,ink)
     g.video.save(args.output/'results.png')
     poses=set()
     if args.rings>=50:

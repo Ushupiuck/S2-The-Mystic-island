@@ -206,43 +206,43 @@ DPLC_Card_62: dc.w 9
 		dc.w $3010,$702E,$304E,$3053,$F070,$5060,$3014,$3026,$3080
 DPLC_Card_63: dc.w 9
 		dc.w $3010,$702E,$304E,$3053,$F070,$508A,$3014,$3026,$3080
-DPLC_Card_64: dc.w 9
-		dc.w $3053,$F066,$9076,$5090,$3000,$B008,$501C,$B02E,$303E
-DPLC_Card_65: dc.w 10
-		dc.w $3053,$F066,$9076,$5090,$3000,$700C,$501C,$3026,$3036,$703E
-DPLC_Card_66: dc.w 9
-		dc.w $3053,$F066,$9076,$505A,$3000,$B008,$501C,$B02E,$303E
-DPLC_Card_67: dc.w 10
-		dc.w $3053,$F066,$9076,$505A,$3000,$700C,$501C,$3026,$3036,$703E
-DPLC_Card_68: dc.w 9
-		dc.w $3053,$F066,$9076,$5060,$3000,$B008,$501C,$B02E,$303E
-DPLC_Card_69: dc.w 10
-		dc.w $3053,$F066,$9076,$5060,$3000,$700C,$501C,$3026,$3036,$703E
-DPLC_Card_70: dc.w 9
-		dc.w $3053,$F066,$9076,$508A,$3000,$B008,$501C,$B02E,$303E
-DPLC_Card_71: dc.w 10
-		dc.w $3053,$F066,$9076,$508A,$3000,$700C,$501C,$3026,$3036,$703E
-DPLC_Card_72: dc.w 12
-		dc.w $10A8,$F070,$F096,$10A6,$3000,$3008,$3010,$3018,$1020,$3026,$3036,$703E
-DPLC_Card_74: dc.w 10
-		dc.w $10A8,$F070,$F096,$10A6,$3000,$B008,$301C,$7026,$3032,$703A
-DPLC_Card_76: dc.w 10
-		dc.w $10A8,$F070,$F096,$10A6,$3000,$3008,$3010,$9018,$F026,$703E
-DPLC_Card_77: dc.w 10
-		dc.w $10A8,$F070,$F096,$10A6,$3000,$3010,$9018,$7026,$3032,$703E
+DPLC_Card_64: dc.w 10
+		dc.w $3053,$F06E,$107E,$3096,$5090,$3000,$B008,$501C,$B02E,$303E
+DPLC_Card_65: dc.w 11
+		dc.w $3053,$F06E,$107E,$3096,$5090,$3000,$700C,$501C,$3026,$3036,$703E
+DPLC_Card_66: dc.w 10
+		dc.w $3053,$F06E,$107E,$3096,$505A,$3000,$B008,$501C,$B02E,$303E
+DPLC_Card_67: dc.w 11
+		dc.w $3053,$F06E,$107E,$3096,$505A,$3000,$700C,$501C,$3026,$3036,$703E
+DPLC_Card_68: dc.w 10
+		dc.w $3053,$F06E,$107E,$3096,$5060,$3000,$B008,$501C,$B02E,$303E
+DPLC_Card_69: dc.w 11
+		dc.w $3053,$F06E,$107E,$3096,$5060,$3000,$700C,$501C,$3026,$3036,$703E
+DPLC_Card_70: dc.w 10
+		dc.w $3053,$F06E,$107E,$3096,$508A,$3000,$B008,$501C,$B02E,$303E
+DPLC_Card_71: dc.w 11
+		dc.w $3053,$F06E,$107E,$3096,$508A,$3000,$700C,$501C,$3026,$3036,$703E
+DPLC_Card_72: dc.w 11
+		dc.w $109A,$F070,$3096,$3000,$3008,$3010,$3018,$1020,$3026,$3036,$703E
+DPLC_Card_74: dc.w 9
+		dc.w $109A,$F070,$3096,$3000,$B008,$301C,$7026,$3032,$703A
+DPLC_Card_76: dc.w 9
+		dc.w $109A,$F070,$3096,$3000,$3008,$3010,$9018,$F026,$703E
+DPLC_Card_77: dc.w 9
+		dc.w $109A,$F070,$3096,$3000,$3010,$9018,$7026,$3032,$703E
 		even
 	if 84>ArtTile_Animal_1-ArtTile_Title_Card
 		fatal "Intro glyphs exceed their VRAM lifetime bank"
 	endif
-	if 74>ArtTile_Animal_1-ArtTile_Results_Card
+	if 70>ArtTile_Animal_1-ArtTile_Results_Card
 		fatal "NormalResult glyphs exceed their VRAM lifetime bank"
 	endif
-	if 82>vram_fg/tile_size-ArtTile_Results_Card
+	if 68>vram_fg/tile_size-ArtTile_Results_Card
 		fatal "SpecialResult glyphs exceed their VRAM lifetime bank"
 	endif
 	if ArtTile_Bonuses<ArtTile_Shield_2_End
 		fatal "Results bonus digits overlap the auxiliary shield"
 	endif
-	if ArtTile_Bonuses+$10>ArtTile_Results_Card
+	if ArtTile_Bonuses+8>ArtTile_Results_Card
 		fatal "Results glyphs overlap bonus digits"
 	endif

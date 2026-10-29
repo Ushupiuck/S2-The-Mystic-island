@@ -872,6 +872,12 @@ For the shared small UI font, run `build_hud_art.py`, then
 `check_card_screens.py --case special --rings 50` checks both distinct continue
 poses against their six-tile VRAM payloads; run Sonic and Tails selections.
 The normal-results and Debug-HUD checks also cover the shared counters.
+The compact HUD uses one-tile numeric glyphs. Debug switching must preserve
+the reclaimed thirteen-tile range between `ArtTile_HUD_End` and the points
+bank; `check_debug_states.py` compares it throughout its redraw cases.
+`check_sprite_assets.py` checks the ten-letter resident subset and every HUD
+piece's tile range. Both results screens must render RINGS lettering, with
+no special-results ring loader or source; rotating-stage ring assets remain.
 For LZ water colors, inspect the same background above and below the waterline:
 correct palette bytes alone do not establish that imported shading ramps work.
 

@@ -38,7 +38,7 @@ Ranges are **end exclusive**, during stage play before results PLCs load.
 | `$0A20-$0B40` | Opaque transition, nine tiles |
 | `$0B40-$1340` | Shared bird/fish animation, 64 tiles |
 | `$1340-$2940` | Fixed stage art, walls through emeralds |
-| `$2940-$29C0` | Stage rings; palette-0 ring copy during results |
+| `$2940-$29C0` | Rotating-stage rings |
 | `$29C0-$2A40` | Ring sparkles |
 | `$2A40-$C000` | Free in this mode |
 | `$C000-$D000` | Live foreground map, 64x32 tiles |
@@ -51,8 +51,8 @@ Ranges are **end exclusive**, during stage play before results PLCs load.
 | `$FA80-$10000` | Free in this mode; lives/dust inactive |
 
 Stage PLCs, rotating-wall uploads and palette animation use `ArtTile_SS_*`.
-Emerald art is separate from the live maps. Results replace the stage ring at
-`$2940` without touching the ordinary ring bank at `$D720`.
+Emerald art is separate from the live maps. Results use the shared HUD's
+RINGS lettering; no results-only ring copy or ring-frame animation is loaded.
 
 ## RAM and regeneration
 

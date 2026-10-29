@@ -8,33 +8,36 @@ Map_SSR_0_0: ; SPECIAL STAGE
 		dc.w Map_SSR_0_0_5-Map_SSR_0_0
 		dc.w Map_SSR_0_0_6-Map_SSR_0_0
 Map_SSR_0_0_0: dc.w 12
-		dc.w $F805, $3E, $FFA0
-		dc.w $F805, $3A, $FFB0
-		dc.w $F805, $2C, $FFC0
-		dc.w $F805, $28, $FFD0
-		dc.w $F801, $34, $FFE0
-		dc.w $F805, $24, $FFE8
-		dc.w $F805, $36, $FFF8
-		dc.w $F805, $3E, $0010
-		dc.w $F805, $42, $0020
-		dc.w $F805, $24, $0030
-		dc.w $F805, $30, $0040
-		dc.w $F805, $2C, $0050
+		dc.w $F805, $30, $FFA0
+		dc.w $F805, $2C, $FFB0
+		dc.w $F805, $1E, $FFC0
+		dc.w $F805, $1A, $FFD0
+		dc.w $F801, $26, $FFE0
+		dc.w $F805, $16, $FFE8
+		dc.w $F805, $28, $FFF8
+		dc.w $F805, $30, $0010
+		dc.w $F805, $34, $0020
+		dc.w $F805, $16, $0030
+		dc.w $F805, $22, $0040
+		dc.w $F805, $1E, $0050
 Map_SSR_0_0_1: dc.w 6
-		dc.w $F80D, $2012, $FFB0
-		dc.w $F801, $201A, $FFD0
-		dc.w $F809, Map_Results_ScoreDigits, $0018
-		dc.w $F80D, Map_Results_ScoreDigits+6, $0030
+		dc.w $FC0C, make_art_tile(ArtTile_HUD+0,1,0)-ArtTile_Results_Card, $FFB0
+		dc.w $FC00, make_art_tile(ArtTile_HUD+7,1,0)-ArtTile_Results_Card, $FFD0
+		dc.w $FC08, Map_Results_ScoreDigits, $0018
+		dc.w $FC0C, Map_Results_ScoreDigits+3, $0030
 		dc.w $F704, $0, $FFCD
 		dc.w $FF04, $1800, $FFCD
-Map_SSR_0_0_2: dc.w 7
-		dc.w $F805, Map_SSResults_RingTile+$2000, $FFC0
-		dc.w $F80D, $201C, $FFD9
-		dc.w $F801, $2012, $FFF9
-		dc.w $F704, $0, $FFF6
-		dc.w $FF04, $1800, $FFF6
-		dc.w $F80D, Map_Results_RingDigits, $0028
-		dc.w $F801, Map_Results_Zero, $0048
+Map_SSR_0_0_2: dc.w 10
+		dc.w $FC00, make_art_tile(ArtTile_HUD+3,1,0)-ArtTile_Results_Card, $FFB0
+		dc.w $FC00, make_art_tile(ArtTile_HUD+5,1,0)-ArtTile_Results_Card, $FFB8
+		dc.w $FC04, make_art_tile(ArtTile_HUD+8,1,0)-ArtTile_Results_Card, $FFC0
+		dc.w $FC00, make_art_tile(ArtTile_HUD+0,1,0)-ArtTile_Results_Card, $FFD0
+		dc.w $FC0C, $2012, $FFE1
+		dc.w $FC00, make_art_tile(ArtTile_HUD,1,0)-ArtTile_Results_Card, $0001
+		dc.w $F704, $0, $FFFE
+		dc.w $FF04, $1800, $FFFE
+		dc.w $FC0C, Map_Results_RingDigits, $0028
+		dc.w $FC00, Map_Results_Zero, $0048
 Map_SSR_0_0_3: dc.w 13
 		dc.w $E40C, $2, $FFF4
 		dc.w $E402, $6, $0014
@@ -73,33 +76,36 @@ Map_SSR_0_1: ; SPECIAL STAGE
 		dc.w Map_SSR_0_1_5-Map_SSR_0_1
 		dc.w Map_SSR_0_1_6-Map_SSR_0_1
 Map_SSR_0_1_0: dc.w 12
-		dc.w $F805, $3E, $FFA0
-		dc.w $F805, $3A, $FFB0
-		dc.w $F805, $2C, $FFC0
-		dc.w $F805, $28, $FFD0
-		dc.w $F801, $34, $FFE0
-		dc.w $F805, $24, $FFE8
-		dc.w $F805, $36, $FFF8
-		dc.w $F805, $3E, $0010
-		dc.w $F805, $42, $0020
-		dc.w $F805, $24, $0030
-		dc.w $F805, $30, $0040
-		dc.w $F805, $2C, $0050
+		dc.w $F805, $30, $FFA0
+		dc.w $F805, $2C, $FFB0
+		dc.w $F805, $1E, $FFC0
+		dc.w $F805, $1A, $FFD0
+		dc.w $F801, $26, $FFE0
+		dc.w $F805, $16, $FFE8
+		dc.w $F805, $28, $FFF8
+		dc.w $F805, $30, $0010
+		dc.w $F805, $34, $0020
+		dc.w $F805, $16, $0030
+		dc.w $F805, $22, $0040
+		dc.w $F805, $1E, $0050
 Map_SSR_0_1_1: dc.w 6
-		dc.w $F80D, $2012, $FFB0
-		dc.w $F801, $201A, $FFD0
-		dc.w $F809, Map_Results_ScoreDigits, $0018
-		dc.w $F80D, Map_Results_ScoreDigits+6, $0030
+		dc.w $FC0C, make_art_tile(ArtTile_HUD+0,1,0)-ArtTile_Results_Card, $FFB0
+		dc.w $FC00, make_art_tile(ArtTile_HUD+7,1,0)-ArtTile_Results_Card, $FFD0
+		dc.w $FC08, Map_Results_ScoreDigits, $0018
+		dc.w $FC0C, Map_Results_ScoreDigits+3, $0030
 		dc.w $F704, $0, $FFCD
 		dc.w $FF04, $1800, $FFCD
-Map_SSR_0_1_2: dc.w 7
-		dc.w $F805, Map_SSResults_RingTile+$2000, $FFC0
-		dc.w $F80D, $201C, $FFD9
-		dc.w $F801, $2012, $FFF9
-		dc.w $F704, $0, $FFF6
-		dc.w $FF04, $1800, $FFF6
-		dc.w $F80D, Map_Results_RingDigits, $0028
-		dc.w $F801, Map_Results_Zero, $0048
+Map_SSR_0_1_2: dc.w 10
+		dc.w $FC00, make_art_tile(ArtTile_HUD+3,1,0)-ArtTile_Results_Card, $FFB0
+		dc.w $FC00, make_art_tile(ArtTile_HUD+5,1,0)-ArtTile_Results_Card, $FFB8
+		dc.w $FC04, make_art_tile(ArtTile_HUD+8,1,0)-ArtTile_Results_Card, $FFC0
+		dc.w $FC00, make_art_tile(ArtTile_HUD+0,1,0)-ArtTile_Results_Card, $FFD0
+		dc.w $FC0C, $2012, $FFE1
+		dc.w $FC00, make_art_tile(ArtTile_HUD,1,0)-ArtTile_Results_Card, $0001
+		dc.w $F704, $0, $FFFE
+		dc.w $FF04, $1800, $FFFE
+		dc.w $FC0C, Map_Results_RingDigits, $0028
+		dc.w $FC00, Map_Results_Zero, $0048
 Map_SSR_0_1_3: dc.w 13
 		dc.w $E40C, $2, $FFF4
 		dc.w $E402, $6, $0014
@@ -138,34 +144,37 @@ Map_SSR_1_0: ; CHAOS EMERALDS
 		dc.w Map_SSR_1_0_5-Map_SSR_1_0
 		dc.w Map_SSR_1_0_6-Map_SSR_1_0
 Map_SSR_1_0_0: dc.w 13
-		dc.w $F805, $28, $FF94
-		dc.w $F805, $34, $FFA4
-		dc.w $F805, $24, $FFB4
-		dc.w $F805, $40, $FFC4
-		dc.w $F805, $48, $FFD4
-		dc.w $F805, $30, $FFEC
-		dc.w $F805, $3C, $FFFC
-		dc.w $F805, $30, $000C
-		dc.w $F805, $44, $001C
-		dc.w $F805, $24, $002C
-		dc.w $F805, $38, $003C
-		dc.w $F805, $2C, $004C
-		dc.w $F805, $48, $005C
+		dc.w $F805, $1A, $FF94
+		dc.w $F805, $26, $FFA4
+		dc.w $F805, $16, $FFB4
+		dc.w $F805, $32, $FFC4
+		dc.w $F805, $3A, $FFD4
+		dc.w $F805, $22, $FFEC
+		dc.w $F805, $2E, $FFFC
+		dc.w $F805, $22, $000C
+		dc.w $F805, $36, $001C
+		dc.w $F805, $16, $002C
+		dc.w $F805, $2A, $003C
+		dc.w $F805, $1E, $004C
+		dc.w $F805, $3A, $005C
 Map_SSR_1_0_1: dc.w 6
-		dc.w $F80D, $2012, $FFB0
-		dc.w $F801, $201A, $FFD0
-		dc.w $F809, Map_Results_ScoreDigits, $0018
-		dc.w $F80D, Map_Results_ScoreDigits+6, $0030
+		dc.w $FC0C, make_art_tile(ArtTile_HUD+0,1,0)-ArtTile_Results_Card, $FFB0
+		dc.w $FC00, make_art_tile(ArtTile_HUD+7,1,0)-ArtTile_Results_Card, $FFD0
+		dc.w $FC08, Map_Results_ScoreDigits, $0018
+		dc.w $FC0C, Map_Results_ScoreDigits+3, $0030
 		dc.w $F704, $0, $FFCD
 		dc.w $FF04, $1800, $FFCD
-Map_SSR_1_0_2: dc.w 7
-		dc.w $F805, Map_SSResults_RingTile+$2000, $FFC0
-		dc.w $F80D, $201C, $FFD9
-		dc.w $F801, $2012, $FFF9
-		dc.w $F704, $0, $FFF6
-		dc.w $FF04, $1800, $FFF6
-		dc.w $F80D, Map_Results_RingDigits, $0028
-		dc.w $F801, Map_Results_Zero, $0048
+Map_SSR_1_0_2: dc.w 10
+		dc.w $FC00, make_art_tile(ArtTile_HUD+3,1,0)-ArtTile_Results_Card, $FFB0
+		dc.w $FC00, make_art_tile(ArtTile_HUD+5,1,0)-ArtTile_Results_Card, $FFB8
+		dc.w $FC04, make_art_tile(ArtTile_HUD+8,1,0)-ArtTile_Results_Card, $FFC0
+		dc.w $FC00, make_art_tile(ArtTile_HUD+0,1,0)-ArtTile_Results_Card, $FFD0
+		dc.w $FC0C, $2012, $FFE1
+		dc.w $FC00, make_art_tile(ArtTile_HUD,1,0)-ArtTile_Results_Card, $0001
+		dc.w $F704, $0, $FFFE
+		dc.w $FF04, $1800, $FFFE
+		dc.w $FC0C, Map_Results_RingDigits, $0028
+		dc.w $FC00, Map_Results_Zero, $0048
 Map_SSR_1_0_3: dc.w 13
 		dc.w $E40C, $2, $FFF4
 		dc.w $E402, $6, $0014
@@ -204,34 +213,37 @@ Map_SSR_1_1: ; CHAOS EMERALDS
 		dc.w Map_SSR_1_1_5-Map_SSR_1_1
 		dc.w Map_SSR_1_1_6-Map_SSR_1_1
 Map_SSR_1_1_0: dc.w 13
-		dc.w $F805, $28, $FF94
-		dc.w $F805, $34, $FFA4
-		dc.w $F805, $24, $FFB4
-		dc.w $F805, $40, $FFC4
-		dc.w $F805, $48, $FFD4
-		dc.w $F805, $30, $FFEC
-		dc.w $F805, $3C, $FFFC
-		dc.w $F805, $30, $000C
-		dc.w $F805, $44, $001C
-		dc.w $F805, $24, $002C
-		dc.w $F805, $38, $003C
-		dc.w $F805, $2C, $004C
-		dc.w $F805, $48, $005C
+		dc.w $F805, $1A, $FF94
+		dc.w $F805, $26, $FFA4
+		dc.w $F805, $16, $FFB4
+		dc.w $F805, $32, $FFC4
+		dc.w $F805, $3A, $FFD4
+		dc.w $F805, $22, $FFEC
+		dc.w $F805, $2E, $FFFC
+		dc.w $F805, $22, $000C
+		dc.w $F805, $36, $001C
+		dc.w $F805, $16, $002C
+		dc.w $F805, $2A, $003C
+		dc.w $F805, $1E, $004C
+		dc.w $F805, $3A, $005C
 Map_SSR_1_1_1: dc.w 6
-		dc.w $F80D, $2012, $FFB0
-		dc.w $F801, $201A, $FFD0
-		dc.w $F809, Map_Results_ScoreDigits, $0018
-		dc.w $F80D, Map_Results_ScoreDigits+6, $0030
+		dc.w $FC0C, make_art_tile(ArtTile_HUD+0,1,0)-ArtTile_Results_Card, $FFB0
+		dc.w $FC00, make_art_tile(ArtTile_HUD+7,1,0)-ArtTile_Results_Card, $FFD0
+		dc.w $FC08, Map_Results_ScoreDigits, $0018
+		dc.w $FC0C, Map_Results_ScoreDigits+3, $0030
 		dc.w $F704, $0, $FFCD
 		dc.w $FF04, $1800, $FFCD
-Map_SSR_1_1_2: dc.w 7
-		dc.w $F805, Map_SSResults_RingTile+$2000, $FFC0
-		dc.w $F80D, $201C, $FFD9
-		dc.w $F801, $2012, $FFF9
-		dc.w $F704, $0, $FFF6
-		dc.w $FF04, $1800, $FFF6
-		dc.w $F80D, Map_Results_RingDigits, $0028
-		dc.w $F801, Map_Results_Zero, $0048
+Map_SSR_1_1_2: dc.w 10
+		dc.w $FC00, make_art_tile(ArtTile_HUD+3,1,0)-ArtTile_Results_Card, $FFB0
+		dc.w $FC00, make_art_tile(ArtTile_HUD+5,1,0)-ArtTile_Results_Card, $FFB8
+		dc.w $FC04, make_art_tile(ArtTile_HUD+8,1,0)-ArtTile_Results_Card, $FFC0
+		dc.w $FC00, make_art_tile(ArtTile_HUD+0,1,0)-ArtTile_Results_Card, $FFD0
+		dc.w $FC0C, $2012, $FFE1
+		dc.w $FC00, make_art_tile(ArtTile_HUD,1,0)-ArtTile_Results_Card, $0001
+		dc.w $F704, $0, $FFFE
+		dc.w $FF04, $1800, $FFFE
+		dc.w $FC0C, Map_Results_RingDigits, $0028
+		dc.w $FC00, Map_Results_Zero, $0048
 Map_SSR_1_1_3: dc.w 13
 		dc.w $E40C, $2, $FFF4
 		dc.w $E402, $6, $0014
@@ -270,36 +282,39 @@ Map_SSR_2_0: ; SONIC GOT THEM ALL
 		dc.w Map_SSR_2_0_5-Map_SSR_2_0
 		dc.w Map_SSR_2_0_6-Map_SSR_2_0
 Map_SSR_2_0_0: dc.w 15
-		dc.w $F805, $4A, $FF80
-		dc.w $F805, $46, $FF90
-		dc.w $F805, $42, $FFA0
-		dc.w $F801, $38, $FFB0
-		dc.w $F805, $28, $FFB8
-		dc.w $F805, $30, $FFD0
-		dc.w $F805, $46, $FFE0
-		dc.w $F805, $4E, $FFF0
-		dc.w $F805, $4E, $0008
-		dc.w $F805, $34, $0018
-		dc.w $F805, $2C, $0028
-		dc.w $F805, $3E, $0038
-		dc.w $F805, $24, $0050
-		dc.w $F805, $3A, $0060
-		dc.w $F805, $3A, $0070
+		dc.w $F805, $3C, $FF80
+		dc.w $F805, $38, $FF90
+		dc.w $F805, $34, $FFA0
+		dc.w $F801, $2A, $FFB0
+		dc.w $F805, $1A, $FFB8
+		dc.w $F805, $22, $FFD0
+		dc.w $F805, $38, $FFE0
+		dc.w $F805, $40, $FFF0
+		dc.w $F805, $40, $0008
+		dc.w $F805, $26, $0018
+		dc.w $F805, $1E, $0028
+		dc.w $F805, $30, $0038
+		dc.w $F805, $16, $0050
+		dc.w $F805, $2C, $0060
+		dc.w $F805, $2C, $0070
 Map_SSR_2_0_1: dc.w 6
-		dc.w $F80D, $2012, $FFB0
-		dc.w $F801, $201A, $FFD0
-		dc.w $F809, Map_Results_ScoreDigits, $0018
-		dc.w $F80D, Map_Results_ScoreDigits+6, $0030
+		dc.w $FC0C, make_art_tile(ArtTile_HUD+0,1,0)-ArtTile_Results_Card, $FFB0
+		dc.w $FC00, make_art_tile(ArtTile_HUD+7,1,0)-ArtTile_Results_Card, $FFD0
+		dc.w $FC08, Map_Results_ScoreDigits, $0018
+		dc.w $FC0C, Map_Results_ScoreDigits+3, $0030
 		dc.w $F704, $0, $FFCD
 		dc.w $FF04, $1800, $FFCD
-Map_SSR_2_0_2: dc.w 7
-		dc.w $F805, Map_SSResults_RingTile+$2000, $FFC0
-		dc.w $F80D, $201C, $FFD9
-		dc.w $F801, $2012, $FFF9
-		dc.w $F704, $0, $FFF6
-		dc.w $FF04, $1800, $FFF6
-		dc.w $F80D, Map_Results_RingDigits, $0028
-		dc.w $F801, Map_Results_Zero, $0048
+Map_SSR_2_0_2: dc.w 10
+		dc.w $FC00, make_art_tile(ArtTile_HUD+3,1,0)-ArtTile_Results_Card, $FFB0
+		dc.w $FC00, make_art_tile(ArtTile_HUD+5,1,0)-ArtTile_Results_Card, $FFB8
+		dc.w $FC04, make_art_tile(ArtTile_HUD+8,1,0)-ArtTile_Results_Card, $FFC0
+		dc.w $FC00, make_art_tile(ArtTile_HUD+0,1,0)-ArtTile_Results_Card, $FFD0
+		dc.w $FC0C, $2012, $FFE1
+		dc.w $FC00, make_art_tile(ArtTile_HUD,1,0)-ArtTile_Results_Card, $0001
+		dc.w $F704, $0, $FFFE
+		dc.w $FF04, $1800, $FFFE
+		dc.w $FC0C, Map_Results_RingDigits, $0028
+		dc.w $FC00, Map_Results_Zero, $0048
 Map_SSR_2_0_3: dc.w 13
 		dc.w $E40C, $2, $FFF4
 		dc.w $E402, $6, $0014
@@ -338,36 +353,39 @@ Map_SSR_2_1: ; TAILS GOT THEM ALL
 		dc.w Map_SSR_2_1_5-Map_SSR_2_1
 		dc.w Map_SSR_2_1_6-Map_SSR_2_1
 Map_SSR_2_1_0: dc.w 15
-		dc.w $F805, $46, $FF80
-		dc.w $F805, $24, $FF90
-		dc.w $F801, $34, $FFA0
-		dc.w $F805, $36, $FFA8
-		dc.w $F805, $42, $FFB8
-		dc.w $F805, $2C, $FFD0
-		dc.w $F805, $3E, $FFE0
-		dc.w $F805, $46, $FFF0
-		dc.w $F805, $46, $0008
-		dc.w $F805, $30, $0018
-		dc.w $F805, $28, $0028
-		dc.w $F805, $3A, $0038
-		dc.w $F805, $24, $0050
-		dc.w $F805, $36, $0060
-		dc.w $F805, $36, $0070
+		dc.w $F805, $38, $FF80
+		dc.w $F805, $16, $FF90
+		dc.w $F801, $26, $FFA0
+		dc.w $F805, $28, $FFA8
+		dc.w $F805, $34, $FFB8
+		dc.w $F805, $1E, $FFD0
+		dc.w $F805, $30, $FFE0
+		dc.w $F805, $38, $FFF0
+		dc.w $F805, $38, $0008
+		dc.w $F805, $22, $0018
+		dc.w $F805, $1A, $0028
+		dc.w $F805, $2C, $0038
+		dc.w $F805, $16, $0050
+		dc.w $F805, $28, $0060
+		dc.w $F805, $28, $0070
 Map_SSR_2_1_1: dc.w 6
-		dc.w $F80D, $2012, $FFB0
-		dc.w $F801, $201A, $FFD0
-		dc.w $F809, Map_Results_ScoreDigits, $0018
-		dc.w $F80D, Map_Results_ScoreDigits+6, $0030
+		dc.w $FC0C, make_art_tile(ArtTile_HUD+0,1,0)-ArtTile_Results_Card, $FFB0
+		dc.w $FC00, make_art_tile(ArtTile_HUD+7,1,0)-ArtTile_Results_Card, $FFD0
+		dc.w $FC08, Map_Results_ScoreDigits, $0018
+		dc.w $FC0C, Map_Results_ScoreDigits+3, $0030
 		dc.w $F704, $0, $FFCD
 		dc.w $FF04, $1800, $FFCD
-Map_SSR_2_1_2: dc.w 7
-		dc.w $F805, Map_SSResults_RingTile+$2000, $FFC0
-		dc.w $F80D, $201C, $FFD9
-		dc.w $F801, $2012, $FFF9
-		dc.w $F704, $0, $FFF6
-		dc.w $FF04, $1800, $FFF6
-		dc.w $F80D, Map_Results_RingDigits, $0028
-		dc.w $F801, Map_Results_Zero, $0048
+Map_SSR_2_1_2: dc.w 10
+		dc.w $FC00, make_art_tile(ArtTile_HUD+3,1,0)-ArtTile_Results_Card, $FFB0
+		dc.w $FC00, make_art_tile(ArtTile_HUD+5,1,0)-ArtTile_Results_Card, $FFB8
+		dc.w $FC04, make_art_tile(ArtTile_HUD+8,1,0)-ArtTile_Results_Card, $FFC0
+		dc.w $FC00, make_art_tile(ArtTile_HUD+0,1,0)-ArtTile_Results_Card, $FFD0
+		dc.w $FC0C, $2012, $FFE1
+		dc.w $FC00, make_art_tile(ArtTile_HUD,1,0)-ArtTile_Results_Card, $0001
+		dc.w $F704, $0, $FFFE
+		dc.w $FF04, $1800, $FFFE
+		dc.w $FC0C, Map_Results_RingDigits, $0028
+		dc.w $FC00, Map_Results_Zero, $0048
 Map_SSR_2_1_3: dc.w 13
 		dc.w $E40C, $2, $FFF4
 		dc.w $E402, $6, $0014

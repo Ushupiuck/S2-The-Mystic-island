@@ -47,22 +47,28 @@ def check_hud(g, rom, output):
         return bytes(g.vram[(address + i) ^ 1] for i in range(count * 32))
 
     def digits(text):
-        return b''.join(art[int(c) * 64:(int(c) + 1) * 64] for c in text)
+        return b''.join(art[int(c) * 32:(int(c) + 1) * 32] for c in text)
+
+    free_first = g.s['ArtTile_HUD_End']
+    free_count = g.s['ArtTile_Points']-free_first
+    assert free_count == 13
+    free_before = tiles(free_first, free_count)
 
     def check_mapping(placement):
-        # The second HUD piece is SCORE's E during play, coordinates in placement.
-        relative = g.s['Map_Obj21_DebugDigits' if placement else 'Map_Obj21_ScoreE']
+        # Debug keeps SCOR in one piece; normal SCORE uses the shared E tile.
+        relative = g.s['Map_Obj21_DebugDigits'] if placement else 0xA007
         expected = (g.s['ArtTile_HUD'] + relative) & 0xFFFF
         assert g.read(g.s['Sprite_Table'] + 12, 2) == expected, (
             'Wrong HUD mapping for active Debug type', placement)
 
     def check_numbers():
+        assert tiles(free_first, free_count) == free_before, 'HUD wrote into the reclaimed VRAM gap'
         first = g.s['ArtTile_HUD_Numbers']
-        assert tiles(first, 14) == digits('1234560'), 'Score not restored'
-        assert tiles(first + 14, 2) == digits(str(g.read('v_timemin')))
-        assert tiles(first + 18, 4) == digits(f"{g.read('v_timesec'):02}"), (
+        assert tiles(first, 7) == digits('1234560'), 'Score not restored'
+        assert tiles(g.s['ArtTile_HUD_Time'], 1) == digits(str(g.read('v_timemin')))
+        assert tiles(g.s['ArtTile_HUD_Time'] + 2, 2) == digits(f"{g.read('v_timesec'):02}"), (
             'Time still contains Debug digits or initial zeroes')
-        assert tiles(first + 22, 6) == digits('123'), 'Rings not restored'
+        assert tiles(g.s['ArtTile_HUD_Rings'], 3) == digits('123'), 'Rings not restored'
 
     cases = []
     for running in (0, 1):
@@ -94,7 +100,7 @@ def check_hud(g, rom, output):
                 check_numbers()
                 assert (g.read('v_time', 4) != before) == bool(running)
             else:
-                assert tiles(g.s['ArtTile_HUD_Numbers'], 14) != digits('1234560')
+                assert tiles(g.s['ArtTile_HUD_Numbers'], 7) != digits('1234560')
                 first = g.s['ArtTile_HUD_Debug_Numbers']
                 assert all(tiles(first + i, 1) in glyphs for i in range(16)), (
                     'Coordinates did not use the white hexadecimal font')

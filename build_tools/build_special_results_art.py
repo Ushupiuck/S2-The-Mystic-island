@@ -65,8 +65,6 @@ def main():
     for name, data in (('Sonic',text+sonic),('Tails',tails)):
         (ROOT/f'art/uncompressed/Results continue {name}.unc').write_bytes(data)
         (ROOT/f'art/moduled kosinski/Results continue {name}.kospm').write_bytes(pack_moduled(data))
-    # Both game/results ring copies now use aligned gold on the second line.
-    (ROOT/'art/uncompressed/SS Results Ring.bin').write_bytes((ROOT/'art/uncompressed/Ring.bin').read_bytes())
     print('Independent results: navy/white/gold UI, six four-tile emeralds, original animated continue sprites.')
 
 

@@ -157,16 +157,16 @@ def main():
     else:raise AssertionError('Results tally did not start')
     tally_shields=shields('results-tally-shields.png')
     font=(art_root/'HUD Numbers.bin').read_bytes()
-    for offset,name in ((0,'v_timebonus'),(8,'v_ringbonus')):
+    for offset,name in ((0,'v_timebonus'),(4,'v_ringbonus')):
         # Numeric state can be one frame ahead of DMA, so sample a stable pair.
         matched=False
         for _ in range(8):
             value=g.read(name,2);leading=True;expected=bytearray()
             for digit in f'{value:04d}':
                 leading=leading and digit=='0'
-                expected+=bytes(64) if leading else font[int(digit)*64:(int(digit)+1)*64]
+                expected+=bytes(32) if leading else font[int(digit)*32:(int(digit)+1)*32]
             g.run();assert not g.read('v_errortype')
-            if vram((g.s['ArtTile_Bonuses']+offset)*32,256)==expected:
+            if vram((g.s['ArtTile_Bonuses']+offset)*32,128)==expected:
                 matched=True;break
         assert matched,(name,'bonus digits overlap shield or glyph DMA')
     assert vram(g.s['ArtTile_Results_Card']*32,len(glyphs))==glyphs

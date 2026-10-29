@@ -3089,39 +3089,6 @@ LoadRingFrame:
 		bra.w	QueueDMATransfer		; (or DMA_68KtoVRAM)
 .end:		rts
 
-; ---------------------------------------------------------------------------
-; S1 special-stage results replace that stage's ring art at $2940 with palette 0.
-; Keep the normal $D720 art intact for the return to the level.
-; This loop does not run ChangeRingFrame, so load and animate that copy here.
-; ---------------------------------------------------------------------------
-
-InitSSResultsRing:
-		st.b	(v_ani1_prev).w		; Force the first remapped frame to load
-		move.b	#4-1,(v_ani1_time).w
-		bra.s	LoadSSResultsRingFrame
-
-AnimateSSResultsRing:
-		bsr.s	LoadSSResultsRingFrame
-		subq.b	#1,(v_ani1_time).w
-		bpl.s	.return
-		move.b	#4-1,(v_ani1_time).w
-		addq.b	#1,(v_ani1_frame).w
-		andi.b	#7,(v_ani1_frame).w
-.return:	rts
-
-LoadSSResultsRingFrame:
-		moveq	#0,d1
-		move.b	(v_ani1_frame).w,d1
-		cmp.b	(v_ani1_prev).w,d1
-		beq.s	.return
-		move.b	d1,(v_ani1_prev).w
-		lsl.l	#7,d1
-		addi.l	#Art_SSResultsRing,d1
-		move.w	#ArtTile_SS_Rings*tile_size,d2
-		moveq	#$80/2,d3
-		bra.w	QueueDMATransfer
-.return:	rts
-
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 nosignpost macro actid
@@ -3530,7 +3497,6 @@ loc_5214:
 		bsr.w	WaitForVint
 		jsr	(HUD_Base).l
 		ResetDMAQueue
-		bsr.w	InitSSResultsRing	; Queue palette-0 ring art for the results
 		enable_ints
 		moveq	#palid_SSResult,d0
 		bsr.w	PalLoad2		; load results screen palette
@@ -3561,7 +3527,6 @@ SS_NormalExit:
 		move.w	#Vint_TitleCard,(v_vbla_routine).w
 		bsr.w	Process_Kos_Queue
 		bsr.w	WaitForVint
-		bsr.w	AnimateSSResultsRing
 		jsr	(ExecuteObjects).l
 		jsr	(Render_Sprites).l
 		bsr.w	RunPLC_RAM
@@ -11616,7 +11581,7 @@ TimeOver:
 
 HudUpdate_Debug:
 		bsr.w	HUDDebug_XY
-		locVRAM	(ArtTile_HUD_Numbers+$12)*tile_size,d0	; set VRAM address
+		locVRAM	(ArtTile_HUD_Time+2)*tile_size,d0	; set VRAM address
 		moveq	#0,d1
 		move.b	(v_spritecount).w,d1
 		bsr.w	HUD_Secs
@@ -11646,7 +11611,7 @@ Hud_UpdateCounters:
 		bsr.w	HUD_LoadZero
 .rings:
 		clr.b	(f_ringcount).w
-		locVRAM	(ArtTile_HUD_Numbers+$16)*tile_size,d0
+		locVRAM	ArtTile_HUD_Rings*tile_size,d0
 		moveq	#0,d1
 		move.w	(v_rings).w,d1
 		bsr.w	HUD_Rings
@@ -11675,7 +11640,7 @@ Hud_UpdateCounters:
 
 
 HUD_LoadZero:
-		locVRAM	(ArtTile_HUD_Numbers+$16)*tile_size
+		locVRAM	ArtTile_HUD_Rings*tile_size
 		lea	HUD_TilesZero(pc),a2
 		moveq	#HUD_TilesEnd-HUD_TilesZero-1,d2
 		bra.s	loc_1B3CC
@@ -11696,7 +11661,7 @@ loc_1B3CC:
 		lea	Art_HUD(pc),a1
 
 loc_1B3D0:
-		moveq	#$10-1,d1
+		moveq	#8-1,d1
 		move.b	(a2)+,d0
 		bmi.s	loc_1B3EC
 		ext.w	d0
@@ -11721,7 +11686,7 @@ loc_1B3EC:
 		; S3&K's readable digit table, using this project's glyph indices.
 		charset ' ',$FF
 		charset '0',0
-		charset ':',$14
+		charset ':',10
 HUD_TilesBase:	dc.b "      0"	; score is stored in ten-point units
 		dc.b "0:00"
 HUD_TilesZero:	dc.b "  0"
@@ -11733,7 +11698,7 @@ HUD_TilesEnd:
 
 
 HUDDebug_XY:
-		locVRAM	ArtTile_HUD_Debug_Numbers*tile_size	; Include the two debug-only tiles
+		locVRAM	ArtTile_HUD_Debug_Numbers*tile_size	; Sixteen coordinates overlap the seven normal score tiles
 		move.w	(Camera_RAM).w,d1
 		swap	d1
 		move.w	(v_player+obX).w,d1
@@ -11812,7 +11777,7 @@ loc_1B484:
 loc_1B48E:
 		tst.w	d4
 		beq.s	loc_1B4BC
-		lsl.w	#6,d2
+		lsl.w	#5,d2
 		move.l	d0,4(a6)
 		lea	(a1,d2.w),a3
 		move.l	(a3)+,(a6)
@@ -11823,17 +11788,9 @@ loc_1B48E:
 		move.l	(a3)+,(a6)
 		move.l	(a3)+,(a6)
 		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
 
 loc_1B4BC:
-		addi.l	#$400000,d0
+		addi.l	#$200000,d0
 		dbf	d6,loc_1B478
 		rts
 ; End of function HUD_Score
@@ -11866,16 +11823,8 @@ loc_1C95A:
 
 loc_1C962:
 		add.l	d3,d1
-		lsl.w	#6,d2
+		lsl.w	#5,d2
 		lea	(a1,d2.w),a3
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
 		move.l	(a3)+,(a6)
 		move.l	(a3)+,(a6)
 		move.l	(a3)+,(a6)
@@ -11901,11 +11850,11 @@ HUD_1:		dc.l 1
 ; Draw the current time without advancing it or changing its running flag.
 ; Debug return also needs this when the clock was stopped before placement.
 HUD_Time:
-		locVRAM	(ArtTile_HUD_Numbers+$E)*tile_size,d0
+		locVRAM	ArtTile_HUD_Time*tile_size,d0
 		moveq	#0,d1
 		move.b	(v_timemin).w,d1
 		bsr.s	HUD_Mins
-		locVRAM	(ArtTile_HUD_Numbers+$12)*tile_size,d0
+		locVRAM	(ArtTile_HUD_Time+2)*tile_size,d0
 		moveq	#0,d1
 		move.b	(v_timesec).w,d1
 		bra.s	HUD_Secs
@@ -11946,7 +11895,7 @@ loc_1B558:
 		moveq	#1,d4
 
 loc_1B562:
-		lsl.w	#6,d2
+		lsl.w	#5,d2
 		move.l	d0,4(a6)
 		lea	(a1,d2.w),a3
 		move.l	(a3)+,(a6)
@@ -11957,15 +11906,7 @@ loc_1B562:
 		move.l	(a3)+,(a6)
 		move.l	(a3)+,(a6)
 		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		addi.l	#$400000,d0
+		addi.l	#$200000,d0
 		dbf	d6,loc_1B54C
 		rts
 ; End of function HUD_Secs
@@ -12000,16 +11941,8 @@ loc_1B5B0:
 loc_1B5BA:
 		tst.w	d4
 		beq.s	loc_1B5EA
-		lsl.w	#6,d2
+		lsl.w	#5,d2
 		lea	(a1,d2.w),a3
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
 		move.l	(a3)+,(a6)
 		move.l	(a3)+,(a6)
 		move.l	(a3)+,(a6)
@@ -12023,7 +11956,7 @@ loc_1B5BA:
 ; ---------------------------------------------------------------------------
 
 loc_1B5EA:
-		moveq	#$10-1,d5
+		moveq	#8-1,d5
 
 loc_1B5EC:
 		move.l	#0,(a6)
@@ -13750,8 +13683,6 @@ Nem_Ring:	binclude	"art/nemesis/Ring.nem"
 Art_Ring:	binclude	"art/uncompressed/Ring.bin"
 Art_Ring_End:
 	endif
-; Results retain their own source/cache, using the aligned second-line gold ramp.
-Art_SSResultsRing:	binclude	"art/uncompressed/SS Results Ring.bin"
 Art_BigRing:	binclude	"art/uncompressed/Giant Ring.bin"
 Art_BigFlash:	binclude	"art/uncompressed/Giant Ring Flash.bin"
 ; ---------------------------------------------------------------------------
