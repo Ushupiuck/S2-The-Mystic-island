@@ -45,7 +45,11 @@ LevelArtPointersP:
 
 		; EHZ
 		levartptrs plcid_EHZ1_Main, plcid_EHZ1_Extra, palid_EHZ, PKosp_EHZ, PMap16_EHZ, PMap128_EHZ	; EHZ	; ACT 1
+ if MegaCDMode1
+		levartptrs plcid_EHZ2_Main, plcid_EHZ2_Extra, palid_EHZ2_PP, Kosp_EHZ2, Map16_EHZ2, Map128_EHZ2	; EHZ ACT 2, Palmtree Panic background
+ else
 		levartptrs plcid_EHZ2_Main, plcid_EHZ2_Extra, palid_EHZ, PKosp_EHZ, PMap16_EHZ, PMap128_EHZ	; EHZ	; ACT 2
+ endif
 		levartptrs plcid_EHZ3_Main, plcid_EHZ3_Extra, palid_EHZ, PKosp_EHZ, PMap16_EHZ, PMap128_EHZ	; EHZ	; ACT 3
 		levartptrs plcid_EHZ4_Main, plcid_EHZ4_Extra, palid_EHZ, PKosp_EHZ, PMap16_EHZ, PMap128_EHZ	; EHZ	; ACT 4
 

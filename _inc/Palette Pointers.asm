@@ -40,6 +40,8 @@ ptr_Pal_SMZ2: palptr Pal_SMZ2,v_palette+$20,$18
 ptr_Pal_TitleCard:	palptr	Pal_SonicTails,v_palette,$10
 ptr_Pal_GHZ4Water:	palptr	Pal_GHZ4Water,v_palette,$20
 ptr_Pal_MechaSonic:	palptr	Pal_MechaSonic,v_palette+$20,8
+ptr_Pal_EHZ2_PP:	palptr Pal_EHZ2_PP,v_palette+$20,$18
+palid_EHZ2_PP:		equ (ptr_Pal_EHZ2_PP-PalPointers)/8
 palid_MechaSonic:		equ (ptr_Pal_MechaSonic-PalPointers)/8
 palid_GHZ4Water:		equ (ptr_Pal_GHZ4Water-PalPointers)/8
 palid_SMZ1: equ (ptr_Pal_SMZ1-PalPointers)/8

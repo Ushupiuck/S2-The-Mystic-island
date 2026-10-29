@@ -276,6 +276,46 @@ water in an affected act. The VRAM check permits this deliberate borrowing;
 the boss regression executes the actual water-selection code for all four
 GHZ acts to guard the contract.
 
+## Emerald Hill Act 2: Palmtree Panic experiment
+
+Mode 1 EHZ2 has private `8x8 - EHZ2.unc`, `EHZ2.unc` blocks/chunks,
+matching Kosinski+ archives, collision indices and `EHZ2 PP.bin` palette.
+All four era headers select these assets; Acts 1/3/4 retain the original EHZ bank.
+The BG is the upright 512x512 panel at source Y `$600` in Palmtree Panic Act 1
+Present. Its mirrored ramp section is excluded. The new background is authored
+once as 4x4 ordinary 128-pixel chunks.
+
+The importer retains foreground tile/block/chunk IDs, flips, collision paths,
+static pixels and flower animation. Obj18's platform terrain tiles keep their
+IDs too. Background-only slots are recycled; unused trailing definitions are
+removed. Stable foreground IDs preserve objects that reuse level art without
+adding per-act object mappings. The independent source sheets remain editable;
+regeneration deliberately rebuilds them from shared EHZ and the pinned CD source.
+
+PP's cloud/water colors fit exactly in unused palette slots. Five near-matching
+foreground shades are blended with PP's equivalents: each changes just one MD
+channel by one hardware step. Their midpoint lies between representable colors,
+so equal choices select the PP endpoint. This also aligns the wood/grass colors
+used by bridges and platforms. All pixel indices remain fixed; other foreground
+colors and the character palette stay unchanged. A few imported edge shades
+still use the nearest available color per tile. The sky backdrop becomes PP blue.
+The importer checks protected palette uses and bounds each deliberate blend.
+
+EHZ2's own initialization/event entries in `_inc/Level Plane Events.asm`
+produce four moving cloud bands, 3/16-speed mountains, half-speed bushes and
+perspective water. Vertical movement follows at 1/8 speed within the upright
+panel's viewing range. CD uses `Plane_SourceFixed`; MD writes horizontal scroll
+values, while the shared buffered constructor supplies the fixed 512-pixel rows.
+No ramp mirroring or extra RAM allocation is used.
+
+```sh
+python build_tools/import_ehz2_pp_background.py --source /path/to/scddisasm --output test-results/ehz2-pp/import.json
+```
+
+Use sonicretro/scddisasm `f8cf3f0af7bf419d18182ba98554f09307ad3cc6`.
+The source checkout stays read-only. Do not regenerate after hand-editing the
+private EHZ2 sheets unless intentionally replacing those edits.
+
 ## Labyrinth art
 
 Rustic Ruins/LZ uses a Tidal Tempest background with its edited LZ terrain art.

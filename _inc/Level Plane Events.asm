@@ -28,7 +28,7 @@ LevelPlane_CPZ4:
 LevelPlane_EHZ1:
 		dc.l LevelPlane_NoEvent,BgScroll_EHZ,LevelPlane_ScrollCamera,Deform_EHZ,Plane_SourceForeground,Plane_SourceFixed
 LevelPlane_EHZ2:
-		dc.l LevelPlane_NoEvent,BgScroll_EHZ,LevelPlane_ScrollCamera,Deform_EHZ,Plane_SourceForeground,Plane_SourceFixed
+		dc.l LevelPlane_NoEvent,BgScroll_EHZ2_PP,LevelPlane_ScrollCamera,Deform_EHZ2_PP,Plane_SourceForeground,Plane_SourceFixed
 LevelPlane_EHZ3:
 		dc.l LevelPlane_NoEvent,BgScroll_EHZ,LevelPlane_ScrollCamera,Deform_EHZ,Plane_SourceForeground,Plane_SourceFixed
 LevelPlane_EHZ4:
@@ -184,3 +184,95 @@ LevelPlane_ScrollCamera:
 		move.l	(Camera_X_pos).w,(Camera_X_pos_copy).w
 		move.l	(Camera_Y_pos).w,(Camera_Y_pos_copy).w
 		rts
+
+; ---------------------------------------------------------------------------
+; EHZ2: PP Present's upright 512x512 panorama. The CD draws fixed-width rows;
+; MD supplies four cloud bands, mountains, bushes and perspective water.
+; Foreground camera behavior remains the ordinary per-act callback above.
+; ---------------------------------------------------------------------------
+BgScroll_EHZ2_PP:
+		lea	(v_bgscroll_buffer).w,a0
+		moveq	#4-1,d0
+.clear:
+		clr.l	(a0)+
+		dbf	d0,.clear
+		; Continue with the initial background height.
+
+EHZ2_PP_SetY:
+		move.w	(Camera_Y_pos).w,d0
+		lsr.w	#3,d0
+		addi.w	#64,d0
+		cmpi.w	#512-224,d0
+		bls.s	.store
+		move.w	#512-224,d0
+.store:
+		move.w	d0,(Camera_BG_Y_pos).w
+		move.w	d0,(v_bgscrposy_vdp).w
+		rts
+
+Deform_EHZ2_PP:
+		bsr.s	EHZ2_PP_SetY
+		move.w	d0,d4
+		move.w	(Camera_X_pos).w,d0
+		move.w	d0,d1
+		lsr.w	#1,d1
+		move.w	d1,(Camera_BG_X_pos).w
+		move.w	d0,d1
+		lsr.w	#4,d1
+		move.w	d1,d2
+		add.w	d1,d1
+		add.w	d2,d1
+		move.w	d1,(Camera_BG2_X_pos).w
+		lsr.w	#3,d0
+		move.w	d0,(Camera_BG3_X_pos).w
+		lea	(v_bgscroll_buffer).w,a2
+		addi.l	#$4000,(a2)
+		addi.l	#$2000,4(a2)
+		addi.l	#$2000,8(a2)
+		addi.l	#$4000,12(a2)
+		moveq	#0,d3
+		move.w	(Camera_X_pos).w,d3
+		move.l	d3,d5
+		lsl.l	#8,d5	; water step = camera X / 256, 16.16 pixels
+		lsl.l	#8,d3
+		lsl.l	#7,d3	; first water row = camera X / 2
+		move.w	(Camera_X_pos).w,d7
+		neg.w	d7
+		swap	d7
+		lea	(v_hscrolltablebuffer).w,a1
+		move.w	#224-1,d6
+.line:
+		cmpi.w	#192,d4
+		blo.s	.cloud
+		cmpi.w	#352,d4
+		blo.s	.mountains
+		cmpi.w	#384,d4
+		blo.s	.bushes
+		move.l	d3,d0
+		swap	d0
+		add.l	d5,d3
+		bra.s	.write
+.cloud:
+		move.w	d4,d1
+		lsr.w	#4,d1
+		lea	.clouds(pc),a0
+		moveq	#0,d0
+		move.b	(a0,d1.w),d0
+		move.w	(a2,d0.w),d0
+		add.w	(Camera_BG3_X_pos).w,d0
+		bra.s	.write
+.mountains:
+		move.w	(Camera_BG2_X_pos).w,d0
+		bra.s	.write
+.bushes:
+		move.w	(Camera_BG_X_pos).w,d0
+.write:
+		neg.w	d0
+		move.w	d0,d7
+		move.l	d7,(a1)+
+		addq.w	#1,d4
+		dbf	d6,.line
+		rts
+.clouds:
+		dc.b 0,0,4,4,4,4,4,8,8,12,12,12
+		even

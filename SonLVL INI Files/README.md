@@ -15,6 +15,10 @@ Scrap Madness Acts 1/2 use independent terrain tiles, blocks and chunks named
 match the runtime headers. Acts 3/4 share Act 1's tiles/blocks with the separate
 starter chunk bank. See [terrain editing and regeneration](../docs/Levels.md#scrap-madness).
 
+Emerald Hill Act 2 has its own `EHZ2` tiles, blocks and chunks with the PP
+Present background and a matching private palette. Foreground and platform tile
+IDs stay stable. See [the import/editing contract](../docs/Levels.md#emerald-hill-act-2-palmtree-panic-experiment).
+
 Definitions use the game's current graphics and mappings. Nemesis and moduled
 Kosinski Plus art have explicit compression settings. Capsule and resident boss
 previews use the same current moduled archives as the game. The streamed

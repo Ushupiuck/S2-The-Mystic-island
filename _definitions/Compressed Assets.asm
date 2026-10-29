@@ -39,7 +39,7 @@ MCD_CompressedAssets:
 	dc.l BLevel_EHZ1,BLevel_EHZ1+$2F2	; level/layout/bad future/EHZ_1.kosp
 	endif
 	if defined(BLevel_EHZ2)
-	dc.l BLevel_EHZ2,BLevel_EHZ2+$310	; level/layout/bad future/EHZ_2.kosp
+	dc.l BLevel_EHZ2,BLevel_EHZ2+$31F	; level/layout/bad future/EHZ_2.kosp
 	endif
 	if defined(BLevel_EHZ3)
 	dc.l BLevel_EHZ3,BLevel_EHZ3+$310	; level/layout/bad future/EHZ_3.kosp
@@ -321,7 +321,7 @@ MCD_CompressedAssets:
 	dc.l GLevel_EHZ1,GLevel_EHZ1+$2F2	; level/layout/good future/EHZ_1.kosp
 	endif
 	if defined(GLevel_EHZ2)
-	dc.l GLevel_EHZ2,GLevel_EHZ2+$310	; level/layout/good future/EHZ_2.kosp
+	dc.l GLevel_EHZ2,GLevel_EHZ2+$31F	; level/layout/good future/EHZ_2.kosp
 	endif
 	if defined(GLevel_EHZ3)
 	dc.l GLevel_EHZ3,GLevel_EHZ3+$310	; level/layout/good future/EHZ_3.kosp
@@ -548,6 +548,9 @@ MCD_CompressedAssets:
 	if defined(Kosp_EHZ)
 	dc.l Kosp_EHZ,Kosp_EHZ+$2E6A	; art/kosinski/level/8x8 - EHZ.kosp
 	endif
+	if defined(Kosp_EHZ2)
+	dc.l Kosp_EHZ2,Kosp_EHZ2+$2A3E	; art/kosinski/level/8x8 - EHZ2.kosp
+	endif
 	if defined(Kosp_GHZ)
 	dc.l Kosp_GHZ,Kosp_GHZ+$257E	; art/kosinski/level/8x8 - GHZ.kosp
 	endif
@@ -720,7 +723,7 @@ MCD_CompressedAssets:
 	dc.l Level_EHZ1,Level_EHZ1+$2F2	; level/layout/EHZ_1.kosp
 	endif
 	if defined(Level_EHZ2)
-	dc.l Level_EHZ2,Level_EHZ2+$310	; level/layout/EHZ_2.kosp
+	dc.l Level_EHZ2,Level_EHZ2+$31F	; level/layout/EHZ_2.kosp
 	endif
 	if defined(Level_EHZ3)
 	dc.l Level_EHZ3,Level_EHZ3+$310	; level/layout/EHZ_3.kosp
@@ -905,6 +908,9 @@ MCD_CompressedAssets:
 	if defined(Map128_EHZ)
 	dc.l Map128_EHZ,Map128_EHZ+$2D4C	; mappings/128x128/EHZ.kosp
 	endif
+	if defined(Map128_EHZ2)
+	dc.l Map128_EHZ2,Map128_EHZ2+$1BF5	; mappings/128x128/EHZ2.kosp
+	endif
 	if defined(Map128_GHZ)
 	dc.l Map128_GHZ,Map128_GHZ+$2284	; mappings/128x128/GHZ.kosp
 	endif
@@ -937,6 +943,9 @@ MCD_CompressedAssets:
 	endif
 	if defined(Map16_EHZ)
 	dc.l Map16_EHZ,Map16_EHZ+$C94	; mappings/16x16/EHZ.kosp
+	endif
+	if defined(Map16_EHZ2)
+	dc.l Map16_EHZ2,Map16_EHZ2+$B8E	; mappings/16x16/EHZ2.kosp
 	endif
 	if defined(Map16_GHZ)
 	dc.l Map16_GHZ,Map16_GHZ+$B10	; mappings/16x16/GHZ.kosp
@@ -1281,7 +1290,7 @@ MCD_CompressedAssets:
 	dc.l PLevel_EHZ1,PLevel_EHZ1+$2F2	; level/layout/past/EHZ_1.kosp
 	endif
 	if defined(PLevel_EHZ2)
-	dc.l PLevel_EHZ2,PLevel_EHZ2+$310	; level/layout/past/EHZ_2.kosp
+	dc.l PLevel_EHZ2,PLevel_EHZ2+$31F	; level/layout/past/EHZ_2.kosp
 	endif
 	if defined(PLevel_EHZ3)
 	dc.l PLevel_EHZ3,PLevel_EHZ3+$310	; level/layout/past/EHZ_3.kosp

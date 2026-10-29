@@ -1635,6 +1635,8 @@ Pal_CPZ:	binclude	"palette/CPZ.bin"
 		even
 Pal_EHZ:	binclude	"palette/EHZ.bin"
 		even
+Pal_EHZ2_PP:	binclude "palette/EHZ2 PP.bin"
+		even
 Pal_HPZ:	binclude	"palette/HPZ.bin"
 		even
 Pal_HTZ:	binclude	"palette/HTZ.bin"
@@ -13863,7 +13865,13 @@ BMap16_CPZ:	binclude	"mappings/16x16/CPZ.kosp"
 BMap128_CPZ:	binclude	"mappings/128x128/CPZ.kosp"
  endif
 ; ===========================================================================
-; Zone 03
+; Zone 03: Act 2 owns its PP-background terrain bank.
+Kosp_EHZ2:	binclude "art/kosinski/level/8x8 - EHZ2.kosp"
+		even
+Map16_EHZ2:	binclude "mappings/16x16/EHZ2.kosp"
+		even
+Map128_EHZ2:	binclude "mappings/128x128/EHZ2.kosp"
+		even
 Kosp_EHZ:	binclude	"art/kosinski/level/8x8 - EHZ.kosp"
 Map16_EHZ:	binclude	"mappings/16x16/EHZ.kosp"
 Map128_EHZ:	binclude	"mappings/128x128/EHZ.kosp"

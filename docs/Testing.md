@@ -232,8 +232,26 @@ GHZ's split hill/water row. `--legacy-visible` uses the old padded layout as
 the visible-cell oracle when checking background compaction. It takes the same ROM/listing/core/system-directory/
 output options as the SMZ runner. The focused SMZ sweeps check exact parallax
 rates, both acts, pause and PAL timing. Native tests do not model those buses.
-The plane migration has been checked on Linux/Mono; a native Windows build in a
-path containing spaces remains an environment-dependent compatibility check.
+The plane migration passes Linux/Mono and the Windows CI build in its
+`Windows build check` path containing spaces.
+
+The optional 2P scroll-event comparison uses read-only S2 REV01 and skdisasm
+sources and the same Genesis Plus GX core:
+
+```sh
+python build_tools/compare_ehz_alz_scroll.py --s2-source /path/to/s2disasm --sk-source /path/to/skdisasm --rom s2built.bin --listing md-main.lst --core /path/to/genesis_plus_gx_libretro.so --system-directory /path/to/mode1-fixture --output test-results/scroll-comparison
+```
+
+The probe assembles `SwScrl_EHZ_2P` and `ALZ_BackgroundEvent`, including their
+actual deformation helpers, scroll-buffer writes and vertical-scroll updates.
+It preserves S2 REV01's PC-relative `lea_` configuration and samples both camera
+positions/phases. Instructions run in isolated MD RAM with interrupts disabled;
+the core's guest cycle counter measures CPU cost, not host execution time.
+Camera motion, terrain drawing, DMA and the rest of either engine are excluded.
+The two effects have different workloads, so this does not measure whole-game
+performance or prove that either algorithm is globally optimal. Source pins
+are recorded in [Levels](Levels.md#sources-and-regeneration); reports stay in
+the selected output directory.
 
 `check_ram_ranges.py` checks the packed RAM boundaries and palette aliases, then
 assembles the real `clearRAM` macro and executes 38 cases in Unicorn: both
@@ -350,7 +368,17 @@ that offer it. Most primary-player selectors use `--player 0` (Sonic) or `2`
 | Player effects and water | `check_player_effects.py`, `check_water_effects.py`, `check_shared_followup.py` | Shields/stars, splash/countdown, normal/paused surface, DMA retries and shared art |
 | Monitor state and primary Debug | `check_monitor_state.py`, `check_monitor_edges.py`, `check_debug_states.py` | Rider/collector ownership, contact boundaries, Debug HUD switching, stopped/running clock restoration and Time Over |
 | Object lifetime and stage entry | `check_object_lifetimes.py`, `check_giant_ring_entry.py`, `check_object_contexts.py` | Unload/deletion, giant rings and mode-specific objects |
-| Companion | `check_companion_followup.py`, `check_companion_hpz.py`, `check_companion_sbz.py` | Ledges, collapse/bridge/manual takeover; actual HPZ routes; 64-phase SMZ transfer and captured catch-up |
+| Companion | `check_companion_followup.py`, `check_companion_hpz.py`, `check_plane_streaming.py --zone 3 --act 2` checks the private EHZ2/PP bank
+through actual Mode 1 rendering. Use `--pal` for PAL; the default act remains 1.
+The importer verifies foreground/platform tile bytes, block/chunk definitions,
+flower frames and protected object palette uses, bounds the five deliberate
+foreground palette blends to one MD channel step each, and reports the imported
+background's per-color quantization error. Run it twice to verify regeneration
+is byte-stable. The SonLVL checker loads the private Act-2 art and palette with
+all 64 editor sections. Neither the camera excursions nor entrance visits are
+complete controller-only Act-2 playthroughs.
+
+`check_companion_sbz.py` | Ledges, collapse/bridge/manual takeover; actual HPZ routes; 64-phase SMZ transfer and captured catch-up |
 | Input locks and rotating stage | `check_over_screen_input.py`, `check_drowning_input.py`, `check_special_stage_overlap.py` | Real deaths/drowning; normal bumper/item callbacks and embedding regressions |
 | Rotating-stage Debug | `check_ss_debug_game.py` | Actual controller placement, occupied-cell skipping, ring rendering and collection after leaving Debug in NTSC/PAL |
 | SMZ backgrounds, solids and hazards | `check_smz_background.py`, `check_scrap_madness.py`, `check_sbz_discs.py`, `check_smz_vanishing.py`, `check_swing_families.py`, `check_sbz_doors.py` | REV01 parallax/streaming, placed-object lifecycle, transport/ride boundaries and harmful spikeball subtypes |

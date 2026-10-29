@@ -20,6 +20,9 @@ p=argparse.ArgumentParser(description=__doc__)
 for n in ('rom','listing','core','output'):p.add_argument('--'+n,type=Path,required=True)
 p.add_argument('--system-directory',type=Path)
 p.add_argument('--pal',action='store_true')
+p.add_argument('--act',type=int,choices=(1,2,3,4),default=1)
+p.add_argument('--player',type=int,choices=(0,2),default=0)
+p.add_argument('--zone',type=int,help='Limit to one authored terrain set')
 p.add_argument('--legacy-visible',action='store_true',help='Compare against the old padded background cells at visible coordinates')
 a=p.parse_args()
 g=Genesis(a.core,a.rom,a.listing,a.output,a.pal,system_directory=a.system_directory)
@@ -29,13 +32,14 @@ rom=a.rom.read_bytes();samples=0;report=[]
 def word(memory,address):return (memory[address^1]<<8)|memory[(address+1)^1]
 
 for zone,name in ((0,'GHZ'),(1,'LZ'),(2,'CPZ'),(3,'EHZ'),(4,'HPZ'),(5,'HTZ'),(6,'MTZ'),(8,'SMZ')):
-    boot_level(g,zone=zone,act=0)
-    fg,bg=load(ROOT/f'level/layout/{name}_1.kosp')
+    if a.zone is not None and zone!=a.zone: continue
+    boot_level(g,zone=zone,act=a.act-1,player=a.player)
+    fg,bg=load(ROOT/f'level/layout/{name}_{a.act}.kosp')
     if a.legacy_visible:
-        old=kosinski_plus_decode((ROOT/f'md-only/layout/{name}_1.kosp').read_bytes())[0]
+        old=kosinski_plus_decode((ROOT/f'md-only/layout/{name}_{a.act}.kosp').read_bytes())[0]
         fg=[list(old[y*256:y*256+128]) for y in range(16)]
         bg=[list(old[y*256+128:y*256+256]) for y in range(16)]
-    header=g.s['LevelArtPointers']+zone*4*12
+    header=g.s['LevelArtPointers']+(zone*4+a.act-1)*12
     blocks,chunks=[kosinski_plus_decode(rom[struct.unpack_from('>I',rom,header+offset)[0]&0xFFFFFF:])[0] for offset in (4,8)]
     @lru_cache(None)
     def tile(plane,x,y):
@@ -62,7 +66,7 @@ for zone,name in ((0,'GHZ'),(1,'LZ'),(2,'CPZ'),(3,'EHZ'),(4,'HPZ'),(5,'HTZ'),(6,
                     actual=word(g.vram,address);expected=tile(plane,source_x,wy)
                     assert actual==expected,(name,g.frame,plane,(sx,sy),(source_x,wy),hex(actual),hex(expected))
                     samples+=1
-    check();initial_y=g.read('Camera_Y_pos',2)
+    check();g.video.save(a.output/f'{name}-act-{a.act}-start.png');initial_y=g.read('Camera_Y_pos',2)
     for index,(tx,ty) in enumerate(((0x600,initial_y),(0x600,min(initial_y+384,0x720)),(0,initial_y))):
         for tick in range(100):
             for field,value,size in (('obX',tx+160,2),('obY',ty+96,2),('obVelX',0,2),('obVelY',0,2),('obInertia',0,2),('obControl',0x81,1),('obRoutine',2,1),('obStatus',0,1),('invtime',6000,2)):
