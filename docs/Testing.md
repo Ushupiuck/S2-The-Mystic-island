@@ -887,14 +887,16 @@ Run `python build_tools/check_sprite_palettes.py --reference <pre-migration-comm
 It checks level rows, spring piece attributes, underwater regeneration, results
 emeralds and decoded terrain RGB. EHZ2 background readaptation is excluded
 from exact RGB equality; its foreground remains exact. CPZ explicitly accounts
-for original red/brown restoration. Original rotating-stage palette/private
-source pixels, including all five Sonic rolling poses, must remain exact.
+for original red/brown restoration. Rotating-stage private source pixels,
+including all five Sonic rolling poses, remain exact. Its palette comparison
+allows only the three documented first-row warm colors; it also rejects a
+collapsed Tails fur ramp.
 
 `check_special_stage_players.py --rom ROM --listing LISTING --core CORE
 --system-directory BIOS --output OUTPUT --player 2` enters through the real
 menu, verifies complete cloud/opaque-transition uploads before display enable,
 and samples 180 ordinary gameplay frames. It compares compact body/tail VRAM,
-parent following, live sprite-table presence and unchanged stage palette.
+parent following, live sprite-table presence and the authored stage palette.
 Run `--player 1` for Sonic and add `--pal` for PAL. Eight velocity fixtures in
 an unchanged empty layout area exercise all four tail directions; both Debug
 modes and the real goal-exit routine are checked too. Direction and goal states

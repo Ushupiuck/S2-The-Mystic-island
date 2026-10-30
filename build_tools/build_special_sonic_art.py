@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Extract compact rolling body/tail art in the unchanged S1 stage palette.
+"""Extract compact rolling body/tail art in the shared S1 stage palette.
 
 Ordinary character sources remain editable. Sonic keeps his original five
 poses; Tails uses three rolling body poses and sixteen directional tail poses.
-No stage wall, emerald, background or palette data is changed.
+This generator changes no stage wall, emerald, background or palette data.
 """
 from pathlib import Path
 import re

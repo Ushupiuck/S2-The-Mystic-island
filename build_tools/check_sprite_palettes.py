@@ -117,7 +117,14 @@ def main():
                 ('Special stage sparkles.nem','Ring Sparkles.nem'),
                 ('Special stage rings.nem','Ring.nem')):
             assert read('art/nemesis/'+current) == read('art/nemesis/'+original,True)
-        assert read('palette/Special Stage.bin') == read('palette/Special Stage.bin',True)
+        original_palette = bytearray(read('palette/Special Stage.bin',True))
+        for slot,color in ((10,0x8CE),(11,0x26C),(15,0x0AE)):
+            struct.pack_into('>H',original_palette,slot*2,color)
+        assert read('palette/Special Stage.bin') == original_palette
+        from sprite_palette import PLAYER_TO_S1_STAGE_TAILS
+        fur = [PLAYER_TO_S1_STAGE_TAILS[i] for i in (2,3,4)]
+        assert len(set(fur)) == 3, 'Stage fur shades collapsed'
+        assert len({struct.unpack_from('>H',original_palette,i*2)[0] for i in fur}) == 3
         old_source = read("art/uncompressed/Sonic's art.unc",True)
         cues = read('mappings/spriteDPLC/Sonic DPLCs.bin',True)
         stage = read('art/uncompressed/Special stage Sonic.unc')
@@ -129,7 +136,7 @@ def main():
                 words = struct.unpack_from('>'+str(n)+'H',cues,start+2)
                 return b''.join(art[(w&4095)*32:((w&4095)+(w>>12)+1)*32] for w in words)
             assert payload(old_source,cues) == payload(stage,stage_cues), frame
-        checks.update(terrain=samples,rotating_stage_palette_and_shared_pixels_unchanged=True)
+        checks.update(terrain=samples,rotating_stage_shared_pixels_unchanged=True,rotating_stage_warm_slots=[10,11,15])
     if args.output:
         args.output.parent.mkdir(parents=True,exist_ok=True)
         args.output.write_text(json.dumps(checks,indent=2)+'\n')

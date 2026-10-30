@@ -112,9 +112,14 @@ quantization and bumper collision contracts are in
 Background cycles, pause, item callbacks and returns have dedicated checks in
 [Testing](Testing.md); arbitrary Debug placement can still put the player in walls.
 
-The rotating stage retains its original palette and private original-index
-Sonic rolling, bumper, ring and sparkle sources. Results have independent
-palette/emerald art; see [ownership](Sprites-and-VRAM.md#palette-adaptation).
-Tails has private offline-adapted body/tail copies: brown uses stage slot B,
-cream A and bright orange F. The unchanged scenery palette has fewer orange
-shades than his ordinary palette, so the two bright orange shades share yellow.
+The rotating stage retains its original palette positions and private
+original-index Sonic rolling, bumper, ring and sparkle sources. Results have
+independent palette/emerald art; see
+[ownership](Sprites-and-VRAM.md#palette-adaptation).
+The first row's shared warm colors are hand-editable in
+`palette/Special Stage.bin`: B = `$26C` (orange-brown), F = `$0AE` (gold),
+A = `$8CE` (cream). Tails's original fur shades 2/3/4 map to B/F/A, preserving
+three distinct shades; his cream shares A. This also warms Sonic's skin and
+the first-row bumper/item details. The other 61 colors, including the rings,
+walls and cycling background rows, retain their original values. No extra
+palette line or runtime recoloring is needed.

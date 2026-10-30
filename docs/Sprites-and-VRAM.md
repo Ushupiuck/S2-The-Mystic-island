@@ -421,12 +421,12 @@ Their original S2 blue/orange slots are adapted offline to the current player
 row (the four-source-shade blue ramp shares the three available blue slots).
 Its ring
 selects the second-line gold ramp. `build_card_art.py` generates matching labels
-and blue markers. The rotating stage retains its original palette and private
+and blue markers. The rotating stage retains its palette positions and private
 copies of its formerly shared bumper/ring/sparkle banks.
 `build_special_sonic_art.py` extracts five original-index Sonic rolling poses
 (80 source tiles), three Tails rolling poses (48 source tiles), and sixteen
 directional tail poses (96 source tiles) from the editable player art/DPLCs.
-Tails copies are adapted offline to the unchanged stage palette. Their compact
+Tails copies are adapted offline to its shared warm ramp. Their compact
 DPLCs retain the original frame indices, with empty rows outside those sets.
 See the [stage allocations and palette limits](Special-stage.md).
 

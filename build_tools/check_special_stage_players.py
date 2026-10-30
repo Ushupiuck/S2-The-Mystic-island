@@ -126,7 +126,7 @@ for tick in range(180):
     if tick==95:
         g.video.save(a.output/(name+'-in-stage.png'))
 
-# Preserve all stage colors; only private character pixels are adapted.
+# The player and stage items share the authored warm ramp throughout play.
 expected=(ROOT/'palette/Special Stage.bin').read_bytes()[:32]
 assert bytes(g.read(g.s['v_palette']+i) for i in range(32))==expected
 
@@ -185,7 +185,7 @@ assert not g.get('v_player2tails','code'),'Tail leaked into the results scene'
 report=dict(passed=True,player=name,pal=a.pal,visible_entry_checks=entry_checks,
             gameplay_frames=180,body_frames=sorted(body_frames),tail_frames=sorted(tail_frames),
             directional_families=sorted(groups) if a.player==2 else [],
-            stage_palette_unchanged=True,debug_modes=2,goal_exit=True,natural_playthrough=False)
+            stage_palette_matches_source=True,debug_modes=2,goal_exit=True,natural_playthrough=False)
 (a.output/'report.json').write_text(json.dumps(report,indent=2)+'\n')
 print(report,flush=True)
 g.close()
