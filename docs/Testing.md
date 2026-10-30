@@ -401,6 +401,18 @@ to verify regeneration is byte-stable. The SonLVL checker loads the private Act-
 art and palette with all 64 editor sections. Neither the camera excursions nor
 entrance visits are complete controller-only Act-2 playthroughs.
 
+`check_ghz_flowers.py --rom ROM --listing LISTING --output OUTPUT --native
+--reference COMMIT` executes 640 updates of the actual zone DMA scripts,
+checking exact poses/durations, destinations, and the static stalk refresh.
+It verifies retired Ballhog loads/placements are absent in all four GHZ acts,
+and compares block relocation flags plus unchanged terrain/chunks with the
+pre-flower commit. Add `--core CORE --system-directory BIOS --act 1` through
+`--act 4` for live frame uploads, neighboring-bank preservation, pause/resume
+and positioned flower-cluster captures. `--player 2 --pal` covers primary Tails
+in PAL. These captures use diagnostic camera/actor positions, not a complete
+controller-only playthrough. `check_ghz_vram.py` checks loaded sprite banks
+against the flower allocation, including shortened spring art and boss banks.
+
 `check_level_pages.py` also compares the uploaded menu font pixel-for-pixel
 against independently decoded Nemesis art and checks that blank tile zero stays
 transparent, on both pages and after returning from a level. Correct text tile

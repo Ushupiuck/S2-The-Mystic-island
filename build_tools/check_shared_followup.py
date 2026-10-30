@@ -57,7 +57,11 @@ if not a.probe:
    ot,nt=ow&2047,nw&2047
    assert not 1<=nt<17,(zone,'terrain still uses water tiles',nt)
    if ot*32>=len(before):
-    assert ot==nt;continue  # separate animated art
+    expected=ot
+    if zone=='GHZ':
+     for old,new,count in ((0x358,0x39D,4),(0x35C,0x381,16),(0x36C,0x391,12)):
+      if old<=ot<old+count:expected=new+ot-old
+    assert expected==nt;continue  # separate animated art, including relocated GHZ flowers
    else:previous=before[ot*32:(ot+1)*32]
    current=after[nt*32:(nt+1)*32]
    assert previous==current,(zone,hex(ot),hex(nt),'pixels changed')

@@ -283,12 +283,33 @@ handwritten zone routines. No animation decompression runs in VBlank.
 
 | Assets | Animated block IDs | Animated tile slots | Current block count |
 | --- | --- | --- | ---: |
+| GHZ / Twilight Hill | `$1AB-$1AE` sunflower; `$1AF-$1B4` purple flower/stalk | `$381-$390`, `$391-$39C`; static stalk `$39D-$3A0` | 439 |
 | CPZ / Ancient Workbench | `$1B7` | `$319-$31A` | 632 |
 | HPZ / Crystal Valley | `$2BC-$2D9` | `$2E8-$2FF` | 730 |
 
 Source `.unc` and Kosinski Plus block files contain these definitions. SonLVL's
 `animtiles` entries provide first-frame art at the same slots. Both collision
 paths and upper chunk flags must be preserved when rebasing block references.
+
+GHZ uses the classic S1 two-pose sunflower (16 updates per pose) and purple
+flower (0/1/2/1, lasting 128/8/128/8 active updates). Its four stalk tiles are
+static. All three use ordinary `AnimCue_GHZ` DMA scripts; the stalk refreshes
+only every 256 updates. Pause stops the counters and uploads together.
+The 32-tile bank occupies the retired Ballhog ground-explosion range, below
+the giant-ring/boss banks. GHZ Acts 2/3 no longer load that effect or either
+retired Ballhog body bank; none of the four acts places Ballhog. Its source
+objects/art remain available for other levels. `$3A1-$3A4` and `$43D-$483`,
+the reworked HUD gap and shortened spring-bank gaps remain available.
+
+The flower `.unc` sources in `art/uncompressed/` come from sonicretro/s1disasm
+`89c0e0e06b51fd9ebac44d988e4a89bd643fd031`; the existing
+`art/nemesis/S1/GHZ Flower Stalk.nem` remains the editable stalk source.
+After editing blocks or the stalk, run `python build_tools/build_ghz_flower_art.py`.
+It regenerates the raw stalk and packed block definitions. SonLVL overlays the
+same head/stalk first frames for all four acts. Terrain pixels, chunks,
+collision indices, palette/flip/priority bits and terrain-based sprite mappings
+do not change. The unused ending-flower and waterfall reservations are separate
+unfinished work; this does not enable their animation.
 
 All terrain sets start with transparent tile `$000`, the 16 shared water-surface
 slots `$001-$010`, then editable terrain at `$011` onward. No reservation cuts

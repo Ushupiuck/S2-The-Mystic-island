@@ -14,7 +14,9 @@ def check_boss(rom, symbols, cues):
     boss = cues('PLC_GHZBoss')
     assert [source for source, _, _ in boss] == [symbols[name] for name in (
         'Kospm_OldEggPod', 'Kospm_Weapons', 'Kospm_Exhaust', 'Kospm_Prison', 'Kospm_BossExplosion')]
-    protected = [(symbols['ArtTile_Shield_2'] * 32, symbols['ArtTile_Shield_2_End'] * 32),
+    protected = [(symbols['ArtTile_GHZ_Big_Flower_1']*32,
+                  (symbols['ArtTile_GHZ_Flower_Stalk']+4)*32),
+                 (symbols['ArtTile_Shield_2'] * 32, symbols['ArtTile_Shield_2_End'] * 32),
                  (symbols['vram_fg'], 0x10000)]
     for i, (_, low, high) in enumerate(boss):
         assert all(high <= a or low >= b for _, a, b in boss[:i]), (
@@ -66,7 +68,8 @@ def main():
     common = sum((cues(label) for label in ('PLC_Main2', 'PLC_Explode',
                                           'PLC_GHZAnimals')), [])
     # GHZ's 32-tile Chopper occupies the diagonal-spring bank plus four tiles
-    # before it. The shared spring banks themselves have no gaps.
+    # before it. The shortened vertical/horizontal spring art leaves four
+    # unused tiles at the end of each reserved bank.
     expected = {
         'ArtTile_Spring_Diagonal': 0x4DD,
         'ArtTile_Spring_Vertical': 0x4F9,
@@ -83,7 +86,9 @@ def main():
             ('Nem_VSpring2', 'ArtTile_Spring_Vertical', 'ArtTile_Spring_Horizontal'),
             ('Nem_HSpring2', 'ArtTile_Spring_Horizontal', 'ArtTile_Spikes')):
         tiles = struct.unpack_from('>H', rom, symbols[art])[0] & 0x7FFF
-        assert symbols[first] + tiles == symbols[following], (art, 'gap or overlap')
+        expected_tiles = {'Nem_DSpring': 18, 'Nem_VSpring2': 12, 'Nem_HSpring2': 12}
+        assert tiles == expected_tiles[art], (art, 'unexpected spring size')
+        assert symbols[first] + tiles <= symbols[following], (art, 'overlap')
     newtron_tiles = struct.unpack_from('>H', rom, symbols['Kospm_Newtron'])[0] // 32
     assert newtron_tiles == 85
     assert symbols['ArtTile_Newtron'] + newtron_tiles == symbols['ArtTile_Chopper']
@@ -113,10 +118,15 @@ def main():
 
     level_end = len((ROOT / 'art/kosinski/level/8x8 - GHZ.unc').read_bytes())
     assert level_end <= symbols['ArtTile_GHZ_Bridge'] * 32
+    flowers = (symbols['ArtTile_GHZ_Big_Flower_1']*32,
+               (symbols['ArtTile_GHZ_Flower_Stalk']+4)*32)
+    assert flowers == (0x7020,0x7420)
+    assert flowers[1] <= symbols['ArtTile_Giant_Ring']*32
     for act in range(1, 5):
         loaded = (common + cues(f'PLC_GHZ{act}_Main') + cues(f'PLC_GHZ{act}_Extra')
                   + cues(f'PLCKosM_THZ{act}'))
         for i, (source, low, high) in enumerate(loaded):
+            assert high <= flowers[0] or low >= flowers[1], ('flower bank overwritten', act, hex(low))
             # Dry GHZ acts intentionally lend the surface bank to the wall.
             # check_ghz_boss executes the real water initializer for all acts;
             # enabling water requires relocating this borrowed allocation.

@@ -243,7 +243,7 @@ MCD_CompressedAssets:
 	dc.l BMap16_EHZ,BMap16_EHZ+$CAE	; mappings/16x16/EHZ.kosp
 	endif
 	if defined(BMap16_GHZ)
-	dc.l BMap16_GHZ,BMap16_GHZ+$B1C	; mappings/16x16/GHZ.kosp
+	dc.l BMap16_GHZ,BMap16_GHZ+$B14	; mappings/16x16/GHZ.kosp
 	endif
 	if defined(BMap16_HPZ)
 	dc.l BMap16_HPZ,BMap16_HPZ+$F3E	; mappings/16x16/HPZ.kosp
@@ -525,7 +525,7 @@ MCD_CompressedAssets:
 	dc.l GMap16_EHZ,GMap16_EHZ+$CAE	; mappings/16x16/EHZ.kosp
 	endif
 	if defined(GMap16_GHZ)
-	dc.l GMap16_GHZ,GMap16_GHZ+$B1C	; mappings/16x16/GHZ.kosp
+	dc.l GMap16_GHZ,GMap16_GHZ+$B14	; mappings/16x16/GHZ.kosp
 	endif
 	if defined(GMap16_HPZ)
 	dc.l GMap16_HPZ,GMap16_HPZ+$F3E	; mappings/16x16/HPZ.kosp
@@ -954,7 +954,7 @@ MCD_CompressedAssets:
 	dc.l Map16_EHZ2,Map16_EHZ2+$B92	; mappings/16x16/EHZ2.kosp
 	endif
 	if defined(Map16_GHZ)
-	dc.l Map16_GHZ,Map16_GHZ+$B1C	; mappings/16x16/GHZ.kosp
+	dc.l Map16_GHZ,Map16_GHZ+$B14	; mappings/16x16/GHZ.kosp
 	endif
 	if defined(Map16_HPZ)
 	dc.l Map16_HPZ,Map16_HPZ+$F3E	; mappings/16x16/HPZ.kosp
@@ -1509,7 +1509,7 @@ MCD_CompressedAssets:
 	dc.l PMap16_EHZ,PMap16_EHZ+$CAE	; mappings/16x16/EHZ.kosp
 	endif
 	if defined(PMap16_GHZ)
-	dc.l PMap16_GHZ,PMap16_GHZ+$B1C	; mappings/16x16/GHZ.kosp
+	dc.l PMap16_GHZ,PMap16_GHZ+$B14	; mappings/16x16/GHZ.kosp
 	endif
 	if defined(PMap16_HPZ)
 	dc.l PMap16_HPZ,PMap16_HPZ+$F3E	; mappings/16x16/HPZ.kosp

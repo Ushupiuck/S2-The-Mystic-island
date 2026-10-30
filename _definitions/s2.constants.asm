@@ -1669,15 +1669,15 @@ boss_fz_end:	equ boss_fz_x+$2B0
 ; Tile VRAM Locations
 
 ; Universal level sprites; zone/boss PLCs may replace inactive banks.
-ArtTile_Spring_Diagonal:	equ $4DD	; 28 S3&K tiles; spring banks are contiguous
-ArtTile_Spring_Vertical:	equ ArtTile_Spring_Diagonal+$1C ; 16 tiles
-ArtTile_Spring_Horizontal:	equ ArtTile_Spring_Vertical+$10 ; 16 tiles
+ArtTile_Spring_Diagonal:	equ $4DD	; 18 tiles in a 28-tile reservation; GHZ Chopper borrows it
+ArtTile_Spring_Vertical:	equ ArtTile_Spring_Diagonal+$1C ; 12 tiles in a 16-tile reservation
+ArtTile_Spring_Horizontal:	equ ArtTile_Spring_Vertical+$10 ; 12 tiles in a 16-tile reservation
 ArtTile_Spikes: equ $519 ; 16 tiles
 ArtTile_Monitor:		equ ArtTile_Spikes+$10 ; 60 tiles; final four retain Tails's life icon
 ArtTile_Tails_Life:	equ ArtTile_Monitor+$38
 ArtTile_Lamppost:	equ ArtTile_Monitor+$3C ; 10 tiles; ends at $AD9F
 
-; GHZ's packed objects/badniks, starting immediately after its 811 level tiles.
+; GHZ's packed objects/badniks, after its $32B-tile terrain reservation.
 ArtTile_GHZ_SLZ_Smashable_Wall	equ $001	; Temporary location; suits it well
 ArtTile_GHZ_Bridge:		equ $32B	; $6560
 ArtTile_GHZ_MZ_Swing:		equ ArtTile_GHZ_Bridge+$A
@@ -1710,9 +1710,11 @@ ArtTile_Bumper:			equ $380
 
 ; Green Hill Zone
 ArtTile_GHZ_Flower_4:		equ ArtTile_Level+$340
-ArtTile_GHZ_Flower_Stalk:	equ ArtTile_Level+$358
-ArtTile_GHZ_Big_Flower_1:	equ ArtTile_Level+$35C
-ArtTile_GHZ_Small_Flower:	equ ArtTile_Level+$36C
+; Retired Ballhog ground-explosion art frees $381-$3A4 (36 tiles),
+; below the giant-ring/boss banks. Flowers use 32; $3A1-$3A4 stay free.
+ArtTile_GHZ_Big_Flower_1:	equ $381 ; 16 tiles
+ArtTile_GHZ_Small_Flower:	equ $391 ; 12 tiles
+ArtTile_GHZ_Flower_Stalk:	equ $39D ; four tiles, through $3A0
 ArtTile_GHZ_Waterfall:		equ ArtTile_Level+$378
 ArtTile_GHZ_Flower_3:		equ ArtTile_Level+$380
 ArtTile_GHZ_Big_Flower_2:	equ ArtTile_Level+$390

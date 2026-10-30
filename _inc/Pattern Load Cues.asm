@@ -413,7 +413,6 @@ PLC_GHZ2_Main:		dc.w (PLC_GHZ2_Main_End-PLC_GHZ2_Main-2)/6-1
 		plcm	Nem_Swing,	ArtTile_GHZ_MZ_Swing
 		plcm	Nem_GHZ_Ball,	ArtTile_GHZ_Giant_Ball ; giant ball
 		plcm	Nem_GHZ_Rock,	ArtTile_GHZ_Purple_Rock
-		plcm	Nem_GroundExplosion,	ArtTile_Ground_Explosion
 PLC_GHZ2_Main_End:	plccheck PLC_GHZ2_Main,ActPLC_Main_Reserve
 
 PLC_GHZ2_Extra:		dc.w (PLC_GHZ2_Extra_End-PLC_GHZ2_Extra-2)/6-1
@@ -432,7 +431,6 @@ PLC_GHZ3_Main:		dc.w (PLC_GHZ3_Main_End-PLC_GHZ3_Main-2)/6-1
 		plcm	Nem_Swing,	ArtTile_GHZ_MZ_Swing
 		plcm	Nem_GHZ_Ball,	ArtTile_GHZ_Giant_Ball ; giant ball
 		plcm	Nem_GHZ_Rock,	ArtTile_GHZ_Purple_Rock
-		plcm	Nem_GroundExplosion,	ArtTile_Ground_Explosion
 PLC_GHZ3_Main_End:	plccheck PLC_GHZ3_Main,ActPLC_Main_Reserve
 
 PLC_GHZ3_Extra:		dc.w (PLC_GHZ3_Extra_End-PLC_GHZ3_Extra-2)/6-1
@@ -1766,8 +1764,6 @@ PLCKosM_THZ2:	plrKosMlistheader
 	plreqKosM	ArtTile_Crabmeat, Kospm_Crabmeat
 	plreqKosM	ArtTile_Chopper, Kospm_Chopper
 	plreqKosM	ArtTile_Moto_Bug, Kospm_Motobug
-	plreqKosM	ArtTile_Ball_HogV, Kospm_BallhogV
-	plreqKosM	ArtTile_Ball_HogH, Kospm_BallhogH
 	plreqKosM	ArtTile_Newtron, Kospm_Newtron
 PLCKosM_THZ2_End
 ; ---------------------------------------------------------------------------
@@ -1777,8 +1773,6 @@ PLCKosM_THZ3:	plrKosMlistheader
 	plreqKosM	ArtTile_Crabmeat, Kospm_Crabmeat
 	plreqKosM	ArtTile_Chopper, Kospm_Chopper
 	plreqKosM	ArtTile_Moto_Bug, Kospm_Motobug
-	plreqKosM	ArtTile_Ball_HogV, Kospm_BallhogV
-	plreqKosM	ArtTile_Ball_HogH, Kospm_BallhogH
 	plreqKosM	ArtTile_Newtron, Kospm_Newtron
 PLCKosM_THZ3_End
 ; ---------------------------------------------------------------------------

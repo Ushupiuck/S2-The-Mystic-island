@@ -12273,8 +12273,8 @@ Animate_Tiles:
 ; Seems like stage IDs were already being shifted, since listings for $07-$0F
 ; can be found, alongside HPZ's art listed from $08 (its ID in the final).
 ; ---------------------------------------------------------------------------
-Offs_AniFunc:	dc.w Dynamic_NullGHZ-Offs_AniFunc	; GHZ
-Offs_AniPLC:	dc.w Dynamic_Null-Offs_AniFunc		; GHZ
+Offs_AniFunc:	dc.w Dynamic_Normal-Offs_AniFunc	; GHZ
+Offs_AniPLC:	dc.w AnimCue_GHZ-Offs_AniFunc		; GHZ
 		dc.w Dynamic_Null-Offs_AniFunc		; LZ
 		dc.w Dynamic_Null-Offs_AniFunc		; LZ
 		dc.w Dynamic_Normal-Offs_AniFunc	; CPZ
@@ -12308,10 +12308,6 @@ Offs_AniPLC:	dc.w Dynamic_Null-Offs_AniFunc		; GHZ
 ; ===========================================================================
 
 Dynamic_Null:
-		rts
-; ===========================================================================
-
-Dynamic_NullGHZ:
 		rts
 ; ===========================================================================
 
@@ -12397,6 +12393,21 @@ Dynamic_Normal_AtCounter:			; also used by the S1 background's palette-clocked a
 ;	0			Tile ID of first tile in ArtUnc_Flowers1 to transfer
 ;	$7F			Frame duration. Only here if global duration is -1
 
+
+AnimCue_GHZ:	zoneanimstart
+		; Classic sunflower: two poses, sixteen active updates each.
+		zoneanimdecl 15, Art_GHZFlowerLarge, ArtTile_GHZ_Big_Flower_1, 2, 16
+		dc.b 0,16
+		even
+		; Purple flower: long end-pose holds with short transitions.
+		zoneanimdecl -1, Art_GHZFlowerSmall, ArtTile_GHZ_Small_Flower, 4, 12
+		dc.b 0,127,12,7,24,127,12,7
+		even
+		; Static stalk, loaded with the heads; refresh only every 256 updates.
+		zoneanimdecl -1, Art_GHZFlowerStalk, ArtTile_GHZ_Flower_Stalk, 1, 4
+		dc.b 0,255
+		even
+		zoneanimend
 
 AnimCue_EHZ:	zoneanimstart
 		; Flowers
@@ -13710,6 +13721,12 @@ Art_BigFlash:	binclude	"art/uncompressed/Giant Ring Flash.bin"
 ; Misc. animated tiles
 ; ---------------------------------------------------------------------------
 	;		align $20
+Art_GHZFlowerLarge:	binclude	"art/uncompressed/GHZ Flower Large.unc"
+		even
+Art_GHZFlowerSmall:	binclude	"art/uncompressed/GHZ Flower Small.unc"
+		even
+Art_GHZFlowerStalk:	binclude	"art/uncompressed/GHZ Flower Stalk.unc"
+		even
 Art_Flowers1:		binclude	"art/uncompressed/EHZ and HTZ flowers - 1.bin"
 Art_Flowers2:		binclude	"art/uncompressed/EHZ and HTZ flowers - 2.bin"
 Art_Flowers3:		binclude	"art/uncompressed/EHZ and HTZ flowers - 3.bin"
