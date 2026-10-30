@@ -36,6 +36,20 @@ BonusPlayer_Main:	; Routine 0
 		move.w	#make_art_tile(ArtTile_Sonic,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.w	#$100,obPriority(a0)
+		clr.b	(Sonic_LastLoadedDPLC).w
+		clr.b	(Tails_LastLoadedDPLC).w
+		clr.b	(TailsTails_LastLoadedDPLC).w
+		cmpi.w	#PlayerMode_Tails,(Player_mode).w
+		bne.s	.player_ready
+		move.b	#CharacterID_Tails,character_id(a0)
+		move.l	#Map_Tails,obMap(a0)
+		move.b	#Map_Tails_height,height_pixels(a0)
+		move.b	#Map_Tails_width,width_pixels(a0)
+		move.w	#make_art_tile(ArtTile_Tails,0,0),obGfx(a0)
+		move.l	#Obj05,(v_player2tails).w
+		move.w	a0,(v_player2tails+obParent).w
+		move.b	#-1,(v_player2tails+objoff_38).w
+.player_ready:
 		move.b	#2,obAnim(a0)
 		bset	#2,obStatus(a0)
 		bset	#1,obStatus(a0)
@@ -54,7 +68,7 @@ BonusPlayer_ChkDebug:	; Routine 2
 		andi.w	#2,d0				; read air bit of status (d0 = 0 or 2)
 		move.w	BonusPlayer_Modes(pc,d0.w),d1
 		jsr	BonusPlayer_Modes(pc,d1.w)
-		jsr	(LoadSpecialStageSonicPLC).l		; update Sonic's gfx
+		bsr.w	LoadSpecialStagePlayerPLC
 		lea	(v_spritequeue).w,a1
 		adda.w	obPriority(a0),a1
 		move.w	(a1),d0
@@ -100,7 +114,7 @@ BonusPlayer_Display:
 		move.w	(v_ssangle).l,d0
 		add.w	(v_ssrotate).l,d0	; add rotation speed to angle
 		move.w	d0,(v_ssangle).l	; update angle
-		jmp	(Sonic_Animate).l
+		bra.w	SpecialStagePlayer_Animate
 
 ; ---------------------------------------------------------------------------
 ; Subroutine to move Sonic by pressing left/right
@@ -320,8 +334,8 @@ BonusPlayer_ExitStage:
 		move.w	(v_ssangle).l,d0
 		add.w	(v_ssrotate).l,d0
 		move.w	d0,(v_ssangle).l
-		jsr	(Sonic_Animate).l
-		jsr	(LoadSpecialStageSonicPLC).l
+		bsr.w	SpecialStagePlayer_Animate
+		bsr.w	LoadSpecialStagePlayerPLC
 		bsr.s	S1SS_FixCamera
 		lea	(v_spritequeue).w,a1
 		adda.w	obPriority(a0),a1
@@ -783,7 +797,18 @@ SSS_ChkItems_End:
 		rts
 ; End of function SSS_ChkItems2
 
-; Only the rotating stage uses this compact, original-palette rolling source.
+; S3&K's rotating-slot player selects its animator/art by character too.
+; These compact sources preserve S1's live scene palette and ordinary mappings.
+SpecialStagePlayer_Animate:
+		cmpi.b	#CharacterID_Tails,character_id(a0)
+		bne.s	.sonic
+		jmp	(Tails_Animate).l
+.sonic:
+		jmp	(Sonic_Animate).l
+
+LoadSpecialStagePlayerPLC:
+		cmpi.b	#CharacterID_Tails,character_id(a0)
+		beq.s	LoadSpecialStageTailsPLC
 LoadSpecialStageSonicPLC:
 		moveq	#0,d0
 		move.b	obFrame(a0),d0
@@ -791,4 +816,22 @@ LoadSpecialStageSonicPLC:
 		lea	(Sonic_LastLoadedDPLC).w,a3
 		move.w	#ArtTile_Sonic*tile_size,d4
 		move.l	#Art_SpecialStageSonic,d6
+		jmp	(Load_DynamicPLC).l
+
+LoadSpecialStageTailsPLC:
+		moveq	#0,d0
+		move.b	obFrame(a0),d0
+		lea	(DPLC_SpecialStageTails).l,a2
+		lea	(Tails_LastLoadedDPLC).w,a3
+		move.w	#ArtTile_Tails*tile_size,d4
+		move.l	#Art_SpecialStageTails,d6
+		jmp	(Load_DynamicPLC).l
+
+LoadSpecialStageTailsTailPLC:
+		moveq	#0,d0
+		move.b	obFrame(a0),d0
+		lea	(DPLC_SpecialStageTailsTail).l,a2
+		lea	(TailsTails_LastLoadedDPLC).w,a3
+		move.w	#ArtTile_TailsTails*tile_size,d4
+		move.l	#Art_SpecialStageTailsTail,d6
 		jmp	(Load_DynamicPLC).l

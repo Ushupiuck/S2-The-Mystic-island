@@ -15,7 +15,14 @@ Obj_Tails_Tail:
 Obj_Tails_Tail_Main:
 		movea.w	obParent(a0),a2
 		cmpi.l	#Obj02,code(a2)
+		beq.s	.inherit
+		cmpi.l	#BonusPlayer,code(a2)
 		bne.w	DeleteObject
+		cmpi.b	#CharacterID_Tails,character_id(a2)
+		bne.w	DeleteObject
+		tst.w	(Debug_placement_mode).w
+		bne.w	TailS3_loc_1615A.hide	; stage Debug displays a cursor or body-frame preview
+.inherit:
 
 		; Here, several SSTs are inherited from the parent, normally Tails
 		move.b	obAngle(a2),obAngle(a0)
@@ -52,10 +59,18 @@ TailS3_loc_1613C:
 		lea	(AniTails_Tail).l,a1
 		bsr.w	Animate_Tails_Part2
 TailS3_loc_1615A:
+		movea.w	obParent(a0),a2	; directional CalcAngle uses a2 as its lookup pointer
+		cmpi.l	#BonusPlayer,code(a2)
+		beq.s	.stage_art
 		bsr.w	LoadTailsTailsDynPLC
+		bra.s	.art_ready
+.stage_art:
+		jsr	(LoadSpecialStageTailsTailPLC).l
+.art_ready:
 		movea.w	obParent(a0),a2
 		tst.b	tails_hidden(a2)		; use the exact decision made by Tails_Display
 		beq.s	.show
+.hide:
 		andi.b	#$7F,obRender(a0)
 		rts
 .show:

@@ -274,6 +274,8 @@ Debug_FrameCycle:
 		clr.w	(Debug_placement_mode).w
 .next:
 		addq.b	#1,obFrame(a0)
+		cmpi.w	#BonusStage,(v_gamemode).w
+		beq.s	.stage
 		cmpi.b	#CharacterID_Tails,character_id(a0)
 		beq.s	.tails
 		cmpi.b	#Map_Sonic_frames,obFrame(a0)
@@ -288,6 +290,23 @@ Debug_FrameCycle:
 		clr.b	obFrame(a0)
 .tails_art:
 		jsr	(LoadTailsDynPLC).l
+		jmp	(DisplaySprite).l
+.stage:
+		moveq	#$3D,d0
+		moveq	#$42,d1
+		cmpi.b	#CharacterID_Tails,character_id(a0)
+		bne.s	.stage_range
+		move.w	#$96,d0
+		move.w	#$99,d1
+.stage_range:
+		cmp.b	obFrame(a0),d0
+		bhi.s	.stage_wrap
+		cmp.b	obFrame(a0),d1
+		bhi.s	.stage_art
+.stage_wrap:
+		move.b	d0,obFrame(a0)
+.stage_art:
+		jsr	(LoadSpecialStagePlayerPLC).l
 		jmp	(DisplaySprite).l
 
 ; Bonus-stage Debug has no level PLCs. Its ring and sparkle art share the stage

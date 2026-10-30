@@ -3406,6 +3406,15 @@ BonusStage:
 		bsr.w	QuickKosPLC
 		lea	(PLC_S1SpecialStage).l,a1
 		bsr.w	QuickPLC
+		; QuickKosPLC queues work. Finish its art and final DMA while blank;
+		; otherwise clouds arrive before the opaque transition during entry.
+		move.w	#Vint_CtrlDMA,(v_vbla_routine).w
+.load_background_art:
+		bsr.w	Process_Kos_Queue
+		bsr.w	Process_Kos_Module_Queue
+		bsr.w	WaitForVint
+		tst.l	(Kos_module_queue).w
+		bne.s	.load_background_art
 	if MegaCDMode1
 		jsr	(LoadSpecialStageRingArt).l	; unchanged rotating-stage palette
 	endif
@@ -3420,7 +3429,7 @@ BonusStage:
 		move.l	d0,(Camera_Y_pos).w
 		move.l	d0,(Camera_X_pos_copy).w
 		move.l	d0,(Camera_Y_pos_copy).w
-		move.l	#BonusPlayer,(v_player).w ; load special stage Sonic object
+		move.l	#BonusPlayer,(v_player).w ; selected primary character; same S1 stage physics
 		move.b	#-1,(v_ssangleprev).w
 		bsr.w	PalCycle_S1SS
 		clr.w	(v_ssangle).l	; set stage angle to "upright"
@@ -13636,6 +13645,14 @@ Art_Sonic:	binclude	"art/uncompressed/Sonic's art.unc"
 Art_SpecialStageSonic:	binclude "art/uncompressed/Special stage Sonic.unc"
 		even
 DPLC_SpecialStageSonic:	binclude "mappings/spriteDPLC/Special stage Sonic.bin"
+		even
+Art_SpecialStageTails:	binclude "art/uncompressed/Special stage Tails.unc"
+		even
+DPLC_SpecialStageTails:	binclude "mappings/spriteDPLC/Special stage Tails.bin"
+		even
+Art_SpecialStageTailsTail:	binclude "art/uncompressed/Special stage Tails tails.unc"
+		even
+DPLC_SpecialStageTailsTail:	binclude "mappings/spriteDPLC/Special stage Tails tails.bin"
 		even
 Art_HangingSonic:	binclude "art/uncompressed/Sonic hanging.unc"
 	;	align $100

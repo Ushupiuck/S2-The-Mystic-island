@@ -30,6 +30,10 @@ the player's `tails_hidden` decision. Roll/jump anchoring derives the radius
 difference from the character's defaults: Tails's difference is one pixel.
 The common camera compensation uses those radii too, avoiding rolling camera
 bob in every level. Wrapped camera distances are signed 11-bit differences.
+`Obj05` also accepts a Tails `BonusPlayer` parent and selects the private stage
+tail art. Reload the parent pointer after directional animation: `CalcAngle`
+uses `a2` for its lookup tables. Stage-specific behavior is documented in
+[Special stage](Special-stage.md#debug-and-movement).
 
 Companion approach targets use a standing Sonic's live platform-relative X/Y,
 including bridge sag. An established approach steers during the jump and stops

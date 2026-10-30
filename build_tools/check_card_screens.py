@@ -263,7 +263,7 @@ else:
                 if poses=={4,5}:
                     break
         assert poses=={4,5},poses
-        assert_ink_color('v_endcard',4,(0,),7,0xEEE)
+        assert_ink_color('v_endcard',4,(0,1),7,0x0EE)
     report.update(emeralds=args.emeralds,rings=args.rings,continue_poses=sorted(poses))
 
 report['passed']=True

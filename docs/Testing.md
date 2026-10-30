@@ -871,6 +871,8 @@ For the shared small UI font, run `build_hud_art.py`, then
 `build_card_art.py` and `build_special_results_art.py` before building.
 `check_card_screens.py --case special --rings 50` checks both distinct continue
 poses against their six-tile VRAM payloads; run Sonic and Tails selections.
+It also checks that the CONTINUE lettering resolves to yellow independently
+of the portrait's palette selection.
 The normal-results and Debug-HUD checks also cover the shared counters.
 The compact HUD uses one-tile numeric glyphs. Debug switching must preserve
 the reclaimed thirteen-tile range between `ArtTile_HUD_End` and the points
@@ -887,6 +889,16 @@ emeralds and decoded terrain RGB. EHZ2 background readaptation is excluded
 from exact RGB equality; its foreground remains exact. CPZ explicitly accounts
 for original red/brown restoration. Original rotating-stage palette/private
 source pixels, including all five Sonic rolling poses, must remain exact.
+
+`check_special_stage_players.py --rom ROM --listing LISTING --core CORE
+--system-directory BIOS --output OUTPUT --player 2` enters through the real
+menu, verifies complete cloud/opaque-transition uploads before display enable,
+and samples 180 ordinary gameplay frames. It compares compact body/tail VRAM,
+parent following, live sprite-table presence and unchanged stage palette.
+Run `--player 1` for Sonic and add `--pal` for PAL. Eight velocity fixtures in
+an unchanged empty layout area exercise all four tail directions; both Debug
+modes and the real goal-exit routine are checked too. Direction and goal states
+are explicitly staged; this is not a controller-only stage completion.
 
 Regenerate life, spring, player-effect, hanging, conveyor, signpost, card,
 special-results and underwater outputs with their owning build tools. Verify

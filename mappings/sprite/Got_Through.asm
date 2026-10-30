@@ -4,7 +4,7 @@ Map_Results_ScoreDigits = ArtTile_HUD_Numbers-ArtTile_Results_Card
 Map_Results_Zero = ArtTile_HUD_Numbers+6-ArtTile_Results_Card
 Map_Results_TimeDigits = ArtTile_Bonuses-ArtTile_Results_Card
 Map_Results_RingDigits = ArtTile_Bonuses+4-ArtTile_Results_Card
-Map_Results_ContinueText = ArtTile_Mini_Sonic-ArtTile_Results_Card
+Map_Results_ContinueText = make_art_tile(ArtTile_Mini_Sonic,1,0)-ArtTile_Results_Card
 Map_Obj3A: ; SONIC HAS
 		dc.w Map_Obj3A_0-Map_Obj3A
 		dc.w Map_Obj3A_1-Map_Obj3A

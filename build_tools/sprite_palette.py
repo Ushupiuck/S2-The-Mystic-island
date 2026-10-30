@@ -10,6 +10,10 @@ PLAYER_FROM_LEGACY = (0, 1, 12, 11, 15, 10, 6, 7, 8, 9, 5, 2, 13, 14, 4, 3)
 ENEMY_FROM_LEGACY = (0, 1, 12, 11, 4, 10, 6, 7, 8, 9, 5, 2, 13, 14, 15, 3)
 MECHA_FROM_SK = (0, 6, 2, 3, 4, 13, 14, 5, 10, 11, 12, 8, 9, 7, 1, 15)
 PLAYER_FROM_SK = (0, 6, 10, 11, 12, 15, 13, 14, 4, 3, 5, 2, 7, 8, 9, 1)
+# The unchanged S1 stage row has brown, yellow and cream rather than the
+# level's three orange shades. Merge the two bright oranges into its yellow;
+# retain black/grays, skin, shoes and the original stage's blue slots.
+PLAYER_TO_S1_STAGE_TAILS = (0, 1, 11, 15, 15, 10, 6, 7, 8, 9, 5, 3, 2, 12, 13, 14)
 
 
 def remap_pixels(raw, lookup):

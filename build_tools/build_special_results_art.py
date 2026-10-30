@@ -61,7 +61,7 @@ def main():
         return remap_pixels(raw,continue_from_s2)
     sonic = poses('Mini Sonic Continue',18)
     tails = poses('Mini Tails continue')
-    text = lettering('CONTINUE',width=72)
+    text = lettering('CONTINUE',ink=13,width=72)
     for name, data in (('Sonic',text+sonic),('Tails',tails)):
         (ROOT/f'art/uncompressed/Results continue {name}.unc').write_bytes(data)
         (ROOT/f'art/moduled kosinski/Results continue {name}.kospm').write_bytes(pack_moduled(data))

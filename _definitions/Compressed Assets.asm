@@ -678,7 +678,7 @@ MCD_CompressedAssets:
 	dc.l Kospm_Prison,Kospm_Prison+$590	; art/moduled kosinski/Prison Capsule.kospm
 	endif
 	if defined(Kospm_ResultsContinueSonic)
-	dc.l Kospm_ResultsContinueSonic,Kospm_ResultsContinueSonic+$133	; art/moduled kosinski/Results continue Sonic.kospm
+	dc.l Kospm_ResultsContinueSonic,Kospm_ResultsContinueSonic+$132	; art/moduled kosinski/Results continue Sonic.kospm
 	endif
 	if defined(Kospm_ResultsContinueTails)
 	dc.l Kospm_ResultsContinueTails,Kospm_ResultsContinueTails+$C1	; art/moduled kosinski/Results continue Tails.kospm

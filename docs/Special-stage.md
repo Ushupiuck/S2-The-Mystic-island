@@ -21,6 +21,11 @@ clock determines frame timing and long holds. Foreground maps change only when
 entering/leaving checker arrangements. New background maps and the next family's
 first art frame are prepared under the opaque transition.
 
+Entry drains the queued background modules and their final DMA while the
+display is blank, before the white fade. `QuickPLC` only queues those modules;
+enabling display immediately can expose incomplete black-filled clouds before
+the opaque transition tiles arrive.
+
 The main loop constructs four block rows per iteration; completed maps transfer
 in VBlank. Background-map and animated-art uploads never share a frame. Pause
 retains the displayed frame; exit fades use the frozen results VBlank.
@@ -43,7 +48,9 @@ Ranges are **end exclusive**, during stage play before results PLCs load.
 | `$2A40-$C000` | Free in this mode |
 | `$C000-$D000` | Live foreground map, 64x32 tiles |
 | `$D000-$D400` | Sonic allocation; rolling art uses its first `$200` bytes |
-| `$D400-$E000` | Free in this mode |
+| `$D400-$D600` | Tails rolling body, 16 tiles; unused with Sonic |
+| `$D600-$D6C0` | Tails directional tails, six tiles; unused with Sonic |
+| `$D6C0-$E000` | Free in this mode |
 | `$E000-$F000` | Live background map, 64x32 tiles |
 | `$F000-$F380` | Horizontal scroll table |
 | `$F380-$F800` | Free in this mode |
@@ -76,6 +83,14 @@ retains static tile-word attributes. Keep these indices aligned with constants.
 
 ## Debug and movement
 
+Solo Tails selects his own body mappings/animation and spawns the separate
+`Obj05` tail, following S3&K's rotating slot-bonus player setup. Sonic selections
+retain Sonic; no companion AI is spawned. Movement, collision radii and item
+callbacks retain the S1 stage behavior. The tail follows velocity in all four
+directional animation families and stays through the accelerating goal exit.
+Placement and frame-cycle Debug hide it without deleting it. Stage frame-cycle
+Debug stays within Sonic's `$3D-$41` or Tails's `$96-$98` compact rolling poses.
+
 Stage Debug selects its own list without replacing the return level's zone.
 C places a real stage ring (`$3A`) in the layout, without allocating an ordinary
 SST. The cursor snaps to the nearest 24-pixel cell using its full fixed-point
@@ -100,3 +115,6 @@ Background cycles, pause, item callbacks and returns have dedicated checks in
 The rotating stage retains its original palette and private original-index
 Sonic rolling, bumper, ring and sparkle sources. Results have independent
 palette/emerald art; see [ownership](Sprites-and-VRAM.md#palette-adaptation).
+Tails has private offline-adapted body/tail copies: brown uses stage slot B,
+cream A and bright orange F. The unchanged scenery palette has fewer orange
+shades than his ordinary palette, so the two bright orange shades share yellow.

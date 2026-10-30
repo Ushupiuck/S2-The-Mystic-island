@@ -56,7 +56,8 @@ def main():
     for label in ('Art_Sonic', 'Art_Tails', 'Art_Tails_Extra', 'Art_Tails_Tails',
             'Art_SpindashDust', 'Art_WaterSplash', 'Art_AirCountdown',
             'Art_Points', 'Art_Shield', 'Art_Invincibility', 'Art_Ring',
-            'Art_BigRing', 'Art_BigFlash'):
+            'Art_BigRing', 'Art_BigFlash', 'Art_SpecialStageSonic',
+            'Art_SpecialStageTails', 'Art_SpecialStageTailsTail'):
         assert symbols[label] % 2 == 0, f'{label}: DMA source needs word alignment'
     if 'Player_Art_Buffer_Start' in symbols:
         for label, packed, source in (
