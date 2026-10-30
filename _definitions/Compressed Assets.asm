@@ -654,7 +654,7 @@ MCD_CompressedAssets:
 	dc.l Kospm_LzWheel,Kospm_LzWheel+$206	; art/moduled kosinski/LZ conveyor.kospm
 	endif
 	if defined(Kospm_MechaEffects)
-	dc.l Kospm_MechaEffects,Kospm_MechaEffects+$DF	; art/moduled kosinski/Mecha Sonic effects.kospm
+	dc.l Kospm_MechaEffects,Kospm_MechaEffects+$110	; art/moduled kosinski/Mecha Sonic effects.kospm
 	endif
 	if defined(Kospm_MiniSonic)
 	dc.l Kospm_MiniSonic,Kospm_MiniSonic+$1A4	; art/moduled kosinski/Mini Sonic Continue.kospm

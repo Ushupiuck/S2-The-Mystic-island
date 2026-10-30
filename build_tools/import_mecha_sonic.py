@@ -40,10 +40,18 @@ def main():
     art=remap_pixels((src/'Mecha Sonic.unc').read_bytes(),MECHA_FROM_SK);(ROOT/'art/uncompressed/Mecha Sonic.unc').write_bytes(art)
     rows=maps(src/'Map - Mecha Sonic.asm');assert len(rows)==22
     (ROOT/'mappings/sprite/Mecha Sonic.bin').write_bytes(mapping_file(rows))
-    effects=maps(src/'Map - Mecha Sonic Extra.asm')[:8]
+    source_effects=maps(src/'Map - Mecha Sonic Extra.asm')
+    effects=source_effects[:8]
+    # Keep the rematch's small energy ball in a compact two-tile bank after
+    # the standard jets/sparks; importing the entire rematch is unnecessary.
+    effects.append([(y,size,(tile&0xF800)|((tile&0x7FF)-0x75+22),x)
+                    for y,size,tile,x in source_effects[0x15]])
     (ROOT/'mappings/sprite/Mecha Sonic effects.bin').write_bytes(mapping_file(effects))
-    extra=a.extra_raw.read_bytes()[:22*32];assert len(extra)==22*32
+    source_extra=a.extra_raw.read_bytes()
+    extra=source_extra[:22*32];assert len(extra)==22*32
     extra=extra[:9*32]+remap_pixels(extra[9*32:],MECHA_FROM_SK)
+    ball=source_extra[0x75*32:0x77*32];assert len(ball)==2*32
+    extra+=remap_pixels(ball,MECHA_FROM_SK)
     (ROOT/'art/uncompressed/Mecha Sonic effects.unc').write_bytes(extra)
     (ROOT/'art/moduled kosinski/Mecha Sonic effects.kospm').write_bytes(pack_moduled(extra))
     b=blocks(src/'DPLC - Mecha Sonic.asm');base=next(iter(b));runs=[]
@@ -60,5 +68,5 @@ def main():
     for short,file,prefix in [('Land','96 - Mecha Land.asm','Sound_96'),('Spark','5C - Mecha Spark.asm','Sound_5C'),('Thump','49 - Thump.asm','Sound_49')]:
         text=(a.source/'Sound/SFX'/file).read_text().replace(prefix,'Mecha'+short)
         (ROOT/f'sound/SFX/Mecha {short}.asm').write_text('; From pinned skdisasm; legacy SMPS voice format 0.\n'+text.rstrip()+'\n')
-    print('Imported 22 body frames, 8 effect frames, 39-tile body buffer and 22 resident effect tiles.')
+    print('Imported 22 body frames, 9 effect frames, 39-tile body buffer and 24 resident effect tiles.')
 if __name__=='__main__':main()

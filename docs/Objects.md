@@ -267,13 +267,31 @@ The trap bypasses both the high-speed launch and ordinary results handoff.
 `objects/Mecha Sonic.asm` ports `Obj_SSZEndBoss` from the same pinned skdisasm
 revision: the rolling sweep, both landing choices, accelerating ground dash,
 eight-jump attack selection, air dash, high bounce and rebound/dash sequence.
-It retains eight hits, the 32-update hit flash, frame-specific body collision,
+It takes sixteen hits, retaining the 32-update hit flash, frame-specific body collision,
 the invisible moving head/back-spike hitbox, paired jets, landing sound,
 defeat bursts, collapse and electrical palette/sparks. Original private state
 is mapped into the existing SST; the hitbox and jets validate their owner.
 The dispatcher registers the invisible collider, including an earlier child
 slot updated after its own turn. Full-pool constructors, jets and the final
 reward retry; reused slots are not deleted as children.
+
+During the ordinary landing descent, either active player charging a stationary
+spindash within 24 pixels of its X position triggers a committed rolling dive.
+Detection starts within 256 vertical pixels and stops within 24 pixels of the
+rolling body's floor height. The dive aims once at that player's floor position,
+descends at eight pixels per update and keeps the harmful rolling collision until
+touchdown. It then expands to the standing radius without moving its feet and
+continues the selected ground sequence. Released dashes, airborne rolls, dead
+actors and an inactive companion do not trigger it. This borrows the super
+rematch's aimed rolling dive without importing its transformation or AI.
+
+The third consecutive damaging downward hit from above while Mecha is grounded
+queues one energy ball straight upward at four pixels per update. Side/underneath
+hits and takeoff reset the count; flashing contacts never count as hits. Both
+actors contribute to the same streak. A full object pool retries the queued shot;
+the final defeating hit cannot fire one. Balls validate the owner, retire above
+the screen and disappear when the fight ends. These counters use the existing
+SST's last two bytes and flag bits 0/1; no object/RAM allocation grows.
 
 After the defeat sequence, Mecha restores the act palette and creates one
 ordinary `$0001` falling sign. Only that sign can award the act-clear results.

@@ -1,13 +1,14 @@
 ; ---------------------------------------------------------------------------
 ; MD CPU: standard Sky Sanctuary Mecha Sonic, skdisasm 73de97c6b55055bcb8089c1d55d006b02136f163.
 ; The original attack states, animation scripts, acceleration and hitboxes are
-; retained. SMZ2 supplies a placed-sign ambush and falling-sign/results handoff.
+; retained outside the landing-camp and repeated-head-hit counters below.
+; SMZ2 supplies a placed-sign ambush and falling-sign/results handoff.
 ; Knuckles's distinct Master Emerald rematch is not part of this entry point.
 ; ---------------------------------------------------------------------------
 MS_timer = objoff_2E             ; word: wait counter
 MS_script = objoff_30            ; long: raw animation
 MS_callback = objoff_34          ; long: animation/floor continuation
-MS_flags = objoff_38             ; byte: original jet/landing flags
+MS_flags = objoff_38             ; byte: grounded/dive bits 0/1, original jet/turn bits 2/3
 MS_history = objoff_39           ; byte: original landing history; defeat palette timer
 MS_attack = objoff_3A            ; byte: attack selector; defeat palette index
 MS_attack_count = objoff_3B      ; byte: original eight-jump sequence
@@ -19,6 +20,10 @@ MS_right = objoff_44             ; word: right attack boundary
 MS_top = objoff_46               ; word: camera-relative flight height
 MS_hitbox = objoff_48            ; word: owned invisible head hitbox
 MS_sign_y = objoff_4A            ; word: original sign height
+MS_head_hits = objoff_4C         ; byte: consecutive grounded hits from above
+MS_shot_pending = objoff_4D      ; byte: retry the third-hit shot if the pool is full
+MS_grounded_bit = 0             ; MS_flags: landed until the next takeoff
+MS_diving_bit = 1               ; MS_flags: rolling counter until touchdown
 MS_phase = ob2ndRout             ; byte: scene lifecycle, independent of original AI
 MS_flash = obAnim                ; byte: original 32-update hit flash
 MS_jet_kind = obPrevAni          ; byte: 0 flying, 4 dash, 8 landing
@@ -28,6 +33,11 @@ MS_parent = objoff_38            ; word: child -> validated MechaSonic owner
 MS_Fight = 4
 MS_Defeat = 5
 MS_RevealSeconds = 2		; hold the settled portrait before the entry dash
+MS_HitPoints = 16
+MS_CampRadius = $18             ; player centre within the rolling landing footprint
+MS_CampHeight = $100            ; detect before the descent reaches the player
+MS_CampMinDrop = $18            ; enough separation to commit the aimed dive
+MS_EnergyFrame = 8              ; compact copy of the rematch's energy ball
 
 ; Called only after a crossing of subtype bit 1. A full pool retries without
 ; consuming the crossing or entering results. The sign owns its placement.
@@ -102,7 +112,7 @@ MS_Init:
         move.w  #$280,obPriority(a0)
         move.b  #$1F,obHeight(a0)
         move.b  #$20,obWidth(a0)
-        move.b  #8,obColProp(a0)
+        move.b  #MS_HitPoints,obColProp(a0)
         st      MS_loaded(a0)
         move.w  obX(a0),d0
         subi.w  #$80,d0
@@ -180,6 +190,7 @@ MS_Strike:
         move.l  #MS_ReturnSweep,MS_callback(a0)
         rts
 MS_RunFight:
+        bsr.w   MS_FireCounterShot
         moveq   #0,d0
         move.b  obRoutine(a0),d0
         lea     MS_AIIndex(pc),a1
@@ -223,6 +234,7 @@ MS_Defeated:
         move.b  #MS_Defeat,MS_phase(a0)
         clr.b   obRoutine(a0)
         clr.b   MS_flags(a0)
+        clr.w   MS_head_hits(a0)
         clr.b   obColType(a0)
         move.w  #$7F,MS_timer(a0)
         clr.b   (f_timecount).w
@@ -509,6 +521,75 @@ MS_Spark:
         subq.b  #1,obTimeFrame(a0)
         bmi.w   MS_Delete
         jmp     (DisplaySprite).l
+; Touch_Enemy calls this before reflecting the successful attacker's velocity.
+; a0 = player, a1 = boss. Preserve the touch scanner's registers and pointers.
+MS_RecordHit:
+        move.l  d0,-(sp)
+        cmpi.b  #MS_Fight,MS_phase(a1)
+        bne.s   .reset
+        btst    #MS_grounded_bit,MS_flags(a1)
+        beq.s   .reset
+        btst    #status.player.in_air,obStatus(a0)
+        beq.s   .reset
+        tst.w   obVelY(a0)
+        ble.s   .reset
+        move.w  obY(a0),d0
+        sub.w   obY(a1),d0
+        cmpi.w  #-$10,d0
+        bgt.s   .reset
+        move.w  obX(a0),d0
+        sub.w   obX(a1),d0
+        addi.w  #MS_CampRadius,d0
+        cmpi.w  #MS_CampRadius*2,d0
+        bhi.s   .reset
+        addq.b  #1,MS_head_hits(a1)
+        cmpi.b  #3,MS_head_hits(a1)
+        blo.s   .return
+        st      MS_shot_pending(a1)
+.reset:
+        clr.b   MS_head_hits(a1)
+.return:
+        move.l  (sp)+,d0
+        rts
+
+MS_FireCounterShot:
+        tst.b   MS_shot_pending(a0)
+        beq.w   MS_Return
+        tst.b   obColProp(a0)
+        beq.w   MS_Return
+        jsr     (FindFreeObj).l
+        bne.w   MS_Return
+        clr.b   MS_shot_pending(a0)
+        move.l  #MS_EnergyBall,code(a1)
+        move.w  a0,MS_parent(a1)
+        move.l  #Map_MechaEffects,obMap(a1)
+        move.w  #make_art_tile(ArtTile_MechaEffects,1,1),obGfx(a1)
+        move.w  #$280,obPriority(a1)
+        move.b  #4,obRender(a1)
+        move.b  #8,height_pixels(a1)
+        move.b  #8,obActWid(a1)
+        move.b  #MS_EnergyFrame,obFrame(a1)
+        move.b  #$87,obColType(a1)
+        move.w  obX(a0),obX(a1)
+        move.w  obY(a0),obY(a1)
+        subi.w  #$20,obY(a1)
+        move.w  #-$400,obVelY(a1)
+        move.w  #SndID_LaserBurst,d0
+        jmp     (PlaySound_Special).l
+MS_EnergyBall:
+        movea.w MS_parent(a0),a1
+        cmpi.l  #MechaSonic,code(a1)
+        bne.w   MS_Delete
+        cmpi.b  #MS_Fight,MS_phase(a1)
+        bne.w   MS_Delete
+        jsr     (ObjectMove).l
+        move.w  obY(a0),d0
+        sub.w   (Camera_Y_pos).w,d0
+        cmpi.w  #-$10,d0
+        blt.w   MS_Delete
+        bchg    #0,obRender(a0)
+        jmp     (DisplaySprite).l
+
 MS_CopyPalette:
         lea     (v_palette+$20).w,a1
         moveq   #7,d0
@@ -634,12 +715,84 @@ MS_loc_7B4CA:
 ; ---------------------------------------------------------------------------
 
 MS_Landing:
+		bsr.w	MS_CheckLandingCamper
+		btst	#MS_diving_bit,MS_flags(a0)
+		bne.s	.counter
 		jsr	MS_RawAnimate(pc)
 		jsr	(ObjectMoveAndFall_LightGravity).l
 		jmp	MS_FloorCallback(pc)
+.counter:
+		jsr	MS_RawAnimate(pc)
+		jsr	(ObjectMove).l
+		jmp	MS_FloorCallback(pc)
+
+; Commit once, like the super rematch's aimed $800-speed rolling dive.
+; Both active actors count, but released dashes, air rolls and dead actors do not.
+MS_CheckLandingCamper:
+		btst	#MS_diving_bit,MS_flags(a0)
+		bne.w	MS_Return
+		lea	(v_player).w,a1
+		bsr.s	.player
+		btst	#MS_diving_bit,MS_flags(a0)
+		bne.w	MS_Return
+		tst.w	(Player_mode).w
+		bne.w	MS_Return
+		lea	(v_player2).w,a1
+.player:
+		tst.l	code(a1)
+		beq.w	MS_Return
+		cmpi.b	#6,obRoutine(a1)
+		bhs.w	MS_Return
+		tst.b	spindash_flag(a1)
+		beq.w	MS_Return
+		cmpi.b	#AniIDSonAni_Spindash,obAnim(a1)
+		bne.w	MS_Return
+		btst	#status.player.in_air,obStatus(a1)
+		bne.w	MS_Return
+		tst.w	obVelX(a1)
+		bne.w	MS_Return
+		move.w	obX(a1),d0
+		sub.w	obX(a0),d0
+		addi.w	#MS_CampRadius,d0
+		cmpi.w	#MS_CampRadius*2,d0
+		bhi.w	MS_Return
+		move.w	obY(a1),d1
+		sub.w	obY(a0),d1
+		cmpi.w	#MS_CampHeight,d1
+		bhi.w	MS_Return
+		; Aim at the rolling body's floor height, not the player's centre.
+		moveq	#0,d0
+		move.b	obHeight(a1),d0
+		add.w	d0,d1
+		subi.w	#$F,d1
+		cmpi.w	#MS_CampMinDrop,d1
+		blt.w	MS_Return
+		move.w	obX(a1),d0
+		sub.w	obX(a0),d0
+		muls.w	#$800,d0
+		divs.w	d1,d0
+		move.w	d0,obVelX(a0)
+		move.w	#$800,obVelY(a0)
+		move.b	#$F,obHeight(a0)
+		bset	#MS_diving_bit,MS_flags(a0)
+		move.b	#3,obFrame(a0)
+		lea	MS_AnimRoll(pc),a1
+		bsr.w	MS_SetRawAnimation
+		move.l	#MS_CounterLanded,MS_callback(a0)
+		move.w	#sfx_Roll,d0
+		jmp	(PlaySound_Special).l
+
+MS_CounterLanded:
+		bclr	#MS_diving_bit,MS_flags(a0)
+		subi.w	#$10,obY(a0)
+		move.b	#$1F,obHeight(a0)
+		clr.l	obVelX(a0)
+		move.b	#8,obFrame(a0)
+		; Continue the ordinary landing, with feet fixed at the same floor.
 ; ---------------------------------------------------------------------------
 
 MS_Landed:
+		bset	#MS_grounded_bit,MS_flags(a0)
 		move.b	#$E,obRoutine(a0)
 		clr.w	obYSub(a0)
 		clr.b	obAniFrame(a0)
@@ -717,6 +870,8 @@ MS_StopGroundDash:
 ; ---------------------------------------------------------------------------
 
 MS_StartJump:
+		bclr	#MS_grounded_bit,MS_flags(a0)
+		clr.b	MS_head_hits(a0)
 		move.b	#$F,obHeight(a0)
 		lea	MS_AnimJumpRoll(pc),a1
 		jsr	MS_SetRawAnimation(pc)
@@ -829,6 +984,7 @@ MS_locret_7B70C:
 ; ---------------------------------------------------------------------------
 
 MS_ReboundLand:
+		bset	#MS_grounded_bit,MS_flags(a0)
 		add.w	d1,y_pos(a0)
 		move.b	#$20,obRoutine(a0)
 		move.w	#$F,MS_timer(a0)
@@ -901,6 +1057,8 @@ MS_ReboundDashStop:
 ; ---------------------------------------------------------------------------
 
 MS_ReboundJump:
+		bclr	#MS_grounded_bit,MS_flags(a0)
+		clr.b	MS_head_hits(a0)
 		move.b	#$28,obRoutine(a0)
 		bclr	#2,MS_flags(a0)
 		clr.w	obVelX(a0)

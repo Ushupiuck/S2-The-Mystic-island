@@ -51,7 +51,8 @@ def native(args):
     assert m.get(body,'MS_phase')==0
     m.put(pool[-1],'code',0);m.act('MS_Init',body)
     assert m.get(body,'MS_phase')==1 and m.get(pool[-1],'code')==m.s['MS_HeadHitbox']
-    checks.append('constructor retries a full pool without a half-initialized hitbox')
+    assert m.get(body,'obColProp')==16
+    checks.append('16-hit constructor retries a full pool without a half-initialized hitbox')
     for slot in pool:m.put(slot,'code',m.s['MS_Return'])
     m.put(body,'code',m.s['MechaSonic']);m.put(body,'MS_phase',8)
     m.act('MS_Reward',body,{n.UC_M68K_REG_D7:0x55})
@@ -103,20 +104,82 @@ def native(args):
         m.act('MS_AwaitPortrait',body)
         assert m.get(body,'MS_phase')==3 and m.get(body,'obVelX',2)==0xF800
     checks.append('settled final portrait/DPLC gates a separate two-second NTSC/PAL warning plus first-DMA grace')
+    for actor,mode,dx,change,expected in (
+            ('v_player',0,0,None,True),('v_player',2,-24,None,True),
+            ('v_player2',0,24,None,True),('v_player2',1,0,None,False),
+            ('v_player',0,25,None,False),('v_player',0,-25,None,False),
+            ('v_player',0,0,('spindash_flag',0,1),False),
+            ('v_player',0,0,('obAnim',2,1),False),
+            ('v_player',0,0,('obStatus',2,1),False),
+            ('v_player',0,0,('obRoutine',6,1),False),
+            ('v_player',0,0,('code',0,4),False),
+            ('v_player',0,0,('obVelX',0x100,2),False)):
+        m.start();body=pool[0];m.write('Player_mode',mode,2)
+        for f,v,z in [('code',m.s['MechaSonic'],4),('MS_phase',4,1),('obRoutine',12,1),
+                      ('obX',0x1F00,2),('obY',0x520,2),('obHeight',31,1),
+                      ('obColType',9,1),('obColProp',16,1),('MS_script',m.s['MS_AnimLandingRoll'],4),
+                      ('MS_callback',m.s['MS_Landed'],4)]:m.put(body,f,v,z)
+        for f,v,z in [('obX',0x1F00+dx,2),('obY',0x5B1,2),('obHeight',14,1),
+                      ('obStatus',0,1),('spindash_flag',1,1),('obAnim',m.s['AniIDSonAni_Spindash'],1)]:m.put(actor,f,v,z)
+        if change:m.put(actor,*change)
+        m.act('MS_CheckLandingCamper',body)
+        assert bool(m.get(body,'MS_flags')&2)==expected,(actor,mode,dx,change)
+        if expected:
+            assert m.get(body,'obFrame')==3 and m.get(body,'obVelY',2)==0x800
+            assert m.get(body,'obHeight')==15 and m.get(body,'MS_callback',4)==m.s['MS_CounterLanded']
+            m.put(actor,'spindash_flag',0)  # committed aim survives release
+            for _ in range(40):
+                m.act('MS_RunFight',body)
+                if not m.get(body,'MS_flags')&2:break
+                assert m.get(body,'obColType')==0x86 and 3<=m.get(body,'obFrame')<=5
+            else:raise AssertionError('Counter dive never landed')
+            assert m.get(body,'obY',2)==0x5A0 and m.get(body,'obHeight')==31
+            assert m.get(body,'MS_flags')&1 and m.get(body,'obRoutine')==14
+    checks.append('landing camper detection: both actors, inclusive footprint, released/moving/air/dead/solo exclusions; harmful roll commits then unrolls on the same floor')
+    m.start();body=pool[0];player=m.s['v_player']
+    for f,v,z in [('code',m.s['MechaSonic'],4),('MS_phase',4,1),('MS_flags',1,1),
+                  ('obColProp',16,1),('obX',0x1F00,2),('obY',0x5A0,2)]:m.put(body,f,v,z)
+    for hit in range(3):
+        for f,v,z in [('obX',0x1F00,2),('obY',0x580,2),('obStatus',6,1),
+                      ('obAnim',2,1),('obVelY',0x400,2)]:m.put(player,f,v,z)
+        m.act('Touch_Enemy',player,{n.UC_M68K_REG_A1:body,n.UC_M68K_REG_D7:0x55})
+        assert m.get(body,'obColProp')==15-hit
+        assert m.get(body,'MS_head_hits')==((hit+1)%3)
+        assert bool(m.get(body,'MS_shot_pending'))==(hit==2)
+        assert m.cpu.reg_read(n.UC_M68K_REG_D7)==0x55
+    for slot in pool[1:]:m.put(slot,'code',m.s['MS_Return'])
+    m.act('MS_FireCounterShot',body);assert m.get(body,'MS_shot_pending')
+    ball=pool[-1];m.put(ball,'code',0)
+    m.act('MS_FireCounterShot',body,{n.UC_M68K_REG_D7:0x55})
+    assert not m.get(body,'MS_shot_pending') and m.get(ball,'code')==m.s['MS_EnergyBall']
+    assert m.get(ball,'obVelY',2)==0xFC00 and not m.get(ball,'obVelX',2)
+    assert m.get(ball,'obY',2)==0x580 and m.get(ball,'obFrame')==8 and m.get(ball,'obColType')==0x87
+    assert m.cpu.reg_read(n.UC_M68K_REG_D7)==0x55
+    m.write('Camera_Y_pos',0x500,2);m.act('MS_EnergyBall',ball)
+    assert m.get(ball,'obY',2)==0x57C
+    m.put(body,'MS_phase',5);m.act('MS_EnergyBall',ball);assert not m.get(ball,'code')
+    for field,value,size in [('obStatus',0,1),('obVelY',0xFC00,2),('obY',0x5A0,2),('obX',0x1F20,2)]:
+        for f,v,z in [('obX',0x1F00,2),('obY',0x580,2),('obStatus',6,1),('obVelY',0x400,2)]:m.put(player,f,v,z)
+        m.put(body,'MS_phase',4);m.put(body,'MS_head_hits',2)
+        m.put(player,field,value,size);m.act('MS_RecordHit',player,{n.UC_M68K_REG_A1:body})
+        assert not m.get(body,'MS_head_hits') and not m.get(body,'MS_shot_pending'),field
+    checks.append('real touch damage counts only downward grounded head bounces; third hit queues exactly one upward ball, retries a full pool and cleans up at defeat')
     if args.skdisasm:
         ref=Machine(args.rom,args.listing);labels,data=reference(m,args);ref.s.update(labels);ref.cpu.mem_write(0x300000,data)
         m.start();ref.start()
         fields=[('obRoutine',1),('obFrame',1),('obX',4),('obY',4),('obVelX',2),('obVelY',2),('obRender',1),('obHeight',1),('MS_flags',1),('MS_attack',1),('MS_attack_count',1),('MS_timer',2),('MS_accel',2),('obAniFrame',1),('obTimeFrame',1)]
         for machine in (m,ref):
             machine.write('Camera_X_pos',0x1E40,2);machine.write('Camera_Y_pos',0x500,2);machine.write('v_random',0x12345678,4)
-            for key,val,z in [('code',machine.s['MechaSonic'],4),('MS_phase',4,1),('obRoutine',6,1),('MS_timer',63,2),('obFrame',2,1),('obRender',4,1),('obX',0x1E20,2),('obY',0x5A0,2),('obHeight',31,1),('obColProp',8,1),('obColType',9,1),('MS_left',0x1E60,2),('MS_right',0x1F60,2),('MS_top',0x530,2)]:machine.put(body,key,val,z)
+            for key,val,z in [('code',machine.s['MechaSonic'],4),('MS_phase',4,1),('obRoutine',6,1),('MS_timer',63,2),('obFrame',2,1),('obRender',4,1),('obX',0x1E20,2),('obY',0x5A0,2),('obHeight',31,1),('obColProp',16,1),('obColType',9,1),('MS_left',0x1E60,2),('MS_right',0x1F60,2),('MS_top',0x530,2)]:machine.put(body,key,val,z)
         m.put(body,'MS_callback',m.s['MS_ReturnSweep'],4);ref.put(body,'MS_callback',labels['loc_7B41C'],4)
         for address,value,z in [(0xFFDF00,0x1E60,2),(0xFFDF02,0x1F60,2),(0xFFDF04,0x530,2),(0xFFDF06,0,1)]:ref.cpu.mem_write(address,value.to_bytes(z,'big'))
         states=set()
         for tick in range(8400):
             m.act('MS_RunFight',body);ref.act('Ref_Step',body)
             for field,z in fields:
-                assert m.get(body,field,z)==ref.get(body,field,z),(tick,field,m.get(body,field,z),ref.get(body,field,z))
+                actual=m.get(body,field,z)
+                if field=='MS_flags':actual &= ~3  # local grounded/dive bits
+                assert actual==ref.get(body,field,z),(tick,field,actual,ref.get(body,field,z))
             assert m.get(body,'MS_history')==int.from_bytes(ref.cpu.mem_read(0xFFDF06,1),'big')
             assert m.read('v_random',4)==ref.read('v_random',4)
             states.add(m.get(body,'obRoutine'))
@@ -172,24 +235,88 @@ def game(args):
     assert boss and {2,4,6,9,10}<=spin and broken,(boss,spin,seen,broken,{f:g.get('v_player',f,z) for f,z in [('obX',2),('obY',2),('obVelX',2),('obStatus',1),('obControl',1),('obRoutine',1)]})
     assert entry is not None and settled is not None
     assert g.get(sign,'code')!=g.s['Signpost']
-    assert g.get(boss,'obColProp')==8
+    assert g.get(boss,'obColProp')==16
     assert g.read('Camera_Min_X_pos',2)==g.read('Camera_Max_X_pos',2)==0x1E40
     assert not objects('Signpost')
     checks=['authored SMZ2 sign: controller crossing, Eggman/Mecha mixed frames, side entry, debris and no early results']
     checks.append(f'settled visible portrait gets {entry-settled} frames before Mecha enters; minimum {warning_ticks}')
+    fight=g.save()
+    # Position the descent, then use actual down+B input to charge beneath it.
+    for actor in actors:place(g,actor,0x1E60,0x4D0);g.put(actor,'obControl',1)
+    place(g,'v_player',0x1F00,0x5AD,False)
+    g.buttons={5};run(4);g.buttons={5,0};run();g.buttons={5}
+    assert g.get('v_player','spindash_flag'),'Controller input did not start the charge'
+    for f,v,z in [('obRoutine',12,1),('obX',0x1F00,2),('obY',0x520,2),
+                  ('obVelX',0,2),('obVelY',0,2),('obHeight',31,1),('MS_flags',0,1),
+                  ('obStatus',0,1),('MS_flash',0,1),('obFrame',3,1),
+                  ('MS_script',g.s['MS_AnimLandingTurn'],4),('MS_callback',g.s['MS_Landed'],4),
+                  ('obAniFrame',0,1),('obTimeFrame',0,1)]:g.put(boss,f,v,z)
+    run();assert g.get(boss,'MS_flags')&2
+    g.video.save(args.output/'game/counter-dive.png')
+    hurt=False
+    for _ in range(40):
+        run();hurt |= g.get('v_player','obRoutine')==4
+        assert g.get(boss,'obColProp')==16,'Charging player damaged the rolling counter'
+        if not g.get(boss,'MS_flags')&2:break
+    else:raise AssertionError('Live counter did not land')
+    assert hurt,'Rolling counter did not hit the charging player'
+    assert g.get(boss,'obHeight')==31 and g.get(boss,'MS_flags')&1
+    g.video.save(args.output/'game/counter-landed.png')
+    checks.append('actual down+B charge triggers a harmful rolling descent; player takes damage before Mecha unrolls on real SMZ2 terrain')
+    g.restore(fight);g.buttons=set();g.buttons2={4}
+    # Freeze the ordinary ground windup long enough for three genuine contacts.
+    # Only actor positions/velocity are restaged; HP and the streak are never edited.
+    for actor in actors:place(g,actor,0x1E60,0x4D0);g.put(actor,'obControl',1)
+    for f,v,z in [('obRoutine',14,1),('obX',0x1F00,2),('obY',0x5A0,2),
+                  ('obVelX',0,2),('obVelY',0,2),('obFrame',0,1),('MS_flags',1,1),
+                  ('MS_script',g.s['MS_AnimDashStop'],4),('MS_callback',g.s['MS_PrepareJump'],4),
+                  ('obAniFrame',4,1),('obTimeFrame',127,1),('obColType',0x23,1)]:g.put(boss,f,v,z)
+    shooter='v_player2' if args.companion else 'v_player'
+    for hit in range(3):
+        for _ in range(40):
+            if not g.get(boss,'MS_flash'):break
+            run()
+        x=g.get(boss,'obX',2);y=g.get(boss,'obY',2)
+        place(g,shooter,x-6,y-30)
+        for f,v,z in [('obVelY',0x400,2),('obStatus',6,1),('obAnim',2,1),
+                      ('obHeight',14,1),('obWidth',7,1),('jumping',1,1)]:g.put(shooter,f,v,z)
+        run()
+        assert g.get(boss,'obColProp')==15-hit,(hit,g.get(boss,'obColProp'))
+        assert g.get(boss,'MS_head_hits')==((hit+1)%3)
+        assert len(objects('MS_EnergyBall'))==(1 if hit==2 else 0)
+        if hit<2:place(g,shooter,0x1E60,0x4D0);g.put(shooter,'obControl',1)
+    run();balls=objects('MS_EnergyBall');assert len(balls)==1
+    ball=balls[0];assert g.get(ball,'obVelY',2)==0xFC00 and not g.get(ball,'obVelX',2)
+    # Check its actual rendered tile bytes and hardware sprite-table entry.
+    raw=(ROOT/'art/uncompressed/Mecha Sonic effects.unc').read_bytes()[22*32:24*32]
+    assert bytes(g.vram[((g.s['ArtTile_MechaEffects']+22)*32+i)^1] for i in range(len(raw)))==raw
+    index=0;visible=False
+    for _ in range(g.s['Sprite_Table_Max']):
+        address=g.s['Sprite_Table']+index*8
+        visible |= g.read(address+4,2)&2047==g.s['ArtTile_MechaEffects']+22
+        index=g.read(address+3)&127
+        if not index:break
+    assert visible,'Counter ball absent from the hardware sprite table'
+    g.video.save(args.output/'game/third-head-hit-shot.png')
+    for _ in range(80):
+        run()
+        if not objects('MS_EnergyBall'):break
+    else:raise AssertionError('Counter ball did not retire above the camera')
+    checks.append(f'three real {shooter} head contacts retain HP damage and fire once on hit three; energy ball VRAM, SAT, upward motion and screen exit verified')
+    g.restore(fight);g.buttons=set();g.buttons2={4}
     for actor in actors:
         place(g,actor,0x1E60,0x4D0);g.put(actor,'obControl',1)
     states=set()
     for t in range(2400):
         run();r=g.get(boss,'obRoutine');states.add(r)
-        assert g.get(boss,'obColProp')==8 and not objects('Signpost'),(t,g.get(boss,'obColProp'))
+        assert g.get(boss,'obColProp')==16 and not objects('Signpost'),(t,g.get(boss,'obColProp'))
         if r in (16,24,28,36) and t%32==0:g.video.save(args.output/f'game/attack-{r:02x}.png')
     assert {8,12,14,16,20,22,24,26,28,30,32,34,36,38,40}<=states,states
     checks.append('all standard attack states run on live SMZ2 terrain without spawning the reward')
     attacker='v_player2' if args.companion else 'v_player'
     assert attacker in actors
     score=g.read('v_score',4)
-    for hit in range(8):
+    for hit in range(16):
         for wait in range(2000):
             if g.get(boss,'MS_flash')==0 and 0<g.get(boss,'obColType')<0x40:break
             run()
@@ -225,7 +352,7 @@ def game(args):
             run(60);g.video.save(args.output/'game/results.png');break
     else:raise AssertionError('no final falling-sign results')
     assert g.get(reward,'obFrame')==(1 if args.player==2 else 0)
-    checks.append(f'eight real {attacker} hits, 1000 points, defeat bursts/collapse/sparks, then falling sign and character results')
+    checks.append(f'sixteen real {attacker} hits, 1000 points, defeat bursts/collapse/sparks, then falling sign and character results')
     return checks
 
 def main():

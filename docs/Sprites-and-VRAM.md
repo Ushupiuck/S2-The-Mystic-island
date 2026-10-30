@@ -344,15 +344,17 @@ sign reuses that bank.
 
 `import_mecha_sonic.py --source /path/to/skdisasm --extra-raw /path/to/decoded/Mecha_Sonic_Extra.unc`
 imports all 22 body frames, converts the original DPLCs to `Load_DynamicPLC`,
-and retains the eight effect mapping entries used by the standard fight.
+and retains the eight standard effect mapping entries plus a compact copy of
+the rematch's small energy ball (original extra mapping `$15`, now frame 8).
 The decoded extra source is the pinned `Mecha Sonic Extra Art.kosm`; only
-its first 22 tiles are resident for jets/electric sparks. Raw body/effect art
+its first 22 tiles are resident for jets/electric sparks; original tiles
+`$75-$76` are appended as local tiles 22/23 for the energy ball. Raw body/effect art
 and mappings remain directly editable. Resident effects use moduled Kosinski+;
 the body remains raw ROM data for frame-by-frame DPLC DMA. The original
 Main/Flash palettes retain source colors in remapped slots; hit/defeat offsets follow them. Mecha sounds retain their source data.
 
 During the SMZ2 fight, `$400-$426` is Mecha's 39-tile streamed bank;
-`$427-$43C` holds the 22 resident effect tiles. This replaces an inactive
+`$427-$43E` holds the 24 resident effect tiles. This replaces an inactive
 portion of the SMZ object atlas after the last hazards have left the window.
 The boss-explosion PLC uses the existing `$581` bank; player/effect, signpost,
 terrain, HUD and plane allocations are preserved. The body caches a frame

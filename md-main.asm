@@ -11277,6 +11277,10 @@ Touch_Enemy:
 .noharm:
 		tst.b	obColProp(a1)
 		beq.s	Touch_KillEnemy	; skip if zero
+		cmpi.l	#MechaSonic,code(a1)
+		bne.s	.reflect
+		jsr	(MS_RecordHit).l
+.reflect:
 		neg.w	obVelX(a0)
 		neg.w	obVelY(a0)
 		asr	obVelX(a0)

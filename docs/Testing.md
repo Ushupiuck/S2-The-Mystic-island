@@ -105,16 +105,28 @@ python build_tools/check_mecha_sonic.py --rom s2built.bin --listing md-main.lst 
 
 The optional source oracle assembles the original attack states, raw-animation
 interpreter and callbacks, comparing 8,400 updates of positions, velocities,
-frames, timers, flags and RNG. Sound/child effects and a flat floor are fixture
-boundaries. Native checks also exhaust the pool at construction and reward.
+frames, timers, original flags and RNG when no counter is triggered. The local
+grounded/dive flag bits are excluded from original flag equality. Sound/child
+effects and a flat floor are fixture boundaries. Native checks also exhaust the
+pool at construction, reward and the third-hit shot, exercise both actors and
+landing footprint boundaries, reject released/moving/air/dead/solo candidates,
+and check harmful rolling collision through touchdown and the fixed foot height.
+Head-hit cases run the real touch-damage handler and reject ground/side/rising
+contacts; projectile movement and defeat cleanup are executed, not inferred.
 The emulator uses the real SMZ2 placement; controller input crosses the trap.
 It verifies the final portrait in VRAM and at least two seconds of warning
 before entry on NTSC/PAL, then all attacks run on the authored arena. Focused actor positioning supplies
-eight real jumping hits through touch collision; no boss HP is edited. It
+sixteen real jumping hits through touch collision; no boss HP is edited. It
 checks the destroyed sign, no early results/reward, defeat and falling-sign
 results. `--companion` uses the second actor for hits; `--player 2 --pal` uses
 primary Tails/PAL. Omit the system directory for the cartridge build. These
 are focused gameplay fixtures, not a controller-only full-level playthrough.
+The counter scenes position an ordinary landing above an actual down+B charge
+and verify player damage without boss damage. A separate long ground windup
+allows three spaced touch contacts without editing HP or the streak; it checks
+the one upward shot's VRAM, hardware sprites and screen exit. Actor positions
+and attack velocities are staged, and the original fight snapshot is restored
+before the full sixteen-hit lifecycle check.
 
 
 Hanging-surface checks use the assembled D9 code, player art and shared solidity:
