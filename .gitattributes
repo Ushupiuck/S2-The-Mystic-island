@@ -1,6 +1,9 @@
-*.lua text eol=lf
+# Use Windows line endings in editable text; Git normalizes text for diffs.
+* text=auto eol=crlf
 
-*.asm text=auto
+*.lua text eol=crlf
+
+*.asm text eol=crlf
 
 *.bin binary
 

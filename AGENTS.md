@@ -10,6 +10,12 @@ an unreadable implementation. Current user instructions take precedence.
 Mystic Island's primary working copy lives in the owner's Windows 10 VM,
 mainly because most Sonic ROM hacking tools target Windows.
 
+Use CRLF line endings for all edited and newly created text files, including
+ASM, Lua, Python and documentation. Preserve binary files byte-for-byte.
+`.gitattributes` keeps checked-out text in CRLF while Git normalizes text for
+diffs. When publishing through an API, upload the staged Git blob rather than
+unfiltered working-tree bytes. Avoid line-ending-only edits in unrelated files.
+
 Run native Windows build checks only when changes could affect compatibility:
 compiler flags, launch commands, tools/libraries, or OS-specific code. Include
 a project path containing spaces. Routine game code, art, and documentation
