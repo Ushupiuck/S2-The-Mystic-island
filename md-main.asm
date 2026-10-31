@@ -6589,7 +6589,28 @@ DynResize_SBZ1:
 DynResize_SBZ2:
 		cmpi.b	#id_SMZ,(Current_Zone).w
 		bne.s	.legacy
-		jmp	(MechaSonic_LevelEvents).l
+; Act 2 keeps its original approach limits. No SBZ2/FZ placeholder event may
+; race the trap for the camera once its normal crossing has armed the arena.
+		move.w	#$800,(Camera_Max_Y_pos_target).w
+		cmpi.w	#$1800,(Camera_X_pos).w
+		blo.s	.return
+		move.w	#$510,(Camera_Max_Y_pos_target).w
+		cmpi.w	#$1D80,(Camera_X_pos).w
+		blo.s	.return
+		; The industrial background contains high-priority pipe panels.
+		; Actors and their tails must stay above that backdrop in this room.
+		bset	#7,(v_player+obGfx).w
+		bset	#7,(v_player2+obGfx).w
+		bset	#7,(v_player2tails+obGfx).w
+		tst.b	(Dynamic_Resize_Routine).w
+		beq.s	.return
+		move.w	#$1E40,(Camera_Min_X_pos).w
+		move.w	#$1E40,(Camera_Max_X_pos).w
+		move.w	#$500,(Camera_Min_Y_pos).w
+		move.w	#$500,(Camera_Max_Y_pos).w
+		move.w	#$500,(Camera_Max_Y_pos_target).w
+.return:	rts
+
 .legacy:
 		moveq	#0,d0
 		move.b	(Dynamic_Resize_Routine).w,d0

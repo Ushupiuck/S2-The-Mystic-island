@@ -42,101 +42,101 @@ MS_EnergyFrame = 8              ; compact copy of the rematch's energy ball
 ; Called only after a crossing of subtype bit 1. A full pool retries without
 ; consuming the crossing or entering results. The sign owns its placement.
 Signpost_TrapTrigger:
-        jsr     (FindFreeObj).l
-        bne.w   MS_Return
-        move.l  #MechaSonic,code(a1)
-        move.w  a0,MS_sign(a1)
-        move.w  obX(a0),obX(a1)
-        move.w  obY(a0),MS_sign_y(a1)
-        move.w  #120,objoff_34(a0)
-        move.b  #16,obRoutine(a0)
-        move.b  #Signpost_Ani_MechaSpin,obAnim(a0)
-        moveq   #palid_MechaSonic,d0
-        move.l  d7,-(sp)
-        jsr     (PalLoad2).l
-        move.l  (sp)+,d7
-        jsr     (Signpost_Activate).l
-        move.b  #1,(f_timecount).w
-        move.b  #1,(Dynamic_Resize_Routine).w
-        rts
+	jsr	(FindFreeObj).l
+	bne.w	MS_Return
+	move.l	#MechaSonic,code(a1)
+	move.w	a0,MS_sign(a1)
+	move.w	obX(a0),obX(a1)
+	move.w	obY(a0),MS_sign_y(a1)
+	move.w	#120,objoff_34(a0)
+	move.b	#16,obRoutine(a0)
+	move.b	#Signpost_Ani_MechaSpin,obAnim(a0)
+	moveq	#palid_MechaSonic,d0
+	move.l	d7,-(sp)
+	jsr	(PalLoad2).l
+	move.l	(sp)+,d7
+	jsr	(Signpost_Activate).l
+	move.b	#1,(f_timecount).w
+	move.b	#1,(Dynamic_Resize_Routine).w
+	rts
 
 Signpost_TrapSpin:
-        subq.w  #1,objoff_34(a0)
-        bmi.s   .settled
-        jmp     (Signpost_Sparkle).l
+	subq.w	#1,objoff_34(a0)
+	bmi.s	.settled
+	jmp	(Signpost_Sparkle).l
 .settled:
-        move.b  #5,obAnim(a0)
-        move.b  #18,obRoutine(a0)
-        rts
+	move.b	#5,obAnim(a0)
+	move.b	#18,obRoutine(a0)
+	rts
 
 MechaSonic:
-        moveq   #0,d0
-        move.b  MS_phase(a0),d0
-        add.w   d0,d0
-        move.w  MS_Phases(pc,d0.w),d1
-        jsr     MS_Phases(pc,d1.w)
-        tst.l   code(a0)
-        beq.w   MS_Return
-        cmpi.b  #3,MS_phase(a0)
-        blo.w   MS_Return
-        bsr.w   MS_MaintainJets
-        bsr.w   MS_UpdateHitbox
-        moveq   #0,d0
-        move.b  obFrame(a0),d0
-        lea     (DPLC_MechaSonic).l,a2
-        lea     MS_loaded(a0),a3
-        move.w  #ArtTile_MechaSonic*tile_size,d4
-        move.l  #Art_MechaSonic,d6
-        jsr     (Load_DynamicPLC).l
-        bcs.w   MS_Return
-        jmp     (DisplaySprite).l
+	moveq	#0,d0
+	move.b	MS_phase(a0),d0
+	add.w	d0,d0
+	move.w	MS_Phases(pc,d0.w),d1
+	jsr	MS_Phases(pc,d1.w)
+	tst.l	code(a0)
+	beq.w	MS_Return
+	cmpi.b	#3,MS_phase(a0)
+	blo.w	MS_Return
+	bsr.w	MS_MaintainJets
+	bsr.w	MS_UpdateHitbox
+	moveq	#0,d0
+	move.b	obFrame(a0),d0
+	lea	(DPLC_MechaSonic).l,a2
+	lea	MS_loaded(a0),a3
+	move.w	#ArtTile_MechaSonic*tile_size,d4
+	move.l	#Art_MechaSonic,d6
+	jsr	(Load_DynamicPLC).l
+	bcs.w	MS_Return
+	jmp	(DisplaySprite).l
 MS_Phases:
-        dc.w MS_Init-MS_Phases,MS_Loading-MS_Phases,MS_AwaitPortrait-MS_Phases
-        dc.w MS_Strike-MS_Phases,MS_RunFight-MS_Phases,MS_DefeatWait-MS_Phases
-        dc.w MS_DefeatFall-MS_Phases,MS_Crumple-MS_Phases,MS_Reward-MS_Phases
+	dc.w MS_Init-MS_Phases,MS_Loading-MS_Phases,MS_AwaitPortrait-MS_Phases
+	dc.w MS_Strike-MS_Phases,MS_RunFight-MS_Phases,MS_DefeatWait-MS_Phases
+	dc.w MS_DefeatFall-MS_Phases,MS_Crumple-MS_Phases,MS_Reward-MS_Phases
 
 MS_Init:
-        jsr     (FindFreeObj).l
-        bne.w   MS_Return
-        move.l  #MS_HeadHitbox,code(a1)
-        move.w  a0,MS_parent(a1)
-        move.w  a1,MS_hitbox(a0)
-        move.b  #4,obRender(a1)
-        move.b  #16,obActWid(a1)
-        move.b  #64,height_pixels(a1)
-        move.l  #Map_MechaSonic,obMap(a0)
-        move.w  #make_art_tile(ArtTile_MechaSonic,1,1),obGfx(a0)
-        move.b  #4,obRender(a0)
-        move.b  #Map_MechaSonic_height,height_pixels(a0)
-        move.b  #Map_MechaSonic_width,obActWid(a0)
-        move.w  #$280,obPriority(a0)
-        move.b  #$1F,obHeight(a0)
-        move.b  #$20,obWidth(a0)
-        move.b  #MS_HitPoints,obColProp(a0)
-        st      MS_loaded(a0)
-        move.w  obX(a0),d0
-        subi.w  #$80,d0
-        move.w  d0,MS_left(a0)
-        addi.w  #$100,d0
-        move.w  d0,MS_right(a0)
-        move.w  (Camera_Y_pos).w,d0
-        addi.w  #$30,d0
-        move.w  d0,MS_top(a0)
-        moveq   #plcid_MechaSonic,d0
-        jsr     (LoadPLC).l
-        move.b  #1,MS_phase(a0)
-        rts
+	jsr	(FindFreeObj).l
+	bne.w	MS_Return
+	move.l	#MS_HeadHitbox,code(a1)
+	move.w	a0,MS_parent(a1)
+	move.w	a1,MS_hitbox(a0)
+	move.b	#4,obRender(a1)
+	move.b	#16,obActWid(a1)
+	move.b	#64,height_pixels(a1)
+	move.l	#Map_MechaSonic,obMap(a0)
+	move.w	#make_art_tile(ArtTile_MechaSonic,1,1),obGfx(a0)
+	move.b	#4,obRender(a0)
+	move.b	#Map_MechaSonic_height,height_pixels(a0)
+	move.b	#Map_MechaSonic_width,obActWid(a0)
+	move.w	#$280,obPriority(a0)
+	move.b	#$1F,obHeight(a0)
+	move.b	#$20,obWidth(a0)
+	move.b	#MS_HitPoints,obColProp(a0)
+	st	MS_loaded(a0)
+	move.w	obX(a0),d0
+	subi.w	#$80,d0
+	move.w	d0,MS_left(a0)
+	addi.w	#$100,d0
+	move.w	d0,MS_right(a0)
+	move.w	(Camera_Y_pos).w,d0
+	addi.w	#$30,d0
+	move.w	d0,MS_top(a0)
+	moveq	#plcid_MechaSonic,d0
+	jsr	(LoadPLC).l
+	move.b	#1,MS_phase(a0)
+	rts
 MS_Loading:
-        tst.l   (v_plc_buffer).w
-        bne.w   MS_Return
-        move.b  #2,MS_phase(a0)
-        clr.w   MS_timer(a0)
+	tst.l	(v_plc_buffer).w
+	bne.w	MS_Return
+	move.b	#2,MS_phase(a0)
+	clr.w	MS_timer(a0)
 MS_AwaitPortrait:
-        movea.w MS_sign(a0),a1
-        cmpi.l  #Signpost,code(a1)
-        bne.w   MS_Abort
-        cmpi.b  #18,obRoutine(a1)
-        bne.w   MS_Return
+	movea.w	MS_sign(a0),a1
+	cmpi.l	#Signpost,code(a1)
+	bne.w	MS_Delete
+	cmpi.b	#18,obRoutine(a1)
+	bne.w	MS_Return
 		cmpi.b	#6,obFrame(a1)
 		bne.w	MS_Return
 		cmpi.b	#6,signpost_loaded(a1)
@@ -150,63 +150,64 @@ MS_AwaitPortrait:
 		beq.w	MS_Return
 		move.w	#MS_RevealSeconds*50+1,MS_timer(a0)
 		rts
+
 .reveal_wait:
 		subq.w	#1,MS_timer(a0)
 		bne.w	MS_Return
-        move.b  #3,MS_phase(a0)
-        move.b  #2,obFrame(a0)
-        move.w  (Camera_X_pos).w,d0
-        addi.w  #$168,d0
-        move.w  d0,obX(a0)
-        move.w  MS_sign_y(a0),obY(a0)
-        subq.w  #4,obY(a0)
-        move.w  #-$800,obVelX(a0)
-        bset    #2,MS_flags(a0)
-        clr.b   MS_jet_kind(a0)
-        move.w  #MusID_EndBoss,d0
-        jmp     (PlaySound_Special).l
+	move.b	#3,MS_phase(a0)
+	move.b	#2,obFrame(a0)
+	move.w	(Camera_X_pos).w,d0
+	addi.w	#$168,d0
+	move.w	d0,obX(a0)
+	move.w	MS_sign_y(a0),obY(a0)
+	subq.w	#4,obY(a0)
+	move.w	#-$800,obVelX(a0)
+	bset	#2,MS_flags(a0)
+	clr.b	MS_jet_kind(a0)
+	move.w	#MusID_Boss3,d0
+	jmp	(PlaySound).l
 MS_Strike:
-        jsr     (ObjectMove).l
-        tst.w   MS_sign(a0)
-        beq.s   .passed
-        movea.w MS_sign(a0),a1
-        cmpi.l  #Signpost,code(a1)
-        bne.w   MS_Abort
-        move.w  obX(a0),d0
-        sub.w   obX(a1),d0
-        cmpi.w  #$18,d0
-        bgt.s   .passed
-        bsr.w   MS_BreakSign
+	jsr	(ObjectMove).l
+	tst.w	MS_sign(a0)
+	beq.s	.passed
+	movea.w	MS_sign(a0),a1
+	cmpi.l	#Signpost,code(a1)
+	bne.w	MS_Delete
+	move.w	obX(a0),d0
+	sub.w	obX(a1),d0
+	cmpi.w	#$18,d0
+	bgt.s	.passed
+	bsr.w	MS_BreakSign
 .passed:
-        move.w  (Camera_X_pos).w,d0
-        subi.w  #$20,d0
-        cmp.w   obX(a0),d0
-        blo.w   MS_Return
-        bclr    #2,MS_flags(a0)
-        move.b  #MS_Fight,MS_phase(a0)
-        move.b  #6,obRoutine(a0)
-        move.b  #9,obColType(a0)
-        move.w  #$3F,MS_timer(a0)
-        move.l  #MS_ReturnSweep,MS_callback(a0)
-        rts
+	move.w	(Camera_X_pos).w,d0
+	subi.w	#$20,d0
+	cmp.w	obX(a0),d0
+	blo.w	MS_Return
+	bclr	#2,MS_flags(a0)
+	move.b	#MS_Fight,MS_phase(a0)
+	move.b	#6,obRoutine(a0)
+	move.b	#9,obColType(a0)
+	move.w	#$3F,MS_timer(a0)
+	move.l	#MS_ReturnSweep,MS_callback(a0)
+	rts
 MS_RunFight:
-        bsr.w   MS_FireCounterShot
-        moveq   #0,d0
-        move.b  obRoutine(a0),d0
-        lea     MS_AIIndex(pc),a1
-        move.w  (a1,d0.w),d1
-        jsr     (a1,d1.w)
-        bsr.w   MS_HitResponse
-        cmpi.b  #MS_Fight,MS_phase(a0)
-        bne.w   MS_Return
-        btst    #6,obStatus(a0)
-        bne.w   MS_Return
-        moveq   #0,d0
-        move.b  obFrame(a0),d0
-        lea     MS_Collision(pc),a1
-        move.b  (a1,d0.w),obColType(a0)
+	bsr.w	MS_FireCounterShot
+	moveq	#0,d0
+	move.b	obRoutine(a0),d0
+	lea	MS_AIIndex(pc),a1
+	move.w	(a1,d0.w),d1
+	jsr	(a1,d1.w)
+	bsr.w	MS_HitResponse
+	cmpi.b	#MS_Fight,MS_phase(a0)
+	bne.s	MS_Return
+	btst	#6,obStatus(a0)
+	bne.s	MS_Return
+	moveq	#0,d0
+	move.b	obFrame(a0),d0
+	lea	MS_Collision(pc),a1
+	move.b	(a1,d0.w),obColType(a0)
 MS_Return:
-        rts
+	rts
 
 MS_HitResponse:
         tst.b   obColType(a0)
@@ -241,8 +242,7 @@ MS_Defeated:
         moveq   #100,d0
         jsr     (AddPoints).l
         lea     (Pal_MechaSonic).l,a2
-        bsr.w   MS_CopyPalette
-        rts
+        bra.w   MS_CopyPalette
 MS_DefeatWait:
         moveq   #BossExplosion_Mecha,d0
         jsr     (BossExplosion_Start).l
@@ -270,8 +270,7 @@ MS_DefeatFall:
         clr.b   MS_attack(a0)
         move.b  #50,MS_history(a0)
         move.w  #SndID_MechaLand,d0
-        jsr     (PlaySound_Special).l
-        rts
+        jmp     (PlaySound_Special).l
 MS_Crumple:
         bsr.w   MS_RawAnimate
         bsr.w   MS_DefeatPalette
@@ -291,8 +290,7 @@ MS_Reward:
         jsr     (PalLoad2).l
         move.l  (sp)+,d7
         move.b  #2,(Dynamic_Resize_Routine).w
-        jmp     (DeleteObject).l
-MS_Abort:
+MS_Delete:
         ; An externally removed/reused trap must never delete its replacement.
         jmp     (DeleteObject).l
 
@@ -641,14 +639,12 @@ MS_FlyPast:
 		move.w	(Camera_X_pos).w,d0
 		subi.w	#$20,d0
 		cmp.w	x_pos(a0),d0
-		blo.s	MS_locret_7B414
+		blo.s	.return
 		move.b	#6,obRoutine(a0)
 		bclr	#2,MS_flags(a0)
 		move.w	#$3F,MS_timer(a0)
 		move.l	#MS_ReturnSweep,MS_callback(a0)
-
-MS_locret_7B414:
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 
 MS_Wait:
@@ -664,9 +660,7 @@ MS_ReturnSweep:
 		move.w	#$400,obVelX(a0)
 		move.b	#3,mapping_frame(a0)
 		move.l	#MS_AnimRoll,MS_script(a0)
-
-MS_NoAI:
-		rts
+MS_NoAI:	rts
 ; ---------------------------------------------------------------------------
 
 MS_Sweep:
@@ -844,11 +838,9 @@ MS_PrepareJump:
 		addi.w	#$A0,d0
 		bset	#0,render_flags(a0)
 		cmp.w	x_pos(a0),d0
-		bhs.s	MS_locret_7B5AA
+		bhs.s	.return
 		bclr	#0,render_flags(a0)
-
-MS_locret_7B5AA:
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 
 MS_GroundDash:
@@ -921,8 +913,7 @@ MS_loc_7B666:
 		move.w	d1,MS_accel(a0)
 		clr.w	obVelY(a0)
 		moveq	#signextendB(sfx_Dash),d0
-		jsr	(PlaySound_Special).l
-		rts
+		jmp	(PlaySound_Special).l
 ; ---------------------------------------------------------------------------
 
 MS_AirDash:
@@ -943,14 +934,12 @@ MS_BounceApproach:
 		jsr	MS_RawAnimate(pc)
 		jsr	(ObjectMoveAndFall).l
 		tst.w	obVelY(a0)
-		bmi.s	MS_locret_7B6BE
+		bmi.s	.return
 		jsr	(ObjHitFloor).l
 		tst.w	d1
 		bmi.s	MS_Bounce
 		beq.s	MS_Bounce
-
-MS_locret_7B6BE:
-		rts
+.return:	rts
 ; ---------------------------------------------------------------------------
 
 MS_Bounce:
@@ -958,8 +947,7 @@ MS_Bounce:
 		move.b	#$1C,obRoutine(a0)
 		move.w	#-$900,obVelY(a0)
 		moveq	#signextendB(SndID_Thump),d0
-		jsr	(PlaySound_Special).l
-		rts
+		jmp	(PlaySound_Special).l
 ; ---------------------------------------------------------------------------
 
 MS_BounceFlight:
@@ -993,8 +981,7 @@ MS_ReboundLand:
 		moveq	#signextendB(SndID_MechaLand),d0
 		jsr	(PlaySound_Special).l
 		lea	MS_JetsLand(pc),a2
-		jsr	MS_CreateJets(pc)
-		rts
+		jmp	MS_CreateJets(pc)
 ; ---------------------------------------------------------------------------
 
 MS_ReboundWait:
@@ -1036,8 +1023,7 @@ MS_loc_7B7A8:
 		move.w	d0,obVelX(a0)
 		move.w	d1,MS_accel(a0)
 		moveq	#signextendB(sfx_Dash),d0
-		jsr	(PlaySound_Special).l
-		rts
+		jmp	(PlaySound_Special).l
 ; ---------------------------------------------------------------------------
 
 MS_ReboundDash:
@@ -1264,29 +1250,3 @@ MS_CheckBoundary:
         rts
 .reached:
         jmp     (a1)
-
-; Act 2 keeps its original approach limits. No SBZ2/FZ placeholder event may
-; race the trap for the camera once its normal crossing has armed the arena.
-MechaSonic_LevelEvents:
-        move.w  #$800,(Camera_Max_Y_pos_target).w
-        cmpi.w  #$1800,(Camera_X_pos).w
-        blo.w   MS_Return
-        move.w  #$510,(Camera_Max_Y_pos_target).w
-        cmpi.w  #$1D80,(Camera_X_pos).w
-        blo.w   MS_Return
-        ; The industrial background contains high-priority pipe panels.
-        ; Actors and their tails must stay above that backdrop in this room.
-        bset    #7,(v_player+obGfx).w
-        bset    #7,(v_player2+obGfx).w
-        bset    #7,(v_player2tails+obGfx).w
-        tst.b   (Dynamic_Resize_Routine).w
-        beq.w   MS_Return
-        move.w  #$1E40,(Camera_Min_X_pos).w
-        move.w  #$1E40,(Camera_Max_X_pos).w
-        move.w  #$500,(Camera_Min_Y_pos).w
-        move.w  #$500,(Camera_Max_Y_pos).w
-        move.w  #$500,(Camera_Max_Y_pos_target).w
-        rts
-
-MS_Delete:
-        jmp     (DeleteObject).l

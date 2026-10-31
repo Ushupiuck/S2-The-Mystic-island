@@ -3,25 +3,25 @@
 MCD_CompressedAssets:
 	dc.l Snd_Driver,Snd_Driver_End
 	if defined(BKosp_CPZ)
-	dc.l BKosp_CPZ,BKosp_CPZ+$2B4A	; art/kosinski/level/8x8 - CPZ.kosp
+	dc.l BKosp_CPZ,BKosp_CPZ+$28DA	; art/kosinski/level/8x8 - CPZ.kosp
 	endif
 	if defined(BKosp_EHZ)
-	dc.l BKosp_EHZ,BKosp_EHZ+$2E4F	; art/kosinski/level/8x8 - EHZ.kosp
+	dc.l BKosp_EHZ,BKosp_EHZ+$2BC8	; art/kosinski/level/8x8 - EHZ.kosp
 	endif
 	if defined(BKosp_GHZ)
-	dc.l BKosp_GHZ,BKosp_GHZ+$257E	; art/kosinski/level/8x8 - GHZ.kosp
+	dc.l BKosp_GHZ,BKosp_GHZ+$22F8	; art/kosinski/level/8x8 - GHZ.kosp
 	endif
 	if defined(BKosp_HPZ)
-	dc.l BKosp_HPZ,BKosp_HPZ+$2B52	; art/kosinski/level/8x8 - HPZ.kosp
+	dc.l BKosp_HPZ,BKosp_HPZ+$28A8	; art/kosinski/level/8x8 - HPZ.kosp
 	endif
 	if defined(BKosp_HTZ)
-	dc.l BKosp_HTZ,BKosp_HTZ+$20CB	; art/kosinski/level/8x8 - HTZ.kosp
+	dc.l BKosp_HTZ,BKosp_HTZ+$1F0E	; art/kosinski/level/8x8 - HTZ.kosp
 	endif
 	if defined(BKosp_LZ)
-	dc.l BKosp_LZ,BKosp_LZ+$1BCA	; art/kosinski/level/8x8 - LZ.kosp
+	dc.l BKosp_LZ,BKosp_LZ+$1A2E	; art/kosinski/level/8x8 - LZ.kosp
 	endif
 	if defined(BKosp_MTZ)
-	dc.l BKosp_MTZ,BKosp_MTZ+$2CB5	; art/kosinski/level/8x8 - MTZ.kosp
+	dc.l BKosp_MTZ,BKosp_MTZ+$2A96	; art/kosinski/level/8x8 - MTZ.kosp
 	endif
 	if defined(BLevel_CPZ1)
 	dc.l BLevel_CPZ1,BLevel_CPZ1+$454	; level/layout/bad future/CPZ_1.kosp
@@ -285,25 +285,25 @@ MCD_CompressedAssets:
 	dc.l Eni_TitleMap,Eni_TitleMap+$156	; tilemaps/Title Emblem.eni
 	endif
 	if defined(GKosp_CPZ)
-	dc.l GKosp_CPZ,GKosp_CPZ+$2B4A	; art/kosinski/level/8x8 - CPZ.kosp
+	dc.l GKosp_CPZ,GKosp_CPZ+$28DA	; art/kosinski/level/8x8 - CPZ.kosp
 	endif
 	if defined(GKosp_EHZ)
-	dc.l GKosp_EHZ,GKosp_EHZ+$2E4F	; art/kosinski/level/8x8 - EHZ.kosp
+	dc.l GKosp_EHZ,GKosp_EHZ+$2BC8	; art/kosinski/level/8x8 - EHZ.kosp
 	endif
 	if defined(GKosp_GHZ)
-	dc.l GKosp_GHZ,GKosp_GHZ+$257E	; art/kosinski/level/8x8 - GHZ.kosp
+	dc.l GKosp_GHZ,GKosp_GHZ+$22F8	; art/kosinski/level/8x8 - GHZ.kosp
 	endif
 	if defined(GKosp_HPZ)
-	dc.l GKosp_HPZ,GKosp_HPZ+$2B52	; art/kosinski/level/8x8 - HPZ.kosp
+	dc.l GKosp_HPZ,GKosp_HPZ+$28A8	; art/kosinski/level/8x8 - HPZ.kosp
 	endif
 	if defined(GKosp_HTZ)
-	dc.l GKosp_HTZ,GKosp_HTZ+$20CB	; art/kosinski/level/8x8 - HTZ.kosp
+	dc.l GKosp_HTZ,GKosp_HTZ+$1F0E	; art/kosinski/level/8x8 - HTZ.kosp
 	endif
 	if defined(GKosp_LZ)
-	dc.l GKosp_LZ,GKosp_LZ+$1BCA	; art/kosinski/level/8x8 - LZ.kosp
+	dc.l GKosp_LZ,GKosp_LZ+$1A2E	; art/kosinski/level/8x8 - LZ.kosp
 	endif
 	if defined(GKosp_MTZ)
-	dc.l GKosp_MTZ,GKosp_MTZ+$2CB5	; art/kosinski/level/8x8 - MTZ.kosp
+	dc.l GKosp_MTZ,GKosp_MTZ+$2A96	; art/kosinski/level/8x8 - MTZ.kosp
 	endif
 	if defined(GLevel_CPZ1)
 	dc.l GLevel_CPZ1,GLevel_CPZ1+$454	; level/layout/good future/CPZ_1.kosp
@@ -540,37 +540,37 @@ MCD_CompressedAssets:
 	dc.l GMap16_MTZ,GMap16_MTZ+$B89	; mappings/16x16/MTZ.kosp
 	endif
 	if defined(Kosp_CPZ)
-	dc.l Kosp_CPZ,Kosp_CPZ+$2B4A	; art/kosinski/level/8x8 - CPZ.kosp
+	dc.l Kosp_CPZ,Kosp_CPZ+$28DA	; art/kosinski/level/8x8 - CPZ.kosp
 	endif
 	if defined(Kosp_CreditText)
 	dc.l Kosp_CreditText,Kosp_CreditText+$4F1	; art/kosinski/Ending - Credits.kosp
 	endif
 	if defined(Kosp_EHZ)
-	dc.l Kosp_EHZ,Kosp_EHZ+$2E4F	; art/kosinski/level/8x8 - EHZ.kosp
+	dc.l Kosp_EHZ,Kosp_EHZ+$2BC8	; art/kosinski/level/8x8 - EHZ.kosp
 	endif
 	if defined(Kosp_EHZ2)
-	dc.l Kosp_EHZ2,Kosp_EHZ2+$29E4	; art/kosinski/level/8x8 - EHZ2.kosp
+	dc.l Kosp_EHZ2,Kosp_EHZ2+$27AA	; art/kosinski/level/8x8 - EHZ2.kosp
 	endif
 	if defined(Kosp_GHZ)
-	dc.l Kosp_GHZ,Kosp_GHZ+$257E	; art/kosinski/level/8x8 - GHZ.kosp
+	dc.l Kosp_GHZ,Kosp_GHZ+$22F8	; art/kosinski/level/8x8 - GHZ.kosp
 	endif
 	if defined(Kosp_HPZ)
-	dc.l Kosp_HPZ,Kosp_HPZ+$2B52	; art/kosinski/level/8x8 - HPZ.kosp
+	dc.l Kosp_HPZ,Kosp_HPZ+$28A8	; art/kosinski/level/8x8 - HPZ.kosp
 	endif
 	if defined(Kosp_HTZ)
-	dc.l Kosp_HTZ,Kosp_HTZ+$20CB	; art/kosinski/level/8x8 - HTZ.kosp
+	dc.l Kosp_HTZ,Kosp_HTZ+$1F0E	; art/kosinski/level/8x8 - HTZ.kosp
 	endif
 	if defined(Kosp_LZ)
-	dc.l Kosp_LZ,Kosp_LZ+$1BCA	; art/kosinski/level/8x8 - LZ.kosp
+	dc.l Kosp_LZ,Kosp_LZ+$1A2E	; art/kosinski/level/8x8 - LZ.kosp
 	endif
 	if defined(Kosp_MTZ)
-	dc.l Kosp_MTZ,Kosp_MTZ+$2CB5	; art/kosinski/level/8x8 - MTZ.kosp
+	dc.l Kosp_MTZ,Kosp_MTZ+$2A96	; art/kosinski/level/8x8 - MTZ.kosp
 	endif
 	if defined(Kosp_SMZ1)
-	dc.l Kosp_SMZ1,Kosp_SMZ1+$169E	; art/kosinski/level/8x8 - SMZ1.kosp
+	dc.l Kosp_SMZ1,Kosp_SMZ1+$14DA	; art/kosinski/level/8x8 - SMZ1.kosp
 	endif
 	if defined(Kosp_SMZ2)
-	dc.l Kosp_SMZ2,Kosp_SMZ2+$19E7	; art/kosinski/level/8x8 - SMZ2.kosp
+	dc.l Kosp_SMZ2,Kosp_SMZ2+$186E	; art/kosinski/level/8x8 - SMZ2.kosp
 	endif
 	if defined(Kosp_Title)
 	dc.l Kosp_Title,Kosp_Title+$166C	; art/kosinski/level/8x8 - Title.kosp
@@ -897,7 +897,7 @@ MCD_CompressedAssets:
 	dc.l Level_SMZ1,Level_SMZ1+$3C3	; level/layout/SMZ_1.kosp
 	endif
 	if defined(Level_SMZ2)
-	dc.l Level_SMZ2,Level_SMZ2+$412	; level/layout/SMZ_2.kosp
+	dc.l Level_SMZ2,Level_SMZ2+$406	; level/layout/SMZ_2.kosp
 	endif
 	if defined(Level_SMZ3)
 	dc.l Level_SMZ3,Level_SMZ3+$82	; level/layout/SMZ_3.kosp
@@ -939,7 +939,7 @@ MCD_CompressedAssets:
 	dc.l Map128_SMZ1,Map128_SMZ1+$1EFC	; mappings/128x128/SMZ1.kosp
 	endif
 	if defined(Map128_SMZ2)
-	dc.l Map128_SMZ2,Map128_SMZ2+$1EDC	; mappings/128x128/SMZ2.kosp
+	dc.l Map128_SMZ2,Map128_SMZ2+$1E34	; mappings/128x128/SMZ2.kosp
 	endif
 	if defined(Map128_SMZBlank)
 	dc.l Map128_SMZBlank,Map128_SMZBlank+$E	; mappings/128x128/SMZ Blank.kosp
@@ -972,7 +972,7 @@ MCD_CompressedAssets:
 	dc.l Map16_SMZ1,Map16_SMZ1+$830	; mappings/16x16/SMZ1.kosp
 	endif
 	if defined(Map16_SMZ2)
-	dc.l Map16_SMZ2,Map16_SMZ2+$93B	; mappings/16x16/SMZ2.kosp
+	dc.l Map16_SMZ2,Map16_SMZ2+$93C	; mappings/16x16/SMZ2.kosp
 	endif
 	if defined(Nem_Aquis)
 	dc.l Nem_Aquis,Nem_Aquis+$45F	; art/nemesis/Enemy Aquis.nem
@@ -1269,25 +1269,25 @@ MCD_CompressedAssets:
 	dc.l Nem_Wheel,Nem_Wheel+$8C	; art/nemesis/Wheel carrier.nem
 	endif
 	if defined(PKosp_CPZ)
-	dc.l PKosp_CPZ,PKosp_CPZ+$2B4A	; art/kosinski/level/8x8 - CPZ.kosp
+	dc.l PKosp_CPZ,PKosp_CPZ+$28DA	; art/kosinski/level/8x8 - CPZ.kosp
 	endif
 	if defined(PKosp_EHZ)
-	dc.l PKosp_EHZ,PKosp_EHZ+$2E4F	; art/kosinski/level/8x8 - EHZ.kosp
+	dc.l PKosp_EHZ,PKosp_EHZ+$2BC8	; art/kosinski/level/8x8 - EHZ.kosp
 	endif
 	if defined(PKosp_GHZ)
-	dc.l PKosp_GHZ,PKosp_GHZ+$257E	; art/kosinski/level/8x8 - GHZ.kosp
+	dc.l PKosp_GHZ,PKosp_GHZ+$22F8	; art/kosinski/level/8x8 - GHZ.kosp
 	endif
 	if defined(PKosp_HPZ)
-	dc.l PKosp_HPZ,PKosp_HPZ+$2B52	; art/kosinski/level/8x8 - HPZ.kosp
+	dc.l PKosp_HPZ,PKosp_HPZ+$28A8	; art/kosinski/level/8x8 - HPZ.kosp
 	endif
 	if defined(PKosp_HTZ)
-	dc.l PKosp_HTZ,PKosp_HTZ+$20CB	; art/kosinski/level/8x8 - HTZ.kosp
+	dc.l PKosp_HTZ,PKosp_HTZ+$1F0E	; art/kosinski/level/8x8 - HTZ.kosp
 	endif
 	if defined(PKosp_LZ)
-	dc.l PKosp_LZ,PKosp_LZ+$1BCA	; art/kosinski/level/8x8 - LZ.kosp
+	dc.l PKosp_LZ,PKosp_LZ+$1A2E	; art/kosinski/level/8x8 - LZ.kosp
 	endif
 	if defined(PKosp_MTZ)
-	dc.l PKosp_MTZ,PKosp_MTZ+$2CB5	; art/kosinski/level/8x8 - MTZ.kosp
+	dc.l PKosp_MTZ,PKosp_MTZ+$2A96	; art/kosinski/level/8x8 - MTZ.kosp
 	endif
 	if defined(PLevel_CPZ1)
 	dc.l PLevel_CPZ1,PLevel_CPZ1+$454	; level/layout/past/CPZ_1.kosp
