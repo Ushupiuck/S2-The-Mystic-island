@@ -125,6 +125,7 @@ LevelSelect_PlaySound:
 		cmpi.b	#LevelSelect_DebugCode_End-LevelSelect_DebugCode,(v_debugcheat_count).w
 		bne.s	.return
 		clr.b	(v_debugcheat_count).w
+		move.b	#1,(f_slomocheat).w	; Debug also unlocks the pause controls
 		move.b	#1,(f_debugcheat).w
 		move.w	#sfx_Ring,d0
 		jmp	(PlaySound_Special).l

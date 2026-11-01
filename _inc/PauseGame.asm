@@ -17,6 +17,12 @@ PauseGame:
 Pause_AlreadyPaused:
 		move.w	#1,(f_pause).w
 		jsr	PauseSoundDriver
+		tst.b	(f_slomocheat).w
+		beq.s	Pause_Loop
+		btst	#bitA,(v_jpadhold1).w
+		beq.s	Pause_Loop
+		btst	#bitStart,(v_jpadhold1).w
+		bne.s	Pause_Exit		; accept A+Start together as well as paused A
 
 Pause_Loop:
 		move.w	#Vint_Pause,(v_vbla_routine).w
@@ -25,6 +31,7 @@ Pause_Loop:
 		beq.s	Pause_ChkStart
 		btst	#bitA,(v_jpadpress1).w
 		beq.s	Pause_ChkBC
+Pause_Exit:
 		move.w	#TitleScreen,(v_gamemode).w
 		nop
 		bra.s	Pause_Resume

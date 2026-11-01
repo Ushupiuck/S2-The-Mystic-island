@@ -358,11 +358,26 @@ check, and is absent from ordinary builds.
 Only the initialized primary player enters Debug; controller 2/companion AI
 retain their ordinary precedence. In level select's SOUND TEST, play `01`, `03`,
 `05`, `07` in order using B, C or START. Completing the code plays the ring
-jingle and unlocks Debug without changing level select. Wrong sounds reset the
-sequence; playing `01` starts another attempt. Moving the selector does not
+jingle and enables both `f_debugcheat` and `f_slomocheat`, unlocking placement
+and the associated pause controls. Level select stays unlocked. Wrong sounds
+reset the sequence; playing `01` starts another attempt. Moving the selector does not
 count. Hold A while launching a normal level or the rotating S1 stage to enable
 Debug there. The old title-screen Debug variant is retired; the title's
 level-select and slow-motion cheats remain.
+
+The unlock persists through level exits and the title screen. Holding A on
+entry activates placement/frame-cycle Debug for that scene; the unlocked pause
+controls also work without holding A on entry.
+
+| Pause input after unlocking | Action |
+| --- | --- |
+| Start | Pause or resume |
+| Hold B while paused | Advance slowly; releasing B leaves the game paused |
+| Press C while paused | Advance one game frame; holding C does not repeat |
+| Press A while paused, or A+Start together | Exit the level to the title screen |
+
+The rotating S1 stage uses the same pause/step controls and retains its normal
+fade/results exit; see [its return controls](Special-stage.md#debug-and-movement).
 
 Entry is checked before player state dispatch, including hurt/death, subject
 to the input locks in [Players and effects](Players-and-effects.md#input-locks-and-stage-exits).

@@ -357,6 +357,14 @@ retired title variant in both regional paths. Add `--core ...` and optionally
 `--system-directory ...` / `--pal` to enter level select through the actual title
 code, play the sequence with all three playback buttons, verify held-button and
 page-switch behavior, then launch directly into Debug with Sonic and Tails.
+The checker also verifies the companion pause-control flag, locked controls,
+held-B slow motion, press-only C stepping, ordinary Start resume, paused-A
+and simultaneous A+Start exits, and zero-lives behavior. Live checks use real
+buttons to exercise both primary characters and the rotating stage, then
+verify that the complete unlock survives title/level-select returns.
+Pause-control references are sonicretro/s2disasm `4ef457c18fc4902396c43ab06fabc119ac6ecb64`
+(`PauseGame`) and sonicretro/skdisasm `73de97c6b55055bcb8089c1d55d006b02136f163`
+(`Pause_Game`); simultaneous A+Start also retains A when both edges arrive together.
 
 ## Runtime checks
 
