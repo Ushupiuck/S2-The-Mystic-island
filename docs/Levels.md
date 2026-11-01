@@ -335,6 +335,36 @@ water in an affected act. The VRAM check permits this deliberate borrowing;
 the boss regression executes the actual water-selection code for all four
 GHZ acts to guard the contract.
 
+## Emerald Hill flower palette
+
+EHZ's final palette row groups the flower greens at hardware indices `$7-$9`
+(`$080,$0A0,$0E8`), followed by six pink shades at `$A-$F`
+(`$20A,$42C,$A2A,$64E,$C4C,$E6E`), ordered by increasing luminance.
+The owner's annotated viewer labels opaque colors `0-E`; those labels are one
+less than the hardware indices because transparent index zero is omitted.
+
+| Annotated P3 columns | Role |
+| --- | --- |
+| `0-2` | Original Act 1 scenery or Act 2 PP colors |
+| `3-4` | Original Act 1 scenery colors or Act 2 PP cliff browns |
+| `5` | White |
+| `6-8` | Dark-to-bright flower greens |
+| `9-E` | Dark-to-bright flower pinks |
+
+Both static terrain banks, block tile references and all flower/pulse frames
+use this arrangement. Both acts retain every original color. Act 2's
+`$06A/$024` browns color vertical streaks on the PP background rock spires
+(source panel Y `$E0-$157`). They move from annotated columns `3/9` to `3/4`;
+they are used colors, not free slots.
+
+The editable `art/uncompressed/EHZ flowers - 1.bin` through `4.bin` and
+`EHZ Pulse Ball.bin` feed `AnimCue_EHZ`. HTZ retains the original shared-named
+files and its separate `AnimCue_HTZ`; EHZ's regrouping does not recolor HTZ.
+SonLVL's four EHZ act sections select the remapped animation sources too.
+The animation destinations and timings remain unchanged. Edit the raw terrain
+and animation sources together when changing palette indices. The EHZ2 PP
+importer reads the grouped EHZ sources and retains its two PP cliff browns.
+
 ## Emerald Hill Act 2: Palmtree Panic experiment
 
 Mode 1 EHZ2 has private `8x8 - EHZ2.unc`, `EHZ2.unc` blocks/chunks,

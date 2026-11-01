@@ -12333,7 +12333,7 @@ Offs_AniPLC:	dc.w AnimCue_GHZ-Offs_AniFunc		; GHZ
 		dc.w Dynamic_Normal-Offs_AniFunc	; HPZ
 		dc.w AnimCue_HPZ-Offs_AniFunc		; HPZ
 		dc.w Dynamic_Normal-Offs_AniFunc	; HTZ
-		dc.w AnimCue_EHZ-Offs_AniFunc		; HTZ
+		dc.w AnimCue_HTZ-Offs_AniFunc		; HTZ
 		dc.w Dynamic_Null-Offs_AniFunc		; 06
 		dc.w Dynamic_Null-Offs_AniFunc		; 06
 		dc.w Dynamic_Null-Offs_AniFunc		; 07
@@ -12458,7 +12458,53 @@ AnimCue_GHZ:	zoneanimstart
 		even
 		zoneanimend
 
+; EHZ uses its grouped P3 ramp; HTZ keeps the original pixel encodings.
 AnimCue_EHZ:	zoneanimstart
+		; Flowers
+		zoneanimdecl	-1,	Art_EHZFlowers1, ArtTile_Art_Flowers1, 6, 2
+		dc.b	0,$7F		; Start of the script proper
+		dc.b	2,$13
+		dc.b	0,  7
+		dc.b	2,  7
+		dc.b	0,  7
+		dc.b	2,  7
+		even
+		; Flowers
+		zoneanimdecl	-1,	Art_EHZFlowers2, ArtTile_Art_Flowers2, 8, 2
+		dc.b	2,$7F
+		dc.b	0, $B
+		dc.b	2, $B
+		dc.b	0, $B
+		dc.b	2,  5
+		dc.b	0,  5
+		dc.b	2,  5
+		dc.b	0,  5
+		even
+		; Flowers
+		zoneanimdecl	7,	Art_EHZFlowers3, ArtTile_Art_Flowers3, 2, 2
+		dc.b	0
+		dc.b	2
+		even
+		; Flowers
+		zoneanimdecl	-1,	Art_EHZFlowers4, ArtTile_Art_Flowers4, 8, 2
+		dc.b	0,$7F
+		dc.b	2,  7
+		dc.b	0,  7
+		dc.b	2,  7
+		dc.b	0,  7
+		dc.b	2, $B
+		dc.b	0, $B
+		dc.b	2, $B
+		even
+		; Pulsing thing against checkered background
+		zoneanimdecl	1,	Art_EHZPulseBall, ArtTile_Art_EHZPulseBall, 6, 2
+		dc.b	0,  2
+		dc.b	4,  6
+		dc.b	4,  2
+		even
+		zoneanimend
+
+AnimCue_HTZ:	zoneanimstart
 		; Flowers
 		zoneanimdecl -1, Art_Flowers1, ArtTile_Art_Flowers1, 6, 2
 		dc.b   0,$7F		; Start of the script proper
@@ -12496,7 +12542,7 @@ AnimCue_EHZ:	zoneanimstart
 		dc.b   2, $B
 		even
 		; Pulsing thing against checkered background
-		zoneanimdecl 1, Art_EHZPulseBall, ArtTile_Art_EHZPulseBall, 6, 2
+		zoneanimdecl 1, Art_HTZPulseBall, ArtTile_Art_EHZPulseBall, 6, 2
 		dc.b   0,  2
 		dc.b   4,  6
 		dc.b   4,  2
@@ -13776,11 +13822,16 @@ Art_GHZFlowerSmall:	binclude	"art/uncompressed/GHZ Flower Small.unc"
 		even
 Art_GHZFlowerStalk:	binclude	"art/uncompressed/GHZ Flower Stalk.unc"
 		even
+Art_EHZFlowers1:	binclude	"art/uncompressed/EHZ flowers - 1.bin"
+Art_EHZFlowers2:	binclude	"art/uncompressed/EHZ flowers - 2.bin"
+Art_EHZFlowers3:	binclude	"art/uncompressed/EHZ flowers - 3.bin"
+Art_EHZFlowers4:	binclude	"art/uncompressed/EHZ flowers - 4.bin"
+Art_EHZPulseBall:	binclude	"art/uncompressed/EHZ Pulse Ball.bin"
 Art_Flowers1:		binclude	"art/uncompressed/EHZ and HTZ flowers - 1.bin"
 Art_Flowers2:		binclude	"art/uncompressed/EHZ and HTZ flowers - 2.bin"
 Art_Flowers3:		binclude	"art/uncompressed/EHZ and HTZ flowers - 3.bin"
 Art_Flowers4:		binclude	"art/uncompressed/EHZ and HTZ flowers - 4.bin"
-Art_EHZPulseBall:	binclude	"art/uncompressed/Pulsing ball against checkered background (EHZ).bin"
+Art_HTZPulseBall:	binclude	"art/uncompressed/Pulsing ball against checkered background (EHZ).bin"
 Art_CPZAnimBGPlates:	binclude	"art/uncompressed/CPZ animated background section.bin"
 Art_HPZPulseOrb:	binclude	"art/uncompressed/Pulsing orb (HPZ).bin"
 ; ---------------------------------------------------------------------------

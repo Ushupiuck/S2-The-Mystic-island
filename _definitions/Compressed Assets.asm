@@ -6,7 +6,7 @@ MCD_CompressedAssets:
 	dc.l BKosp_CPZ,BKosp_CPZ+$28DA	; art/kosinski/level/8x8 - CPZ.kosp
 	endif
 	if defined(BKosp_EHZ)
-	dc.l BKosp_EHZ,BKosp_EHZ+$2BC8	; art/kosinski/level/8x8 - EHZ.kosp
+	dc.l BKosp_EHZ,BKosp_EHZ+$2E4B	; art/kosinski/level/8x8 - EHZ.kosp
 	endif
 	if defined(BKosp_GHZ)
 	dc.l BKosp_GHZ,BKosp_GHZ+$22F8	; art/kosinski/level/8x8 - GHZ.kosp
@@ -288,7 +288,7 @@ MCD_CompressedAssets:
 	dc.l GKosp_CPZ,GKosp_CPZ+$28DA	; art/kosinski/level/8x8 - CPZ.kosp
 	endif
 	if defined(GKosp_EHZ)
-	dc.l GKosp_EHZ,GKosp_EHZ+$2BC8	; art/kosinski/level/8x8 - EHZ.kosp
+	dc.l GKosp_EHZ,GKosp_EHZ+$2E4B	; art/kosinski/level/8x8 - EHZ.kosp
 	endif
 	if defined(GKosp_GHZ)
 	dc.l GKosp_GHZ,GKosp_GHZ+$22F8	; art/kosinski/level/8x8 - GHZ.kosp
@@ -546,10 +546,10 @@ MCD_CompressedAssets:
 	dc.l Kosp_CreditText,Kosp_CreditText+$4F1	; art/kosinski/Ending - Credits.kosp
 	endif
 	if defined(Kosp_EHZ)
-	dc.l Kosp_EHZ,Kosp_EHZ+$2BC8	; art/kosinski/level/8x8 - EHZ.kosp
+	dc.l Kosp_EHZ,Kosp_EHZ+$2E4B	; art/kosinski/level/8x8 - EHZ.kosp
 	endif
 	if defined(Kosp_EHZ2)
-	dc.l Kosp_EHZ2,Kosp_EHZ2+$27AA	; art/kosinski/level/8x8 - EHZ2.kosp
+	dc.l Kosp_EHZ2,Kosp_EHZ2+$29E8	; art/kosinski/level/8x8 - EHZ2.kosp
 	endif
 	if defined(Kosp_GHZ)
 	dc.l Kosp_GHZ,Kosp_GHZ+$22F8	; art/kosinski/level/8x8 - GHZ.kosp
@@ -1272,7 +1272,7 @@ MCD_CompressedAssets:
 	dc.l PKosp_CPZ,PKosp_CPZ+$28DA	; art/kosinski/level/8x8 - CPZ.kosp
 	endif
 	if defined(PKosp_EHZ)
-	dc.l PKosp_EHZ,PKosp_EHZ+$2BC8	; art/kosinski/level/8x8 - EHZ.kosp
+	dc.l PKosp_EHZ,PKosp_EHZ+$2E4B	; art/kosinski/level/8x8 - EHZ.kosp
 	endif
 	if defined(PKosp_GHZ)
 	dc.l PKosp_GHZ,PKosp_GHZ+$22F8	; art/kosinski/level/8x8 - GHZ.kosp
