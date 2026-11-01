@@ -419,6 +419,9 @@ channel step each, and reports imported background color error. Run it twice
 to verify regeneration is byte-stable. The SonLVL checker loads the private Act-2
 art and palette with all 64 editor sections. Neither the camera excursions nor
 entrance visits are complete controller-only Act-2 playthroughs.
+For EHZ2 mountain smoothness, enter Act 2 and hold Right from the start;
+check that the distant cliffs follow the camera without three-pixel stair-stepping.
+Their VDP horizontal offset must equal `floor(3 * camera_X / 16)`.
 
 `check_ghz_flowers.py --rom ROM --listing LISTING --output OUTPUT --native
 --reference COMMIT` executes 640 updates of the actual zone DMA scripts,

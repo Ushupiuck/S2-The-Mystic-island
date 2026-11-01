@@ -395,8 +395,10 @@ The importer checks protected palette uses and bounds each deliberate blend.
 
 EHZ2's own initialization/event entries in `_inc/Level Plane Events.asm`
 produce four moving cloud bands, 3/16-speed mountains, half-speed bushes and
-perspective water. Vertical movement follows at 1/8 speed within the upright
-panel's viewing range. CD uses `Plane_SourceFixed`; MD writes horizontal scroll
+perspective water. Mountain X uses a 32-bit multiply before the final divide,
+retaining fractional progress until pixel output instead of jumping three pixels
+at each 16-pixel camera boundary. Vertical movement follows at 1/8 speed within
+the upright panel's viewing range. CD uses `Plane_SourceFixed`; MD writes horizontal scroll
 values, while the shared buffered constructor supplies the fixed 512-pixel rows.
 No ramp mirroring or extra RAM allocation is used.
 

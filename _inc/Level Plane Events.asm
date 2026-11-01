@@ -217,11 +217,13 @@ Deform_EHZ2_PP:
 		move.w	d0,d1
 		lsr.w	#1,d1
 		move.w	d1,(Camera_BG_X_pos).w
+		; Multiply before dividing: early rounding makes mountains jump three pixels.
+		moveq	#0,d1
 		move.w	d0,d1
-		lsr.w	#4,d1
-		move.w	d1,d2
-		add.w	d1,d1
-		add.w	d2,d1
+		move.l	d1,d2
+		add.l	d1,d1
+		add.l	d2,d1
+		lsr.l	#4,d1
 		move.w	d1,(Camera_BG2_X_pos).w
 		lsr.w	#3,d0
 		move.w	d0,(Camera_BG3_X_pos).w
