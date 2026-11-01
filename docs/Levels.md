@@ -141,6 +141,8 @@ recovery, invincibility expiry and GHZ/EHZ boss cleanup share `GetLevelMusic`,
 preserving act selection. Invincibility/boss music retains
 priority; one-up jingles restore the driver's saved context. Sound formats
 and importing belong in [the sound guide](../build_tools/sound/README.md).
+GHZ, EHZ and Mecha Sonic request the driver's fade-out command on defeat,
+before their existing escape, reward or results handoffs.
 
 ## Water configuration
 
@@ -428,6 +430,12 @@ and streamed strips share the original row-to-camera table, and checkpoint
 reloads retain the saved background cameras. Act 2 uses the Mecha Sonic
 trap/fight at its original signpost position
 `$1EE0,$05A4` (subtype `$0002`). Camera X locks at `$1E40`, Y at `$0500`.
+The trap sets the shared boss-lock flag, enforcing the on-screen right boundary
+and keeping invincibility expiry from restoring act music. Its warning fades
+the current song before Boss 3 starts. Both players' arena limits stay in sync;
+the vertical boundary advances by at most two pixels per update from either
+approach, including odd camera coordinates. Ordinary tracking may move faster
+within the remaining bounds. Flight height uses the final arena Y.
 `build_smz2_mecha_arena.py` makes three private chunk copies: inside
 `$1E40..$1F7F`, raised steps above `$05C0` are cleared and existing steel
 block 5 supplies a flat, fully solid floor on both collision paths. The
@@ -435,8 +443,8 @@ approach before `$1E40`, other acts and the act's blocks/shared profiles are unc
 All four time variants receive the floor; the SMZ importer reapplies it.
 The last room's pipe backdrop contains high-priority tiles, so its actors,
 tails and sign are drawn above that backdrop. The original foreground still
-supplies the floor. Defeat restores the stage palette, then the real falling
-sign invokes the existing SMZ2 results/next-act route.
+supplies the floor. The real falling sign invokes the existing SMZ2
+results/next-act route; the collapsed boss retains his palette until transition.
 
 Imported families `$A0-$AF` cover the junction, disc,
 belts, trapdoors, saws, stompers, vanishing platforms, flames, electricity,

@@ -62,7 +62,7 @@ escape. Hit flashing saves and restores the actual palette word through
 
 ## Arena and art lifetime
 
-EHZ2 locks camera X to `$28F0-$2940` and Y to `$390`, including Debug return
+EHZ2 locks camera X to `$28F0-$2940` and Y to `$690`, including Debug return
 and primary Tails. Normal row streaming settles either vertical approach before
 spawning. Escape extends the right limit to `$2AB0`; play continues to the
 capsule. Origin deltas at `$44/$46` also support the existing MZ placeholder.

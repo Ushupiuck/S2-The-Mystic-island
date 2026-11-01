@@ -37,6 +37,9 @@ MS_HitPoints = 16
 MS_CampRadius = $18             ; player centre within the rolling landing footprint
 MS_CampHeight = $100            ; detect before the descent reaches the player
 MS_CampMinDrop = $18            ; enough separation to commit the aimed dive
+MS_ArenaX	=	$1E40		; arena camera, independent of the approach height
+MS_ArenaY	=	$500
+MS_EntryRadius	=	$1B		; frame 2 feet are four pixels above the standing feet
 MS_EnergyFrame = 8              ; compact copy of the rematch's energy ball
 
 ; Called only after a crossing of subtype bit 1. A full pool retries without
@@ -58,7 +61,9 @@ Signpost_TrapTrigger:
 	jsr	(Signpost_Activate).l
 	move.b	#1,(f_timecount).w
 	move.b	#1,(Dynamic_Resize_Routine).w
-	rts
+	move.b	#1,(f_lockscreen).w
+	move.w	#MusID_FadeOut,d0
+	jmp	(PlayMusic).l
 
 Signpost_TrapSpin:
 	subq.w	#1,objoff_34(a0)
@@ -94,6 +99,7 @@ MS_Phases:
 	dc.w MS_Init-MS_Phases,MS_Loading-MS_Phases,MS_AwaitPortrait-MS_Phases
 	dc.w MS_Strike-MS_Phases,MS_RunFight-MS_Phases,MS_DefeatWait-MS_Phases
 	dc.w MS_DefeatFall-MS_Phases,MS_Crumple-MS_Phases,MS_Reward-MS_Phases
+	dc.w MS_Remains-MS_Phases
 
 MS_Init:
 	jsr	(FindFreeObj).l
@@ -119,9 +125,7 @@ MS_Init:
 	move.w	d0,MS_left(a0)
 	addi.w	#$100,d0
 	move.w	d0,MS_right(a0)
-	move.w	(Camera_Y_pos).w,d0
-	addi.w	#$30,d0
-	move.w	d0,MS_top(a0)
+	move.w	#MS_ArenaY+$30,MS_top(a0)
 	moveq	#plcid_MechaSonic,d0
 	jsr	(LoadPLC).l
 	move.b	#1,MS_phase(a0)
@@ -152,15 +156,22 @@ MS_AwaitPortrait:
 		rts
 
 .reveal_wait:
+		cmpi.w	#MS_ArenaY,(Camera_Y_pos).w
+		bne.w	MS_Return
+		cmpi.w	#MS_ArenaX,(Camera_X_pos).w
+		bne.w	MS_Return
 		subq.w	#1,MS_timer(a0)
 		bne.w	MS_Return
 	move.b	#3,MS_phase(a0)
 	move.b	#2,obFrame(a0)
+	; Probe the authored floor at the sign before moving outside the room.
+	move.w	MS_sign_y(a0),obY(a0)
+	move.b	#MS_EntryRadius,obHeight(a0)
+	jsr	(ObjHitFloor).l
+	add.w	d1,obY(a0)
 	move.w	(Camera_X_pos).w,d0
 	addi.w	#$168,d0
 	move.w	d0,obX(a0)
-	move.w	MS_sign_y(a0),obY(a0)
-	subq.w	#4,obY(a0)
 	move.w	#-$800,obVelX(a0)
 	bset	#2,MS_flags(a0)
 	clr.b	MS_jet_kind(a0)
@@ -241,6 +252,8 @@ MS_Defeated:
 		clr.b	(f_timecount).w
 		moveq	#100,d0
 		jsr	(AddPoints).l
+		move.w	#MusID_FadeOut,d0
+		jsr	(PlayMusic).l
 		lea	(Pal_MechaSonic).l,a2
 		bra.w	MS_CopyPalette
 MS_DefeatWait:
@@ -285,13 +298,15 @@ MS_Reward:
 		addi.w	#$A0,d0
 		move.w	d0,obX(a1)
 		move.w	#1,obSubtype(a1)
-		moveq	#palid_SMZ2,d0
-		move.l	d7,-(sp)
-		jsr	(PalLoad2).l
-		move.l	(sp)+,d7
+		move.b	#9,MS_phase(a0)
 		move.b	#2,(Dynamic_Resize_Routine).w
+		clr.b	(f_lockscreen).w
+MS_Remains:
+		; Keep the collapsed body, palette and electrical effects until unload.
+		bsr.w	MS_RawAnimate
+		bra.w	MS_DefeatPalette
 MS_Delete:
-        ; An externally removed/reused trap must never delete its replacement.
+		; An externally removed/reused trap must never delete its replacement.
 		jmp	(DeleteObject).l
 
 MS_UpdateHitbox:
@@ -762,6 +777,14 @@ MS_CheckLandingCamper:
 		cmpi.w	#MS_CampMinDrop,d1
 		blt.w	MS_Return
 		move.w	obX(a1),d0
+		cmp.w	MS_left(a0),d0
+		bhs.s	.left_ok
+		move.w	MS_left(a0),d0
+.left_ok:
+		cmp.w	MS_right(a0),d0
+		bls.s	.right_ok
+		move.w	MS_right(a0),d0
+.right_ok:
 		sub.w	obX(a0),d0
 		muls.w	#$800,d0
 		divs.w	d1,d0
@@ -782,7 +805,20 @@ MS_CounterLanded:
 		move.b	#$1F,obHeight(a0)
 		clr.l	obVelX(a0)
 		move.b	#8,obFrame(a0)
-		; Continue the ordinary landing, with feet fixed at the same floor.
+		; A dive can land on either side; the original descent only lands right.
+		move.w	MS_left(a0),d0
+		add.w	MS_right(a0),d0
+		lsr.w	#1,d0
+		bclr	#0,obRender(a0)
+		cmp.w	obX(a0),d0
+		bhs.s	.facing
+		bset	#0,obRender(a0)
+.facing:
+		btst	#3,MS_flags(a0)
+		beq.s	.landed
+		bchg	#0,obRender(a0)	; MS_TurnLanding turns back toward the arena
+.landed:
+		; MS_Landed installs the standing script with feet at the same floor.
 ; ---------------------------------------------------------------------------
 
 MS_Landed:

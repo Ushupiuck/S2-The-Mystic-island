@@ -227,7 +227,8 @@ BGHZ_Defeat:
 		jsr	(AddPoints).l
 		move.b	#BGHZ_Explode,ob2ndRout(a0)
 		move.w	#$B3,BGHZ_Timer(a0)
-		rts
+		move.w	#MusID_FadeOut,d0
+		jmp	(PlayMusic).l
 ; ---------------------------------------------------------------------------
 
 BGHZ_ShipExplode:

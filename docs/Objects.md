@@ -176,6 +176,8 @@ The touch response iterator is adapted from skdisasm
 pool scan with a shared pointer queue in sparse scenes. It retains our
 collision-size table, ducking rectangle, monitor rules, Tails flight attacks
 and response callbacks. Terrain and full/top-solid collision remain separate.
+Successful boss hits reverse the attacker's full X/Y velocity and ground speed,
+matching S3&K's `Touch_Enemy`; repeated rebounds do not halve the velocity.
 
 `ExecuteObjects` lets both player slots consume the previous object pass's
 candidates before resetting the queue. `RunTouchObject` automatically registers
@@ -258,10 +260,14 @@ After it settles and the final portrait DPLC is queued, a separate two-second
 warning holds the sign before Mecha enters: 120 updates on NTSC, 100 on PAL,
 plus one update to admit the portrait's first DMA/VBlank. Spin and loading
 time cannot consume this warning. Players retain control during the hold.
+The countdown waits for the arena camera to settle, so a diagonal arrival from
+above or below cannot start the entry dash at an intermediate camera height.
 The act clock resumes for the fight; the normal sign-art approach loader is
 suppressed while the trap owns the arena, so it cannot repeatedly replace the
 boss PLC queue. Mecha enters from the right, breaks the existing sign into
 mapping-piece debris, and begins the complete standard Sky Sanctuary fight.
+Entry probes the floor at the sign using frame 2's 27-pixel foot offset; the
+standing states retain their original 31-pixel radius.
 The trap bypasses both the high-speed launch and ordinary results handoff.
 
 `objects/Mecha Sonic.asm` ports `Obj_SSZEndBoss` from the same pinned skdisasm
@@ -281,7 +287,10 @@ Detection starts within 256 vertical pixels and stops within 24 pixels of the
 rolling body's floor height. The dive aims once at that player's floor position,
 descends at eight pixels per update and keeps the harmful rolling collision until
 touchdown. It then expands to the standing radius without moving its feet and
-continues the selected ground sequence. Released dashes, airborne rolls, dead
+continues the selected ground sequence facing into the arena. The aimed X is
+clamped to the attack boundaries, and either original landing choice resumes
+its standing script independently of the old approach direction.
+Released dashes, airborne rolls, dead
 actors and an inactive companion do not trigger it. This borrows the super
 rematch's aimed rolling dive without importing its transformation or AI.
 
@@ -293,8 +302,11 @@ the final defeating hit cannot fire one. Balls validate the owner, retire above
 the screen and disappear when the fight ends. These counters use the existing
 SST's last two bytes and flag bits 0/1; no object/RAM allocation grows.
 
-After the defeat sequence, Mecha restores the act palette and creates one
-ordinary `$0001` falling sign. Only that sign can award the act-clear results.
+Defeat fades the boss music. After the defeat sequence, Mecha creates one
+ordinary `$0001` falling sign, then stays collapsed at the landing position with
+his palette and electrical sparks until the level unloads. This final state has
+no touch collision and cannot create another reward. Only the sign can award
+the act-clear results.
 The separate `Obj_SSZ2_Boss` Master Emerald-powered Knuckles rematch and SSZ's
 ending cinematics are different source sequences, not this encounter.
 See [the arena](Levels.md#scrap-madness) and

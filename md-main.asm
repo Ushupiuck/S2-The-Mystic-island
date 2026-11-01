@@ -6588,27 +6588,56 @@ DynResize_SBZ1:
 
 DynResize_SBZ2:
 		cmpi.b	#id_SMZ,(Current_Zone).w
-		bne.s	.legacy
+		bne.w	.legacy
 ; Act 2 keeps its original approach limits. No SBZ2/FZ placeholder event may
 ; race the trap for the camera once its normal crossing has armed the arena.
 		move.w	#$800,(Camera_Max_Y_pos_target).w
 		cmpi.w	#$1800,(Camera_X_pos).w
-		blo.s	.return
+		blo.w	.return
 		move.w	#$510,(Camera_Max_Y_pos_target).w
 		cmpi.w	#$1D80,(Camera_X_pos).w
-		blo.s	.return
+		blo.w	.return
 		; The industrial background contains high-priority pipe panels.
 		; Actors and their tails must stay above that backdrop in this room.
 		bset	#7,(v_player+obGfx).w
 		bset	#7,(v_player2+obGfx).w
 		bset	#7,(v_player2tails+obGfx).w
 		tst.b	(Dynamic_Resize_Routine).w
-		beq.s	.return
-		move.w	#$1E40,(Camera_Min_X_pos).w
-		move.w	#$1E40,(Camera_Max_X_pos).w
-		move.w	#$500,(Camera_Min_Y_pos).w
-		move.w	#$500,(Camera_Max_Y_pos).w
-		move.w	#$500,(Camera_Max_Y_pos_target).w
+		beq.w	.return
+		move.w	#MS_ArenaX,(Camera_Min_X_pos).w
+		move.w	#MS_ArenaX,(Camera_Max_X_pos).w
+		move.w	#MS_ArenaY,(Camera_Max_Y_pos_target).w
+		move.w	(Camera_Y_pos).w,d0
+		cmpi.w	#MS_ArenaY,d0
+		bhi.s	.below_arena
+		beq.s	.at_arena
+		; Move the top edge two pixels per update when entering from above.
+		move.w	#MS_ArenaY,(Camera_Max_Y_pos).w
+		addq.w	#2,d0
+		cmpi.w	#MS_ArenaY,d0
+		bls.s	.set_min
+		move.w	#MS_ArenaY,d0
+		bra.s	.set_min
+.below_arena:
+		; Keep odd camera coordinates smooth too: the generic path rounds to even.
+		subq.w	#2,d0
+		cmpi.w	#MS_ArenaY,d0
+		bhs.s	.set_max
+		move.w	#MS_ArenaY,d0
+.set_max:
+		move.w	d0,(Camera_Max_Y_pos).w
+		move.w	d0,(Camera_Max_Y_pos_target).w
+		move.w	#MS_ArenaY,d0
+		bra.s	.set_min
+.at_arena:
+		move.w	d0,(Camera_Max_Y_pos).w
+.set_min:
+		move.w	d0,(Camera_Min_Y_pos).w
+		move.b	#1,(Camera_Max_Y_Pos_Changing).w
+		move.w	(Camera_Min_X_pos).w,(Tails_Min_X_pos).w
+		move.w	(Camera_Max_X_pos).w,(Tails_Max_X_pos).w
+		move.w	(Camera_Min_Y_pos).w,(Tails_Min_Y_pos).w
+		move.w	(Camera_Max_Y_pos).w,(Tails_Max_Y_pos).w
 .return:	rts
 
 .legacy:
@@ -11304,8 +11333,7 @@ Touch_Enemy:
 .reflect:
 		neg.w	obVelX(a0)
 		neg.w	obVelY(a0)
-		asr	obVelX(a0)
-		asr	obVelY(a0)
+		neg.w	obInertia(a0)		; full rebound, as in the original S3&K fight
 		clr.b	obColType(a1)
 		subq.b	#1,obColProp(a1)
 		bne.s	.return

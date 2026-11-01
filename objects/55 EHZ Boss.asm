@@ -525,6 +525,8 @@ EHZBoss_return_2F4EC:
 ; ===========================================================================
 
 EHZBoss_Defeated:	; boss defeated
+	move.w	#MusID_FadeOut,d0
+	jsr	(PlayMusic).l
 	moveq	#100,d0
 	jsr	(AddPoints).l	; add 1000 points, reward for defeating boss
 	move.b	#6,ob2ndRout(a0)

@@ -359,8 +359,8 @@ portion of the SMZ object atlas after the last hazards have left the window.
 The boss-explosion PLC uses the existing `$581` bank; player/effect, signpost,
 terrain, HUD and plane allocations are preserved. The body caches a frame
 only after its complete DMA is queued and hides/retries on backpressure.
-Palette line two belongs to Mecha until defeat; the act's palette is restored
-before the ordinary falling sign is spawned.
+Palette line two belongs to Mecha through defeat and results. The collapsed
+body keeps its electrical palette/sparks until the next level loads.
 
 `HudUpdate` shares ring, life and result-bonus updates between its ordinary and
 placement displays. Its initial digit table uses S3&K-style readable strings,

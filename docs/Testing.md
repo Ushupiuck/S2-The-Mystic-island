@@ -113,21 +113,32 @@ landing footprint boundaries, reject released/moving/air/dead/solo candidates,
 and check harmful rolling collision through touchdown and the fixed foot height.
 Head-hit cases run the real touch-damage handler and reject ground/side/rising
 contacts; projectile movement and defeat cleanup are executed, not inferred.
+Twenty post-counter landings cover both arena halves, landing choices and old
+facings through the next jump. Shared touch tests check full X/Y/ground-speed
+reversal for both actors and all three bosses. Camera cases approach from six
+heights, including odd coordinates immediately beside the target. All three
+boss defeat entries must request the music fade.
+
 The emulator uses the real SMZ2 placement; controller input crosses the trap.
 It verifies the final portrait in VRAM and at least two seconds of warning
-before entry on NTSC/PAL, then all attacks run on the authored arena. Focused actor positioning supplies
-sixteen real jumping hits through touch collision; no boss HP is edited. It
-checks the destroyed sign, no early results/reward, defeat and falling-sign
-results. `--companion` uses the second actor for hits; `--player 2 --pal` uses
-primary Tails/PAL. Omit the system directory for the cartridge build. These
-are focused gameplay fixtures, not a controller-only full-level playthrough.
-The counter scenes position an ordinary landing above an actual down+B charge
-and verify player damage without boss damage. A separate long ground windup
-allows three spaced touch contacts without editing HP or the streak; it checks
-the one upward shot's VRAM, hardware sprites and screen exit. Actor positions
-and attack velocities are staged, and the original fight snapshot is restored
-before the full sixteen-hit lifecycle check.
+before entry on NTSC/PAL, then all attacks run on the authored arena. Use
+`--approach above` for a diagonal falling crossing or `--approach below` for
+the low-camera approach. Both require bounded camera movement, entry feet on
+the floor and the on-screen right boundary. Entering with invincibility and
+expiring it must leave Boss 3 playing, checked against the actual Z80 song.
+`--companion` uses the second actor for hits; `--player 2 --pal` uses primary
+Tails/PAL. Omit the system directory for the cartridge build. These are focused
+gameplay fixtures, not a controller-only full-level playthrough.
 
+The counter scene positions an ordinary landing above an actual down+B charge
+and verifies player damage without boss damage. A long ground wait supplies
+three uninterrupted head bounces: only the first approach is staged, and real
+character physics supplies subsequent contacts without position, velocity, HP,
+cooldown or streak repairs. It checks the upward shot's VRAM, hardware sprites
+and screen exit. The original fight snapshot is restored before sixteen
+separately positioned jumping hits through touch collision; no boss HP is
+edited. The lifecycle checks the score, real driver fade, defeat/collapse,
+exactly one falling sign and the retained body through results and transition.
 
 Hanging-surface checks use the assembled D9 code, player art and shared solidity:
 
