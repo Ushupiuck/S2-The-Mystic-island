@@ -84,6 +84,12 @@ Camera seam arithmetic uses `Level_YWrapMask` consistently. A negative top bound
 enables the existing `$0800` seam (including SMZ2); ordinary acts clamp at their
 authored bounds, even beyond `$0800`. The 32-row Mode 1 layout capacity is
 independent of whether a particular act wraps.
+At level load, negative-top acts fold the resident foreground row lookups
+above `$800` onto the first sixteen rows. Rendering, floor/ceiling/wall sensors
+and layout edits therefore address the same terrain on either side of the seam,
+including negative sensor coordinates before the player's position wraps.
+This changes only runtime lookup offsets: authored layouts and independent
+background dimensions stay intact. Ordinary acts keep all 32 foreground rows.
 The paused cartridge backend retains its frozen layouts and is not the target
 of this Mode 1 layout work.
 

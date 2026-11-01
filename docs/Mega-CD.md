@@ -142,6 +142,10 @@ address to the CD view:
 data. CD decodes blocks, layout and chunks directly into their PRG allocations.
 `MCD_LoadTerrain` installs collision indices and the single shared
 height/width/angle bank once on level entry.
+Its command argument supplies the signed foreground top boundary. The CD
+level-load setup folds foreground row offsets for wrapping acts, shared by
+collision and drawing; see the [camera-seam rules](Levels.md#foreground-vertical-placement).
+Sensor calls need no extra mask or branch.
 The rotating S1 stage retains its separate MD renderer and staging/PRG overlays.
 
 After scrolling, CD constructs changed tile strips while MD renders sprites

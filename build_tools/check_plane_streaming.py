@@ -34,6 +34,7 @@ def word(memory,address):return (memory[address^1]<<8)|memory[(address+1)^1]
 for zone,name in ((0,'GHZ'),(1,'LZ'),(2,'CPZ'),(3,'EHZ'),(4,'HPZ'),(5,'HTZ'),(6,'MTZ'),(8,'SMZ')):
     if a.zone is not None and zone!=a.zone: continue
     boot_level(g,zone=zone,act=a.act-1,player=a.player)
+    wraps=bool(g.read('Camera_Min_Y_pos',2)&0x8000)
     fg,bg=load(ROOT/f'level/layout/{name}_{a.act}.kosp')
     if a.legacy_visible:
         old=kosinski_plus_decode((ROOT/f'md-only/layout/{name}_{a.act}.kosp').read_bytes())[0]
@@ -43,7 +44,8 @@ for zone,name in ((0,'GHZ'),(1,'LZ'),(2,'CPZ'),(3,'EHZ'),(4,'HPZ'),(5,'HTZ'),(6,
     blocks,chunks=[kosinski_plus_decode(rom[struct.unpack_from('>I',rom,header+offset)[0]&0xFFFFFF:])[0] for offset in (4,8)]
     @lru_cache(None)
     def tile(plane,x,y):
-        cells=(fg,bg)[plane];cx,cy=(x&0x7FFF)//128,(y&0xFFF)//128
+        mask=g.s['Level_YWrapMask'] if not plane and wraps else 0xFFF
+        cells=(fg,bg)[plane];cx,cy=(x&0x7FFF)//128,(y&mask)//128
         chunk=cells[cy][cx] if not plane and cy<len(cells) and cx<len(cells[0]) else (0 if not plane else cells[cy%len(cells)][cx%len(cells[0])])
         e=struct.unpack_from('>H',chunks,chunk*128+((y//16&7)*8+(x//16&7))*2)[0]
         bx,by=(x//8&1)^bool(e&0x400),(y//8&1)^bool(e&0x800)
@@ -60,7 +62,7 @@ for zone,name in ((0,'GHZ'),(1,'LZ'),(2,'CPZ'),(3,'EHZ'),(4,'HPZ'),(5,'HTZ'),(6,
                 for sx in range(0,320,8):
                     wx=(sx-scroll)&65535
                     source_x=wx
-                    if plane and (name in ('EHZ','HTZ') or (name=='GHZ' and (not 4<=((wy//16)&15)<10 or (((wy//16)&15)==9 and wy&8))) or (name=='SMZ' and ((wy//16)&31)<4)):
+                    if plane and (name in ('EHZ','HTZ') or (name=='GHZ' and (not 4<=((wy//16)&15)<10 or (((wy//16)&15)==9 and wy&8))) or (name=='SMZ' and a.act==1 and ((wy//16)&31)<4)):
                         source_x &=511
                     address=(0xE000 if plane else 0xC000)+(wy//8&31)*128+(wx//8&63)*2
                     actual=word(g.vram,address);expected=tile(plane,source_x,wy)
@@ -68,7 +70,9 @@ for zone,name in ((0,'GHZ'),(1,'LZ'),(2,'CPZ'),(3,'EHZ'),(4,'HPZ'),(5,'HTZ'),(6,
                     samples+=1
     check();g.video.save(a.output/f'{name}-act-{a.act}-start.png');initial_y=g.read('Camera_Y_pos',2)
     min_y=g.read('Camera_Min_Y_pos',2);max_y=g.read('Camera_Max_Y_pos',2)
-    for index,(tx,ty) in enumerate(((0x600,initial_y),(0x600,min(initial_y+384,max_y)),(0,initial_y))):
+    targets=[(0x600,initial_y),(0x600,min(initial_y+384,max_y)),(0,initial_y)]
+    if wraps:targets.extend(((0x180,0x7D0),(0x180,0),(0x180,0x7D0)))
+    for index,(tx,ty) in enumerate(targets):
         for tick in range(100):
             for field,value,size in (('obX',tx+160,2),('obY',ty+96,2),('obVelX',0,2),('obVelY',0,2),('obInertia',0,2),('obControl',0x81,1),('obRoutine',2,1),('obStatus',0,1),('invtime',6000,2)):
                 g.put('v_player',field,value,size)

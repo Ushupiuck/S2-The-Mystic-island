@@ -135,6 +135,14 @@ class Native:
                 from level_layout import encode, from_s2
                 data = encode(*from_s2(data))
             sub.mem_write(s[dest], data)
+            if source == 'v_lvllayout' and 'MCD_SubTerrainInitLayout' in s:
+                # Reinstalling a fixture layout must also run the actual
+                # level-load setup used by collision and foreground drawing.
+                argument = bytes(sub.mem_read(s['MCD_SubMainArgument'], 2))
+                sub.mem_write(s['MCD_SubMainArgument'],
+                              self.read('Camera_Min_Y_pos', 2).to_bytes(2, 'big'))
+                self.sub_call('MCD_SubTerrainInitLayout')
+                sub.mem_write(s['MCD_SubMainArgument'], argument)
         # Older ROMs remain usable as comparison baselines.
         legacy = ('S1_' if 'S1_ColArray1' in s and
                   self.read('Current_Zone') in (1, s['id_SMZ']) else '')
@@ -172,6 +180,17 @@ class Native:
                    18: 'MCD_SubArtFrame', 7: 'MCD_SubTerrainProbe', 8: 'MCD_SubTerrainProbe',
                    9: 'MCD_SubTerrainLayout', 10: 'MCD_SubTerrainLayout',
                    11: 'MCD_SubTerrainAir'}.get(kind, 'MCD_SubTerrainObject')
+        self.sub_call(routine, command)
+        result = sub.reg_read(UC_M68K_REG_D0) & 65535
+        sub.mem_write(s['MCD_SubOwnResult'], struct.pack('>H', result))
+        cpu.mem_write(0xA12020, bytes(sub.mem_read(0xFF8020, 0x10)))
+        cpu.mem_write(0xA1200F, bytes(sub.mem_read(0xFF800F, 1)))
+        cpu.reg_write(UC_M68K_REG_D0, result)
+        if kind in (5, 6, 12, 14, 15, 16, 17, 18):
+            cpu.mem_write(0x600000, bytes(sub.mem_read(0x80000, 0x40000)))
+
+    def sub_call(self, routine, command=0):
+        s, sub = self.s, self.sub
         stop, stack = 0x7FBF0, s['MCD_SubStack_Top'] - 4
         sub.mem_write(stack, struct.pack('>I', stop))
         sub.reg_write(UC_M68K_REG_SR, 0x2700)
@@ -180,13 +199,6 @@ class Native:
         sub.emu_start(s[routine], stop, count=300000)
         assert sub.reg_read(UC_M68K_REG_PC) == stop, routine
         assert sub.reg_read(UC_M68K_REG_A7) == stack + 4, routine
-        result = sub.reg_read(UC_M68K_REG_D0) & 65535
-        sub.mem_write(s['MCD_SubOwnResult'], struct.pack('>H', result))
-        cpu.mem_write(0xA12020, bytes(sub.mem_read(0xFF8020, 0x10)))
-        cpu.mem_write(0xA1200F, bytes(sub.mem_read(0xFF800F, 1)))
-        cpu.reg_write(UC_M68K_REG_D0, result)
-        if kind in (5, 6, 12, 14, 15, 16, 17, 18):
-            cpu.mem_write(0x600000, bytes(sub.mem_read(0x80000, 0x40000)))
 
     def placement_handle(self, index):
         return self.respawn_base + index

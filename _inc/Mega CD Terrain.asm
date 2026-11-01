@@ -18,6 +18,20 @@ MCD_SubTerrainLoad:
 		move.l	#MCD_TerrainIndex_Sub,(MCD_TerrainPath1_Sub).l
 		move.l	#MCD_TerrainIndex_Sub+1,(MCD_TerrainPath2_Sub).l
 		move.l	#MCD_TerrainIndex_Sub,(MCD_TerrainPath_Sub).l
+
+; Fold the upper row lookups onto the $800-pixel foreground in wrapping acts.
+; Both rendering and every collision sensor use these same resident offsets.
+; Ordinary acts retain all 32 authored rows; background dimensions stay separate.
+MCD_SubTerrainInitLayout:
+		tst.w	(MCD_SubMainArgument).l
+		bpl.s	.ready
+		lea	(MCD_TerrainLayout_Sub+PlaneLayout_FG).l,a0
+		lea	((Level_YWrapMask+1)/$80)*2(a0),a1
+		moveq	#PlaneLayout_Rows-(Level_YWrapMask+1)/$80-1,d0
+.wrap:
+		move.w	(a0)+,(a1)+
+		dbf	d0,.wrap
+.ready:
 		bsr.w	Plane_Invalidate
 		bset	#0,(MCD_SubMemoryMode).l
 		moveq	#0,d0

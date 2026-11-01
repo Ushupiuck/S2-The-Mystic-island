@@ -456,7 +456,10 @@ for the second build. Each emulator suite starts a fresh process because this
 core cannot reliably unload/reload a cartridge in one process.
 `check_swing_families.py` checks the same twelve profiles under the live core
 in GHZ/SMZ contexts, with both players and flashing immunity, plus actual
-momentary-switch press/release checks. It uses the current word encoding.
+momentary-switch press/release checks. It also checks direct underside/body
+hazards in both Debug modes for both actors, then uses real button entry,
+sixty frames of spikeball overlap in SMZ2 and exit-to-damage checks. It uses
+the current word encoding.
 
 The rail mapping generator `build_swing_rails.py` reuses each zone's existing
 platform/link mappings. Re-running it must reproduce the three checked-in rail
@@ -871,6 +874,29 @@ real oscillator updates to catch float-position/rate confusion and sign-wrap
 jumps. Re-running `build_ghz4_water_palette.py` must reproduce both palette files.
 GHZ4 reserves the normal water-surface bank; its lower camera limit allows the
 water to be reached before death. GHZ1-3 remain dry and keep their wall borrowing.
+
+## Terrain collision across the Y seam
+
+`check_y_wrap_terrain.py --rom ROM --listing LISTING --output OUTPUT` executes
+the real MD level-load request and CD terrain setup for HTZ2 and SMZ2 in all
+four eras. It checks chunk addresses, floor/wall distances and angles in both
+directions and collision paths, including negative Y and sensors past `$800`.
+The plane constructor's foreground tiles are compared with a wrapped world
+oracle, including live script edits through the seam. A separate 32-row
+non-wrapping fixture must retain terrain above `$800`.
+This uses the optional Unicorn package.
+
+Add `--core CORE --system-directory BIOS` to drop Sonic and following Tails
+onto SMZ2's actual starting-pit floor at two speeds, and to hit an authored
+ceiling while moving upward through the top seam. `--player 2` tests primary
+Tails instead; `--pal` selects PAL. Positioning is staged, while subsequent
+movement/contact uses ordinary game frames without terrain edits. `--probe`
+records an old ROM's failures without treating them as a pass.
+The same game pass enters all eight authored SMZ2 transporters, supplies the
+secret route's required rings and follows each path through release. Every
+frame's visible FG/BG tile words are compared against authored geometry using
+the VDP's actual scroll values. This includes both upward and downward camera
+seams. It saves stills and GIF captures of the two seam-crossing tunnel routes.
 
 ## Companion recovery and lost rings at the Y seam
 

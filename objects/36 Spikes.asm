@@ -139,6 +139,8 @@ Spike_Ceiling:
 		bra.s	Spike_Display
 ; ---------------------------------------------------------------------------
 Spike_HurtCharacter:
+		tst.w	(Debug_placement_mode).w
+		bne.s	.return
 		btst	#obStatusSecondary_isInvincible,obStatusSecondary(a1)
 		bne.s	.return
 		tst.w	flashtime(a1)		; Mystic Island uses a word, unlike S3&K's byte

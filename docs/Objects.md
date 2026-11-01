@@ -476,6 +476,10 @@ handle both players. Full-solid damage stays physical under stars or damage
 invulnerability, allowing standing while retaining normal solid-object crushing.
 Bottom damage uses `Spike_HurtCharacter` and its full-word flashing timer.
 Whole-body damage uses the actual collision box, outside the NPC touch table.
+`Spike_HurtCharacter` skips direct damage while either Debug mode is active,
+before changing position, shields, rings or hurt state. This also protects
+whole-body hazards such as the swinging spikeballs; normal damage resumes
+when Debug ends.
 Underside hanging and underside damage are separate profiles: a grip is not
 silently combined with spikes. Art does not change the collision contract;
 ordinary platforms keep their selected shape, including for hazards.

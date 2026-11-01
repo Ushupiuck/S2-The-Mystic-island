@@ -35,7 +35,7 @@ MCD_LoadTerrain:
 		jsr	(MCD_ReleaseWordRAM).l
 		jcs	MCD_Unavailable
 		moveq	#MCD_CommandTerrainLoad,d0
-		moveq	#0,d1
+		move.w	(Camera_Min_Y_pos).w,d1	; negative enables the foreground Y seam
 		jsr	(MCD_Command).l
 		jcs	MCD_Unavailable
 		move.b	#1,(MCD_TerrainReady).l

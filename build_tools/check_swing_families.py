@@ -80,6 +80,32 @@ def main():
                     record(f'damage-{zone}-{profile}-{who}-{immune}',
                            (g.get(who,'obRoutine')==4)==(profile>=10 and not immune))
 
+    # Direct spike/platform damage runs outside the NPC touch scan. Neither
+    # Debug placement nor frame cycling may mutate a character through it.
+    for profile in (2,5,10,11):
+        for who in ('v_player','v_player2'):
+            for debug_type in (1,2):
+                g.restore(base);isolate(g)
+                obj=spawn(g,'SwingingPtfm_ArtBall',250,950,(profile<<8)|0x26)
+                act('SwingingPtfm_ArtBall',obj)
+                body=g.get(obj,'swing_body',2)
+                other='v_player2' if who=='v_player' else 'v_player'
+                g.put(other,'code',0)
+                y=g.get(body,'obY',2)
+                if profile in (2,5):
+                    y+=g.get(body,'obHeight')+g.get(who,'default_y_radius')-3
+                place(g,who,g.get(body,'obX',2),y)
+                g.put(who,'obVelY',0xFF00 if profile in (2,5) else 0x100,2)
+                g.put(who,'obStatusSecondary',1)
+                g.put(obj,'obRender',0x84);g.put(body,'obRender',0x84)
+                g.write('Debug_placement_mode',debug_type,2)
+                fields=(('obX',4),('obY',4),('obVelX',2),('obVelY',2),
+                        ('obRoutine',1),('obStatusSecondary',1),('flashtime',2))
+                before=[g.get(who,f,n) for f,n in fields]
+                act('SwingingPtfm_Interact',obj)
+                record(f'debug-damage-{profile}-{who}-{debug_type}',
+                       [g.get(who,f,n) for f,n in fields]==before)
+
     for who in ('v_player', 'v_player2'):
         g.restore(base)  # resume whole frames only from the original boundary
         isolate(g)
@@ -103,6 +129,41 @@ def main():
         g.run(5)
         record('switch-release-' + who,
                g.get(obj, 'obFrame') == 0 and not g.read('f_switch') & 1)
+
+    # Whole frames cover real button entry, sustained overlap with a spiked
+    # ball in SMZ2, and immediate damage after leaving either Debug mode.
+    from check_debug_states import press_debug
+    g.write('v_gamemode',g.s['SegaScreen'],2);g.run()
+    boot_level(g,zone=8,act=1)
+    smz2=g.save()
+    for debug_type in (1,2):
+        g.restore(smz2);isolate(g)
+        g.put('v_player2','code',0)
+        g.write('Debug_mode_flag',1)
+        g.put('v_player','obStatusSecondary',1)
+        g.put('v_player','flashtime',0,2)
+        press_debug(g,debug_type)
+        x,y=g.get('v_player','obX',2),g.get('v_player','obY',2)
+        obj=spawn(g,'SwingingPtfm_ArtBall',x,y-104,0xA26)
+        g.run()
+        body=g.get(obj,'swing_body',2)
+        untouched=True
+        for _ in range(60):
+            g.put('v_player','obX',g.get(body,'obX',2),2)
+            g.put('v_player','obY',g.get(body,'obY',2),2)
+            g.run()
+            untouched &= (g.get('v_player','obRoutine')==2 and
+                          not g.get('v_player','flashtime',2) and
+                          bool(g.get('v_player','obStatusSecondary')&1))
+            assert not g.read('v_errortype')
+        record(f'debug-ball-frames-{debug_type}',untouched)
+        g.video.save(args.output/f'debug-ball-{debug_type}.png')
+        press_debug(g,0)
+        g.run(3)
+        record(f'debug-ball-exit-{debug_type}',
+               g.get('v_player','obRoutine')==4 and
+               bool(g.get('v_player','flashtime',2)) and
+               not g.get('v_player','obStatusSecondary')&1)
     g.close()
     report = dict(region='PAL' if args.pal else 'NTSC', rows=rows)
     (args.output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')

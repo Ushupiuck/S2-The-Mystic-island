@@ -47,6 +47,7 @@ class Drawing:
         self.stop, self.stack = 0x7FBF0, self.s['MCD_SubStack_Top']-4
         self.bytes = []
         self.samples = 0
+        self.wrap_foreground = False
 
     def put(self, name, value, size=2):
         self.cpu.mem_write(self.s[name], (value & ((1 << (size*8))-1)).to_bytes(size, 'big'))
@@ -70,6 +71,8 @@ class Drawing:
 
     def tile(self, plane, x, y):
         cx, cy = (x & 0x7FFF)//128, (y & 0xFFF)//128
+        if plane is self.fg and self.wrap_foreground:
+            cy = (y & self.s['Level_YWrapMask'])//128
         if plane is self.fg:
             chunk = plane[cy][cx] if cy < len(plane) and cx < len(plane[0]) else 0
         else:
