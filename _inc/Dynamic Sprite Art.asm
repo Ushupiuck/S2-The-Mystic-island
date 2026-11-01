@@ -4,7 +4,6 @@
 ; Level entry reloads all three sources; S1 stage entry needs only the ring.
 ; Other special-stage overlays may reclaim this RAM until the next level load.
 ; ---------------------------------------------------------------------------
-	if MegaCDMode1
 LoadPlayerEffectArt:
 		lea	(Nem_Shield_Dynamic).l,a0
 		lea	(Art_Shield).l,a4
@@ -20,7 +19,6 @@ LoadSpecialStageRingArt:
 		lea	(Nem_SpecialStageRings).l,a0
 		lea	(Art_Ring).l,a4
 		jmp	(NemDecToRAM).l
-	endif
 
 ; ---------------------------------------------------------------------------
 ; S3&K dynamic pattern loading: word count, then one packed word per run.

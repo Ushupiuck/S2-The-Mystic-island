@@ -46,7 +46,7 @@
 ;   space for both pieces (both pieces queued)
 ;
 ; Setting UseVIntSafeDMA to 1 adds 46(6/1) cycles to all times.
-; MegaCDMode1 adds 46 cycles per queued transfer (56 for Word RAM).
+; Mega-CD ownership tracking adds 46 cycles per queued transfer (56 for Word RAM).
 ;
 ; Setting AssumeSourceAddressInBytes to 0 reduces all times by 10(1/0) cycles,
 ; but only if the DMA is not entirely discarded. However, all callers must be
@@ -218,7 +218,7 @@ QueueStaticDMA macro src,length,dest
 	movea.w	(VDP_Command_Buffer_Slot).w,a1
 	cmpa.w	#VDP_Command_Buffer_Slot,a1
 	beq.s	.done												; Return if there's no more room in the buffer
-	if MegaCDMode1&(((src)&$E00000)==$600000)
+	if (((src)&$E00000)==$600000)
 		st.b	(MCD_dma_pending).w
 	endif
 	move.b	#(dmaLength(length)>>8)&$FF,DMAEntry.SizeH(a1)		; Write top byte of size/2
@@ -240,9 +240,7 @@ QueueStaticDMA macro src,length,dest
 ; ---------------------------------------------------------------------------
 ResetDMAQueue macro
 	move.w	#VDP_Command_Buffer,(VDP_Command_Buffer_Slot).w
-	if MegaCDMode1
 		clr.b	(MCD_dma_pending).w
-	endif
 	endm
 ; ===========================================================================
 
@@ -265,14 +263,12 @@ QueueDMATransfer:
 	if UseRAMSourceSafeDMA<>0
 		bclr.l	#23,d1										; Make sure bit 23 is clear (68k->VDP DMA flag)
 	endif	; UseRAMSourceSafeDMA
-	if MegaCDMode1
 		move.l	d1,d0
 		andi.l	#$700000,d0
 		cmpi.l	#$300000,d0
 		bne.s	.notWordRAM
 		st.b	(MCD_dma_pending).w
 .notWordRAM:
-	endif
 	movep.l	d1,DMAEntry.Source(a1)							; Write source address; the useless top byte will be overwritten later
 	moveq	#0,d0											; We need a zero on d0
 
@@ -360,10 +356,8 @@ QueueDMATransfer:
 ; sub_14AC: CopyToVRAM: IssueVDPCommands: Process_DMA:
 Process_DMA_Queue:
 ProcessDMAQueue:
-	if MegaCDMode1
 		tst.b	(MCD_dma_pending).w
 		bne.w	ProcessDMAQueue_WordRAM
-	endif
 	movea.w	(VDP_Command_Buffer_Slot).w,a1
 	jmp	.jump_table-VDP_Command_Buffer(a1)
 ; ---------------------------------------------------------------------------
@@ -421,7 +415,6 @@ InitDMAQueue:
 
 ; Keep the unrolled ordinary queue above. Only a queue containing Word RAM
 ; takes this path. Preserve the original contract: only a1/a5 are trashed.
-	if MegaCDMode1
 ProcessDMAQueue_WordRAM:
 	movem.l	d0-d3/a0/a2,-(sp)
 	lea	(vdp_control_port).l,a5
@@ -486,4 +479,3 @@ ProcessDMAQueue_WordRAM:
 	ResetDMAQueue
 	movem.l	(sp)+,d0-d3/a0/a2
 	rts
-	endif

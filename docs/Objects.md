@@ -3,8 +3,7 @@
 Placement constants live in `_definitions/s2.constants.asm`; shared execution
 and rendering live in `md-main.asm`. Mode 1 uses `_inc/Objects Manager.asm`
 for MD loading/application and `_inc/Mega CD Objects.asm` for CD placement
-selection and working state. The cartridge build uses `md-only/Objects Manager.asm`.
-See [Mega-CD](Mega-CD.md#cpu-work-and-ring-jobs) for CPU ownership. The loader
+selection and working state. See [Mega-CD](Mega-CD.md#cpu-work-and-ring-jobs) for CPU ownership. The loader
 is adapted from S3&K `Load_Sprites`, using skdisasm
 `73de97c6b55055bcb8089c1d55d006b02136f163`. `ObjectsManager` and `Load_Sprites`
 name the same entry. Execution continues after the primary character dies.
@@ -15,7 +14,7 @@ Each object status table (SST) is `$4E` bytes. The pool contains 23 reserved and
 90 dynamic slots, bounded by `v_objspace`/`v_objspace_end`; dynamic slots start
 at `v_lvlobjspace`. `TempArray_LayerDef` follows the pool in Mode 1; terrain blocks live
 in CD PRG RAM, with Word-RAM load staging named `v_16x16`. Absolute addresses
-depend on the selected RAM map; see [Mega-CD](Mega-CD.md#memory-and-ownership).
+depend on the packed RAM map; see [Mega-CD](Mega-CD.md#memory-and-ownership).
 Use `object_size` for pointer arithmetic;
 `object_size_bits` describes allocator buckets, not the actual slot stride.
 
@@ -208,16 +207,16 @@ without changing the scene. Neither overflow nor a full object pool drops hits.
 The two rectangle loops intentionally share the existing response handlers
 rather than adding a mode branch to every rejected candidate.
 
-`Collision_response_list` is allocated in previously free RAM: at `RAM_Start`
-for Mode 1 and immediately after `Main_RAM_End` for cartridge builds. Existing
-engine globals, backend storage and SST fields do not move. `Free_RAM_Start`
-now follows the new allocation. Mode 1 uses long addressing for the low-RAM
-queue. Scene entry clears its count before either player can consume old data.
+`Collision_response_list` is allocated at `RAM_Start` in previously free MD
+RAM. Existing engine globals, CD staging buffers and SST fields do not move.
+`Free_RAM_Start` follows this allocation. Queue accesses use long addressing.
+Scene entry clears its count before either player can consume old data.
 Capacity and probe interval are named constants in `s2.constants.asm`.
 
 The list is a workload tradeoff, not a claim that every scene costs less.
-Queue construction is included in the [CPU comparison](Testing.md#touch-response-checks);
-sparse scenes save work, while dense scans retain a small guard/probe overhead.
+The [touch-response checks](Testing.md#touch-response-checks) cover registration
+and dense re-probes. Performance measurements must include queue construction
+and both player passes, including dense-scene guard/probe overhead.
 
 ## Signpost
 

@@ -465,11 +465,9 @@ dma68kToVDP macro source,dest,length,type
 dma68kToVDPChunk macro source,dest,length,type
 	lea	(vdp_control_port).l,a5
 	set .cdwordram,0
-	ifdef MegaCDMode1
-		if MegaCDMode1&(((source)&$E00000)==$600000)
+		if (((source)&$E00000)==$600000)
 			set .cdwordram,1
 		endif
-	endif
 	if (.cdwordram==0)|((length)>2)
 		move.l	#(($9400|((((length)>>1)&$FF00)>>8))<<16)|($9300|(((length)>>1)&$FF)),(a5)
 		move.l	#(($9600|(((((source)>>1)+.cdwordram)&$FF00)>>8))<<16)|($9500|((((source)>>1)+.cdwordram)&$FF)),(a5)
@@ -502,15 +500,9 @@ ObjectLayoutFile macro filename
 	if ((.end-.start)&(omSize-1))<>0
 		fatal "Object layout is not a whole number of placement records"
 	endif
-	if MegaCDMode1
 		if (.end-.start)/omSize-1>MCD_ObjectPlacementCount
 			fatal "Object layout exceeds Mode 1 placement-state capacity"
 		endif
-	else
-		if (.end-.start)/omSize-1>MD_ObjectPlacementCount
-			fatal "Object layout exceeds cartridge placement-state capacity"
-		endif
-	endif
 	endm
 
 ; macro to move the absolute value of the source in the destination

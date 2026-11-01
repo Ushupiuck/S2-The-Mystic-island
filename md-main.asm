@@ -9,7 +9,6 @@ BackupSRAM		= 1
 AddressSRAM		= 3	; 0 = odd+even; 2 = even only; 3 = odd only
 TimeTravel		= 1	; if 1, allows time-travel mechanics (W.I.P)
 
-MegaCDMode1		= 1	; cartridge boot; CD PRG RAM holds chunks
 
 	CPU 68000
 	include	"_definitions/s2.macrosetup.asm"
@@ -49,11 +48,7 @@ Vectors:
 		dc.b "SONIC THE HEDGEHOG: EGGMAN ATTACKS              " ; International name
 		dc.b "GM 00004049-01"			; Version (leftover from Sonic 1)
 Checksum:	dc.w $0000				; Checksum (patched later if incorrect)
-	if MegaCDMode1
 		dc.b "JC              "	; joypad and Mega-CD cartridge support
-	else
-		dc.b "J               "
-	endif			; I/O support
 		dc.l StartOfRom				; Start address of ROM
 ROMEndLoc:	dc.l EndOfRom-1				; End address of ROM
 		dc.l v_start&$FFFFFF			; Start address of RAM
@@ -239,10 +234,8 @@ GameProgram:
 
 		bsr.w	InitDMAQueue
 		bsr.w	VDPSetupGame
-	if MegaCDMode1
 		jsr	(MCD_Init).l
 		jsr	(MCD_RequireProgramRAM).l
-	endif
 		; Load the Sound Driver
 		stopZ80
 		resetZ80
@@ -263,9 +256,7 @@ GameProgram:
 		move.w	#SegaScreen,(v_gamemode).w	; Set the gamemode to SEGA screen
 
 MainGameLoop:
-	if MegaCDMode1
 		jsr	(MCD_StopTerrain).l
-	endif
 		movea.w	(v_gamemode).w,a0	; jump to apt location in ROM
 		jsr	(a0)
 		bra.s	MainGameLoop	; loop indefinitely
@@ -274,12 +265,10 @@ MainGameLoop:
 
 V_Int:
 		movem.l	d0-a6,-(sp)		; save all registers
-	if MegaCDMode1
 		tst.b	(MCD_TerrainReady).l
 		bne.s	.cdRunning
 		jsr	(MCD_RequireProgramRAM).l
 .cdRunning:
-	endif
 		lea	(vdp_data_port).l,a6
 		lea	vdp_control_port-vdp_data_port(a6),a5
 		tst.b	(v_vbla_counter).w
@@ -300,9 +289,6 @@ V_Int:
 		jsr	(a0)
 
 VintRet:
-	if MegaCDMode1=0
-		bsr.w	Set_Kos_Bookmark	; resumable cartridge decompression owns this IRQ hook
-	endif
 		addq.l	#1,(Vint_runcount).w
 		movem.l	(sp)+,d0-a6
 		rte
@@ -350,9 +336,6 @@ VInt_0_FullyUnderwater:
 VInt_0_Water_Cont:
 		move.w	(v_hbla_hreg).w,(a5)
 		startZ80	; rather than always branching to "VintRet",
-	if MegaCDMode1=0
-		bsr.w	Set_Kos_Bookmark
-	endif
 		addq.l	#1,(Vint_runcount).w	; we'll optimize by copying it here.
 		movem.l	(sp)+,d0-a6
 		rte
@@ -415,9 +398,6 @@ Vint_Level:
 		writeVRAM	Sprite_Table,vram_sprites
 		bsr.w	ProcessDMAQueue
 		startZ80
-	if MegaCDMode1=0
-		jsr	(MD_SaveTileState).l
-	endif
 		enable_ints
 		tst.b	(Water_flag).w
 		beq.s	Do_Updates
@@ -506,9 +486,6 @@ Vint_TitleCard:
 		writeVRAM	Sprite_Table,vram_sprites
 		bsr.w	ProcessDMAQueue
 		startZ80
-	if MegaCDMode1=0
-		jsr	(MD_SaveTileState).l
-	endif
 		jsr	(LoadTilesAsYouMove).l
 	;	jsr	(LoadTilesAsYouMove).l
 		jsr	(HudUpdate).l
@@ -959,7 +936,6 @@ RunPLC_KosModule:
 		bsr.w	ProcessDPLC_Pop
 		bra.w	RunPLC_RAM
 
-	if MegaCDMode1
 ClearPLC:
 		clr.w	(MCD_PLCPrepared).l
 		lea	(v_plc_buffer).w,a2
@@ -1030,9 +1006,6 @@ ProcessDPLC_Done:
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 
-	else
-		include "md-only/Pattern Load Cues.asm"
-	endif
 
 QuickPLC:
 		move.w	(a1)+,d1
@@ -1054,11 +1027,7 @@ QuickPLC:
 
 KosPlusArt_To_VDP:
 		movea.l	a1,a3		; a1 will be changed by KosPlusDec, so we're backing it up to a3
-	if MegaCDMode1
 		bsr.s	KosPlusDec
-	else
-		bsr.w	KosPlusDec
-	endif
 		move.l	a3,d1		; move the backed-up a1 to d1
 		andi.l	#$FFFFFF,d1	; d1 will be used in the DMA transfer as the Source Address
 		move.l	a1,d3		; move end address of decompressed art to d3
@@ -1070,17 +1039,9 @@ KosPlusArt_To_VDP:
 		movea.l	a3,a1		; restore a1
 		rts
 ; ===========================================================================
-	if MegaCDMode1
 		include "_inc/Mega CD Decompression Jobs.asm"
-	else
-		include "md-only/Nemesis Decompression.asm"
-		include "md-only/KosinskiPlus.asm"
-		include "md-only/Enigma Decompression.asm"
-	endif
 		include "_inc/DMA Queue.asm"
-	if MegaCDMode1
 		include "_inc/Mega CD.asm"
-	endif
 ; ===========================================================================
 
 ; ---------------------------------------------------------------------------
@@ -1130,11 +1091,7 @@ QuickKosPLC:
 ; ---------------------------------------------------------------------------
 
 ; ===========================================================================
-	if MegaCDMode1
 		include "_inc/KosinkiPlus_Moduled.asm"
-	else
-		include "md-only/KosinskiPlus Modules.asm"
-	endif
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -1715,7 +1672,6 @@ Pal_WZCyc:	binclude "palette/WZ Cycle.bin"
 
 ; DelayProgram:
 WaitForVint:
-	if MegaCDMode1
 		movem.l	d0-d3/a1,-(sp)	; callers retain loop counters across the wait
 		tst.b	(MCD_dma_pending).w
 		bne.s	.dmaOwnsWordRAM
@@ -1727,7 +1683,6 @@ WaitForVint:
 		disable_ints
 		; Active terrain leaves PRG RAM on CD throughout the frame.
 		move.b	#1,(MCD_SubControl+1).l
-	endif
 		lea	(v_vbla_counter).w,a0
 		move.b	#1,(a0)
 		enable_ints
@@ -2307,9 +2262,7 @@ Demo:		tst.w	(f_demo).w		; are we on an ending demo?
 		bsr.w	PlaySound_Special
 
 Level_NoMusicFade:
-	if MegaCDMode1
 		jsr	(MCD_StopTerrain).l
-	endif
 		bsr.w	Pal_FadeToBlack
 		bsr.w	ResetMusicTempo
 		bsr.w	ClearPLC
@@ -2390,18 +2343,14 @@ Level_TtlCardLoop:
 Level_SkipTtlCard:
 		moveq	#palid_SonicTails,d0
 		bsr.w	PalLoad1
-	if MegaCDMode1
 		jsr	(LoadPlayerEffectArt).l	; rebuild RAM sources after any scene overlay
-	endif
 		bsr.w	InitRingFrame
 		bsr.w	LevelSizeLoad
 		bsr.w	DeformBGLayer
 		bset	#2,(Scroll_flags).w
 		bsr.w	LoadZone
 		bsr.w	LoadCollisionIndexes
-	if MegaCDMode1
 		jsr	(MCD_LoadTerrain).l
-	endif
 		jsr	(LoadTilesFromStart).l
 		bsr.w	WaterEffects
 		move.l	#Obj01,(v_player).w
@@ -2563,10 +2512,8 @@ Level_SkipScroll:
 		bsr.w	OscillateNumDo
 		bsr.w	ChangeRingFrame
 		bsr.w	SignpostArtLoad
-	if MegaCDMode1
 		jsr	(MCD_FinishRingJob).l
 		jsr	(MCD_BeginTerrainJob).l
-	endif
 		jsr	(Render_Sprites).l
 		jsr	(ObjectsManager).l
 		cmpi.w	#Demo,(v_gamemode).w
@@ -3218,29 +3165,17 @@ LoadZone:
 		move.l	(a2)+,d0
 		andi.l	#$FFFFFF,d0	; pointer to block mappings
 		movea.l	d0,a0
-	if MegaCDMode1
 		lea	(MCD_TerrainBlocks_Sub).l,a1
 		jsr	(MCD_KosToCD).l	; load block maps
-	else
-		lea	(v_16x16).l,a1
-		bsr.w	KosPlusDec
-	endif
-	if MegaCDMode1
 		move.l	a1,d0
 		subi.l	#MCD_TerrainBlocks_Sub,d0
 		lsr.w	#2,d0		; two collision-index bytes per eight-byte block
 		move.w	d0,(MCD_TerrainIndexBytes).l
-	endif
 		move.l	(a2),d0
 		andi.l	#$FFFFFF,d0	; pointer to chunk mappings
 		movea.l	d0,a0
-	if MegaCDMode1
 		lea	(MCD_ChunkTable_SubStart).l,a1
 		jsr	(MCD_KosToCD).l
-	else
-		lea	(Chunk_Table).l,a1
-		bsr.w	KosPlusDec
-	endif
 		bsr.s	LevelLayoutLoad	; also preserves a2 (palette+chunks)
 		moveq	#0,d0
 		move.b	-4(a2),d0	; PLC2 ID
@@ -3270,13 +3205,8 @@ LevelLayoutLoad:
 		movea.l	LevelLayout_TimezoneTable(pc,d1.w),a0
 		move.w	(a0,d0.w),d0
 		adda.l	d0,a0
-	if MegaCDMode1
 		lea	(MCD_TerrainLayout_Sub).l,a1
 		jmp	(MCD_KosToCD).l
-	else
-		lea	(v_lvllayout).l,a1
-		jmp	(KosPlusDec).l
-	endif
 
 ; End of function LevelLayoutLoad
 
@@ -3415,9 +3345,7 @@ BonusStage:
 		bsr.w	WaitForVint
 		tst.l	(Kos_module_queue).w
 		bne.s	.load_background_art
-	if MegaCDMode1
 		jsr	(LoadSpecialStageRingArt).l	; unchanged rotating-stage palette
-	endif
 		bsr.w	InitRingFrame
 		sf	(f_wtr_state).w
 		clr.w	(Level_Inactive_flag).w
@@ -4387,10 +4315,6 @@ Map_SS_Bump:	binclude	"mappings/sprite/S1/SS Bumper.bin"
 		include	"objects/Bonus & Special Stages/04 Player in Bonus Stage.asm"
 ; ---------------------------------------------------------------------------
 LevelSizeLoad:
-	if MegaCDMode1=0
-		clr.l	(Scroll_flags_copy).w
-		clr.l	(Scroll_flags_BG2_copy).w
-	endif
 		clr.w	(Scroll_flags).w
 		clr.w	(Scroll_flags_BG).w
 		clr.w	(Scroll_flags_BG2).w
@@ -4638,7 +4562,6 @@ BgScrollSpeed:
 		move.w	d1,(Camera_BG3_X_pos).w
 
 .skip:
-	if	MegaCDMode1
 		movem.w	d0-d1,-(sp)
 		bsr.w	GetLevelPlaneRecord
 		movea.l	(a2),a0
@@ -4648,35 +4571,9 @@ BgScrollSpeed:
 		movea.l	4(a2),a0
 		movem.w	(sp)+,d0-d1
 		jmp	(a0)
-	else
-		moveq	#0,d2
-		move.b	(Current_Zone).w,d2
-		add.w	d2,d2
-		move.w	BgScroll_Index(pc,d2.w),d2
-		jmp	BgScroll_Index(pc,d2.w)
-	endif
 ; End of function BgScrollSpeed
 
 ; ---------------------------------------------------------------------------
-	if	MegaCDMode1=0
-BgScroll_Index:
-		dc.w BgScroll_GHZ-BgScroll_Index
-		dc.w BgScroll_LZ-BgScroll_Index
-		dc.w BgScroll_CPZ-BgScroll_Index
-		dc.w BgScroll_EHZ-BgScroll_Index
-		dc.w BgScroll_HPZ-BgScroll_Index
-		dc.w BgScroll_EHZ-BgScroll_Index
-		dc.w BgScroll_GHZ-BgScroll_Index
-		dc.w BgScroll_GHZ-BgScroll_Index
-		dc.w BgScroll_SMZ-BgScroll_Index
-		dc.w BgScroll_GHZ-BgScroll_Index
-		dc.w BgScroll_GHZ-BgScroll_Index
-		dc.w BgScroll_GHZ-BgScroll_Index
-		dc.w BgScroll_GHZ-BgScroll_Index
-		dc.w BgScroll_GHZ-BgScroll_Index
-		dc.w BgScroll_GHZ-BgScroll_Index
-		dc.w BgScroll_GHZ-BgScroll_Index
-	endif
 ; ---------------------------------------------------------------------------
 
 BgScroll_SMZ:
@@ -4901,61 +4798,10 @@ BgScroll_S1Ending:
 
 ; DeformLayers:
 DeformBGLayer:
-	if	MegaCDMode1
 		jmp	LevelPlane_Events
-	else
-		tst.b	(Deform_lock).w
-		bne.s	-
-		clr.w	(Scroll_flags).w
-		clr.w	(Scroll_flags_BG).w
-		clr.w	(Scroll_flags_BG2).w
-		clr.w	(Scroll_flags_BG3).w
-		clr.w	(Camera_X_pos_diff).w
-		clr.w	(Camera_Y_pos_diff).w
-		lea	(v_player).w,a0
-		lea	(Camera_RAM).w,a1
-		lea	(Horiz_block_crossed_flag).w,a2
-		lea	(Scroll_flags).w,a3
-		lea	(Camera_X_pos_diff).w,a4
-		lea	(Horiz_scroll_delay_val).w,a5
-		lea	(Sonic_Pos_Record_Buf).w,a6
-		bsr.w	ScrollHorizontal
-		lea	(Camera_Y_pos).w,a1
-		lea	(Verti_block_crossed_flag).w,a2
-		lea	(Camera_Y_pos_diff).w,a4
-		bsr.w	ScrollVertical
-		bsr.w	DynScreenResizeLoad
-		move.w	(Camera_Y_pos).w,(v_scrposy_vdp).w
-		move.w	(Camera_BG_Y_pos).w,(v_bgscrposy_vdp).w
-		move.l	(Camera_X_pos).w,(Camera_X_pos_copy).w
-		move.l	(Camera_Y_pos).w,(Camera_Y_pos_copy).w
-		moveq	#0,d0
-		move.b	(Current_Zone).w,d0
-		add.w	d0,d0
-		move.w	Deform_Index(pc,d0.w),d0
-		jmp	Deform_Index(pc,d0.w)
-	endif
 ; End of function DeformBGLayer
 
 ; ---------------------------------------------------------------------------
-	if	MegaCDMode1=0
-Deform_Index:	dc.w Deform_GHZ-Deform_Index
-		dc.w Deform_LZ-Deform_Index
-		dc.w Deform_CPZ-Deform_Index
-		dc.w Deform_EHZ-Deform_Index
-		dc.w Deform_HPZ-Deform_Index
-		dc.w Deform_HTZ-Deform_Index
-		dc.w Deform_GHZ-Deform_Index
-		dc.w Deform_GHZ-Deform_Index
-		dc.w Deform_SMZ-Deform_Index
-		dc.w Deform_GHZ-Deform_Index
-		dc.w Deform_GHZ-Deform_Index
-		dc.w Deform_GHZ-Deform_Index
-		dc.w Deform_GHZ-Deform_Index
-		dc.w Deform_GHZ-Deform_Index
-		dc.w Deform_GHZ-Deform_Index
-		dc.w Deform_GHZ-Deform_Index
-	endif
 ; ---------------------------------------------------------------------------
 
 Deform_GHZ:
@@ -6086,11 +5932,7 @@ loc_6818:
 ; =============== S U B R O U T I N E =======================================
 
 
-	if MegaCDMode1
 		include "_inc/Level Plane Events.asm"
-	else
-		include "md-only/Tile Streaming.asm"
-	endif
 
 DynScreenResizeLoad:
 		moveq	#0,d0
@@ -8249,28 +8091,7 @@ loc_D8AE:
 ; ===========================================================================
 ; RPL_Next:
 RingsManager_Main:
-	if MegaCDMode1
 		jsr	(MCD_BeginRingJob).l
-	else
-		lea	(Ring_Positions).w,a1
-		move.w	#bytesToXcnt(Ring_Positions_Active_End-Ring_Positions,6),d1	; exclude the sentinel
-
-loc_D8CC:
-		move.b	(a1),d0				; is there a ring in this slot?
-		beq.s	loc_D8EA			; if not, branch
-		bmi.s	loc_D8EA
-		subq.b	#1,(a1)				; decrement timer
-		bne.s	loc_D8EA			; if it's not 0 yet, branch
-		move.b	#6,(a1)				; reset timer
-		addq.b	#1,1(a1)			; increment frame
-		cmpi.b	#5,1(a1)			; is it destruction time yet?
-		bne.s	loc_D8EA			; if not, branch
-		move.w	#-1,(a1)			; destroy ring
-
-loc_D8EA:
-		lea	6(a1),a1
-		dbf	d1,loc_D8CC
-	endif
 
 		; update ring start and end addresses
 		movea.w	(Ring_start_addr).w,a1
@@ -8398,9 +8219,7 @@ loc_DA1E:
 
 loc_DA24:
 		move.w	#$601,(a1)
-	if MegaCDMode1
 		jsr	(MCD_RecordRingCollection).l
-	endif
 		jsr	(CollectRing).l
 
 loc_DA2C:
@@ -8424,9 +8243,7 @@ locret_DA36:
 
 ; RingsManager2:
 RingsManager_Setup:
-	if MegaCDMode1
 		jsr	(MCD_ResetRingAnimations).l
-	endif
 		clearRAM Ring_Positions, Ring_Positions_End
 		moveq	#0,d0
 		move.w	(Current_ZoneAndAct).w,d0
@@ -8505,11 +8322,7 @@ loc_DBF2:
 MapUnc_Rings:	include	"mappings/sprite/Ring.asm"
 
 ; ===========================================================================
-	if MegaCDMode1
 		include	"_inc/Objects Manager.asm"
-	else
-		include	"md-only/Objects Manager.asm"
-	endif
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -9471,11 +9284,7 @@ loc_12310:
 
 ; =============== S U B R O U T I N E =======================================
 
-	if MegaCDMode1
 		include "_inc/Mega CD Terrain Jobs.asm"
-	else
-		include "md-only/Terrain Collision.asm"
-	endif
 
 		include	"objects/S1/1F LZ Conveyor.asm"
 		include	"objects/47 Bumper.asm"
@@ -13783,17 +13592,10 @@ Art_LConWheels:	binclude "art/uncompressed/LZ conveyor wheels.unc"
 Art_LConWheels_End:
 Art_Points:		binclude	"art/uncompressed/Points.unc"
 Art_Points_End:
-	if MegaCDMode1
 Nem_Shield_Dynamic:	binclude "art/nemesis/Shield Dynamic.nem"
 		even
 Nem_Invincibility:	binclude "art/nemesis/Invincibility.nem"
 		even
-	else
-Art_Shield:		binclude "art/uncompressed/Shield.unc"
-Art_Shield_End:
-Art_Invincibility:	binclude "art/uncompressed/Invincibility.unc"
-Art_Invincibility_End:
-	endif
 		if (Art_Invincibility_End-Art_Invincibility)>((VRAM_Sprite_Attribute_Table/tile_size-ArtTile_Invincibility)*tile_size)
 			fatal "Invincibility art exceeds the primary effect bank."
 		endif
@@ -13803,13 +13605,8 @@ Art_CardFont_End:
 Art_Signpost:	binclude	"art/uncompressed/Signpost.unc"
 		binclude	"art/uncompressed/Signpost extra.unc"
 Art_Signpost_End:
-	if MegaCDMode1
 Nem_Ring:	binclude	"art/nemesis/Ring.nem"
 		even
-	else
-Art_Ring:	binclude	"art/uncompressed/Ring.bin"
-Art_Ring_End:
-	endif
 Art_BigRing:	binclude	"art/uncompressed/Giant Ring.bin"
 Art_BigFlash:	binclude	"art/uncompressed/Giant Ring Flash.bin"
 ; ---------------------------------------------------------------------------
@@ -14590,467 +14387,211 @@ Level_Index:
 		dc.w Level_LV0F4-Level_Index
 
 Level_GHZ1:
-	if	MegaCDMode1
 		binclude "level/layout/GHZ_1.kosp"
-	else
-		binclude "md-only/layout/GHZ_1.kosp"
-	endif
 		even
 Level_GHZ2:
-	if	MegaCDMode1
 		binclude "level/layout/GHZ_2.kosp"
-	else
-		binclude "md-only/layout/GHZ_2.kosp"
-	endif
 		even
 Level_GHZ3:
-	if	MegaCDMode1
 		binclude "level/layout/GHZ_3.kosp"
-	else
-		binclude "md-only/layout/GHZ_3.kosp"
-	endif
 		even
 Level_GHZ4:
-	if	MegaCDMode1
 		binclude "level/layout/GHZ_4.kosp"
-	else
-		binclude "md-only/layout/GHZ_4.kosp"
-	endif
 		even
 
 Level_LZ1:
-	if	MegaCDMode1
 		binclude "level/layout/LZ_1.kosp"
-	else
-		binclude "md-only/layout/LZ_1.kosp"
-	endif
 		even
 Level_LZ2:
-	if	MegaCDMode1
 		binclude "level/layout/LZ_2.kosp"
-	else
-		binclude "md-only/layout/LZ_2.kosp"
-	endif
 		even
 Level_LZ3:
-	if	MegaCDMode1
 		binclude "level/layout/LZ_3.kosp"
-	else
-		binclude "md-only/layout/LZ_3.kosp"
-	endif
 		even
 Level_LZ4:
-	if	MegaCDMode1
 		binclude "level/layout/LZ_4.kosp"
-	else
-		binclude "md-only/layout/LZ_4.kosp"
-	endif
 		even
 
 Level_CPZ1:
-	if	MegaCDMode1
 		binclude "level/layout/CPZ_1.kosp"
-	else
-		binclude "md-only/layout/CPZ_1.kosp"
-	endif
 		even
 Level_CPZ2:
-	if	MegaCDMode1
 		binclude "level/layout/CPZ_2.kosp"
-	else
-		binclude "md-only/layout/CPZ_2.kosp"
-	endif
 		even
 Level_CPZ3:
-	if	MegaCDMode1
 		binclude "level/layout/CPZ_3.kosp"
-	else
-		binclude "md-only/layout/CPZ_3.kosp"
-	endif
 		even
 Level_CPZ4:
-	if	MegaCDMode1
 		binclude "level/layout/CPZ_4.kosp"
-	else
-		binclude "md-only/layout/CPZ_4.kosp"
-	endif
 		even
 
 Level_EHZ1:
-	if	MegaCDMode1
 		binclude "level/layout/EHZ_1.kosp"
-	else
-		binclude "md-only/layout/EHZ_1.kosp"
-	endif
 		even
 Level_EHZ2:
-	if	MegaCDMode1
 		binclude "level/layout/EHZ_2.kosp"
-	else
-		binclude "md-only/layout/EHZ_2.kosp"
-	endif
 		even
 Level_EHZ3:
-	if	MegaCDMode1
 		binclude "level/layout/EHZ_3.kosp"
-	else
-		binclude "md-only/layout/EHZ_3.kosp"
-	endif
 		even
 Level_EHZ4:
-	if	MegaCDMode1
 		binclude "level/layout/EHZ_4.kosp"
-	else
-		binclude "md-only/layout/EHZ_4.kosp"
-	endif
 		even
 
 Level_HPZ1:
-	if	MegaCDMode1
 		binclude "level/layout/HPZ_1.kosp"
-	else
-		binclude "md-only/layout/HPZ_1.kosp"
-	endif
 		even
 Level_HPZ2:
-	if	MegaCDMode1
 		binclude "level/layout/HPZ_2.kosp"
-	else
-		binclude "md-only/layout/HPZ_2.kosp"
-	endif
 		even
 Level_HPZ3:
-	if	MegaCDMode1
 		binclude "level/layout/HPZ_3.kosp"
-	else
-		binclude "md-only/layout/HPZ_3.kosp"
-	endif
 		even
 Level_HPZ4:
-	if	MegaCDMode1
 		binclude "level/layout/HPZ_4.kosp"
-	else
-		binclude "md-only/layout/HPZ_4.kosp"
-	endif
 		even
 
 Level_HTZ1:
-	if	MegaCDMode1
 		binclude "level/layout/HTZ_1.kosp"
-	else
-		binclude "md-only/layout/HTZ_1.kosp"
-	endif
 		even
 Level_HTZ2:
-	if	MegaCDMode1
 		binclude "level/layout/HTZ_2.kosp"
-	else
-		binclude "md-only/layout/HTZ_2.kosp"
-	endif
 		even
 Level_HTZ3:
-	if	MegaCDMode1
 		binclude "level/layout/HTZ_3.kosp"
-	else
-		binclude "md-only/layout/HTZ_3.kosp"
-	endif
 		even
 Level_HTZ4:
-	if	MegaCDMode1
 		binclude "level/layout/HTZ_4.kosp"
-	else
-		binclude "md-only/layout/HTZ_4.kosp"
-	endif
 		even
 
 Level_MTZ1:
-	if	MegaCDMode1
 		binclude "level/layout/MTZ_1.kosp"
-	else
-		binclude "md-only/layout/MTZ_1.kosp"
-	endif
 		even
 Level_MTZ2:
-	if	MegaCDMode1
 		binclude "level/layout/MTZ_2.kosp"
-	else
-		binclude "md-only/layout/MTZ_2.kosp"
-	endif
 		even
 Level_MTZ3:
-	if	MegaCDMode1
 		binclude "level/layout/MTZ_3.kosp"
-	else
-		binclude "md-only/layout/MTZ_3.kosp"
-	endif
 		even
 Level_MTZ4:
-	if	MegaCDMode1
 		binclude "level/layout/MTZ_4.kosp"
-	else
-		binclude "md-only/layout/MTZ_4.kosp"
-	endif
 		even
 
 Level_LV071:
-	if	MegaCDMode1
 		binclude "level/layout/LV07_1.kosp"
-	else
-		binclude "md-only/layout/LV07_1.kosp"
-	endif
 		even
 Level_LV072:
-	if	MegaCDMode1
 		binclude "level/layout/LV07_2.kosp"
-	else
-		binclude "md-only/layout/LV07_2.kosp"
-	endif
 		even
 Level_LV073:
-	if	MegaCDMode1
 		binclude "level/layout/LV07_3.kosp"
-	else
-		binclude "md-only/layout/LV07_3.kosp"
-	endif
 		even
 Level_LV074:
-	if	MegaCDMode1
 		binclude "level/layout/LV07_4.kosp"
-	else
-		binclude "md-only/layout/LV07_4.kosp"
-	endif
 		even
 
 Level_SMZ1:
-	if	MegaCDMode1
 		binclude "level/layout/SMZ_1.kosp"
-	else
-		binclude "md-only/layout/SMZ_1.kosp"
-	endif
 		even
 Level_SMZ2:
-	if	MegaCDMode1
 		binclude "level/layout/SMZ_2.kosp"
-	else
-		binclude "md-only/layout/SMZ_2.kosp"
-	endif
 		even
 Level_SMZ3:
-	if	MegaCDMode1
 		binclude "level/layout/SMZ_3.kosp"
-	else
-		binclude "md-only/layout/SMZ_3.kosp"
-	endif
 		even
 Level_SMZ4:
-	if	MegaCDMode1
 		binclude "level/layout/SMZ_4.kosp"
-	else
-		binclude "md-only/layout/SMZ_4.kosp"
-	endif
 		even
 
 Level_LV091:
-	if	MegaCDMode1
 		binclude "level/layout/LV09_1.kosp"
-	else
-		binclude "md-only/layout/LV09_1.kosp"
-	endif
 		even
 Level_LV092:
-	if	MegaCDMode1
 		binclude "level/layout/LV09_2.kosp"
-	else
-		binclude "md-only/layout/LV09_2.kosp"
-	endif
 		even
 Level_LV093:
-	if	MegaCDMode1
 		binclude "level/layout/LV09_3.kosp"
-	else
-		binclude "md-only/layout/LV09_3.kosp"
-	endif
 		even
 Level_LV094:
-	if	MegaCDMode1
 		binclude "level/layout/LV09_4.kosp"
-	else
-		binclude "md-only/layout/LV09_4.kosp"
-	endif
 		even
 
 Level_LV0A1:
-	if	MegaCDMode1
 		binclude "level/layout/LV0A_1.kosp"
-	else
-		binclude "md-only/layout/LV0A_1.kosp"
-	endif
 		even
 Level_LV0A2:
-	if	MegaCDMode1
 		binclude "level/layout/LV0A_2.kosp"
-	else
-		binclude "md-only/layout/LV0A_2.kosp"
-	endif
 		even
 Level_LV0A3:
-	if	MegaCDMode1
 		binclude "level/layout/LV0A_3.kosp"
-	else
-		binclude "md-only/layout/LV0A_3.kosp"
-	endif
 		even
 Level_LV0A4:
-	if	MegaCDMode1
 		binclude "level/layout/LV0A_4.kosp"
-	else
-		binclude "md-only/layout/LV0A_4.kosp"
-	endif
 		even
 
 Level_LV0B1:
-	if	MegaCDMode1
 		binclude "level/layout/LV0B_1.kosp"
-	else
-		binclude "md-only/layout/LV0B_1.kosp"
-	endif
 		even
 Level_LV0B2:
-	if	MegaCDMode1
 		binclude "level/layout/LV0B_2.kosp"
-	else
-		binclude "md-only/layout/LV0B_2.kosp"
-	endif
 		even
 Level_LV0B3:
-	if	MegaCDMode1
 		binclude "level/layout/LV0B_3.kosp"
-	else
-		binclude "md-only/layout/LV0B_3.kosp"
-	endif
 		even
 Level_LV0B4:
-	if	MegaCDMode1
 		binclude "level/layout/LV0B_4.kosp"
-	else
-		binclude "md-only/layout/LV0B_4.kosp"
-	endif
 		even
 
 Level_LV0C1:
-	if	MegaCDMode1
 		binclude "level/layout/LV0C_1.kosp"
-	else
-		binclude "md-only/layout/LV0C_1.kosp"
-	endif
 		even
 Level_LV0C2:
-	if	MegaCDMode1
 		binclude "level/layout/LV0C_2.kosp"
-	else
-		binclude "md-only/layout/LV0C_2.kosp"
-	endif
 		even
 Level_LV0C3:
-	if	MegaCDMode1
 		binclude "level/layout/LV0C_3.kosp"
-	else
-		binclude "md-only/layout/LV0C_3.kosp"
-	endif
 		even
 Level_LV0C4:
-	if	MegaCDMode1
 		binclude "level/layout/LV0C_4.kosp"
-	else
-		binclude "md-only/layout/LV0C_4.kosp"
-	endif
 		even
 
 Level_LV0D1:
-	if	MegaCDMode1
 		binclude "level/layout/LV0D_1.kosp"
-	else
-		binclude "md-only/layout/LV0D_1.kosp"
-	endif
 		even
 Level_LV0D2:
-	if	MegaCDMode1
 		binclude "level/layout/LV0D_2.kosp"
-	else
-		binclude "md-only/layout/LV0D_2.kosp"
-	endif
 		even
 Level_LV0D3:
-	if	MegaCDMode1
 		binclude "level/layout/LV0D_3.kosp"
-	else
-		binclude "md-only/layout/LV0D_3.kosp"
-	endif
 		even
 Level_LV0D4:
-	if	MegaCDMode1
 		binclude "level/layout/LV0D_4.kosp"
-	else
-		binclude "md-only/layout/LV0D_4.kosp"
-	endif
 		even
 
 Level_LV0E1:
-	if	MegaCDMode1
 		binclude "level/layout/LV0E_1.kosp"
-	else
-		binclude "md-only/layout/LV0E_1.kosp"
-	endif
 		even
 Level_LV0E2:
-	if	MegaCDMode1
 		binclude "level/layout/LV0E_2.kosp"
-	else
-		binclude "md-only/layout/LV0E_2.kosp"
-	endif
 		even
 Level_LV0E3:
-	if	MegaCDMode1
 		binclude "level/layout/LV0E_3.kosp"
-	else
-		binclude "md-only/layout/LV0E_3.kosp"
-	endif
 		even
 Level_LV0E4:
-	if	MegaCDMode1
 		binclude "level/layout/LV0E_4.kosp"
-	else
-		binclude "md-only/layout/LV0E_4.kosp"
-	endif
 		even
 
 Level_LV0F1:
-	if	MegaCDMode1
 		binclude "level/layout/LV0F_1.kosp"
-	else
-		binclude "md-only/layout/LV0F_1.kosp"
-	endif
 		even
 Level_LV0F2:
-	if	MegaCDMode1
 		binclude "level/layout/LV0F_2.kosp"
-	else
-		binclude "md-only/layout/LV0F_2.kosp"
-	endif
 		even
 Level_LV0F3:
-	if	MegaCDMode1
 		binclude "level/layout/LV0F_3.kosp"
-	else
-		binclude "md-only/layout/LV0F_3.kosp"
-	endif
 		even
 Level_LV0F4:
-	if	MegaCDMode1
 		binclude "level/layout/LV0F_4.kosp"
-	else
-		binclude "md-only/layout/LV0F_4.kosp"
-	endif
 		even
 Level_Null:	dc.l	0
 	if	TimeTravel=1
@@ -16216,7 +15757,6 @@ Art_SMZSmoke: binclude "art/uncompressed/SMZ Smoke.bin"
 
 ; Embed the separate CD-CPU program at its execution address. The MD loader
 ; copies this ROM image to CD PRG RAM before starting MCD_SubEntry.
-	if MegaCDMode1
 		include "_definitions/Compressed Assets.asm"
 MCD_SubProgram:
 		phase	0
@@ -16226,7 +15766,6 @@ MCD_SubProgramEnd:
 		if (MCD_SubProgramEnd-MCD_SubProgram)>MCD_BIOS_RAM_End
 			fatal "Mode 1 bootstrap overlaps the first user PRG-RAM allocation"
 		endif
-	endif
 
 	if	AdvancedHandler=1
 ; ===========================================================================
@@ -16249,7 +15788,7 @@ MCD_SubProgramEnd:
 		even
 	endif
 EndOfRom:
-	if MegaCDMode1&(EndOfRom>$400000)
+	if (EndOfRom>$400000)
 		fatal "Mode 1 cartridge overlaps the Mega-CD mapping above $400000"
 	endif
 	if MOMPASS=2

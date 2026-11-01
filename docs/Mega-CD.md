@@ -1,9 +1,9 @@
 # Mega-CD Mode 1
 
-Mega-CD Mode 1 is the primary configuration on the default **`Mystic-Island`**
-branch; `Mystic-Island-(Experimental)` holds experimental development. The default
-`MegaCDMode1 = 1` and `JC` header
-enable cartridge boot, raw subprogram upload, verification and a fresh handshake.
+Mega-CD Mode 1 is the sole target on the default **`Mystic-Island`**
+branch; `Mystic-Island-(Experimental)` holds experimental development. The `JC`
+header declares cartridge boot with required Mega-CD hardware. Startup uploads
+the raw subprogram, verifies it and performs a fresh handshake.
 Its chunk storage requires the add-on; absence/failure reaches `MEGA CD REQUIRED`
 before CD RAM access. Detection and waits are bounded. `MCD_status` is zero for
 absent, one for ready, `$FF` for failed initialization. ROM must fit below `$400000`.
@@ -34,37 +34,25 @@ collision resolution, tilemap construction, and Kosinski+/Nemesis/Enigma decodin
 execute on CD. Camera motion,
 object control, VDP output and sound still execute on MD.
 
-## Cartridge build dependencies
+## Build target
 
-`MegaCDMode1` in `md-main.asm` selects the backend at assembly time. The primary
-configuration is `1`; `0` builds a standalone Mega Drive ROM without the CD
-bootstrap, subprogram, mailboxes or CD-owned buffers. Shared objects, art, palettes, mappings, sound and editor files keep their usual
-paths. Cartridge layouts are frozen in `md-only/layout/` while development and
-the independent-plane migration target Mode 1.
-Only cartridge-specific implementations live in `md-only/`:
+The normal build always produces a Mega-CD Mode 1 cartridge image. Main-CPU
+loaders, the embedded CD subprogram, mailboxes, CD terrain/decoder services and
+their RAM declarations are unconditional. There is no standalone Mega Drive
+backend or target selector. Build from the repository root with the normal
+`build.bat` / `build.lua` entry points.
 
-| File | Cartridge responsibility |
-| --- | --- |
-| `Nemesis Decompression.asm`, `Enigma Decompression.asm`, `KosinskiPlus.asm` | Direct decoding; `NemDec` takes its VRAM destination in `d2` in either build |
-| `KosinskiPlus Modules.asm` | Interruptible module/decoder queues, using the existing shared codec core and queue helpers |
-| `Pattern Load Cues.asm` | Prepare Nemesis state in foreground, emit bounded tile batches in VBlank |
-| `Tile Streaming.asm` | Direct VDP rows/columns and layout reads/writes, including SMZ parallax |
-| `Terrain Collision.asm` | Current interleaved collision banks, projected movement probes and whole airborne contact resolution |
-| `Objects Manager.asm` | Eight-byte placements, word subtypes, era filtering and persistent state |
-| `layout/` | Frozen byte-layout inputs for the paused cartridge backend |
-| `RAM.asm` | Private codec buffers, VBlank camera snapshots and placement state, appended by the main RAM declaration |
+Shared objects, art, palettes, mappings, sound and editor files keep their
+usual paths. The independent-plane layouts in `level/layout/` are the only
+live level-layout inputs; all acts and timezones use their word-based format.
+The CD object manager has `$300` (768) persistent placement entries per era;
+`ObjectLayoutFile` checks each placement list against that capacity. Objects use
+index-plus-one handles through the [placement state API](Objects.md#placement-format-and-ownership).
 
-The cartridge retains the `$8000`-byte chunk table in the lower half of its
-64 KiB RAM. Its three placement-state banks hold `$180` (384) entries apiece;
-Mode 1 retains `$300` (768). The largest current authored list contains 263.
-`ObjectLayoutFile` checks each included list against the selected capacity,
-and assembly rejects total RAM overflow. This is a cartridge resource limit,
-not a different placement format. Both configurations use index-plus-one
-handles and the [same object-facing state API](Objects.md#placement-format-and-ownership).
-
-The cartridge queue's VBlank bookmark runs on both ordinary and underwater lag
-returns. Codecs, terrain buffers and state tables are absent from MD RAM in the
-Mode 1 build; changing the toggle does not silently select obsolete object data.
+The required-hardware guard stays active: absence or failed initialization
+reaches `MEGA CD REQUIRED` before accessing CD RAM. The image still boots from
+cartridge and requires no disc or BIOS calls. See the ownership table below
+for the main-CPU and CD allocations.
 
 ## Memory and ownership
 
@@ -289,7 +277,7 @@ the staging entry through decompression, then records the low five VInt bits
 and waits for a later VInt before retiring it. This preserves ordering, the
 seven-slot module limit and existing `v_plc_buffer` completion waits without
 new RAM. Repeated foreground calls in one frame cannot release a DMA source.
-Both backends use this scheduler; only the existing decoder/DMA transport differs.
+The CD codecs and DMA transport use this same scheduler.
 The direct `QuickKosPLC` path retains its ordinary untagged list format.
 
 PLCs keep a separate compressed archive and code table in PRG RAM, so general

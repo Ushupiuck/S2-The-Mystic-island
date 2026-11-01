@@ -104,7 +104,7 @@ if a.stack_gameplay:
 		g.run = original_run
 	g.restore(base)
 	passed('MD stack watermark survives HPZ loading, Sonic/Tails gameplay and water HBlank')
-names = ('MegaCDMode1', 'vdp_control_port', 'VDP_control_port', 'vdp_data_port', 'v_dma_thunk',
+names = ('vdp_control_port', 'VDP_control_port', 'vdp_data_port', 'v_dma_thunk',
 	'VDP_Command_Buffer', 'VDP_Command_Buffer_Slot', 'MCD_dma_pending', 'InitDMAQueue',
 	'ProcessDMAQueue', 'QueueDMATransfer', 'MCD_Init', 'MCD_Command', 'MCD_AcquireWordRAM', 'MCD_ReleaseWordRAM')
 prefix = '\tCPU 68000\n\tinclude "_definitions/s2.macrosetup.asm"\n\tinclude "_definitions/s2.macros.asm"\n'
@@ -114,10 +114,10 @@ for k in names:
 prefix += (ROOT / '_inc/DMA Queue.asm').read_text().split('; sub_144E:')[0]
 
 
-def probe(body, restore=True, safe=True):
+def probe(body, restore=True):
 	if restore:
 		g.restore(base)
-	source = prefix if safe else prefix.replace('MegaCDMode1 equ 1', 'MegaCDMode1 equ 0')
+	source = prefix
 	source += '\n\tphase $FF0000\n\tmove.w #$2700,sr\n\tmove.w #$8114,($C00004).l\n\tmove.w #$8F02,($C00004).l\n'
 	source += body + '\nTestDone:\n\tbra.s *\n\tEND\n'
 	asm = a.output / 'probe.asm'; asm.write_text(source)
@@ -190,7 +190,10 @@ for method in ('queued', 'immediate'):
 		assert vram() == written(before,dest,pattern(words)+b'\xBE\xEF'), (method,hex(source),words)
 		assert not g.read('MCD_dma_pending')
 	passed(method + ' Word RAM: single words, bank edges, VRAM wrap and 64/128 KB')
-probe(fill(0x600000,4)+'\tdma68kToVDP $600000,$1000,8,VRAM',safe=False)
+# Deliberately issue an uncorrected Word-RAM DMA as the negative control.
+probe(fill(0x600000,4) + '\tmove.l #$94009304,($C00004).l\n'
+	+ '\tmove.l #$96009500,($C00004).l\n\tmove.w #$9730,($C00004).l\n'
+	+ '\tmove.l #vdpComm($1000,VRAM,DMA),($C00004).l\n')
 assert vram()[0x1000:0x1008] != pattern(4)
 passed('Negative control reproduces first-word delay')
 for words in (1,32768,65536):
@@ -231,11 +234,11 @@ passed('Ordinary ROM boundary split')
 g.close()
 g=Genesis(a.core,a.rom,a.listing,a.output/'no-cd',a.pal,core_options={b'genesis_plus_gx_add_on':b'none'})
 for _ in range(120):
-    g.run()
-    if g.core.m68k_get_reg(16) == g.s['MCD_Unavailable.halt']:
-        break
+	g.run()
+	if g.core.m68k_get_reg(16) == g.s['MCD_Unavailable.halt']:
+		break
 else:
-    raise AssertionError('Missing-CD guard not reached')
+	raise AssertionError('Missing-CD guard not reached')
 assert C.c_uint8.in_dll(g.core,'system_hw').value != 0x84
 assert g.read('MCD_status') == 0 and not g.read('v_errortype')
 g.run(2)

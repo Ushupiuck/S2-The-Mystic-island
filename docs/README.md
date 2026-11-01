@@ -35,10 +35,10 @@ variables remain together in `_definitions/s2.constants.asm`; the CD build adds
 its hardware and physical RAM definitions alongside it. Preserve include order
 when moving definitions: some depend on macros or earlier allocations.
 
-`md-only/` contains the cartridge-specific backends selected by
-`MegaCDMode1 = 0`: direct codecs and streaming, collision, placement loading and
-their private RAM. Mode 1 remains the default. Shared assets and engine sources
-keep their existing paths; see [build dependencies](Mega-CD.md#cartridge-build-dependencies).
+Mega-CD Mode 1 is the sole build target. The cartridge boot path, CD-owned
+terrain/decoder services and their RAM declarations are unconditional; see the
+[build target](Mega-CD.md#build-target). Shared editable assets keep their
+existing paths.
 
 `_inc/` holds engine subsystems and substantial tables. Keep small helpers and
 local macros with their owner; split a routine out when it makes the subsystem
@@ -48,14 +48,11 @@ described in the [sound guide](../build_tools/sound/README.md).
 ## Branch scope
 
 `Mystic-Island` is the default development branch and includes the former KEH
-baseline. `Mystic-Island-(Experimental)` is the experimental branch. Both configurations
-live in the same source tree: the default `MegaCDMode1 = 1` uses required
-Mega-CD RAM and selective sub-CPU work; `0` selects the standalone cartridge
-dependencies. These guides describe the shared baseline and identify behavior
-by build configuration. Sixteen four-act zones are exposed (`$00-$0F`);
-editable starter acts are not finished levels. Mode 1 uses the
-[independent-plane engine](Levels.md#mode-1-plane-engine); cartridge development
-is paused. Mixed-size SonLVL stamping remains [future work](Levels.md#planned-layout-format).
+baseline. `Mystic-Island-(Experimental)` is the experimental branch. Both target
+Mega-CD Mode 1 with required CD RAM and sub-CPU processing. Sixteen four-act
+zones are exposed (`$00-$0F`); editable starter acts are not finished levels.
+The [independent-plane engine](Levels.md#mode-1-plane-engine) is the live terrain
+path. Mixed-size SonLVL stamping remains [future work](Levels.md#planned-layout-format).
 
 ## Maintaining these guides
 

@@ -5,12 +5,9 @@ object loading and rendering, Sonic/Tails gameplay, imported level objects,
 a rotating S1 special stage, and the KeH enhanced sound driver.
 
 `Mystic-Island` is the default branch and includes the former KEH branch's
-engine, tools and assets. Mega-CD Mode 1 is the primary configuration, with
-required CD RAM and selective sub-CPU processing. `test/rebuilt-kehmusic` is
-synchronized with this baseline.
-
-Set `MegaCDMode1 = 0` in `md-main.asm` for a standalone Mega Drive build using
-`md-only/`. Shared assets keep their usual paths; see [build configurations](docs/Mega-CD.md#cartridge-build-dependencies).
+engine, tools and assets. The hack targets Mega-CD Mode 1 exclusively: its
+cartridge image requires CD RAM and uses both 68000 CPUs. See the
+[build target and hardware requirements](docs/Mega-CD.md#build-target).
 Level content includes unfinished acts and editable starters.
 
 Build from the repository root with `build.bat` on Windows, or `lua build.lua`

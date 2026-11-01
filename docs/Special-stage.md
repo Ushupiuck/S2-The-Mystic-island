@@ -67,10 +67,8 @@ The rotating-stage overlay begins at `Chunk_Table+$A00`, keeping item updates,
 transform grid, layout and scroll state together. Two `$1000` plane buffers
 follow the animation state. `v_ssbg_end` is `Chunk_Table+$6A34`:
 
-| Build | `Chunk_Table` | Overlay end, exclusive |
-| --- | --- | --- |
-| Cartridge (`MegaCDMode1 = 0`) | `$FF0000` | `$FF6A34` |
-| Mode 1 (`MegaCDMode1 = 1`) | `$426000` | `$42CA34` |
+`Chunk_Table` is the banked CD address `$426000`; the overlay ends at
+`$42CA34` (exclusive).
 
 Assembly guards the active `Chunk_Table_End`, which remains a 32 KiB working
 range even though [CD physical storage](Mega-CD.md) is larger.

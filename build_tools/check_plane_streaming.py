@@ -23,7 +23,6 @@ p.add_argument('--pal',action='store_true')
 p.add_argument('--act',type=int,choices=(1,2,3,4),default=1)
 p.add_argument('--player',type=int,choices=(0,2),default=0)
 p.add_argument('--zone',type=int,help='Limit to one authored terrain set')
-p.add_argument('--legacy-visible',action='store_true',help='Compare against the old padded background cells at visible coordinates')
 a=p.parse_args()
 g=Genesis(a.core,a.rom,a.listing,a.output,a.pal,system_directory=a.system_directory)
 vsram=(C.c_uint8*128).in_dll(g.core,'vsram')
@@ -32,55 +31,51 @@ rom=a.rom.read_bytes();samples=0;report=[]
 def word(memory,address):return (memory[address^1]<<8)|memory[(address+1)^1]
 
 for zone,name in ((0,'GHZ'),(1,'LZ'),(2,'CPZ'),(3,'EHZ'),(4,'HPZ'),(5,'HTZ'),(6,'MTZ'),(8,'SMZ')):
-    if a.zone is not None and zone!=a.zone: continue
-    boot_level(g,zone=zone,act=a.act-1,player=a.player)
-    wraps=bool(g.read('Camera_Min_Y_pos',2)&0x8000)
-    fg,bg=load(ROOT/f'level/layout/{name}_{a.act}.kosp')
-    if a.legacy_visible:
-        old=kosinski_plus_decode((ROOT/f'md-only/layout/{name}_{a.act}.kosp').read_bytes())[0]
-        fg=[list(old[y*256:y*256+128]) for y in range(16)]
-        bg=[list(old[y*256+128:y*256+256]) for y in range(16)]
-    header=g.s['LevelArtPointers']+(zone*4+a.act-1)*12
-    blocks,chunks=[kosinski_plus_decode(rom[struct.unpack_from('>I',rom,header+offset)[0]&0xFFFFFF:])[0] for offset in (4,8)]
-    @lru_cache(None)
-    def tile(plane,x,y):
-        mask=g.s['Level_YWrapMask'] if not plane and wraps else 0xFFF
-        cells=(fg,bg)[plane];cx,cy=(x&0x7FFF)//128,(y&mask)//128
-        chunk=cells[cy][cx] if not plane and cy<len(cells) and cx<len(cells[0]) else (0 if not plane else cells[cy%len(cells)][cx%len(cells[0])])
-        e=struct.unpack_from('>H',chunks,chunk*128+((y//16&7)*8+(x//16&7))*2)[0]
-        bx,by=(x//8&1)^bool(e&0x400),(y//8&1)^bool(e&0x800)
-        return struct.unpack_from('>H',blocks,(e&1023)*8+(by*2+bx)*2)[0]^(0x800 if e&0x400 else 0)^(0x1000 if e&0x800 else 0)
-    def check():
-        global samples
-        assert not g.read('v_errortype'),(name,g.frame)
-        for plane in (0,1):
-            py=word(vsram,plane*2)&0x7FF
-            for sy in range(0,224,8):
-                wy=py+sy
-                scroll=word(g.vram,g.s['vram_hscroll']+sy*4+plane*2)
-                scroll=scroll if scroll<0x8000 else scroll-65536
-                for sx in range(0,320,8):
-                    wx=(sx-scroll)&65535
-                    source_x=wx
-                    if plane and (name in ('EHZ','HTZ') or (name=='GHZ' and (not 4<=((wy//16)&15)<10 or (((wy//16)&15)==9 and wy&8))) or (name=='SMZ' and a.act==1 and ((wy//16)&31)<4)):
-                        source_x &=511
-                    address=(0xE000 if plane else 0xC000)+(wy//8&31)*128+(wx//8&63)*2
-                    actual=word(g.vram,address);expected=tile(plane,source_x,wy)
-                    assert actual==expected,(name,g.frame,plane,(sx,sy),(source_x,wy),hex(actual),hex(expected))
-                    samples+=1
-    check();g.video.save(a.output/f'{name}-act-{a.act}-start.png');initial_y=g.read('Camera_Y_pos',2)
-    min_y=g.read('Camera_Min_Y_pos',2);max_y=g.read('Camera_Max_Y_pos',2)
-    targets=[(0x600,initial_y),(0x600,min(initial_y+384,max_y)),(0,initial_y)]
-    if wraps:targets.extend(((0x180,0x7D0),(0x180,0),(0x180,0x7D0)))
-    for index,(tx,ty) in enumerate(targets):
-        for tick in range(100):
-            for field,value,size in (('obX',tx+160,2),('obY',ty+96,2),('obVelX',0,2),('obVelY',0,2),('obInertia',0,2),('obControl',0x81,1),('obRoutine',2,1),('obStatus',0,1),('invtime',6000,2)):
-                g.put('v_player',field,value,size)
-            g.write('Camera_Min_Y_pos',min_y,2);g.write('Camera_Max_Y_pos',max_y,2);g.write('Camera_Max_Y_pos_target',max_y,2)
-            g.run()
-            if tick%4==0:check()
-        check();g.video.save(a.output/f'{name}-{index}.png')
-    report.append(name);print(name+' visible foreground/background pass.',flush=True)
-    g.write('v_gamemode',g.s['SegaScreen'],2);g.run()
+	if a.zone is not None and zone!=a.zone: continue
+	boot_level(g,zone=zone,act=a.act-1,player=a.player)
+	wraps=bool(g.read('Camera_Min_Y_pos',2)&0x8000)
+	fg,bg=load(ROOT/f'level/layout/{name}_{a.act}.kosp')
+	header=g.s['LevelArtPointers']+(zone*4+a.act-1)*12
+	blocks,chunks=[kosinski_plus_decode(rom[struct.unpack_from('>I',rom,header+offset)[0]&0xFFFFFF:])[0] for offset in (4,8)]
+	@lru_cache(None)
+	def tile(plane,x,y):
+		mask=g.s['Level_YWrapMask'] if not plane and wraps else 0xFFF
+		cells=(fg,bg)[plane];cx,cy=(x&0x7FFF)//128,(y&mask)//128
+		chunk=cells[cy][cx] if not plane and cy<len(cells) and cx<len(cells[0]) else (0 if not plane else cells[cy%len(cells)][cx%len(cells[0])])
+		e=struct.unpack_from('>H',chunks,chunk*128+((y//16&7)*8+(x//16&7))*2)[0]
+		bx,by=(x//8&1)^bool(e&0x400),(y//8&1)^bool(e&0x800)
+		return struct.unpack_from('>H',blocks,(e&1023)*8+(by*2+bx)*2)[0]^(0x800 if e&0x400 else 0)^(0x1000 if e&0x800 else 0)
+	def check():
+		global samples
+		assert not g.read('v_errortype'),(name,g.frame)
+		for plane in (0,1):
+			py=word(vsram,plane*2)&0x7FF
+			for sy in range(0,224,8):
+				wy=py+sy
+				scroll=word(g.vram,g.s['vram_hscroll']+sy*4+plane*2)
+				scroll=scroll if scroll<0x8000 else scroll-65536
+				for sx in range(0,320,8):
+					wx=(sx-scroll)&65535
+					source_x=wx
+					if plane and (name in ('EHZ','HTZ') or (name=='GHZ' and (not 4<=((wy//16)&15)<10 or (((wy//16)&15)==9 and wy&8))) or (name=='SMZ' and a.act==1 and ((wy//16)&31)<4)):
+						source_x &=511
+					address=(0xE000 if plane else 0xC000)+(wy//8&31)*128+(wx//8&63)*2
+					actual=word(g.vram,address);expected=tile(plane,source_x,wy)
+					assert actual==expected,(name,g.frame,plane,(sx,sy),(source_x,wy),hex(actual),hex(expected))
+					samples+=1
+	check();g.video.save(a.output/f'{name}-act-{a.act}-start.png');initial_y=g.read('Camera_Y_pos',2)
+	min_y=g.read('Camera_Min_Y_pos',2);max_y=g.read('Camera_Max_Y_pos',2)
+	targets=[(0x600,initial_y),(0x600,min(initial_y+384,max_y)),(0,initial_y)]
+	if wraps:targets.extend(((0x180,0x7D0),(0x180,0),(0x180,0x7D0)))
+	for index,(tx,ty) in enumerate(targets):
+		for tick in range(100):
+			for field,value,size in (('obX',tx+160,2),('obY',ty+96,2),('obVelX',0,2),('obVelY',0,2),('obInertia',0,2),('obControl',0x81,1),('obRoutine',2,1),('obStatus',0,1),('invtime',6000,2)):
+				g.put('v_player',field,value,size)
+			g.write('Camera_Min_Y_pos',min_y,2);g.write('Camera_Max_Y_pos',max_y,2);g.write('Camera_Max_Y_pos_target',max_y,2)
+			g.run()
+			if tick%4==0:check()
+		check();g.video.save(a.output/f'{name}-{index}.png')
+	report.append(name);print(name+' visible foreground/background pass.',flush=True)
+	g.write('v_gamemode',g.s['SegaScreen'],2);g.run()
 (a.output/'report.json').write_text(json.dumps(dict(terrain_sets=report,tile_samples=samples,pal=a.pal),indent=2)+'\n')
 g.close()

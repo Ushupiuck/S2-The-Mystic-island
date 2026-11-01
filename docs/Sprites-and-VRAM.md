@@ -116,12 +116,12 @@ Tails retains his original mapping and separate-tail animation throughout.
 
 ### Mode 1 RAM art
 
-With `MegaCDMode1 = 1`, shield, invincibility and normal/lost-ring art is
+Shield, invincibility and normal/lost-ring art is
 Nemesis-compressed in ROM. The CD CPU decodes it into Word RAM, then MD copies
 the results into its packed work area; see [the decoder boundary](Mega-CD.md#asset-decompression-and-plcs).
-`Art_Shield`, `Art_Invincibility` and `Art_Ring` are RAM source addresses in this
-configuration; cartridge builds retain their uncompressed ROM sources. The existing
-shield DPLCs, resident-star upload and eight-frame ring uploader use those
+`Art_Shield`, `Art_Invincibility` and `Art_Ring` name RAM source addresses.
+The editable source art remains available for regeneration. The existing shield
+DPLCs, resident-star upload and eight-frame ring uploader use those
 addresses without changing mappings, frame selection or VRAM banks.
 
 | RAM bytes, end exclusive | Source | Size |

@@ -905,9 +905,7 @@ bgm_Stop =		MusID_Stop
 ; ---------------------------------------------------------------------------
 ; Main RAM
 ; ---------------------------------------------------------------------------
-	if MegaCDMode1
 		include "_definitions/Mega CD RAM.asm"
-	endif
 	phase	ramaddr($FFFE0000)
 RAM_debug_start:		ds.b	$10000
 RAM_debug_end:
@@ -916,7 +914,6 @@ v_start:
 RAM_Start:
 	dephase
 
-	if MegaCDMode1
 ; Pack the engine against the top of RAM, with long-addressed CD work/art
 ; immediately below it. Forward differences are allocation sizes, so adding
 ; a field moves the boundary automatically rather than leaving address holes.
@@ -950,30 +947,18 @@ Art_Ring_End:
 Player_Art_Buffer_End:
 	dephase
 	phase	-(Main_RAM_End-Main_RAM_Start)
-	else
-	phase	RAM_Start
-Chunk_Table:			ds.w	$40*$100	; 128x128 tile mappings ($8000 bytes)
-Chunk_Table_End:
-	endif
 Main_RAM_Start:
 v_128x128:=	Chunk_Table
 v_128x128_end:=	Chunk_Table_End
-	if MegaCDMode1
 ; Level-load staging only. Live terrain layout and blocks are CD-owned.
 Level_Layout:			equ	MCD_TerrainLayoutStage
 Level_Layout_End:		equ	MCD_TerrainLayoutStage+$1000
-	else
-Level_Layout:			ds.b	$1000
-Level_Layout_End:
-	endif
 
 v_lvllayout:=			Level_Layout
 v_lvllayout_end:=		Level_Layout_End
 v_lvllayoutbg:=			Level_Layout+$80
-	if MegaCDMode1
 Kos_decomp_buffer:		equ	MCD_DecompOutput
 Kos_decomp_buffer_End:		equ	MCD_DecompOutput+$1000
-	endif
 ; ---------------------------------------------------------------------------
 	if	object_size*object_slot_count > object_ram_size
 	fatal "Object slots exceed the reserved object RAM growth area."
@@ -1055,13 +1040,8 @@ v_endeggman	= v_objspace+object_size*2		; object variable space for Eggman after
 v_tryagain	= v_objspace+object_size*3		; object variable space for the "TRY AGAIN" text (1 SST)
 v_eggmanchaos	= v_objspace+object_size*32		; object variable space for the emeralds juggled by Eggman (6 SSTs)
 ; ---------------------------------------------------------------------------
-	if MegaCDMode1
 v_16x16:			equ	MCD_TerrainBlockStage
 v_16x16_End:			equ	MCD_TerrainBlockStage+$1800
-	else
-v_16x16:			ds.b	$1800
-v_16x16_End:
-	endif
 
 TempArray_LayerDef:		ds.b	$200		; background scroll buffer
 v_bgscroll_buffer:=		TempArray_LayerDef
@@ -1484,29 +1464,21 @@ Camera_Y_pos_coarse_back:	ds.w	1	; (Camera_Y_pos - $80) & $FF80
 Object_load_retry:	ds.b	1	; an eligible placement could not get an SST this frame
 
 			ds.b	1			; align the following allocation boundary
-	if MegaCDMode1=0
-		include "md-only/RAM.asm"
-	endif
 Main_RAM_End:
 	dephase
 
 ; Touch-response candidates live in previously free RAM. Keep every existing
-; engine global/SST address fixed in both builds; Mode 1 uses long addressing.
+; engine global/SST addresses fixed; queued pointers use long addressing.
 Collision_response_capacity = (v_lvlobjend-v_lvlobjspace)/object_size
-Collision_response_list_capacity = 24 ; 50 bytes fits the cartridge's 54 free bytes
+Collision_response_list_capacity = 24 ; 24 hit candidates and a count word occupy 50 bytes
 Collision_response_bytes = Collision_response_list_capacity*2
 Collision_response_probe_mask = $F ; retry the list every 16 dense updates
-	if MegaCDMode1
 	phase RAM_Start
-	else
-	phase Main_RAM_End
-	endif
 Collision_response_list:	ds.w	1	; pointer bytes; -1 = dense-scene full scan
 Collision_response_entries:	ds.w	Collision_response_list_capacity
 Collision_response_list_end:
 	dephase
 
-	if MegaCDMode1
 	if (MOMPASS>1)&&((Main_RAM_Start&$FF8000)<>$FF8000)
 		fatal "Short-addressed engine RAM exceeds the upper 32 KB."
 	endif
@@ -1518,14 +1490,6 @@ Free_RAM_Start:		ds.b	MCD_MainWorkStart-Collision_response_list_end
 Free_RAM_End:
 	if Free_RAM_End<>MCD_MainWorkStart
 		fatal "Free RAM must end at the first live allocation."
-	endif
-	else
-	if (MOMPASS>1)&&(Collision_response_list_end>0)
-		fatal "Cartridge work RAM exceeds 64 KB; reduce level/placement data or work buffers"
-	endif
-	phase	Collision_response_list_end
-Free_RAM_Start:		ds.b	-Collision_response_list_end
-Free_RAM_End:
 	endif
 	dephase
 	phase	0

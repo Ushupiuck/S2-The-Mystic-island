@@ -90,8 +90,6 @@ and layout edits therefore address the same terrain on either side of the seam,
 including negative sensor coordinates before the player's position wraps.
 This changes only runtime lookup offsets: authored layouts and independent
 background dimensions stay intact. Ordinary acts keep all 32 foreground rows.
-The paused cartridge backend retains its frozen layouts and is not the target
-of this Mode 1 layout work.
 
 ## Per-act art
 
@@ -230,9 +228,8 @@ CD drawing tracks rounded source positions per physical 16-pixel row, producing
 only newly exposed rows/columns in Word RAM. A stationary scene emits no terrain
 records. VBlank consumes the completed records; it does not construct terrain.
 
-The cartridge backend is paused at its former byte layout format. Its frozen
-inputs live in `md-only/layout/`; editing a Mode 1 layout does not update them.
-The current migration and validation target Mode 1 only.
+All acts and timezones use these word-based layouts. The level loader, CD
+drawing path, validators and SonLVL definitions share this format.
 
 ## Terrain and tile animation
 
