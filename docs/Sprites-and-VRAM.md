@@ -412,8 +412,8 @@ mapping frames. Its editable `art/uncompressed/EHZ Waterfall.unc` uses P1
 indices `2/3/A/B` for the four cyans and `6` for white; the former `$F` pixels
 now use cyan slot `2`, rather than the yellow ramp. Run
 `python build_tools/build_ehz_waterfall_art.py` to pack it. Waterfalls use
-priority `$380`, after players and badniks, and render bit 4 clips offscreen
-pieces before they consume SAT entries. The mappings themselves remain intact.
+priority zero so the flow still overlays characters. Render bit 4 clips
+offscreen pieces before they consume SAT entries. The mappings themselves remain intact.
 
 Springs retain S3&K mechanisms/geometry, with Sonic CD straight caps from
 scddisasm `f8cf3f0af7bf419d18182ba98554f09307ad3cc6` (normal spring tiles 0–3

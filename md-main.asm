@@ -9315,7 +9315,7 @@ Obj49_Init:
 		move.b	#Map_Waterfall1_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Waterfall,1,0),obGfx(a0)
 		move.b	#4,obRender(a0)
-		move.w	#$380,obPriority(a0)	; scenery follows players and badniks in the SAT
+		clr.w	obPriority(a0)		; retain the foreground waterfall overlay
 		move.b	#sprite_bound($20,Map_Waterfall1_width),obActWid(a0)
 		move.w	obX(a0),objoff_34(a0)
 		move.b	#$80,obHeight(a0)
