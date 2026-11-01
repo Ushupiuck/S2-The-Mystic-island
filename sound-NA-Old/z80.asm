@@ -29,15 +29,15 @@ ensure1byteoffset macro maxsize
 	if offsetover1byte($,maxsize)
 startpad := $
 		align 100h
-	    if MOMPASS=1
+		if	MOMPASS=1
 endpad := $
 		if endpad-startpad>=1h
 			; warn because otherwise you'd have no clue why you're running out of space so fast
 			message "had to insert \{endpad-startpad}h   bytes of padding before improperly located data at 0\{startpad}h in Z80 code"
 		endif
-	    endif
+		endif
 	endif
-    endm
+	endm
 
 ;Z80Driver_Start:
 	di					; Disable interrupts. Interrupts will never be reenabled
@@ -210,7 +210,7 @@ zPCMMetadata macro label
 	dw	label.size				; Length
 	dw	dpcmLoopCounter(label.sample_rate)	; Pitch
 	dw	0					; Padding
-    endm
+	endm
 
 ; DPCM metadata
 zPCM_Table:

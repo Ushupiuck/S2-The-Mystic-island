@@ -65,12 +65,12 @@ SMZ_Disc_Main:	; Routine 0
 ; ---------------------------------------------------------------------------
 
 SMZ_Disc_Action:	; Routine 2
-        lea (v_player).w,a1
-        lea SMZ_disc_sonic_attached(a0),a3
-        bsr.w SMZ_Disc_MoveSonic
-        lea (v_player2).w,a1
-        lea SMZ_disc_sonic_attached+1(a0),a3
-        bsr.w SMZ_Disc_MoveSonic				; handle Sonic moving on gear
+		lea	(v_player).w,a1
+		lea	SMZ_disc_sonic_attached(a0),a3
+		bsr.w	SMZ_Disc_MoveSonic
+		lea	(v_player2).w,a1
+		lea	SMZ_disc_sonic_attached+1(a0),a3
+		bsr.w	SMZ_Disc_MoveSonic				; handle Sonic moving on gear
 		bsr.w	SMZ_Disc_MoveSpot				; move the spot inside the gear circularly
 		bra.w	SMZ_Disc_Display				; display spot, or delete whole object if offscreen
 
@@ -80,10 +80,10 @@ SMZ_Disc_Action:	; Routine 2
 ; ---------------------------------------------------------------------------
 
 SMZ_Disc_MoveSonic:
-        tst.l code(a1)
-        beq.w SMZ_Disc_DetachSonic
-        cmpi.b #4,obRoutine(a1)
-        bhs.w SMZ_Disc_DetachSonic
+		tst.l	code(a1)
+		beq.w	SMZ_Disc_DetachSonic
+		cmpi.b	#4,obRoutine(a1)
+		bhs.w	SMZ_Disc_DetachSonic
 
 		moveq	#0,d2					; clear d2
 		move.b	SMZ_disc_triggersize(a0),d2			; get trigger distance for Sonic to latch onto gear
@@ -214,13 +214,13 @@ SMZ_Disc_Display:
 		jmp	(DisplaySprite).l			; display small spot
 
 	.delete:
-        lea (v_player).w,a1
-        lea SMZ_disc_sonic_attached(a0),a3
-        bsr.w SMZ_Disc_DetachSonic
-        lea (v_player2).w,a1
-        lea SMZ_disc_sonic_attached+1(a0),a3
-        bsr.w SMZ_Disc_DetachSonic
-        jmp (UnloadObject).l
+		lea	(v_player).w,a1
+		lea	SMZ_disc_sonic_attached(a0),a3
+		bsr.w	SMZ_Disc_DetachSonic
+		lea	(v_player2).w,a1
+		lea	SMZ_disc_sonic_attached+1(a0),a3
+		bsr.w	SMZ_Disc_DetachSonic
+		jmp	(UnloadObject).l
 
 ; ===========================================================================
 

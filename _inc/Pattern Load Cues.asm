@@ -1687,13 +1687,13 @@ plrKosMlistheader macro {INTLABEL}
 __LABEL__ label *
 	dc.w (((__LABEL___End - __LABEL__Plc) / 6) - 1)
 __LABEL__Plc:
-    endm
+	endm
 
 ; macro for a pattern load request
 plreqKosM macro toVRAMaddr,fromROMaddr
 	dc.l	fromROMaddr
 	dc.w	tiles_to_bytes(toVRAMaddr)
-    endm
+	endm
 
 ; ---------------------------------------------------------------------------
 ; RESIDENT END-OF-ACT ART

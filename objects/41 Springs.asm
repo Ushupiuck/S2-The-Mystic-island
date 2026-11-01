@@ -124,27 +124,27 @@ Obj41_Strengths:
 ; ===========================================================================
 ; loc_E302:
 Obj41_Up:
-        moveq #27,d1
-        moveq #8,d2
-        moveq #16,d3
-        move.w obX(a0),d4
-        lea .actor(pc),a5
-        bsr.w Obj41_TestBoth
-        lea Ani_obj41(pc),a1
-        jmp (AnimateSprite).l
+		moveq	#27,d1
+		moveq	#8,d2
+		moveq	#16,d3
+		move.w	obX(a0),d4
+		lea	.actor(pc),a5
+		bsr.w	Obj41_TestBoth
+		lea	Ani_obj41(pc),a1
+		jmp	(AnimateSprite).l
 .actor:
-        jsr (SolidObject_Always_SingleCharacter).l
-        btst d6,obStatus(a0)
-        beq.s .return
-        jmp (sub_E34E).l
+		jsr	(SolidObject_Always_SingleCharacter).l
+		btst	d6,obStatus(a0)
+		beq.s	.return
+		jmp	(sub_E34E).l
 .return:
-        rts
+		rts
 
 sub_E34E:
-        clr.b jumping(a1)
-        clr.b spindash_flag(a1)
-        clr.b tails_flight_flag(a1)
-        bclr #status.player.rolljumping,obStatus(a1)
+		clr.b	jumping(a1)
+		clr.b	spindash_flag(a1)
+		clr.b	tails_flight_flag(a1)
+		bclr	#status.player.rolljumping,obStatus(a1)
 		move.w	#$100,obAnim(a0)
 		addq.w	#8,obY(a1)
 		move.w	objoff_34(a0),obVelY(a1)
@@ -196,36 +196,36 @@ loc_E3EA:
 ; ===========================================================================
 ; loc_E3F4:
 Obj41_Horizontal:
-        moveq #19,d1
+		moveq	#19,d1
 		moveq	#15,d2
 		moveq	#16,d3
-        move.w obX(a0),d4
-        lea .actor(pc),a5
-        bsr.w Obj41_TestBoth
-        bsr.w sub_E54C
-        lea Ani_obj41(pc),a1
-        jmp (AnimateSprite).l
+		move.w	obX(a0),d4
+		lea	.actor(pc),a5
+		bsr.w	Obj41_TestBoth
+		bsr.w	sub_E54C
+		lea	Ani_obj41(pc),a1
+		jmp	(AnimateSprite).l
 .actor:
-        jsr (SolidObject_Always_SingleCharacter).l
-        cmpi.w #1,d4 ; S3&K side-contact result, including airborne actors
-        bne.s .return
-        move.b obStatus(a0),d1
-        move.w obX(a0),d0
-        sub.w obX(a1),d0
-        bcs.s .facing
-        eori.b #1,d1
+		jsr	(SolidObject_Always_SingleCharacter).l
+		cmpi.w	#1,d4 ; S3&K side-contact result, including airborne actors
+		bne.s	.return
+		move.b	obStatus(a0),d1
+		move.w	obX(a0),d0
+		sub.w	obX(a1),d0
+		bcs.s	.facing
+		eori.b	#1,d1
 .facing:
-        andi.b #1,d1
-        bne.s .return
-        jmp (sub_E474).l
+		andi.b	#1,d1
+		bne.s	.return
+		jmp	(sub_E474).l
 .return:
-        rts
+		rts
 
 sub_E474:
-        clr.b jumping(a1)
-        clr.b spindash_flag(a1)
-        clr.b tails_flight_flag(a1)
-        bclr #status.player.rolljumping,obStatus(a1)
+		clr.b	jumping(a1)
+		clr.b	spindash_flag(a1)
+		clr.b	tails_flight_flag(a1)
+		bclr	#status.player.rolljumping,obStatus(a1)
 		move.w	#$300,obAnim(a0)
 		move.w	objoff_34(a0),obVelX(a1)
 		addq.w	#8,obX(a1)
@@ -361,27 +361,27 @@ sub_E54C:
 ; ===========================================================================
 ; loc_E606:
 Obj41_Down:
-        moveq #27,d1
-        moveq #8,d2
-        moveq #16,d3
-        move.w obX(a0),d4
-        lea .actor(pc),a5
-        bsr.w Obj41_TestBoth
-        lea Ani_obj41(pc),a1
-        jmp (AnimateSprite).l
+		moveq	#27,d1
+		moveq	#8,d2
+		moveq	#16,d3
+		move.w	obX(a0),d4
+		lea	.actor(pc),a5
+		bsr.w	Obj41_TestBoth
+		lea	Ani_obj41(pc),a1
+		jmp	(AnimateSprite).l
 .actor:
-        jsr (SolidObject_Always_SingleCharacter).l
-        cmpi.w #-2,d4
-        bne.s .return
-        jmp (sub_E64E).l
+		jsr	(SolidObject_Always_SingleCharacter).l
+		cmpi.w	#-2,d4
+		bne.s	.return
+		jmp	(sub_E64E).l
 .return:
-        rts
+		rts
 
 sub_E64E:
-        clr.b jumping(a1)
-        clr.b spindash_flag(a1)
-        clr.b tails_flight_flag(a1)
-        bclr #status.player.rolljumping,obStatus(a1)
+		clr.b	jumping(a1)
+		clr.b	spindash_flag(a1)
+		clr.b	tails_flight_flag(a1)
+		bclr	#status.player.rolljumping,obStatus(a1)
 		move.w	#$100,obAnim(a0)
 		subq.w	#8,obY(a1)
 		move.w	objoff_34(a0),obVelY(a1)
@@ -433,22 +433,22 @@ loc_E6D6:
 ; ===========================================================================
 ; loc_E6F2:
 Obj41_DiagonallyUp:
-        moveq #27,d1
-        moveq #16,d2
-        moveq #0,d3
-        move.w obX(a0),d4
-        lea .actor(pc),a5
-        bsr.w Obj41_TestBoth
-        lea Ani_obj41(pc),a1
-        jmp (AnimateSprite).l
+		moveq	#27,d1
+		moveq	#16,d2
+		moveq	#0,d3
+		move.w	obX(a0),d4
+		lea	.actor(pc),a5
+		bsr.w	Obj41_TestBoth
+		lea	Ani_obj41(pc),a1
+		jmp	(AnimateSprite).l
 .actor:
-        lea Obj41_SlopeData_DiagUp(pc),a2
-        jsr (SlopedSolid_SingleCharacter).l
-        btst d6,obStatus(a0)
-        beq.s .return
-        jmp (sub_E73E).l
+		lea	Obj41_SlopeData_DiagUp(pc),a2
+		jsr	(SlopedSolid_SingleCharacter).l
+		btst	d6,obStatus(a0)
+		beq.s	.return
+		jmp	(sub_E73E).l
 .return:
-        rts
+		rts
 
 sub_E73E:
 		btst	#0,obStatus(a0)
@@ -469,10 +469,10 @@ loc_E754:
 ; ===========================================================================
 
 loc_E762:
-        clr.b jumping(a1)
-        clr.b spindash_flag(a1)
-        clr.b tails_flight_flag(a1)
-        bclr #status.player.rolljumping,obStatus(a1)
+		clr.b	jumping(a1)
+		clr.b	spindash_flag(a1)
+		clr.b	tails_flight_flag(a1)
+		bclr	#status.player.rolljumping,obStatus(a1)
 		move.w	#$500,obAnim(a0)
 		move.w	objoff_34(a0),obVelY(a1)
 		move.w	objoff_34(a0),obVelX(a1)
@@ -529,28 +529,28 @@ loc_E81E:
 ; ===========================================================================
 ; loc_E828:
 Obj41_DiagonallyDown:
-        moveq #27,d1
-        moveq #16,d2
-        moveq #0,d3
-        move.w obX(a0),d4
-        lea .actor(pc),a5
-        bsr.w Obj41_TestBoth
-        lea Ani_obj41(pc),a1
-        jmp (AnimateSprite).l
+		moveq	#27,d1
+		moveq	#16,d2
+		moveq	#0,d3
+		move.w	obX(a0),d4
+		lea	.actor(pc),a5
+		bsr.w	Obj41_TestBoth
+		lea	Ani_obj41(pc),a1
+		jmp	(AnimateSprite).l
 .actor:
-        lea Obj41_SlopeData_DiagDown(pc),a2
-        jsr (SlopedSolid_SingleCharacter).l
-        cmpi.w #-2,d4
-        bne.s .return
-        jmp (sub_E870).l
+		lea	Obj41_SlopeData_DiagDown(pc),a2
+		jsr	(SlopedSolid_SingleCharacter).l
+		cmpi.w	#-2,d4
+		bne.s	.return
+		jmp	(sub_E870).l
 .return:
-        rts
+		rts
 
 sub_E870:
-        clr.b jumping(a1)
-        clr.b spindash_flag(a1)
-        clr.b tails_flight_flag(a1)
-        bclr #status.player.rolljumping,obStatus(a1)
+		clr.b	jumping(a1)
+		clr.b	spindash_flag(a1)
+		clr.b	tails_flight_flag(a1)
+		bclr	#status.player.rolljumping,obStatus(a1)
 		move.w	#$500,obAnim(a0)
 		move.w	objoff_34(a0),obVelY(a1)
 		neg.w	obVelY(a1)
@@ -606,15 +606,15 @@ loc_E92A:
 
 ; Input d1-d4 is shared; a5 names one direction's actor callback.
 Obj41_TestBoth:
-        lea (v_player).w,a1
-        moveq #3,d6
-        movem.l d1-d4/a5,-(sp)
-        jsr (a5)
-        movem.l (sp)+,d1-d4/a5
-        lea (v_player2).w,a1
-        tst.l code(a1)
-        beq.s .return
-        moveq #4,d6
-        jmp (a5)
+		lea	(v_player).w,a1
+		moveq	#3,d6
+		movem.l	d1-d4/a5,-(sp)
+		jsr	(a5)
+		movem.l	(sp)+,d1-d4/a5
+		lea	(v_player2).w,a1
+		tst.l	code(a1)
+		beq.s	.return
+		moveq	#4,d6
+		jmp	(a5)
 .return:
-        rts
+		rts

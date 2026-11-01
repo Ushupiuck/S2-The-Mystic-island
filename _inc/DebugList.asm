@@ -241,26 +241,26 @@ Debug_SMZIndoor_End:
 
 ; LV0A is an editable asset/behavior library, not a port of the PP stage.
 Debug_PP: dc.w (Debug_PP_End-Debug_PP-2)/DebugEntry_size
-        dbug Map_PP_Anton,PP_Anton,0,0,ArtTile_PP_Anton
-        dbug Map_PP_Anton,PP_Anton,1,0,ArtTile_PP_Anton
-        dbug Map_PP_Mosqui1,PP_Mosqui,0,0,ArtTile_PP_Mosqui
-        dbug Map_PP_Mosqui2,PP_Mosqui,1,0,ArtTile_PP_Mosqui
-        dbug Map_PP_PataBata1,PP_PataBata,0,0,ArtTile_PP_PataBata
-        dbug Map_PP_PataBata2,PP_PataBata,1,0,ArtTile_PP_PataBata
-        dbug Map_PP_TagaTaga1,PP_TagaTaga,0,0,ArtTile_PP_TagaTaga
-        dbug Map_PP_TagaTaga2,PP_TagaTaga,1,0,ArtTile_PP_TagaTaga
-        dbug Map_PP_Tamabboh1,PP_Tamabboh,0,0,ArtTile_PP_Tamabboh
-        dbug Map_PP_Tamabboh2,PP_Tamabboh,1,0,ArtTile_PP_Tamabboh
+		dbug	Map_PP_Anton,PP_Anton,0,0,ArtTile_PP_Anton
+		dbug	Map_PP_Anton,PP_Anton,1,0,ArtTile_PP_Anton
+		dbug	Map_PP_Mosqui1,PP_Mosqui,0,0,ArtTile_PP_Mosqui
+		dbug	Map_PP_Mosqui2,PP_Mosqui,1,0,ArtTile_PP_Mosqui
+		dbug	Map_PP_PataBata1,PP_PataBata,0,0,ArtTile_PP_PataBata
+		dbug	Map_PP_PataBata2,PP_PataBata,1,0,ArtTile_PP_PataBata
+		dbug	Map_PP_TagaTaga1,PP_TagaTaga,0,0,ArtTile_PP_TagaTaga
+		dbug	Map_PP_TagaTaga2,PP_TagaTaga,1,0,ArtTile_PP_TagaTaga
+		dbug	Map_PP_Tamabboh1,PP_Tamabboh,0,0,ArtTile_PP_Tamabboh
+		dbug	Map_PP_Tamabboh2,PP_Tamabboh,1,0,ArtTile_PP_Tamabboh
 		dbug	Map_MM_PropellerBase,MM_Propeller,0,0,ArtTile_Propeller
-        dbug Map_Ring,Obj12,0,0,make_art_tile(ArtTile_Ring,1,0)
-        dbug Map_Obj26,Obj26,4,0,ArtTile_Monitor
-        dbug Map_obj41,Obj41,0,0,ArtTile_Spring_Vertical
-        dbug Map_MovSpring,WheelCarrier,0,0,ArtTile_Wheel
-        dbug Map_MovSpring,WheelCarrier,1,0,ArtTile_Wheel
-        dbug Map_MovSpring,WheelCarrier,2,0,ArtTile_Wheel
-        dbug Map_MovSpring,WheelCarrier,3,0,ArtTile_Wheel
-        dbug Map_MovSpring,WheelCarrier,4,0,ArtTile_Wheel
-        dbug Map_MovSpring,WheelCarrier,5,0,ArtTile_Wheel
-        dbug Map_MovSpring,WheelCarrier,6,0,ArtTile_Wheel
-        dbug Map_MovSpring,WheelCarrier,7,0,ArtTile_Wheel
+		dbug	Map_Ring,Obj12,0,0,make_art_tile(ArtTile_Ring,1,0)
+		dbug	Map_Obj26,Obj26,4,0,ArtTile_Monitor
+		dbug	Map_obj41,Obj41,0,0,ArtTile_Spring_Vertical
+		dbug	Map_MovSpring,WheelCarrier,0,0,ArtTile_Wheel
+		dbug	Map_MovSpring,WheelCarrier,1,0,ArtTile_Wheel
+		dbug	Map_MovSpring,WheelCarrier,2,0,ArtTile_Wheel
+		dbug	Map_MovSpring,WheelCarrier,3,0,ArtTile_Wheel
+		dbug	Map_MovSpring,WheelCarrier,4,0,ArtTile_Wheel
+		dbug	Map_MovSpring,WheelCarrier,5,0,ArtTile_Wheel
+		dbug	Map_MovSpring,WheelCarrier,6,0,ArtTile_Wheel
+		dbug	Map_MovSpring,WheelCarrier,7,0,ArtTile_Wheel
 Debug_PP_End:

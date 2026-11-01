@@ -35,17 +35,17 @@ SMZ_Invis_Main:	; Routine 0
 ; ---------------------------------------------------------------------------
 
 SMZ_Invis_Solid:
-        moveq #0,d1
-        move.b obActWid(a0),d1
-        addi.w #sonic_solid_width,d1
-        moveq #0,d2
-        move.b obHeight(a0),d2
-        move.w d2,d3
-        addq.w #1,d3
-        move.w obX(a0),d4
-        jsr (SolidObject_Always).l
-        out_of_range2 UnloadObject
-        tst.w (Debug_placement_mode).w
-        jne DisplaySprite
-        rts
+		moveq	#0,d1
+		move.b	obActWid(a0),d1
+		addi.w	#sonic_solid_width,d1
+		moveq	#0,d2
+		move.b	obHeight(a0),d2
+		move.w	d2,d3
+		addq.w	#1,d3
+		move.w	obX(a0),d4
+		jsr	(SolidObject_Always).l
+		out_of_range2	UnloadObject
+		tst.w	(Debug_placement_mode).w
+		jne	DisplaySprite
+		rts
 Map_SMZ_Invis: binclude "mappings/sprite/SMZ Invis.bin"

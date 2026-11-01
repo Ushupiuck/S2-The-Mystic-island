@@ -254,10 +254,10 @@ SFX_PSG_TRACK_COUNT = (zSFX_PSGEnd-zSFX_PSGStart)/zTrack.len
     ; both the phased and unphased PCs must be within the target processor's range,
     ; which means phase is useless here despite being designed to fix this problem...
     ; oh well, I set it up to fix this later when processing the .p file
-    !org 0 ; Z80 code at address 0 is compressed by p2bin's -z=0 pass
+	!org	0 ; Z80 code at address 0 is compressed by p2bin's -z=0 pass
 
-    CPU Z80UNDOC
-    listing purecode
+	CPU	Z80UNDOC
+	listing	purecode
 
 zmake68kBank function addr,(((addr&3F8000h)/zROMWindow))
 
@@ -269,7 +269,7 @@ rsttarget macro {INTLABEL}
 	if "__LABEL__"<>""
 __LABEL__ label $
 	endif
-    endm
+	endm
 
 ; function to decide whether an offset's full range won't fit in one byte
 offsetover1byte function from,maxsize, ((from&0FFh)>(100h-maxsize))
@@ -279,15 +279,15 @@ ensure1byteoffset macro maxsize
 	if offsetover1byte($,maxsize)
 startpad := $
 		align 100h
-	    if MOMPASS=1
+		if	MOMPASS=1
 endpad := $
 		if endpad-startpad>=1h
 			; warn because otherwise you'd have no clue why you're running out of space so fast
 			warning "had to insert \{endpad-startpad}h   bytes of padding before improperly located data at 0\{startpad}h in Z80 code"
 		endif
-	    endif
+		endif
 	endif
-    endm
+	endm
 
 ; function to turn a 68k address into a word the Z80 can use to access it,
 ; assuming the correct bank has been switched to first
@@ -920,7 +920,7 @@ zFMSetFreq:
 	sub	80h
 	jr	z,zFMDoRest		; If this is a rest, jump to zFMDoRest
 	add	a,(ix+zTrack.Transpose)		; Add current channel transpose (coord flag E9)
-  if 0
+	if	0
 	add	a,a				; Offset into Frequency table...
 	add	a,zFrequencies&0FFh
 	ld	(zloc_292+2),a	; store into the instruction after zloc_292 (self-modifying code)
@@ -932,7 +932,7 @@ zloc_292:
 	ld	de,(zFrequencies)	; Stores frequency into "de"
 	ld	(ix+zTrack.FreqLow),e		; Frequency low byte   -> trackPtr + 0Dh
 	ld	(ix+zTrack.FreqHigh),d		; Frequency high byte  -> trackPtr + 0Eh
-  else
+	else
 	ld	d,12			; 12 notes per octave
 	ld	c,0			; clear c (will hold octave bits)
 
@@ -959,7 +959,7 @@ SetFMPSGFreq:
 	ld	a,(de)
 	or	c			; a = high bits of frequency (including octave bits, which were in c)
 	ld	(ix+zTrack.FreqHigh),a		; Frequency high byte  -> trackPtr + 0Eh
-  endif
+	endif
 	ret
 ; ---------------------------------------------------------------------------
 
@@ -1075,19 +1075,19 @@ zDoModulation:
 	ld	h,(ix+zTrack.ModulationValHigh)		; Get 16-bit modulation value
 
 	; This is a 16-bit sign extension for 'bc'
-    if 0
+	if	0
 	ld	b,0
 	ld	c,(ix+zTrack.ModulationDelta)		; Get current modulation change per step -> 'c'
 	bit	7,c
 	jp	z,+
 	ld	b,0FFh			; Sign extend if negative
-    else
+	else
 	ld	c,(ix+zTrack.ModulationDelta)		; Get current modulation change per step -> 'c'
 	ld	a, c
 	add	a, a			; sign bit into carry
 	sbc	a, a
 	ld	b, a			; b = sign extention
-    endif
+	endif
 +
 	add	hl,bc			; Add to current modulation value
 	ld	(ix+zTrack.ModulationValLow),l
@@ -1115,20 +1115,20 @@ zFMPrepareNote:
 zFMUpdateFreq:
 	bit	2,(ix+zTrack.PlaybackControl)		; Is SFX overriding this track?
 	ret	nz				; If so, quit!
-    if 0
+	if	0
 	ld	h,0				; h = 0
 	ld	l,(ix+zTrack.Detune)		; Get detune value
 	; This is a 16-bit sign extension of (ix+19h)
 	bit	7,l				; Did prior value have 80h set?
 	jr	z,+				; If not, skip next step
 	ld	h,0FFh			; h = FFh
-    else
+	else
 	ld	l,(ix+zTrack.Detune)		; Get detune value
 	ld	a, l
 	add	a, a			; sign bit into carry
 	sbc	a, a
 	ld	h, a			; h = sign extention
-    endif
+	endif
 +
 	add	hl,de			; Alter frequency just a tad
 	ld	c,h				; Upper part of frequency as data to FM ('c')
@@ -1198,7 +1198,7 @@ zPSGSetFreq:
 	jr	c,+				; If carry (only time that happens if 80h because of earlier logic) this is a rest!
 	add	a,(ix+zTrack.Transpose)		; Add current channel transpose (coord flag E9)
 	add	a,12
-  if 0
+	if	0
 	add	a,a
 	add	a,zPSGFrequencies&0FFh	; Point to proper place in table
 	ld	(zloc_46D+2),a	; store into the instruction after zloc_46D (self-modifying code)
@@ -1211,11 +1211,11 @@ zloc_46D:
 	ld	(ix+zTrack.FreqLow),e		; Frequency low byte   -> trackPtr + 0Dh
 	ld	(ix+zTrack.FreqHigh),d		; Frequency high byte  -> trackPtr + 0Eh
 	ret
-  else
+	else
 	ld	de, zPSGFrequencies
 	ld	c,0	; SetFMPSGFreq uses c to hold octave bits for FM
 	jp	SetFMPSGFreq
-  endif
+	endif
 +
 	; If you get here, we're doing a PSG rest
 	set	1,(ix+zTrack.PlaybackControl)		; Set "track in rest" bit
@@ -1240,19 +1240,19 @@ zPSGUpdateFreq:
 	and	6
 	ret	nz				; If either bit 1 ("track in rest") and 2 ("SFX overriding this track"), quit!
 	; This is a 16-bit sign extension of (ix+19h) -> 'hl'
-    if 0
+	if	0
 	ld	h,0
 	ld	l,(ix+zTrack.Detune)		; hl = detune value (coord flag E9)
 	bit	7,l				; Did prior value have 80h set?
 	jr	z,+				; If not, skip next step
 	ld	h,0FFh			; sign extend negative value
-    else
+	else
 	ld	l,(ix+zTrack.Detune)		; Get detune value
 	ld	a, l
 	add	a, a			; sign bit into carry
 	sbc	a, a
 	ld	h, a			; h = sign extention
-    endif
+	endif
 +
 	add	hl,de			; Alter frequency just a tad
 	; This picks out the reg to write to the PSG
@@ -2728,12 +2728,12 @@ zBankSwitchPart2:
 zCoordFlag:
 	sub	0E0h
 	add	a,a
-    if 0
+	if	0
 	add	a,coordflagLookup&0FFh
 	ld	(.writeme+2),a
 .writeme:
 	ld	bc,(coordflagLookup)
-    else
+	else
 	ex	de, hl
 	ld	hl, coordflagLookup
 	add	a, l
@@ -2745,7 +2745,7 @@ zCoordFlag:
 	inc	hl
 	ld	b, (hl)
 	ex	de, hl
-    endif
+	endif
 	ld	(.writeme2+1),bc ; store into the instruction after coordflagLookup (self-modifying code)
 	ld	a,(hl)
 	inc	hl

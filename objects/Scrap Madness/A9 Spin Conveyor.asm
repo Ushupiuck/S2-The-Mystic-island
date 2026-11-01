@@ -162,8 +162,8 @@ SMZ_SpinC_Solid:	; Routine 2
 ; ---------------------------------------------------------------------------
 
 .spinning:
-        jsr (SMZ_ReleaseRiders).l
-        bra.w SMZ_SpinC_Platform_Update
+		jsr	(SMZ_ReleaseRiders).l
+		bra.w	SMZ_SpinC_Platform_Update
 SMZ_SpinC_Platform_Update:
 		move.w	obX(a0),d0				; get platform's current X-position
 		cmp.w	SMZ_spinc_nextX(a0),d0			; is platform at corner? (X-axis)

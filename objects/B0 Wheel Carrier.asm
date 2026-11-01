@@ -11,153 +11,153 @@ wheel_payload_x = objoff_2E		; signed bytes: left/right bounds, right exclusive
 wheel_payload_y = obAngle		; signed bytes: top/bottom bounds, bottom exclusive
 
 WheelCarrier:
-        tst.b obRoutine(a0)
-        bne.s .ready
-        move.b #2,obRoutine(a0)
-        move.l #Map_MovSpring,obMap(a0)
-        move.b #Map_MovSpring_height,height_pixels(a0)
-        move.b #Map_MovSpring_width,width_pixels(a0)
-        move.w #ArtTile_Wheel,obGfx(a0)
-        move.b #4,obRender(a0)
-        move.w #$200,obPriority(a0)
-        move.b #8,obWidth(a0)
-        move.b #7,obHeight(a0)
-        move.w #$180,obVelX(a0)
-        btst #0,obStatus(a0)
+		tst.b	obRoutine(a0)
+		bne.s	.ready
+		move.b	#2,obRoutine(a0)
+		move.l	#Map_MovSpring,obMap(a0)
+		move.b	#Map_MovSpring_height,height_pixels(a0)
+		move.b	#Map_MovSpring_width,width_pixels(a0)
+		move.w	#ArtTile_Wheel,obGfx(a0)
+		move.b	#4,obRender(a0)
+		move.w	#$200,obPriority(a0)
+		move.b	#8,obWidth(a0)
+		move.b	#7,obHeight(a0)
+		move.w	#$180,obVelX(a0)
+		btst	#0,obStatus(a0)
 		beq.w	.mount
-        neg.w obVelX(a0)
+		neg.w	obVelX(a0)
 		bra.w	.mount		; mount the payload before the first movement/wall check
 .ready:
-        move.w obX(a0),wheel_old_x(a0)
-        move.w obY(a0),wheel_old_y(a0)
-        cmpi.b #2,obRoutine(a0)
-        bne.s .roll
-        jsr (ObjectMoveAndFall).l
+		move.w	obX(a0),wheel_old_x(a0)
+		move.w	obY(a0),wheel_old_y(a0)
+		cmpi.b	#2,obRoutine(a0)
+		bne.s	.roll
+		jsr	(ObjectMoveAndFall).l
 		bsr.w	.wall
 		bmi.s	.reverse
-        jsr (ObjHitFloor).l
-        bpl.s .mount
-        add.w d1,obY(a0)
-        clr.w obVelY(a0)
-        move.b #4,obRoutine(a0)
-        bra.s .mount
+		jsr	(ObjHitFloor).l
+		bpl.s	.mount
+		add.w	d1,obY(a0)
+		clr.w	obVelY(a0)
+		move.b	#4,obRoutine(a0)
+		bra.s	.mount
 .roll:
-        jsr (ObjectMove).l
+		jsr	(ObjectMove).l
 		bsr.w	.wall
 		bmi.s	.reverse
-        jsr (ObjHitFloor).l
-        cmpi.w #12,d1
-        bgt.s .reverse
-        cmpi.w #-12,d1
-        blt.s .reverse
-        add.w d1,obY(a0)
-        bra.s .mount
+		jsr	(ObjHitFloor).l
+		cmpi.w	#12,d1
+		bgt.s	.reverse
+		cmpi.w	#-12,d1
+		blt.s	.reverse
+		add.w	d1,obY(a0)
+		bra.s	.mount
 .reverse:
-        move.w wheel_old_x(a0),obX(a0)
-        move.w wheel_old_y(a0),obY(a0)
-        neg.w obVelX(a0)
-        bchg #0,obStatus(a0)
+		move.w	wheel_old_x(a0),obX(a0)
+		move.w	wheel_old_y(a0),obY(a0)
+		neg.w	obVelX(a0)
+		bchg	#0,obStatus(a0)
 .mount:
-        tst.b wheel_spawned(a0)
-        bne.s .carry
-        jsr (FindFreeObj).l
-        bne.w .draw
-        moveq #0,d0
-        move.w obSubtype(a0),d0
-        andi.w #15,d0
-        cmpi.w #WheelPayload_Count,d0
-        blo.s .config
-        moveq #0,d0
+		tst.b	wheel_spawned(a0)
+		bne.s	.carry
+		jsr	(FindFreeObj).l
+		bne.w	.draw
+		moveq	#0,d0
+		move.w	obSubtype(a0),d0
+		andi.w	#15,d0
+		cmpi.w	#WheelPayload_Count,d0
+		blo.s	.config
+		moveq	#0,d0
 .config:
 		mulu.w	#WheelPayload_size,d0
-        lea (WheelPayloads).l,a2
-        adda.w d0,a2
-        move.l (a2)+,d0
-        move.l d0,code(a1)
-        move.l d0,wheel_type(a0)
-        move.l a1,wheel_child(a0)
-        move.w (a2)+,wheel_offset(a0)
-        move.w (a2)+,obSubtype(a1)
-        move.b (a2),obStatus(a1)
-        move.b (a2)+,obRender(a1)
-        addq.w #1,a2              ; explicit pad keeps payload bounds word aligned
+		lea	(WheelPayloads).l,a2
+		adda.w	d0,a2
+		move.l	(a2)+,d0
+		move.l	d0,code(a1)
+		move.l	d0,wheel_type(a0)
+		move.l	a1,wheel_child(a0)
+		move.w	(a2)+,wheel_offset(a0)
+		move.w	(a2)+,obSubtype(a1)
+		move.b	(a2),obStatus(a1)
+		move.b	(a2)+,obRender(a1)
+		addq.w	#1,a2              ; explicit pad keeps payload bounds word aligned
 		move.w	(a2)+,wheel_payload_x(a0)
 		move.w	(a2),wheel_payload_y(a0)
-        move.w respawn_addr(a0),respawn_addr(a1)
-        move.b #1,wheel_spawned(a0)
-        bra.s .position
+		move.w	respawn_addr(a0),respawn_addr(a1)
+		move.b	#1,wheel_spawned(a0)
+		bra.s	.position
 .carry:
-        movea.l wheel_child(a0),a1
-        move.l a1,d0
-        beq.s .draw
-        move.l code(a1),d0
-        cmp.l wheel_type(a0),d0
-        bne.s .consumed
-        move.w respawn_addr(a1),d0
-        cmp.w respawn_addr(a0),d0
-        bne.s .consumed
-        movea.l a1,a2
-        lea (v_player).w,a1
-        bsr.s .rider
-        lea (v_player2).w,a1
-        bsr.s .rider
-        movea.l a2,a1
+		movea.l	wheel_child(a0),a1
+		move.l	a1,d0
+		beq.s	.draw
+		move.l	code(a1),d0
+		cmp.l	wheel_type(a0),d0
+		bne.s	.consumed
+		move.w	respawn_addr(a1),d0
+		cmp.w	respawn_addr(a0),d0
+		bne.s	.consumed
+		movea.l	a1,a2
+		lea	(v_player).w,a1
+		bsr.s	.rider
+		lea	(v_player2).w,a1
+		bsr.s	.rider
+		movea.l	a2,a1
 .position:
-        move.l obX(a0),obX(a1)
-        moveq #0,d0
-        move.w wheel_offset(a0),d0
-        swap d0
-        add.l obY(a0),d0
-        move.l d0,obY(a1)
-        clr.w obVelX(a1)
-        clr.w obVelY(a1)
-        bra.s .draw
+		move.l	obX(a0),obX(a1)
+		moveq	#0,d0
+		move.w	wheel_offset(a0),d0
+		swap	d0
+		add.l	obY(a0),d0
+		move.l	d0,obY(a1)
+		clr.w	obVelX(a1)
+		clr.w	obVelY(a1)
+		bra.s	.draw
 .consumed:
-        clr.l wheel_child(a0)
+		clr.l	wheel_child(a0)
         ; A destroyed monitor must not become a new monitor on backtracking.
-        clr.w respawn_addr(a0)
+		clr.w	respawn_addr(a0)
 .draw:
-        lea (Ani_MovSpring).l,a1
-        jsr (AnimateSprite).l
-        out_of_range2 .unload
-        jmp (DisplaySprite).l
+		lea	(Ani_MovSpring).l,a1
+		jsr	(AnimateSprite).l
+		out_of_range2	.unload
+		jmp	(DisplaySprite).l
 .rider:
-        tst.b obControl(a1)
-        bmi.s .return
-        btst #status.player.on_object,obStatus(a1)
-        beq.s .return
-        moveq #0,d0
-        move.b standonobject(a1),d0
-        mulu.w #object_size,d0
-        addi.l #v_objspace,d0
-        cmp.l a2,d0
-        bne.s .return
-        move.w obX(a0),d0
-        sub.w wheel_old_x(a0),d0
-        add.w d0,obX(a1)
-        move.w obY(a0),d0
-        sub.w wheel_old_y(a0),d0
-        add.w d0,obY(a1)
+		tst.b	obControl(a1)
+		bmi.s	.return
+		btst	#status.player.on_object,obStatus(a1)
+		beq.s	.return
+		moveq	#0,d0
+		move.b	standonobject(a1),d0
+		mulu.w	#object_size,d0
+		addi.l	#v_objspace,d0
+		cmp.l	a2,d0
+		bne.s	.return
+		move.w	obX(a0),d0
+		sub.w	wheel_old_x(a0),d0
+		add.w	d0,obX(a1)
+		move.w	obY(a0),d0
+		sub.w	wheel_old_y(a0),d0
+		add.w	d0,obY(a1)
 .return:
-        rts
+		rts
 .unload:
-        movea.l wheel_child(a0),a1
-        move.l a1,d0
-        beq.s .delete
-        move.l code(a1),d0
-        cmp.l wheel_type(a0),d0
-        bne.s .delete
-        move.w respawn_addr(a1),d0
-        cmp.w respawn_addr(a0),d0
-        bne.s .delete
-        move.l a0,-(sp)
-        movea.l a1,a0
-        jsr (SMZ_ReleaseRiders).l
-        movea.l a0,a1
-        movea.l (sp)+,a0
-        jsr (DeleteObject2).l
+		movea.l	wheel_child(a0),a1
+		move.l	a1,d0
+		beq.s	.delete
+		move.l	code(a1),d0
+		cmp.l	wheel_type(a0),d0
+		bne.s	.delete
+		move.w	respawn_addr(a1),d0
+		cmp.w	respawn_addr(a0),d0
+		bne.s	.delete
+		move.l	a0,-(sp)
+		movea.l	a1,a0
+		jsr	(SMZ_ReleaseRiders).l
+		movea.l	a0,a1
+		movea.l	(sp)+,a0
+		jsr	(DeleteObject2).l
 .delete:
-        jmp (UnloadObject).l
+		jmp	(UnloadObject).l
 
 ; Use the existing directional wall probes, as Splats does. Probe the upper
 ; rim so traversable steps/slopes are still handled by the floor check.
@@ -242,43 +242,43 @@ WheelCarrier:
 ; Bounds include the table's facing flags; the carrier's flip only steers it.
 WheelPayload_size = 14
 WheelPayloads:
-        dc.l Obj41
-        dc.w -16
-        dc.w $00
-        dc.b 0,0; red up spring
+		dc.l	Obj41
+		dc.w	-16
+		dc.w	$00
+		dc.b	0,0; red up spring
 		dc.b	-16,16,-8,8
-        dc.l Obj41
-        dc.w -16
-        dc.w $02
-        dc.b 0,0; yellow up spring
+		dc.l	Obj41
+		dc.w	-16
+		dc.w	$02
+		dc.b	0,0; yellow up spring
 		dc.b	-16,16,-8,8
-        dc.l Obj41
-        dc.w -16
-        dc.w $10
-        dc.b 0,0; red side spring
+		dc.l	Obj41
+		dc.w	-16
+		dc.w	$10
+		dc.b	0,0; red side spring
 		dc.b	-8,8,-16,16
-        dc.l Obj41
-        dc.w -16
-        dc.w $12
-        dc.b 1,0; yellow side spring facing left
+		dc.l	Obj41
+		dc.w	-16
+		dc.w	$12
+		dc.b	1,0; yellow side spring facing left
 		dc.b	-8,8,-16,16
-        dc.l Obj41
-        dc.w -16
-        dc.w $30
-        dc.b 0,0; red diagonal spring
+		dc.l	Obj41
+		dc.w	-16
+		dc.w	$30
+		dc.b	0,0; red diagonal spring
 		dc.b	-21,11,-15,17
-        dc.l Obj26
-        dc.w -21
-        dc.w 4
-        dc.b 0,0; ring monitor
+		dc.l	Obj26
+		dc.w	-21
+		dc.w	4
+		dc.b	0,0; ring monitor
 		dc.b	-16,16,-17,15
-        dc.l Obj26
-        dc.w -21
-        dc.w 6
-        dc.b 0,0; shield monitor
+		dc.l	Obj26
+		dc.w	-21
+		dc.w	6
+		dc.b	0,0; shield monitor
 		dc.b	-16,16,-17,15
-        dc.l Obj36
-        dc.w -15
+		dc.l	Obj36
+		dc.w	-15
 		dc.w $A0
 		dc.b 0,0; single S1 upward spike
 		dc.b	-4,4,-16,16

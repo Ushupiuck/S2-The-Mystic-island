@@ -90,11 +90,11 @@ HVPlat_StateTable:
 		dc.b 4,   4, $18,   8	; horizontal shrinking, near orb
 
 		dc.b 3, $20,   8,   8	; center orb only, hold
- if FixBugs=1
+	if	FixBugs=1
 		dc.b 2,   4,   8, $18	; vertical expanding, near orb
 		dc.b 1,   4,   8, $28	; vertical expanding
- else		; Bug: The last 2 entries are inverted
+	else	; Bug: The last 2 entries are inverted
 		dc.b 2,   4, $18,   8	; vertical expanding, near orb
 		dc.b 1,   4, $28,   8	; vertical expanding
- endif
+	endif
 		even

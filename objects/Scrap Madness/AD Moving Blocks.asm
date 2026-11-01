@@ -59,15 +59,15 @@ SMZ_MBlock_Main:	; Routine 0
 
 SMZ_MBlock_Platform:
 SMZ_MBlock_StandOn:
-        move.w obX(a0),-(sp)
-        bsr.w SMZ_MBlock_Move
-        move.w (sp)+,d4
-        moveq #0,d1
-        move.b obActWid(a0),d1
-        moveq #9,d3
+		move.w	obX(a0),-(sp)
+		bsr.w	SMZ_MBlock_Move
+		move.w	(sp)+,d4
+		moveq	#0,d1
+		move.b	obActWid(a0),d1
+		moveq	#9,d3
         ; Original Object 52 is a one-way platform: both actors may jump
         ; through the underside before landing on the sliding floor.
-        jsr (PlatformObject2).l
+		jsr	(PlatformObject2).l
 SMZ_MBlock_DisplayOrDelete:
 		out_of_range2	UnloadObject,SMZ_mblock_origX(a0)	; has platform gone out of range? if yes, delete it
 		jmp (DisplaySprite).l				; display platform sprite

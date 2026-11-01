@@ -75,11 +75,11 @@ __LABEL__ label *
 zoneanimcount := 0
 zoneanimcur := "__LABEL__"
 	dc.w zoneanimcount___LABEL__	; Number of scripts for a zone (-1)
-    endm
+	endm
 
 zoneanimend macro
 zoneanimcount_{"\{zoneanimcur}"} = zoneanimcount-1
-    endm
+	endm
 
 zoneanimdeclanonid := 0
 
@@ -90,17 +90,17 @@ start:
 	dc.w tiles_to_bytes(vramaddr)
 	dc.b numentries, numvramtiles
 zoneanimcount := zoneanimcount + 1
-    endm
+	endm
 ; macro to declare an offset table
 offsetTable macro {INTLABEL}
 current_offset_table := __LABEL__
 __LABEL__ label *
-    endm
+	endm
 
 ; macro to declare an entry in an offset table
 offsetTableEntry macro ptr
 	dc.ATTRIBUTE ptr-current_offset_table
-    endm
+	endm
 ; ---------------------------------------------------------------------------
 ; function to calculate the location of a tile in plane mappings
 planeLoc function width,col,line,(((width * line) + col) * 2)
@@ -249,7 +249,7 @@ z80_ptr function x,(x)<<8&$FF00|(x)>>8&$FF
 ; macro to declare a little-endian 16-bit pointer for the Z80 sound driver
 rom_ptr_z80 macro addr
 	dc.w z80_ptr(addr)
-    endm
+	endm
 
 ; aligns the start of a bank, and detects when the bank's contents is too large
 ; can also print the amount of free space in a bank with DebugSoundbanks set
@@ -258,7 +258,7 @@ startBank macro {INTLABEL}
 __LABEL__ label *
 soundBankStart := __LABEL__
 soundBankName := "__LABEL__"
-    endm
+	endm
 
 DebugSoundbanks := 1
 
@@ -268,7 +268,7 @@ finishBank macro
 	elseif (DebugSoundbanks<>0)&&(MOMPASS=1)
 		message "soundBank \{soundBankName} has $\{$8000+soundBankStart-*} bytes free at end."
 	endif
-    endm
+	endm
 
 ; ---------------------------------------------------------------------------
 ; disable interrupts
@@ -293,7 +293,7 @@ enable_ints:	macro
 disableIntsSave macro
 	move.w	sr,-(sp)							; save current interrupt mask
 	disable_ints								; mask off interrupts
-    endm
+	endm
 
 ; ---------------------------------------------------------------------------
 ; enable interrupts
@@ -301,7 +301,7 @@ disableIntsSave macro
 
 enableIntsSave macro
 	move.w	(sp)+,sr							; restore interrupts to previous state
-    endm
+	endm
 
 ; ---------------------------------------------------------------------------
 ; long conditional jumps
@@ -491,7 +491,7 @@ dma68kToVDPChunk macro source,dest,length,type
 ; Macro for marking the boundaries of an object layout file
 ObjectLayoutBoundary macro
 		dc.w	$FFFF,$0000,$0000,$0000
-    endm
+	endm
 
 ; Include and validate an eight-byte placement list against its state capacity.
 ; Its surrounding ObjectLayoutBoundary remains explicit in the data table.
@@ -519,4 +519,4 @@ mvabs macro source,destination
 	bpl.s	.skip
 	neg.ATTRIBUTE	destination
 .skip:
-    endm
+	endm

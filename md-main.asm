@@ -18,14 +18,14 @@ MegaCDMode1		= 1	; cartridge boot; CD PRG RAM holds chunks
 	include	"_definitions/s2.constants.asm"
 	include	"_definitions/Sprite Bounds.asm"
 	include	"_definitions/_smps2asm_inc.asm"
- if AdvancedHandler
+	if	AdvancedHandler
 	include	"_definitions/Debugger.asm"
- endif
+	endif
 
 StartOfRom:
-    if * <> 0
+	if	* <> 0
 	fatal "StartOfRom was $\{*} but it should be 0"
-    endif
+	endif
 Vectors:
 		dc.l v_systemstack,	EntryPoint,	BusError,	AddressError
 		dc.l IllegalInstr,	ZeroDivide,	ChkInstr,	TrapvInstr
@@ -105,9 +105,9 @@ VDPInitValues_End:
 
 Z80StartupCodeBegin:
 		; Z80 instructions (not the sound driver; that gets loaded later)
-    save
-    CPU Z80			; start assembling Z80 code
-    phase 0			; pretend we're at address 0
+	save
+	CPU	Z80			; start assembling Z80 code
+	phase	0			; pretend we're at address 0
 	xor	a		; clear a to 0
 	ld	bc,((Z80_RAM_end-Z80_RAM)-zStartupCodeEndLoc)-1	; prepare to loop this many times
 	ld	de,zStartupCodeEndLoc+1	; initial destination address
@@ -134,9 +134,9 @@ Z80StartupCodeBegin:
 	ld	(hl),0E9h	; replace the first instruction with a jump to itself
 	jp	(hl)		; jump to the first instruction (to stay there forever)
 zStartupCodeEndLoc:
-    dephase	; stop pretending
+	dephase	; stop pretending
 	restore
-    padding off	; unfortunately our flags got reset so we have to set them again...
+	padding	off	; unfortunately our flags got reset so we have to set them again...
 Z80StartupCodeEnd:
 
 		dc.w $8104				; VDP display mode
@@ -2289,10 +2289,10 @@ MusicList:
 		dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0E
 		dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0F
 MusicList_End:
-        if MusicList_End-MusicList<>LevelActCount
-            fatal "MusicList must contain four entries for every zone"
-        endif
-        even
+		if	MusicList_End-MusicList<>LevelActCount
+			fatal	"MusicList must contain four entries for every zone"
+		endif
+		even
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Level
@@ -2683,17 +2683,17 @@ LoadCollisionIndexes:
 ; One another (At least their data. The entries themselves are unique)
 ; ---------------------------------------------------------------------------
 TimeZoneTable:
- if TimeTravel=1
+	if	TimeTravel=1
 		dc.l ColPointers	; 0 - Present
 		dc.l PColPointers	; 1 - Past
 		dc.l GColPointers	; 2 - Good Future
 		dc.l BColPointers	; 3 - Bad Future
- else		; Main entry + 3 dummy Entries
+	else	; Main entry + 3 dummy Entries
 		dc.l ColPointers	; 0 - Present
 		dc.l ColPointers	; 1 - Past
 		dc.l ColPointers	; 2 - Good Future
 		dc.l ColPointers	; 3 - Bad Future
- endif
+	endif
 ; ---------------------------------------------------------------------------
 ; Pointers to collision indexes (Present)
 ; Contains an array of pointers to the primary collision index data for each
@@ -2764,7 +2764,7 @@ ColPointers:
 		dc.l Col_GHZ2
 		dc.l Col_GHZ3
 		dc.l Col_GHZ4
- if TimeTravel=1
+	if	TimeTravel=1
 ; ---------------------------------------------------------------------------
 ; Pointers to collision indexes (Past)
 ; Contains an array of pointers to the primary collision index data for each
@@ -2975,7 +2975,7 @@ BColPointers:
 		dc.l BCol_GHZ1
 		dc.l BCol_GHZ1
 		dc.l BCol_GHZ1
- endif
+	endif
 		include	"_inc/Oscillatory Routines.asm"
 
 ; =============== S U B R O U T I N E =======================================
@@ -3094,7 +3094,7 @@ LoadRingFrame:
 nosignpost macro actid
 		cmpi.w	#actid,(Current_ZoneAndAct).w
 		beq.ATTRIBUTE	.return	; rts
-    endm
+	endm
 
 ; sub_4BD2:
 SetLevelEndType:
@@ -3169,14 +3169,14 @@ GetLevelArtHeader:
 		rts
 
 LevelArt_TimezoneTable:
- if TimeTravel=1
+	if	TimeTravel=1
 		dc.l LevelArtPointers	; Present
 		dc.l LevelArtPointersP	; Past
 		dc.l LevelArtPointersGF	; Good Future
 		dc.l LevelArtPointersBF	; Bad Future
- else
+	else
 		dc.l LevelArtPointers,LevelArtPointers,LevelArtPointers,LevelArtPointers
- endif
+	endif
 
 ; ---------------------------------------------------------------------------
 ; Load level art, blocks, chunks, layout, secondary PLCs and palette.
@@ -3281,14 +3281,14 @@ LevelLayoutLoad:
 ; End of function LevelLayoutLoad
 
 LevelLayout_TimezoneTable:
- if TimeTravel=1
+	if	TimeTravel=1
 		dc.l Level_Index	; Present
 		dc.l Level_Index_Past	; Past
 		dc.l Level_Index_GoodFuture	; Good Future
 		dc.l Level_Index_BadFuture	; Bad Future
- else
+	else
 		dc.l Level_Index,Level_Index,Level_Index,Level_Index
- endif
+	endif
 
 ; ---------------------------------------------------------------------------
 ; MM: these functions now write directly to Z80 RAM
@@ -4638,7 +4638,7 @@ BgScrollSpeed:
 		move.w	d1,(Camera_BG3_X_pos).w
 
 .skip:
- if MegaCDMode1
+	if	MegaCDMode1
 		movem.w	d0-d1,-(sp)
 		bsr.w	GetLevelPlaneRecord
 		movea.l	(a2),a0
@@ -4648,17 +4648,17 @@ BgScrollSpeed:
 		movea.l	4(a2),a0
 		movem.w	(sp)+,d0-d1
 		jmp	(a0)
- else
+	else
 		moveq	#0,d2
 		move.b	(Current_Zone).w,d2
 		add.w	d2,d2
 		move.w	BgScroll_Index(pc,d2.w),d2
 		jmp	BgScroll_Index(pc,d2.w)
- endif
+	endif
 ; End of function BgScrollSpeed
 
 ; ---------------------------------------------------------------------------
- if MegaCDMode1=0
+	if	MegaCDMode1=0
 BgScroll_Index:
 		dc.w BgScroll_GHZ-BgScroll_Index
 		dc.w BgScroll_LZ-BgScroll_Index
@@ -4676,7 +4676,7 @@ BgScroll_Index:
 		dc.w BgScroll_GHZ-BgScroll_Index
 		dc.w BgScroll_GHZ-BgScroll_Index
 		dc.w BgScroll_GHZ-BgScroll_Index
- endif
+	endif
 ; ---------------------------------------------------------------------------
 
 BgScroll_SMZ:
@@ -4901,9 +4901,9 @@ BgScroll_S1Ending:
 
 ; DeformLayers:
 DeformBGLayer:
- if MegaCDMode1
+	if	MegaCDMode1
 		jmp	LevelPlane_Events
- else
+	else
 		tst.b	(Deform_lock).w
 		bne.s	-
 		clr.w	(Scroll_flags).w
@@ -4934,11 +4934,11 @@ DeformBGLayer:
 		add.w	d0,d0
 		move.w	Deform_Index(pc,d0.w),d0
 		jmp	Deform_Index(pc,d0.w)
- endif
+	endif
 ; End of function DeformBGLayer
 
 ; ---------------------------------------------------------------------------
- if MegaCDMode1=0
+	if	MegaCDMode1=0
 Deform_Index:	dc.w Deform_GHZ-Deform_Index
 		dc.w Deform_LZ-Deform_Index
 		dc.w Deform_CPZ-Deform_Index
@@ -4955,7 +4955,7 @@ Deform_Index:	dc.w Deform_GHZ-Deform_Index
 		dc.w Deform_GHZ-Deform_Index
 		dc.w Deform_GHZ-Deform_Index
 		dc.w Deform_GHZ-Deform_Index
- endif
+	endif
 ; ---------------------------------------------------------------------------
 
 Deform_GHZ:
@@ -8569,9 +8569,9 @@ Obj41_SlopeData_DiagDown:
 ; Primary sprite mappings for springs
 ; ----------------------------------------------------------------------------
 Map_obj41: binclude "mappings/sprite/Spring.bin"
-        even
+		even
 Map_obj41a: binclude "mappings/sprite/Spring (Yellow).bin"
-        even
+		even
 
 Map_obj41_GHZ:	binclude	"mappings/sprite/obj41_GHZ.bin"
 		even
@@ -12063,7 +12063,7 @@ loc_1B656:
 ; End of function HUD_Lives
 
 ; ---------------------------------------------------------------------------
- if AdvancedHandler=0
+	if	AdvancedHandler=0
 BusError:
 		move.b	#2,(v_errortype).w
 		bra.s	ErrorMsg_TwoAddresses
@@ -12245,7 +12245,7 @@ ErrorText.trace:	dc.b "TRACE              "
 ErrorText.line1010:	dc.b "LINE 1010 EMULATOR "
 ErrorText.line1111:	dc.b "LINE 1111 EMULATOR "
 		even
- endif
+	endif
 ; ---------------------------------------------------------------------------
 Art_HUD:	binclude	"art/uncompressed/HUD Numbers.bin"
 		even
@@ -13247,11 +13247,11 @@ Snd_Driver_End:
 ; ---------------------------------------------------------------------------
 		include	"_inc/DebugList.asm"
 		include	"_inc/LevelHeaders.asm"
- if TimeTravel=1
+	if	TimeTravel=1
 		include	"_inc/LevelHeaders_Past.asm"
 		include	"_inc/LevelHeaders_GF.asm"
 		include	"_inc/LevelHeaders_BF.asm"
- endif
+	endif
 		include	"_inc/Pattern Load Cues.asm"
 		; $8EE bytes taken, 2EF8 still free
 ; ---------------------------------------------------------------------------
@@ -13844,7 +13844,7 @@ Kosp_GHZ:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
 Map16_GHZ:	binclude	"mappings/16x16/GHZ.kosp"
 Map128_GHZ:	binclude	"mappings/128x128/GHZ.kosp"
 Map128_Blank:	binclude	"mappings/128x128/Blank.kosp"
- if TimeTravel=1
+	if	TimeTravel=1
 ; Past
 PKosp_GHZ:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
 PMap16_GHZ:	binclude	"mappings/16x16/GHZ.kosp"
@@ -13857,13 +13857,13 @@ GMap128_GHZ:	binclude	"mappings/128x128/GHZ.kosp"
 BKosp_GHZ:	binclude	"art/kosinski/level/8x8 - GHZ.kosp"
 BMap16_GHZ:	binclude	"mappings/16x16/GHZ.kosp"
 BMap128_GHZ:	binclude	"mappings/128x128/GHZ.kosp"
- endif
+	endif
 ; ===========================================================================
 ; Zone 01
 Kosp_LZ:	binclude	"art/kosinski/level/8x8 - LZ.kosp"
 Map16_LZ:	binclude	"mappings/16x16/LZ.kosp"
 Map128_LZ:	binclude	"mappings/128x128/LZ.kosp"
- if TimeTravel=1
+	if	TimeTravel=1
 ; Past
 PKosp_LZ:	binclude	"art/kosinski/level/8x8 - LZ.kosp"
 PMap16_LZ:	binclude	"mappings/16x16/LZ.kosp"
@@ -13876,13 +13876,13 @@ GMap128_LZ:	binclude	"mappings/128x128/LZ.kosp"
 BKosp_LZ:	binclude	"art/kosinski/level/8x8 - LZ.kosp"
 BMap16_LZ:	binclude	"mappings/16x16/LZ.kosp"
 BMap128_LZ:	binclude	"mappings/128x128/LZ.kosp"
- endif
+	endif
 ; ===========================================================================
 ; Zone 02
 Kosp_CPZ:	binclude	"art/kosinski/level/8x8 - CPZ.kosp"
 Map16_CPZ:	binclude	"mappings/16x16/CPZ.kosp"
 Map128_CPZ:	binclude	"mappings/128x128/CPZ.kosp"
- if TimeTravel=1
+	if	TimeTravel=1
 ; Past
 PKosp_CPZ:	binclude	"art/kosinski/level/8x8 - CPZ.kosp"
 PMap16_CPZ:	binclude	"mappings/16x16/CPZ.kosp"
@@ -13895,7 +13895,7 @@ GMap128_CPZ:	binclude	"mappings/128x128/CPZ.kosp"
 BKosp_CPZ:	binclude	"art/kosinski/level/8x8 - CPZ.kosp"
 BMap16_CPZ:	binclude	"mappings/16x16/CPZ.kosp"
 BMap128_CPZ:	binclude	"mappings/128x128/CPZ.kosp"
- endif
+	endif
 ; ===========================================================================
 ; Zone 03: Act 2 owns its PP-background terrain bank.
 Kosp_EHZ2:	binclude "art/kosinski/level/8x8 - EHZ2.kosp"
@@ -13907,7 +13907,7 @@ Map128_EHZ2:	binclude "mappings/128x128/EHZ2.kosp"
 Kosp_EHZ:	binclude	"art/kosinski/level/8x8 - EHZ.kosp"
 Map16_EHZ:	binclude	"mappings/16x16/EHZ.kosp"
 Map128_EHZ:	binclude	"mappings/128x128/EHZ.kosp"
- if TimeTravel=1
+	if	TimeTravel=1
 ; Past
 PKosp_EHZ:	binclude	"art/kosinski/level/8x8 - EHZ.kosp"
 PMap16_EHZ:	binclude	"mappings/16x16/EHZ.kosp"
@@ -13920,13 +13920,13 @@ GMap128_EHZ:	binclude	"mappings/128x128/EHZ.kosp"
 BKosp_EHZ:	binclude	"art/kosinski/level/8x8 - EHZ.kosp"
 BMap16_EHZ:	binclude	"mappings/16x16/EHZ.kosp"
 BMap128_EHZ:	binclude	"mappings/128x128/EHZ.kosp"
- endif
+	endif
 ; ===========================================================================
 ; Zone 04
 Kosp_HPZ:	binclude	"art/kosinski/level/8x8 - HPZ.kosp"
 Map16_HPZ:	binclude	"mappings/16x16/HPZ.kosp"
 Map128_HPZ:	binclude	"mappings/128x128/HPZ.kosp"
- if TimeTravel=1
+	if	TimeTravel=1
 ; Past
 PKosp_HPZ:	binclude	"art/kosinski/level/8x8 - HPZ.kosp"
 PMap16_HPZ:	binclude	"mappings/16x16/HPZ.kosp"
@@ -13939,13 +13939,13 @@ GMap128_HPZ:	binclude	"mappings/128x128/HPZ.kosp"
 BKosp_HPZ:	binclude	"art/kosinski/level/8x8 - HPZ.kosp"
 BMap16_HPZ:	binclude	"mappings/16x16/HPZ.kosp"
 BMap128_HPZ:	binclude	"mappings/128x128/HPZ.kosp"
- endif
+	endif
 ; ===========================================================================
 ; Zone 05
 Kosp_HTZ:	binclude	"art/kosinski/level/8x8 - HTZ.kosp"
 Map16_HTZ:	binclude	"mappings/16x16/HTZ.kosp"
 Map128_HTZ:	binclude	"mappings/128x128/HTZ.kosp"
- if TimeTravel=1
+	if	TimeTravel=1
 ; Past
 PKosp_HTZ:	binclude	"art/kosinski/level/8x8 - HTZ.kosp"
 PMap16_HTZ:	binclude	"mappings/16x16/HTZ.kosp"
@@ -13958,13 +13958,13 @@ GMap128_HTZ:	binclude	"mappings/128x128/HTZ.kosp"
 BKosp_HTZ:	binclude	"art/kosinski/level/8x8 - HTZ.kosp"
 BMap16_HTZ:	binclude	"mappings/16x16/HTZ.kosp"
 BMap128_HTZ:	binclude	"mappings/128x128/HTZ.kosp"
- endif
+	endif
 ; ===========================================================================
 ; Zone 06 (Filler; currently S1's leftover ending)
 Kosp_MTZ:	binclude	"art/kosinski/level/8x8 - MTZ.kosp"
 Map16_MTZ:	binclude	"mappings/16x16/MTZ.kosp"
 Map128_MTZ:	binclude	"mappings/128x128/MTZ.kosp"
- if TimeTravel=1
+	if	TimeTravel=1
 ; Past
 PKosp_MTZ:	binclude	"art/kosinski/level/8x8 - MTZ.kosp"
 PMap16_MTZ:	binclude	"mappings/16x16/MTZ.kosp"
@@ -13977,7 +13977,7 @@ GMap128_MTZ:	binclude	"mappings/128x128/MTZ.kosp"
 BKosp_MTZ:	binclude	"art/kosinski/level/8x8 - MTZ.kosp"
 BMap16_MTZ:	binclude	"mappings/16x16/MTZ.kosp"
 BMap128_MTZ:	binclude	"mappings/128x128/MTZ.kosp"
- endif
+	endif
 ; From here onwards, filler data for the NEW levels.
 ; ===========================================================================
 ; Zone 07
@@ -13985,7 +13985,7 @@ Map128_MTZBlank:	binclude	"mappings/128x128/MTZ Blank.kosp"
 Kosp_LV7:	equ Kosp_GHZ
 Map16_LV7:	equ Map16_GHZ
 Map128_LV7:	equ Map128_Blank
- if TimeTravel=1
+	if	TimeTravel=1
 ; Past
 PKosp_LV7:	equ Kosp_GHZ
 PMap16_LV7:	equ Map16_GHZ
@@ -13998,7 +13998,7 @@ GMap128_LV7:	equ Map128_Blank
 BKosp_LV7:	equ Kosp_GHZ
 BMap16_LV7:	equ Map16_GHZ
 BMap128_LV7:	equ Map128_Blank
- endif
+	endif
 ; ===========================================================================
 ; Zone 08 - Scrap Madness, independent per-act terrain banks
 Kosp_SMZ1:	binclude	"art/kosinski/level/8x8 - SMZ1.kosp"
@@ -14019,7 +14019,7 @@ Map128_SMZBlank:	binclude	"mappings/128x128/SMZ Blank.kosp"
 Kosp_LV9:	equ Kosp_GHZ
 Map16_LV9:	equ Map16_GHZ
 Map128_LV9:	equ Map128_Blank
- if TimeTravel=1
+	if	TimeTravel=1
 ; Past
 PKosp_LV9:	equ Kosp_GHZ
 PMap16_LV9:	equ Map16_GHZ
@@ -14032,13 +14032,13 @@ GMap128_LV9:	equ Map128_Blank
 BKosp_LV9:	equ Kosp_GHZ
 BMap16_LV9:	equ Map16_GHZ
 BMap128_LV9:	equ Map128_Blank
- endif
+	endif
 ; ===========================================================================
 ; Zone $0A
 Kosp_LVA:	equ Kosp_GHZ
 Map16_LVA:	equ Map16_GHZ
 Map128_LVA:	equ Map128_Blank
- if TimeTravel=1
+	if	TimeTravel=1
 ; Past
 PKosp_LVA:	equ Kosp_GHZ
 PMap16_LVA:	equ Map16_GHZ
@@ -14051,13 +14051,13 @@ GMap128_LVA:	equ Map128_Blank
 BKosp_LVA:	equ Kosp_GHZ
 BMap16_LVA:	equ Map16_GHZ
 BMap128_LVA:	equ Map128_Blank
- endif
+	endif
 ; ===========================================================================
 ; Zone $0B
 Kosp_LVB:	equ Kosp_GHZ
 Map16_LVB:	equ Map16_GHZ
 Map128_LVB:	equ Map128_Blank
- if TimeTravel=1
+	if	TimeTravel=1
 ; Past
 PKosp_LVB:	equ Kosp_GHZ
 PMap16_LVB:	equ Map16_GHZ
@@ -14070,13 +14070,13 @@ GMap128_LVB:	equ Map128_Blank
 BKosp_LVB:	equ Kosp_GHZ
 BMap16_LVB:	equ Map16_GHZ
 BMap128_LVB:	equ Map128_Blank
- endif
+	endif
 ; ===========================================================================
 ; Zone $0C
 Kosp_LVC:	equ Kosp_GHZ
 Map16_LVC:	equ Map16_GHZ
 Map128_LVC:	equ Map128_Blank
- if TimeTravel=1
+	if	TimeTravel=1
 ; Past
 PKosp_LVC:	equ Kosp_GHZ
 PMap16_LVC:	equ Map16_GHZ
@@ -14089,13 +14089,13 @@ GMap128_LVC:	equ Map128_Blank
 BKosp_LVC:	equ Kosp_GHZ
 BMap16_LVC:	equ Map16_GHZ
 BMap128_LVC:	equ Map128_Blank
- endif
+	endif
 ; ===========================================================================
 ; Zone $0D
 Kosp_LVD:	equ Kosp_GHZ
 Map16_LVD:	equ Map16_GHZ
 Map128_LVD:	equ Map128_Blank
- if TimeTravel=1
+	if	TimeTravel=1
 ; Past
 PKosp_LVD:	equ Kosp_GHZ
 PMap16_LVD:	equ Map16_GHZ
@@ -14108,13 +14108,13 @@ GMap128_LVD:	equ Map128_Blank
 BKosp_LVD:	equ Kosp_GHZ
 BMap16_LVD:	equ Map16_GHZ
 BMap128_LVD:	equ Map128_Blank
- endif
+	endif
 ; ===========================================================================
 ; Zone $0E
 Kosp_LVE:	equ Kosp_GHZ
 Map16_LVE:	equ Map16_GHZ
 Map128_LVE:	equ Map128_Blank
- if TimeTravel=1
+	if	TimeTravel=1
 ; Past
 PKosp_LVE:	equ Kosp_GHZ
 PMap16_LVE:	equ Map16_GHZ
@@ -14127,13 +14127,13 @@ GMap128_LVE:	equ Map128_Blank
 BKosp_LVE:	equ Kosp_GHZ
 BMap16_LVE:	equ Map16_GHZ
 BMap128_LVE:	equ Map128_Blank
- endif
+	endif
 ; ===========================================================================
 ; Zone $0F
 Kosp_LVF:	equ Kosp_GHZ
 Map16_LVF:	equ Map16_GHZ
 Map128_LVF:	equ Map128_Blank
- if TimeTravel=1
+	if	TimeTravel=1
 ; Past
 PKosp_LVF:	equ Kosp_GHZ
 PMap16_LVF:	equ Map16_GHZ
@@ -14146,7 +14146,7 @@ GMap128_LVF:	equ Map128_Blank
 BKosp_LVF:	equ Kosp_GHZ
 BMap16_LVF:	equ Map16_GHZ
 BMap128_LVF:	equ Map128_Blank
- endif
+	endif
 		even
 ; ---------------------------------------------------------------------------
 AngleMap:	binclude	"collision/Curve and resistance mapping.bin"
@@ -14222,7 +14222,7 @@ Col_SMZ3:	binclude	"collision/present/SMZ3.bin"
 		even
 Col_SMZ4:	binclude	"collision/present/SMZ4.bin"
 		even
- if TimeTravel=1
+	if	TimeTravel=1
 ; ---------------------------------------------------------------------------
 ; Past Collision
 ; ---------------------------------------------------------------------------
@@ -14424,7 +14424,7 @@ BCol_SMZ3:	binclude	"collision/bad future/SMZ3.bin"
 		even
 BCol_SMZ4:	binclude	"collision/bad future/SMZ4.bin"
 		even
- endif
+	endif
 ; ---------------------------------------------------------------------------
 ; Level layouts, four entries per act
 ; ---------------------------------------------------------------------------
@@ -14511,472 +14511,472 @@ Level_Index:
 		dc.w Level_LV0F4-Level_Index
 
 Level_GHZ1:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/GHZ_1.kosp"
- else
+	else
 		binclude "md-only/layout/GHZ_1.kosp"
- endif
+	endif
 		even
 Level_GHZ2:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/GHZ_2.kosp"
- else
+	else
 		binclude "md-only/layout/GHZ_2.kosp"
- endif
+	endif
 		even
 Level_GHZ3:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/GHZ_3.kosp"
- else
+	else
 		binclude "md-only/layout/GHZ_3.kosp"
- endif
+	endif
 		even
 Level_GHZ4:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/GHZ_4.kosp"
- else
+	else
 		binclude "md-only/layout/GHZ_4.kosp"
- endif
+	endif
 		even
 
 Level_LZ1:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LZ_1.kosp"
- else
+	else
 		binclude "md-only/layout/LZ_1.kosp"
- endif
+	endif
 		even
 Level_LZ2:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LZ_2.kosp"
- else
+	else
 		binclude "md-only/layout/LZ_2.kosp"
- endif
+	endif
 		even
 Level_LZ3:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LZ_3.kosp"
- else
+	else
 		binclude "md-only/layout/LZ_3.kosp"
- endif
+	endif
 		even
 Level_LZ4:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LZ_4.kosp"
- else
+	else
 		binclude "md-only/layout/LZ_4.kosp"
- endif
+	endif
 		even
 
 Level_CPZ1:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/CPZ_1.kosp"
- else
+	else
 		binclude "md-only/layout/CPZ_1.kosp"
- endif
+	endif
 		even
 Level_CPZ2:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/CPZ_2.kosp"
- else
+	else
 		binclude "md-only/layout/CPZ_2.kosp"
- endif
+	endif
 		even
 Level_CPZ3:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/CPZ_3.kosp"
- else
+	else
 		binclude "md-only/layout/CPZ_3.kosp"
- endif
+	endif
 		even
 Level_CPZ4:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/CPZ_4.kosp"
- else
+	else
 		binclude "md-only/layout/CPZ_4.kosp"
- endif
+	endif
 		even
 
 Level_EHZ1:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/EHZ_1.kosp"
- else
+	else
 		binclude "md-only/layout/EHZ_1.kosp"
- endif
+	endif
 		even
 Level_EHZ2:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/EHZ_2.kosp"
- else
+	else
 		binclude "md-only/layout/EHZ_2.kosp"
- endif
+	endif
 		even
 Level_EHZ3:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/EHZ_3.kosp"
- else
+	else
 		binclude "md-only/layout/EHZ_3.kosp"
- endif
+	endif
 		even
 Level_EHZ4:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/EHZ_4.kosp"
- else
+	else
 		binclude "md-only/layout/EHZ_4.kosp"
- endif
+	endif
 		even
 
 Level_HPZ1:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/HPZ_1.kosp"
- else
+	else
 		binclude "md-only/layout/HPZ_1.kosp"
- endif
+	endif
 		even
 Level_HPZ2:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/HPZ_2.kosp"
- else
+	else
 		binclude "md-only/layout/HPZ_2.kosp"
- endif
+	endif
 		even
 Level_HPZ3:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/HPZ_3.kosp"
- else
+	else
 		binclude "md-only/layout/HPZ_3.kosp"
- endif
+	endif
 		even
 Level_HPZ4:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/HPZ_4.kosp"
- else
+	else
 		binclude "md-only/layout/HPZ_4.kosp"
- endif
+	endif
 		even
 
 Level_HTZ1:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/HTZ_1.kosp"
- else
+	else
 		binclude "md-only/layout/HTZ_1.kosp"
- endif
+	endif
 		even
 Level_HTZ2:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/HTZ_2.kosp"
- else
+	else
 		binclude "md-only/layout/HTZ_2.kosp"
- endif
+	endif
 		even
 Level_HTZ3:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/HTZ_3.kosp"
- else
+	else
 		binclude "md-only/layout/HTZ_3.kosp"
- endif
+	endif
 		even
 Level_HTZ4:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/HTZ_4.kosp"
- else
+	else
 		binclude "md-only/layout/HTZ_4.kosp"
- endif
+	endif
 		even
 
 Level_MTZ1:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/MTZ_1.kosp"
- else
+	else
 		binclude "md-only/layout/MTZ_1.kosp"
- endif
+	endif
 		even
 Level_MTZ2:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/MTZ_2.kosp"
- else
+	else
 		binclude "md-only/layout/MTZ_2.kosp"
- endif
+	endif
 		even
 Level_MTZ3:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/MTZ_3.kosp"
- else
+	else
 		binclude "md-only/layout/MTZ_3.kosp"
- endif
+	endif
 		even
 Level_MTZ4:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/MTZ_4.kosp"
- else
+	else
 		binclude "md-only/layout/MTZ_4.kosp"
- endif
+	endif
 		even
 
 Level_LV071:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV07_1.kosp"
- else
+	else
 		binclude "md-only/layout/LV07_1.kosp"
- endif
+	endif
 		even
 Level_LV072:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV07_2.kosp"
- else
+	else
 		binclude "md-only/layout/LV07_2.kosp"
- endif
+	endif
 		even
 Level_LV073:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV07_3.kosp"
- else
+	else
 		binclude "md-only/layout/LV07_3.kosp"
- endif
+	endif
 		even
 Level_LV074:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV07_4.kosp"
- else
+	else
 		binclude "md-only/layout/LV07_4.kosp"
- endif
+	endif
 		even
 
 Level_SMZ1:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/SMZ_1.kosp"
- else
+	else
 		binclude "md-only/layout/SMZ_1.kosp"
- endif
+	endif
 		even
 Level_SMZ2:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/SMZ_2.kosp"
- else
+	else
 		binclude "md-only/layout/SMZ_2.kosp"
- endif
+	endif
 		even
 Level_SMZ3:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/SMZ_3.kosp"
- else
+	else
 		binclude "md-only/layout/SMZ_3.kosp"
- endif
+	endif
 		even
 Level_SMZ4:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/SMZ_4.kosp"
- else
+	else
 		binclude "md-only/layout/SMZ_4.kosp"
- endif
+	endif
 		even
 
 Level_LV091:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV09_1.kosp"
- else
+	else
 		binclude "md-only/layout/LV09_1.kosp"
- endif
+	endif
 		even
 Level_LV092:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV09_2.kosp"
- else
+	else
 		binclude "md-only/layout/LV09_2.kosp"
- endif
+	endif
 		even
 Level_LV093:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV09_3.kosp"
- else
+	else
 		binclude "md-only/layout/LV09_3.kosp"
- endif
+	endif
 		even
 Level_LV094:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV09_4.kosp"
- else
+	else
 		binclude "md-only/layout/LV09_4.kosp"
- endif
+	endif
 		even
 
 Level_LV0A1:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV0A_1.kosp"
- else
+	else
 		binclude "md-only/layout/LV0A_1.kosp"
- endif
+	endif
 		even
 Level_LV0A2:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV0A_2.kosp"
- else
+	else
 		binclude "md-only/layout/LV0A_2.kosp"
- endif
+	endif
 		even
 Level_LV0A3:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV0A_3.kosp"
- else
+	else
 		binclude "md-only/layout/LV0A_3.kosp"
- endif
+	endif
 		even
 Level_LV0A4:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV0A_4.kosp"
- else
+	else
 		binclude "md-only/layout/LV0A_4.kosp"
- endif
+	endif
 		even
 
 Level_LV0B1:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV0B_1.kosp"
- else
+	else
 		binclude "md-only/layout/LV0B_1.kosp"
- endif
+	endif
 		even
 Level_LV0B2:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV0B_2.kosp"
- else
+	else
 		binclude "md-only/layout/LV0B_2.kosp"
- endif
+	endif
 		even
 Level_LV0B3:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV0B_3.kosp"
- else
+	else
 		binclude "md-only/layout/LV0B_3.kosp"
- endif
+	endif
 		even
 Level_LV0B4:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV0B_4.kosp"
- else
+	else
 		binclude "md-only/layout/LV0B_4.kosp"
- endif
+	endif
 		even
 
 Level_LV0C1:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV0C_1.kosp"
- else
+	else
 		binclude "md-only/layout/LV0C_1.kosp"
- endif
+	endif
 		even
 Level_LV0C2:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV0C_2.kosp"
- else
+	else
 		binclude "md-only/layout/LV0C_2.kosp"
- endif
+	endif
 		even
 Level_LV0C3:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV0C_3.kosp"
- else
+	else
 		binclude "md-only/layout/LV0C_3.kosp"
- endif
+	endif
 		even
 Level_LV0C4:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV0C_4.kosp"
- else
+	else
 		binclude "md-only/layout/LV0C_4.kosp"
- endif
+	endif
 		even
 
 Level_LV0D1:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV0D_1.kosp"
- else
+	else
 		binclude "md-only/layout/LV0D_1.kosp"
- endif
+	endif
 		even
 Level_LV0D2:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV0D_2.kosp"
- else
+	else
 		binclude "md-only/layout/LV0D_2.kosp"
- endif
+	endif
 		even
 Level_LV0D3:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV0D_3.kosp"
- else
+	else
 		binclude "md-only/layout/LV0D_3.kosp"
- endif
+	endif
 		even
 Level_LV0D4:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV0D_4.kosp"
- else
+	else
 		binclude "md-only/layout/LV0D_4.kosp"
- endif
+	endif
 		even
 
 Level_LV0E1:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV0E_1.kosp"
- else
+	else
 		binclude "md-only/layout/LV0E_1.kosp"
- endif
+	endif
 		even
 Level_LV0E2:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV0E_2.kosp"
- else
+	else
 		binclude "md-only/layout/LV0E_2.kosp"
- endif
+	endif
 		even
 Level_LV0E3:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV0E_3.kosp"
- else
+	else
 		binclude "md-only/layout/LV0E_3.kosp"
- endif
+	endif
 		even
 Level_LV0E4:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV0E_4.kosp"
- else
+	else
 		binclude "md-only/layout/LV0E_4.kosp"
- endif
+	endif
 		even
 
 Level_LV0F1:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV0F_1.kosp"
- else
+	else
 		binclude "md-only/layout/LV0F_1.kosp"
- endif
+	endif
 		even
 Level_LV0F2:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV0F_2.kosp"
- else
+	else
 		binclude "md-only/layout/LV0F_2.kosp"
- endif
+	endif
 		even
 Level_LV0F3:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV0F_3.kosp"
- else
+	else
 		binclude "md-only/layout/LV0F_3.kosp"
- endif
+	endif
 		even
 Level_LV0F4:
- if MegaCDMode1
+	if	MegaCDMode1
 		binclude "level/layout/LV0F_4.kosp"
- else
+	else
 		binclude "md-only/layout/LV0F_4.kosp"
- endif
+	endif
 		even
 Level_Null:	dc.l	0
- if TimeTravel=1
+	if	TimeTravel=1
 		include	"_inc/LevelLayouts_Timezones.asm"
- endif
+	endif
 ; --------------------------------------------------------------------------------------
 ; Object layouts
 ; --------------------------------------------------------------------------------------
@@ -16111,29 +16111,29 @@ Map_Points:	include	"mappings/sprite/Points.asm"	; $FF, S3&K mappings
 DPLC_Points:	include	"mappings/spriteDPLC/Points.asm"
 		even
 Map_SMZ_Floor: binclude "mappings/sprite/SMZ Floor.bin"
-        even
+		even
 Map_SMZ_Door: binclude "mappings/sprite/SMZ Door.bin"
-        even
+		even
 Map_SMZ_Cat: binclude "mappings/sprite/SMZ Cat.bin"
-        even
+		even
 Map_SMZ_Hog: binclude "mappings/sprite/SMZ Hog.bin"
-        even
+		even
 Map_SMZ_Swing: binclude "mappings/sprite/SMZ Swing.bin"
-        even
+		even
 Nem_SMZAtlas: binclude "art/nemesis/SMZ Sprite Atlas.nem"
-        even
+		even
 Nem_Kemusi:	binclude	"art/nemesis/Enemy Kemusi.nem"
 		even
 Nem_S3LevelSelect: binclude "art/nemesis/S3 Level Select.nem"
-        even
+		even
 Eni_S3LevelSelect: binclude "mappings/misc/S3 Level Select.eni"
-        even
+		even
 Art_S3LevelSelectBackground: binclude "art/uncompressed/S3 Level Select Background.unc"
-        even
+		even
 
 
 Art_SMZSmoke: binclude "art/uncompressed/SMZ Smoke.bin"
-        even
+		even
 
 ; Embed the separate CD-CPU program at its execution address. The MD loader
 ; copies this ROM image to CD PRG RAM before starting MCD_SubEntry.
@@ -16149,14 +16149,14 @@ MCD_SubProgramEnd:
 		endif
 	endif
 
- if AdvancedHandler=1
+	if	AdvancedHandler=1
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Debugging modules
 ; ---------------------------------------------------------------------------
 
-   include   "SampleDebugger.asm"
-   include   "ErrorHandler.asm"
+	include	"SampleDebugger.asm"
+	include	"ErrorHandler.asm"
 
 ; ---------------------------------------------------------------------------
 ; WARNING!
@@ -16165,10 +16165,10 @@ MCD_SubProgramEnd:
 ;	by ConvSym utility, otherwise debugger modules won't be able
 ;	to resolve symbol names.
 ; ---------------------------------------------------------------------------
- else
+	else
 	;	align	$2FFFFF			; Pad to 3MB
 		even
- endif
+	endif
 EndOfRom:
 	if MegaCDMode1&(EndOfRom>$400000)
 		fatal "Mode 1 cartridge overlaps the Mega-CD mapping above $400000"

@@ -12,6 +12,9 @@ mainly because most Sonic ROM hacking tools target Windows.
 
 Use CRLF line endings for all edited and newly created text files, including
 ASM, Lua, Python and documentation. Preserve binary files byte-for-byte.
+Use literal tabs for code indentation and field alignment, including new test
+code. Preserve tabs when editing existing code; do not make the owner repair
+space-indented additions by hand. `.editorconfig` sets the editor defaults.
 `.gitattributes` keeps checked-out text in CRLF while Git normalizes text for
 diffs. When publishing through an API, upload the staged Git blob rather than
 unfiltered working-tree bytes. Avoid line-ending-only edits in unrelated files.

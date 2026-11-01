@@ -31,7 +31,7 @@ paddingSoFar	set paddingSoFar + address - *
 			endm
 		endif
 	endif
-    endm
+	endm
 
 ; define an alternate org that fills the extra space with 0s instead of FFs
 org0 macro address
@@ -46,7 +46,7 @@ org0 macro address
 		endm
 		dc.b [.diff]0
 	endif
-    endm
+	endm
 
 ; define the cnop pseudo-instruction
 cnop macro offset,alignment
@@ -55,22 +55,22 @@ cnop macro offset,alignment
 	else
 		org ($-1+(alignment)-(($-1+(-(offset)))#(alignment)))
 	endif
-    endm
+	endm
 
 ; define an alternate cnop that fills the extra space with 0s instead of FFs
 cnop0 macro offset,alignment
 	org0 (*-1+(alignment)-((*-1+(-(offset)))#(alignment)))
-    endm
+	endm
 
 ; redefine align in terms of cnop, because the built-in align can be stupid sometimes
 align macro alignment
 	cnop 0,alignment
-    endm
+	endm
 
 ; define an alternate align that fills the extra space with 0s instead of FFs
 align0 macro alignment
 	cnop0 0,alignment
-    endm
+	endm
 
 ; define the even pseudo-instruction
 even macro
@@ -84,7 +84,7 @@ paddingSoFar		set paddingSoFar+1
 			db 0
 		endif
 	endif
-    endm
+	endm
 
 ; make ds work in Z80 code without creating a new segment
 ds macro
@@ -95,7 +95,7 @@ ds macro
 			db 0
 		endm
 	endif
-   endm
+	endm
 
 ; define a trace macro
 ; lets you easily check what address a location in this disassembly assembles to
@@ -108,7 +108,7 @@ trace macro optionalMessageWithoutQuotes
 		endif
 tracenum := (tracenum+1)
 	endif
-   endm
+	endm
 tracenum := 0
 
 bit function nBits,1<<(nBits-1)

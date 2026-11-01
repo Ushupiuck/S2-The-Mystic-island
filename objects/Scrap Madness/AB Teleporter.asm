@@ -11,147 +11,147 @@ smz_pipe_data = objoff_44
 smz_pipe_length = objoff_48
 
 SMZ_Teleport:
-        tst.b obRoutine(a0)
-        bne.s .ready
-        move.b #2,obRoutine(a0)
-        moveq #0,d0
-        move.w obSubtype(a0),d0
-        andi.w #7,d0
-        add.w d0,d0
-        lea SMZ_PipeData(pc),a2
-        adda.w (a2,d0.w),a2
-        move.w (a2)+,d0
-        move.b d0,smz_pipe_length(a0)
-        move.l a2,smz_pipe_data(a0)
+		tst.b	obRoutine(a0)
+		bne.s	.ready
+		move.b	#2,obRoutine(a0)
+		moveq	#0,d0
+		move.w	obSubtype(a0),d0
+		andi.w	#7,d0
+		add.w	d0,d0
+		lea	SMZ_PipeData(pc),a2
+		adda.w	(a2,d0.w),a2
+		move.w	(a2)+,d0
+		move.b	d0,smz_pipe_length(a0)
+		move.l	a2,smz_pipe_data(a0)
 .ready:
-        lea (v_player).w,a1
-        lea objoff_30(a0),a3
-        bsr.w .actor
-        lea (v_player2).w,a1
-        lea objoff_30+smz_pipe_packet(a0),a3
-        bsr.w .actor
-        tst.b objoff_30(a0)
-        bne.w .return
-        tst.b objoff_30+smz_pipe_packet(a0)
-        bne.w .return
-        out_of_range2 UnloadObject
+		lea	(v_player).w,a1
+		lea	objoff_30(a0),a3
+		bsr.w	.actor
+		lea	(v_player2).w,a1
+		lea	objoff_30+smz_pipe_packet(a0),a3
+		bsr.w	.actor
+		tst.b	objoff_30(a0)
+		bne.w	.return
+		tst.b	objoff_30+smz_pipe_packet(a0)
+		bne.w	.return
+		out_of_range2	UnloadObject
 .return:
-        rts
+		rts
 .actor:
-        cmpi.b #6,obRoutine(a1)
-        bhs.w .cancel
-        tst.b smz_pipe_state(a3)
-        beq.s .wait
-        cmpi.b #1,smz_pipe_state(a3)
-        beq.w .bump
-        bra.w .travel
+		cmpi.b	#6,obRoutine(a1)
+		bhs.w	.cancel
+		tst.b	smz_pipe_state(a3)
+		beq.s	.wait
+		cmpi.b	#1,smz_pipe_state(a3)
+		beq.w	.bump
+		bra.w	.travel
 .wait:
-        tst.b obControl(a1)
-        bne.w .return
-        tst.w (Debug_placement_mode).w
-        bne.w .return
-        move.w obX(a1),d0
-        sub.w obX(a0),d0
-        btst #0,obStatus(a0)
-        beq.s .x
-        addi.w #15,d0
+		tst.b	obControl(a1)
+		bne.w	.return
+		tst.w	(Debug_placement_mode).w
+		bne.w	.return
+		move.w	obX(a1),d0
+		sub.w	obX(a0),d0
+		btst	#0,obStatus(a0)
+		beq.s	.x
+		addi.w	#15,d0
 .x:
-        cmpi.w #16,d0
-        bhs.s .return
-        move.w obY(a1),d0
-        sub.w obY(a0),d0
-        addi.w #32,d0
-        cmpi.w #64,d0
-        bhs.s .return
-        cmpi.w #7,obSubtype(a0)
-        bne.s .start
-        cmpi.w #50,(v_rings).w
-        blo.s .return
+		cmpi.w	#16,d0
+		bhs.s	.return
+		move.w	obY(a1),d0
+		sub.w	obY(a0),d0
+		addi.w	#32,d0
+		cmpi.w	#64,d0
+		bhs.s	.return
+		cmpi.w	#7,obSubtype(a0)
+		bne.s	.start
+		cmpi.w	#50,(v_rings).w
+		blo.s	.return
 .start:
-        move.b #1,smz_pipe_state(a3)
-        clr.b smz_pipe_bump(a3)
-        clr.b smz_pipe_index(a3)
-        movea.l smz_pipe_data(a0),a2
-        move.w (a2)+,smz_pipe_x(a3)
-        move.w (a2),smz_pipe_y(a3)
-        move.b #$81,obControl(a1)
-        move.b #2,obAnim(a1)
-        move.w #$800,obInertia(a1)
-        clr.w obVelX(a1)
-        clr.w obVelY(a1)
-        bclr #status.player.pushing,obStatus(a1)
-        bclr #status.player.on_object,obStatus(a1)
-        bset #status.player.in_air,obStatus(a1)
-        clr.b jumping(a1)
-        clr.b spindash_flag(a1)
-        clr.b tails_flight_flag(a1)
-        move.w obX(a0),obX(a1)
-        move.w obY(a0),obY(a1)
-        move.w #sfx_Roll,d0
-        jmp (PlaySound_Special).l
+		move.b	#1,smz_pipe_state(a3)
+		clr.b	smz_pipe_bump(a3)
+		clr.b	smz_pipe_index(a3)
+		movea.l	smz_pipe_data(a0),a2
+		move.w	(a2)+,smz_pipe_x(a3)
+		move.w	(a2),smz_pipe_y(a3)
+		move.b	#$81,obControl(a1)
+		move.b	#2,obAnim(a1)
+		move.w	#$800,obInertia(a1)
+		clr.w	obVelX(a1)
+		clr.w	obVelY(a1)
+		bclr	#status.player.pushing,obStatus(a1)
+		bclr	#status.player.on_object,obStatus(a1)
+		bset	#status.player.in_air,obStatus(a1)
+		clr.b	jumping(a1)
+		clr.b	spindash_flag(a1)
+		clr.b	tails_flight_flag(a1)
+		move.w	obX(a0),obX(a1)
+		move.w	obY(a0),obY(a1)
+		move.w	#sfx_Roll,d0
+		jmp	(PlaySound_Special).l
 .bump:
-        moveq #0,d0
-        move.b smz_pipe_bump(a3),d0
-        addq.b #2,smz_pipe_bump(a3)
-        jsr (CalcSine).l
-        asr.w #5,d0
-        move.w obY(a0),d2
-        sub.w d0,d2
-        move.w d2,obY(a1)
-        cmpi.b #$80,smz_pipe_bump(a3)
-        bne.w .return
-        bsr.w SMZ_PipeDirection
-        move.b #2,smz_pipe_state(a3)
-        move.w #sfx_Teleport,d0
-        jmp (PlaySound_Special).l
+		moveq	#0,d0
+		move.b	smz_pipe_bump(a3),d0
+		addq.b	#2,smz_pipe_bump(a3)
+		jsr	(CalcSine).l
+		asr.w	#5,d0
+		move.w	obY(a0),d2
+		sub.w	d0,d2
+		move.w	d2,obY(a1)
+		cmpi.b	#$80,smz_pipe_bump(a3)
+		bne.w	.return
+		bsr.w	SMZ_PipeDirection
+		move.b	#2,smz_pipe_state(a3)
+		move.w	#sfx_Teleport,d0
+		jmp	(PlaySound_Special).l
 .travel:
-        subq.b #1,smz_pipe_time(a3)
-        bpl.s .move
-        move.w smz_pipe_x(a3),obX(a1)
-        move.w smz_pipe_y(a3),obY(a1)
-        moveq #0,d1
-        move.b smz_pipe_index(a3),d1
-        addq.b #4,d1
-        cmp.b smz_pipe_length(a0),d1
-        bhs.s .exit
-        move.b d1,smz_pipe_index(a3)
-        movea.l smz_pipe_data(a0),a2
-        move.w (a2,d1.w),smz_pipe_x(a3)
-        move.w 2(a2,d1.w),smz_pipe_y(a3)
-        jmp (SMZ_PipeDirection).l
+		subq.b	#1,smz_pipe_time(a3)
+		bpl.s	.move
+		move.w	smz_pipe_x(a3),obX(a1)
+		move.w	smz_pipe_y(a3),obY(a1)
+		moveq	#0,d1
+		move.b	smz_pipe_index(a3),d1
+		addq.b	#4,d1
+		cmp.b	smz_pipe_length(a0),d1
+		bhs.s	.exit
+		move.b	d1,smz_pipe_index(a3)
+		movea.l	smz_pipe_data(a0),a2
+		move.w	(a2,d1.w),smz_pipe_x(a3)
+		move.w	2(a2,d1.w),smz_pipe_y(a3)
+		jmp	(SMZ_PipeDirection).l
 .move:
-        move.w obVelX(a1),d0
-        ext.l d0
-        asl.l #8,d0
-        add.l d0,obX(a1)
-        move.w obVelY(a1),d0
-        ext.l d0
-        asl.l #8,d0
-        add.l d0,obY(a1)
-        rts
+		move.w	obVelX(a1),d0
+		ext.l	d0
+		asl.l	#8,d0
+		add.l	d0,obX(a1)
+		move.w	obVelY(a1),d0
+		ext.l	d0
+		asl.l	#8,d0
+		add.l	d0,obY(a1)
+		rts
 .exit:
-        andi.w #$7FF,obY(a1)
-        clr.w obVelX(a1)
-        move.w #$200,obVelY(a1)
+		andi.w	#$7FF,obY(a1)
+		clr.w	obVelX(a1)
+		move.w	#$200,obVelY(a1)
 .cancel:
-        tst.b smz_pipe_state(a3)
-        beq.s .done
-        clr.b smz_pipe_state(a3)
-        clr.b obControl(a1)
+		tst.b	smz_pipe_state(a3)
+		beq.s	.done
+		clr.b	smz_pipe_state(a3)
+		clr.b	obControl(a1)
 .done:
-        rts
+		rts
 
 SMZ_PipeDirection:
-        move.w smz_pipe_x(a3),d0
-        sub.w obX(a1),d0
-        move.w smz_pipe_y(a3),d1
-        sub.w obY(a1),d1
-        or.w d1,d0
-        bne.s .nonzero
-        clr.w smz_pipe_time(a3)
-        clr.w obVelX(a1)
-        clr.w obVelY(a1)
-        rts
+		move.w	smz_pipe_x(a3),d0
+		sub.w	obX(a1),d0
+		move.w	smz_pipe_y(a3),d1
+		sub.w	obY(a1),d1
+		or.w	d1,d0
+		bne.s	.nonzero
+		clr.w	smz_pipe_time(a3)
+		clr.w	obVelX(a1)
+		clr.w	obVelY(a1)
+		rts
 .nonzero:
 		moveq	#0,d0					; clear d0 for X-difference
 		move.w	#$1000,d2				; move Sonic horizontally at speed $1000 to the right

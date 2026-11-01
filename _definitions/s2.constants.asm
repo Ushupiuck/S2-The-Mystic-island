@@ -266,15 +266,15 @@ MCD_ObjectSlotBytes:		equ	(MCD_ObjectSlotCount+7)/8
 object_slot_count:      equ reserved_object_slots+dynamic_object_slots
 object_ram_size:        equ object_size*object_slot_count ; $226E; keep all 113 slots
 next_object =           object_size
-    if (object_size<(1<<object_size_bits))||((object_size&1)<>0)
-        fatal "SSTs must be even-sized and at least as large as an allocator lookup bucket."
-    endif
-    if (dynamic_object_slots<1)||(object_slot_count>$80)
-        fatal "The object pool must fit its byte references and MOVEQ counter."
-    endif
-    if (dynamic_object_slots*object_size)/(1<<object_size_bits)>$FF
-        fatal "The allocator lookup index must fit its loop-counter register."
-    endif
+	if	(object_size<(1<<object_size_bits))||((object_size&1)<>0)
+		fatal	"SSTs must be even-sized and at least as large as an allocator lookup bucket."
+	endif
+	if	(dynamic_object_slots<1)||(object_slot_count>$80)
+		fatal	"The object pool must fit its byte references and MOVEQ counter."
+	endif
+	if	(dynamic_object_slots*object_size)/(1<<object_size_bits)>$FF
+		fatal	"The allocator lookup index must fit its loop-counter register."
+	endif
 ; ---------------------------------------------------------------------------
 ; Optional boss aliases.
 boss_subtype =              obXSub
@@ -975,9 +975,9 @@ Kos_decomp_buffer:		equ	MCD_DecompOutput
 Kos_decomp_buffer_End:		equ	MCD_DecompOutput+$1000
 	endif
 ; ---------------------------------------------------------------------------
-    if object_size*object_slot_count > object_ram_size
+	if	object_size*object_slot_count > object_ram_size
 	fatal "Object slots exceed the reserved object RAM growth area."
-    endif
+	endif
 v_objspace:			ds.b	object_size*object_slot_count
 v_objspace_end:
 ; ---------------------------------------------------------------------------

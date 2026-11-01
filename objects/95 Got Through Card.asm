@@ -300,7 +300,7 @@ Got_SBZ2:
 		jmp	(PlaySound).l	; play FZ music
 ; ---------------------------------------------------------------------------
 
- loc_BD3A:	; Routine $10
+	loc_BD3A:	; Routine $10
 		addq.w	#2,(Camera_Max_X_pos).w
 		cmpi.w	#$2100,(Camera_Max_X_pos).w
 		beq.w	DeleteObject

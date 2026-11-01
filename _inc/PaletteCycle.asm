@@ -141,7 +141,7 @@ PalCycle_HTZ:
 		addq.w	#1,(v_pcyc_num).w
 		andi.w	#$F,d0
 		lea	(Pal_HTZCyc2).l,a1
-                move.b	(a1,d0.w),(v_pcyc_time+1).w
+				move.b	(a1,d0.w),(v_pcyc_time+1).w
 		lsl.w	#3,d0
 		move.l	(a0,d0.w),(v_palette+$26).w
 		move.w	4(a0,d0.w),(v_palette+$36).w
@@ -362,67 +362,67 @@ loc_2456:
 ; End of function PalCycle_Load
 ; The imported SBZ scripts retain their existing per-colour clocks.
 PalCycle_SMZ:
-        lea Pal_SMZScripts1(pc),a2
-        tst.b (Current_Act).w
-        beq.s .first
-        lea Pal_SMZScripts2(pc),a2
+		lea	Pal_SMZScripts1(pc),a2
+		tst.b	(Current_Act).w
+		beq.s	.first
+		lea	Pal_SMZScripts2(pc),a2
 .first:
-        lea (v_pal_buffer).w,a1
-        move.w (a2)+,d7
+		lea	(v_pal_buffer).w,a1
+		move.w	(a2)+,d7
 .loop:
-        subq.b #1,(a1)
-        bpl.s .skip
-        move.b (a2),(a1)+
-        moveq #0,d0
-        move.b (a1),d0
-        addq.b #1,d0
-        cmp.b 1(a2),d0
-        blo.s .frame
-        moveq #0,d0
+		subq.b	#1,(a1)
+		bpl.s	.skip
+		move.b	(a2),(a1)+
+		moveq	#0,d0
+		move.b	(a1),d0
+		addq.b	#1,d0
+		cmp.b	1(a2),d0
+		blo.s	.frame
+		moveq	#0,d0
 .frame:
-        move.b d0,(a1)+
-        add.w d0,d0
-        move.w 2(a2),d1
-        lea (v_palette).w,a3
-        adda.w d1,a3
-        movea.l 4(a2),a0
-        move.w (a0,d0.w),(a3)
-        bra.s .next
+		move.b	d0,(a1)+
+		add.w	d0,d0
+		move.w	2(a2),d1
+		lea	(v_palette).w,a3
+		adda.w	d1,a3
+		movea.l	4(a2),a0
+		move.w	(a0,d0.w),(a3)
+		bra.s	.next
 .skip:
-        addq.l #2,a1
+		addq.l	#2,a1
 .next:
-        addq.l #8,a2
-        dbf d7,.loop
-        subq.w #1,(v_pcyc_time).w
-        bpl.s .return
-        lea Pal_SMZCyc4(pc),a0
-        move.w #1,(v_pcyc_time).w
-        tst.b (Current_Act).w
-        beq.s .direction
-        lea Pal_SMZCyc10(pc),a0
-        clr.w (v_pcyc_time).w
+		addq.l	#8,a2
+		dbf	d7,.loop
+		subq.w	#1,(v_pcyc_time).w
+		bpl.s	.return
+		lea	Pal_SMZCyc4(pc),a0
+		move.w	#1,(v_pcyc_time).w
+		tst.b	(Current_Act).w
+		beq.s	.direction
+		lea	Pal_SMZCyc10(pc),a0
+		clr.w	(v_pcyc_time).w
 .direction:
-        moveq #-1,d1
-        tst.b (f_conveyrev).w
-        beq.s .advance
-        neg.w d1
+		moveq	#-1,d1
+		tst.b	(f_conveyrev).w
+		beq.s	.advance
+		neg.w	d1
 .advance:
-        move.w (v_pcyc_num).w,d0
-        add.w d1,d0
-        cmpi.w #3,d0
-        blo.s .colour
-        move.w d0,d1
-        moveq #0,d0
-        tst.w d1
-        bpl.s .colour
-        moveq #2,d0
+		move.w	(v_pcyc_num).w,d0
+		add.w	d1,d0
+		cmpi.w	#3,d0
+		blo.s	.colour
+		move.w	d0,d1
+		moveq	#0,d0
+		tst.w	d1
+		bpl.s	.colour
+		moveq	#2,d0
 .colour:
-        move.w d0,(v_pcyc_num).w
-        add.w d0,d0
-        move.l (a0,d0.w),(v_palette+$58).w
-        move.w 4(a0,d0.w),(v_palette+$5C).w
+		move.w	d0,(v_pcyc_num).w
+		add.w	d0,d0
+		move.l	(a0,d0.w),(v_palette+$58).w
+		move.w	4(a0,d0.w),(v_palette+$5C).w
 .return:
-        rts
+		rts
 Pal_SMZScripts1: dc.w 8
 		dc.b 8,8
 		dc.w $50

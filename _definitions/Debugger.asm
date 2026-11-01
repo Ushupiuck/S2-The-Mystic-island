@@ -218,7 +218,7 @@ _assert:	macro	src, cond, dest, consoleprogram
 
 	.skip:
 	endif
-    endm
+	endm
 
 ; ---------------------------------------------------------------
 ; Raises an error with the given message
@@ -584,7 +584,7 @@ __FSTRING_PushArgument: macro OPERAND,DEST
 		move.ATTRIBUTE	d6,DEST
 	case "d7"
 		move.ATTRIBUTE	d7,DEST
-	
+
 	case "a0"
 		move.ATTRIBUTE	a0,DEST
 	case "a1"
@@ -646,22 +646,22 @@ __FSTRING_GenerateArgumentsCode: macro string
 	while (.__pos>=0)
 
     	; Find the last occurance "%<" in the string
-    	while ( strstr(substr(.__str,.__pos+2,0),"%<")>=0 )
+		while	( strstr(substr(.__str,.__pos+2,0),"%<")>=0 )
 			.__pos: 	set		strstr(substr(.__str,.__pos+2,0),"%<")+.__pos+2
 		endm
 		.__substr:	set		substr(.__str,.__pos,0)
 
 		; Retrive expression in brackets following % char
-    	.__endpos:	set		strstr(.__substr,">")
+		.__endpos:	set		strstr(.__substr,">")
 		if (.__endpos<0) ; Fix bizzare AS bug as stsstr() fails to check the last character of string
 			.__endpos:	set		strlen(.__substr)-1
 		endif
-    	.__midpos:	set		strstr(substr(.__substr,5,0)," ")
-    	if ((.__midpos<0)||(.__midpos+5>.__endpos))
+		.__midpos:	set		strstr(substr(.__substr,5,0)," ")
+		if	((.__midpos<0)||(.__midpos+5>.__endpos))
 			.__midpos:	set		.__endpos
 		else
 			.__midpos:	set		.__midpos+5
-    	endif
+		endif
 		.__type:		set		substr(.__substr,2,2)	; .type
 
 		; Expression is an effective address (e.g. %(.w d0 hex) )
@@ -714,14 +714,14 @@ __FSTRING_GenerateDecodedString:	macro string
 		endif
 
 		; Retrive expression in brakets following % char
-    	.__endpos:	set		strstr(substr(string,.__pos+1,0),">")+.__pos+1 
+		.__endpos:	set		strstr(substr(string,.__pos+1,0),">")+.__pos+1
 		if (.__endpos<=.__pos) ; Fix bizzare AS bug as stsstr() fails to check the last character of string
 			.__endpos:	set		strlen(string)-1
 		endif
-    	.__midpos:	set		strstr(substr(string,.__pos+5,0)," ")+.__pos+5
-    	if ((.__midpos<.__pos+5)||(.__midpos>.__endpos))
+		.__midpos:	set		strstr(substr(string,.__pos+5,0)," ")+.__pos+5
+		if	((.__midpos<.__pos+5)||(.__midpos>.__endpos))
 			.__midpos:	set		.__endpos
-    	endif
+		endif
 		.__type:		set		substr(string,.__pos+1+1,2)		; .type
 
 		; Expression is an effective address (e.g. %<.w d0 hex> )
@@ -768,25 +768,25 @@ __FSTRING_GenerateDecodedString:	macro string
 
 ; ---------------------------------------------------------------
 ; MIT License
-; 
+;
 ; Copyright (c) 2016-2024 Vladikcomper
-; 
+;
 ; Permission is hereby granted, free of charge, to any person
 ; obtaining a copy ; of this software and associated
-; documentation files (the "Software"), to deal in the Software 
+; documentation files (the "Software"), to deal in the Software
 ; without restriction, including without limitation the rights
 ; to use, copy, modify, merge, publish, distribute, sublicense,
 ; and/or sell copies of the Software, and to permit persons to
 ; whom the Software is furnished to do so, subject to the
 ; following conditions:
-; 
+;
 ; The above copyright notice and this permission notice shall be
 ; included in all copies or substantial portions of the Software.
-; 
+;
 ; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 ; EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 ; OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-; NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT 
+; NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
 ; HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 ; WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 ; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR

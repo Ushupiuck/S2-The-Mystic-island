@@ -28,7 +28,7 @@ levartptrs macro plc1,plc2,palette,art,map16x16,map128x128
 	dc.l (plc1<<24)|art
 	dc.l (plc2<<24)|map16x16
 	dc.l (palette<<24)|map128x128
-    endm
+	endm
 
 LevelArtPointers:
 		; GHZ
@@ -51,11 +51,11 @@ LevelArtPointers:
 
 		; EHZ
 		levartptrs plcid_EHZ1_Main, plcid_EHZ1_Extra, palid_EHZ, Kosp_EHZ, Map16_EHZ, Map128_EHZ	; EHZ	; ACT 1
- if MegaCDMode1
+	if	MegaCDMode1
 		levartptrs plcid_EHZ2_Main, plcid_EHZ2_Extra, palid_EHZ2_PP, Kosp_EHZ2, Map16_EHZ2, Map128_EHZ2	; EHZ ACT 2, Palmtree Panic background
- else
+	else
 		levartptrs plcid_EHZ2_Main, plcid_EHZ2_Extra, palid_EHZ, Kosp_EHZ, Map16_EHZ, Map128_EHZ	; EHZ	; ACT 2
- endif
+	endif
 		levartptrs plcid_EHZ3_Main, plcid_EHZ3_Extra, palid_EHZ, Kosp_EHZ, Map16_EHZ, Map128_EHZ	; EHZ	; ACT 3
 		levartptrs plcid_EHZ4_Main, plcid_EHZ4_Extra, palid_EHZ, Kosp_EHZ, Map16_EHZ, Map128_EHZ	; EHZ	; ACT 4
 
