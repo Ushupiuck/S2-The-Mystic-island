@@ -1646,6 +1646,8 @@ Pal_GHZCyc:	binclude "palette/GHZ Water.bin"
 		even
 Pal_EHZCyc:	binclude "palette/EHZ Water.bin"
 		even
+Pal_EHZ2PPCyc:	binclude "palette/EHZ2 PP Water.bin"
+		even
 Pal_CPZCyc1:	binclude "palette/CPZ Cycle 1.bin"
 		even
 Pal_CPZCyc2:	binclude "palette/CPZ Cycle 2.bin"
@@ -9313,6 +9315,7 @@ Obj49_Init:
 		move.b	#Map_Waterfall1_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Waterfall,1,0),obGfx(a0)
 		move.b	#4,obRender(a0)
+		move.w	#$380,obPriority(a0)	; scenery follows players and badniks in the SAT
 		move.b	#sprite_bound($20,Map_Waterfall1_width),obActWid(a0)
 		move.w	obX(a0),objoff_34(a0)
 		move.b	#$80,obHeight(a0)
@@ -12137,7 +12140,7 @@ Offs_AniPLC:	dc.w AnimCue_GHZ-Offs_AniFunc		; GHZ
 		dc.w Dynamic_Null-Offs_AniFunc		; LZ
 		dc.w Dynamic_Normal-Offs_AniFunc	; CPZ
 		dc.w Animated_CPZ-Offs_AniFunc		; CPZ
-		dc.w Dynamic_Normal-Offs_AniFunc	; EHZ
+		dc.w Animate_EHZ-Offs_AniFunc	; EHZ
 		dc.w AnimCue_EHZ-Offs_AniFunc		; EHZ
 		dc.w Dynamic_Normal-Offs_AniFunc	; HPZ
 		dc.w AnimCue_HPZ-Offs_AniFunc		; HPZ
@@ -12168,6 +12171,17 @@ Offs_AniPLC:	dc.w AnimCue_GHZ-Offs_AniFunc		; GHZ
 Dynamic_Null:
 		rts
 ; ===========================================================================
+
+Animate_EHZ:
+		; The shared flower scripts run first. Act 2's private waterfall
+		; uses the next counter without resetting or retiming those flowers.
+		bsr.w	Dynamic_Normal
+		cmpi.b	#1,(Current_Act).w
+		bne.s	.return
+		lea	AnimCue_EHZ2BG(pc),a2
+		bra.w	Dynamic_Normal_AtCounter
+.return:
+		rts
 
 Animate_SMZ:
 		cmpi.b	#1,(Current_Act).w	; indoor Act 2 reuses the smoke bank for Kemusi
@@ -12310,6 +12324,12 @@ AnimCue_EHZ:	zoneanimstart
 		dc.b	0,  2
 		dc.b	4,  6
 		dc.b	4,  2
+		even
+		zoneanimend
+
+AnimCue_EHZ2BG:	zoneanimstart
+		zoneanimdecl	8,	Art_EHZ2BGWaterfall, ArtTile_EHZ2_BGWaterfall, 3, ArtTile_EHZ2_BGWaterfall_Count
+		dc.b	ArtTile_EHZ2_BGWaterfall_Count,ArtTile_EHZ2_BGWaterfall_Count*2,0
 		even
 		zoneanimend
 
@@ -13624,6 +13644,9 @@ Art_EHZFlowers2:	binclude	"art/uncompressed/EHZ flowers - 2.bin"
 Art_EHZFlowers3:	binclude	"art/uncompressed/EHZ flowers - 3.bin"
 Art_EHZFlowers4:	binclude	"art/uncompressed/EHZ flowers - 4.bin"
 Art_EHZPulseBall:	binclude	"art/uncompressed/EHZ Pulse Ball.bin"
+		even
+Art_EHZ2BGWaterfall:	binclude	"art/uncompressed/EHZ2 Background Waterfall.unc"
+		even
 Art_Flowers1:		binclude	"art/uncompressed/EHZ and HTZ flowers - 1.bin"
 Art_Flowers2:		binclude	"art/uncompressed/EHZ and HTZ flowers - 2.bin"
 Art_Flowers3:		binclude	"art/uncompressed/EHZ and HTZ flowers - 3.bin"

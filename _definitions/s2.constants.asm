@@ -355,7 +355,7 @@ obRender.x_flip			= 0 ; Sprite mirrored horizontally.
 obRender.y_flip			= 1 ; Sprite mirrored vertically.
 obRender.level_fg		= 2 ; Move with level foreground.
 obRender.level_bg		= 3 ; Move with level background; leftover from Sonic 1.
-obRender.explicit_height	= 4 ; Legacy composite flag; display height is always height_pixels.
+obRender.explicit_height	= 4 ; Clip ordinary mapping pieces too; height is always height_pixels.
 obRender.static_mappings	= 5 ; Mappings pointer points directly to a lone sprite piece instead of a list of sprites.
 obRender.multi_sprite		= 6 ; Object SST holds metadata for multiple sprites.
 obRender.on_screen		= 7 ; Object is on-screen and was rendered on the previous frame.
@@ -1895,6 +1895,8 @@ ArtTile_Art_Flowers1:		equ $394
 ArtTile_Art_Flowers2:		equ $396
 ArtTile_Art_Flowers3:		equ $398
 ArtTile_Art_Flowers4:		equ $39A
+ArtTile_EHZ2_BGWaterfall:		equ $380	; 11 PP tiles, below the EHZ flowers
+ArtTile_EHZ2_BGWaterfall_Count:	equ $00B
 
 ; CPZ
 ArtTile_MorphingOrbs:		equ $3C0

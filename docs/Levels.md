@@ -342,17 +342,17 @@ less than the hardware indices because transparent index zero is omitted.
 
 | Annotated P3 columns | Role |
 | --- | --- |
-| `0-2` | Original Act 1 scenery or Act 2 PP colors |
-| `3-4` | Original Act 1 scenery colors or Act 2 PP cliff browns |
-| `5` | White |
+| `0-2` | Act 1 scenery; Act 2 cycling blues at hardware `1/3`, fixed `$E64` at `2` |
+| `3-4` | Act 1 scenery; Act 2 fixed `$EC8/$E86` |
+| `5` | Act 1 white; Act 2 cycling `$EEE` entry |
 | `6-8` | Dark-to-bright flower greens |
 | `9-E` | Dark-to-bright flower pinks |
 
 Both static terrain banks, block tile references and all flower/pulse frames
-use this arrangement. Both acts retain every original color. Act 2's
-`$06A/$024` browns color vertical streaks on the PP background rock spires
-(source panel Y `$E0-$157`). They move from annotated columns `3/9` to `3/4`;
-they are used colors, not free slots.
+use this arrangement. Act 1 retains every original color. Act 2's
+`$06A/$024` cliff browns still color the vertical streaks on the PP background
+rock spires (source panel Y `$E0-$157`), now on P2 hardware slots `5/3` alongside
+the baked waterfall frames. Their former P3 slots supply fixed water blues.
 
 The editable `art/uncompressed/EHZ flowers - 1.bin` through `4.bin` and
 `EHZ Pulse Ball.bin` feed `AnimCue_EHZ`. HTZ retains the original shared-named
@@ -360,7 +360,9 @@ files and its separate `AnimCue_HTZ`; EHZ's regrouping does not recolor HTZ.
 SonLVL's four EHZ act sections select the remapped animation sources too.
 The animation destinations and timings remain unchanged. Edit the raw terrain
 and animation sources together when changing palette indices. The EHZ2 PP
-importer reads the grouped EHZ sources and retains its two PP cliff browns.
+importer reads the grouped EHZ sources and retains both PP cliff browns.
+EHZ palette cycling is enabled: Acts 1/3/4 address the actual four P1 cyan
+slots `2/3/A/B`; Act 2 uses its separate three-phase PP water script.
 
 ## Emerald Hill Act 2: Palmtree Panic experiment
 
@@ -372,7 +374,9 @@ Present. Its mirrored ramp section is excluded. The new background is authored
 once as 4x4 ordinary 128-pixel chunks.
 
 The importer retains foreground tile/block/chunk IDs, flips, collision paths,
-static pixels and flower animation. Obj18's platform terrain tiles keep their
+flower animation and all foreground tile IDs. Act 2 merges P2 `$060` into
+`$064` and `$080` into `$0A0`, remapping their terrain pixels so hardware slots
+`A/B` hold fixed `$EEA/$CC6` for its background waterfalls. Obj18's platform tiles keep their
 IDs too. Background-only slots are recycled; unused trailing definitions are
 removed. Stable foreground IDs preserve objects that reuse level art without
 adding per-act object mappings. The independent source sheets remain editable;
@@ -386,9 +390,27 @@ foreground shades are blended with PP's equivalents: each changes just one MD
 channel by one hardware step. Their midpoint lies between representable colors,
 so equal choices select the PP endpoint. This also aligns the wood/grass colors
 used by bridges and platforms. All pixel indices remain fixed; other foreground
-colors and the character palette stay unchanged. A few imported edge shades
+colors and the character palette stay unchanged apart from the two explicit
+green merges above. A few imported edge shades
 still use the nearest available color per tile. The sky backdrop becomes PP blue.
 The importer checks protected palette uses and bounds each deliberate blend.
+
+The background waterfalls use 11 resident animated tiles at `$380-$38A`, below
+the flower bank. `EHZ2 Background Waterfall Source.unc` preserves their original
+PP pixel indices. `build_ehz2_waterfall_art.py` applies the three original PP
+palette phases to these pixels, producing `EHZ2 Background Waterfall.unc` and
+`palette/EHZ2 PP Water.bin`. All 2,112 waterfall pixel colors across the three
+poses exactly match the source. P2 provides fixed white/cyans, browns and greens;
+no raster resampling or image quantization is used. Each pose uploads 352 bytes
+every nine active updates through the normal DMA queue and sixth animation
+counter. SonLVL overlays the same bank.
+
+Water below panel Y `$180` uses the original three-phase palette cycle on P3
+hardware slots `1/3/6`. Its `$E64/$EC8/$E86` blues stay fixed at `2/4/5`. The
+408 source `$EEC` water-glint pixels share the animated `$EEA` role; every other
+water pixel retains its original PP shade and cycle role. Static cloud shading
+does not use these cycling entries. Flower greens/pinks and pause behavior
+remain independent of the new background animation.
 
 EHZ2's own initialization/event entries in `_inc/Level Plane Events.asm`
 produce four moving cloud bands, 3/16-speed mountains, half-speed bushes and

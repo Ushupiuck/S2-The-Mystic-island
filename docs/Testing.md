@@ -937,3 +937,21 @@ matching ROM/listing pairs with sprite assets/bounds, card art, end art and
 Mecha native checks, plus GX HUD, cards, effects and plane streaming checks.
 Positioned camera/actor screenshots are diagnostic captures, not controller-only
 playthroughs. RGB preservation alone cannot detect a preserved historical bug.
+
+## EHZ waterfall animation and sprite pressure
+
+`build_ehz_waterfall_art.py --check` verifies the packed object bank.
+`build_ehz2_waterfall_art.py --check` verifies the baked PP animation and its
+water palette script. The PP importer reproduces the private terrain bank and
+source waterfall tiles from the pinned CD source documented in [Levels](Levels.md).
+
+`python build_tools/check_ehz_waterfalls.py --rom s2built.bin --listing md-main.lst --output test-results/ehz-waterfalls`
+checks every baked pixel against the original PP colors, executes palette/DMA
+updates, and renders a native scene using the authored four-column Act-2
+waterfalls, separated players, an approaching snail and 32 rings. This is a
+controlled pressure fixture, not a controller-only route. Optional
+`--before-rom ROM --before-listing LISTING` confirms the old snail starvation
+and compares visible mapping pieces at 80 edge/flip cases. Add `--core CORE
+--system-directory BIOS` to boot Act 2 in the emulator, verify complete DMA
+poses and three live palette phases, and save an animation. Native checks use
+the optional Unicorn dependency.

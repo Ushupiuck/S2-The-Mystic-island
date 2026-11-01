@@ -27,7 +27,9 @@ their child motion, not merely one child's geometry. See [Importing objects](Imp
 
 `Render_Sprites` consumes initialized bounds and routine pointers, with ordinary
 and composite paths plus inline HUD/ring drawing. It clips composite children
-separately. SAT links are initialized on clear; the renderer repairs the previous
+separately. Ordinary objects with render bit 4 also clip their mapping pieces,
+using the same four flip paths and queue continuation. Tall waterfalls therefore
+do not spend SAT entries on pieces outside the viewport. SAT links are initialized on clear; the renderer repairs the previous
 terminator and writes a new hidden terminator, retaining the 80-sprite limit.
 The S1 stage appends to the same link chain. There is no star-specific renderer path.
 
@@ -404,6 +406,14 @@ ramps; other slots are per-act enemy colors. S&K indices map to
 `0 6 A B C F D E 4 3 5 2 7 8 9 1`. `sprite_palette.py` owns offline import
 conversions; editable runtime art already uses the new slots. No runtime pixel
 conversion is performed. Keep every compressed archive followed by `even`.
+
+The EHZ waterfall object keeps its 24-tile bank at `$3AE-$3C5` and all six
+mapping frames. Its editable `art/uncompressed/EHZ Waterfall.unc` uses P1
+indices `2/3/A/B` for the four cyans and `6` for white; the former `$F` pixels
+now use cyan slot `2`, rather than the yellow ramp. Run
+`python build_tools/build_ehz_waterfall_art.py` to pack it. Waterfalls use
+priority `$380`, after players and badniks, and render bit 4 clips offscreen
+pieces before they consume SAT entries. The mappings themselves remain intact.
 
 Springs retain S3&K mechanisms/geometry, with Sonic CD straight caps from
 scddisasm `f8cf3f0af7bf419d18182ba98554f09307ad3cc6` (normal spring tiles 0–3

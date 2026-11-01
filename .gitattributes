@@ -6,6 +6,7 @@
 *.asm text eol=crlf
 
 *.bin binary
+*.unc binary
 
 *.nem binary
 *.kos binary

@@ -197,7 +197,18 @@ Render_Sprites_Visible:
 		bmi.s	Render_Sprites_NextObj
 .draw:
 		move.w	obGfx(a0),d5
+		btst	#obRender.explicit_height,d6
+		bne.s	Render_Sprites_ClipMappings
 		bra.w	Render_Mappings	; inline continuation: no BSR/RTS per ordinary object
+
+; Tall ordinary objects use the same piece clipping as composite groups.
+; A zero child count rejoins the ordinary queue after this mapping frame.
+Render_Sprites_ClipMappings:
+		move.l	a4,-(sp)
+		move.w	d6,d3
+		swap	d3
+		clr.w	d3
+		bra.w	Render_CompositeMappings
 
 Render_Sprites_NextObj:
 		cmpa.l	a2,a4

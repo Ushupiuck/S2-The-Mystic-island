@@ -16,6 +16,8 @@ import re
 from convert_s1_ss_background import kosinski_plus
 from level_layout import load, save
 from check_sprite_assets import frames
+from sprite_palette import remap_pixels
+from build_ehz2_waterfall_art import outputs as waterfall_outputs
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_REVISION = 'f8cf3f0af7bf419d18182ba98554f09307ad3cc6'
@@ -104,7 +106,10 @@ def build(source, output):
 		return int(match[1],16)
 	level_base = allocation('ArtTile_Level')
 	static_end = allocation('ArtTile_Art_Flowers1')
+	waterfall_base = allocation('ArtTile_EHZ2_BGWaterfall')
+	waterfall_count = allocation('ArtTile_EHZ2_BGWaterfall_Count')
 	assert level_base == 0 and static_end == 0x394, 'Review terrain/animation allocation before regenerating'
+	assert waterfall_base + waterfall_count <= static_end
 	data = source/'src/Level/Palmtree Panic/Data'
 	pp_art = nemesis((data/'Tiles (Act 1 Present).nem').read_bytes())
 	pp_blocks = words(nemesis((data/'Blocks (Act 1 Present).nem').read_bytes()),4)
@@ -128,6 +133,25 @@ def build(source, output):
 			start = level_base+(tile & 2047)
 			platform_tiles.update(range(start,start+((size>>2)+1)*((size&3)+1)))
 	keep_tiles |= platform_tiles
+	# Consolidate the two close foreground greens with the PP greens already
+	# present in this row. A/B then hold fixed cyans for the baked waterfalls.
+	green_lookup = list(range(16))
+	green_lookup[10], green_lookup[11] = 13, 12
+	owners = {}
+	for w in fg_words:
+		owners.setdefault(w & 2047, set()).add(w >> 13 & 3)
+	for tid in platform_tiles:
+		owners.setdefault(tid, set()).add(2)
+	adapted_art = bytearray(art)
+	for tid, lines in owners.items():
+		if 2 not in lines or tid * 32 >= len(art):
+			continue
+		raw = art[tid * 32:(tid + 1) * 32]
+		adapted = remap_pixels(raw, green_lookup)
+		assert lines == {2} or raw == adapted, ('Shared terrain tile needs a palette variant', tid, lines)
+		adapted_art[tid * 32:(tid + 1) * 32] = adapted
+	art = bytes(adapted_art)
+	assert not keep_tiles & set(range(waterfall_base, waterfall_base + waterfall_count))
 	original_pal = list(struct.unpack('>48H',(ROOT/'palette/EHZ.bin').read_bytes()))
 	palette = original_pal.copy()
 	# These five foreground shades differ from PP by one channel step only.
@@ -138,12 +162,12 @@ def build(source, output):
 	for index, target in blend_targets.items():
 		palette[index] = midpoint(original_pal[index], target)
 		assert distance(original_pal[index], palette[index]) <= 4
-	# Slots unused by EHZ2's foreground, flower frames, bridge, platforms and HUD.
-	# P3 indices 4/5 retain the PP cliff browns; the grouped flower ramp is 7-F.
+	# Background waterfalls now keep their cliff browns on P2 and animate tiles.
+	# P3 1/3/6 cycle; 2/4/5 hold fixed water blues. The flower ramp stays 7-F.
 	# Other foreground/object colors and all palette indices remain fixed.
 	additions = {4:0xEEC, 5:0xEC8,
-					16+8:0x0A6, 16+13:0x064,
-					32+1:0xEEA, 32+2:0xE64, 32+3:0xCC6, 32+4:0x06A, 32+5:0x024}
+					16+8:0x0A6, 16+10:0xEEA, 16+11:0xCC6, 16+13:0x064,
+					32+1:0xEEA, 32+2:0xE64, 32+3:0xCC6, 32+4:0xEC8, 32+5:0xE86}
 	used = set()
 	for w in fg_words:
 		tid, line = w & 2047, (w >> 13) & 3
@@ -171,7 +195,9 @@ def build(source, output):
 		hud_colors.update(tile_pixels(raw))
 	hud_colors.update(tile_pixels(nemesis((ROOT/'art/nemesis/Sonic lives counter.nem').read_bytes())[4*32:]))
 	used |= hud_colors - {0}
-	assert not any(i in used and original_pal[i] != value for i,value in additions.items()), ('Palette addition overwrites an EHZ2 foreground/object/HUD color', [(i,hex(original_pal[i]),hex(value)) for i,value in additions.items() if i in used and original_pal[i] != value])
+	protected_changes = [(i, hex(original_pal[i]), hex(value)) for i, value in additions.items()
+						if i in used and i not in (16+8, 16+13) and original_pal[i] != value]
+	assert not protected_changes, ('Palette addition overwrites an EHZ2 foreground/object/HUD color', protected_changes)
 	for i,value in additions.items(): palette[i] = value
 	for i in (0,16,32): palette[i] = 0xA00  # PP sky backdrop; pixel zero remains transparent.
 	(ROOT/'palette/EHZ2 PP.bin').write_bytes(struct.pack('>48H',*palette))
@@ -182,11 +208,13 @@ def build(source, output):
 	block_ids = {tuple(row):i for i,row in enumerate(block_data) if i in fg_blocks}
 	chunk_data = [row if i in fg_chunks else [0]*64 for i,row in enumerate(chunks)]
 	chunk_ids = {tuple(row):i for i,row in enumerate(chunk_data) if i in fg_chunks}
-	free_tiles = iter(i for i in range(17,static_end) if i not in keep_tiles)
+	reserved_tiles = set(range(waterfall_base, waterfall_base + waterfall_count))
+	free_tiles = iter(i for i in range(17,static_end) if i not in keep_tiles | reserved_tiles)
 	free_blocks = iter(i for i in range(6,768) if i not in fg_blocks)
 	free_chunks = iter(i for i in range(1,1024) if i not in fg_chunks)
 	assigned_tiles, assigned_blocks, assigned_chunks = set(keep_tiles),set(fg_blocks),set(fg_chunks)
 	errors = Counter(); tile_cache = {}
+	waterfall_tiles, waterfall_ids = [], {}
 	def add(rows, index, value, free, assigned):
 		value = tuple(value) if isinstance(value,list) else value
 		if value not in index:
@@ -205,12 +233,29 @@ def build(source, output):
 		flip_x = bool(word & 0x800)^bool(entry & 0x800)
 		flip_y = bool(word & 0x1000)^bool(entry & 0x1000)
 		raw = [raw[(py^(7 if flip_y else 0))*8+(px^(7 if flip_x else 0))] for py in range(8) for px in range(8)]
-		key = tuple(raw)
+		animated = y < CROP_Y + 384 and any(v in (1, 2, 3) for v in raw)
+		water = y >= CROP_Y + 384
+		key = (animated, water, tuple(raw))
 		if key in tile_cache: return tile_cache[key]
+		if animated:
+			pixels = bytes((a << 4) | b for a, b in zip(raw[::2], raw[1::2]))
+			if pixels not in waterfall_ids:
+				waterfall_ids[pixels] = len(waterfall_tiles)
+				waterfall_tiles.append(pixels)
+			result = (waterfall_base + waterfall_ids[pixels]) | 0x4000
+			tile_cache[key] = result
+			return result
 		counts = Counter(v for v in raw if v)
 		candidates = []
-		for line in range(3):
-			lookup = {v:min(range(1,16),key=lambda i:distance(pp_palette[v],palette[line*16+i])) for v in counts}
+		if water:
+			# PP's sparse EEC glints join the EEA animation entry. The other
+			# fixed blues stay distinct; all three original cycling roles survive.
+			lookup = {1:6, 2:1, 3:3, 4:2, 10:1, 11:4, 12:5}
+			assert counts.keys() <= lookup.keys(), counts
+			candidates.append((0, 2, lookup))
+		for line in (() if water else range(3)):
+			slots = [i for i in range(1,16) if line != 2 or i not in (1,3,6)]
+			lookup = {v:min(slots,key=lambda i:distance(pp_palette[v],palette[line*16+i])) for v in counts}
 			error = sum(counts[v]*distance(pp_palette[v],palette[line*16+lookup[v]]) for v in counts)
 			candidates.append((error,line,lookup))
 		_,line,lookup = min(candidates,key=lambda v:(v[0],v[1]))
@@ -236,6 +281,18 @@ def build(source, output):
 			values = [bg_blocks[cy*8+y][cx*8+x] for y in range(8) for x in range(8)]
 			row.append(add(chunk_data,chunk_ids,values,free_chunks,assigned_chunks))
 		bg.append(row)
+	assert len(waterfall_tiles) == waterfall_count
+	waterfall_source = b''.join(waterfall_tiles)
+	(ROOT / 'art/uncompressed/EHZ2 Background Waterfall Source.unc').write_bytes(waterfall_source)
+	waterfall_assets = waterfall_outputs(waterfall_source)
+	for name, raw in waterfall_assets.items():
+		(ROOT / name).write_bytes(raw)
+	first_frame = waterfall_assets['art/uncompressed/EHZ2 Background Waterfall.unc'][:waterfall_count * 32]
+	while len(tiles) < waterfall_base + waterfall_count:
+		tiles.append(bytes(32))
+	for i in range(waterfall_count):
+		tiles[waterfall_base + i] = first_frame[i * 32:(i + 1) * 32]
+	assigned_tiles |= reserved_tiles
 	# Only retained or newly assigned slots remain in each private bank.
 	tiles = tiles[:max(assigned_tiles)+1];block_data=block_data[:max(assigned_blocks)+1];chunk_data=chunk_data[:max(assigned_chunks)+1]
 	assert all(tiles[i] == art[i*32:(i+1)*32] for i in keep_tiles)
@@ -248,7 +305,7 @@ def build(source, output):
 	for era in ('present','past','good Future','bad future'):
 		path=ROOT/f'collision/{era}/EHZ2.bin';original=path.read_bytes()
 		path.write_bytes(b''.join(original[i*2:i*2+2] if i in fg_blocks else bytes(2) for i in range(len(block_data))))
-	result=dict(source_revision=SOURCE_REVISION,source_crop=[0,CROP_Y,512,512],tiles=len(tiles),blocks=len(block_data),chunks=len(chunk_data),background_dimensions=[4,4],foreground_and_platform_pixels_preserved=True,hud_palette_slots_preserved=sorted(hud_colors-{0}),foreground_palette_blends=[dict(index=index+16,original=original_pal[index],pp=target,result=palette[index]) for index,target in blend_targets.items()],unique_tile_pixel_error_histogram=dict(sorted(errors.items())))
+	result=dict(source_revision=SOURCE_REVISION,source_crop=[0,CROP_Y,512,512],tiles=len(tiles),blocks=len(block_data),chunks=len(chunk_data),background_dimensions=[4,4],foreground_and_platform_tile_ids_preserved=True,foreground_green_merges={'060':'064','080':'0A0'},background_waterfall_tiles=waterfall_count,background_waterfall_frames=3,hud_palette_slots_preserved=sorted(hud_colors-{0}),foreground_palette_blends=[dict(index=index+16,original=original_pal[index],pp=target,result=palette[index]) for index,target in blend_targets.items()],unique_tile_pixel_error_histogram=dict(sorted(errors.items())))
 	output.parent.mkdir(parents=True,exist_ok=True);output.write_text(json.dumps(result,indent=2)+'\n')
 	print(json.dumps(result,indent=2))
 

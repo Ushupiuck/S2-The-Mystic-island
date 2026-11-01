@@ -549,7 +549,7 @@ MCD_CompressedAssets:
 	dc.l Kosp_EHZ,Kosp_EHZ+$2E4B	; art/kosinski/level/8x8 - EHZ.kosp
 	endif
 	if defined(Kosp_EHZ2)
-	dc.l Kosp_EHZ2,Kosp_EHZ2+$29E8	; art/kosinski/level/8x8 - EHZ2.kosp
+	dc.l Kosp_EHZ2,Kosp_EHZ2+$2931	; art/kosinski/level/8x8 - EHZ2.kosp
 	endif
 	if defined(Kosp_GHZ)
 	dc.l Kosp_GHZ,Kosp_GHZ+$22F8	; art/kosinski/level/8x8 - GHZ.kosp
@@ -951,7 +951,7 @@ MCD_CompressedAssets:
 	dc.l Map16_EHZ,Map16_EHZ+$CAE	; mappings/16x16/EHZ.kosp
 	endif
 	if defined(Map16_EHZ2)
-	dc.l Map16_EHZ2,Map16_EHZ2+$B92	; mappings/16x16/EHZ2.kosp
+	dc.l Map16_EHZ2,Map16_EHZ2+$B8E	; mappings/16x16/EHZ2.kosp
 	endif
 	if defined(Map16_GHZ)
 	dc.l Map16_GHZ,Map16_GHZ+$B14	; mappings/16x16/GHZ.kosp
@@ -1020,7 +1020,7 @@ MCD_CompressedAssets:
 	dc.l Nem_EHZ_Fireball,Nem_EHZ_Fireball+$11D	; art/nemesis/Fireball 1.nem
 	endif
 	if defined(Nem_EHZ_Waterfall)
-	dc.l Nem_EHZ_Waterfall,Nem_EHZ_Waterfall+$F5	; art/nemesis/Waterfall tiles.nem
+	dc.l Nem_EHZ_Waterfall,Nem_EHZ_Waterfall+$EE	; art/nemesis/Waterfall tiles.nem
 	endif
 	if defined(Nem_Eagle)
 	dc.l Nem_Eagle,Nem_Eagle+$13E	; art/nemesis/Flicky/Eagle.nem
