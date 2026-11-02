@@ -1191,10 +1191,7 @@ MCD_CompressedAssets:
 	dc.l Nem_SSEmStars,Nem_SSEmStars+$5B	; art/Bonus & Special Stage/Bonus Stage Emerald Twinkle.nem
 	endif
 	if defined(Nem_SSEmerald)
-	dc.l Nem_SSEmerald,Nem_SSEmerald+$15B	; art/Bonus & Special Stage/Bonus Stage Emeralds.nem
-	endif
-	if defined(Nem_SSExtraEmeralds)
-	dc.l Nem_SSExtraEmeralds,Nem_SSExtraEmeralds+$DC	; art/nemesis/Special stage blue and cyan emeralds.nem
+	dc.l Nem_SSEmerald,Nem_SSEmerald+$220	; art/Bonus & Special Stage/Bonus Stage Emeralds.nem
 	endif
 	if defined(Nem_SSGOAL)
 	dc.l Nem_SSGOAL,Nem_SSGOAL+$E2	; art/Bonus & Special Stage/Bonus Stage GOAL.nem

@@ -136,7 +136,7 @@ The cache occupies `$BA0` bytes after the CD ring event queue. `LoadPlayerEffect
 decompresses all three after level clears/PLCs and before `InitRingFrame`;
 it also runs on death restarts and returns from other scenes. The rotating S1
 stage loads its ring source independently with `LoadRingArt` before its first
-upload to `$2940`; it needs no shield/star source. Its palette-remapped results
+upload immediately after the stage emerald sheet; it needs no shield/star source. Its palette-remapped results
 ring remains a separate ROM asset. Decompression runs outside VBlank.
 
 Keep the editable files in `art/uncompressed/`; SonLVL continues reading the
@@ -451,8 +451,9 @@ blue’s dark outline `2` and white `6`. Both sprites select the same P2 row.
 Frames `0-5` retain the original gem IDs and `6` is cyan. The seven-frame
 results object skips drawing on its hidden blink phase; see the
 [special-stage guide](Special-stage.md#emerald-items) for outcome and layout.
-The generator also builds the private stage blue/cyan bank described in the
-[special-stage guide](Special-stage.md#emerald-items).
+Stage emeralds remain in the existing `Bonus Stage Emeralds.nem` sheet and
+its original mapping file; the results generator does not rebuild those
+editable stage assets. See the [stage guide](Special-stage.md#emerald-items).
 The retained Mini Sonic/Tails compressed sources supply the poses; Sonic's
 old CONTINUE tiles are replaced by lettering from the shared Ristar font.
 Only the lettering pieces select line two's gold slot D; the portrait pieces

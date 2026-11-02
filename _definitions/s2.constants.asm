@@ -772,7 +772,7 @@ VRAM_Horiz_Scroll_Table_Size             = 224*2*2	; 224 lines * 2 bytes per ent
 ; Level-mode tile $79C ($F380), up to the $F800 sprite table, is reserved
 ; for shared shield/invincibility art. A second shield bank at tile $56E
 ; ($ADC0) permits independent shield phases and mixed shield/star states.
-; The S1 stage has its own ring/sparkle bank at $2940.
+; The S1 stage keeps its rings/sparkles after the emerald sheet.
 
 ; VRAM Reserved regions, Sega screen.
 VRAM_SegaScr_Plane_A_Name_Table          = $C000	; Extends until $DFFF
@@ -1883,9 +1883,8 @@ ArtTile_SS_Ghost_Block:		equ ArtTile_SS_Red_White_Block+9
 ArtTile_SS_W_Block:		equ ArtTile_SS_Ghost_Block+9
 ArtTile_SS_Glass:		equ ArtTile_SS_W_Block+9
 ArtTile_SS_Emerald:		equ ArtTile_SS_Glass+9	; away from the live BG plane
-ArtTile_SS_Rings:		equ $14A	; $2940; rotating-stage rings only
+ArtTile_SS_Rings:		equ ArtTile_SS_Emerald+24 ; after the complete emerald sheet
 ArtTile_SS_Sparkles:		equ ArtTile_SS_Rings+4
-ArtTile_SS_ExtraEmeralds:	equ ArtTile_SS_Sparkles+4	; eight blue/cyan tiles at $2A40
 
 ; Special Stage Results
 ArtTile_SS_Results_Emeralds:	equ $500	; 28 private results tiles, below continue icons

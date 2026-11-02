@@ -42,10 +42,9 @@ Ranges are **end exclusive**, during stage play before results PLCs load.
 | `$0000-$0A20` | Clouds, 81 tiles |
 | `$0A20-$0B40` | Opaque transition, nine tiles |
 | `$0B40-$1340` | Shared bird/fish animation, 64 tiles |
-| `$1340-$2940` | Fixed stage art, walls through emeralds |
-| `$2940-$29C0` | Rotating-stage rings |
-| `$29C0-$2A40` | Ring sparkles |
-| `$2A40-$2B40` | Private dark-blue and cyan emeralds, eight tiles |
+| `$1340-$2A40` | Fixed stage art, including the complete emerald sheet |
+| `$2A40-$2AC0` | Rotating-stage rings |
+| `$2AC0-$2B40` | Ring sparkles |
 | `$2B40-$C000` | Free in this mode |
 | `$C000-$D000` | Live foreground map, 64x32 tiles |
 | `$D000-$D400` | Sonic allocation; rolling art uses its first `$200` bytes |
@@ -76,12 +75,18 @@ Stage Debug offers ring, blue, yellow, purple, green, red, gray and cyan, with
 the existing forward/backward selection and grid placement. Legacy external
 editors may still show ZONE 1 at item 52; the stored layout byte selects cyan.
 
-`build_special_results_art.py` duplicates the stage's original blue template
-into an eight-tile bank at `$152-$159`. Blue uses its existing darker P0 shades;
-cyan uses P1's formerly unused gray slots `7/8/9`, now `$EEA/$EC4/$A60`, plus
-black and white. Other stage palette entries, player art, existing emerald art
-and background cycles stay unchanged. Both new mappings share the old blank
-flash tiles and the existing emerald blink clock.
+The existing `art/Bonus & Special Stage/Bonus Stage Emeralds.nem` is the
+editable stage sheet: 24 tiles loaded by the single `Nem_SSEmerald` PLC entry.
+Its original 16 tiles retain red, gray, the shared yellow/purple/green pose and
+the shared flash pose. Dark blue and cyan occupy local tiles `$10-$13` and
+`$14-$17`. Their two-frame tables extend the existing `SS Chaos Emeralds.asm`
+mapping family and use that same flash pose and blink clock. No separate
+blue/cyan asset, VRAM allocation or PLC entry exists. Rings and their sparkles
+follow the enlarged sheet; the complete stage-art range still ends at `$2B40`.
+
+Blue uses its darker existing P0 shades. Cyan uses P1 slots `7/8/9`, now
+`$EEA/$EC4/$A60`, plus black and white. The results-art producer leaves this
+stage sheet and its palette alone; edit their existing files directly.
 
 The collected-ID list holds seven entries. Its former alignment byte is now
 `v_ss_emerald_collected`, cleared at stage entry and set only by a new pickup;

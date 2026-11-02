@@ -105,8 +105,9 @@ def live(args):
 	loaded=[g.read(g.s['v_ssblockbuffer']+r*g.s['S1SS_LayoutStride']+c) for r in range(64) for c in range(64)]
 	assert loaded.count(g.s['S1SS_CyanItem'])==1 and 0x40 not in loaded
 	step(100)
-	stage=(ROOT/'art/uncompressed/Special stage blue and cyan emeralds.unc').read_bytes()
-	bank=g.s['ArtTile_SS_ExtraEmeralds']*32
+	from import_ehz2_pp_background import nemesis
+	stage=nemesis((ROOT/'art/Bonus & Special Stage/Bonus Stage Emeralds.nem').read_bytes())
+	bank=g.s['ArtTile_SS_Emerald']*32
 	assert bytes(g.vram[(bank+i)^1] for i in range(len(stage)))==stage
 	palette=(ROOT/'palette/Special Stage.bin').read_bytes()
 	assert bytes(g.read(g.s['v_palette']+i) for i in range(32))==palette[:32]

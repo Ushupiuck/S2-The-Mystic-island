@@ -13750,8 +13750,6 @@ Nem_SSGlass:		binclude	"art/Bonus & Special Stage/Bonus Stage Glass.nem" ; bonus
 			even
 Nem_SSGOAL:		binclude	"art/Bonus & Special Stage/Bonus Stage GOAL.nem" ; bonus stage GOAL block
 			even
-Nem_SSExtraEmeralds:	binclude "art/nemesis/Special stage blue and cyan emeralds.nem"
-		even
 Nem_SSEmerald:		binclude	"art/Bonus & Special Stage/Bonus Stage Emeralds.nem" ; bonus stage chaos emeralds
 			even
 Nem_SSEmStars:		binclude	"art/Bonus & Special Stage/Bonus Stage Emerald Twinkle.nem" ; bonus stage stars from a collected emerald

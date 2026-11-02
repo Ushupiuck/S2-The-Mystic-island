@@ -323,7 +323,7 @@ Debug_SS_Entries:
 		dc.l 0,Map_Ring
 		dc.w $3B			; blue
 		dc.b 0,0
-		dc.w make_art_tile(ArtTile_SS_ExtraEmeralds,0,0)
+		dc.w make_art_tile(ArtTile_SS_Emerald+16,0,0)
 		dc.l 0,Map_Ring
 		dc.w $3C			; yellow
 		dc.b 0,0
@@ -347,7 +347,7 @@ Debug_SS_Entries:
 		dc.l 0,Map_Ring
 		dc.w S1SS_CyanItem
 		dc.b 0,0
-		dc.w make_art_tile(ArtTile_SS_ExtraEmeralds+4,1,0)
+		dc.w make_art_tile(ArtTile_SS_Emerald+20,1,0)
 Debug_SS_End:
 
 ; Place directly into the authored 64x64 cells, whose physical rows have

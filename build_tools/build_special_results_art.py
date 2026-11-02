@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """Build the results screen's own palette, emeralds and continue sprites.
 
-The rotating stage retains its original sources and adds private blue/cyan
-copies, using three previously unused palette entries. Results use a dark
-blue backdrop, the shared player row, aligned gold/gray UI colors and two rows
+The rotating stage keeps its own editable emerald sheet and palette. Results
+use a dark blue backdrop, the shared player row, aligned gold/gray UI colors and two rows
 of independent emerald ramps. The original results emerald sheet is the pixel
 source; each color now owns four tiles instead of sharing incompatible slots.
 """
@@ -57,20 +56,6 @@ def main():
 	(ROOT/'art/uncompressed/Results emeralds.unc').write_bytes(raw)
 	(ROOT/'art/nemesis/Results emeralds.nem').write_bytes(nemesis_compress(raw))
 	(ROOT/'mappings/sprite/SSR Emeralds.bin').write_bytes(mapping_file(rows))
-	# Stage colors remain independent of results. Only P1's unused gray slots
-	# change; the player's row and the cycling backgrounds retain their colors.
-	stage_palette = bytearray((ROOT/'palette/Special Stage.bin').read_bytes())
-	for slot, color in ((7,0xEEA),(8,0xEC4),(9,0xA60)):
-		struct.pack_into('>H',stage_palette,(16+slot)*2,color)
-	(ROOT/'palette/Special Stage.bin').write_bytes(stage_palette)
-	stage = nemesis((ROOT/'art/Bonus & Special Stage/Bonus Stage Emeralds.nem').read_bytes())[8*32:12*32]
-	blue = list(range(16))
-	blue[2:7] = (2,2,3,4,6)
-	cyan = list(range(16))
-	cyan[2:7] = (1,9,8,7,6)
-	stage_extra = remap_pixels(stage,blue) + remap_pixels(stage,cyan)
-	(ROOT/'art/uncompressed/Special stage blue and cyan emeralds.unc').write_bytes(stage_extra)
-	(ROOT/'art/nemesis/Special stage blue and cyan emeralds.nem').write_bytes(nemesis_compress(stage_extra))
 	# Retain both original 16x24 continue poses. These older S2 banks use four
 	# blue shades and the original orange slots, not today's shared indices.
 	continue_from_s2 = (0,1,12,11,10,10,6,7,8,9,5,2,13,14,4,3)
