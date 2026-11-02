@@ -275,6 +275,9 @@ MCD_CompressedAssets:
 	if defined(BS_6)
 	dc.l BS_6,BS_6+$1A4	; Bonus & Special Stages/6.kosp
 	endif
+	if defined(BS_7)
+	dc.l BS_7,BS_7+$1DD	; Bonus & Special Stages/7.kosp
+	endif
 	if defined(Eni_S3LevelSelect)
 	dc.l Eni_S3LevelSelect,Eni_S3LevelSelect+$1AC	; mappings/misc/S3 Level Select.eni
 	endif
@@ -1173,7 +1176,7 @@ MCD_CompressedAssets:
 	dc.l Nem_PlatformButton,Nem_PlatformButton+$A2	; art/nemesis/Platform button.nem
 	endif
 	if defined(Nem_ResultEm)
-	dc.l Nem_ResultEm,Nem_ResultEm+$236	; art/nemesis/Results emeralds.nem
+	dc.l Nem_ResultEm,Nem_ResultEm+$298	; art/nemesis/Results emeralds.nem
 	endif
 	if defined(Nem_Ring)
 	dc.l Nem_Ring,Nem_Ring+$1E8	; art/nemesis/Ring.nem
@@ -1189,6 +1192,9 @@ MCD_CompressedAssets:
 	endif
 	if defined(Nem_SSEmerald)
 	dc.l Nem_SSEmerald,Nem_SSEmerald+$15B	; art/Bonus & Special Stage/Bonus Stage Emeralds.nem
+	endif
+	if defined(Nem_SSExtraEmeralds)
+	dc.l Nem_SSExtraEmeralds,Nem_SSExtraEmeralds+$DC	; art/nemesis/Special stage blue and cyan emeralds.nem
 	endif
 	if defined(Nem_SSGOAL)
 	dc.l Nem_SSGOAL,Nem_SSGOAL+$E2	; art/Bonus & Special Stage/Bonus Stage GOAL.nem

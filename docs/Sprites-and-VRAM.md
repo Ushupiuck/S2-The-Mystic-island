@@ -283,18 +283,34 @@ A live splash takes precedence; numbers have their own screen-space draw path.
 Resident bubble art is separate. See [player behavior](Players-and-effects.md#water-and-shared-effects).
 
 Title cards stream scene glyphs at tile `$581`. Results begin at that same
-tile with eight time/ring bonus digit tiles (`ArtTile_Bonuses`), then stream
-their glyphs at `$589` (`ArtTile_Results_Card`). Normal results use at most 70
-glyph tiles and stay below animal bank 1; special results use at most 68 and
+tile with nine time/ring bonus digit tiles (`ArtTile_Bonuses`: five time,
+four ring), then stream glyphs at `$58A` (`ArtTile_Results_Card`). Normal results
+use at most 70 glyph tiles and stay below animal bank 1; special results use
+at most 76 and
 have no live level animals. Both shield banks remain disjoint from the complete
 results allocation. The generator checks these lifetimes at assembly time.
 Scene DPLCs avoid loading the whole raw font. `Pal_TitleCardYellow` must
 immediately follow `Pal_SonicTails`: the title-card loader copies them as one
 two-line palette. Assembly and the native palette-loader check guard that pair. `build_card_art.py` owns their mappings/DPLCs, including
 act 4, V/W and the wide W metrics. Its `act_four()` draws the digit into the
-existing six-tile (16x24) slot. Small results markers use blue-only shading
-from `Title Cards Base.unc`; normal and special results use the same blue
-ramp. Special results use the aligned palette contract below.
+existing six-tile (16x24) slot. Small results markers preserve the blue fill
+and dark-blue edge from `Title Cards Base.unc`, with the outer black pixels
+removed. Both screens share that treatment and the tightened final S in BONUS.
+Special results use the aligned palette contract below.
+
+Normal and special results share `Card_InitResultSprite`, an eight-byte-record
+constructor adapted from S3&K's `sub_2E802`. Their editable configuration tables
+and classic movement remain in the owning object files. Title cards already
+use table-driven initialization and per-scene DPLCs; they keep those compact
+scene banks rather than S2/S3's larger title-card artwork. The normal tally
+already combines both bonus deltas into one score update, as S3&K does.
+
+Finishing at any frame displaying exactly 9:59 awards 100,000 time-bonus
+points, following `Obj_LevelResultsInit` in skdisasm
+`73de97c6b55055bcb8089c1d55d006b02136f163`. Other finish times retain this
+project's existing bonus table. The counter holds 10,000 ten-point units;
+its fifth streamed digit plus the resident trailing zero display all six
+figures. The ordinary tally awards the full amount, including score lives.
 `build_signpost_art.py` owns the streamed
 signpost and monitor arrangement. Tails's portrait is the final four monitor
 tiles (`$561-$564`); signpost frames stay below it. Sonic's life art remains
@@ -394,8 +410,8 @@ tiles instead of 46. The freed `$DCC0-$DE60` range is unused by HUD uploads and
 mappings. All life-HUD sources and pieces retain their original cells.
 The generator also owns `obj21.asm` and the four-tile private BONU label in
 `SS Results Labels.unc`; run `build_card_art.py` afterwards. Both results
-screens share the resident SCORE/TIME/RINGS letters, use eight bonus digit
-tiles, and select their own glyph/marker banks. Large title/result headings
+screens share the resident SCORE/TIME/RINGS letters, use the nine bonus digit
+tiles described above, and select their own glyph/marker banks. Large title/result headings
 retain their separate card font. The special-results ring copy and animation
 are removed; rotating-stage rings keep their original assets and loader.
 
@@ -427,8 +443,16 @@ and the shared red/yellow ramp `D-F`. Their VRAM bases stay
 fixed; the 18 released slots remain gaps rather than new global allocations.
 
 `build_special_results_art.py` builds the independent navy/white/gold results
-palette, six four-tile emeralds at tile $500 on lines three/four, and the
+palette, seven four-tile emeralds at tiles `$500-$51B` on lines three/four, and the
 original two-frame 16x24 continue sprites at the existing mini-character banks.
+Blue uses P2 slots `2/3/4` (`$822/$C42/$E66`) plus white `6`. Its former light
+slot `5` and unused slots `1/7` provide cyan (`$A60/$EC4/$EEA`); cyan shares
+blue’s dark outline `2` and white `6`. Both sprites select the same P2 row.
+Frames `0-5` retain the original gem IDs and `6` is cyan. The seven-frame
+results object skips drawing on its hidden blink phase; see the
+[special-stage guide](Special-stage.md#emerald-items) for outcome and layout.
+The generator also builds the private stage blue/cyan bank described in the
+[special-stage guide](Special-stage.md#emerald-items).
 The retained Mini Sonic/Tails compressed sources supply the poses; Sonic's
 old CONTINUE tiles are replaced by lettering from the shared Ristar font.
 Only the lettering pieces select line two's gold slot D; the portrait pieces

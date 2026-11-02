@@ -38,22 +38,15 @@ SSR_Main:
 		jsr	(Get_SpecialCardScene).l
 		movea.l	a0,a1
 		lea	(SSR_Config).l,a2
-		moveq	#3,d1
+		move.b	#Map_SSR_height,d3
+		move.l	#BonusGotThrough,d6
+		moveq	#(SSR_Config_Continue-SSR_Config)/8-1,d1
 		cmpi.w	#50,(v_rings).w	; do you have 50 or more rings?
 		bcs.s	SSR_Loop	; if not, branch
 		addq.w	#1,d1		; if yes, add 1	to d1 (number of sprites)
 
 SSR_Loop:
-		move.l	#BonusGotThrough,code(a1)
-		move.w	(a2)+,obX(a1)		; load start x-position
-		move.w	(a2)+,ssr_mainX(a1)	; load main x-position
-		move.w	(a2)+,obScreenY(a1)	; load y-position
-		move.b	(a2)+,obRoutine(a1)
-		move.b	(a2)+,obFrame(a1)
-		move.l	a3,obMap(a1)
-		move.b	#Map_SSR_height,height_pixels(a1)
-		move.w	#make_art_tile(ArtTile_Results_Card,0,1),obGfx(a1)
-		sf	obRender(a1)
+		bsr.w	Card_InitResultSprite
 		lea	object_size(a1),a1
 		dbf	d1,SSR_Loop	; repeat sequence 3 or 4 times
 		; Frame 0 contains the selected SPECIAL STAGE / emeralds / character
@@ -159,5 +152,6 @@ SSR_Config:	dc.w $20, $120,	$C4	; start	x-pos, main x-pos, y-pos
 		dc.b 2,	2
 		dc.w $1EC, $11C, $C4
 		dc.b 2,	3
+SSR_Config_Continue:
 		dc.w $3A0, $120, $138
 		dc.b 2,	6

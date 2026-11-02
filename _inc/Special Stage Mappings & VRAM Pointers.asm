@@ -57,14 +57,14 @@ specialStageData: macro frame,mappings,palette,vram
 		specialStageData	0, Map_SS_R,      0, ArtTile_SS_R_Block
 		specialStageData	1, Map_SS_Bump,   0, ArtTile_SS_Bumper
 		specialStageData	2, Map_SS_Bump,   0, ArtTile_SS_Bumper
-		specialStageData	0, Map_SS_R,      0, ArtTile_SS_W_Block ; Filler (these used to be "ZONE" blocks)
+		specialStageData	0, Map_SS_Cyan,   1, ArtTile_SS_ExtraEmeralds ; $34: cyan, formerly ZONE 1
 		specialStageData	0, Map_SS_R,      0, ArtTile_SS_W_Block ; Filler
 		specialStageData	0, Map_SS_R,      0, ArtTile_SS_W_Block ; Filler
 		specialStageData	0, Map_SS_R,      0, ArtTile_SS_W_Block ; Filler
 		specialStageData	0, Map_SS_R,      0, ArtTile_SS_W_Block ; Filler
 		specialStageData	0, Map_SS_R,      0, ArtTile_SS_W_Block ; Filler
 		specialStageData	0, Map_SS_Ring,   1, ArtTile_SS_Rings
-		specialStageData	0, Map_SS_Chaos3, 0, ArtTile_SS_Emerald
+		specialStageData	0, Map_SS_Blue,   0, ArtTile_SS_ExtraEmeralds
 		specialStageData	0, Map_SS_Chaos3, 1, ArtTile_SS_Emerald
 		specialStageData	0, Map_SS_Chaos3, 2, ArtTile_SS_Emerald
 		specialStageData	0, Map_SS_Chaos3, 3, ArtTile_SS_Emerald

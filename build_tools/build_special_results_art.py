@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Build the results screen's own palette, emeralds and continue sprites.
 
-The rotating stage keeps every original palette and asset. Results use a dark
+The rotating stage retains its original sources and adds private blue/cyan
+copies, using three previously unused palette entries. Results use a dark
 blue backdrop, the shared player row, aligned gold/gray UI colors and two rows
 of independent emerald ramps. The original results emerald sheet is the pixel
 source; each color now owns four tiles instead of sharing incompatible slots.
@@ -20,53 +21,72 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():
-    player = list(struct.unpack('>16H', (ROOT/'palette/SonicAndTails.bin').read_bytes()))
-    player[0] = 0x200
-    ui = player.copy()
-    ui[13:16] = [0x0EE, 0x088, 0x044]
-    gems = [[0x200, 0x222, 0, 0, 0, 0, 0xEEE, 0xECC] + [0]*8 for _ in range(2)]
-    # Source tile, source colors dark -> light, four authored destination shades.
-    colors = (
-        (4, (2,3,4,5,6), (0x822,0xC42,0xE66,0xEAA)),
-        (0, (10,11,12,13,14), (0x044,0x088,0x0CC,0x4EE)),
-        (4, (2,3,4,5,6), (0x404,0x808,0xC4C,0xEAE)),
-        (4, (2,3,4,5,6), (0x040,0x080,0x0C6,0x8EA)),
-        (8, (14,13,12,11,6), (0x004,0x008,0x00E,0x88E)),
-        (12, (9,8,7,6), (0x444,0x888,0xAAA,0xECC)),
-    )
-    original = nemesis((ROOT/'art/Bonus & Special Stage/Bonus Stage Result Emeralds.nem').read_bytes())
-    raw, rows = bytearray(), []
-    for i, (tile, indices, ramp) in enumerate(colors):
-        line, slots = i//3, ((2,3,4,5),(8,9,10,11),(12,13,14,15))[i%3]
-        for slot, value in zip(slots, ramp):
-            gems[line][slot] = value
-        lookup = [0]*16
-        for old, new in zip(indices[:-1], slots):
-            lookup[old] = new
-        lookup[indices[-1]] = 6
-        raw += remap_pixels(original[tile*32:(tile+4)*32], lookup)
-        rows.append([(-8, 5, ((line+2)<<13) | i*4, -8)])
-    rows.append([])
-    (ROOT/'palette/Special Stage Results.bin').write_bytes(struct.pack('>64H',*(player+ui+gems[0]+gems[1])))
-    (ROOT/'art/uncompressed/Results emeralds.unc').write_bytes(raw)
-    (ROOT/'art/nemesis/Results emeralds.nem').write_bytes(nemesis_compress(raw))
-    (ROOT/'mappings/sprite/SSR Emeralds.bin').write_bytes(mapping_file(rows))
-    # Retain both original 16x24 continue poses. These older S2 banks use four
-    # blue shades and the original orange slots, not today's shared indices.
-    continue_from_s2 = (0,1,12,11,10,10,6,7,8,9,5,2,13,14,4,3)
-    def poses(filename, skip=0):
-        packed = (ROOT/f'art/moduled kosinski/{filename}.kospm').read_bytes()
-        raw = kosinski_plus_decode(packed[2:])[0][skip*32:]
-        assert len(raw) == 12*32
-        return remap_pixels(raw,continue_from_s2)
-    sonic = poses('Mini Sonic Continue',18)
-    tails = poses('Mini Tails continue')
-    text = lettering('CONTINUE',ink=13,width=72)
-    for name, data in (('Sonic',text+sonic),('Tails',tails)):
-        (ROOT/f'art/uncompressed/Results continue {name}.unc').write_bytes(data)
-        (ROOT/f'art/moduled kosinski/Results continue {name}.kospm').write_bytes(pack_moduled(data))
-    print('Independent results: navy/white/gold UI, six four-tile emeralds, original animated continue sprites.')
+	player = list(struct.unpack('>16H', (ROOT/'palette/SonicAndTails.bin').read_bytes()))
+	player[0] = 0x200
+	ui = player.copy()
+	ui[13:16] = [0x0EE, 0x088, 0x044]
+	# P2 keeps the existing blue shades at 2/3/4. Blue no longer needs 5;
+	# previously unused 1/7 and released 5 supply cyan's intermediate shades.
+	# Both gems share the dark-blue outline at 2 and white highlight at 6.
+	gems = [
+		[0x200,0xA60,0x822,0xC42,0xE66,0xEC4,0xEEE,0xEEA,
+		 0x044,0x088,0x0CC,0x4EE,0x404,0x808,0xC4C,0xEAE],
+		[0x200,0x222,0x040,0x080,0x0C6,0x8EA,0xEEE,0xECC,
+		 0x004,0x008,0x00E,0x88E,0x444,0x888,0xAAA,0xECC],
+	]
+	# Source tile and its dark-to-light indices, destination row and indices.
+	# Cyan duplicates blue's four source tiles, with its own palette indices.
+	colors = (
+		(4, (2,3,4,5,6), 0, (2,2,3,4,6)),
+		(0, (10,11,12,13,14), 0, (8,9,10,11,6)),
+		(4, (2,3,4,5,6), 0, (12,13,14,15,6)),
+		(4, (2,3,4,5,6), 1, (2,3,4,5,6)),
+		(8, (14,13,12,11,6), 1, (8,9,10,11,6)),
+		(12, (9,8,7,6), 1, (12,13,14,6)),
+		(4, (2,3,4,5,6), 0, (2,1,5,7,6)),
+	)
+	original = nemesis((ROOT/'art/Bonus & Special Stage/Bonus Stage Result Emeralds.nem').read_bytes())
+	raw, rows = bytearray(), []
+	for i, (tile, indices, line, destinations) in enumerate(colors):
+		lookup = [0]*16
+		for old, new in zip(indices, destinations):
+			lookup[old] = new
+		raw += remap_pixels(original[tile*32:(tile+4)*32], lookup)
+		rows.append([(-8, 5, ((line+2)<<13) | i*4, -8)])
+	(ROOT/'palette/Special Stage Results.bin').write_bytes(struct.pack('>64H',*(player+ui+gems[0]+gems[1])))
+	(ROOT/'art/uncompressed/Results emeralds.unc').write_bytes(raw)
+	(ROOT/'art/nemesis/Results emeralds.nem').write_bytes(nemesis_compress(raw))
+	(ROOT/'mappings/sprite/SSR Emeralds.bin').write_bytes(mapping_file(rows))
+	# Stage colors remain independent of results. Only P1's unused gray slots
+	# change; the player's row and the cycling backgrounds retain their colors.
+	stage_palette = bytearray((ROOT/'palette/Special Stage.bin').read_bytes())
+	for slot, color in ((7,0xEEA),(8,0xEC4),(9,0xA60)):
+		struct.pack_into('>H',stage_palette,(16+slot)*2,color)
+	(ROOT/'palette/Special Stage.bin').write_bytes(stage_palette)
+	stage = nemesis((ROOT/'art/Bonus & Special Stage/Bonus Stage Emeralds.nem').read_bytes())[8*32:12*32]
+	blue = list(range(16))
+	blue[2:7] = (2,2,3,4,6)
+	cyan = list(range(16))
+	cyan[2:7] = (1,9,8,7,6)
+	stage_extra = remap_pixels(stage,blue) + remap_pixels(stage,cyan)
+	(ROOT/'art/uncompressed/Special stage blue and cyan emeralds.unc').write_bytes(stage_extra)
+	(ROOT/'art/nemesis/Special stage blue and cyan emeralds.nem').write_bytes(nemesis_compress(stage_extra))
+	# Retain both original 16x24 continue poses. These older S2 banks use four
+	# blue shades and the original orange slots, not today's shared indices.
+	continue_from_s2 = (0,1,12,11,10,10,6,7,8,9,5,2,13,14,4,3)
+	def poses(filename, skip=0):
+		packed = (ROOT/f'art/moduled kosinski/{filename}.kospm').read_bytes()
+		raw = kosinski_plus_decode(packed[2:])[0][skip*32:]
+		assert len(raw) == 12*32
+		return remap_pixels(raw,continue_from_s2)
+	sonic = poses('Mini Sonic Continue',18)
+	tails = poses('Mini Tails continue')
+	text = lettering('CONTINUE',ink=13,width=72)
+	for name, data in (('Sonic',text+sonic),('Tails',tails)):
+		(ROOT/f'art/uncompressed/Results continue {name}.unc').write_bytes(data)
+		(ROOT/f'art/moduled kosinski/Results continue {name}.kospm').write_bytes(pack_moduled(data))
+	print('Independent results: navy/white/gold UI, seven four-tile emeralds, original animated continue sprites.')
 
 
 if __name__ == '__main__':
-    main()
+	main()

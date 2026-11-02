@@ -14,302 +14,317 @@ from sprite_palette import PLAYER_FROM_LEGACY, remap_pixels
 
 ROOT = Path(__file__).resolve().parents[1]
 NAMES = ('TWILIGHT HILL', 'RUSTIC RUINS', 'ANCIENT WORKBENCH',
-         'EMERALD HILL', 'CRYSTAL VALLEY', 'EGG MOUNTAIN', 'METROPOLIS',
-         'SHOCKING BLIZZARD', 'SCRAP MADNESS', 'DEATH EGG',
-         'LEVEL 0A', 'LEVEL 0B', 'LEVEL 0C', 'LEVEL 0D', 'LEVEL 0E', 'LEVEL 0F')
+		 'EMERALD HILL', 'CRYSTAL VALLEY', 'EGG MOUNTAIN', 'METROPOLIS',
+		 'SHOCKING BLIZZARD', 'SCRAP MADNESS', 'DEATH EGG',
+		 'LEVEL 0A', 'LEVEL 0B', 'LEVEL 0C', 'LEVEL 0D', 'LEVEL 0E', 'LEVEL 0F')
 GLYPHS = dict(zip('ABCDEFGHIKLMNOPRSTUYZ',
-                  (0, 4, 8, 12, 16, 20, 24, 28, 32, 34, 38, 42, 46,
-                   50, 54, 58, 62, 66, 70, 74, 78)))
+				  (0, 4, 8, 12, 16, 20, 24, 28, 32, 34, 38, 42, 46,
+				   50, 54, 58, 62, 66, 70, 74, 78)))
 GLYPHS.update(V=128, W=132)
 GLYPHS['0'] = GLYPHS['O']
 GLYPH_WIDTHS = {'I': 8, 'W': 24}
 OVAL = [(-28, 12, 0x70, -12), (-28, 2, 0x74, 20),
-        (-20, 4, 0x77, -20), (-12, 5, 0x79, -28),
-        (20, 12, 0x1870, -20), (4, 2, 0x1874, -28),
-        (12, 4, 0x1877, 4), (-4, 5, 0x1879, 12),
-        (-20, 8, 0x7D, -4), (-12, 12, 0x7C, -12),
-        (-4, 8, 0x7C, -12), (4, 12, 0x7C, -20),
-        (12, 8, 0x7C, -20)]
+		(-20, 4, 0x77, -20), (-12, 5, 0x79, -28),
+		(20, 12, 0x1870, -20), (4, 2, 0x1874, -28),
+		(12, 4, 0x1877, 4), (-4, 5, 0x1879, 12),
+		(-20, 8, 0x7D, -4), (-12, 12, 0x7C, -12),
+		(-4, 8, 0x7C, -12), (4, 12, 0x7C, -20),
+		(12, 8, 0x7C, -20)]
 ACT = (0x90, 0x5A, 0x60, 0x8A)  # 1 padded to six tiles; 2/3; new 4
 SS_BONUS, SS_OVAL = 150, 154
 
 
 def tiles(pixels):
-    h, w = len(pixels), len(pixels[0])
-    assert not w % 8 and not h % 8
-    return bytes((pixels[ty+y][tx+x] << 4) | pixels[ty+y][tx+x+1]
-                 for tx in range(0, w, 8) for ty in range(0, h, 8)
-                 for y in range(8) for x in range(0, 8, 2))
+	h, w = len(pixels), len(pixels[0])
+	assert not w % 8 and not h % 8
+	return bytes((pixels[ty+y][tx+x] << 4) | pixels[ty+y][tx+x+1]
+				 for tx in range(0, w, 8) for ty in range(0, h, 8)
+				 for y in range(8) for x in range(0, 8, 2))
 
 
 def serif(points, width=16):
-    """Rasterize a 15-pixel cap with the original white/gray/black slots."""
-    def inside(x, y):
-        hit = False
-        for (ax, ay), (bx, by) in zip(points, points[1:]+points[:1]):
-            if (ay > y) != (by > y) and x < (bx-ax)*(y-ay)/(by-ay)+ax:
-                hit = not hit
-        return hit
-    body = [[0]*width for _ in range(16)]
-    for y in range(15):
-        for x in range(width-1):
-            n = sum(inside(x+(sx+.5)/4, y+(sy+.5)/4)
-                    for sy in range(4) for sx in range(4))
-            body[y][x] = 6 if n >= 12 else 8 if n >= 6 else 7 if n >= 2 else 0
-    out = [[0]*width for _ in range(16)]
-    for y in range(15):
-        for x in range(width-1):
-            if body[y][x]:
-                out[y+1][x+1] = 1
-    for y in range(16):
-        for x in range(width):
-            if body[y][x]:
-                out[y][x] = body[y][x]
-    return tiles(out)
+	"""Rasterize a 15-pixel cap with the original white/gray/black slots."""
+	def inside(x, y):
+		hit = False
+		for (ax, ay), (bx, by) in zip(points, points[1:]+points[:1]):
+			if (ay > y) != (by > y) and x < (bx-ax)*(y-ay)/(by-ay)+ax:
+				hit = not hit
+		return hit
+	body = [[0]*width for _ in range(16)]
+	for y in range(15):
+		for x in range(width-1):
+			n = sum(inside(x+(sx+.5)/4, y+(sy+.5)/4)
+					for sy in range(4) for sx in range(4))
+			body[y][x] = 6 if n >= 12 else 8 if n >= 6 else 7 if n >= 2 else 0
+	out = [[0]*width for _ in range(16)]
+	for y in range(15):
+		for x in range(width-1):
+			if body[y][x]:
+				out[y+1][x+1] = 1
+	for y in range(16):
+		for x in range(width):
+			if body[y][x]:
+				out[y][x] = body[y][x]
+	return tiles(out)
 
 
 def act_four():
-    body = [[False]*16 for _ in range(24)]
-    for y in range(23):
-        for x in range(15):
-            # Join the crossbar to the diagonal without a left-hand overhang.
-            body[y][x] = (9 <= x <= 12 or 13 <= y <= 16 and x >= 2 or
-                          y < 14 and 8-y//2 <= x <= 11-y//2)
-    out = [[0]*16 for _ in range(24)]
-    for y in range(23):
-        for x in range(15):
-            if body[y][x]:
-                out[y+1][x+1] = 1
-    for y in range(24):
-        for x in range(16):
-            if body[y][x]:
-                out[y][x] = 15
-    return tiles(out)
+	body = [[False]*16 for _ in range(24)]
+	for y in range(23):
+		for x in range(15):
+			# Join the crossbar to the diagonal without a left-hand overhang.
+			body[y][x] = (9 <= x <= 12 or 13 <= y <= 16 and x >= 2 or
+						  y < 14 and 8-y//2 <= x <= 11-y//2)
+	out = [[0]*16 for _ in range(24)]
+	for y in range(23):
+		for x in range(15):
+			if body[y][x]:
+				out[y+1][x+1] = 1
+	for y in range(24):
+		for x in range(16):
+			if body[y][x]:
+				out[y][x] = 15
+	return tiles(out)
 
 
 def count(size):
-    return ((size >> 2)+1)*((size & 3)+1)
+	return ((size >> 2)+1)*((size & 3)+1)
 
 
 def used(pieces):
-    return {t for _, size, word, _ in pieces
-            for t in range(word & 0x7FF, (word & 0x7FF)+count(size))}
+	return {t for _, size, word, _ in pieces
+			for t in range(word & 0x7FF, (word & 0x7FF)+count(size))}
 
 
 def lettering(text, space=12, x=None):
-    width = sum(space if c == ' ' else GLYPH_WIDTHS.get(c, 16) for c in text)
-    x = -width//2 if x is None else x
-    out = []
-    for c in text:
-        if c != ' ':
-            size = ((GLYPH_WIDTHS.get(c, 16)//8-1) << 2) | 1
-            out.append((-8, size, GLYPHS[c], x))
-        x += space if c == ' ' else GLYPH_WIDTHS.get(c, 16)
-    return out
+	width = sum(space if c == ' ' else GLYPH_WIDTHS.get(c, 16) for c in text)
+	x = -width//2 if x is None else x
+	out = []
+	for c in text:
+		if c != ' ':
+			size = ((GLYPH_WIDTHS.get(c, 16)//8-1) << 2) | 1
+			out.append((-8, size, GLYPHS[c], x))
+		x += space if c == ' ' else GLYPH_WIDTHS.get(c, 16)
+	return out
 
 
 def pack(prefix, pieces):
-    order = list(prefix) + sorted(used(pieces)-set(prefix))
-    assert len(order) == len(set(order))
-    lookup = {t: i for i, t in enumerate(order)}
-    # Every original sprite rectangle must still be one contiguous tile run.
-    for _, size, word, _ in pieces:
-        first = word & 0x7FF
-        assert all(lookup[first+i] == lookup[first]+i for i in range(count(size)))
-    return order, lookup
+	order = list(prefix) + sorted(used(pieces)-set(prefix))
+	assert len(order) == len(set(order))
+	lookup = {t: i for i, t in enumerate(order)}
+	# Every original sprite rectangle must still be one contiguous tile run.
+	for _, size, word, _ in pieces:
+		first = word & 0x7FF
+		assert all(lookup[first+i] == lookup[first]+i for i in range(count(size)))
+	return order, lookup
 
 
 def dplc(order):
-    runs = []
-    for tile in order:
-        if runs and tile == runs[-1][0]+runs[-1][1] and runs[-1][1] < 16:
-            runs[-1][1] += 1
-        else:
-            runs.append([tile, 1])
-    return tuple(((n-1) << 12) | tile for tile, n in runs)
+	runs = []
+	for tile in order:
+		if runs and tile == runs[-1][0]+runs[-1][1] and runs[-1][1] < 16:
+			runs[-1][1] += 1
+		else:
+			runs.append([tile, 1])
+	return tuple(((n-1) << 12) | tile for tile, n in runs)
 
 
 def mapped(pieces, lookup):
-    return [(y, size, (word & ~0x7FF) | lookup[word & 0x7FF], x)
-            for y, size, word, x in pieces]
+	return [(y, size, (word & ~0x7FF) | lookup[word & 0x7FF], x)
+			for y, size, word, x in pieces]
 
 
 def row(y, size, word, x):
-    return y, size, word, x
+	return y, size, word, x
 
 
 def emit_table(label, frames, description=''):
-    lines = [f'{label}: ; {description}']
-    for i in range(len(frames)):
-        lines.append(f'\t\tdc.w {label}_{i}-{label}')
-    for i, pieces in enumerate(frames):
-        lines.append(f'{label}_{i}: dc.w {len(pieces)}')
-        for y, size, word, x in pieces:
-            word = f'${word:X}' if isinstance(word, int) else word
-            lines.append(f'\t\tdc.w ${((y & 255) << 8) | size:04X}, {word}, ${x & 65535:04X}')
-    return '\n'.join(lines)+'\n\t\teven\n'
+	lines = [f'{label}: ; {description}']
+	for i in range(len(frames)):
+		lines.append(f'\t\tdc.w {label}_{i}-{label}')
+	for i, pieces in enumerate(frames):
+		lines.append(f'{label}_{i}: dc.w {len(pieces)}')
+		for y, size, word, x in pieces:
+			word = f'${word:X}' if isinstance(word, int) else word
+			lines.append(f'\t\tdc.w ${((y & 255) << 8) | size:04X}, {word}, ${x & 65535:04X}')
+	return '\n'.join(lines)+'\n\t\teven\n'
+
+
+
+def thin_results_marker(data):
+	"""Keep the original blue fill/edge and remove the black outer trim."""
+	return bytes((0 if b>>4 == 1 else b>>4)<<4 |
+				 (0 if b&15 == 1 else b&15) for b in data)
 
 
 def main():
-    from build_hud_art import label_pieces
-    raw = bytearray((ROOT/'art/uncompressed/Title Cards Base.unc').read_bytes())
-    assert len(raw) == 128*32
-    raw += serif([(0,0),(6,0),(6,1),(5,1),(9,11),(13,1),(11,1),
-                  (11,0),(15,0),(15,1),(14,1),(9,15),(7,15),(2,1),(0,1)])
-    raw += serif([(0,0),(7,0),(7,1),(5,1),(9,11),(11,5),(9,1),(8,1),
-                  (8,0),(15,0),(15,1),(13,1),(17,11),(21,1),(19,1),
-                  (19,0),(23,0),(23,1),(22,1),(17,15),(15,15),(12,8),
-                  (9,15),(7,15),(2,1),(0,1)], width=24)
-    raw += act_four()
-    raw += raw[0x57*32:0x5A*32] + bytes(3*32)
-    assert len(raw) == 150*32
-    # The player palette lost blue $4 and uses orange at $F. Merge the
-    # missing blue into $5; ACT digits and BONU use level-palette yellow $C.
-    colors = list(range(16))
-    colors[4], colors[15] = 5, 12
-    raw = bytearray(colors[b >> 4] << 4 | colors[b & 15] for b in raw)
-    raw = bytearray(remap_pixels(raw, PLAYER_FROM_LEGACY))
-    # Generated by build_hud_art.py from the small CONTINUE/Ristar font.
-    # Keep both results screens' SCORE/TIME/BONUS labels in that same style.
-    labels = (ROOT/'art/uncompressed/SS Results Labels.unc').read_bytes()
-    assert len(labels) == 4*32
-    # Gold labels use the results UI row; retain their black shadow.
-    labels = bytes((1 if b>>4 == 1 else 13 if b>>4 else 0)<<4 |
-                   (1 if b&15 == 1 else 13 if b&15 else 0) for b in labels)
-    raw += labels
-    assert len(raw) == SS_OVAL*32
-    # The results palette shares the player's blue ramp.
-    raw += raw[0x6E*32:0x70*32]
-    assert len(raw) == (SS_OVAL+2)*32
-    (ROOT/'art/uncompressed/Card Font.unc').write_bytes(raw)
+	from build_hud_art import label_pieces
+	raw = bytearray((ROOT/'art/uncompressed/Title Cards Base.unc').read_bytes())
+	assert len(raw) == 128*32
+	raw += serif([(0,0),(6,0),(6,1),(5,1),(9,11),(13,1),(11,1),
+				  (11,0),(15,0),(15,1),(14,1),(9,15),(7,15),(2,1),(0,1)])
+	raw += serif([(0,0),(7,0),(7,1),(5,1),(9,11),(11,5),(9,1),(8,1),
+				  (8,0),(15,0),(15,1),(13,1),(17,11),(21,1),(19,1),
+				  (19,0),(23,0),(23,1),(22,1),(17,15),(15,15),(12,8),
+				  (9,15),(7,15),(2,1),(0,1)], width=24)
+	raw += act_four()
+	raw += raw[0x57*32:0x5A*32] + bytes(3*32)
+	assert len(raw) == 150*32
+	# The player palette lost blue $4 and uses orange at $F. Merge the
+	# missing blue into $5; ACT digits and BONU use level-palette yellow $C.
+	colors = list(range(16))
+	colors[4], colors[15] = 5, 12
+	raw = bytearray(colors[b >> 4] << 4 | colors[b & 15] for b in raw)
+	raw = bytearray(remap_pixels(raw, PLAYER_FROM_LEGACY))
+	raw[0x6E*32:0x70*32] = thin_results_marker(raw[0x6E*32:0x70*32])
+	# Generated by build_hud_art.py from the small CONTINUE/Ristar font.
+	# Keep both results screens' SCORE/TIME/BONUS labels in that same style.
+	labels = (ROOT/'art/uncompressed/SS Results Labels.unc').read_bytes()
+	assert len(labels) == 4*32
+	# Gold labels use the results UI row; retain their black shadow.
+	labels = bytes((1 if b>>4 == 1 else 13 if b>>4 else 0)<<4 |
+				   (1 if b&15 == 1 else 13 if b&15 else 0) for b in labels)
+	raw += labels
+	assert len(raw) == SS_OVAL*32
+	# The results palette shares the player's blue ramp.
+	raw += raw[0x6E*32:0x70*32]
+	assert len(raw) == (SS_OVAL+2)*32
+	(ROOT/'art/uncompressed/Card Font.unc').write_bytes(raw)
 
-    scenes = []
-    intro_common = sorted(used(OVAL+lettering('ZONE')+[row(4,12,0x53,-20)]))
-    intro_frames = []
-    intro_lookups = []
-    for zone, name in enumerate(NAMES):
-        text = lettering(name)
-        for act in range(4):
-            prefix = intro_common + list(range(ACT[act], ACT[act]+6))
-            order, lookup = pack(prefix, text)
-            scenes.append((f'{name} ACT {act+1}', order))
-            if act == 0:
-                intro_frames.append(mapped(text, lookup))
-                intro_lookups.append(lookup)
-    common = intro_lookups[0]
-    intro_frames.append(mapped(lettering('ZONE', x=-32), common))
-    digit_slot = len(intro_common)
-    for act in range(4):
-        intro_frames.append(mapped([row(4,12,0x53,-20)], common)+
-                            [row(-12,2 if act == 0 else 6,digit_slot | 0x2000,12 if act == 0 else 8)])
-    intro_frames.append(mapped(OVAL, common))
-    header = '; Generated by build_tools/build_card_art.py. Do not hand-edit.\n'
-    (ROOT/'mappings/sprite/Title_Cards.asm').write_text(
-        header+emit_table('Map_Cards', intro_frames, '16 names, ZONE, ACT 1-4, oval'))
+	scenes = []
+	intro_common = sorted(used(OVAL+lettering('ZONE')+[row(4,12,0x53,-20)]))
+	intro_frames = []
+	intro_lookups = []
+	for zone, name in enumerate(NAMES):
+		text = lettering(name)
+		for act in range(4):
+			prefix = intro_common + list(range(ACT[act], ACT[act]+6))
+			order, lookup = pack(prefix, text)
+			scenes.append((f'{name} ACT {act+1}', order))
+			if act == 0:
+				intro_frames.append(mapped(text, lookup))
+				intro_lookups.append(lookup)
+	common = intro_lookups[0]
+	intro_frames.append(mapped(lettering('ZONE', x=-32), common))
+	digit_slot = len(intro_common)
+	for act in range(4):
+		intro_frames.append(mapped([row(4,12,0x53,-20)], common)+
+							[row(-12,2 if act == 0 else 6,digit_slot | 0x2000,12 if act == 0 else 8)])
+	intro_frames.append(mapped(OVAL, common))
+	header = '; Generated by build_tools/build_card_art.py. Do not hand-edit.\n'
+	(ROOT/'mappings/sprite/Title_Cards.asm').write_text(
+		header+emit_table('Map_Cards', intro_frames, '16 names, ZONE, ACT 1-4, oval'),newline='\r\n')
 
-    result_constants = '''; HUD and dynamic bonus references are relative to the current card bank.
+	result_constants = '''; HUD and dynamic bonus references are relative to the current card bank.
 Map_Results_ScoreDigits = ArtTile_HUD_Numbers-ArtTile_Results_Card
 Map_Results_Zero = ArtTile_HUD_Numbers+6-ArtTile_Results_Card
 Map_Results_TimeDigits = ArtTile_Bonuses-ArtTile_Results_Card
-Map_Results_RingDigits = ArtTile_Bonuses+4-ArtTile_Results_Card
+Map_Results_RingDigits = ArtTile_Bonuses+5-ArtTile_Results_Card
 Map_Results_ContinueText = make_art_tile(ArtTile_Mini_Sonic,1,0)-ArtTile_Results_Card
 '''
 
-    def fixed(lookup, special=False, tails=False):
-        bonus_letters = lookup[SS_BONUS] | 0x2000
-        oval = lookup[SS_OVAL if special else 0x6E]
-        score = label_pieces('SCORE',-4,-80,base='ArtTile_Results_Card')+[
-                 row(-4,8,'Map_Results_ScoreDigits',24),
-                 row(-4,12,'Map_Results_ScoreDigits+3',48),
-                 row(-9,4,oval,-51), row(-1,4,oval | 0x1800,-51)]
-        def bonus(time):
-            label = label_pieces('TIME' if time else 'RINGS',-4,-80,base='ArtTile_Results_Card')
-            return label+[row(-4,12,bonus_letters,-31),
-                    row(-4,0,'make_art_tile(ArtTile_HUD,1,0)-ArtTile_Results_Card',1),
-                    row(-9,4,oval,-2), row(-1,4,oval | 0x1800,-2),
-                    row(-4,12,'Map_Results_TimeDigits' if time else 'Map_Results_RingDigits',40),
-                    row(-4,0,'Map_Results_Zero',72)]
-        return score, bonus
+	def fixed(lookup, special=False, tails=False):
+		bonus_letters = lookup[SS_BONUS] | 0x2000
+		oval = lookup[SS_OVAL if special else 0x6E]
+		score = label_pieces('SCORE',-4,-80,base='ArtTile_Results_Card')+[
+				 row(-4,8,'Map_Results_ScoreDigits',24),
+				 row(-4,12,'Map_Results_ScoreDigits+3',48),
+				 row(-9,4,oval,-51), row(-1,4,oval | 0x1800,-51)]
+		def bonus(time):
+			label = label_pieces('TIME' if time else 'RINGS',-4,-80,base='ArtTile_Results_Card')
+			return label+[row(-4,12,bonus_letters,-31),
+					row(-4,0,'make_art_tile(ArtTile_HUD,1,0)-ArtTile_Results_Card',0),
+					row(-9,4,oval,-3), row(-1,4,oval | 0x1800,-3),
+					*([row(-4,0,'Map_Results_TimeDigits',32),
+						row(-4,12,'Map_Results_TimeDigits+1',40)] if time else
+						[row(-4,12,'Map_Results_RingDigits',40)]),
+					row(-4,0,'Map_Results_Zero',72)]
+		return score, bonus
 
-    normal_common = sorted(used(OVAL+[row(4,12,0x53,-20),
-                                      row(-4,12,SS_BONUS,0),row(-9,4,0x6E,0)]))
-    normal_output = [header, result_constants]
-    for act in range(4):
-        for tails in (False, True):
-            name = 'TAILS HAS' if tails else 'SONIC HAS'
-            text = lettering(name, space=16, x=-72)+lettering('PASSED')
-            order, lookup = pack(normal_common+list(range(ACT[act],ACT[act]+6)),text)
-            scenes.append((name+f' PASSED ACT {act+1}',order))
-            if act:
-                continue  # All four acts use the same six-tile digit destination.
-            score, bonus = fixed(lookup)
-            frames = [mapped(lettering(name,space=16,x=-72),lookup),
-                      mapped(lettering('PASSED'),lookup),score,bonus(True),bonus(False),
-                      mapped(OVAL,lookup)]
-            for a in range(4):
-                frames.append(mapped([row(4,12,0x53,-20)],lookup)+
-                              [row(-12,2 if a == 0 else 6,len(normal_common) | 0x2000,12 if a == 0 else 8)])
-            normal_output.append(emit_table('Map_Got_Tails' if tails else 'Map_Obj3A',frames,name))
-    (ROOT/'mappings/sprite/Got_Through.asm').write_text(''.join(normal_output))
+	normal_common = sorted(used(OVAL+[row(4,12,0x53,-20),
+									  row(-4,12,SS_BONUS,0),row(-9,4,0x6E,0)]))
+	normal_output = [header, result_constants]
+	for act in range(4):
+		for tails in (False, True):
+			name = 'TAILS HAS' if tails else 'SONIC HAS'
+			text = lettering(name, space=16, x=-72)+lettering('PASSED')
+			order, lookup = pack(normal_common+list(range(ACT[act],ACT[act]+6)),text)
+			scenes.append((name+f' PASSED ACT {act+1}',order))
+			if act:
+				continue  # All four acts use the same six-tile digit destination.
+			score, bonus = fixed(lookup)
+			frames = [mapped(lettering(name,space=16,x=-72),lookup),
+					  mapped(lettering('PASSED'),lookup),score,bonus(True),bonus(False),
+					  mapped(OVAL,lookup)]
+			for a in range(4):
+				frames.append(mapped([row(4,12,0x53,-20)],lookup)+
+							  [row(-12,2 if a == 0 else 6,len(normal_common) | 0x2000,12 if a == 0 else 8)])
+			normal_output.append(emit_table('Map_Got_Tails' if tails else 'Map_Obj3A',frames,name))
+	(ROOT/'mappings/sprite/Got_Through.asm').write_text(''.join(normal_output),newline='\r\n')
 
-    # Keep the two marker tiles first, preserving every existing mapping slot.
-    special_common = [SS_OVAL, SS_OVAL+1] + sorted(used(OVAL+[
-        row(-4,12,SS_BONUS,0)]))
-    special_output = [header]
-    for state in range(3):
-        for tails in (False,True):
-            name = ('SPECIAL STAGE','CHAOS EMERALDS',
-                    ('TAILS' if tails else 'SONIC')+' GOT THEM ALL')[state]
-            text = lettering(name,space=8)
-            order, lookup = pack(special_common,text)
-            scenes.append((name,order))
-            score, bonus = fixed(lookup,special=True,tails=tails)
-            mini = 'ArtTile_Mini_Tails' if tails else 'ArtTile_Mini_Sonic+18'
-            continues = [row(-8,13,'Map_Results_ContinueText',-80),
-                         row(-8,13,'Map_Results_ContinueText+8',-48),
-                         row(-8,1,'Map_Results_ContinueText+16',-16)]
-            frames = [mapped(text,lookup),score,bonus(False),mapped(OVAL,lookup),
-                      continues+[row(-8,6,f'make_art_tile({mini},0,0)-ArtTile_Results_Card',64)],
-                      continues+[row(-8,6,f'make_art_tile({mini}+6,0,0)-ArtTile_Results_Card',64)],
-                      continues]
-            special_output.append(emit_table(f'Map_SSR_{state}_{int(tails)}',frames,name))
-    special_output.append('Card_SS_MapPointers:\n')
-    for state in range(3):
-        for tails in (False,True):
-            special_output.append(f'\t\tdc.l Map_SSR_{state}_{int(tails)}\n')
-    (ROOT/'mappings/sprite/SSResults.asm').write_text(''.join(special_output))
+	# Keep the two marker tiles first, preserving every existing mapping slot.
+	special_common = [SS_OVAL, SS_OVAL+1] + sorted(used(OVAL+[
+		row(-4,12,SS_BONUS,0)]))
+	special_output = [header]
+	for state in range(3):
+		for tails in (False,True):
+			character = 'TAILS' if tails else 'SONIC'
+			name = ('SPECIAL STAGE',character+' GOT A CHAOS EMERALD',
+					character+' GOT THEM ALL')[state]
+			if state == 1:
+				text = [(y-8,size,word,x) for y,size,word,x in lettering(character+' GOT A',space=8)]
+				text += [(y+8,size,word,x) for y,size,word,x in lettering('CHAOS EMERALD',space=8)]
+			else:
+				text = lettering(name,space=8)
+			order, lookup = pack(special_common,text)
+			scenes.append((name,order))
+			score, bonus = fixed(lookup,special=True,tails=tails)
+			mini = 'ArtTile_Mini_Tails' if tails else 'ArtTile_Mini_Sonic+18'
+			continues = [row(-8,13,'Map_Results_ContinueText',-80),
+						 row(-8,13,'Map_Results_ContinueText+8',-48),
+						 row(-8,1,'Map_Results_ContinueText+16',-16)]
+			frames = [mapped(text,lookup),score,bonus(False),mapped(OVAL,lookup),
+					  continues+[row(-8,6,f'make_art_tile({mini},0,0)-ArtTile_Results_Card',64)],
+					  continues+[row(-8,6,f'make_art_tile({mini}+6,0,0)-ArtTile_Results_Card',64)],
+					  continues]
+			special_output.append(emit_table(f'Map_SSR_{state}_{int(tails)}',frames,name))
+	special_output.append('Card_SS_MapPointers:\n')
+	for state in range(3):
+		for tails in (False,True):
+			special_output.append(f'\t\tdc.l Map_SSR_{state}_{int(tails)}\n')
+	(ROOT/'mappings/sprite/SSResults.asm').write_text(''.join(special_output),newline='\r\n')
 
-    assert len(scenes) == 78
-    lines = [header,'DPLC_Cards:\n']
-    unique = {}
-    for i,(name,order) in enumerate(scenes):
-        key=dplc(order)
-        unique.setdefault(key,i)
-        lines.append(f'\t\tdc.w DPLC_Card_{unique[key]}-DPLC_Cards ; {name}\n')
-    for runs,i in unique.items():
-        lines.append(f'DPLC_Card_{i}: dc.w {len(runs)}\n')
-        lines.append('\t\tdc.w '+','.join(f'${run:04X}' for run in runs)+'\n')
-    lines.append('\t\teven\n')
-    # Check the live scene payloads against the banks that coexist with them.
-    for name,limit,maximum in (
-            ('Intro', 'ArtTile_Animal_1-ArtTile_Title_Card', max(len(x[1]) for x in scenes[:64])),
-            ('NormalResult', 'ArtTile_Animal_1-ArtTile_Results_Card', max(len(x[1]) for x in scenes[64:72])),
-            ('SpecialResult', 'vram_fg/tile_size-ArtTile_Results_Card', max(len(x[1]) for x in scenes[72:]))):
-        lines.append(f'\tif {maximum}>{limit}\n\t\tfatal "{name} glyphs exceed their VRAM lifetime bank"\n\tendif\n')
-    lines.append('\tif ArtTile_Bonuses<ArtTile_Shield_2_End\n\t\tfatal "Results bonus digits overlap the auxiliary shield"\n\tendif\n')
-    lines.append('\tif ArtTile_Bonuses+8>ArtTile_Results_Card\n\t\tfatal "Results glyphs overlap bonus digits"\n\tendif\n')
-    (ROOT/'mappings/spriteDPLC/Cards.asm').write_text(''.join(lines))
-    life_text = (ROOT/'art/uncompressed/Tails Life Text Source.unc').read_bytes()
-    assert len(life_text) == 8*32
-    (ROOT/'art/nemesis/Tails Life Text.nem').write_bytes(nemesis_inline(life_text))
-    report={'font_source_tiles':len(raw)//32,'intro_max_tiles':max(len(x[1]) for x in scenes[:64]),
-            'normal_result_tiles':[len(x[1]) for x in scenes[64:72]],
-            'special_result_tiles':[len(x[1]) for x in scenes[72:]],
-            'scenes':[{'name':name,'tiles':len(order),'runs':len(dplc(order))} for name,order in scenes]}
-    assert max(len(order) for _,order in scenes) <= 127
-    print(json.dumps({k:v for k,v in report.items() if k!='scenes'},indent=2))
-    return report
+	assert len(scenes) == 78
+	lines = [header,'DPLC_Cards:\n']
+	unique = {}
+	for i,(name,order) in enumerate(scenes):
+		key=dplc(order)
+		unique.setdefault(key,i)
+		lines.append(f'\t\tdc.w DPLC_Card_{unique[key]}-DPLC_Cards ; {name}\n')
+	for runs,i in unique.items():
+		lines.append(f'DPLC_Card_{i}: dc.w {len(runs)}\n')
+		lines.append('\t\tdc.w '+','.join(f'${run:04X}' for run in runs)+'\n')
+	lines.append('\t\teven\n')
+	# Check the live scene payloads against the banks that coexist with them.
+	for name,limit,maximum in (
+			('Intro', 'ArtTile_Animal_1-ArtTile_Title_Card', max(len(x[1]) for x in scenes[:64])),
+			('NormalResult', 'ArtTile_Animal_1-ArtTile_Results_Card', max(len(x[1]) for x in scenes[64:72])),
+			('SpecialResult', 'vram_fg/tile_size-ArtTile_Results_Card', max(len(x[1]) for x in scenes[72:]))):
+		lines.append(f'\tif {maximum}>{limit}\n\t\tfatal "{name} glyphs exceed their VRAM lifetime bank"\n\tendif\n')
+	lines.append('\tif ArtTile_Bonuses<ArtTile_Shield_2_End\n\t\tfatal "Results bonus digits overlap the auxiliary shield"\n\tendif\n')
+	lines.append('\tif ArtTile_Bonuses+9>ArtTile_Results_Card\n\t\tfatal "Results glyphs overlap bonus digits"\n\tendif\n')
+	(ROOT/'mappings/spriteDPLC/Cards.asm').write_text(''.join(lines),newline='\r\n')
+	life_text = (ROOT/'art/uncompressed/Tails Life Text Source.unc').read_bytes()
+	assert len(life_text) == 8*32
+	(ROOT/'art/nemesis/Tails Life Text.nem').write_bytes(nemesis_inline(life_text))
+	report={'font_source_tiles':len(raw)//32,'intro_max_tiles':max(len(x[1]) for x in scenes[:64]),
+			'normal_result_tiles':[len(x[1]) for x in scenes[64:72]],
+			'special_result_tiles':[len(x[1]) for x in scenes[72:]],
+			'scenes':[{'name':name,'tiles':len(order),'runs':len(dplc(order))} for name,order in scenes]}
+	assert max(len(order) for _,order in scenes) <= 127
+	print(json.dumps({k:v for k,v in report.items() if k!='scenes'},indent=2))
+	return report
 
 
 if __name__ == '__main__':
-    main()
+	main()

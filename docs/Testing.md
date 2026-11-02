@@ -920,6 +920,23 @@ poses against their six-tile VRAM payloads; run Sonic and Tails selections.
 It also checks that the CONTINUE lettering resolves to yellow independently
 of the portrait's palette selection.
 The normal-results and Debug-HUD checks also cover the shared counters.
+`check_seventh_emerald.py --output test-results/cyan/native` checks seven
+awards, duplicate rejection, the following RAM word, seven result objects,
+color-specific 4-over-3 positions, both draw/hidden blink phases, and all 896
+ownership/next-stage combinations against the seven real layout pointers.
+Add `--core /path/to/core.so --system-directory /path/to/mode1-fixture` for the
+real stage pickup/goal/results fixture; run `--player 1` and `--player 2`. It
+enters the actual Stage 7 from level select with six owned emeralds and verifies
+its cyan layout and reset attempt flag. It cycles all eight Debug entries in
+both directions, then stages cyan/gray for a normal collision-driven double
+pickup and real goal exit. `--pickup-count 1` covers partial success; `--fail`
+uses a real GOAL with six previously held emeralds. These are positioned
+fixtures, not controller-only full-stage routes.
+`check_card_screens.py --case special --emeralds 6` must show SPECIAL STAGE;
+add `--collected` for the character-specific successful heading, or use seven
+with that flag for GOT THEM ALL. `check_card_art.py` executes all 600 displayed
+finish times and a full secret-bonus tally. `check_card_screens.py --case normal
+--time-seconds 599` checks the actual 100,000 display and five-digit VRAM strip.
 The compact HUD uses one-tile numeric glyphs. Debug switching must preserve
 the reclaimed thirteen-tile range between `ArtTile_HUD_End` and the points
 bank; `check_debug_states.py` compares it throughout its redraw cases.

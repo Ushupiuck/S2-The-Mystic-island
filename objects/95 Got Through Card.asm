@@ -37,26 +37,18 @@ Got_Main:
 		jsr	(Get_NormalCardScene).l
 		movea.l	a0,a1
 		lea	(Got_Config).l,a2
-		moveq	#6,d1
+		move.b	#Map_Obj3A_height,d3
+		move.l	#GotThrough,d6
+		moveq	#(Got_Config_End-Got_Config)/8-1,d1
 
 Got_Loop:
-		move.l	#GotThrough,code(a1)
-		move.w	(a2),obX(a1)	; load start x-position
-		move.w	(a2)+,got_finalX(a1) ; load finish x-position (same as start)
-		move.w	(a2)+,got_mainX(a1) ; load main x-position
-		move.w	(a2)+,obScreenY(a1) ; load y-position
-		move.b	(a2)+,obRoutine(a1)
-		move.b	(a2)+,d0
+		bsr.w	Card_InitResultSprite
 		cmpi.b	#6,d0
 		bne.s	loc_BB94
 		add.b	(Current_Act).w,d0	; add act number to frame number
 
 loc_BB94:
 		move.b	d0,obFrame(a1)
-		move.l	a3,obMap(a1)
-		move.b	#Map_Obj3A_height,height_pixels(a1)
-		move.w	#make_art_tile(ArtTile_Results_Card,0,1),obGfx(a1)
-		sf	obRender(a1)
 		lea	object_size(a1),a1
 		dbf	d1,Got_Loop	; repeat 6 times
 
@@ -330,3 +322,22 @@ Got_Config:	dc.w 4,		$124,	$BC			; "SONIC HAS"
 
 		dc.w $20C,	$14C,	$CC			; oval
 		dc.b 				2,	5
+Got_Config_End:
+
+; Shared results-element constructor, adapted from S3&K sub_2E802.
+; a2 = eight-byte position/state/frame record; a3 = scene mappings.
+; d3.b = mapping height; d6.l = object code. Returns the frame in d0.b.
+Card_InitResultSprite:
+		move.l	d6,code(a1)
+		move.w	(a2),obX(a1)
+		move.w	(a2)+,got_finalX(a1)
+		move.w	(a2)+,got_mainX(a1)
+		move.w	(a2)+,obScreenY(a1)
+		move.b	(a2)+,obRoutine(a1)
+		move.b	(a2)+,d0
+		move.b	d0,obFrame(a1)
+		move.l	a3,obMap(a1)
+		move.b	d3,height_pixels(a1)
+		move.w	#make_art_tile(ArtTile_Results_Card,0,1),obGfx(a1)
+		sf	obRender(a1)
+		rts

@@ -316,6 +316,7 @@ PLC_S1SpecialStage:
 		plcm	Nem_SSWBlock,	ArtTile_SS_W_Block		; W block
 		plcm	Nem_SSGlass,	ArtTile_SS_Glass		; glass block
 		plcm	Nem_SSEmerald,	ArtTile_SS_Emerald		; emeralds
+		plcm	Nem_SSExtraEmeralds,ArtTile_SS_ExtraEmeralds	; dark blue and cyan
 PLC_S1SpecialStage_End:
 ; ---------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST

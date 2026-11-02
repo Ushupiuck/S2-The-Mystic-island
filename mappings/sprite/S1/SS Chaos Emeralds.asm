@@ -23,3 +23,24 @@ byte_1B97E:
 		dc.b 1
 		dc.b $F8, 5, 0,	$C, $F8
 		even
+; Blue and cyan use private four-tile copies; the other emeralds keep their
+; original shared art. Their flash frame reuses the old transparent tiles.
+Map_SS_Blue:
+		dc.w Map_SS_BlueFrame-Map_SS_Blue
+		dc.w Map_SS_ExtraBlank-Map_SS_Blue
+Map_SS_Cyan:
+		dc.w Map_SS_CyanFrame-Map_SS_Cyan
+		dc.w Map_SS_ExtraBlank-Map_SS_Cyan
+Map_SS_BlueFrame:
+		dc.b 1,$F8,5
+		dc.w 0
+		dc.b $F8
+Map_SS_CyanFrame:
+		dc.b 1,$F8,5
+		dc.w 4
+		dc.b $F8
+Map_SS_ExtraBlank:
+		dc.b 1,$F8,5
+		dc.w ArtTile_SS_Emerald+12-ArtTile_SS_ExtraEmeralds
+		dc.b $F8
+		even

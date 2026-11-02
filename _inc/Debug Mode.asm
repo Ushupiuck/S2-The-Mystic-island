@@ -312,11 +312,43 @@ Debug_FrameCycle:
 ; Bonus-stage Debug has no level PLCs. Its ring and sparkle art share the stage
 ; bank; the rotating layout itself still uses its dedicated S1 mapping ABI.
 Debug_SS:
-		dc.w 1
-		dc.l 0,Map_Ring		; grid items have no SST routine
-		dc.w S1SS_RingItem		; actual rotating-stage ring, not Obj12
+		dc.w (Debug_SS_End-Debug_SS_Entries)/DebugEntry_size
+Debug_SS_Entries:
+		; Grid items use the shared 16x16 preview geometry, with their own
+		; resident art and palette. These entries never allocate an SST.
+		dc.l 0,Map_Ring
+		dc.w S1SS_RingItem
 		dc.b 0,0
 		dc.w make_art_tile(ArtTile_SS_Rings,1,0)
+		dc.l 0,Map_Ring
+		dc.w $3B			; blue
+		dc.b 0,0
+		dc.w make_art_tile(ArtTile_SS_ExtraEmeralds,0,0)
+		dc.l 0,Map_Ring
+		dc.w $3C			; yellow
+		dc.b 0,0
+		dc.w make_art_tile(ArtTile_SS_Emerald+8,1,0)
+		dc.l 0,Map_Ring
+		dc.w $3D			; purple
+		dc.b 0,0
+		dc.w make_art_tile(ArtTile_SS_Emerald+8,2,0)
+		dc.l 0,Map_Ring
+		dc.w $3E			; green
+		dc.b 0,0
+		dc.w make_art_tile(ArtTile_SS_Emerald+8,3,0)
+		dc.l 0,Map_Ring
+		dc.w $3F			; red
+		dc.b 0,0
+		dc.w make_art_tile(ArtTile_SS_Emerald,0,0)
+		dc.l 0,Map_Ring
+		dc.w $40			; gray
+		dc.b 0,0
+		dc.w make_art_tile(ArtTile_SS_Emerald+4,0,0)
+		dc.l 0,Map_Ring
+		dc.w S1SS_CyanItem
+		dc.b 0,0
+		dc.w make_art_tile(ArtTile_SS_ExtraEmeralds+4,1,0)
+Debug_SS_End:
 
 ; Place directly into the authored 64x64 cells, whose physical rows have
 ; 64 padding bytes. Never allocate an ordinary SST or write into the padding.

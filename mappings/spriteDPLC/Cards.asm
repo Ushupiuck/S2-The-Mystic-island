@@ -74,8 +74,8 @@ DPLC_Cards:
 		dc.w DPLC_Card_71-DPLC_Cards ; TAILS HAS PASSED ACT 4
 		dc.w DPLC_Card_72-DPLC_Cards ; SPECIAL STAGE
 		dc.w DPLC_Card_72-DPLC_Cards ; SPECIAL STAGE
-		dc.w DPLC_Card_74-DPLC_Cards ; CHAOS EMERALDS
-		dc.w DPLC_Card_74-DPLC_Cards ; CHAOS EMERALDS
+		dc.w DPLC_Card_74-DPLC_Cards ; SONIC GOT A CHAOS EMERALD
+		dc.w DPLC_Card_75-DPLC_Cards ; TAILS GOT A CHAOS EMERALD
 		dc.w DPLC_Card_76-DPLC_Cards ; SONIC GOT THEM ALL
 		dc.w DPLC_Card_77-DPLC_Cards ; TAILS GOT THEM ALL
 DPLC_Card_0: dc.w 10
@@ -224,8 +224,10 @@ DPLC_Card_71: dc.w 11
 		dc.w $3053,$F06E,$107E,$3096,$508A,$3000,$700C,$501C,$3026,$3036,$703E
 DPLC_Card_72: dc.w 11
 		dc.w $109A,$F070,$3096,$3000,$3008,$3010,$3018,$1020,$3026,$3036,$703E
-DPLC_Card_74: dc.w 9
-		dc.w $109A,$F070,$3096,$3000,$B008,$301C,$7026,$3032,$703A
+DPLC_Card_74: dc.w 8
+		dc.w $109A,$F070,$3096,$3000,$B008,$9018,$F026,$B03A
+DPLC_Card_75: dc.w 9
+		dc.w $109A,$F070,$3096,$3000,$B008,$9018,$7026,$3032,$B03A
 DPLC_Card_76: dc.w 9
 		dc.w $109A,$F070,$3096,$3000,$3008,$3010,$9018,$F026,$703E
 DPLC_Card_77: dc.w 9
@@ -237,12 +239,12 @@ DPLC_Card_77: dc.w 9
 	if 70>ArtTile_Animal_1-ArtTile_Results_Card
 		fatal "NormalResult glyphs exceed their VRAM lifetime bank"
 	endif
-	if 68>vram_fg/tile_size-ArtTile_Results_Card
+	if 76>vram_fg/tile_size-ArtTile_Results_Card
 		fatal "SpecialResult glyphs exceed their VRAM lifetime bank"
 	endif
 	if ArtTile_Bonuses<ArtTile_Shield_2_End
 		fatal "Results bonus digits overlap the auxiliary shield"
 	endif
-	if ArtTile_Bonuses+8>ArtTile_Results_Card
+	if ArtTile_Bonuses+9>ArtTile_Results_Card
 		fatal "Results glyphs overlap bonus digits"
 	endif

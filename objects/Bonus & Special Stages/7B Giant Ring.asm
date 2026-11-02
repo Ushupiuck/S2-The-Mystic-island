@@ -23,7 +23,7 @@ GRing_Main:
 		move.b	#sprite_bound($40,Map_GiantRing_width),obActWid(a0)
 		tst.b	obRender(a0)
 		bpl.s	GRing_Animate
-		cmpi.b	#6,(v_emeralds).w
+		cmpi.b	#ChaosEmerald_Count,(v_emeralds).w
 		beq.w	GRing_Delete
 		cmpi.w	#50,(v_rings).w
 		bcc.s	GRing_Okay

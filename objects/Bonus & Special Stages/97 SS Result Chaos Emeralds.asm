@@ -3,16 +3,8 @@
 ; ---------------------------------------------------------------------------
 
 ChaosEmeralds:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	SSRC_Index(pc,d0.w),d1
-		jmp	SSRC_Index(pc,d1.w)
-; ===========================================================================
-SSRC_Index:	dc.w SSRC_Main-SSRC_Index
-		dc.w SSRC_Flash-SSRC_Index
-; ===========================================================================
-
-SSRC_Main:	; Routine 0
+		; S3&K-style constructor/direct handlers. Only held emeralds get SSTs;
+		; their shared blink skips the draw queue entirely on hidden frames.
 		movea.l	a0,a1
 		lea	SSRC_PosData(pc),a2
 		moveq	#0,d2
@@ -22,15 +14,15 @@ SSRC_Main:	; Routine 0
 		bcs.w	DeleteObject	; if you have 0	emeralds, branch
 
 SSRC_Loop:
-		move.l	#ChaosEmeralds,code(a1)
-		move.w	(a2)+,obX(a1)	; set x-position
-		move.w	#$F0,obScreenY(a1) ; set y-position
+		move.l	#SSRC_Flash,code(a1)
 		lea	(v_emldlist).w,a3 ; check which emeralds you have
 		move.b	(a3,d2.w),d3
 		move.b	d3,obFrame(a1)
-		move.b	d3,obAnim(a1)
+		moveq	#0,d4
+		move.b	d3,d4
+		lsl.w	#2,d4
+		move.l	(a2,d4.w),obX(a1)	; screen X/Y pair for this color
 		addq.b	#1,d2
-		addq.b	#2,obRoutine(a1)
 		move.l	#Map_SSRE,obMap(a1)
 		move.b	#Map_SSRE_height,height_pixels(a1)
 		move.w	#make_art_tile(ArtTile_SS_Results_Emeralds,0,1),obGfx(a1)
@@ -38,16 +30,21 @@ SSRC_Loop:
 		lea	object_size(a1),a1	; next object
 		dbf	d1,SSRC_Loop	; loop for d1 number of	emeralds
 
-SSRC_Flash:	; Routine 2
-		move.b	obFrame(a0),d0
-		move.b	#6,obFrame(a0)	; load 6th frame (blank)
-		cmpi.b	#6,d0
-		bne.s	SSRC_Display
-		move.b	obAnim(a0),obFrame(a0) ; load visible frame
-
-SSRC_Display:
+SSRC_Flash:
+		btst	#0,(Vint_runcount+3).w
+		beq.s	.return
 		bra.w	DisplaySprite
+.return:
+		rts
 ; ---------------------------------------------------------------------------
-; X-axis positions for chaos emeralds
+; Screen X/Y pairs indexed by emerald ID. S3 order: red/blue/yellow/green,
+; then purple/gray/cyan, centered below the heading and above the score.
 ; ---------------------------------------------------------------------------
-SSRC_PosData:	dc.w $110, $128, $F8, $140, $E0, $158 ;, $C8 (if a 7th emerald was added)
+SSRC_PosData:
+		dc.w $110,$E4	; blue
+		dc.w $130,$E4	; yellow
+		dc.w $100,$FC	; purple
+		dc.w $150,$E4	; green
+		dc.w $F0,$E4	; red
+		dc.w $120,$FC	; gray
+		dc.w $140,$FC	; cyan

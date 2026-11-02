@@ -459,6 +459,8 @@ SSS_FindWall:
 
 SSS_FindWall_Chk:
 		beq.s	.no_collide		; branch if 0
+		cmpi.b	#S1SS_CyanItem,d4
+		beq.s	.no_collide
 		cmpi.b	#$28,d4			; is the item an extra life?
 		beq.s	.no_collide		; if yes, branch
 		cmpi.b	#$3A,d4			; is the item an emerald or ghost block ($3B+)?
@@ -575,24 +577,42 @@ SSS_Chk1Up:
 ; ===========================================================================
 
 SSS_ChkEmerald:
+		cmpi.b	#S1SS_CyanItem,d4
+		beq.s	.item
 		cmpi.b	#$3B,d4			; is the item an emerald? (Emerald 1)
 		bcs.s	SSS_ChkGhost
 		cmpi.b	#$40,d4			; is the item an emerald? (Emerald 6)
 		bhi.s	SSS_ChkGhost
+.item:
 		bsr.w	SS_RemoveCollectedItem
 		bne.s	.noslot
 		move.b	#5,(a2)
 		move.l	a1,4(a2)
 
 .noslot:
-		cmpi.b	#6,(v_emeralds).w	; do you have all the emeralds?
-		beq.s	.noemerald		; if yes, branch
-		subi.b	#$3B,d4			; Emerald 1
+		cmpi.b	#S1SS_CyanItem,d4
+		bne.s	.original
+		moveq	#S1SS_CyanEmerald,d4
+		bra.s	.owned
+.original:
+		subi.b	#$3B,d4
+.owned:
 		moveq	#0,d0
 		move.b	(v_emeralds).w,d0
+		cmpi.b	#ChaosEmerald_Count,d0
+		bhs.s	.noemerald
 		lea	(v_emldlist).w,a2
+		move.w	d0,d1
+		subq.w	#1,d1
+		bmi.s	.award
+.check_duplicate:
+		cmp.b	(a2,d1.w),d4
+		beq.s	.noemerald
+		dbf	d1,.check_duplicate
+.award:
 		move.b	d4,(a2,d0.w)
-		addq.b	#1,(v_emeralds).w	; add 1 to number of emeralds
+		addq.b	#1,(v_emeralds).w
+		move.b	#1,(v_ss_emerald_collected).w
 
 .noemerald:
 		moveq	#0,d4

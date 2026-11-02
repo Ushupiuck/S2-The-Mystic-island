@@ -3945,6 +3945,7 @@ loc_19D16:
 		move.b	d0,$160(a1)
 		move.b	d0,$148(a1)
 		move.b	d0,$150(a1)
+		move.b	d0,S1SS_CyanItem*8(a1)
 		move.b	d0,$1D8(a1)
 		move.b	d0,$1E0(a1)
 		move.b	d0,$1E8(a1)
@@ -4216,6 +4217,8 @@ Bonus_LayoutIndex:
 		dc.l BS_4
 		dc.l BS_5
 		dc.l BS_6
+		dc.l BS_7
+Bonus_LayoutIndex_End:
 		even
 ; ---------------------------------------------------------------------------
 ; Subroutine to	load the bonus stage layout
@@ -4225,15 +4228,18 @@ Bonus_LayoutIndex:
 
 
 BonusStage_Load:
+		clr.b	(v_ss_emerald_collected).w	; success belongs to this attempt
+		moveq	#S1SS_StageCount-1,d2
+.next_stage:
 		moveq	#0,d0
 		move.b	(v_lastbonus).w,d0	; load number of last bonus stage entered
 		addq.b	#1,(v_lastbonus).w
-		cmpi.b	#6,(v_lastbonus).w
+		cmpi.b	#S1SS_StageCount,(v_lastbonus).w
 		blo.s	S1SS_ChkEmldNum
-		sf	(v_lastbonus).w		; reset if higher than 6
+		sf	(v_lastbonus).w		; wrap after the final stage
 
 S1SS_ChkEmldNum:
-		cmpi.b	#6,(v_emeralds).w	; do you have all emeralds?
+		cmpi.b	#ChaosEmerald_Count,(v_emeralds).w	; do you have all emeralds?
 		beq.s	S1SS_LoadData		; if yes, branch
 		moveq	#0,d1
 		move.b	(v_emeralds).w,d1
@@ -4244,7 +4250,10 @@ S1SS_ChkEmldNum:
 S1SS_ChkEmldLoop:
 		cmp.b	(a3,d1.w),d0
 		bne.s	S1SS_ChkEmldRepeat
-		bra.s	BonusStage_Load
+		dbf	d2,BonusStage_Load.next_stage
+		; Keep malformed ownership data inside the stage pointer table.
+		moveq	#S1SS_StageCount-1,d0
+		bra.s	S1SS_LoadData
 ; ---------------------------------------------------------------------------
 
 S1SS_ChkEmldRepeat:
@@ -11506,7 +11515,7 @@ Hud_UpdateCounters:
 		locVRAM	ArtTile_Bonuses*tile_size
 		moveq	#0,d1
 		move.w	(v_timebonus).w,d1
-		bsr.w	HUD_TimeRingBonus
+		bsr.w	HUD_TimeBonus
 		moveq	#0,d1
 		move.w	(v_ringbonus).w,d1
 		bra.w	HUD_TimeRingBonus
@@ -11794,9 +11803,15 @@ loc_1B562:
 ; =============== S U B R O U T I N E =======================================
 
 
+HUD_TimeBonus:
+		lea	HUD_10000(pc),a2
+		moveq	#5-1,d6
+		bra.s	HUD_BonusDigits
+
 HUD_TimeRingBonus:
 		lea	HUD_1000(pc),a2
 		moveq	#4-1,d6
+HUD_BonusDigits:
 		moveq	#0,d4
 		lea	Art_HUD(pc),a1
 
@@ -13704,6 +13719,8 @@ BS_3:		binclude	"Bonus & Special Stages/3.kosp"
 BS_4:		binclude	"Bonus & Special Stages/4.kosp"
 BS_5:		binclude	"Bonus & Special Stages/5.kosp"
 BS_6:		binclude	"Bonus & Special Stages/6.kosp"
+BS_7:		binclude	"Bonus & Special Stages/7.kosp"
+		even
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - Bonus & Special stages
 ; ---------------------------------------------------------------------------
@@ -13733,6 +13750,8 @@ Nem_SSGlass:		binclude	"art/Bonus & Special Stage/Bonus Stage Glass.nem" ; bonus
 			even
 Nem_SSGOAL:		binclude	"art/Bonus & Special Stage/Bonus Stage GOAL.nem" ; bonus stage GOAL block
 			even
+Nem_SSExtraEmeralds:	binclude "art/nemesis/Special stage blue and cyan emeralds.nem"
+		even
 Nem_SSEmerald:		binclude	"art/Bonus & Special Stage/Bonus Stage Emeralds.nem" ; bonus stage chaos emeralds
 			even
 Nem_SSEmStars:		binclude	"art/Bonus & Special Stage/Bonus Stage Emerald Twinkle.nem" ; bonus stage stars from a collected emerald

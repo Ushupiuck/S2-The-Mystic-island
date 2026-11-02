@@ -233,6 +233,8 @@ Load_EndOfAct:
 		moveq	#0,d1
 		move.b	(v_timesec).w,d1
 		add.w	d1,d0
+		cmpi.w	#9*60+59,d0		; S3&K secret time bonus
+		beq.s	.secret_bonus
 		divu.w	#15,d0
 		moveq	#$14,d1
 		cmp.w	d1,d0
@@ -241,6 +243,10 @@ Load_EndOfAct:
 +
 		add.w	d0,d0
 		move.w	TimeBonuses(pc,d0.w),(v_timebonus).w
+		bra.s	.ring_bonus
+.secret_bonus:
+		move.w	#10000,(v_timebonus).w	; score/bonus units are ten points
+.ring_bonus:
 		move.w	(v_rings).w,d0
 		move.w	d0,d1			; multiply rings by 10
 		lsl.w	#3,d0

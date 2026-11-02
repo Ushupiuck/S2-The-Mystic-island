@@ -139,10 +139,12 @@ Get_NormalCardScene:
 
 Get_SpecialCardScene:
 		moveq	#0,d0
+		tst.b	(v_ss_emerald_collected).w
+		beq.s	.character
 		tst.b	(v_emeralds).w
 		beq.s	.character
 		moveq	#2,d0
-		cmpi.b	#6,(v_emeralds).w
+		cmpi.b	#ChaosEmerald_Count,(v_emeralds).w
 		bne.s	.character
 		moveq	#4,d0
 .character:

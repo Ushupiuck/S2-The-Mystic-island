@@ -1022,7 +1022,7 @@ v_bsresscore	= v_bsrescard+object_size*1		; object variable space for the Bonus 
 v_bsresring	= v_bsrescard+object_size*2		; object variable space for the Bonus Stage results card ring bonus tally (1 SST)
 v_bsresoval	= v_bsrescard+object_size*3		; object variable space for the Bonus Stage results card oval (1 SST)
 v_ssrescontinue	= v_bsrescard+object_size*4		; object variable space for the Bonus Stage results card continue icon (1 SST)
-v_ssresemeralds	= v_objspace+object_size*32		; object variable space for the emeralds in the Bonus Stage results (6 SSTs)
+v_ssresemeralds	= v_objspace+object_size*32		; object variable space for the emeralds in the Bonus Stage results (7 SSTs)
 
 ; Continue screen objects
 v_continuetext	= v_objspace+object_size*1		; object variable space for the continue screen text (1 SST)
@@ -1409,8 +1409,11 @@ v_lamp_wtrpos:		ds.w	1			; water position at lamppost
 v_lamp_wtrrout:		ds.b	1			; water routine at lamppost
 v_lamp_wtrstat:		ds.b	1			; water state at lamppost
 v_lamp_lives:		ds.b	1			; lives counter at lamppost
-v_emeralds:		ds.b	1			; number of chaos emeralds
-v_emldlist:		ds.b	6			; which individual emeralds you have (00 = no; 01 = yes)
+ChaosEmerald_Count	equ 7
+v_emeralds:		ds.b	1			; number of collected chaos emeralds
+v_emldlist:		ds.b	ChaosEmerald_Count	; collected emerald IDs, in pickup order
+v_ss_emerald_collected:	ds.b	1		; this attempt awarded a new emerald
+			even				; keep the following words aligned
 v_oscillate:		ds.w	1			; oscillation bitfield
 
 
@@ -1521,6 +1524,9 @@ S1SS_LayoutHeight	= $40
 S1SS_LayoutStride	= $80
 S1SS_CellSize		= 24
 S1SS_RingItem		= $3A
+S1SS_CyanItem		= $34	; recycled first ZONE block, decimal 52
+S1SS_CyanEmerald		= 6
+S1SS_StageCount		= (Bonus_LayoutIndex_End-Bonus_LayoutIndex)/4
 v_ssbuffer1		= Chunk_Table+SSBG_Chunk_RAM_Size
 v_ssblockbuffer		= v_ssbuffer1+$1020		; $1020 bytes -- layout padded from the top and sides
 v_ssblockbuffer_end	= v_ssblockbuffer+$80*$40	; ($2000 bytes)
@@ -1823,8 +1829,8 @@ ArtTile_Hidden_Points:		equ ArtTile_Signpost+$1A ; 28 tiles after the signpost D
 ArtTile_Warp:			equ $541
 ArtTile_Mini_Tails:		equ $535
 ArtTile_Mini_Sonic:		equ $551
-ArtTile_Bonuses:		equ ArtTile_Title_Card ; eight numeric tiles, clear of both shield banks
-ArtTile_Results_Card:	equ ArtTile_Bonuses+8 ; scene glyphs follow the bonus digits
+ArtTile_Bonuses:		equ ArtTile_Title_Card ; nine numeric tiles (five time, four ring), clear of both shields
+ArtTile_Results_Card:	equ ArtTile_Bonuses+9 ; scene glyphs follow the bonus digits
 ArtTile_Signpost:		equ ArtTile_Monitor	; 26-tile DPLC buffer; stops before Tails's life icon
 
 ; Sega Screen
@@ -1879,9 +1885,10 @@ ArtTile_SS_Glass:		equ ArtTile_SS_W_Block+9
 ArtTile_SS_Emerald:		equ ArtTile_SS_Glass+9	; away from the live BG plane
 ArtTile_SS_Rings:		equ $14A	; $2940; rotating-stage rings only
 ArtTile_SS_Sparkles:		equ ArtTile_SS_Rings+4
+ArtTile_SS_ExtraEmeralds:	equ ArtTile_SS_Sparkles+4	; eight blue/cyan tiles at $2A40
 
 ; Special Stage Results
-ArtTile_SS_Results_Emeralds:	equ $500	; 24 private results tiles, below continue icons
+ArtTile_SS_Results_Emeralds:	equ $500	; 28 private results tiles, below continue icons
 
 ; Font
 ArtTile_Credits_Font:		equ $5A0

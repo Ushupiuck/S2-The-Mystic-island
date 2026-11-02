@@ -45,7 +45,8 @@ Ranges are **end exclusive**, during stage play before results PLCs load.
 | `$1340-$2940` | Fixed stage art, walls through emeralds |
 | `$2940-$29C0` | Rotating-stage rings |
 | `$29C0-$2A40` | Ring sparkles |
-| `$2A40-$C000` | Free in this mode |
+| `$2A40-$2B40` | Private dark-blue and cyan emeralds, eight tiles |
+| `$2B40-$C000` | Free in this mode |
 | `$C000-$D000` | Live foreground map, 64x32 tiles |
 | `$D000-$D400` | Sonic allocation; rolling art uses its first `$200` bytes |
 | `$D400-$D600` | Tails rolling body, 16 tiles; unused with Sonic |
@@ -60,6 +61,45 @@ Ranges are **end exclusive**, during stage play before results PLCs load.
 Stage PLCs, rotating-wall uploads and palette animation use `ArtTile_SS_*`.
 Emerald art is separate from the live maps. Results use the shared HUD's
 RINGS lettering; no results-only ring copy or ring-frame animation is loaded.
+
+## Emerald items
+
+The original six stages are followed by an independently editable Stage 7
+placeholder: a copy of Stage 6 and its start position, with the gray emerald
+replaced by cyan. Edit `Bonus & Special Stages/7.unc` and recompress it into
+`7.kosp` with the existing `convert_s1_ss_background.kosinski_plus` encoder;
+`startpos/bs7.bin` owns its start position. The former ZONE 1 item,
+decimal 52 (`$34`), is now cyan; all six old ZONE IDs `$34-$39` were absent from
+the existing layouts. Its collected ID is `6`; original `$3B-$40` items retain
+IDs `0-5`. Cyan is passable and uses the ordinary pickup/sparkle/goal path.
+Stage Debug offers ring, blue, yellow, purple, green, red, gray and cyan, with
+the existing forward/backward selection and grid placement. Legacy external
+editors may still show ZONE 1 at item 52; the stored layout byte selects cyan.
+
+`build_special_results_art.py` duplicates the stage's original blue template
+into an eight-tile bank at `$152-$159`. Blue uses its existing darker P0 shades;
+cyan uses P1's formerly unused gray slots `7/8/9`, now `$EEA/$EC4/$A60`, plus
+black and white. Other stage palette entries, player art, existing emerald art
+and background cycles stay unchanged. Both new mappings share the old blank
+flash tiles and the existing emerald blink clock.
+
+The collected-ID list holds seven entries. Its former alignment byte is now
+`v_ss_emerald_collected`, cleared at stage entry and set only by a new pickup;
+duplicates cannot increase the count. Failed attempts say SPECIAL STAGE even
+when earlier emeralds are held. A successful attempt says SONIC/TAILS GOT A
+CHAOS EMERALD, or GOT THEM ALL when that pickup completes all seven. Solo
+Tails uses TAILS; Sonic selections use SONIC. Giant rings stop appearing at seven.
+
+Selection uses all seven layout pointers, skips owned emeralds and advances on
+failure too. Results reserve seven objects. Their positions depend on color,
+not collection order: red/blue/yellow/green above purple/gray/cyan. Each uses
+its real frame throughout; following S3&K, the hidden blink phase skips the
+draw queue instead of mapping an empty frame. No blank results frame is needed.
+
+Item IDs `$4B-$4E` (decimal 75-78) are temporary glass hit-flash poses, not
+ordinary breakable crystals. A queued `SS_AniGlassBlock` update cycles them,
+then restores the next `$2D-$30` crystal state or removes the final one. Direct
+layout placements have no queued update and stay solid and indestructible.
 
 ## RAM and regeneration
 
@@ -99,8 +139,8 @@ Repeated presses continue filling the spiral without moving the cursor.
 Placement is restricted to the authored 64x64 cells inside the padded layout.
 Occupied cells and row padding are preserved; a full grid or a cursor outside
 that grid makes placement a no-op. The bounded search needs no persistent RAM
-and preserves the object dispatch counter. The list currently offers only a
-ring; other stage items need their own entries and matching previews.
+and preserves the object dispatch counter. The list offers a ring and all
+seven emeralds; other items need their own entries and matching previews. See [emerald items](#emerald-items).
 
 Start+A follows the normal fade/results path. Results VBlank advances the fade
 even with wall rotation stopped; clearing objects also clears Debug placement
@@ -118,6 +158,7 @@ The first row's shared warm colors are hand-editable in
 `palette/Special Stage.bin`: B = `$26C` (orange-brown), F = `$0AE` (gold),
 A = `$8CE` (cream). Tails's original fur shades 2/3/4 map to B/F/A, preserving
 three distinct shades; his cream shares A. This also warms Sonic's skin and
-the first-row bumper/item details. The other 61 colors, including the rings,
+the first-row bumper/item details. With the three cyan entries described above,
+the other 58 colors, including the rings,
 walls and cycling background rows, retain their original values. No extra
 palette line or runtime recoloring is needed.

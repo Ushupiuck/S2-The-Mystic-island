@@ -57,12 +57,13 @@ def main():
 	assert results[1:16] == struct.unpack('>16H',player)[1:]
 	assert results[29:32] == (0x0EE,0x088,0x044)
 	gems = frames((ROOT/'mappings/sprite/SSR Emeralds.bin').read_bytes())
-	assert len(gems) == 7 and not gems[6]
+	assert len(gems) == 7 and all(gems)
 	assert {row[0][2]&2047 for row in gems[:6]} == set(range(0,24,4))
+	assert gems[6][0][2]&2047 == 24 and gems[6][0][2]>>13&3 == 2
 	assert [row[0][2]>>13&3 for row in gems[:6]] == [2,2,2,3,3,3]
-	assert len(nemesis((ROOT/'art/nemesis/Results emeralds.nem').read_bytes())) == 24*32
+	assert len(nemesis((ROOT/'art/nemesis/Results emeralds.nem').read_bytes())) == 28*32
 	checks = dict(shared_level_rows=len(names),spring_frames=len(springs[0]),
-				  spring_tiles=42,results_emeralds=6)
+				  spring_tiles=42,results_emeralds=7)
 	if args.reference:
 		@lru_cache(None)
 		def read(path, prior=False):
@@ -120,7 +121,7 @@ def main():
 				('Special stage rings.nem','Ring.nem')):
 			assert read('art/nemesis/'+current) == read('art/nemesis/'+original,True)
 		original_palette = bytearray(read('palette/Special Stage.bin',True))
-		for slot,color in ((10,0x8CE),(11,0x26C),(15,0x0AE)):
+		for slot,color in ((10,0x8CE),(11,0x26C),(15,0x0AE),(23,0xEEA),(24,0xEC4),(25,0xA60)):
 			struct.pack_into('>H',original_palette,slot*2,color)
 		assert read('palette/Special Stage.bin') == original_palette
 		from sprite_palette import PLAYER_TO_S1_STAGE_TAILS
