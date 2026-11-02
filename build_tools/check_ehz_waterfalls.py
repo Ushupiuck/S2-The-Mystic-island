@@ -10,6 +10,7 @@ import argparse
 import json
 import struct
 from native_test_core import Native
+from build_ehz_reflection_art import reflection_runs, reflection_source
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -154,24 +155,41 @@ def fixed_reflections(rom,listing):
 	n.cpu.mem_write(base,palette)
 	original=struct.unpack('>64H',palette)
 	assert original[18:22]==(0xA86,0xE86,0xEA8,0xECA)
-	source=(ROOT/'art/uncompressed/EHZ Reflections Source.unc').read_bytes()
+	source=reflection_source()
 	expected=[original[16+i] if i else None for i in tile_pixels(source)]
+	runs={}
+	offset=0
+	for dest,count in reflection_runs():
+		runs[dest*32]=(offset,count*32)
+		offset+=count*32
 	poses=set()
 	for tick in range(64):
 		n.act('PalCycle_Load')
 		current=struct.unpack('>64H',n.cpu.mem_read(base,128))
 		assert all(current[i]==original[i] for i in range(64) if i not in (18,19,20,21))
+		assert not n.uploads or {dest&65535 for _,dest,_ in n.uploads}==runs.keys()
 		for address,dest,length in n.uploads:
-			if dest&65535 != n.s['ArtTile_EHZ_Reflection']*32:
-				continue
-			assert length&65535==len(source)//2
-			pose=(address-n.s['Art_EHZReflection'])//len(source)
-			actual=tile_pixels(n.cpu.mem_read(address,len(source)))
-			assert [current[16+i] if i else None for i in actual]==expected, ('Reflection pulses',pose)
+			offset,size=runs[dest&65535]
+			assert length&65535==size//2
+			pose=(address-n.s['Art_EHZReflection']-offset)//len(source)
+			actual=tile_pixels(n.cpu.mem_read(address,size))
+			assert [current[16+i] if i else None for i in actual]==expected[offset*2:(offset+size)*2], ('Reflection pulses',pose)
 			poses.add(pose)
 		n.uploads.clear()
 	assert poses=={0,1,2,3}
-	return {'poses':sorted(poses),'fixed_rgb_pixels':len(source)*2*4}
+	# Palette and both tile spans must wait together when the queue is full.
+	before=bytes(n.cpu.mem_read(base,128))
+	phase=n.read('v_pcyc_num',2)
+	for free in range(3):
+		n.write('VDP_Command_Buffer_Slot',(n.s['VDP_Command_Buffer_Slot']-free*n.s['DMAEntry.len'])&65535,2)
+		n.write('v_pcyc_time',0,2)
+		n.act('PalCycle_Load')
+		assert not n.uploads and n.read('v_pcyc_num',2)==phase
+		assert bytes(n.cpu.mem_read(base,128))==before
+	n.write('VDP_Command_Buffer_Slot',(n.s['VDP_Command_Buffer_Slot']-3*n.s['DMAEntry.len'])&65535,2)
+	n.act('PalCycle_Load')
+	assert len(n.uploads)==2 and n.read('v_pcyc_num',2)==phase+1
+	return {'poses':sorted(poses),'fixed_rgb_pixels':len(source)*2*4,'deferred_queue_cases':3}
 
 
 def live(args):
@@ -189,15 +207,15 @@ def live(args):
 	cram=(C.c_uint16*64).in_dll(g.core,'cram')
 	if args.act==0:
 		original=struct.unpack('>48H',(ROOT/'palette/EHZ.bin').read_bytes())[:16]
-		source=(ROOT/'art/uncompressed/EHZ Reflections Source.unc').read_bytes()
+		source=reflection_source()
 		fixed=[original[i] if i else None for i in tile_pixels(source)]
 	seen, phases, pictures = set(), set(), []
 	foreground=set()
 	for tick in range(90):
 		g.run()
 		assert not g.read('v_errortype')
-		base = g.s['ArtTile_EHZ2_BGWaterfall' if args.act==1 else 'ArtTile_EHZ_Reflection'] * 32
-		actual = bytes(g.vram[(base+i)^1] for i in range(size))
+		runs=[(g.s['ArtTile_EHZ2_BGWaterfall'],11)] if args.act==1 else reflection_runs()
+		actual=b''.join(bytes(g.vram[(base*32+i)^1] for i in range(count*32)) for base,count in runs)
 		assert actual in poses, ('Incomplete live waterfall pose', tick)
 		if args.act==0:
 			colors=[((v&7)<<1)|((v&0x38)<<2)|((v&0x1C0)<<3) for v in cram[16:32]]

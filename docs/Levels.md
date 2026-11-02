@@ -370,18 +370,24 @@ its separate three-phase PP water script on the existing second palette timer,
 so neither cycle stops the other: foreground cyans advance every eight active
 updates and PP water advances every nine.
 
-Acts 1/3/4 retain the exact colors in their water reflections with 17 inverse
-index poses at `$340-$350`. The palette-cycle routine queues the matching pose
-in the same update as the four cyan writes. Palette DMA and tile DMA reach the
-same VBlank, so reflection shading stays fixed while the existing line-scroll
-deformation continues. This needs no additional palette entries or RAM counters:
-one 544-byte transfer every eight active updates. Foreground waterfalls keep
-using the cycling ramp normally.
+Acts 1/3/4 retain the corrected four-frame reflection animation in the original
+terrain slots `$1A7-$1A9` and `$1DE-$1EB`. The 12 background block definitions
+select these slots; the redundant `$340-$350` copy and its preceding 18 blank
+tiles are removed. The resident sheet ends at `$32D` again, reclaiming 35 tiles
+(1,120 bytes) without renumbering any other terrain or object art.
 
-`art/uncompressed/EHZ Reflections Source.unc` is the editable first pose in
-P1's grouped indices. `python build_tools/build_ehz_reflection_art.py` regenerates
-its four poses and the resident terrain bank. The 12 affected background block
-definitions select this bank; foreground blocks and chunk/layout IDs stay fixed.
+The palette-cycle routine queues both inverse-index spans in the same update
+as the four cyan writes. Palette DMA and tile DMA reach the same VBlank, so
+reflection shading stays fixed while line-scroll deformation continues. The
+544-byte payload is unchanged, split into 96- and 448-byte transfers every eight
+active updates. It reserves queue room for both and one possible ROM-bank split;
+insufficient room defers their palette phase together. Foreground waterfalls
+keep using the cycling ramp normally. No palette entries or RAM counters are added.
+
+Edit the first pose directly in `art/kosinski/level/8x8 - EHZ.unc` at those
+original slots. `python build_tools/build_ehz_reflection_art.py` regenerates
+the four inverse poses and packed terrain from that sheet; no separate editable
+reflection-source copy remains. Foreground blocks and chunk/layout IDs stay fixed.
 
 ## Emerald Hill Act 2: Palmtree Panic experiment
 

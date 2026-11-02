@@ -1903,8 +1903,11 @@ ArtTile_Art_Flowers3:		equ $398
 ArtTile_Art_Flowers4:		equ $39A
 ArtTile_EHZ2_BGWaterfall:		equ $380	; 11 PP tiles, below the EHZ flowers
 ArtTile_EHZ2_BGWaterfall_Count:	equ $00B
-ArtTile_EHZ_Reflection:		equ $340	; 17 fixed-color cloud reflection tiles
-ArtTile_EHZ_Reflection_Count:	equ $011
+ArtTile_EHZ_Reflection1:		equ $1A7	; corrected reflection, original three-tile span
+ArtTile_EHZ_Reflection1_Count:	equ $003
+ArtTile_EHZ_Reflection2:		equ $1DE	; corrected reflection, original fourteen-tile span
+ArtTile_EHZ_Reflection2_Count:	equ $00E
+ArtTile_EHZ_Reflection_Count:	equ ArtTile_EHZ_Reflection1_Count+ArtTile_EHZ_Reflection2_Count
 
 ; CPZ
 ArtTile_MorphingOrbs:		equ $3C0

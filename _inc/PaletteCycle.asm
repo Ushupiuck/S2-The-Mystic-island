@@ -120,13 +120,20 @@ PalCycle_HPZ:
 PalCycle_EHZ:
 		bsr.s	PalCycle_EHZWaterfalls
 		cmpi.b	#1,(Current_Act).w
-		beq.s	PalCycle_EHZ2
+		beq.w	PalCycle_EHZ2
 		rts
 
 PalCycle_EHZWaterfalls:
 		lea	(Pal_EHZCyc).l,a0
 		subq.w	#1,(v_pcyc_time).w
 		bpl.s	.return
+		cmpi.b	#1,(Current_Act).w
+		beq.s	.advance
+		; Two reflection spans, plus one possible ROM 128KB crossing.
+		; Keep their palette phase unchanged until both can reach VBlank.
+		cmpi.w	#VDP_Command_Buffer_Slot-3*DMAEntry.len,(VDP_Command_Buffer_Slot).w
+		bhi.s	.return
+.advance:
 		move.w	#7,(v_pcyc_time).w
 		move.w	(v_pcyc_num).w,d0
 		addq.w	#1,(v_pcyc_num).w
@@ -142,8 +149,14 @@ PalCycle_EHZWaterfalls:
 		lsr.w	#1,d0
 		lea	Pal_EHZReflectionFrames(pc),a0
 		move.l	(a0,d0.w),d1
-		move.w	#tiles_to_bytes(ArtTile_EHZ_Reflection),d2
-		move.w	#ArtTile_EHZ_Reflection_Count*16,d3
+		move.l	d1,-(sp)
+		move.w	#tiles_to_bytes(ArtTile_EHZ_Reflection1),d2
+		moveq	#ArtTile_EHZ_Reflection1_Count*16,d3
+		jsr	(QueueDMATransfer).l
+		move.l	(sp)+,d1
+		addi.l	#ArtTile_EHZ_Reflection1_Count*tile_size,d1
+		move.w	#tiles_to_bytes(ArtTile_EHZ_Reflection2),d2
+		move.w	#ArtTile_EHZ_Reflection2_Count*16,d3
 		jmp	(QueueDMATransfer).l
 .return:	rts
 ; ===========================================================================

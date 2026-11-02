@@ -997,7 +997,8 @@ playthroughs. RGB preservation alone cannot detect a preserved historical bug.
 
 `build_ehz_waterfall_art.py --check` verifies the packed object bank.
 `build_ehz_reflection_art.py --check` verifies the inverse reflection frames
-and resident terrain bank. The spring packer/palette check rejects per-act
+against the two original terrain spans and checks the packed terrain bank.
+The spring packer/palette check rejects per-act
 color indices in all three shared spring banks.
 `build_ehz2_waterfall_art.py --check` verifies the baked PP animation and its
 water palette script. The PP importer reproduces the private terrain bank and
@@ -1006,8 +1007,10 @@ source waterfall tiles from the pinned CD source documented in [Levels](Levels.m
 `python build_tools/check_ehz_waterfalls.py --rom s2built.bin --listing md-main.lst --output test-results/ehz-waterfalls`
 checks every baked pixel against the original PP colors, verifies all 4,352
 reflection-pose pixels keep their RGB colors through the grouped cyan cycle,
-executes both independent Act-2 palette clocks (four foreground phases every
-eight active updates and three PP water phases every nine), then palette/DMA
+checks both reflection DMA destinations and deferral with fewer than three
+free queue entries, executes both independent Act-2 palette clocks (four
+foreground phases every eight active updates and three PP water phases every
+nine), then palette/DMA
 updates, and renders a native scene using the authored four-column Act-2
 waterfalls, separated players, an approaching snail and 32 rings. This is a
 controlled pressure fixture, not a controller-only route. Optional
