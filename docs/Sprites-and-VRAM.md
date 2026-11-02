@@ -450,8 +450,9 @@ scddisasm `f8cf3f0af7bf419d18182ba98554f09307ad3cc6` (normal spring tiles 0–3
 and 18–21). Both colors share the cap tiles, selecting a palette per piece.
 The editable `* spring S3.unc` files now contain 12 vertical, 12 horizontal
 and 18 diagonal tiles; `build_spring_art.py` packs them. All three cap shapes
-use the shared red/yellow ramp `D-F` with white at `6`; gray `7-9` belongs only
-to their metal mechanisms. The diagonal cap's first ten tiles include blank
+use the shared red/yellow ramp `D-F` with white at `6`: `D` is brightest, `E`
+is the middle shade and `F` is darkest. Gray `7-9` belongs only to their metal
+mechanisms. The diagonal cap's first ten tiles include blank
 tile `7`, the empty lower-left corner of its final 16x16 sprite piece. Removing
 it would require an extra sprite piece for the remaining three quadrants.
 Their VRAM bases stay fixed; the 18 released slots remain gaps rather than
