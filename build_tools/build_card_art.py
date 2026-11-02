@@ -272,7 +272,7 @@ Map_Results_ContinueText = make_art_tile(ArtTile_Mini_Sonic,1,0)-ArtTile_Results
 			name = ('SPECIAL STAGE',character+' GOT A CHAOS EMERALD',
 					character+' GOT THEM ALL')[state]
 			if state == 1:
-				text = [(y-8,size,word,x) for y,size,word,x in lettering(character+' GOT A',space=8)]
+				text = [(y-16,size,word,x) for y,size,word,x in lettering(character+' GOT A',space=8)]
 				text += [(y+8,size,word,x) for y,size,word,x in lettering('CHAOS EMERALD',space=8)]
 			else:
 				text = lettering(name,space=8)

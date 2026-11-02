@@ -121,7 +121,7 @@ def main():
 				('Special stage rings.nem','Ring.nem')):
 			assert read('art/nemesis/'+current) == read('art/nemesis/'+original,True)
 		original_palette = bytearray(read('palette/Special Stage.bin',True))
-		for slot,color in ((10,0x8CE),(11,0x26C),(15,0x0AE),(23,0xEEA),(24,0xEC4),(25,0xA60)):
+		for slot,color in ((10,0x8CE),(11,0x26C),(15,0x0AE),(23,0xEEA),(24,0xEC4),(25,0xA60),(31,0x822)):
 			struct.pack_into('>H',original_palette,slot*2,color)
 		assert read('palette/Special Stage.bin') == original_palette
 		from sprite_palette import PLAYER_TO_S1_STAGE_TAILS

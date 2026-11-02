@@ -84,8 +84,11 @@ mapping family and use that same flash pose and blink clock. No separate
 blue/cyan asset, VRAM allocation or PLC entry exists. Rings and their sparkles
 follow the enlarged sheet; the complete stage-art range still ends at `$2B40`.
 
-Blue uses its darker existing P0 shades. Cyan uses P1 slots `7/8/9`, now
-`$EEA/$EC4/$A60`, plus black and white. The results-art producer leaves this
+Blue uses its darker existing P0 shades. Cyan uses P1 slots `7/8/9/F`, now
+`$EEA/$EC4/$A60/$822`, plus white. F was an unused duplicate black; only the
+cyan pose uses it. R blocks, walls, glass, ring/sparkle art and emerald stars
+have no F pixels on this row, and background cycles write only P2/P3. Cyan's
+darkest shade is therefore blue rather than black, matching its results ramp. The results-art producer leaves this
 stage sheet and its palette alone; edit their existing files directly.
 
 The collected-ID list holds seven entries. Its former alignment byte is now
@@ -163,7 +166,7 @@ The first row's shared warm colors are hand-editable in
 `palette/Special Stage.bin`: B = `$26C` (orange-brown), F = `$0AE` (gold),
 A = `$8CE` (cream). Tails's original fur shades 2/3/4 map to B/F/A, preserving
 three distinct shades; his cream shares A. This also warms Sonic's skin and
-the first-row bumper/item details. With the three cyan entries described above,
-the other 58 colors, including the rings,
+the first-row bumper/item details. With the four cyan-ramp entries described above,
+the other 57 colors, including the rings,
 walls and cycling background rows, retain their original values. No extra
 palette line or runtime recoloring is needed.

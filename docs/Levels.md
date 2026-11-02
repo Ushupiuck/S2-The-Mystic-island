@@ -401,6 +401,13 @@ removed. Stable foreground IDs preserve objects that reuse level art without
 adding per-act object mappings. The independent source sheets remain editable;
 regeneration deliberately rebuilds them from shared EHZ and the pinned CD source.
 
+Further cross-act green consolidation remains a proposal. The earlier preview
+rendered Act 1's background with Act 2's greens; it did not change Act 1's
+palette or art. Continue the EHZ1/EHZ2 palette-space review with aligned free
+slots in mind, then resolve the [boss's remaining gray choice](Importing-objects.md#ehz-boss-palette-candidate).
+The flower ramps, cycling cyans, PP waterfalls and fixed reflection poses above
+are already implemented; the seven-emerald/results work was a separate detour.
+
 The importer reserves shared HUD, life-text, points and ring colors in level
 palette line 1, including shadow `$1` and digit highlights `$7/$8`; absence from
 foreground tiles does not make these slots free. PP uses the remaining free

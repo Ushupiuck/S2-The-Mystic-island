@@ -107,6 +107,9 @@ W.I.P./unassembled sources are development work, not disposable unused code.
   generated art, mappings, DPLCs, bounds or audio data. Update that source or
   generator, regenerate the checked-in outputs, and inspect the resulting diff.
   A manual output-only patch must not disappear on the next regeneration.
+- Extend an existing art sheet and its mapping family for new variants of the
+  same object unless a distinct format or lifetime requires a separate asset.
+  Provisional cartridge banking is not a reason to duplicate files or PLCs.
 - Keep source art convenient for human editing. Document palette-index roles
   and engine-reserved tile ranges; coordinate art changes with their mappings,
   PLCs, animations and SonLVL definitions instead of hiding a runtime workaround

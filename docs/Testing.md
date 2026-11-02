@@ -160,8 +160,9 @@ SAT piece counts/spacing for 1/2/3/8 grips, and camera views across a 63-grip ro
 The game pass also checks DA's uploaded chain pixels, both lift directions with
 independent releases, and three camera views through the longest chain.
 Add `--pal` or `--player 2` for PAL or primary Tails. RAM writes construct disposable scenes;
-these are not a controller-only playthrough of authored placements. MD builds
-omit `--system-directory`. Use separate processes when changing ROMs/regions.
+these are not a controller-only playthrough of authored placements. Current
+builds require Mode 1 hardware and its fixture. Use separate processes when
+changing ROMs/regions.
 Source references are skdisasm `73de97c6b55055bcb8089c1d55d006b02136f163`,
 the LBZ unused bar, FBZ chain/array controller and SOZ light switch. This import
 adds the lowering/raising chain through DA and LBZ's reversible movement, but
@@ -363,10 +364,11 @@ Pause-control references are sonicretro/s2disasm `4ef457c18fc4902396c43ab06fabc1
 
 ## Runtime checks
 
-The old `check_level_lag.py` GHZ → CPZ → HPZ sequence is a historical
-Twizzler investigation, not current decompressor validation. Do not include it
-in routine migration checks. [VBlank ownership](Sprites-and-VRAM.md#mapping-and-rendering-abi)
-documents the retained wait-latch/nested-interrupt fix.
+The historical Twizzler lag harness has been removed: it patched a retired
+block renderer and did not exercise the live independent-plane path. Use
+`check_plane_engine.py`, `check_plane_streaming.py` and the CD checks for the
+current renderer. [VBlank ownership](Sprites-and-VRAM.md#mapping-and-rendering-abi)
+retains the wait-latch/nested-interrupt fix and its cause.
 
 Example for the shared visual regressions (life art, SMZ smoke/flame and boss flash):
 
@@ -736,8 +738,8 @@ performance profiling, and later SMZ/PP imports need their focused native-level 
 python build_tools/build_object_course.py --output /tmp/mystic-object-course
 python build_tools/check_object_course.py --build /tmp/mystic-object-course --core /path/to/genesis_plus_gx_libretro.so --output test-results/course-sweep
 python build_tools/check_object_interactions.py --build /tmp/mystic-object-course --core /path/to/genesis_plus_gx_libretro.so --output test-results/course-contacts
-python build_tools/check_object_contexts.py --build /tmp/mystic-object-course --core /path/to/genesis_plus_gx_libretro.so --output test-results/course-stage --case stage
-python build_tools/check_object_contexts.py --build /tmp/mystic-object-course --core /path/to/genesis_plus_gx_libretro.so --output test-results/course-warp --case warp --player 2
+python build_tools/check_object_contexts.py --build /tmp/mystic-object-course --core /path/to/genesis_plus_gx_libretro.so --system-directory /path/to/mode1-fixture --output test-results/course-stage --case stage
+python build_tools/check_object_contexts.py --build /tmp/mystic-object-course --core /path/to/genesis_plus_gx_libretro.so --system-directory /path/to/mode1-fixture --output test-results/course-warp --case warp --player 2
 ```
 
 On Windows use equivalent absolute external output paths. Sweep/contacts support
@@ -751,6 +753,21 @@ explosion art, only in its isolated section. Fresh snapshots restore explosion
 art for enemy/effect cases. This cannot certify that allocation in a populated
 level. Bundled test-only S1 floor/door art has provenance in
 `build_tools/object_course_art/sources.json`; LZ palettes do not certify zone colors.
+
+The stage-context runner uses the current level-select entry, seven results
+objects and an explicitly staged successful-attempt flag. `--player 2` selects
+Tails in the stage as well as in the return level. Real emerald pickups are
+covered separately by `check_seventh_emerald.py`; this course runner checks
+instrumented object execution and the return transition. Coverage uses a hook
+at the ordinary/touch dispatchers, with a last-code cache per slot in the
+already reserved free test RAM. Object bodies keep their original instruction
+layout, avoiding short-branch and PC-indexed-table range failures caused by
+per-entry stamps. The hook preserves registers and CCR. This instrumented
+image is not a performance reference.
+Generated test sources and metadata retain CRLF.
+`check_special_stage_overlap.py` accepts `--system-directory` and treats cyan
+as passable in its independent wall oracle. It retains real bumper, DOWN and
+GOAL callbacks and ordinary-movement embedding coverage.
 
 ## Reports and evidence
 
@@ -946,14 +963,18 @@ no special-results ring loader or source; rotating-stage ring assets remain.
 For LZ water colors, inspect the same background above and below the waterline:
 correct palette bytes alone do not establish that imported shading ramps work.
 
-Run `python build_tools/check_sprite_palettes.py --reference <pre-migration-commit> --output test-results/palettes/report.json`.
-It checks level rows, spring piece attributes, underwater regeneration, results
-emeralds and decoded terrain RGB. EHZ2 background readaptation is excluded
-from exact RGB equality; its foreground remains exact. CPZ explicitly accounts
-for original red/brown restoration. Rotating-stage private source pixels,
+Run `python build_tools/check_sprite_palettes.py --output test-results/palettes/report.json`
+for current level rows, spring attributes, underwater regeneration and results
+emeralds. Its optional `--reference REV` mode was written for the shared-palette
+migration and also compares decoded terrain RGB, with CPZ's intentional
+red/brown restoration. This is a historical, baseline-specific comparison:
+later EHZ flower/PP remaps cannot be assumed RGB-identical to an unrelated old
+revision. Use the current EHZ waterfall/reflection checks for those assets and
+their live palette phases instead of treating a migration baseline as a
+whole-project golden image. Rotating-stage private source pixels,
 including all five Sonic rolling poses, remain exact. Its palette comparison
-allows only the three documented first-row warm colors; it also rejects a
-collapsed Tails fur ramp.
+allows the three documented first-row warm colors and P1's four cyan-ramp
+entries, including the dark blue in F; it also rejects a collapsed Tails fur ramp.
 
 `check_special_stage_players.py --rom ROM --listing LISTING --core CORE
 --system-directory BIOS --output OUTPUT --player 2` enters through the real

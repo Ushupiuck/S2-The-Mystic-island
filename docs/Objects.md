@@ -153,8 +153,8 @@ index + 1, and zero means dynamic/Debug-owned. Use `Object_RespawnRead`,
 `Object_RespawnConsume`, `Object_RespawnRelease` and `Object_RespawnBump`;
 `Object_PlacementX` retrieves the original placement X. Never reinterpret a
 handle as an MD pointer. The Mode 1 `MCD_*` labels remain same-address aliases
-for existing diagnostics. The [build selection](Mega-CD.md#cartridge-build-dependencies)
-changes storage and execution, while preserving the object-facing contract.
+for existing diagnostics. The [Mode 1 target](Mega-CD.md#build-target)
+requires CD-owned storage and execution while preserving the object-facing contract.
 
 - Preserve the handle on initialization and leave its loaded bit set.
 - `UnloadObject` releases the loaded bit and deletes a reusable out-of-range SST.

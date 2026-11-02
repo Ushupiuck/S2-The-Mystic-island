@@ -39,8 +39,8 @@ Only `$01` starts the full screen handler. A second VBlank arriving while the
 first handler still runs must count lag and return without touching the VDP;
 re-entering the handler can exhaust the stack and overwrite the end of the block
 table. Ordinary foreground lag (`$00`) retains its water-palette refresh path.
-The old [Twizzler lag investigation](Testing.md#runtime-checks) exercised this
-distinction; it is not part of current decompressor migration checks.
+The retired Twizzler investigation exposed this distinction. Current plane
+and CD tests are listed under [runtime checks](Testing.md#runtime-checks).
 
 In Mode 1, screen handlers return directly to the outer VBlank restore.
 Timer tails use local short conditional exits, and the title-card handler tail-calls its final
@@ -146,6 +146,12 @@ the committed packed copies. The old `art/nemesis/Shield.nem` is unrelated
 to this dynamic art and is preserved.
 
 ## Shared level allocations
+
+These are runtime VRAM lifetimes, not a finalized cartridge-file placement
+plan. ROM ordering/banking remains provisional. Add variants to the existing
+editable art sheet and mapping family when they belong to the same object;
+a new palette variant alone does not justify separate files and PLC entries.
+
 
 These apply during ordinary level play. Zone-specific terrain/badnik and boss
 phases can have different lifetimes; the [special-stage map](Special-stage.md#vram)
@@ -296,7 +302,11 @@ act 4, V/W and the wide W metrics. Its `act_four()` draws the digit into the
 existing six-tile (16x24) slot. Small results markers preserve the blue fill
 and dark-blue edge from `Title Cards Base.unc`, with the outer black pixels
 removed. Both screens share that treatment and the tightened final S in BONUS.
-Special results use the aligned palette contract below.
+Special results use the aligned palette contract below. A successful partial
+set uses two 16-pixel heading lines separated by eight clear pixels; the upper
+line moves up so the lower line and emerald grid retain their positions. The
+special-results oval sits eight pixels above the heading anchor, keeping its
+lower edge clear of the blue emerald.
 
 Normal and special results share `Card_InitResultSprite`, an eight-byte-record
 constructor adapted from S3&K's `sub_2E802`. Their editable configuration tables
@@ -424,6 +434,9 @@ ramps; other slots are per-act enemy colors. S&K indices map to
 `0 6 A B C F D E 4 3 5 2 7 8 9 1`. `sprite_palette.py` owns offline import
 conversions; editable runtime art already uses the new slots. No runtime pixel
 conversion is performed. Keep every compressed archive followed by `even`.
+
+The EHZ boss's palette candidate remains separate from the accepted assets;
+see [its review status](Importing-objects.md#ehz-boss-palette-candidate).
 
 The EHZ waterfall object keeps its 24-tile bank at `$3AE-$3C5` and all six
 mapping frames. Its editable `art/uncompressed/EHZ Waterfall.unc` uses P1

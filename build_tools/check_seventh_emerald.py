@@ -110,7 +110,7 @@ def live(args):
 	bank=g.s['ArtTile_SS_Emerald']*32
 	assert bytes(g.vram[(bank+i)^1] for i in range(len(stage)))==stage
 	palette=(ROOT/'palette/Special Stage.bin').read_bytes()
-	assert bytes(g.read(g.s['v_palette']+i) for i in range(32))==palette[:32]
+	assert bytes(g.read(g.s['v_palette']+i) for i in range(64))==palette[:64]
 	g.write('Debug_mode_flag',1);press(0)
 	assert g.read('Debug_placement_mode',2)
 	for index in range(1,8):

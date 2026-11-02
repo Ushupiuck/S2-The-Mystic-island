@@ -26,30 +26,13 @@ def replace_once(text, before, after):
 
 
 def instrument_entries(root):
-	"""Stamp real routine entries without adding an ID lookup to RunObject."""
-	main = root / 'md-main.asm'
-	text = main.read_text()
-	entries = {}
-	for oid, label in re.findall(r'^ptr_Obj([0-9A-F]{2}):\s*dc\.l\s+(\w+)', text, re.M):
-		if label != 'ObjNull':
-			entries.setdefault(label, []).append(int(oid, 16))
-	files = [main] + [root / name for name in re.findall(
-		r'^\s*include\s+"(objects/[^"]+\.asm)"', text, re.M)]
-	seen = set()
-	for path in files:
-		text = path.read_text(encoding='latin1')
-		for label, ids in entries.items():
-			pattern = r'^' + re.escape(label) + r':[ \t]*([^\n]*)\n'
-			def hook(match):
-				seen.add(label)
-				stamps = ''.join('\tst (ObjectTest_Executed+$%02X).l\n' % oid
-									for oid in ids)
-				suffix = match[1]
-				return label + ':\n' + stamps + ('\t' + suffix + '\n' if suffix else '')
-			text, count = re.subn(pattern, hook, text, flags=re.M)
-			assert count <= 1, (path, label)
-		path.write_text(text, encoding='latin1')
-	assert seen == entries.keys(), ('Missing coverage entry', entries.keys()-seen)
+	"""Record dispatch through one cached hook, preserving object code layout."""
+	p = root/'md-main.asm'
+	text = p.read_text()
+	before = '\t\tmovea.l\td0,a1\n\t\tjsr\t(a1)'
+	assert text.count(before)==2, 'Review ordinary and touch dispatch hooks'
+	text = text.replace(before, '\t\tjsr\t(ObjectTest_RecordExecution).l\n'+before)
+	p.write_text(text, newline='\r\n')
 
 
 def generate(root, banks):
@@ -59,7 +42,9 @@ def generate(root, banks):
 			"ObjectTest_Bank = ObjectTest_Executed+$100",
 			"ObjectTest_Active = ObjectTest_Bank+1",
 			"ObjectTest_Enable = ObjectTest_Bank+2",
-			"\tif ObjectTest_Enable+1>Free_RAM_End",
+			"ObjectTest_LastCode = ObjectTest_Executed+$104",
+			"ObjectTest_StorageEnd = ObjectTest_LastCode+(v_objspace_end-v_objspace)/object_size*4",
+			"\tif ObjectTest_StorageEnd>Free_RAM_End",
 			"\t\tfatal \"Object course coverage exceeds the free RAM area.\"",
 			"\tendif",
 			"ObjectTest_FloorY = $500",
@@ -104,6 +89,44 @@ def generate(root, banks):
 			"ObjectTest_LoadNem:",
 			"\tmovem.l a1-a2,-(sp) ; Raw is the tail entry after LoadPLC's save",
 			"\tjmp (LoadPLC_Raw).l"]
+	asm.extend([
+			'ObjectTest_RecordExecution:',
+			'\tmove.w sr,-(sp)',
+			'\tmovem.l d0-d2/a1-a2,-(sp)',
+			'\tmoveq #0,d0',
+			'\tmove.w a0,d0',
+			'\tsubi.w #v_objspace&$FFFF,d0',
+			'\tcmpi.w #v_objspace_end-v_objspace,d0',
+			'\tbhs.s .done',
+			'\tdivu.w #object_size,d0',
+			'\tswap d0',
+			'\ttst.w d0',
+			'\tbne.s .done',
+			'\tswap d0',
+			'\tlsl.w #2,d0',
+			'\tlea (ObjectTest_LastCode).l,a2',
+			'\tmove.l code(a0),d1',
+			'\tcmp.l (a2,d0.w),d1',
+			'\tbeq.s .done',
+			'\tmove.l d1,(a2,d0.w)',
+			'\tcmpi.l #ObjNull,d1',
+			'\tbeq.s .done',
+			'\tlea (Obj_Index).l,a1',
+			'\tlea (ObjectTest_Executed).l,a2',
+			'\tmoveq #1,d0',
+			'\tmove.w #255-1,d2',
+			'.next:',
+			'\tcmp.l (a1)+,d1',
+			'\tbne.s .advance',
+			'\tst (a2,d0.w)',
+			'.advance:',
+			'\taddq.w #1,d0',
+			'\tdbf d2,.next',
+			'.done:',
+			'\tmovem.l (sp)+,d0-d2/a1-a2',
+			'\tmove.w (sp)+,ccr',
+			'\trts',
+	])
 	for fmt in ('Nem', 'Kos', 'Raw'):
 		asm.append(f'ObjectTest_{fmt}Lists:')
 		asm.extend(f'\tdc.l ObjectTest_{fmt}{i}' for i in range(16))
@@ -130,7 +153,7 @@ def generate(root, banks):
 	placements.extend(f'\tdc.w ${x:04X},${y:04X}\n\tdc.b ${oid:02X},ObjectTime_All\n\tdc.w ${sub:04X}'
 						for x,y,oid,sub in sorted(records))
 	placements.append('\tdc.w $FFFF,0,0,0')
-	(root / '_inc/Object Test Placements.asm').write_text('\n'.join(placements)+'\n')
+	(root / '_inc/Object Test Placements.asm').write_text('\n'.join(placements)+'\n', newline='\r\n')
 	asm.extend([
 				'ObjectTest_DoorArt: binclude "build_tools/object_course_art/door.nem"',
 				'\teven',
@@ -140,7 +163,7 @@ def generate(root, banks):
 				'ObjectTest_GHZArt: binclude "art/kosinski/level/8x8 - GHZ.unc"',
 				'ObjectTest_CPZArt: binclude "art/kosinski/level/8x8 - CPZ.unc"',
 				'\teven'])
-	(root / '_inc/Object Test Course.asm').write_text('\n'.join(asm)+'\n')
+	(root / '_inc/Object Test Course.asm').write_text('\n'.join(asm)+'\n', newline='\r\n')
 	return banks
 
 
@@ -186,8 +209,10 @@ def main():
 							'\t\tdc.w $80,$4ED\t; test-course LZ2')
 	source = replace_once(source, 'EndOfRom:\n',
 							'\t\tinclude "_inc/Object Test Course.asm"\nEndOfRom:\n')
-	mainfile.write_text(source)
+	mainfile.write_text(source, newline='\r\n')
 	instrument_entries(root)
+	for original in (ROOT/'objects').rglob('*.asm'):
+		assert original.read_bytes()==(root/original.relative_to(ROOT)).read_bytes(), original
 	# These prototype water enemies still use old banks which overlap today's
 	# universal assets. Relocate their art only in the disposable course ROM.
 	constants = root/'_definitions/s2.constants.asm'
@@ -197,14 +222,14 @@ def main():
 							('ArtTile_Splats','$418')]:
 		text, count = re.subn(r'('+symbol+r':\s*equ\s+)[^;\n]+',r'\g<1>'+value+' ',text)
 		assert count == 1, symbol
-	constants.write_text(text)
+	constants.write_text(text, newline='\r\n')
 	# Give the diagnostic image its own output names, and never accept an old
 	# gameplay ROM paired with fresh placement metadata/listing.
 	build=root/'build.lua'
 	script=build.read_text().replace('"s2built"','"object-course"').replace('"s2built.bin"','"object-course.bin"')
 	script=script.replace('common.build_rom("md-main", "object-course", "",',
 							'common.build_rom("md-main", "object-course", "-OLIST object-course.lst",')
-	build.write_text(script)
+	build.write_text(script, newline='\r\n')
 	for name in ('object-course.bin','object-course.lst'):
 		(root/name).unlink(missing_ok=True)
 	# Run executable copies outside the checkout. This also avoids changing
@@ -218,9 +243,9 @@ def main():
 		script = common.read_text()
 		hook = '\tlocal platform_directory, executable_suffix = get_platform_specific_info_memoised()\n'
 		script = replace_once(script, hook, hook + '\tplatform_directory = "' + tools.as_posix() + '/"\n')
-		common.write_text(script)
+		common.write_text(script, newline='\r\n')
 		result = subprocess.run(['texlua','build.lua'],cwd=root,capture_output=True,text=True)
-	(output/'build.log').write_text(result.stdout+result.stderr)
+	(output/'build.log').write_text(result.stdout+result.stderr, newline='\r\n')
 	if result.returncode or not (root/'object-course.lst').exists() or 'Symbol Table' not in (root/'object-course.lst').read_text():
 		raise SystemExit(f'Build failed; see {output}/build.log')
 	symbols={n:int(v,16) for n,v in re.findall(r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]',(root/'object-course.lst').read_text())}
@@ -232,7 +257,7 @@ def main():
 	assert len(image)>=symbols['EndOfRom'],'Built ROM does not match its listing extent'
 	for name in ('object-course.bin','object-course.lst'):
 		shutil.copyfile(root/name,output/name)
-	(output/'course.json').write_text(json.dumps({'banks':banks},indent=2)+'\n')
+	(output/'course.json').write_text(json.dumps({'banks':banks},indent=2)+'\n', newline='\r\n')
 	print(f'Object course: {output}/object-course.bin ({sum(len(b["objects"]) for b in banks)} placements)')
 
 

@@ -26,11 +26,11 @@ offsets. [Objects](Objects.md) owns the SST, loading, dispatch and respawn ABI;
 `15e9fd52a65318bec3d5e746ce48dba6db6910db`. The controller initializes:
 
 ```asm
-        move.l  #Map_EHZBoss_Vehicle,obMap(a0)
-        move.b  #Map_EHZBoss_Vehicle_height,height_pixels(a0)
-        move.b  #sprite_bound($20,Map_EHZBoss_Vehicle_width),width_pixels(a0)
-        move.b  #$14,obHeight(a0)     ; collision half-height: 20 pixels
-        move.w  #$200,obPriority(a0) ; priority tier 4
+		move.l	#Map_EHZBoss_Vehicle,obMap(a0)
+		move.b	#Map_EHZBoss_Vehicle_height,height_pixels(a0)
+		move.b	#sprite_bound($20,Map_EHZBoss_Vehicle_width),width_pixels(a0)
+		move.b	#$14,obHeight(a0)	; collision half-height: 20 pixels
+		move.w	#$200,obPriority(a0)	; priority tier 4
 ```
 
 `sprite_bound` emits the larger assembly-time constant. The ordinary build
@@ -89,3 +89,21 @@ The faster shared explosion controller is covered by
 [the boss checks](Testing.md#boss-runtime-checks).
 Runtime fight checks belong in the
 normal arena; a lifecycle fixture alone does not establish boss/capsule behavior.
+
+## EHZ boss palette candidate
+
+The boss's shared-palette adaptation is still awaiting visual review. Main
+keeps the accepted assets; do not describe the three-gray proposal as shipped.
+The separate [Mystic-Island-EHZ-palette-WIP branch](https://github.com/Ushupiuck/S2-The-Mystic-island/tree/Mystic-Island-EHZ-palette-WIP)
+preserves the candidate raw/packed ship and car art, its compressed-input spans,
+`import_ehz_boss.py`, the source-pixel extensions to `check_ehz_boss.py`, and
+`check_boss_rebounds.py`. Nothing in the normal build invokes that importer.
+
+The candidate merges S2's extra metal gray into the shared middle gray. The
+alternative discussed is a boss-owned second palette row with a custom fourth
+gray; `$A88` was suggested. Neither option is accepted by this checkpoint.
+Before continuing, compare the candidate in both EHZ acts and review water,
+background and player colors. Keep the original source palette roles separate
+from Mystic Island's former slot permutation. Runtime rebound coverage and
+source-color checks serve different purposes; a visually incorrect shade can
+still have valid collision, geometry and VRAM ranges.

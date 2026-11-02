@@ -54,6 +54,30 @@ zones are exposed (`$00-$0F`); editable starter acts are not finished levels.
 The [independent-plane engine](Levels.md#mode-1-plane-engine) is the live terrain
 path. Mixed-size SonLVL stamping remains [future work](Levels.md#planned-layout-format).
 
+## Current development state
+
+The rotating stage has seven collectible emeralds and seven layouts; Stage 7
+is an editable copy of Stage 6, not a newly authored course. Its outcome flag,
+Debug entries, results arrangement and consolidated art are documented in
+[Special stage](Special-stage.md#emerald-items). Title/results typography,
+streamed bonus digits and the 9:59 secret bonus belong to
+[Sprites and VRAM](Sprites-and-VRAM.md#player-effects-and-ui).
+
+[Levels](Levels.md#emerald-hill-flower-palette) records the EHZ palette/flower,
+foreground waterfall, PP background animation and reflection work. Both-player
+tunnel effects and Mecha's floor/facing fixes are in
+[Players and effects](Players-and-effects.md) and
+[Mecha Sonic](Sprites-and-VRAM.md#mecha-sonic-standard-fight).
+Next, return to [EHZ1/EHZ2 palette-space consolidation](Levels.md#emerald-hill-act-2-palmtree-panic-experiment).
+The earlier cross-act greens preview was not applied to Act 1. The remaining
+boss gray decision and its isolated WIP checkpoint are
+[explicitly pending](Importing-objects.md#ehz-boss-palette-candidate).
+
+The existing guides remain in use; migration/import scripts are kept
+when they own a reproducible asset or a still-useful authoring operation.
+`TODO.txt` retains older completed notes as history; current behavior lives in
+these guides, and outstanding level/design work must be labelled as such.
+
 ## Maintaining these guides
 
 Update the existing guide when its subsystem changes. Put a fact in one guide

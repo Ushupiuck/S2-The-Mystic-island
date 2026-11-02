@@ -144,15 +144,15 @@ Map_SSR_1_0: ; SONIC GOT A CHAOS EMERALD
 		dc.w Map_SSR_1_0_5-Map_SSR_1_0
 		dc.w Map_SSR_1_0_6-Map_SSR_1_0
 Map_SSR_1_0_0: dc.w 21
-		dc.w $F005, $44, $FFB4
-		dc.w $F005, $3C, $FFC4
-		dc.w $F005, $38, $FFD4
-		dc.w $F001, $2E, $FFE4
-		dc.w $F005, $1A, $FFEC
-		dc.w $F005, $26, $0004
-		dc.w $F005, $3C, $0014
-		dc.w $F005, $48, $0024
-		dc.w $F005, $16, $003C
+		dc.w $E805, $44, $FFB4
+		dc.w $E805, $3C, $FFC4
+		dc.w $E805, $38, $FFD4
+		dc.w $E801, $2E, $FFE4
+		dc.w $E805, $1A, $FFEC
+		dc.w $E805, $26, $0004
+		dc.w $E805, $3C, $0014
+		dc.w $E805, $48, $0024
+		dc.w $E805, $16, $003C
 		dc.w $0005, $1A, $FF9C
 		dc.w $0005, $2A, $FFAC
 		dc.w $0005, $16, $FFBC
@@ -221,15 +221,15 @@ Map_SSR_1_1: ; TAILS GOT A CHAOS EMERALD
 		dc.w Map_SSR_1_1_5-Map_SSR_1_1
 		dc.w Map_SSR_1_1_6-Map_SSR_1_1
 Map_SSR_1_1_0: dc.w 21
-		dc.w $F005, $44, $FFB4
-		dc.w $F005, $16, $FFC4
-		dc.w $F001, $2E, $FFD4
-		dc.w $F005, $30, $FFDC
-		dc.w $F005, $40, $FFEC
-		dc.w $F005, $26, $0004
-		dc.w $F005, $38, $0014
-		dc.w $F005, $44, $0024
-		dc.w $F005, $16, $003C
+		dc.w $E805, $44, $FFB4
+		dc.w $E805, $16, $FFC4
+		dc.w $E801, $2E, $FFD4
+		dc.w $E805, $30, $FFDC
+		dc.w $E805, $40, $FFEC
+		dc.w $E805, $26, $0004
+		dc.w $E805, $38, $0014
+		dc.w $E805, $44, $0024
+		dc.w $E805, $16, $003C
 		dc.w $0005, $1A, $FF9C
 		dc.w $0005, $2A, $FFAC
 		dc.w $0005, $16, $FFBC

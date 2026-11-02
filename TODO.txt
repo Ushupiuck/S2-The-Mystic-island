@@ -25,7 +25,7 @@ Use GHZ4's sparse object layout for disposable runtime fixtures; restore the mat
 Give GHZ4 its own minimal object-test PLC/Debug kit instead of the copied Act 1-3 scenery/badnik loads; preserve the authored layout and terrain < DONE
 Retire LZ1's six and GHZ1's four temporary Ballhog placements; comment out the test PLC/Debug entries while preserving Scrap Madness's ten authored Ballhogs and their assets < DONE
 Design distinct terrain/art/objects for the newly enabled zone slots and four-act templates; MTZ1 remains the existing unfinished test stage, MTZ2-4 and SMZ3-4 are safe editable starters, and LV0A1 currently showcases imported PP enemies < NEXT level-content work
-Design an intentional Scrap Madness act-2 ending/cutscene; the current port uses the normal signpost
+Design the remaining Scrap Madness act-2 ending/cutscene beyond the implemented trap signpost, 16-hit Mecha fight and falling reward signpost
 Add inverse-gravity player physics/collision before enabling S3&K's Debug gravity-reversal cheat < FUTURE engine feature
 Add cached DMA switching between interleaved S3 horizontal spike art and linear S1 horizontal spike art in the shared bank, after the S3&K object-manager migration; handle preloading, backtracking and visible-bank ownership < FUTURE, separate task
 Implement time-travel transitions and replace the dummy timezone asset/layout tables with distinct data; header/layout selection already supports four timezones and four acts
@@ -37,7 +37,7 @@ Repack temporary zone/boss art when final levels replace the test stages; GHZ cu
 Future elemental-shield pickups must grant the same type and benefits to both live players, including fire/lava immunity and bubble-shield underwater breathing; damage/death remove only the affected player's shield
 Add Super forms and decide how an optional Sonic Insta-Shield would coexist with the WIP homing attack < FUTURE; both deliberately excluded from the completed normal S3&K player port
 Import the S3&K rings manager
-Port over Sonic 2 Special stages: Sonic 1 will be Bonus stages. Sonic 2's will be the ACTUAL Special stages. < IN PROGRESS, HIGH PRIORITY
+Author a distinct seventh rotating-stage layout; the current cyan stage is a copy of Stage 6. Any future half-pipe special stage is a new port: the old S2 implementation was removed, and no half-pipe port is currently active.
 Add Rustic Ruins Zone (Marble + Aquatic Ruin), Ancient Workbench (Labyrinth + Chemical plant), Toy Factory (Wacky Workbench + Carnival Night), Egg Mountain (Hill Top + Scrap brain + Metropolis)
 Fix HTZ scrolling to use a straight table, rather than a soup of chunk entries.
 Improve Boss_MoveObject < Not marked as done until I'm absolutely finished importing bosses (they tend to have their own version of this)
@@ -47,7 +47,8 @@ Reimplement the following ram adress & code (allows for extra life past 200 ring
 ;v_ring1uplimit:	ds.w	1	; awards an extra life every 100 rings (2 bytes)
 
 ; ---------------------------------------------------------------------------
-Finished:
+Finished (historical notes; old allocations/build variants below are not current contracts):
+Current implementation and pending-work status: docs/README.md and its subsystem guides.
 Promote the complete KEH baseline to the default Mystic-Island branch, preserve both branch histories, synchronize their heads, and document the required Mega-CD Mode 1 target throughout the guides < DONE
 Retire title-screen Debug variants and unlock Debug by playing 01,03,05,07 in level select with the ring jingle; preserve level-select/slow-motion cheats, reserved RAM and hold-A level entry, and verify both characters and build configurations < DONE
 Retire the standalone Mega Drive backend, build switch, frozen layouts and exclusive tooling; retain the required Mega-CD Mode 1 target and shared editable assets < DONE
