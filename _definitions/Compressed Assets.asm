@@ -1014,7 +1014,7 @@ MCD_CompressedAssets:
 	dc.l Nem_Crawl,Nem_Crawl+$3B1	; art/nemesis/Enemy Crawl.nem
 	endif
 	if defined(Nem_DSpring)
-	dc.l Nem_DSpring,Nem_DSpring+$14C	; art/nemesis/Diagonal spring.nem
+	dc.l Nem_DSpring,Nem_DSpring+$154	; art/nemesis/Diagonal spring.nem
 	endif
 	if defined(Nem_EHZ_Bridge)
 	dc.l Nem_EHZ_Bridge,Nem_EHZ_Bridge+$E1	; art/nemesis/EHZ bridge.nem

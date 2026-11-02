@@ -449,11 +449,13 @@ Springs retain S3&K mechanisms/geometry, with Sonic CD straight caps from
 scddisasm `f8cf3f0af7bf419d18182ba98554f09307ad3cc6` (normal spring tiles 0–3
 and 18–21). Both colors share the cap tiles, selecting a palette per piece.
 The editable `* spring S3.unc` files now contain 12 vertical, 12 horizontal
-and 18 diagonal tiles; `build_spring_art.py` packs them. Diagonal cap bevels
-use fixed gray slots `7/8`, so yellow springs cannot borrow the act's animated
-cyan/skin entries. Every spring pixel uses only transparent/black, gray `6-9`
-and the shared red/yellow ramp `D-F`. Their VRAM bases stay
-fixed; the 18 released slots remain gaps rather than new global allocations.
+and 18 diagonal tiles; `build_spring_art.py` packs them. All three cap shapes
+use the shared red/yellow ramp `D-F` with white at `6`; gray `7-9` belongs only
+to their metal mechanisms. The diagonal cap's first ten tiles include blank
+tile `7`, the empty lower-left corner of its final 16x16 sprite piece. Removing
+it would require an extra sprite piece for the remaining three quadrants.
+Their VRAM bases stay fixed; the 18 released slots remain gaps rather than
+new global allocations.
 
 `build_special_results_art.py` builds the independent navy/white/gold results
 palette, seven four-tile emeralds at tiles `$500-$51B` on lines three/four, and the
