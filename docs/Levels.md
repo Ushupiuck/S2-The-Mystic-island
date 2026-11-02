@@ -41,8 +41,8 @@ the entrance-gap water to be reached before the death plane. Its banks use
 spare chunks `$C4-$C7/$E6-$E7` with side collision on the solid fill below the old wall
 edge, preventing rafts from entering decorative terrain interiors. All four
 era layouts select these copies; existing chunks and their artwork are unchanged.
-Its act-specific art kit loads only the swinging platform/ball, vertical and
-horizontal springs, the shared handhold/chain bank and the portable button, in addition to common
+Its act-specific art kit loads only the swinging platform/ball, the packed
+spring atlas, the shared handhold/chain bank and the portable button, in addition to common
 HUD/monitor/spike/effect/animal/player art. Its module list is explicitly empty;
 bridge, rock, wall, ground-explosion and badnik loads from Acts 1–3 are omitted.
 `Debug_GHZ4` lists the matching test objects independently of the earlier acts.
@@ -55,7 +55,8 @@ the entries remain commented out for convenient act-specific reuse. GHZ1's four
 starting Ballhog test placements are also removed, with its Ballhog module,
 ground-explosion and shared Debug test entries commented out. Scrap Madness's
 ten authored Ballhogs, their code and atlas are unchanged. Those two enemy banks total
-71 tiles (`$43D-$483`, 2,272 bytes), available for a future LZ act recipe.
+71 tiles (2,272 bytes). GHZ now uses that space to move Newtron/Chopper below
+the packed spring atlas; a future LZ act recipe needs its own compatible allocation.
 
 ## Foreground vertical placement
 
@@ -364,7 +365,8 @@ importer reads the grouped EHZ sources and retains both PP cliff browns.
 EHZ palette cycling is enabled: Acts 1/3/4 address the actual four P1 cyan
 slots `2-5`, ordered `$A86,$E86,$EA8,$ECA`, immediately before white at `6`.
 P1's former fixed entries at `4/5` move to `A/B`; Act 2's fixed cloud shades
-`$EEC/$EC8` therefore live at `A/B`. Terrain, object art and PP generation use
+`$E86/$EC8` live at `A/B`, with the near-white PP highlight sharing fixed white.
+Terrain, object art and PP generation use
 the grouped indices. The foreground cycle runs in every act. Act 2 also runs
 its separate three-phase PP water script on the existing second palette timer,
 so neither cycle stops the other: foreground cyans advance every eight active
@@ -398,14 +400,40 @@ The BG is the upright 512x512 panel at source Y `$600` in Palmtree Panic Act 1
 Present. Its mirrored ramp section is excluded. The new background is authored
 once as 4x4 ordinary 128-pixel chunks.
 
-The importer retains foreground tile/block/chunk IDs, flips, collision paths,
-flower animation and all foreground tile IDs. Act 2 merges P2 `$060` into
-`$064` and `$080` into `$0A0`, remapping their terrain pixels so hardware slots
-`A/B` hold fixed `$EEA/$CC6` for its background waterfalls. Obj18's platform tiles keep their
-IDs too. Background-only slots are recycled; unused trailing definitions are
-removed. Stable foreground IDs preserve objects that reuse level art without
-adding per-act object mappings. The independent source sheets remain editable;
-regeneration deliberately rebuilds them from shared EHZ and the pinned CD source.
+Both acts retain the complete shared foreground art, including unplaced
+S-tunnel, platform and breakable-wall pieces. The common sheet order after
+the twisting path is explicit:
+
+| Tile range, inclusive | Shared art |
+| --- | --- |
+| `$26E-$272` | Four window tiles and the inner-window closing filler |
+| `$273-$2DD` | Complete 107-tile S-tunnel bank |
+| `$2DE-$31D` | Platforms, 64 tiles |
+| `$31E-$32D` | Breakable wall, 16 tiles |
+
+Obj18's existing mappings reference the new platform slots. Obj3C uses extra
+frames in the existing breakable-wall mapping family for EHZ's terrain bank
+and P2; its Debug and SonLVL entries expose those frames without a second art
+file. The ordinary terrain sheet still ends at `$32D`.
+
+Act 2 preserves all 236 original chunk definitions and all authored nonblank
+blocks, whether currently placed or not. PP adds 14 background chunks after
+them. Its 173 static tiles follow the shared art, skipping the existing
+waterfall/flower animation reservations; the complete bank ends at `$3EF`.
+Only unreferenced, blank, non-solid block slots are available for PP blocks.
+The importer does not prune reusable terrain to match a particular layout.
+All four era foreground grids retain their geometry, flips and collision.
+Act 2's P2 green merges (`$060` into `$064`, `$080` into `$0A0`) remain, with
+pixel indices translated across all authored terrain and platform uses;
+P2 `A/B` stay the fixed `$EEA/$CC6` background-waterfall shades.
+
+Normal EHZ sprite loads follow the terrain: fireball `$3F0`, waterfall `$400`,
+bridge `$418`, Buzzer `$420`, Snailbot `$43C`, Masher `$456`, seesaw `$46C`.
+The seesaw constructor and Debug select EHZ's bank independently of HTZ's
+unchanged `$3CE` allocation. The [boss banks](Importing-objects.md#arena-and-art-lifetime)
+move together above the enlarged terrain bank. The private source sheets
+remain editable; explicit PP regeneration rebuilds from shared EHZ and the
+pinned CD source.
 
 Further cross-act green consolidation remains a proposal. The earlier preview
 rendered Act 1's background with Act 2's greens; it did not change Act 1's
@@ -440,9 +468,12 @@ counter. SonLVL overlays the same bank.
 Water below panel Y `$180` uses the original three-phase palette cycle on P3
 hardware slots `1/3/6`. Its `$E64/$EC8/$E86` blues stay fixed at `2/4/5`. The
 408 source `$EEC` water-glint pixels share the animated `$EEA` role; every other
-water pixel retains its original PP shade and cycle role. Static cloud shading
-does not use these cycling entries. Flower greens/pinks and pause behavior
-remain independent of the new background animation.
+water pixel retains its original PP shade and cycle role. Cloud shading uses
+fixed P1 `6/A/B` (`$EEE/$E86/$EC8`); source `$EEC` shares `$EEE`, differing by
+one hardware red step. Static background tiles cannot select the foreground
+cyan cycle or PP water cycle. The original dark foreground blue at P1 `C`
+and the shared gray/HUD slots retain their colors.
+Flower greens/pinks and pause behavior remain independent of the PP animation.
 
 EHZ2's own initialization/event entries in `_inc/Level Plane Events.asm`
 produce four moving cloud bands, 3/16-speed mountains, half-speed bushes and
@@ -485,8 +516,12 @@ The S1 converter deduplicates 256-pixel chunks into the current 128-pixel format
 Each act has independent editable `8x8 - SMZ1/SMZ2.unc` tiles and
 `SMZ1/SMZ2.unc` block/chunk sheets, with matching Kosinski+ archives. Act 1
 contains its outside background; Act 2 contains its inside background. Each
-bank keeps the foreground and background chunks used by that act in any era,
-then compacts their blocks and static tiles. All four era headers and SonLVL
+bank keeps the full common foreground authoring collection, including unplaced
+chunks, plus its own background. Only opposite-act background-only chunks are
+excluded; layout use is not a reason to delete a foreground definition. The
+current sheets retain 188 common foreground chunks, including custom arena
+geometry, and compact their referenced blocks/static tiles. Transparent,
+non-solid flipped block-zero cells normalize to the canonical empty chunk. All four era headers and SonLVL
 select the corresponding bank. Collision indices are remapped with the blocks;
 the shared profiles, chunk flips/solidity and tile palette/priority/flips remain
 unchanged. The source sheets remain ordinary editable inputs, not outputs
@@ -495,15 +530,15 @@ the edit. A full S1 import deliberately rebuilds and splits them again.
 
 | Act | Static tiles, including reserved prefix | Blocks | Chunks | Static upload saved versus the shared 697-tile bank |
 | --- | ---: | ---: | ---: | ---: |
-| 1 | 469 | 374 | 166 | 228 tiles / 7,296 bytes |
-| 2 | 474 | 383 | 175 | 223 tiles / 7,136 bytes |
+| 1 | 643 | 498 | 228 | 54 tiles / 1,728 bytes |
+| 2 | 573 | 454 | 212 | 124 tiles / 3,968 bytes |
 
 Tile zero and water slots `$001-$010` retain their fixed positions. External
-smoke, junction and sprite banks do not move. The reclaimed space is contiguous
-before the resident atlas; object allocations are unchanged. Splitting duplicates
+smoke, junction and sprite banks do not move. Both banks fit below the resident `$2B9` atlas; object allocations are unchanged. Splitting duplicates
 some shared foreground data in ROM, while reducing each act's decode/upload work
 and resident terrain. Starter acts 3/4 use Act 1's tiles/blocks and retain their
-separate `SMZ Blank.kosp` chunks. Blocks 0..5 keep their IDs: block 0 is empty,
+separate `SMZ Blank.kosp` chunks and the remapped Act-1 collision tables.
+Blocks 0..5 keep their IDs: block 0 is empty,
 block 1 supplies the starter floor and block 5 supplies the Mecha arena floor.
 
 Act 1 uses the REV01 cloud gradient and three building layers scrolling at

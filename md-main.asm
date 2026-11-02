@@ -13353,7 +13353,7 @@ Nem_HTZ_Lift:		binclude	"art/nemesis/HTZ zip-line platform.nem"
 			even
 Nem_HTZ_AutomaticDoor:	binclude	"art/nemesis/HTZ Autodoor.nem"
 			even
-Nem_HTZ_Seesaw:		binclude	"art/nemesis/See-saw in HTZ.nem"
+Nem_Seesaw:		binclude	"art/nemesis/Seesaw.nem"
 			even
 ; ---------------------------------------------------------------------------
 ; Scrap Madness Zone stage assets
@@ -13499,11 +13499,7 @@ Nem_Wheel:	binclude	"art/nemesis/Wheel carrier.nem"
 Nem_MM_Propeller:
 		binclude	"art/nemesis/MM Propeller.nem"
 		even
-Nem_HSpring2:	binclude	"art/nemesis/Horizontal spring.nem"
-		even
-Nem_VSpring2:	binclude	"art/nemesis/Vertical spring.nem"
-		even
-Nem_DSpring:	binclude	"art/nemesis/Diagonal spring.nem"
+Nem_Springs:	binclude	"art/nemesis/Springs.nem"
 		even
 ; S3&K side and floor spikes, remapped to the shared player palette.
 Nem_VSpikes:	binclude	"art/nemesis/Spikes.nem"

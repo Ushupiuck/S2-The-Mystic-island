@@ -178,117 +178,127 @@ def remap_player_art(name, raw, lookup):
 
 
 def split_art(art, blocks, chunks, layouts, collisions, blank):
-    """Write independent act banks, keeping every cell used in any era.
+	"""Write act banks with the complete shared foreground authoring set.
 
-    This is an import operation, not a normal build step. The resulting .unc
-    sheets, layouts and collision indices are the editable sources. Tile zero
-    and water slots 1..16 stay fixed, as do external animation/sprite banks.
-    Blocks 0..5 retain their IDs for the starter floor and Mecha arena tool.
-    """
-    report = []
-    for act in (1, 2):
-        selected = sorted(set().union(*(set(data) for data in layouts[act].values())))
-        assert selected[0] == 0 and len(selected) <= 256
-        chunk_map = {old: new for new, old in enumerate(selected)}
-        cells = [struct.unpack_from('>64H', chunks, old*128) for old in selected]
-        block_ids = sorted(set(range(6)) | {word & 0x3FF for row in cells for word in row})
-        block_map = {old: new for new, old in enumerate(block_ids)}
-        words = [struct.unpack_from('>4H', blocks, old*8) for old in block_ids]
-        tile_ids = sorted(set(range(17)) | {
-            word & 0x7FF for row in words for word in row if (word & 0x7FF)*32 < len(art)})
-        tile_map = {old: new for new, old in enumerate(tile_ids)}
-        def tile(word):
-            old = word & 0x7FF
-            return (word & 0xF800) | tile_map.get(old, old)
-        act_art = b''.join(art[old*32:(old+1)*32] for old in tile_ids)
-        act_blocks = b''.join(struct.pack('>4H', *(tile(w) for w in row)) for row in words)
-        act_chunks = b''.join(struct.pack('>64H', *(
-            (w & 0xFC00) | block_map[w & 0x3FF] for w in row)) for row in cells)
-        for path, raw in ((f'art/kosinski/level/8x8 - SMZ{act}', act_art),
-                          (f'mappings/16x16/SMZ{act}', act_blocks),
-                          (f'mappings/128x128/SMZ{act}', act_chunks)):
-            (ROOT/(path+'.unc')).write_bytes(raw)
-            pack(path+'.kosp', raw)
-        for path, data in layouts[act].items():
-            pack(path, bytes(chunk_map[n] for n in data))
-        for path, data in collisions[act].items():
-            (ROOT/path).write_bytes(b''.join(data[n*2:n*2+2] for n in block_ids))
-        if act == 1:
-            # The starter chunks share Act 1's block definitions, not its layout.
-            values = [(w & 0xFC00) | block_map[w & 0x3FF]
-                      for w, in struct.iter_unpack('>H', blank)]
-            pack('mappings/128x128/SMZ Blank.kosp', struct.pack('>'+str(len(values))+'H', *values))
-            for starter in (3, 4):
-                for path, data in collisions[starter].items():
-                    (ROOT/path).write_bytes(b''.join(data[n*2:n*2+2] for n in block_ids))
-        report.append(dict(act=act, tiles=len(tile_ids), blocks=len(block_ids), chunks=len(selected)))
-    return report
+	This is an import operation, not a normal build step. The resulting .unc
+	sheets, layouts and collision indices are the editable sources. Tile zero
+	and water slots 1..16 stay fixed, as do external animation/sprite banks.
+	Blocks 0..5 retain their IDs for the starter floor and Mecha arena tool.
+	"""
+	# Both acts retain all foreground authoring pieces. Only opposite-act
+	# background-only chunks are omitted; layout use is not a deletion rule.
+	foreground = set()
+	backgrounds = {1:set(), 2:set()}
+	for act in (1,2):
+		for data in layouts[act].values():
+			foreground.update(data[y*256+x] for y in range(16) for x in range(128))
+			backgrounds[act].update(data[y*256+128+x] for y in range(16) for x in range(128))
+	common = set(range(len(chunks)//128)) - ((backgrounds[1] | backgrounds[2]) - foreground)
+	report = []
+	for act in (1, 2):
+		selected = sorted(common) + sorted(backgrounds[act] - common)
+		assert selected[0] == 0 and len(selected) <= 256
+		chunk_map = {old: new for new, old in enumerate(selected)}
+		cells = [struct.unpack_from('>64H', chunks, old*128) for old in selected]
+		block_ids = sorted(set(range(6)) | {word & 0x3FF for row in cells for word in row})
+		block_map = {old: new for new, old in enumerate(block_ids)}
+		words = [struct.unpack_from('>4H', blocks, old*8) for old in block_ids]
+		tile_ids = sorted(set(range(17)) | {
+			word & 0x7FF for row in words for word in row if (word & 0x7FF)*32 < len(art)})
+		tile_map = {old: new for new, old in enumerate(tile_ids)}
+		def tile(word):
+			old = word & 0x7FF
+			return (word & 0xF800) | tile_map.get(old, old)
+		act_art = b''.join(art[old*32:(old+1)*32] for old in tile_ids)
+		act_blocks = b''.join(struct.pack('>4H', *(tile(w) for w in row)) for row in words)
+		act_chunks = b''.join(struct.pack('>64H', *(
+			(w & 0xFC00) | block_map[w & 0x3FF] for w in row)) for row in cells)
+		for path, raw in ((f'art/kosinski/level/8x8 - SMZ{act}', act_art),
+						  (f'mappings/16x16/SMZ{act}', act_blocks),
+						  (f'mappings/128x128/SMZ{act}', act_chunks)):
+			(ROOT/(path+'.unc')).write_bytes(raw)
+			pack(path+'.kosp', raw)
+		for path, data in layouts[act].items():
+			pack(path, bytes(chunk_map[n] for n in data))
+		for path, data in collisions[act].items():
+			(ROOT/path).write_bytes(b''.join(data[n*2:n*2+2] for n in block_ids))
+		if act == 1:
+			# The starter chunks share Act 1's block definitions, not its layout.
+			values = [(w & 0xFC00) | block_map[w & 0x3FF]
+					  for w, in struct.iter_unpack('>H', blank)]
+			pack('mappings/128x128/SMZ Blank.kosp', struct.pack('>'+str(len(values))+'H', *values))
+			for starter in (3, 4):
+				for path, data in collisions[starter].items():
+					(ROOT/path).write_bytes(b''.join(data[n*2:n*2+2] for n in block_ids))
+		report.append(dict(act=act, tiles=len(tile_ids), blocks=len(block_ids), chunks=len(selected)))
+	return report
 
-
-def geometry(source):
-    words = enigma((source/'map16/SBZ.eni').read_bytes(), 0)
-    # Animated smoke lives above the wheel, below the spring bank.
-    words = [(word & 0xF800) | (0x4C5 + (word & 0x7FF)-0x448)
-             if 0x448 <= word & 0x7FF < 0x460 else word for word in words]
-    # Keep tile zero transparent; reserve the next sixteen tiles for water.
-    words = [(word & 0xF800) | ((word & 0x7FF) + 16)
-             if 0 < word & 0x7FF < 0x2A9 else word for word in words]
-    blocks = struct.pack('>'+str(len(words))+'H', *words)
-    old = classic_kosinski((source/'map256/SBZ (REV01).kos').read_bytes())
-    assert len(old) % 512 == 0 and len(blocks) <= 0x1800
-    chunks = [bytes(128)]
-    chunk_ids = {chunks[0]: 0}
-    halves = {(0, x, y): 0 for x in range(2) for y in range(2)}
-    layouts = []
-    for act in (1,2):
-        layout = bytearray(4096)
-        for bg in (False,True):
-            data = (source/f'levels/sbz{act}{"bg" if bg else ""}.bin').read_bytes()
-            width,height = data[0]+1,data[1]+1
-            assert len(data) == width*height+2
-            for cy in range(16):
-                for cx in range(128):
-                    if not bg and (cx >= width*2 or cy >= height*2):
-                        continue
-                    cell = data[2 + (cy//2 % height)*width + cx//2 % width] & 127
-                    key = cell,cx&1,cy&1
-                    if key not in halves:
-                        assert 0 < cell <= len(old)//512
-                        words = []
-                        for by in range(8):
-                            for bx in range(8):
-                                offset = (cell-1)*512 + ((cy&1)*8+by)*32 + ((cx&1)*8+bx)*2
-                                word = struct.unpack_from('>H',old,offset)[0]
-                                assert word & 0x3FF < len(blocks)//8
-                                # S1 X/Y flips and solidity become both S2 paths.
-                                words.append((word&0x3FF) | (word&0x1800)>>1 |
-                                             (word&0x6000)>>1 | (word&0x6000)<<1)
-                        chunk = struct.pack('>64H', *words)
-                        if chunk not in chunk_ids:
-                            chunk_ids[chunk] = len(chunks)
-                            chunks.append(chunk)
-                        halves[key] = chunk_ids[chunk]
-                    layout[cy*256 + (128 if bg else 0) + cx] = halves[key]
-        layouts.append(bytes(layout))
-    assert len(chunks) <= 256, len(chunks)
-    collisions = (source/'collide/SBZ.bin').read_bytes()
-    # The last two source blocks are background-only and have no collision entry.
-    assert len(collisions) <= len(blocks)//8
-    collisions += bytes(len(blocks)//8-len(collisions))
-    indices = b''.join(bytes((v,v)) for v in collisions)
-    blocks, chunk_data, (indices,), _ = remap_geometry(
-        blocks, b''.join(chunks), [indices],
-        read_bank(source/'collide', S1_BANK_FILES), read_bank(ROOT/'collision'),
-        max_angle_change=4)
-    for act in (1,2):
-        (ROOT/f'startpos/SMZ_{act}.bin').write_bytes((source/f'startpos/sbz{act}.bin').read_bytes())
-        palette = bytearray((source/f'palette/SBZ Act {act}.bin').read_bytes())
-        assert len(palette) == 96
-        # The first imported row is palette line 2, shared by terrain/objects.
-        palette[14:20] = (ROOT/'palette/SonicAndTails.bin').read_bytes()[14:20]
-        palette[:32] = struct.pack('>16H', *remap_line(struct.unpack('>16H', palette[:32]), ENEMY_FROM_LEGACY))
-        (ROOT/f'palette/SMZ{act}.bin').write_bytes(palette)
-    return blocks, chunk_data, indices, layouts
+def geometry(source, write_metadata=True):
+	words = enigma((source/'map16/SBZ.eni').read_bytes(), 0)
+	constants = (ROOT/'_definitions/s2.constants.asm').read_text()
+	smoke = int(re.search(r'^ArtTile_SMZ_Smoke1:\s*equ\s+\$([0-9A-Fa-f]+)', constants, re.M)[1],16)
+	words = [(word & 0xF800) | (smoke + (word & 0x7FF)-0x448)
+		if 0x448 <= word & 0x7FF < 0x460 else word for word in words]
+	# Keep tile zero transparent; reserve the next sixteen tiles for water.
+	words = [(word & 0xF800) | ((word & 0x7FF) + 16)
+		if 0 < word & 0x7FF < 0x2A9 else word for word in words]
+	blocks = struct.pack('>'+str(len(words))+'H', *words)
+	old = classic_kosinski((source/'map256/SBZ (REV01).kos').read_bytes())
+	assert len(old) % 512 == 0 and len(blocks) <= 0x1800
+	chunks = [bytes(128)]
+	chunk_ids = {chunks[0]: 0}
+	halves = {(0, x, y): 0 for x in range(2) for y in range(2)}
+	# Decode every authored chunk, including unplaced foreground pieces.
+	for cell in range(1,len(old)//512+1):
+		for qy in range(2):
+			for qx in range(2):
+				words = []
+				for by in range(8):
+					for bx in range(8):
+						offset = (cell-1)*512 + (qy*8+by)*32 + (qx*8+bx)*2
+						word = struct.unpack_from('>H',old,offset)[0]
+						assert word & 0x3FF < len(blocks)//8
+						word = ((word&0x3FF) | (word&0x1800)>>1 |
+							(word&0x6000)>>1 | (word&0x6000)<<1)
+						# Flipping transparent, non-solid block zero adds no geometry.
+						words.append(word if word & 0xF3FF else 0)
+				chunk = struct.pack('>64H', *words)
+				if chunk not in chunk_ids:
+					chunk_ids[chunk] = len(chunks)
+					chunks.append(chunk)
+				halves[cell,qx,qy] = chunk_ids[chunk]
+	assert len(chunks) <= 256, len(chunks)
+	layouts = []
+	for act in (1,2):
+		layout = bytearray(4096)
+		for bg in (False,True):
+			data = (source/f'levels/sbz{act}{"bg" if bg else ""}.bin').read_bytes()
+			width,height = data[0]+1,data[1]+1
+			assert len(data) == width*height+2
+			for cy in range(16):
+				for cx in range(128):
+					if not bg and (cx >= width*2 or cy >= height*2):
+						continue
+					cell = data[2 + (cy//2 % height)*width + cx//2 % width] & 127
+					layout[cy*256 + (128 if bg else 0) + cx] = halves[cell,cx&1,cy&1]
+		layouts.append(bytes(layout))
+	collisions = (source/'collide/SBZ.bin').read_bytes()
+	assert len(collisions) <= len(blocks)//8
+	collisions += bytes(len(blocks)//8-len(collisions))
+	indices = b''.join(bytes((v,v)) for v in collisions)
+	blocks, chunk_data, (indices,), _ = remap_geometry(
+		blocks, b''.join(chunks), [indices],
+		read_bank(source/'collide', S1_BANK_FILES), read_bank(ROOT/'collision'),
+		max_angle_change=4)
+	if write_metadata:
+		for act in (1,2):
+			(ROOT/f'startpos/SMZ_{act}.bin').write_bytes((source/f'startpos/sbz{act}.bin').read_bytes())
+			palette = bytearray((source/f'palette/SBZ Act {act}.bin').read_bytes())
+			assert len(palette) == 96
+			palette[14:20] = (ROOT/'palette/SonicAndTails.bin').read_bytes()[14:20]
+			palette[:32] = struct.pack('>16H', *remap_line(struct.unpack('>16H', palette[:32]), ENEMY_FROM_LEGACY))
+			(ROOT/f'palette/SMZ{act}.bin').write_bytes(palette)
+	return blocks, chunk_data, indices, layouts
 
 
 def placements(source):

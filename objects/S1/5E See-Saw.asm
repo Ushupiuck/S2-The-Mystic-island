@@ -1,5 +1,6 @@
 ; ---------------------------------------------------------------------------
-; Object 5E - HTZ see-saw
+; Object 5E - shared Sonic 1 see-saw (EHZ/HTZ)
+; Full-height S1 art is drawn 16 pixels lower to retain the existing origin.
 ; ---------------------------------------------------------------------------
 
 see_origX = objoff_34		; original x-axis position
@@ -31,6 +32,10 @@ See_Main:
 		move.l	#Map_obj5E,obMap(a0)
 		move.b	#Map_obj5E_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_HTZ_Seesaw,0,0),obGfx(a0)
+		cmpi.b	#id_EHZ,(Current_Zone).w
+		bne.s	.art_ready
+		move.w	#make_art_tile(ArtTile_EHZ_Seesaw,0,0),obGfx(a0)
+.art_ready:
 		ori.b	#4,obRender(a0)
 		move.w	#$200,obPriority(a0)
 		move.b	#sprite_bound($30,Map_obj5E_width),obActWid(a0)
@@ -140,8 +145,7 @@ See_ChgFrame:
 		lea	See_DataFlat(pc),a2
 +
 		move.w	obX(a0),-(sp)
-		moveq	#0,d1
-		move.b	obActWid(a0),d1
+		moveq	#$30,d1		; 96px physics width; mapping overhang only affects culling
 		moveq	#8,d3
 		move.w	(sp)+,d4
 		bra.w	SlopedPlatform
@@ -154,6 +158,10 @@ See_Spikeball:
 		move.l	#Map_obj5Eb,obMap(a0)
 		move.b	#Map_obj5Eb_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_HTZ_Seesaw,0,0),obGfx(a0)
+		cmpi.b	#id_EHZ,(Current_Zone).w
+		bne.s	.art_ready
+		move.w	#make_art_tile(ArtTile_EHZ_Seesaw,0,0),obGfx(a0)
+.art_ready:
 		ori.b	#4,obRender(a0)
 		move.w	#$200,obPriority(a0)
 		move.b	#$8B,obColType(a0)

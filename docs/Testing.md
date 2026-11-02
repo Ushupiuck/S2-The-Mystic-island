@@ -419,7 +419,7 @@ pre-flower commit. Add `--core CORE --system-directory BIOS --act 1` through
 and positioned flower-cluster captures. `--player 2 --pal` covers primary Tails
 in PAL. These captures use diagnostic camera/actor positions, not a complete
 controller-only playthrough. `check_ghz_vram.py` checks loaded sprite banks
-against the flower allocation, including shortened spring art and boss banks.
+against the flower allocation, including the contiguous spring/support/spike allocation and boss banks.
 
 `check_level_pages.py` also compares the uploaded menu font pixel-for-pixel
 against independently decoded Nemesis art and checks that blank tile zero stays
@@ -999,7 +999,43 @@ playthroughs. RGB preservation alone cannot detect a preserved historical bug.
 `build_ehz_reflection_art.py --check` verifies the inverse reflection frames
 against the two original terrain spans and checks the packed terrain bank.
 The spring packer/palette check rejects per-act
-color indices in all three shared spring banks.
+color indices in the packed spring atlas. `check_ghz_vram.py` verifies the
+vertical/horizontal/diagonal/support order, adjacent spikes and all 64 act
+PLC selections. Check both colors, both diagonal directions and X flips in
+real emulation: the support must remain stationary while all three plate/coil
+poses animate. Check the linked SAT, rather than stale entries beyond its
+terminator, when counting those hardware sprites.
+
+`build_seesaw_art.py --check` verifies the full-height 62-tile S1 seesaw atlas.
+Use its optional `--source /path/to/s1disasm --check` to compare against the
+pinned original art and converted mappings. `check_ghz_vram.py` additionally
+rejects EHZ/HTZ object PLCs overlapping their actual terrain or each other,
+and checks every seesaw mapping against the loaded bank in all eight acts.
+
+```sh
+python build_tools/check_ehz_terrain.py --rom s2built.bin --listing md-main.lst --core /path/to/genesis_plus_gx_libretro.so --system-directory /path/to/mode1-fixture --output test-results/ehz-terrain
+```
+
+This runner checks real resident terrain pixels as well as tilemap words,
+excluding the named water/flower/reflection animation banks. It stages the
+otherwise-unplaced restored S-tunnel in both acts, then runs complete Sonic
+and Tails traversals on both collision paths without position/velocity repairs.
+All five platform bodies receive real landings; both terrain shapes also
+exercise all four placement flips and verify mapping tile bytes. The shared
+S1 seesaw is checked in both EHZ acts and HTZ: complete resident art, all three
+tilts, player landings and spikeball launches in both orientations. Add `--pal`
+for PAL. These are disposable gameplay fixtures, not full controller-only
+playthroughs of the authored levels.
+
+Terrain repacks must preserve every reusable authoring chunk, including those
+not placed in any era. Compare old/new chunk pixels, tile attributes and both
+collision paths; then compare every foreground/background layout cell through
+its remapped chunk ID. SMZ acts share their full foreground collection and
+exclude only the opposite background. Keep the custom Mecha floor and starter
+blocks 0..5. Run `check_y_wrap_terrain.py`, `check_mecha_sonic.py` and the plane
+streaming sweeps after repacking; a successful decode alone does not test the
+collision seam or arena. EHZ wall/platform object mappings must also follow
+the relocated terrain art.
 `build_ehz2_waterfall_art.py --check` verifies the baked PP animation and its
 water palette script. The PP importer reproduces the private terrain bank and
 source waterfall tiles from the pinned CD source documented in [Levels](Levels.md).
@@ -1021,3 +1057,6 @@ poses and three live palette phases, and save an animation. Add `--act 0`
 for Act 1: it checks the actual VRAM tile bytes against hardware CRAM through
 all four phases, so a flashing cloud reflection fails even if the CPU-side
 palette buffer looks valid. Native checks use the optional Unicorn dependency.
+The Act-2 live pass also samples the real VRAM cloud tiles against hardware
+CRAM throughout both independent palette clocks; fixed cloud pixels must not
+pulse with either waterfall or water phases.

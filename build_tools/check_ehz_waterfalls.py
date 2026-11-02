@@ -192,6 +192,23 @@ def fixed_reflections(rom,listing):
 	return {'poses':sorted(poses),'fixed_rgb_pixels':len(source)*2*4,'deferred_queue_cases':3}
 
 
+def cloud_tiles():
+	"""Return actual cloud tile/palette references from the editable PP panel."""
+	from level_layout import load
+	_, bg = load(ROOT/'level/layout/EHZ_2.kosp')
+	chunks = (ROOT/'mappings/128x128/EHZ2.unc').read_bytes()
+	blocks = (ROOT/'mappings/16x16/EHZ2.unc').read_bytes()
+	refs = set()
+	for y in range(0,192,8):
+		for x in range(0,512,8):
+			cid = bg[y//128][x//128]
+			cell = struct.unpack_from('>H',chunks,cid*128+(y//16%8*8+x//16%8)*2)[0]
+			bx, by = (x//8%2)^bool(cell&0x400), (y//8%2)^bool(cell&0x800)
+			word = struct.unpack_from('>H',blocks,(cell&1023)*8+(by*2+bx)*2)[0]
+			refs.add((word&2047,word>>13&3))
+	return sorted(refs)
+
+
 def live(args):
 	import ctypes as C
 	from import_ehz2_pp_background import tile_pixels
@@ -205,6 +222,9 @@ def live(args):
 	bank = (ROOT / 'art/uncompressed' / name).read_bytes()
 	poses = [bank[i:i+size] for i in range(0,len(bank),size)]
 	cram=(C.c_uint16*64).in_dll(g.core,'cram')
+	clouds = cloud_tiles() if args.act==1 else []
+	cloud_colors = None
+	cloud_samples = 0
 	if args.act==0:
 		original=struct.unpack('>48H',(ROOT/'palette/EHZ.bin').read_bytes())[:16]
 		source=reflection_source()
@@ -223,13 +243,23 @@ def live(args):
 		seen.add(poses.index(actual))
 		phases.add(tuple(g.read(g.s['v_palette']+i*2,2) for i in ((49,51,54) if args.act==1 else (18,19,20,21))))
 		foreground.add(tuple(cram[18:22]))
+		if clouds:
+			colors = []
+			for tile,line in clouds:
+				pixels = bytes(g.vram[(tile*32+i)^1] for i in range(32))
+				colors.extend(cram[line*16+p] for p in tile_pixels(pixels) if p)
+			if cloud_colors is None:
+				cloud_colors = colors
+			assert colors == cloud_colors, ('Visible PP clouds change color with waterfall cycle',tick)
+			cloud_samples += len(colors)
 		pictures.append(g.video.copy())
 	assert seen == set(range(len(poses))) and len(phases) == len(poses)
 	assert len(foreground)==4,('Foreground waterfall is frozen',args.act,foreground)
 	pictures[0].save(args.output / f'EHZ{args.act+1}-waterfalls.webp', save_all=True,
 					append_images=pictures[1:],duration=17,loop=0,lossless=True)
 	g.close()
-	return {'frames':90,'tile_poses':sorted(seen),'palette_phases':len(phases),'foreground_phases':len(foreground)}
+	return {'frames':90,'tile_poses':sorted(seen),'palette_phases':len(phases),
+		'foreground_phases':len(foreground),'fixed_cloud_color_samples':cloud_samples}
 
 
 def main():

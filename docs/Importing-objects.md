@@ -69,10 +69,10 @@ capsule. Origin deltas at `$44/$46` also support the existing MZ placeholder.
 
 | Bytes, end exclusive | Art and current constant |
 | --- | --- |
-| `$7400-$8000` | Ship, `ArtTile_ArtNem_Eggpod_1`, 96 tiles |
-| `$8000-$9000` | Car/wheels/drill, `ArtTile_ArtNem_EHZBoss`, 128 tiles |
-| `$9000-$9280` | Propeller, `ArtTile_ArtNem_EggChoppers`, 20 tiles |
-| `$94E0-$9F80` | Capsule, `ArtTile_Prison_Capsule`, 85 tiles; loaded at defeat |
+| `$7E00-$8A00` | Ship, `ArtTile_ArtNem_Eggpod_1`, 96 tiles |
+| `$8A00-$9A00` | Car/wheels/drill, `ArtTile_ArtNem_EHZBoss`, 128 tiles |
+| `$9A00-$9C80` | Propeller, `ArtTile_ArtNem_EggChoppers`, 20 tiles |
+| `$9C80-$A720` | Capsule, `ArtTile_Prison_Capsule`, 85 tiles; loaded at defeat |
 | `$B020-$BCA0` | Shared S2 fiery boss explosion, `ArtTile_BossExplosion`, 100 tiles |
 
 Boss/capsule phases replace general object art. They preserve both shield

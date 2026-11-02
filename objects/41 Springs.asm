@@ -1,4 +1,5 @@
 ; Straight/diagonal springs: S3&K mappings, shared two-player contact dispatch.
+; One packed V/H/diagonal bank; the static support is a separate shared piece.
 ; Cap pixels are shared: red uses line 1, yellow selects line 2 per piece.
 ; One contact dispatcher handles both characters in all five orientations.
 ; Launch strengths/subtype flips and collision paths follow S3&K's model.
@@ -52,7 +53,7 @@ Obj41_Init:
 		addq.b	#2,obRoutine(a0)	; goto Up
 		move.l #Map_obj41,obMap(a0)
 		move.b #Map_obj41_height,height_pixels(a0)
-		move.w #make_art_tile(ArtTile_Spring_Vertical,0,0),obGfx(a0)
+		move.w #make_art_tile(ArtTile_Springs,0,0),obGfx(a0)
 
 loc_E22A:
 		ori.b	#4,obRender(a0)
@@ -76,7 +77,6 @@ Obj41_Init_Horizontal:
 		move.b	#4,obRoutine(a0)	; goto Horizontal
 		move.b	#2,obAnim(a0)
 		move.b	#3,obFrame(a0)
-		move.w #make_art_tile(ArtTile_Spring_Horizontal,0,0),obGfx(a0)
 
 loc_E27C:
 		move.b	#sprite_bound(8,sprite_bound(Map_obj41_GHZ_width,sprite_bound(Map_obj41_width,Map_obj41a_width))),obActWid(a0)
@@ -94,7 +94,6 @@ Obj41_Init_DiagUp:
 		move.b	#8,obRoutine(a0)	; goto DiagonallyUp
 		move.b	#4,obAnim(a0)
 		move.b	#7,obFrame(a0)
-		move.w	#make_art_tile(ArtTile_Spring_Diagonal,0,0),obGfx(a0)
 		bra.s	Obj41_Init_Common
 ; ===========================================================================
 ; loc_E2B2:
@@ -102,7 +101,6 @@ Obj41_Init_DiagDown:
 		move.b	#$A,obRoutine(a0)	; goto DiagonallyDown
 		move.b	#4,obAnim(a0)
 		move.b	#$A,obFrame(a0)
-		move.w	#make_art_tile(ArtTile_Spring_Diagonal,0,0),obGfx(a0)
 		bset	#1,obStatus(a0)
 ; loc_E2D0:
 Obj41_Init_Common:

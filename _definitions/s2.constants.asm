@@ -1639,11 +1639,14 @@ boss_fz_end:	equ boss_fz_x+$2B0
 ; Tile VRAM Locations
 
 ; Universal level sprites; zone/boss PLCs may replace inactive banks.
-ArtTile_Spring_Diagonal:	equ $4DD	; 18 tiles in a 28-tile reservation; GHZ Chopper borrows it
-ArtTile_Spring_Vertical:	equ ArtTile_Spring_Diagonal+$1C ; 12 tiles in a 16-tile reservation
-ArtTile_Spring_Horizontal:	equ ArtTile_Spring_Vertical+$10 ; 12 tiles in a 16-tile reservation
-ArtTile_Spikes: equ $519 ; 16 tiles
-ArtTile_Monitor:		equ ArtTile_Spikes+$10 ; 60 tiles; final four retain Tails's life icon
+ArtTile_Springs:		equ $4DD
+ArtTile_Spring_Vertical:	equ ArtTile_Springs	; 12 tiles
+ArtTile_Spring_Horizontal:	equ ArtTile_Spring_Vertical+12 ; 12 tiles
+ArtTile_Spring_Diagonal:	equ ArtTile_Spring_Horizontal+12 ; 18 tiles
+ArtTile_Spring_Support:	equ ArtTile_Spring_Diagonal+18 ; 4 shared static tiles
+ArtTile_Springs_End:	equ ArtTile_Spring_Support+4
+ArtTile_Spikes:		equ ArtTile_Springs_End ; 16 tiles, immediately after support
+ArtTile_Monitor:		equ $529 ; 60 tiles; final four retain Tails's life icon
 ArtTile_Tails_Life:	equ ArtTile_Monitor+$38
 ArtTile_Lamppost:	equ ArtTile_Monitor+$3C ; 10 tiles; ends at $AD9F
 
@@ -1659,10 +1662,8 @@ ArtTile_Crabmeat:		equ ArtTile_Buzz_Bomber+$37
 ArtTile_Moto_Bug:		equ ArtTile_Crabmeat+$44
 ArtTile_Ball_HogV:		equ ArtTile_Moto_Bug+$1D
 ArtTile_Ball_HogH:		equ ArtTile_Ball_HogV+$18
-ArtTile_Newtron:		equ ArtTile_Ball_HogH+$2F ; 85 tiles, including tail and exhaust
-ArtTile_Chopper:		equ ArtTile_Newtron+$55 ; 32 tiles; GHZ has no diagonal springs
-ArtTile_S1_Spring_Vertical:	equ ArtTile_Spring_Vertical ; 16 tiles
-ArtTile_S1_Spring_Horizontal:	equ ArtTile_Spring_Horizontal
+ArtTile_Newtron:		equ ArtTile_Moto_Bug+$1D ; 85 tiles, including tail and exhaust
+ArtTile_Chopper:		equ ArtTile_Newtron+$55 ; 32 tiles; clear of all spring orientations
 ArtTile_Wheel:			equ $4BC ; LV0A carrier bank; absent from SMZ
 ArtTile_SMZ_BallHog: equ ArtTile_SMZ_Atlas
 ArtTile_SMZ_Junction: equ ArtTile_SMZ_Atlas
@@ -1824,7 +1825,7 @@ ArtTile_Eggman_Exhaust:		equ ArtTile_Eggman_Weapons+$2A ; 17 tiles, after 42 wea
 ; End of Level
 ArtTile_Giant_Ring:		equ $400
 ArtTile_Giant_Ring_Flash:	equ $462
-ArtTile_Prison_Capsule:		equ $4A7	; immediately after Eggman's exhaust
+ArtTile_Prison_Capsule:		equ $4E4	; clear of the EHZ boss's packed vehicle banks
 ArtTile_Hidden_Points:		equ ArtTile_Signpost+$1A ; 28 tiles after the signpost DPLC bank; below Tails's life icon
 ArtTile_Warp:			equ $541
 ArtTile_Mini_Tails:		equ $535
@@ -1897,6 +1898,11 @@ ArtTile_Error_Handler_Font:	equ $7C0
 
 ; EHZ, HTZ
 ArtTile_Checkers:		equ ArtTile_Level+$7D
+ArtTile_EHZ_Windows:		equ $26E	; five window/filler tiles after the twisting path
+ArtTile_EHZ_STunnel:		equ $273	; 107 S-tunnel tiles
+ArtTile_EHZ_Platform:		equ $2DE	; 64 platform tiles, shared positions in both acts
+ArtTile_EHZ_Smashable_Wall:	equ $31E	; 16 wall tiles
+ArtTile_EHZ_Common_End:		equ $32E
 ArtTile_Art_Flowers1:		equ $394
 ArtTile_Art_Flowers2:		equ $396
 ArtTile_Art_Flowers3:		equ $398
@@ -1927,19 +1933,20 @@ ArtTile_HPZ_Emerald:		equ $392
 
 ; EHZ
 ArtTile_Art_EHZPulseBall:	equ $39C
-ArtTile_Fireball:		equ $39E
-ArtTile_Waterfall:		equ $3AE
-ArtTile_EHZ_Bridge:		equ $3C6
-ArtTile_Buzzer:			equ $3E6
+ArtTile_Fireball:		equ $3F0
+ArtTile_Waterfall:		equ $400
+ArtTile_EHZ_Bridge:		equ $418
+ArtTile_Buzzer:			equ $420
 ArtTile_Buzzer_Fireball:	equ $3BE	; Actually unused
-ArtTile_Snail:			equ $402
-ArtTile_Masher:			equ $41C
+ArtTile_Snail:			equ $43C
+ArtTile_Masher:			equ $456
+ArtTile_EHZ_Seesaw:		equ $46C	; 62 tiles; ends at $4AA, below springs
 ArtTile_Art_EHZMountains:	equ $500
 
 ; EHZ boss
-ArtTile_ArtNem_Eggpod_1:	equ $3A0
-ArtTile_ArtNem_EHZBoss:		equ $400
-ArtTile_ArtNem_EggChoppers:	equ $480
+ArtTile_ArtNem_Eggpod_1:	equ $3F0
+ArtTile_ArtNem_EHZBoss:		equ $450
+ArtTile_ArtNem_EggChoppers:	equ $4D0
 ArtTile_BossExplosion:	equ $581	; 100 S2 tiles; replaced by animals/normal explosions after escape
 ArtTile_ExplosionWall_Small:	equ ArtTile_Eggman ; 94 normal/fiery tiles replace inactive ship art during the wall
 
@@ -1951,10 +1958,11 @@ ArtTile_Splats:			equ $418	; 29 tiles; independent of the streamed water surface
 ArtTile_BBat:			equ ArtTile_Bubbles+$38 ; 58 tiles after bubbles, below common level sprites
 
 ; HTZ
+ArtTile_HTZ_LegacyFireball:	equ $39E	; retained legacy fireball bank
 ArtTile_Rexon:			equ $37E
 ArtTile_HTZ_Fireball:		equ $3AE
 ArtTile_HTZ_AutomaticDoor:	equ $3BE
-ArtTile_HTZ_Seesaw:		equ $3CE
+ArtTile_HTZ_Seesaw:		equ $420	; 62 tiles, after the shared bridge; ends at $45E
 ArtTile_Sol:			equ $3DE
 ArtTile_HtzZipline:		equ $3E6
 ArtTile_HtzValveBarrier:	equ $426

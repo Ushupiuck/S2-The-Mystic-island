@@ -160,10 +160,12 @@ is not a source of free level VRAM.
 | Bytes, end exclusive | Tile base | Use |
 | --- | --- | --- |
 | `$0020-$0220` | `$001` | Streamed water surface: 16 tiles immediately after transparent tile zero |
-| `$9BA0-$9DE0` | `$4DD` | Diagonal springs, 18 tiles; GHZ reuses this space for Chopper |
-| `$9F20-$A0A0` | `$4F9` | Vertical springs, 12 tiles |
-| `$A120-$A2A0` | `$509` | Horizontal springs, 12 tiles |
-| `$A320-$A520` | `$519` | Floor/side spikes, 16 tiles |
+| `$9BA0-$9D20` | `$4DD` | Vertical springs, 12 tiles |
+| `$9D20-$9EA0` | `$4E9` | Horizontal springs, 12 tiles |
+| `$9EA0-$A0E0` | `$4F5` | Diagonal springs, 18 tiles |
+| `$A0E0-$A160` | `$507` | Shared static spring support, four tiles |
+| `$A160-$A360` | `$50B` | Floor/side spikes, 16 tiles |
+| `$A360-$A520` | `$51B` | Free after packing springs and adding the support, 14 tiles |
 | `$A520-$ACA0` | `$529` | Monitor/signpost bank, 60 tiles |
 | `$ACA0-$ADE0` | `$565` | Checkpoint, 10 tiles |
 | `$ADE0-$B020` | `$56F` | Auxiliary shield, 18 tiles |
@@ -198,8 +200,8 @@ are free. Boss/capsule loading deliberately replaces general object art;
 see [the EHZ example](Importing-objects.md#arena-and-art-lifetime).
 
 GHZ packs its bridge/scenery/badnik art after its terrain. Newtron uses one
-complete 85-tile bank; Chopper starts at `$4D9` and occupies the diagonal-spring
-space. Adding diagonal springs to GHZ needs a new allocation. Wall caps reuse
+complete 85-tile bank at `$43D-$491`; Chopper follows at `$492-$4B1`. They
+use the former Ballhog reservation, clear of the shared spring atlas. Wall caps reuse
 terrain tile `$D1`. HPZ keeps `ArtTile_Splats = $418`, resident bubbles at
 `$45C-$493`, and BBat at `$494-$4CD` (bytes `$9280-$99C0`), below the spring bank.
 Use the actual PLCs/constants for other zone banks, not an older address table.
@@ -438,7 +440,7 @@ conversion is performed. Keep every compressed archive followed by `even`.
 The EHZ boss's palette candidate remains separate from the accepted assets;
 see [its review status](Importing-objects.md#ehz-boss-palette-candidate).
 
-The EHZ waterfall object keeps its 24-tile bank at `$3AE-$3C5` and all six
+The EHZ waterfall object keeps its 24-tile bank at `$400-$417` and all six
 mapping frames. Its editable `art/uncompressed/EHZ Waterfall.unc` uses P1
 indices `2-5` for the four cyans and `6` for white. Run
 `python build_tools/build_ehz_waterfall_art.py` to pack it. Waterfalls use
@@ -448,15 +450,42 @@ offscreen pieces before they consume SAT entries. The mappings themselves remain
 Springs retain S3&K mechanisms/geometry, with Sonic CD straight caps from
 scddisasm `f8cf3f0af7bf419d18182ba98554f09307ad3cc6` (normal spring tiles 0–3
 and 18–21). Both colors share the cap tiles, selecting a palette per piece.
-The editable `* spring S3.unc` files now contain 12 vertical, 12 horizontal
-and 18 diagonal tiles; `build_spring_art.py` packs them. All three cap shapes
-use the shared red/yellow ramp `D-F` with white at `6`: `D` is brightest, `E`
-is the middle shade and `F` is darkest. Gray `7-9` belongs only to their metal
-mechanisms. The diagonal cap's first ten tiles include blank
-tile `7`, the empty lower-left corner of its final 16x16 sprite piece. Removing
-it would require an extra sprite piece for the remaining three quadrants.
-Their VRAM bases stay fixed; the 18 released slots remain gaps rather than
-new global allocations.
+The editable `art/uncompressed/Springs.unc` is one contiguous atlas: 12 vertical,
+12 horizontal and 18 diagonal tiles, then four static support tiles.
+`build_spring_art.py` packs it as `Springs.nem`; all act PLCs load that single
+archive at `ArtTile_Springs`. Runtime objects, Debug and SonLVL use the same
+base, with orientation offsets in the existing mapping family. Spikes start
+immediately after the support. Monitors keep their existing `$529` base.
+All three cap shapes use the shared red/yellow ramp `D-F` with white at `6`:
+`D` is brightest, `E` is the middle shade and `F` is darkest. Gray `7-9` belongs
+to their metal mechanisms. The diagonal cap's local tile `7` remains the
+empty lower-left corner of its final 16x16 sprite piece; deleting it would
+require another hardware sprite for the three remaining quadrants.
+
+The support uses diagonal Sonic CD tiles `1,0,blank,2` in one column-major
+16x16 sprite. Its black/white/gray indices already match the shared player
+row. Every diagonal pose adds this independent, static VDP piece behind the
+moving plate/coil; both colors and all flips reuse the same four resident
+tiles. It has no duplicate pose art and needs no extra object slot. The empty
+corner is part of that rectangular sprite, not padding between art banks.
+
+The shared seesaw uses Sonic 1's full-height artwork from s1disasm
+`2c51d46a0b0682133834db2093292d41da872ecf`: 44 plank tiles followed by both
+nine-tile spikeball frames. `art/uncompressed/Seesaw.unc` is the editable
+62-tile atlas; `build_seesaw_art.py` packs `Seesaw.nem`. Its optional `--source`
+import also converts the two original S1 mapping families. Ordinary builds
+do not overwrite the editable art/mappings. `--check` verifies the packed copy.
+There are no interleaved two-player rows. The plank's original blue indices
+`2-5` deliberately use the orange/skin ramp, including its central ball.
+White/grays remain at `6-9`; the spikeball's skin/red pixels use the shared
+skin and `D-F` red slots. All pieces use the primary player palette.
+
+Plank mappings are translated down 16 pixels to retain the existing object's
+collision origin and spikeball offsets. The physical slope remains 96 pixels
+wide; its width is independent of the original art's three-pixel overhang.
+The complete atlas occupies EHZ `$46C-$4A9` or HTZ `$420-$45D`, clear of terrain,
+the HTZ lift and bridge, and the common spring bank. Every act PLC, Debug and
+SonLVL consumer selects the corresponding bank and full-height mappings.
 
 `build_special_results_art.py` builds the independent navy/white/gold results
 palette, seven four-tile emeralds at tiles `$500-$51B` on lines three/four, and the

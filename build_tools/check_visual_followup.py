@@ -66,8 +66,11 @@ smoke = (ROOT/'art/uncompressed/SMZ Smoke.bin').read_bytes()
 smoke_frames = [smoke[i:i+384] for i in range(0,len(smoke),384)]
 assert len(smoke_frames) == 8 and smoke_frames[-1] == bytes(384)
 seen = [set(), set()]
-protected = [(g.s['ArtTile_SMZ_Atlas']*32, (ROOT/'art/uncompressed/SMZ Sprite Atlas.unc').read_bytes()),
-             (g.s['ArtTile_Spring_Diagonal']*32, vram(g.s['ArtTile_Spring_Diagonal']*32, 60*32))]
+protected = [
+	(g.s['ArtTile_SMZ_Atlas']*32, (ROOT/'art/uncompressed/SMZ Sprite Atlas.unc').read_bytes()),
+	(g.s['ArtTile_Springs']*32, vram(g.s['ArtTile_Springs']*32,
+		(g.s['ArtTile_Springs_End']-g.s['ArtTile_Springs'])*32)),
+]
 for tick in range(800):
     g.run()
     assert not g.read('v_errortype')

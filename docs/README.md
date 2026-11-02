@@ -68,6 +68,10 @@ foreground waterfall, PP background animation and reflection work. Both-player
 tunnel effects and Mecha's floor/facing fixes are in
 [Players and effects](Players-and-effects.md) and
 [Mecha Sonic](Sprites-and-VRAM.md#mecha-sonic-standard-fight).
+EHZ and both SMZ acts retain their reusable foreground authoring collections;
+see [Levels](Levels.md). The common [spring atlas](Sprites-and-VRAM.md#palette-adaptation)
+is packed vertical/horizontal/diagonal/support, with spikes immediately after it.
+The same guide records the shared full-height S1 seesaw and spikeball atlas.
 Next, return to [EHZ1/EHZ2 palette-space consolidation](Levels.md#emerald-hill-act-2-palmtree-panic-experiment).
 The earlier cross-act greens preview was not applied to Act 1. The remaining
 boss gray decision and its isolated WIP checkpoint are

@@ -476,7 +476,8 @@ namespace MysticIsland.ObjectDefinitions
 				case "Newtron": return subtype == 0 ? At(frames, 3) : At(alternate, 1);
 				case "Capsule": return At(frames, subtype == 0 ? 1 : 3);
 				case "Collapse":
-				case "BreakableWall": return At(frames, subtype);
+					return At(frames, subtype);
+				case "BreakableWall": return At(frames, subtype + int.Parse(Setting("framebase", "0")));
 				case "Bonus": return At(frames, subtype);
 				case "EdgeWall":
 					pieces = new List<Sprite>();

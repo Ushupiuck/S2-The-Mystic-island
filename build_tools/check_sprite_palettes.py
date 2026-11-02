@@ -45,14 +45,14 @@ def main():
 			cap = pi == 0 if fi < 7 else pi < 3
 			assert r[:2]+r[3:] == y[:2]+y[3:]
 			assert y[2] == r[2] | (0x2000 if cap else 0), (fi,pi)
-			count = 12 if fi < 7 else 18
-			assert (r[2]&2047)+((r[1]>>2)+1)*((r[1]&3)+1) <= count
-	for name, count in (('Vertical',12),('Horizontal',12),('Diagonal',18)):
-		raw = (ROOT/f'art/uncompressed/{name} spring S3.unc').read_bytes()
-		assert len(raw) == count*32
-		assert nemesis((ROOT/f'art/nemesis/{name} spring.nem').read_bytes()) == raw
-		colors = {c for byte in raw for c in (byte >> 4, byte & 15)}
-		assert colors <= {0,1,6,7,8,9,13,14,15}, (name,'spring borrows per-act colors',colors)
+			assert (r[2]&2047)+((r[1]>>2)+1)*((r[1]&3)+1) <= 46
+		if fi >= 7:
+			assert red[-1] == yellow[-1] == (-16 if fi == 10 else 0,5,42|(0x1000 if fi == 10 else 0),-16)
+	raw = (ROOT/'art/uncompressed/Springs.unc').read_bytes()
+	assert len(raw) == 46*32
+	assert nemesis((ROOT/'art/nemesis/Springs.nem').read_bytes()) == raw
+	colors = {c for byte in raw for c in (byte >> 4, byte & 15)}
+	assert colors <= {0,1,6,7,8,9,13,14,15}, ('spring borrows per-act colors',colors)
 	results = struct.unpack('>64H',(ROOT/'palette/Special Stage Results.bin').read_bytes())
 	assert results[1:16] == struct.unpack('>16H',player)[1:]
 	assert results[29:32] == (0x0EE,0x088,0x044)
@@ -63,7 +63,7 @@ def main():
 	assert [row[0][2]>>13&3 for row in gems[:6]] == [2,2,2,3,3,3]
 	assert len(nemesis((ROOT/'art/nemesis/Results emeralds.nem').read_bytes())) == 28*32
 	checks = dict(shared_level_rows=len(names),spring_frames=len(springs[0]),
-				  spring_tiles=42,results_emeralds=7)
+				  spring_tiles=46,results_emeralds=7)
 	if args.reference:
 		@lru_cache(None)
 		def read(path, prior=False):

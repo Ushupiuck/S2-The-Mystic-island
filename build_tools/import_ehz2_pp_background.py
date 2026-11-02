@@ -3,8 +3,8 @@
 
 Source: sonicretro/scddisasm f8cf3f0af7bf419d18182ba98554f09307ad3cc6.
 Uses the final upright 512x512 panel (source Y $600), excluding the mirrored
-ramp scenery. Foreground tile/block/chunk IDs remain stable for terrain-using
-objects. Background-only slots are recycled, and unused trailing slots removed.
+ramp scenery. Retains the complete shared terrain and authored chunk table,
+including unplaced tunnels and walls. PP tiles/chunks follow the shared bank.
 Regeneration deliberately overwrites the independent EHZ2 editable outputs.
 """
 from pathlib import Path
@@ -105,10 +105,11 @@ def build(source, output):
 		assert match, 'Expected literal art allocation '+name
 		return int(match[1],16)
 	level_base = allocation('ArtTile_Level')
-	static_end = allocation('ArtTile_Art_Flowers1')
+	static_end = allocation('ArtTile_Fireball')
+	flower_base = allocation('ArtTile_Art_Flowers1')
 	waterfall_base = allocation('ArtTile_EHZ2_BGWaterfall')
 	waterfall_count = allocation('ArtTile_EHZ2_BGWaterfall_Count')
-	assert level_base == 0 and static_end == 0x394, 'Review terrain/animation allocation before regenerating'
+	assert level_base == 0 and flower_base == 0x394, 'Review terrain/animation allocation before regenerating'
 	assert waterfall_base + waterfall_count <= static_end
 	data = source/'src/Level/Palmtree Panic/Data'
 	pp_art = nemesis((data/'Tiles (Act 1 Present).nem').read_bytes())
@@ -125,7 +126,10 @@ def build(source, output):
 	fg_chunks = {v for plane in layouts.values() for row in plane for v in row}
 	fg_blocks = set(range(6)) | {v & 1023 for cid in fg_chunks for v in chunks[cid]}
 	fg_words = {w for bid in fg_blocks for w in blocks[bid]}
-	keep_tiles = set(range(17)) | {w & 2047 for w in fg_words if (w & 2047)*32 < len(art)}
+	keep_tiles = set(range(len(art)//32))
+	common_blocks = {w & 1023 for row in chunks for w in row}
+	era_names = ('present','past','good Future','bad future')
+	common_collision = {(era): (ROOT/f'collision/{era}/EHZ1.bin').read_bytes() for era in era_names}
 	# Obj18 uses terrain pixels with fixed IDs and palette line 2.
 	platform_tiles = set()
 	for frame in frames((ROOT/'mappings/sprite/18 - EHZ platform mappings.bin').read_bytes()):
@@ -138,7 +142,7 @@ def build(source, output):
 	green_lookup = list(range(16))
 	green_lookup[10], green_lookup[11] = 13, 12
 	owners = {}
-	for w in fg_words:
+	for w in (w for row in blocks for w in row):
 		owners.setdefault(w & 2047, set()).add(w >> 13 & 3)
 	for tid in platform_tiles:
 		owners.setdefault(tid, set()).add(2)
@@ -165,7 +169,9 @@ def build(source, output):
 	# Background waterfalls now keep their cliff browns on P2 and animate tiles.
 	# P3 1/3/6 cycle; 2/4/5 hold fixed water blues. The flower ramp stays 7-F.
 	# Other foreground/object colors and all palette indices remain fixed.
-	additions = {10:0xEEC, 11:0xEC8,
+	# Merge the almost-white EEC cloud highlight into fixed white. Its freed
+	# slot holds E86, so dark cloud pixels do not borrow the waterfall cycle.
+	additions = {10:0xE86, 11:0xEC8,
 					16+8:0x0A6, 16+10:0xEEA, 16+11:0xCC6, 16+13:0x064,
 					32+1:0xEEA, 32+2:0xE64, 32+3:0xCC6, 32+4:0xEC8, 32+5:0xE86}
 	used = set()
@@ -201,18 +207,20 @@ def build(source, output):
 	for i,value in additions.items(): palette[i] = value
 	for i in (0,16,32): palette[i] = 0xA00  # PP sky backdrop; pixel zero remains transparent.
 	(ROOT/'palette/EHZ2 PP.bin').write_bytes(struct.pack('>48H',*palette))
-	tiles = [art[i*32:(i+1)*32] if i in keep_tiles else bytes(32) for i in range(len(art)//32)]
+	tiles = [art[i*32:(i+1)*32] for i in range(len(art)//32)]
 	tile_ids = {tile:i for i,tile in enumerate(tiles) if i in keep_tiles}
 	tile_ids[bytes(32)] = 0
-	block_data = [row if i in fg_blocks else [0]*4 for i,row in enumerate(blocks)]
-	block_ids = {tuple(row):i for i,row in enumerate(block_data) if i in fg_blocks}
-	chunk_data = [row if i in fg_chunks else [0]*64 for i,row in enumerate(chunks)]
-	chunk_ids = {tuple(row):i for i,row in enumerate(chunk_data) if i in fg_chunks}
-	reserved_tiles = set(range(waterfall_base, waterfall_base + waterfall_count))
-	free_tiles = iter(i for i in range(17,static_end) if i not in keep_tiles | reserved_tiles)
-	free_blocks = iter(i for i in range(6,768) if i not in fg_blocks)
-	free_chunks = iter(i for i in range(1,1024) if i not in fg_chunks)
-	assigned_tiles, assigned_blocks, assigned_chunks = set(keep_tiles),set(fg_blocks),set(fg_chunks)
+	block_data = [row.copy() for row in blocks]
+	block_ids = {tuple(row):i for i,row in enumerate(block_data)}
+	block_ids[(0,0,0,0)] = 0
+	chunk_data = [row.copy() for row in chunks]
+	chunk_ids = {tuple(row):i for i,row in enumerate(chunk_data)}
+	reserved_tiles = set(range(waterfall_base, waterfall_base + waterfall_count)) | set(range(flower_base,flower_base+10))
+	free_tiles = iter(i for i in range(len(tiles),static_end) if i not in reserved_tiles)
+	free_blocks = iter(i for i,row in enumerate(blocks) if not any(row) and i not in common_blocks
+		and all(not any(data[i*2:i*2+2]) for data in common_collision.values()))
+	free_chunks = iter(range(len(chunks),1024))
+	assigned_tiles, assigned_blocks, assigned_chunks = set(keep_tiles),set(range(len(blocks))),set(range(len(chunks)))
 	errors = Counter(); tile_cache = {}
 	waterfall_tiles, waterfall_ids = [], {}
 	def add(rows, index, value, free, assigned):
@@ -254,7 +262,8 @@ def build(source, output):
 			assert counts.keys() <= lookup.keys(), counts
 			candidates.append((0, 2, lookup))
 		for line in (() if water else range(3)):
-			slots = [i for i in range(1,16) if line != 2 or i not in (1,3,6)]
+			cycling = ({2,3,4,5},set(),{1,3,6})[line]
+			slots = [i for i in range(1,16) if i not in cycling]
 			lookup = {v:min(slots,key=lambda i:distance(pp_palette[v],palette[line*16+i])) for v in counts}
 			error = sum(counts[v]*distance(pp_palette[v],palette[line*16+lookup[v]]) for v in counts)
 			candidates.append((error,line,lookup))
@@ -292,20 +301,30 @@ def build(source, output):
 		tiles.append(bytes(32))
 	for i in range(waterfall_count):
 		tiles[waterfall_base + i] = first_frame[i * 32:(i + 1) * 32]
+	while len(tiles) < flower_base + 10:
+		tiles.append(bytes(32))
+	for i,name in enumerate(('EHZ flowers - 1.bin','EHZ flowers - 2.bin','EHZ flowers - 3.bin','EHZ flowers - 4.bin','EHZ Pulse Ball.bin')):
+		frame = (ROOT/'art/uncompressed'/name).read_bytes()[:64]
+		tiles[flower_base+i*2:flower_base+i*2+2] = [frame[:32],frame[32:]]
 	assigned_tiles |= reserved_tiles
-	# Only retained or newly assigned slots remain in each private bank.
+	# Preserve authored definitions, with new PP content in safe blank slots or appended banks.
 	tiles = tiles[:max(assigned_tiles)+1];block_data=block_data[:max(assigned_blocks)+1];chunk_data=chunk_data[:max(assigned_chunks)+1]
 	assert all(tiles[i] == art[i*32:(i+1)*32] for i in keep_tiles)
 	assert all(list(block_data[i]) == blocks[i] for i in fg_blocks)
-	assert all(list(chunk_data[i]) == chunks[i] for i in fg_chunks)
+	assert all(list(block_data[i]) == blocks[i] for i,row in enumerate(blocks) if any(row) or i in common_blocks)
+	assert all(list(chunk_data[i]) == row for i,row in enumerate(chunks))
 	write_asset('art/kosinski/level/8x8 - EHZ2',b''.join(tiles))
 	write_asset('mappings/16x16/EHZ2',encode_words(block_data))
 	write_asset('mappings/128x128/EHZ2',encode_words(chunk_data))
 	for path,fg in layouts.items(): save(path,fg,bg)
-	for era in ('present','past','good Future','bad future'):
+	for era in era_names:
 		path=ROOT/f'collision/{era}/EHZ2.bin';original=path.read_bytes()
-		path.write_bytes(b''.join(original[i*2:i*2+2] if i in fg_blocks else bytes(2) for i in range(len(block_data))))
-	result=dict(source_revision=SOURCE_REVISION,source_crop=[0,CROP_Y,512,512],tiles=len(tiles),blocks=len(block_data),chunks=len(chunk_data),background_dimensions=[4,4],foreground_and_platform_tile_ids_preserved=True,foreground_green_merges={'060':'064','080':'0A0'},background_waterfall_tiles=waterfall_count,background_waterfall_frames=3,hud_palette_slots_preserved=sorted(hud_colors-{0}),foreground_palette_blends=[dict(index=index+16,original=original_pal[index],pp=target,result=palette[index]) for index,target in blend_targets.items()],unique_tile_pixel_error_histogram=dict(sorted(errors.items())))
+		indices=bytearray(common_collision[era])
+		indices.extend(bytes(max(0,len(block_data)*2-len(indices))))
+		for i in fg_blocks:
+			if i*2+2<=len(original): indices[i*2:i*2+2]=original[i*2:i*2+2]
+		path.write_bytes(indices)
+	result=dict(source_revision=SOURCE_REVISION,source_crop=[0,CROP_Y,512,512],tiles=len(tiles),blocks=len(block_data),chunks=len(chunk_data),background_dimensions=[4,4],foreground_and_platform_tile_ids_preserved=True,shared_authored_chunks_preserved=len(chunks),foreground_green_merges={'060':'064','080':'0A0'},background_waterfall_tiles=waterfall_count,background_waterfall_frames=3,hud_palette_slots_preserved=sorted(hud_colors-{0}),foreground_palette_blends=[dict(index=index+16,original=original_pal[index],pp=target,result=palette[index]) for index,target in blend_targets.items()],unique_tile_pixel_error_histogram=dict(sorted(errors.items())))
 	output.parent.mkdir(parents=True,exist_ok=True);output.write_text(json.dumps(result,indent=2)+'\n')
 	print(json.dumps(result,indent=2))
 

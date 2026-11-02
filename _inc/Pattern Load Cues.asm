@@ -398,8 +398,7 @@ PLC_GHZ1_Main:		dc.w (PLC_GHZ1_Main_End-PLC_GHZ1_Main-2)/6-1
 PLC_GHZ1_Main_End:	plccheck PLC_GHZ1_Main,ActPLC_Main_Reserve
 
 PLC_GHZ1_Extra:		dc.w (PLC_GHZ1_Extra_End-PLC_GHZ1_Extra-2)/6-1
-		plcm	Nem_HSpring2,	ArtTile_S1_Spring_Horizontal
-		plcm	Nem_VSpring2,	ArtTile_S1_Spring_Vertical
+		plcm	Nem_Springs,	ArtTile_Springs
 		plcm	Nem_GHZ_BWall,	ArtTile_GHZ_SLZ_Smashable_Wall
 		plcm	Nem_GHZ_SWall,	ArtTile_GHZ_Edge_Wall
 PLC_GHZ1_Extra_End:	plccheck PLC_GHZ1_Extra,0
@@ -416,8 +415,7 @@ PLC_GHZ2_Main:		dc.w (PLC_GHZ2_Main_End-PLC_GHZ2_Main-2)/6-1
 PLC_GHZ2_Main_End:	plccheck PLC_GHZ2_Main,ActPLC_Main_Reserve
 
 PLC_GHZ2_Extra:		dc.w (PLC_GHZ2_Extra_End-PLC_GHZ2_Extra-2)/6-1
-		plcm	Nem_HSpring2,	ArtTile_S1_Spring_Horizontal
-		plcm	Nem_VSpring2,	ArtTile_S1_Spring_Vertical
+		plcm	Nem_Springs,	ArtTile_Springs
 		plcm	Nem_GHZ_BWall,	ArtTile_GHZ_SLZ_Smashable_Wall
 		plcm	Nem_GHZ_SWall,	ArtTile_GHZ_Edge_Wall
 PLC_GHZ2_Extra_End:	plccheck PLC_GHZ2_Extra,0
@@ -434,8 +432,7 @@ PLC_GHZ3_Main:		dc.w (PLC_GHZ3_Main_End-PLC_GHZ3_Main-2)/6-1
 PLC_GHZ3_Main_End:	plccheck PLC_GHZ3_Main,ActPLC_Main_Reserve
 
 PLC_GHZ3_Extra:		dc.w (PLC_GHZ3_Extra_End-PLC_GHZ3_Extra-2)/6-1
-		plcm	Nem_HSpring2,	ArtTile_S1_Spring_Horizontal
-		plcm	Nem_VSpring2,	ArtTile_S1_Spring_Vertical
+		plcm	Nem_Springs,	ArtTile_Springs
 		plcm	Nem_GHZ_BWall,	ArtTile_GHZ_SLZ_Smashable_Wall
 		plcm	Nem_GHZ_SWall,	ArtTile_GHZ_Edge_Wall
 PLC_GHZ3_Extra_End:	plccheck PLC_GHZ3_Extra,0
@@ -451,8 +448,7 @@ PLC_GHZ4_Main:		dc.w (PLC_GHZ4_Main_End-PLC_GHZ4_Main-2)/6-1
 PLC_GHZ4_Main_End:	plccheck PLC_GHZ4_Main,ActPLC_Main_Reserve
 
 PLC_GHZ4_Extra:		dc.w (PLC_GHZ4_Extra_End-PLC_GHZ4_Extra-2)/6-1
-		plcm	Nem_HSpring2,	ArtTile_S1_Spring_Horizontal
-		plcm	Nem_VSpring2,	ArtTile_S1_Spring_Vertical
+		plcm	Nem_Springs,	ArtTile_Springs
 		plcm	Nem_HangingSurface,	ArtTile_HangingSurface
 PLC_GHZ4_Extra_End:	plccheck PLC_GHZ4_Extra,0
 
@@ -466,9 +462,7 @@ PLC_LZ1_Main:		dc.w (PLC_LZ1_Main_End-PLC_LZ1_Main-2)/6-1
 PLC_LZ1_Main_End:	plccheck PLC_LZ1_Main,ActPLC_Main_Reserve
 
 PLC_LZ1_Extra:		dc.w (PLC_LZ1_Extra_End-PLC_LZ1_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 		plcm	Nem_HangingSurface,	ArtTile_HangingSurface
 PLC_LZ1_Extra_End:	plccheck PLC_LZ1_Extra,0
 
@@ -482,9 +476,7 @@ PLC_LZ2_Main:		dc.w (PLC_LZ2_Main_End-PLC_LZ2_Main-2)/6-1
 PLC_LZ2_Main_End:	plccheck PLC_LZ2_Main,ActPLC_Main_Reserve
 
 PLC_LZ2_Extra:		dc.w (PLC_LZ2_Extra_End-PLC_LZ2_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 		plcm	Nem_HangingSurface,	ArtTile_HangingSurface
 PLC_LZ2_Extra_End:	plccheck PLC_LZ2_Extra,0
 
@@ -498,9 +490,7 @@ PLC_LZ3_Main:		dc.w (PLC_LZ3_Main_End-PLC_LZ3_Main-2)/6-1
 PLC_LZ3_Main_End:	plccheck PLC_LZ3_Main,ActPLC_Main_Reserve
 
 PLC_LZ3_Extra:		dc.w (PLC_LZ3_Extra_End-PLC_LZ3_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 		plcm	Nem_HangingSurface,	ArtTile_HangingSurface
 PLC_LZ3_Extra_End:	plccheck PLC_LZ3_Extra,0
 
@@ -514,9 +504,7 @@ PLC_LZ4_Main:		dc.w (PLC_LZ4_Main_End-PLC_LZ4_Main-2)/6-1
 PLC_LZ4_Main_End:	plccheck PLC_LZ4_Main,ActPLC_Main_Reserve
 
 PLC_LZ4_Extra:		dc.w (PLC_LZ4_Extra_End-PLC_LZ4_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 		plcm	Nem_HangingSurface,	ArtTile_HangingSurface
 PLC_LZ4_Extra_End:	plccheck PLC_LZ4_Extra,0
 
@@ -529,9 +517,7 @@ PLC_CPZ1_Main:		dc.w (PLC_CPZ1_Main_End-PLC_CPZ1_Main-2)/6-1
 PLC_CPZ1_Main_End:	plccheck PLC_CPZ1_Main,ActPLC_Main_Reserve
 
 PLC_CPZ1_Extra:		dc.w (PLC_CPZ1_Extra_End-PLC_CPZ1_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_CPZ1_Extra_End:	plccheck PLC_CPZ1_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -543,9 +529,7 @@ PLC_CPZ2_Main:		dc.w (PLC_CPZ2_Main_End-PLC_CPZ2_Main-2)/6-1
 PLC_CPZ2_Main_End:	plccheck PLC_CPZ2_Main,ActPLC_Main_Reserve
 
 PLC_CPZ2_Extra:		dc.w (PLC_CPZ2_Extra_End-PLC_CPZ2_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_CPZ2_Extra_End:	plccheck PLC_CPZ2_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -557,9 +541,7 @@ PLC_CPZ3_Main:		dc.w (PLC_CPZ3_Main_End-PLC_CPZ3_Main-2)/6-1
 PLC_CPZ3_Main_End:	plccheck PLC_CPZ3_Main,ActPLC_Main_Reserve
 
 PLC_CPZ3_Extra:		dc.w (PLC_CPZ3_Extra_End-PLC_CPZ3_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_CPZ3_Extra_End:	plccheck PLC_CPZ3_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -571,9 +553,7 @@ PLC_CPZ4_Main:		dc.w (PLC_CPZ4_Main_End-PLC_CPZ4_Main-2)/6-1
 PLC_CPZ4_Main_End:	plccheck PLC_CPZ4_Main,ActPLC_Main_Reserve
 
 PLC_CPZ4_Extra:		dc.w (PLC_CPZ4_Extra_End-PLC_CPZ4_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_CPZ4_Extra_End:	plccheck PLC_CPZ4_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -584,10 +564,8 @@ PLC_EHZ1_Main:		dc.w (PLC_EHZ1_Main_End-PLC_EHZ1_Main-2)/6-1
 		plcm	Nem_EHZ_Fireball,	ArtTile_Fireball
 		plcm	Nem_EHZ_Waterfall,	ArtTile_Waterfall
 		plcm	Nem_EHZ_Bridge,	ArtTile_EHZ_Bridge
-		plcm	Nem_HTZ_Seesaw,	ArtTile_HTZ_Seesaw
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Seesaw,	ArtTile_EHZ_Seesaw
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_EHZ1_Main_End:	plccheck PLC_EHZ1_Main,ActPLC_Main_Reserve
 
 PLC_EHZ1_Extra:		dc.w (PLC_EHZ1_Extra_End-PLC_EHZ1_Extra-2)/6-1
@@ -604,10 +582,8 @@ PLC_EHZ2_Main:		dc.w (PLC_EHZ2_Main_End-PLC_EHZ2_Main-2)/6-1
 		plcm	Nem_EHZ_Fireball,	ArtTile_Fireball
 		plcm	Nem_EHZ_Waterfall,	ArtTile_Waterfall
 		plcm	Nem_EHZ_Bridge,	ArtTile_EHZ_Bridge
-		plcm	Nem_HTZ_Seesaw,	ArtTile_HTZ_Seesaw
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Seesaw,	ArtTile_EHZ_Seesaw
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_EHZ2_Main_End:	plccheck PLC_EHZ2_Main,ActPLC_Main_Reserve
 
 PLC_EHZ2_Extra:		dc.w (PLC_EHZ2_Extra_End-PLC_EHZ2_Extra-2)/6-1
@@ -624,10 +600,8 @@ PLC_EHZ3_Main:		dc.w (PLC_EHZ3_Main_End-PLC_EHZ3_Main-2)/6-1
 		plcm	Nem_EHZ_Fireball,	ArtTile_Fireball
 		plcm	Nem_EHZ_Waterfall,	ArtTile_Waterfall
 		plcm	Nem_EHZ_Bridge,	ArtTile_EHZ_Bridge
-		plcm	Nem_HTZ_Seesaw,	ArtTile_HTZ_Seesaw
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Seesaw,	ArtTile_EHZ_Seesaw
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_EHZ3_Main_End:	plccheck PLC_EHZ3_Main,ActPLC_Main_Reserve
 
 PLC_EHZ3_Extra:		dc.w (PLC_EHZ3_Extra_End-PLC_EHZ3_Extra-2)/6-1
@@ -644,10 +618,8 @@ PLC_EHZ4_Main:		dc.w (PLC_EHZ4_Main_End-PLC_EHZ4_Main-2)/6-1
 		plcm	Nem_EHZ_Fireball,	ArtTile_Fireball
 		plcm	Nem_EHZ_Waterfall,	ArtTile_Waterfall
 		plcm	Nem_EHZ_Bridge,	ArtTile_EHZ_Bridge
-		plcm	Nem_HTZ_Seesaw,	ArtTile_HTZ_Seesaw
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Seesaw,	ArtTile_EHZ_Seesaw
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_EHZ4_Main_End:	plccheck PLC_EHZ4_Main,ActPLC_Main_Reserve
 
 PLC_EHZ4_Extra:		dc.w (PLC_EHZ4_Extra_End-PLC_EHZ4_Extra-2)/6-1
@@ -671,9 +643,7 @@ PLC_HPZ1_Main_End:	plccheck PLC_HPZ1_Main,ActPLC_Main_Reserve
 PLC_HPZ1_Extra:		dc.w (PLC_HPZ1_Extra_End-PLC_HPZ1_Extra-2)/6-1
 		plcm	Nem_HPZ_Various,	$37C
 		plcm	Nem_HPZ_Emerald,	ArtTile_HPZ_Emerald
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_HPZ1_Extra_End:	plccheck PLC_HPZ1_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -691,9 +661,7 @@ PLC_HPZ2_Main_End:	plccheck PLC_HPZ2_Main,ActPLC_Main_Reserve
 PLC_HPZ2_Extra:		dc.w (PLC_HPZ2_Extra_End-PLC_HPZ2_Extra-2)/6-1
 		plcm	Nem_HPZ_Various,	$37C
 		plcm	Nem_HPZ_Emerald,	ArtTile_HPZ_Emerald
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_HPZ2_Extra_End:	plccheck PLC_HPZ2_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -711,9 +679,7 @@ PLC_HPZ3_Main_End:	plccheck PLC_HPZ3_Main,ActPLC_Main_Reserve
 PLC_HPZ3_Extra:		dc.w (PLC_HPZ3_Extra_End-PLC_HPZ3_Extra-2)/6-1
 		plcm	Nem_HPZ_Various,	$37C
 		plcm	Nem_HPZ_Emerald,	ArtTile_HPZ_Emerald
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_HPZ3_Extra_End:	plccheck PLC_HPZ3_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -731,9 +697,7 @@ PLC_HPZ4_Main_End:	plccheck PLC_HPZ4_Main,ActPLC_Main_Reserve
 PLC_HPZ4_Extra:		dc.w (PLC_HPZ4_Extra_End-PLC_HPZ4_Extra-2)/6-1
 		plcm	Nem_HPZ_Various,	$37C
 		plcm	Nem_HPZ_Emerald,	ArtTile_HPZ_Emerald
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_HPZ4_Extra_End:	plccheck PLC_HPZ4_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -741,18 +705,16 @@ PLC_HPZ4_Extra_End:	plccheck PLC_HPZ4_Extra,0
 ; Egg Mountain - Act 1
 ; ---------------------------------------------------------------------------
 PLC_HTZ1_Main:		dc.w (PLC_HTZ1_Main_End-PLC_HTZ1_Main-2)/6-1
-		plcm	Nem_EHZ_Fireball,	ArtTile_Fireball
+		plcm	Nem_EHZ_Fireball,	ArtTile_HTZ_LegacyFireball
 		plcm	Nem_HTZ_Fireball,	ArtTile_HTZ_Fireball
 		plcm	Nem_HTZ_AutomaticDoor,	ArtTile_HTZ_AutomaticDoor
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_HTZ1_Main_End:	plccheck PLC_HTZ1_Main,ActPLC_Main_Reserve
 
 PLC_HTZ1_Extra:		dc.w (PLC_HTZ1_Extra_End-PLC_HTZ1_Extra-2)/6-1
 		plcm	Nem_HTZ_Lift,	ArtTile_HtzZipline
 		plcm	Nem_EHZ_Bridge,	ArtTile_EHZ_Bridge
-		plcm	Nem_HTZ_Seesaw,	ArtTile_HTZ_Seesaw
+		plcm	Nem_Seesaw,	ArtTile_HTZ_Seesaw
 PLC_HTZ1_Extra_End:	plccheck PLC_HTZ1_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -760,18 +722,16 @@ PLC_HTZ1_Extra_End:	plccheck PLC_HTZ1_Extra,0
 ; Egg Mountain - Act 2
 ; ---------------------------------------------------------------------------
 PLC_HTZ2_Main:		dc.w (PLC_HTZ2_Main_End-PLC_HTZ2_Main-2)/6-1
-		plcm	Nem_EHZ_Fireball,	ArtTile_Fireball
+		plcm	Nem_EHZ_Fireball,	ArtTile_HTZ_LegacyFireball
 		plcm	Nem_HTZ_Fireball,	ArtTile_HTZ_Fireball
 		plcm	Nem_HTZ_AutomaticDoor,	ArtTile_HTZ_AutomaticDoor
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_HTZ2_Main_End:	plccheck PLC_HTZ2_Main,ActPLC_Main_Reserve
 
 PLC_HTZ2_Extra:		dc.w (PLC_HTZ2_Extra_End-PLC_HTZ2_Extra-2)/6-1
 		plcm	Nem_HTZ_Lift,	ArtTile_HtzZipline
 		plcm	Nem_EHZ_Bridge,	ArtTile_EHZ_Bridge
-		plcm	Nem_HTZ_Seesaw,	ArtTile_HTZ_Seesaw
+		plcm	Nem_Seesaw,	ArtTile_HTZ_Seesaw
 PLC_HTZ2_Extra_End:	plccheck PLC_HTZ2_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -779,18 +739,16 @@ PLC_HTZ2_Extra_End:	plccheck PLC_HTZ2_Extra,0
 ; Egg Mountain - Act 3
 ; ---------------------------------------------------------------------------
 PLC_HTZ3_Main:		dc.w (PLC_HTZ3_Main_End-PLC_HTZ3_Main-2)/6-1
-		plcm	Nem_EHZ_Fireball,	ArtTile_Fireball
+		plcm	Nem_EHZ_Fireball,	ArtTile_HTZ_LegacyFireball
 		plcm	Nem_HTZ_Fireball,	ArtTile_HTZ_Fireball
 		plcm	Nem_HTZ_AutomaticDoor,	ArtTile_HTZ_AutomaticDoor
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_HTZ3_Main_End:	plccheck PLC_HTZ3_Main,ActPLC_Main_Reserve
 
 PLC_HTZ3_Extra:		dc.w (PLC_HTZ3_Extra_End-PLC_HTZ3_Extra-2)/6-1
 		plcm	Nem_HTZ_Lift,	ArtTile_HtzZipline
 		plcm	Nem_EHZ_Bridge,	ArtTile_EHZ_Bridge
-		plcm	Nem_HTZ_Seesaw,	ArtTile_HTZ_Seesaw
+		plcm	Nem_Seesaw,	ArtTile_HTZ_Seesaw
 PLC_HTZ3_Extra_End:	plccheck PLC_HTZ3_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -798,18 +756,16 @@ PLC_HTZ3_Extra_End:	plccheck PLC_HTZ3_Extra,0
 ; Egg Mountain - Act 4
 ; ---------------------------------------------------------------------------
 PLC_HTZ4_Main:		dc.w (PLC_HTZ4_Main_End-PLC_HTZ4_Main-2)/6-1
-		plcm	Nem_EHZ_Fireball,	ArtTile_Fireball
+		plcm	Nem_EHZ_Fireball,	ArtTile_HTZ_LegacyFireball
 		plcm	Nem_HTZ_Fireball,	ArtTile_HTZ_Fireball
 		plcm	Nem_HTZ_AutomaticDoor,	ArtTile_HTZ_AutomaticDoor
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_HTZ4_Main_End:	plccheck PLC_HTZ4_Main,ActPLC_Main_Reserve
 
 PLC_HTZ4_Extra:		dc.w (PLC_HTZ4_Extra_End-PLC_HTZ4_Extra-2)/6-1
 		plcm	Nem_HTZ_Lift,	ArtTile_HtzZipline
 		plcm	Nem_EHZ_Bridge,	ArtTile_EHZ_Bridge
-		plcm	Nem_HTZ_Seesaw,	ArtTile_HTZ_Seesaw
+		plcm	Nem_Seesaw,	ArtTile_HTZ_Seesaw
 PLC_HTZ4_Extra_End:	plccheck PLC_HTZ4_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -820,9 +776,7 @@ PLC_LV61_Main:		dc.w -1
 PLC_LV61_Main_End:	plccheck PLC_LV61_Main,ActPLC_Main_Reserve
 
 PLC_LV61_Extra:		dc.w (PLC_LV61_Extra_End-PLC_LV61_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LV61_Extra_End:	plccheck PLC_LV61_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -833,9 +787,7 @@ PLC_LV62_Main:		dc.w -1
 PLC_LV62_Main_End:	plccheck PLC_LV62_Main,ActPLC_Main_Reserve
 
 PLC_LV62_Extra:		dc.w (PLC_LV62_Extra_End-PLC_LV62_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LV62_Extra_End:	plccheck PLC_LV62_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -846,9 +798,7 @@ PLC_LV63_Main:		dc.w -1
 PLC_LV63_Main_End:	plccheck PLC_LV63_Main,ActPLC_Main_Reserve
 
 PLC_LV63_Extra:		dc.w (PLC_LV63_Extra_End-PLC_LV63_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LV63_Extra_End:	plccheck PLC_LV63_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -859,9 +809,7 @@ PLC_LV64_Main:		dc.w -1
 PLC_LV64_Main_End:	plccheck PLC_LV64_Main,ActPLC_Main_Reserve
 
 PLC_LV64_Extra:		dc.w (PLC_LV64_Extra_End-PLC_LV64_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LV64_Extra_End:	plccheck PLC_LV64_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -872,9 +820,7 @@ PLC_LV71_Main:		dc.w -1
 PLC_LV71_Main_End:	plccheck PLC_LV71_Main,ActPLC_Main_Reserve
 
 PLC_LV71_Extra:		dc.w (PLC_LV71_Extra_End-PLC_LV71_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LV71_Extra_End:	plccheck PLC_LV71_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -885,9 +831,7 @@ PLC_LV72_Main:		dc.w -1
 PLC_LV72_Main_End:	plccheck PLC_LV72_Main,ActPLC_Main_Reserve
 
 PLC_LV72_Extra:		dc.w (PLC_LV72_Extra_End-PLC_LV72_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LV72_Extra_End:	plccheck PLC_LV72_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -898,9 +842,7 @@ PLC_LV73_Main:		dc.w -1
 PLC_LV73_Main_End:	plccheck PLC_LV73_Main,ActPLC_Main_Reserve
 
 PLC_LV73_Extra:		dc.w (PLC_LV73_Extra_End-PLC_LV73_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LV73_Extra_End:	plccheck PLC_LV73_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -911,9 +853,7 @@ PLC_LV74_Main:		dc.w -1
 PLC_LV74_Main_End:	plccheck PLC_LV74_Main,ActPLC_Main_Reserve
 
 PLC_LV74_Extra:		dc.w (PLC_LV74_Extra_End-PLC_LV74_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LV74_Extra_End:	plccheck PLC_LV74_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -925,9 +865,7 @@ PLC_SMZ1_Main:		dc.w (PLC_SMZ1_Main_End-PLC_SMZ1_Main-2)/6-1
 PLC_SMZ1_Main_End:	plccheck PLC_SMZ1_Main,ActPLC_Main_Reserve
 
 PLC_SMZ1_Extra:		dc.w (PLC_SMZ1_Extra_End-PLC_SMZ1_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_SMZ1_Extra_End:	plccheck PLC_SMZ1_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -940,9 +878,7 @@ PLC_SMZ2_Main:		dc.w (PLC_SMZ2_Main_End-PLC_SMZ2_Main-2)/6-1
 PLC_SMZ2_Main_End:	plccheck PLC_SMZ2_Main,ActPLC_Main_Reserve
 
 PLC_SMZ2_Extra:		dc.w (PLC_SMZ2_Extra_End-PLC_SMZ2_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_SMZ2_Extra_End:	plccheck PLC_SMZ2_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -954,9 +890,7 @@ PLC_SMZ3_Main:		dc.w (PLC_SMZ3_Main_End-PLC_SMZ3_Main-2)/6-1
 PLC_SMZ3_Main_End:	plccheck PLC_SMZ3_Main,ActPLC_Main_Reserve
 
 PLC_SMZ3_Extra:		dc.w (PLC_SMZ3_Extra_End-PLC_SMZ3_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_SMZ3_Extra_End:	plccheck PLC_SMZ3_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -968,9 +902,7 @@ PLC_SMZ4_Main:		dc.w (PLC_SMZ4_Main_End-PLC_SMZ4_Main-2)/6-1
 PLC_SMZ4_Main_End:	plccheck PLC_SMZ4_Main,ActPLC_Main_Reserve
 
 PLC_SMZ4_Extra:		dc.w (PLC_SMZ4_Extra_End-PLC_SMZ4_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_SMZ4_Extra_End:	plccheck PLC_SMZ4_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -981,9 +913,7 @@ PLC_LV91_Main:		dc.w -1
 PLC_LV91_Main_End:	plccheck PLC_LV91_Main,ActPLC_Main_Reserve
 
 PLC_LV91_Extra:		dc.w (PLC_LV91_Extra_End-PLC_LV91_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LV91_Extra_End:	plccheck PLC_LV91_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -994,9 +924,7 @@ PLC_LV92_Main:		dc.w -1
 PLC_LV92_Main_End:	plccheck PLC_LV92_Main,ActPLC_Main_Reserve
 
 PLC_LV92_Extra:		dc.w (PLC_LV92_Extra_End-PLC_LV92_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LV92_Extra_End:	plccheck PLC_LV92_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -1007,9 +935,7 @@ PLC_LV93_Main:		dc.w -1
 PLC_LV93_Main_End:	plccheck PLC_LV93_Main,ActPLC_Main_Reserve
 
 PLC_LV93_Extra:		dc.w (PLC_LV93_Extra_End-PLC_LV93_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LV93_Extra_End:	plccheck PLC_LV93_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -1020,9 +946,7 @@ PLC_LV94_Main:		dc.w -1
 PLC_LV94_Main_End:	plccheck PLC_LV94_Main,ActPLC_Main_Reserve
 
 PLC_LV94_Extra:		dc.w (PLC_LV94_Extra_End-PLC_LV94_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LV94_Extra_End:	plccheck PLC_LV94_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -1040,9 +964,7 @@ PLC_PP1_Main:		dc.w (PLC_PP1_Main_End-PLC_PP1_Main-2)/6-1
 PLC_PP1_Main_End:	plccheck PLC_PP1_Main,ActPLC_Main_Reserve
 
 PLC_PP1_Extra:		dc.w (PLC_PP1_Extra_End-PLC_PP1_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_PP1_Extra_End:	plccheck PLC_PP1_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -1060,9 +982,7 @@ PLC_PP2_Main:		dc.w (PLC_PP2_Main_End-PLC_PP2_Main-2)/6-1
 PLC_PP2_Main_End:	plccheck PLC_PP2_Main,ActPLC_Main_Reserve
 
 PLC_PP2_Extra:		dc.w (PLC_PP2_Extra_End-PLC_PP2_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_PP2_Extra_End:	plccheck PLC_PP2_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -1080,9 +1000,7 @@ PLC_PP3_Main:		dc.w (PLC_PP3_Main_End-PLC_PP3_Main-2)/6-1
 PLC_PP3_Main_End:	plccheck PLC_PP3_Main,ActPLC_Main_Reserve
 
 PLC_PP3_Extra:		dc.w (PLC_PP3_Extra_End-PLC_PP3_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_PP3_Extra_End:	plccheck PLC_PP3_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -1100,9 +1018,7 @@ PLC_PP4_Main:		dc.w (PLC_PP4_Main_End-PLC_PP4_Main-2)/6-1
 PLC_PP4_Main_End:	plccheck PLC_PP4_Main,ActPLC_Main_Reserve
 
 PLC_PP4_Extra:		dc.w (PLC_PP4_Extra_End-PLC_PP4_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_PP4_Extra_End:	plccheck PLC_PP4_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -1113,9 +1029,7 @@ PLC_LVB1_Main:		dc.w -1
 PLC_LVB1_Main_End:	plccheck PLC_LVB1_Main,ActPLC_Main_Reserve
 
 PLC_LVB1_Extra:		dc.w (PLC_LVB1_Extra_End-PLC_LVB1_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LVB1_Extra_End:	plccheck PLC_LVB1_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -1126,9 +1040,7 @@ PLC_LVB2_Main:		dc.w -1
 PLC_LVB2_Main_End:	plccheck PLC_LVB2_Main,ActPLC_Main_Reserve
 
 PLC_LVB2_Extra:		dc.w (PLC_LVB2_Extra_End-PLC_LVB2_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LVB2_Extra_End:	plccheck PLC_LVB2_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -1139,9 +1051,7 @@ PLC_LVB3_Main:		dc.w -1
 PLC_LVB3_Main_End:	plccheck PLC_LVB3_Main,ActPLC_Main_Reserve
 
 PLC_LVB3_Extra:		dc.w (PLC_LVB3_Extra_End-PLC_LVB3_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LVB3_Extra_End:	plccheck PLC_LVB3_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -1152,9 +1062,7 @@ PLC_LVB4_Main:		dc.w -1
 PLC_LVB4_Main_End:	plccheck PLC_LVB4_Main,ActPLC_Main_Reserve
 
 PLC_LVB4_Extra:		dc.w (PLC_LVB4_Extra_End-PLC_LVB4_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LVB4_Extra_End:	plccheck PLC_LVB4_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -1165,9 +1073,7 @@ PLC_LVC1_Main:		dc.w -1
 PLC_LVC1_Main_End:	plccheck PLC_LVC1_Main,ActPLC_Main_Reserve
 
 PLC_LVC1_Extra:		dc.w (PLC_LVC1_Extra_End-PLC_LVC1_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LVC1_Extra_End:	plccheck PLC_LVC1_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -1178,9 +1084,7 @@ PLC_LVC2_Main:		dc.w -1
 PLC_LVC2_Main_End:	plccheck PLC_LVC2_Main,ActPLC_Main_Reserve
 
 PLC_LVC2_Extra:		dc.w (PLC_LVC2_Extra_End-PLC_LVC2_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LVC2_Extra_End:	plccheck PLC_LVC2_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -1191,9 +1095,7 @@ PLC_LVC3_Main:		dc.w -1
 PLC_LVC3_Main_End:	plccheck PLC_LVC3_Main,ActPLC_Main_Reserve
 
 PLC_LVC3_Extra:		dc.w (PLC_LVC3_Extra_End-PLC_LVC3_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LVC3_Extra_End:	plccheck PLC_LVC3_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -1204,9 +1106,7 @@ PLC_LVC4_Main:		dc.w -1
 PLC_LVC4_Main_End:	plccheck PLC_LVC4_Main,ActPLC_Main_Reserve
 
 PLC_LVC4_Extra:		dc.w (PLC_LVC4_Extra_End-PLC_LVC4_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LVC4_Extra_End:	plccheck PLC_LVC4_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -1217,9 +1117,7 @@ PLC_LVD1_Main:		dc.w -1
 PLC_LVD1_Main_End:	plccheck PLC_LVD1_Main,ActPLC_Main_Reserve
 
 PLC_LVD1_Extra:		dc.w (PLC_LVD1_Extra_End-PLC_LVD1_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LVD1_Extra_End:	plccheck PLC_LVD1_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -1230,9 +1128,7 @@ PLC_LVD2_Main:		dc.w -1
 PLC_LVD2_Main_End:	plccheck PLC_LVD2_Main,ActPLC_Main_Reserve
 
 PLC_LVD2_Extra:		dc.w (PLC_LVD2_Extra_End-PLC_LVD2_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LVD2_Extra_End:	plccheck PLC_LVD2_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -1243,9 +1139,7 @@ PLC_LVD3_Main:		dc.w -1
 PLC_LVD3_Main_End:	plccheck PLC_LVD3_Main,ActPLC_Main_Reserve
 
 PLC_LVD3_Extra:		dc.w (PLC_LVD3_Extra_End-PLC_LVD3_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LVD3_Extra_End:	plccheck PLC_LVD3_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -1256,9 +1150,7 @@ PLC_LVD4_Main:		dc.w -1
 PLC_LVD4_Main_End:	plccheck PLC_LVD4_Main,ActPLC_Main_Reserve
 
 PLC_LVD4_Extra:		dc.w (PLC_LVD4_Extra_End-PLC_LVD4_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LVD4_Extra_End:	plccheck PLC_LVD4_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -1269,9 +1161,7 @@ PLC_LVE1_Main:		dc.w -1
 PLC_LVE1_Main_End:	plccheck PLC_LVE1_Main,ActPLC_Main_Reserve
 
 PLC_LVE1_Extra:		dc.w (PLC_LVE1_Extra_End-PLC_LVE1_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LVE1_Extra_End:	plccheck PLC_LVE1_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -1282,9 +1172,7 @@ PLC_LVE2_Main:		dc.w -1
 PLC_LVE2_Main_End:	plccheck PLC_LVE2_Main,ActPLC_Main_Reserve
 
 PLC_LVE2_Extra:		dc.w (PLC_LVE2_Extra_End-PLC_LVE2_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LVE2_Extra_End:	plccheck PLC_LVE2_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -1295,9 +1183,7 @@ PLC_LVE3_Main:		dc.w -1
 PLC_LVE3_Main_End:	plccheck PLC_LVE3_Main,ActPLC_Main_Reserve
 
 PLC_LVE3_Extra:		dc.w (PLC_LVE3_Extra_End-PLC_LVE3_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LVE3_Extra_End:	plccheck PLC_LVE3_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -1308,9 +1194,7 @@ PLC_LVE4_Main:		dc.w -1
 PLC_LVE4_Main_End:	plccheck PLC_LVE4_Main,ActPLC_Main_Reserve
 
 PLC_LVE4_Extra:		dc.w (PLC_LVE4_Extra_End-PLC_LVE4_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LVE4_Extra_End:	plccheck PLC_LVE4_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -1321,9 +1205,7 @@ PLC_LVF1_Main:		dc.w -1
 PLC_LVF1_Main_End:	plccheck PLC_LVF1_Main,ActPLC_Main_Reserve
 
 PLC_LVF1_Extra:		dc.w (PLC_LVF1_Extra_End-PLC_LVF1_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LVF1_Extra_End:	plccheck PLC_LVF1_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -1334,9 +1216,7 @@ PLC_LVF2_Main:		dc.w -1
 PLC_LVF2_Main_End:	plccheck PLC_LVF2_Main,ActPLC_Main_Reserve
 
 PLC_LVF2_Extra:		dc.w (PLC_LVF2_Extra_End-PLC_LVF2_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LVF2_Extra_End:	plccheck PLC_LVF2_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -1347,9 +1227,7 @@ PLC_LVF3_Main:		dc.w -1
 PLC_LVF3_Main_End:	plccheck PLC_LVF3_Main,ActPLC_Main_Reserve
 
 PLC_LVF3_Extra:		dc.w (PLC_LVF3_Extra_End-PLC_LVF3_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LVF3_Extra_End:	plccheck PLC_LVF3_Extra,0
 
 ; ---------------------------------------------------------------------------
@@ -1360,9 +1238,7 @@ PLC_LVF4_Main:		dc.w -1
 PLC_LVF4_Main_End:	plccheck PLC_LVF4_Main,ActPLC_Main_Reserve
 
 PLC_LVF4_Extra:		dc.w (PLC_LVF4_Extra_End-PLC_LVF4_Extra-2)/6-1
-		plcm	Nem_DSpring,	ArtTile_Spring_Diagonal
-		plcm	Nem_VSpring2,	ArtTile_Spring_Vertical
-		plcm	Nem_HSpring2,	ArtTile_Spring_Horizontal
+		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LVF4_Extra_End:	plccheck PLC_LVF4_Extra,0
 
 ; ---------------------------------------------------------------------------

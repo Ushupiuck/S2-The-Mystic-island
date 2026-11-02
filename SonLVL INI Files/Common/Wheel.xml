@@ -6,23 +6,23 @@
 			<MapFile type="Binary" filename="../mappings/sprite/Wheel for the moving spring.bin" frame="0" startpal="0" />
 		</ImageFromMappings>
 		<ImageFromMappings id="payload0">
-			<ArtFile filename="../art/nemesis/Vertical spring.nem" />
+			<ArtFile filename="../art/nemesis/Springs.nem" />
 			<MapFile type="Binary" filename="../mappings/sprite/Spring.bin" frame="0" startpal="0" />
 		</ImageFromMappings>
 		<ImageFromMappings id="payload1">
-			<ArtFile filename="../art/nemesis/Vertical spring.nem" />
+			<ArtFile filename="../art/nemesis/Springs.nem" />
 			<MapFile type="Binary" filename="../mappings/sprite/Spring (Yellow).bin" frame="0" startpal="0" />
 		</ImageFromMappings>
 		<ImageFromMappings id="payload2">
-			<ArtFile filename="../art/nemesis/Horizontal spring.nem" />
+			<ArtFile filename="../art/nemesis/Springs.nem" />
 			<MapFile type="Binary" filename="../mappings/sprite/Spring.bin" frame="3" startpal="0" />
 		</ImageFromMappings>
 		<ImageFromMappings id="payload3">
-			<ArtFile filename="../art/nemesis/Horizontal spring.nem" />
+			<ArtFile filename="../art/nemesis/Springs.nem" />
 			<MapFile type="Binary" filename="../mappings/sprite/Spring (Yellow).bin" frame="3" startpal="0" />
 		</ImageFromMappings>
 		<ImageFromMappings id="payload4">
-			<ArtFile filename="../art/nemesis/Diagonal spring.nem" />
+			<ArtFile filename="../art/nemesis/Springs.nem" />
 			<MapFile type="Binary" filename="../mappings/sprite/Spring.bin" frame="7" startpal="0" />
 		</ImageFromMappings>
 		<ImageFromMappings id="payload5">

@@ -1,5 +1,5 @@
 ; ---------------------------------------------------------------------------
-; Object 3C - smashable wall (GHZ, SLZ)
+; Object 3C - smashable wall (GHZ, SLZ, EHZ)
 ; ---------------------------------------------------------------------------
 
 Obj3C:
@@ -46,6 +46,11 @@ Smash_Main:	; Routine 0
 		move.w	#$200,obPriority(a0)
 		move.w	obSubtype(a0),d0
 		move.b	d0,obFrame(a0)
+		cmpi.b	#id_EHZ,(Current_Zone).w
+		bne.s	.art_ready
+		move.w	#make_art_tile(ArtTile_Level,2,0),obGfx(a0)
+		addq.b	#3,obFrame(a0)	; EHZ variants in the same mapping family
+.art_ready:
 
 Smash_Solid:	; Routine 2
 		move.w	(v_player+obVelX).w,smash_speed(a0) ; load Sonic's horizontal speed
