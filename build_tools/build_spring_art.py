@@ -12,20 +12,22 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():
-    p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--check', action='store_true')
-    args = p.parse_args()
-    for name, count in (('Vertical', 12), ('Horizontal', 12), ('Diagonal', 18)):
-        raw = (ROOT / f'art/uncompressed/{name} spring S3.unc').read_bytes()
-        assert len(raw) == count * 32
-        target = ROOT / f'art/nemesis/{name} spring.nem'
-        packed = nemesis_compress(raw)
-        if args.check:
-            assert target.read_bytes() == packed, target
-        else:
-            target.write_bytes(packed)
-    print('Springs: 42 resident tiles; cap art shared by both colors (formerly 60).')
+	p = argparse.ArgumentParser(description=__doc__)
+	p.add_argument('--check', action='store_true')
+	args = p.parse_args()
+	for name, count in (('Vertical', 12), ('Horizontal', 12), ('Diagonal', 18)):
+		raw = (ROOT / f'art/uncompressed/{name} spring S3.unc').read_bytes()
+		assert len(raw) == count * 32
+		colors = {v for b in raw for v in (b >> 4, b & 15)}
+		assert colors <= {0, 1, 6, 7, 8, 9, 13, 14, 15}, (name, colors)
+		target = ROOT / f'art/nemesis/{name} spring.nem'
+		packed = nemesis_compress(raw)
+		if args.check:
+			assert target.read_bytes() == packed, target
+		else:
+			target.write_bytes(packed)
+	print('Springs: 42 resident tiles; cap art shared by both colors (formerly 60).')
 
 
 if __name__ == '__main__':
-    main()
+	main()

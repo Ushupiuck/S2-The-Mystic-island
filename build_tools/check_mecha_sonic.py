@@ -48,6 +48,11 @@ def native(args):
 				cpu.reg_write(n.UC_M68K_REG_PC,int.from_bytes(cpu.mem_read(stack,4),'big'))
 				cpu.reg_write(n.UC_M68K_REG_A7,stack+4)
 	m=Machine(args.rom,args.listing);m.start();pool=list(m.pool());body=pool[0];checks=[]
+	from check_sprite_assets import frames
+	entry_map=frames((ROOT/'mappings/sprite/Mecha Sonic.bin').read_bytes())[2]
+	entry_feet=max(y+((size&3)+1)*8 for y,size,_,_ in entry_map)
+	assert m.s['MS_EntryRadius']+1==entry_feet, ('Entry pose clips the floor',entry_feet)
+	checks.append('entry floor sensor matches the actual frame-2 foot baseline')
 	for slot in pool:m.put(slot,'code',m.s['MS_Return'])
 	m.put(body,'code',m.s['MechaSonic']);m.act('MS_Init',body)
 	assert m.get(body,'MS_phase')==0
@@ -151,17 +156,24 @@ def native(args):
 		for turn in (0,8):
 			for facing in (0,1):
 				m.start();body=pool[0]
+				m.write('Camera_X_pos',m.s['MS_ArenaX'],2)
 				for f,v,z in [('code',m.s['MechaSonic'],4),('MS_phase',4,1),('obColProp',16,1),
 						('obX',x,2),('obY',0x5B0,2),('obHeight',15,1),('MS_flags',turn|2,1),
 						('obRender',4|facing,1),('MS_left',0x1E60,2),('MS_right',0x1F60,2)]:m.put(body,f,v,z)
 				m.act('MS_CounterLanded',body)
-				assert m.get(body,'obY',2)==0x5A0 and m.get(body,'obRender')&1==int(x>0x1EE0)
+				assert m.get(body,'obY',2)==0x5A0 and m.get(body,'obRender')&1==int(x<=0x1EE0)
 				assert m.get(body,'MS_script',4)==m.s['MS_AnimTurnStand' if turn else 'MS_AnimGroundWindup']
 				states=set()
 				for _ in range(200):
 					m.act('MS_RunFight',body);states.add(m.get(body,'obRoutine'))
+					if m.get(body,'obRoutine')==14:
+						assert m.get(body,'obRender')&1==int(x<=0x1EE0),('Outward windup',x,turn,facing)
 					if m.get(body,'obRoutine')==16:
 						assert 0x1E60<=m.get(body,'obX',2)<=0x1F60
+						assert m.get(body,'obRender')&1==int(x<=0x1EE0)
+						velocity=m.get(body,'obVelX',2)
+						assert (velocity<0x8000)==(x<=0x1EE0),('Outward dash',x,velocity)
+					if m.get(body,'obRoutine')==20:break
 				assert 20 in states and (turn or 16 in states),(x,turn,facing,states)
 	checks.append('20 counter landings across both arena halves and both original choices resume inward movement, stay inside dash boundaries and reach the next jump')
 	for who in ('v_player','v_player2'):
@@ -305,6 +317,7 @@ def game(args):
 			if g.get(boss,'MS_phase')>=3 and entry is None:
 				entry=g.frame
 				assert g.get(boss,'obY',2)+g.get(boss,'obHeight')+1==0x5C0
+				assert g.get(boss,'obY',2)+32==0x5C0, 'Entry sprite feet clip the authored floor'
 				g.video.save(args.output/'game/entry.png')
 				assert settled is not None and entry-settled>=warning_ticks,(settled,entry,warning_ticks)
 			if settled is not None and g.frame-settled<warning_ticks:
@@ -331,28 +344,49 @@ def game(args):
 		run();assert g.get('v_player','obX',2)<=0x1F68,('Escaped right edge',g.get('v_player','obX',2))
 	g.restore(fight);g.buttons=set()
 	checks.append(f'{args.approach} camera entry stays smooth, entry feet meet the floor, right boundary holds, and invincibility expiry retains Boss 3 music')
-	# Position the descent, then use actual down+B input to charge beneath it.
-	for actor in actors:place(g,actor,0x1E60,0x4D0);g.put(actor,'obControl',1)
-	place(g,'v_player',0x1F00,0x5AD,False)
-	g.buttons={5};run(4);g.buttons={5,0};run();g.buttons={5}
-	assert g.get('v_player','spindash_flag'),'Controller input did not start the charge'
-	for f,v,z in [('obRoutine',12,1),('obX',0x1F00,2),('obY',0x520,2),
-					('obVelX',0,2),('obVelY',0,2),('obHeight',31,1),('MS_flags',0,1),
-					('obStatus',0,1),('MS_flash',0,1),('obFrame',3,1),
-					('MS_script',g.s['MS_AnimLandingTurn'],4),('MS_callback',g.s['MS_Landed'],4),
-					('obAniFrame',0,1),('obTimeFrame',0,1)]:g.put(boss,f,v,z)
-	run();assert g.get(boss,'MS_flags')&2
-	g.video.save(args.output/'game/counter-dive.png')
-	hurt=False
-	for _ in range(40):
-		run();hurt |= g.get('v_player','obRoutine')==4
-		assert g.get(boss,'obColProp')==16,'Charging player damaged the rolling counter'
-		if not g.get(boss,'MS_flags')&2:break
-	else:raise AssertionError('Live counter did not land')
-	assert hurt,'Rolling counter did not hit the charging player'
-	assert g.get(boss,'obHeight')==31 and g.get(boss,'MS_flags')&1
-	g.video.save(args.output/'game/counter-landed.png')
-	checks.append('actual down+B charge triggers a harmful rolling descent; player takes damage before Mecha unrolls on real SMZ2 terrain')
+	# Exercise both random landing choices at both edges and with either player facing.
+	for counter_x,turn,player_facing in ((x,t,f) for x in (0x1E60,0x1F60) for t in (0,8) for f in (0,1)):
+		g.restore(fight);g.buttons=set()
+		# Position the descent, then use actual down+B input to charge beneath it.
+		for actor in actors:place(g,actor,0x1E60,0x4D0);g.put(actor,'obControl',1)
+		place(g,'v_player',counter_x,0x5AD,False)
+		g.put('v_player','obStatus',player_facing)
+		g.put('v_player','obStatusSecondary',1)	# absorb the counter without a ring burst obscuring the stance
+		g.buttons={5};run(4);g.buttons={5,0};run();g.buttons={5}
+		assert g.get('v_player','spindash_flag'),'Controller input did not start the charge'
+		for f,v,z in [('obRoutine',12,1),('obX',counter_x,2),('obY',0x520,2),
+						('obVelX',0,2),('obVelY',0,2),('obHeight',31,1),('MS_flags',turn,1),
+						('obStatus',0,1),('MS_flash',0,1),('obFrame',3,1),
+						('MS_script',g.s['MS_AnimLandingTurn'],4),('MS_callback',g.s['MS_Landed'],4),
+						('obAniFrame',0,1),('obTimeFrame',0,1)]:g.put(boss,f,v,z)
+		run();assert g.get(boss,'MS_flags')&2
+		g.video.save(args.output/'game/counter-dive.png')
+		hurt=False
+		for _ in range(40):
+			run();hurt |= g.get('v_player','obRoutine')==4
+			assert g.get(boss,'obColProp')==16,'Charging player damaged the rolling counter'
+			if not g.get(boss,'MS_flags')&2:break
+		else:raise AssertionError('Live counter did not land')
+		assert hurt,'Rolling counter did not hit the charging player'
+		assert g.get(boss,'obHeight')==31 and g.get(boss,'MS_flags')&1
+		assert g.get(boss,'obRender')&1==int(counter_x<=0x1EE0),(counter_x,turn,player_facing,'outward landing')
+		assert g.get(boss,'obY',2)+32==0x5C0
+		g.video.save(args.output/f'game/counter-landed-{counter_x:X}-{turn}-{player_facing}.png')
+		for actor in actors:place(g,actor,0x1EE0,0x4D0);g.put(actor,'obControl',1)
+		g.buttons=set()
+		for tick in range(210):
+			run()
+			routine=g.get(boss,'obRoutine')
+			if routine==14:
+				assert g.get(boss,'obRender')&1==int(counter_x<=0x1EE0),(counter_x,turn,'outward windup')
+				if tick==5:g.video.save(args.output/f'game/counter-windup-{counter_x:X}-{turn}-{player_facing}.png')
+			if routine==16:
+				velocity=g.get(boss,'obVelX',2)
+				assert (velocity<0x8000)==(counter_x<=0x1EE0),(counter_x,'outward follow-up dash')
+				if tick==45:g.video.save(args.output/f'game/counter-dash-{counter_x:X}.png')
+			if routine==20:break
+		else:raise AssertionError('Counter did not resume the next jump')
+	checks.append('eight actual down+B counters cover both edges, landing choices and player facings: harmful roll, aligned feet, inward windup/dash and next jump')
 	g.restore(fight);g.buttons=set();g.buttons2={4}
 	# Freeze the ordinary ground windup long enough for three genuine contacts.
 	# Only actor positions/velocity are restaged; HP and the streak are never edited.

@@ -141,6 +141,12 @@ refill or leaving water. Resident bubbles are separate from streamed numbers.
 
 Both players' invincibility trails use the shared gray ramp. Their lifetime
 and animation are independent; shield/star physical banks remain coordinated.
+Shields update once after the dynamic object pass, so carriers and teleporters
+can finish moving both owners first. Star lifetime, allocation, art and orbit
+advancement stay in the ordinary object update; the late pass then constructs
+and queues each composite once. Its leading pair uses the final owner position;
+the other three pairs retain the original recorded-position trail. The dynamic
+star scan runs only during invincibility and adds no RAM or reserved slots.
 Points popups similarly use separate per-player banks, including primary Tails.
 
 ## Input locks and stage exits

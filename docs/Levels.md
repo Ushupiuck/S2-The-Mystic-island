@@ -362,7 +362,26 @@ The animation destinations and timings remain unchanged. Edit the raw terrain
 and animation sources together when changing palette indices. The EHZ2 PP
 importer reads the grouped EHZ sources and retains both PP cliff browns.
 EHZ palette cycling is enabled: Acts 1/3/4 address the actual four P1 cyan
-slots `2/3/A/B`; Act 2 uses its separate three-phase PP water script.
+slots `2-5`, ordered `$A86,$E86,$EA8,$ECA`, immediately before white at `6`.
+P1's former fixed entries at `4/5` move to `A/B`; Act 2's fixed cloud shades
+`$EEC/$EC8` therefore live at `A/B`. Terrain, object art and PP generation use
+the grouped indices. The foreground cycle runs in every act. Act 2 also runs
+its separate three-phase PP water script on the existing second palette timer,
+so neither cycle stops the other: foreground cyans advance every eight active
+updates and PP water advances every nine.
+
+Acts 1/3/4 retain the exact colors in their water reflections with 17 inverse
+index poses at `$340-$350`. The palette-cycle routine queues the matching pose
+in the same update as the four cyan writes. Palette DMA and tile DMA reach the
+same VBlank, so reflection shading stays fixed while the existing line-scroll
+deformation continues. This needs no additional palette entries or RAM counters:
+one 544-byte transfer every eight active updates. Foreground waterfalls keep
+using the cycling ramp normally.
+
+`art/uncompressed/EHZ Reflections Source.unc` is the editable first pose in
+P1's grouped indices. `python build_tools/build_ehz_reflection_art.py` regenerates
+its four poses and the resident terrain bank. The 12 affected background block
+definitions select this bank; foreground blocks and chunk/layout IDs stay fixed.
 
 ## Emerald Hill Act 2: Palmtree Panic experiment
 

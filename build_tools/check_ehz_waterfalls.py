@@ -71,17 +71,20 @@ def native_animation(rom, listing):
 	n.cpu.mem_write(base, pal)
 	before = bytes(n.cpu.mem_read(base, 128))
 	cycle, poses, changes = set(), set(), []
+	foreground, foreground_changes = set(), []
 	previous = before
 	for tick in range(60):
 		n.act('PalCycle_Load')
 		n.act('Animate_Tiles')
 		current = bytes(n.cpu.mem_read(base, 128))
 		for i in range(64):
-			if i not in (49,51,54):
+			if i not in (18,19,20,21,49,51,54):
 				assert current[i*2:i*2+2] == before[i*2:i*2+2], ('Static color changed', i)
 		cycle.add(tuple(struct.unpack_from('>H', current, i*2)[0] for i in (49,51,54)))
-		if current != previous:
+		if any(current[i*2:i*2+2] != previous[i*2:i*2+2] for i in (49,51,54)):
 			changes.append(tick)
+		foreground.add(tuple(struct.unpack_from('>H',current,i*2)[0] for i in (18,19,20,21)))
+		if current[36:44] != previous[36:44]:foreground_changes.append(tick)
 		previous = current
 		for source, dest, length in n.uploads:
 			if dest & 65535 == n.s['ArtTile_EHZ2_BGWaterfall'] * 32:
@@ -90,7 +93,8 @@ def native_animation(rom, listing):
 		n.uploads.clear()
 	assert len(cycle) == 3 and poses == {0,1,2}, (cycle, poses)
 	assert all(b-a == 9 for a,b in zip(changes,changes[1:])), changes
-	return {'palette_phases':len(cycle), 'tile_poses':sorted(poses), 'palette_updates':changes}
+	assert len(foreground)==4 and all(b-a==8 for a,b in zip(foreground_changes,foreground_changes[1:])),foreground_changes
+	return {'palette_phases':len(cycle), 'tile_poses':sorted(poses), 'palette_updates':changes,'foreground_phases':len(foreground),'foreground_updates':foreground_changes}
 
 
 def clipping_comparison(rom, listing, before_rom, before_listing):
@@ -140,29 +144,74 @@ def source_colors():
 	return 11*64*3
 
 
+def fixed_reflections(rom,listing):
+	from import_ehz2_pp_background import tile_pixels
+	n=Native(rom,listing)
+	n.start()
+	n.write('Current_ZoneAndAct',0x300,2)
+	palette=(ROOT/'palette/SonicAndTails.bin').read_bytes()+(ROOT/'palette/EHZ.bin').read_bytes()
+	base=n.s['v_palette']&0xFFFFFF
+	n.cpu.mem_write(base,palette)
+	original=struct.unpack('>64H',palette)
+	assert original[18:22]==(0xA86,0xE86,0xEA8,0xECA)
+	source=(ROOT/'art/uncompressed/EHZ Reflections Source.unc').read_bytes()
+	expected=[original[16+i] if i else None for i in tile_pixels(source)]
+	poses=set()
+	for tick in range(64):
+		n.act('PalCycle_Load')
+		current=struct.unpack('>64H',n.cpu.mem_read(base,128))
+		assert all(current[i]==original[i] for i in range(64) if i not in (18,19,20,21))
+		for address,dest,length in n.uploads:
+			if dest&65535 != n.s['ArtTile_EHZ_Reflection']*32:
+				continue
+			assert length&65535==len(source)//2
+			pose=(address-n.s['Art_EHZReflection'])//len(source)
+			actual=tile_pixels(n.cpu.mem_read(address,len(source)))
+			assert [current[16+i] if i else None for i in actual]==expected, ('Reflection pulses',pose)
+			poses.add(pose)
+		n.uploads.clear()
+	assert poses=={0,1,2,3}
+	return {'poses':sorted(poses),'fixed_rgb_pixels':len(source)*2*4}
+
+
 def live(args):
+	import ctypes as C
+	from import_ehz2_pp_background import tile_pixels
 	from genesis_test_core import Genesis
 	from check_object_course import boot_level
 	g = Genesis(args.core, args.rom, args.listing, args.output / 'live',
 				system_directory=args.system_directory)
-	boot_level(g, zone=3, act=1, player=0)
-	bank = (ROOT / 'art/uncompressed/EHZ2 Background Waterfall.unc').read_bytes()
-	poses = [bank[i:i+352] for i in range(0,len(bank),352)]
+	boot_level(g, zone=3, act=args.act, player=0)
+	name='EHZ2 Background Waterfall.unc' if args.act==1 else 'EHZ Reflections.unc'
+	size=352 if args.act==1 else 544
+	bank = (ROOT / 'art/uncompressed' / name).read_bytes()
+	poses = [bank[i:i+size] for i in range(0,len(bank),size)]
+	cram=(C.c_uint16*64).in_dll(g.core,'cram')
+	if args.act==0:
+		original=struct.unpack('>48H',(ROOT/'palette/EHZ.bin').read_bytes())[:16]
+		source=(ROOT/'art/uncompressed/EHZ Reflections Source.unc').read_bytes()
+		fixed=[original[i] if i else None for i in tile_pixels(source)]
 	seen, phases, pictures = set(), set(), []
+	foreground=set()
 	for tick in range(90):
 		g.run()
 		assert not g.read('v_errortype')
-		base = g.s['ArtTile_EHZ2_BGWaterfall'] * 32
-		actual = bytes(g.vram[(base+i)^1] for i in range(352))
+		base = g.s['ArtTile_EHZ2_BGWaterfall' if args.act==1 else 'ArtTile_EHZ_Reflection'] * 32
+		actual = bytes(g.vram[(base+i)^1] for i in range(size))
 		assert actual in poses, ('Incomplete live waterfall pose', tick)
+		if args.act==0:
+			colors=[((v&7)<<1)|((v&0x38)<<2)|((v&0x1C0)<<3) for v in cram[16:32]]
+			assert [colors[i] if i else None for i in tile_pixels(actual)]==fixed, ('Visible reflection pulses',tick)
 		seen.add(poses.index(actual))
-		phases.add(tuple(g.read(g.s['v_palette']+i*2,2) for i in (49,51,54)))
+		phases.add(tuple(g.read(g.s['v_palette']+i*2,2) for i in ((49,51,54) if args.act==1 else (18,19,20,21))))
+		foreground.add(tuple(cram[18:22]))
 		pictures.append(g.video.copy())
-	assert seen == {0,1,2} and len(phases) == 3
-	pictures[0].save(args.output / 'EHZ2-waterfalls.webp', save_all=True,
+	assert seen == set(range(len(poses))) and len(phases) == len(poses)
+	assert len(foreground)==4,('Foreground waterfall is frozen',args.act,foreground)
+	pictures[0].save(args.output / f'EHZ{args.act+1}-waterfalls.webp', save_all=True,
 					append_images=pictures[1:],duration=17,loop=0,lossless=True)
 	g.close()
-	return {'frames':90,'tile_poses':sorted(seen),'palette_phases':len(phases)}
+	return {'frames':90,'tile_poses':sorted(seen),'palette_phases':len(phases),'foreground_phases':len(foreground)}
 
 
 def main():
@@ -173,10 +222,12 @@ def main():
 	p.add_argument('--before-listing',type=Path)
 	p.add_argument('--core',type=Path)
 	p.add_argument('--system-directory',type=Path)
+	p.add_argument('--act',type=int,choices=(0,1),default=1)
 	p.add_argument('--output',type=Path,required=True)
 	args = p.parse_args()
 	args.output.mkdir(parents=True,exist_ok=True)
 	report = {'exact_baked_pixels':source_colors(),
+			'fixed_reflections':fixed_reflections(args.rom,args.listing),
 			'animation':native_animation(args.rom,args.listing),
 			'pressure':pressure_scene(args.rom,args.listing)}
 	assert report['pressure']['snail_pieces'] == 3, report

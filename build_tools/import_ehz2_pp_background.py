@@ -165,7 +165,7 @@ def build(source, output):
 	# Background waterfalls now keep their cliff browns on P2 and animate tiles.
 	# P3 1/3/6 cycle; 2/4/5 hold fixed water blues. The flower ramp stays 7-F.
 	# Other foreground/object colors and all palette indices remain fixed.
-	additions = {4:0xEEC, 5:0xEC8,
+	additions = {10:0xEEC, 11:0xEC8,
 					16+8:0x0A6, 16+10:0xEEA, 16+11:0xCC6, 16+13:0x064,
 					32+1:0xEEA, 32+2:0xE64, 32+3:0xCC6, 32+4:0xEC8, 32+5:0xE86}
 	used = set()

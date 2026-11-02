@@ -118,8 +118,12 @@ PalCycle_HPZ:
 ; ===========================================================================
 
 PalCycle_EHZ:
+		bsr.s	PalCycle_EHZWaterfalls
 		cmpi.b	#1,(Current_Act).w
 		beq.s	PalCycle_EHZ2
+		rts
+
+PalCycle_EHZWaterfalls:
 		lea	(Pal_EHZCyc).l,a0
 		subq.w	#1,(v_pcyc_time).w
 		bpl.s	.return
@@ -128,21 +132,37 @@ PalCycle_EHZ:
 		addq.w	#1,(v_pcyc_num).w
 		andi.w	#3,d0
 		lsl.w	#3,d0
-		move.w	(a0,d0.w),(v_palette+$26).w
-		move.l	2(a0,d0.w),(v_palette+$34).w
-		move.w	6(a0,d0.w),(v_palette+$24).w
+		lea	(v_palette+$24).w,a1	; four adjacent cyans, before white
+		move.l	(a0,d0.w),(a1)+
+		move.l	4(a0,d0.w),(a1)
+		cmpi.b	#1,(Current_Act).w
+		beq.s	.return			; Act 2 has its own background tile bank
+		; Queue the inverse tile pose in the same update as its palette.
+		; The reflection's colors stay fixed; line-scroll still deforms it.
+		lsr.w	#1,d0
+		lea	Pal_EHZReflectionFrames(pc),a0
+		move.l	(a0,d0.w),d1
+		move.w	#tiles_to_bytes(ArtTile_EHZ_Reflection),d2
+		move.w	#ArtTile_EHZ_Reflection_Count*16,d3
+		jmp	(QueueDMATransfer).l
 .return:	rts
 ; ===========================================================================
 
+Pal_EHZReflectionFrames:
+		dc.l Art_EHZReflection
+		dc.l Art_EHZReflection+ArtTile_EHZ_Reflection_Count*tile_size
+		dc.l Art_EHZReflection+ArtTile_EHZ_Reflection_Count*tile_size*2
+		dc.l Art_EHZReflection+ArtTile_EHZ_Reflection_Count*tile_size*3
+
 PalCycle_EHZ2:
-		subq.w	#1,(v_pcyc_time).w
+		subq.w	#1,(v_pcyc_time2).w
 		bpl.s	.return
-		move.w	#8,(v_pcyc_time).w	; original CD timer: nine active updates
-		move.w	(v_pcyc_num).w,d0
-		addq.w	#1,(v_pcyc_num).w
-		cmpi.w	#3,(v_pcyc_num).w
+		move.w	#8,(v_pcyc_time2).w	; original CD timer: nine active updates
+		move.w	(v_pcyc_num2).w,d0
+		addq.w	#1,(v_pcyc_num2).w
+		cmpi.w	#3,(v_pcyc_num2).w
 		blo.s	.phase_ready
-		clr.w	(v_pcyc_num).w
+		clr.w	(v_pcyc_num2).w
 .phase_ready:
 		move.w	d0,d1
 		add.w	d0,d0

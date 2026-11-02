@@ -363,6 +363,8 @@ terrain, HUD and plane allocations are preserved. The body caches a frame
 only after its complete DMA is queued and hides/retries on backpressure.
 Palette line two belongs to Mecha through defeat and results. The collapsed
 body keeps its electrical palette/sparks until the next level loads.
+The entry dash uses floor radius `$1F`: frame 2 has the same 32-pixel foot
+baseline as the standing frames, despite its shorter upper silhouette.
 
 `HudUpdate` shares ring, life and result-bonus updates between its ordinary and
 placement displays. Its initial digit table uses S3&K-style readable strings,
@@ -409,8 +411,7 @@ conversion is performed. Keep every compressed archive followed by `even`.
 
 The EHZ waterfall object keeps its 24-tile bank at `$3AE-$3C5` and all six
 mapping frames. Its editable `art/uncompressed/EHZ Waterfall.unc` uses P1
-indices `2/3/A/B` for the four cyans and `6` for white; the former `$F` pixels
-now use cyan slot `2`, rather than the yellow ramp. Run
+indices `2-5` for the four cyans and `6` for white. Run
 `python build_tools/build_ehz_waterfall_art.py` to pack it. Waterfalls use
 priority zero so the flow still overlays characters. Render bit 4 clips
 offscreen pieces before they consume SAT entries. The mappings themselves remain intact.
@@ -419,7 +420,10 @@ Springs retain S3&K mechanisms/geometry, with Sonic CD straight caps from
 scddisasm `f8cf3f0af7bf419d18182ba98554f09307ad3cc6` (normal spring tiles 0–3
 and 18–21). Both colors share the cap tiles, selecting a palette per piece.
 The editable `* spring S3.unc` files now contain 12 vertical, 12 horizontal
-and 18 diagonal tiles; `build_spring_art.py` packs them. Their VRAM bases stay
+and 18 diagonal tiles; `build_spring_art.py` packs them. Diagonal cap bevels
+use fixed gray slots `7/8`, so yellow springs cannot borrow the act's animated
+cyan/skin entries. Every spring pixel uses only transparent/black, gray `6-9`
+and the shared red/yellow ramp `D-F`. Their VRAM bases stay
 fixed; the 18 released slots remain gaps rather than new global allocations.
 
 `build_special_results_art.py` builds the independent navy/white/gold results

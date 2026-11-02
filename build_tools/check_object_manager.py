@@ -752,6 +752,7 @@ for camera,alternating in ((0,False),(400,True),(1600,False)):
 	for tick in range(90):
 		m.act('Obj35','v_starsobj',{UC_M68K_REG_D7:0x13579BDF})
 		assert m.cpu.reg_read(UC_M68K_REG_D7)==0x13579BDF
+		m.act('InvincibilityStars_Draw')
 		angles=[m.cpu.mem_read(
 			(m.s['v_starsobj']+m.s['invincibility_angles']+i*6)&0xFFFFFF,1)[0] for i in range(4)]
 		frames=[m.cpu.mem_read((m.s['v_starsobj']+m.s['invincibility_frames']+i*6)&0xFFFFFF,1)[0]
@@ -780,6 +781,7 @@ for camera,partner_x in ((0,160),(1600,600)):
 		m.act('Obj35','v_starsobj')
 		partner=next(a for a in pool() if m.get(a,'code')==m.s['Obj35'])
 		m.act('Obj35',partner)
+		m.act('InvincibilityStars_Draw')
 		effects=[m.s['v_starsobj'],partner]
 		before=[bytes(m.cpu.mem_read(a&0xFFFFFF,m.s['object_size'])) for a in effects]
 		for effect in effects:

@@ -7049,8 +7049,9 @@ ExecuteObjects:
 .build_list:
 		clr.w	(Collision_response_list).l
 .reserved:
-		lea	(v_player2tails+object_size).w,a0
-		moveq	#(v_lvlobjspace-v_player2tails)/object_size-2,d7
+		; The tail and shields follow after transports move their owners.
+		lea	(v_shieldobj2+object_size).w,a0
+		moveq	#(v_lvlobjspace-v_shieldobj2)/object_size-2,d7
 		bsr.s	RunObject
 		moveq	#Collision_response_capacity-1,d7
 		tst.w	(Collision_response_list).l
@@ -7060,6 +7061,10 @@ ExecuteObjects:
 .dense:
 		bsr.s	RunObject
 .tail:
+		lea	(v_shieldobj).w,a0
+		moveq	#1,d7
+		bsr.s	RunObject
+		jsr	(InvincibilityStars_Draw).l
 		; Carriers move the body after its normal update. Animate and queue
 		; the separate tail last, using the body's final position and state.
 		lea	(v_player2tails).w,a0
@@ -13646,6 +13651,8 @@ Art_EHZFlowers4:	binclude	"art/uncompressed/EHZ flowers - 4.bin"
 Art_EHZPulseBall:	binclude	"art/uncompressed/EHZ Pulse Ball.bin"
 		even
 Art_EHZ2BGWaterfall:	binclude	"art/uncompressed/EHZ2 Background Waterfall.unc"
+		even
+Art_EHZReflection:	binclude	"art/uncompressed/EHZ Reflections.unc"
 		even
 Art_Flowers1:		binclude	"art/uncompressed/EHZ and HTZ flowers - 1.bin"
 Art_Flowers2:		binclude	"art/uncompressed/EHZ and HTZ flowers - 2.bin"

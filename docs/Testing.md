@@ -95,6 +95,9 @@ python build_tools/check_mecha_sonic.py --rom s2built.bin --listing md-main.lst 
 python build_tools/check_mecha_sonic.py --rom s2built.bin --listing md-main.lst --output test-results/mecha/game --core /path/to/genesis_plus_gx_libretro.so --system-directory /path/to/mode1-fixture
 ```
 
+Native and emulator entry checks compare frame 2's actual foot baseline with
+the floor sensor and the authored SMZ2 floor at `$5C0`.
+
 The optional source oracle assembles the original attack states, raw-animation
 interpreter and callbacks, comparing 8,400 updates of positions, velocities,
 frames, timers, original flags and RNG when no counter is triggered. The local
@@ -106,7 +109,8 @@ and check harmful rolling collision through touchdown and the fixed foot height.
 Head-hit cases run the real touch-damage handler and reject ground/side/rising
 contacts; projectile movement and defeat cleanup are executed, not inferred.
 Twenty post-counter landings cover both arena halves, landing choices and old
-facings through the next jump. Shared touch tests check full X/Y/ground-speed
+facings through the next jump, checking inward rendered stance throughout the
+windup and the counter-specific dash velocity. Shared touch tests check full X/Y/ground-speed
 reversal for both actors and all three bosses. Camera cases approach from six
 heights, including odd coordinates immediately beside the target. All three
 boss defeat entries must request the music fade.
@@ -122,8 +126,10 @@ expiring it must leave Boss 3 playing, checked against the actual Z80 song.
 Tails/PAL. These are focused
 gameplay fixtures, not a controller-only full-level playthrough.
 
-The counter scene positions an ordinary landing above an actual down+B charge
-and verifies player damage without boss damage. A long ground wait supplies
+Eight counter scenes position ordinary landings over actual down+B charges at
+both arena edges, with both landing choices and both player facings. They check
+player damage without boss damage, floor alignment, inward stance through the
+windup and inward follow-up dash velocity through the next jump. A long ground wait supplies
 three uninterrupted head bounces: only the first approach is staged, and real
 character physics supplies subsequent contacts without position, velocity, HP,
 cooldown or streak repairs. It checks the upward shot's VRAM, hardware sprites
@@ -677,6 +683,17 @@ entering the rotating stage, checks that stage's RAM-to-VRAM ring upload, then
 returns through results and verifies all three level sources are rebuilt.
 `check_player_effects.py` compares RAM sources and actual VRAM against editable
 art, including all eight regular/lost-ring frames and shield/star transitions.
+`check_tunnel_shields.py --output test-results/tunnel-effects` executes the real
+dispatcher, both shields, both star composites and a tunnel: all 113 object
+slots must update exactly once in normal and dense collision modes. Native
+checks compare final owner/shield positions and both leading orbit coordinates.
+Add `--core /path/to/core.so --system-directory /path/to/mode1-fixture` for the
+authored SMZ2 route with real players and rendering; `--stars` selects stars,
+and `--player 2` selects primary Tails. `--tunnel 2` selects the curved route
+with a visible horizontal corridor; the default route 0 crosses the Y wrap.
+`--before-rom/--before-listing` can
+demonstrate the old movement-frame lag, rather than merely testing a stationary
+effect. Orbit history/phase and hardware art transitions have separate checks.
 Run `python build_tools/build_player_effect_art.py --check` after source-art edits.
 Ring tests cover sparse/all-active lifetimes, staggered
 collection, bank pauses, reset, expanded-tail guards and HPZ/SMZ gameplay in both
@@ -941,17 +958,25 @@ playthroughs. RGB preservation alone cannot detect a preserved historical bug.
 ## EHZ waterfall animation and sprite pressure
 
 `build_ehz_waterfall_art.py --check` verifies the packed object bank.
+`build_ehz_reflection_art.py --check` verifies the inverse reflection frames
+and resident terrain bank. The spring packer/palette check rejects per-act
+color indices in all three shared spring banks.
 `build_ehz2_waterfall_art.py --check` verifies the baked PP animation and its
 water palette script. The PP importer reproduces the private terrain bank and
 source waterfall tiles from the pinned CD source documented in [Levels](Levels.md).
 
 `python build_tools/check_ehz_waterfalls.py --rom s2built.bin --listing md-main.lst --output test-results/ehz-waterfalls`
-checks every baked pixel against the original PP colors, executes palette/DMA
+checks every baked pixel against the original PP colors, verifies all 4,352
+reflection-pose pixels keep their RGB colors through the grouped cyan cycle,
+executes both independent Act-2 palette clocks (four foreground phases every
+eight active updates and three PP water phases every nine), then palette/DMA
 updates, and renders a native scene using the authored four-column Act-2
 waterfalls, separated players, an approaching snail and 32 rings. This is a
 controlled pressure fixture, not a controller-only route. Optional
 `--before-rom ROM --before-listing LISTING` confirms the old snail starvation
 and compares visible mapping pieces at 80 edge/flip cases. Add `--core CORE
 --system-directory BIOS` to boot Act 2 in the emulator, verify complete DMA
-poses and three live palette phases, and save an animation. Native checks use
-the optional Unicorn dependency.
+poses and three live palette phases, and save an animation. Add `--act 0`
+for Act 1: it checks the actual VRAM tile bytes against hardware CRAM through
+all four phases, so a flashing cloud reflection fails even if the CPU-side
+palette buffer looks valid. Native checks use the optional Unicorn dependency.

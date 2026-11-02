@@ -39,7 +39,7 @@ MS_CampHeight = $100            ; detect before the descent reaches the player
 MS_CampMinDrop = $18            ; enough separation to commit the aimed dive
 MS_ArenaX	=	$1E40		; arena camera, independent of the approach height
 MS_ArenaY	=	$500
-MS_EntryRadius	=	$1B		; frame 2 feet are four pixels above the standing feet
+MS_EntryRadius	=	$1F		; entry and standing frames share the same foot baseline
 MS_EnergyFrame = 8              ; compact copy of the rematch's energy ball
 
 ; Called only after a crossing of subtype bit 1. A full pool retries without
@@ -809,16 +809,23 @@ MS_CounterLanded:
 		move.w	MS_left(a0),d0
 		add.w	MS_right(a0),d0
 		lsr.w	#1,d0
-		bclr	#0,obRender(a0)
+		bset	#0,obRender(a0)	; unflipped standing art faces left
 		cmp.w	obX(a0),d0
 		bhs.s	.facing
-		bset	#0,obRender(a0)
+		bclr	#0,obRender(a0)
 .facing:
 		btst	#3,MS_flags(a0)
 		beq.s	.landed
 		bchg	#0,obRender(a0)	; MS_TurnLanding turns back toward the arena
 .landed:
-		; MS_Landed installs the standing script with feet at the same floor.
+		bsr.s	MS_Landed
+		btst	#3,MS_flags(a0)
+		bne.s	.return
+		; The ordinary dash travels backwards. This aimed landing can occur
+		; at either edge, so its dash follows the corrected inward stance.
+		move.l	#MS_StartCounterDash,MS_callback(a0)
+.return:
+		rts
 ; ---------------------------------------------------------------------------
 
 MS_Landed:
@@ -846,6 +853,17 @@ MS_TurnLanding:
 
 MS_Animate:
 		jmp	MS_RawAnimate(pc)
+; ---------------------------------------------------------------------------
+
+MS_StartCounterDash:
+		move.b	#$10,obRoutine(a0)
+		move.w	#$820,d0
+		move.w	#-$20,d1
+		btst	#0,render_flags(a0)
+		bne.s	MS_loc_7B55E
+		neg.w	d0
+		neg.w	d1
+		bra.s	MS_loc_7B55E
 ; ---------------------------------------------------------------------------
 
 MS_StartGroundDash:

@@ -45,6 +45,11 @@ Screen-space Y uses `obScreenY` at `$12`. Display bounds are independent of
 collision radii. Fields are conventions, not separately allocated storage:
 private overlays may reuse services an object does not use.
 
+`ExecuteObjects` updates reserved slots 0-5, then 9-22 and the dynamic pool.
+Shields in 7/8, star child construction and the separate tail in 6 follow the
+finished movement pass. Every live object still updates once; see
+[effect timing](Players-and-effects.md#water-and-shared-effects).
+
 `ExecuteObjects` calls the longword `code` directly. Placement IDs remain bytes;
 `Obj_Index` resolves them only when spawning. Internal `obRoutine` state machines
 remain valid. Existence/deletion checks must access the full longword: the high
@@ -288,7 +293,11 @@ descends at eight pixels per update and keeps the harmful rolling collision unti
 touchdown. It then expands to the standing radius without moving its feet and
 continues the selected ground sequence facing into the arena. The aimed X is
 clamped to the attack boundaries, and either original landing choice resumes
-its standing script independently of the old approach direction.
+its standing script independently of the old approach direction. Standing
+art faces left without X flip; counter landings therefore set X flip on the
+left half and clear it on the right, independently of either player's facing.
+The counter's ground-dash callback travels in that inward direction; the
+ordinary fight's original backwards dash keeps its original callback.
 Released dashes, airborne rolls, dead
 actors and an inactive companion do not trigger it. This borrows the super
 rematch's aimed rolling dive without importing its transformation or AI.

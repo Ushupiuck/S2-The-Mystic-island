@@ -6,7 +6,7 @@ MCD_CompressedAssets:
 	dc.l BKosp_CPZ,BKosp_CPZ+$28DA	; art/kosinski/level/8x8 - CPZ.kosp
 	endif
 	if defined(BKosp_EHZ)
-	dc.l BKosp_EHZ,BKosp_EHZ+$2E4B	; art/kosinski/level/8x8 - EHZ.kosp
+	dc.l BKosp_EHZ,BKosp_EHZ+$2F3C	; art/kosinski/level/8x8 - EHZ.kosp
 	endif
 	if defined(BKosp_GHZ)
 	dc.l BKosp_GHZ,BKosp_GHZ+$22F8	; art/kosinski/level/8x8 - GHZ.kosp
@@ -240,7 +240,7 @@ MCD_CompressedAssets:
 	dc.l BMap16_CPZ,BMap16_CPZ+$E28	; mappings/16x16/CPZ.kosp
 	endif
 	if defined(BMap16_EHZ)
-	dc.l BMap16_EHZ,BMap16_EHZ+$CAE	; mappings/16x16/EHZ.kosp
+	dc.l BMap16_EHZ,BMap16_EHZ+$CAC	; mappings/16x16/EHZ.kosp
 	endif
 	if defined(BMap16_GHZ)
 	dc.l BMap16_GHZ,BMap16_GHZ+$B14	; mappings/16x16/GHZ.kosp
@@ -288,7 +288,7 @@ MCD_CompressedAssets:
 	dc.l GKosp_CPZ,GKosp_CPZ+$28DA	; art/kosinski/level/8x8 - CPZ.kosp
 	endif
 	if defined(GKosp_EHZ)
-	dc.l GKosp_EHZ,GKosp_EHZ+$2E4B	; art/kosinski/level/8x8 - EHZ.kosp
+	dc.l GKosp_EHZ,GKosp_EHZ+$2F3C	; art/kosinski/level/8x8 - EHZ.kosp
 	endif
 	if defined(GKosp_GHZ)
 	dc.l GKosp_GHZ,GKosp_GHZ+$22F8	; art/kosinski/level/8x8 - GHZ.kosp
@@ -522,7 +522,7 @@ MCD_CompressedAssets:
 	dc.l GMap16_CPZ,GMap16_CPZ+$E28	; mappings/16x16/CPZ.kosp
 	endif
 	if defined(GMap16_EHZ)
-	dc.l GMap16_EHZ,GMap16_EHZ+$CAE	; mappings/16x16/EHZ.kosp
+	dc.l GMap16_EHZ,GMap16_EHZ+$CAC	; mappings/16x16/EHZ.kosp
 	endif
 	if defined(GMap16_GHZ)
 	dc.l GMap16_GHZ,GMap16_GHZ+$B14	; mappings/16x16/GHZ.kosp
@@ -546,10 +546,10 @@ MCD_CompressedAssets:
 	dc.l Kosp_CreditText,Kosp_CreditText+$4F1	; art/kosinski/Ending - Credits.kosp
 	endif
 	if defined(Kosp_EHZ)
-	dc.l Kosp_EHZ,Kosp_EHZ+$2E4B	; art/kosinski/level/8x8 - EHZ.kosp
+	dc.l Kosp_EHZ,Kosp_EHZ+$2F3C	; art/kosinski/level/8x8 - EHZ.kosp
 	endif
 	if defined(Kosp_EHZ2)
-	dc.l Kosp_EHZ2,Kosp_EHZ2+$2931	; art/kosinski/level/8x8 - EHZ2.kosp
+	dc.l Kosp_EHZ2,Kosp_EHZ2+$2938	; art/kosinski/level/8x8 - EHZ2.kosp
 	endif
 	if defined(Kosp_GHZ)
 	dc.l Kosp_GHZ,Kosp_GHZ+$22F8	; art/kosinski/level/8x8 - GHZ.kosp
@@ -948,7 +948,7 @@ MCD_CompressedAssets:
 	dc.l Map16_CPZ,Map16_CPZ+$E28	; mappings/16x16/CPZ.kosp
 	endif
 	if defined(Map16_EHZ)
-	dc.l Map16_EHZ,Map16_EHZ+$CAE	; mappings/16x16/EHZ.kosp
+	dc.l Map16_EHZ,Map16_EHZ+$CAC	; mappings/16x16/EHZ.kosp
 	endif
 	if defined(Map16_EHZ2)
 	dc.l Map16_EHZ2,Map16_EHZ2+$B8E	; mappings/16x16/EHZ2.kosp
@@ -1011,7 +1011,7 @@ MCD_CompressedAssets:
 	dc.l Nem_Crawl,Nem_Crawl+$3B1	; art/nemesis/Enemy Crawl.nem
 	endif
 	if defined(Nem_DSpring)
-	dc.l Nem_DSpring,Nem_DSpring+$15E	; art/nemesis/Diagonal spring.nem
+	dc.l Nem_DSpring,Nem_DSpring+$14C	; art/nemesis/Diagonal spring.nem
 	endif
 	if defined(Nem_EHZ_Bridge)
 	dc.l Nem_EHZ_Bridge,Nem_EHZ_Bridge+$E1	; art/nemesis/EHZ bridge.nem
@@ -1020,7 +1020,7 @@ MCD_CompressedAssets:
 	dc.l Nem_EHZ_Fireball,Nem_EHZ_Fireball+$11D	; art/nemesis/Fireball 1.nem
 	endif
 	if defined(Nem_EHZ_Waterfall)
-	dc.l Nem_EHZ_Waterfall,Nem_EHZ_Waterfall+$EE	; art/nemesis/Waterfall tiles.nem
+	dc.l Nem_EHZ_Waterfall,Nem_EHZ_Waterfall+$E6	; art/nemesis/Waterfall tiles.nem
 	endif
 	if defined(Nem_Eagle)
 	dc.l Nem_Eagle,Nem_Eagle+$13E	; art/nemesis/Flicky/Eagle.nem
@@ -1272,7 +1272,7 @@ MCD_CompressedAssets:
 	dc.l PKosp_CPZ,PKosp_CPZ+$28DA	; art/kosinski/level/8x8 - CPZ.kosp
 	endif
 	if defined(PKosp_EHZ)
-	dc.l PKosp_EHZ,PKosp_EHZ+$2E4B	; art/kosinski/level/8x8 - EHZ.kosp
+	dc.l PKosp_EHZ,PKosp_EHZ+$2F3C	; art/kosinski/level/8x8 - EHZ.kosp
 	endif
 	if defined(PKosp_GHZ)
 	dc.l PKosp_GHZ,PKosp_GHZ+$22F8	; art/kosinski/level/8x8 - GHZ.kosp
@@ -1506,7 +1506,7 @@ MCD_CompressedAssets:
 	dc.l PMap16_CPZ,PMap16_CPZ+$E28	; mappings/16x16/CPZ.kosp
 	endif
 	if defined(PMap16_EHZ)
-	dc.l PMap16_EHZ,PMap16_EHZ+$CAE	; mappings/16x16/EHZ.kosp
+	dc.l PMap16_EHZ,PMap16_EHZ+$CAC	; mappings/16x16/EHZ.kosp
 	endif
 	if defined(PMap16_GHZ)
 	dc.l PMap16_GHZ,PMap16_GHZ+$B14	; mappings/16x16/GHZ.kosp

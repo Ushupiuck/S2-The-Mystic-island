@@ -93,7 +93,44 @@ InvincibilityStars_Update:
 		or.b	d1,d0
 		ori.b	#$80,d0
 		move.b	d0,invincibility_flags(a0)	; initialized, with this frame's orbit direction
-		bra.s	InvincibilityStars_BuildChildren
+		rts					; children use the owner's final position in the late pass
+
+; ===========================================================================
+; Position/queue stars after carriers and tunnels. Normal object updates still
+; own lifetime, art and orbit advancement; only child construction is delayed.
+; Scan the dynamic pool only while either player is invincible. No new SST,
+; pointer cache or per-object dispatcher comparison is required.
+; ---------------------------------------------------------------------------
+InvincibilityStars_Draw:
+		move.b	(v_player+obStatusSecondary).w,d0
+		or.b	(v_player2+obStatusSecondary).w,d0
+		btst	#obStatusSecondary_isInvincible,d0
+		beq.s	.return
+		cmpi.b	#PlayerEffects_StarsLoaded,(v_shieldobj+effect_loaded_frame).w
+		bne.s	.return
+		lea	(v_starsobj).w,a0
+		bsr.s	.draw_object
+		lea	(v_lvlobjspace).w,a0
+		moveq	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d7
+.loop:
+		bsr.s	.draw_object
+		lea	object_size(a0),a0
+		dbf	d7,.loop
+.return:
+		rts
+.draw_object:
+		cmpi.l	#Obj35,code(a0)
+		bne.s	.return
+		tst.b	invincibility_flags(a0)
+		bpl.s	.return			; art backpressure can postpone initialization
+		lea	(v_player).w,a1
+		btst	#InvincibilityStars_PartnerBit,invincibility_flags(a0)
+		beq.s	.parent_ready
+		lea	(v_player2).w,a1
+.parent_ready:
+		bsr.w	InvincibilityStars_CheckParent
+		beq.s	.return
+		bra.w	InvincibilityStars_BuildChildren
 
 ; ===========================================================================
 ; Create/refresh at most one secondary effect. No reserved slots or VRAM are
@@ -155,7 +192,7 @@ InvincibilityStars_Advance:
 		rts
 
 ; ===========================================================================
-; Prepare the generic composite during the object's update. Child data
+; Prepare the generic composite after the object pass. Child data
 ; overlaps the usual routine/status fields, so this object uses
 ; invincibility_flags for initialization/facing and DisplaySprite3 to queue.
 ; Preserve ExecuteObjects' loop counter while preparing all four layers.
