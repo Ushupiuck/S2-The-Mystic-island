@@ -629,12 +629,6 @@ MCD_CompressedAssets:
 	if defined(Kospm_EHZ_Boss)
 	dc.l Kospm_EHZ_Boss,Kospm_EHZ_Boss+$74D	; art/moduled kosinski/EHZ boss.kospm
 	endif
-	if defined(Kospm_EggChopper)
-	dc.l Kospm_EggChopper,Kospm_EggChopper+$C2	; art/moduled kosinski/Chopper blades for EHZ boss.kospm
-	endif
-	if defined(Kospm_EggPod)
-	dc.l Kospm_EggPod,Kospm_EggPod+$496	; art/moduled kosinski/Boss Ship.kospm
-	endif
 	if defined(Kospm_EggmanFace)
 	dc.l Kospm_EggmanFace,Kospm_EggmanFace+$2A9	; art/moduled kosinski/Eggman face.kospm
 	endif

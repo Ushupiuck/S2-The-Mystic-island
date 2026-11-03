@@ -1827,6 +1827,11 @@ BossExhaust_Off = 0
 BossExhaust_Cruise = 1
 BossExhaust_Escape = 2
 
+; EHZ chassis borrows only row-two slot C while its arena is active.
+; Existing slots 6-9 supply the other metal shades; slots 2-5 keep cycling.
+EHZBoss_MetalPaletteOffset = $20+$C*2
+EHZBoss_MetalColor = $A88
+
 ArtTile_Eggman:			equ $3F0
 ArtTile_Eggman_Weapons:		equ $475
 ArtTile_Eggman_Button:		equ $4A4

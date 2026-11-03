@@ -17,9 +17,7 @@ BANKS = (
 	('Weapons', 'Boss weapons', 'Nem_Weapons'),
 	('Exhaust', 'Boss exhaust', 'Nem_Exhaust'),
 	('Prison', 'Prison Capsule', 'Nem_Prison'),
-	('EggPod', 'Boss Ship', 'Nem_EggPod'),
 	('EHZ_Boss', 'EHZ boss', 'Nem_EHZ_Boss'),
-	('EggChopper', 'Chopper blades for EHZ boss', 'Nem_EggChopper'),
 	('BossExplosion', 'Large explosion', 'Nem_BossExplosion'),
 	('MechaEffects', 'Mecha Sonic effects', 'Nem_MechaEffects'),
 	('Bonus', 'Hidden bonus', 'Nem_Bonus'),
@@ -63,7 +61,7 @@ def main():
 	report = []
 	for label, name, original in BANKS:
 		source = ROOT / f'art/uncompressed/{name}.unc'
-		if a.import_nemesis and label not in ('OldEggPod','EggmanFace','Exhaust','EggPod','EggChopper'):
+		if a.import_nemesis and label not in ('OldEggPod','EggmanFace','Exhaust'):
 			raw = decode(original)
 			if source.exists():
 				assert source.read_bytes() == raw, source

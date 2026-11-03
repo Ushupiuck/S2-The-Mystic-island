@@ -610,6 +610,20 @@ controller-only routes. `--pal` selects PAL; `--player 2` selects primary Tails;
 `--act 0` / `--act 1` restrict the run. Captures stay in the supplied ignored
 output directory. The shared-art runner's `--core` mode uses the same checks.
 
+`check_ehz_boss_palette.py --s2disasm SOURCE --output OUTPUT` compares all
+128 chassis tiles/eight frames with an independently built Sonic 2 final
+checkout, preserving the source geometry and intended RGB roles. Native
+constructor tests allow exactly one changed palette word, include a failed
+allocation/retry, restore an arbitrary saved color at escape cleanup, and run
+both palette clocks with the metal shade loaded.
+
+The S1-pod gameplay runner also compares 36 actual VDP frames with/without
+the one-word load at each of the entry/fight/escape camera positions. Terrain,
+background, player and HUD pixels must match exactly. During the boss, its
+palette/CRAM monitor checks all fixed entries, all four foreground phases,
+Act 2's three background phases, the resident metal shade and its restoration
+after escape. The shared S1 pod/head/exhaust banks are not recolored.
+
 The native pass covers fragmented/full pools and retries, end-of-pool parents,
 dry-act water-bank borrowing, staged deployment, the original opening delay,
 quarter-speed first pass and timed return sweeps, recycled

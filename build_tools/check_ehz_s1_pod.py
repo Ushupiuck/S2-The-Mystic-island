@@ -10,6 +10,7 @@ from PIL import Image
 from check_boss_shared_art import raster,unpack
 from check_sprite_assets import frames
 from check_ehz_boss import symbols
+from check_ehz_boss_palette import environment,LivePalette
 ROOT=Path(__file__).resolve().parents[1]
 
 
@@ -23,8 +24,7 @@ def check_art(rom,s):
 	n=struct.unpack_from('>H',rom,plc)[0]+1
 	entries=[struct.unpack_from('>IH',rom,plc+2+6*i) for i in range(n)]
 	assert (s['Kospm_OldEggPod'],s['ArtTile_Eggman']*32) in entries
-	assert all(source not in (s['Kospm_EggPod'],s['Kospm_EggChopper']) for source,dest in entries)
-	assert 'Map_EHZBoss_Propeller' not in s
+	assert not {'Kospm_EggPod','Kospm_EggChopper','Map_EHZBoss_Propeller'} & s.keys()
 
 
 def save_gif(images,path,stride=2,pal=False):
@@ -49,6 +49,7 @@ def live(a,act):
 	out.mkdir(parents=True,exist_ok=True)
 	g=Genesis(a.core,a.rom,a.listing,out,a.pal,system_directory=a.system_directory)
 	s=g.s
+	palette_monitor=None
 	rom=a.rom.read_bytes()
 	boot_level(g,zone=s['id_EHZ'],act=act,player=a.player)
 	isolate(g)
@@ -74,6 +75,8 @@ def live(a,act):
 		g.put('v_player','obControl',0x81)
 		g.put('v_player','flashtime',6000,2)
 	def valid():
+		if palette_monitor is not None:
+			palette_monitor.sample()
 		assert not g.read('v_errortype'),hex(g.core.m68k_get_reg(16))
 		assert g.read('v_gamemode',2)==s['Level']
 		assert g.get('v_player','obRoutine')<6, ('Player died',g.frame,g.get('v_player','obX',2),g.get('v_player','obY',2),g.read('Camera_Y_pos',2),g.read('Camera_Max_Y_pos',2),[(p,g.get(p,'obRoutine'),g.get(p,'obY',2)) for p in objects(g,0x55)])
@@ -104,7 +107,9 @@ def live(a,act):
 	):
 		raw=unpack(rom,s[label])
 		assert bytes(g.vram[(s[base]*32+i)^1] for i in range(len(raw)))==raw,label
+	environment_report=environment(g)
 	body=spawn(g,'EHZBoss',s['EHZBoss_LandingX'],s['EHZBoss_LandingY']+8)
+	palette_monitor=LivePalette(g,body,act)
 	entry=[]
 	entry_flames=set()
 	cycles=set()
@@ -138,7 +143,7 @@ def live(a,act):
 		# Act 1 has no authored EHZ fight arena. Its fixture verifies entry,
 		# docking, palette animation and every pose/facing; Act 2 owns the fight.
 		g.close()
-		return {'act':1,'landing_and_docking':True,'poses_and_facings':14,'animated_palette_phases':len(cycles),'no_rotor':True,'authored_fight':False}
+		return {'act':1,'landing_and_docking':True,'poses_and_facings':14,'animated_palette_phases':len(cycles),'no_rotor':True,'authored_fight':False,'environment':environment_report,'palette':palette_monitor.report()}
 	facings=set()
 	drive=[]
 	for tick in range(750):
@@ -257,7 +262,7 @@ def live(a,act):
 		assert any(g.get(p,'code')==s['Flicky'] for p in objects(g))
 		g.video.save(out/'capsule.png')
 	g.close()
-	return {'act':act+1,'hits':hits,'facings':sorted(facings),'hop_pixels':8,'entry_flame':sorted(entry_flames),'escape_flare':sorted(flare),'animated_palette_phases':len(cycles),'no_rotor':True,'capsule_tested':act==1}
+	return {'act':act+1,'hits':hits,'facings':sorted(facings),'hop_pixels':8,'entry_flame':sorted(entry_flames),'escape_flare':sorted(flare),'animated_palette_phases':len(cycles),'no_rotor':True,'capsule_tested':act==1,'environment':environment_report,'palette':palette_monitor.report()}
 
 
 def main():

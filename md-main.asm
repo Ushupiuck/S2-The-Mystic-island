@@ -13561,11 +13561,7 @@ Kospm_Exhaust:	binclude "art/moduled kosinski/Boss exhaust.kospm"
 		even
 Kospm_Prison:	binclude "art/moduled kosinski/Prison Capsule.kospm"
 		even
-Kospm_EggPod:	binclude "art/moduled kosinski/Boss Ship.kospm"
-		even
 Kospm_EHZ_Boss:	binclude "art/moduled kosinski/EHZ boss.kospm"
-		even
-Kospm_EggChopper:	binclude "art/moduled kosinski/Chopper blades for EHZ boss.kospm"
 		even
 Nem_CPZ_Boss:	binclude	"art/nemesis/CPZ boss.nem"
 		even

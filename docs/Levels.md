@@ -438,7 +438,9 @@ pinned CD source.
 Further cross-act green consolidation remains a proposal. The earlier preview
 rendered Act 1's background with Act 2's greens; it did not change Act 1's
 palette or art. Continue the EHZ1/EHZ2 palette-space review with aligned free
-slots in mind, then resolve the [boss's remaining gray choice](Importing-objects.md#ehz-boss-palette-candidate).
+slots in mind. The S1-pod preview now uses the selected
+[boss-owned metal shade](Importing-objects.md#ehz-boss-palette) through a
+masked row-two load; the earlier three-gray WIP remains separate.
 The flower ramps, cycling cyans, PP waterfalls and fixed reflection poses above
 are already implemented; the seven-emerald/results work was a separate detour.
 

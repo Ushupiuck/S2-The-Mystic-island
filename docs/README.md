@@ -77,9 +77,10 @@ for EHZ, with a four-pixel drawing offset, rear-flame entry and an unpowered
 hop before escape ignition. S1's seat padding uses the S2 orange ramp. See
 [shared boss art](Sprites-and-VRAM.md#shared-eggman-heads-and-exhaust).
 Next, return to [EHZ1/EHZ2 palette-space consolidation](Levels.md#emerald-hill-act-2-palmtree-panic-experiment).
-The earlier cross-act greens preview was not applied to Act 1. The remaining
-boss gray decision and its isolated WIP checkpoint are
-[explicitly pending](Importing-objects.md#ehz-boss-palette-candidate).
+The earlier cross-act greens preview was not applied to Act 1. The S1-pod
+preview also applies the boss-owned metal shade through a
+[masked palette load](Importing-objects.md#ehz-boss-palette), preserving
+foreground and background animation. The earlier three-gray WIP stays separate.
 
 The existing guides remain in use; migration/import scripts are kept
 when they own a reproducible asset or a still-useful authoring operation.

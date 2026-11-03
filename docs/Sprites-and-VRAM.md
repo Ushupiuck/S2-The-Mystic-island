@@ -255,8 +255,9 @@ grid phases reuse tiles without changing indexed pixels. Declared allocation
 boundaries are checked before writing. Normal builds do not re-import old art.
 
 The former S2 cockpit bank and compact 12-tile rotor source remain as archived
-editable/WIP assets. EHZ's live PLC does not load either; rotor mappings,
-animations and controller routines are no longer assembled. No S2 canopy or
+editable/WIP assets. Both banks are excluded from the ROM and resident-art
+packer. The S2 pod mappings were replaced by the complete S1 mappings; rotor
+mappings, animations and controller routines are not assembled. No S2 canopy or
 partial cockpit is grafted onto the S1 pod. The superseded S2 jet archive was
 removed during the earlier exhaust migration.
 
@@ -480,8 +481,9 @@ ramps; other slots are per-act enemy colors. S&K indices map to
 conversions; editable runtime art already uses the new slots. No runtime pixel
 conversion is performed. Keep every compressed archive followed by `even`.
 
-The EHZ boss's palette candidate remains separate from the accepted assets;
-see [its review status](Importing-objects.md#ehz-boss-palette-candidate).
+The EHZ preview's drill/wheels use a one-word masked row-two load; see the
+[boss palette contract](Importing-objects.md#ehz-boss-palette). The former
+three-gray WIP remains separate.
 
 The EHZ waterfall object keeps its 24-tile bank at `$400-$417` and all six
 mapping frames. Its editable `art/uncompressed/EHZ Waterfall.unc` uses P1

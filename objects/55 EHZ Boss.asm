@@ -6,6 +6,7 @@
 ; final choreography when this boss is used as the existing MZ placeholder.
 ; Display half-height uses height_pixels; collision radii are separate.
 ; ---------------------------------------------------------------------------
+EHZBoss_saved_metal_color = objoff_34	; row-two slot C before the boss
 EHZBoss_flash_color = objoff_36	; original hit-flash color; unused word before child pointer
 EHZBoss_origin_x = objoff_44
 EHZBoss_origin_y = objoff_46
@@ -72,6 +73,9 @@ EHZBoss_Init:
 	lea	object_size(a1),a1
 	bra.s	.free_slot
 .slots_ready:
+	; Masked row-two load: retain waterfall slots 2-5 and every pod color.
+	move.w	(v_palette+EHZBoss_MetalPaletteOffset).w,EHZBoss_saved_metal_color(a0)
+	move.w	#EHZBoss_MetalColor,(v_palette+EHZBoss_MetalPaletteOffset).w
 	move.w	obX(a0),EHZBoss_origin_x(a0)
 	subi.w	#EHZBoss_LandingX,EHZBoss_origin_x(a0)
 	move.w	obY(a0),EHZBoss_origin_y(a0)
@@ -93,7 +97,6 @@ EHZBoss_Init:
 	move.b	#$F,obColType(a0)
 	move.b	#8,obColProp(a0)	; hitcount
 	addq.b	#2,obRoutine(a0)
-	move.w	obX(a0),objoff_34(a0)
 	move.w	obY(a0),objoff_3C(a0)
 	jsr	(FindNextFreeObj).l	; vehicle with ability to fly, top part
 	bne.w	+
@@ -439,6 +442,7 @@ EHZBoss_loc_2F460:
 EHZBoss_loc_2F46E:
 	btst	#obRender.on_screen,obRender(a0)
 	bne.s	EHZBoss_return_2F482
+	move.w	EHZBoss_saved_metal_color(a0),(v_palette+EHZBoss_MetalPaletteOffset).w
 	addq.w	#4,sp
 	movea.l	objoff_38(a0),a1 ; parent address (vehicle)
 	jsr	(DeleteObject2).l

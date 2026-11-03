@@ -96,24 +96,35 @@ The faster shared explosion controller is covered by
 Runtime fight checks belong in the
 normal arena; a lifecycle fixture alone does not establish boss/capsule behavior.
 
-## EHZ boss palette candidate
+## EHZ boss palette
 
-The remaining ground-vehicle metal palette adaptation is still awaiting visual review.
-The shared S1 head and orange seats use the existing primary sprite palette. Main
-keeps the accepted assets; do not describe the three-gray proposal as shipped.
-The separate [Mystic-Island-EHZ-palette-WIP branch](https://github.com/Ushupiuck/S2-The-Mystic-island/tree/Mystic-Island-EHZ-palette-WIP)
-preserves the candidate raw/packed ship and car art, its compressed-input spans,
-`import_ehz_boss.py`, the source-pixel extensions to `check_ehz_boss.py`, and
-`check_boss_rebounds.py`. Nothing in the normal build invokes that importer.
+On `Mystic-Island-EHZ-S1-pod-preview`, the car body retains the primary sprite
+palette. Its drill and wheels use row two's existing black/white/gray ramp,
+plus slot C (`$A88`) for Sonic 2's extra `$666` metal shade. The complete S1
+pod, pilot, orange seat and shared exhaust already use existing colors; their
+art and palette entries are unchanged by this adaptation.
 
-The candidate merges S2's extra metal gray into the shared middle gray. The
-alternative discussed is a boss-owned second palette row with a custom fourth
-gray; `$A88` was suggested. The owner has selected a masked row-two load that
-preserves cycling slots rather than disabling animation. Its vehicle-color
-implementation and shade review remain pending; the pilot/exhaust change does
-not load or replace any palette words.
-Before continuing, compare the candidate in both EHZ acts and review water,
-background and player colors. Keep the original source palette roles separate
-from Mystic Island's former slot permutation. Runtime rebound coverage and
-source-color checks serve different purposes; a visually incorrect shade can
-still have valid collision, geometry and VRAM ranges.
+The successful constructor saves only row-two slot C through
+`EHZBoss_saved_metal_color` and writes `EHZBoss_MetalColor` to
+`v_palette+EHZBoss_MetalPaletteOffset` (`$38`). Failed child allocation leaves
+all palette words untouched. Offscreen escape cleanup restores the saved word.
+Slots 2-5 continue the foreground waterfall cycle; the fixed cloud colors,
+HUD, shared grays and all Act-2 background cycling slots are retained. Hit
+flashing still independently saves/restores slot 1 through `EHZBoss_flash_color`.
+Slot C is unused by visible terrain across both boss-scene camera ranges;
+other placements require checking their visible background/foreground first.
+Act 1 has no authored boss arena; its palette/rendering check is a staged scene.
+
+The editable source is `art/uncompressed/EHZ boss.unc`, packed normally by
+`build_tools/build_end_art.py`. `build_tools/import_ehz_boss.py --source PATH`
+can reimport just the 128 chassis/drill/wheel tiles from sonicretro/s2disasm
+`4ef457c18fc4902396c43ab06fabc119ac6ecb64`; `--check` verifies reproduction.
+It follows each original mapping frame's primary/secondary palette role,
+rather than treating the former Mystic Island slot permutation as source art.
+Normal builds do not rerun the importer or overwrite hand-edited raw pixels.
+
+The earlier [Mystic-Island-EHZ-palette-WIP branch](https://github.com/Ushupiuck/S2-The-Mystic-island/tree/Mystic-Island-EHZ-palette-WIP)
+retains its separate three-gray candidate and archived S2 pod/rotor import.
+It is not the preview branch's live palette implementation. See the
+[boss checks](Testing.md#boss-runtime-checks) for source-color, masked-load,
+animated-background and real fight coverage.
