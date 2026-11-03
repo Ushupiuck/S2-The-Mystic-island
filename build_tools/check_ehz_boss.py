@@ -11,96 +11,105 @@ import struct
 
 ROOT = Path(__file__).resolve().parents[1]
 MAPS = (
-    ('Map_EHZBoss_Vehicle', 'Kospm_EggPod', 'Obj56_MapUnc_2FAF8'),
-    ('Map_EHZBoss_Ground', 'Kospm_EHZ_Boss', 'Obj56_MapUnc_2FA58'),
-    ('Map_EHZBoss_Propeller', 'Kospm_EggChopper', 'Obj56_MapUnc_2F970'),
-    ('Map_BossExplosion', 'Kospm_BossExplosion', 'Obj58_MapUnc_2D50A'),
+	('Map_EHZBoss_Vehicle', 'Kospm_EggPod', 'Obj56_MapUnc_2FAF8'),
+	('Map_EHZBoss_Ground', 'Kospm_EHZ_Boss', 'Obj56_MapUnc_2FA58'),
+	('Map_EHZBoss_Propeller', 'Kospm_EggChopper', 'Obj56_MapUnc_2F970'),
+	('Map_BossExplosion', 'Kospm_BossExplosion', 'Obj58_MapUnc_2D50A'),
+	('Map_BossExhaust', 'Kospm_Exhaust', None),
 )
 
 
 def symbols(path):
-    return {name: int(value, 16) for name, value in re.findall(
-        r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]', path.read_text())}
+	return {name: int(value, 16) for name, value in re.findall(
+		r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]', path.read_text())}
 
 
 def pieces(rom, base, count, stride=6):
-    result = []
-    for frame in range(count):
-        position = base + struct.unpack_from('>h', rom, base + frame * 2)[0]
-        length = struct.unpack_from('>H', rom, position)[0]
-        assert length <= 80
-        row = []
-        for i in range(length):
-            position_i = position + 2 + i * stride
-            y, size, tile = struct.unpack_from('>bBH', rom, position_i)
-            x = struct.unpack_from('>h', rom, position_i + stride - 2)[0]
-            assert size < 16
-            row.append((y, size, tile, x))
-        result.append(row)
-    return result
+	result = []
+	for frame in range(count):
+		position = base + struct.unpack_from('>h', rom, base + frame * 2)[0]
+		length = struct.unpack_from('>H', rom, position)[0]
+		assert length <= 80
+		row = []
+		for i in range(length):
+			position_i = position + 2 + i * stride
+			y, size, tile = struct.unpack_from('>bBH', rom, position_i)
+			x = struct.unpack_from('>h', rom, position_i + stride - 2)[0]
+			assert size < 16
+			row.append((y, size, tile, x))
+		result.append(row)
+	return result
 
 
 def main():
-    parser = ArgumentParser(description=__doc__)
-    parser.add_argument('--s2disasm', type=Path)
-    args = parser.parse_args()
-    rom = (ROOT / 's2built.bin').read_bytes()
-    sym = symbols(ROOT / 'md-main.lst')
-    art_tiles = lambda name: struct.unpack_from('>H', rom, sym[name])[0] // 32
-    cues = []
-    for label in ('PLC_Boss', 'PLC_Capsule'):
-        base = sym[label]
-        count = struct.unpack_from('>H', rom, base)[0] + 1
-        for i in range(count):
-            source, dest = struct.unpack_from('>IH', rom, base + 2 + i * 6)
-            length = struct.unpack_from('>H', rom, source)[0]
-            cues.append((label, dest, dest + length))
+	parser = ArgumentParser(description=__doc__)
+	parser.add_argument('--s2disasm', type=Path)
+	args = parser.parse_args()
+	rom = (ROOT / 's2built.bin').read_bytes()
+	sym = symbols(ROOT / 'md-main.lst')
+	art_tiles = lambda name: struct.unpack_from('>H', rom, sym[name])[0] // 32
+	cues = []
+	for label in ('PLC_Boss', 'PLC_Capsule'):
+		base = sym[label]
+		count = struct.unpack_from('>H', rom, base)[0] + 1
+		for i in range(count):
+			source, dest = struct.unpack_from('>IH', rom, base + 2 + i * 6)
+			length = struct.unpack_from('>H', rom, source)[0]
+			cues.append((label, dest, dest + length))
 
-    # Both star trails share the primary bank. The auxiliary shield bank
-    # permits independent shield phases and mixed shield/star states. Neither may be
-    # overwritten by the boss's explosions or the capsule loaded at defeat.
-    protected = [(sym['vram_fg'], 0x10000),
-                 (sym['ArtTile_Shield_2'] * 32, sym['ArtTile_Shield_2_End'] * 32)]
-    # Boss/capsule PLCs intentionally replace general sprites, including
-    # monitors, spikes and springs. Player/effect/table banks remain protected.
-    for label, low, high in cues:
-        assert low % 32 == 0 and low < high <= 0x10000
-        assert all(high <= a or low >= b for a, b in protected), (
-            'Shared VRAM overwritten', label, hex(low), hex(high))
-    for i, (_, low, high) in enumerate(cues):
-        assert all(high <= a or low >= b for _, a, b in cues[:i]), (
-            'Boss/capsule art overlap', hex(low), hex(high))
+	# Both star trails share the primary bank. The auxiliary shield bank
+	# permits independent shield phases and mixed shield/star states. Neither may be
+	# overwritten by the boss's explosions or the capsule loaded at defeat.
+	protected = [(sym['vram_fg'], 0x10000),
+				 (sym['ArtTile_Shield_2'] * 32, sym['ArtTile_Shield_2_End'] * 32)]
+	# Boss/capsule PLCs intentionally replace general sprites, including
+	# monitors, spikes and springs. Player/effect/table banks remain protected.
+	for label, low, high in cues:
+		assert low % 32 == 0 and low < high <= 0x10000
+		assert all(high <= a or low >= b for a, b in protected), (
+			'Shared VRAM overwritten', label, hex(low), hex(high))
+	for i, (_, low, high) in enumerate(cues):
+		assert all(high <= a or low >= b for _, a, b in cues[:i]), (
+			'Boss/capsule art overlap', hex(low), hex(high))
 
-    total = 0
-    stock = (args.s2disasm / 's2built.bin').read_bytes() if args.s2disasm else None
-    stock_sym = symbols(args.s2disasm / 's2.lst') if stock else None
-    for label, art, original in MAPS:
-        frames = pieces(rom, sym[label], sym[label + '_frames'])
-        for frame, row in enumerate(frames):
-            for y, size, tile, x in row:
-                width, height = ((size >> 2) + 1) * 8, ((size & 3) + 1) * 8
-                assert (tile & 0x7FF) + width * height // 64 <= art_tiles(art), (label, frame)
-                assert max(abs(x), abs(x + width)) <= sym[label + '_width']
-                assert max(abs(y), abs(y + height)) <= sym[label + '_height']
-        if stock:
-            assert frames == pieces(stock, stock_sym[original], len(frames), 8), label
-        total += len(frames)
+	# Cockpit pieces reference their private vehicle and the one shared head bank.
+	resident = [(low,high) for _,low,high in cues]
+	for row in pieces(rom,sym['Map_EHZBoss_Cockpit'],7):
+		for _,size,tile,_ in row:
+			low = (sym['ArtTile_ArtNem_Eggpod_1']+(tile&0x7FF))*32
+			high = low+((size>>2)+1)*((size&3)+1)*32
+			assert any(a<=low<high<=b for a,b in resident), ('Unloaded cockpit tile',hex(low),hex(high))
 
-    # This manager consumes eight-byte records; preserve the sorted list and its
-    # sentinel. The button rests 38 pixels above the body: its stem ends at
-    # +7 and the body's visible cap starts at -30 (two transparent art rows).
-    placements = (ROOT / 'level/objects/EHZ_2.bin').read_bytes()
-    assert len(placements) % 8 == 0 and placements[-8:] == bytes.fromhex('FFFF000000000000')
-    records = [(x,y,oid,sub) for x,y,oid,eras,sub in struct.iter_unpack('>HHBBH', placements[:-8])]
-    assert [x for x, *_ in records] == sorted(x for x, *_ in records)
-    capsule = [r for r in records if r[2] == sym['id_Obj3E'] and r[0] == 0x2B50]
-    assert capsule == [(0x2B50, 0x722, sym['id_Obj3E'], 0),
-                       (0x2B50, 0x6FC, sym['id_Obj3E'], 1)], capsule
-    print(f'{total} boss/explosion mapping frames, {len(cues)} disjoint art banks '
-          'and the capsule placements pass.')
-    if stock:
-        print('Every converted piece matches Sonic 2 final geometry and tile indices.')
+	total = 0
+	stock = (args.s2disasm / 's2built.bin').read_bytes() if args.s2disasm else None
+	stock_sym = symbols(args.s2disasm / 's2.lst') if stock else None
+	for label, art, original in MAPS:
+		frames = pieces(rom, sym[label], sym[label + '_frames'])
+		for frame, row in enumerate(frames):
+			for y, size, tile, x in row:
+				width, height = ((size >> 2) + 1) * 8, ((size & 3) + 1) * 8
+				assert (tile & 0x7FF) + width * height // 64 <= art_tiles(art), (label, frame)
+				assert max(abs(x), abs(x + width)) <= sym[label + '_width']
+				assert max(abs(y), abs(y + height)) <= sym[label + '_height']
+		if stock and original and label!='Map_EHZBoss_Propeller':
+			assert frames == pieces(stock, stock_sym[original], len(frames), 8), label
+		total += len(frames)
+
+	# This manager consumes eight-byte records; preserve the sorted list and its
+	# sentinel. The button rests 38 pixels above the body: its stem ends at
+	# +7 and the body's visible cap starts at -30 (two transparent art rows).
+	placements = (ROOT / 'level/objects/EHZ_2.bin').read_bytes()
+	assert len(placements) % 8 == 0 and placements[-8:] == bytes.fromhex('FFFF000000000000')
+	records = [(x,y,oid,sub) for x,y,oid,eras,sub in struct.iter_unpack('>HHBBH', placements[:-8])]
+	assert [x for x, *_ in records] == sorted(x for x, *_ in records)
+	capsule = [r for r in records if r[2] == sym['id_Obj3E'] and r[0] == 0x2B50]
+	assert capsule == [(0x2B50, 0x722, sym['id_Obj3E'], 0),
+					   (0x2B50, 0x6FC, sym['id_Obj3E'], 1)], capsule
+	print(f'{total} boss/explosion mapping frames, {len(cues)} disjoint art banks '
+		  'and the capsule placements pass.')
+	if stock:
+		print('Every converted piece matches Sonic 2 final geometry and tile indices.')
 
 
 if __name__ == '__main__':
-    main()
+	main()

@@ -630,10 +630,13 @@ MCD_CompressedAssets:
 	dc.l Kospm_EHZ_Boss,Kospm_EHZ_Boss+$74D	; art/moduled kosinski/EHZ boss.kospm
 	endif
 	if defined(Kospm_EggChopper)
-	dc.l Kospm_EggChopper,Kospm_EggChopper+$C6	; art/moduled kosinski/Chopper blades for EHZ boss.kospm
+	dc.l Kospm_EggChopper,Kospm_EggChopper+$C2	; art/moduled kosinski/Chopper blades for EHZ boss.kospm
 	endif
 	if defined(Kospm_EggPod)
-	dc.l Kospm_EggPod,Kospm_EggPod+$592	; art/moduled kosinski/Boss Ship.kospm
+	dc.l Kospm_EggPod,Kospm_EggPod+$505	; art/moduled kosinski/Boss Ship.kospm
+	endif
+	if defined(Kospm_EggmanFace)
+	dc.l Kospm_EggmanFace,Kospm_EggmanFace+$2C7	; art/moduled kosinski/Eggman face.kospm
 	endif
 	if defined(Kospm_EndFlowers)
 	dc.l Kospm_EndFlowers,Kospm_EndFlowers+$556	; art/moduled kosinski/Ending - Flowers.kospm
@@ -642,7 +645,7 @@ MCD_CompressedAssets:
 	dc.l Kospm_EndStalk,Kospm_EndStalk+$25C	; art/moduled kosinski/Ending - Flower Stalk.kospm
 	endif
 	if defined(Kospm_Exhaust)
-	dc.l Kospm_Exhaust,Kospm_Exhaust+$132	; art/moduled kosinski/Boss exhaust.kospm
+	dc.l Kospm_Exhaust,Kospm_Exhaust+$181	; art/moduled kosinski/Boss exhaust.kospm
 	endif
 	if defined(Kospm_Explosion)
 	dc.l Kospm_Explosion,Kospm_Explosion+$6CC	; art/moduled kosinski/Explosion.kospm
@@ -672,7 +675,7 @@ MCD_CompressedAssets:
 	dc.l Kospm_Newtron,Kospm_Newtron+$4CC	; art/moduled kosinski/Enemy Newtron.kospm
 	endif
 	if defined(Kospm_OldEggPod)
-	dc.l Kospm_OldEggPod,Kospm_OldEggPod+$674	; art/moduled kosinski/Old Eggpod.kospm
+	dc.l Kospm_OldEggPod,Kospm_OldEggPod+$471	; art/moduled kosinski/Old Eggpod.kospm
 	endif
 	if defined(Kospm_Orbinaut)
 	dc.l Kospm_Orbinaut,Kospm_Orbinaut+$1A6	; art/moduled kosinski/Enemy Orbinaut.kospm
@@ -1024,9 +1027,6 @@ MCD_CompressedAssets:
 	endif
 	if defined(Nem_Eagle)
 	dc.l Nem_Eagle,Nem_Eagle+$13E	; art/nemesis/Flicky/Eagle.nem
-	endif
-	if defined(Nem_EggPodJets)
-	dc.l Nem_EggPodJets,Nem_EggPodJets+$85	; art/nemesis/Boss Ship Boost.nem
 	endif
 	if defined(Nem_Eggman)
 	dc.l Nem_Eggman,Nem_Eggman+$8AF	; art/nemesis/S1/Boss - Eggman in SBZ2 & FZ.nem

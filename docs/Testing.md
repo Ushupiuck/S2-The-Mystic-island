@@ -585,6 +585,22 @@ Screenshots and trajectories remain in the supplied ignored output directory.
 python build_tools/check_ghz_boss.py --rom s2built.bin --listing md-main.lst --output test-results/ghz-boss
 ```
 
+`check_boss_shared_art.py --output test-results/boss-shared` executes both
+constructors, all five expression selectors, both facings, S1 flame startup/loop,
+rotor-slot reuse, unchanged palette buffers and recycled-parent cleanup. Optional
+`--reference-rom` / `--reference-listing` inputs from the pre-sharing build
+compare rendered indexed pixels: both hulls, every S1 pose/flame and rotor remain
+exact apart from S1's explicitly recolored seat. S2 is checked pixel-for-pixel
+outside its facial silhouette, including its original windshield/seat/torso.
+The short glass-side whisker has a separate source-pixel assertion.
+
+With `--core` and `--system-directory`, the shared-art runner loads both real
+EHZ act palettes/planes and compiled boss PLCs, verifies resident tile bytes,
+then observes landing, hurt, rotor lift, flame startup/loop and parent cleanup.
+Act 2 also reaches the actual capsule switch and animal release.
+These staged arena scenes are not controller-only playthroughs. `--pal` selects
+PAL; screenshots/animations stay in the supplied ignored output directory.
+
 The native pass covers fragmented/full pools and retries, end-of-pool parents,
 dry-act water-bank borrowing, staged deployment, the original opening delay,
 quarter-speed first pass and timed return sweeps, recycled

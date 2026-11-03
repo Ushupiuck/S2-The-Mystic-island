@@ -40,17 +40,21 @@ requires suitable bounds, or maxima covering every set the object uses.
 
 | Mapping | Frames | Display half-width | Display half-height |
 | --- | ---: | --- | --- |
-| `Map_EHZBoss_Vehicle` | 7 | `$20` | `$28` |
+| `Map_EHZBoss_Vehicle` (hull) | 1 | `$20` | `$18` |
+| `Map_EHZBoss_Cockpit` | 7 | `$20` | `$22` |
 | `Map_EHZBoss_Ground` | 8 | `$30` | `$10` |
 | `Map_EHZBoss_Propeller` | 7 | `$52` | `$28` |
 | `Map_BossExplosion` (shared S2 fiery effect) | 7 | `$10` | `$10` |
 
 The propeller's rightmost piece begins at X=50 and is 32 pixels wide, requiring
-82 pixels (`$52`), beyond the old `$40` minimum. The ship's display half-height
-of 40 pixels is independent of its 20-pixel collision radius.
+82 pixels (`$52`), beyond the old `$40` minimum. The cockpit's 34-pixel display half-height is independent of the ship's
+20-pixel collision radius. Shared S1 heads are layered over the original S2
+windshield, seat and torso; the S1 upper cockpit is not transplanted.
 
 The boss uses eight linked ordinary SSTs: ship/controller, cockpit, car, three
-wheels, drill and propeller. `objoff_38` links children to their parent; the
+wheels, drill and rotor/exhaust. The rotor lifts the defeated ship, then its
+same SST becomes the shared S1 exhaust on horizontal departure. `objoff_38`
+links children to their parent; the
 controller/cockpit link is reciprocal. Initialization retries until all seven
 children are available. Each child queues separately through `DisplaySprite`.
 Packed composites instead need bounds covering child motion and the record
@@ -69,10 +73,12 @@ capsule. Origin deltas at `$44/$46` also support the existing MZ placeholder.
 
 | Bytes, end exclusive | Art and current constant |
 | --- | --- |
-| `$7E00-$8A00` | Ship, `ArtTile_ArtNem_Eggpod_1`, 96 tiles |
-| `$8A00-$9A00` | Car/wheels/drill, `ArtTile_ArtNem_EHZBoss`, 128 tiles |
-| `$9A00-$9C80` | Propeller, `ArtTile_ArtNem_EggChoppers`, 20 tiles |
-| `$9C80-$A720` | Capsule, `ArtTile_Prison_Capsule`, 85 tiles; loaded at defeat |
+| `$7E00-$8780` | S2 hull/cockpit/torso, `ArtTile_ArtNem_Eggpod_1`, 76 tiles |
+| `$87A0-$8E60` | Shared S1 heads, `ArtTile_EggmanFace`, 54 tiles |
+| `$8E60-$9E60` | Car/wheels/drill, `ArtTile_ArtNem_EHZBoss`, 128 tiles |
+| `$9E60-$9FE0` | Propeller, `ArtTile_ArtNem_EggChoppers`, 12 tiles |
+| `$9FE0-$AA80` | Capsule, `ArtTile_Prison_Capsule`, 85 tiles; loaded at defeat |
+| `$AA80-$ADA0` | Shared S1 exhaust, `ArtTile_Eggman_Exhaust`, 25 tiles |
 | `$B020-$BCA0` | Shared S2 fiery boss explosion, `ArtTile_BossExplosion`, 100 tiles |
 
 Boss/capsule phases replace general object art. They preserve both shield
@@ -85,6 +91,8 @@ extending an arena's object set.
 `check_ehz_boss.py` validates converted geometry, art indices, compiled PLC
 lifetimes and capsule records. Its optional `--s2disasm /path/to/s2disasm`
 compares the vehicle and explosion mappings with a built source checkout.
+Shared pilot/exhaust ownership is described in
+[Sprites and VRAM](Sprites-and-VRAM.md#shared-eggman-heads-and-exhaust).
 The faster shared explosion controller is covered by
 [the boss checks](Testing.md#boss-runtime-checks).
 Runtime fight checks belong in the
@@ -92,7 +100,8 @@ normal arena; a lifecycle fixture alone does not establish boss/capsule behavior
 
 ## EHZ boss palette candidate
 
-The boss's shared-palette adaptation is still awaiting visual review. Main
+The remaining vehicle-metal palette adaptation is still awaiting visual review.
+The shared S1 head and orange seats use the existing primary sprite palette. Main
 keeps the accepted assets; do not describe the three-gray proposal as shipped.
 The separate [Mystic-Island-EHZ-palette-WIP branch](https://github.com/Ushupiuck/S2-The-Mystic-island/tree/Mystic-Island-EHZ-palette-WIP)
 preserves the candidate raw/packed ship and car art, its compressed-input spans,
@@ -101,7 +110,10 @@ preserves the candidate raw/packed ship and car art, its compressed-input spans,
 
 The candidate merges S2's extra metal gray into the shared middle gray. The
 alternative discussed is a boss-owned second palette row with a custom fourth
-gray; `$A88` was suggested. Neither option is accepted by this checkpoint.
+gray; `$A88` was suggested. The owner has selected a masked row-two load that
+preserves cycling slots rather than disabling animation. Its vehicle-color
+implementation and shade review remain pending; the pilot/exhaust change does
+not load or replace any palette words.
 Before continuing, compare the candidate in both EHZ acts and review water,
 background and player colors. Keep the original source palette roles separate
 from Mystic Island's former slot permutation. Runtime rebound coverage and

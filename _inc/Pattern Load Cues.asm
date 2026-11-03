@@ -1583,10 +1583,12 @@ PLCKosM_Explode_End:	plccheck PLCKosM_Explode,0
 
 PLC_Boss:	; legacy label for the same module list
 PLCKosM_Boss:	plrKosMlistheader
+	plreqKosM	ArtTile_EggmanFace, Kospm_EggmanFace
 	plreqKosM	ArtTile_ArtNem_Eggpod_1, Kospm_EggPod
 	plreqKosM	ArtTile_ArtNem_EHZBoss, Kospm_EHZ_Boss
 	plreqKosM	ArtTile_ArtNem_EggChoppers, Kospm_EggChopper
 	plreqKosM	ArtTile_BossExplosion, Kospm_BossExplosion
+	plreqKosM	ArtTile_Eggman_Exhaust, Kospm_Exhaust
 PLCKosM_Boss_End:	plccheck PLCKosM_Boss,0
 
 PLC_MechaSonic:	; legacy label for the same module list
@@ -1597,6 +1599,7 @@ PLCKosM_MechaSonic_End:	plccheck PLCKosM_MechaSonic,0
 
 PLC_GHZBoss:	; legacy label for the same module list
 PLCKosM_GHZBoss:	plrKosMlistheader
+	plreqKosM	ArtTile_EggmanFace, Kospm_EggmanFace
 	plreqKosM	ArtTile_Eggman, Kospm_OldEggPod
 	plreqKosM	ArtTile_Eggman_Weapons, Kospm_Weapons
 	plreqKosM	ArtTile_Eggman_Exhaust, Kospm_Exhaust

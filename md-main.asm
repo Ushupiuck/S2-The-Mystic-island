@@ -6325,7 +6325,7 @@ DynResize_EHZ2_Routine4:
 		move.w	(Camera_X_pos).w,(Camera_Min_X_pos).w
 		move.w	(Camera_Max_X_pos).w,(Tails_Max_X_pos).w
 		move.w	(Camera_X_pos).w,(Tails_Min_X_pos).w
-		move.w	#SegaScreen,(v_gamemode).w	; And for now, that's the end of the Demo, so return to the SEGA Screen!
+		; The capsule/results own completion; let the escape finish in level mode.
 .return:	rts
 ; ---------------------------------------------------------------------------
 
@@ -10632,90 +10632,80 @@ Credits_Display:
 		include "objects/S1/3D Boss - Green Hill.asm"
 		include "objects/S1/48 Eggman's Swinging Ball.asm"
 ; ---------------------------------------------------------------------------
-Ani_Eggman:	dc.w byte_192E0-Ani_Eggman
-		dc.w byte_192E3-Ani_Eggman
-		dc.w byte_192E7-Ani_Eggman
-		dc.w byte_192EB-Ani_Eggman
-		dc.w byte_192EF-Ani_Eggman
-		dc.w byte_192F3-Ani_Eggman
-		dc.w byte_192F7-Ani_Eggman
-		dc.w byte_192FB-Ani_Eggman
-		dc.w byte_192FE-Ani_Eggman
-		dc.w byte_19302-Ani_Eggman
-		dc.w byte_19306-Ani_Eggman
-		dc.w byte_19309-Ani_Eggman
-byte_192E0:	dc.b  $F,  0,$FF
-byte_192E3:	dc.b   5,  1,  2,$FF
-byte_192E7:	dc.b   3,  1,  2,$FF
-byte_192EB:	dc.b   1,  1,  2,$FF
-byte_192EF:	dc.b   4,  3,  4,$FF
-byte_192F3:	dc.b $1F,  5,  1,$FF
-byte_192F7:	dc.b   3,  6,  1,$FF
-byte_192FB:	dc.b  $F, $A,$FF
-byte_192FE:	dc.b   3,  8,  9,$FF
-byte_19302:	dc.b   1,  8,  9,$FF
-byte_19306:	dc.b  $F,  7,$FF
-byte_19309:	dc.b   2,  9,  8, $B, $C, $B, $C,  9,  8,$FE,  2
-		even
+; Shared S1 pilot and exhaust. Callers validate a1's parent before following.
+; Offsets belong to the child, so hulls keep their own nozzle/cockpit anchors.
+BossFace_Display:
+		bsr.s	BossChild_Follow
+		lea	Ani_EggmanFace(pc),a1
+		bra.s	BossChild_Animate
+BossExhaust_Display:
+		bsr.s	BossChild_Follow
+		lea	Ani_BossExhaust(pc),a1
+BossChild_Animate:
+		jsr	(AnimateSprite).l
+		move.b	obStatus(a0),d0
+		andi.b	#3,d0
+		andi.b	#$FC,obRender(a0)
+		or.b	d0,obRender(a0)
+		jmp	(DisplaySprite).l
+BossChild_Follow:
+		move.w	BossChild_OffsetX(a0),d0
+		btst	#status.npc.x_flip,obStatus(a1)
+		beq.s	.x_ready
+		neg.w	d0
+.x_ready:
+		add.w	obX(a1),d0
+		move.w	d0,obX(a0)
+		move.w	BossChild_OffsetY(a0),d0
+		add.w	obY(a1),d0
+		move.w	d0,obY(a0)
+		move.b	obStatus(a1),obStatus(a0)
+		rts
 
-Map_Eggman:	dc.w word_1932E-Map_Eggman
-		dc.w word_19360-Map_Eggman
-		dc.w word_19372-Map_Eggman
-		dc.w word_19384-Map_Eggman
-		dc.w word_1939E-Map_Eggman
-		dc.w word_193B8-Map_Eggman
-		dc.w word_193D2-Map_Eggman
-		dc.w word_193EC-Map_Eggman
-		dc.w word_1940E-Map_Eggman
-		dc.w word_19418-Map_Eggman
-		dc.w word_19422-Map_Eggman
-		dc.w word_19424-Map_Eggman
-		dc.w word_19436-Map_Eggman
-word_1932E:	dc.w 6
-		dc.w $EC01, $A, $FFE4
-		dc.w $EC05, $C, $C
-		dc.w $FC0E, $2010, $FFE4
-		dc.w $FC0E, $201C, 4
-		dc.w $140C, $2028, $FFEC
-		dc.w $1400, $202C, $C
-word_19360:	dc.w 2
-		dc.w $E404, 0, $FFF4
-		dc.w $EC0D, 2, $FFEC
-word_19372:	dc.w 2
-		dc.w $E404, 0, $FFF4
-		dc.w $EC0D, $35, $FFEC
-word_19384:	dc.w 3
-		dc.w $E408, $3D, $FFF4
-		dc.w $EC09, $40, $FFEC
-		dc.w $EC05, $46, 4
-word_1939E:	dc.w 3
-		dc.w $E408, $4A, $FFF4
-		dc.w $EC09, $4D, $FFEC
-		dc.w $EC05, $53, 4
-word_193B8:	dc.w 3
-		dc.w $E408, $57, $FFF4
-		dc.w $EC09, $5A, $FFEC
-		dc.w $EC05, $60, 4
-word_193D2:	dc.w 3
-		dc.w $E404, $64, 4
-		dc.w $E404, 0, $FFF4
-		dc.w $EC0D, $35, $FFEC
-word_193EC:	dc.w 4
-		dc.w $E409, $66, $FFF4
-		dc.w $E408, $57, $FFF4
-		dc.w $EC09, $5A, $FFEC
-		dc.w $EC05, $60, 4
-word_1940E:	dc.w 1
-		dc.w  $405, $2D, $22
-word_19418:	dc.w 1
-		dc.w  $405, $31, $22
-word_19422:	dc.w 0
-word_19424:	dc.w 2
-		dc.w	 8, ArtTile_Eggman_Exhaust-ArtTile_Eggman, $22
-		dc.w  $808, $1000+ArtTile_Eggman_Exhaust-ArtTile_Eggman, $22
-word_19436:	dc.w 2
-		dc.w $F80B, ArtTile_Eggman_Exhaust+3-ArtTile_Eggman, $22
-		dc.w	 1, ArtTile_Eggman_Exhaust+$F-ArtTile_Eggman, $3A
+Ani_Eggman:	dc.w .body-Ani_Eggman
+.body:		dc.b $F,0,afEnd
+		even
+Ani_EggmanFace:
+		dc.w .normal-Ani_EggmanFace
+		dc.w .laugh-Ani_EggmanFace
+		dc.w .hurt-Ani_EggmanFace
+		dc.w .defeated-Ani_EggmanFace
+		dc.w .recover-Ani_EggmanFace
+.normal:	dc.b 5,0,1,afEnd
+.laugh:		dc.b 4,2,3,afEnd
+.hurt:		dc.b $1F,4,0,afEnd
+.defeated:	dc.b 3,5,0,afEnd
+.recover:	dc.b $F,6,afEnd
+		even
+Ani_BossExhaust:
+		dc.w .off-Ani_BossExhaust
+		dc.w .cruise-Ani_BossExhaust
+		dc.w .escape-Ani_BossExhaust
+.off:		dc.b $F,4,afEnd
+.cruise:	dc.b 3,0,1,afEnd
+.escape:	dc.b 2,1,0,2,3,2,3,1,0,afBack,2
+		even
+		include "mappings/sprite/GHZ Boss Cockpit.asm"
+		include "mappings/sprite/EHZ Boss Cockpit.asm"
+		include "mappings/sprite/Boss exhaust.asm"
+
+; GHZ vehicle body; pilot and exhaust use their shared mapping families.
+Map_Eggman:
+	dc.w Map_Eggman_Frame0-Map_Eggman
+Map_Eggman_Frame0:	dc.w 6
+	dc.b -20,$01
+	dc.w $0000,-28
+	dc.b -20,$05
+	dc.w $0002,12
+	dc.b -4,$0E
+	dc.w $2006,-28
+	dc.b -4,$0E
+	dc.w $2012,4
+	dc.b 20,$0C
+	dc.w $201E,-20
+	dc.b 20,$00
+	dc.w $2022,12
+	even
 Map_BossItems:	dc.w word_19458-Map_BossItems
 		dc.w word_19462-Map_BossItems
 		dc.w word_19474-Map_BossItems
@@ -13557,6 +13547,8 @@ Nem_Bunny:	binclude	"art/nemesis/Flicky/Rabbit.nem"
 ; ---------------------------------------------------------------------------
 Kospm_OldEggPod:	binclude "art/moduled kosinski/Old Eggpod.kospm"
 		even
+Kospm_EggmanFace:	binclude "art/moduled kosinski/Eggman face.kospm"
+		even
 Nem_FzEggman:	binclude	"art/nemesis/S1/Boss - Eggman after FZ Fight.nem"	; Ruined Eggpod tiles
 		even
 Nem_Eggman:	binclude	"art/nemesis/S1/Boss - Eggman in SBZ2 & FZ.nem"		; Walking/Running/Jumping frames
@@ -13570,8 +13562,6 @@ Kospm_Exhaust:	binclude "art/moduled kosinski/Boss exhaust.kospm"
 Kospm_Prison:	binclude "art/moduled kosinski/Prison Capsule.kospm"
 		even
 Kospm_EggPod:	binclude "art/moduled kosinski/Boss Ship.kospm"
-		even
-Nem_EggPodJets:	binclude	"art/nemesis/Boss Ship Boost.nem"
 		even
 Kospm_EHZ_Boss:	binclude "art/moduled kosinski/EHZ boss.kospm"
 		even

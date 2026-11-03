@@ -34,8 +34,8 @@ BGHZ_Index:	dc.w BGHZ_Main-BGHZ_Index
 		dc.w BGHZ_FlameMain-BGHZ_Index
 
 BGHZ_ObjData:	dc.b 2,0		; routine, animation
-		dc.b 4,1
-		dc.b 6,7
+		dc.b 4,BossFace_Normal
+		dc.b 6,BossExhaust_Off
 BGHZ_ObjData_End:
 ; ===========================================================================
 
@@ -76,6 +76,22 @@ BGHZ_LoadBoss:
 		move.w	#$180,obPriority(a1)
 		move.b	(a2)+,obAnim(a1)
 		move.l	a0,BGHZ_Parent(a1)
+		cmpi.b	#4,obRoutine(a1)
+		bne.s	.check_exhaust
+		move.l	#Map_GHZBoss_Cockpit,obMap(a1)
+		move.b	#Map_GHZBoss_Cockpit_height,height_pixels(a1)
+		move.b	#Map_GHZBoss_Cockpit_width,width_pixels(a1)
+		move.w	#make_art_tile(ArtTile_Eggman,0,0),obGfx(a1)
+		bra.s	.child_ready
+.check_exhaust:
+		cmpi.b	#6,obRoutine(a1)
+		bne.s	.child_ready
+		move.l	#Map_BossExhaust,obMap(a1)
+		move.b	#Map_BossExhaust_height,height_pixels(a1)
+		move.b	#Map_BossExhaust_width,width_pixels(a1)
+		move.w	#make_art_tile(ArtTile_Eggman_Exhaust,0,0),obGfx(a1)
+		move.w	#$22,BossChild_OffsetX(a1)
+.child_ready:
 		dbf	d1,BGHZ_Loop
 		move.l	obX(a0),BGHZ_BaseX(a0)
 		move.l	obY(a0),BGHZ_BaseY(a0)
@@ -301,7 +317,7 @@ BGHZ_FaceMain:	; Routine 4
 		bne.w	BGHZ_Delete
 		cmpi.b	#2,obRoutine(a1)
 		bne.w	BGHZ_Delete
-		moveq	#1,d1			; idle
+		moveq	#BossFace_Normal,d1
 		cmpi.b	#BGHZ_Explode,ob2ndRout(a1)
 		bhs.s	.defeated
 		tst.b	BGHZ_FlashTimer(a1)
@@ -309,7 +325,7 @@ BGHZ_FaceMain:	; Routine 4
 		cmpi.b	#BGHZ_Deploy,ob2ndRout(a1)
 		bne.s	.check_player
 		cmpi.w	#BGHZ_CenterX,BGHZ_BaseX(a1)
-		beq.s	.laugh			; laugh during the opening pause, not every turn
+		beq.s	.laugh
 .check_player:
 		cmpi.b	#4,(v_player+obRoutine).w
 		bhs.s	.laugh
@@ -318,49 +334,42 @@ BGHZ_FaceMain:	; Routine 4
 		cmpi.b	#4,(v_player2+obRoutine).w
 		blo.s	.animate
 .laugh:
-		moveq	#4,d1
+		moveq	#BossFace_Laugh,d1
 		bra.s	.animate
 .hurt:
-		moveq	#5,d1
+		moveq	#BossFace_Hurt,d1
 		bra.s	.animate
 .defeated:
-		moveq	#6,d1
+		moveq	#BossFace_Defeated,d1
 		cmpi.b	#BGHZ_Recover,ob2ndRout(a1)
 		bne.s	.animate
-		moveq	#$A,d1
+		moveq	#BossFace_Recover,d1
 .animate:
 		move.b	d1,obAnim(a0)
-		bra.s	BGHZ_Display
+		jmp	(BossFace_Display).l
 ; ---------------------------------------------------------------------------
 
 BGHZ_FlameMain:	; Routine 6
 		movea.l	BGHZ_Parent(a0),a1
 		cmpi.l	#Obj3D,code(a1)
-		bne.s	BGHZ_Delete
+		bne.w	BGHZ_Delete
 		cmpi.b	#2,obRoutine(a1)
-		bne.s	BGHZ_Delete
-		move.b	#7,obAnim(a0)		; no thrust
+		bne.w	BGHZ_Delete
+		move.b	#BossExhaust_Off,obAnim(a0)
 		cmpi.b	#BGHZ_Escape,ob2ndRout(a1)
 		beq.s	.escape
 		tst.w	obVelX(a1)
-		beq.s	BGHZ_Display
-		move.b	#8,obAnim(a0)
-		bra.s	BGHZ_Display
+		beq.s	.display
+		move.b	#BossExhaust_Cruise,obAnim(a0)
+		bra.s	.display
 .escape:
-		move.b	#$B,obAnim(a0)
+		move.b	#BossExhaust_Escape,obAnim(a0)
+.display:
+		jmp	(BossExhaust_Display).l
 
-BGHZ_Display:
-		move.w	obX(a1),obX(a0)
-		move.w	obY(a1),obY(a0)
-		move.b	obStatus(a1),obStatus(a0)
 BGHZ_Animate:
 		lea	Ani_Eggman(pc),a1
-		jsr	(AnimateSprite).l
-		move.b	obStatus(a0),d0
-		andi.b	#3,d0
-		andi.b	#$FC,obRender(a0)
-		or.b	d0,obRender(a0)
-		jmp	(DisplaySprite).l
+		jmp	(BossChild_Animate).l
 ; ---------------------------------------------------------------------------
 
 BGHZ_Delete:

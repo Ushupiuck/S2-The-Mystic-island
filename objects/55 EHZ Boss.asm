@@ -37,6 +37,7 @@ EHZBoss_Index:	offsetTable
 		offsetTableEntry.w EHZBoss_Drill	; A - Spike
 		offsetTableEntry.w EHZBoss_PropellerReloaded	; C - Propeller after defeat
 		offsetTableEntry.w EHZBoss_Cockpit	; E - Flying vehicle, top
+		offsetTableEntry.w EHZBoss_Exhaust	; 10 - shared S1 horizontal escape thrust
 ; ===========================================================================
 
 ; #status.npc.no_balancing,status(ax) set via collision response routine (Touch_Enemy_Part2)
@@ -100,16 +101,16 @@ EHZBoss_Init:
 	move.w	EHZBoss_origin_x(a0),EHZBoss_origin_x(a1)
 	move.w	EHZBoss_origin_y(a0),EHZBoss_origin_y(a1)
 	move.l	a1,objoff_38(a0)	; i.e. addresses for cross references
-	move.l	#Map_EHZBoss_Vehicle,obMap(a1)
-	move.b	#Map_EHZBoss_Vehicle_height,height_pixels(a1)
+	move.l	#Map_EHZBoss_Cockpit,obMap(a1)
+	move.b	#Map_EHZBoss_Cockpit_height,height_pixels(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_Eggpod_1,0,0),obGfx(a1)
 	move.b	#1<<obRender.level_fg,obRender(a1)
-	move.b	#sprite_bound($20,Map_EHZBoss_Vehicle_width),width_pixels(a1)
+	move.b	#Map_EHZBoss_Cockpit_width,width_pixels(a1)
 	move.w	#$200,obPriority(a1)
 	move.l	obX(a0),obX(a1)
 	move.l	obY(a0),obY(a1)
 	move.b	#$E,obRoutine(a1)
-	move.b	#1,obAnim(a1)	; normal animation
+	move.b	#BossFace_Normal,obAnim(a1)	; shared S1 pilot
 	move.b	obRender(a0),obRender(a1)
 +
 	jsr	(FindNextFreeObj).l	; Vehicle on ground
@@ -535,8 +536,7 @@ EHZBoss_Defeated:	; boss defeated
 	move.w	#$B3,objoff_40(a0)	; timer
 	bset	#3,objoff_31(a0)	; flag to separate spike from vehicle
 	movea.l	objoff_38(a0),a1 ; address top part
-	move.b	#4,obAnim(a1)	; flying off animation
-	move.b	#6,obFrame(a1)
+	move.b	#BossFace_Defeated,obAnim(a1)	; shared S1 defeat expression
 	moveq	#plcid_Capsule,d0
 	jmp	(LoadPLC).l	; load egg prison
 ; ===========================================================================
@@ -566,6 +566,23 @@ EHZBoss_loc_2F560:	; EHZBoss_Propeller_Sub0
 	movea.l	objoff_38(a0),a1 ; parent address (vehicle)
 	cmpi.l	#EHZBoss,code(a1)
 	bne.w	EHZBoss_Delete	; if boss non-existant
+	cmpi.b	#$A,ob2ndRout(a1)
+	bne.s	.check_ground
+	cmpi.b	#4,objoff_30(a1)
+	bne.s	.check_ground
+	tst.w	objoff_2E(a1)	; rotor lift first, thrust on horizontal escape
+	bpl.s	.check_ground
+	move.l	#Map_BossExhaust,obMap(a0)
+	move.b	#Map_BossExhaust_height,height_pixels(a0)
+	move.b	#Map_BossExhaust_width,width_pixels(a0)
+	move.w	#make_art_tile(ArtTile_Eggman_Exhaust,0,0),obGfx(a0)
+	move.w	#$1C,BossChild_OffsetX(a0)
+	move.w	#-4,BossChild_OffsetY(a0)
+	move.b	#BossExhaust_Escape,obAnim(a0)
+	move.b	#$FF,obPrevAni(a0)
+	move.b	#$10,obRoutine(a0)
+	jmp	(BossExhaust_Display).l
+.check_ground:
 	btst	#0,objoff_31(a1)	; is Robotnik on ground?
 	beq.s	EHZBoss_loc_2F58E	; if not, branch
 	move.b	#1,obAnim(a0)
@@ -897,32 +914,45 @@ EHZBoss_loc_2F8D2:
 	rts
 ; ===========================================================================
 
-EHZBoss_Cockpit:	; EHZBoss_VehicleTop:
-	movea.l	objoff_38(a0),a1 ; parent address (vehicle)
-	move.l	obX(a1),obX(a0)
-	move.l	obY(a1),obY(a0)
-	move.b	obStatus(a1),obStatus(a0)	; update position and status
-	move.b	obRender(a1),obRender(a0)
-	move.b	objoff_42(a1),d0	; boss invincibility timer
-	cmpi.b	#$1F,d0	; boss just got hit?
-	bne.s	EHZBoss_loc_2F906
-	move.b	#2,obAnim(a0)	; Robotnik animation when hit
+EHZBoss_Cockpit:	; Shared S1 pilot on the S2 vehicle
+	movea.l	objoff_38(a0),a1
+	cmpi.l	#EHZBoss,code(a1)
+	bne.w	EHZBoss_Delete
+	cmpi.b	#2,obRoutine(a1)
+	bne.w	EHZBoss_Delete
+	moveq	#BossFace_Normal,d1
+	cmpi.b	#6,ob2ndRout(a1)
+	bhs.s	.defeated
+	tst.b	objoff_42(a1)
+	bne.s	.hurt
+	cmpi.b	#4,(v_player+obRoutine).w
+	bhs.s	.laugh
+	tst.l	(v_player2+code).w
+	beq.s	.animate
+	cmpi.b	#4,(v_player2+obRoutine).w
+	blo.s	.animate
+.laugh:
+	moveq	#BossFace_Laugh,d1
+	bra.s	.animate
+.hurt:
+	moveq	#BossFace_Hurt,d1
+	bra.s	.animate
+.defeated:
+	moveq	#BossFace_Defeated,d1
+	cmpi.b	#8,ob2ndRout(a1)
+	bne.s	.animate
+	moveq	#BossFace_Recover,d1
+.animate:
+	move.b	d1,obAnim(a0)
+	jmp	(BossFace_Display).l
 
-EHZBoss_loc_2F906:
-	cmpi.b	#4,(v_player+obRoutine).w	; Sonic = ball
-	beq.s	EHZBoss_loc_2F916
-	cmpi.b	#4,(v_player2+obRoutine).w	; Tails = ball
-	bne.s	EHZBoss_loc_2F924
-
-EHZBoss_loc_2F916:
-	cmpi.b	#2,obAnim(a0)	; check Eggman animation (when hit)
-	beq.s	EHZBoss_loc_2F924
-	move.b	#3,obAnim(a0)	; Eggman animation when hurting Sonic
-
-EHZBoss_loc_2F924:
-	lea	(Ani_EHZBoss_Vehicle).l,a1	; animation script
-	jsr	(AnimateSprite).l
-	jmp	(DisplaySprite).l
+EHZBoss_Exhaust:
+	movea.l	objoff_38(a0),a1
+	cmpi.l	#EHZBoss,code(a1)
+	bne.w	EHZBoss_Delete
+	cmpi.b	#2,obRoutine(a1)
+	bne.w	EHZBoss_Delete
+	jmp	(BossExhaust_Display).l
 
 ; ===========================================================================
 ; animation script
@@ -972,25 +1002,6 @@ EHZBoss_byte_2FA53:
 	; frame 1-3 = spike
 	; frame 4-5 = foreground wheel
 	; frame 6-7 = background wheel
-
-; animation script
-; EHZBoss_off_2FAC8:
-Ani_EHZBoss_Vehicle:	offsetTable
-		offsetTableEntry.w EHZBoss_byte_2FAD2	; 0
-		offsetTableEntry.w EHZBoss_byte_2FAD5	; 1
-		offsetTableEntry.w EHZBoss_byte_2FAD9	; 2
-		offsetTableEntry.w EHZBoss_byte_2FAE2	; 3
-		offsetTableEntry.w EHZBoss_byte_2FAEB	; 4
-EHZBoss_byte_2FAD2:	dc.b  $F,  0,$FF	; bottom
-
-EHZBoss_byte_2FAD5:	dc.b   7,  1,  2,$FF	; top, normal
-
-EHZBoss_byte_2FAD9:	dc.b   7,  5,  5,  5,  5,  5,  5,$FD,  1	; top, when hit
-
-EHZBoss_byte_2FAE2:	dc.b   7,  3,  4,  3,  4,  3,  4,$FD,  1	; top, laughter (when hurting Sonic)
-
-EHZBoss_byte_2FAEB:	dc.b  $F,  6,  6,  6,  6,  6,  6,  6,  6,  6,  6,$FD,  1	; top, when flying off
-	even	; for top part, after end of special animations always return to normal one ($FD->1)
 
 ; ----------------------------------------------------------------------------
 ; sprite mappings

@@ -230,6 +230,48 @@ LZ's per-act module lists load the resident bank; another zone must load it too.
 
 ## Effects and UI ownership
 
+### Shared Eggman heads and exhaust
+
+GHZ and EHZ share Sonic 1's seven head/expression poses and its full escape
+flame. The shared head bank at `ArtTile_EggmanFace = $43D` has 54 tiles; the
+25-tile flame bank starts at `$554`. Both use the primary player palette, so
+palette-row-two cycling remains independent. The unused S2 jet include and
+its superseded archive have been removed.
+
+Each Eggmobile retains its own glass, metal frame, seat shape and torso.
+`Map_GHZBoss_Cockpit` and `Map_EHZBoss_Cockpit` combine those private pixels
+with the same head bank. The S2 head anchor is four pixels left and two up
+from the S1 source; its private cockpit keeps its original position. Preserve
+the short glass-side whisker as well as the longer opposite whisker. Only S1's
+exposed blue seat padding changes color in both the hull backrest and pilot
+rim: primary `A/B/C` becomes `4/3/2`, the
+existing orange ramp used by S2. Glass and eye blues keep their source colors.
+
+The editable sources are `art/uncompressed/Old Eggpod.unc` (77 private tiles),
+`Boss Ship.unc` (76), `Eggman face.unc` (54) and `Boss exhaust.unc` (25).
+`python build_tools/build_end_art.py` packs these along with the other resident
+end-of-act banks. The explicit `build_boss_shared_art.py --rom PRE_SPLIT_ROM
+--listing PRE_SPLIT_LISTING --write` migration reads the unsplit assets/mappings
+from the pre-sharing build, applies the authored head contours and seat remap,
+and regenerates private/shared sources plus both cockpit mapping families.
+It checks the declared allocations before writing. Ordinary builds do not
+re-import the old source or overwrite pixel edits.
+
+The propeller keeps every visible S2 pixel and the same hardware-piece count.
+Its repeated blade drops a transparent top tile row, leaving eight hub tiles
+and a four-tile blade run (12 tiles total). This keeps the private cockpits,
+shared heads, capsule and flame below the auxiliary shield bank. GHZ's private
+bank starts at `$3F0`, its weapon bank at `$473`; EHZ lifetimes are tabulated in
+[the import guide](Importing-objects.md#arena-and-art-lifetime).
+
+Both bosses use one expression script and one S1 exhaust script. Callers
+validate their parent's code and main routine before following it. Child words
+`BossChild_OffsetX/Y` at `$30/$32` hold attachment offsets; X mirrors with the
+parent. GHZ keeps its existing pilot/exhaust SSTs. EHZ keeps rotor lift, then
+reuses the rotor SST for S1 thrust on sideways departure. Its arena remains in
+level mode through escape and the capsule, rather than ending at the old demo
+return-to-Sega placeholder.
+
 ### Boss explosions
 
 GHZ and EHZ share Sonic 2 final's seven-frame fiery boss explosion through

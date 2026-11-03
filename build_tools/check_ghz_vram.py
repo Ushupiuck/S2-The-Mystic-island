@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def check_boss(rom, symbols, cues):
 	boss = cues('PLC_GHZBoss')
 	assert [source for source, _, _ in boss] == [symbols[name] for name in (
-		'Kospm_OldEggPod', 'Kospm_Weapons', 'Kospm_Exhaust', 'Kospm_Prison', 'Kospm_BossExplosion')]
+		'Kospm_EggmanFace', 'Kospm_OldEggPod', 'Kospm_Weapons', 'Kospm_Exhaust', 'Kospm_Prison', 'Kospm_BossExplosion')]
 	protected = [(symbols['ArtTile_GHZ_Big_Flower_1']*32,
 				  (symbols['ArtTile_GHZ_Flower_Stalk']+4)*32),
 				 (symbols['ArtTile_Shield_2'] * 32, symbols['ArtTile_Shield_2_End'] * 32),
@@ -26,6 +26,8 @@ def check_boss(rom, symbols, cues):
 			'GHZ boss overwrote fixed bank', hex(low), hex(high))
 	resident = [(a, b) for _, a, b in boss + cues('PLC_GHZ3_Main')]
 	for mapping, base in (('Map_Eggman', 'ArtTile_Eggman'),
+						  ('Map_GHZBoss_Cockpit', 'ArtTile_Eggman'),
+						  ('Map_BossExhaust', 'ArtTile_Eggman_Exhaust'),
 						  ('Map_BossItems', 'ArtTile_Eggman_Weapons'),
 						  ('Map_GBall', 'ArtTile_GHZ_Giant_Ball'),
 						  ('Map_BossExplosion', 'ArtTile_BossExplosion'),

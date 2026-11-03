@@ -307,8 +307,8 @@ try:
   for i,value in enumerate(regs):g.core.m68k_set_reg(i,value)
   for _ in range(180):g.run();assert not g.read('v_errortype')
   assert not g.read('v_plc_buffer',4),'boss PLC did not finish'
-  assert g.s['ArtTile_Prison_Capsule']==0x4A7
-  assert g.s['ArtTile_Prison_Capsule']>=g.s['ArtTile_Eggman_Exhaust']+17
+  assert g.s['ArtTile_Prison_Capsule']==0x4FF
+  assert g.s['ArtTile_Prison_Capsule']+85<=g.s['ArtTile_Eggman_Exhaust']
   assert vram(g.s['ArtTile_Prison_Capsule']*32,32)!=bytes(32)
   g.buttons={3};g.run(2);g.buttons=set();g.run(3)
   frame=g.get('v_watersurface1','obFrame');assert 3<=frame<=5

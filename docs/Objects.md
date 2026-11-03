@@ -1042,7 +1042,9 @@ grows. If no burst slot becomes available during the defeat phase, recovery
 still releases the pieces. Debris uses Sky Sanctuary's indexed launch velocities
 and `$38` gravity every frame.
 Alternating drawing never gates movement. Detached pieces stop reading their
-parent; faces/exhaust validate the ship before following it. Hit flashing saves
+parent; faces/exhaust validate the ship before following it. The common
+[head/exhaust art](Sprites-and-VRAM.md#shared-eggman-heads-and-exhaust) keeps each
+vehicle's own cockpit/torso and shares only the head pixels. Hit flashing saves
 and restores the actual palette word, and escape uses `GetLevelMusic`.
 
 `objects/FC, FD & FE Explosions.asm` owns the shared boss burst controller and

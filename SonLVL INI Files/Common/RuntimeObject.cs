@@ -40,6 +40,14 @@ namespace MysticIsland.ObjectDefinitions
 					Array.Resize(ref pixels, gapOffset + 4 * 32);
 					Array.Copy(File.ReadAllBytes("../art/uncompressed/SMZ Junction Gap.unc"), 0, pixels, gapOffset, 4 * 32);
 				}
+				if (behavior == "Eggman")
+				{
+					byte[] heads = ObjectHelper.OpenArtFile("../art/moduled kosinski/Eggman face.kospm", CompressionType.KosinskiPlusM);
+					int offset = int.Parse(Setting("headtileoffset", "0")) * 32;
+					if (offset < pixels.Length) throw new InvalidDataException("Shared head overlaps the cockpit art.");
+					Array.Resize(ref pixels, offset + heads.Length);
+					Array.Copy(heads, 0, pixels, offset, heads.Length);
+				}
 				frames = Render(pixels, map, data.Palette, dplc, data.DPLCVersion, int.Parse(Setting("mapframes", "0")));
 			}
 			else frames = new[] { Outline(16, 16) };
@@ -55,6 +63,11 @@ namespace MysticIsland.ObjectDefinitions
 					Bits("Right / down priority", 5, 1, "Sprite priority after crossing right or down.", "Low", "High");
 					Bits("Left / up priority", 6, 1, "Sprite priority after crossing left or up.", "Low", "High");
 					Bits("Ground only", 7, 1, "Ignore airborne characters.", "No", "Yes");
+					break;
+				case "Eggman":
+					byte[] hullArt = ObjectHelper.OpenArtFile("../art/moduled kosinski/Old Eggpod.kospm", CompressionType.KosinskiPlusM);
+					byte[] hullMap = LevelData.ASMToBin("../md-main.asm", "Map_Eggman", EngineVersion.S3K);
+					alternate = Render(hullArt, hullMap, 0, null, EngineVersion.S2, 1);
 					break;
 				case "Signpost":
 					Bits("Entry", 0, 3, "Placed signs can launch on a fast crossing. Falling signs start above the camera. The SMZ2 Mecha trap spins to Mecha, is destroyed, and gives the real sign only after the fight.", "Placed", "Falling from sky", "SMZ2 Mecha trap");
@@ -491,7 +504,7 @@ namespace MysticIsland.ObjectDefinitions
 					for (int i = 1; i < 4; i++) pieces.Add(new Sprite(kemusi ? alternate[damaged ? 3 : 2] : At(frames, 8), i * 12, kemusi ? (damaged ? 5 : 1) : 0));
 					return new Sprite(pieces);
 				case "Junction": return new Sprite(frames[0], At(frames, 16));
-				case "Eggman": return new Sprite(frames[0], At(frames, 1));
+				case "Eggman": return new Sprite(alternate[0], frames[0]);
 				case "Saw": return At(frames, (subtype & 7) >= 3 ? 2 : 0);
 				case "SpinTrap": return (subtype & 0x80) != 0 ? frames[0] : alternate[0];
 				case "Stomper": return At(frames, (subtype >> 4) & 7);
