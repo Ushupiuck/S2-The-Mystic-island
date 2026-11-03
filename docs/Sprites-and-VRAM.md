@@ -233,8 +233,8 @@ LZ's per-act module lists load the resident bank; another zone must load it too.
 ### Shared Eggman heads and exhaust
 
 GHZ and EHZ share Sonic 1's seven head/expression poses and its full escape
-flame. The shared head bank at `ArtTile_EggmanFace = $43D` has 54 tiles; the
-25-tile flame bank starts at `$554`. Both use the primary player palette, so
+flame. The shared head bank at `ArtTile_EggmanFace = $43F` has 54 tiles; the
+25-tile flame bank starts at `$556`. Both use the primary player palette, so
 palette-row-two cycling remains independent. The unused S2 jet include and
 its superseded archive have been removed.
 
@@ -245,10 +245,17 @@ from the S1 source; its private cockpit keeps its original position. Preserve
 the short glass-side whisker as well as the longer opposite whisker. Only S1's
 exposed blue seat padding changes color in both the hull backrest and pilot
 rim: primary `A/B/C` becomes `4/3/2`, the
-existing orange ramp used by S2. Glass and eye blues keep their source colors.
+existing orange ramp used by S2.
+
+The S2 windshield edge is a private foreground piece, before the shared head
+in mapping order; overlapping whisker pixels remain behind the glass in both
+facings. Its neck cleanup uses the dark interior shade rather than copying
+shirt reds below the mouth. Profile lens pixels use `B/A` instead of `C/B`
+so their blue stays readable next to the frontal expressions; skin, facial
+shapes and the other eye shading remain intact.
 
 The editable sources are `art/uncompressed/Old Eggpod.unc` (77 private tiles),
-`Boss Ship.unc` (76), `Eggman face.unc` (54) and `Boss exhaust.unc` (25).
+`Boss Ship.unc` (79), `Eggman face.unc` (54) and `Boss exhaust.unc` (25).
 `python build_tools/build_end_art.py` packs these along with the other resident
 end-of-act banks. The explicit `build_boss_shared_art.py --rom PRE_SPLIT_ROM
 --listing PRE_SPLIT_LISTING --write` migration reads the unsplit assets/mappings
@@ -261,7 +268,7 @@ The propeller keeps every visible S2 pixel and the same hardware-piece count.
 Its repeated blade drops a transparent top tile row, leaving eight hub tiles
 and a four-tile blade run (12 tiles total). This keeps the private cockpits,
 shared heads, capsule and flame below the auxiliary shield bank. GHZ's private
-bank starts at `$3F0`, its weapon bank at `$473`; EHZ lifetimes are tabulated in
+bank starts at `$3F0`, its weapon bank at `$475`; EHZ lifetimes are tabulated in
 [the import guide](Importing-objects.md#arena-and-art-lifetime).
 
 Both bosses use one expression script and one S1 exhaust script. Callers

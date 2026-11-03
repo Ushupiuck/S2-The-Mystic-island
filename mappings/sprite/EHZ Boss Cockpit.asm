@@ -9,7 +9,7 @@ Map_EHZBoss_Cockpit:
 	dc.w Map_EHZBoss_Cockpit_Frame6-Map_EHZBoss_Cockpit
 Map_EHZBoss_Cockpit_Frame0:	dc.w 5
 	dc.b -26,$09
-	dc.w $004D,-12
+	dc.w $004F,-12
 	dc.b -32,$0A
 	dc.w $0027,0
 	dc.b -24,$09
@@ -20,11 +20,11 @@ Map_EHZBoss_Cockpit_Frame0:	dc.w 5
 	dc.w $0020,-32
 Map_EHZBoss_Cockpit_Frame1:	dc.w 9
 	dc.b -26,$04
-	dc.w $0053,-20
+	dc.w $0055,-20
 	dc.b -26,$05
-	dc.w $0056,-4
+	dc.w $0058,-4
 	dc.b -18,$00
-	dc.w $0055,-12
+	dc.w $0057,-12
 	dc.b -32,$00
 	dc.w $0027,0
 	dc.b -32,$06
@@ -37,15 +37,17 @@ Map_EHZBoss_Cockpit_Frame1:	dc.w 9
 	dc.w $0030,24
 	dc.b -16,$00
 	dc.w $0020,-32
-Map_EHZBoss_Cockpit_Frame2:	dc.w 12
+Map_EHZBoss_Cockpit_Frame2:	dc.w 13
+	dc.b -24,$04
+	dc.w $004C,-24
 	dc.b -26,$04
-	dc.w $005A,-20
+	dc.w $005C,-20
 	dc.b -26,$05
-	dc.w $005D,-4
+	dc.w $005F,-4
 	dc.b -26,$00
-	dc.w $0061,12
+	dc.w $0063,12
 	dc.b -18,$00
-	dc.w $005C,-12
+	dc.w $005E,-12
 	dc.b -32,$00
 	dc.w $0027,0
 	dc.b -32,$01
@@ -62,15 +64,17 @@ Map_EHZBoss_Cockpit_Frame2:	dc.w 12
 	dc.w $0020,-32
 	dc.b -16,$00
 	dc.w $003A,8
-Map_EHZBoss_Cockpit_Frame3:	dc.w 12
+Map_EHZBoss_Cockpit_Frame3:	dc.w 13
+	dc.b -24,$04
+	dc.w $004C,-24
 	dc.b -34,$06
-	dc.w $0063,-12
+	dc.w $0065,-12
 	dc.b -26,$00
-	dc.w $0062,-20
+	dc.w $0064,-20
 	dc.b -26,$01
-	dc.w $0069,4
+	dc.w $006B,4
 	dc.b -26,$00
-	dc.w $006B,12
+	dc.w $006D,12
 	dc.b -32,$00
 	dc.w $0027,0
 	dc.b -32,$00
@@ -87,17 +91,19 @@ Map_EHZBoss_Cockpit_Frame3:	dc.w 12
 	dc.w $0030,24
 	dc.b -16,$00
 	dc.w $0020,-32
-Map_EHZBoss_Cockpit_Frame4:	dc.w 16
+Map_EHZBoss_Cockpit_Frame4:	dc.w 17
+	dc.b -24,$00
+	dc.w $004D,-16
 	dc.b -34,$01
-	dc.w $006C,-20
+	dc.w $006E,-20
 	dc.b -34,$00
-	dc.w $0063,-12
+	dc.w $0065,-12
 	dc.b -34,$00
-	dc.w $0066,-4
+	dc.w $0068,-4
 	dc.b -26,$09
-	dc.w $006E,-12
+	dc.w $0070,-12
 	dc.b -26,$00
-	dc.w $0074,12
+	dc.w $0076,12
 	dc.b -32,$00
 	dc.w $0027,0
 	dc.b -32,$00
@@ -122,17 +128,17 @@ Map_EHZBoss_Cockpit_Frame4:	dc.w 16
 	dc.w $0040,-8
 Map_EHZBoss_Cockpit_Frame5:	dc.w 16
 	dc.b -34,$04
-	dc.w $0075,-4
+	dc.w $0077,-4
 	dc.b -26,$04
-	dc.w $0053,-20
+	dc.w $0055,-20
 	dc.b -26,$01
-	dc.w $0056,-4
+	dc.w $0058,-4
 	dc.b -26,$00
-	dc.w $0077,4
+	dc.w $0079,4
 	dc.b -18,$00
-	dc.w $0055,-12
+	dc.w $0057,-12
 	dc.b -18,$00
-	dc.w $0059,4
+	dc.w $005B,4
 	dc.b -32,$00
 	dc.w $0027,0
 	dc.b -32,$00
@@ -153,15 +159,17 @@ Map_EHZBoss_Cockpit_Frame5:	dc.w 16
 	dc.w $0035,-16
 	dc.b -16,$00
 	dc.w $0047,-8
-Map_EHZBoss_Cockpit_Frame6:	dc.w 14
+Map_EHZBoss_Cockpit_Frame6:	dc.w 15
+	dc.b -24,$00
+	dc.w $004E,-16
 	dc.b -34,$05
-	dc.w $0078,-20
+	dc.w $007A,-20
 	dc.b -34,$06
-	dc.w $007D,-4
+	dc.w $007F,-4
 	dc.b -26,$00
-	dc.w $0074,12
+	dc.w $0076,12
 	dc.b -18,$00
-	dc.w $007C,-12
+	dc.w $007E,-12
 	dc.b -32,$00
 	dc.w $0027,0
 	dc.b -32,$00

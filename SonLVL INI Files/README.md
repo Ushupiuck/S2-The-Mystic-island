@@ -27,7 +27,7 @@ preview applies its current DPLCs; those use the S2/player-style cue encoding,
 even though its mappings use S3&K format. Inline mappings for BBat, Gator,
 Aquis/Skyhorse and the GHZ ship hull are read from `md-main.asm`. The GHZ
 cockpit preview appends the shared head bank at its explicit `headtileoffset`
-(77), then reads the same `GHZ Boss Cockpit.asm` mappings as the runtime.
+(79), then reads the same `GHZ Boss Cockpit.asm` mappings as the runtime.
 
 ## Terrain layouts
 

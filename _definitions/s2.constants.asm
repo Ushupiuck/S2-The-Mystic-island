@@ -1828,17 +1828,17 @@ BossExhaust_Cruise = 1
 BossExhaust_Escape = 2
 
 ArtTile_Eggman:			equ $3F0
-ArtTile_Eggman_Weapons:		equ $473
+ArtTile_Eggman_Weapons:		equ $475
 ArtTile_Eggman_Button:		equ $4A4
 ArtTile_Eggman_Spikeball:	equ $518
 ArtTile_Eggman_Trap_Floor:	equ $518
-ArtTile_EggmanFace:		equ $43D	; 54 shared S1 head tiles
-ArtTile_Eggman_Exhaust:		equ $554	; 25 shared S1 flame tiles
+ArtTile_EggmanFace:		equ $43F	; 54 shared S1 head tiles
+ArtTile_Eggman_Exhaust:		equ $556	; 25 shared S1 flame tiles
 
 ; End of Level
 ArtTile_Giant_Ring:		equ $400
 ArtTile_Giant_Ring_Flash:	equ $462
-ArtTile_Prison_Capsule:		equ $4FF	; 85 tiles, between the 12-tile EHZ propeller and shared exhaust
+ArtTile_Prison_Capsule:		equ $501	; 85 tiles, between the 12-tile EHZ propeller and shared exhaust
 ArtTile_Hidden_Points:		equ ArtTile_Signpost+$1A ; 28 tiles after the signpost DPLC bank; below Tails's life icon
 ArtTile_Warp:			equ $541
 ArtTile_Mini_Tails:		equ $535
@@ -1958,8 +1958,8 @@ ArtTile_Art_EHZMountains:	equ $500
 
 ; EHZ boss
 ArtTile_ArtNem_Eggpod_1:	equ $3F0
-ArtTile_ArtNem_EHZBoss:		equ $473
-ArtTile_ArtNem_EggChoppers:	equ $4F3
+ArtTile_ArtNem_EHZBoss:		equ $475
+ArtTile_ArtNem_EggChoppers:	equ $4F5
 ArtTile_BossExplosion:	equ $581	; 100 S2 tiles; replaced by animals/normal explosions after escape
 ArtTile_ExplosionWall_Small:	equ ArtTile_Eggman ; 94 normal/fiery tiles replace inactive ship art during the wall
 

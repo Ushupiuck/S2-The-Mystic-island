@@ -9,18 +9,18 @@ Map_GHZBoss_Cockpit:
 	dc.w Map_GHZBoss_Cockpit_Frame6-Map_GHZBoss_Cockpit
 Map_GHZBoss_Cockpit_Frame0:	dc.w 3
 	dc.b -24,$09
-	dc.w $004D,-8
+	dc.w $004F,-8
 	dc.b -24,$0A
 	dc.w $0023,-24
 	dc.b -16,$05
 	dc.w $002C,0
 Map_GHZBoss_Cockpit_Frame1:	dc.w 6
 	dc.b -24,$04
-	dc.w $0053,-16
+	dc.w $0055,-16
 	dc.b -24,$05
-	dc.w $0056,0
+	dc.w $0058,0
 	dc.b -16,$00
-	dc.w $0055,-8
+	dc.w $0057,-8
 	dc.b -24,$0A
 	dc.w $0023,-24
 	dc.b -24,$00
@@ -29,13 +29,13 @@ Map_GHZBoss_Cockpit_Frame1:	dc.w 6
 	dc.w $002C,0
 Map_GHZBoss_Cockpit_Frame2:	dc.w 12
 	dc.b -24,$04
-	dc.w $005A,-16
+	dc.w $005C,-16
 	dc.b -24,$05
-	dc.w $005D,0
+	dc.w $005F,0
 	dc.b -24,$00
-	dc.w $0061,16
+	dc.w $0063,16
 	dc.b -16,$00
-	dc.w $005C,-8
+	dc.w $005E,-8
 	dc.b -24,$02
 	dc.w $0023,-24
 	dc.b -24,$00
@@ -54,13 +54,13 @@ Map_GHZBoss_Cockpit_Frame2:	dc.w 12
 	dc.w $002D,0
 Map_GHZBoss_Cockpit_Frame3:	dc.w 14
 	dc.b -32,$06
-	dc.w $0063,-8
+	dc.w $0065,-8
 	dc.b -24,$00
-	dc.w $0062,-16
+	dc.w $0064,-16
 	dc.b -24,$01
-	dc.w $0069,8
+	dc.w $006B,8
 	dc.b -24,$00
-	dc.w $006B,16
+	dc.w $006D,16
 	dc.b -24,$02
 	dc.w $0023,-24
 	dc.b -24,$00
@@ -83,15 +83,15 @@ Map_GHZBoss_Cockpit_Frame3:	dc.w 14
 	dc.w $0039,16
 Map_GHZBoss_Cockpit_Frame4:	dc.w 16
 	dc.b -32,$01
-	dc.w $006C,-16
+	dc.w $006E,-16
 	dc.b -32,$00
-	dc.w $0063,-8
+	dc.w $0065,-8
 	dc.b -32,$00
-	dc.w $0066,0
+	dc.w $0068,0
 	dc.b -24,$09
-	dc.w $006E,-8
+	dc.w $0070,-8
 	dc.b -24,$00
-	dc.w $0074,16
+	dc.w $0076,16
 	dc.b -24,$04
 	dc.w $0041,-24
 	dc.b -24,$00
@@ -116,17 +116,17 @@ Map_GHZBoss_Cockpit_Frame4:	dc.w 16
 	dc.w $0039,16
 Map_GHZBoss_Cockpit_Frame5:	dc.w 9
 	dc.b -32,$04
-	dc.w $0075,0
+	dc.w $0077,0
 	dc.b -24,$04
-	dc.w $0053,-16
+	dc.w $0055,-16
 	dc.b -24,$01
-	dc.w $0056,0
+	dc.w $0058,0
 	dc.b -24,$00
-	dc.w $0077,8
+	dc.w $0079,8
 	dc.b -16,$00
-	dc.w $0055,-8
+	dc.w $0057,-8
 	dc.b -16,$00
-	dc.w $0059,8
+	dc.w $005B,8
 	dc.b -24,$0A
 	dc.w $0023,-24
 	dc.b -24,$00
@@ -135,13 +135,13 @@ Map_GHZBoss_Cockpit_Frame5:	dc.w 9
 	dc.w $002C,0
 Map_GHZBoss_Cockpit_Frame6:	dc.w 15
 	dc.b -32,$05
-	dc.w $0078,-16
+	dc.w $007A,-16
 	dc.b -32,$06
-	dc.w $007D,0
+	dc.w $007F,0
 	dc.b -24,$00
-	dc.w $0074,16
+	dc.w $0076,16
 	dc.b -16,$00
-	dc.w $007C,-8
+	dc.w $007E,-8
 	dc.b -24,$00
 	dc.w $0041,-24
 	dc.b -24,$05

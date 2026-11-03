@@ -30,6 +30,19 @@ def seat_color(x, y, color):
 	return S1_SEAT_COLORS.get(color,color) if x>=10 and -20<=y<-4 else color
 
 
+def head_color(pose, x, y, color):
+	"""Keep profile lenses visibly blue, with the frontal poses' blue ramp."""
+	if pose in (0,1,5) and -6<=x<=3 and -24<=y<=-14:
+		return {12:11,11:10}.get(color,color)
+	return color
+
+
+def glass_foreground(head, original):
+	"""The original S2 windshield edge sits in front of the shared whisker."""
+	return {p:original[p] for p in head if p in original
+		and p[0]<=-15 and p[1]>=-20 and original[p] in (6,7,8,9,10)}
+
+
 def head_mask(pose, x, y, color):
 	"""Authored head contour; never extract the S1 glass, console or torso."""
 	if x>=10 and -20<=y<-4 and color in S1_SEAT_COLORS:
@@ -104,6 +117,10 @@ def s2_background(pose, rows):
 			if x>=0 and color in (3,4):
 				continue	# source seat rim, retained behind the new moustache
 			pixels[x,y] = 1 if y<-14 else rows[0].get((x,-10),13)
+	# Clearing the old face must not extend its two-tone shirt strip into the neck.
+	for y in range(-14,-11):
+		for x in (-4,-3):
+			pixels[x,y] = 1
 	return pixels
 
 
@@ -164,7 +181,7 @@ def extract(rom_path, listing_path):
 	oldmaps,newmaps = frames(rom,s['Map_Eggman'],13),frames(rom,s['Map_EHZBoss_Vehicle'],7)
 	pilots = [raster(row,old) for row in oldmaps[1:8]]
 	s2pilots = [raster(row,new) for row in newmaps[1:7]]
-	heads = [{p:c for p,c in row.items() if head_mask(i,*p,c)} for i,row in enumerate(pilots)]
+	heads = [{p:head_color(i,*p,c) for p,c in row.items() if head_mask(i,*p,c)} for i,row in enumerate(pilots)]
 	backgrounds = [{p:seat_color(*p,c) for p,c in row.items() if p not in heads[i]} for i,row in enumerate(pilots)]
 	ghz_hull = bytearray(old[10*32:0x2D*32])
 	# The outer backrest is in the hull's second piece, not the pilot bank.
@@ -175,20 +192,24 @@ def extract(rom_path, listing_path):
 	headmaps = [pack_pixels(row,banks['Eggman face']) for row in heads]
 	ghz = [pack_pixels(row,banks['Old Eggpod']) for row in backgrounds]
 	ehz = [pack_pixels(s2_background(min(i,5),s2pilots),banks['Boss Ship']) for i in range(7)]
+	fronts = [glass_foreground({(x+S2_HEAD_X,y+S2_HEAD_Y):c for (x,y),c in head.items()},s2pilots[min(i,5)])
+		for i,head in enumerate(heads)]
+	frontmaps = [pack_pixels(row,banks['Boss Ship']) if row else [] for row in fronts]
+
 	# Preserve the full S1 figure after separating its ownership into two banks.
 	for i,row in enumerate(pilots):
-		assert {**backgrounds[i],**heads[i]}=={p:seat_color(*p,c) for p,c in row.items()}
-	return banks,headmaps,ghz,ehz,oldmaps[0],newmaps[0]
+		assert {**backgrounds[i],**heads[i]}=={p:head_color(i,*p,seat_color(*p,c)) for p,c in row.items()}
+	return banks,headmaps,ghz,ehz,frontmaps,oldmaps[0],newmaps[0]
 
 
-def mapping(label, rows, headmaps=None, private_base=0, dx=0, dy=0):
+def mapping(label, rows, headmaps=None, private_base=0, dx=0, dy=0, foregrounds=None):
 	lines = [label+':']+[f'\tdc.w {label}_Frame{i}-{label}' for i in range(len(rows))]
 	for i,row in enumerate(rows):
 		head = headmaps[i] if headmaps else []
-		lines.append(f'{label}_Frame{i}:\tdc.w {len(head)+len(row)}')
-		for y,size,tile,x in head:
-			lines += [f'\tdc.b {y+dy},${size:02X}',f'\tdc.w ${private_base+tile:04X},{x+dx}']
-		for y,size,tile,x in row:
+		front = foregrounds[i] if foregrounds else []
+		pieces = front+[(y+dy,size,private_base+tile,x+dx) for y,size,tile,x in head]+row
+		lines.append(f'{label}_Frame{i}:\tdc.w {len(pieces)}')
+		for y,size,tile,x in pieces:
 			lines += [f'\tdc.b {y},${size:02X}',f'\tdc.w ${tile:04X},{x}']
 	return '\n'.join(lines)+'\n\teven\n'
 
@@ -199,11 +220,11 @@ def main():
 	p.add_argument('--listing',type=Path,required=True)
 	p.add_argument('--write',action='store_true')
 	a = p.parse_args()
-	banks,heads,ghz,ehz,oldhull,newhull = extract(a.rom,a.listing)
+	banks,heads,ghz,ehz,fronts,oldhull,newhull = extract(a.rom,a.listing)
 	report = {name:len(raw)//32 for name,raw in banks.items()}
 	report['shared_base'] = hex(0x3F0+max(len(banks['Old Eggpod']),len(banks['Boss Ship']))//32)
 	report['shared_end'] = hex(int(report['shared_base'],16)+len(banks['Eggman face'])//32)
-	report['pieces'] = {'head':[len(r) for r in heads],'GHZ':[len(r) for r in ghz],'EHZ':[len(r) for r in ehz]}
+	report['pieces'] = {'head':[len(r) for r in heads],'GHZ':[len(r) for r in ghz],'EHZ':[len(r) for r in ehz],'glass':[len(r) for r in fronts]}
 	print(json.dumps(report,indent=2))
 	if not a.write:
 		return
@@ -221,7 +242,7 @@ def main():
 		(ROOT/f'art/uncompressed/{name}.unc').write_bytes(raw)
 	outputs = {
 		'GHZ Boss Cockpit.asm':mapping('Map_GHZBoss_Cockpit',ghz,heads,int(report['shared_base'],16)-0x3F0),
-		'EHZ Boss Cockpit.asm':mapping('Map_EHZBoss_Cockpit',ehz,heads,int(report['shared_base'],16)-0x3F0,S2_HEAD_X,S2_HEAD_Y),
+		'EHZ Boss Cockpit.asm':mapping('Map_EHZBoss_Cockpit',ehz,heads,int(report['shared_base'],16)-0x3F0,S2_HEAD_X,S2_HEAD_Y,fronts),
 	}
 	rom = a.rom.read_bytes()
 	s = {name:int(value,16) for name,value in re.findall(r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]',a.listing.read_text())}

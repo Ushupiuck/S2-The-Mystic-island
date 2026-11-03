@@ -73,12 +73,12 @@ capsule. Origin deltas at `$44/$46` also support the existing MZ placeholder.
 
 | Bytes, end exclusive | Art and current constant |
 | --- | --- |
-| `$7E00-$8780` | S2 hull/cockpit/torso, `ArtTile_ArtNem_Eggpod_1`, 76 tiles |
-| `$87A0-$8E60` | Shared S1 heads, `ArtTile_EggmanFace`, 54 tiles |
-| `$8E60-$9E60` | Car/wheels/drill, `ArtTile_ArtNem_EHZBoss`, 128 tiles |
-| `$9E60-$9FE0` | Propeller, `ArtTile_ArtNem_EggChoppers`, 12 tiles |
-| `$9FE0-$AA80` | Capsule, `ArtTile_Prison_Capsule`, 85 tiles; loaded at defeat |
-| `$AA80-$ADA0` | Shared S1 exhaust, `ArtTile_Eggman_Exhaust`, 25 tiles |
+| `$7E00-$87E0` | S2 hull/cockpit/torso and foreground glass, `ArtTile_ArtNem_Eggpod_1`, 79 tiles |
+| `$87E0-$8EA0` | Shared S1 heads, `ArtTile_EggmanFace`, 54 tiles |
+| `$8EA0-$9EA0` | Car/wheels/drill, `ArtTile_ArtNem_EHZBoss`, 128 tiles |
+| `$9EA0-$A020` | Propeller, `ArtTile_ArtNem_EggChoppers`, 12 tiles |
+| `$A020-$AAC0` | Capsule, `ArtTile_Prison_Capsule`, 85 tiles; loaded at defeat |
+| `$AAC0-$ADE0` | Shared S1 exhaust, `ArtTile_Eggman_Exhaust`, 25 tiles |
 | `$B020-$BCA0` | Shared S2 fiery boss explosion, `ArtTile_BossExplosion`, 100 tiles |
 
 Boss/capsule phases replace general object art. They preserve both shield

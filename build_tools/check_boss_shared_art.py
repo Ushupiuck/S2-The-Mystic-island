@@ -55,12 +55,12 @@ def reference_checks(a, rom, s):
 	oldbanks = [(before[tile],unpack(old,before[label])) for tile,label in (
 		('ArtTile_Eggman','Kospm_OldEggPod'),('ArtTile_Eggman_Exhaust','Kospm_Exhaust'))]
 	oldrows = frames(old,before['Map_Eggman'],13)
-	from build_boss_shared_art import seat_color
+	from build_boss_shared_art import seat_color,head_color
 	newbanks = [(s[tile],unpack(rom,s[label])) for tile,label in (
 		('ArtTile_Eggman','Kospm_OldEggPod'),('ArtTile_EggmanFace','Kospm_EggmanFace'))]
 	for row,index in zip(frames(rom,s['Map_GHZBoss_Cockpit'],7),range(1,8)):
 		original = raster(oldrows[index],oldbanks,before['ArtTile_Eggman'])
-		expected = {(x,y):(line,seat_color(x,y,color)) for (x,y),(line,color) in original.items()}
+		expected = {(x,y):(line,head_color(index-1,x,y,seat_color(x,y,color))) for (x,y),(line,color) in original.items()}
 		assert raster(row,newbanks,s['ArtTile_Eggman'])==expected, ('S1 changed beyond seat colors',index)
 	newfire = frames(rom,s['Map_BossExhaust'],5)
 	firebank = [(s['ArtTile_Eggman_Exhaust'],unpack(rom,s['Kospm_Exhaust']))]
@@ -79,13 +79,24 @@ def reference_checks(a, rom, s):
 		actual = raster(row,new2banks,s['ArtTile_ArtNem_Eggpod_1'])
 		original = raster(frames(old,before['Map_EHZBoss_Vehicle'],7)[min(pose,5)+1],old2banks)
 		source = raster(oldrows[pose+1],oldbanks,before['ArtTile_Eggman'])
-		head = {(x+S2_HEAD_X,y+S2_HEAD_Y):c for (x,y),c in source.items() if head_mask(pose,x,y,c[1])}
+		head = {(x+S2_HEAD_X,y+S2_HEAD_Y):(line,head_color(pose,x,y,color)) for (x,y),(line,color) in source.items() if head_mask(pose,x,y,color)}
+		front = {p:original[p] for p in head if p in original and p[0]<=-15 and p[1]>=-20 and original[p][1] in (6,7,8,9,10)}
 		region = set(head) | {(x,y) for y,(lo,hi) in S2_FACE_SPANS.items() for x in range(lo,hi)}
 		assert {p:c for p,c in actual.items() if p not in region}=={p:c for p,c in original.items() if p not in region}, ('S2 cockpit/torso altered outside facial area',pose)
-		assert all(actual.get(p)==c for p,c in head.items()), ('S1 head detail lost',pose)
+		assert all(actual.get(p)==front.get(p,c) for p,c in head.items()), ('S1 head detail or windshield overlap lost',pose)
 		for (x,y),c in source.items():
 			if -21<=y<=-17 and -16<=x<-5 and c[1] in (13,14,15):
-				assert actual.get((x+S2_HEAD_X,y+S2_HEAD_Y))==c, ('Glass-side whisker clipped',pose,x,y)
+				p = (x+S2_HEAD_X,y+S2_HEAD_Y)
+				assert actual.get(p)==front.get(p,c), ('Glass-side whisker lost',pose,x,y)
+		# Named fault locations, independent of the producer's extraction rules.
+		for p in ((-17,-19),(-16,-19),(-15,-19)):
+			if p in front:
+				assert actual[p]==original[p], ('Whisker painted over glass',pose,p)
+		for (x,y),(_,color) in source.items():
+			if -6<=x<=3 and -24<=y<=-14 and color in (10,11,12):
+				assert actual[(x+S2_HEAD_X,y+S2_HEAD_Y)][1] in (10,11,12), ('Non-blue lens',pose,x,y)
+		if pose in (2,3):
+			assert all(actual[(x,y)][1]==1 for x in (-4,-3) for y in range(-14,-11)), ('Two-tone red neck strays',pose)
 	oldprop = [(0,unpack(old,before['Kospm_EggChopper']))]
 	newprop = [(0,unpack(rom,s['Kospm_EggChopper']))]
 	for oldrow,newrow in zip(frames(old,before['Map_EHZBoss_Propeller'],7),frames(rom,s['Map_EHZBoss_Propeller'],7)):
@@ -93,7 +104,7 @@ def reference_checks(a, rom, s):
 	oldrow = frames(old,before['Map_EHZBoss_Vehicle'],1)[0]
 	newrow = frames(rom,s['Map_EHZBoss_Vehicle'],1)[0]
 	assert raster(oldrow,[(0,unpack(old,before['Kospm_EggPod']))]) == raster(newrow,[(0,unpack(rom,s['Kospm_EggPod']))])
-	return ['S1 changes only its seat colors; whiskers and S2 cockpit/torso pass source checks; both hulls, flames and rotor retain their pixels']
+	return ['S1 seat/lens changes are scoped; S2 neck is clean, windshield occludes whiskers, and all seven poses keep blue lenses']
 
 
 def native_checks(a):
@@ -198,6 +209,62 @@ def native_checks(a):
 	return result
 
 
+def live_gallery(g, a, act):
+	"""Check actual VDP pixels for every expression/facing, including glass order."""
+	from check_companion_followup import isolate,place,spawn
+	saved = g.save()
+	s = g.s
+	camx,camy = g.read('Camera_X_pos',2),g.read('Camera_Y_pos',2)
+	isolate(g)
+	g.put('v_player2','code',0)
+	place(g,'v_player',camx+160,camy+210,False)
+	g.put('v_player','obControl',0x81)
+	for name,value in (('Camera_Min_X_pos',camx),('Camera_Max_X_pos',camx),('Camera_Max_X_pos_target',camx),
+		('Camera_Min_Y_pos',camy),('Camera_Max_Y_pos',camy),('Camera_Max_Y_pos_target',camy)):
+		g.write(name,value,2)
+	x,y = camx+160,camy+150
+	hull,face = [spawn(g,'DisplaySprite',x,y) for _ in range(2)]
+	for obj,mapping,line in ((hull,'Map_EHZBoss_Vehicle',1),(face,'Map_EHZBoss_Cockpit',0)):
+		for field,value,size in (('obMap',s[mapping],4),('obGfx',s['ArtTile_ArtNem_Eggpod_1']+(line<<13),2),
+			('obRender',4,1),('obPriority',0x200,2),('width_pixels',s[mapping+'_width'],1),
+			('height_pixels',s[mapping+'_height'],1)):
+			g.put(obj,field,value,size)
+	rom = a.rom.read_bytes()
+	banks = [(s[tile],unpack(rom,s[label])) for tile,label in (
+		('ArtTile_ArtNem_Eggpod_1','Kospm_EggPod'),('ArtTile_EggmanFace','Kospm_EggmanFace'))]
+	rows = frames(rom,s['Map_EHZBoss_Cockpit'],7)
+	# Let the copied camera and the displayed SAT settle before pixel sampling.
+	g.run(30)
+	for flip in (0,1):
+		for pose,row in enumerate(rows):
+			for obj in (hull,face):
+				g.put(obj,'obRender',4|flip)
+				g.put(obj,'obStatus',flip)
+			g.put(face,'obFrame',pose)
+			g.run(4)
+			assert not g.read('v_errortype')
+			pixels = raster(row,banks,s['ArtTile_ArtNem_Eggpod_1'])
+			def screen(p):
+				px,py = p
+				return x-g.read('Camera_X_pos_copy',2)+(-px-1 if flip else px),y-g.read('Camera_Y_pos_copy',2)+py
+			# Inspect the lens itself, without borrowing the producer's color mask.
+			blues = [p for p,(_,n) in pixels.items() if -10<=p[0]<=-1 and -26<=p[1]<=-16 and n in (10,11,12)]
+			assert blues, ('No blue lens pixels',act,pose,flip)
+			for point in blues:
+				r,gc,b = g.video.getpixel(screen(point))
+				assert b>r+50 and b>gc+40, ('Lens lost its blue in the VDP output',act,pose,flip,point,(r,gc,b))
+			if pose in (2,3,4,6):
+				r,gc,b = g.video.getpixel(screen((-16,-19)))
+				assert max(r,gc,b)-min(r,gc,b)<80 and min(r,gc,b)>100, ('Whisker covers glass in VDP output',act,pose,flip,(r,gc,b))
+			if pose in (2,3):
+				for px in (-4,-3):
+					for py in range(-14,-11):
+						rgb = g.video.getpixel(screen((px,py)))
+						assert max(rgb)<80 and max(rgb)-min(rgb)<20, ('Red neck strays in VDP output',act,pose,flip,px,py,rgb)
+			g.video.save(a.output/f'ehz{act+1}-pose{pose}-flip{flip}.png')
+	g.restore(saved)
+
+
 def live_checks(a):
 	from genesis_test_core import Genesis
 	from check_object_course import boot_level,objects
@@ -254,6 +321,7 @@ def live_checks(a):
 		face = next(p for p in objects(g,0x55) if g.get(p,'obRoutine')==14)
 		assert g.get(face,'obMap',4)==s['Map_EHZBoss_Cockpit']
 		g.video.save(a.output/f'ehz{act+1}-normal.png')
+		live_gallery(g,a,act)
 		# Invoke the actual hit/defeat handler; the native/GHZ checks cover collisions.
 		g.put(body,'obColType',0)
 		frames_out,hit_frames = [],[]
@@ -305,7 +373,7 @@ def live_checks(a):
 			g.run(4)
 			assert any(g.get(p,'code')==s['Flicky'] for p in objects(g))
 			g.video.save(a.output/'ehz2-capsule-open.png')
-		result.append(f'EHZ{act+1}: real PLC pixels, normal/hurt pilot, rotor lift, S1 flare/loop and parent cleanup')
+		result.append(f'EHZ{act+1}: all seven VDP-rendered poses in both facings, blue lenses, foreground glass, clean neck, escape and cleanup')
 	return result
 
 
