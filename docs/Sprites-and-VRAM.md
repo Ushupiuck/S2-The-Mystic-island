@@ -232,59 +232,46 @@ LZ's per-act module lists load the resident bank; another zone must load it too.
 
 ### Shared Eggman heads and exhaust
 
-GHZ and EHZ share Sonic 1's seven head/expression poses and its full escape
-flame. The shared head bank at `ArtTile_EggmanFace = $43F` has 40 tiles; the
-25-tile flame bank starts at `$556`. Both use the primary player palette, so
-palette-row-two cycling remains independent. The unused S2 jet include and
-its superseded archive have been removed.
+On `Mystic-Island-EHZ-S1-pod-preview`, GHZ and EHZ share the complete Sonic 1
+Eggpod: its hull, cockpit, seven head poses and full escape flame. EHZ keeps
+Sonic 2's car/wheels/drill. Its pod/cockpit mappings draw the S1 pixels four
+pixels higher, while the controller, chassis and collision anchors keep their
+original positions. That hides the deeper S1 underside inside the chassis in
+both directions; moving the whole boss upward would also move its children.
 
-Each Eggmobile retains its own glass, metal frame, seat shape and torso.
-`Map_GHZBoss_Cockpit` and `Map_EHZBoss_Cockpit` combine those private pixels
-with the same head bank. The S2 head anchor is four pixels left, with the same
-Y position as the S1 source; its private cockpit keeps its original position. Preserve
-the short glass-side whisker as well as the longer opposite whisker. Only S1's
-exposed blue seat padding changes color in both the hull backrest and pilot
-rim: primary `A/B/C` becomes `4/3/2`, the
-existing orange ramp used by S2.
+The shared editable banks are `art/uncompressed/Old Eggpod.unc` (60 tiles),
+`Eggman face.unc` (40) and `Boss exhaust.unc` (25). They start at `$3F0`, `$43F`
+and `$556`. The cockpit, face and flame use the primary sprite palette; metal
+pieces select the existing second row. Profile lenses retain the selected
+`C/B` to `B/A` blue remap. Exposed S1 seat padding uses `4/3/2` in place of
+`A/B/C`; both the hull's backrest and cockpit rim change, with the original
+shading and shapes preserved.
 
-The full S2 windshield and gauge use the original normal-pose panel in every
-expression. A private foreground piece precedes the shared head where it crosses
-the glass, including its outline and instrument needle. S2 keeps its original
-rounded lower chin, collar and jacket. The shared face contour includes the
-whole jaw and its outline in hurt/recovery poses, while S1 shirt/collar pixels
-stay in the private S1 bank. Removed upper-face pixels expose sky above the
-windshield or dark cabin interior; never extend a clothing row through the jaw.
-Profile lens pixels use `B/A` instead of `C/B`
-so their blue stays readable next to the frontal expressions; skin, facial
-shapes and the other eye shading remain intact.
+`python build_tools/build_end_art.py` packs the editable banks. The explicit
+`build_boss_shared_art.py --rom PRE_SPLIT_ROM --listing PRE_SPLIT_LISTING --write`
+migration reads pre-sharing revision `21c233e`, extracts the S1 face contours
+and emits the GHZ mappings plus EHZ's whole-pod drawing offset. Per-pose 8x8
+grid phases reuse tiles without changing indexed pixels. Declared allocation
+boundaries are checked before writing. Normal builds do not re-import old art.
 
-The editable sources are `art/uncompressed/Old Eggpod.unc` (60 private tiles),
-`Boss Ship.unc` (72), `Eggman face.unc` (40) and `Boss exhaust.unc` (25).
-`python build_tools/build_end_art.py` packs these along with the other resident
-end-of-act banks. The explicit `build_boss_shared_art.py --rom PRE_SPLIT_ROM
---listing PRE_SPLIT_LISTING --write` migration reads the unsplit assets/mappings
-from pre-sharing revision `21c233e`, applies the authored head contours and seat
-remap,
-and regenerates private/shared sources plus both cockpit mapping families.
-Each pose chooses an 8x8 grid phase that reuses existing tiles; mapping offsets
-preserve every indexed pixel. It checks the declared allocation boundaries
-before writing; bank starts stay fixed, with unused padding before the head
-and weapon banks. Ordinary builds do not re-import the old source or overwrite pixel edits.
+The former S2 cockpit bank and compact 12-tile rotor source remain as archived
+editable/WIP assets. EHZ's live PLC does not load either; rotor mappings,
+animations and controller routines are no longer assembled. No S2 canopy or
+partial cockpit is grafted onto the S1 pod. The superseded S2 jet archive was
+removed during the earlier exhaust migration.
 
-The propeller keeps every visible S2 pixel and the same hardware-piece count.
-Its repeated blade drops a transparent top tile row, leaving eight hub tiles
-and a four-tile blade run (12 tiles total). This keeps the private cockpits,
-shared heads, capsule and flame below the auxiliary shield bank. GHZ's private
-bank starts at `$3F0`, its weapon bank at `$475`; EHZ lifetimes are tabulated in
-[the import guide](Importing-objects.md#arena-and-art-lifetime).
+Both bosses share their expression/exhaust scripts. EHZ retains one exhaust
+SST through approach, driving and escape; there is no rotor or reload
+allocation. Its nozzle is at mirrored X=34, Y=-4. Entry uses the small flame
+on a straight diagonal, which stops at docking. After defeat it detaches from
+the chassis and rises eight pixels with the flame off, then ignites S1's
+startup flare and leaves at four pixels right and a quarter pixel up per
+update. The large flare plays once before the small flame loop.
 
-Both bosses use one expression script and one S1 exhaust script. Callers
-validate their parent's code and main routine before following it. Child words
-`BossChild_OffsetX/Y` at `$30/$32` hold attachment offsets; X mirrors with the
-parent. GHZ keeps its existing pilot/exhaust SSTs. EHZ keeps rotor lift, then
-reuses the rotor SST for S1 thrust on sideways departure. Its arena remains in
-level mode through escape and the capsule, rather than ending at the old demo
-return-to-Sega placeholder.
+Child words `BossChild_OffsetX/Y` at `$30/$32` hold attachment offsets; X mirrors
+with the parent. Each caller validates its parent's code and main routine.
+The arena stays in level mode through escape and the real capsule. See
+[the import guide](Importing-objects.md#arena-and-art-lifetime) for live ranges.
 
 ### Boss explosions
 

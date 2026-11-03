@@ -586,32 +586,29 @@ python build_tools/check_ghz_boss.py --rom s2built.bin --listing md-main.lst --o
 ```
 
 `check_boss_shared_art.py --output test-results/boss-shared` executes both
-constructors, all five expression selectors, both facings, S1 flame startup/loop,
-rotor-slot reuse, unchanged palette buffers and recycled-parent cleanup. Optional
-`--reference-rom` / `--reference-listing` inputs from the pre-sharing build
-compare rendered indexed pixels: both hulls, every S1 pose/flame and rotor remain
-exact apart from S1's explicitly recolored seat and profile lenses. S2 is checked pixel-for-pixel
-outside its facial silhouette, including its original seat/torso. Every pose
-keeps the original normal-pose windshield/gauge and the rounded S2 lower jaw.
-The short glass-side whisker has a separate source-pixel assertion; original
-windshield edge pixels take precedence where it passes behind the glass.
-Independent checks reject shirt-colored chin strips, S1 collar pixels in the
-shared bank, cropped hurt/recovery teeth, residual S2 burnt hair and non-blue
-lenses. Add `--s2disasm /path/to/s2disasm` for retail-source validation: build
-Sonic 2 final REV01 with its default settings (the runner verifies its retail
-MD5), then compare the entire windshield/gauge and lower jaw/collar/jacket
-against its original Nemesis art and eight-byte mappings. Source palette roles
-are converted to the primary sprite row; this does not validate the pending
-vehicle-metal palette adaptation.
+constructors, all five expressions in both facings, persistent exhaust ownership,
+S1 flame startup/loop, unchanged palette buffers and recycled-parent cleanup.
+Optional `--reference-rom` / `--reference-listing` from pre-sharing revision
+`21c233e` compare every S1 hull/pilot/flame pixel, allowing only the selected
+seat and lens color changes. EHZ's complete pod must equal GHZ's at Y=-4.
 
-With `--core` and `--system-directory`, the shared-art runner loads both real
-EHZ act palettes/planes and compiled boss PLCs, verifies resident tile bytes,
-then observes landing, hurt, rotor lift, flame startup/loop and parent cleanup.
-An additional gallery renders all seven poses in both facings through the VDP,
-checks the actual glass/neck/lens pixels and saves each rendered frame.
-Act 2 also reaches the actual capsule switch and animal release.
-These staged arena scenes are not controller-only playthroughs. `--pal` selects
-PAL; screenshots/animations stay in the supplied ignored output directory.
+`check_ehz_s1_pod.py --core CORE --system-directory BIOS --output OUTPUT`
+boots the real EHZ palettes/planes, loads the compiled boss PLC and verifies
+resident S1 pod/head, S2 chassis and common flame bytes. Both acts check entry,
+docking, all seven expressions in both facings through the VDP, blue lenses
+and continued palette animation. The Act-1 scene suppresses its normal
+signpost loader with the act clock; it has no authored boss arena, so its
+fixture ends after docking/rendering rather than driving into its ordinary
+level geometry.
+
+Act 2 runs the fight in its authored arena: both turnarounds, eight actual
+rolling collisions, hit-palette restoration, score, breakup, eight flame-off
+hop pixels, ignition flare, departure, parent cleanup, capsule switch and
+animal release. Players are positioned for each attack; damage is produced
+by the real collision code. These are staged gameplay checks, not full
+controller-only routes. `--pal` selects PAL; `--player 2` selects primary Tails;
+`--act 0` / `--act 1` restrict the run. Captures stay in the supplied ignored
+output directory. The shared-art runner's `--core` mode uses the same checks.
 
 The native pass covers fragmented/full pools and retries, end-of-pool parents,
 dry-act water-bank borrowing, staged deployment, the original opening delay,

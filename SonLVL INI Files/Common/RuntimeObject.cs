@@ -66,7 +66,10 @@ namespace MysticIsland.ObjectDefinitions
 					break;
 				case "Eggman":
 					byte[] hullArt = ObjectHelper.OpenArtFile("../art/moduled kosinski/Old Eggpod.kospm", CompressionType.KosinskiPlusM);
-					byte[] hullMap = LevelData.ASMToBin("../md-main.asm", "Map_Eggman", EngineVersion.S3K);
+					string bodyMap = Setting("bodymap", "");
+					byte[] hullMap = bodyMap.Length == 0
+						? LevelData.ASMToBin("../md-main.asm", "Map_Eggman", EngineVersion.S3K)
+						: LevelData.ASMToBin(bodyMap, EngineVersion.S3K);
 					alternate = Render(hullArt, hullMap, 0, null, EngineVersion.S2, 1);
 					break;
 				case "Signpost":

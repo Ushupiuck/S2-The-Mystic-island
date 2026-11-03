@@ -40,25 +40,24 @@ requires suitable bounds, or maxima covering every set the object uses.
 
 | Mapping | Frames | Display half-width | Display half-height |
 | --- | ---: | --- | --- |
-| `Map_EHZBoss_Vehicle` (hull) | 1 | `$20` | `$18` |
-| `Map_EHZBoss_Cockpit` | 7 | `$22` | `$23` |
+| `Map_EHZBoss_Vehicle` (S1 hull) | 1 | `$24` | `$18` |
+| `Map_EHZBoss_Cockpit` | 7 | `$15` | `$27` |
 | `Map_EHZBoss_Ground` | 8 | `$30` | `$10` |
-| `Map_EHZBoss_Propeller` | 7 | `$52` | `$28` |
 | `Map_BossExplosion` (shared S2 fiery effect) | 7 | `$10` | `$10` |
 
-The propeller's rightmost piece begins at X=50 and is 32 pixels wide, requiring
-82 pixels (`$52`), beyond the old `$40` minimum. The cockpit's 35-pixel display
-half-height is independent of the ship's 20-pixel collision radius. Shared S1 heads are layered over the original S2
-windshield, seat and torso; the S1 upper cockpit is not transplanted.
+The S1-pod preview branch uses Sonic 2's controller and ground vehicle with
+Sonic 1's complete Eggpod/cockpit. Generated EHZ mappings translate all S1 pod
+pixels by Y=-4; the controller and chassis anchors stay unchanged. Display
+bounds include transparent tile padding and remain separate from the original
+20-pixel collision half-height.
 
-The boss uses eight linked ordinary SSTs: ship/controller, cockpit, car, three
-wheels, drill and rotor/exhaust. The rotor lifts the defeated ship, then its
-same SST becomes the shared S1 exhaust on horizontal departure. `objoff_38`
-links children to their parent; the
-controller/cockpit link is reciprocal. Initialization retries until all seven
-children are available. Each child queues separately through `DisplaySprite`.
-Packed composites instead need bounds covering child motion and the record
-layout in [Objects](Objects.md#composites-and-other-records).
+Eight ordinary SSTs hold the controller/hull, cockpit, car, three wheels,
+drill and a persistent rear exhaust. The controller/cockpit link is reciprocal;
+children use `objoff_38` for their owner. Initialization still retries until
+all seven children can be allocated. The rotor and reload paths are retired.
+The rear flame runs on entry, stops while docked, and stays off during an
+eight-pixel escape hop. Ignition then runs the shared S1 flare/loop as the pod
+flies up and right. See [shared boss art](Sprites-and-VRAM.md#shared-eggman-heads-and-exhaust).
 
 The fight retains eight hits, terrain-following wheels, drill separation and
 escape. Hit flashing saves and restores the actual palette word through
@@ -73,10 +72,9 @@ capsule. Origin deltas at `$44/$46` also support the existing MZ placeholder.
 
 | Bytes, end exclusive | Art and current constant |
 | --- | --- |
-| `$7E00-$8700` | S2 hull/cockpit/chin/torso and foreground glass, `ArtTile_ArtNem_Eggpod_1`, 72 tiles |
+| `$7E00-$8580` | Shared S1 hull/cockpit, `ArtTile_Eggman`, 60 tiles |
 | `$87E0-$8CE0` | Shared S1 heads, `ArtTile_EggmanFace`, 40 tiles |
 | `$8EA0-$9EA0` | Car/wheels/drill, `ArtTile_ArtNem_EHZBoss`, 128 tiles |
-| `$9EA0-$A020` | Propeller, `ArtTile_ArtNem_EggChoppers`, 12 tiles |
 | `$A020-$AAC0` | Capsule, `ArtTile_Prison_Capsule`, 85 tiles; loaded at defeat |
 | `$AAC0-$ADE0` | Shared S1 exhaust, `ArtTile_Eggman_Exhaust`, 25 tiles |
 | `$B020-$BCA0` | Shared S2 fiery boss explosion, `ArtTile_BossExplosion`, 100 tiles |
@@ -90,7 +88,7 @@ extending an arena's object set.
 
 `check_ehz_boss.py` validates converted geometry, art indices, compiled PLC
 lifetimes and capsule records. Its optional `--s2disasm /path/to/s2disasm`
-compares the vehicle and explosion mappings with a built source checkout.
+compares the retained chassis and explosion mappings with a built source checkout. The shared S1-pod check validates its complete hull/cockpit against GHZ.
 Shared pilot/exhaust ownership is described in
 [Sprites and VRAM](Sprites-and-VRAM.md#shared-eggman-heads-and-exhaust).
 The faster shared explosion controller is covered by
@@ -100,7 +98,7 @@ normal arena; a lifecycle fixture alone does not establish boss/capsule behavior
 
 ## EHZ boss palette candidate
 
-The remaining vehicle-metal palette adaptation is still awaiting visual review.
+The remaining ground-vehicle metal palette adaptation is still awaiting visual review.
 The shared S1 head and orange seats use the existing primary sprite palette. Main
 keeps the accepted assets; do not describe the three-gray proposal as shipped.
 The separate [Mystic-Island-EHZ-palette-WIP branch](https://github.com/Ushupiuck/S2-The-Mystic-island/tree/Mystic-Island-EHZ-palette-WIP)

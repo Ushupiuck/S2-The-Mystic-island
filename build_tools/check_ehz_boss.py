@@ -11,9 +11,8 @@ import struct
 
 ROOT = Path(__file__).resolve().parents[1]
 MAPS = (
-	('Map_EHZBoss_Vehicle', 'Kospm_EggPod', 'Obj56_MapUnc_2FAF8'),
+	('Map_EHZBoss_Vehicle', 'Kospm_OldEggPod', None),
 	('Map_EHZBoss_Ground', 'Kospm_EHZ_Boss', 'Obj56_MapUnc_2FA58'),
-	('Map_EHZBoss_Propeller', 'Kospm_EggChopper', 'Obj56_MapUnc_2F970'),
 	('Map_BossExplosion', 'Kospm_BossExplosion', 'Obj58_MapUnc_2D50A'),
 	('Map_BossExhaust', 'Kospm_Exhaust', None),
 )
@@ -108,7 +107,7 @@ def main():
 	print(f'{total} boss/explosion mapping frames, {len(cues)} disjoint art banks '
 		  'and the capsule placements pass.')
 	if stock:
-		print('Every converted piece matches Sonic 2 final geometry and tile indices.')
+		print('Retained chassis/explosion pieces match Sonic 2 final geometry and tile indices.')
 
 
 if __name__ == '__main__':

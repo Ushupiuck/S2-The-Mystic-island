@@ -1,4 +1,4 @@
-; Original vehicle cockpit/torso with a shared S1 head layer.
+; Shared S1 pod/cockpit; EHZ maps draw the complete pod four pixels higher.
 Map_GHZBoss_Cockpit:
 	dc.w Map_GHZBoss_Cockpit_Frame0-Map_GHZBoss_Cockpit
 	dc.w Map_GHZBoss_Cockpit_Frame1-Map_GHZBoss_Cockpit

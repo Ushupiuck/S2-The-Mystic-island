@@ -1,4 +1,4 @@
-; Original vehicle cockpit/torso with a shared S1 head layer.
+; Archived Sonic 2 propeller mappings; not assembled by the S1-pod preview.
 Map_EHZBoss_Propeller:
 	dc.w Map_EHZBoss_Propeller_Frame0-Map_EHZBoss_Propeller
 	dc.w Map_EHZBoss_Propeller_Frame1-Map_EHZBoss_Propeller

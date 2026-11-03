@@ -1832,7 +1832,7 @@ ArtTile_Eggman_Weapons:		equ $475
 ArtTile_Eggman_Button:		equ $4A4
 ArtTile_Eggman_Spikeball:	equ $518
 ArtTile_Eggman_Trap_Floor:	equ $518
-ArtTile_EggmanFace:		equ $43F	; 54 shared S1 head tiles
+ArtTile_EggmanFace:		equ $43F	; 40 shared S1 head tiles
 ArtTile_Eggman_Exhaust:		equ $556	; 25 shared S1 flame tiles
 
 ; End of Level

@@ -253,7 +253,7 @@ def extract(rom_path, listing_path):
 	return banks,headmaps,ghz,ehz,frontmaps,oldmaps[0],newmaps[0]
 
 
-def mapping(label, rows, headmaps=None, private_base=0, dx=0, dy=0, foregrounds=None):
+def mapping(label, rows, headmaps=None, private_base=0, dx=0, dy=0, foregrounds=None, draw_y=0):
 	lines = [label+':']+[f'\tdc.w {label}_Frame{i}-{label}' for i in range(len(rows))]
 	for i,row in enumerate(rows):
 		head = headmaps[i] if headmaps else []
@@ -261,7 +261,7 @@ def mapping(label, rows, headmaps=None, private_base=0, dx=0, dy=0, foregrounds=
 		pieces = front+[(y+dy,size,private_base+tile,x+dx) for y,size,tile,x in head]+row
 		lines.append(f'{label}_Frame{i}:\tdc.w {len(pieces)}')
 		for y,size,tile,x in pieces:
-			lines += [f'\tdc.b {y},${size:02X}',f'\tdc.w ${tile:04X},{x}']
+			lines += [f'\tdc.b {y+draw_y},${size:02X}',f'\tdc.w ${tile:04X},{x}']
 	return '\n'.join(lines)+'\n\teven\n'
 
 
@@ -273,12 +273,14 @@ def main():
 	a = p.parse_args()
 	constants = (ROOT/'_definitions/s2.constants.asm').read_text()
 	allocations = {name:int(value,16) for name,value in re.findall(r'^(ArtTile_\w+):\s+equ \$([0-9A-Fa-f]+)',constants,re.M)}
+	object_source = (ROOT/'objects/55 EHZ Boss.asm').read_text()
+	draw_y = int(re.search(r'^EHZBoss_PodDrawY\s*=\s*(-?\d+)',object_source,re.M).group(1))
 	banks,heads,ghz,ehz,fronts,oldhull,newhull = extract(a.rom,a.listing)
 	report = {name:len(raw)//32 for name,raw in banks.items()}
 	report['private_end'] = hex(0x3F0+max(len(banks['Old Eggpod']),len(banks['Boss Ship']))//32)
 	report['shared_base'] = hex(allocations['ArtTile_EggmanFace'])
 	report['shared_end'] = hex(int(report['shared_base'],16)+len(banks['Eggman face'])//32)
-	report['pieces'] = {'head':[len(r) for r in heads],'GHZ':[len(r) for r in ghz],'EHZ':[len(r) for r in ehz],'glass':[len(r) for r in fronts]}
+	report['pieces'] = {'head':[len(r) for r in heads],'GHZ':[len(r) for r in ghz],'EHZ':[len(r) for r in ghz]}
 	print(json.dumps(report,indent=2))
 	if not a.write:
 		return
@@ -297,7 +299,8 @@ def main():
 		(ROOT/f'art/uncompressed/{name}.unc').write_bytes(raw)
 	outputs = {
 		'GHZ Boss Cockpit.asm':mapping('Map_GHZBoss_Cockpit',ghz,heads,int(report['shared_base'],16)-0x3F0),
-		'EHZ Boss Cockpit.asm':mapping('Map_EHZBoss_Cockpit',ehz,heads,int(report['shared_base'],16)-0x3F0,S2_HEAD_X,S2_HEAD_Y,fronts),
+		'EHZ Boss Cockpit.asm':mapping('Map_EHZBoss_Cockpit',ghz,heads,int(report['shared_base'],16)-0x3F0,draw_y=draw_y),
+		'EHZ Boss Vehicle.asm':mapping('Map_EHZBoss_Vehicle',[[(y,size,(tile&0xF800)|((tile&0x7FF)-10),x) for y,size,tile,x in oldhull]],draw_y=draw_y),
 	}
 	rom = a.rom.read_bytes()
 	s = {name:int(value,16) for name,value in re.findall(r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]',a.listing.read_text())}
@@ -310,7 +313,9 @@ def main():
 	propmaps = [[(y+8,(size&12),8,x) if tile>=8 else (y,size,tile,x) for y,size,tile,x in row] for row in propmaps]
 	outputs['EHZ Boss Propeller.asm'] = mapping('Map_EHZBoss_Propeller',propmaps)
 	for name,text in outputs.items():
-		(ROOT/f'mappings/sprite/{name}').write_bytes(('; Original vehicle cockpit/torso with a shared S1 head layer.\n'+text).replace('\n','\r\n').encode())
+		comment = ('; Archived Sonic 2 propeller mappings; not assembled by the S1-pod preview.\n'
+			if name=='EHZ Boss Propeller.asm' else '; Shared S1 pod/cockpit; EHZ maps draw the complete pod four pixels higher.\n')
+		(ROOT/f'mappings/sprite/{name}').write_bytes((comment+text).replace('\n','\r\n').encode())
 
 
 if __name__=='__main__':
