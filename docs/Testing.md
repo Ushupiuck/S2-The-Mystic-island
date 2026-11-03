@@ -591,10 +591,18 @@ rotor-slot reuse, unchanged palette buffers and recycled-parent cleanup. Optiona
 `--reference-rom` / `--reference-listing` inputs from the pre-sharing build
 compare rendered indexed pixels: both hulls, every S1 pose/flame and rotor remain
 exact apart from S1's explicitly recolored seat and profile lenses. S2 is checked pixel-for-pixel
-outside its facial silhouette, including its original windshield/seat/torso.
+outside its facial silhouette, including its original seat/torso. Every pose
+keeps the original normal-pose windshield/gauge and the rounded S2 lower jaw.
 The short glass-side whisker has a separate source-pixel assertion; original
 windshield edge pixels take precedence where it passes behind the glass.
-Independent checks reject the two-tone neck strays and non-blue lenses.
+Independent checks reject shirt-colored chin strips, S1 collar pixels in the
+shared bank, cropped hurt/recovery teeth, residual S2 burnt hair and non-blue
+lenses. Add `--s2disasm /path/to/s2disasm` for retail-source validation: build
+Sonic 2 final REV01 with its default settings (the runner verifies its retail
+MD5), then compare the entire windshield/gauge and lower jaw/collar/jacket
+against its original Nemesis art and eight-byte mappings. Source palette roles
+are converted to the primary sprite row; this does not validate the pending
+vehicle-metal palette adaptation.
 
 With `--core` and `--system-directory`, the shared-art runner loads both real
 EHZ act palettes/planes and compiled boss PLCs, verifies resident tile bytes,

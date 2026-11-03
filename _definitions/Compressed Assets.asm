@@ -633,10 +633,10 @@ MCD_CompressedAssets:
 	dc.l Kospm_EggChopper,Kospm_EggChopper+$C2	; art/moduled kosinski/Chopper blades for EHZ boss.kospm
 	endif
 	if defined(Kospm_EggPod)
-	dc.l Kospm_EggPod,Kospm_EggPod+$516	; art/moduled kosinski/Boss Ship.kospm
+	dc.l Kospm_EggPod,Kospm_EggPod+$496	; art/moduled kosinski/Boss Ship.kospm
 	endif
 	if defined(Kospm_EggmanFace)
-	dc.l Kospm_EggmanFace,Kospm_EggmanFace+$2C7	; art/moduled kosinski/Eggman face.kospm
+	dc.l Kospm_EggmanFace,Kospm_EggmanFace+$2A9	; art/moduled kosinski/Eggman face.kospm
 	endif
 	if defined(Kospm_EndFlowers)
 	dc.l Kospm_EndFlowers,Kospm_EndFlowers+$556	; art/moduled kosinski/Ending - Flowers.kospm
@@ -675,7 +675,7 @@ MCD_CompressedAssets:
 	dc.l Kospm_Newtron,Kospm_Newtron+$4CC	; art/moduled kosinski/Enemy Newtron.kospm
 	endif
 	if defined(Kospm_OldEggPod)
-	dc.l Kospm_OldEggPod,Kospm_OldEggPod+$471	; art/moduled kosinski/Old Eggpod.kospm
+	dc.l Kospm_OldEggPod,Kospm_OldEggPod+$3AD	; art/moduled kosinski/Old Eggpod.kospm
 	endif
 	if defined(Kospm_Orbinaut)
 	dc.l Kospm_Orbinaut,Kospm_Orbinaut+$1A6	; art/moduled kosinski/Enemy Orbinaut.kospm

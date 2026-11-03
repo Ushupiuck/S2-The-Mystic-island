@@ -41,14 +41,14 @@ requires suitable bounds, or maxima covering every set the object uses.
 | Mapping | Frames | Display half-width | Display half-height |
 | --- | ---: | --- | --- |
 | `Map_EHZBoss_Vehicle` (hull) | 1 | `$20` | `$18` |
-| `Map_EHZBoss_Cockpit` | 7 | `$20` | `$22` |
+| `Map_EHZBoss_Cockpit` | 7 | `$22` | `$23` |
 | `Map_EHZBoss_Ground` | 8 | `$30` | `$10` |
 | `Map_EHZBoss_Propeller` | 7 | `$52` | `$28` |
 | `Map_BossExplosion` (shared S2 fiery effect) | 7 | `$10` | `$10` |
 
 The propeller's rightmost piece begins at X=50 and is 32 pixels wide, requiring
-82 pixels (`$52`), beyond the old `$40` minimum. The cockpit's 34-pixel display half-height is independent of the ship's
-20-pixel collision radius. Shared S1 heads are layered over the original S2
+82 pixels (`$52`), beyond the old `$40` minimum. The cockpit's 35-pixel display
+half-height is independent of the ship's 20-pixel collision radius. Shared S1 heads are layered over the original S2
 windshield, seat and torso; the S1 upper cockpit is not transplanted.
 
 The boss uses eight linked ordinary SSTs: ship/controller, cockpit, car, three
@@ -73,8 +73,8 @@ capsule. Origin deltas at `$44/$46` also support the existing MZ placeholder.
 
 | Bytes, end exclusive | Art and current constant |
 | --- | --- |
-| `$7E00-$87E0` | S2 hull/cockpit/torso and foreground glass, `ArtTile_ArtNem_Eggpod_1`, 79 tiles |
-| `$87E0-$8EA0` | Shared S1 heads, `ArtTile_EggmanFace`, 54 tiles |
+| `$7E00-$8700` | S2 hull/cockpit/chin/torso and foreground glass, `ArtTile_ArtNem_Eggpod_1`, 72 tiles |
+| `$87E0-$8CE0` | Shared S1 heads, `ArtTile_EggmanFace`, 40 tiles |
 | `$8EA0-$9EA0` | Car/wheels/drill, `ArtTile_ArtNem_EHZBoss`, 128 tiles |
 | `$9EA0-$A020` | Propeller, `ArtTile_ArtNem_EggChoppers`, 12 tiles |
 | `$A020-$AAC0` | Capsule, `ArtTile_Prison_Capsule`, 85 tiles; loaded at defeat |

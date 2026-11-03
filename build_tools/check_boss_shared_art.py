@@ -71,32 +71,57 @@ def reference_checks(a, rom, s):
 	expectedhull = {(x,y):(line,seat_color(x,y,color) if line==0 else color) for (x,y),(line,color) in oldhull.items()}
 	assert raster(frames(rom,s['Map_Eggman'],1)[0],newbanks,s['ArtTile_Eggman'])==expectedhull
 	# The affected silhouette is the only permitted difference to the S2 cockpit.
-	from build_boss_shared_art import S2_FACE_SPANS,head_mask,S2_HEAD_X,S2_HEAD_Y
+	from build_boss_shared_art import S2_FACE_SPANS,S2_GLASS_RIGHT,head_mask,S2_HEAD_X,S2_HEAD_Y
 	old2banks = [(0,unpack(old,before['Kospm_EggPod']))]
 	new2banks = [(s[tile],unpack(rom,s[label])) for tile,label in (
 		('ArtTile_ArtNem_Eggpod_1','Kospm_EggPod'),('ArtTile_EggmanFace','Kospm_EggmanFace'))]
+	glass = raster(frames(old,before['Map_EHZBoss_Vehicle'],7)[1],old2banks)
 	for pose,row in enumerate(frames(rom,s['Map_EHZBoss_Cockpit'],7)):
 		actual = raster(row,new2banks,s['ArtTile_ArtNem_Eggpod_1'])
 		original = raster(frames(old,before['Map_EHZBoss_Vehicle'],7)[min(pose,5)+1],old2banks)
 		source = raster(oldrows[pose+1],oldbanks,before['ArtTile_Eggman'])
 		head = {(x+S2_HEAD_X,y+S2_HEAD_Y):(line,head_color(pose,x,y,color)) for (x,y),(line,color) in source.items() if head_mask(pose,x,y,color)}
-		front = {p:original[p] for p in head if p in original and p[0]<=-15 and p[1]>=-20 and original[p][1] in (6,7,8,9,10)}
+		front = {p:glass[p] for p in head if p in glass and p[1] in S2_GLASS_RIGHT and p[0]<=S2_GLASS_RIGHT[p[1]]}
 		region = set(head) | {(x,y) for y,(lo,hi) in S2_FACE_SPANS.items() for x in range(lo,hi)}
+		region |= {(x,y) for y in range(-25,-19) for x in range(-17,17)}
+		region |= {(x,y) for y,right in S2_GLASS_RIGHT.items() for x in range(-32,right+1)}
 		assert {p:c for p,c in actual.items() if p not in region}=={p:c for p,c in original.items() if p not in region}, ('S2 cockpit/torso altered outside facial area',pose)
 		assert all(actual.get(p)==front.get(p,c) for p,c in head.items()), ('S1 head detail or windshield overlap lost',pose)
 		for (x,y),c in source.items():
-			if -21<=y<=-17 and -16<=x<-5 and c[1] in (13,14,15):
+			if -21<=y<=-17 and -20<=x<-5 and c[1] in (13,14,15):
 				p = (x+S2_HEAD_X,y+S2_HEAD_Y)
 				assert actual.get(p)==front.get(p,c), ('Glass-side whisker lost',pose,x,y)
-		# Named fault locations, independent of the producer's extraction rules.
-		for p in ((-17,-19),(-16,-19),(-15,-19)):
-			if p in front:
-				assert actual[p]==original[p], ('Whisker painted over glass',pose,p)
+		shared = raster([p for p in row if (p[2]&0x7FF)>=s['ArtTile_EggmanFace']-s['ArtTile_ArtNem_Eggpod_1']],new2banks,s['ArtTile_ArtNem_Eggpod_1'])
+		for (x,y),(_,color) in shared.items():
+			if color==13:
+				assert -4<=x-S2_HEAD_X<=0 and -18<=y-S2_HEAD_Y<=-14, ('S1 shirt reds entered the shared head',pose,x,y)
+		if pose in (4,6):
+			for (x,y),c in source.items():
+				if -20<=x<-5 and -20<=y<=-13 and c[1]==1:
+					p = x+S2_HEAD_X,y+S2_HEAD_Y
+					assert shared.get(p)==c, ('Hurt/recovery whisker outline clipped',pose,x,y)
+		# Check the complete vehicle panel, not just one formerly clipped pixel.
+		for (x,y),c in glass.items():
+			if y in S2_GLASS_RIGHT and x<=S2_GLASS_RIGHT[y]:
+				assert actual.get((x,y))==c, ('Windshield/gauge altered',pose,x,y)
 		for (x,y),(_,color) in source.items():
 			if -6<=x<=3 and -24<=y<=-14 and color in (10,11,12):
 				assert actual[(x+S2_HEAD_X,y+S2_HEAD_Y)][1] in (10,11,12), ('Non-blue lens',pose,x,y)
 		if pose in (2,3):
-			assert all(actual[(x,y)][1]==1 for x in (-4,-3) for y in range(-14,-11)), ('Two-tone red neck strays',pose)
+			for x in range(-7,0):
+				assert actual[x,-12]==original[x,-12], ('Original rounded chin replaced',pose,x)
+			assert actual[-4,-12][1]==(5 if pose==2 else 2), ('Chin became a shirt-colored strip',pose)
+		if pose in (4,6):
+			# The former coarse mask cut off the left half of these teeth.
+			for x in range(-3 if pose==4 else -5,4):
+				for y in (-14,-13):
+					if source.get((x,y),(0,0))[1] in (6,7,9):
+						p = x+S2_HEAD_X,y+S2_HEAD_Y
+						assert actual[p]==front.get(p,source[x,y]), ('Shared jaw was cropped',pose,x,y)
+		private = raster([p for p in row if (p[2]&0x7FF)<s['ArtTile_EggmanFace']-s['ArtTile_ArtNem_Eggpod_1']],new2banks,s['ArtTile_ArtNem_Eggpod_1'])
+		assert not any(-17<=x<0 and -25<=y<-19 for x,y in private), ('Old S2 hair/skull remains behind shared head',pose)
+	assert 4 not in (n for b in unpack(rom,s['Kospm_EggmanFace']) for n in (b>>4,b&15)), 'S1 gold collar entered the shared face bank'
+
 	oldprop = [(0,unpack(old,before['Kospm_EggChopper']))]
 	newprop = [(0,unpack(rom,s['Kospm_EggChopper']))]
 	for oldrow,newrow in zip(frames(old,before['Map_EHZBoss_Propeller'],7),frames(rom,s['Map_EHZBoss_Propeller'],7)):
@@ -104,7 +129,38 @@ def reference_checks(a, rom, s):
 	oldrow = frames(old,before['Map_EHZBoss_Vehicle'],1)[0]
 	newrow = frames(rom,s['Map_EHZBoss_Vehicle'],1)[0]
 	assert raster(oldrow,[(0,unpack(old,before['Kospm_EggPod']))]) == raster(newrow,[(0,unpack(rom,s['Kospm_EggPod']))])
-	return ['S1 seat/lens changes are scoped; S2 neck is clean, windshield occludes whiskers, and all seven poses keep blue lenses']
+	return ['S1 seat/lens changes are scoped; all seven S2 poses retain their rounded chin, original windshield and blue lenses']
+
+
+def source_final_checks(a, rom, s):
+	"""Independent retail S2 art/mappings: whole glass, lower jaw and jacket."""
+	if not a.s2disasm:
+		return []
+	from hashlib import md5
+	from check_ehz_boss import pieces
+	from import_ehz2_pp_background import nemesis
+	stock = (a.s2disasm/'s2built.bin').read_bytes()
+	assert md5(stock).hexdigest()=='9feeb724052c39982d432a7851c98d3e', 'Build Sonic 2 final REV01 without optimizations'
+	ss = symbols(a.s2disasm/'s2.lst')
+	raw = nemesis((a.s2disasm/'art/nemesis/Eggpod.nem').read_bytes())
+	rows = pieces(stock,ss['Obj56_MapUnc_2FAF8'],7,8)
+	# Primary sprite row only. Metal on the hull uses its own palette row.
+	colors = {0:0,1:1,5:10,6:6,7:7,8:8,9:9,10:5,11:2,12:13,13:14,14:4,15:3}
+	originals = [{p:(line,colors[n]) for p,(line,n) in raster(row,[(0,raw)]).items()} for row in rows[1:]]
+	banks = [(s[tile],unpack(rom,s[label])) for tile,label in (
+		('ArtTile_ArtNem_Eggpod_1','Kospm_EggPod'),('ArtTile_EggmanFace','Kospm_EggmanFace'))]
+	# Explicit original glass contour, independent of the importer's mask.
+	glass_edge = {-19:-15,-18:-13,-17:-12,-16:-11,-15:-10,-14:-10,-13:-9,-12:-9,-11:-9,-10:-7,-9:-7}
+	for pose,row in enumerate(frames(rom,s['Map_EHZBoss_Cockpit'],7)):
+		actual = raster(row,banks,s['ArtTile_ArtNem_Eggpod_1'])
+		head = raster([p for p in row if (p[2]&0x7FF)>=s['ArtTile_EggmanFace']-s['ArtTile_ArtNem_Eggpod_1']],banks,s['ArtTile_ArtNem_Eggpod_1'])
+		for (x,y),c in originals[0].items():
+			if y in glass_edge and x<=glass_edge[y]:
+				assert actual.get((x,y))==c, ('Retail S2 glass/gauge mismatch',pose,x,y)
+		for (x,y),c in originals[min(pose,5)].items():
+			if y>=-13 and (x,y) not in head and not (y in glass_edge and x<=glass_edge[y]):
+				assert actual.get((x,y))==c, ('Retail S2 chin/collar/jacket mismatch',pose,x,y)
+	return ['Sonic 2 final REV01: complete windshield/gauge, rounded lower jaw, collar and jacket match retail indexed art']
 
 
 def native_checks(a):
@@ -118,7 +174,7 @@ def native_checks(a):
 	ini = configparser.ConfigParser()
 	ini.read(ROOT/'SonLVL INI Files/objGHZ.ini')
 	assert int(ini['3D']['headtileoffset'])==s['ArtTile_EggmanFace']-s['ArtTile_Eggman']
-	result = reference_checks(a,rom,s)
+	result = reference_checks(a,rom,s)+source_final_checks(a,rom,s)
 	for kind in ('Obj3D','EHZBoss'):
 		m.start()
 		body = pool[0]
@@ -248,19 +304,19 @@ def live_gallery(g, a, act):
 				px,py = p
 				return x-g.read('Camera_X_pos_copy',2)+(-px-1 if flip else px),y-g.read('Camera_Y_pos_copy',2)+py
 			# Inspect the lens itself, without borrowing the producer's color mask.
-			blues = [p for p,(_,n) in pixels.items() if -10<=p[0]<=-1 and -26<=p[1]<=-16 and n in (10,11,12)]
+			blues = [p for p,(_,n) in pixels.items() if -10<=p[0]<=-1 and -24<=p[1]<=-14 and n in (10,11,12)]
 			assert blues, ('No blue lens pixels',act,pose,flip)
 			for point in blues:
 				r,gc,b = g.video.getpixel(screen(point))
 				assert b>r+50 and b>gc+40, ('Lens lost its blue in the VDP output',act,pose,flip,point,(r,gc,b))
 			if pose in (2,3,4,6):
-				r,gc,b = g.video.getpixel(screen((-16,-19)))
+				r,gc,b = g.video.getpixel(screen((-15,-18)))
 				assert max(r,gc,b)-min(r,gc,b)<80 and min(r,gc,b)>100, ('Whisker covers glass in VDP output',act,pose,flip,(r,gc,b))
 			if pose in (2,3):
 				for px in (-4,-3):
-					for py in range(-14,-11):
+					for py in (-12,):
 						rgb = g.video.getpixel(screen((px,py)))
-						assert max(rgb)<80 and max(rgb)-min(rgb)<20, ('Red neck strays in VDP output',act,pose,flip,px,py,rgb)
+						assert rgb[0]>120 and rgb[0]>rgb[2]+60, ('Original chin skin lost in VDP output',act,pose,flip,px,py,rgb)
 			g.video.save(a.output/f'ehz{act+1}-pose{pose}-flip{flip}.png')
 	g.restore(saved)
 
@@ -383,6 +439,7 @@ def main():
 	p.add_argument('--listing',type=Path,default=ROOT/'md-main.lst')
 	p.add_argument('--reference-rom',type=Path)
 	p.add_argument('--reference-listing',type=Path)
+	p.add_argument('--s2disasm',type=Path,help='Built Sonic 2 final REV01 checkout for independent source-art checks')
 	p.add_argument('--output',type=Path,required=True)
 	p.add_argument('--core',type=Path)
 	p.add_argument('--system-directory',type=Path)

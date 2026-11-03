@@ -233,36 +233,43 @@ LZ's per-act module lists load the resident bank; another zone must load it too.
 ### Shared Eggman heads and exhaust
 
 GHZ and EHZ share Sonic 1's seven head/expression poses and its full escape
-flame. The shared head bank at `ArtTile_EggmanFace = $43F` has 54 tiles; the
+flame. The shared head bank at `ArtTile_EggmanFace = $43F` has 40 tiles; the
 25-tile flame bank starts at `$556`. Both use the primary player palette, so
 palette-row-two cycling remains independent. The unused S2 jet include and
 its superseded archive have been removed.
 
 Each Eggmobile retains its own glass, metal frame, seat shape and torso.
 `Map_GHZBoss_Cockpit` and `Map_EHZBoss_Cockpit` combine those private pixels
-with the same head bank. The S2 head anchor is four pixels left and two up
-from the S1 source; its private cockpit keeps its original position. Preserve
+with the same head bank. The S2 head anchor is four pixels left, with the same
+Y position as the S1 source; its private cockpit keeps its original position. Preserve
 the short glass-side whisker as well as the longer opposite whisker. Only S1's
 exposed blue seat padding changes color in both the hull backrest and pilot
 rim: primary `A/B/C` becomes `4/3/2`, the
 existing orange ramp used by S2.
 
-The S2 windshield edge is a private foreground piece, before the shared head
-in mapping order; overlapping whisker pixels remain behind the glass in both
-facings. Its neck cleanup uses the dark interior shade rather than copying
-shirt reds below the mouth. Profile lens pixels use `B/A` instead of `C/B`
+The full S2 windshield and gauge use the original normal-pose panel in every
+expression. A private foreground piece precedes the shared head where it crosses
+the glass, including its outline and instrument needle. S2 keeps its original
+rounded lower chin, collar and jacket. The shared face contour includes the
+whole jaw and its outline in hurt/recovery poses, while S1 shirt/collar pixels
+stay in the private S1 bank. Removed upper-face pixels expose sky above the
+windshield or dark cabin interior; never extend a clothing row through the jaw.
+Profile lens pixels use `B/A` instead of `C/B`
 so their blue stays readable next to the frontal expressions; skin, facial
 shapes and the other eye shading remain intact.
 
-The editable sources are `art/uncompressed/Old Eggpod.unc` (77 private tiles),
-`Boss Ship.unc` (79), `Eggman face.unc` (54) and `Boss exhaust.unc` (25).
+The editable sources are `art/uncompressed/Old Eggpod.unc` (60 private tiles),
+`Boss Ship.unc` (72), `Eggman face.unc` (40) and `Boss exhaust.unc` (25).
 `python build_tools/build_end_art.py` packs these along with the other resident
 end-of-act banks. The explicit `build_boss_shared_art.py --rom PRE_SPLIT_ROM
 --listing PRE_SPLIT_LISTING --write` migration reads the unsplit assets/mappings
-from the pre-sharing build, applies the authored head contours and seat remap,
+from pre-sharing revision `21c233e`, applies the authored head contours and seat
+remap,
 and regenerates private/shared sources plus both cockpit mapping families.
-It checks the declared allocations before writing. Ordinary builds do not
-re-import the old source or overwrite pixel edits.
+Each pose chooses an 8x8 grid phase that reuses existing tiles; mapping offsets
+preserve every indexed pixel. It checks the declared allocation boundaries
+before writing; bank starts stay fixed, with unused padding before the head
+and weapon banks. Ordinary builds do not re-import the old source or overwrite pixel edits.
 
 The propeller keeps every visible S2 pixel and the same hardware-piece count.
 Its repeated blade drops a transparent top tile row, leaving eight hub tiles

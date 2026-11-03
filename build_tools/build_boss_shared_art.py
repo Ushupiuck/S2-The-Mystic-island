@@ -2,7 +2,7 @@
 """Extract S1 heads while retaining each Eggmobile's original cockpit/body.
 
 This explicit migration reads a pre-split ROM/listing. The resulting .unc and
-ASM files are editable sources; ordinary builds only pack those sources.
+ASM files are editable sources; build_end_art.py packs them without re-importing.
 """
 from pathlib import Path
 import argparse
@@ -14,15 +14,31 @@ from check_sprite_assets import frames
 from convert_s1_ss_background import kosinski_plus_decode
 
 ROOT = Path(__file__).resolve().parents[1]
-# Original S2 facial silhouette, excluding the windshield and rear seat rim.
+# Clear the old upper face; retain S2's rounded lower jaw, collar and jacket.
+# The primary palette's warm colors serve both skin and clothing: color alone
+# cannot identify which pixels belong to the face.
 S2_FACE_SPANS = {
-	-23:(-9,-4), -22:(-10,-1), -21:(-11,0), -20:(-12,1),
-	-19:(-12,2), -18:(-12,7), -17:(-12,7), -16:(-10,5),
-	-15:(-9,5), -14:(-8,5), -13:(-7,-1), -12:(-6,-1),
+	-24:(-6,-2), -23:(-9,1), -22:(-10,2), -21:(-11,2),
+	-20:(-12,3), -19:(-14,8), -18:(-12,8), -17:(-12,8),
+	-16:(-10,6), -15:(-9,6), -14:(-8,6),
 }
+# Rightmost original windshield pixel on each occupied scanline.
+S2_GLASS_RIGHT = {-19:-15,-18:-13,-17:-12,-16:-11,-15:-10,-14:-10,
+	-13:-9,-12:-9,-11:-9,-10:-7,-9:-7}
 S2_HEAD_X = -4
-S2_HEAD_Y = -2
+S2_HEAD_Y = 0
 S1_SEAT_COLORS = {10:4,11:3,12:2}
+# Lower contours follow the drawing, including the whole jaw and its outline.
+# Profile poses stop above the gold collar; no S1 shirt pixels are shared.
+S1_HEAD_LOWER_SPANS = (
+	{-16:(-6,12), -15:(-5,12), -14:(-4,11), -13:(-2,7)},
+	{-16:(-6,12), -15:(-5,12), -14:(-4,7), -13:(-2,4)},
+	{-16:(-6,18), -15:(-5,16), -14:(-4,13), -13:(-3,11)},
+	{-16:(-6,16), -15:(-5,15), -14:(-4,10)},
+	{-16:(-6,20), -15:(-5,20), -14:(-4,18), -13:(-3,5), -12:(-3,5)},
+	{-16:(-6,12), -15:(-5,12), -14:(-4,7), -13:(-2,4)},
+	{-16:(-6,20), -15:(-5,20), -14:(-5,18), -13:(-5,5), -12:(-3,5)},
+)
 
 
 def seat_color(x, y, color):
@@ -38,17 +54,28 @@ def head_color(pose, x, y, color):
 
 
 def glass_foreground(head, original):
-	"""The original S2 windshield edge sits in front of the shared whisker."""
+	"""Original windshield shades/outline occlude the new face in SAT order."""
 	return {p:original[p] for p in head if p in original
-		and p[0]<=-15 and p[1]>=-20 and original[p] in (6,7,8,9,10)}
+		and p[1] in S2_GLASS_RIGHT and p[0]<=S2_GLASS_RIGHT[p[1]]}
 
 
 def head_mask(pose, x, y, color):
-	"""Authored head contour; never extract the S1 glass, console or torso."""
+	"""Authored face contour; leave each cockpit, collar and shirt private."""
+	if pose in (4,6) and -20<=y<=-13 and -20<=x<-5 and color==1:
+		return True
+	if y>=-16:
+		# The front whisker's curled tip passes across S1's glass. Keep the
+		# facial pixels, while leaving the fixed red instrument needle private.
+		if pose in (2,3,4,6) and -16<=y<=-13 and -16<=x<-8:
+			if color in (13,14,15):
+				return True
+			if pose in (4,6) and (x,y) in ((-13,-14),(-14,-13)) and color==1:
+				return True
+		left,right = S1_HEAD_LOWER_SPANS[pose].get(y,(0,0))
+		return left<=x<right and not (x>=10 and color in S1_SEAT_COLORS)
 	if x>=10 and -20<=y<-4 and color in S1_SEAT_COLORS:
 		return False
-	# The short glass-side whisker extends left of the skull contour.
-	if -21<=y<=-17 and -16<=x<-5 and color in (13,14,15):
+	if -21<=y<=-17 and -20<=x<-5 and color in (13,14,15):
 		return True
 	if pose in (0,1,5):
 		if pose==5 and 4<=x<16 and -30<=y<-20:
@@ -57,12 +84,6 @@ def head_mask(pose, x, y, color):
 			left,right = -8,8
 		elif -19<=y<=-17:
 			left,right = -7,12
-		elif -16<=y<=-14:
-			left,right = -6,12
-		elif y==-13:
-			left,right = -4,8
-		elif -12<=y<=-11:
-			left,right = -4,3
 		else:
 			return False
 	else:
@@ -70,17 +91,11 @@ def head_mask(pose, x, y, color):
 			left,right = (-12,16) if pose in (4,6) else (-10,10)
 		elif -20<=y<=-17:
 			left,right = -14,20
-		elif -16<=y<=-15:
-			left,right = -6,16
-		elif y==-14:
-			left,right = -4,12
-		elif y==-13:
-			left,right = -2,8
 		else:
 			return False
 	if not left<=x<right:
 		return False
-	if x<-4 and y>-20 and 6<=color<=10:
+	if x<-4 and 6<=color<=10:
 		return False
 	if x<-7 and y>=-20 and color not in (13,14,15):
 		return False
@@ -109,18 +124,34 @@ def raster(row, raw):
 
 def s2_background(pose, rows):
 	pixels = rows[pose].copy()
+	# This panel is vehicle art. Its edge and gauge do not acquire the old
+	# pilot's burnt hair or facial shading in the recovery expression.
+	for y,right in S2_GLASS_RIGHT.items():
+		for x in range(-32,right+1):
+			if (x,y) in rows[0]:
+				pixels[x,y] = rows[0][x,y]
+	# Hurt/recovery whiskers and burnt hair project beyond the normal skull.
+	# Their exposed part is sky; the arch to their right remains untouched.
+	for y in range(-25,-19):
+		for x in range(-17,0):
+			pixels.pop((x,y),None)
+		for x in range(0,17):
+			if pixels.get((x,y)) in (13,14,15):
+				pixels[x,y] = 1
 	for y,(left,right) in S2_FACE_SPANS.items():
 		for x in range(left,right):
 			color = pixels.get((x,y),0)
-			if not color or (color in (6,7,8,9,10) and x<-10):
+			if not color or (y in S2_GLASS_RIGHT and x<=S2_GLASS_RIGHT[y]):
 				continue
 			if x>=0 and color in (3,4):
-				continue	# source seat rim, retained behind the new moustache
-			pixels[x,y] = 1 if y<-14 else rows[0].get((x,-10),13)
-	# Clearing the old face must not extend its two-tone shirt strip into the neck.
-	for y in range(-14,-11):
-		for x in (-4,-3):
-			pixels[x,y] = 1
+				continue	# original orange backrest
+			# Above the windshield, the old head projects into open air.
+			# Below it, expose the cabin's dark interior. Never stretch a
+			# shirt row through the jaw or erase S2's lower chin/collar.
+			if y<-19 and x<0:
+				pixels.pop((x,y),None)
+			else:
+				pixels[x,y] = 1
 	return pixels
 
 
@@ -132,8 +163,10 @@ def tile_bytes(pixels, x, y):
 	return bytes(out)
 
 
-def pack_pixels(pixels, bank):
-	"""Deduplicate 8x8 cells, then join runs with valid hardware tile order."""
+def pack_pixels_aligned(pixels, bank, offset):
+	"""Pack one candidate grid without changing any visible pixel."""
+	ox,oy = offset
+	pixels = {(x-ox,y-oy):c for (x,y),c in pixels.items()}
 	cells = {(x//8,y//8) for x,y in pixels if pixels[x,y]}
 	lookup = {bytes(bank[i:i+32]):i//32 for i in range(0,len(bank),32)}
 	indices = {}
@@ -158,7 +191,25 @@ def pack_pixels(pixels, bank):
 		_,w,h,covered = max(choices,key=lambda r:r[:3])
 		pieces.append((y*8,((w-1)<<2)|(h-1),first,x*8))
 		cells -= covered
-	return pieces
+	return [(y+oy,size,tile,x+ox) for y,size,tile,x in pieces]
+
+
+def pack_pixels(pixels, bank):
+	"""Choose a grid phase that reuses the most tiles from earlier poses.
+
+	A one-pixel expression bob must not force an entirely new 8x8 grid.
+	Only the mapping origin changes; indexed pixels and SAT order stay exact.
+	"""
+	best = None
+	for oy in range(8):
+		for ox in range(8):
+			candidate = bytearray(bank)
+			pieces = pack_pixels_aligned(pixels,candidate,(ox,oy))
+			key = (len(candidate),len(pieces),oy,ox)
+			if best is None or key<best[0]:
+				best = key,candidate,pieces
+	bank[:] = best[1]
+	return best[2]
 
 
 def unpack_bank(rom, address):
@@ -192,7 +243,7 @@ def extract(rom_path, listing_path):
 	headmaps = [pack_pixels(row,banks['Eggman face']) for row in heads]
 	ghz = [pack_pixels(row,banks['Old Eggpod']) for row in backgrounds]
 	ehz = [pack_pixels(s2_background(min(i,5),s2pilots),banks['Boss Ship']) for i in range(7)]
-	fronts = [glass_foreground({(x+S2_HEAD_X,y+S2_HEAD_Y):c for (x,y),c in head.items()},s2pilots[min(i,5)])
+	fronts = [glass_foreground({(x+S2_HEAD_X,y+S2_HEAD_Y):c for (x,y),c in head.items()},s2pilots[0])
 		for i,head in enumerate(heads)]
 	frontmaps = [pack_pixels(row,banks['Boss Ship']) if row else [] for row in fronts]
 
@@ -220,21 +271,25 @@ def main():
 	p.add_argument('--listing',type=Path,required=True)
 	p.add_argument('--write',action='store_true')
 	a = p.parse_args()
+	constants = (ROOT/'_definitions/s2.constants.asm').read_text()
+	allocations = {name:int(value,16) for name,value in re.findall(r'^(ArtTile_\w+):\s+equ \$([0-9A-Fa-f]+)',constants,re.M)}
 	banks,heads,ghz,ehz,fronts,oldhull,newhull = extract(a.rom,a.listing)
 	report = {name:len(raw)//32 for name,raw in banks.items()}
-	report['shared_base'] = hex(0x3F0+max(len(banks['Old Eggpod']),len(banks['Boss Ship']))//32)
+	report['private_end'] = hex(0x3F0+max(len(banks['Old Eggpod']),len(banks['Boss Ship']))//32)
+	report['shared_base'] = hex(allocations['ArtTile_EggmanFace'])
 	report['shared_end'] = hex(int(report['shared_base'],16)+len(banks['Eggman face'])//32)
 	report['pieces'] = {'head':[len(r) for r in heads],'GHZ':[len(r) for r in ghz],'EHZ':[len(r) for r in ehz],'glass':[len(r) for r in fronts]}
 	print(json.dumps(report,indent=2))
 	if not a.write:
 		return
-	constants = (ROOT/'_definitions/s2.constants.asm').read_text()
-	allocations = {name:int(value,16) for name,value in re.findall(r'^(ArtTile_\w+):\s+equ \$([0-9A-Fa-f]+)',constants,re.M)}
 	headbase,headend = int(report['shared_base'],16),int(report['shared_end'],16)
+	assert headbase>=int(report['private_end'],16)
+	assert headend<=min(allocations['ArtTile_Eggman_Weapons'],allocations['ArtTile_ArtNem_EHZBoss'])
+	weaponbase = allocations['ArtTile_ArtNem_EHZBoss']
 	expected = {'ArtTile_Eggman':0x3F0,'ArtTile_ArtNem_Eggpod_1':0x3F0,
-		'ArtTile_EggmanFace':headbase,'ArtTile_Eggman_Weapons':headend,
-		'ArtTile_ArtNem_EHZBoss':headend,'ArtTile_ArtNem_EggChoppers':headend+128,
-		'ArtTile_Prison_Capsule':headend+128+12,'ArtTile_Eggman_Exhaust':headend+128+12+85}
+		'ArtTile_EggmanFace':headbase,'ArtTile_Eggman_Weapons':weaponbase,
+		'ArtTile_ArtNem_EHZBoss':weaponbase,'ArtTile_ArtNem_EggChoppers':weaponbase+128,
+		'ArtTile_Prison_Capsule':weaponbase+128+12,'ArtTile_Eggman_Exhaust':weaponbase+128+12+85}
 	for name,value in expected.items():
 		assert allocations[name]==value, (name,hex(allocations[name]),'needs',hex(value))
 	assert expected['ArtTile_Eggman_Exhaust']+25<=allocations['ArtTile_Shield_2']
