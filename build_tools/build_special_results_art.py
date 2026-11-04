@@ -14,7 +14,7 @@ from build_end_art import pack_moduled
 from build_signpost_art import mapping_file
 from build_hud_art import lettering
 from convert_s1_ss_background import kosinski_plus_decode
-from sprite_palette import remap_pixels
+from sprite_palette import PLAYER_FROM_S1, remap_pixels
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -56,16 +56,16 @@ def main():
 	(ROOT/'art/uncompressed/Results emeralds.unc').write_bytes(raw)
 	(ROOT/'art/nemesis/Results emeralds.nem').write_bytes(nemesis_compress(raw))
 	(ROOT/'mappings/sprite/SSR Emeralds.bin').write_bytes(mapping_file(rows))
-	# Retain both original 16x24 continue poses. These older S2 banks use four
-	# blue shades and the original orange slots, not today's shared indices.
+	# Sonic is the unchanged S1 Continue Screen Stuff sheet; Tails is S2 art.
+	# S1 E is dark red, while S2 E/F are orange. Keep their conversions distinct.
 	continue_from_s2 = (0,1,12,11,10,10,6,7,8,9,5,2,13,14,4,3)
-	def poses(filename, skip=0):
+	def poses(filename, lookup, skip=0):
 		packed = (ROOT/f'art/moduled kosinski/{filename}.kospm').read_bytes()
 		raw = kosinski_plus_decode(packed[2:])[0][skip*32:]
 		assert len(raw) == 12*32
-		return remap_pixels(raw,continue_from_s2)
-	sonic = poses('Mini Sonic Continue',18)
-	tails = poses('Mini Tails continue')
+		return remap_pixels(raw,lookup)
+	sonic = poses('Mini Sonic Continue',PLAYER_FROM_S1,18)
+	tails = poses('Mini Tails continue',continue_from_s2)
 	text = lettering('CONTINUE',ink=13,width=72)
 	for name, data in (('Sonic',text+sonic),('Tails',tails)):
 		(ROOT/f'art/uncompressed/Results continue {name}.unc').write_bytes(data)

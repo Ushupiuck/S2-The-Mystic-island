@@ -101,20 +101,20 @@ def assert_special_heading(state,announcement=False):
 	frame=7 if announcement else 0
 	rows=frames(rom,g.get('v_endcard','obMap',4),10)[frame]
 	top=g.get('v_endcard','obScreenY',2)-128+min(y for y,_,_,_ in rows)
-	assert top == (12 if announcement else (60,44,24)[state]), ('Heading height',state,top)
+	assert top == (40 if announcement else (52,40,52)[state]), ('Heading height',state,top)
 	pixels=text_pixels('v_endcard',frame)
 	if state==2:
 		pixels+=text_pixels('v_bsresright',9 if announcement else 8)
-		oval=frames(rom,g.get('v_bsresoval','obMap',4),10)[3]
-		xs=[x for _,_,_,x in oval]+[x+((size>>2)+1)*8 for _,size,_,x in oval]
-		ys=[y for y,_,_,_ in oval]+[y+((size&3)+1)*8 for y,size,_,_ in oval]
-		oval_center=(g.get('v_bsresoval','obX',2)-128+(min(xs)+max(xs))/2,
-			g.get('v_bsresoval','obScreenY',2)-128+(min(ys)+max(ys))/2)
-		xs=[x for _,_,x,_,_ in pixels];ys=[y for _,_,_,y,_ in pixels]
-		ink_center=((min(xs)+max(xs)+1)/2,(min(ys)+max(ys)+1)/2)
-		# Native checks also center the complete glyph rectangles exactly; ink
-		# side bearings differ by up to one pixel between the original letters.
-		assert abs(ink_center[0]-oval_center[0])<=1 and ink_center[1]==oval_center[1], ('Heading ink not centered on oval',frame,ink_center,oval_center)
+	oval=frames(rom,g.get('v_bsresoval','obMap',4),10)[3]
+	xs=[x for _,_,_,x in oval]+[x+((size>>2)+1)*8 for _,size,_,x in oval]
+	ys=[y for y,_,_,_ in oval]+[y+((size&3)+1)*8 for y,size,_,_ in oval]
+	oval_center=(g.get('v_bsresoval','obX',2)-128+(min(xs)+max(xs))/2,
+		g.get('v_bsresoval','obScreenY',2)-128+(min(ys)+max(ys))/2)
+	xs=[x for _,_,x,_,_ in pixels];ys=[y for _,_,_,y,_ in pixels]
+	ink_center=((min(xs)+max(xs)+1)/2,(min(ys)+max(ys)+1)/2)
+	# Native checks also center the complete glyph rectangles exactly; ink
+	# side bearings differ by up to one pixel between the original letters.
+	assert abs(ink_center[0]-oval_center[0])<=1 and ink_center[1]==oval_center[1], ('Heading ink not centered on oval',frame,ink_center,oval_center)
 	white=[(x,y) for _,_,x,y,color in pixels if color==6]
 	assert white, 'Heading has no white ink'
 	for x,y in white[::max(1,len(white)//20)]:
@@ -311,10 +311,18 @@ else:
 	# Start+A is only the fixture's exit mechanism. Disable coordinate Debug
 	# before HUD_Base builds the ordinary results score strip.
 	g.write('Debug_mode_flag',0);g.write('f_slomocheat',0)
+	staged_results=False
 	for _ in range(1000):
 		step()
-		if g.get('v_endcard','code')==g.s['BonusGotThrough'] and g.get('v_endcard','obRoutine'):
-			break
+		if g.get('v_endcard','code')==g.s['BonusGotThrough']:
+			if not staged_results:
+				assert not g.get('v_endcard','obRoutine'), 'Fixture missed the pre-constructor results frame'
+				# Real stage pickups during the exit must not alter the intended UI case.
+				g.write('v_rings',args.rings,2);g.write('v_ringbonus',args.rings*10,2)
+				g.write('v_score',800,4);g.write('f_scorecount',1);g.write('f_endactbonus',1)
+				staged_results=True
+			if g.get('v_endcard','obRoutine'):
+				break
 	else:
 		raise AssertionError('Special results did not start')
 	state=0 if not args.collected or not args.emeralds else 2 if args.emeralds==7 else 1
@@ -345,22 +353,40 @@ else:
 		rows=frames(rom,g.get('v_endcard','obMap',4),10)
 		old_left_right=max(x+((size>>2)+1)*8 for _,size,_,x in rows[0])
 		old_right_left=min(x for _,_,_,x in rows[8])
-		outgoing=[];incoming=[]
-		for _ in range(g.s['SSR_AnnouncementDelay']+60):
+		outgoing=[];incoming=[];timing={}
+		for _ in range(args.rings+g.s['SSR_PostTallyDelay']+g.s['SSR_ContinueDelay']+600):
 			expected=heading_ink()
 			step();assert_heading_video(expected)
 			assert (g.get('v_bsresoval','obX',2),g.get('v_bsresoval','obScreenY',2))==oval_position, 'Oval moved with its departing heading'
 			assert_card(76+(args.player==2))
 			frame=g.get('v_endcard','obFrame');x=g.get('v_endcard','obX',2);right_x=g.get('v_bsresright','obX',2)
+			if g.read('v_ringbonus',2):
+				assert frame==0 and x==right_x==main_x, 'Heading left before the bonus tally finished'
+			if 'tally' not in timing and g.get('v_bsresring','obRoutine') in (8,0xC):
+				timing['tally']=g.frame
+				assert g.read('v_score',4)==800+args.rings*10 and not g.read('v_ringbonus',2)
+				assert g.get('v_bsresring','objoff_38',2)==120
+			if 'tally' in timing and g.frame==timing['tally']+2:
+				assert_bonus();assert_score()
+			if 'continue' not in timing and g.get('v_ssrescontinue','obFrame') in (4,5):
+				timing['continue']=g.frame
+				assert g.frame-timing['tally']==121
+				assert g.get('v_bsresring','objoff_38',2)==270
+			if 'departure' not in timing and g.get('v_endcard','obRoutine')==0x18:
+				timing['departure']=g.frame
+				assert g.frame-timing['continue' if args.rings>=50 else 'tally']==(271 if args.rings>=50 else 121)
 			if frame==0 and x!=main_x:
 				outgoing.append((x,right_x))
 			elif frame==7:
 				assert g.get('v_bsresright','obFrame')==9
 				if not incoming:
+					timing['announcement']=g.frame
+					assert g.frame-timing['departure']==5 and g.get('v_bsresring','objoff_38',2)==240
 					left,right=outgoing[-1]
 					assert left-32-128+old_left_right<=0 and right+32-128+old_right_left>=320, 'New heading started before both old groups cleared'
 				incoming.append((x,right_x))
 				if x==right_x==main_x:
+					timing['settled']=g.frame
 					break
 		else:
 			raise AssertionError('All-seven heading did not finish its Super announcement transition')
@@ -368,6 +394,7 @@ else:
 		assert incoming==[(x,2*main_x-x) for x in range(0,main_x+1,16)], ('Opposed incoming path',incoming)
 		report['announcement_motion']={'exit_pixels_per_update':32,'entry_pixels_per_update':16,
 			'old_clears_before_new':True,'oval_stays_put':True,'opposed_groups':True}
+		report['announcement_timing']=timing
 		step()  # present the settled new header's SAT
 		# Capture the visible half of the existing emerald blink for review.
 		for _ in range(4):
@@ -398,6 +425,13 @@ else:
 				if frame not in poses:
 					step()  # The video callback presents the preceding SAT.
 					g.video.save(args.output/f'continue-{frame-4}.png')
+					if args.player==1:
+						portrait=text_pixels('v_ssrescontinue',frame,{3})
+						dark_red=[(x,y) for _,_,x,y,color in portrait if color==15]
+						assert dark_red and not any(color==4 for *_,color in portrait), 'S1 shoe shadow became S2 orange'
+						for x,y in dark_red:
+							r,green,b=g.video.getpixel((x,y))
+							assert r>0 and green==b==0, ('Continue shoe shadow is not dark red',frame,x,y)
 				poses.add(frame)
 				if poses=={4,5}:
 					break
@@ -407,6 +441,8 @@ else:
 	if announcement:
 		for _ in range(1200):
 			step()
+			if g.frame<timing['announcement']+g.s['SSR_AnnouncementHold']:
+				assert not g.read('Level_Inactive_flag',2), 'Announcement display window was cut short'
 			if g.read('v_vbla_routine',2)==g.s['Vint_Level'] and g.read('f_timecount'):
 				break
 		else:
@@ -421,11 +457,15 @@ if args.record_transition:
 	assert transition_state is not None, '--record-transition requires a collected seventh emerald result'
 	g.restore(transition_state)
 	step()  # present the opening assembly, including both approaching groups
-	images=[g.video.copy()]
-	for tick in range(1,420):
+	images=[g.video.copy()];announcement_start=None
+	for tick in range(1,args.rings+1200):
 		step()
-		if not tick%2:
-			images.append(g.video.copy())
+		if g.get('v_endcard','obFrame')==7 and announcement_start is None:
+			announcement_start=tick
+		if not tick%2:images.append(g.video.copy())
+		if announcement_start is not None and tick-announcement_start>=g.s['SSR_AnnouncementHold']-1:
+			break
+	else:raise AssertionError('Preview did not reach the complete announcement display window')
 	durations=[40]*len(images) if args.pal else [10*((i+1)*100//30-i*100//30) for i in range(len(images))]
 	images[0].save(args.output/'announcement-transition.gif',save_all=True,
 		append_images=images[1:],duration=durations,loop=0,optimize=True)

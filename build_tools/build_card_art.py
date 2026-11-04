@@ -272,21 +272,17 @@ Map_Results_ContinueText = make_art_tile(ArtTile_Mini_Sonic,1,0)-ArtTile_Results
 			name = ('SPECIAL STAGE',character+' GOT A CHAOS EMERALD',
 					character+' GOT THEM ALL')[state]
 			if state == 1:
-				text = [(y-16,size,word,x) for y,size,word,x in lettering(character+' GOT A',space=8)]
-				text += [(y+8,size,word,x) for y,size,word,x in lettering('CHAOS EMERALD',space=8)]
+				text = [(y-20,size,word,x) for y,size,word,x in lettering(character+' GOT A',space=8)]
+				text += [(y+4,size,word,x) for y,size,word,x in lettering('CHAOS EMERALD',space=8)]
 			else:
-				text = lettering(name,space=8)
-				if state == 2:
-					# S3&K's $98 text row is screen Y=24; our anchor is $C4.
-					text = [(y-36,size,word,x) for y,size,word,x in text]
+				text = [(y-8,size,word,x) for y,size,word,x in lettering(name,space=8)]
 			announcement = []
-			oval = OVAL
+			# All heading blocks share the regular oval center at screen (160,60).
+			oval = [(y,size,word,x+4) for y,size,word,x in OVAL]
 			if state == 2:
 				# Center the complete 40-pixel announcement on the oval, not its first line.
-				announcement = [(y-48,size,word,x) for y,size,word,x in lettering(character+' CAN NOW BE',space=8)]
-				announcement += [(y-24,size,word,x) for y,size,word,x in lettering('SUPER '+character,space=8)]
-				# Both headings share the oval's screen center at (160,32).
-				oval = [(y-28,size,word,x+4) for y,size,word,x in OVAL]
+				announcement = [(y-20,size,word,x) for y,size,word,x in lettering(character+' CAN NOW BE',space=8)]
+				announcement += [(y+4,size,word,x) for y,size,word,x in lettering('SUPER '+character,space=8)]
 			# Keep the shared bank's tile order while assigning independently moving halves.
 			order, lookup = pack(special_common,text+announcement)
 			right_text = []
@@ -295,8 +291,8 @@ Map_Results_ContinueText = make_art_tile(ArtTile_Mini_Sonic,1,0)-ArtTile_Results
 				# The complete old line keeps its original spacing and center.
 				left_glyphs = len(character+'GOT')
 				right_text, text = text[left_glyphs:], text[:left_glyphs]
-				right_announcement = [piece for piece in announcement if piece[0] == -32]
-				announcement = [piece for piece in announcement if piece[0] == -56]
+				right_announcement = [piece for piece in announcement if piece[0] == -4]
+				announcement = [piece for piece in announcement if piece[0] == -28]
 			scenes.append((name,order))
 			score, bonus = fixed(lookup,special=True,tails=tails)
 			mini = 'ArtTile_Mini_Tails' if tails else 'ArtTile_Mini_Sonic+18'

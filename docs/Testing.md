@@ -1000,16 +1000,24 @@ pickup and real goal exit. `--pickup-count 1` covers partial success; `--fail`
 uses a real GOAL with six previously held emeralds. These are positioned
 fixtures, not controller-only full-stage routes.
 `check_card_screens.py` also checks settled heading pixels against their mapping
-positions: all-seven success starts at screen Y=24. With at least 50 rings, it
+positions: single-line headings start at screen Y=52 and two-line blocks at
+Y=40/64, all centered on the oval at `(160,60)`. With at least 50 rings, it
 checks the one-pixel T-I gap in CONTINUE from loaded VRAM and rendered gold ink,
-including both character portraits and both animation poses. All-seven success
-also checks the timed Super announcement, its rendered Y=12/36 lines, both
-headings' centers against the oval, initial two-sided assembly, opposed
+including both character portraits and both animation poses. Sonic's source
+dark-red shoe pixels must load and render as the third red, never orange.
+All-seven success also checks the timed Super announcement, its rendered Y=40/64 lines, both
+headings' centers against the oval, initial two-sided assembly, completed
+tally before the post-tally/Continue delays, the full announcement hold, opposed
 exit/entry speeds, both old halves offscreen before the swap, the fixed oval
 and the unchanged resident glyph bank. Moving white pixels are checked against
 clipped VRAM glyph positions, including the screen edges. Add
 `--record-transition` to capture the opening assembly and complete announcement
-as an emulator GIF. Native checks reject it for failed or partial results and
+as an emulator GIF through the end of its display window. The fixture resets
+ring/score inputs after the stage exits and before the results constructor, so
+incidental stage pickups cannot change the requested case. Use `--rings 0`
+for the no-Continue route and `--rings 999` to catch an announcement that races
+a large bonus tally. Native checks pin the S3&K post-tally timers to
+120/270/240 updates, reject the announcement for failed or partial results and
 verify that it does not enable transformation gameplay.
 `check_card_screens.py --case special --emeralds 6` must show SPECIAL STAGE;
 add `--collected` for the character-specific successful heading, or use seven

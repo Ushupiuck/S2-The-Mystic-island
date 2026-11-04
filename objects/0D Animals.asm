@@ -179,7 +179,7 @@ Flicky_Init:
 		move.w	#$300,obPriority(a0)
 		move.b	#Flicky_DisplayWidth,obActWid(a0)
 		move.b	#7,obTimeFrame(a0)
-		bra.w	DisplaySprite
+		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 FlickyRandom:

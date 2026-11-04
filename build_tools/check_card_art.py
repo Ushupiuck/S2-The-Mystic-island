@@ -147,84 +147,127 @@ for mode in (0,1,2):
 			assert m.cpu.reg_read(m68k.UC_M68K_REG_D0) == scene
 			rows=frames(rom,m.cpu.reg_read(m68k.UC_M68K_REG_A3),10)
 			heading_y=struct.unpack_from('>H',rom,m.s['SSR_Config']+4)[0]-128+min(y for y,_,_,_ in rows[0])
-			assert heading_y == (60,44,24)[state], ('Special heading row',state,heading_y)
+			assert heading_y == (52,40,52)[state], ('Special heading row',state,heading_y)
 			for frame in (4,5,6):
 				assert [x for _,_,_,x in rows[frame][:3]] == [-80,-50,-18], 'CONTINUE lost its T-I kerning'
+			oval=rows[3]
+			xs=[x for _,_,_,x in oval]+[x+((size>>2)+1)*8 for _,size,_,x in oval]
+			ys=[y for y,_,_,_ in oval]+[y+((size&3)+1)*8 for y,size,_,_ in oval]
+			ox,oy=struct.unpack_from('>HH',rom,m.s['SSR_Config']+3*8+2)
+			oval_center=(ox-128+(min(xs)+max(xs))/2,oy-128+(min(ys)+max(ys))/2)
+			assert oval_center==(160,60)
+			hx,hy=struct.unpack_from('>HH',rom,m.s['SSR_Config']+2)
+			groups=[rows[0]+(rows[8] if state==2 else [])]
 			if state==2:
 				assert len(rows[0])==8 and len(rows[8])==7, 'GOT/THEM ALL split changed'
-				assert {y for y,_,_,_ in rows[7]}=={-56} and {y for y,_,_,_ in rows[9]}=={-32}, 'Super announcement lost its separate text rows'
-				oval=rows[3]
-				xs=[x for _,_,_,x in oval]+[x+((size>>2)+1)*8 for _,size,_,x in oval]
-				ys=[y for y,_,_,_ in oval]+[y+((size&3)+1)*8 for y,size,_,_ in oval]
-				ox,oy=struct.unpack_from('>HH',rom,m.s['SSR_Config']+3*8+2)
-				oval_center=(ox-128+(min(xs)+max(xs))/2,oy-128+(min(ys)+max(ys))/2)
-				assert oval_center==(160,32)
-				hx,hy=struct.unpack_from('>HH',rom,m.s['SSR_Config']+2)
-				for frame,right_frame in ((0,8),(7,9)):
-					joined=rows[frame]+rows[right_frame]
-					xs=[x for _,_,_,x in joined]+[x+((size>>2)+1)*8 for _,size,_,x in joined]
-					ys=[y for y,_,_,_ in joined]+[y+((size&3)+1)*8 for y,size,_,_ in joined]
-					heading_center=(hx-128+(min(xs)+max(xs))/2,hy-128+(min(ys)+max(ys))/2)
-					assert heading_center==oval_center, ('Heading not centered on oval',mode,frame,heading_center,oval_center)
+				assert {y for y,_,_,_ in rows[7]}=={-28} and {y for y,_,_,_ in rows[9]}=={-4}
+				groups.append(rows[7]+rows[9])
 			else:
 				assert not any(rows[7:]), 'An unsuccessful result exposes split success headings'
+			for joined in groups:
+				xs=[x for _,_,_,x in joined]+[x+((size>>2)+1)*8 for _,size,_,x in joined]
+				ys=[y for y,_,_,_ in joined]+[y+((size&3)+1)*8 for y,size,_,_ in joined]
+				heading_center=(hx-128+(min(xs)+max(xs))/2,hy-128+(min(ys)+max(ys))/2)
+				assert heading_center==oval_center, ('Heading not centered on oval',mode,state,heading_center,oval_center)
 			assert (rows[2][-2][2]+m.s['ArtTile_Results_Card']) & 0xFFFF == m.s['ArtTile_Bonuses']+5
 			mini=m.s['ArtTile_Mini_Tails'] if mode == 2 else m.s['ArtTile_Mini_Sonic']+18
 			assert (rows[4][-1][2]+m.s['ArtTile_Results_Card']) & 0xFFFF == mini
 			checks.append({'case':'special-heading-and-character-addresses','mode':mode,'emeralds':emeralds,'collected':collected})
 
+# S3&K loc_2E4C4 / loc_2E4EA / loc_2E5C0: post-tally, Continue, announcement.
+assert (m.s['SSR_PostTallyDelay'],m.s['SSR_ContinueDelay'],m.s['SSR_AnnouncementHold'])==(120,270,240)
 for emeralds,collected in ((6,1),(7,0)):
-	reset()
-	m.write('v_emeralds',emeralds);m.write('v_ss_emerald_collected',collected)
-	for field,value,size in (('obRoutine',2,1),('obFrame',0,1),('obX',0x120,2),('ssr_mainX',0x120,2)):
-		m.put(obj,field,value,size)
-	m.act('BonusGotThrough',obj)
-	assert m.get(obj,'obRoutine')==2 and not m.get('v_bsresright','code')
-	checks.append({'case':'no-split-heading-for-other-outcomes','emeralds':emeralds,'collected':collected})
-
-for mode in (0,1,2):
 	for rings in (0,122):
 		reset()
+		m.write('v_emeralds',emeralds);m.write('v_ss_emerald_collected',collected);m.write('v_rings',rings,2)
+		for field,value,size in (('obRoutine',2,1),('obFrame',0,1),('obX',0x120,2),('ssr_mainX',0x120,2)):
+			m.put(obj,field,value,size)
+		m.act('BonusGotThrough',obj)
+		assert m.get(obj,'obRoutine')==2 and not m.get('v_bsresright','code')
+		ring=m.s['v_bsresring'];m.put(ring,'obRoutine',6);m.put(ring,'obFrame',2)
+		m.act('BonusGotThrough',ring)
+		assert m.get(ring,'objoff_38',2)==(60 if rings>=50 else 180)
+		if rings>=50:
+			m.put(ring,'obRoutine',0xE)
+			m.act('SSR_Continue',ring)
+			assert m.get(ring,'objoff_38',2)==360
+		m.act('SSR_Exit',ring)
+		assert m.read('Level_Inactive_flag',2)==1
+		checks.append({'case':'ordinary-outcome-timers-and-exit','emeralds':emeralds,'collected':collected,'rings':rings})
+
+for mode in (0,1,2):
+	for rings in (0,49,50,122,999):
+		reset()
 		m.write('Player_mode',mode,2);m.write('v_emeralds',7);m.write('v_ss_emerald_collected',1)
-		m.write('v_rings',rings,2)
-		header=m.s['v_bsrestext'];right=m.s['v_bsresright']
+		m.write('v_rings',rings,2);m.write('v_ringbonus',rings*10,2)
+		m.write('v_score',800,4);m.write('v_scorelife',5000,4)
+		header=m.s['v_bsrestext'];right=m.s['v_bsresright'];ring=m.s['v_bsresring']
 		m.act('SSR_Main',header)
 		assert right+m.s['object_size']<=m.s['v_lvlobjspace']
 		assert m.get('v_bsresoval','obPriority',2)>m.get(right,'obPriority',2), 'Oval covers the right heading group'
 		assert m.get(right,'obFrame')==8 and m.get(right,'obRoutine')==0x1C
 		assert bool(m.get('v_ssrescontinue','code'))==(rings>=50)
-		assert all(m.get(actor,'obRender') & 1<<m.s['obRender.explicit_height'] for actor in (header,right)), 'Split glyphs can wrap at VDP X boundaries'
+		assert all(m.get(actor,'obRender') & 1<<m.s['obRender.explicit_height'] for actor in (header,right))
 		entry=[]
 		for tick in range(18):
 			entry.append((m.get(header,'obX',2),m.get(right,'obX',2)))
 			if tick<17:m.act('BonusGotThrough',header)
-		assert entry==[(x,0x240-x) for x in range(16,0x121,16)], ('Opposed initial assembly',entry)
-		assert m.get(header,'obRoutine')==0x16 and m.get(header,'objoff_38',2)==m.s['SSR_AnnouncementDelay']
+		assert entry==[(x,0x240-x) for x in range(16,0x121,16)]
+		assert m.get(header,'obRoutine')==0x16
 		oval=(m.get('v_bsresoval','obX',2),m.get('v_bsresoval','obScreenY',2))
-		for tick in range(m.s['SSR_AnnouncementDelay']-1):
+		timing={};outgoing=[];incoming=[]
+		for tick in range(rings+1600):
 			m.act('BonusGotThrough',header)
-			assert (m.get(header,'obFrame'),m.get(right,'obFrame'))==(0,8)
-			assert m.get(header,'obX',2)==m.get(right,'obX',2)==0x120
-		outgoing=[]
-		for tick in range(5):
-			m.act('BonusGotThrough',header)
-			outgoing.append((m.get(header,'obX',2),m.get(right,'obX',2)))
-		assert outgoing==[(0x120-i*32,0x120+i*32) for i in range(1,5)]+[(0,0x240)]
+			m.act('BonusGotThrough',ring)
+			frame=m.get(header,'obFrame');pair=(m.get(header,'obX',2),m.get(right,'obX',2))
+			assert (m.get('v_bsresoval','obX',2),m.get('v_bsresoval','obScreenY',2))==oval
+			if m.read('v_ringbonus',2):
+				assert frame==0 and pair==(0x120,0x120), 'Announcement raced the score tally'
+			if 'tally' not in timing and m.get(ring,'obRoutine') in (8,0xC):
+				timing['tally']=tick
+				assert not m.read('v_ringbonus',2) and m.read('v_score',4)==800+rings*10
+				assert m.get(ring,'objoff_38',2)==120
+			if 'continue' not in timing and m.get('v_ssrescontinue','obFrame')==4:
+				timing['continue']=tick
+				assert tick-timing['tally']==121
+				assert m.get(ring,'objoff_38',2)==270
+			if 'departure' not in timing and m.get(header,'obRoutine')==0x18:
+				timing['departure']=tick
+				assert tick-timing['continue' if rings>=50 else 'tally']==(271 if rings>=50 else 121)
+			if frame==0 and pair!=(0x120,0x120):outgoing.append(pair)
+			if frame==7:
+				if 'announcement' not in timing:
+					timing['announcement']=tick
+					assert tick-timing['departure']==5 and m.get(ring,'objoff_38',2)==240
+				if not incoming or incoming[-1]!=pair:incoming.append(pair)
+				assert m.get(right,'obFrame')==9
+			if m.read('Level_Inactive_flag',2):
+				assert tick-timing['announcement']==241
+				break
+		else:raise AssertionError(('Announcement sequence did not exit',mode,rings,timing))
+		assert outgoing==[(0x120-i*32,0x120+i*32) for i in range(1,5)]
+		assert incoming==[(x,0x240-x) for x in range(0,0x121,16)]
 		rows=frames(rom,m.get(header,'obMap',4),10)
 		left_edge=max(x+((size>>2)+1)*8 for _,size,_,x in rows[0])
 		right_edge=min(x for _,_,_,x in rows[8])
 		assert 0x120-160-128+left_edge<=0 and 0x120+160-128+right_edge>=320
-		assert 0x120-128-128+left_edge>0 or 0x120+128-128+right_edge<320, 'Transition waited after the old pair cleared'
-		assert (m.get(header,'obFrame'),m.get(right,'obFrame'))==(7,9)
-		incoming=[(m.get(header,'obX',2),m.get(right,'obX',2))]
-		for tick in range(18):
-			m.act('BonusGotThrough',header)
-			incoming.append((m.get(header,'obX',2),m.get(right,'obX',2)))
-		assert incoming==[(x,0x240-x) for x in range(0,0x121,16)], ('Opposed Super entry',incoming)
-		assert m.get(header,'obRoutine')==0x1C
-		assert (m.get('v_bsresoval','obX',2),m.get('v_bsresoval','obScreenY',2))==oval
+		assert 0x120-128-128+left_edge>0 or 0x120+128-128+right_edge<320
 		assert not m.read('Super_Sonic_flag')
-		checks.append({'case':'opposed-heading-assembly-and-announcement','mode':mode,'rings':rings})
+		checks.append({'case':'post-tally-opposed-heading-announcement','mode':mode,'rings':rings,'timing':timing})
+
+
+# Mini Sonic retains S1 palette indices: its source E must remain the third red.
+from convert_s1_ss_background import kosinski_plus_decode
+source=kosinski_plus_decode((ROOT/'art/moduled kosinski/Mini Sonic Continue.kospm').read_bytes()[2:])[0][18*32:]
+portrait=(ROOT/'art/uncompressed/Results continue Sonic.unc').read_bytes()[18*32:]
+source_pixels=[n for byte in source for n in (byte>>4,byte&15)]
+portrait_pixels=[n for byte in portrait for n in (byte>>4,byte&15)]
+assert len(source_pixels)==len(portrait_pixels)==16*24*2
+assert all(new==15 for old,new in zip(source_pixels,portrait_pixels) if old==14), 'S1 dark red was converted as S2 orange'
+assert source_pixels.count(14)==portrait_pixels.count(15)>0
+assert 4 not in portrait_pixels, 'Mini Sonic retains orange shoe shadows'
+assert struct.unpack_from('>H',(ROOT/'palette/SonicAndTails.bin').read_bytes(),15*2)[0]==0x004
+checks.append({'case':'mini-sonic-s1-dark-red','dark_red_pixels':portrait_pixels.count(15)})
 
 
 

@@ -354,22 +354,27 @@ act 4, V/W and the wide W metrics. Its `act_four()` draws the digit into the
 existing six-tile (16x24) slot. Small results markers preserve the blue fill
 and dark-blue edge from `Title Cards Base.unc`, with the outer black pixels
 removed. Both screens share that treatment and the tightened final S in BONUS.
-Special results use the aligned palette contract below. A successful partial
-set uses two 16-pixel heading lines separated by eight clear pixels; the upper
-line moves up so the lower line and emerald grid retain their positions. The
-oval in failed/partial results sits eight pixels above the heading anchor, keeping its
-lower edge clear of the blue emerald.
-The all-seven success heading starts at screen Y=24, matching S3&K's `$98`
-text row; its glyph mappings move up 36 pixels from the shared `$C4` anchor.
-Its oval is centered at screen `(160,32)`. The all-seven heading has two
-independent groups: CHARACTER GOT enters from the left, THEM ALL from the
-right. One offset brings both to their original assembled positions together.
-After a 180-update hold, they leave towards their respective sides at 32 pixels
-per update. Once both have cleared the screen, CHARACTER CAN NOW BE enters
-from the left and SUPER CHARACTER from the right at 16 pixels per update.
-Their rows are Y=12/36, centering the complete two-line message on the same
-stationary oval. The extra right group uses reserved slot 21 (`v_bsresright`),
-shared with inactive normal results; the five existing bonus-result slots keep
+Special results use the aligned palette contract below. Every heading block
+is centered on the regular oval at screen `(160,60)`. Single-line SPECIAL
+STAGE and CHARACTER GOT THEM ALL start at Y=52; the partial-success and
+Super-announcement two-line blocks start at Y=40/64, with eight clear pixels
+between their 16-pixel rows. The oval's bottom stays clear of the emerald grid.
+The all-seven heading has two independent groups: CHARACTER GOT enters from
+the left, THEM ALL from the right. One offset brings both to their assembled
+positions together.
+The ring-bonus controller waits for the completed tally, then pauses for
+120 updates. If a Continue was earned, it plays that celebration for 270
+updates before starting the heading departure. This follows the S3&K
+post-tally sequence in `sonic3k.asm` (`loc_2E4C4` through `loc_2E5E0`) at
+`73de97c6b55055bcb8089c1d55d006b02136f163`. The groups leave towards their
+respective sides at 32 pixels per update. Once both have cleared the screen,
+CHARACTER CAN NOW BE enters from the left and SUPER CHARACTER from the
+right at 16 pixels per update.
+Their rows are Y=40/64, centering the complete two-line message on the same
+stationary oval. The new announcement gets 240 updates from spawning before
+the results can exit, matching S3&K. The extra right group uses reserved slot
+21 (`v_bsresright`), shared with inactive normal results; the five existing
+bonus-result slots keep
 their roles. The left owner controls both groups' positions and mapping frames.
 Both groups use piece clipping to prevent VDP X wrapping at the screen edges.
 Both messages share the resident all-seven bank, so the change needs no upload.
@@ -571,8 +576,11 @@ The retained Mini Sonic/Tails compressed sources supply the poses; Sonic's
 old CONTINUE tiles are replaced by lettering from the shared Ristar font.
 Only the lettering pieces select line two's gold slot D; the portrait pieces
 keep the player palette, including their two distinct animation poses.
-Their original S2 blue/orange slots are adapted offline to the current player
-row (the four-source-shade blue ramp shares the three available blue slots).
+Mini Sonic is the unchanged S1 Continue Screen Stuff sheet. Its source slot E
+is dark red and maps to shared slot F; it must not use Tails' S2 conversion,
+where E/F are orange. `PLAYER_FROM_S1` owns that source contract. Both blue
+ramps share the three available player blues. The packed results copy is
+regenerated from the retained sources; both Sonic poses keep their third red.
 Its ring
 selects the second-line gold ramp. `build_card_art.py` generates matching labels
 and blue markers. The rotating stage retains its palette positions and private

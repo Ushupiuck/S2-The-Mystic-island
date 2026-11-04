@@ -19,10 +19,13 @@ SSR_Index:	dc.w SSR_ChkPLC-SSR_Index
 		dc.w SSR_Wait-SSR_Index
 		dc.w SSR_Exit-SSR_Index
 		dc.w loc_BEF2-SSR_Index
-		dc.w SSR_AnnouncementWait-SSR_Index
+		dc.w SSR_Display-SSR_Index	; $16: assembled old heading waits for the tally controller
 		dc.w SSR_AnnouncementOut-SSR_Index
 		dc.w SSR_AnnouncementIn-SSR_Index
 		dc.w SSR_Display-SSR_Index
+		dc.w SSR_WaitAnnouncement-SSR_Index
+		dc.w SSR_Wait-SSR_Index
+		dc.w SSR_ExitLevel-SSR_Index
 
 ssr_mainX = objoff_34	; position for card to display on
 ssr_splitoffset = objoff_36	; all-seven left/right distance from the common anchor
@@ -31,7 +34,9 @@ SSR_AnnouncementRightFrame = 9
 SSR_HeadingEntryOffset = $120	; both incoming groups start wholly offscreen
 SSR_HeadingExitOffset = $A0	; both old groups clear the edges after five exit steps
 SSR_AnnouncementFrame = 7
-SSR_AnnouncementDelay = 180	; updates before the UI-only heading transition
+SSR_PostTallyDelay = 2*60		; S3&K: pause after the completed tally
+SSR_ContinueDelay = 270		; S3&K: let the Continue celebration finish
+SSR_AnnouncementHold = 4*60	; S3&K: display time from the new message spawning
 ; ===========================================================================
 
 SSR_ChkPLC:	; Routine 0
@@ -49,7 +54,7 @@ SSR_Main:
 		jsr	(Get_SpecialCardScene).l
 		movea.l	a0,a1
 		lea	(SSR_Config).l,a2
-		move.b	#Map_SSR_2_0_height,d3	; largest family includes the raised oval and both headings
+		move.b	#Map_SSR_2_0_height,d3	; covers both heading groups and the oval
 		move.l	#BonusGotThrough,d6
 		moveq	#(SSR_Config_Continue-SSR_Config)/8-1,d1
 		cmpi.w	#50,(v_rings).w	; do you have 50 or more rings?
@@ -107,7 +112,7 @@ loc_BE44:
 		move.w	#180,objoff_38(a0) ; set time delay to 3 seconds
 		move.l	#ChaosEmeralds,(v_ssresemeralds).w ; load chaos emerald object
 
-SSR_Wait:	; Routine 4, 8, $C, $10
+SSR_Wait:	; Routine 4, 8, $C, $10, $20
 		subq.w	#1,objoff_38(a0) ; subtract 1 from time delay
 		bne.s	SSR_Display
 		addq.b	#2,obRoutine(a0)
@@ -118,11 +123,6 @@ SSR_Display:
 
 ; A single offset keeps the two heading objects synchronized around the oval.
 ; The right object only displays; the left owner advances both positions/frames.
-SSR_AnnouncementWait:	; Routine $16
-		subq.w	#1,objoff_38(a0)
-		bne.w	SSR_Display
-		move.b	#$18,obRoutine(a0)
-
 SSR_AnnouncementOut:	; Routine $18
 		addi.w	#$20,ssr_splitoffset(a0) ; title-card exit speed, towards opposite edges
 		cmpi.w	#SSR_HeadingExitOffset,ssr_splitoffset(a0)
@@ -140,8 +140,7 @@ SSR_AnnouncementIn:	; Routine $1A; initial GOT/THEM ALL and subsequent Super pai
 		move.b	#$1C,obRoutine(a0)
 		tst.b	obFrame(a0)
 		bne.s	SSR_HeadingPosition
-		move.b	#$16,obRoutine(a0)
-		move.w	#SSR_AnnouncementDelay,objoff_38(a0)
+		move.b	#$16,obRoutine(a0)	; the ring-bonus controller starts the transition
 
 SSR_HeadingPosition:
 		move.w	ssr_mainX(a0),d0
@@ -174,15 +173,33 @@ loc_BE9C:
 		addq.b	#2,obRoutine(a0)
 		move.w	#180,objoff_38(a0) ; set time delay to 3 seconds
 		cmpi.w	#50,(v_rings).w	; do you have at least 50 rings?
-		bcs.s	locret_BEC2	; if not, branch
-		move.w	#60,objoff_38(a0) ; set time delay to 1 second
+		bcs.s	.post_tally
+		move.w	#60,objoff_38(a0) ; ordinary results pause before Continue
 		addq.b	#4,obRoutine(a0) ; goto "SSR_Continue" routine
+.post_tally:
+		tst.l	(v_bsresright).w	; the split heading exists only on a fresh seventh emerald
+		beq.s	locret_BEC2
+		move.w	#SSR_PostTallyDelay,objoff_38(a0)
 
 locret_BEC2:
 		rts
 ; ===========================================================================
 
-SSR_Exit:	; Routine $A, $12
+SSR_Exit:	; Routine $A, $12: ordinary exit, or start the all-seven announcement
+		tst.l	(v_bsresright).w
+		beq.s	SSR_ExitLevel
+		move.b	#$18,(v_bsrestext+obRoutine).w
+		move.b	#$1E,obRoutine(a0)
+		bra.w	DisplaySprite
+
+SSR_WaitAnnouncement:	; Routine $1E; old groups must leave before the new hold starts
+		cmpi.b	#SSR_AnnouncementFrame,(v_bsrestext+obFrame).w
+		bne.w	SSR_Display
+		move.w	#SSR_AnnouncementHold,objoff_38(a0)
+		move.b	#$20,obRoutine(a0)
+		bra.w	DisplaySprite
+
+SSR_ExitLevel:	; Routine $22, or an ordinary result without the split heading
 		move.w	#1,(Level_Inactive_flag).w ; restart level
 		bra.w	DisplaySprite
 ; ===========================================================================
@@ -193,7 +210,10 @@ SSR_Continue:	; Routine $E
 		move.w	#sfx_Continue,d0
 		jsr	(PlaySound_Special).l	; play continues jingle
 		addq.b	#2,obRoutine(a0)
-		move.w	#360,objoff_38(a0) ; set time delay to 6 seconds
+		move.w	#360,objoff_38(a0) ; ordinary results Continue hold
+		tst.l	(v_bsresright).w
+		beq.w	SSR_Display
+		move.w	#SSR_ContinueDelay,objoff_38(a0)
 		bra.w	DisplaySprite
 ; ===========================================================================
 

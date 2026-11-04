@@ -6,6 +6,8 @@ keeps black/grays and the yellow ramp aligned; its other colors belong to
 each act's enemies. Existing editable art already uses the destination slots.
 """
 
+# S1's E is the darkest shoe red and F is yellow; S2 uses those for orange.
+PLAYER_FROM_S1 = (0, 1, 12, 11, 10, 10, 6, 7, 8, 9, 5, 2, 13, 14, 15, 4)
 PLAYER_FROM_LEGACY = (0, 1, 12, 11, 15, 10, 6, 7, 8, 9, 5, 2, 13, 14, 4, 3)
 ENEMY_FROM_LEGACY = (0, 1, 12, 11, 4, 10, 6, 7, 8, 9, 5, 2, 13, 14, 15, 3)
 MECHA_FROM_SK = (0, 6, 2, 3, 4, 13, 14, 5, 10, 11, 12, 8, 9, 7, 1, 15)
