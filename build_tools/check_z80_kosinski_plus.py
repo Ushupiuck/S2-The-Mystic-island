@@ -62,6 +62,7 @@ class Native:
 		assert bytes(ram[0xA000:0xA000+len(packed)])==packed,'Modified compressed input'
 		assert regs.hl.d==0xA000+len(packed) and regs.de.d==0x4000+len(raw),'Wrong final cursors'
 		assert regs.sp.d==0xFF02 and regs.ix.d==0xBEEF and regs.iy.d==0xCAFE,'Clobbered stack or index registers'
+		assert regs.af2.d==0xA55A,('Clobbered DPCM accumulator AF′',hex(regs.af2.d))
 		actual=bytearray(ram[:len(self.program)]);expected=bytearray(self.program)
 		at=s['zKosPlusCopyOffset']+1
 		actual[at:at+2]=expected[at:at+2]

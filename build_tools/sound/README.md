@@ -149,13 +149,16 @@ bundled `p2bin` Kosinski+ encoder. Streams have MSB-first descriptors and a long
 zero-count end marker, without a size header or module framing. Both ordinary
 song loading and the post-1-up restoration path call `zKosinskiPlusDec`.
 
-The Z80 routine occupies 102 bytes, replacing the 136-byte Saxman routine. It
-ends at `$1227`, leaving 47 bytes before the unchanged `zMusicData` at `$1256`.
+The Z80 routine occupies 105 bytes, replacing the 136-byte Saxman routine. It
+ends at `$122A`, leaving 44 bytes before the unchanged `zMusicData` at `$1256`.
 The `$A40` music allocation and following state/backup areas have not moved.
 `HL` supplies the banked source; output starts at `zMusicData`. On return `HL`
-and `DE` point past the input and output. `IX`/`IY` are preserved; `AF`, `AF'`
-and `BC` are scratch. A signed match displacement patches one immediate word
-in the decoder, so no new RAM variable is needed. It runs inside the sound
+and `DE` point past the input and output. `IX`/`IY` and `AF'` are preserved;
+`AF` and `BC` are scratch. The DAC player keeps its running DPCM accumulator
+in `AF'`, including across song loads. Long-token parsing saves the descriptor
+on the stack so an old drum can finish without a corrupted accumulator. A signed
+match displacement patches one immediate word in the decoder, so no new RAM
+variable is needed. It runs inside the sound
 interrupt and is not reentrant. Host validation enforces the output bound; the
 compact runtime trusts those validated streams.
 
@@ -214,7 +217,7 @@ and builds the ROM again on a native Windows runner.
 ```sh
 python3 build_tools/sound/build.py --check
 python3 build_tools/check_sound_playback.py --core /path/to/genesis_plus_gx_libretro.so \
-  --effects --jingles --priority
+	--effects --jingles --priority --switches
 python3 build_tools/check_sound_playback.py --core /path/to/genesis_plus_gx_libretro.so \
   --pal --songs GHZ EHZ GGZ1 RRZ1 HTZ HPZ GRGZ2 LBZ2_S3 EndLevel ExtraLife
 ```
@@ -262,6 +265,14 @@ unrelated PSG effect finishing, equal-priority retriggering, and priority releas
 Its `--jingles` cases include RAM-loaded GHZ, ROM-streamed Launch Base 2 and the
 large RAM-loaded S3 Menu track, checking bank/voice and decompressed-data restore.
 
+`check_sound_playback.py --switches` selects every song through the actual
+level-select input path in three uninterrupted playlist passes, at 5/12/24-frame
+intervals. It traces real Z80 DAC writes and checks each DPCM delta against the
+previous accumulator, with explicit `$80` resets for new samples. It exercises
+compressed/raw transitions and interrupted 1-ups, then checks that music settles.
+This trace also requires the core's exported `Z80` registers and `z80_writemem`
+bus callback. Reports include discontinuities and a local audio capture.
+
 The tool fixtures check original instrument dumps, relative music pointers,
 compact SFX headers, modern command conversions, dependency invalidation,
 separate bank placement, unsupported imports and invalid/oversized input.
@@ -281,8 +292,8 @@ This requires a core exporting its native Z80 registers, memory maps and bus
 callbacks. It relocates the unchanged decoder into guarded flat fixture memory,
 then checks all descriptor alignments, short/long/extended counts, overlap,
 8-KiB distances, current songs and seeded encoder fixtures. Output/input guards,
-source/destination cursors, stack balance and `IX`/`IY` preservation are checked;
-only the copy displacement may modify code. This proves instruction-level
+source/destination cursors, stack balance and `IX`/`IY`/`AF'` preservation are
+checked; only the copy displacement may modify code. This proves instruction-level
 format behavior, not Mega Drive bus or interrupt timing. The full-game playback
 checks cover the real banked load and restoration paths.
 

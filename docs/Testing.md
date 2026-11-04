@@ -771,7 +771,8 @@ effects and jingle restoration.
 For complete music-stream equivalence and per-frame Z80 state comparisons,
 see the [sound validation guide](../build_tools/sound/README.md#validation),
 including the direct native Z80 Kosinski+ decoder check on the experimental branch.
-Its `--priority` playback case covers bumper/Continue arbitration.
+Its `--priority` playback case covers bumper/Continue arbitration; `--switches`
+traces DPCM accumulator continuity during rapid level-select song changes.
 Add `--core /path/to/genesis_plus_gx_libretro.so --system-directory ...`
 to the codec runner for actual queued PLC uploads while HPZ's early water
 HBlank split is active; it compares VRAM with the old decoder and checks

@@ -3601,8 +3601,9 @@ byte_11E5:
 ; Kosinski+ music decoder, ported from the format in _inc/KosinskiPlus.asm
 ; (Flamewing/vladikcomper/Clownacy; credits/license in that 68000 reference).
 ; HL = banked source; output starts at zMusicData.
-; MSB-first descriptor bits use A with a sentinel; AF' holds it while long
-; tokens are decoded. The signed copy displacement patches an immediate word.
+; MSB-first descriptor bits use A with a sentinel, saved on the stack for long
+; tokens. Preserve AF': the DAC loop keeps its live DPCM accumulator there.
+; The signed copy displacement patches an immediate word.
 ; IX/IY and the RAM layout are unchanged. Called inside the sound interrupt;
 ; this scratch state is not reentrant. Streams are validated by KEHmusic.
 zKosinskiPlusDec:
@@ -3630,7 +3631,7 @@ zKosPlusMatch:
 	inc	c
 	jr	zKosPlusCopy
 zKosPlusLong:
-	ex	af,af'
+	push	af			; save descriptor without touching the DPCM accumulator
 	ld	a,(hl)
 	inc	hl
 	ld	b,a
@@ -3656,13 +3657,16 @@ zKosPlusExtended:
 	ld	a,(hl)
 	inc	hl
 	or	a
-	ret	z			; extended count zero is the end marker
+	jr	nz,zKosPlusExtendedCopy
+	pop	af			; discard saved descriptor at the end marker
+	ret
+zKosPlusExtendedCopy:
 	add	a,9			; 16-bit count also handles 256-byte copies
 zKosPlusSetCount:
 	ld	c,a
 	ld	b,0
 	rl	b
-	ex	af,af'
+	pop	af			; restore descriptor
 zKosPlusCopy:
 	push	hl
 zKosPlusCopyOffset:

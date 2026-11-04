@@ -23,6 +23,7 @@ p.add_argument('--output', type=Path)
 p.add_argument('--effects', action='store_true')
 p.add_argument('--jingles', action='store_true')
 p.add_argument('--priority', action='store_true', help='Check bumper/Continue SFX arbitration and priority release.')
+p.add_argument('--switches', action='store_true', help='Trace DPCM continuity while rapidly selecting different songs.')
 p.add_argument('--pal', action='store_true')
 p.add_argument('--system-directory', type=Path)
 p.add_argument('--songs', nargs='*')
@@ -134,6 +135,63 @@ def play(sound_id):
 	step(2)
 	g.buttons = set()
 	step(1)
+
+
+if args.switches:
+	# AF' is the running DPCM accumulator between interrupts. Check each real
+	# DAC write against the previous accumulator plus the current delta-table
+	# byte; a newly queued sample explicitly resets the accumulator to $80.
+	from check_z80_kosinski_plus import Registers
+	g.restore(menu)
+	regs = Registers.in_dll(g.core, 'Z80')
+	Write = C.CFUNCTYPE(None, C.c_uint, C.c_uint8)
+	writer_slot = C.c_void_p.in_dll(g.core, 'z80_writemem')
+	original_address = writer_slot.value
+	original_writer = Write(original_address)
+	state = {'accumulator': (regs.af2.d >> 8) & 255, 'requested': 'menu',
+		'samples': 0, 'restarts': 0, 'dac_enabled': bool(zr('zDACEnabled') & 128)}
+	corruptions = []; loads = []
+	def trace_write(address, value):
+		pc = regs.pc.d
+		if address == g.s['zCurDAC'] and not value & 128 and g.s['zUpdateDAC'] <= pc < g.s['zloc_104']:
+			state['accumulator'] = 0x80
+			state['restarts'] += 1
+		if address == g.s['zDACEnabled']:
+			state['dac_enabled'] = bool(value & 128)
+		if address == g.s['zMusicData']:
+			loads.append({'frame': g.frame, 'song': state['requested']})
+		if address == 0x4001 and g.s['zWriteDPCMtoDAC'] <= pc < g.s['zDPCMWaitLoop']:
+			expected = (state['accumulator'] + zram[regs.hl.d & 0x1FFF]) & 255
+			if value != expected:
+				corruptions.append({'frame': g.frame, 'song': state['requested'],
+					'expected': expected, 'actual': value, 'audible': state['dac_enabled'], 'pc': pc})
+			state['accumulator'] = value
+			state['samples'] += 1
+		original_writer(address, value)
+	writer = Write(trace_write)
+	writer_slot.value = C.cast(writer, C.c_void_p).value
+	chunks.clear(); capture = True; selections = 0
+	try:
+		for delay in (0, 7, 19):
+			for index, name in enumerate(ini.sections(), 1):
+				state['requested'] = name
+				play(index); step(delay); selections += 1
+		state['requested'] = 'GHZ settle'
+		play(g.s['MusID_GHZ']); step(120)
+	finally:
+		writer_slot.value = original_address
+		capture = False
+	with wave.open(str(output / 'rapid-switches.wav'), 'wb') as wav:
+		wav.setnchannels(2); wav.setsampwidth(2); wav.setframerate(round(av.timing.sample_rate))
+		wav.writeframes(b''.join(chunks))
+	report['switches'] = {'selections': selections, 'dpcm_samples': state['samples'],
+		'sample_restarts': state['restarts'], 'ram_loads': loads, 'corruptions': corruptions}
+	(output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
+	assert state['samples'] > 1000 and state['restarts'] > 10, 'Rapid switching did not exercise DPCM playback'
+	assert len(loads) > 100, 'Rapid switching did not exercise music decoding'
+	assert not corruptions, ('DPCM accumulator changed outside sample playback', corruptions[:3])
+	assert zr('zSongFM1.PlaybackControl') & 128, 'Final song did not settle'
+	print('Rapid music switching:', selections, 'selections;', state['samples'], 'DPCM writes; accumulator continuity passed.', flush=True)
 
 
 if args.priority:
