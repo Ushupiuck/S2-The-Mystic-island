@@ -324,6 +324,10 @@ Effect cache values are zero for empty, 1-4 for shield cues, `$80` for stars,
 physical-bank cache state. Act clear preserves both shield banks and their
 uploads; Game/Time Over still protects the dead primary's bank from companion stars.
 
+`art/nemesis/Game Over.nem` is the editable 34-tile GAME/TIME/OVER sheet.
+Both OVER mappings share the same V quartet (tiles 24-27). Its white/blue
+lettering uses slots `6/A/B/C`; the edge uses dark blue `C`, never red `F`.
+
 Each player has one visible points popup, with at most two uploaded tiles.
 A new award replaces that player's predecessor only after the complete upload
 fits. The predecessor gets an empty frame until retirement, preventing queued

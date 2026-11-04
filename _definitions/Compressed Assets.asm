@@ -1059,7 +1059,7 @@ MCD_CompressedAssets:
 	dc.l Nem_GHZ_SWall,Nem_GHZ_SWall+$15C	; art/nemesis/S1/GHZ Edge Wall.nem
 	endif
 	if defined(Nem_GameOver)
-	dc.l Nem_GameOver,Nem_GameOver+$196	; art/nemesis/Game Over.nem
+	dc.l Nem_GameOver,Nem_GameOver+$180	; art/nemesis/Game Over.nem
 	endif
 	if defined(Nem_Gator)
 	dc.l Nem_Gator,Nem_Gator+$3C5	; art/nemesis/Enemy Gator.nem

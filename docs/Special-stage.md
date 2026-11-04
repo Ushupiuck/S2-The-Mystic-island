@@ -136,6 +136,9 @@ callbacks retain the S1 stage behavior. The tail follows velocity in all four
 directional animation families and stays through the accelerating goal exit.
 Placement and frame-cycle Debug hide it without deleting it. Stage frame-cycle
 Debug stays within Sonic's `$3D-$41` or Tails's `$96-$98` compact rolling poses.
+Debug movement finishes before `S1SS_FixCamera` publishes the live camera and
+its renderer copies. The cursor and rotating grid therefore use the same final
+position, including the first movement tick, stops and direction reversals.
 
 Stage Debug selects its own list without replacing the return level's zone.
 C places a real stage ring (`$3A`) in the layout, without allocating an ordinary

@@ -968,6 +968,16 @@ scatters 32 rings at both sides of the seam with real terrain probes, suppressin
 collection afterward to isolate movement/expiry. `--pal` selects PAL;
 `--probe` records an old build's failures without treating them as a pass.
 
+`check_over_screen_input.py` also checks the shared V's actual loaded VRAM
+pixels and opaque on-screen pixels in both GAME OVER and TIME OVER. Its
+`--system-directory` option selects the Mode 1 BIOS directory. The palette
+validator rejects red slots in the editable V quartet. `check_ss_debug_game.py`
+checks all eight movement directions, single-frame taps, held acceleration,
+stops and immediate reversals: the live/copied camera must match the cursor's
+final position, and its rendered sprite anchor must stay fixed. Run `--player 2`
+for Tails and `--pal` for PAL; the same run retains the grid-placement/collection
+checks. These are controller-driven Debug checks after entering the real stage.
+
 ## Shared palette migration
 
 For the shared small UI font, run `build_hud_art.py`, then

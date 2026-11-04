@@ -5,8 +5,8 @@
 BonusPlayer:
 		tst.w	(Debug_placement_mode).w	; is debug mode being used?
 		beq.s	BonusPlayer_Normal			; if not, branch
-		bsr.w	S1SS_FixCamera
-		jmp	(DebugMode).l
+		jsr	(DebugMode).l		; move before publishing this frame's camera
+		bra.w	S1SS_FixCamera
 ; ===========================================================================
 
 BonusPlayer_Normal:

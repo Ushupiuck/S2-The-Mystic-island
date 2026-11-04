@@ -29,6 +29,11 @@ def main():
 	assert struct.unpack('>16H', player) == (
 		0,0x222,0x06C,0x08E,0x0AE,0x8CE,0xEEE,0xECC,
 		0xCAA,0x866,0xE66,0xC42,0x822,0x00E,0x008,0x004)
+	over = nemesis((ROOT/'art/nemesis/Game Over.nem').read_bytes())
+	assert len(over) == 34*32
+	v_colors = {c for byte in over[24*32:28*32] for c in (byte>>4, byte&15)}
+	assert v_colors == {0,6,10,11,12}, ('OVER V must retain its white/blue edge',v_colors)
+
 	names = ('GHZ','LZ','CPZ','EHZ','EHZ2 PP','HPZ','HTZ','MTZ','LZ4','SMZ1','SMZ2')
 	for name in names:
 		row = struct.unpack('>48H', (ROOT/f'palette/{name}.bin').read_bytes())[:16]
