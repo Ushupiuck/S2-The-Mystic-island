@@ -361,13 +361,18 @@ oval in failed/partial results sits eight pixels above the heading anchor, keepi
 lower edge clear of the blue emerald.
 The all-seven success heading starts at screen Y=24, matching S3&K's `$98`
 text row; its glyph mappings move up 36 pixels from the shared `$C4` anchor.
-Its oval is centered at screen `(160,32)`. After a 180-update hold, the same
-header displays CHARACTER CAN NOW BE / SUPER CHARACTER at Y=12/36, centering
-the complete two-line message on the same oval. The old heading exits left
-at 32 pixels per update, then the new one enters from the left at 16, matching
-the title cards. The frame switches only once the old text is wholly offscreen;
-the oval stays fixed. Both messages share the resident all-seven bank, so the
-change needs no upload.
+Its oval is centered at screen `(160,32)`. The all-seven heading has two
+independent groups: CHARACTER GOT enters from the left, THEM ALL from the
+right. One offset brings both to their original assembled positions together.
+After a 180-update hold, they leave towards their respective sides at 32 pixels
+per update. Once both have cleared the screen, CHARACTER CAN NOW BE enters
+from the left and SUPER CHARACTER from the right at 16 pixels per update.
+Their rows are Y=12/36, centering the complete two-line message on the same
+stationary oval. The extra right group uses reserved slot 21 (`v_bsresright`),
+shared with inactive normal results; the five existing bonus-result slots keep
+their roles. The left owner controls both groups' positions and mapping frames.
+Both groups use piece clipping to prevent VDP X wrapping at the screen edges.
+Both messages share the resident all-seven bank, so the change needs no upload.
 This is the announcement UI; Super transformation gameplay remains unfinished.
 CONTINUE pulls its INUE mapping pieces two pixels left, leaving one clear pixel
 between T and I. The existing shared glyph art and 18-tile word bank stay in use.

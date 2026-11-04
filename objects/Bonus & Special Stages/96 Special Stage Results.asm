@@ -25,6 +25,11 @@ SSR_Index:	dc.w SSR_ChkPLC-SSR_Index
 		dc.w SSR_Display-SSR_Index
 
 ssr_mainX = objoff_34	; position for card to display on
+ssr_splitoffset = objoff_36	; all-seven left/right distance from the common anchor
+SSR_HeadingRightFrame = 8
+SSR_AnnouncementRightFrame = 9
+SSR_HeadingEntryOffset = $120	; both incoming groups start wholly offscreen
+SSR_HeadingExitOffset = $A0	; both old groups clear the edges after five exit steps
 SSR_AnnouncementFrame = 7
 SSR_AnnouncementDelay = 180	; updates before the UI-only heading transition
 ; ===========================================================================
@@ -54,9 +59,23 @@ SSR_Main:
 SSR_Loop:
 		bsr.w	Card_InitResultSprite
 		lea	object_size(a1),a1
-		dbf	d1,SSR_Loop	; repeat sequence 3 or 4 times
-		; Frame 0 contains the selected SPECIAL STAGE / emeralds / character
-		; heading; its mappings and DPLC were chosen before creating children.
+		dbf	d1,SSR_Loop	; score, ring bonus, oval and optional Continue
+		cmpi.b	#7,(v_emeralds).w
+		bne.s	SSR_Move
+		tst.b	(v_ss_emerald_collected).w
+		beq.s	SSR_Move
+		; Slot 21 is shared with the inactive normal-results card, inside the
+		; existing reserved pool. Its glyphs use the same loaded scene bank.
+		lea	(v_bsresright).w,a1
+		lea	SSR_Config_Right(pc),a2
+		bsr.w	Card_InitResultSprite
+		bset	#obRender.explicit_height,obRender(a1) ; clip offscreen pieces before VDP X wrapping
+		bset	#obRender.explicit_height,obRender(a0)
+		move.w	(v_bsresoval+ssr_mainX).w,(v_bsresoval+obX).w
+		move.w	#$80,(v_bsresoval+obPriority).w ; both heading groups draw in front
+		move.w	#SSR_HeadingEntryOffset,ssr_splitoffset(a0)
+		move.b	#$1A,obRoutine(a0)
+		bra.w	SSR_AnnouncementIn
 
 SSR_Move:	; Routine 2
 		moveq	#$10,d1		; set horizontal speed
@@ -82,16 +101,6 @@ locret_BE42:
 ; ===========================================================================
 
 loc_BE44:
-		tst.b	obFrame(a0)
-		bne.s	.check_tally
-		tst.b	(v_ss_emerald_collected).w
-		beq.s	loc_BE32
-		cmpi.b	#7,(v_emeralds).w
-		bne.s	loc_BE32
-		move.b	#$16,obRoutine(a0)
-		move.w	#SSR_AnnouncementDelay,objoff_38(a0)
-		bra.w	DisplaySprite
-.check_tally:
 		cmpi.b	#2,obFrame(a0)
 		bne.s	loc_BE32
 		addq.b	#2,obRoutine(a0)
@@ -107,28 +116,40 @@ SSR_Display:
 		bra.w	DisplaySprite
 ; ===========================================================================
 
-; The all-seven bank already contains both messages. Only the header moves;
-; the oval, score, gems and Continue retain their own positions and controllers.
+; A single offset keeps the two heading objects synchronized around the oval.
+; The right object only displays; the left owner advances both positions/frames.
 SSR_AnnouncementWait:	; Routine $16
 		subq.w	#1,objoff_38(a0)
 		bne.w	SSR_Display
 		move.b	#$18,obRoutine(a0)
 
 SSR_AnnouncementOut:	; Routine $18
-		subi.w	#$20,obX(a0)	; title-card exit speed, towards the left
-		bgt.w	SSR_Display
-		; At hardware X=0 even the 256-pixel old heading has cleared the screen.
-		clr.w	obX(a0)
+		addi.w	#$20,ssr_splitoffset(a0) ; title-card exit speed, towards opposite edges
+		cmpi.w	#SSR_HeadingExitOffset,ssr_splitoffset(a0)
+		bcs.s	SSR_HeadingPosition
+		; Both old groups are now wholly offscreen. Begin the new pair together.
 		move.b	#SSR_AnnouncementFrame,obFrame(a0)
+		move.b	#SSR_AnnouncementRightFrame,(v_bsresright+obFrame).w
+		move.w	#SSR_HeadingEntryOffset,ssr_splitoffset(a0)
 		move.b	#$1A,obRoutine(a0)
-		rts			; new text is still entirely offscreen
+		bra.s	SSR_HeadingPosition
 
-SSR_AnnouncementIn:	; Routine $1A
-		moveq	#$10,d1		; title-card entry speed
-		move.w	ssr_mainX(a0),d0
-		cmp.w	obX(a0),d0
-		bne.w	SSR_ChgPos
+SSR_AnnouncementIn:	; Routine $1A; initial GOT/THEM ALL and subsequent Super pair
+		subi.w	#$10,ssr_splitoffset(a0) ; title-card entry speed
+		bne.s	SSR_HeadingPosition
 		move.b	#$1C,obRoutine(a0)
+		tst.b	obFrame(a0)
+		bne.s	SSR_HeadingPosition
+		move.b	#$16,obRoutine(a0)
+		move.w	#SSR_AnnouncementDelay,objoff_38(a0)
+
+SSR_HeadingPosition:
+		move.w	ssr_mainX(a0),d0
+		move.w	d0,d1
+		sub.w	ssr_splitoffset(a0),d0
+		add.w	ssr_splitoffset(a0),d1
+		move.w	d0,obX(a0)
+		move.w	d1,(v_bsresright+obX).w
 		bra.w	DisplaySprite
 ; ===========================================================================
 
@@ -196,3 +217,6 @@ SSR_Config:	dc.w $20, $120,	$C4	; start	x-pos, main x-pos, y-pos
 SSR_Config_Continue:
 		dc.w $3A0, $120, $138
 		dc.b 2,	6
+SSR_Config_Right:
+		dc.w $240, $120, $C4	; separate right group, sharing the heading's center
+		dc.b $1C, SSR_HeadingRightFrame

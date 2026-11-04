@@ -238,7 +238,9 @@ FlickyRandom:
 
 Flicky_ChkFloor:
 		tst.b	obRender(a0)
-		bpl.w	DeleteObject
+		bmi.s	.onscreen
+		jmp	(DeleteObject).l
+.onscreen:
 		bsr.w	ObjectMoveAndFall
 		tst.w	obVelY(a0)
 		bmi.w	DisplaySprite

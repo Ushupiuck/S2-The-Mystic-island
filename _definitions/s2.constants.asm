@@ -1016,12 +1016,16 @@ v_lvlobjend	= v_objspace_end
 v_objend	= v_lvlobjend
 
 ; Bonus Stage objects
-v_bsrescard	= v_objspace+object_size*16		; object variable space for the Bonus Stage results card (5 SSTs)
+v_bsrescard	= v_objspace+object_size*16		; object variable space for the Bonus Stage results card (6 SSTs)
 v_bsrestext	= v_bsrescard+object_size*0		; object variable space for the Bonus Stage results card text (1 SST)
 v_bsresscore	= v_bsrescard+object_size*1		; object variable space for the Bonus Stage results card score tally (1 SST)
 v_bsresring	= v_bsrescard+object_size*2		; object variable space for the Bonus Stage results card ring bonus tally (1 SST)
 v_bsresoval	= v_bsrescard+object_size*3		; object variable space for the Bonus Stage results card oval (1 SST)
 v_ssrescontinue	= v_bsrescard+object_size*4		; object variable space for the Bonus Stage results card continue icon (1 SST)
+v_bsresright	= v_bsrescard+object_size*5		; right half of the all-seven heading (1 SST)
+	if v_bsresright+object_size>v_lvlobjspace
+		fatal "The bonus results card overlaps the dynamic object pool."
+	endif
 v_ssresemeralds	= v_objspace+object_size*32		; object variable space for the emeralds in the Bonus Stage results (7 SSTs)
 
 ; Continue screen objects

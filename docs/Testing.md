@@ -1004,9 +1004,11 @@ positions: all-seven success starts at screen Y=24. With at least 50 rings, it
 checks the one-pixel T-I gap in CONTINUE from loaded VRAM and rendered gold ink,
 including both character portraits and both animation poses. All-seven success
 also checks the timed Super announcement, its rendered Y=12/36 lines, both
-headings' centers against the oval, title-card exit/entry speeds, a fully
-offscreen old heading before the swap, the fixed oval and the unchanged
-resident glyph bank. Add `--record-transition` to capture that complete sequence
+headings' centers against the oval, initial two-sided assembly, opposed
+exit/entry speeds, both old halves offscreen before the swap, the fixed oval
+and the unchanged resident glyph bank. Moving white pixels are checked against
+clipped VRAM glyph positions, including the screen edges. Add
+`--record-transition` to capture the opening assembly and complete announcement
 as an emulator GIF. Native checks reject it for failed or partial results and
 verify that it does not enable transformation gameplay.
 `check_card_screens.py --case special --emeralds 6` must show SPECIAL STAGE;

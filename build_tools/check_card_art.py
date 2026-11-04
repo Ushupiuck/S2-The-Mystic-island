@@ -145,13 +145,14 @@ for mode in (0,1,2):
 			state=0 if not collected or not emeralds else 2 if emeralds == 7 else 1
 			scene=72+state*2+(mode == 2)
 			assert m.cpu.reg_read(m68k.UC_M68K_REG_D0) == scene
-			rows=frames(rom,m.cpu.reg_read(m68k.UC_M68K_REG_A3),8)
+			rows=frames(rom,m.cpu.reg_read(m68k.UC_M68K_REG_A3),10)
 			heading_y=struct.unpack_from('>H',rom,m.s['SSR_Config']+4)[0]-128+min(y for y,_,_,_ in rows[0])
 			assert heading_y == (60,44,24)[state], ('Special heading row',state,heading_y)
 			for frame in (4,5,6):
 				assert [x for _,_,_,x in rows[frame][:3]] == [-80,-50,-18], 'CONTINUE lost its T-I kerning'
 			if state==2:
-				assert {y for y,_,_,_ in rows[7]}=={-56,-32}, 'Super announcement lost its two text rows'
+				assert len(rows[0])==8 and len(rows[8])==7, 'GOT/THEM ALL split changed'
+				assert {y for y,_,_,_ in rows[7]}=={-56} and {y for y,_,_,_ in rows[9]}=={-32}, 'Super announcement lost its separate text rows'
 				oval=rows[3]
 				xs=[x for _,_,_,x in oval]+[x+((size>>2)+1)*8 for _,size,_,x in oval]
 				ys=[y for y,_,_,_ in oval]+[y+((size&3)+1)*8 for y,size,_,_ in oval]
@@ -159,51 +160,72 @@ for mode in (0,1,2):
 				oval_center=(ox-128+(min(xs)+max(xs))/2,oy-128+(min(ys)+max(ys))/2)
 				assert oval_center==(160,32)
 				hx,hy=struct.unpack_from('>HH',rom,m.s['SSR_Config']+2)
-				for frame in (0,7):
-					xs=[x for _,_,_,x in rows[frame]]+[x+((size>>2)+1)*8 for _,size,_,x in rows[frame]]
-					ys=[y for y,_,_,_ in rows[frame]]+[y+((size&3)+1)*8 for y,size,_,_ in rows[frame]]
+				for frame,right_frame in ((0,8),(7,9)):
+					joined=rows[frame]+rows[right_frame]
+					xs=[x for _,_,_,x in joined]+[x+((size>>2)+1)*8 for _,size,_,x in joined]
+					ys=[y for y,_,_,_ in joined]+[y+((size&3)+1)*8 for y,size,_,_ in joined]
 					heading_center=(hx-128+(min(xs)+max(xs))/2,hy-128+(min(ys)+max(ys))/2)
 					assert heading_center==oval_center, ('Heading not centered on oval',mode,frame,heading_center,oval_center)
 			else:
-				assert not rows[7], 'An unsuccessful result exposes a Super announcement'
+				assert not any(rows[7:]), 'An unsuccessful result exposes split success headings'
 			assert (rows[2][-2][2]+m.s['ArtTile_Results_Card']) & 0xFFFF == m.s['ArtTile_Bonuses']+5
 			mini=m.s['ArtTile_Mini_Tails'] if mode == 2 else m.s['ArtTile_Mini_Sonic']+18
 			assert (rows[4][-1][2]+m.s['ArtTile_Results_Card']) & 0xFFFF == mini
 			checks.append({'case':'special-heading-and-character-addresses','mode':mode,'emeralds':emeralds,'collected':collected})
 
-for emeralds,collected in ((6,1),(7,0),(7,1)):
+for emeralds,collected in ((6,1),(7,0)):
 	reset()
-	m.write('v_emeralds',emeralds)
-	m.write('v_ss_emerald_collected',collected)
-	for field,value,size in (('obRoutine',2,1),('obFrame',0,1),('obX',0x120,2),
-		('ssr_mainX',0x120,2),('obMap',m.s['Map_SSR_2_0'],4)):
+	m.write('v_emeralds',emeralds);m.write('v_ss_emerald_collected',collected)
+	for field,value,size in (('obRoutine',2,1),('obFrame',0,1),('obX',0x120,2),('ssr_mainX',0x120,2)):
 		m.put(obj,field,value,size)
 	m.act('BonusGotThrough',obj)
-	if emeralds==7 and collected:
-		assert m.get(obj,'obRoutine')==0x16
-		assert m.get(obj,'objoff_38',2)==m.s['SSR_AnnouncementDelay']
-		for tick in range(m.s['SSR_AnnouncementDelay']):
-			m.act('BonusGotThrough',obj)
-			assert m.get(obj,'obFrame')==0, 'Old heading changed before leaving the screen'
-		assert m.get(obj,'obRoutine')==0x18
-		outgoing=[m.get(obj,'obX',2)]
-		while m.get(obj,'obFrame')==0 and len(outgoing)<20:
-			m.act('BonusGotThrough',obj)
-			outgoing.append(m.get(obj,'obX',2))
-		assert outgoing==list(range(0x100,-1,-0x20)), ('Title-card exit motion',outgoing)
-		old=frames(rom,m.get(obj,'obMap',4),8)[0]
-		assert outgoing[-1]-128+max(x+((size>>2)+1)*8 for _,size,_,x in old)<=0
-		assert m.get(obj,'obFrame')==7 and m.get(obj,'obRoutine')==0x1A
-		incoming=[m.get(obj,'obX',2)]
-		for tick in range(19):
-			m.act('BonusGotThrough',obj)
-			incoming.append(m.get(obj,'obX',2))
-		assert incoming==list(range(0,0x121,0x10))+[0x120], ('Title-card entry motion',incoming)
-		assert m.get(obj,'obRoutine')==0x1C
-		assert not m.read('Super_Sonic_flag'), 'UI announcement enabled transformation gameplay'
-	else:
-		assert m.get(obj,'obRoutine')==2 and m.get(obj,'obFrame')==0
-	checks.append({'case':'all-seven-announcement-timer','emeralds':emeralds,'collected':collected})
+	assert m.get(obj,'obRoutine')==2 and not m.get('v_bsresright','code')
+	checks.append({'case':'no-split-heading-for-other-outcomes','emeralds':emeralds,'collected':collected})
+
+for mode in (0,1,2):
+	for rings in (0,122):
+		reset()
+		m.write('Player_mode',mode,2);m.write('v_emeralds',7);m.write('v_ss_emerald_collected',1)
+		m.write('v_rings',rings,2)
+		header=m.s['v_bsrestext'];right=m.s['v_bsresright']
+		m.act('SSR_Main',header)
+		assert right+m.s['object_size']<=m.s['v_lvlobjspace']
+		assert m.get('v_bsresoval','obPriority',2)>m.get(right,'obPriority',2), 'Oval covers the right heading group'
+		assert m.get(right,'obFrame')==8 and m.get(right,'obRoutine')==0x1C
+		assert bool(m.get('v_ssrescontinue','code'))==(rings>=50)
+		assert all(m.get(actor,'obRender') & 1<<m.s['obRender.explicit_height'] for actor in (header,right)), 'Split glyphs can wrap at VDP X boundaries'
+		entry=[]
+		for tick in range(18):
+			entry.append((m.get(header,'obX',2),m.get(right,'obX',2)))
+			if tick<17:m.act('BonusGotThrough',header)
+		assert entry==[(x,0x240-x) for x in range(16,0x121,16)], ('Opposed initial assembly',entry)
+		assert m.get(header,'obRoutine')==0x16 and m.get(header,'objoff_38',2)==m.s['SSR_AnnouncementDelay']
+		oval=(m.get('v_bsresoval','obX',2),m.get('v_bsresoval','obScreenY',2))
+		for tick in range(m.s['SSR_AnnouncementDelay']-1):
+			m.act('BonusGotThrough',header)
+			assert (m.get(header,'obFrame'),m.get(right,'obFrame'))==(0,8)
+			assert m.get(header,'obX',2)==m.get(right,'obX',2)==0x120
+		outgoing=[]
+		for tick in range(5):
+			m.act('BonusGotThrough',header)
+			outgoing.append((m.get(header,'obX',2),m.get(right,'obX',2)))
+		assert outgoing==[(0x120-i*32,0x120+i*32) for i in range(1,5)]+[(0,0x240)]
+		rows=frames(rom,m.get(header,'obMap',4),10)
+		left_edge=max(x+((size>>2)+1)*8 for _,size,_,x in rows[0])
+		right_edge=min(x for _,_,_,x in rows[8])
+		assert 0x120-160-128+left_edge<=0 and 0x120+160-128+right_edge>=320
+		assert 0x120-128-128+left_edge>0 or 0x120+128-128+right_edge<320, 'Transition waited after the old pair cleared'
+		assert (m.get(header,'obFrame'),m.get(right,'obFrame'))==(7,9)
+		incoming=[(m.get(header,'obX',2),m.get(right,'obX',2))]
+		for tick in range(18):
+			m.act('BonusGotThrough',header)
+			incoming.append((m.get(header,'obX',2),m.get(right,'obX',2)))
+		assert incoming==[(x,0x240-x) for x in range(0,0x121,16)], ('Opposed Super entry',incoming)
+		assert m.get(header,'obRoutine')==0x1C
+		assert (m.get('v_bsresoval','obX',2),m.get('v_bsresoval','obScreenY',2))==oval
+		assert not m.read('Super_Sonic_flag')
+		checks.append({'case':'opposed-heading-assembly-and-announcement','mode':mode,'rings':rings})
+
 
 
 def render(data,pieces):

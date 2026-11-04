@@ -74,7 +74,7 @@ def assert_ink_color(actor, frame, pieces, count, expected=0x0EE):
 
 
 def text_pixels(actor, frame, selected=None):
-	rows=frames(rom,g.get(actor,'obMap',4),8)[frame]
+	rows=frames(rom,g.get(actor,'obMap',4),10)[frame]
 	base=g.get(actor,'obGfx',2)
 	ax=g.get(actor,'obX',2)-128
 	ay=g.get(actor,'obScreenY',2)-128
@@ -99,12 +99,13 @@ def text_pixels(actor, frame, selected=None):
 
 def assert_special_heading(state,announcement=False):
 	frame=7 if announcement else 0
-	rows=frames(rom,g.get('v_endcard','obMap',4),8)[frame]
+	rows=frames(rom,g.get('v_endcard','obMap',4),10)[frame]
 	top=g.get('v_endcard','obScreenY',2)-128+min(y for y,_,_,_ in rows)
 	assert top == (12 if announcement else (60,44,24)[state]), ('Heading height',state,top)
 	pixels=text_pixels('v_endcard',frame)
 	if state==2:
-		oval=frames(rom,g.get('v_bsresoval','obMap',4),8)[3]
+		pixels+=text_pixels('v_bsresright',9 if announcement else 8)
+		oval=frames(rom,g.get('v_bsresoval','obMap',4),10)[3]
 		xs=[x for _,_,_,x in oval]+[x+((size>>2)+1)*8 for _,size,_,x in oval]
 		ys=[y for y,_,_,_ in oval]+[y+((size&3)+1)*8 for y,size,_,_ in oval]
 		oval_center=(g.get('v_bsresoval','obX',2)-128+(min(xs)+max(xs))/2,
@@ -119,6 +120,18 @@ def assert_special_heading(state,announcement=False):
 	for x,y in white[::max(1,len(white)//20)]:
 		assert min(g.video.getpixel((x,y)))>=224, ('Heading not rendered at its mapping position',x,y)
 	return top
+
+
+def heading_ink():
+	return {(x,y) for actor in ('v_bsrestext','v_bsresright')
+		for _,_,x,y,color in text_pixels(actor,g.get(actor,'obFrame'))
+		if color==6 and 0<=x<320 and 0<=y<80}
+
+
+def assert_heading_video(expected):
+	actual={(i%320,i//320) for i,rgb in enumerate(g.video.crop((0,0,320,80)).getdata()) if min(rgb)>=224}
+	assert actual==expected, ('Moving heading pixels differ from their clipped mapping positions',
+		len(actual-expected),len(expected-actual),g.frame)
 
 
 def assert_continue_spacing():
@@ -307,7 +320,16 @@ else:
 	state=0 if not args.collected or not args.emeralds else 2 if args.emeralds==7 else 1
 	if args.record_transition and state==2:
 		transition_state=g.save()
-	step(80)
+	entry=[]
+	for _ in range(80):
+		if state==2:
+			entry.append((g.get('v_endcard','obX',2),g.get('v_bsresright','obX',2)))
+			expected=heading_ink()
+		step()
+		if state==2:assert_heading_video(expected)
+	if state==2:
+		assert entry[:18]==[(x,576-x) for x in range(16,289,16)], ('Initial two-sided assembly',entry[:18])
+		report['opposed_initial_assembly']=True
 	assert_card(72+state*2+(args.player==2));assert_bonus();assert_score()
 	assert g.get('v_endcard','obMap',4)==g.s[f'Map_SSR_{state}_{int(args.player==2)}']
 	heading_top=assert_special_heading(state)
@@ -320,28 +342,32 @@ else:
 		g.video.save(args.output/'got-them-all.png')
 		oval_position=(g.get('v_bsresoval','obX',2),g.get('v_bsresoval','obScreenY',2))
 		main_x=g.get('v_endcard','ssr_mainX',2)
-		old=frames(rom,g.get('v_endcard','obMap',4),8)[0]
-		old_right=max(x+((size>>2)+1)*8 for _,size,_,x in old)
+		rows=frames(rom,g.get('v_endcard','obMap',4),10)
+		old_left_right=max(x+((size>>2)+1)*8 for _,size,_,x in rows[0])
+		old_right_left=min(x for _,_,_,x in rows[8])
 		outgoing=[];incoming=[]
 		for _ in range(g.s['SSR_AnnouncementDelay']+60):
-			step()
+			expected=heading_ink()
+			step();assert_heading_video(expected)
 			assert (g.get('v_bsresoval','obX',2),g.get('v_bsresoval','obScreenY',2))==oval_position, 'Oval moved with its departing heading'
 			assert_card(76+(args.player==2))
-			frame=g.get('v_endcard','obFrame');x=g.get('v_endcard','obX',2)
+			frame=g.get('v_endcard','obFrame');x=g.get('v_endcard','obX',2);right_x=g.get('v_bsresright','obX',2)
 			if frame==0 and x!=main_x:
-				outgoing.append(x)
+				outgoing.append((x,right_x))
 			elif frame==7:
+				assert g.get('v_bsresright','obFrame')==9
 				if not incoming:
-					assert x-128+old_right<=0, 'New heading started before old text cleared the screen'
-				incoming.append(x)
-				if x==main_x:
+					left,right=outgoing[-1]
+					assert left-32-128+old_left_right<=0 and right+32-128+old_right_left>=320, 'New heading started before both old groups cleared'
+				incoming.append((x,right_x))
+				if x==right_x==main_x:
 					break
 		else:
 			raise AssertionError('All-seven heading did not finish its Super announcement transition')
-		assert outgoing==list(range(main_x-32,0,-32)), ('Outgoing heading path',outgoing)
-		assert incoming==list(range(0,main_x+1,16)), ('Incoming heading path',incoming)
+		assert outgoing==[(main_x-i*32,main_x+i*32) for i in range(1,5)], ('Opposed outgoing path',outgoing)
+		assert incoming==[(x,2*main_x-x) for x in range(0,main_x+1,16)], ('Opposed incoming path',incoming)
 		report['announcement_motion']={'exit_pixels_per_update':32,'entry_pixels_per_update':16,
-			'old_clears_before_new':True,'oval_stays_put':True}
+			'old_clears_before_new':True,'oval_stays_put':True,'opposed_groups':True}
 		step()  # present the settled new header's SAT
 		# Capture the visible half of the existing emerald blink for review.
 		for _ in range(4):
@@ -385,27 +411,24 @@ else:
 				break
 		else:
 			raise AssertionError('Super announcement stalled the normal results exit')
+		assert not g.get('v_bsresright','code'), 'Split heading survived the return to gameplay'
 		report['returns_to_level']=True
+		report['split_heading_retired']=True
 	report.update(emeralds=args.emeralds,collected=args.collected,rings=args.rings,continue_poses=sorted(poses),
 		heading_top=heading_top,continue_gap=continue_gap if args.rings>=50 else None,super_announcement=announcement)
 
 if args.record_transition:
 	assert transition_state is not None, '--record-transition requires a collected seventh emerald result'
 	g.restore(transition_state)
-	for _ in range(40):
-		step()
-		if g.get('v_endcard','obX',2)==g.get('v_endcard','ssr_mainX',2):
-			break
-	else:
-		raise AssertionError('Preview heading did not settle')
-	step()  # present the settled old heading before recording
+	step()  # present the opening assembly, including both approaching groups
 	images=[g.video.copy()]
-	for tick in range(1,360):
+	for tick in range(1,420):
 		step()
-		if not tick%3:
+		if not tick%2:
 			images.append(g.video.copy())
+	durations=[40]*len(images) if args.pal else [10*((i+1)*100//30-i*100//30) for i in range(len(images))]
 	images[0].save(args.output/'announcement-transition.gif',save_all=True,
-		append_images=images[1:],duration=60 if args.pal else 50,loop=0,optimize=True)
+		append_images=images[1:],duration=durations,loop=0,optimize=True)
 	report['transition_recording_frames']=len(images)
 
 report['passed']=True

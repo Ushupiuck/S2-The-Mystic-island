@@ -287,8 +287,16 @@ Map_Results_ContinueText = make_art_tile(ArtTile_Mini_Sonic,1,0)-ArtTile_Results
 				announcement += [(y-24,size,word,x) for y,size,word,x in lettering('SUPER '+character,space=8)]
 				# Both headings share the oval's screen center at (160,32).
 				oval = [(y-28,size,word,x+4) for y,size,word,x in OVAL]
-			# Both headings are resident together: the timed swap needs no DMA.
+			# Keep the shared bank's tile order while assigning independently moving halves.
 			order, lookup = pack(special_common,text+announcement)
+			right_text = []
+			right_announcement = []
+			if state == 2:
+				# The complete old line keeps its original spacing and center.
+				left_glyphs = len(character+'GOT')
+				right_text, text = text[left_glyphs:], text[:left_glyphs]
+				right_announcement = [piece for piece in announcement if piece[0] == -32]
+				announcement = [piece for piece in announcement if piece[0] == -56]
 			scenes.append((name,order))
 			score, bonus = fixed(lookup,special=True,tails=tails)
 			mini = 'ArtTile_Mini_Tails' if tails else 'ArtTile_Mini_Sonic+18'
@@ -299,7 +307,8 @@ Map_Results_ContinueText = make_art_tile(ArtTile_Mini_Sonic,1,0)-ArtTile_Results
 			frames = [mapped(text,lookup),score,bonus(False),mapped(oval,lookup),
 					  continues+[row(-8,6,f'make_art_tile({mini},0,0)-ArtTile_Results_Card',64)],
 					  continues+[row(-8,6,f'make_art_tile({mini}+6,0,0)-ArtTile_Results_Card',64)],
-					  continues,mapped(announcement,lookup)]
+					  continues,mapped(announcement,lookup),
+					  mapped(right_text,lookup),mapped(right_announcement,lookup)]
 			special_output.append(emit_table(f'Map_SSR_{state}_{int(tails)}',frames,name))
 	special_output.append('Card_SS_MapPointers:\n')
 	for state in range(3):
