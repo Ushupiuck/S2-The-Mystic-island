@@ -151,11 +151,19 @@ for mode in (0,1,2):
 			for frame in (4,5,6):
 				assert [x for _,_,_,x in rows[frame][:3]] == [-80,-50,-18], 'CONTINUE lost its T-I kerning'
 			if state==2:
-				assert {y for y,_,_,_ in rows[7]}=={-44,-20}, 'Super announcement lost its two text rows'
+				assert {y for y,_,_,_ in rows[7]}=={-56,-32}, 'Super announcement lost its two text rows'
 				oval=rows[3]
 				xs=[x for _,_,_,x in oval]+[x+((size>>2)+1)*8 for _,size,_,x in oval]
 				ys=[y for y,_,_,_ in oval]+[y+((size&3)+1)*8 for y,size,_,_ in oval]
-				assert (156+(min(xs)+max(xs))/2,60+(min(ys)+max(ys))/2)==(160,32)
+				ox,oy=struct.unpack_from('>HH',rom,m.s['SSR_Config']+3*8+2)
+				oval_center=(ox-128+(min(xs)+max(xs))/2,oy-128+(min(ys)+max(ys))/2)
+				assert oval_center==(160,32)
+				hx,hy=struct.unpack_from('>HH',rom,m.s['SSR_Config']+2)
+				for frame in (0,7):
+					xs=[x for _,_,_,x in rows[frame]]+[x+((size>>2)+1)*8 for _,size,_,x in rows[frame]]
+					ys=[y for y,_,_,_ in rows[frame]]+[y+((size&3)+1)*8 for y,size,_,_ in rows[frame]]
+					heading_center=(hx-128+(min(xs)+max(xs))/2,hy-128+(min(ys)+max(ys))/2)
+					assert heading_center==oval_center, ('Heading not centered on oval',mode,frame,heading_center,oval_center)
 			else:
 				assert not rows[7], 'An unsuccessful result exposes a Super announcement'
 			assert (rows[2][-2][2]+m.s['ArtTile_Results_Card']) & 0xFFFF == m.s['ArtTile_Bonuses']+5
@@ -176,8 +184,22 @@ for emeralds,collected in ((6,1),(7,0),(7,1)):
 		assert m.get(obj,'objoff_38',2)==m.s['SSR_AnnouncementDelay']
 		for tick in range(m.s['SSR_AnnouncementDelay']):
 			m.act('BonusGotThrough',obj)
-			assert m.get(obj,'obFrame')==(7 if tick==m.s['SSR_AnnouncementDelay']-1 else 0)
+			assert m.get(obj,'obFrame')==0, 'Old heading changed before leaving the screen'
 		assert m.get(obj,'obRoutine')==0x18
+		outgoing=[m.get(obj,'obX',2)]
+		while m.get(obj,'obFrame')==0 and len(outgoing)<20:
+			m.act('BonusGotThrough',obj)
+			outgoing.append(m.get(obj,'obX',2))
+		assert outgoing==list(range(0x100,-1,-0x20)), ('Title-card exit motion',outgoing)
+		old=frames(rom,m.get(obj,'obMap',4),8)[0]
+		assert outgoing[-1]-128+max(x+((size>>2)+1)*8 for _,size,_,x in old)<=0
+		assert m.get(obj,'obFrame')==7 and m.get(obj,'obRoutine')==0x1A
+		incoming=[m.get(obj,'obX',2)]
+		for tick in range(19):
+			m.act('BonusGotThrough',obj)
+			incoming.append(m.get(obj,'obX',2))
+		assert incoming==list(range(0,0x121,0x10))+[0x120], ('Title-card entry motion',incoming)
+		assert m.get(obj,'obRoutine')==0x1C
 		assert not m.read('Super_Sonic_flag'), 'UI announcement enabled transformation gameplay'
 	else:
 		assert m.get(obj,'obRoutine')==2 and m.get(obj,'obFrame')==0

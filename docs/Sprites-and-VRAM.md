@@ -362,8 +362,12 @@ lower edge clear of the blue emerald.
 The all-seven success heading starts at screen Y=24, matching S3&K's `$98`
 text row; its glyph mappings move up 36 pixels from the shared `$C4` anchor.
 Its oval is centered at screen `(160,32)`. After a 180-update hold, the same
-header displays CHARACTER CAN NOW BE / SUPER CHARACTER at Y=24/48. Both
-messages share the resident all-seven bank, so the change needs no upload.
+header displays CHARACTER CAN NOW BE / SUPER CHARACTER at Y=12/36, centering
+the complete two-line message on the same oval. The old heading exits left
+at 32 pixels per update, then the new one enters from the left at 16, matching
+the title cards. The frame switches only once the old text is wholly offscreen;
+the oval stays fixed. Both messages share the resident all-seven bank, so the
+change needs no upload.
 This is the announcement UI; Super transformation gameplay remains unfinished.
 CONTINUE pulls its INUE mapping pieces two pixels left, leaving one clear pixel
 between T and I. The existing shared glyph art and 18-tile word bank stay in use.

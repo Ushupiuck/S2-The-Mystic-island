@@ -1003,9 +1003,12 @@ fixtures, not controller-only full-stage routes.
 positions: all-seven success starts at screen Y=24. With at least 50 rings, it
 checks the one-pixel T-I gap in CONTINUE from loaded VRAM and rendered gold ink,
 including both character portraits and both animation poses. All-seven success
-also checks the timed Super announcement, its rendered Y=24/48 lines and the
-unchanged resident glyph bank; native checks reject it for failed or partial
-results and verify that it does not enable transformation gameplay.
+also checks the timed Super announcement, its rendered Y=12/36 lines, both
+headings' centers against the oval, title-card exit/entry speeds, a fully
+offscreen old heading before the swap, the fixed oval and the unchanged
+resident glyph bank. Add `--record-transition` to capture that complete sequence
+as an emulator GIF. Native checks reject it for failed or partial results and
+verify that it does not enable transformation gameplay.
 `check_card_screens.py --case special --emeralds 6` must show SPECIAL STAGE;
 add `--collected` for the character-specific successful heading, or use seven
 with that flag for GOT THEM ALL. `check_card_art.py` executes all 600 displayed

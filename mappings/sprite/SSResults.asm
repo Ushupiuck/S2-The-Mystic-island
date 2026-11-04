@@ -369,29 +369,29 @@ Map_SSR_2_0_6: dc.w 3
 		dc.w $F80D, Map_Results_ContinueText+8, $FFCE
 		dc.w $F801, Map_Results_ContinueText+16, $FFEE
 Map_SSR_2_0_7: dc.w 23
-		dc.w $D405, $48, $FF8C
-		dc.w $D405, $3C, $FF9C
-		dc.w $D405, $38, $FFAC
-		dc.w $D401, $2E, $FFBC
-		dc.w $D405, $1E, $FFC4
-		dc.w $D405, $1E, $FFDC
-		dc.w $D405, $16, $FFEC
-		dc.w $D405, $38, $FFFC
-		dc.w $D405, $38, $0014
-		dc.w $D405, $3C, $0024
-		dc.w $D409, $54, $0034
-		dc.w $D405, $1A, $0054
-		dc.w $D405, $22, $0064
-		dc.w $EC05, $48, $FFB0
-		dc.w $EC05, $50, $FFC0
-		dc.w $EC05, $40, $FFD0
-		dc.w $EC05, $22, $FFE0
-		dc.w $EC05, $44, $FFF0
-		dc.w $EC05, $48, $0008
-		dc.w $EC05, $3C, $0018
-		dc.w $EC05, $38, $0028
-		dc.w $EC01, $2E, $0038
-		dc.w $EC05, $1E, $0040
+		dc.w $C805, $48, $FF8C
+		dc.w $C805, $3C, $FF9C
+		dc.w $C805, $38, $FFAC
+		dc.w $C801, $2E, $FFBC
+		dc.w $C805, $1E, $FFC4
+		dc.w $C805, $1E, $FFDC
+		dc.w $C805, $16, $FFEC
+		dc.w $C805, $38, $FFFC
+		dc.w $C805, $38, $0014
+		dc.w $C805, $3C, $0024
+		dc.w $C809, $54, $0034
+		dc.w $C805, $1A, $0054
+		dc.w $C805, $22, $0064
+		dc.w $E005, $48, $FFB0
+		dc.w $E005, $50, $FFC0
+		dc.w $E005, $40, $FFD0
+		dc.w $E005, $22, $FFE0
+		dc.w $E005, $44, $FFF0
+		dc.w $E005, $48, $0008
+		dc.w $E005, $3C, $0018
+		dc.w $E005, $38, $0028
+		dc.w $E001, $2E, $0038
+		dc.w $E005, $1E, $0040
 		even
 Map_SSR_2_1: ; TAILS GOT THEM ALL
 		dc.w Map_SSR_2_1_0-Map_SSR_2_1
@@ -465,29 +465,29 @@ Map_SSR_2_1_6: dc.w 3
 		dc.w $F80D, Map_Results_ContinueText+8, $FFCE
 		dc.w $F801, Map_Results_ContinueText+16, $FFEE
 Map_SSR_2_1_7: dc.w 23
-		dc.w $D405, $4C, $FF8C
-		dc.w $D405, $16, $FF9C
-		dc.w $D401, $2E, $FFAC
-		dc.w $D405, $30, $FFB4
-		dc.w $D405, $48, $FFC4
-		dc.w $D405, $1E, $FFDC
-		dc.w $D405, $16, $FFEC
-		dc.w $D405, $38, $FFFC
-		dc.w $D405, $38, $0014
-		dc.w $D405, $3C, $0024
-		dc.w $D409, $54, $0034
-		dc.w $D405, $1A, $0054
-		dc.w $D405, $22, $0064
-		dc.w $EC05, $48, $FFB0
-		dc.w $EC05, $50, $FFC0
-		dc.w $EC05, $40, $FFD0
-		dc.w $EC05, $22, $FFE0
-		dc.w $EC05, $44, $FFF0
-		dc.w $EC05, $4C, $0008
-		dc.w $EC05, $16, $0018
-		dc.w $EC01, $2E, $0028
-		dc.w $EC05, $30, $0030
-		dc.w $EC05, $48, $0040
+		dc.w $C805, $4C, $FF8C
+		dc.w $C805, $16, $FF9C
+		dc.w $C801, $2E, $FFAC
+		dc.w $C805, $30, $FFB4
+		dc.w $C805, $48, $FFC4
+		dc.w $C805, $1E, $FFDC
+		dc.w $C805, $16, $FFEC
+		dc.w $C805, $38, $FFFC
+		dc.w $C805, $38, $0014
+		dc.w $C805, $3C, $0024
+		dc.w $C809, $54, $0034
+		dc.w $C805, $1A, $0054
+		dc.w $C805, $22, $0064
+		dc.w $E005, $48, $FFB0
+		dc.w $E005, $50, $FFC0
+		dc.w $E005, $40, $FFD0
+		dc.w $E005, $22, $FFE0
+		dc.w $E005, $44, $FFF0
+		dc.w $E005, $4C, $0008
+		dc.w $E005, $16, $0018
+		dc.w $E001, $2E, $0028
+		dc.w $E005, $30, $0030
+		dc.w $E005, $48, $0040
 		even
 Card_SS_MapPointers:
 		dc.l Map_SSR_0_0

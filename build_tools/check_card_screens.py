@@ -25,10 +25,12 @@ p.add_argument('--rings',type=int,default=122)
 p.add_argument('--time-seconds',type=int,choices=range(600),default=112)
 p.add_argument('--collected',action='store_true',help='Stage a successful emerald result for typography/VRAM checks')
 p.add_argument('--pal',action='store_true')
+p.add_argument('--record-transition',action='store_true',help='Record the complete all-seven heading transition as an emulator GIF')
 p.add_argument('--system-directory',type=Path)
 args=p.parse_args()
 g=Genesis(args.core,args.rom,args.listing,args.output,args.pal,system_directory=args.system_directory)
 rom=args.rom.read_bytes()
+transition_state=None
 report={'case':args.case,'player_mode':args.player,'pal':args.pal,
 		'natural_playthrough':False,'companion_ai_run':False}
 
@@ -99,8 +101,20 @@ def assert_special_heading(state,announcement=False):
 	frame=7 if announcement else 0
 	rows=frames(rom,g.get('v_endcard','obMap',4),8)[frame]
 	top=g.get('v_endcard','obScreenY',2)-128+min(y for y,_,_,_ in rows)
-	assert top == (24 if announcement else (60,44,24)[state]), ('Heading height',state,top)
-	white=[(x,y) for _,_,x,y,color in text_pixels('v_endcard',frame) if color==6]
+	assert top == (12 if announcement else (60,44,24)[state]), ('Heading height',state,top)
+	pixels=text_pixels('v_endcard',frame)
+	if state==2:
+		oval=frames(rom,g.get('v_bsresoval','obMap',4),8)[3]
+		xs=[x for _,_,_,x in oval]+[x+((size>>2)+1)*8 for _,size,_,x in oval]
+		ys=[y for y,_,_,_ in oval]+[y+((size&3)+1)*8 for y,size,_,_ in oval]
+		oval_center=(g.get('v_bsresoval','obX',2)-128+(min(xs)+max(xs))/2,
+			g.get('v_bsresoval','obScreenY',2)-128+(min(ys)+max(ys))/2)
+		xs=[x for _,_,x,_,_ in pixels];ys=[y for _,_,_,y,_ in pixels]
+		ink_center=((min(xs)+max(xs)+1)/2,(min(ys)+max(ys)+1)/2)
+		# Native checks also center the complete glyph rectangles exactly; ink
+		# side bearings differ by up to one pixel between the original letters.
+		assert abs(ink_center[0]-oval_center[0])<=1 and ink_center[1]==oval_center[1], ('Heading ink not centered on oval',frame,ink_center,oval_center)
+	white=[(x,y) for _,_,x,y,color in pixels if color==6]
 	assert white, 'Heading has no white ink'
 	for x,y in white[::max(1,len(white)//20)]:
 		assert min(g.video.getpixel((x,y)))>=224, ('Heading not rendered at its mapping position',x,y)
@@ -290,8 +304,10 @@ else:
 			break
 	else:
 		raise AssertionError('Special results did not start')
-	step(80)
 	state=0 if not args.collected or not args.emeralds else 2 if args.emeralds==7 else 1
+	if args.record_transition and state==2:
+		transition_state=g.save()
+	step(80)
 	assert_card(72+state*2+(args.player==2));assert_bonus();assert_score()
 	assert g.get('v_endcard','obMap',4)==g.s[f'Map_SSR_{state}_{int(args.player==2)}']
 	heading_top=assert_special_heading(state)
@@ -302,13 +318,31 @@ else:
 	announcement=False
 	if state==2:
 		g.video.save(args.output/'got-them-all.png')
-		for _ in range(g.s['SSR_AnnouncementDelay']+2):
+		oval_position=(g.get('v_bsresoval','obX',2),g.get('v_bsresoval','obScreenY',2))
+		main_x=g.get('v_endcard','ssr_mainX',2)
+		old=frames(rom,g.get('v_endcard','obMap',4),8)[0]
+		old_right=max(x+((size>>2)+1)*8 for _,size,_,x in old)
+		outgoing=[];incoming=[]
+		for _ in range(g.s['SSR_AnnouncementDelay']+60):
 			step()
-			if g.get('v_endcard','obFrame')==7:
-				break
+			assert (g.get('v_bsresoval','obX',2),g.get('v_bsresoval','obScreenY',2))==oval_position, 'Oval moved with its departing heading'
+			assert_card(76+(args.player==2))
+			frame=g.get('v_endcard','obFrame');x=g.get('v_endcard','obX',2)
+			if frame==0 and x!=main_x:
+				outgoing.append(x)
+			elif frame==7:
+				if not incoming:
+					assert x-128+old_right<=0, 'New heading started before old text cleared the screen'
+				incoming.append(x)
+				if x==main_x:
+					break
 		else:
-			raise AssertionError('All-seven heading did not advance to the Super announcement')
-		step()  # present the new header's SAT
+			raise AssertionError('All-seven heading did not finish its Super announcement transition')
+		assert outgoing==list(range(main_x-32,0,-32)), ('Outgoing heading path',outgoing)
+		assert incoming==list(range(0,main_x+1,16)), ('Incoming heading path',incoming)
+		report['announcement_motion']={'exit_pixels_per_update':32,'entry_pixels_per_update':16,
+			'old_clears_before_new':True,'oval_stays_put':True}
+		step()  # present the settled new header's SAT
 		# Capture the visible half of the existing emerald blink for review.
 		for _ in range(4):
 			backdrop=g.video.getpixel((0,80))
@@ -354,6 +388,25 @@ else:
 		report['returns_to_level']=True
 	report.update(emeralds=args.emeralds,collected=args.collected,rings=args.rings,continue_poses=sorted(poses),
 		heading_top=heading_top,continue_gap=continue_gap if args.rings>=50 else None,super_announcement=announcement)
+
+if args.record_transition:
+	assert transition_state is not None, '--record-transition requires a collected seventh emerald result'
+	g.restore(transition_state)
+	for _ in range(40):
+		step()
+		if g.get('v_endcard','obX',2)==g.get('v_endcard','ssr_mainX',2):
+			break
+	else:
+		raise AssertionError('Preview heading did not settle')
+	step()  # present the settled old heading before recording
+	images=[g.video.copy()]
+	for tick in range(1,360):
+		step()
+		if not tick%3:
+			images.append(g.video.copy())
+	images[0].save(args.output/'announcement-transition.gif',save_all=True,
+		append_images=images[1:],duration=60 if args.pal else 50,loop=0,optimize=True)
+	report['transition_recording_frames']=len(images)
 
 report['passed']=True
 (args.output/'report.json').write_text(json.dumps(report,indent=2)+'\n')

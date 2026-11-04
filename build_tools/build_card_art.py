@@ -282,9 +282,10 @@ Map_Results_ContinueText = make_art_tile(ArtTile_Mini_Sonic,1,0)-ArtTile_Results
 			announcement = []
 			oval = OVAL
 			if state == 2:
-				announcement = [(y-36,size,word,x) for y,size,word,x in lettering(character+' CAN NOW BE',space=8)]
-				announcement += [(y-12,size,word,x) for y,size,word,x in lettering('SUPER '+character,space=8)]
-				# Center the oval at screen (160,32), behind the raised first line.
+				# Center the complete 40-pixel announcement on the oval, not its first line.
+				announcement = [(y-48,size,word,x) for y,size,word,x in lettering(character+' CAN NOW BE',space=8)]
+				announcement += [(y-24,size,word,x) for y,size,word,x in lettering('SUPER '+character,space=8)]
+				# Both headings share the oval's screen center at (160,32).
 				oval = [(y-28,size,word,x+4) for y,size,word,x in OVAL]
 			# Both headings are resident together: the timed swap needs no DMA.
 			order, lookup = pack(special_common,text+announcement)

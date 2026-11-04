@@ -20,11 +20,13 @@ SSR_Index:	dc.w SSR_ChkPLC-SSR_Index
 		dc.w SSR_Exit-SSR_Index
 		dc.w loc_BEF2-SSR_Index
 		dc.w SSR_AnnouncementWait-SSR_Index
+		dc.w SSR_AnnouncementOut-SSR_Index
+		dc.w SSR_AnnouncementIn-SSR_Index
 		dc.w SSR_Display-SSR_Index
 
 ssr_mainX = objoff_34	; position for card to display on
 SSR_AnnouncementFrame = 7
-SSR_AnnouncementDelay = 180	; all-seven heading holds three seconds before the UI-only announcement
+SSR_AnnouncementDelay = 180	; updates before the UI-only heading transition
 ; ===========================================================================
 
 SSR_ChkPLC:	; Routine 0
@@ -105,13 +107,28 @@ SSR_Display:
 		bra.w	DisplaySprite
 ; ===========================================================================
 
-; The all-seven bank already contains both messages. Only the header changes;
-; score, gems and the Continue controller retain their own timers and mappings.
+; The all-seven bank already contains both messages. Only the header moves;
+; the oval, score, gems and Continue retain their own positions and controllers.
 SSR_AnnouncementWait:	; Routine $16
 		subq.w	#1,objoff_38(a0)
 		bne.w	SSR_Display
-		move.b	#SSR_AnnouncementFrame,obFrame(a0)
 		move.b	#$18,obRoutine(a0)
+
+SSR_AnnouncementOut:	; Routine $18
+		subi.w	#$20,obX(a0)	; title-card exit speed, towards the left
+		bgt.w	SSR_Display
+		; At hardware X=0 even the 256-pixel old heading has cleared the screen.
+		clr.w	obX(a0)
+		move.b	#SSR_AnnouncementFrame,obFrame(a0)
+		move.b	#$1A,obRoutine(a0)
+		rts			; new text is still entirely offscreen
+
+SSR_AnnouncementIn:	; Routine $1A
+		moveq	#$10,d1		; title-card entry speed
+		move.w	ssr_mainX(a0),d0
+		cmp.w	obX(a0),d0
+		bne.w	SSR_ChgPos
+		move.b	#$1C,obRoutine(a0)
 		bra.w	DisplaySprite
 ; ===========================================================================
 
