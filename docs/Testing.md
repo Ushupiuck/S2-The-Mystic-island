@@ -602,12 +602,19 @@ fixture ends after docking/rendering rather than driving into its ordinary
 level geometry.
 
 Act 2 runs the fight in its authored arena: both turnarounds, eight actual
-rolling collisions, hit-palette restoration, score, breakup, eight flame-off
-hop pixels, the burnt face through the hop, panic at ignition, departure,
+rolling collisions, hit-palette restoration, score, breakup, the complete
+48-pixel flame-off lift with no horizontal movement, a stationary chassis and
+at least 16 clear pixels beneath the pod at ignition. It also checks the burnt
+face through the lift, panic at ignition, departure,
 parent cleanup, capsule switch and
 animal release. Players are positioned for each attack; damage is produced
 by the real collision code. These are staged gameplay checks, not full
-controller-only routes. `--pal` selects PAL; `--player 2` selects primary Tails;
+controller-only routes.
+
+A frozen chassis is also placed over a real foreground flower in both
+facings. A low-priority control must be covered by the flower; the initialized
+chassis must draw its opaque white pixel in front. All boss parts must retain
+high VDP priority. `--pal` selects PAL; `--player 2` selects primary Tails;
 `--act 0` / `--act 1` restrict the run. Captures stay in the supplied ignored
 output directory. The shared-art runner's `--core` mode uses the same checks.
 

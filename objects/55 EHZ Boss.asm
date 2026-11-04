@@ -5,6 +5,7 @@
 ; Stage/placement X,Y specify the landing anchor; origin deltas preserve the
 ; final choreography when this boss is used as the existing MZ placeholder.
 ; Display half-height uses height_pixels; collision radii are separate.
+; High VDP sprite priority keeps every part in front of foreground flowers.
 ; ---------------------------------------------------------------------------
 EHZBoss_saved_metal_color = objoff_34	; row-two slot C before the boss
 EHZBoss_flash_color = objoff_36	; original hit-flash color; unused word before child pointer
@@ -15,7 +16,7 @@ EHZBoss_LandingY = $71E
 EHZBoss_ApproachX = EHZBoss_LandingX+$120
 EHZBoss_ApproachY = EHZBoss_LandingY-$120
 EHZBoss_PodDrawY = -4
-EHZBoss_EscapeHop = 8
+EHZBoss_EscapeHop = $30	; clear the chassis by a visible pod-height rise
 EHZBoss_LeftTurn = $28A0
 EHZBoss_RightTurn = $2B08
 EHZBoss_CameraLeft = $28F0
@@ -82,7 +83,7 @@ EHZBoss_Init:
 	subi.w	#EHZBoss_LandingY+8,EHZBoss_origin_y(a0)
 	move.l	#Map_EHZBoss_Vehicle,obMap(a0)	; main object
 	move.b	#Map_EHZBoss_Vehicle_height,height_pixels(a0)
-	move.w	#make_art_tile(ArtTile_Eggman,0,0),obGfx(a0) ; vehicle with ability to fly, bottom part
+	move.w	#make_art_tile(ArtTile_Eggman,0,1),obGfx(a0) ; vehicle with ability to fly, bottom part
 	ori.b	#1<<obRender.level_fg,obRender(a0)
 	move.w	#$81,obSubtype(a0)
 	move.w	EHZBoss_origin_x(a0),d0
@@ -108,7 +109,7 @@ EHZBoss_Init:
 	move.l	a1,objoff_38(a0)	; i.e. addresses for cross references
 	move.l	#Map_EHZBoss_Cockpit,obMap(a1)
 	move.b	#Map_EHZBoss_Cockpit_height,height_pixels(a1)
-	move.w	#make_art_tile(ArtTile_Eggman,0,0),obGfx(a1)
+	move.w	#make_art_tile(ArtTile_Eggman,0,1),obGfx(a1)
 	move.b	#1<<obRender.level_fg,obRender(a1)
 	move.b	#Map_EHZBoss_Cockpit_width,width_pixels(a1)
 	move.w	#$200,obPriority(a1)
@@ -127,7 +128,7 @@ EHZBoss_Init:
 	move.w	EHZBoss_origin_y(a0),EHZBoss_origin_y(a1)
 	move.l	#Map_EHZBoss_Ground,obMap(a1)
 	move.b	#Map_EHZBoss_Ground_height,height_pixels(a1)
-	move.w	#make_art_tile(ArtTile_ArtNem_EHZBoss,0,0),obGfx(a1)
+	move.w	#make_art_tile(ArtTile_ArtNem_EHZBoss,0,1),obGfx(a1)
 	move.b	#1<<obRender.level_fg,obRender(a1)
 	move.b	#sprite_bound($30,Map_EHZBoss_Ground_width),width_pixels(a1)
 	move.b	#$10,obHeight(a1)
@@ -154,7 +155,7 @@ EHZBoss_Init:
 	move.l	#Map_BossExhaust,obMap(a1)
 	move.b	#Map_BossExhaust_height,height_pixels(a1)
 	move.b	#Map_BossExhaust_width,width_pixels(a1)
-	move.w	#make_art_tile(ArtTile_Eggman_Exhaust,0,0),obGfx(a1)
+	move.w	#make_art_tile(ArtTile_Eggman_Exhaust,0,1),obGfx(a1)
 	move.b	#1<<obRender.level_fg,obRender(a1)
 	move.w	#$200,obPriority(a1)	; behind the pod at the same queue tier
 	move.w	#$22,BossChild_OffsetX(a1)
@@ -177,7 +178,7 @@ EHZBoss_MakeGroundParts:
 	move.w	EHZBoss_origin_y(a0),EHZBoss_origin_y(a1)
 	move.l	#Map_EHZBoss_Ground,obMap(a1)
 	move.b	#Map_EHZBoss_Ground_height,height_pixels(a1)
-	move.w	#make_art_tile(ArtTile_ArtNem_EHZBoss,1,0),obGfx(a1)
+	move.w	#make_art_tile(ArtTile_ArtNem_EHZBoss,1,1),obGfx(a1)
 	move.b	#1<<obRender.level_fg,obRender(a1)
 	move.b	#sprite_bound($10,Map_EHZBoss_Ground_width),width_pixels(a1)
 	move.w	#$100,obPriority(a1)
@@ -204,7 +205,7 @@ EHZBoss_MakeGroundParts:
 	move.w	EHZBoss_origin_y(a0),EHZBoss_origin_y(a1)
 	move.l	#Map_EHZBoss_Ground,obMap(a1)
 	move.b	#Map_EHZBoss_Ground_height,height_pixels(a1)
-	move.w	#make_art_tile(ArtTile_ArtNem_EHZBoss,1,0),obGfx(a1)
+	move.w	#make_art_tile(ArtTile_ArtNem_EHZBoss,1,1),obGfx(a1)
 	move.b	#1<<obRender.level_fg,obRender(a1)
 	move.b	#sprite_bound($10,Map_EHZBoss_Ground_width),width_pixels(a1)
 	move.w	#$100,obPriority(a1)
@@ -231,7 +232,7 @@ EHZBoss_MakeGroundParts:
 	move.w	EHZBoss_origin_y(a0),EHZBoss_origin_y(a1)
 	move.l	#Map_EHZBoss_Ground,obMap(a1)
 	move.b	#Map_EHZBoss_Ground_height,height_pixels(a1)
-	move.w	#make_art_tile(ArtTile_ArtNem_EHZBoss,1,0),obGfx(a1)
+	move.w	#make_art_tile(ArtTile_ArtNem_EHZBoss,1,1),obGfx(a1)
 	move.b	#1<<obRender.level_fg,obRender(a1)
 	move.b	#sprite_bound($10,Map_EHZBoss_Ground_width),width_pixels(a1)
 	move.w	#$180,obPriority(a1)
@@ -258,7 +259,7 @@ EHZBoss_MakeGroundParts:
 	move.w	EHZBoss_origin_y(a0),EHZBoss_origin_y(a1)
 	move.l	#Map_EHZBoss_Ground,obMap(a1)
 	move.b	#Map_EHZBoss_Ground_height,height_pixels(a1)
-	move.w	#make_art_tile(ArtTile_ArtNem_EHZBoss,1,0),obGfx(a1)
+	move.w	#make_art_tile(ArtTile_ArtNem_EHZBoss,1,1),obGfx(a1)
 	move.b	#1<<obRender.level_fg,obRender(a1)
 	move.b	#sprite_bound($20,Map_EHZBoss_Ground_width),width_pixels(a1)
 	move.w	#$100,obPriority(a1)
@@ -416,7 +417,7 @@ EHZBoss_StartHop:
 EHZBoss_HopBeforeIgnition:
 	subq.w	#1,objoff_2E(a0)
 	bmi.s	.ignite
-	subq.w	#1,obY(a0)	; eight unpowered pixels, then ignition
+	subq.w	#1,obY(a0)	; rise one pixel per update, then ignite at full clearance
 	rts
 .ignite:
 	bset	#status.npc.x_flip,obStatus(a0)

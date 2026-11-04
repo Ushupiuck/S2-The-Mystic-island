@@ -50,14 +50,18 @@ Sonic 1's complete Eggpod/cockpit. Generated EHZ mappings translate all S1 pod
 pixels by Y=-4; the controller and chassis anchors stay unchanged. Display
 bounds include transparent tile padding and remain separate from the original
 20-pixel collision half-height.
+Every boss part uses high VDP sprite priority so foreground flowers cannot
+cover the vehicle or pod; the existing queue tiers preserve their internal
+depth, including the hull tucked into the chassis.
 
 Eight ordinary SSTs hold the controller/hull, cockpit, car, three wheels,
 drill and a persistent rear exhaust. The controller/cockpit link is reciprocal;
 children use `objoff_38` for their owner. Initialization still retries until
 all seven children can be allocated. The rotor and reload paths are retired.
-The rear flame runs on entry, stops while docked, and stays off during an
-eight-pixel escape hop. Ignition then runs the shared S1 flare/loop as the pod
-flies up and right. See [shared boss art](Sprites-and-VRAM.md#shared-eggman-heads-and-exhaust).
+The rear flame runs on entry, stops while docked, and stays off during a
+48-pixel vertical escape lift, leaving 16 clear pixels beneath the pod. The
+shared S1 flare/loop then starts as the pod flies up and right. See
+[shared boss art](Sprites-and-VRAM.md#shared-eggman-heads-and-exhaust).
 
 The fight retains eight hits, terrain-following wheels, drill separation and
 escape. Hit flashing saves and restores the actual palette word through

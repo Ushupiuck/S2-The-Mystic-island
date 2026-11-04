@@ -41,6 +41,55 @@ def save_gif(images,path,stride=2,pal=False):
 	indexed[0].save(path,save_all=True,append_images=indexed[1:],duration=durations,loop=0,optimize=False,disposal=2)
 
 
+def flower_priority(g,car,rom):
+	"""Render the real chassis over a real flower, using low priority as a control."""
+	from check_companion_followup import isolate,spawn
+	s=g.s;original=g.save()
+	fields={name:g.get(car,name,size) for name,size in
+		(('obMap',4),('obGfx',2),('obFrame',1),('width_pixels',1),('height_pixels',1))}
+	assert fields['obGfx']&0x8000, 'Chassis is behind high-priority foreground foliage'
+	try:
+		camx,camy=g.read('Camera_X_pos',2),g.read('Camera_Y_pos',2)
+		isolate(g)
+		for player in ('v_player','v_player2'):g.put(player,'code',0)
+		g.write('Dynamic_Resize_Routine',0);g.write('f_timecount',0)
+		for name,value in (('Camera_Min_X_pos',camx),('Camera_Max_X_pos',camx),('Camera_Max_X_pos_target',camx),
+			('Camera_Min_Y_pos',camy),('Camera_Max_Y_pos',camy),('Camera_Max_Y_pos_target',camy)):
+			g.write(name,value,2)
+		g.run(4);base=g.save();g.run(3);background=g.video.copy()
+		flowers=[]
+		for y in range(140,194):
+			for x in range(24,296):
+				r,green,b=background.getpixel((x,y))
+				if r>160 and r>green+50 and r>b+20 and b>32:flowers.append((x,y))
+		assert flowers, 'No real flower pixels found for the priority scene'
+		flowers.sort(key=lambda point:abs(point[0]-160)+abs(point[1]-172))
+		pixels=raster(frames(rom,fields['obMap'],8)[fields['obFrame']],
+			[(s['ArtTile_ArtNem_EHZBoss'],unpack(rom,s['Kospm_EHZ_Boss']))],s['ArtTile_ArtNem_EHZBoss'])
+		white=[point for point,(_,color) in pixels.items() if color==6]
+		px,py=min(white,key=lambda point:abs(point[0])+abs(point[1]+8))
+		checks=[]
+		for flip in (0,1):
+			for flower in flowers[:24]:
+				samples=[];images=[]
+				for gfx in (fields['obGfx']&0x7FFF,fields['obGfx']):
+					g.restore(base)
+					actor=spawn(g,'DisplaySprite',camx+flower[0]-(-px-1 if flip else px),camy+flower[1]-py)
+					for name,value,size in (('obMap',fields['obMap'],4),('obGfx',gfx,2),('obFrame',fields['obFrame'],1),
+						('width_pixels',fields['width_pixels'],1),('height_pixels',fields['height_pixels'],1),
+						('obPriority',0x180,2),('obRender',4|flip,1),('obStatus',flip,1)):
+						g.put(actor,name,value,size)
+					g.run(3);samples.append(g.video.getpixel(flower));images.append(g.video.copy())
+				if samples[0]==background.getpixel(flower):
+					assert min(samples[1])>=224 and samples[1]!=samples[0], ('Flower still covers the chassis',flip,flower,samples)
+					for label,im in zip(('low','high'),images):im.save(g.output/f'flower-priority-facing{flip}-{label}.png')
+					checks.append(flip);break
+			else:raise AssertionError(('Priority control did not overlap high-priority flowers',flip))
+		return {'facings':checks,'foreground_flower_samples':len(checks),'chassis_in_front':True}
+	finally:
+		g.restore(original)
+
+
 def live(a,act):
 	from genesis_test_core import Genesis
 	from check_object_course import boot_level,objects
@@ -134,6 +183,7 @@ def live(a,act):
 	face=next(p for p in objects(g,0x55) if g.get(p,'obRoutine')==14)
 	flame=next(p for p in objects(g,0x55) if g.get(p,'obRoutine')==16)
 	assert g.get(flame,'obFrame')==4,'Flame stayed on while docked'
+	assert all(g.get(part,'obGfx',2)&0x8000 for part in objects(g,0x55)), 'A boss part can be covered by foreground flowers'
 	g.run(4)
 	g.video.save(out/'docked.png')
 	save_gif(entry,out/'landing.gif',pal=a.pal)
@@ -160,6 +210,7 @@ def live(a,act):
 			g.video.save(out/f'drive-facing{flip}.png')
 	assert facings=={0,1}
 	save_gif(drive,out/'driving.gif',stride=4,pal=a.pal)
+	flower_report=flower_priority(g,car,rom)
 	hits=[]
 	score=g.read('v_score',4)
 	normal=g.read(s['v_palette']+0x22,2)
@@ -206,6 +257,11 @@ def live(a,act):
 	defeat_faces=set()
 	ignition_y=None
 	before_hop=None
+	lift_x=None
+	chassis_y=None
+	ignition_screen_y=None
+	lift_start_screen_y=None
+	pod_gap=None
 	for tick in range(800):
 		g.run()
 		valid()
@@ -223,9 +279,22 @@ def live(a,act):
 				assert g.get(flame,'obFrame')==4
 				if before_hop is None:
 					before_hop=g.get(body,'obY',2)
+					lift_start_screen_y=before_hop-g.read('Camera_Y_pos_copy',2)
+					lift_x=g.get(body,'obX',2)
+					chassis_y=g.get(car,'obY',2)
+				assert g.get(body,'obX',2)==lift_x and not g.get(body,'obVelX',2), 'Pod moved sideways before ignition'
+				assert g.get(car,'obY',2)==chassis_y, 'Chassis rose with the detached pod'
 			if phase==10 and ter==4:
 				if ignition_y is None:
 					ignition_y=g.get(body,'obY',2)
+					ignition_screen_y=ignition_y-g.read('Camera_Y_pos_copy',2)
+					assert g.get(body,'obX',2)==lift_x and g.get(car,'obY',2)==chassis_y
+					pod_pixels=raster(frames(rom,s['Map_EHZBoss_Vehicle'],1)[0],
+						[(s['ArtTile_Eggman'],unpack(rom,s['Kospm_OldEggPod']))],s['ArtTile_Eggman'])
+					car_pixels=raster(frames(rom,s['Map_EHZBoss_Ground'],8)[g.get(car,'obFrame')],
+						[(s['ArtTile_ArtNem_EHZBoss'],unpack(rom,s['Kospm_EHZ_Boss']))],s['ArtTile_ArtNem_EHZBoss'])
+					pod_gap=chassis_y+min(y for x,y in car_pixels)-ignition_y-max(y for x,y in pod_pixels)-1
+					assert pod_gap>=16, ('Pod left too close to the chassis',pod_gap)
 					g.video.save(out/'ignition.png')
 				flare.add(g.get(flame,'obFrame'))
 				assert g.get(flame,'obX',2)==g.get(body,'obX',2)-34
@@ -237,7 +306,10 @@ def live(a,act):
 	else:
 		raise AssertionError('Boss did not leave')
 	assert {6,8} <= {phase for phase,ter in defeat_faces} and {(10,2),(10,4)} <= defeat_faces
-	assert before_hop-min(hop)==8,(before_hop,hop)
+	assert before_hop-min(hop)==s['EHZBoss_EscapeHop'],(before_hop,hop)
+	# Restoring level art can hold a video frame; each moving update is one pixel.
+	steps=[y for i,y in enumerate(hop) if not i or y!=hop[i-1]]
+	assert steps==list(range(before_hop,before_hop-s['EHZBoss_EscapeHop']-1,-1)), ('Vertical lift path',hop)
 	assert ignition_y==min(hop)
 	assert {0,1,2,3}<=flare,flare
 	assert not g.get(face,'code') and not g.get(flame,'code')
@@ -270,7 +342,7 @@ def live(a,act):
 		assert any(g.get(p,'code')==s['Flicky'] for p in objects(g))
 		g.video.save(out/'capsule.png')
 	g.close()
-	return {'act':act+1,'hits':hits,'facings':sorted(facings),'hop_pixels':8,'entry_flame':sorted(entry_flames),'escape_flare':sorted(flare),'animated_palette_phases':len(cycles),'no_rotor':True,'capsule_tested':act==1,'environment':environment_report,'palette':palette_monitor.report()}
+	return {'act':act+1,'hits':hits,'facings':sorted(facings),'hop_pixels':before_hop-ignition_y,'lift_start_screen_y':lift_start_screen_y,'ignition_screen_y':ignition_screen_y,'pod_chassis_gap':pod_gap,'flower_priority':flower_report,'entry_flame':sorted(entry_flames),'escape_flare':sorted(flare),'animated_palette_phases':len(cycles),'no_rotor':True,'capsule_tested':act==1,'environment':environment_report,'palette':palette_monitor.report()}
 
 
 def main():

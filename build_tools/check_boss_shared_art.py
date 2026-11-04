@@ -96,7 +96,7 @@ def native_checks(a):
 		m.act(kind,body)
 		face = next(p for p in pool[1:] if m.get(p,'code')==s[kind] and m.get(p,'obRoutine')==(4 if kind=='Obj3D' else 14))
 		assert m.get(face,'obMap',4)==s['Map_GHZBoss_Cockpit' if kind=='Obj3D' else 'Map_EHZBoss_Cockpit']
-		assert m.get(face,'obGfx',2)==s['ArtTile_Eggman']
+		assert m.get(face,'obGfx',2)==s['ArtTile_Eggman']+(0x8000 if kind=='EHZBoss' else 0)
 		m.put(body,'obX',1000,2)
 		m.put(body,'obY',1000,2)
 		# Only source expression selectors vary; the real animation runs each tick.

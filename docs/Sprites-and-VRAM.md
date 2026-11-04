@@ -237,7 +237,10 @@ Eggpod: its hull, cockpit, seven head poses and full escape flame. EHZ keeps
 Sonic 2's car/wheels/drill. Its pod/cockpit mappings draw the S1 pixels four
 pixels higher, while the controller, chassis and collision anchors keep their
 original positions. That hides the deeper S1 underside inside the chassis in
-both directions; moving the whole boss upward would also move its children.
+both directions; moving the whole boss upward would also move its children. EHZ
+sets high VDP sprite priority on the pod, pilot, chassis, wheels, drill and
+flame to keep them above foreground flowers. Their existing sprite-queue tiers
+still control their order against one another.
 
 The shared editable banks are `art/uncompressed/Old Eggpod.unc` (60 tiles),
 `Eggman face.unc` (40) and `Boss exhaust.unc` (25). They start at `$3F0`, `$43F`
@@ -267,7 +270,8 @@ EHZ retains one exhaust
 SST through approach, driving and escape; there is no rotor or reload
 allocation. Its nozzle is at mirrored X=34, Y=-4. Entry uses the small flame
 on a straight diagonal, which stops at docking. After defeat it detaches from
-the chassis and rises eight pixels with the flame off, then ignites S1's
+the chassis and rises 48 pixels with the flame off, leaving 16 pixels between
+its visible underside and the chassis top. It then ignites S1's
 startup flare and leaves at four pixels right and a quarter pixel up per
 update. The large flare plays once before the small flame loop.
 
