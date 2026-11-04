@@ -716,7 +716,7 @@ SSS_ChkBumper:
 
 .noslot:
 		move.w	#sfx_Bumper,d0
-		jmp	(PlaySound_Special).l	; play bumper sound
+		jmp	(PlaySound).l		; queue bumper SFX with priority
 ; ===========================================================================
 
 SSS_GOAL:

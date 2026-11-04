@@ -7,16 +7,16 @@ zMasterPlaylist:
 	zmakePlaylistEntry	Mus_EHZ,0
 	zmakePlaylistEntry	Mus_GRGZ1,musprop_uncompressed
 	zmakePlaylistEntry	Mus_GRGZ2,musprop_uncompressed
-	zmakePlaylistEntry	Mus_ALZ,musprop_uncompressed
+	zmakePlaylistEntry	Mus_ALZ,0
 	zmakePlaylistEntry	Mus_CPZ,0
-	zmakePlaylistEntry	Mus_GGZ1,musprop_uncompressed
+	zmakePlaylistEntry	Mus_GGZ1,0
 	zmakePlaylistEntry	Mus_GGZ2,0
 	zmakePlaylistEntry	Mus_ARZ,0
-	zmakePlaylistEntry	Mus_RRZ1,musprop_uncompressed
-	zmakePlaylistEntry	Mus_RRZ2,musprop_uncompressed
+	zmakePlaylistEntry	Mus_RRZ1,0
+	zmakePlaylistEntry	Mus_RRZ2,0
 	zmakePlaylistEntry	Mus_HTZ,0
-	zmakePlaylistEntry	Mus_DDZ1,musprop_uncompressed
-	zmakePlaylistEntry	Mus_DDZ2,musprop_uncompressed
+	zmakePlaylistEntry	Mus_DDZ1,0
+	zmakePlaylistEntry	Mus_DDZ2,0
 	zmakePlaylistEntry	Mus_ICZ1,0
 	zmakePlaylistEntry	Mus_ICZ2,0
 	zmakePlaylistEntry	Mus_LZ,0
@@ -25,7 +25,7 @@ zMasterPlaylist:
 	zmakePlaylistEntry	Mus_MTZ,0
 	zmakePlaylistEntry	Mus_PPZ1,0
 	zmakePlaylistEntry	Mus_PPZ2,0
-	zmakePlaylistEntry	Mus_LBZ1_S3,musprop_uncompressed
+	zmakePlaylistEntry	Mus_LBZ1_S3,0
 	zmakePlaylistEntry	Mus_LBZ2_S3,musprop_uncompressed
 	zmakePlaylistEntry	Mus_SBZ,0
 	zmakePlaylistEntry	Mus_DEZ,0
@@ -36,15 +36,15 @@ zMasterPlaylist:
 	zmakePlaylistEntry	Mus_Ending_S1,0
 	zmakePlaylistEntry	Mus_Ending_S2,0
 	zmakePlaylistEntry	Mus_Credits,musprop_uncompressed
-	zmakePlaylistEntry	Mus_Credits_2,musprop_uncompressed
+	zmakePlaylistEntry	Mus_Credits_2,0
 	zmakePlaylistEntry	Mus_BonusStage,0
-	zmakePlaylistEntry	Mus_BonusStage2,musprop_uncompressed
+	zmakePlaylistEntry	Mus_BonusStage2,0
 	zmakePlaylistEntry	Mus_BonusStage3,musprop_uncompressed
 	zmakePlaylistEntry	Mus_SpecialStage,0
 	zmakePlaylistEntry	Mus_Invincible,0
 	zmakePlaylistEntry	Mus_SuperSonic,0
-	zmakePlaylistEntry	Mus_Test6,musprop_uncompressed
-	zmakePlaylistEntry	Mus_Test7,musprop_uncompressed
+	zmakePlaylistEntry	Mus_Test6,0
+	zmakePlaylistEntry	Mus_Test7,0
 	zmakePlaylistEntry	Mus_EHZ_2P,0
 	zmakePlaylistEntry	Mus_SW_HPZ,0
 	zmakePlaylistEntry	Mus_CNZ_2P,0

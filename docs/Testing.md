@@ -768,6 +768,9 @@ codec/state behavior, not hardware bus scheduling. Pair it with Mode 1, act
 launch, ring and player-effect checks. `check_sound_playback.py` accepts
 `--system-directory` to validate the CD-decoded Z80 driver through actual music,
 effects and jingle restoration.
+For complete music-stream equivalence and per-frame Z80 state comparisons,
+see the [sound validation guide](../build_tools/sound/README.md#validation).
+Its `--priority` playback case covers bumper/Continue arbitration.
 Add `--core /path/to/genesis_plus_gx_libretro.so --system-directory ...`
 to the codec runner for actual queued PLC uploads while HPZ's early water
 HBlank split is active; it compares VRAM with the old decoder and checks

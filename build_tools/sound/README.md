@@ -81,6 +81,36 @@ instrument selection and universal voice banks fail explicitly: copy the
 needed instruments into a song-local voice bank. Unsupported commands still
 require conversion to KeH-supported behavior or a separate driver change.
 
+### Optimizing music sequences
+
+The handwritten song ASM remains the editable source. Repeated note phrases
+use ordinary `smpsCall` / `smpsReturn`; larger repeated sections may call those
+phrases. Counted loops use separate indices when nested. KeH shares ten bytes
+between loop counters and its downward-growing return stack, so a counter
+must stay below the active stack. Do not split a note from its duration or
+remove a duration-only event: that event can retrigger the previous note.
+
+An explicit note duration can be omitted only when it inherits the same
+computed duration. Labels, calls and divider changes require checking entry
+state. Local prototype voice banks retain instrument zero; unused instruments
+are removed and selectors compacted, with their original S3 indices noted in
+the source. Selected 25-byte YM patches must remain identical.
+
+Measure both assembled and Saxman sizes. A smaller sequence can have a slightly
+larger compressed encoding; crossing the `$A40` RAM limit can instead save much
+more by enabling compression. Banks are padded to `$8000`, so saved song bytes
+create reusable bank space without necessarily reducing the padded ROM size.
+
+### SFX priority and bumpers
+
+`PlaySound` writes the normal priority queue. `PlaySound_Special` / `PlayMusic`
+can write the immediate queue directly, bypassing priority arbitration; sound
+test also uses that immediate path. Both the level and rotating-stage bumper
+callers use `PlaySound`, so a `$70` bumper cannot replace the `$7F` Continue
+jingle. SFX priority is released only when all six FM/PSG SFX slots have stopped.
+Continue's FM4 lasts seven ticks longer than FM3/FM5; stopping another FM or PSG
+channel must preserve its priority. Equal-priority effects may still retrigger.
+
 ### Binary inputs
 
 A `.bin` is **raw by default**. It must already use KeH's relative music format.
@@ -159,7 +189,7 @@ and builds the ROM again on a native Windows runner.
 ```sh
 python3 build_tools/sound/build.py --check
 python3 build_tools/check_sound_playback.py --core /path/to/genesis_plus_gx_libretro.so \
-  --effects --jingles
+  --effects --jingles --priority
 python3 build_tools/check_sound_playback.py --core /path/to/genesis_plus_gx_libretro.so \
   --pal --songs GHZ EHZ GGZ1 RRZ1 HTZ HPZ GRGZ2 LBZ2_S3 EndLevel ExtraLife
 ```
@@ -169,6 +199,39 @@ Pillow. Its core must expose the `work_ram`, `vram`, and `zram` symbols, as the
 tested Genesis Plus GX build does. Reports and selected WAVs go under
 `.sound-build`. It boots the real game, enters sound test, and plays through the
 actual 68000/Z80/YM2612/PSG paths.
+
+For source optimization, retain the preceding ROM, matching listing and
+`music.ini`, then compare against the rebuilt checkout:
+
+```sh
+python3 build_tools/check_music_sequences.py \
+  --reference-rom /path/to/before.bin --reference-listing /path/to/before.lst \
+  --reference-ini /path/to/music.ini --output test-results/music-sequences/report.json
+```
+
+This independently reads each ROM's playlist and Saxman data, expands relative
+calls/jumps/counted loops, checks stack/counter overlap, and compares complete
+channel streams past their loop boundaries. Headers, playlist behavior flags,
+computed note durations, bare duration events, commands and selected instruments
+must match. Finite tracks must terminate at the same event.
+
+Add `--core CORE --system-directory BIOS` for real Mode 1 playback comparisons
+of every changed song. The default budget covers the introduction and two
+complete channel loops; `--pal` repeats in PAL and `--songs` restricts selection.
+`--frames` is a shorter diagnostic override. Each frame's musical Z80 state,
+including tempo, duration, pitch, modulation and the actual instrument patch,
+must match after at most eight frames of load-start alignment. Relocated data,
+voice/modulation pointers, return addresses and loop counters are excluded.
+Audio callbacks must also produce non-silent output. These checks establish
+musical equivalence; they do not claim identical sub-frame YM/DAC write timing
+or reduced Z80 execution cost. Reports/state captures stay in the supplied
+ignored output directory.
+
+`check_sound_playback.py --priority` checks the compiled bumper callers, normal
+queue arbitration throughout Continue, its staggered final channel stops, an
+unrelated PSG effect finishing, equal-priority retriggering, and priority release.
+Its `--jingles` cases include RAM-loaded GHZ, ROM-streamed Launch Base 2 and the
+large RAM-loaded S3 Menu track, checking bank/voice and decompressed-data restore.
 
 Checked on this update:
 
@@ -184,7 +247,7 @@ Checked on this update:
   flags, `$8000` limits, decompressed buffer overflow, separate bank placement,
   and asset overflow detection.
 - 57 tracks played for 600 frames each in NTSC; 10 representative tracks passed
-  the equivalent PAL check. 83 sound effects produced audio. The 1-up jingle
+  the equivalent PAL check. 86 sound effects produced audio. The 1-up jingle
   restored both RAM-loaded GHZ and ROM-streamed Launch Base 2, including the
   original compressed song's RAM data and each song's bank/instrument pointer.
 
@@ -208,5 +271,5 @@ from KeH remain, and the macro corrections intentionally change some output.
   strategy rather than switching compressors. Its LGPLv3/GPLv3 texts accompany
   the source in `KensSharp.Saxman`; the DLL remains dynamically replaceable.
 
-The runtime driver is unchanged by this tooling update, including its existing
-fix for restoring uncompressed music after a 1-up.
+The runtime retains the fix for restoring uncompressed music after a 1-up.
+Its multi-channel SFX priority lifetime is described above.

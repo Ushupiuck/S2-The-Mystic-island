@@ -80,7 +80,7 @@ Bumper_bump:
 		clr.b	jumping(a1)
 		move.b	#1,obAnim(a0)	; use "hit" animation
 		move.w	#sfx_Bumper,d0
-		jsr	(PlaySound_Special).l	; play bumper sound
+		jsr	(PlaySound).l		; queue bumper SFX with priority
 		move.w	respawn_addr(a0),d0
 		beq.s	.addscore
 		jsr	(Object_RespawnBump).l

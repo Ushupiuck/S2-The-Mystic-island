@@ -20,9 +20,8 @@ Snd_GumBonus_FM1:
 	smpsFMAlterVol      $08
 	smpsSetvoice        $00
 	smpsModSet          $07, $01, $08, $05
-	dc.b	nRst, $01, nA5, $06, nC5, nF5, nA5, nB5, nD5, nG5, nB5, nC6
-	dc.b	nE5, nA5, nC6, nD6, nF5, nB5, nD6, nE6, nG5, nC6, nE6, nF6
-	dc.b	nA5, nD6, nF6
+	dc.b	nRst, $01
+	smpsCall	Snd_GumBonus_Phrase03
 	smpsFMAlterVol      $FF
 	dc.b	nE6
 	smpsFMAlterVol      $FF
@@ -45,35 +44,16 @@ Snd_GumBonus_Jump05:
 	smpsModSet          $07, $01, $08, $05
 	smpsPan             panRight, $00
 	dc.b	nF5, $12, $03, nBb5, nB5, $02, nRst, $0A, nF5, $05, nRst, $07
-	dc.b	nE5, $12, $03, nBb5, nB5, $02, nRst, $0A, nE5, $05, nRst, $07
-	dc.b	nEb5, $12, $03, nBb5, nC6, $05, nRst, $07, nEb5, $05, nRst, $07
-	dc.b	nD5, $0D, nRst, $05, nD5, $0F, nRst, $03, nD5, $06, nRst, nCs5
-	dc.b	$0D, nRst, $05, nCs5, $0C, nG5, $06, nF5, $04, nRst, $08, nC5
-	dc.b	$0D, nRst, $05, nC5, $0C, nG5, $06, nF5, $05, nRst, $07, nD5
-	dc.b	$05, nRst, $07, nD5, $05, nRst, $07, nB4, $05, nRst, $07, nB4
-	dc.b	$05, nRst, $07, nC5, $23, nRst, $0D, nF5, $12, $03, nBb5, nC6
-	dc.b	nRst, $09, nF5, $05, nRst, $07, nE5, $12, $03, nBb5, nB5, $02
-	dc.b	nRst, $0A, nE5, $05, nRst, $07, nEb5, $12, $03, nBb5, nC6, $06
-	dc.b	nRst, nEb5, $05, nRst, $07, nD5, $0E, nRst, $04, nD5, $0F, nRst
-	dc.b	$03, nD5, $06, nRst, nCs5, $0E, nRst, $04, nCs5, $0C, nG5, $06
-	dc.b	nF5, $05, nRst, $07, nC5, $0E, nRst, $04, nC5, $0C, nG5, $06
-	dc.b	nF5, nRst, nC5, $08, nRst, $04, nC5, $0C, nD5, $04, nRst, $08
-	dc.b	nBb4, $05, nRst, $07, nA4, $30
+	dc.b	nE5, $12, $03, nBb5, nB5, $02
+	smpsCall	Snd_GumBonus_Phrase02
+	dc.b	nB5, $02
+	smpsCall	Snd_GumBonus_Phrase04
 	smpsPan             panLeft, $00
 	smpsSetvoice        $02
 	smpsModSet          $07, $01, $03, $05
 	smpsAlterPitch      $0C
 	smpsFMAlterVol      $F6
-	dc.b	nRst, $0C, nD5, $18, $07, nRst, $05, nF5, $12, nRst, $06, nF5
-	dc.b	$11, nRst, $07, nE5, $12, nRst, $06, nE5, $0F, nRst, $09, nE5
-	dc.b	$30, nRst, $0C, nD5, $12, nRst, $06, nD5, nRst, nD5, nRst, nD5
-	dc.b	nRst, nD5, nRst, nD5, $05, nRst, $07, nE5, $11, nRst, $07, nE5
-	dc.b	$11, nRst, $07, nE5, $11, nRst, $07, nE5, $18, smpsNoAttack, $05, nRst
-	dc.b	$07, nD5, $13, nRst, $05, nD5, $07, nRst, $05, nF5, $12, nRst
-	dc.b	$06, nF5, $10, nRst, $08, nE5, $11, nRst, $07, nE5, $0F, nRst
-	dc.b	$09, nF5, $30, smpsNoAttack, $05, nRst, $07, nD5, $12, nRst, $06, nD5
-	dc.b	nRst, nD5, nRst, nD5, nRst, nD5, nRst, nD5, $05, nRst, $07, nE5
-	dc.b	$08, nRst, $10, nE5, $18, nE5, $18, nE5, $18
+	smpsCall	Snd_GumBonus_Phrase01
 	smpsAlterPitch      $F4
 	smpsSetvoice        $01
 	smpsFMAlterVol      $0A
@@ -85,9 +65,7 @@ Snd_GumBonus_FM3:
 	smpsFMAlterVol      $08
 	smpsPan             panLeft, $00
 	smpsModSet          $07, $01, $09, $05
-	dc.b	nA5, $06, nC5, nF5, nA5, nB5, nD5, nG5, nB5, nC6, nE5, nA5
-	dc.b	nC6, nD6, nF5, nB5, nD6, nE6, nG5, nC6, nE6, nF6, nA5, nD6
-	dc.b	nF6
+	smpsCall	Snd_GumBonus_Phrase03
 	smpsFMAlterVol      $FF
 	dc.b	nE6
 	smpsFMAlterVol      $FF
@@ -108,36 +86,13 @@ Snd_GumBonus_FM3:
 Snd_GumBonus_Jump04:
 	smpsModSet          $07, $01, $09, $05
 	smpsPan             panLeft, $00
-	dc.b	nA5, $12, $03, nBb5, nC6, $05, nRst, $07, nA5, $05, nRst, $07
-	dc.b	nA5, $12, $03, nBb5, nC6, $05, nRst, $07, nA5, $05, nRst, $07
-	dc.b	nA5, $12, $03, nBb5, nC6, $05, nRst, $07, nA5, $04, nRst, $08
-	dc.b	nG5, $0E, nRst, $04, nF5, $11, nRst, $01, nE5, $06, nRst, nF5
-	dc.b	$0F, nRst, $03, nCs5, $0C, nG5, $06, nF5, $04, nRst, $08, nF5
-	dc.b	$0D, nRst, $05, nC5, $0C, nG5, $06, nF5, $05, nRst, $07, nF5
-	dc.b	$04, nRst, $08, nF5, $05, nRst, $07, nE5, $06, nRst, nF5, $05
-	dc.b	nRst, $07, nG5, $24, nRst, $0C, nA5, $12, $03, nBb5, nC6, nRst
-	dc.b	$09, nA5, $04, nRst, $08, nA5, $12, $03, nBb5, nC6, $05, nRst
-	dc.b	$07, nA5, $05, nRst, $07, nA5, $12, $03, nBb5, nC6, $06, nRst
-	dc.b	nA5, $04, nRst, $08, nG5, $0F, nRst, $03, nF5, $11, nRst, $01
-	dc.b	nE5, $07, nRst, $05, nF5, $10, nRst, $02, nCs5, $0C, nG5, $06
-	dc.b	nF5, $05, nRst, $07, nF5, $0F, nRst, $03, nC5, $0C, nG5, $06
-	dc.b	nF5, nRst, nE5, $0C, nC5, nD5, $04, nRst, $08, nE5, $06, nRst
-	dc.b	nF5, $30
+	smpsCall	Snd_GumBonus_Phrase00
 	smpsPan             panRight, $00
 	smpsSetvoice        $02
 	smpsModSet          $07, $01, $03, $05
 	smpsAlterPitch      $0C
 	smpsFMAlterVol      $F6
-	dc.b	nRst, $0C, nD5, $18, $07, nRst, $05, nF5, $12, nRst, $06, nF5
-	dc.b	$11, nRst, $07, nE5, $12, nRst, $06, nE5, $0F, nRst, $09, nE5
-	dc.b	$30, nRst, $0C, nD5, $12, nRst, $06, nD5, nRst, nD5, nRst, nD5
-	dc.b	nRst, nD5, nRst, nD5, $05, nRst, $07, nE5, $11, nRst, $07, nE5
-	dc.b	$11, nRst, $07, nE5, $11, nRst, $07, nE5, $18, smpsNoAttack, $05, nRst
-	dc.b	$07, nD5, $13, nRst, $05, nD5, $07, nRst, $05, nF5, $12, nRst
-	dc.b	$06, nF5, $10, nRst, $08, nE5, $11, nRst, $07, nE5, $0F, nRst
-	dc.b	$09, nF5, $30, smpsNoAttack, $05, nRst, $07, nD5, $12, nRst, $06, nD5
-	dc.b	nRst, nD5, nRst, nD5, nRst, nD5, nRst, nD5, $05, nRst, $07, nE5
-	dc.b	$08, nRst, $10, nE5, $18, nE5, $18, nE5, $18
+	smpsCall	Snd_GumBonus_Phrase01
 	smpsAlterPitch      $F4
 	smpsSetvoice        $01
 	smpsFMAlterVol      $0A
@@ -259,7 +214,7 @@ Snd_GumBonus_Jump01:
 	dc.b	$08, nA5, $11, nRst, $07, nD6, $30, smpsNoAttack, $04, nRst, $08, nB5
 	dc.b	$12, nRst, $06, nB5, $05, nRst, $07, nB5, $05, nRst, $07, nG5
 	dc.b	$05, nRst, $07, nA5, $05, nRst, $07, nB5, $06, nRst, nC6, $08
-	dc.b	nRst, $10, nBb5, $18, nA5, $18, nG5, $18
+	dc.b	nRst, $10, nBb5, $18, nA5, nG5
 	smpsFMAlterVol      $0C
 	smpsModSet          $00, $00, $00, $00
 	smpsJump            Snd_GumBonus_Jump01
@@ -267,26 +222,16 @@ Snd_GumBonus_Jump01:
 ; PSG1 Data
 Snd_GumBonus_PSG1:
 	smpsPSGvoice        $00
-	dc.b	nRst, $02, nA5, $06, nC5, nF5, nA5, nB5, nD5, nG5, nB5, nC6
-	dc.b	nE5, nA5, nC6, nD6, nF5, nB5, nD6, nE6, nG5, nC6, nE6, nF6
-	dc.b	nA5, nD6, nF6, nE6, nD6, nC6, nB5, nA5, nG5, nF5, nD5
+	dc.b	nRst, $02
+	smpsCall	Snd_GumBonus_Phrase03
+	dc.b	nE6, nD6, nC6, nB5, nA5, nG5, nF5, nD5
 
 Snd_GumBonus_Jump08:
 	dc.b	nF5, $12, $03, nBb5, nC6, $02, nRst, $0A, nF5, $05, nRst, $07
-	dc.b	nE5, $12, $03, nBb5, nC6, $02, nRst, $0A, nE5, $05, nRst, $07
-	dc.b	nEb5, $12, $03, nBb5, nC6, $05, nRst, $07, nEb5, $05, nRst, $07
-	dc.b	nD5, $0D, nRst, $05, nD5, $0F, nRst, $03, nD5, $06, nRst, nCs5
-	dc.b	$0D, nRst, $05, nCs5, $0C, nG5, $06, nF5, $04, nRst, $08, nC5
-	dc.b	$0D, nRst, $05, nC5, $0C, nG5, $06, nF5, $05, nRst, $07, nD5
-	dc.b	$05, nRst, $07, nD5, $05, nRst, $07, nB4, $05, nRst, $07, nB4
-	dc.b	$05, nRst, $07, nC5, $23, nRst, $0D, nF5, $12, $03, nBb5, nC6
-	dc.b	nRst, $09, nF5, $05, nRst, $07, nE5, $12, $03, nBb5, nC6, $02
-	dc.b	nRst, $0A, nE5, $05, nRst, $07, nEb5, $12, $03, nBb5, nC6, $06
-	dc.b	nRst, nEb5, $05, nRst, $07, nD5, $0E, nRst, $04, nD5, $0F, nRst
-	dc.b	$03, nD5, $06, nRst, nCs5, $0E, nRst, $04, nCs5, $0C, nG5, $06
-	dc.b	nF5, $05, nRst, $07, nC5, $0E, nRst, $04, nC5, $0C, nG5, $06
-	dc.b	nF5, nRst, nC5, $08, nRst, $04, nC5, $0C, nD5, $04, nRst, $08
-	dc.b	nBb4, $05, nRst, $07, nA4, $30
+	dc.b	nE5, $12, $03, nBb5, nC6, $02
+	smpsCall	Snd_GumBonus_Phrase02
+	dc.b	nC6, $02
+	smpsCall	Snd_GumBonus_Phrase04
 	smpsPSGvoice        sTone_09
 	smpsPSGAlterVol     $FF
 	dc.b	nF5, $05, nRst, $07, nBb5, $06, nRst, nD6, $05, nRst, $07, nBb5
@@ -304,7 +249,7 @@ Snd_GumBonus_Jump08:
 	dc.b	$05, nD5, $04, nRst, $08, nD5, $05, nRst, $07, nD5, $05, nRst
 	dc.b	$07, nG5, $05, nRst, $07, nB5, $05, nRst, $07, nD6, $06, nRst
 	dc.b	nG5, $05, nRst, $07, nB5, $06, nRst, nD6, $05, nRst, $07, nG5
-	dc.b	$06, nRst, $12, nG5, $18, nF5, $18, nE5, $18
+	dc.b	$06, nRst, $12, nG5, $18, nF5, nE5
 	smpsPSGAlterVol     $01
 	smpsPSGvoice        $00
 	smpsJump            Snd_GumBonus_Jump08
@@ -312,26 +257,12 @@ Snd_GumBonus_Jump08:
 ; PSG2 Data
 Snd_GumBonus_PSG2:
 	smpsPSGvoice        $00
-	dc.b	nRst, $03, nA5, $06, nC5, nF5, nA5, nB5, nD5, nG5, nB5, nC6
-	dc.b	nE5, nA5, nC6, nD6, nF5, nB5, nD6, nE6, nG5, nC6, nE6, nF6
-	dc.b	nA5, nD6, nF6, nE6, nD6, nC6, nB5, nA5, nG5, nF5, nD5
+	dc.b	nRst, $03
+	smpsCall	Snd_GumBonus_Phrase03
+	dc.b	nE6, nD6, nC6, nB5, nA5, nG5, nF5, nD5
 
 Snd_GumBonus_Jump07:
-	dc.b	nA5, $12, $03, nBb5, nC6, $05, nRst, $07, nA5, $05, nRst, $07
-	dc.b	nA5, $12, $03, nBb5, nC6, $05, nRst, $07, nA5, $05, nRst, $07
-	dc.b	nA5, $12, $03, nBb5, nC6, $05, nRst, $07, nA5, $04, nRst, $08
-	dc.b	nG5, $0E, nRst, $04, nF5, $11, nRst, $01, nE5, $06, nRst, nF5
-	dc.b	$0F, nRst, $03, nCs5, $0C, nG5, $06, nF5, $04, nRst, $08, nF5
-	dc.b	$0D, nRst, $05, nC5, $0C, nG5, $06, nF5, $05, nRst, $07, nF5
-	dc.b	$04, nRst, $08, nF5, $05, nRst, $07, nE5, $06, nRst, nF5, $05
-	dc.b	nRst, $07, nG5, $24, nRst, $0C, nA5, $12, $03, nBb5, nC6, nRst
-	dc.b	$09, nA5, $04, nRst, $08, nA5, $12, $03, nBb5, nC6, $05, nRst
-	dc.b	$07, nA5, $05, nRst, $07, nA5, $12, $03, nBb5, nC6, $06, nRst
-	dc.b	nA5, $04, nRst, $08, nG5, $0F, nRst, $03, nF5, $11, nRst, $01
-	dc.b	nE5, $07, nRst, $05, nF5, $10, nRst, $02, nCs5, $0C, nG5, $06
-	dc.b	nF5, $05, nRst, $07, nF5, $0F, nRst, $03, nC5, $0C, nG5, $06
-	dc.b	nF5, nRst, nE5, $0C, nC5, nD5, $04, nRst, $08, nE5, $06, nRst
-	dc.b	nF5, $30
+	smpsCall	Snd_GumBonus_Phrase00
 	smpsPSGvoice        sTone_09
 	smpsPSGAlterVol     $FF
 	dc.b	nBb4, $05, nRst, $07, nD5, $06, nRst, nF5, $05, nRst, $07, nD5
@@ -349,7 +280,7 @@ Snd_GumBonus_Jump07:
 	dc.b	$05, nD6, $04, nRst, $08, nG5, $05, nRst, $07, nG4, $05, nRst
 	dc.b	$07, nB4, $05, nRst, $07, nD5, $05, nRst, $07, nG5, $06, nRst
 	dc.b	nD5, $05, nRst, $07, nG5, $06, nRst, nB5, $05, nRst, $07, nC5
-	dc.b	$06, nRst, $12, nC5, $18, nD5, $18, nE5, $18
+	dc.b	$06, nRst, $12, nC5, $18, nD5, nE5
 	smpsPSGAlterVol     $01
 	smpsPSGvoice        $00
 	smpsJump            Snd_GumBonus_Jump07
@@ -542,25 +473,87 @@ Snd_GumBonus_DAC:
 	dc.b	dKickS3, dSnareS3, dSnareS3, $0C, dSnareS3
 
 Snd_GumBonus_Jump00:
-	dc.b	dCrashCymbal, $0C, dSnareS3, dKickS3, dSnareS3, dKickS3, dSnareS3, dKickS3, dSnareS3, dKickS3, dSnareS3, dKickS3
-	dc.b	dSnareS3, dKickS3, dSnareS3, dKickS3, dSnareS3, dCrashCymbal, dSnareS3, dKickS3, $06, dSnareS3, dSnareS3, $0C
-	dc.b	dCrashCymbal, dSnareS3, $06, dSnareS3, dKickS3, $0C, dSnareS3, dKickS3, dSnareS3, $06, dSnareS3, dKickS3
-	dc.b	$0C, dSnareS3, $06, dSnareS3, dKickS3, dSnareS3, $0C, $06, dKickS3, dSnareS3, dClapS3, $0C
-	dc.b	dCrashCymbal, $0C, dSnareS3, dKickS3, dSnareS3, dKickS3, dSnareS3, dKickS3, dSnareS3, dKickS3, dSnareS3, dKickS3
-	dc.b	dSnareS3, dKickS3, dSnareS3, dKickS3, dSnareS3, dCrashCymbal, dSnareS3, dKickS3, $06, dSnareS3, dSnareS3, $0C
-	dc.b	dCrashCymbal, dSnareS3, $06, dSnareS3, dKickS3, $0C, dSnareS3, dKickS3, dSnareS3, $06, dSnareS3, dKickS3
-	dc.b	dSnareS3, dSnareS3, dSnareS3, dMuffledSnare, dSnareS3, $0C, $06, dMuffledSnare, dSnareS3, dMuffledSnare, dSnareS3, dKickS3
-	dc.b	$0C, dCrashCymbal, dKickS3, $06, dKickS3, dSnareS3, $0C, dKickS3, $06, dKickS3, dSnareS3, dKickS3
-	dc.b	$0C, $06, dSnareS3, $0C, dKickS3, dSnareS3, dKickS3, $06, dKickS3, dSnareS3, $0C, dKickS3
-	dc.b	$06, dKickS3, dSnareS3, dKickS3, $0C, $06, dSnareS3, $0C, dCrashCymbal, dSnareS3, dKickS3, $06
-	dc.b	$0C, dSnareS3, $06, dCrashCymbal, $0C, dSnareS3, dKickS3, $06, dKickS3, dSnareS3, dSnareS3, dMuffledSnare
-	dc.b	$0C, dSnareS3, dMuffledSnare, dSnareS3, dElectricHighTom, $06, dElectricMidTom, dElectricLowTom, dElectricFloorTom, dSnareS3, dSnareS3, dSnareS3
-	dc.b	dSnareS3, dKickS3, $0C, dCrashCymbal, dKickS3, $06, dKickS3, dSnareS3, $0C, dKickS3, $06, dKickS3
-	dc.b	dSnareS3, dKickS3, $0C, $06, dSnareS3, $0C, dKickS3, dCrashCymbal, dKickS3, dCrashCymbal, dKickS3, dCrashCymbal
-	dc.b	dKickS3, dCrashCymbal, dKickS3, dSnareS3, dKickS3, dSnareS3, dSnareS3, $06, $0C, dElectricHighTom, $06, dSnareS3
-	dc.b	dElectricLowTom, dSnareS3, dElectricFloorTom, dMuffledSnare, dSnareS3, $0C, $06, dMuffledSnare, $0C, dSnareS3, dCrashCymbal, dClapS3
-	dc.b	dClapS3, dClapS3
+	smpsCall	Snd_GumBonus_Phrase05
+	dc.b	dKickS3, $0C, dSnareS3, $06, dSnareS3, dKickS3, dSnareS3, $0C, $06, dKickS3, dSnareS3
+	dc.b	dClapS3, $0C
+	smpsCall	Snd_GumBonus_Phrase05
+	dc.b	dKickS3, dSnareS3, dSnareS3, dSnareS3, dMuffledSnare, dSnareS3, $0C, $06, dMuffledSnare, dSnareS3, dMuffledSnare, dSnareS3
+	dc.b	dKickS3, $0C, dCrashCymbal, dKickS3, $06, dKickS3, dSnareS3, $0C, dKickS3, $06, dKickS3, dSnareS3
+	dc.b	dKickS3, $0C, $06, dSnareS3, $0C, dKickS3, dSnareS3, dKickS3, $06, dKickS3, dSnareS3, $0C
+	dc.b	dKickS3, $06, dKickS3, dSnareS3, dKickS3, $0C, $06, dSnareS3, $0C, dCrashCymbal, dSnareS3
+	dc.b	dKickS3, $06, $0C, dSnareS3, $06, dCrashCymbal, $0C, dSnareS3, dKickS3, $06, dKickS3, dSnareS3
+	dc.b	dSnareS3, dMuffledSnare, $0C, dSnareS3, dMuffledSnare, dSnareS3, dElectricHighTom, $06, dElectricMidTom, dElectricLowTom, dElectricFloorTom, dSnareS3
+	dc.b	dSnareS3, dSnareS3, dSnareS3, dKickS3, $0C, dCrashCymbal, dKickS3, $06, dKickS3, dSnareS3, $0C
+	dc.b	dKickS3, $06, dKickS3, dSnareS3, dKickS3, $0C, $06, dSnareS3, $0C, dKickS3, dCrashCymbal, dKickS3
+	dc.b	dCrashCymbal, dKickS3, dCrashCymbal, dKickS3, dCrashCymbal, dKickS3, dSnareS3, dKickS3, dSnareS3, dSnareS3, $06, $0C
+	dc.b	dElectricHighTom, $06, dSnareS3, dElectricLowTom, dSnareS3, dElectricFloorTom, dMuffledSnare, dSnareS3, $0C, $06, dMuffledSnare, $0C
+	dc.b	dSnareS3, dCrashCymbal, dClapS3, dClapS3, dClapS3
 	smpsJump            Snd_GumBonus_Jump00
+
+; Shared note phrases; channel settings stay in the calling tracks.
+
+Snd_GumBonus_Phrase00:
+	dc.b	nA5, $12, $03, nBb5, nC6, $05, nRst, $07, nA5, $05, nRst, $07
+	dc.b	nA5, $12, $03, nBb5, nC6, $05, nRst, $07, nA5, $05, nRst, $07
+	dc.b	nA5, $12, $03, nBb5, nC6, $05, nRst, $07, nA5, $04, nRst, $08
+	dc.b	nG5, $0E, nRst, $04, nF5, $11, nRst, $01, nE5, $06, nRst
+	dc.b	nF5, $0F, nRst, $03, nCs5, $0C, nG5, $06, nF5, $04, nRst, $08
+	dc.b	nF5, $0D, nRst, $05, nC5, $0C, nG5, $06, nF5, $05, nRst, $07
+	dc.b	nF5, $04, nRst, $08, nF5, $05, nRst, $07, nE5, $06, nRst
+	dc.b	nF5, $05, nRst, $07, nG5, $24, nRst, $0C, nA5, $12, $03, nBb5
+	dc.b	nC6, nRst, $09, nA5, $04, nRst, $08, nA5, $12, $03, nBb5
+	dc.b	nC6, $05, nRst, $07, nA5, $05, nRst, $07, nA5, $12, $03, nBb5
+	dc.b	nC6, $06, nRst, nA5, $04, nRst, $08, nG5, $0F, nRst, $03
+	dc.b	nF5, $11, nRst, $01, nE5, $07, nRst, $05, nF5, $10, nRst, $02
+	dc.b	nCs5, $0C, nG5, $06, nF5, $05, nRst, $07, nF5, $0F, nRst, $03
+	dc.b	nC5, $0C, nG5, $06, nF5, nRst, nE5, $0C, nC5, nD5, $04
+	dc.b	nRst, $08, nE5, $06, nRst, nF5, $30
+	smpsReturn
+
+Snd_GumBonus_Phrase01:
+	dc.b	nRst, $0C, nD5, $18, $07, nRst, $05, nF5, $12, nRst, $06, nF5
+	dc.b	$11, nRst, $07, nE5, $12, nRst, $06, nE5, $0F, nRst, $09, nE5
+	dc.b	$30, nRst, $0C, nD5, $12, nRst, $06, nD5, nRst, nD5, nRst, nD5
+	dc.b	nRst, nD5, nRst, nD5, $05, nRst, $07, nE5, $11, nRst, $07, nE5
+	dc.b	$11, nRst, $07, nE5, $11, nRst, $07, nE5, $18, smpsNoAttack, $05, nRst
+	dc.b	$07, nD5, $13, nRst, $05, nD5, $07, nRst, $05, nF5, $12, nRst
+	dc.b	$06, nF5, $10, nRst, $08, nE5, $11, nRst, $07, nE5, $0F, nRst
+	dc.b	$09, nF5, $30, smpsNoAttack, $05, nRst, $07, nD5, $12, nRst, $06, nD5
+	dc.b	nRst, nD5, nRst, nD5, nRst, nD5, nRst, nD5, $05, nRst, $07, nE5
+	dc.b	$08, nRst, $10, nE5, $18, nE5, nE5
+	smpsReturn
+
+Snd_GumBonus_Phrase02:
+	dc.b	nRst, $0A, nE5, $05, nRst, $07, nEb5, $12, $03, nBb5, nC6, $05
+	dc.b	nRst, $07, nEb5, $05, nRst, $07, nD5, $0D, nRst, $05, nD5, $0F
+	dc.b	nRst, $03, nD5, $06, nRst, nCs5, $0D, nRst, $05, nCs5, $0C
+	dc.b	nG5, $06, nF5, $04, nRst, $08, nC5, $0D, nRst, $05, nC5, $0C
+	dc.b	nG5, $06, nF5, $05, nRst, $07, nD5, $05, nRst, $07, nD5, $05
+	dc.b	nRst, $07, nB4, $05, nRst, $07, nB4, $05, nRst, $07, nC5, $23
+	dc.b	nRst, $0D, nF5, $12, $03, nBb5, nC6, nRst, $09, nF5, $05
+	dc.b	nRst, $07, nE5, $12, $03, nBb5
+	smpsReturn
+
+Snd_GumBonus_Phrase03:
+	dc.b	nA5, $06, nC5, nF5, nA5, nB5, nD5, nG5, nB5, nC6, nE5, nA5
+	dc.b	nC6, nD6, nF5, nB5, nD6, nE6, nG5, nC6, nE6, nF6, nA5, nD6
+	dc.b	nF6
+	smpsReturn
+
+Snd_GumBonus_Phrase04:
+	dc.b	nRst, $0A, nE5, $05, nRst, $07, nEb5, $12, $03, nBb5, nC6, $06
+	dc.b	nRst, nEb5, $05, nRst, $07, nD5, $0E, nRst, $04, nD5, $0F
+	dc.b	nRst, $03, nD5, $06, nRst, nCs5, $0E, nRst, $04, nCs5, $0C
+	dc.b	nG5, $06, nF5, $05, nRst, $07, nC5, $0E, nRst, $04, nC5, $0C
+	dc.b	nG5, $06, nF5, nRst, nC5, $08, nRst, $04, nC5, $0C, nD5, $04
+	dc.b	nRst, $08, nBb4, $05, nRst, $07, nA4, $30
+	smpsReturn
+
+Snd_GumBonus_Phrase05:
+	dc.b	dCrashCymbal, $0C, dSnareS3, dKickS3, dSnareS3, dKickS3, dSnareS3, dKickS3, dSnareS3, dKickS3, dSnareS3, dKickS3
+	dc.b	dSnareS3, dKickS3, dSnareS3, dKickS3, dSnareS3, dCrashCymbal, dSnareS3, dKickS3, $06, dSnareS3, dSnareS3, $0C
+	dc.b	dCrashCymbal, dSnareS3, $06, dSnareS3, dKickS3, $0C, dSnareS3, dKickS3, dSnareS3, $06, dSnareS3
+	smpsReturn
 
 Snd_GumBonus_Voices:
 ;	Voice $00
@@ -634,4 +627,3 @@ Snd_GumBonus_Voices:
 	smpsVcDecayLevel    $0F, $01, $01, $02
 	smpsVcReleaseRate   $08, $00, $00, $00
 	smpsVcTotalLevel    $00, $13, $37, $19
-

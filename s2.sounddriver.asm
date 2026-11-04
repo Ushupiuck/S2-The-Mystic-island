@@ -3327,8 +3327,21 @@ zStopPSGTrack:
 	ld	a,(zDoSFXFlag)		; Check if we're an SFX track
 	or	a					; test it
 	jp	p,zStopMusicTrack	; If not, jump to zStopMusicTrack
-	xor	a					; a = 0
-	ld	(zAbsVar.SFXPriorityVal),a		; Reset SFX priority
+; A multi-channel effect retains priority until its final channel stops.
+; In particular, Continue's FM4 outlasts FM3/FM5 by seven ticks.
+	push	ix
+	ld	ix,zTracksSFXStart
+	ld	de,zTrack.len
+	ld	b,SFX_TRACK_COUNT
+-
+	bit	7,(ix+zTrack.PlaybackControl)
+	jr	nz,+
+	add	ix,de
+	djnz	-
+	xor	a
+	ld	(zAbsVar.SFXPriorityVal),a		; no SFX channels remain
++
+	pop	ix
 	ld	a,(ix+zTrack.VoiceControl)			; Load "voice control" byte
 	or	a					; test it..
 	jp	m,zStopPSGSFXTrack	; If this is PSG SFX track, jump to zStopPSGSFXTrack

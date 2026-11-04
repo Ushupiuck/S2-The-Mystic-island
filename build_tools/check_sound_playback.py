@@ -22,6 +22,7 @@ p.add_argument('--listing', type=Path, default=project / 'md-main.lst')
 p.add_argument('--output', type=Path)
 p.add_argument('--effects', action='store_true')
 p.add_argument('--jingles', action='store_true')
+p.add_argument('--priority', action='store_true', help='Check bumper/Continue SFX arbitration and priority release.')
 p.add_argument('--pal', action='store_true')
 p.add_argument('--system-directory', type=Path)
 p.add_argument('--songs', nargs='*')
@@ -135,6 +136,58 @@ def play(sound_id):
 	step(1)
 
 
+if args.priority:
+	# Both real bumper callers must use PlaySound's priority queue. The
+	# PlaySound_Special fast path writes QueueToPlay and bypasses arbitration.
+	request=bytes.fromhex('303C')+g.s['SndID_Bumper'].to_bytes(2,'big')
+	for opcode in ('4EB9','4EF9'):
+		assert request+bytes.fromhex(opcode)+g.s['PlaySound'].to_bytes(4,'big') in rom,'Bumper bypasses SFX priority'
+	start,end=g.s['zTracksSFXStart'],g.s['zTracksSFXEnd']
+	tracks=[g.s[name] for name in ('zSFX_FM3','zSFX_FM4','zSFX_FM5')]
+	def active():return [bool(zram[p]&128) for p in tracks]
+	def priority():return zr('zAbsVar.SFXPriorityVal')
+	def queue(name):zram[g.s['zAbsVar.SFXUnknown']]=g.s['SndID_'+name]
+	def blocked(saved,delay):
+		g.restore(saved);step(delay);point=g.save();step(3)
+		expected=bytes(zram[start:end])
+		g.restore(point);queue('Bumper');step(3)
+		assert bytes(zram[start:end])==expected,('Bumper interrupted Continue',delay)
+		if any(active()):assert priority()==0x7F,('Continue lost priority',delay)
+	g.restore(menu);play(g.s['MusID_Stop']);step(30)
+	queue('ContinueJingle');step(2);assert priority()==0x7F and all(active())
+	jingle=g.save();tail=None;finished=None
+	for tick in range(350):
+		if any(active()):
+			assert priority()==0x7F,('Priority dropped before the final channel stopped',tick,active())
+			if not all(active()) and tail is None:tail=tick
+		else:
+			assert priority()==0;finished=tick;break
+		step()
+	assert tail is not None and finished is not None
+	for delay in (0,40,100,200,tail,tail+2):blocked(jingle,delay)
+	# A short PSG effect may end while the higher-priority FM jingle remains.
+	g.restore(jingle);queue('Jump');step(2)
+	assert zr('zSFX_PSG1.PlaybackControl')&128,'Higher-priority Jump was rejected'
+	for _ in range(100):
+		step()
+		if not zr('zSFX_PSG1.PlaybackControl')&128:break
+	else:raise AssertionError('Jump never stopped')
+	assert priority()==0x7F and any(active())
+	blocked(g.save(),0)
+	# Equal priority can still retrigger the jingle.
+	g.restore(jingle);step(40);queue('ContinueJingle');step(2)
+	assert all(active()) and priority()==0x7F
+	assert zr('zSFX_FM3.Volume')==6,'Equal-priority jingle did not restart'
+	# Once all jingle channels stop, ordinary bumpers must work again.
+	g.restore(jingle);step(finished+2);queue('Bumper');step(2)
+	assert all(active()) and priority()==0x70,'Bumper stayed blocked after Continue'
+	step(40);assert not any(active()) and priority()==0,'SFX priority did not clear'
+	report['priority']={'protected_delays':[0,40,100,200,tail,tail+2],'tail_start':tail,'finished':finished,
+		'psg_stop_preserved_priority':True,'equal_priority_retrigger':True,'bumper_after_jingle':True}
+	(output/'report.json').write_text(json.dumps(report,indent=2)+'\n')
+	print('Continue/bumper priority: early/middle/tail, PSG stop, retrigger and release passed.',flush=True)
+
+
 if args.effects:
 	effects = configparser.ConfigParser(interpolation=None)
 	effects.read(project / 'sound/SFX/SFX.ini')
@@ -157,7 +210,8 @@ if args.effects:
 
 if args.jingles:
 	report['restoration'] = []
-	for name in ['GHZ', 'LBZ2_S3']:
+	# Include the largest newly RAM-loaded prototype song near the $A40 limit.
+	for name in ['GHZ', 'LBZ2_S3', 'Test6']:
 		g.restore(menu)
 		play(g.s['MusID_' + name])
 		step(120)
