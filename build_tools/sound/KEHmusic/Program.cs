@@ -95,8 +95,7 @@ namespace KEHmusic
 		{
 			var files = new HashSet<string>(StringComparer.Ordinal);
 			foreach (string input in new[] { filename, "_definitions/s2.macros.asm", "_definitions/_smps2asm_inc.asm",
-				assembler, converter, Assembly.GetExecutingAssembly().Location,
-				"SonicRetro.KensSharp.Saxman.dll", "SonicRetro.KensSharp.Common.dll" })
+				assembler, converter, Assembly.GetExecutingAssembly().Location })
 				AddDependencies(files, input, Path.GetExtension(input).Equals(".asm", StringComparison.OrdinalIgnoreCase) ||
 					Path.GetExtension(input).Equals(".68k", StringComparison.OrdinalIgnoreCase));
 			using (var hash = System.Security.Cryptography.SHA256.Create())
@@ -112,7 +111,7 @@ namespace KEHmusic
 			}
 		}
 
-		static void RunTool(string filename, string arguments, string output)
+		static void RunTool(string filename, string arguments, string output, string log = ".sound-build/music.log")
 		{
 			var info = new ProcessStartInfo(Path.GetFullPath(filename), arguments)
 			{
@@ -124,10 +123,10 @@ namespace KEHmusic
 			using (Process process = Process.Start(info))
 			{
 				process.WaitForExit();
-				if (File.Exists(".sound-build/music.log"))
-					Console.Write(File.ReadAllText(".sound-build/music.log"));
+				if (File.Exists(log))
+					Console.Write(File.ReadAllText(log));
 				if (process.ExitCode != 0 || !File.Exists(output))
-					throw new IOException(Path.GetFileName(filename) + " failed; see .sound-build/music.asm and music.log.");
+					throw new IOException(Path.GetFileName(filename) + " failed; see " + log + ".");
 			}
 		}
 
@@ -150,6 +149,28 @@ namespace KEHmusic
 			return File.ReadAllBytes(".sound-build/music.bin");
 		}
 
+		static byte[] CompressSong(byte[] data)
+		{
+			foreach (string extension in new[] { "asm", "p", "bin", "log", "h" })
+				File.Delete(".sound-build/music-kos." + extension);
+			File.WriteAllBytes(".sound-build/music-raw.bin", data);
+			using (var writer = new StreamWriter(".sound-build/music-kos.asm", false, Encoding.ASCII))
+			{
+				writer.NewLine = "\r\n";
+				writer.WriteLine("\tCPU Z80");
+				writer.WriteLine("\torg 0");
+				writer.WriteLine("\tbinclude \".sound-build/music-raw.bin\"");
+			}
+			RunTool(assembler, "-xx -n -q -A -U -E -i . -o .sound-build/music-kos.p .sound-build/music-kos.asm",
+				".sound-build/music-kos.p", ".sound-build/music-kos.log");
+			RunTool(converter, "-z=0,kosinskiplus,MusicCompressedSize,after .sound-build/music-kos.p .sound-build/music-kos.bin .sound-build/music-kos.h",
+				".sound-build/music-kos.bin", ".sound-build/music-kos.log");
+			byte[] compressed = File.ReadAllBytes(".sound-build/music-kos.bin");
+			if (!data.SequenceEqual(KosinskiPlus.Decode(compressed, MusicRamSize)))
+				throw new InvalidDataException("Music failed its Kosinski+ round-trip check.");
+			return compressed;
+		}
+
 		static bool BuildSong(string name, MusicInfo song, bool clean)
 		{
 			string filename = Path.Combine("sound/music", song.File);
@@ -157,8 +178,8 @@ namespace KEHmusic
 			bool assembly = extension == ".asm" || extension == ".68k";
 			if (!assembly && extension != ".bin")
 				throw new InvalidDataException("Unsupported music file: " + filename);
-			if (assembly && song.BinaryFormat == MusicBinaryFormat.Saxman)
-				throw new InvalidDataException("BinaryFormat=Saxman requires a precompressed .bin file: " + filename);
+			if (assembly && song.BinaryFormat == MusicBinaryFormat.KosinskiPlus)
+				throw new InvalidDataException("BinaryFormat=KosinskiPlus requires a precompressed .bin file: " + filename);
 			string hash = BuildHash(filename, song.BinaryFormat);
 			if (!clean && song.BuildHash == hash && song.Size > 0 && song.Size <= BankSize &&
 				(song.OutputFile == null || File.Exists(Path.Combine("sound/music", song.OutputFile))))
@@ -166,21 +187,17 @@ namespace KEHmusic
 			Console.WriteLine("Building song \"{0}\"...", song.Title);
 			byte[] data = assembly ? AssembleSong(filename) : File.ReadAllBytes(filename);
 			song.OutputFile = null;
-			song.IsCompressed = song.BinaryFormat == MusicBinaryFormat.Saxman;
+			song.IsCompressed = song.BinaryFormat == MusicBinaryFormat.KosinskiPlus;
 			if (data.Length == 0 || data.Length > BankSize)
 				throw new InvalidDataException(name + " must occupy between 1 and $8000 bytes.");
-			if (song.IsCompressed && (data.Length < 2 || (data[0] | data[1] << 8) != data.Length - 2))
-				throw new InvalidDataException(name + " has an invalid Saxman size header.");
-			int rawSize = song.IsCompressed ? SonicRetro.KensSharp.Saxman.Decompress(data).Length : data.Length;
+			int rawSize = song.IsCompressed ? KosinskiPlus.Decode(data, MusicRamSize).Length : data.Length;
 			if (song.IsCompressed && (rawSize == 0 || rawSize > MusicRamSize))
 				throw new InvalidDataException(name + " decompresses beyond the Z80 music buffer ($A40 bytes).");
 			if (!song.IsCompressed && data.Length <= MusicRamSize)
 			{
-				byte[] compressed = SonicRetro.KensSharp.Saxman.Compress(data, true);
+				byte[] compressed = CompressSong(data);
 				if (compressed.Length < data.Length)
 				{
-					if (!data.SequenceEqual(SonicRetro.KensSharp.Saxman.Decompress(compressed)))
-						throw new InvalidDataException(name + " failed its Saxman round-trip check.");
 					song.OutputFile = "../generated/" + name + "_cmp.bin";
 					File.WriteAllBytes(Path.Combine("sound/music", song.OutputFile), compressed);
 					data = compressed;
@@ -456,7 +473,7 @@ namespace KEHmusic
 		public MusicBinaryFormat BinaryFormat { get; set; }
 	}
 
-	enum MusicBinaryFormat { Raw, Saxman }
+	enum MusicBinaryFormat { Raw, KosinskiPlus }
 
 	class MusicBuildInfo
 	{

@@ -13,7 +13,7 @@ import itertools
 import json
 import math
 from check_ehz_boss import symbols
-from check_sound_tools import saxman
+from check_sound_tools import saxman,kosinski_plus
 
 ROOT=Path(__file__).resolve().parents[1]
 LENGTHS=(2,2,2,1,1,2,2,1,2,2,2,2,2,1,1,2,5,1,1,2,1,2,3,5,3,1,2)
@@ -27,7 +27,7 @@ def music(rom,listing,ini):
 		row=config[name];start=s['Mus_'+name];size=row.getint('Size')
 		flags=data[s['zMasterPlaylist']+index*4+3]
 		raw=data[start:start+size]
-		if not flags&0x10:raw=saxman(raw)
+		if not flags&0x10:raw=(kosinski_plus if 'zKosinskiPlusDec' in s else saxman)(raw)
 		assert len(raw)==row.getint('UncompressedSize'),(name,'Raw song size')
 		result[name]=(raw,size,flags&~0x10)
 	return result
@@ -169,8 +169,8 @@ def playback(a,before,after):
 	import numpy as np
 	import zlib
 	from genesis_test_core import Genesis
-	selected=[name for name in before if (not a.songs or name in a.songs) and before[name][0]!=after[name][0]]
-	assert selected,'No changed songs selected for runtime comparison'
+	selected=[name for name in before if (not a.songs or name in a.songs) and (a.include_unchanged or before[name][0]!=after[name][0])]
+	assert selected,'No songs selected for runtime comparison; use --include-unchanged for codec/driver changes'
 	out=a.output.parent/('playback-pal' if a.pal else 'playback-ntsc');out.mkdir(parents=True,exist_ok=True)
 	fields=('PlaybackControl','VoiceControl','TempoDivider','Transpose','Volume','AMSFMSPan','VolFlutter',
 		'DurationTimeout','SavedDuration','FreqLow','FreqHigh','NoteFillTimeout','NoteFillMaster',
@@ -257,6 +257,7 @@ def main():
 	p.add_argument('--system-directory',type=Path)
 	p.add_argument('--pal',action='store_true')
 	p.add_argument('--songs',nargs='*')
+	p.add_argument('--include-unchanged',action='store_true',help='Compare unchanged decoded songs for driver/codec changes.')
 	p.add_argument('--frames',type=int,help='Override the two-loop runtime budget for a short diagnostic.')
 	a=p.parse_args()
 	before=music(a.reference_rom,a.reference_listing,a.reference_ini)

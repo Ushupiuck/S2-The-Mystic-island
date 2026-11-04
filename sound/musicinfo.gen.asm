@@ -50,9 +50,9 @@ zMasterPlaylist:
 	zmakePlaylistEntry	Mus_CNZ_2P,0
 	zmakePlaylistEntry	Mus_SCZ,0
 	zmakePlaylistEntry	Mus_EndLevel,0|musprop_nospeedup
-	zmakePlaylistEntry	Mus_GameOver,musprop_uncompressed|musprop_nospeedup
+	zmakePlaylistEntry	Mus_GameOver,0|musprop_nospeedup
 	zmakePlaylistEntry	Mus_ExtraLife,0|musprop_1up|musprop_nospeedup
-	zmakePlaylistEntry	Mus_DoubleLife,musprop_uncompressed|musprop_1up|musprop_nospeedup
+	zmakePlaylistEntry	Mus_DoubleLife,0|musprop_1up|musprop_nospeedup
 	zmakePlaylistEntry	Mus_Continue,0
 	zmakePlaylistEntry	Mus_Emerald,0
 	zmakePlaylistEntry	Mus_Countdown,0|musprop_palmode|musprop_nospeedup

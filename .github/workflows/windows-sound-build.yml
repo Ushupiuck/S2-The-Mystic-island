@@ -2,7 +2,7 @@ name: Windows sound build
 
 on:
   push:
-    branches: [test/rebuilt-kehmusic, Mystic-Island]
+    branches: [test/rebuilt-kehmusic, Mystic-Island, Mystic-Island-(Experimental)]
     paths:
       - .github/workflows/windows-sound-build.yml
       - build.bat

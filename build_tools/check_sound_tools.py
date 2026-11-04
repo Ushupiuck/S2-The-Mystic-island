@@ -9,10 +9,12 @@ import configparser
 import os
 from pathlib import Path
 import re
+import random
 import shutil
 import struct
 import subprocess
 import tempfile
+from convert_s1_ss_background import kosinski_plus_decode
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -46,6 +48,12 @@ def saxman(data):
 	return bytes(result)
 
 
+def kosinski_plus(data):
+	raw,consumed=kosinski_plus_decode(data)
+	assert consumed==len(data),'Trailing data after Kosinski+ stream'
+	return bytes(raw)
+
+
 def main():
 	p = argparse.ArgumentParser(description=__doc__)
 	p.add_argument('--mono', default=os.environ.get('MONO') or shutil.which('mono'))
@@ -75,7 +83,7 @@ def main():
 		(d / 'sound/music').mkdir(parents=True)
 		(d / 'sound/DAC').mkdir()
 		(d / '_definitions').mkdir()
-		for name in ['KEHmusic.exe', 'KEHsfx.exe', 'IniFile.dll', 'SonicRetro.KensSharp.Saxman.dll', 'SonicRetro.KensSharp.Common.dll', '_definitions/s2.macros.asm', 'sound/dacids.gen.asm', '_definitions/_smps2asm_inc.asm']:
+		for name in ['KEHmusic.exe', 'KEHsfx.exe', 'IniFile.dll', '_definitions/s2.macros.asm', 'sound/dacids.gen.asm', '_definitions/_smps2asm_inc.asm']:
 			shutil.copyfile(ROOT / name, d / name)
 		(d / 'md-main.asm').write_text('; Temporary packer fixture\n')
 		(d / 'sound/DAC/sample.bin').write_bytes(b'\x80')
@@ -158,6 +166,27 @@ def main():
 		assert 'failed' in run(packer, d, False)
 		print('Cache: warm reuse; nested includes and shared macros rebuild; invalid sources stop the packer.')
 
+		# Compression is automatic: decoded size must fit and stored size must win.
+		def auto_case(raw, expected):
+			(d / 'sound/music/auto.bin').write_bytes(raw)
+			ini.write_text('[Auto]\nTitle=Automatic fixture\nFile=auto.bin\n')
+			run(packer, d)
+			config = configparser.ConfigParser(interpolation=None); config.read(ini)
+			row = config['Auto']
+			assert row.getboolean('IsCompressed', fallback=False) == expected
+			assert row.getint('UncompressedSize') == len(raw)
+			if expected:
+				assert row.getint('Size') < len(raw)
+				assert kosinski_plus((d / 'sound/music' / row['OutputFile']).read_bytes()) == raw
+			else:
+				assert row.getint('Size') == len(raw) and not row.get('OutputFile')
+			return row
+		auto_case(bytes(0xA40), True)
+		auto_case(bytes(0xA41), False)
+		auto_case(random.Random(0x4B4F53).randbytes(0xA40), False)
+		auto_case(bytes(6), False) # Kosinski+ ties six raw zero bytes: keep raw.
+		print('Automatic music storage: fits+smaller compresses; oversized, incompressible and equal-size inputs stay raw.')
+
 		# Raw binaries must not silently acquire the compressed playlist flag.
 		(d / 'sound/music/raw.bin').write_bytes(bytes(range(256)) * 128)
 		ini.write_text('[Raw]\nTitle=Raw binary\nFile=raw.bin\n')
@@ -170,13 +199,25 @@ def main():
 		(d / 'sound/music/raw.bin').write_bytes(bytes(0x8001))
 		assert '$8000' in run(packer, d, False)
 		(d / 'sound/music/raw.bin').write_bytes(bytes(0xA40 + 1))
-		ini.write_text('[Raw]\nTitle=Raw binary\nFile=raw.bin\nBinaryFormat=Saxman\n')
-		assert 'size header' in run(packer, d, False)
-		# 300 zero-fill references: valid size header, too much decompressed data.
-		payload = (b'\x00' + b'\xDC\xFF' * 8) * 38
-		(d / 'sound/music/raw.bin').write_bytes(struct.pack('<H', len(payload)) + payload)
+		ini.write_text('[Raw]\nTitle=Raw binary\nFile=raw.bin\nBinaryFormat=KosinskiPlus\n')
+		assert 'Kosinski+' in run(packer, d, False)
+		# Explicit precompressed imports retain their encoding and decoded metadata.
+		from convert_s1_ss_background import kosinski_plus as encode_kosinski_plus
+		packed = encode_kosinski_plus(bytes(128))
+		(d / 'sound/music/raw.bin').write_bytes(packed)
+		run(packer, d)
+		config = configparser.ConfigParser(interpolation=None); config.read(ini)
+		assert config['Raw'].getboolean('IsCompressed')
+		assert config['Raw'].getint('UncompressedSize') == 128
+		assert config['Raw'].getint('Size') == len(packed)
+		assert 'musprop_uncompressed' not in (d / 'sound/musicinfo.gen.asm').read_text()
+		ini.write_text('[Raw]\nTitle=Invalid assembly flag\nFile=track.asm\nBinaryFormat=KosinskiPlus\n')
+		assert 'precompressed .bin' in run(packer, d, False)
+		ini.write_text('[Raw]\nTitle=Oversized decoded input\nFile=raw.bin\nBinaryFormat=KosinskiPlus\n')
+		# A literal followed by overlapping 256-byte copies exceeds $A40.
+		(d / 'sound/music/raw.bin').write_bytes(encode_kosinski_plus(bytes(0xA41)))
 		assert '$A40' in run(packer, d, False)
-		print('Binary imports: raw $8000 accepted; oversized banks, invalid Saxman headers, and Z80 buffer overflow rejected.')
+		print('Binary imports: raw $8000 accepted; oversized banks, invalid Kosinski+ streams, and Z80 buffer overflow rejected.')
 
 		# The same generated include works in a nonconsecutive bank arrangement.
 		(d / 'sound/music/raw.bin').write_bytes(bytes(range(256)) * 128)
@@ -190,16 +231,16 @@ def main():
 		assert 'must fit in $8000' in assemble(layout, okay=False)
 		print('Banks: independent placement works; asset overflow is caught by finishBank.')
 
-	# Check every packed song against a fresh assembly with an independent decoder.
+		# Check every packed song against a fresh assembly with an independent decoder.
 		music = configparser.ConfigParser(interpolation=None)
 		music.read(ROOT / 'sound/music/music.ini')
 		shutil.copyfile(ROOT / 'sound/dacids.gen.asm', d / 'sound/dacids.gen.asm')
 		for name in music.sections():
 			if music[name].getboolean('IsCompressed', fallback=False):
-				raw = saxman((ROOT / 'sound/music' / music[name]['OutputFile']).read_bytes())
+				raw = kosinski_plus((ROOT / 'sound/music' / music[name]['OutputFile']).read_bytes())
 				assert len(raw) <= 0xA40 and len(raw) == music[name].getint('UncompressedSize')
 				assert raw == assemble('\tinclude "' + (ROOT / 'sound/music' / music[name]['File']).as_posix() + '"\n'), name
-		print('All compressed project songs match fresh assembly using the independent Saxman decoder.')
+		print('All compressed project songs match fresh assembly using the independent Kosinski+ decoder.')
 	print('Sound tool checks passed.')
 
 

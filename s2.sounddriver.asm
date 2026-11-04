@@ -16,9 +16,7 @@
 ; and the 68k code can use the labels and equates defined in here.
 ; This is fortunate, as they contain references to each other's addresses.
 ;
-; If you want to add significant amounts of extra code to this driver,
-; I suggest putting your code as far down as possible, after the function zloc_12FC.
-; That will make you less likely to run into space shortages from dislocated data alignment.
+; Added code must fit below zMusicData; the final assembly checks this boundary.
 ;
 ; >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; setup defines and macros and stuff
@@ -28,10 +26,9 @@
 	; got; it's probably about 95% figured out.
 	;	- I didn't do 68K queueing completely... it's in there, I'm just a little fuzzy right now
 
-	; I briefly touched the Saxman decoder though I'm not using it; I figured someone
-	; else can play with that.  I think playing music out of ROM is just dandy,
-	; even if it does require a little post-processing to work.  And actually, with
-	; some tweaks, I think I can get this beast on relative addresses... heheheh
+	; KeH uses relative music pointers for both ROM-streamed and RAM-loaded songs.
+	; This experimental build decodes headerless Kosinski+ music into Z80 RAM;
+	; the packer leaves songs raw when they do not fit or compression saves nothing.
 
 	; LOTS of decoding work and relabelling of unknowns!  This is a much more complete disasm ;)
 
@@ -1768,15 +1765,15 @@ zBGMLoad_FlagLoadInstruction:
 	sbc	a,a
 	ld	(zCanNotBeSpedUp),a
 	sla	c				; Put bit 6 into carry flag (uncompressed data flag)
-	; If we bypass the Saxman decompressor, the Z80 engine starts
+	; If we bypass the Kosinski+ decompressor, the Z80 engine starts
 	; with the assumption that we're already decompressed with 'de' pointing
 	; at the decompressed data (which just so happens to be the ROM window)
-	jr	c,+	; Bypass the Saxman decompressor if uncompressed
+	jr	c,+	; Bypass the Kosinski+ decompressor if uncompressed
 
-	; This begins a call to the Saxman decompressor:
+	; Decode a headerless Kosinski+ music stream:
 	ex	de,hl
-	call	zSaxmanDec
-	ld	de,zMusicData	; Saxman compressed songs start at zMusicData (1380h)
+	call	zKosinskiPlusDec
+	ld	de,zMusicData	; decompressed music starts at zMusicData
 +
 	; Begin common track init code
 	push	de
@@ -2924,7 +2921,7 @@ cfFadeInToPrevious_FlagLoadInstruction:
 cfFadeInToPrevious_AddressLoadInstruction:
 	ld	hl,0
 
-	call	zSaxmanDec
+	call	zKosinskiPlusDec
 +
 
 	ld	a,(zSongDAC.PlaybackControl)	; Get DAC's playback bit
@@ -3601,124 +3598,87 @@ byte_11E5:
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 
-;zsub_1271
-zSaxmanDec:
-	exx
-	xor	a
-	ld	b,a
-	ld	c,a
-	ld	d,a
-	ld	e,a
-	exx
+; Kosinski+ music decoder, ported from the format in _inc/KosinskiPlus.asm
+; (Flamewing/vladikcomper/Clownacy; credits/license in that 68000 reference).
+; HL = banked source; output starts at zMusicData.
+; MSB-first descriptor bits use A with a sentinel; AF' holds it while long
+; tokens are decoded. The signed copy displacement patches an immediate word.
+; IX/IY and the RAM layout are unchanged. Called inside the sound interrupt;
+; this scratch state is not reentrant. Streams are validated by KEHmusic.
+zKosinskiPlusDec:
 	ld	de,zMusicData
+	ld	a,80h
+zKosPlusReadLoop:
+	call	zKosPlusGetBit
+	jr	nc,zKosPlusMatch
+	ldi
+	jr	zKosPlusReadLoop
+zKosPlusMatch:
+	call	zKosPlusGetBit
+	jr	c,zKosPlusLong
+	; Short token: signed 8-bit displacement, then two count bits (2..5).
 	ld	c,(hl)
 	inc	hl
-	ld	b,(hl)					; bc = (hl) i.e. "size of song"
+	ld	b,0FFh
+	ld	(zKosPlusCopyOffset+1),bc
+	ld	bc,0
+	call	zKosPlusGetBit
+	rl	c
+	call	zKosPlusGetBit
+	rl	c
+	inc	c
+	inc	c
+	jr	zKosPlusCopy
+zKosPlusLong:
+	ex	af,af'
+	ld	a,(hl)
 	inc	hl
-	ld	(zGetNextByte+1),hl		; modify inst. @ zGetNextByte -- set to beginning of decompression stream
-	inc	bc
-	ld	(zDecEndOrGetByte+1),bc ; modify inst. @ zDecEndOrGetByte -- set to length of song, +1
-
-;zloc_1288
-zSaxmanReadLoop:
-
-	exx							; shadow reg set
-	srl	b						; b >> 1 (just a mask that lets us know when we need to reload)
-	jr	c,+					; if it's set, we still have bits left in 'c'; jump to '+'
-	; If you get here, we're out of bits in 'c'!
-	call	zDecEndOrGetByte	; get next byte -> 'a'
-	ld	c,a						; a -> 'c'
-	ld	b,7Fh					; b = 7Fh (7 new bits in 'c')
-+
-	srl	c						; test next bit of 'c'
-	exx							; normal reg set
-	jr	nc,+						; if bit not set, it's a compression bit; jump to '+'
-	; If you get here, there's a non-compressed byte
-	call	zDecEndOrGetByte	; get next byte -> 'a'
-	ld	(de),a					; store it directly to the target memory address
-	inc	de						; de++
-	exx							; shadow reg set
-	inc	de						; Also increase shadow-side 'de'... relative pointer only, does not point to output Z80_RAM
-	exx							; normal reg set
-	jr	zSaxmanReadLoop			; loop back around...
-+
-	call	zDecEndOrGetByte	; get next byte -> 'a'
-	ld	c,a						; a -> 'c' (low byte of target address)
-	call	zDecEndOrGetByte	; get next byte -> 'a'
-	ld	b,a						; a -> 'b' (high byte of target address + count)
-	and	0Fh						; keep only lower four bits...
-	add	a,3						; add 3 (minimum 3 bytes are to be read in this mode)
-	push	af					; save 'a'...
-	ld	a,b						; b -> 'a' (low byte of target address)
-	rlca
-	rlca
-	rlca
-	rlca
-	and	0Fh						; basically (b >> 4) & 0xF (upper four bits now exclusively as lower four bits)
-	ld	b,a						; a -> 'b' (only upper four bits of value make up part of the address)
-	ld	a,c
-	add	a,12h
-	ld	c,a
-	adc	a,b
-	sub	c
-	and	0Fh
-	ld	b,a						; bc += 12h
-	pop	af						; restore 'a' (byte count to read; no less than 3)
-	exx							; shadow reg set
-	push	de					; keep current 'de' (relative pointer) value...
-	ld	l,a						; how many bytes we will read -> 'hl'
-	ld	h,0
-	add	hl,de					; add current relative pointer...
-	ex	de,hl					; effectively, de += a
-	exx							; normal reg set
-	pop	hl						; shadow 'de' -> 'hl' (relative pointer, prior to all bytes read, relative)
-	or	a						; Clear carry
-	sbc	hl,bc					; hl -= bc
-	jr	nc,+					; if result positive, jump to '+'
-	ex	de,hl					; current output pointer -> 'hl'
-	ld	b,a						; how many bytes to load -> 'b'
-
--	ld	(hl),0					; fill in zeroes that many times
+	ld	b,a
+	and	7
+	push	af
+	ld	a,b
+	or	7
+	rrca
+	rrca
+	rrca
+	ld	b,a
+	ld	c,(hl)
 	inc	hl
-	djnz	-
-
-	ex	de,hl					; output pointer updated
-	jr	zSaxmanReadLoop			; loop back around...
-+
-	ld	hl,zMusicData			; point at beginning of decompression point
-	add	hl,bc					; move ahead however many bytes
+	ld	(zKosPlusCopyOffset+1),bc
+	pop	af
+	or	a
+	jr	z,zKosPlusExtended
+	; Counts 1..7 encode lengths 9..3.
+	xor	7
+	add	a,3
+	jr	zKosPlusSetCount
+zKosPlusExtended:
+	ld	a,(hl)
+	inc	hl
+	or	a
+	ret	z			; extended count zero is the end marker
+	add	a,9			; 16-bit count also handles 256-byte copies
+zKosPlusSetCount:
 	ld	c,a
 	ld	b,0
-	ldir
-	jr	zSaxmanReadLoop
-; End of function zSaxmanDec
-
-
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
-
-
-; This is an ugly countdown to zero implemented in repeatedly modifying code!!
-; But basically, it starts at the full length of the song +1 (so it can decrement)
-; and waits until 'hl' decrements to zero
-;zsub_12E8
-zDecEndOrGetByte:
-	ld	hl,0					; "self-modified code" -- starts at full length of song +1, waits until it gets to 1...
-	dec	hl						; ... where this will be zero
-	ld	(zDecEndOrGetByte+1),hl	; "self-modifying code" -- update the count in case it's not zero
-	ld	a,h
-	or	l
-	jr	z,+						; If 'h' and 'l' both equal zero, we quit!!
-;zloc_12F3
-zGetNextByte:
-	ld	hl,0				; "self-modified code" -- get address of next compressed byte
-	ld	a,(hl)				; put it into -> 'a'
-	inc	hl					; next byte...
-	ld	(zGetNextByte+1),hl	; change inst @ zGetNextByte so it loads next compressed byte
-	ret						; still going...
-+
-	pop	hl					; throws away return address to this function call so that next 'ret' exits decompressor (we're done!)
-	ret						; Exit decompressor
-; End of function zDecEndOrGetByte
+	rl	b
+	ex	af,af'
+zKosPlusCopy:
+	push	hl
+zKosPlusCopyOffset:
+	ld	hl,0			; self-modified signed displacement
+	add	hl,de
+	ldir				; forward copying preserves overlapping matches
+	pop	hl
+	jr	zKosPlusReadLoop
+zKosPlusGetBit:
+	add	a,a
+	ret	nz
+	ld	a,(hl)
+	inc	hl
+	adc	a,a			; old sentinel supplies the new low bit
+	ret
+zKosinskiPlusDec_End:
 
 ; ---------------------------------------------------------------------------
 	; space for a few global variables

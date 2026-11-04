@@ -267,7 +267,9 @@ replaces it. The compressed Z80 driver has its own explicit start/end span.
 Terrain decodes straight into resident CD PRG RAM. General MD destinations use
 the Word-RAM output bank followed by a result copy; Z80 destinations require
 byte writes. This moves startup driver decompression, not sound sequencing:
-the current sound driver, music and Saxman handling remain on Z80/MD.
+sound sequencing and music decompression remain on Z80/MD. The experimental
+branch's Kosinski+ music path is described in the
+[sound guide](../build_tools/sound/README.md#experimental-z80-decoder).
 
 `ArtLoadCues` index offsets use bit 0 to identify a KosM list. `LoadPLC` and
 `NewPLC` strip that bit and tag each staged source's high byte; the low 24 bits

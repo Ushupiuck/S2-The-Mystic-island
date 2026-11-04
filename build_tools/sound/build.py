@@ -34,24 +34,18 @@ if args.framework:
 else:
 	framework_flags = ['/reference:System.dll', '/reference:System.Core.dll']
 
-for name, source_name, target in (('SonicRetro.KensSharp.Saxman', 'KensSharp.Saxman', 'library'),
-	('KEHmusic', 'KEHmusic', 'exe'), ('KEHsfx', 'KEHsfx', 'exe')):
-	flags = ['/nologo', '/noconfig', '/target:' + target, '/optimize+', '/define:TRACE',
-		'/out:' + str(ROOT / (name + ('.dll' if target == 'library' else '.exe')))]
-	if mcs or target == 'library':
+for name in ('KEHmusic', 'KEHsfx'):
+	flags = ['/nologo', '/noconfig', '/target:exe', '/optimize+', '/define:TRACE',
+		'/out:' + str(ROOT / (name + '.exe'))]
+	if mcs:
 		flags.append('/debug-')
 	else:
 		flags.append('/debug:' + debug)
 	if deterministic:
 		flags += ['/deterministic+', '/pathmap:' + str(ROOT) + '=.']
 	flags += framework_flags
-	if target == 'library':
-		flags.append('/reference:' + str(ROOT / 'SonicRetro.KensSharp.Common.dll'))
-	else:
-		flags.append('/reference:' + str(ROOT / 'IniFile.dll'))
-	if name == 'KEHmusic':
-		flags.append('/reference:' + str(ROOT / 'SonicRetro.KensSharp.Saxman.dll'))
-	source = Path(__file__).resolve().parent / source_name
+	flags.append('/reference:' + str(ROOT / 'IniFile.dll'))
+	source = Path(__file__).resolve().parent / name
 	print('Building', name, flush=True)
 	# Regenerate symbols rather than reuse a different compiler's PDB format.
 	(ROOT / (name + '.pdb')).unlink(missing_ok=True)
@@ -61,12 +55,10 @@ for name, source_name, target in (('SonicRetro.KensSharp.Saxman', 'KensSharp.Sax
 if args.check:
 	temporary = ROOT / '.sound-build/checks'
 	temporary.mkdir(parents=True, exist_ok=True)
-	flags = ['/nologo', '/noconfig', '/target:exe', '/debug-', '/out:' + str(temporary / 'SaxmanCheck.exe'),
-		'/reference:' + str(ROOT / 'SonicRetro.KensSharp.Saxman.dll')]
+	flags = ['/nologo', '/noconfig', '/target:exe', '/debug-', '/out:' + str(temporary / 'KosinskiPlusCheck.exe')]
 	flags += framework_flags
-	subprocess.run(command + flags + [str(Path(__file__).resolve().parent / 'tests/SaxmanCheck.cs')], check=True)
-	for name in ('Saxman', 'Common'):
-		shutil.copyfile(ROOT / ('SonicRetro.KensSharp.' + name + '.dll'), temporary / ('SonicRetro.KensSharp.' + name + '.dll'))
-	subprocess.run(([args.mono] if os.name != 'nt' else []) + [str(temporary / 'SaxmanCheck.exe')], check=True)
+	subprocess.run(command + flags + [str(Path(__file__).resolve().parent / 'tests/KosinskiPlusCheck.cs'),
+		str(Path(__file__).resolve().parent / 'KEHmusic/KosinskiPlus.cs')], check=True)
+	subprocess.run(([args.mono] if os.name != 'nt' else []) + [str(temporary / 'KosinskiPlusCheck.exe')], check=True)
 	subprocess.run([os.sys.executable, str(ROOT / 'build_tools/check_sound_tools.py')] +
 		(['--mono', args.mono] if args.mono else []), check=True)

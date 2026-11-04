@@ -1,9 +1,10 @@
 # KeH sound tools
 
-`KEHmusic.exe` still assembles songs, tries Saxman compression when the song fits
-the Z80 buffer, sorts by stored size, and packs music and DAC samples into
+`KEHmusic.exe` assembles songs, automatically chooses compressed or raw storage,
+sorts by stored size, and packs music and DAC samples into
 `$8000`-byte banks. `KEHsfx.exe` generates the sound-effect tables. Their source
-now lives here; rebuilding the tools no longer depends on an unavailable project.
+lives here. `Mystic-Island-(Experimental)` uses headerless Kosinski+ music and a
+Z80 Kosinski+ decoder; this replaces the previous Saxman music format.
 
 The normal `build.bat`/`build.lua` build runs both tools before assembling the
 ROM. The packer uses the AS assembler and `p2bin` in the platform's `build_tools`
@@ -20,8 +21,8 @@ python3 build_tools/sound/build.py
 ```
 
 The script supports Mono's `mcs`, the Windows .NET Framework C# compiler, and
-Roslyn `csc`. It targets .NET Framework 4. It also rebuilds the patched Saxman
-DLL against the existing `SonicRetro.KensSharp.Common.dll`.
+Roslyn `csc`. It targets .NET Framework 4 and uses the existing `IniFile.dll`.
+The retired KensSharp Saxman/Common DLLs are no longer required.
 
 For a separately installed Roslyn compiler/reference set:
 
@@ -32,8 +33,8 @@ python3 build_tools/sound/build.py --compiler /path/to/csc.exe \
 
 `CSC` and `MONO` environment variables are also accepted. Roslyn builds use
 deterministic output and portable PDBs when available. Older compilers use their
-supported debug format instead. `--check` runs the compressor and macro/packer
-checks after compilation.
+supported debug format instead. `--check` runs the bounded Kosinski+ decoder
+fixtures and macro/packer checks after compilation.
 
 ## Generated files
 
@@ -96,7 +97,7 @@ state. Local prototype voice banks retain instrument zero; unused instruments
 are removed and selectors compacted, with their original S3 indices noted in
 the source. Selected 25-byte YM patches must remain identical.
 
-Measure both assembled and Saxman sizes. A smaller sequence can have a slightly
+Measure both assembled and Kosinski+ sizes. A smaller sequence can have a slightly
 larger compressed encoding; crossing the `$A40` RAM limit can instead save much
 more by enabling compression. Banks are padded to `$8000`, so saved song bytes
 create reusable bank space without necessarily reducing the padded ROM size.
@@ -115,24 +116,48 @@ channel must preserve its priority. Equal-priority effects may still retrigger.
 
 A `.bin` is **raw by default**. It must already use KeH's relative music format.
 The packer may compress it if it is small enough and compression saves space.
-For an already compressed, size-prefixed Saxman file, specify:
+For an already compressed, headerless Kosinski+ file, specify:
 
 ```ini
 [Imported]
 Title=Imported song
 File=Imported.bin
-BinaryFormat=Saxman
+BinaryFormat=KosinskiPlus
 ```
 
-The actual decompressed size must fit `$A40` bytes, the buffer reserved in
-`s2.sounddriver.asm`. Larger songs remain uncompressed in ROM and must fit one
-`$8000` bank. The playlist's compression flag comes from the chosen encoding,
-not from the filename extension. Compressed output is round-trip checked.
+For ordinary ASM and raw binary inputs, compression is selected only when the
+**decoded** song fits `$A40` bytes and the compressed stream is strictly smaller.
+Oversized, incompressible and equal-size songs stay raw in ROM automatically.
+Raw songs must fit one `$8000` bank. No per-song compression switch is needed.
+
+Explicit `BinaryFormat=KosinskiPlus` inputs are validated before packing: they
+must decode to between 1 and `$A40` bytes. Invalid backreferences, truncated
+streams, trailing data and output overflow fail the build. Legacy Saxman inputs
+must be decoded before importing. The playlist's existing compression flag comes
+from the chosen encoding, not the filename extension. Generated compressed
+output is round-trip checked against the raw song.
 
 Generated compressed songs live in `sound/generated/<music ID>_cmp.bin`;
 `OutputFile`, `Size`, `UncompressedSize`, `IsCompressed`, and `MD5` in the INI are
 computed metadata. The superseded compressed copies beside the sources have
 been removed.
+
+### Experimental Z80 decoder
+
+`KEHmusic` wraps raw song bytes in a temporary AS Z80 segment, then invokes the
+bundled `p2bin` Kosinski+ encoder. Streams have MSB-first descriptors and a long
+zero-count end marker, without a size header or module framing. Both ordinary
+song loading and the post-1-up restoration path call `zKosinskiPlusDec`.
+
+The Z80 routine occupies 102 bytes, replacing the 136-byte Saxman routine. It
+ends at `$1227`, leaving 47 bytes before the unchanged `zMusicData` at `$1256`.
+The `$A40` music allocation and following state/backup areas have not moved.
+`HL` supplies the banked source; output starts at `zMusicData`. On return `HL`
+and `DE` point past the input and output. `IX`/`IY` are preserved; `AF`, `AF'`
+and `BC` are scratch. A signed match displacement patches one immediate word
+in the decoder, so no new RAM variable is needed. It runs inside the sound
+interrupt and is not reentrant. Host validation enforces the output bound; the
+compact runtime trusts those validated streams.
 
 ## Reusing bank padding
 
@@ -169,15 +194,15 @@ the generated files themselves.
 ## Cache and failures
 
 `.sound-build/music-cache.ini` hashes the song, literal transitive source/binary
-includes, shared macros, DAC IDs, assembler, converter, packer, and compression
-DLLs. A changed dependency triggers a rebuild; missing compressed output also
+includes, shared macros, DAC IDs, assembler, converter and packer. A changed dependency triggers a rebuild; missing compressed output also
 triggers one. The local cache is ignored by Git. `KEHmusic /clean` or
 `KEHmusic --clean` rebuilds every song.
 
 `KEHmusic --tools-dir PATH` or `KEH_TOOLS_DIR` overrides native tool selection.
 Assembler/converter failures stop the packer and the ROM build with a nonzero
 exit status. The failing song wrapper and assembler diagnostics remain in
-`.sound-build/music.asm` and `.sound-build/music.log`. Invalid or oversized
+`.sound-build/music.asm` and `.sound-build/music.log`; compression wrappers and
+diagnostics use `.sound-build/music-kos.*`. Invalid or oversized
 music/DAC data also fails the build instead of producing a partial playlist.
 
 ## Validation
@@ -209,7 +234,7 @@ python3 build_tools/check_music_sequences.py \
   --reference-ini /path/to/music.ini --output test-results/music-sequences/report.json
 ```
 
-This independently reads each ROM's playlist and Saxman data, expands relative
+This independently reads each ROM's playlist and compressed data, expands relative
 calls/jumps/counted loops, checks stack/counter overlap, and compares complete
 channel streams past their loop boundaries. Headers, playlist behavior flags,
 computed note durations, bare duration events, commands and selected instruments
@@ -218,6 +243,10 @@ must match. Finite tracks must terminate at the same event.
 Add `--core CORE --system-directory BIOS` for real Mode 1 playback comparisons
 of every changed song. The default budget covers the introduction and two
 complete channel loops; `--pal` repeats in PAL and `--songs` restricts selection.
+Use `--include-unchanged` for codec/driver changes whose decoded songs remain
+identical. The listing selects the Kosinski+ decoder or the retained historical
+Saxman reader for each ROM. Select looping tracks for long runtime comparisons;
+use the jingle checks below for finite 1-up tracks that restore another song.
 `--frames` is a shorter diagnostic override. Each frame's musical Z80 state,
 including tempo, duration, pitch, modulation and the actual instrument patch,
 must match after at most eight frames of load-start alignment. Relocated data,
@@ -233,23 +262,29 @@ unrelated PSG effect finishing, equal-priority retriggering, and priority releas
 Its `--jingles` cases include RAM-loaded GHZ, ROM-streamed Launch Base 2 and the
 large RAM-loaded S3 Menu track, checking bank/voice and decompressed-data restore.
 
-Checked on this update:
+The tool fixtures check original instrument dumps, relative music pointers,
+compact SFX headers, modern command conversions, dependency invalidation,
+separate bank placement, unsupported imports and invalid/oversized input.
+Automatic storage fixtures cover an exact `$A40` fit, `$A41` overflow,
+incompressible data and a compressed/raw size tie. Every compressed project
+song is compared with fresh assembly through an independent Python decoder.
 
-- All 19 instruments in HTZ, Gene Gadget 1, and Rusty Ruin 1 match the source's
-  preserved raw dumps, converted to S2's operator order.
-- Every compressed project song matches fresh assembly with an independent
-  Python Saxman decoder.
-- 123 compressor cases cover zero-length data, trailing zeros, dictionary wrap,
-  and nonzero output stream positions.
-- Macro fixtures check relative music pointers, compact absolute SFX headers,
-  modern command conversions, and unsupported-import diagnostics.
-- Packer fixtures cover dependency invalidation, failed assembly, raw binary
-  flags, `$8000` limits, decompressed buffer overflow, separate bank placement,
-  and asset overflow detection.
-- 57 tracks played for 600 frames each in NTSC; 10 representative tracks passed
-  the equivalent PAL check. 86 sound effects produced audio. The 1-up jingle
-  restored both RAM-loaded GHZ and ROM-streamed Launch Base 2, including the
-  original compressed song's RAM data and each song's bank/instrument pointer.
+For direct execution of the assembled Z80 routine:
+
+```sh
+python3 build_tools/check_z80_kosinski_plus.py \
+  --core /path/to/genesis_plus_gx_libretro.so \
+  --output test-results/z80-kosinski-plus/native
+```
+
+This requires a core exporting its native Z80 registers, memory maps and bus
+callbacks. It relocates the unchanged decoder into guarded flat fixture memory,
+then checks all descriptor alignments, short/long/extended counts, overlap,
+8-KiB distances, current songs and seeded encoder fixtures. Output/input guards,
+source/destination cursors, stack balance and `IX`/`IY` preservation are checked;
+only the copy displacement may modify code. This proves instruction-level
+format behavior, not Mega Drive bus or interrupt timing. The full-game playback
+checks cover the real banked load and restoration paths.
 
 These are playback and encoding checks, not a claim that every imported song
 now duplicates its source game's sound. PSG envelope approximations inherited
@@ -263,13 +298,14 @@ from KeH remain, and the macro corrections intentionally change some output.
   reproduced the original managed method code, generated ROM, and track audio.
 - Modern macro formats/names:
   [sonicretro/s2disasm, `4ef457c1`](https://github.com/sonicretro/s2disasm/blob/4ef457c18fc4902396c43ab06fabc119ac6ecb64/sound/_smps2asm_inc.asm).
-- Bundled Saxman source baseline:
-  [sonicretro/KENSSharp, `a2cf5d1`](https://github.com/sonicretro/KENSSharp/tree/a2cf5d1c24558e190b6de4ddcc359cb80bac5cba/Saxman).
-  The local copy bounds the zero-fill search at EOF, keeps dictionary searches
-  nonnegative, handles decode wrap/empty input, and fixes size headers for output
-  streams with a nonzero starting position. It retains the legacy matching
-  strategy rather than switching compressors. Its LGPLv3/GPLv3 texts accompany
-  the source in `KensSharp.Saxman`; the DLL remains dynamically replaceable.
+- Kosinski+ format and 68000 reference:
+  [`_inc/KosinskiPlus.asm`](../../_inc/KosinskiPlus.asm) and its internal include,
+  originally by Flamewing/vladikcomper with Clownacy's improvements. The Z80
+  implementation ports that format with sentinel-bit parsing and a
+  self-modified displacement; it does not embed 68000 machine code.
+- Host compression uses the project's bundled
+  [Clownacy/p2bin](https://github.com/Clownacy/p2bin). The C# and Python readers
+  independently validate its streams.
 
 The runtime retains the fix for restoring uncompressed music after a 1-up.
 Its multi-channel SFX priority lifetime is described above.
