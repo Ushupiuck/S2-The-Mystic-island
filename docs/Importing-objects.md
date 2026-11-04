@@ -125,6 +125,6 @@ Normal builds do not rerun the importer or overwrite hand-edited raw pixels.
 
 The earlier [Mystic-Island-EHZ-palette-WIP branch](https://github.com/Ushupiuck/S2-The-Mystic-island/tree/Mystic-Island-EHZ-palette-WIP)
 retains its separate three-gray candidate and archived S2 pod/rotor import.
-It is not the preview branch's live palette implementation. See the
+The preview branch has removed the obsolete pod/rotor archives. See the
 [boss checks](Testing.md#boss-runtime-checks) for source-color, masked-load,
 animated-background and real fight coverage.

@@ -411,21 +411,26 @@ the twisting path is explicit:
 | `$2DE-$31D` | Platforms, 64 tiles |
 | `$31E-$32D` | Breakable wall, 16 tiles |
 
-Obj18's existing mappings reference the new platform slots. Obj3C uses extra
-frames in the existing breakable-wall mapping family for EHZ's terrain bank
-and P2; its Debug and SonLVL entries expose those frames without a second art
-file. The ordinary terrain sheet still ends at `$32D`.
+Obj18's platform mappings and Obj3C's wall refer to these slots in both acts.
+The wall is 32x64: two identical 32x32 checker blocks stacked vertically.
+Each block uses all 16 tiles, in four 16x16 quarters (top left, top right,
+bottom left, bottom right). All three EHZ wall frame IDs share this mapping.
+The eight hardware pieces stay in left-column/right-column order for the
+original fragment velocities. Debug and SonLVL use the same frame.
 
-Act 2 preserves all 236 original chunk definitions and all authored nonblank
-blocks, whether currently placed or not. PP adds 14 background chunks after
-them. Its 173 static tiles follow the shared art, skipping the existing
-waterfall/flower animation reservations; the complete bank ends at `$3EF`.
-Only unreferenced, blank, non-solid block slots are available for PP blocks.
-The importer does not prune reusable terrain to match a particular layout.
-All four era foreground grids retain their geometry, flips and collision.
-Act 2's P2 green merges (`$060` into `$064`, `$080` into `$0A0`) remain, with
-pixel indices translated across all authored terrain and platform uses;
-P2 `A/B` stay the fixed `$EEA/$CC6` background-waterfall shades.
+Act 2 retains all 228 shared chunk definitions, including unplaced foreground.
+Its importer identifies the eight original EHZ background-only chunks across
+all eras, then follows block/tile references before reusing their slots. The
+54 exclusive blocks and 114 exclusive tiles are available to the PP scenery.
+Shared blocks, editable unplaced blocks, platforms, walls and collision data
+for foreground blocks keep their IDs. The 14 PP chunks use these holes first;
+the act has 242 chunks and 926 terrain tiles, including the animation seeds.
+
+Act 1 transfers its own 814-tile sheet. When entering the shorter EHZ bank,
+the loader clears the gap from `ArtTile_EHZ_Common_End` to the first flower,
+so a return from Act 2 also clears PP pixels beyond the shorter upload.
+Act 2's P2 green merges (`$060` into `$064`, `$080` into `$0A0`) remain;
+P2 `A/B` supply the fixed `$EEA/$CC6` background-waterfall shades.
 
 Normal EHZ sprite loads follow the terrain: fireball `$3F0`, waterfall `$400`,
 bridge `$418`, Buzzer `$420`, Snailbot `$43C`, Masher `$456`, seesaw `$46C`.

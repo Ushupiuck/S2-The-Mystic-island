@@ -69,7 +69,7 @@ the complete serialized word, including when calculating movement overlays.
 | `$17` | Swinging platform / ball | Word `PPRD IIII SMMM LLLL`: quarter orientation, detach, relay, material sound, twelve interaction profiles, eight movement modes and 0–8 links. See [runtime settings](../docs/Objects.md#swinging-platforms-s1s2-coverage-and-s3k-variants). |
 | `$18` | Regular platform | Word `CCCF IIII STTT MMMM`: movement, shape, sag, shared interaction menu, falling, and phase/corner or switch channel. Profiles 6–9 add a classic underside grip; 8/9 also convey standing riders. See [runtime settings](../docs/Objects.md#ordinary-platforms-and-flying-batterys-hovering-platform). |
 | `$19`, `$AD` | CPZ platform / SMZ moving block | Low nibble: movement, wall stop/fall, switch-2 raft, vertical motion or triggered fast slide. High nibble: shape. |
-| `$1A`, `$3C` | Collapsing ledge / breakable wall | Full byte: mapping frame. |
+| `$1A`, `$3C` | Collapsing ledge / breakable wall | Full byte: mapping frame. EHZ wall variants all show the same two stacked checker blocks. |
 | `$1C` | Scenery | Low nibble: appearance; high nibble: animation. Zone lists supply suitable defaults. |
 | `$1D` | Bridge | Full byte: number of 16-pixel logs. Preview includes every log. |
 | `$1E` | HPZ waterfall | Full byte: height; `$10` and above add a second stream. |

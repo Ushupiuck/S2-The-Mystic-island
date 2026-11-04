@@ -96,7 +96,7 @@ def native_checks(a):
 		m.act(kind,body)
 		face = next(p for p in pool[1:] if m.get(p,'code')==s[kind] and m.get(p,'obRoutine')==(4 if kind=='Obj3D' else 14))
 		assert m.get(face,'obMap',4)==s['Map_GHZBoss_Cockpit' if kind=='Obj3D' else 'Map_EHZBoss_Cockpit']
-		assert m.get(face,'obGfx',2)==s['ArtTile_Eggman' if kind=='Obj3D' else 'ArtTile_ArtNem_Eggpod_1']
+		assert m.get(face,'obGfx',2)==s['ArtTile_Eggman']
 		m.put(body,'obX',1000,2)
 		m.put(body,'obY',1000,2)
 		# Only source expression selectors vary; the real animation runs each tick.
@@ -105,10 +105,13 @@ def native_checks(a):
 				('normal',6 if kind=='Obj3D' else 4,0,False,{0,1}),
 				('laugh',6 if kind=='Obj3D' else 4,0,True,{2,3}),
 				('hurt',6 if kind=='Obj3D' else 4,32,False,{0,4}),
-				('defeated',8 if kind=='Obj3D' else 6,0,False,{0,5}),
-				('recover',10 if kind=='Obj3D' else 8,0,False,{6})):
+				('exploding',8 if kind=='Obj3D' else 6,0,False,{0,4} if kind=='Obj3D' else {6}),
+				('recover',10 if kind=='Obj3D' else 8,0,False,{6}),
+				('escape',12 if kind=='Obj3D' else 10,0,False,{0,5})):
 				m.put(body,'obStatus',flip)
 				m.put(body,'ob2ndRout',phase)
+				if kind=='EHZBoss' and name=='escape':
+					m.put(body,'objoff_30',4)	# powered escape
 				m.put(body,'BGHZ_FlashTimer' if kind=='Obj3D' else 'objoff_42',flash)
 				m.put('v_player','obRoutine',4 if hurt else 2)
 				m.put(face,'obPrevAni',255)
@@ -189,7 +192,7 @@ def live_gallery(g, a, act):
 	x,y = camx+160,camy+150
 	hull,face = [spawn(g,'DisplaySprite',x,y) for _ in range(2)]
 	for obj,mapping,line in ((hull,'Map_EHZBoss_Vehicle',0),(face,'Map_EHZBoss_Cockpit',0)):
-		for field,value,size in (('obMap',s[mapping],4),('obGfx',s['ArtTile_ArtNem_Eggpod_1']+(line<<13),2),
+		for field,value,size in (('obMap',s[mapping],4),('obGfx',s['ArtTile_Eggman']+(line<<13),2),
 			('obRender',4,1),('obPriority',0x200,2),('width_pixels',s[mapping+'_width'],1),
 			('height_pixels',s[mapping+'_height'],1)):
 			g.put(obj,field,value,size)
@@ -207,7 +210,7 @@ def live_gallery(g, a, act):
 			g.put(face,'obFrame',pose)
 			g.run(4)
 			assert not g.read('v_errortype')
-			pixels = raster(row,banks,s['ArtTile_ArtNem_Eggpod_1'])
+			pixels = raster(row,banks,s['ArtTile_Eggman'])
 			def screen(p):
 				px,py = p
 				return x-g.read('Camera_X_pos_copy',2)+(-px-1 if flip else px),y-g.read('Camera_Y_pos_copy',2)+py

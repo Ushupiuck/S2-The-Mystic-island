@@ -9,6 +9,7 @@ alone. These fixtures are not complete controller-only level playthroughs.
 from pathlib import Path
 import argparse
 import json
+import struct
 
 from genesis_test_core import Genesis
 from check_object_course import boot_level
@@ -24,8 +25,12 @@ def resident_terrain(g,act):
 	"""Tilemap equality alone cannot detect an object PLC overwriting terrain."""
 	raw = (ROOT/f'art/kosinski/level/8x8 - EHZ{"2" if act else ""}.unc').read_bytes()
 	dynamic = set(range(1,17))
-	for first,count in reflection_runs():
-		dynamic.update(range(first,first+count))
+	if not act:
+		for first,count in reflection_runs():
+			dynamic.update(range(first,first+count))
+		lo = g.s['ArtTile_EHZ_Common_End']*32
+		hi = g.s['ArtTile_Art_Flowers1']*32
+		assert lo == len(raw) and not any(g.vram[lo:hi]), 'Previous-act background left in VRAM'
 	dynamic.update(range(g.s['ArtTile_Art_Flowers1'],g.s['ArtTile_Art_EHZPulseBall']+2))
 	if act:
 		dynamic.update(range(g.s['ArtTile_EHZ2_BGWaterfall'],
@@ -188,6 +193,86 @@ def seesaws(g,zone,act,output):
 	return report
 
 
+def walls(g, act, rom, output):
+	from check_debug_states import press_debug
+	clear_scene(g)
+	s = g.s
+	table = s['Debug_EHZ']
+	count = struct.unpack_from('>H',rom,table)[0]
+	index = next(i for i in range(count) if struct.unpack_from('>I',rom,
+		table+2+i*s['DebugEntry_size']+s['DebugEntry_code'])[0] == s['Obj3C'])
+	place(g,'v_player',640,608,False)
+	g.write('Debug_mode_flag',1)
+	g.write('Debug_object',index)
+	press_debug(g,1)
+	g.run(4)
+	assert g.get('v_player','obMap',4) == s['Map_Obj3C']
+	def capture(obj):
+		x = g.get(obj,'obX',2)-g.read('Camera_X_pos_copy',2)
+		y = g.get(obj,'obY',2)-g.read('Camera_Y_pos_copy',2)
+		return g.video.crop((x-16,y-32,x+16,y+32))
+	cursor = capture('v_player')
+	g.buttons = {8}  # C places the wall from the live Debug list.
+	g.run(2)
+	g.buttons = set()
+	g.run(3)
+	from check_object_course import objects
+	wall = next(p for p in objects(g,0x3C) if g.get(p,'obRoutine') == 2)
+	g.put('v_player','obX',g.get(wall,'obX',2)+64,2)
+	g.run(4)
+	placed = capture(wall)
+	assert cursor.tobytes() == placed.tobytes()
+	g.video.save(output/f'act{act+1}-wall-debug.png')
+	placed.save(output/f'act{act+1}-wall-placed.png')
+	# Each checker block has four 16px quarters, supplied TL, TR, BL, BR.
+	# Compare the VDP's actual color pattern against all 16 authored tiles.
+	raw = (ROOT/f'art/kosinski/level/8x8 - EHZ{"2" if act else ""}.unc').read_bytes()
+	base = s['ArtTile_EHZ_Smashable_Wall']
+	colors = {}
+	for y in range(64):
+		for x in range(32):
+			tile = base+(y%32//16*2+x//16)*4+(x%16//8)*2+y%16//8
+			pair = raw[tile*32+y%8*4+x%8//2]
+			index = pair&15 if x&1 else pair>>4
+			if index:
+				color = placed.getpixel((x,y))
+				assert colors.setdefault(index,color) == color,(act,x,y,index)
+	assert len(set(colors.values())) == len(colors) > 3
+	press_debug(g,0)
+	g.run(2)
+	# Supply a flat floor for grounded rolling contacts from both sides.
+	indices = g.read('v_colladdr1',4)
+	heights = s['ColArray2']
+	full = next(i for i in range(len((ROOT/'mappings/16x16/EHZ.unc').read_bytes())//8)
+		if rom[heights+rom[indices+2*i]*16:heights+(rom[indices+2*i]+1)*16] == bytes([16])*16)
+	for col in (4,5):
+		g.layout_cell(5,col,255)
+	for cell in range(64):
+		g.write(g.terrain_address('chunks')+255*128+cell*2,full|0xF000,2)
+	g.write('Screen_redraw_flag',1)
+	g.run(10)
+	state = g.save()
+	for direction in (1,-1):
+		g.restore(state)
+		place(g,'v_player',g.get(wall,'obX',2)-direction*29,640-14-1,False)
+		speed = direction*0x700 & 65535
+		for field,value,size in (('obAnim',2,1),('obStatus',4,1),('obHeight',14,1),
+			('obWidth',7,1),('obVelX',speed,2),('obInertia',speed,2)):
+			g.put('v_player',field,value,size)
+		for _ in range(16):
+			g.run()
+			parts = [p for p in objects(g,0x3C) if g.get(p,'obRoutine') == 4]
+			if parts:
+				break
+		assert len(parts) == 8, ('Expected eight wall fragments',act,direction)
+		pieces = [struct.unpack_from('>bBHh',rom,g.get(p,'obMap',4)) for p in parts]
+		assert {tile for _,_,tile,_ in pieces} == {base,base+4,base+8,base+12}
+		assert len({(x,y) for y,_,_,x in pieces}) == 8
+		g.run(3)
+		g.video.save(output/f'act{act+1}-wall-debris-{direction}.png')
+	return {'act':act+1,'stacked_blocks':2,'break_directions':2}
+
+
 def main():
 	p = argparse.ArgumentParser(description=__doc__)
 	p.add_argument('--rom',type=Path,default=ROOT/'s2built.bin')
@@ -199,7 +284,7 @@ def main():
 	args = p.parse_args()
 	g = Genesis(args.core,args.rom,args.listing,args.output,args.pal,
 		system_directory=args.system_directory)
-	results, bodies, saws = [], [], []
+	results, bodies, saws, wall_runs = [], [], [], []
 	for act in (0,1):
 		for player in (0,2):
 			g.core.retro_reset()
@@ -214,6 +299,15 @@ def main():
 				bodies.extend(platforms(g,act,args.rom.read_bytes(),args.output))
 				g.restore(base)
 				saws.extend(seesaws(g,3,act,args.output))
+				g.restore(base)
+				wall_runs.append(walls(g,act,args.rom.read_bytes(),args.output))
+	# Re-enter Act 1 directly from Act 2, without a VDP reset between them.
+	g.restore(base)
+	g.write('Current_ZoneAndAct',g.s['id_EHZ']<<8,2)
+	g.write('Level_Inactive_flag',1,2)
+	g.run(720)
+	assert g.read('v_gamemode',2)==g.s['Level'] and g.read('f_timecount')
+	resident_terrain(g,0)
 	g.core.retro_reset()
 	boot_level(g,zone=5,act=0,player=0)
 	saws.extend(seesaws(g,5,0,args.output))
@@ -228,7 +322,7 @@ def main():
 					active.append(row)
 			rows.append(active)
 		assert all(row==rows[0] for row in rows), ('Act/path traversal geometry differs',player)
-	report = dict(pal=args.pal,tunnel_runs=results,platform_landings=bodies,seesaw_runs=saws,
+	report = dict(pal=args.pal,tunnel_runs=results,platform_landings=bodies,seesaw_runs=saws,wall_runs=wall_runs,act2_to_act1_clear=True,
 		controller_only_playthrough=False)
 	(args.output/'report.json').write_bytes((json.dumps(report,indent=2)+'\n').replace('\n','\r\n').encode())
 	print(f'{len(results)} S-tunnel traversals, {len(bodies)} platform landings and {len(saws)} full-art seesaw rides/ball launches pass.')

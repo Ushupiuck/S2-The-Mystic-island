@@ -603,7 +603,8 @@ level geometry.
 
 Act 2 runs the fight in its authored arena: both turnarounds, eight actual
 rolling collisions, hit-palette restoration, score, breakup, eight flame-off
-hop pixels, ignition flare, departure, parent cleanup, capsule switch and
+hop pixels, the burnt face through the hop, panic at ignition, departure,
+parent cleanup, capsule switch and
 animal release. Players are positioned for each attack; damage is produced
 by the real collision code. These are staged gameplay checks, not full
 controller-only routes. `--pal` selects PAL; `--player 2` selects primary Tails;
@@ -1060,7 +1061,10 @@ excluding the named water/flower/reflection animation banks. It stages the
 otherwise-unplaced restored S-tunnel in both acts, then runs complete Sonic
 and Tails traversals on both collision paths without position/velocity repairs.
 All five platform bodies receive real landings; both terrain shapes also
-exercise all four placement flips and verify mapping tile bytes. The shared
+exercise all four placement flips and verify mapping tile bytes. The wall check
+places the actual Debug entry in each act, compares the cursor and placed
+pixels to the four authored quarters, and breaks it by rolling from either
+side. It also re-enters Act 1 from Act 2 and checks the cleared VRAM gap. The shared
 S1 seesaw is checked in both EHZ acts and HTZ: complete resident art, all three
 tilts, player landings and spikeball launches in both orientations. Add `--pal`
 for PAL. These are disposable gameplay fixtures, not full controller-only

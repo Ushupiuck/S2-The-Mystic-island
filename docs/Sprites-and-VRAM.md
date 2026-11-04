@@ -254,14 +254,16 @@ and emits the GHZ mappings plus EHZ's whole-pod drawing offset. Per-pose 8x8
 grid phases reuse tiles without changing indexed pixels. Declared allocation
 boundaries are checked before writing. Normal builds do not re-import old art.
 
-The former S2 cockpit bank and compact 12-tile rotor source remain as archived
-editable/WIP assets. Both banks are excluded from the ROM and resident-art
-packer. The S2 pod mappings were replaced by the complete S1 mappings; rotor
-mappings, animations and controller routines are not assembled. No S2 canopy or
-partial cockpit is grafted onto the S1 pod. The superseded S2 jet archive was
-removed during the earlier exhaust migration.
+The retired S2 cockpit/rotor files, their mappings and the old full S1 bank
+have been removed. The migration emits only the shared S1 hull/head banks
+and their mappings. EHZ's drawing offset references the same tiles as GHZ.
+The original pre-split source remains available through Git history.
 
-Both bosses share their expression/exhaust scripts. EHZ retains one exhaust
+Both bosses share their expression/exhaust scripts. In GHZ, S1's hit/normal
+animation plays during explosions, the burnt frame during recovery, and the
+panic animation during getaway. In EHZ, Eggman holds the burnt frame from
+the final hit through the unpowered hop. Ignition starts his panic animation.
+EHZ retains one exhaust
 SST through approach, driving and escape; there is no rotor or reload
 allocation. Its nozzle is at mirrored X=34, Y=-4. Entry uses the small flame
 on a straight diagonal, which stops at docking. After defeat it detaches from

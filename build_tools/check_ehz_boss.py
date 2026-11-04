@@ -75,7 +75,7 @@ def main():
 	resident = [(low,high) for _,low,high in cues]
 	for row in pieces(rom,sym['Map_EHZBoss_Cockpit'],7):
 		for _,size,tile,_ in row:
-			low = (sym['ArtTile_ArtNem_Eggpod_1']+(tile&0x7FF))*32
+			low = (sym['ArtTile_Eggman']+(tile&0x7FF))*32
 			high = low+((size>>2)+1)*((size&3)+1)*32
 			assert any(a<=low<high<=b for a,b in resident), ('Unloaded cockpit tile',hex(low),hex(high))
 

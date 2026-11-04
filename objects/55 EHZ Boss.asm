@@ -511,8 +511,6 @@ EHZBoss_Defeated:	; boss defeated
 	move.w	#-$180,obVelY(a0)
 	move.w	#$B3,objoff_40(a0)	; timer
 	bset	#3,objoff_31(a0)	; flag to separate spike from vehicle
-	movea.l	objoff_38(a0),a1 ; address top part
-	move.b	#BossFace_Defeated,obAnim(a1)	; shared S1 defeat expression
 	moveq	#plcid_Capsule,d0
 	jmp	(LoadPLC).l	; load egg prison
 ; ===========================================================================
@@ -829,10 +827,12 @@ EHZBoss_Cockpit:	; Complete S1 cockpit on the EHZ chassis
 	moveq	#BossFace_Hurt,d1
 	bra.s	.animate
 .defeated:
-	moveq	#BossFace_Defeated,d1
-	cmpi.b	#8,ob2ndRout(a1)
+	moveq	#BossFace_Burnt,d1	; through the explosions, pause and unpowered hop
+	cmpi.b	#$A,ob2ndRout(a1)
 	bne.s	.animate
-	moveq	#BossFace_Recover,d1
+	cmpi.b	#4,objoff_30(a1)	; panic when the rear thruster ignites
+	bne.s	.animate
+	moveq	#BossFace_Panic,d1
 .animate:
 	move.b	d1,obAnim(a0)
 	jmp	(BossFace_Display).l

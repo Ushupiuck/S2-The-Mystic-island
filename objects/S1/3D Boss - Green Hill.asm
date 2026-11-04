@@ -340,10 +340,13 @@ BGHZ_FaceMain:	; Routine 4
 		moveq	#BossFace_Hurt,d1
 		bra.s	.animate
 .defeated:
-		moveq	#BossFace_Defeated,d1
+		moveq	#BossFace_Hurt,d1	; S1 alternates hit/normal during the explosions
 		cmpi.b	#BGHZ_Recover,ob2ndRout(a1)
-		bne.s	.animate
-		moveq	#BossFace_Recover,d1
+		blo.s	.animate
+		moveq	#BossFace_Burnt,d1
+		cmpi.b	#BGHZ_Escape,ob2ndRout(a1)
+		blo.s	.animate
+		moveq	#BossFace_Panic,d1
 .animate:
 		move.b	d1,obAnim(a0)
 		jmp	(BossFace_Display).l

@@ -203,6 +203,7 @@ def live(a,act):
 	escape=[]
 	hop=[]
 	flare=set()
+	defeat_faces=set()
 	ignition_y=None
 	before_hop=None
 	for tick in range(800):
@@ -211,6 +212,12 @@ def live(a,act):
 		if g.get(body,'code'):
 			phase=g.get(body,'ob2ndRout')
 			ter=g.get(body,'objoff_30')
+			if phase in (6,8) or (phase==10 and ter<4):
+				assert g.get(face,'obFrame')==6, ('Expected burnt face',phase,ter)
+				defeat_faces.add((phase,ter))
+			elif phase==10:
+				assert g.get(face,'obAnim')==s['BossFace_Panic'] and g.get(face,'obFrame') in (0,5)
+				defeat_faces.add((phase,ter))
 			if phase==10 and ter==2:
 				hop.append(g.get(body,'obY',2))
 				assert g.get(flame,'obFrame')==4
@@ -229,6 +236,7 @@ def live(a,act):
 			break
 	else:
 		raise AssertionError('Boss did not leave')
+	assert {6,8} <= {phase for phase,ter in defeat_faces} and {(10,2),(10,4)} <= defeat_faces
 	assert before_hop-min(hop)==8,(before_hop,hop)
 	assert ignition_y==min(hop)
 	assert {0,1,2,3}<=flare,flare

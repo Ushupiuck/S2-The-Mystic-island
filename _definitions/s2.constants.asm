@@ -1821,8 +1821,8 @@ BossChild_OffsetY = objoff_32
 BossFace_Normal = 0
 BossFace_Laugh = 1
 BossFace_Hurt = 2
-BossFace_Defeated = 3
-BossFace_Recover = 4
+BossFace_Panic = 3
+BossFace_Burnt = 4
 BossExhaust_Off = 0
 BossExhaust_Cruise = 1
 BossExhaust_Escape = 2
@@ -1962,9 +1962,7 @@ ArtTile_EHZ_Seesaw:		equ $46C	; 62 tiles; ends at $4AA, below springs
 ArtTile_Art_EHZMountains:	equ $500
 
 ; EHZ boss
-ArtTile_ArtNem_Eggpod_1:	equ $3F0
 ArtTile_ArtNem_EHZBoss:		equ $475
-ArtTile_ArtNem_EggChoppers:	equ $4F5
 ArtTile_BossExplosion:	equ $581	; 100 S2 tiles; replaced by animals/normal explosions after escape
 ArtTile_ExplosionWall_Small:	equ ArtTile_Eggman ; 94 normal/fiery tiles replace inactive ship art during the wall
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Extract S1 heads while retaining each Eggmobile's original cockpit/body.
+"""Extract the single shared S1 pod/head banks and their GHZ/EHZ mappings.
 
 This explicit migration reads a pre-split ROM/listing. The resulting .unc and
 ASM files are editable sources; build_end_art.py packs them without re-importing.
@@ -14,19 +14,6 @@ from check_sprite_assets import frames
 from convert_s1_ss_background import kosinski_plus_decode
 
 ROOT = Path(__file__).resolve().parents[1]
-# Clear the old upper face; retain S2's rounded lower jaw, collar and jacket.
-# The primary palette's warm colors serve both skin and clothing: color alone
-# cannot identify which pixels belong to the face.
-S2_FACE_SPANS = {
-	-24:(-6,-2), -23:(-9,1), -22:(-10,2), -21:(-11,2),
-	-20:(-12,3), -19:(-14,8), -18:(-12,8), -17:(-12,8),
-	-16:(-10,6), -15:(-9,6), -14:(-8,6),
-}
-# Rightmost original windshield pixel on each occupied scanline.
-S2_GLASS_RIGHT = {-19:-15,-18:-13,-17:-12,-16:-11,-15:-10,-14:-10,
-	-13:-9,-12:-9,-11:-9,-10:-7,-9:-7}
-S2_HEAD_X = -4
-S2_HEAD_Y = 0
 S1_SEAT_COLORS = {10:4,11:3,12:2}
 # Lower contours follow the drawing, including the whole jaw and its outline.
 # Profile poses stop above the gold collar; no S1 shirt pixels are shared.
@@ -51,12 +38,6 @@ def head_color(pose, x, y, color):
 	if pose in (0,1,5) and -6<=x<=3 and -24<=y<=-14:
 		return {12:11,11:10}.get(color,color)
 	return color
-
-
-def glass_foreground(head, original):
-	"""Original windshield shades/outline occlude the new face in SAT order."""
-	return {p:original[p] for p in head if p in original
-		and p[1] in S2_GLASS_RIGHT and p[0]<=S2_GLASS_RIGHT[p[1]]}
 
 
 def head_mask(pose, x, y, color):
@@ -119,39 +100,6 @@ def raster(row, raw):
 						py = h*8-1-py
 					assert not word&0x6000, 'Pilot sources must use the primary palette'
 					pixels[x+px,y+py] = color
-	return pixels
-
-
-def s2_background(pose, rows):
-	pixels = rows[pose].copy()
-	# This panel is vehicle art. Its edge and gauge do not acquire the old
-	# pilot's burnt hair or facial shading in the recovery expression.
-	for y,right in S2_GLASS_RIGHT.items():
-		for x in range(-32,right+1):
-			if (x,y) in rows[0]:
-				pixels[x,y] = rows[0][x,y]
-	# Hurt/recovery whiskers and burnt hair project beyond the normal skull.
-	# Their exposed part is sky; the arch to their right remains untouched.
-	for y in range(-25,-19):
-		for x in range(-17,0):
-			pixels.pop((x,y),None)
-		for x in range(0,17):
-			if pixels.get((x,y)) in (13,14,15):
-				pixels[x,y] = 1
-	for y,(left,right) in S2_FACE_SPANS.items():
-		for x in range(left,right):
-			color = pixels.get((x,y),0)
-			if not color or (y in S2_GLASS_RIGHT and x<=S2_GLASS_RIGHT[y]):
-				continue
-			if x>=0 and color in (3,4):
-				continue	# original orange backrest
-			# Above the windshield, the old head projects into open air.
-			# Below it, expose the cabin's dark interior. Never stretch a
-			# shirt row through the jaw or erase S2's lower chin/collar.
-			if y<-19 and x<0:
-				pixels.pop((x,y),None)
-			else:
-				pixels[x,y] = 1
 	return pixels
 
 
@@ -227,11 +175,10 @@ def extract(rom_path, listing_path):
 	s = {name:int(value,16) for name,value in re.findall(r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]',listing_path.read_text())}
 	def unpack(label):
 		return unpack_bank(rom,s[label])
-	old,new = unpack('Kospm_OldEggPod'),unpack('Kospm_EggPod')
-	assert len(old)==108*32 and len(new)==96*32, 'Use the pre-split source build'
-	oldmaps,newmaps = frames(rom,s['Map_Eggman'],13),frames(rom,s['Map_EHZBoss_Vehicle'],7)
+	old = unpack('Kospm_OldEggPod')
+	assert len(old)==108*32, 'Use the pre-split S1 source build'
+	oldmaps = frames(rom,s['Map_Eggman'],13)
 	pilots = [raster(row,old) for row in oldmaps[1:8]]
-	s2pilots = [raster(row,new) for row in newmaps[1:7]]
 	heads = [{p:head_color(i,*p,c) for p,c in row.items() if head_mask(i,*p,c)} for i,row in enumerate(pilots)]
 	backgrounds = [{p:seat_color(*p,c) for p,c in row.items() if p not in heads[i]} for i,row in enumerate(pilots)]
 	ghz_hull = bytearray(old[10*32:0x2D*32])
@@ -239,26 +186,21 @@ def extract(rom_path, listing_path):
 	for i in range(2*32,6*32):
 		byte = ghz_hull[i]
 		ghz_hull[i] = S1_SEAT_COLORS.get(byte>>4,byte>>4)<<4 | S1_SEAT_COLORS.get(byte&15,byte&15)
-	banks = {'Eggman face':bytearray(),'Old Eggpod':ghz_hull,'Boss Ship':bytearray(new[:32*32])}
+	banks = {'Eggman face':bytearray(),'Old Eggpod':ghz_hull}
 	headmaps = [pack_pixels(row,banks['Eggman face']) for row in heads]
 	ghz = [pack_pixels(row,banks['Old Eggpod']) for row in backgrounds]
-	ehz = [pack_pixels(s2_background(min(i,5),s2pilots),banks['Boss Ship']) for i in range(7)]
-	fronts = [glass_foreground({(x+S2_HEAD_X,y+S2_HEAD_Y):c for (x,y),c in head.items()},s2pilots[0])
-		for i,head in enumerate(heads)]
-	frontmaps = [pack_pixels(row,banks['Boss Ship']) if row else [] for row in fronts]
 
 	# Preserve the full S1 figure after separating its ownership into two banks.
 	for i,row in enumerate(pilots):
 		assert {**backgrounds[i],**heads[i]}=={p:head_color(i,*p,seat_color(*p,c)) for p,c in row.items()}
-	return banks,headmaps,ghz,ehz,frontmaps,oldmaps[0],newmaps[0]
+	return banks,headmaps,ghz,oldmaps[0]
 
 
-def mapping(label, rows, headmaps=None, private_base=0, dx=0, dy=0, foregrounds=None, draw_y=0):
+def mapping(label, rows, headmaps=None, private_base=0, draw_y=0):
 	lines = [label+':']+[f'\tdc.w {label}_Frame{i}-{label}' for i in range(len(rows))]
 	for i,row in enumerate(rows):
 		head = headmaps[i] if headmaps else []
-		front = foregrounds[i] if foregrounds else []
-		pieces = front+[(y+dy,size,private_base+tile,x+dx) for y,size,tile,x in head]+row
+		pieces = [(y,size,private_base+tile,x) for y,size,tile,x in head]+row
 		lines.append(f'{label}_Frame{i}:\tdc.w {len(pieces)}')
 		for y,size,tile,x in pieces:
 			lines += [f'\tdc.b {y+draw_y},${size:02X}',f'\tdc.w ${tile:04X},{x}']
@@ -275,9 +217,9 @@ def main():
 	allocations = {name:int(value,16) for name,value in re.findall(r'^(ArtTile_\w+):\s+equ \$([0-9A-Fa-f]+)',constants,re.M)}
 	object_source = (ROOT/'objects/55 EHZ Boss.asm').read_text()
 	draw_y = int(re.search(r'^EHZBoss_PodDrawY\s*=\s*(-?\d+)',object_source,re.M).group(1))
-	banks,heads,ghz,ehz,fronts,oldhull,newhull = extract(a.rom,a.listing)
+	banks,heads,ghz,oldhull = extract(a.rom,a.listing)
 	report = {name:len(raw)//32 for name,raw in banks.items()}
-	report['private_end'] = hex(0x3F0+max(len(banks['Old Eggpod']),len(banks['Boss Ship']))//32)
+	report['private_end'] = hex(0x3F0+len(banks['Old Eggpod'])//32)
 	report['shared_base'] = hex(allocations['ArtTile_EggmanFace'])
 	report['shared_end'] = hex(int(report['shared_base'],16)+len(banks['Eggman face'])//32)
 	report['pieces'] = {'head':[len(r) for r in heads],'GHZ':[len(r) for r in ghz],'EHZ':[len(r) for r in ghz]}
@@ -288,9 +230,9 @@ def main():
 	assert headbase>=int(report['private_end'],16)
 	assert headend<=min(allocations['ArtTile_Eggman_Weapons'],allocations['ArtTile_ArtNem_EHZBoss'])
 	weaponbase = allocations['ArtTile_ArtNem_EHZBoss']
-	expected = {'ArtTile_Eggman':0x3F0,'ArtTile_ArtNem_Eggpod_1':0x3F0,
+	expected = {'ArtTile_Eggman':0x3F0,
 		'ArtTile_EggmanFace':headbase,'ArtTile_Eggman_Weapons':weaponbase,
-		'ArtTile_ArtNem_EHZBoss':weaponbase,'ArtTile_ArtNem_EggChoppers':weaponbase+128,
+		'ArtTile_ArtNem_EHZBoss':weaponbase,
 		'ArtTile_Prison_Capsule':weaponbase+128+12,'ArtTile_Eggman_Exhaust':weaponbase+128+12+85}
 	for name,value in expected.items():
 		assert allocations[name]==value, (name,hex(allocations[name]),'needs',hex(value))
@@ -302,19 +244,8 @@ def main():
 		'EHZ Boss Cockpit.asm':mapping('Map_EHZBoss_Cockpit',ghz,heads,int(report['shared_base'],16)-0x3F0,draw_y=draw_y),
 		'EHZ Boss Vehicle.asm':mapping('Map_EHZBoss_Vehicle',[[(y,size,(tile&0xF800)|((tile&0x7FF)-10),x) for y,size,tile,x in oldhull]],draw_y=draw_y),
 	}
-	rom = a.rom.read_bytes()
-	s = {name:int(value,16) for name,value in re.findall(r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]',a.listing.read_text())}
-	prop = unpack_bank(rom,s['Kospm_EggChopper'])
-	assert len(prop)==20*32
-	assert all(prop[i*32:(i+1)*32]==bytes(32) for i in range(8,20,2))
-	assert all(prop[i*32:(i+1)*32]==prop[9*32:10*32] for i in range(9,20,2))
-	(ROOT/'art/uncompressed/Chopper blades for EHZ boss.unc').write_bytes(prop[:8*32]+prop[9*32:10*32]*4)
-	propmaps = frames(rom,s['Map_EHZBoss_Propeller'],7)
-	propmaps = [[(y+8,(size&12),8,x) if tile>=8 else (y,size,tile,x) for y,size,tile,x in row] for row in propmaps]
-	outputs['EHZ Boss Propeller.asm'] = mapping('Map_EHZBoss_Propeller',propmaps)
 	for name,text in outputs.items():
-		comment = ('; Archived Sonic 2 propeller mappings; not assembled by the S1-pod preview.\n'
-			if name=='EHZ Boss Propeller.asm' else '; Shared S1 pod/cockpit; EHZ maps draw the complete pod four pixels higher.\n')
+		comment = '; Shared S1 pod/cockpit; EHZ maps draw the complete pod four pixels higher.\n'
 		(ROOT/f'mappings/sprite/{name}').write_bytes((comment+text).replace('\n','\r\n').encode())
 
 

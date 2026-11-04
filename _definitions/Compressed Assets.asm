@@ -552,7 +552,7 @@ MCD_CompressedAssets:
 	dc.l Kosp_EHZ,Kosp_EHZ+$2E43	; art/kosinski/level/8x8 - EHZ.kosp
 	endif
 	if defined(Kosp_EHZ2)
-	dc.l Kosp_EHZ2,Kosp_EHZ2+$3843	; art/kosinski/level/8x8 - EHZ2.kosp
+	dc.l Kosp_EHZ2,Kosp_EHZ2+$322D	; art/kosinski/level/8x8 - EHZ2.kosp
 	endif
 	if defined(Kosp_GHZ)
 	dc.l Kosp_GHZ,Kosp_GHZ+$22F8	; art/kosinski/level/8x8 - GHZ.kosp
@@ -915,7 +915,7 @@ MCD_CompressedAssets:
 	dc.l Map128_EHZ,Map128_EHZ+$2D4C	; mappings/128x128/EHZ.kosp
 	endif
 	if defined(Map128_EHZ2)
-	dc.l Map128_EHZ2,Map128_EHZ2+$3256	; mappings/128x128/EHZ2.kosp
+	dc.l Map128_EHZ2,Map128_EHZ2+$314F	; mappings/128x128/EHZ2.kosp
 	endif
 	if defined(Map128_GHZ)
 	dc.l Map128_GHZ,Map128_GHZ+$2284	; mappings/128x128/GHZ.kosp
@@ -951,7 +951,7 @@ MCD_CompressedAssets:
 	dc.l Map16_EHZ,Map16_EHZ+$CA8	; mappings/16x16/EHZ.kosp
 	endif
 	if defined(Map16_EHZ2)
-	dc.l Map16_EHZ2,Map16_EHZ2+$EDE	; mappings/16x16/EHZ2.kosp
+	dc.l Map16_EHZ2,Map16_EHZ2+$D8D	; mappings/16x16/EHZ2.kosp
 	endif
 	if defined(Map16_GHZ)
 	dc.l Map16_GHZ,Map16_GHZ+$B14	; mappings/16x16/GHZ.kosp

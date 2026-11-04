@@ -2301,6 +2301,13 @@ Level_WaterFlagInit:
 		move.b	(a1,d0.w),(Water_flag).w
 Level_WaterFlagInit_End:
 		bsr.w	ClearScreen
+		; The shorter EHZ sheet cannot overwrite PP scenery left by Act 2.
+		cmpi.b	#id_EHZ,(Current_Zone).w
+		bne.s	.ehz_art_ready
+		cmpi.b	#1,(Current_Act).w
+		beq.s	.ehz_art_ready
+		fillVRAM	0,tiles_to_bytes(ArtTile_EHZ_Common_End),tiles_to_bytes(ArtTile_Art_Flowers1)
+.ehz_art_ready:
 		lea	(vdp_control_port).l,a6
 		move.w	#$8B00+3,(a6)	; set horizontal scrolling single pixel rows mode
 		move.w	#$8200+(vram_fg>>10),(a6)
@@ -10669,13 +10676,13 @@ Ani_EggmanFace:
 		dc.w .normal-Ani_EggmanFace
 		dc.w .laugh-Ani_EggmanFace
 		dc.w .hurt-Ani_EggmanFace
-		dc.w .defeated-Ani_EggmanFace
-		dc.w .recover-Ani_EggmanFace
+		dc.w .panic-Ani_EggmanFace
+		dc.w .burnt-Ani_EggmanFace
 .normal:	dc.b 5,0,1,afEnd
 .laugh:		dc.b 4,2,3,afEnd
 .hurt:		dc.b $1F,4,0,afEnd
-.defeated:	dc.b 3,5,0,afEnd
-.recover:	dc.b $F,6,afEnd
+.panic:		dc.b 3,5,0,afEnd
+.burnt:		dc.b $F,6,afEnd
 		even
 Ani_BossExhaust:
 		dc.w .off-Ani_BossExhaust
