@@ -232,7 +232,7 @@ LZ's per-act module lists load the resident bank; another zone must load it too.
 
 ### Shared Eggman heads and exhaust
 
-On `Mystic-Island-EHZ-S1-pod-preview`, GHZ and EHZ share the complete Sonic 1
+GHZ and EHZ share the complete Sonic 1
 Eggpod: its hull, cockpit, seven head poses and full escape flame. EHZ keeps
 Sonic 2's car/wheels/drill. Its pod/cockpit mappings draw the S1 pixels four
 pixels higher, while the controller, chassis and collision anchors keep their
@@ -483,7 +483,7 @@ ramps; other slots are per-act enemy colors. S&K indices map to
 conversions; editable runtime art already uses the new slots. No runtime pixel
 conversion is performed. Keep every compressed archive followed by `even`.
 
-The EHZ preview's drill/wheels use a one-word masked row-two load; see the
+The EHZ boss's drill/wheels use a one-word masked row-two load; see the
 [boss palette contract](Importing-objects.md#ehz-boss-palette). The former
 three-gray WIP remains separate.
 

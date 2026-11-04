@@ -72,13 +72,13 @@ EHZ and both SMZ acts retain their reusable foreground authoring collections;
 see [Levels](Levels.md). The common [spring atlas](Sprites-and-VRAM.md#palette-adaptation)
 is packed vertical/horizontal/diagonal/support, with spikes immediately after it.
 The same guide records the shared full-height S1 seesaw and spikeball atlas.
-The `Mystic-Island-EHZ-S1-pod-preview` branch also reuses the complete S1 pod
+`Mystic-Island` also reuses the complete S1 pod
 for EHZ, with a four-pixel drawing offset, rear-flame entry and an unpowered
 hop before escape ignition. S1's seat padding uses the S2 orange ramp. See
 [shared boss art](Sprites-and-VRAM.md#shared-eggman-heads-and-exhaust).
 Next, return to [EHZ1/EHZ2 palette-space consolidation](Levels.md#emerald-hill-act-2-palmtree-panic-experiment).
-The earlier cross-act greens preview was not applied to Act 1. The S1-pod
-preview also applies the boss-owned metal shade through a
+The earlier cross-act greens preview was not applied to Act 1. The EHZ boss
+also applies its metal shade through a
 [masked palette load](Importing-objects.md#ehz-boss-palette), preserving
 foreground and background animation. The earlier three-gray WIP stays separate.
 

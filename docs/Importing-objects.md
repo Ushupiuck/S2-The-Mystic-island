@@ -45,7 +45,7 @@ requires suitable bounds, or maxima covering every set the object uses.
 | `Map_EHZBoss_Ground` | 8 | `$30` | `$10` |
 | `Map_BossExplosion` (shared S2 fiery effect) | 7 | `$10` | `$10` |
 
-The S1-pod preview branch uses Sonic 2's controller and ground vehicle with
+EHZ uses Sonic 2's controller and ground vehicle with
 Sonic 1's complete Eggpod/cockpit. Generated EHZ mappings translate all S1 pod
 pixels by Y=-4; the controller and chassis anchors stay unchanged. Display
 bounds include transparent tile padding and remain separate from the original
@@ -98,7 +98,7 @@ normal arena; a lifecycle fixture alone does not establish boss/capsule behavior
 
 ## EHZ boss palette
 
-On `Mystic-Island-EHZ-S1-pod-preview`, the car body retains the primary sprite
+The car body retains the primary sprite
 palette. Its drill and wheels use row two's existing black/white/gray ramp,
 plus slot C (`$A88`) for Sonic 2's extra `$666` metal shade. The complete S1
 pod, pilot, orange seat and shared exhaust already use existing colors; their
@@ -125,6 +125,6 @@ Normal builds do not rerun the importer or overwrite hand-edited raw pixels.
 
 The earlier [Mystic-Island-EHZ-palette-WIP branch](https://github.com/Ushupiuck/S2-The-Mystic-island/tree/Mystic-Island-EHZ-palette-WIP)
 retains its separate three-gray candidate and archived S2 pod/rotor import.
-The preview branch has removed the obsolete pod/rotor archives. See the
+The obsolete pod/rotor archives have been removed. See the
 [boss checks](Testing.md#boss-runtime-checks) for source-color, masked-load,
 animated-background and real fight coverage.

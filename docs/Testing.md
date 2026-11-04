@@ -1070,6 +1070,18 @@ tilts, player landings and spikeball launches in both orientations. Add `--pal`
 for PAL. These are disposable gameplay fixtures, not full controller-only
 playthroughs of the authored levels.
 
+`check_player_interactions.py --output test-results/player-interactions` covers
+all 256 ground angles and held-frame delays for both pushing animations, the
+character-specific tumble ranges, independent wall impact speeds/contacts, and
+owned/stale rider release. `--probe` records an older ROM's failures. Add the
+same `--core` and `--system-directory` arguments as above for real authored EHZ
+corkscrews in both directions, visible sloped-wall pushing, and controller-driven
+spindash wall breaks by Sonic, solo Tails and controller-2 sidekick Tails in both
+acts. Add `--pal` for PAL. Only scene/initial-state setup uses RAM writes; the
+spindash charge, release, contact and fragmentation use ordinary game code.
+The older S-tunnel runner starts in a rolling ball, so it does not validate the
+walking/running corkscrew animation.
+
 Terrain repacks must preserve every reusable authoring chunk, including those
 not placed in any era. Compare old/new chunk pixels, tile attributes and both
 collision paths; then compare every foreground/background layout cell through

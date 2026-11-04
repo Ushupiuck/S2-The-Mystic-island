@@ -11,6 +11,11 @@ On Mode 1, Sonic and Tails push their landing callbacks with PC-relative `pea`
 before branching to the shared airborne collision transport. The transport
 invokes the callback on landing and discards it while the actor remains airborne.
 
+Corkscrews and spring tumbles share angle/facing calculation, with each character
+selecting its own mapping range: Sonic's S2 frames `$5F-$6A`, Tails's S3&K frames
+`$31-$3C`. Pushing refreshes the upright facing before the animation timer can
+return, so a held pushing frame cannot inherit the walker's slope flips.
+
 ## Tails and companion control
 
 Manual controller 2 input takes precedence over following AI for ten seconds.
@@ -90,6 +95,13 @@ the actual collector, including for harmful rewards.
 Object status rider bits 3/4 represent primary/companion; the on-object flag on
 either player is bit 3. Capsule detachment clears bit 3 on both players and sets
 their airborne state, preserving subsequent terrain following.
+
+Smashable walls cache each actor's horizontal speed before solidity stops it.
+Each grounded rolling attack needs that actor's own side-contact/pushing flag
+and at least `$480` speed. Companion Tails can break walls independently of
+Sonic; a distant rolling actor cannot borrow the other's contact. Breaking also
+releases either player still standing on that wall, while preserving riders
+owned by another surface.
 
 The double-life monitor resolves its portrait through
 `ArtTile_Lives_Counter-ArtTile_Monitor` (`$2AD`), also reflected in SonLVL.

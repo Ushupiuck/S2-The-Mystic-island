@@ -2445,9 +2445,9 @@ TailS3_loc_158FA:
 		bne.w	TailS3_loc_159C8
 		moveq	#0,d0
 		tst.b	flip_turned(a0)
-		bmi.w	SAnim_Tumble
+		bmi.w	TAnim_Tumble
 		move.b	flip_angle(a0),d0
-		bne.w	SAnim_Tumble
+		bne.w	TAnim_Tumble
 		moveq	#0,d1
 		move.b	obAngle(a0),d0
 		bmi.s	TailS3_loc_1591E
@@ -2525,9 +2525,14 @@ TailS3_locret_159C6:
 		rts
 ; ---------------------------------------------------------------------------
 
+TAnim_Tumble:
+		moveq	#$31,d3		; S3&K Tails body frames, not Sonic 2
+		bra.w	PlayerAnim_Tumble
+; ---------------------------------------------------------------------------
+
 TailS3_loc_159C8:
 		addq.b	#1,d0
-		bne.s	TailS3_loc_15A3C
+		bne.w	TailS3_loc_15A3C
 		move.b	obStatus(a0),d1
 		andi.b	#1,d1
 		andi.b	#$FC,obRender(a0)
@@ -2557,6 +2562,11 @@ TailS3_loc_15A0A:
 ; ---------------------------------------------------------------------------
 
 TailS3_loc_15A14:
+		; Pushing faces the wall on every tick, including held frames.
+		move.b	obStatus(a0),d1
+		andi.b	#1,d1
+		andi.b	#~(1<<render_flags.x_flip|1<<render_flags.y_flip),obRender(a0)
+		or.b	d1,obRender(a0)
 		subq.b	#1,obTimeFrame(a0)
 		bpl.w	TailS3_locret_158C8
 		move.w	obInertia(a0),d2

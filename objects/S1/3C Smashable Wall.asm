@@ -13,8 +13,8 @@ Smash_Index:	dc.w Smash_Main-Smash_Index
 		dc.w Smash_Solid-Smash_Index
 		dc.w Smash_FragMove-Smash_Index
 
-smash_speed	= objoff_34		; Sonic's horizontal speed
-smash_speed2	= objoff_36		; Tails's horizontal speed (I believe this is how Sonic 3 works)
+smash_speed	= objoff_34		; primary player's pre-collision horizontal speed
+smash_speed2	= objoff_36		; companion's pre-collision horizontal speed
 ; ---------------------------------------------------------------------------
 Obj3C_FragSpdRight:
 		dc.w  $400,-$500
@@ -53,47 +53,52 @@ Smash_Main:	; Routine 0
 .art_ready:
 
 Smash_Solid:	; Routine 2
-		move.w	(v_player+obVelX).w,smash_speed(a0) ; load Sonic's horizontal speed
+		move.w	(v_player+obVelX).w,smash_speed(a0)
+		move.w	(v_player2+obVelX).w,smash_speed2(a0)
 		moveq	#$1B,d1
 		moveq	#$20,d2
 		moveq	#$20,d3
 		move.w	obX(a0),d4
 		bsr.w	SolidObject
-		btst	#5,obStatus(a0)	; is Sonic pushing against the wall?
-		bne.s	.bothcharacters	; if yes, branch
-
+		lea	(v_player).w,a1
+		btst	#p1_pushing_bit,obStatus(a0)
+		beq.s	.companion
+		move.w	smash_speed(a0),d0
+		bsr.s	.chkroll
+.companion:
+		lea	(v_player2).w,a1
+		btst	#p2_pushing_bit,obStatus(a0)
+		beq.s	.donothing
+		move.w	smash_speed2(a0),d0
+		bsr.s	.chkroll
 .donothing:
 		rts
 ; ---------------------------------------------------------------------------
 
-.bothcharacters:
-		lea	(v_player).w,a1
-		bsr.s	.chkroll
-		lea	(v_player2).w,a1
-
 .chkroll:
-		cmpi.b	#2,obAnim(a1)	; is Sonic rolling?
-		bne.s	.donothing	; if not, branch
-		move.w	smash_speed(a0),d0
+		cmpi.b	#AniIDSonAni_Roll,obAnim(a1)
+		bne.s	.donothing
+		move.w	d0,d2		; preserve this actor's signed impact speed
 		bpl.s	.chkspeed
 		neg.w	d0
 
 .chkspeed:
-		cmpi.w	#$480,d0	; is Sonic's speed $480 or higher?
+		cmpi.w	#$480,d0	; is this actor's speed $480 or higher?
 		bcs.s	.donothing	; if not, branch
-		move.w	smash_speed(a0),obVelX(a1)
+		move.w	d2,obVelX(a1)
 		addq.w	#4,obX(a1)
 		lea	Obj3C_FragSpdRight(pc),a4 ; use fragments that move right
 		move.w	obX(a0),d0
-		cmp.w	obX(a1),d0	; is Sonic to the right of the block?
+		cmp.w	obX(a1),d0	; is this actor to the right of the block?
 		bcs.s	.smash		; if yes, branch
 		subq.w	#8,obX(a1)
 		lea	Obj3C_FragSpdLeft(pc),a4 ; use fragments that move left
 
 .smash:
 		move.w	obVelX(a1),obInertia(a1)
-		bclr	#5,obStatus(a0)
-		bclr	#5,obStatus(a1)
+		andi.b	#~pushing_mask,obStatus(a0)
+		bclr	#status.player.pushing,obStatus(a1)
+		jsr	(SMZ_ReleaseRiders).l	; the other player may be standing on this wall
 		moveq	#7,d1		; load 8 fragments
 		move.w	#$70,d2
 		bsr.s	SmashObject

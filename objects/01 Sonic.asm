@@ -1804,6 +1804,8 @@ SAnim_WalkRun:
 ; ---------------------------------------------------------------------------
 
 SAnim_Tumble:
+		moveq	#$5F,d3		; Sonic 2 body frames
+PlayerAnim_Tumble:
 		move.b	flip_angle(a0),d0
 		moveq	#0,d1
 		move.b	obStatus(a0),d2
@@ -1812,7 +1814,7 @@ SAnim_Tumble:
 		andi.b	#~(1<<render_flags.x_flip|1<<render_flags.y_flip),obRender(a0)
 		addi.b	#$B,d0
 		divu.w	#$16,d0
-		addi.b	#$5F,d0
+		add.b	d3,d0
 		move.b	d0,obFrame(a0)
 		clr.b	obTimeFrame(a0)
 		rts
@@ -1834,7 +1836,7 @@ SAnim_Tumble_Left:
 
 +
 		divu.w	#$16,d0
-		addi.b	#$5F,d0
+		add.b	d3,d0
 		move.b	d0,obFrame(a0)
 		clr.b	obTimeFrame(a0)
 		rts
@@ -1866,6 +1868,11 @@ SAnim_Roll:
 ; ---------------------------------------------------------------------------
 
 SAnim_Push:
+		; Ground-angle flips must not survive an animation-delay return.
+		move.b	obStatus(a0),d1
+		andi.b	#1,d1
+		andi.b	#~(1<<render_flags.x_flip|1<<render_flags.y_flip),obRender(a0)
+		or.b	d1,obRender(a0)
 		subq.b	#1,obTimeFrame(a0)	; subtract 1 from frame duration
 		bpl.w	SAnim_End		; if time remains, branch
 		move.w	obInertia(a0),d2
@@ -1883,10 +1890,6 @@ SAnim_Push:
 	;	beq.s	+
 	;	lea	(SupSonAni_Push).l,a1
 +
-		move.b	obStatus(a0),d1
-		andi.b	#1,d1
-		andi.b	#~(1<<render_flags.x_flip|1<<render_flags.y_flip),obRender(a0)
-		or.b	d1,obRender(a0)
 		bra.w	SAnim_Do2
 ; End of function Sonic_Animate
 ; ===========================================================================
