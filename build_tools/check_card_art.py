@@ -145,11 +145,44 @@ for mode in (0,1,2):
 			state=0 if not collected or not emeralds else 2 if emeralds == 7 else 1
 			scene=72+state*2+(mode == 2)
 			assert m.cpu.reg_read(m68k.UC_M68K_REG_D0) == scene
-			rows=frames(rom,m.cpu.reg_read(m68k.UC_M68K_REG_A3),7)
+			rows=frames(rom,m.cpu.reg_read(m68k.UC_M68K_REG_A3),8)
+			heading_y=struct.unpack_from('>H',rom,m.s['SSR_Config']+4)[0]-128+min(y for y,_,_,_ in rows[0])
+			assert heading_y == (60,44,24)[state], ('Special heading row',state,heading_y)
+			for frame in (4,5,6):
+				assert [x for _,_,_,x in rows[frame][:3]] == [-80,-50,-18], 'CONTINUE lost its T-I kerning'
+			if state==2:
+				assert {y for y,_,_,_ in rows[7]}=={-44,-20}, 'Super announcement lost its two text rows'
+				oval=rows[3]
+				xs=[x for _,_,_,x in oval]+[x+((size>>2)+1)*8 for _,size,_,x in oval]
+				ys=[y for y,_,_,_ in oval]+[y+((size&3)+1)*8 for y,size,_,_ in oval]
+				assert (156+(min(xs)+max(xs))/2,60+(min(ys)+max(ys))/2)==(160,32)
+			else:
+				assert not rows[7], 'An unsuccessful result exposes a Super announcement'
 			assert (rows[2][-2][2]+m.s['ArtTile_Results_Card']) & 0xFFFF == m.s['ArtTile_Bonuses']+5
 			mini=m.s['ArtTile_Mini_Tails'] if mode == 2 else m.s['ArtTile_Mini_Sonic']+18
 			assert (rows[4][-1][2]+m.s['ArtTile_Results_Card']) & 0xFFFF == mini
 			checks.append({'case':'special-heading-and-character-addresses','mode':mode,'emeralds':emeralds,'collected':collected})
+
+for emeralds,collected in ((6,1),(7,0),(7,1)):
+	reset()
+	m.write('v_emeralds',emeralds)
+	m.write('v_ss_emerald_collected',collected)
+	for field,value,size in (('obRoutine',2,1),('obFrame',0,1),('obX',0x120,2),
+		('ssr_mainX',0x120,2),('obMap',m.s['Map_SSR_2_0'],4)):
+		m.put(obj,field,value,size)
+	m.act('BonusGotThrough',obj)
+	if emeralds==7 and collected:
+		assert m.get(obj,'obRoutine')==0x16
+		assert m.get(obj,'objoff_38',2)==m.s['SSR_AnnouncementDelay']
+		for tick in range(m.s['SSR_AnnouncementDelay']):
+			m.act('BonusGotThrough',obj)
+			assert m.get(obj,'obFrame')==(7 if tick==m.s['SSR_AnnouncementDelay']-1 else 0)
+		assert m.get(obj,'obRoutine')==0x18
+		assert not m.read('Super_Sonic_flag'), 'UI announcement enabled transformation gameplay'
+	else:
+		assert m.get(obj,'obRoutine')==2 and m.get(obj,'obFrame')==0
+	checks.append({'case':'all-seven-announcement-timer','emeralds':emeralds,'collected':collected})
+
 
 def render(data,pieces):
 	canvas=bytearray(96*80)

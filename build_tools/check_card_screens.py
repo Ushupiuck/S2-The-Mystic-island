@@ -71,6 +71,58 @@ def assert_ink_color(actor, frame, pieces, count, expected=0x0EE):
 		assert actual=={expected},('label colors',actor,frame,index,actual)
 
 
+def text_pixels(actor, frame, selected=None):
+	rows=frames(rom,g.get(actor,'obMap',4),8)[frame]
+	base=g.get(actor,'obGfx',2)
+	ax=g.get(actor,'obX',2)-128
+	ay=g.get(actor,'obScreenY',2)-128
+	out=[]
+	for index,(y,size,word,x) in enumerate(rows):
+		if selected is not None and index not in selected:
+			continue
+		effective=(base+word)&65535
+		assert not effective&0x1800, 'Text fixture expects unflipped glyphs'
+		width,height=((size>>2)+1)*8,((size&3)+1)*8
+		first=effective&2047
+		data=vram(first*32,width*height//2)
+		for py in range(height):
+			for px in range(width):
+				tile=px//8*(height//8)+py//8
+				packed=data[tile*32+py%8*4+px%8//2]
+				color=packed&15 if px&1 else packed>>4
+				if color:
+					out.append((index,px,ax+x+px,ay+y+py,color))
+	return out
+
+
+def assert_special_heading(state,announcement=False):
+	frame=7 if announcement else 0
+	rows=frames(rom,g.get('v_endcard','obMap',4),8)[frame]
+	top=g.get('v_endcard','obScreenY',2)-128+min(y for y,_,_,_ in rows)
+	assert top == (24 if announcement else (60,44,24)[state]), ('Heading height',state,top)
+	white=[(x,y) for _,_,x,y,color in text_pixels('v_endcard',frame) if color==6]
+	assert white, 'Heading has no white ink'
+	for x,y in white[::max(1,len(white)//20)]:
+		assert min(g.video.getpixel((x,y)))>=224, ('Heading not rendered at its mapping position',x,y)
+	return top
+
+
+def assert_continue_spacing():
+	actor='v_ssrescontinue'
+	frame=g.get(actor,'obFrame')
+	assert frame in (4,5,6)
+	pixels=text_pixels(actor,frame,{0,1,2})
+	t=[x for piece,px,x,_,color in pixels if piece==0 and px>=24 and color==13]
+	i=[x for piece,px,x,_,color in pixels if piece==1 and px<8 and color==13]
+	gap=min(i)-max(t)-1
+	assert gap==1, ('CONTINUE has a detached I',gap)
+	for _,_,x,y,color in pixels:
+		if color==13:
+			r,green,b=g.video.getpixel((x,y))
+			assert min(r,green)>=224 and b<64, ('Continue ink missing at joined text pieces',x,y)
+	return gap
+
+
 def assert_bonus():
 	source=(ROOT/'art/uncompressed/HUD Numbers.bin').read_bytes()
 	for offset,name,width in ((0,'v_timebonus',5),(5,'v_ringbonus',4)):
@@ -242,10 +294,33 @@ else:
 	state=0 if not args.collected or not args.emeralds else 2 if args.emeralds==7 else 1
 	assert_card(72+state*2+(args.player==2));assert_bonus();assert_score()
 	assert g.get('v_endcard','obMap',4)==g.s[f'Map_SSR_{state}_{int(args.player==2)}']
+	heading_top=assert_special_heading(state)
 	ink=int.from_bytes((ROOT/'palette/Special Stage Results.bin').read_bytes()[58:60],'big')
 	assert_ink_color('v_endcard',1,(0,1),7,ink)
 	assert_ink_color('v_endcard',2,(0,1,2,3,4,5),7,ink)
 	g.video.save(args.output/'results.png')
+	announcement=False
+	if state==2:
+		g.video.save(args.output/'got-them-all.png')
+		for _ in range(g.s['SSR_AnnouncementDelay']+2):
+			step()
+			if g.get('v_endcard','obFrame')==7:
+				break
+		else:
+			raise AssertionError('All-seven heading did not advance to the Super announcement')
+		step()  # present the new header's SAT
+		# Capture the visible half of the existing emerald blink for review.
+		for _ in range(4):
+			backdrop=g.video.getpixel((0,80))
+			if all(g.video.getpixel(point)!=backdrop for point in
+				((112,100),(144,100),(176,100),(208,100),(128,124),(160,124),(192,124))):
+				break
+			step()
+		assert_special_heading(state,announcement=True)
+		assert_card(76+(args.player==2))
+		assert not g.read('Super_Sonic_flag'), 'Results UI enabled unfinished transformation gameplay'
+		g.video.save(args.output/'super-announcement.png')
+		announcement=True
 	poses=set()
 	if args.rings>=50:
 		character='Tails' if args.player==2 else 'Sonic'
@@ -268,7 +343,17 @@ else:
 					break
 		assert poses=={4,5},poses
 		assert_ink_color('v_endcard',4,(0,1),7,0x0EE)
-	report.update(emeralds=args.emeralds,collected=args.collected,rings=args.rings,continue_poses=sorted(poses))
+		continue_gap=assert_continue_spacing()
+	if announcement:
+		for _ in range(1200):
+			step()
+			if g.read('v_vbla_routine',2)==g.s['Vint_Level'] and g.read('f_timecount'):
+				break
+		else:
+			raise AssertionError('Super announcement stalled the normal results exit')
+		report['returns_to_level']=True
+	report.update(emeralds=args.emeralds,collected=args.collected,rings=args.rings,continue_poses=sorted(poses),
+		heading_top=heading_top,continue_gap=continue_gap if args.rings>=50 else None,super_announcement=announcement)
 
 report['passed']=True
 (args.output/'report.json').write_text(json.dumps(report,indent=2)+'\n')

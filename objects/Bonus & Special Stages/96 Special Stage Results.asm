@@ -19,8 +19,12 @@ SSR_Index:	dc.w SSR_ChkPLC-SSR_Index
 		dc.w SSR_Wait-SSR_Index
 		dc.w SSR_Exit-SSR_Index
 		dc.w loc_BEF2-SSR_Index
+		dc.w SSR_AnnouncementWait-SSR_Index
+		dc.w SSR_Display-SSR_Index
 
 ssr_mainX = objoff_34	; position for card to display on
+SSR_AnnouncementFrame = 7
+SSR_AnnouncementDelay = 180	; all-seven heading holds three seconds before the UI-only announcement
 ; ===========================================================================
 
 SSR_ChkPLC:	; Routine 0
@@ -38,7 +42,7 @@ SSR_Main:
 		jsr	(Get_SpecialCardScene).l
 		movea.l	a0,a1
 		lea	(SSR_Config).l,a2
-		move.b	#Map_SSR_height,d3
+		move.b	#Map_SSR_2_0_height,d3	; largest family includes the raised oval and both headings
 		move.l	#BonusGotThrough,d6
 		moveq	#(SSR_Config_Continue-SSR_Config)/8-1,d1
 		cmpi.w	#50,(v_rings).w	; do you have 50 or more rings?
@@ -76,6 +80,16 @@ locret_BE42:
 ; ===========================================================================
 
 loc_BE44:
+		tst.b	obFrame(a0)
+		bne.s	.check_tally
+		tst.b	(v_ss_emerald_collected).w
+		beq.s	loc_BE32
+		cmpi.b	#7,(v_emeralds).w
+		bne.s	loc_BE32
+		move.b	#$16,obRoutine(a0)
+		move.w	#SSR_AnnouncementDelay,objoff_38(a0)
+		bra.w	DisplaySprite
+.check_tally:
 		cmpi.b	#2,obFrame(a0)
 		bne.s	loc_BE32
 		addq.b	#2,obRoutine(a0)
@@ -88,6 +102,16 @@ SSR_Wait:	; Routine 4, 8, $C, $10
 		addq.b	#2,obRoutine(a0)
 
 SSR_Display:
+		bra.w	DisplaySprite
+; ===========================================================================
+
+; The all-seven bank already contains both messages. Only the header changes;
+; score, gems and the Continue controller retain their own timers and mappings.
+SSR_AnnouncementWait:	; Routine $16
+		subq.w	#1,objoff_38(a0)
+		bne.w	SSR_Display
+		move.b	#SSR_AnnouncementFrame,obFrame(a0)
+		move.b	#$18,obRoutine(a0)
 		bra.w	DisplaySprite
 ; ===========================================================================
 

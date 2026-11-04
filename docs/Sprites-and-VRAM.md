@@ -344,7 +344,7 @@ Title cards stream scene glyphs at tile `$581`. Results begin at that same
 tile with nine time/ring bonus digit tiles (`ArtTile_Bonuses`: five time,
 four ring), then stream glyphs at `$58A` (`ArtTile_Results_Card`). Normal results
 use at most 70 glyph tiles and stay below animal bank 1; special results use
-at most 76 and
+at most 90 and
 have no live level animals. Both shield banks remain disjoint from the complete
 results allocation. The generator checks these lifetimes at assembly time.
 Scene DPLCs avoid loading the whole raw font. `Pal_TitleCardYellow` must
@@ -357,8 +357,16 @@ removed. Both screens share that treatment and the tightened final S in BONUS.
 Special results use the aligned palette contract below. A successful partial
 set uses two 16-pixel heading lines separated by eight clear pixels; the upper
 line moves up so the lower line and emerald grid retain their positions. The
-special-results oval sits eight pixels above the heading anchor, keeping its
+oval in failed/partial results sits eight pixels above the heading anchor, keeping its
 lower edge clear of the blue emerald.
+The all-seven success heading starts at screen Y=24, matching S3&K's `$98`
+text row; its glyph mappings move up 36 pixels from the shared `$C4` anchor.
+Its oval is centered at screen `(160,32)`. After a 180-update hold, the same
+header displays CHARACTER CAN NOW BE / SUPER CHARACTER at Y=24/48. Both
+messages share the resident all-seven bank, so the change needs no upload.
+This is the announcement UI; Super transformation gameplay remains unfinished.
+CONTINUE pulls its INUE mapping pieces two pixels left, leaving one clear pixel
+between T and I. The existing shared glyph art and 18-tile word bank stay in use.
 
 Normal and special results share `Card_InitResultSprite`, an eight-byte-record
 constructor adapted from S3&K's `sub_2E802`. Their editable configuration tables

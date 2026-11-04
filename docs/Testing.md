@@ -999,6 +999,13 @@ both directions, then stages cyan/gray for a normal collision-driven double
 pickup and real goal exit. `--pickup-count 1` covers partial success; `--fail`
 uses a real GOAL with six previously held emeralds. These are positioned
 fixtures, not controller-only full-stage routes.
+`check_card_screens.py` also checks settled heading pixels against their mapping
+positions: all-seven success starts at screen Y=24. With at least 50 rings, it
+checks the one-pixel T-I gap in CONTINUE from loaded VRAM and rendered gold ink,
+including both character portraits and both animation poses. All-seven success
+also checks the timed Super announcement, its rendered Y=24/48 lines and the
+unchanged resident glyph bank; native checks reject it for failed or partial
+results and verify that it does not enable transformation gameplay.
 `check_card_screens.py --case special --emeralds 6` must show SPECIAL STAGE;
 add `--collected` for the character-specific successful heading, or use seven
 with that flag for GOT THEM ALL. `check_card_art.py` executes all 600 displayed

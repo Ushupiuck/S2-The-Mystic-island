@@ -77,7 +77,7 @@ DPLC_Cards:
 		dc.w DPLC_Card_74-DPLC_Cards ; SONIC GOT A CHAOS EMERALD
 		dc.w DPLC_Card_75-DPLC_Cards ; TAILS GOT A CHAOS EMERALD
 		dc.w DPLC_Card_76-DPLC_Cards ; SONIC GOT THEM ALL
-		dc.w DPLC_Card_77-DPLC_Cards ; TAILS GOT THEM ALL
+		dc.w DPLC_Card_76-DPLC_Cards ; TAILS GOT THEM ALL
 DPLC_Card_0: dc.w 10
 		dc.w $3010,$702E,$304E,$3053,$F070,$5090,$9018,$3026,$3042,$5084
 DPLC_Card_1: dc.w 10
@@ -228,10 +228,8 @@ DPLC_Card_74: dc.w 8
 		dc.w $109A,$F070,$3096,$3000,$B008,$9018,$F026,$B03A
 DPLC_Card_75: dc.w 9
 		dc.w $109A,$F070,$3096,$3000,$B008,$9018,$7026,$3032,$B03A
-DPLC_Card_76: dc.w 9
-		dc.w $109A,$F070,$3096,$3000,$3008,$3010,$9018,$F026,$703E
-DPLC_Card_77: dc.w 9
-		dc.w $109A,$F070,$3096,$3000,$3010,$9018,$7026,$3032,$703E
+DPLC_Card_76: dc.w 10
+		dc.w $109A,$F070,$3096,$B000,$3010,$9018,$F026,$F036,$3046,$5084
 		even
 	if 84>ArtTile_Animal_1-ArtTile_Title_Card
 		fatal "Intro glyphs exceed their VRAM lifetime bank"
@@ -239,7 +237,7 @@ DPLC_Card_77: dc.w 9
 	if 70>ArtTile_Animal_1-ArtTile_Results_Card
 		fatal "NormalResult glyphs exceed their VRAM lifetime bank"
 	endif
-	if 76>vram_fg/tile_size-ArtTile_Results_Card
+	if 90>vram_fg/tile_size-ArtTile_Results_Card
 		fatal "SpecialResult glyphs exceed their VRAM lifetime bank"
 	endif
 	if ArtTile_Bonuses<ArtTile_Shield_2_End

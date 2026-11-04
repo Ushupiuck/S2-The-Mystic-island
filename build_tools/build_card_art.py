@@ -276,17 +276,29 @@ Map_Results_ContinueText = make_art_tile(ArtTile_Mini_Sonic,1,0)-ArtTile_Results
 				text += [(y+8,size,word,x) for y,size,word,x in lettering('CHAOS EMERALD',space=8)]
 			else:
 				text = lettering(name,space=8)
-			order, lookup = pack(special_common,text)
+				if state == 2:
+					# S3&K's $98 text row is screen Y=24; our anchor is $C4.
+					text = [(y-36,size,word,x) for y,size,word,x in text]
+			announcement = []
+			oval = OVAL
+			if state == 2:
+				announcement = [(y-36,size,word,x) for y,size,word,x in lettering(character+' CAN NOW BE',space=8)]
+				announcement += [(y-12,size,word,x) for y,size,word,x in lettering('SUPER '+character,space=8)]
+				# Center the oval at screen (160,32), behind the raised first line.
+				oval = [(y-28,size,word,x+4) for y,size,word,x in OVAL]
+			# Both headings are resident together: the timed swap needs no DMA.
+			order, lookup = pack(special_common,text+announcement)
 			scenes.append((name,order))
 			score, bonus = fixed(lookup,special=True,tails=tails)
 			mini = 'ArtTile_Mini_Tails' if tails else 'ArtTile_Mini_Sonic+18'
+			# The second text piece starts at I: tighten the T-I pair by two pixels.
 			continues = [row(-8,13,'Map_Results_ContinueText',-80),
-						 row(-8,13,'Map_Results_ContinueText+8',-48),
-						 row(-8,1,'Map_Results_ContinueText+16',-16)]
-			frames = [mapped(text,lookup),score,bonus(False),mapped(OVAL,lookup),
+						 row(-8,13,'Map_Results_ContinueText+8',-50),
+						 row(-8,1,'Map_Results_ContinueText+16',-18)]
+			frames = [mapped(text,lookup),score,bonus(False),mapped(oval,lookup),
 					  continues+[row(-8,6,f'make_art_tile({mini},0,0)-ArtTile_Results_Card',64)],
 					  continues+[row(-8,6,f'make_art_tile({mini}+6,0,0)-ArtTile_Results_Card',64)],
-					  continues]
+					  continues,mapped(announcement,lookup)]
 			special_output.append(emit_table(f'Map_SSR_{state}_{int(tails)}',frames,name))
 	special_output.append('Card_SS_MapPointers:\n')
 	for state in range(3):
