@@ -801,18 +801,18 @@ VRAM_Menu_Plane_Table_Size               = $1000	; 64 cells x 32 cells x 2 bytes
 	include "sound/sfxids.gen.asm"
 
 ; Sound command IDs
-offset :=	zCommandIndex
+offset :=	Clone_Sound_ExIndex
 ptrsize :=	2
 idstart :=	$FA
 
 CmdID__First = idstart
-MusID_StopSFX =		id(CmdPtr_StopSFX)	; F8
-MusID_FadeOut =		id(CmdPtr_FadeOut)	; F9
-SndID_SegaSound =	id(CmdPtr_SegaSound)	; FA
-MusID_SpeedUp =		id(CmdPtr_SpeedUp)	; FB
-MusID_SlowDown =	id(CmdPtr_SlowDown)	; FC
-MusID_Stop =		id(CmdPtr_Stop)		; FD
-CmdID__End =		id(CmdPtr__End)		; FE
+MusID_StopSFX =		id(Clone_ptr_flgFA)	; FA
+MusID_FadeOut =		id(Clone_ptr_flgFB)	; FB
+SndID_SegaSound =	id(Clone_ptr_flgFC)	; FC
+MusID_SpeedUp =		id(Clone_ptr_flgFD)	; FD
+MusID_SlowDown =	id(Clone_ptr_flgFE)	; FE
+MusID_Stop =		id(Clone_ptr_flgFF)		; FF
+CmdID__End =		id(Clone_ptr_flgend)		; 100
 
 ; Background music
 bgm_GHZ =		MusID_ALZ
@@ -1492,13 +1492,50 @@ Collision_response_list_end:
 	if (MOMPASS>1)&&(MCD_MainWorkStart<Collision_response_list_end)
 		fatal "Live MD allocations exceed 64 KB."
 	endif
-	phase	Collision_response_list_end
-Free_RAM_Start:		ds.b	MCD_MainWorkStart-Collision_response_list_end
+	; Audio state ends below the existing CD workspace; tail padding stays unused.
+	phase MCD_MainWorkStart-(Sound_RAM_End-Clone_Driver_RAM)
+Clone_Driver_RAM: ds.b SMPS_RAM.len
+	ds.b SMPS_RAM.len&1
+Sound_Initialized: ds.b 1
+Sound_UpdateRunning: ds.b 1
+Sound_LoadBusy: ds.b 1
+Sound_PendingSong: ds.b 1
+Sound_PendingSong2: ds.b 1
+Sound_ReadySong: ds.b 1
+Sound_ReadyFlags: ds.b 1
+Sound_CurrentSong: ds.b 1
+Sound_CurrentFlags: ds.b 1
+Sound_BackedSong: ds.b 1
+Sound_TempoAdjust: ds.b 1
+Sound_SpeedClock: ds.b 1
+Sound_SFXNormal: ds.b 1
+Sound_SFXStereo: ds.b 1
+Sound_SFXImmediate: ds.b 1
+	ds.b 1
+Sound_ReadyBuffer: ds.l 1
+Sound_ReadySize: ds.w 1
+Sound_RAM_End:
+	dephase
+	phase Collision_response_list_end
+Sound_MusicBuffer: ds.b Sound_MusicBufferCapacity
+Sound_MusicBuffer_End:
+Sound_JingleBuffer: ds.b Sound_MusicBufferCapacity
+Sound_JingleBuffer_End:
+Free_RAM_Start:		ds.b	Clone_Driver_RAM-Sound_JingleBuffer_End
 Free_RAM_End:
-	if Free_RAM_End<>MCD_MainWorkStart
+	if Free_RAM_End<>Clone_Driver_RAM
 		fatal "Free RAM must end at the first live allocation."
 	endif
 	dephase
+	if (MOMPASS>1)&&(Sound_RAM_End>MCD_MainWorkStart)
+		fatal "Audio state overlaps CD work storage"
+	endif
+	if (MOMPASS>1)&&(Sound_JingleBuffer_End>Clone_Driver_RAM)
+		fatal "Audio allocations exceed available MD RAM"
+	endif
+	if (MOMPASS>1)&&((Clone_Driver_RAM&$FF8000)<>$FF8000)
+		fatal "CloneDriver requires upper-32-KiB MD RAM"
+	endif
 	phase	0
 v_end:
 

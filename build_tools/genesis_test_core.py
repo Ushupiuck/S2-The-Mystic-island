@@ -31,6 +31,16 @@ class RetroMemoryMap(C.Structure):
 				('num_descriptors', C.c_uint)]
 
 
+class Z80Pair(C.Union):
+	_fields_=[('d',C.c_uint32),('w',C.c_uint16*2),('b',C.c_uint8*4)]
+
+
+class Z80Registers(C.Structure):
+	_fields_=[(name,Z80Pair) for name in ('pc','sp','af','bc','de','hl','ix','iy','wz','af2','bc2','de2','hl2')]+[
+		(name,C.c_uint8) for name in ('r','r2','iff1','iff2','halt','im','i','nmi_state','nmi_pending','irq_state','after_ei')]+[
+		('cycles',C.c_uint32),('daisy',C.c_void_p),('irq_callback',C.c_void_p)]
+
+
 class Genesis:
 	def __init__(self, core, rom, listing, output, pal=False, core_options=None, system_directory=None):
 		self.s = {name:int(value,16) for name,value in re.findall(

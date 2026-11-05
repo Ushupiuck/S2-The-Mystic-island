@@ -13,7 +13,8 @@ It calls no BIOS routines and needs no disc or MMD modules. The conventional
 `$000000-$005FFF` BIOS area is reserved; the raw subprogram and its 64 vectors
 occupy its beginning. This does not load Sega's BIOS. Stack top is `$7FFF0`, with a 16-byte bus-read guard below Word RAM;
 PCM and sub-CPU interrupts start disabled. Disc, CDDA, backup RAM and graphics
-jobs remain future work; Z80 sound remains on its existing storage.
+jobs remain future work. The experimental sound split is documented in the
+[sound guide](../build_tools/sound/README.md); PCM remains unimplemented.
 
 ## CPU source boundary
 
@@ -83,21 +84,28 @@ allocation is not a contiguous main-CPU pointer, and jobs cannot use its tail.
 The Mode 1 [plane engine](Levels.md#mode-1-plane-engine) addresses the full
 allocation with word IDs. Mixed-size editor stamping remains future work.
 
-MD work RAM is packed against the top of its 64 KiB address space. The single
-free allocation is `Free_RAM_Start` through `Free_RAM_End` (end exclusive):
-`$FF0032-$FFB1EF`, **`$B1BE` bytes (45,502)**. Terrain, placement loading and
-decompression work storage live with their CD executors. Current live ranges:
+MD work RAM is packed against the top of its 64 KiB address space. The free
+allocation is `Free_RAM_Start` through `Free_RAM_End` (end exclusive). On main
+it is `$FF0032-$FFB1ED`, `$B1BC` bytes (45,500). Experimental reserves two
+16-KiB music buffers and Clone state, leaving `$FF8032-$FFADA3`, `$2D72` bytes
+(11,634). Terrain, placement loading and decompression work storage live with
+their CD executors. Shared upper addresses remain unchanged:
 
 | Allocation | MD address, inclusive | Size |
 | --- | --- | --- |
 | [Touch-collision candidates](Objects.md#touch-collision-candidates) | `$FF0000-$FF0031` | `$32` |
-| Ring/terrain events and CD job controls | `$FFB1F0-$FFB40B` | `$21C` |
-| [Decompressed player art](Sprites-and-VRAM.md#mode-1-ram-art) | `$FFB40C-$FFBFAB` | `$BA0` |
-| Engine variables and work buffers | `$FFBFAC-$FFFFFF` | `$4054` |
+| Experimental normal music | `$FF0032-$FF4031` | `$4000` |
+| Experimental restoring jingle | `$FF4032-$FF8031` | `$4000` |
+| Experimental audio state | `$FFADA4-$FFB1ED` | `$44A` |
+| Ring/terrain events and CD job controls | `$FFB1EE-$FFB409` | `$21C` |
+| [Decompressed player art](Sprites-and-VRAM.md#mode-1-ram-art) | `$FFB40A-$FFBFA9` | `$BA0` |
+| Engine variables and work buffers | `$FFBFAA-$FFFFFF` | `$4056` |
 
 `_definitions/s2.constants.asm` derives the engine's start from its own declared
 size, then places CD work/art immediately below it. Allocation changes move the
-boundary automatically. The touch-collision queue instead reserves its 50 bytes
+boundary automatically. Experimental places its aligned audio state below CD
+work and its song buffers above the touch queue, with overlap checks. The
+touch-collision queue reserves its 50 bytes
 from the bottom of free RAM, preserving existing live addresses. Assembly
 checks keep short-addressed engine storage in `$FF8000-$FFFFFF`. CD event/art
 accesses use long addressing. In Mode 1, the old MD Kosinski module buffer, Nemesis code
@@ -266,10 +274,13 @@ replaces it. The compressed Z80 driver has its own explicit start/end span.
 
 Terrain decodes straight into resident CD PRG RAM. General MD destinations use
 the Word-RAM output bank followed by a result copy; Z80 destinations require
-byte writes. This moves startup driver decompression, not sound sequencing:
-sound sequencing and music decompression remain on Z80/MD. The experimental
-branch's Kosinski+ music path is described in the
-[sound guide](../build_tools/sound/README.md#experimental-z80-decoder).
+byte writes. On the experimental branch, music also uses this existing CD
+decoder and copies its result into one of the stable MD song buffers. The main
+thread prepares songs before waiting for VBlank; the audio interrupt consumes
+ready pointers without submitting CD commands. FM/PSG music executes on MD,
+DAC/SFX execute on Z80, and future PCM will execute on CD. Word RAM is a
+transferred transport workspace, not simultaneous storage for both sequencers.
+See the [sound guide](../build_tools/sound/README.md#playback-and-memory).
 
 `ArtLoadCues` index offsets use bit 0 to identify a KosM list. `LoadPLC` and
 `NewPLC` strip that bit and tag each staged source's high byte; the low 24 bits

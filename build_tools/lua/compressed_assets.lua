@@ -24,8 +24,8 @@ function assets.generate()
 				if not read(resolved) then resolved = "_inc/" .. include end
 				scan(resolved)
 			end
-			local file = line:match('binclude%s+"([^"]+)"')
-			if file and (file:match("%.kosp$") or file:match("%.kospm$") or file:match("%.nem$") or file:match("%.eni$")) then
+			local file = line:match('[bB][iI][nN][cC][lL][uU][dD][eE]%s+"([^"]+)"')
+			if file and (file:match("sound/music/%.%./generated/[%w_]+_cmp%.bin$") or file:match("%.kosp$") or file:match("%.kospm$") or file:match("%.nem$") or file:match("%.eni$")) then
 				assert(label, "Unlabelled compressed asset in " .. path)
 				local data = assert(read(file), "Missing asset " .. file)
 				local size = #data

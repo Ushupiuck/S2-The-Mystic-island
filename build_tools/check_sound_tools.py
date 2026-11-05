@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check KeH macro encoding, real voice dumps, bank layout, and build failures.
+"""Check native Clone music, retained Z80 SFX, compression and build failures.
 
 Run after rebuilding the sound tools and ROM. Fixtures use a temporary project;
 the working music, configuration, generated banks, and ROM are never modified.
@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def saxman(data):
 	"""Independent decoder, including the zero dictionary used by the Z80 driver."""
 	assert len(data) >= 2
-	end = 2 + int.from_bytes(data[:2], 'little')
+	end = 2 + int.from_bytes(data[:2], 'big')
 	assert end == len(data), 'Invalid Saxman payload length'
 	result = bytearray()
 	i = 2
@@ -83,7 +83,8 @@ def main():
 		(d / 'sound/music').mkdir(parents=True)
 		(d / 'sound/DAC').mkdir()
 		(d / '_definitions').mkdir()
-		for name in ['KEHmusic.exe', 'KEHsfx.exe', 'IniFile.dll', '_definitions/s2.macros.asm', 'sound/dacids.gen.asm', '_definitions/_smps2asm_inc.asm']:
+		shutil.copytree(ROOT / 'sound/CloneDriver', d / 'sound/CloneDriver')
+		for name in ['KEHmusic.exe', 'KEHsfx.exe', 'IniFile.dll', '_definitions/s2.macros.asm', 'sound/dacids.gen.asm', '_definitions/_smps2asm_inc.asm', '_definitions/Sound Constants.asm']:
 			shutil.copyfile(ROOT / name, d / name)
 		(d / 'md-main.asm').write_text('; Temporary packer fixture\n')
 		(d / 'sound/DAC/sample.bin').write_bytes(b'\x80')
@@ -92,10 +93,10 @@ def main():
 
 		def assemble(body, origin=0, music=True, okay=True):
 			(d / 'fixture.asm').write_text('\tCPU 68000\n\tpadding off\n' + ('kehmusic = 1\n' if music else '') +
-				'allOptimizations = 1\n\tinclude "_definitions/s2.macros.asm"\n\tinclude "_definitions/_smps2asm_inc.asm"\n' + f'\torg ${origin:X}\n' + body)
+				'allOptimizations = 1\n\tinclude "_definitions/s2.macros.asm"\n' + ('\tinclude "_definitions/Sound Constants.asm"\n\tinclude "sound/CloneDriver/engine/_smps2asm_inc.asm"\n' if music else '\tinclude "_definitions/_smps2asm_inc.asm"\n') + f'\torg ${origin:X}\n' + body)
 			(d / 'fixture.p').unlink(missing_ok=True)
 			try:
-				message = run([asl, '-xx', '-n', '-q', '-A', '-U', '-E', '-i', '.', '-o', 'fixture.p', 'fixture.asm'], d, okay)
+				message = run([asl, '-xx', '-n', '-q', '-A', '-U', '-E', 'fixture.log', '-i', '.', '-o', 'fixture.p', 'fixture.asm'], d, okay)
 			except AssertionError as error:
 				raise AssertionError((d / 'fixture.log').read_text()) from error
 			if not okay:
@@ -112,28 +113,28 @@ def main():
 			assert (d / ('sound/' + name + '.gen.asm')).is_file(), name
 		assert not list(d.glob('*.gen.asm')), 'Generated sound tables leaked into project root'
 
-		# Old and new syntax must retain KeH's relocatable pointer format.
+		# Music uses native big-endian relative pointers; SFX retain KeH's compact format.
 		header = '\tsmpsHeaderStartSong 2,1\n\tsmpsHeaderVoice Voice\n\tsmpsHeaderChan 1,0\n\tsmpsHeaderTempo 1,$80\n\tsmpsHeaderFM Track,0,0\nTrack:\n\tsmpsFMvoice 0\n\tsmpsCall Sub\n\tsmpsLoop 0,2,Track\n\tsmpsJump Track\nSub:\n\tsmpsReturn\nVoice:\n\tdc.b $12\n'
 		data = assemble(header)
 		assert data == assemble(header, 0x12340), 'Music pointers depend on their ROM/RAM address'
-		assert int.from_bytes(data[:2], 'little') == data.index(b'\x12')
-		assert int.from_bytes(data[6:8], 'little') == 2, 'FM pointer is not relative to its end'
+		assert int.from_bytes(data[:2], 'big') == data.index(b'\x12')
+		assert int.from_bytes(data[8:10], 'big') == 12, 'Track pointer is not relative to the header'
 		sfx = '\tsmpsHeaderStartSong 2,1\n\tsmpsHeaderVoiceNull\n\tsmpsHeaderTempoSFX 1\n\tsmpsHeaderChanSFX 1\n\tsmpsHeaderSFXChannel cFM5,Track,0,0\nTrack:\n\tsmpsStop\n'
 		data = assemble(sfx, 0x18000, music=False)
 		assert data[:5] == bytes.fromhex('0000010105') and data[5:7] == bytes.fromhex('0980'), 'Compact SFX header or absolute bank pointer changed'
 		commands = '\tsmpsHeaderStartSong 3,1\n\tsmpsNoteFill 3\n\tsmpsFMAlterVol $7F,$FD\n\tsmpsModSet 4,2,3,8\n\tsmpsHeaderStartSong 1\n\tsmpsNoteFill 4\n\tsmpsModSet 4,2,3,8\n\tsmpsDcb nDb4,nCs4,nGs3,nAb3\n'
-		assert assemble(commands) == bytes.fromhex('FA03E6FDF003020303E804F005020308B2B2ADAD'), 'Imported command or note alias differs'
+		assert assemble(commands) == bytes.fromhex('FF1D03FF06FDFF2104020308FF0804FF0E04020308B2B2ADAD'), 'Imported command or note alias differs'
 		message = assemble('\tsmpsHeaderStartSong 3,1\n\tsmpsFMvoice 0,2\n', okay=False)
 		assert 'copy this instrument locally' in message, message
-		assert 'newer SMPS2ASM' in assemble('\tsmpsHeaderStartSong 2,2\n', okay=False)
-		print('Macros: relative music, compact absolute SFX, modern aliases, note fill, modulation, and import diagnostics.')
+		assert 'newer version of SMPS2ASM' in assemble('\tsmpsHeaderStartSong 2,2\n', okay=False)
+		print('Macros: native relative music, retained Z80 SFX, modern aliases and import diagnostics.')
 
 		# Compare actual instrument bytes to the preserved independent raw dumps.
 		for name in ['HTZ', 'GGZ1', 'RRZ1']:
 			song = ROOT / 'sound/music' / (name + '.asm')
 			text = song.read_text()
 			data = assemble('\tinclude "' + song.as_posix() + '"\n')
-			voice = int.from_bytes(data[:2], 'little')
+			voice = int.from_bytes(data[:2], 'big')
 			blocks = re.split(r'^;\s*Voice \$[0-9A-Fa-f]+\s*$', text, flags=re.M)[1:]
 			assert blocks, 'No reference voices in ' + name
 			for index, block in enumerate(blocks):
@@ -145,6 +146,9 @@ def main():
 				for group in range(1, 25, 4):
 					expected[group + 1], expected[group + 2] = expected[group + 2], expected[group + 1]
 				actual = data[voice + index * 25:voice + (index + 1) * 25]
+				# Clone stores TL before AR; bit 7 marks carriers rather than a YM value.
+				actual = actual[:5] + actual[9:] + bytes(v & 127 for v in actual[5:9])
+				expected[21:25] = bytes(v & 127 for v in expected[21:25])
 				assert actual == expected, (name, index, actual.hex(), expected.hex())
 			print(f'{name}: {len(blocks)} instruments match their original 25-byte dumps.')
 
@@ -159,7 +163,7 @@ def main():
 		with (d / 'sound/music/notes.inc').open('a') as f:
 			f.write('; Nested dependency change\n')
 		assert 'Building song' in run(packer, d)
-		with (d / '_definitions/_smps2asm_inc.asm').open('a') as f:
+		with (d / 'sound/CloneDriver/engine/_smps2asm_inc.asm').open('a') as f:
 			f.write('; Shared macro change\n')
 		assert 'Building song' in run(packer, d)
 		(d / 'sound/music/notes.inc').write_text('\tINVALID_SOUND_INSTRUCTION\n')
@@ -179,29 +183,29 @@ def main():
 				assert row.getint('Size') < len(raw)
 				assert kosinski_plus((d / 'sound/music' / row['OutputFile']).read_bytes()) == raw
 			else:
-				assert row.getint('Size') == len(raw) and not row.get('OutputFile')
+				assert row.getint('Size') == len(raw) and (d / 'sound/music' / row['OutputFile']).read_bytes() == raw
 			return row
-		auto_case(bytes(0xA40), True)
-		auto_case(bytes(0xA41), False)
-		auto_case(random.Random(0x4B4F53).randbytes(0xA40), False)
+		auto_case(bytes(0x4000), True)
+		auto_case(random.Random(0x4B4F53).randbytes(0x4000), False)
 		auto_case(bytes(6), False) # Kosinski+ ties six raw zero bytes: keep raw.
-		print('Automatic music storage: fits+smaller compresses; oversized, incompressible and equal-size inputs stay raw.')
+		print('Automatic music storage: fits+smaller compresses; incompressible and equal-size inputs stay raw.')
 
-		# Raw binaries must not silently acquire the compressed playlist flag.
-		(d / 'sound/music/raw.bin').write_bytes(bytes(range(256)) * 128)
+		# Every music entry is an unbanked ROM pointer plus sizes and format flags.
+		(d / 'sound/music/raw.bin').write_bytes(random.Random(21).randbytes(0x4000))
 		ini.write_text('[Raw]\nTitle=Raw binary\nFile=raw.bin\n')
 		run(packer, d)
-		for name in ('dacbanks', 'dacinfo', 'dacids', 'musicbanks', 'musicinfo', 'musicids', 'musicnames'):
+		for name in ('dacbanks', 'dacinfo', 'dacids', 'musicdata', 'musicinfo', 'musicids', 'musicnames'):
 			assert (d / ('sound/' + name + '.gen.asm')).is_file(), name
-		assert not list(d.glob('*.gen.asm')), 'Generated sound tables leaked into project root'
-		assert 'musprop_uncompressed' in (d / 'sound/musicinfo.gen.asm').read_text()
-		assert '$8000 bytes' in (d / 'sound/generated/music-bank-1.gen.asm').read_text()
-		(d / 'sound/music/raw.bin').write_bytes(bytes(0x8001))
-		assert '$8000' in run(packer, d, False)
-		(d / 'sound/music/raw.bin').write_bytes(bytes(0xA40 + 1))
+		assert not list(d.glob('*.gen.asm')), 'Generated tables leaked into project root'
+		assert not list((d / 'sound/generated').glob('music-bank-*.gen.asm')), 'Music still uses banks'
+		assert 'SoundMusicEntry Mus_Raw,$4000,$4000,$00' in (d / 'sound/musicinfo.gen.asm').read_text()
+		layout = (d / 'sound/musicdata.gen.asm').read_text()
+		assert 'startBank' not in layout and 'finishBank' not in layout
+		(d / 'sound/music/raw.bin').write_bytes(bytes(0x4001))
+		assert '$4000' in run(packer, d, False)
 		ini.write_text('[Raw]\nTitle=Raw binary\nFile=raw.bin\nBinaryFormat=KosinskiPlus\n')
+		(d / 'sound/music/raw.bin').write_bytes(bytes(100))
 		assert 'Kosinski+' in run(packer, d, False)
-		# Explicit precompressed imports retain their encoding and decoded metadata.
 		from convert_s1_ss_background import kosinski_plus as encode_kosinski_plus
 		packed = encode_kosinski_plus(bytes(128))
 		(d / 'sound/music/raw.bin').write_bytes(packed)
@@ -210,26 +214,23 @@ def main():
 		assert config['Raw'].getboolean('IsCompressed')
 		assert config['Raw'].getint('UncompressedSize') == 128
 		assert config['Raw'].getint('Size') == len(packed)
-		assert 'musprop_uncompressed' not in (d / 'sound/musicinfo.gen.asm').read_text()
+		# Packed input may be larger than decoded input; only decoded RAM is bounded.
+		packed = encode_kosinski_plus(random.Random(9).randbytes(0x4000))
+		assert len(packed) > 0x4000
+		(d / 'sound/music/raw.bin').write_bytes(packed)
+		run(packer, d)
+		(d / 'sound/music/raw.bin').write_bytes(encode_kosinski_plus(bytes(0x4001)))
+		assert '$4000' in run(packer, d, False)
 		ini.write_text('[Raw]\nTitle=Invalid assembly flag\nFile=track.asm\nBinaryFormat=KosinskiPlus\n')
 		assert 'precompressed .bin' in run(packer, d, False)
-		ini.write_text('[Raw]\nTitle=Oversized decoded input\nFile=raw.bin\nBinaryFormat=KosinskiPlus\n')
-		# A literal followed by overlapping 256-byte copies exceeds $A40.
-		(d / 'sound/music/raw.bin').write_bytes(encode_kosinski_plus(bytes(0xA41)))
-		assert '$A40' in run(packer, d, False)
-		print('Binary imports: raw $8000 accepted; oversized banks, invalid Kosinski+ streams, and Z80 buffer overflow rejected.')
+		print('Binary imports: unbanked raw/compressed entries; decoded bounds and malformed inputs checked.')
 
-		# The same generated include works in a nonconsecutive bank arrangement.
-		(d / 'sound/music/raw.bin').write_bytes(bytes(range(256)) * 128)
-		ini.write_text('[Raw]\nTitle=Raw binary\nFile=raw.bin\n')
-		run(packer, d)
-		layout = '\tinclude "_definitions/Sound Bank Assets.asm"\n\tinclude "sound/generated/music-bank-1.gen.asm"\n\tdc.b $A5\n\tinclude "sound/generated/dac-bank-1.gen.asm"\n'
-		(d / '_definitions/Sound Bank Assets.asm').write_text('SoundBankAssets macro kind,bank,{GLOBALSYMBOLS}\n\tendm\n')
+		# DAC samples keep their independent Z80 windows; ordinary data can lie between.
+		layout = '\tdc.b $A5\n\tinclude "sound/generated/dac-bank-1.gen.asm"\n'
 		data = assemble(layout)
-		assert data[0x8000] == 0xA5 and data[0x10000] == 0x80
-		(d / '_definitions/Sound Bank Assets.asm').write_text('SoundBankAssets macro kind,bank,{GLOBALSYMBOLS}\n\tdc.b 0\n\tendm\n')
-		assert 'must fit in $8000' in assemble(layout, okay=False)
-		print('Banks: independent placement works; asset overflow is caught by finishBank.')
+		assert data[0] == 0xA5 and data[0x8000] == 0x80
+		assert 'must fit in $8000' in assemble('\tstartBank\n\tds.b $8001\n\tfinishBank\n', okay=False)
+		print('DAC banks: independent alignment and window overflow checks retained.')
 
 		# Check every packed song against a fresh assembly with an independent decoder.
 		music = configparser.ConfigParser(interpolation=None)
@@ -238,7 +239,7 @@ def main():
 		for name in music.sections():
 			if music[name].getboolean('IsCompressed', fallback=False):
 				raw = kosinski_plus((ROOT / 'sound/music' / music[name]['OutputFile']).read_bytes())
-				assert len(raw) <= 0xA40 and len(raw) == music[name].getint('UncompressedSize')
+				assert len(raw) <= 0x4000 and len(raw) == music[name].getint('UncompressedSize')
 				assert raw == assemble('\tinclude "' + (ROOT / 'sound/music' / music[name]['File']).as_posix() + '"\n'), name
 		print('All compressed project songs match fresh assembly using the independent Kosinski+ decoder.')
 	print('Sound tool checks passed.')

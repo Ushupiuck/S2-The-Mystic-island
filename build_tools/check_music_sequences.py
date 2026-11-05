@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare complete KeH music streams before and after source optimization.
+"""Validate native Clone music or compare complete SMPS streams after optimization.
 
 Calls, relative jumps and counted loops are interpreted independently of the
 source macros. All musical commands, explicit/implicit durations, headers and
@@ -244,14 +244,125 @@ def playback(a,before,after):
 	return reports
 
 
+# Native CloneDriver streams use big-endian header/branch offsets and $FF
+# coordination flags. Their return addresses consume four bytes, unlike KeH.
+CLONE_ARGUMENTS=(1,1,1,0,0,1,1,0,1,1,1,1,1,1,4,0,0,1,0,1,2,4,2,2,0,1,1,1,1,1,2,0,2,4)
+
+
+def clone_header(data):
+	voice=int.from_bytes(data[:2],'big');fm,psg,pwm,reserved=data[2:6]
+	assert fm<=7 and psg<=3 and not pwm and not reserved,('Invalid native channel counts',fm,psg,pwm,reserved)
+	tracks=[];at=8
+	for name,stride in [(('DAC' if i==0 else 'FM'+str(i)),4) for i in range(fm)]+[('PSG'+str(i+1),6) for i in range(psg)]:
+		pc=int.from_bytes(data[at:at+2],'big',signed=True)
+		assert at+stride<=len(data) and 0<=pc<len(data),('Invalid native track pointer',name,pc)
+		tracks.append((name,pc,data[at+2:at+stride]));at+=stride
+	assert voice==0 or at<=voice<len(data),('Invalid native voice bank',voice)
+	return data[2:8],tracks,voice
+
+
+def clone_trace(data,start,voice,workspace):
+	pc=start;stack=[];loops=[0]*workspace;events=[];seen={};depth=0;indices=set();controls=0
+	for _ in range(1000000):
+		state=(pc,tuple(stack),tuple(loops))
+		if state in seen:
+			prefix=seen[state];assert len(events)>prefix,'Control-only native loop'
+			return dict(events=events,prefix=prefix,period=len(events)-prefix,depth=depth,indices=sorted(indices),controls=controls)
+		seen[state]=len(events)
+		assert 0<=pc<len(data),('Native track outside song',pc)
+		op=data[pc];pc+=1
+		if op<0xFE:
+			if op>=0x80:
+				duration=data[pc] if pc<len(data) and data[pc]<0x80 else None
+				if duration is not None:pc+=1
+				events.append(('note',op,duration))
+			else:events.append(('duration',op))
+			continue
+		if op==0xFE:events.append(('command','fe'));continue
+		assert pc<len(data),'Truncated native command'
+		cmd=data[pc];pc+=1
+		assert cmd<len(CLONE_ARGUMENTS),('Unknown native command',cmd)
+		end=pc+CLONE_ARGUMENTS[cmd]
+		assert end<=len(data),'Truncated native arguments'
+		def relative(at):return int.from_bytes(data[at:at+2],'big',signed=True)
+		if cmd==0x14:
+			pc=pc+1+relative(pc);controls+=1
+		elif cmd==0x15:
+			index,count=data[pc:pc+2]
+			assert index<workspace-4*len(stack),('Native loop overlaps call stack',index,len(stack))
+			indices.add(index);loops[index]=((loops[index] or count)-1)&255
+			pc=pc+3+relative(pc+2) if loops[index] else end;controls+=1
+		elif cmd==0x16:
+			stack.append(end);depth=max(depth,len(stack))
+			assert 4*len(stack)<=workspace and not any(loops[workspace-4*len(stack):]),'Native call overwrites loop counters'
+			pc=pc+2+relative(pc);controls+=1
+		elif cmd==3:
+			assert stack,'Native return without call'
+			pc=stack.pop();controls+=1
+		else:
+			if cmd==0x0D:
+				index=data[pc];assert voice and voice+(index+1)*25<=len(data),('Native instrument outside bank',index)
+				events.append(('voice',data[voice+index*25:voice+(index+1)*25].hex()))
+			else:events.append(('command',data[pc-2:end].hex()))
+			pc=end
+			if cmd in (4,0x10,0x18):
+				return dict(events=events,prefix=len(events),period=0,depth=depth,indices=sorted(indices),controls=controls)
+	raise AssertionError('Native track did not repeat or terminate')
+
+
+def clone_music(rom,listing,ini):
+	s=symbols(listing);data=rom.read_bytes()
+	config=configparser.ConfigParser(interpolation=None);config.read(ini);result={}
+	for i,name in enumerate(config.sections()):
+		at=s['MusicIndex']+i*s['Sound_MusicEntry.len']
+		start,stored,decoded,flags,reserved=__import__('struct').unpack_from('>IHHBB',data,at)
+		assert start==s['Mus_'+name] and not reserved,(name,'Native metadata')
+		assert stored==config[name].getint('Size') and decoded==config[name].getint('UncompressedSize')
+		assert 0<decoded<=s['Sound_MusicBufferCapacity']
+		raw=data[start:start+stored];raw=kosinski_plus(raw) if flags&1 else raw
+		assert len(raw)==decoded,(name,'Decoded length')
+		header,tracks,voice=clone_header(raw)
+		channels=[]
+		for channel,pc,parameters in tracks:
+			try:trace=clone_trace(raw,pc,voice,s['SMPS_Track.GoSubStack']-s['SMPS_Track.LoopCounters'])
+			except AssertionError as error:raise AssertionError((name,channel,*error.args)) from error
+			channels.append((channel,parameters,trace))
+		result[name]=(raw,stored,flags&~1,header,channels)
+	return result
+
+
+def clone_validate(args):
+	current=clone_music(args.rom,args.listing,args.ini);report=[]
+	reference=None
+	if args.reference_rom:
+		assert 'Sound_MusicBuffer' in symbols(args.reference_listing),'Cross-driver state equality is not supported; use --validate and the playback checks for driver replacement.'
+		reference=clone_music(args.reference_rom,args.reference_listing,args.reference_ini)
+		assert list(reference)==list(current),'Native song order changed'
+	for name,(raw,stored,flags,header,channels) in current.items():
+		if args.songs and name not in args.songs:continue
+		if reference:
+			old,old_stored,old_flags,old_header,old_channels=reference[name]
+			assert (flags,header)==(old_flags,old_header),(name,'Native behavior/header changed')
+			assert [(n,p) for n,p,_ in channels]==[(n,p) for n,p,_ in old_channels]
+			for (channel,_,a),(_,_,b) in zip(channels,old_channels):
+				assert bool(a['period'])==bool(b['period']),(name,channel,'Termination changed')
+				count=max(a['prefix'],b['prefix'])+a['period']+b['period']
+				left,right=expanded(a),expanded(b)
+				for i in range(count):assert next(left,None)==next(right,None),(name,channel,'Native event changed',i)
+		report.append(dict(song=name,decoded=len(raw),stored=stored,channels=[dict(channel=n,events=len(t['events']),loop_events=t['period'],call_depth=t['depth'],loop_indices=t['indices']) for n,_,t in channels]))
+		print(f'{name}: {len(channels)} native streams; pointers, instruments, complete loops and call/counter bounds pass.',flush=True)
+	args.output.parent.mkdir(parents=True,exist_ok=True);args.output.write_text(json.dumps(report,indent=2)+'\n')
+	assert not args.core,'Use check_sound_playback.py for native playback; per-frame KeH/Clone state equality is not assumed.'
+
+
 def main():
 	p=argparse.ArgumentParser(description=__doc__)
 	p.add_argument('--rom',type=Path,default=ROOT/'s2built.bin')
 	p.add_argument('--listing',type=Path,default=ROOT/'md-main.lst')
 	p.add_argument('--ini',type=Path,default=ROOT/'sound/music/music.ini')
-	p.add_argument('--reference-rom',type=Path,required=True)
-	p.add_argument('--reference-listing',type=Path,required=True)
-	p.add_argument('--reference-ini',type=Path,required=True)
+	p.add_argument('--reference-rom',type=Path)
+	p.add_argument('--reference-listing',type=Path)
+	p.add_argument('--reference-ini',type=Path)
 	p.add_argument('--output',type=Path,required=True)
 	p.add_argument('--core',type=Path)
 	p.add_argument('--system-directory',type=Path)
@@ -260,6 +371,9 @@ def main():
 	p.add_argument('--include-unchanged',action='store_true',help='Compare unchanged decoded songs for driver/codec changes.')
 	p.add_argument('--frames',type=int,help='Override the two-loop runtime budget for a short diagnostic.')
 	a=p.parse_args()
+	if 'Sound_MusicBuffer' in symbols(a.listing):
+		clone_validate(a);return
+	assert a.reference_rom and a.reference_listing and a.reference_ini,'KeH comparisons require reference inputs'
 	before=music(a.reference_rom,a.reference_listing,a.reference_ini)
 	after=music(a.rom,a.listing,a.ini)
 	assert list(before)==list(after),'Song order/IDs changed'

@@ -36,5 +36,4 @@ SndDAC_8A_8B_End:
 SndDAC_8C:	BINCLUDE "sound/DAC/8C.bin"
 SndDAC_8C_End:
 SndDAC2_DataEnd:
-	SoundBankAssets DAC,2
 	finishBank

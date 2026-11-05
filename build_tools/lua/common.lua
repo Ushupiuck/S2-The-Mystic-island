@@ -753,6 +753,7 @@ local function assemble_file(input_filename, output_filename, as_arguments, p2bi
 
 		-- Delete the object file, so that we can use its presence to detect a successful build later on.
 		os.remove(object_filename)
+		os.remove(output_filename)
 		-- AS leaves an old error log behind after a successful retry.
 		os.remove(log_filename)
 
@@ -764,7 +765,10 @@ local function assemble_file(input_filename, output_filename, as_arguments, p2bi
 		-- '-E'   - output errors to a file (*.log)
 		-- '-i .' - allows (b)include paths to be absolute
 		-- '-c'   - outputs a shared file (*.h)
-		os.execute(tools.as .. " -xx -n -q -A -L -U -E -i . " .. (create_header_file and "-c" or "") .. " " .. as_arguments .. " " .. input_filename)
+		local assembled = os.execute(tools.as .. " -xx -n -q -A -L -U -E " .. log_filename .. " -i . " .. (create_header_file and "-c" or "") .. " " .. as_arguments .. " " .. input_filename)
+		if assembled ~= true and assembled ~= 0 then
+			return file_exists(log_filename) and "error" or "crash", file_exists(log_filename) and log_filename or nil
+		end
 
 		-- If the assembler encountered an error, then the object file will not exist.
 		if not file_exists(object_filename) then
@@ -776,7 +780,14 @@ local function assemble_file(input_filename, output_filename, as_arguments, p2bi
 		end
 
 		-- Convert the object file to a flat binary.
-		os.execute(tools.p2bin .. " " .. p2bin_arguments .. " " .. object_filename .. " " .. output_filename .. " " .. (create_header_file and header_filename or ""))
+		-- A failed converter must not leave a previous binary looking successful.
+		os.remove(output_filename)
+		local converted = os.execute(tools.p2bin .. " " .. p2bin_arguments .. " " .. object_filename .. " " .. output_filename .. " " .. (create_header_file and header_filename or ""))
+		if converted ~= true and converted ~= 0 then
+			os.remove(object_filename)
+			os.remove(output_filename)
+			return "failure"
+		end
 
 		-- Remove the object file, since we no longer need it.
 		os.remove(object_filename)

@@ -17,8 +17,8 @@ root. Windows is the primary development environment; see [AGENTS.md](../AGENTS.
 | [Testing](Testing.md) | Dependencies, commands, disposable course, report generation and limits |
 
 [SonLVL's own guide](../SonLVL%20INI%20Files/README.md) owns editor setup,
-property definitions and subtype options. [KeH sound tools](../build_tools/sound/README.md)
-own song/SFX importing, packer formats and sound-tool builds.
+property definitions and subtype options. [Sound driver and tools](../build_tools/sound/README.md)
+owns CPU ownership, song/SFX importing, packer formats and sound-tool builds.
 [TODO.txt](../TODO.txt) is the development backlog, rather than implemented behavior.
 
 ## Source organization
@@ -48,7 +48,9 @@ described in the [sound guide](../build_tools/sound/README.md).
 ## Branch scope
 
 `Mystic-Island` is the default development branch and includes the former KEH
-baseline. `Mystic-Island-(Experimental)` is the experimental branch. Both target
+baseline. `Mystic-Island-(Experimental)` is the experimental branch. Experimental uses CloneDriver v2 for MD FM/PSG music and retains Z80 DAC/SFX;
+main keeps the preceding complete Z80 driver. See the
+[sound guide](../build_tools/sound/README.md). Both target
 Mega-CD Mode 1 with required CD RAM and sub-CPU processing. Sixteen four-act
 zones are exposed (`$00-$0F`); editable starter acts are not finished levels.
 The [independent-plane engine](Levels.md#mode-1-plane-engine) is the live terrain
