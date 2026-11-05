@@ -13158,12 +13158,10 @@ Snd_Driver:
 	!org (Snd_Driver+Size_of_Snd_driver_guess) ; don't worry; I know what I'm doing
 
 
-; loc_1C81A:	; For reference. Unless MAJOR ammounts of code are added before this,
-		; The driver will always end here. Which leads to..!
 Snd_Driver_End:
 ; ---------------------------------------------------------------------------
-; There being free space between the driver and the Music Pointers after compiling,
-; so we may as well put it to good use! ($1C81A-$20000; $37E6 bytes)
+; Level metadata and ordinary art use the space before the first aligned
+; audio bank. Its address is determined by the current ROM layout.
 ; ---------------------------------------------------------------------------
 		include	"_inc/DebugList.asm"
 		include	"_inc/LevelHeaders.asm"
@@ -13173,7 +13171,6 @@ Snd_Driver_End:
 		include	"_inc/LevelHeaders_BF.asm"
 	endif
 		include	"_inc/Pattern Load Cues.asm"
-		; $8EE bytes taken, 2EF8 still free
 ; ---------------------------------------------------------------------------
 ; Music pointers
 ; ---------------------------------------------------------------------------
@@ -13192,7 +13189,113 @@ zmakePlaylistEntry macro addr,val
 	endm
 
 	include "_definitions/Sound Bank Assets.asm"
-	include "sound/musicbanks.gen.asm"
+
+; Ordinary art fills the alignment gap before the first music bank. The
+; playlist records actual addresses; bank numbers need not follow ROM order.
+; -------------------------------------------------------------------------------
+Kosp_Title:		binclude	"art/kosinski/level/8x8 - Title.kosp"
+Nem_TitleSonicTails:	binclude	"art/nemesis/Title Sonic and Tails.nem"
+			even
+; ---------------------------------------------------------------------------
+; Misc. compressed data - Tilemaps
+; ---------------------------------------------------------------------------
+		; enigma assets seem to be even by default?
+Eni_SegaLogo:	binclude	"tilemaps/Sega Logo (JP1).eni"
+Eni_TitleMap:	binclude	"tilemaps/Title Emblem.eni"
+Kosp_TitleBg1:	binclude	"tilemaps/Title Background - 1.kosp"
+Kosp_TitleBg2:	binclude	"tilemaps/Title Background - 2.kosp"
+; ---------------------------------------------------------------------------
+; Green Hill Zone stage assets
+; ---------------------------------------------------------------------------
+Nem_Stalk:	binclude	"art/nemesis/S1/GHZ Flower Stalk.nem"
+		even
+Nem_Swing:	binclude	"art/nemesis/S1/GHZ Swinging Platform.nem"
+		even
+Nem_GHZ_Bridge:	binclude	"art/nemesis/S1/GHZ Bridge.nem"
+		even
+Nem_GHZ_Ball:	binclude	"art/nemesis/S1/GHZ Giant Ball.nem"
+		even
+Nem_GHZ_Rock:	binclude	"art/nemesis/S1/GHZ Purple Rock.nem"
+		even
+Nem_GHZ_BWall:	binclude	"art/nemesis/S1/GHZ Breakable Wall.nem"
+		even
+Nem_GHZ_SWall:	binclude	"art/nemesis/S1/GHZ Edge Wall.nem"
+		even
+; ---------------------------------------------------------------------------
+; Rustic Ruins Zone stage assets
+; ---------------------------------------------------------------------------
+Kospm_FlapDoor:	binclude	"art/moduled kosinski/Flapping Door.kospm"
+		even
+Kospm_LzWheel:	binclude	"art/moduled kosinski/LZ conveyor.kospm"
+		even
+; ---------------------------------------------------------------------------
+; Ancient Workbench Zone stage assets
+; ---------------------------------------------------------------------------
+Nem_CPZ_Platform1:	binclude	"art/nemesis/CPZ Floating Platform.nem"
+		even
+; ---------------------------------------------------------------------------
+; Emerald Hill Zone stage assets
+; ---------------------------------------------------------------------------
+Nem_EHZ_Waterfall:	binclude	"art/nemesis/Waterfall tiles.nem"
+			even
+Nem_EHZ_Bridge:		binclude	"art/nemesis/EHZ bridge.nem"
+			even
+
+	include "sound/generated/music-bank-3.gen.asm"
+
+; ---------------------------------------------------------------------------
+; Hidden Palace Zone stage assets
+; ---------------------------------------------------------------------------
+Nem_HPZ_Bridge:		binclude	"art/nemesis/HPZ bridge.nem"
+			even
+Nem_HPZ_Waterfall:	binclude	"art/nemesis/HPZ waterfall.nem"
+			even
+Nem_HPZ_Emerald:	binclude	"art/nemesis/HPZ Emerald.nem"
+			even
+Nem_HPZ_Platform:	binclude	"art/nemesis/HPZ Platform.nem"
+			even
+Nem_HPZ_PulsingBall:	binclude	"art/nemesis/HPZ Pulsing Ball.nem"
+			even
+Nem_HPZ_Various:	binclude	"art/nemesis/HPZ Various.nem"
+			even
+; ---------------------------------------------------------------------------
+; Hill Top Zone stage assets
+; ---------------------------------------------------------------------------
+Nem_EHZ_Fireball:	binclude	"art/nemesis/Fireball 1.nem"
+			even
+Nem_HTZ_Fireball:	binclude	"art/nemesis/Fireball 2.nem"
+			even
+Nem_HTZ_Lift:		binclude	"art/nemesis/HTZ zip-line platform.nem"
+			even
+Nem_HTZ_AutomaticDoor:	binclude	"art/nemesis/HTZ Autodoor.nem"
+			even
+Nem_Seesaw:		binclude	"art/nemesis/Seesaw.nem"
+			even
+; ---------------------------------------------------------------------------
+; Scrap Madness Zone stage assets
+; ---------------------------------------------------------------------------
+Map_MechaSonic:	binclude "mappings/sprite/Mecha Sonic.bin"
+		even
+Map_MechaEffects:	binclude "mappings/sprite/Mecha Sonic effects.bin"
+		even
+Map_MechaSignDebris:	binclude "mappings/sprite/Mecha signpost debris.bin"
+		even
+		include "mappings/spriteDPLC/Mecha Sonic.asm"
+Art_MechaSonic:	binclude "art/uncompressed/Mecha Sonic.unc"
+		even
+Kospm_MechaEffects:	binclude "art/moduled kosinski/Mecha Sonic effects.kospm"
+		even
+Pal_MechaFlash1:	binclude "palette/Mecha Sonic Flash 1.bin"
+		even
+Pal_MechaFlash2:	binclude "palette/Mecha Sonic Flash 2.bin"
+		even
+Nem_Swing2:		binclude	"art/nemesis/S1/SLZ Swinging Platform.nem"
+			even
+
+; Keep the two nearly full music banks together. The short bank above leaves
+; its remaining space to ordinary art before this next bank alignment.
+	include "sound/generated/music-bank-1.gen.asm"
+	include "sound/generated/music-bank-2.gen.asm"
 
 zSoundIndexEntry macro pointer, priority
 	rom_ptr_z80	pointer
@@ -13271,109 +13374,17 @@ Snd_Sega_End:		even
 	if Snd_Sega_End - Snd_Sega > Size_of_SEGA_sound
 		fatal "Size_of_SEGA_sound = $\{Size_of_SEGA_sound}, but you have a $\{Snd_Sega_End-Snd_Sega} byte Sega sound."
 	endif
+; Ordinary art also uses the free tail after SFX and the Sega sample.
+Nem_MorphingPlatform:	binclude	"art/nemesis/Morphing Orbs.nem"
+			even
+Kospm_BallhogV:	binclude	"art/moduled kosinski/Enemy Ballhog (Vertical).kospm"
+		even
+
 ; ---------------------------------------------------------------------------
 ; DAC samples
 ; ---------------------------------------------------------------------------
 	include "sound/dacbanks.gen.asm"
 		even
-; -------------------------------------------------------------------------------
-Kosp_Title:		binclude	"art/kosinski/level/8x8 - Title.kosp"
-Nem_TitleSonicTails:	binclude	"art/nemesis/Title Sonic and Tails.nem"
-			even
-; ---------------------------------------------------------------------------
-; Misc. compressed data - Tilemaps
-; ---------------------------------------------------------------------------
-		; enigma assets seem to be even by default?
-Eni_SegaLogo:	binclude	"tilemaps/Sega Logo (JP1).eni"
-Eni_TitleMap:	binclude	"tilemaps/Title Emblem.eni"
-Kosp_TitleBg1:	binclude	"tilemaps/Title Background - 1.kosp"
-Kosp_TitleBg2:	binclude	"tilemaps/Title Background - 2.kosp"
-; ---------------------------------------------------------------------------
-; Green Hill Zone stage assets
-; ---------------------------------------------------------------------------
-Nem_Stalk:	binclude	"art/nemesis/S1/GHZ Flower Stalk.nem"
-		even
-Nem_Swing:	binclude	"art/nemesis/S1/GHZ Swinging Platform.nem"
-		even
-Nem_GHZ_Bridge:	binclude	"art/nemesis/S1/GHZ Bridge.nem"
-		even
-Nem_GHZ_Ball:	binclude	"art/nemesis/S1/GHZ Giant Ball.nem"
-		even
-Nem_GHZ_Rock:	binclude	"art/nemesis/S1/GHZ Purple Rock.nem"
-		even
-Nem_GHZ_BWall:	binclude	"art/nemesis/S1/GHZ Breakable Wall.nem"
-		even
-Nem_GHZ_SWall:	binclude	"art/nemesis/S1/GHZ Edge Wall.nem"
-		even
-; ---------------------------------------------------------------------------
-; Rustic Ruins Zone stage assets
-; ---------------------------------------------------------------------------
-Kospm_FlapDoor:	binclude	"art/moduled kosinski/Flapping Door.kospm"
-		even
-Kospm_LzWheel:	binclude	"art/moduled kosinski/LZ conveyor.kospm"
-		even
-; ---------------------------------------------------------------------------
-; Ancient Workbench Zone stage assets
-; ---------------------------------------------------------------------------
-Nem_CPZ_Platform1:	binclude	"art/nemesis/CPZ Floating Platform.nem"
-		even
-; ---------------------------------------------------------------------------
-; Emerald Hill Zone stage assets
-; ---------------------------------------------------------------------------
-Nem_EHZ_Waterfall:	binclude	"art/nemesis/Waterfall tiles.nem"
-			even
-Nem_EHZ_Bridge:		binclude	"art/nemesis/EHZ bridge.nem"
-			even
-; ---------------------------------------------------------------------------
-; Hidden Palace Zone stage assets
-; ---------------------------------------------------------------------------
-Nem_HPZ_Bridge:		binclude	"art/nemesis/HPZ bridge.nem"
-			even
-Nem_HPZ_Waterfall:	binclude	"art/nemesis/HPZ waterfall.nem"
-			even
-Nem_HPZ_Emerald:	binclude	"art/nemesis/HPZ Emerald.nem"
-			even
-Nem_HPZ_Platform:	binclude	"art/nemesis/HPZ Platform.nem"
-			even
-Nem_HPZ_PulsingBall:	binclude	"art/nemesis/HPZ Pulsing Ball.nem"
-			even
-Nem_HPZ_Various:	binclude	"art/nemesis/HPZ Various.nem"
-			even
-; ---------------------------------------------------------------------------
-; Hill Top Zone stage assets
-; ---------------------------------------------------------------------------
-Nem_EHZ_Fireball:	binclude	"art/nemesis/Fireball 1.nem"
-			even
-Nem_HTZ_Fireball:	binclude	"art/nemesis/Fireball 2.nem"
-			even
-Nem_HTZ_Lift:		binclude	"art/nemesis/HTZ zip-line platform.nem"
-			even
-Nem_HTZ_AutomaticDoor:	binclude	"art/nemesis/HTZ Autodoor.nem"
-			even
-Nem_Seesaw:		binclude	"art/nemesis/Seesaw.nem"
-			even
-; ---------------------------------------------------------------------------
-; Scrap Madness Zone stage assets
-; ---------------------------------------------------------------------------
-Map_MechaSonic:	binclude "mappings/sprite/Mecha Sonic.bin"
-		even
-Map_MechaEffects:	binclude "mappings/sprite/Mecha Sonic effects.bin"
-		even
-Map_MechaSignDebris:	binclude "mappings/sprite/Mecha signpost debris.bin"
-		even
-		include "mappings/spriteDPLC/Mecha Sonic.asm"
-Art_MechaSonic:	binclude "art/uncompressed/Mecha Sonic.unc"
-		even
-Kospm_MechaEffects:	binclude "art/moduled kosinski/Mecha Sonic effects.kospm"
-		even
-Pal_MechaFlash1:	binclude "palette/Mecha Sonic Flash 1.bin"
-		even
-Pal_MechaFlash2:	binclude "palette/Mecha Sonic Flash 2.bin"
-		even
-Nem_Swing2:		binclude	"art/nemesis/S1/SLZ Swinging Platform.nem"
-			even
-Nem_MorphingPlatform:	binclude	"art/nemesis/Morphing Orbs.nem"
-			even
 ; ---------------------------------------------------------------------------
 ; Compressed misc. graphics - Level placeholders
 ; ---------------------------------------------------------------------------
@@ -13382,8 +13393,6 @@ Nem_MorphingPlatform:	binclude	"art/nemesis/Morphing Orbs.nem"
 ; Compressed graphics - enemies
 ; ---------------------------------------------------------------------------
 		; Keep each independently addressed module archive word aligned.
-Kospm_BallhogV:	binclude	"art/moduled kosinski/Enemy Ballhog (Vertical).kospm"
-		even
 Kospm_BallhogH:	binclude	"art/moduled kosinski/Enemy Ballhog (Horizontal).kospm"
 		even
 Kospm_Chopper:	binclude	"art/moduled kosinski/Enemy Chopper.kospm"

@@ -778,6 +778,12 @@ to the codec runner for actual queued PLC uploads while HPZ's early water
 HBlank split is active; it compares VRAM with the old decoder and checks
 resident blocks and the entire expanded chunk allocation for changes.
 
+After ROM bank-layout changes, compare stored song payloads and playlist flags
+with the preceding ROM, run the playback checks in both regions, and exercise
+`check_level_pages.py` plus both-act `check_plane_streaming.py` checks. These
+cover relocated pointers, all act launches and live foreground/background words;
+`check_ghz_vram.py` checks the compiled sprite-art sources and mapping ranges.
+
 ## Disposable object course
 
 The builder copies the checkout, replaces LZ2 with an instrumented flat course,

@@ -99,8 +99,10 @@ the source. Selected 25-byte YM patches must remain identical.
 
 Measure both assembled and Kosinski+ sizes. A smaller sequence can have a slightly
 larger compressed encoding; crossing the `$A40` RAM limit can instead save much
-more by enabling compression. Banks are padded to `$8000`, so saved song bytes
-create reusable bank space without necessarily reducing the padded ROM size.
+more by enabling compression. Each bank starts on an `$8000` boundary; its
+audio must stay within that window. Ordinary ROM data can use the remaining
+tail before the next aligned bank, so saved song bytes can reduce ROM size
+without reducing the number of music banks.
 
 ### SFX priority and bumpers
 
@@ -169,10 +171,9 @@ each bank's sound data and before `finishBank` checks its size. `kind` is
 `Music`, `DAC`, or `SFX`; `bank` is one-based within that category. The macro uses
 `GLOBALSYMBOLS` so ordinary asset labels remain accessible from the game.
 
-Music bank 3 currently holds `Nem_SegaLogo` and `Nem_HUD`: 1,294 bytes of existing
-art, with its pixels unchanged. The resulting ROM is 1,280 bytes smaller after
-the project's other alignment requirements. Remove the original include when
-moving an asset here; keep word/DMA alignment appropriate to that asset.
+Music bank 3 holds `Nem_SegaLogo` and `Nem_HUD`: 1,294 bytes of existing art.
+Remove the original include when moving an asset here; keep word/DMA alignment
+appropriate to that asset.
 
 The hook file is handwritten and is never regenerated. Music packing remains
 automatic. If a later song import consumes the chosen bank's free tail,
@@ -187,12 +188,22 @@ Each generated bank also has an independent include:
 	include "sound/generated/music-bank-3.gen.asm"
 ```
 
-`sound/musicbanks.gen.asm` and `sound/dacbanks.gen.asm` include the individual files for the
-default layout. For a custom layout, replace the corresponding aggregate include
-in `md-main.asm` with individual includes and place other data between them. Every
-bank aligns itself; playlist and DAC table entries use the labels' actual ROM
-addresses. The runtime does not require consecutive music/DAC banks. Do not edit
-the generated files themselves.
+`sound/musicbanks.gen.asm` and `sound/dacbanks.gen.asm` list the individual files
+for a consecutive layout. The experimental ROM uses the individual music
+includes in `md-main.asm`: title and early-zone art precede music bank 3, then
+HPZ/HTZ/Mecha art fills its tail before the nearly full banks 1 and 2. Morphing
+platform and vertical Ballhog art also use the gap after SFX and the Sega
+sample. DAC banks still use their aggregate include; ordinary art follows the
+last bank directly.
+
+`finishBank` checks the audio and any `SoundBankAssets` hook before the following
+ordinary data. That later data may extend beyond the window; it is not read by
+the Z80. Each next bank aligns itself, while playlist and DAC entries use actual
+ROM addresses. The runtime requires neither consecutive banks nor numerical
+bank order. Keep per-bank includes synchronized with the generated aggregate
+list if an import changes the bank count, and rebuild to measure the new
+alignment gaps. The packer still selects storage and assigns songs to banks
+automatically. Do not hand-edit its generated files.
 
 ## Cache and failures
 
