@@ -140,7 +140,12 @@ SMZ_Disc_AttachSonic:
 	.stickToConvex:
 		bclr	#status.player.pushing,obStatus(a1)	; clear Sonic's pushing flag
 		move.b	#1,obPrevAni(a1)			; restart Sonic's animation
-		move.b	#1,stick_to_convex(a1)			; set Sonic's stick-to-convex state flag for the gear
+		moveq	#0,d0
+		move.w	a0,d0
+		subi.w	#v_objspace,d0
+		divu.w	#object_size,d0
+		addq.b	#1,d0
+		move.b	d0,stick_to_convex(a1)		; nonzero for terrain, slot + 1 for companion AI
 ; ---------------------------------------------------------------------------
 
 .moveSonic:

@@ -278,8 +278,8 @@ Flicky_Walk:
 		tst.w	obSubtype(a0)
 		bne.s	Flicky_ChkDel
 		tst.b	obRender(a0)
-		bpl.w	DeleteObject
-		bra.w	DisplaySprite
+		bmi.w	DisplaySprite
+		jmp	(DeleteObject).l
 ; ---------------------------------------------------------------------------
 
 Flicky_Fly:

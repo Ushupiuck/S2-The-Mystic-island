@@ -30,6 +30,7 @@ Plat_fall_check:	equ objoff_4A	; byte: oscillator rate offset, or endpoint selec
 Plat_parent:	equ objoff_4C	; word: suspension owner; zero on ordinary placements
 Plat_oldstatus:	equ obTimeFrame	; byte: previous riders for the ICZ physical rail
 Plat_attached_bit = 4              ; private Plat_flags bit; parent drives one update
+Plat_BallRadius:	equ 24
 
 Plat_Init:
 		move.b	#4,obRender(a0)
@@ -752,6 +753,7 @@ Platform_HurtOverlap:
 .xAbs:
 		cmp.w	d1,d0
 		bhi.s	.return
+		move.w	d0,d2
 		moveq	#0,d1
 		move.b	obHeight(a0),d1
 		add.b	obHeight(a1),d1
@@ -762,6 +764,24 @@ Platform_HurtOverlap:
 .yAbs:
 		cmp.w	d1,d0
 		bhi.s	.return
+		move.w	obSubtype(a0),d1
+		andi.w	#$70,d1
+		cmpi.w	#$40,d1			; shape 4, large spikeball
+		bne.s	.hurt
+		; Distance from the ball's center to the closest point of the player box.
+		; The axis tests already suffice if either coordinate is inside that box.
+		subq.w	#8,d2
+		ble.s	.hurt
+		moveq	#0,d1
+		move.b	obHeight(a1),d1
+		sub.w	d1,d0
+		ble.s	.hurt
+		mulu.w	d2,d2
+		mulu.w	d0,d0
+		add.w	d2,d0
+		cmpi.w	#Plat_BallRadius*Plat_BallRadius,d0
+		bhi.s	.return
+.hurt:
 		jmp	Spike_HurtCharacter
 .return:
 		rts
@@ -821,8 +841,8 @@ Platform_SetBodyArt:
 		move.w	#make_art_tile(ArtTile_GHZ_Giant_Ball,2,0),obGfx(a0)
 		move.b	#1,obFrame(a0)
 .ball_size:
-		move.b	#$18,obHeight(a0)
-		move.b	#sprite_bound($18,Map_GBall_width),obActWid(a0)
+		move.b	#Plat_BallRadius,obHeight(a0)
+		move.b	#sprite_bound(Plat_BallRadius,Map_GBall_width),obActWid(a0)
 		rts
 
 Platform_HangingOffset:
