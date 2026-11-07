@@ -24,32 +24,35 @@
 ; ---------------------------------------------------------------------------
 
 ; Multiplication:
-	mulu.w	#6,d0
+	mulu.w	#6,dx
 	; can be turned into
-	add.w	d0,d0		; multiply by 6
-	move.w	d0,d2
-	add.w	d0,d0
-	add.w	d2,d0
+	add.w	dx,dx		; multiply by 6
+	move.w	dx,dy
+	add.w	dx,dx
+	add.w	dy,dx
 ; ---------------------------------------------------------------------------
-	mulu.w	#X,d0
-	; can be turned into
-; ---------------------------------------------------------------------------
-	mulu.w	#X,d0
+	[filler; to be replaced by a value + optimization]
+	mulu.w	#X,dx
 	; can be turned into
 ; ---------------------------------------------------------------------------
-	mulu.w	#X,d0
+	[filler; to be replaced by a value + optimization]
+	mulu.w	#X,dx
 	; can be turned into
 ; ---------------------------------------------------------------------------
-	mulu.w	#$A,d0		; decimal 10
+	[filler; to be replaced by a value + optimization]
+	mulu.w	#X,dx
 	; can be turned into
-	move.w	d0,d1
-	lsl.w	#3,d0
-	add.w	d1,d0
-	add.w	d1,d0
+; ---------------------------------------------------------------------------
+	mulu.w	#$A,dx		; decimal 10
+	; can be turned into
+	move.w	dx,dy
+	lsl.w	#3,dx
+	add.w	dy,dx
+	add.w	dy,dx
 ; ---------------------------------------------------------------------------
 	mulu.w	#$2A,d1		; decimal 42
 	; can be turned into
-	moveq	#0,d2		; (optional) sanitize d2 (note: d0 was already in use, hence d2. The alternative was backing up & restoring d0 via SP, which would of been slower)
+	moveq	#0,d2		; (optional) sanitize d2 (note: in the particular case this was applied, d0 was already in use, hence d2. The alternative was backing up & restoring d0 via SP, which would of been slower)
 	move.w	d1,d2		; multiply by 42
 	move.w	d1,d3
 	lsl.w	#5,d1
@@ -58,21 +61,21 @@
 	add.w	d3,d1
 	add.w	d3,d1
 ; ---------------------------------------------------------------------------
-	mulu.w	#$3C,d0		; decimal 60
+	mulu.w	#$3C,dx		; decimal 60
  	; can be turned into
-	add.w	d0,d0		; multiply by 60
-	add.w	d0,d0
-	move.w	d0,d1
-	lsl.w	#4,d0
-	sub.w	d1,d0
+	add.w	dx,dx		; multiply by 60
+	add.w	dx,dx
+	move.w	dx,dy
+	lsl.w	#4,dx
+	sub.w	dy,dx
 ; ---------------------------------------------------------------------------
-	mulu.w	#$80,d0		; decimal 128
+	mulu.w	#$80,dx		; decimal 128
 	; can be turned into (exact math)
-	andi.l	#$0000FFFF,d0
-	lsl.l	#7,d0		; multiply by 128
+	andi.l	#$0000FFFF,dx
+	lsl.l	#7,dx		; multiply by 128
 	; or into (exact math, but only valid for values 0-$FF)
-	lsl.w	#7,d0		; multiply by 128
-	ext.l	d0
+	lsl.w	#7,dx		; multiply by 128
+	ext.l	dx
 ; ---------------------------------------------------------------------------
 
 ; ===========================================================================
@@ -91,22 +94,22 @@
 
 ; ===========================================================================
 ; Miscelaneous:
-	lsl.w	#1,d1		; logic shift left by 1
+	lsl.w	#1,dx		; logic shift left by 1
 	; can be turned into
-	add.w	d1,d1		; which can also be achieved via addition
+	add.w	dx,dx		; which can also be achieved via addition
 ; ---------------------------------------------------------------------------
-	lsl.w	#2,d1		; logic shift left by 1
+	lsl.w	#2,dx		; logic shift left by 1
 	; can be turned into
-	add.w	d1,d1		; which can also be achieved via addition
-	add.w	d1,d1
+	add.w	dx,dx		; which can also be achieved via addition
+	add.w	dx,dx
 ; ---------------------------------------------------------------------------
-	clr.b	objoff_XY(a0)
+	clr.b	objoff_XY(ax)
 	; can be turned into
-	sf.b	objoff_XY(a0)
+	sf.b	objoff_XY(ax)
 ; ---------------------------------------------------------------------------
-	move.b	#0,d0
+	move.b	#0,dx
 	; can be turned into
-	clr.b	d0
+	clr.b	dx
 ; ---------------------------------------------------------------------------
 
 ; ---------------------------------------------------------------------------
