@@ -54,12 +54,9 @@ Music_QueueHint:
 ; A slot remains immutable while it is live or saved for a 1-up return.
 Music_Prepare:
 		tst.b	(Music_PendingSong).l
-		beq.s	.return
+		beq.s	Music_QueueHint.return
 		tst.b	(Music_LoadBusy).l
-		beq.s	.start
-.return:
-		rts
-.start:
+		bne.s	Music_QueueHint.return
 		movem.l	d0-d1/d4-d7/a0-a2,-(sp)
 		move.w	sr,-(sp)
 		disable_ints
@@ -262,9 +259,10 @@ Music_Service:
 .tickComplete:
 		tst.b	d6
 		bne.s	.done
-		bsr.w	Music_Prefetch
+		bsr.s	Music_Prefetch
 .done:
 		clr.b	(Music_ServiceBusy).l
+.doneReturn:
 		rts
 .song:
 		tst.b	(Music_PendingSong).l
@@ -290,7 +288,7 @@ Music_Service:
 	endif
 Music_Prefetch:
 		tst.b	(Music_CacheSong).l
-		beq.w	.return
+		beq.s	Music_Service.doneReturn
 		disableIntsSave
 		stopZ80
 		waitZ80
@@ -368,7 +366,6 @@ Music_Prefetch:
 .release:
 		startZ80
 		enableIntsSave
-.return:
 		rts
 
 Music_PrefetchLengths:
