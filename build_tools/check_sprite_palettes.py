@@ -39,6 +39,24 @@ def main():
 		row = struct.unpack('>48H', (ROOT/f'palette/{name}.bin').read_bytes())[:16]
 		assert row[6:10] == (0xEEE,0xECC,0xCAA,0x866), (name,'gray slots')
 		assert row[13:16] == (0x0EE,0x088,0x044), (name,'yellow slots')
+	# Scrap Madness uses the atlas copy, while the ordinary mapping reads
+	# the shared Caterkiller sheet. Both must follow the second palette row.
+	cat = kosinski_plus_decode((ROOT/'art/moduled kosinski/Enemy Caterkiller.kospm').read_bytes()[2:])[0]
+	atlas = (ROOT/'art/uncompressed/SMZ Sprite Atlas.unc').read_bytes()
+	assert nemesis((ROOT/'art/nemesis/SMZ Sprite Atlas.nem').read_bytes()) == atlas
+	cat_frames = frames((ROOT/'mappings/sprite/Caterkiller.bin').read_bytes())
+	smz_frames = frames((ROOT/'mappings/sprite/SMZ Cat.bin').read_bytes())
+	assert len(cat_frames) == len(smz_frames)
+	for original, packed in zip(cat_frames, smz_frames):
+		assert len(original) == len(packed)
+		for (y, size, tile, x), (atlas_y, atlas_size, atlas_tile, atlas_x) in zip(original, packed):
+			assert (y, size, (tile+0x2000)&0xF800, x) == (atlas_y, atlas_size, atlas_tile&0xF800, atlas_x)
+			source_offset = (tile&0x7FF)*32
+			atlas_offset = (atlas_tile&0x7FF)*32
+			length = ((size >> 2)+1)*((size&3)+1)*32
+			assert cat[source_offset:source_offset+length] == atlas[atlas_offset:atlas_offset+length], (
+				'SMZ Caterkiller palette indices', atlas_tile&0x7FF)
+
 	from build_underwater_palettes import outputs
 	for path, data in outputs():
 		assert path.read_bytes() == data, path
@@ -68,7 +86,7 @@ def main():
 	assert [row[0][2]>>13&3 for row in gems[:6]] == [2,2,2,3,3,3]
 	assert len(nemesis((ROOT/'art/nemesis/Results emeralds.nem').read_bytes())) == 28*32
 	checks = dict(shared_level_rows=len(names),spring_frames=len(springs[0]),
-				  spring_tiles=46,results_emeralds=7)
+				  spring_tiles=46,results_emeralds=7,caterkiller_frames=len(cat_frames))
 	if args.reference:
 		@lru_cache(None)
 		def read(path, prior=False):

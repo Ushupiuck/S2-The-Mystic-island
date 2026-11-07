@@ -13,6 +13,7 @@ import struct
 
 from check_caterkiller import Fixture, ROOT
 from check_companion_followup import isolate, place, spawn
+from check_debug_states import press_debug
 from check_object_course import boot_level
 from check_sprite_assets import frames
 
@@ -98,7 +99,10 @@ def main():
 		rom = args.rom.read_bytes()
 		base = g.s['Debug_SMZIndoor']
 		count = struct.unpack_from('>H', rom, base)[0]
-		records = list(struct.iter_unpack('>IIBBH', rom[base+2:base+2+count*12]))
+		entry_size = g.s['DebugEntry_size']
+		record = struct.Struct('>IIHBxH')
+		assert entry_size == record.size
+		records = list(record.iter_unpack(rom[base+2:base+2+count*entry_size]))
 		entries = {row[2]: (i, row) for i, row in enumerate(records) if row[0] == g.s['Caterkiller']}
 		assert set(entries) == {0, 1, 2}
 		g.restore(stages[2])
@@ -109,7 +113,8 @@ def main():
 		g.write('Camera_X_pos_coarse_back', 0x460, 2)
 		g.write('Camera_Y_pos', 0x600, 2)
 		g.write('Debug_mode_flag', 1)
-		g.buttons = {0}; g.run(); g.buttons = set(); g.run(2)
+		press_debug(g, 1)
+		g.run(3)
 		assert g.read('Debug_placement_type') == 1
 		heads = []
 		for subtype, x in ((0, 0x520), (1, 0x580), (2, 0x5E0)):
@@ -117,11 +122,11 @@ def main():
 			g.put('v_player', 'obX', x, 2)
 			g.put('v_player', 'obY', 0x680, 2)
 			g.write('Debug_object', (index-1) % count)
-			g.buttons = {1}; g.run(); g.buttons = set(); g.run()
-			assert g.read('Debug_object') == index
+			g.buttons = {1}; g.run(2); g.buttons = set(); g.run(2)
+			assert g.read('Debug_object') == index, (subtype, index, g.read('Debug_object'))
 			assert g.get('v_player', 'obMap', 4) == entry[1]
 			before = {a for a in f.pool() if g.get(a, 'code')}
-			g.buttons = {8}; g.run(); g.buttons = set(); g.run()
+			g.buttons = {8}; g.run(2); g.buttons = set(); g.run(3)
 			new = [a for a in f.pool() if a not in before and g.get(a, 'code') == g.s['Caterkiller'] and g.get(a, 'obRoutine') == 2]
 			assert len(new) == 1 and g.get(new[0], 'obSubtype') == subtype, (subtype, new)
 			heads.append(new[0])
