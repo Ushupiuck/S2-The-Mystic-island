@@ -136,7 +136,8 @@ cooldown or streak repairs. It checks the upward shot's VRAM, hardware sprites
 and screen exit. The original fight snapshot is restored before sixteen
 separately positioned jumping hits through touch collision; no boss HP is
 edited. The lifecycle checks the score, real driver fade, defeat/collapse,
-exactly one falling sign and the retained body through results and transition.
+one falling sign, restoration of the current act's music, and the retained body
+through results and transition.
 
 Hanging-surface checks use the assembled D9 code, player art and shared solidity:
 

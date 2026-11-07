@@ -63,15 +63,19 @@ def native(args):
 	for slot in pool:m.put(slot,'code',m.s['MS_Return'])
 	m.put(body,'code',m.s['MechaSonic']);m.put(body,'MS_phase',8)
 	m.put(body,'MS_script',m.s['MS_AnimDefeat'],4);m.put(body,'MS_history',50)
+	act_index=m.s['id_SMZ']*m.s['ActsPerZone']+1
+	m.write('Current_ZoneAndAct',(m.s['id_SMZ']<<8)|1,2)
+	m.music=[]
 	m.act('MS_Reward',body,{n.UC_M68K_REG_D7:0x55})
-	assert m.get(body,'code')==m.s['MechaSonic']
+	assert m.get(body,'code')==m.s['MechaSonic'] and not m.music
 	m.put(pool[-1],'code',0);m.act('MS_Reward',body,{n.UC_M68K_REG_D7:0x55})
 	assert m.get(body,'code')==m.s['MechaSonic'] and m.get(body,'MS_phase')==9
 	assert m.get(pool[-1],'code')==m.s['Signpost'] and m.get(pool[-1],'obSubtype')==1
 	for _ in range(300):m.act('MechaSonic',body)
 	assert m.get(body,'code')==m.s['MechaSonic'] and sum(m.get(o,'code')==m.s['Signpost'] for o in pool)==1
 	assert m.cpu.reg_read(n.UC_M68K_REG_D7)==0x55
-	checks.append('defeat retries one falling sign, retains body/palette/effects and preserves dispatcher D7')
+	assert m.music==list(m.cpu.mem_read(m.s['MusicList']+act_index,1)),m.music
+	checks.append('defeat retries one falling sign, resumes the act track once and retains body/palette/effects and dispatcher D7')
 	m.start();body,child=pool[-1],pool[0]
 	for f,v,z in [('code',m.s['MechaSonic'],4),('MS_phase',4,1),('MS_hitbox',child,2),('obX',0x1E80,2),('obY',0x5A0,2),('obFrame',0,1),('obRender',4,1)]:m.put(body,f,v,z)
 	m.put(child,'code',m.s['MS_HeadHitbox']);m.put(child,'MS_parent',body,2)
@@ -265,13 +269,16 @@ def game(args):
 	from check_object_course import boot_level
 	from check_companion_followup import place
 	g=Genesis(args.core,args.rom,args.listing,args.output/'game',args.pal,system_directory=args.system_directory)
+	rom=args.rom.read_bytes()
 	zram=(C.c_uint8*8192).in_dll(g.core,'zram')
 	def song_entry(music):
-		offset=g.s['zMasterPlaylist']+(g.s[music]-g.s['MusID__First'])*4
-		return args.rom.read_bytes()[offset:offset+3]
+		offset=g.s['zMasterPlaylist']+(music-g.s['MusID__First'])*4
+		return rom[offset:offset+3]
 	def playing_song():
 		return bytes(zram[g.s[name]+1] for name in ('zBGMLoad_BankLoadInstruction','zBGMLoad_AddressLoadInstruction'))+bytes([zram[g.s['zBGMLoad_AddressLoadInstruction']+2]])
 	boot_level(g,zone=g.s['id_SMZ'],act=1,player=args.player)
+	act_music=rom[g.s['MusicList']+g.s['id_SMZ']*g.s['ActsPerZone']+1]
+	assert playing_song()==song_entry(act_music)
 	pool=list(range(g.s['v_lvlobjspace']&65535,g.s['v_lvlobjend']&65535,g.s['object_size']))
 	def objects(label):return [o for o in pool if g.get(o,'code')==g.s[label]]
 	def run(count=1):
@@ -330,10 +337,10 @@ def game(args):
 	assert g.get(boss,'obColProp')==16
 	assert g.read('Camera_Min_X_pos',2)==g.read('Camera_Max_X_pos',2)==0x1E40
 	assert not objects('Signpost')
-	assert g.read('f_lockscreen') and playing_song()==song_entry('MusID_Boss3')
+	assert g.read('f_lockscreen') and playing_song()==song_entry(g.s['MusID_Boss3'])
 	for actor in actors:g.put(actor,'invtime',1,2)
 	run(4)
-	assert playing_song()==song_entry('MusID_Boss3') and all(not g.get(a,'obStatusSecondary')&2 for a in actors)
+	assert playing_song()==song_entry(g.s['MusID_Boss3']) and all(not g.get(a,'obStatusSecondary')&2 for a in actors)
 	(args.output/'game/camera.json').write_bytes((json.dumps({'approach':args.approach,'y':camera})+'\n').replace('\n','\r\n').encode())
 	checks=['authored SMZ2 sign: controller crossing, Eggman/Mecha mixed frames, side entry, debris and no early results']
 	checks.append(f'settled visible portrait gets {entry-settled} frames before Mecha enters; minimum {warning_ticks}')
@@ -480,7 +487,11 @@ def game(args):
 		if objects('Signpost'):break
 	assert {5,6,7}<=phases and objects('Signpost'),phases
 	assert not zram[g.s['zAbsVar.FadeOutCounter']]
-	assert not zram[g.s['zSongFM1.PlaybackControl']]&128
+	for _ in range(20):
+		if playing_song()==song_entry(act_music) and zram[g.s['zSongFM1.PlaybackControl']]&128:
+			break
+		run()
+	else:raise AssertionError('Act music did not resume after the boss fade')
 	reward=objects('Signpost')[0]
 	assert g.get(reward,'obSubtype')==1 and objects('MechaSonic')==[boss]
 	assert g.get(boss,'MS_phase')==9 and not g.read('f_lockscreen')
@@ -509,7 +520,7 @@ def game(args):
 	assert g.read('Current_ZoneAndAct',2)==g.s['id_EHZ']<<8
 	g.video.save(args.output/'game/next-level.png')
 
-	checks.append(f'sixteen real {attacker} hits, 1000 points, defeat bursts/collapse/sparks, then falling sign and character results')
+	checks.append(f'sixteen real {attacker} hits, 1000 points, defeat bursts/collapse/sparks, resumed act music, falling sign and character results')
 	return checks
 
 def main():

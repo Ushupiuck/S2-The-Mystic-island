@@ -311,8 +311,9 @@ the screen and disappear when the fight ends. These counters use the existing
 SST's last two bytes and flag bits 0/1; no object/RAM allocation grows.
 
 Defeat fades the boss music. After the defeat sequence, Mecha creates one
-ordinary `$0001` falling sign, then stays collapsed at the landing position with
-his palette and electrical sparks until the level unloads. This final state has
+ordinary `$0001` falling sign and resumes the current act's music. He stays
+collapsed at the landing position with his palette and electrical sparks until
+the level unloads. This final state has
 no touch collision and cannot create another reward. Only the sign can award
 the act-clear results.
 The separate `Obj_SSZ2_Boss` Master Emerald-powered Knuckles rematch and SSZ's

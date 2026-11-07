@@ -301,6 +301,8 @@ MS_Reward:
 		move.b	#9,MS_phase(a0)
 		move.b	#2,(Dynamic_Resize_Routine).w
 		clr.b	(f_lockscreen).w
+		jsr	(GetLevelMusic).l
+		jsr	(PlayMusic).l
 MS_Remains:
 		; Keep the collapsed body, palette and electrical effects until unload.
 		bsr.w	MS_RawAnimate
