@@ -17,6 +17,26 @@ from check_caterkiller import CpuPrefix
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def check_ball_contacts(g, base, act, record):
+	for who in ('v_player', 'v_player2'):
+		radius = g.get(who, 'default_y_radius')
+		cases = ((32, -radius-19, False), (-32, radius+19, False),
+				 (32, 0, True), (0, -radius-24, True), (23, -radius-18, True))
+		for dx, dy, hurt in cases:
+			g.restore(base)
+			isolate(g)
+			obj = spawn(g, 'SwingingPtfm_ArtBall', 250, 950, 0x0A26)
+			act('SwingingPtfm_ArtBall', obj)
+			body = g.get(obj, 'swing_body', 2)
+			assert g.get(body, 'obHeight') == 24
+			other = 'v_player2' if who == 'v_player' else 'v_player'
+			g.put(other, 'code', 0)
+			place(g, who, g.get(body, 'obX', 2) + dx, g.get(body, 'obY', 2) + dy)
+			g.put(who, 'obStatusSecondary', 1)
+			act('Platform_HurtOverlap', body)
+			record(f'ball-contact-{who}-{dx}-{dy}', (g.get(who, 'obRoutine') == 4) == hurt)
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--core', type=Path, required=True)
@@ -79,6 +99,8 @@ def main():
                            standing==(profile!=10 and (profile!=11 or immune)))
                     record(f'damage-{zone}-{profile}-{who}-{immune}',
                            (g.get(who,'obRoutine')==4)==(profile>=10 and not immune))
+
+    check_ball_contacts(g, base, act, record)
 
     # Direct spike/platform damage runs outside the NPC touch scan. Neither
     # Debug placement nor frame cycling may mutate a character through it.

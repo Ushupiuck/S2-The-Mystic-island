@@ -511,7 +511,9 @@ prevents duplicate pushes, including overlapping terrain conveyors. All paths
 handle both players. Full-solid damage stays physical under stars or damage
 invulnerability, allowing standing while retaining normal solid-object crushing.
 Bottom damage uses `Spike_HurtCharacter` and its full-word flashing timer.
-Whole-body damage uses the actual collision box, outside the NPC touch table.
+Whole-body damage uses the collision box outside the NPC touch table. The
+large spikeball further checks its 24-pixel radius against the closest point
+of each player's box, so the empty corners of the sprite cannot deal damage.
 `Spike_HurtCharacter` skips direct damage while either Debug mode is active,
 before changing position, shields, rings or hurt state. This also protects
 whole-body hazards such as the swinging spikeballs; normal damage resumes
