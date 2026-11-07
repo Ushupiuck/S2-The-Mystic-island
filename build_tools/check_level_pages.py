@@ -200,21 +200,18 @@ assert g.read('v_levselsound', 2) == 0xFF
 press(RIGHT)
 assert g.read('v_levselsound', 2) == 0
 zram = (C.c_uint8 * 8192).in_dll(g.core, 'zram')
-clone = 'Clone_Driver_RAM' in g.s
-playing = (g.s['Clone_Driver_RAM'] + g.s['SMPS_RAM.v_music_fm1_track'] + g.s['SMPS_Track.PlaybackControl']) if clone else g.s['zSongFM1.PlaybackControl']
-def is_playing():
-	return bool((g.read(playing) if clone else zram[playing]) & 0x80)
+playing = g.s['zSongFM1.PlaybackControl']
 for button in (B, C_BUTTON, START):
 	g.write('v_levselsound', g.s['MusID_Stop'], 2)
 	press(B); step(30)
-	assert not is_playing()
+	assert not zram[playing] & 0x80
 	g.write('v_levselsound', 0xF6, 2)
 	press(A); step(15)
 	assert g.read('v_levselsound', 2) == 6
-	assert not is_playing(), 'A played the sound instead of only changing its ID'
+	assert not zram[playing] & 0x80, 'A played the sound instead of only changing its ID'
 	g.write('v_levselsound', g.s['MusID_GHZ'], 2)
 	press(button); step(30)
-	assert is_playing(), ('Sound did not play', button)
+	assert zram[playing] & 0x80, ('Sound did not play', button)
 	item(SOUND)
 	assert g.read('Player_mode', 2) == 0
 g.video.save(args.output / 'page-1.png')

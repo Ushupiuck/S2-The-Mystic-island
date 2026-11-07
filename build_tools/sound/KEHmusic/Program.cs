@@ -13,8 +13,8 @@ namespace KEHmusic
 	static class Program
 	{
 		const int BankSize = 0x8000;
-		// Matches Sound_MusicBufferCapacity; normal music and jingles have separate MD buffers.
-		const int MusicRamSize = 0x4000;
+		// s2.sounddriver.asm reserves this much for zMusicData, plus a $20-byte gap.
+		const int MusicRamSize = 0xA40;
 		static string toolsDirectory;
 		static string assembler;
 		static string converter;
@@ -94,7 +94,7 @@ namespace KEHmusic
 		static string BuildHash(string filename, MusicBinaryFormat format)
 		{
 			var files = new HashSet<string>(StringComparer.Ordinal);
-			foreach (string input in new[] { filename, "_definitions/s2.macros.asm", "sound/CloneDriver/engine/_smps2asm_inc.asm", "_definitions/Sound Constants.asm",
+			foreach (string input in new[] { filename, "_definitions/s2.macros.asm", "_definitions/_smps2asm_inc.asm",
 				assembler, converter, Assembly.GetExecutingAssembly().Location })
 				AddDependencies(files, input, Path.GetExtension(input).Equals(".asm", StringComparison.OrdinalIgnoreCase) ||
 					Path.GetExtension(input).Equals(".68k", StringComparison.OrdinalIgnoreCase));
@@ -141,18 +141,31 @@ namespace KEHmusic
 				writer.WriteLine("kehmusic = 1");
 				writer.WriteLine("allOptimizations = 1");
 				writer.WriteLine("\tinclude \"_definitions/s2.macros.asm\"");
-				writer.WriteLine("\tinclude \"_definitions/Sound Constants.asm\"");
-				writer.WriteLine("\tinclude \"sound/CloneDriver/engine/_smps2asm_inc.asm\"");
+				writer.WriteLine("\tinclude \"_definitions/_smps2asm_inc.asm\"");
 				writer.WriteLine("\tinclude \"{0}\"", filename.Replace('\\', '/'));
 			}
-			RunTool(assembler, "-xx -n -q -A -U -E .sound-build/music.log -i . -o .sound-build/music.p .sound-build/music.asm", ".sound-build/music.p");
+			RunTool(assembler, "-xx -n -q -A -U -E -i . -o .sound-build/music.p .sound-build/music.asm", ".sound-build/music.p");
 			RunTool(converter, ".sound-build/music.p .sound-build/music.bin", ".sound-build/music.bin");
 			return File.ReadAllBytes(".sound-build/music.bin");
 		}
 
 		static byte[] CompressSong(byte[] data)
 		{
-			byte[] compressed = KosinskiPlus.Encode(data);
+			foreach (string extension in new[] { "asm", "p", "bin", "log", "h" })
+				File.Delete(".sound-build/music-kos." + extension);
+			File.WriteAllBytes(".sound-build/music-raw.bin", data);
+			using (var writer = new StreamWriter(".sound-build/music-kos.asm", false, Encoding.ASCII))
+			{
+				writer.NewLine = "\r\n";
+				writer.WriteLine("\tCPU Z80");
+				writer.WriteLine("\torg 0");
+				writer.WriteLine("\tbinclude \".sound-build/music-raw.bin\"");
+			}
+			RunTool(assembler, "-xx -n -q -A -U -E -i . -o .sound-build/music-kos.p .sound-build/music-kos.asm",
+				".sound-build/music-kos.p", ".sound-build/music-kos.log");
+			RunTool(converter, "-z=0,kosinskiplus,MusicCompressedSize,after .sound-build/music-kos.p .sound-build/music-kos.bin .sound-build/music-kos.h",
+				".sound-build/music-kos.bin", ".sound-build/music-kos.log");
+			byte[] compressed = File.ReadAllBytes(".sound-build/music-kos.bin");
 			if (!data.SequenceEqual(KosinskiPlus.Decode(compressed, MusicRamSize)))
 				throw new InvalidDataException("Music failed its Kosinski+ round-trip check.");
 			return compressed;
@@ -168,18 +181,18 @@ namespace KEHmusic
 			if (assembly && song.BinaryFormat == MusicBinaryFormat.KosinskiPlus)
 				throw new InvalidDataException("BinaryFormat=KosinskiPlus requires a precompressed .bin file: " + filename);
 			string hash = BuildHash(filename, song.BinaryFormat);
-			if (!clean && song.BuildHash == hash && song.Size > 0 && song.UncompressedSize > 0 && song.UncompressedSize <= MusicRamSize &&
+			if (!clean && song.BuildHash == hash && song.Size > 0 && song.Size <= BankSize &&
 				(song.OutputFile == null || File.Exists(Path.Combine("sound/music", song.OutputFile))))
 				return false;
 			Console.WriteLine("Building song \"{0}\"...", song.Title);
 			byte[] data = assembly ? AssembleSong(filename) : File.ReadAllBytes(filename);
 			song.OutputFile = null;
 			song.IsCompressed = song.BinaryFormat == MusicBinaryFormat.KosinskiPlus;
-			if (data.Length == 0 || (!song.IsCompressed && data.Length > MusicRamSize))
-				throw new InvalidDataException(name + " must occupy between 1 and $4000 decoded bytes.");
+			if (data.Length == 0 || data.Length > BankSize)
+				throw new InvalidDataException(name + " must occupy between 1 and $8000 bytes.");
 			int rawSize = song.IsCompressed ? KosinskiPlus.Decode(data, MusicRamSize).Length : data.Length;
 			if (song.IsCompressed && (rawSize == 0 || rawSize > MusicRamSize))
-				throw new InvalidDataException(name + " decompresses beyond the MD music buffer ($4000 bytes).");
+				throw new InvalidDataException(name + " decompresses beyond the Z80 music buffer ($A40 bytes).");
 			if (!song.IsCompressed && data.Length <= MusicRamSize)
 			{
 				byte[] compressed = CompressSong(data);
@@ -190,11 +203,6 @@ namespace KEHmusic
 					data = compressed;
 					song.IsCompressed = true;
 				}
-			}
-			if (song.OutputFile == null)
-			{
-				song.OutputFile = "../generated/" + name + (song.IsCompressed ? "_cmp.bin" : "_raw.bin");
-				File.WriteAllBytes(Path.Combine("sound/music", song.OutputFile), data);
 			}
 			song.Size = data.Length;
 			song.UncompressedSize = rawSize;
@@ -295,6 +303,7 @@ namespace KEHmusic
 							sw.WriteLine("SndDAC_{0}_End:", label);
 						}
 						sw.WriteLine("SndDAC{0}_DataEnd:", b + 1);
+						sw.WriteLine("\tSoundBankAssets DAC,{0}", b + 1);
 						sw.WriteLine("\tfinishBank");
 					}
 				}
@@ -357,28 +366,60 @@ namespace KEHmusic
 			IniSerializer.Serialize(cache, cacheFile);
 			if (writeini)
 				IniSerializer.Serialize(songs, "sound/music/music.ini");
-			// Music is addressed by the main 68000 and decoded to MD RAM. No ROM banks.
-			foreach (string stale in Directory.GetFiles("sound/generated", "music-bank-*.gen.asm"))
-				File.Delete(stale);
-			File.Delete("sound/musicbanks.gen.asm");
-			using (var sw = new StreamWriter("sound/musicdata.gen.asm", false, Encoding.ASCII))
+			List<int> banksizes = new List<int>() { 0 };
+			List<List<KeyValuePair<string, MusicInfo>>> banks = new List<List<KeyValuePair<string, MusicInfo>>>() { new List<KeyValuePair<string, MusicInfo>>() };
+			foreach (var item in songs.OrderByDescending(a => a.Value.Size))
 			{
-				sw.NewLine = "\r\n";
-				foreach (var item in songs)
+				bool found = false;
+				for (int i = 0; i < banks.Count; i++)
+					if (banksizes[i] + item.Value.Size <= 0x8000)
+					{
+						banks[i].Add(item);
+						banksizes[i] += item.Value.Size;
+						found = true;
+						break;
+					}
+				if (!found)
 				{
-					sw.WriteLine("\teven");
-					sw.WriteLine("Mus_{0}:\tBINCLUDE \"sound/music/{1}\" ; ${2:X} stored bytes", item.Key, item.Value.OutputFile, item.Value.Size);
+					banks.Add(new List<KeyValuePair<string, MusicInfo>>() { item });
+					banksizes.Add(item.Value.Size);
 				}
 			}
-			using (var sw = new StreamWriter("sound/musicinfo.gen.asm", false, Encoding.ASCII))
+			using (var layout = new StreamWriter("sound/musicbanks.gen.asm", false, Encoding.ASCII))
 			{
-				sw.NewLine = "\r\n";
-				sw.WriteLine("MusicIndex:");
+				for (int i = 0; i < banks.Count; i++)
+				{
+					string bankFile = string.Format("sound/generated/music-bank-{0}.gen.asm", i + 1);
+					layout.WriteLine("\tinclude \"{0}\"", bankFile);
+					using (var sw = new StreamWriter(bankFile, false, Encoding.ASCII))
+					{
+						sw.WriteLine("SndMus{0}_Start:\tstartBank", i + 1);
+						foreach (var item in banks[i])
+						{
+							string file = item.Value.OutputFile ?? item.Value.File;
+							string directive = Path.GetExtension(file).Equals(".bin", StringComparison.OrdinalIgnoreCase) ? "BINCLUDE" : "include";
+							sw.WriteLine("Mus_{0}:\t{1} \"sound/music/{2}\" ; ${3:X} bytes", item.Key, directive, file, item.Value.Size);
+						}
+						sw.WriteLine("SndMus{0}_DataEnd:", i + 1);
+						sw.WriteLine("\tSoundBankAssets Music,{0}", i + 1);
+						sw.WriteLine("\tfinishBank");
+					}
+				}
+			}
+			using (StreamWriter sw = new StreamWriter("sound/musicinfo.gen.asm", false, Encoding.ASCII))
+			{
+				sw.WriteLine("zMasterPlaylist:");
 				foreach (var item in songs)
 				{
-					int flags = (item.Value.IsCompressed ? 1 : 0) | (item.Value.NoSpeedUp ? 0x20 : 0) |
-						(item.Value.PALMode ? 0x40 : 0) | (item.Value.ExtraLifeJingle ? 0x80 : 0);
-					sw.WriteLine("\tSoundMusicEntry Mus_{0},${1:X},${2:X},${3:X2}", item.Key, item.Value.Size, item.Value.UncompressedSize, flags);
+					sw.Write("\tzmakePlaylistEntry\tMus_{0},", item.Key);
+					sw.Write(item.Value.IsCompressed ? "0" : "musprop_uncompressed");
+					if (item.Value.PALMode)
+						sw.Write("|musprop_palmode");
+					if (item.Value.ExtraLifeJingle)
+						sw.Write("|musprop_1up");
+					if (item.Value.NoSpeedUp)
+						sw.Write("|musprop_nospeedup");
+					sw.WriteLine();
 				}
 			}
 			using (StreamWriter sw = new StreamWriter("sound/musicids.gen.asm", false, Encoding.ASCII))

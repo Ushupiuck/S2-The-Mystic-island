@@ -266,13 +266,10 @@ def game(args):
 	from check_companion_followup import place
 	g=Genesis(args.core,args.rom,args.listing,args.output/'game',args.pal,system_directory=args.system_directory)
 	zram=(C.c_uint8*8192).in_dll(g.core,'zram')
-	clone = 'Sound_CurrentSong' in g.s
 	def song_entry(music):
-		if clone: return g.s[music]
 		offset=g.s['zMasterPlaylist']+(g.s[music]-g.s['MusID__First'])*4
 		return args.rom.read_bytes()[offset:offset+3]
 	def playing_song():
-		if clone: return g.read('Sound_CurrentSong')
 		return bytes(zram[g.s[name]+1] for name in ('zBGMLoad_BankLoadInstruction','zBGMLoad_AddressLoadInstruction'))+bytes([zram[g.s['zBGMLoad_AddressLoadInstruction']+2]])
 	boot_level(g,zone=g.s['id_SMZ'],act=1,player=args.player)
 	pool=list(range(g.s['v_lvlobjspace']&65535,g.s['v_lvlobjend']&65535,g.s['object_size']))
@@ -452,19 +449,13 @@ def game(args):
 	checks.append('all standard attack states run on live SMZ2 terrain without spawning the reward')
 	attacker='v_player2' if args.companion else 'v_player'
 	assert attacker in actors
-	# Keep the partner from scoring extra head hits between the controlled
-	# attacks. Different V-int timing changes when the boss crosses that slot.
-	g.write('f_lockctrl', 0x80)
-	for actor in actors:
-		if actor != attacker: g.put(actor, 'obControl', 0x81)
 	score=g.read('v_score',4)
 	for hit in range(16):
 		for wait in range(2000):
 			if g.get(boss,'MS_flash')==0 and 0<g.get(boss,'obColType')<0x40:break
 			run()
-		else:raise AssertionError(('no vulnerable state',hit,g.get(boss,'code'),g.get(boss,'MS_phase'),g.get(boss,'obRoutine'),g.get(boss,'obColProp'),g.get(boss,'obColType'),g.read('v_gamemode',2),g.get(attacker,'obRoutine')))
-		hp=g.get(boss,'obColProp');assert hp==16-hit,('Uncontrolled boss damage',hit,hp)
-		x=g.get(boss,'obX',2);y=g.get(boss,'obY',2)
+		else:raise AssertionError(('no vulnerable state',hit))
+		hp=g.get(boss,'obColProp');x=g.get(boss,'obX',2);y=g.get(boss,'obY',2)
 		offset=6 if g.get(boss,'obRender')&1 else -6
 		shape=g.get(boss,'obColType')&0x3F
 		radius=args.rom.read_bytes()[g.s['Touch_Sizes']+(shape-1)*2+1]
@@ -472,13 +463,13 @@ def game(args):
 		for f,v,z in [('obVelY',0x400,2),('obStatus',6,1),('obAnim',2,1),('obHeight',14,1),('obWidth',7,1),('jumping',1,1)]:g.put(attacker,f,v,z)
 		run()
 		assert g.get(boss,'obColProp')==hp-1,(hit,hp,g.get(boss,'obColProp'),g.get(boss,'obFrame'),g.get(attacker,'obRoutine'))
-		place(g,attacker,0x1E60,0x440);g.put(attacker,'obControl',1)
+		place(g,attacker,0x1E60,0x510);g.put(attacker,'obControl',1)
 		run()
 		if hit==0:g.video.save(args.output/'game/hit-flash.png')
 	assert g.read('v_score',4)==score+100
 	assert g.get(boss,'MS_phase')==5 and not g.read('f_timecount')
 	assert not objects('MS_HeadHitbox')
-	run(3);fade_start=g.read(g.s['Clone_Driver_RAM']+g.s['SMPS_RAM.variables.v_fadeout_counter']) if clone else zram[g.s['zAbsVar.FadeOutCounter']]
+	run(3);fade_start=zram[g.s['zAbsVar.FadeOutCounter']]
 	assert 0<fade_start<=0x28,('Boss music did not start fading',fade_start)
 	phases=set()
 	for t in range(800):
@@ -488,12 +479,8 @@ def game(args):
 			if phase==7 and t%8==0:g.video.save(args.output/'game/defeat.png')
 		if objects('Signpost'):break
 	assert {5,6,7}<=phases and objects('Signpost'),phases
-	if clone:
-		assert not g.read(g.s['Clone_Driver_RAM'] + g.s['SMPS_RAM.variables.v_fadeout_counter'])
-		assert not g.read(g.s['Clone_Driver_RAM'] + g.s['SMPS_RAM.v_music_fm1_track']) & 128
-	else:
-		assert not zram[g.s['zAbsVar.FadeOutCounter']]
-		assert not zram[g.s['zSongFM1.PlaybackControl']] & 128
+	assert not zram[g.s['zAbsVar.FadeOutCounter']]
+	assert not zram[g.s['zSongFM1.PlaybackControl']]&128
 	reward=objects('Signpost')[0]
 	assert g.get(reward,'obSubtype')==1 and objects('MechaSonic')==[boss]
 	assert g.get(boss,'MS_phase')==9 and not g.read('f_lockscreen')

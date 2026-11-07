@@ -393,7 +393,7 @@ that offer it. Most primary-player selectors use `--player 0` (Sonic) or `2`
 | SMZ backgrounds, solids and hazards | `check_smz_background.py`, `check_scrap_madness.py`, `check_sbz_discs.py`, `check_smz_vanishing.py`, `check_swing_families.py`, `check_sbz_doors.py` | REV01 parallax/streaming, placed-object lifecycle, transport/ride boundaries and harmful spikeball subtypes |
 | Compact clearance/closing doors | `check_duck_clearance.py`, `check_smz_trapdoor.py` | Native 68000 collision fixtures |
 | Imported enemies/obstacles | `check_palmtree_enemies.py`, `check_propeller.py`, `check_caterkiller.py`, `check_kemusi.py`, `check_terrain_conveyors.py`, `check_wheel_carriers.py` | Both-actor triggers, motion, damage, unload/reload and source-specific regressions |
-| Audio | `check_sound_playback.py`, `check_music_sequences.py`, `sound/build.py --check` | Actual sound paths and SMZ2 ownership stress; complete native streams; encoding/macro/packer checks |
+| Audio | `check_sound_playback.py`, `sound/build.py --check` | Actual sound paths; encoding/macro/packer checks |
 
 `check_plane_streaming.py --zone 3 --act 2` checks the private EHZ2/PP bank
 through actual Mode 1 rendering. Use `--pal` for PAL; the default act remains 1.
@@ -766,23 +766,19 @@ and output guards. Resumed PLC batches also run an unrelated general decode
 between steps and force time-budget yields across stopwatch wrap. This proves
 codec/state behavior, not hardware bus scheduling. Pair it with Mode 1, act
 launch, ring and player-effect checks. `check_sound_playback.py` accepts
-`--system-directory` to validate the CD-decoded Z80 worker and experimental
-MD music buffers through actual music, effects and jingle restoration.
-For native sequence validation and historical KeH stream comparisons, see the
-[sound validation guide](../build_tools/sound/README.md#validation). Its
-`--priority` playback case covers bumper/Continue arbitration; `--switches`
-traces DPCM accumulator continuity during rapid song changes. Experimental
-`--stress` runs Scrap Madness Act 2 with all six effect-channel handoffs,
-restored FM patches, dense queues, CD song loads, tempo and actual pause/resume.
-The common YM trace checks ownership of register/data pairs. Players are held
-in a focused fixture; this is not a complete controller playthrough. Repeat
-with `--pal`, and run the act-launch and plane-streaming checks in both acts.
+`--system-directory` to validate the CD-decoded Z80 driver through actual music,
+effects and jingle restoration.
+For complete music-stream equivalence and per-frame Z80 state comparisons,
+see the [sound validation guide](../build_tools/sound/README.md#validation),
+including the direct native Z80 Kosinski+ decoder check on the experimental branch.
+Its `--priority` playback case covers bumper/Continue arbitration; `--switches`
+traces DPCM accumulator continuity during rapid level-select song changes.
 Add `--core /path/to/genesis_plus_gx_libretro.so --system-directory ...`
 to the codec runner for actual queued PLC uploads while HPZ's early water
 HBlank split is active; it compares VRAM with the old decoder and checks
 resident blocks and the entire expanded chunk allocation for changes.
 
-After ROM audio-layout changes, validate generated song payloads and behavior flags
+After ROM bank-layout changes, compare stored song payloads and playlist flags
 with the preceding ROM, run the playback checks in both regions, and exercise
 `check_level_pages.py` plus both-act `check_plane_streaming.py` checks. These
 cover relocated pointers, all act launches and live foreground/background words;

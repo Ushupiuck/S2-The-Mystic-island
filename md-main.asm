@@ -14,7 +14,6 @@ TimeTravel		= 1	; if 1, allows time-travel mechanics (W.I.P)
 	include	"_definitions/s2.macrosetup.asm"
 	include	"_definitions/s2.macros.asm"
 	include	"_definitions/Mega CD Constants.asm"
-	include "_definitions/Sound Constants.asm"
 	include	"_definitions/s2.constants.asm"
 	include	"_definitions/Sprite Bounds.asm"
 	include	"_definitions/_smps2asm_inc.asm"
@@ -243,6 +242,8 @@ GameProgram:
 		lea	(Snd_Driver).l,a0
 		lea	(Z80_RAM).l,a1
 		bsr.w	KosPlusDec
+		btst	#0,(VDP_control_port+1).l	; check video mode
+		sne	(Z80_RAM+zPalModeByte).l	; set if PAL
 		resetZ80a
 		; Initialize Joypads AND the YM chips -- 52 cycles vs the laughable 16 of before
 		moveq	#$40,d0
@@ -251,7 +252,6 @@ GameProgram:
 		move.b	d0,(HW_Expansion_Control).l
 		resetZ80
 		startZ80
-		jsr (Sound_Setup).l
 		; We're done here!
 		move.w	#SegaScreen,(v_gamemode).w	; Set the gamemode to SEGA screen
 
@@ -265,8 +265,6 @@ MainGameLoop:
 
 V_Int:
 		movem.l	d0-a6,-(sp)		; save all registers
-		tst.b (Sound_UpdateRunning).l
-		bne.s VintRet			; guard an audio update extending into another frame
 		tst.b	(MCD_TerrainReady).l
 		bne.s	.cdRunning
 		jsr	(MCD_RequireProgramRAM).l
@@ -291,7 +289,6 @@ V_Int:
 		jsr	(a0)
 
 VintRet:
-		jsr (Sound_Update).l		; VDP work has first claim on VBlank
 		addq.l	#1,(Vint_runcount).w
 		movem.l	(sp)+,d0-a6
 		rte
@@ -338,8 +335,7 @@ VInt_0_FullyUnderwater:
 
 VInt_0_Water_Cont:
 		move.w	(v_hbla_hreg).w,(a5)
-		startZ80
-		jsr (Sound_Update).l	; lag-water path also advances audio
+		startZ80	; rather than always branching to "VintRet",
 		addq.l	#1,(Vint_runcount).w	; we'll optimize by copying it here.
 		movem.l	(sp)+,d0-a6
 		rte
@@ -774,7 +770,26 @@ SegaSndTbl:
 
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-; Pause input calls the public sound interface.
+; MM: use these routines to pause/unpause sound
+PauseSoundDriver:
+		disable_ints
+		stopZ80
+		waitZ80
+		move.b	#$7F,(Z80_RAM+zAbsVar.StopMusic).l
+		startZ80
+		enable_ints
+		rts
+
+UnpauseSoundDriver:
+		disable_ints
+		stopZ80
+		waitZ80
+		move.b	#$80,(Z80_RAM+zAbsVar.StopMusic).l
+		startZ80
+		enable_ints
+		rts
+; ---------------------------------------------------------------------------
+
 		include	"_inc/PauseGame.asm"
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
@@ -1659,7 +1674,6 @@ Pal_WZCyc:	binclude "palette/WZ Cycle.bin"
 
 ; DelayProgram:
 WaitForVint:
-		jsr (Sound_PrepareMusic).l
 		movem.l	d0-d3/a1,-(sp)	; callers retain loop counters across the wait
 		tst.b	(MCD_dma_pending).w
 		bne.s	.dmaOwnsWordRAM
@@ -3216,9 +3230,86 @@ LevelLayout_TimezoneTable:
 	endif
 
 ; ---------------------------------------------------------------------------
-; Game audio queues, prepared-song transport and shared-hardware ownership.
+; MM: these functions now write directly to Z80 RAM
+; If Music_to_play is clear, move d0 into Music_to_play,
+; else move d0 into Music_to_play_2.
 
-	include "_inc/Sound Interface.asm"
+PlaySound_Special:
+PlayMusic:	disable_ints
+		stopZ80
+		waitZ80
+		tst.b	(Z80_RAM+zAbsVar.QueueToPlay).l
+		bne.s	+
+		move.b	d0,(Z80_RAM+zAbsVar.QueueToPlay).l
+		startZ80
+		enable_ints
+		rts
++
+		move.b	d0,(Z80_RAM+zAbsVar.SFXToPlay).l
+		startZ80
+		enable_ints
+		rts
+; End of function PlayMusic
+; ---------------------------------------------------------------------------
+; d0.b = speed-shoe tempo adjustment (8 enabled, 0 normal). Change the
+; driver flag directly so simultaneous music/SFX requests cannot overwrite
+; this update. During a 1-up jingle, change the saved song's flag instead,
+; just as the driver's speed-up/slow-down commands do.
+; ---------------------------------------------------------------------------
+ChangeMusicTempo:
+		disable_ints
+		stopZ80
+		waitZ80
+		tst.b	(Z80_RAM+zAbsVar.1upPlaying).l
+		beq.s	.live_song
+		move.b	d0,(Z80_RAM+zSaveVar.SpeedUpFlag).l
+		bra.s	.resume
+.live_song:
+		move.b	d0,(Z80_RAM+zAbsVar.SpeedUpFlag).l
+.resume:
+		startZ80
+		enable_ints
+		rts
+; ---------------------------------------------------------------------------
+; New scenes clear the players' power-ups. Clear both audio contexts too:
+; new songs retain speed shoes for invincibility music, and a pending 1-up
+; restoration must not resurrect the previous level's speed-up flag.
+; ---------------------------------------------------------------------------
+ResetMusicTempo:
+		disable_ints
+		stopZ80
+		waitZ80
+		clr.b	(Z80_RAM+zAbsVar.SpeedUpFlag).l
+		clr.b	(Z80_RAM+zSaveVar.SpeedUpFlag).l
+		clr.b	(Z80_RAM+zAbsVar.TempoTurbo).l
+		clr.b	(Z80_RAM+zSaveVar.TempoTurbo).l
+		bra.s	ChangeMusicTempo.resume
+; ---------------------------------------------------------------------------
+; play a sound in alternating speakers (as in the ring collection sound)
+
+PlaySoundStereo:
+		disable_ints
+		stopZ80
+		waitZ80
+		move.b	d0,(Z80_RAM+zAbsVar.SFXStereoToPlay).l
+		startZ80
+		enable_ints
+		rts
+; End of function PlaySoundStereo
+; ---------------------------------------------------------------------------
+; play a sound if the source is onscreen
+
+PlaySoundLocal:
+		tst.b	obRender(a0)
+		bpl.s	+	; rts
+PlaySound:	disable_ints
+		stopZ80
+		waitZ80
+		move.b	d0,(Z80_RAM+zAbsVar.SFXUnknown).l
+		startZ80
+		enable_ints
++		rts
+; End of function PlaySoundLocal
 
 ; ===========================================================================
 ; Sonic 1 Special Stage
@@ -13061,17 +13152,13 @@ loc_29890:
 ; ---------------------------------------------------------------------------
 Snd_Driver:
 	save
-	include "sound/Z80 DAC and SFX.asm" ; CPU Z80
+	include "s2.sounddriver.asm" ; CPU Z80
 	restore
 	padding off
 	!org (Snd_Driver+Size_of_Snd_driver_guess) ; don't worry; I know what I'm doing
 
 
 Snd_Driver_End:
-	even
-	include "sound/CloneDriver/engine/Sonic 2 Clone Driver v2.asm"
-	include "sound/musicdata.gen.asm"
-	even
 ; ---------------------------------------------------------------------------
 ; Level metadata and ordinary art use the space before the first aligned
 ; audio bank. Its address is determined by the current ROM layout.
@@ -13084,13 +13171,27 @@ Snd_Driver_End:
 		include	"_inc/LevelHeaders_BF.asm"
 	endif
 		include	"_inc/Pattern Load Cues.asm"
-	even
-Nem_SegaLogo:	binclude "art/nemesis/Sega Logo (JP1).nem"
-	even
-Nem_HUD:	binclude "art/nemesis/HUD.nem"
-	even
+; ---------------------------------------------------------------------------
+; Music pointers
+; ---------------------------------------------------------------------------
+musprop_uncompressed	= 1<<4	; $10
+musprop_nospeedup	= 1<<5	; $20
+musprop_palmode	= 1<<6		; $40
+musprop_1up	= 1<<7		; $80
+zmakePlaylistEntry macro addr,val
+	dc.b	addr/$8000	; bank
+	rom_ptr_z80	addr
+	if "val"<>""
+	dc.b	val
+	else
+	dc.b	0
+	endif
+	endm
 
-; Ordinary art has no music-bank alignment requirements.
+	include "_definitions/Sound Bank Assets.asm"
+
+; Ordinary art fills the alignment gap before the first music bank. The
+; playlist records actual addresses; bank numbers need not follow ROM order.
 ; -------------------------------------------------------------------------------
 Kosp_Title:		binclude	"art/kosinski/level/8x8 - Title.kosp"
 Nem_TitleSonicTails:	binclude	"art/nemesis/Title Sonic and Tails.nem"
@@ -13140,7 +13241,7 @@ Nem_EHZ_Waterfall:	binclude	"art/nemesis/Waterfall tiles.nem"
 Nem_EHZ_Bridge:		binclude	"art/nemesis/EHZ bridge.nem"
 			even
 
-
+	include "sound/generated/music-bank-3.gen.asm"
 
 ; ---------------------------------------------------------------------------
 ; Hidden Palace Zone stage assets
@@ -13191,9 +13292,10 @@ Pal_MechaFlash2:	binclude "palette/Mecha Sonic Flash 2.bin"
 Nem_Swing2:		binclude	"art/nemesis/S1/SLZ Swinging Platform.nem"
 			even
 
-; The remaining Z80 effect/sample banks retain their own alignment.
-
-
+; Keep the two nearly full music banks together. The short bank above leaves
+; its remaining space to ordinary art before this next bank alignment.
+	include "sound/generated/music-bank-1.gen.asm"
+	include "sound/generated/music-bank-2.gen.asm"
 
 zSoundIndexEntry macro pointer, priority
 	rom_ptr_z80	pointer
@@ -13251,10 +13353,11 @@ DACSample	macro	pPtr,pDelay,pFlags
 	endm
 
 	include "sound/dacinfo.gen.asm"
-
+	include "sound/musicinfo.gen.asm"
 
 	even
 
+	SoundBankAssets SFX,1
 	finishBank
 
 ; -------------------------------------------------------------------------------

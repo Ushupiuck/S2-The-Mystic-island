@@ -16,8 +16,6 @@ on:
       - build_tools/Windows-*/**
       - _definitions/**
       - sound/*.gen.asm
-      - sound/CloneDriver/**
-      - sound/Z80 DAC and SFX.asm
       - KEHmusic.exe
       - KEHsfx.exe
       - '*.dll'

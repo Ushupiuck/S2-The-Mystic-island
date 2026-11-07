@@ -1,131 +1,124 @@
-# Sound driver and tools
+# KeH sound tools
 
-This guide describes **`Mystic-Island-(Experimental)`**. It uses CloneDriver v2
-on the Mega Drive main 68000 for FM/PSG music, the retained KeH Z80 worker for
-DAC and FM/PSG effects, and the existing Mega-CD decompression service for songs.
-PCM sequencing/playback on the CD is future work. `Mystic-Island` retains its
-previous complete Z80 driver until this replacement is explicitly promoted.
+`KEHmusic.exe` assembles songs, automatically chooses compressed or raw storage,
+sorts by stored size, and packs music and DAC samples into
+`$8000`-byte banks. `KEHsfx.exe` generates the sound-effect tables. Their source
+lives here. `Mystic-Island-(Experimental)` uses headerless Kosinski+ music and a
+Z80 Kosinski+ decoder; this replaces the previous Saxman music format.
 
-## Source ownership
-
-| Source | Owns |
-| --- | --- |
-| `_definitions/Sound Constants.asm` | Clone settings, native metadata format and music capacity |
-| `_definitions/s2.constants.asm` | MD audio RAM allocations and public sound IDs |
-| `_inc/Sound Interface.asm` | MD queues, song preparation, bus ownership and SFX handoff |
-| `sound/CloneDriver/engine/` | Native FM/PSG sequencer, track layout and music import macros |
-| `sound/Z80 DAC and SFX.asm` | Z80 DAC streaming and the six FM/PSG effect slots |
-| `_definitions/_smps2asm_inc.asm` | Retained KeH **SFX** format |
-| `build_tools/sound/KEHmusic/` | Native music assembly, Kosinski+ compression and DAC packing |
-| `build_tools/sound/KEHsfx/` | Effect tables, priorities and IDs |
-
-The vendored ASM release is Clownacy's **v2.8.0.1**, commit
-[`f9723d683bcc304afb7a1fb5d1278592451fd274`](https://github.com/Clownacy/Sonic-2-Clone-Driver-v2/tree/f9723d683bcc304afb7a1fb5d1278592451fd274).
-Later upstream v2.9 uses a precompiled C++ core. This integration keeps the ASM
-FM/PSG implementation editable, replaces its DAC/SFX executors with the existing
-Z80 worker, and obtains song pointers from prepared MD RAM. Global internal
-labels carry the `Clone_` prefix to avoid game/SFX symbol collisions.
-
-The native track's shared loop/call workspace is 20 bytes rather than upstream's
-12. Imported arrangements can make three nested calls while loop counters remain
-live; 68000 return addresses consume four bytes. The sequence validator checks
-every call and loop against the assembled allocation.
-
-## Playback and memory
-
-Music lives in ordinary ROM through full 68000 pointers. There are **no music
-banks**, `$8000` placement boundaries, Z80 music buffer, or Z80 music decoder.
-`PlayMusic` queues a song ID. Before `WaitForVint`, `Sound_PrepareMusic` copies or
-asks the existing CD Kosinski+ service to decode that song into MD RAM. The CD
-transport stages cartridge input, runs its existing decoder, and copies the
-result to the requested MD destination. No second MD decoder is installed.
-
-A ready flag publishes the pointer only after loading finishes. The interrupt
-never starts CD work or reads a buffer being replaced. The two `$4000`-byte MD
-buffers separate normal music from 1-up jingles, preserving the previous song's
-live sequence/instrument pointers for native restoration. All current songs fit;
-future imports exceeding the decoded capacity fail explicitly. Raw storage is
-also copied to MD RAM, rather than streamed from a Z80 bank.
-
-See [Mega-CD memory](../../docs/Mega-CD.md#memory-and-ownership) for live allocations. Word RAM
-is a transport workspace, not a simultaneous music store for both CPUs: the
-engine uses 2M ownership transfers. Songs remain in MD RAM after the transfer.
-For future PCM songs, each CPU will need a self-contained channel stream and its
-dependencies in its own RAM; splitting and synchronizing those streams is not
-implemented here.
-
-`Sound_Update` runs **after** VBlank display work, including on lag frames.
-Running music before the VBlank wait can miss that frame's display window.
-Raster palette interrupts may preempt sequencing; individual YM register/data
-pairs mask interrupts. A running flag rejects recursive audio updates.
-
-Before music touches shared hardware/state, MD takes the Z80 bus, publishes
-`MDLock`, and waits for `FMBusy` to clear. The Z80 checks that lock when entering
-its effect update and publishes its busy flag before accessing FM/PSG. MD holds
-the bus for its music tick and restores the YM `$2A` DAC selector before release.
-This protects the address/data latch as well as DAC data writes. DAC streaming
-pauses while MD owns the bus, just as it pauses during Z80 effect sequencing.
-
-Actual Z80 effect flags override MD FM3/FM4/FM5 and PSG1/PSG2/PSG3 output. Music
-continues sequencing silently on occupied channels. Release restores the music
-instrument or PSG noise mode; DAC effects also override DAC/FM6 ownership.
-DAC-enable state is mirrored to the Z80. Pause freezes both sequencers and DAC
-progress; resume restores the appropriate voices. Tempo changes retain the
-game's interval-based speed control and per-song `NoSpeedUp`/PAL flags.
-
-The retained player is the project's **single DAC channel**, with its existing
-PCM/DPCM samples and rates. This does not install upstream's two-channel DAC
-mixer or per-sample volume support. Native FM/PSG fading remains enabled. DAC
-samples and SFX still use the Z80's `$8000` ROM window and bank alignment.
+The normal `build.bat`/`build.lua` build runs both tools before assembling the
+ROM. The packer uses the AS assembler and `p2bin` in the platform's `build_tools`
+directory. The obsolete `win32` toolchain has been removed. Windows runs the
+prebuilt EXEs directly; Linux/BSD require Mono. Python and a C# compiler are only needed when
+rebuilding or checking the tools themselves.
 
 ## Rebuilding
 
-The normal `build.bat` / `build.lua` build runs both shipped tools first. Windows
-runs the EXEs directly; Linux/BSD require Mono. AS and `p2bin` come from the
-matching platform's `build_tools` directory. To rebuild the tools:
+From the project root:
 
 ```sh
-python3 build_tools/sound/build.py --check
+python3 build_tools/sound/build.py
 ```
 
-For a separately installed compiler/reference set:
+The script supports Mono's `mcs`, the Windows .NET Framework C# compiler, and
+Roslyn `csc`. It targets .NET Framework 4 and uses the existing `IniFile.dll`.
+The retired KensSharp Saxman/Common DLLs are no longer required.
+
+For a separately installed Roslyn compiler/reference set:
 
 ```sh
 python3 build_tools/sound/build.py --compiler /path/to/csc.exe \
-	--mono /path/to/mono --framework /path/to/mono/4.0-api --check
+  --mono /path/to/mono --framework /path/to/mono/4.0-api --check
 ```
 
-The script supports Mono `mcs`, .NET Framework `csc`, and Roslyn; it targets
-.NET Framework 4 and uses `IniFile.dll`. `CSC` and `MONO` are accepted. Rebuild
-the distributed EXEs after source changes. The `Windows sound build` workflow
-checks both shipped and rebuilt tools in a project path containing spaces.
+`CSC` and `MONO` environment variables are also accepted. Roslyn builds use
+deterministic output and portable PDBs when available. Older compilers use their
+supported debug format instead. `--check` runs the bounded Kosinski+ decoder
+fixtures and macro/packer checks after compilation.
+
+## Generated files
+
+The packers write aggregate bank lists, playlists/sample tables, ID constants
+and name tables to `sound/*.gen.asm`. Per-bank includes stay in
+`sound/generated/`. Run the tools from the project root; all ASM include paths
+are relative to that root. Shared sound macros live in
+`_definitions/_smps2asm_inc.asm`, alongside the other shared definitions.
+
+Rebuild the distributed `KEHmusic.exe` and `KEHsfx.exe` after changing their
+source; the build script invokes those binaries. Do not hand-edit generated
+outputs or keep duplicate copies at the project root.
 
 ## Importing music
 
-Handwritten ASM in `sound/music/` and `music.ini` remain the editable sources.
-Keep both source-version arguments when supplied:
+Add the song to `sound/music/music.ini`. For modern SMPS2ASM instrument data,
+retain **both** arguments, for example:
 
 ```asm
 Song_Header:
 	smpsHeaderStartSong 3,1
 ```
 
-The first selects source-driver semantics; the second selects the SMPS2ASM
-instrument format. Omission means legacy format 0. Modern AM enables, literal
-TL values, five-argument reserved D1R bits and the S3 two-argument FM-volume
-command are preserved. Legacy names and enharmonic note aliases remain usable.
-S3 PSG envelope aliases retain the project's existing S1/S2 approximations.
-Cross-song instruments and universal voice banks fail explicitly: copy required
-instruments into the song-local bank. Disabled native extensions require an
-explicit driver change, not an unsupported bytecode import.
+The first argument identifies the source driver (S1, S2, or S3-family); the
+second identifies the SMPS2ASM instrument format. An omitted second argument
+means legacy format 0. Format 1 has single-bit AM arguments and literal total
+level bytes. Five-argument `smpsVcUnusedBits` also preserves the reserved D1R
+bits. Legacy syntax remains supported, alongside names such as `smpsFMvoice`,
+`smpsMaxRelRate`, `smpsPSGAlterVolS2`, `smpsDcb`, and enharmonic note aliases.
 
-The destination **music format is CloneDriver**, with big-endian relative
-pointers, an eight-byte header and `$FF` coordination flags. KeH music binaries
-must be rebuilt from ASM or converted. SFX retain their separate compact KeH
-headers and absolute Z80 bank pointers; do not assemble them with music macros.
+The destination is **KeH**, not the original song's driver. Its music headers,
+jumps, calls, and loops contain relative little-endian pointers, so the same
+song works in ROM or decompressed Z80 RAM. Its SFX channel headers omit the
+stock S2 `$80` byte and use absolute bank-window pointers. Do not replace the
+macro file with stock S2 macros: those contracts must be preserved.
 
-Raw `.bin` music inputs must already use native Clone bytecode. They are raw by
-default; an existing headerless Kosinski+ stream requires:
+KeH already has `$FA` for S3-style note fill, including multiplication by the
+channel tempo divider. The macro emits that command alone. S1 modulation waits
+are adjusted for S2 semantics, and S3's two-argument `smpsFMAlterVol` uses its
+second argument. KeH selects carrier operators from the algorithm; it does not
+use the generic S3 driver's total-level marker interpretation.
+
+This is not an implementation of every S3 coordination command. Cross-song
+instrument selection and universal voice banks fail explicitly: copy the
+needed instruments into a song-local voice bank. Unsupported commands still
+require conversion to KeH-supported behavior or a separate driver change.
+
+### Optimizing music sequences
+
+The handwritten song ASM remains the editable source. Repeated note phrases
+use ordinary `smpsCall` / `smpsReturn`; larger repeated sections may call those
+phrases. Counted loops use separate indices when nested. KeH shares ten bytes
+between loop counters and its downward-growing return stack, so a counter
+must stay below the active stack. Do not split a note from its duration or
+remove a duration-only event: that event can retrigger the previous note.
+
+An explicit note duration can be omitted only when it inherits the same
+computed duration. Labels, calls and divider changes require checking entry
+state. Local prototype voice banks retain instrument zero; unused instruments
+are removed and selectors compacted, with their original S3 indices noted in
+the source. Selected 25-byte YM patches must remain identical.
+
+Measure both assembled and Kosinski+ sizes. A smaller sequence can have a slightly
+larger compressed encoding; crossing the `$A40` RAM limit can instead save much
+more by enabling compression. Each bank starts on an `$8000` boundary; its
+audio must stay within that window. Ordinary ROM data can use the remaining
+tail before the next aligned bank, so saved song bytes can reduce ROM size
+without reducing the number of music banks.
+
+### SFX priority and bumpers
+
+`PlaySound` writes the normal priority queue. `PlaySound_Special` / `PlayMusic`
+can write the immediate queue directly, bypassing priority arbitration; sound
+test also uses that immediate path. Both the level and rotating-stage bumper
+callers use `PlaySound`, so a `$70` bumper cannot replace the `$7F` Continue
+jingle. SFX priority is released only when all six FM/PSG SFX slots have stopped.
+Continue's FM4 lasts seven ticks longer than FM3/FM5; stopping another FM or PSG
+channel must preserve its priority. Equal-priority effects may still retrigger.
+
+### Binary inputs
+
+A `.bin` is **raw by default**. It must already use KeH's relative music format.
+The packer may compress it if it is small enough and compression saves space.
+For an already compressed, headerless Kosinski+ file, specify:
 
 ```ini
 [Imported]
@@ -134,113 +127,207 @@ File=Imported.bin
 BinaryFormat=KosinskiPlus
 ```
 
-For ASM/raw inputs, compression is automatic when its stored size is strictly
-smaller; equal-size and incompressible inputs stay raw. Both encodings must fit
-the `$4000` **decoded** capacity. Explicit compressed inputs are bounded by their
-decoded size, even if the packed stream is larger. Invalid references, truncated
-streams, trailing data and output overflow fail the build.
+For ordinary ASM and raw binary inputs, compression is selected only when the
+**decoded** song fits `$A40` bytes and the compressed stream is strictly smaller.
+Oversized, incompressible and equal-size songs stay raw in ROM automatically.
+Raw songs must fit one `$8000` bank. No per-song compression switch is needed.
 
-The managed host encoder chooses a minimum bit-cost Kosinski+ parse and checks
-each result through a bounded decoder. Its 8-KiB match dictionary is a format
-property, not a limit on song length. It handles the full MD allocation without
-using `p2bin`'s 8-KiB Z80 compression segment. Runtime decompression still uses
-the existing CD decoder. `p2bin` continues converting assembled songs and
-compressing the actual Z80 driver.
+Explicit `BinaryFormat=KosinskiPlus` inputs are validated before packing: they
+must decode to between 1 and `$A40` bytes. Invalid backreferences, truncated
+streams, trailing data and output overflow fail the build. Legacy Saxman inputs
+must be decoded before importing. The playlist's existing compression flag comes
+from the chosen encoding, not the filename extension. Generated compressed
+output is round-trip checked against the raw song.
 
-Repeated phrases may use ordinary calls and counted loops; the independent
-validator checks complete loops, local instrument references, and live counter /
-return-stack overlap. Preserve duration-only events and inherited durations when
-optimizing. Measure both decoded and compressed sizes.
+Generated compressed songs live in `sound/generated/<music ID>_cmp.bin`;
+`OutputFile`, `Size`, `UncompressedSize`, `IsCompressed`, and `MD5` in the INI are
+computed metadata. The superseded compressed copies beside the sources have
+been removed.
 
-## Generated files and metadata
+### Experimental Z80 decoder
 
-Generated tables stay in `sound/*.gen.asm`; music bytes stay in
-`sound/generated/<ID>_cmp.bin` or `<ID>_raw.bin`. The INI's `OutputFile`, `Size`,
-`UncompressedSize`, `IsCompressed` and `MD5` are computed metadata.
-`sound/musicdata.gen.asm` includes each stored song in ordinary ROM with word
-alignment; it does not emit music-bank wrappers. `musicinfo.gen.asm` owns the
-`MusicIndex` entries:
+`KEHmusic` wraps raw song bytes in a temporary AS Z80 segment, then invokes the
+bundled `p2bin` Kosinski+ encoder. Streams have MSB-first descriptors and a long
+zero-count end marker, without a size header or module framing. Both ordinary
+song loading and the post-1-up restoration path call `zKosinskiPlusDec`.
 
-| Offset | Field | Encoding |
-| --- | --- | --- |
-| 0 | Source | Full ROM long pointer |
-| 4 | StoredSize | Big-endian word |
-| 6 | DecodedSize | Big-endian word |
-| 8 | Flags | Bit 0 compressed, 5 no speed-up, 6 force PAL tempo, 7 restoring jingle |
-| 9 | Reserved | Zero |
+The Z80 routine occupies 105 bytes, replacing the 136-byte Saxman routine. It
+ends at `$122A`, leaving 44 bytes before the unchanged `zMusicData` at `$1256`.
+The `$A40` music allocation and following state/backup areas have not moved.
+`HL` supplies the banked source; output starts at `zMusicData`. On return `HL`
+and `DE` point past the input and output. `IX`/`IY` and `AF'` are preserved;
+`AF` and `BC` are scratch. The DAC player keeps its running DPCM accumulator
+in `AF'`, including across song loads. Long-token parsing saves the descriptor
+on the stack so an old drum can finish without a corrupted accumulator. A signed
+match displacement patches one immediate word in the decoder, so no new RAM
+variable is needed. It runs inside the sound
+interrupt and is not reentrant. Host validation enforces the output bound; the
+compact runtime trusts those validated streams.
 
-The compressed-asset generator recognizes packed music includes, so imports
-join the existing CD source-span manifest automatically. DAC aggregate/per-bank
-includes retain `startBank` / `finishBank` and window-overflow checks. Old music
-bank includes, bank-asset hooks and the monolithic Z80 source were removed; the
-Sega logo/HUD remain ordinary art includes. Unassembled `sound-NA-Old` material
-is preserved.
+## Reusing bank padding
 
-`.sound-build/music-cache.ini` hashes source/transitive includes, macros, DAC
-IDs, native tools and the packer. `KEHmusic /clean` or `--clean` rebuilds all
-songs. `--tools-dir PATH` / `KEH_TOOLS_DIR` override native tool selection.
-Assembler/converter failures stop both packer and ROM build;
-the launcher checks tool exit status and removes stale output before assembly. the failing wrapper
-and diagnostics remain in `.sound-build/music.asm` / `music.log`.
+Edit `_definitions/Sound Bank Assets.asm`. `SoundBankAssets kind,bank` is expanded after
+each bank's sound data and before `finishBank` checks its size. `kind` is
+`Music`, `DAC`, or `SFX`; `bank` is one-based within that category. The macro uses
+`GLOBALSYMBOLS` so ordinary asset labels remain accessible from the game.
 
-## SFX priority
+Music bank 3 holds `Nem_SegaLogo` and `Nem_HUD`: 1,294 bytes of existing art.
+Remove the original include when moving an asset here; keep word/DMA alignment
+appropriate to that asset.
 
-`PlaySound` uses normal priority arbitration; `PlaySound_Special` uses the
-immediate effect queue. Named music IDs route to the preparation queue, and
-named commands route to Clone's control queue. `PlaySoundStereo` retains the
-stereo effect path. Avoid hardcoded command values.
+The hook file is handwritten and is never regenerated. Music packing remains
+automatic. If a later song import consumes the chosen bank's free tail,
+`finishBank` reports an overflow; move those assets to another bank's hook or
+back to ordinary ROM space. Assets are not silently overwritten or discarded.
 
-Both bumper callers use `PlaySound`. A `$70` bumper cannot replace the `$7F`
-Continue jingle. Priority persists until all six FM/PSG effect slots stop,
-including Continue's longer FM4 tail. A PSG effect finishing cannot clear the
-remaining FM priority. Equal-priority effects can retrigger.
+Each generated bank also has an independent include:
+
+```asm
+	include "sound/generated/music-bank-1.gen.asm"
+	include "sound/generated/music-bank-2.gen.asm"
+	include "sound/generated/music-bank-3.gen.asm"
+```
+
+`sound/musicbanks.gen.asm` and `sound/dacbanks.gen.asm` list the individual files
+for a consecutive layout. The experimental ROM uses the individual music
+includes in `md-main.asm`: title and early-zone art precede music bank 3, then
+HPZ/HTZ/Mecha art fills its tail before the nearly full banks 1 and 2. Morphing
+platform and vertical Ballhog art also use the gap after SFX and the Sega
+sample. DAC banks still use their aggregate include; ordinary art follows the
+last bank directly.
+
+`finishBank` checks the audio and any `SoundBankAssets` hook before the following
+ordinary data. That later data may extend beyond the window; it is not read by
+the Z80. Each next bank aligns itself, while playlist and DAC entries use actual
+ROM addresses. The runtime requires neither consecutive banks nor numerical
+bank order. Keep per-bank includes synchronized with the generated aggregate
+list if an import changes the bank count, and rebuild to measure the new
+alignment gaps. The packer still selects storage and assigns songs to banks
+automatically. Do not hand-edit its generated files.
+
+## Cache and failures
+
+`.sound-build/music-cache.ini` hashes the song, literal transitive source/binary
+includes, shared macros, DAC IDs, assembler, converter and packer. A changed dependency triggers a rebuild; missing compressed output also
+triggers one. The local cache is ignored by Git. `KEHmusic /clean` or
+`KEHmusic --clean` rebuilds every song.
+
+`KEHmusic --tools-dir PATH` or `KEH_TOOLS_DIR` overrides native tool selection.
+Assembler/converter failures stop the packer and the ROM build with a nonzero
+exit status. The failing song wrapper and assembler diagnostics remain in
+`.sound-build/music.asm` and `.sound-build/music.log`; compression wrappers and
+diagnostics use `.sound-build/music-kos.*`. Invalid or oversized
+music/DAC data also fails the build instead of producing a partial playlist.
 
 ## Validation
 
+The `Windows sound build` workflow checks the shipped Lua launcher and ROM build
+from a directory containing spaces, then rebuilds the tools, runs their checks,
+and builds the ROM again on a native Windows runner.
+
 ```sh
 python3 build_tools/sound/build.py --check
-python3 build_tools/check_music_sequences.py --output test-results/audio/sequences.json
 python3 build_tools/check_sound_playback.py --core /path/to/genesis_plus_gx_libretro.so \
-	--system-directory /path/to/mode1-fixture --effects --jingles --priority --switches --stress
+	--effects --jingles --priority --switches
+python3 build_tools/check_sound_playback.py --core /path/to/genesis_plus_gx_libretro.so \
+  --pal --songs GHZ EHZ GGZ1 RRZ1 HTZ HPZ GRGZ2 LBZ2_S3 EndLevel ExtraLife
 ```
 
-Repeat playback with `--pal`. `--songs NAME ...` restricts selection. Reports
-and WAV captures stay in ignored output directories. The core must export the
-RAM, Z80 register/bus and FM-write interfaces used by the harness.
+The optional playback check uses the existing libretro harness, NumPy, and
+Pillow. Its core must expose the `work_ram`, `vram`, and `zram` symbols, as the
+tested Genesis Plus GX build does. Reports and selected WAVs go under
+`.sound-build`. It boots the real game, enters sound test, and plays through the
+actual 68000/Z80/YM2612/PSG paths.
 
-The host checks cover independent instrument dumps, native music / retained SFX
-encoding, dependency invalidation, automatic compression, raw ties, the exact
-16-KiB boundary, malformed inputs and independent round trips for every song.
-Native sequence validation follows every channel to its repeat or termination,
-checking pointers, instruments and shared loop/call storage. Optional reference
-ROM/listing/INI arguments compare native streams after source optimization.
-Historical KeH comparisons remain supported for KeH ROM pairs; cross-driver
-per-frame state equality is not assumed.
+For source optimization, retain the preceding ROM, matching listing and
+`music.ini`, then compare against the rebuilt checkout:
 
-Playback enters the real sound test and checks decoded MD bytes, audible
-output, all effects, both restoring jingles over several songs, Continue/bumper
-priority, and uninterrupted rapid song selection. The DAC trace checks each
-actual DPCM write against its previous accumulator and current delta; new samples
-explicitly reset to `$80`.
+```sh
+python3 build_tools/check_music_sequences.py \
+  --reference-rom /path/to/before.bin --reference-listing /path/to/before.lst \
+  --reference-ini /path/to/music.ini --output test-results/music-sequences/report.json
+```
 
-`--stress` enters **Scrap Madness Act 2**. With players held at the starting
-floor, the actual level, CD services, rendering and both sound CPUs keep running.
-It plays all effects over level music, checks all six channel handoffs and
-restored FM patches, then mixes dense normal/stereo/immediate queues, CD music
-loads, speed changes and real Start-button pause/resume. A common YM-write trace
-checks CPU ownership of selector/data pairs and rejects music writes to active
-FM effect channels. This is a focused integration fixture, not a controller-only
-playthrough. Use act-launch, plane-streaming and early-water HBlank checks from
-[Testing](../../docs/Testing.md) alongside audio checks.
+This independently reads each ROM's playlist and compressed data, expands relative
+calls/jumps/counted loops, checks stack/counter overlap, and compares complete
+channel streams past their loop boundaries. Headers, playlist behavior flags,
+computed note durations, bare duration events, commands and selected instruments
+must match. Finite tracks must terminate at the same event.
+
+Add `--core CORE --system-directory BIOS` for real Mode 1 playback comparisons
+of every changed song. The default budget covers the introduction and two
+complete channel loops; `--pal` repeats in PAL and `--songs` restricts selection.
+Use `--include-unchanged` for codec/driver changes whose decoded songs remain
+identical. The listing selects the Kosinski+ decoder or the retained historical
+Saxman reader for each ROM. Select looping tracks for long runtime comparisons;
+use the jingle checks below for finite 1-up tracks that restore another song.
+`--frames` is a shorter diagnostic override. Each frame's musical Z80 state,
+including tempo, duration, pitch, modulation and the actual instrument patch,
+must match after at most eight frames of load-start alignment. Relocated data,
+voice/modulation pointers, return addresses and loop counters are excluded.
+Audio callbacks must also produce non-silent output. These checks establish
+musical equivalence; they do not claim identical sub-frame YM/DAC write timing
+or reduced Z80 execution cost. Reports/state captures stay in the supplied
+ignored output directory.
+
+`check_sound_playback.py --priority` checks the compiled bumper callers, normal
+queue arbitration throughout Continue, its staggered final channel stops, an
+unrelated PSG effect finishing, equal-priority retriggering, and priority release.
+Its `--jingles` cases include RAM-loaded GHZ, ROM-streamed Launch Base 2 and the
+large RAM-loaded S3 Menu track, checking bank/voice and decompressed-data restore.
+
+`check_sound_playback.py --switches` selects every song through the actual
+level-select input path in three uninterrupted playlist passes, at 5/12/24-frame
+intervals. It traces real Z80 DAC writes and checks each DPCM delta against the
+previous accumulator, with explicit `$80` resets for new samples. It exercises
+compressed/raw transitions and interrupted 1-ups, then checks that music settles.
+This trace also requires the core's exported `Z80` registers and `z80_writemem`
+bus callback. Reports include discontinuities and a local audio capture.
+
+The tool fixtures check original instrument dumps, relative music pointers,
+compact SFX headers, modern command conversions, dependency invalidation,
+separate bank placement, unsupported imports and invalid/oversized input.
+Automatic storage fixtures cover an exact `$A40` fit, `$A41` overflow,
+incompressible data and a compressed/raw size tie. Every compressed project
+song is compared with fresh assembly through an independent Python decoder.
+
+For direct execution of the assembled Z80 routine:
+
+```sh
+python3 build_tools/check_z80_kosinski_plus.py \
+  --core /path/to/genesis_plus_gx_libretro.so \
+  --output test-results/z80-kosinski-plus/native
+```
+
+This requires a core exporting its native Z80 registers, memory maps and bus
+callbacks. It relocates the unchanged decoder into guarded flat fixture memory,
+then checks all descriptor alignments, short/long/extended counts, overlap,
+8-KiB distances, current songs and seeded encoder fixtures. Output/input guards,
+source/destination cursors, stack balance and `IX`/`IY`/`AF'` preservation are
+checked; only the copy displacement may modify code. This proves instruction-level
+format behavior, not Mega Drive bus or interrupt timing. The full-game playback
+checks cover the real banked load and restoration paths.
+
+These are playback and encoding checks, not a claim that every imported song
+now duplicates its source game's sound. PSG envelope approximations inherited
+from KeH remain, and the macro corrections intentionally change some output.
 
 ## Source history
 
-- [CloneDriver ASM release](https://github.com/Clownacy/Sonic-2-Clone-Driver-v2/tree/f9723d683bcc304afb7a1fb5d1278592451fd274).
-- Retained KeH SFX/DAC and packer origins:
+- Packer/SFX source and the enhanced driver contract:
   [MainMemory/s2-sound-driver-plus, `57edda88`](https://github.com/MainMemory/s2-sound-driver-plus/tree/57edda88ae502cbb8c3bb425a00b52ea798e8b76/build_source/KEHmusic).
-- Modern instrument syntax:
+  The earlier test-branch commit verified that recompiling its packer source
+  reproduced the original managed method code, generated ROM, and track audio.
+- Modern macro formats/names:
   [sonicretro/s2disasm, `4ef457c1`](https://github.com/sonicretro/s2disasm/blob/4ef457c18fc4902396c43ab06fabc119ac6ecb64/sound/_smps2asm_inc.asm).
-- Runtime Kosinski+ implementation/provenance:
-  [`_inc/KosinskiPlus.asm`](../../_inc/KosinskiPlus.asm), executed by the CD
-  decompression service. The host's encoder/validator are managed C#; independent
-  Python decoding is used by the tests.
+- Kosinski+ format and 68000 reference:
+  [`_inc/KosinskiPlus.asm`](../../_inc/KosinskiPlus.asm) and its internal include,
+  originally by Flamewing/vladikcomper with Clownacy's improvements. The Z80
+  implementation ports that format with sentinel-bit parsing and a
+  self-modified displacement; it does not embed 68000 machine code.
+- Host compression uses the project's bundled
+  [Clownacy/p2bin](https://github.com/Clownacy/p2bin). The C# and Python readers
+  independently validate its streams.
+
+The runtime retains the fix for restoring uncompressed music after a 1-up.
+Its multi-channel SFX priority lifetime is described above.
