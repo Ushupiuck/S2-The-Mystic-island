@@ -11,10 +11,13 @@ import argparse,json,struct
 from genesis_test_core import Genesis
 from check_object_course import boot_level,objects,snapshot
 from check_companion_followup import place,reset_cpu,spawn
+from check_debug_states import press_debug
 
 p=argparse.ArgumentParser(description=__doc__)
 for n in ('rom','listing','core','output'):p.add_argument('--'+n,type=Path,required=True)
-p.add_argument('--pal',action='store_true');p.add_argument('--skip-sweep',action='store_true');args=p.parse_args()
+p.add_argument('--pal',action='store_true');p.add_argument('--skip-sweep',action='store_true')
+p.add_argument('--companion-only', action='store_true', help='Run the shared disc and two-step ledge fixtures')
+args=p.parse_args()
 ROOT=Path(__file__).resolve().parents[1]
 g=Genesis(args.core,args.rom,args.listing,args.output,args.pal);report=[]
 def row():
@@ -46,6 +49,92 @@ def prime_history():
  for i in range(0,256,4):
   g.write(g.s['Sonic_Pos_Record_Buf']+i,g.get('v_player','obX',2),2);g.write(g.s['Sonic_Pos_Record_Buf']+i+2,g.get('v_player','obY',2),2)
   g.write(g.s['Sonic_Stat_Record_Buf']+i,0,4)
+
+
+
+def load_companion_scene(base, x, y):
+	g.restore(base)
+	g.buttons2 = set()
+	g.write('Debug_mode_flag', 1)
+	press_debug(g, 1)
+	g.put('v_player', 'obX', x, 2)
+	g.put('v_player', 'obY', y, 2)
+	g.run(310)
+	press_debug(g, 0)
+	g.run(3)
+
+
+def check_disc_laps(base):
+	x, y = 688, 1872
+	load_companion_scene(base, x, y - 80)
+	disc = next(obj for obj in objects(g, 0xA1) if g.get(obj, 'SMZ_disc_origX', 2) == x)
+	for actor, rise in (('v_player', 67), ('v_player2', 63)):
+		place(g, actor, x, y - rise, False)
+		g.put(actor, 'flashtime', 1800, 2)
+	reset_cpu(g)
+	prime_history()
+	g.write('Timer_frames', 9, 2)
+	g.run()
+	previous_angle = g.get('v_player2', 'obAngle')
+	winding = 0
+	for _ in range(750):
+		g.run()
+		assert all(g.read(disc + g.s['SMZ_disc_sonic_attached'] + player)
+				   for player in (0, 1)), 'Companion left the shared disc'
+		assert g.read('Tails_CPU_routine', 2) == 6 and not g.get('v_player2', 'jumping')
+		assert not g.read('v_errortype')
+		angle = g.get('v_player2', 'obAngle')
+		winding += (angle - previous_angle + 128) % 256 - 128
+		previous_angle = angle
+	assert winding >= 6 * 256, winding
+	for _ in range(160):
+		if ((g.get('v_player2', 'obAngle') + 12) & 255) < 24:
+			break
+		g.run()
+	else:
+		raise AssertionError('Companion did not reach the top of the disc')
+	g.buttons2 = {8}
+	g.run(2)
+	g.buttons2 = set()
+	assert g.get('v_player2', 'jumping') and not g.get('v_player2', 'stick_to_convex')
+	assert g.get('v_player', 'stick_to_convex') and g.read('Tails_CPU_idle_timer', 2) > 0
+	report.append({'case': 'disc-shared-laps-and-manual-exit', 'passed': True})
+
+
+def check_center_ledge(base):
+	# Sonic waits on the actual ledge between the wheels. Tails falls to the floor below.
+	for x in (2738, 2755, 2796):
+		load_companion_scene(base, x, 1117)
+		place(g, 'v_player', x, 1117)
+		place(g, 'v_player2', x, 1263)
+		for actor in ('v_player', 'v_player2'):
+			g.put(actor, 'flashtime', 1800, 2)
+		reset_cpu(g)
+		prime_history()
+		landings = []
+		was_airborne = True
+		for _ in range(260):
+			g.run()
+			assert g.read('Tails_CPU_routine', 2) == 6 and not g.read('v_errortype')
+			airborne = bool(g.get('v_player2', 'obStatus') & 2)
+			if was_airborne and not airborne:
+				landings.append(g.get('v_player2', 'obY', 2))
+			was_airborne = airborne
+		assert landings == [1264, 1200, 1120] and not airborne, (x, landings)
+		assert abs(g.get('v_player2', 'obX', 2) - g.get('v_player', 'obX', 2)) < 32
+	report.append({'case': 'terrain-step-to-center-ledge', 'passed': True})
+
+
+if args.companion_only:
+	boot_level(g, zone=8, act=1)
+	base = g.save()
+	check_disc_laps(base)
+	check_center_ledge(base)
+	(args.output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
+	print(f'{len(report)} Scrap Madness companion checks passed.')
+	g.close()
+	raise SystemExit
+
 
 for act in (1,2):
  boot_level(g,zone=8,act=act-1);assert g.read('Current_ZoneAndAct',2)==0x800+act-1;base=g.save()
@@ -98,6 +187,7 @@ for act in (1,2):
   g.write('Camera_X_pos',x-160,2);g.write('Camera_Y_pos',y-160,2);reset_cpu(g);prime_history();g.run(2)
   assert all(g.get(a,'stick_to_convex') and g.get(a,'obInertia',2)==0x400 for a in ('v_player','v_player2')),'disc did not affect both'
   report.append({'case':'disc-two-actor-attachment','passed':True})
+
  if act==1:
   for subtype in (0,2,0x10,0x12,0x20,0x22,0x30,0x32,0x40,0x42):
    g.restore(base);x,y=270,(1200 if subtype>>4==1 else 1152);spring=spawn(g,'Obj41',x,y,subtype);g.run(2)

@@ -48,12 +48,22 @@ object without waiting for the global jump clock. Terrain-only climbs retain
 normal timing. A deliberate lead jump preserves an established approach;
 falling cancels it. Airborne Sonic cannot create an approach from nothing.
 
-Unreachable ordinary platforms keep ordinary jump attempts. The approach word
-is steering state, not a timeout that promotes a target to flight. Grounded
-zero-momentum locks and real slope slips use CPU spindash recovery. A moving
-spring landing on flat ground retains normal steering. When sharing a carrier
+Below a flat, dry terrain ledge higher than a full jump, Tails checks for a
+reachable side step on the normal jump tick. He samples up to four terrain
+columns, steers to the intermediate landing, then turns back toward Sonic with
+an early brake for the upper ledge. After landing he stays near Sonic until
+Sonic moves. With no reachable step he waits for a route.
+Object platforms use their normal jump attempts. Collapse flight uses the
+separate trigger below. Grounded zero-momentum locks and real slope slips use
+CPU spindash recovery. A moving spring landing on flat ground uses normal
+steering. When sharing a carrier
 with nearly stationary Sonic, the target is clamped inside it and stale
 horizontal input is discarded, preventing Tails from chasing a toe off its edge.
+When both are attached to the same running disc, Tails rides at Sonic's pace
+and suppresses ordinary positional steering and auto-jumps. The existing
+`stick_to_convex` byte carries the disc slot plus one while attached. A jump
+or disc release clears it and restores normal following. Controller 2 can
+still jump off on demand.
 
 Local collapse flight requires an actually fragmenting retained ledge/floor,
 Sonic running or deliberately jumping away, horizontal separation within

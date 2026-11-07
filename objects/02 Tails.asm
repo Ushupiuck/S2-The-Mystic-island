@@ -616,6 +616,15 @@ TailS3_loc_13D78:
 		bne.w	TailS3_loc_13EBE
 		tst.b	obControl(a0)
 		bmi.w	TailS3_loc_13EBE
+		move.b	stick_to_convex(a0),d0
+		beq.s	.slope_lock
+		cmp.b	stick_to_convex(a1),d0
+		bne.s	.slope_lock
+		move.w	obInertia(a1),obInertia(a0)
+		clr.w	(Tails_CPU_reach_state).w
+		clr.b	(Tails_CPU_auto_jump_flag).w
+		rts				; a shared disc supplies the route, keep Sonic's pace
+.slope_lock:
 		tst.w	move_lock(a0)
 		beq.s	TailS3_loc_13DA6
 		btst	#status.player.in_air,obStatus(a0)
@@ -656,10 +665,21 @@ TailS3_loc_13DA6:
 		bra.s	TailS3_loc_13DD0
 .reach_target:
 		moveq	#Tails_CPU_ReachStopWidth,d5
+		cmpi.w	#Tails_CPU_StepApproach,(Tails_CPU_reach_state).w
+		bne.s	.mounted_target
+		move.w	(Tails_CPU_target_X).w,d2
+		bra.s	TailS3_loc_13DD0
 .mounted_target:
 		move.w	obX(a1),d2		; steer at the live target, including during a ledge jump
 		move.w	obY(a1),d3		; follows static, moving and depressed platforms alike
-		bsr.w Tails_CPU_MountedTargetX
+		bsr.w	Tails_CPU_MountedTargetX
+		cmpi.w	#Tails_CPU_StepReturn,(Tails_CPU_reach_state).w
+		bne.s	TailS3_loc_13DD0
+		btst	#status.player.in_air,obStatus(a0)
+		beq.s	TailS3_loc_13DD0
+		move.w	obVelX(a0),d4
+		asr.w	#5,d4			; look ahead eight frames at the current 8.8 speed
+		sub.w	d4,d2			; brake early on the jump back to a narrow ledge
 
 TailS3_loc_13DD0:
 		lea	(Sonic_Stat_Record_Buf).w,a2
@@ -732,8 +752,12 @@ TailS3_loc_13E64:
 		move.b	#0,(Tails_CPU_auto_jump_flag).w
 
 TailS3_loc_13E7C:
-		tst.w	(Tails_CPU_reach_state).w
+		move.w	(Tails_CPU_reach_state).w,d0
 		beq.s	.timed_jump
+		cmpi.w	#Tails_CPU_StepApproach,d0
+		beq.s	Tails_CPU_StepJumpApproach
+		cmpi.w	#Tails_CPU_StepReturn,d0
+		beq.s	Tails_CPU_StepJump
 		btst	#status.player.on_object,obStatus(a1)
 		beq.s	.timed_jump		; terrain climbs still allow the slope/spindash recovery
 		cmpi.w	#$40,d2
@@ -759,6 +783,8 @@ TailS3_loc_13E9C:
 		move.b	(Timer_frames+1).w,d0
 		andi.b	#$3F,d0
 		bne.s	TailS3_loc_13EB8
+		bsr.w	Tails_CPU_TryStep
+		bne.s	TailS3_loc_13EB8
 Tails_CPU_Jump:
 		cmpi.b	#8,obAnim(a0)
 		beq.s	TailS3_loc_13EB8
@@ -768,6 +794,22 @@ Tails_CPU_Jump:
 TailS3_loc_13EB8:
 		move.w	d1,(v_jpadholdlogical2).w
 		rts
+
+Tails_CPU_StepJumpApproach:
+		cmpi.w	#$40,d2
+		bhs.s	TailS3_loc_13EB8	; build speed before jumping at a farther step
+Tails_CPU_StepJump:
+		btst	#status.player.in_air,obStatus(a0)
+		bne.s	TailS3_loc_13EB8
+		tst.w	obVelX(a0)
+		bmi.s	.moving_left
+		btst	#bitL,d1
+		bne.s	TailS3_loc_13EB8	; reverse ground momentum before the next jump
+		bra.s	Tails_CPU_Jump
+.moving_left:
+		btst	#bitR,d1
+		beq.s	Tails_CPU_Jump
+		bra.s	TailS3_loc_13EB8
 ; ---------------------------------------------------------------------------
 
 TailS3_loc_13EBE:
@@ -830,7 +872,11 @@ Tails_CPU_CheckReach:
 		tst.w	d0
 		beq.s	.check_lead
 		move.w	#Tails_CPU_CrumbleFlight,(Tails_CPU_reach_state).w
-		bra.s	.start_flight
+		move.w	#4,(Tails_CPU_routine).w
+		move.w	obY(a0),d0		; take off here; do not teleport to Sonic
+		bsr.w	TailS3_loc_13B78
+		moveq	#1,d0
+		rts
 .check_lead:
 		btst	#status.player.in_air,obStatus(a1)
 		beq.s	.check_companion
@@ -844,20 +890,122 @@ Tails_CPU_CheckReach:
 		move.w	obY(a0),d0
 		sub.w	obY(a1),d0
 		cmpi.w	#Tails_CPU_ReachHeight,d0
-		blt.s	.reset
+		blt.s	.settle_step
+		cmpi.w	#Tails_CPU_StepApproach,(Tails_CPU_reach_state).w
+		beq.s	.step_landing
+		cmpi.w	#Tails_CPU_StepReturn,(Tails_CPU_reach_state).w
+		bne.s	.approach
+		tst.b	(Tails_CPU_auto_jump_flag).w
+		beq.s	.return			; still preparing the jump back to Sonic
+.approach:
 		move.w	#1,(Tails_CPU_reach_state).w
 		bra.s	.return
-.start_flight:
-		move.w	#4,(Tails_CPU_routine).w
-		move.w	obY(a0),d0		; take off here; do not teleport to Sonic
-		bsr.w	TailS3_loc_13B78
-		moveq	#1,d0
-		rts
+.step_landing:
+		cmpi.w	#Tails_CPU_DirectJumpHeight,d0
+		bgt.s	.step_missed
+		move.w	#Tails_CPU_StepReturn,(Tails_CPU_reach_state).w
+		bra.s	.return
+.step_missed:
+		tst.b	(Tails_CPU_auto_jump_flag).w
+		beq.s	.return			; still approaching the step on the ground
+		bra.s	.approach		; if we landed low, reconsider on the next jump tick
+.settle_step:
+		cmpi.w	#-8,d0
+		blt.s	.reset
+		tst.w	obVelX(a1)
+		bne.s	.reset
+		cmpi.w	#Tails_CPU_StepReturn,(Tails_CPU_reach_state).w
+		beq.s	.arrived
+		cmpi.w	#Tails_CPU_StepArrived,(Tails_CPU_reach_state).w
+		bne.s	.reset
+.arrived:
+		move.w	#Tails_CPU_StepArrived,(Tails_CPU_reach_state).w
+		bra.s	.return			; keep the live X instead of trailing off the ledge
 .reset:
 		clr.w	(Tails_CPU_reach_state).w
 .return:
 		moveq	#0,d0
 		rts
+
+; When directly below a high terrain ledge, search nearby for a flat step
+; that puts Sonic within the next jump. Only called on the ordinary jump tick.
+; Z is set for the ordinary jump and clear for a step or a wait.
+Tails_CPU_TryStep:
+		cmpi.w	#1,(Tails_CPU_reach_state).w
+		bne.s	.normal
+		cmpi.w	#$20,d2
+		bhs.s	.normal
+		move.b	obStatus(a0),d0
+		or.b	obStatus(a1),d0
+		andi.b	#(1<<status.player.in_air)|(1<<status.player.on_object)|(1<<status.player.underwater),d0
+		bne.s	.normal
+		tst.b	obAngle(a0)
+		bne.s	.normal
+		tst.b	obAngle(a1)
+		bne.s	.normal
+		move.w	obY(a0),d0
+		sub.w	obY(a1),d0
+		cmpi.w	#Tails_CPU_DirectJumpHeight,d0
+		bgt.s	.search
+.normal:
+		moveq	#0,d0
+		rts
+.search:
+		cmpi.w	#Tails_CPU_DirectJumpHeight+Tails_CPU_StepProbeRise+8,d0
+		bgt.w	.wait
+		movem.l	d1/d4-d7/a3-a4,-(sp)
+		move.l	(Collision_addr).w,-(sp)
+		moveq	#0,d4
+		move.b	obHeight(a0),d4
+		add.w	obY(a0),d4
+		subi.w	#Tails_CPU_StepProbeRise,d4
+		moveq	#0,d5
+		move.b	obTopSolidBit(a0),d5
+		move.l	(v_colladdr1).w,(Collision_addr).w
+		cmpi.b	#$C,d5
+		beq.s	.path_ready
+		move.l	(v_colladdr2).w,(Collision_addr).w
+.path_ready:
+		moveq	#0,d6
+		moveq	#0,d7
+		movea.w	#16,a3
+		lea	(Primary_Angle).w,a4
+.probe:
+		move.w	.offsets(pc,d7.w),d3
+		add.w	obX(a0),d3
+		bmi.s	.next
+		andi.w	#$FFF0,d3
+		addq.w	#8,d3			; center of the sampled terrain block
+		move.w	d4,d2
+		st	(a4)
+		jsr	(FindFloor).l
+		move.b	(a4),d0
+		addq.b	#1,d0
+		cmpi.b	#1,d0			; $FF (default flat) or $00
+		bhi.s	.next
+		addq.w	#8,d1
+		cmpi.w	#23,d1			; floor distance -8..15, clear of the empty result
+		bhi.s	.next
+		add.w	obY(a0),d1
+		sub.w	obY(a1),d1
+		cmpi.w	#Tails_CPU_DirectJumpHeight+Tails_CPU_StepProbeRise+8,d1
+		bgt.s	.next			; the second jump must reach the lead's height
+		move.w	d3,(Tails_CPU_target_X).w
+		move.w	#Tails_CPU_StepApproach,(Tails_CPU_reach_state).w
+		bra.s	.restore
+.next:
+		addq.w	#2,d7
+		cmpi.w	#.offsets_end-.offsets,d7
+		blo.s	.probe
+.restore:
+		move.l	(sp)+,(Collision_addr).w
+		movem.l	(sp)+,d1/d4-d7/a3-a4
+.wait:
+		moveq	#1,d0
+		rts
+.offsets:
+		dc.w	-64,64,-96,96
+.offsets_end:
 
 ; On the same resting surface, keep the ordinary trailing gap and clamp it
 ; inside that parent's width. A lead player may balance beyond the real edge.

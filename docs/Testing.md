@@ -437,6 +437,10 @@ or `--player 2`, `--pal` for PAL, and `--system-directory` for Mode 1. The sweep
 are streaming fixtures, not complete controller-only playthroughs.
 
 `check_companion_sbz.py` has `--probe` for older-ROM failures, but no PAL flag.
+`check_scrap_madness.py --companion-only` runs both players around the Act 2
+running disc for 750 updates, then jumps off with controller 2. Its ledge fixture
+starts Tails on the floor under the actual center ledge and requires both
+landings with CPU following throughout.
 `check_swing_motion.py` owns the current Obj17 word settings and twelve shared platform interaction
 profiles. It checks full-pool/missing-helper safety, reserved lengths/interactions,
 word preservation, both players' solid/damaging contacts under stars and full-word
