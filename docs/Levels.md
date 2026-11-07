@@ -595,8 +595,11 @@ Pipe ends, red/dark-red outlines and global palette colors remain intact.
 
 The static sprite atlas shares whole identical/overlapping rectangles, retaining
 piece sizes, ordering, geometry, flips, adapted pixels, palette and priority.
-It never subdivides pieces or changes the renderer. Its 497 used tiles start at
-`$2B9`; six padding tiles bring the allocation through `$4AF`.
+It never subdivides pieces or changes the renderer. Caterkiller's atlas
+rectangles use the same palette-line-2 indices as `Enemy Caterkiller.kospm`.
+Keep the atlas copy in sync when editing the shared Caterkiller sheet.
+The atlas's 497 used tiles start at `$2B9`. Six padding tiles extend the
+allocation through `$4AF`.
 The junction's rotating edge streams 4-12 tiles into `$4B0-$4BB`; center/outer
 ring stay resident. Its placements have disjoint load windows. Failed queue
 reservation hides the rotating sprite and retries without displaying partial art.
