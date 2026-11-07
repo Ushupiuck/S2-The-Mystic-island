@@ -1,10 +1,9 @@
 # KeH sound tools
 
-`KEHmusic.exe` assembles songs, automatically chooses compressed or raw storage,
-sorts by stored size, and packs music and DAC samples into
-`$8000`-byte banks. `KEHsfx.exe` generates the sound-effect tables. Their source
-lives here. `Mystic-Island-(Experimental)` uses headerless Kosinski+ music and a
-Z80 Kosinski+ decoder; this replaces the previous Saxman music format.
+In the KeH streaming experiment, `KEHmusic.exe` assembles songs and chooses
+headerless Kosinski+ or raw storage. It writes a flat music table with 32-bit
+ROM pointers and decoded sizes. DAC samples still use `$8000`-byte banks.
+`KEHsfx.exe` generates the banked sound-effect tables.
 
 The normal `build.bat`/`build.lua` build runs both tools before assembling the
 ROM. The packer uses the AS assembler and `p2bin` in the platform's `build_tools`
@@ -38,11 +37,11 @@ fixtures and macro/packer checks after compilation.
 
 ## Generated files
 
-The packers write aggregate bank lists, playlists/sample tables, ID constants
-and name tables to `sound/*.gen.asm`. Per-bank includes stay in
-`sound/generated/`. Run the tools from the project root; all ASM include paths
-are relative to that root. Shared sound macros live in
-`_definitions/_smps2asm_inc.asm`, alongside the other shared definitions.
+The packers write playlists, sample tables, ID constants and name tables to
+`sound/*.gen.asm`. `musicinfo.gen.asm` indexes `musicdata.gen.asm`.
+DAC bank includes and generated compressed scores stay in `sound/generated/`.
+Run the tools from the project root so ASM paths resolve. Shared sound macros
+live in `_definitions/_smps2asm_inc.asm`.
 
 Rebuild the distributed `KEHmusic.exe` and `KEHsfx.exe` after changing their
 source; the build script invokes those binaries. Do not hand-edit generated
@@ -66,8 +65,8 @@ bits. Legacy syntax remains supported, alongside names such as `smpsFMvoice`,
 `smpsMaxRelRate`, `smpsPSGAlterVolS2`, `smpsDcb`, and enharmonic note aliases.
 
 The destination is **KeH**, not the original song's driver. Its music headers,
-jumps, calls, and loops contain relative little-endian pointers, so the same
-song works in ROM or decompressed Z80 RAM. Its SFX channel headers omit the
+jumps, calls, and loops contain relative little-endian pointers. Those pointers
+remain valid when a score page moves to another physical Z80 slot. Its SFX channel headers omit the
 stock S2 `$80` byte and use absolute bank-window pointers. Do not replace the
 macro file with stock S2 macros: those contracts must be preserved.
 
@@ -97,12 +96,9 @@ state. Local prototype voice banks retain instrument zero; unused instruments
 are removed and selectors compacted, with their original S3 indices noted in
 the source. Selected 25-byte YM patches must remain identical.
 
-Measure both assembled and Kosinski+ sizes. A smaller sequence can have a slightly
-larger compressed encoding; crossing the `$A40` RAM limit can instead save much
-more by enabling compression. Each bank starts on an `$8000` boundary; its
-audio must stay within that window. Ordinary ROM data can use the remaining
-tail before the next aligned bank, so saved song bytes can reduce ROM size
-without reducing the number of music banks.
+Measure both assembled and Kosinski+ sizes. A smaller sequence can have a
+larger compressed encoding. The packer compares the stored lengths directly,
+and music can cross a `$8000` ROM boundary.
 
 ### SFX priority and bumpers
 
@@ -117,7 +113,7 @@ channel must preserve its priority. Equal-priority effects may still retrigger.
 ### Binary inputs
 
 A `.bin` is **raw by default**. It must already use KeH's relative music format.
-The packer may compress it if it is small enough and compression saves space.
+The packer compresses it if the encoding saves space.
 For an already compressed, headerless Kosinski+ file, specify:
 
 ```ini
@@ -127,16 +123,14 @@ File=Imported.bin
 BinaryFormat=KosinskiPlus
 ```
 
-For ordinary ASM and raw binary inputs, compression is selected only when the
-**decoded** song fits `$A40` bytes and the compressed stream is strictly smaller.
-Oversized, incompressible and equal-size songs stay raw in ROM automatically.
-Raw songs must fit one `$8000` bank. No per-song compression switch is needed.
+Ordinary ASM and raw inputs can decode to at most `$2000` bytes, the size of
+one MD staging slot. An encoding must be strictly smaller than the decoded
+score for the packer to choose it automatically.
 
-Explicit `BinaryFormat=KosinskiPlus` inputs are validated before packing: they
-must decode to between 1 and `$A40` bytes. Invalid backreferences, truncated
-streams, trailing data and output overflow fail the build. Legacy Saxman inputs
-must be decoded before importing. The playlist's existing compression flag comes
-from the chosen encoding, not the filename extension. Generated compressed
+Explicit `BinaryFormat=KosinskiPlus` inputs must decode to between 1 and
+`$2000` bytes. Invalid backreferences, truncated streams, trailing data and
+output overflow fail the build. Decode legacy Saxman inputs before importing.
+The playlist's compression flag follows the encoding. Generated Kosinski+
 output is round-trip checked against the raw song.
 
 Generated compressed songs live in `sound/generated/<music ID>_cmp.bin`;
@@ -144,66 +138,31 @@ Generated compressed songs live in `sound/generated/<music ID>_cmp.bin`;
 computed metadata. The superseded compressed copies beside the sources have
 been removed.
 
-### Experimental Z80 decoder
+### Experimental score streaming
 
-`KEHmusic` wraps raw song bytes in a temporary AS Z80 segment, then invokes the
-bundled `p2bin` Kosinski+ encoder. Streams have MSB-first descriptors and a long
-zero-count end marker, without a size header or module framing. Both ordinary
-song loading and the post-1-up restoration path call `zKosinskiPlusDec`.
+The main 68000 prepares a requested score in one of three `$2000` MD RAM
+slots. The slots protect the live score, a saved 1-up return, and the next
+score being prepared. Compressed scores use the existing CD Kosinski+ job
+and output copy. Raw scores copy from ROM. The live slot stays immutable
+while KeH reads it.
 
-The Z80 routine occupies 105 bytes, replacing the 136-byte Saxman routine. It
-ends at `$122A`, leaving 44 bytes before the unchanged `zMusicData` at `$1256`.
-The `$A40` music allocation and following state/backup areas have not moved.
-`HL` supplies the banked source; output starts at `zMusicData`. On return `HL`
-and `DE` point past the input and output. `IX`/`IY` and `AF'` are preserved;
-`AF` and `BC` are scratch. The DAC player keeps its running DPCM accumulator
-in `AF'`, including across song loads. Long-token parsing saves the descriptor
-on the stack so an old drum can finish without a corrupted accumulator. A signed
-match displacement patches one immediate word in the decoder, so no new RAM
-variable is needed. It runs inside the sound
-interrupt and is not reentrant. Host validation enforces the output bound; the
-compact runtime trusts those validated streams.
+KeH keeps the FM, PSG, DAC and SFX updates on the Z80. Larger scores use
+logical pointers and 64-byte pages. The Z80 requests a missing page by
+writing a byte to MD RAM through its banked window. The MD services requests
+on both VBlank exits, with short bus grants for copies. PAL can also refill
+ordinary pages during the existing VBlank delay. A quiet tick can preload a
+page for an approaching jump or call in a held track. Scores that fit the page
+data area load in full and use direct reads. A short score invalidates just
+the slots it overwrites, so the preceding paged score can keep other pages.
+Live modulation settings and cross-page YM patches use local Z80 state.
 
 ## Reusing bank padding
 
-Edit `_definitions/Sound Bank Assets.asm`. `SoundBankAssets kind,bank` is expanded after
-each bank's sound data and before `finishBank` checks its size. `kind` is
-`Music`, `DAC`, or `SFX`; `bank` is one-based within that category. The macro uses
-`GLOBALSYMBOLS` so ordinary asset labels remain accessible from the game.
-
-Music bank 3 holds `Nem_SegaLogo` and `Nem_HUD`: 1,294 bytes of existing art.
-Remove the original include when moving an asset here; keep word/DMA alignment
-appropriate to that asset.
-
-The hook file is handwritten and is never regenerated. Music packing remains
-automatic. If a later song import consumes the chosen bank's free tail,
-`finishBank` reports an overflow; move those assets to another bank's hook or
-back to ordinary ROM space. Assets are not silently overwritten or discarded.
-
-Each generated bank also has an independent include:
-
-```asm
-	include "sound/generated/music-bank-1.gen.asm"
-	include "sound/generated/music-bank-2.gen.asm"
-	include "sound/generated/music-bank-3.gen.asm"
-```
-
-`sound/musicbanks.gen.asm` and `sound/dacbanks.gen.asm` list the individual files
-for a consecutive layout. The experimental ROM uses the individual music
-includes in `md-main.asm`: title and early-zone art precede music bank 3, then
-HPZ/HTZ/Mecha art fills its tail before the nearly full banks 1 and 2. Morphing
-platform and vertical Ballhog art also use the gap after SFX and the Sega
-sample. DAC banks still use their aggregate include; ordinary art follows the
-last bank directly.
-
-`finishBank` checks the audio and any `SoundBankAssets` hook before the following
-ordinary data. That later data may extend beyond the window; it is not read by
-the Z80. Each next bank aligns itself, while playlist and DAC entries use actual
-ROM addresses. The runtime requires neither consecutive banks nor numerical
-bank order. Keep per-bank includes synchronized with the generated aggregate
-list if an import changes the bank count, and rebuild to measure the new
-alignment gaps. The packer still selects storage and assigns songs to banks
-automatically. Do not hand-edit its generated files.
+`_definitions/Sound Bank Assets.asm` supplies the optional `SoundBankAssets
+kind,bank` hook after audio and before `finishBank`. Use `DAC` or `SFX` and
+a one-based bank number. `finishBank` checks that the audio and hook fit
+the aligned bank. Ordinary data may follow a bank directly. The music table
+records actual ROM addresses and needs no bank padding.
 
 ## Cache and failures
 
@@ -273,12 +232,12 @@ ignored output directory.
 `check_sound_playback.py --priority` checks the compiled bumper callers, normal
 queue arbitration throughout Continue, its staggered final channel stops, an
 unrelated PSG effect finishing, equal-priority retriggering, and priority release.
-Its `--jingles` cases include RAM-loaded GHZ, ROM-streamed Launch Base 2 and the
-large RAM-loaded S3 Menu track, checking bank/voice and decompressed-data restore.
+Its `--jingles` cases exercise Extra Life and Double Life with GHZ, Launch
+Base 2 and S3 Menu, checking the restored score, voice and data.
 
 `check_sound_playback.py --switches` selects every song through the actual
-level-select input path in three uninterrupted playlist passes, at 5/12/24-frame
-intervals. It traces real Z80 DAC writes and checks each DPCM delta against the
+level-select input path in four uninterrupted playlist passes, at
+2/5/12/24-frame intervals. It traces real Z80 DAC writes and checks each DPCM delta against the
 previous accumulator, with explicit `$80` resets for new samples. It exercises
 compressed/raw transitions and interrupted 1-ups, then checks that music settles.
 This trace also requires the core's exported `Z80` registers and `z80_writemem`
@@ -286,27 +245,15 @@ bus callback. Reports include discontinuities and a local audio capture.
 
 The tool fixtures check original instrument dumps, relative music pointers,
 compact SFX headers, modern command conversions, dependency invalidation,
-separate bank placement, unsupported imports and invalid/oversized input.
-Automatic storage fixtures cover an exact `$A40` fit, `$A41` overflow,
-incompressible data and a compressed/raw size tie. Every compressed project
+flat music placement, remaining SFX and DAC bank limits, unsupported imports
+and invalid or oversized input. Automatic storage fixtures cover an exact
+`$2000` fit, `$2001` overflow, incompressible data and a compressed/raw size tie. Every compressed project
 song is compared with fresh assembly through an independent Python decoder.
 
-For direct execution of the assembled Z80 routine:
-
-```sh
-python3 build_tools/check_z80_kosinski_plus.py \
-  --core /path/to/genesis_plus_gx_libretro.so \
-  --output test-results/z80-kosinski-plus/native
-```
-
-This requires a core exporting its native Z80 registers, memory maps and bus
-callbacks. It relocates the unchanged decoder into guarded flat fixture memory,
-then checks all descriptor alignments, short/long/extended counts, overlap,
-8-KiB distances, current songs and seeded encoder fixtures. Output/input guards,
-source/destination cursors, stack balance and `IX`/`IY`/`AF'` preservation are
-checked; only the copy displacement may modify code. This proves instruction-level
-format behavior, not Mega Drive bus or interrupt timing. The full-game playback
-checks cover the real banked load and restoration paths.
+The historical `check_z80_kosinski_plus.py` fixture can still execute an older
+Z80 decoder given its source, ROM, listing and INI. Run it with
+`--driver-source` pointing to that checkout's `s2.sounddriver.asm`.
+For the streaming path, use the CD codec checks and live playback checks.
 
 These are playback and encoding checks, not a claim that every imported song
 now duplicates its source game's sound. PSG envelope approximations inherited

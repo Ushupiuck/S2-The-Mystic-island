@@ -14,6 +14,7 @@ import numpy as np
 project = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(project / 'build_tools'))
 from genesis_test_core import Genesis
+from check_music_sequences import current_music
 
 p = argparse.ArgumentParser(description='Play music, effects and 1-up restoration on a Genesis Plus GX libretro core.')
 p.add_argument('--core', type=Path, required=True)
@@ -84,6 +85,7 @@ menu = g.save()
 ini = configparser.ConfigParser(interpolation=None)
 ini.read(source / 'sound/music/music.ini')
 rom = args.rom.read_bytes()
+streamed = 'Music_Index' in g.s
 report = {'region': 'PAL' if args.pal else 'NTSC', 'sample_rate': av.timing.sample_rate, 'emulator': 'Genesis Plus GX', 'rom_sha256': hashlib.sha256(rom).hexdigest(), 'songs': []}
 
 for index, name in enumerate(ini.sections(), 1):
@@ -108,8 +110,12 @@ for index, name in enumerate(ini.sections(), 1):
 	assert np.count_nonzero(values) > 1000, ('Silent music', name)
 	assert before != after, ('Game stalled', name)
 	assert g.read('v_levselitem', 2) == g.s['LevelSelect_SoundItem'], ('Sound test exited', name)
-	bank, low, high, flags = rom[g.s['zMasterPlaylist'] + (index - 1) * 4:g.s['zMasterPlaylist'] + index * 4]
-	entry = {'id': index, 'name': name, 'title': ini[name]['Title'], 'bank': bank, 'compressed_to_z80_ram': not bool(flags & 0x10), 'frames': args.frames, 'pcm_sha256': hashlib.sha256(pcm).hexdigest(), 'sample_frames': len(pcm) // 4, 'rms': float(np.sqrt(np.mean(values * values))), 'peak': int(np.max(np.abs(values))), 'nonzero_samples': int(np.count_nonzero(values))}
+	if streamed:
+		bank = None
+		flags = rom[g.s['Music_Index'] + (index - 1) * 8 + 6]
+	else:
+		bank, low, high, flags = rom[g.s['zMasterPlaylist'] + (index - 1) * 4:g.s['zMasterPlaylist'] + index * 4]
+	entry = {'id': index, 'name': name, 'title': ini[name]['Title'], 'bank': bank, 'compressed_in_rom': not bool(flags & 0x10), 'frames': args.frames, 'pcm_sha256': hashlib.sha256(pcm).hexdigest(), 'sample_frames': len(pcm) // 4, 'rms': float(np.sqrt(np.mean(values * values))), 'peak': int(np.max(np.abs(values))), 'nonzero_samples': int(np.count_nonzero(values))}
 	report['songs'].append(entry)
 	if name in ['GHZ', 'SBZ', 'LBZ2_S3', 'EHZ', 'ExtraLife']:
 		with wave.open(str(output / (name + '.wav')), 'wb') as wav:
@@ -117,7 +123,7 @@ for index, name in enumerate(ini.sections(), 1):
 			wav.setsampwidth(2)
 			wav.setframerate(round(av.timing.sample_rate))
 			wav.writeframes(pcm)
-	print(f'{report["region"]}: {index:02X} {name} bank {bank} {"RAM" if entry["compressed_to_z80_ram"] else "ROM"} RMS={entry["rms"]:.1f}', flush=True)
+	print(f'{report["region"]}: {index:02X} {name} {"streamed" if streamed else f"bank {bank}"} {"Kos+" if entry["compressed_in_rom"] else "raw"} RMS={entry["rms"]:.1f}', flush=True)
 	(output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
 
 zram = (C.c_uint8 * 8192).in_dll(g.core, 'zram')
@@ -158,7 +164,7 @@ if args.switches:
 			state['restarts'] += 1
 		if address == g.s['zDACEnabled']:
 			state['dac_enabled'] = bool(value & 128)
-		if address == g.s['zMusicData']:
+		if address == g.s.get('zAbsVar.MusicSlot' if streamed else 'zMusicData') and (not streamed or value):
 			loads.append({'frame': g.frame, 'song': state['requested']})
 		if address == 0x4001 and g.s['zWriteDPCMtoDAC'] <= pc < g.s['zDPCMWaitLoop']:
 			expected = (state['accumulator'] + zram[regs.hl.d & 0x1FFF]) & 255
@@ -172,10 +178,19 @@ if args.switches:
 	writer_slot.value = C.cast(writer, C.c_void_p).value
 	chunks.clear(); capture = True; selections = 0
 	try:
-		for delay in (0, 7, 19):
+		for interval in (2, 5, 12, 24):
 			for index, name in enumerate(ini.sections(), 1):
 				state['requested'] = name
-				play(index); step(delay); selections += 1
+				if interval == 2:
+					g.write('v_levselsound', index, 2)
+					g.buttons = {0}
+					step()
+					g.buttons = set()
+					step()
+				else:
+					play(index)
+					step(interval - 5)
+				selections += 1
 		state['requested'] = 'GHZ settle'
 		play(g.s['MusID_GHZ']); step(120)
 	finally:
@@ -191,6 +206,7 @@ if args.switches:
 	assert len(loads) > 100, 'Rapid switching did not exercise music decoding'
 	assert not corruptions, ('DPCM accumulator changed outside sample playback', corruptions[:3])
 	assert zr('zSongFM1.PlaybackControl') & 128, 'Final song did not settle'
+	assert current_music(g, rom, zram) == g.s['MusID_GHZ'], 'Wrong song after rapid selections'
 	print('Rapid music switching:', selections, 'selections;', state['samples'], 'DPCM writes; accumulator continuity passed.', flush=True)
 
 
@@ -268,17 +284,23 @@ if args.effects:
 
 if args.jingles:
 	report['restoration'] = []
-	# Include the largest newly RAM-loaded prototype song near the $A40 limit.
-	for name in ['GHZ', 'LBZ2_S3', 'Test6']:
+	# Include both small and large scores in the 1-up restoration cases.
+	for name, jingle in (('GHZ', 'ExtraLife'), ('LBZ2_S3', 'ExtraLife'),
+			('Test6', 'ExtraLife'), ('Test6', 'DoubleLife')):
 		g.restore(menu)
 		play(g.s['MusID_' + name])
 		step(120)
-		bank = zr('zAbsVar.MusicBankNumber')
+		music_context = 'zAbsVar.MusicSlot' if streamed else 'zAbsVar.MusicBankNumber'
+		bank = zr(music_context)
 		voice = zr('zSongFM1.VoicePtrLow', 2)
 		is_compressed = ini[name].getboolean('IsCompressed', fallback=bool(ini[name].get('OutputFile')))
 		raw_size = ini[name].getint('UncompressedSize', fallback=0)
-		before = bytes(zram[g.s['zMusicData']:g.s['zMusicData'] + raw_size]) if is_compressed else None
-		play(g.s['MusID_ExtraLife'])
+		if streamed:
+			stage = g.s['Music_StageData'] + (bank - 1) * g.s['Music_StageCapacity']
+			before = bytes(g.ram[stage & 0xFFFF:(stage & 0xFFFF) + raw_size])
+		else:
+			before = bytes(zram[g.s['zMusicData']:g.s['zMusicData'] + raw_size]) if is_compressed else None
+		play(g.s['MusID_' + jingle])
 		assert zr('zAbsVar.1upPlaying'), ('1-up did not start', name)
 		for elapsed in range(900):
 			step()
@@ -287,10 +309,12 @@ if args.jingles:
 		else:
 			raise AssertionError(('1-up did not restore music', name))
 		step(200)
-		assert zr('zAbsVar.MusicBankNumber') == bank, ('Wrong restored bank', name)
+		assert zr(music_context) == bank, ('Wrong restored music context', name)
 		assert zr('zSongFM1.VoicePtrLow', 2) == voice, ('Wrong restored instruments', name)
 		assert zr('zSongFM1.PlaybackControl') & 0x80, ('Restored FM track is stopped', name)
-		if is_compressed:
+		if streamed:
+			assert before == bytes(g.ram[stage & 0xFFFF:(stage & 0xFFFF) + raw_size]), ('Saved song was overwritten', name)
+		elif is_compressed:
 			assert before == bytes(zram[g.s['zMusicData']:g.s['zMusicData'] + raw_size]), ('Compressed music buffer was not restored', name)
 		chunks.clear()
 		capture = True
@@ -298,8 +322,8 @@ if args.jingles:
 		capture = False
 		values = np.frombuffer(b''.join(chunks), dtype='<i2')
 		assert np.count_nonzero(values) > 1000, ('Restored music is silent', name)
-		report['restoration'].append({'name': name, 'compressed': is_compressed, 'restored_after_frames': elapsed + 1, 'bank': bank})
-		print('1-up restoration:', name, 'RAM' if is_compressed else 'ROM', flush=True)
+		report['restoration'].append({'name': name, 'jingle': jingle, 'compressed': is_compressed, 'restored_after_frames': elapsed + 1, 'bank': bank})
+		print('1-up restoration:', jingle, 'to', name, flush=True)
 	(output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
 
 g.close()

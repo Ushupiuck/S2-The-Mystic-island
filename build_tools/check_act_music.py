@@ -12,6 +12,7 @@ import json
 from genesis_test_core import Genesis
 from check_object_course import boot_level
 from check_caterkiller import CpuPrefix
+from check_music_sequences import current_music
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -128,27 +129,17 @@ def main():
     zram = (C.c_uint8 * 8192).in_dll(g.core, 'zram')
 
     def playing_song():
-        bank = g.s['zBGMLoad_BankLoadInstruction'] + 1
-        address = g.s['zBGMLoad_AddressLoadInstruction'] + 1
-        return bytes((zram[bank], zram[address], zram[address+1]))
+        return current_music(g, rom, zram)
 
-    def song_entry(music_id):
-        offset = g.s['zMasterPlaylist'] + (music_id-g.s['MusID__First']) * 4
-        return bytes(rom[offset:offset+3])
-
-    banks = []
     for act_number in (0, 1):
         if act_number:
             g.write('v_gamemode', g.s['SegaScreen'], 2)
             g.run()
             boot_level(g, zone=0, act=act_number)
-        expected_bank = rom[g.s['zMasterPlaylist'] + (ids[act_number] - 1) * 4]
-        actual_bank = zram[g.s['zAbsVar.MusicBankNumber']]
-        assert actual_bank == expected_bank, (act_number, actual_bank, expected_bank)
-        assert zram[g.s['zSongFM1.PlaybackControl']] & 0x80
         g.run(120)
+        assert playing_song() == ids[act_number], (act_number, playing_song(), ids[act_number])
+        assert zram[g.s['zSongFM1.PlaybackControl']] & 0x80
         assert not g.read('v_errortype')
-        banks.append(actual_bank)
     assert ids[0] != ids[1]
     restores = []
     for zone in (g.s['id_EHZ'], g.s['id_SMZ']):
@@ -173,20 +164,20 @@ def main():
                     g.put(obj, field, value, size)
                 g.run(40)
                 assert g.get('v_player', 'obStatusSecondary') & 2
-                assert playing_song() == song_entry(g.s['bgm_Invincible'])
+                assert playing_song() == g.s['bgm_Invincible']
                 for who in ('v_player', 'v_player2'):
                     if g.get(who, 'code'):
                         g.put(who, 'invtime', 1, 2)
                 g.run(30)
                 assert not g.read('v_errortype')
                 assert not g.get('v_player', 'obStatusSecondary') & 2
-                assert playing_song() == song_entry(expected), (zone, act_number, player_mode, expected, playing_song())
+                assert playing_song() == expected, (zone, act_number, player_mode, expected, playing_song())
                 assert zram[g.s['zSongFM1.PlaybackControl']] & 0x80
                 restores.append(dict(zone=zone, act=act_number+1, player=player_mode, music_id=expected))
     g.close()
     report = dict(region='PAL' if args.pal else 'NTSC', lookup_and_callers=count * 4,
                   invincibility_expiry_cases=count * 2, expiry_priority_cases=len(guards) * 2,
-                  priority_cases=4, live_act_music_ids=ids[:2], live_act_music_banks=banks,
+                  priority_cases=4, live_act_music_ids=ids[:2],
                   live_invincibility_restores=restores)
     (args.output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
     print(report, flush=True)

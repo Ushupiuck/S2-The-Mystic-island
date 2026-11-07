@@ -13,8 +13,8 @@ namespace KEHmusic
 	static class Program
 	{
 		const int BankSize = 0x8000;
-		// s2.sounddriver.asm reserves this much for zMusicData, plus a $20-byte gap.
-		const int MusicRamSize = 0xA40;
+		// Keep in sync with Music_StageCapacity in _definitions/s2.constants.asm.
+		const int MusicStageSize = 0x2000;
 		static string toolsDirectory;
 		static string assembler;
 		static string converter;
@@ -166,7 +166,7 @@ namespace KEHmusic
 			RunTool(converter, "-z=0,kosinskiplus,MusicCompressedSize,after .sound-build/music-kos.p .sound-build/music-kos.bin .sound-build/music-kos.h",
 				".sound-build/music-kos.bin", ".sound-build/music-kos.log");
 			byte[] compressed = File.ReadAllBytes(".sound-build/music-kos.bin");
-			if (!data.SequenceEqual(KosinskiPlus.Decode(compressed, MusicRamSize)))
+			if (!data.SequenceEqual(KosinskiPlus.Decode(compressed, MusicStageSize)))
 				throw new InvalidDataException("Music failed its Kosinski+ round-trip check.");
 			return compressed;
 		}
@@ -181,19 +181,19 @@ namespace KEHmusic
 			if (assembly && song.BinaryFormat == MusicBinaryFormat.KosinskiPlus)
 				throw new InvalidDataException("BinaryFormat=KosinskiPlus requires a precompressed .bin file: " + filename);
 			string hash = BuildHash(filename, song.BinaryFormat);
-			if (!clean && song.BuildHash == hash && song.Size > 0 && song.Size <= BankSize &&
+			if (!clean && song.BuildHash == hash && song.Size > 0 && song.Size <= MusicStageSize &&
 				(song.OutputFile == null || File.Exists(Path.Combine("sound/music", song.OutputFile))))
 				return false;
 			Console.WriteLine("Building song \"{0}\"...", song.Title);
 			byte[] data = assembly ? AssembleSong(filename) : File.ReadAllBytes(filename);
 			song.OutputFile = null;
 			song.IsCompressed = song.BinaryFormat == MusicBinaryFormat.KosinskiPlus;
-			if (data.Length == 0 || data.Length > BankSize)
-				throw new InvalidDataException(name + " must occupy between 1 and $8000 bytes.");
-			int rawSize = song.IsCompressed ? KosinskiPlus.Decode(data, MusicRamSize).Length : data.Length;
-			if (song.IsCompressed && (rawSize == 0 || rawSize > MusicRamSize))
-				throw new InvalidDataException(name + " decompresses beyond the Z80 music buffer ($A40 bytes).");
-			if (!song.IsCompressed && data.Length <= MusicRamSize)
+			if (data.Length == 0 || data.Length > MusicStageSize)
+				throw new InvalidDataException(name + " must occupy between 1 and $2000 bytes.");
+			int rawSize = song.IsCompressed ? KosinskiPlus.Decode(data, MusicStageSize).Length : data.Length;
+			if (song.IsCompressed && (rawSize == 0 || rawSize > MusicStageSize))
+				throw new InvalidDataException(name + " decompresses beyond the MD music stage ($2000 bytes).");
+			if (!song.IsCompressed)
 			{
 				byte[] compressed = CompressSong(data);
 				if (compressed.Length < data.Length)
@@ -366,52 +366,23 @@ namespace KEHmusic
 			IniSerializer.Serialize(cache, cacheFile);
 			if (writeini)
 				IniSerializer.Serialize(songs, "sound/music/music.ini");
-			List<int> banksizes = new List<int>() { 0 };
-			List<List<KeyValuePair<string, MusicInfo>>> banks = new List<List<KeyValuePair<string, MusicInfo>>>() { new List<KeyValuePair<string, MusicInfo>>() };
-			foreach (var item in songs.OrderByDescending(a => a.Value.Size))
+			using (var sw = new StreamWriter("sound/musicdata.gen.asm", false, Encoding.ASCII))
 			{
-				bool found = false;
-				for (int i = 0; i < banks.Count; i++)
-					if (banksizes[i] + item.Value.Size <= 0x8000)
-					{
-						banks[i].Add(item);
-						banksizes[i] += item.Value.Size;
-						found = true;
-						break;
-					}
-				if (!found)
-				{
-					banks.Add(new List<KeyValuePair<string, MusicInfo>>() { item });
-					banksizes.Add(item.Value.Size);
-				}
-			}
-			using (var layout = new StreamWriter("sound/musicbanks.gen.asm", false, Encoding.ASCII))
-			{
-				for (int i = 0; i < banks.Count; i++)
-				{
-					string bankFile = string.Format("sound/generated/music-bank-{0}.gen.asm", i + 1);
-					layout.WriteLine("\tinclude \"{0}\"", bankFile);
-					using (var sw = new StreamWriter(bankFile, false, Encoding.ASCII))
-					{
-						sw.WriteLine("SndMus{0}_Start:\tstartBank", i + 1);
-						foreach (var item in banks[i])
-						{
-							string file = item.Value.OutputFile ?? item.Value.File;
-							string directive = Path.GetExtension(file).Equals(".bin", StringComparison.OrdinalIgnoreCase) ? "BINCLUDE" : "include";
-							sw.WriteLine("Mus_{0}:\t{1} \"sound/music/{2}\" ; ${3:X} bytes", item.Key, directive, file, item.Value.Size);
-						}
-						sw.WriteLine("SndMus{0}_DataEnd:", i + 1);
-						sw.WriteLine("\tSoundBankAssets Music,{0}", i + 1);
-						sw.WriteLine("\tfinishBank");
-					}
-				}
-			}
-			using (StreamWriter sw = new StreamWriter("sound/musicinfo.gen.asm", false, Encoding.ASCII))
-			{
-				sw.WriteLine("zMasterPlaylist:");
 				foreach (var item in songs)
 				{
-					sw.Write("\tzmakePlaylistEntry\tMus_{0},", item.Key);
+					string file = item.Value.OutputFile ?? item.Value.File;
+					string directive = item.Value.IsCompressed ? "MusicPacked" :
+						Path.GetExtension(file).Equals(".bin", StringComparison.OrdinalIgnoreCase) ? "binclude" : "include";
+					sw.WriteLine("Mus_{0}:\t{1} \"sound/music/{2}\" ; ${3:X} bytes", item.Key, directive, file, item.Value.Size);
+					sw.WriteLine("\teven");
+				}
+			}
+			using (var sw = new StreamWriter("sound/musicinfo.gen.asm", false, Encoding.ASCII))
+			{
+				sw.WriteLine("Music_Index:");
+				foreach (var item in songs)
+				{
+					sw.Write("\tMusicEntry\tMus_{0},${1:X},", item.Key, item.Value.UncompressedSize);
 					sw.Write(item.Value.IsCompressed ? "0" : "musprop_uncompressed");
 					if (item.Value.PALMode)
 						sw.Write("|musprop_palmode");

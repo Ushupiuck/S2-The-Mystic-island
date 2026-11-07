@@ -974,6 +974,177 @@ MCD_CompressedAssets:
 	if defined(Map16_SMZ2)
 	dc.l Map16_SMZ2,Map16_SMZ2+$ABB	; mappings/16x16/SMZ2.kosp
 	endif
+	if defined(Mus_2PResult)
+	dc.l Mus_2PResult,Mus_2PResult+$35B	; sound/music/../generated/2PResult_cmp.bin
+	endif
+	if defined(Mus_ALZ)
+	dc.l Mus_ALZ,Mus_ALZ+$4AA	; sound/music/../generated/ALZ_cmp.bin
+	endif
+	if defined(Mus_ARZ)
+	dc.l Mus_ARZ,Mus_ARZ+$557	; sound/music/../generated/ARZ_cmp.bin
+	endif
+	if defined(Mus_BonusStage)
+	dc.l Mus_BonusStage,Mus_BonusStage+$231	; sound/music/../generated/BonusStage_cmp.bin
+	endif
+	if defined(Mus_BonusStage2)
+	dc.l Mus_BonusStage2,Mus_BonusStage2+$566	; sound/music/../generated/BonusStage2_cmp.bin
+	endif
+	if defined(Mus_BonusStage3)
+	dc.l Mus_BonusStage3,Mus_BonusStage3+$65D	; sound/music/../generated/BonusStage3_cmp.bin
+	endif
+	if defined(Mus_Boss)
+	dc.l Mus_Boss,Mus_Boss+$1EC	; sound/music/../generated/Boss_cmp.bin
+	endif
+	if defined(Mus_Boss2)
+	dc.l Mus_Boss2,Mus_Boss2+$426	; sound/music/../generated/Boss2_cmp.bin
+	endif
+	if defined(Mus_Boss3)
+	dc.l Mus_Boss3,Mus_Boss3+$30B	; sound/music/../generated/Boss3_cmp.bin
+	endif
+	if defined(Mus_CNZ_2P)
+	dc.l Mus_CNZ_2P,Mus_CNZ_2P+$36C	; sound/music/../generated/CNZ_2P_cmp.bin
+	endif
+	if defined(Mus_CPZ)
+	dc.l Mus_CPZ,Mus_CPZ+$3C3	; sound/music/../generated/CPZ_cmp.bin
+	endif
+	if defined(Mus_Continue)
+	dc.l Mus_Continue,Mus_Continue+$140	; sound/music/../generated/Continue_cmp.bin
+	endif
+	if defined(Mus_Countdown)
+	dc.l Mus_Countdown,Mus_Countdown+$105	; sound/music/../generated/Countdown_cmp.bin
+	endif
+	if defined(Mus_Credits)
+	dc.l Mus_Credits,Mus_Credits+$D71	; sound/music/../generated/Credits_cmp.bin
+	endif
+	if defined(Mus_Credits_2)
+	dc.l Mus_Credits_2,Mus_Credits_2+$5E3	; sound/music/../generated/Credits_2_cmp.bin
+	endif
+	if defined(Mus_DDZ1)
+	dc.l Mus_DDZ1,Mus_DDZ1+$668	; sound/music/../generated/DDZ1_cmp.bin
+	endif
+	if defined(Mus_DDZ2)
+	dc.l Mus_DDZ2,Mus_DDZ2+$751	; sound/music/../generated/DDZ2_cmp.bin
+	endif
+	if defined(Mus_DEZ)
+	dc.l Mus_DEZ,Mus_DEZ+$326	; sound/music/../generated/DEZ_cmp.bin
+	endif
+	if defined(Mus_DoubleLife)
+	dc.l Mus_DoubleLife,Mus_DoubleLife+$114	; sound/music/../generated/DoubleLife_cmp.bin
+	endif
+	if defined(Mus_EHZ)
+	dc.l Mus_EHZ,Mus_EHZ+$47D	; sound/music/../generated/EHZ_cmp.bin
+	endif
+	if defined(Mus_EHZ_2P)
+	dc.l Mus_EHZ_2P,Mus_EHZ_2P+$35A	; sound/music/../generated/EHZ_2P_cmp.bin
+	endif
+	if defined(Mus_Emerald)
+	dc.l Mus_Emerald,Mus_Emerald+$B8	; sound/music/../generated/Emerald_cmp.bin
+	endif
+	if defined(Mus_EndBoss)
+	dc.l Mus_EndBoss,Mus_EndBoss+$28A	; sound/music/../generated/EndBoss_cmp.bin
+	endif
+	if defined(Mus_EndLevel)
+	dc.l Mus_EndLevel,Mus_EndLevel+$100	; sound/music/../generated/EndLevel_cmp.bin
+	endif
+	if defined(Mus_Ending_S1)
+	dc.l Mus_Ending_S1,Mus_Ending_S1+$208	; sound/music/../generated/Ending_S1_cmp.bin
+	endif
+	if defined(Mus_Ending_S2)
+	dc.l Mus_Ending_S2,Mus_Ending_S2+$476	; sound/music/../generated/Ending_S2_cmp.bin
+	endif
+	if defined(Mus_ExtraLife)
+	dc.l Mus_ExtraLife,Mus_ExtraLife+$AF	; sound/music/../generated/ExtraLife_cmp.bin
+	endif
+	if defined(Mus_GGZ1)
+	dc.l Mus_GGZ1,Mus_GGZ1+$5AA	; sound/music/../generated/GGZ1_cmp.bin
+	endif
+	if defined(Mus_GGZ2)
+	dc.l Mus_GGZ2,Mus_GGZ2+$501	; sound/music/../generated/GGZ2_cmp.bin
+	endif
+	if defined(Mus_GHZ)
+	dc.l Mus_GHZ,Mus_GHZ+$51C	; sound/music/../generated/GHZ_cmp.bin
+	endif
+	if defined(Mus_GRGZ1)
+	dc.l Mus_GRGZ1,Mus_GRGZ1+$9CC	; sound/music/../generated/GRGZ1_cmp.bin
+	endif
+	if defined(Mus_GRGZ2)
+	dc.l Mus_GRGZ2,Mus_GRGZ2+$A33	; sound/music/../generated/GRGZ2_cmp.bin
+	endif
+	if defined(Mus_GameOver)
+	dc.l Mus_GameOver,Mus_GameOver+$139	; sound/music/../generated/GameOver_cmp.bin
+	endif
+	if defined(Mus_HPZ)
+	dc.l Mus_HPZ,Mus_HPZ+$1DF	; sound/music/../generated/HPZ_cmp.bin
+	endif
+	if defined(Mus_HTZ)
+	dc.l Mus_HTZ,Mus_HTZ+$306	; sound/music/../generated/HTZ_cmp.bin
+	endif
+	if defined(Mus_ICZ1)
+	dc.l Mus_ICZ1,Mus_ICZ1+$2D0	; sound/music/../generated/ICZ1_cmp.bin
+	endif
+	if defined(Mus_ICZ2)
+	dc.l Mus_ICZ2,Mus_ICZ2+$303	; sound/music/../generated/ICZ2_cmp.bin
+	endif
+	if defined(Mus_Invincible)
+	dc.l Mus_Invincible,Mus_Invincible+$16F	; sound/music/../generated/Invincible_cmp.bin
+	endif
+	if defined(Mus_LBZ1_S3)
+	dc.l Mus_LBZ1_S3,Mus_LBZ1_S3+$4CF	; sound/music/../generated/LBZ1_S3_cmp.bin
+	endif
+	if defined(Mus_LBZ2_S3)
+	dc.l Mus_LBZ2_S3,Mus_LBZ2_S3+$80E	; sound/music/../generated/LBZ2_S3_cmp.bin
+	endif
+	if defined(Mus_LZ)
+	dc.l Mus_LZ,Mus_LZ+$368	; sound/music/../generated/LZ_cmp.bin
+	endif
+	if defined(Mus_MTZ)
+	dc.l Mus_MTZ,Mus_MTZ+$32C	; sound/music/../generated/MTZ_cmp.bin
+	endif
+	if defined(Mus_OOZ)
+	dc.l Mus_OOZ,Mus_OOZ+$380	; sound/music/../generated/OOZ_cmp.bin
+	endif
+	if defined(Mus_Options)
+	dc.l Mus_Options,Mus_Options+$3CE	; sound/music/../generated/Options_cmp.bin
+	endif
+	if defined(Mus_PPZ1)
+	dc.l Mus_PPZ1,Mus_PPZ1+$57D	; sound/music/../generated/PPZ1_cmp.bin
+	endif
+	if defined(Mus_PPZ2)
+	dc.l Mus_PPZ2,Mus_PPZ2+$403	; sound/music/../generated/PPZ2_cmp.bin
+	endif
+	if defined(Mus_RRZ1)
+	dc.l Mus_RRZ1,Mus_RRZ1+$615	; sound/music/../generated/RRZ1_cmp.bin
+	endif
+	if defined(Mus_RRZ2)
+	dc.l Mus_RRZ2,Mus_RRZ2+$611	; sound/music/../generated/RRZ2_cmp.bin
+	endif
+	if defined(Mus_SBZ)
+	dc.l Mus_SBZ,Mus_SBZ+$44D	; sound/music/../generated/SBZ_cmp.bin
+	endif
+	if defined(Mus_SCZ)
+	dc.l Mus_SCZ,Mus_SCZ+$2ED	; sound/music/../generated/SCZ_cmp.bin
+	endif
+	if defined(Mus_SW_HPZ)
+	dc.l Mus_SW_HPZ,Mus_SW_HPZ+$2D4	; sound/music/../generated/SW_HPZ_cmp.bin
+	endif
+	if defined(Mus_SpecialStage)
+	dc.l Mus_SpecialStage,Mus_SpecialStage+$385	; sound/music/../generated/SpecialStage_cmp.bin
+	endif
+	if defined(Mus_SuperSonic)
+	dc.l Mus_SuperSonic,Mus_SuperSonic+$272	; sound/music/../generated/SuperSonic_cmp.bin
+	endif
+	if defined(Mus_Test6)
+	dc.l Mus_Test6,Mus_Test6+$61F	; sound/music/../generated/Test6_cmp.bin
+	endif
+	if defined(Mus_Test7)
+	dc.l Mus_Test7,Mus_Test7+$3B3	; sound/music/../generated/Test7_cmp.bin
+	endif
+	if defined(Mus_TestSong1)
+	dc.l Mus_TestSong1,Mus_TestSong1+$332	; sound/music/../generated/TestSong1_cmp.bin
+	endif
+	if defined(Mus_Title)
+	dc.l Mus_Title,Mus_Title+$19A	; sound/music/../generated/Title_cmp.bin
+	endif
 	if defined(Nem_Aquis)
 	dc.l Nem_Aquis,Nem_Aquis+$45F	; art/nemesis/Enemy Aquis.nem
 	endif

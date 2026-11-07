@@ -4,6 +4,7 @@ MCD_ProgramRAM:		equ	$420000	; banked 128 KB main-CPU window
 MCD_WordRAM:		equ	$600000	; 256 KB in 2M mode
 MCD_SubControl:		equ	$A12000
 MCD_MemoryMode:		equ	$A12002
+MCD_MainStopwatch:	equ	$A1200C	; same 12-bit counter as MCD_SubStopwatch
 MCD_MainCommand:	equ	$A12010
 MCD_MainArgument:	equ	$A12012
 MCD_MainToken:		equ	$A1201E

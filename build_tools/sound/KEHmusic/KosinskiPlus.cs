@@ -31,7 +31,7 @@ namespace KEHmusic
 				if (readBit() != 0)
 				{
 					if (output.Count == outputLimit)
-						throw new InvalidDataException("Kosinski+ output exceeds the Z80 music buffer ($A40 bytes).");
+						throw new InvalidDataException("Kosinski+ output exceeds the limit ($" + outputLimit.ToString("X") + " bytes).");
 					output.Add((byte)readByte());
 					continue;
 				}
@@ -62,7 +62,7 @@ namespace KEHmusic
 				if (offset < -output.Count)
 					throw new InvalidDataException("Kosinski+ match precedes the start of the song.");
 				if (count > outputLimit - output.Count)
-					throw new InvalidDataException("Kosinski+ output exceeds the Z80 music buffer ($A40 bytes).");
+					throw new InvalidDataException("Kosinski+ output exceeds the limit ($" + outputLimit.ToString("X") + " bytes).");
 				while (count-- != 0) output.Add(output[output.Count + offset]);
 			}
 		}

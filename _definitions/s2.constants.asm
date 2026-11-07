@@ -1492,9 +1492,38 @@ Collision_response_list_end:
 	if (MOMPASS>1)&&(MCD_MainWorkStart<Collision_response_list_end)
 		fatal "Live MD allocations exceed 64 KB."
 	endif
+; Whole decoded songs live in MD RAM. The slots cover the live song, the
+; song saved for a 1-up return, and a song being prepared by the main thread.
+Music_StageCapacity = $2000
+Music_StageCount = 3
+Music_PageShift = 6
+Music_PageSize = 1<<Music_PageShift
+Music_PageCount = Music_StageCapacity/Music_PageSize
+Music_CacheSlots = 28
+Music_CacheSize = $820
+Music_ScoreBase = $4000
+
 	phase	Collision_response_list_end
-Free_RAM_Start:		ds.b	MCD_MainWorkStart-Collision_response_list_end
+Music_StageData:	ds.b	Music_StageCapacity*Music_StageCount
+Music_StageSongs:	ds.b	Music_StageCount
+Music_PageTags:		ds.b	Music_CacheSlots
+Music_CacheSong:		ds.b	1
+Music_NextPage:		ds.b	1
+Music_NextTrack:	ds.b	1
+Music_PendingSong:	ds.b	1
+Music_LoadBusy:		ds.b	1
+Music_ServiceReady:	ds.b	1
+Music_ServiceBusy:	ds.b	1
+Music_BusSignal:		ds.b	1	; Z80 posts page requests and tick completion here
+Music_RAM_End:
+Free_RAM_Start:		ds.b	MCD_MainWorkStart-Music_RAM_End
 Free_RAM_End:
+	if (MOMPASS>1)&&((Music_BusSignal&$FF8000)<>$FF0000)
+		fatal "The music mailbox must be in the lower half of MD RAM."
+	endif
+	if (MOMPASS>1)&&(Music_RAM_End>MCD_MainWorkStart)
+		fatal "Music stages overlap CD work storage."
+	endif
 	if Free_RAM_End<>MCD_MainWorkStart
 		fatal "Free RAM must end at the first live allocation."
 	endif

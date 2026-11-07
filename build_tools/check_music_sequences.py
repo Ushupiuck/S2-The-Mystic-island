@@ -25,12 +25,33 @@ def music(rom,listing,ini):
 	result={}
 	for index,name in enumerate(config.sections()):
 		row=config[name];start=s['Mus_'+name];size=row.getint('Size')
-		flags=data[s['zMasterPlaylist']+index*4+3]
+		if 'Music_Index' in s:
+			entry=s['Music_Index']+index*8
+			assert int.from_bytes(data[entry:entry+4],'big')==start
+			assert int.from_bytes(data[entry+4:entry+6],'big')==row.getint('UncompressedSize')
+			flags=data[entry+6]
+		else:
+			flags=data[s['zMasterPlaylist']+index*4+3]
 		raw=data[start:start+size]
-		if not flags&0x10:raw=(kosinski_plus if 'zKosinskiPlusDec' in s else saxman)(raw)
+		if not flags&0x10:raw=(kosinski_plus if 'zKosinskiPlusDec' in s or 'Music_Index' in s else saxman)(raw)
 		assert len(raw)==row.getint('UncompressedSize'),(name,'Raw song size')
 		result[name]=(raw,size,flags&~0x10)
 	return result
+
+
+def current_music(g, rom, zram):
+	if 'Music_Index' in g.s:
+		slot = zram[g.s['zAbsVar.MusicSlot']]
+		return g.read(g.s['Music_StageSongs'] + slot - 1) if slot else 0
+	bank = zram[g.s['zBGMLoad_BankLoadInstruction'] + 1]
+	address = g.s['zBGMLoad_AddressLoadInstruction'] + 1
+	entry = bytes((bank, zram[address], zram[address+1]))
+	first = g.s['MusID__First']
+	for song_id in range(first, g.s['MusID__End']):
+		offset = g.s['zMasterPlaylist'] + (song_id - first) * 4
+		if rom[offset:offset+3] == entry:
+			return song_id
+	return 0
 
 
 def word(data,at):
@@ -213,7 +234,7 @@ def playback(a,before,after):
 				for index,track in enumerate(tracks):
 					record.extend(zram[track+offset] for offset in offsets)
 					voice=zram[track+g.s['zTrack.VoiceIndex']]
-					if 1<=index<=6:
+					if 1<=index<=6 and before[name][0]!=after[name][0]:
 						assert voice<len(patches),(name,'Bad runtime instrument index',voice)
 						record.extend(patches[voice])
 					else:record.extend((voice,0,0,0))

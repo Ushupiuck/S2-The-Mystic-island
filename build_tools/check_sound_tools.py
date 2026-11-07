@@ -181,24 +181,23 @@ def main():
 			else:
 				assert row.getint('Size') == len(raw) and not row.get('OutputFile')
 			return row
-		auto_case(bytes(0xA40), True)
-		auto_case(bytes(0xA41), False)
-		auto_case(random.Random(0x4B4F53).randbytes(0xA40), False)
+		auto_case(bytes(0x2000), True)
+		auto_case(random.Random(0x4B4F53).randbytes(0x2000), False)
 		auto_case(bytes(6), False) # Kosinski+ ties six raw zero bytes: keep raw.
-		print('Automatic music storage: fits+smaller compresses; oversized, incompressible and equal-size inputs stay raw.')
+		print('Automatic music storage: smaller streams compress; incompressible and equal-size inputs stay raw.')
 
 		# Raw binaries must not silently acquire the compressed playlist flag.
-		(d / 'sound/music/raw.bin').write_bytes(bytes(range(256)) * 128)
+		(d / 'sound/music/raw.bin').write_bytes(random.Random(0x4B4F53).randbytes(0x2000))
 		ini.write_text('[Raw]\nTitle=Raw binary\nFile=raw.bin\n')
 		run(packer, d)
-		for name in ('dacbanks', 'dacinfo', 'dacids', 'musicbanks', 'musicinfo', 'musicids', 'musicnames'):
+		for name in ('dacbanks', 'dacinfo', 'dacids', 'musicdata', 'musicinfo', 'musicids', 'musicnames'):
 			assert (d / ('sound/' + name + '.gen.asm')).is_file(), name
 		assert not list(d.glob('*.gen.asm')), 'Generated sound tables leaked into project root'
 		assert 'musprop_uncompressed' in (d / 'sound/musicinfo.gen.asm').read_text()
-		assert '$8000 bytes' in (d / 'sound/generated/music-bank-1.gen.asm').read_text()
-		(d / 'sound/music/raw.bin').write_bytes(bytes(0x8001))
-		assert '$8000' in run(packer, d, False)
-		(d / 'sound/music/raw.bin').write_bytes(bytes(0xA40 + 1))
+		assert '$2000 bytes' in (d / 'sound/musicdata.gen.asm').read_text()
+		(d / 'sound/music/raw.bin').write_bytes(bytes(0x2001))
+		assert '$2000' in run(packer, d, False)
+		(d / 'sound/music/raw.bin').write_bytes(b'\x80')
 		ini.write_text('[Raw]\nTitle=Raw binary\nFile=raw.bin\nBinaryFormat=KosinskiPlus\n')
 		assert 'Kosinski+' in run(packer, d, False)
 		# Explicit precompressed imports retain their encoding and decoded metadata.
@@ -211,25 +210,29 @@ def main():
 		assert config['Raw'].getint('UncompressedSize') == 128
 		assert config['Raw'].getint('Size') == len(packed)
 		assert 'musprop_uncompressed' not in (d / 'sound/musicinfo.gen.asm').read_text()
+		assert 'MusicPacked' in (d / 'sound/musicdata.gen.asm').read_text()
 		ini.write_text('[Raw]\nTitle=Invalid assembly flag\nFile=track.asm\nBinaryFormat=KosinskiPlus\n')
 		assert 'precompressed .bin' in run(packer, d, False)
 		ini.write_text('[Raw]\nTitle=Oversized decoded input\nFile=raw.bin\nBinaryFormat=KosinskiPlus\n')
-		# A literal followed by overlapping 256-byte copies exceeds $A40.
-		(d / 'sound/music/raw.bin').write_bytes(encode_kosinski_plus(bytes(0xA41)))
-		assert '$A40' in run(packer, d, False)
-		print('Binary imports: raw $8000 accepted; oversized banks, invalid Kosinski+ streams, and Z80 buffer overflow rejected.')
+		# A literal followed by overlapping 256-byte copies exceeds $2000.
+		(d / 'sound/music/raw.bin').write_bytes(encode_kosinski_plus(bytes(0x2001)))
+		assert '$2000' in run(packer, d, False)
+		print('Binary imports: raw $2000 accepted; malformed streams and MD stage overflow rejected.')
 
-		# The same generated include works in a nonconsecutive bank arrangement.
-		(d / 'sound/music/raw.bin').write_bytes(bytes(range(256)) * 128)
+		# The music include crosses a Z80 boundary; DAC keeps its size check.
+		(d / 'sound/music/raw.bin').write_bytes(random.Random(0x4B4F53).randbytes(0x2000))
 		ini.write_text('[Raw]\nTitle=Raw binary\nFile=raw.bin\n')
 		run(packer, d)
-		layout = '\tinclude "_definitions/Sound Bank Assets.asm"\n\tinclude "sound/generated/music-bank-1.gen.asm"\n\tdc.b $A5\n\tinclude "sound/generated/dac-bank-1.gen.asm"\n'
+		layout = 'even macro\n\talign 2\n\tendm\n\tinclude "_definitions/Sound Bank Assets.asm"\n\tdc.b $5A\n\torg $7FF0\n\tinclude "sound/musicdata.gen.asm"\n\tdc.b $A5\n\tinclude "sound/generated/dac-bank-1.gen.asm"\n'
 		(d / '_definitions/Sound Bank Assets.asm').write_text('SoundBankAssets macro kind,bank,{GLOBALSYMBOLS}\n\tendm\n')
 		data = assemble(layout)
-		assert data[0x8000] == 0xA5 and data[0x10000] == 0x80
+		assert data[0x7FF0:0x9FF0] == (d / 'sound/music/raw.bin').read_bytes()
+		assert data[0x9FF0] == 0xA5 and data[0x10000] == 0x80
+		(d / 'sound/DAC/sample.bin').write_bytes(bytes([0x80]) * 0x8000)
+		run(packer, d)
 		(d / '_definitions/Sound Bank Assets.asm').write_text('SoundBankAssets macro kind,bank,{GLOBALSYMBOLS}\n\tdc.b 0\n\tendm\n')
 		assert 'must fit in $8000' in assemble(layout, okay=False)
-		print('Banks: independent placement works; asset overflow is caught by finishBank.')
+		print('Music spans ROM boundaries; DAC overflow is caught by finishBank.')
 
 		# Check every packed song against a fresh assembly with an independent decoder.
 		music = configparser.ConfigParser(interpolation=None)
@@ -238,7 +241,7 @@ def main():
 		for name in music.sections():
 			if music[name].getboolean('IsCompressed', fallback=False):
 				raw = kosinski_plus((ROOT / 'sound/music' / music[name]['OutputFile']).read_bytes())
-				assert len(raw) <= 0xA40 and len(raw) == music[name].getint('UncompressedSize')
+				assert len(raw) <= 0x2000 and len(raw) == music[name].getint('UncompressedSize')
 				assert raw == assemble('\tinclude "' + (ROOT / 'sound/music' / music[name]['File']).as_posix() + '"\n'), name
 		print('All compressed project songs match fresh assembly using the independent Kosinski+ decoder.')
 	print('Sound tool checks passed.')

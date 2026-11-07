@@ -263,14 +263,15 @@ def game(args):
 	import ctypes as C
 	from genesis_test_core import Genesis
 	from check_object_course import boot_level
+	from check_music_sequences import current_music
 	from check_companion_followup import place
 	g=Genesis(args.core,args.rom,args.listing,args.output/'game',args.pal,system_directory=args.system_directory)
 	zram=(C.c_uint8*8192).in_dll(g.core,'zram')
+	rom=args.rom.read_bytes()
 	def song_entry(music):
-		offset=g.s['zMasterPlaylist']+(g.s[music]-g.s['MusID__First'])*4
-		return args.rom.read_bytes()[offset:offset+3]
+		return g.s[music]
 	def playing_song():
-		return bytes(zram[g.s[name]+1] for name in ('zBGMLoad_BankLoadInstruction','zBGMLoad_AddressLoadInstruction'))+bytes([zram[g.s['zBGMLoad_AddressLoadInstruction']+2]])
+		return current_music(g,rom,zram)
 	boot_level(g,zone=g.s['id_SMZ'],act=1,player=args.player)
 	pool=list(range(g.s['v_lvlobjspace']&65535,g.s['v_lvlobjend']&65535,g.s['object_size']))
 	def objects(label):return [o for o in pool if g.get(o,'code')==g.s[label]]
@@ -294,7 +295,7 @@ def game(args):
 	g.put('v_player','obControl',0);g.put('v_player','obVelX',0x600,2);g.put('v_player','obInertia',0x600,2);g.buttons={7};spin=set();seen=set();broken=False;boss=None
 	settled=None;entry=None;warning_ticks=100 if args.pal else 120
 	root=g.s['DPLC_Signpost'];cue=root+struct.unpack_from('>h',args.rom.read_bytes(),root+12)[0]
-	rom=args.rom.read_bytes();portrait=bytearray()
+	portrait=bytearray()
 	for i in range(struct.unpack_from('>H',rom,cue)[0]):
 		word=struct.unpack_from('>H',rom,cue+2+i*2)[0]
 		start=g.s['Art_Signpost']+(word&4095)*32

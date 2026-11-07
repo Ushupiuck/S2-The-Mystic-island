@@ -242,6 +242,11 @@ GameProgram:
 		lea	(Snd_Driver).l,a0
 		lea	(Z80_RAM).l,a1
 		bsr.w	KosPlusDec
+		lea	(Z80_RAM+zMusicPageMap).l,a0
+		moveq	#Music_PageCount-1,d0
+.clearMusicMap:
+		clr.b	(a0)+
+		dbf	d0,.clearMusicMap
 		btst	#0,(VDP_control_port+1).l	; check video mode
 		sne	(Z80_RAM+zPalModeByte).l	; set if PAL
 		resetZ80a
@@ -252,6 +257,7 @@ GameProgram:
 		move.b	d0,(HW_Expansion_Control).l
 		resetZ80
 		startZ80
+		st	(Music_ServiceReady).l
 		; We're done here!
 		move.w	#SegaScreen,(v_gamemode).w	; Set the gamemode to SEGA screen
 
@@ -280,8 +286,7 @@ V_Int:
 		move.l	(v_scrposy_vdp).w,vdp_data_port-vdp_data_port(a6)	; send screen y-axis pos. to VSRAM
 		btst	#0,(vdp_control_port-vdp_control_port)+1(a5)
 		beq.s	+					; branch if it's not a PAL system
-		move.w	#$700,d0
-		dbf	d0,*	; wait here doing nothing for a while...
+		bsr.w	Music_WaitPAL
 +
 		st	(v_vbla_counter).w
 		st	(f_hbla_pal).w
@@ -289,6 +294,7 @@ V_Int:
 		jsr	(a0)
 
 VintRet:
+		bsr.w	Music_Service
 		addq.l	#1,(Vint_runcount).w
 		movem.l	(sp)+,d0-a6
 		rte
@@ -319,8 +325,7 @@ VInt_0_Level:
 		btst	#6,(v_megadrive).w
 		beq.s	+	; branch if it isn't a PAL system
 
-		move.w	#14344/8-1,d0
-		dbf	d0,*	; otherwise waste a bit of time here
+		bsr.w	Music_WaitPAL
 +
 		st	(f_hbla_pal).w
 		stopZ80
@@ -335,7 +340,8 @@ VInt_0_FullyUnderwater:
 
 VInt_0_Water_Cont:
 		move.w	(v_hbla_hreg).w,(a5)
-		startZ80	; rather than always branching to "VintRet",
+		startZ80
+		bsr.w	Music_Service
 		addq.l	#1,(Vint_runcount).w	; we'll optimize by copying it here.
 		movem.l	(sp)+,d0-a6
 		rte
@@ -1674,6 +1680,7 @@ Pal_WZCyc:	binclude "palette/WZ Cycle.bin"
 
 ; DelayProgram:
 WaitForVint:
+		bsr.w	Music_Prepare
 		movem.l	d0-d3/a1,-(sp)	; callers retain loop counters across the wait
 		tst.b	(MCD_dma_pending).w
 		bne.s	.dmaOwnsWordRAM
@@ -1695,6 +1702,8 @@ WaitForVint:
 		clr.b	(a0)
 		rts
 ; End of function WaitForVint
+
+	include "_inc/Music Streaming.asm"
 
 ; ---------------------------------------------------------------------------
 ; Subroutine to generate a pseudo-random number in d0
@@ -3238,6 +3247,10 @@ PlaySound_Special:
 PlayMusic:	disable_ints
 		stopZ80
 		waitZ80
+		cmpi.b	#MusID__End,d0
+		bhs.s	.queue
+		bsr.w	Music_QueueHint
+.queue:
 		tst.b	(Z80_RAM+zAbsVar.QueueToPlay).l
 		bne.s	+
 		move.b	d0,(Z80_RAM+zAbsVar.QueueToPlay).l
@@ -3305,6 +3318,10 @@ PlaySoundLocal:
 PlaySound:	disable_ints
 		stopZ80
 		waitZ80
+		cmpi.b	#MusID__End,d0
+		bhs.s	.queue
+		bsr.w	Music_QueueHint
+.queue:
 		move.b	d0,(Z80_RAM+zAbsVar.SFXUnknown).l
 		startZ80
 		enable_ints
@@ -13172,27 +13189,14 @@ Snd_Driver_End:
 	endif
 		include	"_inc/Pattern Load Cues.asm"
 ; ---------------------------------------------------------------------------
-; Music pointers
+; Asset placement before the first Z80 SFX bank.
 ; ---------------------------------------------------------------------------
-musprop_uncompressed	= 1<<4	; $10
-musprop_nospeedup	= 1<<5	; $20
-musprop_palmode	= 1<<6		; $40
-musprop_1up	= 1<<7		; $80
-zmakePlaylistEntry macro addr,val
-	dc.b	addr/$8000	; bank
-	rom_ptr_z80	addr
-	if "val"<>""
-	dc.b	val
-	else
-	dc.b	0
-	endif
-	endm
-
 	include "_definitions/Sound Bank Assets.asm"
 
-; Ordinary art fills the alignment gap before the first music bank. The
-; playlist records actual addresses; bank numbers need not follow ROM order.
-; -------------------------------------------------------------------------------
+Nem_SegaLogo:	binclude "art/nemesis/Sega Logo (JP1).nem"
+		even
+Nem_HUD:	binclude "art/nemesis/HUD.nem"
+		even
 Kosp_Title:		binclude	"art/kosinski/level/8x8 - Title.kosp"
 Nem_TitleSonicTails:	binclude	"art/nemesis/Title Sonic and Tails.nem"
 			even
@@ -13240,8 +13244,6 @@ Nem_EHZ_Waterfall:	binclude	"art/nemesis/Waterfall tiles.nem"
 			even
 Nem_EHZ_Bridge:		binclude	"art/nemesis/EHZ bridge.nem"
 			even
-
-	include "sound/generated/music-bank-3.gen.asm"
 
 ; ---------------------------------------------------------------------------
 ; Hidden Palace Zone stage assets
@@ -13291,11 +13293,6 @@ Pal_MechaFlash2:	binclude "palette/Mecha Sonic Flash 2.bin"
 		even
 Nem_Swing2:		binclude	"art/nemesis/S1/SLZ Swinging Platform.nem"
 			even
-
-; Keep the two nearly full music banks together. The short bank above leaves
-; its remaining space to ordinary art before this next bank alignment.
-	include "sound/generated/music-bank-1.gen.asm"
-	include "sound/generated/music-bank-2.gen.asm"
 
 zSoundIndexEntry macro pointer, priority
 	rom_ptr_z80	pointer
@@ -13353,7 +13350,6 @@ DACSample	macro	pPtr,pDelay,pFlags
 	endm
 
 	include "sound/dacinfo.gen.asm"
-	include "sound/musicinfo.gen.asm"
 
 	even
 
@@ -13385,6 +13381,8 @@ Kospm_BallhogV:	binclude	"art/moduled kosinski/Enemy Ballhog (Vertical).kospm"
 ; ---------------------------------------------------------------------------
 	include "sound/dacbanks.gen.asm"
 		even
+	include "sound/musicinfo.gen.asm"
+	include "sound/musicdata.gen.asm"
 ; ---------------------------------------------------------------------------
 ; Compressed misc. graphics - Level placeholders
 ; ---------------------------------------------------------------------------

@@ -97,6 +97,7 @@ def main():
 	p.add_argument('--listing',type=Path,default=ROOT/'md-main.lst')
 	p.add_argument('--ini',type=Path,default=ROOT/'sound/music/music.ini')
 	p.add_argument('--tools-dir',type=Path)
+	p.add_argument('--driver-source',type=Path,default=ROOT/'s2.sounddriver.asm')
 	p.add_argument('--output',type=Path,required=True)
 	a=p.parse_args();out=a.output.resolve();out.mkdir(parents=True,exist_ok=True)
 	tools=a.tools_dir or ROOT/'build_tools'/('Windows-x86' if os.name=='nt' else platform.system()+'-'+{'amd64':'x86_64','arm64':'aarch64'}.get(platform.machine(),platform.machine()))
@@ -108,7 +109,10 @@ def main():
 	def assemble(name,body):
 		(out/(name+'.asm')).write_bytes(body.replace('\n','\r\n').encode())
 		run([asl,'-xx','-n','-q','-A','-L','-U','-E','-i','.', '-o',out/(name+'.p'),out/(name+'.asm')])
-	source=(ROOT/'s2.sounddriver.asm').read_text();code='zKosinskiPlusDec:'+source.split('zKosinskiPlusDec:',1)[1].split('zKosinskiPlusDec_End:',1)[0]+'zKosinskiPlusDec_End:\n'
+	source=a.driver_source.read_text()
+	if 'zKosinskiPlusDec:' not in source:
+		p.error('Supply --driver-source from a checkout with the Z80 Kosinski+ decoder.')
+	code='zKosinskiPlusDec:'+source.split('zKosinskiPlusDec:',1)[1].split('zKosinskiPlusDec_End:',1)[0]+'zKosinskiPlusDec_End:\n'
 	assemble('decoder','\tcpu Z80\n\torg 100h\nzMusicData = 4000h\n'+code)
 	run([p2bin,out/'decoder.p',out/'decoder.bin'])
 	s=symbols(out/'decoder.lst');program=(out/'decoder.bin').read_bytes();native=Native(a.core,program,s)

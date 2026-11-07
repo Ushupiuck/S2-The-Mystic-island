@@ -769,9 +769,10 @@ launch, ring and player-effect checks. `check_sound_playback.py` accepts
 `--system-directory` to validate the CD-decoded Z80 driver through actual music,
 effects and jingle restoration.
 For complete music-stream equivalence and per-frame Z80 state comparisons,
-see the [sound validation guide](../build_tools/sound/README.md#validation),
-including the direct native Z80 Kosinski+ decoder check on the experimental branch.
-Its `--priority` playback case covers bumper/Continue arbitration; `--switches`
+see the [sound validation guide](../build_tools/sound/README.md#validation).
+Run dense tracks in Scrap Madness and GHZ4 to exercise VBlank refills alongside
+ordinary stage updates and the water split. Check the countdown and the current
+act's track after resurfacing. The `--priority` playback case covers bumper/Continue arbitration; `--switches`
 traces DPCM accumulator continuity during rapid level-select song changes.
 Add `--core /path/to/genesis_plus_gx_libretro.so --system-directory ...`
 to the codec runner for actual queued PLC uploads while HPZ's early water
