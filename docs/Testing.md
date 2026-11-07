@@ -775,6 +775,9 @@ launch, ring and player-effect checks. `check_sound_playback.py` accepts
 effects and jingle restoration.
 For complete music-stream equivalence and per-frame Z80 state comparisons,
 see the [sound validation guide](../build_tools/sound/README.md#validation).
+When comparing streaming code against the previous ROM, use
+`--include-unchanged` to compare playback of the same decoded score bytes.
+Exercise both resident uploads and paged scores in NTSC and PAL.
 Run dense tracks in Scrap Madness and GHZ4 to exercise VBlank refills alongside
 ordinary stage updates and the water split. Check the countdown and the current
 act's track after resurfacing. The `--priority` playback case covers bumper/Continue arbitration; `--switches`

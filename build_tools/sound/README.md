@@ -156,6 +156,12 @@ data area load in full and use direct reads. A short score invalidates just
 the slots it overwrites, so the preceding paged score can keep other pages.
 Live modulation settings and cross-page YM patches use local Z80 state.
 
+The prefetch cursor stores a word offset into the Z80 track table. The MD
+resolves the starting track once and advances by the track stride. Page fills
+and short-score uploads share one unrolled byte-copy loop. The MD publishes
+the page map or direct read base after copying the score bytes with the Z80
+bus held.
+
 ## Reusing bank padding
 
 `_definitions/Sound Bank Assets.asm` supplies the optional `SoundBankAssets

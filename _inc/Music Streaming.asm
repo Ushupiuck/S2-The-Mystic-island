@@ -5,6 +5,9 @@ musprop_nospeedup	= 1<<5
 musprop_palmode		= 1<<6
 musprop_1up		= 1<<7
 
+; Bias the eight-byte playlist so the song ID is the index.
+Music_IndexByID = Music_Index-(MusID__First<<3)
+
 MusicEntry macro source,size,flags
 	dc.l	source
 	dc.w	size
@@ -24,21 +27,20 @@ Music_QueueHint:
 		tst.b	(Music_LoadBusy).l
 		bne.s	.return
 		movem.l	d1-d2/a1,-(sp)
-		lea	(Music_StageSongs-1).l,a1
+		lea	(Music_StageSongs).l,a1
 		moveq	#1,d2
-.find:
-		cmp.b	(a1,d2.w),d0
+		rept	Music_StageCount-1
+		cmp.b	(a1)+,d0
 		beq.s	.cached
-		addq.w	#1,d2
-		cmpi.w	#Music_StageCount+1,d2
-		blo.s	.find
-		bra.s	.done
+		addq.b	#1,d2
+		endm
+		cmp.b	(a1),d0
+		bne.s	.done
 .cached:
 		moveq	#0,d1
 		move.b	d0,d1
-		subi.w	#MusID__First,d1
 		lsl.w	#3,d1
-		lea	(Music_Index+6).l,a1
+		lea	(Music_IndexByID+6).l,a1
 		move.b	(a1,d1.w),(Z80_RAM+zMusicReadyFlags).l
 		move.b	d2,(Z80_RAM+zMusicReadySlot).l
 		move.b	d0,(Z80_RAM+zMusicReadySong).l
@@ -52,10 +54,13 @@ Music_QueueHint:
 ; A slot remains immutable while it is live or saved for a 1-up return.
 Music_Prepare:
 		tst.b	(Music_PendingSong).l
-		beq.w	.return
+		beq.s	.return
 		tst.b	(Music_LoadBusy).l
-		bne.w	.return
-		movem.l	d0-d7/a0-a2,-(sp)
+		beq.s	.start
+.return:
+		rts
+.start:
+		movem.l	d0-d1/d4-d7/a0-a2,-(sp)
 		move.w	sr,-(sp)
 		disable_ints
 		stopZ80
@@ -69,14 +74,12 @@ Music_Prepare:
 		beq.w	.release
 
 		; A previously decoded song can be published again in place.
-		lea	(Music_StageSongs-1).l,a2
-		moveq	#1,d6
+		lea	(Music_StageSongs).l,a2
+		moveq	#Music_StageCount-1,d6
 .findCached:
-		cmp.b	(a2,d6.w),d7
+		cmp.b	(a2)+,d7
+		dbeq	d6,.findCached
 		beq.w	.cached
-		addq.w	#1,d6
-		cmpi.w	#Music_StageCount+1,d6
-		blo.s	.findCached
 
 		moveq	#1,d6
 		move.b	(Z80_RAM+zAbsVar.MusicSlot).l,d0
@@ -93,31 +96,27 @@ Music_Prepare:
 		addq.b	#1,d6
 		bra.s	.findSlot
 .slot:
+		lea	(Music_StageSongs-1).l,a2
 		clr.b	(a2,d6.w)
 		clr.b	(Z80_RAM+zMusicReadySong).l
 		st	(Music_LoadBusy).l
 		startZ80
 		move.w	(sp),sr
 
-		bsr.w	Music_FindEntry
+		move.w	d7,d0
+		lsl.w	#3,d0
+		lea	(Music_IndexByID).l,a2
+		adda.w	d0,a2
 		movea.l	(a2)+,a0
 		move.w	(a2)+,d4
 		move.b	(a2),d5
 		move.w	d6,d0
-		lsl.w	#8,d0
-		lsl.w	#5,d0
+		ror.w	#16-Music_StageShift,d0	; one-based slot times stage capacity
 		lea	(Music_StageData-Music_StageCapacity).l,a1
 		adda.w	d0,a1
 		btst	#4,d5
 		bne.s	.raw
-		jsr	(KosPlusDec).l
-		bra.s	.pad
-.raw:
-		move.w	d4,d0
-		subq.w	#1,d0
-.copyRaw:
-		move.b	(a0)+,(a1)+
-		dbf	d0,.copyRaw
+		bsr.w	KosPlusDec
 .pad:
 		; A read may peek a byte past the last event on the final page.
 		neg.w	d4
@@ -136,8 +135,12 @@ Music_Prepare:
 		clr.b	(Music_LoadBusy).l
 		bra.s	.publishHeld
 .cached:
-		bsr.w	Music_FindEntry
-		move.b	6(a2),d5
+		neg.w	d6
+		addq.w	#Music_StageCount,d6
+		move.w	d7,d0
+		lsl.w	#3,d0
+		lea	(Music_IndexByID+6).l,a2
+		move.b	(a2,d0.w),d5
 .publishHeld:
 		move.b	d5,(Z80_RAM+zMusicReadyFlags).l
 		move.b	d6,(Z80_RAM+zMusicReadySlot).l
@@ -145,25 +148,28 @@ Music_Prepare:
 .release:
 		startZ80
 		move.w	(sp)+,sr
-		movem.l	(sp)+,d0-d7/a0-a2
-.return:
+		movem.l	(sp)+,d0-d1/d4-d7/a0-a2
 		rts
-
-Music_FindEntry:
-		move.w	d7,d0
-		subi.w	#MusID__First,d0
-		lsl.w	#3,d0
-		lea	(Music_Index).l,a2
-		lea	(a2,d0.w),a2
-		rts
+.raw:
+		move.w	d4,d0
+		subq.w	#1,d0
+.copyRaw:
+		move.b	(a0)+,(a1)+
+		dbf	d0,.copyRaw
+		bra.s	.pad
 
 ; Spend the existing PAL delay servicing pending pages. Leave full uploads
 ; of short scores for the ordinary VBlank exit.
 Music_WaitPAL:
 		tst.b	(Music_ServiceReady).l
-		beq.w	.legacy
+		beq.s	.legacy
 		cmpi.b	#MCD_StatusReady,(MCD_status).w
-		bne.w	.legacy
+		beq.s	.ready
+.legacy:
+		move.w	#$700,d0
+		dbf	d0,*
+		rts
+.ready:
 		lea	(Music_BusSignal).l,a4
 		move.w	(MCD_MainStopwatch).l,d6
 		tst.b	(Music_ServiceBusy).l
@@ -202,19 +208,19 @@ Music_WaitPAL:
 		cmpi.w	#76,d5		; about 2.34 ms, like the former DBF
 		blo.s	.wait
 		rts
-.legacy:
-		move.w	#$700,d0
-		dbf	d0,*
-		rts
 
 ; Both VBlank exits call this after their VDP work. Keep the bus free between
 ; requests so KeH can finish the same tick and return to its DAC loop.
 Music_Service:
 		tst.b	(Music_ServiceReady).l
-		beq.w	.return
+		beq.s	.return
 		disableIntsSave
 		tst.b	(Music_ServiceBusy).l
-		bne.w	.restoreInts
+		beq.s	.start
+		enableIntsSave
+.return:
+		rts
+.start:
 		st	(Music_ServiceBusy).l
 		lea	(Music_BusSignal).l,a4
 		; Synchronize with the Z80 once. Its mailbox remains readable while
@@ -259,7 +265,6 @@ Music_Service:
 		bsr.w	Music_Prefetch
 .done:
 		clr.b	(Music_ServiceBusy).l
-.return:
 		rts
 .song:
 		tst.b	(Music_PendingSong).l
@@ -275,17 +280,14 @@ Music_Service:
 		startZ80
 		enableIntsSave
 		bra.s	.done
-.restoreInts:
-		enableIntsSave
-		rts
 
 ; A quiet tick can preload a jump or call from one of the next held notes.
 ; The round-robin scan is bounded and never runs the command or advances a track.
-Music_PrefetchLengths:
-		dc.b	2,2,2,0,0,2,2,1,2,2,2,2,2,1,1,2
-		dc.b	5,1,0,2,1,2,3,0,3,1,2
-		even
-
+	if MOMPASS>1
+		if ((zTrack.len&1)<>0)||((zTracksEnd-zTracksStart)/2>$FF)
+			fatal "The music track cursor requires an even stride and byte-sized word offset."
+		endif
+	endif
 Music_Prefetch:
 		tst.b	(Music_CacheSong).l
 		beq.w	.return
@@ -299,25 +301,19 @@ Music_Prefetch:
 		bsr.w	Music_GetStage
 		movea.l	a0,a5
 		moveq	#0,d7
-		move.b	(Music_NextTrack).l,d7
-		moveq	#1,d6
-.track:
+		move.b	(Music_NextTrackWordOffset).l,d7
 		move.w	d7,d5
-		mulu.w	#zTrack.len,d5
+		add.w	d5,d5
 		lea	(Z80_RAM+zTracksStart).l,a6
 		adda.w	d5,a6
-		addq.b	#1,d7
-		cmpi.b	#MUSIC_TRACK_COUNT,d7
-		blo.s	.scan
-		moveq	#0,d7
-.scan:
+		moveq	#1,d6
+.track:
 		btst	#7,zTrack.PlaybackControl(a6)
-		beq.w	.next
+		beq.s	.next
 		move.b	zTrack.DurationTimeout(a6),d0
 		subq.b	#2,d0
 		cmpi.b	#11,d0
-		bhs.w	.next
-		moveq	#0,d0
+		bhs.s	.next
 		move.b	zTrack.DataPointerHigh(a6),d0
 		lsl.w	#8,d0
 		move.b	zTrack.DataPointerLow(a6),d0
@@ -325,65 +321,77 @@ Music_Prefetch:
 		moveq	#3,d5
 .command:
 		cmpi.w	#Music_StageCapacity-3,d0
-		bhs.w	.next
+		bhs.s	.next
 		lea	(a5,d0.w),a3
 		moveq	#0,d1
 		move.b	(a3),d1
 		subi.b	#$E0,d1
 		cmpi.b	#$1B,d1
-		bhs.w	.next		; note or duration
+		bhs.s	.next		; note or duration
 		moveq	#0,d2
-		lea	(Music_PrefetchLengths).l,a2
-		move.b	(a2,d1.w),d2
-		beq.w	.next		; return, stop, or a counted loop
+		move.b	Music_PrefetchLengths(pc,d1.w),d2
+		beq.s	.next		; return, stop, or a counted loop
 		cmpi.b	#$16,d1
 		beq.s	.jump
 		cmpi.b	#$18,d1
 		beq.s	.call
 		add.w	d2,d0
 		dbf	d5,.command
-		bra.w	.next
+		bra.s	.next
 .call:
 		addq.w	#1,d0
 .jump:
-		moveq	#0,d1
 		move.b	2(a3),d1
 		lsl.w	#8,d1
 		move.b	1(a3),d1
 		addq.w	#2,d0
 		add.w	d1,d0
 		cmpi.w	#Music_StageCapacity,d0
-		bhs.w	.next
+		bhs.s	.next
 		lsr.w	#Music_PageShift,d0
 		lea	(Z80_RAM+zMusicPageMap).l,a1
 		tst.b	(a1,d0.w)
-		bne.w	.next
-		bsr.w	Music_FillPage
+		bne.s	.next
+		movea.l	a5,a0
+		bsr.s	Music_FillStagedPage
 		bset	#5,(a1,d0.w)
 .next:
+		lea	zTrack.len(a6),a6
+		addi.b	#zTrack.len/2,d7
+		cmpi.b	#(zTracksEnd-zTracksStart)/2,d7
+		blo.s	.advance
+		moveq	#0,d7
+		lea	(Z80_RAM+zTracksStart).l,a6
+.advance:
 		dbf	d6,.track
-		move.b	d7,(Music_NextTrack).l
+		move.b	d7,(Music_NextTrackWordOffset).l
 .release:
 		startZ80
 		enableIntsSave
 .return:
 		rts
 
+Music_PrefetchLengths:
+		dc.b	2,2,2,0,0,2,2,1,2,2,2,2,2,1,1,2
+		dc.b	5,1,0,2,1,2,3,0,3,1,2
+		even
+
 Music_GetStage:
 		moveq	#0,d4
 		move.b	(Z80_RAM+zAbsVar.MusicSlot).l,d4
 		move.w	d4,d1
-		lsl.w	#8,d1
-		lsl.w	#5,d1
+		ror.w	#16-Music_StageShift,d1
 		lea	(Music_StageData-Music_StageCapacity).l,a0
 		adda.w	d1,a0
 		rts
 
 ; d0.w is a virtual page index. Bus is granted until the map byte is written.
 Music_FillPage:
+		bsr.s	Music_GetStage
+; Prefetch already resolved the live stage in a0 and slot in d4.
+Music_FillStagedPage:
 		lea	(Z80_RAM+zMusicPageMap).l,a1
 		lea	(Music_PageTags).l,a2
-		bsr.s	Music_GetStage
 		tst.b	(Z80_RAM+zMusicCacheValid).l
 		bne.s	.keepCache
 		bsr.w	Music_GetStageScore
@@ -400,7 +408,7 @@ Music_FillPage:
 		bra.s	.keepCache
 .reuseCache:
 		tst.b	(a1,d0.w)
-		bne.s	.publish
+		bne.w	.publish
 .keepCache:
 		move.w	d0,d1
 		lsl.w	#Music_PageShift,d1
@@ -436,14 +444,26 @@ Music_FillPage:
 		move.w	d2,d1
 		lsl.w	#Music_PageShift,d1
 		adda.w	d1,a3
-		bsr.s	Music_CopyPage
 		addi.w	#zMusicCache/Music_PageSize,d2
 		ror.b	#2,d2
+		moveq	#0,d1			; one page, with its nonzero map byte in d2
+.copyPages:
+		; Keep one unrolled byte copy for both page fills and whole scores.
+		rept	Music_PageSize
+		move.b	(a0)+,(a3)+
+		endm
+		dbf	d1,.copyPages
+		tst.b	d2
+		beq.s	.residentReady
 		move.b	d2,(a1,d0.w)
 .publish:
 		st	(Z80_RAM+zMusicPageRequest).l
 		st	(Z80_RAM+zMusicCacheValid).l
 		rts
+.residentReady:
+		move.b	#zMusicCache&$FF,(Z80_RAM+zMusicReadBase).l
+		move.b	#zMusicCache>>8,(Z80_RAM+zMusicReadBase+1).l
+		bra.s	.publish
 .resident:
 		; A short song only evicts the slots it physically overwrites.
 		; The previous paged song can reuse the others after a jingle.
@@ -452,30 +472,20 @@ Music_FillPage:
 		move.w	d1,d3
 		bsr.s	Music_ClearSlots
 		lea	(Z80_RAM+zMusicCache).l,a3
-.copyScore:
-		bsr.s	Music_CopyPage
-		dbf	d1,.copyScore
-		move.b	#zMusicCache&$FF,(Z80_RAM+zMusicReadBase).l
-		move.b	#zMusicCache>>8,(Z80_RAM+zMusicReadBase+1).l
-		bra.s	.publish
+		moveq	#0,d2			; a resident score publishes no page-map entry
+		bra.w	.copyPages
 
 ; Clear tags and mappings for slots d3 through zero. d1 is preserved.
 Music_ClearSlots:
+		lea	1(a2,d3.w),a3
 		moveq	#0,d2
 .slot:
-		move.b	(a2,d3.w),d2
+		move.b	-(a3),d2
 		beq.s	.next
 		clr.b	-1(a1,d2.w)
-		clr.b	(a2,d3.w)
+		clr.b	(a3)
 .next:
 		dbf	d3,.slot
-		rts
-
-Music_CopyPage:
-		; Byte writes are required by the Z80 bus bridge.
-		rept	Music_PageSize
-		move.b	(a0)+,(a3)+
-		endm
 		rts
 
 ; d4 is the staging slot. Return the song ID in d4 and decoded size in d1.
@@ -483,8 +493,7 @@ Music_GetStageScore:
 		lea	(Music_StageSongs-1).l,a3
 		move.b	(a3,d4.w),d4
 		move.w	d4,d1
-		subi.w	#MusID__First,d1
 		lsl.w	#3,d1
-		lea	(Music_Index).l,a3
+		lea	(Music_IndexByID).l,a3
 		move.w	4(a3,d1.w),d1
 		rts
