@@ -146,7 +146,7 @@ invtime:                equ $36     ; word; invincibility duration
 shoetime:               equ $38     ; word; speed shoes duration
 next_tilt:              equ $3A     ; byte; forward ground sensor angle
 tilt:                   equ $3B     ; byte; ground sensor angle
-stick_to_convex:        equ $3C     ; byte
+stick_to_convex:        equ $3C     ; byte; 0 off, running disc slot + 1 while attached
 spindash_flag:          equ $3D     ; byte; charging/forced rolling state
 pinball_mode =          spindash_flag
 spindash_counter:       equ $3E     ; word; 8.8 spindash charge
@@ -180,6 +180,11 @@ Tails_CPU_ReachHeight:	equ 24
 Tails_CPU_ReachWidth:	equ $80
 Tails_CPU_FollowWidth:	equ $30	; ordinary recorded-position following distance
 Tails_CPU_ReachStopWidth:	equ 8	; close the horizontal gap during a ledge jump
+Tails_CPU_DirectJumpHeight:	equ 104	; dry jump rise plus Sonic/Tails standing radius difference
+Tails_CPU_StepProbeRise:	equ 72	; sample the middle of the reachable step band
+Tails_CPU_StepApproach:	equ 2	; jump towards the intermediate terrain ledge
+Tails_CPU_StepReturn:	equ 3	; jump from that ledge back to Sonic
+Tails_CPU_StepArrived:	equ 4	; settle near Sonic on the reached ledge
 Tails_CPU_CrumbleFlight:	equ -1	; approach state becomes the collapse marker in CPU flight state 4
 Tails_CPU_FlyHorizontalMax: equ 6	; local collapse pursuit; offscreen respawn keeps stock speed
 Tails_CPU_CatchUpVerticalMax:	equ 6	; respawn flight must keep up with a descending camera
@@ -196,7 +201,7 @@ v_jpadpresslogical2:	equ v_jpadholdlogical2+1
 Tails_CPU_idle_timer:	equ Tails_control_counter
 Tails_CPU_flight_timer:	equ Tails_respawn_counter
 Tails_CPU_interact:	equ v_player2tails+objoff_2E	; long; remembered standing-object code
-Tails_CPU_reach_state:	equ v_player2tails+objoff_32	; word; 0 normal, 1 ledge approach, -1 collapse flight
+Tails_CPU_reach_state:	equ v_player2tails+objoff_32	; word; 0 normal, 1 ledge approach, or a named state above
 Tails_CPU_target_X:	equ v_player2tails+objoff_44
 Tails_CPU_target_Y:	equ v_player2tails+objoff_46
 Tails_CPU_auto_jump_flag:	equ v_player2tails+objoff_39
