@@ -281,11 +281,6 @@ Music_Service:
 
 ; A quiet tick can preload a jump or call from one of the next held notes.
 ; The round-robin scan is bounded and never runs the command or advances a track.
-	if MOMPASS>1
-		if ((zTrack.len&1)<>0)||((zTracksEnd-zTracksStart)/2>$FF)
-			fatal "The music track cursor requires an even stride and byte-sized word offset."
-		endif
-	endif
 Music_Prefetch:
 		tst.b	(Music_CacheSong).l
 		beq.s	Music_Service.doneReturn

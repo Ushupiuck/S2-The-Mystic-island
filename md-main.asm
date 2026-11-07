@@ -13171,6 +13171,10 @@ Snd_Driver:
 	save
 	include "s2.sounddriver.asm" ; CPU Z80
 	restore
+	; Check the 68000 prefetch cursor after the Z80 track layout is defined.
+	if ((zTrack.len&1)<>0)||((zTracksEnd-zTracksStart)/2>$FF)
+		fatal "The music track cursor requires an even stride and byte-sized word offset."
+	endif
 	padding off
 	!org (Snd_Driver+Size_of_Snd_driver_guess) ; don't worry; I know what I'm doing
 
