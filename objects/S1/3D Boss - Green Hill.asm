@@ -20,6 +20,7 @@ BGHZ_Explode = 8
 BGHZ_Recover = $A
 BGHZ_Escape = $C
 BGHZ_CenterX = boss_ghz_x+$A0
+BGHZ_CockpitBottom = -4		; first scanline below the face mappings, relative to ship Y
 BGHZ_ChainBreakDelay = 64		; HCZ/MGZ/CNZ-style defeat wait before releasing attached parts
 
 Obj3D:

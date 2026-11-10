@@ -287,7 +287,9 @@ both boss PLCs at `ArtTile_BossExplosion = $581`. Its 100 tiles occupy
 `$B020-$BCA0`, replacing ordinary explosion art and the first five tiles of
 animal bank 1 during the fight. Keep that bank live until every burst finishes.
 GHZ reloads ordinary explosions and animals during recovery; EHZ does so after
-its escape delay, before the capsule opens. The controller and parent SST
+its escape delay, before the capsule opens. GHZ queues bursts that overlap
+the cockpit behind it so the 320-pixel sprite limit cannot clip the face
+in a dense burst. Lower bursts still draw over the hull. The controller and parent SST
 contract are in [Objects](Objects.md#ghz-boss-and-boss-explosions).
 
 `art/uncompressed/Large explosion.unc` is the editable pixel source;
