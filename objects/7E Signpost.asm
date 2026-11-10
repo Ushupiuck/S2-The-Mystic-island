@@ -32,6 +32,7 @@ signpost_hit_delay = objoff_30	; byte: shared 32-update hit cooldown
 signpost_previous_x = objoff_3C	; word: detect a crossing that skips the 32px window
 Signpost_LaunchSpeed = $600	; 6px/update, rightward ground speed
 Signpost_LaunchY = -$400		; upward launch in place; later hits may move it sideways
+Signpost_FootOffset = $1F	; last opaque row of the post in every frame
 Signpost_Ani_MechaSpin = 6
 Signpost_Ani_TailsSpin1 = 7
 Signpost_Ani_TailsSpin2 = 8
@@ -62,7 +63,7 @@ Signpost_Init:
 		move.b	#4,obRender(a0)
 		move.b	#sprite_bound($18,Map_Signpost_width),obActWid(a0)
 		move.w	#$200,obPriority(a0)
-		move.b	#$1E,obHeight(a0)
+		move.b	#Signpost_FootOffset,obHeight(a0)
 		move.b	#$18,obWidth(a0)
 		move.w	(v_player+obX).w,signpost_previous_x(a0)
 		move.w	obSubtype(a0),d0
@@ -306,7 +307,7 @@ Signpost_Fall:
 		bmi.s	.return
 		jsr	(ObjHitFloor).l
 		tst.w	d1
-		bpl.s	.return
+		bgt.s	.return
 		add.w	d1,obY(a0)
 		move.b	#12,obRoutine(a0)
 		move.w	#$40,objoff_34(a0)

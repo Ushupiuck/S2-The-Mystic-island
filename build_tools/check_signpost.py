@@ -105,13 +105,13 @@ def main():
         obj=setup();m.wall=wall;m.put(obj,'obX',x,2);m.put(obj,'obVelX',vx,2)
         act('Signpost_CheckWall',obj);assert m.get(obj,'obVelX',2)==((-vx if bounce else vx)&65535)
     checks.append('both camera edges and both terrain wall sensors reflect horizontal speed')
-    for y,vy,floor,land in ((0x24F,0, -2,False),(0x260,0xFF00,-2,False),(0x260,0,1,False),(0x260,0,-2,True)):
+    for y,vy,floor,land in ((0x24F,0, -2,False),(0x260,0xFF00,-2,False),(0x260,0,1,False),(0x260,0,0,True),(0x260,0,-2,True)):
         obj=setup();m.put('v_player','code',0);m.put('v_player2','code',0)
         m.put(obj,'obRoutine',10);m.put(obj,'obY',y,2);m.put(obj,'obVelY',vy,2);m.floor=floor;m.write('Vint_runcount',1,4)
         act('Signpost_Fall',obj)
         assert m.get(obj,'obRoutine')==(12 if land else 10)
         assert m.get(obj,'obVelY',2)==(vy+12)&65535
-        if land:assert m.get(obj,'obY',2)==y-2 and m.get(obj,'objoff_34',2)==64
+        if land:assert m.get(obj,'obY',2)==y+floor and m.get(obj,'objoff_34',2)==64
     for mode in (0,1,2):
         obj=setup();m.write('Player_mode',mode,2);m.put(obj,'objoff_34',64,2);m.put(obj,'obRoutine',12)
         for _ in range(64):act('Signpost_Landed',obj)

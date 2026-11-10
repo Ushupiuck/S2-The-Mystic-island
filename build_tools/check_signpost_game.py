@@ -14,6 +14,21 @@ from check_companion_followup import isolate, spawn, place
 from check_sprite_assets import frames
 
 
+def park_fixture_camera(g):
+	# GHZ1's flat stretch is at Y $5C0 after the terrain shift.
+	for name in ('Camera_X_pos', 'Camera_Min_X_pos', 'Camera_Max_X_pos'):
+		g.write(name, 0, 2)
+	for name in ('Camera_Y_pos', 'Camera_Min_Y_pos', 'Camera_Max_Y_pos', 'Camera_Max_Y_pos_target'):
+		g.write(name, 0x500, 2)
+	g.write('Screen_redraw_flag', 1)
+
+
+def check_ground_contact(g, sign, label):
+	if label in ('sky', 'fast-launch') and g.get(sign, 'obRoutine') in (12, 14, 8):
+		assert g.get(sign, 'obX', 2) == 248
+		assert g.get(sign, 'obY', 2) + 31 == 0x5BF, (label, 'signpost foot')
+
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     for name in ('rom','listing','core','output'):p.add_argument('--'+name,type=Path,required=True)
@@ -30,11 +45,11 @@ def main():
             g.run();assert not g.read('v_errortype'),('CPU exception',g.frame)
     def fixture(sub=1):
         g.restore(base)
-        g.write('Camera_X_pos',0,2);g.write('Camera_Min_X_pos',0,2);g.write('Camera_Max_X_pos',0,2)
+        park_fixture_camera(g)
         for who in actors:
-            place(g,who,80 if who=='v_player' else 48,940)
+            place(g,who,80 if who=='v_player' else 48,1452)
         g.write('Tails_CPU_idle_timer',6000,2);g.buttons2={4}
-        return spawn(g,'Signpost',248,930,sub)
+        return spawn(g,'Signpost',248,1440,sub)
     def verify_dplc(sign):
         frame=g.get(sign,'obFrame');root=g.s['DPLC_Signpost']
         ptr=root+struct.unpack_from('>h',rom,root+frame*2)[0];data=bytearray()
@@ -47,7 +62,7 @@ def main():
     def finish(sign,label):
         states=set()
         for t in range(900):
-            run();states.add(g.get(sign,'obRoutine'))
+            run();states.add(g.get(sign,'obRoutine'));check_ground_contact(g,sign,label)
             if t in (4,40,80):g.video.save(args.output/f'{label}-{t}.png')
             if g.get('v_endcard','code')==g.s['GotThrough'] and g.get('v_endcard','obRoutine'):
                 run(80);verify_dplc(sign)
@@ -97,9 +112,9 @@ def main():
     # This artificial near-start arena is shorter than the normal 256px
     # signpost-art approach. Suppress that unrelated approach-lock service.
     g.write('f_timecount',0)
-    place(g,'v_player',228,940,False)
+    place(g,'v_player',228,1451,False)
     g.put('v_player','obVelX',0x600,2);g.put('v_player','obInertia',0x600,2)
-    g.buttons={7};run(6);g.buttons=set()
+    g.buttons={7};run(12);g.buttons=set()
     assert g.get(sign,'obRoutine')==10 and g.get(sign,'obSubtype')&1
     assert g.get(sign,'obVelY',2)&0x8000 and g.get(sign,'obX',2)==248
     # Brake after crossing so the actor stays in the scene while it lands.
@@ -114,7 +129,7 @@ def main():
         assert g.get(sign,'obRoutine')==10
         x=g.get(sign,'obX',2);y=g.get(sign,'obY',2)
         for actor in actors:
-            place(g,actor,48,940)
+            place(g,actor,48,1452)
         place(g,who,x-8,y+20)
         for f,v,n in [('obVelY',0xFC00,2),('obStatus',6,1),('obAnim',2,1),('obHeight',14,1),('obWidth',7,1),('jumping',1,1)]:g.put(who,f,v,n)
         score=g.read('v_score',4);run()
@@ -124,7 +139,7 @@ def main():
         assert any(g.get(a,'points_parent',2)==g.s[who]&65535 for a in pops)
         run(4);g.video.save(args.output/f'hit-{who}.png')
         # Cooldown is real game time; keep the actor safely away afterward.
-        place(g,who,80,900)
+        place(g,who,80,1412)
         run(30);assert g.read('v_score',4)==score+10
         # Exercise the screen-edge reflection with an actual moving sign.
         g.put(sign,'obX',297,2);g.put(sign,'obVelX',0x100,2)
