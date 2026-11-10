@@ -233,6 +233,8 @@ A sky-drop locks horizontal scrolling at the camera's current X and stops
 the act clock immediately; create it after any boss escape/arena cleanup.
 This subtype does not perform boss-specific cleanup or act transitions.
 
+For a placed signpost on a flat floor, set its layout Y 32 pixels above
+the first solid row. The last opaque row of the post is at Y + 31.
 A placed signpost retains the normal crossing/spin/run-offscreen finish.
 Crossing it grounded with rightward inertia at least `$0600` (6 pixels per
 update) instead launches it vertically at `-$0400`, with zero horizontal speed,
@@ -251,8 +253,10 @@ Orbiting sparkles spawn every four VInts, use the resident ring art, alternate
 depth and expire after 32 updates. Our existing signpost mappings already
 include the post, so no separate stub/art allocation is needed.
 
-Landing requires downward motion, terrain penetration and Y at least camera
-Y + `$50`. The sign keeps spinning for `$40` countdown updates (65 calls before
+Landing requires downward motion and Y at least camera Y + `$50`. The floor
+sensor uses the last opaque row of the post and accepts zero distance so
+the foot settles immediately above the solid terrain.
+The sign keeps spinning for `$40` countdown updates (65 calls before
 the negative-timer transition), then selects the primary character's portrait,
 locks neutral logical input and waits for the primary to reach the ground
 before loading the existing results. It stays in place instead of forcing
