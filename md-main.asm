@@ -294,7 +294,12 @@ V_Int:
 		jsr	(a0)
 
 VintRet:
+		tst.b	(Music_BusSignal).l
+		beq.s	+
+		cmpi.b	#Music_LookaheadSignal,(Music_BusSignal).l
+		beq.s	+
 		bsr.w	Music_Service
++
 		addq.l	#1,(Vint_runcount).w
 		movem.l	(sp)+,d0-a6
 		rte
@@ -341,7 +346,12 @@ VInt_0_FullyUnderwater:
 VInt_0_Water_Cont:
 		move.w	(v_hbla_hreg).w,(a5)
 		startZ80
+		tst.b	(Music_BusSignal).l
+		beq.s	+
+		cmpi.b	#Music_LookaheadSignal,(Music_BusSignal).l
+		beq.s	+
 		bsr.w	Music_Service
++
 		addq.l	#1,(Vint_runcount).w	; we'll optimize by copying it here.
 		movem.l	(sp)+,d0-a6
 		rte
@@ -1688,6 +1698,12 @@ Pal_WZCyc:	binclude "palette/WZ Cycle.bin"
 
 ; DelayProgram:
 WaitForVint:
+		tst.b	(Music_BusSignal).l
+		beq.s	+
+		cmpi.b	#Music_LookaheadSignal,(Music_BusSignal).l
+		beq.s	+
+		bsr.w	Music_ServiceSave
++
 		bsr.w	Music_Prepare
 		movem.l	d0-d3/a1,-(sp)	; callers retain loop counters across the wait
 		tst.b	(MCD_dma_pending).w
@@ -1706,7 +1722,12 @@ WaitForVint:
 
 .wait:
 		tst.b	(a0)
-		bpl.s	.wait
+		bmi.s	.frameReady
+		tst.b	(Music_BusSignal).l
+		beq.s	.wait
+		bsr.w	Music_ServiceSave
+		bra.s	.wait
+.frameReady:
 		clr.b	(a0)
 		rts
 ; End of function WaitForVint
@@ -2518,6 +2539,12 @@ Level_MainLoop:
 		bsr.w	MoveSonicInDemo
 		bsr.w	WaterEffects
 		jsr	(ExecuteObjects).l
+		tst.b	(Music_BusSignal).l
+		beq.s	+
+		cmpi.b	#Music_LookaheadSignal,(Music_BusSignal).l
+		beq.s	+
+		bsr.w	Music_Service
++
 		tst.w	(Level_Inactive_flag).w
 		bne.w	Level
 		tst.w	(Debug_placement_mode).w
@@ -7079,6 +7106,14 @@ ExecuteObjects:
 		lea	(v_objspace).w,a0
 		moveq	#(v_player2tails-v_objspace)/object_size-1,d7
 		bsr.s	RunObject
+		; A score page can arrive during the player updates. Refill it before
+		; running the level object pool, rather than delaying it to frame end.
+		tst.b	(Music_BusSignal).l
+		beq.s	+
+		cmpi.b	#Music_LookaheadSignal,(Music_BusSignal).l
+		beq.s	+
+		jsr	(Music_ServiceSave).l
++
 		; Both players consume the previous object pass's candidates first.
 		; S3&K does this reset from Reserved_object_3; keep our UI slots free.
 		tst.w	(Collision_response_list).l
@@ -13179,11 +13214,7 @@ Snd_Driver:
 	save
 	include "s2.sounddriver.asm" ; CPU Z80
 	restore
-	; Check the 68000 prefetch cursor after the Z80 track layout is defined.
-	if ((zTrack.len&1)<>0)||((zTracksEnd-zTracksStart)/2>$FF)
-		fatal "The music track cursor requires an even stride and byte-sized word offset."
-	endif
-	padding off
+		padding off
 	!org (Snd_Driver+Size_of_Snd_driver_guess) ; don't worry; I know what I'm doing
 
 
@@ -13299,10 +13330,6 @@ Art_MechaSonic:	binclude "art/uncompressed/Mecha Sonic.unc"
 		even
 Kospm_MechaEffects:	binclude "art/moduled kosinski/Mecha Sonic effects.kospm"
 		even
-Pal_MechaFlash1:	binclude "palette/Mecha Sonic Flash 1.bin"
-		even
-Pal_MechaFlash2:	binclude "palette/Mecha Sonic Flash 2.bin"
-		even
 Nem_Swing2:		binclude	"art/nemesis/S1/SLZ Swinging Platform.nem"
 			even
 
@@ -13386,6 +13413,10 @@ Snd_Sega_End:		even
 Nem_MorphingPlatform:	binclude	"art/nemesis/Morphing Orbs.nem"
 			even
 Kospm_BallhogV:	binclude	"art/moduled kosinski/Enemy Ballhog (Vertical).kospm"
+		even
+Pal_MechaFlash1:	binclude "palette/Mecha Sonic Flash 1.bin"
+		even
+Pal_MechaFlash2:	binclude "palette/Mecha Sonic Flash 2.bin"
 		even
 
 ; ---------------------------------------------------------------------------

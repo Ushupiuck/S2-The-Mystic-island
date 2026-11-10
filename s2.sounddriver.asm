@@ -180,7 +180,9 @@ zPSG =		$7F11
 zROMWindow =	$8000
 ; more equates: addresses specific to this program (besides labelled addresses)
 zStack =	$2000-((zVar.len*2)+(zTrack.len*20))
-zMusicData = zStack - Music_CacheSize - $20
+zMusicVoiceSize = 25
+zMusicPageMapBase = (zStack-$20-zMusicVoiceSize-Music_PageCount)&(0-Music_PageCount)
+zMusicData = zMusicPageMapBase-Music_CacheSlots*Music_PageSize
 
 	phase zStack
 zAbsVar:		zVar
@@ -240,13 +242,13 @@ zTracksSFXEnd:
 
 ; The score uses virtual addresses. The cache and voice scratch are physical
 ; Z80 addresses resolved at the point of use.
-	phase (zMusicData+Music_PageSize-1)&(0-Music_PageSize)
+	phase zMusicData
 zMusicCache:		ds.b Music_CacheSlots*Music_PageSize
 zMusicCacheEnd:
 	dephase
-	phase (zMusicCacheEnd+Music_PageCount-1)&(0-Music_PageCount)
+	phase zMusicPageMapBase
 zMusicPageMap:		ds.b Music_PageCount
-zMusicVoiceScratch:	ds.b 25
+zMusicVoiceScratch:	ds.b zMusicVoiceSize
 zMusicCacheEndRAM:
 	dephase
 	if zMusicCacheEndRAM>zStack-$20
@@ -796,6 +798,7 @@ zloc_20E:
 zDACAfterDur:
 	ld	(ix+zTrack.DataPointerLow),l		; Stores "hl" to the DAC track pointer memory
 	ld	(ix+zTrack.DataPointerHigh),h
+	call	zHintMusicLookahead
 	bit	2,(ix+zTrack.PlaybackControl)		; Is SFX overriding this track?
 	ret	nz				; If so, we're done
 	ld	a,(ix+zTrack.SavedDAC)		; Check next note to play
@@ -1026,6 +1029,7 @@ zFinishTrackUpdate:
 	ld	(ix+zTrack.DataPointerHigh),h
 	ld	a,(ix+zTrack.SavedDuration)		; Last set duration
 	ld	(ix+zTrack.DurationTimeout),a		; ... put into ticker
+	call	zHintMusicLookahead
 	bit	4,(ix+zTrack.PlaybackControl)		; Is bit 4 (10h) "do not attack next note" set on playback?
 	ret	nz				; If so, quit
 	ld	a,(ix+zTrack.NoteFillMaster)		; Master "note fill" value -> a
@@ -1684,10 +1688,15 @@ zPCMLoopExit:
 ; ---------------------------------------------------------------------------
 ; zloc_73D:
 zPlayMusic:
-	ld	hl,zMusicReadySong
+	; Keep ready flags/slot stable from the ID check until the slot is live.
+	ld	hl,zMusicSlotBusy
+	ld	(hl),1
+	inc	hl				; zMusicReadySong
 	cp	(hl)
 	jr	z,.ready
 	ld	(zMusicSongRequest),a
+	dec	hl				; zMusicSlotBusy
+	ld	(hl),0
 	ret
 .ready:
 	xor	a
@@ -1752,6 +1761,8 @@ zBGMLoad:
 	call	zInitMusicPlayback
 	ld	a,(zMusicReadySlot)
 	ld	(zAbsVar.MusicSlot),a
+	xor	a
+	ld	(zMusicSlotBusy),a
 	call	zResetMusicCache
 zBGMLoad_FlagLoadInstruction:
 	ld	c,0			; Get song flags
@@ -2914,7 +2925,9 @@ cfFadeInToPrevious:
 	ld	bc,zVar.len		; for this many bytes
 	ldir					; Go!
 
-	; The MD still owns the saved song slot. Refill its pages on demand.
+	xor	a
+	ld	(zMusicSlotBusy),a
+	; The restored slot is now live. Refill its pages on demand.
 	ld	a,(zAbsVar.MusicSlot)
 	or	a
 	call	nz,zResetMusicCache
@@ -3672,6 +3685,8 @@ zMusicTickBusy:		db 0
 zMusicPageRequest:	db 0FFh
 zMusicCacheValid:	db 0
 zMusicSongRequest:	db 0
+zMusicLookahead:	db 0
+zMusicSlotBusy:		db 0
 zMusicReadySong:		db 0
 zMusicReadySlot:		db 0
 zMusicReadyFlags:	db 0
@@ -3704,12 +3719,19 @@ zFinishMusicTick:
 	ld	(zMusicTickBusy),a
 	ld	a,(zMusicSongRequest)
 	or	a
-	jr	z,.post
+	jr	nz,.song
+	ld	a,(zMusicLookahead)
+	or	a
+	ret	z
+	jr	.post
+.song:
 	or	80h
 .post:
-	call	zPostMusicSignal
+	push	af
 	xor	a
-	ret
+	ld	(zMusicLookahead),a
+	pop	af
+	jp	zPostMusicSignal
 
 zResetMusicCache:
 	xor	a
@@ -3822,6 +3844,28 @@ zMapScorePage:
 	or	c
 	ld	l,a
 	pop	bc
+	ret
+
+; A finished note can leave a branch or page boundary ahead of the cursor.
+; Within the same page the preceding note read already resolved this byte.
+; Publish a hint at tick end, when lookahead can safely replace cache pages.
+zHintMusicLookahead:
+	ld	a,h
+	sub	Music_ScoreBase>>8
+	cp	Music_StageCapacity>>8
+	ret	nc
+	ld	a,(zMusicLookahead)
+	or	a
+	ret	nz
+	ld	a,l
+	and	Music_PageSize-1
+	jr	z,.hint
+	rst	zReadScoreByte
+	cp	0E0h
+	ret	c
+.hint:
+	ld	a,Music_LookaheadSignal
+	ld	(zMusicLookahead),a
 	ret
 
 ; end of Z80 'ROM'

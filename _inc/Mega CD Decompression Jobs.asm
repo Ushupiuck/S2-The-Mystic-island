@@ -128,14 +128,9 @@ MCD_Decompress:
 		movea.l	a2,a0
 		btst	#0,d0
 		bne.s	.copyBytes
-		move.l	d1,d2
-		lsr.l	#1,d2
-		subq.w	#1,d2
-		bmi.s	.tail
-.copyWords:
-		move.w	(a0)+,(a1)+
-		dbf	d2,.copyWords
-.tail:
+		move.l	d1,d0
+		lsr.l	#1,d0
+		bsr.w	MCD_CopyDecodeWords
 		btst	#0,d1
 		beq.s	.cached
 		move.b	(a0)+,(a1)+
@@ -214,14 +209,9 @@ MCD_Decompress:
 .copyResult:
 		btst	#0,d0
 		bne.s	.copyResultBytes
-		move.l	d2,d1
-		lsr.l	#1,d1
-		subq.w	#1,d1
-		bmi.s	.resultTail
-.resultWord:
-		move.w	(a0)+,(a1)+
-		dbf	d1,.resultWord
-.resultTail:
+		move.l	d2,d0
+		lsr.l	#1,d0
+		bsr.w	MCD_CopyDecodeWords
 		btst	#0,d2
 		beq.s	.pointers
 		move.b	(a0)+,(a1)+
@@ -243,6 +233,39 @@ MCD_Decompress:
 .return:
 		move.w	(sp)+,sr
 		movem.l	(sp)+,d0-d7/a2-a6
+		rts
+
+; d0.w words from a0 to a1. Unroll large copies and service an actual Z80
+; request at each 256-byte boundary. The CD transaction still owns Word RAM.
+MCD_CopyDecodeWords:
+		move.w	d0,d4
+		lsr.w	#7,d4
+		beq.s	.remainder
+		subq.w	#1,d4
+.block:
+		moveq	#16-1,d3
+.copyEight:
+		rept 8
+		move.w	(a0)+,(a1)+
+		endm
+		dbf	d3,.copyEight
+		tst.b	(Music_BusSignal).l
+		beq.s	.nextBlock
+		cmpi.b	#Music_LookaheadSignal,(Music_BusSignal).l
+		beq.s	.nextBlock
+		btst	#0,(Z80_Bus_Request).l
+		beq.s	.nextBlock
+		jsr	(Music_ServiceSave).l
+.nextBlock:
+		dbf	d4,.block
+.remainder:
+		andi.w	#$7F,d0
+		subq.w	#1,d0
+		bmi.s	.return
+.copyWord:
+		move.w	(a0)+,(a1)+
+		dbf	d0,.copyWord
+.return:
 		rts
 
 ; May be called with IRQs masked. Preserve the caller's VBlank selection and

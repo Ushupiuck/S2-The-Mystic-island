@@ -1505,8 +1505,9 @@ Music_StageCount = 3
 Music_PageShift = 6
 Music_PageSize = 1<<Music_PageShift
 Music_PageCount = Music_StageCapacity/Music_PageSize
-Music_CacheSlots = 28
-Music_CacheSize = $820
+Music_CacheSlots = 30
+Music_VoicePageSlots = 4
+Music_LookaheadSignal = $FF
 Music_ScoreBase = $4000
 	if (Music_StageCount*Music_StageCapacity)>$7FFF
 		fatal "Music stage offsets must fit signed word addressing."
@@ -1518,12 +1519,11 @@ Music_StageSongs:	ds.b	Music_StageCount
 Music_PageTags:		ds.b	Music_CacheSlots
 Music_CacheSong:		ds.b	1
 Music_NextPage:		ds.b	1
-Music_NextTrackWordOffset:	ds.b	1	; word offset into the Z80 music tracks
+Music_FirstVoicePage:	ds.b	1	; first of the fixed slots for the shared voice table
 Music_PendingSong:	ds.b	1
 Music_LoadBusy:		ds.b	1
 Music_ServiceReady:	ds.b	1
-Music_ServiceBusy:	ds.b	1
-Music_BusSignal:		ds.b	1	; Z80 posts page requests and tick completion here
+Music_BusSignal:		ds.b	1	; Z80 posts page and song requests here
 Music_RAM_End:
 Free_RAM_Start:		ds.b	MCD_MainWorkStart-Music_RAM_End
 Free_RAM_End:

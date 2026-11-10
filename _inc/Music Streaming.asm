@@ -1,5 +1,5 @@
 ; Mega Drive 68000. Prepare complete scores on the main thread and fill the
-; Z80's read-only pages during its original VBlank update. The CD owns Kos+.
+; Z80's read-only pages when requested. The CD owns Kos+.
 musprop_uncompressed	= 1<<4
 musprop_nospeedup	= 1<<5
 musprop_palmode		= 1<<6
@@ -22,7 +22,7 @@ MusicPacked macro filename
 ; resurfacing and other common returns can use the very next sound tick.
 Music_QueueHint:
 		move.b	d0,(Music_PendingSong).l
-		tst.b	(Z80_RAM+zMusicTickBusy).l
+		tst.b	(Z80_RAM+zMusicSlotBusy).l
 		bne.s	.return
 		tst.b	(Music_LoadBusy).l
 		bne.s	.return
@@ -62,7 +62,7 @@ Music_Prepare:
 		disable_ints
 		stopZ80
 		waitZ80
-		tst.b	(Z80_RAM+zMusicTickBusy).l
+		tst.b	(Z80_RAM+zMusicSlotBusy).l
 		bne.w	.release
 		moveq	#0,d7
 		move.b	(Music_PendingSong).l,d7
@@ -169,8 +169,6 @@ Music_WaitPAL:
 .ready:
 		lea	(Music_BusSignal).l,a4
 		move.w	(MCD_MainStopwatch).l,d6
-		tst.b	(Music_ServiceBusy).l
-		bne.s	.wait
 .poll:
 		move.w	(MCD_MainStopwatch).l,d5
 		sub.w	d6,d5
@@ -193,7 +191,7 @@ Music_WaitPAL:
 		bls.s	.release
 .fill:
 		bsr.w	Music_FillPage
-		st	(a4)
+		clr.b	(a4)
 		startZ80
 		bra.s	.poll
 .release:
@@ -206,131 +204,123 @@ Music_WaitPAL:
 		blo.s	.wait
 		rts
 
-; Both VBlank exits call this after their VDP work. Keep the bus free between
-; requests so KeH can finish the same tick and return to its DAC loop.
+; The Z80 posts a page number, a song ID with bit 7 set, or a lookahead hint.
+; The caller has seen a request. Recheck after masking interrupts because
+; VBlank can service it before a foreground caller gets here. Hold the Z80
+; while taking the request so a new page can't replace an earlier song ID.
 Music_Service:
-		tst.b	(Music_ServiceReady).l
-		beq.s	.return
 		disableIntsSave
-		tst.b	(Music_ServiceBusy).l
-		beq.s	.start
-		enableIntsSave
-.return:
-		rts
-.start:
-		st	(Music_ServiceBusy).l
 		lea	(Music_BusSignal).l,a4
-		; Synchronize with the Z80 once. Its mailbox remains readable while
-		; the sound CPU runs, so only an actual fill needs another grant.
+		tst.b	(a4)
+		beq.s	.return
 		stopZ80
 		waitZ80
-		tst.b	(Z80_RAM+zMusicTickBusy).l
-		beq.w	.idleHeld
-		move.b	(a4),d0
-		subq.b	#1,d0
-		cmpi.b	#Music_PageCount,d0
-		blo.s	.release
-		st	(a4)
-.release:
-		startZ80
-		enableIntsSave
-		move.w	#2999,d7
-		moveq	#0,d6
-.poll:
 		moveq	#0,d0
 		move.b	(a4),d0
-		beq.s	.tickComplete
-		cmpi.b	#$FF,d0
-		beq.s	.running
 		cmpi.b	#Music_PageCount,d0
-		bhi.s	.song
+		bhi.s	.songOrHint
 		subq.w	#1,d0
-		disableIntsSave
-		stopZ80
-		waitZ80
 		bsr.w	Music_FillPage
-		st	(a4)
+.release:
+		clr.b	(a4)
+.resume:
 		startZ80
+.return:
 		enableIntsSave
-		moveq	#1,d6
-.running:
-		dbf	d7,.poll
-		bra.s	.done
-.tickComplete:
-		tst.b	d6
-		bne.s	.done
-		bsr.s	Music_Prefetch
-.done:
-		clr.b	(Music_ServiceBusy).l
-.doneReturn:
 		rts
-.song:
+.songOrHint:
+		cmpi.b	#Music_LookaheadSignal,d0
+		beq.s	.lookahead
 		tst.b	(Music_PendingSong).l
-		bne.s	.done
+		bne.s	.release
 		andi.b	#$7F,d0
+		cmp.b	(Z80_RAM+zMusicSongRequest).l,d0
+		bne.s	.release
 		move.b	d0,(Music_PendingSong).l
-		bra.s	.done
-.idleHeld:
-		tst.b	(Music_PendingSong).l
-		bne.s	.doneHeld
-		move.b	(Z80_RAM+zMusicSongRequest).l,(Music_PendingSong).l
-.doneHeld:
-		startZ80
-		enableIntsSave
-		bra.s	.done
+		bra.s	.release
 
-; A quiet tick can preload a jump or call from one of the next held notes.
-; The round-robin scan is bounded and never runs the command or advances a track.
-Music_Prefetch:
-		tst.b	(Music_CacheSong).l
-		beq.s	Music_Service.doneReturn
-		disableIntsSave
-		stopZ80
-		waitZ80
+.lookahead:
+		; Leave the next Z80 VBlank IRQ room even if all six pages miss.
+		; VBlank itself is reserved for the VDP and mandatory refills.
+		btst	#3,(vdp_control_port+1).l
+		bne.s	.release
+		moveq	#0,d0
+		move.b	(vdp_control_port+4).l,d0
+		cmpi.b	#168,d0
+		bhs.s	.release
+		; A six-page prefetch must also finish before an upcoming water split.
+		; Retain this optional hint until the split has run or a tick replaces it.
+		tst.b	(Water_flag).w
+		beq.s	.hintReady
+		moveq	#0,d1
+		move.b	(v_hbla_pal_line).w,d1
+		cmpi.b	#224-1,d1
+		beq.s	.hintReady
+		sub.w	d0,d1
+		bls.s	.hintReady
+		cmpi.w	#56,d1
+		blo.s	.resume
+.hintReady:
+		; A hint expires as soon as a new tick starts.
 		tst.b	(Z80_RAM+zMusicTickBusy).l
-		bne.w	.release
+		bne.s	.release
 		cmpi.b	#Music_ScoreBase>>8,(Z80_RAM+zMusicReadBase+1).l
-		bne.w	.release
+		bne.s	.release
+		bsr.s	Music_Prefetch
+		bra.s	.release
+
+; A track has reached a branch or page boundary. Read nearby held cursors
+; from the staged score and fill up to six pages in this one bus grant.
+Music_Prefetch:
+		movem.l	d5-d7/a5-a6,-(sp)
 		bsr.w	Music_GetStage
 		movea.l	a0,a5
-		moveq	#0,d7
-		move.b	(Music_NextTrackWordOffset).l,d7
-		move.w	d7,d5
-		add.w	d5,d5
 		lea	(Z80_RAM+zTracksStart).l,a6
-		adda.w	d5,a6
-		moveq	#1,d6
+		moveq	#MUSIC_TRACK_COUNT-1,d7
+		moveq	#6,d6
 .track:
 		btst	#7,zTrack.PlaybackControl(a6)
-		beq.s	.next
+		beq.w	.next
 		move.b	zTrack.DurationTimeout(a6),d0
-		subq.b	#2,d0
-		cmpi.b	#11,d0
-		bhs.s	.next
+		subq.b	#1,d0
+		cmpi.b	#16,d0
+		bhs.w	.next
+		moveq	#0,d0
 		move.b	zTrack.DataPointerHigh(a6),d0
 		lsl.w	#8,d0
 		move.b	zTrack.DataPointerLow(a6),d0
 		subi.w	#Music_ScoreBase,d0
-		moveq	#3,d5
+		moveq	#7,d5
 .command:
-		cmpi.w	#Music_StageCapacity-3,d0
+		cmpi.w	#Music_StageCapacity-5,d0
 		bhs.s	.next
+		bsr.w	Music_PrefetchPage
+		beq.s	.done
 		lea	(a5,d0.w),a3
 		moveq	#0,d1
 		move.b	(a3),d1
 		subi.b	#$E0,d1
 		cmpi.b	#$1B,d1
-		bhs.s	.next		; note or duration
+		bhs.s	.next		; reached a note or duration
 		moveq	#0,d2
-		move.b	Music_PrefetchLengths(pc,d1.w),d2
+		lea	Music_PrefetchLengths(pc),a2
+		move.b	(a2,d1.w),d2
 		beq.s	.next		; return, stop, or a counted loop
 		cmpi.b	#$16,d1
 		beq.s	.jump
 		cmpi.b	#$18,d1
 		beq.s	.call
+		cmpi.b	#$F,d1
+		beq.s	.voice
 		add.w	d2,d0
+.advance:
 		dbf	d5,.command
-		bra.s	.next
+.next:
+		lea	zTrack.len(a6),a6
+		dbf	d7,.track
+.done:
+		movem.l	(sp)+,d5-d7/a5-a6
+		rts
 .call:
 		addq.w	#1,d0
 .jump:
@@ -339,34 +329,64 @@ Music_Prefetch:
 		move.b	1(a3),d1
 		addq.w	#2,d0
 		add.w	d1,d0
-		cmpi.w	#Music_StageCapacity,d0
-		bhs.s	.next
-		lsr.w	#Music_PageShift,d0
+		bra.s	.advance		; follow nested calls to the first timed event
+
+.voice:
+		; A voice change can read either side of a page boundary before
+		; the next note. Resolve the patch in the staged score as well.
+		moveq	#0,d1
+		move.b	1(a3),d1
+		mulu.w	#25,d1
+		moveq	#0,d2
+		move.b	1(a5),d2
+		lsl.w	#8,d2
+		move.b	(a5),d2
+		add.w	d2,d1
+		cmpi.w	#Music_StageCapacity-25,d1
+		bhi.s	.skipVoice
+		move.w	d0,-(sp)
+		move.w	d1,d0
+		bsr.w	Music_PrefetchPage
+		beq.s	.voiceDone
+		addi.w	#24,d0
+		bsr.w	Music_PrefetchPage
+.voiceDone:
+		move.w	(sp)+,d0
+		tst.w	d6
+		beq.s	.done
+.skipVoice:
+		addq.w	#2,d0
+		bra.s	.advance
+
+; d0 is an offset in the live score. Return Z if the fill budget is spent.
+Music_PrefetchPage:
+		move.w	d0,d1
+		lsr.w	#Music_PageShift,d1
 		lea	(Z80_RAM+zMusicPageMap).l,a1
-		tst.b	(a1,d0.w)
-		bne.s	.next
+		tst.b	(a1,d1.w)
+		bne.s	.return
+		move.w	d0,-(sp)
+		move.w	d1,d0
 		movea.l	a5,a0
-		bsr.s	Music_FillStagedPage
+		bsr.w	Music_FillStagedPage
 		bset	#5,(a1,d0.w)
-.next:
-		lea	zTrack.len(a6),a6
-		addi.b	#zTrack.len/2,d7
-		cmpi.b	#(zTracksEnd-zTracksStart)/2,d7
-		blo.s	.advance
-		moveq	#0,d7
-		lea	(Z80_RAM+zTracksStart).l,a6
-.advance:
-		dbf	d6,.track
-		move.b	d7,(Music_NextTrackWordOffset).l
-.release:
-		startZ80
-		enableIntsSave
+		move.b	#(Music_ScoreBase+Music_StageCapacity)>>8,(Z80_RAM+zReadScoreLastHigh+1).l
+		move.w	(sp)+,d0
+		subq.w	#1,d6
+.return:
 		rts
 
 Music_PrefetchLengths:
 		dc.b	2,2,2,0,0,2,2,1,2,2,2,2,2,1,1,2
 		dc.b	5,1,0,2,1,2,3,0,3,1,2
 		even
+
+; The foreground and CD waits retain their live registers across a refill.
+Music_ServiceSave:
+		movem.l	d0-d4/a0-a4,-(sp)
+		bsr.w	Music_Service
+		movem.l	(sp)+,d0-d4/a0-a4
+		rts
 
 Music_GetStage:
 		moveq	#0,d4
@@ -380,7 +400,6 @@ Music_GetStage:
 ; d0.w is a virtual page index. Bus is granted until the map byte is written.
 Music_FillPage:
 		bsr.s	Music_GetStage
-; Prefetch already resolved the live stage in a0 and slot in d4.
 Music_FillStagedPage:
 		lea	(Z80_RAM+zMusicPageMap).l,a1
 		lea	(Music_PageTags).l,a2
@@ -396,7 +415,15 @@ Music_FillStagedPage:
 		move.b	d4,(Music_CacheSong).l
 		moveq	#Music_CacheSlots-1,d3
 		bsr.w	Music_ClearSlots
-		clr.b	(Music_NextPage).l
+		; Keep the first instrument pages out of the track-page clock.
+		; These patches are shared by all FM channels and reused across sections.
+		moveq	#0,d1
+		move.b	1(a0),d1
+		lsl.w	#8,d1
+		move.b	(a0),d1
+		lsr.w	#Music_PageShift,d1
+		move.b	d1,(Music_FirstVoicePage).l
+		move.b	#Music_VoicePageSlots,(Music_NextPage).l
 		bra.s	.keepCache
 .reuseCache:
 		tst.b	(a1,d0.w)
@@ -406,6 +433,10 @@ Music_FillStagedPage:
 		lsl.w	#Music_PageShift,d1
 		adda.w	d1,a0
 
+		move.w	d0,d2
+		sub.b	(Music_FirstVoicePage).l,d2
+		cmpi.b	#Music_VoicePageSlots,d2
+		blo.s	.tag
 		moveq	#0,d2
 		move.b	(Music_NextPage).l,d2
 .candidate:
@@ -417,7 +448,7 @@ Music_FillStagedPage:
 		addq.w	#1,d2
 		cmpi.w	#Music_CacheSlots,d2
 		blo.s	.candidate
-		moveq	#0,d2
+		moveq	#Music_VoicePageSlots,d2
 		bra.s	.candidate
 .evict:
 		clr.b	-1(a1,d1.w)
@@ -425,13 +456,16 @@ Music_FillStagedPage:
 		move.w	d0,d1
 		addq.w	#1,d1
 		move.b	d1,(a2,d2.w)
+		cmpi.w	#Music_VoicePageSlots,d2
+		blo.s	.destination
 		move.w	d2,d3
 		addq.w	#1,d3
 		cmpi.w	#Music_CacheSlots,d3
 		blo.s	.nextSlot
-		moveq	#0,d3
+		moveq	#Music_VoicePageSlots,d3
 .nextSlot:
 		move.b	d3,(Music_NextPage).l
+.destination:
 		lea	(Z80_RAM+zMusicCache).l,a3
 		move.w	d2,d1
 		lsl.w	#Music_PageShift,d1

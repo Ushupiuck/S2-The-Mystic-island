@@ -266,7 +266,10 @@ replaces it. The compressed Z80 driver has its own explicit start/end span.
 
 Terrain decodes straight into resident CD PRG RAM. General MD destinations use
 the Word-RAM output bank followed by a result copy; Z80 destinations require
-byte writes. The KeH streaming experiment also uses the CD codec to stage
+byte writes. On the KeH streaming branch, aligned input/result copies use
+unrolled word transfers and check for pending Z80 score pages between
+256-byte blocks. Those refills do not release Word RAM to CD or disturb a
+caller-owned Z80 bus grant. The experiment also uses the CD codec to stage
 complete scores in MD RAM. The Z80 sequences music from pages supplied by the
 main CPU. See the [sound guide](../build_tools/sound/README.md#experimental-score-streaming).
 

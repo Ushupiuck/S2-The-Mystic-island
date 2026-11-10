@@ -147,20 +147,29 @@ and output copy. Raw scores copy from ROM. The live slot stays immutable
 while KeH reads it.
 
 KeH keeps the FM, PSG, DAC and SFX updates on the Z80. Larger scores use
-logical pointers and 64-byte pages. The Z80 requests a missing page by
-writing a byte to MD RAM through its banked window. The MD services requests
-on both VBlank exits, with short bus grants for copies. PAL can also refill
-ordinary pages during the existing VBlank delay. A quiet tick can preload a
-page for an approaching jump or call in a held track. Scores that fit the page
-data area load in full and use direct reads. A short score invalidates just
-the slots it overwrites, so the preceding paged score can keep other pages.
-Live modulation settings and cross-page YM patches use local Z80 state.
+logical pointers and a 30-slot cache of 64-byte pages. Four slots retain the
+first instrument pages across section changes. Scores that fit the cache use
+direct reads and invalidate only the slots they overwrite.
 
-The prefetch cursor stores a word offset into the Z80 track table. The MD
-resolves the starting track once and advances by the track stride. Page fills
-and short-score uploads share one unrolled byte-copy loop. The MD publishes
-the page map or direct read base after copying the score bytes with the Z80
-bus held.
+When a page misses, the Z80 writes its number to a byte in MD RAM through
+its banked window. VBlank exits, frame waits and longer CD operations check
+that byte before requesting the Z80 bus. A grant copies the requested page
+and clears the mailbox before releasing the Z80. The MD never waits for the
+rest of a normal sound tick. PAL can also refill during its existing VBlank
+delay. CD decode word copies check for requests between 256-byte blocks.
+
+A held note can leave a branch or page boundary ahead of a track. The Z80
+sends a lookahead hint in that case. Only the idle frame wait uses it, and
+only if the Z80 has finished its tick with time before the next VBlank or
+water-palette split. A hint held near the split remains pending until the
+split runs or a new tick replaces it. The MD follows a bounded number of
+upcoming commands and can preload up to six missing pages, including an
+instrument that crosses a page boundary.
+Live modulation and cross-page instrument reads still use local Z80 state.
+
+Song requests and cache refills share the mailbox. Publishing a staged score
+checks the short Z80 slot-change lock, so note playback can keep running
+while the MD prepares a different score.
 
 ## Reusing bank padding
 
@@ -168,7 +177,9 @@ bus held.
 kind,bank` hook after audio and before `finishBank`. Use `DAC` or `SFX` and
 a one-based bank number. `finishBank` checks that the audio and hook fit
 the aligned bank. Ordinary data may follow a bank directly. The music table
-records actual ROM addresses and needs no bank padding.
+records actual ROM addresses and needs no bank padding. Mecha's two flash
+palettes occupy the SFX tail alongside ordinary art, keeping the first bank
+from moving when the streaming code grows.
 
 ## Cache and failures
 
@@ -260,6 +271,20 @@ The historical `check_z80_kosinski_plus.py` fixture can still execute an older
 Z80 decoder given its source, ROM, listing and INI. Run it with
 `--driver-source` pointing to that checkout's `s2.sounddriver.asm`.
 For the streaming path, use the CD codec checks and live playback checks.
+
+Scheduling validation also needs active gameplay. Queue dense scores such as
+`GRGZ2`, `DDZ2`, `Test6`, `LBZ2_S3` and `Credits` in Scrap Madness acts 1/2,
+then exercise water entry, the air countdown and resurfacing in GHZ4/HPZ.
+Trace actual page requests and sound-tick completion, including song reloads
+after death. A resident score should make no `Music_Service` calls once loaded.
+Measure complete service calls through their return, including any interrupt
+work, and account for the emulator's cycle counter wrapping between frames.
+
+Cold song starts during a heavy level reload or a water-music restore can
+still take an extra tick in this experiment, as in its preceding driver.
+Compare those transitions separately from established playback; the regular
+sound-test state comparison allows startup alignment and cannot prove their
+first-tick latency. The MD has no note-playing fallback.
 
 These are playback and encoding checks, not a claim that every imported song
 now duplicates its source game's sound. PSG envelope approximations inherited

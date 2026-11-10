@@ -162,6 +162,15 @@ MCD_Command:
 MCD_WaitReply:
 		cmp.w	(MCD_SubAck).l,d2
 		beq.s	.acknowledged
+		; The CD job is still running. Use this wait to unblock the Z80.
+		tst.b	(Music_BusSignal).l
+		beq.s	.retry
+		cmpi.b	#Music_LookaheadSignal,(Music_BusSignal).l
+		beq.s	.retry
+		btst	#0,(Z80_Bus_Request).l	; the caller may own the Z80 bus
+		beq.s	.retry
+		bsr.w	Music_ServiceSave
+.retry:
 		dbf	d3,MCD_WaitReply
 .failed:
 		ori	#1,ccr
