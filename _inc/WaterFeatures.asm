@@ -79,7 +79,7 @@ WaterEffects:
 		bsr.w	DynamicWaterHeight
 
 .setheight:
-		sf.b	(f_wtr_state).w
+		moveq	#0,d1			; default to the dry palette above the split
 		moveq	#0,d0
 	;	cmpi.b	#aquatic_ruin_zone,(Current_Zone).w
 	;	beq.s	+	; This is an example on how not to have oscillating water
@@ -94,15 +94,20 @@ WaterEffects:
 		bcc.s	.isbelow
 		tst.w	d0
 		bpl.s	.isbelow
-		move.b	#224-1,(v_hbla_line).w
-		st.b	(f_wtr_state).w
+		st	d1			; the whole screen is underwater
 
 .isbelow:
 		cmpi.w	#224-1,d0
 		bcs.s	.isvisible
 		move.w	#224-1,d0
 
-.isvisible:	move.b	d0,(v_hbla_line).w
+.isvisible:
+		; Publish the line and top palette together. A lag VBlank can
+		; interrupt WaterEffects even when the screen stays submerged.
+		disableIntsSave
+		move.b	d0,(v_hbla_line).w
+		move.b	d1,(f_wtr_state).w
+		enableIntsSave
 .return:	rts
 ; End of function WaterEffects
 ; ===========================================================================
