@@ -289,7 +289,7 @@ V_Int:
 		bsr.w	Music_WaitPAL
 +
 		st	(v_vbla_counter).w
-		st	(f_hbla_pal).w
+		move.b	(v_hbla_line).w,(v_hbla_pal_line).w
 		movea.w	(v_vbla_routine).w,a0
 		jsr	(a0)
 
@@ -327,7 +327,7 @@ VInt_0_Level:
 
 		bsr.w	Music_WaitPAL
 +
-		st	(f_hbla_pal).w
+		move.b	(v_hbla_line).w,(v_hbla_pal_line).w
 		stopZ80
 		waitZ80
 		tst.b	(f_wtr_state).w
@@ -404,13 +404,15 @@ Vint_Level:
 		writeVRAM	Sprite_Table,vram_sprites
 		bsr.w	ProcessDMAQueue
 		startZ80
-		enable_ints
 		tst.b	(Water_flag).w
-		beq.s	Do_Updates
-		cmpi.b	#92,(v_hbla_line).w
-		bhs.s	Do_Updates
+		beq.s	.updates
+		cmpi.b	#92,(v_hbla_pal_line).w
+		bhs.s	.updates
 		st	(f_doupdatesinhblank).w
+		enable_ints
 		rts
+.updates:
+		enable_ints
 ; ---------------------------------------------------------------------------
 ; Subroutine to run a demo for an amount of time
 ; ---------------------------------------------------------------------------
@@ -580,15 +582,18 @@ Do_ControllerPal:
 ; ===========================================================================
 ; Start of H-INT code
 H_Int:
-		tst.b	(f_hbla_pal).w
-		beq.w	H_Int_done
-		; Enabling H-int can release a pending interrupt from the loading sequence.
-		; Acknowledge it during VBlank without consuming this frame's water split.
-		btst	#3,(vdp_control_port+1).l	; is the VDP still in VBlank?
-		bne.w	H_Int_done		; if so, leave CRAM and the H-int counter unchanged
+		cmpi.b	#224-1,(v_hbla_pal_line).w
+		bhs.w	H_Int_done		; VBlank already set the palette for the whole screen
+		btst	#3,(vdp_control_port+1).l
+		bne.w	H_Int_done		; acknowledge a pending H-int during VBlank
+		movem.l	d0/a0-a1,-(sp)
+		; A late VBlank exit can deliver the previous frame's H-int during
+		; active display. Keep the current split armed until its scanline.
+		move.b	(vdp_control_port+4).l,d0
+		cmp.b	(v_hbla_pal_line).w,d0
+		blo.s	H_Int_early
 		disable_ints
-		sf	(f_hbla_pal).w
-		movem.l	a0-a1,-(sp)
+		move.b	#224-1,(v_hbla_pal_line).w
 		lea	(vdp_data_port).l,a1
 		move.w	#$8A00+224-1,4(a1)		; write %1101 %1111 to register 10 (interrupt every 224th line)
 		lea	(v_palette_water).w,a0		; load palette from RAM
@@ -596,15 +601,18 @@ H_Int:
 	rept (palette_size)/4
 		move.l	(a0)+,(a1)			; move palette to CRAM (all 64 colors at once)
 	endm
-		movem.l	(sp)+,a0-a1
+		movem.l	(sp)+,d0/a0-a1
 		tst.b	(f_doupdatesinhblank).w
 		beq.s	H_Int_done
 		sf	(f_doupdatesinhblank).w
 		movem.l	d0-a6,-(sp)
 		bsr.w	Do_Updates
 		movem.l	(sp)+,d0-a6
-
 H_Int_done:
+		rte
+
+H_Int_early:
+		movem.l	(sp)+,d0/a0-a1
 		rte
 
 ; ===========================================================================

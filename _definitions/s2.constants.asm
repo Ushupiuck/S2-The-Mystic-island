@@ -1207,7 +1207,7 @@ v_vbla_counter:		ds.b	1			; 0 = foreground, 1 = waiting, $FF = VBlank admitted
 v_spritecount:		ds.b	1			; number of sprites on-screen
 v_vbla_routine:		ds.w	1
 f_doupdatesinhblank:	ds.b	1			; defers performing various tasks to the Horizontal Interrupt (H-Blank)
-f_hbla_pal:		ds.b	1			; flag set to change palette during HBlank (00 = no; 01 = change)
+v_hbla_pal_line:	ds.b	1			; current frame water split, 223 = no split
 v_dma_thunk:		ds.w	1			; Used as a RAM holder for the final DMA command word. Data will NOT be preserved across V-INTs, so consider this space reserved.
 v_pcyc_num:		ds.w	1			; palette cycling - current reference number
 v_pcyc_num2:		ds.w	1			; palette cycling - current reference number
