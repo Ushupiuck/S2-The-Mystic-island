@@ -261,6 +261,13 @@ The retired S2 cockpit/rotor files, their mappings and the old full S1 bank
 have been removed. The migration emits only the shared S1 hull/head banks
 and their mappings. EHZ's drawing offset references the same tiles as GHZ.
 The original pre-split source remains available through Git history.
+Final Zone keeps its separate piston assembly and damaged cockpit as moduled
+Kosinski+ banks, `Kospm_FzBoss` and `Kospm_FzEggman`. They are reserved for the
+planned fight and have no active load cue. `build_end_art.py` repacks the
+cockpit from its Nemesis source. That source already uses the earlier palette
+conversion, so tiles `$20-$39` translate from those slots to the current player
+line for both poses. Their `$3/$4/$F` indices become `$4/$F/$A`. The legs and
+lower metal retain their existing line-two indices.
 
 Both bosses share their expression/exhaust scripts. In GHZ, S1's hit/normal
 animation plays during explosions, the burnt frame during recovery, and the

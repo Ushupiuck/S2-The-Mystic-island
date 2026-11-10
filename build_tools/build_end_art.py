@@ -9,6 +9,8 @@ import argparse
 import json
 import struct
 from convert_s1_ss_background import kosinski_plus, kosinski_plus_decode
+from import_ehz2_pp_background import nemesis
+from sprite_palette import PLAYER_FROM_S1, PLAYER_FROM_LEGACY, remap_pixels
 
 ROOT = Path(__file__).resolve().parents[1]
 BANKS = (
@@ -34,6 +36,22 @@ def pack_moduled(raw):
 		assert kosinski_plus_decode(stream)[0] == module
 		packed += stream
 	return bytes(packed)
+
+
+def pack_fz_damaged_eggmobile():
+	# S1's FZ Damaged Eggmobile and FZ Eggmobile Legs mappings own these ranges.
+	# The two damaged cockpit poses use P1. Legs and lower metal use P2.
+	source = ROOT / 'art/nemesis/S1/Boss - Eggman after FZ Fight.nem'
+	raw = nemesis(source.read_bytes())
+	assert len(raw) == 0x4C * 32
+	cockpit_start, cockpit_end = 0x20 * 32, 0x3A * 32
+	# This Nemesis source already uses the earlier PLAYER_FROM_LEGACY remap.
+	# Translate from those slots rather than applying the S1 conversion twice.
+	lookup = tuple(PLAYER_FROM_S1[PLAYER_FROM_LEGACY.index(slot)] for slot in range(16))
+	cockpit = remap_pixels(raw[cockpit_start:cockpit_end], lookup)
+	packed = pack_moduled(raw[:cockpit_start] + cockpit + raw[cockpit_end:])
+	source.with_suffix('.kospm').write_bytes(packed)
+	return dict(label='Kospm_FzEggman', raw=len(raw), packed=len(packed), odd=bool(len(packed) & 1))
 
 
 def main():
@@ -72,6 +90,7 @@ def main():
 		(ROOT / f'art/moduled kosinski/{name}.kospm').write_bytes(packed)
 		report.append(dict(label='Kospm_'+label, raw=len(raw),
 			packed=len(packed), odd=bool(len(packed) & 1)))
+	report.append(pack_fz_damaged_eggmobile())
 	if a.report:
 		a.report.write_text(json.dumps(report, indent=2)+'\n')
 	print(f'{len(report)} resident banks: {sum(x["raw"] for x in report)} raw '

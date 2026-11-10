@@ -647,6 +647,12 @@ MCD_CompressedAssets:
 	if defined(Kospm_FlapDoor)
 	dc.l Kospm_FlapDoor,Kospm_FlapDoor+$165	; art/moduled kosinski/Flapping Door.kospm
 	endif
+	if defined(Kospm_FzBoss)
+	dc.l Kospm_FzBoss,Kospm_FzBoss+$6D4	; art/nemesis/S1/Boss - Final Zone.kospm
+	endif
+	if defined(Kospm_FzEggman)
+	dc.l Kospm_FzEggman,Kospm_FzEggman+$547	; art/nemesis/S1/Boss - Eggman after FZ Fight.kospm
+	endif
 	if defined(Kospm_Jaws)
 	dc.l Kospm_Jaws,Kospm_Jaws+$1DF	; art/moduled kosinski/Enemy Jaws.kospm
 	endif
@@ -1207,12 +1213,6 @@ MCD_CompressedAssets:
 	endif
 	if defined(Nem_Flicky)
 	dc.l Nem_Flicky,Nem_Flicky+$13A	; art/nemesis/Flicky/Flicky.nem
-	endif
-	if defined(Nem_FzBoss)
-	dc.l Nem_FzBoss,Nem_FzBoss+$74D	; art/nemesis/S1/Boss - Final Zone.nem
-	endif
-	if defined(Nem_FzEggman)
-	dc.l Nem_FzEggman,Nem_FzEggman+$5BF	; art/nemesis/S1/Boss - Eggman after FZ Fight.nem
 	endif
 	if defined(Nem_GHZ_BWall)
 	dc.l Nem_GHZ_BWall,Nem_GHZ_BWall+$AB	; art/nemesis/S1/GHZ Breakable Wall.nem
