@@ -182,7 +182,9 @@ BossExplosion_FollowParent:
 		move.w	obX(a1),obX(a0)
 		move.w	obY(a1),obY(a0)
 		subq.b	#1,BossBurst_Timer(a0)
-		bpl.s	.return
+		bmi.s	.emit
+		rts
+.emit:
 		tst.b	d3
 		bne.s	.finite
 		tst.b	BossBurst_Count(a0)
@@ -221,6 +223,13 @@ BossExplosion_FollowParent:
 		and.w	d2,d0
 		sub.w	d1,d0
 		add.w	d0,obY(a1)
+		; GHZ bursts that reach the cockpit use the remaining scanline
+		; budget after the face. Lower bursts still cover the hull.
+		cmpi.w	#Map_BossExplosion_height+BGHZ_CockpitBottom,d0
+		bge.s	.return
+		cmpi.l	#Obj3D,BossBurst_ParentCode(a0)
+		bne.s	.return
+		move.w	#$200,obPriority(a1)
 .return:
 		rts
 ; ---------------------------------------------------------------------------
@@ -309,7 +318,6 @@ BossExplosion:
 		move.b	#Map_BossExplosion_width,width_pixels(a0)
 		move.w	#make_art_tile(ArtTile_BossExplosion,0,1),obGfx(a0)
 		move.b	#4,obRender(a0)
-		clr.w	obPriority(a0)
 		clr.b	obColType(a0)
 		move.b	BossExplosion_Delays(pc),obTimeFrame(a0)
 		clr.b	obFrame(a0)
