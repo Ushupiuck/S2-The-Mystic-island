@@ -13573,13 +13573,13 @@ Kospm_OldEggPod:	binclude "art/moduled kosinski/Old Eggpod.kospm"
 		even
 Kospm_EggmanFace:	binclude "art/moduled kosinski/Eggman face.kospm"
 		even
-Nem_FzEggman:	binclude	"art/nemesis/S1/Boss - Eggman after FZ Fight.nem"	; Ruined Eggpod tiles
+Kospm_FzEggman:	binclude "art/nemesis/S1/Boss - Eggman after FZ Fight.kospm" ; damaged cockpit, reserved for FZ
 		even
 Nem_Eggman:	binclude	"art/nemesis/S1/Boss - Eggman in SBZ2 & FZ.nem"		; Walking/Running/Jumping frames
 		even
 Kospm_Weapons:	binclude "art/moduled kosinski/Boss weapons.kospm"
 		even
-Nem_FzBoss:	binclude	"art/nemesis/S1/Boss - Final Zone.nem"			; This boss might be reused
+Kospm_FzBoss:	binclude "art/nemesis/S1/Boss - Final Zone.kospm" ; piston assembly, reserved for FZ
 		even
 Kospm_Exhaust:	binclude "art/moduled kosinski/Boss exhaust.kospm"
 		even
