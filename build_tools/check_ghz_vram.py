@@ -214,7 +214,7 @@ def main():
 			header = symbols['LevelArtPointers']+(zone*4+act-1)*12
 			source = struct.unpack_from('>I',rom,header)[0]&0xFFFFFF
 			level_end = len(kosinski_plus_decode(rom[source:])[0])
-			loaded = cues(f'PLC_{name}{act}_Main')+cues(f'PLC_{name}{act}_Extra')
+			loaded = cues(f'PLC_{name}{act}_Main')+cues(f'PLC_{name}{act}_Extra')+cues(f'PLCKosM_{name}{act}')
 			for i,(_,low,high) in enumerate(loaded):
 				assert low>=level_end, ('Object PLC overlaps terrain',name,act,hex(low),hex(level_end))
 				assert all(high<=a or low>=b for _,a,b in loaded[:i]), ('Act object banks overlap',name,act,hex(low),hex(high))

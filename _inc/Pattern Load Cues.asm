@@ -1718,24 +1718,28 @@ PLCKosM_AWZ4_End
 ; Act 1
 PLCKosM_EHZ1:	plrKosMlistheader
 	plreqKosM	ArtTile_Fireball, Kospm_Fireballs
+	plreqKosM	ArtTile_FireballMaker, Kospm_FireballMaker
 PLCKosM_EHZ1_End
 
 ; ---------------------------------------------------------------------------
 ; Act 2
 PLCKosM_EHZ2:	plrKosMlistheader
 	plreqKosM	ArtTile_Fireball, Kospm_Fireballs
+	plreqKosM	ArtTile_FireballMaker, Kospm_FireballMaker
 PLCKosM_EHZ2_End
 
 ; ---------------------------------------------------------------------------
 ; Act 3
 PLCKosM_EHZ3:	plrKosMlistheader
 	plreqKosM	ArtTile_Fireball, Kospm_Fireballs
+	plreqKosM	ArtTile_FireballMaker, Kospm_FireballMaker
 PLCKosM_EHZ3_End
 
 ; ---------------------------------------------------------------------------
 ; Act 4
 PLCKosM_EHZ4:	plrKosMlistheader
 	plreqKosM	ArtTile_Fireball, Kospm_Fireballs
+	plreqKosM	ArtTile_FireballMaker, Kospm_FireballMaker
 PLCKosM_EHZ4_End
 
 ; ---------------------------------------------------------------------------
@@ -1777,24 +1781,28 @@ PLCKosM_CVZ4_End
 ; Act 1
 PLCKosM_HTZ1:	plrKosMlistheader
 	plreqKosM	ArtTile_Fireball, Kospm_Fireballs
+	plreqKosM	ArtTile_FireballMaker, Kospm_FireballMaker
 PLCKosM_HTZ1_End
 
 ; ---------------------------------------------------------------------------
 ; Act 2
 PLCKosM_HTZ2:	plrKosMlistheader
 	plreqKosM	ArtTile_Fireball, Kospm_Fireballs
+	plreqKosM	ArtTile_FireballMaker, Kospm_FireballMaker
 PLCKosM_HTZ2_End
 
 ; ---------------------------------------------------------------------------
 ; Act 3
 PLCKosM_HTZ3:	plrKosMlistheader
 	plreqKosM	ArtTile_Fireball, Kospm_Fireballs
+	plreqKosM	ArtTile_FireballMaker, Kospm_FireballMaker
 PLCKosM_HTZ3_End
 
 ; ---------------------------------------------------------------------------
 ; Act 4
 PLCKosM_HTZ4:	plrKosMlistheader
 	plreqKosM	ArtTile_Fireball, Kospm_Fireballs
+	plreqKosM	ArtTile_FireballMaker, Kospm_FireballMaker
 PLCKosM_HTZ4_End
 
 ; ---------------------------------------------------------------------------

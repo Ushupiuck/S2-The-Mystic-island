@@ -160,8 +160,8 @@ its subtype/VRAM tables here.
 | GHZ flowers | `check_ghz_flowers.py` | Native exact DMA cadence; `--core` adds live uploads, neighboring-bank guards and pause; `--act 1` through `4`, optional pre-flower `--reference` |
 | EHZ terrain | `check_ehz_terrain.py` | Both acts' S-tunnels on both paths, five platform landings/all flips, actual Debug wall placement and breaks, return loading, S1 seesaw tilts/landings/launches in EHZ/HTZ |
 | EHZ waterfalls | `check_ehz_waterfalls.py` | Baked PP/reflection pixels, queue deferral, independent palette clocks and SAT pressure; `--core`, `--act 0`/`1`, optional `--before-rom`/`--before-listing` |
-| S1 fireballs | `check_s1_fireballs.py` | Fixed-point arcs, intervals, offscreen/pool behavior, real CD terrain impacts, both-player damage and all five controller-selected Debug presets |
-| Flame rendering | `check_fire_art.py --core CORE` | Eight EHZ/HTZ loads, six poses/four flips, springs intact; both emitters through all 22 SMZ frames in both acts and original harmful-frame gating |
+| S1 fireballs | `check_s1_fireballs.py` | Mirrored fixed-point arcs, independent settings/flips, maker offsets/intervals, offscreen/full/end-of-pool behavior, placement release, real CD impacts and both-player damage and all six controller-selected maker/projectile Debug presets |
+| Flame rendering | `check_fire_art.py --core CORE` | Eight EHZ/HTZ loads, six poses/four flips, both launcher orientations/four flips with exact SAT pieces, springs/spikes/monitors intact; both emitters through all 22 SMZ frames in both acts and original harmful-frame gating |
 
 `check_debug_states.py --zone 3 --act 2` covers EHZ2's private palette and HUD.
 `check_water_effects.py --player 2` selects primary Tails; `--companion` selects

@@ -6,7 +6,8 @@ from check_sprite_assets import frames
 from check_ehz_boss import symbols
 from import_ehz2_pp_background import nemesis
 from import_scrap_madness import mapping
-from check_boss_shared_art import unpack
+from check_boss_shared_art import unpack, raster
+from build_fire_art import FIREBALL_RECTS, PIPE_RECTS, rectangle
 
 ROOT = Path(__file__).resolve().parents[1]
 WARM = {0,2,3,4,5,6,13,14,15}
@@ -19,10 +20,36 @@ def assets(a):
 	atlas = (ROOT/'art/uncompressed/SMZ Sprite Atlas.unc').read_bytes()
 	assert unpack(rom,s['Kospm_Fireballs'])==balls
 	assert len(balls)==44*32 and len(pipe)==28*32
+	maker = unpack(rom,s['Kospm_FireballMaker'])
+	assert len(maker)==14*32
+	assert s['ArtTile_Spikes']+16 <= s['ArtTile_FireballMaker']
+	assert s['ArtTile_FireballMaker']+14 <= s['ArtTile_Monitor']
+	master = (ROOT/'art/uncompressed/Fireball maker.unc').read_bytes()
+	horizontal = rectangle(master,0,2,4)
+	vertical = [list(row) for row in zip(*horizontal)][::-1]
+	for row,pixels in zip(frames(rom,s['Map_FireballMaker'],2),(horizontal,vertical)):
+		assert len(row)==3
+		h,w = len(pixels),len(pixels[0])
+		expected = {(x-w//2,y-h//2):(0,c) for y,line in enumerate(pixels)
+			for x,c in enumerate(line) if c}
+		assert raster(row,[(0,maker)])==expected, 'Launcher mapping/rotation changed'
 	assert nemesis((ROOT/'art/nemesis/S1/SBZ Flaming Pipe.nem').read_bytes())==pipe
 	assert nemesis((ROOT/'art/nemesis/SMZ Sprite Atlas.nem').read_bytes())==atlas
 	for data in (balls,pipe[:20*32]):
 		assert {n for b in data for n in (b>>4,b&15)}==WARM
+	# A cold red must remain at the silhouette, never enclosed in a hot core.
+	# Inspect a two-pixel neighborhood independently of the importer's shading.
+	for data,rects in ((balls,FIREBALL_RECTS),
+			(pipe,[(first,w,h) for _,_,first,w,h in PIPE_RECTS if first<20])):
+		for first,w,h in rects:
+			pixels = rectangle(data,first,w,h)
+			for y,row in enumerate(pixels):
+				for x,color in enumerate(row):
+					if color not in (14,15):continue
+					near = [(x+dx,y+dy) for dx in range(-2,3) for dy in range(-2,3)
+						if abs(dx)+abs(dy)<=2]
+					assert any(not (0<=xx<w*8 and 0<=yy<h*8) or not pixels[yy][xx]
+						for xx,yy in near), ('Dark pixel inside flame',first,x,y,color)
 	assert s['ArtTile_Fireball']+len(balls)//32<=s['ArtTile_Springs']
 	assert s['ArtTile_EHZ_Seesaw']+62<=s['ArtTile_Fireball']
 	rows = frames(rom,s['Map_Fireballs'],6)
@@ -48,18 +75,20 @@ def assets(a):
 			assert path.read_bytes()==old(str(path.relative_to(ROOT))),path
 	for zone in ('EHZ','HTZ'):
 		for act in range(1,5):
-			pos=s[f'PLCKosM_{zone}{act}'];assert struct.unpack_from('>H',rom,pos)[0]==0
+			pos=s[f'PLCKosM_{zone}{act}'];assert struct.unpack_from('>H',rom,pos)[0]==1
 			assert struct.unpack_from('>IH',rom,pos+2)==(s['Kospm_Fireballs'],s['ArtTile_Fireball']*32)
-	return ['source silhouettes, all warm slots, six S1 mappings, isolated atlas edit and eight module lists']
+			assert struct.unpack_from('>IH',rom,pos+8)==(s['Kospm_FireballMaker'],s['ArtTile_FireballMaker']*32)
+	return ['source silhouettes, warm cores without dark specks, six S1 mappings, two compact launcher orientations, isolated atlas edit and eight module lists']
 
 
 def game(a):
 	from genesis_test_core import Genesis
 	from check_object_course import boot_level,objects
-	from check_companion_followup import place
+	from check_companion_followup import place,spawn
 	from object_layout import decode
 	checks=[];rom=a.rom.read_bytes();balls=(ROOT/'art/uncompressed/Fireballs.unc').read_bytes()
 	springs=nemesis((ROOT/'art/nemesis/Springs.nem').read_bytes())
+	maker=unpack(rom,symbols(a.listing)['Kospm_FireballMaker'])
 	for zone in (3,5,8):
 		for act in range(4 if zone!=8 else 2):
 			out=a.output/f'{zone}-{act+1}';g=Genesis(a.core,a.rom,a.listing,out,a.pal,system_directory=a.system_directory)
@@ -68,6 +97,9 @@ def game(a):
 			if zone!=8:
 				assert vram(s['ArtTile_Fireball']*32,len(balls))==balls,(zone,act,'fireball upload')
 				assert vram(s['ArtTile_Springs']*32,len(springs))==springs,(zone,act,'spring overlap')
+				assert vram(s['ArtTile_FireballMaker']*32,len(maker))==maker,(zone,act,'launcher upload')
+				for label,tile in (('Nem_VSpikes','ArtTile_Spikes'),('Nem_Monitors','ArtTile_Monitor')):
+					data=nemesis(rom[s[label]:]);assert vram(s[tile]*32,len(data))==data,(zone,act,tile)
 				if act==0:
 					pool=[p for p in range(s['v_lvlobjspace'],s['v_lvlobjend'],s['object_size']) if not g.get(p,'code')][-6:]
 					assert len(pool)==6
@@ -85,7 +117,31 @@ def game(a):
 								found.add((word&2047)-s['ArtTile_Fireball'])
 						assert found=={0,8,16,22,30,38},(zone,flip,found)
 						g.video.save(out/f'fireballs-{flip}.png')
-				checks.append(f'zone {zone} act {act+1}: real module upload and intact springs' + ('; six rendered poses, four flips' if act==0 else ''))
+					# Run the maker itself and compare its three hardware pieces with
+					# independently transformed mapping coordinates in every facing.
+					for subtype,frame in ((0x5C,0),(0x54,1)):
+						for flip in range(4):
+							obj=pool[-1];g.write(obj,0,s['object_size'])
+							for field,value,n in (('code',s['S1FireballSpawner'],4),('obSubtype',subtype,2),
+								('obStatus',flip,1),('obX',g.read('Camera_X_pos',2)+160,2),('obY',g.read('Camera_Y_pos',2)+104,2)):
+								g.put(obj,field,value,n)
+							g.run(3)
+							assert g.get(obj,'obFrame')==frame
+							expected=[]
+							for y,size,word,x in frames(rom,s['Map_FireballMaker'],2)[frame]:
+								w,h=((size>>2)+1)*8,((size&3)+1)*8
+								x=-x-w if flip&1 else x;y=-y-h if flip&2 else y
+								expected.append(((g.get(obj,'obX',2)-g.read('Camera_X_pos',2)+128+x)&511,
+									(g.get(obj,'obY',2)-g.read('Camera_Y_pos',2)+128+y)&511,size,
+									(word+s['ArtTile_FireballMaker'])^(flip<<11)))
+							actual=[]
+							for i in range(g.read('v_spritecount')):
+								at=s['Sprite_Table']+i*8;word=g.read(at+4,2)
+								if s['ArtTile_FireballMaker']<=word&2047<s['ArtTile_FireballMaker']+14:
+									actual.append((g.read(at+6,2)&511,g.read(at,2)&511,g.read(at+2),word))
+							assert sorted(actual)==sorted(expected),(zone,subtype,flip,actual,expected)
+							g.video.save(out/f'maker-{frame}-{flip}.png')
+				checks.append(f'zone {zone} act {act+1}: real fireball/launcher uploads; intact springs, spikes and monitors' + ('; six rendered poses, four flips' if act==0 else ''))
 			else:
 				x,y,_,_,sub=next(row for row in decode((ROOT/f'level/objects/SMZ_{act+1}.bin').read_bytes()) if row[2]==0xA7)
 				y&=0xFFF

@@ -1692,7 +1692,12 @@ ArtTile_Spring_Diagonal:	equ ArtTile_Spring_Horizontal+12 ; 18 tiles
 ArtTile_Spring_Support:	equ ArtTile_Spring_Diagonal+18 ; 4 shared static tiles
 ArtTile_Springs_End:	equ ArtTile_Spring_Support+4
 ArtTile_Spikes:		equ ArtTile_Springs_End ; 16 tiles, immediately after support
+ArtTile_FireballMaker:	equ ArtTile_Spikes+$10 ; 14 SLZ launcher tiles, EHZ/HTZ only
+ArtTile_FireballMaker_Count: equ 14
 ArtTile_Monitor:		equ $529 ; 60 tiles; final four retain Tails's life icon
+	if ArtTile_FireballMaker+ArtTile_FireballMaker_Count>ArtTile_Monitor
+		fatal "Fireball maker overlaps monitors."
+	endif
 ArtTile_Tails_Life:	equ ArtTile_Monitor+$38
 ArtTile_Lamppost:	equ ArtTile_Monitor+$3C ; 10 tiles; ends at $AD9F
 

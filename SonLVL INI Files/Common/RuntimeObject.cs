@@ -161,9 +161,12 @@ namespace MysticIsland.ObjectDefinitions
 					alternate = Load("../art/nemesis/Enemy Kemusi.nem", CompressionType.Nemesis, "Kemusi.bin", 1);
 					Bits("Variant", 0, 255, "The level must load the matching art bank. Scrap Madness Act 1 loads Caterkiller; Act 2 loads both families. Damaged Kemusi has a vulnerable body and moves at half speed.", "Caterkiller", "Kemusi", "Damaged Kemusi");
 					break;
+				case "Fireball":
 				case "FireballSpawner":
-					Bits("Launch", 0, 15, "Sonic 1 fireball trajectory; unsupported values use stationary type 8.", "Arc -$400", "Arc -$500", "Arc -$600", "Arc -$700", "Up", "Down", "Left", "Right", "Stationary");
-					Bits("Interval", 4, 15, "30-update increments; values above 5 clamp to 180 updates.", "30 updates", "60 updates", "90 updates", "120 updates", "150 updates", "180 updates");
+					Bits("Arc strength", 0, 3, "Initial arc speed; Y flip mirrors velocity/gravity. Straight shots use two pixels/update.", "-$400", "-$500", "-$600", "-$700");
+					Bits("Straight flight", 2, 1, "Off: arc away from the floor/roof and return with gravity. On: fly until terrain impact.", "Disabled", "Enabled");
+					Bits("Straight axis", 3, 1, "Applies to straight flight. X flip selects left instead of right; Y flip selects down instead of up.", "Vertical", "Horizontal");
+					if (behavior == "FireballSpawner") Bits("Interval", 4, 15, "30-update increments; values above 5 clamp to 180 updates.", "30 updates", "60 updates", "90 updates", "120 updates", "150 updates", "180 updates");
 					break;
 				case "Chopper": Bits("Jump velocity", 0, 255, "Index into the eight-entry jump-speed table.", "-$400", "-$480", "-$500", "-$580", "-$600", "-$680", "-$700", "-$780"); break;
 				case "Jaws": Bits("Turn interval", 0, 255, "Subtype * 64 - 1 frames; zero wraps to $FFFF."); break;
@@ -453,9 +456,13 @@ namespace MysticIsland.ObjectDefinitions
 			{
 				case "PathSwapper": return frames[subtype & 0x1F];
 				case "FireballSpawner":
-					int fireType = Math.Min(subtype & 15, 8);
-					Sprite fire = new Sprite(At(frames, fireType >= 6 ? 3 : 0));
-					fire.Flip(fireType == 6, fireType < 5);
+					Sprite maker = new Sprite(At(frames, (subtype & 12) == 12 ? 0 : 1));
+					maker.Flip(xflip, yflip);
+					return maker;
+				case "Fireball":
+					bool fireHorizontal = (subtype & 12) == 12;
+					Sprite fire = new Sprite(At(frames, fireHorizontal ? 3 : 0));
+					fire.Flip(xflip, fireHorizontal ? yflip : !yflip);
 					return fire;
 				case "Bridge":
 					pieces = new List<Sprite>();
@@ -598,7 +605,7 @@ namespace MysticIsland.ObjectDefinitions
 		{
 			Sprite sprite = new Sprite(Preview(Subtype(obj), obj.X, obj.Y, obj.YFlip, obj.XFlip, behavior == "Platform" || behavior == "Swing" ? MountSettings(obj) : 0, SwingArt(obj.ID)));
 			if (behavior == "Teleporter") sprite.Flip(obj.XFlip, false);
-			else if (behavior != "FireballSpawner" && behavior != "Platform" && behavior != "Swing" && behavior != "SpinGroup" && behavior != "LabyrinthConveyor" && behavior != "InvisibleSolid" && behavior != "Conveyor" && behavior != "PathSwapper" && behavior != "Hanging" && behavior != "PullChain") sprite.Flip(obj.XFlip, obj.YFlip);
+			else if (behavior != "FireballSpawner" && behavior != "Fireball" && behavior != "Platform" && behavior != "Swing" && behavior != "SpinGroup" && behavior != "LabyrinthConveyor" && behavior != "InvisibleSolid" && behavior != "Conveyor" && behavior != "PathSwapper" && behavior != "Hanging" && behavior != "PullChain") sprite.Flip(obj.XFlip, obj.YFlip);
 			return sprite;
 		}
 		public override Sprite GetDebugOverlay(ObjectEntry obj)
@@ -694,6 +701,7 @@ namespace MysticIsland.ObjectDefinitions
 	public sealed class Ballhog : RuntimeObject { }
 	public sealed class Chopper : RuntimeObject { }
 	public sealed class FireballSpawner : RuntimeObject { }
+	public sealed class Fireball : RuntimeObject { }
 	public sealed class Jaws : RuntimeObject { }
 	public sealed class VerticalDoor : RuntimeObject { }
 	public sealed class BreakableWall : RuntimeObject { }

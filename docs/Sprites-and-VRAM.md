@@ -610,9 +610,20 @@ See the [stage allocations and palette limits](Special-stage.md).
 `art/uncompressed/Fireballs.unc` contains S1's complete 44-tile fireball sheet.
 `mappings/sprite/Fireballs.asm` retains its two flight poses and impact pose in
 each direction. EHZ and HTZ load the shared Moduled Kosinski+ sheet at `$4B0`;
-the S1 fireball spawner is available in their Debug lists and editor pickers.
+both the maker and individual fireballs are available in their Debug lists
+and editor pickers.
 SMZ does not load this bank. [Objects](Objects.md#sonic-1-fireballs) owns the
 spawner/flight behavior; existing level layouts do not add new hazards.
+
+`art/uncompressed/Fireball maker.unc` is the right-facing SLZ launcher master,
+from s1disasm `2c51d46a`'s `SLZ Cannon.nem`. Its original greens use the shared
+blue ramp and its trim uses the gray ramp on the first player line. The packer
+rotates it for the upward version and reuses mirrored corners: 14 unique tiles,
+three mapping pieces per orientation. Placement flips supply left/down facings.
+The Moduled Kosinski+ bank occupies `$51B-$528`, between shared spikes and monitors,
+and loads in every EHZ/HTZ act beside the fireball bank. It is decorative;
+the emitted projectile owns harmful collision. Editing the master must preserve
+the mirrored corners checked by the packer or require a revised allocation.
 
 `art/uncompressed/SBZ Flaming Pipe.unc` owns its three flame rectangles and
 two pipe ends. The first 20 tiles use the first player line. Slots `D/E/F`
@@ -626,11 +637,12 @@ with warmer rings toward the edge. S1's silhouettes, shadow regions and
 transparent pixels come from s1disasm `2c51d46a`'s Fireballs/Flamethrower art.
 The four warm player slots expand the original yellow cores. Bright red remains
 in broad outer tongues (two pixels for fireballs, three for the longer pipe
-flame), medium red shades the original shadow regions, and the darkest red is
-reserved for internal folds. White stays inside the hottest cores.
+flame), dark/medium reds stay within the outer two pixels, and original interior
+shadow pixels progress through bright red into the warm ramp. White stays
+inside the hottest cores; deep shadow flecks must not puncture it.
 
-Run `python build_tools/build_fire_art.py` after editing either sheet. It packs
-the fireballs and pipe, updates the mapped atlas rectangles and repacks the
+Run `python build_tools/build_fire_art.py` after editing a fire/launcher sheet. It packs
+the fireballs, rotated launcher and pipe, updates the mapped atlas rectangles and repacks the
 atlas without moving its tiles. It rejects changes that would affect another
 SMZ object's shared rectangle. `--import-s1 /path/to/s1disasm` resets the editable
 sheets from the original silhouettes and the documented shading conversion.

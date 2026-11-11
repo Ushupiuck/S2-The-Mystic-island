@@ -644,8 +644,11 @@ MCD_CompressedAssets:
 	if defined(Kospm_Explosion)
 	dc.l Kospm_Explosion,Kospm_Explosion+$6CC	; art/moduled kosinski/Explosion.kospm
 	endif
+	if defined(Kospm_FireballMaker)
+	dc.l Kospm_FireballMaker,Kospm_FireballMaker+$103	; art/moduled kosinski/Fireball maker.kospm
+	endif
 	if defined(Kospm_Fireballs)
-	dc.l Kospm_Fireballs,Kospm_Fireballs+$370	; art/moduled kosinski/Fireballs.kospm
+	dc.l Kospm_Fireballs,Kospm_Fireballs+$37C	; art/moduled kosinski/Fireballs.kospm
 	endif
 	if defined(Kospm_FlapDoor)
 	dc.l Kospm_FlapDoor,Kospm_FlapDoor+$165	; art/moduled kosinski/Flapping Door.kospm
