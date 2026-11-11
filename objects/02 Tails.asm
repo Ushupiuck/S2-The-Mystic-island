@@ -106,6 +106,7 @@ Obj02_Control:
 .no_wrap:
 		btst	#0,obControl(a0)
 		beq.s	+
+		clr.b	tails_flight_flag(a0)	; an object lock also cancels manual flight, as in S3&K
 		bsr.w	Tails_ReleaseCarry
 +
 		bsr.w	Tails_Display
@@ -2404,6 +2405,7 @@ Tails_ResetOnFloor:
 ; ---------------------------------------------------------------------------
 
 Obj02_Hurt:
+		bsr.w	Tails_ReleaseCarry	; recoil must not leave Sonic locked in midair
 		clr.b	tails_hidden(a0)		; hurt recoil draws the body unconditionally
 		bsr.w	Player_ChkInvincibility
 		bsr.w	Player_ChkSpeedShoes

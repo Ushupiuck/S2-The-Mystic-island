@@ -406,7 +406,7 @@ that offer it. Most primary-player selectors use `--player 0` (Sonic) or `2`
 | Player effects and water | `check_player_effects.py`, `check_water_effects.py`, `check_shared_followup.py` | Shields/stars, splash/countdown, normal/paused surface, DMA retries and shared art |
 | Monitor state and primary Debug | `check_monitor_state.py`, `check_monitor_edges.py`, `check_debug_states.py` | Rider/collector ownership, contact boundaries, Debug HUD switching, stopped/running clock restoration and Time Over |
 | Object lifetime and stage entry | `check_object_lifetimes.py`, `check_giant_ring_entry.py`, `check_object_contexts.py` | Unload/deletion, giant rings and mode-specific objects |
-| Companion | `check_companion_followup.py`, `check_companion_hpz.py`, `check_companion_sbz.py` | Ledges, collapse/bridge/manual takeover; actual HPZ routes; 64-phase SMZ transfer and captured catch-up |
+| Companion | `check_companion_followup.py`, `check_companion_hpz.py`, `check_companion_sbz.py`, `check_tails_carry.py` | Ledges, collapse/bridge/manual takeover; actual HPZ routes; 64-phase SMZ transfer and captured catch-up; carry damage and object-lock transitions |
 | Input locks and rotating stage | `check_over_screen_input.py`, `check_drowning_input.py`, `check_special_stage_overlap.py` | Real deaths/drowning; normal bumper/item callbacks and embedding regressions |
 | Rotating-stage Debug | `check_ss_debug_game.py` | Actual controller placement, occupied-cell skipping, ring rendering and collection after leaving Debug in NTSC/PAL |
 | SMZ backgrounds, solids and hazards | `check_smz_background.py`, `check_scrap_madness.py`, `check_sbz_discs.py`, `check_smz_vanishing.py`, `check_swing_families.py`, `check_sbz_doors.py` | REV01 parallax/streaming, placed-object lifecycle, transport/ride boundaries and harmful spikeball subtypes |
@@ -454,6 +454,22 @@ at successive camera targets to cross plane wraps and layer boundaries in both
 directions. It covers pause/resume and saves rendered views. Use `--player 0`
 or `--player 2`, `--pal` for PAL, and `--system-directory` for Mode 1. The sweeps
 are streaming fixtures, not complete controller-only playthroughs.
+
+`check_tails_carry.py --core CORE --rom ROM --listing LISTING --output OUTPUT
+--system-directory BIOS` positions a carrying pair and a normal SMZ electrocuter.
+It checks Tails hurt/death, Sonic hurt/jumping/platform landing, and carrier
+movement locks `$01/$03/$81`, including normal gravity after unlocking. The
+hazard's animation, collision, recoil, carry release and subsequent landing run
+through game frames. Add `--pal` for PAL or `--probe` to record older-ROM failures.
+These are focused fixtures, not a controller-only level playthrough.
+
+Two older scenes need fixture maintenance before they can be used as passing
+suite gates: `check_companion_followup.py`'s first GHZ ledge setup predates the
+`$200` foreground shift, and `check_companion_sbz.py`'s conveyor setup can reach
+its three-frame initialization assertion without any matching platforms. Both
+also fail on the unchanged baseline. The latter's standalone `--scene flight`
+recording check remains usable; the native manager checks cover the companion
+approach/collapse logic independently.
 
 `check_companion_sbz.py` has `--probe` for older-ROM failures, but no PAL flag.
 `check_scrap_madness.py --companion-only` runs both players around the Act 2

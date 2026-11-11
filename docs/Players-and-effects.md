@@ -22,7 +22,10 @@ Manual controller 2 input takes precedence over following AI for ten seconds.
 Ordinary offscreen recovery retains its five-second timeout. Flight energy
 uses the existing `(8*60)/2` half-frame budget. Carrying Sonic uses frames
 `$D5-$D9`, a 28-pixel Y offset and an initial center-pose upload; S3's frame
-numbers would select unrelated poses here.
+numbers would select unrelated poses here. As in S3&K, a forced drop keeps the
+carry pose until landing. Tails's hurt handler releases Sonic's control lock
+before recoil, and object-controlled movement cancels active manual flight
+before releasing any passenger. Neither path waits for Tails to land.
 
 Initialization updates body/tail together and retains position history. Flying
 attacks use the S3&K upward sector and angle rounding; swimming and other sectors
