@@ -1681,7 +1681,11 @@ boss_fz_end:	equ boss_fz_x+$2B0
 ; Tile VRAM Locations
 
 ; Universal level sprites; zone/boss PLCs may replace inactive banks.
+ArtTile_Fireball:		equ $4B0	; 44 S1 horizontal/vertical fireball tiles (EHZ/HTZ)
 ArtTile_Springs:		equ $4DD
+	if ArtTile_Fireball+$2C>ArtTile_Springs
+		fatal "Fireballs overlap the common springs."
+	endif
 ArtTile_Spring_Vertical:	equ ArtTile_Springs	; 12 tiles
 ArtTile_Spring_Horizontal:	equ ArtTile_Spring_Vertical+12 ; 12 tiles
 ArtTile_Spring_Diagonal:	equ ArtTile_Spring_Horizontal+12 ; 18 tiles
@@ -1993,7 +1997,7 @@ ArtTile_HPZ_Emerald:		equ $392
 
 ; EHZ
 ArtTile_Art_EHZPulseBall:	equ $39C
-ArtTile_Fireball:		equ $3F0
+ArtTile_EHZ_Static_End:		equ $3F0	; foreground/background staging limit
 ArtTile_Waterfall:		equ $400
 ArtTile_EHZ_Bridge:		equ $418
 ArtTile_Buzzer:			equ $420
@@ -2016,9 +2020,7 @@ ArtTile_Splats:			equ $418	; 29 tiles; independent of the streamed water surface
 ArtTile_BBat:			equ ArtTile_Bubbles+$38 ; 58 tiles after bubbles, below common level sprites
 
 ; HTZ
-ArtTile_HTZ_LegacyFireball:	equ $39E	; retained legacy fireball bank
 ArtTile_Rexon:			equ $37E
-ArtTile_HTZ_Fireball:		equ $3AE
 ArtTile_HTZ_AutomaticDoor:	equ $3BE
 ArtTile_HTZ_Seesaw:		equ $420	; 62 tiles, after the shared bridge; ends at $45E
 ArtTile_Sol:			equ $3DE

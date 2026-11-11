@@ -157,24 +157,19 @@ def remap_pixels(raw, lookup):
 
 
 def remap_player_art(name, raw, lookup):
-    """Keep stage-palette parts intact in art shared with player-palette FX."""
-    if name == 'SBZ Button':
-        # Discard S1's four unused red tiles; retain the gray/blue up/down art.
-        assert len(raw) == 12*32
-        return remap_pixels(raw[4*32:], lookup)
-    if name == 'SBZ Electrocuter':
-        # First eight tiles: line 4 cyan dome and line 3 body. Only the
-        # remaining discharge tiles use the shared player palette.
-        return raw[:8*32] + remap_pixels(raw[8*32:], lookup)
-    if name == 'SBZ Flaming Pipe':
-        # Flames use line 1; both pipe ends use stage line 3.
-        # S1's $0EE yellow core uses our nearest existing golden orange,
-        # $0AE in slot $E. Slot $A ($8CE) is skin-tone cream, not fire orange.
-        # Pipe ends retain their stage-palette pixels.
-        flame_lookup = list(lookup)
-        flame_lookup[15] = 4
-        return remap_pixels(raw[:20*32], flame_lookup) + raw[20*32:]
-    return remap_pixels(raw, lookup)
+	"""Keep stage-palette parts intact in art shared with player-palette FX."""
+	if name == 'SBZ Button':
+		# Discard S1's four unused red tiles; retain the gray/blue up/down art.
+		assert len(raw) == 12*32
+		return remap_pixels(raw[4*32:], lookup)
+	if name == 'SBZ Electrocuter':
+		# First eight tiles: line 4 cyan dome and line 3 body. Only the
+		# remaining discharge tiles use the shared player palette.
+		return raw[:8*32] + remap_pixels(raw[8*32:], lookup)
+	if name == 'SBZ Flaming Pipe':
+		# The recolored flame sheet is editable; preserve it on a stage re-import.
+		return (ROOT/'art/uncompressed/SBZ Flaming Pipe.unc').read_bytes()
+	return remap_pixels(raw, lookup)
 
 
 def split_art(art, blocks, chunks, layouts, collisions, blank):

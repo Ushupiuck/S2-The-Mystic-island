@@ -644,6 +644,9 @@ MCD_CompressedAssets:
 	if defined(Kospm_Explosion)
 	dc.l Kospm_Explosion,Kospm_Explosion+$6CC	; art/moduled kosinski/Explosion.kospm
 	endif
+	if defined(Kospm_Fireballs)
+	dc.l Kospm_Fireballs,Kospm_Fireballs+$385	; art/moduled kosinski/Fireballs.kospm
+	endif
 	if defined(Kospm_FlapDoor)
 	dc.l Kospm_FlapDoor,Kospm_FlapDoor+$165	; art/moduled kosinski/Flapping Door.kospm
 	endif
@@ -1190,9 +1193,6 @@ MCD_CompressedAssets:
 	if defined(Nem_EHZ_Bridge)
 	dc.l Nem_EHZ_Bridge,Nem_EHZ_Bridge+$E1	; art/nemesis/EHZ bridge.nem
 	endif
-	if defined(Nem_EHZ_Fireball)
-	dc.l Nem_EHZ_Fireball,Nem_EHZ_Fireball+$11D	; art/nemesis/Fireball 1.nem
-	endif
 	if defined(Nem_EHZ_Waterfall)
 	dc.l Nem_EHZ_Waterfall,Nem_EHZ_Waterfall+$E6	; art/nemesis/Waterfall tiles.nem
 	endif
@@ -1258,9 +1258,6 @@ MCD_CompressedAssets:
 	endif
 	if defined(Nem_HTZ_AutomaticDoor)
 	dc.l Nem_HTZ_AutomaticDoor,Nem_HTZ_AutomaticDoor+$70	; art/nemesis/HTZ Autodoor.nem
-	endif
-	if defined(Nem_HTZ_Fireball)
-	dc.l Nem_HTZ_Fireball,Nem_HTZ_Fireball+$137	; art/nemesis/Fireball 2.nem
 	endif
 	if defined(Nem_HTZ_Lift)
 	dc.l Nem_HTZ_Lift,Nem_HTZ_Lift+$30C	; art/nemesis/HTZ zip-line platform.nem
@@ -1341,7 +1338,7 @@ MCD_CompressedAssets:
 	dc.l Nem_S3LevelSelect,Nem_S3LevelSelect+$574	; art/nemesis/S3 Level Select.nem
 	endif
 	if defined(Nem_SMZAtlas)
-	dc.l Nem_SMZAtlas,Nem_SMZAtlas+$1E5D	; art/nemesis/SMZ Sprite Atlas.nem
+	dc.l Nem_SMZAtlas,Nem_SMZAtlas+$1EA7	; art/nemesis/SMZ Sprite Atlas.nem
 	endif
 	if defined(Nem_SSEmStars)
 	dc.l Nem_SSEmStars,Nem_SSEmStars+$5B	; art/Bonus & Special Stage/Bonus Stage Emerald Twinkle.nem

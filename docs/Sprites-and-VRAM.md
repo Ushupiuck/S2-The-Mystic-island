@@ -605,6 +605,34 @@ Tails copies are adapted offline to its shared warm ramp. Their compact
 DPLCs retain the original frame indices, with empty rows outside those sets.
 See the [stage allocations and palette limits](Special-stage.md).
 
+### Fire art
+
+`art/uncompressed/Fireballs.unc` contains S1's complete 44-tile fireball sheet.
+`mappings/sprite/Fireballs.asm` retains its two flight poses and impact pose in
+each direction. EHZ and HTZ load the shared Moduled Kosinski+ sheet at `$4B0`;
+there is no new fireball object or placement. SMZ does not load this bank.
+
+`art/uncompressed/SBZ Flaming Pipe.unc` owns its three flame rectangles and
+two pipe ends. The first 20 tiles use the first player line. Slots `D/E/F`
+supply the three reds, `2/3/4/5` the warm ramp and `6` white. Colors are baked
+into the art; the player palette is unchanged. The eight hardware tiles retain
+stage line three. All 22 packed SMZ frames retain their geometry and flips.
+
+The shading reference is skdisasm `73de97c6b55055bcb8089c1d55d006b02136f163`:
+LRZ's fireball, Act 2 flamethrower and Fireworm segment flames use a pale core
+with warmer rings toward the edge. S1's silhouettes, shadow regions and
+transparent pixels come from s1disasm `2c51d46a`'s Fireballs/Flamethrower art.
+The four warm player slots expand those original flat fills.
+
+Run `python build_tools/build_fire_art.py` after editing either sheet. It packs
+the fireballs and pipe, updates the mapped atlas rectangles and repacks the
+atlas without moving its tiles. It rejects changes that would affect another
+SMZ object's shared rectangle. `--import-s1 /path/to/s1disasm` resets the editable
+sheets from the original silhouettes and the documented shading conversion.
+The SMZ importer preserves the edited pipe sheet; a full atlas repack consumes
+its generated Nemesis bank. `pack_scrap_sprites.py --check` verifies all 133
+packed frames without replacing outputs and uses a host Nemesis decoder.
+
 ## Platform-mounted button art
 
 Mounted buttons reuse the live SMZ switch. In SMZ, its existing atlas/mappings
