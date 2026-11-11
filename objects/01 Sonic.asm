@@ -313,7 +313,7 @@ Sonic_Water:
 		bne.s	Sonic_RecordPos.return		; if already underwater, branch
 
 		bsr.w	ResumeMusic
-		move.l	#Obj0A,(v_sonicbubbles).w		; load Sonic's breathing bubbles
+		move.l	#MouthBubbles,(v_sonicbubbles).w		; load Sonic's breathing bubbles
 		move.w	#$81,(v_sonicbubbles+obSubtype).w
 		movea.l	a0,a2
 		bsr.w	Player_UpdateSpeed

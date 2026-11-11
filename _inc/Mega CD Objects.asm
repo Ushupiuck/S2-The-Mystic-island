@@ -9,7 +9,7 @@
 MCD_SubObjectsLoad:
 		lea	(MCD_TerrainStage_Sub).l,a0
 		lea	(MCD_ObjectBoundary_Sub).l,a1
-		move.w	(MCD_SubMainArgument).l,d1
+		move.w	(MCD_SubMainArgument).w,d1
 		cmpi.w	#MCD_ObjectPlacementCapacity,d1
 		bhi.w	MCD_SubError
 		lsr.w	#1,d1
@@ -17,10 +17,10 @@ MCD_SubObjectsLoad:
 .copy:
 		move.w	(a0)+,(a1)+
 		dbf	d1,.copy
-		move.b	(MCD_SubMainCommand).l,(MCD_ObjectKeep_Sub).l
+		move.b	(MCD_SubMainCommand).w,(MCD_ObjectKeep_Sub).l
 		clr.b	(MCD_ObjectRoutine_Sub).l
 		st	(MCD_ObjectTimeZone_Sub).l
-		bset	#0,(MCD_SubMemoryMode).l
+		bset	#0,(MCD_SubMemoryMode).w
 		moveq	#0,d0
 		rts
 
@@ -84,13 +84,13 @@ MCD_SubObjectsFrame:
 ; Dynamic handle zero has no state and returns zero.
 MCD_SubObjectState:
 		moveq	#0,d0
-		move.w	(MCD_SubMainArgument).l,d1
+		move.w	(MCD_SubMainArgument).w,d1
 		beq.s	.return
 		subq.w	#1,d1
 		cmpi.w	#MCD_ObjectPlacementCount,d1
 		bhs.w	MCD_SubError
 		movea.l	(MCD_ObjectRespawnBase_Sub).l,a2
-		move.b	(MCD_SubMainCommand).l,d2
+		move.b	(MCD_SubMainCommand).w,d2
 		cmpi.b	#5,d2
 		beq.s	.mount_consumed
 		tst.b	d2
@@ -101,7 +101,7 @@ MCD_SubObjectState:
 		beq.s	.release
 		subq.b	#1,d2
 		beq.s	.bump
-		mulu.w	#omSize,d1
+		lsl.w	#3,d1		; omSize = eight bytes; only the word offset is used
 		lea	(MCD_ObjectPlacements_Sub).l,a2
 		move.w	(a2,d1.w),d0
 		rts

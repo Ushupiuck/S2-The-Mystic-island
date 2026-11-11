@@ -19,10 +19,11 @@ ROOT = Path(__file__).resolve().parents[1]
 JOBS = ('MCD_SubRingTick', 'MCD_SubRingReset', 'MCD_SubTerrainLoad',
         'MCD_SubTerrainDraw', 'MCD_SubTerrainProbe', 'MCD_SubTerrainLayout',
         'MCD_SubTerrainAir', 'MCD_SubObjectsLoad', 'MCD_SubObjectState',
-        'MCD_SubDecompress', 'MCD_SubArtFrame', 'MCD_SubTerrainObject')
+        'MCD_SubDecompress', 'MCD_SubArtFrame', 'MCD_SubTerrainObject',
+        'MCD_SubTerrainObjectFloor')
 ROUTES = {3: 0, 4: 1, 5: 2, 6: 3, 7: 4, 8: 4, 9: 5, 10: 5,
           11: 6, 12: 7, 13: 8, 14: 9, 15: 9, 16: 9, 17: 9, 18: 10,
-          **{i: 11 for i in range(0x20, 0x2E)}}
+          **{i: 11 for i in range(0x20, 0x2E)}, 0x28: 12}
 
 
 def timing(core, rom, listing, directory, output):
@@ -53,7 +54,7 @@ def timing(core, rom, listing, directory, output):
     g.core.s68k_get_reg.restype = C.c_uint
     g.core.s68k_run.argtypes = [C.c_uint]
     for i, name in enumerate(JOBS):
-        code = (bytes.fromhex('7C817E42') if i in (3, 4, 6, 9, 10, 11) else b'')
+        code = (bytes.fromhex('7C817E42') if i in (3, 4, 6, 9, 10, 11, 12) else b'')
         code += bytes.fromhex('70004E75')
         for j, byte in enumerate(code):
             prg[(g.s[name] + j) ^ 1] = byte

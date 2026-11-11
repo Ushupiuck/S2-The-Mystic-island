@@ -25,7 +25,7 @@ def vram(a,n):return bytes(g.vram[(a+i)^1] for i in range(n))
 def bank_sprites():
     return [i for i in range(g.read('v_spritecount')) if bank//32<=g.read(g.s['Sprite_Table']+i*8+4,2)&0x7FF<bank//32+16]
 def actor(a):return {f:g.get(a,f,n) for f,n in [('code',4),('obFrame',1),('obRoutine',1),('obX',2),('obY',2),('obGfx',2),('obStatus',1)]}
-def number_actors():return [a for a in range(g.s['v_lvlobjspace']&65535,g.s['v_lvlobjend']&65535,g.s['object_size']) if g.get(a,'code')==g.s['Obj0A'] and 9<=g.get(a,'obFrame')<19]
+def number_actors():return [a for a in range(g.s['v_lvlobjspace']&65535,g.s['v_lvlobjend']&65535,g.s['object_size']) if g.get(a,'code')==g.s['MouthBubbles'] and 9<=g.get(a,'obFrame')<19]
 def fixture(a,x,y,vy=0,status=2):
     for f,v,n in [('obX',x,2),('obY',y,2),('obVelX',0,2),('obVelY',vy,2),('obInertia',0,2),('obControl',0,1),('obStatus',status,1),('obAnim',0,1),('obRoutine',2,1),('obStatusSecondary',2,1),('invtime',6000,2),('flashtime',0,2)]:g.put(a,f,v,n)
     g.write('Camera_X_pos',x-160,2);g.write('Camera_Y_pos',y-100,2)

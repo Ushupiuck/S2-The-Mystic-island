@@ -50,6 +50,7 @@ class Native:
 			self.sub.mem_map(0, 0xC0000)
 			self.sub.mem_map(0xFF0000, 0x10000)
 			self.sub.mem_map(0xFFFF0000, 0x10000)
+			self.sub.hook_add(UC_HOOK_MEM_READ | UC_HOOK_MEM_WRITE, self.sub_bus)
 			begin, end = self.s['MCD_SubProgram'], self.s['MCD_SubProgramEnd']
 			self.sub.mem_write(0, data[begin:end])
 		self.cpu.mem_map(0xFF0000, 0x10000)
@@ -63,6 +64,14 @@ class Native:
 							enumerate(self.object_codes[1:], 1)}
 		# Ordinary platforms replace their constructor pointer after spawning.
 		# Keep the fixture-only ID projection useful throughout their lifetime.
+		for constructor, states in (
+				('Ring', ('Ring_Animate', 'Ring_Collect', 'Ring_Sparkle')),
+				('LostRings', ('LostRing_Move', 'LostRing_Collect')),
+				('TwistingPathway', ('TwistingPathway_Main', 'TwistingPathway_Cage'))):
+			if constructor in self.s:
+				for label in states:
+					if label in self.s:
+						self.ids_by_code[self.s[label]] = self.ids_by_code[self.s[constructor]]
 		for label in ('Plat_Top', 'Plat_Full', 'Plat_FallingIntangible', 'Platform_SuspendedBody'):
 			if label in self.s:
 				self.ids_by_code[self.s[label]] = self.ids_by_code[self.s['Obj18']]
@@ -72,6 +81,16 @@ class Native:
 		self.cpu.hook_add(UC_HOOK_MEM_READ_UNMAPPED, self.alias)
 		self.cpu.hook_add(UC_HOOK_CODE, self.dispatch_hook)
 		self.uploads = []
+
+	def sub_bus(self, cpu, access, address, size, value, unused):
+		# CD absolute-word mailbox operands sign-extend just like MD RAM.
+		# Unicorn maps 32-bit aliases separately; the hardware has a 24-bit bus.
+		physical = address & 0xFFFFFF
+		if address != physical:
+			if access == UC_MEM_READ:
+				cpu.mem_write(address, bytes(cpu.mem_read(physical, size)))
+			else:
+				cpu.mem_write(physical, value.to_bytes(size, 'big'))
 
 	def bus(self, cpu, access, address, size, value, unused):
 		physical = address & 0xFFFFFF
@@ -181,7 +200,8 @@ class Native:
 					15: 'MCD_SubDecompress', 16: 'MCD_SubDecompress', 17: 'MCD_SubDecompress',
 					18: 'MCD_SubArtFrame', 7: 'MCD_SubTerrainProbe', 8: 'MCD_SubTerrainProbe',
 					9: 'MCD_SubTerrainLayout', 10: 'MCD_SubTerrainLayout',
-					11: 'MCD_SubTerrainAir'}.get(kind, 'MCD_SubTerrainObject')
+					11: 'MCD_SubTerrainAir', 0x28: 'MCD_SubTerrainObjectFloor'
+					if 'MCD_SubTerrainObjectFloor' in s else 'MCD_SubTerrainObject'}.get(kind, 'MCD_SubTerrainObject')
 		self.sub_call(routine, command)
 		result = sub.reg_read(UC_M68K_REG_D0) & 65535
 		sub.mem_write(s['MCD_SubOwnResult'], struct.pack('>H', result))

@@ -108,6 +108,14 @@ class Genesis:
 		self.ids_by_code = {pointer: oid for oid, pointer in
 							enumerate(self.object_codes[1:], 1)}
 		# Test-only identity survives the platform's direct update transitions.
+		for constructor, states in (
+				('Ring', ('Ring_Animate', 'Ring_Collect', 'Ring_Sparkle')),
+				('LostRings', ('LostRing_Move', 'LostRing_Collect')),
+				('TwistingPathway', ('TwistingPathway_Main', 'TwistingPathway_Cage'))):
+			if constructor in self.s:
+				for label in states:
+					if label in self.s:
+						self.ids_by_code[self.s[label]] = self.ids_by_code[self.s[constructor]]
 		for label in ('Plat_Top', 'Plat_Full', 'Plat_FallingIntangible', 'Platform_SuspendedBody'):
 			if label in self.s:
 				self.ids_by_code[self.s[label]] = self.ids_by_code[self.s['Obj18']]

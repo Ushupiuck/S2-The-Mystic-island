@@ -58,7 +58,7 @@ for z,n in enumerate(names):
 		cases+=1
 report['real_acts']=cases
 # Dense boundaries, all four flip combinations, bypass flags and a full-byte ID.
-rows=sorted([(x,y|flags,0x36,0xA0) for x in (0,127,128,255,256,639,640,768,896,1024) for y,flags in [(0,0),(128,0x2000),(256,0x4000),(512,0x6000),(1408,0x8000)]])
+rows=sorted([(x,y|flags,0x15,0xA0) for x in (0,127,128,255,256,639,640,768,896,1024) for y,flags in [(0,0),(128,0x2000),(256,0x4000),(512,0x6000),(1408,0x8000)]])
 rows.append((1100,0x8100,0xFC,7))
 rows.sort()
 base=m.fixture(rows)
@@ -80,7 +80,7 @@ for x,y in [(128,0),(256,128),(384,256),(512,384),(768,512),(1024,0),(128,768),(
 report['horizontal_backtracking_flips_full_byte_id']=True
 # Vertical-only movement in both directions, large jumps and $800 wrapping.
 for wrap in (False,True):
-	rows=[(256,y|((i&3)<<13),0x36,0xA0) for i,y in enumerate(range(0,2048,64))]+[(300,0x8E00,0x41,0)]
+	rows=[(256,y|((i&3)<<13),0x15,0xA0) for i,y in enumerate(range(0,2048,64))]+[(300,0x8E00,0x14,0)]
 	base=m.fixture(rows)
 	m.write('Camera_Min_Y_pos',0xFF00 if wrap else 0,2)
 	for y in [0,128,256,384,768,1536,1920,0,1920,1792,640,0]:
@@ -92,7 +92,7 @@ for wrap in (False,True):
 report['vertical_bands_jumps_and_wrap']=True
 # Exhausted pool: no flag may be set without a real SST. Retry even if the
 # camera remains still, preserve cursor pairing, and use all 90 slots exactly.
-rows=[(256,128,0x36,i) for i in range(95)]
+rows=[(256,128,0x15,i) for i in range(95)]
 base=m.fixture(rows)
 for a in m.pool():
 	m.put(a,'layout_id',0x35)
@@ -117,7 +117,7 @@ assert len(m.verify(rows,base))==90 and not m.read('Object_load_retry')
 report['pool_exhaustion_stationary_retry']=True
 # No byte-index wrap at placement 255. Exercise the complete variant capacity.
 capacity = m.s['MCD_ObjectPlacementCount']
-rows=[(i*16,128,0x41,0) for i in range(capacity)]
+rows=[(i*16,128,0x14,0) for i in range(capacity)]
 base=m.fixture(rows)
 for x in range(0,capacity*16,128):
 	m.cam(x,0)
@@ -158,17 +158,17 @@ def setup(objid,sub=0,state=0x80):
 	return obj,ptr
 # Loaded tags stay set during initialization, and persistent state survives unload.
 for state in (0x80,0x81):
-	obj,ptr=setup(0x26,0,state)
-	m.act('Obj26',obj)
+	obj,ptr=setup(0x12,0,state)
+	m.act('Monitor',obj)
 	assert m.placement_read()==state
 	assert (m.get(obj,'obRoutine')==8)==bool(state&1)
 	m.write('Camera_X_pos_coarse_back',0x1000,2)
-	m.act('Obj26',obj)
+	m.act('Monitor',obj)
 	assert m.get(obj,'layout_id')==0 and m.placement_read()==state&127
-obj,ptr=setup(0x26)
-m.act('Obj26',obj)
+obj,ptr=setup(0x12)
+m.act('Monitor',obj)
 m.put(obj,'obRoutine',4)
-m.act('Obj26',obj)
+m.act('Monitor',obj)
 assert m.placement_read()==0x81
 for state in (0x80,0x81):
 	obj,ptr=setup(0x79,1,state)
@@ -177,7 +177,7 @@ for state in (0x80,0x81):
 	m.act('UnloadObject',obj)
 	assert m.placement_read()==state&127
 # Zero respawn pointers must not alter a real placement's state.
-for objid,routine in ((0x26,'Obj26'),(0x79,'Obj79'),(0x47,'Obj47')):
+for objid,routine in ((0x12,'Monitor'),(0x79,'Obj79'),(0x47,'Obj47')):
 	obj,ptr=setup(objid)
 	m.put(obj,'respawn_addr',0,2)
 	m.act(routine,obj)
@@ -236,14 +236,14 @@ report['bridge_two_riders_preserve_helper_pointers']=True
 # Negative Y speed on an uphill slope is grounded motion, not a rising jump.
 for player in ('v_player','v_player2'):
 	for vy in (0,0x100,0xFF00):
-		obj,ptr=setup(0x26,1)
-		m.act('Obj26',obj)
+		obj,ptr=setup(0x12,1)
+		m.act('Monitor',obj)
 		m.put(player,'obX',240,2);m.put(player,'obY',240,2)
 		m.put(player,'obAnim',m.s['AniIDSonAni_Roll'])
 		m.put(player,'obStatus',4);m.put(player,'obVelY',vy,2)
 		m.act('loc_198FA',player,{UC_M68K_REG_A1:obj|0xFF000000})
 		assert m.get(obj,'obRoutine')==4 and m.get(obj,'obParent',2)==m.s[player]&65535
-	obj,ptr=setup(0x26,1);m.act('Obj26',obj)
+	obj,ptr=setup(0x12,1);m.act('Monitor',obj)
 	m.put(player,'obY',260,2);m.put(player,'obStatus',6)
 	m.put(player,'obAnim',m.s['AniIDSonAni_Roll']);m.put(player,'obVelY',0xFF00,2)
 	m.act('loc_198FA',player,{UC_M68K_REG_A1:obj|0xFF000000})
@@ -252,10 +252,10 @@ report['monitor_ground_roll_slopes_and_airborne_underside']=8
 # A held charge is still solid when falling onto a monitor. Rolling attacks
 # use TouchResponse instead; these states must not leave a collision gap.
 for player,character in [('v_player',1),('v_player',2),('v_player2',2)]:
-	obj,ptr=setup(0x26,6)
+	obj,ptr=setup(0x12,6)
 	m.put(player,'layout_id',character)
 	m.write('Player_mode',m.s['PlayerMode_Tails'] if player=='v_player' and character==2 else 0,2)
-	m.act('Obj26',obj)
+	m.act('Monitor',obj)
 	for field,value,size in [('obX',240,2),('obY',207,2),('obVelY',0x400,2),
 			('obStatus',2,1),('obAnim',m.s['AniIDSonAni_Spindash'],1),
 			('spindash_flag',1,1),('spindash_counter',0x600,2)]:
@@ -282,7 +282,7 @@ for player,character in [('v_player',1),('v_player',2),('v_player2',2)]:
 		m.put(player,'obStatusSecondary',int(shield)|(int(invincible)<<m.s['obStatusSecondary_isInvincible']))
 		m.put(player,'flashtime',8 if flashing else 0,2)
 		icon=pool()[0]
-		for field,value,size in [('code',m.s['Obj29'],4),('obRoutine',4,1),
+		for field,value,size in [('code',m.s['MonitorContents'],4),('obRoutine',4,1),
 				('obAnim',0,1),('obParent',m.s[player]&65535,2),('obX',600,2),('obY',180,2)]:
 			m.put(icon,field,value,size)
 		before=bytes(m.cpu.mem_read(icon&0xFFFFFF,m.s['object_size']))
@@ -296,14 +296,14 @@ for player,character in [('v_player',1),('v_player',2),('v_player2',2)]:
 		expected=2 if protected else (4 if shield or rings else 6)
 		assert m.get(player,'obRoutine')==expected,(player,rings,shield,invincible,flashing)
 		assert bool(m.get(player,'obStatusSecondary')&1)==(shield and protected)
-		scatters=[a for a in pool() if m.get(a,'code')==m.s['Obj13']]
+		scatters=[a for a in pool() if m.get(a,'code')==m.s['LostRings']]
 		assert bool(scatters)==(not protected and not shield and rings>0 and player=='v_player')
 		damage_cases+=1
 	for routine,present in [(0,False),(4,True),(6,True)]:
 		m.start()
 		m.put(player,'code',m.s['Obj01' if character==1 else 'Obj02'] if present else 0)
 		m.put(player,'obRoutine',routine)
-		icon=pool()[0];m.put(icon,'code',m.s['Obj29']);m.put(icon,'obRoutine',4)
+		icon=pool()[0];m.put(icon,'code',m.s['MonitorContents']);m.put(icon,'obRoutine',4)
 		before=bytes(m.cpu.mem_read(m.s[player]&0xFFFFFF,m.s['object_size']))
 		m.act('Monitor_Null',icon,{UC_M68K_REG_A1:m.s[player]&0xFFFFFFFF})
 		assert bytes(m.cpu.mem_read(m.s[player]&0xFFFFFF,m.s['object_size']))==before
@@ -388,7 +388,7 @@ for camera,player,target,flag,delta in [(0xFF00,0x75F,0x6FF,1,0xFF00),(0x7FF,0x6
 	assert m.read('Camera_Y_pos',2)==target and m.read('Camera_Y_pos_diff',2)==delta
 	assert m.cpu.mem_read(0xFF9002,1)[0]&flag
 m.start()
-obj,ptr=setup(7)
+obj,ptr=setup(0x09)
 m.write('v_waterpos1',0x800,2)
 before=bytes(m.cpu.mem_read(m.s['Object_Display_Lists']&0xFFFFFF,0x400))
 m.act('WaterSurface_Main',obj)
@@ -427,7 +427,7 @@ for who,objid,mode,mapname,h,w in [('Sonic',1,1,'Map_Sonic',19,9),('Tails',2,2,'
 	m.write('v_jpadhold1',0)
 	m.write('v_jpadpress1',m.s['btnC'])
 	m.act('DebugMode','v_player')
-	placed=[a for a in pool() if m.get(a,'layout_id')==0x12]
+	placed=[a for a in pool() if m.get(a,'layout_id')==0x0F]
 	assert len(placed)==1 and m.get(placed[0],'respawn_addr',2)==0
 	assert m.get(placed[0],'obStatus')==1, 'Debug placement lost the facing flag'
 	for f,v,n in [('obVelX',0x1234,2),('obVelY',0x3456,2),('spindash_counter',0x9876,2),('obControl',0x81,1),('move_lock',0xABCD,2),('stick_to_convex',1,1),('tails_flight_flag',7,1),('tails_flight_energy',24,1)]:
@@ -516,7 +516,7 @@ m.write('v_jpadpress1',m.s['btnC'])
 m.act('DebugMode','v_player')
 grid_cell=m.s['v_ssbuffer1']+((1000+79)//24)*128+(1000+31)//24
 assert m.cpu.mem_read(grid_cell&0xFFFFFF,1)==bytes([m.s['S1SS_RingItem']])
-assert not any(m.get(a,'layout_id')==0x12 for a in pool())
+assert not any(m.get(a,'layout_id')==0x0F for a in pool())
 m.write('v_jpadpress1',m.s['btnB'])
 m.act('DebugMode','v_player')
 assert m.get('v_player','obHeight')==14 and m.get('v_player','obWidth')==7
@@ -642,7 +642,7 @@ for player,destination,cache in [('v_player',0xFC00,'v_splash'),('v_player2',0xF
 	for frame in range(9,19):
 		obj=pool()[0]
 		m.put(obj,'obParent',m.s[player]&65535,2);m.put(obj,'obFrame',frame)
-		m.act('Obj0A_LoadArt',obj)
+		m.act('MouthBubbles_LoadArt',obj)
 		assert m.uploads[-1][1]&65535==destination and m.uploads[-1][2]&65535==6*16,(player,frame,m.uploads[-1])
 report['water_shared_banks_source_switch_dma_retry_and_all_numbers']=True
 # Resolve the carry through an actual BCC: Unicorn's lazy CMP flags need not
@@ -806,7 +806,7 @@ for actor in ('v_player','v_player2'):
 		m.put(actor,'obX',160,2);m.put(actor,'obY',112,2)
 		m.put(actor,'obStatusSecondary',2);m.put(actor,'obAnim',m.s['AniIDSonAni_Roll'])
 		m.put(actor,'obVelY',0x100,2)
-		m.put(target,'code',m.s['Crabmeat'] if kind=='enemy' else m.s['Obj26'])
+		m.put(target,'code',m.s['Crabmeat'] if kind=='enemy' else m.s['Monitor'])
 		m.put(target,'obRender',4);m.put(target,'obX',160,2);m.put(target,'obY',112,2)
 		m.put(target,'obColType',9 if kind=='enemy' else 0x46)
 		m.act('Add_SpriteToCollisionResponseList',target)
@@ -1077,7 +1077,7 @@ for actor,primary_id in (('v_player',1),('v_player',2),('v_player2',1)):
 	m.write('v_jpadholdlogical',0x0808,2);m.write('v_jpadholdlogical2',0x0404,2)
 	bubble=m.s['v_sonicbubbles' if actor=='v_player' else 'v_tailsbubbles']
 	m.put(bubble,'obParent',m.s[actor]&65535,2)
-	m.act('Obj0A_Countdown',bubble)
+	m.act('MouthBubbles_Countdown',bubble)
 	assert m.get(actor,'obAnim')==m.s['AniIDSonAni_Drown']
 	assert m.get(actor,'obControl')==0x81
 	if actor=='v_player':

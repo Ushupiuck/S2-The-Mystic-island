@@ -53,6 +53,7 @@ python build_tools/check_object_manager.py
 | `check_ram_ranges.py` | Packed RAM boundaries, palette aliases and actual `clearRAM` instructions, including odd starts, short tails, DBF counts and canaries |
 | `check_object_layouts.py`, `check_word_subtypes.py` | Eight-byte records, word settings, era masks, MD/CD loaders and Debug; optional `--before-ref`/`--before-listing` audit a specific migration |
 | `check_object_manager.py` | Loading/dispatch/deletion, all 768 placements per era, indices above 255, Debug, collision and effect-bank behavior |
+| `check_scattered_rings.py` | Original sine reference versus 216 allocation/count/water cases, both-player single rewards and exact sparkle timing, goddess proximity/fifty-emission/full-pool behavior and both-character cage phases |
 | `check_sprite_bounds.py`, `check_sprite_assets.py` | Compiled mapping geometry, initialization bounds, SST operands and art/DPLC ranges; static scans cannot prove register aliases/runtime indices |
 | `check_ghz_vram.py` | All 64 act PLC selections, sprite-bank overlap, spring/support/spike order, seesaws, boss banks and optional mounted-button art |
 | `check_sprite_palettes.py` | Shared slots, spring attributes, underwater regeneration, private stage/results art and emeralds; `--reference REV` is a migration-specific RGB comparison |
@@ -84,7 +85,13 @@ life-portrait producer is `build_life_art.py`; shared UI regeneration runs
 `build_hud_art.py`, then `build_card_art.py` and `build_special_results_art.py`.
 These write outputs; do not invoke them just to inspect source.
 
-### Terrain and independent planes
+#For the ring-spill/monitor scene, run `check_scattered_rings.py` with `--core`,
+`--system-directory` and `--output test-results/rings/report.json`, then add
+`--pal` for PAL. Sonic's no-pickup flashing interval stays active while Tails
+recovers a real 32-ring spill. The scene also checks all four loaded monitor
+icons. Native cases execute all 256 act/preset Debug placements.
+
+## Terrain and independent planes
 
 ```sh
 python build_tools/check_terrain_collision.py --reference OLD_REF --output test-results/terrain

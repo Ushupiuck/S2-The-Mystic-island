@@ -113,7 +113,7 @@ for tick in range(180):
                 for f in {previous,g.read(cache)} if f in body_range]
     assert any(vram(base,len(data))==data for data in candidates),'Body VRAM is not a complete compact frame'
     if a.player==2:
-        assert g.get('v_player2tails','code')==g.s['Obj05'],'Tails lost his tail object'
+        assert g.get('v_player2tails','code')==g.s['TailsTails'],'Tails lost his tail object'
         assert g.get('v_player2tails','obParent',2)==g.s['v_player']&65535
         for field in ('obX','obY'):
             assert g.get('v_player2tails',field,2)==g.get('v_player',field,2)
@@ -160,7 +160,7 @@ for buttons,kind in (({0},1),({0,8},2)):
     press(buttons)
     assert g.read('Debug_placement_type')==kind
     if a.player==2:
-        assert g.get('v_player2tails','code')==g.s['Obj05']
+        assert g.get('v_player2tails','code')==g.s['TailsTails']
         assert not tail_visible(),'Tail follows the Debug cursor/frame preview'
     if kind==2:
         seen=set()

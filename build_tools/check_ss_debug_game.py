@@ -128,7 +128,7 @@ for _ in range(12):
 	placed.append(expected)
 g.video.save(g.output / 'grid-rings.png')
 pool = range(g.s['v_lvlobjspace'] & 65535, g.s['v_lvlobjend'] & 65535, g.s['object_size'])
-assert not any(g.get(obj, 'code') == g.s['Obj12'] for obj in pool)
+assert not any(g.get(obj, 'code') == g.s['Ring'] for obj in pool)
 
 # Resume normal play at the first inserted ring and collect it through S1SS.
 col, row = placed[0]

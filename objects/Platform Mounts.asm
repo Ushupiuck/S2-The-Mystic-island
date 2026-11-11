@@ -57,9 +57,9 @@ PlatformMount_ApplyReply:
 		rts
 
 PlatformMount_Codes:
-		dc.l Obj41,Obj36,Obj26,SMZ_Button
+		dc.l Springs,Spikes,Monitor,SMZ_Button
 PlatformMount_Behaviors:
-		dc.l Obj41_Behavior,Obj36_Behavior,Obj26_Behavior,SMZ_Button_Behavior
+		dc.l Springs_Behavior,Spikes_Behavior,Monitor_Behavior,SMZ_Button_Behavior
 
 ; a0 body, a1 child -> Z iff this still is one of our ordinary payload objects.
 PlatformMount_CheckChild:

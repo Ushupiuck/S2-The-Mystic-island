@@ -1,5 +1,5 @@
 ; ---------------------------------------------------------------------------
-; Object 0D - animals
+; Object 0E - animals
 ; ---------------------------------------------------------------------------
 animal_direction	= objoff_30	; 1 byte
 animal_type		= objoff_31	; 1 byte
@@ -179,7 +179,7 @@ Flicky_Init:
 		move.w	#$300,obPriority(a0)
 		move.b	#Flicky_DisplayWidth,obActWid(a0)
 		move.b	#7,obTimeFrame(a0)
-		jmp	(DisplaySprite).l
+		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 
 FlickyRandom:

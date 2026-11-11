@@ -28,7 +28,7 @@ def main():
     g.write('Debug_mode_flag', 1)
     g.run(8)
     assert g.get('v_player', 'obStatus') & 64
-    assert g.get('v_sonicbubbles', 'code') == g.s['Obj0A']
+    assert g.get('v_sonicbubbles', 'code') == g.s['MouthBubbles']
     underwater = g.save()
     rows = []
 
@@ -88,7 +88,7 @@ def main():
         g.put('v_player2', 'obControl', 1)
         g.write('Tails_CPU_idle_timer', 600, 2)
         g.run(8)
-        assert g.get('v_tailsbubbles', 'code') == g.s['Obj0A']
+        assert g.get('v_tailsbubbles', 'code') == g.s['MouthBubbles']
         g.put('v_player2', 'air_left', 0)
         g.put('v_tailsbubbles', 'objoff_3C', 0, 2)
         g.run()

@@ -121,7 +121,7 @@ def main():
                             machine.start();a=next(iter(machine.pool()))
                             machine.write('v_scorelife',5000,4)
                             for f,v,n in [('obX',600,2),('obY',116,2),('obHeight',19,1),('obAnim',machine.s['AniIDSonAni_Duck'] if duck else machine.s['AniIDSonAni_Roll'],1),('obVelY',0x100,2)]:machine.put(who,f,v,n)
-                            for f,v,n in [('code',machine.s['Obj12'],4),('obX',600+dx,2),('obY',116+dy,2),('obRender',4,1),('obColType',0x40|size,1)]:machine.put(a,f,v,n)
+                            for f,v,n in [('code',machine.s['Ring'],4),('obX',600+dx,2),('obY',116+dy,2),('obRender',4,1),('obColType',0x40|size,1)]:machine.put(a,f,v,n)
                             if machine is m:
                                 machine.act('Add_SpriteToCollisionResponseList',a)
                                 if dense:machine.write('Collision_response_list',65535,2)
@@ -138,7 +138,7 @@ def main():
                             machine.start();a=next(iter(machine.pool()))
                             machine.write('v_scorelife',5000,4);machine.write('v_rings',30,2)
                             for f,v,n in [('obX',600,2),('obY',116,2),('obHeight',19,1),('obAnim',anim,1),('obVelY',0x100,2),('obStatusSecondary',protection,1)]:machine.put(who,f,v,n)
-                            for f,v,n in [('code',machine.s['Obj26'] if flag==0x46 else machine.s['Crabmeat'],4),('obX',600,2),('obY',116,2),('obRender',4,1),('obColType',flag,1)]:machine.put(a,f,v,n)
+                            for f,v,n in [('code',machine.s['Monitor'] if flag==0x46 else machine.s['Crabmeat'],4),('obX',600,2),('obY',116,2),('obRender',4,1),('obColType',flag,1)]:machine.put(a,f,v,n)
                             if machine is m:
                                 machine.act('Add_SpriteToCollisionResponseList',a)
                                 if dense:machine.write('Collision_response_list',65535,2)

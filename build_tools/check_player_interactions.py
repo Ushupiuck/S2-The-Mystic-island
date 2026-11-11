@@ -245,7 +245,7 @@ def spiral(g, act, mode, direction, output):
 		g.write(name, value, 2)
 	g.write('Screen_redraw_flag', 1)
 	g.run(30)
-	assert any(g.get(a, 'obX', 2) == x for a in objects(g, 6)), 'Authored spiral did not load'
+	assert any(g.get(a, 'obX', 2) == x for a in objects(g, 0x0B)), 'Authored spiral did not load'
 	place(g, 'v_player', x-direction*216, y+32, False)
 	for field, value, size in (('obStatus', int(direction < 0), 1), ('obAngle', 0, 1),
 		('flip_angle', 0, 1), ('obVelX', direction*0x900 & 65535, 2),
@@ -265,7 +265,7 @@ def spiral(g, act, mode, direction, output):
 			(('obX', 2), ('obY', 2), ('obFrame', 1), ('flip_angle', 1), ('obStatus', 1))])
 		if tick % 2 == 0:
 			pictures.append(g.video.copy())
-		visited.update(g.get(a, 'obX', 2) for a in objects(g, 6) if g.get(a, 'obStatus') & 8)
+		visited.update(g.get(a, 'obX', 2) for a in objects(g, 0x0B) if g.get(a, 'obStatus') & 8)
 		if direction * (g.get('v_player', 'obX', 2)-exit_x) > 0:
 			break
 	assert len(poses) >= 10, ('Spiral was not traversed', act, mode, direction, trace)

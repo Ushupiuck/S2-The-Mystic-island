@@ -46,7 +46,7 @@ BonusPlayer_Main:	; Routine 0
 		move.b	#Map_Tails_height,height_pixels(a0)
 		move.b	#Map_Tails_width,width_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Tails,0,0),obGfx(a0)
-		move.l	#Obj05,(v_player2tails).w
+		move.l	#TailsTails,(v_player2tails).w
 		move.w	a0,(v_player2tails+obParent).w
 		move.b	#-1,(v_player2tails+objoff_38).w
 .player_ready:

@@ -32,7 +32,7 @@ def main():
     def setup(subtype, charge=False):
         g.restore(baseline)
         obj = next(a for a in slots if not g.get(a, 'code'))
-        for field, value, size in [('code', g.s['Obj26'], 4), ('obX', x, 2),
+        for field, value, size in [('code', g.s['Monitor'], 4), ('obX', x, 2),
                 ('obY', y, 2), ('obSubtype', subtype, 1)]:
             g.put(obj, field, value, size)
         for field, value, size in [('obX', x, 2), ('obY', y - 110, 2),
@@ -95,13 +95,13 @@ def main():
             died |= g.get('v_player', 'obRoutine') == 6
             minimum_rings = min(minimum_rings, g.read('v_rings', 2))
             for a in slots:
-                if g.get(a, 'code') == g.s['Obj29']:
+                if g.get(a, 'code') == g.s['MonitorContents']:
                     icon_hurt |= g.get(a, 'obAnim') == g.s['AniIDSonAni_Hurt']
                     icon_death |= g.get(a, 'obRoutine') == 6
         row = {'broken': broke, 'collector_hurt': hurt, 'collector_died': died, 'icon_hurt': icon_hurt,
                'icon_died': icon_death, 'rings': g.read('v_rings', 2),
                'minimum_rings': minimum_rings,
-               'icon_deleted': not any(g.get(a, 'code') == g.s['Obj29'] for a in slots)}
+               'icon_deleted': not any(g.get(a, 'code') == g.s['MonitorContents'] for a in slots)}
         report['cases'][name] = row
         g.video.save(args.output / (name + '.png'))
         if not args.probe:

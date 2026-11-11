@@ -25,31 +25,31 @@ Ani_MovSpring:	dc.w	.frame1-Ani_MovSpring
 .frame1:	dc.b	8,0,1,afEnd
 		even
 ; ---------------------------------------------------------------------------
-; Object 41 - springs
+; Object 14 - springs
 ; ---------------------------------------------------------------------------
 
-Obj41:
+Springs:
 		tst.w	Mount_parent(a0)
-		beq.s	Obj41_Behavior
+		beq.s	Springs_Behavior
 		jmp	(PlatformMount_Child).l
-Obj41_Behavior:
+Springs_Behavior:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	Obj41_Index(pc,d0.w),d1
-		jsr	Obj41_Index(pc,d1.w)
+		move.w	Springs_Index(pc,d0.w),d1
+		jsr	Springs_Index(pc,d1.w)
 		out_of_range2	PlatformMount_CullChild
 		bra.w	DisplaySprite
 ; ===========================================================================
-Obj41_Index:
-		dc.w Obj41_Init-Obj41_Index		; 0
-		dc.w Obj41_Up-Obj41_Index		; 2
-		dc.w Obj41_Horizontal-Obj41_Index	; 4
-		dc.w Obj41_Down-Obj41_Index		; 6
-		dc.w Obj41_DiagonallyUp-Obj41_Index	; 8
-		dc.w Obj41_DiagonallyDown-Obj41_Index	; $A
+Springs_Index:
+		dc.w Springs_Init-Springs_Index		; 0
+		dc.w Springs_Up-Springs_Index		; 2
+		dc.w Springs_Horizontal-Springs_Index	; 4
+		dc.w Springs_Down-Springs_Index		; 6
+		dc.w Springs_DiagonallyUp-Springs_Index	; 8
+		dc.w Springs_DiagonallyDown-Springs_Index	; $A
 ; ============================================================================
 ; loc_E204:
-Obj41_Init:
+Springs_Init:
 		addq.b	#2,obRoutine(a0)	; goto Up
 		move.l #Map_obj41,obMap(a0)
 		move.b #Map_obj41_height,height_pixels(a0)
@@ -62,51 +62,51 @@ loc_E22A:
 		move.w	obSubtype(a0),d0
 		lsr.w	#3,d0
 		andi.w	#$E,d0
-		move.w	Obj41_Init_Subtypes(pc,d0.w),d0
-		jmp	Obj41_Init_Subtypes(pc,d0.w)
+		move.w	Springs_Init_Subtypes(pc,d0.w),d0
+		jmp	Springs_Init_Subtypes(pc,d0.w)
 ; ===========================================================================
-Obj41_Init_Subtypes:
-		dc.w Obj41_Init_Common-Obj41_Init_Subtypes	; 0
-		dc.w Obj41_Init_Horizontal-Obj41_Init_Subtypes	; 2
-		dc.w Obj41_Init_Down-Obj41_Init_Subtypes	; 4
-		dc.w Obj41_Init_DiagUp-Obj41_Init_Subtypes	; 6
-		dc.w Obj41_Init_DiagDown-Obj41_Init_Subtypes	; 8
+Springs_Init_Subtypes:
+		dc.w Springs_Init_Common-Springs_Init_Subtypes	; 0
+		dc.w Springs_Init_Horizontal-Springs_Init_Subtypes	; 2
+		dc.w Springs_Init_Down-Springs_Init_Subtypes	; 4
+		dc.w Springs_Init_DiagUp-Springs_Init_Subtypes	; 6
+		dc.w Springs_Init_DiagDown-Springs_Init_Subtypes	; 8
 ; ===========================================================================
 ; loc_E258:
-Obj41_Init_Horizontal:
+Springs_Init_Horizontal:
 		move.b	#4,obRoutine(a0)	; goto Horizontal
 		move.b	#2,obAnim(a0)
 		move.b	#3,obFrame(a0)
 
 loc_E27C:
 		move.b	#sprite_bound(8,sprite_bound(Map_obj41_GHZ_width,sprite_bound(Map_obj41_width,Map_obj41a_width))),obActWid(a0)
-		bra.s	Obj41_Init_Common
+		bra.s	Springs_Init_Common
 ; ===========================================================================
 ; loc_E284:
-Obj41_Init_Down:
+Springs_Init_Down:
 		move.b	#6,obRoutine(a0)	; goto Down
 		move.b	#6,obFrame(a0)
 		bset	#1,obStatus(a0)
-		bra.s	Obj41_Init_Common
+		bra.s	Springs_Init_Common
 ; ===========================================================================
 ; loc_E298:
-Obj41_Init_DiagUp:
+Springs_Init_DiagUp:
 		move.b	#8,obRoutine(a0)	; goto DiagonallyUp
 		move.b	#4,obAnim(a0)
 		move.b	#7,obFrame(a0)
-		bra.s	Obj41_Init_Common
+		bra.s	Springs_Init_Common
 ; ===========================================================================
 ; loc_E2B2:
-Obj41_Init_DiagDown:
+Springs_Init_DiagDown:
 		move.b	#$A,obRoutine(a0)	; goto DiagonallyDown
 		move.b	#4,obAnim(a0)
 		move.b	#$A,obFrame(a0)
 		bset	#1,obStatus(a0)
 ; loc_E2D0:
-Obj41_Init_Common:
+Springs_Init_Common:
 		move.w	obSubtype(a0),d0
 		andi.w	#2,d0
-		move.w	Obj41_Strengths(pc,d0.w),objoff_34(a0)
+		move.w	Springs_Strengths(pc,d0.w),objoff_34(a0)
 		btst	#1,d0
 		beq.s	.return
 		move.l	#Map_obj41a,obMap(a0)
@@ -116,18 +116,18 @@ Obj41_Init_Common:
 		rts
 ; ===========================================================================
 ; word_E2FE:
-Obj41_Strengths:
+Springs_Strengths:
 		dc.w -$1000
 		dc.w -$A00
 ; ===========================================================================
 ; loc_E302:
-Obj41_Up:
+Springs_Up:
 		moveq	#27,d1
 		moveq	#8,d2
 		moveq	#16,d3
 		move.w	obX(a0),d4
 		lea	.actor(pc),a5
-		bsr.w	Obj41_TestBoth
+		bsr.w	Springs_TestBoth
 		lea	Ani_obj41(pc),a1
 		jmp	(AnimateSprite).l
 .actor:
@@ -193,13 +193,13 @@ loc_E3EA:
 
 ; ===========================================================================
 ; loc_E3F4:
-Obj41_Horizontal:
+Springs_Horizontal:
 		moveq	#19,d1
 		moveq	#15,d2
 		moveq	#16,d3
 		move.w	obX(a0),d4
 		lea	.actor(pc),a5
-		bsr.w	Obj41_TestBoth
+		bsr.w	Springs_TestBoth
 		bsr.w	sub_E54C
 		lea	Ani_obj41(pc),a1
 		jmp	(AnimateSprite).l
@@ -358,13 +358,13 @@ sub_E54C:
 
 ; ===========================================================================
 ; loc_E606:
-Obj41_Down:
+Springs_Down:
 		moveq	#27,d1
 		moveq	#8,d2
 		moveq	#16,d3
 		move.w	obX(a0),d4
 		lea	.actor(pc),a5
-		bsr.w	Obj41_TestBoth
+		bsr.w	Springs_TestBoth
 		lea	Ani_obj41(pc),a1
 		jmp	(AnimateSprite).l
 .actor:
@@ -430,17 +430,17 @@ loc_E6D6:
 
 ; ===========================================================================
 ; loc_E6F2:
-Obj41_DiagonallyUp:
+Springs_DiagonallyUp:
 		moveq	#27,d1
 		moveq	#16,d2
 		moveq	#0,d3
 		move.w	obX(a0),d4
 		lea	.actor(pc),a5
-		bsr.w	Obj41_TestBoth
+		bsr.w	Springs_TestBoth
 		lea	Ani_obj41(pc),a1
 		jmp	(AnimateSprite).l
 .actor:
-		lea	Obj41_SlopeData_DiagUp(pc),a2
+		lea	Springs_SlopeData_DiagUp(pc),a2
 		jsr	(SlopedSolid_SingleCharacter).l
 		btst	d6,obStatus(a0)
 		beq.s	.return
@@ -526,17 +526,17 @@ loc_E81E:
 
 ; ===========================================================================
 ; loc_E828:
-Obj41_DiagonallyDown:
+Springs_DiagonallyDown:
 		moveq	#27,d1
 		moveq	#16,d2
 		moveq	#0,d3
 		move.w	obX(a0),d4
 		lea	.actor(pc),a5
-		bsr.w	Obj41_TestBoth
+		bsr.w	Springs_TestBoth
 		lea	Ani_obj41(pc),a1
 		jmp	(AnimateSprite).l
 .actor:
-		lea	Obj41_SlopeData_DiagDown(pc),a2
+		lea	Springs_SlopeData_DiagDown(pc),a2
 		jsr	(SlopedSolid_SingleCharacter).l
 		cmpi.w	#-2,d4
 		bne.s	.return
@@ -603,7 +603,7 @@ loc_E92A:
 ; End of function sub_E870
 
 ; Input d1-d4 is shared; a5 names one direction's actor callback.
-Obj41_TestBoth:
+Springs_TestBoth:
 		lea	(v_player).w,a1
 		moveq	#3,d6
 		movem.l	d1-d4/a5,-(sp)

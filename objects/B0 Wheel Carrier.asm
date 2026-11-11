@@ -181,7 +181,7 @@ WheelCarrier:
 		move.l	code(a1),d0
 		cmp.l	wheel_type(a0),d0
 		bne.w	.wallreturn
-		cmpi.l	#Obj26,d0
+		cmpi.l	#Monitor,d0
 		bne.s	.payloadlive
 		cmpi.b	#4,obRoutine(a1)	; the carried shell has no intact monitor collision
 		bhs.w	.wallreturn
@@ -242,42 +242,42 @@ WheelCarrier:
 ; Bounds include the table's facing flags; the carrier's flip only steers it.
 WheelPayload_size = 14
 WheelPayloads:
-		dc.l	Obj41
+		dc.l	Springs
 		dc.w	-16
 		dc.w	$00
 		dc.b	0,0; red up spring
 		dc.b	-16,16,-8,8
-		dc.l	Obj41
+		dc.l	Springs
 		dc.w	-16
 		dc.w	$02
 		dc.b	0,0; yellow up spring
 		dc.b	-16,16,-8,8
-		dc.l	Obj41
+		dc.l	Springs
 		dc.w	-16
 		dc.w	$10
 		dc.b	0,0; red side spring
 		dc.b	-8,8,-16,16
-		dc.l	Obj41
+		dc.l	Springs
 		dc.w	-16
 		dc.w	$12
 		dc.b	1,0; yellow side spring facing left
 		dc.b	-8,8,-16,16
-		dc.l	Obj41
+		dc.l	Springs
 		dc.w	-16
 		dc.w	$30
 		dc.b	0,0; red diagonal spring
 		dc.b	-21,11,-15,17
-		dc.l	Obj26
+		dc.l	Monitor
 		dc.w	-21
 		dc.w	4
 		dc.b	0,0; ring monitor
 		dc.b	-16,16,-17,15
-		dc.l	Obj26
+		dc.l	Monitor
 		dc.w	-21
 		dc.w	6
 		dc.b	0,0; shield monitor
 		dc.b	-16,16,-17,15
-		dc.l	Obj36
+		dc.l	Spikes
 		dc.w	-15
 		dc.w $A0
 		dc.b 0,0; single S1 upward spike

@@ -68,7 +68,7 @@ def main():
 
     def reward(kind):
         obj = next(a for a in slots if not g.get(a, 'code'))
-        for field, value, size in [('code', g.s['Obj29'], 4), ('obAnim', kind, 1),
+        for field, value, size in [('code', g.s['MonitorContents'], 4), ('obAnim', kind, 1),
                 ('obX', g.get('v_player', 'obX', 2), 2), ('obY', g.get('v_player', 'obY', 2), 2),
                 ('obParent', g.s['v_player'] & 0xFFFF, 2)]:
             g.put(obj, field, value, size)

@@ -23,7 +23,7 @@ MCD_SubTerrainLoad:
 ; Both rendering and every collision sensor use these same resident offsets.
 ; Ordinary acts retain all 32 authored rows; background dimensions stay separate.
 MCD_SubTerrainInitLayout:
-		tst.w	(MCD_SubMainArgument).l
+		tst.w	(MCD_SubMainArgument).w
 		bpl.s	.ready
 		lea	(MCD_TerrainLayout_Sub+PlaneLayout_FG).l,a0
 		lea	((Level_YWrapMask+1)/$80)*2(a0),a1
@@ -33,14 +33,14 @@ MCD_SubTerrainInitLayout:
 		dbf	d0,.wrap
 .ready:
 		bsr.w	Plane_Invalidate
-		bset	#0,(MCD_SubMemoryMode).l
+		bset	#0,(MCD_SubMemoryMode).w
 		moveq	#0,d0
 		rts
 
 ; Indexed script access avoids exposing/stopping PRG RAM for a single word.
 ; Argument 1 = chunk row<<8 | column; argument 2 = word chunk ID.
 MCD_SubTerrainLayout:
-		move.w	(MCD_SubMainArgument).l,d1	; chunk row<<8 | column
+		move.w	(MCD_SubMainArgument).w,d1	; chunk row<<8 | column
 		move.w	d1,d2
 		lsr.w	#7,d2
 		andi.w	#$3E,d2
@@ -51,7 +51,7 @@ MCD_SubTerrainLayout:
 		add.w	PlaneLayout_ColumnTable(a0,d1.w),d2
 		cmpi.w	#MCD_CommandLayoutWrite,d0
 		bne.s	.read
-		move.w	(MCD_SubMainArgument+2).l,(a0,d2.w)
+		move.w	(MCD_SubMainArgument+2).w,(a0,d2.w)
 .read:
 		moveq	#0,d0
 		move.w	(a0,d2.w),d0
@@ -59,7 +59,7 @@ MCD_SubTerrainLayout:
 
 ; One complete floor/wall query, including its neighbour scan, flips and angle.
 MCD_SubTerrainProbe:
-		lea	(MCD_SubMainArgument).l,a2
+		lea	(MCD_SubMainArgument).w,a2
 		move.w	(a2)+,d3
 		move.w	(a2)+,d2
 		move.w	(a2)+,d5
@@ -81,46 +81,50 @@ MCD_SubTerrainProbe:
 .result:
 		bra.w	MCD_SubTerrainResult
 
+; Common enemy/ring floor command: no generic command dispatch or X round trip.
+; MCD_SubFindFloor supplies a1 before the normal result writer uses it.
+MCD_SubTerrainObjectFloor:
+		lea	(MCD_TerrainObject_Sub).l,a0
+		move.w	(MCD_SubMainArgument).w,d3
+		move.w	(MCD_SubMainArgument+2).w,obY(a0)
+		move.w	(MCD_SubMainArgument+4).w,obHeight(a0)
+		bsr.w	MCD_SubObjHitFloor2
+		bra.w	MCD_SubTerrainResult
+
 ; Six words supply only the fields used by terrain, rather than copying an SST.
 ; Player paired sensors, distance selection and ground attachment all run here.
 MCD_SubTerrainObject:
 		lea	(MCD_TerrainObject_Sub).l,a0
-		lea	(MCD_SubMainArgument).l,a1
+		lea	(MCD_SubMainArgument).w,a1
 		move.w	(a1)+,obX(a0)
 		move.w	(a1)+,obY(a0)
 		move.w	(a1)+,obHeight(a0)
-		cmpi.b	#MCD_TerrainObjectFloorX,(MCD_SubMainCommand+1).l
-		beq.s	.floor
 		move.b	(a1)+,obAngle(a0)
 		move.b	(a1)+,obStatus(a0)
 		move.w	(a1)+,obTopSolidBit(a0)
 		move.b	(a1)+,stick_to_convex(a0)
 		move.b	(a1)+,obPrevAni(a0)
 		moveq	#0,d1
-		move.b	(MCD_SubMainCommand+1).l,d1
+		move.b	(MCD_SubMainCommand+1).w,d1
 		subi.w	#MCD_TerrainAnglePos,d1
 		lsl.w	#2,d1
 		movea.l	.entries(pc,d1.w),a2
 		move.w	obX(a0),d3
 		moveq	#0,d0
-		move.b	(MCD_SubMainCommand).l,d0
+		move.b	(MCD_SubMainCommand).w,d0
 		jsr	(a2)
 		bsr.w	MCD_SubTerrainResult
-		cmpi.b	#MCD_TerrainAnglePos,(MCD_SubMainCommand+1).l
+		cmpi.b	#MCD_TerrainAnglePos,(MCD_SubMainCommand+1).w
 		bne.s	.return
 		; Ground attachment is the operation that mutates the supplied object.
-		move.w	d1,(MCD_SubOwnResult+$C).l
+		move.w	d1,(MCD_SubOwnResult+$C).w
 		move.w	obX(a0),d0
-		move.w	obY(a0),(MCD_SubOwnResult+4).l
-		move.b	obAngle(a0),(MCD_SubOwnResult+6).l
-		move.b	obStatus(a0),(MCD_SubOwnResult+7).l
-		move.b	obPrevAni(a0),(MCD_SubOwnResult+9).l
+		move.w	obY(a0),(MCD_SubOwnResult+4).w
+		move.b	obAngle(a0),(MCD_SubOwnResult+6).w
+		move.b	obStatus(a0),(MCD_SubOwnResult+7).w
+		move.b	obPrevAni(a0),(MCD_SubOwnResult+9).w
 .return:
 		rts
-.floor:
-		move.w	obX(a0),d3
-		bsr.w	MCD_SubObjHitFloor2
-		bra.w	MCD_SubTerrainResult
 .entries:
 		dc.l	MCD_SubAnglePos
 		dc.l	MCD_SubCalcRoomInFront
@@ -138,11 +142,11 @@ MCD_SubTerrainObject:
 		dc.l	MCD_SubObjHitCeiling
 
 MCD_SubTerrainResult:
-		move.w	d1,(MCD_SubOwnResult+4).l
-		move.w	d2,(MCD_SubOwnResult+6).l
-		move.w	d3,(MCD_SubOwnResult+8).l
-		move.w	(MCD_TerrainPrimary_Sub).l,(MCD_SubOwnResult+$A).l
-		move.w	(a1),(MCD_SubOwnResult+$C).l
+		move.w	d1,(MCD_SubOwnResult+4).w
+		move.w	d2,(MCD_SubOwnResult+6).w
+		move.w	d3,(MCD_SubOwnResult+8).w
+		move.w	(MCD_TerrainPrimary_Sub).l,(MCD_SubOwnResult+$A).w
+		move.w	(a1),(MCD_SubOwnResult+$C).w
 		rts
 
 ; The MD hands over Word RAM only for building a changed-strip stream.
@@ -155,7 +159,7 @@ MCD_SubTerrainDraw:
 		move.l	(a0)+,(a1)+
 		dbf	d0,.frame
 		lea	(MCD_TerrainStream_Sub).l,a6
-		tst.w	(MCD_SubMainArgument).l
+		tst.w	(MCD_SubMainArgument).w
 		bne.s	.initial
 		bsr.w	Plane_DrawFrame
 		bra.s	.done
@@ -170,7 +174,7 @@ MCD_SubTerrainDraw:
 		bsr.w	MCD_SubPLCStep
 		moveq	#0,d0
 		move.w	(MCD_ObjectStreamBytes_Sub).l,d0
-		bset	#0,(MCD_SubMemoryMode).l
+		bset	#0,(MCD_SubMemoryMode).w
 		rts
 
 		if PlaneDraw_MaxRecordBytes>MCD_TerrainStreamCapacity-$40
@@ -1324,26 +1328,26 @@ MCD_SubObjHitWallLeft:
 ; PRG-RAM handoff is needed. Only actual inertia changes are applied by MD.
 MCD_SubTerrainAir:
 		lea	(MCD_TerrainObject_Sub).l,a0
-		lea	(MCD_SubMainArgument).l,a1
+		lea	(MCD_SubMainArgument).w,a1
 		move.w	(a1)+,obX(a0)
 		move.w	(a1)+,obY(a0)
 		move.l	(a1)+,obVelX(a0)
 		move.w	(a1)+,obHeight(a0)
 		move.b	(a1)+,obAngle(a0)
 		move.b	(a1)+,obStatus(a0)
-		move.b	(MCD_SubMainCommand).l,d0
+		move.b	(MCD_SubMainCommand).w,d0
 		move.b	d0,d1
 		lsr.b	#4,d0
 		andi.b	#$F,d1
 		move.b	d0,obTopSolidBit(a0)
 		move.b	d1,obLRBSolidBit(a0)
 		bsr.w	MCD_Air_Sonic_DoLevelCollision
-		move.w	obY(a0),(MCD_SubOwnResult+2).l
-		move.l	obVelX(a0),(MCD_SubOwnResult+4).l
-		move.w	obInertia(a0),(MCD_SubOwnResult+8).l
-		move.w	obHeight(a0),(MCD_SubOwnResult+$A).l
-		move.b	obAngle(a0),(MCD_SubOwnResult+$C).l
-		move.b	obStatus(a0),(MCD_SubOwnResult+$D).l
+		move.w	obY(a0),(MCD_SubOwnResult+2).w
+		move.l	obVelX(a0),(MCD_SubOwnResult+4).w
+		move.w	obInertia(a0),(MCD_SubOwnResult+8).w
+		move.w	obHeight(a0),(MCD_SubOwnResult+$A).w
+		move.b	obAngle(a0),(MCD_SubOwnResult+$C).w
+		move.b	obStatus(a0),(MCD_SubOwnResult+$D).w
 		move.w	obX(a0),d0
 		rts
 
@@ -1351,7 +1355,7 @@ MCD_SubTerrainAir:
 ; but no later terrain probe uses them in this pass. Apply that callback on MD
 ; after the coherent contact result, preserving each character's own behavior.
 MCD_SubAirLand:
-		bset	#MCD_ServiceLanded,(MCD_SubOwnFlags).l
+		bset	#MCD_ServiceLanded,(MCD_SubOwnFlags).w
 		rts
 
 MCD_Air_Sonic_DoLevelCollision:
@@ -1413,7 +1417,7 @@ MCD_Air_SonAirCol_PosY:
 		andi.b	#$20,d0
 		beq.s	MCD_Air_loc_105B2
 		asr	obVelY(a0)
-		bset	#MCD_ServiceInertia,(MCD_SubOwnFlags).l
+		bset	#MCD_ServiceInertia,(MCD_SubOwnFlags).w
 		move.w	obVelY(a0),obInertia(a0)
 		tst.b	d3
 		bpl.s	.return
@@ -1425,7 +1429,7 @@ MCD_Air_SonAirCol_PosY:
 
 MCD_Air_loc_105B2:
 		clr.w	obVelY(a0)
-		bset	#MCD_ServiceInertia,(MCD_SubOwnFlags).l
+		bset	#MCD_ServiceInertia,(MCD_SubOwnFlags).w
 		move.w	obVelX(a0),obInertia(a0)
 		rts
 ; ---------------------------------------------------------------------------
@@ -1437,7 +1441,7 @@ MCD_Air_loc_105C0:
 		move.w	#$FC0,obVelY(a0)
 
 MCD_Air_loc_105D4:
-		bset	#MCD_ServiceInertia,(MCD_SubOwnFlags).l
+		bset	#MCD_ServiceInertia,(MCD_SubOwnFlags).w
 		move.w	obVelY(a0),obInertia(a0)
 		tst.b	d3
 		bpl.s	.return
@@ -1453,7 +1457,7 @@ MCD_Air_Sonic_FloorLeft:
 		bpl.s	MCD_Air_loc_105FE
 		sub.w	d1,obX(a0)
 		clr.w	obVelX(a0)
-		bset	#MCD_ServiceInertia,(MCD_SubOwnFlags).l
+		bset	#MCD_ServiceInertia,(MCD_SubOwnFlags).w
 		move.w	obVelY(a0),obInertia(a0)
 		rts
 ; ---------------------------------------------------------------------------
@@ -1484,7 +1488,7 @@ MCD_Air_Sonic_FloorLeft_OppositeWall:
 		rts
 
 MCD_Air_loc_10618:
-		tst.b	(MCD_SubMainFlags).l
+		tst.b	(MCD_SubMainFlags).w
 		bne.s	.checkfloor
 		tst.w	obVelY(a0)
 		bmi.s	.return
@@ -1496,7 +1500,7 @@ MCD_Air_loc_10618:
 		move.b	d3,obAngle(a0)
 		bsr.w	MCD_SubAirLand
 		clr.w	obVelY(a0)
-		bset	#MCD_ServiceInertia,(MCD_SubOwnFlags).l
+		bset	#MCD_ServiceInertia,(MCD_SubOwnFlags).w
 		move.w	obVelX(a0),obInertia(a0)
 
 .return:
@@ -1533,7 +1537,7 @@ MCD_Air_loc_1066A:
 MCD_Air_loc_1068A:
 		move.b	d3,obAngle(a0)
 		bsr.w	MCD_SubAirLand
-		bset	#MCD_ServiceInertia,(MCD_SubOwnFlags).l
+		bset	#MCD_ServiceInertia,(MCD_SubOwnFlags).w
 		move.w	obVelY(a0),obInertia(a0)
 		tst.b	d3
 		bpl.s	.return
@@ -1549,7 +1553,7 @@ MCD_Air_Sonic_FloorRight:
 		bpl.s	MCD_Air_loc_106BC
 		add.w	d1,obX(a0)
 		clr.w	obVelX(a0)
-		bset	#MCD_ServiceInertia,(MCD_SubOwnFlags).l
+		bset	#MCD_ServiceInertia,(MCD_SubOwnFlags).w
 		move.w	obVelY(a0),obInertia(a0)
 		rts
 ; ---------------------------------------------------------------------------
@@ -1568,7 +1572,7 @@ MCD_Air_loc_106BC:
 ; ---------------------------------------------------------------------------
 
 MCD_Air_loc_106D6:
-		tst.b	(MCD_SubMainFlags).l
+		tst.b	(MCD_SubMainFlags).w
 		bne.s	.checkfloor
 		tst.w	obVelY(a0)
 		bmi.s	.return
@@ -1580,7 +1584,7 @@ MCD_Air_loc_106D6:
 		move.b	d3,obAngle(a0)
 		bsr.w	MCD_SubAirLand
 		clr.w	obVelY(a0)
-		bset	#MCD_ServiceInertia,(MCD_SubOwnFlags).l
+		bset	#MCD_ServiceInertia,(MCD_SubOwnFlags).w
 		move.w	obVelX(a0),obInertia(a0)
 
 .return:

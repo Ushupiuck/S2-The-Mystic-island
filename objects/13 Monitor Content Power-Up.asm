@@ -1,17 +1,17 @@
 ; ---------------------------------------------------------------------------
-; Object 29 - monitor contents (code for power-up behavior and rising image)
+; Object 13 - monitor contents (code for power-up behavior and rising image)
 ; ---------------------------------------------------------------------------
 
-Obj29:
+MonitorContents:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	Obj29_Index(pc,d0.w),d1
-		jsr	Obj29_Index(pc,d1.w)
+		move.w	MonitorContents_Index(pc,d0.w),d1
+		jsr	MonitorContents_Index(pc,d1.w)
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
-Obj29_Index:	dc.w loc_B04E-Obj29_Index
-		dc.w loc_B092-Obj29_Index
-		dc.w Pow_Delete-Obj29_Index
+MonitorContents_Index:	dc.w loc_B04E-MonitorContents_Index
+		dc.w loc_B092-MonitorContents_Index
+		dc.w Pow_Delete-MonitorContents_Index
 ; ---------------------------------------------------------------------------
 
 loc_B04E:

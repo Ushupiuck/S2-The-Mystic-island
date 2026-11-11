@@ -74,7 +74,7 @@ Obj02_Init:
 		clr.b	(Tails_LastLoadedDPLC).w
 		clr.b	(TailsTails_LastLoadedDPLC).w	; reset body and tail caches together
 		bsr.w	Tails_ResetHistory
-		move.l	#Obj05,(v_player2tails).w
+		move.l	#TailsTails,(v_player2tails).w
 		clr.b	(v_player2tails+obRoutine).w
 		move.w	a0,(v_player2tails+obParent).w
 		move.b	#-1,(v_player2tails+objoff_38).w
@@ -316,11 +316,11 @@ Tails_Water:
 		cmpa.w	#v_player,a0
 		bne.s	.bubbles
 		jsr	(ResumeMusic).l
-		move.l	#Obj0A,(v_sonicbubbles).w
+		move.l	#MouthBubbles,(v_sonicbubbles).w
 		move.w	#$81,(v_sonicbubbles+obSubtype).w
 		bra.s	.drag
 .bubbles:
-		move.l	#Obj0A,(v_tailsbubbles).w
+		move.l	#MouthBubbles,(v_tailsbubbles).w
 		clr.b	(v_tailsbubbles+obRoutine).w
 		move.w	#$81,(v_tailsbubbles+obSubtype).w
 		move.w	a0,(v_tailsbubbles+obParent).w

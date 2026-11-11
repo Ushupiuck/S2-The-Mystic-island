@@ -120,7 +120,7 @@ def main():
 		pos = symbols[f'ObjPos_GHZ{act}']
 		while struct.unpack_from('>H', rom, pos)[0] != 0xFFFF:
 			_, _, obj, eras, subtype = struct.unpack_from('>HHBBH', rom, pos)
-			if obj == symbols['id_Obj36']:
+			if obj == symbols['id_Obj15']:
 				assert subtype >> 4 < len(spike_frames), ('GHZ spike arrangement', act, hex(subtype))
 			pos += symbols['omSize']
 

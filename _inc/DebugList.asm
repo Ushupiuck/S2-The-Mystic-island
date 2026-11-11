@@ -25,11 +25,15 @@ dbug:	macro map,object,subtype,frame,vram
 
 Debug_GHZ:	dc.w (Debug_GHZ_End-Debug_GHZ-2)/DebugEntry_size
 ;		mappings	object		subtype	frame	VRAM setting
-	dbug	Map_Ring,	Obj12,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Obj26,	Obj26,	0,	0,	make_art_tile(ArtTile_Monitor,0,0)
-	dbug	Map_Obj03,	Obj03,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Obj03,	Obj03,	9,	1,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Obj03,	Obj03,	$D,	5,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Ring,	Ring,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj26,	Monitor,	0,	0,	make_art_tile(ArtTile_Monitor,0,0)
+	dbug	Map_Obj26,	Monitor,	4,	5,	make_art_tile(ArtTile_Monitor,0,0)	; Rings
+	dbug	Map_Obj26,	Monitor,	6,	7,	make_art_tile(ArtTile_Monitor,0,0)	; Shield
+	dbug	Map_Obj26,	Monitor,	7,	8,	make_art_tile(ArtTile_Monitor,0,0)	; Invincibility
+	dbug	Map_Obj26,	Monitor,	5,	6,	make_art_tile(ArtTile_Monitor,0,0)	; Speed shoes
+	dbug	Map_Obj03,	CollisionSwitcher,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj03,	CollisionSwitcher,	9,	1,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj03,	CollisionSwitcher,	$D,	5,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Obj17,	SwingingPtfm,	$0005,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
 	dbug	Map_Obj17,	SwingingPtfm,	$0015,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
 	dbug	Map_Obj17,	SwingingPtfm,	$0025,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
@@ -48,27 +52,32 @@ Debug_GHZ:	dc.w (Debug_GHZ_End-Debug_GHZ-2)/DebugEntry_size
 ;	dbug	Map_BallHogV,	Ballhog,	$13,	0,	make_art_tile(ArtTile_Ball_HogV,1,0)
 ;	dbug	Map_BallHogH,	Ballhog,	$00,	0,	make_art_tile(ArtTile_Ball_HogH,1,0)
 ;	dbug	Map_BallHogH,	Ballhog,	$06,	0,	make_art_tile(ArtTile_Ball_HogH,1,0)
-	dbug	Map_Obj36,	Obj36,	0,	0,	make_art_tile(ArtTile_Spikes,0,0)
+	dbug	Map_Obj36,	Spikes,	0,	0,	make_art_tile(ArtTile_Spikes,0,0)
 	dbug	Map_Obj18_GHZ,	Obj18,	$0080,	0,	make_art_tile(ArtTile_Level,2,0)
 	dbug	Map_Obj18_GHZ,	Obj18,	$0601,	0,	make_art_tile(ArtTile_Level,2,0)
 	dbug	Map_Ring,	HangingSurface,	$0000,	0,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_PRock,	Obj3B,	0,	0,	make_art_tile(ArtTile_GHZ_Purple_Rock,3,0)
 	dbug	Map_obj40,	MotoBug,	0,	0,	make_art_tile(ArtTile_Moto_Bug,0,0)
-	dbug	Map_obj41_GHZ,	Obj41,	0,	0,	make_art_tile(ArtTile_Springs,0,0)
+	dbug	Map_obj41_GHZ,	Springs,	0,	0,	make_art_tile(ArtTile_Springs,0,0)
 	dbug	Map_Newtron,	Newtron,	0,	0,	make_art_tile(ArtTile_Newtron,0,0)
 	dbug	Map_Newtron,	Newtron,	1,	0,	make_art_tile(ArtTile_Newtron,1,0)
 	dbug	Map_obj44,	Obj44,	0,	0,	make_art_tile(ArtTile_GHZ_Edge_Wall,2,0)
 	dbug	Map_Obj79,	Obj79,	1,	0,	make_art_tile(ArtTile_Lamppost,1,0)
 	dbug	Map_GiantRing,	GiantRing,	0,	0,	make_art_tile(ArtTile_Giant_Ring,1,0)
+	dbug	Map_Ring,	GoddessRings,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
 Debug_GHZ_End:
 
 Debug_GHZ4:	dc.w (Debug_GHZ4_End-Debug_GHZ4-2)/DebugEntry_size
 ; Act-specific kit: these are the art banks loaded by GHZ4's PLCs.
-	dbug	Map_Ring,	Obj12,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Obj26,	Obj26,	0,	0,	make_art_tile(ArtTile_Monitor,0,0)
-	dbug	Map_Obj03,	Obj03,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Obj03,	Obj03,	9,	1,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Obj03,	Obj03,	$D,	5,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Ring,	Ring,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj26,	Monitor,	0,	0,	make_art_tile(ArtTile_Monitor,0,0)
+	dbug	Map_Obj26,	Monitor,	4,	5,	make_art_tile(ArtTile_Monitor,0,0)	; Rings
+	dbug	Map_Obj26,	Monitor,	6,	7,	make_art_tile(ArtTile_Monitor,0,0)	; Shield
+	dbug	Map_Obj26,	Monitor,	7,	8,	make_art_tile(ArtTile_Monitor,0,0)	; Invincibility
+	dbug	Map_Obj26,	Monitor,	5,	6,	make_art_tile(ArtTile_Monitor,0,0)	; Speed shoes
+	dbug	Map_Obj03,	CollisionSwitcher,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj03,	CollisionSwitcher,	9,	1,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj03,	CollisionSwitcher,	$D,	5,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Obj17,	SwingingPtfm,	$0005,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
 	dbug	Map_Obj17,	SwingingPtfm,	$0015,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
 	dbug	Map_Obj17,	SwingingPtfm,	$0025,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
@@ -79,14 +88,14 @@ Debug_GHZ4:	dc.w (Debug_GHZ4_End-Debug_GHZ4-2)/DebugEntry_size
 	dbug	Map_GBall,	SwingingPtfm_ArtBall,	$0275,	1,	make_art_tile(ArtTile_GHZ_Giant_Ball,2,0)
 	dbug	Map_GBall,	SwingingPtfm_ArtBall,	$0205,	1,	make_art_tile(ArtTile_GHZ_Giant_Ball,2,0)
 	dbug	Map_Obj17,	SwingingPtfm,	$1005,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
-	dbug	Map_Obj36,	Obj36,	0,	0,	make_art_tile(ArtTile_Spikes,0,0)
+	dbug	Map_Obj36,	Spikes,	0,	0,	make_art_tile(ArtTile_Spikes,0,0)
 	dbug	Map_Obj18_GHZ,	Obj18,	$0080,	0,	make_art_tile(ArtTile_Level,2,0)
 	dbug	Map_Obj18_GHZ,	Obj18,	$0601,	0,	make_art_tile(ArtTile_Level,2,0)
 	dbug	Map_Ring,	HangingSurface,	$0000,	0,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_HangingSurface,	HangingSurface,	$0084,	3,	make_art_tile(ArtTile_HangingSurface,0,0)
 	dbug	Map_PullChain,	PullChain,	$0410,	4,	make_art_tile(ArtTile_HangingSurface,0,0)
 	dbug	Map_PullChain,	PullChain,	$0490,	4,	make_art_tile(ArtTile_HangingSurface,0,0)
-	dbug	Map_obj41_GHZ,	Obj41,	0,	0,	make_art_tile(ArtTile_Springs,0,0)
+	dbug	Map_obj41_GHZ,	Springs,	0,	0,	make_art_tile(ArtTile_Springs,0,0)
 	dbug	Map_Obj17,	SwingingPtfm,	$0025,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
 	dbug	Map_Obj18_GHZ,	Obj18,	$0000,	0,	make_art_tile(ArtTile_Level,2,0)
 	dbug	Map_Obj17,	SwingingPtfm,	$0125,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
@@ -116,47 +125,58 @@ Debug_GHZ4_End:
 
 Debug_LZ:	dc.w (Debug_LZ_End-Debug_LZ-2)/DebugEntry_size
 ;		mappings	object		subtype	frame	VRAM setting
-	dbug	Map_Ring,	Obj12,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Obj26,	Obj26,	0,	0,	make_art_tile(ArtTile_Monitor,0,0)
-	dbug	Map_Obj03,	Obj03,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Obj03,	Obj03,	9,	1,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Obj03,	Obj03,	$D,	5,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Ring,	Ring,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj26,	Monitor,	0,	0,	make_art_tile(ArtTile_Monitor,0,0)
+	dbug	Map_Obj26,	Monitor,	4,	5,	make_art_tile(ArtTile_Monitor,0,0)	; Rings
+	dbug	Map_Obj26,	Monitor,	6,	7,	make_art_tile(ArtTile_Monitor,0,0)	; Shield
+	dbug	Map_Obj26,	Monitor,	7,	8,	make_art_tile(ArtTile_Monitor,0,0)	; Invincibility
+	dbug	Map_Obj26,	Monitor,	5,	6,	make_art_tile(ArtTile_Monitor,0,0)	; Speed shoes
+	dbug	Map_Obj03,	CollisionSwitcher,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj03,	CollisionSwitcher,	9,	1,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj03,	CollisionSwitcher,	$D,	5,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Mplat,	MorphingPlatform,	0,	0,	make_art_tile(ArtTile_MorphingOrbs,0,0)
 	dbug	Map_Mplat,	MorphingPlatform,	0,	3,	make_art_tile(ArtTile_MorphingOrbs,0,0)
-	dbug	Map_Obj36,	Obj36,	0,	0,	make_art_tile(ArtTile_Spikes,0,0)
-	dbug	Map_obj41,	Obj41,	$81,	0,	make_art_tile(ArtTile_Springs,0,0)
-	dbug	Map_obj41,	Obj41,	$A0,	6,	make_art_tile(ArtTile_Springs,0,0)
-	dbug	Map_obj41,	Obj41,	$90,	3,	make_art_tile(ArtTile_Springs,0,0)
-	dbug	Map_obj41,	Obj41,	$30,	7,	make_art_tile(ArtTile_Springs,0,0)
-	dbug	Map_obj41,	Obj41,	$40,	$A,	make_art_tile(ArtTile_Springs,0,0)
+	dbug	Map_Obj36,	Spikes,	0,	0,	make_art_tile(ArtTile_Spikes,0,0)
+	dbug	Map_obj41,	Springs,	$81,	0,	make_art_tile(ArtTile_Springs,0,0)
+	dbug	Map_obj41,	Springs,	$A0,	6,	make_art_tile(ArtTile_Springs,0,0)
+	dbug	Map_obj41,	Springs,	$90,	3,	make_art_tile(ArtTile_Springs,0,0)
+	dbug	Map_obj41,	Springs,	$30,	7,	make_art_tile(ArtTile_Springs,0,0)
+	dbug	Map_obj41,	Springs,	$40,	$A,	make_art_tile(ArtTile_Springs,0,0)
 Debug_LZ_End:
 
 Debug_CPZ:	dc.w (Debug_CPZ_End-Debug_CPZ-2)/DebugEntry_size
 ;		mappings	object		subtype	frame	VRAM setting
-	dbug	Map_Ring,	Obj12,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Obj26,	Obj26,	0,	0,	make_art_tile(ArtTile_Monitor,0,0)
-	dbug	Map_Obj03,	Obj03,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Obj03,	Obj03,	9,	1,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Obj03,	Obj03,	$D,	5,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Obj0B,	Obj0B,	0,	0,	make_art_tile(ArtTile_Level,3,1)
+	dbug	Map_Ring,	Ring,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj26,	Monitor,	0,	0,	make_art_tile(ArtTile_Monitor,0,0)
+	dbug	Map_Obj26,	Monitor,	4,	5,	make_art_tile(ArtTile_Monitor,0,0)	; Rings
+	dbug	Map_Obj26,	Monitor,	6,	7,	make_art_tile(ArtTile_Monitor,0,0)	; Shield
+	dbug	Map_Obj26,	Monitor,	7,	8,	make_art_tile(ArtTile_Monitor,0,0)	; Invincibility
+	dbug	Map_Obj26,	Monitor,	5,	6,	make_art_tile(ArtTile_Monitor,0,0)	; Speed shoes
+	dbug	Map_Obj03,	CollisionSwitcher,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj03,	CollisionSwitcher,	9,	1,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj03,	CollisionSwitcher,	$D,	5,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj0B,	TiltingPlatform,	0,	0,	make_art_tile(ArtTile_Level,3,1)
 	dbug	Map_Flap,	FlapDoor,	2,	0,	make_art_tile(ArtTile_LZ_Flapping_Door,2,0)
 	dbug	Map_Obj19,	Obj19,	1,	0,	make_art_tile(ArtTile_CPZ_Platform,3,0)
-	dbug	Map_Obj36,	Obj36,	0,	0,	make_art_tile(ArtTile_Spikes,0,0)
-	dbug	Map_obj41,	Obj41,	$81,	0,	make_art_tile(ArtTile_Springs,0,0)
-	dbug	Map_obj41,	Obj41,	$90,	3,	make_art_tile(ArtTile_Springs,0,0)
-	dbug	Map_obj41,	Obj41,	$A0,	6,	make_art_tile(ArtTile_Springs,0,0)
-	dbug	Map_obj41,	Obj41,	$30,	7,	make_art_tile(ArtTile_Springs,0,0)
-	dbug	Map_obj41,	Obj41,	$40,	$A,	make_art_tile(ArtTile_Springs,0,0)
+	dbug	Map_Obj36,	Spikes,	0,	0,	make_art_tile(ArtTile_Spikes,0,0)
+	dbug	Map_obj41,	Springs,	$81,	0,	make_art_tile(ArtTile_Springs,0,0)
+	dbug	Map_obj41,	Springs,	$90,	3,	make_art_tile(ArtTile_Springs,0,0)
+	dbug	Map_obj41,	Springs,	$A0,	6,	make_art_tile(ArtTile_Springs,0,0)
+	dbug	Map_obj41,	Springs,	$30,	7,	make_art_tile(ArtTile_Springs,0,0)
+	dbug	Map_obj41,	Springs,	$40,	$A,	make_art_tile(ArtTile_Springs,0,0)
 	dbug	Map_GiantRing,	GiantRing,	0,	0,	make_art_tile(ArtTile_Giant_Ring,1,0)
 Debug_CPZ_End:
 
 Debug_EHZ:	dc.w (Debug_EHZ_End-Debug_EHZ-2)/DebugEntry_size
 ;		mappings	object		subtype	frame	VRAM setting
-	dbug	Map_Ring,	Obj12,	1,	0,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Obj26,	Obj26,	4,	5,	make_art_tile(ArtTile_Monitor,0,0)
-	dbug	Map_Obj03,	Obj03,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Obj03,	Obj03,	9,	1,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Obj03,	Obj03,	$D,	5,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Ring,	Ring,	1,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj26,	Monitor,	4,	5,	make_art_tile(ArtTile_Monitor,0,0)
+	dbug	Map_Obj26,	Monitor,	6,	7,	make_art_tile(ArtTile_Monitor,0,0)	; Shield
+	dbug	Map_Obj26,	Monitor,	7,	8,	make_art_tile(ArtTile_Monitor,0,0)	; Invincibility
+	dbug	Map_Obj26,	Monitor,	5,	6,	make_art_tile(ArtTile_Monitor,0,0)	; Speed shoes
+	dbug	Map_Obj03,	CollisionSwitcher,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj03,	CollisionSwitcher,	9,	1,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj03,	CollisionSwitcher,	$D,	5,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Obj79,	Obj79,	1,	0,	make_art_tile(ArtTile_Lamppost,0,0)
 	dbug	Map_Waterfall1,	Obj49,	0,	0,	make_art_tile(ArtTile_Waterfall,1,0)
 	dbug	Map_Waterfall1,	Obj49,	2,	3,	make_art_tile(ArtTile_Waterfall,1,0)
@@ -164,13 +184,13 @@ Debug_EHZ:	dc.w (Debug_EHZ_End-Debug_EHZ-2)/DebugEntry_size
 	dbug	Map_Obj18_EHZ,	Obj18,	$0082,	0,	make_art_tile(ArtTile_Level,2,0)
 	dbug	Map_Obj18_EHZ,	Obj18,	$0093,	1,	make_art_tile(ArtTile_Level,2,0)
 	dbug	Map_Obj3C,	Obj3C,	0,	3,	make_art_tile(ArtTile_Level,2,0)
-	dbug	Map_Obj36,	Obj36,	0,	0,	make_art_tile(ArtTile_Spikes,0,0)
+	dbug	Map_Obj36,	Spikes,	0,	0,	make_art_tile(ArtTile_Spikes,0,0)
 	dbug	Map_obj5E,	Obj5E,	0,	0,	make_art_tile(ArtTile_EHZ_Seesaw,0,0)
-	dbug	Map_obj41,	Obj41,	$81,	0,	make_art_tile(ArtTile_Springs,0,0)
-	dbug	Map_obj41,	Obj41,	$90,	3,	make_art_tile(ArtTile_Springs,0,0)
-	dbug	Map_obj41,	Obj41,	$A0,	6,	make_art_tile(ArtTile_Springs,0,0)
-	dbug	Map_obj41,	Obj41,	$30,	7,	make_art_tile(ArtTile_Springs,0,0)
-	dbug	Map_obj41,	Obj41,	$40,	$A,	make_art_tile(ArtTile_Springs,0,0)
+	dbug	Map_obj41,	Springs,	$81,	0,	make_art_tile(ArtTile_Springs,0,0)
+	dbug	Map_obj41,	Springs,	$90,	3,	make_art_tile(ArtTile_Springs,0,0)
+	dbug	Map_obj41,	Springs,	$A0,	6,	make_art_tile(ArtTile_Springs,0,0)
+	dbug	Map_obj41,	Springs,	$30,	7,	make_art_tile(ArtTile_Springs,0,0)
+	dbug	Map_obj41,	Springs,	$40,	$A,	make_art_tile(ArtTile_Springs,0,0)
 	dbug	Map_Buzzer,	Obj4B,	0,	0,	make_art_tile(ArtTile_Buzzer,0,0)
 	dbug	Map_Snailbot,	Obj54,	0,	0,	make_art_tile(ArtTile_Snail,0,0)
 	dbug	Map_Obj2B,	Obj2B,	3,	0,	make_art_tile(ArtTile_Masher,0,0)
@@ -182,25 +202,30 @@ Debug_EHZ:	dc.w (Debug_EHZ_End-Debug_EHZ-2)/DebugEntry_size
 	dbug	Map_Fireballs,	S1Fireball,	$00,	0,	make_art_tile(ArtTile_Fireball,0,0)|$1000
 	dbug	Map_Fireballs,	S1Fireball,	$04,	0,	make_art_tile(ArtTile_Fireball,0,0)|$1000
 	dbug	Map_Fireballs,	S1Fireball,	$0C,	3,	make_art_tile(ArtTile_Fireball,0,0)
+	dbug	Map_Ring,	TwistingPathway,	$0098,	0,	make_art_tile(ArtTile_Ring,1,0)
 Debug_EHZ_End:
 
 Debug_HTZ:	dc.w (Debug_HTZ_End-Debug_HTZ-2)/DebugEntry_size
 ;		mappings	object		subtype	frame	VRAM setting
-	dbug	Map_Ring,	Obj12,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Obj26,	Obj26,	0,	0,	make_art_tile(ArtTile_Monitor,0,0)
-	dbug	Map_Obj03,	Obj03,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Obj03,	Obj03,	9,	1,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Obj03,	Obj03,	$D,	5,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Ring,	Ring,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj26,	Monitor,	0,	0,	make_art_tile(ArtTile_Monitor,0,0)
+	dbug	Map_Obj26,	Monitor,	4,	5,	make_art_tile(ArtTile_Monitor,0,0)	; Rings
+	dbug	Map_Obj26,	Monitor,	6,	7,	make_art_tile(ArtTile_Monitor,0,0)	; Shield
+	dbug	Map_Obj26,	Monitor,	7,	8,	make_art_tile(ArtTile_Monitor,0,0)	; Invincibility
+	dbug	Map_Obj26,	Monitor,	5,	6,	make_art_tile(ArtTile_Monitor,0,0)	; Speed shoes
+	dbug	Map_Obj03,	CollisionSwitcher,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj03,	CollisionSwitcher,	9,	1,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj03,	CollisionSwitcher,	$D,	5,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Obj79,	Obj79,	1,	0,	make_art_tile(ArtTile_Lamppost,0,0)
 	dbug	Map_Obj18_GHZ,	Obj18,	$0082,	0,	make_art_tile(ArtTile_Level,2,0)
 	dbug	Map_Obj18_GHZ,	Obj18,	$0093,	1,	make_art_tile(ArtTile_Level,2,0)
-	dbug	Map_Obj36,	Obj36,	0,	0,	make_art_tile(ArtTile_Spikes,0,0)
+	dbug	Map_Obj36,	Spikes,	0,	0,	make_art_tile(ArtTile_Spikes,0,0)
 	dbug	Map_obj5E,	Obj5E,	0,	0,	make_art_tile(ArtTile_HTZ_Seesaw,0,0)
-	dbug	Map_obj41,	Obj41,	$81,	0,	make_art_tile(ArtTile_Springs,0,0)
-	dbug	Map_obj41,	Obj41,	$90,	3,	make_art_tile(ArtTile_Springs,0,0)
-	dbug	Map_obj41,	Obj41,	$A0,	6,	make_art_tile(ArtTile_Springs,0,0)
-	dbug	Map_obj41,	Obj41,	$30,	7,	make_art_tile(ArtTile_Springs,0,0)
-	dbug	Map_obj41,	Obj41,	$40,	$A,	make_art_tile(ArtTile_Springs,0,0)
+	dbug	Map_obj41,	Springs,	$81,	0,	make_art_tile(ArtTile_Springs,0,0)
+	dbug	Map_obj41,	Springs,	$90,	3,	make_art_tile(ArtTile_Springs,0,0)
+	dbug	Map_obj41,	Springs,	$A0,	6,	make_art_tile(ArtTile_Springs,0,0)
+	dbug	Map_obj41,	Springs,	$30,	7,	make_art_tile(ArtTile_Springs,0,0)
+	dbug	Map_obj41,	Springs,	$40,	$A,	make_art_tile(ArtTile_Springs,0,0)
 	dbug	Map_Obj16,	Obj16,	0,	0,	make_art_tile(ArtTile_HtzZipline,2,0)
 	dbug	Map_Obj16,	Obj1C,	4,	1,	make_art_tile(ArtTile_HtzZipline,2,0)
 	dbug	Map_Obj16,	Obj1C,	5,	2,	make_art_tile(ArtTile_HtzZipline,2,0)
@@ -214,12 +239,16 @@ Debug_HTZ:	dc.w (Debug_HTZ_End-Debug_HTZ-2)/DebugEntry_size
 Debug_HTZ_End:
 
 Debug_HPZ:	dc.w (Debug_HPZ_End-Debug_HPZ-2)/DebugEntry_size
+	dbug	Map_Obj26,	Monitor,	4,	5,	make_art_tile(ArtTile_Monitor,0,0)	; Rings
 ;		mappings	object		subtype	frame	VRAM setting
-	dbug	Map_Ring,	Obj12,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Obj26,	Obj26,	0,	0,	make_art_tile(ArtTile_Monitor,0,0)
-	dbug	Map_Obj03,	Obj03,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Obj03,	Obj03,	9,	1,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Obj03,	Obj03,	$D,	5,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Ring,	Ring,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj26,	Monitor,	0,	0,	make_art_tile(ArtTile_Monitor,0,0)
+	dbug	Map_Obj26,	Monitor,	6,	7,	make_art_tile(ArtTile_Monitor,0,0)	; Shield
+	dbug	Map_Obj26,	Monitor,	7,	8,	make_art_tile(ArtTile_Monitor,0,0)	; Invincibility
+	dbug	Map_Obj26,	Monitor,	5,	6,	make_art_tile(ArtTile_Monitor,0,0)	; Speed shoes
+	dbug	Map_Obj03,	CollisionSwitcher,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj03,	CollisionSwitcher,	9,	1,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj03,	CollisionSwitcher,	$D,	5,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Waterfall2,	HPZ_Waterfall,	4,	4,	make_art_tile(ArtTile_HPZ_Waterfall,3,1)
 	dbug	Map_Piranha,	Piranha,	0,	0,	make_art_tile(ArtTile_BFish,1,0)
 	dbug	Map_Splats,	Splats,	0,	0,	make_art_tile(ArtTile_Splats,1,0)
@@ -233,9 +262,8 @@ Debug_HPZ:	dc.w (Debug_HPZ_End-Debug_HPZ-2)/DebugEntry_size
 Debug_HPZ_End:
 
 Debug_SMZObjects:	macro
-		dbug	Map_Ring,Obj12,0,0,make_art_tile(ArtTile_Ring,1,0)
-		dbug	Map_Obj26,Obj26,4,0,make_art_tile(ArtTile_Monitor,0,0)
-		dbug	Map_obj41,Obj41,0,0,make_art_tile(ArtTile_Springs,0,0)
+		dbug	Map_Ring,Ring,0,0,make_art_tile(ArtTile_Ring,1,0)
+		dbug	Map_obj41,Springs,0,0,make_art_tile(ArtTile_Springs,0,0)
 		dbug	Map_SMZ_Spin,SMZ_SpinPlatform,$80,0,ArtTile_SMZ_Spin
 		dbug	Map_SMZ_Saw,SMZ_Saws,0,0,ArtTile_SMZ_Saw|$4000
 		dbug	Map_SMZ_VanP,SMZ_VanishPlatform,0,0,ArtTile_SMZ_VanP|$4000
@@ -243,10 +271,18 @@ Debug_SMZObjects:	macro
 		endm
 
 Debug_SMZ:	dc.w (Debug_SMZ_End-Debug_SMZ-2)/DebugEntry_size
+	dbug	Map_Obj26,	Monitor,	4,	5,	make_art_tile(ArtTile_Monitor,0,0)	; Rings
+	dbug	Map_Obj26,	Monitor,	6,	7,	make_art_tile(ArtTile_Monitor,0,0)	; Shield
+	dbug	Map_Obj26,	Monitor,	7,	8,	make_art_tile(ArtTile_Monitor,0,0)	; Invincibility
+	dbug	Map_Obj26,	Monitor,	5,	6,	make_art_tile(ArtTile_Monitor,0,0)	; Speed shoes
 		Debug_SMZObjects
 Debug_SMZ_End:
 
 Debug_SMZIndoor:	dc.w (Debug_SMZIndoor_End-Debug_SMZIndoor-2)/DebugEntry_size
+	dbug	Map_Obj26,	Monitor,	4,	5,	make_art_tile(ArtTile_Monitor,0,0)	; Rings
+	dbug	Map_Obj26,	Monitor,	6,	7,	make_art_tile(ArtTile_Monitor,0,0)	; Shield
+	dbug	Map_Obj26,	Monitor,	7,	8,	make_art_tile(ArtTile_Monitor,0,0)	; Invincibility
+	dbug	Map_Obj26,	Monitor,	5,	6,	make_art_tile(ArtTile_Monitor,0,0)	; Speed shoes
 		Debug_SMZObjects
 		dbug	Map_Kemusi,Caterkiller,1,2,make_art_tile(ArtTile_SMZ_Kemusi,1,0)
 		dbug	Map_Kemusi,Caterkiller,2,3,make_art_tile(ArtTile_SMZ_Kemusi,1,0)
@@ -265,9 +301,12 @@ Debug_PP: dc.w (Debug_PP_End-Debug_PP-2)/DebugEntry_size
 		dbug	Map_PP_Tamabboh1,PP_Tamabboh,0,0,ArtTile_PP_Tamabboh
 		dbug	Map_PP_Tamabboh2,PP_Tamabboh,1,0,ArtTile_PP_Tamabboh
 		dbug	Map_MM_PropellerBase,MM_Propeller,0,0,ArtTile_Propeller
-		dbug	Map_Ring,Obj12,0,0,make_art_tile(ArtTile_Ring,1,0)
-		dbug	Map_Obj26,Obj26,4,0,ArtTile_Monitor
-		dbug	Map_obj41,Obj41,0,0,ArtTile_Springs
+		dbug	Map_Ring,Ring,0,0,make_art_tile(ArtTile_Ring,1,0)
+		dbug	Map_Obj26,Monitor,4,5,ArtTile_Monitor
+	dbug	Map_Obj26,	Monitor,	6,	7,	make_art_tile(ArtTile_Monitor,0,0)	; Shield
+	dbug	Map_Obj26,	Monitor,	7,	8,	make_art_tile(ArtTile_Monitor,0,0)	; Invincibility
+	dbug	Map_Obj26,	Monitor,	5,	6,	make_art_tile(ArtTile_Monitor,0,0)	; Speed shoes
+		dbug	Map_obj41,Springs,0,0,ArtTile_Springs
 		dbug	Map_MovSpring,WheelCarrier,0,0,ArtTile_Wheel
 		dbug	Map_MovSpring,WheelCarrier,1,0,ArtTile_Wheel
 		dbug	Map_MovSpring,WheelCarrier,2,0,ArtTile_Wheel

@@ -10,6 +10,7 @@ namespace S2ObjectDefinitions.EHZ
 	{
 		private Sprite img;
 		private Sprite sprite;
+		private PropertySpec[] properties;
 
 		public override void Init(ObjectData data)
 		{
@@ -18,21 +19,30 @@ namespace S2ObjectDefinitions.EHZ
 			marker.DrawLine(LevelData.ColorWhite, 0, 8, 16, 8);
 			marker.DrawLine(LevelData.ColorWhite, 8, 0, 8, 16);
 			img = new Sprite(marker, -8, -8);
+			properties = new[] {
+				new PropertySpec("Path type", typeof(int), "Object settings", "EHZ spiral or the FBZ/MTZ horizontal wire cage.", 0,
+					new Dictionary<string, int> { { "EHZ spiral", 0 }, { "FBZ/MTZ wire cage", 1 } },
+					obj => (Subtype(obj) >> 7) & 1,
+					(obj, value) => SetSubtype(obj, (Subtype(obj) & ~0x80) | (((int)value & 1) << 7))),
+				new PropertySpec("Cage half-width", typeof(int), "Object settings", "Units of eight pixels, 0-127; zero uses MTZ's 192 pixels. Used only in cage mode.", 0,
+					obj => Subtype(obj) & 0x7F,
+					(obj, value) => SetSubtype(obj, (Subtype(obj) & ~0x7F) | ((int)value & 0x7F)))
+			};
 			List<Sprite> sprs = new List<Sprite>();
 			int left = -208;
 			int right = 208;
 			int top = 0;
 			int bottom = 0;
-			for (int i = 0; i < Obj06_CosineTable.Length; i++)
+			for (int i = 0; i < TwistingPathway_CosineTable.Length; i++)
 			{
-				top = Math.Min(Obj06_CosineTable[i], top);
-				bottom = Math.Max(Obj06_CosineTable[i], bottom);
+				top = Math.Min(TwistingPathway_CosineTable[i], top);
+				bottom = Math.Max(TwistingPathway_CosineTable[i], bottom);
 			}
 			Point offset = new Point(left, top);
 			BitmapBits bmp = new BitmapBits(right - left, bottom - top);
 			for (int x = 0; x < 0x1A0; x++)
 			{
-				int y = Obj06_CosineTable[x] - top;
+				int y = TwistingPathway_CosineTable[x] - top;
 				if (x < bmp.Width & y >= 0 & y < bmp.Height)
 					bmp[x, y] = LevelData.ColorYellow;
 			}
@@ -48,17 +58,17 @@ namespace S2ObjectDefinitions.EHZ
 
 		public override ReadOnlyCollection<byte> Subtypes
 		{
-			get { return new ReadOnlyCollection<byte>(new byte[] { 0 }); }
+			get { return new ReadOnlyCollection<byte>(new byte[] { 0, 0x98 }); }
 		}
 
 		public override string Name
 		{
-			get { return "Twisting Pathway"; }
+			get { return "Twisting pathway / wire cage"; }
 		}
 
 		public override string SubtypeName(byte subtype)
 		{
-			return string.Empty;
+			return (subtype & 0x80) == 0 ? "EHZ spiral" : "FBZ/MTZ wire cage";
 		}
 
 		public override Sprite Image
@@ -71,7 +81,7 @@ namespace S2ObjectDefinitions.EHZ
 			return img;
 		}
 
-		private int[] Obj06_CosineTable = {
+		private int[] TwistingPathway_CosineTable = {
 	      32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, // 16
 	      32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 31, 31, // 32
 	      31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 30, 30, 30, // 48
@@ -99,10 +109,25 @@ namespace S2ObjectDefinitions.EHZ
 	      31, 31, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, //400
 	      32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, //416
 										  };
-        
+
 		public override Sprite GetSprite(ObjectEntry obj)
 		{
-			return sprite;
+			if ((Subtype(obj) & 0x80) == 0) return sprite;
+			int halfWidth = (Subtype(obj) & 0x7F) * 8;
+			if (halfWidth == 0) halfWidth = 192;
+			BitmapBits area = new BitmapBits(halfWidth * 2 + 1, 121);
+			area.DrawRectangle(LevelData.ColorYellow, 0, 0, halfWidth * 2, 120);
+			area.DrawLine(LevelData.ColorWhite, 0, 40, halfWidth * 2, 40);
+			return new Sprite(new Sprite(area, -halfWidth, -80), img);
+		}
+
+		public override PropertySpec[] CustomProperties { get { return properties; } }
+		private static int Subtype(ObjectEntry obj) { return ByteConverter.ToUInt16(obj.GetBytes(), 6); }
+		private static void SetSubtype(ObjectEntry obj, int subtype)
+		{
+			byte[] data = obj.GetBytes();
+			ByteConverter.GetBytes((ushort)subtype).CopyTo(data, 6);
+			obj.FromBytes(data);
 		}
 
 		public override Rectangle GetBounds(ObjectEntry obj)

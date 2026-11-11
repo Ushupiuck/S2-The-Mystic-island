@@ -69,8 +69,8 @@ def main():
     isolate(g)
     g.write('Camera_X_pos', 4520, 2)
     g.write('Camera_X_pos_coarse_back', 0x1100, 2)
-    mon = spawn(g, 'Obj26', 4624, 1521, 4)
-    act('Obj26', mon)
+    mon = spawn(g, 'Monitor', 4624, 1521, 4)
+    act('Monitor', mon)
     place(g, who, 4624, 1490)
     g.put(who, 'obVelY', 0x100, 2)
     act('Monitor_Solid', mon)
@@ -156,7 +156,7 @@ def main():
                       g.s['object_size'])
 
         def left_monitor():
-            return next((obj for obj in slots if g.get(obj, 'code') == g.s['Obj26']
+            return next((obj for obj in slots if g.get(obj, 'code') == g.s['Monitor']
                          and g.get(obj, 'obX', 2) == 4624), None)
 
         for visit in range(2):

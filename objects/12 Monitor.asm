@@ -1,22 +1,22 @@
 ; ---------------------------------------------------------------------------
-; Object 26 - monitor
+; Object 12 - monitor
 ; ---------------------------------------------------------------------------
 
-Obj26:
+Monitor:
 		tst.w	Mount_parent(a0)
-		beq.s	Obj26_Behavior
+		beq.s	Monitor_Behavior
 		jmp	(PlatformMount_Child).l
-Obj26_Behavior:
+Monitor_Behavior:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	Obj26_Index(pc,d0.w),d1
-		jmp	Obj26_Index(pc,d1.w)
+		move.w	Monitor_Index(pc,d0.w),d1
+		jmp	Monitor_Index(pc,d1.w)
 ; ---------------------------------------------------------------------------
-Obj26_Index:	dc.w loc_AE70-Obj26_Index	; 0
-		dc.w loc_AED6-Obj26_Index	; 2
-		dc.w loc_AFDC-Obj26_Index	; 4
-		dc.w Mon_Animate-Obj26_Index	; 6
-		dc.w loc_AFC4-Obj26_Index	; 8
+Monitor_Index:	dc.w loc_AE70-Monitor_Index	; 0
+		dc.w loc_AED6-Monitor_Index	; 2
+		dc.w loc_AFDC-Monitor_Index	; 4
+		dc.w Mon_Animate-Monitor_Index	; 6
+		dc.w loc_AFC4-Monitor_Index	; 8
 ; ---------------------------------------------------------------------------
 
 loc_AE70:
@@ -138,7 +138,7 @@ loc_AFDC:
 		clr.b	obColType(a0)
 		bsr.w	FindFreeObj
 		bne.s	loc_B004
-		move.l	#Obj29,code(a1)
+		move.l	#MonitorContents,code(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.b	obAnim(a0),obAnim(a1)

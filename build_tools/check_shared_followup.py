@@ -104,13 +104,13 @@ try:
 			attached=bool(g.read(flag));cases+=1
 			record(who+' disc acquisition '+str((dx,dy)),attached==inside,attached=attached)
 	# First landing and continued standing must use the same visible 16px top.
-	g.restore(stage);isolate(g);spring=spawn(g,'Obj41',0x180,0x400,0x10)
-	g.write('Camera_X_pos',0x100,2);act('Obj41_Init',spring);sbase=g.save()
+	g.restore(stage);isolate(g);spring=spawn(g,'Springs',0x180,0x400,0x10)
+	g.write('Camera_X_pos',0x100,2);act('Springs_Init',spring);sbase=g.save()
 	for who in ('v_player','v_player2'):
 		g.restore(sbase);place(g,who,0x180,0x400-16-g.get(who,'obHeight')+2,True)
-		g.put(who,'obVelY',0x100,2);act('Obj41_Horizontal',spring)
+		g.put(who,'obVelY',0x100,2);act('Springs_Horizontal',spring)
 		landed=g.get(who,'obY',2)+g.get(who,'obHeight')
-		act('Obj41_Horizontal',spring)
+		act('Springs_Horizontal',spring)
 		stood=g.get(who,'obY',2)+g.get(who,'obHeight')
 		record(who+' horizontal spring top',landed==0x3F0 and stood==landed,landed_feet=landed,standing_feet=stood)
 	# Run real object passes. A teleporter updates Tails after his reserved slot.

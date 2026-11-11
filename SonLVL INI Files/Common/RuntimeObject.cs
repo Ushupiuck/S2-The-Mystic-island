@@ -306,11 +306,11 @@ namespace MysticIsland.ObjectDefinitions
 			if (settings <= 16) pieces.Add(new Sprite(Load("../art/nemesis/Platform button.nem", CompressionType.Nemesis, "Platform button.bin", 0)[0], x, y - height - 5));
 			else if (settings <= 20)
 			{
-				pieces.Add(new Sprite(PayloadSprite(0x41, ((settings - 17) >> 1) * 2), x - 16, y - height - 8));
-				pieces.Add(new Sprite(PayloadSprite(0x41, ((settings - 17) & 1) * 2), x + 16, y - height - 8));
+				pieces.Add(new Sprite(PayloadSprite(0x14, ((settings - 17) >> 1) * 2), x - 16, y - height - 8));
+				pieces.Add(new Sprite(PayloadSprite(0x14, ((settings - 17) & 1) * 2), x + 16, y - height - 8));
 			}
-			else if (settings == 21) pieces.Add(new Sprite(PayloadSprite(0x36, 0x80), x, y - height - 16));
-			else pieces.Add(new Sprite(PayloadSprite(0x26, settings - 22), x, y - height - 15));
+			else if (settings == 21) pieces.Add(new Sprite(PayloadSprite(0x15, 0x80), x, y - height - 16));
+			else pieces.Add(new Sprite(PayloadSprite(0x12, settings - 22), x, y - height - 15));
 			return new Sprite(pieces);
 		}
 

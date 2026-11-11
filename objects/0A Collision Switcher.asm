@@ -1,22 +1,22 @@
 ;----------------------------------------------------
-; Object 03 - collision	index switcher (in loops)
+; Object 0A - collision	index switcher (in loops)
 ;----------------------------------------------------
 
-Obj03:
+CollisionSwitcher:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	Obj03_Index(pc,d0.w),d1
-		jsr	Obj03_Index(pc,d1.w)
+		move.w	CollisionSwitcher_Index(pc,d0.w),d1
+		jsr	CollisionSwitcher_Index(pc,d1.w)
 		tst.b	(Debug_mode_flag).w
 		beq.w	MarkObjGone2
 		bra.w	MarkObjGone
 ; ---------------------------------------------------------------------------
-Obj03_Index:	dc.w Obj03_Init-Obj03_Index
-		dc.w loc_13EB4-Obj03_Index
-		dc.w loc_13FB6-Obj03_Index
+CollisionSwitcher_Index:	dc.w CollisionSwitcher_Init-CollisionSwitcher_Index
+		dc.w loc_13EB4-CollisionSwitcher_Index
+		dc.w loc_13FB6-CollisionSwitcher_Index
 ; ---------------------------------------------------------------------------
 
-Obj03_Init:
+CollisionSwitcher_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj03,obMap(a0)
 		move.b	#Map_Obj03_height,height_pixels(a0)
@@ -32,17 +32,17 @@ Obj03_Init:
 		move.b	d0,obFrame(a0)
 		andi.w	#3,d0
 		add.w	d0,d0
-		move.w	Obj03_Data(pc,d0.w),objoff_36(a0)
+		move.w	CollisionSwitcher_Data(pc,d0.w),objoff_36(a0)
 		bra.w	loc_13FB6
 ; ---------------------------------------------------------------------------
-Obj03_Data:	dc.w   $20,  $40,  $80,	$100
+CollisionSwitcher_Data:	dc.w   $20,  $40,  $80,	$100
 ; ---------------------------------------------------------------------------
 
 loc_13EA4:
 		andi.w	#3,d0
 		move.b	d0,obFrame(a0)
 		add.w	d0,d0
-		move.w	Obj03_Data(pc,d0.w),objoff_36(a0)
+		move.w	CollisionSwitcher_Data(pc,d0.w),objoff_36(a0)
 
 loc_13EB4:
 		tst.w	(Debug_placement_mode).w
