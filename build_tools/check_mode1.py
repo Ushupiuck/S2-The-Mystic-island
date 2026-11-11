@@ -20,6 +20,7 @@ for name in ('core', 'rom', 'listing', 'output'):
 	p.add_argument('--' + name, type=Path, required=True)
 p.add_argument('--pal', action='store_true')
 p.add_argument('--stack-gameplay', action='store_true', help='Watermark the MD stack through HPZ loading/gameplay/water')
+p.add_argument('--art-cache-gameplay', action='store_true', help='Check free RAM and art-cache reloads through level/special-stage transitions')
 p.add_argument('--assembler', type=Path)
 p.add_argument('--p2bin', type=Path)
 a = p.parse_args()
@@ -104,6 +105,74 @@ if a.stack_gameplay:
 		g.run = original_run
 	g.restore(base)
 	passed('MD stack watermark survives HPZ loading, Sonic/Tails gameplay and water HBlank')
+if a.art_cache_gameplay:
+	from check_object_course import boot_level
+	from import_ehz2_pp_background import nemesis
+	free_start = g.s['Free_RAM_Start'] & 65535
+	free_end = g.s['Free_RAM_End'] & 65535
+	assert 0 <= free_start < free_end <= 65535
+	assert g.s['Free_RAM_End'] == g.s['MCD_MainWorkStart']
+	assert g.s['MCD_MainWorkEnd'] == g.s['Player_Art_Buffer_Start']
+	assert g.s['Player_Art_Buffer_End'] == g.s['Main_RAM_Start']
+	canary = bytes((i * 37 + 19) & 255 for i in range(free_end-free_start))
+	g.restore(base)
+	boot_level(g, zone=0, act=0)
+	g.ram[free_start:free_end] = canary
+	for tick in range(600):
+		g.buttons = {7} | ({0} if tick % 120 < 20 else set())
+		g.run()
+		assert not g.read('v_errortype') and g.read('MCD_status') == 1
+		assert bytes(g.ram[free_start:free_end]) == canary, tick
+	passed('600 controller-driven level frames preserve free MD RAM')
+
+	# Poison only cached art. Enter through the real menu, then let the stage
+	# and results path rebuild their sources without depending on a prior level.
+	g.restore(base)
+	g.buttons = set()
+	g.ram[free_start:free_end] = canary
+	art_start = g.s['Player_Art_Buffer_Start'] & 65535
+	art_end = g.s['Player_Art_Buffer_End'] & 65535
+	g.ram[art_start:art_end] = bytes([0xA5]) * (art_end-art_start)
+	g.write('f_levselcheat', 1)
+	g.buttons = {3}; g.run(2); g.buttons = set(); g.run(100)
+	g.write('v_levselitem', g.s['LevelSelect_BonusItem'], 2)
+	g.run(3); g.buttons = {3}; g.run(2); g.buttons = set()
+	for _ in range(800):
+		g.run()
+		if g.read('v_vbla_routine', 2) == g.s['Vint_S1SS']:
+			break
+	else:
+		raise AssertionError('Bonus-stage timeout')
+	first_angle = g.read('v_ssangle', 2)
+	ring_art = nemesis((ROOT/'art/nemesis/Special stage rings.nem').read_bytes())
+	assert bytes(g.read(g.s['Art_Ring']+i) for i in range(len(ring_art))) == ring_art
+	for _ in range(180):
+		g.run()
+		assert not g.read('v_errortype')
+		assert bytes(g.ram[free_start:free_end]) == canary
+	assert g.read('v_ssangle', 2) != first_angle
+	frame = g.read('v_ani1_prev')
+	bank = g.s['ArtTile_SS_Rings'] * 32
+	assert bytes(g.vram[(bank+i)^1] for i in range(128)) == ring_art[frame*128:(frame+1)*128]
+	g.video.save(a.output/'art-cache-stage.png')
+	passed('Rotating stage restores its poisoned ring source and uploads the live frame')
+	# Stage the exit request; subsequent tally, return and reload execute normally.
+	g.write('v_gamemode', g.s['Level'], 2)
+	for _ in range(2400):
+		g.run()
+		assert not g.read('v_errortype')
+		if (g.read('v_vbla_routine', 2) == g.s['Vint_Level']
+				and g.read('v_gamemode', 2) == g.s['Level'] and g.read('f_timecount')):
+			break
+	else:
+		raise AssertionError('Special-stage results did not return to a level')
+	for label, source in (('Art_Shield', 'Shield.unc'), ('Art_Invincibility', 'Invincibility.unc'),
+						('Art_Ring', 'Ring.bin')):
+		expected = (ROOT/'art/uncompressed'/source).read_bytes()
+		assert bytes(g.read(g.s[label]+i) for i in range(len(expected))) == expected, label
+	assert bytes(g.ram[free_start:free_end]) == canary
+	passed('Results return rebuilds all three level art sources without touching free RAM')
+	g.restore(base)
 names = ('vdp_control_port', 'VDP_control_port', 'vdp_data_port', 'v_dma_thunk',
 	'VDP_Command_Buffer', 'VDP_Command_Buffer_Slot', 'MCD_dma_pending', 'InitDMAQueue',
 	'ProcessDMAQueue', 'QueueDMATransfer', 'MCD_Init', 'MCD_Command', 'MCD_AcquireWordRAM', 'MCD_ReleaseWordRAM')
