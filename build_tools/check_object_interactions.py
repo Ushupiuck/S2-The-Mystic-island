@@ -263,7 +263,7 @@ def main():
         g.buttons={5};g.run(15)
         assert g.get('v_player','obAnim')==g.s['AniIDSonAni_Spindash'],g.get('v_player','obAnim')
         dust=g.get('v_player','player_dust_ptr',2)
-        assert g.get(dust,'layout_id')==0x0E
+        assert g.get(dust,'layout_id')==0x05
         g.buttons=set();g.run(2)
         speed=g.get('v_player','obInertia',2)
         assert speed>=0x700,speed

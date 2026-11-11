@@ -1,25 +1,25 @@
 ; ---------------------------------------------------------------------------
-; Object 0A - drowning bubbles and countdown numbers
+; Object 07 - drowning bubbles and countdown numbers
 ; ---------------------------------------------------------------------------
 
-Obj0A:
+MouthBubbles:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	Obj0A_Index(pc,d0.w),d1
-		jmp	Obj0A_Index(pc,d1.w)
+		move.w	MouthBubbles_Index(pc,d0.w),d1
+		jmp	MouthBubbles_Index(pc,d1.w)
 ; ---------------------------------------------------------------------------
-Obj0A_Index:	dc.w Obj0A_Init-Obj0A_Index
-		dc.w Obj0A_Animate-Obj0A_Index
-		dc.w Obj0A_ChkWater-Obj0A_Index
-		dc.w Obj0A_Display-Obj0A_Index
-		dc.w Obj0A_Delete-Obj0A_Index
-		dc.w Obj0A_Countdown-Obj0A_Index
-		dc.w Obj0A_AirLeft-Obj0A_Index
-		dc.w Obj0A_DisplayNumber-Obj0A_Index
-		dc.w Obj0A_Delete-Obj0A_Index
+MouthBubbles_Index:	dc.w MouthBubbles_Init-MouthBubbles_Index
+		dc.w MouthBubbles_Animate-MouthBubbles_Index
+		dc.w MouthBubbles_ChkWater-MouthBubbles_Index
+		dc.w MouthBubbles_Display-MouthBubbles_Index
+		dc.w MouthBubbles_Delete-MouthBubbles_Index
+		dc.w MouthBubbles_Countdown-MouthBubbles_Index
+		dc.w MouthBubbles_AirLeft-MouthBubbles_Index
+		dc.w MouthBubbles_DisplayNumber-MouthBubbles_Index
+		dc.w MouthBubbles_Delete-MouthBubbles_Index
 ; ---------------------------------------------------------------------------
 
-Obj0A_Init:
+MouthBubbles_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Bubbles,obMap(a0)
 		move.b	#Map_Bubbles_height,height_pixels(a0)
@@ -37,7 +37,7 @@ Obj0A_Init:
 		addq.b	#8,obRoutine(a0)
 		andi.w	#$7F,d0
 		move.b	d0,objoff_37(a0)
-		bra.w	Obj0A_Countdown
+		bra.w	MouthBubbles_Countdown
 ; ---------------------------------------------------------------------------
 
 loc_11ECC:
@@ -45,20 +45,20 @@ loc_11ECC:
 		move.w	obX(a0),objoff_34(a0)
 		move.w	#-$100,obVelY(a0)
 
-Obj0A_Animate:
+MouthBubbles_Animate:
 		lea	Ani_Obj0A(pc),a1
 		bsr.w	AnimateSprite
 
-Obj0A_ChkWater:
+MouthBubbles_ChkWater:
 		move.w	(v_waterpos1).w,d0
 		cmp.w	obY(a0),d0
 		blo.s	loc_11F0A
 		move.b	#6,obRoutine(a0)
 		addq.b	#7,obAnim(a0)
 		cmpi.b	#$D,obAnim(a0)
-		bls.s	Obj0A_Display
+		bls.s	MouthBubbles_Display
 		move.b	#$D,obAnim(a0)
-		bra.s	Obj0A_Display
+		bra.s	MouthBubbles_Display
 ; ---------------------------------------------------------------------------
 
 loc_11F0A:
@@ -75,48 +75,48 @@ loc_11F14:
 		ext.w	d0
 		add.w	objoff_34(a0),d0
 		move.w	d0,obX(a0)
-		bsr.s	Obj0A_ShowNumber
+		bsr.s	MouthBubbles_ShowNumber
 		bsr.w	ObjectMove
 		tst.b	obRender(a0)
 		bpl.w	DeleteObject
-		bra.s	Obj0A_Draw
+		bra.s	MouthBubbles_Draw
 ; ---------------------------------------------------------------------------
 
-Obj0A_Display:
-		bsr.s	Obj0A_ShowNumber
+MouthBubbles_Display:
+		bsr.s	MouthBubbles_ShowNumber
 		lea	Ani_Obj0A(pc),a1
 		bsr.w	AnimateSprite
-Obj0A_Draw:
-		bsr.w	Obj0A_LoadArt
+MouthBubbles_Draw:
+		bsr.w	MouthBubbles_LoadArt
 		bcs.s	.return
 		bra.w	DisplaySprite
 .return:	rts
 
 ; S3&K separates this path so reaching the surface cannot turn a number
 ; back into a bubble. Resurfacing/refilling air removes either player's number.
-Obj0A_DisplayNumber:
-		bsr.w	Obj0A_GetAir
+MouthBubbles_DisplayNumber:
+		bsr.w	MouthBubbles_GetAir
 		cmpi.w	#12,d0
 		bhi.w	DeleteObject
-		bra.s	Obj0A_Display
+		bra.s	MouthBubbles_Display
 ; ---------------------------------------------------------------------------
 
-Obj0A_Delete:
+MouthBubbles_Delete:
 		bra.w	DeleteObject
 ; ---------------------------------------------------------------------------
 
-Obj0A_AirLeft:
-		bsr.w	Obj0A_GetAir
+MouthBubbles_AirLeft:
+		bsr.w	MouthBubbles_GetAir
 		cmpi.w	#$C,d0
 		bhi.w	DeleteObject
 		subq.w	#1,objoff_3C(a0)
 		bne.s	loc_11F82
 		move.b	#$E,obRoutine(a0)
 		addq.b	#7,obAnim(a0)
-		bsr.s	Obj0A_ShowNumber
+		bsr.s	MouthBubbles_ShowNumber
 		lea	Ani_Obj0A(pc),a1
 		bsr.w	AnimateSprite
-		bra.s	Obj0A_Draw
+		bra.s	MouthBubbles_Draw
 ; ---------------------------------------------------------------------------
 
 loc_11F82:
@@ -124,12 +124,12 @@ loc_11F82:
 		bsr.w	AnimateSprite
 		tst.b	obRender(a0)
 		bpl.w	DeleteObject
-		bra.s	Obj0A_Draw
+		bra.s	MouthBubbles_Draw
 
 ; =============== S U B	R O U T	I N E =======================================
 
 
-Obj0A_ShowNumber:
+MouthBubbles_ShowNumber:
 		tst.w	objoff_3C(a0)
 		beq.s	.return
 		subq.w	#1,objoff_3C(a0)
@@ -149,20 +149,20 @@ Obj0A_ShowNumber:
 		move.w	d0,obScreenY(a0)
 		move.b	#$C,obRoutine(a0)
 .return:	rts
-; End of function Obj0A_ShowNumber
+; End of function MouthBubbles_ShowNumber
 
 ; ---------------------------------------------------------------------------
 
-Obj0A_Countdown:
-		bsr.w	Obj0A_GetAir
+MouthBubbles_Countdown:
+		bsr.w	MouthBubbles_GetAir
 		tst.w	objoff_30(a0)
 		bne.w	loc_121D6
 		tst.b	obControl(a2)	; CPU catch-up and scripted absence do not consume air
-		bmi.w	Obj0A_ShowNumber.return
+		bmi.w	MouthBubbles_ShowNumber.return
 		cmpi.b	#6,obRoutine(a2)
-		bhs.w	Obj0A_ShowNumber.return
+		bhs.w	MouthBubbles_ShowNumber.return
 		btst	#6,obStatus(a2)
-		beq.w	Obj0A_ShowNumber.return
+		beq.w	MouthBubbles_ShowNumber.return
 		subq.w	#1,objoff_3C(a0)
 		bpl.w	loc_121FC
 		move.w	#60-1,objoff_3C(a0)
@@ -170,7 +170,7 @@ Obj0A_Countdown:
 		jsr	(RandomNumber).l
 		andi.w	#1,d0
 		move.b	d0,objoff_38(a0)
-		bsr.w	Obj0A_GetAir
+		bsr.w	MouthBubbles_GetAir
 		cmpi.w	#25,d0
 		beq.s	loc_12166
 		cmpi.w	#20,d0
@@ -263,7 +263,7 @@ loc_1220C:
 		move.w	d0,objoff_3E(a0)
 		bsr.w	FindFreeObj
 		bne.s	loc_12242.return
-		move.l	#Obj0A,code(a1)
+		move.l	#MouthBubbles,code(a1)
 		move.w	a2,obParent(a1)
 		move.w	obX(a2),obX(a1)
 		moveq	#6,d0
@@ -298,7 +298,7 @@ loc_12242:
 loc_1228E:
 		btst	#7,objoff_3A(a0)
 		beq.s	loc_122D2
-		bsr.w	Obj0A_GetAir
+		bsr.w	MouthBubbles_GetAir
 		move.w	d0,d2
 		lsr.w	#1,d2
 		jsr	(RandomNumber).l
@@ -325,7 +325,7 @@ loc_122D2:
 ; ---------------------------------------------------------------------------
 ; Return the parent's air in d0 and pointer in a2. Older/scripted bubbles
 ; with no parent default to the primary player, retaining their original ABI.
-Obj0A_GetAir:
+MouthBubbles_GetAir:
 		lea	(v_player).w,a2
 		tst.w	obParent(a0)
 		beq.s	.primary
@@ -340,7 +340,7 @@ Obj0A_GetAir:
 		rts
 
 ; Six streamed tiles per countdown frame, in the owner's dust/splash bank.
-Obj0A_LoadArt:
+MouthBubbles_LoadArt:
 		moveq	#0,d0
 		move.b	obFrame(a0),d0
 		cmpi.w	#9,d0

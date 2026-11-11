@@ -6884,10 +6884,7 @@ DynResize_SLZ4:
 		rts
 ; ===========================================================================
 		include	"objects/Platform Mounts.asm"
-		include	"objects/0D Animals.asm"
-		include	"objects/12 & 13 Rings.asm"
-		include	"objects/Empty Slots/14.asm"
-		include	"objects/Empty Slots/15.asm"
+		include	"objects/0E Animals.asm"
 		include	"objects/17 Swinging Platforms.asm"
 		include	"objects/18 Platforms.asm"
 		include	"objects/D9 Hanging Surface.asm"
@@ -6897,7 +6894,7 @@ DynResize_SLZ4:
 		include	"objects/1D Bridge.asm"
 		include	"objects/1E HPZ Waterfall.asm"
 		include	"objects/Enemies/21 Ball Hog.asm"
-		include	"objects/29 Monitor Content Power-Up.asm"
+		include	"objects/13 Monitor Content Power-Up.asm"
 ; ---------------------------------------------------------------------------
 ; Shared across objects $1A and $1B.
 ; Expects time remaining in objoff_3C
@@ -6981,11 +6978,11 @@ Obj1A_Conf_HPZ:
 		dc.b $10,$10,$10,$10
 		even
 ; ---------------------------------------------------------------------------
-		include	"objects/03 Collision Switcher.asm"
+		include	"objects/0A Collision Switcher.asm"
 		include	"objects/20 Morphing Platform.asm"
 		include	"objects/Empty Slots/24.asm"
 		include	"objects/Empty Slots/25.asm"
-		include	"objects/26 Monitor.asm"
+		include	"objects/12 Monitor.asm"
 
 ; ===========================================================================
 ; animation script
@@ -7032,7 +7029,7 @@ byte_B292:	dc.b   2,  0,  1, $B,afBack,  1
 		include	"objects/Empty Slots/28.asm"
 		include	"objects/Empty Slots/2A.asm"
 		include	"objects/S1/30 SBZ Small Door.asm"
-		include	"objects/36 Spikes.asm"
+		include	"objects/15 Spikes.asm"
 		include	"objects/S1/3B Purple Rock.asm"
 		include	"objects/S1/3C Smashable Wall.asm"
 		include	"objects/S1/sub SmashObject.asm"
@@ -7160,26 +7157,25 @@ Obj_Index_Zero:		dc.l ObjNull
 Obj_Index:
 ptr_Obj01:		dc.l Obj01		; Sonic
 ptr_Obj02:		dc.l Obj02		; Tails
-ptr_Obj03:		dc.l Obj03		; Collision plane/layer switcher
+ptr_Obj03:		dc.l TailsTails		; Tails' tails
 ptr_Obj04:		dc.l BonusPlayer	; Sonic or Tails in the Bonus Stage
-ptr_Obj05:		dc.l Obj05		; Tails' tails
-ptr_Obj06:		dc.l Obj06		; Twisting spiral pathway in EHZ
-ptr_Obj07:		dc.l WaterSurface	; Surface of the water
-ptr_Obj08:		dc.l Splash		; Water splash in HPZ
-ptr_Obj09:		dc.l Bubbles		; Bubble maker
-ptr_Obj0A:		dc.l Obj0A		; Small bubbles from Sonic's face while underwater
-ptr_Obj0B:		dc.l Obj0B		; (S1) Pole that breaks in LZ
-ptr_Obj0C:		dc.l FlapDoor		; (S1) Flapping door in LZ
-ptr_Obj0D:		dc.l Flicky		; Flickies (Also summons the 100 points from a badnik)
-ptr_Obj0E:		dc.l SpindashDust	; independent spindash/skid dust
-ptr_Obj0F:		dc.l ObjNull
-
-ptr_Obj10:		dc.l ObjNull
-ptr_Obj11:		dc.l ObjNull
-ptr_Obj12:		dc.l Obj12		; A ring
-ptr_Obj13:		dc.l Obj13		; Scattering rings (generated when Sonic or Tails are hurt and has rings)
-ptr_Obj14:		dc.l S1FireballSpawner	; Sonic 1 fireball spawner
-ptr_Obj15:		dc.l S1Fireball	; standalone Sonic 1 fireball
+ptr_Obj05:		dc.l SpindashDust	; independent spindash/skid dust
+ptr_Obj06:		dc.l Splash		; Water splash in HPZ
+ptr_Obj07:		dc.l MouthBubbles		; Small bubbles from Sonic's face while underwater
+ptr_Obj08:		dc.l Bubbles		; Bubble maker
+ptr_Obj09:		dc.l WaterSurface	; Surface of the water
+ptr_Obj0A:		dc.l CollisionSwitcher		; Collision plane/layer switcher
+ptr_Obj0B:		dc.l TwistingPathway		; EHZ twisting pathway / FBZ-MTZ wire cage
+ptr_Obj0C:		dc.l TiltingPlatform		; Tilting platform segment in CPZ
+ptr_Obj0D:		dc.l FlapDoor		; (S1) Flapping door in LZ
+ptr_Obj0E:		dc.l Flicky		; Flickies (Also summons the 100 points from a badnik)
+ptr_Obj0F:		dc.l Ring		; A ring
+ptr_Obj10:		dc.l LostRings		; Scattered rings from the primary character
+ptr_Obj11:		dc.l GoddessRings	; Wacky Workbench goddess ring spill
+ptr_Obj12:		dc.l Monitor		; Monitor
+ptr_Obj13:		dc.l MonitorContents		; Monitor contents (code for power-up behavior and rising image)
+ptr_Obj14:		dc.l Springs		; Spring
+ptr_Obj15:		dc.l Spikes		; Vertical spikes
 ptr_Obj16:		dc.l Obj16		; Diagonally moving lift from HTZ
 ptr_Obj17:		dc.l SwingingPtfm	; Swinging platforms in GHZ, CPZ and EHZ
 ptr_Obj18:		dc.l Obj18		; Stationary/moving platforms from GHZ and EHZ
@@ -7190,31 +7186,29 @@ ptr_Obj1C:		dc.l Obj1C		; Stage decorations in GHZ, EHZ, HTZ and HPZ
 ptr_Obj1D:		dc.l Bridge		; Bridges in GHZ, EHZ and HPZ
 ptr_Obj1E:		dc.l HPZ_Waterfall	; Waterfall from Hidden Palace Zone
 ptr_Obj1F:		dc.l LabyrinthConvey	; Conveyor belts
-
 ptr_Obj20:		dc.l MorphingPlatform	; Morphing Platform from MMZ
 ptr_Obj21:		dc.l Ballhog		; Horizontal and Vertical Ballhog
 ptr_Obj22:		dc.l Obj22		; (S1) Buzz Bomber from GHZ
 ptr_Obj23:		dc.l Obj23		; (S1) Buzz Bomber/Newtron missile
 ptr_Obj24:		dc.l ObjNull
 ptr_Obj25:		dc.l ObjNull
-ptr_Obj26:		dc.l Obj26		; Monitor
+ptr_Obj26:		dc.l ObjNull
 ptr_Obj27:		dc.l ObjNull		; Empty
 ptr_Obj28:		dc.l ObjNull		; Empty
-ptr_Obj29:		dc.l Obj29		; Monitor contents (code for power-up behavior and rising image)
+ptr_Obj29:		dc.l ObjNull
 ptr_Obj2A:		dc.l ObjNull
 ptr_Obj2B:		dc.l Obj2B		; (S1) Chopper from GHZ
 ptr_Obj2C:		dc.l Obj2C		; (S1) Jaws from LZ
 ptr_Obj2D:		dc.l ObjNull
 ptr_Obj2E:		dc.l ObjNull
 ptr_Obj2F:		dc.l ObjNull
-
 ptr_Obj30:		dc.l Obj30		; (S1) Small door from SBZ
 ptr_Obj31:		dc.l ObjNull
 ptr_Obj32:		dc.l ObjNull
 ptr_Obj33:		dc.l ObjNull
 ptr_Obj34:		dc.l ObjNull
 ptr_Obj35:		dc.l Obj35		; Composite invincibility stars
-ptr_Obj36:		dc.l Obj36		; Vertical spikes
+ptr_Obj36:		dc.l ObjNull
 ptr_Obj37:		dc.l ObjNull
 ptr_Obj38:		dc.l Obj38		; Shield
 ptr_Obj39:		dc.l ObjNull
@@ -7224,9 +7218,8 @@ ptr_Obj3C:		dc.l Obj3C		; (S1) Breakable wall
 ptr_Obj3D:		dc.l Obj3D		; (S1) GHZ boss
 ptr_Obj3E:		dc.l PrisonCapsule	; Egg prison
 ptr_Obj3F:		dc.l ObjNull		; Empty
-
 ptr_Obj40:		dc.l MotoBug		; (S1) Motobug from GHZ
-ptr_Obj41:		dc.l Obj41		; Spring
+ptr_Obj41:		dc.l ObjNull
 ptr_Obj42:		dc.l Newtron		; (S1) Newtron from GHZ
 ptr_Obj43:		dc.l ObjNull
 ptr_Obj44:		dc.l Obj44		; (S1) Breakable wall
@@ -7241,7 +7234,6 @@ ptr_Obj4C:		dc.l Obj4C		; BBat from HPZ
 ptr_Obj4D:		dc.l Obj4D		; Rhinobot from HPZ
 ptr_Obj4E:		dc.l Obj4E		; Gator from HPZ
 ptr_Obj4F:		dc.l Splats		; Bunny badnick from the Sonic 1 Prototype
-
 ptr_Obj50:		dc.l Obj50		; Seahorse/Aquis from HPZ
 ptr_Obj51:		dc.l Obj51		; Skyhorse from HPZ
 ptr_Obj52:		dc.l Piranha		; Piranha from HPZ
@@ -7258,7 +7250,6 @@ ptr_Obj5C:		dc.l ObjNull
 ptr_Obj5D:		dc.l ObjNull
 ptr_Obj5E:		dc.l Obj5E		; Seesaw from Hill Top Zone
 ptr_Obj5F:		dc.l ObjNull
-
 ptr_Obj60:		dc.l Caterkiller	; Caterkiller from MZ & SBZ
 ptr_Obj61:		dc.l Crabmeat		; Crabmeat from GHZ
 ptr_Obj62:		dc.l Basaran		; Basaran (Batbrain) from MZ
@@ -7275,7 +7266,6 @@ ptr_Obj6C:		dc.l ObjNull
 ptr_Obj6D:		dc.l ObjNull
 ptr_Obj6E:		dc.l ObjNull
 ptr_Obj6F:		dc.l ObjNull
-
 ptr_Obj70:		dc.l ObjNull
 ptr_Obj71:		dc.l ObjNull
 ptr_Obj72:		dc.l ObjNull
@@ -7292,7 +7282,6 @@ ptr_Obj7C:		dc.l GiantRingFlash
 ptr_Obj7D:		dc.l Obj7D		; Hidden points at end of stage
 ptr_Obj7E:		dc.l Signpost		; End of level signpost
 ptr_Obj7F:		dc.l ObjNull
-
 ptr_Obj80:		dc.l ObjNull		; Was originally Continue Screen Elements, but was completely stripped out
 ptr_Obj81:		dc.l ObjNull		; Was originally Continue Screen Sonic, but was completely stripped out
 ptr_Obj82:		dc.l ObjNull		; Was originally Eggman - Scrap Brain 2, but was completely stripped out
@@ -7309,7 +7298,6 @@ ptr_Obj8C:		dc.l ObjNull		; Was originally Try Again Emeralds, but was completel
 ptr_Obj8D:		dc.l ObjNull
 ptr_Obj8E:		dc.l ObjNull
 ptr_Obj8F:		dc.l ObjNull
-
 ptr_Obj90:		dc.l Credits		; "SONIC TEAM PRESENTS" screen and credits
 ptr_Obj91:		dc.l TitleSonicTails	; Sonic and Tails from the title screen
 ptr_Obj92:		dc.l TitlePaletteHandler; TODO
@@ -7326,7 +7314,6 @@ ptr_Obj9C:		dc.l ObjNull
 ptr_Obj9D:		dc.l ObjNull
 ptr_Obj9E:		dc.l ObjNull
 ptr_Obj9F:		dc.l ObjNull
-
 ptr_ObjA0:		dc.l SMZ_Junction
 ptr_ObjA1:		dc.l SMZ_RunningDisc
 ptr_ObjA2:		dc.l Conveyor
@@ -7343,7 +7330,6 @@ ptr_ObjAC:		dc.l SMZ_Invisibarrier
 ptr_ObjAD:		dc.l SMZ_MovingBlock
 ptr_ObjAE:		dc.l SMZ_Bomb
 ptr_ObjAF:		dc.l SMZ_Button
-
 ptr_ObjB0:		dc.l WheelCarrier
 ptr_ObjB1:		dc.l PP_Anton
 ptr_ObjB2:		dc.l PP_Mosqui
@@ -7360,9 +7346,8 @@ ptr_ObjBC:		dc.l ObjNull
 ptr_ObjBD:		dc.l ObjNull
 ptr_ObjBE:		dc.l ObjNull
 ptr_ObjBF:		dc.l ObjNull
-
-ptr_ObjC0:		dc.l ObjNull
-ptr_ObjC1:		dc.l ObjNull
+ptr_ObjC0:		dc.l S1Fireball	; standalone Sonic 1 fireball
+ptr_ObjC1:		dc.l S1FireballSpawner	; Sonic 1 fireball spawner
 ptr_ObjC2:		dc.l ObjNull
 ptr_ObjC3:		dc.l ObjNull
 ptr_ObjC4:		dc.l ObjNull
@@ -7377,7 +7362,6 @@ ptr_ObjCC:		dc.l ObjNull
 ptr_ObjCD:		dc.l ObjNull
 ptr_ObjCE:		dc.l ObjNull
 ptr_ObjCF:		dc.l ObjNull
-
 ptr_ObjD0:		dc.l ObjNull
 ptr_ObjD1:		dc.l ObjNull
 ptr_ObjD2:		dc.l ObjNull
@@ -7394,7 +7378,6 @@ ptr_ObjDC:		dc.l SwingingPtfm_ArtTerrain1
 ptr_ObjDD:		dc.l SwingingPtfm_ArtRail
 ptr_ObjDE:		dc.l SwingingPtfm_ArtBall
 ptr_ObjDF:		dc.l ObjNull
-
 ptr_ObjE0:		dc.l ObjNull
 ptr_ObjE1:		dc.l ObjNull
 ptr_ObjE2:		dc.l ObjNull
@@ -7411,7 +7394,6 @@ ptr_ObjEC:		dc.l ObjNull
 ptr_ObjED:		dc.l ObjNull
 ptr_ObjEE:		dc.l ObjNull
 ptr_ObjEF:		dc.l ObjNull
-
 ptr_ObjF0:		dc.l ObjNull
 ptr_ObjF1:		dc.l ObjNull
 ptr_ObjF2:		dc.l ObjNull
@@ -8415,10 +8397,10 @@ FindNextFreeObj:
 .lookup_end:
 	even
 ; ===========================================================================
-		include	"objects/41 Springs.asm"
+		include	"objects/14 Springs.asm"
 ; ===========================================================================
 ; byte_E934:
-Obj41_SlopeData_DiagUp:
+Springs_SlopeData_DiagUp:
 		dc.b $10,$10,$10,$10
 		dc.b $10,$10,$10,$10
 		dc.b $10,$10,$10,$10
@@ -8429,7 +8411,7 @@ Obj41_SlopeData_DiagUp:
 		even
 
 ; byte_E950:
-Obj41_SlopeData_DiagDown:
+Springs_SlopeData_DiagDown:
 		dc.b $F4,$F0,$F0,$F0
 		dc.b $F0,$F0,$F0,$F0
 		dc.b $F0,$F0,$F0,$F0
@@ -8451,8 +8433,8 @@ Map_obj41_GHZ:	binclude	"mappings/sprite/obj41_GHZ.bin"
 Map_MovSpring:	binclude	"mappings/sprite/Wheel for the moving spring.bin"
 		even
 
-		include	"objects/0B Tilting platform.asm"
-		include	"objects/0C Labyrinth Flapdoor.asm"
+		include	"objects/0C Tilting platform.asm"
+		include	"objects/0D Labyrinth Flapdoor.asm"
 		include	"objects/DA Pull Chain.asm"
 		include	"objects/S1/44 GHZ Edge Walls.asm"
 ; ===========================================================================
@@ -9265,20 +9247,22 @@ ExitPlatform:
 ; ===========================================================================
 		include	"objects/01 Sonic.asm"
 		include	"objects/02 Tails.asm"
-		include	"objects/05 Tails' Tails.asm"
-		include	"objects/07 Water Surface.asm"
-		include	"objects/08 Water Splash.asm"
+		include	"objects/03 Tails' Tails.asm"
+		include	"objects/09 Water Surface.asm"
+		include	"objects/06 Water Splash.asm"
 		include	"_inc/Dynamic Sprite Art.asm"
-		include	"objects/0E Spindash Dust.asm"
-		include	"objects/09 Bubbles.asm"
-		include	"objects/0A Drowning Countdown.asm"
+		include	"objects/05 Spindash Dust.asm"
+		include	"objects/08 Bubbles.asm"
+		include	"objects/07 Drowning Countdown.asm"
 ; ===========================================================================
 KillCharacter:
 		jmp	(KillSonic).l
 ; ===========================================================================
 
 ; ---------------------------------------------------------------------------
-		include	"objects/06 EHZ Spiral.asm"
+		include	"objects/0B Twisting Pathway.asm"
+		include	"objects/0F & 10 Rings.asm"
+		include	"objects/11 Goddess Ring Spill.asm"
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -11009,7 +10993,7 @@ loc_198C0:
 		andi.b	#$C0,d1
 		beq.w	Touch_Enemy
 		cmpi.b	#$C0,d1
-		beq.s	Touch_Special
+		beq.w	Touch_Special
 		tst.b	d1
 		bmi.w	Touch_Hurt
 		move.b	obColType(a1),d0
@@ -11019,7 +11003,19 @@ loc_198C0:
 		cmpi.w	#90,flashtime(a0)
 		bhs.s	.return
 		move.b	#4,obRoutine(a1)
+		cmpi.b	#7,d0
+		bne.s	.return
+		; Only live ring states switch entry. Other item-category objects keep
+		; the generic routine-byte contract, including custom size-7 hitboxes.
+		cmpi.l	#LostRing_Move,code(a1)
+		beq.s	.lost_ring
+		cmpi.l	#Ring_Animate,code(a1)
+		bne.s	.return
+		move.l	#Ring_Collect,code(a1)
 .return:	rts
+.lost_ring:
+		move.l	#LostRing_Collect,code(a1)
+		rts
 ; ---------------------------------------------------------------------------
 
 loc_198FA:
@@ -11245,7 +11241,7 @@ HurtSonic:
 		beq.s	HurtShield
 		jsr	(FindFreeObj).l
 		bne.s	HurtShield
-		move.l	#Obj13,code(a1)
+		move.l	#LostRings,code(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 
@@ -11272,7 +11268,7 @@ Hurt_ChkSpikes:
 		move.b	#AniIDSonAni_Hurt,obAnim(a0)
 		move.w	#60*2,flashtime(a0)
 -		move.w	#sfx_Death,d0
-		cmpi.l	#Obj36,code(a2)
+		cmpi.l	#Spikes,code(a2)
 		bne.s	+
 ;		cmpi.b	#id_Obj16,code(a2)	; Used to be the LZ Harpoon in Sonic 1
 ;		bne.s	+			; It's been replaced by the HTZ lifts
@@ -11300,7 +11296,7 @@ KillSonic:
 		move.b	#AniIDSonAni_Death,obAnim(a0)
 		bset	#7,obGfx(a0)
 		move.w	#sfx_HitSpikes,d0	; Preload the spike sfx
-		cmpi.l	#Obj36,code(a2)	; Is this the spikes object?
+		cmpi.l	#Spikes,code(a2)	; Is this the spikes object?
 		beq.s	+
 ;		cmpi.b	#id_Obj16,code(a2)	; Is this the LZ Harpoon? (Leftover from Sonic 1)
 ;		beq.s	+			; It's been replaced by the HTZ lifts
@@ -13171,7 +13167,6 @@ Snd_Driver_End:
 ; Level metadata and ordinary art use the space before the first aligned
 ; audio bank. Its address is determined by the current ROM layout.
 ; ---------------------------------------------------------------------------
-		include	"_inc/DebugList.asm"
 		include	"_inc/LevelHeaders.asm"
 	if	TimeTravel=1
 		include	"_inc/LevelHeaders_Past.asm"
@@ -13402,7 +13397,7 @@ Kospm_BallhogH:	binclude	"art/moduled kosinski/Enemy Ballhog (Horizontal).kospm"
 Kospm_Chopper:	binclude	"art/moduled kosinski/Enemy Chopper.kospm"
 		even
 ; Shared fire art follows the final audio bank, avoiding bank-alignment padding.
-		include	"objects/14 S1 Fireballs.asm"
+		include	"objects/C0 & C1 Fireballs.asm"
 
 Kospm_Fireballs:	binclude	"art/moduled kosinski/Fireballs.kospm"
 			even
@@ -15813,6 +15808,8 @@ Art_S3LevelSelectBackground: binclude "art/uncompressed/S3 Level Select Backgrou
 
 Art_SMZSmoke: binclude "art/uncompressed/SMZ Smoke.bin"
 		even
+
+		include	"_inc/DebugList.asm"
 
 ; Embed the separate CD-CPU program at its execution address. The MD loader
 ; copies this ROM image to CD PRG RAM before starting MCD_SubEntry.

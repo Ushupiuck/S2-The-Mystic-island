@@ -190,7 +190,7 @@ for act in (1,2):
 
  if act==1:
   for subtype in (0,2,0x10,0x12,0x20,0x22,0x30,0x32,0x40,0x42):
-   g.restore(base);x,y=270,(1200 if subtype>>4==1 else 1152);spring=spawn(g,'Obj41',x,y,subtype);g.run(2)
+   g.restore(base);x,y=270,(1200 if subtype>>4==1 else 1152);spring=spawn(g,'Springs',x,y,subtype);g.run(2)
    for actor,radius in [('v_player',19),('v_player2',15)]:
     if subtype>>4==0:xx,yy,vx,vy=x,y-8-radius-1,0,0x200
     elif subtype>>4==1:xx,yy,vx,vy=x+28,y,-0x400,0
@@ -208,7 +208,7 @@ for act in (1,2):
    report.append({'case':f'spring-{subtype:02X}-both-actors','passed':True})
    # Airborne side contacts must also launch, as in S3&K.
    if subtype>>4==1:
-    g.restore(base);spring=spawn(g,'Obj41',270,1152,subtype);g.run(2)
+    g.restore(base);spring=spawn(g,'Springs',270,1152,subtype);g.run(2)
     for actor in ('v_player','v_player2'):place(g,actor,298,1152);g.put(actor,'obVelX',-0x400,2)
     reset_cpu(g);g.buttons2={4};launched=set()
     for _ in range(8):

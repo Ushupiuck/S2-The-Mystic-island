@@ -175,7 +175,7 @@ def main():
 			xs.append(g.get(a, 'obX', 2))
 		finish('replaced-payload-restores-wheel-clearance', not g.get(a, 'wheel_child', 4) and 608 < max(xs) <= 616 and 536 <= min(xs) < 544)
 
-		# A real broken monitor keeps Obj26 as its code while animating the
+		# A real broken monitor keeps Monitor as its code while animating the
 		# shell. Attack it through the normal player/touch response, then
 		# verify the intact screen's box no longer steers the carrier.
 		a = setup(576, 824, 5, 0, True)
@@ -191,7 +191,7 @@ def main():
 			g.run()
 			if g.get(child, 'obRoutine') >= 4:
 				break
-		assert g.get(child, 'code') == g.s['Obj26'] and g.get(child, 'obRoutine') >= 4, 'monitor was not broken'
+		assert g.get(child, 'code') == g.s['Monitor'] and g.get(child, 'obRoutine') >= 4, 'monitor was not broken'
 		for actor in ('v_player', 'v_player2'):
 			place(g, actor, 500, 700)
 			g.put(actor, 'obControl', 0x81)

@@ -38,7 +38,7 @@ the player's `tails_hidden` decision. Roll/jump anchoring derives the radius
 difference from the character's defaults: Tails's difference is one pixel.
 The common camera compensation uses those radii too, avoiding rolling camera
 bob in every level. Wrapped camera distances are signed 11-bit differences.
-`Obj05` also accepts a Tails `BonusPlayer` parent and selects the private stage
+`TailsTails` also accepts a Tails `BonusPlayer` parent and selects the private stage
 tail art. Reload the parent pointer after directional animation: `CalcAngle`
 uses `a2` for its lookup tables. Stage-specific behavior is documented in
 [Special stage](Special-stage.md#debug-and-movement).
@@ -140,7 +140,7 @@ its `WheelPayloads` table owns routine, vertical offset, subtype and facing.
 Payload presets and object properties belong in the
 [SonLVL guide](../SonLVL%20INI%20Files/README.md).
 
-Spikes (`$36`) retain S3&K's floor/side/ceiling and movement behavior for both
+Spikes (`$15`) retain S3&K's floor/side/ceiling and movement behavior for both
 actors. The damage path preserves simultaneous contact flags and checks the
 full word `flashtime`. High subtypes `$00-$70` select S3 sizes/orientations;
 `$80-$D0` add S1 arrangements using the same resident art. Low `$0-$3` select
@@ -150,7 +150,7 @@ art and FBZ spikes are not implemented.
 
 ## Water and shared effects
 
-Splash `$08` and dust `$0E` remain separate objects. Each player has independent
+Splash `$06` and dust `$05` remain separate objects. Each player has independent
 air, mouth bubbles and countdown objects. Nine visible splash frames and ten
 six-tile number frames stream through the common atomic art loader. The two
 physical player banks cache both source kind and frame; matching frame numbers

@@ -8,6 +8,78 @@ is adapted from S3&K `Load_Sprites`, using skdisasm
 `73de97c6b55055bcb8089c1d55d006b02136f163`. `ObjectsManager` and `Load_Sprites`
 name the same entry. Execution continues after the primary character dies.
 
+## Core object IDs
+
+The byte IDs below resolve through `Obj_Index`; runtime states use descriptive
+routine pointers. Placement files, Debug and SonLVL use the same assignments.
+
+| ID | Object |
+| --- | --- |
+| `$03` | Tails's separate tails |
+| `$04` | Bonus-stage player |
+| `$05` | Spindash/skid dust |
+| `$06` | Splash |
+| `$07` | Mouth bubbles and drowning countdown |
+| `$08` | Bubble maker |
+| `$09` | Water surface |
+| `$0A` | Collision/priority switcher |
+| `$0B` | EHZ twisting pathway / FBZ-MTZ wire cage |
+| `$0C` | CPZ tilting platform |
+| `$0D` | LZ flap door |
+| `$0E` | Animals |
+| `$0F` | Individual ring |
+| `$10` | Scattered rings |
+| `$11` | Goddess ring spill |
+| `$12` | Monitor |
+| `$13` | Monitor contents |
+| `$14` | Springs |
+| `$15` | Spikes |
+| `$C0` / `$C1` | S1 fireball / visible launcher |
+
+Old monitor/content/spring/spike slots `$26/$29/$41/$36` are empty. The CPZ
+platform is still a tilting platform; its old pointer comment called it an LZ
+pole incorrectly. Generators/importers must write the current destination IDs,
+while their upstream input IDs remain those of the source game.
+
+## Scattered rings and goddess spill
+
+`objects/0F & 10 Rings.asm` uses direct state pointers and a 128-byte ROM table
+of the original 32 signed X/Y velocity pairs. A spill uses the first
+`min(rings,32)` pairs and scans the dynamic pool once, preserving the original
+lowest-free-slot allocation order even when the owner occupies a later slot.
+Zero rings deletes the controller. No gameplay RAM buffer or trigonometry is
+needed. Sonic 2 final and S3&K use identical scattered-ring launch math and
+`$18` gravity above/below water; the table preserves that behavior.
+
+Each ring retains its own 255-update lifetime at `$2E`, fixed-point motion,
+quarter-rate on-screen descending floor probe, 3/4 bounce, wrapping and final
+80-update flicker. Item touch replaces only an actual ring's moving/wait entry
+with its collection entry. Both players can flag one ring before the object
+pass, but it awards once. Four sparkle poses last six updates each; the final
+terminal display is followed by deletion, matching the former animation script.
+
+`objects/11 Goddess Ring Spill.asm` is an invisible trigger with no runtime
+sprite. Entering X `[-16,16)` and Y `[-32,32)` starts fifty successful emissions,
+eleven updates apart, at `(X+24,Y-16)`. Y velocity is `-$200`; the eight original
+random X velocities are retained. Full-pool attempts retry without consuming
+rings. Timer/count use private `$2E/$2F`, not the shared status byte. Spawned
+rings use `LostRing_Init` and keep independent lifetimes.
+
+## Twisting pathway and wire cage
+
+`objects/0B Twisting Pathway.asm` retains the EHZ spiral with subtype bit 7
+clear. Bit 7 selects the horizontal FBZ/MTZ cage, adapted from
+`Obj_FBZWireCage` in skdisasm `73de97c6`. Bits 0-6 give half-width in eight-pixel
+units; zero selects MTZ's original 192 pixels. `$0098` is the 192-pixel preset.
+The upper subtype byte is reserved and preserved. Both forms use direct states.
+
+The cage keeps each rider's phase at `$2E/$2F`, upper-entry cooldown at
+`$30/$31`, and half-width at `$32`. Its 64 reachable phases use exact signed
+`cos(angle)*$2800 >> 16` offsets from ROM, removing per-rider trigonometry and
+multiplication. Existing Sonic/Tails tumble art handles the poses. Jump/edge
+release and the upper-entry cooldown follow FBZ; this is the horizontal wire
+cage, not its separate stationary/vertical variants.
+
 ## SST and dispatch
 
 Each object status table (SST) is `$4E` bytes. The pool contains 23 reserved and
@@ -426,6 +498,10 @@ with the sprite count, and lets the internal clock advance without Time Over.
 Leaving placement redraws the current score, rings and time immediately,
 preserving whether the clock was running or stopped. Frame cycling keeps the
 ordinary HUD and timer rules.
+
+Every ordinary act list explicitly offers ring, shield, invincibility and
+speed-shoe monitors (subtypes `$04/$06/$07/$05`, icon frame subtype+1).
+Rotating special-stage Debug continues to place its own grid items.
 
 A Debug entry is 14 bytes: routine long, mappings long, subtype word, frame byte,
 padding byte, art word. Lists have four pointers per zone; acts may share a list. Placement
@@ -1096,7 +1172,7 @@ Art requirements are in [Sprites and VRAM](Sprites-and-VRAM.md#boss-explosions).
 
 ## Sonic 1 fireballs
 
-`objects/14 S1 Fireballs.asm` adapts s1disasm `2c51d46a`'s objects 13/14.
+`objects/C0 & C1 Fireballs.asm` adapts s1disasm `2c51d46a`'s objects 13/14.
 Mystic Island placement `$14` is the visible Starlight maker; `$15` is an individual
 fireball. The maker creates the same `S1Fireball` projectile used by `$15`,
 passing its complete subtype word and X/Y placement flips. Shots start 16 pixels
@@ -1132,7 +1208,7 @@ as its completion signal. Original harmful 8px contact radii and launch sound re
 `S1Fireball_FromBoss` optionally selects the original lower drawing tier; no
 boss currently sets it.
 
-EHZ/HTZ Debug lists offer six presets: makers `$30`/`$34`/`$3C` and individual
+EHZ/HTZ Debug lists offer six fireball presets: makers `$30`/`$34`/`$3C` and individual
 fireballs `$00`/`$04`/`$0C` (arc/vertical/horizontal). Direction inherits the Debug
 cursor's placement flips. SonLVL exposes both objects, independent straight-flight
 and axis flags, arc strength and the maker interval. All four acts already load

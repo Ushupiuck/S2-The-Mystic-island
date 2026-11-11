@@ -1,23 +1,23 @@
 ; ---------------------------------------------------------------------------
-; Object 0B - Tilting platform segment from CPZ
+; Object 0C - Tilting platform segment from CPZ
 ; ---------------------------------------------------------------------------
 
-Obj0B:
+TiltingPlatform:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	Obj0B_Index(pc,d0.w),d1
-		jmp	Obj0B_Index(pc,d1.w)
+		move.w	TiltingPlatform_Index(pc,d0.w),d1
+		jmp	TiltingPlatform_Index(pc,d1.w)
 ; ---------------------------------------------------------------------------
-Obj0B_Index:	dc.w Obj0B_Init-Obj0B_Index
-		dc.w Obj0B_WaitTilt-Obj0B_Index
-		dc.w Obj0B_TiltLoop-Obj0B_Index
+TiltingPlatform_Index:	dc.w TiltingPlatform_Init-TiltingPlatform_Index
+		dc.w TiltingPlatform_WaitTilt-TiltingPlatform_Index
+		dc.w TiltingPlatform_TiltLoop-TiltingPlatform_Index
 
 tilt_timer	= objoff_34	; 2 bytes; time until next tilt
 tilt_duration	= objoff_36	; 2 bytes; how long it stays tilted for
 tilt_offset	= objoff_3A	; 1 byte; individual timer per tilting platform
 ; ---------------------------------------------------------------------------
 
-Obj0B_Init:
+TiltingPlatform_Init:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj0B,obMap(a0)
 		move.b	#Map_Obj0B_height,height_pixels(a0)
@@ -40,13 +40,13 @@ Obj0B_Init:
 		lsl.w	#4,d0
 		move.b	d0,tilt_offset(a0)
 
-Obj0B_WaitTilt:
+TiltingPlatform_WaitTilt:
 		move.b	(Vint_runcount+3).w,d0
 		add.b	tilt_offset(a0),d0
-		bne.s	Obj0B_TiltLoop.solid
+		bne.s	TiltingPlatform_TiltLoop.solid
 		addq.b	#2,obRoutine(a0)
 
-Obj0B_TiltLoop:
+TiltingPlatform_TiltLoop:
 		subq.w	#1,tilt_timer(a0)
 		bpl.s	.animate
 		move.w	#$80-1,tilt_timer(a0)
@@ -57,7 +57,7 @@ Obj0B_TiltLoop:
 		bchg	#0,obAnim(a0)
 
 .animate:
-		lea	Obj0B_Anim(pc),a1
+		lea	TiltingPlatform_Anim(pc),a1
 		jsr	(AnimateSprite).l
 
 .solid:
@@ -86,8 +86,8 @@ Obj0B_TiltLoop:
 +
 		bra.w	MarkObjGone
 ; ---------------------------------------------------------------------------
-Obj0B_Anim:	dc.w byte_1428E-Obj0B_Anim
-		dc.w byte_14296-Obj0B_Anim
+TiltingPlatform_Anim:	dc.w byte_1428E-TiltingPlatform_Anim
+		dc.w byte_14296-TiltingPlatform_Anim
 byte_1428E:	dc.b   7,  0,  1,  2,  3,  4,afBack,  1
 byte_14296:	dc.b   7,  4,  3,  2,  1,  0,afBack,  1
 		even

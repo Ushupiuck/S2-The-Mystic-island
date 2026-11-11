@@ -158,6 +158,13 @@ also executes on CD; object behavior and motion remain MD-owned. Small single
 probes pay mailbox overhead: clock speed alone does not guarantee a gain.
 The terrain runner measures complete calls, including waits.
 
+The frequent six-byte enemy/ring floor request has a dedicated dispatch entry,
+`MCD_SubTerrainObjectFloor`, which bypasses the generic object's command test,
+extra argument cursor setup and scratch-X round trip. Its reply uses the same
+result writer and distance/angle ABI. CD-local `$FF80xx` mailbox operands use
+absolute-word addressing throughout the CD executors. MD `$A120xx` mailboxes
+and relocatable work allocations retain their long operands.
+
 MD distance-query wrappers return `d1.w` with N/Z describing that distance and
 V/C cleared, including floor, ceiling and wall queries. Callers can branch on
 those flags directly; a second `tst.w d1` is unnecessary on this branch.

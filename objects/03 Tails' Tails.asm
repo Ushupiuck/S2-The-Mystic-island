@@ -1,5 +1,5 @@
 ; S3&K tail animation and separate nine-tile art bank.
-Obj05:
+TailsTails:
 		tst.b	obRoutine(a0)
 		bne.s	Obj_Tails_Tail_Main
 Obj_Tails_Tail:

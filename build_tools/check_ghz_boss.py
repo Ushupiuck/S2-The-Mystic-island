@@ -225,7 +225,7 @@ def wall_checks(m, pool, rom):
     m.start()
     m.put(wall, 'code', s['BossExplosion_Wall'])
     m.act('BossExplosion_Wall', wall)
-    m.put(wall, 'code', s['Obj26'])
+    m.put(wall, 'code', s['Monitor'])
     before = bytes(m.cpu.mem_read(wall & 0xFFFFFF, s['object_size']))
     for a in pool[:-1]:
         if m.get(a, 'code') in (s[kinds[0]], s[kinds[1]]):
@@ -395,7 +395,7 @@ def native_checks(args):
 
     # A recycled child slot is never repositioned by its old root.
     reused = children[1]
-    m.put(reused, 'code', s['Obj26'])
+    m.put(reused, 'code', s['Monitor'])
     before = bytes(m.cpu.mem_read(reused & 0xFFFFFF, s['object_size']))
     m.act('Obj48', root)
     assert bytes(m.cpu.mem_read(reused & 0xFFFFFF, s['object_size'])) == before

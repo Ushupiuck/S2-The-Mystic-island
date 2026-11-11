@@ -62,7 +62,7 @@ def main():
 		g.write('v_lives', 3 if time_over else 1)
 		g.write('v_continues', 0)
 		g.write('f_timeover', int(time_over))
-		spawn(g, 'Obj26', 80, 860, 0)
+		spawn(g, 'Monitor', 80, 860, 0)
 		place(g, 'v_player', 80, 730)
 		for f, v, n in [('obStatus', 6, 1), ('obAnim', g.s['AniIDSonAni_Roll'], 1),
 						('obStatusSecondary', 0, 1),

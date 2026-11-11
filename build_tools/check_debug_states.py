@@ -163,7 +163,7 @@ def main():
             x = g.get('v_player', 'obX', 2)
             y = g.get('v_player', 'obY', 2) - 64
             obj = next(a for a in slots if not g.get(a, 'code'))
-            for field, value, size in [('code', g.s['Obj26'], 4),
+            for field, value, size in [('code', g.s['Monitor'], 4),
                     ('obX', x, 2), ('obY', y, 2), ('obSubtype', 0, 1)]:
                 g.put(obj, field, value, size)
             for field, value, size in [('obY', y - 110, 2), ('obStatus', 6, 1),

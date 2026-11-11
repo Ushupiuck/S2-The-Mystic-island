@@ -130,7 +130,7 @@ retains static tile-word attributes. Keep these indices aligned with constants.
 ## Debug and movement
 
 Solo Tails selects his own body mappings/animation and spawns the separate
-`Obj05` tail, following S3&K's rotating slot-bonus player setup. Sonic selections
+`TailsTails` tail, following S3&K's rotating slot-bonus player setup. Sonic selections
 retain Sonic; no companion AI is spawned. Movement, collision radii and item
 callbacks retain the S1 stage behavior. The tail follows velocity in all four
 directional animation families and stays through the accelerating goal exit.

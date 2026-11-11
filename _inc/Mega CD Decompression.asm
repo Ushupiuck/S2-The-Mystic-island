@@ -5,11 +5,11 @@
 ; Mailbox result +4 = output bytes (long), +8 = consumed input bytes (long).
 ; ===========================================================================
 MCD_SubDecompress:
-		movea.l	(MCD_SubMainArgument).l,a1
+		movea.l	(MCD_SubMainArgument).w,a1
 		move.l	a1,(MCD_DecompOutBase_Sub).l
 		lea	(MCD_DecompInput_Sub).l,a0
 		moveq	#0,d1
-		move.w	(MCD_SubMainArgument+6).l,d1
+		move.w	(MCD_SubMainArgument+6).w,d1
 		adda.l	d1,a0
 		cmpi.b	#MCD_CommandPLCInit,d0
 		beq.w	MCD_SubPLCInit
@@ -20,7 +20,7 @@ MCD_SubDecompress:
 		bsr.w	MCD_SubKosPlusDec
 		bra.s	.size
 .enigma:
-		move.w	(MCD_SubMainArgument+4).l,d0
+		move.w	(MCD_SubMainArgument+4).w,d0
 		bsr.w	MCD_SubEniDec
 .size:
 		move.l	a1,d0
@@ -36,14 +36,14 @@ MCD_SubDecompress:
 		bsr.w	MCD_SubNemDecToRAM
 		move.l	(MCD_DecompOutSize_Sub).l,d0
 .done:
-		move.l	d0,(MCD_SubOwnResult+4).l
+		move.l	d0,(MCD_SubOwnResult+4).w
 		move.l	a0,d1
 		subi.l	#MCD_DecompInput_Sub,d1
 		moveq	#0,d2
-		move.w	(MCD_SubMainArgument+6).l,d2
+		move.w	(MCD_SubMainArgument+6).w,d2
 		sub.l	d2,d1
-		move.l	d1,(MCD_SubOwnResult+8).l
-		bset	#0,(MCD_SubMemoryMode).l
+		move.l	d1,(MCD_SubOwnResult+8).w
+		bset	#0,(MCD_SubMemoryMode).w
 		moveq	#0,d0
 		rts
 
@@ -57,7 +57,7 @@ MCD_SubPLCInit:
 		movea.l	a0,a2
 		lea	(MCD_PLCInput_Sub).l,a1
 		moveq	#0,d1
-		move.w	(MCD_SubMainArgument+8).l,d1
+		move.w	(MCD_SubMainArgument+8).w,d1
 		move.w	d1,d3
 		lsr.w	#1,d1
 		subq.w	#1,d1
@@ -98,7 +98,7 @@ MCD_SubPLCStep:
 		move.w	(MCD_PLCRemaining_Sub).l,d3
 .count:
 		clr.w	(MCD_PLCProduced_Sub).l
-		clr.w	(MCD_SubOwnResult+4).l
+		clr.w	(MCD_SubOwnResult+4).w
 		tst.w	d3
 		beq.w	.return
 		movea.w	d3,a2
@@ -130,7 +130,7 @@ MCD_SubPLCStep:
 		bsr.s	MCD_SubPLCSave
 		move.w	(MCD_PLCProduced_Sub).l,d3
 		sub.w	d3,(MCD_PLCRemaining_Sub).l
-		move.w	d3,(MCD_SubOwnResult+4).l
+		move.w	d3,(MCD_SubOwnResult+4).w
 .return:
 		rts
 
@@ -146,6 +146,6 @@ MCD_SubPLCSave:
 
 MCD_SubArtFrame:
 		bsr.w	MCD_SubPLCStep
-		bset	#0,(MCD_SubMemoryMode).l
+		bset	#0,(MCD_SubMemoryMode).w
 		moveq	#0,d0
 		rts

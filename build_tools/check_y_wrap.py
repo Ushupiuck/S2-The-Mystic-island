@@ -48,14 +48,14 @@ def native_checks(args):
         for vy, y in ((0x400, wrap-4), (0xFC00, 4)):
             m.start()
             a = m.s['v_lvlobjspace']
-            for field,value,size in (('code',m.s['Obj13'],4),('obRoutine',2,1),
+            for field,value,size in (('code',m.s['LostRing_Move'],4),('obRoutine',0,1),
                                      ('obX',0x1000,2),('obY',y,2),
                                      ('obVelX',vx,2),('obVelY',vy,2),('obDelayAni',255,1)):
                 m.put(a,field,value,size)
             m.write('Camera_Min_Y_pos', 0xFF00, 2)
             for tick in range(1,256):
                 displayed.clear()
-                m.act('Obj13',a)
+                m.act('LostRing_Move',a)
                 live = bool(m.get(a,'code',4))
                 good = live == (tick<255)
                 if live:
@@ -68,26 +68,26 @@ def native_checks(args):
                     break
     m.start()
     a = m.s['v_lvlobjspace']
-    m.put(a,'code',m.s['Obj13'],4);m.put(a,'obX',0x1000,2);m.put(a,'obY',0x300,2)
+    m.put(a,'code',m.s['LostRings'],4);m.put(a,'obX',0x1000,2);m.put(a,'obY',0x300,2)
     m.write('v_rings',32,2);m.write('Camera_Max_Y_pos',0x720,2)
-    m.act('Obj13',a)
+    m.act('LostRings',a)
     rings = [p for p in range(m.s['v_lvlobjspace'],m.s['v_lvlobjend'],m.s['object_size'])
-             if m.get(p,'code',4)==m.s['Obj13']]
+             if m.get(p,'code',4)==m.s['LostRing_Move']]
     if len(rings)!=32 or any(m.get(p,'obDelayAni') != (254 if p==a else 255) for p in rings):
         failures.append(dict(case='all-32-ring-timers',count=len(rings),
                              timers=[m.get(p,'obDelayAni') for p in rings]))
     # A collected lost ring still awards once and finishes the sparkle path.
-    m.put(a,'obRoutine',4);m.act('Obj13',a)
-    if m.read('v_rings',2)!=1 or m.get(a,'obRoutine')!=6:
+    m.put(a,'code',m.s['LostRing_Collect'],4);m.act('LostRing_Collect',a)
+    if m.read('v_rings',2)!=1 or m.get(a,'code',4)!=m.s['Ring_Sparkle']:
         failures.append(dict(case='lost-ring-collection'))
     for _ in range(60):
         if not m.get(a,'code',4):break
-        m.act('Obj13',a)
+        m.act('DeleteObject' if m.get(a,'code',4)==m.s['DeleteObject'] else 'Ring_Sparkle',a)
     if m.get(a,'code',4):failures.append(dict(case='collected-ring-sparkle-expiry'))
     # Ordinary levels still cull rings below their lower boundary.
-    m.start();m.put(a,'code',m.s['Obj13'],4);m.put(a,'obRoutine',2)
+    m.start();m.put(a,'code',m.s['LostRing_Move'],4)
     m.put(a,'obY',0x500,2);m.put(a,'obDelayAni',255)
-    m.write('Camera_Max_Y_pos',0x300,2);m.act('Obj13',a)
+    m.write('Camera_Max_Y_pos',0x300,2);m.act('LostRing_Move',a)
     if m.get(a,'code',4): failures.append(dict(case='non-wrapping-bottom-cull'))
     return dict(flight_samples=samples,ring_lifetime_cases=10,scatter_count=len(rings),failures=failures)
 
@@ -148,11 +148,11 @@ def game_checks(args):
     pool=range(g.s['v_lvlobjspace']&65535,g.s['v_lvlobjend']&65535,g.s['object_size'])
     for y in (4,0x7FC):
         for actor in pool:
-            if g.get(actor,'code')==g.s['Obj13']:g.write(actor,0,g.s['object_size'])
+            if g.get(actor,'layout_id')==0x10:g.write(actor,0,g.s['object_size'])
         place(g,'v_player',sx,y,False);g.put('v_player','obControl',1)
         g.put('v_player','invtime',6000,2);g.run(30)
-        g.write('v_rings',32,2);spawn(g,'Obj13',sx+80,y);g.run()
-        rings=[a for a in pool if g.get(a,'code')==g.s['Obj13']]
+        g.write('v_rings',32,2);spawn(g,'LostRings',sx+80,y);g.run()
+        rings=[a for a in pool if g.get(a,'layout_id')==0x10]
         assert len(rings)==32 and not g.read('v_rings',2), 'Real scatter did not create 32 rings'
         # Suppress collection only after the real scatter, to isolate movement
         # and expiry while retaining normal terrain probes and game scheduling.
@@ -160,13 +160,13 @@ def game_checks(args):
         canonical=True;full_lifetime=True
         for tick in range(30):
             canonical &= all(g.get(a,'obY',2)<0x800 for a in rings if g.get(a,'code'))
-            full_lifetime &= all(g.get(a,'code')==g.s['Obj13'] for a in rings)
+            full_lifetime &= all(g.get(a,'layout_id')==0x10 for a in rings)
             g.run();assert not g.read('v_errortype')
         g.video.save(args.output/f'lost-rings-{y:03x}.png')
         for tick in range(600):
-            if not any(g.get(a,'code')==g.s['Obj13'] for a in rings):break
+            if not any(g.get(a,'layout_id')==0x10 for a in rings):break
             g.run();assert not g.read('v_errortype')
-        expired=not any(g.get(a,'code')==g.s['Obj13'] for a in rings)
+        expired=not any(g.get(a,'layout_id')==0x10 for a in rings)
         ring_cases.append(dict(y=y,canonical=canonical,alive_through_30_frames=full_lifetime,expired=expired))
     g.close()
     failures=[c for c in cases if not c['recovered'] or not c['prompt']]

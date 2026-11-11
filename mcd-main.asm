@@ -17,13 +17,13 @@
 		endm
 MCD_SubEntry:
 		move.w	#$2700,sr
-		clr.b	($FF8033).l		; mask Gate Array IRQ sources
-		clr.w	($FF8030).l		; stop timer
+		clr.b	($FF8033).w		; mask Gate Array IRQ sources
+		clr.w	($FF8030).w		; stop timer
 		move.b	#$FF,($FF0011).l		; silence PCM channels
-		bset	#0,(MCD_SubMemoryMode).l	; give main CPU 2M Word RAM
-		move.w	#MCD_Ready,(MCD_SubOwnStatus).l
-		move.b	#MCD_ServiceReady,(MCD_SubOwnFlags).l
-		move.w	(MCD_SubMainToken).l,d7
+		bset	#0,(MCD_SubMemoryMode).w	; give main CPU 2M Word RAM
+		move.w	#MCD_Ready,(MCD_SubOwnStatus).w
+		move.b	#MCD_ServiceReady,(MCD_SubOwnFlags).w
+		move.w	(MCD_SubMainToken).w,d7
 		not.w	d7			; process the staged boot request too
 		bra.s	.wait
 ; A job may clobber every data/address register except SP. Keep only its
@@ -52,11 +52,11 @@ MCD_SubEntry:
 		rts
 ; ===========================================================================
 .ping:
-		move.w	(MCD_SubMainArgument).l,d0
+		move.w	(MCD_SubMainArgument).w,d0
 		rts
 ; ===========================================================================
 .returnRAM:
-		bset	#0,(MCD_SubMemoryMode).l
+		bset	#0,(MCD_SubMemoryMode).w
 		moveq	#0,d0
 		rts
 ; ===========================================================================
@@ -71,7 +71,11 @@ MCD_SubEntry:
 		rept	$20-19
 		dc.l	.unknown
 		endm
-		rept	MCD_TerrainObjectLast-MCD_TerrainAnglePos+1
+		rept	MCD_TerrainObjectFloorX-MCD_TerrainAnglePos
+		dc.l	MCD_SubTerrainObject
+		endm
+		dc.l	MCD_SubTerrainObjectFloor
+		rept	MCD_TerrainObjectLast-MCD_TerrainObjectFloorX
 		dc.l	MCD_SubTerrainObject
 		endm
 		rept	$100-MCD_TerrainObjectLast-1
@@ -85,8 +89,8 @@ MCD_SubEntry:
 MCD_SubIRQ2:
 		rte
 MCD_SubError:
-		move.b	#MCD_ServiceReady|MCD_ServiceError,(MCD_SubOwnFlags).l
-		move.w	#$FFFF,(MCD_SubOwnStatus).l
+		move.b	#MCD_ServiceReady|MCD_ServiceError,(MCD_SubOwnFlags).w
+		move.w	#$FFFF,(MCD_SubOwnStatus).w
 		bra.s	*
 
 ; Only animation state lives here. Ring coordinates, collision and rewards
@@ -107,7 +111,7 @@ MCD_SubRingTick:
 		lea	(MCD_RingEvents_Sub).l,a1
 		lea	(MCD_RingActiveList_Sub).l,a3
 		move.w	(MCD_RingActiveCount_Sub).l,d4
-		move.w	(MCD_SubMainArgument).l,d1
+		move.w	(MCD_SubMainArgument).w,d1
 		subq.w	#1,d1
 		bmi.s	.tick
 .event:

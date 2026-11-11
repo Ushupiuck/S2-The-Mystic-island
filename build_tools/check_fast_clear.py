@@ -96,7 +96,7 @@ else:
 	raise AssertionError('$0B timeout')
 assert g.read('Current_ZoneAndAct', 2) == 0x0B00
 monitor = next(x for x in range(g.s['v_lvlobjspace'] & 65535, g.s['v_lvlobjend'] & 65535, g.s['object_size']) if not g.get(x, 'code'))
-for key, value, size in (('code', g.s['Obj26'], 4), ('obX', 0x100, 2), ('obY', 0x170, 2), ('obSubtype', 5, 1)):
+for key, value, size in (('code', g.s['Monitor'], 4), ('obX', 0x100, 2), ('obY', 0x170, 2), ('obSubtype', 5, 1)):
 	g.put(monitor, key, value, size)
 hold({}, 30)
 event('monitor', 0)

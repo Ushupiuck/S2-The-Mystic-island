@@ -42,7 +42,7 @@ def main():
         for a in slots[:-1]:
             for f,v,n in [('code',dummy,4),('obColType',0x47,1),('obX',1600,2),('obY',500,2)]:g.put(a,f,v,n)
         ring=slots[-1]
-        for f,v,n in [('code',g.s['Obj12'],4),('obX',80,2),('obY',500,2)]:g.put(ring,f,v,n)
+        for f,v,n in [('code',g.s['Ring'],4),('obX',80,2),('obY',500,2)]:g.put(ring,f,v,n)
         run(4);assert queue()==slots,('capacity',len(queue()))
         score=g.read('v_rings',2);place(g,who,80,500);g.put(who,'obControl',1);g.write('f_playerctrl',0)
         run(6)

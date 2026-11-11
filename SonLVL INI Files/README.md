@@ -2,7 +2,7 @@
 
 Open `SonLVL.ini` with a current Sonic Retro SonLVL build that supports
 Kosinski Plus and moduled Kosinski Plus. This project uses custom eight-byte
-object placements and S3&K sprite mappings. Its object IDs come from `Obj_Index`
+object placements and S3&K sprite mappings. Its object IDs follow [the current core table](../docs/Objects.md#core-object-ids) in `Obj_Index`
 in `md-main.asm`, rather than an original game's table.
 
 `obj.ini` supplies shared objects and imported enemies. The zone lists override
@@ -62,10 +62,12 @@ the complete serialized word, including when calculating movement overlays.
 
 | ID | Object | Subtype settings |
 |---|---|---|
-| `$03` | Path / priority switcher | Bits 0–1: length 64/128/256/512 px; bit 2: horizontal trigger; bits 3/4: right-down/left-up collision path; bits 5/6: corresponding priority; bit 7: grounded only. Placement flips do not enable a priority-only mode in this handler. |
-| `$0B` | Tilting platform | High nibble: duration; low nibble: initial phase, both in 16-frame units. |
-| `$0C` | Flapping door | Full byte: interval in seconds. |
-| `$14` / `$15` | S1 fireball maker / individual fireball (EHZ/HTZ) | Bits 0-1: arc strength; bit 2: straight flight; bit 3: horizontal straight shot. X flip selects left, Y flip selects down for vertical shots and mirrors arc gravity. Maker bits 4-7 select 30-180 updates (clamped); upper word bits are preserved. Maker passes settings and flips to its shots. |
+| `$0A` | Path / priority switcher | Bits 0–1: length 64/128/256/512 px; bit 2: horizontal trigger; bits 3/4: right-down/left-up collision path; bits 5/6: corresponding priority; bit 7: grounded only. Placement flips do not enable a priority-only mode in this handler. |
+| `$0B` | Twisting pathway / wire cage | Bit 7: cage; bits 0-6: half-width / 8 (zero = 192 px); `$0098` is the FBZ/MTZ preset. Clear bit 7 retains the EHZ spiral. |
+| `$0C` | Tilting platform | High nibble: duration; low nibble: initial phase, both in 16-frame units. |
+| `$0D` | Flapping door | Full byte: interval in seconds. |
+| `$C1` / `$C0` | S1 fireball maker / individual fireball (EHZ/HTZ) | Bits 0-1: arc strength; bit 2: straight flight; bit 3: horizontal straight shot. X flip selects left, Y flip selects down for vertical shots and mirrors arc gravity. Maker bits 4-7 select 30-180 updates (clamped); upper word bits are preserved. Maker passes settings and flips to its shots. |
+| `$11` | Goddess ring spill | Invisible proximity trigger; fifty successful scattered-ring emissions. No subtype settings. |
 | `$16` | Diagonal lift | Full byte: duration in 8-frame units. Travels twice as far horizontally as vertically, then falls. |
 | `$17` | Swinging platform / ball | Word `PPRD IIII SMMM LLLL`: quarter orientation, detach, relay, material sound, twelve interaction profiles, eight movement modes and 0–8 links. See [runtime settings](../docs/Objects.md#swinging-platforms-s1s2-coverage-and-s3k-variants). |
 | `$18` | Regular platform | Word `CCCF IIII STTT MMMM`: movement, shape, sag, shared interaction menu, falling, and phase/corner or switch channel. Profiles 6–9 add a classic underside grip; 8/9 also convey standing riders. See [runtime settings](../docs/Objects.md#ordinary-platforms-and-flying-batterys-hovering-platform). |

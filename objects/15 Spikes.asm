@@ -1,5 +1,5 @@
 ; ---------------------------------------------------------------------------
-; Object 36 - S3&K spikes, adapted to Mystic Island's SSTs and player routines.
+; Object 15 - S3&K spikes, adapted to Mystic Island's SSTs and player routines.
 ; High subtype: 0-3 = S3 floor rows, 4-7 = S3 side columns.
 ; 8-D = S1's six arrangements (three floor, three side, single floor,
 ; wide three floor, wide six floor, single side), using the same art.
@@ -20,11 +20,11 @@ spikes_move_step		= $800
 spikes_move_delay	= 60
 spikes_push_delay	= $10
 
-Obj36:
+Spikes:
 		tst.w	Mount_parent(a0)
-		beq.s	Obj36_Behavior
+		beq.s	Spikes_Behavior
 		jmp	(PlatformMount_Child).l
-Obj36_Behavior:
+Spikes_Behavior:
 		tst.b	obRoutine(a0)
 		beq.w	Spike_Init
 		bsr.w	MoveSpikes
@@ -40,15 +40,15 @@ Obj36_Behavior:
 		bsr.w	SolidObject
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
-		move.w	Obj36_Index-2(pc,d0.w),d1
-		jmp	Obj36_Index(pc,d1.w)
+		move.w	Spikes_Index-2(pc,d0.w),d1
+		jmp	Spikes_Index(pc,d1.w)
 ; ---------------------------------------------------------------------------
-Obj36_Index:	dc.w Spike_Floor-Obj36_Index
-		dc.w Spike_Side-Obj36_Index
-		dc.w Spike_Ceiling-Obj36_Index
+Spikes_Index:	dc.w Spike_Floor-Spikes_Index
+		dc.w Spike_Side-Spikes_Index
+		dc.w Spike_Ceiling-Spikes_Index
 
 ; Collision half-width and half-height; also the exact frame's display bounds.
-Obj36_Conf:	dc.b $10,$10, $20,$10, $30,$10, Map_Obj36_width,$10
+Spikes_Conf:	dc.b $10,$10, $20,$10, $30,$10, Map_Obj36_width,$10
 		dc.b $10,$10, $10,$20, $10,$30, $10,Map_Obj36_height
 		dc.b $14,$10	; $8: three floor spikes, 16 pixels apart
 		dc.b $10,$14	; $9: three side spikes, 16 pixels apart
@@ -57,7 +57,7 @@ Obj36_Conf:	dc.b $10,$10, $20,$10, $30,$10, Map_Obj36_width,$10
 		dc.b $40,$10	; $C: six floor spikes, 24 pixels apart
 		dc.b $10,$04	; $D: one side spike
 ; Routine 2 = floor, 4 = side. Y flip selects routine 6 (ceiling).
-Obj36_Routines:	dc.b 2,2,2,2, 4,4,4,4, 2,4,2,2,2,4
+Spikes_Routines:	dc.b 2,2,2,2, 4,4,4,4, 2,4,2,2,2,4
 ; ---------------------------------------------------------------------------
 Spike_Init:
 		ori.b	#4,obRender(a0)
@@ -66,13 +66,13 @@ Spike_Init:
 		move.w	obSubtype(a0),d0
 		andi.w	#$F0,d0
 		lsr.w	#3,d0
-		lea	Obj36_Conf(pc,d0.w),a1
+		lea	Spikes_Conf(pc,d0.w),a1
 		move.b	(a1)+,obActWid(a0)
 		move.b	(a1),obHeight(a0)
 		move.b	(a1),height_pixels(a0)
 		lsr.w	#1,d0
 		move.b	d0,obFrame(a0)
-		move.b	Obj36_Routines(pc,d0.w),obRoutine(a0)
+		move.b	Spikes_Routines(pc,d0.w),obRoutine(a0)
 		move.w	#make_art_tile(ArtTile_Spikes,0,0),obGfx(a0)
 		btst	#render_flags.y_flip,obStatus(a0)
 		beq.s	.position

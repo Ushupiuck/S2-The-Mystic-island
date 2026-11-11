@@ -1,5 +1,5 @@
 ; ---------------------------------------------------------------------------
-; Object 0E - spindash and skid dust. Water splash remains object 08.
+; Object 05 - spindash and skid dust. Water splash remains object 08.
 ; Each player owns one controller and one 16-tile bank; skid particles share
 ; their owner's bank only while it still contains the four skid frames.
 ; ---------------------------------------------------------------------------
