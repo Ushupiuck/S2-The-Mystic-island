@@ -12,15 +12,19 @@ p=argparse.ArgumentParser(description='Pack SBZ sprites without changing their v
 p.add_argument('--source',type=Path,required=True)
 p.add_argument('--rom',type=Path,required=True)
 p.add_argument('--listing',type=Path,required=True)
+p.add_argument('--check',action='store_true',help='Validate packing without writing outputs.')
 args=p.parse_args();S=args.source
 from check_sprite_assets import frames
 from import_scrap_madness import mapping,nemesis_compress,remap_pixels,palette_lookup
 from convert_s1_ss_background import kosinski_plus_decode
-import native_test_core as m68k
-m = m68k.Native(args.rom, args.listing)
+from check_ehz_boss import symbols
+from import_ehz2_pp_background import nemesis
+from types import SimpleNamespace
+m = SimpleNamespace(s=symbols(args.listing))
 rom = args.rom.read_bytes()
+
 def dec(path):
- d=path.read_bytes();n=struct.unpack_from('>H',d)[0]&32767;m.cpu.mem_write(0x300000,d);m.act('NemDecToRAM',limit=2000000,regs={m68k.UC_M68K_REG_A0:0x300000,m68k.UC_M68K_REG_A4:0xff0000});return bytes(m.cpu.mem_read(0xff0000,n*32))
+	return nemesis(path.read_bytes())
 bank={}
 def fill(base,raw):
  for i in range(len(raw)//32):bank[base+i]=raw[i*32:(i+1)*32]
@@ -174,12 +178,13 @@ dplc += ['.empty: dc.w 0']
 for i, (first, count) in enumerate(gap_runs):
     dplc.append(f'.gap{i:X}: dc.w 1,${((count-1)<<12)|first:04X}')
 
-for name, data in out.items():
-    (R/f'mappings/sprite/SMZ {name}.bin').write_bytes(data)
-(R/'art/nemesis/SMZ Sprite Atlas.nem').write_bytes(nemesis_compress(atlas))
-(R/'art/uncompressed/SMZ Sprite Atlas.unc').write_bytes(atlas)
-(R/'art/uncompressed/SMZ Junction Gap.unc').write_bytes(gap_art)
-(R/'mappings/spriteDPLC/SMZ Junction.asm').write_text('\n'.join(dplc)+'\n')
+if not args.check:
+	for name, data in out.items():
+		(R/f'mappings/sprite/SMZ {name}.bin').write_bytes(data)
+	(R/'art/nemesis/SMZ Sprite Atlas.nem').write_bytes(nemesis_compress(atlas))
+	(R/'art/uncompressed/SMZ Sprite Atlas.unc').write_bytes(atlas)
+	(R/'art/uncompressed/SMZ Junction Gap.unc').write_bytes(gap_art)
+	(R/'mappings/spriteDPLC/SMZ Junction.asm').write_bytes(('\r\n'.join(dplc)+'\r\n').encode())
 print('Atlas:', packed_count, 'used tiles; capacity:', capacity,
       '; original rectangles retained in all', sum(len(rs) for rs,_ in inputs.values()), 'frames')
 print('Junction DPLC:', max(count for first,count in gap_runs),

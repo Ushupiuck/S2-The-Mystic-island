@@ -83,7 +83,7 @@
       {"name":"Bumper", "id":"47", "x":256, "y":1184},
       {"name":"Seesaw", "id":"5E", "x":512, "y":1248},
       {"name":"Flapdoor", "id":"0C", "x":768, "y":1216}],
-      "art":[["nem","Nem_Bumper","ArtTile_Bumper"],["nem","Nem_Seesaw","ArtTile_HTZ_Seesaw"],["nem","Nem_EHZ_Fireball","ArtTile_Fireball"],["kos","Kospm_FlapDoor","ArtTile_LZ_Flapping_Door"]]},
+      "art":[["nem","Nem_Bumper","ArtTile_Bumper"],["nem","Nem_Seesaw","ArtTile_HTZ_Seesaw"],["kos","Kospm_FlapDoor","ArtTile_LZ_Flapping_Door"]]},
     {"name":"Level exit and giant rings", "objects":[
       {"name":"Hidden bonus", "id":"7D", "x":256, "y":1232},
       {"name":"Signpost", "id":"7E", "x":416, "y":1256},

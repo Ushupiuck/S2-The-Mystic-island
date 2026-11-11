@@ -561,7 +561,6 @@ PLC_CPZ4_Extra_End:	plccheck PLC_CPZ4_Extra,0
 ; Emerald Hill - Act 1
 ; ---------------------------------------------------------------------------
 PLC_EHZ1_Main:		dc.w (PLC_EHZ1_Main_End-PLC_EHZ1_Main-2)/6-1
-		plcm	Nem_EHZ_Fireball,	ArtTile_Fireball
 		plcm	Nem_EHZ_Waterfall,	ArtTile_Waterfall
 		plcm	Nem_EHZ_Bridge,	ArtTile_EHZ_Bridge
 		plcm	Nem_Seesaw,	ArtTile_EHZ_Seesaw
@@ -579,7 +578,6 @@ PLC_EHZ1_Extra_End:	plccheck PLC_EHZ1_Extra,0
 ; Emerald Hill - Act 2
 ; ---------------------------------------------------------------------------
 PLC_EHZ2_Main:		dc.w (PLC_EHZ2_Main_End-PLC_EHZ2_Main-2)/6-1
-		plcm	Nem_EHZ_Fireball,	ArtTile_Fireball
 		plcm	Nem_EHZ_Waterfall,	ArtTile_Waterfall
 		plcm	Nem_EHZ_Bridge,	ArtTile_EHZ_Bridge
 		plcm	Nem_Seesaw,	ArtTile_EHZ_Seesaw
@@ -597,7 +595,6 @@ PLC_EHZ2_Extra_End:	plccheck PLC_EHZ2_Extra,0
 ; Emerald Hill - Act 3
 ; ---------------------------------------------------------------------------
 PLC_EHZ3_Main:		dc.w (PLC_EHZ3_Main_End-PLC_EHZ3_Main-2)/6-1
-		plcm	Nem_EHZ_Fireball,	ArtTile_Fireball
 		plcm	Nem_EHZ_Waterfall,	ArtTile_Waterfall
 		plcm	Nem_EHZ_Bridge,	ArtTile_EHZ_Bridge
 		plcm	Nem_Seesaw,	ArtTile_EHZ_Seesaw
@@ -615,7 +612,6 @@ PLC_EHZ3_Extra_End:	plccheck PLC_EHZ3_Extra,0
 ; Emerald Hill - Act 4
 ; ---------------------------------------------------------------------------
 PLC_EHZ4_Main:		dc.w (PLC_EHZ4_Main_End-PLC_EHZ4_Main-2)/6-1
-		plcm	Nem_EHZ_Fireball,	ArtTile_Fireball
 		plcm	Nem_EHZ_Waterfall,	ArtTile_Waterfall
 		plcm	Nem_EHZ_Bridge,	ArtTile_EHZ_Bridge
 		plcm	Nem_Seesaw,	ArtTile_EHZ_Seesaw
@@ -705,8 +701,6 @@ PLC_HPZ4_Extra_End:	plccheck PLC_HPZ4_Extra,0
 ; Egg Mountain - Act 1
 ; ---------------------------------------------------------------------------
 PLC_HTZ1_Main:		dc.w (PLC_HTZ1_Main_End-PLC_HTZ1_Main-2)/6-1
-		plcm	Nem_EHZ_Fireball,	ArtTile_HTZ_LegacyFireball
-		plcm	Nem_HTZ_Fireball,	ArtTile_HTZ_Fireball
 		plcm	Nem_HTZ_AutomaticDoor,	ArtTile_HTZ_AutomaticDoor
 		plcm	Nem_Springs,	ArtTile_Springs
 PLC_HTZ1_Main_End:	plccheck PLC_HTZ1_Main,ActPLC_Main_Reserve
@@ -722,8 +716,6 @@ PLC_HTZ1_Extra_End:	plccheck PLC_HTZ1_Extra,0
 ; Egg Mountain - Act 2
 ; ---------------------------------------------------------------------------
 PLC_HTZ2_Main:		dc.w (PLC_HTZ2_Main_End-PLC_HTZ2_Main-2)/6-1
-		plcm	Nem_EHZ_Fireball,	ArtTile_HTZ_LegacyFireball
-		plcm	Nem_HTZ_Fireball,	ArtTile_HTZ_Fireball
 		plcm	Nem_HTZ_AutomaticDoor,	ArtTile_HTZ_AutomaticDoor
 		plcm	Nem_Springs,	ArtTile_Springs
 PLC_HTZ2_Main_End:	plccheck PLC_HTZ2_Main,ActPLC_Main_Reserve
@@ -739,8 +731,6 @@ PLC_HTZ2_Extra_End:	plccheck PLC_HTZ2_Extra,0
 ; Egg Mountain - Act 3
 ; ---------------------------------------------------------------------------
 PLC_HTZ3_Main:		dc.w (PLC_HTZ3_Main_End-PLC_HTZ3_Main-2)/6-1
-		plcm	Nem_EHZ_Fireball,	ArtTile_HTZ_LegacyFireball
-		plcm	Nem_HTZ_Fireball,	ArtTile_HTZ_Fireball
 		plcm	Nem_HTZ_AutomaticDoor,	ArtTile_HTZ_AutomaticDoor
 		plcm	Nem_Springs,	ArtTile_Springs
 PLC_HTZ3_Main_End:	plccheck PLC_HTZ3_Main,ActPLC_Main_Reserve
@@ -756,8 +746,6 @@ PLC_HTZ3_Extra_End:	plccheck PLC_HTZ3_Extra,0
 ; Egg Mountain - Act 4
 ; ---------------------------------------------------------------------------
 PLC_HTZ4_Main:		dc.w (PLC_HTZ4_Main_End-PLC_HTZ4_Main-2)/6-1
-		plcm	Nem_EHZ_Fireball,	ArtTile_HTZ_LegacyFireball
-		plcm	Nem_HTZ_Fireball,	ArtTile_HTZ_Fireball
 		plcm	Nem_HTZ_AutomaticDoor,	ArtTile_HTZ_AutomaticDoor
 		plcm	Nem_Springs,	ArtTile_Springs
 PLC_HTZ4_Main_End:	plccheck PLC_HTZ4_Main,ActPLC_Main_Reserve
@@ -1728,15 +1716,27 @@ PLCKosM_AWZ4_End
 ; LV03 - Emerald Hill Zone
 ; ---------------------------------------------------------------------------
 ; Act 1
+PLCKosM_EHZ1:	plrKosMlistheader
+	plreqKosM	ArtTile_Fireball, Kospm_Fireballs
+PLCKosM_EHZ1_End
 
 ; ---------------------------------------------------------------------------
 ; Act 2
+PLCKosM_EHZ2:	plrKosMlistheader
+	plreqKosM	ArtTile_Fireball, Kospm_Fireballs
+PLCKosM_EHZ2_End
 
 ; ---------------------------------------------------------------------------
 ; Act 3
+PLCKosM_EHZ3:	plrKosMlistheader
+	plreqKosM	ArtTile_Fireball, Kospm_Fireballs
+PLCKosM_EHZ3_End
 
 ; ---------------------------------------------------------------------------
 ; Act 4
+PLCKosM_EHZ4:	plrKosMlistheader
+	plreqKosM	ArtTile_Fireball, Kospm_Fireballs
+PLCKosM_EHZ4_End
 
 ; ---------------------------------------------------------------------------
 ; KOSM PATTERN LOAD REQUEST LIST
@@ -1775,15 +1775,27 @@ PLCKosM_CVZ4_End
 ; LV05 - Egg Mountain Zone
 ; ---------------------------------------------------------------------------
 ; Act 1
+PLCKosM_HTZ1:	plrKosMlistheader
+	plreqKosM	ArtTile_Fireball, Kospm_Fireballs
+PLCKosM_HTZ1_End
 
 ; ---------------------------------------------------------------------------
 ; Act 2
+PLCKosM_HTZ2:	plrKosMlistheader
+	plreqKosM	ArtTile_Fireball, Kospm_Fireballs
+PLCKosM_HTZ2_End
 
 ; ---------------------------------------------------------------------------
 ; Act 3
+PLCKosM_HTZ3:	plrKosMlistheader
+	plreqKosM	ArtTile_Fireball, Kospm_Fireballs
+PLCKosM_HTZ3_End
 
 ; ---------------------------------------------------------------------------
 ; Act 4
+PLCKosM_HTZ4:	plrKosMlistheader
+	plreqKosM	ArtTile_Fireball, Kospm_Fireballs
+PLCKosM_HTZ4_End
 
 ; ---------------------------------------------------------------------------
 ; KOSM PATTERN LOAD REQUEST LIST
@@ -2091,14 +2103,6 @@ mkplcid_Misc12:		equ (ptr_KPLC_12-KosMLoadCues)/2		; $4B
 mkplcid_Misc13:		equ (ptr_KPLC_13-KosMLoadCues)/2		; $4C
 
 ; Independent empty Kosinski module lists; ready for act-specific imports.
-PLCKosM_EHZ1: dc.w -1
-PLCKosM_EHZ2: dc.w -1
-PLCKosM_EHZ3: dc.w -1
-PLCKosM_EHZ4: dc.w -1
-PLCKosM_HTZ1: dc.w -1
-PLCKosM_HTZ2: dc.w -1
-PLCKosM_HTZ3: dc.w -1
-PLCKosM_HTZ4: dc.w -1
 PLCKosM_LV61: dc.w -1
 PLCKosM_LV62: dc.w -1
 PLCKosM_LV63: dc.w -1

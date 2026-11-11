@@ -121,9 +121,9 @@ for tick in range(260):
             if (4 in flame_colors and g.get(obj,'obRender')&128
                     and g.get(obj,'obFrame') in (10,21) and tick>60 and not visible):
                 g.video.save(a.output/'sbz1-flame.png');visible = True
-assert visible and 4 in flame_colors and 5 not in flame_colors, flame_colors
+assert visible and {2,3,4,5,6,13,14,15} <= flame_colors, flame_colors
 assert g.read(g.s['v_palette']+4*2, 2) == 0x0AE
-passed('Visible SBZ flames use the golden orange core without changing global colors')
+passed('Visible SBZ flames use the full warm ramp and white core without changing global colors')
 
 restart(8,1)
 kemusi = vram(g.s['ArtTile_SMZ_Kemusi']*32,22*32)

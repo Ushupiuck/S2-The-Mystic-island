@@ -43,6 +43,24 @@ must advance both CPUs and include registration, reset and collision work.
 
 ## Source and asset checks
 
+Fire art and its per-act module uploads use:
+
+```sh
+python build_tools/build_fire_art.py
+python build_tools/check_fire_art.py --rom s2built.bin --listing md-main.lst --s1disasm /path/to/s1disasm --core /path/to/genesis_plus_gx_libretro.so --system-directory /path/to/mode1-fixture --output test-results/fire
+```
+
+The source checkout is optional. It compares S1 silhouettes/mappings and the
+unchanged pipe hardware. Optional `--reference COMMIT` additionally checks
+that only flame rectangles changed in the SMZ atlas and that palettes and
+packed mappings remain intact. Choose a commit before the fire-art change.
+The game pass boots all eight EHZ/HTZ act slots, checks actual module bytes and
+spring preservation, and renders all six fireball poses with four flips in
+each zone. It then runs both flamethrower styles in both real SMZ acts through
+all 22 frames, checking their colors and original harmful-frame gating.
+These are positioned rendering fixtures, not new level hazards. Add `--pal`
+for PAL. Generated screenshots/reports stay in the ignored output directory.
+
 Signpost checks use matching ROM/listing pairs:
 
 ```sh

@@ -436,10 +436,13 @@ so a return from Act 2 also clears PP pixels beyond the shorter upload.
 Act 2's P2 green merges (`$060` into `$064`, `$080` into `$0A0`) remain;
 P2 `A/B` supply the fixed `$EEA/$CC6` background-waterfall shades.
 
-Normal EHZ sprite loads follow the terrain: fireball `$3F0`, waterfall `$400`,
-bridge `$418`, Buzzer `$420`, Snailbot `$43C`, Masher `$456`, seesaw `$46C`.
+Normal EHZ sprite loads follow the terrain: waterfall `$400`, bridge `$418`,
+Buzzer `$420`, Snailbot `$43C`, Masher `$456`, seesaw `$46C`. The shared S1
+fireball bank occupies `$4B0-$4DB` in all four EHZ and HTZ act lists, below
+the common springs at `$4DD`. Its graphics remain unused by level objects.
+The former EHZ/HTZ fireball sheets and their Nemesis loads are removed.
 The seesaw constructor and Debug select EHZ's bank independently of HTZ's
-unchanged `$3CE` allocation. The [boss banks](Importing-objects.md#arena-and-art-lifetime)
+`$420` allocation. The [boss banks](Importing-objects.md#arena-and-art-lifetime)
 move together above the enlarged terrain bank. The private source sheets
 remain editable; explicit PP regeneration rebuilds from shared EHZ and the
 pinned CD source.
@@ -593,9 +596,10 @@ are omitted by both importer and packer. The separate user-authored draft
 `Nem_Button` and `ArtTile_Button` placeholder are preserved. That draft is not
 assembled into the running game.
 
-Flame-core pixels map S1's palette-0 index `$F` yellow (`$0EE`) to the shared
-palette's `$4` golden orange (`$0AE`), distinct from `$5` cream (`$8CE`).
-Pipe ends, red/dark-red outlines and global palette colors remain intact.
+SMZ flames use the shared [fire-art palette](Sprites-and-VRAM.md#fire-art),
+including pale/white cores and the full warm ramp. Both pipe styles retain
+their original hardware, mapping geometry, timing and harmful frames. The SMZ
+importer preserves the editable flame sheet during a full stage re-import.
 
 The static sprite atlas shares whole identical/overlapping rectangles, retaining
 piece sizes, ordering, geometry, flips, adapted pixels, palette and priority.

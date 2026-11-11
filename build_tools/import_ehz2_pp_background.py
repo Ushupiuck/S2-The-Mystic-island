@@ -106,7 +106,7 @@ def build(source, output):
 		assert match, 'Expected literal art allocation '+name
 		return int(match[1],16)
 	level_base = allocation('ArtTile_Level')
-	static_end = allocation('ArtTile_Fireball')
+	static_end = allocation('ArtTile_EHZ_Static_End')
 	flower_base = allocation('ArtTile_Art_Flowers1')
 	waterfall_base = allocation('ArtTile_EHZ2_BGWaterfall')
 	waterfall_count = allocation('ArtTile_EHZ2_BGWaterfall_Count')

@@ -13269,10 +13269,6 @@ Nem_HPZ_Various:	binclude	"art/nemesis/HPZ Various.nem"
 ; ---------------------------------------------------------------------------
 ; Hill Top Zone stage assets
 ; ---------------------------------------------------------------------------
-Nem_EHZ_Fireball:	binclude	"art/nemesis/Fireball 1.nem"
-			even
-Nem_HTZ_Fireball:	binclude	"art/nemesis/Fireball 2.nem"
-			even
 Nem_HTZ_Lift:		binclude	"art/nemesis/HTZ zip-line platform.nem"
 			even
 Nem_HTZ_AutomaticDoor:	binclude	"art/nemesis/HTZ Autodoor.nem"
@@ -13405,6 +13401,10 @@ Kospm_BallhogH:	binclude	"art/moduled kosinski/Enemy Ballhog (Horizontal).kospm"
 		even
 Kospm_Chopper:	binclude	"art/moduled kosinski/Enemy Chopper.kospm"
 		even
+; Shared fire art follows the final audio bank, avoiding bank-alignment padding.
+Kospm_Fireballs:	binclude	"art/moduled kosinski/Fireballs.kospm"
+			even
+		include "mappings/sprite/Fireballs.asm"
 Kospm_Motobug:	binclude	"art/moduled kosinski/Enemy Motobug.kospm"
 		even
 Kospm_Crabmeat:	binclude	"art/moduled kosinski/Enemy Crabmeat.kospm"
