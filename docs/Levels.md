@@ -58,6 +58,10 @@ ten authored Ballhogs, their code and atlas are unchanged. Those two enemy banks
 71 tiles (2,272 bytes). GHZ now uses that space to move Newtron/Chopper below
 the packed spring atlas; a future LZ act recipe needs its own compatible allocation.
 
+The friends-demo route ends after EHZ Act 2's result card. Its `LevelOrder`
+entry is `$0000`, the existing SEGA-screen sentinel; unfinished EHZ Acts 3/4
+remain selectable for development but are outside normal progression.
+
 ## Foreground vertical placement
 
 All four GHZ acts have moved down `$200` pixels (four 128-pixel rows); all four
