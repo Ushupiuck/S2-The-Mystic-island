@@ -11,6 +11,13 @@ On Mode 1, Sonic and Tails push their landing callbacks with PC-relative `pea`
 before branching to the shared airborne collision transport. The transport
 invokes the callback on landing and discards it while the actor remains airborne.
 
+Ground attachment follows S2/S3&K's speed-dependent reach: four pixels plus the
+absolute signed integer tangential speed, capped at fourteen pixels. Floors and
+ceilings use X speed; walls use Y speed. A slow character leaves an abrupt drop
+instead of walking down it with a stale flat angle. Airborne contact then supplies
+the landing angle for slope acceleration and sliding. Running discs retain their
+explicit `stick_to_convex` override; this is shared character physics, not AI.
+
 Corkscrews and spring tumbles share angle/facing calculation, with each character
 selecting its own mapping range: Sonic's S2 frames `$5F-$6A`, Tails's S3&K frames
 `$31-$3C`. Pushing refreshes the upright facing before the animation timer can

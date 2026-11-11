@@ -151,7 +151,14 @@ MCD_TerrainObject:
 		disable_ints
 		lea	(MCD_MainArgument).l,a5
 		move.w	d0,d4
-		lsl.w	#8,d4		; optional input angle in command high byte
+		cmpi.b	#MCD_TerrainAnglePos,d7
+		bne.s	.inputAngle
+		; Ground attachment needs the signed integer X/Y speeds. Reuse the
+		; otherwise unused command high byte and flags byte for this operation.
+		move.b	obVelX(a0),d4
+		move.b	obVelY(a0),(MCD_MainFlags).l
+.inputAngle:
+		lsl.w	#8,d4		; input angle / integer X speed in command high byte
 		or.w	d7,d4
 		cmpi.b	#MCD_TerrainFloorEdgeX,d7
 		beq.s	.haveX

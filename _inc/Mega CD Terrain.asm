@@ -270,7 +270,18 @@ MCD_Subloc_12A5A:
 ; ---------------------------------------------------------------------------
 
 MCD_Subloc_12AE6:
-		cmpi.w	#$E,d1
+		; S2/S3&K: slow actors must leave a sharp drop instead of snapping
+		; down a fixed 14 pixels with their previous (possibly flat) angle.
+		tst.b	stick_to_convex(a0)
+		bne.s	MCD_Subloc_12AEC
+		move.b	(MCD_SubMainCommand).w,d0	; signed integer X speed
+		bpl.s	+
+		neg.b	d0
++		addq.b	#4,d0
+		cmpi.b	#$E,d0
+		blo.s	+
+		move.b	#$E,d0
++		cmp.b	d0,d1
 		bgt.s	MCD_Subloc_12AF2
 
 MCD_Subloc_12AEC:
@@ -279,8 +290,6 @@ MCD_Subloc_12AEC:
 ; ---------------------------------------------------------------------------
 
 MCD_Subloc_12AF2:
-		tst.b	stick_to_convex(a0)
-		bne.s	MCD_Subloc_12AEC
 		bset	#1,obStatus(a0)
 		bclr	#5,obStatus(a0)
 		move.b	#1,obPrevAni(a0)
@@ -368,7 +377,16 @@ MCD_SubSonic_WalkVertR:
 ; ---------------------------------------------------------------------------
 
 MCD_Subloc_12C14:
-		cmpi.w	#$E,d1
+		tst.b	stick_to_convex(a0)
+		bne.s	MCD_Subloc_12C1A
+		move.b	(MCD_SubMainFlags).w,d0	; signed integer Y speed
+		bpl.s	+
+		neg.b	d0
++		addq.b	#4,d0
+		cmpi.b	#$E,d0
+		blo.s	+
+		move.b	#$E,d0
++		cmp.b	d0,d1
 		bgt.s	MCD_Subloc_12C20
 
 MCD_Subloc_12C1A:
@@ -377,8 +395,6 @@ MCD_Subloc_12C1A:
 ; ---------------------------------------------------------------------------
 
 MCD_Subloc_12C20:
-		tst.b	stick_to_convex(a0)
-		bne.s	MCD_Subloc_12C1A
 		bset	#1,obStatus(a0)
 		bclr	#5,obStatus(a0)
 		move.b	#1,obPrevAni(a0)
@@ -427,7 +443,16 @@ MCD_SubSonic_WalkCeiling:
 ; ---------------------------------------------------------------------------
 
 MCD_Subloc_12CB2:
-		cmpi.w	#$E,d1
+		tst.b	stick_to_convex(a0)
+		bne.s	MCD_Subloc_12CB8
+		move.b	(MCD_SubMainCommand).w,d0	; signed integer X speed
+		bpl.s	+
+		neg.b	d0
++		addq.b	#4,d0
+		cmpi.b	#$E,d0
+		blo.s	+
+		move.b	#$E,d0
++		cmp.b	d0,d1
 		bgt.s	MCD_Subloc_12CBE
 
 MCD_Subloc_12CB8:
@@ -436,8 +461,6 @@ MCD_Subloc_12CB8:
 ; ---------------------------------------------------------------------------
 
 MCD_Subloc_12CBE:
-		tst.b	stick_to_convex(a0)
-		bne.s	MCD_Subloc_12CB8
 		bset	#1,obStatus(a0)
 		bclr	#5,obStatus(a0)
 		move.b	#1,obPrevAni(a0)
@@ -486,7 +509,16 @@ MCD_SubSonic_WalkVertL:
 ; ---------------------------------------------------------------------------
 
 MCD_Subloc_12D50:
-		cmpi.w	#$E,d1
+		tst.b	stick_to_convex(a0)
+		bne.s	MCD_Subloc_12D56
+		move.b	(MCD_SubMainFlags).w,d0	; signed integer Y speed
+		bpl.s	+
+		neg.b	d0
++		addq.b	#4,d0
+		cmpi.b	#$E,d0
+		blo.s	+
+		move.b	#$E,d0
++		cmp.b	d0,d1
 		bgt.s	MCD_Subloc_12D5C
 
 MCD_Subloc_12D56:
@@ -495,8 +527,6 @@ MCD_Subloc_12D56:
 ; ---------------------------------------------------------------------------
 
 MCD_Subloc_12D5C:
-		tst.b	stick_to_convex(a0)
-		bne.s	MCD_Subloc_12D56
 		bset	#1,obStatus(a0)
 		bclr	#5,obStatus(a0)
 		move.b	#1,obPrevAni(a0)

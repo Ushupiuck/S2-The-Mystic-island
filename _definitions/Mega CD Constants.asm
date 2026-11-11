@@ -44,7 +44,9 @@ MCD_ChunkTable_CurrentSize:	equ	$8000
 MCD_RingSlots:			equ	255
 
 ; Terrain service. Object commands carry an optional input angle in the high
-; byte. The six argument words are a compact sensor/object snapshot, never SSTs.
+; byte, except AnglePos: its high byte is signed integer X speed and MainFlags
+; carries signed integer Y speed. The six argument words remain a compact
+; sensor/object snapshot, never SSTs. Air collision supplies water-tunnel flags.
 MCD_CommandTerrainLoad:		equ	5
 MCD_CommandTerrainDraw:		equ	6
 MCD_CommandTerrainFloor:		equ	7
