@@ -346,7 +346,10 @@ MCD_PreparePLCBudget:
 		beq.s	.budget
 		cmpi.w	#Vint_SSResults,d0
 		bne.s	.return
-		bra.s	.budget
+	;	bra.s	.budget
+		move.b	d1,(MCD_PLCBudget).l
+		move.w	d2,(MCD_PLCTimeLimit).l
+		rts
 .small:
 		moveq	#MCD_PLCTilesLevel,d1
 		move.w	#MCD_PLCTicksLevel,d2
