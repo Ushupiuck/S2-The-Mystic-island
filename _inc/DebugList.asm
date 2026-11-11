@@ -176,6 +176,11 @@ Debug_EHZ:	dc.w (Debug_EHZ_End-Debug_EHZ-2)/DebugEntry_size
 	dbug	Map_Obj2B,	Obj2B,	3,	0,	make_art_tile(ArtTile_Masher,0,0)
 	dbug	Map_Obj2B,	Obj2B,	4,	0,	make_art_tile(ArtTile_Masher,0,0)
 	dbug	Map_GiantRing,	GiantRing,	0,	0,	make_art_tile(ArtTile_Giant_Ring,1,0)
+	dbug	Map_Fireballs,	S1FireballSpawner,	$30,	0,	make_art_tile(ArtTile_Fireball,0,0)
+	dbug	Map_Fireballs,	S1FireballSpawner,	$34,	0,	make_art_tile(ArtTile_Fireball,0,0)
+	dbug	Map_Fireballs,	S1FireballSpawner,	$35,	0,	make_art_tile(ArtTile_Fireball,0,0)
+	dbug	Map_Fireballs,	S1FireballSpawner,	$36,	3,	make_art_tile(ArtTile_Fireball,0,0)
+	dbug	Map_Fireballs,	S1FireballSpawner,	$37,	3,	make_art_tile(ArtTile_Fireball,0,0)
 Debug_EHZ_End:
 
 Debug_HTZ:	dc.w (Debug_HTZ_End-Debug_HTZ-2)/DebugEntry_size
@@ -199,6 +204,11 @@ Debug_HTZ:	dc.w (Debug_HTZ_End-Debug_HTZ-2)/DebugEntry_size
 	dbug	Map_Obj16,	Obj1C,	4,	1,	make_art_tile(ArtTile_HtzZipline,2,0)
 	dbug	Map_Obj16,	Obj1C,	5,	2,	make_art_tile(ArtTile_HtzZipline,2,0)
 	dbug	Map_GiantRing,	GiantRing,	0,	0,	make_art_tile(ArtTile_Giant_Ring,1,0)
+	dbug	Map_Fireballs,	S1FireballSpawner,	$30,	0,	make_art_tile(ArtTile_Fireball,0,0)
+	dbug	Map_Fireballs,	S1FireballSpawner,	$34,	0,	make_art_tile(ArtTile_Fireball,0,0)
+	dbug	Map_Fireballs,	S1FireballSpawner,	$35,	0,	make_art_tile(ArtTile_Fireball,0,0)
+	dbug	Map_Fireballs,	S1FireballSpawner,	$36,	3,	make_art_tile(ArtTile_Fireball,0,0)
+	dbug	Map_Fireballs,	S1FireballSpawner,	$37,	3,	make_art_tile(ArtTile_Fireball,0,0)
 Debug_HTZ_End:
 
 Debug_HPZ:	dc.w (Debug_HPZ_End-Debug_HPZ-2)/DebugEntry_size

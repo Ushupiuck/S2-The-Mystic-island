@@ -1092,3 +1092,30 @@ run continuously; normal emitters count down to 127 bursts, or end with the wall
 sooner. The wall deletes itself and its emitters stop; already spawned visuals
 finish independently. The DEZ ending transition is left to the invoking level.
 Art requirements are in [Sprites and VRAM](Sprites-and-VRAM.md#boss-explosions).
+
+## Sonic 1 fireballs
+
+`objects/14 S1 Fireballs.asm` ports the FixBugs path of s1disasm `2c51d46a`'s
+objects 13/14. Mystic Island placement `$14` creates an invisible spawner;
+projectiles use the full `S1Fireball` code pointer and have no placement handle.
+The spawner retains its complete subtype word and passes it to each child.
+The low nibble selects four arcs (`0-3`, initial Y speed `-$400` through `-$700`),
+straight up/down (`4/5`, speed `$200`), left/right (`6/7`, speed `$200`), or
+stationary (`8`). The high nibble selects 30, 60, 90, 120, 150 or 180 updates.
+Unsupported launch/interval nibbles clamp to 8/5; higher word bits are reserved.
+Placement flips do not override the selected trajectory.
+
+The spawner advances its timer offscreen, but fires only while its origin is
+visible. A full object pool drops that shot and retries on the next interval.
+Arcs add `$18` gravity each update and expire after returning below their
+starting Y. Straight shots use the live CD terrain floor, ceiling and wall
+probes, stop on impact, show the corresponding impact pose and then delete.
+The original animation flips, harmful 8px contact radii and launch sound remain.
+`S1Fireball_FromBoss` is an optional projectile flag selecting the original
+lower sprite-queue tier; no boss currently sets it.
+
+EHZ and HTZ share five Debug presets: `$30` (arc), `$34` (up), `$35` (down),
+`$36` (left), `$37` (right), each firing every 120 updates. All four acts already
+load the shared fireball art; there are no new layout placements. Their SonLVL
+pickers expose the launch type and interval, with orientation-specific previews.
+The [fire art guide](Sprites-and-VRAM.md#fire-art) owns the palette and bank.

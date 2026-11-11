@@ -7230,7 +7230,7 @@ ptr_Obj10:		dc.l ObjNull
 ptr_Obj11:		dc.l ObjNull
 ptr_Obj12:		dc.l Obj12		; A ring
 ptr_Obj13:		dc.l Obj13		; Scattering rings (generated when Sonic or Tails are hurt and has rings)
-ptr_Obj14:		dc.l ObjNull
+ptr_Obj14:		dc.l S1FireballSpawner	; Sonic 1 fireball spawner
 ptr_Obj15:		dc.l ObjNull
 ptr_Obj16:		dc.l Obj16		; Diagonally moving lift from HTZ
 ptr_Obj17:		dc.l SwingingPtfm	; Swinging platforms in GHZ, CPZ and EHZ
@@ -13435,6 +13435,8 @@ Kospm_BallhogH:	binclude	"art/moduled kosinski/Enemy Ballhog (Horizontal).kospm"
 Kospm_Chopper:	binclude	"art/moduled kosinski/Enemy Chopper.kospm"
 		even
 ; Shared fire art follows the final audio bank, avoiding bank-alignment padding.
+		include	"objects/14 S1 Fireballs.asm"
+
 Kospm_Fireballs:	binclude	"art/moduled kosinski/Fireballs.kospm"
 			even
 		include "mappings/sprite/Fireballs.asm"

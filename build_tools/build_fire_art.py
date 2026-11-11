@@ -50,10 +50,12 @@ def distances(pixels, inside):
 	return distance
 
 
-def shade_s1(pixels):
+def shade_s1(pixels, rim=(13,13,2,3), shadows=(14,14,15)):
 	# LRZ's flame/Fireworm reference uses a white core, yellow/orange rim and
 	# red edge. Our player line provides four warm slots in place of its yellow.
 	# Keep S1's masks and shadow regions; expand the interior's flat fills.
+	# Keep broad bright-red tongues and medium-red shadows. Reserve the
+	# darkest red for internal folds; the pipe uses a wider body rim.
 	edge = distances(pixels, bool)
 	core = distances(pixels, lambda c:c in (6,15))
 	result = [row[:] for row in pixels]
@@ -61,9 +63,9 @@ def shade_s1(pixels):
 		for x,color in enumerate(row):
 			assert color in (0,6,12,13,14,15), color
 			if color == 12:
-				result[y][x] = (13,2,3)[min(edge[y][x],3)-1]
+				result[y][x] = rim[min(edge[y][x],len(rim))-1]
 			elif color in (13,14):
-				result[y][x] = (15,14,13)[min(edge[y][x],3)-1]
+				result[y][x] = shadows[min(edge[y][x],len(shadows))-1]
 			elif color == 15:
 				result[y][x] = (4,5,6)[min(core[y][x],3)-1]
 	return result
@@ -77,7 +79,8 @@ def import_s1(source):
 		store_rectangle(balls,first,shade_s1(rectangle(balls,first,w,h)))
 	for _,_,first,w,h in PIPE_RECTS:
 		if first<20:
-			store_rectangle(pipe,first,shade_s1(rectangle(pipe,first,w,h)))
+			store_rectangle(pipe,first,shade_s1(rectangle(pipe,first,w,h),
+				rim=(13,13,13,2,3),shadows=(14,14,15)))
 	(ROOT/'art/uncompressed/Fireballs.unc').write_bytes(balls)
 	(ROOT/'art/uncompressed/SBZ Flaming Pipe.unc').write_bytes(pipe)
 
