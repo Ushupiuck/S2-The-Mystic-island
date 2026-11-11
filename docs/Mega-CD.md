@@ -134,6 +134,12 @@ Its command argument supplies the signed foreground top boundary. The CD
 level-load setup folds foreground row offsets for wrapping acts, shared by
 collision and drawing; see the [camera-seam rules](Levels.md#foreground-vertical-placement).
 Sensor calls need no extra mask or branch.
+Ground-attachment requests keep the twelve-byte object snapshot. For that command
+only, the command high byte carries signed integer X speed and the MD communication
+flag byte carries signed integer Y speed. CD uses the tangential component to limit
+contact reach. Other sensor commands retain their input-angle high byte; airborne
+collision writes its wind-tunnel flag before each request. These operation-specific
+fields do not extend into the mailbox token or require a PRG-RAM transfer.
 The rotating S1 stage retains its separate MD renderer and staging/PRG overlays.
 
 After scrolling, CD constructs changed tile strips while MD renders sprites

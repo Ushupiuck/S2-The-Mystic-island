@@ -20,6 +20,121 @@ from check_object_course import boot_level
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def ground_attachment(args):
+	"""Probe real planes across the S2/S3&K speed-dependent reach boundary."""
+	from native_test_core import Native, UC_M68K_REG_D1, UC_M68K_REG_D7
+	from level_layout import encode
+	n = Native(args.rom, args.listing)
+	n.start()
+	n.resident_terrain = True
+	n.sub.mem_write(n.s['MCD_TerrainLayout_Sub'], encode([[1]*8 for _ in range(8)], [[0]]))
+	n.cpu.mem_write(0x3E0000, bytes([255])*n.s['MCD_TerrainIndexCapacity'])
+	n.write('v_colladdr1', 0x3E0000, 4)
+	n.write('v_colladdr2', 0x3E0001, 4)
+	speeds = ((0, 0), (0, 0x900), (0x900, 0), (-0x80, 0x880),
+		(0x80, -0x880), (-0x280, 0x380), (0xA00, -0xA00), (0x7F00, -0x8000))
+	count = 0
+	for quadrant in range(4):
+		# Four rotations of a plane through the middle of chunk 1. The generic
+		# full-solid profile retains the actor's current cardinal orientation.
+		cells = [0xF001 if ((quadrant == 0 and y >= 4) or
+			(quadrant == 1 and x < 4) or (quadrant == 2 and y < 4) or
+			(quadrant == 3 and x >= 4)) else 0 for y in range(8) for x in range(8)]
+		n.sub.mem_write(n.s['MCD_ChunkTable_SubStart']+128, struct.pack('>64H', *cells))
+		for actor, radius in (('v_player', 19), ('v_player2', 15)):
+			for path in (12, 14):
+				for stick in (0, 1):
+					for vx, vy in speeds:
+						for gap in (-15, -14, -1, 0, *range(1, 17)):
+							x, y = 560, 560
+							if quadrant == 0:
+								y = 576-radius-1-gap
+							elif quadrant == 1:
+								x = 576+radius+gap
+							elif quadrant == 2:
+								y = 576+radius+gap
+							else:
+								x = 576-radius-1-gap
+							for field, value, size in (('obX', x, 2), ('obY', y, 2),
+								('obHeight', radius, 1), ('obWidth', 9, 1),
+								('obAngle', quadrant*64, 1), ('obStatus', 33, 1),
+								('obPrevAni', 0xA5, 1), ('obTopSolidBit', path, 1),
+								('obLRBSolidBit', path+1, 1), ('obVelX', vx, 2),
+								('obVelY', vy, 2), ('stick_to_convex', stick, 1)):
+								n.put(actor, field, value, size)
+							n.write('MCD_MainToken', 0x1357, 2)
+							n.act('AnglePos', actor, {UC_M68K_REG_D7: 0x24681357})
+							limit = min(14, 4+abs((vx if quadrant % 2 == 0 else vy) >> 8))
+							leave = gap > limit and not stick
+							shift = gap if not leave and gap >= -14 else 0
+							expected = (x+(0, -shift, 0, shift)[quadrant],
+								y+(shift, 0, -shift, 0)[quadrant], 3 if leave else 33,
+								1 if leave else 0xA5)
+							actual = tuple(n.get(actor, f, z) for f, z in
+								(('obX', 2), ('obY', 2), ('obStatus', 1), ('obPrevAni', 1)))
+							assert actual == expected, (quadrant, actor, path, stick, vx, vy, gap, actual, expected)
+							assert n.cpu.reg_read(UC_M68K_REG_D1) & 65535 == gap & 65535
+							assert n.cpu.reg_read(UC_M68K_REG_D7) == 0x24681357
+							assert n.read('MCD_MainToken', 2) == 0x1357, 'Ground snapshot overwrote the token'
+							assert (n.get(actor, 'obVelX', 2), n.get(actor, 'obVelY', 2)) == (vx & 65535, vy & 65535)
+							count += 1
+	print(f'{count} ground-attachment boundaries: both actors/paths, four orientations, signed speeds and disc override.', flush=True)
+	return count
+
+
+def hpz_ledge(g, output):
+	"""Reproduce the steep HPZ cliff with manual input, including the uphill turn."""
+	from check_companion_followup import isolate, place, reset_cpu
+	g.buttons = g.buttons2 = set()
+	g.write('v_gamemode', g.s['SegaScreen'], 2)
+	g.run()
+	boot_level(g, zone=4, act=0, player=0)
+	level = g.save()
+	results = []
+	for actor in ('v_player', 'v_player2'):
+		g.restore(level)
+		isolate(g)
+		reset_cpu(g)
+		for who in ('v_player', 'v_player2'):
+			height = g.get(who, 'default_y_radius')
+			place(g, who, 3066 if who == actor else 3096, 767-height, False)
+			g.put(who, 'obControl', 0x81)
+			g.put(who, 'invtime', 6000, 2)
+			g.put(who, 'obStatusSecondary', 2)
+		g.write('Camera_X_pos', 2936, 2)
+		g.write('Camera_X_pos_coarse_back', (2936-128) & 0xFF80, 2)
+		g.write('Camera_Y_pos', 640, 2)
+		g.write('Screen_redraw_flag', 1)
+		g.run(20)
+		g.put(actor, 'obControl', 0)
+		top = g.get(actor, 'obY', 2)
+		trace = []
+		for tick in range(240):
+			buttons = {6} if tick < 30 else {7}
+			if actor == 'v_player2':
+				g.buttons2 = buttons
+			else:
+				g.buttons = buttons
+			g.run()
+			row = {f: g.get(actor, f, size) for f, size in (('obX', 2),
+				('obY', 2), ('obAngle', 1), ('obStatus', 1), ('obVelX', 2), ('obVelY', 2))}
+			trace.append(row)
+			assert not g.read('v_errortype'), (actor, tick, 'ROM exception')
+			if tick in (20, 160):
+				g.video.save(output/f'hpz-{actor}-{tick}.png')
+		first_air = next((i for i, row in enumerate(trace) if row['obStatus'] & 2), None)
+		assert first_air is not None and trace[first_air]['obY'] <= top+4, (actor, 'Walked down the cliff', trace[:32])
+		assert min(row['obX'] for row in trace[:100]) < 3000, (actor, 'Did not fall onto the lower slope')
+		assert any(not row['obStatus'] & 2 and 0xC0 < row['obAngle'] < 0xFF
+			for row in trace[30:]), (actor, 'Lost the slope angle after landing')
+		assert not any(row['obStatus'] & 32 for row in trace[30:]), (actor, 'False wall push on the uphill turn')
+		(output/f'hpz-{actor}.json').write_text(json.dumps(trace, indent=2)+'\n')
+		results.append(dict(actor=actor, first_air=first_air, frames=len(trace), false_pushes=0))
+		g.buttons = g.buttons2 = set()
+	print('HPZ cliff: Sonic and controller-2 Tails leave the ledge, acquire slope angles and turn uphill without false pushing.', flush=True)
+	return results
+
+
 def main():
 	p = argparse.ArgumentParser(description=__doc__)
 	for n in ('core', 'output'):
@@ -32,6 +147,7 @@ def main():
 	p.add_argument('--pal', action='store_true')
 	p.add_argument('--zone', type=int, default=0)
 	args = p.parse_args()
+	ground_cases = 0 if args.baseline else ground_attachment(args)
 	g = Genesis(args.core, args.rom, args.listing, args.output, args.pal,
 				system_directory=args.system_directory)
 	boot_level(g, zone=args.zone)
@@ -199,13 +315,15 @@ def main():
 		gameplay.append([g.get('v_player', 'obX', 2), g.get('v_player', 'obY', 2),
 							hashlib.sha256(bytes(g.vram[0xC000:0xD000]) + bytes(g.vram[0xE000:0xF000])).hexdigest()])
 	g.video.save(args.output / 'gameplay.png')
+	hpz = hpz_ledge(g, args.output) if args.zone == 4 and not args.baseline else []
 	g.close()
 	if args.reference:
 		assert reference['walking'] == walking, next(
 			(i, a, b) for i, (a, b) in enumerate(zip(reference['walking'], walking)) if a != b)
 	report = dict(cases=cases, planes=planes, walking=walking, gameplay=gameplay, md_cpu_cycles=costs,
 					pal=args.pal, zone=args.zone, baseline=args.baseline,
-					rom_sha256=hashlib.sha256(args.rom.read_bytes()).hexdigest())
+					rom_sha256=hashlib.sha256(args.rom.read_bytes()).hexdigest(),
+					ground_attachment_cases=ground_cases, hpz_ledge=hpz)
 	(args.output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
 	print('600 controller-driven frames preserve the complete free MD RAM block.', flush=True)
 

@@ -350,6 +350,15 @@ mailbox waits; full frames also check jumping and free-RAM canaries without
 requiring random/NPC phases to match. Prepared art DMA drains through VBlank
 before a plane probe takes Word RAM.
 
+Current-ROM runs also execute 5,120 native ground-attachment boundaries: both
+actors/radii and collision paths, all four surface orientations, signed X/Y
+speeds, penetration limits, exact attachment thresholds and the running-disc
+override. `--zone 4` adds the HPZ1 cliff at `$C00,$300`: Sonic and manually
+controlled sidekick Tails walk left off its edge, fall onto the lower slope and
+turn right for 240 frames each. The check rejects stepping down with a flat angle,
+missing landing angles and false uphill pushing. Run with and without `--pal`;
+the fixture stages initial positions, then uses ordinary controller input.
+
 Ring-job tests cover sparse/all-active timers, staggered collection, bank pauses,
 reset and guards in HPZ/SMZ with both player modes. Their `--baseline` is a boolean
 recording mode, not a path. Use the current word-ID plane audit for exhaustive
