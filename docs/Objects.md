@@ -80,6 +80,33 @@ multiplication. Existing Sonic/Tails tumble art handles the poses. Jump/edge
 release and the upper-entry cooldown follow FBZ; this is the horizontal wire
 cage, not its separate stationary/vertical variants.
 
+## Automatic transport paths
+
+`_inc/Automatic Paths.asm` now owns the live `AutoTunnel_GetPath` and
+`AutoTunnel_CalcSpeed` helpers, adapted from the reserved S3&K routines.
+`objects/Scrap Madness/AB Teleporter.asm` uses them for all eight SMZ2 routes.
+The constructor installs `SMZ_Teleport_Main` directly, removing its per-update
+initialization branch. The object retains its two independent ten-byte rider
+packets, entry bounce,
+50-ring gate, waypoint snapping, wrapped exit and cancellation when an actor
+is dying. Metropolis's Sonic 2 object `$67` and S3&K's auto tunnels use the same
+family of path calculations; MMZ's route/entry variants are still pending.
+
+The caller supplies actor `a1`, rider packet `a3` and positive 8.8 major speed
+`d2`; `AutoTunnel_GetPath` additionally loads a signed X/Y word pair from `a2`.
+Shared packet offsets are timer `$02`, target X `$04` and target Y `$06`.
+The timer remains 8.8, with its signed integer byte ticked by the object, so
+individual legs must fit fewer than 128 ticks. A duplicate target yields zero
+velocity/time rather than dividing by zero. Movement, release and locks remain
+the caller's responsibility. At the normal `$1000` speed, a shift replaces the
+first division; straight legs need no division. Other positive speeds retain
+the generic calculation, including its fractional-timer rounding.
+
+The unused stock S3&K route table is removed. Its absolute LBZ/LRZ positions
+were invalid for this project's levels. SMZ's authored `SMZ_PipeData` remains
+the directly editable route source; other reserved helpers remain available
+until a caller needs them. Newly ported levels must supply their own routes.
+
 ## SST and dispatch
 
 Each object status table (SST) is `$4E` bytes. The pool contains 23 reserved and

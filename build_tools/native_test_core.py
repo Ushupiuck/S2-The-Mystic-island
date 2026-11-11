@@ -68,7 +68,8 @@ class Native:
 				('Ring', ('Ring_Animate', 'Ring_Collect', 'Ring_Sparkle')),
 				('LostRings', ('LostRing_Move', 'LostRing_Collect')),
 				('TwistingPathway', ('TwistingPathway_Main', 'TwistingPathway_Cage')),
-				('SMZ_SpinConvey', ('SMZ_SpinC_Move',))):
+				('SMZ_SpinConvey', ('SMZ_SpinC_Move',)),
+				('SMZ_Teleport', ('SMZ_Teleport_Main',))):
 			if constructor in self.s:
 				for label in states:
 					if label in self.s:
