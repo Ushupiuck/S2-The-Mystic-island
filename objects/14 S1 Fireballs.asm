@@ -1,16 +1,31 @@
-; MD main CPU. From s1disasm 2c51d46, objects 13/14 (FixBugs path).
-; Placement $14 is the invisible spawner; children use full code pointers.
-; Subtype: low nibble 0-3 arcs (-$400..-$700), 4 up, 5 down, 6 left,
-; 7 right, 8 stationary. High nibble 0-5 selects 30..180-update intervals.
-; Reserved word bits survive initialization/child creation; invalid nibbles
-; clamp to the last table entry. Placement flips do not change launch type.
-S1Fireball_Interval:	equ objoff_2E	; spawner: byte
-S1Fireball_Timer:	equ objoff_2F	; spawner: byte
-S1Fireball_Type:		equ objoff_2E	; projectile: byte, 0-8
+; MD main CPU. S1 fireballs: s1disasm 2c51d46; maker flow: skdisasm 73de97c6
+; Obj_LRZFireballLauncher. $14 is the maker; $15 is one projectile.
+; Word settings: bits 0-1 arc strength, 2 straight flight, 3 horizontal straight
+; flight, 4-7 maker interval (30..180, clamped); upper bits are preserved.
+; Placement X flip selects left; Y flip selects down, including mirrored arcs.
+S1Fireball_Interval:	equ objoff_2E	; maker: byte
+S1Fireball_Timer:	equ objoff_2F	; maker: byte
 S1Fireball_OriginY:	equ objoff_30	; projectile: word
-S1Fireball_FromBoss:	equ objoff_32	; projectile: byte, optional lower drawing tier
+S1Fireball_FromBoss:	equ objoff_32	; projectile: optional lower drawing tier
 
 S1FireballSpawner:
+		move.l	#Map_FireballMaker,obMap(a0)
+		move.w	#make_art_tile(ArtTile_FireballMaker,0,0),obGfx(a0)
+		move.b	obStatus(a0),d0
+		andi.b	#3,d0
+		ori.b	#4,d0
+		move.b	d0,obRender(a0)
+		move.b	#Map_FireballMaker_height,height_pixels(a0)
+		move.b	#Map_FireballMaker_width,width_pixels(a0)
+		move.w	#$100,obPriority(a0)
+		moveq	#1,d0		; vertical, including arcing shots
+		move.w	obSubtype(a0),d1
+		andi.w	#$C,d1
+		cmpi.w	#$C,d1
+		bne.s	.frame_ready
+		moveq	#0,d0		; horizontal straight shot
+.frame_ready:
+		move.b	d0,obFrame(a0)
 		move.w	obSubtype(a0),d0
 		lsr.w	#4,d0
 		andi.w	#$F,d0
@@ -18,8 +33,10 @@ S1FireballSpawner:
 		bls.s	.rate_ready
 		moveq	#5,d0
 .rate_ready:
-		move.b	S1Fireball_Rates(pc,d0.w),S1Fireball_Interval(a0)
-		move.b	S1Fireball_Interval(a0),S1Fireball_Timer(a0)
+		lea	S1Fireball_Rates(pc),a1
+		move.b	(a1,d0.w),d0
+		move.b	d0,S1Fireball_Interval(a0)
+		move.b	d0,S1Fireball_Timer(a0)
 		move.l	#S1FireballSpawner_Wait,code(a0)
 S1FireballSpawner_Wait:
 		subq.b	#1,S1Fireball_Timer(a0)
@@ -27,31 +44,40 @@ S1FireballSpawner_Wait:
 		move.b	S1Fireball_Interval(a0),S1Fireball_Timer(a0)
 		jsr	(ChkObjectVisible).l
 		bne.s	.return
-		jsr	(FindFreeObj).l
+		jsr	(AllocateObjectAfterCurrent).l
+		beq.s	.allocated
+		jsr	(FindFreeObj).l		; retain earlier free slots at the end of the pool
 		bne.s	.return
+.allocated:
 		move.l	#S1Fireball,code(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.w	obSubtype(a0),obSubtype(a1)
+		move.b	obStatus(a0),obStatus(a1)
+		andi.b	#3,obStatus(a1)		; placement direction, not maker state
+		moveq	#16,d0			; muzzle edge plus projectile collision radius
+		tst.b	obFrame(a0)
+		bne.s	.vertical
+		btst	#0,obStatus(a0)
+		beq.s	.horizontal_offset
+		neg.w	d0
+.horizontal_offset:
+		add.w	d0,obX(a1)
+		bra.s	.return
+.vertical:
+		btst	#1,obStatus(a0)
+		bne.s	.vertical_offset
+		neg.w	d0
+.vertical_offset:
+		add.w	d0,obY(a1)
 .return:
-		jmp	(MarkObjGone2).l	; invisible; unload releases its placement handle
+		jmp	(MarkObjGone).l		; draw the housing and release unloaded placements
 
 S1Fireball_Rates:
 		dc.b 30,60,90,120,150,180
 		even
 
 S1Fireball:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	S1Fireball_Index(pc,d0.w),d1
-		jmp	S1Fireball_Index(pc,d1.w)
-S1Fireball_Index:
-		dc.w S1Fireball_Init-S1Fireball_Index
-		dc.w S1Fireball_Move-S1Fireball_Index
-		dc.w S1Fireball_Delete-S1Fireball_Index
-
-S1Fireball_Init:
-		addq.b	#2,obRoutine(a0)
 		move.b	#8,obHeight(a0)
 		move.b	#8,obWidth(a0)
 		move.l	#Map_Fireballs,obMap(a0)
@@ -60,98 +86,115 @@ S1Fireball_Init:
 		move.w	#make_art_tile(ArtTile_Fireball,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.w	#$180,obPriority(a0)
-		move.b	#$8B,obColType(a0)	; S1's 8px collision radii, harmful to either player
+		move.b	#$8B,obColType(a0)
 		move.w	obY(a0),S1Fireball_OriginY(a0)
 		tst.b	S1Fireball_FromBoss(a0)
-		beq.s	.type
+		beq.s	.motion
 		addi.w	#$100,obPriority(a0)
-.type:
+.motion:
 		move.w	obSubtype(a0),d0
-		andi.w	#$F,d0
-		cmpi.w	#8,d0
-		bls.s	.type_ready
-		moveq	#8,d0
-.type_ready:
-		move.b	d0,S1Fireball_Type(a0)
-		add.w	d0,d0
-		move.w	S1Fireball_Speeds(pc,d0.w),obVelY(a0)
-		cmpi.w	#6*2,d0
-		blo.s	.sound
+		btst	#2,d0
+		bne.s	.straight
+		andi.w	#3,d0
+		lsl.w	#8,d0
+		addi.w	#$400,d0
+		neg.w	d0
+		move.l	#S1Fireball_Arc,code(a0)
+		btst	#1,obStatus(a0)
+		beq.s	.arc_ready
+		neg.w	d0
+		move.l	#S1Fireball_ArcDown,code(a0)
+.arc_ready:
+		move.w	d0,obVelY(a0)
+		bra.s	.begin
+.straight:
+		btst	#3,d0
+		bne.s	.horizontal
+		move.w	#-$200,obVelY(a0)
+		move.l	#S1Fireball_Up,code(a0)
+		btst	#1,obStatus(a0)
+		bne.s	.down
+		bset	#1,obStatus(a0)		; the vertical mapping's default points down
+		bra.s	.begin
+.down:
+		neg.w	obVelY(a0)
+		bclr	#1,obStatus(a0)
+		move.l	#S1Fireball_Down,code(a0)
+		bra.s	.begin
+.horizontal:
 		move.b	#2,obAnim(a0)
-		move.w	obVelY(a0),obVelX(a0)
-		clr.w	obVelY(a0)
-.sound:
+		move.w	#$200,obVelX(a0)
+		move.l	#S1Fireball_Right,code(a0)
+		btst	#0,obStatus(a0)
+		beq.s	.begin
+		neg.w	obVelX(a0)
+		move.l	#S1Fireball_Left,code(a0)
+.begin:
 		move.w	#sfx_Fireball,d0
 		jsr	(PlaySound_Special).l
-S1Fireball_Move:
-		moveq	#0,d0
-		move.b	S1Fireball_Type(a0),d0
-		add.w	d0,d0
-		move.w	S1Fireball_Types(pc,d0.w),d1
-		jsr	S1Fireball_Types(pc,d1.w)
-		jsr	(ObjectMove).l
-		lea	(Ani_S1Fireball).l,a1
-		jsr	(AnimateSprite).l
-		out_of_range.w	S1Fireball_Delete
-		jmp	(DisplaySprite).l
-
-S1Fireball_Speeds:
-		dc.w -$400,-$500,-$600,-$700,-$200,$200,-$200,$200,0
-S1Fireball_Types:
-		dc.w S1Fireball_Arc-S1Fireball_Types,S1Fireball_Arc-S1Fireball_Types
-		dc.w S1Fireball_Arc-S1Fireball_Types,S1Fireball_Arc-S1Fireball_Types
-		dc.w S1Fireball_Up-S1Fireball_Types,S1Fireball_Down-S1Fireball_Types
-		dc.w S1Fireball_Left-S1Fireball_Types,S1Fireball_Right-S1Fireball_Types
-		dc.w S1Fireball_Still-S1Fireball_Types
+		movea.l	code(a0),a1
+		jmp	(a1)
 
 S1Fireball_Arc:
 		addi.w	#$18,obVelY(a0)
 		move.w	S1Fireball_OriginY(a0),d0
 		cmp.w	obY(a0),d0
-		bhs.s	.facing
-		addq.b	#2,obRoutine(a0)
-.facing:
+		bhs.s	S1Fireball_ArcFacing
+		bra.s	S1Fireball_ArcExpired
+S1Fireball_ArcDown:
+		subi.w	#$18,obVelY(a0)
+		move.w	S1Fireball_OriginY(a0),d0
+		cmp.w	obY(a0),d0
+		bls.s	S1Fireball_ArcFacing
+S1Fireball_ArcExpired:
+		move.l	#S1Fireball_Delete,code(a0)
+S1Fireball_ArcFacing:
 		bclr	#1,obStatus(a0)
 		tst.w	obVelY(a0)
-		bpl.s	S1Fireball_Still
+		bpl.s	S1Fireball_Animate
 		bset	#1,obStatus(a0)
-S1Fireball_Still:
-		rts
+		bra.s	S1Fireball_Animate
 
 S1Fireball_Up:
-		bset	#1,obStatus(a0)
 		jsr	(ObjHitCeiling).l
 		bra.s	S1Fireball_VerticalImpact
 S1Fireball_Down:
-		bclr	#1,obStatus(a0)
 		jsr	(ObjHitFloor).l
 S1Fireball_VerticalImpact:
 		tst.w	d1
-		bpl.s	S1Fireball_Still
-		move.b	#8,S1Fireball_Type(a0)
+		bpl.s	S1Fireball_Animate
 		move.b	#1,obAnim(a0)
 		clr.w	obVelY(a0)
-		rts
+		bra.s	S1Fireball_StartImpact
 
 S1Fireball_Left:
-		bset	#0,obStatus(a0)
 		moveq	#-8,d3
 		jsr	(ObjHitWallLeft).l
 		bra.s	S1Fireball_HorizontalImpact
 S1Fireball_Right:
-		bclr	#0,obStatus(a0)
 		moveq	#8,d3
 		jsr	(ObjHitWallRight).l
 S1Fireball_HorizontalImpact:
 		tst.w	d1
-		bpl.s	S1Fireball_Still
-		move.b	#8,S1Fireball_Type(a0)
+		bpl.s	S1Fireball_Animate
 		move.b	#3,obAnim(a0)
 		clr.w	obVelX(a0)
-		rts
-
+S1Fireball_StartImpact:
+		move.l	#S1Fireball_Impact,code(a0)
+		bra.s	S1Fireball_Draw
+S1Fireball_Impact:
+		tst.b	obRoutine(a0)		; animation's afRoutine signals completion
+		bne.s	S1Fireball_Delete
+		bra.s	S1Fireball_Draw		; stopped impact frames need no movement
+S1Fireball_Animate:
+		jsr	(ObjectMove).l
+S1Fireball_Draw:
+		lea	(Ani_S1Fireball).l,a1
+		jsr	(AnimateSprite).l
+		out_of_range.w	S1Fireball_Delete
+		jmp	(DisplaySprite).l
 S1Fireball_Delete:
-		jmp	(DeleteObject).l
+		jmp	(UnloadObject).l		; emitted children have handle zero
 
 Ani_S1Fireball:
 		dc.w Ani_S1Fireball_Vertical-Ani_S1Fireball,Ani_S1Fireball_VerticalImpact-Ani_S1Fireball

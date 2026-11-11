@@ -7179,7 +7179,7 @@ ptr_Obj11:		dc.l ObjNull
 ptr_Obj12:		dc.l Obj12		; A ring
 ptr_Obj13:		dc.l Obj13		; Scattering rings (generated when Sonic or Tails are hurt and has rings)
 ptr_Obj14:		dc.l S1FireballSpawner	; Sonic 1 fireball spawner
-ptr_Obj15:		dc.l ObjNull
+ptr_Obj15:		dc.l S1Fireball	; standalone Sonic 1 fireball
 ptr_Obj16:		dc.l Obj16		; Diagonally moving lift from HTZ
 ptr_Obj17:		dc.l SwingingPtfm	; Swinging platforms in GHZ, CPZ and EHZ
 ptr_Obj18:		dc.l Obj18		; Stationary/moving platforms from GHZ and EHZ
@@ -13407,6 +13407,10 @@ Kospm_Chopper:	binclude	"art/moduled kosinski/Enemy Chopper.kospm"
 Kospm_Fireballs:	binclude	"art/moduled kosinski/Fireballs.kospm"
 			even
 		include "mappings/sprite/Fireballs.asm"
+Kospm_FireballMaker:	binclude "art/moduled kosinski/Fireball maker.kospm"
+			even
+Map_FireballMaker:	binclude "mappings/sprite/Fireball maker.bin"
+			even
 Kospm_Motobug:	binclude	"art/moduled kosinski/Enemy Motobug.kospm"
 		even
 Kospm_Crabmeat:	binclude	"art/moduled kosinski/Enemy Crabmeat.kospm"

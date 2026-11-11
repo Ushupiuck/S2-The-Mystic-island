@@ -7,6 +7,7 @@ preserves those sheets, the SMZ mapping layout and all unrelated atlas tiles.
 from pathlib import Path
 from collections import deque
 import argparse
+import struct
 from build_end_art import pack_moduled
 from check_sprite_assets import frames
 from import_ehz2_pp_background import nemesis
@@ -50,12 +51,13 @@ def distances(pixels, inside):
 	return distance
 
 
-def shade_s1(pixels, rim=(13,13,2,3), shadows=(14,14,15)):
+def shade_s1(pixels, rim=(13,13,2,3), shadows=(15,14,13,2,3,4,5)):
 	# LRZ's flame/Fireworm reference uses a white core, yellow/orange rim and
 	# red edge. Our player line provides four warm slots in place of its yellow.
 	# Keep S1's masks and shadow regions; expand the interior's flat fills.
 	# Keep broad bright-red tongues and medium-red shadows. Reserve the
-	# darkest red for internal folds; the pipe uses a wider body rim.
+	# darkest reds at the silhouette; deepen the warm ramp toward the core.
+	# Original shadow pixels inside the flame must not become cold specks.
 	edge = distances(pixels, bool)
 	core = distances(pixels, lambda c:c in (6,15))
 	result = [row[:] for row in pixels]
@@ -80,12 +82,46 @@ def import_s1(source):
 	for _,_,first,w,h in PIPE_RECTS:
 		if first<20:
 			store_rectangle(pipe,first,shade_s1(rectangle(pipe,first,w,h),
-				rim=(13,13,13,2,3),shadows=(14,14,15)))
+				rim=(13,13,13,2,3),shadows=(15,14,13,2,3,4,5)))
+	# SLZ's launcher originally faces left. Keep an editable right-facing
+	# master; its green body uses the shared blue ramp, metal the gray ramp.
+	maker = bytearray(nemesis((source/'artnem/SLZ Cannon.nem').read_bytes()))
+	assert len(maker)==8*32
+	lookup = (0,1,1,9,8,7,6,10,11,12,1,11,12,13,14,15)
+	pixels = [[lookup[c] for c in reversed(row)] for row in rectangle(maker,0,2,4)]
+	store_rectangle(maker,0,pixels)
+	(ROOT/'art/uncompressed/Fireball maker.unc').write_bytes(maker)
 	(ROOT/'art/uncompressed/Fireballs.unc').write_bytes(balls)
 	(ROOT/'art/uncompressed/SBZ Flaming Pipe.unc').write_bytes(pipe)
 
 
+def pack_maker():
+	master = (ROOT/'art/uncompressed/Fireball maker.unc').read_bytes()
+	assert len(master)==8*32
+	horizontal = rectangle(master,0,2,4)
+	vertical = [list(row) for row in zip(*horizontal)][::-1]
+	# Three pieces per orientation: reuse the mirrored corner instead of
+	# spending 16 VRAM tiles. The 14-tile bank exactly fits spikes..monitors.
+	assert [row[:8] for row in horizontal[24:]] == [row[:8] for row in horizontal[:8]][::-1]
+	assert [row[24:] for row in vertical[8:]] == [row[:8][::-1] for row in vertical[8:]]
+	raw = bytearray(14*32)
+	store_rectangle(raw,0,[row[:8] for row in horizontal[:24]])
+	store_rectangle(raw,3,[row[8:] for row in horizontal])
+	store_rectangle(raw,7,vertical[:8])
+	store_rectangle(raw,11,[row[:24] for row in vertical[8:]])
+	rows = [[(-16,2,0,-8),(8,0,0x1000,-8),(-16,3,3,0)],
+		[(-8,12,7,-16),(0,8,11,-16),(0,0,11|0x800,8)]]
+	mapping = bytearray(4)
+	for i,row in enumerate(rows):
+		struct.pack_into('>H',mapping,i*2,len(mapping))
+		mapping.extend(struct.pack('>H',len(row)))
+		for piece in row:mapping.extend(struct.pack('>bBHh',*piece))
+	(ROOT/'art/moduled kosinski/Fireball maker.kospm').write_bytes(pack_moduled(raw))
+	(ROOT/'mappings/sprite/Fireball maker.bin').write_bytes(mapping)
+
+
 def build():
+	pack_maker()
 	balls = (ROOT/'art/uncompressed/Fireballs.unc').read_bytes()
 	pipe = (ROOT/'art/uncompressed/SBZ Flaming Pipe.unc').read_bytes()
 	assert len(balls)==44*32 and len(pipe)==28*32
@@ -110,7 +146,7 @@ def build():
 	(ROOT/'art/nemesis/S1/SBZ Flaming Pipe.nem').write_bytes(nemesis_compress(pipe))
 	atlas_path.write_bytes(atlas)
 	(ROOT/'art/nemesis/SMZ Sprite Atlas.nem').write_bytes(nemesis_compress(atlas))
-	print(f'44 fireball tiles; {len(changed)} SMZ atlas tiles updated; mappings and hardware retained.')
+	print(f'44 fireball tiles; 14 launcher tiles; {len(changed)} SMZ atlas tiles updated; mappings and hardware retained.')
 
 
 def main():

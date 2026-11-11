@@ -1096,27 +1096,45 @@ Art requirements are in [Sprites and VRAM](Sprites-and-VRAM.md#boss-explosions).
 
 ## Sonic 1 fireballs
 
-`objects/14 S1 Fireballs.asm` ports the FixBugs path of s1disasm `2c51d46a`'s
-objects 13/14. Mystic Island placement `$14` creates an invisible spawner;
-projectiles use the full `S1Fireball` code pointer and have no placement handle.
-The spawner retains its complete subtype word and passes it to each child.
-The low nibble selects four arcs (`0-3`, initial Y speed `-$400` through `-$700`),
-straight up/down (`4/5`, speed `$200`), left/right (`6/7`, speed `$200`), or
-stationary (`8`). The high nibble selects 30, 60, 90, 120, 150 or 180 updates.
-Unsupported launch/interval nibbles clamp to 8/5; higher word bits are reserved.
-Placement flips do not override the selected trajectory.
+`objects/14 S1 Fireballs.asm` adapts s1disasm `2c51d46a`'s objects 13/14.
+Mystic Island placement `$14` is the visible Starlight maker; `$15` is an individual
+fireball. The maker creates the same `S1Fireball` projectile used by `$15`,
+passing its complete subtype word and X/Y placement flips. Shots start 16 pixels
+out from the maker center along its nozzle. Emitted children
+have no placement handle. Individual placements release theirs on deletion.
 
-The spawner advances its timer offscreen, but fires only while its origin is
-visible. A full object pool drops that shot and retries on the next interval.
-Arcs add `$18` gravity each update and expire after returning below their
-starting Y. Straight shots use the live CD terrain floor, ceiling and wall
-probes, stop on impact, show the corresponding impact pose and then delete.
-The original animation flips, harmful 8px contact radii and launch sound remain.
-`S1Fireball_FromBoss` is an optional projectile flag selecting the original
-lower sprite-queue tier; no boss currently sets it.
+| Subtype field | Meaning |
+| --- | --- |
+| Bits 0-1 | Arc strength: initial Y speed `-$400`, `-$500`, `-$600`, `-$700` |
+| Bit 2 | Straight flight: clear for an arc; set for flight until terrain impact |
+| Bit 3 | Straight-shot axis: clear vertical, set horizontal; ignored by arcs |
+| Bits 4-7 | Maker interval: 30, 60, 90, 120, 150, 180 updates; values above 5 clamp |
+| Bits 8-15 | Reserved, preserved by maker and projectile |
 
-EHZ and HTZ share five Debug presets: `$30` (arc), `$34` (up), `$35` (down),
-`$36` (left), `$37` (right), each firing every 120 updates. All four acts already
-load the shared fireball art; there are no new layout placements. Their SonLVL
-pickers expose the launch type and interval, with orientation-specific previews.
-The [fire art guide](Sprites-and-VRAM.md#fire-art) owns the palette and bank.
+Horizontal straight shots move right, or left with X flip. Vertical shots move up, or down with Y flip.
+Y flip also mirrors arc velocity, gravity and the return-to-origin deletion
+test. Straight speed is `$200`; direction is not
+a separate subtype. Arcs apply `$18` gravity toward their launch surface each update and expire after returning
+past their starting Y on the return leg. Their animation follows actual velocity.
+
+The maker follows skdisasm `73de97c6b55055bcb8089c1d55d006b02136f163`
+`Obj_LRZFireballLauncher`: a routine-pointer wait, visibility gate, mirrored muzzle
+offset and allocation after the current SST. An earlier-slot fallback preserves
+firing when only slots before the maker are free.
+
+The maker advances its timer offscreen, but fires only while its origin is
+visible. A full pool drops that shot and retries on the next interval. Straight
+shots use the live CD floor/ceiling/wall probes, stop on impact, show the impact
+pose and delete. Initialization installs the current routine directly in `code`;
+motion and
+impact states have no dispatch table. Only the impact animation uses `obRoutine`
+as its completion signal. Original harmful 8px contact radii and launch sound remain.
+`S1Fireball_FromBoss` optionally selects the original lower drawing tier; no
+boss currently sets it.
+
+EHZ/HTZ Debug lists offer six presets: makers `$30`/`$34`/`$3C` and individual
+fireballs `$00`/`$04`/`$0C` (arc/vertical/horizontal). Direction inherits the Debug
+cursor's placement flips. SonLVL exposes both objects, independent straight-flight
+and axis flags, arc strength and the maker interval. All four acts already load
+the shared art; no layout placements are added. See [fire art](Sprites-and-VRAM.md#fire-art)
+for its horizontal/rotated housing, palette and bank ownership.
