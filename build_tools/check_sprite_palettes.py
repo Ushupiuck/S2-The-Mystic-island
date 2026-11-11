@@ -70,7 +70,13 @@ def main():
 			assert y[2] == r[2] | (0x2000 if cap else 0), (fi,pi)
 			assert (r[2]&2047)+((r[1]>>2)+1)*((r[1]&3)+1) <= 46
 		if fi >= 7:
-			assert red[-1] == yellow[-1] == (-16 if fi == 10 else 0,5,42|(0x1000 if fi == 10 else 0),-16)
+			assert red[-1] == yellow[-1] == (-14 if fi == 10 else -2,5,42|(0x1000 if fi == 10 else 0),-18)
+	for family in springs:
+		mechanism,backing=family[7][-2:]
+		def axis_center(piece):
+			y,size,_,x=piece
+			return x+y+((size>>2)+1)*4+((size&3)+1)*4-1
+		assert axis_center(mechanism)==axis_center(backing),'Diagonal coil is off-center on its backing'
 	raw = (ROOT/'art/uncompressed/Springs.unc').read_bytes()
 	assert len(raw) == 46*32
 	assert nemesis((ROOT/'art/nemesis/Springs.nem').read_bytes()) == raw
