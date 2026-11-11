@@ -947,13 +947,13 @@ RunPLC_KosModule:
 		bne.s	.return
 		btst	#PLCKos_DrainBit,(v_plc_buffer).w
 		bne.s	.draining
-		move.b	(Timer_frames+1).w,d0
+		move.b	(Vint_runcount+3).w,d0
 		andi.b	#PLCKos_FrameMask,d0
 		ori.b	#PLCKos_DrainFlags,d0
-		move.b	d0,(v_plc_buffer).w	; remember the final DMA's VInt
+		move.b	d0,(v_plc_buffer).w	; remember the final DMA's VInt, including loading screens
 		rts
 .draining:
-		move.b	(Timer_frames+1).w,d0
+		move.b	(Vint_runcount+3).w,d0
 		sub.b	(v_plc_buffer).w,d0
 		andi.b	#PLCKos_FrameMask,d0
 		beq.s	.return		; repeated calls in one frame cannot retire it

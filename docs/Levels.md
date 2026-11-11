@@ -120,6 +120,10 @@ capsule, explosion, signpost bonus and Mecha effect art use the named
 The old `plcid_*` event IDs still address these lists through typed index entries;
 there is one payload per list, with `PLC_*` labels retained as address aliases. The Kosinski module index also has separately named act lists,
 including distinct empty recipes ready for later additions.
+Typed module requests retire only after the final DMA crosses an actual VBlank.
+They use `Vint_runcount`, which advances during loading/title cards as well as
+gameplay, rather than the level-only `Timer_frames`. Repeated service calls
+within one VBlank cannot retire a pending request.
 The Mode 1 build decodes both on the sub-CPU and queues prepared RAM output for
 DMA. Its resumable PLC and module ownership contracts live in
 [Mega-CD](Mega-CD.md#asset-decompression-and-plcs); the editable lists keep their

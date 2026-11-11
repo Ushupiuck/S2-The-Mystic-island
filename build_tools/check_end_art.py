@@ -45,10 +45,14 @@ def native(a):
 		assert read('Kos_module_source',4)==entries(name)[0][0]+2
 		# Module decoding/DMA are the boundary here; real frames verify below.
 		write('Kos_modules_left',0,2);write('Kos_module_queue',0,4)
-		write(s['Timer_frames']+1,31);m.act('RunPLC_RAM')
+		write(s['Vint_runcount']+3,31);m.act('RunPLC_RAM')
 		head=read('v_plc_buffer',4)
+		# Gameplay time can stop during a title card, loading or pause.
+		# It must neither release a pending DMA nor keep a finished one alive.
+		write('Timer_frames',1234,2)
 		m.act('RunPLC_RAM');assert read('v_plc_buffer',4)==head
-		write(s['Timer_frames']+1,32);m.act('RunPLC_RAM')
+		write('Timer_frames',0,2)
+		write(s['Vint_runcount']+3,32);m.act('RunPLC_RAM')
 		if len(entries(name))==1:assert not read('v_plc_buffer',4)
 		else:assert read('v_plc_buffer',4)==entries(name)[1][0]|0xC0000000
 		checks.append(name+': typed index, register contract, busy admission, final VInt drain and wrap')
