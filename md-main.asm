@@ -9130,7 +9130,7 @@ PlatformObject_ChkYRange:
 		cmpi.b	#6,obRoutine(a1)
 		bhs.w	loc_F916.return
 		add.w	d0,d2
-		addq.w	#3,d2
+		addq.w	#4,d2		; match MvSonicOnPtfm's standing surface exactly
 		move.w	d2,obY(a1)
 ; sub_F8F8:
 RideObject_SetRide:
