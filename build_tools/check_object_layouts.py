@@ -131,7 +131,11 @@ def main():
 	assert symbols['Object_Display_Lists'] == symbols['Debug_saved_height'] + 1
 	assert not symbols['Debug_saved_mappings'] & 1
 	assert symbols['Collision_response_list'] == symbols['RAM_Start']
-	assert symbols['Free_RAM_Start'] == symbols['Collision_response_list_end']
+	if 'Music_RAM_End' in symbols:
+		assert symbols['Music_StageData'] == symbols['Collision_response_list_end']
+		assert symbols['Free_RAM_Start'] == symbols['Music_RAM_End']
+	else:
+		assert symbols['Free_RAM_Start'] == symbols['Collision_response_list_end']
 	assert symbols['Free_RAM_End'] == symbols['MCD_MainWorkStart']
 	assert symbols['Player_Art_Buffer_End'] == symbols['Main_RAM_Start']
 	assert symbols['Main_RAM_Start'] & 0xFFFFFF >= 0xFF8000
