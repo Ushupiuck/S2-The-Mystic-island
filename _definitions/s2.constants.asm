@@ -281,6 +281,12 @@ next_object =           object_size
 		fatal	"The allocator lookup index must fit its loop-counter register."
 	endif
 ; ---------------------------------------------------------------------------
+; Automatic-path rider packet offsets. The owning object chooses the packet
+; base; its state/phase bytes precede these shared movement fields.
+autopath_time:		equ 2	; 8.8 travel timer; actor ticks decrement its integer byte
+autopath_target_x:	equ 4	; absolute integer target X
+autopath_target_y:	equ 6	; absolute integer target Y
+; ---------------------------------------------------------------------------
 ; Optional boss aliases.
 boss_subtype =              obXSub
 boss_invulnerable_time =    obInertia

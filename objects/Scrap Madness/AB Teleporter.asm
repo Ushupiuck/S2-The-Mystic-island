@@ -2,17 +2,12 @@
 ; Each actor keeps its own state, travel timer and path index in the parent.
 smz_pipe_state = 0
 smz_pipe_bump = 1
-smz_pipe_time = 2
-smz_pipe_x = 4
-smz_pipe_y = 6
 smz_pipe_index = 8
 smz_pipe_packet = 10
 smz_pipe_data = objoff_44
 smz_pipe_length = objoff_48
 
 SMZ_Teleport:
-		tst.b	obRoutine(a0)
-		bne.s	.ready
 		move.b	#2,obRoutine(a0)
 		moveq	#0,d0
 		move.w	obSubtype(a0),d0
@@ -23,7 +18,9 @@ SMZ_Teleport:
 		move.w	(a2)+,d0
 		move.b	d0,smz_pipe_length(a0)
 		move.l	a2,smz_pipe_data(a0)
-.ready:
+		move.l	#SMZ_Teleport_Main,code(a0)
+
+SMZ_Teleport_Main:
 		lea	(v_player).w,a1
 		lea	objoff_30(a0),a3
 		bsr.w	.actor
@@ -72,8 +69,8 @@ SMZ_Teleport:
 		clr.b	smz_pipe_bump(a3)
 		clr.b	smz_pipe_index(a3)
 		movea.l	smz_pipe_data(a0),a2
-		move.w	(a2)+,smz_pipe_x(a3)
-		move.w	(a2),smz_pipe_y(a3)
+		move.w	(a2)+,autopath_target_x(a3)
+		move.w	(a2),autopath_target_y(a3)
 		move.b	#$81,obControl(a1)
 		move.b	#2,obAnim(a1)
 		move.w	#$800,obInertia(a1)
@@ -100,15 +97,16 @@ SMZ_Teleport:
 		move.w	d2,obY(a1)
 		cmpi.b	#$80,smz_pipe_bump(a3)
 		bne.w	.return
-		bsr.w	SMZ_PipeDirection
+		move.w	#$1000,d2
+		bsr.w	AutoTunnel_CalcSpeed
 		move.b	#2,smz_pipe_state(a3)
 		move.w	#sfx_Teleport,d0
 		jmp	(PlaySound_Special).l
 .travel:
-		subq.b	#1,smz_pipe_time(a3)
+		subq.b	#1,autopath_time(a3)
 		bpl.s	.move
-		move.w	smz_pipe_x(a3),obX(a1)
-		move.w	smz_pipe_y(a3),obY(a1)
+		move.w	autopath_target_x(a3),obX(a1)
+		move.w	autopath_target_y(a3),obY(a1)
 		moveq	#0,d1
 		move.b	smz_pipe_index(a3),d1
 		addq.b	#4,d1
@@ -116,9 +114,9 @@ SMZ_Teleport:
 		bhs.s	.exit
 		move.b	d1,smz_pipe_index(a3)
 		movea.l	smz_pipe_data(a0),a2
-		move.w	(a2,d1.w),smz_pipe_x(a3)
-		move.w	2(a2,d1.w),smz_pipe_y(a3)
-		jmp	(SMZ_PipeDirection).l
+		adda.w	d1,a2
+		move.w	#$1000,d2
+		jmp	(AutoTunnel_GetPath).l
 .move:
 		move.w	obVelX(a1),d0
 		ext.l	d0
@@ -141,90 +139,7 @@ SMZ_Teleport:
 .done:
 		rts
 
-SMZ_PipeDirection:
-		move.w	smz_pipe_x(a3),d0
-		sub.w	obX(a1),d0
-		move.w	smz_pipe_y(a3),d1
-		sub.w	obY(a1),d1
-		or.w	d1,d0
-		bne.s	.nonzero
-		clr.w	smz_pipe_time(a3)
-		clr.w	obVelX(a1)
-		clr.w	obVelY(a1)
-		rts
-.nonzero:
-		moveq	#0,d0					; clear d0 for X-difference
-		move.w	#$1000,d2				; move Sonic horizontally at speed $1000 to the right
-		move.w	smz_pipe_x(a3),d0			; get next teleport X-target
-		sub.w	obX(a1),d0				; calculate difference to Sonic's current X-position
-		bge.s	.getYDirection				; is Sonic's next target to the right or directly above? if yes, branch
-		neg.w	d0					; negate X-difference
-		neg.w	d2					; negate X-speed to move to the left instead
 
-	.getYDirection:
-		moveq	#0,d1					; clear d1 for Y-difference
-		move.w	#$1000,d3				; move Sonic vertically at speed $1000 downwards
-		move.w	smz_pipe_y(a3),d1			; get next teleport Y-target
-		sub.w	obY(a1),d1				; calculate difference to Sonic's current Y-position
-		bge.s	.checkHorizOrVert			; is Sonic's next target below or leveled? if yes, branch
-		neg.w	d1					; negate Y-difference
-		neg.w	d3					; negate Y-speed to move upwards instead
-
-	.checkHorizOrVert:
-		cmp.w	d0,d1					; is X-distance greater than Y-distance?
-		bcs.s	SMZ_PipeDirection_X				; if yes, branch
-
-; SMZ_PipeDirection_Y:
-		moveq	#0,d1					; clear d1 again
-		move.w	smz_pipe_y(a3),d1			; get next teleport Y-target
-		sub.w	obY(a1),d1				; calculate difference to Sonic's current Y-position
-		swap	d1					; move into upper word
-		divs.w	d3,d1					; divide by $1000 or -$1000
-
-		moveq	#0,d0					; clear d0 again
-		move.w	smz_pipe_x(a3),d0			; get next teleport X-target
-		sub.w	obX(a1),d0				; calculate difference to Sonic's current X-position
-		beq.s	.setSpeeds				; if next X-target is the same as Sonic's current X-position, branch
-		swap	d0					; move into upper word
-		divs.w	d1,d0					; divide by earlier division result
-
-	.setSpeeds:
-		move.w	d0,obVelX(a1)				; set new X-speed
-		move.w	d3,obVelY(a1)				; set new Y-speed
-
-		tst.w	d1					; is next tele_time already positive?
-		bpl.s	.setTravelTime				; if yes, branch
-		neg.w	d1					; make it positive otherwise
-	.setTravelTime:
-		move.w	d1,smz_pipe_time(a3)			; set travel time until next target
-		rts						; return
-; ===========================================================================
-
-SMZ_PipeDirection_X:
-		moveq	#0,d0					; clear d1 again
-		move.w	smz_pipe_x(a3),d0			; get next teleport X-target
-		sub.w	obX(a1),d0				; calculate difference to Sonic's current X-position
-		swap	d0					; move into upper word
-		divs.w	d2,d0					; divide by $1000 or -$1000
-
-		moveq	#0,d1					; clear d1 again
-		move.w	smz_pipe_y(a3),d1			; get next teleport Y-target
-		sub.w	obY(a1),d1				; calculate difference to Sonic's current Y-position
-		beq.s	.y_match				; if next Y-target is the same as Sonic's current Y-position, branch
-		swap	d1					; move into upper word
-		divs.w	d0,d1					; divide by earlier division result
-
-	.y_match:
-		move.w	d1,obVelY(a1)				; set new Y-speed
-		move.w	d2,obVelX(a1)				; set new X-speed
-
-		tst.w	d0					; is next tele_time already positive?
-		bpl.s	.setTravelTime				; if yes, branch
-		neg.w	d0					; make it positive otherwise
-	.setTravelTime:
-		move.w	d0,smz_pipe_time(a3)			; set travel time until next target
-		rts						; return
-; End of function SMZ_PipeDirection
 
 
 ; ===========================================================================

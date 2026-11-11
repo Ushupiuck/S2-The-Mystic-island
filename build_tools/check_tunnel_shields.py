@@ -87,6 +87,103 @@ def tunnel(rom,listing,stars=False):
 	return {'frames':120,'moving_frames':moving,'owner_samples':240,'position_mismatches':mismatches}
 
 
+def path_math(rom,listing):
+	"""Exercise the shared 68000 kernel, including signs and fractional timers."""
+	from native_test_core import (UC_M68K_REG_D2,UC_M68K_REG_D6,UC_M68K_REG_D7,
+		UC_M68K_REG_A0,UC_M68K_REG_A1,UC_M68K_REG_A3)
+	n=Native(rom,listing);n.start()
+	packet=(n.s['v_lvlobjspace']+n.s['objoff_30'])&0xFFFFFF
+	guard=bytes(range(32))
+	cases=0
+	for speed in (0x100,0x180,0x200,0x280,0x400,0x800,0xC00,0x1000,0x2000):
+		maximum=min(1024,speed*127//256)
+		for distance in sorted({1,2,7,8,15,16,17,31,32,33,maximum-1,maximum}):
+			if not 0<distance<=maximum:continue
+			for minor in sorted({0,1,distance//3,distance-1,distance}):
+				if not 0<=minor<=distance:continue
+				for swap in (False,True):
+					for sx,sy in ((1,1),(-1,1),(1,-1),(-1,-1)):
+						dx,dy=(minor,distance) if swap else (distance,minor)
+						dx*=sx;dy*=sy
+						for actor in ('v_player','v_player2'):
+							n.cpu.mem_write(packet,guard)
+							n.put(actor,'obX',6000,2);n.put(actor,'obY',1400,2)
+							n.cpu.mem_write(packet+4,struct.pack('>HH',6000+dx,1400+dy))
+							regs={UC_M68K_REG_D2:speed,UC_M68K_REG_A0:n.s['v_lvlobjspace'],
+								UC_M68K_REG_A1:n.s[actor],UC_M68K_REG_A3:packet,
+								UC_M68K_REG_D6:0x12345678,UC_M68K_REG_D7:0x24681357}
+							n.act('AutoTunnel_CalcSpeed',regs=regs)
+							time=(distance<<16)//speed
+							def velocity(delta,major):
+								if major:return speed if delta>=0 else -speed
+								v=(abs(delta)<<16)//time
+								return v if delta>=0 else -v
+							expected=(velocity(dx,abs(dx)>abs(dy))&65535,
+								velocity(dy,abs(dy)>=abs(dx))&65535,time)
+							actual=(n.get(actor,'obVelX',2),n.get(actor,'obVelY',2),
+								int.from_bytes(n.cpu.mem_read(packet+2,2),'big'))
+							assert actual==expected,(actor,speed,dx,dy,actual,expected)
+							state=n.cpu.mem_read(packet,32)
+							assert state[:2]==guard[:2] and state[8:]==guard[8:]
+							for reg in (UC_M68K_REG_A0,UC_M68K_REG_A1,UC_M68K_REG_A3,
+								UC_M68K_REG_D6,UC_M68K_REG_D7):
+								assert n.cpu.reg_read(reg)==regs[reg]&0xFFFFFFFF,('clobbered register',reg)
+							cases+=1
+	for actor in ('v_player','v_player2'):
+		n.put(actor,'obX',6000,2);n.put(actor,'obY',1400,2)
+		n.cpu.mem_write(packet+4,struct.pack('>HH',6000,1400))
+		n.act('AutoTunnel_CalcSpeed',regs={UC_M68K_REG_D2:0x1000,
+			UC_M68K_REG_A1:n.s[actor],UC_M68K_REG_A3:packet})
+		assert n.get(actor,'obVelX',2)==n.get(actor,'obVelY',2)==0
+		assert n.cpu.mem_read(packet+2,2)==b'\0\0'
+		cases+=1
+	return dict(cases=cases,speeds=9,actors=2,duplicate_waypoints='zero velocity, no divide')
+
+
+def path_routes(rom,listing,previous_rom,previous_listing):
+	"""Compare complete authored journeys against the previous 68000 object."""
+	from object_layout import decode
+	new=Native(rom,listing);old=Native(previous_rom,previous_listing)
+	placements=[r for r in decode((ROOT/'level/objects/SMZ_2.bin').read_bytes()) if r[2]==0xAB]
+	assert len(placements)==8
+	fields=(('obX',4),('obY',4),('obVelX',2),('obVelY',2),('obInertia',2),
+		('obControl',1),('obRoutine',1),('obAnim',1),('obStatus',1),('jumping',1),
+		('spindash_flag',1),('tails_flight_flag',1))
+	updates=0;routes=[]
+	for x,packed,_,_,subtype in sorted(placements,key=lambda row:row[4]):
+		for delay,death in ((0,False),(37,False),(0,True)):
+			for n in (new,old):
+				n.start();obj=n.s['v_lvlobjspace']
+				n.write('Camera_X_pos_coarse_back',(x&0xFF80)-128,2)
+				n.write('v_rings',99,2)
+				for field,value,size in (('code',n.s['SMZ_Teleport'],4),('obX',x,2),
+					('obY',packed&0xFFF,2),('obSubtype',subtype,2),
+					('obStatus',1 if packed&0x2000 else 0,1)):
+					n.put(obj,field,value,size)
+				for actor in ('v_player','v_player2'):
+					n.put(actor,'obX',x-8 if packed&0x2000 else x+8,2)
+					n.put(actor,'obY',packed&0xFFF,2)
+					n.put(actor,'obControl',0x81 if actor=='v_player2' and delay else 0)
+			captured=False
+			for tick in range(400):
+				for n in (new,old):
+					if tick==delay:n.put('v_player2','obControl',0)
+					if death and tick==80:n.put('v_player2','obRoutine',6)
+					n.act('SMZ_Teleport_Main' if tick and 'SMZ_Teleport_Main' in n.s else 'SMZ_Teleport',n.s['v_lvlobjspace'])
+				for actor in ('v_player','v_player2'):
+					assert tuple(new.get(actor,f,z) for f,z in fields)==tuple(
+						old.get(actor,f,z) for f,z in fields),(subtype,delay,death,tick,actor)
+				assert new.cpu.mem_read((new.s['v_lvlobjspace']+0x30)&0xFFFFFF,20)==old.cpu.mem_read(
+					(old.s['v_lvlobjspace']+0x30)&0xFFFFFF,20),(subtype,delay,death,tick,'rider packets')
+				captured|=new.get('v_player','obControl')==0x81
+				updates+=2
+				if tick>delay and captured and not any(new.get(a,'obControl') for a in ('v_player','v_player2')):
+					break
+			assert captured and tick<399,(subtype,delay,death,'never released')
+			routes.append(dict(subtype=subtype,tail_delay=delay,tail_dies=death,updates=tick+1))
+	return dict(routes=routes,actor_updates=updates,mismatches=0)
+
+
 def live(args):
 	from genesis_test_core import Genesis
 	from check_object_course import boot_level,objects
@@ -175,6 +272,8 @@ def main():
 	p.add_argument('--output',type=Path,required=True)
 	p.add_argument('--stars',action='store_true')
 	p.add_argument('--tunnel',type=int,choices=range(8),default=0)
+	p.add_argument('--previous-rom',type=Path,help='Compare all authored paths against the previous controller')
+	p.add_argument('--previous-listing',type=Path)
 	p.add_argument('--before-rom',type=Path)
 	p.add_argument('--before-listing',type=Path)
 	p.add_argument('--core',type=Path)
@@ -182,10 +281,14 @@ def main():
 	p.add_argument('--player',type=int,choices=(0,2),default=0)
 	args=p.parse_args()
 	args.output.mkdir(parents=True,exist_ok=True)
-	report={'dispatch':dispatch_counts(args.rom,args.listing),
+	report={'paths':path_math(args.rom,args.listing),
+			'dispatch':dispatch_counts(args.rom,args.listing),
 			'native':tunnel(args.rom,args.listing),
 			'stars':tunnel(args.rom,args.listing,True)}
 	assert not report['native']['position_mismatches'] and not report['stars']['position_mismatches'],report
+	if bool(args.previous_rom)!=bool(args.previous_listing):
+		p.error('--previous-rom and --previous-listing must be paired')
+	if args.previous_rom:report['routes']=path_routes(args.rom,args.listing,args.previous_rom,args.previous_listing)
 	if args.before_rom:
 		report['before']=tunnel(args.before_rom,args.before_listing)
 		assert report['before']['position_mismatches']>0,report
