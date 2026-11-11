@@ -208,8 +208,8 @@ namespace MysticIsland.ObjectDefinitions
 				case "Flame": Bits("Off duration", 0, 15, "Low nibble * 32 frames."); Bits("On duration", 4, 15, "High nibble * 32 frames. Y flip selects the sideways flame mapping."); break;
 				case "Electro": Bits("Period mask", 0, 255, "Sync mask = subtype * 16 - 1; use a power of two for a regular interval."); break;
 				case "SpinGroup":
-					groups = ReadWordTable("../objects/Scrap Madness/A9 Spin Conveyor.asm", "SMZ_SpinC_Placements");
-					Bits("Group", 0, 127, "Absolute-position group 0 to 5. Moving the spawner does not move the runtime's hardcoded group.");
+					groups = ReadWordTable("../objects/Scrap Madness/A9 Spin Conveyor.asm", "SMZ_SpinC_Placements", "SMZ_SpinC_Corners");
+					Bits("Initial phase", 0, 7, "Initial position around the relative loop, used for individual platforms.");
 					Bits("Group spawner", 7, 1, "Set for level placements; clear is an individual moving child.", "Individual child", "Eight-platform group"); break;
 				case "LabyrinthConveyor":
 					groups = ReadWordTable("../objects/S1/1F LZ Conveyor.asm", "LCon_Placements");
@@ -555,10 +555,9 @@ namespace MysticIsland.ObjectDefinitions
 					Sprite trigger = Outline(16, 64); trigger.Offset(8, 0); return trigger;
 				case "Unused": return Outline(32, 32);
 				case "SpinGroup":
-					if ((subtype & 0x80) == 0 || (subtype & 0x7F) >= 6) return frames[0];
-					int offset = ByteConverter.ToUInt16(groups, (subtype & 0x7F) * 2), members = ByteConverter.ToUInt16(groups, offset) + 1;
+					int first = (subtype & 0x80) != 0 ? 0 : subtype & 7, members = (subtype & 0x80) != 0 ? 8 : 1;
 					pieces = new List<Sprite>();
-					for (int i = 0; i < members; i++) { int entry = offset + 2 + i * 6; pieces.Add(new Sprite(frames[0], ByteConverter.ToUInt16(groups, entry) - x, ByteConverter.ToUInt16(groups, entry + 2) - y)); }
+					for (int i = 0; i < members; i++) { int entry = (first + i) * 6; pieces.Add(new Sprite(frames[0], (short)ByteConverter.ToUInt16(groups, entry), (short)ByteConverter.ToUInt16(groups, entry + 2))); }
 					return new Sprite(pieces);
 				case "LabyrinthConveyor":
 					if (subtype == 0x7F) return alternate[0];

@@ -513,6 +513,28 @@ return shortcuts are covered in [Special stage](Special-stage.md).
 Reverse-gravity Debug support is not implemented. For object imports, start
 with [the worked example](Importing-objects.md); for checks, use [Testing](Testing.md).
 
+## Scrap Madness spinning conveyor
+
+Placement `$A9` uses X/Y as a relative loop origin. Bit 7 creates all eight
+platforms; with bit 7 clear, bits 0-2 choose one of the eight initial positions.
+The six SMZ1 placements now store their true origins. Their displayed positions,
+subpixels, velocities and animation timing retain the original S1 trajectories.
+Use any-Y loading for complete groups so camera height does not split a loop.
+
+`SMZ_SpinC_Placements` supplies signed X/Y offsets and initial target corners.
+One four-corner table serves every placement. The initial/corner motion tables
+retain S1's exact signed division results and fractional remainders in both
+directions; changing the route requires updating those tables too. The global
+conveyor-reversal flag selects the initial direction, as in the previous object.
+
+The constructor preflights seven helpers, then allocates them in one forward
+scan. A full pool retries without partial groups. Only the original SST retains
+the placement handle. Members install `SMZ_SpinC_Move` directly, without subtype
+dispatch or per-corner division. Spinning members release both riders before
+moving; upright members use the shared solid-object service. Private fields are
+origin X/Y `$30/$32`, target X/Y `$34/$36`, corner byte `$38`, signed corner step
+`$3A`, and corner-motion pointer `$3C`. SonLVL reads the same relative offsets.
+
 ## Labyrinth conveyor
 
 `objects/S1/1F LZ Conveyor.asm` implements placement `$1F` using S1 `$63`'s
