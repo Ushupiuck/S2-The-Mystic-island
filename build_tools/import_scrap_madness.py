@@ -315,8 +315,10 @@ def placements(source):
                 group = (source/f'objpos/platforms/sbz1pf{(subtype&127)+1}.bin').read_bytes()
                 count = struct.unpack_from('>H',group)[0]+1
                 assert len(group) in (count*6+2,count*6+8)
-                for px,py,psub in struct.iter_unpack('>HHH',group[2:2+count*6]):
-                    objects.append((px,py,OBJECTS[oid],psub&255))
+                px,py,psub = struct.unpack_from('>HHH',group,2)
+                # One placement owns the original loop. Its center is relative;
+                # do not expand eight absolute-position children into the layout.
+                objects.append((px+108,(py-24)|0x8000,OBJECTS[oid],0x80))
                 continue
             assert oid in OBJECTS, hex(oid)
             if oid == 0x15:

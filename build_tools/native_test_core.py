@@ -67,7 +67,8 @@ class Native:
 		for constructor, states in (
 				('Ring', ('Ring_Animate', 'Ring_Collect', 'Ring_Sparkle')),
 				('LostRings', ('LostRing_Move', 'LostRing_Collect')),
-				('TwistingPathway', ('TwistingPathway_Main', 'TwistingPathway_Cage'))):
+				('TwistingPathway', ('TwistingPathway_Main', 'TwistingPathway_Cage')),
+				('SMZ_SpinConvey', ('SMZ_SpinC_Move',))):
 			if constructor in self.s:
 				for label in states:
 					if label in self.s:

@@ -141,6 +141,14 @@ monitors, enemies and boss suites exercise the same collision path in context.
 
 ## Runtime checks
 
+`check_object_lifetimes.py` covers complete SMZ1 conveyor loops, all-or-nothing
+helper allocation, late parent slots, vertical camera excursions, horizontal
+reloads, translated origins, and all eight individual phases with a full pool.
+`--previous-rom OLD --previous-listing OLD_LISTING` additionally compares all six
+original S1 loops in both directions for 600 frames each, including full fixed
+point positions, velocities, animation and contact flags. `--core CORE` adds
+actual camera travel through GHZ/SMZ; its game cases use separate processes.
+
 Most game runners take `--rom ROM --listing LISTING --core CORE --output OUTPUT`
 and `--system-directory BIOS`. Exceptions and useful scene selectors are below.
 For implementation settings, follow the owning guide rather than reproducing

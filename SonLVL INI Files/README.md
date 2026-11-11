@@ -99,7 +99,7 @@ the complete serialized word, including when calculating movement overlays.
 | `$A6` | Vanishing platform | Low nibble: duration; high nibble: phase. |
 | `$A7` | Flamethrower | Low/high nibbles: off/on duration; Y flip selects valve art. |
 | `$A8` | Electrocuter | Full byte: synchronization mask; regular intervals use powers of two. |
-| `$A9` | Conveyor platform group | Bit 7: group spawner; low seven bits: one of six groups. Preview reads all eight members at their absolute runtime coordinates. |
+| `$A9` | Conveyor platform group | X/Y: relative loop origin. Bit 7: eight-platform group; clear it for one platform, with bits 0-2 selecting its initial phase. Preview reads the runtime's signed offsets. |
 | `$AB` | Transport pipe | Low three bits: route; route 7 requires 50 rings. Route points are read from the ASM table. |
 | `$AC` | Invisible solid | High/low nibbles: width/height in 16-pixel units, minus one. |
 | `$AF` | Button | Low nibble: switch number. |
