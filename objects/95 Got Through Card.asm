@@ -186,7 +186,7 @@ LevelOrder: ; Don't be fooled: the 2nd byte is the act you're transitioning TO
 
 		; Emerald Hill Zone
 		dc.b id_EHZ, 1	; Act 1 -> Act 2
-		dc.b id_EHZ, 2	; Act 2 -> Act 3
+		dc.b 0, 0	; Act 2 -> SEGA screen (end of the friends demo)
 		dc.b id_EHZ, 3	; Act 3 -> Act 4
 		dc.b id_HPZ, 0	; Act 4 -> Crystal Valley Zone Act 1
 
