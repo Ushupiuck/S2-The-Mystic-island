@@ -610,7 +610,9 @@ See the [stage allocations and palette limits](Special-stage.md).
 `art/uncompressed/Fireballs.unc` contains S1's complete 44-tile fireball sheet.
 `mappings/sprite/Fireballs.asm` retains its two flight poses and impact pose in
 each direction. EHZ and HTZ load the shared Moduled Kosinski+ sheet at `$4B0`;
-there is no new fireball object or placement. SMZ does not load this bank.
+the S1 fireball spawner is available in their Debug lists and editor pickers.
+SMZ does not load this bank. [Objects](Objects.md#sonic-1-fireballs) owns the
+spawner/flight behavior; existing level layouts do not add new hazards.
 
 `art/uncompressed/SBZ Flaming Pipe.unc` owns its three flame rectangles and
 two pipe ends. The first 20 tiles use the first player line. Slots `D/E/F`
@@ -622,7 +624,10 @@ The shading reference is skdisasm `73de97c6b55055bcb8089c1d55d006b02136f163`:
 LRZ's fireball, Act 2 flamethrower and Fireworm segment flames use a pale core
 with warmer rings toward the edge. S1's silhouettes, shadow regions and
 transparent pixels come from s1disasm `2c51d46a`'s Fireballs/Flamethrower art.
-The four warm player slots expand those original flat fills.
+The four warm player slots expand the original yellow cores. Bright red remains
+in broad outer tongues (two pixels for fireballs, three for the longer pipe
+flame), medium red shades the original shadow regions, and the darkest red is
+reserved for internal folds. White stays inside the hottest cores.
 
 Run `python build_tools/build_fire_art.py` after editing either sheet. It packs
 the fireballs and pipe, updates the mapped atlas rectangles and repacks the

@@ -47,6 +47,7 @@ Fire art and its per-act module uploads use:
 
 ```sh
 python build_tools/build_fire_art.py
+python build_tools/check_s1_fireballs.py --rom s2built.bin --listing md-main.lst --core /path/to/genesis_plus_gx_libretro.so --system-directory /path/to/mode1-fixture --output test-results/fireballs
 python build_tools/check_fire_art.py --rom s2built.bin --listing md-main.lst --s1disasm /path/to/s1disasm --core /path/to/genesis_plus_gx_libretro.so --system-directory /path/to/mode1-fixture --output test-results/fire
 ```
 
@@ -341,6 +342,14 @@ collects the inserted ring through the real item handler.
 ```sh
 python build_tools/check_ss_debug.py
 ```
+
+`check_s1_fireballs.py` executes an independent fixed-point model for all four
+S1 arcs, exact spawner intervals, offscreen suppression and pool exhaustion.
+A disposable fully solid block exercises the loaded game's real CD terrain
+probes, impact poses and deletion in four directions. Full EHZ frames verify
+damage to both players and actual controller selection/placement of all five
+14-byte Debug presets. Add `--pal` for PAL. These are focused fixtures, not a
+complete level playthrough or a SonLVL editor run.
 
 ## Mode 1 build checks
 
