@@ -544,15 +544,20 @@ base, with orientation offsets in the existing mapping family. Spikes start
 immediately after the support. Monitors keep their existing `$529` base.
 All three cap shapes use the shared red/yellow ramp `D-F` with white at `6`:
 `D` is brightest, `E` is the middle shade and `F` is darkest. Gray `7-9` belongs
-to their metal mechanisms. The diagonal cap's local tile `7` remains the
+to their metal mechanisms. The diagonal face now maps both original S3&K orange highlights to bright `D`;
+the former conversion made the brighter orange darker than the neighboring
+medium orange. Its 34 corrected pixels retain the existing silhouette and
+white marker. The diagonal cap's local tile `7` remains the
 empty lower-left corner of its final 16x16 sprite piece; deleting it would
 require another hardware sprite for the three remaining quadrants.
 
 The support uses diagonal Sonic CD tiles `1,0,blank,2` in one column-major
 16x16 sprite. Its black/white/gray indices already match the shared player
 row. Every diagonal pose adds this independent, static VDP piece behind the
-moving plate/coil; both colors and all flips reuse the same four resident
-tiles. It has no duplicate pose art and needs no extra object slot. The empty
+moving plate/coil. Its unflipped mapping is `(-18,-2)`, aligning its
+longitudinal center with the existing S3&K coil; the former `(-16,0)` displaced
+it two pixels along the plate. The down-facing pose mirrors that position
+vertically. Both colors and all flips reuse the same four resident tiles. It has no duplicate pose art and needs no extra object slot. The empty
 corner is part of that rectangular sprite, not padding between art banks.
 
 The shared seesaw uses Sonic 1's full-height artwork from s1disasm
