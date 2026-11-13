@@ -297,6 +297,7 @@ positioned fixtures, not full-stage controller routes.
 
 ```sh
 python build_tools/check_ghz_boss.py --rom s2built.bin --listing md-main.lst --output test-results/ghz-boss/native
+python build_tools/check_boss_shared_art.py --ghz-faces-only --core /path/to/core.so --system-directory /path/to/mode1-fixture --output test-results/ghz-boss/faces
 python build_tools/check_ghz_boss.py --rom s2built.bin --listing md-main.lst --core /path/to/core.so --system-directory /path/to/mode1-fixture --output test-results/ghz-boss/game
 python build_tools/check_ehz_s1_pod.py --core /path/to/core.so --system-directory /path/to/mode1-fixture --output test-results/ehz-boss
 python build_tools/check_mecha_sonic.py --rom s2built.bin --listing md-main.lst --native --skdisasm /path/to/skdisasm --output test-results/mecha/native
@@ -310,6 +311,13 @@ python build_tools/check_mecha_sonic.py --rom s2built.bin --listing md-main.lst 
 | `check_ehz_s1_pod.py` | Both act loaders, docking, seven expressions/facings, live palette/CRAM and foreground priority; Act 2 fight/hits, breakup, lift/ignition clearance, escape cleanup and capsule release |
 | `check_ghz_boss.py` | Native pool/retry, deployment, timed flight, hits, breakup clock/debris, explosions, palette/music cleanup; `--core` adds the actual GHZ3 arena fight/results/capsule |
 | `check_mecha_sonic.py` | Native floor/facing/counters, both actors, pool failures and projectiles; real SMZ2 trap/attacks, three uninterrupted head bounces, sixteen actual hits, fade/signpost/results and current-act music restoration on `Mystic-Island` |
+
+`check_boss_shared_art.py --ghz-faces-only` enters GHZ3's real arena and lets
+its normal boss/music transition run. It compares all 40 pilot tiles and all
+six boss PLC banks with their source data, then exposes the pilot in a fixture
+without the waterfall and checks seven expressions in both directions, including
+rendered head pixels. Add `--pal` for PAL. This focused check does not run the
+full fight or the EHZ suites; ClownEmu remains a separate manual retest.
 
 EHZ `--act 0`/`1` narrows the run. Act 1 suppresses its ordinary signpost loader
 with the clock and ends after docking/rendering because it has no authored boss
