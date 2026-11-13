@@ -94,7 +94,9 @@ icons. Native cases execute all 256 act/preset Debug placements.
 `python build_tools/check_monitor_art.py --output test-results/monitor-art.json`
 checks every four-kind combination in both allocation orders, hits/reuse,
 queue refusal, prior-pass pins, 16-bit wrap, unchanged one/two-life awards and
-all authored viewport demand. Add `--core CORE --system-directory BIOS_DIR`
+all authored viewport demand. It also checks all 48 slot/pose mappings against
+the editor geometry and verifies shared resident-frame records.
+Add `--core CORE --system-directory BIOS_DIR`
 for all four eras of the selected act, both permanent life images (also in primary-Tails mode),
 actual SAT tile/position checks, simultaneous content VRAM and a ball-broken
 regular-shield reward. It defaults to Scrap Madness 1; `--zone N --act N`

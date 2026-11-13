@@ -78,7 +78,7 @@ def main():
 	assert symbols['ArtTile_SS_Sparkles'] == symbols['ArtTile_SS_Rings'] + 4
 
 	# The Sonic monitor icon reuses the lives art, outside the monitor bank.
-	monitor_frames = frames(rom, symbols['Map_Obj26'])
+	monitor_frames = frames(rom, symbols['Map_Obj26'], symbols['Map_Obj26_frames'])
 	assert (monitor_frames[symbols['MonitorType_DoubleLife']+1][0][2] + symbols['ArtTile_Monitor']) & 0x7FF == symbols['ArtTile_Lives_Counter']
 
 	assert symbols['ArtTile_Bubbles'] * 32 == 0x8B80
