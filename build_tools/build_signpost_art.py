@@ -8,8 +8,8 @@ The editable 40x32 source preserves the original pixels. Packed rectangles
 omit transparent tiles. Mecha's board shares his palette; only the post
 retains the primary palette.
 
-Monitor generation is delegated to build_monitor_art.py; its permanent Tails
-portrait remains at tiles 56-59, beyond the 26-tile signpost buffer.
+Monitor generation is delegated to build_monitor_art.py; the selected portrait
+reuses the HUD, outside the separate 26-tile signpost buffer.
 The original Signpost.bin is the editable source for the first six frames.
 """
 from pathlib import Path

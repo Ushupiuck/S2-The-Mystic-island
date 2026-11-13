@@ -70,7 +70,6 @@ Map_Obj21_DebugDigits = make_art_tile(ArtTile_HUD_Debug_Numbers,1,1)-ArtTile_HUD
 Map_Obj21_TimeDigits = make_art_tile(ArtTile_HUD_Time,1,1)-ArtTile_HUD
 Map_Obj21_RingDigits = make_art_tile(ArtTile_HUD_Rings,1,1)-ArtTile_HUD
 Map_Obj21_LivesIcon = make_art_tile(ArtTile_Lives_Counter,0,1)-ArtTile_HUD
-Map_Obj21_TailsIcon = make_art_tile(ArtTile_Tails_Life,0,1)-ArtTile_HUD
 Map_Obj21_LivesLetters = make_art_tile(ArtTile_Lives_Counter+4,1,1)-ArtTile_HUD
 '''
     frames = []
@@ -86,7 +85,7 @@ Map_Obj21_LivesLetters = make_art_tile(ArtTile_Lives_Counter+4,1,1)-ArtTile_HUD
                 (-108,12,'Map_Obj21_TimeDigits',40)]+
                 label_pieces('RINGS',-92,0,priority=1)+[
                 (-92,8,'Map_Obj21_RingDigits',48),
-                (64,5,'Map_Obj21_TailsIcon' if tails else 'Map_Obj21_LivesIcon',0),
+                (64,5,'Map_Obj21_LivesIcon',0),
                 (64,13,'Map_Obj21_LivesLetters',16)])
     (ROOT/'mappings/sprite/obj21.asm').write_text(
         header+emit_table('Map_Obj21_internal',frames,'normal/blinking/Debug, Sonic/Tails'))

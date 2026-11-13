@@ -222,8 +222,10 @@ if args.case == 'intro':
 elif args.case == 'normal':
 	boot_level(g,zone=0,act=args.act,player=args.player)
 	assert g.get('v_player2','code')==0, 'Solo fixture unexpectedly spawned a companion'
-	portrait=(ROOT/'art/nemesis/Monitor and contents.unc').read_bytes()[56*32:60*32]
-	assert vram(g.s['ArtTile_Tails_Life']*32,4*32)==portrait
+	from build_life_art import sonic_lives
+	portrait=((ROOT/'art/nemesis/Monitor and contents.unc').read_bytes()[56*32:60*32]
+		if args.player==2 else sonic_lives()[:128])
+	assert vram(g.s['ArtTile_Lives_Counter']*32,4*32)==portrait
 	if args.player == 2:
 		name=(ROOT/'art/uncompressed/Tails Life Text Source.unc').read_bytes()
 		for tile in (0,2,4,6):
@@ -246,7 +248,7 @@ elif args.case == 'normal':
 		step()
 		assert g.get(actor,'code')==g.s['Signpost'], 'Signpost unexpectedly unloaded'
 		seen.add(g.get(actor,'obFrame'))
-		assert vram(g.s['ArtTile_Tails_Life']*32,4*32)==portrait, 'Signpost overwrote Tails life icon'
+		assert vram(g.s['ArtTile_Lives_Counter']*32,4*32)==portrait, 'Signpost overwrote the selected HUD portrait'
 		if g.get(actor,'obRoutine')==6:
 			break
 	else:
@@ -282,7 +284,7 @@ elif args.case == 'normal':
 	assert_ink_color('v_endcard',3,(0,1,2),10,normal_ink)
 	assert_ink_color('v_endcard',4,(0,1,2,3,4,5),10,normal_ink)
 	assert_ink_color('v_endcardact',6+args.act,(1,),10,normal_ink)
-	assert vram(g.s['ArtTile_Tails_Life']*32,4*32)==portrait
+	assert vram(g.s['ArtTile_Lives_Counter']*32,4*32)==portrait
 	g.video.save(args.output/'results.png')
 	assert g.get(actor,'obFrame')==expected_frame, 'Signpost portrait changed during results'
 	if args.time_seconds==599:assert g.read('v_timebonus',2)==10000

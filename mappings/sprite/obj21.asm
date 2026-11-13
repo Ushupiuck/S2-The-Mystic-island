@@ -4,7 +4,6 @@ Map_Obj21_DebugDigits = make_art_tile(ArtTile_HUD_Debug_Numbers,1,1)-ArtTile_HUD
 Map_Obj21_TimeDigits = make_art_tile(ArtTile_HUD_Time,1,1)-ArtTile_HUD
 Map_Obj21_RingDigits = make_art_tile(ArtTile_HUD_Rings,1,1)-ArtTile_HUD
 Map_Obj21_LivesIcon = make_art_tile(ArtTile_Lives_Counter,0,1)-ArtTile_HUD
-Map_Obj21_TailsIcon = make_art_tile(ArtTile_Tails_Life,0,1)-ArtTile_HUD
 Map_Obj21_LivesLetters = make_art_tile(ArtTile_Lives_Counter+4,1,1)-ArtTile_HUD
 Map_Obj21_internal: ; normal/blinking/Debug, Sonic/Tails
 		dc.w Map_Obj21_internal_0-Map_Obj21_internal
@@ -81,7 +80,7 @@ Map_Obj21_internal_4: dc.w 13
 		dc.w $A404, make_art_tile(ArtTile_HUD+8,1,1)-ArtTile_HUD, $0010
 		dc.w $A400, make_art_tile(ArtTile_HUD+0,1,1)-ArtTile_HUD, $0020
 		dc.w $A408, Map_Obj21_RingDigits, $0030
-		dc.w $4005, Map_Obj21_TailsIcon, $0000
+		dc.w $4005, Map_Obj21_LivesIcon, $0000
 		dc.w $400D, Map_Obj21_LivesLetters, $0010
 Map_Obj21_internal_5: dc.w 13
 		dc.w $840C, make_art_tile(ArtTile_HUD+0,1,1)-ArtTile_HUD, $0000
@@ -95,7 +94,7 @@ Map_Obj21_internal_5: dc.w 13
 		dc.w $A404, make_art_tile(ArtTile_HUD+8,1,1)-ArtTile_HUD, $0010
 		dc.w $A400, make_art_tile(ArtTile_HUD+0,1,1)-ArtTile_HUD, $0020
 		dc.w $A408, Map_Obj21_RingDigits, $0030
-		dc.w $4005, Map_Obj21_TailsIcon, $0000
+		dc.w $4005, Map_Obj21_LivesIcon, $0000
 		dc.w $400D, Map_Obj21_LivesLetters, $0010
 Map_Obj21_internal_6: dc.w 12
 		dc.w $840C, make_art_tile(ArtTile_HUD,1,1)-ArtTile_HUD, $0000
@@ -108,7 +107,7 @@ Map_Obj21_internal_6: dc.w 12
 		dc.w $A404, make_art_tile(ArtTile_HUD+8,1,1)-ArtTile_HUD, $0010
 		dc.w $A400, make_art_tile(ArtTile_HUD+0,1,1)-ArtTile_HUD, $0020
 		dc.w $A408, Map_Obj21_RingDigits, $0030
-		dc.w $4005, Map_Obj21_TailsIcon, $0000
+		dc.w $4005, Map_Obj21_LivesIcon, $0000
 		dc.w $400D, Map_Obj21_LivesLetters, $0010
 Map_Obj21_internal_7: dc.w 12
 		dc.w $840C, make_art_tile(ArtTile_HUD,1,1)-ArtTile_HUD, $0000
@@ -121,6 +120,6 @@ Map_Obj21_internal_7: dc.w 12
 		dc.w $A404, make_art_tile(ArtTile_HUD+8,1,1)-ArtTile_HUD, $0010
 		dc.w $A400, make_art_tile(ArtTile_HUD+0,1,1)-ArtTile_HUD, $0020
 		dc.w $A408, Map_Obj21_RingDigits, $0030
-		dc.w $4005, Map_Obj21_TailsIcon, $0000
+		dc.w $4005, Map_Obj21_LivesIcon, $0000
 		dc.w $400D, Map_Obj21_LivesLetters, $0010
 		even

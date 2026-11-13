@@ -302,6 +302,7 @@ class Native:
 		self.write('v_air', 30, 2)
 		self.act('Init_SpriteTable')
 		if 'MonitorArt_Reset' in self.s:self.act('MonitorArt_Reset')
+		if 'HUD_LifeType' in self.s:self.write('HUD_LifeType',self.s['MonitorType_DoubleLife'])
 		for obj, object_id in [('v_player', 1), ('v_player2', 2)]:
 			for field, value, size in [('layout_id', object_id, 1), ('obRoutine', 2, 1),
 					('obRender', 0x84, 1), ('obHeight', 19, 1), ('obWidth', 9, 1),

@@ -127,8 +127,9 @@ Sonic; a distant rolling actor cannot borrow the other's contact. Breaking also
 releases either player still standing on that wall, while preserving riders
 owned by another surface.
 
-The double-life monitor resolves its portrait through
-`ArtTile_Lives_Counter-ArtTile_Monitor` (`$2AD`), also reflected in SonLVL.
+Life monitors reuse the portrait actually loaded for the HUD; the opposite
+portrait uses the shared monitor DPLC cache. The art selection and its recorded
+identity are described in [Sprites and VRAM](Sprites-and-VRAM.md#monitor-contents).
 Sonic's life/monitor art uses the corrected blue and two red shades. Both live
 actors can collect hidden end bonuses, awarding the shared score once.
 
