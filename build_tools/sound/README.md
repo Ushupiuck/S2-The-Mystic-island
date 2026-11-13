@@ -167,6 +167,15 @@ upcoming commands and can preload up to six missing pages, including an
 instrument that crosses a page boundary.
 Live modulation and cross-page instrument reads still use local Z80 state.
 
+Fresh starts are asynchronous. KeH retires the outgoing music without muting
+active SFX, requests its initial cache, and returns to the ordinary SFX/DAC
+update instead of waiting inside the IRQ. The MD batches the header, opening
+command spans and selected instruments after KeH has released the old cache.
+Header initialization and the first notes use separate music ticks; the new
+channels begin together on the next tick. SFX and their spindash counters keep
+updating while the cache is pending. Preparing an MD staging slot never writes
+over the live Z80 cache. Saved 1-up restoration retains its existing refill path.
+
 Song requests and cache refills share the mailbox. Publishing a staged score
 checks the short Z80 slot-change lock, so note playback can keep running
 while the MD prepares a different score.
@@ -204,14 +213,17 @@ and builds the ROM again on a native Windows runner.
 ```sh
 python3 build_tools/sound/build.py --check
 python3 build_tools/check_sound_playback.py --core /path/to/genesis_plus_gx_libretro.so \
-	--effects --jingles --priority --switches
+	--effects --jingles --priority --switches --startup
 python3 build_tools/check_sound_playback.py --core /path/to/genesis_plus_gx_libretro.so \
   --pal --songs GHZ EHZ GGZ1 RRZ1 HTZ HPZ GRGZ2 LBZ2_S3 EndLevel ExtraLife
 ```
 
 The optional playback check uses the existing libretro harness, NumPy, and
-Pillow. Its core must expose the `work_ram`, `vram`, and `zram` symbols, as the
-tested Genesis Plus GX build does. Reports and selected WAVs go under
+Pillow. Genesis Plus GX must expose the `work_ram`, `vram`, and `zram` symbols.
+The shared runner also accepts unmodified ClownMDEmu libretro cores, using their
+advertised memory maps and actual audio sample rate; enable the CD add-on,
+overseas region and selected TV standard through core options. `--switches`
+still requires Genesis Plus GX's exported Z80 CPU/bus callbacks. Reports and selected WAVs go under
 `.sound-build`. It boots the real game, enters sound test, and plays through the
 actual 68000/Z80/YM2612/PSG paths.
 
@@ -245,6 +257,22 @@ Audio callbacks must also produce non-silent output. These checks establish
 musical equivalence; they do not claim identical sub-frame YM/DAC write timing
 or reduced Z80 execution cost. Reports/state captures stay in the supplied
 ignored output directory.
+
+`check_sound_playback.py --startup` checks the actual 1,3,5,7 sound-test code,
+4/5/6 to entry 7, and a staged return to 7. The confirmation ring must have the
+same complete per-frame duration sequence as the ring played alone (36 SFX
+updates). The startup must finish and the Z80 IRQ must not remain busy across
+an output-frame boundary in the opening window. WAV headers use the core's
+reported sample rate. These frame checks complement cycle-level diagnostics;
+they do not establish a worst-case IRQ budget for every score and gameplay load.
+The NTSC check also runs on stock ClownMDEmu 1.6.12. When that core exposes a
+cache wait across a frame boundary, it also queues a cached 1-up via B during
+that wait and requires restoration of initialized FM tracks in the new score.
+Later music requests wait for header initialization before a jingle can back up
+the current tracks.
+
+ClownMDEmu 1.6.12 PAL Mode 1 boot cannot reach sound test because the pre-existing PAL wait polls the unimplemented CD
+stopwatch register; use Genesis Plus GX for PAL validation.
 
 `check_sound_playback.py --priority` checks the compiled bumper callers, normal
 queue arbitration throughout Continue, its staggered final channel stops, an
@@ -280,11 +308,11 @@ after death. A resident score should make no `Music_Service` calls once loaded.
 Measure complete service calls through their return, including any interrupt
 work, and account for the emulator's cycle counter wrapping between frames.
 
-Cold song starts during a heavy level reload or a water-music restore can
-still take an extra tick in this experiment, as in its preceding driver.
-Compare those transitions separately from established playback; the regular
-sound-test state comparison allows startup alignment and cannot prove their
-first-tick latency. The MD has no note-playing fallback.
+Cold starts deliberately separate preparation/initialization from their first
+notes. The focused sound-test checks do not cover every heavy level reload or
+water-music restore. Compare those transitions separately from established
+playback; the regular music-state comparison allows startup alignment and
+cannot prove first-note latency. The MD has no note-playing fallback.
 
 These are playback and encoding checks, not a claim that every imported song
 now duplicates its source game's sound. PSG envelope approximations inherited

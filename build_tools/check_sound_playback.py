@@ -24,6 +24,7 @@ p.add_argument('--output', type=Path)
 p.add_argument('--effects', action='store_true')
 p.add_argument('--jingles', action='store_true')
 p.add_argument('--priority', action='store_true', help='Check bumper/Continue SFX arbitration and priority release.')
+p.add_argument('--startup', action='store_true', help='Check cold/cached starts and the 1,3,5,7 confirmation ring cadence.')
 p.add_argument('--switches', action='store_true', help='Trace DPCM continuity while rapidly selecting different songs.')
 p.add_argument('--pal', action='store_true')
 p.add_argument('--system-directory', type=Path)
@@ -86,7 +87,7 @@ ini = configparser.ConfigParser(interpolation=None)
 ini.read(source / 'sound/music/music.ini')
 rom = args.rom.read_bytes()
 streamed = 'Music_Index' in g.s
-report = {'region': 'PAL' if args.pal else 'NTSC', 'sample_rate': av.timing.sample_rate, 'emulator': 'Genesis Plus GX', 'rom_sha256': hashlib.sha256(rom).hexdigest(), 'songs': []}
+report = {'region': 'PAL' if args.pal else 'NTSC', 'sample_rate': av.timing.sample_rate, 'emulator': g.emulator, 'rom_sha256': hashlib.sha256(rom).hexdigest(), 'songs': []}
 
 for index, name in enumerate(ini.sections(), 1):
 	if args.songs and name not in args.songs:
@@ -126,7 +127,7 @@ for index, name in enumerate(ini.sections(), 1):
 	print(f'{report["region"]}: {index:02X} {name} {"streamed" if streamed else f"bank {bank}"} {"Kos+" if entry["compressed_in_rom"] else "raw"} RMS={entry["rms"]:.1f}', flush=True)
 	(output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
 
-zram = (C.c_uint8 * 8192).in_dll(g.core, 'zram')
+zram = g.zram
 
 
 def zr(name, size=1):
@@ -142,6 +143,79 @@ def play(sound_id):
 	g.buttons = set()
 	step(1)
 
+
+if args.startup:
+	from check_music_sequences import current_music
+	report['startup'] = []
+	baseline = None
+	for case, prior, last in (
+			('ring-alone', [], g.s['SndID_Ring']),
+			('code-1357', [1, 3, 5], 7), ('4-to-7', [4], 7),
+			('5-to-7', [5], 7), ('6-to-7', [6], 7), ('7-cached', [7, 5], 7)):
+		g.restore(menu)
+		for song in prior:
+			play(song)
+			step(90)
+		rows = []
+		chunks.clear()
+		capture = True
+		g.write('v_levselsound', last, 2)
+		g.buttons = {0}
+		for frame in range(48):
+			step()
+			g.buttons = set()
+			rows.append({'busy': zr('zMusicTickBusy'), 'starting': zr('zMusicStarting'),
+				'ring_active': bool(zr('zSFX_FM4') & 128),
+				'ring_duration': zr(g.s['zSFX_FM4'] + g.s['zTrack.DurationTimeout'])})
+		capture = False
+		durations = [row['ring_duration'] for row in rows if row['ring_active']]
+		if case == 'ring-alone':
+			baseline = durations
+			assert len(baseline) == 36, ('Ring reference length', baseline)
+		elif case == 'code-1357':
+			assert durations == baseline, ('Held confirmation note', durations, baseline)
+			assert g.read('f_debugcheat'), 'The real sound-test cheat did not unlock'
+		else:
+			assert not durations, ('Unexpected ring', case)
+		if last == 7:
+			assert current_music(g, rom, zram) == 7, ('Wrong startup song', case)
+			assert not any(row['busy'] for row in rows[:20]), ('Startup crossed a frame', case)
+			assert not any(row['starting'] for row in rows[15:]), ('Startup never finished', case)
+		with wave.open(str(output / (case + '.wav')), 'wb') as wav:
+			wav.setnchannels(2)
+			wav.setsampwidth(2)
+			wav.setframerate(round(av.timing.sample_rate))
+			wav.writeframes(b''.join(chunks))
+		report['startup'].append({'case': case, 'ring_active_frames': len(durations), 'frames': rows})
+		print('Startup:', case, len(durations), flush=True)
+	# Clown exposes the cache-wait phase at an output-frame boundary. Queue
+	# a cached 1-up through B while the new song has no initialized tracks.
+	g.restore(menu)
+	play(g.s['MusID_GHZ']);step(90)
+	play(g.s['MusID_ExtraLife']);step(450)
+	assert current_music(g, rom, zram)==g.s['MusID_GHZ'] and not zr('zAbsVar.1upPlaying')
+	g.write('v_levselsound',7,2);g.buttons={0};step();g.buttons=set()
+	for frame in range(12):
+		step()
+		if zr('zMusicStarting'):
+			g.write('v_levselsound',g.s['MusID_ExtraLife'],2)
+			g.buttons={0};step();g.buttons=set();step(12)
+			assert zr('zAbsVar.1upPlaying'), 'The startup-time jingle was lost'
+			for _ in range(900):
+				step()
+				if not zr('zAbsVar.1upPlaying'):break
+			else:raise AssertionError('Startup-time jingle never restored')
+			step(8)
+			assert current_music(g, rom, zram)==7, 'Wrong song restored after startup-time jingle'
+			assert zr('zSongFM1.PlaybackControl')&128, 'Jingle backed up uninitialized music tracks'
+			pointer=zr('zSongFM1.DataPointerLow',2)
+			assert g.s['Music_ScoreBase']<=pointer<g.s['Music_ScoreBase']+g.s['Music_StageCapacity']
+			report['startup_jingle']='restored the initialized score after an actual cache-wait interruption'
+			print('Startup-time 1-up restoration passed.',flush=True)
+			break
+	else:
+		report['startup_jingle']='cache wait did not cross an observable frame boundary on this core'
+	(output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
 
 if args.switches:
 	# AF' is the running DPCM accumulator between interrupts. Check each real

@@ -1,4 +1,4 @@
-"""Small optional libretro runner; supply a Genesis Plus GX shared library.
+"""Small optional libretro runner for Genesis Plus GX or ClownMDEmu.
 
 Uses the core's real 68000/VDP/Z80 and saves RGB screenshots. RAM writes are
 explicit test-fixture positioning/state setup, never replacements for code.
@@ -13,6 +13,21 @@ from PIL import Image
 class GameInfo(C.Structure):
 	_fields_ = [('path', C.c_char_p), ('data', C.c_void_p),
 				('size', C.c_size_t), ('meta', C.c_char_p)]
+
+
+class SystemInfo(C.Structure):
+	_fields_ = [('library_name', C.c_char_p), ('library_version', C.c_char_p),
+				('valid_extensions', C.c_char_p), ('need_fullpath', C.c_bool),
+				('block_extract', C.c_bool)]
+
+
+class AVInfo(C.Structure):
+	class Geometry(C.Structure):
+		_fields_ = [('base_width', C.c_uint), ('base_height', C.c_uint),
+					('max_width', C.c_uint), ('max_height', C.c_uint), ('aspect_ratio', C.c_float)]
+	class Timing(C.Structure):
+		_fields_ = [('fps', C.c_double), ('sample_rate', C.c_double)]
+	_fields_ = [('geometry', Geometry), ('timing', Timing)]
 
 
 class Variable(C.Structure):
@@ -43,6 +58,16 @@ class Genesis:
 		self.memory_domains = {}
 		self.region = b'pal' if pal else b'ntsc-u'
 		self.core = C.CDLL(str(core))
+		info = SystemInfo()
+		self.core.retro_get_system_info(C.byref(info))
+		self.emulator = info.library_name.decode()
+		clown = 'ClownMDEmu' in self.emulator
+		options = dict(core_options or {})
+		if clown:
+			options = {b'clownmdemu_cd_addon': b'enabled',
+				b'clownmdemu_overseas_region': b'elsewhere',
+				b'clownmdemu_lowpass_filter': b'enabled', b'clownmdemu_ladder_effect': b'enabled',
+				b'clownmdemu_tv_standard': b'pal' if pal else b'ntsc', **options}
 		ENV = C.CFUNCTYPE(C.c_bool,C.c_uint,C.c_void_p)
 		VIDEO = C.CFUNCTYPE(None,C.c_void_p,C.c_uint,C.c_uint,C.c_size_t)
 		AUDIO = C.CFUNCTYPE(None,C.c_int16,C.c_int16)
@@ -67,8 +92,11 @@ class Genesis:
 				return True
 			if cmd == 15:
 				var = C.cast(data,C.POINTER(Variable)).contents
-				var.value = self.region if var.key == b'genesis_plus_gx_region_detect' else (core_options or {}).get(var.key)
+				var.value = self.region if var.key == b'genesis_plus_gx_region_detect' else options.get(var.key)
 				return var.value is not None
+			if cmd == 52:  # GET_CORE_OPTIONS_VERSION: select legacy variables.
+				C.cast(data, C.POINTER(C.c_uint))[0] = 0
+				return True
 			if cmd == 17:
 				C.cast(data,C.POINTER(C.c_bool))[0] = False
 				return True
@@ -79,6 +107,11 @@ class Genesis:
 
 		def video(data,width,height,pitch):
 			if not data:
+				return
+			if self.pixel_format == 1:
+				pixels = np.frombuffer(C.string_at(data,pitch*height),'<u4').reshape(height,pitch//4)[:,:width]
+				rgb = np.stack([(pixels>>16)&255, (pixels>>8)&255, pixels&255], -1)
+				self.video = Image.fromarray(rgb.astype('uint8'))
 				return
 			pixels = np.frombuffer(C.string_at(data,pitch*height),'<u2').reshape(height,pitch//2)[:,:width]
 			if self.pixel_format == 2:
@@ -123,10 +156,21 @@ class Genesis:
 				self.ids_by_code[self.s[label]] = self.ids_by_code[self.s['Obj18']]
 		info = GameInfo(str(rom).encode(),C.cast(self.rom,C.c_void_p),len(self.rom)-1,None)
 		assert self.core.retro_load_game(C.byref(info))
-		self.ram = (C.c_uint8*65536).in_dll(self.core,'work_ram')
-		self.vram = (C.c_uint8*65536).in_dll(self.core,'vram')
-		self.core.m68k_get_reg.argtypes = [C.c_int]
-		self.core.m68k_get_reg.restype = C.c_uint
+		if clown:
+			self.ram = self.memory_domains['68KRAM']
+			self.zram = self.memory_domains['Z80RAM']
+			self.core.retro_get_memory_data.restype = C.c_void_p
+			self.vram = (C.c_uint8*65536).from_address(self.core.retro_get_memory_data(3))
+		else:
+			self.ram = (C.c_uint8*65536).in_dll(self.core,'work_ram')
+			self.vram = (C.c_uint8*65536).in_dll(self.core,'vram')
+			self.zram = (C.c_uint8*8192).in_dll(self.core,'zram')
+			self.core.m68k_get_reg.argtypes = [C.c_int]
+			self.core.m68k_get_reg.restype = C.c_uint
+		# Clown also uses this call to install its software video fallback.
+		av = AVInfo()
+		self.core.retro_get_system_av_info(C.byref(av))
+		self.sample_rate, self.fps = av.timing.sample_rate, av.timing.fps
 		self.core.retro_serialize_size.restype = C.c_size_t
 		self.core.retro_serialize.argtypes = [C.c_void_p,C.c_size_t]
 		self.core.retro_unserialize.argtypes = [C.c_void_p,C.c_size_t]

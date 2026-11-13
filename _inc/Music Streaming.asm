@@ -269,6 +269,44 @@ Music_Service:
 		bsr.s	Music_Prefetch
 		bra.s	.release
 
+; A new score has no track state yet. Prime its header, opening command
+; spans and selected instruments in one grant, after KeH has stopped using
+; the old cache. Do not overwrite a playing score while preparing MD slots.
+Music_PrefetchStart:
+		movem.l	d5-d7/a5-a6,-(sp)
+		movea.l	a0,a5
+		moveq	#0,d7
+		move.b	2(a5),d7
+		add.b	3(a5),d7
+		subq.w	#1,d7
+		bmi.s	.done
+		lea	6(a5),a6
+		moveq	#Music_CacheSlots-1,d6
+.track:
+		moveq	#0,d0
+		move.b	1(a6),d0
+		lsl.w	#8,d0
+		move.b	(a6),d0
+		move.w	a6,d1
+		sub.w	a5,d1
+		addq.w	#2,d1
+		add.w	d1,d0			; relative to the end of the pointer
+		moveq	#31,d5
+		bsr.s	Music_PrefetchTrack
+		tst.w	d6
+		beq.s	.done
+		lea	4(a6),a6
+		moveq	#0,d1
+		move.b	3(a5),d1
+		cmp.w	d1,d7
+		bhs.s	.next
+		addq.w	#2,a6			; PSG headers also have tone/unused bytes
+.next:
+		dbf	d7,.track
+.done:
+		movem.l	(sp)+,d5-d7/a5-a6
+		rts
+
 ; A track has reached a branch or page boundary. Read nearby held cursors
 ; from the staged score and fill up to six pages in this one bus grant.
 Music_Prefetch:
@@ -280,32 +318,51 @@ Music_Prefetch:
 		moveq	#6,d6
 .track:
 		btst	#7,zTrack.PlaybackControl(a6)
-		beq.w	.next
+		beq.s	.next
 		move.b	zTrack.DurationTimeout(a6),d0
 		subq.b	#1,d0
 		cmpi.b	#16,d0
-		bhs.w	.next
+		bhs.s	.next
 		moveq	#0,d0
 		move.b	zTrack.DataPointerHigh(a6),d0
 		lsl.w	#8,d0
 		move.b	zTrack.DataPointerLow(a6),d0
 		subi.w	#Music_ScoreBase,d0
 		moveq	#7,d5
+		bsr.s	Music_PrefetchTrack
+		tst.w	d6
+		beq.s	.done
+.next:
+		lea	zTrack.len(a6),a6
+		dbf	d7,.track
+.done:
+		movem.l	(sp)+,d5-d7/a5-a6
+		rts
+
+; Follow commands to the next timed event. d5 bounds command traversal;
+; d6 bounds missing pages. a5 is the immutable decoded score.
+Music_PrefetchTrack:
 .command:
 		cmpi.w	#Music_StageCapacity-5,d0
-		bhs.s	.next
+		bhs.s	.done
 		bsr.w	Music_PrefetchPage
+		beq.s	.done
+		move.w	d0,-(sp)
+		addq.w	#4,d0			; command parameters/note duration may straddle
+		bsr.w	Music_PrefetchPage
+		move.w	(sp)+,d0
+		tst.w	d6
 		beq.s	.done
 		lea	(a5,d0.w),a3
 		moveq	#0,d1
 		move.b	(a3),d1
 		subi.b	#$E0,d1
 		cmpi.b	#$1B,d1
-		bhs.s	.next		; reached a note or duration
+		bhs.s	.done			; reached a note or duration
 		moveq	#0,d2
 		lea	Music_PrefetchLengths(pc),a2
 		move.b	(a2,d1.w),d2
-		beq.s	.next		; return, stop, or a counted loop
+		beq.s	.done			; return, stop, or a counted loop
 		cmpi.b	#$16,d1
 		beq.s	.jump
 		cmpi.b	#$18,d1
@@ -315,11 +372,7 @@ Music_Prefetch:
 		add.w	d2,d0
 .advance:
 		dbf	d5,.command
-.next:
-		lea	zTrack.len(a6),a6
-		dbf	d7,.track
 .done:
-		movem.l	(sp)+,d5-d7/a5-a6
 		rts
 .call:
 		addq.w	#1,d0
@@ -332,8 +385,6 @@ Music_Prefetch:
 		bra.s	.advance		; follow nested calls to the first timed event
 
 .voice:
-		; A voice change can read either side of a page boundary before
-		; the next note. Resolve the patch in the staged score as well.
 		moveq	#0,d1
 		move.b	1(a3),d1
 		mulu.w	#25,d1
@@ -400,6 +451,18 @@ Music_GetStage:
 ; d0.w is a virtual page index. Bus is granted until the map byte is written.
 Music_FillPage:
 		bsr.s	Music_GetStage
+		tst.b	(Z80_RAM+zMusicCacheValid).l
+		bne.s	Music_FillStagedPage
+		move.l	a0,-(sp)
+		bsr.s	Music_FillStagedPage
+		movea.l	(sp)+,a0
+		cmpi.b	#Music_ScoreBase>>8,(Z80_RAM+zMusicReadBase+1).l
+		bne.s	.return
+		tst.b	(Z80_RAM+zMusicStarting).l
+		beq.s	.return
+		bra.w	Music_PrefetchStart
+.return:
+		rts
 Music_FillStagedPage:
 		lea	(Z80_RAM+zMusicPageMap).l,a1
 		lea	(Music_PageTags).l,a2

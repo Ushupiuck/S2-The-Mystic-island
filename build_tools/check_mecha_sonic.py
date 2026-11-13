@@ -4,7 +4,8 @@
 Game scenes use the authored placement and controller input for the crossing.
 Focused actor positioning supplies jumping hits; this is not a full playthrough.
 The optional upstream reference executes original 68000 attack/animation code;
-audio/child effects and a flat floor are explicit fixture boundaries.
+audio/child effects and a flat floor are explicit oracle boundaries. Separate
+live audio checks observe the restored jet sound through the actual Z80/YM path.
 """
 from pathlib import Path
 import argparse,json,re,struct,subprocess,sys
@@ -38,6 +39,8 @@ def native(args):
 	import native_test_core as n
 	class Machine(n.Manager):
 		def hook(self,cpu,address,size,unused):
+			if address==self.s['PlayMusic'] and hasattr(self,'sounds'):
+				self.sounds.append(cpu.reg_read(n.UC_M68K_REG_D0)&255)
 			if address==self.s['PlayMusic'] and hasattr(self,'music'):
 				self.music.append(cpu.reg_read(n.UC_M68K_REG_D0)&255)
 			if address==self.s['ObjHitFloor']:
@@ -94,6 +97,21 @@ def native(args):
 		m.put(pool[index],'code',0);m.act('MS_MaintainJets',body)
 		assert m.get(body,field,2)==pool[index]&65535 and m.get(pool[index],'code')==m.s['MS_Jet']
 	checks.append('jet pairs recover from partial allocation without writing beyond the pool')
+	m.sounds=[]
+	for _ in range(8):m.act('MS_MaintainJets',body)
+	assert not m.sounds, 'Maintaining the pair retriggered the jet sound'
+	m.act('MS_CreateJets',body,{n.UC_M68K_REG_A2:m.s['MS_JetsDash']})
+	assert m.sounds==[m.s['sfx_Roll']],m.sounds
+	for _ in range(8):m.act('MS_MaintainJets',body)
+	assert m.sounds==[m.s['sfx_Roll']],m.sounds
+	m.start();m.sounds=[];body=pool[0]
+	for slot in pool:m.put(slot,'code',m.s['MS_Return'])
+	m.put(body,'code',m.s['MechaSonic']);m.put(body,'MS_flags',4)
+	m.act('MS_MaintainJets',body);assert not m.sounds
+	m.put(pool[-1],'code',0);m.act('MS_MaintainJets',body)
+	assert m.sounds==[m.s['sfx_Roll']],m.sounds
+	checks.append('jet allocation/recovery and a reused pair changing kind play Roll once; full-pool retries and maintenance do not retrigger it')
+
 	for pal,ticks in ((0,120),(0x40,100)):
 		m.start();body,sign=pool[:2]
 		m.put(body,'code',m.s['MechaSonic']);m.put(body,'MS_phase',2)
@@ -266,7 +284,7 @@ def game(args):
 	from check_music_sequences import current_music
 	from check_companion_followup import place
 	g=Genesis(args.core,args.rom,args.listing,args.output/'game',args.pal,system_directory=args.system_directory)
-	zram=(C.c_uint8*8192).in_dll(g.core,'zram')
+	zram=g.zram
 	rom=args.rom.read_bytes()
 	def song_entry(music):
 		return g.s[music]
@@ -441,12 +459,46 @@ def game(args):
 	g.restore(fight);g.buttons=set();g.buttons2={4}
 	for actor in actors:
 		place(g,actor,0x1E60,0x4D0);g.put(actor,'obControl',1)
+	# The source jet constructor (loc_7C902) plays Roll. Verify that the
+	# real fight starts that FM4 voice, rather than only seeing a 68k queue.
+	voice=(g.s['Snd_Roll']+int.from_bytes(rom[g.s['Snd_Roll']:g.s['Snd_Roll']+2],'little'))&0x7FFF|0x8000
+	jet_audio=[];jet_keyons=[];audio_chunks=[]
+	Batch=C.CFUNCTYPE(C.c_size_t,C.c_void_p,C.c_size_t)
+	def batch(data,count):
+		audio_chunks.append(C.string_at(data,count*4));return count
+	g.callbacks[3]=Batch(batch);g.core.retro_set_audio_sample_batch(g.callbacks[3])
+	def rolling():
+		start=g.s['zSFX_FM4']
+		ptr=start+g.s['zTrack.VoicePtrLow']
+		return bool(zram[start]&128) and int.from_bytes(bytes(zram[ptr:ptr+2]),'little')==voice
+	writer_slot=None
+	if g.emulator.startswith('Genesis Plus GX'):
+		Write=C.CFUNCTYPE(None,C.c_uint,C.c_uint8)
+		writer_slot=C.c_void_p.in_dll(g.core,'z80_writemem')
+		original_address=writer_slot.value;original=Write(original_address);ym_address=[0]
+		def write(address,value):
+			if address==0x4000:ym_address[0]=value
+			if address==0x4001 and ym_address[0]==0x28 and value==0xF4 and rolling():jet_keyons.append(g.frame)
+			original(address,value)
+		writer=Write(write);writer_slot.value=C.cast(writer,C.c_void_p).value
 	states=set()
 	for t in range(2400):
 		run();r=g.get(boss,'obRoutine');states.add(r)
+		if rolling():jet_audio.append(g.frame)
 		assert g.get(boss,'obColProp')==16 and not objects('Signpost'),(t,g.get(boss,'obColProp'))
 		if r in (16,24,28,36) and t%32==0:g.video.save(args.output/f'game/attack-{r:02x}.png')
 	assert {8,12,14,16,20,22,24,26,28,30,32,34,36,38,40}<=states,states
+	if writer_slot is not None:
+		writer_slot.value=original_address
+		assert jet_keyons, 'Jet Roll never keyed on FM4 at the actual YM port'
+	assert len(jet_audio)>30, ('Missing live jet sound',jet_audio)
+	assert any(any(chunk) for chunk in audio_chunks), 'No fight audio'
+	import wave
+	with wave.open(str(args.output/'game/jet-sound.wav'),'wb') as wav:
+		wav.setnchannels(2);wav.setsampwidth(2);wav.setframerate(round(g.sample_rate));wav.writeframes(b''.join(audio_chunks))
+	# Keep the callback alive through the remainder of the fight.
+	g.callbacks[3]=Batch(lambda data,count:count);g.core.retro_set_audio_sample_batch(g.callbacks[3])
+	checks.append('actual attacks run the Roll FM4 voice with PCM output; Genesis Plus GX also verifies YM key-on writes')
 	checks.append('all standard attack states run on live SMZ2 terrain without spawning the reward')
 	attacker='v_player2' if args.companion else 'v_player'
 	assert attacker in actors

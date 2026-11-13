@@ -382,8 +382,11 @@ revision: the rolling sweep, both landing choices, accelerating ground dash,
 eight-jump attack selection, air dash, high bounce and rebound/dash sequence.
 It takes sixteen hits, retaining the 32-update hit flash, frame-specific body collision,
 the invisible moving head/back-spike hitbox, paired jets, landing sound,
-defeat bursts, collapse and electrical palette/sparks. Original private state
-is mapped into the existing SST; the hitbox and jets validate their owner.
+defeat bursts, collapse and electrical palette/sparks. The jets retain the original constructor's Roll sound on FM4. A maintained
+pair shares one start sound, including a recovered allocation or changed jet
+kind; ordinary per-frame maintenance does not retrigger it.
+Original private state is mapped into the existing SST; the hitbox and jets
+validate their owner.
 The dispatcher registers the invisible collider, including an earlier child
 slot updated after its own turn. Full-pool constructors, jets and the final
 reward retry; reused slots are not deleted as children.

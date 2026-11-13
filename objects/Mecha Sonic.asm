@@ -389,7 +389,18 @@ MS_MaintainJets:
 		move.b	#4,obRender(a1)
 		move.b	#Map_MechaEffects_width,obActWid(a1)
 		move.b	#Map_MechaEffects_height,height_pixels(a1)
-.ready: move.w  d2,obSubtype(a1)
+		bra.s	.startJet
+.ready:
+		cmp.w	obSubtype(a1),d2
+		beq.s	.return
+.startJet:
+		move.w	d2,obSubtype(a1)
+		; skdisasm's jet constructor plays Roll. The maintained pair shares
+		; one start sound; ordinary maintenance must not restart it each frame.
+		btst	#1,d2
+		bne.s	.return
+		move.w	#sfx_Roll,d0
+		jmp	(PlaySound_Special).l
 .return:rts
 MS_Jet:
 		movea.w	MS_parent(a0),a2

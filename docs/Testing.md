@@ -14,6 +14,14 @@ runners need NumPy, Pillow and a Genesis Plus GX libretro library exporting the
 RAM/VRAM and CPU symbols used by `genesis_test_core.py`; ordinary distributed
 cores may omit them. No graphical frontend is needed.
 
+The shared libretro runner also reads stock ClownMDEmu's advertised RAM maps.
+Sound-test `--startup` runs there in NTSC; CPU/bus tracing still requires Genesis
+Plus GX exports. This does not make every existing fixture core-independent:
+ClownMDEmu 1.6.12 cannot complete this project's PAL stopwatch wait, and the
+full Mecha fixture's final-portrait VRAM check fails on both the preceding and
+current ROM before it reaches the fight. Use Genesis Plus GX for that full
+fight assertion. See the sound guide for audio-specific boundaries.
+
 Use a fresh process for each ROM/region: this core cannot reliably unload and
 reload different cartridges in one process. Give every run its own output
 folder. Runners have different interfaces; inspect `--help` before copying
@@ -339,6 +347,10 @@ without animals. A full-pool case must not advance the breakup clock early.
 
 Mecha's optional skdisasm oracle compares original attack states/animation/RNG;
 local grounded/dive flags and sound/children/flat-floor boundaries are excluded.
+The source jet constructor at `loc_7C902` also plays Roll. Native cases check
+one start per maintained pair, kind changes, pool recovery and no maintenance
+retrigger. The real fight checks that the Roll voice reaches the FM4 SFX track
+and produces PCM, with actual YM2612 key-on writes on Genesis Plus GX.
 Game `--approach above`/`below` exercises camera entry, `--companion` selects
 second-actor hits, and `--player 2 --pal` selects primary Tails/PAL. Counter
 scenes retain real charges and contact; the repeated-bounce sequence repairs

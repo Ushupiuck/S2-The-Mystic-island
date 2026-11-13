@@ -442,20 +442,10 @@ zUpdateEverything:
 	dec	a ; decrease the spindash sound playing counter
 	ld	(zSpindashPlayingCounter),a
 +
-	; If the system is PAL, then this performs some timing adjustments
-	; (i.e. you need to update 1.2x as much to keep up the same rate)
-	ld	hl,zPalModeByte		; Get address of zPalModeByte
-	ld	a,(zAbsVar.IsPalFlag)		; Get IsPalFlag -> 'a'
-	and	(hl)				; 'And' them together
-	jr	z,+					; If it comes out zero, do nothing
-	ld	hl,zPALUpdTick
-	dec	(hl)
-	jr	nz,+
-	ld	(hl),5				; every 6 frames (0-5) you need to "double update" to sort of keep up
-	call	zUpdateMusic
-+
-	call	zUpdateMusic
+	call	zUpdateMusicTick
 
+zUpdateSFX:
+	ld	ix,zTracksSFXStart-zTrack.len
 	; Don't update SFX while 1up is playing (RAM gets overwritten in this driver, too)
 	ld	a,(zAbsVar.1upPlaying)
 	or	a
@@ -1688,6 +1678,14 @@ zPCMLoopExit:
 ; ---------------------------------------------------------------------------
 ; zloc_73D:
 zPlayMusic:
+	; A jingle must not back up half-initialized tracks. Retain the latest
+	; request until the current header is complete, then arbitrate normally.
+	ld	hl,zMusicStarting
+	bit	0,(hl)
+	jr	z,.begin
+	ld	(zMusicSongRequest),a
+	ret
+.begin:
 	; Keep ready flags/slot stable from the ID check until the slot is live.
 	ld	hl,zMusicSlotBusy
 	ld	(hl),1
@@ -1710,7 +1708,7 @@ zPlayMusic:
 	; The following code disables all sound (technically for duration of 1-up)
 	ld	a,(zAbsVar.1upPlaying)			; Check if 1-up sound is already playing
 	or	a					; Test it
-	jr	nz,zBGMLoad				; If it is, then just reload it!  (I suppose a humorous restore-to-1up could happen otherwise... with no good results after that)
+	jp	nz,zBGMLoad				; If it is, then just reload it!  (I suppose a humorous restore-to-1up could happen otherwise... with no good results after that)
 	ld	ix,zTracksStart				; Starting at beginning of all tracks...
 	ld	de,zTrack.len				; Each track size
 	ld	b,MUSIC_TRACK_COUNT			; All 10 (DAC, 6FM, 3PSG) tracks
@@ -1735,7 +1733,7 @@ zPlayMusic:
 
 	ld	a,80h
 	ld	(zAbsVar.1upPlaying),a	; Set 1-up song playing flag
-	jr	zBGMLoad			; Now load 1-up BGM
+	jp	zBGMLoad			; Now load 1-up BGM
 ; ---------------------------------------------------------------------------
 
 zloc_784:
@@ -1755,15 +1753,15 @@ zloc_784:
 	ld	(hl),a	; clear 1-up is playing flag (it isn't)
 	ld	(zAbsVar.FadeInCounter),a	; clear fade-in frame count
 	ld	(zAbsVar.FadeOutCounter),a		; clear fade-out frame count
+	jp	zBGMLoad
 
 ;zloc_78E
-zBGMLoad:
-	call	zInitMusicPlayback
-	ld	a,(zMusicReadySlot)
-	ld	(zAbsVar.MusicSlot),a
+; Once the cache is ready, initialize tracks without their opening notes.
+; Notes run on the following tick; SFX keep their normal cadence throughout.
+zFinishBGMLoad:
+	call	zInstallMusicReader
 	xor	a
-	ld	(zMusicSlotBusy),a
-	call	zResetMusicCache
+	ld	(zMusicStarting),a
 zBGMLoad_FlagLoadInstruction:
 	ld	c,0			; Get song flags
 	sla	c				; Put bit 7 into carry flag (force PAL speed flag)
@@ -1929,7 +1927,7 @@ zloc_884:
 zloc_8D0:
 	ld	a,(zAbsVar.1upPlaying)
 	or	a
-	jr	nz,zBGMLoad_SFXEnd
+	jp	nz,zBGMLoad_SFXEnd
 
 	ld	ix,zTracksSFXStart		; 'ix' points to start of SFX track memory (10 prior tracks were DAC, 6 FM, 3 PSG)
 	ld	b,SFX_TRACK_COUNT					; 6 SFX tracks total (3FM, 3PSG)
@@ -2463,6 +2461,7 @@ zFMSilenceAll:
 ; zloc_B4E:
 zStopSoundAndMusic:
 	xor	a
+	ld	(zMusicStarting),a
 	ld	(zMusicSongRequest),a
 	ld	(zAbsVar.StopMusic),a
 
@@ -3690,6 +3689,7 @@ zMusicSlotBusy:		db 0
 zMusicReadySong:		db 0
 zMusicReadySlot:		db 0
 zMusicReadyFlags:	db 0
+zMusicStarting:		db 0	; fresh header, rather than a saved 1-up return
 zMusicReadBase:	dw Music_ScoreBase
 
 ; The banked window can write to MD RAM. Never read that RAM from the Z80.
@@ -3733,18 +3733,22 @@ zFinishMusicTick:
 	pop	af
 	jp	zPostMusicSignal
 
-zResetMusicCache:
+zRequestMusicCache:
 	xor	a
 	ld	(zMusicCacheValid),a
 	ld	(zMusicPageRequest),a	; Request the header and invalidate old tags
 	ld	a,60h
 	ld	(zReadScoreLastHigh+1),a
 	ld	a,1
-	call	zPostMusicSignal
+	jp	zPostMusicSignal
+
+zResetMusicCache:
+	call	zRequestMusicCache
 .wait:
 	ld	a,(zMusicCacheValid)
 	or	a
 	jr	z,.wait
+zInstallMusicReader:
 	ld	a,(zMusicReadBase+1)
 	cp	Music_ScoreBase>>8
 	ld	hl,0C97Eh		; LD A,(HL) / RET
@@ -3867,6 +3871,42 @@ zHintMusicLookahead:
 	ld	a,Music_LookaheadSignal
 	ld	(zMusicLookahead),a
 	ret
+
+zBGMLoad:
+	call	zInitMusicPlayback
+	ld	a,(zMusicReadySlot)
+	ld	(zAbsVar.MusicSlot),a
+	xor	a
+	ld	(zMusicSlotBusy),a
+	inc	a
+	ld	(zMusicStarting),a
+	call	zloc_8D0			; stop outgoing music while preserving active SFX
+	jp	zRequestMusicCache
+
+; Cache waiting and track initialization leave SFX on the ordinary tick.
+; Opening notes start together on the following music tick.
+zUpdateMusicTick:
+	ld	a,(zMusicStarting)
+	or	a
+	jr	z,.ready
+	ld	a,(zMusicCacheValid)
+	or	a
+	ret	z
+	jp	zFinishBGMLoad
+.ready:
+	; If the system is PAL, then this performs some timing adjustments
+	; (i.e. you need to update 1.2x as much to keep up the same rate)
+	ld	hl,zPalModeByte		; Get address of zPalModeByte
+	ld	a,(zAbsVar.IsPalFlag)		; Get IsPalFlag -> 'a'
+	and	(hl)				; 'And' them together
+	jr	z,+					; If it comes out zero, do nothing
+	ld	hl,zPALUpdTick
+	dec	(hl)
+	jr	nz,+
+	ld	(hl),5				; every 6 frames (0-5) you need to "double update" to sort of keep up
+	call	zUpdateMusic
++
+	jp	zUpdateMusic
 
 ; end of Z80 'ROM'
 	if MOMPASS=1
