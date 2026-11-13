@@ -459,8 +459,7 @@ Music_FillPage:
 		cmpi.b	#Music_ScoreBase>>8,(Z80_RAM+zMusicReadBase+1).l
 		bne.s	.return
 		tst.b	(Z80_RAM+zMusicStarting).l
-		beq.s	.return
-		bra.w	Music_PrefetchStart
+		bne.w	Music_PrefetchStart
 .return:
 		rts
 Music_FillStagedPage:
