@@ -55,11 +55,13 @@ def native(args):
 		entry=struct.unpack_from('>H',rom,base+(parts[0]>>24)*2)[0]
 		assert entry&flag
 		plc=base+(entry&~flag)
-		expected=[(n.s['Kospm_MMZ1_Atlas'],n.s['ArtTile_MMZ_Atlas']*32)]
-		if era==1:expected.append((n.s['Kospm_MMZ1_GeneratorPast'],n.s['ArtTile_MMZ_Generator']*32))
-		elif era==2:
-			expected.extend([(n.s['Kospm_MMZ1_SawGoodFuture'],n.s['ArtTile_MMZ_Saw']*32),
-				(n.s['Kospm_MMZ1_SeesawGoodFuture'],n.s['ArtTile_MMZ_Seesaw']*32)])
+		expected=[(n.s[label],n.s[tile]*32) for label,tile in (
+			('Kospm_MMZ1_Platforms','ArtTile_MMZ_Atlas'),('Kospm_MMZ_CrusherFloor','ArtTile_MMZ_CrusherFloor'),
+			('Kospm_MMZ1_SawsSeesawGoodFuture' if era==2 else 'Kospm_MMZ1_SawsSeesaw','ArtTile_MMZ_Saw'),
+			('Kospm_MMZ_MechaBu','ArtTile_MMZ_MechaBu'),('Kospm_MMZ1_Enemies','ArtTile_MMZ_Atlas'),
+			('Kospm_MMZ_TimePostHeads','ArtTile_TimePostHeads'),
+			('Kospm_MMZ_GeneratorPast' if era==1 else 'Kospm_MMZ_Generator','ArtTile_MMZ_Generator'))]
+		expected[4]=(expected[4][0],(n.s['ArtTile_MMZ_Atlas']+318)*32)
 		count=struct.unpack_from('>h',rom,plc)[0]+1
 		assert [struct.unpack_from('>IH',rom,plc+2+i*6) for i in range(count)]==expected,(era,'primary PLC')
 		assert parts[1]>>24==n.s['plcid_LVF1_Extra']
@@ -119,16 +121,16 @@ def native(args):
 	return dict(eras=4,chunks_per_era=445,parallax_and_provider_cases=cases,debug_previews=count)
 
 
-def animation_checks(args):
+def animation_checks(args,act=1):
 	"""Compare the assembled VM's writes and DMA requests with CD source steps."""
 	from import_metallic_madness import animations,table_values,number
 	import re
 	n=Native(args.rom,args.listing);rom=args.rom.read_bytes()
-	_,reference=animations(args.source,(ROOT/'_definitions/s2.constants.asm').read_text())
+	_,reference=animations(args.source,(ROOT/'_definitions/s2.constants.asm').read_text(),act)
 	writes=updates=0
 	for era,(key,title,_) in enumerate(ERAS):
-		n.start();n.write('Current_ZoneAndAct',0xF00,2);n.write('Current_Timezone',era)
-		initial=(ROOT/'palette/SonicAndTails.bin').read_bytes()+(ROOT/f'palette/MMZ1 {title}.bin').read_bytes()
+		n.start();n.write('Current_ZoneAndAct',0xF00+act-1,2);n.write('Current_Timezone',era)
+		initial=(ROOT/'palette/SonicAndTails.bin').read_bytes()+(ROOT/f'palette/MMZ{act} {title}.bin').read_bytes()
 		palette=bytearray(initial);n.cpu.mem_write(n.s['v_palette']&0xFFFFFF,bytes(palette))
 		letter=('a','b','c','d')[era]
 		source=(args.source/f'src/r8/palette_cycle_{letter}.asm').read_text()
@@ -140,7 +142,7 @@ def animation_checks(args):
 			slot,count=values[:2];steps=list(zip(values[2::2],values[3::2]))
 			if letter=='c' and slot==0x31:steps=[(2,0),(2,1),(22,0),(2,1),(66,2),(2,0)]
 			cycles.append(dict(slot=slot,steps=steps,colors=colors,time=0,frame=0))
-		data=(args.source/f'src/r8/data_1{letter}.asm').read_text()
+		data=(args.source/f'src/r8/data_{act}{letter}.asm').read_text()
 		files=dict(re.findall(r'^(\w+):\s*\n\s*incbin\s+"([^"]+)"',data,re.M))
 		streams=[dict(v,time=0,frame=0) for v in reference['streams'] if v['era']==key]
 		for tick in range(1200):
@@ -166,8 +168,8 @@ def animation_checks(args):
 			actual=[(dest&65535,rom[address:address+(length&65535)*2]) for address,dest,length in n.uploads]
 			assert actual==expected,(era,tick,'animation DMA',[(d,len(b)) for d,b in actual],[(d,len(b)) for d,b in expected])
 			updates+=len(actual);n.uploads.clear()
-		# Other acts keep their existing callbacks; MMZ1 tables must not run.
-		n.write('Current_Act',1);before=bytes(n.cpu.mem_read(n.s['v_palette']&0xFFFFFF,128))
+		# Starter Acts 3/4 retain their existing callbacks.
+		n.write('Current_Act',2);before=bytes(n.cpu.mem_read(n.s['v_palette']&0xFFFFFF,128))
 		n.act('PalCycle_Load');n.act('Animate_Tiles')
 		assert not n.uploads and n.cpu.mem_read(n.s['v_palette']&0xFFFFFF,128)==before
 	return dict(eras=4,updates_per_era=1200,palette_changes=writes,dma_transfers=updates,

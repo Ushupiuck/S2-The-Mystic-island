@@ -1626,6 +1626,14 @@ Pal_MTZ:	binclude	"palette/MTZ.bin"
 		even
 Pal_LZ4:	binclude	"palette/LZ4.bin"
 		even
+Pal_MMZ2_Present:	binclude "palette/MMZ2 Present.bin"
+		even
+Pal_MMZ2_Past:	binclude "palette/MMZ2 Past.bin"
+		even
+Pal_MMZ2_GoodFuture:	binclude "palette/MMZ2 Good Future.bin"
+		even
+Pal_MMZ2_BadFuture:	binclude "palette/MMZ2 Bad Future.bin"
+		even
 Pal_MMZ1_Present:	binclude	"palette/MMZ1 Present.bin"
 		even
 Pal_MMZ1_Past:	binclude	"palette/MMZ1 Past.bin"
@@ -2771,7 +2779,7 @@ ColPointers:
 		dc.l Col_GHZ3
 		dc.l Col_GHZ4
 		dc.l Col_MMZ1_Present
-		dc.l Col_GHZ2
+		dc.l Col_MMZ2_Present
 		dc.l Col_GHZ3
 		dc.l Col_GHZ4
 	if	TimeTravel=1
@@ -2842,7 +2850,7 @@ PColPointers:
 		dc.l PCol_GHZ3
 		dc.l PCol_GHZ4
 		dc.l Col_MMZ1_Past
-		dc.l PCol_GHZ2
+		dc.l Col_MMZ2_Past
 		dc.l PCol_GHZ3
 		dc.l PCol_GHZ4
 ; ---------------------------------------------------------------------------
@@ -2912,7 +2920,7 @@ GColPointers:
 		dc.l GCol_GHZ3
 		dc.l GCol_GHZ4
 		dc.l Col_MMZ1_GoodFuture
-		dc.l GCol_GHZ2
+		dc.l Col_MMZ2_GoodFuture
 		dc.l GCol_GHZ3
 		dc.l GCol_GHZ4
 ; ---------------------------------------------------------------------------
@@ -2982,7 +2990,7 @@ BColPointers:
 		dc.l BCol_GHZ1
 		dc.l BCol_GHZ1
 		dc.l Col_MMZ1_BadFuture
-		dc.l BCol_GHZ1
+		dc.l Col_MMZ2_BadFuture
 		dc.l BCol_GHZ1
 		dc.l BCol_GHZ1
 	endif
@@ -4482,7 +4490,7 @@ LevelSizeArray:
 		dc.w $0000, $0600, $0000, $0200 ; $0E act 3
 		dc.w $0000, $0600, $0000, $0200 ; $0E act 4
 		dc.w $0000, $1E97, $0000, $0710 ; $0F act 1 - Metallic Madness
-		dc.w $0000, $0600, $0000, $0200 ; $0F act 2
+		dc.w $0000, $1E97, $0000, $0710 ; $0F act 2 - Metallic Madness
 		dc.w $0000, $0600, $0000, $0200 ; $0F act 3
 		dc.w $0000, $0600, $0000, $0200 ; $0F act 4
 		dc.w $0000, $3FFF, $0000, $0800	; ZONE 10 1
@@ -12252,7 +12260,7 @@ Offs_AniPLC:	dc.w AnimCue_GHZ-Offs_AniFunc		; GHZ
 		dc.w Dynamic_Null-Offs_AniFunc		; 0D
 		dc.w Dynamic_Null-Offs_AniFunc		; 0E
 		dc.w Dynamic_Null-Offs_AniFunc		; 0E
-		dc.w Animate_MMZ1-Offs_AniFunc		; 0F
+		dc.w Animate_MMZ-Offs_AniFunc		; 0F
 		dc.w AnimCue_MMZ1_Present-Offs_AniFunc	; 0F
 ; ===========================================================================
 
@@ -12271,11 +12279,13 @@ Animate_EHZ:
 .return:
 		rts
 
-Animate_MMZ1:
-		tst.b	(Current_Act).w
-		bne.s	.return
+Animate_MMZ:
 		moveq	#0,d0
-		move.b	(Current_Timezone).w,d0
+		move.b	(Current_Act).w,d0
+		cmpi.b	#1,d0
+		bhi.s	.return
+		lsl.w	#2,d0
+		add.b	(Current_Timezone).w,d0
 		lsl.w	#2,d0
 		movea.l	.scripts(pc,d0.w),a2
 		bra.w	Dynamic_Normal
@@ -12283,6 +12293,7 @@ Animate_MMZ1:
 		rts
 .scripts:
 		dc.l AnimCue_MMZ1_Present,AnimCue_MMZ1_Past,AnimCue_MMZ1_GoodFuture,AnimCue_MMZ1_BadFuture
+		dc.l AnimCue_MMZ2_Present,AnimCue_MMZ2_Past,AnimCue_MMZ2_GoodFuture,AnimCue_MMZ2_BadFuture
 
 Animate_SMZ:
 		cmpi.b	#1,(Current_Act).w	; indoor Act 2 reuses the smoke bank for Kemusi
@@ -12552,6 +12563,7 @@ AnimCue_SMZ:	zoneanimstart
 
 ; ---------------------------------------------------------------------------
 		include "_inc/Metallic Madness Animation Data.asm"
+		include "_inc/Metallic Madness 2 Animation Data.asm"
 
 ; These subroutines are yet to be properly implemented
 ; ---------------------------------------------------------------------------
@@ -13469,18 +13481,46 @@ Nem_CheckpointYellow:	binclude "art/nemesis/Checkpoint yellow.nem"
 		even
 Nem_Wheel:	binclude	"art/nemesis/Wheel carrier.nem"
 		even
-Kospm_MMZ1_Atlas:
-		binclude "art/moduled kosinski/MMZ1 Sprite Atlas.kospm"
+Kospm_MMZ_CrusherFloor:
+		binclude "art/moduled kosinski/MMZ Crusher and floor.kospm"
 		even
-Kospm_MMZ1_SawGoodFuture:
-		binclude "art/moduled kosinski/MMZ1 Saw Good Future.kospm"
+Kospm_MMZ_MechaBu:
+		binclude "art/moduled kosinski/MMZ Mecha-Bu.kospm"
 		even
-Kospm_MMZ1_SeesawGoodFuture:
-		binclude "art/moduled kosinski/MMZ1 Seesaw Good Future.kospm"
+Kospm_MMZ_TimePostHeads:
+		binclude "art/moduled kosinski/MMZ Time post heads.kospm"
 		even
-Kospm_MMZ1_GeneratorPast:
-		binclude "art/moduled kosinski/MMZ1 Generator Past.kospm"
+Kospm_MMZ_Generator:
+		binclude "art/moduled kosinski/MMZ Generator.kospm"
 		even
+Kospm_MMZ_GeneratorPast:
+		binclude "art/moduled kosinski/MMZ Generator Past.kospm"
+		even
+Kospm_MMZ1_Platforms:
+		binclude "art/moduled kosinski/MMZ1 Platforms.kospm"
+		even
+Kospm_MMZ1_SawsSeesaw:
+		binclude "art/moduled kosinski/MMZ1 Saws and seesaw.kospm"
+		even
+Kospm_MMZ1_SawsSeesawGoodFuture:
+		binclude "art/moduled kosinski/MMZ1 Saws and seesaw Good Future.kospm"
+		even
+Kospm_MMZ1_Enemies:
+		binclude "art/moduled kosinski/MMZ1 Enemies.kospm"
+		even
+Kospm_MMZ2_EmittersDoors:
+		binclude "art/moduled kosinski/MMZ2 Emitters and doors.kospm"
+		even
+Kospm_MMZ2_BombCrushers:
+		binclude "art/moduled kosinski/MMZ2 Bomb and crushers.kospm"
+		even
+Kospm_MMZ2_DangoDoors:
+		binclude "art/moduled kosinski/MMZ2 Dango and doors.kospm"
+		even
+Kospm_MMZ2_TerrainSpill:
+		binclude "art/moduled kosinski/MMZ2 Bad Future Spill.kospm"
+		even
+
 Nem_MM_Propeller:
 		binclude	"art/nemesis/MM Propeller.nem"
 		even
@@ -14053,6 +14093,38 @@ Kosp_MMZ1_BadFuture:	binclude	"art/kosinski/level/8x8 - MMZ1 Bad Future.kosp"
 Map16_MMZ1_BadFuture:	binclude	"mappings/16x16/MMZ1 Bad Future.kosp"
 		even
 Map128_MMZ1_BadFuture:	binclude	"mappings/128x128/MMZ1 Bad Future.kosp"
+		even
+Kosp_MMZ2_Present:	binclude "art/kosinski/level/8x8 - MMZ2 Present.kosp"
+		even
+Map16_MMZ2_Present:	binclude "mappings/16x16/MMZ2 Present.kosp"
+		even
+Map128_MMZ2_Present:	binclude "mappings/128x128/MMZ2 Present.kosp"
+		even
+Kosp_MMZ2_Past:	binclude "art/kosinski/level/8x8 - MMZ2 Past.kosp"
+		even
+Map16_MMZ2_Past:	binclude "mappings/16x16/MMZ2 Past.kosp"
+		even
+Map128_MMZ2_Past:	binclude "mappings/128x128/MMZ2 Past.kosp"
+		even
+Kosp_MMZ2_GoodFuture:	binclude "art/kosinski/level/8x8 - MMZ2 Good Future.kosp"
+		even
+Map16_MMZ2_GoodFuture:	binclude "mappings/16x16/MMZ2 Good Future.kosp"
+		even
+Map128_MMZ2_GoodFuture:	binclude "mappings/128x128/MMZ2 Good Future.kosp"
+		even
+Kosp_MMZ2_BadFuture:	binclude "art/kosinski/level/8x8 - MMZ2 Bad Future.kosp"
+		even
+Map16_MMZ2_BadFuture:	binclude "mappings/16x16/MMZ2 Bad Future.kosp"
+		even
+Map128_MMZ2_BadFuture:	binclude "mappings/128x128/MMZ2 Bad Future.kosp"
+		even
+Col_MMZ2_Present:	binclude "collision/present/LV0F2.bin"
+		even
+Col_MMZ2_Past:	binclude "collision/past/LV0F2.bin"
+		even
+Col_MMZ2_GoodFuture:	binclude "collision/good Future/LV0F2.bin"
+		even
+Col_MMZ2_BadFuture:	binclude "collision/bad future/LV0F2.bin"
 		even
 Col_MMZ1_Present:	binclude	"collision/present/LV0F1.bin"
 		even
@@ -15292,6 +15364,8 @@ Art_S3LevelSelectBackground: binclude "art/uncompressed/S3 Level Select Backgrou
 
 
 Art_MMZ1Animated: binclude "art/uncompressed/MMZ1 Animated.unc"
+		even
+Art_MMZ2Animated: binclude "art/uncompressed/MMZ2 Animated.unc"
 		even
 
 Art_SMZSmoke: binclude "art/uncompressed/SMZ Smoke.bin"

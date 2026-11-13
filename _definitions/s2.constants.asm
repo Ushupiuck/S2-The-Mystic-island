@@ -34,6 +34,10 @@ MonitorType_Count:	equ 10
 MonitorArt_SlotCount:	equ 4
 MonitorArt_IconTiles:	equ 4
 ; ---------------------------------------------------------------------------
+; MMZ2 changes one staged angle, retaining the shared collision geometry.
+MMZ2_CollisionAngleIndex:	equ $69
+MMZ2_CollisionAngle:		equ $C8
+; ---------------------------------------------------------------------------
 ; Shared checkpoint/time-pole word subtype
 ; ---------------------------------------------------------------------------
 PoleType_Checkpoint:	equ $000
@@ -2100,12 +2104,20 @@ ArtTile_ArtNem_S1EndSquirrel:	equ $580;$05B3
 ; MMZ Act 1 resident object art. Overlay destinations retain the base atlas layout.
 ArtTile_MMZ_Atlas:		equ $260
 ArtTile_MMZ_Atlas_End:		equ $478
+ArtTile_MMZ_CrusherFloor:	equ ArtTile_MMZ_Atlas+38
+ArtTile_MMZ_MechaBu:		equ ArtTile_MMZ_Atlas+270
+ArtTile_MMZ2_Button:		equ ArtTile_MMZ_Atlas+30
 ArtTile_MMZ_Saw:			equ ArtTile_MMZ_Atlas+110
 ArtTile_MMZ_Seesaw:		equ ArtTile_MMZ_Atlas+148
 ArtTile_TimePostHeads:		equ ArtTile_MMZ_Atlas+432
 ArtTile_MMZ_Generator:		equ ArtTile_MMZ_Atlas+454
 ArtTile_MMZ_HVPlatform:		equ $478 ; existing shared eight-tile morphing platform
 ArtTile_MMZ_Propeller:		equ $480 ; existing shared 49-tile propeller
+
+ArtTile_MMZ2_TerrainSpill:	equ ArtTile_Monitor_Reclaimed ; 13 static Bad Future tiles
+	if ArtTile_MMZ2_TerrainSpill+13>ArtTile_Monitor_FreeEnd
+		fatal "MMZ2 terrain spill overlaps permanent Tails life art."
+	endif
 
 ; MMZ1 keeps CD terrain-animation slots, shifted past the reserved water tiles.
 ArtTile_MMZ1_Present_Anim1:	equ $20D
@@ -2120,6 +2132,22 @@ ArtTile_MMZ1_BadFuture_Anim1:	equ $238
 ArtTile_MMZ1_BadFuture_Anim2:	equ $240
 ArtTile_MMZ1_BadFuture_Anim3:	equ $248
 ArtTile_MMZ1_BadFuture_Anim4:	equ $258
+
+; MMZ2 Bad Future slides its complete animated range down thirteen tiles.
+ArtTile_MMZ2_Present_Anim1:	equ $232
+ArtTile_MMZ2_Present_Anim2:	equ $23A
+ArtTile_MMZ2_Present_Anim3:	equ $242
+ArtTile_MMZ2_Present_Anim4:	equ $252
+ArtTile_MMZ2_Present_Anim5:	equ $256
+ArtTile_MMZ2_GoodFuture_Anim1:	equ $22E
+ArtTile_MMZ2_GoodFuture_Anim2:	equ $236
+ArtTile_MMZ2_GoodFuture_Anim3:	equ $23E
+ArtTile_MMZ2_GoodFuture_Anim4:	equ $252
+ArtTile_MMZ2_BadFuture_Anim1:	equ $238
+ArtTile_MMZ2_BadFuture_Anim2:	equ $240
+ArtTile_MMZ2_BadFuture_Anim3:	equ $248
+ArtTile_MMZ2_BadFuture_Anim4:	equ $258
+ArtTile_MMZ2_BadFuture_Anim5:	equ $25C
 
 ArtTile_SMZ_Atlas:	equ $2B9 ; original sprite rectangles, shared by both acts
 ArtTile_SMZ_Junction_Gap:	equ $4B0 ; twelve streamed tiles, below the wheel bank

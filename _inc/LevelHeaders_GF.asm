@@ -117,7 +117,7 @@ LevelArtPointersGF:
 
 		; LVF placeholder
 		levartptrs plcid_MMZ1_GoodFuture, plcid_LVF1_Extra, palid_MMZ1_GoodFuture, Kosp_MMZ1_GoodFuture, Map16_MMZ1_GoodFuture, Map128_MMZ1_GoodFuture	; MMZ Act 1, GoodFuture
-		levartptrs plcid_LVF2_Main, plcid_LVF2_Extra, palid_GHZ, GKosp_LVF, GMap16_LVF, GMap128_LVF	; LVFZ	; ACT 2
+		levartptrs plcid_LVF2_Main, plcid_LVF2_Extra, palid_MMZ2_GoodFuture, Kosp_MMZ2_GoodFuture, Map16_MMZ2_GoodFuture, Map128_MMZ2_GoodFuture	; MMZ Act 2, GoodFuture
 		levartptrs plcid_LVF3_Main, plcid_LVF3_Extra, palid_GHZ, GKosp_LVF, GMap16_LVF, GMap128_LVF	; LVFZ	; ACT 3
 		levartptrs plcid_LVF4_Main, plcid_LVF4_Extra, palid_GHZ, GKosp_LVF, GMap16_LVF, GMap128_LVF	; LVFZ	; ACT 4
 LevelArtPointersGF_End:

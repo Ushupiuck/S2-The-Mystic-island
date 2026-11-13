@@ -117,7 +117,7 @@ LevelArtPointersP:
 
 		; LVF placeholder
 		levartptrs plcid_MMZ1_Past, plcid_LVF1_Extra, palid_MMZ1_Past, Kosp_MMZ1_Past, Map16_MMZ1_Past, Map128_MMZ1_Past	; MMZ Act 1, Past
-		levartptrs plcid_LVF2_Main, plcid_LVF2_Extra, palid_GHZ, PKosp_LVF, PMap16_LVF, PMap128_LVF	; LVFZ	; ACT 2
+		levartptrs plcid_MMZ2_Past, plcid_LVF2_Extra, palid_MMZ2_Past, Kosp_MMZ2_Past, Map16_MMZ2_Past, Map128_MMZ2_Past	; MMZ Act 2, Past
 		levartptrs plcid_LVF3_Main, plcid_LVF3_Extra, palid_GHZ, PKosp_LVF, PMap16_LVF, PMap128_LVF	; LVFZ	; ACT 3
 		levartptrs plcid_LVF4_Main, plcid_LVF4_Extra, palid_GHZ, PKosp_LVF, PMap16_LVF, PMap128_LVF	; LVFZ	; ACT 4
 LevelArtPointersP_End:

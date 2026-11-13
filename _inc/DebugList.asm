@@ -14,7 +14,7 @@ DebugList:
 		dc.w Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList
 		dc.w Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList
 		dc.w Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList
-		dc.w Debug_MMZ1-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList
+		dc.w Debug_MMZ1-DebugList,Debug_MMZ2-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList
 
 dbug:	macro map,object,subtype,frame,vram
 	dc.l object,map
@@ -350,3 +350,28 @@ Debug_MMZ1:	dc.w (Debug_MMZ1_End-Debug_MMZ1-2)/DebugEntry_size
 	dbug	Map_Obj79,	Obj79,	PoleType_Past,	6,	0
 	dbug	Map_Obj79,	Obj79,	PoleType_Future,	8,	0
 Debug_MMZ1_End:
+
+; MMZ2 common/implemented object families; remaining mechanisms are being ported.
+Debug_MMZ2:	dc.w (Debug_MMZ2_End-Debug_MMZ2-2)/DebugEntry_size
+	dbug	Map_Ring,	Ring,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj26,	Monitor,	MonitorType_Rings,	2,	ArtTile_Monitor
+	dbug	Map_Obj26,	Monitor,	MonitorType_Shield,	3,	ArtTile_Monitor
+	dbug	Map_Obj26,	Monitor,	MonitorType_Invincibility,	8,	ArtTile_Monitor
+	dbug	Map_Obj26,	Monitor,	MonitorType_Shoes,	7,	ArtTile_Monitor
+	dbug	Map_obj41,	Springs,	0,	0,	ArtTile_Springs
+	dbug	Map_Obj36,	Spikes,	0,	0,	ArtTile_Spikes
+	dbug	Map_MMZ_Crusher,	SMZ_ScrapStomp,	$100,	0,	ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_Crusher,	SMZ_ScrapStomp,	$101,	1,	ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_Crusher,	SMZ_ScrapStomp,	$141,	1,	ArtTile_MMZ_Atlas
+	dbug	Map_MovSpring,	WheelCarrier,	0,	0,	ArtTile_Wheel
+	dbug	Map_MovSpring,	WheelCarrier,	$81,	0,	ArtTile_Wheel
+	dbug	Map_MMZ_Floor,	Obj1B,	$101,	0,	ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_Floor,	Obj1B,	$104,	3,	ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_Floor,	Obj1B,	$108,	7,	ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_Floor,	Obj1B,	$181,	0,	ArtTile_MMZ_Atlas
+	dbug	Map_Obj79,	Obj79,	1,	0,	0
+	dbug	Map_Obj79,	Obj79,	1+Pole_Yellow,	2,	0
+	dbug	Map_Obj79,	Obj79,	PoleType_Past,	6,	0
+	dbug	Map_Obj79,	Obj79,	PoleType_Future,	8,	0
+	dbug	Map_PlatformButton,SMZ_Button,0,0,ArtTile_MMZ2_Button
+Debug_MMZ2_End:

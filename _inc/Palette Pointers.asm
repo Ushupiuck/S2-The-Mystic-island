@@ -46,6 +46,14 @@ ptr_Pal_MMZ1_Present:	palptr Pal_MMZ1_Present,v_palette+$20,$18
 ptr_Pal_MMZ1_Past:	palptr Pal_MMZ1_Past,v_palette+$20,$18
 ptr_Pal_MMZ1_GoodFuture:	palptr Pal_MMZ1_GoodFuture,v_palette+$20,$18
 ptr_Pal_MMZ1_BadFuture:	palptr Pal_MMZ1_BadFuture,v_palette+$20,$18
+ptr_Pal_MMZ2_Present:	palptr Pal_MMZ2_Present,v_palette+$20,$18
+ptr_Pal_MMZ2_Past:	palptr Pal_MMZ2_Past,v_palette+$20,$18
+ptr_Pal_MMZ2_GoodFuture:	palptr Pal_MMZ2_GoodFuture,v_palette+$20,$18
+ptr_Pal_MMZ2_BadFuture:	palptr Pal_MMZ2_BadFuture,v_palette+$20,$18
+palid_MMZ2_Present:	equ (ptr_Pal_MMZ2_Present-PalPointers)/8
+palid_MMZ2_Past:	equ (ptr_Pal_MMZ2_Past-PalPointers)/8
+palid_MMZ2_GoodFuture:	equ (ptr_Pal_MMZ2_GoodFuture-PalPointers)/8
+palid_MMZ2_BadFuture:	equ (ptr_Pal_MMZ2_BadFuture-PalPointers)/8
 palid_MMZ1_Present:	equ (ptr_Pal_MMZ1_Present-PalPointers)/8
 palid_MMZ1_Past:	equ (ptr_Pal_MMZ1_Past-PalPointers)/8
 palid_MMZ1_GoodFuture:	equ (ptr_Pal_MMZ1_GoodFuture-PalPointers)/8

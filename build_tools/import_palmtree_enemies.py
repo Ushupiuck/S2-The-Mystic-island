@@ -38,29 +38,29 @@ def read_tables(source):
     return tables
 
 
-def mapping(source, root):
-    tables = read_tables(source)
-    entries = tables[root]['entries']
-    out = bytearray(len(entries) * 2)
-    seen = {}
-    for i, entry in enumerate(entries):
-        data = tables[entry]['bytes']
-        count = data[0]
-        assert len(data) >= 1 + count * 5
-        frame = bytearray(struct.pack('>H', count))
-        for j in range(count):
-            y, size, hi, lo, x = data[1+j*5:6+j*5]
-            tile = hi << 8 | lo
-            assert not tile & 0x6000, 'Source rectangles use the base palette 1'
-            frame.extend(struct.pack('>bBHh', y if y < 128 else y-256,
-                                     size, tile, x if x < 128 else x-256))
-        frame = bytes(frame)
-        if frame not in seen:
-            seen[frame] = len(out)
-            out.extend(frame)
-        struct.pack_into('>H', out, i*2, seen[frame])
-    return bytes(out)
-
+def mapping(source, root, allow_palettes=False):
+	tables = read_tables(source)
+	entries = tables[root]['entries']
+	out = bytearray(len(entries) * 2)
+	seen = {}
+	for i, entry in enumerate(entries):
+		data = tables[entry]['bytes']
+		count = data[0]
+		assert len(data) >= 1 + count * 5
+		frame = bytearray(struct.pack('>H', count))
+		for j in range(count):
+			y, size, hi, lo, x = data[1+j*5:6+j*5]
+			tile = hi << 8 | lo
+			if not allow_palettes:
+				assert not tile & 0x6000, 'Source rectangles use the base palette 1'
+			frame.extend(struct.pack('>bBHh', y if y < 128 else y-256,
+									size, tile, x if x < 128 else x-256))
+		frame = bytes(frame)
+		if frame not in seen:
+			seen[frame] = len(out)
+			out.extend(frame)
+		struct.pack_into('>H', out, i*2, seen[frame])
+	return bytes(out)
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)

@@ -24,7 +24,7 @@ PalCycle:	dc.w PalCycle_GHZ-PalCycle	; Zone 0
 		dc.w PalCycle_Null-PalCycle
 		dc.w PalCycle_Null-PalCycle
 		dc.w PalCycle_Null-PalCycle
-		dc.w PalCycle_MMZ1-PalCycle
+		dc.w PalCycle_MMZ-PalCycle
 ; ===========================================================================
 PalCycle_Null:
 		rts
@@ -546,11 +546,13 @@ Pal_SMZCyc10: binclude "palette/SMZ Cycle 10.bin"
 ; MMZ1's independently timed colors. One loop replaces six copies of the CD
 ; setup/call sequence. State is six timer/step byte pairs in v_pal_buffer.
 ; The four era tables retain their own colors, holds and channel counts.
-PalCycle_MMZ1:
-		tst.b	(Current_Act).w
-		bne.s	.return
+PalCycle_MMZ:
 		moveq	#0,d0
-		move.b	(Current_Timezone).w,d0
+		move.b	(Current_Act).w,d0
+		cmpi.b	#1,d0
+		bhi.s	.return
+		lsl.w	#2,d0
+		add.b	(Current_Timezone).w,d0
 		lsl.w	#2,d0
 		movea.l	.scripts(pc,d0.w),a1
 		move.w	(a1)+,d6
@@ -579,3 +581,4 @@ PalCycle_MMZ1:
 		rts
 .scripts:
 		dc.l MMZ1_PalPresent,MMZ1_PalPast,MMZ1_PalGoodFuture,MMZ1_PalBadFuture
+		dc.l MMZ2_PalPresent,MMZ2_PalPast,MMZ2_PalGoodFuture,MMZ2_PalBadFuture

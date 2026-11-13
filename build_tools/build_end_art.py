@@ -24,10 +24,23 @@ BANKS = (
 	('MechaEffects', 'Mecha Sonic effects', 'Nem_MechaEffects'),
 	('Bonus', 'Hidden bonus', 'Nem_Bonus'),
 	('Explosion', 'Explosion', 'Nem_Explosion'),
-	('MMZ1_Atlas', 'MMZ1 Sprite Atlas', None),
-	('MMZ1_SawGoodFuture', 'MMZ1 Saw Good Future', None),
-	('MMZ1_SeesawGoodFuture', 'MMZ1 Seesaw Good Future', None),
-	('MMZ1_GeneratorPast', 'MMZ1 Generator Past', None),
+)
+
+
+# Common MMZ art is stored once. Each act fills the same three private ranges.
+MMZ_BANKS = (
+	('MMZ Crusher and floor', 'MMZ1 Sprite Atlas', 38, 72),
+	('MMZ Mecha-Bu', 'MMZ1 Sprite Atlas', 270, 48),
+	('MMZ Time post heads', 'MMZ1 Sprite Atlas', 432, 22),
+	('MMZ Generator', 'MMZ1 Sprite Atlas', 454, 23),
+	('MMZ Generator Past', 'MMZ1 Generator Past', 0, 23),
+	('MMZ1 Platforms', 'MMZ1 Sprite Atlas', 0, 38),
+	('MMZ1 Saws and seesaw', 'MMZ1 Sprite Atlas', 110, 160),
+	('MMZ1 Enemies', 'MMZ1 Sprite Atlas', 318, 114),
+	('MMZ2 Emitters and doors', 'MMZ2 Emitters and doors', 0, 38),
+	('MMZ2 Bomb and crushers', 'MMZ2 Bomb and crushers', 0, 138),
+	('MMZ2 Dango and doors', 'MMZ2 Dango and doors', 0, 102),
+	('MMZ2 Bad Future Spill', 'MMZ2 Bad Future Spill', 0, 13),
 )
 
 
@@ -94,6 +107,23 @@ def main():
 		(ROOT / f'art/moduled kosinski/{name}.kospm').write_bytes(packed)
 		report.append(dict(label='Kospm_'+label, raw=len(raw),
 			packed=len(packed), odd=bool(len(packed) & 1)))
+	for name,master,start,count in MMZ_BANKS:
+		raw=(ROOT/f'art/uncompressed/{master}.unc').read_bytes()[start*32:(start+count)*32]
+		assert len(raw)==count*32,(name,'master range')
+		packed=pack_moduled(raw)
+		(ROOT/f'art/moduled kosinski/{name}.kospm').write_bytes(packed)
+		report.append(dict(label=name,raw=len(raw),packed=len(packed),odd=bool(len(packed)&1)))
+	good=(ROOT/'art/uncompressed/MMZ1 Saw Good Future.unc').read_bytes()+(ROOT/'art/uncompressed/MMZ1 Seesaw Good Future.unc').read_bytes()
+	assert len(good)==160*32
+	packed=pack_moduled(good)
+	(ROOT/'art/moduled kosinski/MMZ1 Saws and seesaw Good Future.kospm').write_bytes(packed)
+	report.append(dict(label='MMZ1 Good Future saws/seesaw',raw=len(good),packed=len(packed),odd=bool(len(packed)&1)))
+	# Editor-only composite: edit the ordinary shared master or private sources,
+	# then rebuild. The common 165 tiles are never duplicated in the ROM.
+	preview=bytearray((ROOT/'art/uncompressed/MMZ1 Sprite Atlas.unc').read_bytes())
+	for name,start,count in (('MMZ2 Emitters and doors',0,38),('MMZ2 Bomb and crushers',110,138),('MMZ2 Dango and doors',318,102)):
+		preview[start*32:(start+count)*32]=(ROOT/f'art/uncompressed/{name}.unc').read_bytes()
+	(ROOT/'art/uncompressed/MMZ2 Editor Atlas.unc').write_bytes(preview)
 	report.append(pack_fz_damaged_eggmobile())
 	if a.report:
 		a.report.write_text(json.dumps(report, indent=2)+'\n')

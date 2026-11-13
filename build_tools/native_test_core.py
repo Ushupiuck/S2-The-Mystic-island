@@ -180,6 +180,8 @@ class Native:
 				('ColArray2', 'MCD_TerrainWidths_Sub', 0x1000),
 				('AngleMap', 'MCD_TerrainAngles_Sub', 0x100)):
 			sub.mem_write(s[dest], bytes(cpu.mem_read(s[legacy + source], length)))
+			if source=='AngleMap' and self.read('Current_ZoneAndAct',2)==0xF01:
+				sub.mem_write(s[dest]+s['MMZ2_CollisionAngleIndex'],bytes((s['MMZ2_CollisionAngle'],)))
 		for i in (1, 2):
 			pointer = self.read('v_colladdr' + str(i), 4) & 0xFFFFFF
 			# Preserve independently supplied fixture paths, including offsets.
