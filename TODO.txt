@@ -282,3 +282,8 @@ $E  Tiles
 Keep normal and S3&K falling signpost entries at $7E, launch normal signs on fast grounded crossings, and verify both-player airborne hits/points, sparkle art, wall/floor motion and results in MD/Mode1 NTSC/PAL < DONE
 
 Use an S3&K-style shared touch-response queue with automatic registration, sorted late-child handling and complete dense-scene fallback; preserve SST/global addresses, compare old/new boundaries and both actors, and measure whole dispatch/registration costs in MD and Mode1 gameplay < DONE
+
+- [ ] LAST, after the current MMZ port/optimization and shared-object work:
+	Fix GHZ boss face corruption reported in ClownEmu. Removing the waterfall
+	exposes several face frames drawing garbage/static while other frames are
+	correct. Reproduce in ClownEmu and trace the frame art/mapping/VRAM lifetime.
