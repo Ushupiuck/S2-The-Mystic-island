@@ -6,20 +6,19 @@
 ; ---------------------------------------------------------------------------
 
 SMZ_Saws:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	SMZ_Saw_Index(pc,d0.w),d1
-		jmp	SMZ_Saw_Index(pc,d1.w)
-; ===========================================================================
-SMZ_Saw_Index:	dc.w SMZ_Saw_Main-SMZ_Saw_Index
-		dc.w SMZ_Saw_Action-SMZ_Saw_Index
+		move.w	obSubtype(a0),d0
+		btst	#8,d0	; bit 8 selects MMZ outside its own zone
+		bne.w	MMZ_Saw_Init
+		cmpi.b	#id_MMZ,(v_zone).w
+		beq.w	MMZ_Saw_Init
 
 SMZ_saw_origY:	equ objoff_38		; original y-axis position
 SMZ_saw_origX:	equ objoff_3A		; original x-axis position
 SMZ_saw_shot:	equ objoff_3D		; flag set when the speeding saw appears
 ; ===========================================================================
 
-SMZ_Saw_Main:	; Routine 0
+SMZ_Saw_Main:	; Constructor; the live object skips initialization dispatch.
+		move.l	#SMZ_Saw_Action,code(a0)
 		addq.b	#2,obRoutine(a0)			; advance to SMZ_Saw_Action
 		move.l	#Map_SMZ_Saw,obMap(a0)
 		move.b #Map_SMZ_Saw_height,height_pixels(a0)			; set mappings
@@ -221,3 +220,181 @@ SMZ_Saw_Type4_SpeedingFromRight_Shot:
 ; ===========================================================================
 
 Map_SMZ_Saw: binclude "mappings/sprite/SMZ Saw.bin"
+
+; ---------------------------------------------------------------------------
+; MMZ diagonal buzzsaw. One placement ID, direction from X/Y flip, bit 7 of
+; the low subtype byte selects the initially extended phase. Direct state
+; entries replace CD's parent/child and five-routine dispatch tables.
+MMZ_saw_timer:		equ objoff_2E
+MMZ_saw_xstep:		equ objoff_30 ; signed 16.16
+MMZ_saw_ystep:		equ objoff_34 ; signed 16.16
+MMZ_saw_steps:		equ objoff_38
+MMZ_saw_home:		equ objoff_3A
+MMZ_saw_handle:		equ objoff_3C ; reciprocal word pointer
+MMZ_saw_parent:		equ objoff_3E ; handle's parent pointer
+MMZ_saw_sound:		equ objoff_40 ; visible-update counter
+
+MMZ_Saw_Init:
+		jsr	(FindFreeObj).l
+		bne.w	.return	; retry the intact placement without leaking a handle
+		move.w	a1,MMZ_saw_handle(a0)
+		move.w	a0,MMZ_saw_parent(a1)
+		move.l	#MMZ_Saw_Handle,code(a1)
+		move.l	#Map_MMZ_SawHandle,obMap(a1)
+		move.b	#Map_MMZ_SawHandle_width,width_pixels(a1)
+		move.b	#Map_MMZ_SawHandle_height,height_pixels(a1)
+		move.w	obX(a0),obX(a1)
+		move.w	obY(a0),obY(a1)
+		move.b	obStatus(a0),obStatus(a1)
+		move.b	obStatus(a0),obRender(a1)
+		ori.b	#4,obRender(a1)
+		move.w	#ArtTile_MMZ_Atlas,obGfx(a1)
+		move.w	#$200,obPriority(a1)
+		move.l	#Map_MMZ_Saw,obMap(a0)
+		move.b	#Map_MMZ_Saw_width,width_pixels(a0)
+		move.b	#Map_MMZ_Saw_height,height_pixels(a0)
+		move.w	#ArtTile_MMZ_Atlas,obGfx(a0)
+		move.w	#$180,obPriority(a0)
+		move.b	obStatus(a0),obRender(a0)
+		ori.b	#4,obRender(a0)
+		move.b	#$80|Touch_Size_MMZSaw_ID,obColType(a0)
+		move.w	obX(a0),MMZ_saw_home(a0)
+		move.l	#$10000,MMZ_saw_xstep(a0)
+		move.l	#$10000,MMZ_saw_ystep(a0)
+		moveq	#80,d0
+		moveq	#80,d1
+		btst	#0,obStatus(a0)
+		beq.s	.y_direction
+		neg.l	MMZ_saw_xstep(a0)
+		neg.w	d0
+.y_direction:
+		btst	#1,obStatus(a0)
+		beq.s	.phase
+		neg.l	MMZ_saw_ystep(a0)
+		neg.w	d1
+.phase:
+		move.l	#MMZ_Saw_HoldIn,code(a0)
+		move.w	obSubtype(a0),d2
+		btst	#7,d2
+		beq.s	.start
+		move.l	#MMZ_Saw_HoldOut,code(a0)
+		move.b	#9,obAnim(a0)
+		sub.w	d0,obX(a1)
+		sub.w	d1,obY(a1)
+.start:
+		move.b	#-1,obPrevAni(a0)
+		move.w	#59,MMZ_saw_timer(a0)
+		; CD's constructor executes the outward movement once, including
+		; this one-pixel birth offset, before entering its selected hold.
+		bra.s	MMZ_Saw_MoveOut
+.return:
+		rts
+
+MMZ_Saw_HoldIn:
+		subq.w	#1,MMZ_saw_timer(a0)
+		bne.w	MMZ_Saw_Finish
+		move.l	#MMZ_Saw_Extend,code(a0)
+		move.w	#9,MMZ_saw_steps(a0)
+		move.w	#1,MMZ_saw_timer(a0)
+		bra.w	MMZ_Saw_Finish
+
+MMZ_Saw_Extend:
+		subq.w	#1,MMZ_saw_timer(a0)
+		bne.s	MMZ_Saw_MoveOut
+		addq.b	#1,obAnim(a0)
+		move.w	#9,MMZ_saw_timer(a0)
+		subq.w	#1,MMZ_saw_steps(a0)
+		bne.s	MMZ_Saw_MoveOut
+		move.l	#MMZ_Saw_HoldOut,code(a0)
+		move.w	#60,MMZ_saw_timer(a0)
+MMZ_Saw_MoveOut:
+		move.l	MMZ_saw_xstep(a0),d0
+		add.l	d0,obX(a0)
+		move.l	MMZ_saw_ystep(a0),d0
+		add.l	d0,obY(a0)
+		bra.s	MMZ_Saw_Finish
+
+MMZ_Saw_HoldOut:
+		subq.w	#1,MMZ_saw_timer(a0)
+		bne.s	MMZ_Saw_Finish
+		move.l	#MMZ_Saw_Retract,code(a0)
+		move.w	#9,MMZ_saw_steps(a0)
+		move.w	#1,MMZ_saw_timer(a0)
+		bra.s	MMZ_Saw_Finish
+
+MMZ_Saw_Retract:
+		subq.w	#1,MMZ_saw_timer(a0)
+		bne.s	.move
+		subq.b	#1,obAnim(a0)
+		move.w	#9,MMZ_saw_timer(a0)
+		subq.w	#1,MMZ_saw_steps(a0)
+		bne.s	.move
+		move.l	#MMZ_Saw_HoldIn,code(a0)
+		move.w	#60,MMZ_saw_timer(a0)
+.move:
+		move.l	MMZ_saw_xstep(a0),d0
+		sub.l	d0,obX(a0)
+		move.l	MMZ_saw_ystep(a0),d0
+		sub.l	d0,obY(a0)
+
+MMZ_Saw_Finish:
+		; Each extension stage has exactly two poses, two updates apiece.
+		; Anim 9 is the original alias of 8. No animation interpreter needed.
+		move.b	obAnim(a0),d0
+		cmp.b	obPrevAni(a0),d0
+		beq.s	.animate
+		move.b	d0,obPrevAni(a0)
+		cmpi.b	#8,d0
+		bls.s	.pair
+		moveq	#8,d0
+.pair:
+		add.b	d0,d0
+		move.b	d0,obFrame(a0)
+		move.b	#1,obTimeFrame(a0)
+		bra.s	.sound
+.animate:
+		subq.b	#1,obTimeFrame(a0)
+		bpl.s	.sound
+		move.b	#1,obTimeFrame(a0)
+		bchg	#0,obFrame(a0)
+.sound:
+		tst.b	obRender(a0)
+		bpl.s	.display
+		addq.w	#1,MMZ_saw_sound(a0)
+		move.w	MMZ_saw_sound(a0),d0
+		andi.w	#31,d0
+		bne.s	.display
+		move.w	#sfx_Saw,d0
+		jsr	(PlaySound_Special).l
+.display:
+		out_of_range2	MMZ_Saw_Unload,MMZ_saw_home(a0)
+		jmp	(DisplaySprite).l
+
+MMZ_Saw_Handle:
+		movea.w	MMZ_saw_parent(a0),a1
+		tst.l	code(a1)
+		beq.s	.delete
+		cmpi.l	#Map_MMZ_Saw,obMap(a1)
+		bne.s	.delete
+		move.w	a0,d0
+		cmp.w	MMZ_saw_handle(a1),d0
+		bne.s	.delete
+		jmp	(DisplaySprite).l
+.delete:
+		jmp	(DeleteObject).l
+
+MMZ_Saw_Unload:
+		movea.w	MMZ_saw_handle(a0),a1
+		cmpi.l	#MMZ_Saw_Handle,code(a1)
+		bne.s	.delete
+		move.w	a0,d0
+		cmp.w	MMZ_saw_parent(a1),d0
+		bne.s	.delete
+		jsr	(DeleteObject2).l
+.delete:
+		jmp	(UnloadObject).l
+
+Map_MMZ_Saw:		binclude "mappings/sprite/MMZ Saw.bin"
+		even
+Map_MMZ_SawHandle:	binclude "mappings/sprite/MMZ Saw Handle.bin"
+		even

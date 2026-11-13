@@ -199,9 +199,9 @@ def main():
 		index = symbols['plcid_' + label[4:]]
 		assert 0 <= index <= 255, ('PLC ID exceeds header byte', label, index)
 		ptr = symbols['ArtLoadCues'] + index * 2
-		assert symbols['ArtLoadCues'] + struct.unpack_from('>h', rom, ptr)[0] == symbols[label], (
+		assert symbols['ArtLoadCues'] + (struct.unpack_from('>h', rom, ptr)[0]&~symbols['PLCKos_IndexFlag']) == symbols[label], (
 			'PLC ID resolves to another list', label, index)
-	for label in act_lists + [f'PLCKosM_CVZ{act}' for act in range(1, 5)]:
+	for label in act_lists + ['PLCKosM_MMZ1_Past','PLCKosM_MMZ1_GoodFuture'] + [f'PLCKosM_CVZ{act}' for act in range(1, 5)]:
 		for source, low, high in cues(label):
 			assert all(source == s or high <= a or low >= b for s, a, b in shared), (
 				'common sprite bank overwritten', label, hex(low), hex(high))

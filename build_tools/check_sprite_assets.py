@@ -191,26 +191,34 @@ def main():
 	act_count = symbols['LevelActCount']
 	assert act_count == symbols['LevelCount'] * symbols['ActsPerZone']
 	assert len(act_lists) == act_count * 2
-	expected_ids = None
+	base_ids = [rom[symbols['LevelArtPointers']+act*12+offset] for act in range(act_count) for offset in (0,4)]
+	era_primary = {'LevelArtPointersP':'Past','LevelArtPointersGF':'GoodFuture'}
+	era_lists = tuple('PLCKosM_MMZ1_'+era for era in era_primary.values())
 	for table in ('LevelArtPointers', 'LevelArtPointersP', 'LevelArtPointersGF', 'LevelArtPointersBF'):
 		assert symbols[table + '_End'] - symbols[table] == act_count * 12, table
 		ids = [rom[symbols[table]+act*12+offset] for act in range(act_count) for offset in (0,4)]
-		targets = [symbols['ArtLoadCues'] + struct.unpack_from(
-			'>h', rom, symbols['ArtLoadCues']+ident*2)[0] for ident in ids]
+		targets = [symbols['ArtLoadCues'] + (struct.unpack_from(
+			'>h', rom, symbols['ArtLoadCues']+ident*2)[0]&~symbols['PLCKos_IndexFlag']) for ident in ids]
 		assert len(set(ids)) == len(set(targets)) == act_count * 2, table
-		assert set(targets) == {symbols[label] for label in act_lists}, table
-		assert expected_ids is None or ids == expected_ids, table
-		expected_ids = ids
+		expected_targets = {symbols[label] for label in act_lists}
+		expected_ids = base_ids[:]
+		if table in era_primary:
+			era = era_primary[table]
+			expected_targets.remove(symbols['PLC_LVF1_Main'])
+			expected_targets.add(symbols['PLCKosM_MMZ1_'+era])
+			expected_ids[symbols['id_MMZ']*symbols['ActsPerZone']*2] = symbols['plcid_MMZ1_'+era]
+		assert set(targets) == expected_targets, table
+		assert ids == expected_ids, table
 	assert symbols['KosMLevelCues_End'] - symbols['KosMLoadCues'] == act_count * 2
 	module_targets = [symbols['KosMLoadCues'] + struct.unpack_from(
 		'>h', rom, symbols['KosMLoadCues']+act*2)[0] for act in range(act_count)]
 	assert len(set(module_targets)) == act_count
-	for label in act_lists + ('PLC_Main', 'PLC_Main2', 'PLC_Explode', 'PLC_Boss', 'PLC_Capsule') + tuple(
+	for label in act_lists + era_lists + ('PLC_Main', 'PLC_Main2', 'PLC_Explode', 'PLC_Boss', 'PLC_Capsule') + tuple(
 			'PLC_' + zone + 'Animals' for zone in ('GHZ', 'LZ', 'CPZ', 'EHZ', 'HPZ', 'HTZ')):
 		base = symbols[label]
 		count = struct.unpack_from('>h', rom, base)[0] + 1
 		assert 0 <= count <= 16, (label, count)
-		if label.endswith('_Main'):
+		if label.endswith('_Main') or label in era_lists:
 			assert count + symbols['ActPLC_Main_Reserve'] <= 16, (label, count)
 		for i in range(count):
 			source, low = struct.unpack_from('>IH', rom, base + 2 + i * 6)

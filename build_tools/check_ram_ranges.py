@@ -22,7 +22,17 @@ def main():
 		r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]', args.listing.read_text())}
 	address = lambda name: symbols[name] & 0xFFFFFF
 	assert address('Collision_response_list') == 0xFF0000
-	assert address('Free_RAM_Start') == address('Collision_response_list_end')
+	if 'Music_RAM_End' in symbols:
+		assert address('Music_StageData') == address('Collision_response_list_end')
+		assert address('Music_StageSongs') == address('Music_StageData')+symbols['Music_StageCapacity']*symbols['Music_StageCount']
+		assert address('Music_PageTags') == address('Music_StageSongs')+symbols['Music_StageCount']
+		assert address('Music_CacheSong') == address('Music_PageTags')+symbols['Music_CacheSlots']
+		fields=('Music_CacheSong','Music_NextPage','Music_FirstVoicePage','Music_PendingSong',
+			'Music_LoadBusy','Music_ServiceReady','Music_BusSignal','Music_RAM_End')
+		for before,after in zip(fields,fields[1:]):assert address(after)==address(before)+1,(before,after)
+		assert address('Free_RAM_Start') == address('Music_RAM_End')
+	else:
+		assert address('Free_RAM_Start') == address('Collision_response_list_end')
 	assert address('Free_RAM_End') == address('MCD_MainWorkStart')
 	assert address('MCD_MainWorkEnd') == address('Player_Art_Buffer_Start')
 	assert address('Player_Art_Buffer_End') == address('Main_RAM_Start')

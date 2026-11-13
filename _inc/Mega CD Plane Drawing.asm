@@ -157,6 +157,48 @@ Plane_SourceSMZ:
 		bra.w	Plane_SourceBand
 .rows:		dc.b 0,0,0,0,12,12,12,12,12,12,12,12,12,12,8,8
 		dc.b 8,8,8,8,8,4,4,4,4,4,4,4,4,4,4,4
+; MMZ1: 96 eight-pixel rows, with separate Past gradients. The same ROM
+; selectors feed Deform_MMZ1; only this routine executes on the CD CPU.
+Plane_SourceMMZ1:
+		move.w	d4,d0
+		bpl.s	.positive
+		addi.w	#768,d0	; top redraw margin wraps to the final background row
+.positive:
+		cmpi.w	#768,d0
+		blo.s	.row
+		subi.w	#768,d0
+.row:
+		lsr.w	#3,d0
+		lea	Plane_MMZ1ScrollRows(pc),a0
+		cmpi.b	#1,(MCD_TerrainTimeZone_Sub).l
+		bne.s	.era
+		lea	Plane_MMZ1PastScrollRows(pc),a0
+.era:
+		moveq	#0,d5
+		move.b	(a0,d0.w),d5
+		cmpi.w	#18,d5
+		blo.w	Plane_SourceFixed
+		subi.w	#16,d5	; 18 = base camera (+4), 20 = near camera (+8)
+		add.w	d5,d5
+		moveq	#0,d7
+		bra.w	Plane_SourceBand.scrolling
+Plane_MMZ1ScrollRows:
+		dc.b 8,8,8,8,6,6,6,6,6,4,4,4,2,0,18,18
+		dc.b 18,18,18,18,18,18,18,18,18,18,18,18,18,18,20,20
+		dc.b 20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20
+		dc.b 20,20,20,20,20,20,20,20,20,20,8,8,8,8,6,6
+		dc.b 6,6,6,4,4,4,2,0,18,18,18,18,18,18,18,18
+		dc.b 18,18,18,18,20,20,20,20,20,20,20,20,20,20,20,20
+		even
+Plane_MMZ1PastScrollRows:
+		dc.b 16,16,16,16,14,14,14,14,12,12,10,10,10,10,10,10
+		dc.b 8,8,6,6,4,4,2,2,0,0,18,18,18,18,20,20
+		dc.b 20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20
+		dc.b 20,20,20,20,20,20,20,20,20,20,12,12,12,12,10,10
+		dc.b 8,8,6,6,6,6,4,4,2,2,0,0,18,18,18,18
+		dc.b 18,18,18,18,20,20,20,20,20,20,20,20,20,20,20,20
+		even
+
 Plane_SourceBand:
 		moveq	#0,d7
 		moveq	#0,d5

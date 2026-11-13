@@ -24,6 +24,10 @@ BANKS = (
 	('MechaEffects', 'Mecha Sonic effects', 'Nem_MechaEffects'),
 	('Bonus', 'Hidden bonus', 'Nem_Bonus'),
 	('Explosion', 'Explosion', 'Nem_Explosion'),
+	('MMZ1_Atlas', 'MMZ1 Sprite Atlas', None),
+	('MMZ1_SawGoodFuture', 'MMZ1 Saw Good Future', None),
+	('MMZ1_SeesawGoodFuture', 'MMZ1 Seesaw Good Future', None),
+	('MMZ1_GeneratorPast', 'MMZ1 Generator Past', None),
 )
 
 
@@ -79,7 +83,7 @@ def main():
 	report = []
 	for label, name, original in BANKS:
 		source = ROOT / f'art/uncompressed/{name}.unc'
-		if a.import_nemesis and label not in ('OldEggPod','EggmanFace','Exhaust'):
+		if a.import_nemesis and original and label not in ('OldEggPod','EggmanFace','Exhaust'):
 			raw = decode(original)
 			if source.exists():
 				assert source.read_bytes() == raw, source

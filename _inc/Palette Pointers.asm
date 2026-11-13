@@ -42,6 +42,14 @@ ptr_Pal_GHZ4Water:	palptr	Pal_GHZ4Water,v_palette,$20
 ptr_Pal_MechaSonic:	palptr	Pal_MechaSonic,v_palette+$20,8
 ptr_Pal_EHZ2_PP:	palptr Pal_EHZ2_PP,v_palette+$20,$18
 ptr_Pal_LZWater:	palptr Pal_LZWater,v_palette,$20
+ptr_Pal_MMZ1_Present:	palptr Pal_MMZ1_Present,v_palette+$20,$18
+ptr_Pal_MMZ1_Past:	palptr Pal_MMZ1_Past,v_palette+$20,$18
+ptr_Pal_MMZ1_GoodFuture:	palptr Pal_MMZ1_GoodFuture,v_palette+$20,$18
+ptr_Pal_MMZ1_BadFuture:	palptr Pal_MMZ1_BadFuture,v_palette+$20,$18
+palid_MMZ1_Present:	equ (ptr_Pal_MMZ1_Present-PalPointers)/8
+palid_MMZ1_Past:	equ (ptr_Pal_MMZ1_Past-PalPointers)/8
+palid_MMZ1_GoodFuture:	equ (ptr_Pal_MMZ1_GoodFuture-PalPointers)/8
+palid_MMZ1_BadFuture:	equ (ptr_Pal_MMZ1_BadFuture-PalPointers)/8
 palid_LZWater:	equ (ptr_Pal_LZWater-PalPointers)/8
 palid_EHZ2_PP:		equ (ptr_Pal_EHZ2_PP-PalPointers)/8
 palid_MechaSonic:		equ (ptr_Pal_MechaSonic-PalPointers)/8

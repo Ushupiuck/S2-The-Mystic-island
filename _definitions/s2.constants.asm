@@ -578,6 +578,7 @@ LevelActCount: equ LevelCount*ActsPerZone
 id_MTZ: equ $06
 id_BLZ: equ $07 ; Shocking Blizzard (SBZ is a legacy Hill Top alias)
 id_SMZ: equ $08
+id_MMZ: equ $0F
 id_DEZ: equ $09
 
 ; Colours
@@ -2057,6 +2058,29 @@ ArtTile_ArtNem_S1EndSeal:	equ $592;$0585
 ArtTile_ArtNem_S1EndPig:	equ $580;$0593
 ArtTile_ArtNem_S1EndChicken:	equ $592;$0565
 ArtTile_ArtNem_S1EndSquirrel:	equ $580;$05B3
+
+; MMZ Act 1 resident object art. Overlay destinations retain the base atlas layout.
+ArtTile_MMZ_Atlas:		equ $260
+ArtTile_MMZ_Atlas_End:		equ $478
+ArtTile_MMZ_Saw:			equ ArtTile_MMZ_Atlas+110
+ArtTile_MMZ_Seesaw:		equ ArtTile_MMZ_Atlas+148
+ArtTile_MMZ_Generator:		equ ArtTile_MMZ_Atlas+482
+ArtTile_MMZ_HVPlatform:		equ $478 ; existing shared eight-tile morphing platform
+ArtTile_MMZ_Propeller:		equ $480 ; existing shared 49-tile propeller
+
+; MMZ1 keeps CD terrain-animation slots, shifted past the reserved water tiles.
+ArtTile_MMZ1_Present_Anim1:	equ $20D
+ArtTile_MMZ1_Present_Anim2:	equ $215
+ArtTile_MMZ1_Present_Anim3:	equ $21D
+ArtTile_MMZ1_Present_Anim4:	equ $1FD
+ArtTile_MMZ1_Present_Anim5:	equ $22D
+ArtTile_MMZ1_GoodFuture_Anim1:	equ $226
+ArtTile_MMZ1_GoodFuture_Anim2:	equ $22E
+ArtTile_MMZ1_GoodFuture_Anim3:	equ $236
+ArtTile_MMZ1_BadFuture_Anim1:	equ $238
+ArtTile_MMZ1_BadFuture_Anim2:	equ $240
+ArtTile_MMZ1_BadFuture_Anim3:	equ $248
+ArtTile_MMZ1_BadFuture_Anim4:	equ $258
 
 ArtTile_SMZ_Atlas:	equ $2B9 ; original sprite rectangles, shared by both acts
 ArtTile_SMZ_Junction_Gap:	equ $4B0 ; twelve streamed tiles, below the wheel bank

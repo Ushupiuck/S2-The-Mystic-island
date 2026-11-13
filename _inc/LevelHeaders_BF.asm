@@ -116,7 +116,7 @@ LevelArtPointersBF:
 		levartptrs plcid_LVE4_Main, plcid_LVE4_Extra, palid_GHZ, BKosp_LVE, BMap16_LVE, BMap128_LVE	; LVEZ	; ACT 4
 
 		; LVF placeholder
-		levartptrs plcid_LVF1_Main, plcid_LVF1_Extra, palid_GHZ, BKosp_LVF, BMap16_LVF, BMap128_LVF	; LVFZ	; ACT 1
+		levartptrs plcid_LVF1_Main, plcid_LVF1_Extra, palid_MMZ1_BadFuture, Kosp_MMZ1_BadFuture, Map16_MMZ1_BadFuture, Map128_MMZ1_BadFuture	; MMZ Act 1, BadFuture
 		levartptrs plcid_LVF2_Main, plcid_LVF2_Extra, palid_GHZ, BKosp_LVF, BMap16_LVF, BMap128_LVF	; LVFZ	; ACT 2
 		levartptrs plcid_LVF3_Main, plcid_LVF3_Extra, palid_GHZ, BKosp_LVF, BMap16_LVF, BMap128_LVF	; LVFZ	; ACT 3
 		levartptrs plcid_LVF4_Main, plcid_LVF4_Extra, palid_GHZ, BKosp_LVF, BMap16_LVF, BMap128_LVF	; LVFZ	; ACT 4

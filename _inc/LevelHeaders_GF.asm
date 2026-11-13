@@ -116,7 +116,7 @@ LevelArtPointersGF:
 		levartptrs plcid_LVE4_Main, plcid_LVE4_Extra, palid_GHZ, GKosp_LVE, GMap16_LVE, GMap128_LVE	; LVEZ	; ACT 4
 
 		; LVF placeholder
-		levartptrs plcid_LVF1_Main, plcid_LVF1_Extra, palid_GHZ, GKosp_LVF, GMap16_LVF, GMap128_LVF	; LVFZ	; ACT 1
+		levartptrs plcid_MMZ1_GoodFuture, plcid_LVF1_Extra, palid_MMZ1_GoodFuture, Kosp_MMZ1_GoodFuture, Map16_MMZ1_GoodFuture, Map128_MMZ1_GoodFuture	; MMZ Act 1, GoodFuture
 		levartptrs plcid_LVF2_Main, plcid_LVF2_Extra, palid_GHZ, GKosp_LVF, GMap16_LVF, GMap128_LVF	; LVFZ	; ACT 2
 		levartptrs plcid_LVF3_Main, plcid_LVF3_Extra, palid_GHZ, GKosp_LVF, GMap16_LVF, GMap128_LVF	; LVFZ	; ACT 3
 		levartptrs plcid_LVF4_Main, plcid_LVF4_Extra, palid_GHZ, GKosp_LVF, GMap16_LVF, GMap128_LVF	; LVFZ	; ACT 4

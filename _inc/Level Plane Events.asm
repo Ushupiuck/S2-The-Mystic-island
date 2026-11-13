@@ -122,7 +122,7 @@ LevelPlane_LV0E3:
 LevelPlane_LV0E4:
 		dc.l LevelPlane_NoEvent,BgScroll_GHZ,LevelPlane_ScrollCamera,Deform_GHZ,Plane_SourceForeground,Plane_SourcePlain
 LevelPlane_LV0F1:
-		dc.l LevelPlane_NoEvent,BgScroll_GHZ,LevelPlane_ScrollCamera,Deform_GHZ,Plane_SourceForeground,Plane_SourcePlain
+		dc.l LevelPlane_NoEvent,BgScroll_MMZ1,LevelPlane_ScrollCamera,Deform_MMZ1,Plane_SourceForeground,Plane_SourceMMZ1
 LevelPlane_LV0F2:
 		dc.l LevelPlane_NoEvent,BgScroll_GHZ,LevelPlane_ScrollCamera,Deform_GHZ,Plane_SourceForeground,Plane_SourcePlain
 LevelPlane_LV0F3:

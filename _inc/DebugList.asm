@@ -14,7 +14,7 @@ DebugList:
 		dc.w Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList
 		dc.w Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList
 		dc.w Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList
-		dc.w Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList
+		dc.w Debug_MMZ1-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList,Debug_GHZ-DebugList
 
 dbug:	macro map,object,subtype,frame,vram
 	dc.l object,map
@@ -316,3 +316,28 @@ Debug_PP: dc.w (Debug_PP_End-Debug_PP-2)/DebugEntry_size
 		dbug	Map_MovSpring,WheelCarrier,6,0,ArtTile_Wheel
 		dbug	Map_MovSpring,WheelCarrier,7,0,ArtTile_Wheel
 Debug_PP_End:
+
+; MMZ1 only: all entries use art resident in every era.
+Debug_MMZ1:	dc.w (Debug_MMZ1_End-Debug_MMZ1-2)/DebugEntry_size
+	dbug	Map_Ring,	Ring,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj26,	Monitor,	4,	5,	ArtTile_Monitor
+	dbug	Map_Obj26,	Monitor,	6,	7,	ArtTile_Monitor
+	dbug	Map_Obj26,	Monitor,	7,	8,	ArtTile_Monitor
+	dbug	Map_Obj26,	Monitor,	5,	6,	ArtTile_Monitor
+	dbug	Map_obj41,	Springs,	0,	0,	ArtTile_Springs
+	dbug	Map_Obj36,	Spikes,	0,	0,	ArtTile_Spikes
+	dbug	Map_MMZ_Saw,	SMZ_Saws,	$100,	0,	ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_Saw,	SMZ_Saws,	$180,	16,	ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_Crusher,	SMZ_ScrapStomp,	$100,	0,	ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_Crusher,	SMZ_ScrapStomp,	$101,	1,	ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_Crusher,	SMZ_ScrapStomp,	$141,	1,	ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_Vanish,	SMZ_VanishPlatform,	$100,	0,	ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_Vanish,	SMZ_VanishPlatform,	$101,	0,	ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_Vanish,	SMZ_VanishPlatform,	$102,	0,	ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_Spin,	SMZ_SpinConvey,	$100,	0,	ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_Spin,	SMZ_SpinConvey,	$102,	0,	ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_Spin,	SMZ_SpinConvey,	$101,	0,	ArtTile_MMZ_Atlas
+	dbug	Map_Mplat,	MorphingPlatform,	0,	0,	ArtTile_MMZ_HVPlatform
+	dbug	Map_MM_PropellerBase,	MM_Propeller,	0,	0,	ArtTile_MMZ_Propeller
+	dbug	Map_MovSpring,	WheelCarrier,	0,	0,	ArtTile_Wheel
+Debug_MMZ1_End:

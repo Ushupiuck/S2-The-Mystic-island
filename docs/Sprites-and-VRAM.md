@@ -522,6 +522,28 @@ ramps; other slots are per-act enemy colors. S&K indices map to
 conversions; editable runtime art already uses the new slots. No runtime pixel
 conversion is performed. Keep every compressed archive followed by `even`.
 
+### Mania miniature references (experimental)
+
+The editable reference crops in `art/sources/` retain the PC Sonic Mania
+miniature frames at their original pixel scale, including the separate mini
+Tails tail animations. They are source art for MMZ's later shrinking mechanic;
+they are not assembled player banks or replacements for the Continue sprites.
+Knuckles is reserved art only; no Knuckles player code is introduced.
+
+| Reference | PC sheet | Original crop, left/top/right/bottom (end exclusive) |
+| --- | --- | --- |
+| `Mania Mini Sonic.png` | [Sonic, sheet 95304](https://www.spriters-resource.com/pc_computer/sonicmania/asset/95304/) | `0,2057,1128,2304` |
+| `Mania Mini Tails.png` | [Tails, sheet 95305](https://www.spriters-resource.com/pc_computer/sonicmania/asset/95305/) | `0,2139,1176,2443` |
+| `Mania Mini Knuckles.png` | [Knuckles, sheet 95306](https://www.spriters-resource.com/pc_computer/sonicmania/asset/95306/) | `0,2553,1176,2861` |
+
+The sheets are credited to AsuharaMoon (Sonic's current sheet) and Random
+Talking Bush (Tails/Knuckles). Source pixels, labels and grid backgrounds are
+preserved. Crop the sprite cells and remove their backgrounds when converting
+to runtime tiles. Mania Tails follows the S2 shading convention; adapting him
+requires checking the placement of dark fur shades against Mystic Island's
+S3&K standing frame `$AD` and corresponding animated poses, as well as mapping
+colors into the shared palette. The source crop has not yet had that correction.
+
 The EHZ boss's drill/wheels use a one-word masked row-two load; see the
 [boss palette contract](Importing-objects.md#ehz-boss-palette). The former
 three-gray WIP remains separate.

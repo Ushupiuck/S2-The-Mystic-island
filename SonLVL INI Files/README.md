@@ -15,6 +15,13 @@ Scrap Madness Acts 1/2 use independent terrain tiles, blocks and chunks named
 match the runtime headers. Acts 3/4 share Act 1's tiles/blocks with the separate
 starter chunk bank. See [terrain editing and regeneration](../docs/Levels.md#scrap-madness).
 
+Metallic Madness Act 1 has four explicit era sections on experimental. Each
+selects its own full 445-chunk bank, layout, palette and collision indexes.
+They share the act's placement file; presence masks remain editable per object.
+The existing `chunkmax=400` and word-based custom layout cover these banks;
+no SonLVL fork change is required for the terrain format. Object definitions
+are being populated with the port. See [the import contract](../docs/Levels.md#metallic-madness-import-experimental).
+
 Emerald Hill Act 2 has its own `EHZ2` tiles, blocks and chunks with the PP
 Present background and a matching private palette. Foreground and platform tile
 IDs stay stable. See [the import/editing contract](../docs/Levels.md#emerald-hill-act-2-palmtree-panic-experiment).
@@ -252,3 +259,10 @@ and VRAM allocation before using buttons.
 Shared sprites follow the [palette slot contract](../docs/Sprites-and-VRAM.md#palette-adaptation).
 Yellow springs share cap pixels and select palette 1 per piece; mechanisms use
 palette 0. LZ conveyor/morphing previews use palette 0, matching the runtime.
+
+MMZ1's four era sections use `objMMZ.ini`; Good Future adds `objMMZ_GF.ini`
+for its saw overlay. Group previews read the actual byte curve/height tables,
+show relative members and preserve full subtype words. The picker can create
+byte subtypes because zone `$0F` selects the MMZ family automatically. Existing
+records may explicitly retain bit 8. The shared eight-byte layout and current
+`chunkmax=400` (hex, 1024) support all 445 imported chunks without an editor fork.

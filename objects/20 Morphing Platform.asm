@@ -7,29 +7,26 @@ mplat_timer	= objoff_38
 mplat_state	= objoff_39
 ; ---------------------------------------------------------------------------
 MorphingPlatform:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	MorphingPlatform_Index(pc,d0.w),d0
-		jsr	MorphingPlatform_Index(pc,d0.w)
-		out_of_range.w	UnloadObject,mplat_origin_x(a0)
-		jmp	(DisplaySprite).l
-; ---------------------------------------------------------------------------
-MorphingPlatform_Index:
-		dc.w MorphingPlatform_Init-MorphingPlatform_Index
-		dc.w MorphingPlatform_Main-MorphingPlatform_Index
-; ---------------------------------------------------------------------------
-
 MorphingPlatform_Init:
-		addq.b	#2,obRoutine(a0)
+		move.l	#MorphingPlatform_Run,code(a0)
 		move.l	#Map_Mplat,obMap(a0)
 		move.b	#Map_Mplat_height,height_pixels(a0)
-		move.w	#make_art_tile(ArtTile_MorphingOrbs,0,0),obGfx(a0)
+		move.w	#ArtTile_MorphingOrbs,obGfx(a0)
+		cmpi.b	#id_MMZ,(v_zone).w
+		bne.s	.art_ready
+		move.w	#ArtTile_MMZ_HVPlatform,obGfx(a0)
+.art_ready:
 		ori.b	#4,obRender(a0)
 		move.w	#$180,obPriority(a0)
 		move.w	obX(a0),mplat_origin_x(a0)
 		move.w	obY(a0),mplat_origin_y(a0)
 		; fall through
 ; ---------------------------------------------------------------------------
+
+MorphingPlatform_Run:
+		bsr.s	MorphingPlatform_Main
+		out_of_range.w	UnloadObject,mplat_origin_x(a0)
+		jmp	(DisplaySprite).l
 
 MorphingPlatform_Main:
 		tst.b	mplat_timer(a0)
@@ -56,7 +53,7 @@ MorphingPlatform_Main:
 .solid:		moveq	#0,d1
 		move.b	obWidth(a0),d1		; half-width / X radius
 		move.b	obStatus(a0),d0		; load obStatus from the table
-		andi.b	#18,d0			; and by Sonic/Tails standing bits
+		andi.b	#$18,d0			; and by Sonic/Tails standing bits
 		bne.s	.no_extra_width		; if not being stood on, skip
 		addi.w	#$10,d1			; otherwise, correct side collision
 

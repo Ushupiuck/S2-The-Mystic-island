@@ -345,7 +345,7 @@ MCD_PrepareTerrainFrame:
 		move.l	(Scroll_flags_BG2).w,(a0)+
 		move.w	(Current_ZoneAndAct).w,(a0)+
 		move.b	(Screen_redraw_flag).w,(a0)+
-		clr.b	(a0)+			; keep the frame header longword-aligned
+		move.b	(Current_Timezone).w,(a0)+	; reuses the aligned frame header byte
 		move.w	(v_bgscrposy_vdp).w,(a0)+
 		clr.w	(a0)+
 		move.l	a0,-(sp)

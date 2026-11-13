@@ -52,36 +52,7 @@ for name,label,base in [('Floor','Map_Obj1B',0x43f5),('Door','Map_obj30',0x42e8)
  if name=='Floor':rs=rs[:2]+rs[:2]
  inputs[name]=(rs,base)
 inputs['Swing']=(frames(mapping((S/'_maps/Big Spiked Ball.asm').read_text())),lambda i:0x4391 if i==2 else 0x391)
-def find_tiles(sequence, pattern):
-    """Find an entire column-major sprite rectangle at a tile boundary."""
-    return next((i for i in range(len(sequence)-len(pattern)+1)
-                 if sequence[i:i+len(pattern)] == pattern), None)
-
-
-def pack_rectangles(patterns):
-    """Share complete rectangles and overlapping ends; never split a piece."""
-    strings = []
-    for pattern in sorted(set(patterns), key=lambda p: (-len(p), p)):
-        if not any(find_tiles(s, pattern) is not None for s in strings):
-            strings.append(pattern)
-    while True:
-        best = (0, 0, 0)
-        for i, a in enumerate(strings):
-            for j, b in enumerate(strings):
-                if i == j:
-                    continue
-                for count in range(min(len(a), len(b)), 0, -1):
-                    if a[-count:] == b[:count]:
-                        if count > best[0]:
-                            best = count, i, j
-                        break
-        count, i, j = best
-        if not count:
-            return tuple(tile for s in strings for tile in s)
-        joined = strings[i] + strings[j][count:]
-        strings = [s for k, s in enumerate(strings)
-                   if k not in (i, j) and find_tiles(joined, s) is None]
-        strings.append(joined)
+from sprite_art import find_tiles, pack_rectangles
 
 
 def rectangle(tile, size, gfx):

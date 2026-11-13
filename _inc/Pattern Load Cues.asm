@@ -215,7 +215,7 @@ ptr_PLC_LVE4_Main:	dc.w PLC_LVE4_Main-ArtLoadCues
 ptr_PLC_LVE4_Extra:	dc.w PLC_LVE4_Extra-ArtLoadCues
 ; ---------------------------------------------------------------------------
 ; Level slot $0F: Level 0F
-ptr_PLC_LVF1_Main:	dc.w PLC_LVF1_Main-ArtLoadCues
+ptr_PLC_LVF1_Main:	dc.w PLC_LVF1_Main-ArtLoadCues+PLCKos_IndexFlag
 ptr_PLC_LVF1_Extra:	dc.w PLC_LVF1_Extra-ArtLoadCues
 ptr_PLC_LVF2_Main:	dc.w PLC_LVF2_Main-ArtLoadCues
 ptr_PLC_LVF2_Extra:	dc.w PLC_LVF2_Extra-ArtLoadCues
@@ -224,10 +224,14 @@ ptr_PLC_LVF3_Extra:	dc.w PLC_LVF3_Extra-ArtLoadCues
 ptr_PLC_LVF4_Main:	dc.w PLC_LVF4_Main-ArtLoadCues
 ptr_PLC_LVF4_Extra:	dc.w PLC_LVF4_Extra-ArtLoadCues
 ; ---------------------------------------------------------------------------
-ArtLoadCues_End:
-		if ArtLoadCues_End-ActLoadCues<>LevelActCount*4
+ActLoadCues_End:
+		if ActLoadCues_End-ActLoadCues<>LevelActCount*4
 			fatal "Act PLC index must contain Main and Extra for every act"
 		endif
+; Era-specific primary lists follow the fixed Main/Extra act index.
+ptr_PLC_MMZ1_Past:	dc.w PLCKosM_MMZ1_Past-ArtLoadCues+PLCKos_IndexFlag
+ptr_PLC_MMZ1_GoodFuture:	dc.w PLCKosM_MMZ1_GoodFuture-ArtLoadCues+PLCKos_IndexFlag
+ArtLoadCues_End:
 		if (ArtLoadCues_End-ArtLoadCues)/2>$100
 			fatal "PLC IDs no longer fit level-header bytes"
 		endif
@@ -1189,10 +1193,11 @@ PLC_LVE4_Extra_End:	plccheck PLC_LVE4_Extra,0
 ; PATTERN LOAD REQUEST LISTS
 ; Level 0F - Act 1
 ; ---------------------------------------------------------------------------
-PLC_LVF1_Main:		dc.w -1
-PLC_LVF1_Main_End:	plccheck PLC_LVF1_Main,ActPLC_Main_Reserve
-
+; Primary MMZ1 atlas is a typed module list below.
 PLC_LVF1_Extra:		dc.w (PLC_LVF1_Extra_End-PLC_LVF1_Extra-2)/6-1
+		plcm	Nem_MorphingPlatform,	ArtTile_MMZ_HVPlatform
+		plcm	Nem_MM_Propeller,	ArtTile_MMZ_Propeller
+		plcm	Nem_Wheel,	ArtTile_Wheel
 		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LVF1_Extra_End:	plccheck PLC_LVF1_Extra,0
 
@@ -1410,6 +1415,8 @@ plcid_LVE4_Main:	equ (ptr_PLC_LVE4_Main-ArtLoadCues)/2
 plcid_LVE4_Extra:	equ (ptr_PLC_LVE4_Extra-ArtLoadCues)/2
 ; ---------------------------------------------------------------------------
 ; Level slot $0F: Level 0F
+plcid_MMZ1_Past:	equ (ptr_PLC_MMZ1_Past-ArtLoadCues)/2
+plcid_MMZ1_GoodFuture:	equ (ptr_PLC_MMZ1_GoodFuture-ArtLoadCues)/2
 plcid_LVF1_Main:	equ (ptr_PLC_LVF1_Main-ArtLoadCues)/2
 plcid_LVF1_Extra:	equ (ptr_PLC_LVF1_Extra-ArtLoadCues)/2
 plcid_LVF2_Main:	equ (ptr_PLC_LVF2_Main-ArtLoadCues)/2
@@ -1558,6 +1565,28 @@ plreqKosM macro toVRAMaddr,fromROMaddr
 	dc.l	fromROMaddr
 	dc.w	tiles_to_bytes(toVRAMaddr)
 	endm
+
+; ---------------------------------------------------------------------------
+; MMZ1 RESIDENT SPRITE ATLAS
+; Base art is shared; only genuinely different Past/GF rectangles overwrite it.
+; The primary queue already contains ActPLC_Main_Reserve common requests.
+; ---------------------------------------------------------------------------
+PLC_LVF1_Main:
+PLCKosM_MMZ1_Present:	plrKosMlistheader
+		plreqKosM ArtTile_MMZ_Atlas,Kospm_MMZ1_Atlas
+PLCKosM_MMZ1_Present_End:	plccheck PLCKosM_MMZ1_Present,ActPLC_Main_Reserve
+PLC_LVF1_Main_End:
+
+PLCKosM_MMZ1_Past:	plrKosMlistheader
+		plreqKosM ArtTile_MMZ_Atlas,Kospm_MMZ1_Atlas
+		plreqKosM ArtTile_MMZ_Generator,Kospm_MMZ1_GeneratorPast
+PLCKosM_MMZ1_Past_End:	plccheck PLCKosM_MMZ1_Past,ActPLC_Main_Reserve
+
+PLCKosM_MMZ1_GoodFuture:	plrKosMlistheader
+		plreqKosM ArtTile_MMZ_Atlas,Kospm_MMZ1_Atlas
+		plreqKosM ArtTile_MMZ_Saw,Kospm_MMZ1_SawGoodFuture
+		plreqKosM ArtTile_MMZ_Seesaw,Kospm_MMZ1_SeesawGoodFuture
+PLCKosM_MMZ1_GoodFuture_End:	plccheck PLCKosM_MMZ1_GoodFuture,ActPLC_Main_Reserve
 
 ; ---------------------------------------------------------------------------
 ; RESIDENT END-OF-ACT ART

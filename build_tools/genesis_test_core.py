@@ -113,6 +113,9 @@ class Genesis:
 				('LostRings', ('LostRing_Move', 'LostRing_Collect')),
 				('TwistingPathway', ('TwistingPathway_Main', 'TwistingPathway_Cage')),
 				('SMZ_SpinConvey', ('SMZ_SpinC_Move',)),
+				('MorphingPlatform', ('MorphingPlatform_Run',)),
+				('SMZ_Saws', ('SMZ_Saw_Action','MMZ_Saw_HoldIn','MMZ_Saw_Extend','MMZ_Saw_HoldOut','MMZ_Saw_Retract')),
+				('SMZ_ScrapStomp', ('SMZ_Sto_Action','MMZ_Crusher_Run')),
 				('SMZ_Teleport', ('SMZ_Teleport_Main',))):
 			if constructor in self.s:
 				for label in states:
@@ -194,6 +197,8 @@ class Genesis:
 		elif field=='obSubtype': size=2
 		elif field in ('code','obID'): size=4
 		value=self.read((self.s[actor] if isinstance(actor,str) else actor)+self.s[field],size)
+		if projected and value == self.s.get('MMZ_Platform_Run'):
+			return 0xA6 if self.get(obj, 'obMap', 4) == self.s.get('Map_MMZ_Vanish') else 0xA9
 		if projected and value == self.s.get('SwingingPtfm') and 'swing_body_shape' in self.s and self.get(actor, 'obRoutine'):
 			return {0: 0xDB, 1: 0xDC, 2: 0x17, 3: 0xDD, 4: 0xDE}[self.get(actor, 'swing_body_shape')]
 		return self.ids_by_code.get(value,value) if projected else value

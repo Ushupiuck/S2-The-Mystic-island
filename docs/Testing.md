@@ -174,10 +174,23 @@ its subtype/VRAM tables here.
 | Clearance/trapdoors | `check_duck_clearance.py`, `check_smz_trapdoor.py` | Native solid-object head clearance and first-closed-frame overlaps |
 | SMZ backgrounds | `check_smz_background.py` | Both acts, REV01 parallax rates, actual VDP scroll/tile words, camera wraps, pause and PAL timing |
 | GHZ flowers | `check_ghz_flowers.py` | Native exact DMA cadence; `--core` adds live uploads, neighboring-bank guards and pause; `--act 1` through `4`, optional pre-flower `--reference` |
+| Metallic Madness terrain/scenery | `check_metallic_madness.py` | Four era headers/collision bindings, 445 chunks, 1,160 native parallax/provider cases; `--source` adds 1,200 palette/tile updates per era against CD data. `--core --system-directory` visits 24 real scenes and checks visible VDP tiles/animated VRAM; `--pal` repeats PAL. Camera/timezone writes are fixtures, not a complete controller playthrough. |
 | EHZ terrain | `check_ehz_terrain.py` | Both acts' S-tunnels on both paths, five platform landings/all flips, actual Debug wall placement and breaks, return loading, S1 seesaw tilts/landings/launches in EHZ/HTZ |
 | EHZ waterfalls | `check_ehz_waterfalls.py` | Baked PP/reflection pixels, queue deferral, independent palette clocks and SAT pressure; `--core`, `--act 0`/`1`, optional `--before-rom`/`--before-listing` |
 | S1 fireballs | `check_s1_fireballs.py` | Mirrored fixed-point arcs, independent settings/flips, maker offsets/intervals, offscreen/full/end-of-pool behavior, placement release, real CD impacts and both-player damage and all six controller-selected maker/projectile Debug presets |
 | Flame rendering | `check_fire_art.py --core CORE` | Eight EHZ/HTZ loads, six poses/four flips, both launcher orientations/four flips with exact SAT pieces, springs/spikes/monitors intact; both emitters through all 22 SMZ frames in both acts and original harmful-frame gating |
+
+`check_metallic_madness.py --source /path/to/scddisasm --output test-results/mmz`
+also compares platform timelines, the complete CD curve, saw states and crusher
+heights/pauses, including the bounded long-pause correction. Native cases check
+the object-loop counter, full-pool atomicity and stale ownership. Optional
+`--before-rom PATH --before-listing PATH` compares retained S1 saw/stomper
+variants against a matching older build. With `--core` and `--system-directory`,
+the checker enters all four eras, checks exact sprite-bank VRAM bytes, lands
+both actors, releases either independently, checks saw contact/clearance in all
+four orientations and launches both riders at both strengths. `--pal` repeats
+the actual frame checks in PAL. These are staged interaction/rendering visits,
+not a complete controller-only MMZ playthrough; the placement port is unfinished.
 
 `check_debug_states.py --zone 3 --act 2` covers EHZ2's private palette and HUD.
 `check_water_effects.py --player 2` selects primary Tails; `--companion` selects

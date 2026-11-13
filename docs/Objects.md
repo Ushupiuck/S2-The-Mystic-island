@@ -107,6 +107,51 @@ were invalid for this project's levels. SMZ's authored `SMZ_PipeData` remains
 the directly editable route source; other reserved helpers remain available
 until a caller needs them. Newly ported levels must supply their own routes.
 
+## MMZ object variants (experimental)
+
+Four original families retain their placement IDs and add a CD variant in
+zone `$0F`, or when subtype bit 8 is set elsewhere with compatible PLCs:
+
+| ID | Low subtype bits | Behavior |
+| --- | --- | --- |
+| `$A4` | 7 | Initially extended; X/Y placement flips independently select travel signs |
+| `$A5` | 0-1 | 0/2: small crusher; 1: tall launcher; reserved 3 safely uses small |
+| `$A5` | 2-3 | Small: phase rates 4/8/16/32; tall: bit 2 selects 4/8, bit 3 selects 60/90 pause |
+| `$A5` | 4-5, 6, 7 | Initial quarter phase; 32/48 amplitude; strong/weak launch |
+| `$A6` | 0-1 | Single, horizontal pair, or three-block staircase; reserved 3 uses single |
+| `$A9` | 0, 1 | Moving five-member curve; otherwise bit 1 selects a fixed pair |
+
+`objects/Metallic Madness/Common.asm` owns platform cohort preflight, one-pass
+allocation, independent state pointers, parent/backlink validation and cleanup.
+Only the root owns a placement. Its four reciprocal child fields prevent a
+recycled same-family parent from adopting old children. Both actors keep their
+own standing bits; disappearance, spin and unload release only actual owners.
+Timed-frame runs replace repeated CD animation bytes. The 446-point conveyor
+curve stores its antisymmetric first half (223 signed XY pairs), saving 446
+bytes while preserving every position and the original spin interval. Its spin
+accumulator is private; it never writes a word over the byte sprite frame.
+Moving members start at their own curve positions before the first draw,
+with zero birth velocity, avoiding the source's one-frame stack at the origin.
+
+The MMZ saw uses direct hold/extend/retract entries and a two-pose animation
+counter. The fixed handle validates the full parent mapping/code and reciprocal
+link, and unload removes it. It retains CD's one-pixel birth displacement,
+source step/hold timing and a 28-pixel harmful half-size through a named local
+collision-table ID. Foreign CD collision IDs are not assumed to match ours.
+
+The crusher's two 256-byte signed-height tables retain CD sine values and
+negative rounding, removing trigonometry/multiplication from the live update.
+The original before/after-motion solidity order is retained for both actors.
+At phase `$210`, the tall form launches only its actual standing riders,
+independently, with `-$1000` or `-$A00` velocity. CD's long-pause byte table
+indexes 0/2 into a two-byte list, reading the following TST opcode instead of
+its declared 90. The port explicitly selects 60/90. The original SMZ behaviors
+retain their timings while skipping their old constructor-dispatch table.
+
+The existing morphing platform uses its direct running entry, the complete
+`$18` standing mask and the MMZ art base in this zone. Propeller blades inherit
+their parent's act-selected art base; neither object duplicates a source bank.
+
 ## SST and dispatch
 
 Each object status table (SST) is `$4E` bytes. The pool contains 23 reserved and
@@ -313,7 +358,8 @@ rather than adding a mode branch to every rejected candidate.
 
 `Collision_response_list` is allocated at `RAM_Start` in previously free MD
 RAM. Existing engine globals, CD staging buffers and SST fields do not move.
-`Free_RAM_Start` follows this allocation. Queue accesses use long addressing.
+`Free_RAM_Start` follows this allocation on main; experimental music staging
+occupies its separately declared region before free RAM. Queue accesses use long addressing.
 Scene entry clears its count before either player can consume old data.
 Capacity and probe interval are named constants in `s2.constants.asm`.
 
