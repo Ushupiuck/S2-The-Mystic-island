@@ -77,8 +77,8 @@ capsule. Origin deltas at `$44/$46` also support the existing MZ placeholder.
 | Bytes, end exclusive | Art and current constant |
 | --- | --- |
 | `$7E00-$8580` | Shared S1 hull/cockpit, `ArtTile_Eggman`, 60 tiles |
-| `$87E0-$8CE0` | Shared S1 heads, `ArtTile_EggmanFace`, 40 tiles |
-| `$8EA0-$9EA0` | Car/wheels/drill, `ArtTile_ArtNem_EHZBoss`, 128 tiles |
+| `$8580-$8680` | Shared Eggman/EggRobo head buffer, `ArtTile_EggmanFace`, 8 streamed tiles |
+| `$8680-$9680` | Car/wheels/drill, `ArtTile_ArtNem_EHZBoss`, 128 tiles |
 | `$A020-$AAC0` | Capsule, `ArtTile_Prison_Capsule`, 85 tiles; loaded at defeat |
 | `$AAC0-$ADE0` | Shared S1 exhaust, `ArtTile_Eggman_Exhaust`, 25 tiles |
 | `$B020-$BCA0` | Shared S2 fiery boss explosion, `ArtTile_BossExplosion`, 100 tiles |

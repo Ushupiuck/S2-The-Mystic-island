@@ -73,7 +73,7 @@ def convert(raw, frames, roles, palettes):
 
 def outputs(source):
 	constants = (ROOT / '_definitions/s2.constants.asm').read_text()
-	assert re.search(r'ArtTile_ArtNem_EHZBoss:\s*equ \$475\b', constants)
+	assert re.search(r'ArtTile_ArtNem_EHZBoss:\s*equ \$434\b', constants)
 	palettes = [struct.unpack('>16H', (source / 'art/palettes/SonicAndTails.bin').read_bytes()),
 		struct.unpack('>48H', (source / 'art/palettes/EHZ.bin').read_bytes())[:16]]
 	files = {}

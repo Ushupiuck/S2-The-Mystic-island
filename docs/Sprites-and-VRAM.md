@@ -320,6 +320,9 @@ The shared editable banks are `art/uncompressed/Old Eggpod.unc` (60 tiles),
 Both pilots stream into the same **eight-tile buffer at `$42C-$433`**, directly
 after the pod. Compared with the former 40 resident Eggman tiles, this saves
 **32 VRAM tiles (1 KiB)** and closes the old 19-tile gap before the head bank.
+EHZ's 128-tile chassis/drill/wheel bank follows at `$434-$4B3`
+(`$8680-$9680`, end exclusive). Its PLC and every child use
+`ArtTile_ArtNem_EHZBoss`; GHZ's separate weapon bank remains at `$475`.
 The human source atlas grows by two tiles to permit the smaller per-pose
 reservation; this is a VRAM saving, with a small increase in compressed ROM art.
 The cockpit, face and flame use the primary sprite palette; metal

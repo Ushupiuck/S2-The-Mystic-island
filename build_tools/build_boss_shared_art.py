@@ -311,13 +311,13 @@ def main():
 	headbase,headend = int(report['shared_base'],16),int(report['shared_end'],16)
 	assert headbase>=int(report['private_end'],16)
 	assert headend<=min(allocations['ArtTile_Eggman_Weapons'],allocations['ArtTile_ArtNem_EHZBoss'])
-	weaponbase = allocations['ArtTile_ArtNem_EHZBoss']
 	expected = {'ArtTile_Eggman':0x3F0,
-		'ArtTile_EggmanFace':headbase,'ArtTile_Eggman_Weapons':weaponbase,
-		'ArtTile_ArtNem_EHZBoss':weaponbase,
-		'ArtTile_Prison_Capsule':weaponbase+128+12,'ArtTile_Eggman_Exhaust':weaponbase+128+12+85}
+		'ArtTile_EggmanFace':headbase,'ArtTile_Eggman_Weapons':0x475,
+		'ArtTile_ArtNem_EHZBoss':0x434,
+		'ArtTile_Prison_Capsule':0x501,'ArtTile_Eggman_Exhaust':0x556}
 	for name,value in expected.items():
 		assert allocations[name]==value, (name,hex(allocations[name]),'needs',hex(value))
+	assert expected['ArtTile_ArtNem_EHZBoss']+128<=expected['ArtTile_Prison_Capsule']
 	assert expected['ArtTile_Eggman_Exhaust']+25<=allocations['ArtTile_Shield_2']
 	for name,raw in banks.items():
 		(ROOT/f'art/uncompressed/{name}.unc').write_bytes(raw)

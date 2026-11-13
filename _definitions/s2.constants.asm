@@ -1937,7 +1937,7 @@ ArtTile_Eggman_Exhaust:		equ $556	; 25 shared S1 flame tiles
 ; End of Level
 ArtTile_Giant_Ring:		equ $400
 ArtTile_Giant_Ring_Flash:	equ $462
-ArtTile_Prison_Capsule:		equ $501	; 85 tiles, between the 12-tile EHZ propeller and shared exhaust
+ArtTile_Prison_Capsule:		equ $501	; 85 tiles immediately before the shared exhaust
 ArtTile_Hidden_Points:		equ ArtTile_Signpost+$1A ; 28 tiles after the signpost DPLC bank; below checkpoints
 ArtTile_Warp:			equ $541
 ArtTile_Mini_Tails:		equ $535
@@ -2056,7 +2056,7 @@ ArtTile_EHZ_Seesaw:		equ $46C	; 62 tiles; ends at $4AA, below springs
 ArtTile_Art_EHZMountains:	equ $500
 
 ; EHZ boss
-ArtTile_ArtNem_EHZBoss:		equ $475
+ArtTile_ArtNem_EHZBoss:		equ $434	; 128 chassis/drill/wheel tiles immediately after the shared head buffer
 ArtTile_BossExplosion:	equ $581	; 100 S2 tiles; replaced by animals/normal explosions after escape
 ArtTile_ExplosionWall_Small:	equ ArtTile_Eggman ; 94 normal/fiery tiles replace inactive ship art during the wall
 
