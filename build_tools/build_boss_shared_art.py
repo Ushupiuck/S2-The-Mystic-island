@@ -312,7 +312,7 @@ def main():
 	assert headbase>=int(report['private_end'],16)
 	assert headend<=min(allocations['ArtTile_Eggman_Weapons'],allocations['ArtTile_ArtNem_EHZBoss'])
 	expected = {'ArtTile_Eggman':0x3F0,
-		'ArtTile_EggmanFace':headbase,'ArtTile_Eggman_Weapons':0x475,
+		'ArtTile_EggmanFace':headbase,'ArtTile_Eggman_Weapons':0x434,
 		'ArtTile_ArtNem_EHZBoss':0x434,
 		'ArtTile_Prison_Capsule':0x501,'ArtTile_Eggman_Exhaust':0x556}
 	for name,value in expected.items():

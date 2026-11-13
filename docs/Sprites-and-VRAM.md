@@ -322,7 +322,10 @@ after the pod. Compared with the former 40 resident Eggman tiles, this saves
 **32 VRAM tiles (1 KiB)** and closes the old 19-tile gap before the head bank.
 EHZ's 128-tile chassis/drill/wheel bank follows at `$434-$4B3`
 (`$8680-$9680`, end exclusive). Its PLC and every child use
-`ArtTile_ArtNem_EHZBoss`; GHZ's separate weapon bank remains at `$475`.
+`ArtTile_ArtNem_EHZBoss`. Sonic 1's shared 42-tile boss-weapon bank uses the
+same start through `ArtTile_Eggman_Weapons`: `$434-$45D`
+(`$8680-$8BC0`, end exclusive). GHZ and EHZ load their respective alternative
+banks for their arenas. GHZ's chain and ball retain the level's shared art.
 The human source atlas grows by two tiles to permit the smaller per-pose
 reservation; this is a VRAM saving, with a small increase in compressed ROM art.
 The cockpit, face and flame use the primary sprite palette; metal

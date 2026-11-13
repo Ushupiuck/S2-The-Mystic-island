@@ -1927,7 +1927,7 @@ EHZBoss_MetalPaletteOffset = $20+$C*2
 EHZBoss_MetalColor = $A88
 
 ArtTile_Eggman:			equ $3F0
-ArtTile_Eggman_Weapons:		equ $475
+ArtTile_Eggman_Weapons:		equ $434	; 42 shared S1 boss-weapon tiles immediately after the head buffer
 ArtTile_Eggman_Button:		equ $4A4
 ArtTile_Eggman_Spikeball:	equ $518
 ArtTile_Eggman_Trap_Floor:	equ $518
