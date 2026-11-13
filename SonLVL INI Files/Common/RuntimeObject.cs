@@ -208,6 +208,10 @@ namespace MysticIsland.ObjectDefinitions
 				case "MMZSaw":
 					Bits("Initial phase", 7, 1, "The handle stays fixed; X and Y flips independently mirror the diagonal travel.", "Retracted", "Extended");
 					break;
+				case "MMZFloor":
+					Bits("Columns", 0, 127, "One to eight 16-pixel columns. Invalid values safely use one column.");
+					Bits("Static block", 7, 1, "Static blocks are full-solid; crumbling floors are solid only on top and either character can trigger them.", "Crumbling", "Static");
+					break;
 				case "MMZCrusher":
 					routes = ReadByteTable("../objects/Scrap Madness/A5 Stomper.asm", "MMZ_Crusher_Height32", "MMZ_Crusher_Height48");
 					groups = ReadByteTable("../objects/Scrap Madness/A5 Stomper.asm", "MMZ_Crusher_Height48", "Map_MMZ_Crusher");
@@ -568,6 +572,7 @@ namespace MysticIsland.ObjectDefinitions
 				case "MMZCrusher":
 					byte[] heights = (subtype & 64) == 0 ? routes : groups;
 					return new Sprite(At(frames, (subtype & 3) == 1 ? 1 : 0), 0, unchecked((sbyte)heights[((subtype >> 4) & 3) * 64]));
+				case "MMZFloor": return At(frames, (subtype & 127) >= 1 && (subtype & 127) <= 8 ? (subtype & 127) - 1 : 0);
 				case "MMZVanish":
 					int variant = subtype & 3;
 					if (variant > 2) variant = 0;

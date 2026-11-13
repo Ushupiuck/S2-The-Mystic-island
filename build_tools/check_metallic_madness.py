@@ -341,6 +341,166 @@ def platform_native(args):
 	report['platform_updates']=checks;report['allocation_failure_and_stale_owner']=True
 	return report
 
+def floor_wheel_native(args):
+	"""Progressive floor edges, stationary riders and flat CD wheel patrols."""
+	n=Native(args.rom,args.listing);checks=0
+	states=('MMZ_Floor_Idle','MMZ_Floor_Delay','MMZ_Floor_Break','MMZ_Floor_Static',
+		'MMZ_FloorPiece_Start','MMZ_FloorPiece_Wait','MMZ_FloorPiece_Fall',
+		'MMZ_Wheel_Fall','MMZ_Wheel_Roll')
+	states={n.s[name]:name for name in states}
+	ss=list(range(n.s['v_lvlobjspace']&0xffffff,n.s['v_lvlobjend']&0xffffff,n.s['object_size']))
+	def run(a):
+		n.put(a,'obRender',n.get(a,'obRender')|128)
+		n.act(states[n.get(a,'code')],a,regs={UC_M68K_REG_D7:0x3579006F})
+		assert n.cpu.reg_read(UC_M68K_REG_D7)==0x3579006F
+	def setup(entry,sub):
+		n.start();n.write('Camera_X_pos',440,2);root=ss[5]
+		for actor in ('v_player','v_player2'):n.put(actor,'obX',100,2);n.put(actor,'obY',100,2)
+		for f,v,z in [('code',n.s[entry],4),('obX',600,2),('obY',600,2),('obSubtype',sub,2)]:n.put(root,f,v,z)
+		n.act(entry,root,regs={UC_M68K_REG_D7:0x3579006F})
+		assert n.cpu.reg_read(UC_M68K_REG_D7)==0x3579006F
+		return root
+	def attach(a,actor,x,bit):
+		n.put(actor,'obX',x,2);n.put(actor,'obY',565,2);n.put(actor,'obStatus',8)
+		n.put(actor,'standonobject',(a-(n.s['v_objspace']&0xffffff))//n.s['object_size'])
+		n.put(a,'obStatus',n.get(a,'obStatus')|(1<<bit))
+	for columns in range(1,9):
+		for direction in (-1,1):
+			for trigger in ('v_player','v_player2'):
+				a=setup('Obj1B',0x100|columns)
+				assert (n.get(a,'obFrame'),n.get(a,'obWidth'))==(columns-1,columns*8)
+				attach(a,trigger,600,3 if trigger=='v_player' else 4)
+				n.put(trigger,'obVelX',(direction*256)&65535,2);run(a)
+				assert n.get(a,'code')==n.s['MMZ_Floor_Delay']
+				assert n.get(a,'MMZ_floor_step',2)==(direction*8)&65535
+				for remaining in range(columns-1,-1,-1):
+					while n.get(a,'code')==n.s['MMZ_Floor_Delay']:run(a)
+					assert n.get(a,'code')==n.s['MMZ_Floor_Break'];run(a)
+					if remaining:
+						assert n.get(a,'obX',2)==600+(columns-remaining)*8*direction
+						assert n.get(a,'obWidth')==remaining*8 and n.get(a,'obFrame')==remaining-1
+					else:assert not n.get(a,'code') and not n.get(trigger,'obStatus')&8
+				pieces=[p for p in ss if n.get(p,'code')==n.s['MMZ_FloorPiece_Start']]
+				assert len(pieces)==columns*2 and all(not n.get(p,'respawn_addr',2) for p in pieces)
+				checks+=1
+	# Shrinking the left edge must release its rider while the right-hand rider
+	# keeps exactly the same world position and standing height.
+	a=setup('Obj1B',0x104);attach(a,'v_player',580,3);attach(a,'v_player2',620,4);run(a)
+	while n.get(a,'code')==n.s['MMZ_Floor_Delay']:run(a)
+	run(a)
+	assert not n.get('v_player','obStatus')&8 and n.get('v_player2','obStatus')&8
+	assert (n.get('v_player2','obX',2),n.get('v_player2','obY',2))==(620,565)
+	for count in (0,9,127):
+		a=setup('Obj1B',0x180|count);assert n.get(a,'code')==n.s['MMZ_Floor_Static'] and n.get(a,'obWidth')==8
+	# A full pool still consumes each slice without retry loops or corrupting
+	# neighboring SSTs. Static blocks do not accidentally arm a collapse.
+	a=setup('Obj1B',0x104)
+	for p in ss:
+		if p!=a:n.put(p,'code',n.s['PlayMusic'])
+	n.put(a,'code',n.s['MMZ_Floor_Break']);run(a);assert n.get(a,'MMZ_floor_count',2)==3
+	# Piece acceleration is 0.25px/update, capped at 22px/update, in 16.16.
+	a=setup('Obj1B',0x101);n.put(a,'code',n.s['MMZ_FloorPiece_Fall']);n.put(a,'obY',0,4)
+	y=0
+	for tick in range(1,121):
+		run(a);y+=min(tick*0x4000,0x160000)
+		assert n.get(a,'obY',4)==y and n.get(a,'MMZ_floor_speed',4)==min(tick*0x4000,0x160000)
+	# Isolate the native movement oracle from terrain probes: wall clearance is
+	# eight pixels, the landed floor is flat. Real terrain/payload contacts run
+	# separately in Genesis Plus GX.
+	for label in ('ObjHitWallRight','ObjHitWallLeft'):n.cpu.mem_write(n.s[label],bytes.fromhex('72084E75'))
+	for short in range(2):
+		for yellow in range(2):
+			for flip in range(2):
+				a=setup('WheelCarrier',0x100|(short<<7)|yellow)
+				if flip:n.put(a,'obVelX',0xFF00,2);n.put(a,'obStatus',1)
+				n.cpu.mem_write(n.s['ObjHitFloor'],bytes.fromhex('72FF4E75'))
+				n.cpu.ctl_remove_cache(n.s['ObjHitFloor'],n.s['ObjHitFloor']+4);run(a)
+				assert n.get(a,'code')==n.s['MMZ_Wheel_Roll'] and n.get(a,'obY',2)==599
+				n.cpu.mem_write(n.s['ObjHitFloor'],bytes.fromhex('72004E75'))
+				n.cpu.ctl_remove_cache(n.s['ObjHitFloor'],n.s['ObjHitFloor']+4)
+				x=600;vel=-1 if flip else 1;limit=64 if short else 80
+				child=n.get(a,'wheel_child',4)
+				assert n.get(child,'obSubtype')==(2 if yellow else 0)
+				for _ in range(800):
+					if abs(x-600)>=limit:vel=-vel
+					x+=vel;run(a)
+					assert (n.get(a,'obX',2),n.get(a,'obY',2),n.get(a,'obVelX',2))==(x,599,(vel*256)&65535),(short,yellow,flip,x,n.get(a,'obY',2))
+					assert n.get(child,'obX',4)==n.get(a,'obX',4)
+					checks+=1
+	return dict(floor_configurations=32,wheel_updates=6400,checks=checks,
+		stationary_rider_and_removed_edge=True,piece_acceleration_cases=120,full_pool=True)
+
+
+def floor_wheel_game(args):
+	"""Real-frame floor support, moving-spring contact and removal in each era."""
+	from genesis_test_core import Genesis
+	from check_object_course import boot_level
+	from check_companion_followup import isolate,spawn,place
+	g=Genesis(args.core,args.rom,args.listing,args.output/'floors-wheels',args.pal,
+		system_directory=args.system_directory)
+	initial=g.save();report=[]
+	def clear():
+		isolate(g);g.placement_write(0,int.from_bytes(b'\x80'*g.placement_capacity(),'big'),g.placement_capacity())
+		for actor in ('v_player','v_player2'):
+			place(g,actor,600,400);g.put(actor,'obControl',0x81)
+		g.write('Camera_X_pos',440,2);g.write('Camera_X_pos_coarse_back',256,2);g.write('Camera_Y_pos',480,2)
+		for row in range(2,7):
+			for col in range(2,7):g.layout_cell(row,col,0)
+	for era in range(4):
+		g.restore(initial);boot_level(g,zone=15,timezone=era);clear();stage=g.save()
+		for trigger in ('v_player','v_player2'):
+			g.restore(stage);a=spawn(g,'Obj1B',600,600,4);g.run(2)
+			place(g,trigger,620,600-16-g.get(trigger,'default_y_radius'))
+			g.put(trigger,'obControl',1);g.run(3)
+			assert g.get(a,'obStatus')&(8 if trigger=='v_player' else 16),(era,trigger,'floor-landing')
+			assert g.get(a,'code')==g.s['MMZ_Floor_Delay']
+			place(g,'v_player',580,600-16-g.get('v_player','default_y_radius'));g.put('v_player','obControl',1)
+			place(g,'v_player2',620,600-16-g.get('v_player2','default_y_radius'));g.put('v_player2','obControl',1)
+			g.run(2);before=(g.get('v_player2','obX',2),g.get('v_player2','obY',2))
+			for _ in range(20):
+				g.run()
+				if g.get(a,'MMZ_floor_count',2)==3:break
+			else:raise AssertionError((era,'floor-did-not-crumble'))
+			assert not g.get('v_player','obStatus')&8 and g.get('v_player2','obStatus')&8
+			assert (g.get('v_player2','obX',2),g.get('v_player2','obY',2))==before,(era,trigger,'floor-hop')
+			g.video.save(args.output/'floors-wheels'/f'era{era}-{trigger}-crumbling.png')
+			g.run(35);assert not g.get(a,'code') and not g.get('v_player2','obStatus')&8
+			report.append(dict(era=era,trigger=trigger,stationary_rider=True,removed_edge_released=True))
+		g.restore(stage);a=spawn(g,'Obj1B',600,600,0x184);g.run(2)
+		for actor in ('v_player','v_player2'):
+			place(g,actor,600,600-16-g.get(actor,'default_y_radius'));g.put(actor,'obControl',1)
+		g.run(30);assert g.get(a,'code')==g.s['MMZ_Floor_Static'] and g.get(a,'obStatus')&0x18==0x18
+		g.video.save(args.output/'floors-wheels'/f'era{era}-static.png')
+		# Build only a RAM terrain fixture using this era's own full-solid profile.
+		g.restore(stage);rom=bytes(g.rom);indices=g.read('v_colladdr1',4)
+		block=next(b for b in range(1,551) if set(rom[g.s['ColArray1']+rom[indices+b*2]*16:g.s['ColArray1']+(rom[indices+b*2]+1)*16])=={16})|0xF000
+		chunks=g.terrain_address('chunks')
+		for row in range(8):
+			for col in range(8):g.write(chunks+1023*128+row*16+col*2,block if row>=4 else 0,2)
+		for col in range(3,7):g.layout_cell(4,col,1023)
+		course=g.save()
+		for short in range(2):
+			g.restore(course);a=spawn(g,'WheelCarrier',600,566,0x100|(short<<7)|short);g.run(20)
+			assert g.get(a,'code')==g.s['MMZ_Wheel_Roll'],(era,short,'wheel-did-not-land')
+			child=g.get(a,'wheel_child',4);assert g.get(child,'code')==g.s['Springs']
+			assert g.get(child,'obSubtype')==(2 if short else 0)
+			xs=[]
+			for _ in range(350):
+				g.run();xs.append(g.get(a,'obX',2))
+				assert g.get(child,'obX',4)==g.get(a,'obX',4)
+			assert (min(xs),max(xs))==(600-(64 if short else 80),600+(64 if short else 80)),(era,short,min(xs),max(xs))
+			rest=g.save()
+			for actor in ('v_player','v_player2'):
+				g.restore(rest);place(g,actor,g.get(child,'obX',2),g.get(child,'obY',2)-8-g.get(actor,'default_y_radius'))
+				g.put(actor,'obControl',1);g.run(2)
+				assert g.get(actor,'obVelY',2)&0x8000,(era,short,actor,'no-spring-launch')
+				g.video.save(args.output/'floors-wheels'/f'era{era}-spring{short}-{actor}.png')
+			report.append(dict(era=era,short_patrol=bool(short),x_range=[min(xs),max(xs)],both_spring_contacts=True))
+		assert not g.read('v_errortype')
+	g.close()
+	return report
+
+
 def platform_game(args):
 	"""Check era PLCs, both live riders and independent disappearance/flip release."""
 	from genesis_test_core import Genesis
@@ -483,7 +643,7 @@ def hazard_native(args):
 def legacy_hazards(args):
 	"""Compare retained S1 behavior with a matching pre-port ROM/listing."""
 	old=Native(args.before_rom,args.before_listing);new=Native(args.rom,args.listing);cases=updates=0
-	for entry,action,params in [('SMZ_Saws','SMZ_Saw_Action',range(5)),('SMZ_ScrapStomp','SMZ_Sto_Action',(0,0x13,0x24,0x34,0x40,0x80,0x81,0x83,0x88))]:
+	for entry,action,params in [('SMZ_Saws','SMZ_Saw_Action',range(5)),('SMZ_ScrapStomp','SMZ_Sto_Action',(0,0x13,0x24,0x34,0x40,0x80,0x81,0x83,0x88)),('Obj1B','Obj1B_Dispatch',(0,1))]:
 		for param in params:
 			for flip in range(4):
 				objects=[]
@@ -500,7 +660,7 @@ def legacy_hazards(args):
 						for channel in (0,1,3,8):n.cpu.mem_write((n.s['f_switch']+channel)&0xFFFFFF,bytes([1 if 30<=tick<100 else 0]))
 						if n.get(a,'code'):
 							n.put(a,'obRender',0x84)
-							name=action if n is new and tick else entry
+							name=action if n.get(a,'code')==n.s.get(action) else entry
 							n.act(name,a,regs={UC_M68K_REG_D7:0x3579006f})
 							assert n.cpu.reg_read(UC_M68K_REG_D7)==0x3579006f
 					for field,size in [('obX',4),('obY',4),('obVelX',2),('obVelY',2),('obRoutine',1),('ob2ndRout',1),('obFrame',1),('obAnim',2),('obTimeFrame',2),('obStatus',1),('obSubtype',2),('obColType',2),('objoff_30',16)]:
@@ -578,10 +738,12 @@ def main():
 		report['animations']=animation_checks(args)
 		report['platforms']=platform_native(args)
 		report['hazards']=hazard_native(args)
+		report['floors_and_wheels']=floor_wheel_native(args)
 	if args.core:
 		report['game']=game(args)
 		report['platform_game']=platform_game(args)
 		report['hazard_game']=hazard_game(args)
+		report['floor_wheel_game']=floor_wheel_game(args)
 	if args.before_rom or args.before_listing:
 		assert args.before_rom and args.before_listing,'Supply the matching ROM and listing together'
 		report['retained_s1_hazards']=legacy_hazards(args)

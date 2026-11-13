@@ -47,10 +47,12 @@ def main():
 			g.write('Collision_addr', g.read('v_colladdr1', 4), 4)
 			if course:
 				layout, chunks = g.terrain_address('layout'), g.terrain_address('chunks')
-				ground = g.layout_cell(7,2)
-				block = g.read(chunks+ground*128+7*16, 2) | 0xF000
-				shape = bytes(g.rom)[g.read('v_colladdr1', 4)+(block & 0x3FF)*2]
-				assert set(bytes(g.rom)[g.s['ColArray2']+shape*16:g.s['ColArray2']+(shape+1)*16]) == {16}
+				# Select a genuine full block from this act's collision bank;
+				# an authored layout coordinate moves when terrain is translated.
+				rom = bytes(g.rom); indices = g.read('v_colladdr1', 4)
+				block = next(b for b in range(1,256) if all(
+					set(rom[g.s[axis]+rom[indices+b*2]*16:g.s[axis]+(rom[indices+b*2]+1)*16]) == {16}
+					for axis in ('ColArray1','ColArray2'))) | 0xF000
 				g.layout_cell(6,4,255)
 				for row in range(8):
 					for col in range(8):
@@ -61,10 +63,18 @@ def main():
 			g.write('v_framecount', phase, 2)
 			return a
 
+		def advance():
+			# A Mode 1 collision mailbox can cross a video frame. Sample the
+			# completed game pass, not a carrier between Move and Mount.
+			for _ in range(12):
+				g.run()
+				if g.read('v_vbla_counter') == 1:return
+			raise AssertionError('Game pass did not finish within twelve video frames')
+
 		def trace(a, count):
 			rows = []
 			for _ in range(count):
-				g.run()
+				advance()
 				assert not g.read('v_errortype'), 'ROM exception'
 				assert g.get(a, 'code') == g.s['WheelCarrier']
 				child = g.get(a, 'wheel_child', 4) & 65535
@@ -207,7 +217,7 @@ def main():
 			('bumps-right', 0x100, 920, 0), ('bumps-left', 0x200, 920, 1),
 			('slope-right', 0x620, 840, 0), ('slope-left', 0x6F0, 910, 1),
 			('curve-right', 0x700, 880, 0), ('curve-left', 0x780, 840, 1)):
-			a = setup(x, y, 5, facing)
+			a = setup(x, y+0x200, 5, facing)  # GHZ foreground's authored vertical translation
 			rows = trace(a, 100)
 			terrain[name] = rows
 			finish(name, max(r[0] for r in rows)-min(r[0] for r in rows) > 60)

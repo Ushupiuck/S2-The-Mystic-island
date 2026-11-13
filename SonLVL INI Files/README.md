@@ -110,7 +110,7 @@ the complete serialized word, including when calculating movement overlays.
 | `$AB` | Transport pipe | Low three bits: route; route 7 requires 50 rings. Route points are read from the ASM table. |
 | `$AC` | Invisible solid | High/low nibbles: width/height in 16-pixel units, minus one. |
 | `$AF` | Button | Low nibble: switch number. |
-| `$B0` | Wheel carrier | Low nibble: one of eight mounts. Preview includes the spring, monitor or spikes with the runtime offset/facing. |
+| `$B0` | Wheel carrier | Low nibble: one of eight mounts. MMZ / word bit 8 selects the CD 1px patrol; low bit 7 shortens its half-range from 80 to 64px. Preview includes the spring, monitor or spikes with the runtime offset/facing. |
 | `$B1–B5` | Palmtree Panic badniks | Bit 0: normal/damaged variant. |
 | `$B7` | Metallic Madness propeller obstacle | Subtype unused. X flip reverses the initial patrol; Y flip is ignored. Preview includes the mast and both blade assemblies. |
 | `$D9` | Hanging surface | Low six bits: traversable grip count 1–63 (zero means one), or classic span ×32 px (zero means 56 px). Bit 6: drop at final grip; bit 7: traversable; bit 8: disable support release; bit 9: silent; bit 10: hide metal handholds. X flip selects the left release end. Preview repeats the actual handhold art; invisible modes outline the grab region. Visible rows require the act's handhold PLC. See [hanging surfaces](../docs/Objects.md#hanging-surfaces). |
@@ -259,6 +259,10 @@ and VRAM allocation before using buttons.
 Shared sprites follow the [palette slot contract](../docs/Sprites-and-VRAM.md#palette-adaptation).
 Yellow springs share cap pixels and select palette 1 per piece; mechanisms use
 palette 0. LZ conveyor/morphing previews use palette 0, matching the runtime.
+
+MMZ's `$1B` floor uses 1-8 columns in low bits 0-6; bit 7 selects a static
+full-solid block. The runtime preview selects the same length as the constructor;
+invalid lengths use one column. Either character can trigger a crumbling floor.
 
 MMZ1's four era sections use `objMMZ.ini`; Good Future adds `objMMZ_GF.ini`
 for its saw overlay. Group previews read the actual byte curve/height tables,

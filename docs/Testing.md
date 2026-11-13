@@ -191,6 +191,17 @@ both actors, releases either independently, checks saw contact/clearance in all
 four orientations and launches both riders at both strengths. `--pal` repeats
 the actual frame checks in PAL. These are staged interaction/rendering visits,
 not a complete controller-only MMZ playthrough; the placement port is unfinished.
+The floor/carrier cases cover 32 floor configurations, all 6,400 flat-patrol
+updates, full-pool loss of fragments, exact acceleration and the stationary
+support edge. Real NTSC/PAL visits let either actor trigger the floor, check
+both riders at a breaking edge and use both moving-spring strengths in every
+era. Retained-floor behavior is included in the optional historical comparison.
+
+`check_wheel_carriers.py` samples a completed game pass (`v_vbla_counter=1`),
+since a Mode 1 wall/terrain mailbox may cross a video frame between carrier
+movement and payload positioning. Its RAM wall chooses a full-solid profile
+from the live act bank; natural-terrain probes include GHZ's authored `$200`
+vertical translation. Video frames are not assumed to equal object updates.
 
 `check_debug_states.py --zone 3 --act 2` covers EHZ2's private palette and HUD.
 `check_water_effects.py --player 2` selects primary Tails; `--companion` selects

@@ -96,6 +96,7 @@
 	</Subtypes>
 	<Properties>
 		<BitsProperty name="Payload" type="WheelPayload" startbit="0" length="4" description="Mount from WheelPayloads. Payload facing is fixed by the table; the carrier's X flip changes its initial travel direction." />
+		<BitsProperty name="ShortMMZPatrol" displayname="Short MMZ patrol" type="bool" startbit="7" length="1" description="MMZ variant: reduce the patrol half-range from 80 to 64 pixels." />
 	</Properties>
 	<Enums>
 		<Enum name="WheelPayload">

@@ -109,11 +109,13 @@ until a caller needs them. Newly ported levels must supply their own routes.
 
 ## MMZ object variants (experimental)
 
-Four original families retain their placement IDs and add a CD variant in
+Six original families retain their placement IDs and add a CD variant in
 zone `$0F`, or when subtype bit 8 is set elsewhere with compatible PLCs:
 
 | ID | Low subtype bits | Behavior |
 | --- | --- | --- |
+| `$1B` | 0-6, 7 | 1-8 crumbling columns; bit 7 selects a static full-solid block |
+| `$B0` | 0-3, 7 | Existing payload presets; bit 7 selects a 64px patrol instead of 80px |
 | `$A4` | 7 | Initially extended; X/Y placement flips independently select travel signs |
 | `$A5` | 0-1 | 0/2: small crusher; 1: tall launcher; reserved 3 safely uses small |
 | `$A5` | 2-3 | Small: phase rates 4/8/16/32; tall: bit 2 selects 4/8, bit 3 selects 60/90 pause |
@@ -151,6 +153,23 @@ retain their timings while skipping their old constructor-dispatch table.
 The existing morphing platform uses its direct running entry, the complete
 `$18` standing mask and the MMZ art base in this zone. Propeller blades inherit
 their parent's act-selected art base; neither object duplicates a source bank.
+
+The crumbling floor extends the existing `$1B` family. Its constructor selects
+one direct state chain; fragments have separate direct entries and never own a
+placement. Each column releases two 16px pieces, then shrinks the remaining
+stationary surface. Both support relationships are checked against its new
+extent without translating the riders or releasing/relanding the retained one.
+Either character can start the collapse and select its direction. Invalid
+column counts use one column; a full pool consumes the column without retrying
+or retaining invisible support. Fragments accelerate by 0.25px per update to
+22px, preserving CD's 16.16 motion.
+
+The `$B0` carrier retains its existing eight ordinary payload presets, wall
+bounds, independent rider translation and lifetime services. MMZ selects its
+one-pixel drop and 1px/update patrol through direct states; classic carriers
+retain their 1.5px/update movement. Bit 7 shortens MMZ's patrol from 80 to 64px.
+Payload subtype/facing comes from `WheelPayloads`, not the carrier's patrol
+flag. The new variants reuse the already imported floor mappings and wheel art.
 
 ## SST and dispatch
 

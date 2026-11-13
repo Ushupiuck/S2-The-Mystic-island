@@ -70,6 +70,8 @@ class Native:
 				('TwistingPathway', ('TwistingPathway_Main', 'TwistingPathway_Cage')),
 				('SMZ_SpinConvey', ('SMZ_SpinC_Move',)),
 				('MorphingPlatform', ('MorphingPlatform_Run',)),
+				('Obj1B', ('Obj1B_Dispatch','MMZ_Floor_Idle','MMZ_Floor_Delay','MMZ_Floor_Break','MMZ_Floor_Static')),
+				('WheelCarrier', ('MMZ_Wheel_Fall','MMZ_Wheel_Roll')),
 				('SMZ_Saws', ('SMZ_Saw_Action','MMZ_Saw_HoldIn','MMZ_Saw_Extend','MMZ_Saw_HoldOut','MMZ_Saw_Retract')),
 				('SMZ_ScrapStomp', ('SMZ_Sto_Action','MMZ_Crusher_Run')),
 				('SMZ_Teleport', ('SMZ_Teleport_Main',))):

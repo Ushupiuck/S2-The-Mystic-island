@@ -107,7 +107,8 @@ its three-word table. Its six flash steps are bounded, interpreting those two
 values as 22/66-update holds instead of reading executable code as colors.
 
 The first shared object families now have MMZ variants: `$A4` diagonal saw,
-`$A5` crusher, `$A6` vanishing groups and `$A9` fixed/curved spinning platforms.
+`$A5` crusher, `$A6` vanishing groups, `$A9` fixed/curved spinning platforms,
+`$1B` progressively crumbling floors/static blocks and `$B0` patrolling carriers.
 Zone `$0F` selects them automatically; word-subtype bit 8 explicitly selects
 one in another act loading compatible art. The F1 Debug list exposes these
 variants, the existing morphing platform, propeller and wheeled carrier, plus

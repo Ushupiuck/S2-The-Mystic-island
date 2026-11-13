@@ -1,6 +1,16 @@
 ; ---------------------------------------------------------------------------
 
 Obj1B:
+		move.w	obSubtype(a0),d0
+		btst	#8,d0
+		bne.s	.mmz
+		cmpi.b	#id_MMZ,(Current_Zone).w
+		bne.s	.classic
+.mmz:
+		jmp	(MMZ_Floor_Init).l
+.classic:
+		move.l	#Obj1B_Dispatch,code(a0)
+Obj1B_Dispatch:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	Obj1B_Index(pc,d0.w),d1
