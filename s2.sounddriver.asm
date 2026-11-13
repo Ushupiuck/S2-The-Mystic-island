@@ -1682,19 +1682,17 @@ zPlayMusic:
 	; request until the current header is complete, then arbitrate normally.
 	ld	hl,zMusicStarting
 	bit	0,(hl)
-	jr	z,.begin
-	ld	(zMusicSongRequest),a
-	ret
-.begin:
+	jr	nz,.defer
 	; Keep ready flags/slot stable from the ID check until the slot is live.
 	ld	hl,zMusicSlotBusy
 	ld	(hl),1
 	inc	hl				; zMusicReadySong
 	cp	(hl)
 	jr	z,.ready
-	ld	(zMusicSongRequest),a
 	dec	hl				; zMusicSlotBusy
 	ld	(hl),0
+.defer:
+	ld	(zMusicSongRequest),a
 	ret
 .ready:
 	xor	a
@@ -1927,7 +1925,7 @@ zloc_884:
 zloc_8D0:
 	ld	a,(zAbsVar.1upPlaying)
 	or	a
-	jp	nz,zBGMLoad_SFXEnd
+	jr	nz,zBGMLoad_SFXEnd
 
 	ld	ix,zTracksSFXStart		; 'ix' points to start of SFX track memory (10 prior tracks were DAC, 6 FM, 3 PSG)
 	ld	b,SFX_TRACK_COUNT					; 6 SFX tracks total (3FM, 3PSG)
@@ -3888,12 +3886,7 @@ zBGMLoad:
 zUpdateMusicTick:
 	ld	a,(zMusicStarting)
 	or	a
-	jr	z,.ready
-	ld	a,(zMusicCacheValid)
-	or	a
-	ret	z
-	jp	zFinishBGMLoad
-.ready:
+	jr	nz,.starting
 	; If the system is PAL, then this performs some timing adjustments
 	; (i.e. you need to update 1.2x as much to keep up the same rate)
 	ld	hl,zPalModeByte		; Get address of zPalModeByte
@@ -3907,6 +3900,11 @@ zUpdateMusicTick:
 	call	zUpdateMusic
 +
 	jp	zUpdateMusic
+.starting:
+	ld	a,(zMusicCacheValid)
+	or	a
+	ret	z
+	jp	zFinishBGMLoad
 
 ; end of Z80 'ROM'
 	if MOMPASS=1
