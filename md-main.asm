@@ -15238,14 +15238,7 @@ Map_obj23:	binclude	"mappings/sprite/Buzz Bomber Missile.bin"
 		even
 Map_Ring:	binclude	"mappings/sprite/Ring.bin"			; $25
 		even
-Map_Obj26:	binclude	"mappings/sprite/Monitor DPLC 0.bin"
-		even
-Map_MonitorSlot1:	binclude "mappings/sprite/Monitor DPLC 1.bin"
-		even
-Map_MonitorSlot2:	binclude "mappings/sprite/Monitor DPLC 2.bin"
-		even
-Map_MonitorSlot3:	binclude "mappings/sprite/Monitor DPLC 3.bin"
-		even
+		include "mappings/sprite/Monitor.asm"
 MonitorArt_Maps:	dc.l Map_Obj26,Map_MonitorSlot1,Map_MonitorSlot2,Map_MonitorSlot3
 DPLC_MonitorIcons:	binclude "mappings/spriteDPLC/Monitor.bin"
 		even

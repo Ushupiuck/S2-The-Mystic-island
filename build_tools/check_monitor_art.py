@@ -61,12 +61,29 @@ def native(args):
 	maps=frames(rom,m.s['Map_Obj26'],12)
 	assert (maps[9][0][2]+m.s['ArtTile_Monitor'])&2047==m.s['ArtTile_Lives_Counter']
 	assert (maps[10][0][2]+m.s['ArtTile_Monitor'])&2047==m.s['ArtTile_Tails_Life']
+	# Every runtime pose keeps the editor's geometry and attributes; only
+	# non-life icon addresses depend on the selected physical VRAM slot.
+	editor=frames((ROOT/'mappings/sprite/Monitor.bin').read_bytes())
+	shared={frame:set() for frame in (0,9,10,11)}
+	for slot,label in enumerate(('Map_Obj26','Map_MonitorSlot1','Map_MonitorSlot2','Map_MonitorSlot3')):
+		address=m.s[label]
+		for frame,row in enumerate(frames(rom,address,m.s['Map_Obj26_frames'])):
+			expected=list(editor[frame])
+			if 1<=frame<=8:
+				y,size,tile,x=expected[0]
+				expected[0]=(y,size,(tile&0xF800)|(24+slot*4),x)
+			assert row==expected,(label,frame,'Monitor pose changed')
+			if frame in shared:
+				shared[frame].add(address+struct.unpack_from('>h',rom,address+frame*2)[0])
+	assert all(len(addresses)==1 for addresses in shared.values()),'Resident monitor poses must share their records'
+	mapping_bytes=m.s['Map_Monitor_End']-m.s['Map_Obj26']
 	master=(ROOT/'art/nemesis/Monitor and contents.unc').read_bytes()
 	assert nemesis(rom[m.s['Nem_MonitorBodies']:])==master[:24*32]
 	assert nemesis(rom[m.s['Nem_MonitorTailsLife']:])==master[56*32:]
 	assert m.s['ArtTile_Monitor_FreeEnd']-m.s['ArtTile_Monitor_Free']==16
 	return dict(cache_cases=checks,content_slots=4,reclaimed_tiles=16,whole_queue_retry=True,
-		prior_pass_pinning=True,timestamp_wrap=True,life_rewards_preserved=True)
+		prior_pass_pinning=True,timestamp_wrap=True,life_rewards_preserved=True,
+		mapping_bytes=mapping_bytes,shared_resident_frame_records=True)
 
 
 def placements():

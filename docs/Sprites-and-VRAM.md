@@ -18,6 +18,8 @@ For size byte `s`, width is `((s >> 2)+1)*8`, height is `((s & 3)+1)*8`.
 image, and regenerates `_definitions/Sprite Bounds.asm`. Aliases, binary/shared frames and
 backward frame references are supported. There is no manual mapping registry.
 A failed bounds pass restores previous constants and leaves the playable ROM intact.
+ROM readers of shared ASM mappings use the generated `Map_Name_frames` count;
+the first frame offset can span other slot tables and cannot delimit the table.
 
 Bounds are symmetric maxima of `abs(X)`, `abs(X+width)` and the corresponding
 Y values across every piece/frame. Set them alongside mappings on the actual
@@ -105,8 +107,11 @@ tiles, reclaiming 16 tiles/512 bytes before the permanent Tails image.
 Visible authored scenes must fit four distinct non-life kinds, including their
 moving payloads. Cache pressure keeps the baked static on a box and defers a
 floating icon rather than replacing another displayed kind. The editor reads
-the complete master through `Monitor.bin`; runtime `Monitor DPLC 0-3.bin` maps
-select the shared slots. The full master archives remain editor assets and are
+the complete master through `Monitor.bin`. Runtime `Monitor.asm` contains four
+12-entry slot tables sharing twelve frame records, including the body, broken
+base, both life icons and repeated content mappings. Its 252 bytes replace the
+four former 180-byte mapping banks; the renderer uses the same pointer lookup.
+The single actual DPLC table remains `mappings/spriteDPLC/Monitor.bin` (48 bytes). The full master archives remain editor assets and are
 not linked into the ROM. The usual frame convention remains type+1, with zero
 for the bare box and 11 for its broken base. The signpost still replaces the
 first 26 tiles only during its separate end-of-act lifetime.

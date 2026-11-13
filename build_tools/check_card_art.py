@@ -341,7 +341,7 @@ for mode in (0,1,2):
 	assert m.get(obj,'obFrame') == (1 if mode == 2 else 0)
 	checks.append({'case':'signpost-final-character','mode':mode,'frame':m.get(obj,'obFrame')})
 
-monitor=frames(rom,m.s['Map_Obj26'])
+monitor=frames(rom,m.s['Map_Obj26'],m.s['Map_Obj26_frames'])
 assert monitor[m.s['MonitorType_ExtraLife']+1][0][2] & 0x7FF == 56
 assert m.s['ArtTile_Signpost']+26 <= m.s['ArtTile_Tails_Life']
 assert m.s['ArtTile_Tails_Life']+4 == m.s['ArtTile_Lamppost']

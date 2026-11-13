@@ -54,7 +54,7 @@ sat = bytes(g.read(g.s['Sprite_Table']+i) for i in range(80*8))
 icons = [struct.unpack_from('>H', sat, i+4)[0] for i in range(0,len(sat),8)
          if struct.unpack_from('>H', sat, i+4)[0]&2047 == g.s['ArtTile_Lives_Counter']]
 assert icons and all(word>>13&3 == 0 for word in icons), icons
-assert (frames(rom,g.s['Map_Obj26'])[g.s['MonitorType_DoubleLife']+1][0][2]+g.s['ArtTile_Monitor'])&2047 == g.s['ArtTile_Lives_Counter']
+assert (frames(rom,g.s['Map_Obj26'],g.s['Map_Obj26_frames'])[g.s['MonitorType_DoubleLife']+1][0][2]+g.s['ArtTile_Monitor'])&2047 == g.s['ArtTile_Lives_Counter']
 g.video.save(a.output/'sbz1-start.png')
 passed('HUD and Sonic monitor share the corrected portrait, blue and both reds')
 
