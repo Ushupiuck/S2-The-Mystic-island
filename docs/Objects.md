@@ -313,7 +313,8 @@ rather than adding a mode branch to every rejected candidate.
 
 `Collision_response_list` is allocated at `RAM_Start` in previously free MD
 RAM. Existing engine globals, CD staging buffers and SST fields do not move.
-`Free_RAM_Start` follows this allocation. Queue accesses use long addressing.
+Music staging follows this allocation, then the persistent boss-head sources;
+`Free_RAM_Start` follows those banks. Queue accesses use long addressing.
 Scene entry clears its count before either player can consume old data.
 Capacity and probe interval are named constants in `s2.constants.asm`.
 
@@ -460,6 +461,7 @@ Other packed layouts require their own audit when changing fields:
 | GHZ ship | Saved flash color `$2E-$2F`, weapon-ready byte `$30`, breakup clock `$31`, base X/Y longs `$34/$3C`, timer `$40-$41`, flash/bob bytes `$42/$43` |
 | GHZ chain root | Five word child pointers `$2E-$37`, ship long `$38`, drop/radius words `$3C/$3E`, acceleration/flicker bytes `$40/$41`, angular velocity `$42-$43`, piece index `$44` |
 | GHZ chain children | Root word `$2E`, ship long `$38`, drop/radius words `$3C/$3E`, flicker byte `$41`, piece index `$44` |
+| GHZ/EHZ face child | Loaded-head / desired-frame bytes `$2E/$2F`, attachment words `$30/$32`, immutable source long `$34`, parent long `$38`, animation-table long `$40`; pilot selector in subtype bit 0 |
 | Boss burst controller | Parameter bytes `$2E-$31`, countdown/main-routine bytes `$32/$33`, expected parent code long `$34`, parent long `$38`; parent reserves started byte `$4C` |
 
 Caterkiller's packed parent high byte holds a segment index, relying on 68000
@@ -1160,6 +1162,15 @@ a quarter-pixel/frame first pass from the center, then one-pixel/frame return
 passes separated by the original wait counter. The predecremented `$7F`/`$3F`
 movement timers preserve S1's exact subpixel endpoints, rather than reversing
 at invented coordinate bounds. Vertical bobbing continues through pauses.
+
+Placement subtype bit 0 selects the shared pilot: clear for Eggman, set for
+EggRobo. The EHZ boss uses the same setting; its constructor copies the selector
+to the cockpit before reusing the parent's subtype for runtime state. Current
+authored fights remain Eggman. Both pilots share one eight-tile VRAM reservation;
+only one pilot can animate independently in an arena. See
+[head streaming and source ownership](Sprites-and-VRAM.md#shared-eggman-heads-and-exhaust).
+Eggman's defeat expressions retain their existing timing. EggRobo holds the
+source broken-head pose throughout explosions, recovery and escape.
 
 Each of the six weapon pieces drops two pixels/frame to its own stop, then the
 root signals readiness. The mount ends 32 pixels below the ship and the ball's

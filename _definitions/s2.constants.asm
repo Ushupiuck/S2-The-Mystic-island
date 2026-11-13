@@ -1548,13 +1548,22 @@ Music_LoadBusy:		ds.b	1
 Music_ServiceReady:	ds.b	1
 Music_BusSignal:		ds.b	1	; Z80 posts page and song requests here
 Music_RAM_End:
-Free_RAM_Start:		ds.b	MCD_MainWorkStart-Music_RAM_End
+; Immutable DMA sources for the shared boss-head DPLCs. Each character's
+; bank is decoded at first use, retained through the arena and reset on entry.
+BossFace_ArtReady:	ds.b	1
+			ds.b	1
+Art_EggmanFace:		ds.b	42*tile_size
+Art_EggmanFace_End:
+Art_EggRoboHead:		ds.b	32*tile_size
+Art_EggRoboHead_End:
+BossFace_RAM_End:
+Free_RAM_Start:		ds.b	MCD_MainWorkStart-BossFace_RAM_End
 Free_RAM_End:
 	if (MOMPASS>1)&&((Music_BusSignal&$FF8000)<>$FF0000)
 		fatal "The music mailbox must be in the lower half of MD RAM."
 	endif
-	if (MOMPASS>1)&&(Music_RAM_End>MCD_MainWorkStart)
-		fatal "Music stages overlap CD work storage."
+	if (MOMPASS>1)&&(BossFace_RAM_End>MCD_MainWorkStart)
+		fatal "Music stages/boss-head sources overlap CD work storage."
 	endif
 	if Free_RAM_End<>MCD_MainWorkStart
 		fatal "Free RAM must end at the first live allocation."
@@ -1897,6 +1906,12 @@ ArtTile_HangingSurface:		equ $40D	; 12 tiles: handhold + chain; LZ free space / 
 ; Shared GHZ/EHZ pilot and nozzle child fields and animation IDs.
 BossChild_OffsetX = objoff_30
 BossChild_OffsetY = objoff_32
+BossFace_LoadedFrame = objoff_2E	; byte: last atomically queued head pose
+BossFace_DesiredFrame = objoff_2F	; byte: animation pose retained while the queue is full
+BossFace_Source = objoff_34	; long: immutable decoded character art
+BossFace_Animation = objoff_40	; long: selected expression-script table
+BossFace_VRAMTiles = 8
+BossFace_FrameCount = 11
 BossFace_Normal = 0
 BossFace_Laugh = 1
 BossFace_Hurt = 2
@@ -1916,7 +1931,7 @@ ArtTile_Eggman_Weapons:		equ $475
 ArtTile_Eggman_Button:		equ $4A4
 ArtTile_Eggman_Spikeball:	equ $518
 ArtTile_Eggman_Trap_Floor:	equ $518
-ArtTile_EggmanFace:		equ $43F	; 40 shared S1 head tiles
+ArtTile_EggmanFace:		equ $42C	; 8 streamed head tiles immediately after the 60-tile pod; through $433
 ArtTile_Eggman_Exhaust:		equ $556	; 25 shared S1 flame tiles
 
 ; End of Level

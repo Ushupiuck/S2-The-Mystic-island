@@ -133,7 +133,11 @@ def main():
 	assert symbols['Collision_response_list'] == symbols['RAM_Start']
 	if 'Music_RAM_End' in symbols:
 		assert symbols['Music_StageData'] == symbols['Collision_response_list_end']
-		assert symbols['Free_RAM_Start'] == symbols['Music_RAM_End']
+		if 'BossFace_RAM_End' in symbols:
+			assert symbols['BossFace_ArtReady'] == symbols['Music_RAM_End']
+			assert symbols['Free_RAM_Start'] == symbols['BossFace_RAM_End']
+		else:
+			assert symbols['Free_RAM_Start'] == symbols['Music_RAM_End']
 	else:
 		assert symbols['Free_RAM_Start'] == symbols['Collision_response_list_end']
 	assert symbols['Free_RAM_End'] == symbols['MCD_MainWorkStart']

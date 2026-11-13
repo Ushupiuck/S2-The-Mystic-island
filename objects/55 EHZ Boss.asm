@@ -85,7 +85,6 @@ EHZBoss_Init:
 	move.b	#Map_EHZBoss_Vehicle_height,height_pixels(a0)
 	move.w	#make_art_tile(ArtTile_Eggman,0,1),obGfx(a0) ; vehicle with ability to fly, bottom part
 	ori.b	#1<<obRender.level_fg,obRender(a0)
-	move.w	#$81,obSubtype(a0)
 	move.w	EHZBoss_origin_x(a0),d0
 	addi.w	#EHZBoss_LandingX,d0
 	move.w	d0,obX(a0)
@@ -116,9 +115,11 @@ EHZBoss_Init:
 	move.l	obX(a0),obX(a1)
 	move.l	obY(a0),obY(a1)
 	move.b	#$E,obRoutine(a1)
-	move.b	#BossFace_Normal,obAnim(a1)	; shared S1 pilot
+	move.b	#BossFace_Normal,obAnim(a1)	; shared pilot
 	move.b	obRender(a0),obRender(a1)
+	jsr	(BossFace_Init).l
 +
+	move.w	#$81,obSubtype(a0)	; after the cockpit reads placement bit 0
 	jsr	(FindNextFreeObj).l	; Vehicle on ground
 	bne.w	+
 

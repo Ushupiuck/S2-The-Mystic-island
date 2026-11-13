@@ -22,7 +22,13 @@ def main():
 		r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]', args.listing.read_text())}
 	address = lambda name: symbols[name] & 0xFFFFFF
 	assert address('Collision_response_list') == 0xFF0000
-	assert address('Free_RAM_Start') == address('Collision_response_list_end')
+	assert address('Music_StageData') == address('Collision_response_list_end')
+	assert address('BossFace_ArtReady') == address('Music_RAM_End')
+	assert address('Art_EggmanFace') == address('BossFace_ArtReady') + 2
+	assert address('Art_EggmanFace_End') - address('Art_EggmanFace') == 42*32
+	assert address('Art_EggRoboHead') == address('Art_EggmanFace_End')
+	assert address('Art_EggRoboHead_End') - address('Art_EggRoboHead') == 32*32
+	assert address('Free_RAM_Start') == address('BossFace_RAM_End') == address('Art_EggRoboHead_End')
 	assert address('Free_RAM_End') == address('MCD_MainWorkStart')
 	assert address('MCD_MainWorkEnd') == address('Player_Art_Buffer_Start')
 	assert address('Player_Art_Buffer_End') == address('Main_RAM_Start')

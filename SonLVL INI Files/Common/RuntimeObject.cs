@@ -40,15 +40,9 @@ namespace MysticIsland.ObjectDefinitions
 					Array.Resize(ref pixels, gapOffset + 4 * 32);
 					Array.Copy(File.ReadAllBytes("../art/uncompressed/SMZ Junction Gap.unc"), 0, pixels, gapOffset, 4 * 32);
 				}
-				if (behavior == "Eggman")
-				{
-					byte[] heads = ObjectHelper.OpenArtFile("../art/moduled kosinski/Eggman face.kospm", CompressionType.KosinskiPlusM);
-					int offset = int.Parse(Setting("headtileoffset", "0")) * 32;
-					if (offset < pixels.Length) throw new InvalidDataException("Shared head overlaps the cockpit art.");
-					Array.Resize(ref pixels, offset + heads.Length);
-					Array.Copy(heads, 0, pixels, offset, heads.Length);
-				}
-				frames = Render(pixels, map, data.Palette, dplc, data.DPLCVersion, int.Parse(Setting("mapframes", "0")));
+				frames = behavior == "Eggman"
+					? RenderBossCockpits(pixels, map, data.Palette, int.Parse(Setting("mapframes", "11")))
+					: Render(pixels, map, data.Palette, dplc, data.DPLCVersion, int.Parse(Setting("mapframes", "0")));
 			}
 			else frames = new[] { Outline(16, 16) };
 
@@ -65,6 +59,7 @@ namespace MysticIsland.ObjectDefinitions
 					Bits("Ground only", 7, 1, "Ignore airborne characters.", "No", "Yes");
 					break;
 				case "Eggman":
+					Bits("Pilot", 0, 1, "Character piloting this boss.", "Eggman", "EggRobo");
 					byte[] hullArt = ObjectHelper.OpenArtFile("../art/moduled kosinski/Old Eggpod.kospm", CompressionType.KosinskiPlusM);
 					string bodyMap = Setting("bodymap", "");
 					byte[] hullMap = bodyMap.Length == 0
@@ -375,6 +370,35 @@ namespace MysticIsland.ObjectDefinitions
 			if (mode == 2) return (ushort)(0x10 + Math.Max(1, Math.Min(14, seconds)));
 			return (ushort)(0x20 + Math.Max(0, Math.Min(1092, seconds)));
 		}
+		private Sprite[] RenderBossCockpits(byte[] pod, byte[] mappings, int palette, int frameCount)
+		{
+			byte[] eggman = ObjectHelper.OpenArtFile(Setting("headart", "../art/moduled kosinski/Eggman face.kospm"), CompressionType.KosinskiPlusM);
+			byte[] robo = ObjectHelper.OpenArtFile(Setting("roboheadart", "../art/moduled kosinski/Egg Robo head.kospm"), CompressionType.KosinskiPlusM);
+			byte[] cues = LevelData.ASMToBin(Setting("headdplc", "../mappings/spriteDPLC/Boss heads.asm"), Setting("headdplclabel", "DPLC_BossHeads"), EngineVersion.S3K);
+			int headOffset = int.Parse(Setting("headtileoffset", "0")) * 32;
+			if (headOffset < pod.Length) throw new InvalidDataException("Shared head overlaps the cockpit art.");
+			Sprite[] result = new Sprite[frameCount];
+			for (int frame = 0; frame < frameCount; frame++)
+			{
+				byte[] pixels = new byte[headOffset + 8 * 32];
+				Array.Copy(pod, pixels, pod.Length);
+				byte[] source = frame < 7 ? eggman : robo;
+				int cue = ByteConverter.ToUInt16(cues, frame * 2);
+				int count = ByteConverter.ToUInt16(cues, cue);
+				int destination = headOffset;
+				for (int run = 0; run < count; run++)
+				{
+					int word = ByteConverter.ToUInt16(cues, cue + 2 + run * 2);
+					int size = ((word >> 12) + 1) * 32;
+					Array.Copy(source, (word & 0xFFF) * 32, pixels, destination, size);
+					destination += size;
+				}
+				MappingsFrame map = new MappingsFrame(mappings, ByteConverter.ToUInt16(mappings, frame * 2), EngineVersion.S3K, "frame" + frame);
+				result[frame] = LevelData.MapFrameToBmp(pixels, map, palette);
+			}
+			return result;
+		}
+
 		private static Sprite[] Render(byte[] art, byte[] mappings, int palette, byte[] dplc, EngineVersion dplcVersion = EngineVersion.S2, int frameCount = 0)
 		{
 			MappingsFrame[] maps = frameCount == 0 ? MappingsFrame.Load(mappings, EngineVersion.S3K).ToArray()
@@ -523,7 +547,7 @@ namespace MysticIsland.ObjectDefinitions
 					for (int i = 1; i < 4; i++) pieces.Add(new Sprite(kemusi ? alternate[damaged ? 3 : 2] : At(frames, 8), i * 12, kemusi ? (damaged ? 5 : 1) : 0));
 					return new Sprite(pieces);
 				case "Junction": return new Sprite(frames[0], At(frames, 16));
-				case "Eggman": return new Sprite(alternate[0], frames[0]);
+				case "Eggman": return new Sprite(alternate[0], frames[(subtype & 1) == 0 ? 0 : 7]);
 				case "Saw": return At(frames, (subtype & 7) >= 3 ? 2 : 0);
 				case "SpinTrap": return (subtype & 0x80) != 0 ? frames[0] : alternate[0];
 				case "Stomper": return At(frames, (subtype >> 4) & 7);

@@ -2332,6 +2332,7 @@ Level_ClrRam:
 		move.b	d2,(Current_Timezone).w	; clearRAM only changes d0-d1/a1
 		jsr	(LCon_ResetWheels).l
 		jsr	(MonitorArt_Reset).l
+		clr.b	(BossFace_ArtReady).l
 Level_WaterFlagInit:
 		move.w	(Current_ZoneAndAct).w,d0
 		ror.b	#2,d0
@@ -10687,15 +10688,68 @@ Credits_Display:
 ; ---------------------------------------------------------------------------
 ; Shared S1 pilot and exhaust. Callers validate a1's parent before following.
 ; Offsets belong to the child, so hulls keep their own nozzle/cockpit anchors.
+; a0 = parent, a1 = new face child. Placement bit 0 selects EggRobo.
+; Cache source/script pointers in the existing child SST, so normal drawing
+; needs no character dispatch. Independent RAM banks survive all queued DMAs.
+BossFace_Init:
+		move.l	a2,-(sp)
+		moveq	#0,d0
+		move.b	obSubtype+1(a0),d0
+		andi.w	#1,d0
+		move.w	d0,obSubtype(a1)
+		lea	BossFace_Assets(pc),a2
+		tst.b	d0
+		beq.s	.assets
+		lea	12(a2),a2
+.assets:
+		move.l	(a2)+,BossFace_Source(a1)
+		move.l	(a2)+,BossFace_Animation(a1)
+		st	BossFace_LoadedFrame(a1)
+		btst	d0,(BossFace_ArtReady).l
+		bne.s	.return
+		movem.l	a0-a1,-(sp)
+		movea.l	(a2),a0
+		movea.l	BossFace_Source(a1),a1
+		jsr	(KosPlusDec).l
+		movem.l	(sp)+,a0-a1
+		bset	d0,(BossFace_ArtReady).l
+.return:
+		movea.l	(sp)+,a2
+		rts
+BossFace_Assets:
+		dc.l Art_EggmanFace,Ani_EggmanFace,Kospm_EggmanFace+2
+		dc.l Art_EggRoboHead,Ani_EggRoboHead,Kospm_EggRoboHead+2
+
 BossFace_Display:
-		bsr.s	BossChild_Follow
-		lea	Ani_EggmanFace(pc),a1
-		bra.s	BossChild_Animate
+		bsr.w	BossChild_Follow
+		move.b	BossFace_DesiredFrame(a0),obFrame(a0)
+		movea.l	BossFace_Animation(a0),a1
+		jsr	(AnimateSprite).l
+BossFace_Draw:
+		moveq	#0,d0
+		move.b	obFrame(a0),d0
+		move.b	d0,BossFace_DesiredFrame(a0)
+		lea	DPLC_BossHeads(pc),a2
+		lea	BossFace_LoadedFrame(a0),a3
+		move.w	#ArtTile_EggmanFace*tile_size,d4
+		move.l	BossFace_Source(a0),d6
+		jsr	(Load_DynamicPLC).l
+		bcc.s	BossChild_Draw
+		; Keep the complete previous pose when the queue cannot accept all
+		; runs. DisplaySprite queues an SST pointer, so the displayed frame
+		; must remain valid until Render_Sprites consumes that pointer.
+		move.b	BossFace_LoadedFrame(a0),d0
+		bmi.s	.return
+		move.b	d0,obFrame(a0)
+		bra.s	BossChild_Draw
+.return:
+		rts
 BossExhaust_Display:
 		bsr.s	BossChild_Follow
 		lea	Ani_BossExhaust(pc),a1
 BossChild_Animate:
 		jsr	(AnimateSprite).l
+BossChild_Draw:
 		move.b	obStatus(a0),d0
 		andi.b	#3,d0
 		andi.b	#$FC,obRender(a0)
@@ -10730,6 +10784,18 @@ Ani_EggmanFace:
 .panic:		dc.b 3,5,0,afEnd
 .burnt:		dc.b $F,6,afEnd
 		even
+; S3&K provides idle, hurt and defeated EggRobo poses. Laugh shares idle;
+; the defeated head remains broken through escape. Expression IDs stay shared.
+Ani_EggRoboHead:
+		dc.w .normal-Ani_EggRoboHead
+		dc.w .normal-Ani_EggRoboHead
+		dc.w .hurt-Ani_EggRoboHead
+		dc.w .defeated-Ani_EggRoboHead
+		dc.w .defeated-Ani_EggRoboHead
+.normal:	dc.b $F,7,8,afEnd
+.hurt:		dc.b $1F,9,afEnd
+.defeated:	dc.b $F,10,afEnd
+		even
 Ani_BossExhaust:
 		dc.w .off-Ani_BossExhaust
 		dc.w .cruise-Ani_BossExhaust
@@ -10738,6 +10804,7 @@ Ani_BossExhaust:
 .cruise:	dc.b 3,0,1,afEnd
 .escape:	dc.b 2,1,0,2,3,2,3,1,0,afBack,2
 		even
+		include "mappings/spriteDPLC/Boss heads.asm"
 		include "mappings/sprite/GHZ Boss Cockpit.asm"
 		include "mappings/sprite/EHZ Boss Cockpit.asm"
 		include "mappings/sprite/Boss exhaust.asm"
@@ -13499,6 +13566,8 @@ Nem_Bunny:	binclude	"art/nemesis/Flicky/Rabbit.nem"
 Kospm_OldEggPod:	binclude "art/moduled kosinski/Old Eggpod.kospm"
 		even
 Kospm_EggmanFace:	binclude "art/moduled kosinski/Eggman face.kospm"
+		even
+Kospm_EggRoboHead:	binclude "art/moduled kosinski/Egg Robo head.kospm"
 		even
 Kospm_FzEggman:	binclude "art/nemesis/S1/Boss - Eggman after FZ Fight.kospm" ; damaged cockpit, reserved for FZ
 		even

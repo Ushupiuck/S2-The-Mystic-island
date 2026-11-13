@@ -315,19 +315,52 @@ flame to keep them above foreground flowers. Their existing sprite-queue tiers
 still control their order against one another.
 
 The shared editable banks are `art/uncompressed/Old Eggpod.unc` (60 tiles),
-`Eggman face.unc` (40) and `Boss exhaust.unc` (25). They start at `$3F0`, `$43F`
-and `$556`. The cockpit, face and flame use the primary sprite palette; metal
+`Eggman face.unc` (42 source tiles), `Egg Robo head.unc` (32 source tiles) and
+`Boss exhaust.unc` (25). The pod starts at `$3F0` and exhaust at `$556`.
+Both pilots stream into the same **eight-tile buffer at `$42C-$433`**, directly
+after the pod. Compared with the former 40 resident Eggman tiles, this saves
+**32 VRAM tiles (1 KiB)** and closes the old 19-tile gap before the head bank.
+The human source atlas grows by two tiles to permit the smaller per-pose
+reservation; this is a VRAM saving, with a small increase in compressed ROM art.
+The cockpit, face and flame use the primary sprite palette; metal
 pieces select the existing second row. Profile lenses retain the selected
 `C/B` to `B/A` blue remap. Exposed S1 seat padding uses `4/3/2` in place of
 `A/B/C`; both the hull's backrest and cockpit rim change, with the original
 shading and shapes preserved.
 
+`mappings/spriteDPLC/Boss heads.asm` is the single cue table: frames 0-6 are
+Eggman, 7-10 EggRobo. Eggman's poses upload 5, 5, 6, 6, 8, 7 and 8 tiles;
+EggRobo's four 32x16 poses each upload eight. Separate grids for the moustache
+tips preserve every original face pixel. The burnt pose needs five head pieces,
+but their staggered heights keep the complete pod within its existing
+12-piece scanline allowance. Unchanged frames enqueue no art.
+
+`BossFace_Init` decodes the selected character's compressed source through the
+existing CD codec into its own persistent MD RAM bank on first use in a level.
+The two sources occupy 2,368 bytes plus a ready byte and alignment; neither
+source is overwritten while a DMA can reference it. `Load_DynamicPLC` reserves
+the complete cue before queuing its runs. A full queue keeps the last complete
+mapping and retries the desired pose. A separate desired-frame byte preserves
+animation state while the displayed frame remains valid for the deferred
+sprite-queue consumer; before the first accepted upload, the
+cockpit child stays hidden. The eight VRAM tiles support one active boss pilot
+per arena, as in the current layouts. Simultaneous independently animated pilots
+would need separate VRAM reservations.
+
+Placement subtype bit 0 selects Eggman (0) or EggRobo (1) for both GHZ and EHZ.
+Existing encounters retain Eggman. EggRobo's head comes from skdisasm
+`73de97c6b55055bcb8089c1d55d006b02136f163`,
+`General/Sprites/Egg Robo/Egg Robo Head.kosm` and its matching head mappings.
+The import applies `sprite_palette.PLAYER_FROM_SK` and moves the source origin
+to the shared cockpit rim, retaining all four source poses and their pixels.
+
 `python build_tools/build_end_art.py` packs the editable banks. The explicit
-`build_boss_shared_art.py --rom PRE_SPLIT_ROM --listing PRE_SPLIT_LISTING --write`
-migration reads pre-sharing revision `21c233e`, extracts the S1 face contours
-and emits the GHZ mappings plus EHZ's whole-pod drawing offset. Per-pose 8x8
-grid phases reuse tiles without changing indexed pixels. Declared allocation
-boundaries are checked before writing. Normal builds do not re-import old art.
+`build_boss_shared_art.py --rom PRE_DPLC_ROM --listing PRE_DPLC_LISTING --write`
+migration accepts pre-sharing revision `21c233e` or the split-bank revision
+`c13db77`, then emits both cockpit mappings and the shared DPLCs. Add
+`--skdisasm PATH` to re-import EggRobo; otherwise its editable local source is
+retained. Declared allocation boundaries are checked before writing. Normal
+builds do not re-import old art.
 
 The retired S2 cockpit/rotor files, their mappings and the old full S1 bank
 have been removed. The migration emits only the shared S1 hull/head banks
@@ -341,7 +374,10 @@ conversion, so tiles `$20-$39` translate from those slots to the current player
 line for both poses. Their `$3/$4/$F` indices become `$4/$F/$A`. The legs and
 lower metal retain their existing line-two indices.
 
-Both bosses share their expression/exhaust scripts. In GHZ, S1's hit/normal
+Both bosses share the expression selectors and exhaust scripts. Eggman retains
+his existing scripts. EggRobo uses its two idle frames for normal/laugh, holds
+its hurt frame during a hit and holds its broken head from defeat through escape.
+In GHZ, S1's hit/normal
 animation plays during explosions, the burnt frame during recovery, and the
 panic animation during getaway. In EHZ, Eggman holds the burnt frame from
 the final hit through the unpowered hop. Ignition starts his panic animation.
@@ -355,7 +391,9 @@ startup flare and leaves at four pixels right and a quarter pixel up per
 update. The large flare plays once before the small flame loop.
 
 Child words `BossChild_OffsetX/Y` at `$30/$32` hold attachment offsets; X mirrors
-with the parent. Each caller validates its parent's code and main routine.
+with the parent. Face children additionally keep their last queued / desired
+frame bytes at `$2E/$2F`, source long at `$34` and animation-table long at `$40`. These do not
+overlap the parent long at `$38`. Each caller validates its parent's code and main routine.
 The arena stays in level mode through escape and the real capsule. See
 [the import guide](Importing-objects.md#arena-and-art-lifetime) for live ranges.
 

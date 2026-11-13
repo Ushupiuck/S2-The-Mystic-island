@@ -71,9 +71,12 @@ def main():
 		assert all(high <= a or low >= b for _, a, b in cues[:i]), (
 			'Boss/capsule art overlap', hex(low), hex(high))
 
-	# Cockpit pieces reference their private vehicle and the one shared head bank.
+	# Cockpit pieces reference the resident pod plus the streamed head buffer.
 	resident = [(low,high) for _,low,high in cues]
-	for row in pieces(rom,sym['Map_EHZBoss_Cockpit'],7):
+	head = (sym['ArtTile_EggmanFace']*32,(sym['ArtTile_EggmanFace']+sym['BossFace_VRAMTiles'])*32)
+	assert all(head[1]<=low or head[0]>=high for low,high in resident+protected), 'Streamed head overlaps a resident/protected bank'
+	resident.append(head)
+	for row in pieces(rom,sym['Map_EHZBoss_Cockpit'],sym['BossFace_FrameCount']):
 		for _,size,tile,_ in row:
 			low = (sym['ArtTile_Eggman']+(tile&0x7FF))*32
 			high = low+((size>>2)+1)*((size&3)+1)*32

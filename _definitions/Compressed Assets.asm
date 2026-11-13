@@ -629,8 +629,11 @@ MCD_CompressedAssets:
 	if defined(Kospm_EHZ_Boss)
 	dc.l Kospm_EHZ_Boss,Kospm_EHZ_Boss+$74D	; art/moduled kosinski/EHZ boss.kospm
 	endif
+	if defined(Kospm_EggRoboHead)
+	dc.l Kospm_EggRoboHead,Kospm_EggRoboHead+$1D6	; art/moduled kosinski/Egg Robo head.kospm
+	endif
 	if defined(Kospm_EggmanFace)
-	dc.l Kospm_EggmanFace,Kospm_EggmanFace+$2A9	; art/moduled kosinski/Eggman face.kospm
+	dc.l Kospm_EggmanFace,Kospm_EggmanFace+$2F9	; art/moduled kosinski/Eggman face.kospm
 	endif
 	if defined(Kospm_EndFlowers)
 	dc.l Kospm_EndFlowers,Kospm_EndFlowers+$556	; art/moduled kosinski/Ending - Flowers.kospm

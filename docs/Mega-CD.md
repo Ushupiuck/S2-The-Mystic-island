@@ -85,20 +85,24 @@ allocation with word IDs. Mixed-size editor stamping remains future work.
 
 MD work RAM is packed against the top of its 64 KiB address space. The single
 free allocation is `Free_RAM_Start` through `Free_RAM_End` (end exclusive):
-`$FF0032-$FFB1EF`, **`$B1BE` bytes (45,502)**. Terrain, placement loading and
+`$FF699C-$FFB1E1`, **`$4846` bytes (18,502)** in the experimental build with
+music staging and shared boss-head sources. Terrain, placement loading and
 decompression work storage live with their CD executors. Current live ranges:
 
 | Allocation | MD address, inclusive | Size |
 | --- | --- | --- |
 | [Touch-collision candidates](Objects.md#touch-collision-candidates) | `$FF0000-$FF0031` | `$32` |
-| Ring/terrain events and CD job controls | `$FFB1F0-$FFB40B` | `$21C` |
-| [Decompressed player art](Sprites-and-VRAM.md#mode-1-ram-art) | `$FFB40C-$FFBFAB` | `$BA0` |
-| Engine variables and work buffers | `$FFBFAC-$FFFFFF` | `$4054` |
+| Music staging and controls | `$FF0032-$FF6059` | `$6028` |
+| [Boss-head sources and ready bits](Sprites-and-VRAM.md#shared-eggman-heads-and-exhaust) | `$FF605A-$FF699B` | `$942` |
+| Ring/terrain events and CD job controls | `$FFB1E2-$FFB3FD` | `$21C` |
+| [Decompressed player art](Sprites-and-VRAM.md#mode-1-ram-art) | `$FFB3FE-$FFBF9D` | `$BA0` |
+| Engine variables and work buffers | `$FFBF9E-$FFFFFF` | `$4062` |
 
 `_definitions/s2.constants.asm` derives the engine's start from its own declared
 size, then places CD work/art immediately below it. Allocation changes move the
 boundary automatically. The touch-collision queue instead reserves its 50 bytes
-from the bottom of free RAM, preserving existing live addresses. Assembly
+from the bottom of RAM. Music staging follows it, then the two immutable
+boss-head sources; these lower allocations do not move the upper engine ranges. Assembly
 checks keep short-addressed engine storage in `$FF8000-$FFFFFF`. CD event/art
 accesses use long addressing. In Mode 1, the old MD Kosinski module buffer, Nemesis code
 table and decoder bookmarks are absent; queued requests and DMA controls remain.
@@ -317,9 +321,19 @@ Kosinski modules use a separate stable output bank and the same publication
 boundary. `Process_Kos_Queue` marks the completed module for DMA before returning
 to foreground code. A later general decode therefore drains that upload before
 reusing the output bank. Waiting until the end-of-frame module update leaves a
-gap: GHZ's boss-song decode can replace the first 621 bytes of its newly decoded
-pilot art, corrupting only the expressions that reference those tiles. Direct
+gap: before head streaming, GHZ's boss-song decode could replace the first
+621 bytes of the resident pilot art, corrupting only the expressions that
+referenced those tiles. Direct
 scene loaders use a DMA-only VBlank before reusing output.
+
+Boss-head DPLCs use a separate lifetime from that general output bank.
+`BossFace_Init` invokes the existing CD Kosinski+ decoder on first use of a
+character, copying the complete result into `Art_EggmanFace` or
+`Art_EggRoboHead` in MD RAM before queuing head art. Each character has its own
+immutable source, so loading the other pilot cannot replace an outstanding DMA
+source. `Level_ClrRam` clears their ready flags; subsequent constructors in the
+same level reuse the decoded bank. Normal frame updates only queue the selected
+DPLC into the eight reserved VRAM tiles, without invoking the decoder again.
 
 Active-level waits permit palette interrupts. Before handing Word RAM to CD,
 the transport completes any previous deferred HBlank terrain writes; those

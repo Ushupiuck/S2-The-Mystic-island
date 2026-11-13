@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 BANKS = (
 	('OldEggPod', 'Old Eggpod', 'Nem_OldEggPod'),
 	('EggmanFace', 'Eggman face', 'Nem_OldEggPod'),
+	('EggRoboHead', 'Egg Robo head', None),
 	('Weapons', 'Boss weapons', 'Nem_Weapons'),
 	('Exhaust', 'Boss exhaust', 'Nem_Exhaust'),
 	('Prison', 'Prison Capsule', 'Nem_Prison'),
@@ -79,7 +80,7 @@ def main():
 	report = []
 	for label, name, original in BANKS:
 		source = ROOT / f'art/uncompressed/{name}.unc'
-		if a.import_nemesis and label not in ('OldEggPod','EggmanFace','Exhaust'):
+		if a.import_nemesis and original is not None and label not in ('OldEggPod','EggmanFace','Exhaust'):
 			raw = decode(original)
 			if source.exists():
 				assert source.read_bytes() == raw, source

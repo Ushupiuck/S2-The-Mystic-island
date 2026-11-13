@@ -7,7 +7,7 @@ entry, terrain driving, hop, ignition, escape and capsule use normal game code.
 from pathlib import Path
 import argparse,json,struct
 from PIL import Image
-from check_boss_shared_art import raster,unpack
+from check_boss_shared_art import raster,unpack,face_banks
 from check_sprite_assets import frames
 from check_ehz_boss import symbols
 from check_ehz_boss_palette import environment,LivePalette
@@ -15,9 +15,9 @@ ROOT=Path(__file__).resolve().parents[1]
 
 
 def check_art(rom,s):
-	banks=[(s['ArtTile_Eggman'],unpack(rom,s['Kospm_OldEggPod'])),(s['ArtTile_EggmanFace'],unpack(rom,s['Kospm_EggmanFace']))]
-	for old,new,n in (('Map_Eggman','Map_EHZBoss_Vehicle',1),('Map_GHZBoss_Cockpit','Map_EHZBoss_Cockpit',7)):
-		for original,adapted in zip(frames(rom,s[old],n),frames(rom,s[new],n)):
+	for old,new,n in (('Map_Eggman','Map_EHZBoss_Vehicle',1),('Map_GHZBoss_Cockpit','Map_EHZBoss_Cockpit',s['BossFace_FrameCount'])):
+		for pose,(original,adapted) in enumerate(zip(frames(rom,s[old],n),frames(rom,s[new],n))):
+			banks=face_banks(rom,s,pose)
 			expected={(x,y-4):c for (x,y),c in raster(original,banks,s['ArtTile_Eggman']).items()}
 			assert raster(adapted,banks,s['ArtTile_Eggman'])==expected,(old,new)
 	plc=s['PLC_Boss']
@@ -150,7 +150,6 @@ def live(a,act):
 		raise AssertionError('Boss PLC did not finish')
 	for label,base in (
 		('Kospm_OldEggPod','ArtTile_Eggman'),
-		('Kospm_EggmanFace','ArtTile_EggmanFace'),
 		('Kospm_EHZ_Boss','ArtTile_ArtNem_EHZBoss'),
 		('Kospm_Exhaust','ArtTile_Eggman_Exhaust'),
 	):

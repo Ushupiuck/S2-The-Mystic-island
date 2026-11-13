@@ -82,6 +82,7 @@ BGHZ_LoadBoss:
 		move.l	#Map_GHZBoss_Cockpit,obMap(a1)
 		move.b	#Map_GHZBoss_Cockpit_height,height_pixels(a1)
 		move.b	#Map_GHZBoss_Cockpit_width,width_pixels(a1)
+		bsr.w	BossFace_Init
 		move.w	#make_art_tile(ArtTile_Eggman,0,0),obGfx(a1)
 		bra.s	.child_ready
 .check_exhaust:
@@ -341,9 +342,12 @@ BGHZ_FaceMain:	; Routine 4
 		moveq	#BossFace_Hurt,d1
 		bra.s	.animate
 .defeated:
+		tst.w	obSubtype(a0)	; EggRobo holds its source defeated pose
+		bne.s	.burnt
 		moveq	#BossFace_Hurt,d1	; S1 alternates hit/normal during the explosions
 		cmpi.b	#BGHZ_Recover,ob2ndRout(a1)
 		blo.s	.animate
+.burnt:
 		moveq	#BossFace_Burnt,d1
 		cmpi.b	#BGHZ_Escape,ob2ndRout(a1)
 		blo.s	.animate

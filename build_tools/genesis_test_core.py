@@ -46,6 +46,35 @@ class RetroMemoryMap(C.Structure):
 				('num_descriptors', C.c_uint)]
 
 
+class WordSwappedVRAM:
+	"""Keep fixture byte indexing consistent with Genesis Plus GX's word storage.
+
+	ClownMDEmu's libretro video-memory API exposes bytes in VDP address order.
+	The existing fixtures undo a word swap with address ^ 1, for reads and writes.
+	"""
+	def __init__(self, memory):
+		self.memory = memory
+
+	def __len__(self):
+		return len(self.memory)
+
+	def __getitem__(self, index):
+		if isinstance(index, slice):
+			return bytes(self[i] for i in range(*index.indices(len(self))))
+		if index < 0:
+			index += len(self)
+		if not 0 <= index < len(self):
+			raise IndexError(index)
+		return self.memory[index ^ 1]
+
+	def __setitem__(self, index, value):
+		if index < 0:
+			index += len(self)
+		if not 0 <= index < len(self):
+			raise IndexError(index)
+		self.memory[index ^ 1] = value
+
+
 class Genesis:
 	def __init__(self, core, rom, listing, output, pal=False, core_options=None, system_directory=None):
 		self.s = {name:int(value,16) for name,value in re.findall(
@@ -160,7 +189,7 @@ class Genesis:
 			self.ram = self.memory_domains['68KRAM']
 			self.zram = self.memory_domains['Z80RAM']
 			self.core.retro_get_memory_data.restype = C.c_void_p
-			self.vram = (C.c_uint8*65536).from_address(self.core.retro_get_memory_data(3))
+			self.vram = WordSwappedVRAM((C.c_uint8*65536).from_address(self.core.retro_get_memory_data(3)))
 		else:
 			self.ram = (C.c_uint8*65536).in_dll(self.core,'work_ram')
 			self.vram = (C.c_uint8*65536).in_dll(self.core,'vram')

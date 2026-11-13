@@ -15,12 +15,16 @@ RAM/VRAM and CPU symbols used by `genesis_test_core.py`; ordinary distributed
 cores may omit them. No graphical frontend is needed.
 
 The shared libretro runner also reads stock ClownMDEmu's advertised RAM maps.
-Sound-test `--startup` runs there in NTSC; CPU/bus tracing still requires Genesis
-Plus GX exports. This does not make every existing fixture core-independent:
-ClownMDEmu 1.6.12 cannot complete this project's PAL stopwatch wait, and the
-full Mecha fixture's final-portrait VRAM check fails on both the preceding and
-current ROM before it reaches the fight. Use Genesis Plus GX for that full
-fight assertion. See the sound guide for audio-specific boundaries.
+Its VRAM API exposes bytes in VDP order; `WordSwappedVRAM` preserves the existing
+fixtures' Genesis Plus GX word-storage indexing for both reads and writes.
+Clown also expands normal CRAM colors to the full four-bit range before RGB565
+conversion; exact pixel checks account for that difference explicitly.
+Sound-test `--startup` and the GHZ pilot scene run there in NTSC; CPU/bus tracing
+still requires Genesis Plus GX exports. This does not make every existing
+fixture core-independent: ClownMDEmu 1.6.12 cannot complete this project's PAL
+stopwatch wait. The full Mecha fight remains verified in Genesis Plus GX;
+it has not been rerun in Clown since correcting the harness's VRAM byte order.
+See the sound guide for audio-specific boundaries.
 
 Use a fresh process for each ROM/region: this core cannot reliably unload and
 reload different cartridges in one process. Give every run its own output
@@ -319,18 +323,21 @@ python build_tools/check_mecha_sonic.py --rom s2built.bin --listing md-main.lst 
 
 | Runner | Distinct checks / options |
 | --- | --- |
-| `check_boss_shared_art.py` | Shared constructors, expressions/facings, pod/head/exhaust pixels, persistent exhaust, cleanup and unchanged palettes; optional pre-sharing `--reference-rom`/`--reference-listing` (`21c233e`) |
+| `check_boss_shared_art.py` | Both pilots in both boss constructors, expressions/facings, source decompression, pod/head/exhaust pixels, DPLC capacity/cache/full-queue retry, scanline allowance, persistent exhaust and cleanup; `--reference-rom`/`--reference-listing` accepts pre-sharing `21c233e` or pre-DPLC `c13db77`; `--skdisasm` compares all four EggRobo source poses and palette roles |
 | `check_ehz_boss.py`, `check_ehz_boss_palette.py` | Compiled simultaneous mappings/banks; optional `--s2disasm SOURCE` for all original chassis tiles/frames, one-word masked load, pool retry and palette-clock preservation |
 | `check_ehz_s1_pod.py` | Both act loaders, docking, seven expressions/facings, live palette/CRAM and foreground priority; Act 2 fight/hits, breakup, lift/ignition clearance, escape cleanup and capsule release |
 | `check_ghz_boss.py` | Native pool/retry, deployment, timed flight, hits, breakup clock/debris, explosions, palette/music cleanup; `--core` adds the actual GHZ3 arena fight/results/capsule |
 | `check_mecha_sonic.py` | Native floor/facing/counters, both actors, pool failures and projectiles; real SMZ2 trap/attacks, three uninterrupted head bounces, sixteen actual hits, fade/signpost/results and current-act music restoration on `Mystic-Island` |
 
 `check_boss_shared_art.py --ghz-faces-only` enters GHZ3's real arena and lets
-its normal boss/music transition run. It compares all 40 pilot tiles and all
-six boss PLC banks with their source data, then exposes the pilot in a fixture
-without the waterfall and checks seven expressions in both directions, including
-rendered head pixels. Add `--pal` for PAL. This focused check does not run the
-full fight or the EHZ suites; ClownEmu remains a separate manual retest.
+its normal boss/music transition run. It compares the immutable decoded Eggman
+source and all five resident boss PLC banks with their source data, then uses
+the actual EggRobo constructor and verifies both source buffers remain intact.
+A fixture without the waterfall checks the streamed VRAM contents and every
+visible pod/head pixel for all eleven poses in both directions. Whole cockpits also
+have independent indexed-pixel/reference comparisons. Add `--pal` for Genesis
+Plus GX PAL. This focused check passes in Genesis Plus GX NTSC/PAL and stock
+ClownMDEmu NTSC; it does not run the full fight or the EHZ suites.
 
 EHZ `--act 0`/`1` narrows the run. Act 1 suppresses its ordinary signpost loader
 with the clock and ends after docking/rendering because it has no authored boss
