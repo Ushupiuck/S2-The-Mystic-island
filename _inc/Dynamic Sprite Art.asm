@@ -74,10 +74,10 @@ Load_DynamicPLC:
 ; ---------------------------------------------------------------------------
 ; ---------------------------------------------------------------------------
 ; Shared monitor icon DPLCs, MD CPU. Four physical 16x16 slots, shared by kind.
-; Intact/broken bodies and both life portraits remain resident. Keep slots used
+; Intact/broken bodies and the selected HUD portrait remain resident. Keep slots used
 ; in this or the previous game pass pinned, including blinking boxes, Debug
 ; previews and rising reward icons. Queue failure keeps the old tag and retries.
-; A fifth simultaneous non-life kind shows the baked-in static until a slot is
+; A fifth simultaneous cached kind shows the baked-in static until a slot is
 ; available; it cannot overwrite another visible icon. Authored layouts are
 ; checked against the four-kind limit. No object-pool scan or per-box art buffer.
 MonitorArt_Reset:
@@ -89,8 +89,8 @@ MonitorArt_Reset:
 ; d0 = content kind -> a1 = corresponding slot mapping; carry = defer.
 ; Preserve a0/d7. Only cache misses enter the ordinary atomic DPLC loader.
 MonitorArt_Select:
-		cmpi.w	#MonitorType_DoubleLife,d0
-		bhs.w	.life
+		cmp.b	(HUD_LifeType).w,d0
+		beq.w	.life
 		lea	(MonitorArt_Tags).w,a3
 		moveq	#0,d2
 .find:
@@ -138,7 +138,7 @@ MonitorArt_Select:
 .return:
 		rts
 .life:
-		lea	(Map_Obj26).l,a1
+		lea	(Map_MonitorHUD).l,a1
 		andi.b	#$FE,ccr
 		rts
 
@@ -285,12 +285,15 @@ Get_SpecialCardScene:
 		addi.w	#72,d0
 		rts
 
-; Preserve Sonic's portrait for Sonic monitors. Only the name strip is
-; replaced for Tails; his HUD portrait refers to the final monitor-art tiles.
+; Load the selected portrait/name into the common life-HUD bank. Record its
+; monitor type here, so cached monitors follow the loaded art, not the collector
+; or a later Player_mode change. HUD_LifeType survives the level-entry clears.
 Load_LifeArtPLC:
+		move.b	#MonitorType_DoubleLife,(HUD_LifeType).w
 		moveq	#plcid_LivesSonic,d0
 		cmpi.w	#PlayerMode_Tails,(Player_mode).w
 		bne.s	.load
+		move.b	#MonitorType_ExtraLife,(HUD_LifeType).w
 		moveq	#plcid_LivesTails,d0
 .load:
 		jmp	(LoadPLC).l

@@ -121,7 +121,7 @@ def paired_layers(raw,blocks,chunks,indices,bank):
 def spill_terrain(art,blocks,constants):
 	"""Swap 13 static tiles out; move the complete 40-tile animation tail down.
 
-	The 14 monitor tiles remaining after the yellow ball hold this static spill.
+	The 18 reclaimed monitor tiles after the yellow ball hold this static spill.
 	No terrain pixels or authored chunks are discarded, and no animation DMA is
 	split. The former tail ends exactly before the existing $260 sprite bank.
 	"""
@@ -129,7 +129,7 @@ def spill_terrain(art,blocks,constants):
 	monitor=int(re.search(r'^ArtTile_Monitor:\s*equ\s+\$([0-9A-F]+)',constants,re.M)[1],16)
 	spill=monitor+42
 	assert 'ArtTile_MMZ2_TerrainSpill:\tequ ArtTile_Monitor_Reclaimed' in constants
-	assert spill+13<=monitor+56
+	assert spill+13<=monitor+60
 	remap={t:spill+t-568 for t in range(568,581)}
 	remap.update((t,t-13) for t in range(581,621))
 	words=[(w&0xF800)|remap.get(w&2047,w&2047) for w, in struct.iter_unpack('>H',blocks)]

@@ -341,14 +341,13 @@ for mode in (0,1,2):
 	assert m.get(obj,'obFrame') == (1 if mode == 2 else 0)
 	checks.append({'case':'signpost-final-character','mode':mode,'frame':m.get(obj,'obFrame')})
 
-monitor=frames(rom,m.s['Map_Obj26'],m.s['Map_Obj26_frames'])
-assert monitor[m.s['MonitorType_ExtraLife']+1][0][2] & 0x7FF == 56
-assert m.s['ArtTile_Signpost']+26 <= m.s['ArtTile_Tails_Life']
-assert m.s['ArtTile_Tails_Life']+4 == m.s['ArtTile_Lamppost']
+monitor=frames(rom,m.s['Map_MonitorHUD'],m.s['Map_Obj26_frames'])
+for kind in (m.s['MonitorType_DoubleLife'],m.s['MonitorType_ExtraLife']):
+	assert (monitor[kind+1][0][2]+m.s['ArtTile_Monitor'])&0x7FF==m.s['ArtTile_Lives_Counter']
+assert m.s['ArtTile_Signpost']+26 <= m.s['ArtTile_Lamppost']
 hud=frames(rom,m.s['Map_obj21'],8)
-for i in range(8):
-	expected=m.s['ArtTile_Tails_Life'] if i >= 4 else m.s['ArtTile_Lives_Counter']
-	assert (hud[i][-2][2]+m.s['ArtTile_HUD']) & 0xFFFF == expected | 0x8000
+for row in hud:
+	assert (row[-2][2]+m.s['ArtTile_HUD']) & 0xFFFF == m.s['ArtTile_Lives_Counter'] | 0x8000
 
 # Arithmetic in a PLC macro argument needs parentheses before << 5.
 tails_plc=m.s['PLC_LivesTails']
@@ -361,7 +360,7 @@ assert rom[m.s['LevelOrder']:m.s['LevelOrder']+128] == bytes(
 	for v in detours.get((zone, act), (zone,act+1) if act<3 else ((zone+1)%16,0)))
 
 report={'passed':True,'checks':checks,'companion_ai_run':False,
-		'card_scenes':78,'signpost_frames':len(dynamic),'tails_icon_tile':m.s['ArtTile_Tails_Life']}
+		'card_scenes':78,'signpost_frames':len(dynamic),'hud_icon_tile':m.s['ArtTile_Lives_Counter']}
 if args.output:
 	args.output.parent.mkdir(parents=True,exist_ok=True)
 	args.output.write_text(json.dumps(report,indent=2)+'\n')

@@ -74,7 +74,7 @@ one format. SonLVL's overrides are documented in [its guide](../SonLVL%20INI%20F
 four-tile icon DPLCs. Edit `art/nemesis/Monitor and contents.unc`, then run the
 generator (or `--check`). The 60-tile editable/editor master keeps intact tiles
 0-15, broken tiles 16-23, eight four-tile content images in type order, and the
-permanent Tails portrait at 56-59. The separate static icon is removed; the
+Tails portrait at 56-59. The separate static icon is removed; the
 intact box already contains that pattern. Regular-shield pixels come from
 Sonic 2's frame-7 `$2C-$2F` icon (s2disasm commit
 `4c5dc02b3eea186c3f80a020447b206343f30c0a`), adapted through `PLAYER_FROM_S1`; the three
@@ -91,30 +91,50 @@ monitor generation rather than modifying its layout independently.
 | `$5` | Electric shield | Reserved art/type; ability not implemented |
 | `$6` | Speed shoes | Existing shared speed-shoe behavior |
 | `$7` | Invincibility | Existing shared star/invincibility behavior |
-| `$8` | Sonic double life | Two lives; permanent HUD portrait |
-| `$9` | Tails extra life | One life; permanent tile `$561` portrait |
+| `$8` | Sonic double life | Two lives |
+| `$9` | Tails extra life | One life |
 
-Both life images load on every level entry and bypass the four content slots.
-Tails has not moved after the HUD. The other eight kinds share four physical
-16x16 slots, including rising rewards and Debug previews. `MonitorArt_Select`
-reuses a loaded kind and pins slots used in the current or previous object
-pass. Offscreen loaded boxes do not occupy visible slots. Misses use the common
-atomic DPLC loader; a full queue keeps the old tag and retries. Four tag bytes
-and four timestamp words use twelve bytes of MD RAM; no object-pool scan or
-per-monitor tile buffer is needed. The resident footprint falls from 60 to 44
-tiles, reclaiming 16 tiles/512 bytes before the permanent Tails image.
+The selected character's portrait loads at `ArtTile_Lives_Counter` (`$7D4`):
+Sonic for Sonic/Sonic-and-Tails, Tails for solo Tails. Both HUD mapping families
+use this same four-tile address. `Load_LifeArtPLC` records that selection as a
+`MonitorType_*` in `HUD_LifeType`, using the former padding byte after `v_lives`.
+It survives level-entry clears. Monitors compare their type against this
+recorded art identity, independently of their collector and later `Player_mode`
+changes. A matching portrait uses the HUD directly; the opposite portrait uses
+the four shared content slots, just like a shield or rings. No portrait remains
+reserved at `$561`; those four tiles are reclaimed. The life HUD's location has
+not moved after the ring counter.
 
-Visible authored scenes must fit four distinct non-life kinds, including their
-moving payloads. Cache pressure keeps the baked static on a box and defers a
-floating icon rather than replacing another displayed kind. The editor reads
-the complete master through `Monitor.bin`. Runtime `Monitor.asm` contains four
-12-entry slot tables sharing twelve frame records, including the body, broken
-base, both life icons and repeated content mappings. Its 252 bytes replace the
-four former 180-byte mapping banks; the renderer uses the same pointer lookup.
-The single actual DPLC table remains `mappings/spriteDPLC/Monitor.bin` (48 bytes). The full master archives remain editor assets and are
-not linked into the ROM. The usual frame convention remains type+1, with zero
-for the bare box and 11 for its broken base. The signpost still replaces the
-first 26 tiles only during its separate end-of-act lifetime.
+`build_monitor_art.py` appends corrected Sonic pixels from `build_life_art.py`
+and the master Tails portrait to the single uncompressed icon bank, in type
+order. The Tails portrait archive also seeds Tails's HUD at level entry, followed
+by his existing name strip. Sonic's HUD uses its original complete life archive.
+
+The nine kinds other than the loaded HUD portrait share four physical 16x16
+slots, including rising rewards and Debug previews. `MonitorArt_Select` reuses
+a loaded kind and pins slots used in the current or previous object pass.
+Offscreen loaded boxes do not occupy visible slots. Misses use the common atomic
+DPLC loader; a full queue keeps the old tag and retries. Four tag bytes and four
+timestamp words use twelve bytes of MD RAM; no object-pool scan or per-monitor
+tile buffer is needed. The dedicated monitor footprint is 40 tiles: 24 body and
+16 content tiles, down from the original 60. The reclaimed twenty tiles occupy
+`$551-$564` (`$AA20-$ACA0`, end exclusive), before the checkpoint bank.
+
+Visible authored scenes must fit four distinct cached kinds, including their
+moving payloads and the opposite life portrait. The demand check evaluates both
+HUD character selections. Cache pressure keeps the baked static on a box and
+defers a floating icon rather than replacing another displayed kind. The HUD
+portrait always remains available, even with all four slots pinned.
+
+The editor reads the complete master through `Monitor.bin`. Runtime
+`Monitor.asm` contains four 12-entry cache-slot tables plus a HUD table. Eleven
+shared frame records cover the body, broken base, HUD portrait and repeated
+content mappings. The 262-byte block retains one mapping file and the ordinary
+renderer lookup. The single actual DPLC table is
+`mappings/spriteDPLC/Monitor.bin` (60 bytes, ten cues). The full master archives
+remain editor assets and are not linked into the ROM. The usual frame convention
+remains type+1, with zero for the bare box and 11 for its broken base. The signpost
+replaces the first 26 tiles only during its separate end-of-act lifetime.
 
 ### Checkpoint and time-pole art
 
@@ -131,8 +151,9 @@ reuses the blue geometry with those same three yellow shades on line 1.
 
 `build_checkpoint_art.py` generates the ten-tile resident `Lamppost.nem`, the
 two-tile `Checkpoint yellow.nem`, and compact editor/runtime maps. Yellow fits
-at `$551-$552`, using two of the sixteen tiles reclaimed by monitor DPLCs.
-The next fourteen tiles remain free; both life portraits retain their banks.
+at `$551-$552`, using two of the twenty tiles reclaimed by monitor DPLCs.
+The next eighteen tiles are available; MMZ2 provisionally uses thirteen for its
+Bad Future terrain spill. Life portraits follow the common HUD/cache rules above.
 
 The per-act MMZ atlas supplies only CD's PAST (8 tiles), FUTURE (8), thin-spin
 (4) and edge-spin (2) heads at `$410-$425`. All 22 tiles are distinct; the 28
@@ -253,8 +274,7 @@ is not a source of free level VRAM.
 | `$A520-$A820` | `$529` | Resident intact/broken monitor bodies, 24 tiles |
 | `$A820-$AA20` | `$541` | Four shared monitor-content DPLC slots, 16 tiles |
 | `$AA20-$AA60` | `$551` | Optional yellow checkpoint ball, 2 tiles |
-| `$AA60-$AC20` | `$553` | Remaining reclaimed monitor space, 14 tiles |
-| `$AC20-$ACA0` | `$561` | Permanent Tails life portrait, four tiles |
+| `$AA60-$ACA0` | `$553` | Remaining reclaimed monitor space, 18 tiles |
 | `$ACA0-$ADE0` | `$565` | Checkpoint, 10 tiles |
 | `$ADE0-$B020` | `$56F` | Auxiliary shield, 18 tiles |
 | `$B040-$BC00` | `$582` | Normal/shared fiery explosion art, 94 tiles |
@@ -496,11 +516,10 @@ points, following `Obj_LevelResultsInit` in skdisasm
 project's existing bonus table. The counter holds 10,000 ten-point units;
 its fifth streamed digit plus the resident trailing zero display all six
 figures. The ordinary tally awards the full amount, including score lives.
-`build_signpost_art.py` owns the streamed
-signpost and monitor arrangement. Tails's portrait is the final four monitor
-tiles (`$561-$564`); signpost frames stay below it. Sonic's life art remains
-separate and is shared with Sonic monitors. HUD score uses ten-point units,
-with maximum display 9,999,990.
+`build_signpost_art.py` owns the streamed signpost and delegates monitor
+generation to `build_monitor_art.py`. The selected HUD portrait remains outside
+the signpost bank; see [monitor contents](#monitor-contents) for its cache rules.
+HUD score uses ten-point units, with maximum display 9,999,990.
 
 Signpost frame `$06` uses Mecha Sonic's original head and upper body in skdisasm
 `73de97c6b55055bcb8089c1d55d006b02136f163`, main body frame `$00`.

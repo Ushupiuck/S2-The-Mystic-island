@@ -104,14 +104,18 @@ they do not establish a complete time-warp transition or authored MMZ route.
 `python build_tools/build_checkpoint_art.py --check` checks generated outputs.
 
 `python build_tools/check_monitor_art.py --output test-results/monitor-art.json`
-checks every four-kind combination in both allocation orders, hits/reuse,
-queue refusal, prior-pass pins, 16-bit wrap, unchanged one/two-life awards and
-all authored viewport demand. It also checks all 48 slot/pose mappings against
-the editor geometry and verifies shared resident-frame records.
+checks every four-kind combination in both allocation orders for each loaded
+HUD portrait (4,032 cache cases), hits/reuse, queue refusal, prior-pass pins,
+16-bit wrap, unchanged one/two-life awards and authored viewport demand for both
+selections. It also checks all 60 slot/HUD poses against the editor geometry,
+shared frame records and the loader's recorded identity after a `Player_mode` change.
 Add `--core CORE --system-directory BIOS_DIR`
-for all four MMZ eras, both permanent life images (also in primary-Tails mode),
-actual SAT tile/position checks, simultaneous content VRAM and a ball-broken
-regular-shield reward. Add `--pal` for PAL. These are staged rendering and
+for all four eras of the selected act in Sonic-and-Tails and solo-Tails modes,
+plus solo Sonic. It checks actual SAT tile/position output, simultaneous cached
+contents and both life portraits, and ball-breaks both life monitors to verify
+their floating images and distinct rewards. A VRAM marker confirms that the
+reclaimed four tiles remain untouched. It defaults to Scrap Madness 1; `--zone N --act N`
+selects another zero-based act. Add `--pal` for PAL. These are staged rendering and
 interaction fixtures, not a level playthrough.
 
 ## Terrain and independent planes
@@ -182,7 +186,7 @@ its subtype/VRAM tables here.
 | Menus and act data | `check_level_pages.py`, `check_act_music.py` | All 64 launches, 90 live frames without death per act, uploaded menu font/blank tile, act music selection and restoration priorities |
 | HUD, portraits, smoke and flash | `check_debug_states.py`, `check_visual_followup.py` | Debug HUD/clock restoration; both smoke banks through eight frames with neighboring-bank guards; lives/monitor colors and EHZ flash restoration |
 | Shared poles | `check_checkpoint.py` | Both actors, checkpoint snapshot, time-post consumption/spin, pool/reuse safety, path filtering, editor/runtime pixels and real NTSC/PAL SAT/VRAM |
-| Monitors | `check_monitor_state.py`, `check_monitor_edges.py`, `check_monitor_art.py` | Rider/collector ownership, held charge, contact boundaries, 1,120 four-slot cache cases, queue deferral, timestamp wrap, permanent life portraits and real SAT/VRAM checks |
+| Monitors | `check_monitor_state.py`, `check_monitor_edges.py`, `check_monitor_art.py` | Rider/collector ownership, held charge, contact boundaries, 4,032 four-slot cache cases, queue deferral, timestamp wrap, selected HUD/opposite cached portraits and real SAT/VRAM checks |
 | Player interactions | `check_player_interactions.py` | All ground angles/held-frame delays for pushing, character tumble ranges and independent wall speeds/contacts; `--core` adds EHZ corkscrews and controller-2 Tails wall breaks in both acts |
 | Top-only platforms | `check_smz_vanishing.py` | Rise/side pass-through, landing/ride height, disappearing support and adjacent-platform transfers for Sonic, primary Tails and sidekick Tails. Both slot orders/directions and rolling radii; shared flat/alternate/sloped support entries. `--core` checks actual foot and camera Y through the seam; repeat with `--pal`. |
 | Companion | `check_companion_followup.py`, `check_companion_hpz.py`, `check_companion_sbz.py` | Ledges/bridges/collapse, manual takeover, real HPZ routes, SMZ carrier transfer/captured catch-up; see fixture limits below |

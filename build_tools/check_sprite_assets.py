@@ -77,8 +77,8 @@ def main():
 	assert symbols['ArtTile_SS_Rings'] == symbols['ArtTile_SS_Emerald'] + 24
 	assert symbols['ArtTile_SS_Sparkles'] == symbols['ArtTile_SS_Rings'] + 4
 
-	# The Sonic monitor icon reuses the lives art, outside the monitor bank.
-	monitor_frames = frames(rom, symbols['Map_Obj26'], symbols['Map_Obj26_frames'])
+	# The selected life monitor icon reuses the HUD, outside the monitor bank.
+	monitor_frames = frames(rom, symbols['Map_MonitorHUD'], symbols['Map_Obj26_frames'])
 	assert (monitor_frames[symbols['MonitorType_DoubleLife']+1][0][2] + symbols['ArtTile_Monitor']) & 0x7FF == symbols['ArtTile_Lives_Counter']
 
 	assert symbols['ArtTile_Bubbles'] * 32 == 0x8B80
@@ -127,7 +127,7 @@ def main():
 	assert points_banks[-1][1] <= symbols['vram_bg']
 
 	# End-of-level bonuses replace unused monitor contents. The signpost's
-	# largest DPLC and Tails's permanent life icon must survive beside them.
+	# largest DPLC and checkpoint bank must survive beside them.
 	bonus_first = symbols['ArtTile_Hidden_Points']
 	bonus_tiles = struct.unpack_from('>H', rom, symbols['Kospm_Bonus'])[0] // 32
 	bonus_end = bonus_first + bonus_tiles
@@ -138,7 +138,7 @@ def main():
 		loaded = sum((struct.unpack_from('>H', rom, start + 2 + run * 2)[0] >> 12) + 1
 					 for run in range(runs))
 		assert symbols['ArtTile_Signpost'] + loaded <= bonus_first
-	assert bonus_end <= symbols['ArtTile_Tails_Life']
+	assert bonus_end <= symbols['ArtTile_Lamppost']
 	for bank in ('ArtTile_SMZ_Smoke1', 'ArtTile_SMZ_Smoke2'):
 		first = symbols[bank]
 		assert bonus_end <= first or bonus_first >= first + 12
@@ -323,7 +323,7 @@ def main():
 	print(f'{len(points_frames) - 1} points values fit both two-tile banks; hidden-frame and HUD/plane/PLC boundaries pass.')
 	print('Explosion/fiery and all six animal PLC pairs fit the reordered $B040-$BFFF group.')
 	print('Life-monitor icon, 56 resident bubble tiles and both streamed splash/countdown banks pass.')
-	print('Hidden bonuses fit between all signpost DPLC frames and Tails\'s life icon, clear of both SMZ smoke banks.')
+	print('Hidden bonuses fit between all signpost DPLC frames and checkpoints, clear of both SMZ smoke banks.')
 	if args.skdisasm:
 		print('All three Tails art files match the palette-remapped S&K source pixels.')
 

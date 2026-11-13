@@ -19,7 +19,7 @@ PlaneCache_Bytes = 16*4
 PlaneDraw_MaxRecordBytes = 2*16*(32*8+4*6) ; both planes, full rows and wrap headers
 LevelPlane_RecordSize = 6*4
 ; ---------------------------------------------------------------------------
-; Monitor contents: ordinary byte IDs; both life portraits are always resident.
+; Monitor contents: ordinary byte IDs; the selected HUD portrait stays resident.
 MonitorType_Eggman:	equ 0
 MonitorType_Rings:	equ 1
 MonitorType_Shield:	equ 2
@@ -1409,7 +1409,7 @@ Current_Zone:		ds.b	1			; (1 byte)
 Current_Act =		*
 v_act:			ds.b	1			; (1 byte)
 v_lives:		ds.b	1			; (1 byte)
-			ds.b	1			; align v_air after the lives byte
+HUD_LifeType:		ds.b	1			; MonitorType_* portrait selected by Load_LifeArtPLC; former padding
 v_air:			ds.w	1			; air remaining while underwater
 v_airbyte =		v_air+1				; low byte for air
 v_lastbonus:		ds.b	1			; last bonus stage number
@@ -1737,16 +1737,15 @@ ArtTile_FireballMaker_Count: equ 14
 ArtTile_Monitor:		equ $529 ; 24 body tiles, four shared 4-tile content slots
 ArtTile_Monitor_Icons:	equ ArtTile_Monitor+24
 ArtTile_Monitor_Free:	equ ArtTile_Monitor_Icons+MonitorArt_SlotCount*MonitorArt_IconTiles
-ArtTile_Monitor_FreeEnd:	equ ArtTile_Monitor+$38 ; 16 reclaimed tiles, before permanent Tails
-	if ArtTile_Monitor_FreeEnd-ArtTile_Monitor_Free<>16
+ArtTile_Monitor_FreeEnd:	equ ArtTile_Monitor+$3C ; 20 reclaimed tiles, up to the checkpoint bank
+	if ArtTile_Monitor_FreeEnd-ArtTile_Monitor_Free<>20
 		fatal "Review the four-slot monitor allocation."
 	endif
 	if ArtTile_FireballMaker+ArtTile_FireballMaker_Count>ArtTile_Monitor
 		fatal "Fireball maker overlaps monitors."
 	endif
-ArtTile_Tails_Life:	equ ArtTile_Monitor+$38
 ArtTile_Lamppost:	equ ArtTile_Monitor+$3C ; six S1 pole + blue/red head tiles
-ArtTile_CheckpointYellow:	equ ArtTile_Monitor_Free ; two tiles; Tails stays at $561
+ArtTile_CheckpointYellow:	equ ArtTile_Monitor_Free ; two tiles from the reclaimed monitor bank
 ArtTile_Monitor_Reclaimed:	equ ArtTile_CheckpointYellow+2
 
 
@@ -1944,13 +1943,13 @@ ArtTile_Eggman_Exhaust:		equ $556	; 25 shared S1 flame tiles
 ArtTile_Giant_Ring:		equ $400
 ArtTile_Giant_Ring_Flash:	equ $462
 ArtTile_Prison_Capsule:		equ $501	; 85 tiles, between the 12-tile EHZ propeller and shared exhaust
-ArtTile_Hidden_Points:		equ ArtTile_Signpost+$1A ; 28 tiles after the signpost DPLC bank; below Tails's life icon
+ArtTile_Hidden_Points:		equ ArtTile_Signpost+$1A ; 28 tiles after the signpost DPLC bank; below checkpoints
 ArtTile_Warp:			equ $541
 ArtTile_Mini_Tails:		equ $535
 ArtTile_Mini_Sonic:		equ $551
 ArtTile_Bonuses:		equ ArtTile_Title_Card ; nine numeric tiles (five time, four ring), clear of both shields
 ArtTile_Results_Card:	equ ArtTile_Bonuses+9 ; scene glyphs follow the bonus digits
-ArtTile_Signpost:		equ ArtTile_Monitor	; 26-tile DPLC buffer; stops before Tails's life icon
+ArtTile_Signpost:		equ ArtTile_Monitor	; 26-tile DPLC buffer; separate end-of-act lifetime
 
 ; Sega Screen
 ArtTile_Sega_Tiles:		equ $000
@@ -2116,7 +2115,7 @@ ArtTile_MMZ_Propeller:		equ $480 ; existing shared 49-tile propeller
 
 ArtTile_MMZ2_TerrainSpill:	equ ArtTile_Monitor_Reclaimed ; 13 static Bad Future tiles
 	if ArtTile_MMZ2_TerrainSpill+13>ArtTile_Monitor_FreeEnd
-		fatal "MMZ2 terrain spill overlaps permanent Tails life art."
+		fatal "MMZ2 terrain spill overlaps checkpoint art."
 	endif
 
 ; MMZ1 keeps CD terrain-animation slots, shifted past the reserved water tiles.
