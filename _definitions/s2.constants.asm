@@ -19,6 +19,21 @@ PlaneCache_Bytes = 16*4
 PlaneDraw_MaxRecordBytes = 2*16*(32*8+4*6) ; both planes, full rows and wrap headers
 LevelPlane_RecordSize = 6*4
 ; ---------------------------------------------------------------------------
+; Monitor contents: ordinary byte IDs; both life portraits are always resident.
+MonitorType_Eggman:	equ 0
+MonitorType_Rings:	equ 1
+MonitorType_Shield:	equ 2
+MonitorType_Water:	equ 3
+MonitorType_Fire:		equ 4
+MonitorType_Electric:	equ 5
+MonitorType_Shoes:	equ 6
+MonitorType_Invincibility: equ 7
+MonitorType_DoubleLife:	equ 8 ; Sonic portrait, two lives
+MonitorType_ExtraLife:	equ 9 ; Tails portrait, one life
+MonitorType_Count:	equ 10
+MonitorArt_SlotCount:	equ 4
+MonitorArt_IconTiles:	equ 4
+; ---------------------------------------------------------------------------
 ; Object placement record offsets
 ; ---------------------------------------------------------------------------
 ; Mystic Island placement: X/Y words, ID/time-mask bytes, subtype word.
@@ -1466,6 +1481,8 @@ f_demo:			ds.w	1			; demo mode flag (0 = no; 1 = yes; $8001 = ending)
 v_demonum:		ds.w	1			; demo level number (not the same as the level number)
 v_creditsnum:		ds.w	1			; credits index number
 Super_Sonic_frame_count:	ds.w	1
+MonitorArt_Tags:	ds.b	MonitorArt_SlotCount ; icon kind, $FF invalid
+MonitorArt_Uses:	ds.w	MonitorArt_SlotCount ; last game pass using each slot
 v_lcon_wheel_frame:	ds.b	1			; shared requested wheel frame
 v_lcon_wheel_artframe:	ds.b	1			; cached DPLC frame; $FF invalid
 v_lcon_wheel_updateframe:	ds.w	1			; last object-pass frame processed
@@ -1700,7 +1717,13 @@ ArtTile_Springs_End:	equ ArtTile_Spring_Support+4
 ArtTile_Spikes:		equ ArtTile_Springs_End ; 16 tiles, immediately after support
 ArtTile_FireballMaker:	equ ArtTile_Spikes+$10 ; 14 SLZ launcher tiles, EHZ/HTZ only
 ArtTile_FireballMaker_Count: equ 14
-ArtTile_Monitor:		equ $529 ; 60 tiles; final four retain Tails's life icon
+ArtTile_Monitor:		equ $529 ; 24 body tiles, four shared 4-tile content slots
+ArtTile_Monitor_Icons:	equ ArtTile_Monitor+24
+ArtTile_Monitor_Free:	equ ArtTile_Monitor_Icons+MonitorArt_SlotCount*MonitorArt_IconTiles
+ArtTile_Monitor_FreeEnd:	equ ArtTile_Monitor+$38 ; 16 reclaimed tiles, before permanent Tails
+	if ArtTile_Monitor_FreeEnd-ArtTile_Monitor_Free<>16
+		fatal "Review the four-slot monitor allocation."
+	endif
 	if ArtTile_FireballMaker+ArtTile_FireballMaker_Count>ArtTile_Monitor
 		fatal "Fireball maker overlaps monitors."
 	endif

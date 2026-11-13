@@ -69,7 +69,7 @@ def main():
     isolate(g)
     g.write('Camera_X_pos', 4520, 2)
     g.write('Camera_X_pos_coarse_back', 0x1100, 2)
-    mon = spawn(g, 'Monitor', 4624, 1521, 4)
+    mon = spawn(g, 'Monitor', 4624, 1521, 1)
     act('Monitor', mon)
     place(g, who, 4624, 1490)
     g.put(who, 'obVelY', 0x100, 2)

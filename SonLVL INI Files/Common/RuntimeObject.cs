@@ -265,7 +265,7 @@ namespace MysticIsland.ObjectDefinitions
 		}
 		private static int MountGroup(int value)
 		{
-			return value == 0 ? 0 : value <= 16 ? 1 : value <= 20 ? 2 : value == 21 ? 3 : value <= 33 ? 4 : 5;
+			return value == 0 ? 0 : value <= 16 ? 1 : value <= 20 ? 2 : value == 21 ? 3 : value <= 31 ? 4 : 5;
 		}
 		private void PlatformMountProperties()
 		{
@@ -285,9 +285,9 @@ namespace MysticIsland.ObjectDefinitions
 				obj => MountGroup(MountSettings(obj)) == 2 ? (MountSettings(obj) - 17) & 1 : 0,
 				(obj, value) => { int old = MountSettings(obj); if (MountGroup(old) == 2) SetMount(obj, 17 + ((old - 17) & 2) + (Convert.ToInt32(value) & 1)); }));
 			properties.Add(new PropertySpec("Monitor contents", typeof(int), "Mounted object", "Monitor only: retains the normal monitor behavior, including currently unfinished reward types.", null,
-				Choices("Static", "Sonic life", "Tails life", "Eggman", "Rings", "Speed shoes", "Shield", "Invincibility", "Water shield (WIP)", "Fire shield (WIP)", "Electric shield (WIP)", "Super (WIP)"),
+				Choices("Eggman", "Rings", "Regular shield", "Water shield (reserved)", "Fire shield (reserved)", "Electric shield (reserved)", "Speed shoes", "Invincibility", "Double life (Sonic)", "Extra life (Tails)"),
 				obj => MountGroup(MountSettings(obj)) == 4 ? MountSettings(obj) - 22 : 0,
-				(obj, value) => { if (MountGroup(MountSettings(obj)) == 4) SetMount(obj, 22 + Math.Max(0, Math.Min(11, Convert.ToInt32(value)))); }));
+				(obj, value) => { if (MountGroup(MountSettings(obj)) == 4) SetMount(obj, 22 + Math.Max(0, Math.Min(9, Convert.ToInt32(value)))); }));
 		}
 		private static Sprite PayloadSprite(byte id, int subtype)
 		{
@@ -300,7 +300,7 @@ namespace MysticIsland.ObjectDefinitions
 		}
 		private Sprite MountedPreview(Sprite body, int settings, int shape, int interaction, int x = 0, int y = 0)
 		{
-			if (settings == 0 || settings >= 34) return body;
+			if (settings == 0 || settings >= 32) return body;
 			int height = shape == 4 ? 24 : shape == 2 || shape == 3 ? (Setting("platformmaterial", "") == "SLZ" ? 16 : 8) : new[] { 1, 2, 4, 5, 7, 9, 11 }.Contains(interaction) ? 48 : 8;
 			List<Sprite> pieces = new List<Sprite> { body };
 			if (settings <= 16) pieces.Add(new Sprite(Load("../art/nemesis/Platform button.nem", CompressionType.Nemesis, "Platform button.bin", 0)[0], x, y - height - 5));

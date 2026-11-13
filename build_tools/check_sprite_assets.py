@@ -79,7 +79,7 @@ def main():
 
 	# The Sonic monitor icon reuses the lives art, outside the monitor bank.
 	monitor_frames = frames(rom, symbols['Map_Obj26'])
-	assert (monitor_frames[2][0][2] + symbols['ArtTile_Monitor']) & 0x7FF == symbols['ArtTile_Lives_Counter']
+	assert (monitor_frames[symbols['MonitorType_DoubleLife']+1][0][2] + symbols['ArtTile_Monitor']) & 0x7FF == symbols['ArtTile_Lives_Counter']
 
 	assert symbols['ArtTile_Bubbles'] * 32 == 0x8B80
 	assert struct.unpack_from('>H',rom,symbols['Nem_WaterBubbles'])[0] & 0x7FFF == 56

@@ -58,7 +58,7 @@ def main():
     # allocation order. Animation still advances once per actual object update.
     for swing in (False, True):
         for earlier in (False, True):
-            for setting in (1, 18, 21, 26):
+            for setting in (1, 18, 21, 23):
                 root,body,children = setup(setting,swing,earlier)
                 assert len(children) == (2 if setting == 18 else 1)
                 positions = set()
@@ -76,7 +76,7 @@ def main():
     # Keep each art family in view for inspection, without changing its PLCs
     # or renderer. These stationary captures supplement the moving fixtures.
     for swing in (False,True):
-        for setting in (1,18,21,26):
+        for setting in (1,18,21,23):
             root,body,children=setup(setting,swing,word=0x26 if swing else 0x20)
             x,y=g.get(body,'obX',2),g.get(body,'obY',2)
             for who in ('v_player','v_player2'):
@@ -102,7 +102,7 @@ def main():
         assert not g.read(g.s['f_switch']+15)&1
     checks.append('both actors land on channel-F button; payload rider arms falling/sag and stepping away releases channel')
     for who in ('v_player','v_player2'):
-        root,body,children=setup(26,word=0x20)
+        root,body,children=setup(23,word=0x20)
         child=children[0];x,y=g.get(child,'obX',2),g.get(child,'obY',2)
         other='v_player2' if who=='v_player' else 'v_player'
         place(g,other,x-80,y-20);g.put(other,'obControl',1)

@@ -1,7 +1,7 @@
 ; ---------------------------------------------------------------------------
 ; Optional Obj17/18 payloads (MD CPU). Placement metadata, never subtype bits.
 ; 0 none; 1-16 switch channels; 17-20 spring pairs RR/RY/YR/YY;
-; 21 three S1 spikes; 22-33 monitor types 0-B. 34-63 reserved.
+; 21 three S1 spikes; 22-31 monitor types 0-9. 32-63 reserved.
 ; The body owns movement/lifetime. Children retain ordinary code pointers for
 ; touch-response identity; their manager entry only checks ownership. The body
 ; invokes their behavior once after positioning, independent of SST order.
@@ -16,7 +16,7 @@ Mount_next = objoff_46                 ; word: next child, at most two total
 Mount_x = objoff_48                    ; word: local X
 Mount_y = objoff_4A                    ; word: local Y, from physical platform top
 Mount_kind = objoff_4C                 ; word: 0 spring, 1 spikes, 2 monitor, 3 button
-PlatformMount_Count = 34
+PlatformMount_Count = 22+MonitorType_Count
 
 ; MD placement loader: a0 placement, a1 SST. Preserve its free-slot counter d0.
 PlatformMount_LoadSettings:

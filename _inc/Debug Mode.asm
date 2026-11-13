@@ -67,7 +67,28 @@ Debug_Init:
 
 Debug_Main:
 		bsr.w	Debug_SelectList
-		bsr.s	Debug_Control
+		bsr.w	Debug_Control
+		cmpi.w	#BonusStage,(v_gamemode).w
+		beq.s	.draw
+		tst.w	(Debug_placement_mode).w
+		beq.s	.draw
+		bsr.w	Debug_SelectList
+		moveq	#0,d0
+		move.b	(Debug_object).w,d0
+		mulu.w	#DebugEntry_size,d0
+		cmpi.l	#Monitor,DebugEntry_code(a2,d0.w)
+		bne.s	.draw
+		move.w	DebugEntry_subtype(a2,d0.w),d0
+		move.w	d0,d1
+		addq.w	#1,d1
+		move.b	d1,obFrame(a0)
+		jsr	(MonitorArt_Select).l
+		bcs.s	.static
+		move.l	a1,obMap(a0)
+		bra.s	.draw
+.static:
+		clr.b	obFrame(a0)
+.draw:
 		jmp	(DisplaySprite).l
 
 ; The four-act index matches the layout/header tables. Bonus-stage previews

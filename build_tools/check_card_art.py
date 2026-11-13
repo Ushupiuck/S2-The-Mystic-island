@@ -342,7 +342,7 @@ for mode in (0,1,2):
 	checks.append({'case':'signpost-final-character','mode':mode,'frame':m.get(obj,'obFrame')})
 
 monitor=frames(rom,m.s['Map_Obj26'])
-assert monitor[3][0][2] & 0x7FF == 56
+assert monitor[m.s['MonitorType_ExtraLife']+1][0][2] & 0x7FF == 56
 assert m.s['ArtTile_Signpost']+26 <= m.s['ArtTile_Tails_Life']
 assert m.s['ArtTile_Tails_Life']+4 == m.s['ArtTile_Lamppost']
 hud=frames(rom,m.s['Map_obj21'],8)
@@ -355,7 +355,7 @@ tails_plc=m.s['PLC_LivesTails']
 assert struct.unpack_from('>H',rom,tails_plc+2+6+4)[0] == (m.s['ArtTile_Lives_Counter']+4)*32
 # Preserve the authored GHZ -> imported SMZ -> EHZ route as well as templates.
 # These detours predate the eight-byte placement and special-stage Debug work.
-detours = {(0, 2): (8, 0), (8, 1): (3, 0), (8, 2): (3, 0)}
+detours = {(0, 2): (8, 0), (8, 1): (3, 0), (8, 2): (3, 0), (3, 1): (0, 0)}
 assert rom[m.s['LevelOrder']:m.s['LevelOrder']+128] == bytes(
 	v for zone in range(16) for act in range(4)
 	for v in detours.get((zone, act), (zone,act+1) if act<3 else ((zone+1)%16,0)))

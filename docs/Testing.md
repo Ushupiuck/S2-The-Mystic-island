@@ -91,6 +91,16 @@ These write outputs; do not invoke them just to inspect source.
 recovers a real 32-ring spill. The scene also checks all four loaded monitor
 icons. Native cases execute all 256 act/preset Debug placements.
 
+`python build_tools/check_monitor_art.py --output test-results/monitor-art.json`
+checks every four-kind combination in both allocation orders, hits/reuse,
+queue refusal, prior-pass pins, 16-bit wrap, unchanged one/two-life awards and
+all authored viewport demand. Add `--core CORE --system-directory BIOS_DIR`
+for all four eras of the selected act, both permanent life images (also in primary-Tails mode),
+actual SAT tile/position checks, simultaneous content VRAM and a ball-broken
+regular-shield reward. It defaults to Scrap Madness 1; `--zone N --act N`
+selects another zero-based act. Add `--pal` for PAL. These are staged rendering and
+interaction fixtures, not a level playthrough.
+
 ## Terrain and independent planes
 
 ```sh
@@ -158,7 +168,7 @@ its subtype/VRAM tables here.
 | --- | --- | --- |
 | Menus and act data | `check_level_pages.py`, `check_act_music.py` | All 64 launches, 90 live frames without death per act, uploaded menu font/blank tile, act music selection and restoration priorities |
 | HUD, portraits, smoke and flash | `check_debug_states.py`, `check_visual_followup.py` | Debug HUD/clock restoration; both smoke banks through eight frames with neighboring-bank guards; lives/monitor colors and EHZ flash restoration |
-| Monitors | `check_monitor_state.py`, `check_monitor_edges.py` | Rider/collector ownership, held charge, contact boundaries and harmful rewards |
+| Monitors | `check_monitor_state.py`, `check_monitor_edges.py`, `check_monitor_art.py` | Rider/collector ownership, held charge, contact boundaries, 1,120 four-slot cache cases, queue deferral, timestamp wrap, permanent life portraits and real SAT/VRAM checks |
 | Player interactions | `check_player_interactions.py` | All ground angles/held-frame delays for pushing, character tumble ranges and independent wall speeds/contacts; `--core` adds EHZ corkscrews and controller-2 Tails wall breaks in both acts |
 | Top-only platforms | `check_smz_vanishing.py` | Rise/side pass-through, landing/ride height, disappearing support and adjacent-platform transfers for Sonic, primary Tails and sidekick Tails. Both slot orders/directions and rolling radii; shared flat/alternate/sloped support entries. `--core` checks actual foot and camera Y through the seam; repeat with `--pal`. |
 | Companion | `check_companion_followup.py`, `check_companion_hpz.py`, `check_companion_sbz.py` | Ledges/bridges/collapse, manual takeover, real HPZ routes, SMZ carrier transfer/captured catch-up; see fixture limits below |

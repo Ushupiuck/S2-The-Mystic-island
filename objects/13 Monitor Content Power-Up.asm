@@ -7,7 +7,7 @@ MonitorContents:
 		move.b	obRoutine(a0),d0
 		move.w	MonitorContents_Index(pc,d0.w),d1
 		jsr	MonitorContents_Index(pc,d1.w)
-		bra.w	DisplaySprite
+		jmp	(MonitorArt_DrawContents).l
 ; ---------------------------------------------------------------------------
 MonitorContents_Index:	dc.w loc_B04E-MonitorContents_Index
 		dc.w loc_B092-MonitorContents_Index
@@ -39,7 +39,7 @@ loc_B092:
 		bpl.s	++		; if not, branch
 		bsr.w	ObjectMove	; update position
 		addi.w	#$18,obVelY(a0)	; reduce upward speed
-		bra.w	DisplaySprite
+		rts
 
 ; =============== S U B	R O U T	I N E =======================================
 
@@ -64,18 +64,22 @@ loc_B092:
 
 ; ---------------------------------------------------------------------------
 Monitor_Subroutines:
-		dc.w Monitor_Null-Monitor_Subroutines		; 0 - Static
-		dc.w Monitor_SonicLife-Monitor_Subroutines	; 1 - Double up
-		dc.w Monitor_TailsLife-Monitor_Subroutines	; 2 - One up
-		dc.w Monitor_Null-Monitor_Subroutines		; 3 - Eggman
-		dc.w Monitor_Rings-Monitor_Subroutines		; 4 - Super Ring
-		dc.w Monitor_Shoes-Monitor_Subroutines		; 5 - Speedshoes
-		dc.w Monitor_Shield-Monitor_Subroutines		; 6 - Plasma Shield
-		dc.w Monitor_Invincibility-Monitor_Subroutines	; 7 - Invincibility
-		dc.w Monitor_Null-Monitor_Subroutines		; 8 - Water Shield	(TBA)
-		dc.w Monitor_Null-Monitor_Subroutines		; 9 - Fire Shield	(TBA)
-		dc.w Monitor_Null-Monitor_Subroutines		;$A - Electric Shield	(TBA)
-		dc.w Monitor_Null-Monitor_Subroutines		;$B - Super		(TBA)
+		dc.w Monitor_Null-Monitor_Subroutines	; Eggman
+		dc.w Monitor_Rings-Monitor_Subroutines
+		dc.w Monitor_Shield-Monitor_Subroutines	; regular shield
+		dc.w Monitor_ReservedElemental-Monitor_Subroutines ; water: reserved
+		dc.w Monitor_ReservedElemental-Monitor_Subroutines ; fire: reserved
+		dc.w Monitor_ReservedElemental-Monitor_Subroutines ; electric: reserved
+		dc.w Monitor_Shoes-Monitor_Subroutines
+		dc.w Monitor_Invincibility-Monitor_Subroutines
+		dc.w Monitor_SonicLife-Monitor_Subroutines	; unchanged: two lives
+		dc.w Monitor_TailsLife-Monitor_Subroutines	; unchanged: one life
+
+; Elemental-shield art/types are prepared; their abilities are separate work.
+; Reserved types have no reward until that implementation, never Eggman damage.
+Monitor_ReservedElemental:
+		rts
+
 ; ---------------------------------------------------------------------------
 
 Monitor_Null:

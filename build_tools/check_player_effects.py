@@ -103,7 +103,7 @@ def main():
         assert all(frames == {2, 3, 4} for frames in seen.values()), seen
         return {name: sorted(frames) for name, frames in seen.items()}
 
-    reward(6)
+    reward(2)
     first = shields('shields.png')
     reward(7)
     g.run(5)

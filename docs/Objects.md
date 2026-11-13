@@ -526,7 +526,7 @@ preserving whether the clock was running or stopped. Frame cycling keeps the
 ordinary HUD and timer rules.
 
 Every ordinary act list explicitly offers ring, shield, invincibility and
-speed-shoe monitors (subtypes `$04/$06/$07/$05`, icon frame subtype+1).
+speed-shoe monitors (subtypes `$01/$02/$07/$06`, icon frame subtype+1).
 Rotating special-stage Debug continues to place its own grid items.
 
 A Debug entry is 14 bytes: routine long, mappings long, subtype word, frame byte,
@@ -970,8 +970,8 @@ its twelve-byte spawn reply remains unchanged.
 | 1–16 | Momentary button | Channel 0–15 |
 | 17–20 | Two adjacent upright springs, centres 32 pixels apart | Independent left/right red or yellow: RR, RY, YR, YY |
 | 21 | S1 three-spike upward row | Ordinary spike damage/immunity |
-| 22–33 | Monitor | Contents 0–B, including the existing W.I.P. rewards |
-| 34–63 | Reserved, no runtime payload | Preserved on editor round trips |
+| 22–31 | Monitor | Contents 0–9; elemental-shield types remain reserved |
+| 32–63 | Reserved, no runtime payload | Preserved on editor round trips |
 
 The body positions children relative to its physical top, carries either child
 rider by its actual displacement, then invokes ordinary child behavior once.

@@ -78,7 +78,7 @@ def main():
     for label, shape in [('SwingingPtfm', 2), ('SwingingPtfm_ArtTerrain0', 0),
                          ('SwingingPtfm_ArtTerrain1', 1), ('SwingingPtfm_ArtRail', 3), ('SwingingPtfm_ArtBall', 4)]:
         for profile in range(16):
-            for setting in range(34):
+            for setting in range(m.s['PlatformMount_Count']):
                 obj, body = fixture(setting, (profile << 8) | 0x26, label)
                 assert m.get(body, 'obSubtype') == ((profile if profile < 12 else 0) << 8) | shape << 4
                 assert m.get(body, 'PlatformMount_settings') == setting
@@ -90,9 +90,9 @@ def main():
                     before = (m.get(child, 'obX', 4), m.get(child, 'obY', 4), m.get(child, 'obRoutine'))
                     act('PlatformMount_Child', child)
                     assert before == (m.get(child, 'obX', 4), m.get(child, 'obY', 4), m.get(child, 'obRoutine'))
-    checks.append('2720 independent swing art/interaction/payload constructors; exact child count and no double update')
+    checks.append(f"{5*16*m.s['PlatformMount_Count']} independent swing art/interaction/payload constructors; exact child count and no double update")
 
-    for setting in range(1, 34):
+    for setting in range(1, m.s['PlatformMount_Count']):
         obj, body = fixture(setting)
         group = children(body)
         if setting <= 16: assert m.get(group[0], 'obSubtype') == setting - 1
@@ -117,7 +117,7 @@ def main():
     # Either character can stand on a mounted monitor; carry and body sag/fall
     # must use that relationship rather than pretending they stand on the base.
     for who in ('v_player', 'v_player2'):
-        obj, body = fixture(26, 0x10A0)
+        obj, body = fixture(23, 0x10A0)
         child = children(body)[0]
         other = 'v_player2' if who == 'v_player' else 'v_player'
         m.put(other, 'code', 0)
@@ -137,7 +137,7 @@ def main():
         assert m.get(body, 'Plat_flags') & 8 and m.get(body, 'Plat_sag') == 4
     checks.append('both monitor riders translate once, retain standing indices, depress and arm the base platform')
 
-    for setting in (1, 18, 21, 26):
+    for setting in (1, 18, 21, 23):
         obj, body = fixture(setting, 0x1026, 'SwingingPtfm')
         group = children(body)
         for a in m.pool():
@@ -193,7 +193,7 @@ def main():
 
     # Body metadata does not turn a broken monitor into a consumed platform.
     for oid in (0x18,0x17,0xDB,0xDC,0xDD,0xDE):
-        row = with_mount((0x800, 0x400, oid, 0xE0, 0x20), 26)
+        row = with_mount((0x800, 0x400, oid, 0xE0, 0x20), 23)
         m.fixture([row]);m.cam(0x700, 0x300);m.act('ObjectsManager')
         root = next(iter(m.live().values()))
         entry = 'Obj18' if oid==0x18 else {0x17:'SwingingPtfm',0xDB:'SwingingPtfm_ArtTerrain0',0xDC:'SwingingPtfm_ArtTerrain1',0xDD:'SwingingPtfm_ArtRail',0xDE:'SwingingPtfm_ArtBall'}[oid]

@@ -72,6 +72,132 @@ Load_DynamicPLC:
 
 ; ---------------------------------------------------------------------------
 ; ---------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
+; Shared monitor icon DPLCs, MD CPU. Four physical 16x16 slots, shared by kind.
+; Intact/broken bodies and both life portraits remain resident. Keep slots used
+; in this or the previous game pass pinned, including blinking boxes, Debug
+; previews and rising reward icons. Queue failure keeps the old tag and retries.
+; A fifth simultaneous non-life kind shows the baked-in static until a slot is
+; available; it cannot overwrite another visible icon. Authored layouts are
+; checked against the four-kind limit. No object-pool scan or per-box art buffer.
+MonitorArt_Reset:
+		move.l	#-1,(MonitorArt_Tags).w
+		clr.l	(MonitorArt_Uses).w
+		clr.l	(MonitorArt_Uses+4).w
+		rts
+
+; d0 = content kind -> a1 = corresponding slot mapping; carry = defer.
+; Preserve a0/d7. Only cache misses enter the ordinary atomic DPLC loader.
+MonitorArt_Select:
+		cmpi.w	#MonitorType_DoubleLife,d0
+		bhs.w	.life
+		lea	(MonitorArt_Tags).w,a3
+		moveq	#0,d2
+.find:
+		cmp.b	(a3,d2.w),d0
+		beq.s	.pin
+		addq.w	#1,d2
+		cmpi.w	#MonitorArt_SlotCount,d2
+		blo.s	.find
+		moveq	#0,d2
+.free:
+		tst.b	(a3,d2.w)
+		bmi.s	.load
+		move.w	d2,d3
+		add.w	d3,d3
+		lea	(MonitorArt_Uses).w,a2
+		move.w	(Timer_frames).w,d1
+		sub.w	(a2,d3.w),d1
+		cmpi.w	#1,d1
+		bhi.s	.load
+		addq.w	#1,d2
+		cmpi.w	#MonitorArt_SlotCount,d2
+		blo.s	.free
+		ori.b	#1,ccr
+		rts
+.load:
+		move.w	d2,-(sp)
+		adda.w	d2,a3
+		lsl.w	#7,d2	; four tiles, 128 VRAM bytes per slot
+		move.w	#ArtTile_Monitor_Icons*tile_size,d4
+		add.w	d2,d4
+		lea	(DPLC_MonitorIcons).l,a2
+		move.l	#Art_MonitorIcons,d6
+		bsr.w	Load_DynamicPLC
+		movem.w	(sp)+,d2	; preserve the loader's carry flag
+		bcs.s	.return
+.pin:
+		move.w	d2,d3
+		add.w	d3,d3
+		lea	(MonitorArt_Uses).w,a2
+		move.w	(Timer_frames).w,(a2,d3.w)
+		lsl.w	#2,d2
+		lea	(MonitorArt_Maps).l,a1
+		movea.l	(a1,d2.w),a1
+		andi.b	#$FE,ccr
+.return:
+		rts
+.life:
+		lea	(Map_Obj26).l,a1
+		andi.b	#$FE,ccr
+		rts
+
+; Carry means that a conservative sprite rectangle overlaps the viewport.
+; Offscreen loaded boxes must not occupy the four visible-content slots.
+MonitorArt_InView:
+		move.w	obX(a0),d0
+		sub.w	(Camera_X_pos).w,d0
+		addi.w	#16,d0
+		cmpi.w	#320+32,d0
+		bhs.s	.return
+		move.w	obY(a0),d0
+		sub.w	(Camera_Y_pos).w,d0
+		addi.w	#32,d0
+		cmpi.w	#224+64,d0
+.return:
+		rts
+
+MonitorArt_Draw:
+		bsr.s	MonitorArt_InView
+		bcc.w	DisplaySprite
+		moveq	#0,d0
+		move.b	obFrame(a0),d0
+		cmpi.b	#2,obRoutine(a0)
+		bne.s	.animation
+		move.b	obAnim(a0),d0	; pin during the box's blank blink too
+		bra.s	.select
+.animation:
+		tst.b	d0
+		beq.w	DisplaySprite
+		cmpi.b	#11,d0	; broken base has no content
+		beq.w	DisplaySprite
+		subq.w	#1,d0
+.select:
+		bsr.w	MonitorArt_Select
+		bcs.s	.static
+		move.l	a1,obMap(a0)
+		bra.w	DisplaySprite
+.static:
+		clr.b	obFrame(a0)
+		bra.w	DisplaySprite
+
+MonitorArt_DrawContents:
+		bsr.w	MonitorArt_InView
+		bcc.w	DisplaySprite
+		moveq	#0,d0
+		move.b	obAnim(a0),d0
+		bsr.w	MonitorArt_Select
+		bcs.s	.return
+		moveq	#0,d0
+		move.b	obFrame(a0),d0
+		add.w	d0,d0
+		adda.w	(a1,d0.w),a1
+		addq.w	#2,a1	; first mapping piece is the floating icon
+		move.l	a1,obMap(a0)
+		bra.w	DisplaySprite
+.return:
+		rts
+
 ; Card DPLCs use the same packed tile runs as Load_DynamicPLC. A complete card
 ; can exceed the DMA queue's run count, so its owner resumes on the next frame.
 ; The owner creates its visible children only after the final DMA has executed.

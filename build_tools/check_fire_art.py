@@ -98,7 +98,7 @@ def game(a):
 				assert vram(s['ArtTile_Fireball']*32,len(balls))==balls,(zone,act,'fireball upload')
 				assert vram(s['ArtTile_Springs']*32,len(springs))==springs,(zone,act,'spring overlap')
 				assert vram(s['ArtTile_FireballMaker']*32,len(maker))==maker,(zone,act,'launcher upload')
-				for label,tile in (('Nem_VSpikes','ArtTile_Spikes'),('Nem_Monitors','ArtTile_Monitor')):
+				for label,tile in (('Nem_VSpikes','ArtTile_Spikes'),('Nem_MonitorBodies','ArtTile_Monitor'),('Nem_MonitorTailsLife','ArtTile_Tails_Life')):
 					data=nemesis(rom[s[label]:]);assert vram(s[tile]*32,len(data))==data,(zone,act,tile)
 				if act==0:
 					pool=[p for p in range(s['v_lvlobjspace'],s['v_lvlobjend'],s['object_size']) if not g.get(p,'code')][-6:]

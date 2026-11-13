@@ -66,6 +66,51 @@ Sonic/Tails/body/tail/dust use this service. Some dedicated UI loaders, includin
 the signpost, retain their own cue encoding; do not assume every DPLC file uses
 one format. SonLVL's overrides are documented in [its guide](../SonLVL%20INI%20Files/README.md).
 
+### Monitor contents
+
+`build_monitor_art.py` owns monitor mappings, the body/life seed archives and
+four-tile icon DPLCs. Edit `art/nemesis/Monitor and contents.unc`, then run the
+generator (or `--check`). The 60-tile editable/editor master keeps intact tiles
+0-15, broken tiles 16-23, eight four-tile content images in type order, and the
+permanent Tails portrait at 56-59. The separate static icon is removed; the
+intact box already contains that pattern. Regular-shield pixels come from
+Sonic 2's frame-7 `$2C-$2F` icon (s2disasm commit
+`4c5dc02b3eea186c3f80a020447b206343f30c0a`), adapted through `PLAYER_FROM_S1`; the three
+existing elemental images remain separate. `build_signpost_art.py` delegates
+monitor generation rather than modifying its layout independently.
+
+| Type | Content | Reward |
+| --- | --- | --- |
+| `$0` | Eggman | Hurt the actual collector |
+| `$1` | Rings | Ten rings |
+| `$2` | Regular shield | Existing shared shield behavior |
+| `$3` | Water shield | Reserved art/type; ability not implemented |
+| `$4` | Fire shield | Reserved art/type; ability not implemented |
+| `$5` | Electric shield | Reserved art/type; ability not implemented |
+| `$6` | Speed shoes | Existing shared speed-shoe behavior |
+| `$7` | Invincibility | Existing shared star/invincibility behavior |
+| `$8` | Sonic double life | Two lives; permanent HUD portrait |
+| `$9` | Tails extra life | One life; permanent tile `$561` portrait |
+
+Both life images load on every level entry and bypass the four content slots.
+Tails has not moved after the HUD. The other eight kinds share four physical
+16x16 slots, including rising rewards and Debug previews. `MonitorArt_Select`
+reuses a loaded kind and pins slots used in the current or previous object
+pass. Offscreen loaded boxes do not occupy visible slots. Misses use the common
+atomic DPLC loader; a full queue keeps the old tag and retries. Four tag bytes
+and four timestamp words use twelve bytes of MD RAM; no object-pool scan or
+per-monitor tile buffer is needed. The resident footprint falls from 60 to 44
+tiles, reclaiming 16 tiles/512 bytes before the permanent Tails image.
+
+Visible authored scenes must fit four distinct non-life kinds, including their
+moving payloads. Cache pressure keeps the baked static on a box and defers a
+floating icon rather than replacing another displayed kind. The editor reads
+the complete master through `Monitor.bin`; runtime `Monitor DPLC 0-3.bin` maps
+select the shared slots. The full master archives remain editor assets and are
+not linked into the ROM. The usual frame convention remains type+1, with zero
+for the bare box and 11 for its broken base. The signpost still replaces the
+first 26 tiles only during its separate end-of-act lifetime.
+
 ### Hanging animation
 
 D9's traversable row reuses the original FBZ handhold: sixteen by forty pixels,
@@ -128,9 +173,9 @@ addresses without changing mappings, frame selection or VRAM banks.
 
 | RAM bytes, end exclusive | Source | Size |
 | --- | --- | --- |
-| `$FFB40C-$FFB76C` | Shield | `$360` |
-| `$FFB76C-$FFBBAC` | Invincibility stars | `$440` |
-| `$FFBBAC-$FFBFAC` | Normal/lost rings | `$400` |
+| `$FFB3FE-$FFB75E` | Shield | `$360` |
+| `$FFB75E-$FFBB9E` | Invincibility stars | `$440` |
+| `$FFBB9E-$FFBF9E` | Normal/lost rings | `$400` |
 
 The cache occupies `$BA0` bytes after the CD ring event queue. `LoadPlayerEffectArt`
 decompresses all three after level clears/PLCs and before `InitRingFrame`;
@@ -166,7 +211,10 @@ is not a source of free level VRAM.
 | `$A0E0-$A160` | `$507` | Shared static spring support, four tiles |
 | `$A160-$A360` | `$50B` | Floor/side spikes, 16 tiles |
 | `$A360-$A520` | `$51B` | Free after packing springs and adding the support, 14 tiles |
-| `$A520-$ACA0` | `$529` | Monitor/signpost bank, 60 tiles |
+| `$A520-$A820` | `$529` | Resident intact/broken monitor bodies, 24 tiles |
+| `$A820-$AA20` | `$541` | Four shared monitor-content DPLC slots, 16 tiles |
+| `$AA20-$AC20` | `$551` | Reclaimed from resident monitor contents, 16 tiles |
+| `$AC20-$ACA0` | `$561` | Permanent Tails life portrait, four tiles |
 | `$ACA0-$ADE0` | `$565` | Checkpoint, 10 tiles |
 | `$ADE0-$B020` | `$56F` | Auxiliary shield, 18 tiles |
 | `$B040-$BC00` | `$582` | Normal/shared fiery explosion art, 94 tiles |
