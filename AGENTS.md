@@ -129,10 +129,12 @@ W.I.P./unassembled sources are development work, not disposable unused code.
 
 # Scope, verification and handoff
 
-- Inspect the current branch and local changes first. Implement shared fixes
-  once and cherry-pick them onto the intended branches; keep experiments and
-  branch-specific behavior isolated. Do not overwrite another person's work or
-  mix unrelated functionality into a cleanup commit.
+- Inspect the current branch and local changes first. Develop shared fixes on
+  `Mystic-Island-(Experimental)`, then transfer several commits to
+  `metallic-madness-port` in occasional batches. Do not maintain both branches
+  for every change. Keep experiments and branch-specific behavior isolated.
+  Do not overwrite another person's work or mix unrelated functionality into
+  a cleanup commit.
 - Trace the complete affected path, not just the first matching file. Consider
   loaders, callers, mappings, art, palette, PLCs, placement/Debug/editor data,
   generators and documentation as applicable. Check retained variants too.
