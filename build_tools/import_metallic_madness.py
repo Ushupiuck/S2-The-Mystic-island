@@ -207,7 +207,7 @@ def sprites(source,constants):
 		('MechaBu','mecha_bu',[('mecha_bu','.Sprites',None,1),('mecha_bu_saw','.Sprites',None,1)]),
 		('PohBee','poh_bee',[('poh_bee','.Sprites1',None,1),('poh_bee','.Sprites2',None,1)]),
 		('Scarab','scarab',[('scarab','.Sprites',None,1)]),
-		('TimePost','../monitor_time',[('../monitor_time','.Sprites',slice(8,None),0)]),
+		('TimePost','../monitor_time',[('../monitor_time','.Sprites',slice(10,16),0)]),
 		('Generator','../robot_transport_b',[('../robot_transport','.Sprites',None,0)]))
 	atlas=bytearray();overlays={};outputs={};report=[]
 	for family,art,maps in specs:
@@ -224,6 +224,8 @@ def sprites(source,constants):
 			text=(folder/f'sprites/r8/{name}.asm').read_text()
 			rs=frames(cd_mapping(text,root))
 			if selection is not None:rs=rs[selection]
+			# Signs borrow the global S1 post; only the first CD head piece survives.
+			if family=='TimePost':rs=[row[:1] for row in rs]
 			if family=='Saw' and mi==0:
 				gf=frames(cd_mapping((folder/'sprites/r8/buzzsaw_cd.asm').read_text(),'.Sprites'))
 				assert rs==gf,'Era-specific saw geometry needs separate mappings'
@@ -244,6 +246,9 @@ def sprites(source,constants):
 			assert re.search(r'^ArtTile_MMZ_'+family+r':\s*equ ArtTile_MMZ_Atlas\+'+str(offset)+r'\b',constants,re.M),('Overlay destination',family,offset)
 		payloads=[b''.join(t[e] for t in tiles) for e in range(3)]
 		atlas.extend(payloads[0])
+		if family=='TimePost':
+			assert len(tiles)==22
+			assert all(find_tiles(tiles,p)==t for p,t in zip(patterns,(0,0,8,8,16,20)))
 		for era,index in (('Past',1),('Good Future',2)):
 			if payloads[index]!=payloads[0]:
 				filename=f'MMZ1 {family} {era}'

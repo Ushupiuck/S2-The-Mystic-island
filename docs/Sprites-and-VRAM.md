@@ -111,6 +111,40 @@ not linked into the ROM. The usual frame convention remains type+1, with zero
 for the bare box and 11 for its broken base. The signpost still replaces the
 first 26 tiles only during its separate end-of-act lifetime.
 
+### Checkpoint and time-pole art
+
+The shared `$79` family uses Sonic 1's actual six-tile cap/shaft plus its two
+blue and two red ball tiles, from s1disasm commit
+`2c51d46a0b0682133834db2093292d41da872ecf`, `artnem/Lamppost.nem` (blob
+`4d8db3cb03aeb413bfa86a3de9977e0e56dfa8df`) and `_maps/Lamppost.asm`.
+`art/uncompressed/Checkpoint.unc` is the editable 12-tile master: cap 0–1,
+shaft 2–5, blue 6–7, red 8–9, optional yellow 10–11. Source geometry shifts
+four pixels down so the existing placement foot remains at Y +24. Blue keeps
+three separate tones at primary slots C/B/A. Red uses `PLAYER_FROM_S1`;
+shaft C/D/E becomes the shared second-line D/E/F yellow ramp. The yellow ball
+reuses the blue geometry with those same three yellow shades on line 1.
+
+`build_checkpoint_art.py` generates the ten-tile resident `Lamppost.nem`, the
+two-tile `Checkpoint yellow.nem`, and compact editor/runtime maps. Yellow fits
+at `$551-$552`, using two of the sixteen tiles reclaimed by monitor DPLCs.
+The next fourteen tiles remain free; both life portraits retain their banks.
+
+The per-act MMZ atlas supplies only CD's PAST (8 tiles), FUTURE (8), thin-spin
+(4) and edge-spin (2) heads at `$410-$425`. All 22 tiles are distinct; the 28
+removed tiles belonged to the duplicate CD stem and unneeded monitor/HUD parts.
+`import_metallic_madness.py` owns the packed head section and its
+`MMZ TimePost.bin` geometry. The shared body reduces MMZ1's atlas from 505 to
+477 tiles, without duplicating a second pole bank. The editor archive combines
+the common master and these heads solely for preview and is not linked in ROM.
+
+Runtime `Checkpoint.bin` uses absolute VRAM tile words with `obGfx=0`, so
+mirroring never carries a signed bank offset into flip/palette bits. Frames
+0–2 are complete blue/red/yellow checkpoints, 3 is the body, 4–5 are orbiting
+red/yellow balls, 6–9 the two sign faces, 10–11 the spin edges, and 12–13 the
+head-only PAST/FUTURE views reserved for the time-travel indicator. SonLVL reads
+`Checkpoint editor.bin`, whose tile words address the compact preview archive.
+Run the checkpoint generator after editing the master or importing MMZ art.
+
 ### Hanging animation
 
 D9's traversable row reuses the original FBZ handhold: sixteen by forty pixels,
@@ -173,9 +207,9 @@ addresses without changing mappings, frame selection or VRAM banks.
 
 | RAM bytes, end exclusive | Source | Size |
 | --- | --- | --- |
-| `$FFB3FE-$FFB75E` | Shield | `$360` |
-| `$FFB75E-$FFBB9E` | Invincibility stars | `$440` |
-| `$FFBB9E-$FFBF9E` | Normal/lost rings | `$400` |
+| `$FFB3FC-$FFB75C` | Shield | `$360` |
+| `$FFB75C-$FFBB9C` | Invincibility stars | `$440` |
+| `$FFBB9C-$FFBF9C` | Normal/lost rings | `$400` |
 
 The cache occupies `$BA0` bytes after the CD ring event queue. `LoadPlayerEffectArt`
 decompresses all three after level clears/PLCs and before `InitRingFrame`;
@@ -213,7 +247,8 @@ is not a source of free level VRAM.
 | `$A360-$A520` | `$51B` | Free after packing springs and adding the support, 14 tiles |
 | `$A520-$A820` | `$529` | Resident intact/broken monitor bodies, 24 tiles |
 | `$A820-$AA20` | `$541` | Four shared monitor-content DPLC slots, 16 tiles |
-| `$AA20-$AC20` | `$551` | Reclaimed from resident monitor contents, 16 tiles |
+| `$AA20-$AA60` | `$551` | Optional yellow checkpoint ball, 2 tiles |
+| `$AA60-$AC20` | `$553` | Remaining reclaimed monitor space, 14 tiles |
 | `$AC20-$ACA0` | `$561` | Permanent Tails life portrait, four tiles |
 | `$ACA0-$ADE0` | `$565` | Checkpoint, 10 tiles |
 | `$ADE0-$B020` | `$56F` | Auxiliary shield, 18 tiles |

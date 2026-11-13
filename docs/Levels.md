@@ -115,7 +115,7 @@ variants, the existing morphing platform, propeller and wheeled carrier, plus
 the common ring/shield/invincibility/speed monitors. Source placements, the
 remaining enemies/mechanisms and the time-warp sequence are still pending.
 
-The 505-tile resident sprite atlas occupies `$260-$458`; 31 reserved tiles
+The 477-tile resident sprite atlas occupies `$260-$43C`; 59 reserved tiles
 remain before the reused morphing bank at `$478`. Present/Bad Future share
 one base module archive. Past overwrites only the 23 generator tiles; Good
 Future overwrites only 38 saw and 122 seesaw tiles. All use Moduled Kosinski+.
@@ -124,7 +124,9 @@ existing files. Ordinary builds repack editable sprite masters through
 `build_end_art.py`; an explicit import regenerates source conversions.
 Mappings bake each source rectangle's palette role. MMZ's enemy ramp uses
 `ENEMY_FROM_MMZ`, not the earlier S2 palette permutation. The time-post bank
-excludes the common monitor art. See [objects](Objects.md#mmz-object-variants-experimental)
+now contains only 22 sign-head tiles; checkpoints and time poles share the
+common Sonic 1 stem and blue/red/yellow heads. `$79` exposes all three functions
+in Debug and SonLVL. The full speed/resume time-warp sequence remains pending. See [objects](Objects.md#mmz-object-variants-experimental)
 for parameters and lifetimes.
 
 ## Foreground vertical placement

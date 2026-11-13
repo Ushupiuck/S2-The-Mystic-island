@@ -278,3 +278,10 @@ show relative members and preserve full subtype words. The picker can create
 byte subtypes because zone `$0F` selects the MMZ family automatically. Existing
 records may explicitly retain bit 8. The shared eight-byte layout and current
 `chunkmax=400` (hex, 1024) support all 445 imported chunks without an editor fork.
+
+The common `$79` definition now represents checkpoints and time poles. Its
+word properties select the head/function, checkpoint number/camera lock,
+red/yellow activated ball, and optional independent actor-path filter. Preview
+art uses the compact `Checkpoint editor.nem`/`Checkpoint editor.bin` pair;
+runtime maps address separate VRAM banks. PAST/FUTURE placements require their
+22-tile per-act head bank, supplied by all four MMZ1 eras.

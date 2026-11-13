@@ -34,6 +34,16 @@ MonitorType_Count:	equ 10
 MonitorArt_SlotCount:	equ 4
 MonitorArt_IconTiles:	equ 4
 ; ---------------------------------------------------------------------------
+; Shared checkpoint/time-pole word subtype
+; ---------------------------------------------------------------------------
+PoleType_Checkpoint:	equ $000
+PoleType_Past:		equ $100
+PoleType_Future:		equ $200
+PoleType_Mask:		equ $300
+Pole_Yellow:		equ $400 ; checkpoint uses yellow instead of red
+Pole_Layer2:		equ $800 ; required secondary collision path
+Pole_FilterLayer:	equ $1000 ; time-post contact checks the actor path
+; ---------------------------------------------------------------------------
 ; Object placement record offsets
 ; ---------------------------------------------------------------------------
 ; Mystic Island placement: X/Y words, ID/time-mask bytes, subtype word.
@@ -1482,6 +1492,8 @@ f_demo:			ds.w	1			; demo mode flag (0 = no; 1 = yes; $8001 = ending)
 v_demonum:		ds.w	1			; demo level number (not the same as the level number)
 v_creditsnum:		ds.w	1			; credits index number
 Super_Sonic_frame_count:	ds.w	1
+TimeWarp_Direction:	ds.b	1	; -1 PAST, +1 FUTURE, zero unarmed
+			ds.b	1	; align monitor timestamps
 MonitorArt_Tags:	ds.b	MonitorArt_SlotCount ; icon kind, $FF invalid
 MonitorArt_Uses:	ds.w	MonitorArt_SlotCount ; last game pass using each slot
 v_lcon_wheel_frame:	ds.b	1			; shared requested wheel frame
@@ -1729,7 +1741,10 @@ ArtTile_Monitor_FreeEnd:	equ ArtTile_Monitor+$38 ; 16 reclaimed tiles, before pe
 		fatal "Fireball maker overlaps monitors."
 	endif
 ArtTile_Tails_Life:	equ ArtTile_Monitor+$38
-ArtTile_Lamppost:	equ ArtTile_Monitor+$3C ; 10 tiles; ends at $AD9F
+ArtTile_Lamppost:	equ ArtTile_Monitor+$3C ; six S1 pole + blue/red head tiles
+ArtTile_CheckpointYellow:	equ ArtTile_Monitor_Free ; two tiles; Tails stays at $561
+ArtTile_Monitor_Reclaimed:	equ ArtTile_CheckpointYellow+2
+
 
 ; GHZ's packed objects/badniks, after its $32B-tile terrain reservation.
 ArtTile_GHZ_SLZ_Smashable_Wall	equ $001	; Temporary location; suits it well
@@ -2087,7 +2102,8 @@ ArtTile_MMZ_Atlas:		equ $260
 ArtTile_MMZ_Atlas_End:		equ $478
 ArtTile_MMZ_Saw:			equ ArtTile_MMZ_Atlas+110
 ArtTile_MMZ_Seesaw:		equ ArtTile_MMZ_Atlas+148
-ArtTile_MMZ_Generator:		equ ArtTile_MMZ_Atlas+482
+ArtTile_TimePostHeads:		equ ArtTile_MMZ_Atlas+432
+ArtTile_MMZ_Generator:		equ ArtTile_MMZ_Atlas+454
 ArtTile_MMZ_HVPlatform:		equ $478 ; existing shared eight-tile morphing platform
 ArtTile_MMZ_Propeller:		equ $480 ; existing shared 49-tile propeller
 

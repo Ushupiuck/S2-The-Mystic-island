@@ -102,7 +102,7 @@ def native(args):
 	count=struct.unpack_from('>H',rom,debug)[0];monitors=set()
 	from import_ehz2_pp_background import nemesis
 	resident=set()
-	for label,tiles in [('ArtTile_MMZ_Atlas',505),('ArtTile_Ring',32),('ArtTile_Monitor',24),('ArtTile_Monitor_Icons',16),('ArtTile_Tails_Life',4),('ArtTile_Spikes',16)]:
+	for label,tiles in [('ArtTile_MMZ_Atlas',477),('ArtTile_Ring',32),('ArtTile_Monitor',24),('ArtTile_Monitor_Icons',16),('ArtTile_Tails_Life',4),('ArtTile_Spikes',16),('ArtTile_Lamppost',10),('ArtTile_CheckpointYellow',2)]:
 		resident.update(range(n.s[label],n.s[label]+tiles))
 	for label,file in [('ArtTile_MMZ_HVPlatform','Morphing Orbs'),('ArtTile_MMZ_Propeller','MM Propeller'),('ArtTile_Wheel','Wheel carrier'),('ArtTile_Springs','Springs')]:
 		raw=nemesis((ROOT/f'art/nemesis/{file}.nem').read_bytes())
@@ -526,7 +526,7 @@ def platform_game(args):
 	for era in range(4):
 		g.restore(initial);boot_level(g,zone=15,timezone=era)
 		raw=bytearray((R/'art/uncompressed/MMZ1 Sprite Atlas.unc').read_bytes())
-		for off,name in (((482,'Generator Past'),) if era==1 else ((110,'Saw Good Future'),(148,'Seesaw Good Future')) if era==2 else ()):
+		for off,name in (((454,'Generator Past'),) if era==1 else ((110,'Saw Good Future'),(148,'Seesaw Good Future')) if era==2 else ()):
 			data=(R/f'art/uncompressed/MMZ1 {name}.unc').read_bytes();raw[off*32:off*32+len(data)]=data
 		raw_vram(g.s['ArtTile_MMZ_Atlas'],raw)
 		for bank,file in [('ArtTile_MMZ_HVPlatform','Morphing Orbs'),('ArtTile_MMZ_Propeller','MM Propeller'),('ArtTile_Wheel','Wheel carrier')]:raw_vram(g.s[bank],nemesis((R/f'art/nemesis/{file}.nem').read_bytes()))

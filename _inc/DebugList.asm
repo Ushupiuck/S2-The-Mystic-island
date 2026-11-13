@@ -62,7 +62,7 @@ Debug_GHZ:	dc.w (Debug_GHZ_End-Debug_GHZ-2)/DebugEntry_size
 	dbug	Map_Newtron,	Newtron,	0,	0,	make_art_tile(ArtTile_Newtron,0,0)
 	dbug	Map_Newtron,	Newtron,	1,	0,	make_art_tile(ArtTile_Newtron,1,0)
 	dbug	Map_obj44,	Obj44,	0,	0,	make_art_tile(ArtTile_GHZ_Edge_Wall,2,0)
-	dbug	Map_Obj79,	Obj79,	1,	0,	make_art_tile(ArtTile_Lamppost,1,0)
+	dbug	Map_Obj79,	Obj79,	1,	0,	0
 	dbug	Map_GiantRing,	GiantRing,	0,	0,	make_art_tile(ArtTile_Giant_Ring,1,0)
 	dbug	Map_Ring,	GoddessRings,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
 Debug_GHZ_End:
@@ -177,7 +177,7 @@ Debug_EHZ:	dc.w (Debug_EHZ_End-Debug_EHZ-2)/DebugEntry_size
 	dbug	Map_Obj03,	CollisionSwitcher,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Obj03,	CollisionSwitcher,	9,	1,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Obj03,	CollisionSwitcher,	$D,	5,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Obj79,	Obj79,	1,	0,	make_art_tile(ArtTile_Lamppost,0,0)
+	dbug	Map_Obj79,	Obj79,	1,	0,	0
 	dbug	Map_Waterfall1,	Obj49,	0,	0,	make_art_tile(ArtTile_Waterfall,1,0)
 	dbug	Map_Waterfall1,	Obj49,	2,	3,	make_art_tile(ArtTile_Waterfall,1,0)
 	dbug	Map_Waterfall1,	Obj49,	4,	5,	make_art_tile(ArtTile_Waterfall,1,0)
@@ -216,7 +216,7 @@ Debug_HTZ:	dc.w (Debug_HTZ_End-Debug_HTZ-2)/DebugEntry_size
 	dbug	Map_Obj03,	CollisionSwitcher,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Obj03,	CollisionSwitcher,	9,	1,	make_art_tile(ArtTile_Ring,1,0)
 	dbug	Map_Obj03,	CollisionSwitcher,	$D,	5,	make_art_tile(ArtTile_Ring,1,0)
-	dbug	Map_Obj79,	Obj79,	1,	0,	make_art_tile(ArtTile_Lamppost,0,0)
+	dbug	Map_Obj79,	Obj79,	1,	0,	0
 	dbug	Map_Obj18_GHZ,	Obj18,	$0082,	0,	make_art_tile(ArtTile_Level,2,0)
 	dbug	Map_Obj18_GHZ,	Obj18,	$0093,	1,	make_art_tile(ArtTile_Level,2,0)
 	dbug	Map_Obj36,	Spikes,	0,	0,	make_art_tile(ArtTile_Spikes,0,0)
@@ -345,4 +345,8 @@ Debug_MMZ1:	dc.w (Debug_MMZ1_End-Debug_MMZ1-2)/DebugEntry_size
 	dbug	Map_MMZ_Floor,	Obj1B,	$104,	3,	ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_Floor,	Obj1B,	$108,	7,	ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_Floor,	Obj1B,	$181,	0,	ArtTile_MMZ_Atlas
+	dbug	Map_Obj79,	Obj79,	1,	0,	0
+	dbug	Map_Obj79,	Obj79,	1+Pole_Yellow,	2,	0
+	dbug	Map_Obj79,	Obj79,	PoleType_Past,	6,	0
+	dbug	Map_Obj79,	Obj79,	PoleType_Future,	8,	0
 Debug_MMZ1_End:

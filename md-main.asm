@@ -2340,6 +2340,7 @@ Level_ClrRam:
 		move.b	d2,(Current_Timezone).w	; clearRAM only changes d0-d1/a1
 		jsr	(LCon_ResetWheels).l
 		jsr	(MonitorArt_Reset).l
+		clr.b	(TimeWarp_Direction).w
 Level_WaterFlagInit:
 		move.w	(Current_ZoneAndAct).w,d0
 		ror.b	#2,d0
@@ -13463,6 +13464,8 @@ Nem_MonitorTailsLife:	binclude "art/nemesis/Monitor Tails life.nem"
 Art_MonitorIcons:	binclude "art/uncompressed/Monitor icons.unc"
 		even
 Nem_Lamppost:	binclude	"art/nemesis/Lamppost.nem"
+		even
+Nem_CheckpointYellow:	binclude "art/nemesis/Checkpoint yellow.nem"
 		even
 Nem_Wheel:	binclude	"art/nemesis/Wheel carrier.nem"
 		even

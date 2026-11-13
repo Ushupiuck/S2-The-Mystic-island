@@ -110,6 +110,7 @@ class Genesis:
 		# Test-only identity survives the platform's direct update transitions.
 		for constructor, states in (
 				('Ring', ('Ring_Animate', 'Ring_Collect', 'Ring_Sparkle')),
+				('Obj79', ('Checkpoint_Main','Checkpoint_WaitBall','Pole_Active','TimePole_Main','TimePole_Spin')),
 				('LostRings', ('LostRing_Move', 'LostRing_Collect')),
 				('TwistingPathway', ('TwistingPathway_Main', 'TwistingPathway_Cage')),
 				('SMZ_SpinConvey', ('SMZ_SpinC_Move',)),

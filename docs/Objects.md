@@ -107,6 +107,45 @@ were invalid for this project's levels. SMZ's authored `SMZ_PipeData` remains
 the directly editable route source; other reserved helpers remain available
 until a caller needs them. Newly ported levels must supply their own routes.
 
+## Shared checkpoint and time poles
+
+`$79` is the single placement ID for checkpoints, PAST posts and FUTURE posts.
+`objects/79 Lamppost.asm` selects a direct state once during construction; it
+shares proximity, placement-state handling, lifetime and the Sonic 1 body.
+Time poles never enter `Lamppost_StoreInfo` or change checkpoint ordering.
+
+| Word subtype bits | Meaning |
+| --- | --- |
+| 0–6 | Checkpoint number, increasing along the route |
+| 7 | Checkpoint camera lock on respawn, retained from the old object |
+| 8–9 | 0 checkpoint, 1 PAST, 2 FUTURE; reserved 3 uses checkpoint behavior |
+| 10 | Activated checkpoint ball: 0 red, 1 yellow; inactive ball stays blue |
+| 11 | Required path: 0 primary `$C`, 1 secondary `$E` |
+| 12 | Enable the per-actor collision-path filter; used by MMZ2 time poles |
+| 13–15 | Reserved, preserved |
+
+Either live actor can activate a pole independently. Dead, missing or locked
+actors, Debug placement and the global interaction override are rejected.
+Checkpoint contact retains X `[-8,8)`, Y `[-64,40)`; time poles use X `[-22,22)`
+with the same Y interval. The optional path filter examines the contacting
+actor's own `obTopSolidBit`, so Sonic and Tails cannot borrow each other's path.
+
+Checkpoints save the existing engine snapshot at the post's coordinates and
+consume bit 0 of their own placement entry. Their temporary red/yellow ball
+uses a 32-step radius-eight ROM orbit twice, without per-update sine/multiply.
+Both sides validate reciprocal slot ownership. A full pool settles immediately
+into the activated color; an unloaded/reused slot cannot adopt the old child.
+Consumed/earlier checkpoints reload in the activated state. Scripted and Debug
+posts have no handle and never touch a real placement's persistent state.
+
+Time poles consume their own bit 0, arm `TimeWarp_Direction` (`-1` PAST, `+1`
+FUTURE), spin through the original eight-pose sequence at two updates per pose
+for 60 updates, then retain the reversed head. Reloading a consumed post never
+rearms travel. The speed threshold, resume transition and full time-warp
+sequence remain part of the pending MMZ port. The current pickup sound reuses
+the shared checkpoint sound. [Sprites and VRAM](Sprites-and-VRAM.md#checkpoint-and-time-pole-art)
+owns the shared body/head allocations; the act must load the sign-head bank.
+
 ## MMZ object variants (experimental)
 
 Six original families retain their placement IDs and add a CD variant in
