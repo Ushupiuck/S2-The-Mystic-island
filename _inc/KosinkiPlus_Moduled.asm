@@ -179,11 +179,17 @@ Process_Kos_Queue:
 	move.l	a0,(Kos_decomp_source).w
 	move.l	a1,(Kos_decomp_destination).w
 	subq.w	#1,(Kos_decomp_queue_count).w
-	beq.s	.return
+	beq.s	.moduleReady
 	lea	(Kos_decomp_queue).w,a0
 	lea	(Kos_decomp_queue+8).w,a1
 	rept (Kos_decomp_queue_End-(Kos_decomp_queue+8))/4
 	move.l	(a1)+,(a0)+
 	endm
 .return:
+	rts
+.moduleReady:
+	; Protect the decoded module before foreground code can decode a song
+	; into the same output bank. Later decodes drain this pending DMA first.
+	tst.w	(Kos_modules_left).w
+	bmi.w	Process_Kos_Module_Queue
 	rts

@@ -232,6 +232,95 @@ def live_checks(a):
 	return [str(live(a,act)) for act in (0,1)]
 
 
+def ghz_face_checks(a):
+	"""Reproduce the arena/music handoff, then inspect every pilot expression."""
+	from genesis_test_core import Genesis
+	from check_object_course import boot_level,objects
+	from check_companion_followup import isolate,place,spawn
+	g = Genesis(a.core,a.rom,a.listing,a.output,a.pal,
+		system_directory=a.system_directory)
+	s,rom = g.s,a.rom.read_bytes()
+	expected = (ROOT/'art/uncompressed/Eggman face.unc').read_bytes()
+	assert unpack(rom,s['Kospm_EggmanFace'])==expected
+	def vram(address,count):
+		return bytes(g.vram[(address+i)^1] for i in range(count))
+	def check_head():
+		actual = vram(s['ArtTile_EggmanFace']*32,len(expected))
+		bad = [i for i in range(len(expected)//32)
+			if actual[i*32:(i+1)*32]!=expected[i*32:(i+1)*32]]
+		assert not bad,('GHZ head art corrupted during boss/music loading',bad)
+	boot_level(g,zone=0,act=2)
+	g.put('v_player2','code',0)
+	for field,value,size in (
+		('obX',s['BGHZ_CenterX'],2),('obY',s['boss_ghz_y']+0xB0,2),
+		('obVelX',0,2),('obVelY',0,2),('obInertia',0,2),('obControl',1,1),
+		('obRoutine',2,1),('flashtime',6000,2)):
+		g.put('v_player',field,value,size)
+	g.write('v_rings',99,2)
+	for tick in range(1500):
+		g.run()
+		assert not g.read('v_errortype'),('GHZ exception',tick)
+		ships = [obj for obj in objects(g,0x3D) if g.get(obj,'obRoutine')==2]
+		if ships and g.get(ships[0],'ob2ndRout')==s['BGHZ_Patrol']:
+			break
+	else:
+		raise AssertionError('GHZ boss did not deploy')
+	check_head()
+	g.video.save(a.output/'ghz-deployed.png')
+	# Include the remaining module loads: multi-module archives share the fix.
+	plc = s['PLC_GHZBoss']
+	for i in range(struct.unpack_from('>H',rom,plc)[0]+1):
+		source,dest = struct.unpack_from('>IH',rom,plc+2+i*6)
+		raw = unpack(rom,source)
+		assert vram(dest,len(raw))==raw,('GHZ boss PLC bank mismatch',hex(dest))
+	# Clear the fixture's planes to expose the pilot without the waterfall.
+	# The arena above uses unmodified art loading, music and boss constructors.
+	camx,camy = g.read('Camera_X_pos',2),g.read('Camera_Y_pos',2)
+	isolate(g)
+	place(g,'v_player',camx+40,camy+200,False)
+	g.put('v_player','obControl',0x81)
+	for name,value in (
+		('Camera_Min_X_pos',camx),('Camera_Max_X_pos',camx),('Camera_Max_X_pos_target',camx),
+		('Camera_Min_Y_pos',camy),('Camera_Max_Y_pos',camy),('Camera_Max_Y_pos_target',camy)):
+		g.write(name,value,2)
+	x,y = camx+160,camy+120
+	hull,face = [spawn(g,'DisplaySprite',x,y) for _ in range(2)]
+	for obj,mapping in ((hull,'Map_Eggman'),(face,'Map_GHZBoss_Cockpit')):
+		for field,value,size in (
+			('obMap',s[mapping],4),('obGfx',s['ArtTile_Eggman']|0x8000,2),
+			('obRender',4,1),('obPriority',0x180,2),
+			('width_pixels',s[mapping+'_width'],1),('height_pixels',s[mapping+'_height'],1)):
+			g.put(obj,field,value,size)
+	g.run(30)
+	for base in (s['vram_fg'],s['vram_bg']):
+		for i in range(0x1000):g.vram[(base+i)^1] = 0
+	banks = [(s['ArtTile_Eggman'],unpack(rom,s['Kospm_OldEggPod'])),
+		(s['ArtTile_EggmanFace'],expected)]
+	checked = 0
+	for flip in (0,1):
+		for pose,row in enumerate(frames(rom,s['Map_GHZBoss_Cockpit'],7)):
+			for obj in (hull,face):
+				g.put(obj,'obRender',4|flip)
+				g.put(obj,'obStatus',flip)
+			g.put(face,'obFrame',pose)
+			g.run(4)
+			assert not g.read('v_errortype')
+			check_head()
+			for (px,py),(line,index) in raster(row,banks,s['ArtTile_Eggman']).items():
+				if py>=-21:continue	# the hull/cockpit has its own overlap order
+				color = g.read(s['v_palette']+(line*16+index)*2,2)
+				r,green,b = (color>>shift&14 for shift in (0,4,8))
+				rgb = (((r<<1)|(r>>3))*255//31,
+					((green<<2)|(green>>2))*255//63,((b<<1)|(b>>3))*255//31)
+				point = (x-g.read('Camera_X_pos_copy',2)+(-px-1 if flip else px),
+					y-g.read('Camera_Y_pos_copy',2)+py)
+				assert g.video.getpixel(point)==rgb,('GHZ pilot pixel',pose,flip,point)
+				checked += 1
+			g.video.save(a.output/f'ghz-pose{pose}-flip{flip}.png')
+	g.close()
+	return [f'GHZ arena/music handoff: all {len(expected)//32} pilot tiles and six boss banks intact; 14 poses/facings, {checked} rendered head pixels']
+
+
 def main():
 	p = argparse.ArgumentParser(description=__doc__)
 	p.add_argument('--rom',type=Path,default=ROOT/'s2built.bin')
@@ -242,12 +331,17 @@ def main():
 	p.add_argument('--core',type=Path)
 	p.add_argument('--system-directory',type=Path)
 	p.add_argument('--pal',action='store_true')
+	p.add_argument('--ghz-faces-only',action='store_true',help='Only check GHZ arena/music loading and all pilot expressions')
 	a = p.parse_args()
 	assert bool(a.reference_rom)==bool(a.reference_listing)
 	a.output.mkdir(parents=True,exist_ok=True)
-	result = native_checks(a)
-	if a.core:
-		result += live_checks(a)
+	if a.ghz_faces_only:
+		if not a.core or not a.system_directory:p.error('--ghz-faces-only requires --core and --system-directory')
+		result = ghz_face_checks(a)
+	else:
+		result = native_checks(a)
+		if a.core:
+			result += live_checks(a)
 	(a.output/'report.json').write_text(json.dumps(result,indent=2)+'\n')
 	for row in result:
 		print(row+': passed')

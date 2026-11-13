@@ -314,7 +314,12 @@ consumes DMA and updates queue bookkeeping, with no decoder or CD wait.
 batch falls through to the queue-pop loop. `RunPLC_RAM` shares that loop's final
 return without entering the VBlank bookkeeping path.
 Kosinski modules use a separate stable output bank and the same publication
-boundary. Direct scene loaders use a DMA-only VBlank before reusing output.
+boundary. `Process_Kos_Queue` marks the completed module for DMA before returning
+to foreground code. A later general decode therefore drains that upload before
+reusing the output bank. Waiting until the end-of-frame module update leaves a
+gap: GHZ's boss-song decode can replace the first 621 bytes of its newly decoded
+pilot art, corrupting only the expressions that reference those tiles. Direct
+scene loaders use a DMA-only VBlank before reusing output.
 
 Active-level waits permit palette interrupts. Before handing Word RAM to CD,
 the transport completes any previous deferred HBlank terrain writes; those
