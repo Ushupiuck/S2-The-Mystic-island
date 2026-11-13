@@ -325,7 +325,7 @@ def placements(source):
                 subtype = 0x70 | (subtype & 15)  # full spikeball; $5x retains a solid top
             if oid == 0x26:
                 # S1 has unused high-nibble monitor variants; decode the item.
-                subtype = {0:0,1:3,2:2,3:5,4:6,5:7,6:4,7:0,8:0}[subtype & 15]
+                subtype = {0:0,1:0,2:9,3:6,4:2,5:7,6:1,7:0,8:0}[subtype & 15]
             if oid == 0x32:
                 subtype &= 15   # original SBZ switches use normal press behavior
             if act == 2 and oid == 0x0D:

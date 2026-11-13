@@ -52,6 +52,11 @@ loc_AECA:
 .live:
 		move.b	#$46,obColType(a0)
 		move.w	obSubtype(a0),d0
+		andi.w	#$F,d0
+		cmpi.w	#MonitorType_Count,d0
+		blo.s	.type_ready
+		moveq	#MonitorType_Eggman,d0
+.type_ready:
 		move.b	d0,obAnim(a0)
 
 loc_AED6:
@@ -117,7 +122,7 @@ Mon_Animate:
 
 loc_AFC4:
 		out_of_range2	PlatformMount_CullChild
-		bra.w	DisplaySprite
+		jmp	(MonitorArt_Draw).l
 ; ---------------------------------------------------------------------------
 
 loc_AFDC:
@@ -159,4 +164,4 @@ loc_B020:
 		jsr	(Object_RespawnConsume).l
 .no_state:
 		move.b	#$A,obAnim(a0)
-		bra.w	DisplaySprite
+		jmp	(MonitorArt_Draw).l

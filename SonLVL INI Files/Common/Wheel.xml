@@ -27,11 +27,11 @@
 		</ImageFromMappings>
 		<ImageFromMappings id="payload5">
 			<ArtFile filename="../art/nemesis/Monitor and contents.nem" />
-			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="5" startpal="0" />
+			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="2" startpal="0" />
 		</ImageFromMappings>
 		<ImageFromMappings id="payload6">
 			<ArtFile filename="../art/nemesis/Monitor and contents.nem" />
-			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="7" startpal="0" />
+			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="3" startpal="0" />
 		</ImageFromMappings>
 		<ImageFromMappings id="payload7">
 			<ArtFile filename="../art/nemesis/Spikes.nem" />

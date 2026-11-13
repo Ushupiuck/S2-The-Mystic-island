@@ -8,8 +8,8 @@ The editable 40x32 source preserves the original pixels. Packed rectangles
 omit transparent tiles. Mecha's board shares his palette; only the post
 retains the primary palette.
 
-Monitor contents keep their 60-tile allocation. Move the Tails portrait from
-tiles 28-31 to 56-59 so the 26-tile signpost buffer cannot overwrite it.
+Monitor generation is delegated to build_monitor_art.py; its permanent Tails
+portrait remains at tiles 56-59, beyond the 26-tile signpost buffer.
 The original Signpost.bin is the editable source for the first six frames.
 """
 from pathlib import Path
@@ -179,22 +179,8 @@ def main():
     lines.append('\t\teven\n')
     (ROOT/'mappings/spriteDPLC/Signpost.asm').write_text(''.join(lines))
 
-    path = ROOT/'mappings/sprite/Monitor.bin'
-    monitor = frames(path.read_bytes())
-    raw_path = ROOT/'art/nemesis/Monitor and contents.unc'
-    raw = raw_path.read_bytes()
-    assert len(raw) == 60*32
-    portrait = monitor[3][0][2] & 0x7FF
-    if portrait == 28:
-        raw = raw[:28*32]+raw[32*32:]+raw[28*32:32*32]
-        monitor = [[(y,size,(tile&~0x7FF) | (56 if (tile&0x7FF)==28 else
-                            (tile&0x7FF)-4 if 32<=tile&0x7FF<60 else tile&0x7FF),x)
-                    for y,size,tile,x in pieces] for pieces in monitor]
-        path.write_bytes(mapping_file(monitor))
-        raw_path.write_bytes(raw)
-    else:
-        assert portrait == 56, 'Unexpected monitor art layout'
-    (ROOT/'art/nemesis/Monitor and contents.nem').write_bytes(nemesis_inline(raw))
+    from build_monitor_art import generate as monitor_art
+    for name,data in monitor_art().items():(ROOT/name).write_bytes(data)
     maximum = max(sum((x>>12)+1 for x in r) for r in runs)
     assert maximum == 26 and maximum <= 56
     mecha_tiles = sum((x>>12)+1 for x in runs[6])

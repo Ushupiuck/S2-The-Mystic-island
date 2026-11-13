@@ -51,7 +51,7 @@ def main():
         g.buttons = {5} if charge else set()
         return obj
 
-    obj = setup(6, charge=True)
+    obj = setup(2, charge=True)
     landed = False
     dust_visible = False
     dust = g.get('v_player', 'player_dust_ptr', 2)
@@ -72,7 +72,7 @@ def main():
 
     for name, subtype, rings, shield, invincible, flashing in (
             ('blank', 0, 40, False, False, False),
-            ('eggman', 3, 40, False, False, False),
+            ('eggman', 0, 40, False, False, False),
             ('blank_zero_rings', 0, 0, False, False, False),
             ('blank_shield', 0, 0, True, False, False),
             ('blank_invincible', 0, 40, False, True, False),

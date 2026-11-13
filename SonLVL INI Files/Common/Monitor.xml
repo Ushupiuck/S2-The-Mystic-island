@@ -1,32 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ObjDef xmlns="http://www.sonicretro.org" Name="Monitor" Image="static">
+<ObjDef xmlns="http://www.sonicretro.org" Name="Monitor" Image="eggman">
 	<Images>
-		<ImageFromMappings id="static">
+		<ImageFromMappings id="eggman">
 			<ArtFile filename="../art/nemesis/Monitor and contents.nem" />
 			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="1" startpal="0" />
 		</ImageFromMappings>
-		<ImageFromMappings id="sonic">
+		<ImageFromMappings id="rings">
 			<ArtFile filename="../art/nemesis/Monitor and contents.nem" />
-			<ArtFile filename="../art/nemesis/Sonic lives counter.nem" offset="21856" />
 			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="2" startpal="0" />
 		</ImageFromMappings>
-		<ImageFromMappings id="tails">
+		<ImageFromMappings id="shield">
 			<ArtFile filename="../art/nemesis/Monitor and contents.nem" />
 			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="3" startpal="0" />
 		</ImageFromMappings>
-		<ImageFromMappings id="eggman">
+		<ImageFromMappings id="water">
 			<ArtFile filename="../art/nemesis/Monitor and contents.nem" />
 			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="4" startpal="0" />
 		</ImageFromMappings>
-		<ImageFromMappings id="rings">
+		<ImageFromMappings id="fire">
 			<ArtFile filename="../art/nemesis/Monitor and contents.nem" />
 			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="5" startpal="0" />
 		</ImageFromMappings>
-		<ImageFromMappings id="shoes">
+		<ImageFromMappings id="electric">
 			<ArtFile filename="../art/nemesis/Monitor and contents.nem" />
 			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="6" startpal="0" />
 		</ImageFromMappings>
-		<ImageFromMappings id="shield">
+		<ImageFromMappings id="shoes">
 			<ArtFile filename="../art/nemesis/Monitor and contents.nem" />
 			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="7" startpal="0" />
 		</ImageFromMappings>
@@ -34,63 +33,46 @@
 			<ArtFile filename="../art/nemesis/Monitor and contents.nem" />
 			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="8" startpal="0" />
 		</ImageFromMappings>
-		<ImageFromMappings id="random">
+		<ImageFromMappings id="sonic">
 			<ArtFile filename="../art/nemesis/Monitor and contents.nem" />
+			<ArtFile filename="../art/nemesis/Sonic lives counter.nem" offset="21856" />
 			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="9" startpal="0" />
 		</ImageFromMappings>
-		<ImageFromMappings id="spring">
+		<ImageFromMappings id="tails">
 			<ArtFile filename="../art/nemesis/Monitor and contents.nem" />
 			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="10" startpal="0" />
 		</ImageFromMappings>
-		<ImageFromMappings id="broken">
-			<ArtFile filename="../art/nemesis/Monitor and contents.nem" />
-			<MapFile type="Binary" filename="../mappings/sprite/Monitor.bin" frame="11" startpal="0" />
-		</ImageFromMappings>
 	</Images>
 	<Subtypes>
-		<Subtype id="00" name="Static" image="static" />
-		<Subtype id="01" name="Sonic" image="sonic" />
-		<Subtype id="02" name="Tails" image="tails" />
-		<Subtype id="03" name="Eggman" image="eggman" />
-		<Subtype id="04" name="Rings" image="rings" />
-		<Subtype id="05" name="Shoes" image="shoes" />
-		<Subtype id="06" name="Shield" image="shield" />
+		<Subtype id="00" name="Eggman" image="eggman" />
+		<Subtype id="01" name="Rings" image="rings" />
+		<Subtype id="02" name="Regular shield" image="shield" />
+		<Subtype id="03" name="Water shield (reserved)" image="water" />
+		<Subtype id="04" name="Fire shield (reserved)" image="fire" />
+		<Subtype id="05" name="Electric shield (reserved)" image="electric" />
+		<Subtype id="06" name="Speed shoes" image="shoes" />
 		<Subtype id="07" name="Invincibility" image="invincibility" />
-		<Subtype id="08" name="Random" image="random" />
-		<Subtype id="09" name="Spring" image="spring" />
-		<Subtype id="0A" name="Broken" image="broken" />
+		<Subtype id="08" name="Double life (Sonic)" image="sonic" />
+		<Subtype id="09" name="Extra life (Tails)" image="tails" />
 	</Subtypes>
 	<Properties>
 		<BitsProperty name="Contents" type="MonitorType" startbit="0" length="4" />
 	</Properties>
 	<Enums>
 		<Enum name="MonitorType">
-			<EnumMember name="Static" />
-			<EnumMember name="Sonic" />
-			<EnumMember name="Tails" />
 			<EnumMember name="Eggman" />
 			<EnumMember name="Rings" />
-			<EnumMember name="Shoes" />
-			<EnumMember name="Shield" />
+			<EnumMember name="Regular shield" />
+			<EnumMember name="Water shield (reserved)" />
+			<EnumMember name="Fire shield (reserved)" />
+			<EnumMember name="Electric shield (reserved)" />
+			<EnumMember name="Speed shoes" />
 			<EnumMember name="Invincibility" />
-			<EnumMember name="Random" />
-			<EnumMember name="Spring" />
-			<EnumMember name="Broken" />
+			<EnumMember name="Double life (Sonic)" />
+			<EnumMember name="Extra life (Tails)" />
 		</Enum>
 	</Enums>
 	<Display>
-		<DisplayOption>
-			<Condition property="Contents" value="Static" />
-			<ImageRef image="static" />
-		</DisplayOption>
-		<DisplayOption>
-			<Condition property="Contents" value="Sonic" />
-			<ImageRef image="sonic" />
-		</DisplayOption>
-		<DisplayOption>
-			<Condition property="Contents" value="Tails" />
-			<ImageRef image="tails" />
-		</DisplayOption>
 		<DisplayOption>
 			<Condition property="Contents" value="Eggman" />
 			<ImageRef image="eggman" />
@@ -100,28 +82,36 @@
 			<ImageRef image="rings" />
 		</DisplayOption>
 		<DisplayOption>
-			<Condition property="Contents" value="Shoes" />
-			<ImageRef image="shoes" />
+			<Condition property="Contents" value="Regular shield" />
+			<ImageRef image="shield" />
 		</DisplayOption>
 		<DisplayOption>
-			<Condition property="Contents" value="Shield" />
-			<ImageRef image="shield" />
+			<Condition property="Contents" value="Water shield (reserved)" />
+			<ImageRef image="water" />
+		</DisplayOption>
+		<DisplayOption>
+			<Condition property="Contents" value="Fire shield (reserved)" />
+			<ImageRef image="fire" />
+		</DisplayOption>
+		<DisplayOption>
+			<Condition property="Contents" value="Electric shield (reserved)" />
+			<ImageRef image="electric" />
+		</DisplayOption>
+		<DisplayOption>
+			<Condition property="Contents" value="Speed shoes" />
+			<ImageRef image="shoes" />
 		</DisplayOption>
 		<DisplayOption>
 			<Condition property="Contents" value="Invincibility" />
 			<ImageRef image="invincibility" />
 		</DisplayOption>
 		<DisplayOption>
-			<Condition property="Contents" value="Random" />
-			<ImageRef image="random" />
+			<Condition property="Contents" value="Double life (Sonic)" />
+			<ImageRef image="sonic" />
 		</DisplayOption>
 		<DisplayOption>
-			<Condition property="Contents" value="Spring" />
-			<ImageRef image="spring" />
-		</DisplayOption>
-		<DisplayOption>
-			<Condition property="Contents" value="Broken" />
-			<ImageRef image="broken" />
+			<Condition property="Contents" value="Extra life (Tails)" />
+			<ImageRef image="tails" />
 		</DisplayOption>
 	</Display>
 </ObjDef>

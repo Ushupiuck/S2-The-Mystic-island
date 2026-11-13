@@ -343,12 +343,12 @@ WheelPayloads:
 		dc.b	-21,11,-15,17
 		dc.l	Monitor
 		dc.w	-21
-		dc.w	4
+		dc.w	MonitorType_Rings
 		dc.b	0,0; ring monitor
 		dc.b	-16,16,-17,15
 		dc.l	Monitor
 		dc.w	-21
-		dc.w	6
+		dc.w	MonitorType_Shield
 		dc.b	0,0; shield monitor
 		dc.b	-16,16,-17,15
 		dc.l	Spikes

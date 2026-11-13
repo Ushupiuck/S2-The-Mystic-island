@@ -102,7 +102,7 @@ def native(args):
 	count=struct.unpack_from('>H',rom,debug)[0];monitors=set()
 	from import_ehz2_pp_background import nemesis
 	resident=set()
-	for label,tiles in [('ArtTile_MMZ_Atlas',505),('ArtTile_Ring',32),('ArtTile_Monitor',60),('ArtTile_Spikes',16)]:
+	for label,tiles in [('ArtTile_MMZ_Atlas',505),('ArtTile_Ring',32),('ArtTile_Monitor',24),('ArtTile_Monitor_Icons',16),('ArtTile_Tails_Life',4),('ArtTile_Spikes',16)]:
 		resident.update(range(n.s[label],n.s[label]+tiles))
 	for label,file in [('ArtTile_MMZ_HVPlatform','Morphing Orbs'),('ArtTile_MMZ_Propeller','MM Propeller'),('ArtTile_Wheel','Wheel carrier'),('ArtTile_Springs','Springs')]:
 		raw=nemesis((ROOT/f'art/nemesis/{file}.nem').read_bytes())
@@ -115,7 +115,7 @@ def native(args):
 			_,size,tile,_=struct.unpack_from('>bBHh',rom,p+2+j*6)
 			first=(tile+gfx)&2047
 			assert set(range(first,first+((size>>2)+1)*((size&3)+1)))<=resident,(i,hex(first),'Debug tiles not resident')
-	assert monitors>={4,5,6,7}
+	assert monitors>={1,2,6,7}
 	return dict(eras=4,chunks_per_era=445,parallax_and_provider_cases=cases,debug_previews=count)
 
 

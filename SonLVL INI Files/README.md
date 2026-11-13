@@ -47,6 +47,14 @@ copies are separate and are not updated by the editor. See the
 [format and runtime contracts](../docs/Levels.md#mode-1-plane-engine).
 Mixed 128/256-pixel editor stamping remains future work.
 
+Monitor content IDs are Eggman `$0`, rings `$1`, regular shield `$2`, reserved
+water/fire/electric `$3-$5`, shoes `$6`, invincibility `$7`, Sonic double life
+`$8` and Tails extra life `$9`. The two life rewards retain two/one lives. The
+editor reads all source icons; runtime slots are shared through DPLCs. See
+[monitor art](../docs/Sprites-and-VRAM.md#monitor-contents) before adding dense
+mixed-content scenes. Existing placements, mounts, wheel presets and Debug
+entries use these IDs.
+
 ## Editing subtypes
 
 Select an object to see its named settings in the property grid. The raw

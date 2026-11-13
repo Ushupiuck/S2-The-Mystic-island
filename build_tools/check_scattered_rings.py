@@ -65,7 +65,7 @@ def check(args):
 			address = base+delta
 			count = int.from_bytes(m.cpu.mem_read(address, 2), 'big')
 			entries = [struct.unpack('>IIHBBH', bytes(m.cpu.mem_read(address+2+i*14, 14))) for i in range(count)]
-			for subtype in (4, 6, 7, 5):
+			for subtype in (1, 2, 7, 6):
 				index = next(i for i, entry in enumerate(entries) if entry[0] == m.s['Monitor'] and entry[2] == subtype)
 				assert entries[index][3] == subtype+1
 				m.start()
@@ -235,7 +235,7 @@ def game_checks(args):
 	# Render the four actual monitor reward icons using the level's loaded art.
 	isolate(g)
 	icons = []
-	for i, subtype in enumerate((4, 6, 7, 5)):
+	for i, subtype in enumerate((1, 2, 7, 6)):
 		a = spawn(g, 'Monitor', origin_x-48+i*40, floor-15, subtype)
 		icons.append((a, subtype))
 	seen = set()
@@ -246,7 +246,7 @@ def game_checks(args):
 				seen.add(subtype)
 		if all(g.get(a, 'obFrame') == subtype+1 for a, subtype in icons):
 			g.video.save(out/'monitor-icons.png')
-	assert seen == {4, 6, 7, 5}, seen
+	assert seen == {1, 2, 7, 6}, seen
 	assert all(g.get(a, 'obRender') & 128 for a, _ in icons), 'monitor icon left the visible scene'
 	g.close()
 	return dict(peak_scattered_rings=peak, tails_only_recoveries=picked,

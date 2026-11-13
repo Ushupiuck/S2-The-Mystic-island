@@ -1340,8 +1340,11 @@ MCD_CompressedAssets:
 	if defined(Nem_Masher)
 	dc.l Nem_Masher,Nem_Masher+$217	; art/nemesis/Enemy Masher.nem
 	endif
-	if defined(Nem_Monitors)
-	dc.l Nem_Monitors,Nem_Monitors+$9F0	; art/nemesis/Monitor and contents.nem
+	if defined(Nem_MonitorBodies)
+	dc.l Nem_MonitorBodies,Nem_MonitorBodies+$439	; art/nemesis/Monitor bodies.nem
+	endif
+	if defined(Nem_MonitorTailsLife)
+	dc.l Nem_MonitorTailsLife,Nem_MonitorTailsLife+$AA	; art/nemesis/Monitor Tails life.nem
 	endif
 	if defined(Nem_Monkey)
 	dc.l Nem_Monkey,Nem_Monkey+$13F	; art/nemesis/Flicky/Monkey.nem

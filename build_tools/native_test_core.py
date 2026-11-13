@@ -308,6 +308,7 @@ class Native:
 		self.write('v_gamemode', self.s['Level'], 2)
 		self.write('v_air', 30, 2)
 		self.act('Init_SpriteTable')
+		if 'MonitorArt_Reset' in self.s:self.act('MonitorArt_Reset')
 		for obj, object_id in [('v_player', 1), ('v_player2', 2)]:
 			for field, value, size in [('layout_id', object_id, 1), ('obRoutine', 2, 1),
 					('obRender', 0x84, 1), ('obHeight', 19, 1), ('obWidth', 9, 1),

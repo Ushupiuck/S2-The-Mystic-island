@@ -172,7 +172,10 @@ def main():
 						'unloaded mapping art', act, mapping, hex(low), hex(high))
 		if act == 4:
 			# The act's curated Debug entries must use art its own PLCs load.
-			available += [(symbols['ArtTile_Ring']*32, symbols['ArtTile_HUD']*32)]
+			available += [(symbols['ArtTile_Ring']*32, symbols['ArtTile_HUD']*32),
+				(symbols['ArtTile_Monitor_Icons']*32, symbols['ArtTile_Monitor_Free']*32)]
+			# Monitor previews stream into these declared slots; the monitor
+			# checker executes the actual atomic DPLCs and compares their pixels.
 			assert struct.unpack_from('>h',rom,symbols['DebugList']+6)[0]+symbols['DebugList']==symbols['Debug_GHZ4']
 			pos=symbols['Debug_GHZ4']
 			count=struct.unpack_from('>H',rom,pos)[0]

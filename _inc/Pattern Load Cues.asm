@@ -257,7 +257,8 @@ PLC_LivesTails_End:
 ; ---------------------------------------------------------------------------
 PLC_Main2:	dc.w ((PLC_Main2_End-PLC_Main2)/6)-1
 		plcm	Nem_Lamppost,	ArtTile_Lamppost
-		plcm	Nem_Monitors,	ArtTile_Monitor
+		plcm	Nem_MonitorBodies,	ArtTile_Monitor
+		plcm	Nem_MonitorTailsLife,	ArtTile_Tails_Life
 		plcm	Nem_VSpikes,	ArtTile_Spikes
 PLC_Main2_End:
 ; ---------------------------------------------------------------------------

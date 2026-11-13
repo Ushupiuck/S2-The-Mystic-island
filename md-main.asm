@@ -2339,6 +2339,7 @@ Level_ClrRam:
 		clearRAM v_timingvariables,v_timingvariables_end
 		move.b	d2,(Current_Timezone).w	; clearRAM only changes d0-d1/a1
 		jsr	(LCon_ResetWheels).l
+		jsr	(MonitorArt_Reset).l
 Level_WaterFlagInit:
 		move.w	(Current_ZoneAndAct).w,d0
 		ror.b	#2,d0
@@ -7039,28 +7040,29 @@ Obj1A_Conf_HPZ:
 
 ; ===========================================================================
 ; animation script
-Ani_obj26:	dc.w byte_B246-Ani_obj26
-		dc.w byte_B24A-Ani_obj26
-		dc.w byte_B252-Ani_obj26
-		dc.w byte_B25A-Ani_obj26
-		dc.w byte_B262-Ani_obj26
-		dc.w byte_B26A-Ani_obj26
-		dc.w byte_B272-Ani_obj26
-		dc.w byte_B27A-Ani_obj26
-		dc.w byte_B282-Ani_obj26
-		dc.w byte_B28A-Ani_obj26
-		dc.w byte_B292-Ani_obj26
-byte_B246:	dc.b   1,  0,  1,afEnd
-byte_B24A:	dc.b   1,  0,  2,  2,  1,  2,  2,afEnd
-byte_B252:	dc.b   1,  0,  3,  3,  1,  3,  3,afEnd
-byte_B25A:	dc.b   1,  0,  4,  4,  1,  4,  4,afEnd
-byte_B262:	dc.b   1,  0,  5,  5,  1,  5,  5,afEnd
-byte_B26A:	dc.b   1,  0,  6,  6,  1,  6,  6,afEnd
-byte_B272:	dc.b   1,  0,  7,  7,  1,  7,  7,afEnd
-byte_B27A:	dc.b   1,  0,  8,  8,  1,  8,  8,afEnd
-byte_B282:	dc.b   1,  0,  9,  9,  1,  9,  9,afEnd
-byte_B28A:	dc.b   1,  0, $A, $A,  1, $A, $A,afEnd
-byte_B292:	dc.b   2,  0,  1, $B,afBack,  1
+Ani_obj26:
+		dc.w .type0-Ani_obj26
+		dc.w .type1-Ani_obj26
+		dc.w .type2-Ani_obj26
+		dc.w .type3-Ani_obj26
+		dc.w .type4-Ani_obj26
+		dc.w .type5-Ani_obj26
+		dc.w .type6-Ani_obj26
+		dc.w .type7-Ani_obj26
+		dc.w .type8-Ani_obj26
+		dc.w .type9-Ani_obj26
+		dc.w .type10-Ani_obj26
+.type0:	dc.b 1,0,1,1,0,1,1,afEnd
+.type1:	dc.b 1,0,2,2,0,2,2,afEnd
+.type2:	dc.b 1,0,3,3,0,3,3,afEnd
+.type3:	dc.b 1,0,4,4,0,4,4,afEnd
+.type4:	dc.b 1,0,5,5,0,5,5,afEnd
+.type5:	dc.b 1,0,6,6,0,6,6,afEnd
+.type6:	dc.b 1,0,7,7,0,7,7,afEnd
+.type7:	dc.b 1,0,8,8,0,8,8,afEnd
+.type8:	dc.b 1,0,9,9,0,9,9,afEnd
+.type9:	dc.b 1,0,10,10,0,10,10,afEnd
+.type10:	dc.b 2,0,0,11,afBack,1
 		even
 ; ---------------------------------------------------------------------------
 		include	"objects/Enemies/22 Buzz Bomber.asm"
@@ -13454,7 +13456,11 @@ Nem_SpecialStageRings:	binclude "art/nemesis/Special stage rings.nem"
 		even
 Nem_Sparkles:	binclude	"art/nemesis/Ring Sparkles.nem"
 		even
-Nem_Monitors:	binclude	"art/nemesis/Monitor and contents.nem"
+Nem_MonitorBodies:	binclude "art/nemesis/Monitor bodies.nem"
+		even
+Nem_MonitorTailsLife:	binclude "art/nemesis/Monitor Tails life.nem"
+		even
+Art_MonitorIcons:	binclude "art/uncompressed/Monitor icons.unc"
 		even
 Nem_Lamppost:	binclude	"art/nemesis/Lamppost.nem"
 		even
@@ -15157,7 +15163,16 @@ Map_obj23:	binclude	"mappings/sprite/Buzz Bomber Missile.bin"
 		even
 Map_Ring:	binclude	"mappings/sprite/Ring.bin"			; $25
 		even
-Map_Obj26:	binclude	"mappings/sprite/Monitor.bin"
+Map_Obj26:	binclude	"mappings/sprite/Monitor DPLC 0.bin"
+		even
+Map_MonitorSlot1:	binclude "mappings/sprite/Monitor DPLC 1.bin"
+		even
+Map_MonitorSlot2:	binclude "mappings/sprite/Monitor DPLC 2.bin"
+		even
+Map_MonitorSlot3:	binclude "mappings/sprite/Monitor DPLC 3.bin"
+		even
+MonitorArt_Maps:	dc.l Map_Obj26,Map_MonitorSlot1,Map_MonitorSlot2,Map_MonitorSlot3
+DPLC_MonitorIcons:	binclude "mappings/spriteDPLC/Monitor.bin"
 		even
 Map_Obj2B:	binclude	"mappings/sprite/GHZ Chopper.bin"
 		even
