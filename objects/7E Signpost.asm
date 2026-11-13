@@ -167,8 +167,9 @@ Signpost_Sparkle:
 		lea	Signpost_RingSparklePositions(pc,d0.w),a2
 		jsr	(FindFreeObj).l
 		bne.s	.return
-		move.l	#Ring,code(a1)
-		move.b	#6,obRoutine(a1)
+		move.l	#Ring_Sparkle,code(a1)
+		move.b	#1,obFrame(a1)
+		move.b	#5,obTimeFrame(a1)
 		move.b	(a2)+,d0
 		ext.w	d0
 		add.w	obX(a0),d0

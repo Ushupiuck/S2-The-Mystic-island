@@ -51,6 +51,14 @@ def main():
         assert m.get(obj,'obRoutine')==4 and not m.read('f_timecount')
         assert m.get(obj,'obSubtype')==word
     checks.append('placed entry remains stationary and preserves the complete subtype word')
+    obj=setup();act('Signpost_Init',obj);m.put('v_player','obX',0x801,2)
+    act('Signpost_Main',obj);m.write('v_rings',37,2);act('Signpost_Spin',obj)
+    sparkle=next(a for a in m.pool() if m.get(a,'code')==m.s['Ring_Sparkle'])
+    assert not m.get(sparkle,'obColType') and m.get(sparkle,'obFrame')==1
+    for _ in range(24):act('Ring_Sparkle',sparkle)
+    assert m.get(sparkle,'code')==m.s['DeleteObject'] and m.read('v_rings',2)==37
+    act('DeleteObject',sparkle);assert not m.get(sparkle,'code')
+    checks.append('stationary sign emits non-collectible four-frame sparkles, never real rings')
     for speed,air,launched in ((0x5FF,0,False),(0x600,0,True),(0x1000,0,True),(0x600,2,False),(0xFA00,0,False)):
         obj=setup();act('Signpost_Init',obj)
         m.put('v_player','obX',0x830,2) # deliberately skip old 32px trigger window

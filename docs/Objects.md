@@ -424,7 +424,10 @@ The sign keeps spinning for `$40` countdown updates (65 calls before
 the negative-timer transition), then selects the primary character's portrait,
 locks neutral logical input and waits for the primary to reach the ground
 before loading the existing results. It stays in place instead of forcing
-an offscreen run. The classic finish still supports the giant-ring exit.
+an offscreen run. The classic finish still supports the giant-ring exit. Its stationary spin emits
+non-collectible ring sparkles through `Ring_Sparkle` directly, with the first
+sparkle frame and six-update timer initialized; it never calls the ring pickup
+constructor with an obsolete routine byte.
 No SST fields, RAM reservations or VRAM allocations grow.
 
 SMZ2's trap spins from Eggman through its own mixed frames to Mecha's bust.
