@@ -56,6 +56,12 @@ DAC sample indices, FM voice indices and coordination bytecode remain bytes.
 The 68000 holds the Z80 bus across two byte accesses per word: the Z80 RAM
 window does not support ordinary 68000 word transfers. Use `WriteZ80Word` and
 `ReadZ80Word`, with little-endian Z80 storage.
+Register operands are data registers. Writes preserve every register, use two
+temporary stack bytes and restore SP; byte postincrement of A7 advances by two.
+Reads replace only the destination's low word and preserve its upper word.
+Both macros clobber CCR. Their assembled sizes/base 68000 costs are 16 bytes/52
+cycles for writes and 14 bytes/54 cycles for reads, before hardware wait states.
+Z80 words remain packed, with no even-address padding requirement.
 
 | IDs (hex) | Current role |
 | --- | --- |
@@ -281,6 +287,7 @@ and builds the ROM again on a native Windows runner.
 
 ```sh
 python3 build_tools/sound/build.py --check
+python3 build_tools/check_sound_tools.py --mono /path/to/mono --bus-macros
 python3 build_tools/check_sound_playback.py --core /path/to/genesis_plus_gx_libretro.so \
 	--effects --jingles --priority --switches --startup
 python3 build_tools/check_sound_playback.py --core /path/to/genesis_plus_gx_libretro.so \
@@ -374,6 +381,11 @@ flat music placement, remaining SFX and DAC bank limits, unsupported imports
 and invalid or oversized input. Automatic storage fixtures cover an exact
 `$2000` fit, `$2001` overflow, incompressible data and a compressed/raw size tie. Every compressed project
 song is compared with fresh assembly through an independent Python decoder.
+`--bus-macros` also requires Unicorn. It executes the actual 68000 word-transfer
+macros across all data registers and odd/even Z80 addresses, exhausts all 65536
+word values on D0/even and D7/odd, and checks exact byte accesses, byte order,
+source/upper-word preservation, other registers and stack guards. This is a CPU
+and access-width check; it does not emulate Z80 bus arbitration or wait states.
 
 The historical `check_z80_kosinski_plus.py` fixture can still execute an older
 Z80 decoder given its source, ROM, listing and INI. Run it with

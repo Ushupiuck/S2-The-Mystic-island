@@ -3794,11 +3794,10 @@ zFrequencies:
 zMusicTickBusy:		db 0
 zMusicPageRequest:	db 0FFh
 zMusicCacheValid:	db 0
-	align 2
+	; Packed words need no even alignment: the MD accesses each byte separately.
 zMusicSongRequest:	dw 0
 zMusicLookahead:	db 0
 zMusicSlotBusy:		db 0
-	align 2
 zMusicReadySong:		dw 0
 zMusicReadySlot:		db 0
 zMusicReadyFlags:	db 0

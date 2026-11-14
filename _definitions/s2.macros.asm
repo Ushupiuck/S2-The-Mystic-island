@@ -514,12 +514,13 @@ mvabs macro source,destination
 	endm
 
 ; Global sound IDs are words, but the 68000's Z80 RAM window is byte-wide.
-; The caller holds the bus across both accesses. Preserve the written source.
+; The caller holds the bus across both accesses. Register operands are Dn.
+; Both macros clobber CCR. Write preserves every register, using two stack
+; bytes temporarily; MOVE.B (sp)+ advances A7 by two, restoring the stack.
 WriteZ80Word macro source,destination
-	move.b	source,(Z80_RAM+destination).l
-	ror.w	#8,source
-	move.b	source,(Z80_RAM+destination+1).l
-	ror.w	#8,source
+	move.w	source,-(sp)
+	move.b	1(sp),(Z80_RAM+destination).l
+	move.b	(sp)+,(Z80_RAM+destination+1).l
 	endm
 
 ReadZ80Word macro source,destination

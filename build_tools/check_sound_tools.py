@@ -54,10 +54,72 @@ def kosinski_plus(data):
 	return bytes(raw)
 
 
+def check_bus_macros(assemble):
+	"""Execute the actual 68000 macros with guarded byte-wide Z80 RAM."""
+	from unicorn import (Uc, UC_ARCH_M68K, UC_MODE_BIG_ENDIAN,
+		UC_HOOK_MEM_READ, UC_HOOK_MEM_WRITE, UC_MEM_READ, UC_MEM_WRITE)
+	from unicorn import m68k_const as reg
+	cpu = Uc(UC_ARCH_M68K, UC_MODE_BIG_ENDIAN)
+	cpu.ctl_set_cpu_model(reg.UC_CPU_M68K_M68000)
+	cpu.mem_map(0x1000, 0x10000)
+	cpu.mem_map(0xA00000, 0x2000)
+	cpu.reg_write(reg.UC_M68K_REG_SR, 0x2700)
+	registers = [getattr(reg, 'UC_M68K_REG_' + name + str(i))
+		for name, count in (('D', 8), ('A', 7)) for i in range(count)]
+	stack = 0x10000
+	accesses = []
+	def bus(cpu, access, address, size, value, unused):
+		assert size == 1, f'Non-byte Z80 access at {address:X}: {size}'
+		accesses.append((access, address, value if access == UC_MEM_WRITE else None))
+	cpu.hook_add(UC_HOOK_MEM_READ | UC_HOOK_MEM_WRITE, bus, begin=0xA00000, end=0xA01FFF)
+	edges = (0, 1, 0x7F, 0x80, 0xFF, 0x100, 0x17A, 0x180,
+		0x200, 0xFFF, 0x1000, 0x8000, 0xA180, 0xFFFF)
+	tests = 0
+	for number in range(8):
+		for offset in (0x100, 0x103):
+			base = 0x1000 + number*0x100 + (offset & 1)*0x80
+			prefix = 'Z80_RAM = $A00000\n'
+			write = assemble(prefix + f'\tWriteZ80Word d{number},${offset:X}\n')
+			read = assemble(prefix + f'\tReadZ80Word ${offset:X},d{number}\n')
+			cpu.mem_write(base, write)
+			cpu.mem_write(base+0x40, read)
+			initial = [0xA5000000 | (i+1)*0x10203 for i in range(len(registers))]
+			for register, value in zip(registers, initial):
+				cpu.reg_write(register, value)
+			cpu.reg_write(reg.UC_M68K_REG_A7, stack)
+			cpu.mem_write(stack-16, bytes([0xC3])*32)
+			address = 0xA00000+offset
+			values = range(0x10000) if (number, offset) in ((0, 0x100), (7, 0x103)) else edges
+			for value in values:
+				original = ((value*0x9E37 & 0xFFFF) << 16) | value
+				cpu.reg_write(registers[number], original)
+				cpu.mem_write(address-1, bytes((0x5A, 0xCC, 0xDD, 0xA5)))
+				accesses.clear()
+				cpu.emu_start(base, base+len(write), count=16)
+				assert accesses == [(UC_MEM_WRITE, address, value & 255), (UC_MEM_WRITE, address+1, value >> 8)]
+				assert bytes(cpu.mem_read(address-1, 4)) == b'\x5A'+value.to_bytes(2, 'little')+b'\xA5'
+				assert cpu.reg_read(registers[number]) == original, 'Write clobbered its source'
+				assert cpu.reg_read(reg.UC_M68K_REG_A7) == stack, 'Write unbalanced the stack'
+				cpu.reg_write(registers[number], original ^ 0xFFFF)
+				accesses.clear()
+				cpu.emu_start(base+0x40, base+0x40+len(read), count=16)
+				assert accesses == [(UC_MEM_READ, address+1, None), (UC_MEM_READ, address, None)]
+				assert cpu.reg_read(registers[number]) == original, 'Read lost bits or kept stale destination bits'
+				assert cpu.reg_read(reg.UC_M68K_REG_A7) == stack, 'Read unbalanced the stack'
+				for i, register in enumerate(registers):
+					if i != number:
+						assert cpu.reg_read(register) == initial[i], 'Clobbered an unrelated register'
+				assert bytes(cpu.mem_read(stack-16, 14)) == bytes([0xC3])*14
+				assert bytes(cpu.mem_read(stack, 16)) == bytes([0xC3])*16
+				tests += 1
+	print(f'Z80 bus macros: {tests} word round trips; all Dn, odd/even addresses, byte accesses, registers and stack guards.')
+
+
 def main():
 	p = argparse.ArgumentParser(description=__doc__)
 	p.add_argument('--mono', default=os.environ.get('MONO') or shutil.which('mono'))
 	p.add_argument('--tools-dir', type=Path)
+	p.add_argument('--bus-macros', action='store_true', help='Execute 68000/Z80 word macros with Unicorn as well')
 	args = p.parse_args()
 	if os.name != 'nt' and not args.mono:
 		p.error('Mono is required; use --mono /path/to/mono.')
@@ -102,6 +164,9 @@ def main():
 				return re.sub(r'\s+', ' ', message + (d / 'fixture.log').read_text())
 			run([p2bin, 'fixture.p', 'fixture.bin'], d)
 			return (d / 'fixture.bin').read_bytes()[origin:]
+
+		if args.bus_macros:
+			check_bus_macros(assemble)
 
 		# SFX output follows the same sound/ convention as the music packer.
 		(d / 'sound/SFX').mkdir()
