@@ -41,6 +41,11 @@ Author a distinct seventh rotating-stage layout; the current cyan stage is a cop
 Add Rustic Ruins Zone (Marble + Aquatic Ruin), Ancient Workbench (Labyrinth + Chemical plant), Toy Factory (Wacky Workbench + Carnival Night), Egg Mountain (Hill Top + Scrap brain + Metropolis)
 Fix HTZ scrolling to use a straight table, rather than a soup of chunk entries.
 Improve Boss_MoveObject < Not marked as done until I'm absolutely finished importing bosses (they tend to have their own version of this)
+Port CPZ/ARZ/CNZ/MCZ/MTZ boss controllers much later; prepared art/mappings are assembled, but no fights/PLCs/editor IDs are added. Reuse the universal S1 pod, streamed Eggman/EggRobo pilot and exhaust unless the owner explicitly requests an exception < FUTURE, explicitly deferred
+For those future arenas, merge prepared palette rows with visible terrain, implement CNZ's retained cycle tables, and allocate CPZ smoke/MCZ falling rocks outside the main weapon banks; review simultaneous ordinary-object lifetimes < FUTURE
+Hook MCZ's prepared drill DPLCs to two independent 29-tile buffers and cached/displayed phases; decode its 130-tile source outside VBlank, retain queued DMA sources and preserve the last complete mapping when the queue is full < FUTURE controller work
+Keep CPZ's planned chemical collection/attack and trapdoor/pit arena; add the orbiting spiked ball to limit consecutive safe hits (Launch Base precedent), with knockback into open trapdoors/pit intentionally lethal < FUTURE design, no controller port yet
+Consider EHZ drill DPLCs: retain the existing 4x4 drill sprites, stream one 16-tile phase instead of 32 resident tiles, and keep all 48 wheel tiles resident for independent wheel animation/breakup. Current EHZ allocation remains 128; the potential 112-tile bank ends at $4A3/$9460, 93 tiles before the capsule < FUTURE, separate runtime change
 Improve SSObjectMoveAndFall (if it exists)
 Research & Implement "Find_SonicTails" From S3&K into sonic 1
 Reimplement the following ram adress & code (allows for extra life past 200 rings):

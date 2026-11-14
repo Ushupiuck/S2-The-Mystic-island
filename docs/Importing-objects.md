@@ -20,6 +20,28 @@ offsets. [Objects](Objects.md) owns the SST, loading, dispatch and respawn ABI;
 5. Add editor properties/previews and, where useful, an act's Debug entry. Use
    [Testing](Testing.md) for source, art, collision and actual-level checks.
 
+## Asset-only boss preparation
+
+CPZ, ARZ, CNZ, MCZ and MTZ currently stop before the controller, PLC and editor
+steps above. Their prepared banks, palette roles, source revision and VRAM
+budgets are owned by [Sprites and VRAM](Sprites-and-VRAM.md#prepared-sonic-2-boss-weapons).
+There are no new playable encounters or placement IDs for them.
+
+Each boss has one `mappings/sprite/ZONE Boss.asm` file. Source weapon frame IDs
+are retained; frames containing only the omitted shared pod/pilot are empty.
+ARZ keeps weapon and pillar families together. CPZ smoke and MCZ debris have
+separate mapping families/art lifetimes in their boss's same mapping file.
+MCZ's main family keeps source drill frames 2, 3, 4, 8, 9, 10 and 11 for slot A,
+then appends frames 21-27 for slot B; the two byte lookup tables map DPLC phases
+to those frames. Its source debris frames 13/20 move to `Map_MCZBoss_Debris`.
+CNZ's unused source frame zero is normalized to empty.
+
+The future controllers must compose these weapons with the universal pod,
+pilot and exhaust. New constructors will reference their actual mapping bounds,
+which lets the existing bounds generator discover them without a registry.
+Current asset tests inspect every compiled frame directly; they do not stand
+in for the deferred arena, collision, palette and lifecycle checks.
+
 ## Worked example: EHZ boss
 
 `objects/55 EHZ Boss.asm` adapts Sonic 2 final's boss from s2disasm
@@ -41,7 +63,7 @@ requires suitable bounds, or maxima covering every set the object uses.
 | Mapping | Frames | Display half-width | Display half-height |
 | --- | ---: | --- | --- |
 | `Map_EHZBoss_Vehicle` (S1 hull) | 1 | `$24` | `$18` |
-| `Map_EHZBoss_Cockpit` | 7 | `$15` | `$27` |
+| `Map_EHZBoss_Cockpit` | 11 | `$14` | `$21` |
 | `Map_EHZBoss_Ground` | 8 | `$30` | `$10` |
 | `Map_BossExplosion` (shared S2 fiery effect) | 7 | `$10` | `$10` |
 

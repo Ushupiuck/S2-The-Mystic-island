@@ -21,6 +21,13 @@ BANKS = (
 	('Exhaust', 'Boss exhaust', 'Nem_Exhaust'),
 	('Prison', 'Prison Capsule', 'Nem_Prison'),
 	('EHZ_Boss', 'EHZ boss', 'Nem_EHZ_Boss'),
+	('CPZBossWeapons', 'CPZ boss weapons', None),
+	('ARZBossWeapons', 'ARZ boss weapons', None),
+	('CNZBossWeapons', 'CNZ boss weapons', None),
+	('MCZBossWeapons', 'MCZ boss weapons', None),
+	('MTZBossWeapons', 'MTZ boss weapons', None),
+	('CPZBossSmoke', 'CPZ boss smoke', None),
+	('MCZBossDebris', 'MCZ boss debris', None),
 	('BossExplosion', 'Large explosion', 'Nem_BossExplosion'),
 	('MechaEffects', 'Mecha Sonic effects', 'Nem_MechaEffects'),
 	('Bonus', 'Hidden bonus', 'Nem_Bonus'),
@@ -91,11 +98,18 @@ def main():
 		(ROOT / f'art/moduled kosinski/{name}.kospm').write_bytes(packed)
 		report.append(dict(label='Kospm_'+label, raw=len(raw),
 			packed=len(packed), odd=bool(len(packed) & 1)))
+	# One immutable source contains every MCZ drill phase. A plain archive
+	# lets the ordinary RAM decoder prepare it without a one-module limit.
+	drills = (ROOT/'art/uncompressed/MCZ boss drills.unc').read_bytes()
+	packed = bytes(kosinski_plus(drills))
+	assert kosinski_plus_decode(packed)[0]==drills
+	(ROOT/'art/kosinski/MCZ boss drills.kosp').write_bytes(packed)
+	report.append(dict(label='Kos_MCZBossDrills',raw=len(drills),packed=len(packed),odd=bool(len(packed)&1)))
 	report.append(pack_fz_damaged_eggmobile())
 	if a.report:
 		a.report.write_text(json.dumps(report, indent=2)+'\n')
-	print(f'{len(report)} resident banks: {sum(x["raw"] for x in report)} raw '
-		f'-> {sum(x["packed"] for x in report)} moduled Kosinski+ bytes.')
+	print(f'{len(report)} end-of-act banks: {sum(x["raw"] for x in report)} raw '
+		f'-> {sum(x["packed"] for x in report)} Kosinski+ bytes.')
 
 
 if __name__ == '__main__':

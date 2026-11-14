@@ -1928,6 +1928,7 @@ EHZBoss_MetalColor = $A88
 
 ArtTile_Eggman:			equ $3F0
 ArtTile_Eggman_Weapons:		equ $434	; 42 shared S1 boss-weapon tiles immediately after the head buffer
+ArtTile_BossWeapons:		equ ArtTile_Eggman_Weapons ; alternative prepared S2 weapon banks share this start
 ArtTile_Eggman_Button:		equ $4A4
 ArtTile_Eggman_Spikeball:	equ $518
 ArtTile_Eggman_Trap_Floor:	equ $518

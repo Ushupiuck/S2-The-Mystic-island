@@ -312,6 +312,24 @@ positioned fixtures, not full-stage controller routes.
 
 ## Boss runtime checks
 
+Prepared CPZ/ARZ/CNZ/MCZ/MTZ assets have a separate source/mapping check:
+
+```sh
+python build_tools/import_s2_boss_weapons.py --source /path/to/s2disasm --check
+python build_tools/check_s2_boss_weapons.py --source /path/to/s2disasm --output test-results/s2-weapons
+python build_tools/check_s2_boss_weapons.py --source /path/to/s2disasm --core /path/to/core.so --system-directory /path/to/mode1-fixture --output test-results/s2-weapons/game
+```
+
+The checker compares source indexed pixels with all 135 compiled frames,
+checks tile bounds and the packing sprite budgets, and executes the CD RAM
+decoder plus generic DPLC loader for all 49 independent MCZ drill-phase pairs.
+It also checks unchanged-phase caching and rejection of a full DMA queue.
+`--core` adds 540 frame/flip cases through the real renderer/VDP with exact
+pixel samples. The gallery's actors, positions, prepared palettes and raw
+cache uploads are fixtures; uploads use the real DMA queue. These checks do
+not implement or validate new boss controllers, arena colors or CNZ cycling.
+Add `--pal` for PAL; both Genesis Plus GX and ClownMDEmu are supported.
+
 ```sh
 python build_tools/check_ghz_boss.py --rom s2built.bin --listing md-main.lst --output test-results/ghz-boss/native
 python build_tools/check_boss_shared_art.py --ghz-faces-only --core /path/to/core.so --system-directory /path/to/mode1-fixture --output test-results/ghz-boss/faces

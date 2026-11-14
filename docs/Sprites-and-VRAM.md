@@ -304,6 +304,10 @@ LZ's per-act module lists load the resident bank; another zone must load it too.
 
 ### Shared Eggman heads and exhaust
 
+Eggman uses this same complete Sonic 1 pod for every boss unless the owner
+explicitly requests an exception. Imported weapon art must reuse the existing
+pod, streamed pilot and exhaust instead of bringing a second Eggpod bank.
+
 GHZ and EHZ share the complete Sonic 1
 Eggpod: its hull, cockpit, seven head poses and full escape flame. EHZ keeps
 Sonic 2's car/wheels/drill. Its pod/cockpit mappings draw the S1 pixels four
@@ -402,6 +406,71 @@ frame bytes at `$2E/$2F`, source long at `$34` and animation-table long at `$40`
 overlap the parent long at `$38`. Each caller validates its parent's code and main routine.
 The arena stays in level mode through escape and the real capsule. See
 [the import guide](Importing-objects.md#arena-and-art-lifetime) for live ranges.
+
+### Prepared Sonic 2 boss weapons
+
+CPZ, ARZ, CNZ, MCZ and MTZ have imported art and ordinary six-byte mappings,
+assembled into the ROM without controllers, active PLCs, placements or Debug
+entries. These are prepared assets, not playable new bosses. Their alternative
+weapon banks start at `ArtTile_BossWeapons = $434` (`$8680`), immediately after
+the shared head buffer. The capsule starts at `$501` (`$A020`).
+
+| Boss | Source tiles | Prepared resident tiles | Last tile / VRAM start | Free tiles before capsule |
+| --- | ---: | ---: | --- | ---: |
+| EHZ, current baseline | 128 | 128 | `$4B3 / $9660` | 77 |
+| CPZ | 111 | 109 | `$4A0 / $9400` | 96 |
+| ARZ | 166 | 147 | `$4C6 / $98C0` | 58 |
+| CNZ | 133 | 129 | `$4B4 / $9680` | 76 |
+| MCZ | 204 | 105 | `$49C / $9380` | 100 |
+| MTZ | 124 | 108 | `$49F / $93E0` | 97 |
+
+The last-tile column gives its starting byte, not the end-exclusive boundary.
+ARZ is closest: its bank ends at `$4C7 / $98E0`, leaving 58 tiles (1,856 bytes)
+before `$A020`. CPZ's sixteen smoke tiles and MCZ's eight falling-rock tiles
+are separate extras, excluded from these banks. Their future arenas must choose
+separate lifetimes/allocations for them.
+
+MCZ's 105-tile reservation is 47 static tiles plus **two independent 29-tile
+drill buffers**: static `$434-$462`, drill A `$463-$47F`, drill B `$480-$49C`.
+Its immutable 130-tile drill source uses plain Kosinski+ in
+`art/kosinski/MCZ boss drills.kosp`; the other prepared banks use moduled
+Kosinski+. The single `mappings/spriteDPLC/MCZ boss drills.asm` cue family uses
+`Load_DynamicPLC`. A later controller must decode the source outside VBlank,
+retain it while DMA is pending, and maintain a separate cached/displayed phase
+for each drill. Queue rejection must retain the last complete mapping. No drill
+runtime or new persistent RAM reservation is implemented here.
+
+`build_tools/import_s2_boss_weapons.py --source PATH --write` explicitly
+reimports from sonicretro/s2disasm revision
+`4c5dc02b3eea186c3f80a020447b206343f30c0a`; `--check` verifies reproduction.
+After importing, the `.unc` banks and mapping ASM are editable. Ordinary builds
+only repack art through `build_end_art.py`; they do not rerun the optimizer.
+Packing reuses matching/flipped tile blocks and trims blank borders, allowing
+at most two extra mapping pieces per frame, one extra sprite per scanline and
+no increase in sprite width on any scanline. Remaining blank tiles can preserve
+cheaper sprite arrangements. This is a bounded packing search, not a proof of
+the smallest possible atlas.
+
+Sky Sanctuary's alternative was checked against skdisasm revision
+`73de97c6b55055bcb8089c1d55d006b02136f163`,
+`Levels/SSZ/KosinskiM Art/MTZ Orbs.kosm` and its matching mappings. Its raw
+117-tile sheet omits six tiles of S2's laser-cannon fittings; its orbs occupy
+37 tiles instead of 40, while its changed balloon stages use 63 instead of
+61. The prepared bank retains S2's balloon shapes and cannon parts at 108
+tiles. Cosmetic changes to bring those balloons closer to the universal pod
+remain later artwork work; the S&K balloon graphics are not substituted.
+With the same bounded packer, isolated S2/S&K component costs are 29/31 tiles
+for orbs, 4/6 for lasers and 9/9 for bursts. S&K's laser is 48 rather than 64
+pixels wide; two of its orb-deformation frames need one fewer mapping piece.
+These component counts are separate packing comparisons, not additive bank
+totals. The prepared S2 bank already uses symmetry and repeated-block reuse.
+
+Primary-palette weapon pieces translate Sonic 2's color roles into the current
+player palette, including its three-blue ramp. CPZ retains its secondary-row
+index roles. `palette/* Boss Weapons.bin` stores prepared rows 1-3; shared metal
+slots use the current fixed ramp. CNZ's three cycle tables retain their source
+indices. Arena-specific palette merging and cycle code remain deferred; no
+active level palette is changed by this preparation.
 
 ### Boss explosions
 

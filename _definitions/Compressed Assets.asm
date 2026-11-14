@@ -542,6 +542,9 @@ MCD_CompressedAssets:
 	if defined(GMap16_MTZ)
 	dc.l GMap16_MTZ,GMap16_MTZ+$B89	; mappings/16x16/MTZ.kosp
 	endif
+	if defined(Kos_MCZBossDrills)
+	dc.l Kos_MCZBossDrills,Kos_MCZBossDrills+$82A	; art/kosinski/MCZ boss drills.kosp
+	endif
 	if defined(Kosp_CPZ)
 	dc.l Kosp_CPZ,Kosp_CPZ+$28DA	; art/kosinski/level/8x8 - CPZ.kosp
 	endif
@@ -584,6 +587,9 @@ MCD_CompressedAssets:
 	if defined(Kosp_TitleBg2)
 	dc.l Kosp_TitleBg2,Kosp_TitleBg2+$142	; tilemaps/Title Background - 2.kosp
 	endif
+	if defined(Kospm_ARZBossWeapons)
+	dc.l Kospm_ARZBossWeapons,Kospm_ARZBossWeapons+$A07	; art/moduled kosinski/ARZ boss weapons.kospm
+	endif
 	if defined(Kospm_BBat)
 	dc.l Kospm_BBat,Kospm_BBat+$361	; art/moduled kosinski/Enemy BBat.kospm
 	endif
@@ -610,6 +616,15 @@ MCD_CompressedAssets:
 	endif
 	if defined(Kospm_Buzz)
 	dc.l Kospm_Buzz,Kospm_Buzz+$340	; art/moduled kosinski/Enemy Buzz Bomber.kospm
+	endif
+	if defined(Kospm_CNZBossWeapons)
+	dc.l Kospm_CNZBossWeapons,Kospm_CNZBossWeapons+$7D1	; art/moduled kosinski/CNZ boss weapons.kospm
+	endif
+	if defined(Kospm_CPZBossSmoke)
+	dc.l Kospm_CPZBossSmoke,Kospm_CPZBossSmoke+$107	; art/moduled kosinski/CPZ boss smoke.kospm
+	endif
+	if defined(Kospm_CPZBossWeapons)
+	dc.l Kospm_CPZBossWeapons,Kospm_CPZBossWeapons+$535	; art/moduled kosinski/CPZ boss weapons.kospm
 	endif
 	if defined(Kospm_Cater)
 	dc.l Kospm_Cater,Kospm_Cater+$13E	; art/moduled kosinski/Enemy Caterkiller.kospm
@@ -667,6 +682,15 @@ MCD_CompressedAssets:
 	endif
 	if defined(Kospm_LzWheel)
 	dc.l Kospm_LzWheel,Kospm_LzWheel+$206	; art/moduled kosinski/LZ conveyor.kospm
+	endif
+	if defined(Kospm_MCZBossDebris)
+	dc.l Kospm_MCZBossDebris,Kospm_MCZBossDebris+$DE	; art/moduled kosinski/MCZ boss debris.kospm
+	endif
+	if defined(Kospm_MCZBossWeapons)
+	dc.l Kospm_MCZBossWeapons,Kospm_MCZBossWeapons+$300	; art/moduled kosinski/MCZ boss weapons.kospm
+	endif
+	if defined(Kospm_MTZBossWeapons)
+	dc.l Kospm_MTZBossWeapons,Kospm_MTZBossWeapons+$75A	; art/moduled kosinski/MTZ boss weapons.kospm
 	endif
 	if defined(Kospm_MechaEffects)
 	dc.l Kospm_MechaEffects,Kospm_MechaEffects+$110	; art/moduled kosinski/Mecha Sonic effects.kospm
@@ -1184,9 +1208,6 @@ MCD_CompressedAssets:
 	if defined(Nem_Buzzer)
 	dc.l Nem_Buzzer,Nem_Buzzer+$21F	; art/nemesis/Enemy Buzzer.nem
 	endif
-	if defined(Nem_CPZ_Boss)
-	dc.l Nem_CPZ_Boss,Nem_CPZ_Boss+$54F	; art/nemesis/CPZ boss.nem
-	endif
 	if defined(Nem_CPZ_Platform1)
 	dc.l Nem_CPZ_Platform1,Nem_CPZ_Platform1+$16E	; art/nemesis/CPZ Floating Platform.nem
 	endif
@@ -1381,9 +1402,6 @@ MCD_CompressedAssets:
 	endif
 	if defined(Nem_Shield_Dynamic)
 	dc.l Nem_Shield_Dynamic,Nem_Shield_Dynamic+$196	; art/nemesis/Shield Dynamic.nem
-	endif
-	if defined(Nem_Smoke)
-	dc.l Nem_Smoke,Nem_Smoke+$F0	; art/nemesis/Smoke trail from CPZ boss.nem
 	endif
 	if defined(Nem_Snail)
 	dc.l Nem_Snail,Nem_Snail+$238	; art/nemesis/Enemy Snail.nem

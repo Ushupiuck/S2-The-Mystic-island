@@ -13583,9 +13583,55 @@ Kospm_Prison:	binclude "art/moduled kosinski/Prison Capsule.kospm"
 		even
 Kospm_EHZ_Boss:	binclude "art/moduled kosinski/EHZ boss.kospm"
 		even
-Nem_CPZ_Boss:	binclude	"art/nemesis/CPZ boss.nem"
+; Prepared hardware; no current object/PLC selects these replacement banks.
+; Prepared S2 weapon palettes: three level rows, loaded only by future arenas.
+Pal_CPZBossWeapons:	binclude "palette/CPZ Boss Weapons.bin"
+Pal_ARZBossWeapons:	binclude "palette/ARZ Boss Weapons.bin"
+Pal_CNZBossWeapons:	binclude "palette/CNZ Boss Weapons.bin"
+Pal_MCZBossWeapons:	binclude "palette/MCZ Boss Weapons.bin"
+Pal_MTZBossWeapons:	binclude "palette/MTZ Boss Weapons.bin"
+Pal_CNZBossWeaponsCycle1:	binclude "palette/CNZ Boss Weapons Cycle 1.bin"
+Pal_CNZBossWeaponsCycle2:	binclude "palette/CNZ Boss Weapons Cycle 2.bin"
+Pal_CNZBossWeaponsCycle3:	binclude "palette/CNZ Boss Weapons Cycle 3.bin"
 		even
-Nem_Smoke:	binclude	"art/nemesis/Smoke trail from CPZ boss.nem"
+		; Prepared attachments only; their controllers and act loads are deferred.
+		include "mappings/sprite/CPZ Boss.asm"
+		include "mappings/sprite/ARZ Boss.asm"
+		include "mappings/sprite/CNZ Boss.asm"
+		include "mappings/sprite/MCZ Boss.asm"
+		include "mappings/sprite/MTZ Boss.asm"
+		include "mappings/spriteDPLC/MCZ boss drills.asm"
+		if (MOMPASS>1)&&(ArtTile_BossWeapons+CPZBoss_WeaponTiles>ArtTile_Prison_Capsule)
+			fatal "Prepared CPZ weapons overlap the capsule"
+		endif
+		if (MOMPASS>1)&&(ArtTile_BossWeapons+ARZBoss_WeaponTiles>ArtTile_Prison_Capsule)
+			fatal "Prepared ARZ weapons overlap the capsule"
+		endif
+		if (MOMPASS>1)&&(ArtTile_BossWeapons+CNZBoss_WeaponTiles>ArtTile_Prison_Capsule)
+			fatal "Prepared CNZ weapons overlap the capsule"
+		endif
+		if (MOMPASS>1)&&(ArtTile_BossWeapons+MCZBoss_WeaponTiles>ArtTile_Prison_Capsule)
+			fatal "Prepared MCZ weapons overlap the capsule"
+		endif
+		if (MOMPASS>1)&&(ArtTile_BossWeapons+MTZBoss_WeaponTiles>ArtTile_Prison_Capsule)
+			fatal "Prepared MTZ weapons overlap the capsule"
+		endif
+
+Kospm_CPZBossWeapons:	binclude "art/moduled kosinski/CPZ boss weapons.kospm"
+		even
+Kospm_ARZBossWeapons:	binclude "art/moduled kosinski/ARZ boss weapons.kospm"
+		even
+Kospm_CNZBossWeapons:	binclude "art/moduled kosinski/CNZ boss weapons.kospm"
+		even
+Kospm_MCZBossWeapons:	binclude "art/moduled kosinski/MCZ boss weapons.kospm"
+		even
+Kospm_MTZBossWeapons:	binclude "art/moduled kosinski/MTZ boss weapons.kospm"
+		even
+Kospm_CPZBossSmoke:	binclude "art/moduled kosinski/CPZ boss smoke.kospm"
+		even
+Kospm_MCZBossDebris:	binclude "art/moduled kosinski/MCZ boss debris.kospm"
+		even
+Kos_MCZBossDrills:	binclude "art/kosinski/MCZ boss drills.kosp"
 		even
 Nem_HangingSurface:	binclude "art/nemesis/Hanging surface.nem"
 		even
