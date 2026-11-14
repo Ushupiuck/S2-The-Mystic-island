@@ -80,10 +80,12 @@ def adapt_egg_robo(raw):
 	"""Remove S3's shirt fragment; the shared S1 torso supplies the collar."""
 	assert len(raw)==32*32
 	result = bytearray(raw)
-	# Each 32x16 pose is four two-tile columns. Its bottom four rows are
-	# shirt pixels, not helmet/jaw pixels; reveal the resident torso there.
-	for tile in range(1,32,2):
-		result[tile*32+16:(tile+1)*32] = bytes(16)
+	# Each 32x16 pose is four two-tile columns. Keep the complete black
+	# jaw edge: the lowered idle pose needs thirteen rows rather than twelve.
+	for pose,rows in enumerate((12,13,12,12)):
+		for column in range(4):
+			tile = pose*8+column*2+1
+			result[tile*32+(rows-8)*4:(tile+1)*32] = bytes((16-rows)*4)
 	return bytes(result)
 
 

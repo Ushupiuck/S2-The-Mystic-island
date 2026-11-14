@@ -382,8 +382,10 @@ preserves Eggman's pixels outside the intentionally changed glass region and
 all four EggRobo helmets/jaws at the original horizontal anchor, four pixels
 lower. The source shirt fragment must be transparent, revealing the resident
 S1 collar immediately below the jaw without a background gap across any pose.
-Every glass frame/reflection pixel retains its reference color; its openings
-remain transparent, and every frame puts glass first.
+The complete source black jaw outline must remain visible, including the extra
+row in the lowered idle pose. Every glass frame/reflection pixel retains its
+reference color; its openings remain transparent, and every frame puts glass
+first.
 A controlled opaque rider is uploaded through the real DMA queue behind the
 glass. Both facings must show its color through the holes while retaining the
 glass highlights; reversing the two hardware pieces is the opaque control.

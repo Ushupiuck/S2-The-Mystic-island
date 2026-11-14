@@ -152,11 +152,14 @@ def native_checks(a):
 			assert head==[(-24,0x0D,60,-16)],('EggRobo head must stay centered over the torso',i,head)
 			original=raster([(-24,0x0D,0,-16)],[(0,expected[i*256:(i+1)*256])])
 			actual=raster(head,face_banks(rom,s,i+7),s['ArtTile_Eggman'])
-			assert actual=={p:c for p,c in original.items() if p[1]<-12},('Helmet/jaw changed or source shirt retained',i)
+			outline=[y for y in range(-24,-8) if all(original.get((x,y))==(0,1) for x in range(-12,13))]
+			assert len(outline)==1,('Source jaw outline is ambiguous',i,outline)
+			assert actual=={p:c for p,c in original.items() if p[1]<=outline[0]},('Helmet/jaw outline changed or source shirt retained',i)
 			assembled=raster(row,face_banks(rom,s,i+7),s['ArtTile_Eggman'])
 			assert all((x,-13) in assembled for x in range(-3,7)),('Background gap between jaw and collar',i)
-			assert assembled[-3,-12]==(0,4),('The resident S1 collar must remain below the jaw',i)
-		result.append('four EggRobo helmets/jaws retain their source pixels at the original horizontal anchor, four pixels lower; S3 shirt fragments reveal the shared S1 collar')
+			assert all(assembled.get((x,outline[0]))==(0,1) for x in range(-4,13)),('Assembled jaw lost its black outline',i)
+			assert assembled[-2,-11]==(0,4),('The resident S1 collar must remain below the jaw',i)
+		result.append('four EggRobo helmets/jaws retain their source pixels through the full black outline, including the lower idle pose; S3 shirt fragments reveal the shared S1 collar')
 	rows = frames(rom,s['Map_GHZBoss_Cockpit'],s['BossFace_FrameCount'])
 	glass = rows[0][0]
 	assert glass==(-20,5,35,-20)
