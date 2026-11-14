@@ -1419,7 +1419,7 @@ MCD_CompressedAssets:
 	dc.l Nem_SpecialStageSparkles,Nem_SpecialStageSparkles+$41	; art/nemesis/Special stage sparkles.nem
 	endif
 	if defined(Nem_Springs)
-	dc.l Nem_Springs,Nem_Springs+$361	; art/nemesis/Springs.nem
+	dc.l Nem_Springs,Nem_Springs+$365	; art/nemesis/Springs.nem
 	endif
 	if defined(Nem_Squirrel)
 	dc.l Nem_Squirrel,Nem_Squirrel+$169	; art/nemesis/Flicky/Squirrel.nem
