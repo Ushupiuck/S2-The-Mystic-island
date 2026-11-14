@@ -282,7 +282,7 @@ See_Spring:
 		clr.b	see_parent(a2)
 		move.b	#$10,obAnim(a2)
 		move.b	#2,obRoutine(a2)
-		move.w	#sfx_Spring,d0
+		move.w	#SndID_Spring,d0
 		jmp	(PlaySound_Special).l
 
 loc_14FA8:
@@ -298,7 +298,7 @@ loc_14FA8:
 		clr.b	see_parent(a2)
 		move.b	#$10,obAnim(a2)
 		move.b	#2,obRoutine(a2)
-		move.w	#sfx_Spring,d0
+		move.w	#SndID_Spring,d0
 		jmp	(PlaySound_Special).l
 
 loc_14FB6:

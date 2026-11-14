@@ -21,7 +21,7 @@ MusicPacked macro filename
 ; PlayMusic/PlaySound already own the bus. Publish a cached score now so
 ; resurfacing and other common returns can use the very next sound tick.
 Music_QueueHint:
-		move.b	d0,(Music_PendingSong).l
+		move.w	d0,(Music_PendingSong).l
 		tst.b	(Z80_RAM+zMusicSlotBusy).l
 		bne.s	.return
 		tst.b	(Music_LoadBusy).l
@@ -30,21 +30,21 @@ Music_QueueHint:
 		lea	(Music_StageSongs).l,a1
 		moveq	#1,d2
 		rept	Music_StageCount-1
-		cmp.b	(a1)+,d0
+		cmp.w	(a1)+,d0
 		beq.s	.cached
 		addq.b	#1,d2
 		endm
-		cmp.b	(a1),d0
+		cmp.w	(a1),d0
 		bne.s	.done
 .cached:
 		moveq	#0,d1
-		move.b	d0,d1
+		move.w	d0,d1
 		lsl.w	#3,d1
 		lea	(Music_IndexByID+6).l,a1
 		move.b	(a1,d1.w),(Z80_RAM+zMusicReadyFlags).l
 		move.b	d2,(Z80_RAM+zMusicReadySlot).l
-		move.b	d0,(Z80_RAM+zMusicReadySong).l
-		clr.b	(Music_PendingSong).l
+		WriteZ80Word d0,zMusicReadySong
+		clr.w	(Music_PendingSong).l
 .done:
 		movem.l	(sp)+,d1-d2/a1
 .return:
@@ -53,7 +53,7 @@ Music_QueueHint:
 ; Prepare the latest queue hint, or an ID requested by KeH after arbitration.
 ; A slot remains immutable while it is live or saved for a 1-up return.
 Music_Prepare:
-		tst.b	(Music_PendingSong).l
+		tst.w	(Music_PendingSong).l
 		beq.s	Music_QueueHint.return
 		tst.b	(Music_LoadBusy).l
 		bne.s	Music_QueueHint.return
@@ -65,16 +65,17 @@ Music_Prepare:
 		tst.b	(Z80_RAM+zMusicSlotBusy).l
 		bne.w	.release
 		moveq	#0,d7
-		move.b	(Music_PendingSong).l,d7
-		clr.b	(Music_PendingSong).l
-		cmp.b	(Z80_RAM+zMusicReadySong).l,d7
+		move.w	(Music_PendingSong).l,d7
+		clr.w	(Music_PendingSong).l
+		ReadZ80Word zMusicReadySong,d0
+		cmp.w	d0,d7
 		beq.w	.release
 
 		; A previously decoded song can be published again in place.
 		lea	(Music_StageSongs).l,a2
 		moveq	#Music_StageCount-1,d6
 .findCached:
-		cmp.b	(a2)+,d7
+		cmp.w	(a2)+,d7
 		dbeq	d6,.findCached
 		beq.w	.cached
 
@@ -93,9 +94,12 @@ Music_Prepare:
 		addq.b	#1,d6
 		bra.s	.findSlot
 .slot:
-		lea	(Music_StageSongs-1).l,a2
-		clr.b	(a2,d6.w)
+		lea	(Music_StageSongs-2).l,a2
+		move.w	d6,d0
+		add.w	d0,d0
+		clr.w	(a2,d0.w)
 		clr.b	(Z80_RAM+zMusicReadySong).l
+		clr.b	(Z80_RAM+zMusicReadySong+1).l
 		st	(Music_LoadBusy).l
 		startZ80
 		move.w	(sp),sr
@@ -127,8 +131,10 @@ Music_Prepare:
 		disable_ints
 		stopZ80
 		waitZ80
-		lea	(Music_StageSongs-1).l,a2
-		move.b	d7,(a2,d6.w)
+		lea	(Music_StageSongs-2).l,a2
+		move.w	d6,d0
+		add.w	d0,d0
+		move.w	d7,(a2,d0.w)
 		clr.b	(Music_LoadBusy).l
 		bra.s	.publishHeld
 .cached:
@@ -141,7 +147,7 @@ Music_Prepare:
 .publishHeld:
 		move.b	d5,(Z80_RAM+zMusicReadyFlags).l
 		move.b	d6,(Z80_RAM+zMusicReadySlot).l
-		move.b	d7,(Z80_RAM+zMusicReadySong).l
+		WriteZ80Word d7,zMusicReadySong
 .release:
 		startZ80
 		move.w	(sp)+,sr
@@ -153,7 +159,7 @@ Music_Prepare:
 .copyRaw:
 		move.b	(a0)+,(a1)+
 		dbf	d0,.copyRaw
-		bra.s	.pad
+		bra.w	.pad
 
 ; Spend the existing PAL delay servicing pending pages. Leave full uploads
 ; of short scores for the ordinary VBlank exit.
@@ -204,7 +210,7 @@ Music_WaitPAL:
 		blo.s	.wait
 		rts
 
-; The Z80 posts a page number, a song ID with bit 7 set, or a lookahead hint.
+; The Z80 posts a page number, a full-word song request signal, or a lookahead hint.
 ; The caller has seen a request. Recheck after masking interrupts because
 ; VBlank can service it before a foreground caller gets here. Hold the Z80
 ; while taking the request so a new page can't replace an earlier song ID.
@@ -231,19 +237,23 @@ Music_Service:
 .songOrHint:
 		cmpi.b	#Music_LookaheadSignal,d0
 		beq.s	.lookahead
-		tst.b	(Music_PendingSong).l
-		bne.s	.release
-		andi.b	#$7F,d0
-		cmp.b	(Z80_RAM+zMusicSongRequest).l,d0
-		bne.s	.release
-		move.b	d0,(Music_PendingSong).l
-		bra.s	.release
+		tst.w	(Music_PendingSong).l
+		bne.w	.release
+		cmpi.b	#Music_SongRequestSignal,d0
+		bne.w	.release
+		ReadZ80Word zMusicSongRequest,d0
+		andi.w	#SoundID_Mask,d0
+		beq.s	.release
+		cmpi.w	#MusID__End,d0
+		bhs.s	.release
+		move.w	d0,(Music_PendingSong).l
+		bra.w	.release
 
 .lookahead:
 		; Leave the next Z80 VBlank IRQ room even if all six pages miss.
 		; VBlank itself is reserved for the VDP and mandatory refills.
 		btst	#3,(vdp_control_port+1).l
-		bne.s	.release
+		bne.w	.release
 		moveq	#0,d0
 		move.b	(vdp_control_port+4).l,d0
 		cmpi.b	#168,d0
@@ -263,11 +273,11 @@ Music_Service:
 .hintReady:
 		; A hint expires as soon as a new tick starts.
 		tst.b	(Z80_RAM+zMusicTickBusy).l
-		bne.s	.release
+		bne.w	.release
 		cmpi.b	#Music_ScoreBase>>8,(Z80_RAM+zMusicReadBase+1).l
-		bne.s	.release
+		bne.w	.release
 		bsr.s	Music_Prefetch
-		bra.s	.release
+		bra.w	.release
 
 ; A new score has no track state yet. Prime its header, opening command
 ; spans and selected instruments in one grant, after KeH has stopped using
@@ -357,7 +367,7 @@ Music_PrefetchTrack:
 		moveq	#0,d1
 		move.b	(a3),d1
 		subi.b	#$E0,d1
-		cmpi.b	#$1B,d1
+		cmpi.b	#$1C,d1
 		bhs.s	.done			; reached a note or duration
 		moveq	#0,d2
 		lea	Music_PrefetchLengths(pc),a2
@@ -392,6 +402,8 @@ Music_PrefetchTrack:
 		move.b	1(a5),d2
 		lsl.w	#8,d2
 		move.b	(a5),d2
+		tst.w	d2
+		beq.s	.skipVoice
 		add.w	d2,d1
 		cmpi.w	#Music_StageCapacity-25,d1
 		bhi.s	.skipVoice
@@ -428,8 +440,8 @@ Music_PrefetchPage:
 		rts
 
 Music_PrefetchLengths:
-		dc.b	2,2,2,0,0,2,2,1,2,2,2,2,2,1,1,2
-		dc.b	5,1,0,2,1,2,3,0,3,1,2
+		dc.b	2,2,2,0,0,2,2,1,2,2,2,2,2,1,0,2
+		dc.b	5,1,0,2,1,2,3,0,3,1,2,2
 		even
 
 ; The foreground and CD waits retain their live registers across a refill.
@@ -472,9 +484,9 @@ Music_FillStagedPage:
 		bls.w	.resident
 		move.b	#Music_ScoreBase&$FF,(Z80_RAM+zMusicReadBase).l
 		move.b	#Music_ScoreBase>>8,(Z80_RAM+zMusicReadBase+1).l
-		cmp.b	(Music_CacheSong).l,d4
+		cmp.w	(Music_CacheSong).l,d4
 		beq.s	.reuseCache
-		move.b	d4,(Music_CacheSong).l
+		move.w	d4,(Music_CacheSong).l
 		moveq	#Music_CacheSlots-1,d3
 		bsr.w	Music_ClearSlots
 		; Keep the first instrument pages out of the track-page clock.
@@ -578,8 +590,9 @@ Music_ClearSlots:
 
 ; d4 is the staging slot. Return the song ID in d4 and decoded size in d1.
 Music_GetStageScore:
-		lea	(Music_StageSongs-1).l,a3
-		move.b	(a3,d4.w),d4
+		lea	(Music_StageSongs-2).l,a3
+		add.w	d4,d4
+		move.w	(a3,d4.w),d4
 		move.w	d4,d1
 		lsl.w	#3,d1
 		lea	(Music_IndexByID).l,a3

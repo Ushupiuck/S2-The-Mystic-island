@@ -1,18 +1,18 @@
-Sound3B_DoorSlam_Header:
+Sfx_Trapdoor_Header:
 	smpsHeaderStartSong 2
-	smpsHeaderVoice     Sound3B_DoorSlam_Voices
+	smpsHeaderVoice     Sfx_Trapdoor_Voices
 	smpsHeaderTempoSFX  $01
 	smpsHeaderChanSFX   $01
 
-	smpsHeaderSFXChannel cFM5, Sound3B_DoorSlam_FM5,	$F4, $00
+	smpsHeaderSFXChannel cFM5, Sfx_Trapdoor_FM5,	$F4, $00
 
 ; FM5 Data
-Sound3B_DoorSlam_FM5:
+Sfx_Trapdoor_FM5:
 	smpsSetvoice        $00
 	dc.b	nD2, $04, nRst, nG2, $06
 	smpsStop
 
-Sound3B_DoorSlam_Voices:
+Sfx_Trapdoor_Voices:
 ;	Voice $00
 ;	$3C
 ;	$00, $00, $00, $00, 	$1F, $1F, $1F, $1F, 	$00, $16, $0F, $0F

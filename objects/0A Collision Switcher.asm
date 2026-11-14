@@ -128,7 +128,7 @@ loc_13F80:
 loc_13F92:
 		tst.b	(Debug_mode_flag).w
 		beq.s	loc_13FA2
-		move.w	#sfx_Lamppost,d0
+		move.w	#SndID_Checkpoint,d0
 		jsr	(PlaySound_Special).l
 
 loc_13FA2:
@@ -229,7 +229,7 @@ loc_14082:
 loc_14094:
 		tst.b	(Debug_mode_flag).w
 		beq.s	loc_140A4
-		move.w	#sfx_Lamppost,d0
+		move.w	#SndID_Checkpoint,d0
 		jsr	(PlaySound_Special).l
 
 loc_140A4:

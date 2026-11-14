@@ -88,7 +88,7 @@ SMZ_Saw_Type1_PizzaLeftRight:
 		move.w	(v_framecount).w,d0			; get current level frame counter
 		andi.w	#$F,d0					; only play sound every 16 frames
 		bne.s	.return					; branch otherwise
-		move.w	#sfx_Saw,d0				; play saw buzzing sound
+		move.w	#SndID_LaserBeam,d0				; play saw buzzing sound
 		jsr	(PlaySound_Special).l				; (this sound is programmed to not be interruptible by itself)
 
 	.return:
@@ -120,7 +120,7 @@ SMZ_Saw_Type2_PizzaUpDown:
 		move.b	(v_oscillate+6).w,d0			; get current oscillation value for saw type
 		cmpi.b	#$18,d0					; is oscillation value at middle?
 		bne.s	.return					; if not, branch
-		move.w	#sfx_Saw,d0				; play saw buzzing sound
+		move.w	#SndID_LaserBeam,d0				; play saw buzzing sound
 		jsr	(PlaySound_Special).l				; (this sound is programmed to not be interruptible by itself)
 
 	.return:
@@ -148,7 +148,7 @@ SMZ_Saw_Type3_SpeedingFromLeft:
 		move.w	#$600,obVelX(a0)			; move speeding saw to the right (fast)
 		move.b	#$22|$80,obColType(a0)	; make saw harmful on touch
 		move.b	#2,obFrame(a0)				; use speeding saw frames
-		move.w	#sfx_Saw,d0				; set saw buzzing sound
+		move.w	#SndID_LaserBeam,d0				; set saw buzzing sound
 		jsr	(PlaySound_Special).l				; play it
 
 	.hide:
@@ -194,7 +194,7 @@ SMZ_Saw_Type4_SpeedingFromRight:
 		move.w	#-$600,obVelX(a0)			; move speeding saw to the left (fast)
 		move.b	#$22|$80,obColType(a0)	; make saw harmful on touch
 		move.b	#2,obFrame(a0)				; use speeding saw frames
-		move.w	#sfx_Saw,d0				; set saw buzzing sound
+		move.w	#SndID_LaserBeam,d0				; set saw buzzing sound
 		jsr	(PlaySound_Special).l				; play it
 
 	.hide:

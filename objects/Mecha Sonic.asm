@@ -62,7 +62,7 @@ Signpost_TrapTrigger:
 	move.b	#1,(f_timecount).w
 	move.b	#1,(Dynamic_Resize_Routine).w
 	move.b	#1,(f_lockscreen).w
-	move.w	#MusID_FadeOut,d0
+	move.w	#CmdID_FadeOut,d0
 	jmp	(PlayMusic).l
 
 Signpost_TrapSpin:
@@ -229,7 +229,7 @@ MS_HitResponse:
 		bne.s	.flash
 		move.b	#$20,MS_flash(a0)
 		bset	#6,obStatus(a0)
-		move.w	#sfx_HitBoss,d0
+		move.w	#SndID_BossHit,d0
 		jsr	(PlaySound_Special).l
 .flash:
 		lea	MS_HitColours(pc),a2
@@ -252,7 +252,7 @@ MS_Defeated:
 		clr.b	(f_timecount).w
 		moveq	#100,d0
 		jsr	(AddPoints).l
-		move.w	#MusID_FadeOut,d0
+		move.w	#CmdID_FadeOut,d0
 		jsr	(PlayMusic).l
 		lea	(Pal_MechaSonic).l,a2
 		bra.w	MS_CopyPalette
@@ -399,7 +399,7 @@ MS_MaintainJets:
 		; one start sound; ordinary maintenance must not restart it each frame.
 		btst	#1,d2
 		bne.s	.return
-		move.w	#sfx_Roll,d0
+		move.w	#SndID_Roll,d0
 		jmp	(PlaySound_Special).l
 .return:rts
 MS_Jet:
@@ -807,7 +807,7 @@ MS_CheckLandingCamper:
 		lea	MS_AnimRoll(pc),a1
 		bsr.w	MS_SetRawAnimation
 		move.l	#MS_CounterLanded,MS_callback(a0)
-		move.w	#sfx_Roll,d0
+		move.w	#SndID_Roll,d0
 		jmp	(PlaySound_Special).l
 
 MS_CounterLanded:
@@ -845,7 +845,7 @@ MS_Landed:
 		clr.w	obYSub(a0)
 		clr.b	obAniFrame(a0)
 		clr.b	obTimeFrame(a0)
-		moveq	#signextendB(SndID_MechaLand),d0
+		move.w	#SndID_MechaLand,d0
 		jsr	(PlaySound_Special).l
 		btst	#3,MS_flags(a0)
 		bne.s	MS_TurnLanding
@@ -977,7 +977,7 @@ MS_loc_7B666:
 		move.w	d0,obVelX(a0)
 		move.w	d1,MS_accel(a0)
 		clr.w	obVelY(a0)
-		moveq	#signextendB(sfx_Dash),d0
+		move.w	#SndID_SpindashRelease,d0
 		jmp	(PlaySound_Special).l
 ; ---------------------------------------------------------------------------
 
@@ -1011,7 +1011,7 @@ MS_Bounce:
 		add.w	d1,y_pos(a0)
 		move.b	#$1C,obRoutine(a0)
 		move.w	#-$900,obVelY(a0)
-		moveq	#signextendB(SndID_Thump),d0
+		move.w	#SndID_Thump,d0
 		jmp	(PlaySound_Special).l
 ; ---------------------------------------------------------------------------
 
@@ -1043,7 +1043,7 @@ MS_ReboundLand:
 		move.w	#$F,MS_timer(a0)
 		move.l	#MS_ReboundBackoff,MS_callback(a0)
 		bset	#2,MS_flags(a0)
-		moveq	#signextendB(SndID_MechaLand),d0
+		move.w	#SndID_MechaLand,d0
 		jsr	(PlaySound_Special).l
 		lea	MS_JetsLand(pc),a2
 		jmp	MS_CreateJets(pc)
@@ -1087,7 +1087,7 @@ MS_ReboundDashStart:
 MS_loc_7B7A8:
 		move.w	d0,obVelX(a0)
 		move.w	d1,MS_accel(a0)
-		moveq	#signextendB(sfx_Dash),d0
+		move.w	#SndID_SpindashRelease,d0
 		jmp	(PlaySound_Special).l
 ; ---------------------------------------------------------------------------
 

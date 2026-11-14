@@ -591,7 +591,7 @@ SwingingPtfm_Sound:
 .return:
 		rts
 SwingingPtfm_Sounds:
-		dc.w	sfx_Push,0,0,0,0,0,0,0,sfx_ChainStomp,0,0,0,0,0,0,0
+		dc.w	SndID_BlockPush,0,0,0,0,0,0,0,SndID_ChainRise,0,0,0,0,0,0,0
 
 ; Release the existing Obj18 body. No allocation, copy, standing-index transfer
 ; or grip reparenting is needed; only this suspension owns placement state.

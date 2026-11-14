@@ -513,7 +513,7 @@ Hanging_Sound:
 		btst	#Hang_SilentBit,d5
 		bne.s	.return
 		movem.l	d0-d7/a0-a6,-(sp)
-		move.w	#sfx_Grab,d0
+		move.w	#SndID_TailsGrab,d0
 		jsr	(PlaySound_Special).l
 		movem.l	(sp)+,d0-d7/a0-a6
 .return:

@@ -84,7 +84,7 @@ PP_TagaTaga_Jump:
 	move.l	objoff_36(a0),objoff_3A(a0)
 	tst.b	obRender(a0)
 	bpl.s	PP_TagaTaga_Main
-	move.w	#sfx_Spring,d0
+	move.w	#SndID_Spring,d0
 	jsr	(PlaySound_Special).l
 ; End of function PP_TagaTaga_Jump
 
@@ -101,7 +101,7 @@ PP_TagaTaga_Main:
 	move.b	#2,obRoutine(a0)
 	tst.b	obRender(a0)
 	bpl.s	PP_TagaTaga_DoAnim
-	move.w	#sfx_Spring,d0
+	move.w	#SndID_Spring,d0
 	jsr	(PlaySound_Special).l
 
 PP_TagaTaga_DoAnim:

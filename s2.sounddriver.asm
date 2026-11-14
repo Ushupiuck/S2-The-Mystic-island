@@ -31,59 +31,9 @@
 
 	; LOTS of decoding work and relabelling of unknowns!  This is a much more complete disasm ;)
 
-	; zComRange:	@ 1B80h
-	; 	+00h	-- Priority of current SFX (cleared when 1-up song is playing)
-	; 	+01h	-- tempo clock
-	; 	+02h	-- current tempo
-	; 	+03h	-- Pause/unpause flag: 7Fh for pause; 80h for unpause (set from 68K)
-	; 	+04h	-- total volume levels to continue decreasing volume before fade out considered complete (starts at 28h, works downward)
-	; 	+05h	-- delay ticker before next volume decrease
-	; 	+06h	-- communication value
-	; 	+07h	-- "DAC is updating" flag (set to FFh until completion of DAC track change)
-	; 	+08h	-- When NOT set to 80h, 68K request new sound index to play
-	; 	+09h	-- SFX to Play queue slot
-	; 	+0Ah	-- Play stereo sound queue slot
-	; 	+0Bh	-- Unknown SFX Queue slot
-	; 	+0Ch	-- Address to table of voices
-	;
-	; 	+0Eh	-- Set to 80h while fading in (disabling SFX) then 00h
-	; 	+0Fh	-- Same idea as +05h, except for fade IN
-	; 	+10h	-- Same idea as +04h, except for fade IN
-	; 	+11h	-- 80h set indicating 1-up song is playing (stops other sounds)
-	; 	+12h	-- main tempo value
-	; 	+13h	-- original tempo for speed shoe restore
-	; 	+14h	-- Speed shoes flag
-	; 	+15h	-- If 80h, FM Channel 6 is NOT in use (DAC enabled)
-	; 	+16h	-- value of which music bank to use (0 for MusicPoint1, $80 for MusicPoint2)
-	; 	+17h	-- Pal mode flag
-	;
-	; ** zTracksStart starts @ +18h
-	;
-	; 	1B98 base
-	; 	Track 1 = DAC
-	; 	Then 6 FM
-	; 	Then 3 PSG
-	;
-	;
-	; 	1B98 = DAC
-	; 	1BC2 = FM 1
-	; 	1BEC = FM 2
-	; 	1C16 = FM 3
-	; 	1C40 = FM 4
-	; 	1C6A = FM 5
-	; 	1C94 = FM 6
-	; 	1CBE = PSG 1
-	; 	1CE8 = PSG 2
-	; 	1D12 = PSG 3 (tone or noise)
-	;
-	; 	1D3C = SFX FM 3
-	; 	1D66 = SFX FM 4
-	; 	1D90 = SFX FM 5
-	; 	1DBA = SFX PSG 1
-	; 	1DE4 = SFX PSG 2
-	; 	1E0E = SFX PSG 3 (tone or noise)
-	;
-	;
+; Playback and track RAM are declared below; their addresses derive from zStack.
+; The four global request slots are little-endian words. Other zVar fields
+; retain their byte format; music tracks precede the six independent SFX slots.
 zTrack STRUCT DOTS
 	; 	"playback control"; bits:
 	; 	1 (02h): seems to be "track is at rest"
@@ -153,10 +103,10 @@ zVar STRUCT DOTS
 	DACUpdating:		ds.b 1 ; Set to FFh while DAC is updating, then back to 00h
 
 	SoundQueueStart:
-	QueueToPlay:		ds.b 1	; if NOT set to 80h, means new index was requested by 68K
-	SFXToPlay:		ds.b 1	; When Genesis wants to play "normal" sound, it writes it here
-	SFXStereoToPlay:	ds.b 1	; When Genesis wants to play alternating stereo sound, it writes it here
-	SFXUnknown:		ds.b 1 ; Unknown type of sound queue, but it's in Genesis code like it was once used
+	QueueToPlay:		ds.w 1	; little-endian global sound request
+	SFXToPlay:		ds.w 1	; little-endian global sound request
+	SFXStereoToPlay:	ds.w 1	; little-endian global sound request
+	SFXUnknown:		ds.w 1	; little-endian global sound request
 	SoundQueueEnd:
 
 	FadeInFlag:		ds.b 1
@@ -415,25 +365,33 @@ zUpdateEverything:
 	ld	a,(zAbsVar.FadeInFlag)		; are we fading in?
 	or	a
 	call	nz,zUpdateFadeIn	; If so, update that
-	ld	a,(zAbsVar.SFXToPlay)			; zComRange+09h -- play normal sound
-	or	(ix+zVar.SFXStereoToPlay)				; zComRange+0Ah -- play stereo sound (alternating speakers)
-	or	(ix+zVar.SFXUnknown)				; zComRange+0Bh -- "unknown" slot
+	ld	a,(zAbsVar.SFXToPlay)			; normal request, low byte
+	or	(ix+zVar.SFXToPlay+1)
+	or	(ix+zVar.SFXStereoToPlay)				; stereo request, low byte
+	or	(ix+zVar.SFXStereoToPlay+1)
+	or	(ix+zVar.SFXUnknown)
+	or	(ix+zVar.SFXUnknown+1)				; priority request, high byte
 	call	nz,zCycleQueue		; If any of those are non-zero, cycle queue
 
-	; Apparently if this is 80h, it does not play anything new,
-	; otherwise it cues up the next play (flag from 68K for new item)
-	ld	a,(zAbsVar.QueueToPlay)
-	or	a
+	; Prefer a queued word; retry a deferred song only when its full ID is ready.
+	ld	hl,(zAbsVar.QueueToPlay)
+	ld	a,h
+	or	l
 	jr	nz,.playQueued
-	ld	a,(zMusicSongRequest)
-	or	a
+	ld	hl,(zMusicSongRequest)
+	ld	a,h
+	or	l
 	jr	z,.queueDone
-	ld	hl,zMusicReadySong
-	cp	(hl)
+	ld	de,(zMusicReadySong)
+	or	a
+	sbc	hl,de
+	add	hl,de
 	jr	nz,.queueDone
 .playQueued:
 	call	zPlaySoundByIndex
 .queueDone:
+	; One bank selection serves ROM envelopes, universal voices and all SFX.
+	rst	zBankSwitchToSFX
 
 	; Spindash update
 	ld	a,(zSpindashPlayingCounter)
@@ -451,8 +409,7 @@ zUpdateSFX:
 	or	a
 	jr	nz,zUpdateDAC
 
-	; Now all of the SFX tracks are updated in a similar manner to "zUpdateMusic"...
-	rst	zBankSwitchToSFX	; Bank switch to sound effects
+	; The shared ROM bank was selected before the music update too.
 
 	ld	a,80h
 	ld	(zDoSFXFlag),a			; Set zDoSFXFlag = 80h (updating sound effects)
@@ -522,6 +479,12 @@ zloc_10B:
 zDACPlaybackAddrInstruction:
 	jp	zWriteDPCMtoDAC
 ; End of function zVInt
+
+; Fit the push-flag reset in the six-byte gap before the DAC table.
+cfClearPush:
+	xor	a		; Clear a
+	ld	(zPushFlag),a	; Clear pushing sound flag
+	ret
 
 	align 100h
 ;zbyte_1B3
@@ -936,6 +899,10 @@ zFMSetFreq:
 	sub	80h
 	jr	z,zFMDoRest		; If this is a rest, jump to zFMDoRest
 	add	a,(ix+zTrack.Transpose)		; Add current channel transpose (coord flag E9)
+zDistortionGate:
+	jr	.tuned			; The toggle changes this displacement from 3 to 0.
+	call	zApplyMusicDistortion
+.tuned:
 	if	0
 	add	a,a				; Offset into Frequency table...
 	add	a,zFrequencies&0FFh
@@ -1314,7 +1281,7 @@ zPSGDoVolFX:
 	ld	a,(ix+zTrack.VoiceIndex)		; Current PSG tone -> 'a'
 	or	a				; Test it
 	jr	z,zPSGUpdateVol		; If tone is zero, jump to zPSGUpdateVol
-	ld	hl,zPSG_FlutterTbl	; hl points to zPSG_FlutterTbl table
+	ld	hl,zmake68kPtr(PSG_EnvelopeIndex)	; shared ROM-bank envelope pointers
 	dec	a				; a--
 	add	a,a				; a *= 2
 	ld	e,a
@@ -1491,52 +1458,76 @@ zResumeTrack:
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 ;zsub_674
 zCycleQueue:
-	ld	a,(zAbsVar.QueueToPlay)	; Check if a sound request was made zComRange+08h
-	or	a					; Is queue slot equal to 80h?
-	ret	nz					; If not, return
-	ld	hl,zAbsVar.SFXToPlay		; Get address of next sound
-	ld	a,(zAbsVar.SFXPriorityVal)		; Get current SFX priority
-	ld	d,a					; a -> c
-	ld	b,zVar.SoundQueueEnd-zVar.SoundQueueStart					; b = 3
-
--	ld	a,(hl)				; Get sound to play -> 'a'
-	ld	e,a					; 'a' -> 'e'
-	ld	(hl),0				; Clear it back to zero (we got it)
-	inc	hl					; hl = pointer to next queue item
-	cp	MusID__First		; Is it before first music?
-	jr	c,zlocQueueNext		; if so, branch
-	cp	DACSFXID__First		; Is it a special command?
-	jr	nc,zlocQueueItem	; If so, branch
-	sub	SndID__First		; Subtract first SFX index
-	jr	c,zlocQueueItem		; If it was music, branch
-	push	af
-	rst	zBankSwitchToSFX			; Switch to SFX banks
-	pop	af
+	ld	hl,(zAbsVar.QueueToPlay)
+	ld	a,h
+	or	l
+	ret	nz
+	ld	hl,zAbsVar.SFXToPlay
+	ld	b,(zVar.SoundQueueEnd-zVar.SFXToPlay)/2
+.next:
+	ld	e,(hl)
+	ld	(hl),0
+	inc	hl
+	ld	d,(hl)
+	ld	(hl),0
+	inc	hl
+	ld	a,d
+	and	0Fh
+	or	e
+	jr	nz,.candidate
+	djnz	.next
+	ret
+.candidate:
+	push	de
+	if SndID__End-SndID__First<100h
+	; A page-aligned, single-page catalog has an 8-bit relative index.
+	; Keep the complete queued word (including flags) on the stack.
+	ld	a,d
+	and	0Fh
+	cp	SndID__First>>8
+	jr	nz,.accept
+	ld	a,e
+	cp	SndID__End-SndID__First
+	jr	nc,.accept
+	ld	h,0
+	ld	l,e
+	else
+	ex	de,hl
+	ld	a,h
+	and	0Fh
+	ld	h,a
+	ld	de,SndID__First
+	or	a
+	sbc	hl,de
+	jr	c,.accept
+	ld	de,SndID__End-SndID__First
+	or	a
+	sbc	hl,de
+	jr	nc,.accept
+	add	hl,de
+	endif
+	push	hl
+	rst	zBankSwitchToSFX
+	pop	de
 	ld	hl,zmake68kPtr(SoundIndex+2)
-	ld	c,a
-	ld	b,0
-	add	hl,bc
-	add	hl,bc
-	add	hl,bc
-	ld	a,(hl)				; Get SFX priority
-	cp	d					; Is the new SFX of a higher priority?
-	jr	c,+					; Branch if not
-	ld	d,a					; Save new priotity
-	call	zlocQueueItem	; Queue the new SFX
-+
-	ld	a,d					; Get back SFX priority
-	or	a					; Is it negative (jumping sound)?
-	ret	m					; Return if so
-	ld	(zAbsVar.SFXPriorityVal),a		; Store the new priority
+	add	hl,de
+	add	hl,de
+	add	hl,de
+	ld	a,(zAbsVar.SFXPriorityVal)
+	cp	(hl)
+	jr	c,.priority
+	jr	nz,.reject
+.priority:
+	ld	a,(hl)
+	bit	7,a
+	jr	nz,.accept
+	ld	(zAbsVar.SFXPriorityVal),a
+.accept:
+	pop	hl
+	ld	(zAbsVar.QueueToPlay),hl
 	ret
-; ---------------------------------------------------------------------------
-zlocQueueNext:
-	djnz	-
-	ret
-; ---------------------------------------------------------------------------
-zlocQueueItem:
-	ld	a,e				; restore a to be the last queue item read
-	ld	(zAbsVar.QueueToPlay),a	; Put it as the next item to play
+.reject:
+	pop	hl
 	ret
 ; End of function zCycleQueue
 
@@ -1544,50 +1535,77 @@ zlocQueueItem:
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 ; zsub_6B2:
 zPlaySoundByIndex:
-	;or	a							; is it sound 00?
-	;jp	z,zClearTrackPlaybackMem	; if yes, branch to RESET EVERYTHING!!
-    ;if MusID__First-1 == 80h
-	;ret	z							; return if it was (invalidates 00h-7Fh; maybe we don't want that someday?)
-    ;else
-	;cp	MusID__First
-	;ret	c		; return if id is less than the first music id
-    ;endif
-
-	ld	(ix+zVar.QueueToPlay),0					; Rewrite zComRange+8 flag so we know nothing new is coming in
-	cp	MusID__End					; is it music (less than index 20)?
-	jp	c,zPlayMusic				; if yes, branch to play the music
-	cp	SndID__End					; is it a sound (less than index 71)?
-	jp	c,zPlaySound_Main			; if yes, branch to play the sound
-	cp	DACSFXID__First
+	ld	de,0
+	ld	(zAbsVar.QueueToPlay),de
+	ld	a,h
+	and	0Fh
+	ld	h,a
+	or	l
+	ret	z
+	; Commands occupy the visible list tail, even if later catalogs exceed $180.
+	ld	de,CmdID__First
+	or	a
+	sbc	hl,de
+	jr	c,.ordinary
+	ld	a,h
+	or	a
+	jr	nz,.ordinary
+	ld	a,l
+	cp	CmdID__End-CmdID__First
+	jr	c,.command
+.ordinary:
+	add	hl,de
+	ld	de,MusID__End
+	or	a
+	sbc	hl,de
+	jr	c,.music
+	ld	de,SndID__First-MusID__End
+	or	a
+	sbc	hl,de
 	ret	c
-	cp	DACSFXID__End
-	jp	c,zPlayDACSFX
-	cp	CmdID__First				; is it after the last regular sound but before the first special sound command (between 71 and 78)?
-	ret	c							; if yes, return (do nothing)
-	; Otherwise, this is a special command to the music engine...
-	sub	CmdID__First	; convert index 78-7D to a lookup into the following jump table
+	ld	de,SndID__End-SndID__First
+	or	a
+	sbc	hl,de
+	jr	c,.sfx
+	ld	de,DACSFXID__End-SndID__End
+	or	a
+	sbc	hl,de
+	jr	c,.dac
+	ret
+.command:
 	add	a,a
 	add	a,zCommandIndex&0FFh
 	ld	(.writeme+1),a
 .writeme:
 	ld	hl,(zCommandIndex)
 	jp	(hl)
+.music:
+	add	hl,de
+	jp	zPlayMusic
+.sfx:
+	ld	de,SndID__End
+	add	hl,de
+	jp	zPlaySound_Main
+.dac:
+	add	hl,de
+	jp	zPlayDACSFX
 
-	ensure1byteoffset 0Ch
+	ensure1byteoffset 0Eh
 ; zloc_6D5:
 zCommandIndex:
+CmdPtr_Distortion:	dw	zToggleDistortion ; $17A
 ; ---------------------------------------------------------------------------
-CmdPtr_StopSFX:		dw	zStopSoundEffects ; sound test index 78
+CmdPtr_StopSFX:		dw	zStopSoundEffects ; $17B
 ; ---------------------------------------------------------------------------
-CmdPtr_FadeOut:		dw	zFadeOutMusic ; 79
+CmdPtr_FadeOut:		dw	zFadeOutMusic ; $17C
 ; ---------------------------------------------------------------------------
-CmdPtr_SegaSound:	dw	zPlaySegaSound ; 7A
+CmdPtr_SegaSound:	dw	zPlaySegaSound ; $17D
 ; ---------------------------------------------------------------------------
-CmdPtr_SpeedUp:		dw	zSpeedUpMusic ; 7B
+CmdPtr_SpeedUp:		dw	zSpeedUpMusic ; $17E
 ; ---------------------------------------------------------------------------
-CmdPtr_SlowDown:	dw	zSlowDownMusic ; 7C
+CmdPtr_SlowDown:	dw	zSlowDownMusic ; $17F
 ; ---------------------------------------------------------------------------
-CmdPtr_Stop:		dw	zStopSoundAndMusic ; 7D
+CmdPtr_Stop:		dw	zStopSoundAndMusic ; $180
 ; ---------------------------------------------------------------------------
 CmdPtr__End:
 ; ---------------------------------------------------------------------------
@@ -1653,8 +1671,11 @@ zPCMLoop:
 	or	e				; Is de zero?
 	jr	z, zPCMLoopExit	; If so, exit
 
-	ld	a, (zAbsVar.QueueToPlay)	; Get next item to play
-	or	a
+	ld	a,(zAbsVar.QueueToPlay)
+	push	hl
+	ld	hl,zAbsVar.QueueToPlay+1
+	or	(hl)
+	pop	hl
 	jr	nz, zPCMLoopExit
 
 	or	h
@@ -1678,26 +1699,26 @@ zPCMLoopExit:
 ; ---------------------------------------------------------------------------
 ; zloc_73D:
 zPlayMusic:
-	; A jingle must not back up half-initialized tracks. Retain the latest
-	; request until the current header is complete, then arbitrate normally.
-	ld	hl,zMusicStarting
-	bit	0,(hl)
+	; Keep the complete ID while the current header or staging slot is busy.
+	ex	de,hl
+	ld	a,(zMusicStarting)
+	or	a
 	jr	nz,.defer
-	; Keep ready flags/slot stable from the ID check until the slot is live.
-	ld	hl,zMusicSlotBusy
-	ld	(hl),1
-	inc	hl				; zMusicReadySong
-	cp	(hl)
+	ld	a,1
+	ld	(zMusicSlotBusy),a
+	ld	hl,(zMusicReadySong)
+	or	a
+	sbc	hl,de
 	jr	z,.ready
-	dec	hl				; zMusicSlotBusy
-	ld	(hl),0
+	xor	a
+	ld	(zMusicSlotBusy),a
 .defer:
-	ld	(zMusicSongRequest),a
+	ld	(zMusicSongRequest),de
 	ret
 .ready:
-	xor	a
-	ld	(hl),a
-	ld	(zMusicSongRequest),a
+	ld	hl,0
+	ld	(zMusicReadySong),hl
+	ld	(zMusicSongRequest),hl
 	ld	a,(zMusicReadyFlags)
 	rla
 	ld	(zBGMLoad_FlagLoadInstruction+1),a
@@ -1783,8 +1804,15 @@ zBGMLoad_FlagLoadInstruction:
 	pop	ix
 	ld	de,(zMusicReadBase)
 	ld	l,(ix+0)			; Get voice table pointer low byte -> 'e'
-	ld	h,(ix+1)			; Get voice table pointer high byte -> 'd'
+	ld	h,(ix+1)			; voice offset, or zero for the UVB
+	ld	a,h
+	or	l
+	jr	nz,.localVoices
+	ld	hl,zmake68kPtr(UniversalVoiceBank)
+	jr	.voicePointer
+.localVoices:
 	add	hl,de
+.voicePointer:
 	ld	(zBGMLoad_VoiceAddrInstruction+1),hl	; Set master copy of this value in local memory
 	ld	a,(ix+5)			; Get main tempo value
 	ld	(zAbsVar.TempoMod),a	; Store it at (zComRange+12h)
@@ -2045,16 +2073,36 @@ zPSGInitBytes:
 zPlaySound_Checks:
 	xor	a
 	ld	(zSpindashActiveFlag),a			; Clear spindash sound flag
-	ld	a,c								; Sound index -> 'a'
+	; BC holds the complete global SFX ID.
 
-	cp	SndID_Ring						; is this the ring sound?
+	if SndID__End-SndID__First<100h
+	ld	a,c
+	cp	SndID_Ring&0FFh
+	jr	z,zPlaySound_CheckRing
+	cp	SndID_Gloop&0FFh
+	jr	z,zPlaySound_CheckGloop
+	cp	SndID_BlockPush&0FFh
+	jr	z,zPlaySound_CheckPush
+	cp	SndID_SpindashRev&0FFh
+	jr	z,zPlaySound_CheckSpindash
+	else
+	ld	hl,SndID_Ring
+	or	a
+	sbc	hl,bc
 	jr	z,zPlaySound_CheckRing			; if not, branch
-	cp	SndID_Gloop						; is this the bloop/gloop noise?
+	ld	hl,SndID_Gloop
+	or	a
+	sbc	hl,bc
 	jr	z,zPlaySound_CheckGloop			; if not, branch
-	cp	SndID_BlockPush					; is this the pushing block noise?
+	ld	hl,SndID_BlockPush
+	or	a
+	sbc	hl,bc
 	jr	z,zPlaySound_CheckPush			; if not, branch
-	cp	SndID_SpindashRev				; is this the spindash rev sound playing?
+	ld	hl,SndID_SpindashRev
+	or	a
+	sbc	hl,bc
 	jr	z,zPlaySound_CheckSpindash		; if not, branch
+	endif
 	ret
 
 zPlaySound_CheckRing:
@@ -2064,7 +2112,7 @@ zRingSpeaker = $+1
 	xor	0FFh							; If it was 0, it's now FFh, or vice versa
 	ld	(zRingSpeaker),a							; Store new ring speaker value (other side)
 	ret	z								; If it's zero, we play RingRight
-	ld	c,SndID_RingLeft				; play RingLeft
+	ld	bc,SndID_RingLeft				; play RingLeft
 	ret									; now play the play the ring sound
 ; ---------------------------------------------------------------------------
 ; zloc_942:
@@ -2111,7 +2159,8 @@ zPlaySound_CheckSpindash:
 
 ; zloc_920:
 zPlaySound_Main:
-	ld	c,a								; Store sound index -> 'c'
+	ld	b,h
+	ld	c,l
 	ld	a,(ix+zVar.1upPlaying)						; Get "is 1-up playing" flag...
 	or	(ix+zVar.FadeInFlag)						; Or it with fading in flag
 	jp	nz,zloc_KillSFXPrio				; If either is set, SFX cannot be played!!
@@ -2121,14 +2170,21 @@ zPlaySound_Main:
 zPlaySound:
 	rst	zBankSwitchToSFX			; Switch to SFX banks
 
-	ld	hl,zmake68kPtr(SoundIndex)		; 'hl' points to beginning of SFX bank in ROM window
-	ld	a,c								; 'c' -> 'a'
-	sub	SndID__First					; Bring 'a' down to index value
-	ld	e,a
-	ld	d,0								; de = a
+	if SndID__End-SndID__First<100h
+	ld	e,c
+	ld	d,0
+	else
+	ld	h,b
+	ld	l,c
+	ld	de,SndID__First
+	or	a
+	sbc	hl,de
+	ex	de,hl
+	endif
+	ld	hl,zmake68kPtr(SoundIndex)
 	add	hl,de
 	add	hl,de
-	add	hl,de							; now hl points to a pointer in the SoundIndex list (such as rom_ptr_z80 Sound20)
+	add	hl,de
 	ld	a,(hl)
 	inc	hl
 	ld	h,(hl)
@@ -2139,9 +2195,16 @@ zPlaySound:
 	inc	hl
 	ld	b,(hl)							; 'de' points to custom voice table (if any; otherwise is 0000h)
 	inc	hl
+	ld	a,b
+	or	c
+	jr	nz,.localVoices
+	ld	de,zmake68kPtr(UniversalVoiceBank)
+	jr	.voicePointer
+.localVoices:
 	ex	hl,de
 	add	hl,bc
 	ex	hl,de
+.voicePointer:
 	ld	(zloc_A26+1),de	; store into the instruction after zloc_A26 (self-modifying code)
 	ld	c,(hl)							; Timing divisor -> 'c'
 	inc	hl
@@ -2261,11 +2324,8 @@ zloc_KillSFXPrio:
 ; End of function zPlaySoundByIndex
 
 zPlayDACSFX:
-	sub	DACSFXID__First
-	ld	c,a
-	ld	b,0
-	ld	hl,zDACSFXList
-	add	hl,bc
+	ld	de,zDACSFXList
+	add	hl,de
 	ld	b,(hl)
 	ld	c,0C0h		; default Panning / AMS / FMS settings (only stereo L/R enabled)
 	ld	d,80h		; This is a DAC SFX
@@ -2455,13 +2515,57 @@ zFMSilenceAll:
 	ret
 ; End of function zFMSilenceAll
 
+; Ristar sound-test ONCHI: one shared eleven-note sequence, music FM only.
+; Source: Ristar SMPS_FMExtraKeyDelta / FMKeyDeltaArray. The twelfth zero
+; in that source is unreachable because the index wraps before entry eleven.
+zToggleDistortion:
+	ld	a,(zDistortionGate+1)
+	xor	3
+	ld	(zDistortionGate+1),a
+	xor	a
+	ld	(zDistortionIndex+1),a
+	ret
+
+zApplyMusicDistortion:
+	ld	c,a
+	ld	a,(zDoSFXFlag)
+	or	a
+	ld	a,c
+	ret	nz
+	push	hl
+zDistortionIndex:
+	ld	e,0
+	ld	d,0
+	ld	hl,zDistortionNotes
+	add	hl,de
+	add	a,(hl)
+	and	7Fh
+	ld	c,a
+	inc	e
+	ld	a,e
+	cp	zDistortionNotes_End-zDistortionNotes
+	jr	c,.store
+	xor	a
+.store:
+	ld	(zDistortionIndex+1),a
+	ld	a,c
+	pop	hl
+	ret
+zDistortionNotes:
+	db	-1,5,4,2,6,-2,3,-1,4,1,3
+zDistortionNotes_End:
+
 ; ---------------------------------------------------------------------------
 ; zloc_B4E:
 zStopSoundAndMusic:
 	xor	a
 	ld	(zMusicStarting),a
 	ld	(zMusicSongRequest),a
+	ld	(zMusicSongRequest+1),a
 	ld	(zAbsVar.StopMusic),a
+	ld	(zDistortionIndex+1),a
+	ld	a,3
+	ld	(zDistortionGate+1),a
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 
@@ -2473,23 +2577,26 @@ zClearTrackPlaybackMem:
 	ld	c,0							; All clear
 	rst	zWriteFMI					; Write it!
 	; This performs a full clear across all track/playback memory
-	ld	bc, (zAbsVar.SFXToPlay)
+	ld	bc,(zAbsVar.SFXToPlay)
+	push	bc
+	ld	bc,(zAbsVar.SFXStereoToPlay)
 	push	bc						; save zSFXToPlay/zSFXStereoToPlay
-	ld	a,(zAbsVar.SFXUnknown)
-	push	af
+	ld	bc,(zAbsVar.SFXUnknown)
+	push	bc
 
 	ld	hl,zAbsVar
 	ld	de,zAbsVar+1
 	ld	(hl),0						; Starting byte is 00h
-	ld	bc,(zTracksSFXEnd-zAbsVar)-1						; For 695 bytes...
-	ldir							; 695 bytes of clearing!  (Because it will keep copying the byte prior to the byte after; thus 00h repeatedly)
-	pop	af
-	ld	(zAbsVar.SFXUnknown),a
+	ld	bc,(zTracksSFXEnd-zAbsVar)-1						; Clear the declared playback region.
+	ldir							; Propagate zero through the playback region.
+	pop	bc
+	ld	(zAbsVar.SFXUnknown),bc
+	pop	bc
+	ld	(zAbsVar.SFXStereoToPlay),bc
 	pop	bc						; restore zSFXToPlay/zSFXStereoToPlay
 	ld	(zAbsVar.SFXToPlay), bc
 
-	xor	a
-	ld	(zAbsVar.QueueToPlay),a			; Nothing is queued
+	; The full clear already emptied QueueToPlay.
 	call	zFMSilenceAll			; Silence FM
 	jp	zPSGSilenceAll				; Silence PSG
 ; End of function zClearTrackPlaybackMem
@@ -2514,8 +2621,11 @@ zInitMusicPlayback:
 	ld	b,(ix+zVar.SpeedUpFlag)		; speed shoe tempo
 	ld	c,(ix+zVar.FadeInCounter)		; fade in frames
 	push	bc
-	ld	b,(ix+zVar.SFXToPlay)		; SFX queue slot
-	ld	c,(ix+zVar.SFXStereoToPlay)		; Stereo SFX queue slot
+	ld	bc,(zAbsVar.SFXToPlay)
+	push	bc
+	ld	bc,(zAbsVar.SFXStereoToPlay)
+	push	bc
+	ld	bc,(zAbsVar.SFXUnknown)
 	push	bc
 	; Clear from the end with word pushes while the sound IRQ is masked.
 	; The caller's stack lives below the track area and stays intact.
@@ -2538,8 +2648,11 @@ zInitMusicPlayback:
 	endif
 	; Restore those queue/flags:
 	pop	bc
-	ld	(ix+zVar.SFXToPlay),b		; SFX queue slot
-	ld	(ix+zVar.SFXStereoToPlay),c		; Stereo SFX queue slot
+	ld	(zAbsVar.SFXUnknown),bc
+	pop	bc
+	ld	(zAbsVar.SFXStereoToPlay),bc
+	pop	bc
+	ld	(zAbsVar.SFXToPlay),bc
 	pop	bc
 	ld	(ix+zVar.SpeedUpFlag),b		; speed shoe tempo
 	ld	(ix+zVar.FadeInCounter),c		; fade in frames
@@ -2548,6 +2661,7 @@ zInitMusicPlayback:
 	ld	(ix+zVar.1upPlaying),c		; 1-up playing flag
 	xor	a
 	ld	(zAbsVar.QueueToPlay),a
+	ld	(zAbsVar.QueueToPlay+1),a
 	; This silences all channels, even those being used by SFX!
 	; zloc_8FB does the same thing, only better (it doesn't affect SFX channels)
 	;call	zFMSilenceAll
@@ -2757,9 +2871,74 @@ zReadCoordArgument macro
 	inc	hl
 	endm
 
+; Cold helpers occupy the otherwise unused alignment gap before the table.
+; S3 absolute loudness. Masks retain FM bits 0-6 and PSG bits 3-6.
+; Share the existing FM/PSG store tails without slowing their delta commands.
+cfSetVolume:
+	zReadCoordArgument
+	bit	7,(ix+zTrack.VoiceControl)
+	jr	z,.fm
+	rrca
+	rrca
+	rrca
+	cpl
+	and	0Fh
+	jr	cfStorePSGVolume
+.fm:
+	cpl
+	and	7Fh
+	jp	cfStoreFMVolume
+
+
+cfChangePSGVolume:
+	zReadCoordArgument
+	add	a,(ix+zTrack.Volume)	; Add to channel volume
+cfStorePSGVolume:
+	ld	(ix+zTrack.Volume),a	; Store updated volume
+	ret
+
+
+
+zGetROMVoice:
+	bit	7,h
+	ret	z				; resident Z80 RAM needs no bank switch
+	; Unlike cached song patches, UVB patches need the SFX ROM bank.
+	ld	a,(zMusicSavedBank+1)
+	cp	zmake68kBank(SoundIndex)
+	ret	z
+	push	hl
+	rst	zBankSwitchToSFX
+	pop	hl
+	ret
+
+
+zFinishMusicTick:
+	xor	a
+	ld	(zMusicTickBusy),a
+	push	hl
+	ld	hl,(zMusicSongRequest)
+	ld	a,h
+	or	l
+	ld	a,Music_SongRequestSignal
+	jr	nz,.post
+	ld	a,(zMusicLookahead)
+	or	a
+	jr	z,.return
+.post:
+	push	af
+	xor	a
+	ld	(zMusicLookahead),a
+	pop	af
+	pop	hl
+	jp	zPostMusicSignal
+.return:
+	pop	hl
+	ret
+
+
 ; This is the lookup for Coordination flag routines
 
-	ensure1byteoffset 36h
+	ensure1byteoffset 38h
 ;zloc_C92
 coordflagLookup:
 ; ---------------------------------------------------------------------------
@@ -2791,7 +2970,7 @@ coordflagLookup:
 ; ---------------------------------------------------------------------------
 	dw	cfClearPush ; ED
 ; ---------------------------------------------------------------------------
-	dw	cfStopSpecialFM4 ; EE
+	dw	cfStopTrack ; EE, SFX stop/restoration
 ; ---------------------------------------------------------------------------
 	dw	cfSetVoice ; EF
 ; ---------------------------------------------------------------------------
@@ -2815,7 +2994,8 @@ coordflagLookup:
 ; ---------------------------------------------------------------------------
 	dw	cfOpF9 ; F9
 ; ---------------------------------------------------------------------------
-	dw	cfNoteFillS3K ; FA, new
+	dw	cfNoteFillS3K ; FA
+	dw	cfSetVolume ; FB, absolute loudness
 ; ---------------------------------------------------------------------------
 
 ; (via Saxman's doc): panning, AMS, FMS
@@ -3006,6 +3186,7 @@ cfSetTempoDivider:
 cfChangeFMVolume:
 	zReadCoordArgument
 	add	a,(ix+zTrack.Volume)		; Add to current volume
+cfStoreFMVolume:
 	ld	(ix+zTrack.Volume),a		; Update volume
 	jp	zSetChanVol		; Immediately set this new volume
 ; ---------------------------------------------------------------------------
@@ -3093,26 +3274,10 @@ zVolTLMaskTbl:
 
 ; Alternatively, just think of it as a volume setting optimized for PSG :P
 ;zloc_DF9 cfChangeVolume
-cfChangePSGVolume:
-	zReadCoordArgument
-	add	a,(ix+zTrack.Volume)	; Add to channel volume
-	ld	(ix+zTrack.Volume),a	; Store updated volume
-	ret
 ; ---------------------------------------------------------------------------
 
 ; Ported from S1 EDh
 ;zlocret_E00 cfUnused cfUnused1
-cfClearPush:
-	xor	a		; Clear a
-	ld	(zPushFlag),a	; Clear pushing sound flag
-	ret
-; ---------------------------------------------------------------------------
-
-; Unused command EEh
-; This used to be Sonic 1's cfStopSpecialFM4. But the Special SFX function hasn't been ported...
-;zloc_E01 cfVoiceUNK cfUnused2
-cfStopSpecialFM4:
-	ret
 ; ---------------------------------------------------------------------------
 
 ; (via Saxman's doc): set voice selection to xx
@@ -3146,7 +3311,7 @@ zGetCurrentVoice:
 	ld	a,h
 	sub	Music_ScoreBase>>8
 	cp	Music_StageCapacity>>8
-	ret	nc				; SFX patch in the physical ROM window
+	jp	nc,zGetROMVoice
 	ld	a,l
 	and	Music_PageSize-1
 	cp	Music_PageSize-25+1
@@ -3274,8 +3439,12 @@ zSetFMTLs:
 	; It's not appropriate to alter ALL TL values, only
 	; the ones which are "slots" (output operators)
 	push	af				; Save 'a'
-	ld	a,d					; Channel volume -> d
-	add	a,c					; Add it to the TL value
+	ld	a,c
+	or	80h				; Marker bit makes carry detect 7-bit TL overflow.
+	add	a,d
+	jr	nc,.level
+	ld	a,7Fh			; Saturate silence instead of wrapping back to loud.
+.level:
 	ld	c,a					; Modified value -> c
 	pop	af					; Restore 'a'
 +
@@ -3614,62 +3783,6 @@ zFrequencies:
 
 ; zoff_1029:
 ;zPSG_Index
-zPSG_FlutterTbl:
-	; Basically, for any tone 0-11, dynamic volume adjustments are applied to produce a pseudo-decay,
-	; or sometimes a ramp up for "soft" sounds, or really any other volume effect you might want!
-
-	; Remember on PSG that the higher the value, the quieter it gets (it's attenuation, not volume);
-	; 0 is thus loudest, and increasing values decay, until level $F (silent)
-
-	dw	byte_1043, byte_105A, byte_1061, byte_1072
-	dw	byte_108C, byte_107D, byte_10B6, byte_10D2
-	dw	byte_10FA, byte_110B, byte_1149, byte_1165
-	dw	byte_11E5
-byte_1043:
-	db	0,0,0,1,1,1,2,2,2,3,3,3,4,4,4,5
-	db	5,5,6,6,6,7,80h
-byte_105A:
-	db	0,2,4,6,8,10h,80h
-byte_1061:
-	db	0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,80h
-byte_1072:
-	db	0,0,2,3,4,4,5,5,5,6,80h
-byte_107D:
-	db	3,3,3,2,2,2,2,1,1,1,0,80h
-byte_108C:
-	db	0,0,0,0,0,0,0,0,0,0,1,1
-	db	1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2
-	db	2,2,2,2,3,3,3,3,3,3,3,3,4,80h
-byte_10B6:
-	db	0,0,0,0,0,0,1,1,1,1,1,2,2,2,2,2
-	db	3,3,3,4,4,4,5,5,5,6,7,80h
-byte_10D2:
-	db	0,0,0,0,0,1,1,1,1,1,2,2,2,2,2,2
-	db	3,3,3,3,3,4,4,4,4,4,5,5,5,5,5,6
-	db	6,6,6,6,7,80h
-byte_10FA:
-	db	0,1,2,3,4,5,6,7,8,9,0Ah,0Bh,0Ch,0Dh,0Eh,0Fh,80h
-byte_110B:
-	db	0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1
-	db	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
-	db	1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2
-	db	2,2,3,3,3,3,3,3,3,3,3,3,4,80h
-byte_1149:
-	db	4,4,4,3,3,3,2,2,2,1,1,1,1,1,1,1
-	db	2,2,2,2,2,3,3,3,3,3,4,80h
-byte_1165:
-	db	4,4,3,3,2,2,1,1,1,1,1,1,1,1,1,1
-	db	1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2
-	db	2,2,2,2,2,2,2,2,2,2,2,2,2,2,3,3
-	db	3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3
-	db	3,3,4,4,4,4,4,4,4,4,4,4,4,4,4,4
-	db	4,4,4,4,4,4,5,5,5,5,5,5,5,5,5,5
-	db	5,5,5,5,5,5,5,5,5,5,6,6,6,6,6,6
-	db	6,6,6,6,6,6,6,6,6,6,6,6,6,6,7,80h
-byte_11E5:
-	db	0Eh,0Dh,0Ch,0Bh,0Ah,9,8,7,6,5,4,3,2,1,0,80h
-
-;	END of zPSG_FlutterTbl ---------------------------
 
 	;align	100h	; TODO: without this, ensure1byteoffset below throws a warning (?) that prevents the ROM from building??
 
@@ -3681,10 +3794,12 @@ byte_11E5:
 zMusicTickBusy:		db 0
 zMusicPageRequest:	db 0FFh
 zMusicCacheValid:	db 0
-zMusicSongRequest:	db 0
+	align 2
+zMusicSongRequest:	dw 0
 zMusicLookahead:	db 0
 zMusicSlotBusy:		db 0
-zMusicReadySong:		db 0
+	align 2
+zMusicReadySong:		dw 0
 zMusicReadySlot:		db 0
 zMusicReadyFlags:	db 0
 zMusicStarting:		db 0	; fresh header, rather than a saved 1-up return
@@ -3711,25 +3826,6 @@ zMusicSavedBank:
 	pop	af
 	pop	hl
 	ret
-
-zFinishMusicTick:
-	xor	a
-	ld	(zMusicTickBusy),a
-	ld	a,(zMusicSongRequest)
-	or	a
-	jr	nz,.song
-	ld	a,(zMusicLookahead)
-	or	a
-	ret	z
-	jr	.post
-.song:
-	or	80h
-.post:
-	push	af
-	xor	a
-	ld	(zMusicLookahead),a
-	pop	af
-	jp	zPostMusicSignal
 
 zRequestMusicCache:
 	xor	a

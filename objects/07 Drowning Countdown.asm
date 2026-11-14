@@ -182,7 +182,7 @@ MouthBubbles_Countdown:
 		bne.s	loc_12152
 		cmpa.w	#v_player,a2
 		bne.s	loc_12152
-		move.w	#bgm_Drowning,d0
+		move.w	#MusID_Countdown,d0
 		jsr	(PlaySound).l
 
 loc_12152:
@@ -194,7 +194,7 @@ loc_12152:
 ; ---------------------------------------------------------------------------
 
 loc_12166:
-		move.w	#sfx_Warning,d0
+		move.w	#SndID_WaterWarning,d0
 		jsr	(PlaySound_Special).l
 
 loc_12170:
@@ -213,7 +213,7 @@ loc_12170:
 		clr.w	(v_jpadholdlogical2).w
 .drown:
 		move.b	#$81,obControl(a2)
-		move.w	#sfx_Drown,d0
+		move.w	#SndID_Drown,d0
 		jsr	(PlaySound_Special).l
 		move.b	#$A,objoff_38(a0)
 		move.w	#1,objoff_3A(a0)

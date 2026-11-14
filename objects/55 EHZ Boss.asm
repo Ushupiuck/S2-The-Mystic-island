@@ -483,7 +483,7 @@ EHZBoss_CheckHits:	; routine to handle hits
 	bne.s	EHZBoss_loc_2F4D0	; boss already invincibile
 	move.w	(v_palette+$22).w,EHZBoss_flash_color(a0)
 	move.b	#$20,objoff_42(a0)	; boss invincibility timer
-	move.w	#sfx_HitBoss,d0
+	move.w	#SndID_BossHit,d0
 	jsr	(PlaySound).l	; play boss hit sound
 
 EHZBoss_loc_2F4D0:
@@ -504,7 +504,7 @@ EHZBoss_return_2F4EC:
 ; ===========================================================================
 
 EHZBoss_Defeated:	; boss defeated
-	move.w	#MusID_FadeOut,d0
+	move.w	#CmdID_FadeOut,d0
 	jsr	(PlayMusic).l
 	moveq	#100,d0
 	jsr	(AddPoints).l	; add 1000 points, reward for defeating boss

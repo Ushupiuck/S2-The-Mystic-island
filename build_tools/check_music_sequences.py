@@ -16,7 +16,7 @@ from check_ehz_boss import symbols
 from check_sound_tools import saxman,kosinski_plus
 
 ROOT=Path(__file__).resolve().parents[1]
-LENGTHS=(2,2,2,1,1,2,2,1,2,2,2,2,2,1,1,2,5,1,1,2,1,2,3,5,3,1,2)
+LENGTHS=(2,2,2,1,1,2,2,1,2,2,2,2,2,1,1,2,5,1,1,2,1,2,3,5,3,1,2,2)
 
 
 def music(rom,listing,ini):
@@ -42,7 +42,8 @@ def music(rom,listing,ini):
 def current_music(g, rom, zram):
 	if 'Music_Index' in g.s:
 		slot = zram[g.s['zAbsVar.MusicSlot']]
-		return g.read(g.s['Music_StageSongs'] + slot - 1) if slot else 0
+		width = 2 if 'SoundID_Mask' in g.s else 1
+		return g.read(g.s['Music_StageSongs'] + (slot - 1) * width, width) if slot else 0
 	bank = zram[g.s['zBGMLoad_BankLoadInstruction'] + 1]
 	address = g.s['zBGMLoad_AddressLoadInstruction'] + 1
 	entry = bytes((bank, zram[address], zram[address+1]))
@@ -87,7 +88,7 @@ def trace(data,start):
 				events.append(('note',op,duration))
 			else:events.append(('duration',op))
 			continue
-		assert op<=0xFA,('Unsupported KeH command',hex(op),pc-1)
+		assert op<=0xFB,('Unsupported KeH command',hex(op),pc-1)
 		size=LENGTHS[op-0xE0];end=pc+size-1
 		assert end<=len(data),('Truncated command',op,pc)
 		if op==0xF6:
@@ -223,7 +224,7 @@ def playback(a,before,after):
 		tracks=[g.s[name] for name in track_names];offsets=[g.s['zTrack.'+name] for name in fields]
 		globals=[g.s['zAbsVar.'+name] for name in ('TempoTimeout','CurrentTempo','StopMusic')]
 		for name in selected:
-			g.restore(menu);g.write('v_levselsound',list(before).index(name)+1,2);g.run(2)
+			g.restore(menu);g.write('v_levselsound',list(before if reference else after).index(name)+1,2);g.run(2)
 			g.buttons={0};g.run(2);g.buttons=set();g.run(1)
 			raw=(before if reference else after)[name][0];voices=header(raw)[2]
 			patches=[hashlib.sha256(voices[i:i+25]).digest()[:4] for i in range(0,len(voices),25)]

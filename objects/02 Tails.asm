@@ -332,7 +332,7 @@ Tails_Water:
 		asr	obVelY(a0)
 		beq.s	.air
 		jsr	(SpawnPlayerSplash).l
-		move.w	#sfx_Splash,d0
+		move.w	#SndID_Splash,d0
 		jsr	(PlaySound_Special).l
 .air:
 		cmpa.w	#v_player,a0
@@ -367,7 +367,7 @@ Tails_Water:
 		move.w	#-Sonic_WaterExitSpeedLimit,obVelY(a0)
 .sound:
 		jsr	(SpawnPlayerSplash).l
-		move.w	#sfx_Splash,d0
+		move.w	#SndID_Splash,d0
 		jmp	(PlaySound_Special).l
 .return:
 		rts
@@ -1318,7 +1318,7 @@ TailS3_loc_1456C:
 		tst.b	spindash_flag(a1)
 		bne.s	TailS3_locret_1459C
 		bsr.s	TailS3_sub_1459E
-		move.w	#sfx_Grab,d0
+		move.w	#SndID_TailsGrab,d0
 		jsr	(PlaySound_Special).l
 		move.b	#1,(a2)
 
@@ -1452,7 +1452,7 @@ TailS3_loc_148CC:
 		addq.b	#8,d0
 		andi.b	#$F,d0
 		bne.s	TailS3_locret_148F2
-		move.w	#sfx_FlyTired,d0
+		move.w	#SndID_TailsFlyingTired,d0
 		jsr	(PlaySound_Special).l
 
 TailS3_locret_148F2:
@@ -1467,7 +1467,7 @@ TailS3_loc_148F4:
 		addq.b	#8,d0
 		andi.b	#$F,d0
 		bne.s	TailS3_locret_14912
-		move.w	#sfx_Flying,d0
+		move.w	#SndID_TailsFlying,d0
 		jsr	(PlaySound_Special).l
 
 TailS3_locret_14912:
@@ -1669,7 +1669,7 @@ TailS3_loc_14C62:
 		blt.s	TailS3_locret_14CAA
 		tst.b	flip_turned(a0)
 		bmi.s	TailS3_locret_14CAA
-		move.w	#sfx_Skid,d0
+		move.w	#SndID_Skidding,d0
 		jsr	(PlaySound_Special).l
 		move.b	#$D,obAnim(a0)
 		bclr	#status.player.x_flip,obStatus(a0)
@@ -1731,7 +1731,7 @@ TailS3_loc_14CE8:
 		bgt.s	TailS3_locret_14D30
 		tst.b	flip_turned(a0)
 		bmi.s	TailS3_locret_14D30
-		move.w	#sfx_Skid,d0
+		move.w	#SndID_Skidding,d0
 		jsr	(PlaySound_Special).l
 		move.b	#$D,obAnim(a0)
 		bset	#status.player.x_flip,obStatus(a0)
@@ -2094,7 +2094,7 @@ Tails_Roll:
 		move.b	#tails_roll_width,obWidth(a0)
 		move.b	#AniIDSonAni_Roll,obAnim(a0)
 		addq.w	#tails_height-tails_roll_height,obY(a0)
-		move.w	#sfx_Roll,d0
+		move.w	#SndID_Roll,d0
 		jmp	(PlaySound_Special).l
 Obj02_NoRoll:
 		rts
@@ -2130,7 +2130,7 @@ Tails_Jump:
 		addq.l	#4,sp
 		move.b	#1,jumping(a0)
 		clr.b	stick_to_convex(a0)
-		move.w	#sfx_Jump,d0
+		move.w	#SndID_Jump,d0
 		jsr	(PlaySound_Special).l
 		btst	#2,obStatus(a0)
 		bne.s	.return
@@ -2225,7 +2225,7 @@ Tails_CheckSpindash:
 		andi.b	#btnABC,d0
 		beq.s	.return
 		move.b	#AniIDSonAni_Spindash,obAnim(a0)
-		move.w	#sfx_Spindash,d0
+		move.w	#SndID_SpindashRev,d0
 		jsr	(PlaySound_Special).l
 		move.b	#1,spindash_flag(a0)
 		clr.w	spindash_counter(a0)
@@ -2265,7 +2265,7 @@ Tails_UpdateSpindash:
 		neg.w	obInertia(a0)
 .right:
 		bset	#status.player.rolling,obStatus(a0)
-		move.w	#sfx_Dash,d0
+		move.w	#SndID_SpindashRelease,d0
 		jsr	(PlaySound_Special).l
 		bra.s	Tails_SpindashGround
 
@@ -2293,7 +2293,7 @@ Tails_ChargingSpindash:
 		andi.b	#btnABC,d0
 		beq.s	Tails_SpindashGround
 		move.w	#AniIDSonAni_Spindash<<8,obAnim(a0)
-		move.w	#sfx_Spindash,d0
+		move.w	#SndID_SpindashRev,d0
 		jsr	(PlaySound_Special).l
 		addi.w	#Sonic_SpindashChargeStep,spindash_counter(a0)
 		cmpi.w	#Sonic_SpindashMaxCharge,spindash_counter(a0)

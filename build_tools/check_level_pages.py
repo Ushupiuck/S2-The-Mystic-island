@@ -186,28 +186,29 @@ for button in (A, B, C_BUTTON, START):
 	press(button); item(0x100 | PAGE)
 	press(button); item(PAGE)
 
-# Test every low-nibble/wrap combination, including F6 -> 06 and FF -> 0F.
+# Test all three-digit IDs and wrapping at the configured sound-test limit.
 g.restore(menu)
 press(UP); item(SOUND)
-for sound in range(256):
+sound_count=g.s['SoundTest_MaxID']+1
+for sound in range(sound_count):
 	g.write('v_levselsound', sound, 2)
 	press(A)
-	assert g.read('v_levselsound', 2) == ((sound + 0x10) & 0xFF), sound
+	assert g.read('v_levselsound', 2) == ((sound + 0x10) % sound_count), sound
 	item(SOUND)
 g.write('v_levselsound', 0, 2)
 press(LEFT)
-assert g.read('v_levselsound', 2) == 0xFF
+assert g.read('v_levselsound', 2) == sound_count-1
 press(RIGHT)
 assert g.read('v_levselsound', 2) == 0
 zram = (C.c_uint8 * 8192).in_dll(g.core, 'zram')
 playing = g.s['zSongFM1.PlaybackControl']
 for button in (B, C_BUTTON, START):
-	g.write('v_levselsound', g.s['MusID_Stop'], 2)
+	g.write('v_levselsound', g.s['CmdID_Stop'], 2)
 	press(B); step(30)
 	assert not zram[playing] & 0x80
 	g.write('v_levselsound', 0xF6, 2)
 	press(A); step(15)
-	assert g.read('v_levselsound', 2) == 6
+	assert g.read('v_levselsound', 2) == 0x106
 	assert not zram[playing] & 0x80, 'A played the sound instead of only changing its ID'
 	g.write('v_levselsound', g.s['MusID_GHZ'], 2)
 	press(button); step(30)

@@ -829,103 +829,43 @@ VRAM_Menu_Plane_Table_Size               = $1000	; 64 cells x 32 cells x 2 bytes
 ; Sound command IDs
 offset :=	zCommandIndex
 ptrsize :=	2
-idstart :=	$FA
+idstart :=	$17A
 
 CmdID__First = idstart
-MusID_StopSFX =		id(CmdPtr_StopSFX)	; F8
-MusID_FadeOut =		id(CmdPtr_FadeOut)	; F9
-SndID_SegaSound =	id(CmdPtr_SegaSound)	; FA
-MusID_SpeedUp =		id(CmdPtr_SpeedUp)	; FB
-MusID_SlowDown =	id(CmdPtr_SlowDown)	; FC
-MusID_Stop =		id(CmdPtr_Stop)		; FD
-CmdID__End =		id(CmdPtr__End)		; FE
+CmdID_Distortion =	id(CmdPtr_Distortion)	; 17A (toggle)
+CmdID_StopSFX =		id(CmdPtr_StopSFX)	; 17B
+CmdID_FadeOut =		id(CmdPtr_FadeOut)	; 17C
+CmdID_SegaSound =	id(CmdPtr_SegaSound)	; 17D
+CmdID_SpeedUp =		id(CmdPtr_SpeedUp)	; 17E
+CmdID_SlowDown =	id(CmdPtr_SlowDown)	; 17F
+CmdID_Stop =		id(CmdPtr_Stop)		; 180
+CmdID__End =		id(CmdPtr__End)		; 181 (exclusive)
 
-; Background music
-bgm_GHZ =		MusID_ALZ
-bgm_LZ =		MusID_LZ
-bgm_MZ =		MusID_CPZ
-bgm_SLZ =		MusID_GRGZ1
-bgm_SYZ =		MusID_DDZ1
-bgm_HTZ =		MusID_LBZ1_S3
-bgm_SBZ =		MusID_SBZ
-bgm_Invincible =	MusID_Invincible
-bgm_ExtraLife =		MusID_ExtraLife
-bgm_DoubleLife =	MusID_DoubleLife
-bgm_SS =		MusID_BonusStage
-bgm_Title =		MusID_Title
-bgm_Ending =		MusID_Ending_S1
-bgm_Boss =		MusID_Boss
-bgm_FZ =		MusID_HTZ
-bgm_GotThrough =	MusID_EndLevel
-bgm_GameOver =		MusID_GameOver
-bgm_Continue =		MusID_Continue
-bgm_Credits =		MusID_Credits
-bgm_Drowning =		MusID_Countdown
-bgm_Emerald =		MusID_Emerald
-
-; Sound effects -- Note: Some files are offset by +-$1E. That's a mess for future me to sort out
-sfx_Jump =		SndID_Jump
-sfx_Lamppost =		SndID_Checkpoint
-sfx_SpikeSwitch =	SndID_SpikeSwitch
-sfx_Death =		SndID_Hurt
-sfx_Skid =		SndID_Skidding
-sfx_Push =		SndID_BlockPush
-sfx_HitSpikes =		SndID_HurtBySpikes
-sfx_A5 =		SndID_MegaMackDrop
-sfx_SSGoal =		SndID_Goal
-sfx_SSItem =		SndID_Bwoop
-sfx_Splash =		SndID_Splash
-sfx_Grab =		SndID_TailsGrab
-sfx_Flying =		SndID_TailsFlying
-sfx_FlyTired =		SndID_TailsFlyingTired
-sfx_AB =		SndID_Swish
-sfx_HitBoss =		SndID_BossHit
-sfx_Bubble =		SndID_InhalingBubble
-sfx_Fireball =		SndID_FireBurn
-sfx_Shield =		SndID_Shield
-sfx_Saw =		SndID_LaserBeam
-sfx_Electric =		SndID_Zap
-sfx_Drown =		SndID_Drown
-sfx_Flamethrower =	SndID_FireBurn
-sfx_Bumper =		SndID_Bumper
-sfx_Ring =		SndID_Ring
-sfx_SpikesMove =	SndID_SpikesMove
-sfx_Rumbling =		SndID_Rumbling
-sfx_B8 =		SndID_DoorSlam		; 56
-sfx_Collapse =		SndID_Smash
-sfx_SSGlass =		SndID_Glass
-sfx_Door =		SndID_Trapdoor		; 59
-sfx_Teleport =		SndID_SpindashRelease
-sfx_ChainStomp =	SndID_ChainRise
-sfx_Roll =		SndID_Roll
-sfx_Spindash =		SndID_SpindashRev
-sfx_Dash =		SndID_SpindashRelease
-sfx_Continue =		SndID_ContinueJingle
-sfx_Basaran =		SndID_SpindashRelease
-sfx_BreakItem =		SndID_Explosion
-sfx_Warning =		SndID_WaterWarning
-sfx_GiantRing =		SndID_EnterGiantRing
-sfx_Bomb =		SndID_BossExplosion
-sfx_Cash =		SndID_TallyEnd
-sfx_RingLoss =		SndID_RingSpill
-sfx_ChainRise =		SndID_ChainRise
-sfx_Burning =		SndID_FireBurn
-sfx_Bonus =		SndID_Bonus
-sfx_EnterSS =		SndID_SpecStageEntry
-sfx_WallSmash =		SndID_SlowSmash
-sfx_Spring =		SndID_Spring
-sfx_Switch =		SndID_Blip	; file Sound4D.asm; internally 6B
-sfx_RingLeft =		SndID_RingLeft
-sfx_Signpost =		SndID_Signpost
-
-; Special sound effects
-sfx_Waterfall =	$D0
-
-bgm_Fade =		MusID_FadeOut
-sfx_Sega =		SndID_SegaSound
-bgm_Speedup =		MusID_SpeedUp
-bgm_Slowdown =		MusID_SlowDown
-bgm_Stop =		MusID_Stop
+; Global requests carry a 12-bit ID; the upper word nibble is reserved.
+SoundID_None = 0
+SoundID_Mask = $0FFF
+SoundFlags_Mask = $F000
+SoundTest_MaxID = $180
+Music_LevelIDFirst = MusID__First
+Music_LevelIDCount = LevelActCount
+Music_LevelIDEnd = Music_LevelIDFirst+Music_LevelIDCount
+	if (MOMPASS>1)&&(MusID_Title<>Music_LevelIDEnd)
+		fatal "Reserve the first 64 music IDs for stage songs."
+	endif
+	if MOMPASS>1
+		if (CmdID__End<>SoundTest_MaxID+1)||(DACSFXID__End>SoundID_Mask+1)
+			fatal "Sound commands must end at the sound-test limit; IDs must fit 12 bits."
+		endif
+		if (MusID__First<CmdID__End)&&(MusID__End>CmdID__First)
+			fatal "Music IDs overlap the sound commands."
+		endif
+		if (SndID__First<CmdID__End)&&(SndID__End>CmdID__First)
+			fatal "SFX IDs overlap the sound commands."
+		endif
+		if (DACSFXID__First<CmdID__End)&&(DACSFXID__End>CmdID__First)
+			fatal "DAC SFX IDs overlap the sound commands."
+		endif
+	endif
 
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -1530,6 +1470,7 @@ Music_PageSize = 1<<Music_PageShift
 Music_PageCount = Music_StageCapacity/Music_PageSize
 Music_CacheSlots = 30
 Music_VoicePageSlots = 4
+Music_SongRequestSignal = $FE
 Music_LookaheadSignal = $FF
 Music_ScoreBase = $4000
 	if (Music_StageCount*Music_StageCapacity)>$7FFF
@@ -1538,15 +1479,17 @@ Music_ScoreBase = $4000
 
 	phase	Collision_response_list_end
 Music_StageData:	ds.b	Music_StageCapacity*Music_StageCount
-Music_StageSongs:	ds.b	Music_StageCount
+Music_StageSongs:	ds.w	Music_StageCount
 Music_PageTags:		ds.b	Music_CacheSlots
-Music_CacheSong:		ds.b	1
+			even
+Music_CacheSong:		ds.w	1
 Music_NextPage:		ds.b	1
 Music_FirstVoicePage:	ds.b	1	; first of the fixed slots for the shared voice table
-Music_PendingSong:	ds.b	1
+Music_PendingSong:	ds.w	1
 Music_LoadBusy:		ds.b	1
 Music_ServiceReady:	ds.b	1
 Music_BusSignal:		ds.b	1	; Z80 posts page and song requests here
+			even
 Music_RAM_End:
 ; Immutable DMA sources for the shared boss-head DPLCs. Each character's
 ; bank is decoded at first use, retained through the arena and reset on entry.

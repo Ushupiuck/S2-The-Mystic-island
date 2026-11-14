@@ -47,6 +47,59 @@ Rebuild the distributed `KEHmusic.exe` and `KEHsfx.exe` after changing their
 source; the build script invokes those binaries. Do not hand-edit generated
 outputs or keep duplicate copies at the project root.
 
+## Sound IDs and requests
+
+Global requests use `d0.w`: bits 0-11 select `$000-$FFF`; bits 12-15 are
+reserved flags. Queues, deferred requests, stage identities and saved return
+identities preserve the full ID. Dispatch masks the reserved nibble. Priority,
+DAC sample indices, FM voice indices and coordination bytecode remain bytes.
+The 68000 holds the Z80 bus across two byte accesses per word: the Z80 RAM
+window does not support ordinary 68000 word transfers. Use `WriteZ80Word` and
+`ReadZ80Word`, with little-endian Z80 storage.
+
+| IDs (hex) | Current role |
+| --- | --- |
+| `$000` | No request |
+| `$001-$040` | 64 stage-music slots |
+| `$041-$05A` | Shared themes, menus and jingles |
+| `$100-$155` | 86 named SFX |
+| `$17A` | `CmdID_Distortion`: toggle Ristar sound-test ONCHI |
+| `$17B` | `CmdID_StopSFX` |
+| `$17C` | `CmdID_FadeOut` |
+| `$17D` | `CmdID_SegaSound` |
+| `$17E` | `CmdID_SpeedUp` |
+| `$17F` | `CmdID_SlowDown` |
+| `$180` | `CmdID_Stop`: stop music and SFX, reset ONCHI |
+
+Sound test displays three hexadecimal digits and wraps at `$180`; A advances
+by `$10`. Its 1,3,5,7 code compares complete words. Higher valid IDs can be
+queued by game code, while unused holes are ignored. Assembly rejects catalogs
+that overlap the reserved command range or exceed 12 bits. Commands are checked
+independently of catalog order, including when SFX occupy a higher page.
+
+Edit `sound/music/music.ini` and `sound/SFX/SFX.ini`; generated IDs follow their
+entry order. Music uses `MusID_*`, SFX use `SndID_*`, and global commands use
+`CmdID_*`. The misleading legacy `bgm_*`/`sfx_*` aliases have been removed.
+SFX source files and private labels have descriptive names, not obsolete ID
+numbers. SFX begin on the next `$100` boundary after music. A single-page SFX
+catalog uses a proven byte-sized relative index internally; the generic word
+path remains available when the catalog grows beyond one page.
+
+The first 64 music entries are reserved even when unassigned. `Reserved=True`
+labels silent placeholders, which share `Reserved Stage.asm`; repeated source
+files share one ROM payload while retaining independent playlist flags.
+Replace a placeholder in place to fill its stage slot. Shared themes begin
+with `Title` at `$041`; `MusicList` selects songs independently for every act.
+Final-release Hydrocity act 1 (`HCZ1`, `$020`) uses the universal bank. The
+existing `LBZ1_S3` and `LBZ2_S3` are prototype arrangements and remain separate.
+The old waterfall request had no SFX entry; its callers now explicitly queue
+`SoundID_None` until an actual effect is supplied.
+
+ONCHI applies Ristar's reachable eleven-note offset sequence to new FM music
+notes. SFX, PSG, drums and held-note timing are unaffected. Each toggle resets
+its sequence index. It implements Ristar's sound-test mode, not the separate
+mode-2 modulation changes used during that game's scripted events.
+
 ## Importing music
 
 Add the song to `sound/music/music.ini`. For modern SMPS2ASM instrument data,
@@ -76,10 +129,21 @@ are adjusted for S2 semantics, and S3's two-argument `smpsFMAlterVol` uses its
 second argument. KeH selects carrier operators from the algorithm; it does not
 use the generic S3 driver's total-level marker interpretation.
 
-This is not an implementation of every S3 coordination command. Cross-song
-instrument selection and universal voice banks fail explicitly: copy the
-needed instruments into a song-local voice bank. Unsupported commands still
-require conversion to KeH-supported behavior or a separate driver change.
+`smpsHeaderVoiceUVB` (a zero voice-table offset) selects the 35 shared patches
+in `sound/UniBank.asm`, for music or SFX. `smpsSetvoice` still takes a byte
+index. Local nonzero voice offsets retain their original meaning. The shared
+bank lives beside SFX in ROM; it consumes no dedicated Z80 RAM and can be read
+alongside cached score pages. Cross-song instrument selection remains
+unsupported; copy those patches locally or use a matching universal patch.
+
+`smpsSetVol` emits `$FB,value` and implements S3 absolute loudness: zero is
+silent and `$7F` is full volume. FM stores `(~value)&$7F`; PSG stores
+`(~(value>>3))&$0F`. It shares the existing volume-store tails. The TL writer saturates carrier
+attenuation at `$7F`, preventing quiet notes from wrapping back to loud. `$EC` retains
+its PSG attenuation-delta meaning. `smpsClearPush` emits `$ED` and clears the
+push-effect latch. `smpsStopSpecial` emits `$EE` and uses the normal channel
+stop/priority/restoration path. The streaming lookahead parser recognizes all
+three commands. Other unsupported imports still fail explicitly.
 
 ### Optimizing music sequences
 
@@ -146,8 +210,13 @@ score being prepared. Compressed scores use the existing CD Kosinski+ job
 and output copy. Raw scores copy from ROM. The live slot stays immutable
 while KeH reads it.
 
-KeH keeps the FM, PSG, DAC and SFX updates on the Z80. Larger scores use
-logical pointers and a 30-slot cache of 64-byte pages. Four slots retain the
+KeH keeps the FM, PSG, DAC and SFX updates on the Z80. Read-only PSG envelopes
+live in `sound/PSG Envelopes.asm` in the SFX ROM bank. One bank switch before
+the track updates serves envelopes, universal patches and SFX; the DAC path
+selects its own bank afterward. This reclaims 454 Z80 bytes without adding a
+bank switch to an ordinary tick. ROM envelope reads incur the cartridge's
+normal wait states. Larger scores use logical pointers and a 30-slot cache of
+64-byte pages. Four slots retain the
 first instrument pages across section changes. Scores that fit the cache use
 direct reads and invalidate only the slots they overwrite.
 
@@ -217,6 +286,17 @@ python3 build_tools/check_sound_playback.py --core /path/to/genesis_plus_gx_libr
 python3 build_tools/check_sound_playback.py --core /path/to/genesis_plus_gx_libretro.so \
   --pal --songs GHZ EHZ GGZ1 RRZ1 HTZ HPZ GRGZ2 LBZ2_S3 EndLevel ExtraLife
 ```
+
+`check_sound_driver.py --core CORE --system-directory BIOS --mono MONO
+--output test-results/sound-driver` exercises the compiled Z80 handlers and a
+disposable expanded project in a path containing spaces. It checks all 256
+absolute-volume arguments for FM and PSG, carrier saturation and unchanged
+modulators across 512 level combinations, all 35 UVB patch resolutions,
+Ristar's offset sequence and unaffected SFX notes. The live fixture assigns
+music `$100`, its 1-up `$101` and SFX `$200`, preserves reserved flag bits,
+checks three-digit cursor rendering/wrapping, all seven global commands,
+UVB music/SFX with the first and last patches, special-stop restoration and
+invalid IDs. Its generated scores and ROM stay in the supplied output folder.
 
 The optional playback check uses the existing libretro harness, NumPy, and
 Pillow. Genesis Plus GX must expose the `work_ram`, `vram`, and `zram` symbols.
@@ -301,7 +381,7 @@ Z80 decoder given its source, ROM, listing and INI. Run it with
 For the streaming path, use the CD codec checks and live playback checks.
 
 Scheduling validation also needs active gameplay. Queue dense scores such as
-`GRGZ2`, `DDZ2`, `Test6`, `LBZ2_S3` and `Credits` in Scrap Madness acts 1/2,
+`GRGZ2`, `DDZ2`, `S3Menu`, `LBZ2_S3` and `Credits` in Scrap Madness acts 1/2,
 then exercise water entry, the air countdown and resurfacing in GHZ4/HPZ.
 Trace actual page requests and sound-tick completion, including song reloads
 after death. A resident score should make no `Music_Service` calls once loaded.
@@ -324,6 +404,15 @@ from KeH remain, and the macro corrections intentionally change some output.
   [MainMemory/s2-sound-driver-plus, `57edda88`](https://github.com/MainMemory/s2-sound-driver-plus/tree/57edda88ae502cbb8c3bb425a00b52ea798e8b76/build_source/KEHmusic).
   The earlier test-branch commit verified that recompiling its packer source
   reproduced the original managed method code, generated ROM, and track audio.
+- Final Hydrocity act 1 and S3 absolute-volume reference:
+  [sonicretro/skdisasm, `73de97c6`](https://github.com/sonicretro/skdisasm/tree/73de97c6b55055bcb8089c1d55d006b02136f163).
+  Final Launch Base 1 references its local shared Launch Base bank; none of its
+  four used patches duplicates the current UVB. Local `$03` is closest to UVB
+  `$06`, but differs in one detune value and two TL values, even ignoring TL
+  marker bits. Hydrocity 1 explicitly selects the UVB. KeH retains its cache-aware voice resolver; S3&K's
+  repeated-add instrument indexing is not a faster replacement.
+- Ristar ONCHI reference: `SMPS_FMExtraKeyDelta` / `FMKeyDeltaArray` in
+  [the annotated disassembly, `8165556e`](https://github.com/Ushupiuck/ristar/blob/8165556e3b9fe082b9065d293d6676e52369d273/Ristar%20(UE)%20%5B!%5D%2020240228.asm).
 - Modern macro formats/names:
   [sonicretro/s2disasm, `4ef457c1`](https://github.com/sonicretro/s2disasm/blob/4ef457c18fc4902396c43ab06fabc119ac6ecb64/sound/_smps2asm_inc.asm).
 - Kosinski+ format and 68000 reference:

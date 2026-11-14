@@ -147,7 +147,7 @@ But_Pressed:	; Routine 2
 .pressed:
 		tst.b	(a3)					; has Sonic already been standing on it the previous frame?
 		bne.s	.setPressedState			; if yes, don't play sound again
-		move.w	#sfx_Switch,d0
+		move.w	#SndID_Blip,d0
 		jsr	(PlaySound).l				; play switch sound
 
 .setPressedState:

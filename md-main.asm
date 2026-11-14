@@ -1929,7 +1929,7 @@ Atan2Table:
 
 SegaScreen:
 		clr.b	(f_lockctrl).w
-		move.b	#bgm_Stop,d0
+		move.w	#CmdID_Stop,d0
 		bsr.w	PlaySound_Special
 		bsr.w	ClearPLC
 		bsr.w	Pal_FadeToBlack
@@ -1978,7 +1978,7 @@ Sega_WaitPalette:
 		bne.s	Sega_WaitPalette
 	;	moveq	#0,d0	; unnecessary, at least according to tests so far
 		bsr.w	ChangeSegaSound
-		move.b	#sfx_Sega,d0
+		move.w	#CmdID_SegaSound,d0
 		bsr.w	PlaySound
 		move.w	#Vint_SEGA,(v_vbla_routine).w
 		bsr.w	WaitForVint
@@ -2001,7 +2001,7 @@ Sega_GoToTitleScreen:
 
 TitleScreen:
 		bsr.w	ResetMusicTempo
-		move.b	#bgm_Stop,d0
+		move.w	#CmdID_Stop,d0
 		bsr.w	PlaySound_Special ; stop music
 		bsr.w	ClearPLC
 		bsr.w	Pal_FadeToBlack
@@ -2074,7 +2074,7 @@ TitleScreen:
 		copyTilemap	Chunk_Table,vram_bg+64,32,28
 		moveq	#palid_Title,d0
 		bsr.w	PalLoad1
-		move.b	#bgm_Title,d0
+		move.w	#MusID_Title,d0
 		bsr.w	PlaySound_Special
 		clr.b	(Debug_mode_flag).w
 		move.w	#376,(v_generictimer).w
@@ -2131,7 +2131,7 @@ Title_Cheat_SlowMotion:
 Title_Cheat_LevelSelect:
 		move.b	#1,(f_levselcheat).w
 Title_Cheat_PlayRing:
-		move.b	#sfx_Ring,d0
+		move.w	#SndID_Ring,d0
 		bsr.w	PlaySound_Special
 		bra.s	Title_Cheat_CountC
 ; ---------------------------------------------------------------------------
@@ -2174,7 +2174,7 @@ PlayLevel:
 		move.l	d0,(v_emldlist+4).w
 		move.b	d0,(v_continues).w
 		move.l	#5000,(v_scorelife).w
-		move.b	#bgm_Fade,d0
+		move.w	#CmdID_FadeOut,d0
 		bra.w	PlaySound_Special
 ; ---------------------------------------------------------------------------
 LvlSelCode:	dc.b btnUp, btnDn, btnDn, btnDn, btnDn, btnUp, 0, $FF	; up, down, down, down, down, up
@@ -2201,7 +2201,7 @@ RunDemo:
 		bne.w	Title_CheckLvlSel	; if so, branch
 		tst.w	(v_generictimer).w
 		bne.s	PrepareDemo.keepgoing
-		move.b	#bgm_Fade,d0
+		move.w	#CmdID_FadeOut,d0
 		bsr.w	PlaySound_Special	; fade out music
 		move.w	(v_demonum).w,d0	; load demo number
 		andi.w	#7,d0
@@ -2255,36 +2255,37 @@ Demo_Levels:
 		include "_inc/LevelSelect.asm"
 
 ; Per-act music IDs. Each row is one zone, with acts 1, 2, 3 and 4.
-; Use any MusID_* / bgm_* entry; defaults preserve the existing zone music.
+; Use any MusID_* entry; defaults preserve the existing zone music.
 ; Level entry and music restoration share this lookup.
 GetLevelMusic:
 		move.w	(Current_ZoneAndAct).w,d0
 		ror.b	#2,d0
 		lsr.w	#6,d0		; index = Zone*4 + Act (Act is 0-3)
 		lea	MusicList(pc),a1
-		move.b	(a1,d0.w),d0	; d0.w music ID; clobbers d0/a1/CCR
+		add.w	d0,d0
+		move.w	(a1,d0.w),d0	; d0.w music ID; clobbers d0/a1/CCR
 		rts
 
 MusicList:
 ;		     Act 1,   Act 2,   Act 3,   Act 4
-		dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; GHZ
-		dc.b bgm_LZ, bgm_LZ, bgm_LZ, bgm_LZ ; LZ
-		dc.b bgm_MZ, bgm_MZ, bgm_MZ, bgm_MZ ; CPZ
-		dc.b bgm_SLZ, bgm_SLZ, bgm_SLZ, bgm_SLZ ; EHZ
-		dc.b bgm_SYZ, bgm_SYZ, bgm_SYZ, bgm_SYZ ; HPZ
-		dc.b MusID_HTZ, MusID_HTZ, MusID_TestSong1, MusID_Boss3 ; HTZ
-		dc.b MusID_MTZ, MusID_MTZ, MusID_MTZ, MusID_MTZ ; LV6
-		dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV7
-		dc.b bgm_SBZ, MusID_GGZ1, MusID_GGZ2, bgm_SBZ ; SMZ
-		dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV9
-		dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0A
-		dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0B
-		dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0C
-		dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0D
-		dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0E
-		dc.b bgm_GHZ, bgm_GHZ, bgm_GHZ, bgm_GHZ ; LV0F
+		dc.w MusID_ALZ, MusID_ALZ, MusID_ALZ, MusID_ALZ ; GHZ
+		dc.w MusID_LZ, MusID_LZ, MusID_LZ, MusID_LZ ; LZ
+		dc.w MusID_CPZ, MusID_CPZ, MusID_CPZ, MusID_CPZ ; CPZ
+		dc.w MusID_GRGZ1, MusID_GRGZ1, MusID_GRGZ1, MusID_GRGZ1 ; EHZ
+		dc.w MusID_DDZ1, MusID_DDZ1, MusID_DDZ1, MusID_DDZ1 ; HPZ
+		dc.w MusID_HTZ, MusID_HTZ, MusID_EggUtopia, MusID_Boss3 ; HTZ
+		dc.w MusID_MTZ, MusID_MTZ, MusID_MTZ, MusID_MTZ ; LV6
+		dc.w MusID_ALZ, MusID_ALZ, MusID_ALZ, MusID_ALZ ; LV7
+		dc.w MusID_SBZ, MusID_GGZ1, MusID_GGZ2, MusID_SBZ ; SMZ
+		dc.w MusID_ALZ, MusID_ALZ, MusID_ALZ, MusID_ALZ ; LV9
+		dc.w MusID_ALZ, MusID_ALZ, MusID_ALZ, MusID_ALZ ; LV0A
+		dc.w MusID_ALZ, MusID_ALZ, MusID_ALZ, MusID_ALZ ; LV0B
+		dc.w MusID_ALZ, MusID_ALZ, MusID_ALZ, MusID_ALZ ; LV0C
+		dc.w MusID_ALZ, MusID_ALZ, MusID_ALZ, MusID_ALZ ; LV0D
+		dc.w MusID_ALZ, MusID_ALZ, MusID_ALZ, MusID_ALZ ; LV0E
+		dc.w MusID_ALZ, MusID_ALZ, MusID_ALZ, MusID_ALZ ; LV0F
 MusicList_End:
-		if	MusicList_End-MusicList<>LevelActCount
+		if	MusicList_End-MusicList<>LevelActCount*2
 			fatal	"MusicList must contain four entries for every zone"
 		endif
 		even
@@ -2298,7 +2299,7 @@ Level:
 		clr.w	(f_demo).w
 Demo:		tst.w	(f_demo).w		; are we on an ending demo?
 		bmi.s	Level_NoMusicFade	; if so, branch
-		move.b	#bgm_Fade,d0
+		move.w	#CmdID_FadeOut,d0
 		bsr.w	PlaySound_Special
 
 Level_NoMusicFade:
@@ -3284,18 +3285,24 @@ PlaySound_Special:
 PlayMusic:	disable_ints
 		stopZ80
 		waitZ80
-		cmpi.b	#MusID__End,d0
+		move.w	d0,-(sp)
+		andi.w	#SoundID_Mask,d0
+		beq.s	.queue
+		cmpi.w	#MusID__End,d0
 		bhs.s	.queue
 		bsr.w	Music_QueueHint
 .queue:
+		move.w	(sp)+,d0
 		tst.b	(Z80_RAM+zAbsVar.QueueToPlay).l
 		bne.s	+
-		move.b	d0,(Z80_RAM+zAbsVar.QueueToPlay).l
+		tst.b	(Z80_RAM+zAbsVar.QueueToPlay+1).l
+		bne.s	+
+		WriteZ80Word d0,zAbsVar.QueueToPlay
 		startZ80
 		enable_ints
 		rts
 +
-		move.b	d0,(Z80_RAM+zAbsVar.SFXToPlay).l
+		WriteZ80Word d0,zAbsVar.SFXToPlay
 		startZ80
 		enable_ints
 		rts
@@ -3341,7 +3348,7 @@ PlaySoundStereo:
 		disable_ints
 		stopZ80
 		waitZ80
-		move.b	d0,(Z80_RAM+zAbsVar.SFXStereoToPlay).l
+		WriteZ80Word d0,zAbsVar.SFXStereoToPlay
 		startZ80
 		enable_ints
 		rts
@@ -3355,11 +3362,15 @@ PlaySoundLocal:
 PlaySound:	disable_ints
 		stopZ80
 		waitZ80
-		cmpi.b	#MusID__End,d0
+		move.w	d0,-(sp)
+		andi.w	#SoundID_Mask,d0
+		beq.s	.queue
+		cmpi.w	#MusID__End,d0
 		bhs.s	.queue
 		bsr.w	Music_QueueHint
 .queue:
-		move.b	d0,(Z80_RAM+zAbsVar.SFXUnknown).l
+		move.w	(sp)+,d0
+		WriteZ80Word d0,zAbsVar.SFXUnknown
 		startZ80
 		enable_ints
 +		rts
@@ -3370,7 +3381,7 @@ PlaySound:	disable_ints
 ; GameMode10:
 BonusStage:
 		bsr.w	ResetMusicTempo
-		move.w	#sfx_EnterSS,d0
+		move.w	#SndID_SpecStageEntry,d0
 		bsr.w	PlaySound_Special
 		clearRAM Kos_decomp_queue_count, Kos_module_queue_End		; clear the KosPlusM bytes
 		clearRAM v_objspace,v_objend
@@ -3425,7 +3436,7 @@ BonusStage:
 		bsr.w	PalCycle_S1SS
 		clr.w	(v_ssangle).l	; set stage angle to "upright"
 		move.w	#$40,(v_ssrotate).l ; set stage rotation speed
-		move.w	#bgm_SS,d0
+		move.w	#MusID_BonusStage,d0
 		bsr.w	PlaySound	; play special stage BG	music
 		clr.w	(v_rings).w
 		clr.b	(v_lifecount).w
@@ -3515,7 +3526,7 @@ loc_5214:
 		add.w	d1,d0
 		add.w	d1,d0
 		move.w	d0,(v_ringbonus).w	; set rings bonus
-		move.w	#bgm_GotThrough,d0
+		move.w	#MusID_EndLevel,d0
 		bsr.w	PlaySound_Special	; play end-of-level music
 		clr.w	(Debug_placement_mode).w	; the stage's Debug object is about to be removed
 		clearRAM v_objspace,v_objend	; clear object RAM
@@ -3535,7 +3546,7 @@ SS_NormalExit:
 		beq.s	SS_NormalExit
 		tst.l	(v_plc_buffer).w
 		bne.s	SS_NormalExit
-		move.w	#sfx_EnterSS,d0
+		move.w	#SndID_SpecStageEntry,d0
 		bsr.w	PlaySound_Special
 		bra.w	Pal_MakeFlash
 ; ---------------------------------------------------------------------------
@@ -4244,7 +4255,7 @@ SS_AniEmeraldSparks:
 		clr.l	(a0)
 		clr.l	4(a0)
 		move.b	#4,(v_objspace+obRoutine).w
-		move.w	#sfx_SSGoal,d0
+		move.w	#SndID_Goal,d0
 		bra.w	PlaySound_Special
 ; ---------------------------------------------------------------------------
 SS_Ani1UpData:	dc.b $46, $47, $48, $49, 0
@@ -6158,7 +6169,7 @@ loc_7672:
 		move.w	#$2A60,obX(a1)
 		move.w	#boss_ghz_y-$80,obY(a1)
 
-		move.w	#bgm_Boss,d0
+		move.w	#MusID_Boss,d0
 		bsr.w	PlaySound
 		move.b	#1,(f_lockscreen).w
 		addq.b	#2,(Dynamic_Resize_Routine).w
@@ -6207,7 +6218,7 @@ DynResize_LZ3:
 		move.w	#$206,d0
 		moveq	#7,d1
 		jsr	(Layout_Write).l
-		move.w	#sfx_Rumbling,d0
+		move.w	#SndID_Rumbling,d0
 		bsr.w	PlaySound_Special
 
 loc_76EA:
@@ -6221,7 +6232,7 @@ loc_76EA:
 		bne.s	+
 		move.l	#ObjNull,code(a1)	; Load Labyrinth Zone's boss (No longer exists)
 
-+		move.w	#bgm_Boss,d0
++		move.w	#MusID_Boss,d0
 		bsr.w	PlaySound
 		move.b	#1,(f_lockscreen).w
 		addq.b	#2,(Dynamic_Resize_Routine).w
@@ -6359,7 +6370,7 @@ DynResize_EHZ2_Routine2:
 		move.w	#EHZBoss_CameraLeft,(Tails_Min_X_pos).w
 		move.w	#EHZBoss_CameraFightRight,(Tails_Max_X_pos).w
 		addq.b	#2,(Dynamic_Resize_Routine).w ; => DynResize_EHZ2_Routine3
-		move.w	#MusID_FadeOut,d0
+		move.w	#CmdID_FadeOut,d0
 		jsr	(PlaySound).l
 		moveq	#plcid_Boss,d0
 		jmp	(LoadPLC).l
@@ -6376,7 +6387,7 @@ DynResize_EHZ2_Routine3:
 		move.w	#EHZBoss_LandingY+8,obY(a1)
 		move.b	#1,(f_lockscreen).w	; keep power-up music changes on the boss track
 		addq.b	#2,(Dynamic_Resize_Routine).w ; => DynResize_EHZ2_Routine4
-		move.w	#bgm_Boss,d0
+		move.w	#MusID_Boss,d0
 		bra.w	PlaySound
 ; ---------------------------------------------------------------------------
 
@@ -6459,7 +6470,7 @@ DynResize_SYZ3_Boss:
 		addq.b	#2,(Dynamic_Resize_Routine).w
 
 loc_7A64:
-		move.w	#bgm_Boss,d0
+		move.w	#MusID_Boss,d0
 		bsr.w	PlaySound
 		move.b	#1,(f_lockscreen).w
 		moveq	#plcid_Boss,d0
@@ -6847,7 +6858,7 @@ DynResize_MZ3Boss:
 		move.w	#$19F0,obX(a1)
 		move.w	#$22C,obY(a1)
 +
-		move.w	#bgm_Boss,d0
+		move.w	#MusID_Boss,d0
 		bsr.w	PlaySound	; play boss music
 		move.b	#1,(f_lockscreen).w ; lock screen
 		addq.b	#2,(Dynamic_Resize_Routine).w
@@ -6913,7 +6924,7 @@ loc_79AA:
 		bne.s	+
 		move.l	#SpecialStageEntry,code(a1)	; load object 7A
 +
-		move.w	#bgm_Boss,d0
+		move.w	#MusID_Boss,d0
 		bsr.w	PlaySound
 		move.b	#1,(f_lockscreen).w
 		addq.b	#2,(Dynamic_Resize_Routine).w
@@ -6988,7 +6999,7 @@ loc_8E70:
 +		dbf	d1,.loop
 
 +		bsr.w	DisplaySprite
-		move.w	#sfx_Collapse,d0
+		move.w	#SndID_Smash,d0
 		jmp	(PlaySound_Special).l
 ; ---------------------------------------------------------------------------
 byte_8EF2:	dc.b $1C,$18,$14,$10
@@ -9332,12 +9343,12 @@ loc_122F6:
 		or.b	(v_player2+obStatusSecondary).w,d1
 		btst	#obStatusSecondary_isInvincible,d1
 		beq.s	loc_12300
-		move.w	#bgm_Invincible,d0
+		move.w	#MusID_Invincible,d0
 
 loc_12300:
 		tst.b	(f_lockscreen).w
 		beq.s	loc_1230A
-		move.w	#bgm_Boss,d0
+		move.w	#MusID_Boss,d0
 
 loc_1230A:
 		jsr	(PlayMusic).l
@@ -11388,12 +11399,12 @@ Hurt_ChkSpikes:
 		clr.w	obInertia(a0)
 		move.b	#AniIDSonAni_Hurt,obAnim(a0)
 		move.w	#60*2,flashtime(a0)
--		move.w	#sfx_Death,d0
+-		move.w	#SndID_Hurt,d0
 		cmpi.l	#Spikes,code(a2)
 		bne.s	+
 ;		cmpi.b	#id_Obj16,code(a2)	; Used to be the LZ Harpoon in Sonic 1
 ;		bne.s	+			; It's been replaced by the HTZ lifts
-		move.w	#sfx_HitSpikes,d0
+		move.w	#SndID_HurtBySpikes,d0
 +		jsr	(PlaySound_Special).l
 .exit:
 		moveq	#-1,d0
@@ -11416,12 +11427,12 @@ KillSonic:
 		clr.w	obInertia(a0)
 		move.b	#AniIDSonAni_Death,obAnim(a0)
 		bset	#7,obGfx(a0)
-		move.w	#sfx_HitSpikes,d0	; Preload the spike sfx
+		move.w	#SndID_HurtBySpikes,d0	; Preload the spike sfx
 		cmpi.l	#Spikes,code(a2)	; Is this the spikes object?
 		beq.s	+
 ;		cmpi.b	#id_Obj16,code(a2)	; Is this the LZ Harpoon? (Leftover from Sonic 1)
 ;		beq.s	+			; It's been replaced by the HTZ lifts
-		move.w	#sfx_Death,d0		; Default to the death sfx
+		move.w	#SndID_Hurt,d0		; Default to the death sfx
 +		jsr	(PlaySound_Special).l
 .exit:
 		moveq	#-1,d0
@@ -11452,7 +11463,7 @@ loc_1B214:
 		addi.l	#5000,(v_scorelife).w
 		addq.b	#1,(v_lives).w
 		addq.b	#1,(f_lifecount).w
-		move.w	#bgm_ExtraLife,d0
+		move.w	#MusID_ExtraLife,d0
 		jmp	(PlaySound).l
 ; End of function AddPoints
 
@@ -13290,6 +13301,20 @@ zSoundIndexEntry macro pointer, priority
 SndSFX1_Start:	startBank
 
 	include "sound/sfxbank.gen.asm"
+	include "sound/PSG Envelopes.asm"
+
+; Shared FM patches live in the same ROM bank as SFX; no Z80 RAM copy.
+		smpsHeaderStartSong 2
+UniversalVoiceBank:
+		include "sound/UniBank.asm"
+UniversalVoiceBank_End:
+UniversalVoice_Count = (UniversalVoiceBank_End-UniversalVoiceBank)/25
+		if UniversalVoice_Count*25<>UniversalVoiceBank_End-UniversalVoiceBank
+			fatal "Universal FM voices must be 25-byte patches."
+		endif
+		if UniversalVoice_Count>256
+			fatal "Universal voice indices are bytes."
+		endif
 
 	; something else for DAC sounds
 	; First byte selects one of the DAC samples.  The number that

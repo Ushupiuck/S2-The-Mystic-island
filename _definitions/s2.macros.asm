@@ -512,3 +512,18 @@ mvabs macro source,destination
 	neg.ATTRIBUTE	destination
 .skip:
 	endm
+
+; Global sound IDs are words, but the 68000's Z80 RAM window is byte-wide.
+; The caller holds the bus across both accesses. Preserve the written source.
+WriteZ80Word macro source,destination
+	move.b	source,(Z80_RAM+destination).l
+	ror.w	#8,source
+	move.b	source,(Z80_RAM+destination+1).l
+	ror.w	#8,source
+	endm
+
+ReadZ80Word macro source,destination
+	move.b	(Z80_RAM+source+1).l,destination
+	lsl.w	#8,destination
+	move.b	(Z80_RAM+source).l,destination
+	endm

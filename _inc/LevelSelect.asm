@@ -119,25 +119,26 @@ LevelSelect_PlaySound:
 		move.b	(v_debugcheat_count).w,d0
 		move.w	(v_levselsound).w,d1
 		lea	LevelSelect_DebugCode(pc),a0
-		cmp.b	(a0,d0.w),d1
+		add.w	d0,d0
+		cmp.w	(a0,d0.w),d1
 		bne.s	.restart
 		addq.b	#1,(v_debugcheat_count).w
-		cmpi.b	#LevelSelect_DebugCode_End-LevelSelect_DebugCode,(v_debugcheat_count).w
+		cmpi.b	#(LevelSelect_DebugCode_End-LevelSelect_DebugCode)/2,(v_debugcheat_count).w
 		bne.s	.return
 		clr.b	(v_debugcheat_count).w
 		move.b	#1,(f_slomocheat).w	; Debug also unlocks the pause controls
 		move.b	#1,(f_debugcheat).w
-		move.w	#sfx_Ring,d0
+		move.w	#SndID_Ring,d0
 		jmp	(PlaySound_Special).l
 .restart:
 		clr.b	(v_debugcheat_count).w
-		cmp.b	LevelSelect_DebugCode(pc),d1	; the first sound starts another attempt
+		cmp.w	LevelSelect_DebugCode(pc),d1	; the first sound starts another attempt
 		bne.s	.return
 		addq.b	#1,(v_debugcheat_count).w
 .return:
 		rts
 LevelSelect_DebugCode:
-		dc.b	1,3,5,7
+		dc.w	1,3,5,7
 LevelSelect_DebugCode_End:
 		even
 
@@ -196,7 +197,15 @@ LevelSelect_Controls:
 		beq.s	.soundStore
 		addq.w	#1,d0
 .soundStore:
-		andi.w	#$FF,d0
+		tst.w	d0
+		bpl.s	.soundUpper
+		move.w	#SoundTest_MaxID,d0
+		bra.s	.soundWrite
+.soundUpper:
+		cmpi.w	#SoundTest_MaxID+1,d0
+		blo.s	.soundWrite
+		subi.w	#SoundTest_MaxID+1,d0
+.soundWrite:
 		move.w	d0,(v_levselsound).w
 		bra.w	LevelSelect_TextLoad
 .return:
@@ -288,6 +297,9 @@ LevelSelect_TextLoad:
 		bsr.s	.option
 		move.w	(v_levselsound).w,d0
 		move.w	d0,d1
+		lsr.w	#8,d0
+		bsr.w	LevelSelect_Hex
+		move.w	d1,d0
 		lsr.w	#4,d0
 		bsr.w	LevelSelect_Hex
 		move.w	d1,d0

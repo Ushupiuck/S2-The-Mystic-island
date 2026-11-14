@@ -326,7 +326,7 @@ Sonic_Water:
 		asr	obVelY(a0)
 		beq.s	Sonic_RecordPos.return
 		jsr	(SpawnPlayerSplash).l		; separate splash owned by this player
-		move.w	#sfx_Splash,d0			; splash sound
+		move.w	#SndID_Splash,d0			; splash sound
 		jmp	(PlaySound_Special).l
 ; ---------------------------------------------------------------------------
 ; Obj01_NotInWater:
@@ -357,7 +357,7 @@ Obj01_OutWater:
 		move.w	#-Sonic_WaterExitSpeedLimit,obVelY(a0)
 
 loc_FC98:
-		move.w	#sfx_Splash,d0			; splash sound
+		move.w	#SndID_Splash,d0			; splash sound
 		jmp	(PlaySound_Special).l
 ; End of function Sonic_Water
 
@@ -786,7 +786,7 @@ Sonic_TurnLeft:
 		blt.s	Sonic_MoveLeft.return
 		move.b	#AniIDSonAni_Stop,obAnim(a0)
 		bclr	#0,obStatus(a0)
-		move.w	#sfx_Skid,d0
+		move.w	#SndID_Skidding,d0
 		jmp	(PlaySound_Special).l
 		; TODO: Uncomment and implement these lines. When that time comes, the jmp will change, too.
 	;	cmpi.b	#12,air_left(a0)
@@ -835,7 +835,7 @@ loc_FFDE:
 		bgt.s	Sonic_MoveRight.return
 		move.b	#AniIDSonAni_Stop,obAnim(a0)
 		bset	#0,obStatus(a0)
-		move.w	#sfx_Skid,d0
+		move.w	#SndID_Skidding,d0
 		jmp	(PlaySound_Special).l
 		; TODO: Uncomment and implement these lines. When that time comes, the jmp will change, too.
 	;	cmpi.b	#12,air_left(a0)
@@ -1147,7 +1147,7 @@ Sonic_Roll:
 		move.b	#sonic_roll_width,obWidth(a0)
 		move.b	#AniIDSonAni_Roll,obAnim(a0)
 		addq.w	#sonic_height-sonic_roll_height,obY(a0)
-		move.w	#sfx_Roll,d0
+		move.w	#SndID_Roll,d0
 		jmp	(PlaySound_Special).l
 Obj01_NoRoll:
 		rts
@@ -1183,7 +1183,7 @@ Sonic_Jump:
 		addq.l	#4,sp
 		move.b	#1,jumping(a0)
 		clr.b	stick_to_convex(a0)
-		move.w	#sfx_Jump,d0
+		move.w	#SndID_Jump,d0
 		jsr	(PlaySound_Special).l
 		btst	#2,obStatus(a0)
 		bne.s	.return
@@ -1242,7 +1242,7 @@ Sonic_HomingAttack:
 		and.b	(v_jpadpresslogical).w,d0	; ...pressed?
 		beq.s	.homeend		; if not, branch
 
-		move.w	#sfx_Teleport,d0	; play dash sound as a test
+		move.w	#SndID_SpindashRelease,d0	; play dash sound as a test
 		jmp	(PlaySound_Special).l
 
 .homeend:
@@ -1265,7 +1265,7 @@ Sonic_CheckSpindash:
 		andi.b	#btnABC,d0
 		beq.s	.return
 		move.b	#AniIDSonAni_Spindash,obAnim(a0)
-		move.w	#sfx_Spindash,d0
+		move.w	#SndID_SpindashRev,d0
 		jsr	(PlaySound_Special).l
 		move.b	#1,spindash_flag(a0)
 		clr.w	spindash_counter(a0)
@@ -1302,7 +1302,7 @@ Sonic_UpdateSpindash:
 		neg.w	obInertia(a0)
 .right:
 		bset	#status.player.rolling,obStatus(a0)
-		move.w	#sfx_Dash,d0
+		move.w	#SndID_SpindashRelease,d0
 		jsr	(PlaySound_Special).l
 		bra.s	Sonic_SpindashGround
 
@@ -1330,7 +1330,7 @@ Sonic_ChargingSpindash:
 		andi.b	#btnABC,d0
 		beq.s	Sonic_SpindashGround
 		move.w	#AniIDSonAni_Spindash<<8,obAnim(a0)
-		move.w	#sfx_Spindash,d0
+		move.w	#SndID_SpindashRev,d0
 		jsr	(PlaySound_Special).l
 		addi.w	#Sonic_SpindashChargeStep,spindash_counter(a0)
 		cmpi.w	#Sonic_SpindashMaxCharge,spindash_counter(a0)
@@ -1652,7 +1652,7 @@ Sonic_LoadOverScreen:
 		move.b	#PlayerInputLock_Over,(f_lockctrl).w
 		clr.w	(v_jpadholdlogical).w
 		clr.w	(v_jpadholdlogical2).w
-		move.w	#bgm_GameOver,d0
+		move.w	#MusID_GameOver,d0
 		jsr	(PlaySound).l
 		move.b	#PlayerEffects_GameOverLoaded,(v_shieldobj+effect_loaded_frame).w
 		moveq	#plcid_GameOver,d0

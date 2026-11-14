@@ -102,14 +102,14 @@ Monitor_Null:
 Monitor_SonicLife:	; Now rarer and MUCH more valuable!
 		addq.b	#2,(v_lives).w
 		addq.b	#2,(f_lifecount).w
-		move.w	#bgm_DoubleLife,d0
+		move.w	#MusID_DoubleLife,d0
 		jmp	(PlaySound).l
 ; ---------------------------------------------------------------------------
 
 Monitor_TailsLife:	; 1up monitor
 		addq.b	#1,(v_lives).w
 		addq.b	#1,(f_lifecount).w
-		move.w	#bgm_ExtraLife,d0
+		move.w	#MusID_ExtraLife,d0
 		jmp	(PlaySound).l
 ; ---------------------------------------------------------------------------
 
@@ -126,7 +126,7 @@ Monitor_Rings:
 		beq.w	Monitor_SonicLife
 
 loc_B130:
-		move.w	#sfx_Ring,d0
+		move.w	#SndID_Ring,d0
 		jmp	(PlaySound).l
 ; ---------------------------------------------------------------------------
 
@@ -160,7 +160,7 @@ Monitor_Shield:
 		beq.s	.sound
 		bsr.w	Monitor_GiveShield
 .sound:
-		move.w	#sfx_Shield,d0
+		move.w	#SndID_Shield,d0
 		jmp	(PlaySound).l
 
 ; ---------------------------------------------------------------------------
@@ -220,7 +220,7 @@ Monitor_Invincibility:
 	;	cmpi.b	#12,air_left(a1)	; or when drowning
 		cmpi.w	#12,(v_air).w
 		bls.s	+
-		move.w	#bgm_Invincible,d0
+		move.w	#MusID_Invincible,d0
 		jsr	(PlayMusic).l
 +
 		lea	(v_starsobj).w,a2

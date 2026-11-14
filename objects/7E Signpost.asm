@@ -109,7 +109,7 @@ Signpost_Main:
 Signpost_Activate:
 		clr.b	(f_timecount).w
 		move.w	(Camera_Max_X_pos).w,(Camera_Min_X_pos).w
-		move.w	#sfx_Signpost,d0
+		move.w	#SndID_Signpost,d0
 		jmp	(PlaySound).l
 
 Signpost_StartFall:
@@ -254,7 +254,7 @@ Load_EndOfAct:
 		add.w	d1,d0
 		add.w	d1,d0
 		move.w	d0,(v_ringbonus).w
-		move.w	#bgm_GotThrough,d0
+		move.w	#MusID_EndLevel,d0
 		jmp	(PlaySound_Special).l
 ; End of function Load_EndOfAct
 
@@ -390,7 +390,7 @@ Signpost_HitCharacter:
 		move.w	obY(a0),obY(a1)
 		move.w	2(sp),points_parent(a1)	; low word of saved player address
 .score:
-		move.w	#sfx_Signpost,d0
+		move.w	#SndID_Signpost,d0
 		jsr	(PlaySound).l
 		moveq	#10,d0			; score counter stores tens: 100 points
 		jsr	(AddPoints).l

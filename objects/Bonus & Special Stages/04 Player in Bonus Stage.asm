@@ -250,7 +250,7 @@ BonusPlayer_Jump:
 		move.w	d0,obVelY(a0)
 		bset	#1,obStatus(a0)
 		bset	#7,obStatus(a0)		; set "Sonic has jumped" flag
-		move.w	#sfx_Jump,d0
+		move.w	#SndID_Jump,d0
 		jmp	(PlaySound_Special).l	; play jumping sound
 ; End of function BonusPlayer_Jump
 
@@ -552,7 +552,7 @@ SSS_ChkRing:
 		bset	#0,(v_lifecount).w	; set flag
 		bne.s	.nocontinue		; branch if flag was already set
 		addq.b	#1,(v_continues).w	; add 1 to the number of continues
-		move.w	#sfx_Continue,d0
+		move.w	#SndID_ContinueJingle,d0
 		jsr	(PlaySound).l		; play extra continue sound
 
 .nocontinue:
@@ -572,7 +572,7 @@ SSS_Chk1Up:
 		addq.b	#1,(v_lives).w		; add 1 to number of lives
 		addq.b	#1,(f_lifecount).w	; update the lives counter
 		moveq	#0,d4
-		move.w	#bgm_ExtraLife,d0
+		move.w	#MusID_ExtraLife,d0
 		jmp	(PlaySound).l		; play extra life music
 ; ===========================================================================
 
@@ -616,7 +616,7 @@ SSS_ChkEmerald:
 
 .noemerald:
 		moveq	#0,d4
-		move.w	#bgm_Emerald,d0
+		move.w	#MusID_Emerald,d0
 		jmp	(PlaySound_Special).l	; play emerald music
 ; ===========================================================================
 
@@ -715,7 +715,7 @@ SSS_ChkBumper:
 		move.l	d0,4(a2)		; set address within layout to update
 
 .noslot:
-		move.w	#sfx_Bumper,d0
+		move.w	#SndID_Bumper,d0
 		jmp	(PlaySound).l		; queue bumper SFX with priority
 ; ===========================================================================
 
@@ -723,7 +723,7 @@ SSS_GOAL:
 		cmpi.b	#$27,d0			; is the item a "GOAL"?
 		bne.s	SSS_UPblock		; if not, branch
 		addq.b	#2,obRoutine(a0)	; run routine "BonusPlayer_ExitStage"
-		move.w	#sfx_SSGoal,d0
+		move.w	#SndID_Goal,d0
 		jmp	(PlaySound_Special).l	; play "GOAL" sound
 ; ===========================================================================
 
@@ -741,7 +741,7 @@ SSS_UPblock:
 		move.b	#$2A,(a1)		; change item to a "DOWN" block
 
 .keepspeed:
-		move.w	#sfx_SSItem,d0
+		move.w	#SndID_Bwoop,d0
 		jmp	(PlaySound_Special).l	; play up/down sound
 ; ===========================================================================
 
@@ -759,7 +759,7 @@ SSS_DOWNblock:
 		move.b	#$29,(a1)		; change item to an "UP" block
 
 .keepspeed:
-		move.w	#sfx_SSItem,d0
+		move.w	#SndID_Bwoop,d0
 		jmp	(PlaySound_Special).l	; play up/down sound
 ; ===========================================================================
 
@@ -778,7 +778,7 @@ SSS_Rblock:
 
 .noslot:
 		neg.w	(v_ssrotate).l		; reverse stage rotation
-		move.w	#sfx_SSItem,d0
+		move.w	#SndID_Bwoop,d0
 		jmp	(PlaySound_Special).l	; play sound
 ; ===========================================================================
 
@@ -809,7 +809,7 @@ SSS_ChkGlass:
 		move.b	d0,4(a2)		; update the stage layout
 
 .noslot:
-		move.w	#sfx_SSGlass,d0
+		move.w	#SndID_Glass,d0
 		jmp	(PlaySound_Special).l	; play glass block sound
 ; ===========================================================================
 

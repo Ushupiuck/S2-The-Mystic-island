@@ -123,6 +123,7 @@ def main():
 		assert data[:5] == bytes.fromhex('0000010105') and data[5:7] == bytes.fromhex('0980'), 'Compact SFX header or absolute bank pointer changed'
 		commands = '\tsmpsHeaderStartSong 3,1\n\tsmpsNoteFill 3\n\tsmpsFMAlterVol $7F,$FD\n\tsmpsModSet 4,2,3,8\n\tsmpsHeaderStartSong 1\n\tsmpsNoteFill 4\n\tsmpsModSet 4,2,3,8\n\tsmpsDcb nDb4,nCs4,nGs3,nAb3\n'
 		assert assemble(commands) == bytes.fromhex('FA03E6FDF003020303E804F005020308B2B2ADAD'), 'Imported command or note alias differs'
+		assert assemble('\tsmpsHeaderStartSong 2\n\tsmpsHeaderVoiceUVB\n\tsmpsSetVol $7F\n\tsmpsClearPush\n\tsmpsStopSpecial\n') == bytes.fromhex('0000FB7FEDEE'), 'Universal header or implemented coordination commands changed'
 		message = assemble('\tsmpsHeaderStartSong 3,1\n\tsmpsFMvoice 0,2\n', okay=False)
 		assert 'copy this instrument locally' in message, message
 		assert 'newer SMPS2ASM' in assemble('\tsmpsHeaderStartSong 2,2\n', okay=False)
@@ -162,6 +163,13 @@ def main():
 		with (d / '_definitions/_smps2asm_inc.asm').open('a') as f:
 			f.write('; Shared macro change\n')
 		assert 'Building song' in run(packer, d)
+		# Repeated source entries share a ROM payload while keeping individual flags.
+		ini.write_text('[Track]\nTitle=Fixture\nFile=track.asm\n[Alias]\nTitle=Shared fixture\nFile=track.asm\nNoSpeedUp=True\nReserved=True\n')
+		run(packer, d)
+		assert 'Mus_Alias = Mus_Track' in (d / 'sound/musicdata.gen.asm').read_text()
+		data = assemble('even macro\n\talign 2\n\tendm\nMusicPacked macro filename\n\tbinclude filename\n\tendm\n\tinclude "sound/musicdata.gen.asm"\n\tdc.l Mus_Track,Mus_Alias\n')
+		assert data[-8:-4] == data[-4:], 'Shared song source was stored twice'
+		assert 'musprop_nospeedup' in (d / 'sound/musicinfo.gen.asm').read_text()
 		(d / 'sound/music/notes.inc').write_text('\tINVALID_SOUND_INSTRUCTION\n')
 		assert 'failed' in run(packer, d, False)
 		print('Cache: warm reuse; nested includes and shared macros rebuild; invalid sources stop the packer.')

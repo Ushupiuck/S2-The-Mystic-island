@@ -314,7 +314,7 @@ DynWater_LZ3:	; Leftover from Sonic 1's LZ3
 		move.w	#$4C8,d1			; set new water height
 	;	move.b	#$4B,(v_lvllayout+$80*2+6).w	; update level layout (leftover from Sonic 1. Functional, but Also... Invalid? If restored, we'd have to update a 2x2 grid of 4 chunks, not 1)
 		move.b	#1,(v_wtr_routine).w
-	;	move.w	#sfx_Rumbling,d0
+	;	move.w	#SndID_Rumbling,d0
 	;	bsr.w	PlaySound_Special		; play sound $B7 (rumbling)
 
 .setwaterlz3:	move.w	d1,(v_waterpos3).w
@@ -451,7 +451,7 @@ WindTunnels:	; leftover from Sonic 1's LZ
 		move.b	(Vint_runcount+3).w,d0
 		andi.b	#$3F,d0		; does VInt counter fall on 0, $40, $80 or $C0?
 		bne.s	.skipsound	; if not, branch
-		move.w	#sfx_Waterfall,d0
+		move.w	#SoundID_None,d0
 		jsr	(PlaySound_Special).l	; play rushing water sound (only every $40 frames)
 
 .skipsound:
@@ -565,7 +565,7 @@ loc_4430:
 		move.b	(Vint_runcount+3).w,d0
 		andi.b	#$1F,d0
 		bne.s	WaterSlides.return
-		move.w	#sfx_Waterfall,d0
+		move.w	#SoundID_None,d0
 		jmp	(PlaySound_Special).l	; play water sound
 ; End of function WaterSlides
 

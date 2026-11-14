@@ -213,7 +213,7 @@ BGHZ_CheckHits:
 		bne.s	.flash
 		move.w	(v_palette+$22).w,BGHZ_FlashColor(a0)
 		move.b	#$20,BGHZ_FlashTimer(a0)
-		move.w	#sfx_HitBoss,d0
+		move.w	#SndID_BossHit,d0
 		jsr	(PlaySound_Special).l
 .flash:
 		move.w	BGHZ_FlashColor(a0),d0
@@ -244,7 +244,7 @@ BGHZ_Defeat:
 		jsr	(AddPoints).l
 		move.b	#BGHZ_Explode,ob2ndRout(a0)
 		move.w	#$B3,BGHZ_Timer(a0)
-		move.w	#MusID_FadeOut,d0
+		move.w	#CmdID_FadeOut,d0
 		jmp	(PlayMusic).l
 ; ---------------------------------------------------------------------------
 

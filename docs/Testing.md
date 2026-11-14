@@ -24,7 +24,11 @@ still requires Genesis Plus GX exports. This does not make every existing
 fixture core-independent: ClownMDEmu 1.6.12 cannot complete this project's PAL
 stopwatch wait. The full Mecha fight remains verified in Genesis Plus GX;
 it has not been rerun in Clown since correcting the harness's VRAM byte order.
-See the sound guide for audio-specific boundaries.
+See the sound guide for audio-specific boundaries. Word-ID, global-command,
+ONCHI and universal-bank checks are in `check_sound_driver.py`; its expanded
+playlist is built in a disposable project copy. Existing-song regression checks
+compare actual musical states, while the final Hydrocity 1 import exercises
+the UVB through a complete score.
 
 Use a fresh process for each ROM/region: this core cannot reliably unload and
 reload different cartridges in one process. Give every run its own output

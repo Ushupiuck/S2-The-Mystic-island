@@ -32,17 +32,17 @@ def main():
     symbols = {name: int(value, 16) for name, value in re.findall(
         r'\*?([A-Za-z_][\w.]*)\s*:\s*([0-9A-F]+)\s+[C-]', args.listing.read_text())}
     count = symbols['LevelActCount']
-    assert symbols['MusicList_End'] - symbols['MusicList'] == count
+    assert symbols['MusicList_End'] - symbols['MusicList'] == count * 2
     ids = list(range(1, count + 1))
     ids[:2] = [symbols['MusID_GHZ'], symbols['MusID_LBZ2_S3']]
     # Live cases use looping songs: default EHZ/SMZ music in act 1 and a
     # deliberately different, valid song in act 2. Other IDs are lookup probes.
-    for zone, songs in (('id_EHZ', ('bgm_SLZ', 'MusID_LBZ2_S3')),
-                        ('id_SMZ', ('bgm_SBZ', 'MusID_EHZ'))):
+    for zone, songs in (('id_EHZ', ('MusID_GRGZ1', 'MusID_LBZ2_S3')),
+                        ('id_SMZ', ('MusID_SBZ', 'MusID_EHZ'))):
         start = symbols[zone] * symbols['ActsPerZone']
         ids[start:start+2] = [symbols[song] for song in songs]
     rom = bytearray(args.rom.read_bytes())
-    rom[symbols['MusicList']:symbols['MusicList_End']] = bytes(ids)
+    rom[symbols['MusicList']:symbols['MusicList_End']] = b''.join(value.to_bytes(2, 'big') for value in ids)
     test_rom = args.output / 'different-act-music.bin'
     test_rom.write_bytes(rom)
     g = Genesis(args.core, test_rom, args.listing, args.output, args.pal,
@@ -112,9 +112,9 @@ def main():
             g.put(other, 'obStatusSecondary', 2 if guard == 'partner' else 0)
             g.put(who, 'invtime', {'timer_active': 2, 'timer_zero': 0}.get(guard, 1), 2)
             assert act('Player_ChkInvincibility', 'PlayMusic', who)[0] == 0xFF7F00, (who, guard)
-    for invincible, boss, expected in ((True, False, g.s['bgm_Invincible']),
-                                      (False, True, g.s['bgm_Boss']),
-                                      (True, True, g.s['bgm_Boss'])):
+    for invincible, boss, expected in ((True, False, g.s['MusID_Invincible']),
+                                      (False, True, g.s['MusID_Boss']),
+                                      (True, True, g.s['MusID_Boss'])):
         g.restore(base)
         g.write('v_air', 5, 2)
         g.put('v_player2', 'obStatusSecondary', 2 if invincible else 0)
@@ -164,7 +164,7 @@ def main():
                     g.put(obj, field, value, size)
                 g.run(40)
                 assert g.get('v_player', 'obStatusSecondary') & 2
-                assert playing_song() == g.s['bgm_Invincible']
+                assert playing_song() == g.s['MusID_Invincible']
                 for who in ('v_player', 'v_player2'):
                     if g.get(who, 'code'):
                         g.put(who, 'invtime', 1, 2)

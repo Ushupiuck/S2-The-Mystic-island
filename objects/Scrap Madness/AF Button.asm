@@ -36,7 +36,7 @@ SMZ_Button_Behavior:
 		beq.s	.off
 		tst.b	(a3)
 		bne.s	.on
-		move.w	#sfx_Switch,d0
+		move.w	#SndID_Blip,d0
 		jsr	(PlaySound_Special).l
 .on:
 		bset	#0,(a3)

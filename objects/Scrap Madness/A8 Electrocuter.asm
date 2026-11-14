@@ -42,7 +42,7 @@ SMZ_Elec_Shock:	; Routine 2
 		move.b	#1,obAnim(a0)				; run "zap" animation
 		tst.b	obRender(a0)				; is zapper on screen?
 		bpl.s	.animate				; if not, don't play sound
-		move.w	#sfx_Electric,d0			; set electricity sound
+		move.w	#SndID_Zap,d0			; set electricity sound
 		jsr	(PlaySound_Special).l				; play it
 
 	.animate:

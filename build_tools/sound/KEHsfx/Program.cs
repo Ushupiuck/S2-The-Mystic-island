@@ -13,6 +13,7 @@ namespace KEHsfx
 			var dac = IniSerializer.Deserialize<Dictionary<string, DACInfo>>("sound/SFX/DACSFX.ini");
 			using (StreamWriter sw = new StreamWriter("sound/sfxbank.gen.asm", false, Encoding.ASCII))
 			{
+				sw.NewLine = "\r\n";
 				sw.WriteLine("SoundIndex:");
 				foreach (var item in sfx)
 					sw.WriteLine("\tzSoundIndexEntry\tSnd_{0},${1:X2}", item.Key, item.Value.Priority);
@@ -23,14 +24,16 @@ namespace KEHsfx
 			}
 			using (StreamWriter sw = new StreamWriter("sound/dacsfxlist.gen.asm", false, Encoding.ASCII))
 			{
+				sw.NewLine = "\r\n";
 				sw.WriteLine("zDACSFXList:");
 				foreach (var item in dac)
 					sw.WriteLine("\tdb\t{0}", item.Value.Sample);
 			}
 			using (StreamWriter sw = new StreamWriter("sound/sfxids.gen.asm", false, Encoding.ASCII))
 			{
+				sw.NewLine = "\r\n";
 				List<string> musids = new List<string>(sfx.Keys) { "_End" };
-				sw.WriteLine("SndID__First = MusID__End");
+				sw.WriteLine("SndID__First = (MusID__End+$FF)&$FF00");
 				string last = "_First";
 				for (int i = 0; i < musids.Count; i++)
 				{
@@ -63,6 +66,7 @@ namespace KEHsfx
 			}
 			using (StreamWriter sw = new StreamWriter("sound/sfxnames.gen.asm", false, Encoding.ASCII))
 			{
+				sw.NewLine = "\r\n";
 				sw.WriteLine("SndNames:\toffsetTable");
 				foreach (var item in sfx)
 					sw.WriteLine("\toffsetTableEntry.w\tSndNam_{0}", item.Key);

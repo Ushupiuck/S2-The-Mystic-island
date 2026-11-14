@@ -190,7 +190,7 @@ Spike_Retract:
 		bne.s	.return
 		tst.b	obRender(a0)
 		bpl.s	.return
-		move.w	#sfx_SpikesMove,d0
+		move.w	#SndID_SpikesMove,d0
 		jmp	(PlaySound_Special).l
 .move:
 		tst.w	spikes_retract_state(a0)

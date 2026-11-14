@@ -23,11 +23,13 @@ def reference(m,args):
 	raw=source[source.index('\nAnimate_RawMultiDelay:'):source.index('\nAnimate_RawMultiDelayFlipX:')]
 	wait=source[source.index('\nObj_Wait:'):source.index('\nObjHitFloor2_DoRoutine:')]
 	edge=source[source.index('\nloc_7D216:'):source.index('; =============== S U B R O U T I N E',source.index('\nloc_7D216:'))]
-	aliases={'routine':'obRoutine','mapping_frame':'obFrame','render_flags':'obRender','x_pos':'obX','y_pos':'obY','x_vel':'obVelX','y_vel':'obVelY','y_radius':'obHeight','anim_frame':'obAniFrame','anim_frame_timer':'obTimeFrame','subtype':'obSubtype','Camera_X_pos':'Camera_X_pos','Camera_Y_pos':'Camera_Y_pos','Random_Number':'RandomNumber','MoveSprite':'ObjectMoveAndFall','MoveSprite2':'ObjectMove','MoveSprite_LightGravity':'ObjectMoveAndFall_LightGravity','ObjCheckFloorDist':'ObjHitFloor','Play_SFX':'PlaySound_Special','sfx_MechaLand':'SndID_MechaLand','sfx_Dash':'sfx_Dash','sfx_Thump':'SndID_Thump'}
+	aliases={'routine':'obRoutine','mapping_frame':'obFrame','render_flags':'obRender','x_pos':'obX','y_pos':'obY','x_vel':'obVelX','y_vel':'obVelY','y_radius':'obHeight','anim_frame':'obAniFrame','anim_frame_timer':'obTimeFrame','subtype':'obSubtype','Camera_X_pos':'Camera_X_pos','Camera_Y_pos':'Camera_Y_pos','Random_Number':'RandomNumber','MoveSprite':'ObjectMoveAndFall','MoveSprite2':'ObjectMove','MoveSprite_LightGravity':'ObjectMoveAndFall_LightGravity','ObjCheckFloorDist':'ObjHitFloor','Play_SFX':'PlaySound_Special','sfx_MechaLand':'SndID_MechaLand','sfx_Dash':'SndID_SpindashRelease','sfx_Thump':'SndID_Thump'}
 	lines=['\tCPU 68000',f'\tinclude "{ROOT}/_definitions/s2.macrosetup.asm"','\t!org 0','\tphase $300000']
 	lines += [f'{k} equ ${m.s[v]:X}' for k,v in aliases.items()]
 	lines += ['_unkFAB4 equ $FFFFDF00','_unkFAB6 equ $FFFFDF02','_unkFAB0 equ $FFFFDF04','_unkFAB8 equ $FFFFDF06','loc_7B2DC equ Ref_Return','loc_7B3AC equ Ref_Return','Ref_Step:','\tmoveq #0,d0','\tmove.b routine(a0),d0','\tmove.w SSZEndBoss_Index(pc,d0.w),d1','\tjsr SSZEndBoss_Index(pc,d1.w)','\trts',state,anim,'\teven',raw,wait,edge,'Set_Raw_Animation:','\tmove.l a1,$30(a0)','\tclr.b anim_frame(a0)','\tclr.b anim_frame_timer(a0)','\trts','CreateChild6_Simple:','\tmoveq #1,d0','\trts','ChildObjDat_7D47A: dc.w 0','ChildObjDat_7D480: dc.w 0','ChildObjDat_7D486: dc.w 0','Ref_Return: rts','\tdephase']
-	path=args.output/'reference.asm';path.write_bytes(('\n'.join(lines)+'\n').replace('\n','\r\n').encode())
+	path=args.output/'reference.asm'
+	body=re.sub(r'moveq\s+#signextendB\((sfx_\w+)\)',r'move.w #\1','\n'.join(lines)+'\n')
+	path.write_bytes(body.replace('\n','\r\n').encode())
 	tool=ROOT/'build_tools/Linux-x86_64'
 	r=subprocess.run([str(tool/'asl'),'-xx','-n','-q','-A','-L','-U',str(path.resolve())],cwd=ROOT,capture_output=True,text=True)
 	assert r.returncode==0,r.stdout+r.stderr
@@ -40,9 +42,9 @@ def native(args):
 	class Machine(n.Manager):
 		def hook(self,cpu,address,size,unused):
 			if address==self.s['PlayMusic'] and hasattr(self,'sounds'):
-				self.sounds.append(cpu.reg_read(n.UC_M68K_REG_D0)&255)
+				self.sounds.append(cpu.reg_read(n.UC_M68K_REG_D0)&65535)
 			if address==self.s['PlayMusic'] and hasattr(self,'music'):
-				self.music.append(cpu.reg_read(n.UC_M68K_REG_D0)&255)
+				self.music.append(cpu.reg_read(n.UC_M68K_REG_D0)&65535)
 			if address==self.s['ObjHitFloor']:
 				a=cpu.reg_read(n.UC_M68K_REG_A0)
 				distance=0x5C0-self.get(a,'obY',2)-self.get(a,'obHeight')-1
@@ -101,15 +103,15 @@ def native(args):
 	for _ in range(8):m.act('MS_MaintainJets',body)
 	assert not m.sounds, 'Maintaining the pair retriggered the jet sound'
 	m.act('MS_CreateJets',body,{n.UC_M68K_REG_A2:m.s['MS_JetsDash']})
-	assert m.sounds==[m.s['sfx_Roll']],m.sounds
+	assert m.sounds==[m.s['SndID_Roll']],m.sounds
 	for _ in range(8):m.act('MS_MaintainJets',body)
-	assert m.sounds==[m.s['sfx_Roll']],m.sounds
+	assert m.sounds==[m.s['SndID_Roll']],m.sounds
 	m.start();m.sounds=[];body=pool[0]
 	for slot in pool:m.put(slot,'code',m.s['MS_Return'])
 	m.put(body,'code',m.s['MechaSonic']);m.put(body,'MS_flags',4)
 	m.act('MS_MaintainJets',body);assert not m.sounds
 	m.put(pool[-1],'code',0);m.act('MS_MaintainJets',body)
-	assert m.sounds==[m.s['sfx_Roll']],m.sounds
+	assert m.sounds==[m.s['SndID_Roll']],m.sounds
 	checks.append('jet allocation/recovery and a reused pair changing kind play Roll once; full-pool retries and maintenance do not retrigger it')
 
 	for pal,ticks in ((0,120),(0x40,100)):
@@ -224,7 +226,7 @@ def native(args):
 		m.start();m.music=[];body=pool[0]
 		m.put(body,'objoff_38',pool[1],4)
 		m.act(label,body)
-		assert m.music==[m.s['MusID_FadeOut']],(label,m.music)
+		assert m.music==[m.s['CmdID_FadeOut']],(label,m.music)
 	checks.append('all three implemented bosses request a music fade at defeat')
 	m.start();body=pool[0];player=m.s['v_player']
 	for f,v,z in [('code',m.s['MechaSonic'],4),('MS_phase',4,1),('MS_flags',1,1),
@@ -309,7 +311,8 @@ def game(args):
 		place(g,'v_player',0x1ED8,0x4A0 if args.approach=='above' else 0x5AD,args.approach=='above')
 		g.put('v_player','obVelY',0x300 if args.approach=='above' else 0,2)
 	for actor in actors:g.put(actor,'obStatusSecondary',2);g.put(actor,'invtime',2000,2)
-	zram[g.s['zAbsVar.QueueToPlay']]=g.s['bgm_Invincible']
+	address=g.s['zAbsVar.QueueToPlay']
+	zram[address:address+2]=g.s['MusID_Invincible'].to_bytes(2,'little')
 	g.put('v_player','obControl',0);g.put('v_player','obVelX',0x600,2);g.put('v_player','obInertia',0x600,2);g.buttons={7};spin=set();seen=set();broken=False;boss=None
 	settled=None;entry=None;warning_ticks=100 if args.pal else 120
 	root=g.s['DPLC_Signpost'];cue=root+struct.unpack_from('>h',args.rom.read_bytes(),root+12)[0]

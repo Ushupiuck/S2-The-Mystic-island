@@ -91,7 +91,7 @@ Bub_ChkWater:	; Routine 4
 		move.b	#30,air_left(a1)
 		clr.b	(v_tailsbubbles+objoff_36).w
 .collect:
-		move.w	#sfx_Bubble,d0
+		move.w	#SndID_InhalingBubble,d0
 		jsr	(PlaySound_Special).l	; play collecting bubble sound
 		movea.l	(sp)+,a1
 		clr.w	obVelX(a1)

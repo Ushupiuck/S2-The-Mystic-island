@@ -136,7 +136,7 @@ PP_Mosqui_Dive:
 	addq.b	#2,obRoutine(a0)
 	tst.b	obRender(a0)
 	bpl.s	.End
-	move.w	#sfx_Collapse,d0
+	move.w	#SndID_Smash,d0
 	jsr	(PlaySound_Special).l
 
 .End:

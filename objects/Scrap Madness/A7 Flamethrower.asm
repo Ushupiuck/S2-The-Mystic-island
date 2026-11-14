@@ -57,7 +57,7 @@ SMZ_Flame_Action:	; Routine 2
 		beq.s	SMZ_Flame_Animate				; if on retracting animation now, branch (to pause)
 
 		move.w	SMZ_flame_firetime(a0),SMZ_flame_timer(a0)	; flamethrower is expanding again, begin flaming time
-		move.w	#sfx_Fireball,d0			; set flamethrower sound
+		move.w	#SndID_FireBurn,d0			; set flamethrower sound
 		jsr	(PlaySound_Special).l				; play it
 
 SMZ_Flame_Animate:

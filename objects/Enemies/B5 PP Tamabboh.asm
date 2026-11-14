@@ -176,7 +176,7 @@ PP_Tamabboh_Fire:
 	bne.w	.End
 	tst.b	obRender(a0)
 	bpl.s	.SkipSound
-	move.w	#sfx_Fireball,d0
+	move.w	#SndID_FireBurn,d0
 	jsr	(PlaySound_Special).l
 
 .SkipSound:

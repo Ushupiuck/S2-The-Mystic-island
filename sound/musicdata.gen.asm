@@ -1,10 +1,4 @@
-Mus_TestSong1:	MusicPacked "sound/music/../generated/TestSong1_cmp.bin" ; $332 bytes
-	even
-Mus_Title:	MusicPacked "sound/music/../generated/Title_cmp.bin" ; $19A bytes
-	even
-Mus_2PResult:	MusicPacked "sound/music/../generated/2PResult_cmp.bin" ; $35B bytes
-	even
-Mus_Options:	MusicPacked "sound/music/../generated/Options_cmp.bin" ; $3CE bytes
+Mus_EggUtopia:	MusicPacked "sound/music/../generated/EggUtopia_cmp.bin" ; $332 bytes
 	even
 Mus_GHZ:	MusicPacked "sound/music/../generated/GHZ_cmp.bin" ; $51C bytes
 	even
@@ -58,6 +52,55 @@ Mus_SBZ:	MusicPacked "sound/music/../generated/SBZ_cmp.bin" ; $44D bytes
 	even
 Mus_DEZ:	MusicPacked "sound/music/../generated/DEZ_cmp.bin" ; $326 bytes
 	even
+Mus_EHZ_2P:	MusicPacked "sound/music/../generated/EHZ_2P_cmp.bin" ; $35A bytes
+	even
+Mus_SW_HPZ:	MusicPacked "sound/music/../generated/SW_HPZ_cmp.bin" ; $2D4 bytes
+	even
+Mus_CNZ_2P:	MusicPacked "sound/music/../generated/CNZ_2P_cmp.bin" ; $36C bytes
+	even
+Mus_SCZ:	MusicPacked "sound/music/../generated/SCZ_cmp.bin" ; $2ED bytes
+	even
+Mus_HCZ1:	MusicPacked "sound/music/../generated/HCZ1_cmp.bin" ; $622 bytes
+	even
+Mus_ReservedStage21:	include "sound/music/Reserved Stage.asm" ; $B bytes
+	even
+Mus_ReservedStage22 = Mus_ReservedStage21
+Mus_ReservedStage23 = Mus_ReservedStage21
+Mus_ReservedStage24 = Mus_ReservedStage21
+Mus_ReservedStage25 = Mus_ReservedStage21
+Mus_ReservedStage26 = Mus_ReservedStage21
+Mus_ReservedStage27 = Mus_ReservedStage21
+Mus_ReservedStage28 = Mus_ReservedStage21
+Mus_ReservedStage29 = Mus_ReservedStage21
+Mus_ReservedStage2A = Mus_ReservedStage21
+Mus_ReservedStage2B = Mus_ReservedStage21
+Mus_ReservedStage2C = Mus_ReservedStage21
+Mus_ReservedStage2D = Mus_ReservedStage21
+Mus_ReservedStage2E = Mus_ReservedStage21
+Mus_ReservedStage2F = Mus_ReservedStage21
+Mus_ReservedStage30 = Mus_ReservedStage21
+Mus_ReservedStage31 = Mus_ReservedStage21
+Mus_ReservedStage32 = Mus_ReservedStage21
+Mus_ReservedStage33 = Mus_ReservedStage21
+Mus_ReservedStage34 = Mus_ReservedStage21
+Mus_ReservedStage35 = Mus_ReservedStage21
+Mus_ReservedStage36 = Mus_ReservedStage21
+Mus_ReservedStage37 = Mus_ReservedStage21
+Mus_ReservedStage38 = Mus_ReservedStage21
+Mus_ReservedStage39 = Mus_ReservedStage21
+Mus_ReservedStage3A = Mus_ReservedStage21
+Mus_ReservedStage3B = Mus_ReservedStage21
+Mus_ReservedStage3C = Mus_ReservedStage21
+Mus_ReservedStage3D = Mus_ReservedStage21
+Mus_ReservedStage3E = Mus_ReservedStage21
+Mus_ReservedStage3F = Mus_ReservedStage21
+Mus_ReservedStage40 = Mus_ReservedStage21
+Mus_Title:	MusicPacked "sound/music/../generated/Title_cmp.bin" ; $19A bytes
+	even
+Mus_2PResult:	MusicPacked "sound/music/../generated/2PResult_cmp.bin" ; $35B bytes
+	even
+Mus_Options:	MusicPacked "sound/music/../generated/Options_cmp.bin" ; $3CE bytes
+	even
 Mus_Boss:	MusicPacked "sound/music/../generated/Boss_cmp.bin" ; $1EC bytes
 	even
 Mus_Boss2:	MusicPacked "sound/music/../generated/Boss2_cmp.bin" ; $426 bytes
@@ -86,17 +129,9 @@ Mus_Invincible:	MusicPacked "sound/music/../generated/Invincible_cmp.bin" ; $16F
 	even
 Mus_SuperSonic:	MusicPacked "sound/music/../generated/SuperSonic_cmp.bin" ; $272 bytes
 	even
-Mus_Test6:	MusicPacked "sound/music/../generated/Test6_cmp.bin" ; $61F bytes
+Mus_S3Menu:	MusicPacked "sound/music/../generated/S3Menu_cmp.bin" ; $61F bytes
 	even
-Mus_Test7:	MusicPacked "sound/music/../generated/Test7_cmp.bin" ; $3B3 bytes
-	even
-Mus_EHZ_2P:	MusicPacked "sound/music/../generated/EHZ_2P_cmp.bin" ; $35A bytes
-	even
-Mus_SW_HPZ:	MusicPacked "sound/music/../generated/SW_HPZ_cmp.bin" ; $2D4 bytes
-	even
-Mus_CNZ_2P:	MusicPacked "sound/music/../generated/CNZ_2P_cmp.bin" ; $36C bytes
-	even
-Mus_SCZ:	MusicPacked "sound/music/../generated/SCZ_cmp.bin" ; $2ED bytes
+Mus_S3SuperSonic:	MusicPacked "sound/music/../generated/S3SuperSonic_cmp.bin" ; $3B3 bytes
 	even
 Mus_EndLevel:	MusicPacked "sound/music/../generated/EndLevel_cmp.bin" ; $100 bytes
 	even

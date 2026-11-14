@@ -79,7 +79,7 @@ Bumper_bump:
 		bclr	#5,obStatus(a1)
 		clr.b	jumping(a1)
 		move.b	#1,obAnim(a0)	; use "hit" animation
-		move.w	#sfx_Bumper,d0
+		move.w	#SndID_Bumper,d0
 		jsr	(PlaySound).l		; queue bumper SFX with priority
 		move.w	respawn_addr(a0),d0
 		beq.s	.addscore

@@ -36,6 +36,6 @@ loc_C9CA:
 		dbf	d1,-
 
 loc_CA1C:
-		move.w	#sfx_WallSmash,d0
+		move.w	#SndID_SlowSmash,d0
 		jmp	(PlaySound_Special).l
 ; End of function SmashObject

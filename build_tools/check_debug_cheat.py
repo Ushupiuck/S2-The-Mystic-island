@@ -16,12 +16,13 @@ def native(rom, listing):
 
 	def hook(cpu, address, size, unused):
 		if address == m.s['PlaySound_Special']:
-			sounds.append(cpu.reg_read(UC_M68K_REG_D0) & 255)
+			sounds.append(cpu.reg_read(UC_M68K_REG_D0) & 65535)
 		original_hook(cpu, address, size, unused)
 
 	m.hook = hook
 	cases = ((1, 3, 5, 7), (1, 1, 3, 5, 7), (1, 3, 1, 3, 5, 7),
-				(1, 3, 5, 6), (1, 3, 7, 5), (1, 3, 0, 5, 7), (0x11, 3, 5, 7))
+				(1, 3, 5, 6), (1, 3, 7, 5), (1, 3, 0, 5, 7), (0x11, 3, 5, 7), (0x101, 0x103, 0x105, 0x107),
+				(0x101, 3, 5, 7), (1, 0x103, 5, 7), (1, 3, 0x105, 7), (1, 3, 5, 0x107))
 	for sequence in cases:
 		m.start()
 		sounds.clear()
@@ -33,7 +34,7 @@ def native(rom, listing):
 			m.act('LevelSelect_PlaySound')
 		unlocked = sequence[-4:] == (1, 3, 5, 7)
 		assert bool(m.read('f_debugcheat')) == unlocked, sequence
-		assert sounds == list(sequence) + ([m.s['sfx_Ring']] if unlocked else []), (sequence, sounds)
+		assert sounds == list(sequence) + ([m.s['SndID_Ring']] if unlocked else []), (sequence, sounds)
 		assert m.read('f_levselcheat') == 1
 		assert m.read('f_slomocheat') == (1 if unlocked else 0x3C)
 		assert m.read('Debug_mode_flag') == 0x5A
@@ -43,7 +44,7 @@ def native(rom, listing):
 	for sound in (1, 3, 5, 7, 9, 1, 3, 5, 7):
 		m.write('v_levselsound', sound, 2)
 		m.act('LevelSelect_PlaySound')
-	assert m.read('f_debugcheat') and m.read('f_slomocheat') and sounds.count(m.s['sfx_Ring']) == 2
+	assert m.read('f_debugcheat') and m.read('f_slomocheat') and sounds.count(m.s['SndID_Ring']) == 2
 
 	# Every old title C-count variant, in both regional code paths, leaves
 	# Debug locked while retaining level-select and slow-motion unlocks.
@@ -183,11 +184,12 @@ def runtime(a):
 	menu = g.save()
 
 	def select(sound):
-		for _ in range(256):
+		for _ in range(g.s['SoundTest_MaxID']+1):
 			current = g.read('v_levselsound', 2)
 			if current == sound:
 				return
-			press(RIGHT if (sound-current) & 255 < 128 else LEFT)
+			count=g.s['SoundTest_MaxID']+1
+			press(RIGHT if (sound-current) % count < (count+1)//2 else LEFT)
 		raise AssertionError(('Could not select sound', sound))
 
 	for playback in (B, C, START):

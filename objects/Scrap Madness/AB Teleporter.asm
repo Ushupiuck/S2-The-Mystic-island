@@ -84,7 +84,7 @@ SMZ_Teleport_Main:
 		clr.b	tails_flight_flag(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
-		move.w	#sfx_Roll,d0
+		move.w	#SndID_Roll,d0
 		jmp	(PlaySound_Special).l
 .bump:
 		moveq	#0,d0
@@ -100,7 +100,7 @@ SMZ_Teleport_Main:
 		move.w	#$1000,d2
 		bsr.w	AutoTunnel_CalcSpeed
 		move.b	#2,smz_pipe_state(a3)
-		move.w	#sfx_Teleport,d0
+		move.w	#SndID_SpindashRelease,d0
 		jmp	(PlaySound_Special).l
 .travel:
 		subq.b	#1,autopath_time(a3)

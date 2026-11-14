@@ -130,7 +130,7 @@ S1Fireball:
 		neg.w	obVelX(a0)
 		move.l	#S1Fireball_Left,code(a0)
 .begin:
-		move.w	#sfx_Fireball,d0
+		move.w	#SndID_FireBurn,d0
 		jsr	(PlaySound_Special).l
 		movea.l	code(a0),a1
 		jmp	(a1)

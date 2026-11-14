@@ -108,7 +108,10 @@ for index, name in enumerate(ini.sections(), 1):
 	pcm = b''.join(chunks)
 	values = np.frombuffer(pcm, dtype='<i2').astype(np.float64)
 	assert values.size > av.timing.sample_rate * 2, ('No audio callback output', name)
-	assert np.count_nonzero(values) > 1000, ('Silent music', name)
+	if ini[name].getboolean('Reserved', fallback=False):
+		assert not np.count_nonzero(values), ('Reserved stage plays audio', name)
+	else:
+		assert np.count_nonzero(values) > 1000, ('Silent music', name)
 	assert before != after, ('Game stalled', name)
 	assert g.read('v_levselitem', 2) == g.s['LevelSelect_SoundItem'], ('Sound test exited', name)
 	if streamed:
@@ -151,7 +154,8 @@ if args.startup:
 	for case, prior, last in (
 			('ring-alone', [], g.s['SndID_Ring']),
 			('code-1357', [1, 3, 5], 7), ('4-to-7', [4], 7),
-			('5-to-7', [5], 7), ('6-to-7', [6], 7), ('7-cached', [7, 5], 7)):
+			('5-to-7', [5], 7), ('6-to-7', [6], 7), ('7-cached', [7, 5], 7),
+			('dense-cold', [5, 6], g.s['MusID_GRGZ1'])):
 		g.restore(menu)
 		for song in prior:
 			play(song)
@@ -177,8 +181,8 @@ if args.startup:
 			assert g.read('f_debugcheat'), 'The real sound-test cheat did not unlock'
 		else:
 			assert not durations, ('Unexpected ring', case)
-		if last == 7:
-			assert current_music(g, rom, zram) == 7, ('Wrong startup song', case)
+		if last < g.s['MusID__End']:
+			assert current_music(g, rom, zram) == last, ('Wrong startup song', case)
 			assert not any(row['busy'] for row in rows[:20]), ('Startup crossed a frame', case)
 			assert not any(row['starting'] for row in rows[15:]), ('Startup never finished', case)
 		with wave.open(str(output / (case + '.wav')), 'wb') as wav:
@@ -209,7 +213,9 @@ if args.startup:
 			assert current_music(g, rom, zram)==7, 'Wrong song restored after startup-time jingle'
 			assert zr('zSongFM1.PlaybackControl')&128, 'Jingle backed up uninitialized music tracks'
 			pointer=zr('zSongFM1.DataPointerLow',2)
-			assert g.s['Music_ScoreBase']<=pointer<g.s['Music_ScoreBase']+g.s['Music_StageCapacity']
+			base=zr('zMusicReadBase',2)
+			size=int.from_bytes(rom[g.s['Music_Index']+6*8+4:g.s['Music_Index']+6*8+6],'big')
+			assert base<=pointer<base+size
 			report['startup_jingle']='restored the initialized score after an actual cache-wait interruption'
 			print('Startup-time 1-up restoration passed.',flush=True)
 			break
@@ -294,14 +300,17 @@ if args.priority:
 	tracks=[g.s[name] for name in ('zSFX_FM3','zSFX_FM4','zSFX_FM5')]
 	def active():return [bool(zram[p]&128) for p in tracks]
 	def priority():return zr('zAbsVar.SFXPriorityVal')
-	def queue(name):zram[g.s['zAbsVar.SFXUnknown']]=g.s['SndID_'+name]
+	def queue(name):
+		address=g.s['zAbsVar.SFXUnknown']
+		width=2 if 'SoundID_Mask' in g.s else 1
+		zram[address:address+width]=g.s['SndID_'+name].to_bytes(width,'little')
 	def blocked(saved,delay):
 		g.restore(saved);step(delay);point=g.save();step(3)
 		expected=bytes(zram[start:end])
 		g.restore(point);queue('Bumper');step(3)
 		assert bytes(zram[start:end])==expected,('Bumper interrupted Continue',delay)
 		if any(active()):assert priority()==0x7F,('Continue lost priority',delay)
-	g.restore(menu);play(g.s['MusID_Stop']);step(30)
+	g.restore(menu);play(g.s['CmdID_Stop']);step(30)
 	queue('ContinueJingle');step(2);assert priority()==0x7F and all(active())
 	jingle=g.save();tail=None;finished=None
 	for tick in range(350):
@@ -342,7 +351,7 @@ if args.effects:
 	report['effects'] = []
 	for name in effects.sections():
 		g.restore(menu)
-		play(g.s['MusID_Stop'])
+		play(g.s['CmdID_Stop'])
 		step(30)
 		chunks.clear()
 		capture = True
@@ -360,7 +369,7 @@ if args.jingles:
 	report['restoration'] = []
 	# Include both small and large scores in the 1-up restoration cases.
 	for name, jingle in (('GHZ', 'ExtraLife'), ('LBZ2_S3', 'ExtraLife'),
-			('Test6', 'ExtraLife'), ('Test6', 'DoubleLife')):
+			('S3Menu', 'ExtraLife'), ('S3Menu', 'DoubleLife')):
 		g.restore(menu)
 		play(g.s['MusID_' + name])
 		step(120)

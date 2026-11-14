@@ -136,6 +136,7 @@ namespace KEHmusic
 				File.Delete(".sound-build/music." + extension);
 			using (var writer = new StreamWriter(".sound-build/music.asm", false, Encoding.ASCII))
 			{
+				writer.NewLine = "\r\n";
 				writer.WriteLine("\tCPU 68000");
 				writer.WriteLine("\tpadding off");
 				writer.WriteLine("kehmusic = 1");
@@ -288,12 +289,14 @@ namespace KEHmusic
 			var samplenums = new Dictionary<string, string>();
 			using (var layout = new StreamWriter("sound/dacbanks.gen.asm", false, Encoding.ASCII))
 			{
+				layout.NewLine = "\r\n";
 				for (int b = 0; b < dacbanks.Count; b++)
 				{
 					string bankFile = string.Format("sound/generated/dac-bank-{0}.gen.asm", b + 1);
 					layout.WriteLine("\tinclude \"{0}\"", bankFile);
 					using (var sw = new StreamWriter(bankFile, false, Encoding.ASCII))
 					{
+						sw.NewLine = "\r\n";
 						sw.WriteLine("SndDAC{0}_Start:\tstartBank", b + 1);
 						foreach (string item in dacbanks[b])
 						{
@@ -311,6 +314,7 @@ namespace KEHmusic
 			List<string> dacids = new List<string>(dacs.Count);
 			using (StreamWriter sw = new StreamWriter("sound/dacinfo.gen.asm", false, Encoding.ASCII))
 			{
+				sw.NewLine = "\r\n";
 				sw.WriteLine("zDACMasterPlaylist:");
 				sw.WriteLine();
 				foreach (var item in dacs)
@@ -327,6 +331,7 @@ namespace KEHmusic
 			}
 			using (StreamWriter sw = new StreamWriter("sound/dacids.gen.asm", false, Encoding.ASCII))
 			{
+				sw.NewLine = "\r\n";
 				string last = "$81";
 				for (int i = 0; i < dacids.Count; i++)
 				{
@@ -368,8 +373,18 @@ namespace KEHmusic
 				IniSerializer.Serialize(songs, "sound/music/music.ini");
 			using (var sw = new StreamWriter("sound/musicdata.gen.asm", false, Encoding.ASCII))
 			{
+				sw.NewLine = "\r\n";
+				var sources = new Dictionary<string, string>(StringComparer.Ordinal);
 				foreach (var item in songs)
 				{
+					string source = item.Value.BinaryFormat + "|" + Path.GetFullPath(Path.Combine("sound/music", item.Value.File));
+					string shared;
+					if (sources.TryGetValue(source, out shared))
+					{
+						sw.WriteLine("Mus_{0} = Mus_{1}", item.Key, shared);
+						continue;
+					}
+					sources.Add(source, item.Key);
 					string file = item.Value.OutputFile ?? item.Value.File;
 					string directive = item.Value.IsCompressed ? "MusicPacked" :
 						Path.GetExtension(file).Equals(".bin", StringComparison.OrdinalIgnoreCase) ? "binclude" : "include";
@@ -379,6 +394,7 @@ namespace KEHmusic
 			}
 			using (var sw = new StreamWriter("sound/musicinfo.gen.asm", false, Encoding.ASCII))
 			{
+				sw.NewLine = "\r\n";
 				sw.WriteLine("Music_Index:");
 				foreach (var item in songs)
 				{
@@ -395,6 +411,7 @@ namespace KEHmusic
 			}
 			using (StreamWriter sw = new StreamWriter("sound/musicids.gen.asm", false, Encoding.ASCII))
 			{
+				sw.NewLine = "\r\n";
 				List<string> musids = new List<string>(songs.Keys) { "_End" };
 				sw.WriteLine("MusID__First = 1");
 				string last = "_First";
@@ -413,6 +430,7 @@ namespace KEHmusic
 			}
 			using (StreamWriter sw = new StreamWriter("sound/musicnames.gen.asm", false, Encoding.ASCII))
 			{
+				sw.NewLine = "\r\n";
 				sw.WriteLine("SongNames:\toffsetTable");
 				sw.WriteLine("\toffsetTableEntry.w\tMusNam_Null");
 				foreach (var item in songs)
@@ -434,6 +452,7 @@ namespace KEHmusic
 		public bool PALMode { get; set; }
 		public bool ExtraLifeJingle { get; set; }
 		public bool NoSpeedUp { get; set; }
+		public bool Reserved { get; set; }
 		public int Size { get; set; }
 		public int UncompressedSize { get; set; }
 		public string MD5 { get; set; }

@@ -136,10 +136,10 @@ these PLCs do not dynamically allocate object VRAM or encode allocation in mappi
 ## Per-act music
 
 Edit `MusicList` in `md-main.asm`: each zone row holds four independent IDs in act
-1-4 order. Use existing `MusID_*` names or `bgm_*` aliases. For example:
+1-4 order as **words**. Use the generated `MusID_*` names. For example:
 
 ```asm
-        dc.b MusID_GHZ, MusID_EHZ, MusID_GRGZ1, MusID_GRGZ2 ; GHZ
+		dc.w MusID_GHZ, MusID_EHZ, MusID_GRGZ1, MusID_GRGZ2 ; GHZ
 ```
 
 Defaults repeat each zone's existing song. Assembly checks all 64 entries

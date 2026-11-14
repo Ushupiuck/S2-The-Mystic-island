@@ -586,12 +586,12 @@ def native_checks(args):
     m.write('Current_ZoneAndAct', 2, 2)
     m.write('f_lockscreen', 1)
     # Give GHZ3 a deliberately different valid song in this native ROM only.
-    m.cpu.mem_write(s['MusicList'] + 2, bytes((s['bgm_LZ'],)))
+    m.cpu.mem_write(s['MusicList'] + 4, s['MusID_LZ'].to_bytes(2, 'big'))
     played = []
     m.cpu.hook_add(UC_HOOK_CODE, lambda c, a, z, u: played.append(c.reg_read(UC_M68K_REG_D0) & 65535),
                    begin=s['PlayMusic'], end=s['PlayMusic'])
     m.act('Obj3D', body)
-    assert played == [s['bgm_LZ']] and not m.read('f_lockscreen')
+    assert played == [s['MusID_LZ']] and not m.read('f_lockscreen')
     results.append('escape restores the act-selected song')
 
     # Decode through the actual owning CPU, independently of the PLC upload.

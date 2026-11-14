@@ -35,7 +35,7 @@ ExItem_Setup:
 		clr.b	obColType(a0)
 		move.b	#sprite_bound($C,Map_Explosion_width),obActWid(a0)
 		clr.b	obFrame(a0)
-		move.w	#sfx_BreakItem,d0
+		move.w	#SndID_Explosion,d0
 		jsr	(PlaySound_Special).l	; play breaking enemy sound
 
 ExItem_Animate:	; Routine 4 (2 for ExplosionBomb)
@@ -72,7 +72,7 @@ ExBom_Main:	; Routine 0
 		move.b	#sprite_bound($C,Map_FExplosion_width),obActWid(a0)
 		move.b	#7,obTimeFrame(a0)
 		clr.b	obFrame(a0)
-		move.w	#sfx_Bomb,d0
+		move.w	#SndID_BossExplosion,d0
 		jmp	(PlaySound_Special).l	; play exploding bomb sound
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -100,7 +100,7 @@ MDis_Main:	; Routine 0
 		move.b	#sprite_bound($C,Map_GExplosion_width),obActWid(a0)
 		move.b	#7,obTimeFrame(a0)
 		clr.b	obFrame(a0)
-		move.w	#sfx_Bomb,d0
+		move.w	#SndID_BossExplosion,d0
 		jsr	(PlaySound_Special).l		 ; play sound
 
 MDis_Animate:	; Routine 2

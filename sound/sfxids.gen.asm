@@ -1,4 +1,4 @@
-SndID__First = MusID__End
+SndID__First = (MusID__End+$FF)&$FF00
 	enum SndID_Jump=SndID__First,SndID_Checkpoint,SndID_SpikeSwitch,SndID_Hurt,SndID_Skidding,SndID_BlockPush,SndID_HurtBySpikes
 	enum SndID_Sparkle=SndID_HurtBySpikes+1,SndID_Beep,SndID_Bwoop,SndID_Splash,SndID_Swish,SndID_BossHit,SndID_InhalingBubble
 	enum SndID_LavaBall=SndID_InhalingBubble+1,SndID_Shield,SndID_LaserBeam,SndID_Zap,SndID_Drown,SndID_FireBurn,SndID_Bumper

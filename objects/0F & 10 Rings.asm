@@ -43,7 +43,7 @@ Ring_Sparkle:
 		bra.w	DisplaySprite
 ; ---------------------------------------------------------------------------
 CollectRing:
-		move.w	#sfx_Ring,d0
+		move.w	#SndID_Ring,d0
 		cmpi.w	#999,(v_rings).w
 		bhs.s	.playsound
 		addq.w	#1,(v_rings).w
@@ -59,7 +59,7 @@ CollectRing:
 +
 		addq.b	#1,(v_lives).w
 		addq.b	#1,(f_lifecount).w
-		moveq	#bgm_ExtraLife,d0
+		move.w	#MusID_ExtraLife,d0
 
 .playsound:
 		jmp	(PlaySound_Special).l
@@ -102,7 +102,7 @@ LostRings:
 		move.b	#$80,(f_ringcount).w
 		clr.b	(v_lifecount).w
 		move.b	#-1,(v_ani3_time).w
-		moveq	#sfx_RingLoss,d0
+		move.w	#SndID_RingSpill,d0
 		jsr	(PlaySound_Special).l
 		bra.s	LostRing_Move
 

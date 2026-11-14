@@ -179,7 +179,7 @@ smpsHeaderVoiceNull macro
 	endm
 
 smpsHeaderVoiceUVB macro
-	fatal "KeH requires a local FM voice bank; universal voice banks are unsupported."
+	smpsHeaderVoiceNull
 	endm
 
 ; Header - Set up Voice Location
@@ -339,9 +339,9 @@ smpsSetTempoDiv macro val
 	dc.b	$EB,val
 	endm
 
-; ECxx - Set Volume to xx
+; FBxx - Absolute loudness: 0 is silent, $7F is full volume (S3 semantics).
 smpsSetVol macro val
-	fatal "Coord. Flag to set volume (instead of volume attenuation) does not exist in S1 or S2 drivers. Complain to Flamewing to add it."
+	dc.b	$FB,val
 	endm
 
 ; Works on all drivers
@@ -350,15 +350,14 @@ smpsPSGAlterVol macro vol
 	endm
 spVol	EQU $EC
 
-; Clears pushing sound flag in S1
+; Clear KeH's pushing-effect latch so the next push can start it again.
 smpsClearPush macro
-	fatal "Coord. Flag to clear S1 push block flag does not exist in S2 or S3 drivers. Complain to Flamewing to add it."
+	dc.b	$ED
 	endm
 
-; Stops special SFX (S1 only) and restarts overridden music track
+; Stop the current SFX channel and restore its overridden music channel.
 smpsStopSpecial macro
-	message "Coord. Flag to stop special SFX does not exist in S2 or S3 drivers. Complain to Flamewing to add it. With adequate caution, smpsStop can do this job."
-	dc.b	$F2
+	dc.b	$EE
 	endm
 
 ; EFxx[yy] - Set Voice of FM channel to xx; xx < 0 means yy present

@@ -1,8 +1,5 @@
 Music_Index:
-	MusicEntry	Mus_TestSong1,$4C4,0
-	MusicEntry	Mus_Title,$1F2,0
-	MusicEntry	Mus_2PResult,$463,0
-	MusicEntry	Mus_Options,$568,0
+	MusicEntry	Mus_EggUtopia,$4C4,0
 	MusicEntry	Mus_GHZ,$768,0
 	MusicEntry	Mus_EHZ,$772,0
 	MusicEntry	Mus_GRGZ1,$F76,0
@@ -29,6 +26,46 @@ Music_Index:
 	MusicEntry	Mus_LBZ2_S3,$EE2,0
 	MusicEntry	Mus_SBZ,$550,0
 	MusicEntry	Mus_DEZ,$4E7,0
+	MusicEntry	Mus_EHZ_2P,$519,0
+	MusicEntry	Mus_SW_HPZ,$449,0
+	MusicEntry	Mus_CNZ_2P,$585,0
+	MusicEntry	Mus_SCZ,$403,0
+	MusicEntry	Mus_HCZ1,$100A,0
+	MusicEntry	Mus_ReservedStage21,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage22,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage23,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage24,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage25,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage26,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage27,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage28,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage29,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage2A,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage2B,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage2C,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage2D,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage2E,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage2F,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage30,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage31,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage32,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage33,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage34,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage35,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage36,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage37,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage38,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage39,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage3A,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage3B,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage3C,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage3D,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage3E,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage3F,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ReservedStage40,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_Title,$1F2,0
+	MusicEntry	Mus_2PResult,$463,0
+	MusicEntry	Mus_Options,$568,0
 	MusicEntry	Mus_Boss,$26D,0
 	MusicEntry	Mus_Boss2,$614,0
 	MusicEntry	Mus_Boss3,$473,0
@@ -43,12 +80,8 @@ Music_Index:
 	MusicEntry	Mus_SpecialStage,$60E,0
 	MusicEntry	Mus_Invincible,$1CA,0
 	MusicEntry	Mus_SuperSonic,$2F3,0
-	MusicEntry	Mus_Test6,$A39,0
-	MusicEntry	Mus_Test7,$58F,0
-	MusicEntry	Mus_EHZ_2P,$519,0
-	MusicEntry	Mus_SW_HPZ,$449,0
-	MusicEntry	Mus_CNZ_2P,$585,0
-	MusicEntry	Mus_SCZ,$403,0
+	MusicEntry	Mus_S3Menu,$A39,0
+	MusicEntry	Mus_S3SuperSonic,$58F,0
 	MusicEntry	Mus_EndLevel,$13C,0|musprop_nospeedup
 	MusicEntry	Mus_GameOver,$14F,0|musprop_nospeedup
 	MusicEntry	Mus_ExtraLife,$ED,0|musprop_1up|musprop_nospeedup

@@ -73,7 +73,7 @@ Obj79_HitLamp:
 		addi.w	#$40,d0
 		cmpi.w	#$68,d0
 		bhs.s	.return
-		move.w	#sfx_Lamppost,d0
+		move.w	#SndID_Checkpoint,d0
 		jsr	(PlaySound_Special).l
 		addq.b	#2,obRoutine(a0)
 		bsr.s	Lamppost_StoreInfo

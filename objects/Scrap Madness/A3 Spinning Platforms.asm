@@ -72,7 +72,7 @@ SMZ_Spin_Trapdoor:	; Routine 2
 		bchg	#0,obAnim(a0)				; toggle between open/close trapdoor animations
 		tst.b	obRender(a0)				; was trapdoor on screen as it toggled?
 		bpl.s	.animate				; if not, branch
-		move.w	#sfx_Door,d0				; set flapping door sound
+		move.w	#SndID_Trapdoor,d0				; set flapping door sound
 		jsr	(PlaySound_Special).l				; play it
 
 	.animate:

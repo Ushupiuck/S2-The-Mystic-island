@@ -1076,6 +1076,9 @@ MCD_CompressedAssets:
 	if defined(Mus_EHZ_2P)
 	dc.l Mus_EHZ_2P,Mus_EHZ_2P+$35A	; sound/music/../generated/EHZ_2P_cmp.bin
 	endif
+	if defined(Mus_EggUtopia)
+	dc.l Mus_EggUtopia,Mus_EggUtopia+$332	; sound/music/../generated/EggUtopia_cmp.bin
+	endif
 	if defined(Mus_Emerald)
 	dc.l Mus_Emerald,Mus_Emerald+$B8	; sound/music/../generated/Emerald_cmp.bin
 	endif
@@ -1111,6 +1114,9 @@ MCD_CompressedAssets:
 	endif
 	if defined(Mus_GameOver)
 	dc.l Mus_GameOver,Mus_GameOver+$139	; sound/music/../generated/GameOver_cmp.bin
+	endif
+	if defined(Mus_HCZ1)
+	dc.l Mus_HCZ1,Mus_HCZ1+$622	; sound/music/../generated/HCZ1_cmp.bin
 	endif
 	if defined(Mus_HPZ)
 	dc.l Mus_HPZ,Mus_HPZ+$1DF	; sound/music/../generated/HPZ_cmp.bin
@@ -1157,6 +1163,12 @@ MCD_CompressedAssets:
 	if defined(Mus_RRZ2)
 	dc.l Mus_RRZ2,Mus_RRZ2+$611	; sound/music/../generated/RRZ2_cmp.bin
 	endif
+	if defined(Mus_S3Menu)
+	dc.l Mus_S3Menu,Mus_S3Menu+$61F	; sound/music/../generated/S3Menu_cmp.bin
+	endif
+	if defined(Mus_S3SuperSonic)
+	dc.l Mus_S3SuperSonic,Mus_S3SuperSonic+$3B3	; sound/music/../generated/S3SuperSonic_cmp.bin
+	endif
 	if defined(Mus_SBZ)
 	dc.l Mus_SBZ,Mus_SBZ+$44D	; sound/music/../generated/SBZ_cmp.bin
 	endif
@@ -1171,15 +1183,6 @@ MCD_CompressedAssets:
 	endif
 	if defined(Mus_SuperSonic)
 	dc.l Mus_SuperSonic,Mus_SuperSonic+$272	; sound/music/../generated/SuperSonic_cmp.bin
-	endif
-	if defined(Mus_Test6)
-	dc.l Mus_Test6,Mus_Test6+$61F	; sound/music/../generated/Test6_cmp.bin
-	endif
-	if defined(Mus_Test7)
-	dc.l Mus_Test7,Mus_Test7+$3B3	; sound/music/../generated/Test7_cmp.bin
-	endif
-	if defined(Mus_TestSong1)
-	dc.l Mus_TestSong1,Mus_TestSong1+$332	; sound/music/../generated/TestSong1_cmp.bin
 	endif
 	if defined(Mus_Title)
 	dc.l Mus_Title,Mus_Title+$19A	; sound/music/../generated/Title_cmp.bin

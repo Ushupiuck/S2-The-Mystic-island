@@ -163,12 +163,12 @@ SSR_RingBonus:	; Routine 6
 		move.b	(Vint_runcount+3).w,d0
 		andi.b	#3,d0
 		bne.s	locret_BEC2
-		move.w	#sfx_Switch,d0
+		move.w	#SndID_Blip,d0
 		jmp	(PlaySound_Special).l	; play "blip" sound
 ; ===========================================================================
 
 loc_BE9C:
-		move.w	#sfx_Cash,d0
+		move.w	#SndID_TallyEnd,d0
 		jsr	(PlaySound_Special).l	; play "ker-ching" sound
 		addq.b	#2,obRoutine(a0)
 		move.w	#180,objoff_38(a0) ; set time delay to 3 seconds
@@ -207,7 +207,7 @@ SSR_ExitLevel:	; Routine $22, or an ordinary result without the split heading
 SSR_Continue:	; Routine $E
 		move.b	#4,(v_ssrescontinue+obFrame).w
 		move.b	#$14,(v_ssrescontinue+obRoutine).w
-		move.w	#sfx_Continue,d0
+		move.w	#SndID_ContinueJingle,d0
 		jsr	(PlaySound_Special).l	; play continues jingle
 		addq.b	#2,obRoutine(a0)
 		move.w	#360,objoff_38(a0) ; ordinary results Continue hold
