@@ -70,7 +70,7 @@ def main():
 			assert y[2] == r[2] | (0x2000 if cap else 0), (fi,pi)
 			assert (r[2]&2047)+((r[1]>>2)+1)*((r[1]&3)+1) <= 46
 		if fi >= 7:
-			assert red[-1] == yellow[-1] == (-14 if fi == 10 else -2,5,42|(0x1000 if fi == 10 else 0),-18)
+			assert red[-1] == yellow[-1] == (-16 if fi == 10 else 0,5,42|(0x1000 if fi == 10 else 0),-20)
 	for family in springs:
 		mechanism,backing=family[7][-2:]
 		def axis_center(piece):

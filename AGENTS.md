@@ -149,3 +149,5 @@ W.I.P./unassembled sources are development work, not disposable unused code.
 - Report the actual commits/branches, meaningful verification and remaining
   limits. Preserve enduring decisions in the existing canonical guide; use Git
   history for the narrative, not another session-specific handoff document.
+- Include pictures in replies only when the user explicitly requests them for
+  the current task. Otherwise keep required visual QA captures internal.

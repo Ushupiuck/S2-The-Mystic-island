@@ -789,9 +789,10 @@ require another hardware sprite for the three remaining quadrants.
 The support uses diagonal Sonic CD tiles `1,0,blank,2` in one column-major
 16x16 sprite. Its black/white/gray indices already match the shared player
 row. Every diagonal pose adds this independent, static VDP piece behind the
-moving plate/coil. Its unflipped mapping is `(-18,-2)`, aligning its
-longitudinal center with the existing S3&K coil; the former `(-16,0)` displaced
-it two pixels along the plate. The down-facing pose mirrors that position
+moving plate/coil. Its unflipped mapping is `(-20,0)`, centered on the existing
+S3&K coil and recessed two pixels down/back from `(-18,-2)` so the mechanism
+protrudes from its support. The plate and its collision surface retain their
+existing coordinates. The down-facing pose mirrors the support position
 vertically. Both colors and all flips reuse the same four resident tiles. It has no duplicate pose art and needs no extra object slot. The empty
 corner is part of that rectangular sprite, not padding between art banks.
 
