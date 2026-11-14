@@ -420,7 +420,7 @@ the shared head buffer. The capsule starts at `$501` (`$A020`).
 | EHZ, current baseline | 128 | 128 | `$4B3 / $9660` | 77 |
 | CPZ | 111 | 109 | `$4A0 / $9400` | 96 |
 | ARZ | 166 | 147 | `$4C6 / $98C0` | 58 |
-| CNZ | 133 | 129 | `$4B4 / $9680` | 76 |
+| CNZ | 133 | 117 | `$4A8 / $9500` | 88 |
 | MCZ | 204 | 105 | `$49C / $9380` | 100 |
 | MTZ | 124 | 110 | `$4A1 / $9420` | 95 |
 
@@ -439,6 +439,23 @@ Kosinski+. The single `mappings/spriteDPLC/MCZ boss drills.asm` cue family uses
 retain it while DMA is pending, and maintain a separate cached/displayed phase
 for each drill. Queue rejection must retain the last complete mapping. No drill
 runtime or new persistent RAM reservation is implemented here.
+
+CNZ's collar is adapted to the shared S1 hull rather than retaining the S2
+pod's upper shell. In its first eight rows, collar pixels covered by the S1
+hull are transparent, exposing the existing hull/vent artwork. The lower neon
+band and all other weapon frames retain their source pixels. Source frame 1
+now holds the collar alone; appended frame 21 (`CNZBoss_TopperFrame`) holds
+the topper shifted sixteen pixels left. Draw collar, shared hull, shared pilot,
+then topper, from front to back. The mast's mounting base sits behind the
+S1 cockpit. Mirror the complete group together. No duplicate pod tiles or new
+palette slots are required; the adapted bank is twelve tiles smaller than the
+earlier 129-tile import and fits a single 4 KiB module.
+
+The explicit importer derives the collar cutout from the editable
+`Map_Eggman_Frame0` in `md-main.asm` and `Old Eggpod.unc`. Reimport after
+changing that shared silhouette, or adjust the editable CNZ art by hand.
+Normal builds only repack the raw bank. Controller/layer ownership is still
+deferred; the assembled preview uses temporary sprite fixtures.
 
 `build_tools/import_s2_boss_weapons.py --source S2_PATH --skdisasm SK_PATH --write` explicitly
 reimports from sonicretro/s2disasm revision

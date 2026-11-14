@@ -320,21 +320,31 @@ python build_tools/check_s2_boss_weapons.py --source /path/to/s2disasm --skdisas
 python build_tools/check_s2_boss_weapons.py --source /path/to/s2disasm --skdisasm /path/to/skdisasm --core /path/to/core.so --system-directory /path/to/mode1-fixture --output test-results/s2-weapons/game
 ```
 
-The checker compares source indexed pixels with all 135 compiled frames,
+The checker compares source indexed pixels with all 136 compiled frames,
 checks tile bounds and the packing sprite budgets, and executes the CD RAM
 decoder plus generic DPLC loader for all 49 independent MCZ drill-phase pairs.
 It also checks unchanged-phase caching, rejection of a full DMA queue and
 all five compiled palettes' shared black/gray/yellow slots. The options
 `--reference-rom BEFORE.bin --reference-listing BEFORE.lst` compare unchanged
 frames' CRAM colors with the prior build, allowing only CPZ's opaque-black
-normalization and excluding the six replaced MTZ egg poses. The same reference
+normalization and excluding the six replaced MTZ egg poses. CNZ's edited
+collar is compared with the old body outside its S1-hull cutout; the topper
+must retain the old pixels at its new X offset. The same reference
 comparison checks every color in CNZ cycles 2/3 at their relocated destinations.
 CPZ's chemical frames are checked with both ordinary and alternate palettes.
-`--core` adds 612 frame/palette/flip cases through the real renderer/VDP with exact
+`--core` adds 616 frame/palette/flip cases through the real renderer/VDP with exact
 pixel samples. The gallery's actors, positions, prepared palettes and raw
 cache uploads are fixtures; uploads use the real DMA queue. These checks do
 not implement or validate new boss controllers, arena colors or CNZ cycling.
 Add `--pal` for PAL; both Genesis Plus GX and ClownMDEmu are supported.
+
+The same gallery also assembles CNZ's collar, actual shared S1 hull/cockpit,
+and rear topper in their required layers. All eleven Eggman/EggRobo poses,
+both facings and three prepared CNZ cycle phases give 66 composite cases.
+It compares every visible VDP pixel, checks the collar opening against the
+compiled S1 silhouette and measures peak scanline sprite count/width. Shared
+head-cache and static uploads are fixtures through the real DMA queue; this
+does not implement CNZ's controller or execute its future palette-cycle code.
 
 ```sh
 python build_tools/check_ghz_boss.py --rom s2built.bin --listing md-main.lst --output test-results/ghz-boss/native

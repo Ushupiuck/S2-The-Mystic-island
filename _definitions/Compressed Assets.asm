@@ -618,7 +618,7 @@ MCD_CompressedAssets:
 	dc.l Kospm_Buzz,Kospm_Buzz+$340	; art/moduled kosinski/Enemy Buzz Bomber.kospm
 	endif
 	if defined(Kospm_CNZBossWeapons)
-	dc.l Kospm_CNZBossWeapons,Kospm_CNZBossWeapons+$7D5	; art/moduled kosinski/CNZ boss weapons.kospm
+	dc.l Kospm_CNZBossWeapons,Kospm_CNZBossWeapons+$6F6	; art/moduled kosinski/CNZ boss weapons.kospm
 	endif
 	if defined(Kospm_CPZBossSmoke)
 	dc.l Kospm_CPZBossSmoke,Kospm_CPZBossSmoke+$107	; art/moduled kosinski/CPZ boss smoke.kospm
