@@ -98,6 +98,7 @@ def live(a,act):
 	out.mkdir(parents=True,exist_ok=True)
 	g=Genesis(a.core,a.rom,a.listing,out,a.pal,system_directory=a.system_directory)
 	s=g.s
+	pilot=getattr(a,'pilot',0)
 	palette_monitor=None
 	rom=a.rom.read_bytes()
 	boot_level(g,zone=s['id_EHZ'],act=act,player=a.player)
@@ -156,7 +157,7 @@ def live(a,act):
 		raw=unpack(rom,s[label])
 		assert bytes(g.vram[(s[base]*32+i)^1] for i in range(len(raw)))==raw,label
 	environment_report=environment(g)
-	body=spawn(g,'EHZBoss',s['EHZBoss_LandingX'],s['EHZBoss_LandingY']+8)
+	body=spawn(g,'EHZBoss',s['EHZBoss_LandingX'],s['EHZBoss_LandingY']+8,pilot)
 	palette_monitor=LivePalette(g,body,act)
 	entry=[]
 	entry_flames=set()
@@ -192,7 +193,7 @@ def live(a,act):
 		# Act 1 has no authored EHZ fight arena. Its fixture verifies entry,
 		# docking, palette animation and every pose/facing; Act 2 owns the fight.
 		g.close()
-		return {'act':1,'landing_and_docking':True,'poses_and_facings':14,'animated_palette_phases':len(cycles),'no_rotor':True,'authored_fight':False,'environment':environment_report,'palette':palette_monitor.report()}
+		return {'act':1,'pilot':pilot,'landing_and_docking':True,'poses_and_facings':22,'animated_palette_phases':len(cycles),'no_rotor':True,'authored_fight':False,'environment':environment_report,'palette':palette_monitor.report()}
 	facings=set()
 	drive=[]
 	for tick in range(750):
@@ -268,10 +269,10 @@ def live(a,act):
 			phase=g.get(body,'ob2ndRout')
 			ter=g.get(body,'objoff_30')
 			if phase in (6,8) or (phase==10 and ter<4):
-				assert g.get(face,'obFrame')==6, ('Expected burnt face',phase,ter)
+				assert g.get(face,'obFrame')==(10 if pilot else 6), ('Expected defeated face',phase,ter)
 				defeat_faces.add((phase,ter))
 			elif phase==10:
-				assert g.get(face,'obAnim')==s['BossFace_Panic'] and g.get(face,'obFrame') in (0,5)
+				assert g.get(face,'obAnim')==s['BossFace_Panic'] and g.get(face,'obFrame') in ((10,) if pilot else (0,5))
 				defeat_faces.add((phase,ter))
 			if phase==10 and ter==2:
 				hop.append(g.get(body,'obY',2))
@@ -341,7 +342,7 @@ def live(a,act):
 		assert any(g.get(p,'code')==s['Flicky'] for p in objects(g))
 		g.video.save(out/'capsule.png')
 	g.close()
-	return {'act':act+1,'hits':hits,'facings':sorted(facings),'hop_pixels':before_hop-ignition_y,'lift_start_screen_y':lift_start_screen_y,'ignition_screen_y':ignition_screen_y,'pod_chassis_gap':pod_gap,'flower_priority':flower_report,'entry_flame':sorted(entry_flames),'escape_flare':sorted(flare),'animated_palette_phases':len(cycles),'no_rotor':True,'capsule_tested':act==1,'environment':environment_report,'palette':palette_monitor.report()}
+	return {'act':act+1,'pilot':pilot,'hits':hits,'facings':sorted(facings),'hop_pixels':before_hop-ignition_y,'lift_start_screen_y':lift_start_screen_y,'ignition_screen_y':ignition_screen_y,'pod_chassis_gap':pod_gap,'flower_priority':flower_report,'entry_flame':sorted(entry_flames),'escape_flare':sorted(flare),'animated_palette_phases':len(cycles),'no_rotor':True,'capsule_tested':act==1,'environment':environment_report,'palette':palette_monitor.report()}
 
 
 def main():
@@ -353,6 +354,7 @@ def main():
 	p.add_argument('--output',type=Path,required=True)
 	p.add_argument('--pal',action='store_true')
 	p.add_argument('--player',type=int,default=0)
+	p.add_argument('--pilot',type=int,choices=(0,1),default=0,help='Eggman (0) or EggRobo (1), through the real boss constructor')
 	p.add_argument('--act',type=int,choices=(0,1))
 	a=p.parse_args()
 	a.output.mkdir(parents=True,exist_ok=True)

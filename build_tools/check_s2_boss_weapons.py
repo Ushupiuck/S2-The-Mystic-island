@@ -10,7 +10,7 @@ import json
 import struct
 
 from PIL import Image,ImageDraw
-from check_boss_shared_art import raster,unpack,face_banks,head_frame
+from check_boss_shared_art import raster,unpack,face_banks,head_frame,display_color,queue_fixture
 from check_ehz_boss import symbols
 from check_sprite_assets import frames
 from convert_s1_ss_background import kosinski_plus_decode
@@ -209,17 +209,6 @@ def native_drills(a,rom,s):
 	return 'actual CD codec and generic DPLC loader: all 49 independent drill-phase pairs, immutable source, cached phases and full-queue rejection'
 
 
-def display_color(g,word):
-	if 'ClownMDEmu' in g.emulator:word |= (word&0x888)>>3
-	r,green,b = (word>>shift&15 for shift in (0,4,8))
-	return (((r<<1)|(r>>3))*255//31,((green<<2)|(green>>2))*255//63,((b<<1)|(b>>3))*255//31)
-
-
-def queue_fixture(g,fixture,bank,dest):
-	program = struct.pack('>HIHHHHHI',0x223C,fixture+32,0x343C,dest,0x363C,len(bank)//2,0x4EF9,g.s['QueueDMATransfer'])
-	for offset,value in enumerate(program+bytes(32-len(program))+bank):g.write(fixture+offset,value)
-
-
 def cnz_assembly(g,a,rom,s):
 	"""The intact shell must cover the hull while every pilot pose stays visible."""
 	from check_companion_followup import isolate,spawn
@@ -266,7 +255,8 @@ def cnz_assembly(g,a,rom,s):
 				(face,face_banks(rom,s,pose),s['ArtTile_Eggman']),(body,[(0,private)],0),(parts[front],[(0,private)],0)):
 				pixels.update(raster(layer,banks,origin))
 			head = raster([p for p in face if p[2]&2047>=s['ArtTile_EggmanFace']-s['ArtTile_Eggman']],face_banks(rom,s,pose),s['ArtTile_Eggman'])
-			assert all(pixels[p]==c for p,c in head.items()),('Pilot head is obscured',pose)
+			glass = raster(face[:1],face_banks(rom,s,pose),s['ArtTile_Eggman'])
+			assert all(pixels[p]==glass.get(p,c) for p,c in head.items()),('Pilot head is obscured outside the front glass',pose)
 			for phase in range(3):
 				palette = bytearray(palette_bytes(rom,s,'CNZ'))
 				for slot,start in ((2,0),(3,6),(4,12)):

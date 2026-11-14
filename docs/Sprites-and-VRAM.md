@@ -338,6 +338,18 @@ pieces select the existing second row. Profile lenses retain the selected
 `A/B/C`; both the hull's backrest and cockpit rim change, with the original
 shading and shapes preserved.
 
+The front windshield is one independent, transparent 16x16 hardware sprite,
+first in every cockpit frame, ahead of the streamed head and rear torso. It
+reuses pod tiles `$23-$26` (`$413-$416` in VRAM), retaining every original blue
+rim/reflection, white highlight and instrument pixel. Its existing color-zero
+openings show the occupant behind it. The embedded glass copies are cropped
+out of the rear torso mappings. Both pilots therefore sit behind
+the same glass. This follows skdisasm's `Obj_RobotnikShip`/`Obj_RobotnikHead`
+composition and `Map_RobotnikShip`, at revision
+`73de97c6b55055bcb8089c1d55d006b02136f163`. The existing cockpit SST owns the
+glass mapping piece: no extra object slot, DPLC, art bank or VRAM reservation
+is needed. All complete pod poses remain within the 12-piece scanline budget.
+
 `mappings/spriteDPLC/Boss heads.asm` is the single cue table: frames 0-6 are
 Eggman, 7-10 EggRobo. Eggman's poses upload 5, 5, 6, 6, 8, 7 and 8 tiles;
 EggRobo's four 32x16 poses each upload eight. Separate grids for the moustache
@@ -362,15 +374,22 @@ Existing encounters retain Eggman. EggRobo's head comes from skdisasm
 `73de97c6b55055bcb8089c1d55d006b02136f163`,
 `General/Sprites/Egg Robo/Egg Robo Head.kosm` and its matching head mappings.
 The import applies `sprite_palette.PLAYER_FROM_SK` and moves the source origin
-to the shared cockpit rim, retaining all four source poses and their pixels.
+to `(-6,-28)`, ten pixels rearward of the former anchor. The upper twelve rows
+of each helmet/face remain source-exact. The lower four chest rows use one
+trimmed, stable collar strip, matching the existing S1 torso's yellow triangle
+at `(-3,-13)` and leaving the backrest exposed. The collar does not move with
+the idle/hurt/defeated head animations. EHZ applies its existing four-pixel
+upward mapping offset to glass, head and torso together.
 
 `python build_tools/build_end_art.py` packs the editable banks. The explicit
 `build_boss_shared_art.py --rom PRE_DPLC_ROM --listing PRE_DPLC_LISTING --write`
 migration accepts pre-sharing revision `21c233e` or the split-bank revision
 `c13db77`, then emits both cockpit mappings and the shared DPLCs. Add
-`--skdisasm PATH` to re-import EggRobo; otherwise its editable local source is
-retained. Declared allocation boundaries are checked before writing. Normal
-builds do not re-import old art.
+`--skdisasm PATH` to re-import EggRobo; otherwise it reads the editable local
+head source. This explicit migration reapplies the collar fit and glass split.
+Declared allocation boundaries are checked before writing. After editing the
+shared `.unc` files, run `build_end_art.py` before rebuilding; normal builds do
+not re-import old art.
 
 The retired S2 cockpit/rotor files, their mappings and the old full S1 bank
 have been removed. The migration emits only the shared S1 hull/head banks

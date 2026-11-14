@@ -18,6 +18,10 @@ from convert_s1_ss_background import kosinski_plus_decode
 
 ROOT = Path(__file__).resolve().parents[1]
 S1_SEAT_COLORS = {10:4,11:3,12:2}
+GLASS_X, GLASS_Y, GLASS_TILE = -20, -20, 35
+EGG_ROBO_HEAD_X, EGG_ROBO_HEAD_Y = -6, -28
+EGG_ROBO_COLLAR_LEFT = {-16:-6, -15:-5, -14:-4, -13:-3}
+EGG_ROBO_COLLAR_RIGHT = 12
 # Lower contours follow the drawing, including the whole jaw and its outline.
 # Profile poses stop above the gold collar; no S1 shirt pixels are shared.
 S1_HEAD_LOWER_SPANS = (
@@ -71,7 +75,40 @@ def import_egg_robo(source):
 	packed = path.read_bytes()
 	raw = classic_kosinski(packed[2:])
 	assert len(raw)==int.from_bytes(packed[:2],'big')==32*32
-	return remap_pixels(raw,PLAYER_FROM_SK)
+	return adapt_egg_robo(remap_pixels(raw,PLAYER_FROM_SK))
+
+
+def adapt_egg_robo(raw):
+	"""Fit a stable chest strip to S1's collar; keep each helmet/face intact."""
+	assert len(raw)==32*32
+	result = bytearray()
+	collar = {p:c for p,c in raster([(EGG_ROBO_HEAD_Y,0x0D,0,EGG_ROBO_HEAD_X)],raw).items() if p[1]>=-16}
+	for pose in range(4):
+		pixels = raster([(EGG_ROBO_HEAD_Y,0x0D,pose*8,EGG_ROBO_HEAD_X)],raw)
+		pixels = {p:c for p,c in pixels.items() if p[1]<-16}
+		pixels.update(collar)
+		pixels = {p:c for p,c in pixels.items() if p[1]<-16 or EGG_ROBO_COLLAR_LEFT[p[1]]<=p[0]<EGG_ROBO_COLLAR_RIGHT}
+		for tx in range(4):
+			for ty in range(2):
+				result += tile_bytes(pixels,EGG_ROBO_HEAD_X+tx*8,EGG_ROBO_HEAD_Y+ty*8)
+	return bytes(result)
+
+
+def split_glass(rows):
+	"""One transparent foreground piece reuses the existing four glass tiles."""
+	glass_right = GLASS_X+16
+	backgrounds = []
+	for row in rows:
+		cropped = []
+		for y,size,tile,x in row:
+			w,h = (size>>2)+1,(size&3)+1
+			if x<glass_right:
+				assert not (glass_right-x)%8 and not tile&0x1800,'Glass boundary cuts a mapped tile'
+				columns = min(w,(glass_right-x)//8)
+				x += columns*8; tile += columns*h; w -= columns
+			if w:cropped.append((y,((w-1)<<2)|(h-1),tile,x))
+		backgrounds.append(cropped)
+	return backgrounds,[(GLASS_Y,0x05,GLASS_TILE,GLASS_X)]
 
 
 def dplc(cues):
@@ -267,11 +304,11 @@ def extract(rom_path, listing_path):
 	return banks,headmaps,ghz,oldmaps[0]
 
 
-def mapping(label, rows, headmaps=None, private_base=0, draw_y=0):
+def mapping(label, rows, headmaps=None, private_base=0, draw_y=0, foreground=()):
 	lines = [label+':']+[f'\tdc.w {label}_Frame{i}-{label}' for i in range(len(rows))]
 	for i,row in enumerate(rows):
 		head = headmaps[i] if headmaps else []
-		pieces = [(y,size,private_base+tile,x) for y,size,tile,x in head]+row
+		pieces = list(foreground)+[(y,size,private_base+tile,x) for y,size,tile,x in head]+row
 		lines.append(f'{label}_Frame{i}:\tdc.w {len(pieces)}')
 		for y,size,tile,x in pieces:
 			lines += [f'\tdc.b {y+draw_y},${size:02X}',f'\tdc.w ${tile:04X},{x}']
@@ -292,19 +329,20 @@ def main():
 	banks,heads,ghz,oldhull = extract(a.rom,a.listing)
 	hull_bias = 10 if min(t&2047 for _,_,t,_ in oldhull)==10 else 0
 	banks['Eggman face'],heads,cues = pack_heads(heads,banks['Eggman face'])
-	robo = import_egg_robo(a.skdisasm) if a.skdisasm else (ROOT/'art/uncompressed/Egg Robo head.unc').read_bytes()
+	robo = import_egg_robo(a.skdisasm) if a.skdisasm else adapt_egg_robo((ROOT/'art/uncompressed/Egg Robo head.unc').read_bytes())
 	banks['Egg Robo head'] = bytearray(robo)
 	assert len(robo)==32*32
-	# Source head mappings are 32x16 at (-16,-8). Move their origin to
-	# the shared S1 cockpit rim, retaining all four source poses unchanged.
-	heads += [[(-28,0x0D,0,-16)] for _ in range(4)]
+	# Align the first yellow collar triangle with the S1 torso. The lower
+	# source chest strip is trimmed; the glass draws in front of either pilot.
+	heads += [[(EGG_ROBO_HEAD_Y,0x0D,0,EGG_ROBO_HEAD_X)] for _ in range(4)]
 	cues += [list(range(i*8,(i+1)*8)) for i in range(4)]
 	ghz += [ghz[0] for _ in range(4)]
+	ghz,glass = split_glass(ghz)
 	report = {name:len(raw)//32 for name,raw in banks.items()}
 	report['private_end'] = hex(0x3F0+len(banks['Old Eggpod'])//32)
 	report['shared_base'] = hex(allocations['ArtTile_EggmanFace'])
 	report['shared_end'] = hex(int(report['shared_base'],16)+8)
-	report['pieces'] = {'head':[len(r) for r in heads],'GHZ':[len(r) for r in ghz],'EHZ':[len(r) for r in ghz]}
+	report['pieces'] = {'head':[len(r) for r in heads],'glass':len(glass),'GHZ':[len(r) for r in ghz],'EHZ':[len(r) for r in ghz]}
 	print(json.dumps(report,indent=2))
 	if not a.write:
 		return
@@ -323,8 +361,8 @@ def main():
 		(ROOT/f'art/uncompressed/{name}.unc').write_bytes(raw)
 	(ROOT/'mappings/spriteDPLC/Boss heads.asm').write_bytes(dplc(cues).replace('\n','\r\n').encode())
 	outputs = {
-		'GHZ Boss Cockpit.asm':mapping('Map_GHZBoss_Cockpit',ghz,heads,int(report['shared_base'],16)-0x3F0),
-		'EHZ Boss Cockpit.asm':mapping('Map_EHZBoss_Cockpit',ghz,heads,int(report['shared_base'],16)-0x3F0,draw_y=draw_y),
+		'GHZ Boss Cockpit.asm':mapping('Map_GHZBoss_Cockpit',ghz,heads,int(report['shared_base'],16)-0x3F0,foreground=glass),
+		'EHZ Boss Cockpit.asm':mapping('Map_EHZBoss_Cockpit',ghz,heads,int(report['shared_base'],16)-0x3F0,draw_y=draw_y,foreground=glass),
 		'EHZ Boss Vehicle.asm':mapping('Map_EHZBoss_Vehicle',[[(y,size,(tile&0xF800)|((tile&0x7FF)-hull_bias),x) for y,size,tile,x in oldhull]],draw_y=draw_y),
 	}
 	for name,text in outputs.items():

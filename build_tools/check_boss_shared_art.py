@@ -69,6 +69,17 @@ def face_banks(rom, s, pose):
 	return [(s['ArtTile_Eggman'],unpack(rom,s['Kospm_OldEggPod'])),(s['ArtTile_EggmanFace'],head)]
 
 
+def display_color(g,word):
+	if 'ClownMDEmu' in g.emulator:word |= (word&0x888)>>3
+	r,green,b = (word>>shift&15 for shift in (0,4,8))
+	return (((r<<1)|(r>>3))*255//31,((green<<2)|(green>>2))*255//63,((b<<1)|(b>>3))*255//31)
+
+
+def queue_fixture(g,fixture,bank,dest):
+	program = struct.pack('>HIHHHHHI',0x223C,fixture+32,0x343C,dest,0x363C,len(bank)//2,0x4EF9,g.s['QueueDMATransfer'])
+	for offset,value in enumerate(program+bytes(32-len(program))+bank):g.write(fixture+offset,value)
+
+
 
 def reference_checks(a, rom, s):
 	if not a.reference_rom:
@@ -85,7 +96,11 @@ def reference_checks(a, rom, s):
 	for index,(row,previous) in enumerate(zip(frames(rom,s['Map_GHZBoss_Cockpit'],7),oldrows)):
 		original = raster(previous,oldbanks if legacy else face_banks(old,before,index),before['ArtTile_Eggman'])
 		expected = {(x,y):(line,head_color(index,x,y,seat_color(x,y,color))) for (x,y),(line,color) in original.items()} if legacy else original
-		assert raster(row,face_banks(rom,s,index),s['ArtTile_Eggman'])==expected,('Pilot pixels changed',index)
+		actual = raster(row,face_banks(rom,s,index),s['ArtTile_Eggman'])
+		# The windshield now has transparent glass and sits in front of the
+		# pilot. All other human/cockpit pixels retain the source appearance.
+		outside = lambda pixels:{p:c for p,c in pixels.items() if not(-20<=p[0]<-4 and -20<=p[1]<-4)}
+		assert outside(actual)==outside(expected),('Pilot pixels changed outside the windshield',index)
 	newfire = frames(rom,s['Map_BossExhaust'],5)
 	firebank = [(s['ArtTile_Eggman_Exhaust'],unpack(rom,s['Kospm_Exhaust']))]
 	oldfire = [frames(old,before['Map_Eggman'],13)[i] for i in (8,9,11,12,10)] if legacy else frames(old,before['Map_BossExhaust'],5)
@@ -98,7 +113,7 @@ def reference_checks(a, rom, s):
 	oldhull = raster(frames(old,before['Map_Eggman'],1)[0],oldbanks if legacy else face_banks(old,before,0),before['ArtTile_Eggman'])
 	expectedhull = {(x,y):(line,seat_color(x,y,color) if line==0 else color) for (x,y),(line,color) in oldhull.items()} if legacy else oldhull
 	assert raster(frames(rom,s['Map_Eggman'],1)[0],face_banks(rom,s,0),s['ArtTile_Eggman'])==expectedhull
-	return ['complete pod, all seven Eggman expressions and exhaust remain pixel-exact against the reference']
+	return ['all seven Eggman expressions outside the new glass overlay, the hull and exhaust remain pixel-exact against the reference']
 
 
 def native_checks(a):
@@ -122,6 +137,8 @@ def native_checks(a):
 	result = reference_checks(a,rom,s)
 	assert len(unpack(rom,s['Kospm_EggmanFace']))==s['Art_EggmanFace_End']-s['Art_EggmanFace']
 	assert len(unpack(rom,s['Kospm_EggRoboHead']))==s['Art_EggRoboHead_End']-s['Art_EggRoboHead']
+	for label,name in (('Kospm_OldEggPod','Old Eggpod'),('Kospm_EggmanFace','Eggman face'),('Kospm_EggRoboHead','Egg Robo head')):
+		assert unpack(rom,s[label])==(ROOT/f'art/uncompressed/{name}.unc').read_bytes(),('Packed bank differs from editable art',name)
 	assert s['ArtTile_EggmanFace']==s['ArtTile_Eggman']+60
 	assert max(len(head_frame(rom,s,i)) for i in range(s['BossFace_FrameCount']))==8*32
 	if a.skdisasm:
@@ -130,13 +147,38 @@ def native_checks(a):
 		packed=(a.skdisasm/'General/Sprites/Egg Robo/Egg Robo Head.kosm').read_bytes()
 		raw=classic_kosinski(packed[2:])
 		expected=bytes((PLAYER_FROM_SK[b>>4]<<4)|PLAYER_FROM_SK[b&15] for b in raw)
-		assert unpack(rom,s['Kospm_EggRoboHead'])==expected, 'EggRobo import differs from skdisasm'
 		for i,row in enumerate(frames(rom,s['Map_GHZBoss_Cockpit'],s['BossFace_FrameCount'])[7:]):
 			head=[piece for piece in row if (piece[2]&2047)>=60]
-			original=raster([(-28,0x0D,0,-16)],[(0,expected[i*256:(i+1)*256])])
+			assert head==[(-28,0x0D,60,-6)],('EggRobo collar anchor',i,head)
+			original=raster([(-28,0x0D,0,-6)],[(0,expected[i*256:(i+1)*256])])
 			actual=raster(head,face_banks(rom,s,i+7),s['ArtTile_Eggman'])
-			assert actual==original,('EggRobo head changed',i)
-		result.append('four EggRobo source poses and palette roles match the pinned skdisasm art exactly')
+			assert {p:c for p,c in actual.items() if p[1]<-16}=={p:c for p,c in original.items() if p[1]<-16}
+			assert actual[-3,-13]==(0,4),('Yellow head triangle does not meet the shared collar',i)
+			neck = {p:c for p,c in actual.items() if p[1]>=-16}
+			assert all(-6<=x<12 and -16<=y<=-13 for x,y in neck),'Chest strip covers glass or the backrest'
+			if i:assert neck==previous_neck,'Collar seam moves with the head animation'
+			previous_neck=neck
+		result.append('four EggRobo source helmets/faces and palette roles are exact; only the lower chest strip is adapted to a stable aligned collar')
+	rows = frames(rom,s['Map_GHZBoss_Cockpit'],s['BossFace_FrameCount'])
+	glass = rows[0][0]
+	assert glass==(-20,5,35,-20)
+	assert all(row[0]==glass for row in rows),'Glass must precede every pilot head'
+	glass_pixels = raster([glass],face_banks(rom,s,0),s['ArtTile_Eggman'])
+	assert len(glass_pixels)<256 and {6,7,8,9,10}<={color for _,color in glass_pixels.values()}
+	assert any((x,y) not in glass_pixels for x in range(-17,-10) for y in range(-17,-12)),'The window has no transparent opening'
+	if a.reference_rom:
+		before,old = symbols(a.reference_listing),a.reference_rom.read_bytes()
+		if 'Map_GHZBoss_Cockpit' in before:
+			first = frames(old,before['Map_GHZBoss_Cockpit'],7)[0]
+			static = [p for p in first if (p[2]&2047)<before['ArtTile_EggmanFace']-before['ArtTile_Eggman']]
+			previous = raster(static,face_banks(old,before,0),before['ArtTile_Eggman'])
+		else:
+			from build_boss_shared_art import head_mask
+			previous = raster(frames(old,before['Map_Eggman'],13)[1],[(before['ArtTile_Eggman'],unpack(old,before['Kospm_OldEggPod']))],before['ArtTile_Eggman'])
+			previous = {p:c for p,c in previous.items() if not head_mask(0,*p,c[1])}
+		expected = {p:c for p,c in previous.items() if -20<=p[0]<-4 and -20<=p[1]<-4}
+		assert glass_pixels==expected,'Windshield frame/reflection pixels changed'
+	result.append('one shared transparent glass piece precedes every pilot; four resident tiles and the original reflection/frame pixels are retained')
 
 	from check_ehz_s1_pod import check_art
 	check_art(rom,s)
@@ -300,20 +342,26 @@ def live_gallery(g, a, act):
 	for name,value in (('Camera_Min_X_pos',camx),('Camera_Max_X_pos',camx),('Camera_Max_X_pos_target',camx),
 		('Camera_Min_Y_pos',camy),('Camera_Max_Y_pos',camy),('Camera_Max_Y_pos_target',camy)):
 		g.write(name,value,2)
+	# Decode the missing character through the real constructor. Restore the
+	# original fight after the gallery, including its immutable source buffers.
+	if g.read('BossFace_ArtReady')!=3:
+		missing = 1 if not g.read('BossFace_ArtReady')&2 else 0
+		spawn(g,'EHZBoss',camx+160,camy+150,missing)
+		g.run(4);assert not g.read('v_errortype')
+		assert g.read('BossFace_ArtReady')==3
+		isolate(g)
 	x,y = camx+160,camy+150
 	hull=spawn(g,'DisplaySprite',x,y)
 	face=spawn(g,'BossFace_Draw',x,y)
 	g.put(face,'BossFace_Source',s['Art_EggmanFace'],4)
 	g.put(face,'BossFace_LoadedFrame',255)
 	for obj,mapping,line in ((hull,'Map_EHZBoss_Vehicle',0),(face,'Map_EHZBoss_Cockpit',0)):
-		for field,value,size in (('obMap',s[mapping],4),('obGfx',s['ArtTile_Eggman']+(line<<13),2),
+		for field,value,size in (('obMap',s[mapping],4),('obGfx',s['ArtTile_Eggman']+(line<<13)|0x8000,2),
 			('obRender',4,1),('obPriority',0x200,2),('width_pixels',s[mapping+'_width'],1),
 			('height_pixels',s[mapping+'_height'],1)):
 			g.put(obj,field,value,size)
 	rom = a.rom.read_bytes()
-	banks = [(s[tile],unpack(rom,s[label])) for tile,label in (
-		('ArtTile_Eggman','Kospm_OldEggPod'),('ArtTile_EggmanFace','Kospm_EggmanFace'))]
-	rows = frames(rom,s['Map_EHZBoss_Cockpit'],7)
+	rows = frames(rom,s['Map_EHZBoss_Cockpit'],s['BossFace_FrameCount'])
 	# Let the copied camera and the displayed SAT settle before pixel sampling.
 	g.run(30)
 	for flip in (0,1):
@@ -321,6 +369,7 @@ def live_gallery(g, a, act):
 			for obj in (hull,face):
 				g.put(obj,'obRender',4|flip)
 				g.put(obj,'obStatus',flip)
+			g.put(face,'BossFace_Source',s['Art_EggmanFace' if pose<7 else 'Art_EggRoboHead'],4)
 			g.put(face,'obFrame',pose)
 			g.run(4)
 			assert not g.read('v_errortype')
@@ -330,13 +379,62 @@ def live_gallery(g, a, act):
 				return x-g.read('Camera_X_pos_copy',2)+(-px-1 if flip else px),y-g.read('Camera_Y_pos_copy',2)+py
 			# Inspect the lens itself, without borrowing the producer's color mask.
 			blues = [p for p,(_,n) in pixels.items() if -6<=p[0]<=3 and -28<=p[1]<=-16 and n in (10,11,12)]
-			assert blues, ('No blue lens pixels',act,pose,flip)
+			if pose<7:assert blues, ('No blue lens pixels',act,pose,flip)
 			for point in blues:
 				r,gc,b = g.video.getpixel(screen(point))
 				assert b>r+50 and b>gc+40, ('Lens lost its blue in the VDP output',act,pose,flip,point,(r,gc,b))
+			composite = frames(rom,s['Map_EHZBoss_Vehicle'],1)[0]+row
+			for point,(line,index) in raster(composite,face_banks(rom,s,pose),s['ArtTile_Eggman']).items():
+				word = g.read(s['v_palette']+(line*16+index)*2,2)
+				assert g.video.getpixel(screen(point))==display_color(g,word),('EHZ pilot/glass pixel',act,pose,flip,point)
 
 			g.video.save(a.output/f'ehz{act+1}-pose{pose}-flip{flip}.png')
 	g.restore(saved)
+	return 22
+
+
+def glass_priority_check(g,face):
+	"""An opaque test rider behind the real glass must show through its holes."""
+	from check_companion_followup import spawn
+	from check_object_course import objects
+	saved = g.save()
+	s,rom = g.s,bytes(g.rom.raw[:-1])
+	try:
+		glass = frames(rom,g.get(face,'obMap',4),s['BossFace_FrameCount'])[0][0]
+		gy,size,tile,gx = glass
+		assert size==5
+		front = raster([glass],face_banks(rom,s,0),s['ArtTile_Eggman'])
+		for obj in objects(g):
+			if obj!=face:g.put(obj,'code',0,4)
+		fixture = s['Free_RAM_Start']&0xFFFFFF
+		probe = fixture+0x100
+		rider = (gy,size,s['ArtTile_EggmanFace']-s['ArtTile_Eggman'],gx)
+		g.put(face,'code',s['DisplaySprite'],4);g.put(face,'obMap',probe,4);g.put(face,'obFrame',0)
+		queue_fixture(g,fixture,bytes([0xDD])*(4*32),s['ArtTile_EggmanFace']*32)
+		uploader=spawn(g,'DisplaySprite',0,0);g.put(uploader,'code',fixture,4)
+		red = display_color(g,g.read(s['v_palette']+13*2,2))
+		checked = 0
+		for flip in (0,1):
+			g.put(face,'obStatus',flip);g.put(face,'obRender',4|flip)
+			for reverse in (False,True):
+				pieces = (rider,glass) if reverse else (glass,rider)
+				mapping = struct.pack('>HH',2,2)+b''.join(struct.pack('>bBHh',*p) for p in pieces)
+				for i,value in enumerate(mapping):g.write(probe+i,value)
+				g.run(3);assert not g.read('v_errortype')
+				for y in range(gy,gy+16):
+					for x in range(gx,gx+16):
+						point = (g.get(face,'obX',2)-g.read('Camera_X_pos_copy',2)+(-x-1 if flip else x),g.get(face,'obY',2)-g.read('Camera_Y_pos_copy',2)+y)
+						expected = red
+						if not reverse and (x,y) in front:
+							line,index = front[x,y]
+							expected = display_color(g,g.read(s['v_palette']+(line*16+index)*2,2))
+						actual=g.video.getpixel(point)
+						if actual!=expected:g.video.save(g.output/'glass-control-failure.png')
+						assert actual==expected,('Glass/rider control',flip,reverse,(x,y),actual,expected)
+						checked+=1
+		return f'front glass: both facings, transparent holes reveal the opaque test rider, reversed-order control; {checked} VDP pixels'
+	finally:
+		g.restore(saved)
 
 
 def live_checks(a):
@@ -516,18 +614,14 @@ def ghz_face_checks(a):
 			composite=frames(rom,s['Map_Eggman'],1)[0]+row
 			for (px,py),(line,index) in raster(composite,face_banks(rom,s,pose),s['ArtTile_Eggman']).items():
 				color=g.read(s['v_palette']+(line*16+index)*2,2)
-				if 'ClownMDEmu' in g.emulator:
-					# Clown expands each normal CRAM component to the full four-bit
-					# range before the frontend's RGB565 conversion.
-					color |= (color&0x888)>>3
-				r,green,b=(color>>shift&15 for shift in (0,4,8))
-				rgb=(((r<<1)|(r>>3))*255//31,((green<<2)|(green>>2))*255//63,((b<<1)|(b>>3))*255//31)
+				rgb=display_color(g,color)
 				point=(x-g.read('Camera_X_pos_copy',2)+(-px-1 if flip else px),y-g.read('Camera_Y_pos_copy',2)+py)
 				assert g.video.getpixel(point)==rgb,('Pilot pixel',pose,flip,point)
 				checked+=1
 			g.video.save(a.output/f'ghz-pose{pose}-flip{flip}.png')
+	glass_report = glass_priority_check(g,face)
 	g.close()
-	return [waterfall_report,f'GHZ arena/music handoff: stable per-character sources, {count} resident banks; 22 streamed poses/facings, {checked} rendered pod/head pixels']
+	return [waterfall_report,f'GHZ arena/music handoff: stable per-character sources, {count} resident banks; 22 streamed poses/facings, {checked} rendered pod/head pixels',glass_report]
 
 
 def main():
