@@ -422,7 +422,7 @@ the shared head buffer. The capsule starts at `$501` (`$A020`).
 | ARZ | 166 | 147 | `$4C6 / $98C0` | 58 |
 | CNZ | 133 | 129 | `$4B4 / $9680` | 76 |
 | MCZ | 204 | 105 | `$49C / $9380` | 100 |
-| MTZ | 124 | 108 | `$49F / $93E0` | 97 |
+| MTZ | 124 | 110 | `$4A1 / $9420` | 95 |
 
 The last-tile column gives its starting byte, not the end-exclusive boundary.
 ARZ is closest: its bank ends at `$4C7 / $98E0`, leaving 58 tiles (1,856 bytes)
@@ -440,7 +440,7 @@ retain it while DMA is pending, and maintain a separate cached/displayed phase
 for each drill. Queue rejection must retain the last complete mapping. No drill
 runtime or new persistent RAM reservation is implemented here.
 
-`build_tools/import_s2_boss_weapons.py --source PATH --write` explicitly
+`build_tools/import_s2_boss_weapons.py --source S2_PATH --skdisasm SK_PATH --write` explicitly
 reimports from sonicretro/s2disasm revision
 `4c5dc02b3eea186c3f80a020447b206343f30c0a`; `--check` verifies reproduction.
 After importing, the `.unc` banks and mapping ASM are editable. Ordinary builds
@@ -456,9 +456,13 @@ Sky Sanctuary's alternative was checked against skdisasm revision
 `Levels/SSZ/KosinskiM Art/MTZ Orbs.kosm` and its matching mappings. Its raw
 117-tile sheet omits six tiles of S2's laser-cannon fittings; its orbs occupy
 37 tiles instead of 40, while its changed balloon stages use 63 instead of
-61. The prepared bank retains S2's balloon shapes and cannon parts at 108
-tiles. Cosmetic changes to bring those balloons closer to the universal pod
-remain later artwork work; the S&K balloon graphics are not substituted.
+61. The prepared bank uses S&K's six egg/orb poses, while retaining S2's balloon
+shapes, laser and cannon parts. S&K frames 0-5 replace S2 frame IDs 3-8 in
+animation-role order; the distant pose becomes the S&K 16x24 egg. Only the
+first 37 source tiles are eligible, so no S&K balloon or pod art is imported.
+The hybrid bank uses 110 tiles, two more than the earlier S2-only packing,
+with two fewer mapping pieces across its frame family. Cosmetic changes to
+bring S2's balloons closer to the universal pod remain later artwork work.
 With the same bounded packer, isolated S2/S&K component costs are 29/31 tiles
 for orbs, 4/6 for lasers and 9/9 for bursts. S&K's laser is 48 rather than 64
 pixels wide; two of its orb-deformation frames need one fewer mapping piece.
@@ -466,11 +470,23 @@ These component counts are separate packing comparisons, not additive bank
 totals. The prepared S2 bank already uses symmetry and repeated-block reuse.
 
 Primary-palette weapon pieces translate Sonic 2's color roles into the current
-player palette, including its three-blue ramp. CPZ retains its secondary-row
-index roles. `palette/* Boss Weapons.bin` stores prepared rows 1-3; shared metal
-slots use the current fixed ramp. CNZ's three cycle tables retain their source
-indices. Arena-specific palette merging and cycle code remain deferred; no
-active level palette is changed by this preparation.
+player palette, including its three-blue ramp. `palette/* Boss Weapons.bin`
+stores prepared rows 1-3. Every prepared boss uses EHZ's human line 2 (hardware
+palette 1) for metal, following the [shared slot contract](#palette-adaptation).
+S2's extra gray moves A to C, yellows C/D/5 move to D/E/F, and displaced
+source E/F colors move to A/5. Both pixels and palette entries are converted;
+opaque source blacks reuse slot 1 (`$222`). MTZ's S&K egg shades
+`$CAA/$A88/$866/$644` map to those same four gray slots; white and near-black
+use 6/1. Their yellow/teal deformation colors use the shared D/E/F ramp.
+
+CPZ's smoke follows the same conversion. Its chemical frames 4-9 and 16-27
+use only indices 0/8, so their alternate line-4 palette and cycles stay intact.
+CNZ's three cycle tables retain their source colors: cycle 1 keeps slots 2-4,
+while cycles 2/3 move from E/F to A/5. `CNZBoss_Cycle2PaletteOffset` and
+`CNZBoss_Cycle3PaletteOffset` expose those future destinations as byte offsets
+from `v_palette`; the yellow ramp remains fixed. Arena-specific palette merging and
+cycle code remain deferred; no active level palette is changed by this
+preparation.
 
 ### Boss explosions
 
@@ -705,6 +721,21 @@ ramps; other slots are per-act enemy colors. S&K indices map to
 `0 6 A B C F D E 4 3 5 2 7 8 9 1`. `sprite_palette.py` owns offline import
 conversions; editable runtime art already uses the new slots. No runtime pixel
 conversion is performed. Keep every compressed archive followed by `even`.
+
+These zero-based positions are universal unless the owner explicitly approves
+a level-specific exception. Red/yellow variants use the same D-F positions on
+their selected palette line. Human line 2 (hardware palette 1) keeps:
+
+| Slot | Fixed role / color |
+| --- | --- |
+| 1 | Black, `$222` |
+| 6 | White, `$EEE` |
+| 7, 8, 9 | Grays, `$ECC`, `$CAA`, `$866` |
+| D, E, F | Yellows, `$0EE`, `$088`, `$044` |
+| C, optional | Fourth gray, `EHZBoss_MetalColor` (`$A88`) |
+
+Other colors and cycling effects must fit the remaining slots. Move their
+pixels and cycle destinations together; do not displace a shared ramp.
 
 The EHZ boss's drill/wheels use a one-word masked row-two load; see the
 [boss palette contract](Importing-objects.md#ehz-boss-palette). The former

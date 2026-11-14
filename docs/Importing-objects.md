@@ -35,6 +35,9 @@ MCZ's main family keeps source drill frames 2, 3, 4, 8, 9, 10 and 11 for slot A,
 then appends frames 21-27 for slot B; the two byte lookup tables map DPLC phases
 to those frames. Its source debris frames 13/20 move to `Map_MCZBoss_Debris`.
 CNZ's unused source frame zero is normalized to empty.
+MTZ retains S2's frame IDs but uses Sky Sanctuary's six egg/orb poses at 3-8;
+its S2 balloon stages, cannon and laser stay in the same family. The sprite
+guide owns the shared EHZ gray slots and palette-index conversions.
 
 The future controllers must compose these weapons with the universal pod,
 pilot and exhaust. New constructors will reference their actual mapping bounds,

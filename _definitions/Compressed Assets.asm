@@ -588,7 +588,7 @@ MCD_CompressedAssets:
 	dc.l Kosp_TitleBg2,Kosp_TitleBg2+$142	; tilemaps/Title Background - 2.kosp
 	endif
 	if defined(Kospm_ARZBossWeapons)
-	dc.l Kospm_ARZBossWeapons,Kospm_ARZBossWeapons+$A07	; art/moduled kosinski/ARZ boss weapons.kospm
+	dc.l Kospm_ARZBossWeapons,Kospm_ARZBossWeapons+$A05	; art/moduled kosinski/ARZ boss weapons.kospm
 	endif
 	if defined(Kospm_BBat)
 	dc.l Kospm_BBat,Kospm_BBat+$361	; art/moduled kosinski/Enemy BBat.kospm
@@ -618,7 +618,7 @@ MCD_CompressedAssets:
 	dc.l Kospm_Buzz,Kospm_Buzz+$340	; art/moduled kosinski/Enemy Buzz Bomber.kospm
 	endif
 	if defined(Kospm_CNZBossWeapons)
-	dc.l Kospm_CNZBossWeapons,Kospm_CNZBossWeapons+$7D1	; art/moduled kosinski/CNZ boss weapons.kospm
+	dc.l Kospm_CNZBossWeapons,Kospm_CNZBossWeapons+$7D5	; art/moduled kosinski/CNZ boss weapons.kospm
 	endif
 	if defined(Kospm_CPZBossSmoke)
 	dc.l Kospm_CPZBossSmoke,Kospm_CPZBossSmoke+$107	; art/moduled kosinski/CPZ boss smoke.kospm
@@ -690,7 +690,7 @@ MCD_CompressedAssets:
 	dc.l Kospm_MCZBossWeapons,Kospm_MCZBossWeapons+$300	; art/moduled kosinski/MCZ boss weapons.kospm
 	endif
 	if defined(Kospm_MTZBossWeapons)
-	dc.l Kospm_MTZBossWeapons,Kospm_MTZBossWeapons+$75A	; art/moduled kosinski/MTZ boss weapons.kospm
+	dc.l Kospm_MTZBossWeapons,Kospm_MTZBossWeapons+$76A	; art/moduled kosinski/MTZ boss weapons.kospm
 	endif
 	if defined(Kospm_MechaEffects)
 	dc.l Kospm_MechaEffects,Kospm_MechaEffects+$110	; art/moduled kosinski/Mecha Sonic effects.kospm

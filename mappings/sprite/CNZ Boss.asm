@@ -1,6 +1,9 @@
 ; Prepared CNZ weapon art; six-byte S3&K mappings, original frame IDs.
 ; Empty pilot frames use the existing shared pod/head children when code is ported.
 CNZBoss_WeaponTiles = 129
+; Future cycle destinations, byte offsets from v_palette.
+CNZBoss_Cycle2PaletteOffset = $34
+CNZBoss_Cycle3PaletteOffset = $2A
 
 Map_CNZBoss_Weapons:
 	dc.w Map_CNZBoss_Weapons_Frame0-Map_CNZBoss_Weapons

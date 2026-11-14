@@ -5,6 +5,7 @@ Explicit imports optimize the atlas. Normal builds repack the editable .unc
 files without overwriting them. Shared Eggpod pieces are deliberately omitted;
 the later controllers must use Mystic Island's existing pod/head children.
 Source: sonicretro/s2disasm, revision 4c5dc02b3eea186c3f80a020447b206343f30c0a.
+MTZ eggs: sonicretro/skdisasm, revision 73de97c6b55055bcb8089c1d55d006b02136f163.
 """
 from pathlib import Path
 from functools import lru_cache
@@ -16,11 +17,19 @@ import struct
 from build_end_art import pack_moduled
 from import_ehz2_pp_background import nemesis
 from convert_s1_ss_background import kosinski_plus, kosinski_plus_decode
+from import_scrap_madness import classic_kosinski
 
 ROOT = Path(__file__).resolve().parents[1]
 # Sonic 2's four blues become the project's three-blue ramp. Other roles match
 # the existing EHZ import: black/gray, skin, reds and the yellow/orange pair.
 PLAYER_FROM_S2 = (0,1,12,11,10,10,6,7,8,9,5,2,13,14,4,3)
+# Shared row-two contract: black 1, white 6, grays 7/8/9 and optional C,
+# yellows D/E/F. Displaced source E/F colors move to A/5, including CNZ cycles.
+SECONDARY_FROM_S2 = (0,1,2,3,4,15,6,7,8,9,12,11,13,14,10,5)
+# S&K's four intermediate grays, white and near-black use the same EHZ ramp.
+# Its yellow/teal deformation colors follow the prepared secondary row too.
+MTZ_EGGS_FROM_SK = {0:0,1:6,3:7,4:12,5:13,6:14,7:9,12:1,13:8,15:15}
+CPZ_CHEMICAL_FRAMES = tuple(range(4,10))+tuple(range(16,28))
 BOSSES = {
 	'CPZ': (0x500, [('Weapons','obj5D_a')]),
 	'ARZ': (0x3E0, [('Weapons','obj89_b'),('Pillars','obj89_a')]),
@@ -52,11 +61,39 @@ def read_mappings(path):
 	return [rows.get(label,[]) for label in re.findall(r'mappingsTableEntry\.w\s+(\w+)',text)]
 
 
-def source_boss(source, zone):
+def mtz_eggs(source):
+	path = source/'Levels/SSZ/KosinskiM Art/MTZ Orbs.kosm'
+	packed = path.read_bytes()
+	raw = classic_kosinski(packed[2:])
+	assert len(raw)==int.from_bytes(packed[:2],'big')==117*32
+	text = (source/'Levels/SSZ/Misc Object Data/Map - MTZ Orbs.asm').read_text()
+	labels = re.findall(r'dc.w\s+(\w+)-Map_SSZMTZOrbs_',text)[:6]
+	rows,current = {},None
+	for line in text.splitlines():
+		header = re.match(r'^(\w+):\s*dc.w\s+(\d+)',line)
+		if header:
+			current = [] if header[1] in labels else None
+			if current is not None:rows[header[1]] = current
+		piece = re.match(r'\s*dc.b\s+([^;]+)',line)
+		if piece and current is not None:
+			y,size,word,x = struct.unpack('>bBHh',bytes(map(number,piece[1].split(','))))
+			w,h = (size>>2)+1,(size&3)+1
+			first = word&2047
+			assert first+w*h<=37,'Only the egg/orb tiles may be imported'
+			data = raw[first*32:(first+w*h)*32]
+			assert word&0x6000==0x2000
+			data = bytes(MTZ_EGGS_FROM_SK[b>>4]<<4|MTZ_EGGS_FROM_SK[b&15] for b in data)
+			current.append((x,y,w,h,data,word>>11&1,word>>12&1,1,word>>15))
+	assert len(labels)==6 and all(len(rows[label])==1 for label in labels)
+	return [rows[label] for label in labels]
+
+
+def source_boss(source, zone, skdisasm):
 	base, tables = BOSSES[zone]
 	raw = nemesis((source/f'art/nemesis/{zone} boss.nem').read_bytes())
 	assert len(raw)==SOURCE_COUNTS[zone]*32
 	first = 96 if zone=='CNZ' else 0
+	secondary = secondary_lookup(source,zone)
 	families = {}
 	for family,name in tables:
 		frames = []
@@ -73,9 +110,15 @@ def source_boss(source, zone):
 				art = raw[start*32:(start+w*h)*32]
 				if zone!='CPZ' and pal==0:
 					art = bytes(PLAYER_FROM_S2[b>>4]<<4|PLAYER_FROM_S2[b&15] for b in art)
+				elif zone=='CPZ' or pal==1:
+					art = bytes(secondary[b>>4]<<4|secondary[b&15] for b in art)
 				private.append((x,y,w,h,art,xf,yf,pal,pri))
 			frames.append(private)
 		families[family] = frames
+	if zone=='MTZ':
+		# S2 IDs 3-8 and S&K IDs 0-5 have the same animation roles: two
+		# orbit poses, distant pose and three transitions into the balloon.
+		families['Weapons'][3:9] = mtz_eggs(skdisasm)
 	return raw, families
 
 
@@ -216,6 +259,10 @@ def mapping_text(zone, families, tiles):
 	lines = [f'; Prepared {zone} weapon art; six-byte S3&K mappings, original frame IDs.',
 		'; Empty pilot frames use the existing shared pod/head children when code is ported.',
 		f'{zone}Boss_WeaponTiles = {tiles}']
+	if zone=='CNZ':
+		lines += ['; Future cycle destinations, byte offsets from v_palette.',
+			f'CNZBoss_Cycle2PaletteOffset = ${0x20+SECONDARY_FROM_S2[14]*2:02X}',
+			f'CNZBoss_Cycle3PaletteOffset = ${0x20+SECONDARY_FROM_S2[15]*2:02X}']
 	for family,rows in families.items():
 		label = f'Map_{zone}Boss_{family}'
 		lines += ['',label+':']+[f'\tdc.w {label}_Frame{i}-{label}' for i in range(len(rows))]
@@ -290,22 +337,39 @@ def drill_dplc(cues):
 	return ('\n'.join(lines)+'\n\teven\n').replace('\n','\r\n').encode()
 
 
-def prepared_palette(source, zone):
+def source_palette(source, zone):
 	palette = bytearray((source/f'art/palettes/{zone}.bin').read_bytes())
 	if zone in ('MCZ','CNZ'):
 		palette[:32] = (source/f'art/palettes/{zone} Boss.bin').read_bytes()
-	# The shared pod's metal stays on the established fixed ramp. Other slots,
-	# including CNZ's cycle entries, retain their original source positions.
+	return palette
+
+
+def secondary_lookup(source, zone):
+	lookup = list(SECONDARY_FROM_S2)
+	for index,color in enumerate(struct.unpack('>16H',source_palette(source,zone)[:32])):
+		if index and color in (0,0x222):lookup[index] = 1
+	return tuple(lookup)
+
+
+def prepared_palette(source, zone):
+	palette = source_palette(source,zone)
+	# Only row two changes; all bosses follow the shared black/metal/yellow ramp.
+	# CPZ's chemical frames use only 0/8, so its row-four cycle stays untouched.
+	old = bytes(palette[:32])
+	for before,after in enumerate(SECONDARY_FROM_S2):
+		palette[after*2:after*2+2] = old[before*2:before*2+2]
 	common = (ROOT/'palette/SonicAndTails.bin').read_bytes()
 	for slot in (1,6,7,8,9):
 		palette[slot*2:slot*2+2] = common[slot*2:slot*2+2]
-	palette[20:22] = struct.pack('>H',0xA88)
+	palette[24:26] = struct.pack('>H',0xA88)
 	return bytes(palette)
 
 
 def extras(source, zone):
 	if zone=='CPZ':
 		raw = nemesis((source/'art/nemesis/Smoke trail from CPZ and HTZ bosses.nem').read_bytes())
+		lookup = secondary_lookup(source,zone)
+		raw = bytes(lookup[b>>4]<<4|lookup[b&15] for b in raw)
 		rows = read_mappings(source/'mappings/sprite/obj5D_d.asm')
 		name,family = 'CPZ boss smoke','Smoke'
 	elif zone=='MCZ':
@@ -323,6 +387,7 @@ def extras(source, zone):
 def main():
 	p = argparse.ArgumentParser(description=__doc__)
 	p.add_argument('--source',type=Path,required=True)
+	p.add_argument('--skdisasm',type=Path,required=True,help='S&K source for the six MTZ egg/orb poses')
 	p.add_argument('--write',action='store_true')
 	p.add_argument('--check',action='store_true')
 	p.add_argument('--report',type=Path)
@@ -330,7 +395,7 @@ def main():
 	assert not (a.write and a.check)
 	report = []
 	for zone in BOSSES:
-		original,source = source_boss(a.source,zone)
+		original,source = source_boss(a.source,zone,a.skdisasm)
 		dynamic = None
 		if zone=='MCZ':
 			art,mappings,drills,cues,resident,metadata = mcz_drills(source)

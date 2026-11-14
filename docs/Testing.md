@@ -315,16 +315,22 @@ positioned fixtures, not full-stage controller routes.
 Prepared CPZ/ARZ/CNZ/MCZ/MTZ assets have a separate source/mapping check:
 
 ```sh
-python build_tools/import_s2_boss_weapons.py --source /path/to/s2disasm --check
-python build_tools/check_s2_boss_weapons.py --source /path/to/s2disasm --output test-results/s2-weapons
-python build_tools/check_s2_boss_weapons.py --source /path/to/s2disasm --core /path/to/core.so --system-directory /path/to/mode1-fixture --output test-results/s2-weapons/game
+python build_tools/import_s2_boss_weapons.py --source /path/to/s2disasm --skdisasm /path/to/skdisasm --check
+python build_tools/check_s2_boss_weapons.py --source /path/to/s2disasm --skdisasm /path/to/skdisasm --output test-results/s2-weapons
+python build_tools/check_s2_boss_weapons.py --source /path/to/s2disasm --skdisasm /path/to/skdisasm --core /path/to/core.so --system-directory /path/to/mode1-fixture --output test-results/s2-weapons/game
 ```
 
 The checker compares source indexed pixels with all 135 compiled frames,
 checks tile bounds and the packing sprite budgets, and executes the CD RAM
 decoder plus generic DPLC loader for all 49 independent MCZ drill-phase pairs.
-It also checks unchanged-phase caching and rejection of a full DMA queue.
-`--core` adds 540 frame/flip cases through the real renderer/VDP with exact
+It also checks unchanged-phase caching, rejection of a full DMA queue and
+all five compiled palettes' shared black/gray/yellow slots. The options
+`--reference-rom BEFORE.bin --reference-listing BEFORE.lst` compare unchanged
+frames' CRAM colors with the prior build, allowing only CPZ's opaque-black
+normalization and excluding the six replaced MTZ egg poses. The same reference
+comparison checks every color in CNZ cycles 2/3 at their relocated destinations.
+CPZ's chemical frames are checked with both ordinary and alternate palettes.
+`--core` adds 612 frame/palette/flip cases through the real renderer/VDP with exact
 pixel samples. The gallery's actors, positions, prepared palettes and raw
 cache uploads are fixtures; uploads use the real DMA queue. These checks do
 not implement or validate new boss controllers, arena colors or CNZ cycling.
