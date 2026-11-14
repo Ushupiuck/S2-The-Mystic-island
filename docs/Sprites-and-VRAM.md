@@ -77,8 +77,10 @@ generator (or `--check`). The 60-tile editable/editor master keeps intact tiles
 Tails portrait at 56-59. The separate static icon is removed; the
 intact box already contains that pattern. Regular-shield pixels come from
 Sonic 2's frame-7 `$2C-$2F` icon (s2disasm commit
-`4c5dc02b3eea186c3f80a020447b206343f30c0a`), adapted through `PLAYER_FROM_S1`; the three
-existing elemental images remain separate. `build_signpost_art.py` delegates
+`4c5dc02b3eea186c3f80a020447b206343f30c0a`), with its interior adapted through
+`PLAYER_FROM_S1`. Its 52 frame pixels use primary palette slot `$4`, matching
+the orange frame of the other content icons. The three existing elemental
+images remain separate. `build_signpost_art.py` delegates
 monitor generation rather than modifying its layout independently.
 
 | Type | Content | Reward |
