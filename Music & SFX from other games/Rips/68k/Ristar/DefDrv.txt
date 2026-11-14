@@ -1,0 +1,50 @@
+; --- Ristar SMPS Driver Definition ---
+; modified SMPS 68k Type 2
+
+[Settings]
+DefTimingMode = 00
+LockTimingMode = True
+
+[Main]
+PtrFmt = Rst
+InsMode = Default
+FMChnOrder = 16 17 0 1 2 4 5 6	; driver actually uses 10 11 0 1 2 4 5 6, but this would break panning.
+TempoMode = Overflow
+Tempo1Tick = PlayMusic
+FMBaseNote = B
+FMBaseOctave = 0
+DetuneOctWrap = False
+NoteOnPrevent = Rest
+DelayFreq = Reset
+ModAlgo = 68k
+EnvMult = 68k
+VolMode = Algo
+FMFreqs = Def_68k
+PSGFreqs = Def_68k
+FM3Freqs = $000 $180 $1F4 $260
+
+FadeMode = 68k
+
+FadeOutSteps = $18
+FadeOutDelay = $10
+FadeOutVolAddFM = 8
+FadeOutVolAddPSG = 1
+
+; Alternative #1: (FadeOutMusic_Kill)
+;FadeOutSteps = $40
+;FadeOutDelay = $10
+
+; Alternative #2: (FadeOutMusic_Quick)
+;FadeOutSteps = $0C
+;FadeOutDelay = 1
+
+DrumChMode = Normal
+DACChns = 2
+DACVolDiv = 2
+
+[EnvelopeCmds]
+80 = RESET
+81 = HOLD
+82 = LOOP
+83 = STOP
+84 = CHG_MULT

@@ -1,0 +1,56 @@
+Driver Bank:		078000 (JW)
+General Pointer List:	8000 (JW) (Z80 Bank Offset)
+Tempo List:		8059 (JW) (Z80 Bank Offset)
+Music Pointer List:	807D (JW) (Z80 Bank Offset)
+SFX Pointer List:	0F04 (J) / 0EF4 (W) (Z80 RAM)
+Spc. SFX Pointer List:	0F04 (J) / 0EF4 (W) (Z80 RAM)
+Instr. Pointer List:	80B1 (JW) (Z80 Bank Offset)
+Mod. Pointer List:	8073 (JW) (Z80 Bank Offset)
+PSG Pointer List:	8078 (JW) (Z80 Bank Offset)
+Z80 Snd Driver Offset:	07E48A (JW)
+Sound RAM:		1C00 (Z80 RAM)
+
+
+The sound data (078000-07E489) matches exactly in all revisions, except for 2 bytes (at 078037 and 07A5C7) that differ between the J and W version.
+
+
+Notes:
+- The sound driver uses different sequence formats for music and SFX.
+  SFX are in usual preSMPS format, music uses a custom format that's very similar to the one used in Strider, also a port of a Capcom arcade game.
+  
+  The header for both format usual pre-SMPS:
+    1 byte - Number of Tracks tc
+    9*tc bytes - Track Header (get copied to RAM)
+    
+    Track Header:
+	00	Playback Bits
+	01	Channel Bits (00..02 = FM 1..3, 04..06 = FM 4..6)
+	02	Tick Multiplier
+	03-04	Data Pointer (i.e. where the track starts, absolute Little Endian)
+	05	Tranpose
+	06	Modulation Envelope
+	07	Volume Envelope (ignored as there is no PSG support)
+	08	Volume
+    
+    Capcom Sequence Format:
+	00-1F - Commands
+		00 tt - Tick Multiplier
+		01 xx - does nothing
+		02 tt - Change Tempo by tt
+		03..05 tt aa bb - Loop back tt times (00 = infinite) to bbaa, use Loop Index 0..2
+		06 - play next note as "dotted note" (1.5 duration)
+		07 tt - set Transpose to (tt + Track Header Transpose)
+		08 ss - enable Pitch Slide mode and set speed to ss
+		09 - disable Pitch Slide mode
+		0A pp - set Pan to pp*40h (possible values are 00..03)
+		0B ss - set global LFO Speed to ss
+		0C ii - set FM instrument ii
+		0D vv - set Volume to vv
+		0E aa - set LFO Amplitude Vibrato to aa
+		0F - Stop Track
+		10..1F - same as 00..0F (but not intended to be used)
+	2x - Don't release the key for the next X notes. (i.e. after the current note, there are X notes that don't retrigger the sound)
+	3x - play next X notes as "tripled notes" (2/3 duration)
+	40..FF - Notes
+		Note & 1F -> Note Value (modified by Transpose value in order to reach higher octaves)
+		Note & E0 -> Note Length (smaller = shorter, E0 = whole note, C0 = half note, etc.)

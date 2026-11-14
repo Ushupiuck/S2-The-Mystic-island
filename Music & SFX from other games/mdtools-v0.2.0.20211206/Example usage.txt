@@ -1,0 +1,3 @@
+smps2asm.exe --sonicver 1 "Round_1.bin" "Round_1.asm" Round1
+
+smps2asm.exe --sonicver 2 "Round_1_(Converted).bin" "Round_1.asm" Round1

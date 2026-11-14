@@ -1,0 +1,61 @@
+General Pointer List:	0B0000 (JUE)
+Sound Update Routine:	0B00F8 (JUE)
+Music Pointer List:	0B0020 (JUE)
+Spc. SFX Pointer List:	-- invalid -- (JUE) (points to 0B644C)
+SFX Pointer List:	0B638C (JUE)
+Mod. Pointer List:	-- invalid -- (JUE) (points to 0B009C)
+PSG Pointer List:	-- invalid -- (JUE) (points to 0B0020)
+Z80 DAC Driver Offset:	0B6E84 (J) / 0B6E86 (UE)
+DAC Voice Pointer List:	0B8000 (JUE) (DAC sound 80-85)
+DAC Voice Pointer List:	0D8000 (JUE) (DAC sound 86-87)
+Sound RAM:		9C00 (68k RAM)
+
+
+DAC Table
+---------
+The DAC table format is the same as Fatal Fury.
+
+Data is DPCM compressed with the delta-array.
+00 01 02 04 08 10 20 40 80 FF FD FC F8 F0 E0 C0 (Z80 Driver offset 0028)
+
+
+Notes:
+- There seem to be a few minor differences in the SFX sounds between the J and UE version.
+- There is no code that processes the DAC and the PSG channels. There is RAM reserved for them, but they're simply skipped.
+- The first DAC sound really has ID 80.
+- This sound driver seems to be based on SMPS 68k Type 1a, but received a few heavy changes regarding the sequence format.
+	00-1F - Commands
+		00 tt - Change Tempo by tt
+		01 ff - same as 08
+		02 aa bb - same as 16
+		03..05 ii tt aa bb - same as 17
+		06 - play next note as "dotted note" (1.5 duration)
+		07 tt - set Transpose value to tt
+		08 ff - stop note after ff frames
+		09 es aa - set global LFO Speed to ss and channel LFO amount to aa (bits in "e" enforce AM Enable for certain operators)
+		0A pp - set Pan to pp
+		0B aaaa bbbb cccc dddd - same as 1D
+		0C ii - set FM instrument ii
+		0D vv - set Volume to vv
+		0E tt - add tt to Transpose value
+		0F - Stop Track
+		10 aa bb cc dd - set Modulation values to aa bb cc dd and enable Modulation (usual SMPS 68k Modulation)
+		11 - enable Modulation (can't be disabled!)
+		12 vv - add tt to Volume
+		13..15 - nothing
+		16 aa bb - GoTo: jump to sequence offset aabb, relative to bb
+		17 ii tt aa bb - Loop back tt times to aabb (relative to bb), use Loop Index ii
+		18 aa bb - GoSub: put current offset on Track Stack and jump to aa bb (relative to bb)
+		19 - Return from GoSub
+		1A mm - set Note Tick multiplier to mm
+		1B mm - set Note Tick multiplier to mm for all music tracks
+		1C aa bb cc dd - set SSG-EG Operators to 90=aa, 98=bb, 94=cc, 9C=dd
+		1D aaaa bbbb cccc dddd - enable Special FM3 Mode and set FM3 frequencies to aaaa, bbbb, cccc and dddd
+		1E - Meta Coordination flag
+		1E 00 xx - set Communication Byte to xx
+		1F - invalid
+	2x - Don't release the key for the next X notes.
+	3x - play next X notes as "tripled notes" (2/3 duration)
+	40..FF - Notes
+		Note & 1F -> Note Value (modified by Transpose value in order to reach higher octaves)
+		Note & E0 -> Note Length (smaller = shorter, E0 = whole note, C0 = half note, etc.)

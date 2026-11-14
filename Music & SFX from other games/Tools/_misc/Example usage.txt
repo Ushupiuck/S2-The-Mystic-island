@@ -1,0 +1,2 @@
+SMPSOpt.exe Rst Round_1-1_ShootingRistar.rst Round_1.bin
+SMPSConv.exe Rst-S2 Round_1.bin Round_1_(Converted).bin

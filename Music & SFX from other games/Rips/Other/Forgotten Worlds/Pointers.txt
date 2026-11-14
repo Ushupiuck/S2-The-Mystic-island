@@ -1,0 +1,28 @@
+Driver Bank:		078000 (W)
+General Pointer List:	8000 (W) (Z80 Bank Offset)
+Tempo List:		8027 (W) (Z80 Bank Offset)
+Music Pointer List:	803B (W) (Z80 Bank Offset)
+SFX Pointer List:	0F6C (W) (Z80 RAM)
+Instr. Pointer List:	8063 (W) (Z80 Bank Offset)
+Mod. Pointer List:	803B (W) (Z80 Bank Offset, list empty)
+PSG Pointer List:	803B (W) (Z80 Bank Offset, list empty, PSG support removed)
+DAC Voice Pointer List:	015E (W) (Z80 RAM)
+Z80 Snd Driver Offset:	07E8CE (W)
+Sound RAM:		1C00 (Z80 RAM)
+
+
+DAC List Format: (all little endian values)
+2 bytes - Start Offset (Z80 Bank Offset)
+2 bytes - Data Length
+
+Data is DPCM compressed with the pre-SMPS delta-array.
+01 03 06 0C 18 28 50 90 FF FD FA F4 E8 D8 B0 70 (Z80 Driver offset 014E)
+
+
+Note:
+- This sound driver is largely on the one from Ghouls 'N Ghosts. It is a preSMPS Z80 driver modified to play the Capcom sequence format.
+  Unlike Ghouls 'N Ghosts, support for SMPS sound effects was stripped off.
+- Sound ID C3 causes the sound driver to play a short PCM sample. (The routines were apparently copy-pasted from Rambo III.)
+  The offsets are hardcoded into the Z80 driver (code offset 00E0).
+  Data Start: 015E
+  Data Length: 0170

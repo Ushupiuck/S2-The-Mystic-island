@@ -1,0 +1,1 @@
+-dpcmdata "0103060C18285090FFFDFAF4E8D8B070" -aos 2 DAC_82.raw DAC_82_pre.bin

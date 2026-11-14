@@ -1,0 +1,44 @@
+; --- Metal Head 32X Driver Definition ---
+; modified SMPS 68k Type 2
+
+[Settings]
+DefTimingMode = 00
+LockTimingMode = True
+
+[Main]
+PtrFmt = 68k
+InsMode = Default
+FMChnOrder = 16 0 1 4 5 2 6
+PSGChnOrder = 80 A0 C0
+; Note: PWM channels are enabled with by setting a byte in RAM.
+;       But this is never done and none of the songs has the required header fields.
+;AddChnOrder = 18 1A 1C 1E	; The driver uses 10 12 14 16 internally.
+TempoMode = Overflow	; Verified
+Tempo1Tick = DoTempo
+FMBaseNote = B
+FMBaseOctave = 0
+DetuneOctWrap = False
+NoteOnPrevent = Rest
+DelayFreq = Reset
+ModAlgo = 68k
+EnvMult = 68k
+VolMode = Algo
+FMFreqs = Def_68k
+PSGFreqs = Def_68k
+FM3Freqs = $000	; removed from the driver
+
+DrumChMode = VRDlx	; nothing special, just enables Volume control
+DACChns = 2		; 1 for music, 1 for SFX
+DACVolDiv = 2
+
+FadeMode = 68k
+
+FadeOutSteps = $28
+FadeOutDelay = 3
+
+[EnvelopeCmds]
+80 = RESET
+81 = HOLD
+82 = LOOP
+83 = STOP
+84 = CHG_MULT

@@ -1,0 +1,129 @@
+General Pointer List:	074700 (W)
+Music Pointer List:	074770 (W)
+SFX Pointer List:	07F43C (W)
+Mod. Pointer List:	-- invalid -- (W) (points to 0747EC)
+PSG Pointer List:	0747EC (W)
+Z80 Snd Driver Offset:	0769B2 (W)
+Additional Z80 Data:	076B09 (W) (goes to Z80 RAM 0160)
+DAC Pointer List:	076B09 (W) (Z80 RAM: 0160)
+DAC Voice Pointer List:	07486A (W)
+
+The complete sound related part of the ROM (074700-07FFFF) matches byte-by-byte in all 4 known revisions: Rev 00, 01, 02 and 03.
+
+
+DAC List Format: (all Little Endian)
+2 bytes - Start Offset (Z80 RAM)
+2 bytes - Data Length
+1 byte  - Loop Count
+		This must be 00 (no looping) or 81-FF (loop 01-7F times).
+		01-7F cause bugs with DPCM decoding.
+1 byte  - 'Uninterruptable' Flag
+		Bit 7 (80): if set, all commands are ignored until the sound finished playing.
+2 bytes - Loop Length
+2 bytes - Final Length
+1 byte  - unused (always 00)
+1 byte  - pitch
+
+If looping is disabled, the sample is played like this:
+	begin at [Start Offset], play [Data Length] bytes
+
+If looping is enabled, the sample is played like this:
+	1. begin at [Start Offset], play [Data Length] bytes
+	2. save current DPCM state and remove Bit 7 (80) from Loop Counter, subtract 1 from Loop Counter
+	3. restore saved DPCM state
+	4. restart at [Start Offset + Data Length], play [Loop Length] bytes
+	5. subtract 1 from Loop Counter
+	5a. Loop Counter is not yet 0, go to 3
+	5b. Loop Counter reached 0, continue
+	6. restore saved DPCM state
+	7. restart at [Start Offset + Data Length], play [Final Length] bytes
+In short words, it is like this:
+    [Intro], n-1 times [Loop], [End]
+
+
+The DAC table format is the same as Fatal Fury.
+
+Data is DPCM compressed with a slightly modified delta-array.
+00 01 02 04 08 10 20 40 80 FF FD FC F8 F0 E0 C0 (Z80 Driver offset 0019)
+
+
+Notes:
+- The header is in SMPS 68k format, but the order of the channels is FM 1..5, DAC, PSG 1..4.
+  The RAM looks like SMPS 68k, too.
+- The format of the sequence data is not SMPS.
+- Coordination flags are F0-FF.
+  The coordination flag handler is at 079330.
+  The coordination flag jump tables are at 079348 (FM/DAC) and 079388 (PSG).
+
+Format:
+
+Sequence Header:
+2 bytes - Instrument Pointer
+1 byte  - FM/DAC channels (DAC is the 6th channel)
+1 byte  - PSG channels (up to 4 channels)
+1 byte  - Tick Multiplier
+1 byte  - FM base volume
+x bytes - Track Headers
+
+Track Header (FM/DAC):
+2 bytes - Data Pointer
+1 byte  - unused
+1 byte  - Volume
+
+Track Header (PSG):
+2 bytes - Data Pointer
+1 byte  - unused
+1 byte  - Volume
+1 byte  - unused
+1 byte  - PSG Envelope/Instrument
+
+  Command Format 00-EF:
+  00-7F xx - Delay, Note xx
+    Note Format: High Nibble = Octave, Low Nibble = Note
+  80-EF - Delay only ([command & 0x7F] is written to TrkRAM+$0E)
+    Delay 00/80 cause a Track End
+  
+  Commands:
+    F0 ii - set FM/PSG instrument to ii
+		DAC: set DAC sound to (80h + ii)
+    F1 vv - set Channel Volume to vv (low value == low volume, high value == high volume)
+		FM: vv can be 0..19 (decimal) and is used as an index for a vv->FM volume lookup table.
+		PSG: vv can be 0..F (hex) PSGVol = (0Fh - vv) & 0Fh
+    F2 bbaa - set Detune
+		FM: sets Detune to aabb
+		PSG: sets Detune to 0 if bb == 0 and to 1 if bb != 0
+    F3 ss - set Note Stop timeout (note stops after ss ticks)
+FM  F4 cc - Modulation, command cc
+    F4 00 dd pp uutt ss - enable Modulation and set variables (see FF 03..06 below)
+    F4 01 - Modulation Off
+    F4 02 - Modulation On
+    F4 03 dd - Delay = dd ticks
+    F4 04 pp - Speed = pp
+    F4 05 uutt - Delta = ttuu
+    F4 06 ss - Steps til Delta Inversion = ss
+PSG F4 aa bb cc dd ee - ignored
+    F5 bbaa - Loop Start
+		1. decrement Loop Stack Index
+		2. read Loop Counter from [current address + aabb]
+    F6 xxxx bbaa - Loop End
+		1. decrement current Loop Counter
+		2. if Loop Counter > 0
+			2.1. jump back by aabb bytes (relative to the bbaa)
+			2.2. increment Loop Stack Index
+FM  F7 aa bb cc dd - enable Special FM 3 Mode and set FM 3 frequency offsets to aa (Reg A6), bb (Reg AC), cc (Reg AE), dd (Reg AD)
+PSG F7 aa - set PSG channel to Noise mode E4 (parameter is ignored)
+FM  F8 - Silence and Stop Track
+PSG F8 aa - does nothing
+FM  F9 pp - set Pan bits to (pp << 6)
+PSG F9 - disable PSG Noise mode
+FM  FA rr dd - send Register rr, Data dd to FM chip
+PSG FA ii - set PSG instrument to ii
+    FB vv - change Channel Volume
+		FM: vv is added to the Channel volume, which is post-processed then (see command F2)
+		PSG: vv is negated (~vv or FFh-vv) and added to the channel volume
+FM  FC ss ff aa - set LFO Speed (YM Reg. 022) to (08 | ss), Frequency Mod. amount (FMS) to ff, Amplitude Mod. amount (AMS) to aaa
+PSG FC - enters an endless loop and thus hangs the CPU
+    FD - hold Note (prevents Note Off)
+    FE bbaa - Loop Exit
+		If current Loop Counter == 1: jump forward by aabb bytes
+    FF bbaa - GoTo (jump backwards/forwards by aabb bytes)

@@ -1,0 +1,37 @@
+Music Pointer List:	00928A (J)
+SFX Pointer List:	0092FE (J)
+PSG Pointer List:	0092BA (J)
+DAC Pointer Table:	00619B (J) (Z80 Driver: 019B)
+Z80 Snd Driver Offset:	006000 (J)
+
+
+DAC Table
+---------
+DAC List Format: (all little endian values)
+2 bytes - Start Offset (in Z80 RAM)
+2 bytes - Data Length
+1 byte  - Pitch
+-> 5 bytes
+
+The list format is similar to the one used in Mazin Saga.
+
+Note: Data is DPCM compressed. The delta-array is placed at the beginning of each DAC sound.
+
+
+
+SMPS Header
+-----------
+2 bytes - Instrument Pointer
+1 byte  - FM Track Count
+1 byte  - PSG Track Count
+? bytes - Track Header
+
+Track Header:
+2 bytes - data pionter
+1 byte  - unknown (05 for FM, 00 for DAC?, 02 for PSG
+1 byte  - always 00 (PSG tracks only)
+
+
+Notes:
+This is a modified SMPS driver.
+The SMPS music format is probably the same as Streets of Rage.

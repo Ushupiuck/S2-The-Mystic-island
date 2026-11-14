@@ -1,0 +1,14 @@
+; --- The Revenge of Shinobi SMPS DAC Drum Definition ---
+
+[Main]
+DrumMode = Normal
+DrumIDBase = 01
+
+[Drums]
+;Note	Type    DrumID	Pitch
+81	DAC	01
+82	DAC	02
+83	DAC	02
+85	DAC	04
+86	DAC	06
+84	DAC	07

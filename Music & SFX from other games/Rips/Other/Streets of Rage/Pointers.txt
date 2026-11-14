@@ -1,0 +1,19 @@
+Music Pointer List:	07288C (Rev0/1)
+SFX Pointer List:	073B56 (Rev0/1)
+PSG Pointer List:	0728D0 (Rev0/1)
+DAC Drum Pointer List:	Z80 Driver: 019B (Rev01)
+Z80 Snd Driver Offset:	0795A2 (compressed)
+DAC Voice Pointer List:	078000 (Rev01)
+
+
+
+DAC List Format: (all Little Endian)
+2 bytes - Start Offset (Z80 RAM Offset)
+2 bytes - Data Length
+1 byte  - pitch
+
+Data is compressed with a custom algorithm. (see http://forums.sonicretro.org/index.php?showtopic=18619&view=findpost&p=383910)
+
+
+Notes:
+- The routine that decompresses the DAC driver is at 0085A2.
