@@ -109,29 +109,29 @@ Map_GHZBoss_Cockpit_Frame6:	dc.w 8
 Map_GHZBoss_Cockpit_Frame7:	dc.w 3
 	dc.b -20,$05
 	dc.w $0023,-20
-	dc.b -28,$0D
-	dc.w $003C,-6
+	dc.b -25,$0D
+	dc.w $003C,-16
 	dc.b -20,$05
 	dc.w $0027,-4
 Map_GHZBoss_Cockpit_Frame8:	dc.w 3
 	dc.b -20,$05
 	dc.w $0023,-20
-	dc.b -28,$0D
-	dc.w $003C,-6
+	dc.b -25,$0D
+	dc.w $003C,-16
 	dc.b -20,$05
 	dc.w $0027,-4
 Map_GHZBoss_Cockpit_Frame9:	dc.w 3
 	dc.b -20,$05
 	dc.w $0023,-20
-	dc.b -28,$0D
-	dc.w $003C,-6
+	dc.b -25,$0D
+	dc.w $003C,-16
 	dc.b -20,$05
 	dc.w $0027,-4
 Map_GHZBoss_Cockpit_Frame10:	dc.w 3
 	dc.b -20,$05
 	dc.w $0023,-20
-	dc.b -28,$0D
-	dc.w $003C,-6
+	dc.b -25,$0D
+	dc.w $003C,-16
 	dc.b -20,$05
 	dc.w $0027,-4
 	even

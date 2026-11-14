@@ -373,20 +373,22 @@ Placement subtype bit 0 selects Eggman (0) or EggRobo (1) for both GHZ and EHZ.
 Existing encounters retain Eggman. EggRobo's head comes from skdisasm
 `73de97c6b55055bcb8089c1d55d006b02136f163`,
 `General/Sprites/Egg Robo/Egg Robo Head.kosm` and its matching head mappings.
-The import applies `sprite_palette.PLAYER_FROM_SK` and moves the source origin
-to `(-6,-28)`, ten pixels rearward of the former anchor. The upper twelve rows
-of each helmet/face remain source-exact. The lower four chest rows use one
-trimmed, stable collar strip, matching the existing S1 torso's yellow triangle
-at `(-3,-13)` and leaving the backrest exposed. The collar does not move with
-the idle/hurt/defeated head animations. EHZ applies its existing four-pixel
-upward mapping offset to glass, head and torso together.
+The import applies `sprite_palette.PLAYER_FROM_SK`, retains the original
+horizontal origin at `-16`, and lowers the head three pixels to `(-16,-25)`.
+The upper twelve rows of every helmet and jaw remain source-exact. The bottom
+four source rows contain part of S3's shirt; they are cleared so the existing
+S1 torso supplies the collar and its yellow triangle immediately below the
+jaw. The head therefore joins the torso inside the cockpit, leaving the orange
+backrest behind it. EHZ applies its existing four-pixel upward mapping offset
+to glass, head and torso together.
 
 `python build_tools/build_end_art.py` packs the editable banks. The explicit
 `build_boss_shared_art.py --rom PRE_DPLC_ROM --listing PRE_DPLC_LISTING --write`
 migration accepts pre-sharing revision `21c233e` or the split-bank revision
 `c13db77`, then emits both cockpit mappings and the shared DPLCs. Add
 `--skdisasm PATH` to re-import EggRobo; otherwise it reads the editable local
-head source. This explicit migration reapplies the collar fit and glass split.
+head source. This explicit migration removes the source shirt fragment and
+splits the glass.
 Declared allocation boundaries are checked before writing. After editing the
 shared `.unc` files, run `build_end_art.py` before rebuilding; normal builds do
 not re-import old art.

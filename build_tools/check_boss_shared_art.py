@@ -149,16 +149,13 @@ def native_checks(a):
 		expected=bytes((PLAYER_FROM_SK[b>>4]<<4)|PLAYER_FROM_SK[b&15] for b in raw)
 		for i,row in enumerate(frames(rom,s['Map_GHZBoss_Cockpit'],s['BossFace_FrameCount'])[7:]):
 			head=[piece for piece in row if (piece[2]&2047)>=60]
-			assert head==[(-28,0x0D,60,-6)],('EggRobo collar anchor',i,head)
-			original=raster([(-28,0x0D,0,-6)],[(0,expected[i*256:(i+1)*256])])
+			assert head==[(-25,0x0D,60,-16)],('EggRobo head must stay centered over the torso',i,head)
+			original=raster([(-25,0x0D,0,-16)],[(0,expected[i*256:(i+1)*256])])
 			actual=raster(head,face_banks(rom,s,i+7),s['ArtTile_Eggman'])
-			assert {p:c for p,c in actual.items() if p[1]<-16}=={p:c for p,c in original.items() if p[1]<-16}
-			assert actual[-3,-13]==(0,4),('Yellow head triangle does not meet the shared collar',i)
-			neck = {p:c for p,c in actual.items() if p[1]>=-16}
-			assert all(-6<=x<12 and -16<=y<=-13 for x,y in neck),'Chest strip covers glass or the backrest'
-			if i:assert neck==previous_neck,'Collar seam moves with the head animation'
-			previous_neck=neck
-		result.append('four EggRobo source helmets/faces and palette roles are exact; only the lower chest strip is adapted to a stable aligned collar')
+			assert actual=={p:c for p,c in original.items() if p[1]<-13},('Helmet/jaw changed or source shirt retained',i)
+			assembled=raster(row,face_banks(rom,s,i+7),s['ArtTile_Eggman'])
+			assert assembled[-3,-13]==(0,4),('The resident S1 collar must meet the jaw',i)
+		result.append('four EggRobo helmets/jaws retain their source pixels at the original horizontal anchor, three pixels lower; S3 shirt fragments reveal the shared S1 collar')
 	rows = frames(rom,s['Map_GHZBoss_Cockpit'],s['BossFace_FrameCount'])
 	glass = rows[0][0]
 	assert glass==(-20,5,35,-20)

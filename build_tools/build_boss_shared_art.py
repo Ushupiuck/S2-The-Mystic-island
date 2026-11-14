@@ -19,9 +19,7 @@ from convert_s1_ss_background import kosinski_plus_decode
 ROOT = Path(__file__).resolve().parents[1]
 S1_SEAT_COLORS = {10:4,11:3,12:2}
 GLASS_X, GLASS_Y, GLASS_TILE = -20, -20, 35
-EGG_ROBO_HEAD_X, EGG_ROBO_HEAD_Y = -6, -28
-EGG_ROBO_COLLAR_LEFT = {-16:-6, -15:-5, -14:-4, -13:-3}
-EGG_ROBO_COLLAR_RIGHT = 12
+EGG_ROBO_HEAD_X, EGG_ROBO_HEAD_Y = -16, -25
 # Lower contours follow the drawing, including the whole jaw and its outline.
 # Profile poses stop above the gold collar; no S1 shirt pixels are shared.
 S1_HEAD_LOWER_SPANS = (
@@ -79,18 +77,13 @@ def import_egg_robo(source):
 
 
 def adapt_egg_robo(raw):
-	"""Fit a stable chest strip to S1's collar; keep each helmet/face intact."""
+	"""Remove S3's shirt fragment; the shared S1 torso supplies the collar."""
 	assert len(raw)==32*32
-	result = bytearray()
-	collar = {p:c for p,c in raster([(EGG_ROBO_HEAD_Y,0x0D,0,EGG_ROBO_HEAD_X)],raw).items() if p[1]>=-16}
-	for pose in range(4):
-		pixels = raster([(EGG_ROBO_HEAD_Y,0x0D,pose*8,EGG_ROBO_HEAD_X)],raw)
-		pixels = {p:c for p,c in pixels.items() if p[1]<-16}
-		pixels.update(collar)
-		pixels = {p:c for p,c in pixels.items() if p[1]<-16 or EGG_ROBO_COLLAR_LEFT[p[1]]<=p[0]<EGG_ROBO_COLLAR_RIGHT}
-		for tx in range(4):
-			for ty in range(2):
-				result += tile_bytes(pixels,EGG_ROBO_HEAD_X+tx*8,EGG_ROBO_HEAD_Y+ty*8)
+	result = bytearray(raw)
+	# Each 32x16 pose is four two-tile columns. Its bottom four rows are
+	# shirt pixels, not helmet/jaw pixels; reveal the resident torso there.
+	for tile in range(1,32,2):
+		result[tile*32+16:(tile+1)*32] = bytes(16)
 	return bytes(result)
 
 
@@ -332,8 +325,8 @@ def main():
 	robo = import_egg_robo(a.skdisasm) if a.skdisasm else adapt_egg_robo((ROOT/'art/uncompressed/Egg Robo head.unc').read_bytes())
 	banks['Egg Robo head'] = bytearray(robo)
 	assert len(robo)==32*32
-	# Align the first yellow collar triangle with the S1 torso. The lower
-	# source chest strip is trimmed; the glass draws in front of either pilot.
+	# Keep the original horizontal anchor and lower the head three pixels.
+	# Its jaw meets the resident S1 collar; the glass draws ahead of both.
 	heads += [[(EGG_ROBO_HEAD_Y,0x0D,0,EGG_ROBO_HEAD_X)] for _ in range(4)]
 	cues += [list(range(i*8,(i+1)*8)) for i in range(4)]
 	ghz += [ghz[0] for _ in range(4)]

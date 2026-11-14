@@ -379,9 +379,11 @@ A fixture without the waterfall checks the streamed VRAM contents and every
 visible pod/head pixel for all eleven poses in both directions. Whole cockpits also
 have independent indexed-pixel/reference comparisons. The native source oracle
 preserves Eggman's pixels outside the intentionally changed glass region and
-all four EggRobo helmets/faces; its lower chest strip must stay aligned with the
-torso across every pose. Every glass frame/reflection pixel retains its
-reference color, its existing openings remain transparent, and every frame puts glass first.
+all four EggRobo helmets/jaws at the original horizontal anchor, three pixels
+lower. The source shirt fragment must be transparent, revealing the resident
+S1 collar immediately below the jaw across every pose. Every glass
+frame/reflection pixel retains its reference color, its existing openings
+remain transparent, and every frame puts glass first.
 A controlled opaque rider is uploaded through the real DMA queue behind the
 glass. Both facings must show its color through the holes while retaining the
 glass highlights; reversing the two hardware pieces is the opaque control.
