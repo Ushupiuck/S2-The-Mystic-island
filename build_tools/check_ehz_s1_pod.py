@@ -100,6 +100,8 @@ def live(a,act):
 	s=g.s
 	pilot=getattr(a,'pilot',0)
 	palette_monitor=None
+	pilot_poses=set()
+	attachment_frames=set()
 	rom=a.rom.read_bytes()
 	boot_level(g,zone=s['id_EHZ'],act=act,player=a.player)
 	isolate(g)
@@ -127,6 +129,15 @@ def live(a,act):
 	def valid():
 		if palette_monitor is not None:
 			palette_monitor.sample()
+			if g.get(body,'code')==s['EHZBoss'] and g.get(body,'obRoutine')==2:
+				heads=[p for p in objects(g,0x55) if g.get(p,'obRoutine')==14]
+				assert len(heads)==1,('Missing or duplicate cockpit',g.frame,heads)
+				head=heads[0]
+				for field in ('obX','obY'):
+					assert g.get(head,field,2)==g.get(body,field,2),('Pilot detached during movement',g.frame,field)
+				assert g.get(head,'obRender')&1==g.get(body,'obStatus')&1,('Pilot facing lags behind pod',g.frame)
+				pilot_poses.add(g.get(head,'obFrame'))
+				attachment_frames.add(g.frame)
 		assert not g.read('v_errortype'),hex(g.core.m68k_get_reg(16))
 		assert g.read('v_gamemode',2)==s['Level']
 		assert g.get('v_player','obRoutine')<6, ('Player died',g.frame,g.get('v_player','obX',2),g.get('v_player','obY',2),g.read('Camera_Y_pos',2),g.read('Camera_Max_Y_pos',2),[(p,g.get(p,'obRoutine'),g.get(p,'obY',2)) for p in objects(g,0x55)])
@@ -193,7 +204,7 @@ def live(a,act):
 		# Act 1 has no authored EHZ fight arena. Its fixture verifies entry,
 		# docking, palette animation and every pose/facing; Act 2 owns the fight.
 		g.close()
-		return {'act':1,'pilot':pilot,'landing_and_docking':True,'poses_and_facings':22,'animated_palette_phases':len(cycles),'no_rotor':True,'authored_fight':False,'environment':environment_report,'palette':palette_monitor.report()}
+		return {'act':1,'pilot':pilot,'attachment_frames':len(attachment_frames),'pilot_poses':sorted(pilot_poses),'landing_and_docking':True,'poses_and_facings':22,'animated_palette_phases':len(cycles),'no_rotor':True,'authored_fight':False,'environment':environment_report,'palette':palette_monitor.report()}
 	facings=set()
 	drive=[]
 	for tick in range(750):
@@ -245,8 +256,9 @@ def live(a,act):
 		hits.append(g.get(body,'obColProp'))
 		park()
 		if hit<7:
-			g.run(34)
-			valid()
+			for _ in range(34):
+				g.run()
+				valid()
 			assert g.get(body,'obColType')==15
 			assert g.read(s['v_palette']+0x22,2)==normal
 	assert hits==list(range(7,-1,-1))
@@ -305,6 +317,7 @@ def live(a,act):
 			break
 	else:
 		raise AssertionError('Boss did not leave')
+	assert ({7,8,9,10} if pilot else {0,1,4,6})<=pilot_poses,('Missing live pilot poses',pilot_poses)
 	assert {6,8} <= {phase for phase,ter in defeat_faces} and {(10,2),(10,4)} <= defeat_faces
 	assert before_hop-min(hop)==s['EHZBoss_EscapeHop'],(before_hop,hop)
 	# Restoring level art can hold a video frame; each moving update is one pixel.
@@ -342,7 +355,7 @@ def live(a,act):
 		assert any(g.get(p,'code')==s['Flicky'] for p in objects(g))
 		g.video.save(out/'capsule.png')
 	g.close()
-	return {'act':act+1,'pilot':pilot,'hits':hits,'facings':sorted(facings),'hop_pixels':before_hop-ignition_y,'lift_start_screen_y':lift_start_screen_y,'ignition_screen_y':ignition_screen_y,'pod_chassis_gap':pod_gap,'flower_priority':flower_report,'entry_flame':sorted(entry_flames),'escape_flare':sorted(flare),'animated_palette_phases':len(cycles),'no_rotor':True,'capsule_tested':act==1,'environment':environment_report,'palette':palette_monitor.report()}
+	return {'act':act+1,'pilot':pilot,'attachment_frames':len(attachment_frames),'pilot_poses':sorted(pilot_poses),'hits':hits,'facings':sorted(facings),'hop_pixels':before_hop-ignition_y,'lift_start_screen_y':lift_start_screen_y,'ignition_screen_y':ignition_screen_y,'pod_chassis_gap':pod_gap,'flower_priority':flower_report,'entry_flame':sorted(entry_flames),'escape_flare':sorted(flare),'animated_palette_phases':len(cycles),'no_rotor':True,'capsule_tested':act==1,'environment':environment_report,'palette':palette_monitor.report()}
 
 
 def main():

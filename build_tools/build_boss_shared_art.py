@@ -19,7 +19,7 @@ from convert_s1_ss_background import kosinski_plus_decode
 ROOT = Path(__file__).resolve().parents[1]
 S1_SEAT_COLORS = {10:4,11:3,12:2}
 GLASS_X, GLASS_Y, GLASS_TILE = -20, -20, 35
-EGG_ROBO_HEAD_X, EGG_ROBO_HEAD_Y = -16, -25
+EGG_ROBO_HEAD_X, EGG_ROBO_HEAD_Y = -16, -24
 # Lower contours follow the drawing, including the whole jaw and its outline.
 # Profile poses stop above the gold collar; no S1 shirt pixels are shared.
 S1_HEAD_LOWER_SPANS = (
@@ -325,7 +325,7 @@ def main():
 	robo = import_egg_robo(a.skdisasm) if a.skdisasm else adapt_egg_robo((ROOT/'art/uncompressed/Egg Robo head.unc').read_bytes())
 	banks['Egg Robo head'] = bytearray(robo)
 	assert len(robo)==32*32
-	# Keep the original horizontal anchor and lower the head three pixels.
+	# Keep the original horizontal anchor and lower the head four pixels.
 	# Its jaw meets the resident S1 collar; the glass draws ahead of both.
 	heads += [[(EGG_ROBO_HEAD_Y,0x0D,0,EGG_ROBO_HEAD_X)] for _ in range(4)]
 	cues += [list(range(i*8,(i+1)*8)) for i in range(4)]

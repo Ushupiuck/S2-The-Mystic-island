@@ -379,10 +379,10 @@ A fixture without the waterfall checks the streamed VRAM contents and every
 visible pod/head pixel for all eleven poses in both directions. Whole cockpits also
 have independent indexed-pixel/reference comparisons. The native source oracle
 preserves Eggman's pixels outside the intentionally changed glass region and
-all four EggRobo helmets/jaws at the original horizontal anchor, three pixels
+all four EggRobo helmets/jaws at the original horizontal anchor, four pixels
 lower. The source shirt fragment must be transparent, revealing the resident
-S1 collar immediately below the jaw across every pose. Every glass
-frame/reflection pixel retains its reference color, its existing openings
+S1 collar immediately below the jaw without a background gap across any pose.
+Every glass frame/reflection pixel retains its reference color; its openings
 remain transparent, and every frame puts glass first.
 A controlled opaque rider is uploaded through the real DMA queue behind the
 glass. Both facings must show its color through the holes while retaining the
@@ -396,9 +396,11 @@ EHZ `--act 0`/`1` narrows the run. Act 1 suppresses its ordinary signpost loader
 with the clock and ends after docking/rendering because it has no authored boss
 arena. `--pilot 0`/`1` selects Eggman/EggRobo for the actual encounter; the gallery
 initializes the other source through its real constructor before checking all
-22 pose/facing combinations, then restores the original fight state. Act 2 uses
-the real arena. Positions establish attacks; HP is changed by
-actual collision. Palette tests compare environment pixels with/without the
+22 pose/facing combinations, then restores the original fight state. Entry,
+driving, damage recovery and escape also check the cockpit position/facing
+against its live parent and report observed pilot poses and attachment frames.
+Act 2 uses the real arena. Positions establish attacks; HP is changed by actual
+collision. Palette tests compare environment pixels with/without the
 masked load and observe fixed entries, both clocks and escape restoration.
 
 GHZ `--s1disasm SOURCE` assembles the original movement, sine and pendulum code

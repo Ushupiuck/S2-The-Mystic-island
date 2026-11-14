@@ -374,7 +374,7 @@ Existing encounters retain Eggman. EggRobo's head comes from skdisasm
 `73de97c6b55055bcb8089c1d55d006b02136f163`,
 `General/Sprites/Egg Robo/Egg Robo Head.kosm` and its matching head mappings.
 The import applies `sprite_palette.PLAYER_FROM_SK`, retains the original
-horizontal origin at `-16`, and lowers the head three pixels to `(-16,-25)`.
+horizontal origin at `-16`, and lowers the head four pixels to `(-16,-24)`.
 The upper twelve rows of every helmet and jaw remain source-exact. The bottom
 four source rows contain part of S3's shirt; they are cleared so the existing
 S1 torso supplies the collar and its yellow triangle immediately below the
