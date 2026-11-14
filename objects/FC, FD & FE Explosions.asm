@@ -199,6 +199,7 @@ BossExplosion_FollowParent:
 		movea.l	BossBurst_Parent(a0),a2
 		bset	#7,BossBurst_Started(a2)	; allocation success, rather than just an active controller
 		move.l	#BossExplosion,code(a1)
+		move.w	#make_art_tile(ArtTile_BossExplosion,0,1),obGfx(a1)
 		tst.b	d3
 		beq.s	.position
 		move.l	#BossExplosion_Small,code(a1)
@@ -223,13 +224,11 @@ BossExplosion_FollowParent:
 		and.w	d2,d0
 		sub.w	d1,d0
 		add.w	d0,obY(a1)
-		; GHZ bursts that reach the cockpit use the remaining scanline
-		; budget after the face. Lower bursts still cover the hull.
-		cmpi.w	#Map_BossExplosion_height+BGHZ_CockpitBottom,d0
-		bge.s	.return
+		; GHZ's foreground-plane waterfall covers the ship and its bursts.
 		cmpi.l	#Obj3D,BossBurst_ParentCode(a0)
 		bne.s	.return
-		move.w	#$200,obPriority(a1)
+		bclr	#7,obGfx(a1)		; low VDP priority, like the parent pod
+		; Keep the earlier sprite tier: bursts still draw over Eggman.
 .return:
 		rts
 ; ---------------------------------------------------------------------------
@@ -305,7 +304,8 @@ BossExplosion_Small:
 		move.b	#3,obTimeFrame(a0)
 		bra.w	ExItem_Setup
 ; ---------------------------------------------------------------------------
-; Shared S2 fiery art; ordinary bombs and enemy explosions keep theirs.
+; Shared S2 fiery art; emitter supplies obGfx, including plane priority.
+; Ordinary bombs and enemy explosions keep their own initializer.
 ; Fit its seven frames into S3&K's 21-tick effect lifetime: 2,2,3,3,3,4,4.
 ; ---------------------------------------------------------------------------
 
@@ -316,7 +316,6 @@ BossExplosion:
 		move.l	#Map_BossExplosion,obMap(a0)
 		move.b	#Map_BossExplosion_height,height_pixels(a0)
 		move.b	#Map_BossExplosion_width,width_pixels(a0)
-		move.w	#make_art_tile(ArtTile_BossExplosion,0,1),obGfx(a0)
 		move.b	#4,obRender(a0)
 		clr.b	obColType(a0)
 		move.b	BossExplosion_Delays(pc),obTimeFrame(a0)

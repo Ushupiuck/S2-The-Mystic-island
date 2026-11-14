@@ -39,9 +39,8 @@ BOSSES = {
 }
 SOURCE_COUNTS = {'CPZ':111,'ARZ':166,'CNZ':133,'MCZ':204,'MTZ':124}
 MCZ_DRILL_FRAMES = (2,3,4,8,9,10,11)
-CNZ_TOPPER_FRAME = 21
-CNZ_TOPPER_X = -16
-CNZ_COLLAR_Y = 8
+CNZ_BODY_Y = -4
+CNZ_BODY_FRAMES = (1,2,3,4,5,12,13,14,15,16,17)
 
 
 def number(text):
@@ -91,45 +90,12 @@ def mtz_eggs(source):
 	return [rows[label] for label in labels]
 
 
-def pod_coverage():
-	"""Opaque pixels of the editable universal hull, in its normal coordinates."""
-	text = (ROOT/'md-main.asm').read_text().split('Map_Eggman_Frame0:',1)[1]
-	count = int(re.match(r'\s*dc.w\s+(\d+)',text)[1])
-	pieces = re.findall(r'dc.b\s+([^\n]+)\n\s*dc.w\s+([^\n]+)',text)[:count]
-	assert len(pieces)==count
-	raw = (ROOT/'art/uncompressed/Old Eggpod.unc').read_bytes()
-	covered = set()
-	for first,second in pieces:
-		y,size = map(number,first.split(','));word,x = map(number,second.split(','))
-		w,h = (size>>2)+1,(size&3)+1
-		for px in range(w*8):
-			for py in range(h*8):
-				tile = (word&2047)+(px//8)*h+py//8
-				byte = raw[tile*32+py%8*4+px%8//2]
-				if (byte>>(0 if px&1 else 4))&15:
-					covered.add((x+(w*8-1-px if word&0x800 else px),y+(h*8-1-py if word&0x1000 else py)))
-	return covered
-
-
 def cnz_mounts(rows):
-	"""Show the S1 hull through the collar; keep the topper behind the pilot."""
-	assert len(rows)==CNZ_TOPPER_FRAME
-	covered = pod_coverage()
-	body,topper = [],[]
-	for x,y,w,h,raw,xf,yf,pal,pri in rows[1]:
-		if y<0:
-			topper.append((x+CNZ_TOPPER_X,y,w,h,raw,xf,yf,pal,pri))
-			continue
-		data = bytearray(raw)
-		for px in range(w*8):
-			for py in range(h*8):
-				point = x+(w*8-1-px if xf else px),y+(h*8-1-py if yf else py)
-				if 0<=point[1]<CNZ_COLLAR_Y and point in covered:
-					offset = ((px//8)*h+py//8)*32+py%8*4+px%8//2
-					data[offset] &= 0xF0 if px&1 else 0x0F
-		body.append((x,y,w,h,bytes(data),xf,yf,pal,pri))
-	rows[1] = body
-	rows.append(topper)
+	"""Enclose the Eggmobile below its cockpit; discard the decorative topper."""
+	assert len(rows)==21
+	rows[1] = [p for p in rows[1] if p[1]>=0]
+	for index in CNZ_BODY_FRAMES:
+		rows[index] = [(x,y+CNZ_BODY_Y,w,h,raw,xf,yf,pal,pri) for x,y,w,h,raw,xf,yf,pal,pri in rows[index]]
 
 
 def source_boss(source, zone, skdisasm):
@@ -309,8 +275,8 @@ def mapping_text(zone, families, tiles):
 		lines += ['; Future cycle destinations, byte offsets from v_palette.',
 			f'CNZBoss_Cycle2PaletteOffset = ${0x20+SECONDARY_FROM_S2[14]*2:02X}',
 			f'CNZBoss_Cycle3PaletteOffset = ${0x20+SECONDARY_FROM_S2[15]*2:02X}',
-			'; Body frame 1 draws before the shared pod; topper draws behind it.',
-			f'CNZBoss_TopperFrame = {CNZ_TOPPER_FRAME}']
+			'; Shell draws in front of the Eggmobile; topper is omitted.',
+			f'CNZBoss_BodyOffsetY = {CNZ_BODY_Y}']
 	for family,rows in families.items():
 		label = f'Map_{zone}Boss_{family}'
 		lines += ['',label+':']+[f'\tdc.w {label}_Frame{i}-{label}' for i in range(len(rows))]

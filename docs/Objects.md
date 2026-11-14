@@ -1204,6 +1204,12 @@ parent, stops when that phase ends, and emits every three frames. Low/high RNG
 words independently place bursts in `[-range,range-1]` on each axis. Animation,
 art and timing are described in [Sprites and VRAM](Sprites-and-VRAM.md#boss-explosions).
 
+The emitter supplies `obGfx` before the visual initializes. GHZ clears its VDP
+priority bit, matching the pod, so its foreground-plane waterfall covers the
+bursts. Their sprite queue tier remains zero, ahead of the hull and cockpit at
+`$180`, so explosions still cover Eggman's head. EHZ, Mecha and explosion-wall
+emitters retain high VDP priority. Plane priority does not change sprite order.
+
 Deployment, breakup and burst cadence/RNG come from skdisasm
 `73de97c6b55055bcb8089c1d55d006b02136f163`, `Obj_SSZGHZBoss`,
 `Child_Draw_Sprite_FlickerMove`, `Set_IndexedVelocity` and

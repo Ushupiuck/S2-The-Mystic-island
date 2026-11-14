@@ -1,11 +1,11 @@
 ; Prepared CNZ weapon art; six-byte S3&K mappings, original frame IDs.
 ; Empty pilot frames use the existing shared pod/head children when code is ported.
-CNZBoss_WeaponTiles = 117
+CNZBoss_WeaponTiles = 119
 ; Future cycle destinations, byte offsets from v_palette.
 CNZBoss_Cycle2PaletteOffset = $34
 CNZBoss_Cycle3PaletteOffset = $2A
-; Body frame 1 draws before the shared pod; topper draws behind it.
-CNZBoss_TopperFrame = 21
+; Shell draws in front of the Eggmobile; topper is omitted.
+CNZBoss_BodyOffsetY = -4
 
 Map_CNZBoss_Weapons:
 	dc.w Map_CNZBoss_Weapons_Frame0-Map_CNZBoss_Weapons
@@ -29,31 +29,30 @@ Map_CNZBoss_Weapons:
 	dc.w Map_CNZBoss_Weapons_Frame18-Map_CNZBoss_Weapons
 	dc.w Map_CNZBoss_Weapons_Frame19-Map_CNZBoss_Weapons
 	dc.w Map_CNZBoss_Weapons_Frame20-Map_CNZBoss_Weapons
-	dc.w Map_CNZBoss_Weapons_Frame21-Map_CNZBoss_Weapons
 Map_CNZBoss_Weapons_Frame0:	dc.w 0
 Map_CNZBoss_Weapons_Frame1:	dc.w 4
-	dc.b 0,$06
+	dc.b -4,$06
 	dc.w $2000,-40
-	dc.b 8,$06
+	dc.b -4,$07
 	dc.w $2006,-24
-	dc.b 8,$0E
-	dc.w $2806,-8
-	dc.b 0,$06
-	dc.w $2012,24
+	dc.b -4,$0F
+	dc.w $200E,-8
+	dc.b -4,$06
+	dc.w $201E,24
 Map_CNZBoss_Weapons_Frame2:	dc.w 1
-	dc.b 24,$06
-	dc.w $2018,-28
+	dc.b 20,$06
+	dc.w $2024,-28
 Map_CNZBoss_Weapons_Frame3:	dc.w 1
-	dc.b 16,$06
-	dc.w $201E,-37
+	dc.b 12,$06
+	dc.w $202A,-37
 Map_CNZBoss_Weapons_Frame4:	dc.w 1
-	dc.b 16,$0B
-	dc.w $2024,8
-Map_CNZBoss_Weapons_Frame5:	dc.w 2
-	dc.b 16,$09
+	dc.b 12,$0B
 	dc.w $2030,8
-	dc.b 16,$06
-	dc.w $2036,32
+Map_CNZBoss_Weapons_Frame5:	dc.w 2
+	dc.b 12,$09
+	dc.w $203C,8
+	dc.b 12,$06
+	dc.w $2042,32
 Map_CNZBoss_Weapons_Frame6 equ Map_CNZBoss_Weapons_Frame0
 Map_CNZBoss_Weapons_Frame7 equ Map_CNZBoss_Weapons_Frame0
 Map_CNZBoss_Weapons_Frame8 equ Map_CNZBoss_Weapons_Frame0
@@ -61,41 +60,36 @@ Map_CNZBoss_Weapons_Frame9 equ Map_CNZBoss_Weapons_Frame0
 Map_CNZBoss_Weapons_Frame10 equ Map_CNZBoss_Weapons_Frame0
 Map_CNZBoss_Weapons_Frame11 equ Map_CNZBoss_Weapons_Frame0
 Map_CNZBoss_Weapons_Frame12:	dc.w 1
-	dc.b 40,$0C
-	dc.w $203C,-16
+	dc.b 36,$0C
+	dc.w $2048,-16
 Map_CNZBoss_Weapons_Frame13:	dc.w 1
-	dc.b 40,$0C
-	dc.w $2040,-16
+	dc.b 36,$0C
+	dc.w $204C,-16
 Map_CNZBoss_Weapons_Frame14:	dc.w 1
-	dc.b 40,$0C
-	dc.w $2044,-16
+	dc.b 36,$0C
+	dc.w $2050,-16
 Map_CNZBoss_Weapons_Frame15:	dc.w 2
-	dc.b 32,$0C
-	dc.w $2048,-28
-	dc.b 32,$0C
-	dc.w $204C,4
+	dc.b 28,$0C
+	dc.w $2054,-28
+	dc.b 28,$0C
+	dc.w $2058,4
 Map_CNZBoss_Weapons_Frame16:	dc.w 2
-	dc.b 32,$0C
-	dc.w $2050,-28
-	dc.b 32,$0C
-	dc.w $2054,4
+	dc.b 28,$0C
+	dc.w $205C,-28
+	dc.b 28,$0C
+	dc.w $2060,4
 Map_CNZBoss_Weapons_Frame17:	dc.w 2
-	dc.b 32,$0C
-	dc.w $2058,-28
-	dc.b 32,$0C
-	dc.w $205C,4
+	dc.b 28,$0C
+	dc.w $2064,-28
+	dc.b 28,$0C
+	dc.w $2068,4
 Map_CNZBoss_Weapons_Frame18:	dc.w 1
 	dc.b -12,$0A
-	dc.w $0060,-12
+	dc.w $006C,-12
 Map_CNZBoss_Weapons_Frame19:	dc.w 1
 	dc.b -4,$00
-	dc.w $0069,-4
+	dc.w $0075,-4
 Map_CNZBoss_Weapons_Frame20:	dc.w 1
 	dc.b -4,$00
-	dc.w $006A,-4
-Map_CNZBoss_Weapons_Frame21:	dc.w 2
-	dc.b -40,$04
-	dc.w $206B,-7
-	dc.b -32,$0D
-	dc.w $206D,-23
+	dc.w $0076,-4
 	even

@@ -34,10 +34,11 @@ separate mapping families/art lifetimes in their boss's same mapping file.
 MCZ's main family keeps source drill frames 2, 3, 4, 8, 9, 10 and 11 for slot A,
 then appends frames 21-27 for slot B; the two byte lookup tables map DPLC phases
 to those frames. Its source debris frames 13/20 move to `Map_MCZBoss_Debris`.
-CNZ's unused source frame zero is normalized to empty.
-Its frame 1 contains the adapted collar alone; appended frame 21 is the rear
-topper. Assemble them around `Map_Eggman` and `Map_GHZBoss_Cockpit` using the
-[documented layer order](Sprites-and-VRAM.md#prepared-sonic-2-boss-weapons).
+CNZ's unused source frame zero is normalized to empty. Its frame 1 retains the
+opaque party-mobile shell; the decorative top mast is removed. Seat the shared
+cockpit inside the shell and include both claw families. Their four-pixel upward
+shift is baked into the mappings. Assemble these around `Map_Eggman` and
+`Map_GHZBoss_Cockpit` using the [documented layer order](Sprites-and-VRAM.md#prepared-sonic-2-boss-weapons).
 MTZ retains S2's frame IDs but uses Sky Sanctuary's six egg/orb poses at 3-8;
 its S2 balloon stages, cannon and laser stay in the same family. The sprite
 guide owns the shared EHZ gray slots and palette-index conversions.

@@ -347,6 +347,108 @@ def live_checks(a):
 
 
 
+def waterfall_burst_checks(g,body):
+	"""Real GHZ bursts go behind the foreground plane but in front of Eggman."""
+	from check_object_course import objects
+	s,rom = g.s,bytes(g.rom.raw[:-1])
+	before = g.save()
+	try:
+		g.put(body,'ob2ndRout',s['BGHZ_Explode']);g.put(body,'BGHZ_Timer',0x400,2)
+		g.put(body,'BossBurst_Started',0);g.put(body,'obColType',0)
+		for _ in range(120):
+			g.run();assert not g.read('v_errortype')
+			bursts = [o for o in objects(g) if g.get(o,'code')==s['BossExplosion'] and g.get(o,'obRoutine')]
+			if bursts:break
+		else:raise AssertionError('GHZ did not emit a burst')
+		burst = bursts[0]
+		assert not g.get(burst,'obGfx',2)&0x8000,'GHZ burst overrides the foreground-plane waterfall'
+		assert g.get(burst,'obPriority',2)<g.get(body,'obPriority',2),'GHZ burst is behind Eggman'
+		face = next(o for o in objects(g) if g.get(o,'obMap',4)==s['Map_GHZBoss_Cockpit'])
+		for o in objects(g):
+			if o not in (body,face,burst):g.put(o,'code',0,4)
+		for player in ('v_player','v_player2'):g.put(player,'code',0,4)
+		camx,camy = g.read('Camera_X_pos',2),g.read('Camera_Y_pos',2)
+		for name,value in (('Camera_Min_X_pos',camx),('Camera_Max_X_pos',camx),('Camera_Max_X_pos_target',camx),
+			('Camera_Min_Y_pos',camy),('Camera_Max_Y_pos',camy),('Camera_Max_Y_pos_target',camy)):g.write(name,value,2)
+		g.write('f_timecount',0);g.write('v_pcyc_time',0x7FFF,2)
+		g.put(body,'code',s['DisplaySprite'],4);g.put(face,'code',s['BossFace_Draw'],4)
+		for obj in (body,face):
+			g.put(obj,'obX',camx+160,2);g.put(obj,'obY',camy+120,2)
+			g.put(obj,'obRender',4);g.put(obj,'obStatus',0)
+		g.put(face,'obFrame',0);g.put(face,'BossFace_LoadedFrame',255)
+		g.put(burst,'obX',camx+160,2);g.put(burst,'obY',camy+96,2)
+		g.put(burst,'obTimeFrame',127)
+		g.run(3)
+		assert not g.read('v_errortype')
+		def rgb(line,color):
+			word = g.read(s['v_palette']+(line*16+color)*2,2)
+			if 'ClownMDEmu' in g.emulator:word |= (word&0x888)>>3
+			r,green,b = (word>>shift&15 for shift in (0,4,8))
+			return (((r<<1)|(r>>3))*255//31,((green<<2)|(green>>2))*255//63,((b<<1)|(b>>3))*255//31)
+		def sprite_pixels(obj):
+			bank = bytes(g.vram[i^1] for i in range(65536))
+			mapping,frame,gfx = g.get(obj,'obMap',4),g.get(obj,'obFrame'),g.get(obj,'obGfx',2)
+			name = 'Map_GHZBoss_Cockpit' if obj==face else 'Map_BossExplosion'
+			count = s[name+'_frames']
+			row = frames(rom,mapping,count)[frame]
+			flip = g.get(obj,'obRender')&3
+			result = {}
+			for (x,y),(line,color) in raster(row,[(0,bank)],gfx&2047).items():
+				point = (g.get(obj,'obX',2)-g.read('Camera_X_pos_copy',2)+(-x-1 if flip&1 else x),
+					g.get(obj,'obY',2)-g.read('Camera_Y_pos_copy',2)+(-y-1 if flip&2 else y))
+				if not(0<=point[0]<320 and 0<=point[1]<224):continue
+				result[point] = rgb(((gfx>>13)+line)&3,color)
+			return result
+		def foreground_pixel(point):
+			"""Decode the real foreground name table, scrolling and opaque tile pixel."""
+			x,y = point
+			bank = g.vram
+			def word(address):return (bank[address^1]<<8)|bank[(address+1)^1]
+			x = (x-word(s['vram_hscroll']+y*4))&511
+			y = (y+g.read('v_scrposy_vdp',2))&255
+			entry = word(s['vram_fg']+((y//8)*64+x//8)*2)
+			if not entry&0x8000:return None
+			x,y = x&7,y&7
+			if entry&0x800:x=7-x
+			if entry&0x1000:y=7-y
+			packed = bank[((entry&2047)*32+y*4+x//2)^1]
+			color = (packed>>(0 if x&1 else 4))&15
+			return rgb((entry>>13)&3,color) if color else None
+		staged = g.save()
+		checked,controls,over_head = 0,0,0
+		for phase in range(s['Map_BossExplosion_frames']):
+			g.restore(staged);g.put(burst,'obFrame',phase);g.put(burst,'obTimeFrame',127)
+			seed = g.save()
+			g.put(burst,'code',0,4);g.run(3);baseline=g.video.copy()
+			assert not g.read('v_errortype')
+			g.restore(seed)
+			g.run(3)
+			assert not g.read('v_errortype')
+			fire,head = sprite_pixels(burst),sprite_pixels(face)
+			witnesses = {p:foreground_pixel(p) for p in fire}
+			witnesses = {p:c for p,c in witnesses.items() if c is not None and c!=fire[p]}
+			assert witnesses,('No opaque foreground overlap',phase)
+			assert all(baseline.getpixel(p)==c for p,c in witnesses.items()),('Foreground pixel decoder disagrees with VDP',phase)
+			assert all(g.video.getpixel(p)==c for p,c in witnesses.items()),('Explosion covers foreground waterfall',phase)
+			checked+=len(witnesses)
+			visible = [p for p in fire.keys()&head.keys() if baseline.getpixel(p)==head[p] and fire[p]!=head[p]]
+			if not visible:
+				baseline.save(g.output/f'burst{phase}-baseline.png')
+				g.video.save(g.output/f'burst{phase}-overlap.png')
+			assert visible,('No visible head/burst overlap',phase)
+			assert all(g.video.getpixel(p)==fire[p] for p in visible),('Explosion is behind Eggman',phase)
+			over_head+=len(visible)
+			if phase==3:g.video.save(g.output/'waterfall-over-burst.png')
+			g.restore(seed);g.put(burst,'obGfx',g.get(burst,'obGfx',2)|0x8000,2);g.run(3)
+			assert not g.read('v_errortype')
+			assert all(g.video.getpixel(p)==fire[p] for p in witnesses),('High-priority control did not reveal the burst',phase)
+			controls+=len(witnesses)
+			if phase==3:g.video.save(g.output/'burst-front-control.png')
+		return f'foreground waterfall: all seven burst frames, {checked} covered pixels, {controls} high-priority control pixels; {over_head} pixels over Eggman'
+	finally:
+		g.restore(before)
+
+
 def ghz_face_checks(a):
 	"""Normal arena/music handoff, then every streamed pose without the waterfall."""
 	from genesis_test_core import Genesis
@@ -374,6 +476,7 @@ def ghz_face_checks(a):
 	for i in range(count):
 		source,dest=struct.unpack_from('>IH',rom,plc+2+i*6);raw=unpack(rom,source)
 		assert vram(dest,len(raw))==raw,('GHZ boss PLC bank mismatch',hex(dest))
+	waterfall_report = waterfall_burst_checks(g,ships[0])
 	# Construct the other pilot through the actual boss path. Separate immutable
 	# buffers keep any previously queued Eggman DMA source intact.
 	camx,camy=g.read('Camera_X_pos',2),g.read('Camera_Y_pos',2)
@@ -424,7 +527,7 @@ def ghz_face_checks(a):
 				checked+=1
 			g.video.save(a.output/f'ghz-pose{pose}-flip{flip}.png')
 	g.close()
-	return [f'GHZ arena/music handoff: stable per-character sources, {count} resident banks; 22 streamed poses/facings, {checked} rendered pod/head pixels']
+	return [waterfall_report,f'GHZ arena/music handoff: stable per-character sources, {count} resident banks; 22 streamed poses/facings, {checked} rendered pod/head pixels']
 
 
 def main():

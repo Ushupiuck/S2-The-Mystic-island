@@ -14,7 +14,7 @@ from check_boss_shared_art import raster,unpack,face_banks,head_frame
 from check_ehz_boss import symbols
 from check_sprite_assets import frames
 from convert_s1_ss_background import kosinski_plus_decode
-from import_s2_boss_weapons import BOSSES,MCZ_DRILL_FRAMES,CPZ_CHEMICAL_FRAMES,CNZ_TOPPER_FRAME,CNZ_TOPPER_X,CNZ_COLLAR_Y,source_boss,extras,scanlines
+from import_s2_boss_weapons import BOSSES,MCZ_DRILL_FRAMES,CPZ_CHEMICAL_FRAMES,CNZ_BODY_Y,CNZ_BODY_FRAMES,source_boss,extras,scanlines
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -127,12 +127,14 @@ def palette_checks(a,rom,s,cases):
 	checked = 0
 	for zone,family,index,label,row,bank,base in palette_cases(cases):
 		if zone=='MTZ' and family=='Weapons' and 3<=index<=8:continue
-		legacy_cnz = zone=='CNZ' and 'CNZBoss_TopperFrame' not in before
-		previous = frames(old,before[label])[1 if legacy_cnz and index==CNZ_TOPPER_FRAME else index]
-		if legacy_cnz and index==CNZ_TOPPER_FRAME:
-			previous = [(y,size,word,x+CNZ_TOPPER_X) for y,size,word,x in previous if y<0]
-		elif legacy_cnz and index==1:
-			previous = [p for p in previous if p[0]>=0]
+		previous = frames(old,before[label])[index]
+		if zone=='CNZ' and index in CNZ_BODY_FRAMES:
+			if index==1 and 'CNZBoss_BodyOffsetY' not in before and 'CNZBoss_TopperFrame' not in before:
+				previous = [p for p in previous if p[0]>=0]
+			old_y = before.get('CNZBoss_BodyOffsetY',0)&65535
+			if old_y&0x8000:old_y-=0x10000
+			delta = CNZ_BODY_Y-old_y
+			previous = [(y+delta,size,word,x) for y,size,word,x in previous]
 		oldbank = weapon_bank(old,before,zone,index) if family not in ('Smoke','Debris') else unpack(old,before[f'Kospm_{zone}Boss{family}'])
 		def colors(pieces,art,palette,normalize_black=False):
 			result = {}
@@ -142,12 +144,13 @@ def palette_checks(a,rom,s,cases):
 				result[point] = 0x222 if normalize_black and zone=='CPZ' and line==1 and color==11 and word==0 else word
 			return result
 		actual,expected = colors(row,bank,palette_bytes(rom,s,zone)),colors(previous,oldbank,palette_bytes(old,before,zone),True)
-		if legacy_cnz and index==1:
-			hull = raster(frames(old,before['Map_Eggman'],1)[0],face_banks(old,before,0),before['ArtTile_Eggman'])
-			expected = {p:c for p,c in expected.items() if not(0<=p[1]<CNZ_COLLAR_Y and p in hull)}
+		old_cutout = zone=='CNZ' and index==1 and 'CNZBoss_TopperFrame' in before
+		if old_cutout:
+			actual = {p:c for p,c in actual.items() if not(CNZ_BODY_Y<=p[1]<CNZ_BODY_Y+8)}
+			expected = {p:c for p,c in expected.items() if not(CNZ_BODY_Y<=p[1]<CNZ_BODY_Y+8)}
 		assert actual==expected,(zone,family,index,base,'visible colors changed')
 		checked+=1
-		if zone=='CNZ' and not(legacy_cnz and index==1):
+		if zone=='CNZ' and not old_cutout:
 			for cycle,oldoffset in ((2,0x3C),(3,0x3E)):
 				label = f'Pal_CNZBossWeaponsCycle{cycle}'
 				oldoffset = before.get(f'CNZBoss_Cycle{cycle}PaletteOffset',oldoffset)
@@ -218,14 +221,15 @@ def queue_fixture(g,fixture,bank,dest):
 
 
 def cnz_assembly(g,a,rom,s):
-	"""Render the real shared hull/pilot with front collar and rear topper."""
+	"""The intact shell must cover the hull while every pilot pose stays visible."""
 	from check_companion_followup import isolate,spawn
 	isolate(g)
 	camx,camy = g.read('Camera_X_pos',2),g.read('Camera_Y_pos',2)
 	actors = []
-	staged = (('Map_CNZBoss_Weapons',1,s['ArtTile_BossWeapons']),
-		('Map_Eggman',0,s['ArtTile_Eggman']),('Map_GHZBoss_Cockpit',0,s['ArtTile_Eggman']),
-		('Map_CNZBoss_Weapons',s['CNZBoss_TopperFrame'],s['ArtTile_BossWeapons']))
+	staged = (('Map_CNZBoss_Weapons',4,s['ArtTile_BossWeapons']),
+		('Map_CNZBoss_Weapons',1,s['ArtTile_BossWeapons']),
+		('Map_GHZBoss_Cockpit',0,s['ArtTile_Eggman']),('Map_Eggman',0,s['ArtTile_Eggman']),
+		('Map_CNZBoss_Weapons',2,s['ArtTile_BossWeapons']))
 	for order,(label,frame,base) in enumerate(staged):
 		actor = spawn(g,'DisplaySprite',camx+160,camy+112)
 		for field,value,size in (('obMap',s[label],4),('obFrame',frame,1),('obGfx',base|0x8000,2),
@@ -236,13 +240,15 @@ def cnz_assembly(g,a,rom,s):
 	uploader = spawn(g,'DisplaySprite',0,0);g.put(uploader,'code',fixture,4)
 	private = unpack(rom,s['Kospm_CNZBossWeapons'])
 	parts = frames(rom,s['Map_CNZBoss_Weapons'])
-	assert s['CNZBoss_TopperFrame']==CNZ_TOPPER_FRAME==len(parts)-1
-	body,topper = parts[1],parts[s['CNZBoss_TopperFrame']]
+	assert len(parts)==21 and 'CNZBoss_TopperFrame' not in s
+	assert s['CNZBoss_BodyOffsetY']&65535==CNZ_BODY_Y&65535
+	body = parts[1]
 	hull = frames(rom,s['Map_Eggman'],1)[0]
 	faces = frames(rom,s['Map_GHZBoss_Cockpit'],s['BossFace_FrameCount'])
 	body_pixels = raster(body,[(0,private)])
 	covered = raster(hull,face_banks(rom,s,0),s['ArtTile_Eggman'])
-	assert not any(p in body_pixels for p in covered if 0<=p[1]<CNZ_COLLAR_Y),'CNZ collar still covers the shared hull'
+	lower_hull = {p for p in covered if p[1]>=CNZ_BODY_Y}
+	assert lower_hull<=body_pixels.keys(),'Eggmobile hull leaks through the party-mobile shell'
 	checked,peak,width = 0,0,0
 	for pose,face in enumerate(faces):
 		g.put(actors[2],'obFrame',pose)
@@ -250,31 +256,37 @@ def cnz_assembly(g,a,rom,s):
 		assert s['ArtTile_BossWeapons']==s['ArtTile_EggmanFace']+s['BossFace_VRAMTiles']
 		bank = unpack(rom,s['Kospm_OldEggPod'])+cache+bytes(s['BossFace_VRAMTiles']*32-len(cache))+private
 		queue_fixture(g,fixture,bank,s['ArtTile_Eggman']*32)
-		rows = body+hull+face+topper
-		counts,widths = scanlines(rows);peak=max(peak,max(counts));width=max(width,max(widths))
-		assert peak<=20 and width<=320,('CNZ assembly exceeds VDP scanline limits',pose,peak,width)
-		pixels = {}
-		for layer,banks,origin in ((topper,[(0,private)],0),(face,face_banks(rom,s,pose),s['ArtTile_Eggman']),
-			(hull,face_banks(rom,s,pose),s['ArtTile_Eggman']),(body,[(0,private)],0)):
-			pixels.update(raster(layer,banks,origin))
-		for phase in range(3):
-			palette = bytearray(palette_bytes(rom,s,'CNZ'))
-			for slot,start in ((2,0),(3,6),(4,12)):
-				p = s['Pal_CNZBossWeaponsCycle1']+start+phase*2
-				palette[32+slot*2:34+slot*2] = rom[p:p+2]
-			for cycle in (2,3):
-				p = s[f'Pal_CNZBossWeaponsCycle{cycle}']+phase*2
-				offset = s[f'CNZBoss_Cycle{cycle}PaletteOffset'];palette[offset:offset+2] = rom[p:p+2]
-			for offset,value in enumerate(palette):g.write(s['v_palette']+offset,value)
-			for flip in (0,1):
-				for actor in actors:g.put(actor,'obRender',4|flip);g.put(actor,'obStatus',flip)
-				g.run(3);assert not g.read('v_errortype')
-				for (x,y),(line,color) in pixels.items():
-					word = int.from_bytes(palette[(line*16+color)*2:(line*16+color)*2+2],'big')
-					point = 160+(-x-1 if flip else x),112+y
-					assert g.video.getpixel(point)==display_color(g,word),('CNZ composite pixel',pose,phase,flip,point)
-				if pose in (0,7) and phase==0:g.video.save(a.output/f'cnz-composite-pilot{pose//7}-flip{flip}.png')
-				checked+=1
+		for rear,front in ((2,4),(2,5),(3,4),(3,5)):
+			g.put(actors[0],'obFrame',front);g.put(actors[4],'obFrame',rear)
+			rows = parts[front]+body+face+hull+parts[rear]
+			counts,widths = scanlines(rows);peak=max(peak,max(counts));width=max(width,max(widths))
+			assert peak<=20 and width<=320,('CNZ assembly exceeds VDP scanline limits',pose,peak,width)
+			pixels = {}
+			for layer,banks,origin in ((parts[rear],[(0,private)],0),(hull,face_banks(rom,s,pose),s['ArtTile_Eggman']),
+				(face,face_banks(rom,s,pose),s['ArtTile_Eggman']),(body,[(0,private)],0),(parts[front],[(0,private)],0)):
+				pixels.update(raster(layer,banks,origin))
+			head = raster([p for p in face if p[2]&2047>=s['ArtTile_EggmanFace']-s['ArtTile_Eggman']],face_banks(rom,s,pose),s['ArtTile_Eggman'])
+			assert all(pixels[p]==c for p,c in head.items()),('Pilot head is obscured',pose)
+			for phase in range(3):
+				palette = bytearray(palette_bytes(rom,s,'CNZ'))
+				for slot,start in ((2,0),(3,6),(4,12)):
+					p = s['Pal_CNZBossWeaponsCycle1']+start+phase*2
+					palette[32+slot*2:34+slot*2] = rom[p:p+2]
+				for cycle in (2,3):
+					p = s[f'Pal_CNZBossWeaponsCycle{cycle}']+phase*2
+					offset = s[f'CNZBoss_Cycle{cycle}PaletteOffset'];palette[offset:offset+2] = rom[p:p+2]
+				for offset,value in enumerate(palette):g.write(s['v_palette']+offset,value)
+				for flip in (0,1):
+					for actor in actors:g.put(actor,'obRender',4|flip);g.put(actor,'obStatus',flip)
+					g.run(3);assert not g.read('v_errortype')
+					for (x,y),(line,color) in pixels.items():
+						word = int.from_bytes(palette[(line*16+color)*2:(line*16+color)*2+2],'big')
+						point = 160+(-x-1 if flip else x),112+y
+						assert g.video.getpixel(point)==display_color(g,word),('CNZ composite pixel',pose,phase,flip,point)
+					if pose in (0,7) and phase==0 and (rear,front) in ((2,4),(3,5)):
+						suffix = '' if rear==2 else '-claws-active'
+						g.video.save(a.output/f'cnz-composite-pilot{pose//7}-flip{flip}{suffix}.png')
+					checked+=1
 	return f'CNZ assembly: {checked} pilot/facing/cycle cases, peak {peak} sprites and {width} fetched pixels per scanline'
 
 
