@@ -1,0 +1,8 @@
+There are a few additional tools that can decompress data from certain games. You can find them in the respective game-folder in the Rips-category.
+
+Z80\Dyna Brothers\DynaBrothers_Extract
+	Decompresses data from Dyna Brothers. (uses LZSS and LZHUF-like compressions)
+Z80\Sega CD BIOS\SCDBIOS_Extract
+	Extracts the 68k and Z80 sound drivers and their data from the Sega MegaCD ROMs.
+Z80\Sorcerian\Sorcerian_Extract
+	Decompresses the music data from Sorcerian. (LZSS compression)

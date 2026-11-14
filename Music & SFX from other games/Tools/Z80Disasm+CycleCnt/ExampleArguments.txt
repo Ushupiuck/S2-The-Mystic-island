@@ -1,0 +1,2 @@
+Z80CycleCalc.exe -jpstop -showcycles -summarize "..\..\Drivers\68k_DACDrv\Sonic The Hedgehog (W) (REV00) [!].bin" 0x0077
+Z80CycleCalc.exe -showdata "..\..\Drivers\68k_DACDrv\Sonic The Hedgehog (W) (REV00) [!].bin" 0x0032 0x77

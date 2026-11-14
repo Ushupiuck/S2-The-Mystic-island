@@ -1,0 +1,37 @@
+SMPSExtract.exe -mus "Golden Axe II (W) [!].bin" 0x0760F4
+    ->	extract music
+	68k pointers
+	Music Pointer List is at 0760F4
+
+SMPSExtract.exe -mus -Z80BPtr "Sonic 3D Blast (W) [!].bin" 0x165C 0x0B65
+    ->	extract music
+	Z80 ROM pointers, using a Bank list
+	Music Pointer List is at 165C, Bank List is at 0B65 (all Z80 RAM offsets)
+
+SMPSExtract.exe -dac "Sonic 3D Blast (W) [!].bin" 0x19
+    ->	extract dac sounds
+	Type 0x19: Sonic 3 & Knuckles, Sonic 3D Blast
+
+SMPSExtract.exe -dac "OutRun 2019 (U) [!].bin" 0x0E 0x8007800E
+    ->	extract dac sounds
+	Type 0x0E: Mazin Saga, OutRun, ...
+	The DAC list is at the offset (0x80xxxxxx), where the pointer at offset 07800E points to.
+
+SMPSExtract.exe -mus -Z80 -ReadOnly -Z80Dump Z80Dump.bin "Flicky (W) [!].bin" 0x124D
+    ->	extract music
+	Z80 RAM/ROM pointers
+	Z80 RAM dump, file "Z80Dump.bin" (because SMPSExtract fails to find the Z80 driver data)
+	Read Only mode, so all offsets are listed, but no files are extracted
+	Music Pointer List is at 124D (Z80 RAM offsets)
+
+SMPSExtract.exe -mus -Z80BPtr "Mickey Mouse - World of Illusion (E) [!].bin" 0x0E8392 0x08E1
+    ->	extract music
+	Z80 ROM pointers, using a Bank list
+	Music Pointer List is at Z80 offset 8392 (within ROM Bank), Bank List is at 0B65 (Z80 RAM)
+	Default Z80 ROM Bank is 0E8000. (The Bank List uses small offsets, so those are added to the default ROM Bank.)
+
+SMPSExtract.exe -mus -Z80BPtr "Hybrid Front, The (J) [a1].bin" 0x0956 0x0A25 0x060000
+    ->	extract music
+	Z80 ROM pointers, using a Bank list
+	Music Pointer List is at Z80 offset 0956 (Z80 RAM), Bank List is at 0B65 (Z80 RAM)
+	Default Z80 ROM Bank is 060000.

@@ -1,0 +1,18 @@
+General Pointer List:	074000
+Sound Update Routine:	0740BE
+Music Pointer List:	074082
+SFX Pointer List:	077B3A
+Mod. Pointer List:	-- invalid, feature removed -- (points to 074070)
+PSG Pointer List:	07404A (Note: pointer-list pointer is 074070, but both ones are invalid)
+Z80 Snd Driver Offset:	0784C4
+DAC Pointer List:	007F (Z80 RAM)
+DAC Voice Pointer List:	07486A (W)
+
+Notes:
+- The DAC driver plays 8-bit PCM data. Before sending it to the YM2612, it's shifted right by 2 bits, so it plays with 25% volume.
+- The DAC pointer list is a list of 2-byte jump offsets.
+  These jump to code with the format:
+	11 oo oo	LD	DE, oooo	; sample offset
+	21 ll ll	LD	HL, llll	; sample length
+	3E rr		LD	A, rr		; playback rate
+	C3 E3 00	JP	00E3h		; jump to DAC play routine

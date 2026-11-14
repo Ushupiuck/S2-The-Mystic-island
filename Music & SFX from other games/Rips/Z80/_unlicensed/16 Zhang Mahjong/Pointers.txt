@@ -1,0 +1,56 @@
+General Pointer List:	8000 (Unl) (Z80 Bank Offset)
+Music Pointer List:	816D (Unl) (Z80 Bank Offset)
+SFX Pointer List:	B6D6 (Unl) (Z80 Bank Offset)
+Mod. Pointer List:	800E (Unl) (Z80 Bank Offset)
+PSG Pointer List:	8082 (Unl) (Z80 Bank Offset)
+Global Instrument Lib.:	94B7 (Unl) (Z80 Bank Offset)
+DAC Voice Pointer List:	058000 (Unl)
+Z80 Snd Driver Offset:	03689C (Unl)
+Pan Animation List:	02F1 (Z80 RAM)
+FM Drum Pointer List:	0A67 (Z80 RAM)
+FM Drum Ins. Ptr. List:	0A81 (Z80 RAM)
+PSG Drum Pointer List:	0A40 (Z80 RAM)
+Sound RAM:		1C00 (Z80 RAM)
+
+
+There is only 1 music bank: 078000
+
+
+Both games, 16 Zhang Mahjong and Pretty Girl Mahjongg, use the exactly same sound data.
+The only differences in the DAC and sound banks are due garbage that fills unused bytes.
+
+
+DAC List Format: (all big endian values!)
+2 bytes - Data Length
+2 bytes - ignored (Data Length + this value seems to result in the full size of the data in ROM)
+2 bytes - Start Offset (Z80 Bank Offset)
+
+The DAC data is raw uncompressed 8-bit data.
+
+
+
+Notes:
+- The sound driver originates from Wonder Boy III - Monster Lair.
+- The jump command in song 84's drum channel jumps to the wrong drum track.
+  04o (original) is how it sounds in the game. 04f (fixed) is how it is supposed to sound.
+- The sound driver is able to play DAC Voices via commands E4-EE.
+  Their speed is fixed to a pitch value of 32h (value is at 10A1).
+  Most other Gamtec games could play DAC Voices as well, but don't use that feature.
+  They all probably just re-use this game's sound driver.
+- There is an unreferenced DAC sound at 05A1F9.
+  It sounds like it's part of the DAC sound that follows it. Both sounds are separated by a 00 byte though,
+  so dividing both DAC sounds seems intentional.
+- [16 Tiles] PlaySound routine: 036828 (reads sound ID from 68k RAM 0546)
+- [Pretty Girl] PlaySound routine: 03B3EA (reads sound ID from 68k RAM 0586)
+- The songs are used at different places in both games, but the 3 unused songs are not referenced by either game.
+  Looking at the code, these songs are used at the same spot:
+	16T	PG
+	06	02	Main BGM
+	01	01
+	09	04
+	02	04
+	04	06
+	06	09	Title Screen
+	02	02
+	06	06
+	07	07	Game Over
