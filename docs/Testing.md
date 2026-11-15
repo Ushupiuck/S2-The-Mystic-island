@@ -182,6 +182,18 @@ currently adopted families listed in [Levels](Levels.md#metallic-madness-import-
 not the remaining unported source objects. The generic object-manager check
 uses the Present era mask when checking all 64 act tables.
 
+The morphing-platform cases retain the existing CD art/mapping provenance and
+check both owners and approach directions through all twelve phases/seven
+authored shapes. Grounded and airborne actors approach while the other rides;
+retained riders release immediately outside the raw visible standing radius.
+Opposed contacts retain both pushing flags, and leaving one side clears only
+that character's flag. Both riders follow a complete shrinking/expanding cycle.
+The core suite repeats these contacts in every era with positioned, held actors.
+It also runs sixty frames of opposing controller inputs on a flat RAM terrain
+fixture, with normal Sonic/Tails movement, in the full horizontal and vertical
+poses and with their sides exchanged. These remain contact fixtures rather than
+a controller playthrough of the authored level.
+
 `check_metallic_enemies.py --output test-results/mmz-enemies.json` executes
 8,000 Mecha-Bu motion/attachment updates in both slot orders and checks full-pool
 retry, placement release, recycled links, both collision shapes and Good Future

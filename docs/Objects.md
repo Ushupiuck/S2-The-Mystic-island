@@ -189,9 +189,18 @@ indexes 0/2 into a two-byte list, reading the following TST opcode instead of
 its declared 90. The port explicitly selects 60/90. The original SMZ behaviors
 retain their timings while skipping their old constructor-dispatch table.
 
-The existing morphing platform uses its direct running entry, the complete
-`$18` standing mask and the MMZ art base in this zone. Propeller blades inherit
-their parent's act-selected art base; neither object duplicates a source bank.
+Obj20 retains the owner's existing morphing-platform rewrite, seven CD poses,
+palette-adapted eight-tile CD art, phase table and standing helper. Its direct
+running entry removes the old routine dispatch. The constructor's MMZ check
+only selects the relocated `$478` bank: the original `$3C0` slot is occupied by
+MMZ's resident enemy atlas. No alternate artwork is selected or imported.
+
+Approach collision always includes the original sixteen-pixel character reach.
+`SolidObject_MorphPlatform` already tests retained riders against `obActWid`,
+so standing bounds stay at the visible radius. A global standing-mask check
+incorrectly made one rider narrow the other character's new side contacts;
+removing that check retains each actor's own standing-edge behavior. Propeller
+blades likewise inherit their parent's act-selected art base without copying art.
 
 The crumbling floor extends the existing `$1B` family. Its constructor selects
 one direct state chain; fragments have separate direct entries and never own a

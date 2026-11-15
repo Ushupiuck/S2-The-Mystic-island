@@ -176,6 +176,146 @@ def animation_checks(args,act=1):
 		shared_animated_tiles=reference['tiles'])
 
 
+def morph_native(args):
+	"""Exercise independent and simultaneous contacts across the complete morph."""
+	n = Native(args.rom, args.listing)
+	s = n.s
+	root = (s['v_lvlobjspace'] & 0xFFFFFF)+5*s['object_size']
+	index = (root-(s['v_objspace'] & 0xFFFFFF))//s['object_size']
+	rom = args.rom.read_bytes()
+	shapes = [(0,120,8,56),(1,4,8,40),(2,4,8,24),(3,32,8,8),
+		(4,4,24,8),(5,4,40,8),(6,120,56,8),(5,4,40,8),
+		(4,4,24,8),(3,32,8,8),(2,4,8,24),(1,4,8,40)]
+	assert [struct.unpack_from('>4B', rom, s['HVPlat_StateTable']+i*4)
+		for i in range(12)] == shapes
+	actors = (('v_player',3),('v_player2',4))
+
+	def setup(phase):
+		n.start()
+		n.write('Current_Zone', s['id_MMZ'])
+		n.write('Camera_X_pos', 440, 2)
+		for actor, bit in actors:
+			n.put(actor, 'obX', 100, 2)
+			n.put(actor, 'obY', 100, 2)
+			n.put(actor, 'obHeight', s['sonic_height' if bit == 3 else 'tails_height'])
+		for f, v, z in (('code', s['MorphingPlatform'], 4), ('obX', 600, 2), ('obY', 500, 2)):
+			n.put(root, f, v, z)
+		n.act('MorphingPlatform', root)
+		assert n.get(root, 'obGfx', 2) == s['ArtTile_MMZ_HVPlatform']
+		frame, duration, width, height = shapes[phase]
+		for f, v, z in (('obFrame', frame, 1), ('obWidth', width, 1),
+			('obActWid', width, 1), ('obHeight', height, 1), ('mplat_timer', 100, 1),
+			('mplat_state', phase, 1), ('obRender', 0x84, 1), ('obStatus', 0, 1)):
+			n.put(root, f, v, z)
+		return width, height
+
+	def attach(owner, bit, x=600):
+		n.put(root, 'obStatus', n.get(root, 'obStatus') | (1 << bit))
+		height = n.get(root, 'obHeight')
+		for f, v, z in (('obX', x, 2), ('obY', 500-height-n.get(owner, 'obHeight'), 2),
+			('obStatus', 8, 1), ('standonobject', index, 1)):
+			n.put(owner, f, v, z)
+
+	def run():
+		n.act('MorphingPlatform_Run', root, regs={UC_M68K_REG_D7: 0x13572468})
+		assert n.cpu.reg_read(UC_M68K_REG_D7) == 0x13572468
+
+	cases = 0
+	for phase, shape in enumerate(shapes):
+		for owner, bit, other in (('v_player', 3, 'v_player2'), ('v_player2', 4, 'v_player')):
+			for side in (-1, 1):
+				for airborne in (0, 2):
+					width, height = setup(phase)
+					attach(owner, bit)
+					n.put(other, 'obX', 600+side*(width+8), 2)
+					n.put(other, 'obY', 500, 2)
+					n.put(other, 'obVelX', (-side*0x100)&65535, 2)
+					n.put(other, 'obStatus', airborne)
+					run()
+					assert n.get(other, 'obX', 2) == 600+side*(width+16), (phase, owner, side, airborne, 'approach missed')
+					assert bool(n.get(other, 'obStatus') & 32) == (not airborne)
+					assert n.get(other, 'obVelX', 2) == 0
+					assert n.get(root, 'obStatus') & (1 << bit)
+					assert n.get(owner, 'obStatus') & 8
+					assert n.get(owner, 'obY', 2) == 500-height-n.get(owner, 'obHeight')
+					cases += 1
+				# Standing still uses the raw visible radius, despite the enlarged
+				# approach bound. Check the last valid pixel and the first outside.
+				for offset in (width, width+1):
+					setup(phase)
+					attach(owner, bit)
+					n.put(owner, 'obX', 600+side*offset, 2)
+					run()
+					assert bool(n.get(owner, 'obStatus') & 8) == (offset == width), (shape, owner, side, offset)
+					assert bool(n.get(root, 'obStatus') & (1 << bit)) == (offset == width)
+					cases += 1
+		# Both side corrections must survive the first character's register and
+		# status writes. Swap sides and test sustained ground/air contacts.
+		for sonic_side in (-1, 1):
+			for airborne in (0, 2):
+				width, height = setup(phase)
+				for actor, bit in actors:
+					n.put(actor, 'obY', 500, 2)
+					n.put(actor, 'obStatus', airborne)
+				for tick in range(16):
+					for actor, bit in actors:
+						side = sonic_side if bit == 3 else -sonic_side
+						n.put(actor, 'obX', 600+side*(width+8), 2)
+						n.put(actor, 'obVelX', (-side*0x100)&65535, 2)
+						n.put(actor, 'obInertia', (-side*0x100)&65535, 2)
+					run()
+					assert n.get(root, 'obStatus') & 0x60 == (0 if airborne else 0x60), (phase, sonic_side, airborne, tick)
+					for actor, bit in actors:
+						side = sonic_side if bit == 3 else -sonic_side
+						assert n.get(actor, 'obX', 2) == 600+side*(width+16)
+						assert n.get(actor, 'obY', 2) == 500
+						assert n.get(actor, 'obVelX', 2) == 0
+						assert bool(n.get(actor, 'obStatus') & 32) == (not airborne)
+				if not airborne:
+					for actor, bit in actors:
+						side = sonic_side if bit == 3 else -sonic_side
+						n.put(actor, 'obX', 600+side*(width+17), 2)
+						run()
+						assert not n.get(root, 'obStatus') & (1 << (bit+2))
+						assert not n.get(actor, 'obStatus') & 32
+						assert n.get(root, 'obStatus') & (0x40 if bit==3 else 0x20)
+						n.put(actor, 'obX', 600+side*(width+16), 2)
+						run()
+						assert n.get(root, 'obStatus') & 0x60 == 0x60
+				cases += 1
+	# Both riders follow all shrinking/expanding poses for two full cycles.
+	setup(0)
+	for actor, bit in actors:attach(actor, bit, 600+(-4 if bit==3 else 4))
+	n.put(root, 'mplat_timer', shapes[0][1])
+	phase, timer = 0, shapes[0][1]
+	timeline = sum(shape[1] for shape in shapes)*2
+	for tick in range(timeline):
+		timer -= 1
+		if not timer:
+			phase = (phase+1)%len(shapes)
+			timer = shapes[phase][1]
+		run()
+		assert (n.get(root, 'mplat_state'), n.get(root, 'mplat_timer')) == (phase, timer)
+		assert tuple(n.get(root, f) for f in ('obFrame','obWidth','obHeight')) == (shapes[phase][0],*shapes[phase][2:])
+		assert n.get(root, 'obStatus') & 0x18 == 0x18
+		for actor, bit in actors:
+			assert n.get(actor, 'obStatus') & 8
+			assert n.get(actor, 'obX', 2) == 600+(-4 if bit==3 else 4)
+			assert n.get(actor, 'obY', 2) == 500-shapes[phase][3]-n.get(actor, 'obHeight')
+	if args.source:
+		from import_palmtree_enemies import mapping
+		from sprite_palette import PLAYER_FROM_S1, remap_pixels
+		from check_sprite_assets import frames
+		from import_ehz2_pp_background import nemesis
+		assert frames((ROOT/'mappings/sprite/Morphing Platform.bin').read_bytes()) == frames(
+			mapping((args.source/'src/sprites/r8/hv_platform.asm').read_text(), '.Sprites'))
+		assert nemesis((ROOT/'art/nemesis/Morphing Orbs.nem').read_bytes()) == remap_pixels(
+			nemesis((args.source/'src/gfx/r8/hv_platform.nem').read_bytes()), PLAYER_FROM_S1)
+	return dict(contact_and_standing_cases=cases, seven_authored_shapes=True,
+		phases=12, simultaneous_side_contacts=True, both_rider_timeline=timeline,
+		independent_approach_width=True, raw_standing_edges=True, existing_cd_art=True)
+
+
 def placement_native(args):
 	"""Exercise the real ROM placement tables and CD selection in every era."""
 	from native_test_core import Manager
@@ -538,7 +678,7 @@ def platform_game(args):
 	"""Check era PLCs, both live riders and independent disappearance/flip release."""
 	from genesis_test_core import Genesis
 	from check_object_course import boot_level
-	from check_companion_followup import isolate,spawn,place
+	from check_companion_followup import isolate,spawn,place,reset_cpu
 	from import_ehz2_pp_background import nemesis
 	R=ROOT
 	g=Genesis(args.core,args.rom,args.listing,args.output/'objects',args.pal,
@@ -595,6 +735,119 @@ def platform_game(args):
 		for f in ('prop_upper','prop_lower'):assert g.get(g.get(a,f,2),'obGfx',2)==g.get(a,'obGfx',2)
 		a=setup('MorphingPlatform',0);assert g.get(a,'obGfx',2)==g.s['ArtTile_MMZ_HVPlatform']
 		assert g.get(a,'code')==g.s['MorphingPlatform_Run']
+		morph = g.save()
+		shapes = [struct.unpack_from('>4B',bytes(g.rom),g.s['HVPlat_StateTable']+i*4) for i in range(12)]
+		actors = (('v_player',3),('v_player2',4))
+		x,y = g.get(a,'obX',2),g.get(a,'obY',2)
+		def pose(phase):
+			# A restored late-scene companion may be in catch-up flight. Start
+			# both actors visible and under manual control before contact setup.
+			g.restore(morph)
+			reset_cpu(g)
+			g.write('Tails_CPU_idle_timer',600,2)
+			g.write('Tails_CPU_interact',g.s['MorphingPlatform_Run'],4)
+			for actor,bit in actors:g.put(actor,'obRender',0x84)
+			frame,duration,width,height = shapes[phase]
+			for f,v in (('mplat_state',phase),('mplat_timer',100),('obFrame',frame),
+				('obWidth',width),('obActWid',width),('obHeight',height),('obStatus',0)):
+				g.put(a,f,v)
+			return width,height
+		def attach(actor,bit,dx=0):
+			place(g,actor,x+dx,y-g.get(a,'obHeight')-g.get(actor,'default_y_radius'),airborne=False)
+			g.put(actor,'obControl',1)
+			g.put(actor,'obStatus',8)
+			g.put(actor,'standonobject',((a&65535)-(g.s['v_objspace']&65535))//g.s['object_size'])
+			g.put(a,'obStatus',g.get(a,'obStatus')|(1<<bit))
+		for phase in range(12):
+			for owner,bit,other in (('v_player',3,'v_player2'),('v_player2',4,'v_player')):
+				for side in (-1,1):
+					width,height = pose(phase)
+					attach(owner,bit)
+					place(g,other,x+side*(width+8),y,airborne=False)
+					g.put(other,'obControl',1)
+					g.put(other,'obVelX',(-side*0x100)&65535,2)
+					g.run(2)
+					assert g.get(other,'obX',2)==x+side*(width+16),(era,phase,owner,side,'morph side contact')
+					assert g.get(other,'obStatus')&32,(era,phase,owner,side,'morph push')
+					assert g.get(owner,'obStatus')&8 and g.get(a,'obStatus')&(1<<bit),(era,phase,owner,side,'morph rider')
+					assert g.get(owner,'obY',2)==y-height-g.get(owner,'default_y_radius')
+					if phase in (0,6):g.video.save((args.output/'objects')/f'era{era}-morph-pose{phase}-{owner}-side{side}.png')
+					g.put(owner,'obX',x+side*(width+1),2)
+					g.run()
+					assert not g.get(owner,'obStatus')&8 and not g.get(a,'obStatus')&(1<<bit),(era,phase,owner,side,'morph edge release')
+					report.append(dict(era=era,code='MorphingPlatform',phase=phase,owner=owner,side=side,
+						independent_side_contact=True,raw_standing_edge=True))
+			for sonic_side in (-1,1):
+				for airborne in (False,True):
+					width,height = pose(phase)
+					for actor,bit in actors:
+						side = sonic_side if bit==3 else -sonic_side
+						place(g,actor,x+side*(width+8),y,airborne=airborne)
+						g.put(actor,'obControl',1)
+						g.put(actor,'obVelX',(-side*0x100)&65535,2)
+					for tick in range(8):
+						g.run()
+						assert g.get(a,'obStatus')&0x60==(0 if airborne else 0x60),(era,phase,sonic_side,airborne,tick,'both push')
+						for actor,bit in actors:
+							side = sonic_side if bit==3 else -sonic_side
+							assert g.get(actor,'obX',2)==x+side*(width+16)
+							assert g.get(actor,'obY',2)==y
+							assert bool(g.get(actor,'obStatus')&32)==(not airborne)
+					if phase in (0,6) and not airborne:g.video.save((args.output/'objects')/f'era{era}-morph-pose{phase}-opposed{sonic_side}.png')
+					if not airborne:
+						for actor,bit in actors:
+							side = sonic_side if bit==3 else -sonic_side
+							g.put(actor,'obX',x+side*(width+17),2)
+							g.run()
+							assert not g.get(a,'obStatus')&(1<<(bit+2)) and not g.get(actor,'obStatus')&32
+							assert g.get(a,'obStatus')&(0x40 if bit==3 else 0x20)
+							g.put(actor,'obX',x+side*(width+16),2)
+							g.run()
+							assert g.get(a,'obStatus')&0x60==0x60
+					report.append(dict(era=era,code='MorphingPlatform',phase=phase,sonic_side=sonic_side,
+						airborne=airborne,simultaneous_side_contacts=True))
+		pose(0)
+		for actor,bit in actors:attach(actor,bit,-4 if bit==3 else 4)
+		g.put(a,'mplat_timer',shapes[0][1])
+		for tick in range(sum(shape[1] for shape in shapes)):
+			g.run()
+			assert g.get(a,'obStatus')&0x18==0x18,(era,tick,'morph simultaneous riders')
+			for actor,bit in actors:
+				assert g.get(actor,'obStatus')&8
+				assert g.get(actor,'obY',2)==y-g.get(a,'obHeight')-g.get(actor,'default_y_radius')
+		assert not g.read('v_errortype')
+		report.append(dict(era=era,code='MorphingPlatform',both_rider_timeline=336))
+		# Let both complete character movement paths run under opposing held
+		# inputs. A flat RAM terrain fixture supports their different radii.
+		rom = bytes(g.rom)
+		indices = g.read('v_colladdr1',4)
+		block = next(b for b in range(1,551) if set(rom[g.s['ColArray1']+rom[indices+b*2]*16:
+			g.s['ColArray1']+(rom[indices+b*2]+1)*16])=={16})|0xF000
+		for phase in (0,6):
+			for sonic_side in (-1,1):
+				width,height = pose(phase)
+				chunks = g.terrain_address('chunks')
+				for row in range(8):
+					for col in range(8):g.write(chunks+1023*128+row*16+col*2,block if row==7 else 0,2)
+				for col in range(3,7):g.layout_cell(4,col,1023)
+				for actor,bit in actors:
+					side = sonic_side if bit==3 else -sonic_side
+					place(g,actor,x+side*(width+12),624-g.get(actor,'default_y_radius'),airborne=False)
+					g.put(actor,'obVelX',(-side*0x100)&65535,2)
+					g.put(actor,'obInertia',(-side*0x100)&65535,2)
+				g.buttons = {7 if sonic_side<0 else 6}
+				g.buttons2 = {6 if sonic_side<0 else 7}
+				for tick in range(60):
+					g.run()
+					assert g.get(a,'obStatus')&0x60==0x60,(era,phase,sonic_side,tick,'controller push',
+						[(p,g.get(p,'obX',2),g.get(p,'obY',2),g.get(p,'obStatus'),g.get(p,'obControl')) for p,b in actors])
+					for actor,bit in actors:
+						side = sonic_side if bit==3 else -sonic_side
+						assert g.get(actor,'obX',2)==x+side*(width+16)
+						assert g.get(actor,'obStatus')&32 and not g.get(actor,'obStatus')&2
+				g.video.save((args.output/'objects')/f'era{era}-morph-pose{phase}-controllers{sonic_side}.png')
+				report.append(dict(era=era,code='MorphingPlatform',phase=phase,sonic_side=sonic_side,
+					opposed_controller_frames=60))
 	g.close()
 	return report
 
@@ -766,7 +1019,7 @@ def main():
 	p.add_argument('--system-directory',type=Path)
 	p.add_argument('--pal',action='store_true')
 	args=p.parse_args();args.output.mkdir(parents=True,exist_ok=True)
-	report=dict(native=native(args),placements=placement_native(args))
+	report=dict(native=native(args),placements=placement_native(args),morphing_platform=morph_native(args))
 	if args.source:
 		report['animations']=animation_checks(args)
 		report['platforms']=platform_native(args)

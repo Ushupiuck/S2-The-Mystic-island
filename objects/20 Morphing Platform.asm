@@ -52,12 +52,10 @@ MorphingPlatform_Main:
 		move.b	obWidth(a0),obActWid(a0)	; top-standing width check
 .solid:		moveq	#0,d1
 		move.b	obWidth(a0),d1		; half-width / X radius
-		move.b	obStatus(a0),d0		; load obStatus from the table
-		andi.b	#$18,d0			; and by Sonic/Tails standing bits
-		bne.s	.no_extra_width		; if not being stood on, skip
-		addi.w	#$10,d1			; otherwise, correct side collision
+		; New contacts include the character's horizontal reach. Retained
+		; riders use obActWid inside SolidObject_MorphPlatform, independently.
+		addi.w	#$10,d1
 
-.no_extra_width:
 		moveq	#0,d2
 		move.b	obHeight(a0),d2		; half-height / Y radius
 		move.w	d2,d3			; top-standing offset
