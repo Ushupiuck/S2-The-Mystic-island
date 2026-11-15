@@ -67,7 +67,7 @@ def assets(a):
 		assert changed
 		for path in (ROOT/'mappings/sprite').glob('SMZ *.bin'):
 			assert path.read_bytes()==old(str(path.relative_to(ROOT))),path
-			if path.name=='SMZ Flame.bin':continue
+			if path.name in ('SMZ Flame.bin', 'SMZ Bomb.bin'):continue
 			for row in frames(path.read_bytes()):
 				for _,size,word,_ in row:
 					assert not changed & set(range(word&2047,(word&2047)+((size>>2)+1)*((size&3)+1)))

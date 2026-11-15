@@ -1574,8 +1574,8 @@ plreqKosM macro toVRAMaddr,fromROMaddr
 ; MMZ SHARED / PER-ACT SPRITE BANKS
 ; ---------------------------------------------------------------------------
 ; All lists stay directly editable. Seven banks store common art once; each
-; act fills the same three private ranges. The Bad Future terrain spill is
-; static art in the thirteen reclaimed monitor tiles after the yellow ball.
+; act fills the same three private ranges. Small Bomb has a separate complete
+; module in the act list, in the free space after the 477-tile MMZ bank.
 PLC_LVF1_Main:
 PLCKosM_MMZ1_Present:	plrKosMlistheader
 		plreqKosM ArtTile_MMZ_Atlas,Kospm_MMZ1_Platforms
@@ -2197,10 +2197,18 @@ PLCKosM_LV71: dc.w -1
 PLCKosM_LV72: dc.w -1
 PLCKosM_LV73: dc.w -1
 PLCKosM_LV74: dc.w -1
-PLCKosM_SMZ1: dc.w -1
-PLCKosM_SMZ2: dc.w -1
-PLCKosM_SMZ3: dc.w -1
-PLCKosM_SMZ4: dc.w -1
+PLCKosM_SMZ1:	plrKosMlistheader
+		plreqKosM ArtTile_Bomb,Kospm_Bomb
+PLCKosM_SMZ1_End:	plccheck PLCKosM_SMZ1,0
+PLCKosM_SMZ2:	plrKosMlistheader
+		plreqKosM ArtTile_Bomb,Kospm_Bomb
+PLCKosM_SMZ2_End:	plccheck PLCKosM_SMZ2,0
+PLCKosM_SMZ3:	plrKosMlistheader
+		plreqKosM ArtTile_Bomb,Kospm_Bomb
+PLCKosM_SMZ3_End:	plccheck PLCKosM_SMZ3,0
+PLCKosM_SMZ4:	plrKosMlistheader
+		plreqKosM ArtTile_Bomb,Kospm_Bomb
+PLCKosM_SMZ4_End:	plccheck PLCKosM_SMZ4,0
 PLCKosM_LV91: dc.w -1
 PLCKosM_LV92: dc.w -1
 PLCKosM_LV93: dc.w -1
@@ -2225,7 +2233,11 @@ PLCKosM_LVE1: dc.w -1
 PLCKosM_LVE2: dc.w -1
 PLCKosM_LVE3: dc.w -1
 PLCKosM_LVE4: dc.w -1
-PLCKosM_LVF1: dc.w -1
-PLCKosM_LVF2: dc.w -1
+PLCKosM_LVF1:	plrKosMlistheader
+		plreqKosM ArtTile_Bomb_MMZ,Kospm_Bomb
+PLCKosM_LVF1_End:	plccheck PLCKosM_LVF1,0
+PLCKosM_LVF2:	plrKosMlistheader
+		plreqKosM ArtTile_Bomb_MMZ,Kospm_Bomb
+PLCKosM_LVF2_End:	plccheck PLCKosM_LVF2,0
 PLCKosM_LVF3: dc.w -1
 PLCKosM_LVF4: dc.w -1

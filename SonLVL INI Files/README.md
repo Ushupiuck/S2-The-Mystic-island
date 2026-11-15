@@ -120,6 +120,7 @@ the complete serialized word, including when calculating movement overlays.
 | `$A9` | Conveyor platform group | X/Y: relative loop origin. Bit 7: eight-platform group; clear it for one platform, with bits 0-2 selecting its initial phase. Preview reads the runtime's signed offsets. |
 | `$AB` | Transport pipe | Low three bits: route; route 7 requires 50 rings. Route points are read from the ASM table. |
 | `$AC` | Invisible solid | High/low nibbles: width/height in 16-pixel units, minus one. |
+| `$AE` | Bomb / Bigbom | Bits 4–7: `$0` Bomb / `$1` Bigbom; low nibble: zero keeps original speed, otherwise value / 4 px/update. Upper byte: Bigbom normal / short / scripted charge (0/1/2). Y flip selects ceiling walking. Bigbom needs the MMZ2 bank; both forms share the existing ID. |
 | `$AF` | Button | Low nibble: switch number. |
 | `$B0` | Wheel carrier | Low nibble: one of eight mounts. MMZ / word bit 8 selects the CD 1px patrol; low bit 7 shortens its half-range from 80 to 64px. Preview includes the spring, monitor or spikes with the runtime offset/facing. |
 | `$B1–B5` | Palmtree Panic badniks | Bit 0: normal/damaged variant. |
@@ -292,3 +293,8 @@ runtime maps address separate VRAM banks. PAST/FUTURE placements require their
 Mecha-Bu (`$B8`) is available in both MMZ act definitions. Its Saw reach property
 selects alternating/fixed-low reach; X flip mirrors the complete body/blade
 preview. The 48-tile art span is shared by both acts.
+
+Bomb (`$AE`) is a shared definition with complete Kosinski+ module art and
+Kind, Speed and Bigbom patrol properties. Its preview selects the appropriate
+body while retaining the subtype word and placement flips. Bigbom previews
+read the existing MMZ2 editor atlas; this does not add its bank to other acts.

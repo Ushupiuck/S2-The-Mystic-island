@@ -189,6 +189,22 @@ Run the checkpoint generator after editing the master or importing MMZ art.
 
 ### MMZ enemy art
 
+Bomb's editable complete sheet is `art/uncompressed/Enemy Bomb.unc` (41 tiles).
+`build_end_art.py` packs its 518-byte `Enemy Bomb.kospm`; the adopted 701-byte
+Nemesis reference feeds explicit S1 imports. SMZ no longer duplicates those
+41 exclusive tiles in its atlas. SMZ's module occupies `$487-$4AF`; the shared
+atlas has 456 used tiles plus six padding tiles at `$2B9-$486`. The combined
+resident footprint stays 503 tiles. Both MMZ acts load the same complete module
+at `$44A-$472`, immediately after their 477-tile bank, leaving five tiles before
+the morphing platform. Each act has an explicit module PLC, including SMZ3/4.
+
+`pack_scrap_sprites.py` regenerates the atlas, standalone Bomb source/module and
+both kinds of mappings from adopted S1 references. Bomb mappings are relative to
+its own bank; every other SMZ mapping remains relative to the shared atlas.
+The packer's independent indexed-pixel proof covers all 133 frames. SonLVL's
+junction preview derives the streamed gap offset from the actual mapping, so
+the independent Bomb bank does not shift its gap art into the static atlas.
+
 The MMZ Mecha-Bu body and blade use their existing 48-tile shared atlas span,
 resident in both acts. Their mapping words already include atlas offsets;
 constructors use `ArtTile_MMZ_Atlas`, not a second addition of the span offset.

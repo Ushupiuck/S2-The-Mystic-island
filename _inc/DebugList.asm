@@ -262,6 +262,7 @@ Debug_HPZ:	dc.w (Debug_HPZ_End-Debug_HPZ-2)/DebugEntry_size
 Debug_HPZ_End:
 
 Debug_SMZObjects:	macro
+		dbug	Map_SMZ_Bomb,Bomb,0,0,ArtTile_Bomb
 		dbug	Map_Ring,Ring,0,0,make_art_tile(ArtTile_Ring,1,0)
 		dbug	Map_obj41,Springs,0,0,make_art_tile(ArtTile_Springs,0,0)
 		dbug	Map_SMZ_Spin,SMZ_SpinPlatform,$80,0,ArtTile_SMZ_Spin
@@ -351,6 +352,7 @@ Debug_MMZ1:	dc.w (Debug_MMZ1_End-Debug_MMZ1-2)/DebugEntry_size
 	dbug	Map_Obj79,	Obj79,	PoleType_Future,	8,	0
 	dbug	Map_MMZ_MechaBu,MMZ_MechaBu,0,0,ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_MechaBu,MMZ_MechaBu,1,0,ArtTile_MMZ_Atlas
+		dbug	Map_SMZ_Bomb,Bomb,0,0,ArtTile_Bomb_MMZ
 Debug_MMZ1_End:
 
 ; MMZ2 common/implemented object families; remaining mechanisms are being ported.
@@ -378,4 +380,6 @@ Debug_MMZ2:	dc.w (Debug_MMZ2_End-Debug_MMZ2-2)/DebugEntry_size
 	dbug	Map_PlatformButton,SMZ_Button,0,0,ArtTile_MMZ2_Button
 	dbug	Map_MMZ_MechaBu,MMZ_MechaBu,0,0,ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_MechaBu,MMZ_MechaBu,1,0,ArtTile_MMZ_Atlas
+		dbug	Map_SMZ_Bomb,Bomb,0,0,ArtTile_Bomb_MMZ
+		dbug	Map_Bigbom,Bomb,$10,0,ArtTile_MMZ_Atlas|$8000
 Debug_MMZ2_End:

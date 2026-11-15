@@ -74,6 +74,7 @@ class Native:
 				('Obj1B', ('Obj1B_Dispatch','MMZ_Floor_Idle','MMZ_Floor_Delay','MMZ_Floor_Break','MMZ_Floor_Static')),
 				('WheelCarrier', ('MMZ_Wheel_Fall','MMZ_Wheel_Roll')),
 				('MMZ_MechaBu', ('MMZ_MechaBu_Fall','MMZ_MechaBu_Walk')),
+				('Bomb', ('Bomb_Fall','Bomb_SmallWait','Bomb_SmallWalk','Bomb_SmallBurn','Bomb_BigWalk','Bomb_BigWaitCharge','Bomb_BigCharge','Bomb_BigWaitTarget','Bomb_BigPreFuse','Bomb_BigBurn','Bomb_BigDetonate','Bomb_BigScatter','Bomb_BigRemove')),
 				('SMZ_Saws', ('SMZ_Saw_Action','MMZ_Saw_HoldIn','MMZ_Saw_Extend','MMZ_Saw_HoldOut','MMZ_Saw_Retract')),
 				('SMZ_ScrapStomp', ('SMZ_Sto_Action','MMZ_Crusher_Run')),
 				('SMZ_Teleport', ('SMZ_Teleport_Main',))):

@@ -7412,7 +7412,7 @@ ptr_ObjAA:		dc.l SMZ_Girder
 ptr_ObjAB:		dc.l SMZ_Teleport
 ptr_ObjAC:		dc.l SMZ_Invisibarrier
 ptr_ObjAD:		dc.l SMZ_MovingBlock
-ptr_ObjAE:		dc.l SMZ_Bomb
+ptr_ObjAE:		dc.l Bomb
 ptr_ObjAF:		dc.l SMZ_Button
 ptr_ObjB0:		dc.l WheelCarrier
 ptr_ObjB1:		dc.l PP_Anton
@@ -11094,6 +11094,12 @@ Touch_Size_MMZSaw:
 		dc.b $1C,$1C	; CD buzzsaw: 28-pixel harmful half-size
 Touch_Size_MMZMechaBu:
 		dc.b $10,$E
+Touch_Size_BigbomBody:
+		dc.b $10,$10
+Touch_Size_BigbomDebris:
+		dc.b 6,6
+Touch_Size_BigbomBody_ID = (Touch_Size_BigbomBody-Touch_Sizes)/2+1
+Touch_Size_BigbomDebris_ID = (Touch_Size_BigbomDebris-Touch_Sizes)/2+1
 Touch_Size_MMZMechaBu_ID = (Touch_Size_MMZMechaBu-Touch_Sizes)/2+1
 Touch_Size_MMZSaw_ID = (Touch_Size_MMZSaw-Touch_Sizes)/2+1
 Touch_Size_MechaHead_ID = (Touch_Size_MechaHead-Touch_Sizes)/2+1
@@ -11213,32 +11219,41 @@ loc_19926:
 Touch_Special:
 		move.b	obColType(a1),d1	; Get collision_flags
 		andi.b	#$3F,d1			; Get only collision size (but that doesn't seems to be its use here?)
+		cmpi.b	#Touch_Size_BigbomBody_ID,d1
+		beq.w	Touch_BigbomPath
+		cmpi.b	#Touch_Size_BigbomDebris_ID,d1
+		beq.w	Touch_BigbomPath
 		cmpi.b	#6,d1
-		beq.s	Touch_D7
+		beq.w	Touch_D7
 		cmpi.b	#7,d1
 		beq.w	Touch_Unknown
 		cmpi.b	#$A,d1
-		beq.s	Touch_D7
+		beq.w	Touch_D7
 		cmpi.b	#$B,d1
 		beq.w	Touch_Caterkiller
 		cmpi.b	#$C,d1
-		beq.s	Touch_Yadrin
+		beq.w	Touch_Yadrin
 		cmpi.b	#$14,d1
-		beq.s	Touch_D7
+		beq.w	Touch_D7
 		cmpi.b	#$15,d1
-		beq.s	Touch_D7
+		beq.w	Touch_D7
 		cmpi.b	#$16,d1
-		beq.s	Touch_D7
+		beq.w	Touch_D7
 		cmpi.b	#$17,d1
-		beq.s	Touch_D7
+		beq.w	Touch_D7
 		cmpi.b	#$18,d1
-		beq.s	Touch_D7
+		beq.w	Touch_D7
 		cmpi.b	#$1A,d1
-		beq.s	Touch_Inv
+		beq.w	Touch_Inv
 		cmpi.b	#$21,d1
-		beq.s	Touch_E1
+		beq.w	Touch_E1
 		rts
 ; ---------------------------------------------------------------------------
+
+Touch_BigbomPath:
+		cmpi.b	#$C,obTopSolidBit(a0)
+		bne.w	Touch_Return
+		bra.w	Touch_Hurt
 
 Touch_Yadrin:
 		sub.w	d0,d5
@@ -13481,7 +13496,7 @@ Kospm_Crabmeat:	binclude	"art/moduled kosinski/Enemy Crabmeat.kospm"
 		include "objects/Scrap Madness/AA Girder.asm"
 		include "objects/Scrap Madness/AC Invisible Barriers.asm"
 		include "objects/Scrap Madness/AD Moving Blocks.asm"
-		include "objects/Scrap Madness/AE Bomb.asm"
+		include "objects/Enemies/AE Bomb.asm"
 		include "objects/Scrap Madness/Common.asm"
 		include "objects/Scrap Madness/A0 Junction.asm"
 		include "_inc/Automatic Paths.asm"

@@ -230,9 +230,49 @@ allocation put the blade earlier in the execution order. Both actors can
 break the body and are hurt by the blade through ordinary touch response.
 
 Good Future currently suppresses this enemy. CD's generator-dependent seed
-replacement and source placement import remain pending. Both forms are
+replacement remains pending. The importer now supplies six Act-1 and five
+Act-2 source placements, including facing and era masks. Both forms are
 available in both MMZ Debug lists and SonLVL definitions; the existing shared
 48-tile Mecha-Bu bank is reused without another art copy or PLC.
+
+### Bomb / Bigbom
+
+`objects/Enemies/AE Bomb.asm` owns the single `$AE` placement family. Its word
+subtype selects the body once; burning fuses, debris and flash effects have
+direct internal entries and never interpret placement subtypes as routines.
+
+| Subtype bits | Meaning |
+| --- | --- |
+| 4–7 | `$0`: Bomb; `$1`: Bigbom; reserved values use Bomb |
+| 0–3 | Zero: original speed; 1–15: quarter-pixel steps, 0.25–3.75 px/update |
+| 8–15 | Bigbom: 0 normal patrol, 1 short patrol, 2 scripted charge; other nonzero values use short patrol |
+
+Zero-speed selection retains Bomb's 0.0625px patrol and Bigbom's 0.625px patrol
+or 2.5px scripted charge. X flip selects facing; Y flip selects a ceiling walker.
+Both sizes follow their surface and reverse at an unsupported edge or a rise
+outside −7..7px. Rejected moves restore the complete fractional X coordinate.
+Each actor is checked independently; dead actors and Debug placement are ignored.
+The scripted Bigbom's trigger, body and debris use each actor's own primary path.
+
+Bomb retains its 1536-update walk interval, 180-update pause and 144-update fuse,
+with four original shrapnel velocities and `$18` gravity. Bigbom retains the
+205/26-update patrols, 26/16/26/19 gait holds and 231-update charge. It arms for
+30 updates, holds the lit fuse for 60, lowers it for 77 at 0.3125px/update, then
+retires it on the next update. Its flash starts 30 updates later, seven original
+fragments follow one update later with `$20` gravity, and the body disappears
+on the next update. The common fiery explosion art loops twice in 40 updates;
+this uses the engine's existing effect artwork rather than CD's explosion sheet.
+
+The visible body also owns CD's former invisible controller state, saving one
+SST per Bigbom. It owns its countdown even if a visual fuse cannot allocate.
+Both sides validate reciprocal handles; unload removes only its own fuse.
+A full pool skips unavailable effects/fragments without invalid writes or a
+stalled detonation. Debris and flash effects own no placement and outlive the body.
+
+The importer supplies all twelve Act-2 Bigboms with original era masks and patrol
+variants. Both sizes have shared SonLVL properties and appropriate Debug previews;
+Bigbom requires its Act-2 bank. [Sprites and VRAM](Sprites-and-VRAM.md#mmz-enemy-art)
+owns the resident banks; neither size uses DPLCs.
 
 ## SST and dispatch
 

@@ -385,6 +385,35 @@ def sprites2(source):
 	return outputs,dict(families=report,private_tiles=278,shared_tiles=165)
 
 
+def enemy_placements(source, act):
+	"""Import completed enemy families while preserving other editable placements."""
+	from object_layout import decode, encode
+	path = f'level/objects/LV0F_{act}.bin'
+	# Incremental ownership is explicit: add a family here only once its runtime
+	# and art load are present. Other placed families remain directly editable.
+	rows = [row for row in decode((ROOT/path).read_bytes()) if row[2] not in (0xAE, 0xB8)]
+	counts = {'Bigbom': 0, 'MechaBu': 0}
+	for x, y, oid, sub, eras, variant in struct.iter_unpack('>HHBBBB',
+		(source/f'src/maps/r8/objects_{act}.bin').read_bytes()):
+		if x == 0xFFFF:
+			break
+		oid &= 0x7F
+		if oid not in (0x23, 0x24):
+			continue
+		assert not y & 0x3000 and eras & 0xE0, ('Enemy placement flags', act, x, y, eras)
+		y = (y & 0xFFF) | ((y & 0xC000) >> 1)
+		if oid == 0x23:
+			assert act == 2 and sub == 0 and variant <= 2
+			row = x, y, 0xAE, eras & 0xE0, (variant << 8) | 0x10
+			counts['Bigbom'] += 1
+		else:
+			assert sub in (0, 1) and variant in (0, 1)
+			row = x, y | (0x2000 if variant else 0), 0xB8, eras & 0xE0, sub
+			counts['MechaBu'] += 1
+		rows.append(row)
+	return {path: encode(sorted(rows, key=lambda row: row[0]))}, counts
+
+
 def build(source):
 	constants=(ROOT/'_definitions/s2.constants.asm').read_text()
 	limit=re.search(r'^ArtTile_MMZ_Atlas:\s*equ\s+\$([0-9A-Fa-f]+)\b',constants,re.M)
@@ -464,6 +493,10 @@ def build(source):
 	sprite2_outputs,sprite2_report=sprites2(source)
 	outputs.update(sprite2_outputs)
 	sprite_report['act2']=sprite2_report
+	for act in (1, 2):
+		placements, counts = enemy_placements(source, act)
+		outputs.update(placements)
+		sprite_report['placements'+str(act)] = counts
 	return outputs,report,animation_report,sprite_report
 
 

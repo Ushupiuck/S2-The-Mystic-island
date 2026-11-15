@@ -137,7 +137,7 @@ def build():
 		atlas[at:at+w*h*32] = pipe[first*32:(first+w*h)*32]
 	changed = {i for i in range(len(atlas)//32) if atlas[i*32:(i+1)*32]!=before[i*32:(i+1)*32]}
 	for path in (ROOT/'mappings/sprite').glob('SMZ *.bin'):
-		if path.name=='SMZ Flame.bin':
+		if path.name in ('SMZ Flame.bin', 'SMZ Bomb.bin'):
 			continue
 		for row in frames(path.read_bytes()):
 			for _,size,word,_ in row:

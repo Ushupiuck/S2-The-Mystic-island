@@ -32,6 +32,7 @@ BANKS = (
 	('MechaEffects', 'Mecha Sonic effects', 'Nem_MechaEffects'),
 	('Bonus', 'Hidden bonus', 'Nem_Bonus'),
 	('Explosion', 'Explosion', 'Nem_Explosion'),
+	('Bomb', 'Enemy Bomb', None),
 )
 
 

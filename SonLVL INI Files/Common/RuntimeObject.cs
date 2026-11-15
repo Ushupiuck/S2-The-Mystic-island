@@ -35,14 +35,17 @@ namespace MysticIsland.ObjectDefinitions
 				byte[] pixels = art.ToArray();
 				if (behavior == "Junction")
 				{
-					// Gap angle 0 starts immediately after the padded static atlas.
-					int gapOffset = pixels.Length;
+					// The independent Bomb bank now sits between the atlas and gap.
+					int row = ByteConverter.ToUInt16(map, 0);
+					int gapOffset = Math.Min(ByteConverter.ToUInt16(map, row + 4) & 2047,
+						ByteConverter.ToUInt16(map, row + 10) & 2047) * 32;
 					Array.Resize(ref pixels, gapOffset + 4 * 32);
 					Array.Copy(File.ReadAllBytes("../art/uncompressed/SMZ Junction Gap.unc"), 0, pixels, gapOffset, 4 * 32);
 				}
 				frames = behavior == "Eggman"
 					? RenderBossCockpits(pixels, map, data.Palette, int.Parse(Setting("mapframes", "11")))
 					: Render(pixels, map, data.Palette, dplc, data.DPLCVersion, int.Parse(Setting("mapframes", "0")));
+				if (behavior == "Bomb") alternate = Render(File.ReadAllBytes("../art/uncompressed/MMZ2 Editor Atlas.unc"), File.ReadAllBytes("../mappings/sprite/MMZ BigBom 1.bin"), 0, null);
 				if (behavior == "MMZMechaBu") alternate = Render(pixels, File.ReadAllBytes("../mappings/sprite/MMZ MechaBu Saw.bin"), 0, null);
 				if (behavior == "MMZSaw") alternate = Render(pixels, File.ReadAllBytes("../mappings/sprite/MMZ Saw Handle.bin"), 0, null);
 			}
@@ -208,6 +211,11 @@ namespace MysticIsland.ObjectDefinitions
 					Bits("Shape", 4, 7, "Size / frame configuration.", "Sliding block (128 x 24)", "Stomper (56 x 64)", "Stomper, 64 px travel", "Stomper, 96 px travel", "Large lift (256 x 128)");
 					Bits("Switch controlled", 7, 1, "When set, low nibble = switch; otherwise low nibble = movement.", "No", "Yes");
 					Bits("Movement / switch", 0, 15, "Button number when switch controlled; movement type 0 to 5 otherwise."); break;
+				case "Bomb":
+					Bits("Kind", 4, 15, "Bigbom requires the MMZ2 resident art bank; other acts must supply it explicitly.", "Bomb", "Bigbom");
+					Bits("Speed", 0, 15, "Zero keeps the original speed (Bomb 0.0625, Bigbom 0.625; charge 2.5 px/update). Other values select value / 4 pixels per update.");
+					Bits("Bigbom patrol", 8, 255, "Bigbom only; charge contact and detection use the contacting actor's primary path.", "Normal", "Short", "Scripted charge");
+					break;
 				case "MMZMechaBu":
 					Bits("Saw reach", 0, 1, "The independent saw alternates every 61 updates, or stays low. X flip mirrors the attachment.", "Alternating", "Fixed low"); break;
 				case "MMZSaw":
@@ -601,6 +609,7 @@ namespace MysticIsland.ObjectDefinitions
 					return new Sprite(pieces);
 				case "Junction": return new Sprite(frames[0], At(frames, 16));
 				case "Eggman": return new Sprite(alternate[0], frames[(subtype & 1) == 0 ? 0 : 7]);
+				case "Bomb": return (subtype & 0xF0) == 0x10 ? alternate[0] : frames[0];
 				case "MMZMechaBu": return new Sprite(frames[0], new Sprite(At(alternate, (subtype & 1) == 0 ? 2 : 0), (subtype & 1) == 0 ? -19 : -25, (subtype & 1) == 0 ? -15 : 0));
 				case "MMZSaw":
 					int mmzMount = (subtype & 128) == 0 ? 0 : -80;

@@ -122,11 +122,16 @@ Zone `$0F` selects them automatically; word-subtype bit 8 explicitly selects
 one in another act loading compatible art. The F1 Debug list exposes these
 variants, the existing morphing platform, propeller and wheeled carrier, plus
 the common ring/shield/invincibility/speed monitors. Mecha-Bu is also implemented for both acts, including its independent blade
-and both actors' touch responses. Source placements, the remaining enemies/
-mechanisms and the time-warp sequence are still pending.
+and both actors' touch responses. The shared `$AE` Bomb family also implements
+Bigbom. The importer now supplies eleven Mecha-Bu placements across both acts
+and all twelve Act-2 Bigboms with original variants and era masks. It replaces
+only these completed enemy families when reimporting placements; other editable
+rows are preserved. The remaining enemies, mechanisms, object placements and
+time-warp sequence are still pending.
 
-The Act-1 sprite atlas occupies `$26D-$449`; 46 reserved tiles remain before
-the reused morphing bank at `$478`. Each act selects seven Moduled Kosinski+
+The Act-1 sprite atlas occupies `$26D-$449`; the complete 41-tile Bomb bank
+follows at `$44A-$472`, leaving five tiles before the reused morphing bank at
+`$478`. Each act selects seven primary Moduled Kosinski+
 banks: 165 tiles shared between acts (crusher/floor, Mecha-Bu, time-post heads
 and generator), plus three private ranges. Act 1 has 312 private tiles and
 Act 2 has 278, retaining the common address footprint with gaps. Past uses
@@ -725,8 +730,9 @@ piece sizes, ordering, geometry, flips, adapted pixels, palette and priority.
 It never subdivides pieces or changes the renderer. Caterkiller's atlas
 rectangles use the same palette-line-2 indices as `Enemy Caterkiller.kospm`.
 Keep the atlas copy in sync when editing the shared Caterkiller sheet.
-The atlas's 497 used tiles start at `$2B9`. Six padding tiles extend the
-allocation through `$4AF`.
+The atlas's 456 used tiles start at `$2B9`. Six padding tiles extend it through
+`$486`; Bomb's separate complete 41-tile module follows at `$487-$4AF`. Total
+resident use is unchanged. The standalone Bomb mappings no longer use atlas offsets.
 The junction's rotating edge streams 4-12 tiles into `$4B0-$4BB`; center/outer
 ring stay resident. Its placements have disjoint load windows. Failed queue
 reservation hides the rotating sprite and retries without displaying partial art.

@@ -1482,7 +1482,7 @@ MCD_CompressedAssets:
 	dc.l Nem_S3LevelSelect,Nem_S3LevelSelect+$574	; art/nemesis/S3 Level Select.nem
 	endif
 	if defined(Nem_SMZAtlas)
-	dc.l Nem_SMZAtlas,Nem_SMZAtlas+$1E90	; art/nemesis/SMZ Sprite Atlas.nem
+	dc.l Nem_SMZAtlas,Nem_SMZAtlas+$1C1B	; art/nemesis/SMZ Sprite Atlas.nem
 	endif
 	if defined(Nem_SSEmStars)
 	dc.l Nem_SSEmStars,Nem_SSEmStars+$5B	; art/Bonus & Special Stage/Bonus Stage Emerald Twinkle.nem

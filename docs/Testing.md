@@ -184,6 +184,21 @@ hits, blade damage and post-defeat cleanup. `--pal` repeats PAL. Positioned
 contact fixtures hold actor movement while the real touch handler runs; they do
 not establish a controller playthrough or source-placement import.
 
+`check_bomb.py --output test-results/bomb.json` checks all speed nibbles,
+floor/ceiling edge rollback, both actors, original patrol/charge/fuse clocks,
+slot-order-independent fuse attachment, reciprocal cleanup and full-pool
+explosions. Its controlled-distance cases stub terrain; four additional cases
+run the assembled MD/CD floor and roof solvers against real solid-edge fixtures.
+`--core CORE --system-directory BIOS` checks exact resident module bytes and
+hardware SAT output in SMZ1/2 and both MMZ acts/all eras, both body orientations,
+independent actor/path damage, burning fuses and four/seven debris pieces.
+It also stages four visible Bigboms in distinct poses without changing the
+resident bank. These are deliberate positioned cases, not proof that four
+source origins share a viewport. `--pal` repeats PAL. Internal screenshots
+cover body, fuse and detonation; contact fixtures hold actor movement while
+the ordinary touch handler runs. The C# editor checker still needs a released
+SonLVL API and .NET/Mono environment; ROM tests do not compile that editor code.
+
 ## Touch-response checks
 
 ```sh

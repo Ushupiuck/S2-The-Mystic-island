@@ -1819,7 +1819,7 @@ ArtTile_FZ_Eggman_No_Vehicle:	equ $470
 ; Universal springs, spikes, monitors and checkpoint follow in fixed slots.
 ; General Level Art
 ArtTile_Level:			equ $000
-ArtTile_Bomb:			equ $400
+ArtTile_Bomb:			equ $487 ; complete 41-tile resident bank, before junction gap
 
 
 ArtTile_Yadrin:			equ $47B
@@ -2070,6 +2070,7 @@ ArtTile_MMZ_Saw:			equ ArtTile_MMZ_Atlas+110
 ArtTile_MMZ_Seesaw:		equ ArtTile_MMZ_Atlas+148
 ArtTile_TimePostHeads:		equ ArtTile_MMZ_Atlas+432
 ArtTile_MMZ_Generator:		equ ArtTile_MMZ_Atlas+454
+ArtTile_Bomb_MMZ:		equ ArtTile_MMZ_Atlas+477 ; 41 tiles before the morphing platform
 ArtTile_MMZ_HVPlatform:		equ $478 ; existing shared eight-tile morphing platform
 ArtTile_MMZ_Propeller:		equ $480 ; existing shared 49-tile propeller
 
