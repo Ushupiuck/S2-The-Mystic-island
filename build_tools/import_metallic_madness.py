@@ -396,7 +396,7 @@ def placements(source, act):
 		'BuzzsawObject': 0xA4, 'VanishPlatformObject': 0xA6,
 		'SpinPlatformObject': 0xA9, 'MoveSpringObjectR8': 0xB0,
 		'HVPlatformObject': 0x20, 'PropellerObject': 0xB7,
-		'CheckpointObject': 0x79}
+		'CheckpointObject': 0x79, 'SpringObject': 0x14}
 	# Time poles share $79 but belong to the later MonitorTime import.
 	rows = [row for row in decode((ROOT/path).read_bytes())
 		if row[2] not in ids.values() or (row[2] == 0x79 and row[4] & 0x300)]
@@ -441,6 +441,17 @@ def placements(source, act):
 			assert variant == 0 and sub in (0, 2, 128)
 			# CD's spring $02 is yellow-up; our carrier preset 2 is sideward.
 			sub = 0x100 | (sub & 0x80) | (1 if sub & 0xF == 2 else 0)
+		elif family == 'SpringObject':
+			assert variant == 0 and sub & ~0xF == 0
+			# Source bit 2 selects sideward before bit 3 selects diagonal;
+			# bit 0 is unused, so it must not accidentally enable our twirl.
+			if sub & 4:
+				orientation = 0x10
+			elif sub & 8:
+				orientation = 0x40 if y & 0x4000 else 0x30
+			else:
+				orientation = 0x20 if y & 0x4000 else 0
+			sub = orientation | (sub & 2)
 		elif family in ('HVPlatformObject', 'PropellerObject'):
 			assert sub == variant == 0
 		else:

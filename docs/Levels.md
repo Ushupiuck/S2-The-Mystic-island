@@ -123,7 +123,7 @@ one in another act loading compatible art. The F1 Debug list exposes these
 variants, the existing morphing platform, propeller and wheeled carrier, plus
 the common ring/shield/invincibility/speed monitors. Mecha-Bu is also implemented for both acts, including its independent blade
 and both actors' touch responses. The shared `$AE` Bomb family also implements
-Bigbom. The importer now supplies 170 source roots across the completed
+Bigbom. The importer now supplies 249 source roots across the completed
 families, retaining coordinates, era masks and variants. It replaces these
 adopted families on an explicit reimport and preserves other editable rows,
 including time poles sharing `$79`. The two existing signpost rows remain.
@@ -141,10 +141,15 @@ including time poles sharing `$79`. The two existing signpost rows remain.
 | Morphing platform | `$20` | 4 | 0 |
 | Propeller | `$B7` | 9 | 0 |
 | Checkpoint | `$79` | 8 | 7 |
+| Spring | `$14` | 31 | 48 |
 
 The importer translates signed CD floor widths to the explicit static flag,
 moves diagonal-saw direction bits to placement flips, and translates CD's
 moving yellow-up spring to carrier preset 1 (preset 2 is sideward here).
+Ordinary springs translate CD's direction/color bits and placement flips to
+the existing `$14` subtypes. They retain Mystic Island's shared art, strengths
+and behavior, including diagonal speed; the unused CD low bit does not enable
+S3&K's twirl option.
 The remaining enemies, mechanisms, pickup/object placements and time-warp
 sequence are still pending; this is not yet the complete source object layout.
 

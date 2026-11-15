@@ -4,6 +4,12 @@ Use the project's named fields and services rather than transplanting source
 offsets. [Objects](Objects.md) owns the SST, loading, dispatch and respawn ABI;
 [Sprites and VRAM](Sprites-and-VRAM.md) owns mappings, generated bounds and DPLCs.
 
+Reuse an existing object's Mystic Island behavior when importing another game's
+placements. Translate subtype layouts and placement flags to the shared family.
+Differences such as another game's spring launch speed do not require a
+level-specific compatibility mode; shared springs retain the shared strengths.
+Extend a family for a distinct mechanism or an explicitly requested improvement.
+
 ## Import checklist
 
 1. Include the implementation/mappings through `md-main.asm` and connect the
