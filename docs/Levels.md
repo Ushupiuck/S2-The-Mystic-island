@@ -21,7 +21,8 @@ See [Debug controls](Objects.md#debug) for level-entry activation.
 | 08 | Scrap Madness | S1 SBZ acts 1/2, starters 3/4 |
 | 09 | Death Egg | Starters; final space assets/layouts unfinished |
 | 0A | LEVEL 0A | Starters; act 1 tests PP enemies, wheel and propeller |
-| 0B-0F | LEVEL 0B-0F | Starters |
+| 0B-0E | LEVEL 0B-0E | Starters |
+| 0F | Metallic Madness | Experimental: Acts 1-2 terrain/scenery in four eras; object port in progress |
 
 All 64 act entries have headers, placements, starts, bounds, collision,
 cards, Debug lists and progression. SonLVL has matching present-day sections.
@@ -61,6 +62,115 @@ the packed spring atlas; a future LZ act recipe needs its own compatible allocat
 The friends-demo route ends after EHZ Act 2's result card. Its `LevelOrder`
 entry is `$0000`, the existing SEGA-screen sentinel; unfinished EHZ Acts 3/4
 remain selectable for development but are outside normal progression.
+
+## Metallic Madness import (experimental)
+
+Zone `$0F` Acts 1 and 2 select independent Present/Past/Good Future/Bad Future art,
+blocks, chunks, layouts, palettes and collision indexes. The source is
+scddisasm's `test` revision `791253ba1922d7c4142a40975860d1b3bb37b9f7`.
+`python build_tools/import_metallic_madness.py --source /path/to/scddisasm`
+imports those sources; `--check` verifies regeneration without writing.
+Ordinary builds preserve the editable `.unc` assets. Importing again deliberately
+replaces them. The object placements and time-travel sequence are still being
+ported; the four eras are currently exercised through the test fixture's
+level-entry timezone selection. Acts 3-4 retain their development terrain.
+The import continues directly on `Mystic-Island-(Experimental)`, which includes
+the former MMZ branch and the latest shared fixes. Object placements and the
+remaining mechanisms are still unfinished; terrain checks do not certify them.
+
+Each Act-1 bank has 111 authored 256px chunks. All four quadrants are kept,
+including unplaced/duplicate pieces: 445 runtime chunks with blank chunk zero.
+Foreground is 64 by 16 cells; background is 48 by 6. Block sheets retain 551
+entries, zero-filling the source bank's unprovided references so the full chunk
+bank remains editable. Source collision paths share the original CD profile;
+seven exact profiles occupy previously unused shared slots `$CC-$D0/$D8-$D9`.
+Existing profile bytes and angles are unchanged. Imported nonzero terrain tiles
+move past the common sixteen-tile water prefix. The importer checks the declared
+sprite boundary and animation allocations before writing. Act 2 additionally
+uses nine previously unused profiles at `$DA-$DC/$F5-$FA`. Its profile `$69`
+needs angle `$C8`; the terrain loader scopes that override to `$0F01`, retaining
+the shared `$D0` angle in other acts.
+
+`_inc/Metallic Madness Events.asm` derives parallax directly from the camera:
+Act-1 Y at 1/4, distant X at 1/4, near X at 1/2 and the intermediate layer at 3/16.
+Present and both futures share one 96-row selector list; Past uses its own
+longer gradients. MD hscroll and the CD row provider read the same ROM lists.
+Nine gradient values replace the original expanded row scratch. Eight-line
+writes use at most the declared hscroll padding. The unsigned interpolation
+quotient avoids the source's sign extension at the far right of the stage.
+Timezone travels in the formerly padded terrain-frame byte; packet size is
+unchanged. Act 2 uses Y at 1/8 and a 64-row selector family, with its own Past
+gradients. Both acts retain the existing independent foreground/background planes.
+
+`_inc/Metallic Madness Animation Data.asm` contains the per-era palette and tile
+scripts. Present has five tile streams, Good Future three, Bad Future four and
+Past none, matching the source's active callbacks. Equal raw frames share the
+332-tile `art/uncompressed/MMZ1 Animated.unc` bank, including all Present/Bad
+Future overlap. The raw bank follows the sound banks to avoid inflating their
+alignment holes. Existing animation counters and twelve palette-state bytes
+are reused; no new persistent MD RAM is needed. Act 2 has its own four-era
+scripts in `_inc/Metallic Madness 2 Animation Data.asm` and a 292-tile raw bank.
+Acts 3-4 exit these callbacks.
+The source Good Future `$31` palette script has color indices `$16/$42` outside
+its three-word table. Its six flash steps are bounded, interpreting those two
+values as 22/66-update holds instead of reading executable code as colors.
+
+The first shared object families now have MMZ variants: `$A4` diagonal saw,
+`$A5` crusher, `$A6` vanishing groups, `$A9` fixed/curved spinning platforms,
+`$1B` progressively crumbling floors/static blocks and `$B0` patrolling carriers.
+Zone `$0F` selects them automatically; word-subtype bit 8 explicitly selects
+one in another act loading compatible art. The F1 Debug list exposes these
+variants, the existing morphing platform, propeller and wheeled carrier, plus
+the common ring/shield/invincibility/speed monitors. Source placements, the
+remaining enemies/mechanisms and the time-warp sequence are still pending.
+
+The Act-1 sprite atlas occupies `$26D-$449`; 46 reserved tiles remain before
+the reused morphing bank at `$478`. Each act selects seven Moduled Kosinski+
+banks: 165 tiles shared between acts (crusher/floor, Mecha-Bu, time-post heads
+and generator), plus three private ranges. Act 1 has 312 private tiles and
+Act 2 has 278, retaining the common address footprint with gaps. Past uses
+the separate generator bank; Act-1 Good Future selects its own saw/seesaw bank.
+Full atlas archives are no longer linked into the ROM.
+Shared morphing (8 tiles), propeller (49 tiles) and wheel art retain their
+existing files. Ordinary builds repack editable sprite masters through
+`build_end_art.py`; an explicit import regenerates source conversions.
+Mappings bake each source rectangle's palette role. MMZ's enemy ramp uses
+`ENEMY_FROM_MMZ`, not the earlier S2 palette permutation. The time-post bank
+now contains only 22 sign-head tiles; checkpoints and time poles share the
+common Sonic 1 stem and blue/red/yellow heads. `$79` exposes all three functions
+in Debug and SonLVL. The full speed/resume time-warp sequence remains pending. See [objects](Objects.md#mmz-object-variants-experimental)
+for parameters and lifetimes.
+
+Act-2 terrain preparation keeps every authored source-chunk quadrant. The
+following counts describe the current checkpoint; paired collision paths append
+only the necessary block/chunk copies.
+
+| Era | Low tiles | Blocks | Chunks |
+| --- | --- | --- | --- |
+| Present | 602 | 560 | 445 |
+| Past | 590 | 532 | 451 |
+| Good Future | 598 | 611 | 445 |
+| Bad Future | 621 | 556 | 445 |
+
+Act-2 foreground/background dimensions are 66x16 and 48x4 cells. Bad Future
+keeps all 621 tiles contiguous at `$000-$26C`, including its complete original
+animated tail. Object art starts at `$26D` in both acts; their PLCs, mappings,
+time-post heads and editor previews share that allocation. There is no terrain
+spill bank or extra PLC request. The primary module list has seven requests,
+with fourteen total requests including the common/reserved budget.
+
+`$260` is a customary suggestion, not a fixed hardware boundary. For a given
+act the object region normally begins where its terrain ends. Moving that
+boundary requires updating its actual object consumers and checking shared
+banks, but level-specific/shared object art can occupy the available space.
+
+Remaining optimization must keep enemy art resident for simultaneous independent
+enemies. Revolving doors must extend the existing `CollisionSwitcher` with
+sprite animation and per-player path/priority changes. The former terrain-driven
+priority prototype has been removed; collision retains both authored paths.
+Splitting the switch's cap/base mappings and evaluating non-enemy DPLC candidates
+remain pending. Both acts' terrain, palette/tile animation and actual-era entry
+checks run in NTSC and PAL; they do not establish completed object gameplay.
 
 ## Foreground vertical placement
 

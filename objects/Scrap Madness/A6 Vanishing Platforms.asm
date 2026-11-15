@@ -6,6 +6,11 @@
 ; ---------------------------------------------------------------------------
 
 SMZ_VanishPlatform:
+		move.w	obSubtype(a0),d0
+		btst	#8,d0	; subtype bit 8: MMZ grouped variant
+		bne.w	MMZ_VanP_Init
+		cmpi.b	#id_MMZ,(v_zone).w
+		beq.w	MMZ_VanP_Init
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	SMZ_VanP_Index(pc,d0.w),d1
@@ -116,3 +121,116 @@ SMZ_Ani_Van_appear:	dc.b 7
 		even
 
 Map_SMZ_VanP: binclude "mappings/sprite/SMZ VanP.bin"
+
+; ---------------------------------------------------------------------------
+; CD grouped vanishing blocks. Repeated source frames use short timed runs;
+; the blank interval no longer walks dozens of identical animation bytes.
+MMZ_VanP_Init:
+		move.w	obSubtype(a0),d6
+		andi.w	#3,d6
+		cmpi.w	#2,d6
+		bls.s	.variant
+		moveq	#0,d6
+.variant:
+		move.w	d6,d0
+		add.w	d0,d0
+		lea	MMZ_VanP_Groups(pc),a2
+		adda.w	(a2,d0.w),a2
+		lea	MMZ_VanP_Delay(pc),a4
+		lea	Map_MMZ_Vanish(pc),a5
+		moveq	#Map_MMZ_Vanish_height,d5
+		bsr.w	MMZ_Platform_CreateGroup
+		bne.s	.return
+		; Every member begins invisible; allocation leaves their frame zero.
+		move.b	#6,obFrame(a0)
+		lea	MMZ_group_members(a0),a2
+		moveq	#1,d5
+.blank:
+		move.w	(a2)+,d0
+		beq.s	.next
+		movea.w	d0,a1
+		move.b	#6,obFrame(a1)
+.next:
+		dbf	d5,.blank
+		bra.w	MMZ_Platform_Draw
+.return:
+		rts
+
+MMZ_VanP_Delay:
+		subq.w	#1,MMZ_group_timer(a0)
+		bne.s	.return
+		move.l	#MMZ_VanP_Animate,MMZ_group_state(a0)
+		move.l	#MMZ_VanP_Appear,MMZ_group_script(a0)
+.return:
+		rts
+
+MMZ_VanP_Animate:
+		bsr.w	MMZ_Platform_Animate
+		bne.s	.return
+		move.w	#120,MMZ_group_timer(a0)
+		move.l	#MMZ_VanP_Stand,MMZ_group_state(a0)
+.return:
+		rts
+
+MMZ_VanP_Stand:
+		moveq	#16,d1
+		moveq	#16,d3
+		move.w	obX(a0),d4
+		jsr	(PlatformObject).l
+		subq.w	#1,MMZ_group_timer(a0)
+		bne.s	.return
+		move.l	#MMZ_VanP_Animate,MMZ_group_state(a0)
+		move.l	#MMZ_VanP_Disappear,MMZ_group_script(a0)
+		clr.b	MMZ_group_dwell(a0)
+		jmp	(SMZ_ReleaseRiders).l
+.return:
+		rts
+
+; timer, relative X/Y, phase. Only the root owns the authored placement.
+MMZ_VanP_Groups:
+		dc.w .one-MMZ_VanP_Groups,.two-MMZ_VanP_Groups,.three-MMZ_VanP_Groups
+.one:	dc.w 60,0,0,0
+.two:	dc.w 60,0,0,0,60,32,0,0
+.three:	dc.w 90,0,0,0,180,32,16,0,270,64,32,0
+
+MMZ_VanP_Appear:
+		dc.b 4,5
+		dc.b 2,4
+		dc.b 4,5
+		dc.b 2,4
+		dc.b 4,3
+		dc.b 2,2
+		dc.b 4,3
+		dc.b 2,2
+		dc.b 4,1
+		dc.b 2,7
+		dc.b 4,1
+		dc.b 0,0
+MMZ_VanP_Disappear:
+		dc.b 4,1
+		dc.b 2,7
+		dc.b 4,1
+		dc.b 2,2
+		dc.b 4,3
+		dc.b 2,2
+		dc.b 4,3
+		dc.b 2,4
+		dc.b 4,5
+		dc.b 2,4
+		dc.b 4,5
+		dc.b 59,6
+		dc.b 4,5
+		dc.b 2,4
+		dc.b 4,5
+		dc.b 2,4
+		dc.b 4,3
+		dc.b 2,2
+		dc.b 4,3
+		dc.b 2,2
+		dc.b 4,1
+		dc.b 2,7
+		dc.b 4,1
+		dc.b 0,0
+		even
+Map_MMZ_Vanish:	binclude "mappings/sprite/MMZ Vanish.bin"
+		even

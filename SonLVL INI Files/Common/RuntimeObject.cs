@@ -43,6 +43,7 @@ namespace MysticIsland.ObjectDefinitions
 				frames = behavior == "Eggman"
 					? RenderBossCockpits(pixels, map, data.Palette, int.Parse(Setting("mapframes", "11")))
 					: Render(pixels, map, data.Palette, dplc, data.DPLCVersion, int.Parse(Setting("mapframes", "0")));
+				if (behavior == "MMZSaw") alternate = Render(pixels, File.ReadAllBytes("../mappings/sprite/MMZ Saw Handle.bin"), 0, null);
 			}
 			else frames = new[] { Outline(16, 16) };
 
@@ -172,7 +173,14 @@ namespace MysticIsland.ObjectDefinitions
 				case "BreakableWall":
 				case "Collapse": Bits("Appearance", 0, 255, "The runtime copies the subtype directly into the mapping frame."); break;
 				case "Capsule": Bits("Part", 0, 255, "Body and button are separate placements.", "Body", "Button"); break;
-				case "Checkpoint": Bits("Checkpoint number", 0, 255, "Identifier stored when activated."); break;
+				case "Checkpoint":
+					Bits("Head / function", 8, 3, "One object family. Time poles require the act to load the 22 sign-head tiles; they never save checkpoint data.", "Checkpoint", "PAST", "FUTURE", "Checkpoint (reserved)");
+					Bits("Checkpoint number", 0, 127, "Checkpoint only: monotonically increasing activation number.");
+					Bits("Lock backtracking", 7, 1, "Checkpoint only: limit the camera behind the respawn position.", "No", "Yes");
+					Bits("Activated ball", 10, 1, "Checkpoint only: blue before activation, then the selected color.", "Red", "Yellow");
+					Bits("Required path", 11, 1, "Applies only when the layer filter is enabled; each actor uses its own path.", "Primary", "Secondary");
+					Bits("Layer filter", 12, 1, "Use for MMZ2 poles behind the layer-changing terrain.", "Either path", "Required path only");
+					break;
 				case "Bonus": Bits("Points", 0, 255, "End-of-level hidden bonus.", "No points", "10000 points", "1000 points", "100 points"); break;
 				case "Lift": Bits("Travel duration", 0, 65535, "Subtype * 8 frames: moves 16 * subtype pixels horizontally and 8 * subtype pixels down before falling. X flip reverses horizontal travel."); break;
 				case "HPZWaterfall": Bits("Height", 0, 255, "Waterfall top = origin Y - 120 + subtype * 16 pixels, clamped to water. Values $10 and above add a second stream."); break;
@@ -199,6 +207,30 @@ namespace MysticIsland.ObjectDefinitions
 					Bits("Shape", 4, 7, "Size / frame configuration.", "Sliding block (128 x 24)", "Stomper (56 x 64)", "Stomper, 64 px travel", "Stomper, 96 px travel", "Large lift (256 x 128)");
 					Bits("Switch controlled", 7, 1, "When set, low nibble = switch; otherwise low nibble = movement.", "No", "Yes");
 					Bits("Movement / switch", 0, 15, "Button number when switch controlled; movement type 0 to 5 otherwise."); break;
+				case "MMZSaw":
+					Bits("Initial phase", 7, 1, "The handle stays fixed; X and Y flips independently mirror the diagonal travel.", "Retracted", "Extended");
+					break;
+				case "MMZFloor":
+					Bits("Columns", 0, 127, "One to eight 16-pixel columns. Invalid values safely use one column.");
+					Bits("Static block", 7, 1, "Static blocks are full-solid; crumbling floors are solid only on top and either character can trigger them.", "Crumbling", "Static");
+					break;
+				case "MMZCrusher":
+					routes = ReadByteTable("../objects/Scrap Madness/A5 Stomper.asm", "MMZ_Crusher_Height32", "MMZ_Crusher_Height48");
+					groups = ReadByteTable("../objects/Scrap Madness/A5 Stomper.asm", "MMZ_Crusher_Height48", "Map_MMZ_Crusher");
+					Bits("Body", 0, 3, "Tall crushers pause at both extremes and launch standing riders while rising.", "Small", "Tall launcher", "Small (alternate)");
+					Bits("Speed / pause", 2, 3, "Small: four increasing phase rates. Tall: slow/fast, with the high setting bit selecting 90 instead of 60 pause updates.", "Slow / short pause", "Medium / short pause", "Fast / long pause", "Fastest / long pause");
+					Bits("Initial phase", 4, 3, "Quarter-cycle phase; both body types are positioned from the placement origin.", "Center, moving down", "Bottom", "Center, moving up", "Top");
+					Bits("Travel amplitude", 6, 1, "Distance above and below the placement origin.", "32 pixels", "48 pixels");
+					Bits("Launch strength", 7, 1, "Tall body only; either standing rider is launched independently.", "16 pixels per update", "10 pixels per update");
+					break;
+				case "MMZVanish":
+					Bits("Group", 0, 3, "Relative group; initial delays are 60/60 or 90/180/270 updates, followed by the original appear/fade sequence.", "Single", "Horizontal pair", "Three-step staircase");
+					break;
+				case "MMZSpin":
+					groups = ReadByteTable("../objects/Scrap Madness/A9 Spin Conveyor.asm", "MMZ_SpinC_Path", "Map_MMZ_Spin");
+					Bits("Movement", 0, 1, "The moving form creates five independently phased platforms on a rounded relative path.", "Fixed flipper", "Five-platform conveyor");
+					Bits("Fixed group", 1, 1, "Fixed form only; the second platform is 32 pixels to the right.", "Single", "Pair");
+					break;
 				case "Vanish": Bits("Duration", 0, 15, "Visible duration = (value + 1) * 128 frames; invisible transition = 128 frames."); Bits("Phase", 4, 15, "Sync offset = phase * (duration + 2) * 8 frames."); break;
 				case "Flame": Bits("Off duration", 0, 15, "Low nibble * 32 frames."); Bits("On duration", 4, 15, "High nibble * 32 frames. Y flip selects the sideways flame mapping."); break;
 				case "Electro": Bits("Period mask", 0, 255, "Sync mask = subtype * 16 - 1; use a power of two for a regular interval."); break;
@@ -437,6 +469,23 @@ namespace MysticIsland.ObjectDefinitions
 			if (!started) throw new InvalidDataException("Missing table " + startLabel + " in " + filename);
 			return words.SelectMany(word => ByteConverter.GetBytes(unchecked((ushort)WordValue(word, labels)))).ToArray();
 		}
+		private static byte[] ReadByteTable(string filename, string startLabel, string endLabel)
+		{
+			List<byte> bytes = new List<byte>();
+			Dictionary<string, int> labels = new Dictionary<string, int>();
+			bool started = false;
+			foreach (string source in File.ReadAllLines(filename))
+			{
+				string line = source.Split(';')[0].Trim();
+				if (line.StartsWith(endLabel + ":")) break;
+				if (!started) { if (!line.StartsWith(startLabel + ":")) continue; started = true; line = line.Substring(startLabel.Length + 1).Trim(); }
+				if (line.Length == 0 || line == "even") continue;
+				if (!line.StartsWith("dc.b")) throw new InvalidDataException("Unexpected byte-table directive in " + filename + ": " + line);
+				bytes.AddRange(line.Substring(4).Split(',').Select(value => unchecked((byte)WordValue(value.Trim(), labels))));
+			}
+			if (!started) throw new InvalidDataException("Missing table " + startLabel + " in " + filename);
+			return bytes.ToArray();
+		}
 		private static int WordValue(string value, Dictionary<string, int> labels)
 		{
 			int split = value.IndexOf('-', 1);
@@ -479,6 +528,7 @@ namespace MysticIsland.ObjectDefinitions
 			switch (behavior)
 			{
 				case "PathSwapper": return frames[subtype & 0x1F];
+				case "Checkpoint": return At(frames, (subtype & 0x300) == 0x100 ? 6 : (subtype & 0x300) == 0x200 ? 8 : (subtype & 0x400) != 0 ? 2 : 0);
 				case "FireballSpawner":
 					Sprite maker = new Sprite(At(frames, (subtype & 12) == 12 ? 0 : 1));
 					maker.Flip(xflip, yflip);
@@ -548,6 +598,31 @@ namespace MysticIsland.ObjectDefinitions
 					return new Sprite(pieces);
 				case "Junction": return new Sprite(frames[0], At(frames, 16));
 				case "Eggman": return new Sprite(alternate[0], frames[(subtype & 1) == 0 ? 0 : 7]);
+				case "MMZSaw":
+					int mmzMount = (subtype & 128) == 0 ? 0 : -80;
+					return new Sprite(new Sprite(At(frames, (subtype & 128) == 0 ? 0 : 16), 1, 1), new Sprite(alternate[0], mmzMount, mmzMount));
+				case "MMZCrusher":
+					byte[] heights = (subtype & 64) == 0 ? routes : groups;
+					return new Sprite(At(frames, (subtype & 3) == 1 ? 1 : 0), 0, unchecked((sbyte)heights[((subtype >> 4) & 3) * 64]));
+				case "MMZFloor": return At(frames, (subtype & 127) >= 1 && (subtype & 127) <= 8 ? (subtype & 127) - 1 : 0);
+				case "MMZVanish":
+					int variant = subtype & 3;
+					if (variant > 2) variant = 0;
+					pieces = new List<Sprite>();
+					for (int i = 0; i <= variant; i++) { Sprite block = new Sprite(frames[0]); block.Flip(xflip, yflip); pieces.Add(new Sprite(block, i * 32, variant == 2 ? i * 16 : 0)); }
+					return new Sprite(pieces);
+				case "MMZSpin":
+					pieces = new List<Sprite>();
+					bool moving = (subtype & 1) != 0;
+					int mmzCount = moving ? 5 : (subtype & 2) == 0 ? 1 : 2;
+					for (int i = 0; i < mmzCount; i++)
+					{
+						int phase = i * 89, sign = phase >= 223 ? -1 : 1;
+						phase %= 223;
+						Sprite mmzPlatform = new Sprite(frames[0]); mmzPlatform.Flip(xflip, yflip);
+						pieces.Add(new Sprite(mmzPlatform, moving ? unchecked((sbyte)groups[phase * 2]) * sign : i * 32, moving ? unchecked((sbyte)groups[phase * 2 + 1]) * sign : 0));
+					}
+					return new Sprite(pieces);
 				case "Saw": return At(frames, (subtype & 7) >= 3 ? 2 : 0);
 				case "SpinTrap": return (subtype & 0x80) != 0 ? frames[0] : alternate[0];
 				case "Stomper": return At(frames, (subtype >> 4) & 7);
@@ -628,7 +703,7 @@ namespace MysticIsland.ObjectDefinitions
 		{
 			Sprite sprite = new Sprite(Preview(Subtype(obj), obj.X, obj.Y, obj.YFlip, obj.XFlip, behavior == "Platform" || behavior == "Swing" ? MountSettings(obj) : 0, SwingArt(obj.ID)));
 			if (behavior == "Teleporter") sprite.Flip(obj.XFlip, false);
-			else if (behavior != "FireballSpawner" && behavior != "Fireball" && behavior != "Platform" && behavior != "Swing" && behavior != "SpinGroup" && behavior != "LabyrinthConveyor" && behavior != "InvisibleSolid" && behavior != "Conveyor" && behavior != "PathSwapper" && behavior != "Hanging" && behavior != "PullChain") sprite.Flip(obj.XFlip, obj.YFlip);
+			else if (behavior != "MMZVanish" && behavior != "MMZSpin" && behavior != "FireballSpawner" && behavior != "Fireball" && behavior != "Platform" && behavior != "Swing" && behavior != "SpinGroup" && behavior != "LabyrinthConveyor" && behavior != "InvisibleSolid" && behavior != "Conveyor" && behavior != "PathSwapper" && behavior != "Hanging" && behavior != "PullChain") sprite.Flip(obj.XFlip, obj.YFlip);
 			return sprite;
 		}
 		public override Sprite GetDebugOverlay(ObjectEntry obj)

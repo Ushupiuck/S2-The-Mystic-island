@@ -39,7 +39,7 @@ MCD_TerrainBG3Flags_Sub:	ds.w	1
 MCD_TerrainZone_Sub:	ds.b	1
 MCD_TerrainAct_Sub:	ds.b	1
 MCD_TerrainRedraw_Sub:	ds.b	1
-			ds.b	1
+MCD_TerrainTimeZone_Sub:	ds.b	1
 MCD_TerrainVScroll_Sub:	ds.w	1
 			ds.w	1
 MCD_TerrainFGDraw_Sub:	ds.l	1

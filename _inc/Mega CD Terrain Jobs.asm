@@ -32,6 +32,12 @@ MCD_LoadTerrain:
 		movea.l	a3,a0
 		move.w	#$100,d0
 		bsr.s	.copy
+		cmpi.w	#$0F01,(Current_ZoneAndAct).w
+		bne.s	.angles_ready
+		; CD MMZ2 uses the existing shape $69 with its original $C8 angle.
+		; Select at load time; no terrain-query or other-act behavior changes.
+		move.b	#MMZ2_CollisionAngle,(MCD_TerrainAngleStage+MMZ2_CollisionAngleIndex).l
+.angles_ready:
 		jsr	(MCD_ReleaseWordRAM).l
 		jcs	MCD_Unavailable
 		moveq	#MCD_CommandTerrainLoad,d0
@@ -345,7 +351,7 @@ MCD_PrepareTerrainFrame:
 		move.l	(Scroll_flags_BG2).w,(a0)+
 		move.w	(Current_ZoneAndAct).w,(a0)+
 		move.b	(Screen_redraw_flag).w,(a0)+
-		clr.b	(a0)+			; keep the frame header longword-aligned
+		move.b	(Current_Timezone).w,(a0)+	; reuses the aligned frame header byte
 		move.w	(v_bgscrposy_vdp).w,(a0)+
 		clr.w	(a0)+
 		move.l	a0,-(sp)

@@ -21,7 +21,8 @@ examples when changing allocations or formats.
 ## Branch scope
 
 `Mystic-Island` is the default development branch;
-`Mystic-Island-(Experimental)` contains experimental work. Both target
+`Mystic-Island-(Experimental)` contains experimental work, including the integrated Metallic Madness import.
+The former `metallic-madness-port` branch is retired. Both target
 [Mega-CD Mode 1](Mega-CD.md#build-target), the sole build target. The MD entry
 point is `md-main.asm`; `mcd-main.asm` owns the sub-CPU program embedded in that
 cartridge image. [Mega-CD](Mega-CD.md#cpu-source-boundary) describes the boundary.

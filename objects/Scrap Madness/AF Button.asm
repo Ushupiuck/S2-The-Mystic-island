@@ -17,6 +17,9 @@ SMZ_Button_Behavior:
 		beq.s	.art_ready
 		move.l	#Map_PlatformButton,obMap(a0)
 		move.w	#ArtTile_PlatformButton,obGfx(a0)
+		cmpi.w	#$0F01,(Current_ZoneAndAct).w
+		bne.s	.art_ready
+		move.w	#ArtTile_MMZ2_Button,obGfx(a0)
 .art_ready:
 		addq.w	#3,obY(a0)
 .active:

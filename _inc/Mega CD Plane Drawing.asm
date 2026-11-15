@@ -157,6 +157,86 @@ Plane_SourceSMZ:
 		bra.w	Plane_SourceBand
 .rows:		dc.b 0,0,0,0,12,12,12,12,12,12,12,12,12,12,8,8
 		dc.b 8,8,8,8,8,4,4,4,4,4,4,4,4,4,4,4
+; MMZ1: 96 eight-pixel rows, with separate Past gradients. The same ROM
+; selectors feed Deform_MMZ1; only this routine executes on the CD CPU.
+Plane_SourceMMZ1:
+		move.w	d4,d0
+		bpl.s	.positive
+		addi.w	#768,d0	; top redraw margin wraps to the final background row
+.positive:
+		cmpi.w	#768,d0
+		blo.s	.row
+		subi.w	#768,d0
+.row:
+		lsr.w	#3,d0
+		lea	Plane_MMZ1ScrollRows(pc),a0
+		cmpi.b	#1,(MCD_TerrainTimeZone_Sub).l
+		bne.s	.era
+		lea	Plane_MMZ1PastScrollRows(pc),a0
+.era:
+		moveq	#0,d5
+		move.b	(a0,d0.w),d5
+		cmpi.w	#18,d5
+		blo.w	Plane_SourceFixed
+		subi.w	#16,d5	; 18 = base camera (+4), 20 = near camera (+8)
+		add.w	d5,d5
+		moveq	#0,d7
+		bra.w	Plane_SourceBand.scrolling
+Plane_MMZ1ScrollRows:
+		dc.b 8,8,8,8,6,6,6,6,6,4,4,4,2,0,18,18
+		dc.b 18,18,18,18,18,18,18,18,18,18,18,18,18,18,20,20
+		dc.b 20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20
+		dc.b 20,20,20,20,20,20,20,20,20,20,8,8,8,8,6,6
+		dc.b 6,6,6,4,4,4,2,0,18,18,18,18,18,18,18,18
+		dc.b 18,18,18,18,20,20,20,20,20,20,20,20,20,20,20,20
+		even
+Plane_MMZ1PastScrollRows:
+		dc.b 16,16,16,16,14,14,14,14,12,12,10,10,10,10,10,10
+		dc.b 8,8,6,6,4,4,2,2,0,0,18,18,18,18,20,20
+		dc.b 20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20
+		dc.b 20,20,20,20,20,20,20,20,20,20,12,12,12,12,10,10
+		dc.b 8,8,6,6,6,6,4,4,2,2,0,0,18,18,18,18
+		dc.b 18,18,18,18,20,20,20,20,20,20,20,20,20,20,20,20
+		even
+
+; MMZ2 repeats its 512-pixel background; Past has two different gradients.
+Plane_SourceMMZ2:
+		move.w	d4,d0
+		andi.w	#$1F8,d0
+		lsr.w	#3,d0
+		cmpi.b	#1,(MCD_TerrainTimeZone_Sub).l
+		beq.s	.past
+		lea	Plane_MMZ2ScrollRows(pc),a0
+		moveq	#0,d5
+		move.b	(a0,d0.w),d5
+		cmpi.w	#18,d5
+		blo.w	Plane_SourceFixed
+		subi.w	#16,d5
+		bra.s	.scrolling
+.past:
+		lea	Plane_MMZ2PastScrollRows(pc),a0
+		moveq	#0,d5
+		move.b	(a0,d0.w),d5
+		cmpi.w	#40,d5
+		blo.w	Plane_SourceFixed
+		subi.w	#38,d5
+.scrolling:
+		add.w	d5,d5
+		moveq	#0,d7
+		bra.w	Plane_SourceBand.scrolling
+Plane_MMZ2ScrollRows:
+		dc.b 18,18,18,18,18,18,0,0,2,2,4,4,6,8,10,12
+		dc.b 20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20
+		dc.b 20,20,12,10,8,6,4,4,2,2,2,2,2,2,2,2
+		dc.b 2,2,0,0,18,18,18,18,18,18,18,18,18,18,18,18
+		even
+Plane_MMZ2PastScrollRows:
+		dc.b 22,22,20,20,18,18,16,16,14,14,12,12,10,10,8,8
+		dc.b 8,8,6,6,6,6,4,4,2,2,0,0,40,40,40,40
+		dc.b 24,26,28,30,32,34,36,36,38,38,44,44,44,44,44,44
+		dc.b 44,44,44,44,42,42,42,42,42,42,42,42,42,42,42,42
+		even
+
 Plane_SourceBand:
 		moveq	#0,d7
 		moveq	#0,d5

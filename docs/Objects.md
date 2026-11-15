@@ -107,6 +107,109 @@ were invalid for this project's levels. SMZ's authored `SMZ_PipeData` remains
 the directly editable route source; other reserved helpers remain available
 until a caller needs them. Newly ported levels must supply their own routes.
 
+## Shared checkpoint and time poles
+
+`$79` is the single placement ID for checkpoints, PAST posts and FUTURE posts.
+`objects/79 Lamppost.asm` selects a direct state once during construction; it
+shares proximity, placement-state handling, lifetime and the Sonic 1 body.
+Time poles never enter `Lamppost_StoreInfo` or change checkpoint ordering.
+
+| Word subtype bits | Meaning |
+| --- | --- |
+| 0–6 | Checkpoint number, increasing along the route |
+| 7 | Checkpoint camera lock on respawn, retained from the old object |
+| 8–9 | 0 checkpoint, 1 PAST, 2 FUTURE; reserved 3 uses checkpoint behavior |
+| 10 | Activated checkpoint ball: 0 red, 1 yellow; inactive ball stays blue |
+| 11 | Required path: 0 primary `$C`, 1 secondary `$E` |
+| 12 | Enable the per-actor collision-path filter; used by MMZ2 time poles |
+| 13–15 | Reserved, preserved |
+
+Either live actor can activate a pole independently. Dead, missing or locked
+actors, Debug placement and the global interaction override are rejected.
+Checkpoint contact retains X `[-8,8)`, Y `[-64,40)`; time poles use X `[-22,22)`
+with the same Y interval. The optional path filter examines the contacting
+actor's own `obTopSolidBit`, so Sonic and Tails cannot borrow each other's path.
+
+Checkpoints save the existing engine snapshot at the post's coordinates and
+consume bit 0 of their own placement entry. Their temporary red/yellow ball
+uses a 32-step radius-eight ROM orbit twice, without per-update sine/multiply.
+Both sides validate reciprocal slot ownership. A full pool settles immediately
+into the activated color; an unloaded/reused slot cannot adopt the old child.
+Consumed/earlier checkpoints reload in the activated state. Scripted and Debug
+posts have no handle and never touch a real placement's persistent state.
+
+Time poles consume their own bit 0, arm `TimeWarp_Direction` (`-1` PAST, `+1`
+FUTURE), spin through the original eight-pose sequence at two updates per pose
+for 60 updates, then retain the reversed head. Reloading a consumed post never
+rearms travel. The speed threshold, resume transition and full time-warp
+sequence remain part of the pending MMZ port. The current pickup sound reuses
+the shared checkpoint sound. [Sprites and VRAM](Sprites-and-VRAM.md#checkpoint-and-time-pole-art)
+owns the shared body/head allocations; the act must load the sign-head bank.
+
+## MMZ object variants (experimental)
+
+Six original families retain their placement IDs and add a CD variant in
+zone `$0F`, or when subtype bit 8 is set elsewhere with compatible PLCs:
+
+| ID | Low subtype bits | Behavior |
+| --- | --- | --- |
+| `$1B` | 0-6, 7 | 1-8 crumbling columns; bit 7 selects a static full-solid block |
+| `$B0` | 0-3, 7 | Existing payload presets; bit 7 selects a 64px patrol instead of 80px |
+| `$A4` | 7 | Initially extended; X/Y placement flips independently select travel signs |
+| `$A5` | 0-1 | 0/2: small crusher; 1: tall launcher; reserved 3 safely uses small |
+| `$A5` | 2-3 | Small: phase rates 4/8/16/32; tall: bit 2 selects 4/8, bit 3 selects 60/90 pause |
+| `$A5` | 4-5, 6, 7 | Initial quarter phase; 32/48 amplitude; strong/weak launch |
+| `$A6` | 0-1 | Single, horizontal pair, or three-block staircase; reserved 3 uses single |
+| `$A9` | 0, 1 | Moving five-member curve; otherwise bit 1 selects a fixed pair |
+
+`objects/Metallic Madness/Common.asm` owns platform cohort preflight, one-pass
+allocation, independent state pointers, parent/backlink validation and cleanup.
+Only the root owns a placement. Its four reciprocal child fields prevent a
+recycled same-family parent from adopting old children. Both actors keep their
+own standing bits; disappearance, spin and unload release only actual owners.
+Timed-frame runs replace repeated CD animation bytes. The 446-point conveyor
+curve stores its antisymmetric first half (223 signed XY pairs), saving 446
+bytes while preserving every position and the original spin interval. Its spin
+accumulator is private; it never writes a word over the byte sprite frame.
+Moving members start at their own curve positions before the first draw,
+with zero birth velocity, avoiding the source's one-frame stack at the origin.
+
+The MMZ saw uses direct hold/extend/retract entries and a two-pose animation
+counter. The fixed handle validates the full parent mapping/code and reciprocal
+link, and unload removes it. It retains CD's one-pixel birth displacement,
+source step/hold timing and a 28-pixel harmful half-size through a named local
+collision-table ID. Foreign CD collision IDs are not assumed to match ours.
+
+The crusher's two 256-byte signed-height tables retain CD sine values and
+negative rounding, removing trigonometry/multiplication from the live update.
+The original before/after-motion solidity order is retained for both actors.
+At phase `$210`, the tall form launches only its actual standing riders,
+independently, with `-$1000` or `-$A00` velocity. CD's long-pause byte table
+indexes 0/2 into a two-byte list, reading the following TST opcode instead of
+its declared 90. The port explicitly selects 60/90. The original SMZ behaviors
+retain their timings while skipping their old constructor-dispatch table.
+
+The existing morphing platform uses its direct running entry, the complete
+`$18` standing mask and the MMZ art base in this zone. Propeller blades inherit
+their parent's act-selected art base; neither object duplicates a source bank.
+
+The crumbling floor extends the existing `$1B` family. Its constructor selects
+one direct state chain; fragments have separate direct entries and never own a
+placement. Each column releases two 16px pieces, then shrinks the remaining
+stationary surface. Both support relationships are checked against its new
+extent without translating the riders or releasing/relanding the retained one.
+Either character can start the collapse and select its direction. Invalid
+column counts use one column; a full pool consumes the column without retrying
+or retaining invisible support. Fragments accelerate by 0.25px per update to
+22px, preserving CD's 16.16 motion.
+
+The `$B0` carrier retains its existing eight ordinary payload presets, wall
+bounds, independent rider translation and lifetime services. MMZ selects its
+one-pixel drop and 1px/update patrol through direct states; classic carriers
+retain their 1.5px/update movement. Bit 7 shortens MMZ's patrol from 80 to 64px.
+Payload subtype/facing comes from `WheelPayloads`, not the carrier's patrol
+flag. The new variants reuse the already imported floor mappings and wheel art.
+
 ## SST and dispatch
 
 Each object status table (SST) is `$4E` bytes. The pool contains 23 reserved and
@@ -360,7 +463,10 @@ The sign keeps spinning for `$40` countdown updates (65 calls before
 the negative-timer transition), then selects the primary character's portrait,
 locks neutral logical input and waits for the primary to reach the ground
 before loading the existing results. It stays in place instead of forcing
-an offscreen run. The classic finish still supports the giant-ring exit.
+an offscreen run. The classic finish still supports the giant-ring exit. Its stationary spin emits
+non-collectible ring sparkles through `Ring_Sparkle` directly, with the first
+sparkle frame and six-update timer initialized; it never calls the ring pickup
+constructor with an obsolete routine byte.
 No SST fields, RAM reservations or VRAM allocations grow.
 
 SMZ2's trap spins from Eggman through its own mixed frames to Mecha's bust.

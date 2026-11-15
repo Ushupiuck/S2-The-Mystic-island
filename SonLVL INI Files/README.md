@@ -15,6 +15,13 @@ Scrap Madness Acts 1/2 use independent terrain tiles, blocks and chunks named
 match the runtime headers. Acts 3/4 share Act 1's tiles/blocks with the separate
 starter chunk bank. See [terrain editing and regeneration](../docs/Levels.md#scrap-madness).
 
+Metallic Madness Act 1 has four explicit era sections on experimental. Each
+selects its own full 445-chunk bank, layout, palette and collision indexes.
+They share the act's placement file; presence masks remain editable per object.
+The existing `chunkmax=400` and word-based custom layout cover these banks;
+no SonLVL fork change is required for the terrain format. Object definitions
+are being populated with the port. See [the import contract](../docs/Levels.md#metallic-madness-import-experimental).
+
 Emerald Hill Act 2 has its own `EHZ2` tiles, blocks and chunks with the PP
 Present background and a matching private palette. Foreground and platform tile
 IDs stay stable. See [the import/editing contract](../docs/Levels.md#emerald-hill-act-2-palmtree-panic-experiment).
@@ -114,7 +121,7 @@ the complete serialized word, including when calculating movement overlays.
 | `$AB` | Transport pipe | Low three bits: route; route 7 requires 50 rings. Route points are read from the ASM table. |
 | `$AC` | Invisible solid | High/low nibbles: width/height in 16-pixel units, minus one. |
 | `$AF` | Button | Low nibble: switch number. |
-| `$B0` | Wheel carrier | Low nibble: one of eight mounts. Preview includes the spring, monitor or spikes with the runtime offset/facing. |
+| `$B0` | Wheel carrier | Low nibble: one of eight mounts. MMZ / word bit 8 selects the CD 1px patrol; low bit 7 shortens its half-range from 80 to 64px. Preview includes the spring, monitor or spikes with the runtime offset/facing. |
 | `$B1–B5` | Palmtree Panic badniks | Bit 0: normal/damaged variant. |
 | `$B7` | Metallic Madness propeller obstacle | Subtype unused. X flip reverses the initial patrol; Y flip is ignored. Preview includes the mast and both blade assemblies. |
 | `$D9` | Hanging surface | Low six bits: traversable grip count 1–63 (zero means one), or classic span ×32 px (zero means 56 px). Bit 6: drop at final grip; bit 7: traversable; bit 8: disable support release; bit 9: silent; bit 10: hide metal handholds. X flip selects the left release end. Preview repeats the actual handhold art; invisible modes outline the grab region. Visible rows require the act's handhold PLC. See [hanging surfaces](../docs/Objects.md#hanging-surfaces). |
@@ -263,3 +270,21 @@ and VRAM allocation before using buttons.
 Shared sprites follow the [palette slot contract](../docs/Sprites-and-VRAM.md#palette-adaptation).
 Yellow springs share cap pixels and select palette 1 per piece; mechanisms use
 palette 0. LZ conveyor/morphing previews use palette 0, matching the runtime.
+
+MMZ's `$1B` floor uses 1-8 columns in low bits 0-6; bit 7 selects a static
+full-solid block. The runtime preview selects the same length as the constructor;
+invalid lengths use one column. Either character can trigger a crumbling floor.
+
+MMZ1's four era sections use `objMMZ.ini`; Good Future adds `objMMZ_GF.ini`
+for its saw overlay. Group previews read the actual byte curve/height tables,
+show relative members and preserve full subtype words. The picker can create
+byte subtypes because zone `$0F` selects the MMZ family automatically. Existing
+records may explicitly retain bit 8. The shared eight-byte layout and current
+`chunkmax=400` (hex, 1024) support all 445 imported chunks without an editor fork.
+
+The common `$79` definition now represents checkpoints and time poles. Its
+word properties select the head/function, checkpoint number/camera lock,
+red/yellow activated ball, and optional independent actor-path filter. Preview
+art uses the compact `Checkpoint editor.nem`/`Checkpoint editor.bin` pair;
+runtime maps address separate VRAM banks. PAST/FUTURE placements require their
+22-tile per-act head bank, supplied by all four MMZ1 eras.

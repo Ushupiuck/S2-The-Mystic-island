@@ -168,10 +168,10 @@ MCD_CompressedAssets:
 	dc.l BLevel_LV0E4,BLevel_LV0E4+$82	; level/layout/bad future/LV0E_4.kosp
 	endif
 	if defined(BLevel_LV0F1)
-	dc.l BLevel_LV0F1,BLevel_LV0F1+$82	; level/layout/bad future/LV0F_1.kosp
+	dc.l BLevel_LV0F1,BLevel_LV0F1+$44F	; level/layout/bad future/LV0F_1.kosp
 	endif
 	if defined(BLevel_LV0F2)
-	dc.l BLevel_LV0F2,BLevel_LV0F2+$82	; level/layout/bad future/LV0F_2.kosp
+	dc.l BLevel_LV0F2,BLevel_LV0F2+$58F	; level/layout/bad future/LV0F_2.kosp
 	endif
 	if defined(BLevel_LV0F3)
 	dc.l BLevel_LV0F3,BLevel_LV0F3+$82	; level/layout/bad future/LV0F_3.kosp
@@ -453,10 +453,10 @@ MCD_CompressedAssets:
 	dc.l GLevel_LV0E4,GLevel_LV0E4+$82	; level/layout/good future/LV0E_4.kosp
 	endif
 	if defined(GLevel_LV0F1)
-	dc.l GLevel_LV0F1,GLevel_LV0F1+$82	; level/layout/good future/LV0F_1.kosp
+	dc.l GLevel_LV0F1,GLevel_LV0F1+$44F	; level/layout/good future/LV0F_1.kosp
 	endif
 	if defined(GLevel_LV0F2)
-	dc.l GLevel_LV0F2,GLevel_LV0F2+$82	; level/layout/good future/LV0F_2.kosp
+	dc.l GLevel_LV0F2,GLevel_LV0F2+$58F	; level/layout/good future/LV0F_2.kosp
 	endif
 	if defined(GLevel_LV0F3)
 	dc.l GLevel_LV0F3,GLevel_LV0F3+$82	; level/layout/good future/LV0F_3.kosp
@@ -568,6 +568,30 @@ MCD_CompressedAssets:
 	endif
 	if defined(Kosp_LZ)
 	dc.l Kosp_LZ,Kosp_LZ+$1A2E	; art/kosinski/level/8x8 - LZ.kosp
+	endif
+	if defined(Kosp_MMZ1_BadFuture)
+	dc.l Kosp_MMZ1_BadFuture,Kosp_MMZ1_BadFuture+$2249	; art/kosinski/level/8x8 - MMZ1 Bad Future.kosp
+	endif
+	if defined(Kosp_MMZ1_GoodFuture)
+	dc.l Kosp_MMZ1_GoodFuture,Kosp_MMZ1_GoodFuture+$2359	; art/kosinski/level/8x8 - MMZ1 Good Future.kosp
+	endif
+	if defined(Kosp_MMZ1_Past)
+	dc.l Kosp_MMZ1_Past,Kosp_MMZ1_Past+$1E9B	; art/kosinski/level/8x8 - MMZ1 Past.kosp
+	endif
+	if defined(Kosp_MMZ1_Present)
+	dc.l Kosp_MMZ1_Present,Kosp_MMZ1_Present+$1F68	; art/kosinski/level/8x8 - MMZ1 Present.kosp
+	endif
+	if defined(Kosp_MMZ2_BadFuture)
+	dc.l Kosp_MMZ2_BadFuture,Kosp_MMZ2_BadFuture+$247D	; art/kosinski/level/8x8 - MMZ2 Bad Future.kosp
+	endif
+	if defined(Kosp_MMZ2_GoodFuture)
+	dc.l Kosp_MMZ2_GoodFuture,Kosp_MMZ2_GoodFuture+$2544	; art/kosinski/level/8x8 - MMZ2 Good Future.kosp
+	endif
+	if defined(Kosp_MMZ2_Past)
+	dc.l Kosp_MMZ2_Past,Kosp_MMZ2_Past+$20EC	; art/kosinski/level/8x8 - MMZ2 Past.kosp
+	endif
+	if defined(Kosp_MMZ2_Present)
+	dc.l Kosp_MMZ2_Present,Kosp_MMZ2_Present+$22B9	; art/kosinski/level/8x8 - MMZ2 Present.kosp
 	endif
 	if defined(Kosp_MTZ)
 	dc.l Kosp_MTZ,Kosp_MTZ+$2A96	; art/kosinski/level/8x8 - MTZ.kosp
@@ -688,6 +712,42 @@ MCD_CompressedAssets:
 	endif
 	if defined(Kospm_MCZBossWeapons)
 	dc.l Kospm_MCZBossWeapons,Kospm_MCZBossWeapons+$300	; art/moduled kosinski/MCZ boss weapons.kospm
+	endif
+	if defined(Kospm_MMZ1_Enemies)
+	dc.l Kospm_MMZ1_Enemies,Kospm_MMZ1_Enemies+$67C	; art/moduled kosinski/MMZ1 Enemies.kospm
+	endif
+	if defined(Kospm_MMZ1_Platforms)
+	dc.l Kospm_MMZ1_Platforms,Kospm_MMZ1_Platforms+$216	; art/moduled kosinski/MMZ1 Platforms.kospm
+	endif
+	if defined(Kospm_MMZ1_SawsSeesaw)
+	dc.l Kospm_MMZ1_SawsSeesaw,Kospm_MMZ1_SawsSeesaw+$92E	; art/moduled kosinski/MMZ1 Saws and seesaw.kospm
+	endif
+	if defined(Kospm_MMZ1_SawsSeesawGoodFuture)
+	dc.l Kospm_MMZ1_SawsSeesawGoodFuture,Kospm_MMZ1_SawsSeesawGoodFuture+$930	; art/moduled kosinski/MMZ1 Saws and seesaw Good Future.kospm
+	endif
+	if defined(Kospm_MMZ2_BombCrushers)
+	dc.l Kospm_MMZ2_BombCrushers,Kospm_MMZ2_BombCrushers+$7DB	; art/moduled kosinski/MMZ2 Bomb and crushers.kospm
+	endif
+	if defined(Kospm_MMZ2_DangoDoors)
+	dc.l Kospm_MMZ2_DangoDoors,Kospm_MMZ2_DangoDoors+$4B5	; art/moduled kosinski/MMZ2 Dango and doors.kospm
+	endif
+	if defined(Kospm_MMZ2_EmittersDoors)
+	dc.l Kospm_MMZ2_EmittersDoors,Kospm_MMZ2_EmittersDoors+$21A	; art/moduled kosinski/MMZ2 Emitters and doors.kospm
+	endif
+	if defined(Kospm_MMZ_CrusherFloor)
+	dc.l Kospm_MMZ_CrusherFloor,Kospm_MMZ_CrusherFloor+$227	; art/moduled kosinski/MMZ Crusher and floor.kospm
+	endif
+	if defined(Kospm_MMZ_Generator)
+	dc.l Kospm_MMZ_Generator,Kospm_MMZ_Generator+$15D	; art/moduled kosinski/MMZ Generator.kospm
+	endif
+	if defined(Kospm_MMZ_GeneratorPast)
+	dc.l Kospm_MMZ_GeneratorPast,Kospm_MMZ_GeneratorPast+$191	; art/moduled kosinski/MMZ Generator Past.kospm
+	endif
+	if defined(Kospm_MMZ_MechaBu)
+	dc.l Kospm_MMZ_MechaBu,Kospm_MMZ_MechaBu+$294	; art/moduled kosinski/MMZ Mecha-Bu.kospm
+	endif
+	if defined(Kospm_MMZ_TimePostHeads)
+	dc.l Kospm_MMZ_TimePostHeads,Kospm_MMZ_TimePostHeads+$1F2	; art/moduled kosinski/MMZ Time post heads.kospm
 	endif
 	if defined(Kospm_MTZBossWeapons)
 	dc.l Kospm_MTZBossWeapons,Kospm_MTZBossWeapons+$76A	; art/moduled kosinski/MTZ boss weapons.kospm
@@ -897,10 +957,10 @@ MCD_CompressedAssets:
 	dc.l Level_LV0E4,Level_LV0E4+$82	; level/layout/LV0E_4.kosp
 	endif
 	if defined(Level_LV0F1)
-	dc.l Level_LV0F1,Level_LV0F1+$82	; level/layout/LV0F_1.kosp
+	dc.l Level_LV0F1,Level_LV0F1+$456	; level/layout/LV0F_1.kosp
 	endif
 	if defined(Level_LV0F2)
-	dc.l Level_LV0F2,Level_LV0F2+$82	; level/layout/LV0F_2.kosp
+	dc.l Level_LV0F2,Level_LV0F2+$585	; level/layout/LV0F_2.kosp
 	endif
 	if defined(Level_LV0F3)
 	dc.l Level_LV0F3,Level_LV0F3+$82	; level/layout/LV0F_3.kosp
@@ -968,6 +1028,30 @@ MCD_CompressedAssets:
 	if defined(Map128_LZ)
 	dc.l Map128_LZ,Map128_LZ+$1EEE	; mappings/128x128/LZ.kosp
 	endif
+	if defined(Map128_MMZ1_BadFuture)
+	dc.l Map128_MMZ1_BadFuture,Map128_MMZ1_BadFuture+$3F08	; mappings/128x128/MMZ1 Bad Future.kosp
+	endif
+	if defined(Map128_MMZ1_GoodFuture)
+	dc.l Map128_MMZ1_GoodFuture,Map128_MMZ1_GoodFuture+$3E1F	; mappings/128x128/MMZ1 Good Future.kosp
+	endif
+	if defined(Map128_MMZ1_Past)
+	dc.l Map128_MMZ1_Past,Map128_MMZ1_Past+$3C35	; mappings/128x128/MMZ1 Past.kosp
+	endif
+	if defined(Map128_MMZ1_Present)
+	dc.l Map128_MMZ1_Present,Map128_MMZ1_Present+$3CA6	; mappings/128x128/MMZ1 Present.kosp
+	endif
+	if defined(Map128_MMZ2_BadFuture)
+	dc.l Map128_MMZ2_BadFuture,Map128_MMZ2_BadFuture+$4CF4	; mappings/128x128/MMZ2 Bad Future.kosp
+	endif
+	if defined(Map128_MMZ2_GoodFuture)
+	dc.l Map128_MMZ2_GoodFuture,Map128_MMZ2_GoodFuture+$484D	; mappings/128x128/MMZ2 Good Future.kosp
+	endif
+	if defined(Map128_MMZ2_Past)
+	dc.l Map128_MMZ2_Past,Map128_MMZ2_Past+$45FD	; mappings/128x128/MMZ2 Past.kosp
+	endif
+	if defined(Map128_MMZ2_Present)
+	dc.l Map128_MMZ2_Present,Map128_MMZ2_Present+$4C1B	; mappings/128x128/MMZ2 Present.kosp
+	endif
 	if defined(Map128_MTZ)
 	dc.l Map128_MTZ,Map128_MTZ+$2A8C	; mappings/128x128/MTZ.kosp
 	endif
@@ -1003,6 +1087,30 @@ MCD_CompressedAssets:
 	endif
 	if defined(Map16_LZ)
 	dc.l Map16_LZ,Map16_LZ+$593	; mappings/16x16/LZ.kosp
+	endif
+	if defined(Map16_MMZ1_BadFuture)
+	dc.l Map16_MMZ1_BadFuture,Map16_MMZ1_BadFuture+$AC2	; mappings/16x16/MMZ1 Bad Future.kosp
+	endif
+	if defined(Map16_MMZ1_GoodFuture)
+	dc.l Map16_MMZ1_GoodFuture,Map16_MMZ1_GoodFuture+$B71	; mappings/16x16/MMZ1 Good Future.kosp
+	endif
+	if defined(Map16_MMZ1_Past)
+	dc.l Map16_MMZ1_Past,Map16_MMZ1_Past+$A57	; mappings/16x16/MMZ1 Past.kosp
+	endif
+	if defined(Map16_MMZ1_Present)
+	dc.l Map16_MMZ1_Present,Map16_MMZ1_Present+$A59	; mappings/16x16/MMZ1 Present.kosp
+	endif
+	if defined(Map16_MMZ2_BadFuture)
+	dc.l Map16_MMZ2_BadFuture,Map16_MMZ2_BadFuture+$C29	; mappings/16x16/MMZ2 Bad Future.kosp
+	endif
+	if defined(Map16_MMZ2_GoodFuture)
+	dc.l Map16_MMZ2_GoodFuture,Map16_MMZ2_GoodFuture+$CBF	; mappings/16x16/MMZ2 Good Future.kosp
+	endif
+	if defined(Map16_MMZ2_Past)
+	dc.l Map16_MMZ2_Past,Map16_MMZ2_Past+$B69	; mappings/16x16/MMZ2 Past.kosp
+	endif
+	if defined(Map16_MMZ2_Present)
+	dc.l Map16_MMZ2_Present,Map16_MMZ2_Present+$C0F	; mappings/16x16/MMZ2 Present.kosp
 	endif
 	if defined(Map16_MTZ)
 	dc.l Map16_MTZ,Map16_MTZ+$B89	; mappings/16x16/MTZ.kosp
@@ -1214,6 +1322,9 @@ MCD_CompressedAssets:
 	if defined(Nem_CPZ_Platform1)
 	dc.l Nem_CPZ_Platform1,Nem_CPZ_Platform1+$16E	; art/nemesis/CPZ Floating Platform.nem
 	endif
+	if defined(Nem_CheckpointYellow)
+	dc.l Nem_CheckpointYellow,Nem_CheckpointYellow+$3B	; art/nemesis/Checkpoint yellow.nem
+	endif
 	if defined(Nem_Chicken)
 	dc.l Nem_Chicken,Nem_Chicken+$157	; art/nemesis/Flicky/Chicken.nem
 	endif
@@ -1305,7 +1416,7 @@ MCD_CompressedAssets:
 	dc.l Nem_Kemusi,Nem_Kemusi+$1BA	; art/nemesis/Enemy Kemusi.nem
 	endif
 	if defined(Nem_Lamppost)
-	dc.l Nem_Lamppost,Nem_Lamppost+$C3	; art/nemesis/Lamppost.nem
+	dc.l Nem_Lamppost,Nem_Lamppost+$D4	; art/nemesis/Lamppost.nem
 	endif
 	if defined(Nem_Lives)
 	dc.l Nem_Lives,Nem_Lives+$204	; art/nemesis/Sonic lives counter.nem
@@ -1623,10 +1734,10 @@ MCD_CompressedAssets:
 	dc.l PLevel_LV0E4,PLevel_LV0E4+$82	; level/layout/past/LV0E_4.kosp
 	endif
 	if defined(PLevel_LV0F1)
-	dc.l PLevel_LV0F1,PLevel_LV0F1+$82	; level/layout/past/LV0F_1.kosp
+	dc.l PLevel_LV0F1,PLevel_LV0F1+$46B	; level/layout/past/LV0F_1.kosp
 	endif
 	if defined(PLevel_LV0F2)
-	dc.l PLevel_LV0F2,PLevel_LV0F2+$82	; level/layout/past/LV0F_2.kosp
+	dc.l PLevel_LV0F2,PLevel_LV0F2+$5AB	; level/layout/past/LV0F_2.kosp
 	endif
 	if defined(PLevel_LV0F3)
 	dc.l PLevel_LV0F3,PLevel_LV0F3+$82	; level/layout/past/LV0F_3.kosp

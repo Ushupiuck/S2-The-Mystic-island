@@ -34,6 +34,20 @@ MonitorType_Count:	equ 10
 MonitorArt_SlotCount:	equ 4
 MonitorArt_IconTiles:	equ 4
 ; ---------------------------------------------------------------------------
+; MMZ2 changes one staged angle, retaining the shared collision geometry.
+MMZ2_CollisionAngleIndex:	equ $69
+MMZ2_CollisionAngle:		equ $C8
+; ---------------------------------------------------------------------------
+; Shared checkpoint/time-pole word subtype
+; ---------------------------------------------------------------------------
+PoleType_Checkpoint:	equ $000
+PoleType_Past:		equ $100
+PoleType_Future:		equ $200
+PoleType_Mask:		equ $300
+Pole_Yellow:		equ $400 ; checkpoint uses yellow instead of red
+Pole_Layer2:		equ $800 ; required secondary collision path
+Pole_FilterLayer:	equ $1000 ; time-post contact checks the actor path
+; ---------------------------------------------------------------------------
 ; Object placement record offsets
 ; ---------------------------------------------------------------------------
 ; Mystic Island placement: X/Y words, ID/time-mask bytes, subtype word.
@@ -593,6 +607,7 @@ LevelActCount: equ LevelCount*ActsPerZone
 id_MTZ: equ $06
 id_BLZ: equ $07 ; Shocking Blizzard (SBZ is a legacy Hill Top alias)
 id_SMZ: equ $08
+id_MMZ: equ $0F
 id_DEZ: equ $09
 
 ; Colours
@@ -1421,6 +1436,8 @@ f_demo:			ds.w	1			; demo mode flag (0 = no; 1 = yes; $8001 = ending)
 v_demonum:		ds.w	1			; demo level number (not the same as the level number)
 v_creditsnum:		ds.w	1			; credits index number
 Super_Sonic_frame_count:	ds.w	1
+TimeWarp_Direction:	ds.b	1	; -1 PAST, +1 FUTURE, zero unarmed
+			ds.b	1	; align monitor timestamps
 MonitorArt_Tags:	ds.b	MonitorArt_SlotCount ; icon kind, $FF invalid
 MonitorArt_Uses:	ds.w	MonitorArt_SlotCount ; last game pass using each slot
 v_lcon_wheel_frame:	ds.b	1			; shared requested wheel frame
@@ -1679,7 +1696,10 @@ ArtTile_Monitor_FreeEnd:	equ ArtTile_Monitor+$3C ; 20 reclaimed tiles, up to the
 	if ArtTile_FireballMaker+ArtTile_FireballMaker_Count>ArtTile_Monitor
 		fatal "Fireball maker overlaps monitors."
 	endif
-ArtTile_Lamppost:	equ ArtTile_Monitor+$3C ; 10 tiles; ends at $AD9F
+ArtTile_Lamppost:	equ ArtTile_Monitor+$3C ; six S1 pole + blue/red head tiles
+ArtTile_CheckpointYellow:	equ ArtTile_Monitor_Free ; two tiles from the reclaimed monitor bank
+ArtTile_Monitor_Reclaimed:	equ ArtTile_CheckpointYellow+2
+
 
 ; GHZ's packed objects/badniks, after its $32B-tile terrain reservation.
 ArtTile_GHZ_SLZ_Smashable_Wall	equ $001	; Temporary location; suits it well
@@ -2038,6 +2058,50 @@ ArtTile_ArtNem_S1EndSeal:	equ $592;$0585
 ArtTile_ArtNem_S1EndPig:	equ $580;$0593
 ArtTile_ArtNem_S1EndChicken:	equ $592;$0565
 ArtTile_ArtNem_S1EndSquirrel:	equ $580;$05B3
+
+; MMZ resident object art follows the largest terrain bank ($26D tiles).
+; This act-specific boundary can move with terrain and its object consumers.
+ArtTile_MMZ_Atlas:		equ $26D
+ArtTile_MMZ_Atlas_End:		equ $478
+ArtTile_MMZ_CrusherFloor:	equ ArtTile_MMZ_Atlas+38
+ArtTile_MMZ_MechaBu:		equ ArtTile_MMZ_Atlas+270
+ArtTile_MMZ2_Button:		equ ArtTile_MMZ_Atlas+30
+ArtTile_MMZ_Saw:			equ ArtTile_MMZ_Atlas+110
+ArtTile_MMZ_Seesaw:		equ ArtTile_MMZ_Atlas+148
+ArtTile_TimePostHeads:		equ ArtTile_MMZ_Atlas+432
+ArtTile_MMZ_Generator:		equ ArtTile_MMZ_Atlas+454
+ArtTile_MMZ_HVPlatform:		equ $478 ; existing shared eight-tile morphing platform
+ArtTile_MMZ_Propeller:		equ $480 ; existing shared 49-tile propeller
+
+; MMZ1 keeps CD terrain-animation slots, shifted past the reserved water tiles.
+ArtTile_MMZ1_Present_Anim1:	equ $20D
+ArtTile_MMZ1_Present_Anim2:	equ $215
+ArtTile_MMZ1_Present_Anim3:	equ $21D
+ArtTile_MMZ1_Present_Anim4:	equ $1FD
+ArtTile_MMZ1_Present_Anim5:	equ $22D
+ArtTile_MMZ1_GoodFuture_Anim1:	equ $226
+ArtTile_MMZ1_GoodFuture_Anim2:	equ $22E
+ArtTile_MMZ1_GoodFuture_Anim3:	equ $236
+ArtTile_MMZ1_BadFuture_Anim1:	equ $238
+ArtTile_MMZ1_BadFuture_Anim2:	equ $240
+ArtTile_MMZ1_BadFuture_Anim3:	equ $248
+ArtTile_MMZ1_BadFuture_Anim4:	equ $258
+
+; MMZ2 keeps its complete terrain and original contiguous animation tail.
+ArtTile_MMZ2_Present_Anim1:	equ $232
+ArtTile_MMZ2_Present_Anim2:	equ $23A
+ArtTile_MMZ2_Present_Anim3:	equ $242
+ArtTile_MMZ2_Present_Anim4:	equ $252
+ArtTile_MMZ2_Present_Anim5:	equ $256
+ArtTile_MMZ2_GoodFuture_Anim1:	equ $22E
+ArtTile_MMZ2_GoodFuture_Anim2:	equ $236
+ArtTile_MMZ2_GoodFuture_Anim3:	equ $23E
+ArtTile_MMZ2_GoodFuture_Anim4:	equ $252
+ArtTile_MMZ2_BadFuture_Anim1:	equ $245
+ArtTile_MMZ2_BadFuture_Anim2:	equ $24D
+ArtTile_MMZ2_BadFuture_Anim3:	equ $255
+ArtTile_MMZ2_BadFuture_Anim4:	equ $265
+ArtTile_MMZ2_BadFuture_Anim5:	equ $269
 
 ArtTile_SMZ_Atlas:	equ $2B9 ; original sprite rectangles, shared by both acts
 ArtTile_SMZ_Junction_Gap:	equ $4B0 ; twelve streamed tiles, below the wheel bank

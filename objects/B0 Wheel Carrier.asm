@@ -9,10 +9,17 @@ wheel_offset = objoff_3C          ; signed word, mount Y relative to axle
 wheel_spawned = objoff_3E         ; byte; retries allocation until a child exists
 wheel_payload_x = objoff_2E		; signed bytes: left/right bounds, right exclusive
 wheel_payload_y = obAngle		; signed bytes: top/bottom bounds, bottom exclusive
+wheel_home = objoff_40			; MMZ patrol center, word
+wheel_limit = objoff_42			; MMZ patrol half-range, word
 
 WheelCarrier:
 		tst.b	obRoutine(a0)
 		bne.s	.ready
+		move.w	obSubtype(a0),d0
+		btst	#8,d0
+		bne.w	MMZ_Wheel_Init
+		cmpi.b	#id_MMZ,(Current_Zone).w
+		beq.w	MMZ_Wheel_Init
 		move.b	#2,obRoutine(a0)
 		move.l	#Map_MovSpring,obMap(a0)
 		move.b	#Map_MovSpring_height,height_pixels(a0)
@@ -236,6 +243,73 @@ WheelCarrier:
 .wallreturn:
 		tst.w	d1
 		rts
+
+; MMZ uses the same payload, rider, wall and cleanup services, with CD's
+; one-pixel movement and 80/64-pixel patrol. No constructor dispatch in motion.
+; Low nibble retains WheelPayloads; bit 7 selects the shorter patrol.
+MMZ_Wheel_Init:
+		move.l	#MMZ_Wheel_Fall,code(a0)
+		move.b	#2,obRoutine(a0)
+		move.l	#Map_MovSpring,obMap(a0)
+		move.b	#Map_MovSpring_height,height_pixels(a0)
+		move.b	#Map_MovSpring_width,width_pixels(a0)
+		move.w	#ArtTile_Wheel,obGfx(a0)
+		move.b	#4,obRender(a0)
+		move.w	#$200,obPriority(a0)
+		move.b	#8,obWidth(a0)
+		move.b	#6,obHeight(a0)
+		move.w	obX(a0),wheel_home(a0)
+		move.w	#80,wheel_limit(a0)
+		move.w	obSubtype(a0),d0
+		btst	#7,d0
+		beq.s	.speed
+		move.w	#64,wheel_limit(a0)
+.speed:
+		move.w	#$100,obVelX(a0)
+		btst	#0,obStatus(a0)
+		beq.w	WheelCarrier.mount
+		neg.w	obVelX(a0)
+		bra.w	WheelCarrier.mount
+
+MMZ_Wheel_Fall:
+		move.w	obX(a0),wheel_old_x(a0)
+		move.w	obY(a0),wheel_old_y(a0)
+		jsr	(ObjHitFloor).l
+		tst.w	d1
+		bpl.s	.fall
+		add.w	d1,obY(a0)
+		move.l	#MMZ_Wheel_Roll,code(a0)
+		move.b	#4,obRoutine(a0)
+		bra.w	WheelCarrier.mount
+.fall:
+		addq.w	#1,obY(a0)
+		bra.w	WheelCarrier.mount
+
+MMZ_Wheel_Roll:
+		move.w	obX(a0),wheel_old_x(a0)
+		move.w	obY(a0),wheel_old_y(a0)
+		bsr.w	WheelCarrier.wall
+		bmi.s	.reverse
+		move.w	obX(a0),d0
+		sub.w	wheel_home(a0),d0
+		bpl.s	.distance
+		neg.w	d0
+.distance:
+		cmp.w	wheel_limit(a0),d0
+		bhs.s	.reverse
+		jsr	(ObjHitFloor).l
+		cmpi.w	#-7,d1
+		blt.s	.reverse
+		cmpi.w	#7,d1
+		bgt.s	.reverse
+		add.w	d1,obY(a0)
+		bra.s	.move
+.reverse:
+		neg.w	obVelX(a0)
+		bchg	#0,obStatus(a0)
+.move:
+		jsr	(ObjectMove).l
+		bra.w	WheelCarrier.mount
 
 ; Routine, Y offset, subtype, facing flags, then the payload's collision box
 ; relative to its center (left/right/top/bottom). Right/bottom are exclusive.

@@ -138,6 +138,42 @@ remain editor assets and are not linked into the ROM. The usual frame convention
 remains type+1, with zero for the bare box and 11 for its broken base. The signpost
 replaces the first 26 tiles only during its separate end-of-act lifetime.
 
+### Checkpoint and time-pole art
+
+The shared `$79` family uses Sonic 1's actual six-tile cap/shaft plus its two
+blue and two red ball tiles, from s1disasm commit
+`2c51d46a0b0682133834db2093292d41da872ecf`, `artnem/Lamppost.nem` (blob
+`4d8db3cb03aeb413bfa86a3de9977e0e56dfa8df`) and `_maps/Lamppost.asm`.
+`art/uncompressed/Checkpoint.unc` is the editable 12-tile master: cap 0–1,
+shaft 2–5, blue 6–7, red 8–9, optional yellow 10–11. Source geometry shifts
+four pixels down so the existing placement foot remains at Y +24. Blue keeps
+three separate tones at primary slots C/B/A. Red uses `PLAYER_FROM_S1`;
+shaft C/D/E becomes the shared second-line D/E/F yellow ramp. The yellow ball
+reuses the blue geometry with those same three yellow shades on line 1.
+
+`build_checkpoint_art.py` generates the ten-tile resident `Lamppost.nem`, the
+two-tile `Checkpoint yellow.nem`, and compact editor/runtime maps. Yellow fits
+at `$551-$552`, using two of the twenty tiles reclaimed by monitor DPLCs.
+The next eighteen tiles remain available. MMZ2 keeps its terrain contiguous
+below the act-specific object boundary. Life portraits follow the common
+HUD/cache rules above.
+
+The per-act MMZ atlas supplies only CD's PAST (8 tiles), FUTURE (8), thin-spin
+(4) and edge-spin (2) heads at `$41D-$432`. All 22 tiles are distinct; the 28
+removed tiles belonged to the duplicate CD stem and unneeded monitor/HUD parts.
+`import_metallic_madness.py` owns the packed head section and its
+`MMZ TimePost.bin` geometry. The shared body reduces MMZ1's atlas from 505 to
+477 tiles, without duplicating a second pole bank. The editor archive combines
+the common master and these heads solely for preview and is not linked in ROM.
+
+Runtime `Checkpoint.bin` uses absolute VRAM tile words with `obGfx=0`, so
+mirroring never carries a signed bank offset into flip/palette bits. Frames
+0–2 are complete blue/red/yellow checkpoints, 3 is the body, 4–5 are orbiting
+red/yellow balls, 6–9 the two sign faces, 10–11 the spin edges, and 12–13 the
+head-only PAST/FUTURE views reserved for the time-travel indicator. SonLVL reads
+`Checkpoint editor.bin`, whose tile words address the compact preview archive.
+Run the checkpoint generator after editing the master or importing MMZ art.
+
 ### Hanging animation
 
 D9's traversable row reuses the original FBZ handhold: sixteen by forty pixels,
@@ -240,7 +276,8 @@ is not a source of free level VRAM.
 | `$A360-$A520` | `$51B` | Free after packing springs and adding the support, 14 tiles |
 | `$A520-$A820` | `$529` | Resident intact/broken monitor bodies, 24 tiles |
 | `$A820-$AA20` | `$541` | Four shared monitor-content DPLC slots, 16 tiles |
-| `$AA20-$ACA0` | `$551` | Reclaimed from resident monitor contents/second life portrait, 20 tiles |
+| `$AA20-$AA60` | `$551` | Optional yellow checkpoint ball, 2 tiles |
+| `$AA60-$ACA0` | `$553` | Remaining reclaimed monitor space, 18 tiles |
 | `$ACA0-$ADE0` | `$565` | Checkpoint, 10 tiles |
 | `$ADE0-$B020` | `$56F` | Auxiliary shield, 18 tiles |
 | `$B040-$BC00` | `$582` | Normal/shared fiery explosion art, 94 tiles |
@@ -780,6 +817,28 @@ their selected palette line. Human line 2 (hardware palette 1) keeps:
 
 Other colors and cycling effects must fit the remaining slots. Move their
 pixels and cycle destinations together; do not displace a shared ramp.
+
+### Mania miniature references (experimental)
+
+The editable reference crops in `art/sources/` retain the PC Sonic Mania
+miniature frames at their original pixel scale, including the separate mini
+Tails tail animations. They are source art for MMZ's later shrinking mechanic;
+they are not assembled player banks or replacements for the Continue sprites.
+Knuckles is reserved art only; no Knuckles player code is introduced.
+
+| Reference | PC sheet | Original crop, left/top/right/bottom (end exclusive) |
+| --- | --- | --- |
+| `Mania Mini Sonic.png` | [Sonic, sheet 95304](https://www.spriters-resource.com/pc_computer/sonicmania/asset/95304/) | `0,2057,1128,2304` |
+| `Mania Mini Tails.png` | [Tails, sheet 95305](https://www.spriters-resource.com/pc_computer/sonicmania/asset/95305/) | `0,2139,1176,2443` |
+| `Mania Mini Knuckles.png` | [Knuckles, sheet 95306](https://www.spriters-resource.com/pc_computer/sonicmania/asset/95306/) | `0,2553,1176,2861` |
+
+The sheets are credited to AsuharaMoon (Sonic's current sheet) and Random
+Talking Bush (Tails/Knuckles). Source pixels, labels and grid backgrounds are
+preserved. Crop the sprite cells and remove their backgrounds when converting
+to runtime tiles. Mania Tails follows the S2 shading convention; adapting him
+requires checking the placement of dark fur shades against Mystic Island's
+S3&K standing frame `$AD` and corresponding animated poses, as well as mapping
+colors into the shared palette. The source crop has not yet had that correction.
 
 The EHZ boss's drill/wheels use a one-word masked row-two load; see the
 [boss palette contract](Importing-objects.md#ehz-boss-palette). The former

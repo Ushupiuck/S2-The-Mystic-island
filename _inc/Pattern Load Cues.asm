@@ -215,19 +215,25 @@ ptr_PLC_LVE4_Main:	dc.w PLC_LVE4_Main-ArtLoadCues
 ptr_PLC_LVE4_Extra:	dc.w PLC_LVE4_Extra-ArtLoadCues
 ; ---------------------------------------------------------------------------
 ; Level slot $0F: Level 0F
-ptr_PLC_LVF1_Main:	dc.w PLC_LVF1_Main-ArtLoadCues
+ptr_PLC_LVF1_Main:	dc.w PLC_LVF1_Main-ArtLoadCues+PLCKos_IndexFlag
 ptr_PLC_LVF1_Extra:	dc.w PLC_LVF1_Extra-ArtLoadCues
-ptr_PLC_LVF2_Main:	dc.w PLC_LVF2_Main-ArtLoadCues
+ptr_PLC_LVF2_Main:	dc.w PLC_LVF2_Main-ArtLoadCues+PLCKos_IndexFlag
 ptr_PLC_LVF2_Extra:	dc.w PLC_LVF2_Extra-ArtLoadCues
 ptr_PLC_LVF3_Main:	dc.w PLC_LVF3_Main-ArtLoadCues
 ptr_PLC_LVF3_Extra:	dc.w PLC_LVF3_Extra-ArtLoadCues
 ptr_PLC_LVF4_Main:	dc.w PLC_LVF4_Main-ArtLoadCues
 ptr_PLC_LVF4_Extra:	dc.w PLC_LVF4_Extra-ArtLoadCues
 ; ---------------------------------------------------------------------------
-ArtLoadCues_End:
-		if ArtLoadCues_End-ActLoadCues<>LevelActCount*4
+ActLoadCues_End:
+		if ActLoadCues_End-ActLoadCues<>LevelActCount*4
 			fatal "Act PLC index must contain Main and Extra for every act"
 		endif
+; Era-specific primary lists follow the fixed Main/Extra act index.
+ptr_PLC_MMZ1_Past:	dc.w PLCKosM_MMZ1_Past-ArtLoadCues+PLCKos_IndexFlag
+ptr_PLC_MMZ1_GoodFuture:	dc.w PLCKosM_MMZ1_GoodFuture-ArtLoadCues+PLCKos_IndexFlag
+ptr_PLC_MMZ2_Past:	dc.w PLCKosM_MMZ2_Past-ArtLoadCues+PLCKos_IndexFlag
+ptr_PLC_MMZ2_BadFuture:	dc.w PLCKosM_MMZ2_BadFuture-ArtLoadCues+PLCKos_IndexFlag
+ArtLoadCues_End:
 		if (ArtLoadCues_End-ArtLoadCues)/2>$100
 			fatal "PLC IDs no longer fit level-header bytes"
 		endif
@@ -253,6 +259,7 @@ PLC_LivesTails_End:
 ; ---------------------------------------------------------------------------
 PLC_Main2:	dc.w ((PLC_Main2_End-PLC_Main2)/6)-1
 		plcm	Nem_Lamppost,	ArtTile_Lamppost
+		plcm	Nem_CheckpointYellow,	ArtTile_CheckpointYellow
 		plcm	Nem_MonitorBodies,	ArtTile_Monitor
 		plcm	Nem_VSpikes,	ArtTile_Spikes
 PLC_Main2_End:
@@ -1189,10 +1196,11 @@ PLC_LVE4_Extra_End:	plccheck PLC_LVE4_Extra,0
 ; PATTERN LOAD REQUEST LISTS
 ; Level 0F - Act 1
 ; ---------------------------------------------------------------------------
-PLC_LVF1_Main:		dc.w -1
-PLC_LVF1_Main_End:	plccheck PLC_LVF1_Main,ActPLC_Main_Reserve
-
+; Primary MMZ1 atlas is a typed module list below.
 PLC_LVF1_Extra:		dc.w (PLC_LVF1_Extra_End-PLC_LVF1_Extra-2)/6-1
+		plcm	Nem_MorphingPlatform,	ArtTile_MMZ_HVPlatform
+		plcm	Nem_MM_Propeller,	ArtTile_MMZ_Propeller
+		plcm	Nem_Wheel,	ArtTile_Wheel
 		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LVF1_Extra_End:	plccheck PLC_LVF1_Extra,0
 
@@ -1200,10 +1208,9 @@ PLC_LVF1_Extra_End:	plccheck PLC_LVF1_Extra,0
 ; PATTERN LOAD REQUEST LISTS
 ; Level 0F - Act 2
 ; ---------------------------------------------------------------------------
-PLC_LVF2_Main:		dc.w -1
-PLC_LVF2_Main_End:	plccheck PLC_LVF2_Main,ActPLC_Main_Reserve
-
+; Primary MMZ2 lists are typed module requests below.
 PLC_LVF2_Extra:		dc.w (PLC_LVF2_Extra_End-PLC_LVF2_Extra-2)/6-1
+		plcm	Nem_Wheel,	ArtTile_Wheel
 		plcm	Nem_Springs,	ArtTile_Springs
 PLC_LVF2_Extra_End:	plccheck PLC_LVF2_Extra,0
 
@@ -1410,6 +1417,10 @@ plcid_LVE4_Main:	equ (ptr_PLC_LVE4_Main-ArtLoadCues)/2
 plcid_LVE4_Extra:	equ (ptr_PLC_LVE4_Extra-ArtLoadCues)/2
 ; ---------------------------------------------------------------------------
 ; Level slot $0F: Level 0F
+plcid_MMZ2_Past:	equ (ptr_PLC_MMZ2_Past-ArtLoadCues)/2
+plcid_MMZ2_BadFuture:	equ (ptr_PLC_MMZ2_BadFuture-ArtLoadCues)/2
+plcid_MMZ1_Past:	equ (ptr_PLC_MMZ1_Past-ArtLoadCues)/2
+plcid_MMZ1_GoodFuture:	equ (ptr_PLC_MMZ1_GoodFuture-ArtLoadCues)/2
 plcid_LVF1_Main:	equ (ptr_PLC_LVF1_Main-ArtLoadCues)/2
 plcid_LVF1_Extra:	equ (ptr_PLC_LVF1_Extra-ArtLoadCues)/2
 plcid_LVF2_Main:	equ (ptr_PLC_LVF2_Main-ArtLoadCues)/2
@@ -1559,6 +1570,75 @@ plreqKosM macro toVRAMaddr,fromROMaddr
 	dc.w	tiles_to_bytes(toVRAMaddr)
 	endm
 
+; ---------------------------------------------------------------------------
+; MMZ SHARED / PER-ACT SPRITE BANKS
+; ---------------------------------------------------------------------------
+; All lists stay directly editable. Seven banks store common art once; each
+; act fills the same three private ranges. The Bad Future terrain spill is
+; static art in the thirteen reclaimed monitor tiles after the yellow ball.
+PLC_LVF1_Main:
+PLCKosM_MMZ1_Present:	plrKosMlistheader
+		plreqKosM ArtTile_MMZ_Atlas,Kospm_MMZ1_Platforms
+		plreqKosM ArtTile_MMZ_CrusherFloor,Kospm_MMZ_CrusherFloor
+		plreqKosM ArtTile_MMZ_Saw,Kospm_MMZ1_SawsSeesaw
+		plreqKosM ArtTile_MMZ_MechaBu,Kospm_MMZ_MechaBu
+		plreqKosM ArtTile_MMZ_Atlas+318,Kospm_MMZ1_Enemies
+		plreqKosM ArtTile_TimePostHeads,Kospm_MMZ_TimePostHeads
+		plreqKosM ArtTile_MMZ_Generator,Kospm_MMZ_Generator
+PLCKosM_MMZ1_Present_End:	plccheck PLCKosM_MMZ1_Present,ActPLC_Main_Reserve
+PLC_LVF1_Main_End:
+
+PLCKosM_MMZ1_Past:	plrKosMlistheader
+		plreqKosM ArtTile_MMZ_Atlas,Kospm_MMZ1_Platforms
+		plreqKosM ArtTile_MMZ_CrusherFloor,Kospm_MMZ_CrusherFloor
+		plreqKosM ArtTile_MMZ_Saw,Kospm_MMZ1_SawsSeesaw
+		plreqKosM ArtTile_MMZ_MechaBu,Kospm_MMZ_MechaBu
+		plreqKosM ArtTile_MMZ_Atlas+318,Kospm_MMZ1_Enemies
+		plreqKosM ArtTile_TimePostHeads,Kospm_MMZ_TimePostHeads
+		plreqKosM ArtTile_MMZ_Generator,Kospm_MMZ_GeneratorPast
+PLCKosM_MMZ1_Past_End:	plccheck PLCKosM_MMZ1_Past,ActPLC_Main_Reserve
+
+PLCKosM_MMZ1_GoodFuture:	plrKosMlistheader
+		plreqKosM ArtTile_MMZ_Atlas,Kospm_MMZ1_Platforms
+		plreqKosM ArtTile_MMZ_CrusherFloor,Kospm_MMZ_CrusherFloor
+		plreqKosM ArtTile_MMZ_Saw,Kospm_MMZ1_SawsSeesawGoodFuture
+		plreqKosM ArtTile_MMZ_MechaBu,Kospm_MMZ_MechaBu
+		plreqKosM ArtTile_MMZ_Atlas+318,Kospm_MMZ1_Enemies
+		plreqKosM ArtTile_TimePostHeads,Kospm_MMZ_TimePostHeads
+		plreqKosM ArtTile_MMZ_Generator,Kospm_MMZ_Generator
+PLCKosM_MMZ1_GoodFuture_End:	plccheck PLCKosM_MMZ1_GoodFuture,ActPLC_Main_Reserve
+
+PLC_LVF2_Main:
+PLCKosM_MMZ2_Present:	plrKosMlistheader
+		plreqKosM ArtTile_MMZ_Atlas,Kospm_MMZ2_EmittersDoors
+		plreqKosM ArtTile_MMZ_CrusherFloor,Kospm_MMZ_CrusherFloor
+		plreqKosM ArtTile_MMZ_Saw,Kospm_MMZ2_BombCrushers
+		plreqKosM ArtTile_MMZ_MechaBu,Kospm_MMZ_MechaBu
+		plreqKosM ArtTile_MMZ_Atlas+318,Kospm_MMZ2_DangoDoors
+		plreqKosM ArtTile_TimePostHeads,Kospm_MMZ_TimePostHeads
+		plreqKosM ArtTile_MMZ_Generator,Kospm_MMZ_Generator
+PLCKosM_MMZ2_Present_End:	plccheck PLCKosM_MMZ2_Present,ActPLC_Main_Reserve
+PLC_LVF2_Main_End:
+
+PLCKosM_MMZ2_Past:	plrKosMlistheader
+		plreqKosM ArtTile_MMZ_Atlas,Kospm_MMZ2_EmittersDoors
+		plreqKosM ArtTile_MMZ_CrusherFloor,Kospm_MMZ_CrusherFloor
+		plreqKosM ArtTile_MMZ_Saw,Kospm_MMZ2_BombCrushers
+		plreqKosM ArtTile_MMZ_MechaBu,Kospm_MMZ_MechaBu
+		plreqKosM ArtTile_MMZ_Atlas+318,Kospm_MMZ2_DangoDoors
+		plreqKosM ArtTile_TimePostHeads,Kospm_MMZ_TimePostHeads
+		plreqKosM ArtTile_MMZ_Generator,Kospm_MMZ_GeneratorPast
+PLCKosM_MMZ2_Past_End:	plccheck PLCKosM_MMZ2_Past,ActPLC_Main_Reserve
+
+PLCKosM_MMZ2_BadFuture:	plrKosMlistheader
+		plreqKosM ArtTile_MMZ_Atlas,Kospm_MMZ2_EmittersDoors
+		plreqKosM ArtTile_MMZ_CrusherFloor,Kospm_MMZ_CrusherFloor
+		plreqKosM ArtTile_MMZ_Saw,Kospm_MMZ2_BombCrushers
+		plreqKosM ArtTile_MMZ_MechaBu,Kospm_MMZ_MechaBu
+		plreqKosM ArtTile_MMZ_Atlas+318,Kospm_MMZ2_DangoDoors
+		plreqKosM ArtTile_TimePostHeads,Kospm_MMZ_TimePostHeads
+		plreqKosM ArtTile_MMZ_Generator,Kospm_MMZ_Generator
+PLCKosM_MMZ2_BadFuture_End:	plccheck PLCKosM_MMZ2_BadFuture,ActPLC_Main_Reserve
 ; ---------------------------------------------------------------------------
 ; RESIDENT END-OF-ACT ART
 ; Also addressable through the typed ArtLoadCues entries above.

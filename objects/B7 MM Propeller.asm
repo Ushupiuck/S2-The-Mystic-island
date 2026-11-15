@@ -38,6 +38,10 @@ MM_Propeller:
 		move.w	obX(a0),prop_home_x(a0)
 		move.l	#Map_MM_PropellerBase,obMap(a0)
 		move.w	#ArtTile_Propeller,obGfx(a0)
+		cmpi.b	#id_MMZ,(v_zone).w
+		bne.s	.art_ready
+		move.w	#ArtTile_MMZ_Propeller,obGfx(a0)
+.art_ready:
 		andi.b	#1,obStatus(a0)
 		andi.b	#1,obRender(a0)	; Y flip does not invert the mast
 		ori.b	#4,obRender(a0)
@@ -109,7 +113,7 @@ MM_Propeller:
 		ori.b	#4,obRender(a1)
 		move.w	#$180,obPriority(a1)
 		move.l	#Map_MM_PropellerBlade,obMap(a1)
-		move.w	#ArtTile_Propeller,obGfx(a1)
+		move.w	obGfx(a0),obGfx(a1)
 		move.b	#Map_MM_PropellerBlade_width,width_pixels(a1)
 		move.b	#Map_MM_PropellerBlade_height,height_pixels(a1)
 		move.w	obX(a0),obX(a1)
