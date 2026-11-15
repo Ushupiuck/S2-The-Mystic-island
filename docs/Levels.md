@@ -123,11 +123,30 @@ one in another act loading compatible art. The F1 Debug list exposes these
 variants, the existing morphing platform, propeller and wheeled carrier, plus
 the common ring/shield/invincibility/speed monitors. Mecha-Bu is also implemented for both acts, including its independent blade
 and both actors' touch responses. The shared `$AE` Bomb family also implements
-Bigbom. The importer now supplies eleven Mecha-Bu placements across both acts
-and all twelve Act-2 Bigboms with original variants and era masks. It replaces
-only these completed enemy families when reimporting placements; other editable
-rows are preserved. The remaining enemies, mechanisms, object placements and
-time-warp sequence are still pending.
+Bigbom. The importer now supplies 170 source roots across the completed
+families, retaining coordinates, era masks and variants. It replaces these
+adopted families on an explicit reimport and preserves other editable rows,
+including time poles sharing `$79`. The two existing signpost rows remain.
+
+| Adopted family | ID | Act 1 | Act 2 |
+| --- | --- | --- | --- |
+| Mecha-Bu | `$B8` | 6 | 5 |
+| Bigbom | `$AE` | 0 | 12 |
+| Crumbling floor / static block | `$1B` | 10 | 16 |
+| Crusher / launcher | `$A5` | 10 | 15 |
+| Diagonal buzzsaw | `$A4` | 12 | 0 |
+| Vanishing groups | `$A6` | 19 | 0 |
+| Fixed / curved flippers | `$A9` | 18 | 0 |
+| Spring carrier | `$B0` | 10 | 9 |
+| Morphing platform | `$20` | 4 | 0 |
+| Propeller | `$B7` | 9 | 0 |
+| Checkpoint | `$79` | 8 | 7 |
+
+The importer translates signed CD floor widths to the explicit static flag,
+moves diagonal-saw direction bits to placement flips, and translates CD's
+moving yellow-up spring to carrier preset 1 (preset 2 is sideward here).
+The remaining enemies, mechanisms, pickup/object placements and time-warp
+sequence are still pending; this is not yet the complete source object layout.
 
 The Act-1 sprite atlas occupies `$26D-$449`; the complete 41-tile Bomb bank
 follows at `$44A-$472`, leaving five tiles before the reused morphing bank at

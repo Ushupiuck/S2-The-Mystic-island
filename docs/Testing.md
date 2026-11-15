@@ -172,7 +172,15 @@ compares all authored source-quadrant pixels and both collision paths, then
 executes the real Act-2 headers, parallax providers and palette/tile animation.
 `--core CORE --system-directory BIOS` adds 24 actual era/camera scenes;
 `--pal` selects PAL. Bad Future's full 621-tile bank must remain contiguous.
-These are positioned terrain fixtures, not completed placement/playthrough tests.
+These are positioned terrain fixtures, not a complete playthrough.
+
+The Act-1 runner also loads both actual ROM placement tables through the MD/CD
+manager in all four eras, with a fresh camera window around every adopted root.
+It compares every resulting placement handle, constructor, word subtype and
+flip against an independent geometric/era window model. This covers the
+currently adopted families listed in [Levels](Levels.md#metallic-madness-import-experimental),
+not the remaining unported source objects. The generic object-manager check
+uses the Present era mask when checking all 64 act tables.
 
 `check_metallic_enemies.py --output test-results/mmz-enemies.json` executes
 8,000 Mecha-Bu motion/attachment updates in both slot orders and checks full-pool

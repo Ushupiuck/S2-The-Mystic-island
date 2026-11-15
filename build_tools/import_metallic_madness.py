@@ -385,32 +385,68 @@ def sprites2(source):
 	return outputs,dict(families=report,private_tiles=278,shared_tiles=165)
 
 
-def enemy_placements(source, act):
-	"""Import completed enemy families while preserving other editable placements."""
+def placements(source, act):
+	"""Import completed families while preserving other editable placements."""
 	from object_layout import decode, encode
 	path = f'level/objects/LV0F_{act}.bin'
-	# Incremental ownership is explicit: add a family here only once its runtime
-	# and art load are present. Other placed families remain directly editable.
-	rows = [row for row in decode((ROOT/path).read_bytes()) if row[2] not in (0xAE, 0xB8)]
-	counts = {'Bigbom': 0, 'MechaBu': 0}
+	# Expand this explicit ownership list only after runtime, art and editor data
+	# exist. Reimporting a completed family resets its authored source settings.
+	ids = {'BigbomObject': 0xAE, 'MechaBuObject': 0xB8,
+		'CollapseFloorObject': 0x1B, 'CrusherObject': 0xA5,
+		'BuzzsawObject': 0xA4, 'VanishPlatformObject': 0xA6,
+		'SpinPlatformObject': 0xA9, 'MoveSpringObjectR8': 0xB0,
+		'HVPlatformObject': 0x20, 'PropellerObject': 0xB7,
+		'CheckpointObject': 0x79}
+	# Time poles share $79 but belong to the later MonitorTime import.
+	rows = [row for row in decode((ROOT/path).read_bytes())
+		if row[2] not in ids.values() or (row[2] == 0x79 and row[4] & 0x300)]
+	index = re.findall(r'^\s*dc\.l\s+(\w+)',
+		(source/f'src/r8/object_index_{act}.asm').read_text(), re.M)
+	counts = dict.fromkeys(ids, 0)
 	for x, y, oid, sub, eras, variant in struct.iter_unpack('>HHBBBB',
 		(source/f'src/maps/r8/objects_{act}.bin').read_bytes()):
 		if x == 0xFFFF:
 			break
 		oid &= 0x7F
-		if oid not in (0x23, 0x24):
+		assert 0 < oid <= len(index), ('Source placement ID', act, x, oid)
+		family = index[oid-1]
+		if family not in ids:
 			continue
-		assert not y & 0x3000 and eras & 0xE0, ('Enemy placement flags', act, x, y, eras)
+		assert not y & 0x3000 and eras & 0xE0, ('Placement flags', act, x, y, eras)
 		y = (y & 0xFFF) | ((y & 0xC000) >> 1)
-		if oid == 0x23:
+		if family == 'BigbomObject':
 			assert act == 2 and sub == 0 and variant <= 2
-			row = x, y, 0xAE, eras & 0xE0, (variant << 8) | 0x10
-			counts['Bigbom'] += 1
-		else:
+			sub = (variant << 8) | 0x10
+		elif family == 'MechaBuObject':
 			assert sub in (0, 1) and variant in (0, 1)
-			row = x, y | (0x2000 if variant else 0), 0xB8, eras & 0xE0, sub
-			counts['MechaBu'] += 1
-		rows.append(row)
+			y |= 0x2000 if variant else 0
+		elif family == 'CollapseFloorObject':
+			assert variant == 0 and (1 <= sub <= 8 or sub in (254, 255))
+			sub = 0x100 | (sub if sub < 128 else (0x80 | (256-sub)))
+		elif family == 'BuzzsawObject':
+			assert variant == 0 and sub & 0x7C == 0
+			y |= (sub & 3) << 13
+			sub = 0x100 | (sub & 0x80)
+		elif family == 'CrusherObject':
+			assert variant == 0 and sub & 3 <= 2
+			sub |= 0x100
+		elif family == 'VanishPlatformObject':
+			assert variant == 0 and sub <= 2
+			sub |= 0x100
+		elif family == 'SpinPlatformObject':
+			assert sub in (0, 1) and variant in (0, 1)
+			# A fixed pair uses word bit 1; bit 0 remains the moving curve.
+			sub = 0x100 | (1 if sub else variant << 1)
+		elif family == 'MoveSpringObjectR8':
+			assert variant == 0 and sub in (0, 2, 128)
+			# CD's spring $02 is yellow-up; our carrier preset 2 is sideward.
+			sub = 0x100 | (sub & 0x80) | (1 if sub & 0xF == 2 else 0)
+		elif family in ('HVPlatformObject', 'PropellerObject'):
+			assert sub == variant == 0
+		else:
+			assert family == 'CheckpointObject' and variant == 0 and 1 <= sub <= 8
+		rows.append((x, y, ids[family], eras & 0xE0, sub))
+		counts[family] += 1
 	return {path: encode(sorted(rows, key=lambda row: row[0]))}, counts
 
 
@@ -494,8 +530,8 @@ def build(source):
 	outputs.update(sprite2_outputs)
 	sprite_report['act2']=sprite2_report
 	for act in (1, 2):
-		placements, counts = enemy_placements(source, act)
-		outputs.update(placements)
+		placed, counts = placements(source, act)
+		outputs.update(placed)
 		sprite_report['placements'+str(act)] = counts
 	return outputs,report,animation_report,sprite_report
 

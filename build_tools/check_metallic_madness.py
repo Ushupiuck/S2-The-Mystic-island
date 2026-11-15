@@ -176,6 +176,37 @@ def animation_checks(args,act=1):
 		shared_animated_tiles=reference['tiles'])
 
 
+def placement_native(args):
+	"""Exercise the real ROM placement tables and CD selection in every era."""
+	from native_test_core import Manager
+	from object_layout import decode
+	m = Manager(args.rom, args.listing)
+	windows = 0
+	loaded = 0
+	for act in (1, 2):
+		rows = decode((ROOT/f'level/objects/LV0F_{act}.bin').read_bytes())
+		cameras = {(max(0, x-160) & 0xFF80, max(0, (y & 0xFFF)-112) & 0xFF80)
+			for x, y, oid, eras, sub in rows}
+		for era, mask in enumerate((0x40, 0x20, 0x80, 0x80)):
+			for x, y in sorted(cameras):
+				m.start()
+				m.write('Current_ZoneAndAct', 0xF00+act-1, 2)
+				m.write('Current_Timezone', era)
+				m.cam(x, y)
+				m.act('ObjectsManager')
+				live = m.verify(rows)
+				actual = {(ptr-m.respawn_base) & 65535 for ptr in live}
+				expected = {i for i, (px, py, oid, eras, sub) in enumerate(rows)
+					if eras & mask and max(0, x-128) <= px < x+640
+					and max(0, y-128) <= py & 0xFFF <= y+512}
+				assert actual == expected, (act, era, x, y, actual ^ expected)
+				assert all(m.get(obj, 'code') != m.s['ObjNull'] for obj in live.values())
+				loaded += len(live)
+				windows += 1
+	return dict(windows=windows, created_roots=loaded, acts=2, eras=4,
+		actual_rom_tables=True, exact_subtypes_and_flips=True)
+
+
 def game(args):
 	from genesis_test_core import Genesis
 	from check_object_course import boot_level
@@ -735,7 +766,7 @@ def main():
 	p.add_argument('--system-directory',type=Path)
 	p.add_argument('--pal',action='store_true')
 	args=p.parse_args();args.output.mkdir(parents=True,exist_ok=True)
-	report=dict(native=native(args))
+	report=dict(native=native(args),placements=placement_native(args))
 	if args.source:
 		report['animations']=animation_checks(args)
 		report['platforms']=platform_native(args)

@@ -9,6 +9,7 @@ from pathlib import Path
 import argparse
 import struct
 from itertools import product
+from object_layout import with_timezones
 
 from native_test_core import (Native, Manager, UC_M68K_REG_A0, UC_M68K_REG_A1,
 								UC_M68K_REG_A2, UC_M68K_REG_A3, UC_M68K_REG_A4,
@@ -35,7 +36,11 @@ def eligible(rows,x,y,wrap=False):
 		bottom&=0x7FF
 	else:
 		top=max(top,0)
-	return {i for i,(px,py,*_) in enumerate(rows) if lo<=px<hi and (py&0x8000 or (top<=py&0xFFF<=bottom if top<=bottom else (py&0xFFF>=top or py&0xFFF<=bottom)))}
+	return {i for i,row in enumerate(map(with_timezones,rows))
+		if row[3]&0x40 and lo<=row[0]<hi and (row[1]&0x8000 or
+		(top<=row[1]&0xFFF<=bottom if top<=bottom else
+		(row[1]&0xFFF>=top or row[1]&0xFFF<=bottom)))}
+
 
 m=Manager(args.rom, args.listing)
 report={}
