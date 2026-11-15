@@ -288,3 +288,7 @@ red/yellow activated ball, and optional independent actor-path filter. Preview
 art uses the compact `Checkpoint editor.nem`/`Checkpoint editor.bin` pair;
 runtime maps address separate VRAM banks. PAST/FUTURE placements require their
 22-tile per-act head bank, supplied by all four MMZ1 eras.
+
+Mecha-Bu (`$B8`) is available in both MMZ act definitions. Its Saw reach property
+selects alternating/fixed-low reach; X flip mirrors the complete body/blade
+preview. The 48-tile art span is shared by both acts.

@@ -43,6 +43,7 @@ namespace MysticIsland.ObjectDefinitions
 				frames = behavior == "Eggman"
 					? RenderBossCockpits(pixels, map, data.Palette, int.Parse(Setting("mapframes", "11")))
 					: Render(pixels, map, data.Palette, dplc, data.DPLCVersion, int.Parse(Setting("mapframes", "0")));
+				if (behavior == "MMZMechaBu") alternate = Render(pixels, File.ReadAllBytes("../mappings/sprite/MMZ MechaBu Saw.bin"), 0, null);
 				if (behavior == "MMZSaw") alternate = Render(pixels, File.ReadAllBytes("../mappings/sprite/MMZ Saw Handle.bin"), 0, null);
 			}
 			else frames = new[] { Outline(16, 16) };
@@ -207,6 +208,8 @@ namespace MysticIsland.ObjectDefinitions
 					Bits("Shape", 4, 7, "Size / frame configuration.", "Sliding block (128 x 24)", "Stomper (56 x 64)", "Stomper, 64 px travel", "Stomper, 96 px travel", "Large lift (256 x 128)");
 					Bits("Switch controlled", 7, 1, "When set, low nibble = switch; otherwise low nibble = movement.", "No", "Yes");
 					Bits("Movement / switch", 0, 15, "Button number when switch controlled; movement type 0 to 5 otherwise."); break;
+				case "MMZMechaBu":
+					Bits("Saw reach", 0, 1, "The independent saw alternates every 61 updates, or stays low. X flip mirrors the attachment.", "Alternating", "Fixed low"); break;
 				case "MMZSaw":
 					Bits("Initial phase", 7, 1, "The handle stays fixed; X and Y flips independently mirror the diagonal travel.", "Retracted", "Extended");
 					break;
@@ -598,6 +601,7 @@ namespace MysticIsland.ObjectDefinitions
 					return new Sprite(pieces);
 				case "Junction": return new Sprite(frames[0], At(frames, 16));
 				case "Eggman": return new Sprite(alternate[0], frames[(subtype & 1) == 0 ? 0 : 7]);
+				case "MMZMechaBu": return new Sprite(frames[0], new Sprite(At(alternate, (subtype & 1) == 0 ? 2 : 0), (subtype & 1) == 0 ? -19 : -25, (subtype & 1) == 0 ? -15 : 0));
 				case "MMZSaw":
 					int mmzMount = (subtype & 128) == 0 ? 0 : -80;
 					return new Sprite(new Sprite(At(frames, (subtype & 128) == 0 ? 0 : 16), 1, 1), new Sprite(alternate[0], mmzMount, mmzMount));

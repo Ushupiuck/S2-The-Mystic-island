@@ -174,6 +174,16 @@ executes the real Act-2 headers, parallax providers and palette/tile animation.
 `--pal` selects PAL. Bad Future's full 621-tile bank must remain contiguous.
 These are positioned terrain fixtures, not completed placement/playthrough tests.
 
+`check_metallic_enemies.py --output test-results/mmz-enemies.json` executes
+8,000 Mecha-Bu motion/attachment updates in both slot orders and checks full-pool
+retry, placement release, recycled links, both collision shapes and Good Future
+suppression. Its native floor distance, sound and DMA boundaries are stubbed.
+`--core CORE --system-directory BIOS` adds actual terrain/PLC scenes in both
+acts and all eras, both facings, linked hardware SAT checks, both actors' rolling
+hits, blade damage and post-defeat cleanup. `--pal` repeats PAL. Positioned
+contact fixtures hold actor movement while the real touch handler runs; they do
+not establish a controller playthrough or source-placement import.
+
 ## Touch-response checks
 
 ```sh

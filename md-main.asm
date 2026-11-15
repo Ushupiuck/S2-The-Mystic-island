@@ -7422,7 +7422,7 @@ ptr_ObjB4:		dc.l PP_TagaTaga
 ptr_ObjB5:		dc.l PP_Tamabboh
 ptr_ObjB6:		dc.l PP_TamabbohMissile
 ptr_ObjB7:		dc.l MM_Propeller
-ptr_ObjB8:		dc.l ObjNull
+ptr_ObjB8:		dc.l MMZ_MechaBu
 ptr_ObjB9:		dc.l ObjNull
 ptr_ObjBA:		dc.l ObjNull
 ptr_ObjBB:		dc.l ObjNull
@@ -11092,6 +11092,9 @@ Touch_Size_MechaFront:
 		dc.b $10,$40
 Touch_Size_MMZSaw:
 		dc.b $1C,$1C	; CD buzzsaw: 28-pixel harmful half-size
+Touch_Size_MMZMechaBu:
+		dc.b $10,$E
+Touch_Size_MMZMechaBu_ID = (Touch_Size_MMZMechaBu-Touch_Sizes)/2+1
 Touch_Size_MMZSaw_ID = (Touch_Size_MMZSaw-Touch_Sizes)/2+1
 Touch_Size_MechaHead_ID = (Touch_Size_MechaHead-Touch_Sizes)/2+1
 Touch_Size_MechaFront_ID = (Touch_Size_MechaFront-Touch_Sizes)/2+1
@@ -13468,6 +13471,7 @@ Kospm_Crabmeat:	binclude	"art/moduled kosinski/Enemy Crabmeat.kospm"
 		include "objects/Scrap Madness/A3 Spinning Platforms.asm"
 		include "objects/Metallic Madness/Common.asm"
 		include "objects/Metallic Madness/Floors.asm"
+		include "objects/Metallic Madness/Enemies.asm"
 		include "objects/Scrap Madness/A4 Saws.asm"
 		include "objects/Scrap Madness/A5 Stomper.asm"
 		include "objects/Scrap Madness/A6 Vanishing Platforms.asm"

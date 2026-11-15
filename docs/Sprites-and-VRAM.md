@@ -174,6 +174,24 @@ head-only PAST/FUTURE views reserved for the time-travel indicator. SonLVL reads
 `Checkpoint editor.bin`, whose tile words address the compact preview archive.
 Run the checkpoint generator after editing the master or importing MMZ art.
 
+### MMZ enemy art
+
+The MMZ Mecha-Bu body and blade use their existing 48-tile shared atlas span,
+resident in both acts. Their mapping words already include atlas offsets;
+constructors use `ArtTile_MMZ_Atlas`, not a second addition of the span offset.
+
+Bigbom's complete 93-tile family remains resident and Kosinski+ module packed;
+DPLCs are explicitly not selected for it. Its unchanged body/fuse components
+and independently living burning fuse/debris remain together in the complete
+editable art bank. Do not split its art into body/leg/component files. If partial
+DPLCs are considered for another family, preserve a complete editable sheet
+and prepare a stable decompressed source before streaming selected ranges.
+
+The roller's two mapping variants currently share 78 resident tiles. Its largest
+frame references 15 tiles. DPLCs are still a candidate, not implemented: sizing
+must account for simultaneous independent frames and live object lifetime,
+not just the number of authored origins in one camera-loading window.
+
 ### Hanging animation
 
 D9's traversable row reuses the original FBZ handhold: sixteen by forty pixels,

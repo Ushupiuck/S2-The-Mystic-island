@@ -121,8 +121,9 @@ The first shared object families now have MMZ variants: `$A4` diagonal saw,
 Zone `$0F` selects them automatically; word-subtype bit 8 explicitly selects
 one in another act loading compatible art. The F1 Debug list exposes these
 variants, the existing morphing platform, propeller and wheeled carrier, plus
-the common ring/shield/invincibility/speed monitors. Source placements, the
-remaining enemies/mechanisms and the time-warp sequence are still pending.
+the common ring/shield/invincibility/speed monitors. Mecha-Bu is also implemented for both acts, including its independent blade
+and both actors' touch responses. Source placements, the remaining enemies/
+mechanisms and the time-warp sequence are still pending.
 
 The Act-1 sprite atlas occupies `$26D-$449`; 46 reserved tiles remain before
 the reused morphing bank at `$478`. Each act selects seven Moduled Kosinski+

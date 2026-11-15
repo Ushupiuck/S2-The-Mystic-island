@@ -192,8 +192,11 @@ def main():
 	assert act_count == symbols['LevelCount'] * symbols['ActsPerZone']
 	assert len(act_lists) == act_count * 2
 	base_ids = [rom[symbols['LevelArtPointers']+act*12+offset] for act in range(act_count) for offset in (0,4)]
-	era_primary = {'LevelArtPointersP':'Past','LevelArtPointersGF':'GoodFuture'}
-	era_lists = tuple('PLCKosM_MMZ1_'+era for era in era_primary.values())
+	era_primary = {'LevelArtPointersP': ((1, 'Past'), (2, 'Past')),
+		'LevelArtPointersGF': ((1, 'GoodFuture'),),
+		'LevelArtPointersBF': ((2, 'BadFuture'),)}
+	era_lists = tuple('PLCKosM_MMZ%d_%s' % (act, era)
+		for overrides in era_primary.values() for act, era in overrides)
 	for table in ('LevelArtPointers', 'LevelArtPointersP', 'LevelArtPointersGF', 'LevelArtPointersBF'):
 		assert symbols[table + '_End'] - symbols[table] == act_count * 12, table
 		ids = [rom[symbols[table]+act*12+offset] for act in range(act_count) for offset in (0,4)]
@@ -202,11 +205,11 @@ def main():
 		assert len(set(ids)) == len(set(targets)) == act_count * 2, table
 		expected_targets = {symbols[label] for label in act_lists}
 		expected_ids = base_ids[:]
-		if table in era_primary:
-			era = era_primary[table]
-			expected_targets.remove(symbols['PLC_LVF1_Main'])
-			expected_targets.add(symbols['PLCKosM_MMZ1_'+era])
-			expected_ids[symbols['id_MMZ']*symbols['ActsPerZone']*2] = symbols['plcid_MMZ1_'+era]
+		for act, era in era_primary.get(table, ()):
+			expected_targets.remove(symbols['PLC_LVF%d_Main' % act])
+			expected_targets.add(symbols['PLCKosM_MMZ%d_%s' % (act, era)])
+			index = (symbols['id_MMZ']*symbols['ActsPerZone']+act-1)*2
+			expected_ids[index] = symbols['plcid_MMZ%d_%s' % (act, era)]
 		assert set(targets) == expected_targets, table
 		assert ids == expected_ids, table
 	assert symbols['KosMLevelCues_End'] - symbols['KosMLoadCues'] == act_count * 2

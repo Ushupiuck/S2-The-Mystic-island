@@ -132,7 +132,7 @@ W.I.P./unassembled sources are development work, not disposable unused code.
 - Inspect the current branch and local changes first. Continue shared fixes
   and the Metallic Madness import on `Mystic-Island-(Experimental)`. The former
   `metallic-madness-port` branch is integrated and retired. Keep unrelated
-  experiments isolated.
+  experiments isolated. Do not create a new branch unless absolutely necessary.
   Do not overwrite another person's work or mix unrelated functionality into
   a cleanup commit.
 - Trace the complete affected path, not just the first matching file. Consider

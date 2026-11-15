@@ -210,6 +210,30 @@ retain their 1.5px/update movement. Bit 7 shortens MMZ's patrol from 80 to 64px.
 Payload subtype/facing comes from `WheelPayloads`, not the carrier's patrol
 flag. The new variants reuse the already imported floor mappings and wheel art.
 
+### Mecha-Bu
+
+`$B8` selects Mecha-Bu in either MMZ act. Low subtype bit 0 selects an
+alternating blade (61-update holds) or a fixed low blade; placement X flip
+mirrors its reach. `objects/Metallic Madness/Enemies.asm` owns the named body
+and blade fields and direct update entries. The body retains CD's 16.16
+`$5000` steps and 410-update reversals, one-pixel initial fall, floor following,
+and 32-visible-update buzzing cadence. Its normal hitbox is 16 by 14 half-size;
+the separate harmful blade reuses the existing 12 by 16 hitbox.
+
+The constructor allocates its sole child before exposing either part. A full
+pool leaves the untouched constructor and placement handle ready to retry.
+Only the body owns a placement; unload deletes a child only when both handles
+agree. The blade accepts the body's full fall/walk entries and validates the
+reciprocal child field, so a destroyed or recycled same-family parent cannot
+adopt it. Body updates synchronize the final attachment position even when
+allocation put the blade earlier in the execution order. Both actors can
+break the body and are hurt by the blade through ordinary touch response.
+
+Good Future currently suppresses this enemy. CD's generator-dependent seed
+replacement and source placement import remain pending. Both forms are
+available in both MMZ Debug lists and SonLVL definitions; the existing shared
+48-tile Mecha-Bu bank is reused without another art copy or PLC.
+
 ## SST and dispatch
 
 Each object status table (SST) is `$4E` bytes. The pool contains 23 reserved and
