@@ -4,6 +4,19 @@
 byte ranges. A tile is 32 bytes. Object-specific act loads are selected through
 [per-act PLCs](Levels.md#per-act-art); fixed addresses do not replace those loads.
 
+## Compression and staging assets
+
+Prefer Nemesis for ordinary art unless the Kosinski+ moduled archive is smaller,
+or its use benefits from a persistent decompressed source, DPLCs or fast loading
+(such as a boss). Use complete resident Kosinski+ module banks for both Bomb and Bigbom. Compression choice must follow measured data and the actual loader path.
+
+`art/nemesis/S1/` is temporary staging for unused assets, not an origin-based
+permanent category. Move an adopted archive to its compression folder and update
+its ASM, editor and generator consumers together. Active SBZ source archives
+also leave staging when they feed the resident atlas. Keep unused references
+in staging until needed; remove the folder once it is empty. Preserve byte
+content on a move, and keep generators writing to the adopted destination.
+
 ## Mapping and rendering ABI
 
 Ordinary mappings use a word piece count followed by six-byte pieces:

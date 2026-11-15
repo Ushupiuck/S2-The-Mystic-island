@@ -103,6 +103,8 @@ W.I.P./unassembled sources are development work, not disposable unused code.
 
 # Assets, generators and cleanup
 
+- Follow the compression and unused-asset staging rules in
+  [Sprites and VRAM](docs/Sprites-and-VRAM.md#compression-and-staging-assets).
 - Find the authoritative editable source and its generator before changing
   generated art, mappings, DPLCs, bounds or audio data. Update that source or
   generator, regenerate the checked-in outputs, and inspect the resulting diff.

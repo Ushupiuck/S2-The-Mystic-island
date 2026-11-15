@@ -143,7 +143,7 @@ def build():
 			for _,size,word,_ in row:
 				tiles = set(range(word&2047,(word&2047)+((size>>2)+1)*((size&3)+1)))
 				assert not tiles&changed, ('Flame tiles shared with another object',path,tiles&changed)
-	(ROOT/'art/nemesis/S1/SBZ Flaming Pipe.nem').write_bytes(nemesis_compress(pipe))
+	(ROOT/'art/nemesis/SBZ Flaming Pipe.nem').write_bytes(nemesis_compress(pipe))
 	atlas_path.write_bytes(atlas)
 	(ROOT/'art/nemesis/SMZ Sprite Atlas.nem').write_bytes(nemesis_compress(atlas))
 	print(f'44 fireball tiles; 14 launcher tiles; {len(changed)} SMZ atlas tiles updated; mappings and hardware retained.')

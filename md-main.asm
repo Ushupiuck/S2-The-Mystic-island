@@ -13258,19 +13258,19 @@ Kosp_TitleBg2:	binclude	"tilemaps/Title Background - 2.kosp"
 ; ---------------------------------------------------------------------------
 ; Green Hill Zone stage assets
 ; ---------------------------------------------------------------------------
-Nem_Stalk:	binclude	"art/nemesis/S1/GHZ Flower Stalk.nem"
+Nem_Stalk:	binclude	"art/nemesis/GHZ Flower Stalk.nem"
 		even
-Nem_Swing:	binclude	"art/nemesis/S1/GHZ Swinging Platform.nem"
+Nem_Swing:	binclude	"art/nemesis/GHZ Swinging Platform.nem"
 		even
-Nem_GHZ_Bridge:	binclude	"art/nemesis/S1/GHZ Bridge.nem"
+Nem_GHZ_Bridge:	binclude	"art/nemesis/GHZ Bridge.nem"
 		even
-Nem_GHZ_Ball:	binclude	"art/nemesis/S1/GHZ Giant Ball.nem"
+Nem_GHZ_Ball:	binclude	"art/nemesis/GHZ Giant Ball.nem"
 		even
-Nem_GHZ_Rock:	binclude	"art/nemesis/S1/GHZ Purple Rock.nem"
+Nem_GHZ_Rock:	binclude	"art/nemesis/GHZ Purple Rock.nem"
 		even
-Nem_GHZ_BWall:	binclude	"art/nemesis/S1/GHZ Breakable Wall.nem"
+Nem_GHZ_BWall:	binclude	"art/nemesis/GHZ Breakable Wall.nem"
 		even
-Nem_GHZ_SWall:	binclude	"art/nemesis/S1/GHZ Edge Wall.nem"
+Nem_GHZ_SWall:	binclude	"art/nemesis/GHZ Edge Wall.nem"
 		even
 ; ---------------------------------------------------------------------------
 ; Rustic Ruins Zone stage assets
@@ -13330,7 +13330,7 @@ Art_MechaSonic:	binclude "art/uncompressed/Mecha Sonic.unc"
 		even
 Kospm_MechaEffects:	binclude "art/moduled kosinski/Mecha Sonic effects.kospm"
 		even
-Nem_Swing2:		binclude	"art/nemesis/S1/SLZ Swinging Platform.nem"
+Nem_Swing2:		binclude	"art/nemesis/SLZ Swinging Platform.nem"
 			even
 
 zSoundIndexEntry macro pointer, priority
@@ -13679,13 +13679,13 @@ Kospm_EggmanFace:	binclude "art/moduled kosinski/Eggman face.kospm"
 		even
 Kospm_EggRoboHead:	binclude "art/moduled kosinski/Egg Robo head.kospm"
 		even
-Kospm_FzEggman:	binclude "art/nemesis/S1/Boss - Eggman after FZ Fight.kospm" ; damaged cockpit, reserved for FZ
+Kospm_FzEggman:	binclude "art/moduled kosinski/Boss - Eggman after FZ Fight.kospm" ; damaged cockpit, reserved for FZ
 		even
-Nem_Eggman:	binclude	"art/nemesis/S1/Boss - Eggman in SBZ2 & FZ.nem"		; Walking/Running/Jumping frames
+Nem_Eggman:	binclude	"art/nemesis/Boss - Eggman in SBZ2 & FZ.nem"		; Walking/Running/Jumping frames
 		even
 Kospm_Weapons:	binclude "art/moduled kosinski/Boss weapons.kospm"
 		even
-Kospm_FzBoss:	binclude "art/nemesis/S1/Boss - Final Zone.kospm" ; piston assembly, reserved for FZ
+Kospm_FzBoss:	binclude "art/moduled kosinski/Boss - Final Zone.kospm" ; piston assembly, reserved for FZ
 		even
 Kospm_Exhaust:	binclude "art/moduled kosinski/Boss exhaust.kospm"
 		even
@@ -13853,9 +13853,9 @@ Kospm_MiniTails:	binclude	"art/moduled kosinski/Mini Tails continue.kospm"
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - Ending (Leftover placeholder - to be re-used)
 ; ---------------------------------------------------------------------------
-Nem_EndEm:		binclude	"art/nemesis/S1/Ending - Emeralds.nem"
+Nem_EndEm:		binclude	"art/nemesis/Ending - Emeralds.nem"
 			even
-Nem_EndSonic:		binclude	"art/nemesis/S1/Ending - Sonic.nem"
+Nem_EndSonic:		binclude	"art/nemesis/Ending - Sonic.nem"
 			even
 Kospm_EndFlowers:	binclude	"art/moduled kosinski/Ending - Flowers.kospm"
 		even
@@ -13864,7 +13864,7 @@ Kospm_EndStalk:		binclude	"art/moduled kosinski/Ending - Flower Stalk.kospm"
 Kosp_CreditText:	binclude	"art/kosinski/Ending - Credits.kosp"
 Kospm_TryAgain:		binclude	"art/moduled kosinski/Ending - Try Again.kospm"
 		even
-Nem_EndStH:		binclude	"art/nemesis/S1/Ending - StH Logo.nem"
+Nem_EndStH:		binclude	"art/nemesis/Ending - StH Logo.nem"
 			even
 ; ---------------------------------------------------------------------------
 ; Bonus & Special Stage data

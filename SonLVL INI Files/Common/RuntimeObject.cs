@@ -144,7 +144,7 @@ namespace MysticIsland.ObjectDefinitions
 						Load("../art/nemesis/HPZ bridge.nem", CompressionType.Nemesis, "obj1D_HPZ.bin", 3)[3],
 						Load("../art/nemesis/HPZ Pulsing Ball.nem", CompressionType.Nemesis, "HPZ Pulsing Orb.bin", 3)[0],
 						Load("../art/nemesis/EHZ bridge.nem", CompressionType.Nemesis, "obj1D_EHZ.bin", 2)[1],
-						Load("../art/nemesis/S1/GHZ Bridge.nem", CompressionType.Nemesis, "obj1D_GHZ.bin", 2)[1],
+						Load("../art/nemesis/GHZ Bridge.nem", CompressionType.Nemesis, "obj1D_GHZ.bin", 2)[1],
 						Load("../art/nemesis/HTZ zip-line platform.nem", CompressionType.Nemesis, "HTZ Descending lift.bin", 2)[3],
 						Load("../art/nemesis/HTZ zip-line platform.nem", CompressionType.Nemesis, "HTZ Descending lift.bin", 2)[4],
 						Load("../art/nemesis/HTZ zip-line platform.nem", CompressionType.Nemesis, "HTZ Descending lift.bin", 2)[1] };
@@ -273,11 +273,11 @@ namespace MysticIsland.ObjectDefinitions
 		{
 			bool smz = Setting("platformmaterial", "") == "SMZ" || Setting("atlas", "false") == "true";
 			bool slz = Setting("platformmaterial", "") == "SLZ";
-			string art = smz ? "../art/nemesis/SMZ Sprite Atlas.nem" : slz ? "../art/nemesis/S1/SLZ Swinging Platform.nem" : "../art/nemesis/S1/GHZ Swinging Platform.nem";
+			string art = smz ? "../art/nemesis/SMZ Sprite Atlas.nem" : slz ? "../art/nemesis/SLZ Swinging Platform.nem" : "../art/nemesis/GHZ Swinging Platform.nem";
 			string map = smz ? "SMZ Swing.bin" : slz ? "SLZ Swinging Platform.bin" : "Swinging platform.bin";
 			string rail = smz ? "SMZ Swing rail.bin" : slz ? "SLZ Swinging Platform rail.bin" : "Swinging platform rail.bin";
 			int palette = slz ? 2 : 0;
-			platformBodies = new[] { Load(art, CompressionType.Nemesis, map, palette)[0], Load(art, CompressionType.Nemesis, rail, palette)[0], smz ? Load(art, CompressionType.Nemesis, map, palette)[0] : Load("../art/nemesis/S1/GHZ Giant Ball.nem", CompressionType.Nemesis, "Giant Ball.bin", 2)[1] };
+			platformBodies = new[] { Load(art, CompressionType.Nemesis, map, palette)[0], Load(art, CompressionType.Nemesis, rail, palette)[0], smz ? Load(art, CompressionType.Nemesis, map, palette)[0] : Load("../art/nemesis/GHZ Giant Ball.nem", CompressionType.Nemesis, "Giant Ball.bin", 2)[1] };
 		}
 
 		private static int SwingArt(byte id) { return id == 0xDB ? 0 : id == 0xDC ? 1 : id == 0xDD ? 3 : id == 0xDE ? 4 : 2; }
@@ -591,7 +591,7 @@ namespace MysticIsland.ObjectDefinitions
 				case "EdgeWall":
 					pieces = new List<Sprite>();
 					bool cap = (subtype & 15) == 2;
-					byte[] art = cap ? ObjectHelper.LevelArt : ObjectHelper.OpenArtFile("../art/nemesis/S1/GHZ Edge Wall.nem", CompressionType.Nemesis);
+					byte[] art = cap ? ObjectHelper.LevelArt : ObjectHelper.OpenArtFile("../art/nemesis/GHZ Edge Wall.nem", CompressionType.Nemesis);
 					for (int i = 0; i < 4; i++) pieces.Add(LevelData.MapTileToBmp(art, new MappingsTile(-8, (short)(i * 16 - 32), 2, 2, (ushort)(cap ? 0xD1 : i == 0 && (subtype & 15) == 0 ? 0 : 4), cap, false, 0, false), 2));
 					return new Sprite(pieces);
 				case "Caterkiller":

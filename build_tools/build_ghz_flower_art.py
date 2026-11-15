@@ -18,7 +18,7 @@ def main():
             ('GHZ Flower Large', 16, 2), ('GHZ Flower Small', 12, 3)):
         raw = (ROOT/f'art/uncompressed/{name}.unc').read_bytes()
         assert len(raw) == count*32*frames
-    stalk = nemesis((ROOT/'art/nemesis/S1/GHZ Flower Stalk.nem').read_bytes())
+    stalk = nemesis((ROOT/'art/nemesis/GHZ Flower Stalk.nem').read_bytes())
     assert len(stalk) == 4*32
     (ROOT/'art/uncompressed/GHZ Flower Stalk.unc').write_bytes(stalk)
     blocks = ROOT/'mappings/16x16/GHZ'

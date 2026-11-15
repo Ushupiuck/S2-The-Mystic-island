@@ -33,7 +33,7 @@ def assets(a):
 		expected = {(x-w//2,y-h//2):(0,c) for y,line in enumerate(pixels)
 			for x,c in enumerate(line) if c}
 		assert raster(row,[(0,maker)])==expected, 'Launcher mapping/rotation changed'
-	assert nemesis((ROOT/'art/nemesis/S1/SBZ Flaming Pipe.nem').read_bytes())==pipe
+	assert nemesis((ROOT/'art/nemesis/SBZ Flaming Pipe.nem').read_bytes())==pipe
 	assert nemesis((ROOT/'art/nemesis/SMZ Sprite Atlas.nem').read_bytes())==atlas
 	for data in (balls,pipe[:20*32]):
 		assert {n for b in data for n in (b>>4,b&15)}==WARM

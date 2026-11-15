@@ -65,7 +65,7 @@ def pack_moduled(raw):
 def pack_fz_damaged_eggmobile():
 	# S1's FZ Damaged Eggmobile and FZ Eggmobile Legs mappings own these ranges.
 	# The two damaged cockpit poses use P1. Legs and lower metal use P2.
-	source = ROOT / 'art/nemesis/S1/Boss - Eggman after FZ Fight.nem'
+	source = ROOT / 'art/nemesis/Boss - Eggman after FZ Fight.nem'
 	raw = nemesis(source.read_bytes())
 	assert len(raw) == 0x4C * 32
 	cockpit_start, cockpit_end = 0x20 * 32, 0x3A * 32
@@ -74,7 +74,7 @@ def pack_fz_damaged_eggmobile():
 	lookup = tuple(PLAYER_FROM_S1[PLAYER_FROM_LEGACY.index(slot)] for slot in range(16))
 	cockpit = remap_pixels(raw[cockpit_start:cockpit_end], lookup)
 	packed = pack_moduled(raw[:cockpit_start] + cockpit + raw[cockpit_end:])
-	source.with_suffix('.kospm').write_bytes(packed)
+	(ROOT/'art/moduled kosinski'/source.with_suffix('.kospm').name).write_bytes(packed)
 	return dict(label='Kospm_FzEggman', raw=len(raw), packed=len(packed), odd=bool(len(packed) & 1))
 
 

@@ -29,15 +29,15 @@ bank={}
 def fill(base,raw):
  for i in range(len(raw)//32):bank[base+i]=raw[i*32:(i+1)*32]
 for name,base in [('Stomper',0x2c0),('Small Vertical Door',0x2e8),('Crushing Girder',0x2f0),('Spinning Platform',0x302),('Running Disc',0x344),('Junction Wheel',0x348),('Giant Spikeball',0x391),('Pizza Cutter',0x3b5),('Flaming Pipe',0x3d9),('Collapsing Floor',0x3f5),('Sliding Floor Trap',0x460),('Large Horizontal Door',0x46f),('Electrocuter',0x47e),('Trapdoor',0x492),('Vanishing Block',0x429)]:
- raw=dec(R/f'art/nemesis/S1/SBZ {name}.nem')
+ raw=dec(R/f'art/nemesis/SBZ {name}.nem')
  if name=='Giant Spikeball':
   lookup=palette_lookup(struct.unpack('>16H',(S/'palette/Sonic.bin').read_bytes()),struct.unpack('>16H',(R/'palette/SonicAndTails.bin').read_bytes()[:32]))
   # Ball and chain use the player palette; the anchor uses stage line 3.
   raw=remap_pixels(raw[:0x18*32],lookup)+raw[0x18*32:0x20*32]+remap_pixels(raw[0x20*32:],lookup)
  fill(base,raw)
  if name=='Collapsing Floor':fill(base+4,raw)
-fill(0x400,dec(R/'art/nemesis/S1/Enemy Bomb.nem'))
-button = dec(R/'art/nemesis/S1/SBZ Button.nem')
+fill(0x400,dec(R/'art/nemesis/Enemy Bomb.nem'))
+button = dec(R/'art/nemesis/SBZ Button.nem')
 assert len(button) == 8*32, 'Re-import the gray/blue-only button art first.'
 fill(0x336,button)
 for name,base in [('Enemy Caterkiller',0x2b0),('Enemy Ballhog (Horizontal)',0x620)]:fill(base,kosinski_plus_decode((R/f'art/moduled kosinski/{name}.kospm').read_bytes()[2:])[0])

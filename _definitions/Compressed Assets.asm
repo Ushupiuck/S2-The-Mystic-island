@@ -696,10 +696,10 @@ MCD_CompressedAssets:
 	dc.l Kospm_FlapDoor,Kospm_FlapDoor+$165	; art/moduled kosinski/Flapping Door.kospm
 	endif
 	if defined(Kospm_FzBoss)
-	dc.l Kospm_FzBoss,Kospm_FzBoss+$6D4	; art/nemesis/S1/Boss - Final Zone.kospm
+	dc.l Kospm_FzBoss,Kospm_FzBoss+$6D4	; art/moduled kosinski/Boss - Final Zone.kospm
 	endif
 	if defined(Kospm_FzEggman)
-	dc.l Kospm_FzEggman,Kospm_FzEggman+$547	; art/nemesis/S1/Boss - Eggman after FZ Fight.kospm
+	dc.l Kospm_FzEggman,Kospm_FzEggman+$547	; art/moduled kosinski/Boss - Eggman after FZ Fight.kospm
 	endif
 	if defined(Kospm_Jaws)
 	dc.l Kospm_Jaws,Kospm_Jaws+$1DF	; art/moduled kosinski/Enemy Jaws.kospm
@@ -1341,34 +1341,34 @@ MCD_CompressedAssets:
 	dc.l Nem_Eagle,Nem_Eagle+$13E	; art/nemesis/Flicky/Eagle.nem
 	endif
 	if defined(Nem_Eggman)
-	dc.l Nem_Eggman,Nem_Eggman+$8AF	; art/nemesis/S1/Boss - Eggman in SBZ2 & FZ.nem
+	dc.l Nem_Eggman,Nem_Eggman+$8AF	; art/nemesis/Boss - Eggman in SBZ2 & FZ.nem
 	endif
 	if defined(Nem_EndEm)
-	dc.l Nem_EndEm,Nem_EndEm+$1ED	; art/nemesis/S1/Ending - Emeralds.nem
+	dc.l Nem_EndEm,Nem_EndEm+$1ED	; art/nemesis/Ending - Emeralds.nem
 	endif
 	if defined(Nem_EndSonic)
-	dc.l Nem_EndSonic,Nem_EndSonic+$119C	; art/nemesis/S1/Ending - Sonic.nem
+	dc.l Nem_EndSonic,Nem_EndSonic+$119C	; art/nemesis/Ending - Sonic.nem
 	endif
 	if defined(Nem_EndStH)
-	dc.l Nem_EndStH,Nem_EndStH+$275	; art/nemesis/S1/Ending - StH Logo.nem
+	dc.l Nem_EndStH,Nem_EndStH+$275	; art/nemesis/Ending - StH Logo.nem
 	endif
 	if defined(Nem_Flicky)
 	dc.l Nem_Flicky,Nem_Flicky+$13A	; art/nemesis/Flicky/Flicky.nem
 	endif
 	if defined(Nem_GHZ_BWall)
-	dc.l Nem_GHZ_BWall,Nem_GHZ_BWall+$AB	; art/nemesis/S1/GHZ Breakable Wall.nem
+	dc.l Nem_GHZ_BWall,Nem_GHZ_BWall+$AB	; art/nemesis/GHZ Breakable Wall.nem
 	endif
 	if defined(Nem_GHZ_Ball)
-	dc.l Nem_GHZ_Ball,Nem_GHZ_Ball+$1B4	; art/nemesis/S1/GHZ Giant Ball.nem
+	dc.l Nem_GHZ_Ball,Nem_GHZ_Ball+$1B4	; art/nemesis/GHZ Giant Ball.nem
 	endif
 	if defined(Nem_GHZ_Bridge)
-	dc.l Nem_GHZ_Bridge,Nem_GHZ_Bridge+$FB	; art/nemesis/S1/GHZ Bridge.nem
+	dc.l Nem_GHZ_Bridge,Nem_GHZ_Bridge+$FB	; art/nemesis/GHZ Bridge.nem
 	endif
 	if defined(Nem_GHZ_Rock)
-	dc.l Nem_GHZ_Rock,Nem_GHZ_Rock+$149	; art/nemesis/S1/GHZ Purple Rock.nem
+	dc.l Nem_GHZ_Rock,Nem_GHZ_Rock+$149	; art/nemesis/GHZ Purple Rock.nem
 	endif
 	if defined(Nem_GHZ_SWall)
-	dc.l Nem_GHZ_SWall,Nem_GHZ_SWall+$15C	; art/nemesis/S1/GHZ Edge Wall.nem
+	dc.l Nem_GHZ_SWall,Nem_GHZ_SWall+$15C	; art/nemesis/GHZ Edge Wall.nem
 	endif
 	if defined(Nem_GameOver)
 	dc.l Nem_GameOver,Nem_GameOver+$180	; art/nemesis/Game Over.nem
@@ -1539,13 +1539,13 @@ MCD_CompressedAssets:
 	dc.l Nem_Squirrel,Nem_Squirrel+$169	; art/nemesis/Flicky/Squirrel.nem
 	endif
 	if defined(Nem_Stalk)
-	dc.l Nem_Stalk,Nem_Stalk+$3F	; art/nemesis/S1/GHZ Flower Stalk.nem
+	dc.l Nem_Stalk,Nem_Stalk+$3F	; art/nemesis/GHZ Flower Stalk.nem
 	endif
 	if defined(Nem_Swing)
-	dc.l Nem_Swing,Nem_Swing+$122	; art/nemesis/S1/GHZ Swinging Platform.nem
+	dc.l Nem_Swing,Nem_Swing+$122	; art/nemesis/GHZ Swinging Platform.nem
 	endif
 	if defined(Nem_Swing2)
-	dc.l Nem_Swing2,Nem_Swing2+$24C	; art/nemesis/S1/SLZ Swinging Platform.nem
+	dc.l Nem_Swing2,Nem_Swing2+$24C	; art/nemesis/SLZ Swinging Platform.nem
 	endif
 	if defined(Nem_TailsLifeText)
 	dc.l Nem_TailsLifeText,Nem_TailsLifeText+$10D	; art/nemesis/Tails Life Text.nem

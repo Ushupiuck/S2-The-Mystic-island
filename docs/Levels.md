@@ -432,7 +432,7 @@ the reworked HUD gap and shortened spring-bank gaps remain available.
 
 The flower `.unc` sources in `art/uncompressed/` come from sonicretro/s1disasm
 `89c0e0e06b51fd9ebac44d988e4a89bd643fd031`; the existing
-`art/nemesis/S1/GHZ Flower Stalk.nem` remains the editable stalk source.
+`art/nemesis/GHZ Flower Stalk.nem` remains the editable stalk source.
 After editing blocks or the stalk, run `python build_tools/build_ghz_flower_art.py`.
 It regenerates the raw stalk and packed block definitions. SonLVL overlays the
 same head/stalk first frames for all four acts. Terrain pixels, chunks,

@@ -456,7 +456,7 @@ def main():
                                                  palette_lookup(original, target)))
         if name in ('SBZ Stomper', 'SBZ Vanishing Block'):
             data = nemesis_inline(remap_pixels(nemesis(path), ENEMY_FROM_LEGACY))
-        (ROOT/f'art/nemesis/S1/{name}.nem').write_bytes(data)
+        (ROOT/f'art/nemesis/{name}.nem').write_bytes(data)
     print(json.dumps(report,indent=2))
 
 
