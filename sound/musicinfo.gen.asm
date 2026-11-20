@@ -31,7 +31,7 @@ Music_Index:
 	MusicEntry	Mus_CNZ_2P,$585,0
 	MusicEntry	Mus_SCZ,$403,0
 	MusicEntry	Mus_HCZ1,$100A,0
-	MusicEntry	Mus_ReservedStage21,$B,musprop_uncompressed|musprop_nospeedup
+	MusicEntry	Mus_ShadowDancerStage,$408,0
 	MusicEntry	Mus_ReservedStage22,$B,musprop_uncompressed|musprop_nospeedup
 	MusicEntry	Mus_ReservedStage23,$B,musprop_uncompressed|musprop_nospeedup
 	MusicEntry	Mus_ReservedStage24,$B,musprop_uncompressed|musprop_nospeedup
@@ -89,4 +89,3 @@ Music_Index:
 	MusicEntry	Mus_Continue,$15D,0
 	MusicEntry	Mus_Emerald,$CE,0
 	MusicEntry	Mus_Countdown,$12A,0|musprop_palmode|musprop_nospeedup
-	MusicEntry	Mus_ShadowDancerStage,$3F8,0

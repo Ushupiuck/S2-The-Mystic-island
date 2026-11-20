@@ -1,8 +1,8 @@
 ; Shadow Dancer (Mega Drive), Stage 1-1 and 3-1.
 ; Converted from 01 Stage 1-1, 3-1.mmw. See build_tools/sound/README.md.
-; The original loads patch TLs directly. Its volume writes either match the
-; loaded carrier TL or are replaced by another patch before the next note.
-; Keep FM track attenuation at zero to preserve the original levels.
+; The original driver sets each carrier TL to the track attenuation after
+; every patch upload. KeH adds attenuation to the patch, so carrier base
+; TLs are zero here. Modulator TLs retain their original values.
 
 ShadowDancerStage_Header:
 	smpsHeaderStartSong	2, 1
@@ -11,11 +11,11 @@ ShadowDancerStage_Header:
 	smpsHeaderTempo	$02, $CD
 
 	smpsHeaderDAC	ShadowDancerStage_DAC
-	smpsHeaderFM	ShadowDancerStage_FM1,	$00, $00
-	smpsHeaderFM	ShadowDancerStage_FM2,	$F4, $00
-	smpsHeaderFM	ShadowDancerStage_FM3,	$00, $00
-	smpsHeaderFM	ShadowDancerStage_FM4,	$00, $00
-	smpsHeaderFM	ShadowDancerStage_FM5,	$00, $00
+	smpsHeaderFM	ShadowDancerStage_FM1,	$00, $15
+	smpsHeaderFM	ShadowDancerStage_FM2,	$F4, $0E
+	smpsHeaderFM	ShadowDancerStage_FM3,	$00, $0B
+	smpsHeaderFM	ShadowDancerStage_FM4,	$00, $0B
+	smpsHeaderFM	ShadowDancerStage_FM5,	$00, $1A
 	smpsHeaderPSG	ShadowDancerStage_PSG1,	$D0, $03, $00, fTone_ShadowDancer
 	smpsHeaderPSG	ShadowDancerStage_PSG2,	$D0, $03, $00, fTone_ShadowDancer
 
@@ -30,6 +30,7 @@ ShadowDancerStage_Jump01:
 	dc.b	nE5, $27, nD5, $03, nE5, $2D, nG6, $03, nD6, $2D, nE6, $03
 	dc.b	nB5, $2D, nG5, $03, nA5, $06, nE5, $27, nD5, $03, nE5, $27
 	smpsAlterPitch	$F4
+	smpsFMAlterVol	$FC
 	smpsModSet	$00, $01, $09, $04
 
 ShadowDancerStage_Loop0C:
@@ -38,6 +39,7 @@ ShadowDancerStage_Loop0C:
 	smpsLoop	$00, $02, ShadowDancerStage_Loop0C
 	smpsAlterPitch	$0C
 	smpsCall	ShadowDancerStage_Call0A
+	smpsFMAlterVol	$04
 	dc.b	nRst, $09
 	smpsJump	ShadowDancerStage_Jump01
 
@@ -59,6 +61,7 @@ ShadowDancerStage_FM1:
 ShadowDancerStage_Jump00:
 	smpsCall	ShadowDancerStage_Call08
 	smpsAlterPitch	$F4
+	smpsFMAlterVol	$FE
 
 ShadowDancerStage_Loop0B:
 	smpsSetvoice	$00
@@ -66,6 +69,7 @@ ShadowDancerStage_Loop0B:
 	smpsLoop	$00, $02, ShadowDancerStage_Loop0B
 	smpsAlterPitch	$0C
 	smpsCall	ShadowDancerStage_Call0A
+	smpsFMAlterVol	$02
 	smpsJump	ShadowDancerStage_Jump00
 
 ShadowDancerStage_Call08:
@@ -118,6 +122,7 @@ ShadowDancerStage_Loop05:
 	smpsLoop	$00, $04, ShadowDancerStage_Loop05
 	smpsSetvoice	$03
 	smpsModSet	$00, $01, $07, $04
+	smpsFMAlterVol	$07
 
 ShadowDancerStage_Loop06:
 	smpsCall	ShadowDancerStage_Call05
@@ -129,6 +134,7 @@ ShadowDancerStage_Loop07:
 	smpsLoop	$01, $02, ShadowDancerStage_Loop06
 	smpsCall	ShadowDancerStage_Call07
 	smpsModOff
+	smpsFMAlterVol	$F9
 	smpsJump	ShadowDancerStage_Loop05
 
 ShadowDancerStage_Call04:
@@ -160,6 +166,7 @@ ShadowDancerStage_Loop02:
 	smpsLoop	$00, $04, ShadowDancerStage_Loop02
 	smpsSetvoice	$03
 	smpsModSet	$00, $01, $07, $04
+	smpsFMAlterVol	$07
 
 ShadowDancerStage_Loop03:
 	smpsCall	ShadowDancerStage_Call01
@@ -170,6 +177,7 @@ ShadowDancerStage_Loop04:
 	smpsLoop	$00, $02, ShadowDancerStage_Loop04
 	smpsLoop	$01, $02, ShadowDancerStage_Loop03
 	smpsCall	ShadowDancerStage_Call03
+	smpsFMAlterVol	$F9
 	smpsModOff
 	smpsJump	ShadowDancerStage_Loop02
 
@@ -292,7 +300,7 @@ ShadowDancerStage_Voices:
 	smpsVcDecayRate2	$00, $00, $00, $00
 	smpsVcDecayLevel	$0F, $00, $00, $0F
 	smpsVcReleaseRate	$07, $07, $07, $07
-	smpsVcTotalLevel	$83, $20, $09, $14
+	smpsVcTotalLevel	$80, $20, $09, $14
 
 ;	Voice $02
 	smpsVcAlgorithm	$02
@@ -307,7 +315,7 @@ ShadowDancerStage_Voices:
 	smpsVcDecayRate2	$09, $0A, $0C, $00
 	smpsVcDecayLevel	$01, $03, $08, $00
 	smpsVcReleaseRate	$0C, $08, $0B, $0A
-	smpsVcTotalLevel	$82, $15, $2B, $10
+	smpsVcTotalLevel	$80, $15, $2B, $10
 
 ;	Voice $03
 	smpsVcAlgorithm	$00
@@ -322,7 +330,7 @@ ShadowDancerStage_Voices:
 	smpsVcDecayRate2	$04, $00, $00, $00
 	smpsVcDecayLevel	$00, $04, $05, $05
 	smpsVcReleaseRate	$06, $00, $05, $04
-	smpsVcTotalLevel	$92, $13, $18, $28
+	smpsVcTotalLevel	$80, $13, $18, $28
 
 ;	Voice $04
 	smpsVcAlgorithm	$04
@@ -337,7 +345,7 @@ ShadowDancerStage_Voices:
 	smpsVcDecayRate2	$06, $00, $06, $00
 	smpsVcDecayLevel	$02, $04, $02, $02
 	smpsVcReleaseRate	$07, $07, $07, $07
-	smpsVcTotalLevel	$81, $95, $81, $1E
+	smpsVcTotalLevel	$80, $95, $80, $1E
 
 ;	Voice $05
 	smpsVcAlgorithm	$02

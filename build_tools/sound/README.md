@@ -68,7 +68,6 @@ Z80 words remain packed, with no even-address padding requirement.
 | `$000` | No request |
 | `$001-$040` | 64 stage-music slots |
 | `$041-$05A` | Shared themes, menus and jingles |
-| `$05B` | Shadow Dancer stage 1-1 and 3-1 (sound test) |
 | `$100-$155` | 86 named SFX |
 | `$17A` | `CmdID_Distortion`: toggle Ristar sound-test ONCHI |
 | `$17B` | `CmdID_StopSFX` |
@@ -97,8 +96,9 @@ labels silent placeholders, which share `Reserved Stage.asm`; repeated source
 files share one ROM payload while retaining independent playlist flags.
 Replace a placeholder in place to fill its stage slot. Shared themes begin
 with `Title` at `$041`; `MusicList` selects songs independently for every act.
-Final-release Hydrocity act 1 (`HCZ1`, `$020`) uses the universal bank. The
-existing `LBZ1_S3` and `LBZ2_S3` are prototype arrangements and remain separate.
+Final-release Hydrocity act 1 (`HCZ1`, `$020`) uses the universal bank.
+Shadow Dancer stage 1-1 and 3-1 (`ShadowDancerStage`, `$021`) is available
+through Sound Test. `LBZ1_S3` and `LBZ2_S3` are prototype arrangements.
 The old waterfall request had no SFX entry; its callers now explicitly queue
 `SoundID_None` until an actual effect is supplied.
 
@@ -207,16 +207,19 @@ tempo divider/modifier `$02,$05` to `$02,$CD`. Keep the result's
 
 | Channel data | KeH changes for this score |
 | --- | --- |
-| FM | The 68k driver loads patch TLs directly. Its volume commands set absolute carrier TLs. In this song, each write either equals the patch's carrier TL or is superseded by a patch load before the next note. Use zero FM channel attenuation and omit those volume commands to preserve the levels at note on. |
+| FM | Shadow Dancer calls `RefreshFMVol` after every patch upload. It assigns the track attenuation directly to the carriers. In KeH, preserve the original header attenuation and signed volume changes, and zero each local patch's carrier TL so KeH's addition produces the original level. Keep the modulator TLs as recorded, including Voice `$04`'s level in register `$44`. |
 | PSG | Replace `fTone_07` with `fTone_ShadowDancer`. Envelope 7 comes from `VolEnvPtrs` at `byte_62AE0` in the Shadow Dancer driver disassembly in `SMPS_Research_Pack_v5_DriverDisasm.7z`. Translate its hold byte `$83` to KeH's `$80`. KeH's extended low-note table covers PSG2's low A. |
 | DAC | Rename the disassembler's `dKick` and `dSnare` to `dShadowDancerKick` and `dShadowDancerSnare`. Reference the rip's original `DAC_81.bin` and `DAC_82.bin` in `sound/DAC/DAC.ini`. The standard DPCM table matches KeH's. From the rip's `DAC.ini`, use `round(BaseRate / (Rate + RateDiv))` in Hz, giving 11,792 and 7,372 for rates `$08` and `$16`. |
 
-Append the editable score to `sound/music/music.ini` and do a normal build
-so the packer assigns the IDs and updates the DAC banks and song data. The
-stage import occupies Sound Test `$05B`. Each channel repeats every 2,400
+The editable score fills stage slot `$021` in `sound/music/music.ini`. A normal
+build updates the DAC banks and the score used by Sound Test. Each channel
+repeats every 2,400
 duration ticks after its opening notes. A loop takes about 3,000 NTSC frames
 at the converted tempo. The audio check below runs past three wraps. Check the
 bass, stereo FM parts, both PSG parts and both drums across each wrap.
+For volume comparisons, trace the YM2612 total-level registers at key-on
+over a full loop. This captures the source driver's carrier overwrite and
+track volume changes.
 
 ```sh
 python3 build_tools/check_sound_playback.py --core /path/to/genesis_plus_gx_libretro.so \

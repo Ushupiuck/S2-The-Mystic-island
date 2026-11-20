@@ -32,7 +32,7 @@ SongNames:	offsetTable
 	offsetTableEntry.w	MusNam_CNZ_2P
 	offsetTableEntry.w	MusNam_SCZ
 	offsetTableEntry.w	MusNam_HCZ1
-	offsetTableEntry.w	MusNam_ReservedStage21
+	offsetTableEntry.w	MusNam_ShadowDancerStage
 	offsetTableEntry.w	MusNam_ReservedStage22
 	offsetTableEntry.w	MusNam_ReservedStage23
 	offsetTableEntry.w	MusNam_ReservedStage24
@@ -90,7 +90,6 @@ SongNames:	offsetTable
 	offsetTableEntry.w	MusNam_Continue
 	offsetTableEntry.w	MusNam_Emerald
 	offsetTableEntry.w	MusNam_Countdown
-	offsetTableEntry.w	MusNam_ShadowDancerStage
 
 MusNam_Null:	dc.b 0,' '
 MusNam_EggUtopia:	songtext	"EGG UTOPIA"
@@ -125,7 +124,7 @@ MusNam_SW_HPZ:	songtext	"HIDDEN PALACE B"
 MusNam_CNZ_2P:	songtext	"CASINO NIGHT 2P"
 MusNam_SCZ:	songtext	"SKY CHASE"
 MusNam_HCZ1:	songtext	"HYDROCITY ACT 1 (FINAL)"
-MusNam_ReservedStage21:	songtext	"RESERVED STAGE 21"
+MusNam_ShadowDancerStage:	songtext	"SHADOW DANCER 1-1, 3-1"
 MusNam_ReservedStage22:	songtext	"RESERVED STAGE 22"
 MusNam_ReservedStage23:	songtext	"RESERVED STAGE 23"
 MusNam_ReservedStage24:	songtext	"RESERVED STAGE 24"
@@ -183,5 +182,4 @@ MusNam_DoubleLife:	songtext	"DOUBLE LIFE"
 MusNam_Continue:	songtext	"CONTINUE"
 MusNam_Emerald:	songtext	"CHAOS EMERALD"
 MusNam_Countdown:	songtext	"DROWNING"
-MusNam_ShadowDancerStage:	songtext	"SHADOW DANCER 1-1, 3-1"
 	even

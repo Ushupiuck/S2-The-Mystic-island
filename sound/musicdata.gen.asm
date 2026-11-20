@@ -62,39 +62,40 @@ Mus_SCZ:	MusicPacked "sound/music/../generated/SCZ_cmp.bin" ; $2ED bytes
 	even
 Mus_HCZ1:	MusicPacked "sound/music/../generated/HCZ1_cmp.bin" ; $622 bytes
 	even
-Mus_ReservedStage21:	include "sound/music/Reserved Stage.asm" ; $B bytes
+Mus_ShadowDancerStage:	MusicPacked "sound/music/../generated/ShadowDancerStage_cmp.bin" ; $307 bytes
 	even
-Mus_ReservedStage22 = Mus_ReservedStage21
-Mus_ReservedStage23 = Mus_ReservedStage21
-Mus_ReservedStage24 = Mus_ReservedStage21
-Mus_ReservedStage25 = Mus_ReservedStage21
-Mus_ReservedStage26 = Mus_ReservedStage21
-Mus_ReservedStage27 = Mus_ReservedStage21
-Mus_ReservedStage28 = Mus_ReservedStage21
-Mus_ReservedStage29 = Mus_ReservedStage21
-Mus_ReservedStage2A = Mus_ReservedStage21
-Mus_ReservedStage2B = Mus_ReservedStage21
-Mus_ReservedStage2C = Mus_ReservedStage21
-Mus_ReservedStage2D = Mus_ReservedStage21
-Mus_ReservedStage2E = Mus_ReservedStage21
-Mus_ReservedStage2F = Mus_ReservedStage21
-Mus_ReservedStage30 = Mus_ReservedStage21
-Mus_ReservedStage31 = Mus_ReservedStage21
-Mus_ReservedStage32 = Mus_ReservedStage21
-Mus_ReservedStage33 = Mus_ReservedStage21
-Mus_ReservedStage34 = Mus_ReservedStage21
-Mus_ReservedStage35 = Mus_ReservedStage21
-Mus_ReservedStage36 = Mus_ReservedStage21
-Mus_ReservedStage37 = Mus_ReservedStage21
-Mus_ReservedStage38 = Mus_ReservedStage21
-Mus_ReservedStage39 = Mus_ReservedStage21
-Mus_ReservedStage3A = Mus_ReservedStage21
-Mus_ReservedStage3B = Mus_ReservedStage21
-Mus_ReservedStage3C = Mus_ReservedStage21
-Mus_ReservedStage3D = Mus_ReservedStage21
-Mus_ReservedStage3E = Mus_ReservedStage21
-Mus_ReservedStage3F = Mus_ReservedStage21
-Mus_ReservedStage40 = Mus_ReservedStage21
+Mus_ReservedStage22:	include "sound/music/Reserved Stage.asm" ; $B bytes
+	even
+Mus_ReservedStage23 = Mus_ReservedStage22
+Mus_ReservedStage24 = Mus_ReservedStage22
+Mus_ReservedStage25 = Mus_ReservedStage22
+Mus_ReservedStage26 = Mus_ReservedStage22
+Mus_ReservedStage27 = Mus_ReservedStage22
+Mus_ReservedStage28 = Mus_ReservedStage22
+Mus_ReservedStage29 = Mus_ReservedStage22
+Mus_ReservedStage2A = Mus_ReservedStage22
+Mus_ReservedStage2B = Mus_ReservedStage22
+Mus_ReservedStage2C = Mus_ReservedStage22
+Mus_ReservedStage2D = Mus_ReservedStage22
+Mus_ReservedStage2E = Mus_ReservedStage22
+Mus_ReservedStage2F = Mus_ReservedStage22
+Mus_ReservedStage30 = Mus_ReservedStage22
+Mus_ReservedStage31 = Mus_ReservedStage22
+Mus_ReservedStage32 = Mus_ReservedStage22
+Mus_ReservedStage33 = Mus_ReservedStage22
+Mus_ReservedStage34 = Mus_ReservedStage22
+Mus_ReservedStage35 = Mus_ReservedStage22
+Mus_ReservedStage36 = Mus_ReservedStage22
+Mus_ReservedStage37 = Mus_ReservedStage22
+Mus_ReservedStage38 = Mus_ReservedStage22
+Mus_ReservedStage39 = Mus_ReservedStage22
+Mus_ReservedStage3A = Mus_ReservedStage22
+Mus_ReservedStage3B = Mus_ReservedStage22
+Mus_ReservedStage3C = Mus_ReservedStage22
+Mus_ReservedStage3D = Mus_ReservedStage22
+Mus_ReservedStage3E = Mus_ReservedStage22
+Mus_ReservedStage3F = Mus_ReservedStage22
+Mus_ReservedStage40 = Mus_ReservedStage22
 Mus_Title:	MusicPacked "sound/music/../generated/Title_cmp.bin" ; $19A bytes
 	even
 Mus_2PResult:	MusicPacked "sound/music/../generated/2PResult_cmp.bin" ; $35B bytes
@@ -146,6 +147,4 @@ Mus_Continue:	MusicPacked "sound/music/../generated/Continue_cmp.bin" ; $140 byt
 Mus_Emerald:	MusicPacked "sound/music/../generated/Emerald_cmp.bin" ; $B8 bytes
 	even
 Mus_Countdown:	MusicPacked "sound/music/../generated/Countdown_cmp.bin" ; $105 bytes
-	even
-Mus_ShadowDancerStage:	MusicPacked "sound/music/../generated/ShadowDancerStage_cmp.bin" ; $2F6 bytes
 	even
