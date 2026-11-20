@@ -418,11 +418,14 @@ def platform_native(args):
 	import re
 	S=args.source;n=Native(args.rom,args.listing);report={};checks=0
 	slots=lambda:list(range(n.s['v_lvlobjspace']&0xffffff,n.s['v_lvlobjend']&0xffffff,n.s['object_size']))
-	def init(entry,sub,idx=5):
-		n.start();root=slots()[idx];n.put(root,'code',n.s[entry]);n.put(root,'obX',600,2);n.put(root,'obY',300,2);n.put(root,'obSubtype',sub)
+	def construct(entry,sub,idx=5,x=600,y=300):
+		root=slots()[idx];n.put(root,'code',n.s[entry]);n.put(root,'obX',x,2);n.put(root,'obY',y,2);n.put(root,'obSubtype',sub)
 		for a in ('v_player','v_player2'):n.put(a,'obX',100,2);n.put(a,'obY',100,2)
 		n.act(entry,root,regs={UC_M68K_REG_D7:0x3579006F})
 		assert n.cpu.reg_read(UC_M68K_REG_D7)==0x3579006F,'Constructor changed the object-loop counter'
+		return root
+	def init(entry,sub,idx=5):
+		n.start();root=construct(entry,sub,idx)
 		return root,[a for a in slots() if n.get(a,'code')==n.s['PlatformGroup_Run']]
 	def update(a):
 		n.act('PlatformGroup_Run',a,regs={UC_M68K_REG_D7:0x3579006F})
@@ -438,9 +441,11 @@ def platform_native(args):
 		return rows
 	ani=anim('vanish_platform')
 	for variant,timers in enumerate(((60,),(60,60),(90,180,270))):
-		root,members=init('SMZ_VanishPlatform',0x100+variant)
-		assert len(members)==len(timers)
-		members=[root]+[int.from_bytes(n.cpu.mem_read(root+n.s['platgroup_members']+i*2,2),'big')|0xff0000 for i in range(len(timers)-1)]
+		n.start()
+		members=[construct('SMZ_VanishPlatform',0x100|delay//30,5+i,600+32*i,300+(16*i if variant==2 else 0))
+			for i,delay in enumerate(timers)]
+		assert [a for a in slots() if n.get(a,'code')==n.s['PlatformGroup_Run']]==members
+		assert all(not n.get(a,'platgroup_count') and not n.get(a,'platgroup_owner',2) for a in members)
 		refs=[dict(state='delay',timer=tm,frame=6,idx=0,which=0) for tm in timers]
 		for tick in range(1500):
 			for a,ref in zip(members,refs):
@@ -456,11 +461,13 @@ def platform_native(args):
 					if ref['timer']==0:ref.update(state='anim',idx=0,which=1)
 				update(a);actual=n.get(a,'obFrame')
 				assert actual==ref['frame'],('vanish',variant,tick,hex(a),actual,ref)
-				assert bool(n.get(a,'platgroup_state',4)==n.s['PlatformGroup_TimedSolid'])==bool(ref['state']=='stand')
+				assert n.get(a,'platgroup_state',4)==n.s['Vanish_Cycle']
+				if ref['state']=='stand' and ref['timer']<120:
+					assert n.get(a,'vanish_contact',2)==0x101 and n.get(a,'platgroup_timer',2)==ref['timer']
 				checks+=1
-		n.act('PlatformGroup_Unload',root,regs={UC_M68K_REG_D7:0x3579006F})
-		assert n.cpu.reg_read(UC_M68K_REG_D7)==0x3579006F
-		assert all(not n.get(a,'code') for a in members)
+		for a in members:
+			n.act('PlatformGroup_Unload',a,regs={UC_M68K_REG_D7:0x3579006F})
+			assert n.cpu.reg_read(UC_M68K_REG_D7)==0x3579006F and not n.get(a,'code')
 	report['vanish_frames']=checks
 	fixed=anim('spin_platform')[0];assert fixed[0]==1
 	fixed=[f for v in fixed[1:] if v<255 for f in (v,v)]
@@ -500,17 +507,22 @@ def platform_native(args):
 			assert (n.get(a,'obX',2),n.get(a,'obY',2),n.get(a,'obFrame'))==(600+x,300+y,ref['frame']),('curve',tick,a,ref)
 			checks+=1
 	# Allocation is all-or-nothing, including occupied earlier/later slots.
-	for entry,sub,count in (('SMZ_VanishPlatform',0x102,2),('SMZ_SpinConvey',0x101,4)):
-		for free in range(count):
-			n.start();ss=slots();root=ss[6]
-			for a in ss:n.put(a,'code',n.s['PlayMusic'])
-			for a in ss[:free]:n.put(a,'code',0)
-			n.put(root,'code',n.s[entry]);n.put(root,'obX',600,2);n.put(root,'obY',300,2);n.put(root,'obSubtype',sub)
-			before=bytes(n.cpu.mem_read(ss[0],len(ss)*n.s['object_size']));n.act(entry,root)
-			assert bytes(n.cpu.mem_read(ss[0],len(before)))==before
+	for free in range(4):
+		n.start();ss=slots();root=ss[6]
+		for a in ss:n.put(a,'code',n.s['PlayMusic'])
+		for a in ss[:free]:n.put(a,'code',0)
+		n.put(root,'code',n.s['SMZ_SpinConvey']);n.put(root,'obX',600,2);n.put(root,'obY',300,2);n.put(root,'obSubtype',0x101)
+		before=bytes(n.cpu.mem_read(ss[0],len(ss)*n.s['object_size']));n.act('SMZ_SpinConvey',root)
+		assert bytes(n.cpu.mem_read(ss[0],len(before)))==before
 	# A live same-family replacement at the same address cannot adopt a stale child.
-	root,members=init('SMZ_VanishPlatform',0x101);child=next(a for a in members if a!=root)
+	root,members=init('SMZ_SpinConvey',0x102);child=next(a for a in members if a!=root)
 	n.cpu.mem_write(root+n.s['platgroup_members'],b'\0'*8);update(child);assert not n.get(child,'code')
+	# An independent platform initializes even when every other slot is occupied.
+	n.start();ss=slots()
+	for a in ss:n.put(a,'code',n.s['PlayMusic'])
+	a=construct('SMZ_VanishPlatform',0x109,6)
+	assert n.get(a,'platgroup_state',4)==n.s['Vanish_Cycle'] and n.get(a,'platgroup_timer',2)==270
+	assert all(n.get(q,'code')==n.s['PlayMusic'] for q in ss if q!=a)
 	report['platform_updates']=checks;report['allocation_failure_and_stale_owner']=True
 	return report
 
@@ -715,10 +727,12 @@ def platform_game(args):
 		for bank,file in [('ArtTile_MMZ_HVPlatform','Morphing Orbs'),('ArtTile_MMZ_Propeller','MM Propeller'),('ArtTile_Wheel','Wheel carrier')]:raw_vram(g.s[bank],nemesis((R/f'art/nemesis/{file}.nem').read_bytes()))
 		# Full authored timings already have native source comparisons. Here actors
 		# land through the real frame executor and independently release from a group.
-		for code,sub,state,height in [('SMZ_VanishPlatform',0x102,'PlatformGroup_TimedSolid',16),('SMZ_SpinConvey',0x100,'PlatformGroup_TimedSolid',5),('SMZ_SpinConvey',0x101,'MMZ_SpinC_MoveSolid',5)]:
+		for code,sub,state,height in [('SMZ_VanishPlatform',0x103,'Vanish_Cycle',16),('SMZ_SpinConvey',0x100,'PlatformGroup_TimedSolid',5),('SMZ_SpinConvey',0x101,'MMZ_SpinC_MoveSolid',5)]:
 			a=setup(code,sub)
 			for _ in range(450):
-				if g.get(a,'platgroup_state',4)==g.s[state] and g.get(a,'platgroup_timer',2)>30:break
+				state_ready=g.get(a,'platgroup_state',4)==g.s[state]
+				if code=='SMZ_VanishPlatform':state_ready=state_ready and g.get(a,'vanish_contact',2)==0x101
+				if state_ready and g.get(a,'platgroup_timer',2)>30:break
 				if state=='MMZ_SpinC_MoveSolid':break
 				g.run()
 			else:raise AssertionError(('state-timeout',code))

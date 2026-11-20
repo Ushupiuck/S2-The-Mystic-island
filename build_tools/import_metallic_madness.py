@@ -385,6 +385,19 @@ def sprites2(source):
 	return outputs,dict(families=report,private_tiles=278,shared_tiles=165)
 
 
+def vanishing_members(x, y, eras, subtype):
+	"""Translate a source formation into independent Mystic Island placements."""
+	formations = (
+		((0, 0, 2),),
+		((0, 0, 2), (32, 0, 2)),
+		((0, 0, 3), (32, 16, 6), (64, 32, 9)),
+	)
+	for dx, dy, delay in formations[subtype]:
+		new_y = (y & 0xFFF) + dy
+		assert new_y <= 0xFFF
+		yield x + dx, (y & 0xF000) | new_y, 0xA6, eras, 0x100 | delay
+
+
 def placements(source, act):
 	"""Import completed families while preserving other editable placements."""
 	from object_layout import decode, encode
@@ -432,7 +445,10 @@ def placements(source, act):
 			sub |= 0x100
 		elif family == 'VanishPlatformObject':
 			assert variant == 0 and sub <= 2
-			sub |= 0x100
+			members = tuple(vanishing_members(x, y, eras & 0xE0, sub))
+			rows.extend(members)
+			counts[family] += len(members)
+			continue
 		elif family == 'SpinPlatformObject':
 			assert sub in (0, 1) and variant in (0, 1)
 			# A fixed pair uses word bit 1; bit 0 remains the moving curve.

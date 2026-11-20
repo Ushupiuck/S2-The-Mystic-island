@@ -332,9 +332,10 @@ Debug_MMZ1:	dc.w (Debug_MMZ1_End-Debug_MMZ1-2)/DebugEntry_size
 	dbug	Map_MMZ_Crusher,	SMZ_ScrapStomp,	$100,	0,	ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_Crusher,	SMZ_ScrapStomp,	$101,	1,	ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_Crusher,	SMZ_ScrapStomp,	$141,	1,	ArtTile_MMZ_Atlas
-	dbug	Map_MMZ_Vanish,	SMZ_VanishPlatform,	$100,	0,	ArtTile_MMZ_Atlas
-	dbug	Map_MMZ_Vanish,	SMZ_VanishPlatform,	$101,	0,	ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_Vanish,	SMZ_VanishPlatform,	$102,	0,	ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_Vanish,	SMZ_VanishPlatform,	$103,	0,	ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_Vanish,	SMZ_VanishPlatform,	$106,	0,	ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_Vanish,	SMZ_VanishPlatform,	$109,	0,	ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_Spin,	SMZ_SpinConvey,	$100,	0,	ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_Spin,	SMZ_SpinConvey,	$102,	0,	ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_Spin,	SMZ_SpinConvey,	$101,	0,	ArtTile_MMZ_Atlas

@@ -193,11 +193,11 @@ zone `$0F`, or when subtype bit 8 is set elsewhere with compatible PLCs:
 | `$A5` | 0-1 | 0/2: small crusher; 1: tall launcher; reserved 3 safely uses small |
 | `$A5` | 2-3 | Small: phase rates 4/8/16/32; tall: bit 2 selects 4/8, bit 3 selects 60/90 pause |
 | `$A5` | 4-5, 6, 7 | Initial quarter phase; 32/48 amplitude; strong/weak launch |
-| `$A6` | 0-1 | Single, horizontal pair, or three-block staircase; reserved 3 uses single |
+| `$A6` | 0-7 | Initial delay in 30-update steps; one platform per placement |
 | `$A9` | 0, 1 | Moving five-member curve; otherwise bit 1 selects a fixed pair |
 
-The single vanishing platform, timed groups, rectangular conveyor and curved
-conveyor use the allocator, member setup and update runner in
+Vanishing platforms, fixed flippers and both conveyor paths share member
+setup and sprite updates. The flipper and conveyor formations use the allocator in
 `objects/Platform Groups.asm`. Preflight checks the full group before changing
 any slot. The root owns the placement and up to seven reciprocal child links.
 Children validate that link before running. Despawn releases each member's
@@ -205,9 +205,10 @@ actual riders. The rectangle still uses its original corner velocities and
 fractional positions. The curve stores only the 223 signed XY pairs in its
 first half and gives each member its own position on the first draw.
 
-All vanishing platforms use the same timed frame reader and top support. The
-single platform follows the level clock. Grouped vanishing platforms and fixed
-spinning platforms share the 120-update solid hold and the transition state.
+Every `$A6` placement uses one phase update for animation, top support and
+release. The SBZ/SMZ subtype sets its level-clock phase and visible duration.
+The MMZ variant sets its first delay from its own load and keeps a 120-update
+solid hold. Adjacent placements can use separate delays to build a staircase.
 Rectangle and curve motion use the same spin contact routine with full and
 top support respectively.
 

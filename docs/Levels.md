@@ -116,14 +116,14 @@ its three-word table. Its six flash steps are bounded, interpreting those two
 values as 22/66-update holds instead of reading executable code as colors.
 
 The first shared object families now have MMZ variants: `$A4` diagonal saw,
-`$A5` crusher, `$A6` vanishing groups, `$A9` fixed/curved spinning platforms,
+`$A5` crusher, `$A6` vanishing platforms, `$A9` fixed/curved spinning platforms,
 `$1B` progressively crumbling floors/static blocks and `$B0` patrolling carriers.
 Zone `$0F` selects them automatically; word-subtype bit 8 explicitly selects
 one in another act loading compatible art. The F1 Debug list exposes these
 variants, the existing morphing platform, propeller and wheeled carrier, plus
 the common ring/shield/invincibility/speed monitors. Mecha-Bu is also implemented for both acts, including its independent blade
 and both actors' touch responses. The shared `$AE` Bomb family also implements
-Bigbom. The importer now supplies 249 source roots across the completed
+Bigbom. The importer now supplies 253 placements across the completed
 families, retaining coordinates, era masks and variants. It replaces these
 adopted families on an explicit reimport and preserves other editable rows,
 including time poles sharing `$79`. The two existing signpost rows remain.
@@ -135,13 +135,17 @@ including time poles sharing `$79`. The two existing signpost rows remain.
 | Crumbling floor / static block | `$1B` | 10 | 16 |
 | Crusher / launcher | `$A5` | 10 | 15 |
 | Diagonal buzzsaw | `$A4` | 12 | 0 |
-| Vanishing groups | `$A6` | 19 | 0 |
+| Vanishing platforms | `$A6` | 23 | 0 |
 | Fixed / curved flippers | `$A9` | 18 | 0 |
 | Spring carrier | `$B0` | 10 | 9 |
 | Morphing platform | `$20` | 4 | 0 |
 | Propeller | `$B7` | 9 | 0 |
 | Checkpoint | `$79` | 8 | 7 |
 | Spring | `$14` | 31 | 48 |
+
+The two MMZ1 vanishing staircases use independent placements at the same
+member coordinates. Their individual delays are 90, 180 and 270 updates.
+The importer expands the source formation into those editable placements.
 
 The importer translates signed CD floor widths to the explicit static flag,
 moves diagonal-saw direction bits to placement flips, and translates CD's

@@ -114,7 +114,7 @@ the complete serialized word, including when calculating movement overlays.
 | `$A3` | Spinning platform / trapdoor | Bit 7: object type; low nibble: spin phase / trapdoor delay; bits 4–6: spin synchronization period. |
 | `$A4` | Saw | Stationary, horizontal/vertical cutter, speeding from left/right. |
 | `$A5` | Stomper / door | Bits 4–6: shape; bit 7: switch control; low nibble: movement / switch number. |
-| `$A6` | Vanishing platform | Low nibble: duration; high nibble: phase. |
+| `$A6` | Vanishing platform | SBZ/SMZ uses a duration and phase nibble. MMZ uses the low byte for its first delay in 30-update steps. |
 | `$A7` | Flamethrower | Low/high nibbles: off/on duration; Y flip selects valve art. |
 | `$A8` | Electrocuter | Full byte: synchronization mask; regular intervals use powers of two. |
 | `$A9` | Conveyor platform group | X/Y: relative loop origin. Bit 7: eight-platform group; clear it for one platform, with bits 0-2 selecting its initial phase. Preview reads the runtime's signed offsets. |

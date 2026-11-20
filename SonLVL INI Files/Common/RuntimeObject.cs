@@ -239,8 +239,8 @@ namespace MysticIsland.ObjectDefinitions
 					Bits("Travel amplitude", 6, 1, "Distance above and below the placement origin.", "32 pixels", "48 pixels");
 					Bits("Launch strength", 7, 1, "Tall body only; either standing rider is launched independently.", "16 pixels per update", "10 pixels per update");
 					break;
-				case "MMZVanish":
-					Bits("Group", 0, 3, "Relative group; initial delays are 60/60 or 90/180/270 updates, followed by the original appear/fade sequence.", "Single", "Horizontal pair", "Three-step staircase");
+				case "DelayedVanish":
+					Bits("First delay", 0, 255, "Delay in 30-update steps after this platform loads.");
 					break;
 				case "MMZSpin":
 					groups = ReadByteTable("../objects/Scrap Madness/A9 Spin Conveyor.asm", "MMZ_SpinC_Path", "Map_MMZ_Spin");
@@ -624,12 +624,6 @@ namespace MysticIsland.ObjectDefinitions
 					byte[] heights = (subtype & 64) == 0 ? routes : groups;
 					return new Sprite(At(frames, (subtype & 3) == 1 ? 1 : 0), 0, unchecked((sbyte)heights[((subtype >> 4) & 3) * 64]));
 				case "MMZFloor": return At(frames, (subtype & 127) >= 1 && (subtype & 127) <= 8 ? (subtype & 127) - 1 : 0);
-				case "MMZVanish":
-					int variant = subtype & 3;
-					if (variant > 2) variant = 0;
-					pieces = new List<Sprite>();
-					for (int i = 0; i <= variant; i++) { Sprite block = new Sprite(frames[0]); block.Flip(xflip, yflip); pieces.Add(new Sprite(block, i * 32, variant == 2 ? i * 16 : 0)); }
-					return new Sprite(pieces);
 				case "MMZSpin":
 					pieces = new List<Sprite>();
 					bool moving = (subtype & 1) != 0;
@@ -722,7 +716,7 @@ namespace MysticIsland.ObjectDefinitions
 		{
 			Sprite sprite = new Sprite(Preview(Subtype(obj), obj.X, obj.Y, obj.YFlip, obj.XFlip, behavior == "Platform" || behavior == "Swing" ? MountSettings(obj) : 0, SwingArt(obj.ID)));
 			if (behavior == "Teleporter") sprite.Flip(obj.XFlip, false);
-			else if (behavior != "MMZVanish" && behavior != "MMZSpin" && behavior != "FireballSpawner" && behavior != "Fireball" && behavior != "Platform" && behavior != "Swing" && behavior != "SpinGroup" && behavior != "LabyrinthConveyor" && behavior != "InvisibleSolid" && behavior != "Conveyor" && behavior != "PathSwapper" && behavior != "Hanging" && behavior != "PullChain") sprite.Flip(obj.XFlip, obj.YFlip);
+			else if (behavior != "MMZSpin" && behavior != "FireballSpawner" && behavior != "Fireball" && behavior != "Platform" && behavior != "Swing" && behavior != "SpinGroup" && behavior != "LabyrinthConveyor" && behavior != "InvisibleSolid" && behavior != "Conveyor" && behavior != "PathSwapper" && behavior != "Hanging" && behavior != "PullChain") sprite.Flip(obj.XFlip, obj.YFlip);
 			return sprite;
 		}
 		public override Sprite GetDebugOverlay(ObjectEntry obj)

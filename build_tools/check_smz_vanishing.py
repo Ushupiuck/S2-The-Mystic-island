@@ -48,11 +48,11 @@ def game_checks():
 				for offset in ((32,0) if reversed_slots else (0,32)):
 					a=spawn(g,'PlatformGroup_Run',x+offset,y)
 					platforms[offset]=a
-					for f,v,z in (('platgroup_state',g.s['Vanish_ClassicCycle'],4),('platgroup_x',x+offset,2),
+					for f,v,z in (('platgroup_state',g.s['Vanish_Cycle'],4),('platgroup_x',x+offset,2),
 						('obRender',0x84,1),('obActWid',16,1),('obWidth',16,1),('obHeight',9,1),
 						('obMap',g.s['Map_SMZ_VanP'],4),('obGfx',g.s['ArtTile_SMZ_Atlas'],2),
 						('obPriority',0x200,2),('height_pixels',32,1),('obAnim',1,1),
-						('platgroup_timer',1000,2),('vanish_visible_time',127,2)):
+						('platgroup_timer',1000,2),('vanish_visible_time',127,2),('vanish_contact',0x200,2)):
 						g.put(a,f,v,z)
 				start=x-8 if direction>0 else x+40
 				height=g.get(actor,'default_y_radius')
@@ -139,10 +139,10 @@ def setup(role, frame=0, rolling=False):
 	for field, value, size in [
 			('code', m.s['PlatformGroup_Run'], 4), ('obX', 576, 2),
 			('obY', 512, 2), ('platgroup_x', 576, 2), ('obRender', 0x84, 1),
-			('platgroup_state', m.s['Vanish_ClassicCycle'], 4), ('obActWid', 16, 1),
+			('platgroup_state', m.s['Vanish_Cycle'], 4), ('obActWid', 16, 1),
 			('obWidth', 16, 1), ('obHeight', 9, 1), ('obMap', m.s['Map_SMZ_VanP'], 4),
 			('obAnim', 1, 1), ('obFrame', frame, 1), ('platgroup_timer', 1000, 2),
-			('vanish_visible_time', 127, 2)]:
+			('vanish_visible_time', 127, 2), ('vanish_contact', 0x200, 2)]:
 		m.put(obj, field, value, size)
 	return player, m.get(player, 'obHeight')
 
