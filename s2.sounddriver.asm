@@ -40,6 +40,7 @@ zTrack STRUCT DOTS
 	; 	2 (04h): SFX is overriding this track
 	; 	3 (08h): modulation on
 	; 	4 (10h): do not attack next note
+	; 	5 (20h): FM absolute volume selected by coordination flag FB
 	; 	7 (80h): track is playing
 	PlaybackControl:	ds.b 1
 	; 	"voice control"; bits:
@@ -91,6 +92,8 @@ zTrack STRUCT DOTS
 	;
 	; 	All tracks are 2Ah bytes long
 zTrack ENDSTRUCT
+
+zPlayback_AbsoluteFMVolume = 5
 
 zVar STRUCT DOTS
 	SFXPriorityVal:		ds.b 1
@@ -1660,26 +1663,31 @@ zPCMSound = $+1
 	ld	(iy+0),2Ah	; Select it
 	call	zFinishMusicTick
 zPCMLoop:
-	ld	a, (hl)			; Get next PCM byte
-	ld	(iy+1), a	; Send to DAC
+	ld	a,(hl)
+	ld	(zYM2612_D0),a
 	inc	hl
-	dec	de				; 1 byte less to play
-	ld	b, c
-	djnz	$			; Delay loop
+	dec	de
+	ld	b,c
+	djnz	$
 
-	ld	a, d			; a = d
-	or	e				; Is de zero?
-	jr	z, zPCMLoopExit	; If so, exit
+	ld	a,d
+	or	e
+	jr	z,zPCMLoopExit
 
 	ld	a,(zAbsVar.QueueToPlay)
-	push	hl
-	ld	hl,zAbsVar.QueueToPlay+1
-	or	(hl)
-	pop	hl
-	jr	nz, zPCMLoopExit
+	or	a
+	jr	nz,zPCMLoopExit
+	ld	a,(zAbsVar.QueueToPlay+1)
+	or	a
+	jr	nz,zPCMLoopExit
 
+	; Keep the original sample clock. The second request-byte check adds 24
+	; cycles, the direct DAC store saves six, and two fewer DJNZ iterations
+	; save 26 (encoded in SegaSndTblEntry). Pad the remaining eight cycles.
+	nop
+	nop
 	or	h
-	jp	m, zPCMLoop
+	jp	m,zPCMLoop
 zPCMBankAdvance:
 	ld	hl, zCurPCMBnk
 	inc	(hl)	; next Z80 bank
@@ -2885,6 +2893,7 @@ cfSetVolume:
 	and	0Fh
 	jr	cfStorePSGVolume
 .fm:
+	set	zPlayback_AbsoluteFMVolume,(ix+zTrack.PlaybackControl)
 	cpl
 	and	7Fh
 	jp	cfStoreFMVolume
@@ -3440,10 +3449,12 @@ zSetFMTLs:
 	; the ones which are "slots" (output operators)
 	push	af				; Save 'a'
 	ld	a,c
-	or	80h				; Marker bit makes carry detect 7-bit TL overflow.
+	or	80h				; Carry detects overflow of the hardware's 7-bit TL.
 	add	a,d
 	jr	nc,.level
-	ld	a,7Fh			; Saturate silence instead of wrapping back to loud.
+	bit	zPlayback_AbsoluteFMVolume,(ix+zTrack.PlaybackControl)
+	jr	z,.level			; Legacy tracks intentionally wrap in the YM's 7-bit register.
+	ld	a,7Fh				; Absolute volume keeps an attenuated carrier silent.
 .level:
 	ld	c,a					; Modified value -> c
 	pop	af					; Restore 'a'
@@ -3772,6 +3783,13 @@ zPSGFrequencies:
 	dw	 6Bh,  65h,  5Fh,  5Ah,  55h,  50h,  4Bh,  47h,  43h,  40h,  3Ch,  39h
 	dw	 36h,  33h,  30h,  2Dh,  2Bh,  28h,  26h,  24h,  22h,  20h,  1Fh,  1Dh
 	dw	 1Bh,  1Ah,  18h,  17h,  16h,  15h,  13h,  12h,  11h,    0,    0,    0
+	; The byte-doubled index can address all 128 entries. Notes above the
+	; tonal range use the existing zero-period fallback. Index $7F keeps
+	; the established PSG3 noise clock used by Egg Utopia.
+	rept	7Fh-($-zPSGFrequencies)/2
+		dw	0
+	endm
+	dw	303h
 ; lookup table of FM note frequencies for instruments and sound effects
 ; zbyte_534:
 zFrequencies:

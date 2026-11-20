@@ -144,9 +144,11 @@ unsupported; copy those patches locally or use a matching universal patch.
 
 `smpsSetVol` emits `$FB,value` and implements S3 absolute loudness: zero is
 silent and `$7F` is full volume. FM stores `(~value)&$7F`; PSG stores
-`(~(value>>3))&$0F`. It shares the existing volume-store tails. The TL writer saturates carrier
-attenuation at `$7F`, preventing quiet notes from wrapping back to loud. `$EC` retains
-its PSG attenuation-delta meaning. `smpsClearPush` emits `$ED` and clears the
+`(~(value>>3))&$0F`. It shares the existing volume-store tails. An FM track that
+uses `$FB` keeps carrier attenuation saturated at `$7F` until the track is
+initialized again. Other tracks retain the legacy seven-bit sum. Existing
+patches can intentionally wrap that sum, including the bass in Egg Utopia.
+`$EC` retains its PSG attenuation-delta meaning. `smpsClearPush` emits `$ED` and clears the
 push-effect latch. `smpsStopSpecial` emits `$EE` and uses the normal channel
 stop/priority/restoration path. The streaming lookahead parser recognizes all
 three commands. Other unsupported imports still fail explicitly.
@@ -297,9 +299,11 @@ python3 build_tools/check_sound_playback.py --core /path/to/genesis_plus_gx_libr
 `check_sound_driver.py --core CORE --system-directory BIOS --mono MONO
 --output test-results/sound-driver` exercises the compiled Z80 handlers and a
 disposable expanded project in a path containing spaces. It checks all 256
-absolute-volume arguments for FM and PSG, carrier saturation and unchanged
-modulators across 512 level combinations, all 35 UVB patch resolutions,
-Ristar's offset sequence and unaffected SFX notes. The live fixture assigns
+absolute-volume arguments for FM and PSG, both carrier volume modes,
+unchanged modulator levels, all 35 UVB patch resolutions, Ristar's offset
+sequence and unaffected SFX notes. It also executes the SEGA PCM loop at its
+original sample cadence and checks interrupts from either request byte. The
+PSG fixture checks the period used for Egg Utopia's transposed noise note. The live fixture assigns
 music `$100`, its 1-up `$101` and SFX `$200`, preserves reserved flag bits,
 checks three-digit cursor rendering/wrapping, all seven global commands,
 UVB music/SFX with the first and last patches, special-stop restoration and

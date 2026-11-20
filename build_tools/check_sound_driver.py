@@ -32,7 +32,7 @@ def native(core, rom, listing):
 	m.ram[0x8000:0x10000] = image[bank:bank+0x8000]
 	m.ram[0x3000] = 0x76
 
-	def call(label, a=0, hl=0x3100, de=0, iy=0):
+	def call(label, a=0, hl=0x3100, de=0, iy=0, bc=0):
 		C.memset(C.addressof(m.regs), 0, C.sizeof(m.regs))
 		m.regs.pc.d = s[label]
 		m.regs.sp.d = 0x3F00
@@ -40,6 +40,7 @@ def native(core, rom, listing):
 		m.regs.af.d = a << 8
 		m.regs.hl.d = hl
 		m.regs.de.d = de
+		m.regs.bc.d = bc
 		m.regs.iy.d = iy
 		m.regs.ix.d = s['zSongFM1']
 		while not m.regs.halt and m.regs.cycles < 100000:
@@ -48,24 +49,67 @@ def native(core, rom, listing):
 
 	track = s['zSongFM1']
 	volume = track+s['zTrack.Volume']
+	control = track+s['zTrack.PlaybackControl']
+	absolute_flag = 1<<s['zPlayback_AbsoluteFMVolume']
 	for psg in (False, True):
 		m.ram[track+s['zTrack.VoiceControl']] = 0x80 if psg else 0
-		m.ram[track+s['zTrack.PlaybackControl']] = 4
 		for value in range(256):
+			m.ram[control] = 4
 			m.ram[0x3100] = value
 			call('zCoordFlag', 0xFB)
 			expected = (~(value >> 3)) & 15 if psg else (~value) & 127
 			assert m.ram[volume] == expected, (psg, value, m.ram[volume], expected)
 			assert m.regs.hl.d == 0x3101
-	# Execute the TL writer against a harmless register/data pair. Full
-	# attenuation must stay silent even when the patch has nonzero base TL.
-	for level in (0, 7, 16, 127):
-		m.ram[0x3100:0x3104] = bytes((level | 128,))*4
-		for attenuation in range(128):
-			call('zSetFMTLs', 0x40, de=(attenuation << 8) | 15, iy=0x3200)
-			assert m.ram[0x3201] & 127 == min(127, level+attenuation)
-			call('zSetFMTLs', 0x40, de=attenuation << 8, iy=0x3200)
-			assert m.ram[0x3201] & 127 == level
+			assert bool(m.ram[control]&absolute_flag) == (not psg)
+	# Existing scores use the YM's 7-bit wrap, including unmarked $7F
+	# carriers. The absolute command instead saturates each carrier.
+	for absolute in (False, True):
+		m.ram[control] = absolute_flag if absolute else 0
+		for level in (0, 7, 16, 127):
+			m.ram[0x3100:0x3104] = bytes((level,))*4
+			for attenuation in range(128):
+				call('zSetFMTLs', 0x40, de=(attenuation << 8) | 15, iy=0x3200)
+				expected = min(127, level+attenuation) if absolute else (level+attenuation)&127
+				assert m.ram[0x3201]&127 == expected
+				call('zSetFMTLs', 0x40, de=attenuation << 8, iy=0x3200)
+				assert m.ram[0x3201]&127 == level
+	# The transposed PSG3 note in Egg Utopia uses noise clock $303.
+	m.ram[track+s['zTrack.Transpose']] = 0x23
+	for note,period in ((0xD1,0x303),(0xD0,0)):
+		call('zPSGSetFreq',note)
+		at=track+s['zTrack.FreqLow']
+		assert int.from_bytes(bytes(m.ram[at:at+2]),'little')==period
+
+	# Run the actual PCM loop with synthetic source bytes. Stop at its exit
+	# before restarting the driver. Check timing and both request bytes.
+	leave = s['zPCMLoopExit']
+	original = m.ram[leave]
+	m.ram[leave] = 0xC9
+	pcm = bytes((1,33,65,97,129,161,193,225))
+	m.ram[0x9000:0x9000+len(pcm)] = pcm
+	writes = []
+	Write = C.CFUNCTYPE(None,C.c_uint,C.c_uint8)
+	slot = C.c_void_p.in_dll(m.core,'z80_writemem')
+	original_writer = slot.value
+	def trace_write(addr,value):
+		if addr==0x4001:writes.append((m.regs.cycles,value))
+		m.writer(addr,value)
+	trace = Write(trace_write)
+	slot.value = C.cast(trace,C.c_void_p).value
+	try:
+		queue = s['zAbsVar.QueueToPlay']
+		delay = image[s['SegaSndTbl']]
+		for pending in (0,1,0x100):
+			writes.clear()
+			m.ram[queue:queue+2] = pending.to_bytes(2,'little')
+			call('zPCMLoop',hl=0x9000,de=len(pcm),bc=delay)
+			assert bytes(v for _,v in writes)==(pcm[:1] if pending else pcm)
+			if not pending:
+				assert {b[0]-a[0] for a,b in zip(writes,writes[1:])}=={220*15},writes
+	finally:
+		slot.value = original_writer
+		m.ram[leave] = original
+		m.ram[queue:queue+2] = bytes(2)
 	m.ram[s['zPushFlag']] = 255
 	call('zCoordFlag', 0xED)
 	assert not m.ram[s['zPushFlag']]
@@ -99,8 +143,11 @@ def native(core, rom, listing):
 		assert m.ram[s['zDistortionIndex']+1] == 0
 	call('zToggleDistortion')
 	assert m.ram[s['zDistortionGate']+1] == 3
-	return dict(absolute_volume_values=512, carrier_levels=512, unaffected_modulator_levels=512, universal_voices=s['UniversalVoice_Count'],
-		onchi_music_notes=22, unaffected_sfx_notes=22, push_flag_reset=True)
+	return dict(absolute_volume_values=512, legacy_carrier_levels=512,
+		absolute_carrier_levels=512, unaffected_modulator_levels=1024,
+		sega_pcm_and_word_interrupt=True, psg_noise_period=0x303,
+		universal_voices=s['UniversalVoice_Count'], onchi_music_notes=22,
+		unaffected_sfx_notes=22, push_flag_reset=True)
 
 
 def fixture(output, mono):

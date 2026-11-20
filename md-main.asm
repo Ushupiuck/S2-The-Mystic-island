@@ -785,7 +785,10 @@ ChangeSegaSound:
 		rts
 
 SegaSndTblEntry	macro	offset,length,pitch
-		dc.b	pitch,(offset>>15)&$FF
+		if pitch<3
+			fatal "PCM delay must leave two iterations for the word request check."
+		endif
+		dc.b	pitch-2,(offset>>15)&$FF
 		dc.w	zROMWindow|(offset&$7FFF),length
 		endm
 
