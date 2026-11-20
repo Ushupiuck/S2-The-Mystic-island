@@ -1192,9 +1192,10 @@ zloc_46D:
 	ld	(ix+zTrack.FreqHigh),d		; Frequency high byte  -> trackPtr + 0Eh
 	ret
 	else
-	ld	de, zPSGFrequencies
+	ld	de,zPSGFrequencies
 	ld	c,0	; SetFMPSGFreq uses c to hold octave bits for FM
-	jp	SetFMPSGFreq
+zPSGDistortionGate:
+	jp	SetFMPSGFreq		; ONCHI retargets this existing jump
 	endif
 +
 	; If you get here, we're doing a PSG rest
@@ -2523,45 +2524,82 @@ zFMSilenceAll:
 	ret
 ; End of function zFMSilenceAll
 
-; Ristar sound-test ONCHI: one shared eleven-note sequence, music FM only.
+; Ristar sound-test ONCHI, extended to melodic PSG music in Mystic Island.
 ; Source: Ristar SMPS_FMExtraKeyDelta / FMKeyDeltaArray. The twelfth zero
 ; in that source is unreachable because the index wraps before entry eleven.
 zToggleDistortion:
 	ld	a,(zDistortionGate+1)
 	xor	3
 	ld	(zDistortionGate+1),a
+	ld	hl,SetFMPSGFreq
+	or	a
+	jr	nz,.set_psg
+	ld	hl,zPSGSetDistortedTone
+.set_psg:
+	ld	(zPSGDistortionGate+1),hl
 	xor	a
-	ld	(zDistortionIndex+1),a
+	ld	(zDistortionIndex),a
+	ld	(zPSGDistortionIndex),a
 	ret
 
+; ---------------------------------------------------------------------------
+; PSG advances its own copy of the sequence, preserving FM's existing pitches.
+; Noise uses the authored timer (including when PSG3 supplies its clock).
+; ---------------------------------------------------------------------------
+zPSGSetDistortedTone:
+	ld	c,a
+	ld	a,(ix+zTrack.VoiceControl)
+	cp	0E0h
+	ld	a,c
+	jr	z,.tuned
+	and	7Fh				; match the byte-doubled table index
+	cp	zPSGToneCount
+	jr	nc,.tuned			; keep the legacy non-tonal periods
+	ld	de,zPSGDistortionIndex
+	call	zApplyToneDistortion
+	cp	zPSGToneCount
+	jr	c,.tuned
+	cp	7Eh				; -2 and -1 wrapped through the mask
+	ld	a,zPSGToneCount-1
+	jr	c,.tuned			; upper endpoint
+	xor	a				; lower endpoint
+.tuned:
+	ld	de,zPSGFrequencies
+	ld	c,0
+	jp	SetFMPSGFreq
+
 zApplyMusicDistortion:
+	ld	de,zDistortionIndex
+zApplyToneDistortion:
 	ld	c,a
 	ld	a,(zDoSFXFlag)
 	or	a
 	ld	a,c
 	ret	nz
-	push	hl
-zDistortionIndex:
-	ld	e,0
+	push	hl				; preserve the score pointer
+	ex	de,hl
+	ld	e,(hl)
 	ld	d,0
-	ld	hl,zDistortionNotes
-	add	hl,de
-	add	a,(hl)
-	and	7Fh
-	ld	c,a
-	inc	e
 	ld	a,e
+	inc	a
 	cp	zDistortionNotes_End-zDistortionNotes
 	jr	c,.store
 	xor	a
 .store:
-	ld	(zDistortionIndex+1),a
+	ld	(hl),a
+	ld	hl,zDistortionNotes
+	add	hl,de
 	ld	a,c
+	add	a,(hl)
+	and	7Fh
 	pop	hl
 	ret
 zDistortionNotes:
 	db	-1,5,4,2,6,-2,3,-1,4,1,3
 zDistortionNotes_End:
+
+zDistortionIndex:	db 0
+zPSGDistortionIndex:	db 0
 
 ; ---------------------------------------------------------------------------
 ; zloc_B4E:
@@ -2571,9 +2609,12 @@ zStopSoundAndMusic:
 	ld	(zMusicSongRequest),a
 	ld	(zMusicSongRequest+1),a
 	ld	(zAbsVar.StopMusic),a
-	ld	(zDistortionIndex+1),a
+	ld	(zDistortionIndex),a
+	ld	(zPSGDistortionIndex),a
 	ld	a,3
 	ld	(zDistortionGate+1),a
+	ld	hl,SetFMPSGFreq
+	ld	(zPSGDistortionGate+1),hl
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 
@@ -3782,7 +3823,9 @@ zPSGFrequencies:
 	dw	0D6h, 0C9h, 0BEh, 0B4h, 0A9h, 0A0h,  97h,  8Fh,  87h,  7Fh,  78h,  71h
 	dw	 6Bh,  65h,  5Fh,  5Ah,  55h,  50h,  4Bh,  47h,  43h,  40h,  3Ch,  39h
 	dw	 36h,  33h,  30h,  2Dh,  2Bh,  28h,  26h,  24h,  22h,  20h,  1Fh,  1Dh
-	dw	 1Bh,  1Ah,  18h,  17h,  16h,  15h,  13h,  12h,  11h,    0,    0,    0
+	dw	 1Bh,  1Ah,  18h,  17h,  16h,  15h,  13h,  12h,  11h
+zPSGToneCount	equ ($-zPSGFrequencies)/2
+	dw	0,0,0
 	; The byte-doubled index can address all 128 entries. Notes above the
 	; tonal range use the existing zero-period fallback. Index $7F keeps
 	; the established PSG3 noise clock used by Egg Utopia.

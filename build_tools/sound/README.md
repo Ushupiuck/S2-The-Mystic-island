@@ -101,10 +101,12 @@ existing `LBZ1_S3` and `LBZ2_S3` are prototype arrangements and remain separate.
 The old waterfall request had no SFX entry; its callers now explicitly queue
 `SoundID_None` until an actual effect is supplied.
 
-ONCHI applies Ristar's reachable eleven-note offset sequence to new FM music
-notes. SFX, PSG, drums and held-note timing are unaffected. Each toggle resets
-its sequence index. It implements Ristar's sound-test mode, not the separate
-mode-2 modulation changes used during that game's scripted events.
+ONCHI applies Ristar's eleven-note offset sequence to new FM and melodic PSG
+music notes. FM and PSG advance independently so introducing PSG offsets
+preserves the FM sequence. The toggle retargets the existing PSG pitch jump.
+PSG offsets stay inside the tone table. Noise-mode
+PSG, DAC drum samples, sound effects and held-note timing follow their ordinary
+paths. Toggling or stopping resets both sequences.
 
 ## Importing music
 

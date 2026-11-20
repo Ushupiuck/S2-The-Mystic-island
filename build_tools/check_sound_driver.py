@@ -140,14 +140,39 @@ def native(core, rom, listing):
 			expected = int.from_bytes(bytes(m.ram[at:at+2]), 'little') | ((note // 12) << 11)
 			at = track+s['zTrack.FreqLow']
 			assert int.from_bytes(bytes(m.ram[at:at+2]), 'little') == expected
-		assert m.ram[s['zDistortionIndex']+1] == 0
+		assert m.ram[s['zDistortionIndex']] == 0
+	# Both melodic PSG channels and a tone-mode PSG3 use the same offsets.
+	index = s['zPSGDistortionIndex']
+	freq = track+s['zTrack.FreqLow']
+	table = s['zPSGFrequencies']
+	count = s['zPSGToneCount']
+	cases = 0
+	gate = s['zPSGDistortionGate']+1
+	assert int.from_bytes(bytes(m.ram[gate:gate+2]),'little') == s['zPSGSetDistortedTone']
+	for old_note in (0,37,count-1,0x7F):
+		m.ram[track+s['zTrack.Transpose']] = (old_note-12)&255
+		for voice in (0x80,0xA0,0xC0,0xE0):
+			m.ram[track+s['zTrack.VoiceControl']] = voice
+			for effect in (False, True):
+				m.ram[s['zDoSFXFlag']] = 0x80 if effect else 0
+				for i,offset in enumerate(offsets):
+					m.ram[index] = i
+					call('zPSGSetFreq', 0x81)
+					pitched = not effect and voice != 0xE0 and old_note < count
+					note = min(count-1,max(0,old_note+offset)) if pitched else old_note
+					assert m.ram[index] == ((i+1)%len(offsets) if pitched else i)
+					assert bytes(m.ram[freq:freq+2]) == bytes(m.ram[table+note*2:table+note*2+2])
+					assert m.ram[s['zDistortionIndex']] == 0
+					cases += 1
 	call('zToggleDistortion')
 	assert m.ram[s['zDistortionGate']+1] == 3
+	assert int.from_bytes(bytes(m.ram[gate:gate+2]),'little') == s['SetFMPSGFreq']
+	assert m.ram[index] == 0
 	return dict(absolute_volume_values=512, legacy_carrier_levels=512,
 		absolute_carrier_levels=512, unaffected_modulator_levels=1024,
 		sega_pcm_and_word_interrupt=True, psg_noise_period=0x303,
 		universal_voices=s['UniversalVoice_Count'], onchi_music_notes=22,
-		unaffected_sfx_notes=22, push_flag_reset=True)
+		unaffected_sfx_notes=22, onchi_psg_note_cases=cases, push_flag_reset=True)
 
 
 def fixture(output, mono):
@@ -264,7 +289,7 @@ def live(a, d):
 	play(g.s['CmdID_SpeedUp']);assert zr('zAbsVar.SpeedUpFlag')
 	play(g.s['CmdID_SlowDown']);assert not zr('zAbsVar.SpeedUpFlag')
 	play(g.s['CmdID_Distortion']);assert not zr(g.s['zDistortionGate']+1)
-	run(60);assert zr(g.s['zDistortionIndex']+1) < 11
+	run(60);assert zr(g.s['zDistortionIndex']) < 11 and zr(g.s['zPSGDistortionIndex']) < 11
 	play(g.s['CmdID_Distortion']);assert zr(g.s['zDistortionGate']+1) == 3
 	play(g.s['MusID_UVBProbe']);run(20)
 	seen=set()
