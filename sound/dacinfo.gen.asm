@@ -55,3 +55,5 @@ zDACMasterPlaylist:
 	DACSample	SndDAC_BB,7998,0 ; dScratchS3
 	DACSample	SndDAC_BE,12279,0 ; dCrashingNoiseWoo
 	DACSample	SndDAC_C0,12852,0 ; dKickHey
+	DACSample	SndDAC_DAC_81,11792,0 ; dShadowDancerKick
+	DACSample	SndDAC_DAC_82,7372,0 ; dShadowDancerSnare

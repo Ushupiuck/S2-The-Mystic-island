@@ -68,6 +68,7 @@ Z80 words remain packed, with no even-address padding requirement.
 | `$000` | No request |
 | `$001-$040` | 64 stage-music slots |
 | `$041-$05A` | Shared themes, menus and jingles |
+| `$05B` | Shadow Dancer stage 1-1 and 3-1 (sound test) |
 | `$100-$155` | 86 named SFX |
 | `$17A` | `CmdID_Distortion`: toggle Ristar sound-test ONCHI |
 | `$17B` | `CmdID_StopSFX` |
@@ -154,6 +155,74 @@ patches can intentionally wrap that sum, including the bass in Egg Utopia.
 push-effect latch. `smpsStopSpecial` emits `$EE` and uses the normal channel
 stop/priority/restoration path. The streaming lookahead parser recognizes all
 three commands. Other unsupported imports still fail explicitly.
+
+### Converting a 68k rip
+
+The utilities are in `Music & SFX from other games`. Each rip's `DefDrv.txt`
+describes its pointer and tempo formats, and `DefCFlag.txt` describes its
+coordination flags. Select the converter mode from those definitions.
+
+| Utility | Input and output |
+| --- | --- |
+| `Tools/_misc/SMPSConv.exe` | Converts binary scores between driver formats, rebasing pointers and converting tempo and patch order. It reads optional `DACMap.ini` and `PSGMap.ini` from the working directory. Missing maps leave the indices unchanged. |
+| `mdtools-v0.2.0.20211206/smps2asm.exe` | Disassembles a binary score into editable ASM. Match `--sonicver` to the binary's driver. The last argument is the label prefix. |
+| `Tools/_misc/SMPSOpt.exe` | Optionally optimizes a score within its current format. Compare the expanded events if using it. |
+| `Tools/dpcm2pcm/dpcm2pcm.exe` | Decodes a DPCM sample to unsigned 8-bit PCM. Pass one input path to write a sibling file with `.snd` appended. The default accumulator starts at `$80` and uses the standard 16-entry delta table. |
+
+Shadow Dancer stores 68k header pointers as big-endian song offsets, with
+relative branches in the track data. Its `$F9` returns from a call and
+`$FB` changes transposition. `prepare_shadow_dancer.py` follows the channel
+entry points, jumps, loops and calls, rewriting those two opcodes to Sonic 1's
+`$E3` and `$E9` while preserving the offsets. The profile reports the offset of
+any unhandled command. The converter's `Trs` profile reads a parameter after
+`$F4`. Shadow Dancer's `$F4` has no parameter.
+
+Run this example from the repository root in PowerShell. Use a scratch
+directory so another import's mapping files cannot change the IDs.
+
+```powershell
+$archive = Join-Path $PWD 'Music & SFX from other games'
+$rip = Join-Path $archive 'Rips\68k\Shadow Dancer\01 Stage 1-1, 3-1.mmw'
+$conv = Join-Path $archive 'Tools\_misc\SMPSConv.exe'
+$disasm = Join-Path $archive 'mdtools-v0.2.0.20211206\smps2asm.exe'
+$work = Join-Path $PWD 'test-results\shadow-dancer\import'
+New-Item -ItemType Directory -Force $work | Out-Null
+py -3 build_tools/sound/prepare_shadow_dancer.py $rip (Join-Path $work 'shadow-s1.bin')
+Push-Location $work
+try {
+	'8000', 'Y' | & $conv S1-S2 shadow-s1.bin shadow-s2.bin
+	& $disasm --sonicver 2 shadow-s2.bin shadow.asm ShadowDancerStage
+}
+finally {
+	Pop-Location
+}
+```
+
+At bank address `$8000`, the disassembler uses its default offset of zero
+because it masks off the bank-window bit. Check that the disassembly contains
+six DAC/FM entries, two PSG entries, loop targets and seven local FM patches.
+The converter reports six unreachable bytes for this rip. `S1-S2` converts
+tempo divider/modifier `$02,$05` to `$02,$CD`. Keep the result's
+`smpsHeaderStartSong 2,1` and the original modulation arguments.
+
+| Channel data | KeH changes for this score |
+| --- | --- |
+| FM | The 68k driver loads patch TLs directly. Its volume commands set absolute carrier TLs. In this song, each write either equals the patch's carrier TL or is superseded by a patch load before the next note. Use zero FM channel attenuation and omit those volume commands to preserve the levels at note on. |
+| PSG | Replace `fTone_07` with `fTone_ShadowDancer`. Envelope 7 comes from `VolEnvPtrs` at `byte_62AE0` in the Shadow Dancer driver disassembly in `SMPS_Research_Pack_v5_DriverDisasm.7z`. Translate its hold byte `$83` to KeH's `$80`. KeH's extended low-note table covers PSG2's low A. |
+| DAC | Rename the disassembler's `dKick` and `dSnare` to `dShadowDancerKick` and `dShadowDancerSnare`. Reference the rip's original `DAC_81.bin` and `DAC_82.bin` in `sound/DAC/DAC.ini`. The standard DPCM table matches KeH's. From the rip's `DAC.ini`, use `round(BaseRate / (Rate + RateDiv))` in Hz, giving 11,792 and 7,372 for rates `$08` and `$16`. |
+
+Append the editable score to `sound/music/music.ini` and do a normal build
+so the packer assigns the IDs and updates the DAC banks and song data. The
+stage import occupies Sound Test `$05B`. Each channel repeats every 2,400
+duration ticks after its opening notes. A loop takes about 3,000 NTSC frames
+at the converted tempo. The audio check below runs past three wraps. Check the
+bass, stereo FM parts, both PSG parts and both drums across each wrap.
+
+```sh
+python3 build_tools/check_sound_playback.py --core /path/to/genesis_plus_gx_libretro.so \
+  --system-directory /path/to/bios --songs ShadowDancerStage --frames 9200 \
+  --output test-results/shadow-dancer/playback
+```
 
 ### Optimizing music sequences
 

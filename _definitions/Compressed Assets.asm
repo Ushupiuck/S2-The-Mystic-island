@@ -1286,6 +1286,9 @@ MCD_CompressedAssets:
 	if defined(Mus_SW_HPZ)
 	dc.l Mus_SW_HPZ,Mus_SW_HPZ+$2D4	; sound/music/../generated/SW_HPZ_cmp.bin
 	endif
+	if defined(Mus_ShadowDancerStage)
+	dc.l Mus_ShadowDancerStage,Mus_ShadowDancerStage+$2F6	; sound/music/../generated/ShadowDancerStage_cmp.bin
+	endif
 	if defined(Mus_SpecialStage)
 	dc.l Mus_SpecialStage,Mus_SpecialStage+$385	; sound/music/../generated/SpecialStage_cmp.bin
 	endif

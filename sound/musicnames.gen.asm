@@ -90,6 +90,7 @@ SongNames:	offsetTable
 	offsetTableEntry.w	MusNam_Continue
 	offsetTableEntry.w	MusNam_Emerald
 	offsetTableEntry.w	MusNam_Countdown
+	offsetTableEntry.w	MusNam_ShadowDancerStage
 
 MusNam_Null:	dc.b 0,' '
 MusNam_EggUtopia:	songtext	"EGG UTOPIA"
@@ -182,4 +183,5 @@ MusNam_DoubleLife:	songtext	"DOUBLE LIFE"
 MusNam_Continue:	songtext	"CONTINUE"
 MusNam_Emerald:	songtext	"CHAOS EMERALD"
 MusNam_Countdown:	songtext	"DROWNING"
+MusNam_ShadowDancerStage:	songtext	"SHADOW DANCER 1-1, 3-1"
 	even

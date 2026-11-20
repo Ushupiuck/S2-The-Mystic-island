@@ -61,7 +61,7 @@ nMaxPSG2			EQU nA5+psgdelta
 ; PSG volume envelope equates
 	enum fTone_01=$01,fTone_02,fTone_03,fTone_04,fTone_05,fTone_06
 	enum fTone_07=fTone_06+1,fTone_08,fTone_09,fTone_0A,fTone_0B,fTone_0C
-	enum fTone_0D=fTone_0C+1
+	enum fTone_0D=fTone_0C+1,fTone_ShadowDancer
 	enum sTone_01=fTone_02
 	enum sTone_02=fTone_02
 	enum sTone_03=fTone_0B

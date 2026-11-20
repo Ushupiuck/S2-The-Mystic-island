@@ -20,6 +20,7 @@ PSG_EnvelopeIndex:
 	rom_ptr_z80 PSG_Envelope11
 	rom_ptr_z80 PSG_Envelope12
 	rom_ptr_z80 PSG_Envelope13
+	rom_ptr_z80 PSG_EnvelopeShadowDancer
 PSG_Envelope01:
 	dc.b	0,0,0,1,1,1,2,2,2,3,3,3,4,4,4,5
 	dc.b	5,5,6,6,6,7,$80
@@ -63,5 +64,9 @@ PSG_Envelope12:
 	dc.b	6,6,6,6,6,6,6,6,6,6,6,6,6,6,7,$80
 PSG_Envelope13:
 	dc.b	$0E,$0D,$0C,$0B,$0A,9,8,7,6,5,4,3,2,1,0,$80
+
+PSG_EnvelopeShadowDancer:
+	; Shadow Dancer envelope 7 (byte_62AE0). KeH uses $80 to hold.
+	dc.b	0,0,7,1,1,7,2,2,4,4,6,7,8,$80
 
 ;	END of PSG_EnvelopeIndex ---------------------------

@@ -15,16 +15,18 @@ SndDAC_94_97:	BINCLUDE "sound/DAC/94-97.bin"
 SndDAC_94_97_End:
 SndDAC_C0:	BINCLUDE "sound/DAC/C0.bin"
 SndDAC_C0_End:
+SndDAC_DAC_82:	BINCLUDE "sound/DAC/../../Music & SFX from other games/Rips/68k/Shadow Dancer/DAC/DAC_82.bin"
+SndDAC_DAC_82_End:
 SndDAC_81:	BINCLUDE "sound/DAC/81.bin"
 SndDAC_81_End:
 SndDAC_C8:	BINCLUDE "sound/DAC/C8.bin"
 SndDAC_C8_End:
 SndDAC_C6:	BINCLUDE "sound/DAC/C6.bin"
 SndDAC_C6_End:
-SndDAC_87:	BINCLUDE "sound/DAC/87.bin"
-SndDAC_87_End:
-SndDAC_8F:	BINCLUDE "sound/DAC/8F.bin"
-SndDAC_8F_End:
+SndDAC_86:	BINCLUDE "sound/DAC/86.bin"
+SndDAC_86_End:
+SndDAC_8A_8B:	BINCLUDE "sound/DAC/8A-8B.bin"
+SndDAC_8A_8B_End:
 SndDAC1_DataEnd:
 	SoundBankAssets DAC,1
 	finishBank

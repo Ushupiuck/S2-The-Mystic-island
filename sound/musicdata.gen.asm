@@ -147,3 +147,5 @@ Mus_Emerald:	MusicPacked "sound/music/../generated/Emerald_cmp.bin" ; $B8 bytes
 	even
 Mus_Countdown:	MusicPacked "sound/music/../generated/Countdown_cmp.bin" ; $105 bytes
 	even
+Mus_ShadowDancerStage:	MusicPacked "sound/music/../generated/ShadowDancerStage_cmp.bin" ; $2F6 bytes
+	even

@@ -89,3 +89,4 @@ Music_Index:
 	MusicEntry	Mus_Continue,$15D,0
 	MusicEntry	Mus_Emerald,$CE,0
 	MusicEntry	Mus_Countdown,$12A,0|musprop_palmode|musprop_nospeedup
+	MusicEntry	Mus_ShadowDancerStage,$3F8,0

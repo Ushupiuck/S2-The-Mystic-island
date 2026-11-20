@@ -11,4 +11,5 @@ MusID__First = 1
 	enum MusID_ReservedStage40=MusID_ReservedStage3F+1,MusID_Title,MusID_2PResult,MusID_Options,MusID_Boss,MusID_Boss2,MusID_Boss3
 	enum MusID_EndBoss=MusID_Boss3+1,MusID_Ending_S1,MusID_Ending_S2,MusID_Credits,MusID_Credits_2,MusID_BonusStage,MusID_BonusStage2
 	enum MusID_BonusStage3=MusID_BonusStage2+1,MusID_SpecialStage,MusID_Invincible,MusID_SuperSonic,MusID_S3Menu,MusID_S3SuperSonic,MusID_EndLevel
-	enum MusID_GameOver=MusID_EndLevel+1,MusID_ExtraLife,MusID_DoubleLife,MusID_Continue,MusID_Emerald,MusID_Countdown,MusID__End
+	enum MusID_GameOver=MusID_EndLevel+1,MusID_ExtraLife,MusID_DoubleLife,MusID_Continue,MusID_Emerald,MusID_Countdown,MusID_ShadowDancerStage
+	enum MusID__End=MusID_ShadowDancerStage+1
