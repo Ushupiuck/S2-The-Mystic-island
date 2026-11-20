@@ -189,7 +189,6 @@ zone `$0F`, or when subtype bit 8 is set elsewhere with compatible PLCs:
 | --- | --- | --- |
 | `$1B` | 0-6, 7 | 1-8 crumbling columns; bit 7 selects a static full-solid block |
 | `$B0` | 0-3, 7 | Existing payload presets; bit 7 selects a 64px patrol instead of 80px |
-| `$A4` | 7 | Initially extended; X/Y placement flips independently select travel signs |
 | `$A5` | 0-1 | 0/2: small crusher; 1: tall launcher; reserved 3 safely uses small |
 | `$A5` | 2-3 | Small: phase rates 4/8/16/32; tall: bit 2 selects 4/8, bit 3 selects 60/90 pause |
 | `$A5` | 4-5, 6, 7 | Initial quarter phase; 32/48 amplitude; strong/weak launch |
@@ -211,12 +210,6 @@ The MMZ variant sets its first delay from its own load and keeps a 120-update
 solid hold. Adjacent placements can use separate delays to build a staircase.
 Rectangle and curve motion use the same spin contact routine with full and
 top support respectively.
-
-Saw blades share frame-pair timing, sound playback, rendering and placement
-lifetime. Both speeding triggers lead to the same projectile update. The
-diagonal blade uses the standard object velocity fields and reverses them at
-the ends of its travel. Its rail is an optional child with reciprocal ownership.
-It retains the one-pixel birth displacement and the 28-pixel harmful half-size.
 
 The stomper moves its selected body and resolves contact in one update loop.
 The sinusoidal profile uses two 256-byte signed-height tables and tests support
@@ -249,6 +242,32 @@ bounded patrols. Both use 1.5px/update, the same terrain/payload probes and
 the eight ordinary payload presets. A bounded patrol centers on its landing
 point, checks clearance before reversing and limits travel to 80px on each
 side, or 64px with bit 7 set. The mount table owns payload subtype and facing.
+
+### Shared saws
+
+Scrap Madness and Metallic Madness Act 1 use the same `$A4` movement code.
+Each act loads its own blade bank. The subtype word uses the following nibbles.
+
+| Field | Setting |
+| --- | --- |
+| `000X` | Zero holds the blade in place. In continuous motion, `$1` through `$F` move at 0.25 through 3.75 pixels per update on each enabled axis. In timed motion, the value is the number of 10-update pauses at each endpoint. |
+| `00X0` | Bit 4 enables timed motion. The blade travels at 1 pixel per update and pauses at both ends. Bit 7 starts at the far endpoint. Bits 5 and 6 are free. |
+| `0X00` | `$0` horizontal, `$1` vertical, `$2` diagonal, `$3` stock clocked horizontal, `$4` stock clocked vertical, `$5` stock speeding from left, `$6` stock speeding from right. The four stock modes use their own timing when the value is nonzero. |
+| `X000` | Free. |
+
+X and Y flips choose travel signs independently for horizontal, vertical and
+diagonal sweeps. The placement is the initial endpoint. A clip on the final
+step keeps the endpoint exact even at a fractional speed. Bare blades span
+80 pixels per enabled axis. The MMZ1 diagonal blade keeps its rail, 73-pixel
+stroke, one-pixel birth displacement and distance-driven extension frames.
+Bare MMZ frames reuse the resident blade tiles. The rail uses a reciprocal
+child slot.
+
+Existing SMZ placements were converted to `$0000`, `$0301`, `$0401`,
+`$0501` or `$0601`. MMZ1 uses `$0216` or `$0296` to preserve the stock
+60-update pause and starting endpoint. To update a layout saved before this
+format change, run `python build_tools/object_layout.py --legacy-saws scrap FILE`
+for an SMZ layout or use `metal` for an MMZ1 layout.
 
 ### Mecha-Bu
 

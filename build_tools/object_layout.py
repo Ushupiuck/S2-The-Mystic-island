@@ -41,6 +41,24 @@ def with_timezones(row):
     return tuple(row)
 
 
+def legacy_saw_subtype(subtype, metal=False):
+	"""Translate a pre-sweep $A4 subtype while preserving its old motion."""
+	reserved = subtype & 0xF000
+	if metal or subtype & 0x100:
+		return reserved | 0x0216 | (subtype & 0x80)
+	return reserved | (0, 0x0301, 0x0401, 0x0501, 0x0601, 0, 0, 0)[subtype & 7]
+
+
+def convert_legacy_saws(data, metal=False):
+	rows = decode(data)
+	legacy_mask = 0xF180 if metal else 0xF007
+	for x, _, object_id, _, subtype in rows:
+		if object_id == 0xA4 and subtype & ~legacy_mask:
+			raise ValueError(f'Saw at X=${x:04X} has a non-legacy subtype ${subtype:04X}')
+	return encode((*row[:4], legacy_saw_subtype(row[4], metal)) if row[2] == 0xA4 else row
+		for row in rows)
+
+
 def convert_s3k(data):
     if len(data) < 6 or len(data) % 6 or data[-6:] != bytes.fromhex('FFFF00000000'):
         raise ValueError('Input is not a terminated six-byte S3&K layout')
@@ -61,12 +79,20 @@ def with_mount(row, settings):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Convert S3&K layouts to the Mystic Island format in place.')
-    parser.add_argument('--from-s3k', action='store_true', required=True)
-    parser.add_argument('files', nargs='+', type=Path)
-    args = parser.parse_args()
-    # Validate every input before replacing any of them.
-    converted = [(path, convert_s3k(path.read_bytes())) for path in args.files]
-    for path, data in converted:
-        path.write_bytes(data)
-    print(f'Converted {len(converted)} layouts; existing objects appear in every era.')
+	parser = argparse.ArgumentParser(description='Convert supported object layouts in place.')
+	mode = parser.add_mutually_exclusive_group(required=True)
+	mode.add_argument('--from-s3k', action='store_true')
+	mode.add_argument('--legacy-saws', choices=('scrap', 'metal'), help='Translate legacy $A4 records')
+	parser.add_argument('files', nargs='+', type=Path)
+	args = parser.parse_args()
+	# Validate every input before replacing any of them.
+	if args.from_s3k:
+		converted = [(path, convert_s3k(path.read_bytes())) for path in args.files]
+		message = f'Converted {len(converted)} layouts; existing objects appear in every era.'
+	else:
+		converted = [(path, convert_legacy_saws(path.read_bytes(), args.legacy_saws == 'metal'))
+			for path in args.files]
+		message = f'Updated saw subtypes in {len(converted)} layouts.'
+	for path, data in converted:
+		path.write_bytes(data)
+	print(message)

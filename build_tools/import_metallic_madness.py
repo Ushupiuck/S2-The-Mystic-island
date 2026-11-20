@@ -240,6 +240,13 @@ def animations(source,constants,act=1):
 	return outputs,dict(tiles=len(atlas)//32,bytes=len(atlas),streams=report)
 
 
+def bare_saw_frames(rows):
+	"""Reuse the blade tiles from the two repeating faces of the rail saw."""
+	blade_pair = [row[-8:] for row in rows[:2]]
+	assert len(rows) == 18 and all(row[-8:] == blade_pair[i % 2] for i, row in enumerate(rows))
+	return rows + blade_pair
+
+
 def sprites(source,constants):
 	"""Keep one resident atlas and load only the art differing in Past/GF."""
 	from import_palmtree_enemies import mapping as cd_mapping
@@ -314,7 +321,7 @@ def sprites(source,constants):
 			for row in packed:
 				rows.append([(y,size,word|(offset+find_tiles(tiles,pattern)),x) for y,size,word,x,pattern in row])
 			label=family if len(families)==1 else family+(' Saw' if family=='MechaBu' and mi else ' Handle' if family=='Saw' and mi else ' Alternate' if mi else '')
-			outputs[f'mappings/sprite/MMZ {label}.bin']=encode_sprites(rows)
+			outputs[f'mappings/sprite/MMZ {label}.bin']=encode_sprites(bare_saw_frames(rows) if label=='Saw' else rows)
 			# Compare visible indexed pixels in every era, independent of the
 			# rectangle packer's storage order and complete mapping-piece overlap.
 			for era in range(3):
@@ -400,7 +407,7 @@ def vanishing_members(x, y, eras, subtype):
 
 def placements(source, act):
 	"""Import completed families while preserving other editable placements."""
-	from object_layout import decode, encode
+	from object_layout import decode, encode, legacy_saw_subtype
 	path = f'level/objects/LV0F_{act}.bin'
 	# Expand this explicit ownership list only after runtime, art and editor data
 	# exist. Reimporting a completed family resets its authored source settings.
@@ -439,7 +446,7 @@ def placements(source, act):
 		elif family == 'BuzzsawObject':
 			assert variant == 0 and sub & 0x7C == 0
 			y |= (sub & 3) << 13
-			sub = 0x100 | (sub & 0x80)
+			sub = legacy_saw_subtype(sub, metal=True)
 		elif family == 'CrusherObject':
 			assert variant == 0 and sub & 3 <= 2
 			sub |= 0x100

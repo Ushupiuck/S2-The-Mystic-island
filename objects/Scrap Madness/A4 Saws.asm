@@ -1,104 +1,194 @@
 ; ===========================================================================
-; SBZ saw variants derived from sonicretro/s1disasm 2c51d46 (REV01).
-; Stationary, oscillating, speeding and diagonal saws, object $A4.
-; The movement parameters differ; all blades use the same drawing, frame-pair
-; animation and lifetime. The diagonal rail is an optional linked attachment.
-saw_origin_y:	equ objoff_38
+; $A4 saws. Choose the blade bank at construction. The placement settings
+; select motion independently. SBZ defaults from sonicretro/s1disasm 2c51d46.
+; ===========================================================================
+
+; Subtype: free / movement / flags / speed or delay. A zero value stops any mode.
+Saw_TimerBit		equ 4
+Saw_FarEndBit		equ 7
+Saw_MotionMask		equ $F
+Saw_ValueMask		equ $F
+Saw_DelayUnit		equ 10
+Saw_MotionDiagonal	equ 2
+Saw_MotionClockX	equ 3
+Saw_MotionClockY	equ 4
+Saw_MotionRushLeft	equ 5
+Saw_MotionRushRight	equ 6
+Saw_BladeStroke		equ 80
+Saw_RailStages		equ 9
+Saw_RailSpacing		equ 9
+Saw_RailStroke		equ (Saw_RailStages-1)*Saw_RailSpacing+1
+Saw_RailAnchor		equ 80
+Saw_BareMetalFrame	equ Map_MMZ_Saw_frames-2
+
+saw_distance:	equ objoff_2E	; 8.8 travel left before the next endpoint
+saw_timer:	equ objoff_30	; endpoint wait
+saw_step_x:	equ objoff_32	; paired 16.16 increments, set at construction
+saw_step_y:	equ objoff_36
 saw_origin_x:	equ objoff_3A
-saw_handle:	equ objoff_3C	; reciprocal word pointer, zero without a rail
-saw_parent:	equ objoff_3E
-saw_sound:	equ objoff_40	; visible updates for a diagonal blade
-saw_stage_step:	equ objoff_42	; signed, next frame-pair change when travelling
-MMZ_saw_timer:	equ objoff_2E
-saw_stages:	equ objoff_30
+saw_handle:	equ objoff_3C	; reciprocal rail pointer, zero for a bare blade
+saw_parent:	equ objoff_3E	; rail only
+saw_rail_next:	equ objoff_3E	; blade only: 8.8 distance to the next rail pose
+saw_sound:	equ objoff_40	; updates visible
+saw_stage_step:	equ objoff_42	; +1 extending / -1 retracting
+saw_spin_delay:	equ objoff_43	; frame-pair delay minus one
+saw_speed:	equ objoff_44	; unsigned 8.8 distance per update
+saw_hold:	equ objoff_46	; endpoint wait length, zero for continuous travel
+saw_stroke:	equ objoff_48	; full 8.8 travel distance along each enabled axis
+saw_bare_frame:	equ objoff_4A	; frame-pair base for an unmounted blade
+saw_hitbox:	equ objoff_4B	; restored when a speeding saw starts moving
 
-; =============== S U B R O U T I N E =======================================
+; Clock-synchronized cutters overlay the paired movement increments.
+saw_osc_source:	equ saw_step_x
+saw_osc_axis:	equ saw_step_x+2
+saw_osc_base:	equ saw_step_y
 
-; Stationary and oscillating subtypes use 0-2; 3/4 select the speeding
-; triggers. Bit 8 explicitly enables the diagonal saw outside MMZ.
 SMZ_Saws:
-		move.w	obSubtype(a0),d0
-		btst	#8,d0
-		bne.w	Saw_InitDiagonal
-		cmpi.b	#id_MMZ,(v_zone).w	; editor byte presets
-		beq.w	Saw_InitDiagonal
-		andi.w	#7,d0
-		cmpi.w	#4,d0
-		bls.s	.select
-		moveq	#0,d0
-.select:
-		add.w	d0,d0
-		lea	Saw_Movement(pc),a1
-		adda.w	(a1,d0.w),a1
-		move.l	a1,code(a0)
-		move.b	#2,obRoutine(a0)
-		move.l	#Map_SMZ_Saw,obMap(a0)
-		move.b	#Map_SMZ_Saw_height,height_pixels(a0)
-		move.w	#ArtTile_SMZ_Atlas,obGfx(a0)
-		move.b	#4,obRender(a0)
-		move.w	#$200,obPriority(a0)
-		move.b	#32,width_pixels(a0)
+		lea	Saw_ScrapBlade(pc),a2
+		cmpi.b	#id_MMZ,(Current_Zone).w
+		bne.s	.settings
+		tst.b	(Current_Act).w		; only MMZ1 loads the metal saw bank
+		bne.s	.settings
+		lea	Saw_MetalBlade(pc),a2
+.settings:
+		move.w	obSubtype(a0),d6
+		move.w	d6,d5
+		lsr.w	#8,d5			; movement and reserved nibble
+		andi.w	#Saw_MotionMask,d5
+		move.w	d6,d2
+		andi.w	#Saw_ValueMask,d2
+		beq.w	Saw_InitStationary
+		cmpi.w	#Saw_MotionRushRight,d5
+		bhi.w	Saw_InitStationary
+		cmpi.w	#Saw_MotionDiagonal,d5
+		bhi.w	Saw_InitStockMotion
+
+		addq.w	#1,d5			; turn motion 0/1/2 into axes 1/2/3
+		moveq	#0,d4
+		btst	#Saw_TimerBit,d6
+		bne.s	.timed
+		lsl.w	#6,d2			; speed field * quarter pixel in 8.8
+		bra.s	.rail
+.timed:
+		move.w	d2,d4
+		mulu.w	#Saw_DelayUnit,d4
+		move.w	#$100,d2
+.rail:
+		cmpi.w	#3,d5
+		bne.s	.bare
+		cmpi.l	#Map_MMZ_Saw,(a2)
+		beq.w	Saw_InitRail
+.bare:
+		bsr.s	Saw_InitBlade
+		move.w	#Saw_BladeStroke<<8,saw_stroke(a0)
+		bsr.w	Saw_InitVector
+		btst	#Saw_FarEndBit,d6
+		beq.w	Saw_BeginSweep
+		bsr.w	Saw_Reverse
+		bra.w	Saw_BeginSweep
+
+; a2 = mapping, art, priority, hitbox and animation profile.
+Saw_InitBlade:
+		move.l	(a2)+,obMap(a0)
+		move.w	(a2)+,obGfx(a0)
+		move.w	(a2)+,obPriority(a0)
+		move.w	#32<<8|32,height_pixels(a0)
+		move.b	(a2)+,obColType(a0)
+		move.b	obColType(a0),saw_hitbox(a0)
+		move.b	(a2)+,saw_spin_delay(a0)
+		move.b	(a2),obFrame(a0)
+		move.b	(a2),saw_bare_frame(a0)
 		move.w	obX(a0),saw_origin_x(a0)
-		move.w	obY(a0),saw_origin_y(a0)
-		cmpi.w	#3*2,d0
-		bhs.s	.update
-		move.b	#$22|$80,obColType(a0)
-.update:
-		jmp	(a1)
+		move.b	obStatus(a0),obRender(a0)
+		ori.b	#4,obRender(a0)
+		rts
 
-Saw_Movement:
-		dc.w Saw_Draw-Saw_Movement
-		dc.w Saw_OscillateX-Saw_Movement
-		dc.w Saw_OscillateY-Saw_Movement
-		dc.w Saw_WaitLeft-Saw_Movement
-		dc.w Saw_WaitRight-Saw_Movement
+Saw_ScrapBlade:
+		dc.l Map_SMZ_Saw
+		dc.w ArtTile_SMZ_Atlas,$200
+		dc.b $80|$22,2,2
+		even
+Saw_MetalBlade:
+		dc.l Map_MMZ_Saw
+		dc.w ArtTile_MMZ_Atlas,$180
+		dc.b $80|Touch_Size_MMZSaw_ID,1,Saw_BareMetalFrame
+		even
 
-; =============== S U B R O U T I N E =======================================
+Saw_InitStationary:
+		bsr.s	Saw_InitBlade
+		bsr.s	Saw_StockDisplay
+		move.l	#Saw_Draw,code(a0)
+		bra.w	Saw_Draw
 
-; The horizontal saw spans $60 pixels. Mirror its phase within that
-; span and play the buzz every 16 visible updates.
-Saw_OscillateX:
+; The Scrap Madness stationary and stock cutters use their original holder.
+Saw_StockDisplay:
+		cmpi.l	#Map_SMZ_Saw,obMap(a0)
+		bne.s	.return
+		clr.b	obFrame(a0)
+		move.b	#4,obRender(a0)
+		move.b	#2,obRoutine(a0)
+		move.b	#Map_SMZ_Saw_height,height_pixels(a0)
+.return:
+		rts
+
+; Retain the two global oscillator channels and the original speeding triggers.
+Saw_InitStockMotion:
+		bsr.w	Saw_InitBlade
+		bsr.s	Saw_StockDisplay
+		cmpi.w	#Saw_MotionClockY,d5
+		bls.s	.oscillating
+		clr.b	obColType(a0)
+		move.l	#Saw_WaitLeft,code(a0)
+		cmpi.w	#Saw_MotionRushLeft,d5
+		beq.w	Saw_WaitLeft
+		move.l	#Saw_WaitRight,code(a0)
+		bra.w	Saw_WaitRight
+.oscillating:
+		subi.w	#Saw_MotionClockX,d5
+		mulu.w	#6,d5
+		lea	Saw_Oscillators(pc,d5.w),a1
+		move.w	(a1)+,saw_osc_source(a0)
+		move.w	(a1)+,d2
+		move.w	d2,saw_osc_axis(a0)
+		move.w	(a0,d2.w),d1
+		btst	#0,obStatus(a0)
+		beq.s	.save
+		sub.w	(a1),d1
+.save:
+		move.w	d1,saw_osc_base(a0)
+		move.l	#Saw_ClockSweep,code(a0)
+		bra.s	Saw_ClockSweep
+
+; Oscillator byte, coordinate offset, flipped origin bias.
+Saw_Oscillators:
+		dc.w v_oscillate+$E,obX,$60
+		dc.w v_oscillate+6,obY,$80
+
+Saw_ClockSweep:
+		movem.w	saw_osc_source(a0),d1-d3
+		movea.w	d1,a1
 		moveq	#0,d0
-		move.b	(v_oscillate+$E).w,d0
+		move.b	(a1),d0
 		btst	#0,obStatus(a0)
 		beq.s	.position
 		neg.w	d0
-		addi.w	#$60,d0
 .position:
-		move.w	saw_origin_x(a0),d1
-		sub.w	d0,d1
-		move.w	d1,obX(a0)
-		moveq	#2,d0
+		sub.w	d0,d3
+		move.w	d3,(a0,d2.w)
+		move.b	saw_spin_delay(a0),d0
 		bsr.w	Saw_AnimatePair
 		tst.b	obRender(a0)
 		bpl.w	Saw_Draw
+		cmpi.w	#obY,d2
+		beq.s	.vertical
 		move.w	(v_framecount).w,d0
 		andi.w	#$F,d0
-		bne.w	Saw_Draw
-		bra.w	Saw_BuzzDraw
-
-; =============== S U B R O U T I N E =======================================
-
-; The flipped vertical saw keeps the original $80 origin offset. Its
-; buzz fires at the oscillator midpoint.
-Saw_OscillateY:
-		moveq	#0,d0
-		move.b	(v_oscillate+6).w,d0
-		btst	#0,obStatus(a0)
-		beq.s	.position
-		neg.w	d0
-		addi.w	#$80,d0
-.position:
-		move.w	saw_origin_y(a0),d1
-		sub.w	d0,d1
-		move.w	d1,obY(a0)
-		moveq	#2,d0
-		bsr.w	Saw_AnimatePair
-		tst.b	obRender(a0)
-		bpl.w	Saw_Draw
-		cmpi.b	#$18,(v_oscillate+6).w
-		bne.w	Saw_Draw
-		bra.w	Saw_BuzzDraw
+		beq.w	Saw_BuzzDraw
+		bra.w	Saw_Draw
+.vertical:
+		cmpi.b	#$18,(a1)
+		beq.w	Saw_BuzzDraw
+		bra.w	Saw_Draw
 
 ; The two directional triggers retain their original different X distances.
 Saw_WaitLeft:
@@ -127,8 +217,8 @@ Saw_Trigger:
 		blo.w	Saw_Draw
 		move.l	#Saw_Projectile,code(a0)
 		move.w	d1,obVelX(a0)
-		move.b	#$22|$80,obColType(a0)
-		move.b	#2,obFrame(a0)
+		move.b	saw_hitbox(a0),obColType(a0)
+		move.b	saw_bare_frame(a0),obFrame(a0)
 		move.w	#SndID_LaserBeam,d0
 		jsr	(PlaySound_Special).l
 		bra.w	Saw_Cull			; first visible on the next moving update
@@ -136,114 +226,195 @@ Saw_Trigger:
 Saw_Projectile:
 		jsr	(ObjectMove).l
 		move.w	obX(a0),saw_origin_x(a0)
-		moveq	#2,d0
+		move.b	saw_spin_delay(a0),d0
 		bsr.w	Saw_AnimatePair
 		bra.w	Saw_Draw
 
-; =============== S U B R O U T I N E =======================================
 
-; Allocate the rail before taking ownership of the placement.
-Saw_InitDiagonal:
+; Reserve the fixed rail before touching the blade. A full pool can retry.
+; d2 = 8.8 speed, d4 = pause length, d5 = axes, d6 = placement settings.
+Saw_InitRail:
 		jsr	(FindFreeObj).l
-		bne.w	.return	; retry the intact placement without leaking a handle
+		beq.s	.allocate
+		rts
+.allocate:
+		bsr.w	Saw_InitBlade
 		move.w	a1,saw_handle(a0)
 		move.w	a0,saw_parent(a1)
 		move.l	#Saw_Handle,code(a1)
 		move.l	#Map_MMZ_SawHandle,obMap(a1)
-		move.b	#Map_MMZ_SawHandle_width,width_pixels(a1)
-		move.b	#Map_MMZ_SawHandle_height,height_pixels(a1)
+		move.w	#Map_MMZ_SawHandle_height<<8|Map_MMZ_SawHandle_width,height_pixels(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.b	obStatus(a0),obStatus(a1)
-		move.b	obStatus(a0),obRender(a1)
-		ori.b	#4,obRender(a1)
-		move.w	#ArtTile_MMZ_Atlas,obGfx(a1)
+		move.b	obRender(a0),obRender(a1)
+		move.w	obGfx(a0),obGfx(a1)
 		move.w	#$200,obPriority(a1)
-		move.l	#Map_MMZ_Saw,obMap(a0)
-		move.b	#Map_MMZ_Saw_width,width_pixels(a0)
-		move.b	#Map_MMZ_Saw_height,height_pixels(a0)
-		move.w	#ArtTile_MMZ_Atlas,obGfx(a0)
-		move.w	#$180,obPriority(a0)
-		move.b	obStatus(a0),obRender(a0)
-		ori.b	#4,obRender(a0)
-		move.b	#$80|Touch_Size_MMZSaw_ID,obColType(a0)
-		move.w	obX(a0),saw_origin_x(a0)
-		move.w	#$100,obVelX(a0)
-		move.w	#$100,obVelY(a0)
-		moveq	#80,d0
-		moveq	#80,d1
+		move.w	#Map_MMZ_Saw_height<<8|Map_MMZ_Saw_width,height_pixels(a0)
+		move.w	#Saw_RailStroke<<8,saw_stroke(a0)
+		move.b	#1,saw_stage_step(a0)
+		move.b	#-1,obPrevAni(a0)
+		bsr.w	Saw_InitVector
+
+		; The rail preset starts one pixel past the authored endpoint.
+		moveq	#1,d0
+		moveq	#1,d1
 		btst	#0,obStatus(a0)
-		beq.s	.y_direction
-		neg.w	obVelX(a0)
+		beq.s	.y
 		neg.w	d0
-.y_direction:
+.y:
 		btst	#1,obStatus(a0)
-		beq.s	.phase
-		neg.w	obVelY(a0)
+		beq.s	.place
 		neg.w	d1
-.phase:
-		move.l	#Saw_DiagonalHold,code(a0)
-		move.w	obSubtype(a0),d2
-		btst	#7,d2
-		beq.s	.start
-		move.b	#9,obAnim(a0)
+.place:
+		add.w	d0,obX(a0)
+		add.w	d1,obY(a0)
+		btst	#Saw_FarEndBit,d6
+		beq.s	Saw_BeginSweep
+		move.b	#Saw_RailStages,obAnim(a0)
+		muls.w	#Saw_RailAnchor,d0
+		muls.w	#Saw_RailAnchor,d1
 		sub.w	d0,obX(a1)
 		sub.w	d1,obY(a1)
-.start:
-		move.b	#-1,obPrevAni(a0)
-		move.w	#59,MMZ_saw_timer(a0)
-		; Retain the one-pixel displacement on the first drawn update.
-		jsr	(ObjectMove).l
-		move.b	#1,saw_stage_step(a0)
-		tst.b	obAnim(a0)
-		bne.s	Saw_DiagonalAnimate
-		bsr.s	Saw_ReverseDiagonal
-		bra.s	Saw_DiagonalAnimate
-.return:
-		rts
+		bsr.s	Saw_Reverse
 
-Saw_DiagonalHold:
-		subq.w	#1,MMZ_saw_timer(a0)
-		bne.s	Saw_DiagonalAnimate
-		bsr.s	Saw_ReverseDiagonal
-		move.l	#Saw_DiagonalTravel,code(a0)
-		move.w	#9,saw_stages(a0)
-		move.w	#1,MMZ_saw_timer(a0)
-		bra.s	Saw_DiagonalAnimate
+; A waiting blade holds the previous leg's direction until the next leg starts.
+Saw_BeginSweep:
+		move.w	d4,saw_hold(a0)
+		beq.s	.continuous
+		subq.w	#1,d4				; count the constructor's update
+		move.w	d4,saw_timer(a0)
+		bsr.s	Saw_Reverse
+		move.l	#Saw_Hold,code(a0)
+		bra.w	Saw_BoundedAnimate
+.continuous:
+		bsr.s	Saw_StartLeg
+		bra.w	Saw_BoundedAnimate
 
-Saw_ReverseDiagonal:
+Saw_Reverse:
 		neg.w	obVelX(a0)
 		neg.w	obVelY(a0)
+		neg.l	saw_step_x(a0)
+		neg.l	saw_step_y(a0)
 		neg.b	saw_stage_step(a0)
 		rts
 
-Saw_DiagonalTravel:
-		subq.w	#1,MMZ_saw_timer(a0)
-		bne.s	.move
-		move.b	saw_stage_step(a0),d0
-		add.b	d0,obAnim(a0)
-		move.w	#9,MMZ_saw_timer(a0)
-		subq.w	#1,saw_stages(a0)
-		bne.s	.move
-		move.l	#Saw_DiagonalHold,code(a0)
-		move.w	#60,MMZ_saw_timer(a0)
+Saw_StartLeg:
+		move.l	#Saw_Travel,code(a0)
+		move.w	saw_stroke(a0),saw_distance(a0)
+		move.w	#$100,saw_rail_next(a0)
+		rts
+
+Saw_Hold:
+		subq.w	#1,saw_timer(a0)
+		bne.w	Saw_BoundedAnimate
+		bsr.s	Saw_Reverse
+		bsr.s	Saw_StartLeg
+		bra.w	Saw_BoundedAnimate
+
+; Apply cached 16.16 deltas. A short final step lets any speed stop exactly
+; on the endpoint, with no accumulated rounding on either coordinate.
+Saw_Travel:
+		move.w	saw_speed(a0),d0
+		sub.w	d0,saw_distance(a0)
+		bcs.s	.short_step
+		movem.l	saw_step_x(a0),d1-d2
 .move:
-		jsr	(ObjectMove).l
-Saw_DiagonalAnimate:
+		add.l	d1,obX(a0)
+		add.l	d2,obY(a0)
+		tst.w	saw_handle(a0)
+		beq.s	.endpoint
+		sub.w	d0,saw_rail_next(a0)
+		bgt.s	.endpoint
+		addi.w	#Saw_RailSpacing<<8,saw_rail_next(a0)
+		move.b	saw_stage_step(a0),d1
+		add.b	d1,obAnim(a0)
+.endpoint:
+		tst.w	saw_distance(a0)
+		bne.w	Saw_BoundedAnimate
+		move.w	saw_hold(a0),saw_timer(a0)
+		beq.s	.reverse
+		move.l	#Saw_Hold,code(a0)
+		bra.w	Saw_BoundedAnimate
+.reverse:
+		bsr.w	Saw_Reverse
+		bsr.s	Saw_StartLeg
+		bra.w	Saw_BoundedAnimate
+.short_step:
+		add.w	saw_distance(a0),d0
+		clr.w	saw_distance(a0)
+		moveq	#0,d3
+		move.w	d0,d3
+		lsl.l	#8,d3
+		bsr.w	Saw_SignedVector
+		bra.s	.move
+
+; Set the two components once. Both axes use the same configurable speed.
+Saw_InitVector:
+		move.w	d2,saw_speed(a0)
+		clr.l	obVelX(a0)
+		btst	#0,d5
+		beq.s	.vertical
+		move.w	d2,obVelX(a0)
+		btst	#0,obStatus(a0)
+		beq.s	.vertical
+		neg.w	obVelX(a0)
+.vertical:
+		btst	#1,d5
+		beq.s	.cache
+		move.w	d2,obVelY(a0)
+		btst	#1,obStatus(a0)
+		beq.s	.cache
+		neg.w	obVelY(a0)
+.cache:
+		moveq	#0,d3
+		move.w	d2,d3
+		lsl.l	#8,d3
+		bsr.s	Saw_SignedVector
+		movem.l	d1-d2,saw_step_x(a0)
+		rts
+
+; d3 = unsigned 16.16 distance. Return components along the enabled axes.
+Saw_SignedVector:
+		moveq	#0,d1
+		moveq	#0,d2
+		tst.w	obVelX(a0)
+		beq.s	.vertical
+		bmi.s	.left
+		move.l	d3,d1
+		bra.s	.vertical
+.left:
+		move.l	d3,d1
+		neg.l	d1
+.vertical:
+		tst.w	obVelY(a0)
+		beq.s	.return
+		bmi.s	.up
+		move.l	d3,d2
+		rts
+.up:
+		move.l	d3,d2
+		neg.l	d2
+.return:
+		rts
+
+Saw_BoundedAnimate:
+		tst.w	saw_handle(a0)
+		beq.s	.pair
 		move.b	obAnim(a0),d0
 		cmp.b	obPrevAni(a0),d0
 		beq.s	.pair
 		move.b	d0,obPrevAni(a0)
-		cmpi.b	#8,d0
+		cmpi.b	#Saw_RailStages-1,d0
 		bls.s	.frame
-		moveq	#8,d0			; stage 9 uses the fully extended pair
+		moveq	#Saw_RailStages-1,d0
 .frame:
 		add.b	d0,d0
 		move.b	d0,obFrame(a0)
-		move.b	#1,obTimeFrame(a0)
+		move.b	saw_spin_delay(a0),obTimeFrame(a0)
 		bra.s	.sound
 .pair:
-		moveq	#1,d0
+		move.b	saw_spin_delay(a0),d0
 		bsr.s	Saw_AnimatePair
 .sound:
 		tst.b	obRender(a0)

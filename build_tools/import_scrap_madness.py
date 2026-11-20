@@ -17,7 +17,7 @@ from sprite_palette import ENEMY_FROM_LEGACY, remap_line
 from terrain_collision import read_bank, remap_geometry, S1_BANK_FILES
 
 ROOT = Path(__file__).resolve().parents[1]
-from object_layout import encode, with_timezones
+from object_layout import encode, legacy_saw_subtype, with_timezones
 # Source IDs which already have a compatible Mystic Island implementation.
 OBJECTS = {0x0D: 0x7E, 0x15: 0x17, 0x1E: 0x21, 0x26: 0x12,
            0x2A: 0x30, 0x32: 0xAF, 0x41: 0x14, 0x52: 0xAD,
@@ -330,6 +330,8 @@ def placements(source):
                 subtype &= 15   # original SBZ switches use normal press behavior
             if act == 2 and oid == 0x0D:
                 subtype = 2     # SMZ2's original sign now starts the Mecha trap
+            if OBJECTS[oid] == 0xA4:
+                subtype = legacy_saw_subtype(subtype)
             # S1 flags are Y bits 14/15; S3&K uses bits 13/14.
             objects.append((x,(y&0xFFF)|((y&0xC000)>>1),OBJECTS[oid],subtype))
         objects.sort()

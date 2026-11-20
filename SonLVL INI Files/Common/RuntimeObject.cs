@@ -47,7 +47,9 @@ namespace MysticIsland.ObjectDefinitions
 					: Render(pixels, map, data.Palette, dplc, data.DPLCVersion, int.Parse(Setting("mapframes", "0")));
 				if (behavior == "Bomb") alternate = Render(File.ReadAllBytes("../art/uncompressed/MMZ2 Editor Atlas.unc"), File.ReadAllBytes("../mappings/sprite/MMZ BigBom 1.bin"), 0, null);
 				if (behavior == "MMZMechaBu") alternate = Render(pixels, File.ReadAllBytes("../mappings/sprite/MMZ MechaBu Saw.bin"), 0, null);
-				if (behavior == "MMZSaw") alternate = Render(pixels, File.ReadAllBytes("../mappings/sprite/MMZ Saw Handle.bin"), 0, null);
+				string rail = Setting("sawrail", "");
+				if (behavior == "Saw" && rail.Length != 0)
+					alternate = Render(pixels, File.ReadAllBytes(rail), 0, null);
 			}
 			else frames = new[] { Outline(16, 16) };
 
@@ -211,7 +213,13 @@ namespace MysticIsland.ObjectDefinitions
 					Bits("Type", 7, 1, "Selects two different objects and mapping sets.", "Trapdoor", "Spinning platform");
 					Bits("Delay / phase", 0, 15, "Trapdoor: interval * 60 frames. Spin platform: initial phase * 6 frames.");
 					Bits("Spin period", 4, 7, "Sync mask = (value + 1) * 64 - 1. Original patterns use 0, 1, 3 or 7."); break;
-				case "Saw": Bits("Movement", 0, 7, "Saw movement routine.", "Stationary cutter", "Horizontal cutter (96 px)", "Vertical cutter (48 px)", "Speeding saw from left", "Speeding saw from right"); break;
+				case "Saw":
+					Bits("Movement", 8, 15, "Placement flips set the travel signs of the first three modes.",
+						"Horizontal", "Vertical", "Diagonal", "Clocked horizontal cutter", "Clocked vertical cutter", "Speeding from left", "Speeding from right");
+					Bits("Speed / timer", 0, 15, "Zero stops the blade. Continuous motion uses this value in quarter pixels per update. Timed motion travels at 1 px/update and waits this value times 10 updates at each endpoint. The four stock presets use their original timing when nonzero.");
+					Bits("Endpoint timer", 4, 1, "Changes the speed field into the wait duration.", "Continuous", "Timed");
+					Bits("Start at far end", 7, 1, "Reverse the initial direction of a horizontal, vertical or diagonal sweep. The placement is the initial blade position.", "Near", "Far");
+					break;
 				case "Stomper":
 					Bits("Shape", 4, 7, "Size / frame configuration.", "Sliding block (128 x 24)", "Stomper (56 x 64)", "Stomper, 64 px travel", "Stomper, 96 px travel", "Large lift (256 x 128)");
 					Bits("Switch controlled", 7, 1, "When set, low nibble = switch; otherwise low nibble = movement.", "No", "Yes");
@@ -223,9 +231,6 @@ namespace MysticIsland.ObjectDefinitions
 					break;
 				case "MMZMechaBu":
 					Bits("Saw reach", 0, 1, "The independent saw alternates every 61 updates, or stays low. X flip mirrors the attachment.", "Alternating", "Fixed low"); break;
-				case "MMZSaw":
-					Bits("Initial phase", 7, 1, "The handle stays fixed; X and Y flips independently mirror the diagonal travel.", "Retracted", "Extended");
-					break;
 				case "MMZFloor":
 					Bits("Columns", 0, 127, "One to eight 16-pixel columns. Invalid values safely use one column.");
 					Bits("Static block", 7, 1, "Static blocks are full-solid; crumbling floors are solid only on top and either character can trigger them.", "Crumbling", "Static");
@@ -617,9 +622,6 @@ namespace MysticIsland.ObjectDefinitions
 				case "Eggman": return new Sprite(alternate[0], frames[(subtype & 1) == 0 ? 0 : 7]);
 				case "Bomb": return (subtype & 0xF0) == 0x10 ? alternate[0] : frames[0];
 				case "MMZMechaBu": return new Sprite(frames[0], new Sprite(At(alternate, (subtype & 1) == 0 ? 2 : 0), (subtype & 1) == 0 ? -19 : -25, (subtype & 1) == 0 ? -15 : 0));
-				case "MMZSaw":
-					int mmzMount = (subtype & 128) == 0 ? 0 : -80;
-					return new Sprite(new Sprite(At(frames, (subtype & 128) == 0 ? 0 : 16), 1, 1), new Sprite(alternate[0], mmzMount, mmzMount));
 				case "MMZCrusher":
 					byte[] heights = (subtype & 64) == 0 ? routes : groups;
 					return new Sprite(At(frames, (subtype & 3) == 1 ? 1 : 0), 0, unchecked((sbyte)heights[((subtype >> 4) & 3) * 64]));
@@ -636,7 +638,16 @@ namespace MysticIsland.ObjectDefinitions
 						pieces.Add(new Sprite(mmzPlatform, moving ? unchecked((sbyte)groups[phase * 2]) * sign : i * 32, moving ? unchecked((sbyte)groups[phase * 2 + 1]) * sign : 0));
 					}
 					return new Sprite(pieces);
-				case "Saw": return At(frames, (subtype & 7) >= 3 ? 2 : 0);
+				case "Saw":
+					if (SawHasRail(subtype))
+					{
+						bool far = (subtype & 128) != 0;
+						int mount = far ? -80 : 0;
+						return new Sprite(new Sprite(At(frames, far ? 16 : 0), 1, 1), new Sprite(alternate[0], mount, mount));
+					}
+					if (alternate != null) return frames[frames.Length - 2];
+					int sawMode = SawMovement(subtype);
+					return At(frames, sawMode >= 0 && sawMode != 3 && sawMode != 4 ? 2 : 0);
 				case "SpinTrap": return (subtype & 0x80) != 0 ? frames[0] : alternate[0];
 				case "Stomper": return At(frames, (subtype >> 4) & 7);
 				case "Flame": return At(frames, yflip ? 0xB : 0);
@@ -716,6 +727,11 @@ namespace MysticIsland.ObjectDefinitions
 		{
 			Sprite sprite = new Sprite(Preview(Subtype(obj), obj.X, obj.Y, obj.YFlip, obj.XFlip, behavior == "Platform" || behavior == "Swing" ? MountSettings(obj) : 0, SwingArt(obj.ID)));
 			if (behavior == "Teleporter") sprite.Flip(obj.XFlip, false);
+			else if (behavior == "Saw")
+			{
+				int movement = SawMovement(Subtype(obj));
+				if (alternate != null || (movement >= 0 && movement <= 2)) sprite.Flip(obj.XFlip, obj.YFlip);
+			}
 			else if (behavior != "MMZSpin" && behavior != "FireballSpawner" && behavior != "Fireball" && behavior != "Platform" && behavior != "Swing" && behavior != "SpinGroup" && behavior != "LabyrinthConveyor" && behavior != "InvisibleSolid" && behavior != "Conveyor" && behavior != "PathSwapper" && behavior != "Hanging" && behavior != "PullChain") sprite.Flip(obj.XFlip, obj.YFlip);
 			return sprite;
 		}
@@ -761,8 +777,23 @@ namespace MysticIsland.ObjectDefinitions
 				if (movement == 9 || movement == 10) return Travel(0, 0, (obj.XFlip ? -1 : 1) * (frames[(Subtype(obj) >> 4) % frames.Length].Width), 0);
 			}
 			if (behavior == "Lift") return Travel(0, 0, (obj.XFlip ? -1 : 1) * Subtype(obj) * 16, Subtype(obj) * 8);
-			if (behavior == "Saw" && movement == 1) return Travel(-96, 0, 0, 0);
-			if (behavior == "Saw" && movement == 2) return Travel(0, obj.XFlip ? -128 : -48, 0, obj.XFlip ? -80 : 0);
+			if (behavior == "Saw")
+			{
+				int subtype = Subtype(obj);
+				int sawMode = SawMovement(subtype);
+				if (sawMode >= 0 && sawMode <= 2)
+				{
+					bool rail = SawHasRail(subtype);
+					int axis = sawMode + 1;
+					int x = obj.XFlip ? -1 : 1, y = obj.YFlip ? -1 : 1;
+					int stroke = (rail ? 73 : 80) * ((subtype & 128) != 0 ? -1 : 1);
+					int startX = rail ? x : 0, startY = rail ? y : 0;
+					return Travel(startX, startY, startX + ((axis & 1) != 0 ? x * stroke : 0),
+						startY + ((axis & 2) != 0 ? y * stroke : 0));
+				}
+				if (sawMode == 3) return Travel(-96, 0, 0, 0);
+				if (sawMode == 4) return Travel(0, obj.XFlip ? -128 : -48, 0, obj.XFlip ? -80 : 0);
+			}
 			if (behavior == "RunningDisc") return Outline((movement == 0 ? 72 : 56) * 2, (movement == 0 ? 72 : 56) * 2);
 			if (behavior != "Teleporter") return null;
 			int offset = ByteConverter.ToUInt16(routes, (Subtype(obj) & 7) * 2), count = ByteConverter.ToUInt16(routes, offset) / 4;
@@ -773,6 +804,17 @@ namespace MysticIsland.ObjectDefinitions
 			for (int i = 1; i < points.Count; i++) bitmap.DrawLine(LevelData.ColorWhite, points[i - 1].X - left, points[i - 1].Y - top, points[i].X - left, points[i].Y - top);
 			return new Sprite(bitmap, left, top);
 		}
+		private static int SawMovement(int subtype)
+		{
+			int movement = (subtype >> 8) & 15;
+			return (subtype & 15) == 0 || movement > 6 ? -1 : movement;
+		}
+
+		private bool SawHasRail(int subtype)
+		{
+			return alternate != null && SawMovement(subtype) == 2;
+		}
+
 		private static Sprite Travel(int x1, int y1, int x2, int y2)
 		{
 			int left = Math.Min(x1, x2) - 3, top = Math.Min(y1, y2) - 3;

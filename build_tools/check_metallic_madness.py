@@ -14,6 +14,7 @@ import struct
 
 from convert_s1_ss_background import kosinski_plus_decode
 from level_layout import load
+from object_layout import legacy_saw_subtype
 from native_test_core import Native,UC_M68K_REG_A2,UC_M68K_REG_D4,UC_M68K_REG_D5,UC_M68K_REG_D7
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -883,8 +884,8 @@ def hazard_native(args):
 	def call(name,a=root):
 		n.act(name,a,regs={UC_M68K_REG_D7:0x3579006f});assert n.cpu.reg_read(UC_M68K_REG_D7)==0x3579006f
 		assert n.get(a,'code')
-	def init(entry,sub,flip=0):
-		n.start();n.put(root,'code',n.s[entry]);n.put(root,'obX',600,2);n.put(root,'obY',600,2);n.put(root,'obSubtype',sub);n.put(root,'obStatus',flip)
+	def init(entry,sub,flip=0,zone=0):
+		n.start();n.write('Current_Zone',zone);n.put(root,'code',n.s[entry]);n.put(root,'obX',600,2);n.put(root,'obY',600,2);n.put(root,'obSubtype',sub);n.put(root,'obStatus',flip)
 		for a in ('v_player','v_player2'):n.put(a,'obX',100,2);n.put(a,'obY',100,2)
 		call(entry)
 	class CDSaw:
@@ -907,7 +908,7 @@ def hazard_native(args):
 			self.animate()
 	for flip in range(4):
 		for extended in range(2):
-			init('SMZ_Saws',0x100+(extended<<7),flip);ref=CDSaw(extended)
+			init('SMZ_Saws',0x216+(extended<<7),flip,zone=15);ref=CDSaw(extended)
 			child=n.get(root,'saw_handle',2)|0xff0000
 			assert n.get(child,'saw_parent',2)==root&65535
 			for tick in range(1600):
@@ -949,6 +950,95 @@ def hazard_native(args):
 	rom=(R/'s2built.bin').read_bytes();at=n.s['Touch_Sizes']+(n.s['Touch_Size_MMZSaw_ID']-1)*2;assert rom[at:at+2]==bytes((28,28))
 	return dict(source_motion_updates=count,source_height_cases=2048,source_saw_half_size=28,object_loop_counter_preserved=True)
 
+def configured_saws(args):
+	"""Check fixed-point travel, selectable dwells and the one-slot blade."""
+	n = Native(args.rom, args.listing)
+	s = n.s
+	root = (s['v_lvlobjspace'] & 0xFFFFFF) + 5 * s['object_size']
+	start = (600 << 16 | 0x2000, 600 << 16 | 0x6000)
+	bare_metal_frame = s['Map_MMZ_Saw_frames'] - 2
+	cases = updates = 0
+	for metal in (False, True):
+		for motion in range(3):
+			for value in range(16):
+				for timed in (False, True):
+					flip = value & 3
+					far = bool(value & 8)
+					axis = motion + 1 if value else 0
+					reserved = 0xF060 if value & 4 else 0
+					subtype = reserved | (motion << 8) | (far << 7) | (timed << 4) | value
+					n.start()
+					n.write('Current_Zone', 15 if metal else 8)
+					for field, field_value, size in (
+						('code', s['SMZ_Saws'], 4), ('obX', start[0], 4), ('obY', start[1], 4),
+						('obSubtype', subtype, 2), ('obStatus', flip, 1),
+					):
+						n.put(root, field, field_value, size)
+					n.act('SMZ_Saws', root)
+					rail = metal and axis == 3
+					assert bool(n.get(root, 'saw_handle', 2)) == rail, subtype
+					assert n.get(root, 'obMap', 4) == s['Map_MMZ_Saw' if metal else 'Map_SMZ_Saw']
+					assert n.get(root, 'obColType') == (0x80 | (s['Touch_Size_MMZSaw_ID'] if metal else 0x22))
+					signs = tuple(-1 if flip & bit else 1 for bit in (1, 2))
+					xy = [origin + (sign << 16 if rail else 0) for origin, sign in zip(start, signs)]
+					directions = [
+						sign * (-1 if far else 1) if axis & bit else 0
+						for bit, sign in zip((1, 2), signs)
+					]
+					stroke = (73 if rail else 80) << 8
+					speed = 0x100 if timed or not value else value * 0x40
+					wait = value * 10 if timed else 0
+					remaining = stroke
+					hold = max(0, wait - 1)
+					start_frame = n.get(root, 'obFrame')
+					leg_ticks = (stroke + speed - 1) // speed
+					for tick in range(48 if axis == 0 else 2 * leg_ticks + 3 * wait + 2):
+						if tick and axis:
+							if hold:
+								hold -= 1
+							else:
+								step = min(remaining, speed)
+								for i in range(2):
+									xy[i] += directions[i] * (step << 8)
+								remaining -= step
+								if remaining == 0:
+									directions = [-direction for direction in directions]
+									remaining = stroke
+									hold = wait
+						if tick:
+							n.act(n.get(root, 'code'), root, regs={UC_M68K_REG_D7: 0x3579006f})
+							assert n.cpu.reg_read(UC_M68K_REG_D7) == 0x3579006f
+						assert (n.get(root, 'obX', 4), n.get(root, 'obY', 4)) == tuple(xy), (metal, subtype, tick, xy)
+						frame = n.get(root, 'obFrame')
+						if axis == 0:
+							assert n.get(root, 'code') == s['Saw_Draw'] and frame == start_frame
+						elif not rail:
+							first = bare_metal_frame if metal else 2
+							assert frame in (first, first + 1), (metal, subtype, frame)
+						updates += 1
+					if rail:
+						assert n.get(root, 'obFrame') < bare_metal_frame
+					cases += 1
+
+	# A rail retries atomically under slot pressure. A plain blade can use
+	# the last slot without depending on a secondary object.
+	n.start()
+	for a in range(s['v_lvlobjspace'] & 0xFFFFFF, s['v_lvlobjend'] & 0xFFFFFF, s['object_size']):
+		n.put(a, 'code', s['Saw_Draw'])
+	n.put(root, 'code', s['SMZ_Saws'])
+	n.put(root, 'obX', 600, 2)
+	n.put(root, 'obY', 600, 2)
+	n.write('Current_Zone', 15)
+	n.put(root, 'obSubtype', 0x204)
+	before = bytes(n.cpu.mem_read(root, s['object_size']))
+	n.act('SMZ_Saws', root)
+	assert bytes(n.cpu.mem_read(root, s['object_size'])) == before
+	n.put(root, 'obSubtype', 0x104)
+	n.act('SMZ_Saws', root)
+	assert n.get(root, 'code') == s['Saw_Travel'] and not n.get(root, 'saw_handle', 2)
+	return dict(configurations=cases, travel_updates=updates, rail_pool_retry=True)
+
+
 def legacy_hazards(args):
 	"""Compare retained S1 behavior with a matching pre-port ROM/listing."""
 	old=Native(args.before_rom,args.before_listing);new=Native(args.rom,args.listing);cases=updates=0
@@ -958,7 +1048,8 @@ def legacy_hazards(args):
 				objects=[]
 				for n in (old,new):
 					n.start();a=n.s['v_lvlobjspace']&0xffffff;objects.append(a)
-					for f,v,z in [('code',n.s[entry],4),('obX',600,2),('obY',600,2),('obSubtype',param,2),('obStatus',flip,1)]:n.put(a,f,v,z)
+					subtype = legacy_saw_subtype(param) if n is new and entry == 'SMZ_Saws' else param
+					for f,v,z in [('code',n.s[entry],4),('obX',600,2),('obY',600,2),('obSubtype',subtype,2),('obStatus',flip,1)]:n.put(a,f,v,z)
 					for who in ('v_player','v_player2'):n.put(who,'obX',100,2);n.put(who,'obY',100,2)
 				if entry=='SMZ_Saws' and param>=3:
 					for n in (old,new):n.put('v_player','obX',1000 if param==3 else 0,2);n.put('v_player','obY',600,2)
@@ -971,7 +1062,7 @@ def legacy_hazards(args):
 							n.put(a,'obRender',0x84)
 							n.act(n.get(a,'code'),a,regs={UC_M68K_REG_D7:0x3579006f})
 							assert n.cpu.reg_read(UC_M68K_REG_D7)==0x3579006f
-					for field,size in [('obX',4),('obY',4),('obVelX',2),('obVelY',2),('obRoutine',1),('ob2ndRout',1),('obFrame',1),('obAnim',2),('obTimeFrame',2),('obStatus',1),('obSubtype',2),('obColType',2)]:
+					for field,size in [('obX',4),('obY',4),('obVelX',2),('obVelY',2),('obRoutine',1),('ob2ndRout',1),('obFrame',1),('obAnim',2),('obTimeFrame',2),('obStatus',1),('obColType',2)]:
 						assert old.get(objects[0],field,size)==new.get(objects[1],field,size),(entry,param,flip,tick,field,old.get(objects[0],field,size),new.get(objects[1],field,size))
 					assert bool(old.get(objects[0],'code'))==bool(new.get(objects[1],'code'))
 					updates+=1
@@ -1000,7 +1091,7 @@ def hazard_game(args):
 	for era in range(4):
 		g.restore(initial);boot_level(g,zone=15,timezone=era)
 		for flip in range(4):
-			a=setup('SMZ_Saws',0x100,flip);g.run(4);g.put(a,'MMZ_saw_timer',200,2);base=g.save()
+			a=setup('SMZ_Saws',0x216,flip);g.run(4);g.put(a,'saw_timer',200,2);base=g.save()
 			for who in ('v_player','v_player2'):
 				for dx,dy,hit in ((0,0,True),(52,0,False),(0,64,False)):
 					g.restore(base);other='v_player' if who=='v_player2' else 'v_player2'
@@ -1041,7 +1132,8 @@ def main():
 	p.add_argument('--system-directory',type=Path)
 	p.add_argument('--pal',action='store_true')
 	args=p.parse_args();args.output.mkdir(parents=True,exist_ok=True)
-	report=dict(native=native(args),placements=placement_native(args),morphing_platform=morph_native(args))
+	report=dict(native=native(args),placements=placement_native(args),morphing_platform=morph_native(args),
+		configured_saws=configured_saws(args))
 	if args.source:
 		report['animations']=animation_checks(args)
 		report['platforms']=platform_native(args)

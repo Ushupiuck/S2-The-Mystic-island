@@ -112,7 +112,7 @@ the complete serialized word, including when calculating movement overlays.
 | `$A1` | Running disc | Low nibble: radius; signed high nibble: rotation speed. |
 | `$A2` | Terrain conveyor | Low nibble: full width / 16 minus one (16–256 px); bits 4–6: speed magnitude (0–7 px/frame); bit 7: 48/112 px height. X flip selects leftward travel. The rectangle extends upward from its origin; adjacent rectangles can cover uneven terrain. |
 | `$A3` | Spinning platform / trapdoor | Bit 7: object type; low nibble: spin phase / trapdoor delay; bits 4–6: spin synchronization period. |
-| `$A4` | Saw | Stationary, horizontal/vertical cutter, speeding from left/right. |
+| `$A4` | Saw | Movement in bits 8–11, speed or timer value in bits 0–3, timer on bit 4 and far start on bit 7. Select vertical, diagonal and clocked/crossing presets via the word properties. See [shared saws](../docs/Objects.md#shared-saws). |
 | `$A5` | Stomper / door | Bits 4–6: shape; bit 7: switch control; low nibble: movement / switch number. |
 | `$A6` | Vanishing platform | SBZ/SMZ uses a duration and phase nibble. MMZ uses the low byte for its first delay in 30-update steps. |
 | `$A7` | Flamethrower | Low/high nibbles: off/on duration; Y flip selects valve art. |

@@ -267,6 +267,10 @@ Debug_SMZObjects:	macro
 		dbug	Map_obj41,Springs,0,0,make_art_tile(ArtTile_Springs,0,0)
 		dbug	Map_SMZ_Spin,SMZ_SpinPlatform,$80,0,ArtTile_SMZ_Spin
 		dbug	Map_SMZ_Saw,SMZ_Saws,0,0,ArtTile_SMZ_Saw|$4000
+		dbug	Map_SMZ_Saw,SMZ_Saws,$016,2,ArtTile_SMZ_Saw|$4000
+		dbug	Map_SMZ_Saw,SMZ_Saws,$116,2,ArtTile_SMZ_Saw|$4000
+		dbug	Map_SMZ_Saw,SMZ_Saws,$216,2,ArtTile_SMZ_Saw|$4000
+		dbug	Map_SMZ_Saw,SMZ_Saws,$208,2,ArtTile_SMZ_Saw|$4000
 		dbug	Map_SMZ_VanP,SMZ_VanishPlatform,0,0,ArtTile_SMZ_VanP|$4000
 		dbug	Map_SMZ_Cat,Caterkiller,0,0,ArtTile_SMZ_Atlas
 		endm
@@ -327,8 +331,11 @@ Debug_MMZ1:	dc.w (Debug_MMZ1_End-Debug_MMZ1-2)/DebugEntry_size
 	dbug	Map_Obj26,	Monitor,	MonitorType_Shoes,	7,	ArtTile_Monitor
 	dbug	Map_obj41,	Springs,	0,	0,	ArtTile_Springs
 	dbug	Map_Obj36,	Spikes,	0,	0,	ArtTile_Spikes
-	dbug	Map_MMZ_Saw,	SMZ_Saws,	$100,	0,	ArtTile_MMZ_Atlas
-	dbug	Map_MMZ_Saw,	SMZ_Saws,	$180,	16,	ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_Saw,	SMZ_Saws,	$216,	0,	ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_Saw,	SMZ_Saws,	$296,	16,	ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_Saw,	SMZ_Saws,	$204,	0,	ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_Saw,	SMZ_Saws,	$008,	Saw_BareMetalFrame,	ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_Saw,	SMZ_Saws,	$113,	Saw_BareMetalFrame,	ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_Crusher,	SMZ_ScrapStomp,	$100,	0,	ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_Crusher,	SMZ_ScrapStomp,	$101,	1,	ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_Crusher,	SMZ_ScrapStomp,	$141,	1,	ArtTile_MMZ_Atlas

@@ -281,7 +281,9 @@ its subtype/VRAM tables here.
 `check_metallic_madness.py --source /path/to/scddisasm --output test-results/mmz`
 also compares platform timelines, the complete curve, saw states and crusher
 heights/pauses. The runtime traces go through the shared object runners. Native cases check
-the object-loop counter, full-pool atomicity and stale ownership. Optional
+the object-loop counter, full-pool atomicity and stale ownership. Shared saw
+cases also exercise every speed/timer value on all three axes with both
+blade banks, including exact endpoints at fractional speeds. Optional
 `--before-rom PATH --before-listing PATH` compares retained S1 saw/stomper
 variants against a matching older build. With `--core` and `--system-directory`,
 the checker enters all four eras, checks exact sprite-bank VRAM bytes, lands

@@ -184,7 +184,8 @@ class Genesis:
 				('MMZ_MechaBu', ('MMZ_MechaBu_Fall','MMZ_MechaBu_Walk')),
 				('Bomb', ('Bomb_Fall','Bomb_SmallWait','Bomb_SmallWalk','Bomb_SmallBurn','Bomb_BigWalk','Bomb_BigWaitCharge','Bomb_BigCharge','Bomb_BigWaitTarget','Bomb_BigPreFuse','Bomb_BigBurn','Bomb_BigDetonate','Bomb_BigScatter','Bomb_BigRemove')),
 				('SMZ_Saws', ('SMZ_Saw_Action','MMZ_Saw_HoldIn','MMZ_Saw_Extend','MMZ_Saw_HoldOut','MMZ_Saw_Retract',
-					'Saw_Draw','Saw_OscillateX','Saw_OscillateY','Saw_WaitLeft','Saw_WaitRight','Saw_Projectile','Saw_DiagonalHold','Saw_DiagonalTravel')),
+					'Saw_Draw','Saw_OscillateX','Saw_OscillateY','Saw_WaitLeft','Saw_WaitRight','Saw_Projectile','Saw_DiagonalHold','Saw_DiagonalTravel',
+					'Saw_ClockSweep','Saw_Hold','Saw_Travel')),
 				('SMZ_ScrapStomp', ('SMZ_Sto_Action','MMZ_Crusher_Run','Stomper_Run')),
 				('SMZ_Teleport', ('SMZ_Teleport_Main',))):
 			if constructor in self.s:
