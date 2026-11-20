@@ -1,11 +1,8 @@
 ; Read-only KeH PSG envelopes in the shared SFX ROM bank.
 ; zVInt selects this bank before either music or SFX track updates.
 PSG_EnvelopeIndex:
-	; Basically, for any tone 0-11, dynamic volume adjustments are applied to produce a pseudo-decay,
-	; or sometimes a ramp up for "soft" sounds, or really any other volume effect you might want!
-
-	; Remember on PSG that the higher the value, the quieter it gets (it's attenuation, not volume);
-	; 0 is thus loudest, and increasing values decay, until level $F (silent)
+	; Each nonzero tone selects an attenuation curve.
+	; $0 is loudest, $F is silent, and $80 holds the previous step.
 
 	rom_ptr_z80 PSG_Envelope01
 	rom_ptr_z80 PSG_Envelope02
@@ -21,6 +18,9 @@ PSG_EnvelopeIndex:
 	rom_ptr_z80 PSG_Envelope12
 	rom_ptr_z80 PSG_Envelope13
 	rom_ptr_z80 PSG_EnvelopeShadowDancer
+	rom_ptr_z80 PSG_EnvelopeShadowDancer03
+	rom_ptr_z80 PSG_EnvelopeShadowDancer06
+	rom_ptr_z80 PSG_EnvelopeShadowDancer08
 PSG_Envelope01:
 	dc.b	0,0,0,1,1,1,2,2,2,3,3,3,4,4,4,5
 	dc.b	5,5,6,6,6,7,$80
@@ -68,5 +68,15 @@ PSG_Envelope13:
 PSG_EnvelopeShadowDancer:
 	; Shadow Dancer envelope 7 (byte_62AE0). KeH uses $80 to hold.
 	dc.b	0,0,7,1,1,7,2,2,4,4,6,7,8,$80
+
+PSG_EnvelopeShadowDancer03:
+	; byte_62A8E
+	dc.b	0,0,1,1,3,3,4,5,$80
+PSG_EnvelopeShadowDancer06:
+	; byte_62AA2
+	dc.b	8,8,8,7,6,5,4,3,2,0,0,0,0,0,0,0,0,0,0,$80
+PSG_EnvelopeShadowDancer08:
+	; byte_62AEE
+	dc.b	0,0,8,8,$80
 
 ;	END of PSG_EnvelopeIndex ---------------------------

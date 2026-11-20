@@ -224,6 +224,36 @@ python3 build_tools/check_sound_playback.py --core /path/to/genesis_plus_gx_libr
   --output test-results/shadow-dancer/playback
 ```
 
+#### Reusing the Shadow Dancer PSG and DAC data
+
+The World driver has 69 tuned PSG periods. KeH contains all of them in the
+same order after its 12 low slots. For volume envelopes, use the mappings
+from the same revision's `VolEnvPtrs` table.
+
+| Shadow Dancer tone | KeH tone |
+| --- | --- |
+| `$01`, `$02` | `fTone_01`, `fTone_02` |
+| `$03` | `fTone_ShadowDancer03` |
+| `$04`, `$05` | `fTone_04`, `fTone_05` |
+| `$06` | `fTone_ShadowDancer06` |
+| `$07` | `fTone_ShadowDancer` |
+| `$08` | `fTone_ShadowDancer08` |
+
+Compare DAC sources by decoding each driver's format to PCM. Account for
+the source clock, gain and silence when aligning clips. Match the waveform
+across its attack and tail before reusing a sample. Multiple entries in
+`sound/DAC/DAC.ini` can share a `File` and use different `Rate` values.
+The packer stores each shared file once.
+
+Shadow Dancer's two drums from the stage import match its `$81` and `$82`
+exports. `dShadowDancerDrum83` through `dShadowDancerDrum86` use the four
+other drum files. The `$87` alias `dShadowDancerDrum83Fast` plays `$83`'s
+file at the faster rate. The four voice DAC exports in the source INI's
+`$88`–`$8B` sections are `dShadowDancerVoice0` through
+`dShadowDancerVoice3`. The voice entries have priority over music drums.
+In a song's DAC track, source notes `$88`–`$8F` are pitch overrides for
+`$85`. Their delay values are listed in `DefDrum.txt`.
+
 ### Optimizing music sequences
 
 The handwritten song ASM remains the editable source. Repeated note phrases

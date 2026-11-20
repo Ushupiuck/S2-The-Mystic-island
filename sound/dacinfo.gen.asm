@@ -57,3 +57,12 @@ zDACMasterPlaylist:
 	DACSample	SndDAC_C0,12852,0 ; dKickHey
 	DACSample	SndDAC_DAC_81,11792,0 ; dShadowDancerKick
 	DACSample	SndDAC_DAC_82,7372,0 ; dShadowDancerSnare
+	DACSample	SndDAC_DAC_83,9713,0 ; dShadowDancerDrum83
+	DACSample	SndDAC_DAC_84,9713,0 ; dShadowDancerDrum84
+	DACSample	SndDAC_DAC_85,10862,0 ; dShadowDancerDrum85
+	DACSample	SndDAC_DAC_86,10862,0 ; dShadowDancerDrum86
+	DACSample	SndDAC_DAC_83,11792,0 ; dShadowDancerDrum83Fast
+	DACSample	SndDAC_DAC_0_0,9382,2 ; dShadowDancerVoice0
+	DACSample	SndDAC_DAC_0_1,15870,2 ; dShadowDancerVoice1
+	DACSample	SndDAC_DAC_0_2,10068,2 ; dShadowDancerVoice2
+	DACSample	SndDAC_DAC_0_3,9382,2 ; dShadowDancerVoice3

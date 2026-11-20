@@ -6,4 +6,5 @@
 	enum dElectricFloorTom=dElectricLowTom+1,dTightSnare,dMidpitchSnare,dLooseSnare,dLooserSnare,dHiTimpaniS3,dLowTimpaniS3
 	enum dMidTimpaniS3=dLowTimpaniS3+1,dQuickLooseSnare,dOddSnareKick,dKickExtraBass,dComeOn,dHiWoodBlock,dLowWoodBlock
 	enum dMetalCrashHit=dLowWoodBlock+1,dBassHey,dDanceStyleKick,dScratchS3,dCrashingNoiseWoo,dKickHey,dShadowDancerKick
-	enum dShadowDancerSnare=dShadowDancerKick+1
+	enum dShadowDancerSnare=dShadowDancerKick+1,dShadowDancerDrum83,dShadowDancerDrum84,dShadowDancerDrum85,dShadowDancerDrum86,dShadowDancerDrum83Fast,dShadowDancerVoice0
+	enum dShadowDancerVoice1=dShadowDancerVoice0+1,dShadowDancerVoice2,dShadowDancerVoice3
