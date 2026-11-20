@@ -355,5 +355,5 @@ PlatformMount_DeleteChild:
 		lea	(f_switch).w,a1
 		bclr	#0,(a1,d0.w)
 .release:
-		jsr	(SMZ_ReleaseRiders).l
+		jsr	(ReleaseObjectRiders).l
 		jmp	(DeleteObject).l

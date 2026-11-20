@@ -100,7 +100,7 @@ PP_Mosqui_Main:
 ; -------------------------------------------------------------------------
 
 PP_Mosqui_CheckInRange:
-	bsr.w	PP_ValidTarget
+	jsr	(Player_CanInteract).l
 	bcc.w	.End
 	move.w	obY(a1),d0
 	sub.w	obY(a0),d0

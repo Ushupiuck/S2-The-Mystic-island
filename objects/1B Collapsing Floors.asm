@@ -8,6 +8,10 @@ floor_break:		equ objoff_36	; selected breakup routine
 floor_piece_delay:	equ objoff_3C	; byte, also used by the shared ledge fragmenter
 floor_piece_support:	equ objoff_3E	; first slab piece carries the old riders
 
+; =============== S U B R O U T I N E =======================================
+
+; The full slab and progressive floor share the first-contact trigger.
+; Initialization chooses the break routine and remaining width.
 Obj1B:
 		move.l	#Floor_Wait,code(a0)
 		move.b	#2,obRoutine(a0)
@@ -98,7 +102,7 @@ Floor_Draw:
 .check_spawn:
 		jsr	(Object_CheckSpawnXRange).l
 		bls.s	.visible
-		jsr	(SMZ_ReleaseRiders).l
+		jsr	(ReleaseObjectRiders).l
 		jmp	(UnloadObject).l
 
 Floor_Delay:
@@ -179,7 +183,7 @@ Floor_BreakColumn:
 		bsr.w	Floor_TopSupport
 		bra.w	Floor_Draw
 .finished:
-		jsr	(SMZ_ReleaseRiders).l
+		jsr	(ReleaseObjectRiders).l
 		jmp	(DeleteObject).l
 .piece:
 		jsr	(FindFreeObj).l
@@ -203,7 +207,7 @@ FloorPiece_Run:
 		bsr.w	Floor_TopSupport
 		tst.b	floor_piece_delay(a0)
 		bne.s	.draw
-		jsr	(SMZ_ReleaseRiders).l
+		jsr	(ReleaseObjectRiders).l
 .draw:
 		jmp	(DisplaySprite).l
 .fall:

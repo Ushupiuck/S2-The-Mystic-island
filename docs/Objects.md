@@ -65,6 +65,14 @@ random X velocities are retained. Full-pool attempts retry without consuming
 rings. Timer/count use private `$2E/$2F`, not the shared status byte. Spawned
 rings use `LostRing_Init` and keep independent lifetimes.
 
+## Solid-object and platform collision
+
+`_inc/Object Collision.asm` owns the MD-side solid, sloped and top-only
+object collision routines, platform riding and rider release. Release
+checks the actor's current standing object before clearing either owner's
+rider state. The common live-character check is also used by enemy range
+triggers. Terrain probes and chunk collision still run on the CD CPU.
+
 ## Collision path switches and doors
 
 `$0A` uses the same trigger and side selection for invisible switches and

@@ -220,7 +220,7 @@ Platform_RemoveHanging:
 Plat_Unload:
 		bsr.w	PlatformMount_Delete
 		bsr.s	Plat_RemoveHanging
-		jsr	(SMZ_ReleaseRiders).l
+		jsr	(ReleaseObjectRiders).l
 		jmp	(UnloadObject).l
 ; Mapping frame bottoms, checked against actual GHZ/EHZ mapping pieces.
 ; Keep these editable alongside the shapes; the solid body can extend farther.
@@ -980,7 +980,7 @@ Platform_ReleaseSuspended:
 Platform_DeleteBody:
 		bsr.w	PlatformMount_Delete
 		bsr.w	Plat_RemoveHanging
-		jsr	(SMZ_ReleaseRiders).l
+		jsr	(ReleaseObjectRiders).l
 		bsr.w	Platform_SuspendedParent
 		bne.s	.delete
 		clr.w	swing_body(a1)

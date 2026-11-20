@@ -261,7 +261,7 @@ Spin_TimedProfile:
 ; d0.b is zero for the solid pose; d4 contains the previous X.
 SpinPlatform_Contact:
 		tst.b	d0
-		jne	(SMZ_ReleaseRiders).l
+		jne	(ReleaseObjectRiders).l
 		tst.b	spin_top_only(a0)
 		jne	(PlatformGroup_TopSupport).l
 		moveq	#16+sonic_solid_width,d1
@@ -278,7 +278,7 @@ MMZ_SpinC_MoveSolid:
 		move.w	#216,platgroup_timer(a0)
 		move.l	#MMZ_SpinC_MoveSpin,platgroup_state(a0)
 		clr.w	platgroup_spin(a0)
-		jmp	(SMZ_ReleaseRiders).l
+		jmp	(ReleaseObjectRiders).l
 .return:
 		rts
 

@@ -96,6 +96,10 @@ PlatformGroup_Create:
 		bsr.w	PlatformGroup_Allocate
 		bra.s	.make
 
+; =============== S U B R O U T I N E =======================================
+
+; Members run their selected movement/timer and share the render and
+; lifetime path. The root owns the group links.
 PlatformGroup_Run:
 		move.w	platgroup_owner(a0),d0
 		beq.s	.behavior
@@ -117,7 +121,7 @@ PlatformGroup_Draw:
 		jmp	(DisplaySprite).l
 
 PlatformGroup_Delete:
-		jsr	(SMZ_ReleaseRiders).l
+		jsr	(ReleaseObjectRiders).l
 		jmp	(DeleteObject).l
 
 PlatformGroup_Unload:
@@ -146,7 +150,7 @@ PlatformGroup_Unload:
 		dbf	d5,.member
 		movea.l	a4,a0
 .root:
-		jsr	(SMZ_ReleaseRiders).l
+		jsr	(ReleaseObjectRiders).l
 		jmp	(UnloadObject).l
 
 ; Timed frames use (duration-1,frame); a negative duration holds that frame.
@@ -187,7 +191,7 @@ PlatformGroup_TimedSolid:
 		move.l	#PlatformGroup_TimedTransition,platgroup_state(a0)
 		move.l	platgroup_sequence(a0),platgroup_script(a0)
 		clr.b	platgroup_dwell(a0)
-		jmp	(SMZ_ReleaseRiders).l
+		jmp	(ReleaseObjectRiders).l
 .return:
 		rts
 

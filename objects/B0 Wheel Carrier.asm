@@ -13,6 +13,10 @@ wheel_home = objoff_40			; X at landing for bounded patrols
 wheel_limit = objoff_42			; patrol half-range (0: follow terrain)
 wheel_turn = objoff_43			; reached a patrol endpoint this update
 
+; =============== S U B R O U T I N E =======================================
+
+; Low nibble selects WheelPayloads. Bit 8 explicitly enables bounded
+; patrols (bit 7 shortens the range). Mount before the first terrain check.
 WheelCarrier:
 		tst.b	obRoutine(a0)
 		bne.s	.ready
@@ -175,7 +179,7 @@ WheelCarrier:
 		bne.s	.delete
 		move.l	a0,-(sp)
 		movea.l	a1,a0
-		jsr	(SMZ_ReleaseRiders).l
+		jsr	(ReleaseObjectRiders).l
 		movea.l	a0,a1
 		movea.l	(sp)+,a0
 		jsr	(DeleteObject2).l

@@ -71,6 +71,10 @@ SMZ_Sto_Main:
 		move.b	(a3),d0
 		move.w	d0,obSubtype(a0)			; set action type number
 
+; =============== S U B R O U T I N E =======================================
+
+; The movement routine updates obY, then the shared solid-contact pass
+; carries or releases either actor.
 Stomper_Run:
 		move.w	obX(a0),-(sp)
 		movea.l	stomper_motion(a0),a1
@@ -90,7 +94,7 @@ Stomper_Draw:
 		out_of_range2	Stomper_Unload,stomper_origin_x(a0)
 		jmp	(DisplaySprite).l
 Stomper_Unload:
-		jsr	(SMZ_ReleaseRiders).l
+		jsr	(ReleaseObjectRiders).l
 		jmp	(UnloadObject).l
 
 Stomper_Solid:

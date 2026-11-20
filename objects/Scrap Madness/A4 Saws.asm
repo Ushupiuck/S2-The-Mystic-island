@@ -1,3 +1,5 @@
+; ===========================================================================
+; SBZ saw variants derived from sonicretro/s1disasm 2c51d46 (REV01).
 ; Stationary, oscillating, speeding and diagonal saws, object $A4.
 ; The movement parameters differ; all blades use the same drawing, frame-pair
 ; animation and lifetime. The diagonal rail is an optional linked attachment.
@@ -10,6 +12,10 @@ saw_stage_step:	equ objoff_42	; signed, next frame-pair change when travelling
 MMZ_saw_timer:	equ objoff_2E
 saw_stages:	equ objoff_30
 
+; =============== S U B R O U T I N E =======================================
+
+; Stationary and oscillating subtypes use 0-2; 3/4 select the speeding
+; triggers. Bit 8 explicitly enables the diagonal saw outside MMZ.
 SMZ_Saws:
 		move.w	obSubtype(a0),d0
 		btst	#8,d0
@@ -47,6 +53,10 @@ Saw_Movement:
 		dc.w Saw_WaitLeft-Saw_Movement
 		dc.w Saw_WaitRight-Saw_Movement
 
+; =============== S U B R O U T I N E =======================================
+
+; The horizontal saw spans $60 pixels. Mirror its phase within that
+; span and play the buzz every 16 visible updates.
 Saw_OscillateX:
 		moveq	#0,d0
 		move.b	(v_oscillate+$E).w,d0
@@ -67,6 +77,10 @@ Saw_OscillateX:
 		bne.w	Saw_Draw
 		bra.w	Saw_BuzzDraw
 
+; =============== S U B R O U T I N E =======================================
+
+; The flipped vertical saw keeps the original $80 origin offset. Its
+; buzz fires at the oscillator midpoint.
 Saw_OscillateY:
 		moveq	#0,d0
 		move.b	(v_oscillate+6).w,d0
@@ -126,6 +140,9 @@ Saw_Projectile:
 		bsr.w	Saw_AnimatePair
 		bra.w	Saw_Draw
 
+; =============== S U B R O U T I N E =======================================
+
+; Allocate the rail before taking ownership of the placement.
 Saw_InitDiagonal:
 		jsr	(FindFreeObj).l
 		bne.w	.return	; retry the intact placement without leaking a handle
@@ -237,6 +254,7 @@ Saw_DiagonalAnimate:
 		bne.s	Saw_Draw
 
 Saw_BuzzDraw:
+		; The laser-loop effect is marked non-interruptible by itself.
 		move.w	#SndID_LaserBeam,d0
 		jsr	(PlaySound_Special).l
 Saw_Draw:
@@ -256,6 +274,9 @@ Saw_AnimatePair:
 .return:
 		rts
 
+; =============== S U B R O U T I N E =======================================
+
+; The rail lives only while its blade still owns this slot.
 Saw_Handle:
 		movea.w	saw_parent(a0),a1
 		tst.l	code(a1)

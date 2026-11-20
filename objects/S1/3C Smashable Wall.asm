@@ -98,7 +98,7 @@ Smash_Solid:	; Routine 2
 		move.w	obVelX(a1),obInertia(a1)
 		andi.b	#~pushing_mask,obStatus(a0)
 		bclr	#status.player.pushing,obStatus(a1)
-		jsr	(SMZ_ReleaseRiders).l	; the other player may be standing on this wall
+		jsr	(ReleaseObjectRiders).l	; the other player may be standing on this wall
 		moveq	#7,d1		; load 8 fragments
 		move.w	#$70,d2
 		bsr.s	SmashObject

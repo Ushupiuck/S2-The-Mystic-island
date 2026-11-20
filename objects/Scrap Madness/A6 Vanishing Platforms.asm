@@ -58,7 +58,7 @@ Vanish_ClassicCycle:
 .animate:
 		jsr	(PlatformGroup_Animate).l
 		cmpi.b	#2,d0
-		bhs.w	SMZ_ReleaseRiders
+		jhs	(ReleaseObjectRiders).l
 		move.w	obX(a0),d4
 		jmp	(PlatformGroup_TopSupport).l
 

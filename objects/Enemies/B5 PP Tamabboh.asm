@@ -133,7 +133,7 @@ PP_Tamabboh_Main:
 ; -------------------------------------------------------------------------
 
 PP_Tamabboh_CheckInRange:
-	bsr.w	PP_ValidTarget
+	jsr	(Player_CanInteract).l
 	bcc.w	.End
 	move.w	obY(a1),d0
 	sub.w	obY(a0),d0

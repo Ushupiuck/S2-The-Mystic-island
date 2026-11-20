@@ -112,7 +112,7 @@ SMZ_Spin_Trapdoor:	; Routine 2
 ; ---------------------------------------------------------------------------
 
 .notSolid:
-		jsr	(SMZ_ReleaseRiders).l
+		jsr	(ReleaseObjectRiders).l
 		jmp	(RememberState).l
 
 ; Only the first closed frame gets this extra overlap resolution. Ordinary
@@ -180,7 +180,7 @@ SMZ_Spin_Spinner:	; Routine 4
 ; ---------------------------------------------------------------------------
 
 .notSolid:
-		jsr	(SMZ_ReleaseRiders).l
+		jsr	(ReleaseObjectRiders).l
 		jmp	(RememberState).l
 
 SMZ_Ani_Spin:	dc.w SMZ_Ani_Spin_trapopen-SMZ_Ani_Spin
