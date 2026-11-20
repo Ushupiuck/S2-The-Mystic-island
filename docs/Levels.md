@@ -150,8 +150,13 @@ Ordinary springs translate CD's direction/color bits and placement flips to
 the existing `$14` subtypes. They retain Mystic Island's shared art, strengths
 and behavior, including diagonal speed; the unused CD low bit does not enable
 S3&K's twirl option.
-The remaining enemies, mechanisms, pickup/object placements and time-warp
-sequence are still pending; this is not yet the complete source object layout.
+The remaining enemies, mechanisms and time-warp sequence are still pending.
+Both acts currently use the 16-ring starter pattern and have no monitor
+placements. The ring manager selects one of four pointers for each act in
+Present, Past, Good Future, Bad Future order. Shared layouts use one stored file. When an
+act has independent ring layouts, put their four offsets in `RingPos_Index`
+and set each matching SonLVL section's `rings=` path to the same file.
+Monitor placements use the shared `$12` object and the act's presence masks.
 
 The Act-1 sprite atlas occupies `$26D-$449`; the complete 41-tile Bomb bank
 follows at `$44A-$472`, leaving five tiles before the reused morphing bank at

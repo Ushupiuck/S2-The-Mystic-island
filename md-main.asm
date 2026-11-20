@@ -8355,8 +8355,10 @@ RingsManager_Setup:
 		clearRAM Ring_Positions, Ring_Positions_End
 		moveq	#0,d0
 		move.w	(Current_ZoneAndAct).w,d0
-		lsl.b	#6,d0
-		lsr.w	#5,d0
+		ror.b	#2,d0			; Pack the act below the zone.
+		lsr.w	#4,d0			; Four timezones per act.
+		add.b	(Current_Timezone).w,d0
+		add.w	d0,d0			; Word offsets.
 		lea	(RingPos_Index).l,a1
 		move.w	(a1,d0.w),d0
 		lea	(a1,d0.w),a1
@@ -14310,86 +14312,96 @@ ObjPos_Null:	ObjectLayoutFile "level/objects/S1_Ending.bin"
 ; ---------------------------------------------------------------------------
 ; Ring layouts; one entry per act, four entries per zone
 ; ---------------------------------------------------------------------------
+; Ring layouts by zone, act and era (Present, Past, Good Future, Bad Future).
+RingPositions_AllEras	macro	layout
+		dc.w	layout-RingPos_Index,layout-RingPos_Index
+		dc.w	layout-RingPos_Index,layout-RingPos_Index
+		endm
+
 RingPos_Index:
-		dc.w RingPos_GHZ1-RingPos_Index
-		dc.w RingPos_GHZ2-RingPos_Index
-		dc.w RingPos_GHZ3-RingPos_Index
-		dc.w RingPos_GHZ4-RingPos_Index
+		RingPositions_AllEras	RingPos_GHZ1
+		RingPositions_AllEras	RingPos_GHZ2
+		RingPositions_AllEras	RingPos_GHZ3
+		RingPositions_AllEras	RingPos_GHZ4
 
-		dc.w RingPos_LZ1-RingPos_Index
-		dc.w RingPos_LZ2-RingPos_Index
-		dc.w RingPos_LZ3-RingPos_Index
-		dc.w RingPos_LZ4-RingPos_Index
+		RingPositions_AllEras	RingPos_LZ1
+		RingPositions_AllEras	RingPos_LZ2
+		RingPositions_AllEras	RingPos_LZ3
+		RingPositions_AllEras	RingPos_LZ4
 
-		dc.w RingPos_CPZ1-RingPos_Index
-		dc.w RingPos_CPZ2-RingPos_Index
-		dc.w RingPos_CPZ3-RingPos_Index
-		dc.w RingPos_CPZ1-RingPos_Index
+		RingPositions_AllEras	RingPos_CPZ1
+		RingPositions_AllEras	RingPos_CPZ2
+		RingPositions_AllEras	RingPos_CPZ3
+		RingPositions_AllEras	RingPos_CPZ1
 
-		dc.w RingPos_EHZ1-RingPos_Index
-		dc.w RingPos_EHZ2-RingPos_Index
-		dc.w RingPos_EHZ3-RingPos_Index
-		dc.w RingPos_EHZ4-RingPos_Index
+		RingPositions_AllEras	RingPos_EHZ1
+		RingPositions_AllEras	RingPos_EHZ2
+		RingPositions_AllEras	RingPos_EHZ3
+		RingPositions_AllEras	RingPos_EHZ4
 
-		dc.w RingPos_HPZ1-RingPos_Index
-		dc.w RingPos_HPZ2-RingPos_Index
-		dc.w RingPos_HPZ3-RingPos_Index
-		dc.w RingPos_HPZ4-RingPos_Index
+		RingPositions_AllEras	RingPos_HPZ1
+		RingPositions_AllEras	RingPos_HPZ2
+		RingPositions_AllEras	RingPos_HPZ3
+		RingPositions_AllEras	RingPos_HPZ4
 
-		dc.w RingPos_HTZ1-RingPos_Index
-		dc.w RingPos_HTZ2-RingPos_Index
-		dc.w RingPos_HTZ3-RingPos_Index
-		dc.w RingPos_HTZ4-RingPos_Index
+		RingPositions_AllEras	RingPos_HTZ1
+		RingPositions_AllEras	RingPos_HTZ2
+		RingPositions_AllEras	RingPos_HTZ3
+		RingPositions_AllEras	RingPos_HTZ4
 
-		dc.w RingPos_MTZ1-RingPos_Index
-		dc.w RingPos_MTZ2-RingPos_Index
-		dc.w RingPos_MTZ3-RingPos_Index
-		dc.w RingPos_MTZ4-RingPos_Index
+		RingPositions_AllEras	RingPos_MTZ1
+		RingPositions_AllEras	RingPos_MTZ2
+		RingPositions_AllEras	RingPos_MTZ3
+		RingPositions_AllEras	RingPos_MTZ4
 
-		dc.w RingPos_LV071-RingPos_Index
-		dc.w RingPos_LV072-RingPos_Index
-		dc.w RingPos_LV073-RingPos_Index
-		dc.w RingPos_LV074-RingPos_Index
+		RingPositions_AllEras	RingPos_LV071
+		RingPositions_AllEras	RingPos_LV072
+		RingPositions_AllEras	RingPos_LV073
+		RingPositions_AllEras	RingPos_LV074
 
-		dc.w RingPos_SMZ1-RingPos_Index
-		dc.w RingPos_SMZ2-RingPos_Index
-		dc.w RingPos_SMZ3-RingPos_Index
-		dc.w RingPos_SMZ4-RingPos_Index
+		RingPositions_AllEras	RingPos_SMZ1
+		RingPositions_AllEras	RingPos_SMZ2
+		RingPositions_AllEras	RingPos_SMZ3
+		RingPositions_AllEras	RingPos_SMZ4
 
-		dc.w RingPos_LV091-RingPos_Index
-		dc.w RingPos_LV092-RingPos_Index
-		dc.w RingPos_LV093-RingPos_Index
-		dc.w RingPos_LV094-RingPos_Index
+		RingPositions_AllEras	RingPos_LV091
+		RingPositions_AllEras	RingPos_LV092
+		RingPositions_AllEras	RingPos_LV093
+		RingPositions_AllEras	RingPos_LV094
 
-		dc.w RingPos_LV0A1-RingPos_Index
-		dc.w RingPos_LV0A2-RingPos_Index
-		dc.w RingPos_LV0A3-RingPos_Index
-		dc.w RingPos_LV0A4-RingPos_Index
+		RingPositions_AllEras	RingPos_LV0A1
+		RingPositions_AllEras	RingPos_LV0A2
+		RingPositions_AllEras	RingPos_LV0A3
+		RingPositions_AllEras	RingPos_LV0A4
 
-		dc.w RingPos_LV0B1-RingPos_Index
-		dc.w RingPos_LV0B2-RingPos_Index
-		dc.w RingPos_LV0B3-RingPos_Index
-		dc.w RingPos_LV0B4-RingPos_Index
+		RingPositions_AllEras	RingPos_LV0B1
+		RingPositions_AllEras	RingPos_LV0B2
+		RingPositions_AllEras	RingPos_LV0B3
+		RingPositions_AllEras	RingPos_LV0B4
 
-		dc.w RingPos_LV0C1-RingPos_Index
-		dc.w RingPos_LV0C2-RingPos_Index
-		dc.w RingPos_LV0C3-RingPos_Index
-		dc.w RingPos_LV0C4-RingPos_Index
+		RingPositions_AllEras	RingPos_LV0C1
+		RingPositions_AllEras	RingPos_LV0C2
+		RingPositions_AllEras	RingPos_LV0C3
+		RingPositions_AllEras	RingPos_LV0C4
 
-		dc.w RingPos_LV0D1-RingPos_Index
-		dc.w RingPos_LV0D2-RingPos_Index
-		dc.w RingPos_LV0D3-RingPos_Index
-		dc.w RingPos_LV0D4-RingPos_Index
+		RingPositions_AllEras	RingPos_LV0D1
+		RingPositions_AllEras	RingPos_LV0D2
+		RingPositions_AllEras	RingPos_LV0D3
+		RingPositions_AllEras	RingPos_LV0D4
 
-		dc.w RingPos_LV0E1-RingPos_Index
-		dc.w RingPos_LV0E2-RingPos_Index
-		dc.w RingPos_LV0E3-RingPos_Index
-		dc.w RingPos_LV0E4-RingPos_Index
+		RingPositions_AllEras	RingPos_LV0E1
+		RingPositions_AllEras	RingPos_LV0E2
+		RingPositions_AllEras	RingPos_LV0E3
+		RingPositions_AllEras	RingPos_LV0E4
 
-		dc.w RingPos_LV0F1-RingPos_Index
-		dc.w RingPos_LV0F2-RingPos_Index
-		dc.w RingPos_LV0F3-RingPos_Index
-		dc.w RingPos_LV0F4-RingPos_Index
+		RingPositions_AllEras	RingPos_LV0F1
+		RingPositions_AllEras	RingPos_LV0F2
+		RingPositions_AllEras	RingPos_LV0F3
+		RingPositions_AllEras	RingPos_LV0F4
+RingPos_Index_End:
+	if	RingPos_Index_End-RingPos_Index<>LevelActCount*4*2
+		fatal	"Ring positions need four era offsets for every act."
+	endif
 
 RingPos_GHZ1:	binclude	"level/rings/GHZ_1.bin"
 		even
@@ -14519,6 +14531,10 @@ RingPos_LV0F3:	binclude	"level/rings/LV0F_3.bin"
 		even
 RingPos_LV0F4:	binclude	"level/rings/LV0F_4.bin"
 		even
+RingPos_Data_End:
+	if	RingPos_Data_End-RingPos_Index>$8000
+		fatal	"Ring position data exceeds the signed word offset range."
+	endif
 ; ---------------------------------------------------------------------------
 SpriteTerminator:
 		ObjectLayoutBoundary
