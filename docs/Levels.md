@@ -126,7 +126,7 @@ and both actors' touch responses. The shared `$AE` Bomb family also implements
 Bigbom. The importer now supplies 253 placements across the completed
 families, retaining coordinates, era masks and variants. It replaces these
 adopted families on an explicit reimport and preserves other editable rows,
-including time poles sharing `$79`. The two existing signpost rows remain.
+including time poles sharing `$79` and any authored finish placements.
 
 | Adopted family | ID | Act 1 | Act 2 |
 | --- | --- | --- | --- |
@@ -161,12 +161,12 @@ S3&K's twirl option.
 Authored time poles, generator placements and several enemy and mechanism
 families are still pending. The shared poles and generator can be tested from
 the MMZ1/2 Debug lists.
-Both acts currently use the 16-ring starter pattern and have no monitor
-placements. The ring manager selects one of four pointers for each act in
-Present, Past, Good Future, Bad Future order. Shared layouts use one stored file. When an
-act has independent ring layouts, put their four offsets in `RingPos_Index`
-and set each matching SonLVL section's `rings=` path to the same file.
-Monitor placements use the shared `$12` object and the act's presence masks.
+MMZ1 and MMZ2 each have four separate ring lists in Present, Past, Good
+Future and Bad Future order. SonLVL reads the corresponding file in
+`level/rings/`. The eight lists currently contain only the end marker.
+Finish signposts belong in the act's object placements. The starter rings
+and the two starter signposts have been removed. Monitor placements use
+the shared `$12` object and the act's presence masks.
 
 The Act-1 sprite atlas occupies `$26D-$449`; the complete 41-tile Bomb bank
 follows at `$44A-$472`, leaving five tiles before the reused morphing bank at

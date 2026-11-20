@@ -14453,8 +14453,10 @@ RingPos_Index:
 		RingPositions_AllEras	RingPos_LV0E3
 		RingPositions_AllEras	RingPos_LV0E4
 
-		RingPositions_AllEras	RingPos_LV0F1
-		RingPositions_AllEras	RingPos_LV0F2
+		dc.w	RingPos_LV0F1-RingPos_Index, RingPos_LV0F1_Past-RingPos_Index
+		dc.w	RingPos_LV0F1_GoodFuture-RingPos_Index, RingPos_LV0F1_BadFuture-RingPos_Index
+		dc.w	RingPos_LV0F2-RingPos_Index, RingPos_LV0F2_Past-RingPos_Index
+		dc.w	RingPos_LV0F2_GoodFuture-RingPos_Index, RingPos_LV0F2_BadFuture-RingPos_Index
 		RingPositions_AllEras	RingPos_LV0F3
 		RingPositions_AllEras	RingPos_LV0F4
 RingPos_Index_End:
@@ -14584,7 +14586,25 @@ RingPos_LV0E4:	binclude	"level/rings/LV0E_4.bin"
 		even
 RingPos_LV0F1:	binclude	"level/rings/LV0F_1.bin"
 		even
+RingPos_LV0F1_Past:
+		binclude	"level/rings/past/LV0F_1.bin"
+		even
+RingPos_LV0F1_GoodFuture:
+		binclude	"level/rings/good future/LV0F_1.bin"
+		even
+RingPos_LV0F1_BadFuture:
+		binclude	"level/rings/bad future/LV0F_1.bin"
+		even
 RingPos_LV0F2:	binclude	"level/rings/LV0F_2.bin"
+		even
+RingPos_LV0F2_Past:
+		binclude	"level/rings/past/LV0F_2.bin"
+		even
+RingPos_LV0F2_GoodFuture:
+		binclude	"level/rings/good future/LV0F_2.bin"
+		even
+RingPos_LV0F2_BadFuture:
+		binclude	"level/rings/bad future/LV0F_2.bin"
 		even
 RingPos_LV0F3:	binclude	"level/rings/LV0F_3.bin"
 		even

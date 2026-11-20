@@ -179,7 +179,8 @@ These are positioned terrain fixtures, not a complete playthrough.
 The Act-1 runner also loads both actual ROM placement tables through the MD/CD
 manager in all four eras, with a fresh camera window around every adopted root.
 It compares every resulting placement handle, constructor, word subtype and
-flip against an independent geometric/era window model. This covers the
+flip against an independent geometric/era window model. It also follows the
+eight ring pointers and verifies the distinct editor files and ring capacity. This covers the
 currently adopted families listed in [Levels](Levels.md#metallic-madness-import-experimental),
 not the remaining unported source objects. The generic object-manager check
 uses the Present era mask when checking all 64 act tables.

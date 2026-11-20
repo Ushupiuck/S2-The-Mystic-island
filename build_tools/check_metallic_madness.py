@@ -8,6 +8,7 @@ camera visits are rendering fixtures, not a controller-only level playthrough.
 """
 from pathlib import Path
 import argparse
+from configparser import ConfigParser
 import ctypes as C
 import json
 import struct
@@ -315,6 +316,35 @@ def morph_native(args):
 	return dict(contact_and_standing_cases=cases, seven_authored_shapes=True,
 		phases=12, simultaneous_side_contacts=True, both_rider_timeline=timeline,
 		independent_approach_width=True, raw_standing_edges=True, existing_cd_art=True)
+
+
+def ring_layouts(args):
+	"""The ROM and editor must expose the same independent ring lists."""
+	n = Native(args.rom, args.listing)
+	rom = args.rom.read_bytes()
+	ini = ROOT / 'SonLVL INI Files/SonLVL.ini'
+	settings = ConfigParser(interpolation=None)
+	settings.read_string('[Project]\n' + ini.read_text())
+	base = n.s['RingPos_Index']
+	capacity = (n.s['Ring_Positions_Active_End'] - n.s['Ring_Positions']) // 6 - 1
+	addresses = set()
+	files = set()
+	for act in (1, 2):
+		for era, (_, title, _) in enumerate(ERAS):
+			section = settings[f'Metallic Madness Zone Act {act} - {title}']
+			path = (ini.parent / section['rings']).resolve()
+			layout = path.read_bytes()
+			assert len(layout) % 4 == 2 and layout[-2:] == b'\xff\xff', path
+			rows = tuple(struct.iter_unpack('>HH', layout[:-2]))
+			assert all(x < 0x8000 for x, _ in rows), path
+			assert sum(1 + (y >> 12 & 7) for _, y in rows) <= capacity, path
+			index = ((n.s['id_MMZ'] * 4 + act - 1) * 4 + era) * 2
+			address = base + struct.unpack_from('>h', rom, base + index)[0]
+			assert rom[address:address + len(layout)] == layout, (act, title, path)
+			assert address not in addresses and path not in files, (act, title)
+			addresses.add(address)
+			files.add(path)
+	return dict(independent_era_lists=len(files), editor_and_rom_match=True)
 
 
 def placement_native(args):
@@ -1132,8 +1162,8 @@ def main():
 	p.add_argument('--system-directory',type=Path)
 	p.add_argument('--pal',action='store_true')
 	args=p.parse_args();args.output.mkdir(parents=True,exist_ok=True)
-	report=dict(native=native(args),placements=placement_native(args),morphing_platform=morph_native(args),
-		configured_saws=configured_saws(args))
+	report=dict(native=native(args),placements=placement_native(args),ring_layouts=ring_layouts(args),
+		morphing_platform=morph_native(args),configured_saws=configured_saws(args))
 	if args.source:
 		report['animations']=animation_checks(args)
 		report['platforms']=platform_native(args)
