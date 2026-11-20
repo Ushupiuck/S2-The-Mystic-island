@@ -113,6 +113,48 @@ try:
 		act('Springs_Horizontal',spring)
 		stood=g.get(who,'obY',2)+g.get(who,'obHeight')
 		record(who+' horizontal spring top',landed==0x3F0 and stood==landed,landed_feet=landed,standing_feet=stood)
+	# Spring faces catch the feet (or the head when inverted) without a wall hit.
+	for subtype, inverted in ((0x30, False), (0x40, True)):
+		for flipped in (0, 1):
+			g.restore(stage)
+			isolate(g)
+			spring = spawn(g, 'Springs', 0x180, 0x400, subtype)
+			g.write('Camera_X_pos', 0x100, 2)
+			g.put(spring, 'obStatus', flipped)
+			act('Springs_Init', spring)
+			g.put(spring, 'obRender', g.get(spring, 'obRender') | flipped)
+			saved_spring = g.save()
+			direction = -1 if flipped else 1
+			for who in ('v_player', 'v_player2'):
+				g.restore(saved_spring)
+				other = 'v_player2' if who == 'v_player' else 'v_player'
+				place(g, other, 0x240, 0x400, False)
+				radius = g.get(who, 'default_y_radius')
+				contact_y = 0x400 + radius - 3 if inverted else 0x404 - radius + 3
+				place(g, who, 0x180 + 24 * direction, contact_y, False)
+				g.put(who, 'obVelX', -0x600 * direction & 0xFFFF, 2)
+				act('Springs', spring)
+				vx = g.get(who, 'obVelX', 2)
+				vy = g.get(who, 'obVelY', 2)
+				launched = vx == (direction * 0x1000 & 0xFFFF) and vy == (0x1000 if inverted else 0xF000)
+				released = g.get(who, 'obStatus') & 0x2A == 2 and not g.get(spring, 'obStatus') & 0x78
+				record(f'{who} diagonal side launch inverted={inverted} flip={flipped}',
+					launched and released, vx=vx, vy=vy, released=released)
+	for subtype, inverted in ((0, False), (0x20, True)):
+		g.restore(stage)
+		isolate(g)
+		spring = spawn(g, 'Springs', 0x180, 0x400, subtype)
+		g.write('Camera_X_pos', 0x100, 2)
+		act('Springs_Init', spring)
+		place(g, 'v_player', 0x168, 0x400, False)
+		place(g, 'v_player2', 0x198, 0x400, False)
+		g.put('v_player', 'obVelX', 0x600, 2)
+		g.put('v_player2', 'obVelX', 0xFA00, 2)
+		act('Springs', spring)
+		first = (g.get('v_player', 'obX', 2), g.get('v_player', 'obVelX', 2))
+		second = (g.get('v_player2', 'obX', 2), g.get('v_player2', 'obVelX', 2))
+		record(f'vertical spring body is passable inverted={inverted}',
+			first == (0x168, 0x600) and second == (0x198, 0xFA00), first=first, second=second)
 	# Run real object passes. A teleporter updates Tails after his reserved slot.
 	g.restore(stage);isolate(g);place(g,'v_player',0x240,0x400,False)
 	place(g,'v_player2',0x180,0x400,False);g.write('Tails_CPU_idle_timer',6000,2)

@@ -144,6 +144,10 @@ still crush. Closed trapdoors try top landing before full solidity. Their first
 closed frame resolves shallow foot overlap across the physical 24-pixel body;
 closed sides and rising underside contacts remain solid. Horizontal springs
 use 15 pixels for landing and 16 for standing, matching their visible top.
+Vertical and diagonal springs collide only on their launch face. Upward
+springs use the shared flat or sloped top-only contact. The diagonal cap
+can catch a sideways run at its low end. Upside-down springs use the
+corresponding one-way underside contact. Each actor launches independently.
 
 Running discs perform a rectangular reject followed by circular capture.
 Terrain conveyors apply one push per player/frame using `conveyor_applied`.

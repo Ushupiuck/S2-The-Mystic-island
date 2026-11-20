@@ -2,7 +2,7 @@
 ; One packed V/H/diagonal bank; the static support is a separate shared piece.
 ; Cap pixels are shared: red uses line 1, yellow selects line 2 per piece.
 ; One contact dispatcher handles both characters in all five orientations.
-; Launch strengths/subtype flips and collision paths follow S3&K's model.
+; Upward and downward springs only collide with the face they launch from.
 ; animation scripts - Spring & Spring wheel
 Ani_obj41:	dc.w byte_E978-Ani_obj41
 		dc.w byte_E97B-Ani_obj41
@@ -122,19 +122,20 @@ Springs_Strengths:
 ; ===========================================================================
 ; loc_E302:
 Springs_Up:
-		moveq	#27,d1
-		moveq	#8,d2
-		moveq	#16,d3
+		moveq	#0,d1
+		move.b	obActWid(a0),d1
+		moveq	#9,d3
 		move.w	obX(a0),d4
 		lea	.actor(pc),a5
-		bsr.w	Springs_TestBoth
+		bsr.w	Springs_TestFaceBoth
 		lea	Ani_obj41(pc),a1
 		jmp	(AnimateSprite).l
 .actor:
-		jsr	(SolidObject_Always_SingleCharacter).l
+		jsr	(PlatformObject_SingleCharacter).l
 		btst	d6,obStatus(a0)
 		beq.s	.return
-		jmp	(sub_E34E).l
+		jsr	(ReleaseObjectRider).l
+		bra.w	sub_E34E
 .return:
 		rts
 
@@ -359,19 +360,20 @@ sub_E54C:
 ; ===========================================================================
 ; loc_E606:
 Springs_Down:
-		moveq	#27,d1
-		moveq	#8,d2
-		moveq	#16,d3
-		move.w	obX(a0),d4
+		moveq	#0,d1
+		move.b	obActWid(a0),d1
 		lea	.actor(pc),a5
-		bsr.w	Springs_TestBoth
+		bsr.w	Springs_TestFaceBoth
 		lea	Ani_obj41(pc),a1
 		jmp	(AnimateSprite).l
 .actor:
-		jsr	(SolidObject_Always_SingleCharacter).l
-		cmpi.w	#-2,d4
-		bne.s	.return
-		jmp	(sub_E64E).l
+		bsr.w	Springs_CheckFaceX
+		bcc.s	.return
+		move.w	obY(a0),d0
+		addq.w	#8,d0
+		bsr.w	Springs_CheckUnderside
+		bcc.s	.return
+		bra.w	sub_E64E
 .return:
 		rts
 
@@ -432,19 +434,17 @@ loc_E6D6:
 ; loc_E6F2:
 Springs_DiagonallyUp:
 		moveq	#27,d1
-		moveq	#16,d2
-		moveq	#0,d3
 		move.w	obX(a0),d4
 		lea	.actor(pc),a5
-		bsr.w	Springs_TestBoth
+		bsr.w	Springs_TestFaceBoth
 		lea	Ani_obj41(pc),a1
 		jmp	(AnimateSprite).l
 .actor:
 		lea	Springs_SlopeData_DiagUp(pc),a2
-		jsr	(SlopedSolid_SingleCharacter).l
+		jsr	(SlopedPlatform_SingleCharacter).l
 		btst	d6,obStatus(a0)
 		beq.s	.return
-		jmp	(sub_E73E).l
+		bra.w	sub_E73E
 .return:
 		rts
 
@@ -467,6 +467,7 @@ loc_E754:
 ; ===========================================================================
 
 loc_E762:
+		jsr	(ReleaseObjectRider).l
 		clr.b	jumping(a1)
 		clr.b	spindash_flag(a1)
 		clr.b	tails_flight_flag(a1)
@@ -528,19 +529,28 @@ loc_E81E:
 ; loc_E828:
 Springs_DiagonallyDown:
 		moveq	#27,d1
-		moveq	#16,d2
-		moveq	#0,d3
-		move.w	obX(a0),d4
 		lea	.actor(pc),a5
-		bsr.w	Springs_TestBoth
+		bsr.w	Springs_TestFaceBoth
 		lea	Ani_obj41(pc),a1
 		jmp	(AnimateSprite).l
 .actor:
+		bsr.w	Springs_CheckFaceX
+		bcc.s	.return
+		btst	#0,obRender(a0)
+		beq.s	.sample
+		not.w	d0
+		add.w	d1,d0
+.sample:
+		lsr.w	#1,d0
 		lea	Springs_SlopeData_DiagDown(pc),a2
-		jsr	(SlopedSolid_SingleCharacter).l
-		cmpi.w	#-2,d4
-		bne.s	.return
-		jmp	(sub_E870).l
+		move.b	(a2,d0.w),d2
+		ext.w	d2
+		move.w	obY(a0),d0
+		addq.w	#4,d0			; ceiling surface from the slope's authored origin
+		sub.w	d2,d0
+		bsr.w	Springs_CheckUnderside
+		bcc.s	.return
+		bra.w	sub_E870
 .return:
 		rts
 
@@ -602,13 +612,54 @@ loc_E92A:
 		jmp	(PlaySound_Special).l
 ; End of function sub_E870
 
+; Index into the face at the player's X. Carry set inside the width.
+Springs_CheckFaceX:
+		move.w	obX(a1),d0
+		sub.w	obX(a0),d0
+		add.w	d1,d0
+		add.w	d1,d1
+		cmp.w	d1,d0
+		rts
+
+; d0.w is the ceiling surface. Mirror the platform's 4px approach allowance
+; and 12px penetration allowance around it. Adjust Y only on a cap contact.
+Springs_CheckUnderside:
+		tst.w	obVelY(a1)
+		bgt.s	.miss
+		jsr	(Player_CanInteract).l
+		bcc.s	.miss
+		moveq	#0,d1
+		move.b	obHeight(a1),d1
+		add.w	d1,d0
+		move.w	obY(a1),d2
+		sub.w	d0,d2
+		addi.w	#12,d2
+		cmpi.w	#16,d2
+		bhi.s	.miss
+		move.w	d0,obY(a1)
+		ori	#1,ccr
+		rts
+.miss:
+		andi	#$FE,ccr
+		rts
+
+; Face contacts bypass the full-solid wall and crushing paths.
+Springs_TestFaceBoth:
+		tst.w	(Debug_placement_mode).w
+		bne.s	Springs_TestBoth.return
+		tst.b	(f_playerctrl).w
+		bmi.s	Springs_TestBoth.return
+
 ; Input d1-d4 is shared; a5 names one direction's actor callback.
 Springs_TestBoth:
 		lea	(v_player).w,a1
 		moveq	#3,d6
+		tst.l	code(a1)
+		beq.s	.secondary
 		movem.l	d1-d4/a5,-(sp)
 		jsr	(a5)
 		movem.l	(sp)+,d1-d4/a5
+.secondary:
 		lea	(v_player2).w,a1
 		tst.l	code(a1)
 		beq.s	.return
