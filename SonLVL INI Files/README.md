@@ -79,7 +79,7 @@ the complete serialized word, including when calculating movement overlays.
 
 | ID | Object | Subtype settings |
 |---|---|---|
-| `$0A` | Path / priority switcher | Bits 0–1: length 64/128/256/512 px; bit 2: horizontal trigger; bits 3/4: right-down/left-up collision path; bits 5/6: corresponding priority; bit 7: grounded only. Placement flips do not enable a priority-only mode in this handler. |
+| `$0A` | Path / priority switcher | Bits 0–1: length 64/128/256/512 px; bit 2: horizontal trigger; bits 3/4: right-down/left-up collision path; bits 5/6: corresponding priority; bit 7: grounded only. MMZ2 exposes bit 8 for the revolving door, which uses its sprite length and the same exit settings. |
 | `$0B` | Twisting pathway / wire cage | Bit 7: cage; bits 0-6: half-width / 8 (zero = 192 px); `$0098` is the FBZ/MTZ preset. Clear bit 7 retains the EHZ spiral. |
 | `$0C` | Tilting platform | High nibble: duration; low nibble: initial phase, both in 16-frame units. |
 | `$0D` | Flapping door | Full byte: interval in seconds. |

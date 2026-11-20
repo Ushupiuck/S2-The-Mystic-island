@@ -1,253 +1,166 @@
-;----------------------------------------------------
-; Object 0A - collision	index switcher (in loops)
-;----------------------------------------------------
+; ---------------------------------------------------------------------------
+; Object $0A - per-actor collision path and sprite priority switcher.
+; ---------------------------------------------------------------------------
+
+PathSwitch_Door		equ $100	; the act must load the MMZ2 door art
+switch_inside		equ objoff_34	; bits 7/6: primary/companion inside the trigger
+switch_turn		equ objoff_35	; remaining door animation updates
+switch_half_width	equ objoff_36
+switch_half_height	equ objoff_38
 
 CollisionSwitcher:
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	CollisionSwitcher_Index(pc,d0.w),d1
-		jsr	CollisionSwitcher_Index(pc,d1.w)
-		tst.b	(Debug_mode_flag).w
-		beq.w	MarkObjGone2
-		bra.w	MarkObjGone
-; ---------------------------------------------------------------------------
-CollisionSwitcher_Index:	dc.w CollisionSwitcher_Init-CollisionSwitcher_Index
-		dc.w loc_13EB4-CollisionSwitcher_Index
-		dc.w loc_13FB6-CollisionSwitcher_Index
-; ---------------------------------------------------------------------------
-
-CollisionSwitcher_Init:
-		addq.b	#2,obRoutine(a0)
+		move.l	#CollisionSwitcher_Run,code(a0)
 		move.l	#Map_Obj03,obMap(a0)
 		move.b	#Map_Obj03_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Ring,1,0),obGfx(a0)
 		move.b	#4,obRender(a0)
-		move.b	#sprite_bound($10,Map_Obj03_width),obActWid(a0)
+		move.b	#sprite_bound($10,Map_Obj03_width),width_pixels(a0)
 		move.w	#$280,obPriority(a0)
+
 		move.w	obSubtype(a0),d0
+		move.w	d0,d1
+		andi.w	#7,d1
+		move.b	d1,obFrame(a0)
+		andi.w	#3,d1
+		moveq	#$20,d2
+		lsl.w	d1,d2
+		btst	#8,d0
+		beq.s	.set_extent
+		move.l	#Map_MMZ_RevolveDoor,obMap(a0)
+		move.w	#ArtTile_MMZ_Atlas,obGfx(a0)
+		move.b	#Map_MMZ_RevolveDoor_width,width_pixels(a0)
+		move.b	#Map_MMZ_RevolveDoor_height,height_pixels(a0)
+		move.b	#2,obFrame(a0)
+		moveq	#Map_MMZ_RevolveDoor_height,d2	; upright door span
 		btst	#2,d0
-		beq.s	loc_13EA4
-		addq.b	#2,obRoutine(a0)
-		andi.w	#7,d0
-		move.b	d0,obFrame(a0)
-		andi.w	#3,d0
-		add.w	d0,d0
-		move.w	CollisionSwitcher_Data(pc,d0.w),objoff_36(a0)
-		bra.w	loc_13FB6
-; ---------------------------------------------------------------------------
-CollisionSwitcher_Data:	dc.w   $20,  $40,  $80,	$100
-; ---------------------------------------------------------------------------
+		beq.s	.set_extent
+		clr.b	obFrame(a0)
+		moveq	#Map_MMZ_RevolveDoor_width,d2	; horizontal door span
 
-loc_13EA4:
-		andi.w	#3,d0
-		move.b	d0,obFrame(a0)
-		add.w	d0,d0
-		move.w	CollisionSwitcher_Data(pc,d0.w),objoff_36(a0)
+.set_extent:
+		moveq	#8,d1
+		btst	#2,d0
+		beq.s	.store_extent
+		exg	d1,d2
+.store_extent:
+		move.w	d1,switch_half_width(a0)
+		move.w	d2,switch_half_height(a0)
 
-loc_13EB4:
+CollisionSwitcher_Run:
 		tst.w	(Debug_placement_mode).w
-		bne.w	locret_13FB4
-		move.w	objoff_34(a0),d5
-		move.w	obX(a0),d0
-		move.w	d0,d1
-		subq.w	#8,d0
-		addq.w	#8,d1
-		move.w	obY(a0),d2
+		bne.s	.draw
+		move.w	obX(a0),d2
 		move.w	d2,d3
-		move.w	objoff_36(a0),d4
-		sub.w	d4,d2
-		add.w	d4,d3
-		lea	dword_140B8(pc),a2
+		sub.w	switch_half_width(a0),d2
+		add.w	switch_half_width(a0),d3
+		move.w	obY(a0),d4
+		move.w	d4,d5
+		sub.w	switch_half_height(a0),d4
+		add.w	switch_half_height(a0),d5
+
+		lea	(v_player).w,a1
 		moveq	#7,d6
+		bsr.w	CollisionSwitcher_Actor
+		lea	(v_player2).w,a1
+		moveq	#6,d6
+		bsr.w	CollisionSwitcher_Actor
 
-loc_13EE0:
-		move.l	(a2)+,d4
-		beq.s	+
-		movea.l	d4,a1
-		move.w	obX(a1),d4
-		cmp.w	d0,d4
-		blo.s	loc_13F10
-		cmp.w	d1,d4
-		bhs.s	loc_13F10
-		move.w	obY(a1),d4
-		cmp.w	d2,d4
-		blo.s	loc_13F10
-		cmp.w	d3,d4
-		bhs.s	loc_13F10
-		ori.w	#$8000,d5
-+		add.l	d5,d5
-		dbf	d6,loc_13EE0
-		swap	d5
-		move.b	d5,objoff_34(a0)
+.draw:
+		move.w	obSubtype(a0),d0
+		btst	#8,d0
+		bne.w	CollisionSwitcher_DrawDoor
+		tst.b	(Debug_mode_flag).w
+		bne.w	MarkObjGone
+		bra.w	MarkObjGone2
+
+; d2-d5 = trigger bounds [min,max), d6 = this actor's occupancy bit.
+CollisionSwitcher_Actor:
+		tst.l	code(a1)
+		beq.s	.missing
+		move.w	obX(a1),d1
+		cmp.w	d2,d1
+		blo.s	.exit
+		cmp.w	d3,d1
+		bhs.s	.exit
+		move.w	obY(a1),d1
+		cmp.w	d4,d1
+		blo.s	.exit
+		cmp.w	d5,d1
+		bhs.s	.exit
+		bset	d6,switch_inside(a0)
+		bne.s	.return
+		move.w	obSubtype(a0),d0
+		btst	#8,d0
+		beq.s	.return
+		move.b	#16,switch_turn(a0)
+.return:
 		rts
-; ---------------------------------------------------------------------------
 
-loc_13F10:
-		tst.w	d5
-		bpl.w	loc_13FA8
-		swap	d0
+.missing:
+		bclr	d6,switch_inside(a0)
+		rts
+
+.exit:
+		bclr	d6,switch_inside(a0)
+		beq.s	.return
 		move.w	obSubtype(a0),d0
 		btst	#7,d0
-		beq.s	loc_13F26
+		beq.s	.side
 		btst	#1,obStatus(a1)
-		bne.s	loc_13FA2
-
-loc_13F26:
-		move.w	obX(a1),d4
-		cmp.w	obX(a0),d4
-		blo.s	loc_13F62
-		move.b	#$C,obTopSolidBit(a1)
-		move.b	#$D,obLRBSolidBit(a1)
+		bne.s	.return
+.side:
+		btst	#2,d0
+		bne.s	.vertical_crossing
+		move.w	obX(a1),d1
+		cmp.w	obX(a0),d1
+		bra.s	.select_side
+.vertical_crossing:
+		move.w	obY(a1),d1
+		cmp.w	obY(a0),d1
+.select_side:
+		bhs.s	.apply
+		lsr.w	#1,d0				; left/up settings into the right/down bits
+.apply:
+		move.w	#$0C0D,d1
 		btst	#3,d0
-		beq.s	loc_13F4E
-		move.b	#$E,obTopSolidBit(a1)
-		move.b	#$F,obLRBSolidBit(a1)
-
-loc_13F4E:
+		beq.s	.path
+		move.w	#$0E0F,d1
+.path:
+		move.w	d1,obTopSolidBit(a1)
 		bclr	#7,obGfx(a1)
 		btst	#5,d0
-		beq.s	loc_13F92
+		beq.s	.sound
 		bset	#7,obGfx(a1)
-		bra.s	loc_13F92
-; ---------------------------------------------------------------------------
-
-loc_13F62:
-		move.b	#$C,obTopSolidBit(a1)
-		move.b	#$D,obLRBSolidBit(a1)
-		btst	#4,d0
-		beq.s	loc_13F80
-		move.b	#$E,obTopSolidBit(a1)
-		move.b	#$F,obLRBSolidBit(a1)
-
-loc_13F80:
-		bclr	#7,obGfx(a1)
-		btst	#6,d0
-		beq.s	loc_13F92
-		bset	#7,obGfx(a1)
-
-loc_13F92:
+.sound:
 		tst.b	(Debug_mode_flag).w
-		beq.s	loc_13FA2
+		beq.s	.return
 		move.w	#SndID_Checkpoint,d0
-		jsr	(PlaySound_Special).l
+		jmp	(PlaySound_Special).l
 
-loc_13FA2:
-		swap	d0
-		andi.w	#$7FFF,d5
+; Either actor starts the same short turn. The horizontal mapping alternates
+; panel poses; the upright rail alternates its shading using the sprite flip.
+CollisionSwitcher_DrawDoor:
+		moveq	#2,d1
+		btst	#2,d0
+		beq.s	.pose
+		moveq	#0,d1
+.pose:
+		bclr	#0,obRender(a0)
+		tst.b	switch_turn(a0)
+		beq.s	.draw
+		subq.b	#1,switch_turn(a0)
+		btst	#2,switch_turn(a0)
+		beq.s	.draw
+		tst.b	d1
+		bne.s	.flip_rail
+		moveq	#1,d1
+		bra.s	.draw
+.flip_rail:
+		bset	#0,obRender(a0)
+.draw:
+		move.b	d1,obFrame(a0)
+		bra.w	MarkObjGone
 
-loc_13FA8:
-		add.l	d5,d5
-		dbf	d6,loc_13EE0
-		swap	d5
-		move.b	d5,objoff_34(a0)
-
-locret_13FB4:
-		rts
-; ---------------------------------------------------------------------------
-
-loc_13FB6:
-		tst.w	(Debug_placement_mode).w
-		bne.s	locret_13FB4
-		move.w	objoff_34(a0),d5
-		move.w	obX(a0),d0
-		move.w	d0,d1
-		move.w	objoff_36(a0),d4
-		sub.w	d4,d0
-		add.w	d4,d1
-		move.w	obY(a0),d2
-		move.w	d2,d3
-		subq.w	#8,d2
-		addq.w	#8,d3
-		lea	dword_140B8(pc),a2
-		moveq	#7,d6
-
-loc_13FE2:
-		move.l	(a2)+,d4
-		beq.s	+
-		movea.l	d4,a1
-		move.w	obX(a1),d4
-		cmp.w	d0,d4
-		blo.s	loc_14012
-		cmp.w	d1,d4
-		bhs.s	loc_14012
-		move.w	obY(a1),d4
-		cmp.w	d2,d4
-		blo.s	loc_14012
-		cmp.w	d3,d4
-		bhs.s	loc_14012
-		ori.w	#$8000,d5
-+		add.l	d5,d5
-		dbf	d6,loc_13FE2
-		swap	d5
-		move.b	d5,objoff_34(a0)
-		rts
-; ---------------------------------------------------------------------------
-
-loc_14012:
-		tst.w	d5
-		bpl.w	loc_140AA
-		swap	d0
-		move.w	obSubtype(a0),d0
-		btst	#7,d0
-		beq.s	loc_14028
-		btst	#1,obStatus(a1)
-		bne.s	loc_140A4
-
-loc_14028:
-		move.w	obY(a1),d4
-		cmp.w	obY(a0),d4
-		blo.s	loc_14064
-		move.b	#$C,obTopSolidBit(a1)
-		move.b	#$D,obLRBSolidBit(a1)
-		btst	#3,d0
-		beq.s	loc_14050
-		move.b	#$E,obTopSolidBit(a1)
-		move.b	#$F,obLRBSolidBit(a1)
-
-loc_14050:
-		bclr	#7,obGfx(a1)
-		btst	#5,d0
-		beq.s	loc_14094
-		bset	#7,obGfx(a1)
-		bra.s	loc_14094
-; ---------------------------------------------------------------------------
-
-loc_14064:
-		move.b	#$C,obTopSolidBit(a1)
-		move.b	#$D,obLRBSolidBit(a1)
-		btst	#4,d0
-		beq.s	loc_14082
-		move.b	#$E,obTopSolidBit(a1)
-		move.b	#$F,obLRBSolidBit(a1)
-
-loc_14082:
-		bclr	#7,obGfx(a1)
-		btst	#6,d0
-		beq.s	loc_14094
-		bset	#7,obGfx(a1)
-
-loc_14094:
-		tst.b	(Debug_mode_flag).w
-		beq.s	loc_140A4
-		move.w	#SndID_Checkpoint,d0
-		jsr	(PlaySound_Special).l
-
-loc_140A4:
-		swap	d0
-		andi.w	#$7FFF,d5
-
-loc_140AA:
-		add.l	d5,d5
-		dbf	d6,loc_13FE2
-		swap	d5
-		move.b	d5,objoff_34(a0)
-		rts
-; ---------------------------------------------------------------------------
-dword_140B8:	dc.l v_player
-		dc.l v_player2
-		dc.l 0
-		dc.l 0
-		dc.l 0
-		dc.l 0
-		dc.l 0
-		dc.l 0
+Map_MMZ_RevolveDoor:
+		binclude "mappings/sprite/MMZ RevolveDoor.bin"
+		even

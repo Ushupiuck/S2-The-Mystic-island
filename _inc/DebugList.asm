@@ -378,6 +378,8 @@ Debug_MMZ2:	dc.w (Debug_MMZ2_End-Debug_MMZ2-2)/DebugEntry_size
 	dbug	Map_Obj79,	Obj79,	PoleType_Past,	6,	0
 	dbug	Map_Obj79,	Obj79,	PoleType_Future,	8,	0
 	dbug	Map_PlatformButton,SMZ_Button,0,0,ArtTile_MMZ2_Button
+	dbug	Map_MMZ_RevolveDoor,CollisionSwitcher,PathSwitch_Door|$28,2,ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_RevolveDoor,CollisionSwitcher,PathSwitch_Door|$2C,0,ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_MechaBu,MMZ_MechaBu,0,0,ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_MechaBu,MMZ_MechaBu,1,0,ArtTile_MMZ_Atlas
 		dbug	Map_SMZ_Bomb,Bomb,0,0,ArtTile_Bomb_MMZ

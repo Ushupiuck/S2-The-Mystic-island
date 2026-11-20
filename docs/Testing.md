@@ -170,6 +170,8 @@ certify collision seams, object mappings or the Mecha arena.
 `check_metallic_madness2.py --source /path/to/scddisasm --output test-results/mmz2`
 compares all authored source-quadrant pixels and both collision paths, then
 executes the real Act-2 headers, parallax providers and palette/tile animation.
+It checks the revolving door on both axes, including independent occupancy,
+opposed exits, grounded-only exits, absent actors and the complete turn.
 `--core CORE --system-directory BIOS` adds 24 actual era/camera scenes;
 `--pal` selects PAL. Bad Future's full 621-tile bank must remain contiguous.
 These are positioned terrain fixtures, not a complete playthrough.

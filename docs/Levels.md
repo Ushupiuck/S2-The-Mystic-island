@@ -183,24 +183,24 @@ only the necessary block/chunk copies.
 | Bad Future | 621 | 556 | 445 |
 
 Act-2 foreground/background dimensions are 66x16 and 48x4 cells. Bad Future
-keeps all 621 tiles contiguous at `$000-$26C`, including its complete original
-animated tail. Object art starts at `$26D` in both acts; their PLCs, mappings,
-time-post heads and editor previews share that allocation. There is no terrain
-spill bank or extra PLC request. The primary module list has seven requests,
-with fourteen total requests including the common/reserved budget.
+keeps all 621 tiles contiguous at `$000-$26C`, including its animated tail.
+The bank covers both foreground and background after the reserved water
+prefix. Across the four eras, Act 1 reaches `$25B` in Bad Future. Act 2 reaches
+`$26C` in Bad Future, so the shared object atlas starts at `$26D`, leaving
+seventeen unused tiles in Act 1. PLCs, mappings, time-post heads and editor
+previews share that base. The primary module list has seven requests, with
+fourteen total requests including the common/reserved budget.
 
 `$260` is a customary suggestion, not a fixed hardware boundary. For a given
 act the object region normally begins where its terrain ends. Moving that
 boundary requires updating its actual object consumers and checking shared
 banks, but level-specific/shared object art can occupy the available space.
 
-Remaining optimization must keep enemy art resident for simultaneous independent
-enemies. Revolving doors must extend the existing `CollisionSwitcher` with
-sprite animation and per-player path/priority changes. The former terrain-driven
-priority prototype has been removed; collision retains both authored paths.
-Splitting the switch's cap/base mappings and evaluating non-enemy DPLC candidates
-remain pending. Both acts' terrain, palette/tile animation and actual-era entry
-checks run in NTSC and PAL; they do not establish completed object gameplay.
+The [revolving door variant of `$0A`](Objects.md#collision-path-switches-and-doors)
+uses the resident Act-2 door sprites and the shared per-actor path and priority
+switch. The door is available in Debug and SonLVL for placement. Both acts'
+terrain and animation checks run in NTSC and PAL; the remaining authored
+placements and a complete traversal are pending.
 
 ## Foreground vertical placement
 

@@ -54,8 +54,13 @@ namespace MysticIsland.ObjectDefinitions
 			switch (behavior)
 			{
 				case "PathSwapper":
+					if (data.Art != null)
+					{
+						alternate = frames;
+						Bits("Appearance", 8, 1, "The door uses the resident MMZ2 bank and the length of its sprite.", "Invisible switch", "Revolving door");
+					}
 					LoadPathSwapperMarkers();
-					Bits("Length", 0, 3, "Full length; the runtime tests half this distance on either side of the origin.", "64 pixels", "128 pixels", "256 pixels", "512 pixels");
+					Bits("Length", 0, 3, "Invisible switch length; the runtime tests half this distance on either side of the origin.", "64 pixels", "128 pixels", "256 pixels", "512 pixels");
 					Bits("Direction", 2, 1, "Placement flip flags are not used by the runtime.", "Vertical (cross left/right)", "Horizontal (cross up/down)");
 					Bits("Right / down path", 3, 1, "Collision path after crossing right or down.", "Primary ($C / $D)", "Secondary ($E / $F)");
 					Bits("Left / up path", 4, 1, "Collision path after crossing left or up.", "Primary ($C / $D)", "Secondary ($E / $F)");
@@ -538,7 +543,8 @@ namespace MysticIsland.ObjectDefinitions
 			List<Sprite> pieces;
 			switch (behavior)
 			{
-				case "PathSwapper": return frames[subtype & 0x1F];
+				case "PathSwapper":
+					return alternate != null && (subtype & 0x100) != 0 ? alternate[(subtype & 4) != 0 ? 0 : 2] : frames[subtype & 0x1F];
 				case "Checkpoint": return At(frames, (subtype & 0x300) == 0x100 ? 6 : (subtype & 0x300) == 0x200 ? 8 : (subtype & 0x400) != 0 ? 2 : 0);
 				case "FireballSpawner":
 					Sprite maker = new Sprite(At(frames, (subtype & 12) == 12 ? 0 : 1));

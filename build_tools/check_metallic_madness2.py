@@ -84,7 +84,53 @@ def native(a):
 	for x in range(0x1E98):
 		delta=x-x*3//16
 		assert ((delta*0xAAAB)&0xFFFFE000)>>3==((delta*64)//12)<<10
-	return dict(eras=4,header_parallax_cases=cases,reciprocal_domain=7832,max_initial_plcs=14)
+	revolving_doors(n)
+	return dict(eras=4,header_parallax_cases=cases,reciprocal_domain=7832,max_initial_plcs=14,door_axes=2)
+
+
+def revolving_doors(n):
+	actors = ('v_player', 'v_player2')
+	door = n.s['v_lvlobjspace']
+	x, y = 512, 512
+	for axis in (0, 4):
+		n.start()
+		n.write('Camera_X_pos_coarse_back', 256, 2)
+		n.put(door, 'layout_id', 0x0A)
+		n.put(door, 'obX', x, 2)
+		n.put(door, 'obY', y, 2)
+		n.put(door, 'obSubtype', n.s['PathSwitch_Door'] | 0x28 | axis)
+
+		def update(offsets):
+			for actor, offset in zip(actors, offsets):
+				n.put(actor, 'obX', x + (0 if axis else offset), 2)
+				n.put(actor, 'obY', y + (offset if axis else 0), 2)
+			n.act(n.get(door, 'code'), door)
+
+		update((-20, 20))
+		assert n.get(door, 'obMap', 4) == n.s['Map_MMZ_RevolveDoor']
+		assert n.get(door, 'obGfx', 2) == n.s['ArtTile_MMZ_Atlas']
+		update((-1, 1))
+		assert n.get(door, 'switch_inside') == 0xC0
+		assert n.get(door, 'obFrame') == (1 if axis else 2)
+		assert n.get(door, 'obRender') & 1 == (0 if axis else 1)
+		update((20, 1))
+		assert n.get(door, 'switch_inside') == 0x40
+		assert [n.get(actor, 'obTopSolidBit', 2) for actor in actors] == [0x0E0F, 0x0C0D]
+		update((20, -20))
+		assert n.get(door, 'switch_inside') == 0
+		assert [n.get(actor, 'obGfx', 2) >> 15 for actor in actors] == [1, 0]
+
+		update((0, 0))
+		n.put(door, 'obSubtype', n.get(door, 'obSubtype') | 0x80)
+		n.put(actors[0], 'obStatus', 2)
+		n.put(actors[1], 'code', 0)
+		update((-20, 20))
+		assert n.get(door, 'switch_inside') == 0
+		assert [n.get(actor, 'obTopSolidBit', 2) for actor in actors] == [0x0E0F, 0x0C0D]
+		for _ in range(16):
+			update((-20, 20))
+		assert n.get(door, 'obFrame') == (0 if axis else 2)
+		assert not n.get(door, 'obRender') & 1
 
 
 def source_geometry(a):

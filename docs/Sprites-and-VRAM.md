@@ -221,6 +221,18 @@ frame references 15 tiles. DPLCs are still a candidate, not implemented: sizing
 must account for simultaneous independent frames and live object lifetime,
 not just the number of authored origins in one camera-loading window.
 
+### MMZ doors and pressure switch
+
+The revolving door uses 24 resident tiles in the MMZ2 Dango/doors module.
+Its horizontal poses share the same tile indices; the upright rail occupies
+four tiles, repeated along the sprite. The door uses the atlas-relative
+mapping and requires no additional PLC or animation DMA.
+
+The portable pressure switch uses eight tiles and two pieces in either pose.
+Separating the cap, neck and base gives the same pixels with six tiles,
+four pieces pressed and six at rest. The resident switch keeps the
+two-piece mapping for the 64-byte tradeoff.
+
 ### Hanging animation
 
 D9's traversable row reuses the original FBZ handhold: sixteen by forty pixels,
