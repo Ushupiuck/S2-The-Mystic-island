@@ -177,12 +177,48 @@ def game(a):
 	g.close();return report
 
 
+
+def time_warp_native(a):
+	m = Native(a.rom, a.listing)
+	s = m.s
+	cases = 0
+	for era, direction, good_future, target in (
+		(0, -1, 0, 2), (0, 1, 0, 4), (0, 1, 1, 3), (1, 1, 0, 1),
+		(2, -1, 1, 1), (3, -1, 0, 1), (1, -1, 0, 0), (3, 1, 0, 0),
+	):
+		m.start()
+		m.write('f_timecount', 1)
+		m.write('Current_Timezone', era)
+		m.write('TimeWarp_Direction', direction & 255)
+		m.write('TimeWarp_Frames', s['TimeWarp_CommitFrames'] - 1)
+		m.write('TimeWarp_GoodFuture', good_future)
+		m.put('v_player', 'obInertia', -s['TimeWarp_MinSpeed'] & 65535, 2)
+		m.act('TimeWarp_Tick')
+		assert m.read('TimeWarp_Target') == target, (era, direction, good_future, target)
+		if target:
+			assert m.read('TimeWarp_ResumeX', 2) == m.get('v_player', 'obX', 2)
+			assert m.read('TimeWarp_ResumeY', 2) == m.get('v_player', 'obY', 2)
+		else:
+			assert m.read('TimeWarp_Direction') == m.read('TimeWarp_Frames') == 0
+		cases += 1
+	for frames, remaining in ((89, 1), (90, 0)):
+		m.start()
+		m.write('f_timecount', 1)
+		m.write('TimeWarp_Direction', 1)
+		m.write('TimeWarp_Frames', frames)
+		m.put('v_player', 'obInertia', s['TimeWarp_MinSpeed'] - 1, 2)
+		m.act('TimeWarp_Tick')
+		assert (m.read('TimeWarp_Frames'), m.read('TimeWarp_Direction')) == (0, remaining)
+		cases += 1
+	return cases
+
+
 def main():
 	p=argparse.ArgumentParser(description=__doc__)
 	p.add_argument('--rom',type=Path,default=ROOT/'s2built.bin');p.add_argument('--listing',type=Path,default=ROOT/'md-main.lst')
 	p.add_argument('--core',type=Path);p.add_argument('--system-directory',type=Path);p.add_argument('--pal',action='store_true')
 	p.add_argument('--output',type=Path,required=True);a=p.parse_args()
-	report={'native':native(a)}
+	report={'native':native(a), 'time_warp_cases':time_warp_native(a)}
 	if a.core:report['game']=game(a)
 	a.output.parent.mkdir(parents=True,exist_ok=True);a.output.write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report,indent=2))
 

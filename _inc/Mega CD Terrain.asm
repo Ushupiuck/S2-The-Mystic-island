@@ -130,7 +130,7 @@ MCD_SubTerrainObject:
 		dc.l	MCD_SubCalcRoomInFront
 		dc.l	MCD_SubCheckRoomOverhead
 		dc.l	MCD_SubFloorPair
-		dc.l	MCD_SubCeilingPair
+		dc.l	MCD_SubProbeCeiling
 		dc.l	MCD_SubChkFloorEdge
 		dc.l	MCD_SubChkFloorEdge_Part2
 		dc.l	MCD_SubObjHitFloor
@@ -1172,6 +1172,14 @@ MCD_SubObjHitWallRight:
 ; =============== S U B R O U T I N E =======================================
 
 
+; The direct pair request has no earlier angle/sensor setup.
+MCD_SubProbeCeiling:
+		move.l	(MCD_TerrainPath1_Sub).l,(MCD_TerrainPath_Sub).l
+		cmpi.b	#$C,obTopSolidBit(a0)
+		beq.s	.path_ready
+		move.l	(MCD_TerrainPath2_Sub).l,(MCD_TerrainPath_Sub).l
+.path_ready:
+		move.b	obLRBSolidBit(a0),d5
 MCD_SubCeilingPair:
 		move.w	obY(a0),d2
 		move.w	obX(a0),d3

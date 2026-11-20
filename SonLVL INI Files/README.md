@@ -72,7 +72,7 @@ their route when debug overlays are enabled.
 Records are `XXXX YYYY OOTT SSSS`: coordinates/our existing Y flags, full-byte
 object ID, Sonic CD timezone mask, word subtype. The property grid exposes
 Show in Past/Present/Future; Future includes both variants. New placements
-default to all three. This supplies presence filtering, not a time-warp engine.
+default to all three. These bits control placement presence in the destination era.
 The stock picker's byte selector can choose its advertised presets; use the
 16-bit Subtype property for extended values. Project C# definitions read/write
 the complete serialized word, including when calculating movement overlays.

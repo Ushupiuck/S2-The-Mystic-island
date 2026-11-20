@@ -182,3 +182,85 @@ Map_MMZ_MechaBu:
 Map_MMZ_MechaBuSaw:
 		binclude "mappings/sprite/MMZ MechaBu Saw.bin"
 		even
+
+; Both acts load the same generator tiles at the same atlas offset. The Past
+; bank adds the working machine; the other eras display its unpowered shell.
+TimeGenerator:
+		move.l	#Map_TimeGenerator,obMap(a0)
+		move.w	#ArtTile_MMZ_Atlas,obGfx(a0)
+		move.w	#$200,obPriority(a0)
+		move.b	#Map_TimeGenerator_height,height_pixels(a0)
+		move.b	#Map_TimeGenerator_width,width_pixels(a0)
+		ori.b	#4,obRender(a0)
+		move.l	#TimeGenerator_Dormant,code(a0)
+		cmpi.b	#1,(Current_Timezone).w
+		beq.s	.past
+		move.b	#2,obFrame(a0)
+		cmpi.b	#2,(Current_Timezone).w
+		beq.s	.restored
+		tst.b	(TimeWarp_GoodFuture).l
+		beq.s	TimeGenerator_Dormant
+.restored:
+		clr.b	obFrame(a0)
+		bra.s	TimeGenerator_Dormant
+.past:
+		move.b	#1,obFrame(a0)
+		tst.b	(TimeWarp_GoodFuture).l
+		bne.s	TimeGenerator_Dormant
+		move.l	#TimeGenerator_Active,code(a0)
+		move.b	#2,obRoutine(a0)
+		move.b	#3,obFrame(a0)
+		move.b	#$C0|Touch_Size_TimeGenerator_ID,obColType(a0)
+		subi.w	#16,obY(a0)
+		bra.s	TimeGenerator_Active
+
+TimeGenerator_Dormant:
+		jmp	(MarkObjGone).l
+
+; Standard rolling, spindash, invincibility and flight attacks break a
+; working machine. Ordinary contact can safely stand on or push its body.
+TimeGenerator_Touch:
+		cmpi.b	#2,obRoutine(a1)
+		bne.s	.return
+		jsr	(Player_AttacksOnContact).l
+		bcc.s	.return
+		move.b	#4,obRoutine(a1)
+.return:
+		rts
+
+TimeGenerator_Active:
+		cmpi.b	#4,obRoutine(a0)
+		beq.s	.break
+		moveq	#$2B,d1
+		moveq	#$18,d2
+		moveq	#$18,d3
+		move.w	obX(a0),d4
+		jsr	(SolidObject_Always).l
+		lea	Ani_TimeGenerator(pc),a1
+		jsr	(AnimateSprite).l
+		bra.s	TimeGenerator_Dormant
+.break:
+		clr.b	obColType(a0)
+		jsr	(ReleaseObjectRiders).l
+		move.b	#1,(TimeWarp_GoodFuture).l
+		move.l	#TimeGenerator_Dormant,code(a0)
+		move.b	#1,obFrame(a0)
+		moveq	#15,d0
+		jsr	(AddPoints).l
+		jsr	(FindFreeObj).l
+		bne.s	.no_effect
+		move.l	#FieryExplosion,code(a1)
+		move.w	obX(a0),obX(a1)
+		move.w	obY(a0),obY(a1)
+.no_effect:
+		addi.w	#16,obY(a0)
+		bra.w	TimeGenerator_Dormant
+
+Ani_TimeGenerator:
+		dc.w .on-Ani_TimeGenerator
+.on:		dc.b 3,3,4,5,6,$FF
+		even
+
+Map_TimeGenerator:
+		binclude "mappings/sprite/MMZ Generator.bin"
+		even

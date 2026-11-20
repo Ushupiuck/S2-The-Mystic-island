@@ -7,7 +7,7 @@ AdvancedHandler		= 0	; 0 for Sonic 1's Error handler, 1 for the Advanced Error h
 zeroOffsetOptimization	= 1	; if 1, makes a handful of zero-offset instructions smaller
 BackupSRAM		= 1
 AddressSRAM		= 3	; 0 = odd+even; 2 = even only; 3 = odd only
-TimeTravel		= 1	; if 1, allows time-travel mechanics (W.I.P)
+TimeTravel		= 1	; enable era-specific data and player time travel
 
 
 	CPU 68000
@@ -2183,6 +2183,7 @@ Title_CheckLvlSel:
 		bra.w	LevelSelect_Init
 
 PlayLevel:
+		clr.w	(TimeWarp_Target).l	; no pending travel or generator state on a new game
 		move.w	#Level,(v_gamemode).w
 		move.b	#3,(v_lives).w
 		moveq	#0,d0
@@ -2326,6 +2327,7 @@ Demo:		tst.w	(f_demo).w		; are we on an ending demo?
 
 Level_NoMusicFade:
 		jsr	(MCD_StopTerrain).l
+		bsr.w	TimeWarp_PrepareLoad
 		bsr.w	Pal_FadeToBlack
 		bsr.w	ResetMusicTempo
 		bsr.w	ClearPLC
@@ -2356,7 +2358,7 @@ Level_ClrRam:
 		jsr	(LCon_ResetWheels).l
 		jsr	(MonitorArt_Reset).l
 		clr.b	(BossFace_ArtReady).l
-		clr.b	(TimeWarp_Direction).w
+		clr.w	(TimeWarp_Direction).w
 Level_WaterFlagInit:
 		move.w	(Current_ZoneAndAct).w,d0
 		ror.b	#2,d0
@@ -2392,6 +2394,8 @@ Level_WaterFlagInit_End:
 Level_PlayBgm:
 		bsr.w	GetLevelMusic
 		bsr.w	PlaySound		; play music
+		tst.b	(TimeWarp_Target).l
+		bne.s	Level_WarpArtLoop
 		move.l	#TitleCards,(v_titlecard).w	; load title card object
 
 Level_TtlCardLoop:
@@ -2409,6 +2413,18 @@ Level_TtlCardLoop:
 		bne.s	Level_TtlCardLoop
 		tst.l	(v_plc_buffer).w
 		bne.s	Level_TtlCardLoop
+		bra.s	Level_LoadHUD
+
+; A same-act era load still drains all PLCs, without another title card.
+Level_WarpArtLoop:
+		move.w	#Vint_TitleCard,(v_vbla_routine).w
+		bsr.w	Process_Kos_Queue
+		bsr.w	WaitForVint
+		bsr.w	Process_Kos_Module_Queue
+		bsr.w	RunPLC_RAM
+		tst.l	(v_plc_buffer).w
+		bne.s	Level_WarpArtLoop
+Level_LoadHUD:
 		move.w	#Vint_TitleCard,(v_vbla_routine).w
 		bsr.w	WaitForVint
 		jsr	(HUD_Base).l
@@ -2424,6 +2440,7 @@ Level_SkipTtlCard:
 		bsr.w	LoadZone
 		bsr.w	LoadCollisionIndexes
 		jsr	(MCD_LoadTerrain).l
+		bsr.w	TimeWarp_ResolveEntry
 		jsr	(LoadTilesFromStart).l
 		bsr.w	WaterEffects
 		move.l	#Obj01,(v_player).w
@@ -2464,9 +2481,12 @@ Level_LoadObj:
 		jsr	(ObjectsManager).l
 		jsr	(RingsManager).l
 		jsr	(ExecuteObjects).l
+		bsr.w	TimeWarp_RestoreMotion
 		jsr	(Render_Sprites).l
 		jsr	(Animate_Tiles).l
 		moveq	#0,d0
+		tst.b	(TimeWarp_Target).l
+		bne.s	Level_SkipClr
 		tst.b	(v_lastlamp).w
 		bne.s	Level_SkipClr
 		move.w	d0,(v_rings).w
@@ -2527,6 +2547,11 @@ Level_DelayLoop:
 		bsr.w	WaitForVint
 		move.w	#Vint_Level,(v_vbla_routine).w
 		dbf	d1,Level_DelayLoop
+		tst.b	(TimeWarp_Target).l
+		beq.s	.title_palette
+		bsr.w	Pal_FadeFromBlack
+		bra.s	Level_StartGame
+.title_palette:
 		move.w	#$202F,(v_pfade_start).w
 		bsr.w	Pal_FadeFromCurrent	; keep the title card's yellow while the level fades in
 		tst.w	(f_demo).w	; is this an ending demo?
@@ -2550,6 +2575,7 @@ Level_ClrTitleCard:
 		bsr.w	LoadKosPLC
 
 Level_StartGame:
+		clr.b	(TimeWarp_Target).l
 		bclr	#7,(v_gamemode).w	; GameModeFlag_TitleCard
 
 ; ---------------------------------------------------------------------------
@@ -2573,6 +2599,13 @@ Level_MainLoop:
 +
 		tst.w	(Level_Inactive_flag).w
 		bne.w	Level
+	if TimeTravel=1
+		tst.b	(TimeWarp_Direction).w
+		beq.s	.no_warp
+		bsr.w	TimeWarp_Tick
+		bne.w	Level
+.no_warp:
+	endif
 		tst.w	(Debug_placement_mode).w
 		bne.s	Level_DoScroll
 		cmpi.b	#6,(v_player+obRoutine).w
@@ -2646,6 +2679,7 @@ loc_400E:
 		bne.s	Level_FDLoop
 		rts
 
+		include	"_inc/Time Travel.asm"
 		include	"_inc/WaterFeatures.asm"
 		include "_inc/MoveSonicInDemo.asm"
 
@@ -4523,6 +4557,14 @@ S1EndingStartLoc:
 ; ===========================================================================
 
 LevelSize_CheckLamp:
+		tst.b	(TimeWarp_Target).l
+		beq.s	.check_checkpoint
+		move.w	(TimeWarp_ResumeX).l,d1
+		move.w	(TimeWarp_ResumeY).l,d0
+		move.w	d1,(v_player+obX).w
+		move.w	d0,(v_player+obY).w
+		bra.s	LevelSize_StartLocLoaded
+.check_checkpoint:
 		tst.b	(v_lastlamp).w
 		beq.s	LevelSize_StartLoc
 		jsr	(Lamppost_LoadInfo).l
@@ -7434,7 +7476,7 @@ ptr_ObjB5:		dc.l PP_Tamabboh
 ptr_ObjB6:		dc.l PP_TamabbohMissile
 ptr_ObjB7:		dc.l MM_Propeller
 ptr_ObjB8:		dc.l MMZ_MechaBu
-ptr_ObjB9:		dc.l ObjNull
+ptr_ObjB9:		dc.l TimeGenerator
 ptr_ObjBA:		dc.l ObjNull
 ptr_ObjBB:		dc.l ObjNull
 ptr_ObjBC:		dc.l ObjNull
@@ -8166,6 +8208,7 @@ RingsManager_States:
 RingsManager_Init:
 		addq.b	#2,(Rings_manager_routine).w	; => RingsManager_Main
 		bsr.w	RingsManager_Setup		; perform initial setup
+		jsr	(TimeWarp_RestoreRings).l
 		lea	(Ring_Positions).w,a1
 		move.w	(Camera_RAM).w,d4
 		subq.w	#8,d4
@@ -10304,6 +10347,9 @@ Touch_Size_BigbomBody:
 		dc.b $10,$10
 Touch_Size_BigbomDebris:
 		dc.b 6,6
+Touch_Size_TimeGenerator:
+		dc.b $20,$18
+Touch_Size_TimeGenerator_ID = (Touch_Size_TimeGenerator-Touch_Sizes)/2+1
 Touch_Size_BigbomBody_ID = (Touch_Size_BigbomBody-Touch_Sizes)/2+1
 Touch_Size_BigbomDebris_ID = (Touch_Size_BigbomDebris-Touch_Sizes)/2+1
 Touch_Size_MMZMechaBu_ID = (Touch_Size_MMZMechaBu-Touch_Sizes)/2+1
@@ -10425,6 +10471,10 @@ loc_19926:
 Touch_Special:
 		move.b	obColType(a1),d1	; Get collision_flags
 		andi.b	#$3F,d1			; Get only collision size (but that doesn't seems to be its use here?)
+		cmpi.b	#Touch_Size_TimeGenerator_ID,d1
+		bne.s	.other_special
+		jmp	(TimeGenerator_Touch).l
+.other_special:
 		cmpi.b	#Touch_Size_BigbomBody_ID,d1
 		beq.w	Touch_BigbomPath
 		cmpi.b	#Touch_Size_BigbomDebris_ID,d1
@@ -10464,7 +10514,7 @@ Touch_BigbomPath:
 Touch_Yadrin:
 		sub.w	d0,d5
 		cmpi.w	#8,d5
-		bhs.s	Touch_Enemy
+		bhs.w	Touch_Enemy
 		move.w	obX(a1),d0
 		subq.w	#4,d0
 		btst	#0,obStatus(a1)
@@ -10476,12 +10526,12 @@ loc_19B42:
 		bhs.s	loc_19B4E
 		addi.w	#$18,d0
 		blo.w	Touch_Hurt
-		bra.s	Touch_Enemy
+		bra.w	Touch_Enemy
 ; ---------------------------------------------------------------------------
 
 loc_19B4E:
 		cmp.w	d4,d0
-		bhi.s	Touch_Enemy
+		bhi.w	Touch_Enemy
 		bra.w	Touch_Hurt
 ; ---------------------------------------------------------------------------
 
@@ -10498,27 +10548,28 @@ Touch_E1:
 
 Touch_Unknown:	; Touch_E2?
 		move.b	#2,obColProp(a1)	; set collision property to 2 (?)
-		bra.s	Touch_Enemy
+		bra.w	Touch_Enemy
 ; ---------------------------------------------------------------------------
 
 Touch_Inv:	; Touch_E3?
 		st	obColProp(a1)	; set to -1 (as if invulnerable?)
-	;	bra.s	Touch_Enemy
+	;	bra.w	Touch_Enemy
 ; ---------------------------------------------------------------------------
 
-Touch_Enemy:
+; Return carry for attacks accepted by the enemy touch response.
+Player_AttacksOnContact:
 		btst	#obStatusSecondary_isInvincible,obStatusSecondary(a0)	; is Sonic invincible?
-		bne.s	.noharm			; if yes, branch
+		bne.s	.attack			; if yes, branch
 		cmpi.b	#AniIDSonAni_Spindash,obAnim(a0)
-		beq.s	.noharm
+		beq.s	.attack
 		cmpi.b	#AniIDSonAni_Roll,obAnim(a0)
-		beq.s	.noharm
+		beq.s	.attack
 		cmpi.b	#CharacterID_Tails,character_id(a0)	; spinning tails attack while flying
-		bne.w	Touch_Hurt
+		bne.s	.ordinary_contact
 		tst.b	tails_flight_flag(a0)
-		beq.w	Touch_Hurt
+		beq.s	.ordinary_contact
 		btst	#status.player.underwater,obStatus(a0)
-		bne.w	Touch_Hurt		; swimming does not have the flight attack
+		bne.s	.ordinary_contact		; swimming does not have the flight attack
 		move.w	obX(a0),d1
 		move.w	obY(a0),d2
 		sub.w	obX(a1),d1
@@ -10526,9 +10577,17 @@ Touch_Enemy:
 		jsr	(Tails_CalcFlightAttackAngle).l
 		subi.b	#Tails_FlightAttackMinAngle,d0
 		cmpi.b	#Tails_FlightAttackArc,d0
-		bhs.w	Touch_Hurt		; contacts below/beside the body still hurt
+		rts
+.attack:
+		ori	#1,ccr
+		rts
+.ordinary_contact:
+		andi	#$FE,ccr
+		rts
 
-.noharm:
+Touch_Enemy:
+		bsr.s	Player_AttacksOnContact
+		bcc.w	Touch_Hurt
 		tst.b	obColProp(a1)
 		beq.s	Touch_KillEnemy	; skip if zero
 		cmpi.l	#MechaSonic,code(a1)

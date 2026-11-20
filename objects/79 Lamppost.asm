@@ -174,13 +174,14 @@ TimePole_Init:
 		bsr.w	Pole_ReadState
 		btst	#0,d0
 		beq.s	TimePole_Main
-		bra.s	TimePole_Done
+		bra.w	TimePole_Done
 
 TimePole_Main:
 		moveq	#22,d4
 		bsr.w	Pole_Contact
 		bcc.w	Pole_Draw
 		bsr.w	Pole_Consume
+		clr.b	(TimeWarp_Frames).w
 		move.b	#-1,(TimeWarp_Direction).w
 		cmpi.b	#6,Pole_baseframe(a0)
 		beq.s	.past

@@ -149,6 +149,8 @@ Got_NextLevel:	; Routine $A
 ; ===========================================================================
 
 Got_ChkSS:
+		clr.b	(Current_Timezone).w	; a new act starts in Present
+		clr.b	(TimeWarp_GoodFuture).l
 		clr.b	(v_lastlamp).w	; clear	lamppost counter
 		tst.b	(f_bigring).w	; has Sonic jumped into	a giant	ring?
 		beq.s	VBla_08A	; if not, branch

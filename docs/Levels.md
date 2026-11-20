@@ -26,9 +26,9 @@ See [Debug controls](Objects.md#debug) for level-entry activation.
 
 All 64 act entries have headers, placements, starts, bounds, collision,
 cards, Debug lists and progression. SonLVL has matching present-day sections.
-Timezone headers/layouts are prepared copies. Object placements have Sonic CD
-era-presence masks and per-era state; time travel and generator/Good Future
-suppression remain unfinished. See [placement ownership](Objects.md#placement-format-and-ownership).
+Outside the ported MMZ acts, timezone headers and layouts are prepared copies.
+Object placements have era-presence masks and per-era state. Shared
+[time poles](Objects.md#shared-checkpoint-and-time-poles) drive the era loader.
 
 GHZ4 retains its sparse authored object layout for useful object-testing terrain.
 Its loop at chunk origin `$1000,$0500` now has Act 3's matching three pathswappers
@@ -70,10 +70,10 @@ blocks, chunks, layouts, palettes and collision indexes. The source is
 scddisasm's `test` revision `791253ba1922d7c4142a40975860d1b3bb37b9f7`.
 `python build_tools/import_metallic_madness.py --source /path/to/scddisasm`
 imports those sources; `--check` verifies regeneration without writing.
-Ordinary builds preserve the editable `.unc` assets. Importing again deliberately
-replaces them. The object placements and time-travel sequence are still being
-ported; the four eras are currently exercised through the test fixture's
-level-entry timezone selection. Acts 3-4 retain their development terrain.
+Ordinary builds preserve the editable `.unc` assets. An explicit import regenerates them.
+Acts 3-4 still use their development terrain. The planned Act 3 keeps the full
+terrain and chunk map, including the far-right segment. Omit the specified
+lightbugs, special door, boss and entrance piston from the object placements.
 The import continues directly on `Mystic-Island-(Experimental)`, which includes
 the former MMZ branch and the latest shared fixes. Object placements and the
 remaining mechanisms are still unfinished; terrain checks do not certify them.
@@ -150,7 +150,9 @@ Ordinary springs translate CD's direction/color bits and placement flips to
 the existing `$14` subtypes. They retain Mystic Island's shared art, strengths
 and behavior, including diagonal speed; the unused CD low bit does not enable
 S3&K's twirl option.
-The remaining enemies, mechanisms and time-warp sequence are still pending.
+Authored time poles, generator placements and several enemy and mechanism
+families are still pending. The shared poles and generator can be tested from
+the MMZ1/2 Debug lists.
 Both acts currently use the 16-ring starter pattern and have no monitor
 placements. The ring manager selects one of four pointers for each act in
 Present, Past, Good Future, Bad Future order. Shared layouts use one stored file. When an
@@ -173,8 +175,10 @@ Mappings bake each source rectangle's palette role. MMZ's enemy ramp uses
 `ENEMY_FROM_MMZ`, not the earlier S2 palette permutation. The time-post bank
 now contains only 22 sign-head tiles; checkpoints and time poles share the
 common Sonic 1 stem and blue/red/yellow heads. `$79` exposes all three functions
-in Debug and SonLVL. The full speed/resume time-warp sequence remains pending. See [objects](Objects.md#mmz-object-variants-experimental)
-for parameters and lifetimes.
+in Debug and SonLVL. The shared `$B9` generator uses the existing 23-tile bank
+at the same atlas offset in both acts. Destroying it in Past enables Good
+Future for the current act. Moving to the next act starts in Present and
+clears the generator state.
 
 Act-2 terrain preparation keeps every authored source-chunk quadrant. The
 following counts describe the current checkpoint; paired collision paths append

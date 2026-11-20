@@ -98,18 +98,24 @@ InvincibilityStars_Update:
 ; ===========================================================================
 ; Position/queue stars after carriers and tunnels. Normal object updates still
 ; own lifetime, art and orbit advancement; only child construction is delayed.
-; Scan the dynamic pool only while either player is invincible. No new SST,
-; pointer cache or per-object dispatcher comparison is required.
+; Primary warp sparks use this same trail without setting invincibility.
+; Only the reserved SST is needed when a warp is the sole active effect.
 ; ---------------------------------------------------------------------------
 InvincibilityStars_Draw:
 		move.b	(v_player+obStatusSecondary).w,d0
 		or.b	(v_player2+obStatusSecondary).w,d0
-		btst	#obStatusSecondary_isInvincible,d0
+		andi.b	#1<<obStatusSecondary_isInvincible,d0
+		bne.s	.art
+		tst.b	(TimeWarp_Frames).w
 		beq.s	.return
+.art:
 		cmpi.b	#PlayerEffects_StarsLoaded,(v_shieldobj+effect_loaded_frame).w
 		bne.s	.return
 		lea	(v_starsobj).w,a0
+		move.b	d0,-(sp)
 		bsr.s	.draw_object
+		move.b	(sp)+,d0
+		beq.s	.return
 		lea	(v_lvlobjspace).w,a0
 		moveq	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d7
 .loop:
@@ -294,12 +300,17 @@ InvincibilityStars_BuildChildren:
 ; ---------------------------------------------------------------------------
 InvincibilityStars_CheckParent:
 		moveq	#0,d0
-		btst	#obStatusSecondary_isInvincible,obStatusSecondary(a1)
-		beq.s	.return
 		tst.l	code(a1)
 		beq.s	.return
 		cmpi.b	#6,obRoutine(a1)
 		bhs.s	.return
+		btst	#obStatusSecondary_isInvincible,obStatusSecondary(a1)
+		bne.s	.visible
+		cmpa.w	#v_player,a1
+		bne.s	.return
+		tst.b	(TimeWarp_Frames).w
+		beq.s	.return
+.visible:
 		moveq	#1,d0
 .return:
 		tst.b	d0

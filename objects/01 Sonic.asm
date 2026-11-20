@@ -56,6 +56,7 @@ Obj01_Init:
 		move.w	#make_art_tile(ArtTile_Sonic,0,0),obGfx(a0)
 		move.b	#$C,obTopSolidBit(a0)
 		move.b	#$D,obLRBSolidBit(a0)
+		jsr	(TimeWarp_SetPath).l
 		move.w	obX(a0),(v_lamp_xpos).w
 		move.w	obY(a0),(v_lamp_ypos).w
 		move.w	obGfx(a0),(v_lamp_mainchar).w

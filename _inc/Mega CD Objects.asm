@@ -18,6 +18,14 @@ MCD_SubObjectsLoad:
 		move.w	(a0)+,(a1)+
 		dbf	d1,.copy
 		move.b	(MCD_SubMainCommand).w,(MCD_ObjectKeep_Sub).l
+		beq.s	.reload
+		; The old SSTs are gone. Keep local state and release stale loaded bits.
+		lea	(MCD_ObjectRespawn_Sub).l,a0
+		move.w	#bytesToLcnt(MCD_ObjectRespawn_SubEnd-MCD_ObjectRespawn_Sub),d1
+.release:
+		andi.l	#$7F7F7F7F,(a0)+
+		dbf	d1,.release
+.reload:
 		clr.b	(MCD_ObjectRoutine_Sub).l
 		st	(MCD_ObjectTimeZone_Sub).l
 		bset	#0,(MCD_SubMemoryMode).w

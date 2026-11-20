@@ -1434,7 +1434,7 @@ v_demonum:		ds.w	1			; demo level number (not the same as the level number)
 v_creditsnum:		ds.w	1			; credits index number
 Super_Sonic_frame_count:	ds.w	1
 TimeWarp_Direction:	ds.b	1	; -1 PAST, +1 FUTURE, zero unarmed
-			ds.b	1	; align monitor timestamps
+TimeWarp_Frames:	ds.b	1	; consecutive updates at warp speed
 MonitorArt_Tags:	ds.b	MonitorArt_SlotCount ; icon kind, $FF invalid
 MonitorArt_Uses:	ds.w	MonitorArt_SlotCount ; last game pass using each slot
 v_lcon_wheel_frame:	ds.b	1			; shared requested wheel frame
@@ -1514,13 +1514,26 @@ Art_EggmanFace_End:
 Art_EggRoboHead:		ds.b	32*tile_size
 Art_EggRoboHead_End:
 BossFace_RAM_End:
-Free_RAM_Start:		ds.b	MCD_MainWorkStart-BossFace_RAM_End
+; State shared by the outgoing and incoming era loaders.
+TimeWarp_RingBankBytes = ((Ring_Positions_Active_End-Ring_Positions)/6-1+7)/8
+TimeWarp_Target:		ds.b	1	; destination era + 1, zero during ordinary play
+TimeWarp_GoodFuture:	ds.b	1	; generator destroyed in the current act
+TimeWarp_ResumeX:	ds.w	1
+TimeWarp_ResumeY:	ds.w	1
+TimeWarp_Motion:		ds.l	1	; X and Y speed
+TimeWarp_Inertia:	ds.w	1
+TimeWarp_Path:		ds.w	1	; destination collision sensor bits
+TimeWarp_Status:		ds.b	1	; facing and airborne state
+			even
+TimeWarp_RingFlags:	ds.b	4*TimeWarp_RingBankBytes
+TimeWarp_RingFlags_End:
+Free_RAM_Start:		ds.b	MCD_MainWorkStart-TimeWarp_RingFlags_End
 Free_RAM_End:
 	if (MOMPASS>1)&&((Music_BusSignal&$FF8000)<>$FF0000)
 		fatal "The music mailbox must be in the lower half of MD RAM."
 	endif
-	if (MOMPASS>1)&&(BossFace_RAM_End>MCD_MainWorkStart)
-		fatal "Music stages/boss-head sources overlap CD work storage."
+	if (MOMPASS>1)&&(TimeWarp_RingFlags_End>MCD_MainWorkStart)
+		fatal "Player, sound and time-warp storage overlaps CD work storage."
 	endif
 	if Free_RAM_End<>MCD_MainWorkStart
 		fatal "Free RAM must end at the first live allocation."

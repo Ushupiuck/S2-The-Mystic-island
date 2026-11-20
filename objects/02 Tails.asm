@@ -48,7 +48,10 @@ Obj02_Init:
 		move.b	#$C,obTopSolidBit(a0)
 		move.b	#$D,obLRBSolidBit(a0)
 		cmpa.w	#v_player,a0
-		beq.s	.primary
+		bne.s	.companion_path
+		jsr	(TimeWarp_SetPath).l
+		bra.s	.primary
+.companion_path:
 		move.w	(v_player+obTopSolidBit).w,obTopSolidBit(a0)
 		tst.w	(v_player+obGfx).w
 		bpl.s	.primary

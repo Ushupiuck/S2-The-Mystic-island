@@ -50,6 +50,7 @@ MCD_LoadObjectPlacements:
 		jcs	MCD_Unavailable
 		moveq	#0,d0
 		move.b	(Respawn_table_keep).w,d0
+		clr.b	(Respawn_table_keep).w
 		lsl.w	#8,d0
 		ori.w	#MCD_CommandObjectsLoad,d0
 		jsr	(MCD_Command).l

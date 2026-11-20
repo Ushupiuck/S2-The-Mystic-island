@@ -167,10 +167,18 @@ posts have no handle and never touch a real placement's persistent state.
 Time poles consume their own bit 0, arm `TimeWarp_Direction` (`-1` PAST, `+1`
 FUTURE), spin through the original eight-pose sequence at two updates per pose
 for 60 updates, then retain the reversed head. Reloading a consumed post never
-rearms travel. The speed threshold, resume transition and full time-warp
-sequence remain part of the pending MMZ port. The current pickup sound reuses
-the shared checkpoint sound. [Sprites and VRAM](Sprites-and-VRAM.md#checkpoint-and-time-pole-art)
-owns the shared body/head allocations; the act must load the sign-head bank.
+rearms travel. The primary player charges at an absolute ground speed of
+`$600` for 210 consecutive updates. The shared star trail shows the charge.
+Slowing down resets progress. An interruption after 90 updates spends the
+pole. The Past generator determines which Future loads.
+
+An era change uses the ordinary level loader, skips the act card and carries
+forward the ring count and play time. A clear destination preserves position
+and momentum. If neither collision path has clearance, entry uses the act
+start. The destination begins without the old era’s checkpoint. Ring
+collection flags survive visits back to an era and reset on a normal restart.
+[Sprites and VRAM](Sprites-and-VRAM.md#checkpoint-and-time-pole-art) owns the
+body/head allocations. The act must load the sign-head bank.
 
 ## MMZ object variants (experimental)
 
@@ -460,11 +468,10 @@ requires CD-owned storage and execution while preserving the object-facing contr
 - Children do not share the parent's respawn ownership. Delete packed helper SSTs
   directly: their overlaid `$22` bytes are child data, not a placement handle.
 
-Normal level entry clears all era banks. `Respawn_table_keep` supports
-reinitializing the same live layout. Era changes select the corresponding bank
-and rescan the loading window, even with a stationary camera. Time-warp cleanup
-of already active objects and generator/Good Future suppression remain future
-work; the placement filter does not implement a time-travel transition.
+Normal level entry clears all era banks. A time warp rebuilds the SST pool
+and retains persistent placement bits, including consumed poles and monitors.
+The loader releases the outgoing pool’s loaded bits and scans the destination
+era. Enemies that use only the loaded bit can respawn on a return visit.
 Constructors must handle helper-allocation failure without leaking
 partial parents or loaded bits.
 
