@@ -73,6 +73,24 @@ checks the actor's current standing object before clearing either owner's
 rider state. The common live-character check is also used by enemy range
 triggers. Terrain probes and chunk collision still run on the CD CPU.
 
+## Vertical doors
+
+`$30` uses the same two-panel motion in Scrap Madness and Metallic Madness.
+The placement is the center of the closed doorway. Each 32-pixel panel stays
+solid and slides 33 pixels at 2 pixels per update. Once either player trips
+the sensor, the door finishes opening. The wider crossing sensor keeps the
+panels apart until both players clear it and can reopen a closing door.
+
+Subtype bit 7 selects the resident MMZ2 art. `$80` is plain, `$81` has the
+right lamp and approaches from the right, and `$82` has the left lamp.
+X flip reverses the approach side. The default door approaches from the left.
+The opening sensor spans 8–72 pixels on its approach side and 48 pixels above
+or below the seam. The hold-open window extends 40 pixels across the seam.
+
+Both panels use the act's resident art, with synchronized lamp frames in MMZ2.
+The root owns the upper panel and unloads both together. Editor and Debug
+previews show the full closed pair around the placement point.
+
 ## Collision path switches and doors
 
 `$0A` uses the same trigger and side selection for invisible switches and

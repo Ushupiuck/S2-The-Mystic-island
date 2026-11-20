@@ -291,6 +291,12 @@ both actors, releases either independently, checks saw contact/clearance in all
 four orientations and launches both riders at both strengths. `--pal` repeats
 the actual frame checks in PAL. These are staged interaction/rendering visits,
 not a complete controller-only MMZ playthrough; the placement port is unfinished.
+`check_metallic_madness2.py` exercises the shared vertical door with the SBZ,
+Scrap Madness and MMZ2 art. Two players hit separate panels during travel,
+hold the door open from the exit side and trigger it again while it closes.
+The same checks cover both approach directions, paired unloading and slot
+allocation retry.
+
 The floor/carrier cases cover 32 floor configurations, all 6,400 flat-patrol
 updates, full-pool loss of fragments, shared fragment gravity and the stationary
 support edge. Real NTSC/PAL visits let either actor trigger the floor, check

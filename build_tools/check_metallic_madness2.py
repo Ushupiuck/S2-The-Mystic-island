@@ -85,7 +85,93 @@ def native(a):
 		delta=x-x*3//16
 		assert ((delta*0xAAAB)&0xFFFFE000)>>3==((delta*64)//12)<<10
 	revolving_doors(n)
-	return dict(eras=4,header_parallax_cases=cases,reciprocal_domain=7832,max_initial_plcs=14,door_axes=2)
+	return dict(eras=4,header_parallax_cases=cases,reciprocal_domain=7832,max_initial_plcs=14,door_axes=2,
+		vertical_doors=vertical_doors(n))
+
+
+def vertical_doors(n):
+	"""Run both panels through the same controller with each resident art bank."""
+	s = n.s
+	slots = list(range(s['v_lvlobjspace'] & 0xFFFFFF, s['v_lvlobjend'] & 0xFFFFFF, s['object_size']))
+	root = slots[5]
+	actors = ('v_player', 'v_player2')
+	def init(zone, subtype, flip):
+		n.start()
+		n.write('Current_Zone', zone)
+		n.write('Camera_X_pos_coarse_back', 256, 2)
+		for field, value, size in (('code', s['Obj30'], 4), ('obX', 600, 2), ('obY', 600, 2),
+			('obSubtype', subtype, 2), ('obRender', 0x84 | flip, 1), ('obStatus', flip, 1)):
+			n.put(root, field, value, size)
+	def update():
+		n.act('Obj30', root, regs={UC_M68K_REG_D7: 0x3579006F})
+		assert n.cpu.reg_read(UC_M68K_REG_D7) == 0x3579006F
+		return n.get(root, 'door_travel', 2)
+	def place(actor, x, y, vx=0):
+		for field, value, size in (('code', 1, 4), ('obRoutine', 2, 1), ('obRender', 0x84, 1),
+			('obX', x, 2), ('obY', y, 2), ('obVelX', vx & 0xFFFF, 2), ('obWidth', 9, 1),
+			('obHeight', 19, 1), ('obStatus', 2, 1)):
+			n.put(actor, field, value, size)
+
+	banks = ((0, 0, 'Map_Obj30'), (8, 0, 'Map_SMZ_Door'),
+		(15, 0x80, 'Map_MMZ_Door1'), (15, 0x81, 'Map_MMZ_Door2'), (15, 0x82, 'Map_MMZ_Door3'))
+	for zone, subtype, mapping in banks:
+		for flip in (0, 1):
+			init(zone, subtype, flip)
+			assert update() == 0
+			child = 0xFF0000 | n.get(root, 'door_partner', 2)
+			assert n.get(child, 'code') == s['ADoor_Upper']
+			assert n.get(child, 'door_parent', 2) == root & 0xFFFF
+			assert n.get(root, 'obMap', 4) == n.get(child, 'obMap', 4) == s[mapping]
+			side = 1 if (subtype == 0x81) ^ bool(flip) else -1
+			place(actors[0], 600 - side * 40, 600)
+			assert update() == 0
+			place(actors[0], 600 + side * 40, 649)
+			assert update() == 0
+			place(actors[1], 600 + side * 40, 600)
+			assert update() == 2 and update() == 4
+
+			# Each player hits a different panel while the panels are sliding.
+			place(actors[0], 588, 568, 0x200)
+			place(actors[1], 612, 632, -0x200)
+			assert update() == 6
+			assert [n.get(actor, 'obX', 2) for actor in actors] == [583, 617]
+			assert all(n.get(actor, 'obVelX', 2) == 0 for actor in actors)
+
+			# The opening completes even if the first player leaves the sensor early.
+			for actor in actors:
+				place(actor, 400, 400)
+			for gap in (*range(8, 33, 2), 33):
+				assert update() == gap
+				assert n.get(root, 'obY', 2) == 616 + gap
+				assert n.get(child, 'obY', 2) == 584 - gap
+				assert n.get(root, 'obFrame') == n.get(child, 'obFrame')
+			place(actors[0], 600 - side * 22, 600)
+			assert update() == 33
+			place(actors[0], 400, 400)
+			assert update() == 31 and update() == 29
+			place(actors[1], 600 - side * 22, 600)
+			assert update() == 31 and update() == 33
+			place(actors[1], 400, 400)
+			for gap in (*range(31, 0, -2), 0):
+				assert update() == gap
+			n.write('Camera_X_pos_coarse_back', 1536, 2)
+			update()
+			assert not n.get(root, 'code') and not n.get(child, 'code')
+
+	init(8, 0, 0)
+	for a in slots:
+		n.put(a, 'code', s['Obj30'])
+	before = bytes(n.cpu.mem_read(root, s['object_size']))
+	update()
+	assert bytes(n.cpu.mem_read(root, s['object_size'])) == before
+	n.put(slots[0], 'code', 0)
+	update()
+	assert n.get(root, 'door_partner', 2) == slots[0] & 0xFFFF
+	n.put(root, 'code', 0)
+	n.act('ADoor_Upper', slots[0])
+	assert not n.get(slots[0], 'code')
+	return dict(profiles=len(banks)*2, both_panels_solid_during_travel=True,
+		both_players_open_and_hold=True, full_pool_retry=True, paired_unload=True)
 
 
 def revolving_doors(n):

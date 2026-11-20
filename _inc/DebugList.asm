@@ -272,6 +272,7 @@ Debug_SMZObjects:	macro
 		dbug	Map_SMZ_Saw,SMZ_Saws,$216,2,ArtTile_SMZ_Saw|$4000
 		dbug	Map_SMZ_Saw,SMZ_Saws,$208,2,ArtTile_SMZ_Saw|$4000
 		dbug	Map_SMZ_VanP,SMZ_VanishPlatform,0,0,ArtTile_SMZ_VanP|$4000
+		dbug	Map_SMZ_Door,Obj30,0,1,ArtTile_SMZ_Atlas
 		dbug	Map_SMZ_Cat,Caterkiller,0,0,ArtTile_SMZ_Atlas
 		endm
 
@@ -387,6 +388,8 @@ Debug_MMZ2:	dc.w (Debug_MMZ2_End-Debug_MMZ2-2)/DebugEntry_size
 	dbug	Map_Obj79,	Obj79,	PoleType_Past,	6,	0
 	dbug	Map_Obj79,	Obj79,	PoleType_Future,	8,	0
 	dbug	Map_PlatformButton,SMZ_Button,0,0,ArtTile_MMZ2_Button
+	dbug	Map_MMZ_Door2,Obj30,$81,2,ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_Door3,Obj30,$82,2,ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_RevolveDoor,CollisionSwitcher,PathSwitch_Door|$28,2,ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_RevolveDoor,CollisionSwitcher,PathSwitch_Door|$2C,0,ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_MechaBu,MMZ_MechaBu,0,0,ArtTile_MMZ_Atlas

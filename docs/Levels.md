@@ -134,6 +134,7 @@ including time poles sharing `$79`. The two existing signpost rows remain.
 | Bigbom | `$AE` | 0 | 12 |
 | Crumbling floor / static block | `$1B` | 10 | 16 |
 | Crusher / launcher | `$A5` | 10 | 15 |
+| Vertical doors | `$30` | 0 | 14 |
 | Diagonal buzzsaw | `$A4` | 12 | 0 |
 | Vanishing platforms | `$A6` | 23 | 0 |
 | Fixed / curved flippers | `$A9` | 18 | 0 |
@@ -150,6 +151,9 @@ The importer expands the source formation into those editable placements.
 The importer translates signed CD floor widths to the explicit static flag,
 moves diagonal-saw direction bits to placement flips, and translates CD's
 moving yellow-up spring to carrier preset 1 (preset 2 is sideward here).
+Act 2's vertical door placements move the source Y up 16 pixels to anchor the
+[shared door](Objects.md#vertical-doors) at its closed seam. The original era
+masks and lamp sides carry through to the placement records.
 Ordinary springs translate CD's direction/color bits and placement flips to
 the existing `$14` subtypes. They retain Mystic Island's shared art, strengths
 and behavior, including diagonal speed; the unused CD low bit does not enable

@@ -7157,7 +7157,7 @@ Ani_obj26:
 		include	"objects/Empty Slots/27.asm"
 		include	"objects/Empty Slots/28.asm"
 		include	"objects/Empty Slots/2A.asm"
-		include	"objects/S1/30 SBZ Small Door.asm"
+		include	"objects/Scrap Madness/30 Vertical Door.asm"
 		include	"objects/15 Spikes.asm"
 		include	"objects/S1/3B Purple Rock.asm"
 		include	"objects/S1/3C Smashable Wall.asm"
@@ -7339,7 +7339,7 @@ ptr_Obj2C:		dc.l Obj2C		; (S1) Jaws from LZ
 ptr_Obj2D:		dc.l ObjNull
 ptr_Obj2E:		dc.l ObjNull
 ptr_Obj2F:		dc.l ObjNull
-ptr_Obj30:		dc.l Obj30		; (S1) Small door from SBZ
+ptr_Obj30:		dc.l Obj30		; Scrap / Metallic Madness vertical door
 ptr_Obj31:		dc.l ObjNull
 ptr_Obj32:		dc.l ObjNull
 ptr_Obj33:		dc.l ObjNull

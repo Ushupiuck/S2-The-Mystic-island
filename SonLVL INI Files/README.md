@@ -97,6 +97,7 @@ the complete serialized word, including when calculating movement overlays.
 | `$21` | Ballhog | `$0000–000F`: horizontal; `$0010`: timed vertical; `$0011–001E` and `$801F–FFFF`: moving vertical; `$001F–801E`: stationary vertical. The handler's signed comparison and delay arithmetic now use words. The editor reports actual delay after 16-bit frame-timer wrap, including `$001F`. |
 | `$2B` | Chopper / Masher | Eight jump velocities, `$00–07`. |
 | `$2C` | Jaws | Full byte: turning interval in 64-frame units. |
+| `$30` | Vertical door | The placement marks the center of the closed doorway. Bit 7 selects MMZ2 art. Low bits select the lamp style and the default sensor side. X flip reverses the approach side. See [vertical doors](../docs/Objects.md#vertical-doors). |
 | `$3D`, `$55` | GHZ / EHZ boss | Bit 0: Eggman (0) or EggRobo (1). Both previews use the same head DPLCs and preserve other subtype bits. |
 | `$3E` | Capsule | `$00`: body; `$01`: button. |
 | `$42` | Newtron | Blue runner, green missile, custom green hybrid. |

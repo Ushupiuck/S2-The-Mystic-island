@@ -46,9 +46,11 @@ inputs={name:(frames(mapping((S/f'_maps/{sources[name]}.asm').read_text(),
 	frame_count=2 if name == 'But' else None)),base) for name,base in [('Jun',0x4348),('Disc',0xc344),('Trap',0x4492),('Spin',0x302),('Saw',0x43b5),('Stomp',0x22c0),('VanP',0x4429),('Flame',0x83d9),('Elec',0x47e),('Gird',0x42f0),('Bomb',0x400),('But',0x336)]}
 inputs['Stomp']=(inputs['Stomp'][0][:4]+[inputs['Stomp'][0][0]],0x22c0)
 mb=frames(mapping((S/'_maps/Moving Blocks (MZ and SBZ).asm').read_text()));mb=[mb[2],mb[2],mb[2],mb[3],mb[2]];inputs['MBlock']=(mb,lambda i:0x4460 if i==3 else 0x22c0)
-for name,label,base in [('Floor','Map_Obj1B',0x43f5),('Door','Map_obj30',0x42e8),('Cat','Map_Cat',0x22b0),('Hog','Map_BallHogH',0x2620)]:
-	if label not in m.s:label=label.replace('Map_obj30','Map_Obj30')
-	rs=frames(rom,m.s[label],m.s[label+'_frames'])
+for name,label,base in [('Floor','Map_Obj1B',0x43f5),('Door','Map_Obj30',0x42e8),('Cat','Map_Cat',0x22b0),('Hog','Map_BallHogH',0x2620)]:
+	if name == 'Door':
+		rs = frames((R/'mappings/sprite/SBZ Door.bin').read_bytes())
+	else:
+		rs = frames(rom, m.s[label], m.s[label+'_frames'])
 	if name=='Floor':rs=rs[:2]+rs[:2]
 	inputs[name]=(rs,base)
 inputs['Swing']=(frames(mapping((S/'_maps/Big Spiked Ball.asm').read_text())),lambda i:0x4391 if i==2 else 0x391)

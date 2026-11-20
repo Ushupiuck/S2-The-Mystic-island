@@ -14,7 +14,7 @@ namespace MysticIsland.ObjectDefinitions
 	{
 		private ObjectData data;
 		private string behavior;
-		private Sprite[] frames, alternate, scenery, platformBodies;
+		private Sprite[] frames, alternate, scenery, platformBodies, doorPreviews;
 		private byte[] groups, routes, swingSine, swingPresets;
 		private readonly List<PropertySpec> properties = new List<PropertySpec>();
 
@@ -50,6 +50,12 @@ namespace MysticIsland.ObjectDefinitions
 				string rail = Setting("sawrail", "");
 				if (behavior == "Saw" && rail.Length != 0)
 					alternate = Render(pixels, File.ReadAllBytes(rail), 0, null);
+				if (behavior == "VerticalDoor" && Setting("metaldoor", "false") == "true")
+				{
+					doorPreviews = new[] { frames[data.Frame],
+						Render(pixels, File.ReadAllBytes("../mappings/sprite/MMZ Door 2.bin"), data.Palette, null)[data.Frame],
+						Render(pixels, File.ReadAllBytes("../mappings/sprite/MMZ Door 3.bin"), data.Palette, null)[data.Frame] };
+				}
 			}
 			else frames = new[] { Outline(16, 16) };
 
@@ -213,6 +219,11 @@ namespace MysticIsland.ObjectDefinitions
 					Bits("Type", 7, 1, "Selects two different objects and mapping sets.", "Trapdoor", "Spinning platform");
 					Bits("Delay / phase", 0, 15, "Trapdoor: interval * 60 frames. Spin platform: initial phase * 6 frames.");
 					Bits("Spin period", 4, 7, "Sync mask = (value + 1) * 64 - 1. Original patterns use 0, 1, 3 or 7."); break;
+				case "VerticalDoor":
+					if (doorPreviews != null)
+						Bits("Door lamps", 0, 3, "The right lamp starts with a right-side sensor. The other styles start from the left. X flip reverses the sensor.",
+							"Plain", "Right lamp", "Left lamp", "Plain (reserved)");
+					break;
 				case "Saw":
 					Bits("Movement", 8, 15, "Placement flips set the travel signs of the first three modes.",
 						"Horizontal", "Vertical", "Diagonal", "Clocked horizontal cutter", "Clocked vertical cutter", "Speeding from left", "Speeding from right");
@@ -638,6 +649,9 @@ namespace MysticIsland.ObjectDefinitions
 						pieces.Add(new Sprite(mmzPlatform, moving ? unchecked((sbyte)groups[phase * 2]) * sign : i * 32, moving ? unchecked((sbyte)groups[phase * 2 + 1]) * sign : 0));
 					}
 					return new Sprite(pieces);
+				case "VerticalDoor":
+					int lamp = subtype & 3;
+					return doorPreviews == null ? At(frames, data.Frame) : doorPreviews[lamp == 3 ? 0 : lamp];
 				case "Saw":
 					if (SawHasRail(subtype))
 					{

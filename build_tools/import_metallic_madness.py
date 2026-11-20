@@ -380,6 +380,10 @@ def sprites2(source):
 		for i,(name,label,original,packed) in enumerate(families):
 			rows=[[(y,z,word|(offset+find_tiles(tiles,pattern)),x) for y,z,word,x,pattern in row] for row in packed]
 			filename=family+(' '+str(i+1) if len(families)>1 else '')
+			if family == 'Door':
+				# Debug/SonLVL draw the closed pair around the placement anchor.
+				rows.append([(y + offset, size, tile, x) for offset in (-16, 16)
+					for y, size, tile, x in rows[0]])
 			outputs[f'mappings/sprite/MMZ {filename}.bin']=encode(rows)
 			for fi,(before,after) in enumerate(zip(original,rows)):
 				expected={(x,y):((basepal+pal)&3,palettes[(basepal+pal)&3][c]) for (x,y),(pal,c) in raster(before,[(0,raw)]).items()}
@@ -416,7 +420,7 @@ def placements(source, act):
 		'BuzzsawObject': 0xA4, 'VanishPlatformObject': 0xA6,
 		'SpinPlatformObject': 0xA9, 'MoveSpringObjectR8': 0xB0,
 		'HVPlatformObject': 0x20, 'PropellerObject': 0xB7,
-		'CheckpointObject': 0x79, 'SpringObject': 0x14}
+		'CheckpointObject': 0x79, 'SpringObject': 0x14, 'DoorObject': 0x30}
 	# Time poles share $79 but belong to the later MonitorTime import.
 	rows = [row for row in decode((ROOT/path).read_bytes())
 		if row[2] not in ids.values() or (row[2] == 0x79 and row[4] & 0x300)]
@@ -447,6 +451,10 @@ def placements(source, act):
 			assert variant == 0 and sub & 0x7C == 0
 			y |= (sub & 3) << 13
 			sub = legacy_saw_subtype(sub, metal=True)
+		elif family == 'DoorObject':
+			assert act == 2 and variant == 0 and sub in (1, 2) and (y & 0xFFF) >= 16
+			y -= 16  # source Y is the lower panel's center
+			sub |= 0x80
 		elif family == 'CrusherObject':
 			assert variant == 0 and sub & 3 <= 2
 			sub |= 0x100
