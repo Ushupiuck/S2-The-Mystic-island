@@ -267,6 +267,13 @@ namespace KEHmusic
 					throw new InvalidDataException("DAC sample must occupy between 1 and $8000 bytes: " + item);
 				samples.Add(new KeyValuePair<string, int>(item, (int)size));
 			}
+			var sampleSizes = samples.ToDictionary(sample => sample.Key, sample => sample.Value);
+			foreach (var item in dacs)
+			{
+				int offset = item.Value.StartOffset;
+				if (offset < 0 || offset >= sampleSizes[item.Value.File])
+					throw new InvalidDataException("DAC StartOffset must be inside the sample file: " + item.Key);
+			}
 			List<int> dacbanksizes = new List<int>() { 0 };
 			List<List<string>> dacbanks = new List<List<string>> { new List<string>() };
 			foreach (var item in samples.OrderByDescending(a => a.Value))
@@ -325,7 +332,8 @@ namespace KEHmusic
 					if (item.Value.Priority)
 						flags |= 2;
 
-					sw.WriteLine("\tDACSample\tSndDAC_{0},{1},{2} ; {3}", samplenums[item.Value.File], item.Value.Rate, flags, item.Key);
+					string startOffset = item.Value.StartOffset == 0 ? "" : "," + item.Value.StartOffset;
+					sw.WriteLine("\tDACSample\tSndDAC_{0},{1},{2}{3} ; {4}", samplenums[item.Value.File], item.Value.Rate, flags, startOffset, item.Key);
 					dacids.Add(item.Key);
 				}
 			}
@@ -474,6 +482,7 @@ namespace KEHmusic
 	{
 		public string File { get; set; }
 		public int Rate { get; set; }
+		public int StartOffset { get; set; }
 		public DACFormat Format { get; set; }
 		public bool Priority { get; set; }
 	}

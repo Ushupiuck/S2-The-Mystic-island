@@ -307,6 +307,24 @@ def main():
 		assert 'must fit in $8000' in assemble(layout, okay=False)
 		print('Music spans ROM boundaries; DAC overflow is caught by finishBank.')
 
+		(d / 'sound/DAC/sample.bin').write_bytes(bytes(3))
+		dac_ini = d / 'sound/DAC/DAC.ini'
+		dac_entries = '[dKick]\nFile=sample.bin\nRate=8000\n[Trimmed]\nFile=sample.bin\nRate=8000\nPriority=True\n'
+		dac_ini.write_text(dac_entries + 'StartOffset=1\n')
+		run(packer, d)
+		(d / '_definitions/Sound Bank Assets.asm').write_text('SoundBankAssets macro kind,bank,{GLOBALSYMBOLS}\n\tendm\n')
+		bank = d / 'sound/generated/dac-bank-1.gen.asm'
+		assert bank.read_text().count('BINCLUDE') == 1, 'Shared DAC file was stored twice'
+		dac_macro = re.search(r'^DACSample\tmacro\b.*?^\tendm$', (ROOT / 'md-main.asm').read_text(), re.M | re.S)[0]
+		data = assemble(dac_macro + '\n\tinclude "_definitions/Sound Bank Assets.asm"\n'
+			'\tinclude "sound/dacinfo.gen.asm"\n\tinclude "sound/generated/dac-bank-1.gen.asm"\n')
+		assert data[:5] == bytes.fromhex('0100800300') and data[7:12] == bytes.fromhex('0101800200')
+		assert data[5] == data[12] and (data[6], data[13]) == (0, 2), 'DAC delay or priority changed'
+		for invalid in (-1, 3):
+			dac_ini.write_text(dac_entries + f'StartOffset={invalid}\n')
+			assert 'DAC StartOffset must be inside the sample file: Trimmed' in run(packer, d, False)
+		print('DAC aliases share storage; trimmed play ranges preserve delay and flags and reject invalid offsets.')
+
 		# Check every packed song against a fresh assembly with an independent decoder.
 		music = configparser.ConfigParser(interpolation=None)
 		music.read(ROOT / 'sound/music/music.ini')

@@ -245,8 +245,18 @@ from the same revision's `VolEnvPtrs` table.
 Compare DAC sources by decoding each driver's format to PCM. Account for
 the source clock, gain and silence when aligning clips. Match the waveform
 across its attack and tail before reusing a sample. Multiple entries in
-`sound/DAC/DAC.ini` can share a `File` and use different `Rate` values.
-The packer stores each shared file once.
+`sound/DAC/DAC.ini` can share a `File` and retain their own `Rate` and
+`Priority`. The packer stores each shared file once. An optional
+`StartOffset` skips that many stored bytes and plays through the end of
+the file. DPCM starts with an accumulator of `$80`. When cutting a
+lead-in, use a byte boundary that leaves the accumulator at `$80`.
+
+`dKick` and `dShadowDancerKick` share the original `DAC_81.bin`. `dKick`
+starts 57 bytes in to preserve its immediate attack. The Shadow Dancer
+entry retains the full lead-in and its own playback rate. In a rendered
+comparison at `dKick`'s rate, the shared file matches its attack and
+level, with a shorter final decay. The two clap recordings have distinct
+decays and use separate files.
 
 Shadow Dancer's two drums from the stage import match its `$81` and `$82`
 exports. `dShadowDancerDrum83` through `dShadowDancerDrum86` use the four

@@ -12578,20 +12578,20 @@ UniversalVoice_Count = (UniversalVoiceBank_End-UniversalVoiceBank)/25
 			fatal "Universal voice indices are bytes."
 		endif
 
-	; something else for DAC sounds
-	; First byte selects one of the DAC samples.  The number that
-	; follows it is a wait time between each nibble written to the DAC
-	; (thus higher = slower)
-	;ensure1byteoffset 2*48
-; zbyte_124F:
-DACSample	macro	pPtr,pDelay,pFlags
-	dc.b	pPtr/$8000
-	;dc.w	z80_ptr(pPtr)
-	dc.b	(z80_ptr(pPtr)&$FF00)>>8
-	dc.b	z80_ptr(pPtr)&$FF
-	;dc.w	pPtr_End-pPtr
-	dc.b	(pPtr_End-pPtr)&$FF
-	dc.b	((pPtr_End-pPtr)&$FF00)>>8
+; DAC playlist entry: ROM bank, Z80 address, byte count, delay and flags.
+; A sample can start partway through a stored file shared by other entries.
+DACSample	macro	pPtr,pDelay,pFlags,pStartOffset
+	if "pStartOffset"=""
+dacSampleAddress	set	pPtr
+	else
+dacSampleAddress	set	pPtr+pStartOffset
+	endif
+dacSampleLength	set	pPtr_End-dacSampleAddress
+	dc.b	dacSampleAddress/$8000
+	dc.b	(z80_ptr(dacSampleAddress)&$FF00)>>8
+	dc.b	z80_ptr(dacSampleAddress)&$FF
+	dc.b	dacSampleLength&$FF
+	dc.b	(dacSampleLength&$FF00)>>8
 
 	; Lemme explain what's going on here: the Z80 is clocked at 3579545Hz.
 	; 1Hz means 1 cycle per second. So, we divide the clock by the playback speed

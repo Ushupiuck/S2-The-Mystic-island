@@ -1,8 +1,6 @@
 SndDAC3_Start:	startBank
 SndDAC_86:	BINCLUDE "sound/DAC/86.bin"
 SndDAC_86_End:
-SndDAC_C5:	BINCLUDE "sound/DAC/C5.bin"
-SndDAC_C5_End:
 SndDAC_A4:	BINCLUDE "sound/DAC/A4.bin"
 SndDAC_A4_End:
 SndDAC_DAC_81:	BINCLUDE "sound/DAC/../../Music & SFX from other games/Rips/68k/Shadow Dancer/DAC/DAC_81.bin"

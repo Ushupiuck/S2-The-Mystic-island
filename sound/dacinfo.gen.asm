@@ -1,6 +1,6 @@
 zDACMasterPlaylist:
 
-	DACSample	SndDAC_C5,8201,0 ; dKick
+	DACSample	SndDAC_DAC_81,8201,0,57 ; dKick
 	DACSample	SndDAC_C6,23784,0 ; dSnare
 	DACSample	SndDAC_C7,17127,0 ; dClap
 	DACSample	SndDAC_C8,15232,0 ; dScratch
