@@ -79,7 +79,6 @@ WaterEffects:
 		bsr.w	DynamicWaterHeight
 
 .setheight:
-		moveq	#0,d1			; default to the dry palette above the split
 		moveq	#0,d0
 	;	cmpi.b	#aquatic_ruin_zone,(Current_Zone).w
 	;	beq.s	+	; This is an example on how not to have oscillating water
@@ -88,28 +87,29 @@ WaterEffects:
 +
 		add.w	(v_waterpos2).w,d0
 		move.w	d0,(v_waterpos1).w
-		; calculate distance between water surface and top of screen
-		move.w	(v_waterpos1).w,d0
-		sub.w	(Camera_Y_pos).w,d0
-		bcc.s	.isbelow
-		tst.w	d0
-		bpl.s	.isbelow
-		st	d1			; the whole screen is underwater
-
-.isbelow:
-		cmpi.w	#224-1,d0
-		bcs.s	.isvisible
-		move.w	#224-1,d0
-
-.isvisible:
-		; Publish the line and top palette together. A lag VBlank can
-		; interrupt WaterEffects even when the screen stays submerged.
-		disableIntsSave
-		move.b	d0,(v_hbla_line).w
-		move.b	d1,(f_wtr_state).w
-		enableIntsSave
 .return:	rts
 ; End of function WaterEffects
+
+; =============== S U B R O U T I N E =======================================
+
+; The level VBlank submits the camera, surface sprites and this split together.
+; A lag VBlank keeps the previous split with the previous displayed frame.
+WaterPalette_UpdateSplit:
+		tst.b	(Water_flag).w
+		beq.s	.return
+		move.w	(v_waterpos1).w,d0
+		sub.w	(v_scrposy_vdp).w,d0	; foreground scroll sent to the VDP
+		sle	(f_wtr_state).w		; the whole screen is underwater
+		ble.s	.no_split
+		cmpi.w	#224-1,d0
+		bcs.s	.store
+.no_split:
+		move.w	#224-1,d0
+.store:
+		move.b	d0,(v_hbla_line).w
+		move.b	d0,(v_hbla_pal_line).w
+.return:	rts
+; End of function WaterPalette_UpdateSplit
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Water settings cover every zone and act, including currently dry slots.

@@ -304,7 +304,8 @@ vertical translation. Video frames are not assumed to equal object updates.
 `check_debug_states.py --zone 3 --act 2` covers EHZ2's private palette and HUD.
 `check_water_effects.py --player 2` selects primary Tails; `--companion` selects
 following Tails. `check_shared_followup.py` checks the current ROM without a
-fixed historical art snapshot. `--probe` records failures, not passes.
+fixed historical art snapshot. Its moving LZ camera compares the palette split
+with the displayed foreground scroll and water height. `--probe` records failures.
 
 For EHZ2 mountain smoothness, hold Right from the start and inspect distant
 cliffs; their VDP horizontal offset should be `floor(3 * camera_X / 16)`. Live
@@ -456,7 +457,7 @@ python build_tools/check_mecha_sonic.py --rom s2built.bin --listing md-main.lst 
 | --- | --- |
 | `check_boss_shared_art.py` | Both pilots in both boss constructors, expressions/facings, source decompression, pod/head/exhaust pixels, DPLC capacity/cache/full-queue retry, scanline allowance, persistent exhaust and cleanup; `--reference-rom`/`--reference-listing` accepts pre-sharing `21c233e` or pre-DPLC `c13db77`; `--skdisasm` compares all four EggRobo source poses and palette roles |
 | `check_ehz_boss.py`, `check_ehz_boss_palette.py` | Compiled simultaneous mappings/banks; optional `--s2disasm SOURCE` for all original chassis tiles/frames, one-word masked load, pool retry and palette-clock preservation |
-| `check_ehz_s1_pod.py` | Both act loaders, docking, all eleven pilot poses in both facings, exact pod/glass VDP pixels, live palette/CRAM and foreground priority; `--pilot 1` uses EggRobo through the real constructor. Act 2 checks fight/hits, breakup, lift/ignition clearance, escape cleanup and capsule release |
+| `check_ehz_s1_pod.py` | Both act loaders, docking, all eleven pilot poses in both facings, exact pod/glass VDP pixels, live palette/CRAM and foreground priority; `--pilot 1` uses EggRobo through the real constructor. Act 2 checks fight/hits, breakup, lift/ignition clearance, live burst art through all seven frames, escape cleanup and animal art at capsule release |
 | `check_ghz_boss.py` | Native pool/retry, deployment, timed flight, hits, breakup clock/debris, explosions, palette/music cleanup; `--core` adds the actual GHZ3 arena fight/results/capsule |
 | `check_mecha_sonic.py` | Native floor/facing/counters, both actors, pool failures and projectiles; real SMZ2 trap/attacks, three uninterrupted head bounces, sixteen actual hits, fade/signpost/results and current-act music restoration on `Mystic-Island` |
 

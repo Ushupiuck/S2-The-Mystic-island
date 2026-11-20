@@ -245,6 +245,37 @@ try:
 		expected=b''.join(surf[i*256:(i+1)*256] for i in ((0,1),(1,2),(2,1))[frame-3])
 		assert vram(bank,512)==expected,'boss art overwrote water'
 		record('water coexists with the loaded boss/exhaust/capsule PLC')
+
+	g.core.retro_reset()
+	g.buttons = g.buttons2 = set()
+	boot_level(g, zone=1, player=1)
+	isolate(g)
+	x = 0x840
+	y = g.read('v_waterpos1',2)-106
+	g.write('Camera_X_pos',x-160,2)
+	for field,value in (('Camera_Y_pos',y), ('Camera_Min_Y_pos',y-82),
+		('Camera_Max_Y_pos',y+82), ('Camera_Max_Y_pos_target',y+82)):
+		g.write(field,value,2)
+	g.write('Screen_redraw_flag',1)
+	vsram = (C.c_uint8*128).in_dll(g.core,'vsram')
+	lines = set()
+	incorrect = []
+	for tick in range(100):
+		place(g,'v_player',x,y+(0x48 if tick//20&1 else 0x88),False)
+		g.put('v_player','obControl',0x81)
+		camera = g.read('v_scrposy_vdp',2)&2047
+		surface = g.read('v_waterpos1',2)
+		g.run()
+		assert not g.read('v_errortype')
+		if tick<12 or (vsram[0]|vsram[1]<<8)&2047 != camera:
+			continue
+		line = surface-camera
+		expected = line if 0<line<223 else 223
+		lines.add(expected)
+		if g.read('v_hbla_line')!=expected:
+			incorrect.append((tick,expected,g.read('v_hbla_line')))
+	record('LZ palette split follows displayed vertical scroll',len(lines)>16 and not incorrect,
+		unique_lines=len(lines),incorrect=incorrect)
 finally:
 	g.close()
 report={'rom_sha256':hashlib.sha256(rom).hexdigest(),'region':'PAL' if a.pal else 'NTSC','checks':rows,'failures':sum(not r['passed'] for r in rows)}

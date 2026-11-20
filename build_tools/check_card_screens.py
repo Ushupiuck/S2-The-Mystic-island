@@ -230,6 +230,9 @@ elif args.case == 'normal':
 		name=(ROOT/'art/uncompressed/Tails Life Text Source.unc').read_bytes()
 		for tile in (0,2,4,6):
 			assert vram((g.s['ArtTile_Lives_Counter']+4+tile)*32,32)==name[tile*32:(tile+1)*32]
+	# Each normal, blinking and Debug label uses its character's mapping.
+	for i,row in enumerate(frames(rom,g.s['Map_Obj21_internal'],8)):
+		assert row[-2][3] == 0 and row[-1][3] == (17 if i>=4 else 16)
 	for field,value,size in [('obX',272,2),('obControl',1,1),('obStatus',0,1),
 							  ('obVelX',0,2),('obVelY',0,2),('obInertia',0,2)]:
 		g.put('v_player',field,value,size)

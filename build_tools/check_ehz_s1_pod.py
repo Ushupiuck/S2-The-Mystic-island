@@ -263,6 +263,9 @@ def live(a,act):
 			assert g.read(s['v_palette']+0x22,2)==normal
 	assert hits==list(range(7,-1,-1))
 	assert g.read('v_score',4)==score+100
+	burst_base = s['ArtTile_BossExplosion']*32
+	burst_art = unpack(rom, s['Kospm_BossExplosion'])
+	burst_frames = set()
 	escape=[]
 	hop=[]
 	flare=set()
@@ -277,6 +280,10 @@ def live(a,act):
 	for tick in range(800):
 		g.run()
 		valid()
+		bursts = [p for p in objects(g) if g.get(p, 'code') == s['BossExplosion']]
+		if bursts:
+			assert bytes(g.vram[(burst_base+i)^1] for i in range(len(burst_art))) == burst_art, (tick, 'live burst bank overwritten')
+			burst_frames.update(g.get(p, 'obFrame') for p in bursts)
 		if g.get(body,'code'):
 			phase=g.get(body,'ob2ndRout')
 			ter=g.get(body,'objoff_30')
@@ -325,6 +332,7 @@ def live(a,act):
 	assert steps==list(range(before_hop,before_hop-s['EHZBoss_EscapeHop']-1,-1)), ('Vertical lift path',hop)
 	assert ignition_y==min(hop)
 	assert {0,1,2,3}<=flare,flare
+	assert burst_frames == set(range(7)), burst_frames
 	assert not g.get(face,'code') and not g.get(flame,'code')
 	save_gif(escape,out/'escape.gif',pal=a.pal)
 	if act==1:
@@ -353,6 +361,11 @@ def live(a,act):
 			raise AssertionError('Capsule did not open')
 		g.run(4)
 		assert any(g.get(p,'code')==s['Flicky'] for p in objects(g))
+		from import_ehz2_pp_background import nemesis
+		for source, bank in (('Nem_Pig','ArtTile_Animal_1'),('Nem_Flicky','ArtTile_Animal_2')):
+			art = nemesis(rom[s[source]:])
+			first = s[bank]*32
+			assert bytes(g.vram[(first+i)^1] for i in range(len(art))) == art, source
 		g.video.save(out/'capsule.png')
 	g.close()
 	return {'act':act+1,'pilot':pilot,'attachment_frames':len(attachment_frames),'pilot_poses':sorted(pilot_poses),'hits':hits,'facings':sorted(facings),'hop_pixels':before_hop-ignition_y,'lift_start_screen_y':lift_start_screen_y,'ignition_screen_y':ignition_screen_y,'pod_chassis_gap':pod_gap,'flower_priority':flower_report,'entry_flame':sorted(entry_flames),'escape_flare':sorted(flare),'animated_palette_phases':len(cycles),'no_rotor':True,'capsule_tested':act==1,'environment':environment_report,'palette':palette_monitor.report()}

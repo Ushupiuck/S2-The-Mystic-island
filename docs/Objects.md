@@ -157,7 +157,8 @@ actor's own `obTopSolidBit`, so Sonic and Tails cannot borrow each other's path.
 
 Checkpoints save the existing engine snapshot at the post's coordinates and
 consume bit 0 of their own placement entry. Their temporary red/yellow ball
-uses a 32-step radius-eight ROM orbit twice, without per-update sine/multiply.
+uses a 32-step radius-eight ROM orbit twice around the top cap. The ball
+starts and settles at the seated position and draws in front of the cap.
 Both sides validate reciprocal slot ownership. A full pool settles immediately
 into the activated color; an unloaded/reused slot cannot adopt the old child.
 Consumed/earlier checkpoints reload in the activated state. Scripted and Debug

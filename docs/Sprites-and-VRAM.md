@@ -123,7 +123,8 @@ not moved after the ring counter.
 `build_monitor_art.py` appends corrected Sonic pixels from `build_life_art.py`
 and the master Tails portrait to the single uncompressed icon bank, in type
 order. The Tails portrait archive also seeds Tails's HUD at level entry, followed
-by his existing name strip. Sonic's HUD uses its original complete life archive.
+by his name strip. Its mappings place the label one pixel farther right, leaving
+a one-pixel gap after the portrait. Sonic's HUD uses its original life archive.
 
 The nine kinds other than the loaded HUD portrait share four physical 16x16
 slots, including rising rewards and Debug previews. `MonitorArt_Select` reuses
@@ -632,8 +633,8 @@ GHZ and EHZ share Sonic 2 final's seven-frame fiery boss explosion through
 both boss PLCs at `ArtTile_BossExplosion = $581`. Its 100 tiles occupy
 `$B020-$BCA0`, replacing ordinary explosion art and the first five tiles of
 animal bank 1 during the fight. Keep that bank live until every burst finishes.
-GHZ reloads ordinary explosions and animals during recovery; EHZ does so after
-its escape delay, before the capsule opens. GHZ's bursts use low VDP plane
+GHZ reloads ordinary explosions and animals during recovery. EHZ waits until
+the pod ignites at the top of its rise, after the last burst has finished. GHZ's bursts use low VDP plane
 priority, matching its pod, so opaque high-priority foreground waterfall pixels
 cover them. Their earlier sprite queue tier keeps bursts over both the hull
 and Eggman's head. Other emitters retain high VDP priority. The controller supplies

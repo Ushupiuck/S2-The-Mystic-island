@@ -413,7 +413,7 @@ EHZBoss_StartHop:
 	addq.b	#2,objoff_30(a0)
 	bsr.w	EHZBoss_PlayLevelMusic
 	move.b	#1,(Boss_defeated_flag).w
-	bra.w	EHZBoss_RestoreLevelArt
+	rts
 
 EHZBoss_HopBeforeIgnition:
 	subq.w	#1,objoff_2E(a0)
@@ -426,8 +426,11 @@ EHZBoss_HopBeforeIgnition:
 	move.w	#$400,obVelX(a0)
 	move.w	#-$40,obVelY(a0)
 	addq.b	#2,objoff_30(a0)
-	rts
+	; The pod's rise outlasts the last 21-update burst. Animals and ordinary
+	; explosions can now reclaim the overlapping tiles before the capsule.
+	bra.w	EHZBoss_RestoreLevelArt
 
+; ===========================================================================
 EHZBoss_FlyAway:
 	jsr	(ObjectMove).l	; S1 escape: four pixels right, quarter pixel up
 
@@ -916,12 +919,9 @@ EHZBoss_PlayLevelMusic:
 EHZBoss_RestoreLevelArt:
 	moveq	#0,d0
 	move.b	(Current_Zone).w,d0
-	lea	EHZBoss_AnimalCues(pc),a1
-	move.b	(a1,d0.w),d0
+	add.w	d0,d0
+	lea	(Card_AnimalPLC).l,a1
+	move.w	(a1,d0.w),d0
 	jsr	(LoadPLC).l
 	moveq	#plcid_Explode,d0
 	jmp	(LoadPLC).l
-EHZBoss_AnimalCues:
-	dc.b plcid_GHZAnimals,plcid_LZAnimals,plcid_CPZAnimals,plcid_EHZAnimals
-	dc.b plcid_HPZAnimals,plcid_HTZAnimals,plcid_GHZAnimals
-	even

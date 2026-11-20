@@ -398,6 +398,8 @@ Vint_Pause:
 		beq.w	Vint_S1SS
 ; loc_CE2: VintSub8:
 Vint_Level:
+		bsr.w	WaterPalette_UpdateSplit
+.palette_ready:
 		stopZ80
 		waitZ80
 		bsr.w	ReadJoypads
@@ -515,12 +517,13 @@ Vint_TitleCard:
 ; ---------------------------------------------------------------------------
 
 Vint_LevelLoad:
+		bsr.w	WaterPalette_UpdateSplit
 		move.w	(v_hbla_hreg).w,(a5)	; set the water line before enabling H-int
 		tst.b	(Water_flag).w
 		beq.s	.nowater
 		move.w	#$8000+$14,(a5)		; enable H-int during VBlank
 .nowater:
-		bra.w	Vint_Level		; upload palettes and finish the usual level updates
+		bra.w	Vint_Level.palette_ready	; upload palettes and finish the usual level updates
 ; End of function Vint_LevelLoad
 
 ; ===========================================================================

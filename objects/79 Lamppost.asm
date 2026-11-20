@@ -82,6 +82,8 @@ Pole_Draw:
 
 ; One temporary child follows a 32-step radius-eight orbit twice. No live
 ; trigonometry/multiply or per-frame mapping rebuild; pool failure settles red.
+; =============== S U B R O U T I N E =======================================
+
 Checkpoint_SpawnBall:
 		jsr	(FindFreeObj).l
 		bne.s	Checkpoint_MakeActive
@@ -91,7 +93,7 @@ Checkpoint_SpawnBall:
 		move.l	obMap(a0),obMap(a1)
 		move.w	obGfx(a0),obGfx(a1)
 		move.b	#4,obRender(a1)
-		move.w	obPriority(a0),obPriority(a1)
+		move.w	#$200,obPriority(a1)	; the moving ball passes over the cap
 		move.b	#8,width_pixels(a1)
 		move.b	#8,height_pixels(a1)
 		move.b	#4,obFrame(a1)
@@ -150,12 +152,16 @@ Checkpoint_Ball:
 .delete:
 		jmp	(DeleteObject).l
 
+; World offsets from the pole. Center on the cap at Y-24 and start/end
+; at the seated ball position (Y-32).
 Checkpoint_Orbit:
-		dc.b 0,-32,2,-32,3,-33,4,-33,6,-34,7,-36,7,-37,8,-38
-		dc.b 8,-40,8,-42,7,-43,7,-44,6,-46,4,-47,3,-47,2,-48
-		dc.b 0,-48,-2,-48,-3,-47,-4,-47,-6,-46,-7,-44,-7,-43,-8,-42
-		dc.b -8,-40,-8,-38,-7,-37,-7,-36,-6,-34,-4,-33,-3,-33,-2,-32
+		dc.b 0,-32,2,-32,3,-31,4,-31,6,-30,7,-28,7,-27,8,-26
+		dc.b 8,-24,8,-22,7,-21,7,-20,6,-18,4,-17,3,-17,2,-16
+		dc.b 0,-16,-2,-16,-3,-17,-4,-17,-6,-18,-7,-20,-7,-21,-8,-22
+		dc.b -8,-24,-8,-26,-7,-27,-7,-28,-6,-30,-4,-31,-3,-31,-2,-32
 		even
+
+; =============== S U B R O U T I N E =======================================
 
 TimePole_Init:
 		move.b	#6,Pole_baseframe(a0)

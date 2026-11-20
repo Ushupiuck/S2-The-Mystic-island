@@ -50,6 +50,10 @@ def native(a):
 						for _ in range(64):
 							tick(r);tick(child);positions.add((m.get(child,'obX',2),m.get(child,'obY',2)))
 						assert not m.get(child,'code') and len(positions)>=24
+					visible = positions - {(0,0)}
+					assert min(y for x,y in visible) == 240-32
+					assert max(y for x,y in visible) == 240-16
+					assert {(240-8,240-24),(240+8,240-24)} <= visible
 					assert m.get(r,'code')==s['Pole_Active'] and m.get(r,'obFrame')==(2 if yellow else 1)
 					cases+=1
 	# A consumed sign is still visible but cannot arm another trip or touch any
