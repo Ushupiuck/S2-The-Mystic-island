@@ -133,7 +133,6 @@ MCD_Command:
 		move.w	(MCD_MainToken).l,d2
 		cmp.w	(MCD_SubAck).l,d2
 		bne.s	.failed
-		move.w	(MCD_SubAck).l,d2
 		not.w	d2
 		move.w	d0,(MCD_MainCommand).l
 		move.w	d1,(MCD_MainArgument).l

@@ -133,11 +133,16 @@ address to the CD view:
 `v_16x16` and `Level_Layout` name staging aliases; gameplay uses resident CD
 data. CD decodes blocks, layout and chunks directly into their PRG allocations.
 `MCD_LoadTerrain` installs collision indices and the single shared
-height/width/angle bank once on level entry.
+height/width/angle bank once on level entry. It copies the valid index words
+and clears the unused tail, followed by a single transfer of the three
+contiguous profile tables.
 Its command argument supplies the signed foreground top boundary. The CD
 level-load setup folds foreground row offsets for wrapping acts, shared by
 collision and drawing; see the [camera-seam rules](Levels.md#foreground-vertical-placement).
-Sensor calls need no extra mask or branch.
+Sensor calls need no extra mask or branch. Layout reads and writes call the
+terrain mailbox directly and restore the caller's status register on return.
+The per-frame terrain snapshot evaluates placement demand and the PLC budget
+once before handing off Word RAM.
 Ground-attachment requests keep the twelve-byte object snapshot. For that command
 only, the command high byte carries signed integer X speed and the MD communication
 flag byte carries signed integer Y speed. CD uses the tangential component to limit

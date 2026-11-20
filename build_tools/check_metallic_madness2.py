@@ -135,8 +135,8 @@ def revolving_doors(n):
 
 def source_geometry(a):
 	maps=a.source/'src/maps/r8';cd=read_bank(a.source/'src/maps',('collision_columns.bin','collision_rows.bin','collision_angles.bin'))
-	bank=read_bank(ROOT/'collision');bank[0x69]=(bank[0x69][0],bank[0x69][1],0xC8)
-	profiles=visuals=0
+	bank=read_bank(ROOT/'collision')
+	profiles=visuals=shared_ramps=0
 	def profile_equal(p,q):
 		return p[:2]==q[:2] and (not any(p[0]+p[1]) or (bool(p[2]&1) and bool(q[2]&1) if p[2]&1 else p[2]==q[2]))
 	def flip_tile(data,f):
@@ -191,10 +191,19 @@ def source_geometry(a):
 						sc=alternate.get(c&127,c&127) if path and c&128 else c&127
 						sw=struct.unpack_from('>H',original,(sc-1)*512+by*32+bx*2)[0]
 						assert (sw>>13&3)==(dw>>(12+path*2)&3),(era,i,by,bx,path,'solidity')
-						p=reflect(cd[srcindices[sw&2047]],(sw>>11)&3);q=reflect(bank[indices[(dw&1023)*2+path]],(dw>>10)&3)
-						assert profile_equal(p,q),(era,i,by,bx,path,'collision profile/angle')
+						source = srcindices[sw&2047]
+						dest = indices[(dw&1023)*2+path]
+						p = reflect(cd[source], (sw>>11)&3)
+						q = reflect(bank[dest], (dw>>10)&3)
+						if (source, dest) == (0x6E, 0x69):
+							assert p[:2] == q[:2] and abs((q[2]-p[2]+128)%256-128) == 8
+							shared_ramps += 1
+						else:
+							assert profile_equal(p,q),(era,i,by,bx,path,'collision profile/angle')
 						profiles+=1
-	return dict(authored_block_pixels=visuals,path_profiles=profiles,original_chunks_preserved=True,exact_cd_angles=True)
+	assert shared_ramps
+	return dict(authored_block_pixels=visuals,path_profiles=profiles,original_chunks_preserved=True,
+		shared_ramp_cells=shared_ramps,max_angle_difference=8)
 
 
 def game(a):
@@ -207,7 +216,8 @@ def game(a):
 	for era,(key,title,folder) in enumerate(ERAS):
 		g.restore(initial);boot_level(g,zone=15,act=1,timezone=era);isolate(g)
 		assert not g.read('v_errortype') and g.read('Current_ZoneAndAct',2)==0xF01
-		assert g.read(0x420000+g.s['MCD_TerrainAngles_Sub']+0x69)==0xC8
+		angles = (ROOT/'collision/Curve and resistance mapping.bin').read_bytes()
+		assert bytes(g.read(0x420000+g.s['MCD_TerrainAngles_Sub']+i) for i in range(256)) == angles
 		fg,bg=load(ROOT/f'level/layout/{folder}LV0F_2.kosp');chunks=(ROOT/f'mappings/128x128/MMZ2 {title}.unc').read_bytes();blocks=(ROOT/f'mappings/16x16/MMZ2 {title}.unc').read_bytes()
 		def tile(plane,x,y):
 			cid=(fg[y//128][x//128] if y//128<len(fg) and x//128<len(fg[0]) else 0) if not plane else bg[y//128%len(bg)][x//128%len(bg[0])]

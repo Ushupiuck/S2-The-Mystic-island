@@ -87,9 +87,9 @@ seven exact profiles occupy previously unused shared slots `$CC-$D0/$D8-$D9`.
 Existing profile bytes and angles are unchanged. Imported nonzero terrain tiles
 move past the common sixteen-tile water prefix. The importer checks the declared
 sprite boundary and animation allocations before writing. Act 2 additionally
-uses nine previously unused profiles at `$DA-$DC/$F5-$FA`. Its profile `$69`
-needs angle `$C8`; the terrain loader scopes that override to `$0F01`, retaining
-the shared `$D0` angle in other acts.
+uses nine previously unused profiles at `$DA-$DC/$F5-$FA`. Its CD `$6E` ramp
+matches the height and width of shared `$69`. It uses the shared `$D0` angle,
+eight angle units from CD's `$C8`. Runtime and SonLVL read the same bank.
 
 `_inc/Metallic Madness Events.asm` derives parallax directly from the camera:
 Act-1 Y at 1/4, distant X at 1/4, near X at 1/2 and the intermediate layer at 3/16.
@@ -396,9 +396,9 @@ Profiles were consolidated under X/Y flips, retaining every shape referenced
 by the committed block definitions, including unplaced editor blocks. A changed
 profile orientation is cancelled in block art and chunk flags: displayed tiles
 and both collision silhouettes are preserved. Both paths of a block must share
-one compensating orientation across every act/timezone. The bank has 16 empty,
-unreferenced slots: `$CC-$D0`, `$D8-$DC` and `$F5-$FA`. Unreferenced shapes from
-the original full-game banks are not part of this runtime catalog.
+one compensating orientation across every act/timezone. The MMZ import filled
+the sixteen vacant slots at `$CC-$D0`, `$D8-$DC` and `$F5-$FA`. Unreferenced
+shapes from the original full-game banks are kept as source references.
 
 Retained S2 profiles keep their data and angles. The four CPZ blocks
 `$192/$196/$19D/$1A1` normalize their effective even angles by 6/6/2/2 units;

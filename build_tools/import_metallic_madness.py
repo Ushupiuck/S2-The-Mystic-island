@@ -4,7 +4,7 @@
 Read-only source: sonicretro/scddisasm 791253ba1922d7c4142a40975860d1b3bb37b9f7.
 Every 256px source chunk retains all four 128px quadrants, including unplaced
 and duplicate pieces. Sixteen exact CD collision profiles fill unused shared
-slots; Act 2 scopes its alternate angle to the terrain-loader staging copy.
+slots. Act 2 uses the shared $69 ramp, including its standard angle.
 """
 from pathlib import Path
 import argparse
@@ -493,19 +493,15 @@ def build(source):
 			blocks=struct.pack('>'+str(len(words))+'H',*words)
 			assert len(art)//32<=static_limit
 			assert all((w&2047)<static_limit for w, in struct.iter_unpack('>H',blocks))
-			# One existing shape needs CD's $C8 angle only in Act 2. Override the
-			# staged angle byte, preserving every other level and avoiding a second
-			# height/width bank. The nine remaining missing profiles fit free slots.
-			bank=shared
-			if act==2:
-				bank=list(shared);bank[0x69]=(bank[0x69][0],bank[0x69][1],0xC8)
-				outputs['collision/MMZ2 angles.bin']=bytes(p[2] for p in bank)
-			blocks,chunks,(indices,),flips=remap_geometry(blocks,chunks,[indices],cd,bank)
+			# CD $6E and shared $69 have the same height/width geometry.
+			# The shared bank's angle is $D0 instead of CD's $C8.
+			blocks,chunks,(indices,),flips=remap_geometry(
+				blocks,chunks,[indices],cd,shared,max_angle_change=8 if act==2 else 0)
 			source_count=(len(chunks)-128)//512
 			foreground=(maps/f'foreground_{act}{key}.bin').read_bytes()
 			layer_stats={};layers=None
 			if act==2:
-				blocks,chunks,indices,layers,flags,layer_stats=paired_layers(foreground,blocks,chunks,indices,bank)
+				blocks,chunks,indices,layers,flags,layer_stats=paired_layers(foreground,blocks,chunks,indices,shared)
 				layer_flags+=flags
 			fg=expand_layout(foreground,source_count,layers)
 			bg=expand_layout((maps/f'background_{act}{key}.bin').read_bytes(),source_count)

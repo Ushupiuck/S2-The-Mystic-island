@@ -13509,12 +13509,17 @@ BMap128_LVF:	equ Map128_Blank
 	endif
 		even
 ; ---------------------------------------------------------------------------
-AngleMap:	binclude	"collision/Curve and resistance mapping.bin"
-		even
+; Shared collision profiles, in the order used by the CD terrain loader.
 ColArray1:	binclude	"collision/Collision array 1.bin"
 		even
 ColArray2:	binclude	"collision/Collision array 2.bin"
 		even
+AngleMap:	binclude	"collision/Curve and resistance mapping.bin"
+		even
+CollisionProfiles_End:
+	if (ColArray2-ColArray1<>$1000)||(AngleMap-ColArray2<>$1000)||(CollisionProfiles_End-AngleMap<>$100)
+		fatal "Shared terrain profile sizes must match CD staging"
+	endif
 ; ---------------------------------------------------------------------------
 ; Present Collision
 ; ---------------------------------------------------------------------------

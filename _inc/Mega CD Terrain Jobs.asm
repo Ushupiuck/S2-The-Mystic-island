@@ -8,36 +8,31 @@
 ; frame without further block/layout/height copies.
 MCD_LoadTerrain:
 		lea	(MCD_TerrainIndexStage).l,a1
-		move.w	#bytesToLcnt(MCD_TerrainIndexCapacity),d0
-.clearIndex:
-		clr.l	(a1)+
-		dbf	d0,.clearIndex
-		lea	(MCD_TerrainIndexStage).l,a1
 		movea.l	(v_colladdr1).w,a0
 		move.w	(MCD_TerrainIndexBytes).l,d0
+		move.w	#MCD_TerrainIndexCapacity,d1
+		sub.w	d0,d1			; only clear the unused tail
 		lsr.w	#1,d0
 		subq.w	#1,d0
 .index:
 		move.w	(a0)+,(a1)+
 		dbf	d0,.index
+		lsr.w	#2,d1
+		bcc.s	.clear_longs
+		clr.w	(a1)+			; an odd number of unused index words
+.clear_longs:
+		subq.w	#1,d1
+		bmi.s	.profiles
+.clear:
+		clr.l	(a1)+
+		dbf	d1,.clear
+.profiles:
+		; The ROM bank follows the staging order: heights, widths, angles.
 		lea	(ColArray1).l,a0
-		lea	(ColArray2).l,a2
-		lea	(AngleMap).l,a3
-		lea	(MCD_TerrainHeightStage).l,a1
-		move.w	#$1000,d0
-		bsr.s	.copy
-		movea.l	a2,a0
-		move.w	#$1000,d0
-		bsr.s	.copy
-		movea.l	a3,a0
-		move.w	#$100,d0
-		bsr.s	.copy
-		cmpi.w	#$0F01,(Current_ZoneAndAct).w
-		bne.s	.angles_ready
-		; CD MMZ2 uses the existing shape $69 with its original $C8 angle.
-		; Select at load time; no terrain-query or other-act behavior changes.
-		move.b	#MMZ2_CollisionAngle,(MCD_TerrainAngleStage+MMZ2_CollisionAngleIndex).l
-.angles_ready:
+		move.w	#bytesToLcnt(CollisionProfiles_End-ColArray1),d0
+.copy:
+		move.l	(a0)+,(a1)+
+		dbf	d0,.copy
 		jsr	(MCD_ReleaseWordRAM).l
 		jcs	MCD_Unavailable
 		moveq	#MCD_CommandTerrainLoad,d0
@@ -47,14 +42,8 @@ MCD_LoadTerrain:
 		move.b	#1,(MCD_TerrainReady).l
 		move.b	#1,(MCD_SubControl+1).l
 		rts
-.copy:
-		lsr.w	#2,d0
-		subq.w	#1,d0
-.long:
-		move.l	(a0)+,(a1)+
-		dbf	d0,.long
-		rts
 
+; ===========================================================================
 ; Preserve d7, which was not scratch in the original collision ABI. Each entry
 ; submits one whole operation; paired player sensors never make separate calls.
 ; Sonic/Tails push their own landing callback before entering this shared pass.
@@ -167,8 +156,6 @@ MCD_TerrainObject:
 		lsl.w	#8,d4		; input angle / integer X speed in command high byte
 		or.w	d7,d4
 		cmpi.b	#MCD_TerrainFloorEdgeX,d7
-		beq.s	.haveX
-		cmpi.b	#MCD_TerrainObjectFloorX,d7
 		beq.s	.haveX
 		cmpi.b	#MCD_TerrainObjectRight,d7
 		beq.s	.offsetX
@@ -292,7 +279,11 @@ MCD_ReadLayout:
 		disable_ints
 		move.w	d0,(MCD_MainArgument).l
 		moveq	#MCD_CommandLayoutRead,d0
-		bra.s	MCD_LayoutRequest
+		bsr.w	MCD_TerrainRequest
+		move.w	(sp)+,sr
+		rts
+
+; ---------------------------------------------------------------------------
 Layout_Write:
 MCD_WriteLayout:
 		move.w	sr,-(sp)
@@ -300,7 +291,6 @@ MCD_WriteLayout:
 		move.w	d0,(MCD_MainArgument).l
 		move.w	d1,(MCD_MainArgument+2).l
 		moveq	#MCD_CommandLayoutWrite,d0
-MCD_LayoutRequest:
 		bsr.w	MCD_TerrainRequest
 		move.w	(sp)+,sr
 		rts
@@ -325,11 +315,7 @@ MCD_BeginTerrainJob:
 		move.w	(sp)+,sr
 		rts
 .level:
-		jsr	(MCD_ObjectsNeedJob).l
-		move.l	d0,-(sp)
-		jsr	(MCD_PreparePLCBudget).l
-		move.l	(sp)+,d0
-		or.b	(MCD_PLCBudget).l,d0
+		; Preparing the frame checks object demand and budgets PLC work.
 		move.w	sr,-(sp)
 		disable_ints
 		bsr.w	MCD_PrepareTerrainFrame

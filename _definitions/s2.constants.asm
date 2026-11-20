@@ -34,9 +34,6 @@ MonitorType_Count:	equ 10
 MonitorArt_SlotCount:	equ 4
 MonitorArt_IconTiles:	equ 4
 ; ---------------------------------------------------------------------------
-; MMZ2 changes one staged angle, retaining the shared collision geometry.
-MMZ2_CollisionAngleIndex:	equ $69
-MMZ2_CollisionAngle:		equ $C8
 ; ---------------------------------------------------------------------------
 ; Shared checkpoint/time-pole word subtype
 ; ---------------------------------------------------------------------------
@@ -1198,7 +1195,7 @@ v_waterpos1:		ds.w	1			; water height, actual
 v_waterpos2:		ds.w	1			; water height, ignoring sway
 v_waterpos3:		ds.w	1			; water height, next target
 v_wtr_routine:		ds.b	1			; water event - routine counter
-f_wtr_state:		ds.b	1			; water palette state when water is above/below the screen (00 = partly/all dry; 01 = all underwater)
+f_wtr_state:		ds.b	1			; water palette state when water is above/below the screen (00 = partly/all dry; nonzero = all underwater)
 v_misc_variables_end:
 
 v_plc_buffer:			ds.b	6*16		; pattern load cues buffer (maximum $10 PLCs)
