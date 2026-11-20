@@ -340,8 +340,8 @@ Debug_MMZ1:	dc.w (Debug_MMZ1_End-Debug_MMZ1-2)/DebugEntry_size
 	dbug	Map_MMZ_Spin,	SMZ_SpinConvey,	$101,	0,	ArtTile_MMZ_Atlas
 	dbug	Map_Mplat,	MorphingPlatform,	0,	0,	ArtTile_MMZ_HVPlatform
 	dbug	Map_MM_PropellerBase,	MM_Propeller,	0,	0,	ArtTile_MMZ_Propeller
-	dbug	Map_MovSpring,	WheelCarrier,	0,	0,	ArtTile_Wheel
-	dbug	Map_MovSpring,	WheelCarrier,	$81,	0,	ArtTile_Wheel
+	dbug	Map_MovSpring,	WheelCarrier,	$100,	0,	ArtTile_Wheel
+	dbug	Map_MovSpring,	WheelCarrier,	$181,	0,	ArtTile_Wheel
 	dbug	Map_MMZ_Floor,	Obj1B,	$101,	0,	ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_Floor,	Obj1B,	$104,	3,	ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_Floor,	Obj1B,	$108,	7,	ArtTile_MMZ_Atlas
@@ -367,8 +367,8 @@ Debug_MMZ2:	dc.w (Debug_MMZ2_End-Debug_MMZ2-2)/DebugEntry_size
 	dbug	Map_MMZ_Crusher,	SMZ_ScrapStomp,	$100,	0,	ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_Crusher,	SMZ_ScrapStomp,	$101,	1,	ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_Crusher,	SMZ_ScrapStomp,	$141,	1,	ArtTile_MMZ_Atlas
-	dbug	Map_MovSpring,	WheelCarrier,	0,	0,	ArtTile_Wheel
-	dbug	Map_MovSpring,	WheelCarrier,	$81,	0,	ArtTile_Wheel
+	dbug	Map_MovSpring,	WheelCarrier,	$100,	0,	ArtTile_Wheel
+	dbug	Map_MovSpring,	WheelCarrier,	$181,	0,	ArtTile_Wheel
 	dbug	Map_MMZ_Floor,	Obj1B,	$101,	0,	ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_Floor,	Obj1B,	$104,	3,	ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_Floor,	Obj1B,	$108,	7,	ArtTile_MMZ_Atlas

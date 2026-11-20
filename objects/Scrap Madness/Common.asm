@@ -3,13 +3,16 @@
 SMZ_ReleaseRiders:
 		lea	(v_player).w,a1
 		moveq	#3,d6
-		bsr.s	.one
+		bsr.s	ReleaseObjectRider
 		lea	(v_player2).w,a1
 		moveq	#4,d6
-.one:
+; a0: surface, a1: actor, d6: the surface's rider bit. Z on release.
+ReleaseObjectRider:
 		btst	d6,obStatus(a0)
-		beq.s	.return
+		beq.s	.not_owned
 		bclr	d6,obStatus(a0)
+		btst	#status.player.on_object,obStatus(a1)
+		beq.s	.not_owned
 		moveq	#0,d0
 		move.b	standonobject(a1),d0
 		mulu.w	#object_size,d0
@@ -18,5 +21,9 @@ SMZ_ReleaseRiders:
 		bne.s	.return
 		bclr	#status.player.on_object,obStatus(a1)
 		bset	#status.player.in_air,obStatus(a1)
+		moveq	#0,d0
+		rts
+.not_owned:
+		moveq	#-1,d0
 .return:
 		rts

@@ -6964,7 +6964,6 @@ DynResize_SLZ4:
 		include	"objects/18 Platforms.asm"
 		include	"objects/D9 Hanging Surface.asm"
 		include	"objects/1A Collapsing Platforms.asm"
-		include	"objects/S1/1B Collapsing Floors.asm"
 		include	"objects/1C Scenery.asm"
 		include	"objects/1D Bridge.asm"
 		include	"objects/1E HPZ Waterfall.asm"
@@ -6981,7 +6980,7 @@ Ledge_Fragment:
 		lea	byte_8F0B(pc),a4
 +		addq.b	#2,obFrame(a0)
 
-loc_8E70:
+CollapseToPieces:
 		moveq	#0,d0
 		move.b	obFrame(a0),d0
 		add.w	d0,d0
@@ -7000,16 +6999,7 @@ loc_8E70:
 		addq.w	#6,a3		; S3&K sprite-piece stride
 
 +		move.b	#4,obRoutine(a1)
-		move.l	d4,code(a1)
-		move.l	a3,obMap(a1)
-		move.b	height_pixels(a0),height_pixels(a1)
-		move.b	d5,obRender(a1)
-		move.w	obX(a0),obX(a1)
-		move.w	obY(a0),obY(a1)
-		move.w	obGfx(a0),obGfx(a1)
-		move.w	obPriority(a0),obPriority(a1)
-		move.b	obActWid(a0),obActWid(a1)
-		move.b	obHeight(a0),obHeight(a1)
+		bsr.s	CollapsePiece_Init
 		move.b	(a4)+,objoff_3C(a1)
 		cmpa.l	a0,a1
 		bhs.s	+
@@ -7020,6 +7010,21 @@ loc_8E70:
 		move.w	#SndID_Smash,d0
 		jmp	(PlaySound_Special).l
 ; ---------------------------------------------------------------------------
+; a0: intact body, a1: destination, a3: single piece mapping.
+; d4: piece update, d5.b: render flags.
+CollapsePiece_Init:
+		move.l	d4,code(a1)
+		move.l	a3,obMap(a1)
+		move.b	height_pixels(a0),height_pixels(a1)
+		move.b	d5,obRender(a1)
+		move.w	obX(a0),obX(a1)
+		move.w	obY(a0),obY(a1)
+		move.w	obGfx(a0),obGfx(a1)
+		move.w	obPriority(a0),obPriority(a1)
+		move.b	obActWid(a0),obActWid(a1)
+		move.b	obHeight(a0),obHeight(a1)
+		rts
+
 byte_8EF2:	dc.b $1C,$18,$14,$10
 		dc.b $1A,$16,$12, $E
 		dc.b  $A,  6,$18,$14
@@ -7030,9 +7035,9 @@ byte_8EF2:	dc.b $1C,$18,$14,$10
 byte_8F0B:	dc.b $18,$1C,$20,$1E
 		dc.b $1A,$16,  6, $E
 		dc.b $14,$12, $A,  2
-byte_8F17:	dc.b $1E,$16, $E,  6
+FloorPieceDelaysForward:	dc.b $1E,$16, $E,  6
 		dc.b $1A,$12, $A,  2
-byte_8F1F:	dc.b $16,$1E,$1A,$12
+FloorPieceDelaysReverse:	dc.b $16,$1E,$1A,$12
 		dc.b   6, $E, $A,  2
 		even
 ; ---------------------------------------------------------------------------
@@ -13484,8 +13489,8 @@ Kospm_Crabmeat:	binclude	"art/moduled kosinski/Enemy Crabmeat.kospm"
 		include "objects/Scrap Madness/A1 Running Disc.asm"
 		include "objects/A2 Conveyor Belt.asm"
 		include "objects/Scrap Madness/A3 Spinning Platforms.asm"
-		include "objects/Metallic Madness/Common.asm"
-		include "objects/Metallic Madness/Floors.asm"
+		include "objects/Platform Groups.asm"
+		include "objects/1B Collapsing Floors.asm"
 		include "objects/Metallic Madness/Enemies.asm"
 		include "objects/Scrap Madness/A4 Saws.asm"
 		include "objects/Scrap Madness/A5 Stomper.asm"

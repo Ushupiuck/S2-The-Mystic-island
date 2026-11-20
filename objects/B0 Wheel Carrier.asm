@@ -9,17 +9,13 @@ wheel_offset = objoff_3C          ; signed word, mount Y relative to axle
 wheel_spawned = objoff_3E         ; byte; retries allocation until a child exists
 wheel_payload_x = objoff_2E		; signed bytes: left/right bounds, right exclusive
 wheel_payload_y = obAngle		; signed bytes: top/bottom bounds, bottom exclusive
-wheel_home = objoff_40			; MMZ patrol center, word
-wheel_limit = objoff_42			; MMZ patrol half-range, word
+wheel_home = objoff_40			; X at landing for bounded patrols
+wheel_limit = objoff_42			; patrol half-range (0: follow terrain)
+wheel_turn = objoff_43			; reached a patrol endpoint this update
 
 WheelCarrier:
 		tst.b	obRoutine(a0)
 		bne.s	.ready
-		move.w	obSubtype(a0),d0
-		btst	#8,d0
-		bne.w	MMZ_Wheel_Init
-		cmpi.b	#id_MMZ,(Current_Zone).w
-		beq.w	MMZ_Wheel_Init
 		move.b	#2,obRoutine(a0)
 		move.l	#Map_MovSpring,obMap(a0)
 		move.b	#Map_MovSpring_height,height_pixels(a0)
@@ -31,9 +27,20 @@ WheelCarrier:
 		move.b	#7,obHeight(a0)
 		move.w	#$180,obVelX(a0)
 		btst	#0,obStatus(a0)
-		beq.w	.mount
+		beq.s	.patrol_setup
 		neg.w	obVelX(a0)
-		bra.w	.mount		; mount the payload before the first movement/wall check
+.patrol_setup:
+		move.w	obSubtype(a0),d0
+		btst	#8,d0
+		bne.s	.bounded
+		cmpi.b	#id_MMZ,(Current_Zone).w	; default for the editor's byte presets
+		bne.w	.mount
+.bounded:
+		move.b	#80,wheel_limit(a0)
+		btst	#7,d0
+		beq.w	.mount
+		move.b	#64,wheel_limit(a0)
+		bra.w	.mount
 .ready:
 		move.w	obX(a0),wheel_old_x(a0)
 		move.w	obY(a0),wheel_old_y(a0)
@@ -47,9 +54,14 @@ WheelCarrier:
 		add.w	d1,obY(a0)
 		clr.w	obVelY(a0)
 		move.b	#4,obRoutine(a0)
+		move.w	obX(a0),wheel_home(a0)
 		bra.s	.mount
 .roll:
 		jsr	(ObjectMove).l
+		tst.b	wheel_limit(a0)
+		beq.s	.probe_roll
+		bsr.w	.limit_step
+.probe_roll:
 		bsr.w	.wall
 		bmi.s	.reverse
 		jsr	(ObjHitFloor).l
@@ -58,10 +70,14 @@ WheelCarrier:
 		cmpi.w	#-12,d1
 		blt.s	.reverse
 		add.w	d1,obY(a0)
-		bra.s	.mount
+		tst.b	wheel_turn(a0)
+		beq.s	.mount
+		bra.s	.turn
 .reverse:
 		move.w	wheel_old_x(a0),obX(a0)
 		move.w	wheel_old_y(a0),obY(a0)
+.turn:
+		clr.b	wheel_turn(a0)
 		neg.w	obVelX(a0)
 		bchg	#0,obStatus(a0)
 .mount:
@@ -121,7 +137,7 @@ WheelCarrier:
 		bra.s	.draw
 .consumed:
 		clr.l	wheel_child(a0)
-        ; A destroyed monitor must not become a new monitor on backtracking.
+		; A destroyed monitor must not become a new monitor on backtracking.
 		clr.w	respawn_addr(a0)
 .draw:
 		lea	(Ani_MovSpring).l,a1
@@ -244,72 +260,31 @@ WheelCarrier:
 		tst.w	d1
 		rts
 
-; MMZ uses the same payload, rider, wall and cleanup services, with CD's
-; one-pixel movement and 80/64-pixel patrol. No constructor dispatch in motion.
-; Low nibble retains WheelPayloads; bit 7 selects the shorter patrol.
-MMZ_Wheel_Init:
-		move.l	#MMZ_Wheel_Fall,code(a0)
-		move.b	#2,obRoutine(a0)
-		move.l	#Map_MovSpring,obMap(a0)
-		move.b	#Map_MovSpring_height,height_pixels(a0)
-		move.b	#Map_MovSpring_width,width_pixels(a0)
-		move.w	#ArtTile_Wheel,obGfx(a0)
-		move.b	#4,obRender(a0)
-		move.w	#$200,obPriority(a0)
-		move.b	#8,obWidth(a0)
-		move.b	#6,obHeight(a0)
-		move.w	obX(a0),wheel_home(a0)
-		move.w	#80,wheel_limit(a0)
-		move.w	obSubtype(a0),d0
-		btst	#7,d0
-		beq.s	.speed
-		move.w	#64,wheel_limit(a0)
-.speed:
-		move.w	#$100,obVelX(a0)
-		btst	#0,obStatus(a0)
-		beq.w	WheelCarrier.mount
-		neg.w	obVelX(a0)
-		bra.w	WheelCarrier.mount
-
-MMZ_Wheel_Fall:
-		move.w	obX(a0),wheel_old_x(a0)
-		move.w	obY(a0),wheel_old_y(a0)
-		jsr	(ObjHitFloor).l
-		tst.w	d1
-		bpl.s	.fall
-		add.w	d1,obY(a0)
-		move.l	#MMZ_Wheel_Roll,code(a0)
-		move.b	#4,obRoutine(a0)
-		bra.w	WheelCarrier.mount
-.fall:
-		addq.w	#1,obY(a0)
-		bra.w	WheelCarrier.mount
-
-MMZ_Wheel_Roll:
-		move.w	obX(a0),wheel_old_x(a0)
-		move.w	obY(a0),wheel_old_y(a0)
-		bsr.w	WheelCarrier.wall
-		bmi.s	.reverse
-		move.w	obX(a0),d0
-		sub.w	wheel_home(a0),d0
-		bpl.s	.distance
-		neg.w	d0
-.distance:
-		cmp.w	wheel_limit(a0),d0
-		bhs.s	.reverse
-		jsr	(ObjHitFloor).l
-		cmpi.w	#-7,d1
-		blt.s	.reverse
-		cmpi.w	#7,d1
-		bgt.s	.reverse
-		add.w	d1,obY(a0)
-		bra.s	.move
-.reverse:
-		neg.w	obVelX(a0)
-		bchg	#0,obStatus(a0)
-.move:
-		jsr	(ObjectMove).l
-		bra.w	WheelCarrier.mount
+		; Clamp the proposed step before the shared terrain/payload probes.
+		; The caller reverses after verifying the clamped position is clear.
+.limit_step:
+		moveq	#0,d0
+		move.b	wheel_limit(a0),d0
+		move.w	wheel_home(a0),d1
+		tst.w	obVelX(a0)
+		bmi.s	.left
+		add.w	d0,d1
+		cmp.w	obX(a0),d1
+		bgt.s	.within
+		bra.s	.endpoint
+.left:
+		sub.w	d0,d1
+		cmp.w	obX(a0),d1
+		blt.s	.within
+		bgt.s	.endpoint
+		tst.w	obX+2(a0)
+		bne.s	.within
+.endpoint:
+		move.w	d1,obX(a0)
+		clr.w	obX+2(a0)
+		st	wheel_turn(a0)
+.within:
+		rts
 
 ; Routine, Y offset, subtype, facing flags, then the payload's collision box
 ; relative to its center (left/right/top/bottom). Right/bottom are exclusive.

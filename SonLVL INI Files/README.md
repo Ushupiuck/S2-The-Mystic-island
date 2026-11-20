@@ -122,7 +122,7 @@ the complete serialized word, including when calculating movement overlays.
 | `$AC` | Invisible solid | High/low nibbles: width/height in 16-pixel units, minus one. |
 | `$AE` | Bomb / Bigbom | Bits 4–7: `$0` Bomb / `$1` Bigbom; low nibble: zero keeps original speed, otherwise value / 4 px/update. Upper byte: Bigbom normal / short / scripted charge (0/1/2). Y flip selects ceiling walking. Bigbom needs the MMZ2 bank; both forms share the existing ID. |
 | `$AF` | Button | Low nibble: switch number. |
-| `$B0` | Wheel carrier | Low nibble: one of eight mounts. MMZ / word bit 8 selects the CD 1px patrol; low bit 7 shortens its half-range from 80 to 64px. Preview includes the spring, monitor or spikes with the runtime offset/facing. |
+| `$B0` | Wheel carrier | Low nibble: one of eight mounts. MMZ or word bit 8 selects a bounded patrol at the shared carrier speed. Low bit 7 shortens its half-range from 80 to 64px. Preview includes the spring, monitor or spikes with the runtime offset/facing. |
 | `$B1–B5` | Palmtree Panic badniks | Bit 0: normal/damaged variant. |
 | `$B7` | Metallic Madness propeller obstacle | Subtype unused. X flip reverses the initial patrol; Y flip is ignored. Preview includes the mast and both blade assemblies. |
 | `$D9` | Hanging surface | Low six bits: traversable grip count 1–63 (zero means one), or classic span ×32 px (zero means 56 px). Bit 6: drop at final grip; bit 7: traversable; bit 8: disable support release; bit 9: silent; bit 10: hide metal handholds. X flip selects the left release end. Preview repeats the actual handhold art; invisible modes outline the grab region. Visible rows require the act's handhold PLC. See [hanging surfaces](../docs/Objects.md#hanging-surfaces). |

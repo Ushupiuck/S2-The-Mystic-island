@@ -1,245 +1,137 @@
-; Ported from sonicretro/s1disasm 2c51d46 (REV01).
-; Six-byte mappings, full code pointers, S3&K placement ownership.
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; Object 6A - pizza cutters and speeding saws (SBZ)
-; ---------------------------------------------------------------------------
+; Stationary, oscillating, speeding and diagonal saws, object $A4.
+; The movement parameters differ; all blades use the same drawing, frame-pair
+; animation and lifetime. The diagonal rail is an optional linked attachment.
+saw_origin_y:	equ objoff_38
+saw_origin_x:	equ objoff_3A
+saw_handle:	equ objoff_3C	; reciprocal word pointer, zero without a rail
+saw_parent:	equ objoff_3E
+saw_sound:	equ objoff_40	; visible updates for a diagonal blade
+saw_stage_step:	equ objoff_42	; signed, next frame-pair change when travelling
+MMZ_saw_timer:	equ objoff_2E
+saw_stages:	equ objoff_30
 
 SMZ_Saws:
 		move.w	obSubtype(a0),d0
-		btst	#8,d0	; bit 8 selects MMZ outside its own zone
-		bne.w	MMZ_Saw_Init
-		cmpi.b	#id_MMZ,(v_zone).w
-		beq.w	MMZ_Saw_Init
-
-SMZ_saw_origY:	equ objoff_38		; original y-axis position
-SMZ_saw_origX:	equ objoff_3A		; original x-axis position
-SMZ_saw_shot:	equ objoff_3D		; flag set when the speeding saw appears
-; ===========================================================================
-
-SMZ_Saw_Main:	; Constructor; the live object skips initialization dispatch.
-		move.l	#SMZ_Saw_Action,code(a0)
-		addq.b	#2,obRoutine(a0)			; advance to SMZ_Saw_Action
+		btst	#8,d0
+		bne.w	Saw_InitDiagonal
+		cmpi.b	#id_MMZ,(v_zone).w	; editor byte presets
+		beq.w	Saw_InitDiagonal
+		andi.w	#7,d0
+		cmpi.w	#4,d0
+		bls.s	.select
+		moveq	#0,d0
+.select:
+		add.w	d0,d0
+		lea	Saw_Movement(pc),a1
+		adda.w	(a1,d0.w),a1
+		move.l	a1,code(a0)
+		move.b	#2,obRoutine(a0)
 		move.l	#Map_SMZ_Saw,obMap(a0)
-		move.b #Map_SMZ_Saw_height,height_pixels(a0)			; set mappings
-		move.w #ArtTile_SMZ_Atlas,obGfx(a0)	; set art tile and palette line
-		move.b	#4,obRender(a0)		; set to playfield-positioned mode
-		move.w #$200,obPriority(a0)			; set sprite priority
-		move.b	#64/2,obActWid(a0)			; set sprite display width
-		move.w	obX(a0),SMZ_saw_origX(a0)			; remember initial X-position
-		move.w	obY(a0),SMZ_saw_origY(a0)			; remember initial Y-position
+		move.b	#Map_SMZ_Saw_height,height_pixels(a0)
+		move.w	#ArtTile_SMZ_Atlas,obGfx(a0)
+		move.b	#4,obRender(a0)
+		move.w	#$200,obPriority(a0)
+		move.b	#32,width_pixels(a0)
+		move.w	obX(a0),saw_origin_x(a0)
+		move.w	obY(a0),saw_origin_y(a0)
+		cmpi.w	#3*2,d0
+		bhs.s	.update
+		move.b	#$22|$80,obColType(a0)
+.update:
+		jmp	(a1)
 
-		cmpi.w	#3,obSubtype(a0)			; is object a pizza cutter? (subtype 0-2)
-		bhs.s	SMZ_Saw_Action				; if not, branch (speeding saw, subtype 3-4)
-		move.b	#$22|$80,obColType(a0)	; make pizza cutter harmful on touch
-; ---------------------------------------------------------------------------
+Saw_Movement:
+		dc.w Saw_Draw-Saw_Movement
+		dc.w Saw_OscillateX-Saw_Movement
+		dc.w Saw_OscillateY-Saw_Movement
+		dc.w Saw_WaitLeft-Saw_Movement
+		dc.w Saw_WaitRight-Saw_Movement
 
-SMZ_Saw_Action:	; Routine 2
-		moveq	#0,d0					; clear d0
-		move.w	obSubtype(a0),d0			; get saw subtype (0-4)
-		andi.w	#7,d0					; limit to sane values
-		add.w	d0,d0					; double for word-based indexing
-		move.w	SMZ_Saw_Types(pc,d0.w),d1			; find behavior type for current saw
-		jsr	SMZ_Saw_Types(pc,d1.w)			; execute behavior, then return here
+Saw_OscillateX:
+		moveq	#0,d0
+		move.b	(v_oscillate+$E).w,d0
+		btst	#0,obStatus(a0)
+		beq.s	.position
+		neg.w	d0
+		addi.w	#$60,d0
+.position:
+		move.w	saw_origin_x(a0),d1
+		sub.w	d0,d1
+		move.w	d1,obX(a0)
+		moveq	#2,d0
+		bsr.w	Saw_AnimatePair
+		tst.b	obRender(a0)
+		bpl.w	Saw_Draw
+		move.w	(v_framecount).w,d0
+		andi.w	#$F,d0
+		bne.w	Saw_Draw
+		bra.w	Saw_BuzzDraw
 
-		out_of_range2	SMZ_Saw_Delete,SMZ_saw_origX(a0)	; has saw gone out of range? if yes, branch
-		jmp	(DisplaySprite).l			; display saw sprite
-; ---------------------------------------------------------------------------
+Saw_OscillateY:
+		moveq	#0,d0
+		move.b	(v_oscillate+6).w,d0
+		btst	#0,obStatus(a0)
+		beq.s	.position
+		neg.w	d0
+		addi.w	#$80,d0
+.position:
+		move.w	saw_origin_y(a0),d1
+		sub.w	d0,d1
+		move.w	d1,obY(a0)
+		moveq	#2,d0
+		bsr.w	Saw_AnimatePair
+		tst.b	obRender(a0)
+		bpl.w	Saw_Draw
+		cmpi.b	#$18,(v_oscillate+6).w
+		bne.w	Saw_Draw
+		bra.w	Saw_BuzzDraw
 
-SMZ_Saw_Delete:
-		jmp	(UnloadObject).l			; delete saw
+; The two directional triggers retain their original different X distances.
+Saw_WaitLeft:
+		move.w	(v_player+obX).w,d0
+		subi.w	#192,d0
+		bcs.w	Saw_Cull
+		cmp.w	obX(a0),d0
+		blo.w	Saw_Cull
+		move.w	#$600,d1
+		bra.s	Saw_Trigger
 
-; ===========================================================================
-SMZ_Saw_Types:
-		dc.w SMZ_Saw_Type0_PizzaStationary-SMZ_Saw_Types	; 0 - pizza cutter (stationary)
-		dc.w SMZ_Saw_Type1_PizzaLeftRight-SMZ_Saw_Types		; 1 - pizza cutter (moves left and right)
-		dc.w SMZ_Saw_Type2_PizzaUpDown-SMZ_Saw_Types		; 2 - pizza cutter (moves up and down)
-		dc.w SMZ_Saw_Type3_SpeedingFromLeft-SMZ_Saw_Types	; 3 - speeding saw (shot from the left)
-		dc.w SMZ_Saw_Type4_SpeedingFromRight-SMZ_Saw_Types	; 4 - speeding saw (shot from the right)
-; ===========================================================================
+Saw_WaitRight:
+		move.w	(v_player+obX).w,d0
+		addi.w	#224,d0
+		cmp.w	obX(a0),d0
+		bhs.w	Saw_Cull
+		move.w	#-$600,d1
 
-SMZ_Saw_Type0_PizzaStationary:
-		rts						; doesn't move at all
-; ===========================================================================
+Saw_Trigger:
+		move.w	(v_player+obY).w,d0
+		subi.w	#128,d0
+		cmp.w	obY(a0),d0
+		bhs.w	Saw_Draw
+		addi.w	#256,d0
+		cmp.w	obY(a0),d0
+		blo.w	Saw_Draw
+		move.l	#Saw_Projectile,code(a0)
+		move.w	d1,obVelX(a0)
+		move.b	#$22|$80,obColType(a0)
+		move.b	#2,obFrame(a0)
+		move.w	#SndID_LaserBeam,d0
+		jsr	(PlaySound_Special).l
+		bra.w	Saw_Cull			; first visible on the next moving update
 
-SMZ_Saw_Type1_PizzaLeftRight:
-		move.w	#$60,d1					; adjustment offset for X-flipped saws (oscillation range * 2)
-		moveq	#0,d0					; clear d0
-		move.b	(v_oscillate+$E).w,d0			; get oscillatory value (frequency 2, middle value $30)
-		btst	#0,obStatus(a0)		; is saw X-flipped?
-		beq.s	.setX					; if not, branch
-		neg.w	d0					; reverse oscillated offset direction
-		add.w	d1,d0					; keep flipped saws in the same $60px range
-	.setX:
-		move.w	SMZ_saw_origX(a0),d1			; get initial X-position of saw
-		sub.w	d0,d1					; adjust by oscillated offset
-		move.w	d1,obX(a0)				; move saw horizontally
+Saw_Projectile:
+		jsr	(ObjectMove).l
+		move.w	obX(a0),saw_origin_x(a0)
+		moveq	#2,d0
+		bsr.w	Saw_AnimatePair
+		bra.w	Saw_Draw
 
-	.animate:
-		subq.b	#1,obTimeFrame(a0)			; decrement timer until frame change
-		bpl.s	.sound					; if time remains, branch
-		move.b	#3-1,obTimeFrame(a0)			; reset time between frame changes
-		bchg	#0,obFrame(a0)				; alternate saw frames
-
-	.sound:
-		tst.b	obRender(a0)				; is saw on screen?
-		bpl.s	.return					; if not, don't play sound
-		move.w	(v_framecount).w,d0			; get current level frame counter
-		andi.w	#$F,d0					; only play sound every 16 frames
-		bne.s	.return					; branch otherwise
-		move.w	#SndID_LaserBeam,d0				; play saw buzzing sound
-		jsr	(PlaySound_Special).l				; (this sound is programmed to not be interruptible by itself)
-
-	.return:
-		rts						; return
-; ===========================================================================
-
-SMZ_Saw_Type2_PizzaUpDown:
-		move.w	#$30,d1					; (unused, probably a leftover from copying subtype 1)
-		moveq	#0,d0					; clear d0
-		move.b	(v_oscillate+6).w,d0			; get oscillatory value (frequency 2, middle value $18)
-		btst	#0,obStatus(a0)		; is saw X-flipped?
-		beq.s	.setY					; if not, branch
-		neg.w	d0					; reverse oscillated offset direction
-		addi.w	#$60+$20,d0				; keep flipped saws in the same $60px range... plus an extra $20px
-	.setY:
-		move.w	SMZ_saw_origY(a0),d1			; get initial Y-position of saw
-		sub.w	d0,d1					; adjust by oscillated offset
-		move.w	d1,obY(a0)				; move saw vertically
-
-	.animate:
-		subq.b	#1,obTimeFrame(a0)			; decrement timer until frame change
-		bpl.s	.sound					; if time remains, branch
-		move.b	#3-1,obTimeFrame(a0)			; reset time between frame changes
-		bchg	#0,obFrame(a0)				; alternate saw frames
-
-	.sound:
-		tst.b	obRender(a0)				; is saw on screen?
-		bpl.s	.return					; if not, don't play sound
-		move.b	(v_oscillate+6).w,d0			; get current oscillation value for saw type
-		cmpi.b	#$18,d0					; is oscillation value at middle?
-		bne.s	.return					; if not, branch
-		move.w	#SndID_LaserBeam,d0				; play saw buzzing sound
-		jsr	(PlaySound_Special).l				; (this sound is programmed to not be interruptible by itself)
-
-	.return:
-		rts						; return
-; ===========================================================================
-
-SMZ_Saw_Type3_SpeedingFromLeft:
-		tst.b	SMZ_saw_shot(a0)				; has speeding saw already been shot?
-		bne.s	SMZ_Saw_Type3_SpeedingFromLeft_Shot		; if yes, branch
-
-		move.w	(v_player+obX).w,d0			; get Sonic's current X-position
-		subi.w	#192,d0					; spawn saw if Sonic is 192px to the right of it
-		bcs.s	.hide					; if Sonic is close to left level edge, branch
-		sub.w	obX(a0),d0				; subtract saw's X-position
-		bcs.s	.hide					; if Sonic isn't in horizontal range, branch
-		move.w	(v_player+obY).w,d0			; get Sonic's current Y-position
-		subi.w	#128,d0					; check 128px above
-		cmp.w	obY(a0),d0				; is Sonic within upper trigger zone?
-		bhs.s	.return					; if not, branch
-		addi.w	#128*2,d0				; check 128px below
-		cmp.w	obY(a0),d0				; is Sonic within lower trigger zone?
-		blo.s	.return					; if not, branch
-
-		move.b	#1,SMZ_saw_shot(a0)				; set flag to shoot speeding saw
-		move.w	#$600,obVelX(a0)			; move speeding saw to the right (fast)
-		move.b	#$22|$80,obColType(a0)	; make saw harmful on touch
-		move.b	#2,obFrame(a0)				; use speeding saw frames
-		move.w	#SndID_LaserBeam,d0				; set saw buzzing sound
-		jsr	(PlaySound_Special).l				; play it
-
-	.hide:
-		addq.l	#4,sp					; skip returning to SMZ_Saw_Action to avoid rendering sprite
-		; The above line will properly avoid drawing the sprite, but it will
-		; also prevent despawning the object, which can lead to memory leaks.
-		out_of_range2	SMZ_Saw_Delete,SMZ_saw_origX(a0)	; has saw gone out of range? if yes, delete it
-
-	.return:
-		rts						; return
-; ---------------------------------------------------------------------------
-
-SMZ_Saw_Type3_SpeedingFromLeft_Shot:
-		jsr	(SpeedToPos).l				; update speeding saw's position
-		move.w	obX(a0),SMZ_saw_origX(a0)			; update original X-position for offscreen check
-
-		subq.b	#1,obTimeFrame(a0)			; decrement timer until frame change
-		bpl.s	.return					; if time remains, branch
-		move.b	#3-1,obTimeFrame(a0)			; reset time between frame changes
-		bchg	#0,obFrame(a0)				; alternate saw frames
-
-	.return:
-		rts						; return
-; ===========================================================================
-
-SMZ_Saw_Type4_SpeedingFromRight:
-		tst.b	SMZ_saw_shot(a0)				; has speeding saw already been shot?
-		bne.s	SMZ_Saw_Type4_SpeedingFromRight_Shot	; if yes, branch
-
-		move.w	(v_player+obX).w,d0			; get Sonic's current X-position
-		addi.w	#224,d0					; spawn saw if Sonic is 224px to the left of it
-		sub.w	obX(a0),d0				; subtract saw's X-position
-		bcc.s	.hide					; if Sonic isn't in horizontal range, branch
-		move.w	(v_player+obY).w,d0			; get Sonic's current Y-position
-		subi.w	#128,d0					; check 128px above
-		cmp.w	obY(a0),d0				; is Sonic within upper trigger zone?
-		bhs.s	.return					; if not, branch
-		addi.w	#128*2,d0				; check 128px below
-		cmp.w	obY(a0),d0				; is Sonic within lower trigger zone?
-		blo.s	.return					; if not, branch
-
-		move.b	#1,SMZ_saw_shot(a0)				; set flag to shoot speeding saw
-		move.w	#-$600,obVelX(a0)			; move speeding saw to the left (fast)
-		move.b	#$22|$80,obColType(a0)	; make saw harmful on touch
-		move.b	#2,obFrame(a0)				; use speeding saw frames
-		move.w	#SndID_LaserBeam,d0				; set saw buzzing sound
-		jsr	(PlaySound_Special).l				; play it
-
-	.hide:
-		addq.l	#4,sp					; skip returning to SMZ_Saw_Action to avoid rendering sprite
-		; See above.
-		out_of_range2	SMZ_Saw_Delete,SMZ_saw_origX(a0)	; has saw gone out of range? if yes, delete it
-
-	.return:
-		rts						; return
-; ---------------------------------------------------------------------------
-
-SMZ_Saw_Type4_SpeedingFromRight_Shot:
-		jsr	(SpeedToPos).l				; update speeding saw's position
-		move.w	obX(a0),SMZ_saw_origX(a0)			; update original X-position for offscreen check
-
-		subq.b	#1,obTimeFrame(a0)			; decrement timer until frame change
-		bpl.s	.return					; if time remains, branch
-		move.b	#3-1,obTimeFrame(a0)			; reset time between frame changes
-		bchg	#0,obFrame(a0)				; alternate saw frames
-
-	.return:
-		rts						; return
-
-; ===========================================================================
-
-Map_SMZ_Saw: binclude "mappings/sprite/SMZ Saw.bin"
-
-; ---------------------------------------------------------------------------
-; MMZ diagonal buzzsaw. One placement ID, direction from X/Y flip, bit 7 of
-; the low subtype byte selects the initially extended phase. Direct state
-; entries replace CD's parent/child and five-routine dispatch tables.
-MMZ_saw_timer:		equ objoff_2E
-MMZ_saw_xstep:		equ objoff_30 ; signed 16.16
-MMZ_saw_ystep:		equ objoff_34 ; signed 16.16
-MMZ_saw_steps:		equ objoff_38
-MMZ_saw_home:		equ objoff_3A
-MMZ_saw_handle:		equ objoff_3C ; reciprocal word pointer
-MMZ_saw_parent:		equ objoff_3E ; handle's parent pointer
-MMZ_saw_sound:		equ objoff_40 ; visible-update counter
-
-MMZ_Saw_Init:
+Saw_InitDiagonal:
 		jsr	(FindFreeObj).l
 		bne.w	.return	; retry the intact placement without leaking a handle
-		move.w	a1,MMZ_saw_handle(a0)
-		move.w	a0,MMZ_saw_parent(a1)
-		move.l	#MMZ_Saw_Handle,code(a1)
+		move.w	a1,saw_handle(a0)
+		move.w	a0,saw_parent(a1)
+		move.l	#Saw_Handle,code(a1)
 		move.l	#Map_MMZ_SawHandle,obMap(a1)
 		move.b	#Map_MMZ_SawHandle_width,width_pixels(a1)
 		move.b	#Map_MMZ_SawHandle_height,height_pixels(a1)
@@ -258,142 +150,140 @@ MMZ_Saw_Init:
 		move.b	obStatus(a0),obRender(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#$80|Touch_Size_MMZSaw_ID,obColType(a0)
-		move.w	obX(a0),MMZ_saw_home(a0)
-		move.l	#$10000,MMZ_saw_xstep(a0)
-		move.l	#$10000,MMZ_saw_ystep(a0)
+		move.w	obX(a0),saw_origin_x(a0)
+		move.w	#$100,obVelX(a0)
+		move.w	#$100,obVelY(a0)
 		moveq	#80,d0
 		moveq	#80,d1
 		btst	#0,obStatus(a0)
 		beq.s	.y_direction
-		neg.l	MMZ_saw_xstep(a0)
+		neg.w	obVelX(a0)
 		neg.w	d0
 .y_direction:
 		btst	#1,obStatus(a0)
 		beq.s	.phase
-		neg.l	MMZ_saw_ystep(a0)
+		neg.w	obVelY(a0)
 		neg.w	d1
 .phase:
-		move.l	#MMZ_Saw_HoldIn,code(a0)
+		move.l	#Saw_DiagonalHold,code(a0)
 		move.w	obSubtype(a0),d2
 		btst	#7,d2
 		beq.s	.start
-		move.l	#MMZ_Saw_HoldOut,code(a0)
 		move.b	#9,obAnim(a0)
 		sub.w	d0,obX(a1)
 		sub.w	d1,obY(a1)
 .start:
 		move.b	#-1,obPrevAni(a0)
 		move.w	#59,MMZ_saw_timer(a0)
-		; CD's constructor executes the outward movement once, including
-		; this one-pixel birth offset, before entering its selected hold.
-		bra.s	MMZ_Saw_MoveOut
+		; Retain the one-pixel displacement on the first drawn update.
+		jsr	(ObjectMove).l
+		move.b	#1,saw_stage_step(a0)
+		tst.b	obAnim(a0)
+		bne.s	Saw_DiagonalAnimate
+		bsr.s	Saw_ReverseDiagonal
+		bra.s	Saw_DiagonalAnimate
 .return:
 		rts
 
-MMZ_Saw_HoldIn:
+Saw_DiagonalHold:
 		subq.w	#1,MMZ_saw_timer(a0)
-		bne.w	MMZ_Saw_Finish
-		move.l	#MMZ_Saw_Extend,code(a0)
-		move.w	#9,MMZ_saw_steps(a0)
+		bne.s	Saw_DiagonalAnimate
+		bsr.s	Saw_ReverseDiagonal
+		move.l	#Saw_DiagonalTravel,code(a0)
+		move.w	#9,saw_stages(a0)
 		move.w	#1,MMZ_saw_timer(a0)
-		bra.w	MMZ_Saw_Finish
+		bra.s	Saw_DiagonalAnimate
 
-MMZ_Saw_Extend:
-		subq.w	#1,MMZ_saw_timer(a0)
-		bne.s	MMZ_Saw_MoveOut
-		addq.b	#1,obAnim(a0)
-		move.w	#9,MMZ_saw_timer(a0)
-		subq.w	#1,MMZ_saw_steps(a0)
-		bne.s	MMZ_Saw_MoveOut
-		move.l	#MMZ_Saw_HoldOut,code(a0)
-		move.w	#60,MMZ_saw_timer(a0)
-MMZ_Saw_MoveOut:
-		move.l	MMZ_saw_xstep(a0),d0
-		add.l	d0,obX(a0)
-		move.l	MMZ_saw_ystep(a0),d0
-		add.l	d0,obY(a0)
-		bra.s	MMZ_Saw_Finish
+Saw_ReverseDiagonal:
+		neg.w	obVelX(a0)
+		neg.w	obVelY(a0)
+		neg.b	saw_stage_step(a0)
+		rts
 
-MMZ_Saw_HoldOut:
-		subq.w	#1,MMZ_saw_timer(a0)
-		bne.s	MMZ_Saw_Finish
-		move.l	#MMZ_Saw_Retract,code(a0)
-		move.w	#9,MMZ_saw_steps(a0)
-		move.w	#1,MMZ_saw_timer(a0)
-		bra.s	MMZ_Saw_Finish
-
-MMZ_Saw_Retract:
+Saw_DiagonalTravel:
 		subq.w	#1,MMZ_saw_timer(a0)
 		bne.s	.move
-		subq.b	#1,obAnim(a0)
+		move.b	saw_stage_step(a0),d0
+		add.b	d0,obAnim(a0)
 		move.w	#9,MMZ_saw_timer(a0)
-		subq.w	#1,MMZ_saw_steps(a0)
+		subq.w	#1,saw_stages(a0)
 		bne.s	.move
-		move.l	#MMZ_Saw_HoldIn,code(a0)
+		move.l	#Saw_DiagonalHold,code(a0)
 		move.w	#60,MMZ_saw_timer(a0)
 .move:
-		move.l	MMZ_saw_xstep(a0),d0
-		sub.l	d0,obX(a0)
-		move.l	MMZ_saw_ystep(a0),d0
-		sub.l	d0,obY(a0)
-
-MMZ_Saw_Finish:
-		; Each extension stage has exactly two poses, two updates apiece.
-		; Anim 9 is the original alias of 8. No animation interpreter needed.
+		jsr	(ObjectMove).l
+Saw_DiagonalAnimate:
 		move.b	obAnim(a0),d0
 		cmp.b	obPrevAni(a0),d0
-		beq.s	.animate
+		beq.s	.pair
 		move.b	d0,obPrevAni(a0)
 		cmpi.b	#8,d0
-		bls.s	.pair
-		moveq	#8,d0
-.pair:
+		bls.s	.frame
+		moveq	#8,d0			; stage 9 uses the fully extended pair
+.frame:
 		add.b	d0,d0
 		move.b	d0,obFrame(a0)
 		move.b	#1,obTimeFrame(a0)
 		bra.s	.sound
-.animate:
-		subq.b	#1,obTimeFrame(a0)
-		bpl.s	.sound
-		move.b	#1,obTimeFrame(a0)
-		bchg	#0,obFrame(a0)
+.pair:
+		moveq	#1,d0
+		bsr.s	Saw_AnimatePair
 .sound:
 		tst.b	obRender(a0)
-		bpl.s	.display
-		addq.w	#1,MMZ_saw_sound(a0)
-		move.w	MMZ_saw_sound(a0),d0
+		bpl.s	Saw_Draw
+		addq.w	#1,saw_sound(a0)
+		move.w	saw_sound(a0),d0
 		andi.w	#31,d0
-		bne.s	.display
+		bne.s	Saw_Draw
+
+Saw_BuzzDraw:
 		move.w	#SndID_LaserBeam,d0
 		jsr	(PlaySound_Special).l
-.display:
-		out_of_range2	MMZ_Saw_Unload,MMZ_saw_home(a0)
+Saw_Draw:
+		out_of_range2	Saw_Unload,saw_origin_x(a0)
 		jmp	(DisplaySprite).l
 
-MMZ_Saw_Handle:
-		movea.w	MMZ_saw_parent(a0),a1
+Saw_Cull:
+		out_of_range2	Saw_Unload,saw_origin_x(a0)
+		rts
+
+; d0.b: delay minus one (two updates for the rail, three for the other blades).
+Saw_AnimatePair:
+		subq.b	#1,obTimeFrame(a0)
+		bpl.s	.return
+		move.b	d0,obTimeFrame(a0)
+		bchg	#0,obFrame(a0)
+.return:
+		rts
+
+Saw_Handle:
+		movea.w	saw_parent(a0),a1
 		tst.l	code(a1)
 		beq.s	.delete
 		cmpi.l	#Map_MMZ_Saw,obMap(a1)
 		bne.s	.delete
 		move.w	a0,d0
-		cmp.w	MMZ_saw_handle(a1),d0
+		cmp.w	saw_handle(a1),d0
 		bne.s	.delete
 		jmp	(DisplaySprite).l
 .delete:
 		jmp	(DeleteObject).l
 
-MMZ_Saw_Unload:
-		movea.w	MMZ_saw_handle(a0),a1
-		cmpi.l	#MMZ_Saw_Handle,code(a1)
+Saw_Unload:
+		move.w	saw_handle(a0),d0
+		beq.s	.delete
+		movea.w	d0,a1
+		cmpi.l	#Saw_Handle,code(a1)
 		bne.s	.delete
 		move.w	a0,d0
-		cmp.w	MMZ_saw_parent(a1),d0
+		cmp.w	saw_parent(a1),d0
 		bne.s	.delete
 		jsr	(DeleteObject2).l
 .delete:
 		jmp	(UnloadObject).l
 
+Map_SMZ_Saw:		binclude "mappings/sprite/SMZ Saw.bin"
+		even
 Map_MMZ_Saw:		binclude "mappings/sprite/MMZ Saw.bin"
 		even
 Map_MMZ_SawHandle:	binclude "mappings/sprite/MMZ Saw Handle.bin"

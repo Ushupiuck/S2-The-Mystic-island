@@ -31,7 +31,7 @@ if args.game_zone is None:
 
 
 	def owners():
-		return [a for a in pool if m.get(a, 'code') in (m.s['SMZ_SpinConvey'], m.s['SMZ_SpinC_Move'])]
+		return [a for a in pool if m.get(a, 'code') in (m.s['SMZ_SpinConvey'], m.s['PlatformGroup_Run'])]
 
 
 	# A walking enemy can cross the right edge before the camera reaches it.
@@ -126,7 +126,7 @@ if args.game_zone is None:
 		# Let every member initialize and complete more than one whole circuit.
 		for tick in range(600):
 			for obj in members:
-				m.act('SMZ_SpinC_Move', obj)
+				m.act('PlatformGroup_Run', obj)
 			assert len(owners()) == 8
 		# A vertical drop and return must not create a second copy or restart
 		# any member. Y changes alone never unload a loop.
@@ -139,7 +139,7 @@ if args.game_zone is None:
 		m.cam(x+1024, y)
 		m.act('ObjectsManager')
 		for obj in members:
-			m.act('SMZ_SpinC_Move', obj)
+			if m.get(obj,'code'):m.act('PlatformGroup_Run', obj)
 		assert not owners() and m.placement_read(pointer-m.respawn_base) == 0
 		m.cam(x-384, y)
 		m.act('ObjectsManager')
@@ -160,7 +160,7 @@ if args.game_zone is None:
 		members = owners()
 		reference = []
 		for tick in range(600):
-			for obj in members:m.act('SMZ_SpinC_Move',obj)
+			for obj in members:m.act('PlatformGroup_Run',obj)
 			reference.append([[m.get(obj,f,z) for f,z in motion_fields] for obj in members])
 		for x,y in ((1024,512),(6144,1472),(320,1200)):
 			m.fixture([(x,y|0x8000,0xA9,0x80)])
@@ -172,7 +172,7 @@ if args.game_zone is None:
 			members = owners()
 			assert len(members)==8
 			for tick in range(600):
-				for obj in members:m.act('SMZ_SpinC_Move',obj)
+				for obj in members:m.act('PlatformGroup_Run',obj)
 				actual = [[m.get(obj,f,z) for f,z in motion_fields] for obj in members]
 				for row in actual:
 					row[0]=(row[0]-((x-bases[0][0])<<16))&0xFFFFFFFF
@@ -191,20 +191,20 @@ if args.game_zone is None:
 			m.act('SMZ_SpinConvey',parent)
 			assert owners()==[parent]
 			assert (m.get(parent,'obX',2),m.get(parent,'obY',2))==(1024+dx,512+dy)
-			m.act('SMZ_SpinC_Move',parent)
+			m.act('PlatformGroup_Run',parent)
 			checks.append(['individual phase in full pool',reverse,phase])
 		if args.previous_rom:
 			previous=m68k.Manager(args.previous_rom,args.previous_listing)
 			for group,(x,y) in enumerate(bases):
 				samples=[]
 				for machine in (previous,m):
-					machine.fixture([(x,y|0x8000,0xA9,0x80+group if machine is previous else 0x80)])
+					state = next(name for name in ('PlatformGroup_Run','SMZ_SpinC_Move','SMZ_SpinConvey') if name in machine.s)
+					machine.fixture([(x,y|0x8000,0xA9,0x80+group if state=='SMZ_SpinConvey' else 0x80)])
 					machine.cam(x-384,y)
 					machine.act('ObjectsManager')
 					parent=next(iter(machine.live().values()))
 					machine.write('f_conveyrev',reverse)
 					machine.act('SMZ_SpinConvey',parent)
-					state='SMZ_SpinC_Move' if machine is m else 'SMZ_SpinConvey'
 					members=[obj for obj in machine.pool() if machine.get(obj,'code')==machine.s[state]]
 					trace=[]
 					for tick in range(600):
@@ -305,7 +305,7 @@ if args.core:
 				else:
 					def loop_members():
 						return [a for a in objects(g, 0xA9)
-								if g.get(a, 'SMZ_spinc_baseX', 2) == 0xF80 and g.get(a, 'SMZ_spinc_baseY', 2) == 0x558]
+								if g.get(a, 'platgroup_x', 2) == 0xF80 and g.get(a, 'platgroup_y', 2) == 0x558]
 
 					travel(3200, 1356)
 					g.buttons = {7}

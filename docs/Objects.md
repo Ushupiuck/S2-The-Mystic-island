@@ -162,32 +162,32 @@ zone `$0F`, or when subtype bit 8 is set elsewhere with compatible PLCs:
 | `$A6` | 0-1 | Single, horizontal pair, or three-block staircase; reserved 3 uses single |
 | `$A9` | 0, 1 | Moving five-member curve; otherwise bit 1 selects a fixed pair |
 
-`objects/Metallic Madness/Common.asm` owns platform cohort preflight, one-pass
-allocation, independent state pointers, parent/backlink validation and cleanup.
-Only the root owns a placement. Its four reciprocal child fields prevent a
-recycled same-family parent from adopting old children. Both actors keep their
-own standing bits; disappearance, spin and unload release only actual owners.
-Timed-frame runs replace repeated CD animation bytes. The 446-point conveyor
-curve stores its antisymmetric first half (223 signed XY pairs), saving 446
-bytes while preserving every position and the original spin interval. Its spin
-accumulator is private; it never writes a word over the byte sprite frame.
-Moving members start at their own curve positions before the first draw,
-with zero birth velocity, avoiding the source's one-frame stack at the origin.
+The single vanishing platform, timed groups, rectangular conveyor and curved
+conveyor use the allocator, member setup and update runner in
+`objects/Platform Groups.asm`. Preflight checks the full group before changing
+any slot. The root owns the placement and up to seven reciprocal child links.
+Children validate that link before running. Despawn releases each member's
+actual riders. The rectangle still uses its original corner velocities and
+fractional positions. The curve stores only the 223 signed XY pairs in its
+first half and gives each member its own position on the first draw.
 
-The MMZ saw uses direct hold/extend/retract entries and a two-pose animation
-counter. The fixed handle validates the full parent mapping/code and reciprocal
-link, and unload removes it. It retains CD's one-pixel birth displacement,
-source step/hold timing and a 28-pixel harmful half-size through a named local
-collision-table ID. Foreign CD collision IDs are not assumed to match ours.
+All vanishing platforms use the same timed frame reader and top support. The
+single platform follows the level clock. Grouped vanishing platforms and fixed
+spinning platforms share the 120-update solid hold and the transition state.
+Rectangle and curve motion use the same spin contact routine with full and
+top support respectively.
 
-The crusher's two 256-byte signed-height tables retain CD sine values and
-negative rounding, removing trigonometry/multiplication from the live update.
-The original before/after-motion solidity order is retained for both actors.
-At phase `$210`, the tall form launches only its actual standing riders,
-independently, with `-$1000` or `-$A00` velocity. CD's long-pause byte table
-indexes 0/2 into a two-byte list, reading the following TST opcode instead of
-its declared 90. The port explicitly selects 60/90. The original SMZ behaviors
-retain their timings while skipping their old constructor-dispatch table.
+Saw blades share frame-pair timing, sound playback, rendering and placement
+lifetime. Both speeding triggers lead to the same projectile update. The
+diagonal blade uses the standard object velocity fields and reverses them at
+the ends of its travel. Its rail is an optional child with reciprocal ownership.
+It retains the one-pixel birth displacement and the 28-pixel harmful half-size.
+
+The stomper moves its selected body and resolves contact in one update loop.
+The sinusoidal profile uses two 256-byte signed-height tables and tests support
+before upward motion. The tall body selects 60 or 90 updates at the extrema.
+At phase `$210`, it launches each actual rider independently with `-$1000` or
+`-$A00` velocity. The rider's standing index must still match the body.
 
 Obj20 retains the owner's existing morphing-platform rewrite, seven CD poses,
 palette-adapted eight-tile CD art, phase table and standing helper. Its direct
@@ -202,22 +202,18 @@ incorrectly made one rider narrow the other character's new side contacts;
 removing that check retains each actor's own standing-edge behavior. Propeller
 blades likewise inherit their parent's act-selected art base without copying art.
 
-The crumbling floor extends the existing `$1B` family. Its constructor selects
-one direct state chain; fragments have separate direct entries and never own a
-placement. Each column releases two 16px pieces, then shrinks the remaining
-stationary surface. Both support relationships are checked against its new
-extent without translating the riders or releasing/relanding the retained one.
-Either character can start the collapse and select its direction. Invalid
-column counts use one column; a full pool consumes the column without retrying
-or retaining invisible support. Fragments accelerate by 0.25px per update to
-22px, preserving CD's 16.16 motion.
+The `$1B` floor shares the rider trigger, delay and top contact for slab and
+column breakup. Both use the ledge's single-piece initializer and standard
+object gravity. A slab breaks all at once and its first piece retains support
+until its fall begins. Each column releases two 16px pieces and shrinks the
+stationary surface. Both support relationships are checked against the new
+extent. Invalid widths use one column. A full pool still consumes the column.
 
-The `$B0` carrier retains its existing eight ordinary payload presets, wall
-bounds, independent rider translation and lifetime services. MMZ selects its
-one-pixel drop and 1px/update patrol through direct states; classic carriers
-retain their 1.5px/update movement. Bit 7 shortens MMZ's patrol from 80 to 64px.
-Payload subtype/facing comes from `WheelPayloads`, not the carrier's patrol
-flag. The new variants reuse the already imported floor mappings and wheel art.
+The `$B0` carrier uses one fall and roll loop for both terrain-following and
+bounded patrols. Both use 1.5px/update, the same terrain/payload probes and
+the eight ordinary payload presets. A bounded patrol centers on its landing
+point, checks clearance before reversing and limits travel to 80px on each
+side, or 64px with bit 7 set. The mount table owns payload subtype and facing.
 
 ### Mecha-Bu
 

@@ -3,13 +3,11 @@
 ; Bit 7 creates the complete loop. Clear it for one platform; bits 0-2 select
 ; its initial phase. X/Y are the loop center, not an absolute group selector.
 ; ===========================================================================
-SMZ_spinc_baseX:		equ objoff_30
-SMZ_spinc_baseY:		equ objoff_32
-SMZ_spinc_nextX:		equ objoff_34
-SMZ_spinc_nextY:		equ objoff_36
-SMZ_spinc_posindex:	equ objoff_38	; target corner offset: 0,4,8,12
-SMZ_spinc_increment:	equ objoff_3A	; +4 or -4, wrapped modulo 16
-SMZ_spinc_targetdata:	equ objoff_3C	; forward/reverse corner motion table
+SMZ_spinc_nextX:		equ objoff_38
+SMZ_spinc_nextY:		equ objoff_3A
+SMZ_spinc_posindex:	equ obAngle		; target corner offset: 0,4,8,12
+SMZ_spinc_increment:	equ obAngle+1	; +4 or -4, wrapped modulo 16
+spin_top_only:		equ objoff_2B	; full support on the rectangle, top support on the curve
 
 SMZ_SpinConvey:
 		move.w	obSubtype(a0),d0
@@ -17,36 +15,22 @@ SMZ_SpinConvey:
 		bne.w	MMZ_SpinC_Init
 		cmpi.b	#id_MMZ,(v_zone).w
 		beq.w	MMZ_SpinC_Init
-		move.w	obX(a0),SMZ_spinc_baseX(a0)
-		move.w	obY(a0),SMZ_spinc_baseY(a0)
-		out_of_range2	UnloadObject,SMZ_spinc_baseX(a0)
+		out_of_range2	UnloadObject
 		moveq	#0,d6
-		move.w	obSubtype(a0),d2
-		btst	#7,d2
+		move.w	obSubtype(a0),d0
+		btst	#7,d0
 		beq.s	.prepare
 		moveq	#7,d6
-		; Allocate the whole group or leave the placement intact for retry.
-		move.w	d6,d1
-		lea	(v_lvlobjspace).w,a1
-		move.w	#(v_lvlobjend-v_lvlobjspace)/object_size-1,d0
-.count_free:
-		tst.l	code(a1)
-		bne.s	.next
-		subq.w	#1,d1
-		beq.s	.prepare
-.next:
-		lea	object_size(a1),a1
-		dbf	d0,.count_free
-		rts
 .prepare:
+		jsr	(PlatformGroup_Preflight).l
+		bne.w	.return
 		lea	SMZ_SpinC_Placements(pc),a2
 		lea	SMZ_SpinC_InitialMotion(pc),a4
-		lea	SMZ_SpinC_CornerMotion(pc),a5
+		lea	Spin_RectangleProfile(pc),a5
 		moveq	#4,d5
 		tst.b	(f_conveyrev).w
 		beq.s	.phase
 		lea	8*8(a4),a4
-		lea	4*8(a5),a5
 		neg.w	d5
 .phase:
 		tst.w	d6
@@ -60,15 +44,14 @@ SMZ_SpinConvey:
 		sub.w	d1,d0		; phase*6 offset into the position table
 		adda.w	d0,a2
 .first:
-		lea	(v_lvlobjspace).w,a3
 		movea.l	a0,a1
 .make_platform:
-		move.w	SMZ_spinc_baseX(a0),d0
-		move.w	d0,SMZ_spinc_baseX(a1)
+		move.w	platgroup_x(a0),d0
+		move.w	d0,platgroup_x(a1)
 		add.w	(a2)+,d0
 		move.w	d0,obX(a1)
-		move.w	SMZ_spinc_baseY(a0),d0
-		move.w	d0,SMZ_spinc_baseY(a1)
+		move.w	platgroup_y(a0),d0
+		move.w	d0,platgroup_y(a1)
 		add.w	(a2)+,d0
 		move.w	d0,obY(a1)
 		move.w	(a2)+,d1
@@ -81,12 +64,11 @@ SMZ_SpinConvey:
 .target:
 		move.b	d1,SMZ_spinc_posindex(a1)
 		move.b	d5,SMZ_spinc_increment(a1)
-		move.l	a5,SMZ_spinc_targetdata(a1)
 		lea	SMZ_SpinC_Corners(pc),a6
-		move.w	SMZ_spinc_baseX(a1),d0
+		move.w	platgroup_x(a1),d0
 		add.w	(a6,d1.w),d0
 		move.w	d0,SMZ_spinc_nextX(a1)
-		move.w	SMZ_spinc_baseY(a1),d0
+		move.w	platgroup_y(a1),d0
 		add.w	2(a6,d1.w),d0
 		move.w	d0,SMZ_spinc_nextY(a1)
 		move.l	(a4)+,obVelX(a1)
@@ -97,43 +79,30 @@ SMZ_SpinConvey:
 		blo.s	.art
 		clr.b	obAnim(a1)
 .art:
-		move.l	#Map_SMZ_Spin,obMap(a1)
-		move.b	#Map_SMZ_Spin_height,height_pixels(a1)
-		move.w	#ArtTile_SMZ_Atlas,obGfx(a1)
-		move.b	#16,obActWid(a1)
-		ori.b	#4,obRender(a1)
-		move.w	#$200,obPriority(a1)
-		move.l	#SMZ_SpinC_Move,code(a1)
+		move.l	a4,-(sp)		; preserve the initial-motion cursor
+		lea	SMZ_SpinC_Move(pc),a4
+		jsr	(PlatformGroup_InitMember).l
+		movea.l	(sp)+,a4
 		dbf	d6,.allocate
+.return:
 		rts
 .allocate:
-		; One forward scan keeps FindFreeObj's lowest-slot order without
-		; restarting from the beginning for every helper.
-		movea.l	a3,a1
-		lea	object_size(a3),a3
-		tst.l	code(a1)
-		bne.s	.allocate
+		jsr	(PlatformGroup_Allocate).l
 		bra.w	.make_platform
+
+Spin_RectangleProfile:
+		dc.l Map_SMZ_Spin
+		dc.w ArtTile_SMZ_Atlas,$200
+		dc.b Map_SMZ_Spin_height,16,8,16
 
 SMZ_SpinC_Move:
 		lea	(SMZ_Ani_SpinConvey).l,a1
 		jsr	(AnimateSprite).l
-		tst.b	obFrame(a0)
-		bne.s	.spinning
 		move.w	obX(a0),-(sp)
 		bsr.s	SMZ_SpinC_Platform_Update
-		move.w	#16+sonic_solid_width,d1
-		moveq	#7,d2
-		moveq	#8,d3
 		move.w	(sp)+,d4
-		jsr	(SolidObject).l
-		bra.s	.display
-.spinning:
-		jsr	(SMZ_ReleaseRiders).l
-		bsr.s	SMZ_SpinC_Platform_Update
-.display:
-		out_of_range2	UnloadObject,SMZ_spinc_baseX(a0)
-		jmp	(DisplaySprite).l
+		move.b	obFrame(a0),d0
+		bra.w	SpinPlatform_Contact
 
 SMZ_SpinC_Platform_Update:
 		move.w	obX(a0),d0
@@ -148,10 +117,10 @@ SMZ_SpinC_Platform_Update:
 		andi.w	#$F,d1
 		move.b	d1,SMZ_spinc_posindex(a0)
 		lea	SMZ_SpinC_Corners(pc),a1
-		move.w	SMZ_spinc_baseX(a0),d0
+		move.w	platgroup_x(a0),d0
 		add.w	(a1,d1.w),d0
 		move.w	d0,SMZ_spinc_nextX(a0)
-		move.w	SMZ_spinc_baseY(a0),d0
+		move.w	platgroup_y(a0),d0
 		add.w	2(a1,d1.w),d0
 		move.w	d0,SMZ_spinc_nextY(a0)
 		tst.w	d1
@@ -162,7 +131,11 @@ SMZ_SpinC_Platform_Update:
 		bne.s	.motion
 		clr.b	obAnim(a0)
 .motion:
-		movea.l	SMZ_spinc_targetdata(a0),a1
+		lea	SMZ_SpinC_CornerMotion(pc),a1
+		tst.b	SMZ_spinc_increment(a0)
+		bpl.s	.forward
+		lea	4*8(a1),a1
+.forward:
 		add.w	d1,d1
 		move.l	(a1,d1.w),obVelX(a0)
 		move.w	4(a1,d1.w),obX+2(a0)
@@ -232,7 +205,7 @@ SMZ_SpinC_CornerMotion:
 ; cohort service. The SBZ rectangle above retains its exact original motion.
 MMZ_SpinC_Init:
 		lea	MMZ_SpinC_FixedOne(pc),a2
-		lea	MMZ_SpinC_Wait(pc),a4
+		lea	PlatformGroup_TimedSolid(pc),a4
 		moveq	#0,d6
 		move.w	obSubtype(a0),d0
 		btst	#0,d0
@@ -247,85 +220,85 @@ MMZ_SpinC_Init:
 		lea	MMZ_SpinC_MoveSolid(pc),a4
 		moveq	#4,d6
 .make:
-		lea	Map_MMZ_Spin(pc),a5
-		moveq	#Map_MMZ_Spin_height,d5
-		bsr.w	MMZ_Platform_CreateGroup
+		lea	Spin_TimedProfile(pc),a5
+		jsr	(PlatformGroup_Create).l
 		bne.s	.return
 		move.w	obSubtype(a0),d0
 		btst	#0,d0
-		beq.s	.draw
+		beq.s	.fixed
 ; Start each member at its own curve point, without a one-frame pile-up or
 ; a spurious birth velocity. Keep its phase for the first ordinary update.
 		movea.l	a0,a5
-		lea	MMZ_group_members(a0),a3
+		lea	platgroup_members(a0),a3
 		moveq	#4,d5
 .position:
 		bsr.w	MMZ_SpinC_Move
-		subq.w	#1,MMZ_group_phase(a0)
+		st	spin_top_only(a0)
+		subq.w	#1,platgroup_phase(a0)
 		clr.w	obVelX(a0)
 		dbf	d5,.next
 		movea.l	a5,a0
 .draw:
-		bra.w	MMZ_Platform_Draw
+		jmp	(PlatformGroup_Draw).l
 .next:
 		movea.w	(a3)+,a0
 		bra.s	.position
+.fixed:
+		move.l	#MMZ_SpinC_Frames,platgroup_sequence(a0)
+		move.w	platgroup_members(a0),d0
+		beq.s	.draw
+		movea.w	d0,a1
+		move.l	#MMZ_SpinC_Frames,platgroup_sequence(a1)
+		bra.s	.draw
 .return:
 		rts
 
-MMZ_SpinC_Wait:
-		moveq	#16,d1
-		moveq	#5,d3
-		move.w	obX(a0),d4
-		jsr	(PlatformObject).l
-		subq.w	#1,MMZ_group_timer(a0)
-		bne.s	.return
-		move.l	#MMZ_SpinC_FixedSpin,MMZ_group_state(a0)
-		move.l	#MMZ_SpinC_Frames,MMZ_group_script(a0)
-		clr.b	MMZ_group_dwell(a0)
-		jmp	(SMZ_ReleaseRiders).l
-.return:
-		rts
+Spin_TimedProfile:
+		dc.l Map_MMZ_Spin
+		dc.w ArtTile_MMZ_Atlas,$180
+		dc.b Map_MMZ_Spin_height,16,5,16
 
-MMZ_SpinC_FixedSpin:
-		bsr.w	MMZ_Platform_Animate
-		bne.s	.return
-		move.l	#MMZ_SpinC_Wait,MMZ_group_state(a0)
-		move.w	#120,MMZ_group_timer(a0)
-.return:
-		rts
+; d0.b is zero for the solid pose; d4 contains the previous X.
+SpinPlatform_Contact:
+		tst.b	d0
+		jne	(SMZ_ReleaseRiders).l
+		tst.b	spin_top_only(a0)
+		jne	(PlatformGroup_TopSupport).l
+		moveq	#16+sonic_solid_width,d1
+		moveq	#7,d2
+		moveq	#8,d3
+		jmp	(SolidObject).l
 
 MMZ_SpinC_MoveSolid:
 		bsr.s	MMZ_SpinC_Move
-		moveq	#16,d1
-		moveq	#5,d3
-		jsr	(PlatformObject).l
-		cmpi.w	#344,MMZ_group_phase(a0)
+		moveq	#0,d0
+		bsr.s	SpinPlatform_Contact
+		cmpi.w	#344,platgroup_phase(a0)
 		bne.s	.return
-		move.w	#216,MMZ_group_timer(a0)
-		move.l	#MMZ_SpinC_MoveSpin,MMZ_group_state(a0)
-		clr.w	MMZ_group_phase+2(a0) ; private accumulator, never a word over obFrame
+		move.w	#216,platgroup_timer(a0)
+		move.l	#MMZ_SpinC_MoveSpin,platgroup_state(a0)
+		clr.w	platgroup_spin(a0)
 		jmp	(SMZ_ReleaseRiders).l
 .return:
 		rts
 
 MMZ_SpinC_MoveSpin:
 		bsr.s	MMZ_SpinC_Move
-		subq.w	#1,MMZ_group_timer(a0)
+		subq.w	#1,platgroup_timer(a0)
 		bmi.s	.done
-		move.w	MMZ_group_phase+2(a0),d0
+		move.w	platgroup_spin(a0),d0
 		addi.w	#$80,d0
 		cmpi.w	#$500,d0
 		bls.s	.frame
 		moveq	#0,d0
 .frame:
-		move.w	d0,MMZ_group_phase+2(a0)
+		move.w	d0,platgroup_spin(a0)
 		lsr.w	#8,d0
 		move.b	d0,obFrame(a0)
 		rts
 .done:
 		clr.b	obFrame(a0)
-		move.l	#MMZ_SpinC_MoveSolid,MMZ_group_state(a0)
+		move.l	#MMZ_SpinC_MoveSolid,platgroup_state(a0)
 		rts
 
 ; The source curve is exactly antisymmetric. Store 223 signed XY byte pairs;
@@ -333,7 +306,7 @@ MMZ_SpinC_MoveSpin:
 ; d4 returns the previous X for PlatformObject's rider displacement.
 MMZ_SpinC_Move:
 		move.w	obX(a0),d4
-		move.w	MMZ_group_phase(a0),d0
+		move.w	platgroup_phase(a0),d0
 		moveq	#0,d3
 		cmpi.w	#223,d0
 		blo.s	.index
@@ -351,17 +324,17 @@ MMZ_SpinC_Move:
 		neg.w	d1
 		neg.w	d2
 .position:
-		add.w	MMZ_group_x(a0),d1
-		add.w	MMZ_group_y(a0),d2
+		add.w	platgroup_x(a0),d1
+		add.w	platgroup_y(a0),d2
 		move.w	d1,obX(a0)
 		move.w	d2,obY(a0)
 		sub.w	d4,d1
 		lsl.w	#8,d1
 		move.w	d1,obVelX(a0)
-		addq.w	#1,MMZ_group_phase(a0)
-		cmpi.w	#446,MMZ_group_phase(a0)
+		addq.w	#1,platgroup_phase(a0)
+		cmpi.w	#446,platgroup_phase(a0)
 		blo.s	.return
-		clr.w	MMZ_group_phase(a0)
+		clr.w	platgroup_phase(a0)
 .return:
 		rts
 

@@ -277,8 +277,8 @@ its subtype/VRAM tables here.
 | Flame rendering | `check_fire_art.py --core CORE` | Eight EHZ/HTZ loads, six poses/four flips, both launcher orientations/four flips with exact SAT pieces, springs/spikes/monitors intact; both emitters through all 22 SMZ frames in both acts and original harmful-frame gating |
 
 `check_metallic_madness.py --source /path/to/scddisasm --output test-results/mmz`
-also compares platform timelines, the complete CD curve, saw states and crusher
-heights/pauses, including the bounded long-pause correction. Native cases check
+also compares platform timelines, the complete curve, saw states and crusher
+heights/pauses. The runtime traces go through the shared object runners. Native cases check
 the object-loop counter, full-pool atomicity and stale ownership. Optional
 `--before-rom PATH --before-listing PATH` compares retained S1 saw/stomper
 variants against a matching older build. With `--core` and `--system-directory`,
@@ -288,7 +288,7 @@ four orientations and launches both riders at both strengths. `--pal` repeats
 the actual frame checks in PAL. These are staged interaction/rendering visits,
 not a complete controller-only MMZ playthrough; the placement port is unfinished.
 The floor/carrier cases cover 32 floor configurations, all 6,400 flat-patrol
-updates, full-pool loss of fragments, exact acceleration and the stationary
+updates, full-pool loss of fragments, shared fragment gravity and the stationary
 support edge. Real NTSC/PAL visits let either actor trigger the floor, check
 both riders at a breaking edge and use both moving-spring strengths in every
 era. Retained-floor behavior is included in the optional historical comparison.

@@ -93,8 +93,8 @@ try:
         g.run(3)
         carriers = [a for a in range(g.s['v_lvlobjspace'] & 65535,
                                     g.s['v_lvlobjend'] & 65535, g.s['object_size'])
-                    if g.get(a, 'code') == g.s['SMZ_SpinConvey'] and
-                    g.get(a, 'SMZ_spinc_baseX', 2) == 3968 and
+                    if g.get(a, 'layout_id') == 0xA9 and
+                    g.get(a, 'platgroup_x', 2) == 3968 and
                     g.get(a, 'obY', 2) > 1200 and g.get(a, 'obAnim') == 1]
         carriers.sort(key=lambda a: g.get(a, 'obX', 2))
         assert len(carriers) == 3, carriers

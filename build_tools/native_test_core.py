@@ -71,12 +71,14 @@ class Native:
 				('TwistingPathway', ('TwistingPathway_Main', 'TwistingPathway_Cage')),
 				('SMZ_SpinConvey', ('SMZ_SpinC_Move',)),
 				('MorphingPlatform', ('MorphingPlatform_Run',)),
-				('Obj1B', ('Obj1B_Dispatch','MMZ_Floor_Idle','MMZ_Floor_Delay','MMZ_Floor_Break','MMZ_Floor_Static')),
+				('Obj1B', ('Obj1B_Dispatch','MMZ_Floor_Idle','MMZ_Floor_Delay','MMZ_Floor_Break','MMZ_Floor_Static',
+					'Floor_Wait','Floor_Delay','Floor_BreakSlab','Floor_BreakColumn','Floor_Static','FloorPiece_Run')),
 				('WheelCarrier', ('MMZ_Wheel_Fall','MMZ_Wheel_Roll')),
 				('MMZ_MechaBu', ('MMZ_MechaBu_Fall','MMZ_MechaBu_Walk')),
 				('Bomb', ('Bomb_Fall','Bomb_SmallWait','Bomb_SmallWalk','Bomb_SmallBurn','Bomb_BigWalk','Bomb_BigWaitCharge','Bomb_BigCharge','Bomb_BigWaitTarget','Bomb_BigPreFuse','Bomb_BigBurn','Bomb_BigDetonate','Bomb_BigScatter','Bomb_BigRemove')),
-				('SMZ_Saws', ('SMZ_Saw_Action','MMZ_Saw_HoldIn','MMZ_Saw_Extend','MMZ_Saw_HoldOut','MMZ_Saw_Retract')),
-				('SMZ_ScrapStomp', ('SMZ_Sto_Action','MMZ_Crusher_Run')),
+				('SMZ_Saws', ('SMZ_Saw_Action','MMZ_Saw_HoldIn','MMZ_Saw_Extend','MMZ_Saw_HoldOut','MMZ_Saw_Retract',
+					'Saw_Draw','Saw_OscillateX','Saw_OscillateY','Saw_WaitLeft','Saw_WaitRight','Saw_Projectile','Saw_DiagonalHold','Saw_DiagonalTravel')),
+				('SMZ_ScrapStomp', ('SMZ_Sto_Action','MMZ_Crusher_Run','Stomper_Run')),
 				('SMZ_Teleport', ('SMZ_Teleport_Main',))):
 			if constructor in self.s:
 				for label in states:
@@ -278,8 +280,9 @@ class Native:
 		if isinstance(obj, str):
 			obj = self.s[obj]
 		value = int.from_bytes(self.cpu.mem_read((obj + self.s[field]) & 0xFFFFFF, size), 'big')
-		if projected and value == self.s.get('MMZ_Platform_Run'):
-			return 0xA6 if self.get(obj, 'obMap', 4) == self.s.get('Map_MMZ_Vanish') else 0xA9
+		if projected and value in (self.s.get('MMZ_Platform_Run'), self.s.get('PlatformGroup_Run')):
+			mapping = self.get(obj, 'obMap', 4)
+			return 0xA6 if mapping in (self.s.get('Map_MMZ_Vanish'), self.s.get('Map_SMZ_VanP')) else 0xA9
 		if projected and value == self.s.get('SwingingPtfm') and 'swing_body_shape' in self.s and self.get(obj, 'obRoutine'):
 			return {0: 0xDB, 1: 0xDC, 2: 0x17, 3: 0xDD, 4: 0xDE}[self.get(obj, 'swing_body_shape')]
 		return self.ids_by_code.get(value, value) if projected else value
@@ -295,7 +298,8 @@ class Native:
 			self.cpu.reg_write(reg, value)
 		self.cpu.reg_write(UC_M68K_REG_A7, self.stack)
 		self.cpu.mem_write(self.stack, struct.pack('>I', STOP))
-		self.cpu.emu_start(self.s[routine], STOP, count=limit)
+		entry = self.s[routine] if isinstance(routine, str) else routine
+		self.cpu.emu_start(entry, STOP, count=limit)
 		assert self.cpu.reg_read(UC_M68K_REG_PC) == STOP, routine
 		assert self.cpu.reg_read(UC_M68K_REG_A7) == self.stack + 4, routine
 

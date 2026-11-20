@@ -9,6 +9,8 @@ placements. Translate subtype layouts and placement flags to the shared family.
 Differences such as another game's spring launch speed do not require a
 level-specific compatibility mode; shared springs retain the shared strengths.
 Extend a family for a distinct mechanism or an explicitly requested improvement.
+Select the movement, art and phase settings at construction. Reuse the family's
+collision, animation and lifetime routines for behaviors the variants share.
 
 ## Import checklist
 

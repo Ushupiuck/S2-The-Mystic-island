@@ -46,13 +46,13 @@ def game_checks():
 					for cx in range(x//128-2,x//128+3):g.layout_cell(cy,cx,0)
 				platforms={}
 				for offset in ((32,0) if reversed_slots else (0,32)):
-					a=spawn(g,'SMZ_VanishPlatform',x+offset,y)
+					a=spawn(g,'PlatformGroup_Run',x+offset,y)
 					platforms[offset]=a
-					for f,v,z in (('obRoutine',2,1),('obRender',0x84,1),('obActWid',16,1),
+					for f,v,z in (('platgroup_state',g.s['Vanish_ClassicCycle'],4),('platgroup_x',x+offset,2),
+						('obRender',0x84,1),('obActWid',16,1),('obWidth',16,1),('obHeight',9,1),
 						('obMap',g.s['Map_SMZ_VanP'],4),('obGfx',g.s['ArtTile_SMZ_Atlas'],2),
 						('obPriority',0x200,2),('height_pixels',32,1),('obAnim',1,1),
-						('obPrevAni',1,1),('obAniFrame',3,1),('obTimeFrame',127,1),
-						('SMZ_vanp_timer',1000,2),('SMZ_vanp_timelen',127,2)):
+						('platgroup_timer',1000,2),('vanish_visible_time',127,2)):
 						g.put(a,f,v,z)
 				start=x-8 if direction>0 else x+40
 				height=g.get(actor,'default_y_radius')
@@ -137,12 +137,12 @@ def setup(role, frame=0, rolling=False):
 	m.put(player, 'obX', 576, 2)
 	m.put(player, 'obStatus', 6 if rolling else 2)
 	for field, value, size in [
-			('code', m.s['SMZ_VanishPlatform'], 4), ('obX', 576, 2),
-			('obY', 512, 2), ('obRoutine', 2, 1), ('obRender', 0x84, 1),
-			('obActWid', 16, 1), ('obMap', m.s['Map_SMZ_VanP'], 4),
-			('obAnim', 1, 1), ('obPrevAni', 1, 1), ('obFrame', frame, 1),
-			('obTimeFrame', 20, 1), ('SMZ_vanp_timer', 1000, 2),
-			('SMZ_vanp_timelen', 127, 2)]:
+			('code', m.s['PlatformGroup_Run'], 4), ('obX', 576, 2),
+			('obY', 512, 2), ('platgroup_x', 576, 2), ('obRender', 0x84, 1),
+			('platgroup_state', m.s['Vanish_ClassicCycle'], 4), ('obActWid', 16, 1),
+			('obWidth', 16, 1), ('obHeight', 9, 1), ('obMap', m.s['Map_SMZ_VanP'], 4),
+			('obAnim', 1, 1), ('obFrame', frame, 1), ('platgroup_timer', 1000, 2),
+			('vanish_visible_time', 127, 2)]:
 		m.put(obj, field, value, size)
 	return player, m.get(player, 'obHeight')
 
@@ -163,7 +163,7 @@ for role in roles:
 					m.put(player, 'obY', 512 + height - 4, 2)
 					m.put(player, 'obVelY', speed, 2)
 					before = actor_state(player)
-					m.act('SMZ_VanishPlatform', obj)
+					m.act('PlatformGroup_Run', obj)
 					assert actor_state(player) == before, (role, frame, 'underside', before, actor_state(player))
 					checks.append([role[0], frame, rolling, 'rise-through', offset, speed])
 			for direction in (-1, 1):
@@ -173,23 +173,23 @@ for role in roles:
 				m.put(player, 'obVelX', direction * 0x400, 2)
 				m.put(player, 'obInertia', direction * 0x400, 2)
 				before = actor_state(player)
-				m.act('SMZ_VanishPlatform', obj)
+				m.act('PlatformGroup_Run', obj)
 				assert actor_state(player) == before, (role, frame, 'side', before, actor_state(player))
 				checks.append([role[0], frame, rolling, 'side-through', direction])
 		for depth in (0, 4, 10):
 			player, height = setup(role, frame)
 			m.put(player, 'obY', 504 - height + depth, 2)
 			m.put(player, 'obVelY', 0x400, 2)
-			m.act('SMZ_VanishPlatform', obj)
+			m.act('PlatformGroup_Run', obj)
 			assert m.get(player, 'obStatus') & 8, (role, frame, depth, 'did not land')
 			assert not m.get(player, 'obStatus') & 2
 			assert m.get(player, 'obY', 2) == 503 - height
 			for _ in range(8):
-				m.act('SMZ_VanishPlatform', obj)
+				m.act('PlatformGroup_Run', obj)
 				assert m.get(player, 'obY', 2) == 503 - height
 				assert m.get(player, 'obStatus') & 8
 			m.put(player, 'obX', 596, 2)
-			m.act('SMZ_VanishPlatform', obj)
+			m.act('PlatformGroup_Run', obj)
 			assert not m.get(player, 'obStatus') & 8
 			assert m.get(player, 'obStatus') & 2
 			checks.append([role[0], frame, 'land-ride-exit', depth])
@@ -232,7 +232,7 @@ for role in roles:
 					m.put(player,'obInertia',direction*0x100,2)
 					for tick in range(48):
 						if tick<40:m.put(player,'obX',m.get(player,'obX',2)+direction,2)
-						for platform in (obj,second):m.act('SMZ_VanishPlatform',platform)
+						for platform in (obj,second):m.act('PlatformGroup_Run',platform)
 						assert m.get(player,'obY',2)+m.get(player,'obHeight')==503,(role,frame,rolling,direction,reversed_slots,tick,'height changed')
 						assert m.get(player,'obStatus')&8
 					target=right if direction>0 else left
@@ -252,12 +252,12 @@ for frame in (2, 3):
 		m.put(player, 'obY', 504 - height, 2)
 		m.put(player, 'obVelY', 0x400, 2)
 		m.put(player, 'obStatus', 2)
-	m.act('SMZ_VanishPlatform', obj)
+	m.act('PlatformGroup_Run', obj)
 	assert m.get(obj, 'obStatus') & 0x18 == 0x18
 	for player in ('v_player', 'v_player2'):
 		assert m.get(player, 'standonobject') == index
 	m.put(obj, 'obFrame', frame)
-	m.act('SMZ_VanishPlatform', obj)
+	m.act('PlatformGroup_Run', obj)
 	assert not m.get(obj, 'obStatus') & 0x18
 	for player in ('v_player', 'v_player2'):
 		assert not m.get(player, 'obStatus') & 8

@@ -423,9 +423,9 @@ def platform_native(args):
 		for a in ('v_player','v_player2'):n.put(a,'obX',100,2);n.put(a,'obY',100,2)
 		n.act(entry,root,regs={UC_M68K_REG_D7:0x3579006F})
 		assert n.cpu.reg_read(UC_M68K_REG_D7)==0x3579006F,'Constructor changed the object-loop counter'
-		return root,[a for a in slots() if n.get(a,'code')==n.s['MMZ_Platform_Run']]
+		return root,[a for a in slots() if n.get(a,'code')==n.s['PlatformGroup_Run']]
 	def update(a):
-		n.act('MMZ_Platform_Run',a,regs={UC_M68K_REG_D7:0x3579006F})
+		n.act('PlatformGroup_Run',a,regs={UC_M68K_REG_D7:0x3579006F})
 		assert n.cpu.reg_read(UC_M68K_REG_D7)==0x3579006F,'Platform changed the object-loop counter'
 	def anim(name):
 		t=(S/f'src/anims/r8/{name}.asm').read_text();rows=[]
@@ -440,7 +440,7 @@ def platform_native(args):
 	for variant,timers in enumerate(((60,),(60,60),(90,180,270))):
 		root,members=init('SMZ_VanishPlatform',0x100+variant)
 		assert len(members)==len(timers)
-		members=[root]+[int.from_bytes(n.cpu.mem_read(root+n.s['MMZ_group_members']+i*2,2),'big')|0xff0000 for i in range(len(timers)-1)]
+		members=[root]+[int.from_bytes(n.cpu.mem_read(root+n.s['platgroup_members']+i*2,2),'big')|0xff0000 for i in range(len(timers)-1)]
 		refs=[dict(state='delay',timer=tm,frame=6,idx=0,which=0) for tm in timers]
 		for tick in range(1500):
 			for a,ref in zip(members,refs):
@@ -456,9 +456,9 @@ def platform_native(args):
 					if ref['timer']==0:ref.update(state='anim',idx=0,which=1)
 				update(a);actual=n.get(a,'obFrame')
 				assert actual==ref['frame'],('vanish',variant,tick,hex(a),actual,ref)
-				assert bool(n.get(a,'MMZ_group_state',4)==n.s['MMZ_VanP_Stand'])==bool(ref['state']=='stand')
+				assert bool(n.get(a,'platgroup_state',4)==n.s['PlatformGroup_TimedSolid'])==bool(ref['state']=='stand')
 				checks+=1
-		n.act('MMZ_Platform_Unload',root,regs={UC_M68K_REG_D7:0x3579006F})
+		n.act('PlatformGroup_Unload',root,regs={UC_M68K_REG_D7:0x3579006F})
 		assert n.cpu.reg_read(UC_M68K_REG_D7)==0x3579006F
 		assert all(not n.get(a,'code') for a in members)
 	report['vanish_frames']=checks
@@ -478,7 +478,7 @@ def platform_native(args):
 				update(a);assert n.get(a,'obFrame')==frame,('fixed',sub,tick,n.get(a,'obFrame'),frame)
 				checks+=1
 	root,members=init('SMZ_SpinConvey',0x101);assert len(members)==5
-	members=[root]+[(int.from_bytes(n.cpu.mem_read(root+n.s['MMZ_group_members']+i*2,2),'big')|0xff0000) for i in range(4)]
+	members=[root]+[(int.from_bytes(n.cpu.mem_read(root+n.s['platgroup_members']+i*2,2),'big')|0xff0000) for i in range(4)]
 	refs=[dict(phase=i*89,spin=False,timer=0,acc=0,frame=0) for i in range(5)]
 	path=list(struct.iter_unpack('bb',(S/'src/data/r8/spin_platform_1.bin').read_bytes()))
 	for a,ref in zip(members,refs):
@@ -510,26 +510,22 @@ def platform_native(args):
 			assert bytes(n.cpu.mem_read(ss[0],len(before)))==before
 	# A live same-family replacement at the same address cannot adopt a stale child.
 	root,members=init('SMZ_VanishPlatform',0x101);child=next(a for a in members if a!=root)
-	n.cpu.mem_write(root+n.s['MMZ_group_members'],b'\0'*8);update(child);assert not n.get(child,'code')
+	n.cpu.mem_write(root+n.s['platgroup_members'],b'\0'*8);update(child);assert not n.get(child,'code')
 	report['platform_updates']=checks;report['allocation_failure_and_stale_owner']=True
 	return report
 
 def floor_wheel_native(args):
-	"""Progressive floor edges, stationary riders and flat CD wheel patrols."""
+	"""Progressive floor edges, stationary riders and bounded wheel patrols."""
 	n=Native(args.rom,args.listing);checks=0
-	states=('MMZ_Floor_Idle','MMZ_Floor_Delay','MMZ_Floor_Break','MMZ_Floor_Static',
-		'MMZ_FloorPiece_Start','MMZ_FloorPiece_Wait','MMZ_FloorPiece_Fall',
-		'MMZ_Wheel_Fall','MMZ_Wheel_Roll')
-	states={n.s[name]:name for name in states}
 	ss=list(range(n.s['v_lvlobjspace']&0xffffff,n.s['v_lvlobjend']&0xffffff,n.s['object_size']))
 	def run(a):
 		n.put(a,'obRender',n.get(a,'obRender')|128)
-		n.act(states[n.get(a,'code')],a,regs={UC_M68K_REG_D7:0x3579006F})
+		n.act(n.get(a,'code'),a,regs={UC_M68K_REG_D7:0x3579006F})
 		assert n.cpu.reg_read(UC_M68K_REG_D7)==0x3579006F
-	def setup(entry,sub):
+	def setup(entry,sub,flip=0):
 		n.start();n.write('Camera_X_pos',440,2);root=ss[5]
 		for actor in ('v_player','v_player2'):n.put(actor,'obX',100,2);n.put(actor,'obY',100,2)
-		for f,v,z in [('code',n.s[entry],4),('obX',600,2),('obY',600,2),('obSubtype',sub,2)]:n.put(root,f,v,z)
+		for f,v,z in [('code',n.s[entry],4),('obX',600,2),('obY',600,2),('obSubtype',sub,2),('obStatus',flip,1)]:n.put(root,f,v,z)
 		n.act(entry,root,regs={UC_M68K_REG_D7:0x3579006F})
 		assert n.cpu.reg_read(UC_M68K_REG_D7)==0x3579006F
 		return root
@@ -544,39 +540,41 @@ def floor_wheel_native(args):
 				assert (n.get(a,'obFrame'),n.get(a,'obWidth'))==(columns-1,columns*8)
 				attach(a,trigger,600,3 if trigger=='v_player' else 4)
 				n.put(trigger,'obVelX',(direction*256)&65535,2);run(a)
-				assert n.get(a,'code')==n.s['MMZ_Floor_Delay']
-				assert n.get(a,'MMZ_floor_step',2)==(direction*8)&65535
+				assert n.get(a,'code')==n.s['Floor_Delay']
+				assert n.get(a,'floor_step',2)==(direction*8)&65535
 				for remaining in range(columns-1,-1,-1):
-					while n.get(a,'code')==n.s['MMZ_Floor_Delay']:run(a)
-					assert n.get(a,'code')==n.s['MMZ_Floor_Break'];run(a)
+					while n.get(a,'code')==n.s['Floor_Delay']:run(a)
+					assert n.get(a,'code')==n.s['Floor_BreakColumn'];run(a)
 					if remaining:
 						assert n.get(a,'obX',2)==600+(columns-remaining)*8*direction
 						assert n.get(a,'obWidth')==remaining*8 and n.get(a,'obFrame')==remaining-1
 					else:assert not n.get(a,'code') and not n.get(trigger,'obStatus')&8
-				pieces=[p for p in ss if n.get(p,'code')==n.s['MMZ_FloorPiece_Start']]
+				pieces=[p for p in ss if n.get(p,'code')==n.s['FloorPiece_Run']]
 				assert len(pieces)==columns*2 and all(not n.get(p,'respawn_addr',2) for p in pieces)
 				checks+=1
 	# Shrinking the left edge must release its rider while the right-hand rider
 	# keeps exactly the same world position and standing height.
 	a=setup('Obj1B',0x104);attach(a,'v_player',580,3);attach(a,'v_player2',620,4);run(a)
-	while n.get(a,'code')==n.s['MMZ_Floor_Delay']:run(a)
+	while n.get(a,'code')==n.s['Floor_Delay']:run(a)
 	run(a)
 	assert not n.get('v_player','obStatus')&8 and n.get('v_player2','obStatus')&8
 	assert (n.get('v_player2','obX',2),n.get('v_player2','obY',2))==(620,565)
 	for count in (0,9,127):
-		a=setup('Obj1B',0x180|count);assert n.get(a,'code')==n.s['MMZ_Floor_Static'] and n.get(a,'obWidth')==8
+		a=setup('Obj1B',0x180|count);assert n.get(a,'code')==n.s['Floor_Static'] and n.get(a,'obWidth')==8
 	# A full pool still consumes each slice without retry loops or corrupting
 	# neighboring SSTs. Static blocks do not accidentally arm a collapse.
 	a=setup('Obj1B',0x104)
 	for p in ss:
 		if p!=a:n.put(p,'code',n.s['PlayMusic'])
-	n.put(a,'code',n.s['MMZ_Floor_Break']);run(a);assert n.get(a,'MMZ_floor_count',2)==3
-	# Piece acceleration is 0.25px/update, capped at 22px/update, in 16.16.
-	a=setup('Obj1B',0x101);n.put(a,'code',n.s['MMZ_FloorPiece_Fall']);n.put(a,'obY',0,4)
-	y=0
-	for tick in range(1,121):
-		run(a);y+=min(tick*0x4000,0x160000)
-		assert n.get(a,'obY',4)==y and n.get(a,'MMZ_floor_speed',4)==min(tick*0x4000,0x160000)
+	n.put(a,'code',n.s['Floor_BreakColumn']);run(a);assert n.get(a,'floor_columns',2)==3
+	# A progressive floor piece falls exactly like a classic fragment.
+	a=setup('Obj1B',0x101);n.put(a,'floor_step',8,2);n.put(a,'code',n.s['Floor_BreakColumn']);run(a)
+	piece=next(p for p in ss if n.get(p,'code')==n.s['FloorPiece_Run'])
+	n.put(piece,'floor_piece_delay',0)
+	y=n.get(piece,'obY',4)
+	for tick in range(120):
+		run(piece);y+=tick*0x3800
+		assert n.get(piece,'obY',4)==y and n.get(piece,'obVelY',2)==(tick+1)*0x38
 	# Isolate the native movement oracle from terrain probes: wall clearance is
 	# eight pixels, the landed floor is flat. Real terrain/payload contacts run
 	# separately in Genesis Plus GX.
@@ -584,22 +582,29 @@ def floor_wheel_native(args):
 	for short in range(2):
 		for yellow in range(2):
 			for flip in range(2):
-				a=setup('WheelCarrier',0x100|(short<<7)|yellow)
-				if flip:n.put(a,'obVelX',0xFF00,2);n.put(a,'obStatus',1)
+				a=setup('WheelCarrier',0x100|(short<<7)|yellow,flip)
 				n.cpu.mem_write(n.s['ObjHitFloor'],bytes.fromhex('72FF4E75'))
 				n.cpu.ctl_remove_cache(n.s['ObjHitFloor'],n.s['ObjHitFloor']+4);run(a)
-				assert n.get(a,'code')==n.s['MMZ_Wheel_Roll'] and n.get(a,'obY',2)==599
+				assert n.get(a,'code')==n.s['WheelCarrier'] and n.get(a,'obRoutine')==4 and n.get(a,'obY',2)==599
 				n.cpu.mem_write(n.s['ObjHitFloor'],bytes.fromhex('72004E75'))
 				n.cpu.ctl_remove_cache(n.s['ObjHitFloor'],n.s['ObjHitFloor']+4)
-				x=600;vel=-1 if flip else 1;limit=64 if short else 80
+				center=n.get(a,'obX',2);limit=64 if short else 80
 				child=n.get(a,'wheel_child',4)
 				assert n.get(child,'obSubtype')==(2 if yellow else 0)
+				reached=set()
 				for _ in range(800):
-					if abs(x-600)>=limit:vel=-vel
-					x+=vel;run(a)
-					assert (n.get(a,'obX',2),n.get(a,'obY',2),n.get(a,'obVelX',2))==(x,599,(vel*256)&65535),(short,yellow,flip,x,n.get(a,'obY',2))
-					assert n.get(child,'obX',4)==n.get(a,'obX',4)
+					old_x=n.get(a,'obX',4);run(a)
+					x=n.get(a,'obX',4);dx=abs(x-old_x)
+					assert (center-limit)<<16 <= x <= (center+limit)<<16
+					assert n.get(a,'obY',2)==599
+					assert n.get(child,'obX',4)==x
+					if x in ((center-limit)<<16,(center+limit)<<16):
+						reached.add(x)
+						assert 0<dx<=0x18000
+						assert n.get(a,'obVelX',2)==(0x180 if x<old_x else 0xFE80)
+					else:assert dx==0x18000
 					checks+=1
+				assert len(reached)==2
 	return dict(floor_configurations=32,wheel_updates=6400,checks=checks,
 		stationary_rider_and_removed_edge=True,piece_acceleration_cases=120,full_pool=True)
 
@@ -626,13 +631,13 @@ def floor_wheel_game(args):
 			place(g,trigger,620,600-16-g.get(trigger,'default_y_radius'))
 			g.put(trigger,'obControl',1);g.run(3)
 			assert g.get(a,'obStatus')&(8 if trigger=='v_player' else 16),(era,trigger,'floor-landing')
-			assert g.get(a,'code')==g.s['MMZ_Floor_Delay']
+			assert g.get(a,'code')==g.s['Floor_Delay']
 			place(g,'v_player',580,600-16-g.get('v_player','default_y_radius'));g.put('v_player','obControl',1)
 			place(g,'v_player2',620,600-16-g.get('v_player2','default_y_radius'));g.put('v_player2','obControl',1)
 			g.run(2);before=(g.get('v_player2','obX',2),g.get('v_player2','obY',2))
 			for _ in range(20):
 				g.run()
-				if g.get(a,'MMZ_floor_count',2)==3:break
+				if g.get(a,'floor_columns',2)==3:break
 			else:raise AssertionError((era,'floor-did-not-crumble'))
 			assert not g.get('v_player','obStatus')&8 and g.get('v_player2','obStatus')&8
 			assert (g.get('v_player2','obX',2),g.get('v_player2','obY',2))==before,(era,trigger,'floor-hop')
@@ -642,7 +647,7 @@ def floor_wheel_game(args):
 		g.restore(stage);a=spawn(g,'Obj1B',600,600,0x184);g.run(2)
 		for actor in ('v_player','v_player2'):
 			place(g,actor,600,600-16-g.get(actor,'default_y_radius'));g.put(actor,'obControl',1)
-		g.run(30);assert g.get(a,'code')==g.s['MMZ_Floor_Static'] and g.get(a,'obStatus')&0x18==0x18
+		g.run(30);assert g.get(a,'code')==g.s['Floor_Static'] and g.get(a,'obStatus')&0x18==0x18
 		g.video.save(args.output/'floors-wheels'/f'era{era}-static.png')
 		# Build only a RAM terrain fixture using this era's own full-solid profile.
 		g.restore(stage);rom=bytes(g.rom);indices=g.read('v_colladdr1',4)
@@ -654,14 +659,19 @@ def floor_wheel_game(args):
 		course=g.save()
 		for short in range(2):
 			g.restore(course);a=spawn(g,'WheelCarrier',600,566,0x100|(short<<7)|short);g.run(20)
-			assert g.get(a,'code')==g.s['MMZ_Wheel_Roll'],(era,short,'wheel-did-not-land')
+			assert g.get(a,'code')==g.s['WheelCarrier'] and g.get(a,'obRoutine')==4,(era,short,'wheel-did-not-land')
+			center=g.get(a,'wheel_home',2)
 			child=g.get(a,'wheel_child',4);assert g.get(child,'code')==g.s['Springs']
 			assert g.get(child,'obSubtype')==(2 if short else 0)
 			xs=[]
 			for _ in range(350):
-				g.run();xs.append(g.get(a,'obX',2))
+				for frame in range(12):
+					g.run()
+					if g.read('v_vbla_counter')==1:break
+				else:raise AssertionError('Carrier update did not complete')
+				xs.append(g.get(a,'obX',2))
 				assert g.get(child,'obX',4)==g.get(a,'obX',4)
-			assert (min(xs),max(xs))==(600-(64 if short else 80),600+(64 if short else 80)),(era,short,min(xs),max(xs))
+			assert (min(xs),max(xs))==(center-(64 if short else 80),center+(64 if short else 80)),(era,short,min(xs),max(xs))
 			rest=g.save()
 			for actor in ('v_player','v_player2'):
 				g.restore(rest);place(g,actor,g.get(child,'obX',2),g.get(child,'obY',2)-8-g.get(actor,'default_y_radius'))
@@ -692,7 +702,7 @@ def platform_game(args):
 		a=spawn(g,code,600,600,sub);g.run(2)
 		if code=='SMZ_SpinConvey' and sub==0x101:
 			for _ in range(30):
-				if g.get(a,'MMZ_group_phase',2):break
+				if g.get(a,'platgroup_phase',2):break
 				g.run()
 			else:raise AssertionError('Moving cohort did not reach its first curve point')
 		return a
@@ -705,10 +715,10 @@ def platform_game(args):
 		for bank,file in [('ArtTile_MMZ_HVPlatform','Morphing Orbs'),('ArtTile_MMZ_Propeller','MM Propeller'),('ArtTile_Wheel','Wheel carrier')]:raw_vram(g.s[bank],nemesis((R/f'art/nemesis/{file}.nem').read_bytes()))
 		# Full authored timings already have native source comparisons. Here actors
 		# land through the real frame executor and independently release from a group.
-		for code,sub,state,height in [('SMZ_VanishPlatform',0x102,'MMZ_VanP_Stand',16),('SMZ_SpinConvey',0x100,'MMZ_SpinC_Wait',5),('SMZ_SpinConvey',0x101,'MMZ_SpinC_MoveSolid',5)]:
+		for code,sub,state,height in [('SMZ_VanishPlatform',0x102,'PlatformGroup_TimedSolid',16),('SMZ_SpinConvey',0x100,'PlatformGroup_TimedSolid',5),('SMZ_SpinConvey',0x101,'MMZ_SpinC_MoveSolid',5)]:
 			a=setup(code,sub)
 			for _ in range(450):
-				if g.get(a,'MMZ_group_state',4)==g.s[state] and g.get(a,'MMZ_group_timer',2)>30:break
+				if g.get(a,'platgroup_state',4)==g.s[state] and g.get(a,'platgroup_timer',2)>30:break
 				if state=='MMZ_SpinC_MoveSolid':break
 				g.run()
 			else:raise AssertionError(('state-timeout',code))
@@ -856,7 +866,6 @@ def hazard_native(args):
 	"""Compare motion against CD routines and its complete sine table."""
 	import re
 	R=ROOT;S=args.source;n=Native(args.rom,args.listing);slots=list(range(n.s['v_lvlobjspace']&0xffffff,n.s['v_lvlobjend']&0xffffff,n.s['object_size']));root=slots[5];count=0
-	states=('MMZ_Saw_HoldIn','MMZ_Saw_Extend','MMZ_Saw_HoldOut','MMZ_Saw_Retract','MMZ_Crusher_Run');rev={n.s[k]:k for k in states}
 	def call(name,a=root):
 		n.act(name,a,regs={UC_M68K_REG_D7:0x3579006f});assert n.cpu.reg_read(UC_M68K_REG_D7)==0x3579006f
 		assert n.get(a,'code')
@@ -885,16 +894,16 @@ def hazard_native(args):
 	for flip in range(4):
 		for extended in range(2):
 			init('SMZ_Saws',0x100+(extended<<7),flip);ref=CDSaw(extended)
-			child=n.get(root,'MMZ_saw_handle',2)|0xff0000
-			assert n.get(child,'MMZ_saw_parent',2)==root&65535
+			child=n.get(root,'saw_handle',2)|0xff0000
+			assert n.get(child,'saw_parent',2)==root&65535
 			for tick in range(1600):
-				if tick:ref.step();call(rev[n.get(root,'code')])
+				if tick:ref.step();call(n.get(root,'code'))
 				assert (n.get(root,'obX',2),n.get(root,'obY',2),n.get(root,'obFrame'))==(600+ref.x*(-1 if flip&1 else 1),600+ref.x*(-1 if flip&2 else 1),ref.frame),('saw',flip,extended,tick,ref.__dict__)
-				call('MMZ_Saw_Handle',child);count+=1
+				call('Saw_Handle',child);count+=1
 			expected=[600-(80 if extended else 0)*(-1 if flip&b else 1) for b in (1,2)]
 			assert [n.get(child,f,2) for f in ('obX','obY')]==expected
 			assert n.get(root,'obColType')&63==n.s['Touch_Size_MMZSaw_ID']
-			n.put(root,'MMZ_saw_handle',0,2);n.act('MMZ_Saw_Handle',child);assert not n.get(child,'code')
+			n.put(root,'saw_handle',0,2);n.act('Saw_Handle',child);assert not n.get(child,'code')
 	# Exact source heights, including negative rounding and asymmetric source angles.
 	text=(S/'src/common/math.asm').read_text().split('SineTable:',1)[1].split('Atan2:',1)[0];sine=[]
 	for line in text.splitlines():
@@ -919,7 +928,7 @@ def hazard_native(args):
 							if pause<0:paused=False;phase=(phase+step)&1023
 						elif mode==1 and phase in (256,768):paused=True;pause=hold
 						else:phase=(phase+step)&1023
-						call('MMZ_Crusher_Run');assert n.get(root,'MMZ_crush_phase',2)==phase,('crusher-phase',mode,amplitude,initial,speed,tick,phase,n.get(root,'MMZ_crush_phase',2))
+						call('Stomper_Run');assert n.get(root,'MMZ_crush_phase',2)==phase,('crusher-phase',mode,amplitude,initial,speed,tick,phase,n.get(root,'MMZ_crush_phase',2))
 						assert n.get(root,'obY',2)==600+sine[phase>>2]*amplitude//256
 						count+=1
 	# Actual source radius rather than blindly keeping a foreign collision index.
@@ -929,7 +938,7 @@ def hazard_native(args):
 def legacy_hazards(args):
 	"""Compare retained S1 behavior with a matching pre-port ROM/listing."""
 	old=Native(args.before_rom,args.before_listing);new=Native(args.rom,args.listing);cases=updates=0
-	for entry,action,params in [('SMZ_Saws','SMZ_Saw_Action',range(5)),('SMZ_ScrapStomp','SMZ_Sto_Action',(0,0x13,0x24,0x34,0x40,0x80,0x81,0x83,0x88)),('Obj1B','Obj1B_Dispatch',(0,1))]:
+	for entry,params in [('SMZ_Saws',range(5)),('SMZ_ScrapStomp',(0,0x13,0x24,0x34,0x40,0x80,0x81,0x83,0x88)),('Obj1B',(0,1))]:
 		for param in params:
 			for flip in range(4):
 				objects=[]
@@ -946,10 +955,9 @@ def legacy_hazards(args):
 						for channel in (0,1,3,8):n.cpu.mem_write((n.s['f_switch']+channel)&0xFFFFFF,bytes([1 if 30<=tick<100 else 0]))
 						if n.get(a,'code'):
 							n.put(a,'obRender',0x84)
-							name=action if n.get(a,'code')==n.s.get(action) else entry
-							n.act(name,a,regs={UC_M68K_REG_D7:0x3579006f})
+							n.act(n.get(a,'code'),a,regs={UC_M68K_REG_D7:0x3579006f})
 							assert n.cpu.reg_read(UC_M68K_REG_D7)==0x3579006f
-					for field,size in [('obX',4),('obY',4),('obVelX',2),('obVelY',2),('obRoutine',1),('ob2ndRout',1),('obFrame',1),('obAnim',2),('obTimeFrame',2),('obStatus',1),('obSubtype',2),('obColType',2),('objoff_30',16)]:
+					for field,size in [('obX',4),('obY',4),('obVelX',2),('obVelY',2),('obRoutine',1),('ob2ndRout',1),('obFrame',1),('obAnim',2),('obTimeFrame',2),('obStatus',1),('obSubtype',2),('obColType',2)]:
 						assert old.get(objects[0],field,size)==new.get(objects[1],field,size),(entry,param,flip,tick,field,old.get(objects[0],field,size),new.get(objects[1],field,size))
 					assert bool(old.get(objects[0],'code'))==bool(new.get(objects[1],'code'))
 					updates+=1

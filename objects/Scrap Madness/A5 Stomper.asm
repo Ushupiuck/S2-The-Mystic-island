@@ -7,6 +7,10 @@
 ; ---------------------------------------------------------------------------
 
 SMZ_ScrapStomp:
+		move.l	#Stomper_Run,code(a0)
+		ori.b	#4,obRender(a0)
+		move.w	obX(a0),stomper_origin_x(a0)
+		move.w	obY(a0),stomper_origin_y(a0)
 		move.w	obSubtype(a0),d0
 		btst	#8,d0
 		bne.w	MMZ_Crusher_Init
@@ -14,8 +18,9 @@ SMZ_ScrapStomp:
 		beq.w	MMZ_Crusher_Init
 		bra.w	SMZ_Sto_Main
 
-SMZ_sto_origY:	equ objoff_30		; original y-axis position
-SMZ_sto_origX:	equ objoff_34		; original x-axis position
+stomper_origin_y:	equ objoff_30
+stomper_origin_x:	equ objoff_34
+stomper_motion:	equ objoff_40		; long, selected movement routine
 SMZ_sto_delay:	equ objoff_36		; delay timer before moving again
 SMZ_sto_active:	equ objoff_38		; flag set when a switch is pressed
 SMZ_sto_offset_now:	equ objoff_3A		; current X/Y-offset from origin
@@ -31,9 +36,9 @@ SMZ_Sto_Var:	; width, height, max distance, action type
 		dc.b  256/2, 128/2,   0, 5	; $4x - ancient lift at the start of SBZ3/LZ4
 ; ===========================================================================
 
-SMZ_Sto_Main:	; Constructor
-		move.l	#SMZ_Sto_Action,code(a0)
-		addq.b	#2,obRoutine(a0)			; advance to SMZ_Sto_Action
+SMZ_Sto_Main:
+		move.l	#SMZ_Sto_Move,stomper_motion(a0)
+		addq.b	#2,obRoutine(a0)			; classic solid body initialized
 
 		moveq	#0,d0					; clear d0
 		move.w	obSubtype(a0),d0			; get object subtype
@@ -51,8 +56,6 @@ SMZ_Sto_Main:	; Constructor
 .continueSetup:
 		ori.b	#4,obRender(a0)		; set to playfield-positioned mode
 		move.w #$200,obPriority(a0)			; set sprite priority
-		move.w	obX(a0),SMZ_sto_origX(a0)			; remember initial X-position
-		move.w	obY(a0),SMZ_sto_origY(a0)			; remember initial Y-position
 
 		moveq	#0,d0					; clear d0
 		move.b	(a3)+,d0				; get max move distance
@@ -61,42 +64,55 @@ SMZ_Sto_Main:	; Constructor
 		moveq	#0,d0					; clear d0
 		move.w	obSubtype(a0),d0			; get object subtype
 		btst	#7,d0
-		beq.s	SMZ_Sto_Action				; is subtype $80 or above (extending sliding platform)? if not, branch
+		beq.s	Stomper_Run				; is subtype $80 or above (extending sliding platform)? if not, branch
 		andi.w	#$F,d0					; read only lower digit
 		move.b	d0,SMZ_sto_switch(a0)			; store switch ID that will trigger platform behavior
 		moveq	#0,d0
 		move.b	(a3),d0
 		move.w	d0,obSubtype(a0)			; set action type number
 
-SMZ_Sto_Action:	; Routine 2
-		move.w	obX(a0),-(sp)				; backup previous X-position before executing behavior
-		moveq	#0,d0					; clear d0
-		move.w	obSubtype(a0),d0			; get action type (set from SMZ_Sto_Var)
-		andi.w	#$F,d0					; only read lower digit
-		add.w	d0,d0					; double for word-based indexing
-		move.w	SMZ_Sto_TypeIndex(pc,d0.w),d1		; find entry in jump table
-		jsr	SMZ_Sto_TypeIndex(pc,d1.w)			; execute behavior, then return here
-		move.w	(sp)+,d4				; restore previous X-position as input for SolidObject
+Stomper_Run:
+		move.w	obX(a0),-(sp)
+		movea.l	stomper_motion(a0),a1
+		jsr	(a1)
+		move.w	(sp)+,d4			; previous X for rider transport
+		tst.b	d0
+		bmi.s	Stomper_Draw
+		beq.s	.solid
+		bsr.s	Stomper_Solid
+		bsr.w	Stomper_LaunchRiders
+		bra.s	Stomper_Draw
+.solid:
+		tst.b	obRender(a0)
+		bpl.s	Stomper_Draw
+		bsr.s	Stomper_Solid
+Stomper_Draw:
+		out_of_range2	Stomper_Unload,stomper_origin_x(a0)
+		jmp	(DisplaySprite).l
+Stomper_Unload:
+		jsr	(SMZ_ReleaseRiders).l
+		jmp	(UnloadObject).l
 
-		tst.b	obRender(a0)				; is platform on screen?
-		bpl.s	.chkdel					; if not, skip collision detection
+Stomper_Solid:
+		moveq	#0,d1
+		move.b	obActWid(a0),d1
+		addi.w	#sonic_solid_width,d1
+		moveq	#0,d2
+		move.b	obHeight(a0),d2
+		move.w	d2,d3
+		addq.w	#1,d3
+		jmp	(SolidObject).l
 
-		moveq	#0,d1					; clear d1
-		move.b	obActWid(a0),d1				; use sprite display width as solidity width
-		addi.w	#sonic_solid_width,d1			; add Sonic's own collision width
-		moveq	#0,d2					; clear d2
-		move.b	obHeight(a0),d2				; object collision height (initial)
-		move.w	d2,d3					; object collision height (stood-on)
-		addq.w	#1,d3					; +1px height when stood-on
-		jsr (SolidObject).l				; make object solid and handle squash kills
-; ---------------------------------------------------------------------------
-
-	.chkdel:
-		out_of_range2	.chkgone,SMZ_sto_origX(a0)		; has object gone out of range? if yes, branch
-		jmp	(DisplaySprite).l			; display object
-
-	.chkgone:
-		jmp (UnloadObject).l
+; A movement routine returns 0 for normal solidity, -1 when it has already
+; checked support, or 1 when an upward impulse follows the contact pass.
+SMZ_Sto_Move:
+		move.w	obSubtype(a0),d0
+		andi.w	#$F,d0
+		add.w	d0,d0
+		move.w	SMZ_Sto_TypeIndex(pc,d0.w),d1
+		jsr	SMZ_Sto_TypeIndex(pc,d1.w)
+		moveq	#0,d0
+		rts
 
 ; ===========================================================================
 SMZ_Sto_TypeIndex:	dc.w SMZ_Sto_Stationary-SMZ_Sto_TypeIndex		; 0
@@ -136,7 +152,7 @@ SMZ_Sto_SlidingPlatform_Extend:
 		beq.s	.setX					; if not, branch
 		neg.w	d0					; extend platform to the right instead
 		addi.w	#128,d0					; keep in same general X-range (platform width is 128px)
-	.setX:	move.w	SMZ_sto_origX(a0),d1			; get initial platform X-position
+	.setX:	move.w	stomper_origin_x(a0),d1			; get initial platform X-position
 		sub.w	d0,d1					; adjust by current movement offset
 		move.w	d1,obX(a0)				; set new X-position
 		rts						; return
@@ -171,7 +187,7 @@ SMZ_Sto_SlidingPlatform_Retract:
 		beq.s	.setX					; if not, branch
 		neg.w	d0					; retract platform to the left instead
 		addi.w	#128,d0					; keep in same general X-range (platform width is 128px)
-	.setX:	move.w	SMZ_sto_origX(a0),d1			; get initial platform X-position
+	.setX:	move.w	stomper_origin_x(a0),d1			; get initial platform X-position
 		sub.w	d0,d1					; adjust by current movement offset
 		move.w	d1,obX(a0)				; set new X-position
 		rts						; return
@@ -216,7 +232,7 @@ SMZ_Sto_Stomper_DownAndRetract:
 		beq.s	.setY					; if not, branch
 		neg.w	d0					; invert base stomp direction
 		addi.w	#56,d0					; keep in same general Y-range (stomper height is 56px)
-	.setY:	move.w	SMZ_sto_origY(a0),d1			; get initial stomper Y-position
+	.setY:	move.w	stomper_origin_y(a0),d1			; get initial stomper Y-position
 		add.w	d0,d1					; adjust by current stomp distance
 		move.w	d1,obY(a0)				; set new Y-position
 		rts						; return
@@ -260,7 +276,7 @@ SMZ_Sto_Stomper_UpAndDown:
 		beq.s	.setY					; if not, branch
 		neg.w	d0					; invert base stomp direction
 		addi.w	#56,d0					; keep in same general Y-range (stomper height is 56px)
-	.setY:	move.w	SMZ_sto_origY(a0),d1			; get initial stomper Y-position
+	.setY:	move.w	stomper_origin_y(a0),d1			; get initial stomper Y-position
 		add.w	d0,d1					; adjust by current stomp distance
 		move.w	d1,obY(a0)				; set new Y-position
 		rts						; return
@@ -273,13 +289,11 @@ SMZ_Sto_AncientLift:
 Map_SMZ_Stomp: binclude "mappings/sprite/SMZ Stomp.bin"
 
 ; ---------------------------------------------------------------------------
-; MMZ crushers share the stomper's placement ID. Two signed-byte height tables
+; Sinusoidal motion for the stomper and its launch-capable body. Height tables
 ; replace CD's per-update sine/cosine call and multiplication, including the
 ; source's asymmetric sine entries and negative-product rounding.
-MMZ_crush_y:		equ objoff_2E
-MMZ_crush_x:		equ objoff_30
-MMZ_crush_phase:		equ objoff_32
-MMZ_crush_step:		equ objoff_34
+MMZ_crush_phase:		equ objoff_2E
+MMZ_crush_step:		equ objoff_32
 MMZ_crush_heights:	equ objoff_36 ; long table pointer
 MMZ_crush_hold:		equ objoff_3A ; byte, selected pause duration
 MMZ_crush_timer:		equ objoff_3B ; byte, current pause
@@ -288,16 +302,13 @@ MMZ_crush_tall:		equ objoff_3D ; byte
 MMZ_crush_launch:	equ objoff_3E ; word, launch velocity
 
 MMZ_Crusher_Init:
-		move.l	#MMZ_Crusher_Run,code(a0)
+		move.l	#MMZ_Crusher_Move,stomper_motion(a0)
 		move.l	#Map_MMZ_Crusher,obMap(a0)
 		move.w	#ArtTile_MMZ_Atlas,obGfx(a0)
 		move.w	#$180,obPriority(a0)
-		ori.b	#4,obRender(a0)
 		move.b	#32,width_pixels(a0)
 		move.b	#Map_MMZ_Crusher_height,height_pixels(a0)
 		move.b	#32,obHeight(a0)
-		move.w	obY(a0),MMZ_crush_y(a0)
-		move.w	obX(a0),MMZ_crush_x(a0)
 		move.w	obSubtype(a0),d0
 		move.w	d0,d1
 		andi.w	#$30,d1
@@ -335,13 +346,14 @@ MMZ_Crusher_Init:
 		move.w	.speeds(pc,d0.w),MMZ_crush_step(a0)
 		bsr.w	MMZ_Crusher_Position
 		move.w	d0,obY(a0)
-		bra.w	MMZ_Crusher_Display
+		bra.w	Stomper_Draw
 .speeds:	dc.w 4,8,16,32
 
-MMZ_Crusher_Run:
+MMZ_Crusher_Move:
 		tst.w	obVelY(a0)
 		bpl.s	.move
-		bsr.w	MMZ_Crusher_Solid
+		move.w	obX(a0),d4
+		bsr.w	Stomper_Solid
 .move:
 		move.w	obY(a0),-(sp)
 		tst.b	MMZ_crush_tall(a0)
@@ -378,21 +390,15 @@ MMZ_Crusher_Run:
 		beq.s	.solid
 		cmpi.w	#$210,MMZ_crush_phase(a0)
 		bne.s	.solid
-		bsr.s	MMZ_Crusher_Solid
-		lea	(v_player).w,a1
-		moveq	#3,d6
-		bsr.s	MMZ_Crusher_Launch
-		lea	(v_player2).w,a1
-		moveq	#4,d6
-		bsr.s	MMZ_Crusher_Launch
-		bra.s	MMZ_Crusher_Display
+		moveq	#1,d0
+		rts
 .solid:
+		moveq	#0,d0
 		tst.w	obVelY(a0)
-		bmi.s	MMZ_Crusher_Display
-		bsr.s	MMZ_Crusher_Solid
-MMZ_Crusher_Display:
-		out_of_range2	MMZ_Crusher_Unload,MMZ_crush_x(a0)
-		jmp	(DisplaySprite).l
+		bpl.s	.return
+		moveq	#-1,d0
+.return:
+		rts
 
 MMZ_Crusher_Position:
 		move.w	MMZ_crush_phase(a0),d0
@@ -400,25 +406,19 @@ MMZ_Crusher_Position:
 		movea.l	MMZ_crush_heights(a0),a1
 		move.b	(a1,d0.w),d0
 		ext.w	d0
-		add.w	MMZ_crush_y(a0),d0
+		add.w	stomper_origin_y(a0),d0
 		rts
 
-MMZ_Crusher_Solid:
-		moveq	#32+sonic_solid_width,d1
-		moveq	#0,d2
-		move.b	obHeight(a0),d2
-		move.w	d2,d3
-		addq.w	#1,d3
-		move.w	obX(a0),d4
-		jmp	(SolidObject).l
-
-MMZ_Crusher_Launch:
-		btst	d6,obStatus(a0)
-		beq.s	.return
-		bclr	d6,obStatus(a0)
+Stomper_LaunchRiders:
+		lea	(v_player).w,a1
+		moveq	#3,d6
+		bsr.s	.one
+		lea	(v_player2).w,a1
+		moveq	#4,d6
+.one:
+		jsr	(ReleaseObjectRider).l
+		bne.s	.return
 		move.w	MMZ_crush_launch(a0),obVelY(a1)
-		bset	#status.player.in_air,obStatus(a1)
-		bclr	#status.player.on_object,obStatus(a1)
 		bclr	#status.player.rolljumping,obStatus(a1)
 		clr.b	jumping(a1)
 		clr.b	spindash_flag(a1)
@@ -426,10 +426,6 @@ MMZ_Crusher_Launch:
 		move.b	#$10,obAnim(a1)
 .return:
 		rts
-
-MMZ_Crusher_Unload:
-		jsr	(SMZ_ReleaseRiders).l
-		jmp	(UnloadObject).l
 
 MMZ_Crusher_Height32:
 		dc.b 0,0,1,2,3,3,4,5,6,7,7,8,9,10,10,11
