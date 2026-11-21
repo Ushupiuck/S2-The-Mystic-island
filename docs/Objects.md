@@ -235,6 +235,11 @@ before upward motion. The tall body selects 60 or 90 updates at the extrema.
 At phase `$210`, it launches each actual rider independently with `-$1000` or
 `-$A00` velocity. The rider's standing index must still match the body.
 
+The short variant checks terrain headroom when its carry step moves a rider
+upward. Head overlap with the active path's side/bottom solidity is lethal,
+including fully solid terrain. The probe checks both shoulders and the
+center of the head using the rider's standing or compact envelope.
+
 Obj20 retains the owner's existing morphing-platform rewrite, seven CD poses,
 palette-adapted eight-tile CD art, phase table and standing helper. Its direct
 running entry removes the old routine dispatch. The constructor's MMZ check

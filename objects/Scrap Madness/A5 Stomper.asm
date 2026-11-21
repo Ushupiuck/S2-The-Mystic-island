@@ -357,6 +357,11 @@ MMZ_Crusher_Move:
 		tst.w	obVelY(a0)
 		bpl.s	.move
 		move.w	obX(a0),d4
+		tst.b	MMZ_crush_tall(a0)
+		bne.s	.carry
+		bsr.w	MMZ_Crusher_Carry
+		bra.s	.move
+.carry:
 		bsr.w	Stomper_Solid
 .move:
 		move.w	obY(a0),-(sp)
@@ -411,6 +416,105 @@ MMZ_Crusher_Position:
 		move.b	(a1,d0.w),d0
 		ext.w	d0
 		add.w	stomper_origin_y(a0),d0
+		rts
+
+; Player input runs before Stomper_Run. Test expansion against the
+; support the rider will be carried to this frame, even at the first
+; overlap. a0 = rider, a3 = support, d2.w = current centre Y.
+MMZ_Crusher_PendingSupport:
+		cmpi.l	#Stomper_Run,code(a3)
+		bne.s	.return
+		cmpi.l	#MMZ_Crusher_Move,stomper_motion(a3)
+		bne.s	.return
+		tst.b	MMZ_crush_tall(a3)
+		bne.s	.return
+		tst.w	obVelY(a3)
+		bpl.s	.return
+		moveq	#0,d0
+		move.b	obHeight(a3),d0
+		neg.w	d0
+		add.w	obY(a3),d0
+		subq.w	#1,d0
+		moveq	#0,d1
+		move.b	obHeight(a0),d1
+		sub.w	d1,d0
+		cmp.w	d2,d0
+		bge.s	.return
+		move.w	d0,d2
+.return:
+		rts
+
+; Only the short crusher opts into lethal terrain. The solid pass applies
+; the previous rise first. Record the riders' feet to distinguish that lift
+; from a new landing, a stopped player, or an old stand flag.
+MMZ_Crusher_Carry:
+		moveq	#(1<<status.npc.p1_standing)|(1<<status.npc.p2_standing),d0
+		and.b	obStatus(a0),d0
+		beq.w	Stomper_Solid
+		move.w	d0,-(sp)
+		moveq	#0,d0
+		move.b	(v_player+obHeight).w,d0
+		add.w	(v_player+obY).w,d0
+		move.w	d0,-(sp)
+		moveq	#0,d0
+		move.b	(v_player2+obHeight).w,d0
+		add.w	(v_player2+obY).w,d0
+		move.w	d0,-(sp)
+		bsr.w	Stomper_Solid
+		btst	#status.npc.p1_standing,5(sp)
+		beq.s	.companion
+		lea	(v_player).w,a1
+		moveq	#status.npc.p1_standing,d6
+		move.w	2(sp),d3
+		bsr.s	.check_rider
+.companion:
+		btst	#status.npc.p2_standing,5(sp)
+		beq.s	.finish
+		lea	(v_player2).w,a1
+		moveq	#status.npc.p2_standing,d6
+		move.w	(sp),d3
+		bsr.s	.check_rider
+.finish:
+		addq.l	#6,sp
+		rts
+
+.check_rider:
+		btst	d6,obStatus(a0)
+		beq.s	.return
+		tst.w	(Debug_placement_mode).w
+		bne.s	.return
+		tst.b	obControl(a1)
+		bne.s	.return
+		cmpi.b	#2,obRoutine(a1)
+		bne.s	.return
+		jsr	(ObjectOwnsRider).l
+		bne.s	.return
+		moveq	#0,d0
+		move.b	obHeight(a1),d0
+		add.w	obY(a1),d0
+		cmp.w	d3,d0
+		bge.s	.return
+		move.w	obHeight(a1),d0
+		cmpi.b	#AniIDSonAni_Duck,obAnim(a1)
+		beq.s	.compact
+		cmpi.b	#AniIDSonAni_Spindash,obAnim(a1)
+		bne.s	.probe
+.compact:
+		cmpi.b	#sonic_roll_height,obHeight(a1)
+		bls.s	.probe
+		move.w	#(sonic_roll_height<<8)|sonic_roll_width,d0
+.probe:
+		move.l	a0,-(sp)
+		movea.l	a1,a0
+		jsr	(Player_FloorHeadroom).l
+		bpl.s	.restore
+		movea.l	(sp),a2
+		bclr	d6,obStatus(a2)
+		bclr	#status.player.on_object,obStatus(a0)
+		jsr	(KillCharacter).l
+.restore:
+		movea.l	(sp)+,a0
+.return:
 		rts
 
 Stomper_LaunchRiders:
