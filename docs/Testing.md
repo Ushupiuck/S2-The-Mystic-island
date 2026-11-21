@@ -302,7 +302,10 @@ The same checks cover both approach directions, paired unloading and slot
 allocation retry. Authored visits exercise each revolving door and automatic
 pipe in its available eras and both characters. They verify path and sprite
 priority changes, exact exit points, handoffs at adjacent entrances, steering
-junctions and cover opening. `check_metallic_madness.py` also checks all eight
+junctions and cover opening. Hurt Sonic and controller-2 Tails exercise every
+available route and junction. Solo Tails and both carry handoffs use the
+all-era entrance at `$1880,$02D0`; the carry fixtures open its authored hatch
+and lower Sonic using the live carry update. `check_metallic_madness.py` also checks all eight
 ring tables, both pickup paths in MMZ2, time poles, the Past generators and
 crossing the real finish signs inside their vertical corridors.
 

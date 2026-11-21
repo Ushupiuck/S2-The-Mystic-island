@@ -353,6 +353,103 @@ def transport_game(args):
 			and g.get(slot, 'obX', 2) == x and g.get(slot, 'obY', 2) == y)
 		return slot, g.save()
 
+	def packet(actor, pipe):
+		return pipe + s['objoff_30'] + ACTORS.index(actor)*s['smz_pipe_packet']
+
+	def ride(pipe, actor, route, x, y, case):
+		if route:
+			entry = struct.unpack_from('>H', routes, route*2)[0]
+			length = struct.unpack_from('>H', routes, entry)[0]
+			waypoints = ((x, y), *struct.iter_unpack('>hh', routes[entry+2:entry+2+length]))
+			exit_x, exit_y = waypoints[-1]
+			ticks = sum(1+max(abs(bx-ax),abs(by-ay))//16
+				for (ax,ay),(bx,by) in zip(waypoints,waypoints[1:]))
+		else:
+			ticks = 4
+			assert g.read(packet(actor, pipe)) == 3, case
+			exit_x, exit_y = x+(16 if actor == ACTORS[0] else -16), y
+			g.buttons, g.buttons2 = ({7}, {0}) if actor == ACTORS[0] else (set(), {6})
+		for _ in range(ticks*3+16):
+			assert g.get(actor, 'obRoutine') == 2 and g.get(actor, 'obControl') == 0x81, case
+			g.run()
+			if not g.read(packet(actor, pipe)):
+				break
+		else:
+			raise AssertionError(('no pipe exit', case))
+		assert g.get(actor, 'obRoutine') == 2, case
+		control = g.get(actor, 'obControl')
+		current = g.get(actor, 'obX', 2), g.get(actor, 'obY', 2)
+		if control:
+			# A later slot can catch the rider on the same frame.
+			next_pipe = next((slot for slot in slots if slot != pipe
+				and g.get(slot, 'code') == s['SMZ_Teleport_Main'] and g.read(packet(actor, slot))), None)
+			assert control == 0x81 and next_pipe, (case, control, current)
+			assert current == (g.get(next_pipe, 'obX', 2), g.get(next_pipe, 'obY', 2)), case
+			assert abs(current[0]-exit_x) <= 16 and abs(current[1]-(exit_y & 0x7FF)) <= 16, case
+		else:
+			assert current == (exit_x, exit_y & 0x7FF), (case, current)
+
+	def enter(pipe, scene, actor, route, x, y, hurt):
+		g.restore(scene)
+		g.buttons, g.buttons2 = set(), {0}
+		place(g, actor, x, y)
+		if hurt:
+			g.put(actor, 'obRoutine', 4)
+			g.put(actor, 'obAnim', s['AniIDSonAni_Hurt'])
+			g.put(actor, 'obVelX', 0x200, 2)
+			g.put(actor, 'obVelY', -0x400, 2)
+		case = title, hex(x), hex(y), actor, 'hurt' if hurt else 'normal'
+		for _ in range(12):
+			g.run()
+			if g.read(packet(actor, pipe)):
+				break
+		else:
+			raise AssertionError(('no pipe entry', case))
+		if hurt:
+			assert g.get(actor, 'flashtime', 2) == s['Player_HurtFlashTime'], case
+		ride(pipe, actor, route, x, y, case)
+
+	def fly_to_pipe(x, y, pipe, scene, jump_off):
+		sonic, tails = ACTORS
+		case = title, 'jump off' if jump_off else 'carrier enters', hex(x), hex(y)
+		g.restore(scene)
+		g.buttons, g.buttons2 = set(), set()
+		cover = next(slot for slot in slots if g.get(slot, 'code') == s['TubeCover_Update']
+			and g.get(slot, 'obX', 2) == x and 0 < y-g.get(slot, 'obY', 2) < 32)
+		g.write(s['f_switch']+(g.get(cover, 'obSubtype', 2)&15), 1)
+		g.run(8)
+		assert g.get(cover, 'obFrame') == s['TubeCover_Open'], case
+		place(g, sonic, x, y-24)
+		place(g, tails, x, y-60)
+		g.put(tails, 'tails_flight_flag', 1)
+		g.put(tails, 'tails_flight_energy', s['Tails_FlightBudget'])
+		g.put(tails, 'obVelY', 0x100, 2)
+		g.buttons, g.buttons2 = set(), {4}
+		carried_into_range = carrier_entered = False
+		for _ in range(64):
+			g.run()
+			if g.read('Flying_carrying_Sonic_flag'):
+				in_range = -16 <= g.get(sonic, 'obY', 2)-y < 16
+				carried_into_range |= in_range
+				carrier_entered |= bool(g.read(packet(tails, pipe)))
+				assert not g.read(packet(sonic, pipe)) and g.get(sonic, 'obControl') == 3, case
+				if jump_off and in_range:
+					g.buttons = {0}
+			if g.read(packet(sonic, pipe)):
+				break
+		else:
+			raise AssertionError(('no carry handoff', case))
+		assert carried_into_range and carrier_entered != jump_off, case
+		assert not g.read('Flying_carrying_Sonic_flag'), case
+		g.buttons = set()
+		route = g.get(pipe, 'obSubtype', 2) & 63
+		ride(pipe, sonic, route, x, y, case)
+		for _ in range(64):
+			if not g.read(packet(tails, pipe)):
+				break
+			g.run()
+		assert not g.read(packet(tails, pipe)) and g.get(tails, 'obControl') == 0, case
+
 	for era, (_, title, _) in enumerate(ERAS):
 		g.restore(initial)
 		g.buttons, g.buttons2 = set(), set()
@@ -383,47 +480,9 @@ def transport_game(args):
 			elif oid == 0xAB:
 				pipe, scene = visit(x, y, 'SMZ_Teleport_Main')
 				route = subtype & 63
-				for player, actor in enumerate(ACTORS):
-					g.restore(scene)
-					g.buttons, g.buttons2 = set(), {0}
-					place(g, actor, x, y)
-					packet = s['objoff_30'] + player*s['smz_pipe_packet']
-					for _ in range(12):
-						g.run()
-						if g.read(pipe+packet):
-							break
-					else:
-						raise AssertionError((title, 'entry', x, y, actor))
-					assert g.get(actor, 'obControl') == 0x81
-					if route:
-						entry = struct.unpack_from('>H', routes, route*2)[0]
-						length = struct.unpack_from('>H', routes, entry)[0]
-						waypoints = ((x, y), *struct.iter_unpack('>hh', routes[entry+2:entry+2+length]))
-						exit_x, exit_y = waypoints[-1]
-						ticks = sum(1+max(abs(bx-ax),abs(by-ay))//16
-							for (ax,ay),(bx,by) in zip(waypoints,waypoints[1:]))
-					else:
-						ticks = 4
-						assert g.read(pipe+packet) == 3
-						exit_x, exit_y = x+(16 if player == 0 else -16), y
-						g.buttons, g.buttons2 = ({7}, {0}) if player == 0 else (set(), {6})
-					for _ in range(ticks*3+16):
-						g.run()
-						if not g.read(pipe+packet):
-							break
-					else:
-						raise AssertionError((title, 'exit', x, y, actor))
-					control = g.get(actor, 'obControl')
-					current = (g.get(actor, 'obX', 2), g.get(actor, 'obY', 2))
-					if control:
-						# A later slot can catch the rider the same frame it leaves.
-						next_pipe = next((slot for slot in slots if slot != pipe
-							and g.get(slot, 'code') == s['SMZ_Teleport_Main'] and g.read(slot+packet)), None)
-						assert control == 0x81 and next_pipe, (title, x, y, actor, control, current)
-						assert current == (g.get(next_pipe, 'obX', 2), g.get(next_pipe, 'obY', 2))
-						assert abs(current[0]-exit_x) <= 16 and abs(current[1]-(exit_y & 0x7FF)) <= 16
-					else:
-						assert current == (exit_x, exit_y & 0x7FF), (title, x, y, actor, current)
+				for actor in ACTORS:
+					for hurt in (False, True):
+						enter(pipe, scene, actor, route, x, y, hurt)
 				pipes += int(bool(route))
 				junctions += int(not route)
 		x, y, _, _, subtype = next(row for row in placements if row[2] == 0x30 and row[4] & 0x100
@@ -440,8 +499,23 @@ def transport_game(args):
 		g.run(8)
 		assert g.get(cover, 'obFrame') == s['TubeCover_Open']
 		assert not g.read('v_errortype')
-		print(f'MMZ2 {title}: {doors} doors, {pipes} pipe routes and {junctions} junctions pass for both players.', flush=True)
-		report.append(dict(era=title, doors=doors, pipes=pipes, junctions=junctions, hatch=[x,y]))
+		hatch = [x, y]
+		x, y = 0x1880, 0x02D0
+		pipe, scene = visit(x, y, 'SMZ_Teleport_Main')
+		for jump_off in (True, False):
+			fly_to_pipe(x, y, pipe, scene, jump_off)
+
+		g.restore(initial)
+		g.buttons, g.buttons2 = set(), set()
+		boot_level(g, player=s['PlayerMode_Tails'], zone=15, act=1, timezone=era)
+		level = g.save()
+		pipe, scene = visit(x, y, 'SMZ_Teleport_Main')
+		assert g.get(ACTORS[0], 'character_id') == s['CharacterID_Tails']
+		enter(pipe, scene, ACTORS[0], g.get(pipe, 'obSubtype', 2) & 63, x, y, True)
+		assert not g.read('v_errortype')
+		print(f'MMZ2 {title}: normal and hurt riders, solo Tails, carry handoffs, doors and covers passed.', flush=True)
+		report.append(dict(era=title, doors=doors, pipes=pipes, junctions=junctions,
+			hatch=hatch, hurt_entries=(pipes+junctions)*2+1, carry_handoffs=2))
 	g.close()
 	return report
 

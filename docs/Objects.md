@@ -147,7 +147,11 @@ family of path calculations. Subtype bit 8 selects the direct MMZ2 profile
 on `$AB`. It captures from a centered 32-pixel square, starts its first leg
 immediately and preserves travel velocity at the exit. Low bits 0–5 index
 `MMZ2 Tunnel Paths.bin`. Route zero waits for directional input and moves 16
-pixels toward the chosen exit. Both actors can traverse independently.
+pixels toward the chosen exit. Both actors can traverse independently. An
+entry ends active hurt recoil and restores the normal hurt-flash timer before
+the pipe takes control. While Tails carries Sonic, the pipe honors Sonic's carry
+lock. Sonic can enter once he jumps free or the pipe captures Tails and the
+carry releases.
 
 The caller supplies actor `a1`, rider packet `a3` and positive 8.8 major speed
 `d2`; `AutoTunnel_GetPath` additionally loads a signed X/Y word pair from `a2`.

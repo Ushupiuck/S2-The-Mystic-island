@@ -97,6 +97,12 @@ SMZ_Teleport_Main:
 		cmpi.w	#32,d0
 		bhs.w	.return
 .start:
+		; Recoil runs outside the object-control lock. End it before the pipe moves the actor.
+		cmpi.b	#4,obRoutine(a1)
+		bne.s	.capture
+		subq.b	#2,obRoutine(a1)
+		move.w	#Player_HurtFlashTime,flashtime(a1)
+.capture:
 		move.b	#1,smz_pipe_state(a3)
 		clr.b	smz_pipe_bump(a3)
 		clr.b	smz_pipe_index(a3)
