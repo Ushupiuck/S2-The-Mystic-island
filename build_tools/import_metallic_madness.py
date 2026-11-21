@@ -328,6 +328,9 @@ def sprites(source,constants):
 			for row in packed:
 				rows.append([(y,size,word|(offset+find_tiles(tiles,pattern)),x) for y,size,word,x,pattern in row])
 			label=family if len(families)==1 else family+(' Saw' if family=='MechaBu' and mi else ' Handle' if family=='Saw' and mi else ' Alternate' if mi else '')
+			if family=='Seesaw':
+				# Complete resting device for Debug and SonLVL.
+				rows.append(rows[0]+rows[5]+[(y-44,size,word,x) for y,size,word,x in rows[8]])
 			outputs[f'mappings/sprite/MMZ {label}.bin']=encode_sprites(bare_saw_frames(rows) if label=='Saw' else rows)
 			# Compare visible indexed pixels in every era, independent of the
 			# rectangle packer's storage order and complete mapping-piece overlap.
@@ -407,6 +410,9 @@ def sprites2(source):
 				rows.append([(y, size, tile, x + dx) for dx in (0, 64)
 					for y, size, tile, x in rows[0]] + [(y, size, tile, x + dx)
 					for dx in range(8, 64, 8) for y, size, tile, x in rows[1]])
+			if family == 'SpikeCrusher':
+				rows.append([(y,size,word,x+dx) for frame,dx in ((1,-52),(3,0),(2,52))
+					for y,size,word,x in rows[frame]])
 			if family == 'RevolveDoor':
 				# Two cap poses and a rail share one object, anchored between the caps.
 				for cap in rows[:2]:
@@ -464,7 +470,8 @@ def placements(source, act):
 	# Expand this explicit ownership list only after runtime, art and editor data
 	# exist. Reimporting a completed family resets its authored source settings.
 	ids = {'BigbomObject': 0xAE, 'MechaBuObject': 0xB8, 'DangoObject': 0xBA, 'TwinWalkerObject': 0xBB, 'SpikesObject': 0x15,
-		'CollapseFloorObject': 0x1B, 'CrusherObject': 0xA5,
+		'CollapseFloorObject': 0x1B, 'CrusherObject': 0xA5, 'SeesawObject': 0xBC,
+		'SpikeCrusherObject': 0xBD,
 		'BuzzsawObject': 0xA4, 'VanishPlatformObject': 0xA6,
 		'SpinPlatformObject': 0xA9, 'MoveSpringObjectR8': 0xB0,
 		'HVPlatformObject': 0x20, 'PropellerObject': 0xB7,
@@ -518,6 +525,10 @@ def placements(source, act):
 			sub = (variant << 8) | 0x10
 		elif family == 'DangoObject':
 			assert act == 2 and sub in (0, 1) and variant == 0
+		elif family == 'SeesawObject':
+			assert act == 1 and sub == variant == 0
+		elif family == 'SpikeCrusherObject':
+			assert act == 2 and sub == variant == 0
 		elif family == 'SpikesObject':
 			assert variant == 0 and sub & 0x80
 			assert y & 0x6000 == 0

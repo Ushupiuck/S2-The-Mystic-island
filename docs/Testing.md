@@ -311,6 +311,12 @@ and the shared DPLC retries without a partial upload. Core visits at
 `$16B2,$0658` check each rider alone and both ends together through alternating
 steps in every era. They verify the exact art upload and preview it from Debug
 before the authored walker has loaded.
+The MMZ1 seesaw fixture stages Sonic and controller-2 Tails on each of the
+three authored caps in every era. It checks the drop, the armed ball in
+flight and the final resting positions.
+At the MMZ2 spike crusher (`$1A80,$010C`), both actors trigger the descent and
+take damage from the armed undersides. Native cases check the four follow-up
+intervals, pool-pressure retry, hitbox expiry and group cleanup.
 Hurt Sonic and controller-2 Tails exercise every
 available route and junction. Solo Tails and both carry handoffs use the
 all-era entrance at `$1880,$02D0`; the carry fixtures open its authored hatch

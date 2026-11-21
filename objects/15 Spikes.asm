@@ -166,32 +166,6 @@ Spike_Ceiling:
 		bsr.s	Spike_HurtCharacter
 		bra.s	Spike_Display
 ; ---------------------------------------------------------------------------
-; The downward bed hurts through touch response. Its backing is solid to a
-; rider outside the 32-pixel inner band. Measure that band per character.
-Spike_InvertedBed:
-		lea	(v_player).w,a1
-		moveq	#3,d6
-		bsr.s	.backing
-		lea	(v_player2).w,a1
-		moveq	#4,d6
-		bsr.s	.backing
-		bra.w	Spike_Display
-.backing:
-		tst.l	code(a1)
-		beq.s	.return
-		move.w	obY(a1),d0
-		sub.w	obY(a0),d0
-		addi.w	#31,d0
-		cmpi.w	#63,d0
-		blo.s	.release
-		moveq	#16+sonic_solid_width,d1
-		moveq	#8,d2
-		moveq	#9,d3
-		move.w	obX(a0),d4
-		jmp	(SolidObject.sub_F456).l
-.release:
-		jmp	(ReleaseObjectRider).l
-.return:	rts
 ; ---------------------------------------------------------------------------
 Spike_HurtCharacter:
 		tst.w	(Debug_placement_mode).w
@@ -213,6 +187,35 @@ Spike_HurtCharacter:
 		movea.l	a1,a0
 		jsr	(HurtSonic).l
 		movem.l	(sp)+,d6/a0
+.return:	rts
+; ---------------------------------------------------------------------------
+; The downward bed hurts through touch response. Its backing is solid to a
+; rider outside the 32-pixel inner band. Measure that band per character.
+Spike_InvertedBed:
+		pea	Spike_Display(pc)
+Spike_BackSolidPair:
+		lea	(v_player).w,a1
+		moveq	#3,d6
+		bsr.s	.backing
+		lea	(v_player2).w,a1
+		moveq	#4,d6
+.backing:
+		tst.l	code(a1)
+		beq.s	.return
+		move.w	obY(a1),d0
+		sub.w	obY(a0),d0
+		addi.w	#31,d0
+		cmpi.w	#63,d0
+		blo.s	.release
+		moveq	#0,d1
+		move.b	obActWid(a0),d1
+		addi.w	#sonic_solid_width,d1
+		moveq	#8,d2
+		moveq	#9,d3
+		move.w	obX(a0),d4
+		jmp	(SolidObject.sub_F456).l
+.release:
+		jmp	(ReleaseObjectRider).l
 .return:	rts
 ; ---------------------------------------------------------------------------
 MoveSpikes:

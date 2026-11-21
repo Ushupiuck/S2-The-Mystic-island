@@ -368,6 +368,7 @@ Debug_MMZ1:	dc.w (Debug_MMZ1_End-Debug_MMZ1-2)/DebugEntry_size
 	dbug	Map_MMZ_MechaBu,MMZ_MechaBu,1,0,ArtTile_MMZ_Atlas
 	dbug	Map_TimeGenerator,TimeGenerator,0,0,ArtTile_MMZ_Atlas
 		dbug	Map_SMZ_Bomb,Bomb,0,0,ArtTile_Bomb_MMZ
+	dbug	Map_MMZ_Seesaw,MMZ_Seesaw,0,9,ArtTile_MMZ_Atlas
 Debug_MMZ1_End:
 
 ; MMZ2 common/implemented object families; remaining mechanisms are being ported.
@@ -406,4 +407,5 @@ Debug_MMZ2:	dc.w (Debug_MMZ2_End-Debug_MMZ2-2)/DebugEntry_size
 		dbug	Map_MMZ_Dango,MMZ_Dango,0,0,ArtTile_MMZ_Atlas
 		dbug	Map_MMZ_DangoSlow,MMZ_Dango,1,0,ArtTile_MMZ_Atlas
 		dbug	Map_MMZ_TwinWalker,MMZ_TwinWalker,0,2,ArtTile_MMZ2_TwinWalker
+	dbug	Map_MMZ_SpikeCrusher,MMZ_SpikeCrusher,0,7,ArtTile_MMZ_Atlas
 Debug_MMZ2_End:

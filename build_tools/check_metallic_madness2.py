@@ -398,6 +398,108 @@ def twin_allocation(a):
 		object_loop_preserved=True, packed_art_tiles=17, dma_queue_retry=True)
 
 
+def spike_crusher_native(args):
+	"""Verify the five groups' timing, placement and atomic allocation."""
+	n = Native(args.rom, args.listing)
+	n.start()
+	s = n.s
+	slots = list(range(s['v_lvlobjspace'] & 0xFFFFFF, s['v_lvlobjend'] & 0xFFFFFF, s['object_size']))
+	root = slots[5]
+	x, y = 600, 500
+	n.write('Camera_X_pos_coarse_back', 384, 2)
+	n.put(root, 'code', s['MMZ_SpikeCrusher'])
+	n.put(root, 'obX', x, 2)
+	n.put(root, 'obY', y, 2)
+	for slot in slots:
+		if slot != root and slot not in slots[-3:]:
+			n.put(slot, 'code', s['DisplaySprite'])
+	original = bytes(n.cpu.mem_read(root, s['object_size']))
+	n.act('MMZ_SpikeCrusher', root)
+	assert bytes(n.cpu.mem_read(root, s['object_size'])) == original
+	for slot in slots:
+		if slot != root:
+			n.put(slot, 'code', 0)
+	n.act('MMZ_SpikeCrusher', root)
+	assert n.get(root, 'platgroup_count') == 4
+	children = tuple(n.get(root+offset, 'platgroup_members', 2) | 0xFF0000 for offset in (0, 2, 4, 6))
+	assert [n.get(part, 'obX', 2) for part in (root, *children)] == [x-52, x, x+52, x-52, x+52]
+	assert [n.get(part, 'obColType') for part in children] == [0, 0, 0x9C, 0x9C]
+
+	# Use Tails with Sonic far outside the activation band. Let the clock
+	# run while the already-landed root is stationary.
+	n.put(root, 'spikecrusher_landed', 0xFF)
+	n.put('v_player', 'obX', x+256, 2)
+	n.put('v_player2', 'obX', x, 2)
+	n.put('v_player2', 'obY', y+256, 2)
+	launches = {}
+	for tick in range(1, 1082):
+		n.act('MMZ_SpikeCrusher_Controller', root, regs={UC_M68K_REG_D7: 0x13572468})
+		assert n.cpu.reg_read(UC_M68K_REG_D7) == 0x13572468
+		for slot in slots:
+			if n.get(slot, 'code') != s['MMZ_SpikeCrusher']:
+				continue
+			wave = n.get(slot, 'obSubtype')
+			assert wave not in launches and n.get(slot, 'obX', 2) == x
+			assert n.get(slot, 'obY', 2) == y-16*wave
+			launches[wave] = tick
+			n.act('MMZ_SpikeCrusher', slot)
+			assert n.get(slot, 'spikecrusher_wave') == wave
+			assert n.get(slot, 'spikecrusher_depth', 2) == wave*24
+	assert launches == {1: 300, 2: 600, 3: 840, 4: 1080}, launches
+	n.act('MMZ_SpikeCrusher_Touch', children[2])
+	assert not n.get(children[2], 'code') and not n.get(root+4, 'platgroup_members', 2)
+	n.act('PlatformGroup_Unload', root)
+	n.act('MMZ_SpikeCrusher_Touch', children[3])
+	assert all(not n.get(part, 'code') for part in (root, *children))
+	return dict(launch_updates=list(launches.values()), atomic_group=True, landed_hitbox_removed=True)
+
+
+def spike_crusher_game(g, era, output):
+	from check_companion_followup import place, reset_cpu
+	from check_rising_crushers import ACTORS, seek
+
+	x, y = 0x1A80, 0x010C
+	s = g.s
+	seek(g, x, y)
+	slots = range(s['v_lvlobjspace'] & 0xFFFF, s['v_lvlobjend'] & 0xFFFF, s['object_size'])
+	root = next(slot for slot in slots if g.get(slot, 'platgroup_state', 4) == s['MMZ_SpikeCrusher_Controller']
+		and (g.get(slot, 'platgroup_x', 2), g.get(slot, 'platgroup_y', 2)) == (x, y))
+	panels = (root, *(g.get(root+offset, 'platgroup_members', 2) for offset in (0, 2)))
+	touch = tuple(g.get(root+offset, 'platgroup_members', 2) for offset in (4, 6))
+	scene = g.save()
+	for actor, teeth in zip(ACTORS, touch):
+		g.restore(scene)
+		reset_cpu(g)
+		g.buttons2 = {4}
+		g.write('v_rings', 10, 2)
+		place(g, actor, g.get(teeth, 'obX', 2), y+12+g.get(actor, 'default_y_radius')-5)
+		g.put(actor, 'obControl', 1)
+		g.put(actor, 'obRender', 0x84)
+		for _ in range(10):
+			g.run()
+			if g.get(actor, 'obRoutine') == 4:
+				break
+		assert g.get(actor, 'obRoutine') == 4, (era, actor, 'crusher underside')
+		g.restore(scene)
+		reset_cpu(g)
+		g.buttons2 = {4}
+		place(g, actor, x, y+270)
+		g.put(actor, 'obControl', 1)
+		g.put(actor, 'obRender', 0x84)
+		for _ in range(12):
+			g.run()
+			if all(g.get(panel, 'obY', 4) > y << 16 for panel in panels):
+				break
+		assert g.get(root, 'obRoutine') == 2 and all(g.get(panel, 'obY', 4) > y << 16 for panel in panels), (era, actor)
+		g.video.save(output/f'spike-crusher-era{era}.png')
+		for _ in range(440):
+			g.run()
+			if all(g.get(panel, 'spikecrusher_landed') for panel in panels):
+				break
+		assert all(g.get(panel, 'spikecrusher_landed') for panel in panels), (era, actor, 'terrain stops')
+		assert not g.read('v_errortype')
+
+
 def ride_twin_walker(g, era, output):
 	from check_companion_followup import place
 	from check_rising_crushers import ACTORS, seek
@@ -665,6 +767,9 @@ def transport_game(args):
 		g.restore(level)
 		g.buttons, g.buttons2 = set(), set()
 		ride_twin_walker(g, era, args.output/'transport')
+		g.restore(level)
+		g.buttons, g.buttons2 = set(), set()
+		spike_crusher_game(g, era, args.output/'transport')
 		if era == 0:
 			g.restore(level)
 			g.buttons, g.buttons2 = set(), set()
@@ -679,7 +784,7 @@ def transport_game(args):
 		assert not g.read('v_errortype')
 		print(f'MMZ2 {title}: normal and hurt riders, solo Tails, carry handoffs, doors and covers passed.', flush=True)
 		report.append(dict(era=title, doors=doors, pipes=pipes, junctions=junctions,
-			hatch=hatch, hurt_entries=(pipes+junctions)*2+1, carry_handoffs=2, twin_walker=True))
+			hatch=hatch, hurt_entries=(pipes+junctions)*2+1, carry_handoffs=2, twin_walker=True, spike_crusher=True))
 	g.close()
 	return report
 
@@ -689,7 +794,7 @@ def main():
 	p.add_argument('--rom',type=Path,default=ROOT/'s2built.bin');p.add_argument('--listing',type=Path,default=ROOT/'md-main.lst');p.add_argument('--source',type=Path,required=True)
 	p.add_argument('--output',type=Path,required=True);p.add_argument('--core',type=Path);p.add_argument('--system-directory',type=Path);p.add_argument('--pal',action='store_true');a=p.parse_args()
 	a.output.mkdir(parents=True,exist_ok=True)
-	report={'native':native(a),'twin_walker':twin_allocation(a),'source_geometry':source_geometry(a),'animations':animation_checks(a,2)}
+	report={'native':native(a),'twin_walker':twin_allocation(a),'spike_crusher':spike_crusher_native(a),'source_geometry':source_geometry(a),'animations':animation_checks(a,2)}
 	if a.core:
 		report['game']=game(a)
 		report['transport']=transport_game(a)

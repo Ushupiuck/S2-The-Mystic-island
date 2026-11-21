@@ -1301,6 +1301,63 @@ def spike_beds_native(args):
 	return {'floor_damage': True, 'inverted_damage': True, 'both_characters': True}
 
 
+def seesaw_game(args):
+	"""Visit all three authored caps and exercise each with both characters."""
+	from check_companion_followup import place, reset_cpu
+	from check_object_course import boot_level
+	from check_rising_crushers import ACTORS, seek
+	from genesis_test_core import Genesis
+	from object_layout import decode
+
+	output = args.output/'seesaws'
+	g = Genesis(args.core, args.rom, args.listing, output, args.pal, system_directory=args.system_directory)
+	initial = g.save()
+	s = g.s
+	slots = range(s['v_lvlobjspace'] & 0xFFFF, s['v_lvlobjend'] & 0xFFFF, s['object_size'])
+	traps = [(x, y) for x, y, oid, eras, sub in decode((ROOT/'level/objects/LV0F_1.bin').read_bytes())
+		if oid == 0xBC and eras == 0xE0 and sub == 0]
+	assert len(traps) == 3
+	for era in range(4):
+		g.restore(initial)
+		g.buttons, g.buttons2 = set(), set()
+		boot_level(g, zone=15, timezone=era)
+		level = g.save()
+		for x, y in traps:
+			g.restore(level)
+			seek(g, x, y)
+			root = next(slot for slot in slots if g.get(slot, 'platgroup_state', 4) == s['MMZ_Seesaw_Base']
+				and (g.get(slot, 'obX', 2), g.get(slot, 'obY', 2)) == (x, y))
+			ball, cap = divmod(g.get(root, 'platgroup_members', 4), 65536)
+			assert g.get(cap, 'obY', 2) == y-44 and g.get(ball, 'obFrame') == 5
+			scene = g.save()
+			for index, actor in enumerate(ACTORS):
+				g.restore(scene)
+				reset_cpu(g)
+				g.buttons2 = {4}
+				g.put(actor, 'obRender', 0x84)
+				place(g, actor, x, y-44-12-g.get(actor, 'default_y_radius'))
+				g.put(actor, 'obControl', 1)
+				for _ in range(6):
+					g.run()
+					if g.get(root, 'obRoutine'):
+						break
+				assert g.get(root, 'obRoutine') == 2 and g.get(cap, 'obStatus') & (8 << index), (era, x, y, actor)
+				g.put(actor, 'obControl', 0x81)
+				g.run(55)
+				assert g.get(ball, 'obFrame') == 7 and g.get(ball, 'obColType')
+				assert (y-g.get(ball, 'obY', 2)) & 0x7FF > 0x100
+				for _ in range(60):
+					g.run()
+					if g.get(ball, 'platgroup_state', 4) == s['MMZ_Seesaw_Idle']:
+						break
+				assert g.get(ball, 'obY', 2) == y+4 and g.get(cap, 'obY', 2) == y+28
+				assert not g.read('v_errortype')
+			if era == 0:
+				g.video.save(output/f'{x:04x}-{y:04x}.png')
+	g.close()
+	return dict(placements=traps, eras=4, actor_launches=24)
+
+
 def spike_beds_game(args):
 	from check_object_course import boot_level
 	from check_rising_crushers import seek
@@ -1371,6 +1428,7 @@ def main():
 		report['hazard_game']=hazard_game(args)
 		report['floor_wheel_game']=floor_wheel_game(args)
 		report['spike_beds_game']=spike_beds_game(args)
+		report['seesaws']=seesaw_game(args)
 	if args.before_rom or args.before_listing:
 		assert args.before_rom and args.before_listing,'Supply the matching ROM and listing together'
 		report['retained_s1_hazards']=legacy_hazards(args)

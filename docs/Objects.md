@@ -359,6 +359,31 @@ through the shared spike routine. Y flip selects an inverted bed with
 32-pixel Y band. The MMZ importer maps all 90 original placements to these
 two orientations and keeps the standard spike art.
 
+### MMZ2 spike crusher
+
+The compound crusher (`$BD`) at `$1A80,$010C` remains overhead until
+either actor reaches the shaft below it. The panels lower half a pixel per
+update and each stops against the terrain on its own floor probe. The two
+end panels use the same solid backing as the inverted spike beds. Their
+undersides have separate damage boxes that retire when their panel lands.
+
+The main placement releases four more groups at 300, 600, 840 and 1080
+eligible updates, waiting when both players leave the shaft. Each group uses
+a different arrangement from the same resident sheet and two-player
+collision code. The full resting assembly is available in Debug and SonLVL.
+
+### MMZ1 seesaw trap
+
+Either player can activate the cap of `$BC`. As the cap lowers through five
+poses, the trap launches a ball straight overhead. It becomes harmful at the
+apex and settles back into the base. The cap, base and ball share an atomic
+group allocation and unload together. The cap uses the common two-player
+solid handling throughout its stroke.
+
+The three all-era placements are at `$0C4A,$01C5`, `$0CBE,$01C5` and
+`$1280,$06D3`. Debug and SonLVL show the resting group. Good Future swaps the
+existing seesaw art overlay at the same tile indices.
+
 ### Dango and Twin Walker
 
 The Act-2 Dango (`$BA`) uses low subtype bit 0 for its fast or slow shell.
