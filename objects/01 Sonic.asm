@@ -403,6 +403,12 @@ Obj01_MdNormal_Checks:
 ; loc_1A2B8:
 Obj01_MdNormal:
 		bsr.w	Sonic_CheckSpindash
+		cmpi.b	#AniIDSonAni_Duck,obAnim(a0)
+		bne.s	.jump
+		move.b	(v_jpadholdlogical).w,d0
+		bsr.w	Player_KeepDuckUnderRoof
+		bmi.s	Obj01_MdNormal_Skip
+.jump:
 		bsr.w	Sonic_Jump
 		bsr.w	Sonic_SlopeResist
 		bsr.w	Sonic_Move
@@ -891,14 +897,7 @@ Sonic_RollSpeed:
 		bhs.s	.velocity
 		tst.b	spindash_flag(a0)
 		bne.s	.keeprolling
-		bclr	#status.player.rolling,obStatus(a0)
-		move.b	obHeight(a0),d0
-		move.b	default_y_radius(a0),obHeight(a0)
-		move.b	default_x_radius(a0),obWidth(a0)
-		move.b	#AniIDSonAni_Wait,obAnim(a0)
-		sub.b	default_y_radius(a0),d0
-		ext.w	d0
-		add.w	d0,obY(a0)
+		bsr.w	Player_StopRolling
 		bra.s	.velocity
 .keeprolling:
 		move.w	#Sonic_ForcedRollSpeed,obInertia(a0)
@@ -1118,6 +1117,106 @@ loc_101FA:
 ; =============== S U B R O U T I N E =======================================
 
 
+; d0.w = new Y/X radii. Keep the foot position when changing pose on a floor.
+Player_ResizeOnFloor:
+		moveq	#0,d1
+		move.b	obHeight(a0),d1
+		move.w	d0,obHeight(a0)
+		lsr.w	#8,d0
+		sub.w	d0,d1
+		add.w	d1,obY(a0)
+		rts
+
+Player_EnterRoll:
+		bset	#status.player.rolling,obStatus(a0)
+		move.b	#AniIDSonAni_Roll,obAnim(a0)
+		move.w	#(sonic_roll_height<<8)|sonic_roll_width,d0
+		bra.s	Player_ResizeOnFloor
+
+; Probe the proposed shape from the current feet. Only L/R/B solidity on
+; this actor's active path can obstruct a ceiling. N means head overlap.
+Player_FloorHeadroom:
+		tst.b	(MCD_TerrainReady).l
+		beq.s	Player_StandingRoom.clear
+		move.w	obHeight(a0),-(sp)
+		move.w	obY(a0),-(sp)
+		bsr.w	Player_ResizeOnFloor
+		moveq	#1,d0			; include the middle of the head as well as both shoulders
+		jsr	(Sonic_DontRunOnWalls).l
+		move.w	(sp)+,obY(a0)
+		move.w	(sp)+,obHeight(a0)
+		tst.w	d1
+		rts
+
+Player_StandingRoom:
+		move.b	obAngle(a0),d0
+		addi.b	#$20,d0
+		cmpi.b	#$40,d0
+		bhs.s	.clear			; vertical expansion applies on floors
+		move.w	default_y_radius(a0),d0
+		bra.s	Player_FloorHeadroom
+.clear:
+		moveq	#0,d1
+		rts
+
+; Called after the normal spindash input check. A blocked duck remains
+; compact and can aim or charge again using the actual controller state.
+Player_KeepDuckUnderRoof:
+		move.b	d0,d5			; logical held buttons
+		bsr.s	Player_StandingRoom
+		bpl.s	.return
+		; Duck and charge use the compact envelope around a standing
+		; origin. Keep the animation, floor sensors and feet aligned.
+		btst	#button_left,d5
+		beq.s	.right
+		bset	#status.player.x_flip,obStatus(a0)
+.right:
+		btst	#button_right,d5
+		beq.s	.stop
+		bclr	#status.player.x_flip,obStatus(a0)
+.stop:
+		clr.w	obInertia(a0)
+		clr.l	obVelX(a0)
+		bclr	#status.player.pushing,obStatus(a0)
+		bsr.w	Player_ResetScr
+		moveq	#-1,d1
+.return:
+		rts
+
+Player_StopRolling:
+		bclr	#status.player.rolling,obStatus(a0)
+		bsr.s	Player_StandingRoom
+		move.b	#AniIDSonAni_Wait,obAnim(a0)
+		tst.w	d1
+		bpl.s	.resize
+		move.b	#AniIDSonAni_Duck,obAnim(a0)
+.resize:
+		move.w	default_y_radius(a0),d0
+		bra.w	Player_ResizeOnFloor
+
+; Roll-jumps can land back inside a low tunnel. Defer expansion until
+; the normal roll stops. Recoil, death and scripted resets use ordinary bounds.
+Player_RollLandingRoom:
+		cmpi.b	#2,obRoutine(a0)
+		bne.s	.clear
+		tst.b	obControl(a0)
+		bne.s	.clear
+		btst	#status.player.rolling,obStatus(a0)
+		beq.s	.clear
+		tst.b	jumping(a0)
+		bne.w	Player_StandingRoom
+		; An ongoing roll can briefly leave the wall of a tight curve.
+		; Keep the ball when it reattaches to the wall or ceiling.
+		move.b	obAngle(a0),d0
+		addi.b	#$20,d0
+		cmpi.b	#$40,d0
+		blo.w	Player_StandingRoom
+		moveq	#-1,d1
+		rts
+.clear:
+		moveq	#0,d1
+		rts
+
 Sonic_Roll:
 		tst.b	(f_slidemode).w
 		bne.s	Obj01_NoRoll
@@ -1143,11 +1242,7 @@ Sonic_Roll:
 .doroll:
 		btst	#status.player.rolling,obStatus(a0)
 		bne.s	Obj01_NoRoll
-		bset	#status.player.rolling,obStatus(a0)
-		move.b	#sonic_roll_height,obHeight(a0)
-		move.b	#sonic_roll_width,obWidth(a0)
-		move.b	#AniIDSonAni_Roll,obAnim(a0)
-		addq.w	#sonic_height-sonic_roll_height,obY(a0)
+		bsr.w	Player_EnterRoll
 		move.w	#SndID_Roll,d0
 		jmp	(PlaySound_Special).l
 Obj01_NoRoll:
@@ -1277,10 +1372,7 @@ Sonic_CheckSpindash:
 Sonic_UpdateSpindash:
 		btst	#button_down,(v_jpadholdlogical).w
 		bne.w	Sonic_ChargingSpindash
-		move.b	#sonic_roll_height,obHeight(a0)
-		move.b	#sonic_roll_width,obWidth(a0)
-		move.b	#AniIDSonAni_Roll,obAnim(a0)
-		addq.w	#sonic_height-sonic_roll_height,obY(a0)
+		bsr.w	Player_EnterRoll
 		clr.b	spindash_flag(a0)
 		moveq	#0,d0
 		move.b	spindash_counter(a0),d0	; integer part of the 8.8 charge
@@ -1302,7 +1394,6 @@ Sonic_UpdateSpindash:
 		beq.s	.right
 		neg.w	obInertia(a0)
 .right:
-		bset	#status.player.rolling,obStatus(a0)
 		move.w	#SndID_SpindashRelease,d0
 		jsr	(PlaySound_Special).l
 		bra.s	Sonic_SpindashGround
@@ -1509,6 +1600,8 @@ Sonic_ResetOnFloor:
 +
 		tst.b	spindash_flag(a0)
 		bne.s	.reset			; forced rolls retain their ball and animation
+		bsr.w	Player_RollLandingRoom
+		bmi.s	.reset
 		move.b	#AniIDSonAni_Walk,obAnim(a0)
 		move.b	obHeight(a0),d0
 		move.b	default_y_radius(a0),obHeight(a0)

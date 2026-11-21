@@ -263,10 +263,13 @@ SolidObject_ChkBounds:
 
 		; A grounded duck has the same clearance as rolling/spindashing.
 		; Keep the feet, landing bounds and platform ride position unchanged.
-		cmpi.b	#AniIDSonAni_Duck,obAnim(a1)
-		bne.s	.full_height
 		btst	#status.player.in_air,obStatus(a1)
-		bne.s	.full_height		; an airborne animation is not a grounded duck
+		bne.s	.full_height
+		cmpi.b	#AniIDSonAni_Duck,obAnim(a1)
+		beq.s	.compact
+		cmpi.b	#AniIDSonAni_Spindash,obAnim(a1)
+		bne.s	.full_height
+.compact:
 		moveq	#0,d5
 		move.b	obHeight(a1),d5
 		subi.w	#sonic_roll_height,d5
@@ -822,6 +825,27 @@ ReleaseObjectRider:
 		btst	d6,obStatus(a0)
 		beq.s	.not_owned
 		bclr	d6,obStatus(a0)
+		bsr.s	ObjectOwnsRider
+		bne.s	.not_owned
+		bclr	#status.player.on_object,obStatus(a1)
+		bset	#status.player.in_air,obStatus(a1)
+		moveq	#0,d0
+		rts
+.not_owned:
+		moveq	#-1,d0
+		rts
+
+; a0: actor with on_object set. Return the indexed support in a3.
+Player_GetStandingObject:
+		moveq	#0,d0
+		move.b	standonobject(a0),d0
+		mulu.w	#object_size,d0
+		lea	(v_objspace).w,a3
+		adda.w	d0,a3
+		rts
+
+; a0: surface, a1: actor. Z if the actor's current support is this SST.
+ObjectOwnsRider:
 		btst	#status.player.on_object,obStatus(a1)
 		beq.s	.not_owned
 		moveq	#0,d0
@@ -829,14 +853,9 @@ ReleaseObjectRider:
 		mulu.w	#object_size,d0
 		addi.l	#v_objspace,d0
 		cmp.l	a0,d0
-		bne.s	.return
-		bclr	#status.player.on_object,obStatus(a1)
-		bset	#status.player.in_air,obStatus(a1)
-		moveq	#0,d0
 		rts
 .not_owned:
 		moveq	#-1,d0
-.return:
 		rts
 ; ===========================================================================
 

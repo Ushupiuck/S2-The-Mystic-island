@@ -195,20 +195,12 @@ Tails_Control:
 		clr.b	obControl(a0)		; let a catching-up companion land and run right
 		rts
 
-Tails_GetStandingObject:
-		moveq	#0,d0
-		move.b	standonobject(a0),d0
-		mulu.w	#object_size,d0
-		lea	(v_objspace).w,a3
-		adda.w	d0,a3
-		rts
-
 ; Detach before changing to flight, including bridges and moving platforms.
 ; a1 remains the lead player; the indexed standing parent is returned in a3.
 Tails_DetachStandingObject:
 		bclr	#status.player.on_object,obStatus(a0)
 		beq.s	.return
-		bsr.s	Tails_GetStandingObject
+		jsr	(Player_GetStandingObject).l
 		tst.l	code(a3)
 		beq.s	.return
 		bclr	#4,obStatus(a3)		; this object no longer has companion Tails as a rider
@@ -248,10 +240,17 @@ Tails_ReleaseCarry:
 Obj02_MdNormal:
 		bsr.s	Tails_ReleaseCarry
 		bsr.w	Tails_CheckSpindash
+		cmpi.b	#AniIDSonAni_Duck,obAnim(a0)
+		bne.s	.jump
+		move.b	(v_jpadholdlogical2).w,d0
+		jsr	(Player_KeepDuckUnderRoof).l
+		bmi.s	Obj02_MdNormal_Skip
+.jump:
 		bsr.w	Tails_Jump
 		jsr	(Sonic_SlopeResist).l
 		bsr.w	Tails_InputAcceleration_Path
 		bsr.w	Tails_Roll
+Obj02_MdNormal_Skip:
 		bsr.w	Tails_LevelBound
 		jsr	(ObjectMove).l
 		jsr	(AnglePos).l
@@ -1029,7 +1028,7 @@ Tails_CPU_MountedTargetX:
 		cmpi.w	#$100,d4
 		bhs.s	.return
 		movem.l	d0/a3,-(sp)
-		bsr.w	Tails_GetStandingObject
+		jsr	(Player_GetStandingObject).l
 		tst.l	code(a3)
 		beq.s	.restore
 		moveq	#0,d4
@@ -1100,7 +1099,7 @@ TailS3_sub_13EFC:
 		btst	#status.player.on_object,obStatus(a0)
 		beq.s	TailS3_loc_13F18
 		moveq	#0,d0
-		bsr.w	Tails_GetStandingObject
+		jsr	(Player_GetStandingObject).l
 		move.l	(Tails_CPU_interact).w,d0
 		move.l	code(a3),d1
 		cmp.l	d1,d0
@@ -1121,7 +1120,7 @@ TailS3_loc_13F28:
 TailS3_loc_13F2E:
 		btst	#status.player.on_object,obStatus(a0)
 		beq.s	TailS3_locret_13F3E
-		bsr.w	Tails_GetStandingObject
+		jsr	(Player_GetStandingObject).l
 		move.l	code(a3),d0
 		move.l	d0,(Tails_CPU_interact).w
 
@@ -1529,7 +1528,7 @@ TailS3_loc_14A16:
 		move.b	#5,obAnim(a0)
 		btst	#status.player.on_object,obStatus(a0)
 		beq.s	TailS3_loc_14A6C
-		bsr.w	Tails_GetStandingObject
+		jsr	(Player_GetStandingObject).l
 		movea.l	a3,a1
 		tst.b	obStatus(a1)
 		bmi.s	TailS3_loc_14AA0
@@ -1836,14 +1835,7 @@ Tails_RollSpeed:
 		bhs.s	.velocity
 		tst.b	spindash_flag(a0)
 		bne.s	.keeprolling
-		bclr	#status.player.rolling,obStatus(a0)
-		move.b	obHeight(a0),d0
-		move.b	default_y_radius(a0),obHeight(a0)
-		move.b	default_x_radius(a0),obWidth(a0)
-		move.b	#AniIDSonAni_Wait,obAnim(a0)
-		sub.b	default_y_radius(a0),d0
-		ext.w	d0
-		add.w	d0,obY(a0)
+		jsr	(Player_StopRolling).l
 		bra.s	.velocity
 .keeprolling:
 		move.w	#Sonic_ForcedRollSpeed,obInertia(a0)
@@ -2092,11 +2084,7 @@ Tails_Roll:
 .doroll:
 		btst	#status.player.rolling,obStatus(a0)
 		bne.s	Obj02_NoRoll
-		bset	#status.player.rolling,obStatus(a0)
-		move.b	#tails_roll_height,obHeight(a0)
-		move.b	#tails_roll_width,obWidth(a0)
-		move.b	#AniIDSonAni_Roll,obAnim(a0)
-		addq.w	#tails_height-tails_roll_height,obY(a0)
+		jsr	(Player_EnterRoll).l
 		move.w	#SndID_Roll,d0
 		jmp	(PlaySound_Special).l
 Obj02_NoRoll:
@@ -2239,10 +2227,7 @@ Tails_CheckSpindash:
 Tails_UpdateSpindash:
 		btst	#button_down,(v_jpadholdlogical2).w
 		bne.w	Tails_ChargingSpindash
-		move.b	#tails_roll_height,obHeight(a0)
-		move.b	#tails_roll_width,obWidth(a0)
-		move.b	#AniIDSonAni_Roll,obAnim(a0)
-		addq.w	#tails_height-tails_roll_height,obY(a0)
+		jsr	(Player_EnterRoll).l
 		clr.b	spindash_flag(a0)
 		moveq	#0,d0
 		move.b	spindash_counter(a0),d0	; integer part of the 8.8 charge
@@ -2267,7 +2252,6 @@ Tails_UpdateSpindash:
 		beq.s	.right
 		neg.w	obInertia(a0)
 .right:
-		bset	#status.player.rolling,obStatus(a0)
 		move.w	#SndID_SpindashRelease,d0
 		jsr	(PlaySound_Special).l
 		bra.s	Tails_SpindashGround
@@ -2375,6 +2359,8 @@ Tails_DoLevelCollision:
 Tails_ResetOnFloor:
 		tst.b	spindash_flag(a0)
 		bne.s	.reset			; forced rolls retain their ball and animation
+		jsr	(Player_RollLandingRoom).l
+		bmi.s	.reset
 		move.b	#AniIDSonAni_Walk,obAnim(a0)
 		move.b	obHeight(a0),d0
 		move.b	default_y_radius(a0),obHeight(a0)

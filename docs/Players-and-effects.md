@@ -137,10 +137,12 @@ The rare solo-Tails/backtracking monitor failure was not fully reproduced in
 its exact original route. Ownership/contact regressions cover specific cases;
 they do not establish that every rare monitor failure is solved.
 
-Grounded ducking uses the roll/spindash diameter for solid-object head clearance
-(28 pixels for Sonic), preserving stored radii, feet and support height.
-Standing/airborne contacts retain ordinary bounds; genuinely insufficient gaps
-still crush. Closed trapdoors try top landing before full solidity. Their first
+The grounded duck and spindash charge use the 28-pixel rolling envelope
+for head clearance and keep the standing sprite origin. Releasing Down under
+a low terrain roof keeps an already-ducking player tucked until the standing
+shape fits. A player can aim, charge and release a spindash while tucked. When a
+ball stops under a low roof, it settles into a duck at the same foot position.
+Closed trapdoors try top landing before full solidity. Their first
 closed frame resolves shallow foot overlap across the physical 24-pixel body;
 closed sides and rising underside contacts remain solid. Horizontal springs
 use 15 pixels for landing and 16 for standing, matching their visible top.

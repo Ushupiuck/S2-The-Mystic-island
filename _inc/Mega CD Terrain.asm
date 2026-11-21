@@ -1180,6 +1180,20 @@ MCD_SubProbeCeiling:
 		move.l	(MCD_TerrainPath2_Sub).l,(MCD_TerrainPath_Sub).l
 .path_ready:
 		move.b	obLRBSolidBit(a0),d5
+		tst.b	d0
+		beq.s	MCD_SubCeilingPair	; ordinary contact / era-transfer pair
+		bsr.s	MCD_SubCeilingPair
+		tst.w	d1
+		bmi.s	.head_return
+		move.w	obY(a0),d2
+		moveq	#0,d0
+		move.b	obHeight(a0),d0
+		sub.w	d0,d2
+		eori.w	#$F,d2
+		move.w	obX(a0),d3
+		bra.w	MCD_SubFindFloor	; also cover a narrow protrusion between shoulders
+.head_return:
+		rts
 MCD_SubCeilingPair:
 		move.w	obY(a0),d2
 		move.w	obX(a0),d3
