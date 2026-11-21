@@ -70,6 +70,7 @@ MCD_TerrainObjectRight:		equ	$2B
 MCD_TerrainObjectLeft:		equ	$2C
 MCD_TerrainObjectCeiling:		equ	$2D
 MCD_TerrainObjectLast:		equ	MCD_TerrainObjectCeiling
+MCD_TerrainHeadroom:		equ	$2E
 MCD_TerrainIndexCapacity:		equ	$600
 MCD_TerrainStreamCapacity:	equ	$E000-$4C
 MCD_SubWordRAM:			equ	$80000

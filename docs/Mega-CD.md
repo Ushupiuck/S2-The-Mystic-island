@@ -266,7 +266,13 @@ its complete first request before starting the sub-CPU, avoiding warm-reset race
 | `MCD_CommandPLCInit` (17) | Install resident compressed PLC input and initialize its decoder |
 | `MCD_CommandArtFrame` (18) | Decode a bounded PLC batch without a terrain scene |
 | `$20-$2D` | Ground attachment and complete object/sensor operations |
+| `MCD_TerrainHeadroom` (`$2E`) | Ceiling clearance at the proposed position and radii |
 | Other | `$FFFF` |
+
+Headroom supplies four words for X, proposed Y, Y/X radii and the actor's
+two solidity bits. The CD CPU uses the established shoulder and center probes
+and returns the signed clearance directly. The MD caller can test a pose
+without changing the actor's SST or the shared contact angles.
 
 `MCD_AcquireWordRAM` supports 2M mode, clobbers `d0-d3` and reports failure in
 carry. Acquire before accessing/queuing Word RAM, outside VBlank; retain it until

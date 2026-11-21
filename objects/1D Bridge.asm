@@ -270,7 +270,7 @@ Bridge_CheckRider:
 		cmp.w	obY(a1),d0
 		bge.s	.walk
 		move.w	d4,d0
-		jsr	(Object_MoveRiderY).l
+		jsr	(Object_RaiseRider).l
 		bra.s	.return
 .walk:
 		move.w	d4,d0

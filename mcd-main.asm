@@ -78,7 +78,8 @@ MCD_SubEntry:
 		rept	MCD_TerrainObjectLast-MCD_TerrainObjectFloorX
 		dc.l	MCD_SubTerrainObject
 		endm
-		rept	$100-MCD_TerrainObjectLast-1
+		dc.l	MCD_SubTerrainHeadroom
+		rept	$100-MCD_TerrainHeadroom-1
 		dc.l	.unknown
 		endm
 .handlersEnd:

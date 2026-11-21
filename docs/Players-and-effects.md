@@ -159,7 +159,9 @@ full-solid terrain. The test follows the actual position step, so platforms
 that write coordinates directly also use it. For a slope or bridge, the last
 supported X determines whether the surface itself rose beneath the player.
 The check runs during a physical ride, with player and Debug control overrides
-respected.
+respected. Same-height and downward carries fall through to placement. The
+upward path sends the proposed hitbox through the CD headroom packet and
+preserves the larger register set only when the pose changes or the rider dies.
 
 The rider keeps their feet on the support. If a rise blocks standing on the
 same update the player unfolded from a duck or ball, the engine keeps them

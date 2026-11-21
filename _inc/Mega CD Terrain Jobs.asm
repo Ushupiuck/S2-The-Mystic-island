@@ -218,6 +218,24 @@ MCD_TerrainObject:
 		tst.w	d1		; callers branch on distance immediately after returning
 		rts
 
+; Test the center and shoulders at the proposed Y (d2.w) and Y/X radii
+; (d0.w). Only d0-d3 are scratch. No writes to the actor or angle buffers.
+Player_ProbeHeadroom:
+		move.l	a5,-(sp)
+		move.w	sr,-(sp)
+		disable_ints
+		lea	(MCD_MainArgument).l,a5
+		move.w	obX(a0),(a5)+
+		move.w	d2,(a5)+
+		move.w	d0,(a5)+
+		move.w	obTopSolidBit(a0),(a5)
+		moveq	#MCD_TerrainHeadroom,d0
+		bsr.w	MCD_TerrainRequest
+		move.w	(sp)+,sr
+		movea.l	(sp)+,a5
+		move.w	d0,d1
+		rts
+
 ; Explicit-coordinate API retained for callers such as the terrain conveyor.
 FindFloor:
 		move.l	d7,-(sp)

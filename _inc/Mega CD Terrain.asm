@@ -1172,6 +1172,20 @@ MCD_SubObjHitWallRight:
 ; =============== S U B R O U T I N E =======================================
 
 
+; Headroom needs only X, Y, the proposed radii and both path bits. Return
+; the distance in d0 without publishing the contact angles and other results.
+MCD_SubTerrainHeadroom:
+		lea	(MCD_TerrainObject_Sub).l,a0
+		lea	(MCD_SubMainArgument).w,a1
+		move.w	(a1)+,obX(a0)
+		move.w	(a1)+,obY(a0)
+		move.w	(a1)+,obHeight(a0)
+		move.w	(a1),obTopSolidBit(a0)
+		moveq	#1,d0
+		bsr.s	MCD_SubProbeCeiling
+		move.w	d1,d0
+		rts
+
 ; The direct pair request has no earlier angle/sensor setup.
 MCD_SubProbeCeiling:
 		move.l	(MCD_TerrainPath1_Sub).l,(MCD_TerrainPath_Sub).l

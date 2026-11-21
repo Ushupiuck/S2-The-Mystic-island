@@ -1138,16 +1138,18 @@ Player_EnterRoll:
 ; this actor's active path can obstruct a ceiling. N means head overlap.
 Player_FloorHeadroom:
 		tst.b	(MCD_TerrainReady).l
-		beq.s	.clear
-		move.w	obHeight(a0),-(sp)
-		move.w	obY(a0),-(sp)
-		bsr.w	Player_ResizeOnFloor
-		moveq	#1,d0			; include the middle of the head as well as both shoulders
-		jsr	(Sonic_DontRunOnWalls).l
-		move.w	(sp)+,obY(a0)
-		move.w	(sp)+,obHeight(a0)
-		tst.w	d1
-		rts
+		beq.s	Player_FloorHeadroomReady.clear
+Player_FloorHeadroomReady:
+		move.w	obY(a0),d2
+		cmp.w	obHeight(a0),d0
+		beq.w	Player_ProbeHeadroom
+		moveq	#0,d1
+		move.b	obHeight(a0),d1
+		add.w	d1,d2
+		move.w	d0,d1
+		lsr.w	#8,d1
+		sub.w	d1,d2
+		jmp	(Player_ProbeHeadroom).l
 .clear:
 		moveq	#0,d1
 		rts
