@@ -7,6 +7,7 @@ Optional core scenes use the actual MMZ terrain, PLCs and touch handler.
 from pathlib import Path
 import argparse
 import json
+import struct
 from native_test_core import Native, UC_M68K_REG_A1, UC_M68K_REG_D7
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -186,6 +187,76 @@ def dango_native(a):
 	return cases
 
 
+def poh_bee_native(a):
+	"""Follow both patrol and pendulum profiles through several reversals."""
+	n = Native(a.rom, a.listing)
+	s = n.s
+	body = s['v_lvlobjspace']
+	sine = struct.unpack_from('>256h', a.rom.read_bytes(), s['Sine_Data'])
+	results = []
+
+	for subtype in (0, 1):
+		n.start()
+		n.write('Camera_X_pos_coarse_back', 384, 2)
+		n.put(body, 'code', s['MMZ_PohBee'])
+		n.put(body, 'obSubtype', subtype)
+		n.put(body, 'obX', 600, 2)
+		n.put(body, 'obY', 500, 2)
+		n.act('MMZ_PohBee', body)
+
+		x, vx, turn, phase = 600 << 16, -128 if subtype else -256, 0, 0
+		chains = [('poh_long_tip', 'poh_long_links', 2, 0x800, 5)]
+		if not subtype:
+			chains.append(('poh_short_tip', 'poh_short_links', 1, 0x1000, 4))
+		angles = [[initial, 0, 8] for _, _, _, initial, _ in chains]
+		assert n.get(body, 'platgroup_count') == (3 if subtype else 5)
+		for tick in range(550):
+			x += vx << 8
+			turn -= 1
+			if turn < 0:
+				turn = 256 if subtype else 128
+				vx = -vx
+			phase = (phase+(0x300 if subtype else 0x400)) & 0xFFFF
+			y = (500 << 16)+(sine[phase >> 8] << (12 if subtype else 13))
+			assert (n.get(body, 'obX', 4), n.get(body, 'obY', 4)) == (x, y), (subtype, tick, 'patrol')
+			for (tip, links, group_count, _, group_length), angle in zip(chains, angles):
+				previous, speed, accel = angle
+				speed += accel
+				current = (previous+speed) & 0xFFFF
+				if (previous < 0x4000) != (current < 0x4000):
+					accel = -accel
+				angle[:] = [current, speed, accel]
+				index = current >> 8
+				dx, dy = sine[(index+64) & 255] << 11, sine[index] << 11
+				harmful = n.get(body, tip, 2) | 0xFF0000
+				last = 1+group_count*group_length
+				assert n.get(harmful, 'obX', 4) == x+last*dx
+				assert n.get(harmful, 'obY', 4) == y+(12 << 16)+last*dy
+				assert n.get(harmful, 'obColType') == 0x8B
+				segment = 1
+				for group_index in range(group_count):
+					group = n.get(body+2*group_index, links, 2) | 0xFF0000
+					assert n.get(group, 'mainspr_childsprites') == group_length-1
+					for j in range(group_length):
+						xfield, yfield = ('obX', 'obY') if not j else (f'sub{j+1}_x_pos', f'sub{j+1}_y_pos')
+						assert n.get(group, xfield, 2) == (x+segment*dx) >> 16
+						assert n.get(group, yfield, 2) == (y+(12 << 16)+segment*dy) >> 16
+						segment += 1
+			n.act('MMZ_PohBee_Move', body, regs={UC_M68K_REG_D7:0x13572468})
+			assert n.cpu.reg_read(UC_M68K_REG_D7) == 0x13572468
+
+		tip = n.get(body, 'poh_long_tip', 2) | 0xFF0000
+		n.write('v_rings', 10, 2)
+		n.write('Collision_response_list', 0xFFFF, 2)
+		for actor in ('v_player', 'v_player2'):
+			n.put(actor, 'obX', n.get(tip, 'obX', 2), 2)
+			n.put(actor, 'obY', n.get(tip, 'obY', 2), 2)
+			n.act('TouchResponse', actor)
+			assert n.get(actor, 'obRoutine') == 4, (subtype, actor)
+		results.append(dict(subtype=subtype, updates=550, both_players_hurt=True))
+	return results
+
+
 def game(a):
 	from genesis_test_core import Genesis
 	from check_object_course import boot_level
@@ -282,6 +353,7 @@ def game(a):
 			report.append(dict(act=act+1, era=era, suppressed=era == 2,
 				both_facings=True, both_actors=True))
 	report.extend(dango_game(g, initial, hardware_tiles))
+	report.extend(poh_bee_game(g, initial, hardware_tiles))
 	g.close()
 	return report
 
@@ -339,6 +411,53 @@ def dango_game(g, initial, hardware_tiles):
 	return report
 
 
+def poh_bee_game(g, initial, hardware_tiles):
+	from check_object_course import boot_level
+	from check_rising_crushers import seek
+	from check_sprite_assets import frames
+	from object_layout import decode
+
+	rows = decode((ROOT/'level/objects/LV0F_1.bin').read_bytes())
+	assert sum(row[2] == 0xBE for row in rows) == 5
+	s = g.s
+	slots = range(s['v_lvlobjspace'] & 65535, s['v_lvlobjend'] & 65535, s['object_size'])
+	tips = []
+	for label in ('Map_MMZ_PohBee', 'Map_MMZ_PohBeeSlow'):
+		row = frames(bytes(g.rom), s[label], 5)[3]
+		tips.append(s['ArtTile_MMZ_Atlas']+(row[0][2]&2047))
+	results = []
+	for era, mask in enumerate((0x40, 0x20, 0x80, 0x80)):
+		g.restore(initial)
+		g.buttons, g.buttons2 = set(), set()
+		boot_level(g, zone=15, timezone=era)
+		level = g.save()
+		seen = 0
+		for index, (x, y, oid, eras, subtype) in enumerate(rows):
+			if oid != 0xBE or not eras & mask:
+				continue
+			g.restore(level)
+			seek(g, x, max(y+60, 132))
+			handle = g.placement_handle(index)
+			for _ in range(40):
+				assert not g.read('v_errortype')
+				body = next((slot for slot in slots if g.get(slot, 'code')
+					and g.get(slot, 'respawn_addr', 2) == handle), None)
+				if era == 2:
+					if body is None and g.placement_read(index) & 0x80:
+						break
+				elif body is not None and g.get(body, 'platgroup_state', 4) == s['MMZ_PohBee_Move'] and tips[subtype] in hardware_tiles():
+					break
+				g.run()
+			else:
+				raise AssertionError((era,x,y,subtype,'Poh Bee failed to appear in its intended era'))
+			if era != 2:
+				assert g.get(body, 'platgroup_count') == (3 if subtype else 5)
+				g.video.save(g.output/f'poh-bee-era{era}-{x:04x}.png')
+				seen += 1
+		results.append(dict(era=era, poh_bee_placements=seen, suppressed=era==2))
+	return results
+
+
 def main():
 	p = argparse.ArgumentParser(description=__doc__)
 	p.add_argument('--rom', type=Path, default=ROOT/'s2built.bin')
@@ -348,7 +467,7 @@ def main():
 	p.add_argument('--system-directory', type=Path)
 	p.add_argument('--pal', action='store_true')
 	a = p.parse_args()
-	report = {'native': native(a), 'dango_native': dango_native(a)}
+	report = {'native': native(a), 'dango_native': dango_native(a), 'poh_bee_native': poh_bee_native(a)}
 	if a.core:
 		report['game'] = game(a)
 	a.output.parent.mkdir(parents=True, exist_ok=True)

@@ -384,6 +384,14 @@ The three all-era placements are at `$0C4A,$01C5`, `$0CBE,$01C5` and
 `$1280,$06D3`. Debug and SonLVL show the resting group. Good Future swaps the
 existing seesaw art overlay at the same tile indices.
 
+### Poh Bee
+
+Poh Bee (`$BE`) patrols and bobs at two rates. The fast variant carries two
+pendulums and the slow variant carries one. Each spiked tip uses the shared
+touch response for both players. The links are sprite composites, drawn from
+the same resident atlas and animated from their tip's angle. The five authored
+placements retain their era masks. Good Future suppresses the enemy itself.
+
 ### Dango and Twin Walker
 
 The Act-2 Dango (`$BA`) uses low subtype bit 0 for its fast or slow shell.

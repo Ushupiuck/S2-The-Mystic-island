@@ -331,6 +331,13 @@ def sprites(source,constants):
 			if family=='Seesaw':
 				# Complete resting device for Debug and SonLVL.
 				rows.append(rows[0]+rows[5]+[(y-44,size,word,x) for y,size,word,x in rows[8]])
+			if family=='PohBee':
+				preview=rows[0].copy()
+				for links,dx,dy in ((10,5,6),) if mi else ((10,5,6),(4,-5,6)):
+					for i in range(1,links+2):
+						preview.extend((y+12+i*dy,size,word,x+i*dx)
+							for y,size,word,x in rows[2+(i>links)])
+				rows.append(preview)
 			outputs[f'mappings/sprite/MMZ {label}.bin']=encode_sprites(bare_saw_frames(rows) if label=='Saw' else rows)
 			# Compare visible indexed pixels in every era, independent of the
 			# rectangle packer's storage order and complete mapping-piece overlap.
@@ -471,7 +478,7 @@ def placements(source, act):
 	# exist. Reimporting a completed family resets its authored source settings.
 	ids = {'BigbomObject': 0xAE, 'MechaBuObject': 0xB8, 'DangoObject': 0xBA, 'TwinWalkerObject': 0xBB, 'SpikesObject': 0x15,
 		'CollapseFloorObject': 0x1B, 'CrusherObject': 0xA5, 'SeesawObject': 0xBC,
-		'SpikeCrusherObject': 0xBD,
+		'SpikeCrusherObject': 0xBD, 'PohBeeObject': 0xBE,
 		'BuzzsawObject': 0xA4, 'VanishPlatformObject': 0xA6,
 		'SpinPlatformObject': 0xA9, 'MoveSpringObjectR8': 0xB0,
 		'HVPlatformObject': 0x20, 'PropellerObject': 0xB7,
@@ -525,6 +532,8 @@ def placements(source, act):
 			sub = (variant << 8) | 0x10
 		elif family == 'DangoObject':
 			assert act == 2 and sub in (0, 1) and variant == 0
+		elif family == 'PohBeeObject':
+			assert act == 1 and sub in (0, 1) and variant == 0
 		elif family == 'SeesawObject':
 			assert act == 1 and sub == variant == 0
 		elif family == 'SpikeCrusherObject':

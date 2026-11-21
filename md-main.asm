@@ -7483,7 +7483,7 @@ ptr_ObjBA:		dc.l MMZ_Dango
 ptr_ObjBB:		dc.l MMZ_TwinWalker
 ptr_ObjBC:		dc.l MMZ_Seesaw
 ptr_ObjBD:		dc.l MMZ_SpikeCrusher
-ptr_ObjBE:		dc.l ObjNull
+ptr_ObjBE:		dc.l MMZ_PohBee
 ptr_ObjBF:		dc.l ObjNull
 ptr_ObjC0:		dc.l S1Fireball	; standalone Sonic 1 fireball
 ptr_ObjC1:		dc.l S1FireballSpawner	; Sonic 1 fireball spawner
@@ -10397,6 +10397,9 @@ Touch_Size_DangoBody:
 Touch_Size_DangoShell:
 		dc.b 16,16
 Touch_Size_DangoBody_ID = (Touch_Size_DangoBody-Touch_Sizes)/2+1
+Touch_Size_PohBeeBody:
+		dc.b	12,14
+Touch_Size_PohBeeBody_ID = (Touch_Size_PohBeeBody-Touch_Sizes)/2+1
 Touch_Size_DangoShell_ID = (Touch_Size_DangoShell-Touch_Sizes)/2+1
 Touch_Size_TimeGenerator_ID = (Touch_Size_TimeGenerator-Touch_Sizes)/2+1
 Touch_Size_BigbomBody_ID = (Touch_Size_BigbomBody-Touch_Sizes)/2+1
@@ -12812,6 +12815,7 @@ Kospm_Crabmeat:	binclude	"art/moduled kosinski/Enemy Crabmeat.kospm"
 		include	"objects/Metallic Madness/Twin Walker.asm"
 		include	"objects/Metallic Madness/Seesaw.asm"
 		include	"objects/Metallic Madness/Spike Crusher.asm"
+		include	"objects/Metallic Madness/Poh Bee.asm"
 		include "objects/Scrap Madness/A4 Saws.asm"
 		include "objects/Scrap Madness/A5 Stomper.asm"
 		include "objects/Scrap Madness/A6 Vanishing Platforms.asm"

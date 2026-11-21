@@ -317,6 +317,9 @@ flight and the final resting positions.
 At the MMZ2 spike crusher (`$1A80,$010C`), both actors trigger the descent and
 take damage from the armed undersides. Native cases check the four follow-up
 intervals, pool-pressure retry, hitbox expiry and group cleanup.
+`check_metallic_enemies.py` compares both Poh Bee patrols and their pendulums
+against the integer motion, and visits all five authored placements to check
+era filtering and visible tips.
 Hurt Sonic and controller-2 Tails exercise every
 available route and junction. Solo Tails and both carry handoffs use the
 all-era entrance at `$1880,$02D0`; the carry fixtures open its authored hatch

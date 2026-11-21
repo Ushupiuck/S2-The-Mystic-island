@@ -369,6 +369,8 @@ Debug_MMZ1:	dc.w (Debug_MMZ1_End-Debug_MMZ1-2)/DebugEntry_size
 	dbug	Map_TimeGenerator,TimeGenerator,0,0,ArtTile_MMZ_Atlas
 		dbug	Map_SMZ_Bomb,Bomb,0,0,ArtTile_Bomb_MMZ
 	dbug	Map_MMZ_Seesaw,MMZ_Seesaw,0,9,ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_PohBee,MMZ_PohBee,0,4,ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_PohBeeSlow,MMZ_PohBee,1,4,ArtTile_MMZ_Atlas
 Debug_MMZ1_End:
 
 ; MMZ2 common/implemented object families; remaining mechanisms are being ported.

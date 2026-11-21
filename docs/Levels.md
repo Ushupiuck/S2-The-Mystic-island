@@ -128,7 +128,7 @@ one in another act loading compatible art. The F1 Debug list exposes these
 variants, the existing morphing platform, propeller and wheeled carrier, plus
 the common ring/shield/invincibility/speed monitors. Mecha-Bu is also implemented for both acts, including its independent blade
 and both actors' touch responses. The shared `$AE` Bomb family also implements
-Bigbom. The importer supplies 215 placements in act 1 and 352 in act 2
+Bigbom. The importer supplies 220 placements in act 1 and 352 in act 2
 across the adopted families. It regenerates their translated settings and
 preserves other editable rows. Unrelated invisible collision switches remain
 in the act even though they share the rotating door's `$0A` slot.
@@ -136,6 +136,7 @@ in the act even though they share the rotating door's `$0A` slot.
 | Adopted family | ID | Act 1 | Act 2 |
 | --- | --- | --- | --- |
 | Mecha-Bu | `$B8` | 6 | 5 |
+| Poh Bee | `$BE` | 5 | 0 |
 | Bigbom | `$AE` | 0 | 12 |
 | Dango | `$BA` | 0 | 8 |
 | Twin Walker | `$BB` | 0 | 1 |
@@ -249,7 +250,7 @@ the door's bottom plate. The source route pairs and three steering junctions
 use the shared [automatic pipe](Objects.md#automatic-transport-paths).
 Pressure buttons and passage from below open the pipe covers.
 
-The remaining families include the size-changing emitters and enemies. Act 3 and a complete controller traversal of the port
+The remaining families include Scarab and the size-changing emitters. Act 3 and a complete controller traversal of the port
 are pending.
 
 ## Foreground vertical placement
