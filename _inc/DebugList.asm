@@ -65,6 +65,8 @@ Debug_GHZ:	dc.w (Debug_GHZ_End-Debug_GHZ-2)/DebugEntry_size
 	dbug	Map_Obj79,	Obj79,	1,	0,	0
 	dbug	Map_GiantRing,	GiantRing,	0,	0,	make_art_tile(ArtTile_Giant_Ring,1,0)
 	dbug	Map_Ring,	GoddessRings,	0,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj03,	AutoSpin,	$20,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj03,	AutoSpin,	4,	4,	make_art_tile(ArtTile_Ring,1,0)
 Debug_GHZ_End:
 
 Debug_GHZ4:	dc.w (Debug_GHZ4_End-Debug_GHZ4-2)/DebugEntry_size
@@ -121,6 +123,8 @@ Debug_GHZ4:	dc.w (Debug_GHZ4_End-Debug_GHZ4-2)/DebugEntry_size
 	dbug	Map_Obj17,	SwingingPtfm,	$0925,	0,	make_art_tile(ArtTile_GHZ_MZ_Swing,0,0)
 	dbug	Map_Obj18_GHZ,	Obj18,	$0900,	0,	make_art_tile(ArtTile_Level,2,0)
 	dbug	Map_Obj18_GHZ,	Obj18,	$1901,	0,	make_art_tile(ArtTile_Level,2,0)
+	dbug	Map_Obj03,	AutoSpin,	$20,	0,	make_art_tile(ArtTile_Ring,1,0)
+	dbug	Map_Obj03,	AutoSpin,	4,	4,	make_art_tile(ArtTile_Ring,1,0)
 Debug_GHZ4_End:
 
 Debug_LZ:	dc.w (Debug_LZ_End-Debug_LZ-2)/DebugEntry_size

@@ -120,6 +120,7 @@ the complete serialized word, including when calculating movement overlays.
 | `$A8` | Electrocuter | Full byte: synchronization mask; regular intervals use powers of two. |
 | `$A9` | Conveyor platform group | X/Y: relative loop origin. Bit 7: eight-platform group; clear it for one platform, with bits 0-2 selecting its initial phase. Preview reads the runtime's signed offsets. |
 | `$AB` | Transport pipe | Low three bits: route; route 7 requires 50 rings. Route points are read from the ASM table. |
+| `$84` | Rolling tunnel entrance | Bits 0–1 select a 64/128/256/512px line. Bit 2 selects vertical travel and bit 5 requires a grounded crossing. The arrow shows the inward crossing. X flip reverses it. |
 | `$AC` | Invisible solid | High/low nibbles: width/height in 16-pixel units, minus one. |
 | `$AE` | Bomb / Bigbom | Bits 4–7: `$0` Bomb / `$1` Bigbom; low nibble: zero keeps original speed, otherwise value / 4 px/update. Upper byte: Bigbom normal / short / scripted charge (0/1/2). Y flip selects ceiling walking. Bigbom needs the MMZ2 bank; both forms share the existing ID. |
 | `$AF` | Button | Low nibble: switch number. |

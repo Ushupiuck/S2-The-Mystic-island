@@ -30,6 +30,11 @@ Outside the ported MMZ acts, timezone headers and layouts are prepared copies.
 Object placements have era-presence masks and per-era state. Shared
 [time poles](Objects.md#shared-checkpoint-and-time-poles) drive the era loader.
 
+All four GHZ acts have paired [AutoSpin entrances](Objects.md#rolling-tunnel-entrances)
+at their existing S-tunnel mouths. The gates load with the X band, including
+the lower mouths below the camera's usual loading strip. The high Act 1
+tunnel's lower mouth opens over a drop and also accepts an airborne crossing.
+
 GHZ4 retains its sparse authored object layout for useful object-testing terrain.
 Its loop at chunk origin `$1000,$0500` now has Act 3's matching three pathswappers
 (`$1080,$0550/$0091`, `$1108,$0540/$0011`, `$1108,$05A0/$0010`), present in

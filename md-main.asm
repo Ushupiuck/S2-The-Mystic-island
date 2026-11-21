@@ -7107,6 +7107,7 @@ Obj1A_Conf_HPZ:
 		even
 ; ---------------------------------------------------------------------------
 		include	"objects/0A Collision Switcher.asm"
+		include	"objects/84 AutoSpin.asm"
 		include	"objects/20 Morphing Platform.asm"
 		include	"objects/Empty Slots/24.asm"
 		include	"objects/Empty Slots/25.asm"
@@ -7423,7 +7424,7 @@ ptr_Obj80:		dc.l ObjNull		; Was originally Continue Screen Elements, but was com
 ptr_Obj81:		dc.l ObjNull		; Was originally Continue Screen Sonic, but was completely stripped out
 ptr_Obj82:		dc.l ObjNull		; Was originally Eggman - Scrap Brain 2, but was completely stripped out
 ptr_Obj83:		dc.l ObjNull		; Was originally SBZ Eggman's Crumbling Floor, but was completely stripped out
-ptr_Obj84:		dc.l ObjNull		; Was originally FZ Eggman's Cylinders, but was completely stripped out
+ptr_Obj84:		dc.l AutoSpin		; Rolling tunnel entrance
 ptr_Obj85:		dc.l ObjNull		; Was originally Boss - Final, but was completely stripped out
 ptr_Obj86:		dc.l ObjNull		; Was originally FZ Plasma Ball Launcher, but was completely stripped out
 ptr_Obj87:		dc.l ObjNull		; Was originally Ending Sequence Sonic, but was completely stripped out

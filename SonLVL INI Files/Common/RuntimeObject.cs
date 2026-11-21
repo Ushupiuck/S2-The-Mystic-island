@@ -76,6 +76,12 @@ namespace MysticIsland.ObjectDefinitions
 					Bits("Left / up priority", 6, 1, "Sprite priority after crossing left or up.", "Low", "High");
 					Bits("Ground only", 7, 1, "Ignore airborne characters.", "No", "Yes");
 					break;
+				case "AutoSpin":
+					LoadAutoSpinMarkers();
+					Bits("Length", 0, 3, "Length of the entrance line.", "64 pixels", "128 pixels", "256 pixels", "512 pixels");
+					Bits("Axis", 2, 1, "X-flip reverses the inward crossing.", "Left to right", "Top to bottom");
+					Bits("Ground only", 5, 1, "Require contact with the ground when crossing.", "No", "Yes");
+					break;
 				case "Eggman":
 					Bits("Pilot", 0, 1, "Character piloting this boss.", "Eggman", "EggRobo");
 					byte[] hullArt = ObjectHelper.OpenArtFile("../art/moduled kosinski/Old Eggpod.kospm", CompressionType.KosinskiPlusM);
@@ -554,6 +560,33 @@ namespace MysticIsland.ObjectDefinitions
 			}
 		}
 
+		private void LoadAutoSpinMarkers()
+		{
+			frames = new Sprite[8];
+			for (int subtype = 0; subtype < frames.Length; subtype++)
+			{
+				int span = 64 << (subtype & 3);
+				bool horizontal = (subtype & 4) != 0;
+				BitmapBits line = horizontal ? new BitmapBits(span, 17) : new BitmapBits(17, span);
+				int mid = span / 2;
+				if (horizontal)
+				{
+					line.DrawLine(LevelData.ColorWhite, 0, 8, span - 1, 8);
+					line.DrawLine(LevelData.ColorWhite, mid, 0, mid, 16);
+					line.DrawLine(LevelData.ColorWhite, mid, 16, mid - 4, 12);
+					line.DrawLine(LevelData.ColorWhite, mid, 16, mid + 4, 12);
+				}
+				else
+				{
+					line.DrawLine(LevelData.ColorWhite, 8, 0, 8, span - 1);
+					line.DrawLine(LevelData.ColorWhite, 0, mid, 16, mid);
+					line.DrawLine(LevelData.ColorWhite, 16, mid, 12, mid - 4);
+					line.DrawLine(LevelData.ColorWhite, 16, mid, 12, mid + 4);
+				}
+				frames[subtype] = new Sprite(line, -line.Width / 2, -line.Height / 2);
+			}
+		}
+
 		private Sprite Preview(int subtype, int x, int y, bool yflip, bool xflip = false, int mount = 0, int bodyArt = 2)
 		{
 			List<Sprite> pieces;
@@ -561,6 +594,10 @@ namespace MysticIsland.ObjectDefinitions
 			{
 				case "PathSwapper":
 					return alternate != null && (subtype & 0x100) != 0 ? alternate[(subtype & 4) != 0 ? 0 : 2] : frames[subtype & 0x1F];
+				case "AutoSpin":
+					Sprite entrance = new Sprite(frames[subtype & 7]);
+					entrance.Flip(xflip && (subtype & 4) == 0, xflip && (subtype & 4) != 0);
+					return entrance;
 				case "Checkpoint": return At(frames, (subtype & 0x300) == 0x100 ? 6 : (subtype & 0x300) == 0x200 ? 8 : (subtype & 0x400) != 0 ? 2 : 0);
 				case "FireballSpawner":
 					Sprite maker = new Sprite(At(frames, (subtype & 12) == 12 ? 0 : 1));
@@ -746,7 +783,7 @@ namespace MysticIsland.ObjectDefinitions
 				int movement = SawMovement(Subtype(obj));
 				if (alternate != null || (movement >= 0 && movement <= 2)) sprite.Flip(obj.XFlip, obj.YFlip);
 			}
-			else if (behavior != "MMZSpin" && behavior != "FireballSpawner" && behavior != "Fireball" && behavior != "Platform" && behavior != "Swing" && behavior != "SpinGroup" && behavior != "LabyrinthConveyor" && behavior != "InvisibleSolid" && behavior != "Conveyor" && behavior != "PathSwapper" && behavior != "Hanging" && behavior != "PullChain") sprite.Flip(obj.XFlip, obj.YFlip);
+			else if (behavior != "MMZSpin" && behavior != "FireballSpawner" && behavior != "Fireball" && behavior != "Platform" && behavior != "Swing" && behavior != "SpinGroup" && behavior != "LabyrinthConveyor" && behavior != "InvisibleSolid" && behavior != "Conveyor" && behavior != "PathSwapper" && behavior != "AutoSpin" && behavior != "Hanging" && behavior != "PullChain") sprite.Flip(obj.XFlip, obj.YFlip);
 			return sprite;
 		}
 		public override Sprite GetDebugOverlay(ObjectEntry obj)
@@ -846,6 +883,7 @@ namespace MysticIsland.ObjectDefinitions
 	// even though its implementation is shared here. Zone overrides keep the
 	// same type because they replace that ID before definitions are loaded.
 	public sealed class PathSwapper : RuntimeObject { }
+	public sealed class AutoSpin : RuntimeObject { }
 	public sealed class LabyrinthConveyor : RuntimeObject { }
 	public sealed class BubbleGenerator : RuntimeObject { }
 	public sealed class TiltingPlatform : RuntimeObject { }

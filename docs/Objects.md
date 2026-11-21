@@ -150,6 +150,24 @@ were invalid for this project's levels. SMZ's authored `SMZ_PipeData` remains
 the directly editable route source; other reserved helpers remain available
 until a caller needs them. Newly ported levels must supply their own routes.
 
+## Rolling tunnel entrances
+
+Object `$84` uses the roll-only mode of S3&K's AutoSpin as its starting point.
+Each player gets an independent crossing history. Crossing toward the tunnel
+uses the ordinary rolling state and preserves momentum. At a pair of mouths
+the gates face inward, so a player can spindash in from either end.
+
+| Setting | Effect |
+| --- | --- |
+| Subtype bits 0–1 | Line length of 64, 128, 256 or 512 pixels |
+| Subtype bit 2 | Cross up/down instead of left/right |
+| Subtype bit 5 | Require a grounded player |
+| X flip | Enter left/up instead of right/down |
+
+Place the line just outside the low roof. An accepted crossing keeps the
+feet fixed while it changes the player's radii. Debug uses the shared ring
+marker. SonLVL shows the full line and an arrow for its inward direction.
+
 ## Shared checkpoint and time poles
 
 `$79` is the single placement ID for checkpoints, PAST posts and FUTURE posts.
