@@ -73,6 +73,7 @@
     <Subtype id="B0" name="S1 Floor/Ceiling: 3 Wide Spikes" image="classicfloor3wide" />
     <Subtype id="C0" name="S1 Floor/Ceiling: 6 Wide Spikes" image="classicfloor6" />
     <Subtype id="D0" name="S1 Side: 1 Spike" image="classicside1" />
+    <Subtype id="E0" name="MMZ stationary bed" image="floor1" />
   </Subtypes>
   <Properties>
     <BitsProperty name="Arrangement" type="SpikeArrangement" startbit="4" length="4" />
@@ -100,6 +101,7 @@
       <EnumMember name="S1 Floor/Ceiling: 3 Wide Spikes" />
       <EnumMember name="S1 Floor/Ceiling: 6 Wide Spikes" />
       <EnumMember name="S1 Side: 1 Spike" />
+      <EnumMember name="MMZ stationary bed" />
     </Enum>
   </Enums>
   <Display>
@@ -158,6 +160,10 @@
     <DisplayOption>
       <Condition property="Arrangement" value="S1 Side: 1 Spike" />
       <ImageRef image="classicside1" />
+    </DisplayOption>
+    <DisplayOption>
+      <Condition property="Arrangement" value="MMZ stationary bed" />
+      <ImageRef image="floor1" />
     </DisplayOption>
   </Display>
 </ObjDef>

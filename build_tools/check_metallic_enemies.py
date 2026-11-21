@@ -7,7 +7,7 @@ Optional core scenes use the actual MMZ terrain, PLCs and touch handler.
 from pathlib import Path
 import argparse
 import json
-from native_test_core import Native, UC_M68K_REG_D7
+from native_test_core import Native, UC_M68K_REG_A1, UC_M68K_REG_D7
 
 ROOT = Path(__file__).resolve().parents[1]
 SENTINEL = 0x3579006F
@@ -123,6 +123,69 @@ def native(a):
 		recycled_links=True, placement_release=True, good_future_suppression=True)
 
 
+def dango_native(a):
+	n = Native(a.rom, a.listing)
+	s = n.s
+	body = s['v_lvlobjspace']
+	# Test state timing on level ground and cross the actual touch dispatcher.
+	for label in ('ObjHitFloor', 'ObjHitWallLeft', 'ObjHitWallRight'):
+		n.cpu.mem_write(s[label], bytes.fromhex('72004E75'))
+	cases = []
+	for subtype in (0, 1):
+		for actor, facing in (('v_player', 0), ('v_player2', 1)):
+			n.start()
+			n.write('Camera_X_pos', 440, 2)
+			n.put(body, 'code', s['MMZ_Dango'])
+			n.put(body, 'obSubtype', subtype)
+			n.put(body, 'obStatus', facing)
+			n.put(body, 'obX', 600, 2)
+			n.put(body, 'obY', 500, 2)
+			n.act('MMZ_Dango', body)
+			n.put(body, 'obRoutine', 4)
+			n.act('MMZ_Dango_WalkSpeed', body)
+			direction = 1 if facing else -1
+			foot = n.get(body, 'obY', 2)+9
+			assert n.get(body, 'obVelX', 2) == (direction*(0x10 if subtype else 0x60)) & 0xFFFF
+			for rider in ('v_player', 'v_player2'):
+				n.put(rider, 'obX', 600-direction*64, 2)
+				n.put(rider, 'obY', 500, 2)
+			n.act('MMZ_Dango_Run', body)
+			assert n.get(body, 'obRoutine') == 4, (subtype, actor, 'target behind')
+			n.put(actor, 'obX', 600+direction*64, 2)
+			for _ in range(160):
+				n.act('MMZ_Dango_Run', body)
+				assert n.get(body, 'obY', 2)+n.get(body, 'obHeight') == foot
+				if n.get(body, 'obRoutine') == 14:
+					break
+			else:
+				raise AssertionError((subtype, actor, 'no roll'))
+			assert n.get(body, 'obVelX', 2) == (direction*(0x100 if subtype else 0x400)) & 0xFFFF
+			assert n.get(body, 'obColType') == 0xC0|s['Touch_Size_DangoShell_ID']
+			for _ in range(160):
+				n.act('MMZ_Dango_Run', body)
+				assert n.get(body, 'obY', 2)+n.get(body, 'obHeight') == foot
+				if n.get(body, 'obRoutine') == 4:
+					break
+			else:
+				raise AssertionError((subtype, actor, 'no unroll'))
+			assert n.get(body, 'obColType') == s['Touch_Size_DangoBody_ID']
+
+			n.put(body, 'obRoutine', 14)
+			n.put(body, 'obColType', 0xC0|s['Touch_Size_DangoShell_ID'])
+			n.put(actor, 'obX', n.get(body, 'obX', 2)+16, 2)
+			n.put(actor, 'obY', n.get(body, 'obY', 2)-8, 2)
+			n.put(actor, 'obAnim', s['AniIDSonAni_Roll'])
+			n.put(actor, 'obStatus', 6)
+			n.act('Touch_Special', actor, regs={UC_M68K_REG_A1:body})
+			assert n.get(body, 'obRoutine') == s['MMZ_Dango_Rebounding']
+			assert 0 < n.get(actor, 'obVelX', 2) < 0x8000
+			assert n.get(actor, 'obVelY', 2) >= 0x8000
+			assert n.get(body, 'obVelX', 2) == (-n.get(actor, 'obVelX', 2)) & 0xFFFF
+			assert n.get(actor, 'obRoutine') == 2
+			cases.append(dict(subtype=subtype, actor=actor, facing=facing))
+	return cases
+
+
 def game(a):
 	from genesis_test_core import Genesis
 	from check_object_course import boot_level
@@ -218,7 +281,61 @@ def game(a):
 					assert g.get(body, 'code') in states
 			report.append(dict(act=act+1, era=era, suppressed=era == 2,
 				both_facings=True, both_actors=True))
+	report.extend(dango_game(g, initial, hardware_tiles))
 	g.close()
+	return report
+
+
+def dango_game(g, initial, hardware_tiles):
+	from check_object_course import boot_level
+	from check_rising_crushers import seek
+	from check_sprite_assets import frames
+	from object_layout import decode
+
+	s = g.s
+	slots = range(s['v_lvlobjspace'] & 0xFFFF, s['v_lvlobjend'] & 0xFFFF, s['object_size'])
+	rows = decode((ROOT/'level/objects/LV0F_2.bin').read_bytes())
+	assert sum(row[2] == 0xBA for row in rows) == 8
+	rom = bytes(g.rom)
+	tiles = [
+		{s['ArtTile_MMZ_Atlas']+(word & 2047)
+			for row in frames(rom, s[map_label], s[map_label+'_frames'])
+			for _, _, word, _ in row}
+		for map_label in ('Map_MMZ_Dango', 'Map_MMZ_DangoSlow')
+	]
+	report = []
+	for era, presence in enumerate((0x40, 0x20, 0x80, 0x80)):
+		g.restore(initial)
+		g.buttons, g.buttons2 = set(), set()
+		boot_level(g, zone=15, act=1, timezone=era)
+		level = g.save()
+		seen = 0
+		for index, (x, y, oid, mask, subtype) in enumerate(rows):
+			if oid != 0xBA or not mask & presence:
+				continue
+			assert subtype in (0, 1)
+			g.restore(level)
+			seek(g, x, y)
+			handle = g.placement_handle(index)
+			for _ in range(40):
+				assert not g.read('v_errortype')
+				body = next((slot for slot in slots if g.get(slot, 'code')
+					and g.get(slot, 'respawn_addr', 2) == handle), None)
+				if era == 2:
+					if body is None and g.placement_read(index) & 0x80:
+						break
+				elif body is not None and g.get(body, 'code') == s['MMZ_Dango_Run'] and hardware_tiles() & tiles[subtype]:
+					break
+				g.run()
+			else:
+				raise AssertionError((era, x, y, 'Dango did not reach its expected era state'))
+			if era == 2:
+				continue
+			assert g.get(body, 'obSubtype', 2) == subtype
+			assert g.get(body, 'obMap', 4) == s['Map_MMZ_DangoSlow' if subtype else 'Map_MMZ_Dango']
+			g.video.save(g.output/f'dango-era{era}-{x:04x}.png')
+			seen += 1
+		report.append(dict(era=era, dango_placements=seen, suppressed=era==2))
 	return report
 
 
@@ -231,7 +348,7 @@ def main():
 	p.add_argument('--system-directory', type=Path)
 	p.add_argument('--pal', action='store_true')
 	a = p.parse_args()
-	report = {'native': native(a)}
+	report = {'native': native(a), 'dango_native': dango_native(a)}
 	if a.core:
 		report['game'] = game(a)
 	a.output.parent.mkdir(parents=True, exist_ok=True)

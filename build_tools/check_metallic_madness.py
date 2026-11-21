@@ -1267,6 +1267,84 @@ def hazard_game(args):
 	return report
 
 
+def spike_beds_native(args):
+	n = Native(args.rom, args.listing)
+	s = n.s
+	spike = s['v_lvlobjspace']
+	for flipped in (False, True):
+		for actor, radius in (('v_player', 19), ('v_player2', 15)):
+			n.start()
+			n.write('Camera_X_pos_coarse_back', 384, 2)
+			n.write('v_rings', 10, 2)
+			n.put(spike, 'code', s['Spikes'])
+			n.put(spike, 'obX', 600, 2)
+			n.put(spike, 'obY', 500, 2)
+			n.put(spike, 'obSubtype', 0xE0)
+			n.put(spike, 'obStatus', 2 if flipped else 0)
+			n.put(spike, 'obRender', 0x84 | (2 if flipped else 0))
+			n.act('Spikes', spike)
+			assert n.get(spike, 'obMap', 4) == s['Map_Obj36']
+			assert n.get(spike, 'obRoutine') == (8 if flipped else 2)
+			assert n.get(spike, 'obHeight') == 8
+			n.put(actor, 'obX', 600, 2)
+			n.put(actor, 'obHeight', radius)
+			n.put(actor, 'obStatus', 2)
+			if flipped:
+				n.put(actor, 'obY', 522, 2)
+				n.write('Collision_response_list', 0xFFFF, 2)
+				n.act('TouchResponse', actor)
+			else:
+				n.put(actor, 'obY', 492-radius, 2)
+				n.put(actor, 'obVelY', 0x100, 2)
+				n.act('Spikes', spike)
+			assert n.get(actor, 'obRoutine') == 4, (flipped, actor)
+	return {'floor_damage': True, 'inverted_damage': True, 'both_characters': True}
+
+
+def spike_beds_game(args):
+	from check_object_course import boot_level
+	from check_rising_crushers import seek
+	from object_layout import decode
+	from genesis_test_core import Genesis
+
+	output = args.output/'spike-beds'
+	g = Genesis(args.core, args.rom, args.listing, output, args.pal, system_directory=args.system_directory)
+	initial = g.save()
+	s = g.s
+	slots = range(s['v_lvlobjspace'] & 0xFFFF, s['v_lvlobjend'] & 0xFFFF, s['object_size'])
+	report = []
+	for act, expected in ((1, 33), (2, 57)):
+		rows = [r for r in decode((ROOT/f'level/objects/LV0F_{act}.bin').read_bytes())
+			if r[2] == 0x15 and r[4] == 0xE0]
+		assert len(rows) == expected
+		for era, mask in enumerate((0x40, 0x20, 0x80, 0x80)):
+			g.restore(initial)
+			g.buttons, g.buttons2 = set(), set()
+			boot_level(g, zone=15, act=act-1, timezone=era)
+			level = g.save()
+			seen = 0
+			shots = set()
+			for x, y, _, presence, _ in rows:
+				if not presence & mask:
+					continue
+				inverted = bool(y & 0x4000)
+				y &= 0xFFF
+				g.restore(level)
+				seek(g, x, max(132, y))
+				bed = next(slot for slot in slots if g.get(slot, 'code') == s['Spikes']
+					and g.get(slot, 'obX', 2) == x and g.get(slot, 'obY', 2) == y)
+				assert g.get(bed, 'obRoutine') == (8 if inverted else 2), (act, era, x, y)
+				assert g.get(bed, 'obHeight') == 8 and not g.read('v_errortype')
+				assert bool(g.get(bed, 'obRender') & 2) == inverted
+				if inverted not in shots and g.get(bed, 'obRender') & 0x80:
+					g.video.save(output/f'act{act}-era{era}-inverted{int(inverted)}.png')
+					shots.add(inverted)
+				seen += 1
+			report.append(dict(act=act, era=era, placements=seen))
+	g.close()
+	return report
+
+
 def main():
 	p=argparse.ArgumentParser(description=__doc__)
 	p.add_argument('--rom',type=Path,default=ROOT/'s2built.bin')
@@ -1280,7 +1358,7 @@ def main():
 	p.add_argument('--pal',action='store_true')
 	args=p.parse_args();args.output.mkdir(parents=True,exist_ok=True)
 	report=dict(native=native(args),placements=placement_native(args),ring_layouts=ring_layouts(args),
-		morphing_platform=morph_native(args),configured_saws=configured_saws(args))
+		morphing_platform=morph_native(args),configured_saws=configured_saws(args),spike_beds=spike_beds_native(args))
 	if args.source:
 		report['animations']=animation_checks(args)
 		report['platforms']=platform_native(args)
@@ -1292,6 +1370,7 @@ def main():
 		report['platform_game']=platform_game(args)
 		report['hazard_game']=hazard_game(args)
 		report['floor_wheel_game']=floor_wheel_game(args)
+		report['spike_beds_game']=spike_beds_game(args)
 	if args.before_rom or args.before_listing:
 		assert args.before_rom and args.before_listing,'Supply the matching ROM and listing together'
 		report['retained_s1_hazards']=legacy_hazards(args)

@@ -1447,7 +1447,7 @@ v_lcon_wheel_frame:	ds.b	1			; shared requested wheel frame
 v_lcon_wheel_artframe:	ds.b	1			; cached DPLC frame; $FF invalid
 v_lcon_wheel_updateframe:	ds.w	1			; last object-pass frame processed
 v_lcon_wheel_updated:	ds.b	1			; updateframe is valid
-			ds.b	1			; retain the old six-byte reservation
+TwinWalker_ArtFrame:	ds.b	1			; -1 cold, -2 decoded, 0 queued
 v_ani1_prev:		ds.b	1			; synchronised sprite animation 1 - previous frame
 v_ani2_prev:		ds.b	1			; synchronised sprite animation 2 - previous frame
 v_ani3_prev:		ds.b	1			; synchronised sprite animation 3 - previous frame
@@ -1533,12 +1533,15 @@ TimeWarp_Status:		ds.b	1	; facing and airborne state
 			even
 TimeWarp_RingFlags:	ds.b	4*TimeWarp_RingBankBytes
 TimeWarp_RingFlags_End:
-Free_RAM_Start:		ds.b	MCD_MainWorkStart-TimeWarp_RingFlags_End
+TwinWalker_ArtTiles = 17
+Art_TwinWalker:	ds.b	TwinWalker_ArtTiles*tile_size
+Art_TwinWalker_End:
+Free_RAM_Start:		ds.b	MCD_MainWorkStart-Art_TwinWalker_End
 Free_RAM_End:
 	if (MOMPASS>1)&&((Music_BusSignal&$FF8000)<>$FF0000)
 		fatal "The music mailbox must be in the lower half of MD RAM."
 	endif
-	if (MOMPASS>1)&&(TimeWarp_RingFlags_End>MCD_MainWorkStart)
+	if (MOMPASS>1)&&(Art_TwinWalker_End>MCD_MainWorkStart)
 		fatal "Player, sound and time-warp storage overlaps CD work storage."
 	endif
 	if Free_RAM_End<>MCD_MainWorkStart
@@ -2089,6 +2092,10 @@ ArtTile_MMZ_Generator:		equ ArtTile_MMZ_Atlas+454
 ArtTile_Bomb_MMZ:		equ ArtTile_MMZ_Atlas+477 ; 41 tiles before the morphing platform
 ArtTile_MMZ_HVPlatform:		equ $478 ; existing shared eight-tile morphing platform
 ArtTile_MMZ_Propeller:		equ $480 ; existing shared 49-tile propeller
+ArtTile_MMZ2_TwinWalker:	equ ArtTile_MMZ_Propeller ; same window, MMZ2 only
+	if (ArtTile_MMZ2_TwinWalker+TwinWalker_ArtTiles)>ArtTile_Wheel
+		fatal "Twin Walker's streamed art overlaps the wheel tiles."
+	endif
 
 ; MMZ1 keeps CD terrain-animation slots, shifted past the reserved water tiles.
 ArtTile_MMZ1_Present_Anim1:	equ $20D

@@ -3,6 +3,7 @@
 ; High subtype: 0-3 = S3 floor rows, 4-7 = S3 side columns.
 ; 8-D = S1's six arrangements (three floor, three side, single floor,
 ; wide three floor, wide six floor, single side), using the same art.
+; E selects a shallow stationary bed. Its Y flip selects the inverted bed.
 ; Low subtype: 0 = stationary, 1 = vertical, 2 = horizontal, 3 = pushable.
 ; Status flips select ceiling spikes or the direction of side spikes.
 ; ---------------------------------------------------------------------------
@@ -25,8 +26,26 @@ Spikes:
 		beq.s	Spikes_Behavior
 		jmp	(PlatformMount_Child).l
 Spikes_Behavior:
-		tst.b	obRoutine(a0)
-		beq.w	Spike_Init
+		moveq	#0,d0
+		move.b	obRoutine(a0),d0
+		move.w	Spikes_Index(pc,d0.w),d1
+		jmp	Spikes_Index(pc,d1.w)
+
+Spikes_Index:	dc.w Spike_Init-Spikes_Index
+		dc.w Spike_FloorSolid-Spikes_Index
+		dc.w Spike_SideSolid-Spikes_Index
+		dc.w Spike_CeilingSolid-Spikes_Index
+		dc.w Spike_InvertedBed-Spikes_Index
+
+Spike_FloorSolid:
+		pea	Spike_Floor(pc)
+		bra.s	Spike_Solid
+Spike_SideSolid:
+		pea	Spike_Side(pc)
+		bra.s	Spike_Solid
+Spike_CeilingSolid:
+		pea	Spike_Ceiling(pc)
+Spike_Solid:
 		bsr.w	MoveSpikes
 		; All three S3&K handlers use these same solid-object dimensions.
 		moveq	#0,d1
@@ -37,15 +56,7 @@ Spikes_Behavior:
 		move.w	d2,d3
 		addq.w	#1,d3
 		move.w	obX(a0),d4
-		bsr.w	SolidObject
-		moveq	#0,d0
-		move.b	obRoutine(a0),d0
-		move.w	Spikes_Index-2(pc,d0.w),d1
-		jmp	Spikes_Index(pc,d1.w)
-; ---------------------------------------------------------------------------
-Spikes_Index:	dc.w Spike_Floor-Spikes_Index
-		dc.w Spike_Side-Spikes_Index
-		dc.w Spike_Ceiling-Spikes_Index
+		jmp	(SolidObject).l
 
 ; Collision half-width and half-height; also the exact frame's display bounds.
 Spikes_Conf:	dc.b $10,$10, $20,$10, $30,$10, Map_Obj36_width,$10
@@ -63,8 +74,14 @@ Spike_Init:
 		ori.b	#4,obRender(a0)
 		move.w	#$200,obPriority(a0)
 		move.l	#Map_Obj36,obMap(a0)
+		move.w	#make_art_tile(ArtTile_Spikes,0,0),obGfx(a0)
 		move.w	obSubtype(a0),d0
 		andi.w	#$F0,d0
+		cmpi.w	#$E0,d0
+		beq.s	.bed
+		blo.s	.standard
+		moveq	#0,d0
+.standard:
 		lsr.w	#3,d0
 		lea	Spikes_Conf(pc,d0.w),a1
 		move.b	(a1)+,obActWid(a0)
@@ -73,10 +90,21 @@ Spike_Init:
 		lsr.w	#1,d0
 		move.b	d0,obFrame(a0)
 		move.b	Spikes_Routines(pc,d0.w),obRoutine(a0)
-		move.w	#make_art_tile(ArtTile_Spikes,0,0),obGfx(a0)
 		btst	#render_flags.y_flip,obStatus(a0)
 		beq.s	.position
 		move.b	#6,obRoutine(a0)
+		bra.s	.position
+.bed:
+		move.b	#$10,obActWid(a0)
+		move.b	#$10,height_pixels(a0)
+		move.b	#8,obHeight(a0)
+		clr.b	obFrame(a0)
+		clr.w	obSubtype(a0)		; bed motion is always stationary
+		move.b	#2,obRoutine(a0)
+		btst	#render_flags.y_flip,obStatus(a0)
+		beq.s	.position
+		move.b	#8,obRoutine(a0)
+		move.b	#$89,obColType(a0)	; $0C by $10 half-size touch
 .position:
 		move.w	#spikes_travel,spikes_push_distance(a0)
 		move.w	obX(a0),spikes_base_x_pos(a0)
@@ -137,6 +165,33 @@ Spike_Ceiling:
 		lea	(v_player2).w,a1
 		bsr.s	Spike_HurtCharacter
 		bra.s	Spike_Display
+; ---------------------------------------------------------------------------
+; The downward bed hurts through touch response. Its backing is solid to a
+; rider outside the 32-pixel inner band. Measure that band per character.
+Spike_InvertedBed:
+		lea	(v_player).w,a1
+		moveq	#3,d6
+		bsr.s	.backing
+		lea	(v_player2).w,a1
+		moveq	#4,d6
+		bsr.s	.backing
+		bra.w	Spike_Display
+.backing:
+		tst.l	code(a1)
+		beq.s	.return
+		move.w	obY(a1),d0
+		sub.w	obY(a0),d0
+		addi.w	#31,d0
+		cmpi.w	#63,d0
+		blo.s	.release
+		moveq	#16+sonic_solid_width,d1
+		moveq	#8,d2
+		moveq	#9,d3
+		move.w	obX(a0),d4
+		jmp	(SolidObject.sub_F456).l
+.release:
+		jmp	(ReleaseObjectRider).l
+.return:	rts
 ; ---------------------------------------------------------------------------
 Spike_HurtCharacter:
 		tst.w	(Debug_placement_mode).w

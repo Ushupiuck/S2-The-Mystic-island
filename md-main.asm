@@ -2357,6 +2357,7 @@ Level_ClrRam:
 		move.b	d2,(Current_Timezone).w	; clearRAM only changes d0-d1/a1
 		jsr	(LCon_ResetWheels).l
 		jsr	(MonitorArt_Reset).l
+		st	(TwinWalker_ArtFrame).w
 		clr.b	(BossFace_ArtReady).l
 		clr.w	(TimeWarp_Direction).w
 Level_WaterFlagInit:
@@ -7478,8 +7479,8 @@ ptr_ObjB6:		dc.l PP_TamabbohMissile
 ptr_ObjB7:		dc.l MM_Propeller
 ptr_ObjB8:		dc.l MMZ_MechaBu
 ptr_ObjB9:		dc.l TimeGenerator
-ptr_ObjBA:		dc.l ObjNull
-ptr_ObjBB:		dc.l ObjNull
+ptr_ObjBA:		dc.l MMZ_Dango
+ptr_ObjBB:		dc.l MMZ_TwinWalker
 ptr_ObjBC:		dc.l ObjNull
 ptr_ObjBD:		dc.l ObjNull
 ptr_ObjBE:		dc.l ObjNull
@@ -10391,6 +10392,12 @@ Touch_Size_BigbomDebris:
 		dc.b 6,6
 Touch_Size_TimeGenerator:
 		dc.b $20,$18
+Touch_Size_DangoBody:
+		dc.b 16,9
+Touch_Size_DangoShell:
+		dc.b 16,16
+Touch_Size_DangoBody_ID = (Touch_Size_DangoBody-Touch_Sizes)/2+1
+Touch_Size_DangoShell_ID = (Touch_Size_DangoShell-Touch_Sizes)/2+1
 Touch_Size_TimeGenerator_ID = (Touch_Size_TimeGenerator-Touch_Sizes)/2+1
 Touch_Size_BigbomBody_ID = (Touch_Size_BigbomBody-Touch_Sizes)/2+1
 Touch_Size_BigbomDebris_ID = (Touch_Size_BigbomDebris-Touch_Sizes)/2+1
@@ -10521,6 +10528,10 @@ Touch_Special:
 		bne.s	.other_special
 		jmp	(TimeGenerator_Touch).l
 .other_special:
+		cmpi.b	#Touch_Size_DangoShell_ID,d1
+		bne.s	.bomb
+		jmp	(MMZ_Dango_Touch).l
+.bomb:
 		cmpi.b	#Touch_Size_BigbomBody_ID,d1
 		beq.w	Touch_BigbomPath
 		cmpi.b	#Touch_Size_BigbomDebris_ID,d1
@@ -12798,6 +12809,7 @@ Kospm_Crabmeat:	binclude	"art/moduled kosinski/Enemy Crabmeat.kospm"
 		include "objects/Platform Groups.asm"
 		include "objects/1B Collapsing Floors.asm"
 		include "objects/Metallic Madness/Enemies.asm"
+		include	"objects/Metallic Madness/Twin Walker.asm"
 		include "objects/Scrap Madness/A4 Saws.asm"
 		include "objects/Scrap Madness/A5 Stomper.asm"
 		include "objects/Scrap Madness/A6 Vanishing Platforms.asm"
@@ -12936,6 +12948,9 @@ Kospm_MMZ2_BombCrushers:
 		even
 Kospm_MMZ2_DangoDoors:
 		binclude "art/moduled kosinski/MMZ2 Dango and doors.kospm"
+		even
+Kospm_MMZ_TwinWalker:
+		binclude "art/moduled kosinski/MMZ2 Twin Walker.kospm"
 		even
 
 Nem_MM_Propeller:

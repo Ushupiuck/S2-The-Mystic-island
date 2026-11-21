@@ -128,7 +128,7 @@ one in another act loading compatible art. The F1 Debug list exposes these
 variants, the existing morphing platform, propeller and wheeled carrier, plus
 the common ring/shield/invincibility/speed monitors. Mecha-Bu is also implemented for both acts, including its independent blade
 and both actors' touch responses. The shared `$AE` Bomb family also implements
-Bigbom. The importer supplies 179 placements in act 1 and 285 in act 2
+Bigbom. The importer supplies 212 placements in act 1 and 351 in act 2
 across the adopted families. It regenerates their translated settings and
 preserves other editable rows. Unrelated invisible collision switches remain
 in the act even though they share the rotating door's `$0A` slot.
@@ -137,6 +137,8 @@ in the act even though they share the rotating door's `$0A` slot.
 | --- | --- | --- | --- |
 | Mecha-Bu | `$B8` | 6 | 5 |
 | Bigbom | `$AE` | 0 | 12 |
+| Dango | `$BA` | 0 | 8 |
+| Twin Walker | `$BB` | 0 | 1 |
 | Crumbling floor / static block | `$1B` | 10 | 16 |
 | Crusher / launcher | `$A5` | 10 | 15 |
 | Vertical doors | `$30` | 0 | 14 |
@@ -157,6 +159,7 @@ in the act even though they share the rotating door's `$0A` slot.
 | Automatic pipe / steering junction | `$AB` | 0 | 41 |
 | Running disc | `$A1` | 0 | 11 |
 | Invisible block | `$AC` | 0 | 14 |
+| Shallow spike bed | `$15` | 33 | 57 |
 
 The two MMZ1 vanishing staircases use independent placements at the same
 member coordinates. Their individual delays are 90, 180 and 270 updates.
@@ -196,7 +199,8 @@ follows at `$44A-$472`, leaving five tiles before the reused morphing bank at
 `$478`. Each act selects seven primary Moduled Kosinski+
 banks: 165 tiles shared between acts (crusher/floor, Mecha-Bu, time-post heads
 and generator), plus three private ranges. Act 1 has 312 private tiles and
-Act 2 has 278, retaining the common address footprint with gaps. Past uses
+Act 2 has 261, retaining the common address footprint with gaps. Twin Walker
+streams its 17 tiles into the Act-1 propeller window when needed. Past uses
 the separate generator bank; Act-1 Good Future selects its own saw/seesaw bank.
 Full atlas archives are no longer linked into the ROM.
 Shared morphing (8 tiles), propeller (49 tiles) and wheel art retain their
@@ -243,8 +247,8 @@ the door's bottom plate. The source route pairs and three steering junctions
 use the shared [automatic pipe](Objects.md#automatic-transport-paths).
 Pressure buttons and passage from below open the pipe covers.
 
-The remaining families include the seesaws, size-changing emitters, special
-spikes and enemies. Act 3 and a complete controller traversal of the port
+The remaining families include the seesaws, size-changing emitters, the
+compound spike crusher and enemies. Act 3 and a complete controller traversal of the port
 are pending.
 
 ## Foreground vertical placement

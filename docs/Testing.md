@@ -205,7 +205,10 @@ suppression. Its native floor distance, sound and DMA boundaries are stubbed.
 acts and all eras, both facings, linked hardware SAT checks, both actors' rolling
 hits, blade damage and post-defeat cleanup. `--pal` repeats PAL. Positioned
 contact fixtures hold actor movement while the real touch handler runs; they do
-not establish a controller playthrough or source-placement import.
+not establish a controller playthrough. Dango cases check both patrol rates,
+the approach trigger, foot position through its roll and uncurl, and shell
+rebound for each actor. Core visits find all eight authored era placements,
+including Good Future suppression, and verify both shells in the hardware SAT.
 
 `check_bomb.py --output test-results/bomb.json` checks all speed nibbles,
 floor/ceiling edge rollback, both actors, original patrol/charge/fuse clocks,
@@ -302,12 +305,20 @@ The same checks cover both approach directions, paired unloading and slot
 allocation retry. Authored visits exercise each revolving door and automatic
 pipe in its available eras and both characters. They verify path and sprite
 priority changes, exact exit points, handoffs at adjacent entrances, steering
-junctions and cover opening. Hurt Sonic and controller-2 Tails exercise every
+junctions and cover opening. Twin Walker checks cover pool retry and recycled
+helpers in native 68000 code. They verify the object loop returns on the root
+and the shared DPLC retries without a partial upload. Core visits at
+`$16B2,$0658` check each rider alone and both ends together through alternating
+steps in every era. They verify the exact art upload and preview it from Debug
+before the authored walker has loaded.
+Hurt Sonic and controller-2 Tails exercise every
 available route and junction. Solo Tails and both carry handoffs use the
 all-era entrance at `$1880,$02D0`; the carry fixtures open its authored hatch
 and lower Sonic using the live carry update. `check_metallic_madness.py` also checks all eight
 ring tables, both pickup paths in MMZ2, time poles, the Past generators and
-crossing the real finish signs inside their vertical corridors.
+crossing the real finish signs inside their vertical corridors. Its spike bed
+fixtures check both characters' floor and inverted damage and visit every
+authored bed in its era in both acts.
 
 The floor/carrier cases cover 32 floor configurations, all 6,400 flat-patrol
 updates, full-pool loss of fragments, shared fragment gravity and the stationary

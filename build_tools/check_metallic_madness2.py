@@ -330,6 +330,163 @@ def game(a):
 	g.close();return result
 
 
+def twin_allocation(a):
+	from check_sprite_assets import frames
+	from native_test_core import UC_M68K_REG_A0, UC_M68K_REG_SR
+	from convert_s1_ss_background import kosinski_plus_decode
+
+	n = Native(a.rom, a.listing)
+	n.start()
+	s = n.s
+	slots = list(range(s['v_lvlobjspace'] & 0xFFFFFF, s['v_lvlobjend'] & 0xFFFFFF, s['object_size']))
+	foot, mate, links = slots[-3:]
+	for slot in slots:
+		if slot != mate:
+			n.put(slot, 'code', s['DisplaySprite'])
+	n.put(foot, 'code', s['MMZ_TwinWalker'])
+	n.put(foot, 'obX', 600, 2)
+	n.put(foot, 'obY', 500, 2)
+	n.write('Camera_X_pos_coarse_back', 384, 2)
+	length = s['object_size']
+	before = [bytes(n.cpu.mem_read(slot, length)) for slot in (foot, mate)]
+	n.act('MMZ_TwinWalker', foot)
+	assert [bytes(n.cpu.mem_read(slot, length)) for slot in (foot, mate)] == before
+	n.put(links, 'code', 0)
+	n.act('MMZ_TwinWalker', foot)
+	assert n.get(foot, 'code') == s['MMZ_TwinWalker_Run']
+	assert n.get(foot, 'twin_mate', 2) == mate & 0xFFFF and n.get(foot, 'twin_links', 2) == links & 0xFFFF
+	assert n.get(mate, 'obX', 2) == 664 and n.get(links, 'mainspr_childsprites') == 6
+	assert [n.get(links, f'sub{i}_x_pos', 2) for i in range(2, 8)] == list(range(656, 608, -8))
+	assert n.get(links, 'obX', 2) == 608
+	n.act('MMZ_TwinWalker_Run', foot, regs={UC_M68K_REG_D7: 0x13572468})
+	assert n.cpu.reg_read(UC_M68K_REG_D7) == 0x13572468
+	assert n.cpu.reg_read(UC_M68K_REG_A0) & 0xFFFFFF == foot
+
+	raw = (ROOT/'art/uncompressed/MMZ2 Twin Walker.unc').read_bytes()
+	rom = a.rom.read_bytes()
+	assert len(raw) == s['TwinWalker_ArtTiles']*32
+	archive = s['Kospm_MMZ_TwinWalker']
+	assert struct.unpack_from('>H', rom, archive)[0] == len(raw)
+	assert kosinski_plus_decode(rom, archive+2)[0] == raw
+	assert struct.unpack_from('>H', rom, s['Kospm_MMZ2_BombCrushers'])[0] == 121*32
+	mapping = (ROOT/'mappings/sprite/MMZ TwinWalker.bin').read_bytes()
+	assert all((word & 0x6000) == 0 and (word & 0x7FF) < s['TwinWalker_ArtTiles']
+		for row in frames(mapping) for _, _, word, _ in row)
+
+	n.uploads.clear()
+	n.write('TwinWalker_ArtFrame', 0xFE)
+	queue_end = s['VDP_Command_Buffer_Slot'] & 0xFFFF
+	n.write('VDP_Command_Buffer_Slot', queue_end-s['DMAEntry.len']*2, 2)
+	n.act('MMZ_TwinWalker_LoadArt', foot)
+	assert n.cpu.reg_read(UC_M68K_REG_SR) & 1
+	assert not n.uploads and n.read('TwinWalker_ArtFrame') == 0xFE
+	n.write('VDP_Command_Buffer_Slot', s['VDP_Command_Buffer'] & 0xFFFF, 2)
+	source, destination = s['Art_TwinWalker'] & 0xFFFFFFFF, s['ArtTile_MMZ2_TwinWalker']*32
+	n.act('MMZ_TwinWalker_LoadArt', foot)
+	assert not n.cpu.reg_read(UC_M68K_REG_SR) & 1
+	assert [(addr, dest & 0xFFFF, words & 0xFFFF) for addr, dest, words in n.uploads] == [
+		(source, destination, 256), (source+512, destination+512, 16)]
+	n.uploads.clear()
+	n.act('MMZ_TwinWalker_LoadArt', mate)
+	assert not n.uploads and n.read('TwinWalker_ArtFrame') == 0
+
+	n.put(mate, 'code', s['DisplaySprite'])
+	n.act('MMZ_TwinWalker_Run', foot)
+	assert n.get(mate, 'code') == s['DisplaySprite']
+	assert not n.get(foot, 'code') and not n.get(links, 'code')
+	return dict(pool_retry=True, packed_links=7, recycled_slot_preserved=True,
+		object_loop_preserved=True, packed_art_tiles=17, dma_queue_retry=True)
+
+
+def ride_twin_walker(g, era, output):
+	from check_companion_followup import place
+	from check_rising_crushers import ACTORS, seek
+
+	x, y = 0x16B2, 0x0658
+	s = g.s
+	assert g.read('TwinWalker_ArtFrame') == 0xFF
+	seek(g, x-80, y)
+	check_twin_art_upload(g)
+	slots = range(s['v_lvlobjspace'] & 0xFFFF, s['v_lvlobjend'] & 0xFFFF, s['object_size'])
+	walker = next(slot for slot in slots if g.get(slot, 'code') == s['MMZ_TwinWalker_Run'])
+	mate = g.get(walker, 'twin_mate', 2)
+	assert g.get(walker, 'twin_steps') == 12 and g.get(mate, 'obX', 2) == x+64
+	scene = g.save()
+	for riders in (((ACTORS[0], walker),), ((ACTORS[1], walker),), tuple(zip(ACTORS, (walker, mate)))):
+		g.restore(scene)
+		g.buttons, g.buttons2 = set(), {4}
+		for actor, foot in riders:
+			radius = g.get(actor, 'default_y_radius')
+			place(g, actor, g.get(foot, 'obX', 2), y-s['twin_foot_height']-radius-3)
+			g.put(actor, 'obVelY', 0x300, 2)
+		max_updates = len(riders)*(0x10000//s['twin_stride']) + 8
+		for tick in range(max_updates):
+			# Sample after both the sub-CPU floor result and the rider carry.
+			for _ in range(12):
+				g.run()
+				if g.read('v_vbla_counter') == 1:
+					break
+			else:
+				raise AssertionError('Twin Walker update did not complete')
+			assert not g.read('v_errortype')
+			if g.get(walker, 'twin_steps') == 12:
+				continue
+			for actor, foot in riders:
+				case = era, tick, riders, actor
+				assert g.get(actor, 'obRoutine') == 2 and g.get(actor, 'obStatus') & 8, case
+				slot = ((foot-(s['v_objspace'] & 0xFFFF))//s['object_size'])
+				assert g.get(actor, 'standonobject') == slot, case
+				actor_foot = g.get(actor, 'obY', 2)+g.get(actor, 'obHeight')
+				surface = g.get(foot, 'obY', 2)-s['twin_foot_height']
+				assert actor_foot == surface, (case, actor_foot, surface)
+			swinging = g.get(walker, 'obRoutine') == 4
+			landed = 12-g.get(walker, 'twin_steps')-int(swinging)
+			if landed >= len(riders):
+				assert g.get(walker, 'twin_pivot') == landed & 1, (era, riders, landed)
+				break
+		else:
+			raise AssertionError((era, riders, 'walker did not land'))
+		if len(riders) == 2:
+			g.video.save(output/f'twin-walker-era{era}.png')
+
+
+def check_twin_art_upload(g):
+	raw = (ROOT/'art/uncompressed/MMZ2 Twin Walker.unc').read_bytes()
+	base = g.s['ArtTile_MMZ2_TwinWalker']*32
+	for _ in range(24):
+		assert not g.read('v_errortype')
+		uploaded = bytes(g.vram[(base+i)^1] for i in range(len(raw)))
+		if g.read('TwinWalker_ArtFrame') == 0 and uploaded == raw:
+			return
+		g.run()
+	raise AssertionError('Twin Walker art did not reach VRAM')
+
+
+def twin_debug_preview(g):
+	s = g.s
+	assert g.read('TwinWalker_ArtFrame') == 0xFF
+	g.write('Debug_mode_flag', 1)
+	g.buttons = {0}
+	g.run(2)
+	g.buttons = set()
+	g.run(3)
+	assert g.read('Debug_placement_type') == s['DebugType_Placement']
+	rom = bytes(g.rom)
+	base = s['Debug_MMZ2']
+	count = struct.unpack_from('>H', rom, base)[0]
+	entries = list(struct.iter_unpack('>IIHBBH', rom[base+2:base+2+count*14]))
+	index = next(i for i, row in enumerate(entries) if row[0] == s['MMZ_TwinWalker'])
+	g.write('Debug_object', (index-1) % count)
+	g.buttons = {1}
+	g.run(2)
+	g.buttons = set()
+	check_twin_art_upload(g)
+	assert g.read('Debug_object') == index
+	assert g.get('v_player', 'obMap', 4) == s['Map_MMZ_TwinWalker']
+	assert g.get('v_player', 'obFrame') == 2
+	assert g.get('v_player', 'obGfx', 2) & 0x67FF == s['ArtTile_MMZ2_TwinWalker']
+
+
 def transport_game(args):
 	from check_companion_followup import place
 	from check_object_course import boot_level
@@ -505,6 +662,13 @@ def transport_game(args):
 		for jump_off in (True, False):
 			fly_to_pipe(x, y, pipe, scene, jump_off)
 
+		g.restore(level)
+		g.buttons, g.buttons2 = set(), set()
+		ride_twin_walker(g, era, args.output/'transport')
+		if era == 0:
+			g.restore(level)
+			g.buttons, g.buttons2 = set(), set()
+			twin_debug_preview(g)
 		g.restore(initial)
 		g.buttons, g.buttons2 = set(), set()
 		boot_level(g, player=s['PlayerMode_Tails'], zone=15, act=1, timezone=era)
@@ -515,7 +679,7 @@ def transport_game(args):
 		assert not g.read('v_errortype')
 		print(f'MMZ2 {title}: normal and hurt riders, solo Tails, carry handoffs, doors and covers passed.', flush=True)
 		report.append(dict(era=title, doors=doors, pipes=pipes, junctions=junctions,
-			hatch=hatch, hurt_entries=(pipes+junctions)*2+1, carry_handoffs=2))
+			hatch=hatch, hurt_entries=(pipes+junctions)*2+1, carry_handoffs=2, twin_walker=True))
 	g.close()
 	return report
 
@@ -525,7 +689,7 @@ def main():
 	p.add_argument('--rom',type=Path,default=ROOT/'s2built.bin');p.add_argument('--listing',type=Path,default=ROOT/'md-main.lst');p.add_argument('--source',type=Path,required=True)
 	p.add_argument('--output',type=Path,required=True);p.add_argument('--core',type=Path);p.add_argument('--system-directory',type=Path);p.add_argument('--pal',action='store_true');a=p.parse_args()
 	a.output.mkdir(parents=True,exist_ok=True)
-	report={'native':native(a),'source_geometry':source_geometry(a),'animations':animation_checks(a,2)}
+	report={'native':native(a),'twin_walker':twin_allocation(a),'source_geometry':source_geometry(a),'animations':animation_checks(a,2)}
 	if a.core:
 		report['game']=game(a)
 		report['transport']=transport_game(a)

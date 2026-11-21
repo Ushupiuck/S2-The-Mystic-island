@@ -76,6 +76,12 @@ Debug_Main:
 		moveq	#0,d0
 		move.b	(Debug_object).w,d0
 		mulu.w	#DebugEntry_size,d0
+		cmpi.l	#MMZ_TwinWalker,DebugEntry_code(a2,d0.w)
+		bne.s	.monitor
+		jsr	(MMZ_TwinWalker_LoadArt).l
+		bcs.s	.return
+		bra.s	.draw
+.monitor:
 		cmpi.l	#Monitor,DebugEntry_code(a2,d0.w)
 		bne.s	.draw
 		move.w	DebugEntry_subtype(a2,d0.w),d0
@@ -90,6 +96,7 @@ Debug_Main:
 		clr.b	obFrame(a0)
 .draw:
 		jmp	(DisplaySprite).l
+.return:	rts
 
 ; The four-act index matches the layout/header tables. Bonus-stage previews
 ; use only art loaded by that stage and do not change the return zone/act.

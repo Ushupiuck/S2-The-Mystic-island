@@ -222,6 +222,23 @@ frame references 15 tiles. DPLCs are still a candidate, not implemented: sizing
 must account for simultaneous independent frames and live object lifetime,
 not just the number of authored origins in one camera-loading window.
 
+### Twin Walker
+
+`art/uncompressed/MMZ2 Twin Walker.unc` is the 17-tile editable sheet and
+SonLVL source. The importer retains its indices on the first palette line.
+Slots 2–5 select Mystic Island's four oranges and slots 6–9 supply the
+grayscale metal. The level palette itself needs no change.
+
+`build_end_art.py` packs the standalone Kosinski+ module. The first visible
+walker or Debug preview decodes it into a stable 544-byte MD buffer and
+queues one DPLC cue with two runs. Both feet, the seven links and additional
+walkers share that upload. A full queue defers drawing until both runs fit.
+A level or era reload invalidates the cache.
+
+MMZ2 uses tiles `$480-$490`, which MMZ1 uses for the propeller. Moving the
+compound spike-crusher art immediately after Bigbom reduces the Act-2
+resident module from 138 to 121 tiles, so it fits in a single decode module.
+
 ### MMZ doors and pressure switch
 
 The revolving door uses 24 resident tiles in the MMZ2 Dango/doors module.

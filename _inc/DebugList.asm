@@ -336,6 +336,7 @@ Debug_MMZ1:	dc.w (Debug_MMZ1_End-Debug_MMZ1-2)/DebugEntry_size
 	dbug	Map_Obj26,	Monitor,	MonitorType_Shoes,	7,	ArtTile_Monitor
 	dbug	Map_obj41,	Springs,	0,	0,	ArtTile_Springs
 	dbug	Map_Obj36,	Spikes,	0,	0,	ArtTile_Spikes
+	dbug	Map_Obj36,	Spikes,	$E0,	0,	ArtTile_Spikes
 	dbug	Map_MMZ_Saw,	SMZ_Saws,	$216,	0,	ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_Saw,	SMZ_Saws,	$296,	16,	ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_Saw,	SMZ_Saws,	$204,	0,	ArtTile_MMZ_Atlas
@@ -378,6 +379,7 @@ Debug_MMZ2:	dc.w (Debug_MMZ2_End-Debug_MMZ2-2)/DebugEntry_size
 	dbug	Map_Obj26,	Monitor,	MonitorType_Shoes,	7,	ArtTile_Monitor
 	dbug	Map_obj41,	Springs,	0,	0,	ArtTile_Springs
 	dbug	Map_Obj36,	Spikes,	0,	0,	ArtTile_Spikes
+	dbug	Map_Obj36,	Spikes,	$E0,	0,	ArtTile_Spikes
 	dbug	Map_MMZ_Crusher,	SMZ_ScrapStomp,	$100,	0,	ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_Crusher,	SMZ_ScrapStomp,	$101,	1,	ArtTile_MMZ_Atlas
 	dbug	Map_MMZ_Crusher,	SMZ_ScrapStomp,	$141,	1,	ArtTile_MMZ_Atlas
@@ -401,4 +403,7 @@ Debug_MMZ2:	dc.w (Debug_MMZ2_End-Debug_MMZ2-2)/DebugEntry_size
 	dbug	Map_TimeGenerator,TimeGenerator,0,0,ArtTile_MMZ_Atlas
 		dbug	Map_SMZ_Bomb,Bomb,0,0,ArtTile_Bomb_MMZ
 		dbug	Map_Bigbom,Bomb,$10,0,ArtTile_MMZ_Atlas|$8000
+		dbug	Map_MMZ_Dango,MMZ_Dango,0,0,ArtTile_MMZ_Atlas
+		dbug	Map_MMZ_DangoSlow,MMZ_Dango,1,0,ArtTile_MMZ_Atlas
+		dbug	Map_MMZ_TwinWalker,MMZ_TwinWalker,0,2,ArtTile_MMZ2_TwinWalker
 Debug_MMZ2_End:

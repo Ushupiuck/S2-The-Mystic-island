@@ -364,13 +364,15 @@ def sprites2(source):
 		('Door','door',(('r8/door_1','.Sprites'),('r8/door_2','.Sprites'),('r8/door_3','.Sprites')),0,16,10),
 		('TubeDoor','tube_cover',(('r8/tube_door','.Sprites'),),0,26,4),
 		('BigBom','bigbom',(('r8/bigbom','.Sprites'),('r8/bigbom_fuse','.Sprites'),('r8/bigbom_debris','.Sprites')),0,110,94),
-		('TwinWalker','twin_walker',(('r8/twin_walker','.Sprites'),),0,204,17),
-		('SpikeCrusher','spike_crusher',(('r8/spike_crusher','.Sprites'),),0,221,27),
+		('SpikeCrusher','spike_crusher',(('r8/spike_crusher','.Sprites'),),0,204,27),
+		('TwinWalker','twin_walker',(('r8/twin_walker','.Sprites'),),0,0,17),
 		('Dango','dango',(('r7/dango','.Sprites1'),('r7/dango','.Sprites2')),1,318,78),
 		('RevolveDoor','revolve_door',(('r8/revolve_door','.Sprites'),),0,396,24))
 	outputs={};atlas=bytearray(477*32);report=[]
 	for family,art,maps,basepal,offset,capacity in specs:
 		raw=nemesis((source/f'src/gfx/r8/{art}.nem').read_bytes());patterns=[];families=[]
+		# The walker's original blues at 2-5 already select our four oranges.
+		lookup = (identity, *palettes[1:]) if family == 'TwinWalker' else palettes
 		for name,label in maps:
 			rows=frames(cd_mapping((source/f'src/sprites/{name}.asm').read_text(),label,allow_palettes=True));packed=[]
 			for row in rows:
@@ -378,12 +380,17 @@ def sprites2(source):
 				for y,size,word,x in row:
 					first=word&2047;count=((size>>2)+1)*((size&3)+1);pal=(basepal+(word>>13&3))&3
 					assert (first+count)*32<=len(raw),(family,first,count,len(raw)//32)
-					pattern=tuple(remap_pixels(raw[t*32:(t+1)*32],palettes[pal]) for t in range(first,first+count))
+					pattern=tuple(remap_pixels(raw[t*32:(t+1)*32],lookup[pal]) for t in range(first,first+count))
 					patterns.append(pattern);pieces.append((y,size,(word&0x1800)|(pal<<13),x,pattern))
 				packed.append(pieces)
 			families.append((name,label,rows,packed))
 		tiles=pack_rectangles(patterns);assert len(tiles)<=capacity,(family,len(tiles),capacity)
-		payload=b''.join(tiles);atlas[offset*32:(offset+len(tiles))*32]=payload
+		payload=b''.join(tiles)
+		if family == 'TwinWalker':
+			assert len(tiles) == capacity
+			outputs['art/uncompressed/MMZ2 Twin Walker.unc'] = payload
+		else:
+			atlas[offset*32:(offset+len(tiles))*32]=payload
 		for i,(name,label,original,packed) in enumerate(families):
 			rows=[[(y,z,word|(offset+find_tiles(tiles,pattern)),x) for y,z,word,x,pattern in row] for row in packed]
 			filename=family+(' '+str(i+1) if len(families)>1 else '')
@@ -395,6 +402,11 @@ def sprites2(source):
 				caps = [(y, size, tile ^ flip, x + dx)
 					for dx, flip in ((-24, 0), (24, 0x800)) for y, size, tile, x in rows[0]]
 				rows.extend(caps + row for row in rows[1:6])
+			if family == 'TwinWalker':
+				# Static preview of the two feet and seven links.
+				rows.append([(y, size, tile, x + dx) for dx in (0, 64)
+					for y, size, tile, x in rows[0]] + [(y, size, tile, x + dx)
+					for dx in range(8, 64, 8) for y, size, tile, x in rows[1]])
 			if family == 'RevolveDoor':
 				# Two cap poses and a rail share one object, anchored between the caps.
 				for cap in rows[:2]:
@@ -402,14 +414,14 @@ def sprites2(source):
 						for y, size, tile, x in cap])
 			outputs[f'mappings/sprite/MMZ {filename}.bin']=encode(rows)
 			for fi,(before,after) in enumerate(zip(original,rows)):
-				expected={(x,y):((basepal+pal)&3,palettes[(basepal+pal)&3][c]) for (x,y),(pal,c) in raster(before,[(0,raw)]).items()}
+				expected={(x,y):((basepal+pal)&3,lookup[(basepal+pal)&3][c]) for (x,y),(pal,c) in raster(before,[(0,raw)]).items()}
 				assert raster(after,[(offset,payload)])==expected,(family,i,fi,'visible pixels/attributes')
 		report.append(dict(family=family,offset=offset,tiles=len(tiles),capacity=capacity))
 	button=(ROOT/'art/uncompressed/Platform button.unc').read_bytes();assert len(button)==8*32
 	atlas[30*32:38*32]=button
-	for name,start,count in (('MMZ2 Emitters and doors',0,38),('MMZ2 Bomb and crushers',110,138),('MMZ2 Dango and doors',318,102)):
+	for name,start,count in (('MMZ2 Emitters and doors',0,38),('MMZ2 Bomb and crushers',110,121),('MMZ2 Dango and doors',318,102)):
 		outputs[f'art/uncompressed/{name}.unc']=bytes(atlas[start*32:(start+count)*32])
-	return outputs,dict(families=report,private_tiles=278,shared_tiles=165)
+	return outputs,dict(families=report,private_tiles=261,streamed_tiles=17,shared_tiles=165)
 
 
 def vanishing_members(x, y, eras, subtype):
@@ -451,7 +463,7 @@ def placements(source, act):
 	path = f'level/objects/LV0F_{act}.bin'
 	# Expand this explicit ownership list only after runtime, art and editor data
 	# exist. Reimporting a completed family resets its authored source settings.
-	ids = {'BigbomObject': 0xAE, 'MechaBuObject': 0xB8,
+	ids = {'BigbomObject': 0xAE, 'MechaBuObject': 0xB8, 'DangoObject': 0xBA, 'TwinWalkerObject': 0xBB, 'SpikesObject': 0x15,
 		'CollapseFloorObject': 0x1B, 'CrusherObject': 0xA5,
 		'BuzzsawObject': 0xA4, 'VanishPlatformObject': 0xA6,
 		'SpinPlatformObject': 0xA9, 'MoveSpringObjectR8': 0xB0,
@@ -461,9 +473,10 @@ def placements(source, act):
 		'BigRingObject': 0x7B, 'InvisibleBlockObject': 0xAC,
 		'RevolveDoorObject': 0x0A, 'TunnelPathObject': 0xAB,
 		'TubeDoorObject': 0x30, 'SwitchObject': 0xAF, 'SpinDiscObject': 0xA1}
-	owned = (set(ids.values()) - {0x0A}) | {0x12}
+	owned = (set(ids.values()) - {0x0A, 0x15}) | {0x12}
 	rows = [row for row in decode((ROOT/path).read_bytes()) if row[2] not in owned
-		and (row[2] != 0x0A or row[4] & 0x300 != 0x300)]
+		and (row[2] != 0x0A or row[4] & 0x300 != 0x300)
+		and (row[2] != 0x15 or row[4] & 0xF0 != 0xE0)]
 	index = re.findall(r'^\s*dc\.l\s+(\w+)',
 		(source/f'src/r8/object_index_{act}.asm').read_text(), re.M)
 	counts = dict.fromkeys(ids, 0)
@@ -503,6 +516,13 @@ def placements(source, act):
 		if family == 'BigbomObject':
 			assert act == 2 and sub == 0 and variant <= 2
 			sub = (variant << 8) | 0x10
+		elif family == 'DangoObject':
+			assert act == 2 and sub in (0, 1) and variant == 0
+		elif family == 'SpikesObject':
+			assert variant == 0 and sub & 0x80
+			assert y & 0x6000 == 0
+			y |= 0x4000 if sub != 0xFF else 0
+			sub = 0xE0
 		elif family == 'MechaBuObject':
 			assert sub in (0, 1) and variant in (0, 1)
 			y |= 0x2000 if variant else 0

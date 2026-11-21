@@ -47,6 +47,7 @@ namespace MysticIsland.ObjectDefinitions
 					: Render(pixels, map, data.Palette, dplc, data.DPLCVersion, int.Parse(Setting("mapframes", "0")));
 				if (behavior == "Bomb") alternate = Render(File.ReadAllBytes("../art/uncompressed/MMZ2 Editor Atlas.unc"), File.ReadAllBytes("../mappings/sprite/MMZ BigBom 1.bin"), 0, null);
 				if (behavior == "MMZMechaBu") alternate = Render(pixels, File.ReadAllBytes("../mappings/sprite/MMZ MechaBu Saw.bin"), 0, null);
+				if (behavior == "Dango") alternate = Render(pixels, File.ReadAllBytes("../mappings/sprite/MMZ Dango 2.bin"), 0, null);
 				string rail = Setting("sawrail", "");
 				if (behavior == "Saw" && rail.Length != 0)
 					alternate = Render(pixels, File.ReadAllBytes(rail), 0, null);
@@ -254,6 +255,8 @@ namespace MysticIsland.ObjectDefinitions
 					Bits("Speed", 0, 15, "Zero keeps the original speed (Bomb 0.0625, Bigbom 0.625; charge 2.5 px/update). Other values select value / 4 pixels per update.");
 					Bits("Bigbom patrol", 8, 255, "Bigbom only; charge contact and detection use the contacting actor's primary path.", "Normal", "Short", "Scripted charge");
 					break;
+				case "Dango":
+					Bits("Shell", 0, 1, "Selects the patrol speed, preparation time and shell sprites.", "Fast", "Slow"); break;
 				case "MMZMechaBu":
 					Bits("Saw reach", 0, 1, "The independent saw alternates every 61 updates, or stays low. X flip mirrors the attachment.", "Alternating", "Fixed low"); break;
 				case "MMZFloor":
@@ -684,6 +687,7 @@ namespace MysticIsland.ObjectDefinitions
 				case "Junction": return new Sprite(frames[0], At(frames, 16));
 				case "Eggman": return new Sprite(alternate[0], frames[(subtype & 1) == 0 ? 0 : 7]);
 				case "Bomb": return (subtype & 0xF0) == 0x10 ? alternate[0] : frames[0];
+				case "Dango": return (subtype & 1) == 0 ? frames[0] : alternate[0];
 				case "MMZMechaBu": return new Sprite(frames[0], new Sprite(At(alternate, (subtype & 1) == 0 ? 2 : 0), (subtype & 1) == 0 ? -19 : -25, (subtype & 1) == 0 ? -15 : 0));
 				case "MMZCrusher":
 					byte[] heights = (subtype & 64) == 0 ? routes : groups;

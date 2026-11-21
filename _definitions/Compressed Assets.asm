@@ -726,7 +726,7 @@ MCD_CompressedAssets:
 	dc.l Kospm_MMZ1_SawsSeesawGoodFuture,Kospm_MMZ1_SawsSeesawGoodFuture+$930	; art/moduled kosinski/MMZ1 Saws and seesaw Good Future.kospm
 	endif
 	if defined(Kospm_MMZ2_BombCrushers)
-	dc.l Kospm_MMZ2_BombCrushers,Kospm_MMZ2_BombCrushers+$7DB	; art/moduled kosinski/MMZ2 Bomb and crushers.kospm
+	dc.l Kospm_MMZ2_BombCrushers,Kospm_MMZ2_BombCrushers+$663	; art/moduled kosinski/MMZ2 Bomb and crushers.kospm
 	endif
 	if defined(Kospm_MMZ2_DangoDoors)
 	dc.l Kospm_MMZ2_DangoDoors,Kospm_MMZ2_DangoDoors+$4B5	; art/moduled kosinski/MMZ2 Dango and doors.kospm
@@ -748,6 +748,9 @@ MCD_CompressedAssets:
 	endif
 	if defined(Kospm_MMZ_TimePostHeads)
 	dc.l Kospm_MMZ_TimePostHeads,Kospm_MMZ_TimePostHeads+$1F2	; art/moduled kosinski/MMZ Time post heads.kospm
+	endif
+	if defined(Kospm_MMZ_TwinWalker)
+	dc.l Kospm_MMZ_TwinWalker,Kospm_MMZ_TwinWalker+$163	; art/moduled kosinski/MMZ2 Twin Walker.kospm
 	endif
 	if defined(Kospm_MTZBossWeapons)
 	dc.l Kospm_MTZBossWeapons,Kospm_MTZBossWeapons+$76A	; art/moduled kosinski/MTZ boss weapons.kospm

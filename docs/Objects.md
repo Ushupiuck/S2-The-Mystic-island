@@ -350,6 +350,33 @@ Act-2 source placements, including facing and era masks. Both forms are
 available in both MMZ Debug lists and SonLVL definitions; the existing shared
 48-tile Mecha-Bu bank is reused without another art copy or PLC.
 
+### Shallow spike beds
+
+Subtype arrangement `$E0` on shared object `$15` is a stationary 32-pixel bed
+with an 8-pixel collision radius in Y. A floor bed hurts a rider on top
+through the shared spike routine. Y flip selects an inverted bed with
+12-by-16 half-size touch damage and per-actor solid backing outside the
+32-pixel Y band. The MMZ importer maps all 90 original placements to these
+two orientations and keeps the standard spike art.
+
+### Dango and Twin Walker
+
+The Act-2 Dango (`$BA`) uses low subtype bit 0 for its fast or slow shell.
+Either character can trigger its windup from the front. The body uses the
+ordinary enemy touch response. A rolling character bounces off the tucked
+shell and sends Dango in the opposite horizontal direction. Its floor and
+wall probes reject the whole fixed-point step at an edge. Good Future
+suppresses the enemy, as for Mecha-Bu. Both shells use the existing Dango
+atlas module and have Debug and SonLVL previews.
+
+Twin Walker (`$BB`) uses two top-solid feet 64 pixels apart. Boarding the
+moving end triggers one of twelve steps. The far end is its pivot until the
+moving foot lands on terrain. The feet then exchange roles. Each end owns
+its riders independently, and all seven links share one composite SST.
+The constructor waits for both helper slots before writing either one.
+The root owns the placement and releases its riders and owned helpers on unload.
+All three slots share the [on-demand art](Sprites-and-VRAM.md#twin-walker).
+
 ### Bomb / Bigbom
 
 `objects/Enemies/AE Bomb.asm` owns the single `$AE` placement family. Its word

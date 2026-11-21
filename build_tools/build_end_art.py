@@ -47,7 +47,8 @@ MMZ_BANKS = (
 	('MMZ1 Saws and seesaw', 'MMZ1 Sprite Atlas', 110, 160),
 	('MMZ1 Enemies', 'MMZ1 Sprite Atlas', 318, 114),
 	('MMZ2 Emitters and doors', 'MMZ2 Emitters and doors', 0, 38),
-	('MMZ2 Bomb and crushers', 'MMZ2 Bomb and crushers', 0, 138),
+	('MMZ2 Bomb and crushers', 'MMZ2 Bomb and crushers', 0, 121),
+	('MMZ2 Twin Walker', 'MMZ2 Twin Walker', 0, 17),
 	('MMZ2 Dango and doors', 'MMZ2 Dango and doors', 0, 102),
 )
 
@@ -136,7 +137,7 @@ def main():
 	# Editor-only composite: edit the ordinary shared master or private sources,
 	# then rebuild. The common 165 tiles are never duplicated in the ROM.
 	preview=bytearray((ROOT/'art/uncompressed/MMZ1 Sprite Atlas.unc').read_bytes())
-	for name,start,count in (('MMZ2 Emitters and doors',0,38),('MMZ2 Bomb and crushers',110,138),('MMZ2 Dango and doors',318,102)):
+	for name,start,count in (('MMZ2 Emitters and doors',0,38),('MMZ2 Bomb and crushers',110,121),('MMZ2 Dango and doors',318,102)):
 		preview[start*32:(start+count)*32]=(ROOT/f'art/uncompressed/{name}.unc').read_bytes()
 	(ROOT/'art/uncompressed/MMZ2 Editor Atlas.unc').write_bytes(preview)
 	report.append(pack_fz_damaged_eggmobile())
