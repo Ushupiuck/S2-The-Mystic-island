@@ -292,6 +292,9 @@ loc_E530:
 
 
 sub_E54C:
+		; The proximity launch runs outside SolidObject. It must ignore the cursor.
+		cmpi.b	#DebugType_Placement,(Debug_placement_type).w
+		beq.w	.return
 		cmpi.b	#3,obAnim(a0)
 		beq.w	.return
 		move.w	obX(a0),d0

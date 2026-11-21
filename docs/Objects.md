@@ -768,6 +768,8 @@ to the input locks in [Players and effects](Players-and-effects.md#input-locks-a
 In the rotating S1 stage, C writes to its own item grid. See the snapping and
 free-cell search rules in [Special stage](Special-stage.md#debug-and-movement).
 Normal levels continue spawning ordinary objects with word subtypes.
+Horizontal springs skip their close-range launch check in placement mode
+so the cursor can pass through the launch window.
 
 Enabling the cheat leaves the ordinary HUD and timer rules active. Only
 placement replaces the score with player/camera coordinates and the seconds

@@ -266,6 +266,7 @@ its subtype/VRAM tables here.
 | Late effect positions | `check_tunnel_shields.py` | Shared automatic-path math across nine speeds/all signs and both actors; `--previous-rom/--previous-listing` compares all eight full routes, staggered entry and death cancellation. Exactly one update for all 113 slots, final-owner shields/stars and live SMZ2 tunnels; `--stars`, `--player 2`, `--tunnel 2` (horizontal route; default crosses Y wrap) |
 | Lifetime and giant ring | `check_object_lifetimes.py`, `check_giant_ring_entry.py` | Unload/delete, complete conveyor groups and actual giant-ring contact through the last flash frame |
 | Debug unlock and pause | `check_debug_cheat.py` | Native title sequence/restarts and optional real button entry; both players, hold/step/resume, A/Start exit and unlock persistence |
+| Debug placement and restoration | `check_debug_states.py` | Placement cursor through left- and right-facing springs, HUD and timer rules, and recovery from recoil/death with both Debug modes |
 | Input locks | `check_over_screen_input.py`, `check_drowning_input.py` | Real monitor deaths/drowning, Debug lock/unlock and rendered GAME/TIME OVER V pixels |
 | Imported enemies | `check_palmtree_enemies.py`, `check_caterkiller.py`, `check_kemusi.py` | Both-actor damage, terrain, construction/lifetime, art isolation and actual Debug spawning |
 | Propeller and carriers | `check_propeller.py`, `check_terrain_conveyors.py`, `check_wheel_carriers.py` | Triggers, terrain motion, riders/payloads and unload/reload |

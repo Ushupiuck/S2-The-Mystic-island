@@ -11,6 +11,7 @@ import struct
 
 from genesis_test_core import Genesis
 from check_object_course import boot_level
+from check_companion_followup import place, spawn
 
 
 def press_debug(g, debug_type):
@@ -23,6 +24,49 @@ def press_debug(g, debug_type):
     else:
         raise AssertionError(('Debug button was not handled', debug_type))
     g.buttons = set()
+
+
+def check_horizontal_springs(g, output):
+	baseline = g.save()
+	cursor = 'v_player'
+	x = g.get(cursor, 'obX', 2) + 112
+	y = max(32, g.get(cursor, 'obY', 2) - 64)
+
+	def crossing(button):
+		g.buttons = {button}
+		trace = []
+		for _ in range(72):
+			g.run()
+			trace.append((g.get(cursor, 'obX', 4), g.get(cursor, 'obVelX', 2)))
+		assert g.read('Debug_placement_type') == g.s['DebugType_Placement']
+		assert not g.read('v_errortype')
+		return trace
+
+	for flip, button, direction in ((0, 7, 1), (1, 6, -1)):
+		g.restore(baseline)
+		place(g, cursor, x - 50 * direction, y, airborne=False)
+		g.write('Debug_mode_flag', 1)
+		press_debug(g, g.s['DebugType_Placement'])
+		g.run(2)
+		assert not g.get(cursor, 'obStatus') & 2
+		spring = spawn(g, 'Springs', x, y, 0x10 | (flip << 1))
+		g.put(spring, 'obStatus', flip)
+		g.put(spring, 'obRender', flip)
+		at_spring = g.save()
+
+		g.put(spring, 'code', 0)
+		clear = crossing(button)
+		assert (clear[-1][0] - (x << 16)) * direction > (40 << 16)
+		g.restore(at_spring)
+		through_spring = crossing(button)
+		assert g.get(spring, 'obRoutine') == 4
+		for tick, (actual, expected) in enumerate(zip(through_spring, clear), 1):
+			assert actual == expected, ('horizontal spring moved the placement cursor',
+				flip, tick, actual, expected)
+		g.video.save(output / f'placement-spring-{"left" if flip else "right"}.png')
+
+	g.restore(baseline)
+	return {'crossed_both_horizontal_spring_directions': True}
 
 
 def check_hud(g, rom, output):
@@ -155,6 +199,7 @@ def main():
     report = {'region': 'PAL' if args.pal else 'NTSC',
               'player': 'Tails' if args.player else 'Sonic', 'cases': []}
     report['hud'] = check_hud(g, args.rom.read_bytes(), args.output)
+    report.update(check_horizontal_springs(g, args.output))
     for routine, rings, label in ((4, 40, 'hurt'), (6, 0, 'dying')):
         for frame_cycle in (False, True):
             g.restore(baseline)
