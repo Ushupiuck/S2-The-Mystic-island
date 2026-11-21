@@ -924,8 +924,8 @@ MCD_MainWorkEnd:
 Player_Art_Buffer_Start:
 Art_Shield:		ds.b	$360
 Art_Shield_End:
-Art_Invincibility:	ds.b	$440
-Art_Invincibility_End:
+Art_Invincibility:	ds.b	$400
+Art_Invincibility_End:	ds.b	$40	; retain the rest of the effect scratch allocation
 Art_Ring:		ds.b	$400
 Art_Ring_End:
 Player_Art_Buffer_End:
@@ -1742,7 +1742,7 @@ ArtTile_SMZ_Saw: equ ArtTile_SMZ_Atlas
 ArtTile_SMZ_Spin: equ ArtTile_SMZ_Atlas
 ArtTile_SMZ_VanP: equ ArtTile_SMZ_Atlas
 ArtTile_SMZ_Button: equ ArtTile_SMZ_Atlas
-ArtTile_GHZ_Edge_Wall:	equ $6F7	; eight tiles in the HUD/points gap; cap uses level art
+ArtTile_GHZ_Edge_Wall:	equ $4CE	; eight tiles after the GHZ hidden bonuses; cap uses level art
 
 
 ; Shared
@@ -1869,12 +1869,9 @@ ArtTile_HUD_Debug_Numbers:	equ ArtTile_HUD+10	; 16 coordinate tiles; final seven
 ArtTile_HUD_Numbers:		equ ArtTile_HUD_Debug_Numbers+9 ; seven score tiles, four timer tiles, three ring tiles
 ArtTile_HUD_Time:		equ ArtTile_HUD_Numbers+7
 ArtTile_HUD_Rings:		equ ArtTile_HUD_Time+4
-ArtTile_HUD_End:			equ ArtTile_HUD_Rings+3 ; $6E6 / $DCC0; 13 tiles free before points
-ArtTile_Points:			equ $6F3	; $DE60; two tiles for the primary player's popup
-ArtTile_Points_2:		equ ArtTile_Points+2 ; $6F5 / $DEA0; two tiles for the companion
-	if ArtTile_HUD_End>ArtTile_Points
-		fatal "HUD counters overlap points art"
-	endif
+ArtTile_HUD_End:			equ ArtTile_HUD_Rings+3 ; $6E6 / $DCC0
+ArtTile_Points:			equ $7BC	; two tiles for the primary player, shared with TIME OVER
+ArtTile_Points_2:		equ ArtTile_Points+2 ; two tiles for the companion
 
 
 ArtTile_Lives_Counter:		equ $7D4
@@ -1921,13 +1918,17 @@ ArtTile_Eggman_Exhaust:		equ $556	; 25 shared S1 flame tiles
 ArtTile_Giant_Ring:		equ $400
 ArtTile_Giant_Ring_Flash:	equ $462
 ArtTile_Prison_Capsule:		equ $501	; 85 tiles immediately before the shared exhaust
-ArtTile_Hidden_Points:		equ ArtTile_Signpost+$1A ; 28 tiles after the signpost DPLC bank; below checkpoints
+ArtTile_GHZ_Hidden_Points:	equ ArtTile_Chopper+$20 ; 28 resident tiles in GHZ1/2
+ArtTile_SMZ_Hidden_Points:	equ $29D	; 28 resident tiles below the SMZ1 atlas
 ArtTile_Warp:			equ $541
 ArtTile_Mini_Tails:		equ $535
 ArtTile_Mini_Sonic:		equ $551
 ArtTile_Bonuses:		equ ArtTile_Title_Card ; nine numeric tiles (five time, four ring), clear of both shields
 ArtTile_Results_Card:	equ ArtTile_Bonuses+9 ; scene glyphs follow the bonus digits
-ArtTile_Signpost:		equ ArtTile_Monitor	; 26-tile DPLC buffer; separate end-of-act lifetime
+ArtTile_Signpost:		equ ArtTile_HUD_End	; $6E6; 26 tiles before Plane B
+	if ArtTile_Signpost+26>VRAM_Plane_B_Name_Table/tile_size
+		fatal "Signpost overlaps Plane B"
+	endif
 
 ; Sega Screen
 ArtTile_Sega_Tiles:		equ $000

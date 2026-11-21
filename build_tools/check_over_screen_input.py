@@ -11,6 +11,7 @@ import json
 from genesis_test_core import Genesis
 from check_object_course import boot_level
 from check_companion_followup import isolate, spawn, place
+from import_ehz2_pp_background import nemesis
 
 
 def check_over_v(g):
@@ -90,6 +91,15 @@ def main():
 		assert g.get('v_gameovertext1', 'obRoutine') == 4
 		g.run(2)  # present the settled words in the VDP before checking pixels
 		v_pixels = check_over_v(g)
+		# TIME OVER uses the first two point tiles. A late primary
+		# award must retire before it can upload into that lettering.
+		popup = spawn(g, 'Points', 80, 840)
+		g.put(popup, 'points_parent', g.s['v_player'] & 0xFFFF, 2)
+		g.run(3)
+		assert not g.get(popup, 'code')
+		art = nemesis(g.rom[g.s['Nem_GameOver']:])
+		base = g.s['ArtTile_Game_Over']*32
+		assert bytes(g.vram[(base+i)^1] for i in range(len(art))) == art
 		g.video.save(args.output / ('time-over.png' if time_over else 'game-over.png'))
 		g.buttons2 = {8}  # physical controller 2 C still advances the card
 		g.run(1)

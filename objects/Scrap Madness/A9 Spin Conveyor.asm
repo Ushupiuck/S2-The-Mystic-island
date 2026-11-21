@@ -256,7 +256,7 @@ MMZ_SpinC_Init:
 Spin_TimedProfile:
 		dc.l Map_MMZ_Spin
 		dc.w ArtTile_MMZ_Atlas,$180
-		dc.b Map_MMZ_Spin_height,16,5,16
+		dc.b Map_MMZ_Spin_height,16,6,16
 
 ; d0.b is zero for the solid pose; d4 contains the previous X.
 SpinPlatform_Contact:

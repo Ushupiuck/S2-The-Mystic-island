@@ -42,7 +42,6 @@ ptr_PLC_Explode:	dc.w PLCKosM_Explode-ArtLoadCues+PLCKos_IndexFlag
 ptr_PLC_GameOver:	dc.w PLC_GameOver-ArtLoadCues
 ptr_PLC_TitleCard:	dc.w PLC_S1TitleCard-ArtLoadCues
 ptr_PLC_Boss:		dc.w PLCKosM_Boss-ArtLoadCues+PLCKos_IndexFlag
-ptr_PLC_Signpost:	dc.w PLCKosM_Signpost-ArtLoadCues+PLCKos_IndexFlag
 ptr_PLC_Warp:		dc.w PLC_S1SpecialStage-ArtLoadCues
 ptr_PLC_SpecialStage:	dc.w PLC_S1SpecialStage-ArtLoadCues
 ptr_PLC_GHZAnimals:	dc.w PLC_GHZAnimals-ArtLoadCues
@@ -1246,7 +1245,6 @@ plcid_Explode:		equ (ptr_PLC_Explode-ArtLoadCues)/2
 plcid_GameOver:		equ (ptr_PLC_GameOver-ArtLoadCues)/2
 plcid_TitleCard:	equ (ptr_PLC_TitleCard-ArtLoadCues)/2
 plcid_Boss:		equ (ptr_PLC_Boss-ArtLoadCues)/2
-plcid_Signpost:		equ (ptr_PLC_Signpost-ArtLoadCues)/2
 plcid_Warp:		equ (ptr_PLC_Warp-ArtLoadCues)/2
 plcid_SpecialStage:	equ (ptr_PLC_SpecialStage-ArtLoadCues)/2
 plcid_GHZAnimals:	equ (ptr_PLC_GHZAnimals-ArtLoadCues)/2
@@ -1539,7 +1537,6 @@ ptr_KPLC_MechaSonic:	dc.w PLCKosM_MechaSonic-KosMLoadCues
 ptr_KPLC_GHZBoss:	dc.w PLCKosM_GHZBoss-KosMLoadCues
 ptr_KPLC_Capsule:	dc.w PLCKosM_Capsule-KosMLoadCues
 ptr_KPLC_ExplosionWall:	dc.w PLCKosM_ExplosionWall-KosMLoadCues
-ptr_KPLC_Signpost:	dc.w PLCKosM_Signpost-KosMLoadCues
 ; Misc. PLC's [May change. Names here are potential entries]
 ; Note: the ptr names here are temporary.
 ptr_KPLC_1:	dc.w PLCKosM_Null-KosMLoadCues ; Cutscene assets
@@ -1683,10 +1680,6 @@ PLCKosM_ExplosionWall:	plrKosMlistheader
 	plreqKosM	ArtTile_ExplosionWall_Small, Kospm_Explosion
 PLCKosM_ExplosionWall_End:	plccheck PLCKosM_ExplosionWall,0
 
-PLC_Signpost:	; legacy label for the same module list
-PLCKosM_Signpost:	plrKosMlistheader
-	plreqKosM	ArtTile_Hidden_Points, Kospm_Bonus
-PLCKosM_Signpost_End:	plccheck PLCKosM_Signpost,0
 ; ---------------------------------------------------------------------------
 ; KOSM PATTERN LOAD REQUEST LIST
 ; LV00 - Twilight Hill Zone
@@ -1700,6 +1693,7 @@ PLCKosM_THZ1:	plrKosMlistheader
 ;	plreqKosM	ArtTile_Ball_HogV, Kospm_BallhogV ; retired test load
 ;	plreqKosM	ArtTile_Ball_HogH, Kospm_BallhogH ; retired test load
 	plreqKosM	ArtTile_Newtron, Kospm_Newtron
+	plreqKosM	ArtTile_GHZ_Hidden_Points, Kospm_Bonus
 PLCKosM_THZ1_End
 ; ---------------------------------------------------------------------------
 ; Act 2
@@ -1709,6 +1703,7 @@ PLCKosM_THZ2:	plrKosMlistheader
 	plreqKosM	ArtTile_Chopper, Kospm_Chopper
 	plreqKosM	ArtTile_Moto_Bug, Kospm_Motobug
 	plreqKosM	ArtTile_Newtron, Kospm_Newtron
+	plreqKosM	ArtTile_GHZ_Hidden_Points, Kospm_Bonus
 PLCKosM_THZ2_End
 ; ---------------------------------------------------------------------------
 ; Act 3
@@ -2199,6 +2194,7 @@ PLCKosM_LV73: dc.w -1
 PLCKosM_LV74: dc.w -1
 PLCKosM_SMZ1:	plrKosMlistheader
 		plreqKosM ArtTile_Bomb,Kospm_Bomb
+	plreqKosM	ArtTile_SMZ_Hidden_Points, Kospm_Bonus
 PLCKosM_SMZ1_End:	plccheck PLCKosM_SMZ1,0
 PLCKosM_SMZ2:	plrKosMlistheader
 		plreqKosM ArtTile_Bomb,Kospm_Bomb

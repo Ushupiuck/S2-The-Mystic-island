@@ -476,7 +476,9 @@ def authored_game(args):
 					g.put(ACTORS[0], 'obStatusSecondary', 2)
 					g.put(ACTORS[0], 'invtime', 600, 2)
 					g.run(10)
-					assert g.read('TimeWarp_GoodFuture') and g.get(generator, 'code') == s['TimeGenerator_Dormant']
+					assert g.read('TimeWarp_GoodFuture') and g.get(generator, 'code') == s['TimeGenerator_Explode']
+					g.run(48)
+					assert g.get(generator, 'code') == s['TimeGenerator_Dormant']
 			visit(sign_x-32, sign_y)
 			sign = find(sign_x, sign_y, 'Signpost')
 			assert g.get(sign, 'obRoutine') == 2 and g.read('f_timecount')
@@ -875,7 +877,7 @@ def platform_game(args):
 		for bank,file in [('ArtTile_MMZ_HVPlatform','Morphing Orbs'),('ArtTile_MMZ_Propeller','MM Propeller'),('ArtTile_Wheel','Wheel carrier')]:raw_vram(g.s[bank],nemesis((R/f'art/nemesis/{file}.nem').read_bytes()))
 		# Full authored timings already have native source comparisons. Here actors
 		# land through the real frame executor and independently release from a group.
-		for code,sub,state,height in [('SMZ_VanishPlatform',0x103,'Vanish_Cycle',16),('SMZ_SpinConvey',0x100,'PlatformGroup_TimedSolid',5),('SMZ_SpinConvey',0x101,'MMZ_SpinC_MoveSolid',5)]:
+		for code,sub,state,height in [('SMZ_VanishPlatform',0x103,'Vanish_Cycle',17),('SMZ_SpinConvey',0x100,'PlatformGroup_TimedSolid',6),('SMZ_SpinConvey',0x101,'MMZ_SpinC_MoveSolid',6)]:
 			a=setup(code,sub)
 			for _ in range(450):
 				state_ready=g.get(a,'platgroup_state',4)==g.s[state]

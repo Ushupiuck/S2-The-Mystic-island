@@ -185,6 +185,14 @@ def remap_pixels(raw, lookup):
     return bytes(lookup[b >> 4] << 4 | lookup[b & 15] for b in raw)
 
 
+def remap_stomper_art(raw):
+	# Moving block body and stomper caps use the rearranged stage line 2.
+	# The small block cap and tall stomper body use unchanged line 3.
+	start = 4*32
+	end = 0x13*32
+	return raw[:start] + remap_pixels(raw[start:end], ENEMY_FROM_LEGACY) + raw[end:]
+
+
 def remap_player_art(name, raw, lookup):
 	"""Keep stage-palette parts intact in art shared with player-palette FX."""
 	if name == 'SBZ Button':
@@ -485,8 +493,8 @@ def main():
             target = struct.unpack('>16H', (ROOT/'palette/SonicAndTails.bin').read_bytes()[:32])
             data = nemesis_inline(remap_player_art(name, nemesis(path),
                                                  palette_lookup(original, target)))
-        if name in ('SBZ Stomper', 'SBZ Vanishing Block'):
-            data = nemesis_inline(remap_pixels(nemesis(path), ENEMY_FROM_LEGACY))
+        if name == 'SBZ Stomper':
+            data = nemesis_compress(remap_stomper_art(nemesis(path)))
         (ROOT/f'art/nemesis/{name}.nem').write_bytes(data)
     print(json.dumps(report,indent=2))
 

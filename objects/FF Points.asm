@@ -11,6 +11,11 @@ Points_FrameBias = 1
 Points_HiddenFrame = 7
 
 Points:
+		cmpi.b	#PlayerEffects_GameOverLoaded,(v_shieldobj+effect_loaded_frame).w
+		bne.s	.update
+		cmpi.w	#v_player2,points_parent(a0)
+		bne.w	DeleteObject			; TIME OVER owns the primary points tiles
+.update:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	Points_Index(pc,d0.w),d1

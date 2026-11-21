@@ -14,6 +14,39 @@ from check_companion_followup import isolate, spawn, place
 from check_sprite_assets import frames
 
 
+def check_approach(g, player):
+	from check_rising_crushers import seek
+	from check_boss_shared_art import unpack
+
+	def tiles(bank, count):
+		base = g.s[bank]*32
+		return bytes(g.vram[(base+i)^1] for i in range(count*32))
+
+	baseline = g.save()
+	slots = range(g.s['v_lvlobjspace'] & 0xFFFF, g.s['v_lvlobjend'] & 0xFFFF, g.s['object_size'])
+	for zone, act, x, y in ((0, 1, 0x1F60, 0x5A2), (15, 0, 0x1F40, 0x540)):
+		g.restore(baseline)
+		boot_level(g, zone=zone, act=act, player=player)
+		if zone == 0:
+			bonus = unpack(bytes(g.rom), g.s['Kospm_Bonus'])
+			assert tiles('ArtTile_GHZ_Hidden_Points', len(bonus)//32) == bonus
+		camera_min = g.read('Camera_Min_X_pos', 2)
+		monitor = tiles('ArtTile_Monitor', 24)
+		seek(g, x-340, y)
+		sign = next(slot for slot in slots if g.get(slot, 'code') == g.s['Signpost'])
+		assert g.get(sign, 'signpost_loaded') == 255
+		seek(g, x-125, y)
+		assert g.get(sign, 'signpost_loaded') != 255
+		assert g.read('f_timecount') and g.read('Camera_Min_X_pos', 2) == camera_min
+		near_x = g.read('Camera_X_pos', 2)
+		assert tiles('ArtTile_Monitor', 24) == monitor
+		seek(g, x-340, y)
+		assert g.read('Camera_X_pos', 2) < near_x-125
+		assert tiles('ArtTile_Monitor', 24) == monitor
+		assert not g.read('v_errortype')
+	g.restore(baseline)
+
+
 def park_fixture_camera(g):
 	# GHZ1's flat stretch is at Y $5C0 after the terrain shift.
 	for name in ('Camera_X_pos', 'Camera_Min_X_pos', 'Camera_Max_X_pos'):
@@ -37,8 +70,10 @@ def main():
     p.add_argument('--pal',action='store_true')
     args=p.parse_args()
     g=Genesis(args.core,args.rom,args.listing,args.output,args.pal,system_directory=args.system_directory)
+    check_approach(g,args.player)
     boot_level(g,zone=0,act=0,player=args.player)
-    isolate(g);base=g.save();checks=[];rom=args.rom.read_bytes()
+    isolate(g);base=g.save();rom=args.rom.read_bytes()
+    checks=['GHZ2 and MMZ1: signpost art range, camera approach and retreat, resident monitor bodies']
     actors=['v_player','v_player2'] if args.player==0 else ['v_player']
     def run(n=1):
         for _ in range(n):
@@ -109,9 +144,6 @@ def main():
     # Use real horizontal movement for the threshold crossing. The initial
     # position/speed establishes the focused scene, then only hold right.
     sign=fixture(0)
-    # This artificial near-start arena is shorter than the normal 256px
-    # signpost-art approach. Suppress that unrelated approach-lock service.
-    g.write('f_timecount',0)
     place(g,'v_player',228,1451,False)
     g.put('v_player','obVelX',0x600,2);g.put('v_player','obInertia',0x600,2)
     g.buttons={7};run(12);g.buttons=set()

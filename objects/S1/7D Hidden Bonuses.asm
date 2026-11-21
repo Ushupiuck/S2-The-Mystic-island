@@ -45,7 +45,12 @@ Obj7D_Main:
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Obj7D,obMap(a0)
 		move.b	#Map_Obj7D_height,height_pixels(a0)
-		move.w	#make_art_tile(ArtTile_Hidden_Points,0,1),obGfx(a0)
+		move.w	#make_art_tile(ArtTile_GHZ_Hidden_Points,0,1),d0
+		cmpi.b	#id_SMZ,(Current_Zone).w
+		bne.s	.art_ready
+		move.w	#make_art_tile(ArtTile_SMZ_Hidden_Points,0,1),d0
+.art_ready:
+		move.w	d0,obGfx(a0)
 		ori.b	#4,obRender(a0)
 		move.b	#sprite_bound($10,Map_Obj7D_width),obActWid(a0)
 		move.w	obSubtype(a0),d0

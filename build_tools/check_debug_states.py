@@ -94,8 +94,8 @@ def check_hud(g, rom, output):
         return b''.join(art[int(c) * 32:(int(c) + 1) * 32] for c in text)
 
     free_first = g.s['ArtTile_HUD_End']
-    free_count = g.s['ArtTile_Points']-free_first
-    assert free_count == 13
+    free_count = g.s['vram_bg']//32-free_first
+    assert free_count == 26
     free_before = tiles(free_first, free_count)
 
     def check_mapping(placement):
@@ -106,7 +106,7 @@ def check_hud(g, rom, output):
             'Wrong HUD mapping for active Debug type', placement)
 
     def check_numbers():
-        assert tiles(free_first, free_count) == free_before, 'HUD wrote into the reclaimed VRAM gap'
+        assert tiles(free_first, free_count) == free_before, 'HUD wrote into the signpost bank'
         first = g.s['ArtTile_HUD_Numbers']
         assert tiles(first, 7) == digits('1234560'), 'Score not restored'
         assert tiles(g.s['ArtTile_HUD_Time'], 1) == digits(str(g.read('v_timemin')))

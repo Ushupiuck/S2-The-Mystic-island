@@ -314,7 +314,8 @@ addresses without changing mappings, frame selection or VRAM banks.
 | RAM bytes, end exclusive | Source | Size |
 | --- | --- | --- |
 | `$FFB3FE-$FFB75E` | Shield | `$360` |
-| `$FFB75E-$FFBB9E` | Invincibility stars | `$440` |
+| `$FFB75E-$FFBB5E` | Invincibility stars | `$400` |
+| `$FFBB5E-$FFBB9E` | Effect buffer padding | `$40` |
 | `$FFBB9E-$FFBF9E` | Normal/lost rings | `$400` |
 
 The cache occupies `$BA0` bytes after the CD ring event queue. `LoadPlayerEffectArt`
@@ -365,13 +366,11 @@ is not a source of free level VRAM.
 | `$D400`, `$D600` | `$6A0`, `$6B0` | Tails body/tail upload bases; see overlap rule below |
 | `$D720-$D8A0` | `$6B9` | Ring, lost ring and sparkles |
 | `$D8A0-$DCC0` | `$6C5` | Packed HUD, debug glyphs and counters, 33 tiles |
-| `$DCC0-$DE60` | `$6E6` | Free, 13 tiles |
-| `$DE60-$DEA0`, `$DEA0-$DEE0` | `$6F3`, `$6F5` | Per-player points, two tiles each |
-| `$DEE0-$DFE0` | `$6F7` | GHZ wall art, eight tiles |
-| `$DFE0-$E000` | `$6FF` | One free level tile |
+| `$DCC0-$E000` | `$6E6` | Signpost frame DPLC, up to 26 tiles |
 | `$E000-$F000` | `$700` | Background plane, 64 by 32 entries |
 | `$F000-$F380` | `$780` | HScroll table |
-| `$F380-$F800` | `$79C` | Shared shield/invincibility bank |
+| `$F380-$F780` | `$79C` | Primary shield and shared invincibility stars |
+| `$F780-$F7C0`, `$F7C0-$F800` | `$7BC`, `$7BE` | Per-player points, two tiles each |
 | `$F800-$FA80` | `$7C0` | Hardware sprite table |
 | `$FA80-$FC00` | `$7D4` | Life art |
 | `$FC00-$FE00`, `$FE00-$10000` | `$7E0`, `$7F0` | Primary/companion dust, splash or countdown |
@@ -679,7 +678,7 @@ visuals finish, then restore any art it needs. No act currently invokes the wall
 
 ### Player effects and UI
 
-Both eight-star trails share 34 resident tiles at `$F380`. Their gray ramp
+Both eight-star trails share 32 resident tiles at `$F380`. Their gray ramp
 uses the shared palette, while each player owns independent animation/lifetime.
 The primary has a reserved SST; companion stars allocate one dynamic SST and
 retry while needed. [Objects](Objects.md#composites-and-other-records) defines
@@ -697,6 +696,7 @@ physical-bank cache state. Act clear preserves both shield banks and their
 uploads; Game/Time Over still protects the dead primary's bank from companion stars.
 
 `art/nemesis/Game Over.nem` is the editable 34-tile GAME/TIME/OVER sheet.
+It takes over the primary effect and points banks for the Over screen.
 Both OVER mappings share the same V quartet (tiles 24-27). Its white/blue
 lettering uses slots `6/A/B/C`; the edge uses dark blue `C`, never red `F`.
 
@@ -768,8 +768,11 @@ project's existing bonus table. The counter holds 10,000 ten-point units;
 its fifth streamed digit plus the resident trailing zero display all six
 figures. The ordinary tally awards the full amount, including score lives.
 `build_signpost_art.py` owns the streamed signpost and delegates monitor
-generation to `build_monitor_art.py`. The selected HUD portrait remains outside
-the signpost bank; see [monitor contents](#monitor-contents) for its cache rules.
+generation to `build_monitor_art.py`. The signpost begins streaming as it
+approaches the visible viewport. The finish trigger locks the camera at the
+crossing. Monitor bodies and cached contents can stay visible beside the post.
+Hidden bonuses are resident in the act PLCs at `$4B2-$4CD` in GHZ1/2 and
+`$29D-$2B8` in SMZ1. The GHZ edge-wall tiles sit at `$4CE-$4D5`.
 HUD score uses ten-point units, with maximum display 9,999,990.
 
 Signpost frame `$06` uses Mecha Sonic's original head and upper body in skdisasm

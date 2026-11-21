@@ -107,8 +107,8 @@ def main():
 	for row in frames(rom, symbols['Map_Newtron']):
 		for _, size, tile, _ in row:
 			assert (tile & 0x7FF) + ((size >> 2) + 1) * ((size & 3) + 1) <= newtron_tiles
-	assert symbols['ArtTile_Points_2'] + 2 == symbols['ArtTile_GHZ_Edge_Wall']
-	assert symbols['ArtTile_GHZ_Edge_Wall'] + 8 == symbols['vram_bg'] // 32 - 1
+	assert symbols['ArtTile_GHZ_Hidden_Points'] + 28 == symbols['ArtTile_GHZ_Edge_Wall']
+	assert symbols['ArtTile_GHZ_Edge_Wall'] + 8 <= symbols['ArtTile_Springs']
 
 	assert struct.unpack_from('>H', rom, symbols['Nem_VSpikes'])[0] & 0x7FFF == 16
 	spike_frames = frames(rom, symbols['Map_Obj36'])

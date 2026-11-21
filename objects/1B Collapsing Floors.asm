@@ -31,16 +31,17 @@ Obj1B:
 		addq.b	#2,obFrame(a0)
 
 loc_8D8E:
+		move.b	#8,obHeight(a0)
 		cmpi.b	#id_SMZ,(Current_Zone).w
 		bne.s	loc_8D9C
-		move.w #ArtTile_SMZ_Atlas,obGfx(a0)
-		move.l #Map_SMZ_Floor,obMap(a0)
-		move.b #Map_SMZ_Floor_height,height_pixels(a0)	; or scrap brain
+		move.w	#ArtTile_SMZ_Atlas,obGfx(a0)
+		move.l	#Map_SMZ_Floor,obMap(a0)
+		move.b	#Map_SMZ_Floor_height,height_pixels(a0)
+		addq.b	#1,obHeight(a0)		; feet sit above the first opaque row
 
 loc_8D9C:
 		move.b	#sprite_bound($44,Map_Obj1B_width),width_pixels(a0)
 		move.b	#32,obWidth(a0)
-		move.b	#8,obHeight(a0)
 		move.w	#$200,obPriority(a0)
 		move.l	#Floor_BreakSlab,floor_break(a0)
 		bra.w	Floor_Wait
@@ -61,7 +62,7 @@ Floor_InitColumns:
 		move.b	d0,obWidth(a0)
 		move.b	d0,width_pixels(a0)
 		move.b	#Map_MMZ_Floor_height,height_pixels(a0)
-		move.b	#16,obHeight(a0)
+		move.b	#17,obHeight(a0)
 		move.l	#Map_MMZ_Floor,obMap(a0)
 		move.w	#ArtTile_MMZ_Atlas,obGfx(a0)
 		move.w	#$180,obPriority(a0)

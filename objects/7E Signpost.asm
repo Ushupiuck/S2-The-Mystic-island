@@ -8,6 +8,17 @@
 ; Bit 2 requires crossing within 128 pixels vertically of the sign.
 ; ---------------------------------------------------------------------------
 
+Signpost_Index:	dc.w Signpost_Init-Signpost_Index
+		dc.w Signpost_Main-Signpost_Index
+		dc.w Signpost_Spin-Signpost_Index
+		dc.w Signpost_EndLevel-Signpost_Index
+		dc.w Signpost_Sparkle.return-Signpost_Index
+		dc.w Signpost_Fall-Signpost_Index
+		dc.w Signpost_Landed-Signpost_Index
+		dc.w Signpost_FallingResults-Signpost_Index
+		dc.w Signpost_TrapSpin-Signpost_Index
+		dc.w Signpost_Sparkle.return-Signpost_Index
+; ===========================================================================
 Signpost:
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
@@ -16,6 +27,22 @@ Signpost:
 		lea	Ani_Signpost(pc),a1
 		jsr	(AnimateSprite).l
 		out_of_range2	UnloadObject
+		tst.b	signpost_loaded(a0)
+		bpl.s	.stream
+		; The placement manager can spawn the post well offscreen. Allow
+		; one scroll frame of margin before uploading its first portrait.
+		move.w	obX(a0),d0
+		sub.w	(Camera_X_pos).w,d0
+		addi.w	#Map_Signpost_width+32,d0
+		cmpi.w	#320+(Map_Signpost_width+32)*2,d0
+		bhs.s	.return
+		move.w	obY(a0),d0
+		sub.w	(Camera_Y_pos).w,d0
+		addi.w	#Map_Signpost_height+16,d0
+		andi.w	#Level_YWrapMask,d0
+		cmpi.w	#224+(Map_Signpost_height+16)*2,d0
+		bhs.s	.return
+.stream:
 		moveq	#0,d0
 		move.b	obFrame(a0),d0
 		lea	(DPLC_Signpost).l,a2
@@ -39,17 +66,6 @@ Signpost_Ani_TailsSpin1 = 7
 Signpost_Ani_TailsSpin2 = 8
 ; ===========================================================================
 
-Signpost_Index:	dc.w Signpost_Init-Signpost_Index
-		dc.w Signpost_Main-Signpost_Index
-		dc.w Signpost_Spin-Signpost_Index
-		dc.w Signpost_EndLevel-Signpost_Index
-		dc.w Signpost_Sparkle.return-Signpost_Index
-		dc.w Signpost_Fall-Signpost_Index
-		dc.w Signpost_Landed-Signpost_Index
-		dc.w Signpost_FallingResults-Signpost_Index
-		dc.w Signpost_TrapSpin-Signpost_Index
-		dc.w Signpost_Sparkle.return-Signpost_Index
-; ===========================================================================
 ; loc_EFD6:
 Signpost_Init:
 		st	signpost_loaded(a0)
@@ -75,13 +91,15 @@ Signpost_Init:
 		move.w	d0,obY(a0)
 		; A boss/event may spawn this anywhere, not only at the act's end.
 		move.w	(Camera_X_pos).w,(Camera_Max_X_pos).w
-		bsr.s	Signpost_Activate
+		bsr.w	Signpost_Activate
 		bra.w	Signpost_StartFall
 ; loc_EFFE:
 Signpost_Main:
 		move.w	(v_player+obX).w,d0
 		move.w	signpost_previous_x(a0),d1
 		move.w	d0,signpost_previous_x(a0)
+		tst.w	(Debug_placement_mode).w
+		bne.w	Signpost_Sparkle.return
 		sub.w	obX(a0),d0
 		blo.w	Signpost_Sparkle.return
 		cmpi.w	#32,d0

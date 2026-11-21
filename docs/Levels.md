@@ -164,6 +164,11 @@ in the act even though they share the rotating door's `$0A` slot.
 | Invisible block | `$AC` | 0 | 14 |
 | Shallow spike bed | `$15` | 33 | 57 |
 
+In each act the Past generator has a solid body and a larger attack hitbox.
+Either player's rolling, spindash or other supported attack can destroy it
+from any side. The hit sets the Good Future flag and starts 21 timed bursts,
+then the shell returns at the placement's original Y.
+
 The two MMZ1 vanishing staircases use independent placements at the same
 member coordinates. Their individual delays are 90, 180 and 270 updates.
 The importer expands the source formation into those editable placements.
@@ -735,15 +740,13 @@ excluded; layout use is not a reason to delete a foreground definition. The
 current sheets retain 188 common foreground chunks, including custom arena
 geometry, and compact their referenced blocks/static tiles. Transparent,
 non-solid flipped block-zero cells normalize to the canonical empty chunk. All four era headers and SonLVL
-select the corresponding bank. Collision indices are remapped with the blocks;
-the shared profiles, chunk flips/solidity and tile palette/priority/flips remain
-unchanged. The source sheets remain ordinary editable inputs, not outputs
-regenerated during a normal build. Recompress an edited `.unc` sheet alongside
-the edit. A full S1 import deliberately rebuilds and splits them again.
+select the corresponding bank. Collision indices are remapped with the blocks.
+The source sheets are editable inputs. Recompress an edited `.unc` sheet
+alongside the edit. A full S1 import deliberately rebuilds and splits them again.
 
 | Act | Static tiles, including reserved prefix | Blocks | Chunks | Static upload saved versus the shared 697-tile bank |
 | --- | ---: | ---: | ---: | ---: |
-| 1 | 643 | 498 | 228 | 54 tiles / 1,728 bytes |
+| 1 | 643 | 498 | 239 | 54 tiles / 1,728 bytes |
 | 2 | 573 | 454 | 212 | 124 tiles / 3,968 bytes |
 
 Tile zero and water slots `$001-$010` retain their fixed positions. External
@@ -787,8 +790,11 @@ The shared [rider physics](Players-and-effects.md#upward-rider-clearance)
 lets the existing terrain roofs crush riders over the moving girders and
 stompers. Act 1 drops twelve invisible girder caps and six stomper caps.
 Act 2 drops the cap at `$11E0,$01B0` above the stomper at `$11E0,$01E0`.
-The importer omits those exact placements. Side walls and unrelated barriers
-remain in the object layout.
+The importer omits those exact placements. Act 1 gives the ledge tops beside
+the `$06A0` girder shaft full solidity on both paths at Y `$05F0`, `$0670`
+and `$06F0`. The ledges catch a player walking left above the shaft while
+the opening still lets the girder crush riders under the roof. Eleven private
+chunk copies apply this terrain edit across all four eras.
 
 All twelve act-2 swinging spikeballs use `$76/$77`: family `$7x` hurts on every
 side with no standing surface. Family `$5x` retains solid-top/harmful-underside
@@ -806,6 +812,10 @@ SMZ flames use the shared [fire-art palette](Sprites-and-VRAM.md#fire-art),
 including pale/white cores and the full warm ramp. Both pipe styles retain
 their original hardware, mapping geometry, timing and harmful frames. The SMZ
 importer preserves the editable flame sheet during a full stage re-import.
+
+The stomper caps and lower moving-block panels follow the remapped stage
+palette line 2. The stomper bodies, upper moving-block caps and vanishing
+blocks use the original line 3 indices.
 
 The static sprite atlas shares whole identical/overlapping rectangles, retaining
 piece sizes, ordering, geometry, flips, adapted pixels, palette and priority.

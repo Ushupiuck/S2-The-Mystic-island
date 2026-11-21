@@ -169,6 +169,30 @@ def release_and_dash(g, base, actor, piston, path, release, output):
 	assert (g.get(actor, 'obX', 2)-x)*direction >= 16
 
 
+def walk_girder_lip(g, support, x, y, actors):
+	# Approach the left edge above the authored girder at the beginning
+	# of its vertical rise. The original LRB cap lets players drop into it.
+	for field, value, size in (
+			('obX', x<<16, 4), ('obY', (y+24)<<16, 4),
+			('obVelX', 0, 2), ('obVelY', -0x100, 2),
+			('SMZ_gird_time', 24, 2), ('SMZ_gird_set', 0x20, 1),
+			('SMZ_gird_delay', 0, 2), ('obStatus', 0, 1), ('obRender', 0x84, 1)):
+		g.put(support, field, value, size)
+	base = g.save()
+	for actor in actors:
+		for path in (0, 1):
+			g.restore(base)
+			start_x = x-72
+			place(g, actor, start_x, y-40-g.get(actor, 'default_y_radius')-1)
+			g.put(actor, 'obTopSolidBit', 12+path*2)
+			g.put(actor, 'obLRBSolidBit', 13+path*2)
+			hold(g, actor, LEFT)
+			for _ in range(24):
+				assert step(g, actor, support), (actor, path, 'crushed across the ledge')
+			assert g.get(actor, 'obX', 2) < start_x
+			assert g.get(actor, 'obY', 2)+g.get(actor, 'obHeight') <= y-40
+
+
 def scrap_madness(g, initial, era, player, actors, output):
 	root = Path(__file__).resolve().parents[1]
 	for act in (1, 2):
@@ -186,6 +210,10 @@ def scrap_madness(g, initial, era, player, actors, output):
 			seek(g, x, y)
 			if oid == 0xAA:
 				support = find_support(g, 'SMZ_Girder', ('SMZ_gird_origX', 'SMZ_gird_origY'), x, y)
+				if (x, y) == (0x6A0, 0x618):
+					clean = g.save()
+					walk_girder_lip(g, support, x, y, actors)
+					g.restore(clean)
 				# Start at the down/right corner, facing the real diagonal return leg.
 				fields = (
 					('obX', (x+96)<<16, 4), ('obY', (y+48)<<16, 4),
@@ -226,18 +254,30 @@ def scrap_madness(g, initial, era, player, actors, output):
 def metallic_madness(g, initial, era, player, actors, output):
 	for scene in (SNUG, TIGHT, OPEN):
 		piston, base = stage(g, initial, scene, era, player)
-		if era == 0 and scene == SNUG:
+		if era == 0 and scene == SNUG and player != g.s['PlayerMode_Tails']:
 			roof_solidity(g, base, piston)
 		for actor in actors:
 			for path in (0, 1):
 				standing_death = ride(g, base, actor, piston, path)
 				duck_death = ride(g, base, actor, piston, path, duck=True)
 				identity = scene, era, player, actor, path
-				assert (standing_death is None) == (scene == OPEN), identity
+				tails = actor == 'v_player2' or player == g.s['PlayerMode_Tails']
+				standing_fits = scene == OPEN or (scene == SNUG and tails)
+				assert (standing_death is None) == standing_fits, identity
 				assert (duck_death is None) == (scene != TIGHT), identity
 				if scene == SNUG:
+					clearance = base
+					if standing_death is None:
+						# Tails fits exactly on the corrected surface. Move the
+						# piston one pixel up for the forced-duck timing fixture.
+						g.restore(base)
+						g.put(piston, 'stomper_origin_y', scene[2]-1, 2)
+						clearance = g.save()
+						standing_death = ride(g, clearance, actor, piston, path)
+						assert standing_death is not None, identity
+						assert ride(g, clearance, actor, piston, path, duck=True) is None, identity
 					shots = output if era == path == 0 else None
-					release_and_dash(g, base, actor, piston, path, standing_death, shots)
+					release_and_dash(g, clearance, actor, piston, path, standing_death, shots)
 	print(f'Metallic Madness, era {era}: snug, tight and open piston checks passed on both paths.', flush=True)
 
 

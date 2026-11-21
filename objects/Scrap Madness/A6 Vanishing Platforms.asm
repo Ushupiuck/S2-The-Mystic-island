@@ -151,7 +151,7 @@ Vanish_DelayedInit:
 Vanish_DelayedProfile:
 		dc.l Map_MMZ_Vanish
 		dc.w ArtTile_MMZ_Atlas,$180
-		dc.b Map_MMZ_Vanish_height,16,16,16
+		dc.b Map_MMZ_Vanish_height,16,17,16
 
 Vanish_DelayedAppear:
 		dc.b 4,5

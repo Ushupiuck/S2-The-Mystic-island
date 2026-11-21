@@ -312,7 +312,7 @@ MMZ_Crusher_Init:
 		move.w	#$180,obPriority(a0)
 		move.b	#32,width_pixels(a0)
 		move.b	#Map_MMZ_Crusher_height,height_pixels(a0)
-		move.b	#32,obHeight(a0)
+		move.b	#31,obHeight(a0)		; opaque top at -31, feet sit one row above
 		move.w	obSubtype(a0),d0
 		move.w	d0,d1
 		andi.w	#$30,d1
@@ -330,7 +330,7 @@ MMZ_Crusher_Init:
 		bne.s	.small
 		move.b	#1,MMZ_crush_tall(a0)
 		move.b	#1,obFrame(a0)
-		move.b	#96,obHeight(a0)
+		move.b	#95,obHeight(a0)
 		move.b	#60,MMZ_crush_hold(a0)
 		btst	#3,d0
 		beq.s	.power

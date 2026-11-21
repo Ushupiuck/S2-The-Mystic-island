@@ -2624,7 +2624,6 @@ Level_SkipScroll:
 		jsr     (Process_Kos_Module_Queue).l
 		bsr.w	OscillateNumDo
 		bsr.w	ChangeRingFrame
-		bsr.w	SignpostArtLoad
 		jsr	(MCD_FinishRingJob).l
 		jsr	(MCD_BeginTerrainJob).l
 		jsr	(Render_Sprites).l
@@ -3151,63 +3150,6 @@ LoadRingFrame:
 .end:		rts
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
-nosignpost macro actid
-		cmpi.w	#actid,(Current_ZoneAndAct).w
-		beq.ATTRIBUTE	.return	; rts
-	endm
-
-; sub_4BD2:
-SetLevelEndType:
-;		clr.w	(Level_Has_Signpost).w	; set level type to non-signpost
-;		nosignpost.w $301	; emerald hill Act 2
-;		nosignpost.w $XYY	; metropolis Act 3
-;		nosignpost.w $XYY	; wing_fortress Act 1
-;		nosignpost.w $502	; hill top  Act 2
-;		nosignpost.w $XYY	; oil_ocean Act 2
-;		nosignpost.s $XYY	; mystic cave Act 2
-;		nosignpost.s $XYY	; casino night Act 2
-;		nosignpost.s $XYY	; chemical plant Act 2
-;		nosignpost.s $XYY	; death egg Act 1
-;		nosignpost.s $XYY	; aquatic ruin Act 2
-;		nosignpost.s $XYY	; sky chase Act 1
-;		move.w	#1,(Level_Has_Signpost).w	; set level type to signpost
-.return:
-		rts
-; End of function SetLevelEndType
-
-
-; =============== S U B R O U T I N E =======================================
-
-
-SignpostArtLoad:
-		cmpi.w	#(id_SMZ<<8)+1,(Current_ZoneAndAct).w
-		bne.s	.normal
-		tst.b	(Dynamic_Resize_Routine).w
-		bne.w	SetLevelEndType.return
-.normal:
-		tst.w	(Debug_placement_mode).w
-		bne.w	SetLevelEndType.return
-		cmpi.w	#$301,(Current_ZoneAndAct).w
-		beq.s	SetLevelEndType.return
-		cmpi.b #id_MTZ,(Current_Zone).w
-		bhs.s .newZone
-		cmpi.b	#2,(Current_Act).w
-		beq.s	SetLevelEndType.return
-.newZone:
-		move.w	(Camera_RAM).w,d0
-		move.w	(Camera_Max_X_pos).w,d1
-		subi.w	#$100,d1
-		cmp.w	d1,d0
-		blt.s	SetLevelEndType.return
-		tst.b	(f_timecount).w
-		beq.s	SetLevelEndType.return
-		cmp.w	(Camera_Min_X_pos).w,d1
-		beq.s	SetLevelEndType.return
-		move.w	d1,(Camera_Min_X_pos).w
-		moveq	#plcid_Signpost,d0
-		bra.w	NewPLC
-; End of function SignpostArtLoad
 
 ; ---------------------------------------------------------------------------
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
@@ -10400,7 +10342,7 @@ Touch_Size_BigbomBody:
 Touch_Size_BigbomDebris:
 		dc.b 6,6
 Touch_Size_TimeGenerator:
-		dc.b $20,$18
+		dc.b $28,$24	; CD hit envelope extends past the machine's solid body
 Touch_Size_DangoBody:
 		dc.b 16,9
 Touch_Size_DangoShell:
@@ -13148,7 +13090,7 @@ Nem_Shield_Dynamic:	binclude "art/nemesis/Shield Dynamic.nem"
 		even
 Nem_Invincibility:	binclude "art/nemesis/Invincibility.nem"
 		even
-		if (Art_Invincibility_End-Art_Invincibility)>((VRAM_Sprite_Attribute_Table/tile_size-ArtTile_Invincibility)*tile_size)
+		if (Art_Invincibility_End-Art_Invincibility)>((ArtTile_Points-ArtTile_Invincibility)*tile_size)
 			fatal "Invincibility art exceeds the primary effect bank."
 		endif
 		align $100

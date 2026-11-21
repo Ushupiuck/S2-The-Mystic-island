@@ -424,8 +424,14 @@ Map_MMZ_Dango:	binclude "mappings/sprite/MMZ Dango 1.bin"
 Map_MMZ_DangoSlow:	binclude "mappings/sprite/MMZ Dango 2.bin"
 		even
 
-; Both acts load the same generator tiles at the same atlas offset. The Past
-; bank adds the working machine; the other eras display its unpowered shell.
+; The working machine exists in the Past until the act's future is repaired.
+; CD's contact envelope reaches past its solid body, including on top.
+timegen_burst_frame = objoff_30
+timegen_burst_offset = objoff_31
+TimeGenerator_BodyHalfWidth = $22
+TimeGenerator_BodyHalfHeight = $20
+TimeGenerator_BurstEnd = $28+8
+
 TimeGenerator:
 		move.l	#Map_TimeGenerator,obMap(a0)
 		move.w	#ArtTile_MMZ_Atlas,obGfx(a0)
@@ -471,31 +477,79 @@ TimeGenerator_Touch:
 
 TimeGenerator_Active:
 		cmpi.b	#4,obRoutine(a0)
-		beq.s	.break
-		moveq	#$2B,d1
-		moveq	#$18,d2
-		moveq	#$18,d3
+		beq.s	TimeGenerator_Break
+		moveq	#TimeGenerator_BodyHalfWidth+sonic_solid_width,d1
+		moveq	#TimeGenerator_BodyHalfHeight,d2
+		moveq	#TimeGenerator_BodyHalfHeight+1,d3
 		move.w	obX(a0),d4
 		jsr	(SolidObject_Always).l
 		lea	Ani_TimeGenerator(pc),a1
 		jsr	(AnimateSprite).l
 		bra.s	TimeGenerator_Dormant
-.break:
+
+TimeGenerator_Break:
 		clr.b	obColType(a0)
 		jsr	(ReleaseObjectRiders).l
 		move.b	#1,(TimeWarp_GoodFuture).l
+		move.l	#TimeGenerator_Explode,code(a0)
+		move.b	#7,obFrame(a0)
+		moveq	#15,d0
+		jmp	(AddPoints).l
+
+TimeGenerator_Explode:
+		addq.b	#1,timegen_burst_frame(a0)
+		move.b	timegen_burst_frame(a0),d0
+		cmpi.b	#TimeGenerator_BurstEnd,d0
+		beq.s	.finished
+		moveq	#0,d1
+		move.b	timegen_burst_offset(a0),d1
+		lea	TimeGenerator_Bursts(pc,d1.w),a2
+		cmp.b	(a2)+,d0
+		bne.s	.return
+		addq.b	#3,timegen_burst_offset(a0)
+		jsr	(FindFreeObj).l
+		bne.s	.return
+		move.l	#FieryExplosion,code(a1)
+		move.b	(a2)+,d0
+		ext.w	d0
+		add.w	obX(a0),d0
+		move.w	d0,obX(a1)
+		move.b	(a2),d0
+		ext.w	d0
+		add.w	obY(a0),d0
+		move.w	d0,obY(a1)
+.return:	rts
+.finished:
 		move.l	#TimeGenerator_Dormant,code(a0)
 		move.b	#1,obFrame(a0)
-		moveq	#15,d0
-		jsr	(AddPoints).l
-		jsr	(FindFreeObj).l
-		bne.s	.no_effect
-		move.l	#FieryExplosion,code(a1)
-		move.w	obX(a0),obX(a1)
-		move.w	obY(a0),obY(a1)
-.no_effect:
 		addi.w	#16,obY(a0)
 		bra.w	TimeGenerator_Dormant
+
+; Frame and signed X/Y offsets from CD's Metallic Madness generator.
+TimeGenerator_Bursts:
+		dc.b 1,0,0
+		dc.b 2,-40,-20
+		dc.b 3,28,10
+		dc.b 4,18,-18
+		dc.b 5,-18,-10
+		dc.b 6,8,-8
+		dc.b 8,-18,14
+		dc.b $A,-10,10
+		dc.b $C,30,-10
+		dc.b $F,0,-18
+		dc.b $12,20,-10
+		dc.b $14,-10,18
+		dc.b $16,8,23
+		dc.b $19,13,-10
+		dc.b $1A,23,-22
+		dc.b $1C,-3,-25
+		dc.b $1E,10,20
+		dc.b $20,-10,2
+		dc.b $22,30,-8
+		dc.b $23,13,-10
+		dc.b $28,-10,10
+		dc.b $FF
+		even
 
 Ani_TimeGenerator:
 		dc.w .on-Ani_TimeGenerator

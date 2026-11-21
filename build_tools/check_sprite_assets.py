@@ -112,36 +112,37 @@ def main():
 
 	points_banks = [(symbols['ArtTile_Points'] * 32, (symbols['ArtTile_Points'] + 2) * 32),
 					(symbols['ArtTile_Points_2'] * 32, (symbols['ArtTile_Points_2'] + 2) * 32)]
-	assert points_banks == [(0xDE60, 0xDEA0), (0xDEA0, 0xDEE0)]
+	assert points_banks == [(0xF780, 0xF7C0), (0xF7C0, 0xF800)]
 	assert symbols['ArtTile_HUD_Numbers'] + 14 == symbols['ArtTile_HUD_End']
-	assert symbols['ArtTile_HUD_End'] + 13 == symbols['ArtTile_Points']
+	assert symbols['ArtTile_HUD_End'] == symbols['ArtTile_Signpost']
 	assert symbols['ArtTile_HUD_Debug_Numbers'] + 16 == symbols['ArtTile_HUD_Time']
 	assert struct.unpack_from('>H', rom, symbols['Nem_HUD'])[0] & 0x7FFF == 10, 'HUD must load only its ten label letters'
 	assert (ROOT/'art/uncompressed/HUD Numbers.bin').stat().st_size == 11*32
 	for row in frames(rom, symbols['Map_obj21'], 8):
 		for _, size, word, _ in row:
 			tile = (symbols['ArtTile_HUD']+word) & 0x7FF
-			if symbols['ArtTile_HUD'] <= tile < symbols['ArtTile_Points']:
+			if symbols['ArtTile_HUD'] <= tile < symbols['vram_bg'] // 32:
 				assert tile+((size>>2)+1)*((size&3)+1) <= symbols['ArtTile_HUD_End'], 'HUD mapping enters reclaimed VRAM'
 	assert 'Art_SSResultsRing' not in symbols
-	assert points_banks[-1][1] <= symbols['vram_bg']
+	assert points_banks[-1][1] == symbols['VRAM_Sprite_Attribute_Table']
 
-	# End-of-level bonuses replace unused monitor contents. The signpost's
-	# largest DPLC and checkpoint bank must survive beside them.
-	bonus_first = symbols['ArtTile_Hidden_Points']
+	# The placed sign, monitor and hidden award can all be visible together.
 	bonus_tiles = struct.unpack_from('>H', rom, symbols['Kospm_Bonus'])[0] // 32
-	bonus_end = bonus_first + bonus_tiles
+	for plc, bank, end in (('THZ1', 'GHZ', 'ArtTile_GHZ_Edge_Wall'),
+			('THZ2', 'GHZ', 'ArtTile_GHZ_Edge_Wall'), ('SMZ1', 'SMZ', 'ArtTile_SMZ_Atlas')):
+		first = symbols[f'ArtTile_{bank}_Hidden_Points']
+		assert first + bonus_tiles <= symbols[end]
+		list_start = symbols[f'PLCKosM_{plc}']
+		count = struct.unpack_from('>h', rom, list_start)[0] + 1
+		entries = struct.iter_unpack('>IH', rom[list_start+2:list_start+2+count*6])
+		assert (symbols['Kospm_Bonus'], first*32) in entries, plc
 	signpost_table = symbols['DPLC_Signpost']
 	for frame in range(symbols['Map_Signpost_frames']):
 		start = signpost_table + struct.unpack_from('>h', rom, signpost_table + frame * 2)[0]
 		runs = struct.unpack_from('>H', rom, start)[0]
 		loaded = sum((struct.unpack_from('>H', rom, start + 2 + run * 2)[0] >> 12) + 1
 					 for run in range(runs))
-		assert symbols['ArtTile_Signpost'] + loaded <= bonus_first
-	assert bonus_end <= symbols['ArtTile_Lamppost']
-	for bank in ('ArtTile_SMZ_Smoke1', 'ArtTile_SMZ_Smoke2'):
-		first = symbols[bank]
-		assert bonus_end <= first or bonus_first >= first + 12
+		assert (symbols['ArtTile_Signpost'] + loaded)*32 <= symbols['vram_bg']
 	for row in frames(rom, symbols['Map_Obj7D'], symbols['Map_Obj7D_frames']):
 		for _, size, tile, _ in row:
 			assert (tile & 0x7FF) + ((size >> 2) + 1) * ((size & 3) + 1) <= bonus_tiles
@@ -167,7 +168,7 @@ def main():
 	effect_banks = [(symbols['ArtTile_Shield'] * 32, symbols['VRAM_Sprite_Attribute_Table']),
 					(symbols['ArtTile_Shield_2'] * 32, symbols['ArtTile_Shield_2_End'] * 32)]
 	stars_size = symbols['Art_Invincibility_End'] - symbols['Art_Invincibility']
-	assert effect_banks[0][0] + stars_size <= effect_banks[0][1]
+	assert effect_banks[0][0] + stars_size == points_banks[0][0]
 
 	shield_frames = frames(rom, symbols['Map_obj38'])
 	for frame, row in enumerate(shield_frames):
@@ -326,7 +327,7 @@ def main():
 	print(f'{len(points_frames) - 1} points values fit both two-tile banks; hidden-frame and HUD/plane/PLC boundaries pass.')
 	print('Explosion/fiery and all six animal PLC pairs fit the reordered $B040-$BFFF group.')
 	print('Life-monitor icon, 56 resident bubble tiles and both streamed splash/countdown banks pass.')
-	print('Hidden bonuses fit between all signpost DPLC frames and checkpoints, clear of both SMZ smoke banks.')
+	print('Hidden bonuses fit their resident GHZ and SMZ banks, with the signpost clear of monitors and Plane B.')
 	if args.skdisasm:
 		print('All three Tails art files match the palette-remapped S&K source pixels.')
 

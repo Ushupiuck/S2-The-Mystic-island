@@ -204,7 +204,7 @@ MCD_CompressedAssets:
 	dc.l BLevel_MTZ4,BLevel_MTZ4+$82	; level/layout/bad future/MTZ_4.kosp
 	endif
 	if defined(BLevel_SMZ1)
-	dc.l BLevel_SMZ1,BLevel_SMZ1+$3C6	; level/layout/bad future/SMZ_1.kosp
+	dc.l BLevel_SMZ1,BLevel_SMZ1+$3D9	; level/layout/bad future/SMZ_1.kosp
 	endif
 	if defined(BLevel_SMZ2)
 	dc.l BLevel_SMZ2,BLevel_SMZ2+$41B	; level/layout/bad future/SMZ_2.kosp
@@ -489,7 +489,7 @@ MCD_CompressedAssets:
 	dc.l GLevel_MTZ4,GLevel_MTZ4+$82	; level/layout/good future/MTZ_4.kosp
 	endif
 	if defined(GLevel_SMZ1)
-	dc.l GLevel_SMZ1,GLevel_SMZ1+$3C6	; level/layout/good future/SMZ_1.kosp
+	dc.l GLevel_SMZ1,GLevel_SMZ1+$3D9	; level/layout/good future/SMZ_1.kosp
 	endif
 	if defined(GLevel_SMZ2)
 	dc.l GLevel_SMZ2,GLevel_SMZ2+$41B	; level/layout/good future/SMZ_2.kosp
@@ -996,7 +996,7 @@ MCD_CompressedAssets:
 	dc.l Level_MTZ4,Level_MTZ4+$82	; level/layout/MTZ_4.kosp
 	endif
 	if defined(Level_SMZ1)
-	dc.l Level_SMZ1,Level_SMZ1+$3C6	; level/layout/SMZ_1.kosp
+	dc.l Level_SMZ1,Level_SMZ1+$3D9	; level/layout/SMZ_1.kosp
 	endif
 	if defined(Level_SMZ2)
 	dc.l Level_SMZ2,Level_SMZ2+$41B	; level/layout/SMZ_2.kosp
@@ -1062,7 +1062,7 @@ MCD_CompressedAssets:
 	dc.l Map128_MTZBlank,Map128_MTZBlank+$E	; mappings/128x128/MTZ Blank.kosp
 	endif
 	if defined(Map128_SMZ1)
-	dc.l Map128_SMZ1,Map128_SMZ1+$268D	; mappings/128x128/SMZ1.kosp
+	dc.l Map128_SMZ1,Map128_SMZ1+$2921	; mappings/128x128/SMZ1.kosp
 	endif
 	if defined(Map128_SMZ2)
 	dc.l Map128_SMZ2,Map128_SMZ2+$24E9	; mappings/128x128/SMZ2.kosp
@@ -1416,7 +1416,7 @@ MCD_CompressedAssets:
 	dc.l Nem_HangingSurface,Nem_HangingSurface+$AC	; art/nemesis/Hanging surface.nem
 	endif
 	if defined(Nem_Invincibility)
-	dc.l Nem_Invincibility,Nem_Invincibility+$EE	; art/nemesis/Invincibility.nem
+	dc.l Nem_Invincibility,Nem_Invincibility+$EA	; art/nemesis/Invincibility.nem
 	endif
 	if defined(Nem_Kemusi)
 	dc.l Nem_Kemusi,Nem_Kemusi+$1BA	; art/nemesis/Enemy Kemusi.nem
@@ -1488,7 +1488,7 @@ MCD_CompressedAssets:
 	dc.l Nem_S3LevelSelect,Nem_S3LevelSelect+$574	; art/nemesis/S3 Level Select.nem
 	endif
 	if defined(Nem_SMZAtlas)
-	dc.l Nem_SMZAtlas,Nem_SMZAtlas+$1C1B	; art/nemesis/SMZ Sprite Atlas.nem
+	dc.l Nem_SMZAtlas,Nem_SMZAtlas+$1BCE	; art/nemesis/SMZ Sprite Atlas.nem
 	endif
 	if defined(Nem_SSEmStars)
 	dc.l Nem_SSEmStars,Nem_SSEmStars+$5B	; art/Bonus & Special Stage/Bonus Stage Emerald Twinkle.nem
@@ -1776,7 +1776,7 @@ MCD_CompressedAssets:
 	dc.l PLevel_MTZ4,PLevel_MTZ4+$82	; level/layout/past/MTZ_4.kosp
 	endif
 	if defined(PLevel_SMZ1)
-	dc.l PLevel_SMZ1,PLevel_SMZ1+$3C6	; level/layout/past/SMZ_1.kosp
+	dc.l PLevel_SMZ1,PLevel_SMZ1+$3D9	; level/layout/past/SMZ_1.kosp
 	endif
 	if defined(PLevel_SMZ2)
 	dc.l PLevel_SMZ2,PLevel_SMZ2+$41B	; level/layout/past/SMZ_2.kosp
