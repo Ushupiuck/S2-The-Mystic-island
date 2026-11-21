@@ -48,6 +48,16 @@ def main():
 		label = next(n for n in ('Plat_Top', 'Plat_Full', 'Plat_FallingIntangible') if m.s[n] == code)
 		m.act(label, obj)
 
+
+	def board(player, x, foot, height=19):
+		index = (obj-m.s['v_objspace'])//m.s['object_size']
+		for field, value, size in (
+				('obX',x,2), ('obY',foot-height,2), ('player_support_x',x,2),
+				('obHeight',height,1), ('default_y_radius',height,1),
+				('obStatus',8,1), ('standonobject',index,1),
+				('character_id',int(player=='v_player2'),1)):
+			m.put(player,field,value,size)
+
 	# Word flags, configuration bounds, direct update pointers and no global RAM
 	# growth. Invalid mapping frames must never escape into the renderer.
 	for shape in range(8):
@@ -219,9 +229,9 @@ def main():
 		for label, value in (('v_colladdr1', m.s['Col_GHZ4']), ('v_colladdr2', m.s['Col_GHZ4'] + 1), ('Collision_addr', m.s['Col_GHZ4'])):
 			m.write(label, value, 4)
 
-	# Real arch terrain exercises the actual MD/CD distance executor, including
-	# correction at the platform's ceiling and each selected rider's entrapment.
-	fixture(7, x=0x1080, y=0x380)
+	# The platform stops at the real arch, while the shared solid pass
+	# checks the independent roof clearance of each rider.
+	fixture(7, x=0x1080, y=0x580)
 	ghz4_terrain()
 	m.put(obj, 'Plat_state', 1)
 	m.put(obj, 'obVelY', -0x400, 2)
@@ -231,19 +241,117 @@ def main():
 		if not m.get(obj, 'obVelY', 2):
 			stopped = True
 			break
-	assert stopped and 0x318 <= m.get(obj, 'Plat_rawY', 2) <= 0x324
+	assert stopped and 0x518 <= m.get(obj, 'Plat_rawY', 2) <= 0x524, (stopped, hex(m.get(obj, 'Plat_rawY', 2)))
 	for standing in (8, 0x10, 0x18):
-		fixture(7, x=0x1080, y=0x380)
+		fixture(7, x=0x1080, y=0x580)
 		ghz4_terrain()
 		m.put(obj, 'Plat_state', 1)
 		m.put(obj, 'obStatus', standing)
-		for player in ('v_player', 'v_player2'):
-			m.put(player, 'obX', 0x1080, 2)
-			m.put(player, 'obY', 0x308, 2)
-		m.act('Plat_Move', obj)
+		m.put(obj, 'obVelY', -0x400, 2)
+		for bit, player in ((8, 'v_player'), (0x10, 'v_player2')):
+			if standing & bit:
+				board(player, 0x1080, 0x578)
+			else:
+				m.put(player, 'obX', 0x1000, 2)
+		for _ in range(60):
+			tick()
+			if not m.get(obj, 'obVelY', 2):
+				break
 		assert m.get('v_player', 'obRoutine') == (6 if standing & 8 else 2)
 		assert m.get('v_player2', 'obRoutine') == (6 if standing & 0x10 else 2)
-	checks.append('rising trap: either-rider latch, acceleration cap, real GHZ4 ceiling stop and both crush checks')
+	checks.append('rising trap: either-rider latch, acceleration cap, real GHZ4 ceiling stop and shared rider checks')
+
+	# Chunk 1 is a flat roof ending at Y=$180. The stock vertical
+	# oscillator changes the body's position without writing obVelY.
+	from level_layout import encode
+	x, roof = 600, 0x180
+
+	def flat_roof(masks):
+		m.resident_terrain = True
+		m.sub.mem_write(m.s['MCD_TerrainLayout_Sub'],
+			encode([[int(y == 2)]*8 for y in range(8)], [[0]]))
+		word = (masks[0] << 12) | (masks[1] << 14) | 1
+		m.sub.mem_write(m.s['MCD_ChunkTable_SubStart']+128, struct.pack('>64H', *([word]*64)))
+		m.cpu.mem_write(0x3E0000, bytes([255])*m.s['MCD_TerrainIndexCapacity'])
+		m.write('v_colladdr1', 0x3E0000, 4)
+		m.write('v_colladdr2', 0x3E0001, 4)
+
+	modes = (
+		('standing', 29, 12, (3, 3), True),
+		('duck', 29, 12, (3, 3), False),
+		('charge', 29, 12, (3, 3), False),
+		('roll', 29, 12, (3, 3), False),
+		('release', 29, 12, (3, 3), False),
+		('release', 27, 12, (3, 3), True),
+		('standing', 29, 12, (1, 1), False),
+		('standing', 29, 12, (2, 2), True),
+		('standing', 29, 12, (1, 2), True),
+		('standing', 29, 0, (3, 3), False),
+		('standing', 29, -4, (3, 3), False),
+		('controlled', 29, 12, (3, 3), False),
+		('stale', 29, 12, (3, 3), False),
+	)
+	for platform in (3, 0x103):
+		for mode, gap, rise, masks, lethal in modes:
+			foot = roof + gap
+			fixture(platform, x=x, y=foot+32)
+			flat_roof(masks)
+			height = m.get(obj, 'obHeight') + int(platform == 0x103)
+			m.put(obj, 'Plat_originY', foot+height+32, 2)
+			m.put(obj, 'obY', foot+height+rise, 2)
+			m.put(obj, 'obVelY', 0, 2)
+			m.put(obj, 'obStatus', 0x18)
+			m.cpu.mem_write((m.s['v_oscillate']+0xA) & 0xFFFFFF, b'\0')
+			for player, offset, height in (('v_player', -4, 19), ('v_player2', 4, 15)):
+				board(player, x+offset, foot+rise, height)
+				m.put(player, 'obTopSolidBit', 12 if offset<0 else 14)
+				m.put(player, 'obLRBSolidBit', 13 if offset<0 else 15)
+				if mode in ('duck', 'charge', 'roll'):
+					animation = {'duck':'Duck','charge':'Spindash','roll':'Roll'}[mode]
+					m.put(player, 'obAnim', m.s['AniIDSonAni_'+animation])
+				if mode=='roll':
+					m.put(player, 'obStatus', 12)
+					m.put(player, 'obHeight', 14)
+					m.put(player, 'obWidth', 7)
+					m.put(player, 'obY', foot+rise-14, 2)
+				if mode=='release':
+					m.put(player, 'player_unfolding', 1)
+				if mode=='controlled':
+					m.put(player, 'obControl', 1)
+				if mode=='stale':
+					m.put(player,'standonobject',m.get(player,'standonobject')+1)
+			tick()
+			for path, player in enumerate(('v_player','v_player2')):
+				crushed = lethal and bool(masks[path] & 2)
+				assert (m.get(player,'obRoutine')==6)==crushed,(platform,mode,gap,rise,masks,player)
+				if not crushed:
+					assert m.get(player,'obY',2)+m.get(player,'obHeight')==foot
+					if mode=='release':
+						assert m.get(player,'obAnim')==m.s['AniIDSonAni_Duck']
+				assert bool(m.get(obj, 'obStatus') & (8 << path)) != crushed
+			assert m.get(obj, 'obVelY', 2)==0
+			m.resident_terrain = False
+	checks.append('ordinary moving platforms: both solidity modes, poses, paths, support ownership and controlled riders')
+
+	# The same final overlap can come from walking along the slope or from
+	# a support that lifts. Compare both using the usual sloped entry point.
+	for lifted in (False, True):
+		foot = roof+29
+		fixture(0, x=x, y=foot+12)
+		flat_roof((3, 3))
+		slope = bytearray(32)
+		slope[18] = 12
+		m.cpu.mem_write(0x3E1000, bytes(slope))
+		m.put(obj, 'obStatus', 0x18)
+		for player in ('v_player','v_player2'):
+			board(player, x+4, foot+12)
+			m.put(player, 'player_support_x', x+4 if lifted else x-16, 2)
+		m.act('SlopedPlatform', obj, {c.UC_M68K_REG_D1:32, c.UC_M68K_REG_D4:x, c.UC_M68K_REG_A2:0x3E1000})
+		for player in ('v_player','v_player2'):
+			assert (m.get(player,'obRoutine')==6)==lifted,(lifted,player)
+			assert m.get(player,'obY',2)+m.get(player,'obHeight')==foot
+		m.resident_terrain = False
+	checks.append('sloped support: physical rise and walking uphill at the same roof overlap')
 
 	# Long paths stay alive at their distant endpoint and release actual
 	# placement ownership on unload, allowing a clean subsequent reload.
@@ -305,11 +413,11 @@ def main():
 					assert not arrived
 				else:assert arrived,(mode,phase,standing,'never fell')
 				arrival_checks+=1
-	fixture(0x1007,x=0x1080,y=0x380);ghz4_terrain();m.put(obj,'obStatus',8)
+	fixture(0x1007,x=0x1080,y=0x580);ghz4_terrain();m.put(obj,'obStatus',8)
 	for _ in range(300):
 		m.act('Plat_Move',obj)
 		if m.get(obj,'Plat_movement',4)==m.s['Plat_Falling']:break
-	assert m.get(obj,'Plat_movement',4)==m.s['Plat_Falling'] and 0x318<=m.get(obj,'Plat_rawY',2)<=0x324
+	assert m.get(obj,'Plat_movement',4)==m.s['Plat_Falling'] and 0x518<=m.get(obj,'Plat_rawY',2)<=0x524
 	checks.append(f'{arrival_checks} falling combinations: no-rider safety, either rider/both, phase/corner, latch after leaving, exact destination before descent; real ceiling stop')
 
 	if args.before_ref:

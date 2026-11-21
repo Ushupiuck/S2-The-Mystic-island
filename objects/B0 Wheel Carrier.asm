@@ -125,8 +125,10 @@ WheelCarrier:
 		bne.s	.consumed
 		movea.l	a1,a2
 		lea	(v_player).w,a1
+		moveq	#status.npc.p1_standing,d6
 		bsr.s	.rider
 		lea	(v_player2).w,a1
+		moveq	#status.npc.p2_standing,d6
 		bsr.s	.rider
 		movea.l	a2,a1
 .position:
@@ -164,7 +166,11 @@ WheelCarrier:
 		add.w	d0,obX(a1)
 		move.w	obY(a0),d0
 		sub.w	wheel_old_y(a0),d0
-		add.w	d0,obY(a1)
+		add.w	obY(a1),d0
+		move.l	a0,-(sp)
+		movea.l	a2,a0			; the rider owns the payload's surface
+		jsr	(Object_MoveRiderY).l
+		movea.l	(sp)+,a0
 .return:
 		rts
 .unload:

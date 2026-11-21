@@ -91,7 +91,7 @@ Bumper_bump:
 		moveq	#1,d0
 	;	jsr	(AddPoints).l
 		bsr.w	AddPoints
-		bsr.w	FindFreeObj
+		jsr	(FindFreeObj).l
 		movea.w	(sp)+,a2			; MOVEA preserves the allocator's Z flag
 		bne.s	.return
 		move.l	#Points,code(a1)

@@ -487,9 +487,9 @@ MvSonicOnPtfm2:
 		moveq	#0,d1
 		move.b	obHeight(a1),d1
 		sub.w	d1,d0
-		move.w	d0,obY(a1)
 		sub.w	obX(a0),d2
 		sub.w	d2,obX(a1)
+		bra.w	Object_MoveRiderY
 .return:	rts
 ; End of function MvSonicOnPtfm
 
@@ -497,29 +497,134 @@ MvSonicOnPtfm2:
 ; =============== S U B R O U T I N E =======================================
 
 MvSonicOnSlope:
-		btst	#3,obStatus(a1)
+		btst	#status.player.on_object,obStatus(a1)
 		beq.s	.return
+		movem.l	d3-d4,-(sp)
+		move.w	d1,d3			; half-width
 		move.w	obX(a1),d0
 		sub.w	obX(a0),d0
-		add.w	d1,d0
+		add.w	d3,d0
+		bsr.s	.sample
+		move.w	d0,d4			; new centre Y at the player's current X
+		cmp.w	obY(a1),d0
+		bge.s	.walk
+		; Check the old local contact against the new surface. The player's
+		; own walk up a stationary slope can change Y without a lift.
+		move.w	player_support_x(a1),d0
+		sub.w	d2,d0			; d2 is the support's previous X
+		add.w	d3,d0
+		move.w	d3,d1
+		add.w	d1,d1
+		cmp.w	d1,d0
+		bhs.s	.walk
+		bsr.s	.sample
+		move.w	d0,d1
+		bra.s	.place
+.walk:
+		move.w	obY(a1),d1
+.place:
+		sub.w	obX(a0),d2
+		sub.w	d2,obX(a1)
+		move.w	d4,d0
+		movem.l	(sp)+,d3-d4
+		cmp.w	obY(a1),d1
+		bge.w	Object_PositionRider
+		bra.w	Object_MoveRiderY
+.return:
+		rts
+.sample:
 		lsr.w	#1,d0
 		btst	#0,obRender(a0)
-		beq.s	+
+		beq.s	.normal
 		not.w	d0
-		add.w	d1,d0
-+
-		move.b	(a2,d0.w),d1
-		ext.w	d1
-		move.w	obY(a0),d0
-		sub.w	d1,d0
+		add.w	d3,d0
+.normal:
+		move.b	(a2,d0.w),d0
+		ext.w	d0
+		neg.w	d0
+		add.w	obY(a0),d0
 		moveq	#0,d1
 		move.b	obHeight(a1),d1
 		sub.w	d1,d0
+		rts
+
+; d0.w = new centre Y after the support moves; X is already final.
+; All solid carrier paths share the ceiling test. Landing and sampling
+; a stationary surface use Object_PositionRider directly.
+Object_MoveRiderY:
+		cmp.w	obY(a1),d0
+		bge.w	Object_PositionRider
+		bsr.w	Object_PositionRider
+		tst.b	(MCD_TerrainReady).l
+		beq.s	.return
+		tst.w	(Debug_placement_mode).w
+		bne.s	.return
+		tst.b	(f_playerctrl).w
+		bne.s	.return
+		tst.b	obControl(a1)
+		bne.s	.return
+		tst.l	code(a1)
+		beq.s	.return
+		cmpi.b	#6,obRoutine(a1)
+		bhs.s	.return
+		btst	#status.player.in_air,obStatus(a1)
+		bne.s	.return
+		bsr.w	ObjectOwnsRider
+		beq.s	.check
+.return:
+		rts
+.check:
+		movem.l	d1-d7/a0-a6,-(sp)
+		movea.l	a1,a0
+		move.w	obHeight(a0),d0
+		cmpi.b	#AniIDSonAni_Duck,obAnim(a0)
+		beq.s	.compact
+		cmpi.b	#AniIDSonAni_Spindash,obAnim(a0)
+		bne.s	.probe
+.compact:
+		cmpi.b	#sonic_roll_height,obHeight(a0)
+		bls.s	.probe
+		move.w	#(sonic_roll_height<<8)|sonic_roll_width,d0
+		clr.b	player_unfolding(a0)
+.probe:
+		jsr	(Player_FloorHeadroom).l
+		bpl.s	.restore
+		tst.b	player_unfolding(a0)
+		beq.s	.crush
+		cmpi.b	#sonic_roll_height,obHeight(a0)
+		bls.s	.crush
+		move.w	#(sonic_roll_height<<8)|sonic_roll_width,d0
+		jsr	(Player_FloorHeadroom).l
+		bmi.s	.crush
+		; The rise used the last of the standing room on the release
+		; frame. Restore the same compact pose, with the feet planted.
+		move.b	#AniIDSonAni_Duck,obAnim(a0)
+		clr.b	player_unfolding(a0)
+		jsr	(Player_StopForDuck).l
+		; The player already queued its sprite before the solid update.
+		cmpi.b	#CharacterID_Tails,character_id(a0)
+		beq.s	.tails
+		jsr	(Sonic_Animate).l
+		jsr	(LoadSonicDynPLC).l
+		bra.s	.restore
+.tails:
+		jsr	(Tails_Animate).l
+		jsr	(LoadTailsDynPLC).l
+		bra.s	.restore
+.crush:
+		movea.l	7*4(sp),a2		; saved support a0
+		bclr	d6,obStatus(a2)
+		bclr	#status.player.on_object,obStatus(a0)
+		clr.b	standonobject(a0)
+		jsr	(KillCharacter).l
+.restore:
+		movem.l	(sp)+,d1-d7/a0-a6
+		rts
+
+Object_PositionRider:
 		move.w	d0,obY(a1)
-		sub.w	obX(a0),d2
-		sub.w	d2,obX(a1)
-.return:	rts
-; End of function MvSonicOnSlope
+		move.w	obX(a1),player_support_x(a1)
+		rts
 
 
 ; =============== S U B R O U T I N E =======================================
@@ -719,6 +824,7 @@ loc_F916:
 		divu.w	#object_size,d0
 		andi.w	#$7F,d0
 		move.b	d0,standonobject(a1)
+		move.w	obX(a1),player_support_x(a1)
 		clr.b	obAngle(a1)
 		clr.w	obVelY(a1)
 		move.w	obVelX(a1),obInertia(a1)

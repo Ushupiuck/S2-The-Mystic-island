@@ -162,6 +162,7 @@ scroll_delay_counter:   equ $2B     ; byte; camera look delay
 flip_angle:             equ $27     ; byte; twist/tumble angle
 air_left:               equ $2C     ; byte; companion Tails' independent air supply
 flip_turned:            equ $2D     ; byte; tumble orientation
+player_support_x:       equ respawn_addr ; word; position at the last supported contact
 obControl:              equ $2E     ; byte; control override flags
 obStatusSecondary:      equ $2F     ; byte; shield, invincibility, shoes and sliding
 flips_remaining:        equ $30     ; byte
@@ -182,7 +183,7 @@ standonobject:          equ $41     ; byte; object-slot index
 obTopSolidBit:          equ $42     ; byte; top solidity bit
 obLRBSolidBit:          equ $43     ; byte; side/bottom solidity bit
 tails_hidden:           equ $44     ; byte; body's damage-blink decision
-; $45 is available to the CPU respawn code.
+player_unfolding:       equ $45     ; byte; compact pose requested standing this update
 player_dust_ptr:        equ $46     ; word; validated dust-controller pointer
 default_y_radius:       equ $48     ; byte; standing collision Y radius
 default_x_radius:       equ $49     ; byte; standing collision X radius

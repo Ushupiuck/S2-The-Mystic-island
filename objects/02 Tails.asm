@@ -4,6 +4,7 @@
 ; 73de97c6b55055bcb8089c1d55d006b02136f163. Stage-specific cutscenes stay out.
 ; ---------------------------------------------------------------------------
 Obj02:
+		clr.b	player_unfolding(a0)
 		clr.b	conveyor_applied(a0)
 		cmpa.w	#v_player,a0		; companion Tails never gets Debug privileges
 		bne.s	Obj02_Normal
@@ -424,7 +425,7 @@ TailS3_loc_13B78:
 		move.b	d0,spindash_flag(a0)
 		move.w	d0,spindash_counter(a0)
 		move.b	d0,jumping(a0)
-		move.b	d0,objoff_45(a0)
+		move.b	d0,player_unfolding(a0)
 		movem.l	a1-a3,-(sp)
 		; Catch-up is not death: keep shield/status and the ticking timers.
 		movea.l	a0,a2

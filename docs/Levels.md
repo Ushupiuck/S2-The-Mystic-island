@@ -754,6 +754,13 @@ conveyor groups, girders, transport pipes, barriers, floors, bombs and button.
 Their IDs/subtypes/editor definitions are maintained in
 [SonLVL](../SonLVL%20INI%20Files/README.md).
 
+The shared [rider physics](Players-and-effects.md#upward-rider-clearance)
+lets the existing terrain roofs crush riders over the moving girders and
+stompers. Act 1 drops twelve invisible girder caps and six stomper caps.
+Act 2 drops the cap at `$11E0,$01B0` above the stomper at `$11E0,$01E0`.
+The importer omits those exact placements. Side walls and unrelated barriers
+remain in the object layout.
+
 All twelve act-2 swinging spikeballs use `$76/$77`: family `$7x` hurts on every
 side with no standing surface. Family `$5x` retains solid-top/harmful-underside
 behavior for future levels. The wheel (`$B0`) has no SMZ placements, PLC or Debug

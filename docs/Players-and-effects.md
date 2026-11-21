@@ -140,9 +140,8 @@ they do not establish that every rare monitor failure is solved.
 The grounded duck and spindash charge use the 28-pixel rolling envelope
 for head clearance and keep the standing sprite origin. Releasing Down under
 a low terrain roof keeps an already-ducking player tucked until the standing
-shape fits. The check includes the current carry step of a rising short MMZ
-crusher. A player can aim, charge and release a spindash while tucked. When a
-ball stops under a low roof, it settles into a duck at the same foot position.
+shape fits. A player can aim, charge and release a spindash while tucked. When
+a ball stops under a low roof, it settles into a duck at the same foot position.
 Closed trapdoors try top landing before full solidity. Their first
 closed frame resolves shallow foot overlap across the physical 24-pixel body;
 closed sides and rising underside contacts remain solid. Horizontal springs
@@ -151,6 +150,25 @@ Vertical and diagonal springs collide only on their launch face. Upward
 springs use the shared flat or sloped top-only contact. The diagonal cap
 can catch a sideways run at its low end. Upside-down springs use the
 corresponding one-way underside contact. Each actor launches independently.
+
+### Upward rider clearance
+
+Any solid support that raises a rider checks the center and both shoulders
+against side/bottom solidity on that rider's active terrain path. This includes
+full-solid terrain. The test follows the actual position step, so platforms
+that write coordinates directly also use it. For a slope or bridge, the last
+supported X determines whether the surface itself rose beneath the player.
+The check runs during a physical ride, with player and Debug control overrides
+respected.
+
+The rider keeps their feet on the support. If a rise blocks standing on the
+same update the player unfolded from a duck or ball, the engine keeps them
+tucked as long as that pose fits. A rider whose current pose overlaps the
+ceiling during the lift is crushed.
+
+CD puts its ceiling probe in shared `SolidObject` after the object's Y movement.
+Its top-solid entry goes through the same path. CD checks the object's vertical
+speed and uses one center probe. [Sonic CD solid-object routine](https://github.com/sonicretro/scddisasm/blob/791253ba1922d7c4142a40975860d1b3bb37b9f7/src/common/solid_object.asm#L279-L351).
 
 Running discs perform a rectangular reject followed by circular capture.
 Terrain conveyors apply one push per player/frame using `conveyor_applied`.

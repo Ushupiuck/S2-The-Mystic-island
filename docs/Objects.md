@@ -253,10 +253,7 @@ before upward motion. The tall body selects 60 or 90 updates at the extrema.
 At phase `$210`, it launches each actual rider independently with `-$1000` or
 `-$A00` velocity. The rider's standing index must still match the body.
 
-The short variant checks terrain headroom when its carry step moves a rider
-upward. Head overlap with the active path's side/bottom solidity is lethal,
-including fully solid terrain. The probe checks both shoulders and the
-center of the head using the rider's standing or compact envelope.
+Both bodies use the [shared upward rider clearance](Players-and-effects.md#upward-rider-clearance).
 
 Obj20 retains the owner's existing morphing-platform rewrite, seven CD poses,
 palette-adapted eight-tile CD art, phase table and standing helper. Its direct
@@ -1166,10 +1163,8 @@ and the rider-detach helper returns without entering the switch handler.
 The ceiling trap closely matches S1's separate `LabyrinthBlock` rising trap
 (`$61`, subtype `$13` followed by `$14`), suggesting reused lineage. Its S3&K
 profile activates without S1's 30-update delay and ceases acceleration after
-128 px, then cruises. The platform has its own primary-path ceiling sensor;
-S3&K's additional rider-entrapment probe samples inside each standing player's
-body using that player's L/R/B collision path. It is not a head-only sensor.
-The exact S1 delayed/continuously accelerating trap profile is not implemented.
+128 px, then cruises. The platform's primary-path ceiling sensor stops its body.
+Each rider uses the [shared upward rider clearance](Players-and-effects.md#upward-rider-clearance).
 
 References: [S1 ordinary platforms](https://github.com/sonicretro/s1disasm/blob/15dfa3a6ee4c53aeb482233e493755c84b4f3479/_incObj/18%20Platforms.asm),
 [S1 LZ blocks](https://github.com/sonicretro/s1disasm/blob/15dfa3a6ee4c53aeb482233e493755c84b4f3479/_incObj/61%20LZ%20Blocks.asm),

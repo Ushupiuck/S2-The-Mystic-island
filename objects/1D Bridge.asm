@@ -242,8 +242,53 @@ Bridge_CheckRider:
 		bmi.w	.release
 		cmp.w	d2,d0
 		bhs.w	.release
+		move.w	d1,d3			; X bias for selecting the previous log
 		lsr.w	#4,d0
 		move.b	d0,(a0,d5.w)
+		bsr.s	.log_top
+		btst	d6,obStatus(a0)
+		beq.s	.land
+		btst	#status.player.in_air,obStatus(a1)
+		bne.s	.release
+		moveq	#0,d1
+		move.b	obHeight(a1),d1
+		sub.w	d1,d0
+		cmp.w	obY(a1),d0
+		bge.s	.position
+		move.w	d0,d4
+		; A different log may be higher even if the old one did not rise.
+		move.w	player_support_x(a1),d0
+		sub.w	obX(a0),d0
+		add.w	d3,d0
+		cmp.w	d2,d0
+		bhs.s	.walk
+		lsr.w	#4,d0
+		bsr.s	.log_top
+		moveq	#0,d1
+		move.b	obHeight(a1),d1
+		sub.w	d1,d0
+		cmp.w	obY(a1),d0
+		bge.s	.walk
+		move.w	d4,d0
+		jsr	(Object_MoveRiderY).l
+		bra.s	.return
+.walk:
+		move.w	d4,d0
+.position:
+		jsr	(Object_PositionRider).l
+		bra.s	.return
+.land:
+		tst.w	obVelY(a1)
+		bmi.s	.return
+		jmp	(PlatformObject_ChkYRange).l
+.release:
+		bclr	d6,obStatus(a0)
+		beq.s	.return
+		bclr	#status.player.on_object,obStatus(a1)
+.return:
+		moveq	#0,d4
+		rts
+.log_top:
 		movea.l	Bridge_child1(a0),a2
 		cmpi.w	#8,d0
 		blo.s	.log
@@ -255,27 +300,7 @@ Bridge_CheckRider:
 		add.w	d0,d0
 		add.w	d1,d0			; six-byte child record
 		move.w	sub2_y_pos(a2,d0.w),d0
-		subq.w	#8,d0			; land on this log's depressed surface
-		btst	d6,obStatus(a0)
-		beq.s	.land
-		btst	#status.player.in_air,obStatus(a1)
-		bne.s	.release
-		moveq	#0,d1
-		move.b	obHeight(a1),d1
-		sub.w	d1,d0
-		move.w	d0,obY(a1)
-		moveq	#0,d4
-		rts
-.land:
-		tst.w	obVelY(a1)
-		bmi.s	.return
-		jmp	(PlatformObject_ChkYRange).l
-.release:
-		bclr	d6,obStatus(a0)
-		beq.s	.return
-		bclr	#status.player.on_object,obStatus(a1)
-.return:
-		moveq	#0,d4
+		subq.w	#8,d0
 		rts
 ; End of function sub_7DDA
 

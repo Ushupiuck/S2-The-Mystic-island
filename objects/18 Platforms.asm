@@ -612,47 +612,12 @@ Plat_RisingTrap:
 		jsr	(ObjHitCeiling).l
 		move.w	(sp)+,obHeight(a0)
 		tst.w	d1
-		bpl.s	.check_riders
+		bpl.s	.store_y
 		sub.w	d1,obY(a0)
 		clr.b	Plat_state(a0)
 		clr.w	obVelY(a0)
+.store_y:
 		move.l	obY(a0),Plat_rawY(a0)
-		rts
-.check_riders:
-		move.l	obY(a0),Plat_rawY(a0)
-		btst	#3,obStatus(a0)
-		beq.s	.partner
-		lea	(v_player).w,a1
-		bsr.s	Plat_CheckCrush
-.partner:
-		btst	#4,obStatus(a0)
-		beq.w	.return
-		lea	(v_player2).w,a1
-; The S3&K entrapment probe samples terrain inside each rider's body, using
-; their L/R/B collision path. It is not the platform's own ceiling sensor.
-Plat_CheckCrush:
-		movem.l	a0/a2,-(sp)
-		movea.l	a1,a0
-		move.w	obX(a0),d3
-		move.w	obY(a0),d2
-		subq.w	#4,d2
-		move.l	(v_colladdr1).w,(Collision_addr).w
-		cmpi.b	#$D,obLRBSolidBit(a0)
-		beq.s	.path_ready
-		move.l	(v_colladdr2).w,(Collision_addr).w
-.path_ready:
-		lea	(Primary_Angle).w,a4
-		clr.b	(a4)
-		movea.w	#$10,a3
-		moveq	#0,d6
-		move.b	obLRBSolidBit(a0),d5
-		jsr	(FindFloor).l
-		tst.w	d1
-		bpl.s	.return
-		movea.l	(sp),a2		; the hazard SST is required by KillCharacter
-		jsr	(KillCharacter).l
-.return:
-		movem.l	(sp)+,a0/a2
 		rts
 
 ; Shared MD collision/surface implementation for Obj17 and Obj18.

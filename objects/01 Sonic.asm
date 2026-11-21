@@ -6,6 +6,7 @@
 ; ---------------------------------------------------------------------------
 
 Obj01:
+		clr.b	player_unfolding(a0)
 		clr.b	conveyor_applied(a0)
 		tst.w	(Debug_placement_mode).w	; is debug mode being used?
 		beq.s	.check_entry
@@ -1136,13 +1137,10 @@ Player_EnterRoll:
 ; Probe the proposed shape from the current feet. Only L/R/B solidity on
 ; this actor's active path can obstruct a ceiling. N means head overlap.
 Player_FloorHeadroom:
-		move.w	obY(a0),d2
-Player_HeadroomAtY:
 		tst.b	(MCD_TerrainReady).l
-		beq.s	Player_StandingRoom.clear
+		beq.s	.clear
 		move.w	obHeight(a0),-(sp)
 		move.w	obY(a0),-(sp)
-		move.w	d2,obY(a0)
 		bsr.w	Player_ResizeOnFloor
 		moveq	#1,d0			; include the middle of the head as well as both shoulders
 		jsr	(Sonic_DontRunOnWalls).l
@@ -1150,24 +1148,24 @@ Player_HeadroomAtY:
 		move.w	(sp)+,obHeight(a0)
 		tst.w	d1
 		rts
+.clear:
+		moveq	#0,d1
+		rts
 
 Player_StandingRoom:
 		move.b	obAngle(a0),d0
 		addi.b	#$20,d0
 		cmpi.b	#$40,d0
 		bhs.s	.clear			; vertical expansion applies on floors
-		move.w	obY(a0),d2
-		btst	#status.player.on_object,obStatus(a0)
-		beq.s	.probe
-		move.l	a3,-(sp)
-		bsr.w	Player_GetStandingObject
-		jsr	(MMZ_Crusher_PendingSupport).l
-		movea.l	(sp)+,a3
-.probe:
 		move.w	default_y_radius(a0),d0
-		bra.s	Player_HeadroomAtY
+		bsr.s	Player_FloorHeadroom
+		bmi.s	.return
 .clear:
+		; The player moves before the objects. A later upward carry can
+		; still keep this character compact at the actual support height.
+		st	player_unfolding(a0)
 		moveq	#0,d1
+.return:
 		rts
 
 ; Called after the normal spindash input check. A blocked duck remains
@@ -1186,13 +1184,16 @@ Player_KeepDuckUnderRoof:
 		beq.s	.stop
 		bclr	#status.player.x_flip,obStatus(a0)
 .stop:
-		clr.w	obInertia(a0)
-		clr.l	obVelX(a0)
-		bclr	#status.player.pushing,obStatus(a0)
-		bsr.w	Player_ResetScr
+		bsr.s	Player_StopForDuck
 		moveq	#-1,d1
 .return:
 		rts
+
+Player_StopForDuck:
+		clr.w	obInertia(a0)
+		clr.l	obVelX(a0)
+		bclr	#status.player.pushing,obStatus(a0)
+		bra.w	Player_ResetScr
 
 Player_StopRolling:
 		bclr	#status.player.rolling,obStatus(a0)

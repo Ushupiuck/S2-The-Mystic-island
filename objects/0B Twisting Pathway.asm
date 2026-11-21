@@ -300,7 +300,10 @@ TwistingPathway_CagePlayer:
 		move.b	obHeight(a1),d2
 		subi.w	#$13,d2
 		sub.w	d2,d1
-		move.w	d1,obY(a1)
+		move.w	d1,d0
+		jsr	(Object_MoveRiderY).l
+		cmpi.b	#6,obRoutine(a1)
+		bhs.w	.return
 		move.b	(a2),flip_angle(a1)
 		addq.b	#4,(a2)
 		tst.w	obInertia(a1)

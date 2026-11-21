@@ -250,17 +250,12 @@ PlatformMount_Update:
 PlatformMount_Rider:
 		btst	d6,obStatus(a0)
 		beq.s	.return
-		btst	#3,obStatus(a1)
-		beq.s	.return
-		moveq	#0,d0
-		move.b	standonobject(a1),d0
-		mulu.w	#object_size,d0
-		addi.w	#v_objspace,d0
-		move.w	a0,d1
-		cmp.w	d1,d0
+		jsr	(ObjectOwnsRider).l
 		bne.s	.return
 		add.w	d4,obX(a1)
-		add.w	d5,obY(a1)
+		move.w	obY(a1),d0
+		add.w	d5,d0
+		jmp	(Object_MoveRiderY).l
 .return:
 		rts
 

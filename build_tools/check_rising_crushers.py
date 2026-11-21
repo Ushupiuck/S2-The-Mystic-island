@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Test terrain clearance over the authored Metallic Madness crushers."""
+"""Test terrain clearance over authored Metallic and Scrap Madness crushers."""
 import argparse
 from pathlib import Path
 
 from check_companion_followup import place
 from check_object_course import boot_level
 from genesis_test_core import Genesis
+from object_layout import decode
 
 ACTORS = ('v_player', 'v_player2')
 DOWN, ACTION, RIGHT, LEFT = 5, 0, 7, 6
@@ -15,11 +16,7 @@ TIGHT = (2, 0x1D61, 0x02AD)
 OPEN = (1, 0x1721, 0x067F)
 
 
-def stage(g, initial, scene, era):
-	act, x, y = scene
-	g.restore(initial)
-	g.buttons, g.buttons2 = set(), set()
-	boot_level(g, zone=15, act=act-1, timezone=era)
+def seek(g, x, y):
 	for actor in ACTORS:
 		place(g, actor, x, y-56)
 		g.put(actor, 'obControl', 0x81)
@@ -27,29 +24,48 @@ def stage(g, initial, scene, era):
 	g.write('Camera_Y_pos', y-132, 2)
 	g.write('Screen_redraw_flag', 1)
 	g.run(32)
+
+
+def find_support(g, code, origin, x, y):
 	s = g.s
 	slots = range(s['v_lvlobjspace'] & 0xFFFF, s['v_lvlobjend'] & 0xFFFF, s['object_size'])
-	piston = next(slot for slot in slots if g.get(slot, 'code') == s['Stomper_Run']
-		and g.get(slot, 'stomper_origin_x', 2) == x and g.get(slot, 'stomper_origin_y', 2) == y)
+	return next(slot for slot in slots if g.get(slot, 'code') == s[code]
+		and g.get(slot, origin[0], 2) == x and g.get(slot, origin[1], 2) == y)
+
+
+def stage(g, initial, scene, era):
+	act, x, y = scene
+	g.restore(initial)
+	g.buttons, g.buttons2 = set(), set()
+	boot_level(g, zone=15, act=act-1, timezone=era)
+	seek(g, x, y)
+	piston = find_support(g, 'Stomper_Run', ('stomper_origin_x', 'stomper_origin_y'), x, y)
 	return piston, g.save()
 
 
-def board(g, actor, piston, path):
+def set_rider(g, actor, support, x, foot, path):
 	s = g.s
-	height_table = g.get(piston, 'MMZ_crush_heights', 4)
-	y = g.get(piston, 'stomper_origin_y', 2) + g.rom[height_table+64:height_table+65][0]
-	x = g.get(piston, 'stomper_origin_x', 2)
-	foot = y-g.get(piston, 'obHeight')-1
 	player_index = ACTORS.index(actor)
 	place(g, actor, x, foot-g.get(actor, 'default_y_radius'), False)
 	for field, value, size in (
 			('obStatus', 8, 1), ('obStatusSecondary', 2, 1), ('invtime', 6000, 2),
-			('standonobject', (piston-(s['v_objspace'] & 0xFFFF))//s['object_size'], 1),
-			('obTopSolidBit', 12+path*2, 1), ('obLRBSolidBit', 13+path*2, 1)):
+			('standonobject', (support-(s['v_objspace'] & 0xFFFF))//s['object_size'], 1),
+			('player_support_x', x, 2), ('obTopSolidBit', 12+path*2, 1),
+			('obLRBSolidBit', 13+path*2, 1)):
 		g.put(actor, field, value, size)
+	flags = g.get(support, 'obStatus') & ~0x18
+	g.put(support, 'obStatus', flags | (1 << (3+player_index)))
+	g.put(support, 'obRender', g.get(support, 'obRender') | 0x80)
+
+
+def board(g, actor, piston, path):
+	height_table = g.get(piston, 'MMZ_crush_heights', 4)
+	y = g.get(piston, 'stomper_origin_y', 2) + g.rom[height_table+64:height_table+65][0]
+	x = g.get(piston, 'stomper_origin_x', 2)
+	foot = y-g.get(piston, 'obHeight')-1
+	set_rider(g, actor, piston, x, foot, path)
 	for field, value, size in (
-			('obY', y, 2), ('MMZ_crush_phase', 0x100, 2), ('obVelY', 0, 2),
-			('obRender', 0x84, 1), ('obStatus', 1 << (3+player_index), 1)):
+			('obY', y, 2), ('MMZ_crush_phase', 0x100, 2), ('obVelY', 0, 2)):
 		g.put(piston, field, value, size)
 
 
@@ -106,8 +122,8 @@ def release_and_dash(g, base, actor, piston, path, release, output):
 	hold(g, actor, DOWN)
 	for _ in range(release):
 		assert step(g, actor, piston, on_board=True)
-	# The equivalent standing rider dies on this update. The player loop
-	# must test the height the piston will carry the rider to later this frame.
+	# The equivalent standing rider dies on this update. The carry pass
+	# must keep the rider compact if standing fits only before the rise.
 	hold(g, actor)
 	duck = g.s['AniIDSonAni_Duck']
 	for _ in range(3):
@@ -148,6 +164,60 @@ def release_and_dash(g, base, actor, piston, path, release, output):
 	assert (g.get(actor, 'obX', 2)-x)*direction >= 16
 
 
+def scrap_madness(g, initial, era, output):
+	root = Path(__file__).resolve().parents[1]
+	for act in (1, 2):
+		rows = decode((root / f'level/objects/SMZ_{act}.bin').read_bytes())
+		crushers = [(x, y & 0xFFF, oid) for x, y, oid, _, subtype in rows
+			if oid == 0xAA or (oid == 0xA5 and subtype in (0x24, 0x34))]
+		assert len(crushers) == (20 if act == 1 else 1)
+		g.restore(initial)
+		g.buttons, g.buttons2 = set(), set()
+		boot_level(g, zone=8, act=act-1, timezone=era)
+		level = g.save()
+		for x, y, oid in crushers:
+			g.restore(level)
+			g.buttons, g.buttons2 = set(), set()
+			seek(g, x, y)
+			if oid == 0xAA:
+				support = find_support(g, 'SMZ_Girder', ('SMZ_gird_origX', 'SMZ_gird_origY'), x, y)
+				# Start at the down/right corner, facing the real diagonal return leg.
+				fields = (
+					('obX', (x+96)<<16, 4), ('obY', (y+48)<<16, 4),
+					('obVelX', 0xFF00, 2), ('obVelY', 0xFFC0, 2),
+					('SMZ_gird_time', 96, 2), ('SMZ_gird_set', 0x18, 1),
+					('SMZ_gird_delay', 0, 2))
+				rider_x = x+24
+			else:
+				support = find_support(g, 'Stomper_Run', ('stomper_origin_x', 'stomper_origin_y'), x, y)
+				offset = g.get(support, 'SMZ_sto_offset_max', 2)
+				fields = (('obY', (y+offset)<<16, 4), ('SMZ_sto_active', 0, 1),
+					('SMZ_sto_offset_now', offset, 2))
+				rider_x = x
+			for field, value, size in fields:
+				g.put(support, field, value, size)
+			foot = g.get(support, 'obY', 2)-g.get(support, 'obHeight')-1
+			base = g.save()
+			for actor in ACTORS:
+				for path in (0, 1):
+					g.restore(base)
+					g.buttons, g.buttons2 = set(), set()
+					set_rider(g, actor, support, rider_x, foot, path)
+					hold(g, actor)
+					for frame in range(RISE_FRAMES):
+						previous_y = g.get(support, 'obY', 2)
+						if not step(g, actor, support, on_board=True):
+							assert 0 < frame and g.get(support, 'obY', 2) < previous_y
+							assert not g.get(actor, 'obStatus') & 8
+							assert not g.get(support, 'obStatus') & 0x18
+							break
+					else:
+						raise AssertionError((act, hex(x), hex(y), era, actor, path))
+					if era == path == 0 and actor == ACTORS[0] and x in (0x06A0, 0x09A0, 0x11E0):
+						g.video.save(output / f'smz{act}-{x:04x}-{y:04x}-crush.png')
+		print(f'Scrap Madness {act}, era {era}: terrain crush verified at {len(crushers)} placements.', flush=True)
+
+
 def main():
 	p = argparse.ArgumentParser(description=__doc__)
 	for flag in ('rom', 'listing', 'core', 'output'):
@@ -174,6 +244,7 @@ def main():
 						shots = args.output if era == path == 0 else None
 						release_and_dash(g, base, actor, piston, path, standing_death, shots)
 		print(f'Era {era}: both riders and both paths pass the snug, tight and open piston checks.', flush=True)
+		scrap_madness(g, initial, era, args.output)
 	g.close()
 
 
