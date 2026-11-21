@@ -114,7 +114,12 @@ Render_Sprites:
 		move.w	(a1)+,d2
 		move.b	d2,(a6)+
 		addq.w	#1,a6
-		move.w	(a1)+,(a6)+
+		move.w	(a1)+,d2
+		btst	#6,4(a0)			; RingPath_Primary, high byte of the Y word
+		beq.s	.ring_tile
+		ori.w	#$8000,d2
+.ring_tile:
+		move.w	d2,(a6)+
 		move.w	2(a0),d0
 		sub.w	(a3),d0
 		addi.w	#128,d0

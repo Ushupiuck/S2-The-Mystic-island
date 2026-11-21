@@ -164,6 +164,9 @@ Checkpoint_Orbit:
 ; =============== S U B R O U T I N E =======================================
 
 TimePole_Init:
+		movem.w	d0,-(sp)
+		jsr	(Object_PathPriority).l
+		movem.w	(sp)+,d0
 		move.b	#6,Pole_baseframe(a0)
 		cmpi.w	#PoleType_Past,d0
 		beq.s	.frame
@@ -252,17 +255,8 @@ Pole_Contact:
 		addi.w	#64,d0
 		cmpi.w	#104,d0
 		bhs.s	.miss
-		move.w	obSubtype(a0),d0
-		btst	#12,d0
-		beq.s	.hit
-		moveq	#$C,d1
-		btst	#11,d0
-		beq.s	.layer
-		moveq	#$E,d1
-.layer:
-		cmp.b	obTopSolidBit(a1),d1
+		jsr	(Object_MatchesPath).l
 		bne.s	.miss
-.hit:
 		ori.b	#1,ccr
 .return:	rts
 .miss:

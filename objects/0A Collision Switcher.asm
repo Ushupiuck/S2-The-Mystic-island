@@ -3,6 +3,10 @@
 ; ---------------------------------------------------------------------------
 
 PathSwitch_Door		equ $100	; the act must load the MMZ2 door art
+PathSwitch_Revolving	equ $200	; alternate the current path from the boarded base
+PathSwitch_DoorBaseY	equ 88
+PathSwitch_DoorBaseH	equ 8
+PathSwitch_DoorRailH	equ 80
 switch_inside		equ objoff_34	; bits 7/6: primary/companion inside the trigger
 switch_turn		equ objoff_35	; remaining door animation updates
 switch_half_width	equ objoff_36
@@ -25,13 +29,22 @@ CollisionSwitcher:
 		moveq	#$20,d2
 		lsl.w	d1,d2
 		btst	#8,d0
-		beq.s	.set_extent
+		bne.s	.door
+		bclr	#1,obSubtype(a0)		; only a door can have a rotating base
+		bra.s	.set_extent
+.door:
 		move.l	#Map_MMZ_RevolveDoor,obMap(a0)
 		move.w	#ArtTile_MMZ_Atlas,obGfx(a0)
 		move.b	#Map_MMZ_RevolveDoor_width,width_pixels(a0)
 		move.b	#Map_MMZ_RevolveDoor_height,height_pixels(a0)
 		move.b	#2,obFrame(a0)
-		moveq	#Map_MMZ_RevolveDoor_height,d2	; upright door span
+		moveq	#PathSwitch_DoorRailH,d2
+		btst	#9,d0
+		beq.s	.door_axis
+		move.b	#3,obFrame(a0)
+		moveq	#16,d2				; rider origin range above the bottom cap
+		bra.s	.set_extent
+.door_axis:
 		btst	#2,d0
 		beq.s	.set_extent
 		clr.b	obFrame(a0)
@@ -49,11 +62,25 @@ CollisionSwitcher:
 CollisionSwitcher_Run:
 		tst.w	(Debug_placement_mode).w
 		bne.s	.draw
+		btst	#1,obSubtype(a0)		; PathSwitch_Revolving
+		beq.s	.bounds
+		addi.w	#PathSwitch_DoorBaseY,obY(a0)
+		moveq	#40+sonic_solid_width,d1
+		moveq	#PathSwitch_DoorBaseH,d2
+		moveq	#PathSwitch_DoorBaseH+1,d3
+		move.w	obX(a0),d4
+		jsr	(PlatformObject).l
+		subi.w	#PathSwitch_DoorBaseY,obY(a0)
+.bounds:
 		move.w	obX(a0),d2
 		move.w	d2,d3
 		sub.w	switch_half_width(a0),d2
 		add.w	switch_half_width(a0),d3
 		move.w	obY(a0),d4
+		btst	#1,obSubtype(a0)
+		beq.s	.height
+		addi.w	#PathSwitch_DoorBaseY-26,d4
+.height:
 		move.w	d4,d5
 		sub.w	switch_half_height(a0),d4
 		add.w	switch_half_height(a0),d5
@@ -87,12 +114,27 @@ CollisionSwitcher_Actor:
 		blo.s	.exit
 		cmp.w	d5,d1
 		bhs.s	.exit
+		btst	#1,obSubtype(a0)
+		beq.s	.enter
+		jsr	(ObjectOwnsRider).l
+		bne.s	.missing
+.enter:
 		bset	d6,switch_inside(a0)
 		bne.s	.return
 		move.w	obSubtype(a0),d0
 		btst	#8,d0
 		beq.s	.return
 		move.b	#16,switch_turn(a0)
+		btst	#9,d0
+		beq.s	.return
+		move.w	#$0C0D,d0
+		bset	#7,obGfx(a1)
+		cmpi.b	#$E,obTopSolidBit(a1)
+		beq.s	.path_ready
+		move.w	#$0E0F,d0
+		bclr	#7,obGfx(a1)
+.path_ready:
+		move.w	d0,obTopSolidBit(a1)
 .return:
 		rts
 
@@ -104,6 +146,8 @@ CollisionSwitcher_Actor:
 		bclr	d6,switch_inside(a0)
 		beq.s	.return
 		move.w	obSubtype(a0),d0
+		btst	#9,d0
+		bne.s	.return
 		btst	#7,d0
 		beq.s	.side
 		btst	#1,obStatus(a1)
@@ -140,6 +184,17 @@ CollisionSwitcher_Actor:
 ; Either actor starts the same short turn. The horizontal mapping alternates
 ; panel poses; the upright rail alternates its shading using the sprite flip.
 CollisionSwitcher_DrawDoor:
+		btst	#9,d0
+		beq.s	.standard
+		moveq	#3,d1
+		tst.b	switch_turn(a0)
+		beq.s	.draw
+		subq.b	#1,switch_turn(a0)
+		btst	#2,switch_turn(a0)
+		beq.s	.draw
+		moveq	#4,d1
+		bra.s	.draw
+.standard:
 		moveq	#2,d1
 		btst	#2,d0
 		beq.s	.pose

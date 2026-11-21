@@ -299,7 +299,12 @@ not a complete controller-only MMZ playthrough; the placement port is unfinished
 Scrap Madness and MMZ2 art. Two players hit separate panels during travel,
 hold the door open from the exit side and trigger it again while it closes.
 The same checks cover both approach directions, paired unloading and slot
-allocation retry.
+allocation retry. Authored visits exercise each revolving door and automatic
+pipe in its available eras and both characters. They verify path and sprite
+priority changes, exact exit points, handoffs at adjacent entrances, steering
+junctions and cover opening. `check_metallic_madness.py` also checks all eight
+ring tables, both pickup paths in MMZ2, time poles, the Past generators and
+crossing the real finish signs inside their vertical corridors.
 
 The floor/carrier cases cover 32 floor configurations, all 6,400 flat-patrol
 updates, full-pool loss of fragments, shared fragment gravity and the stationary

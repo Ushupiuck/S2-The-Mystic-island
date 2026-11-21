@@ -28,7 +28,7 @@ Design distinct terrain/art/objects for the newly enabled zone slots and four-ac
 Design the remaining Scrap Madness act-2 ending/cutscene beyond the implemented trap signpost, 16-hit Mecha fight and falling reward signpost
 Add inverse-gravity player physics/collision before enabling S3&K's Debug gravity-reversal cheat < FUTURE engine feature
 Add cached DMA switching between interleaved S3 horizontal spike art and linear S1 horizontal spike art in the shared bank, after the S3&K object-manager migration; handle preloading, backtracking and visible-bank ownership < FUTURE, separate task
-Finish authored time poles, generators and remaining era-aware placements for MMZ. Same-act speed-gated travel and the Past generator work through the shared objects.
+Finish the remaining MMZ1/2 mechanisms and enemies, including the size-changing emitters and miniature player states. Authored rings, signposts, poles, generators and MMZ2 transport routes are integrated.
 Finish MMZ3 with the full chunk map. Exclude the specified far-right lightbugs, special door, boss and the entrance piston from its placements.
 Port remaining level animated-art/block setup to S1/S3&K style through Animate_Tiles and AniPLC scripts; replace make_block_tile mapping patches with regular block data < FUTURE, separate from the S1 bonus-stage background conversion
 Compare remaining S3&K power-up behavior and timer layout with the current per-player implementation

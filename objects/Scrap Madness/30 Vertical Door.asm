@@ -18,6 +18,8 @@ door_partner:	equ objoff_3C	; lower panel/root only
 door_parent:	equ objoff_3E	; upper panel only
 
 Obj30:
+		btst	#0,obSubtype(a0)		; horizontal pipe cover
+		bne.w	TubeCover_Init
 		tst.w	door_partner(a0)
 		bne.w	ADoor_Update
 		out_of_range.w	UnloadObject
@@ -211,4 +213,114 @@ Map_MMZ_Door1:	binclude "mappings/sprite/MMZ Door 1.bin"
 Map_MMZ_Door2:	binclude "mappings/sprite/MMZ Door 2.bin"
 		even
 Map_MMZ_Door3:	binclude "mappings/sprite/MMZ Door 3.bin"
+		even
+
+; A single pipe cover owns both static lips and the two retracting plates.
+; Either player can open it from underneath. A pressed button opens it from
+; above. Once open, the cover remains open while either player is nearby.
+TubeCover_Closed		equ 6
+TubeCover_Open		equ 10
+
+TubeCover_Init:
+		move.l	#TubeCover_Update,code(a0)
+		move.l	#Map_MMZ_TubeDoor,obMap(a0)
+		move.w	#ArtTile_MMZ_Atlas,obGfx(a0)
+		move.w	#$200,obPriority(a0)
+		move.b	#4,obRender(a0)
+		move.b	#Map_MMZ_TubeDoor_width,width_pixels(a0)
+		move.b	#Map_MMZ_TubeDoor_height,height_pixels(a0)
+		move.b	#TubeCover_Closed,obFrame(a0)
+
+TubeCover_Update:
+		out_of_range.w	TubeCover_Unload
+		moveq	#0,d0
+		move.b	obSubtype+1(a0),d0
+		andi.w	#$F,d0
+		lea	(f_switch).w,a1
+		btst	#0,(a1,d0.w)
+		bne.s	.open
+		lea	(v_player).w,a1
+		bsr.s	TubeCover_Approach
+		bcs.s	.open
+		lea	(v_player2).w,a1
+		bsr.s	TubeCover_Approach
+		bcs.s	.open
+		cmpi.b	#TubeCover_Closed,obFrame(a0)
+		beq.s	.contacts
+		subq.b	#1,obFrame(a0)
+		bra.s	.contacts
+.open:
+		cmpi.b	#TubeCover_Open,obFrame(a0)
+		beq.s	.contacts
+		addq.b	#1,obFrame(a0)
+.contacts:
+		lea	(v_player).w,a1
+		moveq	#3,d6
+		bsr.s	TubeCover_Top
+		lea	(v_player2).w,a1
+		moveq	#4,d6
+		bsr.s	TubeCover_Top
+		jmp	(DisplaySprite).l
+
+TubeCover_Unload:
+		jsr	(ReleaseObjectRiders).l
+		jmp	(UnloadObject).l
+
+; Carry set when a live actor is in the opening or hold-open window.
+TubeCover_Approach:
+		tst.l	code(a1)
+		beq.s	.clear
+		cmpi.b	#6,obRoutine(a1)
+		bhs.s	.clear
+		move.w	obX(a1),d0
+		sub.w	obX(a0),d0
+		move.w	obY(a1),d1
+		sub.w	obY(a0),d1
+		cmpi.b	#TubeCover_Closed,obFrame(a0)
+		bne.s	.hold
+		tst.w	obVelY(a1)
+		bpl.s	.clear
+		addq.w	#8,d0
+		cmpi.w	#16,d0
+		bhs.s	.clear
+		tst.w	d1
+		bmi.s	.clear
+		cmpi.w	#120,d1
+		rts
+.hold:
+		addi.w	#256,d0
+		cmpi.w	#512,d0
+		bhs.s	.clear
+		addi.w	#160,d1
+		cmpi.w	#320,d1
+		rts
+.clear:
+		andi.b	#$FE,ccr
+		rts
+
+TubeCover_Top:
+		tst.l	code(a1)
+		beq.s	.return
+		moveq	#0,d1
+		move.b	obFrame(a0),d1
+		subq.w	#TubeCover_Closed,d1
+		lsl.w	#2,d1
+		subq.w	#8,d1			; actor's feet still reach the lips
+		ble.s	.solid
+		move.w	obX(a1),d0
+		sub.w	obX(a0),d0
+		add.w	d1,d0
+		add.w	d1,d1
+		cmp.w	d1,d0
+		blo.w	ReleaseObjectRider
+.solid:
+		moveq	#32+sonic_solid_width,d1
+		moveq	#4,d2
+		moveq	#5,d3
+		move.w	obX(a0),d4
+		jmp	(PlatformObject_SingleCharacter).l
+.return:
+		rts
+
+Map_MMZ_TubeDoor:	binclude "mappings/sprite/MMZ TubeDoor.bin"
 		even

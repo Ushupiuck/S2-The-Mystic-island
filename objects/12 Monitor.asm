@@ -26,6 +26,7 @@ loc_AE70:
 		move.l	#Map_Obj26,obMap(a0)
 		move.b	#Map_Obj26_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Monitor,0,0),obGfx(a0)
+		jsr	(Object_PathPriority).l
 		move.b	#4,obRender(a0)
 		move.w	#v_player,obParent(a0)		; default collector for scripted/debug breakage
 		move.w	#$180,obPriority(a0)
@@ -89,6 +90,8 @@ Monitor_Solid:
 Monitor_SolidCharacter:
 		tst.l	code(a1)
 		beq.s	.return
+		jsr	(Object_MatchesPath).l
+		bne.w	ReleaseObjectRider
 		btst	d6,obStatus(a0)
 		beq.s	.contact
 		; A retained monitor must not snap a former rider back onto its top.

@@ -128,10 +128,10 @@ one in another act loading compatible art. The F1 Debug list exposes these
 variants, the existing morphing platform, propeller and wheeled carrier, plus
 the common ring/shield/invincibility/speed monitors. Mecha-Bu is also implemented for both acts, including its independent blade
 and both actors' touch responses. The shared `$AE` Bomb family also implements
-Bigbom. The importer now supplies 253 placements across the completed
-families, retaining coordinates, era masks and variants. It replaces these
-adopted families on an explicit reimport and preserves other editable rows,
-including time poles sharing `$79` and any authored finish placements.
+Bigbom. The importer supplies 179 placements in act 1 and 285 in act 2
+across the adopted families. It regenerates their translated settings and
+preserves other editable rows. Unrelated invisible collision switches remain
+in the act even though they share the rotating door's `$0A` slot.
 
 | Adopted family | ID | Act 1 | Act 2 |
 | --- | --- | --- | --- |
@@ -148,6 +148,15 @@ including time poles sharing `$79` and any authored finish placements.
 | Propeller | `$B7` | 9 | 0 |
 | Checkpoint | `$79` | 8 | 7 |
 | Spring | `$14` | 31 | 48 |
+| Monitor | `$12` | 19 | 26 |
+| PAST / FUTURE pole | `$79` | 16 | 25 |
+| Robot generator | `$B9` | 1 | 1 |
+| Finish signpost / giant ring | `$7E/$7B` | 2 | 2 |
+| Revolving door | `$0A` | 0 | 6 |
+| Tube cover / button | `$30/$AF` | 0 | 33 |
+| Automatic pipe / steering junction | `$AB` | 0 | 41 |
+| Running disc | `$A1` | 0 | 11 |
+| Invisible block | `$AC` | 0 | 14 |
 
 The two MMZ1 vanishing staircases use independent placements at the same
 member coordinates. Their individual delays are 90, 180 and 270 updates.
@@ -163,15 +172,24 @@ Ordinary springs translate CD's direction/color bits and placement flips to
 the existing `$14` subtypes. They retain Mystic Island's shared art, strengths
 and behavior, including diagonal speed; the unused CD low bit does not enable
 S3&K's twirl option.
-Authored time poles, generator placements and several enemy and mechanism
-families are still pending. The shared poles and generator can be tested from
-the MMZ1/2 Debug lists.
-MMZ1 and MMZ2 each have four separate ring lists in Present, Past, Good
-Future and Bad Future order. SonLVL reads the corresponding file in
-`level/rings/`. The eight lists currently contain only the end marker.
-Finish signposts belong in the act's object placements. The starter rings
-and the two starter signposts have been removed. Monitor placements use
-the shared `$12` object and the act's presence masks.
+The original time poles and generators use their authored era masks.
+The generator is at `$1A47,$0481` in act 1 and `$0548,$0580` in act 2.
+Both are active in Past and have dormant shells in Present. The time poles
+and monitors in act 2 use the same per-player collision-path filter.
+
+SonLVL and the game read separate S2 ring lists from `level/rings/` in
+Present, Past, Good Future and Bad Future order. Act 1 has 151 rings in each
+era. Act 2 has 157 in Present and 156 in each other era. The ring loader uses
+act 2's companion `Paths.bin` lists to mark secondary ring coordinates.
+All remaining rings in those lists belong to the primary path, which draws
+above the foreground. The companion lists use sorted X/Y word pairs and a
+`$FFFF,$0000` end marker. Edit the corresponding pair when moving a secondary
+ring in SonLVL. The editor still reads the unmodified S2 record format.
+
+Both finish signs keep the source X at `$1F40` and the same foot position.
+The shared sprite's taller lower half places its origin at `$0540` in act 1
+and `$00C0` in act 2. Crossing must be within 128 pixels of the sign's Y. Each act also has its original
+giant-ring placement, which uses the shared special-stage entry and threshold.
 
 The Act-1 sprite atlas occupies `$26D-$449`; the complete 41-tile Bomb bank
 follows at `$44A-$472`, leaving five tiles before the reused morphing bank at
@@ -220,9 +238,14 @@ banks, but level-specific/shared object art can occupy the available space.
 
 The [revolving door variant of `$0A`](Objects.md#collision-path-switches-and-doors)
 uses the resident Act-2 door sprites and the shared per-actor path and priority
-switch. The door is available in Debug and SonLVL for placement. Both acts'
-terrain and animation checks run in NTSC and PAL; the remaining authored
-placements and a complete traversal are pending.
+switch. The six authored entries change the path of whichever player boards
+the door's bottom plate. The source route pairs and three steering junctions
+use the shared [automatic pipe](Objects.md#automatic-transport-paths).
+Pressure buttons and passage from below open the pipe covers.
+
+The remaining families include the seesaws, size-changing emitters, special
+spikes and enemies. Act 3 and a complete controller traversal of the port
+are pending.
 
 ## Foreground vertical placement
 

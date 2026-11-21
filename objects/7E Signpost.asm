@@ -5,6 +5,7 @@
 ; 73de97c6b55055bcb8089c1d55d006b02136f163, Obj_EndSign.
 ; Both entry modes share the same airborne state after a fast crossing.
 ; Subtype bit 1 selects the SMZ2 Mecha trap instead of the usual finish.
+; Bit 2 requires crossing within 128 pixels vertically of the sign.
 ; ---------------------------------------------------------------------------
 
 Signpost:
@@ -75,7 +76,7 @@ Signpost_Init:
 		; A boss/event may spawn this anywhere, not only at the act's end.
 		move.w	(Camera_X_pos).w,(Camera_Max_X_pos).w
 		bsr.s	Signpost_Activate
-		bra.s	Signpost_StartFall
+		bra.w	Signpost_StartFall
 ; loc_EFFE:
 Signpost_Main:
 		move.w	(v_player+obX).w,d0
@@ -89,6 +90,14 @@ Signpost_Main:
 		bhs.w	Signpost_Sparkle.return
 .crossed:
 		move.w	obSubtype(a0),d0
+		btst	#2,d0
+		beq.s	.check_trap
+		move.w	(v_player+obY).w,d1
+		sub.w	obY(a0),d1
+		addi.w	#$80,d1
+		cmpi.w	#$100,d1
+		bhs.w	Signpost_Sparkle.return
+.check_trap:
 		btst	#1,d0
 		beq.s	.normal_crossing
 		cmpi.w	#(id_SMZ<<8)+1,(Current_ZoneAndAct).w

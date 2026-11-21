@@ -339,7 +339,18 @@ def ring_layouts(args):
 			assert all(x < 0x8000 for x, _ in rows), path
 			assert sum(1 + (y >> 12 & 7) for _, y in rows) <= capacity, path
 			index = ((n.s['id_MMZ'] * 4 + act - 1) * 4 + era) * 2
-			address = base + struct.unpack_from('>h', rom, base + index)[0]
+			header = struct.unpack_from('>H', rom, base + index)[0]
+			layer_flag = n.s['RingLayout_PathTable']
+			assert bool(header & layer_flag) == (act == 2)
+			address = base + (header & ~layer_flag)
+			if act == 2:
+				layers = path.with_name(path.stem + ' Paths.bin').read_bytes()
+				assert layers[-4:] == b'\xff\xff\x00\x00'
+				secondary = tuple(struct.iter_unpack('>HH', layers[:-4]))
+				assert secondary == tuple(sorted(set(secondary)))
+				assert set(secondary) <= set(rows)
+				layer_address = address + len(layout)
+				assert rom[layer_address:layer_address + len(layers)] == layers
 			assert rom[address:address + len(layout)] == layout, (act, title, path)
 			assert address not in addresses and path not in files, (act, title)
 			addresses.add(address)
@@ -376,6 +387,112 @@ def placement_native(args):
 				windows += 1
 	return dict(windows=windows, created_roots=loaded, acts=2, eras=4,
 		actual_rom_tables=True, exact_subtypes_and_flips=True)
+
+
+def authored_game(args):
+	"""Verify authored ring/path data, generator, time poles and finishes in-game."""
+	from check_companion_followup import place
+	from check_object_course import boot_level
+	from check_rising_crushers import ACTORS, seek
+	from genesis_test_core import Genesis
+	from object_layout import decode
+	g = Genesis(args.core, args.rom, args.listing, args.output/'authored', args.pal,
+		system_directory=args.system_directory)
+	initial = g.save()
+	report = []
+	s = g.s
+	slots = range(s['v_lvlobjspace'] & 0xFFFF, s['v_lvlobjend'] & 0xFFFF, s['object_size'])
+
+	def visit(x, y):
+		g.restore(level)
+		g.buttons, g.buttons2 = set(), set()
+		seek(g, max(x, 152), max(y, 132))
+
+	def actor_at(actor, x, y, path=0, control=1):
+		place(g, actor, x, y)
+		g.put(actor, 'obControl', control)
+		g.put(actor, 'obTopSolidBit', 0xC0D+path*0x202, 2)
+		g.put(actor, 'obRender', 0x84)
+		g.buttons2 = {4}
+
+	def find(x, y, code):
+		return next(slot for slot in slots if g.get(slot, 'code') == s[code]
+			and g.get(slot, 'obX', 2) == x and g.get(slot, 'obY', 2) == y)
+
+	for act in (1, 2):
+		placements = decode((ROOT/f'level/objects/LV0F_{act}.bin').read_bytes())
+		sign_x, sign_y, _, _, _ = next(row for row in placements if row[2] == 0x7E)
+		for era, (_, title, folder) in enumerate(ERAS):
+			g.restore(initial)
+			g.buttons, g.buttons2 = set(), set()
+			boot_level(g, zone=15, act=act-1, timezone=era)
+			level = g.save()
+			path = ROOT/f'level/rings/{folder}LV0F_{act}.bin'
+			layout = dict.fromkeys(struct.iter_unpack('>HH', path.read_bytes()[:-2]),
+				s['RingPath_Primary'] if act == 2 else 0)
+			if act == 2:
+				for point in struct.iter_unpack('>HH', path.with_name(path.stem+' Paths.bin').read_bytes()[:-4]):
+					layout[point] = s['RingPath_Secondary']
+			base = s['Ring_Positions']+6
+			records = {}
+			for index in range(len(layout)):
+				at = base+index*6
+				x, y = g.read(at+2, 2), g.read(at+4, 2)
+				records[x, y & 0x3FFF] = at
+				assert layout[x, y & 0x3FFF] == y & 0xC000, (act, title, x, y)
+			assert set(records) == set(layout) and g.read(base+len(layout)*6+2, 2) == 0xFFFF
+			for ring_path in range(act):
+				mask = (s['RingPath_Secondary'] if ring_path else s['RingPath_Primary']) if act == 2 else 0
+				x, y = next(point for point, flag in layout.items()
+					if flag == mask and point[0] >= 0x600 and 132 <= point[1] < 0x700)
+				at = records[x, y]
+				for actor in ACTORS:
+					for player_path in range(act):
+						visit(x, y)
+						actor_at(actor, x, y, player_path)
+						g.run(5)
+						assert bool(g.read(at, 2)) == (player_path == ring_path), (act, title, x, y, actor, player_path)
+			mask = (0x40, 0x20, 0x80, 0x80)[era]
+			x, y, _, _, subtype = next(row for row in placements if row[2] == 0x79
+				and row[3] & mask and row[4] & 0x300 and 0x400 < row[0] < 0x1A00 and 132 <= row[1] < 0x700)
+			pole_path = int(bool(subtype & 0x800))
+			visit(x, y)
+			find(x, y, 'TimePole_Main')
+			if act == 2:
+				actor_at(ACTORS[0], x, y, pole_path ^ 1)
+				g.run(5)
+				assert not g.read('TimeWarp_Direction'), (act, era, x, y, 'wrong pole path')
+			actor_at(ACTORS[0], x, y, pole_path)
+			g.run(5)
+			assert g.read('TimeWarp_Direction') == (255 if subtype & 0x100 else 1), (act, era, x, y)
+			pole = x, y
+			if era < 2:
+				x, y, _, _, _ = next(row for row in placements if row[2] == 0xB9)
+				visit(x, y)
+				generator = find(x, y-16 if era == 1 else y,
+					'TimeGenerator_Active' if era == 1 else 'TimeGenerator_Dormant')
+				if era == 1:
+					actor_at(ACTORS[0], x, y-16)
+					g.put(ACTORS[0], 'obStatusSecondary', 2)
+					g.put(ACTORS[0], 'invtime', 600, 2)
+					g.run(10)
+					assert g.read('TimeWarp_GoodFuture') and g.get(generator, 'code') == s['TimeGenerator_Dormant']
+			visit(sign_x-32, sign_y)
+			sign = find(sign_x, sign_y, 'Signpost')
+			assert g.get(sign, 'obRoutine') == 2 and g.read('f_timecount')
+			actor_at(ACTORS[0], sign_x+4, sign_y+160)
+			g.run(5)
+			assert g.get(sign, 'obRoutine') == 2 and g.read('f_timecount')
+			actor_at(ACTORS[0], sign_x-12, sign_y)
+			g.run(2)
+			actor_at(ACTORS[0], sign_x+4, sign_y)
+			g.run(5)
+			assert g.get(sign, 'obRoutine') >= 4 and not g.read('f_timecount')
+			assert not g.read('v_errortype')
+			print(f'MMZ{act} {title}: {len(layout)} rings, path pickups, time pole and actual finish pass.', flush=True)
+			report.append(dict(act=act, era=title, rings=len(layout), pole=pole, finish=[sign_x,sign_y]))
+	g.close()
+	return report
 
 
 def game(args):
@@ -1171,6 +1288,7 @@ def main():
 		report['floors_and_wheels']=floor_wheel_native(args)
 	if args.core:
 		report['game']=game(args)
+		report['authored_game']=authored_game(args)
 		report['platform_game']=platform_game(args)
 		report['hazard_game']=hazard_game(args)
 		report['floor_wheel_game']=floor_wheel_game(args)

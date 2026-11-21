@@ -179,7 +179,7 @@ Flicky_Init:
 		move.w	#$300,obPriority(a0)
 		move.b	#Flicky_DisplayWidth,obActWid(a0)
 		move.b	#7,obTimeFrame(a0)
-		bra.w	DisplaySprite
+		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 FlickyRandom:
@@ -224,12 +224,12 @@ FlickyRandom:
 		move.w	enemy_combo(a0),d0	; Shared with Touch_KillEnemy & Explosion for the chain hit bonus
 		lsr.w	#1,d0
 		move.b	d0,obFrame(a1)
-+		bra.w	DisplaySprite
++		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 +
 		move.b	#$1C,obRoutine(a0)
 		clr.w	obVelX(a0)
-		bra.w	DisplaySprite
+		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 ;Flicky_Delete:
@@ -241,11 +241,11 @@ Flicky_ChkFloor:
 		bmi.s	.onscreen
 		jmp	(DeleteObject).l
 .onscreen:
-		bsr.w	ObjectMoveAndFall
+		jsr	(ObjectMoveAndFall).l
 		tst.w	obVelY(a0)
-		bmi.w	DisplaySprite
+		jmi	(DisplaySprite).l
 		jsr	(ObjHitFloor).l
-		bpl.w	DisplaySprite
+		jpl	(DisplaySprite).l
 		add.w	d1,obY(a0)
 		move.w	animal_x_vel(a0),obVelX(a0)
 		move.w	animal_y_vel(a0),obVelY(a0)
@@ -258,14 +258,14 @@ Flicky_ChkFloor:
 	;	tst.b	(Boss_defeated_flag).w
 	;	beq.w	DisplaySprite
 		btst	#4,(Vint_runcount+3).w
-		beq.w	DisplaySprite
+		jeq	(DisplaySprite).l
 		neg.w	obVelX(a0)
 		bchg	#0,obRender(a0)
-		bra.w	DisplaySprite
+		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 Flicky_Walk:
-		bsr.w	ObjectMoveAndFall
+		jsr	(ObjectMoveAndFall).l
 		move.b	#1,obFrame(a0)
 		tst.w	obVelY(a0)
 		bmi.s	+
@@ -278,12 +278,12 @@ Flicky_Walk:
 		tst.w	obSubtype(a0)
 		bne.s	Flicky_ChkDel
 		tst.b	obRender(a0)
-		bmi.w	DisplaySprite
+		jmi	(DisplaySprite).l
 		jmp	(DeleteObject).l
 ; ---------------------------------------------------------------------------
 
 Flicky_Fly:
-		bsr.w	ObjectMove
+		jsr	(ObjectMove).l
 		addi.w	#$18,obVelY(a0)
 		tst.w	obVelY(a0)
 		bmi.s	+
@@ -307,29 +307,29 @@ Flicky_Fly:
 		tst.w	obSubtype(a0)
 		bne.s	Flicky_ChkDel
 		tst.b	obRender(a0)
-		bpl.w	DeleteObject
-		bra.w	DisplaySprite
+		jpl	(DeleteObject).l
+		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 Flicky_ChkDel:
 		move.w	obX(a0),d0
 		sub.w	(v_player+obX).w,d0
-		bcs.w	DisplaySprite
+		jcs	(DisplaySprite).l
 		subi.w	#384,d0
-		bpl.w	DisplaySprite
+		jpl	(DisplaySprite).l
 		tst.b	obRender(a0)
-		bpl.w	DeleteObject
-		bra.w	DisplaySprite
+		jpl	(DeleteObject).l
+		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 Flicky_Prison:
 		tst.b	obRender(a0)
-		bpl.w	DeleteObject
+		jpl	(DeleteObject).l
 		subq.w	#1,animal_prison_num(a0)
-		bne.w	DisplaySprite
+		jne	(DisplaySprite).l
 		move.b	#2,obRoutine(a0)
 		move.w	#$80,obPriority(a0)
-		bra.w	DisplaySprite
+		jmp	(DisplaySprite).l
 ; ---------------------------------------------------------------------------
 
 Flicky_FlickyWait:
@@ -346,7 +346,7 @@ Flicky_FlickyJump:
 		bpl.s	Flicky_ChkDel
 		clr.w	obVelX(a0)
 		clr.w	animal_x_vel(a0)
-		bsr.w	ObjectMove
+		jsr	(ObjectMove).l
 		addi.w	#$18,obVelY(a0)
 		bsr.w	AnimalJump
 		bsr.w	AnimalFaceSonic
@@ -368,7 +368,7 @@ Flicky_RabbitWait:
 ; ---------------------------------------------------------------------------
 
 Flicky_DoubleBounce:
-		bsr.w	ObjectMoveAndFall
+		jsr	(ObjectMoveAndFall).l
 		move.b	#1,obFrame(a0)
 		tst.w	obVelY(a0)
 		bmi.w	Flicky_ChkDel
@@ -390,7 +390,7 @@ Flicky_LandJump:
 		bpl.w	Flicky_ChkDel
 		clr.w	obVelX(a0)
 		clr.w	animal_x_vel(a0)
-		bsr.w	ObjectMoveAndFall
+		jsr	(ObjectMoveAndFall).l
 		bsr.w	AnimalJump
 		bsr.w	AnimalFaceSonic
 		bra.w	Flicky_ChkDel
@@ -399,7 +399,7 @@ Flicky_LandJump:
 Flicky_SingleBounce:
 		bsr.w	ChkAnimalInRange
 		bpl.w	Flicky_ChkDel
-		bsr.w	ObjectMoveAndFall
+		jsr	(ObjectMoveAndFall).l
 		move.b	#1,obFrame(a0)
 		tst.w	obVelY(a0)
 		bmi.w	Flicky_ChkDel
@@ -416,7 +416,7 @@ Flicky_SingleBounce:
 Flicky_FlyBounce:
 		bsr.w	ChkAnimalInRange
 		bpl.w	Flicky_ChkDel
-		bsr.w	ObjectMove
+		jsr	(ObjectMove).l
 		addi.w	#$18,obVelY(a0)
 		tst.w	obVelY(a0)
 		bmi.s	++

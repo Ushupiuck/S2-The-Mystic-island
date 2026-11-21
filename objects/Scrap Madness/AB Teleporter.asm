@@ -1,5 +1,6 @@
-; S1 SBZ pipe paths, with two independent control packets.
-; Each actor keeps its own state, travel timer and path index in the parent.
+; Shared automatic pipes with independent actor packets.
+; S1 entrances bounce before travel. The direct entrances use instant
+; capture and retain exit velocity. $180 is a four-way steering junction.
 smz_pipe_state = 0
 smz_pipe_bump = 1
 smz_pipe_index = 8
@@ -11,11 +12,26 @@ SMZ_Teleport:
 		move.b	#2,obRoutine(a0)
 		moveq	#0,d0
 		move.w	obSubtype(a0),d0
+		btst	#8,d0
+		bne.s	.direct
 		andi.w	#7,d0
-		add.w	d0,d0
 		lea	SMZ_PipeData(pc),a2
+		bra.s	.lookup
+.direct:
+		andi.w	#$3F,d0
+		beq.s	.junction
+		lea	MMZ_PipeData(pc),a2
+		cmp.w	(a2)+,d0
+		bhs.s	.junction
+.lookup:
+		add.w	d0,d0
 		adda.w	(a2,d0.w),a2
 		move.w	(a2)+,d0
+		bra.s	.store
+.junction:
+		moveq	#0,d0
+		suba.l	a2,a2
+.store:
 		move.b	d0,smz_pipe_length(a0)
 		move.l	a2,smz_pipe_data(a0)
 		move.l	#SMZ_Teleport_Main,code(a0)
@@ -35,12 +51,16 @@ SMZ_Teleport_Main:
 .return:
 		rts
 .actor:
+		tst.l	code(a1)
+		beq.w	.cancel
 		cmpi.b	#6,obRoutine(a1)
 		bhs.w	.cancel
 		tst.b	smz_pipe_state(a3)
 		beq.s	.wait
 		cmpi.b	#1,smz_pipe_state(a3)
 		beq.w	.bump
+		cmpi.b	#3,smz_pipe_state(a3)
+		beq.w	.steer
 		bra.w	.travel
 .wait:
 		tst.b	obControl(a1)
@@ -49,6 +69,8 @@ SMZ_Teleport_Main:
 		bne.w	.return
 		move.w	obX(a1),d0
 		sub.w	obX(a0),d0
+		btst	#0,obSubtype(a0)		; direct MMZ entrance
+		bne.s	.direct_entry
 		btst	#0,obStatus(a0)
 		beq.s	.x
 		addi.w	#15,d0
@@ -64,15 +86,22 @@ SMZ_Teleport_Main:
 		bne.s	.start
 		cmpi.w	#50,(v_rings).w
 		blo.s	.return
+		bra.s	.start
+.direct_entry:
+		addi.w	#16,d0
+		cmpi.w	#32,d0
+		bhs.w	.return
+		move.w	obY(a1),d0
+		sub.w	obY(a0),d0
+		addi.w	#16,d0
+		cmpi.w	#32,d0
+		bhs.w	.return
 .start:
 		move.b	#1,smz_pipe_state(a3)
 		clr.b	smz_pipe_bump(a3)
 		clr.b	smz_pipe_index(a3)
-		movea.l	smz_pipe_data(a0),a2
-		move.w	(a2)+,autopath_target_x(a3)
-		move.w	(a2),autopath_target_y(a3)
 		move.b	#$81,obControl(a1)
-		move.b	#2,obAnim(a1)
+		move.b	#AniIDSonAni_Roll,obAnim(a1)
 		move.w	#$800,obInertia(a1)
 		clr.w	obVelX(a1)
 		clr.w	obVelY(a1)
@@ -84,8 +113,57 @@ SMZ_Teleport_Main:
 		clr.b	tails_flight_flag(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
+		tst.b	smz_pipe_length(a0)
+		beq.s	.wait_direction
+		movea.l	smz_pipe_data(a0),a2
+		move.w	(a2)+,autopath_target_x(a3)
+		move.w	(a2),autopath_target_y(a3)
+		btst	#0,obSubtype(a0)
+		bne.s	.begin_direct
+.sound:
 		move.w	#SndID_Roll,d0
 		jmp	(PlaySound_Special).l
+.wait_direction:
+		move.b	#3,smz_pipe_state(a3)
+		bra.s	.hide
+.begin_direct:
+		move.b	#2,smz_pipe_state(a3)
+		move.w	#$1000,d2
+		jsr	(AutoTunnel_CalcSpeed).l
+.hide:
+		bclr	#7,obGfx(a1)
+		bra.s	.sound
+
+.steer:
+		move.b	(v_jpadholdlogical).w,d0
+		cmpa.w	#v_player,a1
+		beq.s	.input
+		move.b	(v_jpadholdlogical2).w,d0
+.input:
+		andi.w	#$F,d0
+		beq.w	.return
+		move.w	obX(a0),d1
+		move.w	obY(a0),d2
+		btst	#button_up,d0
+		beq.s	.down
+		subi.w	#16,d2
+		bra.s	.target
+.down:
+		btst	#button_down,d0
+		beq.s	.horizontal
+		addi.w	#16,d2
+		bra.s	.target
+.horizontal:
+		btst	#button_left,d0
+		beq.s	.right
+		subi.w	#16,d1
+		bra.s	.target
+.right:
+		addi.w	#16,d1
+.target:
+		move.w	d1,autopath_target_x(a3)
+		move.w	d2,autopath_target_y(a3)
+		bra.s	.begin_direct
 .bump:
 		moveq	#0,d0
 		move.b	smz_pipe_bump(a3),d0
@@ -128,7 +206,14 @@ SMZ_Teleport_Main:
 		add.l	d0,obY(a1)
 		rts
 .exit:
-		andi.w	#$7FF,obY(a1)
+		andi.w	#Level_YWrapMask,obY(a1)
+		btst	#0,obSubtype(a0)
+		beq.s	.legacy_exit
+		cmpi.b	#$C,obTopSolidBit(a1)
+		bne.s	.cancel
+		bset	#7,obGfx(a1)
+		bra.s	.cancel
+.legacy_exit:
 		clr.w	obVelX(a1)
 		move.w	#$200,obVelY(a1)
 .cancel:
@@ -149,6 +234,10 @@ SMZ_Teleport_Main:
 ; 	dc.w target X-position, target Y-position
 ;	dc.w ...
 
+
+MMZ_PipeData:
+		binclude	"level/objects/MMZ2 Tunnel Paths.bin"
+		even
 
 SMZ_PipeData:	dc.w .type00-SMZ_PipeData
 		dc.w .type01-SMZ_PipeData

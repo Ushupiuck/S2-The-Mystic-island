@@ -8357,6 +8357,7 @@ loc_DA06:
 
 loc_DA0C:
 		move.w	4(a1),d0
+		andi.w	#(~RingPath_Mask)&$FFFF,d0
 		sub.w	d1,d0
 		sub.w	d3,d0
 		bhs.s	loc_DA1E
@@ -8370,6 +8371,19 @@ loc_DA1E:
 		bhi.w	loc_DA2C
 
 loc_DA24:
+		move.w	4(a1),d0
+		andi.w	#RingPath_Mask,d0
+		beq.s	.collect
+		move.b	obTopSolidBit(a0),d0
+		btst	#15,d0
+		beq.s	.primary
+		cmpi.b	#$E,d0
+		bne.s	loc_DA2C
+		bra.s	.collect
+.primary:
+		cmpi.b	#$C,d0
+		bne.s	loc_DA2C
+.collect:
 		move.w	#$601,(a1)
 		jsr	(MCD_RecordRingCollection).l
 		jsr	(CollectRing).l
@@ -8405,6 +8419,8 @@ RingsManager_Setup:
 		add.w	d0,d0			; Word offsets.
 		lea	(RingPos_Index).l,a1
 		move.w	(a1,d0.w),d0
+		bclr	#15,d0				; RingLayout_PathTable
+		sne	d6
 		lea	(a1,d0.w),a1
 		lea	(Ring_Positions+6).w,a2
 ; loc_DB88:
@@ -8443,6 +8459,7 @@ RingsMgr_NextRingInCol:
 ; ===========================================================================
 ; loc_Dbhs:
 RingsMgr_SortRings:
+		movea.l	a1,a3				; optional path table after the layout terminator
 		moveq	#-1,d0
 		move.l	d0,(a2)+
 		lea	(Ring_Positions+2).w,a1
@@ -8469,6 +8486,30 @@ loc_DBF2:
 		dbf	d4,loc_DBE0
 		lea	6(a1),a1
 		dbf	d3,loc_DBD8
+		tst.b	d6
+		bne.s	RingsMgr_SetPaths
+		rts
+
+; a3 = sorted secondary (X,Y) pairs. The ring layout still opens in SonLVL.
+; Unlisted rings belong to the primary path. Match coordinates, not indices,
+; so reordering or deleting a ring in the editor cannot shift the assignments.
+RingsMgr_SetPaths:
+		lea	(Ring_Positions+8).w,a1
+.ring:
+		move.l	(a1),d3
+		bmi.s	.return
+		ori.w	#RingPath_Primary,2(a1)
+		movea.l	a3,a2
+.search:
+		cmp.l	(a2)+,d3
+		bhi.s	.search
+		bne.s	.next
+		ori.w	#RingPath_Secondary,d3
+		move.w	d3,2(a1)
+.next:
+		addq.w	#6,a1
+		bra.s	.ring
+.return:
 		rts
 ; End of function RingsManager_Setup
 
@@ -10434,6 +10475,10 @@ loc_198C0:
 ; ---------------------------------------------------------------------------
 
 loc_198FA:
+		exg	a0,a1
+		jsr	(Object_MatchesPath).l
+		exg	a0,a1
+		bne.s	loc_19912.return
 		; Ground motion up a slope has negative Y velocity too. A rolling
 		; attack must break the monitor before the rising-jump underside test.
 		btst	#status.player.in_air,obStatus(a0)
@@ -14456,8 +14501,10 @@ RingPos_Index:
 
 		dc.w	RingPos_LV0F1-RingPos_Index, RingPos_LV0F1_Past-RingPos_Index
 		dc.w	RingPos_LV0F1_GoodFuture-RingPos_Index, RingPos_LV0F1_BadFuture-RingPos_Index
-		dc.w	RingPos_LV0F2-RingPos_Index, RingPos_LV0F2_Past-RingPos_Index
-		dc.w	RingPos_LV0F2_GoodFuture-RingPos_Index, RingPos_LV0F2_BadFuture-RingPos_Index
+		dc.w	(RingPos_LV0F2-RingPos_Index)|RingLayout_PathTable
+		dc.w	(RingPos_LV0F2_Past-RingPos_Index)|RingLayout_PathTable
+		dc.w	(RingPos_LV0F2_GoodFuture-RingPos_Index)|RingLayout_PathTable
+		dc.w	(RingPos_LV0F2_BadFuture-RingPos_Index)|RingLayout_PathTable
 		RingPositions_AllEras	RingPos_LV0F3
 		RingPositions_AllEras	RingPos_LV0F4
 RingPos_Index_End:
@@ -14597,15 +14644,19 @@ RingPos_LV0F1_BadFuture:
 		binclude	"level/rings/bad future/LV0F_1.bin"
 		even
 RingPos_LV0F2:	binclude	"level/rings/LV0F_2.bin"
+		binclude	"level/rings/LV0F_2 Paths.bin"
 		even
 RingPos_LV0F2_Past:
 		binclude	"level/rings/past/LV0F_2.bin"
+		binclude	"level/rings/past/LV0F_2 Paths.bin"
 		even
 RingPos_LV0F2_GoodFuture:
 		binclude	"level/rings/good future/LV0F_2.bin"
+		binclude	"level/rings/good future/LV0F_2 Paths.bin"
 		even
 RingPos_LV0F2_BadFuture:
 		binclude	"level/rings/bad future/LV0F_2.bin"
+		binclude	"level/rings/bad future/LV0F_2 Paths.bin"
 		even
 RingPos_LV0F3:	binclude	"level/rings/LV0F_3.bin"
 		even

@@ -330,13 +330,131 @@ def game(a):
 	g.close();return result
 
 
+def transport_game(args):
+	from check_companion_followup import place
+	from check_object_course import boot_level
+	from check_rising_crushers import ACTORS, seek
+	from genesis_test_core import Genesis
+	from object_layout import decode
+	g = Genesis(args.core, args.rom, args.listing, args.output/'transport', args.pal,
+		system_directory=args.system_directory)
+	initial = g.save()
+	s = g.s
+	slots = range(s['v_lvlobjspace'] & 0xFFFF, s['v_lvlobjend'] & 0xFFFF, s['object_size'])
+	placements = decode((ROOT/'level/objects/LV0F_2.bin').read_bytes())
+	routes = (ROOT/'level/objects/MMZ2 Tunnel Paths.bin').read_bytes()[2:]
+	report = []
+
+	def visit(x, y, label):
+		g.restore(level)
+		g.buttons, g.buttons2 = set(), set()
+		seek(g, x, max(y, 132))
+		slot = next(slot for slot in slots if g.get(slot, 'code') == s[label]
+			and g.get(slot, 'obX', 2) == x and g.get(slot, 'obY', 2) == y)
+		return slot, g.save()
+
+	for era, (_, title, _) in enumerate(ERAS):
+		g.restore(initial)
+		g.buttons, g.buttons2 = set(), set()
+		boot_level(g, zone=15, act=1, timezone=era)
+		level = g.save()
+		mask = (0x40, 0x20, 0x80, 0x80)[era]
+		doors = pipes = junctions = 0
+		for x, y, oid, presence, subtype in placements:
+			if not presence & mask:
+				continue
+			if oid == 0x0A and subtype == 0x300:
+				door, scene = visit(x, y, 'CollisionSwitcher_Run')
+				for actor in ACTORS:
+					for path in (0, 1):
+						g.restore(scene)
+						g.buttons, g.buttons2 = set(), {4}
+						place(g, actor, x-2, y+78-g.get(actor, 'default_y_radius'))
+						g.put(actor, 'obVelY', 0x100, 2)
+						g.put(actor, 'obTopSolidBit', 0xC0D+path*0x202, 2)
+						for _ in range(12):
+							g.run()
+							if g.get(actor, 'obTopSolidBit') == 0xE-2*path:
+								break
+						else:
+							raise AssertionError((title, 'door', x, y, actor, path))
+						assert g.get(door, 'switch_turn') and g.get(actor, 'obGfx', 2) >> 15 == path
+				doors += 1
+			elif oid == 0xAB:
+				pipe, scene = visit(x, y, 'SMZ_Teleport_Main')
+				route = subtype & 63
+				for player, actor in enumerate(ACTORS):
+					g.restore(scene)
+					g.buttons, g.buttons2 = set(), {0}
+					place(g, actor, x, y)
+					packet = s['objoff_30'] + player*s['smz_pipe_packet']
+					for _ in range(12):
+						g.run()
+						if g.read(pipe+packet):
+							break
+					else:
+						raise AssertionError((title, 'entry', x, y, actor))
+					assert g.get(actor, 'obControl') == 0x81
+					if route:
+						entry = struct.unpack_from('>H', routes, route*2)[0]
+						length = struct.unpack_from('>H', routes, entry)[0]
+						waypoints = ((x, y), *struct.iter_unpack('>hh', routes[entry+2:entry+2+length]))
+						exit_x, exit_y = waypoints[-1]
+						ticks = sum(1+max(abs(bx-ax),abs(by-ay))//16
+							for (ax,ay),(bx,by) in zip(waypoints,waypoints[1:]))
+					else:
+						ticks = 4
+						assert g.read(pipe+packet) == 3
+						exit_x, exit_y = x+(16 if player == 0 else -16), y
+						g.buttons, g.buttons2 = ({7}, {0}) if player == 0 else (set(), {6})
+					for _ in range(ticks*3+16):
+						g.run()
+						if not g.read(pipe+packet):
+							break
+					else:
+						raise AssertionError((title, 'exit', x, y, actor))
+					control = g.get(actor, 'obControl')
+					current = (g.get(actor, 'obX', 2), g.get(actor, 'obY', 2))
+					if control:
+						# A later slot can catch the rider the same frame it leaves.
+						next_pipe = next((slot for slot in slots if slot != pipe
+							and g.get(slot, 'code') == s['SMZ_Teleport_Main'] and g.read(slot+packet)), None)
+						assert control == 0x81 and next_pipe, (title, x, y, actor, control, current)
+						assert current == (g.get(next_pipe, 'obX', 2), g.get(next_pipe, 'obY', 2))
+						assert abs(current[0]-exit_x) <= 16 and abs(current[1]-(exit_y & 0x7FF)) <= 16
+					else:
+						assert current == (exit_x, exit_y & 0x7FF), (title, x, y, actor, current)
+				pipes += int(bool(route))
+				junctions += int(not route)
+		x, y, _, _, subtype = next(row for row in placements if row[2] == 0x30 and row[4] & 0x100
+			and row[3] & mask)
+		cover, scene = visit(x, y, 'TubeCover_Update')
+		assert g.get(cover, 'obFrame') == s['TubeCover_Closed']
+		g.write(s['f_switch']+(subtype & 15), 1)
+		g.run(8)
+		assert g.get(cover, 'obFrame') == s['TubeCover_Open']
+		g.restore(scene)
+		place(g, ACTORS[0], x, y+32)
+		g.put(ACTORS[0], 'obControl', 1)
+		g.put(ACTORS[0], 'obVelY', 0xFC00, 2)
+		g.run(8)
+		assert g.get(cover, 'obFrame') == s['TubeCover_Open']
+		assert not g.read('v_errortype')
+		print(f'MMZ2 {title}: {doors} doors, {pipes} pipe routes and {junctions} junctions pass for both players.', flush=True)
+		report.append(dict(era=title, doors=doors, pipes=pipes, junctions=junctions, hatch=[x,y]))
+	g.close()
+	return report
+
+
 def main():
 	p=argparse.ArgumentParser(description=__doc__)
 	p.add_argument('--rom',type=Path,default=ROOT/'s2built.bin');p.add_argument('--listing',type=Path,default=ROOT/'md-main.lst');p.add_argument('--source',type=Path,required=True)
 	p.add_argument('--output',type=Path,required=True);p.add_argument('--core',type=Path);p.add_argument('--system-directory',type=Path);p.add_argument('--pal',action='store_true');a=p.parse_args()
 	a.output.mkdir(parents=True,exist_ok=True)
 	report={'native':native(a),'source_geometry':source_geometry(a),'animations':animation_checks(a,2)}
-	if a.core:report['game']=game(a)
+	if a.core:
+		report['game']=game(a)
+		report['transport']=transport_game(a)
 	(a.output/'report.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report,indent=2))
 
 

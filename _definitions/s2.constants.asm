@@ -42,8 +42,13 @@ PoleType_Past:		equ $100
 PoleType_Future:		equ $200
 PoleType_Mask:		equ $300
 Pole_Yellow:		equ $400 ; checkpoint uses yellow instead of red
-Pole_Layer2:		equ $800 ; required secondary collision path
-Pole_FilterLayer:	equ $1000 ; time-post contact checks the actor path
+Object_SecondaryPath:	equ $800 ; word subtype: require the secondary path
+Object_FilterPath:	equ $1000 ; word subtype: filter contact by the actor's collision path
+; Active ring Y flags; source ring layouts retain the ordinary S2 format.
+RingPath_Primary:	equ $4000
+RingPath_Secondary:	equ $8000
+RingPath_Mask:		equ RingPath_Primary|RingPath_Secondary
+RingLayout_PathTable:	equ $8000 ; the selected S2 list is followed by secondary X/Y pairs
 ; ---------------------------------------------------------------------------
 ; Object placement record offsets
 ; ---------------------------------------------------------------------------

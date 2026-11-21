@@ -91,6 +91,12 @@ Both panels use the act's resident art, with synchronized lamp frames in MMZ2.
 The root owns the upper panel and unloads both together. Editor and Debug
 previews show the full closed pair around the placement point.
 
+Subtype bit 8 on `$30` selects a horizontal pipe cover. The MMZ2 atlas
+supplies both fixed lips and the retracting center plates. Its low nibble
+selects a shared momentary button channel. Either rising player can also
+open it from underneath, and the cover stays open while either player
+is nearby. The solid top opens under a rider as the gap widens.
+
 ## Collision path switches and doors
 
 `$0A` uses the same trigger and side selection for invisible switches and
@@ -107,6 +113,10 @@ crossing band as the invisible switch. Either actor entering starts a
 the path and priority of their own exit side. The door uses the two
 horizontal panel poses and the upright rail's mirrored shading from the
 resident Act-2 atlas. The MMZ2 Debug list and editor expose both axes.
+With door bit 8 set, bit 9 selects a revolving base that exchanges the
+rider's current path and priority on boarding. The placement is midway
+between its two caps. The trigger only switches an actor standing on
+the base, and each actor can leave and reboard to switch back.
 
 ## Twisting pathway and wire cage
 
@@ -133,7 +143,11 @@ initialization branch. The object retains its two independent ten-byte rider
 packets, entry bounce,
 50-ring gate, waypoint snapping, wrapped exit and cancellation when an actor
 is dying. Metropolis's Sonic 2 object `$67` and S3&K's auto tunnels use the same
-family of path calculations; MMZ's route/entry variants are still pending.
+family of path calculations. Subtype bit 8 selects the direct MMZ2 profile
+on `$AB`. It captures from a centered 32-pixel square, starts its first leg
+immediately and preserves travel velocity at the exit. Low bits 0–5 index
+`MMZ2 Tunnel Paths.bin`. Route zero waits for directional input and moves 16
+pixels toward the chosen exit. Both actors can traverse independently.
 
 The caller supplies actor `a1`, rider packet `a3` and positive 8.8 major speed
 `d2`; `AutoTunnel_GetPath` additionally loads a signed X/Y word pair from `a2`.

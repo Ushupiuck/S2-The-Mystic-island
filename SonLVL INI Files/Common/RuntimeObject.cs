@@ -54,7 +54,8 @@ namespace MysticIsland.ObjectDefinitions
 				{
 					doorPreviews = new[] { frames[data.Frame],
 						Render(pixels, File.ReadAllBytes("../mappings/sprite/MMZ Door 2.bin"), data.Palette, null)[data.Frame],
-						Render(pixels, File.ReadAllBytes("../mappings/sprite/MMZ Door 3.bin"), data.Palette, null)[data.Frame] };
+						Render(pixels, File.ReadAllBytes("../mappings/sprite/MMZ Door 3.bin"), data.Palette, null)[data.Frame],
+						Render(pixels, File.ReadAllBytes("../mappings/sprite/MMZ TubeDoor.bin"), data.Palette, null)[6] };
 				}
 			}
 			else frames = new[] { Outline(16, 16) };
@@ -66,6 +67,7 @@ namespace MysticIsland.ObjectDefinitions
 					{
 						alternate = frames;
 						Bits("Appearance", 8, 1, "The door uses the resident MMZ2 bank and the length of its sprite.", "Invisible switch", "Revolving door");
+						Bits("Door paths", 9, 1, "The rotating base changes each rider to the other path.", "Set path on exit", "Toggle on boarding");
 					}
 					LoadPathSwapperMarkers();
 					Bits("Length", 0, 3, "Invisible switch length; the runtime tests half this distance on either side of the origin.", "64 pixels", "128 pixels", "256 pixels", "512 pixels");
@@ -93,6 +95,7 @@ namespace MysticIsland.ObjectDefinitions
 					break;
 				case "Signpost":
 					Bits("Entry", 0, 3, "Placed signs can launch on a fast crossing. Falling signs start above the camera. The SMZ2 Mecha trap spins to Mecha, is destroyed, and gives the real sign only after the fight.", "Placed", "Falling from sky", "SMZ2 Mecha trap");
+					Bits("Finish height", 2, 1, "Restrict the finish to the sign's vertical corridor.", "Any height", "Within 128 pixels");
 					break;
 				case "Bridge": Bits("Length", 0, 255, "Number of 16-pixel bridge logs. Existing layouts use 8 to 16."); break;
 				case "Hanging":
@@ -227,8 +230,13 @@ namespace MysticIsland.ObjectDefinitions
 					Bits("Spin period", 4, 7, "Sync mask = (value + 1) * 64 - 1. Original patterns use 0, 1, 3 or 7."); break;
 				case "VerticalDoor":
 					if (doorPreviews != null)
+					{
 						Bits("Door lamps", 0, 3, "The right lamp starts with a right-side sensor. The other styles start from the left. X flip reverses the sensor.",
 							"Plain", "Right lamp", "Left lamp", "Plain (reserved)");
+						Bits("Mechanism", 8, 1, "A pipe cover opens from below or when its button is pressed.", "Sliding panels", "Pipe cover");
+						Bits("Cover channel", 0, 15, "Only used by the pipe cover.");
+						Bits("Metal door art", 7, 1, "Applies to the sliding panels.", "Scrap Madness", "Metallic Madness");
+					}
 					break;
 				case "Saw":
 					Bits("Movement", 8, 15, "Placement flips set the travel signs of the first three modes.",
@@ -292,6 +300,11 @@ namespace MysticIsland.ObjectDefinitions
 					properties.Add(new PropertySpec("Initial corner", typeof(int), "Object settings", "Individual platforms only; invalid corners fall back to corner 0. Switch E reverses travel permanently, as in Sonic 1.", null,
 						obj => LConMode(Subtype(obj)) == 0 ? Subtype(obj) & 15 : 0,
 						(obj, value) => { if (LConMode(Subtype(obj)) == 0) SetSubtype(obj, (ushort)((Subtype(obj) & ~15) | ((int)value & 15))); }));
+					break;
+				case "MMZPipe":
+					routes = File.ReadAllBytes("../level/objects/MMZ2 Tunnel Paths.bin").Skip(2).ToArray();
+					Bits("Route", 0, 63, "Zero is a four-way junction. Other values index the MMZ2 routes.");
+					Bits("Entry", 8, 1, "Select the direct MMZ transport mode.", "Scrap Madness", "Metallic Madness");
 					break;
 				case "Teleporter":
 					routes = ReadWordTable("../objects/Scrap Madness/AB Teleporter.asm", "SMZ_PipeData");
@@ -593,7 +606,9 @@ namespace MysticIsland.ObjectDefinitions
 			switch (behavior)
 			{
 				case "PathSwapper":
-					return alternate != null && (subtype & 0x100) != 0 ? alternate[(subtype & 4) != 0 ? 0 : 2] : frames[subtype & 0x1F];
+					if (alternate != null && (subtype & 0x100) != 0)
+						return alternate[(subtype & 0x200) != 0 ? 3 : (subtype & 4) != 0 ? 0 : 2];
+					return frames[subtype & 0x1F];
 				case "AutoSpin":
 					Sprite entrance = new Sprite(frames[subtype & 7]);
 					entrance.Flip(xflip && (subtype & 4) == 0, xflip && (subtype & 4) != 0);
@@ -688,7 +703,7 @@ namespace MysticIsland.ObjectDefinitions
 					return new Sprite(pieces);
 				case "VerticalDoor":
 					int lamp = subtype & 3;
-					return doorPreviews == null ? At(frames, data.Frame) : doorPreviews[lamp == 3 ? 0 : lamp];
+					return doorPreviews == null ? At(frames, data.Frame) : doorPreviews[(subtype & 0x100) != 0 ? 3 : lamp == 3 ? 0 : lamp];
 				case "Saw":
 					if (SawHasRail(subtype))
 					{
@@ -725,6 +740,8 @@ namespace MysticIsland.ObjectDefinitions
 					Sprite grip = Outline(span, 24);
 					grip.Offset(0, (subtype & 128) == 0 ? 36 : 12);
 					return grip;
+				case "MMZPipe":
+					return Outline(32, 32);
 				case "Teleporter":
 					Sprite trigger = Outline(16, 64); trigger.Offset(8, 0); return trigger;
 				case "Unused": return Outline(32, 32);
@@ -846,8 +863,11 @@ namespace MysticIsland.ObjectDefinitions
 				if (sawMode == 4) return Travel(0, obj.XFlip ? -128 : -48, 0, obj.XFlip ? -80 : 0);
 			}
 			if (behavior == "RunningDisc") return Outline((movement == 0 ? 72 : 56) * 2, (movement == 0 ? 72 : 56) * 2);
-			if (behavior != "Teleporter") return null;
-			int offset = ByteConverter.ToUInt16(routes, (Subtype(obj) & 7) * 2), count = ByteConverter.ToUInt16(routes, offset) / 4;
+			if (behavior != "Teleporter" && behavior != "MMZPipe") return null;
+			int routeIndex = Subtype(obj) & (behavior == "MMZPipe" ? 63 : 7);
+			if (behavior == "MMZPipe" && (routeIndex == 0 || routeIndex * 2 >= ByteConverter.ToUInt16(routes, 0)))
+				return Outline(32, 32);
+			int offset = ByteConverter.ToUInt16(routes, routeIndex * 2), count = ByteConverter.ToUInt16(routes, offset) / 4;
 			List<Point> points = new List<Point> { Point.Empty };
 			for (int i = 0; i < count; i++) points.Add(new Point(ByteConverter.ToUInt16(routes, offset + 2 + i * 4) - obj.X, ByteConverter.ToInt16(routes, offset + 4 + i * 4) - obj.Y));
 			int left = points.Min(p => p.X), top = points.Min(p => p.Y);

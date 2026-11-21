@@ -950,6 +950,30 @@ Player_GetStandingObject:
 		adda.w	d0,a3
 		rts
 
+; a0: object, a1: actor. Z if this object accepts the actor's path.
+Object_MatchesPath:
+		move.b	obSubtype(a0),d0
+		btst	#4,d0
+		beq.s	.any
+		andi.b	#8,d0
+		lsr.b	#2,d0
+		ori.b	#$C,d0
+		cmp.b	obTopSolidBit(a1),d0
+		rts
+.any:
+		moveq	#0,d0
+		rts
+
+; Give primary-path objects priority over the cover that conceals path 2.
+Object_PathPriority:
+		move.b	obSubtype(a0),d0
+		andi.b	#(Object_FilterPath|Object_SecondaryPath)>>8,d0
+		cmpi.b	#Object_FilterPath>>8,d0
+		bne.s	.return
+		bset	#7,obGfx(a0)
+.return:
+		rts
+
 ; a0: surface, a1: actor. Z if the actor's current support is this SST.
 ObjectOwnsRider:
 		btst	#status.player.on_object,obStatus(a1)

@@ -71,6 +71,8 @@ SMZ_Disc_Action:	; Routine 2
 		lea	(v_player2).w,a1
 		lea	SMZ_disc_sonic_attached+1(a0),a3
 		bsr.w	SMZ_Disc_MoveSonic				; handle Sonic moving on gear
+		btst	#0,obSubtype(a0)			; disc art is entirely in the terrain
+		bne.w	SMZ_Disc_Display
 		bsr.w	SMZ_Disc_MoveSpot				; move the spot inside the gear circularly
 		bra.w	SMZ_Disc_Display				; display spot, or delete whole object if offscreen
 
@@ -216,7 +218,11 @@ SMZ_Disc_MoveSpot:
 
 SMZ_Disc_Display:
 		out_of_range2	.delete,SMZ_disc_origX(a0)		; is object out of range? if yes, branch
+		btst	#0,obSubtype(a0)
+		bne.s	.return
 		jmp	(DisplaySprite).l			; display small spot
+.return:
+		rts
 
 	.delete:
 		lea	(v_player).w,a1

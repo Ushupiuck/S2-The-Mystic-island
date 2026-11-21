@@ -31,6 +31,13 @@ CD_PROFILES={0x40:0xCC,0x7A:0xCD,0x7B:0xCE,0x7D:0xCF,
 	0x70:0xDC,0xA1:0xF5,0xC4:0xF6,0xD1:0xF7,0xD2:0xF8,0xD3:0xF9,0xD4:0xFA}
 CD_BANK=('collision_columns.bin','collision_rows.bin','collision_angles.bin')
 WATER_TILES=16
+ERA_MASKS = (0x40, 0x20, 0x80, 0x80)
+# Same source spacing in S1 and CD, including the diagonal ring chains.
+RING_STEPS = (
+	(16, 0), (24, 0), (32, 0), (0, 16), (0, 24), (0, 32),
+	(16, 16), (24, 24), (32, 32), (-16, 16), (-24, 24), (-32, 32),
+	(16, 8), (24, 16), (-16, 8), (-24, 16),
+)
 
 
 def pack(raw):
@@ -384,6 +391,15 @@ def sprites2(source):
 				# Debug/SonLVL draw the closed pair around the placement anchor.
 				rows.append([(y + offset, size, tile, x) for offset in (-16, 16)
 					for y, size, tile, x in rows[0]])
+			if family == 'TubeDoor':
+				caps = [(y, size, tile ^ flip, x + dx)
+					for dx, flip in ((-24, 0), (24, 0x800)) for y, size, tile, x in rows[0]]
+				rows.extend(caps + row for row in rows[1:6])
+			if family == 'RevolveDoor':
+				# Two cap poses and a rail share one object, anchored between the caps.
+				for cap in rows[:2]:
+					rows.append(rows[2] + [(y + dy, size, tile, x) for dy in (-88, 88)
+						for y, size, tile, x in cap])
 			outputs[f'mappings/sprite/MMZ {filename}.bin']=encode(rows)
 			for fi,(before,after) in enumerate(zip(original,rows)):
 				expected={(x,y):((basepal+pal)&3,palettes[(basepal+pal)&3][c]) for (x,y),(pal,c) in raster(before,[(0,raw)]).items()}
@@ -409,6 +425,26 @@ def vanishing_members(x, y, eras, subtype):
 		yield x + dx, (y & 0xF000) | new_y, 0xA6, eras, 0x100 | delay
 
 
+def tunnel_paths(source):
+	text = (source/'src/objects/r8/tunnel_path.asm').read_text().split('TunnelPaths:\n', 1)[1]
+	index = re.findall(r'dc\.w\s+(\.TunnelPath_[0-9A-F]+)-TunnelPaths', text)
+	paths = {}
+	for label, data in re.findall(r'^(\.TunnelPath_[0-9A-F]+):\s*\n((?:\s*dc\.w[^\n]*\n)+)', text, re.M):
+		words = [number(word.strip()) for line in re.findall(r'dc\.w\s+([^;\n]+)', data)
+			for word in line.split(',')]
+		assert words[0] == (len(words)-1)*2
+		paths[label] = struct.pack('>'+str(len(words))+'H', *words)
+	table = bytearray(len(index)*2)
+	offsets = {}
+	path_count = len(index)
+	for index, label in enumerate(index):
+		if label not in offsets:
+			offsets[label] = len(table)
+			table.extend(paths[label])
+		struct.pack_into('>H', table, index*2, offsets[label])
+	return {'level/objects/MMZ2 Tunnel Paths.bin': struct.pack('>H', path_count) + table}
+
+
 def placements(source, act):
 	"""Import completed families while preserving other editable placements."""
 	from object_layout import decode, encode, legacy_saw_subtype
@@ -420,13 +456,19 @@ def placements(source, act):
 		'BuzzsawObject': 0xA4, 'VanishPlatformObject': 0xA6,
 		'SpinPlatformObject': 0xA9, 'MoveSpringObjectR8': 0xB0,
 		'HVPlatformObject': 0x20, 'PropellerObject': 0xB7,
-		'CheckpointObject': 0x79, 'SpringObject': 0x14, 'DoorObject': 0x30}
-	# Time poles share $79 but belong to the later MonitorTime import.
-	rows = [row for row in decode((ROOT/path).read_bytes())
-		if row[2] not in ids.values() or (row[2] == 0x79 and row[4] & 0x300)]
+		'CheckpointObject': 0x79, 'SpringObject': 0x14, 'DoorObject': 0x30,
+		'RobotGeneratorObject': 0xB9, 'SignpostObject': 0x7E,
+		'BigRingObject': 0x7B, 'InvisibleBlockObject': 0xAC,
+		'RevolveDoorObject': 0x0A, 'TunnelPathObject': 0xAB,
+		'TubeDoorObject': 0x30, 'SwitchObject': 0xAF, 'SpinDiscObject': 0xA1}
+	owned = (set(ids.values()) - {0x0A}) | {0x12}
+	rows = [row for row in decode((ROOT/path).read_bytes()) if row[2] not in owned
+		and (row[2] != 0x0A or row[4] & 0x300 != 0x300)]
 	index = re.findall(r'^\s*dc\.l\s+(\w+)',
 		(source/f'src/r8/object_index_{act}.asm').read_text(), re.M)
 	counts = dict.fromkeys(ids, 0)
+	counts.update(monitor=0, time_pole=0)
+	rings = [[] for _ in ERAS]
 	for x, y, oid, sub, eras, variant in struct.iter_unpack('>HHBBBB',
 		(source/f'src/maps/r8/objects_{act}.bin').read_bytes()):
 		if x == 0xFFFF:
@@ -434,10 +476,30 @@ def placements(source, act):
 		oid &= 0x7F
 		assert 0 < oid <= len(index), ('Source placement ID', act, x, oid)
 		family = index[oid-1]
-		if family not in ids:
+		if family == 'RingObject':
+			assert y < 0x800 and eras & 0xE0 and 0 <= variant <= (act == 2)
+			dx, dy = RING_STEPS[sub >> 4]
+			chain = [(x + dx*i, y + dy*i, variant) for i in range(1 + min(sub & 7, 6))]
+			for era, mask in enumerate(ERA_MASKS):
+				if eras & mask:
+					rings[era].extend(chain)
+			continue
+		if family not in ids and family != 'MonitorTimeObject':
 			continue
 		assert not y & 0x3000 and eras & 0xE0, ('Placement flags', act, x, y, eras)
 		y = (y & 0xFFF) | ((y & 0xC000) >> 1)
+		if family == 'MonitorTimeObject':
+			assert 0 <= variant <= (act == 2)
+			layer = (0x1000 | (variant << 11)) if act == 2 else 0
+			if sub in (8, 9):
+				rows.append((x, y, 0x79, eras & 0xE0, layer | ((sub-7) << 8)))
+				counts['time_pole'] += 1
+			else:
+				# Extra life, ten rings, shield, invincibility and shoes.
+				item = (9, 1, 2, 7, 6)[sub]
+				rows.append((x, y, 0x12, eras & 0xE0, layer | item))
+				counts['monitor'] += 1
+			continue
 		if family == 'BigbomObject':
 			assert act == 2 and sub == 0 and variant <= 2
 			sub = (variant << 8) | 0x10
@@ -483,13 +545,48 @@ def placements(source, act):
 			else:
 				orientation = 0x20 if y & 0x4000 else 0
 			sub = orientation | (sub & 2)
-		elif family in ('HVPlatformObject', 'PropellerObject'):
-			assert sub == variant == 0
+		elif family == 'CheckpointObject':
+			assert variant == 0 and 1 <= sub <= 8
+		elif family == 'TunnelPathObject':
+			assert act == 2 and variant == 0 and 0x80 <= sub <= 0xBC
+			sub |= 0x100
+		elif family in ('TubeDoorObject', 'SwitchObject'):
+			assert act == 2 and variant == 0 and 3 <= sub <= 17
+			sub -= 3  # map the source channels into fifteen of the shared slots
+			if family == 'TubeDoorObject':
+				x += 24  # center between the cover's two caps
+				sub |= 0x100
+			else:
+				y -= 3  # the shared button constructor adds this offset
 		else:
-			assert family == 'CheckpointObject' and variant == 0 and 1 <= sub <= 8
+			assert sub == variant == 0
+			if family == 'SignpostObject':
+				assert (y & 0xFFF) >= 20
+				y -= 20  # CD's foot is Y+11, the shared sign's foot is Y+31
+				sub = 4  # require the player's Y to be in the finish corridor
+			elif family == 'SpinDiscObject':
+				sub = 0x100  # the disc is already drawn by the terrain
+			elif family == 'InvisibleBlockObject':
+				sub = 0x11  # 32 by 32 pixels
+			elif family == 'RevolveDoorObject':
+				assert act == 2 and (y & 0xFFF) >= 88
+				y -= 88  # source anchors the bottom cap
+				sub = 0x300
 		rows.append((x, y, ids[family], eras & 0xE0, sub))
 		counts[family] += 1
-	return {path: encode(sorted(rows, key=lambda row: row[0]))}, counts
+	outputs = {path: encode(sorted(rows, key=lambda row: row[0]))}
+	for (_, title, _, folder), chain in zip(ERAS, rings):
+		chain.sort()
+		assert len(chain) <= 254
+		assert len({(x, y) for x, y, _ in chain}) == len(chain)
+		assert all(0 < x < 0x8000 and 0 <= y < 0x800 for x, y, _ in chain)
+		ring_name = f'level/rings/{folder}LV0F_{act}'
+		outputs[ring_name+'.bin'] = b''.join(struct.pack('>HH', x, y) for x, y, _ in chain) + b'\xff\xff'
+		if act == 2:
+			outputs[ring_name+' Paths.bin'] = b''.join(
+				struct.pack('>HH', x, y) for x, y, layer in chain if layer) + b'\xff\xff\x00\x00'
+		counts[title+' rings'] = len(chain)
+	return outputs, counts
 
 
 def build(source):
@@ -567,6 +664,7 @@ def build(source):
 	sprite2_outputs,sprite2_report=sprites2(source)
 	outputs.update(sprite2_outputs)
 	sprite_report['act2']=sprite2_report
+	outputs.update(tunnel_paths(source))
 	for act in (1, 2):
 		placed, counts = placements(source, act)
 		outputs.update(placed)
