@@ -33,11 +33,11 @@ def find_support(g, code, origin, x, y):
 		and g.get(slot, origin[0], 2) == x and g.get(slot, origin[1], 2) == y)
 
 
-def stage(g, initial, scene, era):
+def stage(g, initial, scene, era, player):
 	act, x, y = scene
 	g.restore(initial)
 	g.buttons, g.buttons2 = set(), set()
-	boot_level(g, zone=15, act=act-1, timezone=era)
+	boot_level(g, player=player, zone=15, act=act-1, timezone=era)
 	seek(g, x, y)
 	piston = find_support(g, 'Stomper_Run', ('stomper_origin_x', 'stomper_origin_y'), x, y)
 	return piston, g.save()
@@ -46,7 +46,11 @@ def stage(g, initial, scene, era):
 def set_rider(g, actor, support, x, foot, path):
 	s = g.s
 	player_index = ACTORS.index(actor)
-	place(g, actor, x, foot-g.get(actor, 'default_y_radius'), False)
+	tails = player_index == 1 or g.read('Player_mode', 2) == s['PlayerMode_Tails']
+	assert g.get(actor, 'character_id') == (s['CharacterID_Tails'] if tails else 0)
+	radius = s['tails_height' if tails else 'sonic_height']
+	assert g.get(actor, 'default_y_radius') == radius
+	place(g, actor, x, foot-radius, False)
 	for field, value, size in (
 			('obStatus', 8, 1), ('obStatusSecondary', 2, 1), ('invtime', 6000, 2),
 			('standonobject', (support-(s['v_objspace'] & 0xFFFF))//s['object_size'], 1),
@@ -71,9 +75,10 @@ def board(g, actor, piston, path):
 
 def hold(g, actor, *buttons):
 	if actor == 'v_player':
-		g.buttons = set(buttons)
+		g.buttons, g.buttons2 = set(buttons), set()
 	else:
-		g.buttons2 = set(buttons) | {4}  # Controller 2 input keeps manual control
+		# Controller 2 input keeps manual control.
+		g.buttons, g.buttons2 = set(), set(buttons) | {4}
 
 
 def step(g, actor, piston, on_board=False):
@@ -164,7 +169,7 @@ def release_and_dash(g, base, actor, piston, path, release, output):
 	assert (g.get(actor, 'obX', 2)-x)*direction >= 16
 
 
-def scrap_madness(g, initial, era, output):
+def scrap_madness(g, initial, era, player, actors, output):
 	root = Path(__file__).resolve().parents[1]
 	for act in (1, 2):
 		rows = decode((root / f'level/objects/SMZ_{act}.bin').read_bytes())
@@ -173,7 +178,7 @@ def scrap_madness(g, initial, era, output):
 		assert len(crushers) == (20 if act == 1 else 1)
 		g.restore(initial)
 		g.buttons, g.buttons2 = set(), set()
-		boot_level(g, zone=8, act=act-1, timezone=era)
+		boot_level(g, player=player, zone=8, act=act-1, timezone=era)
 		level = g.save()
 		for x, y, oid in crushers:
 			g.restore(level)
@@ -198,7 +203,7 @@ def scrap_madness(g, initial, era, output):
 				g.put(support, field, value, size)
 			foot = g.get(support, 'obY', 2)-g.get(support, 'obHeight')-1
 			base = g.save()
-			for actor in ACTORS:
+			for actor in actors:
 				for path in (0, 1):
 					g.restore(base)
 					g.buttons, g.buttons2 = set(), set()
@@ -218,6 +223,24 @@ def scrap_madness(g, initial, era, output):
 		print(f'Scrap Madness {act}, era {era}: terrain crush verified at {len(crushers)} placements.', flush=True)
 
 
+def metallic_madness(g, initial, era, player, actors, output):
+	for scene in (SNUG, TIGHT, OPEN):
+		piston, base = stage(g, initial, scene, era, player)
+		if era == 0 and scene == SNUG:
+			roof_solidity(g, base, piston)
+		for actor in actors:
+			for path in (0, 1):
+				standing_death = ride(g, base, actor, piston, path)
+				duck_death = ride(g, base, actor, piston, path, duck=True)
+				identity = scene, era, player, actor, path
+				assert (standing_death is None) == (scene == OPEN), identity
+				assert (duck_death is None) == (scene != TIGHT), identity
+				if scene == SNUG:
+					shots = output if era == path == 0 else None
+					release_and_dash(g, base, actor, piston, path, standing_death, shots)
+	print(f'Metallic Madness, era {era}: snug, tight and open piston checks passed on both paths.', flush=True)
+
+
 def main():
 	p = argparse.ArgumentParser(description=__doc__)
 	for flag in ('rom', 'listing', 'core', 'output'):
@@ -228,23 +251,15 @@ def main():
 	g = Genesis(args.core, args.rom, args.listing, args.output, args.pal,
 		system_directory=args.system_directory)
 	initial = g.save()
-	for era in range(4):
-		for scene in (SNUG, TIGHT, OPEN):
-			piston, base = stage(g, initial, scene, era)
-			if era == 0 and scene == SNUG:
-				roof_solidity(g, base, piston)
-			for actor in ACTORS:
-				for path in (0, 1):
-					standing_death = ride(g, base, actor, piston, path)
-					duck_death = ride(g, base, actor, piston, path, duck=True)
-					identity = scene, era, actor, path
-					assert (standing_death is None) == (scene == OPEN), identity
-					assert (duck_death is None) == (scene != TIGHT), identity
-					if scene == SNUG:
-						shots = args.output if era == path == 0 else None
-						release_and_dash(g, base, actor, piston, path, standing_death, shots)
-		print(f'Era {era}: both riders and both paths pass the snug, tight and open piston checks.', flush=True)
-		scrap_madness(g, initial, era, args.output)
+	for player, actors, name in (
+			(g.s['PlayerMode_Tails'], ACTORS[:1], 'solo Tails'),
+			(g.s['PlayerMode_SonicAndTails'], ACTORS, 'Sonic and controller-2 Tails')):
+		output = args.output / ('solo-tails' if player == g.s['PlayerMode_Tails'] else 'sonic-and-tails')
+		output.mkdir(parents=True, exist_ok=True)
+		print(f'Testing {name}.', flush=True)
+		for era in range(4):
+			metallic_madness(g, initial, era, player, actors, output)
+			scrap_madness(g, initial, era, player, actors, output)
 	g.close()
 
 

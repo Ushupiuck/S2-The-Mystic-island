@@ -38,6 +38,11 @@ carry pose until landing. Tails's hurt handler releases Sonic's control lock
 before recoil, and object-controlled movement cancels active manual flight
 before releasing any passenger. Neither path waits for Tails to land.
 
+Starting manual flight or swimming from a roll checks the shared terrain
+headroom with Tails's standing radii. A low roof on his active collision path
+keeps him curled. He can try again once there is room to expand, preserving his
+foot position.
+
 Initialization updates body/tail together and retains position history. Flying
 attacks use the S3&K upward sector and angle rounding; swimming and other sectors
 retain ordinary collision responses. Large bubbles refill the touching actor's

@@ -2126,11 +2126,7 @@ Tails_Jump:
 		jsr	(PlaySound_Special).l
 		btst	#2,obStatus(a0)
 		bne.s	.return
-		move.b	#tails_roll_height,obHeight(a0)
-		move.b	#tails_roll_width,obWidth(a0)
-		move.b	#AniIDSonAni_Roll,obAnim(a0)
-		bset	#2,obStatus(a0)
-		addq.w	#tails_height-tails_roll_height,obY(a0)
+		jmp	(Player_EnterRoll).l
 .return:	rts
 ; ---------------------------------------------------------------------------
 
@@ -2176,35 +2172,32 @@ TailS3_locret_1511A:
 
 Tails_Test_For_Flight:
 		tst.b	tails_flight_flag(a0)
-		bne.w	TailS3_locret_151A2
+		bne.s	.return
 		move.b	(v_jpadpresslogical2).w,d0
 		andi.b	#button_A_mask|button_B_mask|button_C_mask,d0
-		beq.w	TailS3_locret_151A2
+		beq.s	.return
 		cmpa.w	#v_player,a0
-		beq.s	TailS3_loc_1515C
-TailS3_loc_15156:
+		beq.s	.checkroll
 		tst.w	(Tails_CPU_idle_timer).w
-		beq.s	TailS3_locret_151A2
+		beq.s	.return
 
-TailS3_loc_1515C:
+.checkroll:
 		btst	#status.player.rolling,obStatus(a0)
-		beq.s	TailS3_loc_1518C
+		beq.s	.start
+		; Keep the roll when the standing hitbox would overlap terrain.
+		move.w	default_y_radius(a0),d0
+		jsr	(Player_FloorHeadroom).l
+		bmi.s	.return
+		move.w	default_y_radius(a0),d0
+		jsr	(Player_ResizeOnFloor).l
 		bclr	#status.player.rolling,obStatus(a0)
-		move.b	obHeight(a0),d1
-		move.b	default_y_radius(a0),obHeight(a0)
-		move.b	default_x_radius(a0),obWidth(a0)
-		sub.b	default_y_radius(a0),d1
-		ext.w	d1
-TailS3_loc_15188:
-		add.w	d1,obY(a0)
 
-TailS3_loc_1518C:
+.start:
 		bclr	#status.player.rolljumping,obStatus(a0)
 		move.b	#1,tails_flight_flag(a0)
 		move.b	#Tails_FlightBudget,tails_flight_energy(a0)
-		bsr.w	Tails_Set_Flying_Animation
-
-TailS3_locret_151A2:
+		bra.w	Tails_Set_Flying_Animation
+.return:
 		rts
 ; ---------------------------------------------------------------------------
 
