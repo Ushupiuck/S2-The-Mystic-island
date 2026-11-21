@@ -10006,20 +10006,19 @@ Credits_Display:
 ; ===========================================================================
 		include "objects/S1/3D Boss - Green Hill.asm"
 		include "objects/S1/48 Eggman's Swinging Ball.asm"
-; ---------------------------------------------------------------------------
+; ===========================================================================
 ; Shared S1 pilot and exhaust. Callers validate a1's parent before following.
 ; Offsets belong to the child, so hulls keep their own nozzle/cockpit anchors.
 ; a0 = parent, a1 = new face child. Placement bit 0 selects EggRobo.
 ; Cache source/script pointers in the existing child SST, so normal drawing
 ; needs no character dispatch. Independent RAM banks survive all queued DMAs.
+; ===========================================================================
 BossFace_Init:
-		move.l	a2,-(sp)
-		moveq	#0,d0
-		move.b	obSubtype+1(a0),d0
-		andi.w	#1,d0
+		pea	(a2)
+		moveq	#1,d0
+		and.b	obSubtype+1(a0),d0
 		move.w	d0,obSubtype(a1)
 		lea	BossFace_Assets(pc),a2
-		tst.b	d0
 		beq.s	.assets
 		lea	12(a2),a2
 .assets:
@@ -10032,14 +10031,17 @@ BossFace_Init:
 		movea.l	(a2),a0
 		movea.l	BossFace_Source(a1),a1
 		jsr	(KosPlusDec).l
-		movem.l	(sp)+,a0-a1
+		movea.l	(sp)+,a0
+		movea.l	(sp)+,a1
 		bset	d0,(BossFace_ArtReady).l
 .return:
 		movea.l	(sp)+,a2
 		rts
+; ===========================================================================
 BossFace_Assets:
 		dc.l Art_EggmanFace,Ani_EggmanFace,Kospm_EggmanFace+2
 		dc.l Art_EggRoboHead,Ani_EggRoboHead,Kospm_EggRoboHead+2
+; ===========================================================================
 
 BossFace_Display:
 		bsr.w	BossChild_Follow
@@ -10060,22 +10062,28 @@ BossFace_Draw:
 		; runs. DisplaySprite queues an SST pointer, so the displayed frame
 		; must remain valid until Render_Sprites consumes that pointer.
 		move.b	BossFace_LoadedFrame(a0),d0
-		bmi.s	.return
+		bmi.s	BossChild_Follow.return
 		move.b	d0,obFrame(a0)
-		bra.s	BossChild_Draw
-.return:
-		rts
-BossExhaust_Display:
-		bsr.s	BossChild_Follow
-		lea	Ani_BossExhaust(pc),a1
-BossChild_Animate:
-		jsr	(AnimateSprite).l
 BossChild_Draw:
 		move.b	obStatus(a0),d0
 		andi.b	#3,d0
 		andi.b	#$FC,obRender(a0)
 		or.b	d0,obRender(a0)
 		jmp	(DisplaySprite).l
+; ---------------------------------------------------------------------------
+
+BossExhaust_Display:
+		bsr.s	BossChild_Follow
+		lea	Ani_BossExhaust(pc),a1
+BossChild_Animate:
+		jsr	(AnimateSprite).l
+		move.b	obStatus(a0),d0
+		andi.b	#3,d0
+		andi.b	#$FC,obRender(a0)
+		or.b	d0,obRender(a0)
+		jmp	(DisplaySprite).l
+; ---------------------------------------------------------------------------
+
 BossChild_Follow:
 		move.w	BossChild_OffsetX(a0),d0
 		btst	#status.npc.x_flip,obStatus(a1)
@@ -10088,7 +10096,8 @@ BossChild_Follow:
 		add.w	obY(a1),d0
 		move.w	d0,obY(a0)
 		move.b	obStatus(a1),obStatus(a0)
-		rts
+.return:	rts
+; ===========================================================================
 
 Ani_Eggman:	dc.w .body-Ani_Eggman
 .body:		dc.b $F,0,afEnd

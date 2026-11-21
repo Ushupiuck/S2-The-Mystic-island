@@ -10,8 +10,6 @@
 ; ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
 ; OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ; ---------------------------------------------------------------------------
-	set module_remap_A000_to_8000,0
-	set module_padding,0
 Clear_Kos_Queue:
 	moveq	#0,d0
 	move.l	d0,(Kos_module_queue).w
@@ -51,13 +49,6 @@ Queue_Kos_Module:
 ; ---------------------------------------------------------------------------
 Process_Kos_Module_Queue_Init:
 	move.w	(a1)+,d3				; get uncompressed size
-	if module_remap_A000_to_8000<>0
-	cmpi.w	#$A000,d3
-	bne.s	.gotsize
-	move.w	#$8000,d3				; $A000 means $8000 for some reason
-
-.gotsize:
-	endif
 	lsr.w	#1,d3
 	move.w	d3,d0
 	rol.w	#5,d0
@@ -115,16 +106,7 @@ Process_Kos_Module_Queue:
 	add.w	d3,d0
 	add.w	d3,d0
 	move.w	d0,(Kos_module_destination).w	; set new destination
-	if module_padding<>0
-	move.l	(Kos_module_queue).w,d0
-	move.l	(Kos_decomp_source).w,d1
-	sub.l	d1,d0
-	andi.l	#$F,d0
-	add.l	d0,d1					; round to the nearest $10 boundary
-	move.l	d1,(Kos_module_queue).w	; and set new source
-	else
 	move.l	(Kos_decomp_source).w,(Kos_module_queue).w	; set new source
-	endif
 	; Word-RAM source stays stable until the next requested VBlank. Publish
 	; its DMA only after the CD terrain/frame handoff has finished.
 	move.w	d2,(MCD_KosDMADest).l
