@@ -7,6 +7,13 @@ packers. The sole target is Mega-CD Mode 1. A successful build produces
 matching listing. See [AGENTS.md](../AGENTS.md) for Windows compatibility checks
 and [the sound guide](../build_tools/sound/README.md) for packer builds.
 
+## Windows build download
+
+In GitHub Actions, open **Windows sound build** and choose **Run workflow**
+to build a branch on demand. When the run passes both builds and the sound
+tool checks, download **s2built.bin** from **Artifacts**. Open the downloaded
+Mode 1 cartridge image directly in ClownMDEmu.
+
 ## Dependencies and fixture boundaries
 
 Python checks require Python 3. Native 68000 fixtures need Unicorn. Emulator

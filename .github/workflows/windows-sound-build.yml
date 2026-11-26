@@ -1,6 +1,7 @@
 name: Windows sound build
 
 on:
+  workflow_dispatch:
   push:
     branches: [test/rebuilt-kehmusic, Mystic-Island, Mystic-Island-(Experimental)]
     paths:
@@ -41,3 +42,9 @@ jobs:
         run: python build_tools\sound\build.py --check
       - name: Build ROM with rebuilt sound tools
         run: build_tools\lua\lua.exe build.lua
+      - name: Upload ROM
+        uses: actions/upload-artifact@v7
+        with:
+          path: ${{ github.workspace }}/Windows build check/s2built.bin
+          archive: false
+          if-no-files-found: error
