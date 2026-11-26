@@ -7426,7 +7426,7 @@ ptr_ObjBB:		dc.l MMZ_TwinWalker
 ptr_ObjBC:		dc.l MMZ_Seesaw
 ptr_ObjBD:		dc.l MMZ_SpikeCrusher
 ptr_ObjBE:		dc.l MMZ_PohBee
-ptr_ObjBF:		dc.l ObjNull
+ptr_ObjBF:		dc.l MMZ_Laser
 ptr_ObjC0:		dc.l S1Fireball	; standalone Sonic 1 fireball
 ptr_ObjC1:		dc.l S1FireballSpawner	; Sonic 1 fireball spawner
 ptr_ObjC2:		dc.l ObjNull
@@ -8257,6 +8257,11 @@ Touch_Rings:
 		beq.w	locret_DA36
 		cmpi.w	#90,flashtime(a0)
 		bhs.w	locret_DA36
+	if FixBugs
+		jsr	(Player_TouchBounds).l
+	else
+		cmpi.b	#Player_MiniHeight,default_y_radius(a0)
+		beq.s	.mini_bounds
 		move.w	obX(a0),d2
 		move.w	obY(a0),d3
 		subq.w	#8,d2
@@ -8264,23 +8269,20 @@ Touch_Rings:
 		move.b	obHeight(a0),d5
 		subq.b	#3,d5
 		sub.w	d5,d3
-	if FixBugs
-		cmpi.b	#AniIDSonAni_Duck,obAnim(a0)
-	else
-		; Bug: This does not check either player's ducking frame!
-		; Sonic's ducking frame is $80, and Tails's frame is $5B.
-		; However, this does work for Sonic 1's mapping frames.
 		cmpi.b	#$39,obFrame(a0)
-	endif
-		bne.s	loc_D9E0
+		bne.s	.old_bounds
 		addi.w	#$C,d3
 		moveq	#$A,d5
-
-loc_D9E0:
-		move.w	#6,d1
-		move.w	#12,d6
+.old_bounds:
 		move.w	#$10,d4
 		add.w	d5,d5
+		bra.s	.touch_bounds
+.mini_bounds:
+		jsr	(Player_TouchBounds).l
+.touch_bounds:
+	endif
+		move.w	#6,d1
+		move.w	#12,d6
 
 loc_D9EE:
 		tst.w	(a1)
@@ -8565,6 +8567,7 @@ Map_MovSpring:	binclude	"mappings/sprite/Wheel for the moving spring.bin"
 		include	"_inc/Object Collision.asm"
 		include	"objects/01 Sonic.asm"
 		include	"objects/02 Tails.asm"
+		include	"_inc/Player Size.asm"
 		include	"objects/03 Tails' Tails.asm"
 		include	"objects/09 Water Surface.asm"
 		include	"objects/06 Water Splash.asm"
@@ -10206,23 +10209,41 @@ Touch_RegisterEarlierObject:
 .return:
 		rts
 
-TouchResponse:
-		jsr	(Touch_Rings).l
+; Compute the same collision rectangle for rings and object touch.
+; d2/d3 = top-left; d4/d5 = width/height. Keep the full-size contact window.
+Player_TouchBounds:
 		move.w	obX(a0),d2
 		move.w	obY(a0),d3
-		subq.w	#8,d2
 		moveq	#0,d5
 		move.b	obHeight(a0),d5
-		subq.b	#3,d5
+		cmpi.b	#Player_MiniHeight,default_y_radius(a0)
+		beq.s	.mini
+		moveq	#8,d4
+		subq.w	#3,d5
 		sub.w	d5,d3
 		cmpi.b	#AniIDSonAni_Duck,obAnim(a0)
-		bne.s	loc_19812
+		bne.s	.bounds
 		addi.w	#$C,d3
 		moveq	#$A,d5
-
-loc_19812:
-		move.w	#$10,d4
+		bra.s	.bounds
+.mini:
+		moveq	#0,d4
+		move.b	obWidth(a0),d4
+		subq.w	#1,d5
+		sub.w	d5,d3
+		cmpi.b	#AniIDSonAni_Duck,obAnim(a0)
+		bne.s	.bounds
+		addq.w	#3,d3
+		moveq	#6,d5
+.bounds:
+		sub.w	d4,d2
+		add.w	d4,d4
 		add.w	d5,d5
+		rts
+
+TouchResponse:
+		jsr	(Touch_Rings).l
+		bsr.s	Player_TouchBounds
 		lea	(Collision_response_list).l,a4
 		move.w	(a4)+,d6
 		bmi.w	Touch_Dense
@@ -12779,6 +12800,7 @@ Kospm_Crabmeat:	binclude	"art/moduled kosinski/Enemy Crabmeat.kospm"
 		include	"objects/Metallic Madness/Seesaw.asm"
 		include	"objects/Metallic Madness/Spike Crusher.asm"
 		include	"objects/Metallic Madness/Poh Bee.asm"
+		include	"objects/Metallic Madness/Size Laser.asm"
 		include "objects/Scrap Madness/A4 Saws.asm"
 		include "objects/Scrap Madness/A5 Stomper.asm"
 		include "objects/Scrap Madness/A6 Vanishing Platforms.asm"
@@ -13084,6 +13106,9 @@ Art_HangingSonic:	binclude "art/uncompressed/Sonic hanging.unc"
 	;	align $8000
 ; S&K body/extra/tail pixels are remapped to Pal_SonicTails' slot order.
 ; Preserve this hack's warmer skin shades and green-to-dark-red replacement.
+Art_MiniSonic:	binclude	"art/uncompressed/Mini Sonic.unc"
+Art_MiniTails:	binclude	"art/uncompressed/Mini Tails.unc"
+Art_MiniTailsTail:	binclude	"art/uncompressed/Mini Tails tails.unc"
 Art_Tails:	binclude	"art/uncompressed/Tails' art.bin"
 Art_Tails_Extra:	binclude "art/uncompressed/Tails extra.bin"
 Art_Tails_Tails:	binclude "art/uncompressed/Tails tails.bin"
@@ -14664,6 +14689,12 @@ Map_Tails:	include		"mappings/sprite/Tails.asm"
 Map_Tails_Tail:	include "mappings/sprite/Tails tails.asm"
 TailsDynPLC:	include		"mappings/spriteDPLC/Tails.asm"
 TailsTailsDynPLC:	include "mappings/spriteDPLC/Tails tails.asm"
+Map_MiniSonic:	binclude	"mappings/sprite/Mini Sonic.bin"
+Map_MiniTails:	binclude	"mappings/sprite/Mini Tails.bin"
+Map_MiniTailsTail:	binclude	"mappings/sprite/Mini Tails tails.bin"
+MiniSonicDynPLC:	binclude	"mappings/spriteDPLC/Mini Sonic.bin"
+MiniTailsDynPLC:	binclude	"mappings/spriteDPLC/Mini Tails.bin"
+MiniTailsTailDynPLC:	binclude	"mappings/spriteDPLC/Mini Tails tails.bin"
 Map_Obj03:	binclude	"mappings/sprite/Patch switcher.bin"
 		even
 Map_Obj07:	binclude	"mappings/sprite/Water surface.bin"

@@ -898,13 +898,14 @@ their selected palette line. Human line 2 (hardware palette 1) keeps:
 Other colors and cycling effects must fit the remaining slots. Move their
 pixels and cycle destinations together; do not displace a shared ramp.
 
-### Mania miniature references (experimental)
+### Miniature player art
 
-The editable reference crops in `art/sources/` retain the PC Sonic Mania
-miniature frames at their original pixel scale, including the separate mini
-Tails tail animations. They are source art for MMZ's later shrinking mechanic;
-they are not assembled player banks or replacements for the Continue sprites.
-Knuckles is reserved art only; no Knuckles player code is introduced.
+`build_tools/build_mini_player_art.py` packs the supplied Sonic and Tails
+crops into miniature mappings and DPLCs, including the separate tail poses.
+The converter assigns the shared palette roles and reuses overlapping tile
+runs. Each bank keeps the ordinary player frame IDs and reuses that player’s
+VRAM destination. Miniature and full-size players can appear simultaneously.
+The Knuckles crop is reference art for later work.
 
 | Reference | PC sheet | Original crop, left/top/right/bottom (end exclusive) |
 | --- | --- | --- |
@@ -914,11 +915,8 @@ Knuckles is reserved art only; no Knuckles player code is introduced.
 
 The sheets are credited to AsuharaMoon (Sonic's current sheet) and Random
 Talking Bush (Tails/Knuckles). Source pixels, labels and grid backgrounds are
-preserved. Crop the sprite cells and remove their backgrounds when converting
-to runtime tiles. Mania Tails follows the S2 shading convention; adapting him
-requires checking the placement of dark fur shades against Mystic Island's
-S3&K standing frame `$AD` and corresponding animated poses, as well as mapping
-colors into the shared palette. The source crop has not yet had that correction.
+preserved. The converter removes the cell backgrounds and remaps the
+Mania fur shades to Mystic Island's player palette.
 
 The EHZ boss's drill/wheels use a one-word masked row-two load; see the
 [boss palette contract](Importing-objects.md#ehz-boss-palette). The former

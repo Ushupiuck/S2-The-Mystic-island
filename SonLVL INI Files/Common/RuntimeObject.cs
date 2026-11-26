@@ -48,6 +48,7 @@ namespace MysticIsland.ObjectDefinitions
 				if (behavior == "Bomb") alternate = Render(File.ReadAllBytes("../art/uncompressed/MMZ2 Editor Atlas.unc"), File.ReadAllBytes("../mappings/sprite/MMZ BigBom 1.bin"), 0, null);
 				if (behavior == "MMZMechaBu") alternate = Render(pixels, File.ReadAllBytes("../mappings/sprite/MMZ MechaBu Saw.bin"), 0, null);
 				if (behavior == "Dango") alternate = Render(pixels, File.ReadAllBytes("../mappings/sprite/MMZ Dango 2.bin"), 0, null);
+				if (behavior == "MMZLaser") alternate = Render(pixels, File.ReadAllBytes("../mappings/sprite/MMZ Laser 2.bin"), 0, null);
 				if (behavior == "PohBee") alternate = Render(pixels, File.ReadAllBytes("../mappings/sprite/MMZ PohBee Alternate.bin"), 0, null);
 				string rail = Setting("sawrail", "");
 				if (behavior == "Saw" && rail.Length != 0)
@@ -258,6 +259,8 @@ namespace MysticIsland.ObjectDefinitions
 					break;
 				case "PohBee":
 					Bits("Patrol and chain", 0, 1, "Slow patrol has a shorter vertical range and a single chain.", "Two chains", "One chain"); break;
+				case "MMZLaser":
+					Bits("Effect", 0, 1, "Changes the size of either player on contact.", "Shrink", "Grow"); break;
 				case "Dango":
 					Bits("Shell", 0, 1, "Selects the patrol speed, preparation time and shell sprites.", "Fast", "Slow"); break;
 				case "MMZMechaBu":
@@ -693,6 +696,7 @@ namespace MysticIsland.ObjectDefinitions
 				case "Eggman": return new Sprite(alternate[0], frames[(subtype & 1) == 0 ? 0 : 7]);
 				case "Bomb": return (subtype & 0xF0) == 0x10 ? alternate[0] : frames[0];
 				case "Dango": return (subtype & 1) == 0 ? frames[0] : alternate[0];
+				case "MMZLaser": return (subtype & 1) == 0 ? frames[1] : alternate[2];
 				case "PohBee": return subtype == 0 ? frames[4] : alternate[4];
 				case "MMZMechaBu": return new Sprite(frames[0], new Sprite(At(alternate, (subtype & 1) == 0 ? 2 : 0), (subtype & 1) == 0 ? -19 : -25, (subtype & 1) == 0 ? -15 : 0));
 				case "MMZCrusher":

@@ -272,6 +272,8 @@ Lamppost_StoreInfo:
 		move.w	obY(a0),(v_lamp_ypos).w
 		move.w	(v_player+obGfx).w,(v_lamp_mainchar).w
 		move.w	(v_player+obTopSolidBit).w,(v_lamp_solid).w
+		jsr	(Player_SizeFlags).l
+		move.b	d1,(v_lamp_size_flags).w
 		move.w	(v_rings).w,(v_lamp_rings).w
 		move.b	(v_lifecount).w,(v_lamp_lives).w
 		move.l	(v_time).w,(v_lamp_time).w

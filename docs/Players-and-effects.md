@@ -27,6 +27,15 @@ selecting its own mapping range: Sonic's S2 frames `$5F-$6A`, Tails's S3&K frame
 `$31-$3C`. Pushing refreshes the upright facing before the animation timer can
 return, so a held pushing frame cannot inherit the walker's slope flips.
 
+## Miniature players
+
+Each player tracks standing radii independently. The miniature body is
+20 pixels high with a 5-pixel horizontal radius. The ball is 16 pixels
+high. Terrain sensors, object contacts and ring pickup use the active
+shape. Resizing preserves the foot point and waits if the growth space
+or the next complete sprite upload is unavailable. Checkpoints and time
+warps retain each player's form. Entering a new act begins full-size.
+
 ## Tails and companion control
 
 Manual controller 2 input takes precedence over following AI for ten seconds.

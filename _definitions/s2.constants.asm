@@ -375,6 +375,9 @@ sonic_width:		equ 18/2	; Sonic's width
 sonic_height:		equ 38/2	; Sonic's height
 sonic_roll_width:	equ 14/2	; Sonic's width (rolling)
 sonic_roll_height:	equ 28/2	; Sonic's height (rolling)
+Player_MiniHeight:	equ 10
+Player_MiniWidth:	equ 5
+Player_MiniRollHeight:	equ 8
 sonic_solid_width:	equ 22/2	; Sonic's width (solid object collision)
 sonic_react_width:	equ 16/2	; Sonic's width (object collision)
 sonic_duck_height:	equ 20/2	; Sonic's height (object collision, ducking)
@@ -1381,7 +1384,8 @@ v_lamp_ypos:		ds.w	1			; y-axis for Sonic to respawn at lamppost
 v_lamp_rings:		ds.w	1			; rings stored at lamppost
 v_lamp_time:		ds.l	1			; time stored at lamppost
 v_lamp_mainchar:	ds.w	1
-v_lamp_sidekick:	ds.w	1
+v_lamp_size_flags:	ds.b	1	; primary/companion miniature flags
+			ds.b	1
 v_lamp_solid:		ds.w	1
 v_lamp_solid_sidekick:	ds.w	1
 v_lamp_limitbtm:	ds.w	1			; level bottom boundary at lamppost
@@ -1530,7 +1534,7 @@ TimeWarp_Motion:		ds.l	1	; X and Y speed
 TimeWarp_Inertia:	ds.w	1
 TimeWarp_Path:		ds.w	1	; destination collision sensor bits
 TimeWarp_Status:		ds.b	1	; facing and airborne state
-			even
+TimeWarp_SizeFlags:	ds.b	1	; primary/companion miniature flags
 TimeWarp_RingFlags:	ds.b	4*TimeWarp_RingBankBytes
 TimeWarp_RingFlags_End:
 TwinWalker_ArtTiles = 17

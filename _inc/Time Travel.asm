@@ -18,9 +18,9 @@ TimeWarp_Tick:
 		tst.w	(Debug_placement_mode).w
 		bne.w	.slow
 		tst.b	(f_lockctrl).w
-		bne.s	.slow
+		bne.w	.slow
 		tst.b	(f_playerctrl).w
-		bne.s	.slow
+		bne.w	.slow
 		lea	(v_player).w,a0
 		tst.l	code(a0)
 		beq.s	.slow
@@ -49,6 +49,8 @@ TimeWarp_Tick:
 		move.b	obStatus(a0),d1
 		andi.b	#3,d1			; facing and in-air, without attached/roll state
 		move.b	d1,(TimeWarp_Status).l
+		jsr	(Player_SizeFlags).l
+		move.b	d1,(TimeWarp_SizeFlags).l
 		tst.b	d0
 		rts
 
@@ -179,6 +181,10 @@ TimeWarp_ResolveEntry:
 		bne.s	.primary
 		move.w	#tails_height<<8|tails_width,obHeight(a0)
 .primary:
+		btst	#0,(TimeWarp_SizeFlags).l
+		beq.s	.path
+		move.w	#Player_MiniHeight<<8|Player_MiniWidth,obHeight(a0)
+.path:
 		move.w	(TimeWarp_Path).l,obTopSolidBit(a0)
 		bsr.s	.check
 		bcc.s	.return

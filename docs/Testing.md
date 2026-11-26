@@ -330,7 +330,11 @@ corridors. Its spike bed fixtures check both characters' floor, side and
 inverted contacts on each
 collision path and visit each authored bed in both acts. The Act 2 terrain
 check samples all six Past panel frames in VRAM and the rendered panel at
-`$0730,$0050`.
+`$0730,$0050`. The MMZ2 laser fixtures visit all five emitters in the 18
+placements across eras. They transform Sonic, solo Tails and controller-2
+Tails at the authored beams and compare the miniature player VRAM bytes.
+Native cases check the shape underneath a roof on either path, retry with
+a full DMA queue and preserve mixed forms through checkpoint and era saves.
 
 The floor/carrier cases cover 32 floor configurations, all 6,400 flat-patrol
 updates, full-pool loss of fragments, shared fragment gravity and the stationary

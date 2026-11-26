@@ -836,15 +836,181 @@ def transport_game(args):
 	return report
 
 
+def size_laser_native(args):
+	from native_test_core import UC_M68K_REG_D0
+	from level_layout import encode
+	n = Native(args.rom, args.listing)
+	s = n.s
+	n.start()
+	n.resident_terrain = True
+	roof = 0x180
+	layout = encode([[int(y == 2)]*8 for y in range(8)], [[0]])
+	n.sub.mem_write(s['MCD_TerrainLayout_Sub'], layout)
+	n.sub.mem_write(s['MCD_ChunkTable_SubStart']+128, (0xF001).to_bytes(2, 'big')*64)
+	n.cpu.mem_write(0x3E0000, bytes([255])*(s['MCD_TerrainIndexCapacity']+1))
+	n.write('v_colladdr1', 0x3E0000, 4)
+	n.write('v_colladdr2', 0x3E0001, 4)
+	dma = s['VDP_Command_Buffer'] & 0xFFFF
+	full = s['VDP_Command_Buffer_Slot'] & 0xFFFF
+	for actor, name in (('v_player', 'Sonic'), ('v_player2', 'Tails')):
+		tails = name == 'Tails'
+		stand = s['tails_height' if tails else 'sonic_height']
+		for field, value, size in (
+				('character_id', int(tails), 1), ('obMap', s['Map_'+name], 4),
+				('obFrame', 1, 1), ('obHeight', stand, 1), ('default_y_radius', stand, 1),
+				('obX', 600, 2), ('obY', roof+48-stand, 2)):
+			n.put(actor, field, value, size)
+		n.write('VDP_Command_Buffer_Slot', full, 2)
+		n.act('Player_ChangeSize', actor, regs={UC_M68K_REG_D0: 1})
+		assert n.get(actor, 'obHeight') == stand and n.get(actor, 'obMap', 4) == s['Map_'+name]
+		n.write('VDP_Command_Buffer_Slot', dma, 2)
+		n.act('Player_ChangeSize', actor, regs={UC_M68K_REG_D0: 1})
+		assert n.get(actor, 'obHeight', 2) == 0x0A05 and n.get(actor, 'obMap', 4) == s['Map_Mini'+name]
+		assert n.get(actor, 'obY', 2) + n.get(actor, 'obHeight') == roof+48
+		n.act('Player_EnterRoll', actor)
+		assert n.get(actor, 'obHeight', 2) == 0x0805
+		assert n.get(actor, 'obY', 2) + n.get(actor, 'obHeight') == roof+48
+		for path in range(2):
+			n.put(actor,'obTopSolidBit',0xC0D+path*0x202,2)
+			n.put(actor,'obY',roof+24-8,2)
+			n.write('VDP_Command_Buffer_Slot', dma, 2)
+			n.act('Player_ChangeSize', actor, regs={UC_M68K_REG_D0: 0})
+			assert n.get(actor, 'default_y_radius') == 10, (actor,path,'grew into the roof')
+		n.put(actor,'obY',roof+48-8,2)
+		n.act('Player_ChangeSize', actor, regs={UC_M68K_REG_D0: 0})
+		assert n.get(actor, 'obHeight') == stand and n.get(actor, 'obY', 2)+stand == roof+48
+
+	# Save a mixed-size pair through the actual checkpoint and time-warp writers.
+	n.write('VDP_Command_Buffer_Slot', dma, 2)
+	n.act('Player_ChangeSize', 'v_player2', regs={UC_M68K_REG_D0: 1})
+	n.put(s['v_lvlobjspace'],'obSubtype',1)
+	n.act('Lamppost_StoreInfo', s['v_lvlobjspace'])
+	assert n.read('v_lamp_size_flags') == 2
+	n.put('v_player2','default_y_radius',s['tails_height'])
+	n.act('Player_RestoreSize','v_player2')
+	assert n.get('v_player2','default_y_radius') == 10
+	n.write('f_timecount',1)
+	n.write('TimeWarp_Direction',1)
+	n.write('TimeWarp_Frames',s['TimeWarp_CommitFrames']-1)
+	n.put('v_player','obInertia',0x700,2)
+	n.act('TimeWarp_Tick')
+	assert n.read('TimeWarp_Target') == 4 and n.read('TimeWarp_SizeFlags') == 2
+	n.put('v_player2', 'default_y_radius', s['tails_height'])
+	n.put('v_player2', 'obMap', s['Map_Tails'], 4)
+	n.act('Player_RestoreSize', 'v_player2')
+	assert n.get('v_player2','default_y_radius') == 10 and n.get('v_player','default_y_radius') == 19
+	return dict(queue_retry=True, two_player_sizes=True, roof_both_paths=True, checkpoint_and_warp=True)
+
+
+def size_laser_game(args):
+	from genesis_test_core import Genesis
+	from check_companion_followup import place
+	from check_object_course import boot_level
+	from check_rising_crushers import hold, seek
+	from object_layout import decode
+	g = Genesis(args.core,args.rom,args.listing,args.output/'size-lasers',args.pal,
+		system_directory=args.system_directory)
+	s = g.s
+	pool = range(s['v_lvlobjspace']&0xFFFF,s['v_lvlobjend']&0xFFFF,s['object_size'])
+	layout = decode((ROOT/'level/objects/LV0F_2.bin').read_bytes())
+	emitters = [(x,y,flags,kind) for x,y,oid,flags,kind in layout if oid == 0xBF]
+	initial = g.save()
+	placed = 0
+	for era, mask in enumerate((0x40,0x20,0x80,0x80)):
+		g.restore(initial)
+		boot_level(g,zone=15,act=1,timezone=era)
+		level = g.save()
+		for x,y,flags,kind in emitters:
+			if not flags & mask:
+				continue
+			g.restore(level)
+			seek(g,x,max(y,132))
+			root = next(a for a in pool if g.get(a,'code') == s['MMZ_Laser'] and g.get(a,'obX',2) == x)
+			assert g.get(root,'obSubtype',2) == kind and g.get(root,'obFrame') == kind+1
+			states, impact = set(), set()
+			for _ in range(54):
+				g.run()
+				for a in pool:
+					if g.get(a,'code') != s['MMZ_LaserPulse'] or g.get(a,'obX',2) != x:
+						continue
+					state = g.get(a,'obRoutine')
+					states.add(state)
+					if state == 2:
+						impact.add(g.get(a,'obY',2))
+			assert states == {0,2}, (era,x,y,states)
+			if era == 0 and x == 0x19B8:
+				assert impact == {0xDB}, ('long beam stops above floor $E0',impact)
+			placed += 1
+	assert placed == 18 and len(emitters) == 5
+
+	for player, actor in ((0,'v_player'),(0,'v_player2'),(2,'v_player')):
+		g.restore(initial)
+		g.buttons, g.buttons2 = set(), set()
+		boot_level(g,zone=15,act=1,player=player)
+		other = 'v_player2' if actor == 'v_player' else 'v_player'
+		height = g.get(actor,'default_y_radius')
+		other_height = g.get(other,'default_y_radius')
+		for x,y,shrink in ((0x1B79,0x587,True),(0x1830,0x288,False)):
+			seek(g,x,y)
+			stage = g.save()
+			place(g,actor,x,(y&~15)+22)
+			hold(g,actor)
+			g.put(actor,'obStatusSecondary',2)
+			g.put(actor,'invtime',600,2)
+			g.write('v_rings',42,2)
+			expected = 10 if shrink else height
+			for _ in range(45):
+				g.run()
+				assert not g.read('v_errortype')
+				if g.get(actor,'default_y_radius') == expected:
+					break
+			else:
+				raise AssertionError((player,actor,x,y,'no transformation'))
+			assert g.get(actor,'obRoutine') == 4 and g.read('v_rings',2) == 42
+			assert g.get(other,'default_y_radius') == other_height
+			name = 'Tails' if player == 2 or actor == 'v_player2' else 'Sonic'
+			prefix = 'Mini' if shrink else ''
+			assert g.get(actor,'obMap',4) == s['Map_'+prefix+name]
+			if shrink:
+				g.run(5)
+				g.video.save(args.output/'size-lasers'/f'{player}-{actor}-mini.png')
+				frame = g.read(name+'_LastLoadedDPLC')
+				address = s['Mini'+name+'DynPLC']
+				cue = address + struct.unpack_from('>H',g.rom,address+frame*2)[0]
+				count, run = struct.unpack_from('>HH',g.rom,cue)
+				assert count == 1
+				start = s['Art_Mini'+name]+(run&0xFFF)*32
+				bank = s['ArtTile_'+name]*32
+				length = ((run>>12)+1)*32
+				assert bytes(g.vram[(bank+i)^1] for i in range(length)) == g.rom[start:start+length]
+				mini = g.save()
+				# Approach the authored 24-pixel tunnel on its real terrain.
+				for state, small in ((stage,False),(mini,True)):
+					g.restore(state)
+					place(g,actor,0x1BA8,0x57F-g.get(actor,'default_y_radius'),False)
+					g.put(actor,'obVelX',0x300,2)
+					g.put(actor,'obInertia',0x300,2)
+					hold(g,actor,7)
+					g.run(40)
+					x = g.get(actor,'obX',2)
+					assert (x >= 0x1C20 if small else x < 0x1BC0), (player,actor,small,x)
+				g.restore(mini)
+	g.close()
+	print('Size lasers: five authored emitters and independent Sonic/Tails forms passed.',flush=True)
+	return dict(placements=placed,sonic=True,solo_tails=True,companion_tails=True,mini_art=True,low_tunnel=True)
+
+
 def main():
 	p=argparse.ArgumentParser(description=__doc__)
 	p.add_argument('--rom',type=Path,default=ROOT/'s2built.bin');p.add_argument('--listing',type=Path,default=ROOT/'md-main.lst');p.add_argument('--source',type=Path,required=True)
 	p.add_argument('--output',type=Path,required=True);p.add_argument('--core',type=Path);p.add_argument('--system-directory',type=Path);p.add_argument('--pal',action='store_true');a=p.parse_args()
 	a.output.mkdir(parents=True,exist_ok=True)
 	report={'native':native(a),'twin_walker':twin_allocation(a),'spike_crusher':spike_crusher_native(a),'source_geometry':source_geometry(a),'animations':animation_checks(a,2)}
+	report['size_laser']=size_laser_native(a)
 	if a.core:
 		report['game']=game(a)
 		report['transport']=transport_game(a)
+		report['size_laser_game']=size_laser_game(a)
 	(a.output/'report.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report,indent=2))
 
 

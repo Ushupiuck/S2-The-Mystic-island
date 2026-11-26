@@ -361,6 +361,21 @@ through the shared spike routine. Y flip selects an inverted bed with
 switching away from the bed's path loses its support. Floor beds deal
 damage on landing. Their sides can block a grounded player safely.
 
+### Size-changing lasers
+
+`$BF` uses subtype 0 to shrink and subtype 1 to grow. The emitter sends a
+pulse every 30 updates, with retry on a full object pool. Its leading edge
+moves down four pixels per update, stops at the terrain and leaves a spark.
+The last 128 pixels of a long pulse are drawn and can change a player’s
+size. The trailing edge retracts after impact. The stage’s existing laser
+atlas supplies both nozzle, pulse and spark variants.
+
+Each beam can change either player, including a controller-2 companion.
+Contact causes a brief recoil and keeps rings and shields. Growth waits for
+clearance on the actor’s current collision path. See
+[Miniature players](Players-and-effects.md#miniature-players) for the shape
+and persistence rules.
+
 ### MMZ2 spike crusher
 
 The compound crusher (`$BD`) at `$1A80,$010C` remains overhead until

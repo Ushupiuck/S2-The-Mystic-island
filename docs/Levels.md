@@ -130,7 +130,7 @@ one in another act loading compatible art. The F1 Debug list exposes these
 variants, the existing morphing platform, propeller and wheeled carrier, plus
 the common ring/shield/invincibility/speed monitors. Mecha-Bu is also implemented for both acts, including its independent blade
 and both actors' touch responses. The shared `$AE` Bomb family also implements
-Bigbom. The importer supplies 220 placements in act 1 and 352 in act 2
+Bigbom. The importer supplies 220 placements in act 1 and 357 in act 2
 across the adopted families. It regenerates their translated settings and
 preserves other editable rows. Unrelated invisible collision switches remain
 in the act even though they share the rotating door's `$0A` slot.
@@ -165,6 +165,7 @@ in the act even though they share the rotating door's `$0A` slot.
 | Running disc | `$A1` | 0 | 11 |
 | Invisible block | `$AC` | 0 | 14 |
 | Shallow spike bed | `$15` | 33 | 55 |
+| Size-changing laser | `$BF` | 0 | 5 |
 
 In each act the Past generator has a solid body and a larger attack hitbox.
 Either player's rolling, spindash or other supported attack can destroy it
@@ -261,8 +262,13 @@ the door's bottom plate. The source route pairs and three steering junctions
 use the shared [automatic pipe](Objects.md#automatic-transport-paths).
 Pressure buttons and passage from below open the pipe covers.
 
-The remaining families include Scarab and the size-changing emitters. Act 3 and a complete controller traversal of the port
-are pending.
+Act 2 has three grow emitters and two shrink emitters. The shrink emitter
+at `$1D48,$048B` is present in both Futures. The others are present in all
+four eras. [Size-changing lasers](Objects.md#size-changing-lasers) use the art
+already resident in the Act 2 atlas.
+
+Scarab remains pending in Act 1. The Good Future animal placements,
+Act 3 and a complete controller traversal of the port are pending.
 
 ## Foreground vertical placement
 

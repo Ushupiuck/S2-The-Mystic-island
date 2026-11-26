@@ -65,6 +65,7 @@ Obj01_Init:
 
 Obj01_Init_Continued:
 		clr.b	character_id(a0)
+		jsr	(Player_RestoreSize).l
 		bsr.w	CreatePlayerDust
 		clr.b	flips_remaining(a0)
 		move.b	#4,flip_speed(a0)		; flip_speed
@@ -1131,8 +1132,15 @@ Player_ResizeOnFloor:
 Player_EnterRoll:
 		bset	#status.player.rolling,obStatus(a0)
 		move.b	#AniIDSonAni_Roll,obAnim(a0)
-		move.w	#(sonic_roll_height<<8)|sonic_roll_width,d0
+		bsr.s	Player_RollSize
 		bra.s	Player_ResizeOnFloor
+
+Player_RollSize:
+		move.w	#(sonic_roll_height<<8)|sonic_roll_width,d0
+		cmpi.b	#Player_MiniHeight,default_y_radius(a0)
+		bne.s	.return
+		move.w	#(Player_MiniRollHeight<<8)|Player_MiniWidth,d0
+.return:	rts
 
 ; Probe the proposed shape from the current feet. Only L/R/B solidity on
 ; this actor's active path can obstruct a ceiling. N means head overlap.
@@ -1297,11 +1305,7 @@ Sonic_Jump:
 		jsr	(PlaySound_Special).l
 		btst	#2,obStatus(a0)
 		bne.s	.return
-		move.b	#sonic_roll_height,obHeight(a0)
-		move.b	#sonic_roll_width,obWidth(a0)
-		move.b	#AniIDSonAni_Roll,obAnim(a0)
-		bset	#2,obStatus(a0)
-		addq.w	#5,obY(a0)
+		bra.w	Player_EnterRoll
 .return:	rts
 ; ---------------------------------------------------------------------------
 
@@ -2197,10 +2201,16 @@ LoadSonicDynPLC:
 		moveq	#0,d0
 		move.b	obFrame(a0),d0
 LoadSonicDynPLC_Frame:
-		lea	(SonicDynPLC).l,a2
 		lea	(Sonic_LastLoadedDPLC).w,a3
 		move.w	#ArtTile_Sonic*tile_size,d4
+		cmpi.l	#Map_MiniSonic,obMap(a0)
+		beq.s	.mini
+		lea	(SonicDynPLC).l,a2
 		move.l	#Art_Sonic,d6
+		jmp	(Load_DynamicPLC).l
+.mini:
+		lea	(MiniSonicDynPLC).l,a2
+		move.l	#Art_MiniSonic,d6
 		jmp	(Load_DynamicPLC).l
 ; End of function LoadSonicDynPLC
 

@@ -62,7 +62,18 @@ TailS3_loc_1615A:
 		movea.w	obParent(a0),a2	; directional CalcAngle uses a2 as its lookup pointer
 		cmpi.l	#BonusPlayer,code(a2)
 		beq.s	.stage_art
+		move.l	#Map_Tails_Tail,d1
+		cmpi.l	#Map_MiniTails,obMap(a2)
+		bne.s	.tail_size
+		move.l	#Map_MiniTailsTail,d1
+.tail_size:
+		cmp.l	obMap(a0),d1
+		beq.s	.load
+		move.l	d1,obMap(a0)
+		st	(TailsTails_LastLoadedDPLC).w
+.load:
 		bsr.w	LoadTailsTailsDynPLC
+		bcs.s	.hide
 		bra.s	.art_ready
 .stage_art:
 		jsr	(LoadSpecialStageTailsTailPLC).l

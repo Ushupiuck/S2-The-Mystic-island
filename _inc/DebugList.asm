@@ -410,4 +410,6 @@ Debug_MMZ2:	dc.w (Debug_MMZ2_End-Debug_MMZ2-2)/DebugEntry_size
 		dbug	Map_MMZ_DangoSlow,MMZ_Dango,1,0,ArtTile_MMZ_Atlas
 		dbug	Map_MMZ_TwinWalker,MMZ_TwinWalker,0,2,ArtTile_MMZ2_TwinWalker
 	dbug	Map_MMZ_SpikeCrusher,MMZ_SpikeCrusher,0,7,ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_Laser1,MMZ_Laser,0,1,ArtTile_MMZ_Atlas
+	dbug	Map_MMZ_Laser2,MMZ_Laser,1,2,ArtTile_MMZ_Atlas
 Debug_MMZ2_End:

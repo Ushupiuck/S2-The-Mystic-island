@@ -58,6 +58,7 @@ Obj02_Init:
 		bpl.s	.primary
 		ori.w	#high_priority,obGfx(a0)
 .primary:
+		jsr	(Player_RestoreSize).l
 		movea.l	a0,a2
 		jsr	(Player_UpdateSpeed).l
 		bsr.w	CreatePlayerDust
@@ -2773,20 +2774,32 @@ LoadTailsTailsDynPLC:
 		lea	(TailsTails_LastLoadedDPLC).w,a3
 		move.w	#ArtTile_TailsTails*tile_size,d4
 		move.l	#Art_Tails_Tails,d6
+		cmpi.l	#Map_MiniTailsTail,obMap(a0)
+		bne.s	.load
+		lea	(MiniTailsTailDynPLC).l,a2
+		move.l	#Art_MiniTailsTail,d6
+.load:
 		jmp	(Load_DynamicPLC).l
 
 LoadTailsDynPLC:
 		moveq	#0,d0
 		move.b	obFrame(a0),d0
 LoadTailsDynPLC_Frame:
-		lea	(TailsDynPLC).l,a2
 		lea	(Tails_LastLoadedDPLC).w,a3
 		move.w	#ArtTile_Tails*tile_size,d4
+		cmpi.l	#Map_MiniTails,obMap(a0)
+		beq.s	.mini
+		lea	(TailsDynPLC).l,a2
 		move.l	#Art_Tails,d6
 		cmpi.w	#Tails_ExtraFirstFrame,d0
 		blo.s	.ready
 		move.l	#Art_Tails_Extra,d6
 .ready:
+		jmp	(Load_DynamicPLC).l
+
+.mini:
+		lea	(MiniTailsDynPLC).l,a2
+		move.l	#Art_MiniTails,d6
 		jmp	(Load_DynamicPLC).l
 
 ; S3&K carry animation calls this for the player in a1, using d0 as frame.

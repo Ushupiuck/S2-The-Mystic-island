@@ -480,7 +480,7 @@ def placements(source, act):
 	# exist. Reimporting a completed family resets its authored source settings.
 	ids = {'BigbomObject': 0xAE, 'MechaBuObject': 0xB8, 'DangoObject': 0xBA, 'TwinWalkerObject': 0xBB, 'SpikesObject': 0x15,
 		'CollapseFloorObject': 0x1B, 'CrusherObject': 0xA5, 'SeesawObject': 0xBC,
-		'SpikeCrusherObject': 0xBD, 'PohBeeObject': 0xBE,
+		'SpikeCrusherObject': 0xBD, 'PohBeeObject': 0xBE, 'LaserObject': 0xBF,
 		'BuzzsawObject': 0xA4, 'VanishPlatformObject': 0xA6,
 		'SpinPlatformObject': 0xA9, 'MoveSpringObjectR8': 0xB0,
 		'HVPlatformObject': 0x20, 'PropellerObject': 0xB7,
@@ -540,6 +540,8 @@ def placements(source, act):
 			assert act == 1 and sub == variant == 0
 		elif family == 'SpikeCrusherObject':
 			assert act == 2 and sub == variant == 0
+		elif family == 'LaserObject':
+			assert act == 2 and sub in (0, 1) and variant == 0
 		elif family == 'SpikesObject':
 			assert variant == 0 and sub & 0x80
 			assert y & 0x6000 == 0

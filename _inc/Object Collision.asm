@@ -221,6 +221,10 @@ SolidObject_OnScreenTest:
 		bpl.w	SolidObject_TestClearPush
 ; loc_F598:
 SolidObject_cont:
+		cmpi.b	#Player_MiniHeight,default_y_radius(a1)
+		bne.s	.width_ready
+		subq.w	#sonic_width-Player_MiniWidth,d1
+.width_ready:
 		; We now perform the x portion of a bounding box check.  To do this, we assume a
 		; coordinate system where the x origin is at the object's left edge.
 		move.w	obX(a1),d0			; load Sonic's x position...
@@ -273,6 +277,11 @@ SolidObject_ChkBounds:
 		moveq	#0,d5
 		move.b	obHeight(a1),d5
 		subi.w	#sonic_roll_height,d5
+		cmpi.b	#Player_MiniHeight,default_y_radius(a1)
+		bne.s	.compare
+		addq.w	#sonic_roll_height-Player_MiniRollHeight,d5
+.compare:
+		tst.w	d5
 		ble.s	.full_height		; already using a compact radius
 		sub.w	d5,d2			; use the same top/bottom midpoint as the compact body
 		add.w	d5,d5			; standing diameter minus compact diameter
@@ -532,10 +541,12 @@ Object_RaiseRider:
 		cmpi.b	#AniIDSonAni_Spindash,obAnim(a0)
 		bne.s	.current
 .compact:
-		cmpi.b	#sonic_roll_height,obHeight(a0)
-		bls.s	.current
+		jsr	(Player_RollSize).l
+		move.w	d0,d1
+		lsr.w	#8,d1
+		cmp.b	obHeight(a0),d1
+		bhs.s	.current
 		clr.b	player_unfolding(a0)
-		move.w	#(sonic_roll_height<<8)|sonic_roll_width,d0
 		jsr	(Player_FloorHeadroomReady).l
 		bra.s	.result
 .current:
@@ -546,9 +557,11 @@ Object_RaiseRider:
 		bpl.s	.restore
 		tst.b	player_unfolding(a0)
 		beq.s	.crush
-		cmpi.b	#sonic_roll_height,obHeight(a0)
-		bls.s	.crush
-		move.w	#(sonic_roll_height<<8)|sonic_roll_width,d0
+		jsr	(Player_RollSize).l
+		move.w	d0,d1
+		lsr.w	#8,d1
+		cmp.b	obHeight(a0),d1
+		bhs.s	.crush
 		jsr	(Player_FloorHeadroomReady).l
 		bmi.s	.crush
 
