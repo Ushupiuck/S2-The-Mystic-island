@@ -324,10 +324,13 @@ Hurt Sonic and controller-2 Tails exercise every
 available route and junction. Solo Tails and both carry handoffs use the
 all-era entrance at `$1880,$02D0`; the carry fixtures open its authored hatch
 and lower Sonic using the live carry update. `check_metallic_madness.py` also checks all eight
-ring tables, both pickup paths in MMZ2, time poles, the Past generators and
-crossing the real finish signs inside their vertical corridors. Its spike bed
-fixtures check both characters' floor and inverted damage and visit every
-authored bed in its era in both acts.
+ring tables, both pickup paths in MMZ2, time poles, all 21 timed bursts at
+each Past generator and crossing the finish signs inside their vertical
+corridors. Its spike bed fixtures check both characters' floor, side and
+inverted contacts on each
+collision path and visit each authored bed in both acts. The Act 2 terrain
+check samples all six Past panel frames in VRAM and the rendered panel at
+`$0730,$0050`.
 
 The floor/carrier cases cover 32 floor configurations, all 6,400 flat-patrol
 updates, full-pool loss of fragments, shared fragment gravity and the stationary

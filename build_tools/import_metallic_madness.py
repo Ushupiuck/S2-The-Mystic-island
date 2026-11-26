@@ -170,6 +170,7 @@ def animations(source,constants,act=1):
 	if act==2:
 		specs={
 			'a':('Present',(('byte_20FA18',0x222,8),('byte_20FA2A',0x22A,8),('byte_20FA3C',0x232,16),('byte_20FA4E',0x242,4),('byte_20FA6C',0x246,4))),
+			'b':('Past',(('unk_20FBD8',0x23A,4),)),
 			'c':('GoodFuture',(('unk_20FD3A',0x21E,8),('unk_20FD4C',0x226,8),('unk_20FD5E',0x22E,16),('unk_20FD70',0x242,4))),
 			'd':('BadFuture',(('unk_20FC40',0x235,8),('unk_20FC52',0x23D,8),('unk_20FC64',0x245,16),('unk_20FC76',0x255,4),('unk_20FC94',0x259,4)))}
 	report=[]
@@ -213,7 +214,8 @@ def animations(source,constants,act=1):
 			report.append(dict(era=title,slot=i,tile=target,count=count,
 				steps=[dict(duration=d,frame=f) for d,f in steps],source=pointers,offsets=offsets))
 		text.extend(('\t\tzoneanimend',''))
-	text.extend((f'AnimCue_MMZ{act}_Past:\tdc.w -1',''))
+	if 'b' not in specs:
+		text.extend((f'AnimCue_MMZ{act}_Past:\tdc.w -1',''))
 	for era,title,_,_ in ERAS:
 		key=title.replace(' ','')
 		pal=(source/f'src/r8/palette_cycle_{era}.asm').read_text()
@@ -494,7 +496,7 @@ def placements(source, act):
 	index = re.findall(r'^\s*dc\.l\s+(\w+)',
 		(source/f'src/r8/object_index_{act}.asm').read_text(), re.M)
 	counts = dict.fromkeys(ids, 0)
-	counts.update(monitor=0, time_pole=0)
+	counts.update(monitor=0, time_pole=0, layer_platform=0)
 	rings = [[] for _ in ERAS]
 	for x, y, oid, sub, eras, variant in struct.iter_unpack('>HHBBBB',
 		(source/f'src/maps/r8/objects_{act}.bin').read_bytes()):
@@ -541,8 +543,22 @@ def placements(source, act):
 		elif family == 'SpikesObject':
 			assert variant == 0 and sub & 0x80
 			assert y & 0x6000 == 0
-			y |= 0x4000 if sub != 0xFF else 0
-			sub = 0xE0
+			if act == 2 and sub == 0xF8:
+				# CD uses the same three-block slab as the fixed floor,
+				# solid on the secondary path only.
+				rows.append((x, y, 0x1B, eras & 0xE0, 0x1983))
+				counts['layer_platform'] += 1
+				continue
+			path_flags = 0
+			if act == 2:
+				if sub >= 0xFE:
+					path_flags = 0x1000
+				elif sub < 0xFC:
+					path_flags = 0x1800
+			inverted = sub != 0xFF if act == 1 else not (sub & 1)
+			if inverted:
+				y |= 0x4000
+			sub = path_flags | 0xE0
 		elif family == 'MechaBuObject':
 			assert sub in (0, 1) and variant in (0, 1)
 			y |= 0x2000 if variant else 0

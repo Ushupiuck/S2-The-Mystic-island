@@ -402,6 +402,10 @@ def authored_game(args):
 	report = []
 	s = g.s
 	slots = range(s['v_lvlobjspace'] & 0xFFFF, s['v_lvlobjend'] & 0xFFFF, s['object_size'])
+	burst_table = s['TimeGenerator_Bursts'] + 4
+	burst_data = g.rom[burst_table:burst_table+21*3+1]
+	bursts = {time: (dx, dy) for time, dx, dy in struct.iter_unpack('>Bbb', burst_data[:-1])}
+	assert len(bursts) == 21 and burst_data[-1] == 0xFF
 
 	def visit(x, y):
 		g.restore(level)
@@ -475,10 +479,24 @@ def authored_game(args):
 					actor_at(ACTORS[0], x, y-16)
 					g.put(ACTORS[0], 'obStatusSecondary', 2)
 					g.put(ACTORS[0], 'invtime', 600, 2)
-					g.run(10)
-					assert g.read('TimeWarp_GoodFuture') and g.get(generator, 'code') == s['TimeGenerator_Explode']
-					g.run(48)
-					assert g.get(generator, 'code') == s['TimeGenerator_Dormant']
+					seen = set()
+					for _ in range(60):
+						g.run()
+						if g.get(generator, 'code') == s['TimeGenerator_Dormant']:
+							break
+						if g.get(generator, 'code') != s['TimeGenerator_Explode']:
+							continue
+						assert g.read('TimeWarp_GoodFuture')
+						frame = (g.read('Timer_frames', 2) - g.get(generator, 'timegen_break_frame', 2)) & 0xFFFF
+						if frame not in bursts:
+							continue
+						dx, dy = bursts[frame]
+						if any(g.get(slot, 'code') == s['FieryExplosion']
+								and g.get(slot, 'obX', 2) == x + dx
+								and g.get(slot, 'obY', 2) == y - 16 + dy for slot in slots):
+							seen.add(frame)
+					assert seen == bursts.keys(), (act, 'generator burst frames', bursts.keys() - seen)
+					assert g.get(generator, 'code') == s['TimeGenerator_Dormant'] and g.get(generator, 'obFrame') == 1
 			visit(sign_x-32, sign_y)
 			sign = find(sign_x, sign_y, 'Signpost')
 			assert g.get(sign, 'obRoutine') == 2 and g.read('f_timecount')
@@ -692,7 +710,7 @@ def floor_wheel_native(args):
 		assert n.cpu.reg_read(UC_M68K_REG_D7)==0x3579006F
 		return root
 	def attach(a,actor,x,bit):
-		n.put(actor,'obX',x,2);n.put(actor,'obY',565,2);n.put(actor,'obStatus',8)
+		n.put(actor,'obX',x,2);n.put(actor,'obY',564,2);n.put(actor,'obStatus',8)
 		n.put(actor,'standonobject',(a-(n.s['v_objspace']&0xffffff))//n.s['object_size'])
 		n.put(a,'obStatus',n.get(a,'obStatus')|(1<<bit))
 	for columns in range(1,9):
@@ -720,7 +738,7 @@ def floor_wheel_native(args):
 	while n.get(a,'code')==n.s['Floor_Delay']:run(a)
 	run(a)
 	assert not n.get('v_player','obStatus')&8 and n.get('v_player2','obStatus')&8
-	assert (n.get('v_player2','obX',2),n.get('v_player2','obY',2))==(620,565)
+	assert (n.get('v_player2','obX',2),n.get('v_player2','obY',2))==(620,564)
 	for count in (0,9,127):
 		a=setup('Obj1B',0x180|count);assert n.get(a,'code')==n.s['Floor_Static'] and n.get(a,'obWidth')==8
 	# A full pool still consumes each slice without retry loops or corrupting
@@ -1273,34 +1291,71 @@ def spike_beds_native(args):
 	n = Native(args.rom, args.listing)
 	s = n.s
 	spike = s['v_lvlobjspace']
-	for flipped in (False, True):
-		for actor, radius in (('v_player', 19), ('v_player2', 15)):
-			n.start()
-			n.write('Camera_X_pos_coarse_back', 384, 2)
-			n.write('v_rings', 10, 2)
-			n.put(spike, 'code', s['Spikes'])
-			n.put(spike, 'obX', 600, 2)
-			n.put(spike, 'obY', 500, 2)
-			n.put(spike, 'obSubtype', 0xE0)
-			n.put(spike, 'obStatus', 2 if flipped else 0)
-			n.put(spike, 'obRender', 0x84 | (2 if flipped else 0))
-			n.act('Spikes', spike)
-			assert n.get(spike, 'obMap', 4) == s['Map_Obj36']
-			assert n.get(spike, 'obRoutine') == (8 if flipped else 2)
-			assert n.get(spike, 'obHeight') == 8
-			n.put(actor, 'obX', 600, 2)
-			n.put(actor, 'obHeight', radius)
-			n.put(actor, 'obStatus', 2)
-			if flipped:
-				n.put(actor, 'obY', 522, 2)
-				n.write('Collision_response_list', 0xFFFF, 2)
-				n.act('TouchResponse', actor)
-			else:
+	slot = (spike-s['v_objspace'])//s['object_size']
+	paths = (0, s['Object_FilterPath'], s['Object_FilterPath']|s['Object_SecondaryPath'])
+	actors = (('v_player', 19, 8), ('v_player2', 15, 16))
+
+	def setup(flags, inverted, actor, radius, path):
+		n.start()
+		n.write('Camera_X_pos_coarse_back', 384, 2)
+		n.write('v_rings', 10, 2)
+		n.put(spike, 'code', s['Spikes'])
+		n.put(spike, 'obX', 600, 2)
+		n.put(spike, 'obY', 500, 2)
+		n.put(spike, 'obSubtype', 0xE0|flags)
+		n.put(spike, 'obStatus', 2 if inverted else 0)
+		n.put(spike, 'obRender', 0x86 if inverted else 0x84)
+		n.act('Spikes', spike)
+		assert n.get(spike, 'obMap', 4) == s['Map_Obj36']
+		assert n.get(spike, 'obRoutine') == (8 if inverted else 10)
+		assert n.get(spike, 'obHeight') == 8
+		assert bool(n.get(spike, 'obGfx', 2) & 0x8000) == (flags == paths[1])
+		n.put(actor, 'obX', 600, 2)
+		n.put(actor, 'obHeight', radius)
+		n.put(actor, 'obTopSolidBit', 12+path*2)
+		n.put(actor, 'obLRBSolidBit', 13+path*2)
+		n.put(actor, 'obStatus', 2)
+
+	for flags in paths:
+		for actor, radius, bit in actors:
+			for path in range(2):
+				matches = flags in (0, paths[path+1])
+				setup(flags, False, actor, radius, path)
 				n.put(actor, 'obY', 492-radius, 2)
 				n.put(actor, 'obVelY', 0x100, 2)
 				n.act('Spikes', spike)
-			assert n.get(actor, 'obRoutine') == 4, (flipped, actor)
-	return {'floor_damage': True, 'inverted_damage': True, 'both_characters': True}
+				assert n.get(actor, 'obRoutine') == (4 if matches else 2), (flags, actor, path, 'landing')
+				if not matches:
+					assert n.get(actor, 'obY', 2) == 492-radius
+					assert not (n.get(spike, 'obStatus') & bit)
+
+				setup(flags, False, actor, radius, path)
+				n.put(actor, 'obStatus', 0)
+				n.put(actor, 'obX', 626, 2)
+				n.put(actor, 'obY', 500, 2)
+				n.put(actor, 'obVelX', -0x100, 2)
+				n.act('Spikes', spike)
+				assert n.get(actor, 'obRoutine') == 2, (flags, actor, path, 'walk against side')
+				assert n.get(actor, 'obX', 2) == (627 if matches else 626)
+
+				for dense in (False, True):
+					setup(flags, True, actor, radius, path)
+					n.put(actor, 'obY', 522, 2)
+					n.write('Collision_response_list', 0xFFFF if dense else 2, 2)
+					n.cpu.mem_write((s['Collision_response_list'] & 0xFFFFFF)+2, struct.pack('>H', spike & 0xFFFF))
+					n.act('TouchResponse', actor)
+					assert n.get(actor, 'obRoutine') == (4 if matches else 2), (flags, actor, path, dense)
+
+	for actor, radius, bit in actors:
+		setup(paths[2], False, actor, radius, 0)
+		n.put(actor, 'obStatus', 8)
+		n.put(actor, 'standonobject', slot)
+		n.put(spike, 'obStatus', bit)
+		n.act('Spikes', spike)
+		assert n.get(actor, 'obStatus') & 10 == 2
+		assert not (n.get(spike, 'obStatus') & bit)
+	return {'floor_damage': True, 'floor_sides_safe': True, 'inverted_damage': True,
+		'collision_paths': 2, 'both_characters': True, 'off_path_riders_released': True}
 
 
 def seesaw_game(args):
@@ -1372,9 +1427,9 @@ def spike_beds_game(args):
 	s = g.s
 	slots = range(s['v_lvlobjspace'] & 0xFFFF, s['v_lvlobjend'] & 0xFFFF, s['object_size'])
 	report = []
-	for act, expected in ((1, 33), (2, 57)):
+	for act, expected in ((1, 33), (2, 55)):
 		rows = [r for r in decode((ROOT/f'level/objects/LV0F_{act}.bin').read_bytes())
-			if r[2] == 0x15 and r[4] == 0xE0]
+			if r[2] == 0x15 and r[4] & 0xF0 == 0xE0]
 		assert len(rows) == expected
 		for era, mask in enumerate((0x40, 0x20, 0x80, 0x80)):
 			g.restore(initial)
@@ -1383,7 +1438,7 @@ def spike_beds_game(args):
 			level = g.save()
 			seen = 0
 			shots = set()
-			for x, y, _, presence, _ in rows:
+			for x, y, _, presence, subtype in rows:
 				if not presence & mask:
 					continue
 				inverted = bool(y & 0x4000)
@@ -1392,9 +1447,11 @@ def spike_beds_game(args):
 				seek(g, x, max(132, y))
 				bed = next(slot for slot in slots if g.get(slot, 'code') == s['Spikes']
 					and g.get(slot, 'obX', 2) == x and g.get(slot, 'obY', 2) == y)
-				assert g.get(bed, 'obRoutine') == (8 if inverted else 2), (act, era, x, y)
+				assert g.get(bed, 'obRoutine') == (8 if inverted else 10), (act, era, x, y)
 				assert g.get(bed, 'obHeight') == 8 and not g.read('v_errortype')
 				assert bool(g.get(bed, 'obRender') & 2) == inverted
+				assert g.get(bed, 'obSubtype', 2) == subtype
+				assert bool(g.get(bed, 'obGfx', 2) & 0x8000) == bool(subtype & 0x1000 and not subtype & 0x800)
 				if inverted not in shots and g.get(bed, 'obRender') & 0x80:
 					g.video.save(output/f'act{act}-era{era}-inverted{int(inverted)}.png')
 					shots.add(inverted)

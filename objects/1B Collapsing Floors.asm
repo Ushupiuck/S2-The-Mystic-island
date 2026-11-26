@@ -71,6 +71,7 @@ Floor_InitColumns:
 		beq.w	Floor_Draw
 		move.w	#$80,obPriority(a0)
 		move.l	#Floor_Static,code(a0)
+		jsr	(Object_PathPriority).l
 		bra.w	Floor_Draw
 
 Floor_Wait:
@@ -120,7 +121,7 @@ Floor_Static:
 		moveq	#16,d2
 		moveq	#17,d3
 		move.w	obX(a0),d4
-		jsr	(SolidObject).l
+		jsr	(SolidObject_OnPath).l
 		bra.s	Floor_Draw
 
 Floor_TopSupport:

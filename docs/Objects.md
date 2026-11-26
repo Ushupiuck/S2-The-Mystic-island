@@ -356,8 +356,10 @@ Subtype arrangement `$E0` on shared object `$15` is a stationary 32-pixel bed
 with an 8-pixel collision radius in Y. A floor bed hurts a rider on top
 through the shared spike routine. Y flip selects an inverted bed with
 12-by-16 half-size touch damage and per-actor solid backing outside the
-32-pixel Y band. The MMZ importer maps all 90 original placements to these
-two orientations and keeps the standard spike art.
+32-pixel Y band. Both poses accept the shared collision-path flags
+`$1000` (filter) and `$0800` (secondary), tested per player. A player
+switching away from the bed's path loses its support. Floor beds deal
+damage on landing. Their sides can block a grounded player safely.
 
 ### MMZ2 spike crusher
 
@@ -1541,12 +1543,21 @@ its visual object. Both GHZ and EHZ call `BossExplosion_Start` during their
 exploding phase. The helper retries a full pool and creates one controller per
 boss; byte `$4C` is reserved in both parent SSTs. Bit 0 marks controller creation;
 bit 7 is set only after a burst allocation succeeds, so GHZ's breakup clock
-does not run while a controller is waiting for a free visual slot. The parameter rows give the
-finite counter (bit 7 means continuous), X/Y half-ranges and parent phase.
-Spreads must be nonzero powers of two. The controller follows a validated
-parent, stops when that phase ends, and emits every three frames. Low/high RNG
+does not run while a controller is waiting for a free visual slot. The boss
+parameter rows give the finite counter (bit 7 means continuous), X/Y
+half-ranges and parent phase. Spreads must be nonzero powers of two. The
+boss emitters follow the parent until that phase ends, emitting every three
+frames. Low/high RNG
 words independently place bursts in `[-range,range-1]` on each axis. Animation,
 art and timing are described in [Sprites and VRAM](Sprites-and-VRAM.md#boss-explosions).
+
+The MMZ generator uses the same allocator and follows the parent during its
+break. Its `TimeGenerator_Bursts` table starts with the effect code pointer
+and holds 21 increasing update numbers and signed X/Y offsets from CD. A
+frame byte of `$FF` ends the table. The capsule uses the shared scatter
+calculation for one fiery burst per eight VBlanks at X −32…31 and Y 0…31
+relative to the pressed switch. Its release begins 60 updates after the press.
+The generator shell and capsule continue their own timers when the pool fills.
 
 The emitter supplies `obGfx` before the visual initializes. GHZ clears its VDP
 priority bit, matching the pod, so its foreground-plane waterfall covers the

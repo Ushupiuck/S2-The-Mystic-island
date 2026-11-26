@@ -426,8 +426,7 @@ Map_MMZ_DangoSlow:	binclude "mappings/sprite/MMZ Dango 2.bin"
 
 ; The working machine exists in the Past until the act's future is repaired.
 ; CD's contact envelope reaches past its solid body, including on top.
-timegen_burst_frame = objoff_30
-timegen_burst_offset = objoff_31
+timegen_break_frame = objoff_30	; word: first update of the break
 TimeGenerator_BodyHalfWidth = $22
 TimeGenerator_BodyHalfHeight = $20
 TimeGenerator_BurstEnd = $28+8
@@ -493,32 +492,19 @@ TimeGenerator_Break:
 		move.b	#1,(TimeWarp_GoodFuture).l
 		move.l	#TimeGenerator_Explode,code(a0)
 		move.b	#7,obFrame(a0)
+		move.w	(Timer_frames).w,timegen_break_frame(a0)
+		bsr.s	TimeGenerator_Explode
 		moveq	#15,d0
 		jmp	(AddPoints).l
 
 TimeGenerator_Explode:
-		addq.b	#1,timegen_burst_frame(a0)
-		move.b	timegen_burst_frame(a0),d0
-		cmpi.b	#TimeGenerator_BurstEnd,d0
-		beq.s	.finished
-		moveq	#0,d1
-		move.b	timegen_burst_offset(a0),d1
-		lea	TimeGenerator_Bursts(pc,d1.w),a2
-		cmp.b	(a2)+,d0
-		bne.s	.return
-		addq.b	#3,timegen_burst_offset(a0)
-		jsr	(FindFreeObj).l
-		bne.s	.return
-		move.l	#FieryExplosion,code(a1)
-		move.b	(a2)+,d0
-		ext.w	d0
-		add.w	obX(a0),d0
-		move.w	d0,obX(a1)
-		move.b	(a2),d0
-		ext.w	d0
-		add.w	obY(a0),d0
-		move.w	d0,obY(a1)
-.return:	rts
+		move.w	timegen_break_frame(a0),d0
+		move.w	(Timer_frames).w,d1
+		sub.w	d0,d1
+		cmpi.w	#TimeGenerator_BurstEnd,d1
+		bhs.s	.finished
+		lea	TimeGenerator_Bursts(pc),a2
+		jmp	(BossExplosion_StartPattern).l
 .finished:
 		move.l	#TimeGenerator_Dormant,code(a0)
 		move.b	#1,obFrame(a0)
@@ -527,6 +513,7 @@ TimeGenerator_Explode:
 
 ; Frame and signed X/Y offsets from CD's Metallic Madness generator.
 TimeGenerator_Bursts:
+		dc.l FieryExplosion
 		dc.b 1,0,0
 		dc.b 2,-40,-20
 		dc.b 3,28,10

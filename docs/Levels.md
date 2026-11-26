@@ -115,6 +115,8 @@ Future overlap. The raw bank follows the sound banks to avoid inflating their
 alignment holes. Existing animation counters and twelve palette-state bytes
 are reused; no new persistent MD RAM is needed. Act 2 has its own four-era
 scripts in `_inc/Metallic Madness 2 Animation Data.asm` and a 292-tile raw bank.
+The Past panel at `$24A-$24D` runs its six original five-update frames.
+It shares the frame payloads already used in the other eras.
 Acts 3-4 exit these callbacks.
 The source Good Future `$31` palette script has color indices `$16/$42` outside
 its three-word table. Its six flash steps are bounded, interpreting those two
@@ -142,7 +144,7 @@ in the act even though they share the rotating door's `$0A` slot.
 | Twin Walker | `$BB` | 0 | 1 |
 | Seesaw trap | `$BC` | 3 | 0 |
 | Compound spike crusher | `$BD` | 0 | 1 |
-| Crumbling floor / static block | `$1B` | 10 | 16 |
+| Crumbling floor / static block | `$1B` | 10 | 18 |
 | Crusher / launcher | `$A5` | 10 | 15 |
 | Vertical doors | `$30` | 0 | 14 |
 | Diagonal buzzsaw | `$A4` | 12 | 0 |
@@ -162,7 +164,7 @@ in the act even though they share the rotating door's `$0A` slot.
 | Automatic pipe / steering junction | `$AB` | 0 | 41 |
 | Running disc | `$A1` | 0 | 11 |
 | Invisible block | `$AC` | 0 | 14 |
-| Shallow spike bed | `$15` | 33 | 57 |
+| Shallow spike bed | `$15` | 33 | 55 |
 
 In each act the Past generator has a solid body and a larger attack hitbox.
 Either player's rolling, spindash or other supported attack can destroy it
@@ -179,6 +181,10 @@ moving yellow-up spring to carrier preset 1 (preset 2 is sideward here).
 Act 2's vertical door placements move the source Y up 16 pixels to anchor the
 [shared door](Objects.md#vertical-doors) at its closed seam. The original era
 masks and lamp sides carry through to the placement records.
+Act 2 keeps CD's primary, secondary and shared spike beds. The `$FB`
+secondary beds face upward. The Past's two `$F8` placements at
+`$0A18,$03F0` and `$0C18,$03F0` reuse the 48-pixel static slab and
+are solid on the secondary path.
 Ordinary springs translate CD's direction/color bits and placement flips to
 the existing `$14` subtypes. They retain Mystic Island's shared art, strengths
 and behavior, including diagonal speed; the unused CD low bit does not enable

@@ -359,6 +359,8 @@ SolidObject_SideAir:
 		rts
 ; ===========================================================================
 ; loc_F668:
+SolidObject_IgnoreActor:
+		bsr.w	ReleaseObjectRider
 SolidObject_TestClearPush:
 		move.l	d6,d4
 		addq.b	#2,d4
@@ -995,6 +997,27 @@ ObjectOwnsRider:
 ; ===========================================================================
 
 ; =============== S U B R O U T I N E =======================================
+
+; Static geometry scoped to the placement's collision path. Keep both
+; players independent when one crosses a path switch under a rider.
+SolidObject_OnPath:
+		btst	#4,obSubtype(a0)		; Object_FilterPath, high byte
+		beq.w	SolidObject
+		lea	(v_player).w,a1
+		moveq	#3,d6
+		movem.l	d1-d4,-(sp)
+		bsr.s	.actor
+		movem.l	(sp)+,d1-d4
+		lea	(v_player2).w,a1
+		addq.b	#1,d6
+.actor:
+		tst.l	code(a1)
+		beq.s	.return
+		bsr.s	Object_MatchesPath
+		beq.w	SolidObject.sub_F456
+		bra.w	SolidObject_IgnoreActor
+.return:
+		rts
 
 ; A range trigger may use either live actor. Empty slots, death routines and
 ; scripted transport/respawn locks are not attack targets. Return C = valid.

@@ -2118,6 +2118,7 @@ ArtTile_MMZ2_Present_Anim2:	equ $23A
 ArtTile_MMZ2_Present_Anim3:	equ $242
 ArtTile_MMZ2_Present_Anim4:	equ $252
 ArtTile_MMZ2_Present_Anim5:	equ $256
+ArtTile_MMZ2_Past_Anim1:		equ $24A
 ArtTile_MMZ2_GoodFuture_Anim1:	equ $22E
 ArtTile_MMZ2_GoodFuture_Anim2:	equ $236
 ArtTile_MMZ2_GoodFuture_Anim3:	equ $23E

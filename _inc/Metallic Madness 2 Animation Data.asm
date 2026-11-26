@@ -39,6 +39,17 @@ AnimCue_MMZ2_Present:	zoneanimstart
 		even
 		zoneanimend
 
+AnimCue_MMZ2_Past:	zoneanimstart
+		zoneanimdecl -1,Art_MMZ2Animated+148*32,ArtTile_MMZ2_Past_Anim1,6,4
+		dc.b 4,4
+		dc.b 8,4
+		dc.b 12,4
+		dc.b 16,4
+		dc.b 20,4
+		dc.b 0,4
+		even
+		zoneanimend
+
 AnimCue_MMZ2_GoodFuture:	zoneanimstart
 		zoneanimdecl -1,Art_MMZ2Animated+172*32,ArtTile_MMZ2_GoodFuture_Anim1,4,8
 		dc.b 8,6
@@ -105,8 +116,6 @@ AnimCue_MMZ2_BadFuture:	zoneanimstart
 		dc.b 0,4
 		even
 		zoneanimend
-
-AnimCue_MMZ2_Past:	dc.w -1
 
 MMZ2_PalPresent:
 		dc.w 5

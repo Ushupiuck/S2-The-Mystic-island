@@ -10284,7 +10284,7 @@ Touch_Dense:
 		dbf	d6,.loop
 		moveq	#0,d0
 		rts
-Touch_DeletedCandidate:
+Touch_NextCandidate:
 		tst.w	(Collision_response_list).l
 		bmi.w	Touch_Dense.next
 		bra.w	loc_19826
@@ -10351,6 +10351,9 @@ Touch_Size_DangoBody_ID = (Touch_Size_DangoBody-Touch_Sizes)/2+1
 Touch_Size_PohBeeBody:
 		dc.b	12,14
 Touch_Size_PohBeeBody_ID = (Touch_Size_PohBeeBody-Touch_Sizes)/2+1
+Touch_Size_SpikeBed:
+		dc.b $C,$10
+Touch_Size_SpikeBed_ID = (Touch_Size_SpikeBed-Touch_Sizes)/2+1
 Touch_Size_DangoShell_ID = (Touch_Size_DangoShell-Touch_Sizes)/2+1
 Touch_Size_TimeGenerator_ID = (Touch_Size_TimeGenerator-Touch_Sizes)/2+1
 Touch_Size_BigbomBody_ID = (Touch_Size_BigbomBody-Touch_Sizes)/2+1
@@ -10405,7 +10408,7 @@ loc_198BA:
 
 loc_198C0:
 		tst.l	code(a1)
-		beq.w	Touch_DeletedCandidate
+		beq.w	Touch_NextCandidate
 		move.b	obColType(a1),d1
 		andi.b	#$C0,d1
 		beq.w	Touch_Enemy
@@ -10490,6 +10493,8 @@ Touch_Special:
 		beq.w	Touch_BigbomPath
 		cmpi.b	#Touch_Size_BigbomDebris_ID,d1
 		beq.w	Touch_BigbomPath
+		cmpi.b	#Touch_Size_SpikeBed_ID,d1
+		beq.w	Touch_SpikeBedPath
 		cmpi.b	#6,d1
 		beq.w	Touch_D7
 		cmpi.b	#7,d1
@@ -10516,6 +10521,13 @@ Touch_Special:
 		beq.w	Touch_E1
 		rts
 ; ---------------------------------------------------------------------------
+
+Touch_SpikeBedPath:
+		exg	a0,a1
+		jsr	(Object_MatchesPath).l
+		exg	a0,a1
+		bne.w	Touch_NextCandidate
+		bra.w	Touch_Hurt
 
 Touch_BigbomPath:
 		cmpi.b	#$C,obTopSolidBit(a0)

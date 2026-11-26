@@ -113,11 +113,9 @@ MDis_Animate:	; Routine 2
 .display:	bra.w	DisplaySprite
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Boss explosion controller, adapted from S3&K's Obj_CreateBossExplosion.
-; Each boss keeps its defeat timer; a separate SST handles cadence and spread.
-; Parent bosses reserve byte $4C for controller/first-burst flags. Repeated calls
-; retry a full pool, then become no-ops after successful creation.
-; ---------------------------------------------------------------------------
+; Shared burst controller, adapted from S3&K's Obj_CreateBossExplosion.
+; The parent owns its defeat/release state. Controllers follow that state
+; and handle allocation, cadence and either scattered or timed positions.
 BossBurst_Started = objoff_4C	; parent only: bit 0 = controller started, bit 7 = burst created
 BossBurst_Count = objoff_2E	; controller: counter; large bursts use bit 7 = continuous
 BossBurst_RangeX = objoff_2F	; byte: power-of-two half-width
@@ -127,25 +125,10 @@ BossBurst_Timer = objoff_32	; byte: burst countdown
 BossBurst_ParentRoutine = objoff_33	; byte: parent's main routine
 BossBurst_ParentCode = objoff_34	; long: expected parent code
 BossBurst_Parent = objoff_38	; long: parent SST
+BossBurst_StartFrame = objoff_3C	; word: game update when the parent broke
+BossBurst_Script = objoff_3E	; long: next timed burst record
+BossBurst_Effect = objoff_42	; long: scripted explosion initializer
 
-BossExplosion_Start:	; a0 = boss, d0.w = parameter offset
-		tst.b	BossBurst_Started(a0)
-		bne.s	.return
-		lea	BossExplosion_Parameters(pc,d0.w),a2
-		jsr	(FindFreeObj).l
-		bne.s	.return
-		move.l	#BossExplosion_Controller,code(a1)
-		bsr.s	BossExplosion_InitController
-		move.b	#1,BossBurst_Started(a0)
-.return:
-		rts
-; a0 = parent, a1 = allocated controller, a2 = four-byte parameters.
-BossExplosion_InitController:
-		move.l	(a2),BossBurst_Count(a1)
-		move.b	obRoutine(a0),BossBurst_ParentRoutine(a1)
-		move.l	code(a0),BossBurst_ParentCode(a1)
-		move.l	a0,BossBurst_Parent(a1)
-		rts
 ; ---------------------------------------------------------------------------
 ; Burst counter, X/Y half-ranges, parent phase. Both spreads are centered on the
 ; parent. Retain separate editable entries when bosses currently share a spread.
@@ -163,6 +146,70 @@ BossExplosion_WallLarge = BossExplosion_Parameters_WallLarge-BossExplosion_Param
 BossExplosion_WallSmall = BossExplosion_Parameters_WallSmall-BossExplosion_Parameters
 ; ---------------------------------------------------------------------------
 
+BossExplosion_Start:	; a0 = boss, d0.w = parameter offset
+		tst.b	BossBurst_Started(a0)
+		bne.s	.return
+		lea	BossExplosion_Parameters(pc,d0.w),a2
+		move.l	#BossExplosion_Controller,d1
+		bsr.s	BossExplosion_NewController
+		bne.s	.return
+		move.l	(a2),BossBurst_Count(a1)
+.return:
+		rts
+
+BossExplosion_StartCapsule:	; a0 = switch, d0.w = press frame
+		tst.b	BossBurst_Started(a0)
+		bne.s	.return
+		move.w	d0,d2
+		move.l	#BossExplosion_CapsuleController,d1
+		bsr.s	BossExplosion_NewController
+		bne.s	.return
+		move.w	d2,BossBurst_StartFrame(a1)
+		move.b	#$20,BossBurst_RangeX(a1)
+		move.b	#$10,BossBurst_RangeY(a1)
+.return:
+		rts
+
+; a0 = parent, d0.w = start frame, a2 = effect pointer then timed records.
+; Increasing [frame, signed X, signed Y] records end with frame $FF.
+BossExplosion_StartPattern:
+		tst.b	BossBurst_Started(a0)
+		bne.s	.return
+		move.w	d0,d2
+		move.l	#BossExplosion_PatternController,d1
+		bsr.s	BossExplosion_NewController
+		bne.s	.return
+		move.w	d2,BossBurst_StartFrame(a1)
+		move.l	(a2)+,BossBurst_Effect(a1)
+		move.l	a2,BossBurst_Script(a1)
+.return:
+		rts
+
+BossExplosion_NewController:
+		jsr	(FindFreeObj).l
+		bne.s	.return
+		move.l	d1,code(a1)
+		move.b	ob2ndRout(a0),BossBurst_ParentState(a1)
+		bsr.s	BossExplosion_BindParent
+		move.b	#1,BossBurst_Started(a0)
+		moveq	#0,d0
+.return:
+		rts
+
+; a0 = parent, a1 = allocated wall emitter, a2 = four-byte parameters.
+BossExplosion_InitController:
+		move.l	(a2),BossBurst_Count(a1)
+BossExplosion_BindParent:
+		move.b	obRoutine(a0),BossBurst_ParentRoutine(a1)
+		move.l	code(a0),BossBurst_ParentCode(a1)
+		move.l	a0,BossBurst_Parent(a1)
+		rts
+BossExplosion_CapsuleController:
+		moveq	#2,d3
+		bra.s	BossExplosion_FollowParent
+BossExplosion_PatternController:
+		moveq	#3,d3
+		bra.s	BossExplosion_FollowParent
 BossExplosion_Controller:
 		moveq	#0,d3			; large: bit 7 of the count means continuous
 		bra.s	BossExplosion_FollowParent
@@ -175,12 +222,14 @@ BossExplosion_FollowParent:
 		bne.w	BossExplosion_Delete
 		move.b	obRoutine(a1),d0
 		cmp.b	BossBurst_ParentRoutine(a0),d0
-		bne.w	BossExplosion_Delete
+		bne.w	BossExplosion_ParentRoutineChanged
 		move.b	ob2ndRout(a1),d0
 		cmp.b	BossBurst_ParentState(a0),d0
 		bne.w	BossExplosion_Delete
 		move.w	obX(a1),obX(a0)
 		move.w	obY(a1),obY(a0)
+		btst	#1,d3
+		bne.w	BossExplosion_CustomTick
 		subq.b	#1,BossBurst_Timer(a0)
 		bmi.s	.emit
 		rts
@@ -194,18 +243,14 @@ BossExplosion_FollowParent:
 		beq.w	BossExplosion_Delete
 .spawn:
 		move.b	#2,BossBurst_Timer(a0)
-		jsr	(FindFreeObj).l
-		bne.s	.return
-		movea.l	BossBurst_Parent(a0),a2
-		bset	#7,BossBurst_Started(a2)	; allocation success, rather than just an active controller
+		bsr.w	BossExplosion_AllocateBurst
+		bne.s	BossExplosion_Scatter.return
 		move.l	#BossExplosion,code(a1)
 		move.w	#make_art_tile(ArtTile_BossExplosion,0,1),obGfx(a1)
 		tst.b	d3
-		beq.s	.position
+		beq.s	BossExplosion_Scatter
 		move.l	#BossExplosion_Small,code(a1)
-.position:
-		move.w	obX(a0),obX(a1)
-		move.w	obY(a0),obY(a1)
+BossExplosion_Scatter:
 		jsr	(RandomNumber).l
 		moveq	#0,d1
 		move.b	BossBurst_RangeX(a0),d1
@@ -231,6 +276,82 @@ BossExplosion_FollowParent:
 		; Keep the earlier sprite tier: bursts still draw over Eggman.
 .return:
 		rts
+BossExplosion_AllocateBurst:
+		jsr	(FindFreeObj).l
+		bne.s	.return
+		movea.l	BossBurst_Parent(a0),a2
+		bset	#7,BossBurst_Started(a2)
+		move.w	obX(a0),obX(a1)
+		move.w	obY(a0),obY(a1)
+		moveq	#0,d0
+.return:
+		rts
+
+BossExplosion_CustomTick:
+		move.w	(Timer_frames).w,d0
+		sub.w	BossBurst_StartFrame(a0),d0
+		btst	#0,d3
+		bne.s	BossExplosion_PatternTick
+		tst.w	d0				; the press frame has no burst
+		beq.s	BossExplosion_CapsuleScatter.return
+BossExplosion_CapsuleScatter:
+		moveq	#7,d0
+		and.b	(Vint_runcount+3).w,d0
+		bne.s	.return
+		addi.w	#16,obY(a0)			; remain below the capsule switch
+		bsr.s	BossExplosion_AllocateBurst
+		bne.s	.return
+		move.l	#FieryExplosion,code(a1)
+		bra.w	BossExplosion_Scatter
+.return:
+		rts
+
+BossExplosion_PatternTick:
+		movea.l	BossBurst_Script(a0),a3
+.next:
+		moveq	#0,d1
+		move.b	(a3)+,d1
+		cmpi.b	#$FF,d1
+		beq.w	BossExplosion_Delete
+		cmp.w	d0,d1
+		bhi.s	.return
+		beq.s	.emit
+		addq.w	#2,a3				; skip records missed while the pool was full
+		move.l	a3,BossBurst_Script(a0)
+		bra.s	.next
+.emit:
+		lea	2(a3),a2
+		move.l	a2,BossBurst_Script(a0)
+		bsr.s	BossExplosion_AllocateBurst
+		bne.s	.return
+		move.l	BossBurst_Effect(a0),code(a1)
+		move.b	(a3)+,d0
+		ext.w	d0
+		add.w	d0,obX(a1)
+		move.b	(a3),d0
+		ext.w	d0
+		add.w	d0,obY(a1)
+.return:
+		rts
+
+; If the capsule ran earlier this update, its final VBlank can coincide
+; with animal release. Use the switch position before the release drop.
+BossExplosion_ParentRoutineChanged:
+		cmpi.b	#2,d3
+		bne.w	BossExplosion_Delete
+		cmpi.b	#8,d0
+		bne.w	BossExplosion_Delete
+		move.w	(Timer_frames).w,d0
+		sub.w	BossBurst_StartFrame(a0),d0
+		cmpi.w	#Pri_BurstDuration,d0
+		bne.w	BossExplosion_Delete
+		move.w	obX(a1),obX(a0)
+		move.w	obY(a1),d0
+		subi.w	#Pri_ReleaseDrop,d0
+		move.w	d0,obY(a0)
+		pea	BossExplosion_Delete(pc)
+		bra.w	BossExplosion_CapsuleScatter
+
 ; ---------------------------------------------------------------------------
 ; DEZ3's advancing mixed explosion wall. Load plcid_ExplosionWall and let it
 ; finish before creating an SST with code = BossExplosion_Wall. No act starts

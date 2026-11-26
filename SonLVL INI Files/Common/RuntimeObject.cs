@@ -265,6 +265,8 @@ namespace MysticIsland.ObjectDefinitions
 				case "MMZFloor":
 					Bits("Columns", 0, 127, "One to eight 16-pixel columns. Invalid values safely use one column.");
 					Bits("Static block", 7, 1, "Static blocks are full-solid; crumbling floors are solid only on top and either character can trigger them.", "Crumbling", "Static");
+					Bits("Filter static collision by path", 12, 1, "A static block can be solid on one collision path.", "Both paths", "Selected path");
+					Bits("Static collision path", 11, 1, "Used when static collision is filtered by path.", "Primary", "Secondary");
 					break;
 				case "MMZCrusher":
 					routes = ReadByteTable("../objects/Scrap Madness/A5 Stomper.asm", "MMZ_Crusher_Height32", "MMZ_Crusher_Height48");

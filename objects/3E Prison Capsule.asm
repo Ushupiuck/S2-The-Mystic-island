@@ -3,6 +3,9 @@
 ;----------------------------------------------------------------------------
 pri_origY		= objoff_34	; original y-axis position
 animal_release_signal	= objoff_36
+pri_burst_start		= objoff_38	; press frame for the shared burst controller
+Pri_BurstDuration	= 60
+Pri_ReleaseDrop		= $20
 
 PrisonCapsule:
 		moveq	#0,d0
@@ -98,39 +101,25 @@ Pri_Switched:	; Routine 4
 		bsr.s	Pri_DropCharacters
 		addq.w	#8,obY(a0)
 		move.b	#6,obRoutine(a0)
-		move.b	#60,obTimeFrame(a0)	; set delay between animal spawns
+		move.b	#Pri_BurstDuration,obTimeFrame(a0)	; wait to release the animals
 		clr.b	(f_timecount).w		; stop time counter
 		clr.b	(f_lockscreen).w	; lock screen position
+		move.w	(Timer_frames).w,d0
+		move.w	d0,pri_burst_start(a0)
+		jmp	(BossExplosion_StartCapsule).l
 .opened2:	rts
 ; ---------------------------------------------------------------------------
 
 Pri_Explosion:	; Routine 6
-		moveq	#7,d0
-		and.b	(Vint_runcount+3).w,d0
-		bne.s	.makeanimal
-		jsr	(FindFreeObj).l
-		bne.s	.makeanimal
-		move.l	#FieryExplosion,code(a1)	; load fiery explosion
-		move.w	obX(a0),obX(a1)
-		move.w	obY(a0),obY(a1)
-		jsr	(RandomNumber).l
-		moveq	#0,d1
-		move.b	d0,d1
-		lsr.b	#2,d1
-		subi.w	#$20,d1
-		add.w	d1,obX(a1)
-		lsr.w	#8,d0
-		lsr.b	#3,d0
-		add.w	d0,obY(a1)
-
-.makeanimal:
+		move.w	pri_burst_start(a0),d0
+		jsr	(BossExplosion_StartCapsule).l	; retry the emitter if the pool was full
 		subq.b	#1,obTimeFrame(a0)
 		bne.s	.fail
 		move.b	#2,(Boss_defeated_flag).w
 		move.b	#8,obRoutine(a0)	; replace explosions with animals
 		clr.b	obFrame(a0)		; use frame 0 (empty)
 		move.b	#150,obTimeFrame(a0)
-		addi.w	#$20,obY(a0)
+		addi.w	#Pri_ReleaseDrop,obY(a0)
 		moveq	#7,d6
 		move.w	#$9A,d5
 		moveq	#-$1C,d4

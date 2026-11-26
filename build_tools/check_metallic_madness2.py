@@ -292,6 +292,49 @@ def source_geometry(a):
 		shared_ramp_cells=shared_ramps,max_angle_difference=8)
 
 
+def past_panel_frames(g, source):
+	"""Check the original sequence on the visible panel at $0730,$0050."""
+	from check_companion_followup import place
+	from import_metallic_madness import table_values
+	import re
+
+	stage = source/'src/r8'
+	pointers = table_values((stage/'stage_gfx_animate_2b.asm').read_text(), 'unk_20FBD8', 'l')
+	files = dict(re.findall(r'^(\w+):\s*\n\s*incbin\s+"([^"]+)"', (stage/'data_2b.asm').read_text(), re.M))
+	expected = [(source/files[label]).read_bytes()[:128] for label in pointers]
+	assert len(set(expected)) == len(expected) == 6
+
+	for actor in ('v_player', 'v_player2'):
+		place(g, actor, 0x730, 132)
+		g.put(actor, 'obControl', 0x81)
+	g.write('Camera_X_pos', 0x690, 2)
+	g.write('Camera_Y_pos', 0, 2)
+	g.write('Screen_redraw_flag', 1)
+	g.run(32)
+
+	first = g.s['ArtTile_MMZ2_Past_Anim1']
+	plane = g.s['vram_fg']+(0x50//8&31)*128+(0x730//8&63)*2
+	word = (g.vram[plane^1]<<8) | g.vram[(plane+1)^1]
+	assert first <= word & 0x7FF < first+4
+	previous = None
+	crops = {}
+	for _ in range(90):
+		raw = bytes(g.vram[(first*32+i)^1] for i in range(128))
+		assert raw in expected, 'Past panel retained its numbered placeholder'
+		frame = expected.index(raw)
+		if previous is not None and frame != previous:
+			assert frame == (previous+1)%6
+		x = 0x730-g.read('Camera_X_pos', 2)
+		y = 0x50-g.read('Camera_Y_pos', 2)
+		assert 0 <= x <= 304 and 0 <= y <= 208
+		crops[frame] = g.video.crop((x,y,x+16,y+16)).tobytes()
+		previous = frame
+		g.run()
+	assert len(crops) == len(set(crops.values())) == 6
+	g.video.save(g.output/'past-animated-panel.png')
+	return len(crops)
+
+
 def game(a):
 	from genesis_test_core import Genesis
 	from check_object_course import boot_level
@@ -326,7 +369,11 @@ def game(a):
 						assert actual==tile(plane,wx%512 if fixed else wx,wy),(era,index,plane,sx,sy,'visible tilemap')
 						samples+=1
 			g.video.save(g.output/f'era{era}-pose{index}.png')
-		result.append(dict(era=era,visible_tile_samples=samples,terrain_tiles=(ROOT/f'art/kosinski/level/8x8 - MMZ2 {title}.unc').stat().st_size//32))
+		row = dict(era=era,visible_tile_samples=samples,
+			terrain_tiles=(ROOT/f'art/kosinski/level/8x8 - MMZ2 {title}.unc').stat().st_size//32)
+		if era == 1:
+			row['animated_panel_frames'] = past_panel_frames(g, a.source)
+		result.append(row)
 	g.close();return result
 
 

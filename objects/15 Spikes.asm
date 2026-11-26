@@ -3,7 +3,8 @@
 ; High subtype: 0-3 = S3 floor rows, 4-7 = S3 side columns.
 ; 8-D = S1's six arrangements (three floor, three side, single floor,
 ; wide three floor, wide six floor, single side), using the same art.
-; E selects a shallow stationary bed. Its Y flip selects the inverted bed.
+; E selects a shallow stationary bed. Y flip selects the inverted bed,
+; and the standard path flags in the high byte can restrict either pose.
 ; Low subtype: 0 = stationary, 1 = vertical, 2 = horizontal, 3 = pushable.
 ; Status flips select ceiling spikes or the direction of side spikes.
 ; ---------------------------------------------------------------------------
@@ -36,6 +37,7 @@ Spikes_Index:	dc.w Spike_Init-Spikes_Index
 		dc.w Spike_SideSolid-Spikes_Index
 		dc.w Spike_CeilingSolid-Spikes_Index
 		dc.w Spike_InvertedBed-Spikes_Index
+		dc.w Spike_FloorBed-Spikes_Index
 
 Spike_FloorSolid:
 		pea	Spike_Floor(pc)
@@ -99,12 +101,14 @@ Spike_Init:
 		move.b	#$10,height_pixels(a0)
 		move.b	#8,obHeight(a0)
 		clr.b	obFrame(a0)
-		clr.w	obSubtype(a0)		; bed motion is always stationary
-		move.b	#2,obRoutine(a0)
+		move.w	obX(a0),spikes_base_x_pos(a0)
+		move.b	#$A,obRoutine(a0)
 		btst	#render_flags.y_flip,obStatus(a0)
-		beq.s	.position
+		beq.s	.bed_priority
 		move.b	#8,obRoutine(a0)
-		move.b	#$89,obColType(a0)	; $0C by $10 half-size touch
+		move.b	#$C0|Touch_Size_SpikeBed_ID,obColType(a0)
+.bed_priority:
+		jmp	(Object_PathPriority).l
 .position:
 		move.w	#spikes_travel,spikes_push_distance(a0)
 		move.w	obX(a0),spikes_base_x_pos(a0)
@@ -189,8 +193,16 @@ Spike_HurtCharacter:
 		movem.l	(sp)+,d6/a0
 .return:	rts
 ; ---------------------------------------------------------------------------
+Spike_FloorBed:
+		pea	Spike_Floor(pc)
+		moveq	#16+$B,d1
+		moveq	#8,d2
+		moveq	#9,d3
+		move.w	obX(a0),d4
+		jmp	(SolidObject_OnPath).l
+
 ; The downward bed hurts through touch response. Its backing is solid to a
-; rider outside the 32-pixel inner band. Measure that band per character.
+; rider on its path outside the 32-pixel inner band.
 Spike_InvertedBed:
 		pea	Spike_Display(pc)
 Spike_BackSolidPair:
@@ -202,6 +214,8 @@ Spike_BackSolidPair:
 .backing:
 		tst.l	code(a1)
 		beq.s	.return
+		jsr	(Object_MatchesPath).l
+		jne	(SolidObject_IgnoreActor).l
 		move.w	obY(a1),d0
 		sub.w	obY(a0),d0
 		addi.w	#31,d0
