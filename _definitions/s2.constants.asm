@@ -1712,16 +1712,15 @@ ArtTile_FireballMaker_Count: equ 14
 ArtTile_Monitor:		equ $529 ; 24 body tiles, four shared 4-tile content slots
 ArtTile_Monitor_Icons:	equ ArtTile_Monitor+24
 ArtTile_Monitor_Free:	equ ArtTile_Monitor_Icons+MonitorArt_SlotCount*MonitorArt_IconTiles
-ArtTile_Monitor_FreeEnd:	equ ArtTile_Monitor+$3C ; 20 reclaimed tiles, up to the checkpoint bank
-	if ArtTile_Monitor_FreeEnd-ArtTile_Monitor_Free<>20
+ArtTile_Lamppost:	equ $563 ; six pole tiles, then the blue, red and yellow halves
+ArtTile_Monitor_FreeEnd:	equ ArtTile_Lamppost ; 18 reclaimed tiles before the packed checkpoint
+	if ArtTile_Monitor_FreeEnd-ArtTile_Monitor_Free<>18
 		fatal "Review the four-slot monitor allocation."
 	endif
 	if ArtTile_FireballMaker+ArtTile_FireballMaker_Count>ArtTile_Monitor
 		fatal "Fireball maker overlaps monitors."
 	endif
-ArtTile_Lamppost:	equ ArtTile_Monitor+$3C ; six S1 pole + blue/red head tiles
-ArtTile_CheckpointYellow:	equ ArtTile_Monitor_Free ; two tiles from the reclaimed monitor bank
-ArtTile_Monitor_Reclaimed:	equ ArtTile_CheckpointYellow+2
+ArtTile_CheckpointYellow:	equ ArtTile_Lamppost+10
 
 
 ; GHZ's packed objects/badniks, after its $32B-tile terrain reservation.
@@ -1852,6 +1851,9 @@ ArtTile_Basaran:		equ $385
 ArtTile_Button:			equ $50F	; TO BE CHANGED
 ArtTile_Shield:			equ $79C	; $F380; shared with primary invincibility
 ArtTile_Shield_2:			equ $56F ; 18 tiles; follows the enlarged horizontal-spring/common banks
+	if ArtTile_Lamppost+12>ArtTile_Shield_2
+		fatal "Checkpoint tiles overlap the shield bank."
+	endif
 ArtTile_Shield_2_End:		equ ArtTile_Shield_2+$12 ; $B020; exclusive end of this bank
 ArtTile_Invincibility:		equ ArtTile_Shield
 ArtTile_Game_Over:		equ ArtTile_Shield ; replaces the dead primary player's effects, as in S3&K

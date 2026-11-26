@@ -37,6 +37,30 @@ def check_ball_contacts(g, base, act, record):
 			record(f'ball-contact-{who}-{dx}-{dy}', (g.get(who, 'obRoutine') == 4) == hurt)
 
 
+def check_idle_switch(g, base, record):
+	from check_companion_followup import reset_cpu
+	from check_object_course import objects
+	from check_rising_crushers import seek, set_rider
+	x, y = 0x1000, 0x05FB
+	for direction in (-1, 1):
+		g.restore(base)
+		seek(g, x, y)
+		switch = next(slot for slot in objects(g, 0xAF) if g.get(slot, 'obX', 2) == x)
+		set_rider(g, 'v_player', switch, x-12*direction, y-6, 0)
+		place(g, 'v_player2', x+20*direction, y+5-g.get('v_player2', 'default_y_radius'), False)
+		reset_cpu(g)
+		pushed = False
+		for _ in range(200):
+			g.run()
+			pushed |= bool(g.get('v_player2', 'obStatus') & 0x20)
+			assert not g.get('v_player2', 'jumping'), (direction, 'idle companion hopped at the switch')
+			assert g.get(switch, 'obFrame') == 1 and g.read(g.s['f_switch']+1) & 1
+		assert pushed
+		g.buttons2 = {8}
+		g.run(2)
+		record(f'idle-switch-companion-{direction}', bool(g.get('v_player2', 'jumping')))
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--core', type=Path, required=True)
@@ -151,6 +175,8 @@ def main():
         g.run(5)
         record('switch-release-' + who,
                g.get(obj, 'obFrame') == 0 and not g.read('f_switch') & 1)
+
+    check_idle_switch(g, base, record)
 
     # Whole frames cover real button entry, sustained overlap with a spiked
     # ball in SMZ2, and immediate damage after leaving either Debug mode.

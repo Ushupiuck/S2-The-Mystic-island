@@ -133,8 +133,8 @@ Offscreen loaded boxes do not occupy visible slots. Misses use the common atomic
 DPLC loader; a full queue keeps the old tag and retries. Four tag bytes and four
 timestamp words use twelve bytes of MD RAM; no object-pool scan or per-monitor
 tile buffer is needed. The dedicated monitor footprint is 40 tiles: 24 body and
-16 content tiles, down from the original 60. The reclaimed twenty tiles occupy
-`$551-$564` (`$AA20-$ACA0`, end exclusive), before the checkpoint bank.
+16 content tiles, down from the original 60. The eighteen tiles free before the
+packed checkpoint occupy `$551-$562` (`$AA20-$AC60`, end exclusive).
 
 Visible authored scenes must fit four distinct cached kinds, including their
 moving payloads and the opposite life portrait. The demand check evaluates both
@@ -159,18 +159,17 @@ blue and two red ball tiles, from s1disasm commit
 `2c51d46a0b0682133834db2093292d41da872ecf`, `artnem/Lamppost.nem` (blob
 `4d8db3cb03aeb413bfa86a3de9977e0e56dfa8df`) and `_maps/Lamppost.asm`.
 `art/uncompressed/Checkpoint.unc` is the editable 12-tile master: cap 0–1,
-shaft 2–5, blue 6–7, red 8–9, optional yellow 10–11. Source geometry shifts
+shaft 2–5, blue 6–7, red 8–9, yellow 10–11. Source geometry shifts
 four pixels down so the existing placement foot remains at Y +24. Blue keeps
 three separate tones at primary slots C/B/A. Red uses `PLAYER_FROM_S1`;
 shaft C/D/E becomes the shared second-line D/E/F yellow ramp. The yellow ball
-reuses the blue geometry with those same three yellow shades on line 1.
+uses the red orb's indices on the second palette line. Its inner ring uses
+light gray at index 7 in place of index 5.
 
-`build_checkpoint_art.py` generates the ten-tile resident `Lamppost.nem`, the
-two-tile `Checkpoint yellow.nem`, and compact editor/runtime maps. Yellow fits
-at `$551-$552`, using two of the twenty tiles reclaimed by monitor DPLCs.
-The next eighteen tiles remain available. MMZ2 keeps its terrain contiguous
-below the act-specific object boundary. Life portraits follow the common
-HUD/cache rules above.
+`build_checkpoint_art.py` packs all twelve tiles into `Lamppost.nem` for a
+single PLC. The stem starts at `$563`. The blue, red and yellow orb halves
+follow at `$569-$56A`, `$56B-$56C` and `$56D-$56E` respectively. The shield
+bank starts at `$56F`.
 
 The per-act MMZ atlas supplies only CD's PAST (8 tiles), FUTURE (8), thin-spin
 (4) and edge-spin (2) heads at `$41D-$432`. All 22 tiles are distinct; the 28
@@ -354,9 +353,8 @@ is not a source of free level VRAM.
 | `$A360-$A520` | `$51B` | Free after packing springs and adding the support, 14 tiles |
 | `$A520-$A820` | `$529` | Resident intact/broken monitor bodies, 24 tiles |
 | `$A820-$AA20` | `$541` | Four shared monitor-content DPLC slots, 16 tiles |
-| `$AA20-$AA60` | `$551` | Optional yellow checkpoint ball, 2 tiles |
-| `$AA60-$ACA0` | `$553` | Remaining reclaimed monitor space, 18 tiles |
-| `$ACA0-$ADE0` | `$565` | Checkpoint, 10 tiles |
+| `$AA20-$AC60` | `$551` | Remaining reclaimed monitor space, 18 tiles |
+| `$AC60-$ADE0` | `$563` | Checkpoint stem and three orbs, 12 tiles |
 | `$ADE0-$B020` | `$56F` | Auxiliary shield, 18 tiles |
 | `$B040-$BC00` | `$582` | Normal/shared fiery explosion art, 94 tiles |
 | `$BC00-$BE40` | `$5E0` | Animal bank 1, 18 tiles |

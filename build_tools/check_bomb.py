@@ -150,6 +150,8 @@ def native(a):
 				child = n.get(obj, 'Bomb_child', 2) | 0xFF0000
 				assert n.get(child, 'code') == n.s['Bomb_Fuse']
 				assert not n.get(child, 'respawn_addr', 2)
+				if kind:
+					assert n.get(child, 'obPriority', 2) > n.get(obj, 'obPriority', 2)
 				limit = 138 if kind else 144
 				for tick in range(1, limit):
 					for unit in sorted((obj, child)):
@@ -210,8 +212,10 @@ def native(a):
 	assert kosinski_plus_decode((ROOT/'art/moduled kosinski/Enemy Bomb.kospm').read_bytes()[2:])[0] == raw
 	for act in ('SMZ1', 'SMZ2', 'SMZ3', 'SMZ4', 'LVF1', 'LVF2'):
 		at = n.s['PLCKosM_' + act]
-		assert struct.unpack_from('>h', rom, at)[0] == 0
-		assert struct.unpack_from('>IH', rom, at+2) == (n.s['Kospm_Bomb'], n.s['ArtTile_Bomb_MMZ' if act.startswith('LVF') else 'ArtTile_Bomb'] * 32)
+		count = struct.unpack_from('>h', rom, at)[0]+1
+		requests = list(struct.iter_unpack('>IH', rom[at+2:at+2+count*6]))
+		bank = n.s['ArtTile_Bomb_MMZ' if act.startswith('LVF') else 'ArtTile_Bomb']
+		assert requests.count((n.s['Kospm_Bomb'], bank*32)) == 1, act
 	for row in frames(rom, n.s['Map_SMZ_Bomb'], n.s['Map_SMZ_Bomb_frames']):
 		for y, size, word, x in row:
 			assert (word & 2047) + ((size >> 2)+1)*((size & 3)+1) <= 41
@@ -272,11 +276,11 @@ def game(a):
 			assert not g.read('v_errortype'), ('Bomb exception', g.frame)
 
 	def hardware_tiles():
-		visible, link = set(), 0
+		visible, link = [], 0
 		for _ in range(80):
 			words = [int.from_bytes(bytes(g.vram[(g.s['vram_sprites'] + link*8 + j+k) ^ 1]
 				for k in range(2)), 'big') for j in (0, 2, 4, 6)]
-			visible.add(words[2] & 2047)
+			visible.append(words[2] & 2047)
 			link = words[1] & 127
 			if not link:
 				break
@@ -317,7 +321,7 @@ def game(a):
 				tiles = {base+(word & 2047)
 					for row in frames(rom, g.s[mapping], g.s[mapping+'_frames'])
 					for y, size, word, x in row}
-				assert hardware_tiles() & tiles, (zone, act, era, kind, flip, 'body missing from SAT')
+				assert tiles.intersection(hardware_tiles()), (zone, act, era, kind, flip, 'body missing from SAT')
 				g.video.save(g.output/f'z{zone}-a{act+1}-era{era}-kind{kind}-flip{flip}-body.png')
 				unit = g.save()
 				for actor in ('v_player', 'v_player2'):
@@ -342,6 +346,15 @@ def game(a):
 				run(34 if kind else 4)
 				child = g.get(body, 'Bomb_child', 2)
 				assert child and g.get(child, 'code') == g.s['Bomb_Fuse']
+				if kind:
+					fuse_tiles = {base+(word & 2047) for row in frames(rom, g.s['Map_BigbomFuse'], g.s['Map_BigbomFuse_frames'])
+						for _, _, word, _ in row}
+					body_frame = frames(rom, g.s[mapping], g.s[mapping+'_frames'])[g.get(body, 'obFrame')]
+					body_tiles = [base+(word & 2047) for _, _, word, _ in body_frame]
+					sat = hardware_tiles()
+					body_end = next(i+len(body_tiles) for i in range(len(sat)) if sat[i:i+len(body_tiles)] == body_tiles)
+					fuse_at = next(i for i, tile in enumerate(sat) if tile in fuse_tiles)
+					assert body_end <= fuse_at, (era, flip, body_end, fuse_at)
 				g.video.save(g.output/f'z{zone}-a{act+1}-era{era}-kind{kind}-flip{flip}-fuse.png')
 				g.put(body, 'Bomb_timer', 1, 2)
 				run(36 if kind else 4)

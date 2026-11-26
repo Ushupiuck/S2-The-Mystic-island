@@ -287,7 +287,7 @@ records may explicitly retain bit 8. The shared eight-byte layout and current
 
 The common `$79` definition now represents checkpoints and time poles. Its
 word properties select the head/function, checkpoint number/camera lock,
-red/yellow activated ball, and optional independent actor-path filter. Preview
+first flash color, and optional independent actor-path filter. Preview
 art uses the compact `Checkpoint editor.nem`/`Checkpoint editor.bin` pair;
 runtime maps address separate VRAM banks. PAST/FUTURE placements require their
 22-tile per-act head bank, supplied by all four MMZ1 eras.

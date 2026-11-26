@@ -694,15 +694,9 @@ TailS3_loc_13DD0:
 		btst	#status.player.on_object,obStatus(a1)
 		bne.s	.live_direction
 		tst.w	(Tails_CPU_reach_state).w
-		beq.s	.record_direction
+		beq.s	TailS3_loc_13DF2
 .live_direction:
 		andi.w	#$F3F3,d1 ; live steering must not inherit delayed left/right
-.record_direction:
-		btst	#status.player.pushing,obStatus(a0)
-		beq.s	TailS3_loc_13DF2
-		btst	#5,d4
-		beq.w	TailS3_loc_13E9C
-
 TailS3_loc_13DF2:
 		sub.w	obX(a0),d2
 		beq.s	TailS3_loc_13E50
@@ -753,10 +747,20 @@ TailS3_loc_13E64:
 		beq.s	TailS3_loc_13E7C
 		ori.w	#((button_A_mask|button_B_mask|button_C_mask)<<8)|0,d1
 		btst	#status.player.in_air,obStatus(a0)
-		bne.s	TailS3_loc_13EB8
+		bne.w	TailS3_loc_13EB8
 		move.b	#0,(Tails_CPU_auto_jump_flag).w
 
 TailS3_loc_13E7C:
+		; A solid can report pushing while the companion is already close
+		; enough to stand still. Only hop over a block we're trying to pass.
+		btst	#status.player.pushing,obStatus(a0)
+		beq.s	.reach
+		btst	#status.player.pushing,d4
+		bne.s	.reach
+		move.b	d1,d0
+		andi.b	#btnL|btnR,d0
+		bne.s	TailS3_loc_13E9C
+.reach:
 		move.w	(Tails_CPU_reach_state).w,d0
 		beq.s	.timed_jump
 		cmpi.w	#Tails_CPU_StepApproach,d0

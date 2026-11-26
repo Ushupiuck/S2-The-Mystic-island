@@ -948,6 +948,7 @@ def size_laser_game(args):
 	pool = range(s['v_lvlobjspace']&0xFFFF,s['v_lvlobjend']&0xFFFF,s['object_size'])
 	layout = decode((ROOT/'level/objects/LV0F_2.bin').read_bytes())
 	emitters = [(x,y,flags,kind) for x,y,oid,flags,kind in layout if oid == 0xBF]
+	floors = {0x1830:0x2E0, 0x19A8:0x3E0, 0x19B8:0x0E0, 0x1B79:0x5C0, 0x1D48:0x500}
 	initial = g.save()
 	placed = 0
 	for era, mask in enumerate((0x40,0x20,0x80,0x80)):
@@ -961,19 +962,38 @@ def size_laser_game(args):
 			seek(g,x,max(y,132))
 			root = next(a for a in pool if g.get(a,'code') == s['MMZ_Laser'] and g.get(a,'obX',2) == x)
 			assert g.get(root,'obSubtype',2) == kind and g.get(root,'obFrame') == kind+1
-			states, impact = set(), set()
-			for _ in range(54):
+			states, impact, sparks = set(), set(), set()
+			gap_seen = False
+			for _ in range(90):
 				g.run()
+				travelling = []
 				for a in pool:
-					if g.get(a,'code') != s['MMZ_LaserPulse'] or g.get(a,'obX',2) != x:
+					if g.get(a,'obX',2) != x:
 						continue
+					code = g.get(a,'code')
+					tip = g.get(a,'obY',2)+4
+					if code == s['MMZ_LaserSpark']:
+						sparks.add(tip)
+						assert g.get(a,'obPriority',2) > g.get(root,'obPriority',2)
+					if code != s['MMZ_LaserPulse']:
+						continue
+					assert g.get(a,'obPriority',2) > g.get(root,'obPriority',2)
 					state = g.get(a,'obRoutine')
 					states.add(state)
 					if state == 2:
-						impact.add(g.get(a,'obY',2))
+						impact.add(g.get(a,'laser_impact_y',2)+4)
+						assert tip <= floors[x]
+					elif g.get(a,'obFrame') >= 5:
+						travelling.append((tip-(g.get(a,'obAnim')+1)*16,tip))
+				travelling.sort()
+				for upper, lower in zip(travelling, travelling[1:]):
+					# A new slot can get its first update on this frame or the next.
+					assert lower[0]-upper[1] >= 4, (era,x,travelling)
+					gap_seen = True
 			assert states == {0,2}, (era,x,y,states)
-			if era == 0 and x == 0x19B8:
-				assert impact == {0xDB}, ('long beam stops above floor $E0',impact)
+			assert impact == sparks == {floors[x]}, (era,x,impact,sparks)
+			if x == 0x19B8:
+				assert gap_seen, (era,x,'no separated travelling pulses')
 			placed += 1
 	assert placed == 18 and len(emitters) == 5
 

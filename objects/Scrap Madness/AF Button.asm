@@ -23,7 +23,7 @@ SMZ_Button_Behavior:
 .active:
 		moveq	#27,d1
 		moveq	#5,d2
-		moveq	#5,d3
+		moveq	#6,d3			; keep the same foot row as the initial landing
 		move.w	obX(a0),d4
 		jsr	(SolidObject).l
 		moveq	#0,d0

@@ -84,7 +84,7 @@ def main():
 		'ArtTile_Springs_End': 0x50B,
 		'ArtTile_Spikes': 0x50B,
 		'ArtTile_Monitor': 0x529,
-		'ArtTile_Lamppost': 0x565,
+		'ArtTile_Lamppost': 0x563,
 	}
 	for name, tile in expected.items():
 		assert symbols[name] == tile, (name, hex(symbols[name]))

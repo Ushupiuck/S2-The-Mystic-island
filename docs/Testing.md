@@ -266,7 +266,7 @@ its subtype/VRAM tables here.
 | --- | --- | --- |
 | Menus and act data | `check_level_pages.py`, `check_act_music.py` | All 64 launches, 90 live frames without death per act, uploaded menu font/blank tile, act music selection and restoration priorities |
 | HUD, portraits, smoke and flash | `check_debug_states.py`, `check_visual_followup.py` | Debug HUD/clock restoration; both smoke banks through eight frames with neighboring-bank guards; lives/monitor colors and EHZ flash restoration |
-| Shared poles | `check_checkpoint.py` | Both actors, checkpoint snapshot, time-post consumption/spin, pool/reuse safety, path filtering, editor/runtime pixels and real NTSC/PAL SAT/VRAM |
+| Shared poles | `check_checkpoint.py` | Both actors, checkpoint snapshot and red/yellow cadence, time-post consumption/spin, pool/reuse safety, path filtering, editor/runtime pixels and real NTSC/PAL SAT/VRAM |
 | Monitors | `check_monitor_state.py`, `check_monitor_edges.py`, `check_monitor_art.py` | Rider/collector ownership, held charge, contact boundaries, 4,032 four-slot cache cases, queue deferral, timestamp wrap, selected HUD/opposite cached portraits and real SAT/VRAM checks |
 | Player interactions | `check_player_interactions.py` | All ground angles/held-frame delays for pushing, character tumble ranges and independent wall speeds/contacts; `--core` adds EHZ corkscrews and controller-2 Tails wall breaks in both acts |
 | Top-only platforms | `check_smz_vanishing.py` | Rise/side pass-through, landing/ride height, disappearing support and adjacent-platform transfers for Sonic, primary Tails and sidekick Tails. Both slot orders/directions and rolling radii; shared flat/alternate/sloped support entries. `--core` checks actual foot and camera Y through the seam; repeat with `--pal`. |
@@ -342,7 +342,8 @@ collision path and visit each authored bed in both acts. The Act 2 terrain
 check samples all six Past panel frames in VRAM and the rendered panel at
 `$0730,$0050`. The MMZ2 laser fixtures visit all five emitters in the 18
 placements across eras. They transform Sonic, solo Tails and controller-2
-Tails at the authored beams and compare the miniature player VRAM bytes.
+Tails at the authored beams and compare the miniature player VRAM bytes. The
+visits verify pulse gaps and floor contact for both beam colors.
 Native cases check the shape underneath a roof on either path, retry with
 a full DMA queue and preserve mixed forms through checkpoint and era saves.
 

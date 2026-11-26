@@ -81,7 +81,6 @@ Stomper_Run:
 		jsr	(a1)
 		move.w	(sp)+,d4			; previous X for rider transport
 		tst.b	d0
-		bmi.s	Stomper_Draw
 		beq.s	.solid
 		bsr.s	Stomper_Solid
 		bsr.w	Stomper_LaunchRiders
@@ -107,8 +106,8 @@ Stomper_Solid:
 		addq.w	#1,d3
 		jmp	(SolidObject).l
 
-; A movement routine returns 0 for normal solidity, -1 when it has already
-; checked support, or 1 when an upward impulse follows the contact pass.
+; A movement routine returns 0 for normal solidity or 1 to launch riders
+; after the shared contact pass at the new pose.
 SMZ_Sto_Move:
 		move.w	obSubtype(a0),d0
 		andi.w	#$F,d0
@@ -354,18 +353,12 @@ MMZ_Crusher_Init:
 .speeds:	dc.w 4,8,16,32
 
 MMZ_Crusher_Move:
-		tst.w	obVelY(a0)
-		bpl.s	.move
-		move.w	obX(a0),d4
-		bsr.w	Stomper_Solid
-.move:
-		move.w	obY(a0),-(sp)
 		tst.b	MMZ_crush_tall(a0)
 		beq.s	.advance
 		tst.b	MMZ_crush_paused(a0)
 		beq.s	.extremum
 		subq.b	#1,MMZ_crush_timer(a0)
-		bcc.s	.stationary
+		bcc.s	.solid
 		clr.b	MMZ_crush_paused(a0)
 		bra.s	.advance
 .extremum:
@@ -377,19 +370,13 @@ MMZ_Crusher_Move:
 .pause:
 		st	MMZ_crush_paused(a0)
 		move.b	MMZ_crush_hold(a0),MMZ_crush_timer(a0)
-.stationary:
-		move.w	obY(a0),d0
-		bra.s	.velocity
+		bra.s	.solid
 .advance:
 		move.w	MMZ_crush_step(a0),d0
 		add.w	d0,MMZ_crush_phase(a0)
 		andi.w	#$3FF,MMZ_crush_phase(a0)
 		bsr.s	MMZ_Crusher_Position
-.velocity:
 		move.w	d0,obY(a0)
-		sub.w	(sp)+,d0
-		lsl.w	#8,d0
-		move.w	d0,obVelY(a0)
 		tst.b	MMZ_crush_tall(a0)
 		beq.s	.solid
 		cmpi.w	#$210,MMZ_crush_phase(a0)
@@ -398,10 +385,6 @@ MMZ_Crusher_Move:
 		rts
 .solid:
 		moveq	#0,d0
-		tst.w	obVelY(a0)
-		bpl.s	.return
-		moveq	#-1,d0
-.return:
 		rts
 
 MMZ_Crusher_Position:

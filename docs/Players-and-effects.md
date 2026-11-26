@@ -81,8 +81,10 @@ reachable side step on the normal jump tick. He samples up to four terrain
 columns, steers to the intermediate landing, then turns back toward Sonic with
 an early brake for the upper ledge. After landing he stays near Sonic until
 Sonic moves. With no reachable step he waits for a route.
-Object platforms use their normal jump attempts. Collapse flight uses the
-separate trigger below. Grounded zero-momentum locks and real slope slips use
+An obstacle hop requires left or right input from the follow logic. A push
+flag alone can come from standing against a button within following distance.
+Object and terrain approach jumps still use the height checks above. Collapse
+flight uses the separate trigger below. Grounded zero-momentum locks and real slope slips use
 CPU spindash recovery. A moving spring landing on flat ground uses normal
 steering. When sharing a carrier
 with nearly stationary Sonic, the target is clamped inside it and stale

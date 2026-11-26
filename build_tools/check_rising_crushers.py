@@ -69,7 +69,7 @@ def board(g, actor, piston, path):
 	foot = y-g.get(piston, 'obHeight')-1
 	set_rider(g, actor, piston, x, foot, path)
 	for field, value, size in (
-			('obY', y, 2), ('MMZ_crush_phase', 0x100, 2), ('obVelY', 0, 2)):
+			('obY', y, 2), ('MMZ_crush_phase', 0x100, 2)):
 		g.put(piston, field, value, size)
 
 
@@ -82,7 +82,6 @@ def hold(g, actor, *buttons):
 
 
 def step(g, actor, piston, on_board=False):
-	before = g.get(piston, 'obY', 2)
 	g.run()
 	assert not g.read('v_errortype'), 'ROM exception'
 	alive = g.get(actor, 'obRoutine') < 6
@@ -90,7 +89,7 @@ def step(g, actor, piston, on_board=False):
 		assert g.get(actor, 'obStatus') & 8, 'Foot left the piston'
 		foot = g.get(actor, 'obY', 2) + g.get(actor, 'obHeight')
 		offset = g.get(piston, 'obHeight') + 1
-		assert foot in (before-offset, g.get(piston, 'obY', 2)-offset), 'Pose moved the foot'
+		assert foot == g.get(piston, 'obY', 2)-offset, 'Rider lagged the current piston pose'
 	return alive
 
 

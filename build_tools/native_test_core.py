@@ -67,7 +67,7 @@ class Native:
 		for constructor, states in (
 				('Ring', ('Ring_Animate', 'Ring_Collect', 'Ring_Sparkle')),
 				('CollisionSwitcher', ('CollisionSwitcher_Run',)),
-				('Obj79', ('Checkpoint_Main','Checkpoint_WaitBall','Pole_Active','TimePole_Main','TimePole_Spin')),
+				('Obj79', ('Checkpoint_Main','Checkpoint_WaitBall','Checkpoint_Active','Pole_Active','TimePole_Main','TimePole_Spin')),
 				('LostRings', ('LostRing_Move', 'LostRing_Collect')),
 				('TwistingPathway', ('TwistingPathway_Main', 'TwistingPathway_Cage')),
 				('SMZ_SpinConvey', ('SMZ_SpinC_Move',)),

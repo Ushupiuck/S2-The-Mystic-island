@@ -12900,8 +12900,6 @@ Art_MonitorIcons:	binclude "art/uncompressed/Monitor icons.unc"
 		even
 Nem_Lamppost:	binclude	"art/nemesis/Lamppost.nem"
 		even
-Nem_CheckpointYellow:	binclude "art/nemesis/Checkpoint yellow.nem"
-		even
 Nem_Wheel:	binclude	"art/nemesis/Wheel carrier.nem"
 		even
 Kospm_MMZ_CrusherFloor:

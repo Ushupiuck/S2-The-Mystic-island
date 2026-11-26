@@ -300,6 +300,7 @@ Bomb_SpawnFuse:
 		move.b	#3,obAnim(a1)
 		cmpi.l	#Map_Bigbom,obMap(a0)
 		bne.s	.pose
+		move.w	#$200,obPriority(a1)	; fuse passes behind the Bigbom body
 		move.l	#Map_BigbomFuse,obMap(a1)
 		move.b	#Map_BigbomFuse_height,height_pixels(a1)
 		move.b	#Map_BigbomFuse_width,width_pixels(a1)

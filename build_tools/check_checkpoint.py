@@ -12,6 +12,7 @@ from native_test_core import Native,UC_M68K_REG_D7
 from check_sprite_assets import frames
 from check_boss_shared_art import raster
 from import_ehz2_pp_background import nemesis
+from sprite_palette import remap_pixels
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -19,7 +20,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def native(a):
 	m=Native(a.rom,a.listing);rom=a.rom.read_bytes();s=m.s
 	pool=list(range(s['v_lvlobjspace'],s['v_lvlobjend'],s['object_size']))
-	states=('Obj79','Checkpoint_Main','Checkpoint_WaitBall','Checkpoint_Ball','TimePole_Main','TimePole_Spin','Pole_Active')
+	states=('Obj79','Checkpoint_Main','Checkpoint_WaitBall','Checkpoint_Ball','Checkpoint_Active','TimePole_Main','TimePole_Spin','Pole_Active')
 	def tick(obj):
 		label=next(n for n in states if s[n]==m.get(obj,'code'))
 		m.act(label,obj,regs={UC_M68K_REG_D7:0x13572468})
@@ -50,11 +51,17 @@ def native(a):
 						for _ in range(64):
 							tick(r);tick(child);positions.add((m.get(child,'obX',2),m.get(child,'obY',2)))
 						assert not m.get(child,'code') and len(positions)>=24
-					visible = positions - {(0,0)}
-					assert min(y for x,y in visible) == 240-32
-					assert max(y for x,y in visible) == 240-16
-					assert {(240-8,240-24),(240+8,240-24)} <= visible
-					assert m.get(r,'code')==s['Pole_Active'] and m.get(r,'obFrame')==(2 if yellow else 1)
+						visible = positions - {(0,0)}
+						assert min(y for x,y in visible) == 240-32
+						assert max(y for x,y in visible) == 240-16
+						assert {(240-8,240-24),(240+8,240-24)} <= visible
+					first = 2 if yellow else 1
+					assert m.get(r,'code')==s['Checkpoint_Active']
+					colors = [m.get(r,'obFrame')]
+					for _ in range(7):
+						tick(r)
+						colors.append(m.get(r,'obFrame'))
+					assert colors == [first]*4 + [first^3]*4
 					cases+=1
 	# A consumed sign is still visible but cannot arm another trip or touch any
 	# of the existing checkpoint snapshot, even in a different era.
@@ -74,7 +81,8 @@ def native(a):
 					assert m.placement_read()==(0x81 if handle else 0x80);cases+=1
 	for kind,frame in ((1,1),(0x401,2),(0x100,7),(0x200,9)):
 		r=setup(kind,state=0x81);assert m.get(r,'obFrame')==frame
-		assert m.get(r,'code')==s['Pole_Active'] and not m.read('TimeWarp_Direction')
+		assert m.get(r,'code')==s['Checkpoint_Active' if frame < 3 else 'Pole_Active']
+		assert not m.read('TimeWarp_Direction')
 		m.act('UnloadObject',r);assert m.placement_read()==1;cases+=1
 	# Every proximity boundary and both independent actor paths. The other actor
 	# is kept far away so the result cannot borrow that actor's state.
@@ -99,7 +107,7 @@ def native(a):
 			contact(r,who);assert not m.read('TimeWarp_Direction');cases+=1
 	# Reused slots are never adopted as the old parent or ball.
 	r=setup();contact(r,'v_player');child=m.get(r,'Pole_child',2)|0xFF0000
-	m.put(child,'code',s['Ring']);tick(r);assert m.get(child,'code')==s['Ring'] and m.get(r,'code')==s['Pole_Active']
+	m.put(child,'code',s['Ring']);tick(r);assert m.get(child,'code')==s['Ring'] and m.get(r,'code')==s['Checkpoint_Active']
 	r=setup();contact(r,'v_player');child=m.get(r,'Pole_child',2)|0xFF0000
 	m.put(r,'code',s['Ring']);tick(child);assert not m.get(child,'code') and m.get(r,'code')==s['Ring']
 	r=setup();contact(r,'v_player');child=m.get(r,'Pole_child',2)|0xFF0000
@@ -108,12 +116,14 @@ def native(a):
 	# pixels, including mirrors, with the genuine loaded common/act banks.
 	raw=(ROOT/'art/uncompressed/Checkpoint.unc').read_bytes()
 	atlas=(ROOT/'art/uncompressed/MMZ1 Sprite Atlas.unc').read_bytes()
-	assert nemesis(rom[s['Nem_Lamppost']:])==raw[:320]
-	assert nemesis(rom[s['Nem_CheckpointYellow']:])==raw[320:]
+	assert nemesis(rom[s['Nem_Lamppost']:])==raw
+	assert s['ArtTile_CheckpointYellow']==s['ArtTile_Lamppost']+10
+	assert s['ArtTile_Lamppost']+12==s['ArtTile_Shield_2']
+	assert raw[320:]==remap_pixels(raw[256:320], tuple(7 if i==5 else i for i in range(16)))
 	editor=nemesis((ROOT/'art/nemesis/Checkpoint editor.nem').read_bytes())
 	rows=frames(rom,s['Map_Obj79'],14)
 	for i,row in enumerate(frames((ROOT/'mappings/sprite/Checkpoint editor.bin').read_bytes())):
-		actual=raster(rows[i],[(s['ArtTile_Lamppost'],raw[:320]),(s['ArtTile_CheckpointYellow'],raw[320:]),(s['ArtTile_MMZ_Atlas'],atlas)])
+		actual=raster(rows[i],[(s['ArtTile_Lamppost'],raw),(s['ArtTile_MMZ_Atlas'],atlas)])
 		assert actual==raster(row,[(0,editor)]),(i,'bank crossing changed visible art')
 		assert all((w&0x1800)==(v&0x1800) for (_,_,w,_),(_,_,v,_) in zip(rows[i],row))
 	return dict(behavior_cases=cases,orbit_updates=512,recycled_slots=True,mapping_frames=14,atlas_tiles=477)
@@ -137,8 +147,7 @@ def game(a):
 		g.write('Camera_X_pos',440,2);g.write('Camera_X_pos_coarse_back',256,2);g.write('Camera_Y_pos',424,2)
 		for field in ('Camera_Min_Y_pos','Camera_Max_Y_pos','Camera_Max_Y_pos_target'):g.write(field,424,2)
 		master=(ROOT/'art/uncompressed/Checkpoint.unc').read_bytes()
-		assert vram(g.s['ArtTile_Lamppost'],10)==master[:320]
-		assert vram(g.s['ArtTile_CheckpointYellow'],2)==master[320:]
+		assert vram(g.s['ArtTile_Lamppost'],12)==master
 		blue=spawn(g,'Obj79',440,600,7);red=spawn(g,'Obj79',492,600,1);yellow=spawn(g,'Obj79',544,600,0x402)
 		past=future=None
 		if zone==15:
@@ -149,19 +158,23 @@ def game(a):
 		for post in (red,yellow):
 			place(g,'v_player',g.get(post,'obX',2),584);g.put('v_player','obControl',1);run(3)
 			place(g,'v_player',500,520);g.put('v_player','obControl',0x81);run(70)
-		assert g.get(blue,'obFrame')==0 and g.get(red,'obFrame')==1 and g.get(yellow,'obFrame')==2
-		run(5);g.video.save(g.output/('heads-era%d-zone%d.png'%(era,zone)))
+		assert g.get(blue,'obFrame')==0 and all(g.get(post,'code')==g.s['Checkpoint_Active'] for post in (red,yellow))
+		g.video.save(g.output/('heads-era%d-zone%d.png'%(era,zone)))
 		# Verify the actual hardware SAT includes each selected head, not just an
 		# SST frame which can be one video frame ahead of the displayed image.
 		expected={g.s['ArtTile_Lamppost']+6,g.s['ArtTile_Lamppost']+8,g.s['ArtTile_CheckpointYellow']}
 		if past:expected|={g.s['ArtTile_TimePostHeads'],g.s['ArtTile_TimePostHeads']+8}
+		visible=set()
+		colors = [set(), set()]
 		for _ in range(30):
-			visible=set();link=0
+			link=0
 			for __ in range(80):
 				words=[int.from_bytes(bytes(g.vram[(g.s['vram_sprites']+link*8+j+k)^1] for k in range(2)),'big') for j in (0,2,4,6)]
 				visible.add(words[2]&2047);link=words[1]&127
 				if not link:break
-			if expected<=visible:break
+			for post, seen in zip((red,yellow),colors):
+				seen.add(g.get(post,'obFrame'))
+			if expected<=visible and colors==[{1,2},{1,2}]:break
 			run(1)
 		else:raise AssertionError(('head art missing from SAT',zone,era,expected,visible, (g.read('Camera_X_pos',2),g.read('Camera_Y_pos',2)), [{f:g.get(q,f,n) for f,n in (('code',4),('obX',2),('obY',2),('obFrame',1),('obRender',1),('obGfx',2),('obMap',4),('width_pixels',1),('height_pixels',1),('obPriority',2))} for q in (blue,red,yellow,past,future) if q]))
 		if past:

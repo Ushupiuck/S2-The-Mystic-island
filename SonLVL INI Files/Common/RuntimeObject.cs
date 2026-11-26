@@ -206,7 +206,7 @@ namespace MysticIsland.ObjectDefinitions
 					Bits("Head / function", 8, 3, "One object family. Time poles require the act to load the 22 sign-head tiles; they never save checkpoint data.", "Checkpoint", "PAST", "FUTURE", "Checkpoint (reserved)");
 					Bits("Checkpoint number", 0, 127, "Checkpoint only: monotonically increasing activation number.");
 					Bits("Lock backtracking", 7, 1, "Checkpoint only: limit the camera behind the respawn position.", "No", "Yes");
-					Bits("Activated ball", 10, 1, "Checkpoint only: blue before activation, then the selected color.", "Red", "Yellow");
+					Bits("First flash color", 10, 1, "Checkpoints start blue and flash between red and yellow after activation.", "Red", "Yellow");
 					Bits("Required path", 11, 1, "Applies only when the layer filter is enabled; each actor uses its own path.", "Primary", "Secondary");
 					Bits("Layer filter", 12, 1, "Use for MMZ2 poles behind the layer-changing terrain.", "Either path", "Required path only");
 					break;

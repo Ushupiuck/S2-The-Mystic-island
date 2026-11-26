@@ -1328,9 +1328,6 @@ MCD_CompressedAssets:
 	if defined(Nem_CPZ_Platform1)
 	dc.l Nem_CPZ_Platform1,Nem_CPZ_Platform1+$16E	; art/nemesis/CPZ Floating Platform.nem
 	endif
-	if defined(Nem_CheckpointYellow)
-	dc.l Nem_CheckpointYellow,Nem_CheckpointYellow+$3B	; art/nemesis/Checkpoint yellow.nem
-	endif
 	if defined(Nem_Chicken)
 	dc.l Nem_Chicken,Nem_Chicken+$157	; art/nemesis/Flicky/Chicken.nem
 	endif
@@ -1422,7 +1419,7 @@ MCD_CompressedAssets:
 	dc.l Nem_Kemusi,Nem_Kemusi+$1BA	; art/nemesis/Enemy Kemusi.nem
 	endif
 	if defined(Nem_Lamppost)
-	dc.l Nem_Lamppost,Nem_Lamppost+$D4	; art/nemesis/Lamppost.nem
+	dc.l Nem_Lamppost,Nem_Lamppost+$F3	; art/nemesis/Lamppost.nem
 	endif
 	if defined(Nem_Lives)
 	dc.l Nem_Lives,Nem_Lives+$204	; art/nemesis/Sonic lives counter.nem

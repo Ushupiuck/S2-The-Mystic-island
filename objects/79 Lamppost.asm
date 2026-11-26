@@ -1,7 +1,7 @@
 ; ---------------------------------------------------------------------------
 ; Object 79 - shared checkpoint / PAST / FUTURE pole, MD CPU.
 ; Word subtype: low byte checkpoint number/camera lock; bits 8-9 head mode;
-; bit 10 yellow checkpoint; bits 11/12 required layer/filter enabled.
+; bit 10 starts the checkpoint flash on yellow; bits 11/12 select the path.
 ; One constructor selects a direct state. Signs never save checkpoint data.
 ; All heads borrow the Sonic 1 six-tile stem. See build_checkpoint_art.py.
 Pole_child:		equ objoff_30 ; root: orbiting ball; ball: reciprocal parent
@@ -13,7 +13,7 @@ Obj79:
 		move.l	#Map_Obj79,obMap(a0)
 		move.b	#Map_Obj79_height,height_pixels(a0)
 		move.b	#Map_Obj79_width,width_pixels(a0)
-		clr.w	obGfx(a0)	; maps use absolute VRAM words across three banks
+		clr.w	obGfx(a0)	; absolute words address the pole and time-sign banks
 		ori.b	#4,obRender(a0)
 		move.w	#$280,obPriority(a0)
 		move.b	#2,obRoutine(a0)
@@ -68,20 +68,25 @@ Checkpoint_SetActive:
 Checkpoint_MakeActive:
 		clr.w	Pole_child(a0)
 		move.b	#1,obFrame(a0)
-		move.w	obSubtype(a0),d0
-		btst	#10,d0
+		btst	#2,obSubtype(a0)	; high byte, word bit 10
 		beq.s	.ready
-		move.b	#2,obFrame(a0)
+		addq.b	#1,obFrame(a0)
 .ready:
+		move.b	#3,Pole_timer(a0)
 		move.b	#4,obRoutine(a0)
-		move.l	#Pole_Active,code(a0)
+		move.l	#Checkpoint_Active,code(a0)
 		rts
+Checkpoint_Active:
+		subq.b	#1,Pole_timer(a0)
+		bpl.s	Pole_Draw
+		move.b	#3,Pole_timer(a0)
+		eori.b	#3,obFrame(a0)		; red (1) and yellow (2), four updates apiece
 Pole_Active:
 Pole_Draw:
 		jmp	(MarkObjGone).l
 
 ; One temporary child follows a 32-step radius-eight orbit twice. No live
-; trigonometry/multiply or per-frame mapping rebuild; pool failure settles red.
+; trigonometry/multiply or per-frame mapping rebuild. A full pool starts flashing.
 ; =============== S U B R O U T I N E =======================================
 
 Checkpoint_SpawnBall:
@@ -97,8 +102,7 @@ Checkpoint_SpawnBall:
 		move.b	#8,width_pixels(a1)
 		move.b	#8,height_pixels(a1)
 		move.b	#4,obFrame(a1)
-		move.w	obSubtype(a0),d0
-		btst	#10,d0
+		btst	#2,obSubtype(a0)
 		beq.s	.red
 		addq.b	#1,obFrame(a1)
 .red:

@@ -96,6 +96,7 @@ def main():
         run(8)
         assert g.read(g.s['f_switch']+15)&1 and g.get(child,'obFrame')==1, ('button landing',who, [(a,g.get(a,'obX',2),g.get(a,'obY',2),g.get(a,'obStatus'),g.get(a,'obRoutine'),g.get(a,'obControl')) for a in (who,body,child)])
         assert g.get(body,'Plat_flags')&8 and g.get(body,'Plat_sag')>0, ('mounted rider activation',who)
+        assert g.get(who,'obY',2)+g.get(who,'obHeight')==g.get(child,'obY',2)-6
         g.video.save(args.output / f'button-rider-{who}.png')
         # Move away without deleting the body: real momentary release.
         place(g,who,0x140,0x180);g.put(who,'obControl',1);run(3)

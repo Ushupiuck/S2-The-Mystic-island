@@ -100,7 +100,8 @@ is nearby. The solid top opens under a rider as the gap widens.
 The `$AF` momentary switch uses its placement coordinates for its sprite and
 collision. Set its origin five pixels above a flat floor. Both animation frames
 end on the row immediately above the floor. Debug and SonLVL use the same origin,
-and platform mounts place the switch five pixels above the body top.
+and platform mounts place the switch five pixels above the body top. The
+pressed switch holds both actors at the same foot height used on landing.
 
 ## Collision path switches and doors
 
@@ -203,7 +204,7 @@ Time poles never enter `Lamppost_StoreInfo` or change checkpoint ordering.
 | 0–6 | Checkpoint number, increasing along the route |
 | 7 | Checkpoint camera lock on respawn, retained from the old object |
 | 8–9 | 0 checkpoint, 1 PAST, 2 FUTURE; reserved 3 uses checkpoint behavior |
-| 10 | Activated checkpoint ball: 0 red, 1 yellow; inactive ball stays blue |
+| 10 | First color of the active checkpoint flash (0 red, 1 yellow) |
 | 11 | Required path: 0 primary `$C`, 1 secondary `$E` |
 | 12 | Enable the per-actor collision-path filter; used by MMZ2 time poles |
 | 13–15 | Reserved, preserved |
@@ -218,10 +219,11 @@ Checkpoints save the existing engine snapshot at the post's coordinates and
 consume bit 0 of their own placement entry. Their temporary red/yellow ball
 uses a 32-step radius-eight ROM orbit twice around the top cap. The ball
 starts and settles at the seated position and draws in front of the cap.
-Both sides validate reciprocal slot ownership. A full pool settles immediately
-into the activated color; an unloaded/reused slot cannot adopt the old child.
-Consumed/earlier checkpoints reload in the activated state. Scripted and Debug
-posts have no handle and never touch a real placement's persistent state.
+Both sides validate reciprocal slot ownership. After the orbit, a checkpoint
+alternates red and yellow every four updates. A full pool starts the flash
+immediately. Consumed and earlier checkpoints also flash when they reload.
+Scripted and Debug posts have no handle and never touch a real placement's
+persistent state.
 
 Time poles consume their own bit 0, arm `TimeWarp_Direction` (`-1` PAST, `+1`
 FUTURE), spin through the original eight-pose sequence at two updates per pose
@@ -270,9 +272,10 @@ solid hold. Adjacent placements can use separate delays to build a staircase.
 Rectangle and curve motion use the same spin contact routine with full and
 top support respectively.
 
-The stomper moves its selected body and resolves contact in one update loop.
-The sinusoidal profile uses two 256-byte signed-height tables and tests support
-before upward motion. The tall body selects 60 or 90 updates at the extrema.
+The stomper advances its pose before the single shared contact pass. Riders
+and ceiling clearance use the same position as the displayed body. The
+sinusoidal profile uses two 256-byte signed-height tables. The tall body
+selects 60 or 90 updates at the extrema.
 At phase `$210`, it launches each actual rider independently with `-$1000` or
 `-$A00` velocity. The rider's standing index must still match the body.
 
@@ -369,11 +372,11 @@ damage on landing. Their sides can block a grounded player safely.
 ### Size-changing lasers
 
 `$BF` uses subtype 0 to shrink and subtype 1 to grow. The emitter sends a
-pulse every 30 updates, with retry on a full object pool. Its leading edge
-moves down four pixels per update, stops at the terrain and leaves a spark.
-The last 128 pixels of a long pulse are drawn and can change a player’s
-size. The trailing edge retracts after impact. The stage’s existing laser
-atlas supplies both nozzle, pulse and spark variants.
+pulse every 30 updates and retries if the object pool is full. Each pulse
+travels four pixels per update and grows in 16-pixel sections. Its 112-pixel
+limit leaves a visible gap between travelling pulses. On impact the
+beam and spark meet the floor, then the beam loses sections as its tail
+continues down. Both variants draw behind the nozzle and the players.
 
 Each beam can change either player, including a controller-2 companion.
 Contact causes a brief recoil and keeps rings and shields. Growth waits for
@@ -462,7 +465,8 @@ this uses the engine's existing effect artwork rather than CD's explosion sheet.
 
 The visible body also owns CD's former invisible controller state, saving one
 SST per Bigbom. It owns its countdown even if a visual fuse cannot allocate.
-Both sides validate reciprocal handles; unload removes only its own fuse.
+The lit fuse draws behind the body. Both sides validate reciprocal handles.
+Unloading the body also removes its fuse.
 A full pool skips unavailable effects/fragments without invalid writes or a
 stalled detonation. Debris and flash effects own no placement and outlive the body.
 

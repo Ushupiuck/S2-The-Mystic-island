@@ -99,7 +99,7 @@ def native(args):
 	assert nemesis(rom[m.s['Nem_MonitorTailsLife']:])==master[56*32:]
 	assert art[8*128:9*128]==nemesis(rom[m.s['Nem_Lives']:])[:128]
 	assert art[9*128:]==master[56*32:]
-	assert m.s['ArtTile_Monitor_FreeEnd']-m.s['ArtTile_Monitor_Free']==20
+	assert m.s['ArtTile_Monitor_FreeEnd']-m.s['ArtTile_Monitor_Free']==18
 	assert m.s['HUD_LifeType']==m.s['v_lives']+1,'Use the persistent former padding byte'
 	return dict(cache_cases=checks,content_slots=4,reclaimed_tiles=20,whole_queue_retry=True,
 		prior_pass_pinning=True,timestamp_wrap=True,life_rewards_preserved=True,
