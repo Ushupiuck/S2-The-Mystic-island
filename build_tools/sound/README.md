@@ -390,10 +390,11 @@ triggers one. The local cache is ignored by Git. `KEHmusic /clean` or
 
 `KEHmusic --tools-dir PATH` or `KEH_TOOLS_DIR` overrides native tool selection.
 Assembler/converter failures stop the packer and the ROM build with a nonzero
-exit status. The failing song wrapper and assembler diagnostics remain in
-`.sound-build/music.asm` and `.sound-build/music.log`; compression wrappers and
-diagnostics use `.sound-build/music-kos.*`. Invalid or oversized
-music/DAC data also fails the build instead of producing a partial playlist.
+exit status. Each rebuilt song uses a new `.sound-build/music-<id>/` directory
+so an open handle to a previous wrapper cannot block the next song on Windows.
+Successful builds try to remove the directory. Failures report its path and
+leave the `music.*` assembly and `music-kos.*` compression files for diagnosis.
+The build also stops for invalid or oversized music or DAC data.
 
 ## Validation
 

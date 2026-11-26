@@ -111,7 +111,7 @@ namespace KEHmusic
 			}
 		}
 
-		static void RunTool(string filename, string arguments, string output, string log = ".sound-build/music.log")
+		static void RunTool(string filename, string arguments, string output, string log)
 		{
 			var info = new ProcessStartInfo(Path.GetFullPath(filename), arguments)
 			{
@@ -130,11 +130,10 @@ namespace KEHmusic
 			}
 		}
 
-		static byte[] AssembleSong(string filename)
+		static byte[] AssembleSong(string filename, string directory)
 		{
-			foreach (string extension in new[] { "asm", "p", "bin", "log" })
-				File.Delete(".sound-build/music." + extension);
-			using (var writer = new StreamWriter(".sound-build/music.asm", false, Encoding.ASCII))
+			string path = directory + "/music";
+			using (var writer = new StreamWriter(path + ".asm", false, Encoding.ASCII))
 			{
 				writer.NewLine = "\r\n";
 				writer.WriteLine("\tCPU 68000");
@@ -145,28 +144,27 @@ namespace KEHmusic
 				writer.WriteLine("\tinclude \"_definitions/_smps2asm_inc.asm\"");
 				writer.WriteLine("\tinclude \"{0}\"", filename.Replace('\\', '/'));
 			}
-			RunTool(assembler, "-xx -n -q -A -U -E -i . -o .sound-build/music.p .sound-build/music.asm", ".sound-build/music.p");
-			RunTool(converter, ".sound-build/music.p .sound-build/music.bin", ".sound-build/music.bin");
-			return File.ReadAllBytes(".sound-build/music.bin");
+			RunTool(assembler, string.Format("-xx -n -q -A -U -E -i . -o {0}.p {0}.asm", path), path + ".p", path + ".log");
+			RunTool(converter, string.Format("{0}.p {0}.bin", path), path + ".bin", path + ".log");
+			return File.ReadAllBytes(path + ".bin");
 		}
 
-		static byte[] CompressSong(byte[] data)
+		static byte[] CompressSong(byte[] data, string directory)
 		{
-			foreach (string extension in new[] { "asm", "p", "bin", "log", "h" })
-				File.Delete(".sound-build/music-kos." + extension);
-			File.WriteAllBytes(".sound-build/music-raw.bin", data);
-			using (var writer = new StreamWriter(".sound-build/music-kos.asm", false, Encoding.ASCII))
+			string path = directory + "/music-kos";
+			string raw = directory + "/music-raw.bin";
+			File.WriteAllBytes(raw, data);
+			using (var writer = new StreamWriter(path + ".asm", false, Encoding.ASCII))
 			{
 				writer.NewLine = "\r\n";
 				writer.WriteLine("\tCPU Z80");
 				writer.WriteLine("\torg 0");
-				writer.WriteLine("\tbinclude \".sound-build/music-raw.bin\"");
+				writer.WriteLine("\tbinclude \"{0}\"", raw);
 			}
-			RunTool(assembler, "-xx -n -q -A -U -E -i . -o .sound-build/music-kos.p .sound-build/music-kos.asm",
-				".sound-build/music-kos.p", ".sound-build/music-kos.log");
-			RunTool(converter, "-z=0,kosinskiplus,MusicCompressedSize,after .sound-build/music-kos.p .sound-build/music-kos.bin .sound-build/music-kos.h",
-				".sound-build/music-kos.bin", ".sound-build/music-kos.log");
-			byte[] compressed = File.ReadAllBytes(".sound-build/music-kos.bin");
+			RunTool(assembler, string.Format("-xx -n -q -A -U -E -i . -o {0}.p {0}.asm", path), path + ".p", path + ".log");
+			RunTool(converter, string.Format("-z=0,kosinskiplus,MusicCompressedSize,after {0}.p {0}.bin {0}.h", path),
+				path + ".bin", path + ".log");
+			byte[] compressed = File.ReadAllBytes(path + ".bin");
 			if (!data.SequenceEqual(KosinskiPlus.Decode(compressed, MusicStageSize)))
 				throw new InvalidDataException("Music failed its Kosinski+ round-trip check.");
 			return compressed;
@@ -186,7 +184,31 @@ namespace KEHmusic
 				(song.OutputFile == null || File.Exists(Path.Combine("sound/music", song.OutputFile))))
 				return false;
 			Console.WriteLine("Building song \"{0}\"...", song.Title);
-			byte[] data = assembly ? AssembleSong(filename) : File.ReadAllBytes(filename);
+			// A Windows handle can keep a deleted wrapper's name unavailable after Delete returns.
+			string directory = ".sound-build/music-" + Guid.NewGuid().ToString("N");
+			Directory.CreateDirectory(directory);
+			try
+			{
+				RebuildSong(name, song, filename, assembly, directory);
+				song.BuildHash = hash;
+			}
+			catch (Exception error)
+			{
+				throw new IOException(error.Message + " Music build files: " + directory, error);
+			}
+			// A file still held open by another process must not turn a successful song into an error.
+			try
+			{
+				Directory.Delete(directory, true);
+			}
+			catch (IOException) { }
+			catch (UnauthorizedAccessException) { }
+			return true;
+		}
+
+		static void RebuildSong(string name, MusicInfo song, string filename, bool assembly, string directory)
+		{
+			byte[] data = assembly ? AssembleSong(filename, directory) : File.ReadAllBytes(filename);
 			song.OutputFile = null;
 			song.IsCompressed = song.BinaryFormat == MusicBinaryFormat.KosinskiPlus;
 			if (data.Length == 0 || data.Length > MusicStageSize)
@@ -196,7 +218,7 @@ namespace KEHmusic
 				throw new InvalidDataException(name + " decompresses beyond the MD music stage ($2000 bytes).");
 			if (!song.IsCompressed)
 			{
-				byte[] compressed = CompressSong(data);
+				byte[] compressed = CompressSong(data, directory);
 				if (compressed.Length < data.Length)
 				{
 					song.OutputFile = "../generated/" + name + "_cmp.bin";
@@ -207,10 +229,8 @@ namespace KEHmusic
 			}
 			song.Size = data.Length;
 			song.UncompressedSize = rawSize;
-			song.BuildHash = hash;
 			using (var md5 = System.Security.Cryptography.MD5.Create())
 				song.MD5 = GetFileHash(md5, filename, assembly);
-			return true;
 		}
 
 		static int Main(string[] args)

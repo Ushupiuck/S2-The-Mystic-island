@@ -115,6 +115,42 @@ def check_bus_macros(assemble):
 	print(f'Z80 bus macros: {tests} word round trips; all Dn, odd/even addresses, byte accesses, registers and stack guards.')
 
 
+def check_windows_music_rebuild(run, packer, project):
+	"""Reproduce the old wrapper's delete/recreate race while building a cold song."""
+	import ctypes
+	from ctypes import wintypes
+
+	kernel = ctypes.WinDLL('kernel32', use_last_error=True)
+	create_file = kernel.CreateFileW
+	create_file.argtypes = (wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD,
+		wintypes.LPVOID, wintypes.DWORD, wintypes.DWORD, wintypes.HANDLE)
+	create_file.restype = wintypes.HANDLE
+	kernel.CloseHandle.argtypes = (wintypes.HANDLE,)
+	kernel.CloseHandle.restype = wintypes.BOOL
+	invalid_handle = ctypes.c_void_p(-1).value
+	share_read_write_delete = 7
+	wrapper = project / '.sound-build/music-kos.asm'
+	wrapper.parent.mkdir(exist_ok=True)
+	wrapper.write_text('; Previous song wrapper\n')
+	# Open for GENERIC_READ with OPEN_EXISTING and FILE_SHARE_DELETE.
+	handle = create_file(str(wrapper), 0x80000000, share_read_write_delete, None, 3, 0x80, None)
+	if handle == invalid_handle:
+		raise ctypes.WinError(ctypes.get_last_error())
+	try:
+		wrapper.unlink()
+		# The old StreamWriter reopened this path for GENERIC_WRITE with CREATE_ALWAYS.
+		reopened = create_file(str(wrapper), 0x40000000, share_read_write_delete, None, 2, 0x80, None)
+		if reopened != invalid_handle:
+			kernel.CloseHandle(reopened)
+			raise AssertionError('Windows reopened the delete-pending music wrapper')
+		error = ctypes.get_last_error()
+		assert error == 5, ctypes.WinError(error)  # ERROR_ACCESS_DENIED
+		assert 'Building song' in run(packer, project)
+	finally:
+		kernel.CloseHandle(handle)
+	print('Windows: the old wrapper cannot be recreated while delete-pending; a cold song build succeeds.')
+
+
 def main():
 	p = argparse.ArgumentParser(description=__doc__)
 	p.add_argument('--mono', default=os.environ.get('MONO') or shutil.which('mono'))
@@ -220,7 +256,10 @@ def main():
 		(d / 'sound/music/notes.inc').write_text(header)
 		ini = d / 'sound/music/music.ini'
 		ini.write_text('[Track]\nTitle=Fixture\nFile=track.asm\n')
-		assert 'Building song' in run(packer, d)
+		if os.name == 'nt':
+			check_windows_music_rebuild(run, packer, d)
+		else:
+			assert 'Building song' in run(packer, d)
 		assert 'Building song' not in run(packer, d)
 		with (d / 'sound/music/notes.inc').open('a') as f:
 			f.write('; Nested dependency change\n')
