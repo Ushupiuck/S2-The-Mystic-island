@@ -615,7 +615,8 @@ def placements(source, act):
 				x += 24  # center between the cover's two caps
 				sub |= 0x100
 			else:
-				y -= 3  # the shared button constructor adds this offset
+				assert (y & 0xF) in (8, 9)
+				y = (y & ~0xF) + 16 - 5  # shared switch mapping ends at the next floor row
 		else:
 			assert sub == variant == 0
 			if family == 'SignpostObject':

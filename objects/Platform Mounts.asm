@@ -201,15 +201,9 @@ PlatformMount_Update:
 		clr.w	obVelY(a0)
 		move.w	Mount_kind(a0),d0
 		cmpi.w	#1,d0
-		bne.s	.button
+		bne.s	.run
 		move.w	obX(a0),spikes_base_x_pos(a0)
 		move.w	obY(a0),spikes_base_y_pos(a0)
-.button:
-		cmpi.w	#3,d0
-		bne.s	.run
-		tst.b	obRoutine(a0)
-		bne.s	.run
-		subq.w	#3,obY(a0)		; button constructor's original placement adjustment
 .run:
 		lsl.w	#2,d0
 		lea	PlatformMount_Behaviors(pc),a1

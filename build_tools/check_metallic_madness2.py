@@ -611,6 +611,14 @@ def check_twin_art_upload(g):
 	raise AssertionError('Twin Walker art did not reach VRAM')
 
 
+def mmz2_debug_entry(g, code):
+	base = g.s['Debug_MMZ2']
+	count = struct.unpack_from('>H', g.rom, base)[0]
+	size = g.s['DebugEntry_size']
+	index = next(i for i in range(count) if struct.unpack_from('>I', g.rom, base+2+i*size)[0] == code)
+	return index, count
+
+
 def twin_debug_preview(g):
 	s = g.s
 	assert g.read('TwinWalker_ArtFrame') == 0xFF
@@ -620,11 +628,7 @@ def twin_debug_preview(g):
 	g.buttons = set()
 	g.run(3)
 	assert g.read('Debug_placement_type') == s['DebugType_Placement']
-	rom = bytes(g.rom)
-	base = s['Debug_MMZ2']
-	count = struct.unpack_from('>H', rom, base)[0]
-	entries = list(struct.iter_unpack('>IIHBBH', rom[base+2:base+2+count*14]))
-	index = next(i for i, row in enumerate(entries) if row[0] == s['MMZ_TwinWalker'])
+	index, count = mmz2_debug_entry(g, s['MMZ_TwinWalker'])
 	g.write('Debug_object', (index-1) % count)
 	g.buttons = {1}
 	g.run(2)
@@ -634,6 +638,30 @@ def twin_debug_preview(g):
 	assert g.get('v_player', 'obMap', 4) == s['Map_MMZ_TwinWalker']
 	assert g.get('v_player', 'obFrame') == 2
 	assert g.get('v_player', 'obGfx', 2) & 0x67FF == s['ArtTile_MMZ2_TwinWalker']
+
+
+def switch_debug_placement(g):
+	from check_companion_followup import place
+	from check_debug_states import press_debug
+	from check_object_course import objects
+	from check_rising_crushers import seek
+	x, y = 0x0710, 0x05DB  # Flat floor beside the authored switch at $0740.
+	seek(g, x, y)
+	place(g, 'v_player', x, y, False)
+	g.write('Debug_mode_flag', 1)
+	index, _ = mmz2_debug_entry(g, g.s['SMZ_Button'])
+	g.write('Debug_object', index)
+	press_debug(g, g.s['DebugType_Placement'])
+	g.run(4)
+	assert g.get('v_player', 'obMap', 4) == g.s['Map_PlatformButton']
+	assert (g.get('v_player', 'obX', 2), g.get('v_player', 'obY', 2)) == (x, y)
+	g.buttons = {8}  # C places the selected switch.
+	g.run(2)
+	g.buttons = set()
+	g.run(3)
+	switch = next(slot for slot in objects(g, 0xAF) if g.get(slot, 'obX', 2) == x)
+	assert g.get(switch, 'obRoutine') == 2 and not g.get(switch, 'respawn_addr', 2)
+	assert g.get(switch, 'obY', 2) == y, 'Placed switch moved off its Debug preview'
 
 
 def transport_game(args):
@@ -762,7 +790,7 @@ def transport_game(args):
 		boot_level(g, zone=15, act=1, timezone=era)
 		level = g.save()
 		mask = (0x40, 0x20, 0x80, 0x80)[era]
-		doors = pipes = junctions = 0
+		doors = pipes = junctions = switches = 0
 		for x, y, oid, presence, subtype in placements:
 			if not presence & mask:
 				continue
@@ -791,6 +819,10 @@ def transport_game(args):
 						enter(pipe, scene, actor, route, x, y, hurt)
 				pipes += int(bool(route))
 				junctions += int(not route)
+			elif oid == 0xAF:
+				switch, _ = visit(x, y, 'SMZ_Button')
+				assert g.get(switch, 'obSubtype', 2) == subtype
+				switches += 1
 		x, y, _, _, subtype = next(row for row in placements if row[2] == 0x30 and row[4] & 0x100
 			and row[3] & mask)
 		cover, scene = visit(x, y, 'TubeCover_Update')
@@ -821,6 +853,8 @@ def transport_game(args):
 			g.restore(level)
 			g.buttons, g.buttons2 = set(), set()
 			twin_debug_preview(g)
+			g.restore(level)
+			switch_debug_placement(g)
 		g.restore(initial)
 		g.buttons, g.buttons2 = set(), set()
 		boot_level(g, player=s['PlayerMode_Tails'], zone=15, act=1, timezone=era)
@@ -829,8 +863,8 @@ def transport_game(args):
 		assert g.get(ACTORS[0], 'character_id') == s['CharacterID_Tails']
 		enter(pipe, scene, ACTORS[0], g.get(pipe, 'obSubtype', 2) & 63, x, y, True)
 		assert not g.read('v_errortype')
-		print(f'MMZ2 {title}: normal and hurt riders, solo Tails, carry handoffs, doors and covers passed.', flush=True)
-		report.append(dict(era=title, doors=doors, pipes=pipes, junctions=junctions,
+		print(f'MMZ2 {title}: normal and hurt riders, solo Tails, carry handoffs, doors, covers and switches passed.', flush=True)
+		report.append(dict(era=title, doors=doors, pipes=pipes, junctions=junctions, switches=switches,
 			hatch=hatch, hurt_entries=(pipes+junctions)*2+1, carry_handoffs=2, twin_walker=True, spike_crusher=True))
 	g.close()
 	return report

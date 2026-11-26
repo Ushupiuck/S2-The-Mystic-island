@@ -14,14 +14,12 @@ SMZ_Button_Behavior:
 		move.b	#4,obRender(a0)
 		move.w	#$200,obPriority(a0)
 		cmpi.b	#id_SMZ,(Current_Zone).w
-		beq.s	.art_ready
+		beq.s	.active
 		move.l	#Map_PlatformButton,obMap(a0)
 		move.w	#ArtTile_PlatformButton,obGfx(a0)
 		cmpi.w	#$0F01,(Current_ZoneAndAct).w
-		bne.s	.art_ready
+		bne.s	.active
 		move.w	#ArtTile_MMZ2_Button,obGfx(a0)
-.art_ready:
-		addq.w	#3,obY(a0)
 .active:
 		moveq	#27,d1
 		moveq	#5,d2

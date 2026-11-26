@@ -312,8 +312,11 @@ The same checks cover both approach directions, paired unloading and slot
 allocation retry. Authored visits exercise each revolving door and automatic
 pipe in its available eras and both characters. They verify path and sprite
 priority changes, exact exit points, handoffs at adjacent entrances, steering
-junctions and cover opening. Twin Walker checks cover pool retry and recycled
-helpers in native 68000 code. They verify the object loop returns on the root
+junctions and cover opening. The pipe switch visits check every live `$AF`
+placement in all four eras and place a switch with the Debug controls to verify
+that it keeps the cursor's Y.
+Twin Walker checks cover pool retry and recycled helpers in native 68000 code.
+They verify the object loop returns on the root
 and the shared DPLC retries without a partial upload. Core visits at
 `$16B2,$0658` check each rider alone and both ends together through alternating
 steps in every era. They verify the exact art upload and preview it from Debug

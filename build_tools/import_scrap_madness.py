@@ -365,6 +365,8 @@ def placements(source):
                 subtype = {0:0,1:0,2:9,3:6,4:2,5:7,6:1,7:0,8:0}[subtype & 15]
             if oid == 0x32:
                 subtype &= 15   # original SBZ switches use normal press behavior
+                assert (y & 0xF) in (8, 11)
+                y = (y & ~0xF) + 16 - 5  # shared switch mapping ends at the next floor row
             if act == 2 and oid == 0x0D:
                 subtype = 2     # SMZ2's original sign now starts the Mecha trap
             if OBJECTS[oid] == 0xA4:

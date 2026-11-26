@@ -97,6 +97,11 @@ selects a shared momentary button channel. Either rising player can also
 open it from underneath, and the cover stays open while either player
 is nearby. The solid top opens under a rider as the gap widens.
 
+The `$AF` momentary switch uses its placement coordinates for its sprite and
+collision. Set its origin five pixels above a flat floor. Both animation frames
+end on the row immediately above the floor. Debug and SonLVL use the same origin,
+and platform mounts place the switch five pixels above the body top.
+
 ## Collision path switches and doors
 
 `$0A` uses the same trigger and side selection for invisible switches and
