@@ -125,6 +125,9 @@ def check_windows_music_rebuild(run, packer, project):
 	create_file.argtypes = (wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD,
 		wintypes.LPVOID, wintypes.DWORD, wintypes.DWORD, wintypes.HANDLE)
 	create_file.restype = wintypes.HANDLE
+	set_file_info = kernel.SetFileInformationByHandle
+	set_file_info.argtypes = (wintypes.HANDLE, ctypes.c_int, wintypes.LPVOID, wintypes.DWORD)
+	set_file_info.restype = wintypes.BOOL
 	kernel.CloseHandle.argtypes = (wintypes.HANDLE,)
 	kernel.CloseHandle.restype = wintypes.BOOL
 	invalid_handle = ctypes.c_void_p(-1).value
@@ -132,23 +135,26 @@ def check_windows_music_rebuild(run, packer, project):
 	wrapper = project / '.sound-build/music-kos.asm'
 	wrapper.parent.mkdir(exist_ok=True)
 	wrapper.write_text('; Previous song wrapper\n')
-	# Open for GENERIC_READ with OPEN_EXISTING and FILE_SHARE_DELETE.
-	handle = create_file(str(wrapper), 0x80000000, share_read_write_delete, None, 3, 0x80, None)
+	# Open for GENERIC_READ | DELETE with OPEN_EXISTING and FILE_SHARE_DELETE.
+	handle = create_file(str(wrapper), 0x80010000, share_read_write_delete, None, 3, 0x80, None)
 	if handle == invalid_handle:
 		raise ctypes.WinError(ctypes.get_last_error())
 	try:
-		wrapper.unlink()
+		# FileDispositionInfo holds the name pending deletion until this handle closes.
+		delete_file = wintypes.BOOLEAN(1)
+		if not set_file_info(handle, 4, ctypes.byref(delete_file), ctypes.sizeof(delete_file)):
+			raise ctypes.WinError(ctypes.get_last_error())
 		# The old StreamWriter reopened this path for GENERIC_WRITE with CREATE_ALWAYS.
 		reopened = create_file(str(wrapper), 0x40000000, share_read_write_delete, None, 2, 0x80, None)
 		if reopened != invalid_handle:
 			kernel.CloseHandle(reopened)
 			raise AssertionError('Windows reopened the delete-pending music wrapper')
 		error = ctypes.get_last_error()
-		assert error == 5, ctypes.WinError(error)  # ERROR_ACCESS_DENIED
+		assert error in (5, 303), ctypes.WinError(error)  # ERROR_ACCESS_DENIED or ERROR_DELETE_PENDING
 		assert 'Building song' in run(packer, project)
 	finally:
 		kernel.CloseHandle(handle)
-	print('Windows: the old wrapper cannot be recreated while delete-pending; a cold song build succeeds.')
+	print(f'Windows: reopening the delete-pending wrapper returned WinError {error}. Cold song build succeeded.')
 
 
 def main():
@@ -275,7 +281,10 @@ def main():
 		assert data[-8:-4] == data[-4:], 'Shared song source was stored twice'
 		assert 'musprop_nospeedup' in (d / 'sound/musicinfo.gen.asm').read_text()
 		(d / 'sound/music/notes.inc').write_text('\tINVALID_SOUND_INSTRUCTION\n')
-		assert 'failed' in run(packer, d, False)
+		message = run(packer, d, False)
+		assert 'failed' in message and 'Music build files: ' in message, message
+		failed_build = d / message.rstrip().rsplit('Music build files: ', 1)[1]
+		assert 'INVALID_SOUND_INSTRUCTION' in (failed_build / 'music.log').read_text()
 		print('Cache: warm reuse; nested includes and shared macros rebuild; invalid sources stop the packer.')
 
 		# Compression is automatic: decoded size must fit and stored size must win.

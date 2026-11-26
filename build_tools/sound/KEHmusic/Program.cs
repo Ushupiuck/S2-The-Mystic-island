@@ -130,6 +130,12 @@ namespace KEHmusic
 			}
 		}
 
+		static void Assemble(string path)
+		{
+			RunTool(assembler, string.Format("-xx -n -q -A -U -E {0}.log -i . -o {0}.p {0}.asm", path),
+				path + ".p", path + ".log");
+		}
+
 		static byte[] AssembleSong(string filename, string directory)
 		{
 			string path = directory + "/music";
@@ -144,7 +150,7 @@ namespace KEHmusic
 				writer.WriteLine("\tinclude \"_definitions/_smps2asm_inc.asm\"");
 				writer.WriteLine("\tinclude \"{0}\"", filename.Replace('\\', '/'));
 			}
-			RunTool(assembler, string.Format("-xx -n -q -A -U -E -i . -o {0}.p {0}.asm", path), path + ".p", path + ".log");
+			Assemble(path);
 			RunTool(converter, string.Format("{0}.p {0}.bin", path), path + ".bin", path + ".log");
 			return File.ReadAllBytes(path + ".bin");
 		}
@@ -161,7 +167,7 @@ namespace KEHmusic
 				writer.WriteLine("\torg 0");
 				writer.WriteLine("\tbinclude \"{0}\"", raw);
 			}
-			RunTool(assembler, string.Format("-xx -n -q -A -U -E -i . -o {0}.p {0}.asm", path), path + ".p", path + ".log");
+			Assemble(path);
 			RunTool(converter, string.Format("-z=0,kosinskiplus,MusicCompressedSize,after {0}.p {0}.bin {0}.h", path),
 				path + ".bin", path + ".log");
 			byte[] compressed = File.ReadAllBytes(path + ".bin");
