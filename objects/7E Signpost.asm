@@ -215,6 +215,9 @@ Signpost_Sparkle:
 ; ===========================================================================
 ; loc_F0C4:
 Signpost_EndLevel:
+		; S1's giant-ring flash clears the primary player's routine pointer.
+		tst.l	(v_player+code).w
+		beq.s	.finish
 		tst.w	(Debug_placement_mode).w
 		bne.s	Signpost_Sparkle.return
 		btst	#1,(v_player+obStatus).w
@@ -222,15 +225,13 @@ Signpost_EndLevel:
 		move.b	#PlayerInputLock_Automatic,(f_lockctrl).w
 		move.w	#btnR<<8,(v_jpadholdlogical).w
 +
-		; S1's giant-ring flash clears the primary player's routine pointer.
-		tst.l	(v_player+code).w
-		beq.s	+
 		move.w	(v_player+obX).w,d0
 		move.w	(Camera_Max_X_pos).w,d1
 		addi.w	#320-24,d1
 		cmp.w	d1,d0
 		bcs.s	Signpost_Sparkle.return
-+		addq.b	#2,obRoutine(a0)
+.finish:
+		addq.b	#2,obRoutine(a0)
 
 ; ---------------------------------------------------------------------------
 ; Subroutine to load the end of act results screen
@@ -358,14 +359,8 @@ Signpost_Landed:
 		rts
 
 Signpost_FallingResults:
-		tst.w	(Debug_placement_mode).w
-		bne.s	.return
-		btst	#status.player.in_air,(v_player+obStatus).w
-		bne.s	.return
 		move.b	#8,obRoutine(a0)
 		jmp	(Load_EndOfAct).l
-.return:
-		rts
 
 ; Check both actors independently. The S3&K FixBugs version preserves the
 ; second address across the first award; here each player is explicit instead.

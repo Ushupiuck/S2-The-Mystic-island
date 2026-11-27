@@ -465,7 +465,8 @@ this uses the engine's existing effect artwork rather than CD's explosion sheet.
 
 The visible body also owns CD's former invisible controller state, saving one
 SST per Bigbom. It owns its countdown even if a visual fuse cannot allocate.
-The lit fuse draws behind the body. Both sides validate reciprocal handles.
+Both sizes use body priority `$180` and fuse priority `$200`, placing the lit
+fuse behind its body. Both sides validate reciprocal handles.
 Unloading the body also removes its fuse.
 A full pool skips unavailable effects/fragments without invalid writes or a
 stalled detonation. Debris and flash effects own no placement and outlive the body.
@@ -725,9 +726,11 @@ sensor uses the last opaque row of the post and accepts zero distance so
 the foot settles immediately above the solid terrain.
 The sign keeps spinning for `$40` countdown updates (65 calls before
 the negative-timer transition), then selects the primary character's portrait,
-locks neutral logical input and waits for the primary to reach the ground
-before loading the existing results. It stays in place instead of forcing
-an offscreen run. The classic finish still supports the giant-ring exit. Its stationary spin emits
+locks neutral logical input and loads the existing results. The finish proceeds
+while the character is airborne, in Debug, or already removed by the giant ring.
+It stays in place instead of forcing an offscreen run. Both finish modes
+support the giant-ring exit, including removal of a player in active Debug.
+The stationary spin emits
 non-collectible ring sparkles through `Ring_Sparkle` directly, with the first
 sparkle frame and six-update timer initialized; it never calls the ring pickup
 constructor with an obsolete routine byte.
@@ -866,6 +869,8 @@ level-select and slow-motion cheats remain.
 The unlock persists through level exits and the title screen. Holding A on
 entry activates placement/frame-cycle Debug for that scene; the unlocked pause
 controls also work without holding A on entry.
+Level loading clears the old active Debug mode before constructing the new
+player, so a transition cannot run the old cursor on an uninitialized actor.
 
 | Pause input after unlocking | Action |
 | --- | --- |

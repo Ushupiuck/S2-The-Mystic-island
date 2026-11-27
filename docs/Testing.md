@@ -225,6 +225,8 @@ run the assembled MD/CD floor and roof solvers against real solid-edge fixtures.
 `--core CORE --system-directory BIOS` checks exact resident module bytes and
 hardware SAT output in SMZ1/2 and both MMZ acts/all eras, both body orientations,
 independent actor/path damage, burning fuses and four/seven debris pieces.
+For both sizes, the fuse must follow its body in the linked hardware SAT;
+floor and ceiling fixtures reject a fuse that draws over the body.
 It also stages four visible Bigboms in distinct poses without changing the
 resident bank. These are deliberate positioned cases, not proof that four
 source origins share a viewport. `--pal` repeats PAL. Internal screenshots
@@ -440,7 +442,7 @@ non-wrapping bottom culling. `--pal` changes region; `--probe` records old failu
 | `check_seventh_emerald.py` | Native seven awards/duplicates/896 selection cases and result positions/blink; `--core` adds real pickups/results with `--player 1`/`2`, `--pickup-count 1` or `--fail` |
 | `check_special_stage_overlap.py` | Real bumper/DOWN/GOAL callbacks and movement against an independent wall oracle; cyan is passable |
 | `check_ss_debug.py`, `check_ss_debug_game.py` | Native fixed-point ties, free/full-grid bounds, padding and collection; game checks twelve placements, occupied-cell skips and cursor/camera alignment on taps, acceleration, stops and reversals |
-| `check_signpost.py`, `check_signpost_game.py` | Both entry modes, crossing/landing, hit boundaries, cooldown, full pools, popups, sparkles and results; native terrain/sound/DMA boundaries are stubbed |
+| `check_signpost.py`, `check_signpost_game.py` | Both entry modes, crossing/landing, hit boundaries, cooldown, full pools, popups, sparkles, giant-ring results and Debug transitions; native terrain/sound/DMA boundaries are stubbed |
 
 Special-results reproduction examples:
 
@@ -459,10 +461,18 @@ Native card checks pin S3&K's 120/270/240-update delays and reject the announcem
 on failed/partial results; this does not implement transformation gameplay.
 `--case normal --time-seconds 599` checks the five-digit 100,000 secret bonus.
 
-The signpost game runner's short fast-crossing scene stops the clock to disable
-unrelated end-art approach work. Use `check_card_screens.py --case normal` for
-the classic slow finish. Stage goal/direction states and most pickup scenes are
-positioned fixtures, not full-stage controller routes.
+The signpost game runner visits MMZ1 Present's authored signpost and giant ring.
+It positions the primary character at the finish, crosses using real movement,
+then enters the ring before or after landing; the slow stationary finish is
+also covered. Both `--player 0` (Sonic with Tails) and `--player 2` (solo Tails)
+must display the matching results and reach the special stage after the ring
+removes the primary actor. Active placement/frame-cycle Debug also runs through
+the normal tally and next-act load; placement during the ring flash must reach
+the special stage. These scenes use the real loaders and do not recreate the
+removed actor. Native cases additionally check airborne, hurt and dead actors.
+The runner's separate short fast-crossing fixture stops the clock to disable
+unrelated end-art approach work. Stage goal/direction states and most pickup
+scenes are positioned fixtures, not full-stage controller routes.
 
 ## Boss runtime checks
 

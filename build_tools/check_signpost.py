@@ -25,6 +25,31 @@ class SignpostNative(c.Manager):
         super().hook(cpu,address,size,unused)
 
 
+def check_finish_player_states(m, setup, act):
+	for mode in (0, 2):
+		for state in ('grounded', 'airborne', 'missing', 'hurt', 'dead', 'placement', 'frames'):
+			obj = setup()
+			m.write('Player_mode', mode, 2)
+			m.put(obj, 'obRoutine', 14)
+			m.put('v_player', 'obStatus', 0 if state == 'grounded' else 2)
+			if state == 'missing':
+				m.put('v_player', 'code', 0)
+			if state in ('hurt', 'dead'):
+				m.put('v_player', 'obRoutine', 4 if state == 'hurt' else 6)
+			if state in ('placement', 'frames'):
+				m.write('Debug_placement_mode', 1 if state == 'placement' else 2, 2)
+			act('Signpost_FallingResults', obj)
+			assert m.get(obj, 'obRoutine') == 8 and m.get('v_endcard', 'code') == m.s['GotThrough'], (mode, state)
+		for debug in (0, 1, 2):
+			obj = setup()
+			m.write('Player_mode', mode, 2)
+			m.put(obj, 'obRoutine', 6)
+			m.put('v_player', 'code', 0)
+			m.write('Debug_placement_mode', debug, 2)
+			act('Signpost_EndLevel', obj)
+			assert m.get(obj, 'obRoutine') == 8 and m.get('v_endcard', 'code') == m.s['GotThrough'], (mode, debug)
+
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     for name in ('rom','listing','output'):p.add_argument('--'+name,type=Path,required=True)
@@ -128,6 +153,8 @@ def main():
         assert m.get(obj,'obRoutine')==14 and m.get(obj,'obAnim')==(4 if mode==2 else 3)
         assert m.read('f_lockctrl') and not m.read('v_jpadholdlogical',2)
     checks.append('gravity $C, ascending/high-screen floor rejection, 65-update landing spin and character portraits')
+    check_finish_player_states(m,setup,act)
+    checks.append('landed sign starts results with an airborne, absent, hurt, dead or Debug primary player')
     obj=setup();act('Signpost_SpawnAirSparkle',obj)
     sparkle=next(a for a in m.pool() if m.get(a,'code')==m.s['Signpost_AirSparkle'])
     xs=[];tiers=set()

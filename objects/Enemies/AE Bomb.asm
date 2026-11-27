@@ -293,14 +293,13 @@ Bomb_SpawnFuse:
 		move.b	obStatus(a0),obStatus(a1)
 		move.b	obStatus(a0),obRender(a1)
 		ori.b	#4,obRender(a1)
-		move.w	#$100,obPriority(a1)
+		move.w	#$200,obPriority(a1)	; both fuses pass behind their $180-priority bodies
 		move.l	#Map_SMZ_Bomb,obMap(a1)
 		move.b	#Map_SMZ_Bomb_height,height_pixels(a1)
 		move.b	#Map_SMZ_Bomb_width,width_pixels(a1)
 		move.b	#3,obAnim(a1)
 		cmpi.l	#Map_Bigbom,obMap(a0)
 		bne.s	.pose
-		move.w	#$200,obPriority(a1)	; fuse passes behind the Bigbom body
 		move.l	#Map_BigbomFuse,obMap(a1)
 		move.b	#Map_BigbomFuse_height,height_pixels(a1)
 		move.b	#Map_BigbomFuse_width,width_pixels(a1)

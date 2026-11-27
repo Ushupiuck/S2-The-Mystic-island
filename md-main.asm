@@ -2348,6 +2348,7 @@ loc_3BB0:
 
 Level_ClrRam:
 		move.b	(Current_Timezone).w,d2	; level selection survives clearing transient RAM
+		clr.w	(Debug_placement_mode).w	; retire the old cursor before creating the new player
 		clearRAM v_spritequeue,v_spritequeue_end
 		clearRAM v_objspace,v_objend
 		clr.w	(Collision_response_list).l
@@ -2496,7 +2497,6 @@ Level_LoadObj:
 
 Level_SkipClr:
 		move.b	d0,(f_timeover).w
-		move.w	d0,(Debug_placement_mode).w
 		move.w	d0,(Level_Inactive_flag).w
 		move.w	d0,(Timer_frames).w
 		bsr.w	OscillateNumInit

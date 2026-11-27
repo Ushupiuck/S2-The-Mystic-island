@@ -62,6 +62,101 @@ def check_ground_contact(g, sign, label):
 		assert g.get(sign, 'obY', 2) + 31 == 0x5BF, (label, 'signpost foot')
 
 
+def check_finish_transitions(g, player):
+	from check_debug_states import press_debug
+	from check_rising_crushers import seek
+	s = g.s
+	initial = g.save()
+	pool = range(s['v_lvlobjspace'] & 65535, s['v_lvlobjend'] & 65535, s['object_size'])
+	cases = ('fast-ring', 'classic-ring', 'classic-ring-debug', 'late-ring', 'ring-debug', 'placement-next', 'frames-next')
+
+	def run(count=1):
+		for _ in range(count):
+			g.run()
+			assert not g.read('v_errortype'), (case, 'ROM exception', g.read('v_errortype'))
+
+	for case in cases:
+		g.restore(initial)
+		boot_level(g, zone=15, act=0, player=player)
+		ring_entry = case in cases[:5]
+		g.write('v_rings', 60 if ring_entry else 0, 2)
+		seek(g, 0x1F10, 0x540)
+		sign = next(slot for slot in pool if g.get(slot, 'code') == s['Signpost'])
+		place(g, 'v_player', 0x1F30, 0x55F-g.get('v_player', 'default_y_radius'), False)
+		speed = 0x300 if case.startswith('classic-') else 0x600
+		g.put('v_player', 'obVelX', speed, 2)
+		g.put('v_player', 'obInertia', speed, 2)
+		g.buttons = {7}
+		for _ in range(12):
+			run()
+			if g.get(sign, 'obRoutine') in (4, 10):
+				break
+		else:
+			raise AssertionError((case, 'signpost did not activate'))
+		g.buttons = set()
+		assert g.get(sign, 'obRoutine') == (4 if case.startswith('classic-') else 10)
+		if case == 'late-ring':
+			for _ in range(500):
+				run()
+				if g.get(sign, 'obRoutine') == 8:
+					break
+			else:
+				raise AssertionError((case, 'signpost did not settle'))
+		if ring_entry:
+			ring = next(slot for slot in pool if g.get(slot, 'code') == s['GiantRing'])
+			place(g, 'v_player', g.get(ring, 'obX', 2), g.get(ring, 'obY', 2))
+			for _ in range(60):
+				run()
+				if g.read('f_bigring'):
+					break
+			else:
+				raise AssertionError((case, 'ring did not queue the stage'))
+			if case.endswith('-debug'):
+				g.write('Debug_mode_flag', 1)
+				press_debug(g, s['DebugType_Placement'])
+			for _ in range(30):
+				run()
+				if not g.get('v_player', 'code'):
+					break
+			else:
+				raise AssertionError((case, 'ring did not remove the primary player'))
+			assert g.get('v_player', 'obStatus') & 2
+		for _ in range(500):
+			run()
+			if g.get('v_endcard', 'code') == s['GotThrough'] and g.get('v_endcard', 'obRoutine'):
+				break
+		else:
+			raise AssertionError((case, 'no results after signpost finish'))
+		run(60)
+		expected = s['Map_Got_Tails' if player == 2 else 'Map_Obj3A']
+		assert g.get('v_endcard', 'obMap', 4) == expected
+		g.video.save(g.output / f'{case}-results.png')
+		if not ring_entry:
+			g.write('Debug_mode_flag', 1)
+			press_debug(g, s['DebugType_Placement'] if case == 'placement-next' else s['DebugType_FrameCycle'])
+			run(3)
+			assert g.read('Debug_placement_mode', 2)
+		for _ in range(2300):
+			run()
+			if ring_entry:
+				ready = g.read('v_vbla_routine', 2) == s['Vint_S1SS'] and g.get('v_player', 'obRoutine')
+			else:
+				ready = (g.read('Current_ZoneAndAct', 2) == 0xF01 and g.read('v_gamemode', 2) == s['Level']
+					and g.read('v_vbla_routine', 2) == s['Vint_Level'] and g.read('f_timecount')
+					and g.get('v_player', 'obRoutine') == 2)
+			if ready:
+				break
+		else:
+			raise AssertionError((case, 'finish did not reach its destination'))
+		assert not g.read('Debug_placement_mode', 2) and not g.read('f_pause', 2)
+		run(30)
+		g.video.save(g.output / f'{case}-destination.png')
+		print(f'MMZ1 {case}: results and destination passed for player mode {player}.', flush=True)
+	g.restore(initial)
+	return ['MMZ1 real sign/ring: early, late and classic entries reach results and the special stage',
+		'MMZ1 transitions: active placement/frame Debug retires before the new player runs']
+
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     for name in ('rom','listing','core','output'):p.add_argument('--'+name,type=Path,required=True)
@@ -70,10 +165,11 @@ def main():
     p.add_argument('--pal',action='store_true')
     args=p.parse_args()
     g=Genesis(args.core,args.rom,args.listing,args.output,args.pal,system_directory=args.system_directory)
+    transitions=check_finish_transitions(g,args.player)
     check_approach(g,args.player)
     boot_level(g,zone=0,act=0,player=args.player)
     isolate(g);base=g.save();rom=args.rom.read_bytes()
-    checks=['GHZ2 and MMZ1: signpost art range, camera approach and retreat, resident monitor bodies']
+    checks=transitions+['GHZ2 and MMZ1: signpost art range, camera approach and retreat, resident monitor bodies']
     actors=['v_player','v_player2'] if args.player==0 else ['v_player']
     def run(n=1):
         for _ in range(n):

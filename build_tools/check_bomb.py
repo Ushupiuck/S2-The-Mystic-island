@@ -150,8 +150,7 @@ def native(a):
 				child = n.get(obj, 'Bomb_child', 2) | 0xFF0000
 				assert n.get(child, 'code') == n.s['Bomb_Fuse']
 				assert not n.get(child, 'respawn_addr', 2)
-				if kind:
-					assert n.get(child, 'obPriority', 2) > n.get(obj, 'obPriority', 2)
+				assert n.get(child, 'obPriority', 2) > n.get(obj, 'obPriority', 2)
 				limit = 138 if kind else 144
 				for tick in range(1, limit):
 					for unit in sorted((obj, child)):
@@ -346,15 +345,15 @@ def game(a):
 				run(34 if kind else 4)
 				child = g.get(body, 'Bomb_child', 2)
 				assert child and g.get(child, 'code') == g.s['Bomb_Fuse']
-				if kind:
-					fuse_tiles = {base+(word & 2047) for row in frames(rom, g.s['Map_BigbomFuse'], g.s['Map_BigbomFuse_frames'])
-						for _, _, word, _ in row}
-					body_frame = frames(rom, g.s[mapping], g.s[mapping+'_frames'])[g.get(body, 'obFrame')]
-					body_tiles = [base+(word & 2047) for _, _, word, _ in body_frame]
-					sat = hardware_tiles()
-					body_end = next(i+len(body_tiles) for i in range(len(sat)) if sat[i:i+len(body_tiles)] == body_tiles)
-					fuse_at = next(i for i, tile in enumerate(sat) if tile in fuse_tiles)
-					assert body_end <= fuse_at, (era, flip, body_end, fuse_at)
+				fuse_frames = frames(rom, g.get(child, 'obMap', 4))
+				fuse_frames = fuse_frames if kind else fuse_frames[8:10]
+				fuse_tiles = {base+(word & 2047) for row in fuse_frames for _, _, word, _ in row}
+				body_frame = frames(rom, g.s[mapping], g.s[mapping+'_frames'])[g.get(body, 'obFrame')]
+				body_tiles = [base+(word & 2047) for _, _, word, _ in body_frame]
+				sat = hardware_tiles()
+				body_end = next(i+len(body_tiles) for i in range(len(sat)) if sat[i:i+len(body_tiles)] == body_tiles)
+				fuse_at = next(i for i, tile in enumerate(sat) if tile in fuse_tiles)
+				assert body_end <= fuse_at, (zone, act, era, kind, flip, body_end, fuse_at)
 				g.video.save(g.output/f'z{zone}-a{act+1}-era{era}-kind{kind}-flip{flip}-fuse.png')
 				g.put(body, 'Bomb_timer', 1, 2)
 				run(36 if kind else 4)
