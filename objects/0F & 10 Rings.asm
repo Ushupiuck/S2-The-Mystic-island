@@ -192,23 +192,24 @@ LostRing_Floor:
 		move.w	obY(a0),(MCD_MainArgument+2).l
 		lea	(MCD_MainArgument+4).l,a4
 		bsr.w	.predict
-		move.b	#1,(MCD_MainFlags).l
+		moveq	#1,d4
 		move.l	a1,-(sp)
 		bsr.s	.next
 		bcs.s	.two_points
 		movea.l	a1,a2
 		bsr.w	.predict
-		move.b	#2,(MCD_MainFlags).l
+		moveq	#2,d4
 .two_points:
 		movea.l	(sp)+,a1
 		moveq	#0,d0
 		move.b	obHeight(a0),d0
 		lsl.w	#8,d0
 		ori.b	#MCD_TerrainFloorBatch,d0
+		move.b	d4,(MCD_MainFlags).l
 		jsr	(MCD_TerrainRequest).l
 		move.w	(MCD_SubResult+6).l,lost_ring_floor_distance(a1)
 		move.w	(Timer_frames).w,lost_ring_floor_frame(a1)
-		cmpi.b	#2,(MCD_MainFlags).l
+		cmpi.b	#2,d4
 		bne.s	.result
 		move.w	(MCD_SubResult+8).l,lost_ring_floor_distance(a2)
 		move.w	(Timer_frames).w,lost_ring_floor_frame(a2)
@@ -246,28 +247,30 @@ LostRing_Floor:
 		move.b	obHeight(a0),d0
 		cmp.b	obHeight(a1),d0
 		bne.s	.next
-		andi	#$FE,ccr
-		rts
+		rts				; equal radii already leave carry clear
 .unavailable:
 		ori	#1,ccr
 		rts
 
 ; Predict the same signed 16.16 movement and optional seam normalization as
-; LostRing_Move. This leaves its SST and fractional coordinates untouched.
+; LostRing_Move. The low velocity byte adds to the high fractional byte;
+; ADDX carries into the integer coordinate. No full long shift is needed.
+; The SST and both fractional coordinates remain untouched.
 .predict:
-		move.l	obX(a1),d3
-		move.w	obVelX(a1),d0
-		ext.l	d0
-		lsl.l	#8,d0
-		add.l	d0,d3
-		swap	d3
+		move.w	obX(a1),d3
+		moveq	#0,d0
+		move.b	obVelX(a1),d0
+		ext.w	d0
+		move.b	obVelX+1(a1),d1
+		add.b	obXSub(a1),d1
+		addx.w	d0,d3
 		move.w	d3,(a4)+
-		move.l	obY(a1),d3
-		move.w	obVelY(a1),d0
-		ext.l	d0
-		lsl.l	#8,d0
-		add.l	d0,d3
-		swap	d3
+		move.w	obY(a1),d3
+		move.b	obVelY(a1),d0
+		ext.w	d0
+		move.b	obVelY+1(a1),d1
+		add.b	obYSub(a1),d1
+		addx.w	d0,d3
 		tst.w	(Camera_Min_Y_pos).w
 		bpl.s	.y_ready
 		andi.w	#Level_YWrapMask,d3

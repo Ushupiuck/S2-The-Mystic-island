@@ -648,7 +648,9 @@ python build_tools/check_cd_ring_jobs.py --core /path/to/core.so --system-direct
 core's CD model; it contains/executes no Sega BIOS code. The cartridge still
 performs its own upload/handshake. This runner checks required-hardware handling,
 commands/timeouts, ownership, queued/immediate Word/PRG-RAM DMA, negative control,
-bank edges, wrap, full/mixed queues, registers and palette/vertical-scroll DMA.
+bank edges, wrap, full/mixed queues, registers and palette/vertical-scroll DMA. Word-RAM source spans stay within
+`$600000-$63FFFF`; the final-window fixture ends exactly at that boundary.
+The wrap cases exercise the VDP destination, not CPU staging beyond mapped RAM.
 `--assembler`/`--p2bin` override bundled probe tools.
 
 `--art-cache-gameplay` preserves free-RAM canaries through 600 controller frames,

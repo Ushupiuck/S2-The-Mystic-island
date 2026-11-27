@@ -116,8 +116,8 @@ def floor_batch_checks(args):
 					n.write('Camera_Max_Y_pos', 0x780, 2)
 					for i, slot in enumerate(pool[:count]):
 						n.act('LostRing_Init', regs={UC_M68K_REG_A1: slot})
-						for field, value, size in (('obX', ((536+i%12*3)<<16)+i*137, 4),
-							('obY', ((564+i%5)<<16)+i*171, 4), ('obVelX', (i%7-3)*0x80&65535, 2),
+						for field, value, size in (('obX', ((536+i%12*3)<<16)+((i*8191)&65535), 4),
+							('obY', ((564+i%5)<<16)+((i*12289)&65535), 4), ('obVelX', (i%7-3)*0x80&65535, 2),
 							('obVelY', (i%5-1)*0x40&65535, 2), ('obRender', 0xA4, 1)):
 							n.put(slot, field, value, size)
 					if gap_slot is not None:

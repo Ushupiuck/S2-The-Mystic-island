@@ -112,15 +112,16 @@ MCD_SubTerrainObjectFloor:
 MCD_SubTerrainFloorBatch:
 		lea	(MCD_SubMainArgument).w,a5
 		lea	(MCD_SubOwnResult+4).w,a6
+		moveq	#0,d0
+		move.b	(MCD_SubMainCommand).w,d0
+		ext.w	d0
+		movea.w	d0,a0			; common signed height survives every scan
 		moveq	#0,d7
 		move.b	(MCD_SubMainFlags).w,d7
 .point:
 		move.w	(a5)+,d3
 		move.w	(a5)+,d2
-		moveq	#0,d0
-		move.b	(MCD_SubMainCommand).w,d0
-		ext.w	d0
-		add.w	d0,d2
+		add.w	a0,d2
 		lea	(MCD_TerrainPrimary_Sub).l,a4
 		clr.b	(a4)
 		movea.w	#$10,a3

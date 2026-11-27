@@ -245,9 +245,11 @@ assert probe('\tjsr (MCD_AcquireWordRAM).l', restore=False)[1] == 0
 assert probe(f'\tmove.b #3,($A12001).l\n\tmove.w #$60FE,(${0x420000+g.s["MCD_SubEntry.wait"]:X}).l\n\tmove.b #1,($A12001).l\n\tmoveq #1,d0\n\tjsr (MCD_Command).l')[1] == 1
 passed('Repeated commands, warm reset, ownership round trip and service timeout')
 
+# The final span ends at $640000 (exclusive). $640000 onward is outside
+# the mapped Word-RAM window; staging a wrapping pattern there was invalid.
 for method in ('queued', 'immediate'):
 	for source, words, dest in ((0x600000,1,0x1000),(0x600000,2,0x1000),(0x600080,17,0x3FFA),
-		(0x61FFFE,1,0xFFFE),(0x61FFFE,17,0xFFFA),(0x63FFFE,17,0x1000),
+		(0x61FFFE,1,0xFFFE),(0x61FFFE,17,0xFFFA),(0x63FFDE,17,0x1000),
 		(0x600000,256,0x1000),(0x600000,32768,0),(0x600000,32769,0),(0x600000,65536,0)):
 		g.restore(base); before = vram()
 		body = fill(source, words)

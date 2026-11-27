@@ -179,8 +179,7 @@ MCD_WaitReply:
 		andi.b	#MCD_ServiceReady|MCD_ServiceError,d0
 		cmpi.b	#MCD_ServiceReady,d0
 		bne.s	.failed
-		move.w	(MCD_SubResult).l,d0
-		andi	#$FE,ccr
+		move.w	(MCD_SubResult).l,d0	; MOVE already clears carry on success
 		rts
 
 ; 2M-mode ownership. Acquire before CPU access or queuing DMA; retain ownership
