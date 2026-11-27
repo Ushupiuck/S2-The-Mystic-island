@@ -11,6 +11,25 @@ On Mode 1, Sonic and Tails push their landing callbacks with PC-relative `pea`
 before branching to the shared airborne collision transport. The transport
 invokes the callback on landing and discards it while the actor remains airborne.
 
+Terrain geometry uses the active normal/tangent radii for either character.
+The CD executor retains them across the paired scans; ground attachment,
+jump clearance and proposed growth share those same four directional pairs.
+Side and forward probes reach the active width plus one contact pixel.
+Near a cardinal surface, the forward probe's lower offset is the active height
+minus width minus one, clamped at zero and directed toward that support.
+No standing, rolling or miniature reach is selected inside the sensor paths.
+Landing uses top solidity; walls and clearance use L/R/B solidity, including
+clearance directed downward from a ceiling.
+
+The reference is CD's [paired probes](https://github.com/sonicretro/scddisasm/blob/791253ba1922d7c4142a40975860d1b3bb37b9f7/src/common/object_block_collide.asm)
+and [ground attachment](https://github.com/sonicretro/scddisasm/blob/791253ba1922d7c4142a40975860d1b3bb37b9f7/src/common/player_ground_collide.asm).
+CD's fixed ten-pixel single probes and global miniature checks are not adopted.
+S2/S3&K's speed-dependent attachment below is retained instead of CD's fixed reach.
+Both ground probes and `Player_ResizePosition` round exact 45-degree ties to
+the even cardinal quadrant: `(angle + 31 + ((angle >> 6) & 1)) & $C0`.
+Rolling, growing and landing preserve the supported world point on floors,
+both walls and ceilings, including those boundary angles.
+
 Ground attachment follows S2/S3&K's speed-dependent reach: four pixels plus the
 absolute signed integer tangential speed, capped at fourteen pixels. Floors and
 ceilings use X speed; walls use Y speed. A slow character leaves an abrupt drop
@@ -40,20 +59,31 @@ return, so a held pushing frame cannot inherit the walker's slope flips.
 Each player tracks standing radii independently. The miniature body is
 20 pixels high with a 5-pixel horizontal radius. The ball is 16 pixels
 high. Terrain sensors, object contacts and ring pickup use the active
-shape. Resizing preserves the foot point and waits if the growth space
+shape. Resizing preserves the support point and waits if the growth space
 or the next complete sprite upload is unavailable. Checkpoints and time
 warps retain each player's form. Entering a new act begins full-size.
+
+Grounded art aligns its last opaque foot pixel with that pose's radius before
+slope rotation. Miniature Tails's flight uses the supplied whole-body rotor
+poses while retaining animation IDs `$20-$24`; the separate rotor stays blank.
+Full-size spindash/skid dust is suppressed in miniature form, including particles
+already emitted before shrinking. Ordinary dust origins use the owner's
+standing radius rather than a character-ID height correction.
 
 ## Tails and companion control
 
 Manual controller 2 input takes precedence over following AI for ten seconds.
 Ordinary offscreen recovery retains its five-second timeout. Flight energy
 uses the existing `(8*60)/2` half-frame budget. Carrying Sonic uses frames
-`$D5-$D9`, a 28-pixel Y offset and an initial center-pose upload; S3's frame
+`$D5-$D9` and an initial center-pose upload; S3's frame
 numbers would select unrelated poses here. As in S3&K, a forced drop keeps the
 carry pose until landing. Tails's hurt handler releases Sonic's control lock
 before recoil, and object-controlled movement cancels active manual flight
 before releasing any passenger. Neither path waits for Tails to land.
+The carrying offset is the two standing radii minus six pixels: 28 pixels for
+the normal pair, adjusted for either mixed-size pairing or two miniatures.
+Jumping out of the grip uses the shared roll transition and preserves the
+passenger's form.
 
 Starting manual flight or swimming from a roll checks the shared terrain
 headroom with Tails's standing radii. A low roof on his active collision path
@@ -125,6 +155,11 @@ wrapping, before probing terrain. Their independent 255-update lifetime uses
 object byte `$2E`, rather than the X fractional position; horizontal movement
 cannot change the timer. Wrapping retains ordinary expiry and the final-80-update
 blink. Non-wrapping acts retain deletion below the lower camera boundary.
+Their existing slot-based four-phase floor cadence remains intact. Contiguous
+moving-ring runs can prefetch up to three falling/visible points through one CD
+request, caching each answer for that update. Non-ring slots break the run;
+other ring queries do not change its collision path or terrain. This batches
+transport without changing pickup bounds, launch velocity or bounce geometry.
 
 Focused HPZ/SMZ and collapse fixtures exist in [Testing](Testing.md). Historical
 full-route samples predate the revised AI; complete revised-AI low/normal/high

@@ -218,18 +218,25 @@ MCD_TerrainObject:
 		tst.w	d1		; callers branch on distance immediately after returning
 		rts
 
-; Test the center and shoulders at the proposed Y (d2.w) and Y/X radii
-; (d0.w). Only d0-d3 are scratch. No writes to the actor or angle buffers.
+; Vertical rider clearance retains its explicit Y/radii contract. Pose
+; expansion also supplies a proposed X and outward direction through the same
+; eight-byte shape packet; the command high byte carries the direction.
+; Only d0-d3 are scratch. No writes to the actor or MD angle buffers.
 Player_ProbeHeadroom:
+		move.w	obX(a0),d3
+		move.b	#$80,d1
+Player_ProbeShapeRoom:
 		move.l	a5,-(sp)
 		move.w	sr,-(sp)
 		disable_ints
 		lea	(MCD_MainArgument).l,a5
-		move.w	obX(a0),(a5)+
+		move.w	d3,(a5)+
 		move.w	d2,(a5)+
 		move.w	d0,(a5)+
 		move.w	obTopSolidBit(a0),(a5)
-		moveq	#MCD_TerrainHeadroom,d0
+		lsl.w	#8,d1
+		move.b	#MCD_TerrainHeadroom,d1
+		move.w	d1,d0
 		bsr.w	MCD_TerrainRequest
 		move.w	(sp)+,sr
 		movea.l	(sp)+,a5

@@ -1048,10 +1048,32 @@ def size_laser_game(args):
 					g.run(40)
 					x = g.get(actor,'obX',2)
 					assert (x >= 0x1C20 if small else x < 0x1BC0), (player,actor,small,x)
+				# Charge inside the same low passage in either direction. Every
+				# frame uses normal input and must retain the compact hitbox.
+				for direction in (-1, 1):
+					g.restore(mini)
+					x = 0x1C08 if direction < 0 else 0x1BC8
+					place(g,actor,x,0x57F-g.get(actor,'default_y_radius'),False)
+					g.put(actor,'obAngle',0)
+					g.put(actor,'obStatus',int(direction < 0))
+					hold(g,actor,5)
+					g.run(4)
+					hold(g,actor,5,0)
+					g.run(2)
+					hold(g,actor,5)
+					g.run(4)
+					assert g.get(actor,'spindash_flag') == 1, (player,actor,direction,'no charge')
+					hold(g,actor)
+					for _ in range(10):
+						g.run()
+						assert not g.read('v_errortype') and g.get(actor,'obRoutine') == 2
+						assert g.get(actor,'obHeight',2) == 0x0805
+					assert (g.get(actor,'obX',2)-x)*direction > 48, (player,actor,direction,'stalled spindash')
+					g.video.save(args.output/'size-lasers'/f'{player}-{actor}-spindash-{direction}.png')
 				g.restore(mini)
 	g.close()
 	print('Size lasers: five authored emitters and independent Sonic/Tails forms passed.',flush=True)
-	return dict(placements=placed,sonic=True,solo_tails=True,companion_tails=True,mini_art=True,low_tunnel=True)
+	return dict(placements=placed,sonic=True,solo_tails=True,companion_tails=True,mini_art=True,low_tunnel=True,two_way_mini_spindash=True)
 
 
 def main():

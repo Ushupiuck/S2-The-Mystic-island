@@ -547,7 +547,7 @@ Object_RaiseRider:
 		cmp.b	obHeight(a0),d1
 		bhs.s	.current
 		clr.b	player_unfolding(a0)
-		jsr	(Player_FloorHeadroomReady).l
+		jsr	(Player_ResizeRoomReady).l
 		bra.s	.result
 .current:
 		move.w	obHeight(a0),d0
@@ -562,7 +562,7 @@ Object_RaiseRider:
 		lsr.w	#8,d1
 		cmp.b	obHeight(a0),d1
 		bhs.s	.crush
-		jsr	(Player_FloorHeadroomReady).l
+		jsr	(Player_ResizeRoomReady).l
 		bmi.s	.crush
 
 		; The rising surface used the last standing room on the release

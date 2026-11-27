@@ -67,6 +67,8 @@ def traverse(g, output, player, miniature, down, trial):
 		row = sample(g, tick)
 		if entry is None and row['obY'] >= 0x1C0:
 			entry = row.copy()
+			# The authored mouth, rather than a test-spawned enforcer, must
+			# curl either character before the first bend, even with no Down.
 		if trace and abs(signed(trace[-1]['obInertia'])) >= 0x600 and abs(signed(row['obInertia'])) < 0x100:
 			resets.append(tick)
 		if (trace and row['obStatus'] & 32 and not row['obStatus'] & 8
@@ -85,11 +87,11 @@ def traverse(g, output, player, miniature, down, trial):
 		passed=passed, inertia_resets=resets, terrain_push_stops=pushes, entry=entry, final=row)
 
 
-def floor_surface(g, x):
+def floor_surface(g, x, first=0x670, last=0x720):
 	"""Read the bowl's actual resident floor profile to stage the starting feet."""
 	prg = 0x420000
 	path = g.read(prg+g.s['MCD_TerrainPath1_Sub'], 4)
-	for y in range(0x670, 0x720):
+	for y in range(first, last):
 		chunk = g.layout_cell(y//128, x//128)
 		cell = g.read(g.terrain_address('chunks')+chunk*128+((y//16%8)*8+x//16%8)*2, 2)
 		if not cell & 0x1000:
@@ -189,6 +191,9 @@ def main():
 					f'{sum(bool(r["terrain_push_stops"]) for r in rows)} terrain push stops.', flush=True)
 	g.close()
 	if not args.probe:
+		for row in results:
+			if row['scene'] == 'chute':
+				assert row['entry'] and row['entry']['obStatus'] & 4, ('HPZ entrance did not auto-roll', row)
 		assert all(r['passed'] and not r['terrain_push_stops'] for r in results), [
 			r for r in results if not r['passed'] or r['terrain_push_stops']]
 

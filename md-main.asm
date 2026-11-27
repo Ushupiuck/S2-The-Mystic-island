@@ -7145,10 +7145,10 @@ ExecuteObjects:
 		; S3&K does this reset from Reserved_object_3; keep our UI slots free.
 		tst.w	(Collision_response_list).l
 		bpl.s	.build_list
-		; Dense scenes stay on the direct scan; periodically recheck density.
-		move.b	(Timer_frames+1).w,d0
-		andi.b	#Collision_response_probe_mask,d0
-		bne.s	.reserved
+		; A rolling census avoids periodically rebuilding an overflowing list
+		; in one burst. It only recommends a switch; registration validates it.
+		jsr	(Touch_ProbeDense).l
+		bra.s	.reserved
 .build_list:
 		clr.w	(Collision_response_list).l
 .reserved:
@@ -7221,6 +7221,8 @@ RunTouchObject:
 		bpl.s	.skip
 .dense:
 		move.w	#-1,(Collision_response_list).l
+		move.w	#v_lvlobjspace,(Collision_response_dense_cursor).l
+		clr.w	(Collision_response_dense_count).l
 		; Finish a crowded probe without further registration overhead.
 		lea	object_size(a0),a0
 		dbf	d7,RunObject
@@ -10193,6 +10195,43 @@ Add_SpriteToCollisionResponseList:
 		rts
 .dense:
 		move.w	#-1,(a1)
+		move.w	#v_lvlobjspace,2(a1)
+		clr.w	4(a1)
+		rts
+
+; Four records per dense update replace the old 16-frame overflow spike.
+; The census is advisory: objects can change between samples, so only a full
+; RunTouchObject pass can publish a new candidate list. No pointers are exposed
+; to players while the count is negative, and no extra RAM is required.
+Touch_ProbeDense:
+		lea	(Collision_response_list).l,a1
+		movea.w	2(a1),a2
+		move.w	4(a1),d1
+		moveq	#Collision_response_probe_slots-1,d2
+.loop:
+		tst.l	code(a2)
+		beq.s	.next
+		tst.b	obColType(a2)
+		beq.s	.next
+		btst	#obRender.multi_sprite,obRender(a2)
+		bne.s	.next
+		addq.w	#1,d1
+		cmpi.w	#Collision_response_list_capacity,d1
+		bhi.s	.reset
+.next:
+		lea	object_size(a2),a2
+		cmpa.w	#v_lvlobjend,a2
+		bhs.s	.rebuild
+		dbf	d2,.loop
+		move.w	a2,2(a1)
+		move.w	d1,4(a1)
+		rts
+.reset:
+		move.w	#v_lvlobjspace,2(a1)
+		clr.w	4(a1)
+		rts
+.rebuild:
+		clr.w	(a1)
 		rts
 
 ; a0 updating owner, a1 child. Earlier slots have already had their turn.

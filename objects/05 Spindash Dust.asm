@@ -70,6 +70,8 @@ Dust_Main:
 .owner:
 		cmpa.w	player_dust_ptr(a2),a0
 		bne.w	Dust_Delete
+		cmpi.b	#Player_MiniHeight,default_y_radius(a2)
+		beq.w	.idle
 		; A live splash owns this player's bank until its animation ends.
 		lea	(v_splash).w,a1
 		cmpa.w	#v_player,a2
@@ -96,11 +98,11 @@ Dust_Main:
 		move.b	#-1,obPrevAni(a0)
 .follow:
 		move.w	obX(a2),obX(a0)
-		move.w	obY(a2),obY(a0)
-		cmpi.l	#Obj02,code(a2)
-		bne.s	.orientation
-		subq.w	#sonic_height-tails_height,obY(a0)
-.orientation:
+		moveq	#0,d0
+		move.b	default_y_radius(a2),d0
+		add.w	obY(a2),d0
+		subi.w	#sonic_height,d0
+		move.w	d0,obY(a0)
 		move.b	obStatus(a2),d0
 		andi.b	#1,d0
 		move.b	d0,obStatus(a0)
@@ -136,12 +138,11 @@ Dust_Main:
 		move.b	#4,obRoutine(a1)
 		move.w	a0,dust_controller(a1)
 		move.w	obX(a2),obX(a1)
-		move.w	obY(a2),obY(a1)
-		addi.w	#Dust_SkidYOffset,obY(a1)
-		cmpi.l	#Obj02,code(a2)
-		bne.s	.particle
-		subq.w	#sonic_height-tails_height,obY(a1)
-.particle:
+		moveq	#0,d0
+		move.b	default_y_radius(a2),d0
+		add.w	obY(a2),d0
+		addi.w	#Dust_SkidYOffset-sonic_height,d0
+		move.w	d0,obY(a1)
 		move.l	obMap(a0),obMap(a1)
 		move.b	height_pixels(a0),height_pixels(a1)
 		move.b	#4,obRender(a1)
@@ -176,6 +177,8 @@ Dust_Particle:
 .owner:
 		cmpa.w	player_dust_ptr(a2),a1
 		bne.s	.delete
+		cmpi.b	#Player_MiniHeight,default_y_radius(a2)
+		beq.s	.delete
 		cmpi.b	#4,obRoutine(a2)
 		bhs.s	.delete
 		; Check the owner's mode too: a particle may execute before its

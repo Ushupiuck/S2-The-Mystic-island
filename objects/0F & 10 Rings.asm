@@ -19,6 +19,10 @@ Ring_Animate:
 		bra.w	MarkObjGone
 ; ---------------------------------------------------------------------------
 LostRing_Collect:
+		; The moving body uses the single-mapping fast path; its pickup
+		; restores the ordinary four sparkle frames before changing state.
+		move.l	#Map_Ring,obMap(a0)
+		bclr	#obRender.static_mappings,obRender(a0)
 		move.w	#make_art_tile(ArtTile_Ring,1,0),obGfx(a0)
 Ring_Collect:
 		move.l	#Ring_Sparkle,code(a0)
@@ -68,6 +72,8 @@ CollectRing:
 ; ---------------------------------------------------------------------------
 ; Lost rings have independent lifetimes; neither timer aliases subpixel motion.
 obDelayAni	= objoff_2E
+lost_ring_floor_distance = objoff_30
+lost_ring_floor_frame = objoff_32
 
 LostRings:
 		move.w	(v_rings).w,d5
@@ -110,12 +116,19 @@ LostRings:
 ; affects any other ring. Packed stores cover only contiguous NPC fields.
 LostRing_Init:
 		move.l	#LostRing_Move,code(a1)
-		move.l	#($04<<24)|(Map_Ring_height<<8)|sprite_bound(8,Map_Ring_width),obRender(a1)
+		move.l	#($24<<24)|(Map_Ring_height<<8)|sprite_bound(8,Map_Ring_width),obRender(a1)
 		move.l	#($180<<16)|make_art_tile(ArtTile_RingLoss,1,0),obPriority(a1)
-		move.l	#Map_Ring,obMap(a1)
+		; Resolve the existing first piece once, rather than for every draw.
+		lea	(Map_Ring).l,a4
+		adda.w	(a4),a4
+		addq.w	#2,a4
+		move.l	a4,obMap(a1)
 		move.w	#$0808,obHeight(a1)
 		move.b	#$47,obColType(a1)
 		move.b	#255,obDelayAni(a1)
+		move.w	(Timer_frames).w,d0
+		subq.w	#1,d0
+		move.w	d0,lost_ring_floor_frame(a1)
 		rts
 
 LostRing_Move:
@@ -136,7 +149,7 @@ LostRing_Move:
 		bne.s	.lifetime
 		tst.b	obRender(a0)
 		bpl.s	.lifetime
-		jsr	(ObjHitFloor).l
+		bsr.w	LostRing_Floor
 		bpl.s	.lifetime
 		add.w	d1,obY(a0)
 		tst.w	(Camera_Min_Y_pos).w
@@ -161,6 +174,105 @@ LostRing_Move:
 		beq.w	DisplaySprite
 		cmpi.b	#80,obDelayAni(a0)
 		bhi.w	DisplaySprite
+		rts
+
+; The next same-phase slots are four records apart. Prefetch up to two
+; falling, visible rings whose inputs cannot change before their object turn.
+; Cache only this update's answer; isolated rings retain the ordinary query.
+LostRing_Floor:
+		move.w	(Timer_frames).w,d0
+		cmp.w	lost_ring_floor_frame(a0),d0
+		beq.w	.cached
+		movea.l	a0,a1
+		bsr.w	.next
+		bcs.w	.single
+		move.w	sr,-(sp)
+		disable_ints
+		move.w	obX(a0),(MCD_MainArgument).l
+		move.w	obY(a0),(MCD_MainArgument+2).l
+		lea	(MCD_MainArgument+4).l,a4
+		bsr.w	.predict
+		move.b	#1,(MCD_MainFlags).l
+		move.l	a1,-(sp)
+		bsr.s	.next
+		bcs.s	.two_points
+		movea.l	a1,a2
+		bsr.w	.predict
+		move.b	#2,(MCD_MainFlags).l
+.two_points:
+		movea.l	(sp)+,a1
+		moveq	#0,d0
+		move.b	obHeight(a0),d0
+		lsl.w	#8,d0
+		ori.b	#MCD_TerrainFloorBatch,d0
+		jsr	(MCD_TerrainRequest).l
+		move.w	(MCD_SubResult+6).l,lost_ring_floor_distance(a1)
+		move.w	(Timer_frames).w,lost_ring_floor_frame(a1)
+		cmpi.b	#2,(MCD_MainFlags).l
+		bne.s	.result
+		move.w	(MCD_SubResult+8).l,lost_ring_floor_distance(a2)
+		move.w	(Timer_frames).w,lost_ring_floor_frame(a2)
+.result:
+		move.w	(MCD_SubResult+4).l,d1
+		move.w	(sp)+,sr
+		tst.w	d1
+		rts
+.cached:
+		move.w	lost_ring_floor_distance(a0),d1
+		rts
+.single:
+		jmp	(ObjHitFloor).l
+
+; Skip rising/offscreen candidates without ending the run. Intervening slots
+; must all be moving rings: their floor queries do not change the terrain path
+; or layout, even if an interrupt changes which phase gets its turn.
+.next:
+		lea	4*object_size(a1),a1
+		cmpa.w	#v_lvlobjend,a1
+		bhs.s	.unavailable
+		cmpi.l	#LostRing_Move,code-3*object_size(a1)
+		bne.s	.unavailable
+		cmpi.l	#LostRing_Move,code-2*object_size(a1)
+		bne.s	.unavailable
+		cmpi.l	#LostRing_Move,code-object_size(a1)
+		bne.s	.unavailable
+		cmpi.l	#LostRing_Move,code(a1)
+		bne.s	.unavailable
+		tst.b	obRender(a1)
+		bpl.s	.next
+		move.w	obVelY(a1),d0
+		addi.w	#$18,d0
+		bmi.s	.next
+		move.b	obHeight(a0),d0
+		cmp.b	obHeight(a1),d0
+		bne.s	.next
+		andi	#$FE,ccr
+		rts
+.unavailable:
+		ori	#1,ccr
+		rts
+
+; Predict the same signed 16.16 movement and optional seam normalization as
+; LostRing_Move. This leaves its SST and fractional coordinates untouched.
+.predict:
+		move.l	obX(a1),d3
+		move.w	obVelX(a1),d0
+		ext.l	d0
+		lsl.l	#8,d0
+		add.l	d0,d3
+		swap	d3
+		move.w	d3,(a4)+
+		move.l	obY(a1),d3
+		move.w	obVelY(a1),d0
+		ext.l	d0
+		lsl.l	#8,d0
+		add.l	d0,d3
+		swap	d3
+		tst.w	(Camera_Min_Y_pos).w
+		bpl.s	.y_ready
+		andi.w	#Level_YWrapMask,d3
+.y_ready:
+		move.w	d3,(a4)+
 		rts
 
 ; Exact original CalcSine($88+$10*n) pairs: 16 at 4x, then 16 at 2x.

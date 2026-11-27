@@ -20,6 +20,81 @@ from check_object_course import boot_level
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def executor_costs(args):
+	"""Time CD player executors on resident HPZ geometry, excluding RPC waits.
+
+	Only input packets and the return boundary are staged. Clock origins reset
+	per call; scans and the actual 68000 instructions run without job stubs.
+	"""
+	g = Genesis(args.core, args.rom, args.listing, args.output/'executor-timing', args.pal, system_directory=args.system_directory)
+	boot_level(g, zone=4)
+	prg = g.memory_domains['PRGRAM']
+	gate = (C.c_uint8*512).from_address(C.addressof(prg)+0x102000)
+	sub, main = (CpuPrefix.in_dll(g.core, name) for name in ('s68k', 'm68k'))
+	g.core.s68k_set_reg.argtypes = [C.c_int, C.c_uint]
+	g.core.s68k_get_reg.argtypes = [C.c_int]
+	g.core.s68k_get_reg.restype = C.c_uint
+	g.core.s68k_run.argtypes = [C.c_uint]
+	stop, stack = g.s['MCD_SubStack_Top']-32, g.s['MCD_SubStack_Top']-4
+
+	def prgwrite(address, data):
+		for i, byte in enumerate(data):
+			prg[(address+i)^1] = byte
+
+	def act(label, command, packet):
+		g.core.s68k_pulse_reset()
+		main.cycles = sub.cycles = 0
+		main.end = 0xFFFFFFFF
+		for cpu in (main, sub):
+			for i in range(3):
+				cpu.poll[i] = 0
+		for offset, data in ((0x10, struct.pack('>H', command)), (0x12, packet), (0x2E, b'\0\0')):
+			for i, byte in enumerate(data):
+				gate[(offset+i)^1] = byte
+		prgwrite(stack, struct.pack('>I', stop))
+		prgwrite(stop, b'\x60\xFE')
+		for reg, value in ((17, 0x2700), (15, stack), (16, g.s[label])):
+			g.core.s68k_set_reg(reg, value)
+		for _ in range(20000):
+			if g.core.s68k_get_reg(16) == stop:
+				assert g.core.s68k_get_reg(15) == stack+4
+				assert sub.cycles % 4 == 0
+				return sub.cycles//4
+			g.core.s68k_run(sub.cycles+1)
+		raise AssertionError((label, hex(g.core.s68k_get_reg(16))))
+
+	results = {}
+	points = ((0x6C0, 0x180), (0x6C0, 0x248), (0x5E0, 0x280), (0x5C0, 0x300),
+		(0x510, 0x380), (0x4C0, 0x500), (0x500, 0x570), (0x540, 0x590))
+	for title, command, label in (
+		('ground', g.s['MCD_TerrainAnglePos'], 'MCD_SubTerrainObject'),
+		('forward', g.s['MCD_TerrainRoomInFront'],
+			'MCD_SubTerrainForward' if 'MCD_SubTerrainForward' in g.s else 'MCD_SubTerrainObject'),
+		('overhead', g.s['MCD_TerrainRoomOverhead'], 'MCD_SubTerrainObject'),
+		('floor pair', g.s['MCD_TerrainFloorPair'], 'MCD_SubTerrainObject'),
+		('headroom', g.s['MCD_TerrainHeadroom'], 'MCD_SubTerrainHeadroom'),
+		('air', g.s['MCD_CommandTerrainAir'], 'MCD_SubTerrainAir')):
+		costs = []
+		for h, w in ((19,9), (15,9), (14,7), (10,5), (8,5)):
+			for i, (x, y) in enumerate(points):
+				if title == 'headroom':
+					cmd = command|0x8000
+					packet = struct.pack('>HHBBBB', x, y, h, w, 12, 13)
+				elif title == 'air':
+					cmd = command|0xCD00
+					packet = struct.pack('>HHHHBBBB', x, y, 0x300 if i&1 else 0xFD00,
+						0x400 if i&2 else 0xFC00, h, w, 0, 2)
+				else:
+					angle = (i % 4)*64
+					cmd = command|((3 if title == 'ground' else angle)<<8)
+					packet = struct.pack('>HHBBBBBBBB', x, y, h, w, angle, 0, 12, 13, 0, 0)
+				costs.append(act(label, cmd, packet))
+		results[title] = dict(mean=sum(costs)/len(costs), minimum=min(costs),
+			maximum=max(costs), samples=costs)
+	g.close()
+	return results
+
+
 def ground_attachment(args):
 	"""Probe real planes across the S2/S3&K speed-dependent reach boundary."""
 	from native_test_core import Native, UC_M68K_REG_D1, UC_M68K_REG_D7
@@ -41,7 +116,9 @@ def ground_attachment(args):
 			(quadrant == 1 and x < 4) or (quadrant == 2 and y < 4) or
 			(quadrant == 3 and x >= 4)) else 0 for y in range(8) for x in range(8)]
 		n.sub.mem_write(n.s['MCD_ChunkTable_SubStart']+128, struct.pack('>64H', *cells))
-		for actor, radius in (('v_player', 19), ('v_player2', 15)):
+		for actor, radius, width in ((actor, h, w)
+			for actor, standing in (('v_player', 19), ('v_player2', 15))
+			for h, w in ((standing, 9), (14, 7), (10, 5), (8, 5))):
 			for path in (12, 14):
 				for stick in (0, 1):
 					for vx, vy in speeds:
@@ -56,7 +133,7 @@ def ground_attachment(args):
 							else:
 								x = 576-radius-1-gap
 							for field, value, size in (('obX', x, 2), ('obY', y, 2),
-								('obHeight', radius, 1), ('obWidth', 9, 1),
+								('obHeight', radius, 1), ('obWidth', width, 1),
 								('obAngle', quadrant*64, 1), ('obStatus', 33, 1),
 								('obPrevAni', 0xA5, 1), ('obTopSolidBit', path, 1),
 								('obLRBSolidBit', path+1, 1), ('obVelX', vx, 2),
@@ -146,6 +223,7 @@ def main():
 	p.add_argument('--reference', type=Path)
 	p.add_argument('--pal', action='store_true')
 	p.add_argument('--zone', type=int, default=0)
+	p.add_argument('--time-executors', action='store_true', help='Also measure CD-only player executors on resident HPZ geometry')
 	args = p.parse_args()
 	ground_cases = 0 if args.baseline else ground_attachment(args)
 	g = Genesis(args.core, args.rom, args.listing, args.output, args.pal,
@@ -324,6 +402,8 @@ def main():
 					pal=args.pal, zone=args.zone, baseline=args.baseline,
 					rom_sha256=hashlib.sha256(args.rom.read_bytes()).hexdigest(),
 					ground_attachment_cases=ground_cases, hpz_ledge=hpz)
+	if args.time_executors:
+		report['sub_cpu_cycles'] = executor_costs(args)
 	(args.output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
 	print('600 controller-driven frames preserve the complete free MD RAM block.', flush=True)
 

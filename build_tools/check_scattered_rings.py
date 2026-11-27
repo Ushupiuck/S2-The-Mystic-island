@@ -9,9 +9,135 @@ import argparse
 import json
 import struct
 
-from native_test_core import (Native, UC_M68K_REG_A1)
+from native_test_core import (Native, UC_M68K_REG_A1, UC_M68K_REG_D1, UC_M68K_REG_D7)
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def single_render_checks(m, pool):
+	"""Compare the single-piece path with the ordinary mapping renderer."""
+	mapping = m.s['Map_Ring']
+	frame = mapping+int.from_bytes(m.cpu.mem_read(mapping, 2), 'big', signed=True)
+	assert int.from_bytes(m.cpu.mem_read(frame, 2), 'big') == 1
+	piece = frame+2
+	cases = 0
+	positions = [(x, y) for x in (-9, -8, -7, 0, 160, 327, 328, 329)
+		for y in (-9, -8, -7, 0, 112, 231, 232, 2040, 2041)]
+	for x, y in positions:
+		results = []
+		for static in (False, True):
+			m.start()
+			m.act('Init_SpriteTable')
+			m.write('Camera_X_pos_copy', 1000, 2)
+			m.write('Camera_Y_pos_copy', 400, 2)
+			a = pool[0]
+			m.act('LostRing_Init', regs={UC_M68K_REG_A1: a})
+			m.put(a, 'obX', (1000+x)&65535, 2)
+			m.put(a, 'obY', (400+y)&65535, 2)
+			m.put(a, 'obGfx', 0xE260, 2)
+			m.put(a, 'obRender', 0x24 if static else 4)
+			m.put(a, 'obMap', piece if static else mapping, 4)
+			m.act('DisplaySprite', a)
+			m.act('Render_Sprites')
+			results.append((m.get(a, 'obRender')&128, m.read('v_spritecount'),
+				bytes(m.cpu.mem_read(m.s['Sprite_Table']&0xFFFFFF, 80*8))))
+		assert results[0] == results[1], (x, y, 'single mapping differs from ordinary SAT')
+		cases += 1
+	# Exhaust SAT capacity across two priority queues, preserving its links.
+	results = []
+	for static in (False, True):
+		m.start()
+		m.act('Init_SpriteTable')
+		for i, a in enumerate(pool):
+			m.act('LostRing_Init', regs={UC_M68K_REG_A1: a})
+			m.put(a, 'obX', 16+i*3, 2)
+			m.put(a, 'obY', 100, 2)
+			m.put(a, 'obPriority', 0x180 if i < 45 else 0x200, 2)
+			m.put(a, 'obRender', 0x24 if static else 4)
+			m.put(a, 'obMap', piece if static else mapping, 4)
+			m.act('DisplaySprite', a)
+		m.act('Render_Sprites')
+		assert m.read('v_spritecount') == 80
+		results.append(bytes(m.cpu.mem_read(m.s['Sprite_Table']&0xFFFFFF, 80*8)))
+	assert results[0] == results[1], 'single mapping changed a saturated SAT'
+	return cases+1
+
+
+def floor_batch_checks(args):
+	"""Compare batch probes and real ring updates with independent requests."""
+	from level_layout import encode
+	machines = [Native(args.rom, args.listing) for _ in range(2)]
+	# The reference executes the same movement but makes each original query.
+	reference = machines[0]
+	reference.cpu.mem_write(reference.s['LostRing_Floor'], bytes.fromhex('4EF9')+
+		struct.pack('>I', reference.s['ObjHitFloor']))
+
+	def geometry(n, path):
+		n.start()
+		n.resident_terrain = True
+		n.sub.mem_write(n.s['MCD_TerrainLayout_Sub'], encode([[1]*8 for _ in range(8)], [[0]]))
+		n.sub.mem_write(n.s['MCD_ChunkTable_SubStart']+128,
+			struct.pack('>64H', *[0xF001 if y >= 4 else 0 for y in range(8) for x in range(8)]))
+		# Deliberately distinct paths catch accidental primary-path resets.
+		n.cpu.mem_write(0x3E0000, bytes((255, 0))*n.s['MCD_TerrainIndexCapacity'])
+		n.write('v_colladdr1', 0x3E0000, 4)
+		n.write('v_colladdr2', 0x3E0001, 4)
+		n.write('Collision_addr', 0x3E0000+path, 4)
+		return list(range(n.s['v_lvlobjspace'], n.s['v_lvlobjend'], n.s['object_size']))
+
+	n = machines[1]
+	points = 0
+	for path in (0, 1):
+		pool = geometry(n, path)
+		for height in (8, 10, 19, 23, 127, 128):
+			for gap in (-20, -3, -1, 0, 1, 14, 20):
+				positions = [(536+i*16, (575-height+gap+i)&65535) for i in range(3)]
+				expected = []
+				for x, y in positions:
+					for field, value, size in (('obX', x, 2), ('obY', y, 2), ('obHeight', height, 1)):
+						n.put(pool[0], field, value, size)
+					n.act('ObjHitFloor', pool[0])
+					expected.append(n.cpu.reg_read(UC_M68K_REG_D1)&65535)
+				for count in (1, 2, 3):
+					n.cpu.mem_write(n.s['MCD_MainArgument'], struct.pack('>6H', *[v for point in positions for v in point]))
+					n.write('MCD_MainFlags', count-1)
+					n.cd_request(height<<8|n.s['MCD_TerrainFloorBatch'])
+					actual = [int.from_bytes(n.cpu.mem_read(n.s['MCD_SubResult']+4+i*2, 2), 'big') for i in range(count)]
+					assert actual == expected[:count], (path, height, gap, count, actual, expected)
+					points += count
+
+	updates = 0
+	for path in (0, 1):
+		for wrap in (False, True):
+			for count, gap_slot in ((1, None), (8, None), (32, None), (50, None), (32, 3)):
+				for n in machines:
+					pool = geometry(n, path)
+					n.write('Camera_Min_Y_pos', 65535 if wrap else 0, 2)
+					n.write('Camera_Max_Y_pos', 0x780, 2)
+					for i, slot in enumerate(pool[:count]):
+						n.act('LostRing_Init', regs={UC_M68K_REG_A1: slot})
+						for field, value, size in (('obX', ((536+i%12*3)<<16)+i*137, 4),
+							('obY', ((564+i%5)<<16)+i*171, 4), ('obVelX', (i%7-3)*0x80&65535, 2),
+							('obVelY', (i%5-1)*0x40&65535, 2), ('obRender', 0xA4, 1)):
+							n.put(slot, field, value, size)
+					if gap_slot is not None:
+						n.put(pool[gap_slot], 'code', n.s['ObjNull'])
+				for tick in range(12):
+					states = []
+					for n in machines:
+						n.write('Timer_frames', tick, 2)
+						n.write('Vint_runcount', tick, 4)
+						for i, slot in enumerate(pool[:count]):
+							# Simulate an interrupt between ring turns too.
+							if i == 17:
+								n.write('Vint_runcount', tick+1, 4)
+							if n.get(slot, 'code') == n.s['LostRing_Move']:
+								n.act('LostRing_Move', slot, {UC_M68K_REG_D7: 89-i})
+						states.append([(n.get(slot, 'code'), n.get(slot, 'obX', 4), n.get(slot, 'obY', 4),
+							n.get(slot, 'obVelY', 2), n.get(slot, 'obDelayAni')) for slot in pool[:count]])
+					assert states[0] == states[1], (path, wrap, count, gap_slot, tick, 'prefetch changed movement')
+					updates += count
+	return dict(batch_points=points, ring_updates=updates)
 
 
 def check(args):
@@ -104,6 +230,7 @@ def check(args):
 			entry = 'LostRing_Collect' if lost else 'Ring_Collect'
 			assert m.get(a, 'code') == m.s[entry]
 			m.act(entry, a)
+			assert m.get(a, 'obMap', 4) == m.s['Map_Ring'] and not m.get(a, 'obRender')&32
 			assert m.read('v_rings', 2) == 1 and not m.get(a, 'obColType')
 			frames = [m.get(a, 'obFrame')]
 			for tick in range(1, 25):
@@ -185,7 +312,8 @@ def check(args):
 		m.put(actor, 'obVelY', 0xFC00, 2)
 	m.act('TwistingPathway_Cage', a)
 	assert not m.get(a, 'obStatus') & 0x18
-	return dict(allocation_cases=cases, debug_monitor_placements=debug_cases, simultaneous_player_pickups=pickups,
+	render_cases = single_render_checks(m, pool)
+	return dict(single_mapping_cases=render_cases, allocation_cases=cases, debug_monitor_placements=debug_cases, simultaneous_player_pickups=pickups,
 		proximity_cases=proximity, goddess_rings=50, goddess_interval=11,
 		cage_character_phases=128)
 
@@ -262,7 +390,7 @@ def main():
 	p.add_argument('--system-directory', type=Path)
 	p.add_argument('--pal', action='store_true')
 	args = p.parse_args()
-	report = dict(native=check(args))
+	report = dict(native=check(args), floor_batch=floor_batch_checks(args))
 	if args.core:
 		if not args.output or not args.system_directory:
 			p.error('--core requires --output and --system-directory')

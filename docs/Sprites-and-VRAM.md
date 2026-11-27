@@ -48,6 +48,13 @@ do not spend SAT entries on pieces outside the viewport. SAT links are initializ
 terminator and writes a new hidden terminator, retaining the 80-sprite limit.
 The S1 stage appends to the same link chain. There is no star-specific renderer path.
 
+Render bit 5 points directly at one six-byte mapping piece. Unflipped
+foreground instances use a straight single-piece path, preserving their SST
+bounds, Y wrapping, visible flag, art attributes, SAT capacity and X=0 avoidance.
+Flipped, screen-space and explicitly clipped static pieces retain the generic
+path. Scattered rings resolve their existing first piece once at initialization;
+collection restores their ordinary mapping table and clears bit 5.
+
 The VBlank wait latch has three states: `$00` while foreground code runs, `$01`
 when `WaitForVint` requests work, and `$FF` once VBlank admits that request.
 Only `$01` starts the full screen handler. A second VBlank arriving while the
@@ -913,6 +920,14 @@ The converter assigns the shared palette roles and reuses overlapping tile
 runs. Each bank keeps the ordinary player frame IDs and reuses that player’s
 VRAM destination. Miniature and full-size players can appear simultaneously.
 The Knuckles crop is reference art for later work.
+
+Grounded poses carry an explicit foot radius in the converter: ten pixels for
+the miniature standing/charging body and eight for the ball. It anchors the
+opaque pixels before rotating slope poses; airborne poses retain their authored
+center. Tails's five flight scripts use body frames `$EE-$F5`, including the
+two rotor, two carrying and four tired poses. The separate tail's `$27/$28`
+frames remain blank because these body poses already contain the rotor.
+Normal animation IDs and the existing body/tail VRAM allocations are retained.
 
 | Reference | PC sheet | Original crop, left/top/right/bottom (end exclusive) |
 | --- | --- | --- |

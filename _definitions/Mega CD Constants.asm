@@ -55,6 +55,13 @@ MCD_CommandTerrainWall:		equ	8
 MCD_CommandLayoutRead:		equ	9
 MCD_CommandLayoutWrite:		equ	10
 MCD_CommandTerrainAir:		equ	11
+; Twelve-byte player terrain packet. Height/width and top/LRB are byte pairs.
+MCD_TerrainPacketX:		equ 0
+MCD_TerrainPacketY:		equ 2
+MCD_TerrainPacketRadii:		equ 4
+MCD_TerrainPacketAngle:		equ 6
+MCD_TerrainPacketSolidity:	equ 8
+
 MCD_TerrainAnglePos:		equ	$20
 MCD_TerrainRoomInFront:		equ	$21
 MCD_TerrainRoomOverhead:		equ	$22
@@ -71,6 +78,9 @@ MCD_TerrainObjectLeft:		equ	$2C
 MCD_TerrainObjectCeiling:		equ	$2D
 MCD_TerrainObjectLast:		equ	MCD_TerrainObjectCeiling
 MCD_TerrainHeadroom:		equ	$2E
+; Three X/Y pairs; command high byte is their common radius, MainFlags is
+; count minus one (one to three points). Replies are signed distance words.
+MCD_TerrainFloorBatch:		equ	$2F
 MCD_TerrainIndexCapacity:		equ	$600
 MCD_TerrainStreamCapacity:	equ	$E000-$4C
 MCD_SubWordRAM:			equ	$80000

@@ -71,15 +71,16 @@ MCD_SubEntry:
 		rept	$20-19
 		dc.l	.unknown
 		endm
-		rept	MCD_TerrainObjectFloorX-MCD_TerrainAnglePos
+		dc.l	MCD_SubTerrainObject,MCD_SubTerrainForward
+		rept	MCD_TerrainObjectFloorX-MCD_TerrainRoomInFront-1
 		dc.l	MCD_SubTerrainObject
 		endm
 		dc.l	MCD_SubTerrainObjectFloor
 		rept	MCD_TerrainObjectLast-MCD_TerrainObjectFloorX
 		dc.l	MCD_SubTerrainObject
 		endm
-		dc.l	MCD_SubTerrainHeadroom
-		rept	$100-MCD_TerrainHeadroom-1
+		dc.l	MCD_SubTerrainHeadroom,MCD_SubTerrainFloorBatch
+		rept	$100-MCD_TerrainFloorBatch-1
 		dc.l	.unknown
 		endm
 .handlersEnd:

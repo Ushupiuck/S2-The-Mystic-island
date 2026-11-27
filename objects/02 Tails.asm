@@ -1186,6 +1186,12 @@ TailS3_locret_13FBE:
 
 
 Tails_Carry_Sonic:
+		; Preserve the normal hand/body spacing for mixed and miniature forms.
+		; Compute it once for the pickup/attached paths, without form checks.
+		moveq	#0,d2
+		move.b	default_y_radius(a0),d2
+		add.b	default_y_radius(a1),d2
+		subq.w	#sonic_height+tails_height-Tails_CarriedYOffset,d2
 		tst.b	(a2)
 		beq.w	TailS3_loc_14534
 		cmpi.b	#4,obRoutine(a1)
@@ -1223,10 +1229,9 @@ TailS3_loc_14428:
 		move.w	#-$380,obVelY(a1)
 		bset	#status.player.in_air,obStatus(a1)
 		move.b	#1,jumping(a1)
-		move.b	#$E,obHeight(a1)
-		move.b	#7,obWidth(a1)
-		move.b	#2,obAnim(a1)
-		bset	#status.player.rolling,obStatus(a1)
+		exg	a0,a1
+		jsr	(Player_EnterRoll).l
+		exg	a0,a1
 		bclr	#status.player.rolljumping,obStatus(a1)
 		rts
 ; ---------------------------------------------------------------------------
@@ -1249,7 +1254,7 @@ TailS3_loc_1446A:
 TailS3_loc_14474:
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
-		addi.w	#Tails_CarriedYOffset,obY(a1)
+		add.w	d2,obY(a1)
 TailS3_loc_14492:
 		andi.b	#$FC,obRender(a1)
 		andi.b	#$FE,obStatus(a1)
@@ -1313,7 +1318,8 @@ TailS3_loc_14542:
 		bhs.w	TailS3_locret_1459C
 		move.w	obY(a1),d1
 		sub.w	obY(a0),d1
-		subi.w	#$20,d1
+		sub.w	d2,d1
+		subq.w	#4,d1
 TailS3_loc_1456C:
 		cmpi.w	#$10,d1
 		bhs.w	TailS3_locret_1459C
@@ -1345,7 +1351,7 @@ TailS3_sub_1459E:
 		clr.w	obAngle(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
-		addi.w	#Tails_CarriedYOffset,obY(a1)
+		add.w	d2,obY(a1)
 		move.w	#AniIDSonAni_Carried<<8,obAnim(a1)	; and obPrevAni
 		move.b	#SonicFrame_CarriedFirst,obFrame(a1)
 		move.b	#0,obTimeFrame(a1)
@@ -2191,10 +2197,10 @@ Tails_Test_For_Flight:
 		beq.s	.start
 		; Keep the roll when the standing hitbox would overlap terrain.
 		move.w	default_y_radius(a0),d0
-		jsr	(Player_FloorHeadroom).l
+		jsr	(Player_ResizeRoom).l
 		bmi.s	.return
 		move.w	default_y_radius(a0),d0
-		jsr	(Player_ResizeOnFloor).l
+		jsr	(Player_Resize).l
 		bclr	#status.player.rolling,obStatus(a0)
 
 .start:
@@ -2360,23 +2366,7 @@ Tails_ResetOnFloor:
 		bne.s	.reset			; forced rolls retain their ball and animation
 		jsr	(Player_RollLandingRoom).l
 		bmi.s	.reset
-		move.b	#AniIDSonAni_Walk,obAnim(a0)
-		move.b	obHeight(a0),d0
-		move.b	default_y_radius(a0),obHeight(a0)
-		move.b	default_x_radius(a0),obWidth(a0)
-		btst	#status.player.rolling,obStatus(a0)
-		beq.s	.reset
-		bclr	#status.player.rolling,obStatus(a0)
-		sub.b	default_y_radius(a0),d0
-		ext.w	d0
-		move.w	d0,-(sp)
-		move.b	obAngle(a0),d0
-		addi.b	#$40,d0
-		bpl.s	.adjustheight
-		neg.w	(sp)			; standing radius extends the other way on ceilings
-.adjustheight:
-		move.w	(sp)+,d0
-		add.w	d0,obY(a0)
+		jsr	(Player_UnrollOnLanding).l
 .reset:
 		bclr	#status.player.in_air,obStatus(a0)
 		bclr	#status.player.pushing,obStatus(a0)
@@ -2517,6 +2507,17 @@ Animate_Tails_Part2:
 		bclr	#status.player.pushing,obStatus(a0)
 
 TailS3_loc_1588A:
+		; The miniature rotor is part of the body. Preserve the normal IDs
+		; used by flight/carry AI, selecting its five scripts only here.
+		cmpi.b	#$20,d0
+		blo.s	.index
+		cmpi.b	#$25,d0
+		bhs.s	.index
+		cmpi.l	#Map_MiniTails,obMap(a0)
+		bne.s	.index
+		subi.w	#$20,d0
+		lea	(AniMiniTailsFlight).l,a1
+.index:
 		add.w	d0,d0
 		adda.w	(a1,d0.w),a1
 		move.b	(a1),d0

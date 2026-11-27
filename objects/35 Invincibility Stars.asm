@@ -49,7 +49,7 @@ Obj35:
 ; ---------------------------------------------------------------------------
 InvincibilityStars_Update:
 		tst.b	(Super_Sonic_flag).w
-		bne.w	DeleteObject
+		jne	(DeleteObject).l
 		btst	#InvincibilityStars_RetryBit,invincibility_flags(a0)
 		beq.s	.choose_parent
 		bsr.w	InvincibilityStars_EnsurePartner
@@ -62,11 +62,11 @@ InvincibilityStars_Update:
 		bsr.w	InvincibilityStars_CheckParent
 		bne.s	.parent_ready
 		btst	#InvincibilityStars_RetryBit,invincibility_flags(a0)
-		beq.w	DeleteObject
+		jeq	(DeleteObject).l
 		; With a full pool and only the partner alive, reuse this effect.
 		lea	(v_player2).w,a1
 		bsr.w	InvincibilityStars_CheckParent
-		beq.w	DeleteObject
+		jeq	(DeleteObject).l
 		bclr	#InvincibilityStars_RetryBit,invincibility_flags(a0)
 		bset	#InvincibilityStars_PartnerBit,invincibility_flags(a0)
 .parent_ready:

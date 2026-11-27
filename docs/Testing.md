@@ -78,7 +78,7 @@ python build_tools/check_object_manager.py
 | `check_ram_ranges.py` | Packed RAM boundaries, palette aliases and actual `clearRAM` instructions, including odd starts, short tails, DBF counts and canaries |
 | `check_object_layouts.py`, `check_word_subtypes.py` | Eight-byte records, word settings, era masks, MD/CD loaders and Debug; optional `--before-ref`/`--before-listing` audit a specific migration |
 | `check_object_manager.py` | Loading/dispatch/deletion, all 768 placements per era, indices above 255, Debug, collision and effect-bank behavior |
-| `check_scattered_rings.py` | Original sine reference versus 216 allocation/count/water cases, both-player single rewards and exact sparkle timing, goddess proximity/fifty-emission/full-pool behavior and both-character cage phases |
+| `check_scattered_rings.py` | Original sine reference versus 216 allocation/count/water cases, both-player single rewards and exact sparkle timing, goddess proximity/fifty-emission/full-pool behavior, both-character cage phases, single-piece SAT parity and batched-floor/update parity |
 | `check_sprite_bounds.py`, `check_sprite_assets.py` | Compiled mapping geometry, initialization bounds, SST operands and art/DPLC ranges; static scans cannot prove register aliases/runtime indices |
 | `check_ghz_vram.py` | All 64 act PLC selections, sprite-bank overlap, spring/support/spike order, seesaws, boss banks and optional mounted-button art |
 | `check_sprite_palettes.py` | Shared slots, spring attributes, underwater regeneration, private stage/results art and emeralds; `--reference REV` is a migration-specific RGB comparison |
@@ -109,6 +109,20 @@ The atlas check uses a host Nemesis decoder. `build_seesaw_art.py --source
 life-portrait producer is `build_life_art.py`; shared UI regeneration runs
 `build_hud_art.py`, then `build_card_art.py` and `build_special_results_art.py`.
 These write outputs; do not invoke them just to inspect source.
+
+`check_ring_spill_performance.py --core CORE --system-directory BIOS --output OUTPUT`
+collects fifty real pickup objects, then takes a real spike hit on authored SMZ
+terrain. The spike and pickups are test fixtures; no level placements are saved.
+It compares the same hurt state with and without its 32 scattered objects,
+leaving Tails AI, sound, terrain and VBlank scheduling active. It records the hit
+frame, game updates per video frame and ring lifetime, stopping at death/scene
+exit rather than counting reloads as gameplay stalls. Use `--scene girders` or
+`--scene stompers` for SMZ1's lower route, `--act 2 --scene start`, `--player 2`
+and `--pal` for the other variants. The stomper fixture starts on the authored
+slope near `$0940,$0600`; a one-update hitch remains reproducible with the full
+spill. Use `--probe` to record that known limitation or an older ROM's trace.
+The start and girder scenes require zero missed updates. These scheduler checks
+do not establish host presentation timing or hardware performance.
 
 For the ring-spill/monitor scene, run `check_scattered_rings.py` with `--core`,
 `--system-directory` and `--output test-results/rings/report.json`, then add
@@ -263,7 +277,12 @@ Native checks cover insertion ordering/duplicates, overflow, all 90 candidates,
 both actors, invisible hitboxes, composite/deleted/disabled rejection and late
 children. A matching previous pair compares every size at inside/touching/outside
 boundaries, rolling/ducking and response categories in list/dense modes; sound
-and DMA are stubbed. The game fixture checks dispatcher capacity/lifetime,
+and DMA are stubbed. The native census check allows a bounded full pool sweep and then requires
+complete live registration when density drops. Scattered-ring checks compare
+one/two/three-point floor packets, both paths and signed radii with individual
+queries. Full ring movement is compared with forced individual queries across
+contiguous/gapped clouds, wrap modes and an interrupt between ring turns.
+The game fixture checks dispatcher capacity/lifetime,
 final-slot ring collection and live hitbox changes in GHZ4. Mounted objects,
 monitors, enemies and boss suites exercise the same collision path in context.
 
@@ -654,14 +673,38 @@ mailbox waits; full frames also check jumping and free-RAM canaries without
 requiring random/NPC phases to match. Prepared art DMA drains through VBlank
 before a plane probe takes Word RAM.
 
-Current-ROM runs also execute 5,120 native ground-attachment boundaries: both
-actors/radii and collision paths, all four surface orientations, signed X/Y
+Current-ROM runs also execute 20,480 native ground-attachment boundaries: both
+actors' standing/rolling and miniature radii, both collision paths, all four surface orientations, signed X/Y
 speeds, penetration limits, exact attachment thresholds and the running-disc
 override. `--zone 4` adds the HPZ1 cliff at `$C00,$300`: Sonic and manually
 controlled sidekick Tails walk left off its edge, fall onto the lower slope and
 turn right for 240 frames each. The check rejects stepping down with a flat angle,
 missing landing angles and false uphill pushing. Run with and without `--pal`;
 the fixture stages initial positions, then uses ordinary controller input.
+
+`--time-executors` additionally records `sub_cpu_cycles` from real CD instruction
+execution on resident HPZ terrain. It times ground, forward, overhead, paired
+floor, headroom and airborne operations across both full-sized characters,
+rolling and miniature shapes. These slices exclude RPC waits; `md_cpu_cycles`
+still includes the complete MD mailbox call. Input positions may take different
+contact branches after a geometry correction, so compare the recorded samples
+and behavior before attributing a change to instruction savings. Neither clock
+measurement establishes a whole-frame or hardware speedup.
+
+`check_player_shape.py --output test-results/player-shape.json` checks the actual
+MD/CD executors against independent floor/wall/ceiling planes, both solidity
+paths, miniature shafts and proposed growth. Non-character radii catch accidental
+preset assumptions. Resizing covers every pair of tested shapes at all 256
+angles, preserving the supported coordinate and both fractional coordinates.
+The independently computed angle rounding must match the assembled CD table.
+
+`check_mini_players.py --core CORE --system-directory BIOS --output OUTPUT`
+uses the real shrink beam, then ordinary inputs for walking, charging, rolling,
+jumping and Tails flight/tired poses as Sonic, solo Tails and controller-2 Tails.
+It reads the hardware SAT and uploaded body tiles to check grounded feet;
+CPU mapping fields can already describe the following VBlank's frame. It also
+checks hidden oversized dust, both mixed-size carry pairings, both-mini carrying
+and the passenger's real jump-off radii. Visual captures remain in the output.
 
 `check_terrain_momentum.py --core CORE --system-directory BIOS --output OUTPUT`
 repeats HPZ1's first green-rimmed chute at ten integer/subpixel alignments around
@@ -677,6 +720,10 @@ loaded. `--scene chute`/`bowl`, `--player 0`/`2`, `--full-only` and `--pal` narr
 repeat the checks. `--probe` records an older ROM's failures without asserting
 success; compare matching collision geometry. These fixtures do not measure
 complete controller-only act playthroughs.
+The chute run also checks that its authored entrance curls either character
+without held Down. `check_autospin.py` retains the GHZ1 two-way traversal and
+adds HPZ1's actual lower mouth: both sizes run or charge a spindash into it
+from the right and climb its return bend without reversal.
 
 Ring-job tests cover sparse/all-active timers, staggered collection, bank pauses,
 reset and guards in HPZ/SMZ with both player modes. Their `--baseline` is a boolean

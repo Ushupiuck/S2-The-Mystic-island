@@ -1471,11 +1471,15 @@ Main_RAM_End:
 Collision_response_capacity = (v_lvlobjend-v_lvlobjspace)/object_size
 Collision_response_list_capacity = 24 ; 24 hit candidates and a count word occupy 50 bytes
 Collision_response_bytes = Collision_response_list_capacity*2
-Collision_response_probe_mask = $F ; retry the list every 16 dense updates
+Collision_response_probe_slots = 4 ; amortize the dense census across updates
 	phase RAM_Start
 Collision_response_list:	ds.w	1	; pointer bytes; -1 = dense-scene full scan
 Collision_response_entries:	ds.w	Collision_response_list_capacity
 Collision_response_list_end:
+; The entries are dead in dense mode. Reuse their first two words for an
+; advisory rolling census; a complete live rebuild validates any low count.
+Collision_response_dense_cursor = Collision_response_entries
+Collision_response_dense_count = Collision_response_entries+2
 	dephase
 
 	if (MOMPASS>1)&&((Main_RAM_Start&$FF8000)<>$FF8000)

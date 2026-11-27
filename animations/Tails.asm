@@ -88,3 +88,15 @@ AniTails27:	dc.b    4, $CF, $D0, $FF
 AniTails28:	dc.b   $B, $C2, $CD, $CE, $FF
 AniTails29:	dc.b    2, $EB, $EB, $EC, $ED, $EC, $ED, $EC, $ED, $EC, $ED, $EC, $ED, $FD,   0
 		even
+
+; Miniature flight rotates in the complete body; its separate rotor frames
+; remain blank. Animation IDs $20-$24 still serve the ordinary flight logic.
+AniMiniTailsFlight:
+		dc.w .fly-AniMiniTailsFlight,.ascend-AniMiniTailsFlight
+		dc.w .carry-AniMiniTailsFlight,.carry-AniMiniTailsFlight
+		dc.w .tired-AniMiniTailsFlight
+.fly:		dc.b 1,$EE,$EF,$FF
+.ascend:	dc.b 0,$EE,$EF,$FF
+.carry:	dc.b 1,$F0,$F1,$FF
+.tired:	dc.b 7,$F2,$F3,$F4,$F5,$FF
+		even

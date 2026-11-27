@@ -5,6 +5,22 @@
 ; produces ordered VDP records in Word RAM; only the MD consumes those records.
 ; ===========================================================================
 
+terrainshape: macro
+		moveq	#0,d1
+		move.b	obHeight(a0),d1
+		movea.w	d1,a5			; normal radius, retained across tile scans
+		move.b	obWidth(a0),d1
+		movea.w	d1,a6			; tangent radius, retained across tile scans
+		endm
+
+terrainpath: macro solidfield
+		move.l	(MCD_TerrainPath1_Sub).l,(MCD_TerrainPath_Sub).l
+		cmpi.b	#$C,solidfield(a0)
+		beq.s	.ready
+		move.l	(MCD_TerrainPath2_Sub).l,(MCD_TerrainPath_Sub).l
+.ready:
+		endm
+
 ; ---------------------------------------------------------------------------
 ; Level-load transfer. MD prepared the shared collision bank once.
 ; CD decoding already wrote resident blocks, layout and chunks during loading.
@@ -91,6 +107,31 @@ MCD_SubTerrainObjectFloor:
 		bsr.w	MCD_SubObjHitFloor2
 		bra.w	MCD_SubTerrainResult
 
+; Common-height floor points share one dispatch/mailbox round trip. No SST
+; copy is needed; a5/a6 retain the input/output cursors across tile scans.
+MCD_SubTerrainFloorBatch:
+		lea	(MCD_SubMainArgument).w,a5
+		lea	(MCD_SubOwnResult+4).w,a6
+		moveq	#0,d7
+		move.b	(MCD_SubMainFlags).w,d7
+.point:
+		move.w	(a5)+,d3
+		move.w	(a5)+,d2
+		moveq	#0,d0
+		move.b	(MCD_SubMainCommand).w,d0
+		ext.w	d0
+		add.w	d0,d2
+		lea	(MCD_TerrainPrimary_Sub).l,a4
+		clr.b	(a4)
+		movea.w	#$10,a3
+		clr.w	d6
+		moveq	#$C,d5
+		bsr.w	MCD_SubFindFloor
+		move.w	d1,(a6)+
+		dbf	d7,.point
+		moveq	#0,d0
+		rts
+
 ; Six words supply only the fields used by terrain, rather than copying an SST.
 ; Player paired sensors, distance selection and ground attachment all run here.
 MCD_SubTerrainObject:
@@ -127,16 +168,16 @@ MCD_SubTerrainObject:
 		rts
 .entries:
 		dc.l	MCD_SubAnglePos
-		dc.l	MCD_SubCalcRoomInFront
+		dc.l	0			; $21 reads its packet in the direct executor
 		dc.l	MCD_SubCheckRoomOverhead
-		dc.l	MCD_SubFloorPair
+		dc.l	MCD_SubTerrainFloorPair
 		dc.l	MCD_SubProbeCeiling
 		dc.l	MCD_SubChkFloorEdge
 		dc.l	MCD_SubChkFloorEdge_Part2
 		dc.l	MCD_SubObjHitFloor
 		dc.l	MCD_SubObjHitFloor2
-		dc.l	MCD_SubRightSensor
-		dc.l	MCD_SubLeftSensor
+		dc.l	MCD_SubTerrainRightSensor
+		dc.l	MCD_SubTerrainLeftSensor
 		dc.l	MCD_SubObjHitWallRight
 		dc.l	MCD_SubObjHitWallLeft
 		dc.l	MCD_SubObjHitCeiling
@@ -182,355 +223,99 @@ MCD_SubTerrainDraw:
 		endif
 		include "_inc/Mega CD Plane Drawing.asm"
 
+; Cached a5/a6 are the active normal/tangent radii. Ground attachment,
+; jump clearance and growth reuse the same four paired sensor implementations.
 MCD_SubAnglePos:
-		move.l	(MCD_TerrainPath1_Sub).l,(MCD_TerrainPath_Sub).l
-		cmpi.b	#$C,obTopSolidBit(a0)
-		beq.s	MCD_Subloc_12A14
-		move.l	(MCD_TerrainPath2_Sub).l,(MCD_TerrainPath_Sub).l
-
-MCD_Subloc_12A14:
+		btst	#status.player.on_object,obStatus(a0)
+		beq.s	.terrain
+		clr.w	(MCD_TerrainPrimary_Sub).l
+		rts
+.terrain:
+		terrainshape
+		terrainpath obTopSolidBit
+		move.w	#$0303,(MCD_TerrainPrimary_Sub).l
+		moveq	#0,d0
+		move.b	obAngle(a0),d0
+		lea	MCD_SubTerrainQuadrants(pc),a1
+		move.b	(a1,d0.w),d7
 		move.b	obTopSolidBit(a0),d5
-		btst	#3,obStatus(a0)
-		beq.s	MCD_Subloc_12A2C
-		moveq	#0,d0
-		move.b	d0,(MCD_TerrainPrimary_Sub).l
-		move.b	d0,(MCD_TerrainSecondary_Sub).l
-		rts
-; ---------------------------------------------------------------------------
-
-MCD_Subloc_12A2C:
-		moveq	#3,d0
-		move.b	d0,(MCD_TerrainPrimary_Sub).l
-		move.b	d0,(MCD_TerrainSecondary_Sub).l
-		move.b	obAngle(a0),d0
-		addi.b	#$20,d0
-		bpl.s	MCD_Subloc_12A4E
-		move.b	obAngle(a0),d0
-		bpl.s	MCD_Subloc_12A48
-		subq.b	#1,d0
-
-MCD_Subloc_12A48:
-		addi.b	#$20,d0
-		bra.s	MCD_Subloc_12A5A
-; ---------------------------------------------------------------------------
-
-MCD_Subloc_12A4E:
-		move.b	obAngle(a0),d0
-		bpl.s	MCD_Subloc_12A56
-		addq.b	#1,d0
-
-MCD_Subloc_12A56:
-		addi.b	#$1F,d0
-
-MCD_Subloc_12A5A:
-		andi.b	#$C0,d0
-		cmpi.b	#$40,d0
-		beq.w	MCD_SubSonic_WalkVertL
-		cmpi.b	#$80,d0
-		beq.w	MCD_SubSonic_WalkCeiling
-		cmpi.b	#$C0,d0
-		beq.w	MCD_SubSonic_WalkVertR
-		move.w	obY(a0),d2
-		move.w	obX(a0),d3
-		moveq	#0,d0
-		move.b	obHeight(a0),d0
-		ext.w	d0
-		add.w	d0,d2
-		move.b	obWidth(a0),d0
-		ext.w	d0
-		add.w	d0,d3
-		lea	(MCD_TerrainPrimary_Sub).l,a4
-		movea.w	#$10,a3
-		clr.w	d6
-		bsr.w	MCD_SubFindFloor
-		move.w	d1,-(sp)
-		move.w	obY(a0),d2
-		move.w	obX(a0),d3
-		moveq	#0,d0
-		move.b	obHeight(a0),d0
-		ext.w	d0
-		add.w	d0,d2
-		move.b	obWidth(a0),d0
-		ext.w	d0
-		neg.w	d0
-		add.w	d0,d3
-		lea	(MCD_TerrainSecondary_Sub).l,a4
-		movea.w	#$10,a3
-		clr.w	d6
-		bsr.w	MCD_SubFindFloor
-		move.w	(sp)+,d0
-		bsr.w	MCD_SubChooseTerrainAngle
-		tst.w	d1
-		beq.s	.return
-		bpl.s	MCD_Subloc_12AE6
-		cmpi.w	#-$E,d1
-		blt.s	.return
-		add.w	d1,obY(a0)
-.return:	rts
-; ---------------------------------------------------------------------------
-
-MCD_Subloc_12AE6:
-		; S2/S3&K: slow actors must leave a sharp drop instead of snapping
-		; down a fixed 14 pixels with their previous (possibly flat) angle.
-		tst.b	stick_to_convex(a0)
-		bne.s	MCD_Subloc_12AEC
-		move.b	(MCD_SubMainCommand).w,d0	; signed integer X speed
-		bpl.s	+
-		neg.b	d0
-+		addq.b	#4,d0
-		cmpi.b	#$E,d0
-		blo.s	+
-		move.b	#$E,d0
-+		cmp.b	d0,d1
-		bgt.s	MCD_Subloc_12AF2
-
-MCD_Subloc_12AEC:
-		add.w	d1,obY(a0)
-		rts
-; ---------------------------------------------------------------------------
-
-MCD_Subloc_12AF2:
-		bset	#1,obStatus(a0)
-		bclr	#5,obStatus(a0)
-		move.b	#1,obPrevAni(a0)
-		rts
-; End of function MCD_SubAnglePos
-
-; =============== S U B R O U T I N E =======================================
-
-; MCD_SubChooseTerrainAngle:
-MCD_SubChooseTerrainAngle:
-		move.b	(MCD_TerrainSecondary_Sub).l,d2
-		cmp.w	d0,d1
-		ble.s	+
-		move.b	(MCD_TerrainPrimary_Sub).l,d2
-		move.w	d0,d1
-+
-		btst	#0,d2
-		bne.s	MCD_Subloc_12B90
-		; Running discs need S1's valid angles around their tight curves.
-		; Keep the angle-change limit for ordinary terrain.
+		bsr.w	MCD_SubDirectionalPair
+		cmp.b	obAngle(a0),d3
+		beq.s	.distance		; a matching normal needs no clamp or write
 		tst.b	stick_to_convex(a0)
 		bne.s	.set_angle
-		move.b	d2,d0
+		move.b	d3,d0
 		sub.b	obAngle(a0),d0
-		bpl.s	+
+		bpl.s	.angle_delta
 		neg.b	d0
-+
+.angle_delta:
 		cmpi.b	#$20,d0
-		bhs.s	MCD_Subloc_12B90
+		blo.s	.set_angle
+		move.b	obAngle(a0),d3
+		addi.b	#$20,d3
+		andi.b	#$C0,d3
 .set_angle:
-		move.b	d2,obAngle(a0)
-		rts
-; ---------------------------------------------------------------------------
-
-MCD_Subloc_12B90:
-		move.b	obAngle(a0),d2
-		addi.b	#$20,d2
-		andi.b	#$C0,d2
-		move.b	d2,obAngle(a0)
-		rts
-; End of function MCD_SubChooseTerrainAngle
-
-; ---------------------------------------------------------------------------
-
-MCD_SubSonic_WalkVertR:
-		move.w	obY(a0),d2
-		move.w	obX(a0),d3
-		moveq	#0,d0
-		move.b	obWidth(a0),d0
-		ext.w	d0
-		neg.w	d0
-		add.w	d0,d2
-		move.b	obHeight(a0),d0
-		ext.w	d0
-		add.w	d0,d3
-		lea	(MCD_TerrainPrimary_Sub).l,a4
-		movea.w	#$10,a3
-		clr.w	d6
-		bsr.w	MCD_SubFindWall
-		move.w	d1,-(sp)
-		move.w	obY(a0),d2
-		move.w	obX(a0),d3
-		moveq	#0,d0
-		move.b	obWidth(a0),d0
-		ext.w	d0
-		add.w	d0,d2
-		move.b	obHeight(a0),d0
-		ext.w	d0
-		add.w	d0,d3
-		lea	(MCD_TerrainSecondary_Sub).l,a4
-		movea.w	#$10,a3
-		clr.w	d6
-		bsr.w	MCD_SubFindWall
-		move.w	(sp)+,d0
-		bsr.w	MCD_SubChooseTerrainAngle
+		move.b	d3,obAngle(a0)
+.distance:
 		tst.w	d1
 		beq.s	.return
-		bpl.s	MCD_Subloc_12C14
+		bpl.s	.reach
 		cmpi.w	#-$E,d1
 		blt.s	.return
+		bra.s	.attach
+.reach:
+		tst.b	stick_to_convex(a0)
+		bne.s	.attach
+		; S2/S3&K speed-dependent attachment, shared by all four normals.
+		move.b	(MCD_SubMainCommand).w,d0
+		btst	#6,d7
+		beq.s	.speed
+		move.b	(MCD_SubMainFlags).w,d0
+.speed:
+		bpl.s	.positive
+		neg.b	d0
+.positive:
+		addq.b	#4,d0
+		cmpi.b	#$E,d0
+		blo.s	.limit
+		move.b	#$E,d0
+.limit:
+		cmp.b	d0,d1
+		bgt.s	.detach
+.attach:
+		tst.b	d7
+		beq.s	.floor
+		cmpi.b	#$C0,d7
+		beq.s	.right
+		cmpi.b	#$80,d7
+		beq.s	.ceiling
+		sub.w	d1,obX(a0)
+		rts
+.right:
 		add.w	d1,obX(a0)
-
+		rts
+.ceiling:
+		sub.w	d1,obY(a0)
+		rts
+.floor:
+		add.w	d1,obY(a0)
 .return:
 		rts
-; ---------------------------------------------------------------------------
-
-MCD_Subloc_12C14:
-		tst.b	stick_to_convex(a0)
-		bne.s	MCD_Subloc_12C1A
-		move.b	(MCD_SubMainFlags).w,d0	; signed integer Y speed
-		bpl.s	+
-		neg.b	d0
-+		addq.b	#4,d0
-		cmpi.b	#$E,d0
-		blo.s	+
-		move.b	#$E,d0
-+		cmp.b	d0,d1
-		bgt.s	MCD_Subloc_12C20
-
-MCD_Subloc_12C1A:
-		add.w	d1,obX(a0)
-		rts
-; ---------------------------------------------------------------------------
-
-MCD_Subloc_12C20:
-		bset	#1,obStatus(a0)
-		bclr	#5,obStatus(a0)
+.detach:
+		bset	#status.player.in_air,obStatus(a0)
+		bclr	#status.player.pushing,obStatus(a0)
 		move.b	#1,obPrevAni(a0)
 		rts
-; ---------------------------------------------------------------------------
 
-MCD_SubSonic_WalkCeiling:
-		move.w	obY(a0),d2
-		move.w	obX(a0),d3
-		moveq	#0,d0
-		move.b	obHeight(a0),d0
-		ext.w	d0
-		sub.w	d0,d2
-		eori.w	#$F,d2
-		move.b	obWidth(a0),d0
-		ext.w	d0
-		add.w	d0,d3
-		lea	(MCD_TerrainPrimary_Sub).l,a4
-		movea.w	#-$10,a3
-		move.w	#$800,d6
-		bsr.w	MCD_SubFindFloor
-		move.w	d1,-(sp)
-		move.w	obY(a0),d2
-		move.w	obX(a0),d3
-		moveq	#0,d0
-		move.b	obHeight(a0),d0
-		ext.w	d0
-		sub.w	d0,d2
-		eori.w	#$F,d2
-		move.b	obWidth(a0),d0
-		ext.w	d0
-		sub.w	d0,d3
-		lea	(MCD_TerrainSecondary_Sub).l,a4
-		movea.w	#-$10,a3
-		move.w	#$800,d6
-		bsr.w	MCD_SubFindFloor
-		move.w	(sp)+,d0
-		bsr.w	MCD_SubChooseTerrainAngle
-		tst.w	d1
-		beq.s	.return
-		bpl.s	MCD_Subloc_12CB2
-		cmpi.w	#-$E,d1
-		blt.s	.return
-		sub.w	d1,obY(a0)
-.return:	rts
-; ---------------------------------------------------------------------------
-
-MCD_Subloc_12CB2:
-		tst.b	stick_to_convex(a0)
-		bne.s	MCD_Subloc_12CB8
-		move.b	(MCD_SubMainCommand).w,d0	; signed integer X speed
-		bpl.s	+
-		neg.b	d0
-+		addq.b	#4,d0
-		cmpi.b	#$E,d0
-		blo.s	+
-		move.b	#$E,d0
-+		cmp.b	d0,d1
-		bgt.s	MCD_Subloc_12CBE
-
-MCD_Subloc_12CB8:
-		sub.w	d1,obY(a0)
-		rts
-; ---------------------------------------------------------------------------
-
-MCD_Subloc_12CBE:
-		bset	#1,obStatus(a0)
-		bclr	#5,obStatus(a0)
-		move.b	#1,obPrevAni(a0)
-		rts
-; ---------------------------------------------------------------------------
-
-MCD_SubSonic_WalkVertL:
-		move.w	obY(a0),d2
-		move.w	obX(a0),d3
-		moveq	#0,d0
-		move.b	obWidth(a0),d0
-		ext.w	d0
-		sub.w	d0,d2
-		move.b	obHeight(a0),d0
-		ext.w	d0
-		sub.w	d0,d3
-		eori.w	#$F,d3
-		lea	(MCD_TerrainPrimary_Sub).l,a4
-		movea.w	#-$10,a3
-		move.w	#$400,d6
-		bsr.w	MCD_SubFindWall
-		move.w	d1,-(sp)
-		move.w	obY(a0),d2
-		move.w	obX(a0),d3
-		moveq	#0,d0
-		move.b	obWidth(a0),d0
-		ext.w	d0
-		add.w	d0,d2
-		move.b	obHeight(a0),d0
-		ext.w	d0
-		sub.w	d0,d3
-		eori.w	#$F,d3
-		lea	(MCD_TerrainSecondary_Sub).l,a4
-		movea.w	#-$10,a3
-		move.w	#$400,d6
-		bsr.w	MCD_SubFindWall
-		move.w	(sp)+,d0
-		bsr.w	MCD_SubChooseTerrainAngle
-		tst.w	d1
-		beq.s	.return
-		bpl.s	MCD_Subloc_12D50
-		cmpi.w	#-$E,d1
-		blt.s	.return
-		sub.w	d1,obX(a0)
-.return:	rts
-; ---------------------------------------------------------------------------
-
-MCD_Subloc_12D50:
-		tst.b	stick_to_convex(a0)
-		bne.s	MCD_Subloc_12D56
-		move.b	(MCD_SubMainFlags).w,d0	; signed integer Y speed
-		bpl.s	+
-		neg.b	d0
-+		addq.b	#4,d0
-		cmpi.b	#$E,d0
-		blo.s	+
-		move.b	#$E,d0
-+		cmp.b	d0,d1
-		bgt.s	MCD_Subloc_12D5C
-
-MCD_Subloc_12D56:
-		sub.w	d1,obX(a0)
-		rts
-; ---------------------------------------------------------------------------
-
-MCD_Subloc_12D5C:
-		bset	#1,obStatus(a0)
-		bclr	#5,obStatus(a0)
-		move.b	#1,obPrevAni(a0)
-		rts
+; d7.b = outward normal. d5 remains the caller's top or L/R/B solidity.
+MCD_SubDirectionalPair:
+		tst.b	d7
+		beq.w	MCD_SubFloorSensors
+		cmpi.b	#$40,d7
+		beq.w	MCD_SubLeftPair
+		cmpi.b	#$80,d7
+		beq.w	MCD_SubCeilingPair
+		bra.w	MCD_SubRightPair
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -878,158 +663,138 @@ MCD_Subloc_13014:
 
 ; =============== S U B R O U T I N E =======================================
 
-; Sonic_WalkSpeed:
-MCD_SubCalcRoomInFront:
-		move.l	(MCD_TerrainPath1_Sub).l,(MCD_TerrainPath_Sub).l
-		cmpi.b	#$C,obTopSolidBit(a0)
-		beq.s	MCD_Subloc_13094
-		move.l	(MCD_TerrainPath2_Sub).l,(MCD_TerrainPath_Sub).l
-
-MCD_Subloc_13094:
-		move.b	obLRBSolidBit(a0),d5
-		move.w	obX(a0),d3
-		move.w	obY(a0),d2
+; Projected forward probe: read its packet in place instead of copying an
+; SST and entering the generic operation dispatch. The caller on MD still
+; sends the ordinary twelve-byte snapshot; only the fields below are read.
+MCD_SubTerrainForward:
+		lea	(MCD_SubMainArgument).w,a0
+		moveq	#0,d1
+		move.b	MCD_TerrainPacketRadii+1(a0),d1
+		movea.w	d1,a6
+		terrainpath MCD_TerrainPacketSolidity
+		move.b	MCD_TerrainPacketSolidity+1(a0),d5
+		move.w	MCD_TerrainPacketX(a0),d3
+		move.w	MCD_TerrainPacketY(a0),d2
+		moveq	#0,d0
+		move.b	(MCD_SubMainCommand).w,d0
+		pea	MCD_SubTerrainResult(pc)
 		move.b	d0,(MCD_TerrainPrimary_Sub).l
 		move.b	d0,(MCD_TerrainSecondary_Sub).l
-		move.b	d0,d1
-		addi.b	#$20,d0
-		bpl.s	MCD_Subloc_130D4
-		move.b	d1,d0
-		bpl.s	MCD_Subloc_130CE
-		subq.b	#1,d0
-
-MCD_Subloc_130CE:
-		addi.b	#$20,d0
-		bra.s	MCD_Subloc_130DE
-; ---------------------------------------------------------------------------
-
-MCD_Subloc_130D4:
-		move.b	d1,d0
-		bpl.s	MCD_Subloc_130DA
-		addq.b	#1,d0
-
-MCD_Subloc_130DA:
-		addi.b	#$1F,d0
-
-MCD_Subloc_130DE:
+		; The request zero-extends its input angle. Place the shared table
+		; within the PC-indexed range, avoiding a pointer and scratch copy.
+		move.b	MCD_SubTerrainQuadrants(pc,d0.w),d7
+		andi.b	#$38,d0
+		bne.s	.front
+		; A near-cardinal tangent samples the lower side of the current body.
+		; Keep the sample inside its normal radius, including compact shapes.
+		moveq	#0,d1
+		move.b	MCD_TerrainPacketRadii(a0),d1
+		sub.w	a6,d1
+		subq.w	#1,d1
+		ble.s	.front
+		move.b	MCD_TerrainPacketAngle(a0),d0
 		andi.b	#$C0,d0
-		beq.w	MCD_Subloc_131DE
-		cmpi.b	#$80,d0
-		beq.w	MCD_Subloc_133B0
-		andi.b	#$38,d1
-		bne.s	MCD_Subloc_130F6
-		addq.w	#8,d2
-
-MCD_Subloc_130F6:
+		beq.s	.bias_floor
 		cmpi.b	#$40,d0
-		beq.w	MCD_Subloc_13478
-		addi.w	#$A,d3
-		lea	(MCD_TerrainPrimary_Sub).l,a4
-		movea.w	#$10,a3
-		clr.w	d6
-		bsr.w	MCD_SubFindWall
-		move.b	#$C0,d2
-		move.b	(MCD_TerrainPrimary_Sub).l,d3
-		btst	#0,d3
-		beq.s	.return
-		move.b	d2,d3
-.return:	rts
-; End of function MCD_SubCalcRoomInFront
+		beq.s	.bias_left
+		cmpi.b	#$80,d0
+		beq.s	.bias_ceiling
+		add.w	d1,d3
+		bra.s	.front
+.bias_left:
+		sub.w	d1,d3
+		bra.s	.front
+.bias_ceiling:
+		sub.w	d1,d2
+		bra.s	.front
+.bias_floor:
+		add.w	d1,d2
+.front:
+		; Tangential reach is the live width plus one contact pixel in every
+		; orientation. No full-size or miniature reach is stored here.
+		tst.b	d7
+		beq.w	MCD_SubForwardFloor
+		cmpi.b	#$40,d7
+		beq.w	MCD_SubForwardLeft
+		cmpi.b	#$80,d7
+		beq.w	MCD_SubForwardCeiling
+		bra.w	MCD_SubForwardRight
 
-
-; =============== S U B R O U T I N E =======================================
-
+; Match CD/S2/S3&K's asymmetric 45-degree boundary rounding exactly.
+; Indexed reads replace the repeated sign/rounding branches in hot callers.
+MCD_SubTerrainQuadrants:
+		dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+		dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+		dc.b	$00,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+		dc.b	$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+		dc.b	$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+		dc.b	$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+		dc.b	$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80
+		dc.b	$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80
+		dc.b	$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80
+		dc.b	$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80
+		dc.b	$80,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0
+		dc.b	$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0
+		dc.b	$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0
+		dc.b	$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0,$C0
+		dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+		dc.b	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
 
 MCD_SubCheckRoomOverhead:
-		move.l	(MCD_TerrainPath1_Sub).l,(MCD_TerrainPath_Sub).l
-		cmpi.b	#$C,obTopSolidBit(a0)
-		beq.s	MCD_Subloc_1311A
-		move.l	(MCD_TerrainPath2_Sub).l,(MCD_TerrainPath_Sub).l
-
-MCD_Subloc_1311A:
+		terrainshape
+		terrainpath obTopSolidBit
 		move.b	obLRBSolidBit(a0),d5
 		move.b	d0,(MCD_TerrainPrimary_Sub).l
 		move.b	d0,(MCD_TerrainSecondary_Sub).l
 		addi.b	#$20,d0
 		andi.b	#$C0,d0
-		cmpi.b	#$40,d0
-		beq.w	MCD_Subloc_13408
-		cmpi.b	#$80,d0
-		beq.w	MCD_SubCeilingPair
-		cmpi.b	#$C0,d0
-		beq.w	MCD_Subloc_1328E
+		move.b	d0,d7
+		bra.w	MCD_SubDirectionalPair
 
+MCD_SubTerrainFloorPair:
+		terrainshape
+		terrainpath obTopSolidBit
 MCD_SubFloorPair:
-		move.l	(MCD_TerrainPath1_Sub).l,(MCD_TerrainPath_Sub).l
-		cmpi.b	#$C,obTopSolidBit(a0)
-		beq.s	MCD_Subloc_1315E
-		move.l	(MCD_TerrainPath2_Sub).l,(MCD_TerrainPath_Sub).l
-
-MCD_Subloc_1315E:
 		move.b	obTopSolidBit(a0),d5
+MCD_SubFloorSensors:
 		move.w	obY(a0),d2
+		add.w	a5,d2
 		move.w	obX(a0),d3
-		moveq	#0,d0
-		move.b	obHeight(a0),d0
-		ext.w	d0
-		add.w	d0,d2
-		move.b	obWidth(a0),d0
-		ext.w	d0
-		add.w	d0,d3
+		add.w	a6,d3
 		lea	(MCD_TerrainPrimary_Sub).l,a4
 		movea.w	#$10,a3
 		clr.w	d6
 		bsr.w	MCD_SubFindFloor
 		move.w	d1,-(sp)
-		move.w	obY(a0),d2
-		move.w	obX(a0),d3
-		moveq	#0,d0
-		move.b	obHeight(a0),d0
-		ext.w	d0
-		add.w	d0,d2
-		move.b	obWidth(a0),d0
-		ext.w	d0
-		sub.w	d0,d3
+		; Tile scans preserve both sensor coordinates, step and solidity.
+		sub.w	a6,d3
+		sub.w	a6,d3
 		lea	(MCD_TerrainSecondary_Sub).l,a4
-		movea.w	#$10,a3
-		clr.w	d6
 		bsr.w	MCD_SubFindFloor
 		move.w	(sp)+,d0
 		clr.b	d2
-
-MCD_Subloc_131BE:
+MCD_SubChoosePair:
 		move.b	(MCD_TerrainSecondary_Sub).l,d3
 		cmp.w	d0,d1
-		ble.s	.skip
+		ble.s	.angle
 		move.b	(MCD_TerrainPrimary_Sub).l,d3
 		exg	d0,d1
-
-.skip:
+.angle:
 		btst	#0,d3
 		beq.s	.return
 		move.b	d2,d3
-.return:	rts
-; End of function MCD_SubCheckRoomOverhead
+.return:
+		rts
 
-; ---------------------------------------------------------------------------
-		; unused
-	;	move.w	obY(a0),d2
-	;	move.w	obX(a0),d3
-
-MCD_Subloc_131DE:
-		addi.w	#$A,d2
+MCD_SubForwardFloor:
+		add.w	a6,d2
+		addq.w	#1,d2
 		lea	(MCD_TerrainPrimary_Sub).l,a4
 		movea.w	#$10,a3
 		clr.w	d6
 		bsr.w	MCD_SubFindFloor
 		clr.b	d2
-		move.b	(MCD_TerrainPrimary_Sub).l,d3
-		btst	#0,d3
-		beq.s	.return
-		move.b	d2,d3
-.return:	rts
-
-; =============== S U B R O U T I N E =======================================
+		bra.w	MCD_SubSingleAngle
 
 ; Sonic_HitFloor:
 MCD_SubChkFloorEdge:
@@ -1088,68 +853,49 @@ MCD_SubObjHitFloor2:
 
 ; ---------------------------------------------------------------------------
 
-MCD_Subloc_1328E:
+MCD_SubRightPair:
 		move.w	obY(a0),d2
+		sub.w	a6,d2
 		move.w	obX(a0),d3
-		moveq	#0,d0
-		move.b	obWidth(a0),d0
-		ext.w	d0
-		sub.w	d0,d2
-		move.b	obHeight(a0),d0
-		ext.w	d0
-		add.w	d0,d3
+		add.w	a5,d3
 		lea	(MCD_TerrainPrimary_Sub).l,a4
 		movea.w	#$10,a3
 		clr.w	d6
 		bsr.w	MCD_SubFindWall
 		move.w	d1,-(sp)
-		move.w	obY(a0),d2
-		move.w	obX(a0),d3
-		moveq	#0,d0
-		move.b	obWidth(a0),d0
-		ext.w	d0
-		add.w	d0,d2
-		move.b	obHeight(a0),d0
-		ext.w	d0
-		add.w	d0,d3
+		add.w	a6,d2
+		add.w	a6,d2
 		lea	(MCD_TerrainSecondary_Sub).l,a4
-		movea.w	#$10,a3
-		clr.w	d6
 		bsr.w	MCD_SubFindWall
 		move.w	(sp)+,d0
 		move.b	#$C0,d2
-		move.b	(MCD_TerrainSecondary_Sub).l,d3
-		cmp.w	d0,d1
-		ble.s	.skip
-		move.b	(MCD_TerrainPrimary_Sub).l,d3
-		exg	d0,d1
-
-.skip:
-		btst	#0,d3
-		beq.s	.return
-		move.b	d2,d3
-.return:	rts
-
-; =============== S U B R O U T I N E =======================================
+		bra.w	MCD_SubChoosePair
 
 
+MCD_SubTerrainRightSensor:
+		terrainpath obTopSolidBit
+		moveq	#0,d1
+		move.b	obWidth(a0),d1
+		movea.w	d1,a6
+		move.b	obLRBSolidBit(a0),d5
 MCD_SubRightSensor:
 		move.w	obY(a0),d2
 		move.w	obX(a0),d3
-		addi.w	#$A,d3
+MCD_SubForwardRight:
+		add.w	a6,d3
+		addq.w	#1,d3
 		lea	(MCD_TerrainPrimary_Sub).l,a4
 		movea.w	#$10,a3
 		clr.w	d6
 		bsr.w	MCD_SubFindWall
 		move.b	#$C0,d2
+MCD_SubSingleAngle:
 		move.b	(MCD_TerrainPrimary_Sub).l,d3
 		btst	#0,d3
 		beq.s	.return
 		move.b	d2,d3
-.return:	rts
-; End of function MCD_SubRightSensor
-
-; =============== S U B R O U T I N E =======================================
+.return:
+		rts
 
 
 MCD_SubObjHitWallRight:
@@ -1172,8 +918,8 @@ MCD_SubObjHitWallRight:
 ; =============== S U B R O U T I N E =======================================
 
 
-; Headroom needs only X, Y, the proposed radii and both path bits. Return
-; the distance in d0 without publishing the contact angles and other results.
+; Proposed X/Y and radii, both solidity bits, outward direction in the
+; command high byte. Test the pair and center with one retained shape/path.
 MCD_SubTerrainHeadroom:
 		lea	(MCD_TerrainObject_Sub).l,a0
 		lea	(MCD_SubMainArgument).w,a1
@@ -1181,101 +927,100 @@ MCD_SubTerrainHeadroom:
 		move.w	(a1)+,obY(a0)
 		move.w	(a1)+,obHeight(a0)
 		move.w	(a1),obTopSolidBit(a0)
-		moveq	#1,d0
-		bsr.s	MCD_SubProbeCeiling
+		terrainshape
+		terrainpath obTopSolidBit
+		move.b	obLRBSolidBit(a0),d5
+		move.b	(MCD_SubMainCommand).w,d7
+		pea	.paired(pc)
+		cmpi.b	#$80,d7
+		beq.w	MCD_SubCeilingPair	; ordinary headroom avoids the other normals
+		bra.w	MCD_SubDirectionalPair
+.paired:
+		tst.w	d1
+		bmi.s	.done
+		bsr.s	MCD_SubNormalCenter
+.done:
 		move.w	d1,d0
 		rts
 
-; The direct pair request has no earlier angle/sensor setup.
+; Ordinary ceiling/era probes use the same pair. Nonzero d0 also checks the
+; center; angle buffers are private to CD unless the normal result publishes.
 MCD_SubProbeCeiling:
-		move.l	(MCD_TerrainPath1_Sub).l,(MCD_TerrainPath_Sub).l
-		cmpi.b	#$C,obTopSolidBit(a0)
-		beq.s	.path_ready
-		move.l	(MCD_TerrainPath2_Sub).l,(MCD_TerrainPath_Sub).l
-.path_ready:
+		terrainshape
+		terrainpath obTopSolidBit
 		move.b	obLRBSolidBit(a0),d5
 		tst.b	d0
-		beq.s	MCD_SubCeilingPair	; ordinary contact / era-transfer pair
-		bsr.s	MCD_SubCeilingPair
+		beq.w	MCD_SubCeilingPair
+		bsr.w	MCD_SubCeilingPair
 		tst.w	d1
-		bmi.s	.head_return
-		move.w	obY(a0),d2
-		moveq	#0,d0
-		move.b	obHeight(a0),d0
-		sub.w	d0,d2
-		eori.w	#$F,d2
-		move.w	obX(a0),d3
-		bra.w	MCD_SubFindFloor	; also cover a narrow protrusion between shoulders
-.head_return:
+		bmi.s	.return
+		move.b	#$80,d7
+		bra.s	MCD_SubNormalCenter
+.return:
 		rts
+
+MCD_SubNormalCenter:
+		move.w	obY(a0),d2
+		move.w	obX(a0),d3
+		lea	(MCD_TerrainPrimary_Sub).l,a4
+		cmpi.b	#$80,d7
+		beq.s	.ceiling
+		tst.b	d7
+		beq.s	.floor
+		cmpi.b	#$40,d7
+		beq.s	.left
+		add.w	a5,d3
+		movea.w	#$10,a3
+		clr.w	d6
+		bra.w	MCD_SubFindWall
+.left:
+		sub.w	a5,d3
+		eori.w	#$F,d3
+		movea.w	#-$10,a3
+		move.w	#$400,d6
+		bra.w	MCD_SubFindWall
+.ceiling:
+		sub.w	a5,d2
+		eori.w	#$F,d2
+		movea.w	#-$10,a3
+		move.w	#$800,d6
+		bra.w	MCD_SubFindFloor
+.floor:
+		add.w	a5,d2
+		movea.w	#$10,a3
+		clr.w	d6
+		bra.w	MCD_SubFindFloor
+
 MCD_SubCeilingPair:
 		move.w	obY(a0),d2
-		move.w	obX(a0),d3
-		moveq	#0,d0
-		move.b	obHeight(a0),d0
-		ext.w	d0
-		sub.w	d0,d2
+		sub.w	a5,d2
 		eori.w	#$F,d2
-		move.b	obWidth(a0),d0
-		ext.w	d0
-		add.w	d0,d3
+		move.w	obX(a0),d3
+		add.w	a6,d3
 		lea	(MCD_TerrainPrimary_Sub).l,a4
 		movea.w	#-$10,a3
 		move.w	#$800,d6
 		bsr.w	MCD_SubFindFloor
 		move.w	d1,-(sp)
-		move.w	obY(a0),d2
-		move.w	obX(a0),d3
-		moveq	#0,d0
-		move.b	obHeight(a0),d0
-		ext.w	d0
-		sub.w	d0,d2
-		eori.w	#$F,d2
-		move.b	obWidth(a0),d0
-		ext.w	d0
-		sub.w	d0,d3
+		sub.w	a6,d3
+		sub.w	a6,d3
 		lea	(MCD_TerrainSecondary_Sub).l,a4
-		movea.w	#-$10,a3
-		move.w	#$800,d6
 		bsr.w	MCD_SubFindFloor
 		move.w	(sp)+,d0
 		move.b	#$80,d2
-		move.b	(MCD_TerrainSecondary_Sub).l,d3
-		cmp.w	d0,d1
-		ble.s	.skip
-		move.b	(MCD_TerrainPrimary_Sub).l,d3
-		exg	d0,d1
+		bra.w	MCD_SubChoosePair
 
-.skip:
-		btst	#0,d3
-		beq.s	.return
-		move.b	d2,d3
-
-.return:
-		rts
-; End of function MCD_SubCeilingPair
-
-; ---------------------------------------------------------------------------
-		; unused
-	;	move.w	obY(a0),d2
-	;	move.w	obX(a0),d3
-
-MCD_Subloc_133B0:
-		subi.w	#$A,d2
+MCD_SubForwardCeiling:
+		sub.w	a6,d2
+		subq.w	#1,d2
 		eori.w	#$F,d2
 		lea	(MCD_TerrainPrimary_Sub).l,a4
 		movea.w	#-$10,a3
 		move.w	#$800,d6
 		bsr.w	MCD_SubFindFloor
 		move.b	#$80,d2
-		move.b	(MCD_TerrainPrimary_Sub).l,d3
-		btst	#0,d3
-		beq.s	.return
-		move.b	d2,d3
+		bra.w	MCD_SubSingleAngle
 
-.return:
-		rts
-; ---------------------------------------------------------------------------
 
 MCD_SubObjHitCeiling:
 		move.w	obY(a0),d2
@@ -1297,78 +1042,47 @@ MCD_SubObjHitCeiling:
 .return:	rts
 ; ---------------------------------------------------------------------------
 
-MCD_Subloc_13408:
+MCD_SubLeftPair:
 		move.w	obY(a0),d2
+		sub.w	a6,d2
 		move.w	obX(a0),d3
-		moveq	#0,d0
-		move.b	obWidth(a0),d0
-		ext.w	d0
-		sub.w	d0,d2
-		move.b	obHeight(a0),d0
-		ext.w	d0
-		sub.w	d0,d3
+		sub.w	a5,d3
 		eori.w	#$F,d3
 		lea	(MCD_TerrainPrimary_Sub).l,a4
 		movea.w	#-$10,a3
 		move.w	#$400,d6
 		bsr.w	MCD_SubFindWall
 		move.w	d1,-(sp)
-		move.w	obY(a0),d2
-		move.w	obX(a0),d3
-		moveq	#0,d0
-		move.b	obWidth(a0),d0
-		ext.w	d0
-		add.w	d0,d2
-		move.b	obHeight(a0),d0
-		ext.w	d0
-		sub.w	d0,d3
-		eori.w	#$F,d3
+		add.w	a6,d2
+		add.w	a6,d2
 		lea	(MCD_TerrainSecondary_Sub).l,a4
-		movea.w	#-$10,a3
-		move.w	#$400,d6
 		bsr.w	MCD_SubFindWall
 		move.w	(sp)+,d0
 		move.b	#$40,d2
-		move.b	(MCD_TerrainSecondary_Sub).l,d3
-		cmp.w	d0,d1
-		ble.s	.skip
-		move.b	(MCD_TerrainPrimary_Sub).l,d3
-		exg	d0,d1
-
-.skip:
-		btst	#0,d3
-		beq.s	.return
-		move.b	d2,d3
-.return:	rts
-
-; =============== S U B R O U T I N E =======================================
+		bra.w	MCD_SubChoosePair
 
 
+MCD_SubTerrainLeftSensor:
+		terrainpath obTopSolidBit
+		moveq	#0,d1
+		move.b	obWidth(a0),d1
+		movea.w	d1,a6
+		move.b	obLRBSolidBit(a0),d5
 MCD_SubLeftSensor:
 		move.w	obY(a0),d2
 		move.w	obX(a0),d3
-
-MCD_Subloc_13478:
-		subi.w	#$A,d3
+MCD_SubForwardLeft:
+		sub.w	a6,d3
+		subq.w	#1,d3
 		eori.w	#$F,d3
 		lea	(MCD_TerrainPrimary_Sub).l,a4
 		movea.w	#-$10,a3
 		move.w	#$400,d6
 		bsr.w	MCD_SubFindWall
 		move.b	#$40,d2
-		move.b	(MCD_TerrainPrimary_Sub).l,d3
-		btst	#0,d3
-		beq.s	.return
-		move.b	d2,d3
-.return:	rts
-; End of function MCD_SubLeftSensor
+		bra.w	MCD_SubSingleAngle
 
-; ---------------------------------------------------------------------------
-; Subroutine to detect when an object hits a wall to its left
-; ---------------------------------------------------------------------------
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
+; Subroutine to detect when an object hits a wall to its left.
 
 MCD_SubObjHitWallLeft:
 		move.w	obX(a0),d3
@@ -1407,6 +1121,7 @@ MCD_SubTerrainAir:
 		andi.b	#$F,d1
 		move.b	d0,obTopSolidBit(a0)
 		move.b	d1,obLRBSolidBit(a0)
+		terrainshape
 		bsr.w	MCD_Air_Sonic_DoLevelCollision
 		move.w	obY(a0),(MCD_SubOwnResult+2).w
 		move.l	obVelX(a0),(MCD_SubOwnResult+4).w

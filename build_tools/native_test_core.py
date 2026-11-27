@@ -216,6 +216,10 @@ class Native:
 					9: 'MCD_SubTerrainLayout', 10: 'MCD_SubTerrainLayout',
 					11: 'MCD_SubTerrainAir', 0x28: 'MCD_SubTerrainObjectFloor'
 					if 'MCD_SubTerrainObjectFloor' in s else 'MCD_SubTerrainObject'}.get(kind, 'MCD_SubTerrainObject')
+		if kind == s.get('MCD_TerrainRoomInFront') and 'MCD_SubTerrainForward' in s:
+			routine = 'MCD_SubTerrainForward'
+		if kind == s.get('MCD_TerrainFloorBatch'):
+			routine = 'MCD_SubTerrainFloorBatch'
 		if kind == s.get('MCD_TerrainHeadroom'):
 			routine = 'MCD_SubTerrainHeadroom'
 		self.sub_call(routine, command)

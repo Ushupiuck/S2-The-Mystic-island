@@ -34,6 +34,10 @@ All four GHZ acts have paired [AutoSpin entrances](Objects.md#rolling-tunnel-ent
 at their existing S-tunnel mouths. The gates load with the X band, including
 the lower mouths below the camera's usual loading strip. The high Act 1
 tunnel's lower mouth opens over a drop and also accepts an airborne crossing.
+HPZ1's first green-rimmed chute has an airborne downward gate at `$06C0,$0180`
+and a left-facing gate outside its lower mouth at `$0510,$0570`. Both load
+independently of the camera's Y strip and exist in all eras. The lower gate
+allows running or spindashing back into the pipe without reversing momentum.
 
 GHZ4 retains its sparse authored object layout for useful object-testing terrain.
 Its loop at chunk origin `$1000,$0500` now has Act 3's matching three pathswappers

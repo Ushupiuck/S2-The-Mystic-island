@@ -1126,21 +1126,59 @@ loc_101FA:
 ; =============== S U B R O U T I N E =======================================
 
 
-; d0.w = new Y/X radii. Keep the foot position when changing pose on a floor.
-Player_ResizeOnFloor:
+; d0.w = new normal/tangent radii. Keep the support point on every
+; surface, including wall/ceiling rolls and their jump/landing transitions.
+Player_Resize:
+		bsr.s	Player_ResizePosition
+		move.w	d0,obHeight(a0)
+		move.w	d2,obY(a0)
+		move.w	d3,obX(a0)
+		rts
+
+; Calculate the proposed center without changing the actor. d0 keeps the new
+; radii; d1.b returns the direction away from the support, for the room query.
+Player_ResizePosition:
+		move.w	obY(a0),d2
+		move.w	obX(a0),d3
+		move.w	d0,-(sp)
+		lsr.w	#8,d0
 		moveq	#0,d1
 		move.b	obHeight(a0),d1
-		move.w	d0,obHeight(a0)
-		lsr.w	#8,d0
 		sub.w	d0,d1
-		add.w	d1,obY(a0)
+		; Ground probes round exact 45-degree ties to the even quadrant:
+		; (angle + 31 + bit 6) & $C0. Keep that same anchor when resizing.
+		move.b	obAngle(a0),d0
+		rol.b	#2,d0
+		andi.b	#1,d0
+		add.b	obAngle(a0),d0
+		addi.b	#$1F,d0
+		andi.b	#$C0,d0
+		beq.s	.floor
+		cmpi.b	#$40,d0
+		beq.s	.left
+		cmpi.b	#$80,d0
+		beq.s	.ceiling
+		add.w	d1,d3
+		bra.s	.direction
+.left:
+		sub.w	d1,d3
+		bra.s	.direction
+.ceiling:
+		sub.w	d1,d2
+		bra.s	.direction
+.floor:
+		add.w	d1,d2
+.direction:
+		addi.b	#$80,d0
+		move.b	d0,d1
+		move.w	(sp)+,d0
 		rts
 
 Player_EnterRoll:
 		bset	#status.player.rolling,obStatus(a0)
 		move.b	#AniIDSonAni_Roll,obAnim(a0)
 		bsr.s	Player_RollSize
-		bra.s	Player_ResizeOnFloor
+		bra.s	Player_Resize
 
 Player_RollSize:
 		move.w	#(sonic_roll_height<<8)|sonic_roll_width,d0
@@ -1149,37 +1187,24 @@ Player_RollSize:
 		move.w	#(Player_MiniRollHeight<<8)|Player_MiniWidth,d0
 .return:	rts
 
-; Probe the proposed shape from the current feet. Only L/R/B solidity on
-; this actor's active path can obstruct a ceiling. N means head overlap.
-Player_FloorHeadroom:
+; Proposed shape at the same support point, using L/R/B solidity on this
+; actor's path. A wall or ceiling roll expands away from that surface too.
+Player_ResizeRoom:
 		tst.b	(MCD_TerrainReady).l
-		beq.s	Player_FloorHeadroomReady.clear
-Player_FloorHeadroomReady:
-		move.w	obY(a0),d2
-		cmp.w	obHeight(a0),d0
-		beq.w	Player_ProbeHeadroom
-		moveq	#0,d1
-		move.b	obHeight(a0),d1
-		add.w	d1,d2
-		move.w	d0,d1
-		lsr.w	#8,d1
-		sub.w	d1,d2
-		jmp	(Player_ProbeHeadroom).l
+		beq.s	Player_ResizeRoomReady.clear
+Player_ResizeRoomReady:
+		bsr.s	Player_ResizePosition
+		jmp	(Player_ProbeShapeRoom).l
 .clear:
 		moveq	#0,d1
 		rts
 
 Player_StandingRoom:
-		move.b	obAngle(a0),d0
-		addi.b	#$20,d0
-		cmpi.b	#$40,d0
-		bhs.s	.clear			; vertical expansion applies on floors
 		move.w	default_y_radius(a0),d0
-		bsr.s	Player_FloorHeadroom
+		bsr.s	Player_ResizeRoom
 		bmi.s	.return
-.clear:
-		; The player moves before the objects. A later upward carry can
-		; still keep this character compact at the actual support height.
+		; Objects move later. An upward carry can still keep the player tucked
+		; at the actual support point on the frame they tried to unfold.
 		st	player_unfolding(a0)
 		moveq	#0,d1
 .return:
@@ -1221,7 +1246,7 @@ Player_StopRolling:
 		move.b	#AniIDSonAni_Duck,obAnim(a0)
 .resize:
 		move.w	default_y_radius(a0),d0
-		bra.w	Player_ResizeOnFloor
+		bra.w	Player_Resize
 
 ; Roll-jumps can land back inside a low tunnel. Defer expansion until
 ; the normal roll stops. Recoil, death and scripted resets use ordinary bounds.
@@ -1618,6 +1643,14 @@ Sonic_DoLevelCollision:
 ; =============== S U B R O U T I N E =======================================
 
 
+Player_UnrollOnLanding:
+		move.b	#AniIDSonAni_Walk,obAnim(a0)
+		move.w	default_y_radius(a0),d0
+		bclr	#status.player.rolling,obStatus(a0)
+		bne.w	Player_Resize
+		move.w	d0,obHeight(a0)
+		rts
+
 Sonic_ResetOnFloor:
 		cmpi.l	#Obj02,code(a0)
 		bne.s	+
@@ -1627,23 +1660,7 @@ Sonic_ResetOnFloor:
 		bne.s	.reset			; forced rolls retain their ball and animation
 		bsr.w	Player_RollLandingRoom
 		bmi.s	.reset
-		move.b	#AniIDSonAni_Walk,obAnim(a0)
-		move.b	obHeight(a0),d0
-		move.b	default_y_radius(a0),obHeight(a0)
-		move.b	default_x_radius(a0),obWidth(a0)
-		btst	#status.player.rolling,obStatus(a0)
-		beq.s	.reset
-		bclr	#status.player.rolling,obStatus(a0)
-		sub.b	default_y_radius(a0),d0
-		ext.w	d0
-		move.w	d0,-(sp)
-		move.b	obAngle(a0),d0
-		addi.b	#$40,d0
-		bpl.s	.adjustheight
-		neg.w	(sp)			; standing radius extends the other way on ceilings
-.adjustheight:
-		move.w	(sp)+,d0
-		add.w	d0,obY(a0)
+		bsr.w	Player_UnrollOnLanding
 .reset:
 		bclr	#status.player.in_air,obStatus(a0)
 		bclr	#status.player.pushing,obStatus(a0)

@@ -27,7 +27,7 @@ Player_ChangeSize:
 		cmp.w	default_y_radius(a0),d0
 		beq.s	.done
 		blo.s	.load
-		jsr	(Player_FloorHeadroom).l
+		jsr	(Player_ResizeRoom).l
 		bmi.s	.defer
 .load:
 		movea.w	2(a4),a3
@@ -44,7 +44,7 @@ Player_ChangeSize:
 		move.w	(sp)+,d0
 		move.w	d0,default_y_radius(a0)
 		lea	10(sp),sp
-		jsr	(Player_ResizeOnFloor).l
+		jsr	(Player_Resize).l
 .done:
 		andi	#$FE,ccr
 		rts

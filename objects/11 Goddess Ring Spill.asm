@@ -14,21 +14,21 @@ GoddessRings_Wait:
 		sub.w	obX(a0),d0
 		addi.w	#16,d0
 		cmpi.w	#32,d0
-		bhs.w	MarkObjGone2
+		jhs	(MarkObjGone2).l
 		move.w	(v_player+obY).w,d0
 		sub.w	obY(a0),d0
 		addi.w	#32,d0
 		cmpi.w	#64,d0
-		bhs.w	MarkObjGone2
+		jhs	(MarkObjGone2).l
 		move.l	#GoddessRings_Emit,code(a0)
-		bra.w	MarkObjGone2
+		jmp	(MarkObjGone2).l
 
 GoddessRings_Emit:
 		subq.b	#1,goddess_timer(a0)
-		bpl.w	MarkObjGone2
+		jpl	(MarkObjGone2).l
 		move.b	#10,goddess_timer(a0)
 		jsr	(FindFreeObj).l
-		bne.w	MarkObjGone2
+		jne	(MarkObjGone2).l
 		bsr.w	LostRing_Init
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
@@ -41,8 +41,8 @@ GoddessRings_Emit:
 		move.w	.velocities(pc,d0.w),obVelX(a1)
 		jsr	(Touch_RegisterEarlierObject).l
 		subq.b	#1,goddess_remaining(a0)
-		bne.w	MarkObjGone2
+		jne	(MarkObjGone2).l
 		move.l	#MarkObjGone2,code(a0)
-		bra.w	MarkObjGone2
+		jmp	(MarkObjGone2).l
 .velocities:
 		dc.w -$100,-$80,0,$80,$100,$180,$200,$280

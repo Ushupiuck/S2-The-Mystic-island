@@ -7,6 +7,7 @@ from check_companion_followup import place
 from check_object_course import boot_level
 from genesis_test_core import Genesis
 from native_test_core import Native
+from check_terrain_momentum import shrink, floor_surface
 
 ACTORS = ('v_player', 'v_player2')
 UPPER = (0x17F0, 0x0480)
@@ -112,6 +113,54 @@ def traverse(g, base, returning):
 	raise AssertionError(('Tunnel exit not reached', returning, x, y))
 
 
+def hpz_mouths(g, base, miniature, spindash):
+	"""Enter the real lower HPZ1 mouth from the right, then climb its bend."""
+	g.restore(base)
+	if miniature:
+		shrink(g)
+	x = 0x540
+	floor, angle = floor_surface(g, x, 0x570, 0x5C0)
+	height = g.get('v_player', 'default_y_radius')
+	place(g, 'v_player', x, floor-height-1, False)
+	g.put('v_player', 'obAngle', angle)
+	g.put('v_player', 'obStatus', 1)
+	g.put('v_player', 'obControl', 0x81)
+	for field, value in (('Camera_X_pos', 0x480), ('Camera_X_pos_coarse_back', 0x400),
+		('Camera_Y_pos', 0x500), ('Screen_redraw_flag', 1)):
+		g.write(field, value, 1 if field == 'Screen_redraw_flag' else 2)
+	g.run(12)
+	g.put('v_player', 'obControl', 0)
+	if spindash:
+		g.buttons = {5}
+		g.run(4)
+		for _ in range(12):
+			g.buttons = {5, 0}
+			g.run(2)
+			g.buttons = {5}
+			g.run(2)
+		assert g.get('v_player', 'spindash_flag') == 1
+		g.buttons = set()
+	else:
+		g.put('v_player', 'obInertia', -0x580, 2)
+		g.put('v_player', 'obVelX', -0x580, 2)
+		g.buttons = {6}
+	entered = False
+	for tick in range(150):
+		g.run()
+		assert not g.read('v_errortype')
+		assert g.get('v_player', 'obRoutine') == 2
+		x, y = g.get('v_player', 'obX', 2), g.get('v_player', 'obY', 2)
+		if x <= 0x510 and not entered:
+			assert g.get('v_player', 'obStatus') & 4, ('HPZ lower mouth did not curl', miniature, spindash, x, y)
+			assert g.get('v_player', 'obHeight') == (8 if miniature else 14)
+			assert g.get('v_player', 'obInertia', 2) & 0x8000, 'Enforcer reversed the incoming roll'
+			entered = True
+		if entered and y < 0x550:
+			g.video.save(g.output/f'hpz-player{g.read("Player_mode", 2)}-mini{int(miniature)}-dash{int(spindash)}.png')
+			return
+	raise AssertionError(('HPZ lower bend not climbed', miniature, spindash, x, y, entered))
+
+
 def main():
 	p = argparse.ArgumentParser(description=__doc__)
 	for flag in ('rom', 'listing'):
@@ -139,8 +188,16 @@ def main():
 			base = g.save()
 			for returning in (False, True):
 				traverse(g, base, returning)
+		for player in (1, 2):
+			g.restore(initial)
+			boot_level(g, zone=4, act=0, player=player)
+			base = g.save()
+			for miniature in (False, True):
+				for spindash in (False, True):
+					hpz_mouths(g, base, miniature, spindash)
 		g.close()
 		print('Sonic and Tails cross the authored GHZ1 tunnel in both directions.', flush=True)
+		print('Both sizes enter HPZ1\'s authored lower mouth by running or spindashing and climb its return bend.', flush=True)
 
 
 if __name__ == '__main__':

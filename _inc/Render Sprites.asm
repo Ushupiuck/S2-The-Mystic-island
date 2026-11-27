@@ -153,6 +153,11 @@ Render_Sprites_NextEntry:
 		andi.w	#$7F,d6
 		move.b	d6,obRender(a0)
 		move.w	obX(a0),d0
+		; An unflipped world-space single mapping needs no frame lookup,
+		; mapping loop or composite/clip dispatch. Other static forms retain
+		; the generic path, including screen-space and flipped mappings.
+		cmpi.b	#(1<<obRender.level_fg)|(1<<obRender.static_mappings),d6
+		beq.w	Render_Sprites_SingleWorld
 		btst	#obRender.multi_sprite,d6
 		bne.w	Render_Sprites_Composite
 		btst	#obRender.level_fg,d6
@@ -230,6 +235,55 @@ Render_Sprites_AdvanceLevel:
 		clr.l	(a6)		; one hidden terminator, rather than clearing every unused Y
 .return:
 		rts
+
+; One-piece static world mapping. Preserve the ordinary bounding rectangle,
+; Y wrap, visible flag, SAT limit, art attributes and X=0 mask avoidance.
+Render_Sprites_SingleWorld:
+		moveq	#0,d2
+		move.b	width_pixels(a0),d2
+		sub.w	(a3),d0
+		add.w	d2,d0
+		move.w	d2,d3
+		add.w	d3,d3
+		addi.w	#320,d3
+		cmp.w	d3,d0
+		bhs.w	Render_Sprites_NextObj
+		sub.w	d2,d0
+		addi.w	#128,d0
+		move.w	obY(a0),d1
+		sub.w	Camera_Y_pos-Camera_RAM(a3),d1
+		move.b	height_pixels(a0),d2
+		add.w	d2,d1
+		andi.w	#$7FF,d1
+		move.w	d2,d3
+		add.w	d3,d3
+		addi.w	#224,d3
+		cmp.w	d3,d1
+		bhs.w	Render_Sprites_NextObj
+		addi.w	#128,d1
+		sub.w	d2,d1
+		ori.b	#$80,obRender(a0)
+		tst.w	d7
+		bmi.w	Render_Sprites_NextObj
+		movea.l	obMap(a0),a1
+		move.b	(a1)+,d2
+		ext.w	d2
+		add.w	d1,d2
+		move.w	d2,(a6)+
+		move.b	(a1)+,(a6)+
+		addq.w	#1,a6
+		move.w	(a1)+,d2
+		add.w	obGfx(a0),d2
+		move.w	d2,(a6)+
+		move.w	(a1)+,d2
+		add.w	d0,d2
+		andi.w	#$1FF,d2
+		bne.s	.x_ready
+		addq.w	#1,d2
+.x_ready:
+		move.w	d2,(a6)+
+		subq.w	#1,d7
+		bra.w	Render_Sprites_NextObj
 
 ; ---------------------------------------------------------------------------
 ; Generic composite. Children occupy $18-$47; display fields use the shared

@@ -85,18 +85,20 @@ allocation with word IDs. Mixed-size editor stamping remains future work.
 
 MD work RAM is packed against the top of its 64 KiB address space. The single
 free allocation is `Free_RAM_Start` through `Free_RAM_End` (end exclusive):
-`$FF699C-$FFB1E1`, **`$4846` bytes (18,502)** in the experimental build with
-music staging and shared boss-head sources. Terrain, placement loading and
+`$FF6C52-$FFB1DF`, **`$458E` bytes (17,806)** in the experimental build with
+music staging, boss-head sources, era ring flags and Twin Walker's art source. Terrain, placement loading and
 decompression work storage live with their CD executors. Current live ranges:
 
 | Allocation | MD address, inclusive | Size |
 | --- | --- | --- |
 | [Touch-collision candidates](Objects.md#touch-collision-candidates) | `$FF0000-$FF0031` | `$32` |
-| Music staging and controls | `$FF0032-$FF6059` | `$6028` |
-| [Boss-head sources and ready bits](Sprites-and-VRAM.md#shared-eggman-heads-and-exhaust) | `$FF605A-$FF699B` | `$942` |
-| Ring/terrain events and CD job controls | `$FFB1E2-$FFB3FD` | `$21C` |
-| [Decompressed player art](Sprites-and-VRAM.md#mode-1-ram-art) | `$FFB3FE-$FFBF9D` | `$BA0` |
-| Engine variables and work buffers | `$FFBF9E-$FFFFFF` | `$4062` |
+| Music staging and controls | `$FF0032-$FF605F` | `$602E` |
+| [Boss-head sources and ready bits](Sprites-and-VRAM.md#shared-eggman-heads-and-exhaust) | `$FF6060-$FF69A1` | `$942` |
+| Era state and ring flags | `$FF69A2-$FF6A31` | `$90` |
+| Twin Walker DPLC source | `$FF6A32-$FF6C51` | `$220` |
+| Ring/terrain events and CD job controls | `$FFB1E0-$FFB3FB` | `$21C` |
+| [Decompressed player art](Sprites-and-VRAM.md#mode-1-ram-art) | `$FFB3FC-$FFBF9B` | `$BA0` |
+| Engine variables and work buffers | `$FFBF9C-$FFFFFF` | `$4064` |
 
 `_definitions/s2.constants.asm` derives the engine's start from its own declared
 size, then places CD work/art immediately below it. Allocation changes move the
@@ -149,6 +151,16 @@ flag byte carries signed integer Y speed. CD uses the tangential component to li
 contact reach. Other sensor commands retain their input-angle high byte; airborne
 collision writes its wind-tunnel flag before each request. These operation-specific
 fields do not extend into the mailbox token or require a PRG-RAM transfer.
+The CD player passes retain the normal/tangent radii in `a5/a6`; paired tile
+scans preserve coordinates, step and solidity so the second sensor only moves
+across the span. Ground attachment, jump clearance and growth share the four
+paired implementations. Single-object floor/wall requests do not pay for this
+player shape setup.
+`MCD_TerrainRoomInFront` has its own executor, `MCD_SubTerrainForward`, reading
+the existing packet in place. It skips the scratch-SST copy and second dispatch,
+then uses a PC-relative `pea` continuation to the common result writer. The
+packet fields are named in `_definitions/Mega CD Constants.asm`; no extra
+mailbox bytes, persistent RAM or bus transfer are required.
 The rotating S1 stage retains its separate MD renderer and staging/PRG overlays.
 
 After scrolling, CD constructs changed tile strips while MD renders sprites
@@ -179,6 +191,13 @@ extra argument cursor setup and scratch-X round trip. Its reply uses the same
 result writer and distance/angle ABI. CD-local `$FF80xx` mailbox operands use
 absolute-word addressing throughout the CD executors. MD `$A120xx` mailboxes
 and relocatable work allocations retain their long operands.
+
+`MCD_TerrainFloorBatch` (`$2F`) supplies one to three X/Y pairs in the twelve
+argument bytes. The command's high byte is their shared signed height byte;
+`MainFlags` is point count minus one. The CD retains the current terrain path
+and returns signed floor distances in result words `+4/+6/+8`. Moving-ring
+prefetch only crosses other moving rings, whose floor queries leave that path
+and layout unchanged. It requires no Word-RAM handoff or new shared buffer.
 
 MD distance-query wrappers return `d1.w` with N/Z describing that distance and
 V/C cleared, including floor, ceiling and wall queries. Callers can branch on
@@ -265,12 +284,14 @@ its complete first request before starting the sub-CPU, avoiding warm-reset race
 | `MCD_CommandEnigma` (16) | Decode Enigma with a base-tile argument |
 | `MCD_CommandPLCInit` (17) | Install resident compressed PLC input and initialize its decoder |
 | `MCD_CommandArtFrame` (18) | Decode a bounded PLC batch without a terrain scene |
-| `$20-$2D` | Ground attachment and complete object/sensor operations |
-| `MCD_TerrainHeadroom` (`$2E`) | Ceiling clearance at the proposed position and radii |
+| `$20-$2D` | Ground attachment and complete object/sensor operations; `$21` reads the forward packet directly |
+| `MCD_TerrainHeadroom` (`$2E`) | Clearance in the proposed shape's outward direction |
+| `MCD_TerrainFloorBatch` (`$2F`) | One to three common-height floor distances |
 | Other | `$FFFF` |
 
-Headroom supplies four words for X, proposed Y, Y/X radii and the actor's
-two solidity bits. The CD CPU uses the established shoulder and center probes
+Headroom supplies four words for proposed X/Y, normal/tangent radii and the
+actor's two solidity bits. The command high byte specifies the outward cardinal
+direction. The CD CPU uses the established paired and center probes
 and returns the signed clearance directly. The MD caller can test a pose
 without changing the actor's SST or the shared contact angles.
 

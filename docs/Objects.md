@@ -53,7 +53,11 @@ needed. Sonic 2 final and S3&K use identical scattered-ring launch math and
 
 Each ring retains its own 255-update lifetime at `$2E`, fixed-point motion,
 quarter-rate on-screen descending floor probe, 3/4 bounce, wrapping and final
-80-update flicker. Item touch replaces only an actual ring's moving/wait entry
+80-update flicker. Up to three eligible points in a contiguous moving-ring run
+share one CD floor request. Signed fixed-point prediction leaves each future
+SST untouched; distance/frame caches use `$30/$32`. Other object types end the
+run so an intervening terrain-path change cannot invalidate a prediction.
+Pickup restores the frame-indexed mapping before displaying its sparkle. Item touch replaces only an actual ring's moving/wait entry
 with its collection entry. Both players can flag one ring before the object
 pass, but it awards once. Four sparkle poses last six updates each; the final
 terminal display is followed by deletion, matching the former animation script.
@@ -673,9 +677,12 @@ The queue occupies **50 bytes**: signed pointer-byte count plus 24 word
 addresses. Source S3&K's 63-entry cap is not carried over as a collision limit.
 A 25th unique candidate sets the count to `-1`, selecting a complete scan of all
 90 dynamic slots. The rest of that object's dispatch pass uses the ordinary
-loop without registration. Dense scenes keep that path and probe the queue
-again every 16 level updates; density can fall back below the threshold
-without changing the scene. Neither overflow nor a full object pool drops hits.
+loop without registration. Dense scenes sample four pool records per update
+instead of periodically rebuilding an overflowing list in one burst. The
+rolling count is advisory: a low count starts a complete live registration
+pass before publishing any pointers. More than 24 observed hitboxes restart
+the census early. Its cursor/count reuse the first two inactive queue entries;
+no additional RAM is allocated. Neither overflow nor a full pool drops hits.
 The two rectangle loops intentionally share the existing response handlers
 rather than adding a mode branch to every rejected candidate.
 

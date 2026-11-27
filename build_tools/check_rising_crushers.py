@@ -12,8 +12,8 @@ ACTORS = ('v_player', 'v_player2')
 DOWN, ACTION, RIGHT, LEFT = 5, 0, 7, 6
 RISE_FRAMES = 128
 SNUG = (1, 0x1120, 0x032E)
-TIGHT = (2, 0x1D61, 0x02AD)
-OPEN = (1, 0x1721, 0x067F)
+TIGHT = (2, 0x1D60, 0x02AD)
+OPEN = (1, 0x1720, 0x0680)
 
 
 def seek(g, x, y):
