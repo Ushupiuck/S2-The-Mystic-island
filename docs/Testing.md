@@ -663,6 +663,21 @@ turn right for 240 frames each. The check rejects stepping down with a flat angl
 missing landing angles and false uphill pushing. Run with and without `--pal`;
 the fixture stages initial positions, then uses ordinary controller input.
 
+`check_terrain_momentum.py --core CORE --system-directory BIOS --output OUTPUT`
+repeats HPZ1's first green-rimmed chute at ten integer/subpixel alignments around
+`$6C0,$180`, from rest with feet at the mouth. Neutral input and held Down run
+separately. Clearing requires reaching the lower exit near `$600,$580` with at
+least six pixels/update of rightward speed. It records entrance/exit velocity,
+angle, inertia changes and terrain pushing stops. The MMZ1 Present bowl around
+the time post at `$F91,$6C8` repeats both directions, three starting speeds and
+two subpixel phases. Sonic and solo Tails repeat both scenes at their standing
+and rolling radii; the real size laser creates each miniature form before its
+runs. Only the initial state is staged; original terrain and placed objects stay
+loaded. `--scene chute`/`bowl`, `--player 0`/`2`, `--full-only` and `--pal` narrow or
+repeat the checks. `--probe` records an older ROM's failures without asserting
+success; compare matching collision geometry. These fixtures do not measure
+complete controller-only act playthroughs.
+
 Ring-job tests cover sparse/all-active timers, staggered collection, bank pauses,
 reset and guards in HPZ/SMZ with both player modes. Their `--baseline` is a boolean
 recording mode, not a path. Use the current word-ID plane audit for exhaustive

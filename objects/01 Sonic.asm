@@ -721,6 +721,13 @@ Player_CheckWallsOnGround:
 		move.w	(sp)+,d0
 		tst.w	d1
 		bpl.s	.return
+		; A forward sensor can meet the supporting curve at a quadrant seam.
+		; Let AnglePos follow that surface instead of treating it as a wall.
+		move.b	d3,d2
+		sub.b	obAngle(a0),d2
+		addi.b	#$20,d2
+		cmpi.b	#$40,d2
+		blo.s	.return
 		asl.w	#8,d1
 		addi.b	#$20,d0
 		andi.b	#$C0,d0

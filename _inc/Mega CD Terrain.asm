@@ -1451,12 +1451,24 @@ MCD_Air_SonAirCol_PosY:
 		bsr.w	MCD_SubLeftSensor
 		tst.w	d1
 		bpl.s	+
+		; A shallow floor sampled at the waist belongs to the landing pair.
+		; Clipping it as a side wall first would erase horizontal momentum.
+		move.b	d3,d0
+		addi.b	#$20,d0
+		cmpi.b	#$40,d0
+		blo.s	+
 		sub.w	d1,obX(a0)
 		clr.w	obVelX(a0)
 +
 		bsr.w	MCD_SubRightSensor
 		tst.w	d1
 		bpl.s	+
+		; A shallow floor sampled at the waist belongs to the landing pair.
+		; Clipping it as a side wall first would erase horizontal momentum.
+		move.b	d3,d0
+		addi.b	#$20,d0
+		cmpi.b	#$40,d0
+		blo.s	+
 		add.w	d1,obX(a0)
 		clr.w	obVelX(a0)
 +
@@ -1521,6 +1533,13 @@ MCD_Air_Sonic_FloorLeft:
 		bsr.w	MCD_SubLeftSensor
 		tst.w	d1
 		bpl.s	MCD_Air_loc_105FE
+		tst.w	obVelY(a0)
+		bmi.s	.wall
+		move.b	d3,d0
+		addi.b	#$20,d0
+		cmpi.b	#$40,d0
+		blo.s	MCD_Air_loc_105FE
+.wall:
 		sub.w	d1,obX(a0)
 		clr.w	obVelX(a0)
 		bset	#MCD_ServiceInertia,(MCD_SubOwnFlags).w
@@ -1617,6 +1636,13 @@ MCD_Air_Sonic_FloorRight:
 		bsr.w	MCD_SubRightSensor
 		tst.w	d1
 		bpl.s	MCD_Air_loc_106BC
+		tst.w	obVelY(a0)
+		bmi.s	.wall
+		move.b	d3,d0
+		addi.b	#$20,d0
+		cmpi.b	#$40,d0
+		blo.s	MCD_Air_loc_106BC
+.wall:
 		add.w	d1,obX(a0)
 		clr.w	obVelX(a0)
 		bset	#MCD_ServiceInertia,(MCD_SubOwnFlags).w
