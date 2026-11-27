@@ -168,10 +168,10 @@ MCD_CompressedAssets:
 	dc.l BLevel_LV0E4,BLevel_LV0E4+$82	; level/layout/bad future/LV0E_4.kosp
 	endif
 	if defined(BLevel_LV0F1)
-	dc.l BLevel_LV0F1,BLevel_LV0F1+$44F	; level/layout/bad future/LV0F_1.kosp
+	dc.l BLevel_LV0F1,BLevel_LV0F1+$444	; level/layout/bad future/LV0F_1.kosp
 	endif
 	if defined(BLevel_LV0F2)
-	dc.l BLevel_LV0F2,BLevel_LV0F2+$58F	; level/layout/bad future/LV0F_2.kosp
+	dc.l BLevel_LV0F2,BLevel_LV0F2+$58A	; level/layout/bad future/LV0F_2.kosp
 	endif
 	if defined(BLevel_LV0F3)
 	dc.l BLevel_LV0F3,BLevel_LV0F3+$82	; level/layout/bad future/LV0F_3.kosp
@@ -453,10 +453,10 @@ MCD_CompressedAssets:
 	dc.l GLevel_LV0E4,GLevel_LV0E4+$82	; level/layout/good future/LV0E_4.kosp
 	endif
 	if defined(GLevel_LV0F1)
-	dc.l GLevel_LV0F1,GLevel_LV0F1+$44F	; level/layout/good future/LV0F_1.kosp
+	dc.l GLevel_LV0F1,GLevel_LV0F1+$444	; level/layout/good future/LV0F_1.kosp
 	endif
 	if defined(GLevel_LV0F2)
-	dc.l GLevel_LV0F2,GLevel_LV0F2+$58F	; level/layout/good future/LV0F_2.kosp
+	dc.l GLevel_LV0F2,GLevel_LV0F2+$58A	; level/layout/good future/LV0F_2.kosp
 	endif
 	if defined(GLevel_LV0F3)
 	dc.l GLevel_LV0F3,GLevel_LV0F3+$82	; level/layout/good future/LV0F_3.kosp
@@ -570,28 +570,28 @@ MCD_CompressedAssets:
 	dc.l Kosp_LZ,Kosp_LZ+$1A2E	; art/kosinski/level/8x8 - LZ.kosp
 	endif
 	if defined(Kosp_MMZ1_BadFuture)
-	dc.l Kosp_MMZ1_BadFuture,Kosp_MMZ1_BadFuture+$2249	; art/kosinski/level/8x8 - MMZ1 Bad Future.kosp
+	dc.l Kosp_MMZ1_BadFuture,Kosp_MMZ1_BadFuture+$21B8	; art/kosinski/level/8x8 - MMZ1 Bad Future.kosp
 	endif
 	if defined(Kosp_MMZ1_GoodFuture)
-	dc.l Kosp_MMZ1_GoodFuture,Kosp_MMZ1_GoodFuture+$2359	; art/kosinski/level/8x8 - MMZ1 Good Future.kosp
+	dc.l Kosp_MMZ1_GoodFuture,Kosp_MMZ1_GoodFuture+$22C8	; art/kosinski/level/8x8 - MMZ1 Good Future.kosp
 	endif
 	if defined(Kosp_MMZ1_Past)
-	dc.l Kosp_MMZ1_Past,Kosp_MMZ1_Past+$1E9B	; art/kosinski/level/8x8 - MMZ1 Past.kosp
+	dc.l Kosp_MMZ1_Past,Kosp_MMZ1_Past+$1E2E	; art/kosinski/level/8x8 - MMZ1 Past.kosp
 	endif
 	if defined(Kosp_MMZ1_Present)
-	dc.l Kosp_MMZ1_Present,Kosp_MMZ1_Present+$1F68	; art/kosinski/level/8x8 - MMZ1 Present.kosp
+	dc.l Kosp_MMZ1_Present,Kosp_MMZ1_Present+$1F00	; art/kosinski/level/8x8 - MMZ1 Present.kosp
 	endif
 	if defined(Kosp_MMZ2_BadFuture)
-	dc.l Kosp_MMZ2_BadFuture,Kosp_MMZ2_BadFuture+$247D	; art/kosinski/level/8x8 - MMZ2 Bad Future.kosp
+	dc.l Kosp_MMZ2_BadFuture,Kosp_MMZ2_BadFuture+$252C	; art/kosinski/level/8x8 - MMZ2 Bad Future.kosp
 	endif
 	if defined(Kosp_MMZ2_GoodFuture)
-	dc.l Kosp_MMZ2_GoodFuture,Kosp_MMZ2_GoodFuture+$2544	; art/kosinski/level/8x8 - MMZ2 Good Future.kosp
+	dc.l Kosp_MMZ2_GoodFuture,Kosp_MMZ2_GoodFuture+$24D0	; art/kosinski/level/8x8 - MMZ2 Good Future.kosp
 	endif
 	if defined(Kosp_MMZ2_Past)
-	dc.l Kosp_MMZ2_Past,Kosp_MMZ2_Past+$20EC	; art/kosinski/level/8x8 - MMZ2 Past.kosp
+	dc.l Kosp_MMZ2_Past,Kosp_MMZ2_Past+$2092	; art/kosinski/level/8x8 - MMZ2 Past.kosp
 	endif
 	if defined(Kosp_MMZ2_Present)
-	dc.l Kosp_MMZ2_Present,Kosp_MMZ2_Present+$22B9	; art/kosinski/level/8x8 - MMZ2 Present.kosp
+	dc.l Kosp_MMZ2_Present,Kosp_MMZ2_Present+$225E	; art/kosinski/level/8x8 - MMZ2 Present.kosp
 	endif
 	if defined(Kosp_MTZ)
 	dc.l Kosp_MTZ,Kosp_MTZ+$2A96	; art/kosinski/level/8x8 - MTZ.kosp
@@ -960,10 +960,10 @@ MCD_CompressedAssets:
 	dc.l Level_LV0E4,Level_LV0E4+$82	; level/layout/LV0E_4.kosp
 	endif
 	if defined(Level_LV0F1)
-	dc.l Level_LV0F1,Level_LV0F1+$456	; level/layout/LV0F_1.kosp
+	dc.l Level_LV0F1,Level_LV0F1+$44C	; level/layout/LV0F_1.kosp
 	endif
 	if defined(Level_LV0F2)
-	dc.l Level_LV0F2,Level_LV0F2+$585	; level/layout/LV0F_2.kosp
+	dc.l Level_LV0F2,Level_LV0F2+$580	; level/layout/LV0F_2.kosp
 	endif
 	if defined(Level_LV0F3)
 	dc.l Level_LV0F3,Level_LV0F3+$82	; level/layout/LV0F_3.kosp
@@ -1032,28 +1032,28 @@ MCD_CompressedAssets:
 	dc.l Map128_LZ,Map128_LZ+$1EEE	; mappings/128x128/LZ.kosp
 	endif
 	if defined(Map128_MMZ1_BadFuture)
-	dc.l Map128_MMZ1_BadFuture,Map128_MMZ1_BadFuture+$3F08	; mappings/128x128/MMZ1 Bad Future.kosp
+	dc.l Map128_MMZ1_BadFuture,Map128_MMZ1_BadFuture+$3C7C	; mappings/128x128/MMZ1 Bad Future.kosp
 	endif
 	if defined(Map128_MMZ1_GoodFuture)
-	dc.l Map128_MMZ1_GoodFuture,Map128_MMZ1_GoodFuture+$3E1F	; mappings/128x128/MMZ1 Good Future.kosp
+	dc.l Map128_MMZ1_GoodFuture,Map128_MMZ1_GoodFuture+$3B96	; mappings/128x128/MMZ1 Good Future.kosp
 	endif
 	if defined(Map128_MMZ1_Past)
-	dc.l Map128_MMZ1_Past,Map128_MMZ1_Past+$3C35	; mappings/128x128/MMZ1 Past.kosp
+	dc.l Map128_MMZ1_Past,Map128_MMZ1_Past+$399C	; mappings/128x128/MMZ1 Past.kosp
 	endif
 	if defined(Map128_MMZ1_Present)
-	dc.l Map128_MMZ1_Present,Map128_MMZ1_Present+$3CA6	; mappings/128x128/MMZ1 Present.kosp
+	dc.l Map128_MMZ1_Present,Map128_MMZ1_Present+$3A1C	; mappings/128x128/MMZ1 Present.kosp
 	endif
 	if defined(Map128_MMZ2_BadFuture)
-	dc.l Map128_MMZ2_BadFuture,Map128_MMZ2_BadFuture+$4CF4	; mappings/128x128/MMZ2 Bad Future.kosp
+	dc.l Map128_MMZ2_BadFuture,Map128_MMZ2_BadFuture+$4BA0	; mappings/128x128/MMZ2 Bad Future.kosp
 	endif
 	if defined(Map128_MMZ2_GoodFuture)
-	dc.l Map128_MMZ2_GoodFuture,Map128_MMZ2_GoodFuture+$484D	; mappings/128x128/MMZ2 Good Future.kosp
+	dc.l Map128_MMZ2_GoodFuture,Map128_MMZ2_GoodFuture+$46F8	; mappings/128x128/MMZ2 Good Future.kosp
 	endif
 	if defined(Map128_MMZ2_Past)
-	dc.l Map128_MMZ2_Past,Map128_MMZ2_Past+$45FD	; mappings/128x128/MMZ2 Past.kosp
+	dc.l Map128_MMZ2_Past,Map128_MMZ2_Past+$44F0	; mappings/128x128/MMZ2 Past.kosp
 	endif
 	if defined(Map128_MMZ2_Present)
-	dc.l Map128_MMZ2_Present,Map128_MMZ2_Present+$4C1B	; mappings/128x128/MMZ2 Present.kosp
+	dc.l Map128_MMZ2_Present,Map128_MMZ2_Present+$4AC0	; mappings/128x128/MMZ2 Present.kosp
 	endif
 	if defined(Map128_MTZ)
 	dc.l Map128_MTZ,Map128_MTZ+$2A8C	; mappings/128x128/MTZ.kosp
@@ -1092,28 +1092,28 @@ MCD_CompressedAssets:
 	dc.l Map16_LZ,Map16_LZ+$593	; mappings/16x16/LZ.kosp
 	endif
 	if defined(Map16_MMZ1_BadFuture)
-	dc.l Map16_MMZ1_BadFuture,Map16_MMZ1_BadFuture+$AC2	; mappings/16x16/MMZ1 Bad Future.kosp
+	dc.l Map16_MMZ1_BadFuture,Map16_MMZ1_BadFuture+$AC0	; mappings/16x16/MMZ1 Bad Future.kosp
 	endif
 	if defined(Map16_MMZ1_GoodFuture)
-	dc.l Map16_MMZ1_GoodFuture,Map16_MMZ1_GoodFuture+$B71	; mappings/16x16/MMZ1 Good Future.kosp
+	dc.l Map16_MMZ1_GoodFuture,Map16_MMZ1_GoodFuture+$B6E	; mappings/16x16/MMZ1 Good Future.kosp
 	endif
 	if defined(Map16_MMZ1_Past)
-	dc.l Map16_MMZ1_Past,Map16_MMZ1_Past+$A57	; mappings/16x16/MMZ1 Past.kosp
+	dc.l Map16_MMZ1_Past,Map16_MMZ1_Past+$A56	; mappings/16x16/MMZ1 Past.kosp
 	endif
 	if defined(Map16_MMZ1_Present)
-	dc.l Map16_MMZ1_Present,Map16_MMZ1_Present+$A59	; mappings/16x16/MMZ1 Present.kosp
+	dc.l Map16_MMZ1_Present,Map16_MMZ1_Present+$A56	; mappings/16x16/MMZ1 Present.kosp
 	endif
 	if defined(Map16_MMZ2_BadFuture)
-	dc.l Map16_MMZ2_BadFuture,Map16_MMZ2_BadFuture+$C29	; mappings/16x16/MMZ2 Bad Future.kosp
+	dc.l Map16_MMZ2_BadFuture,Map16_MMZ2_BadFuture+$C28	; mappings/16x16/MMZ2 Bad Future.kosp
 	endif
 	if defined(Map16_MMZ2_GoodFuture)
-	dc.l Map16_MMZ2_GoodFuture,Map16_MMZ2_GoodFuture+$CBF	; mappings/16x16/MMZ2 Good Future.kosp
+	dc.l Map16_MMZ2_GoodFuture,Map16_MMZ2_GoodFuture+$CC0	; mappings/16x16/MMZ2 Good Future.kosp
 	endif
 	if defined(Map16_MMZ2_Past)
-	dc.l Map16_MMZ2_Past,Map16_MMZ2_Past+$B69	; mappings/16x16/MMZ2 Past.kosp
+	dc.l Map16_MMZ2_Past,Map16_MMZ2_Past+$B68	; mappings/16x16/MMZ2 Past.kosp
 	endif
 	if defined(Map16_MMZ2_Present)
-	dc.l Map16_MMZ2_Present,Map16_MMZ2_Present+$C0F	; mappings/16x16/MMZ2 Present.kosp
+	dc.l Map16_MMZ2_Present,Map16_MMZ2_Present+$C0C	; mappings/16x16/MMZ2 Present.kosp
 	endif
 	if defined(Map16_MTZ)
 	dc.l Map16_MTZ,Map16_MTZ+$B89	; mappings/16x16/MTZ.kosp
@@ -1737,10 +1737,10 @@ MCD_CompressedAssets:
 	dc.l PLevel_LV0E4,PLevel_LV0E4+$82	; level/layout/past/LV0E_4.kosp
 	endif
 	if defined(PLevel_LV0F1)
-	dc.l PLevel_LV0F1,PLevel_LV0F1+$46B	; level/layout/past/LV0F_1.kosp
+	dc.l PLevel_LV0F1,PLevel_LV0F1+$462	; level/layout/past/LV0F_1.kosp
 	endif
 	if defined(PLevel_LV0F2)
-	dc.l PLevel_LV0F2,PLevel_LV0F2+$5AB	; level/layout/past/LV0F_2.kosp
+	dc.l PLevel_LV0F2,PLevel_LV0F2+$5AA	; level/layout/past/LV0F_2.kosp
 	endif
 	if defined(PLevel_LV0F3)
 	dc.l PLevel_LV0F3,PLevel_LV0F3+$82	; level/layout/past/LV0F_3.kosp
