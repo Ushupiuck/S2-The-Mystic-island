@@ -136,9 +136,10 @@ class CheckSonLVLObjects
 
 	static void CheckSwitcher()
 	{
-		var entry = NewEntry(3, 0xE9, true);
-		ObjectDefinition definition = LevelData.ObjTypes[3];
-		if (definition.CustomProperties.Length != 7) Fail("Switcher settings did not load.");
+		var entry = NewEntry(0x0A, 0xE9, true);
+		ObjectDefinition definition = LevelData.ObjTypes[0x0A];
+		int expected = definition.CustomProperties.Any(p => p.Name == "Appearance") ? 9 : 7;
+		if (definition.CustomProperties.Length != expected) Fail("Switcher settings did not load.");
 		definition.CustomProperties.Single(p => p.Name == "Direction").SetValue(entry, 1);
 		if (entry.SubType != 0xED || !entry.XFlip) Fail("Switcher direction overwrote unrelated flags.");
 		definition.CustomProperties.Single(p => p.Name == "Ground only").SetValue(entry, 0);
