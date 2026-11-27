@@ -741,8 +741,8 @@ namespace MysticIsland.ObjectDefinitions
 					if (SawHasRail(subtype))
 					{
 						bool far = (subtype & 128) != 0;
-						int mount = far ? -80 : 0;
-						return new Sprite(new Sprite(At(frames, far ? 16 : 0), 1, 1), new Sprite(alternate[0], mount, mount));
+						int railOffset = far ? -80 : 0;
+						return new Sprite(new Sprite(At(frames, far ? 16 : 0), 1, 1), new Sprite(alternate[0], railOffset, railOffset));
 					}
 					if (alternate != null) return frames[frames.Length - 2];
 					int sawMode = SawMovement(subtype);
