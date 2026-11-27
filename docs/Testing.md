@@ -243,8 +243,9 @@ Sonic and companion Tails; `--player 2` checks solo Tails. Positioned single-box
 fixtures exercise rising/falling diagonals, vertical and horizontal rolling
 attacks. Three boxes with a fourth above the middle reproduce stacked-monitor
 approaches from both sides. After initial position/velocity setup, the real
-player movement and touch/solid handlers run; every attacked target must break
-and retain the correct collector. The same runner retains held-charge landings
+player movement and touch/solid handlers run. Side/top targets must break and
+retain the correct collector; straight and drifting underside hits must bounce
+the player and drop the intact box. The same runner retains held-charge landings
 and harmful-reward cases. Every angle/stack case repeats after the real shrink
 beam creates the character's miniature form, checking its smaller rolling body
 and miniature mappings. `--probe` records the older pass-through failures.

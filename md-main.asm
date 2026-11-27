@@ -10465,16 +10465,14 @@ loc_198FA:
 		jsr	(Object_MatchesPath).l
 		exg	a0,a1
 		bne.s	loc_19912.return
-		; S3&K Touch_Monitor accepts rolling hits from every direction.
-		; Rising diagonals must not fall between solidity and touch response.
-		cmpi.b	#AniIDSonAni_Roll,obAnim(a0)
-		beq.s	loc_19926.break
+		; Preserve S1/S2/S3's rising underside bump. Other rolling contact,
+		; including rising side diagonals, must still break the monitor.
 		tst.w	obVelY(a0)
-		bpl.s	loc_19926.return
+		bpl.s	loc_19926
 		move.w	obY(a0),d0
 		subi.w	#$10,d0
 		cmp.w	obY(a1),d0
-		blo.s	loc_19912.return
+		blo.s	loc_19926
 
 loc_1990E:
 		neg.w	obVelY(a0)
@@ -10488,6 +10486,8 @@ loc_19912:
 ; ---------------------------------------------------------------------------
 
 loc_19926:
+		cmpi.b	#AniIDSonAni_Roll,obAnim(a0)
+		bne.s	.return
 .break:
 		neg.w	obVelY(a0)
 		move.w	a0,obParent(a1)		; remember which player broke the monitor

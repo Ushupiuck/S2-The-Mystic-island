@@ -23,7 +23,9 @@ def check_attack_angles(g, args):
 		('left-up', 36, 0, -0x600, -0x400),
 		('right-down', -36, -16, 0x400, 0x200),
 		('left-down', 36, -16, -0x400, 0x200),
-		('up', 0, 40, 0, -0x600), ('down', 0, -40, 0, 0x200),
+		('under-up', 0, 40, 0, -0x600),
+		('under-right-up', -12, 40, 0x200, -0x600),
+		('under-left-up', 12, 40, -0x200, -0x600), ('down', 0, -40, 0, 0x200),
 		('right-level', -36, 0, 0x600, 0), ('left-level', 36, 0, -0x600, 0),
 		('stack-right-up', 36, 0, -0x600, -0x400),
 		('stack-left-up', -36, 0, 0x600, -0x400))
@@ -76,7 +78,7 @@ def check_attack_angles(g, args):
 				g.put(who, field, value, size)
 			g.put(who, 'obAngle', 0)
 			trace = []
-			broken = False
+			broken = dropped = bounced = False
 			for tick in range(30):
 				g.run()
 				assert not g.read('v_errortype'), (who, name, 'ROM exception')
@@ -84,15 +86,21 @@ def check_attack_angles(g, args):
 				if tick in (5, 15, 29):
 					g.video.save(args.output / f'{who}-{"mini" if miniature else "full"}-{name}-{tick}.png')
 				broken |= g.get(mon, 'obRoutine') >= 4
+				kicked = g.get(mon, 'obRoutine') == 2 and g.get(mon, 'ob2ndRout') == 4
+				dropped |= kicked
+				bounced |= kicked and 0 < g.get(who, 'obVelY', 2) < 0x8000
 			if miniature:
 				assert g.get(who, 'default_y_radius') == s['Player_MiniHeight']
 				assert g.get(who, 'obMap', 4) == s['Map_MiniTails' if tails else 'Map_MiniSonic']
 			row = {'actor': who, 'miniature': miniature, 'case': name, 'broken': broken,
-				'collector': g.get(mon, 'obParent', 2), 'trace': trace}
+				'collector': g.get(mon, 'obParent', 2), 'dropped': dropped, 'bounced': bounced, 'trace': trace}
 			rows.append(row)
 			print({key: value for key, value in row.items() if key != 'trace'}, flush=True)
 			if not args.probe:
-				assert broken and row['collector'] == s[who] & 65535, row
+				if name.startswith('under-'):
+					assert not broken and dropped and bounced, row
+				else:
+					assert broken and not dropped and row['collector'] == s[who] & 65535, row
 	g.restore(initial)
 	return rows
 

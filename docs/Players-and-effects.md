@@ -127,10 +127,12 @@ route outcomes remain unmeasured. Do not treat old death counts as current resul
 Monitors support either actor. Standing relationships are valid only when the
 player's object index and the monitor's rider flag agree. Stale ownership must
 not snap a player to a distant monitor. A held spindash remains solid. Rolling
-hits from any direction use S3&K's normal-monitor break rule, for Sonic, solo
-Tails and companion Tails. Rising diagonal and underside attacks must not be
-discarded after the solid-object handler delegates rolling contact to touch
-response. Non-rolling underside bumps retain their separate behavior.
+hits from above or either side break the box for Sonic, solo Tails and companion
+Tails, including rising side diagonals. Rising contact from below retains the
+S1/S2/S3 bump: reverse the player's upward velocity and kick the intact monitor
+into its falling state. This underside check runs before the rolling break
+check; S&K's removal of ordinary underside drops is intentionally not adopted.
+Both responses use the same contact geometry for full-size and miniature actors.
 Breaking detaches both riders and remembers
 the actual collector, including for harmful rewards.
 The ten-ring monitor saturates the shared inventory at 999, matching ordinary
