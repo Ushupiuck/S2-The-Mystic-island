@@ -114,7 +114,7 @@ def main():
 					(symbols['ArtTile_Points_2'] * 32, (symbols['ArtTile_Points_2'] + 2) * 32)]
 	assert points_banks == [(0xF780, 0xF7C0), (0xF7C0, 0xF800)]
 	assert symbols['ArtTile_HUD_Numbers'] + 14 == symbols['ArtTile_HUD_End']
-	assert symbols['ArtTile_HUD_End'] == symbols['ArtTile_Signpost']
+	assert symbols['ArtTile_Signpost'] + 26 == symbols['ArtTile_Springs']
 	assert symbols['ArtTile_HUD_Debug_Numbers'] + 16 == symbols['ArtTile_HUD_Time']
 	assert struct.unpack_from('>H', rom, symbols['Nem_HUD'])[0] & 0x7FFF == 10, 'HUD must load only its ten label letters'
 	assert (ROOT/'art/uncompressed/HUD Numbers.bin').stat().st_size == 11*32
@@ -126,7 +126,7 @@ def main():
 	assert 'Art_SSResultsRing' not in symbols
 	assert points_banks[-1][1] == symbols['VRAM_Sprite_Attribute_Table']
 
-	# The placed sign, monitor and hidden award can all be visible together.
+	# Hidden awards are ordinary act art; the end sign overlays the final object tiles.
 	bonus_tiles = struct.unpack_from('>H', rom, symbols['Kospm_Bonus'])[0] // 32
 	for plc, bank, end in (('THZ1', 'GHZ', 'ArtTile_GHZ_Edge_Wall'),
 			('THZ2', 'GHZ', 'ArtTile_GHZ_Edge_Wall'), ('SMZ1', 'SMZ', 'ArtTile_SMZ_Atlas')):
@@ -142,7 +142,7 @@ def main():
 		runs = struct.unpack_from('>H', rom, start)[0]
 		loaded = sum((struct.unpack_from('>H', rom, start + 2 + run * 2)[0] >> 12) + 1
 					 for run in range(runs))
-		assert (symbols['ArtTile_Signpost'] + loaded)*32 <= symbols['vram_bg']
+		assert symbols['ArtTile_Signpost'] + loaded <= symbols['ArtTile_Springs']
 	for row in frames(rom, symbols['Map_Obj7D'], symbols['Map_Obj7D_frames']):
 		for _, size, tile, _ in row:
 			assert (tile & 0x7FF) + ((size >> 2) + 1) * ((size & 3) + 1) <= bonus_tiles
@@ -327,7 +327,7 @@ def main():
 	print(f'{len(points_frames) - 1} points values fit both two-tile banks; hidden-frame and HUD/plane/PLC boundaries pass.')
 	print('Explosion/fiery and all six animal PLC pairs fit the reordered $B040-$BFFF group.')
 	print('Life-monitor icon, 56 resident bubble tiles and both streamed splash/countdown banks pass.')
-	print('Hidden bonuses fit their resident GHZ and SMZ banks, with the signpost clear of monitors and Plane B.')
+	print('Hidden bonuses fit their act banks; the end sign overlays object art immediately before springs.')
 	if args.skdisasm:
 		print('All three Tails art files match the palette-remapped S&K source pixels.')
 

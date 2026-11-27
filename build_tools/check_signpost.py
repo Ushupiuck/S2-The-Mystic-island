@@ -27,27 +27,37 @@ class SignpostNative(c.Manager):
 
 def check_finish_player_states(m, setup, act):
 	for mode in (0, 2):
-		for state in ('grounded', 'airborne', 'missing', 'hurt', 'dead', 'placement', 'frames'):
-			obj = setup()
-			m.write('Player_mode', mode, 2)
-			m.put(obj, 'obRoutine', 14)
-			m.put('v_player', 'obStatus', 0 if state == 'grounded' else 2)
-			if state == 'missing':
-				m.put('v_player', 'code', 0)
-			if state in ('hurt', 'dead'):
-				m.put('v_player', 'obRoutine', 4 if state == 'hurt' else 6)
-			if state in ('placement', 'frames'):
-				m.write('Debug_placement_mode', 1 if state == 'placement' else 2, 2)
-			act('Signpost_FallingResults', obj)
-			assert m.get(obj, 'obRoutine') == 8 and m.get('v_endcard', 'code') == m.s['GotThrough'], (mode, state)
-		for debug in (0, 1, 2):
-			obj = setup()
-			m.write('Player_mode', mode, 2)
-			m.put(obj, 'obRoutine', 6)
-			m.put('v_player', 'code', 0)
-			m.write('Debug_placement_mode', debug, 2)
-			act('Signpost_EndLevel', obj)
-			assert m.get(obj, 'obRoutine') == 8 and m.get('v_endcard', 'code') == m.s['GotThrough'], (mode, debug)
+		for routine in (6, 14):
+			for state in ('grounded', 'airborne', 'missing', 'hurt', 'dead', 'placement', 'frames'):
+				obj = setup()
+				m.write('Player_mode', mode, 2)
+				m.put(obj, 'obRoutine', routine)
+				m.put('v_player', 'obStatus', 0 if state == 'grounded' else 2)
+				if state == 'missing':
+					m.put('v_player', 'code', 0)
+				if state in ('hurt', 'dead'):
+					m.put('v_player', 'obRoutine', 4 if state == 'hurt' else 6)
+				if state in ('placement', 'frames'):
+					m.write('Debug_placement_mode', 1 if state == 'placement' else 2, 2)
+				act('Signpost_EndLevel', obj)
+				assert m.get(obj, 'obRoutine') == 8 and m.get('v_endcard', 'code') == m.s['GotThrough'], (mode, routine, state)
+				assert m.read('f_lockctrl') == m.s['PlayerInputLock_Automatic']
+				for logical in ('v_jpadholdlogical', 'v_jpadholdlogical2'):
+					assert m.read(logical, 2) == m.s['btnR'] << 8
+			# Debug entry/exit clears the lock; the completed sign owns its return.
+			m.write('f_lockctrl', 0)
+			m.write('v_jpadholdlogical', 0xFFFF, 2)
+			m.write('v_jpadholdlogical2', 0xFFFF, 2)
+			act('Signpost_RunRight', obj)
+			assert m.read('f_lockctrl') == m.s['PlayerInputLock_Automatic']
+			assert m.read('v_jpadholdlogical', 2) == m.read('v_jpadholdlogical2', 2) == m.s['btnR'] << 8
+			for lock in ('PlayerInputLock_Over', 'PlayerInputLock_Drowning'):
+				m.write('f_lockctrl', m.s[lock])
+				m.write('v_jpadholdlogical', 0, 2)
+				m.write('v_jpadholdlogical2', 0, 2)
+				act('Signpost_RunRight', obj)
+				assert m.read('f_lockctrl') == m.s[lock]
+				assert not m.read('v_jpadholdlogical', 2) and not m.read('v_jpadholdlogical2', 2)
 
 
 def main():
@@ -84,7 +94,7 @@ def main():
     assert m.get(sparkle,'code')==m.s['DeleteObject'] and m.read('v_rings',2)==37
     act('DeleteObject',sparkle);assert not m.get(sparkle,'code')
     checks.append('stationary sign emits non-collectible four-frame sparkles, never real rings')
-    for speed,air,launched in ((0x5FF,0,False),(0x600,0,True),(0x1000,0,True),(0x600,2,False),(0xFA00,0,False)):
+    for speed,air,launched in ((0x600,0,False),(0x7FF,0,False),(0x800,0,True),(0x1000,0,True),(0x800,2,False),(0xF800,0,False)):
         obj=setup();act('Signpost_Init',obj)
         m.put('v_player','obX',0x830,2) # deliberately skip old 32px trigger window
         m.put('v_player','obInertia',speed,2);m.put('v_player','obStatus',air)
@@ -151,10 +161,10 @@ def main():
         assert m.get(obj,'obRoutine')==12
         act('Signpost_Landed',obj)
         assert m.get(obj,'obRoutine')==14 and m.get(obj,'obAnim')==(4 if mode==2 else 3)
-        assert m.read('f_lockctrl') and not m.read('v_jpadholdlogical',2)
+        assert not m.read('f_lockctrl'), 'Controls locked before results began'
     checks.append('gravity $C, ascending/high-screen floor rejection, 65-update landing spin and character portraits')
     check_finish_player_states(m,setup,act)
-    checks.append('landed sign starts results with an airborne, absent, hurt, dead or Debug primary player')
+    checks.append('both spins: unconditional results, shared rightward input, Debug recovery and death-lock precedence')
     obj=setup();act('Signpost_SpawnAirSparkle',obj)
     sparkle=next(a for a in m.pool() if m.get(a,'code')==m.s['Signpost_AirSparkle'])
     xs=[];tiers=set()

@@ -703,12 +703,17 @@ This subtype does not perform boss-specific cleanup or act transitions.
 
 For a placed signpost on a flat floor, set its layout Y 32 pixels above
 the first solid row. The last opaque row of the post is at Y + 31.
-A placed signpost retains the normal crossing/spin/run-offscreen finish.
-Crossing it grounded with rightward inertia at least `$0600` (6 pixels per
+A placed signpost retains the normal crossing and stationary spin.
+Crossing it grounded with rightward inertia at least `$0800` (8 pixels per
 update) instead launches it vertically at `-$0400`, with zero horizontal speed,
 and enters the falling mode. Crossing detection also handles skipping the
-old 32-pixel trigger window. Jumping past or moving slower keeps the ordinary
-finish. `Signpost_LaunchSpeed` and `Signpost_LaunchY` are the editable constants.
+old 32-pixel trigger window. Jumping past or moving slower keeps the stationary
+spin. `Signpost_LaunchSpeed` and `Signpost_LaunchY` are the editable constants.
+Both paths leave player controls free throughout the spin. When it ends, both
+enter the same results routine and automatically walk both characters right.
+Results never wait for either character to leave the screen.
+The threshold is above the ordinary `$0600` top speed; ordinary running keeps
+the sign planted, while faster momentum can launch it.
 
 The airborne path ports `Obj_EndSign` from skdisasm
 [`73de97c6b55055bcb8089c1d55d006b02136f163`](https://github.com/sonicretro/skdisasm/blob/73de97c6b55055bcb8089c1d55d006b02136f163/sonic3k.asm#L176192):
@@ -725,16 +730,20 @@ Landing requires downward motion and Y at least camera Y + `$50`. The floor
 sensor uses the last opaque row of the post and accepts zero distance so
 the foot settles immediately above the solid terrain.
 The sign keeps spinning for `$40` countdown updates (65 calls before
-the negative-timer transition), then selects the primary character's portrait,
-locks neutral logical input and loads the existing results. The finish proceeds
+the negative-timer transition), then selects the primary character's portrait
+and enters the shared finish routine. The finish proceeds
 while the character is airborne, in Debug, or already removed by the giant ring.
-It stays in place instead of forcing an offscreen run. Both finish modes
+The sign stays in place while the characters walk right. Both finish modes
 support the giant-ring exit, including removal of a player in active Debug.
 The stationary spin emits
 non-collectible ring sparkles through `Ring_Sparkle` directly, with the first
 sparkle frame and six-update timer initialized; it never calls the ring pickup
 constructor with an obsolete routine byte.
-No SST fields, RAM reservations or VRAM allocations grow.
+The 26-tile frame replaces object art at `$4C3-$4DC`, immediately before the
+springs. Successful streaming claims that space until the next level load;
+SMZ1's overlapping smoke uploads stop for that lifetime. `Signpost_ArtActive`
+reuses the former unused P2 scroll-lock byte, so no RAM or SST sizes grow.
+The former HUD-tail signpost reservation is free again.
 
 SMZ2's trap spins from Eggman through its own mixed frames to Mecha's bust.
 After it settles and the final portrait DPLC is queued, a separate two-second
@@ -801,8 +810,8 @@ See [the arena](Levels.md#scrap-madness) and
 [boss art](Sprites-and-VRAM.md#mecha-sonic-standard-fight).
 
 S3&K's buried-monitor controller is a separate object and is not imported
-here. Its signpost-triggered reveal would need a compatible art allocation:
-our ordinary monitor and signpost banks overlap. SOZ sand coordinates and
+here. Its signpost-triggered reveal and cleanup still need a separate port.
+SOZ sand coordinates and
 DEZ's disappearing-floor aftermath are also level-specific source code,
 rather than generic signpost behavior.
 

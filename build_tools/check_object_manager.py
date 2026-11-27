@@ -336,20 +336,19 @@ for primary in (1,2):
 	assert not m.get(flash,'code')
 report['giant_ring_final_frame_preserves_stack_and_clears_full_player_pointer']=True
 
-# A real ROM pointer has a zero leading byte. A live player must finish
-# leaving the screen; a hidden player can immediately queue the result card.
+# Results start after either spin, regardless of player existence or position.
 m.start()
 sign=pool()[0];m.put(sign,'code',m.s['Signpost']);m.put(sign,'obRoutine',6)
 m.write('Camera_Max_X_pos',600,2);m.put('v_player','obX',600,2)
 m.act('Signpost_EndLevel',sign)
-assert m.get(sign,'obRoutine')==6 and not m.get('v_endcard','code')
+assert m.get(sign,'obRoutine')==8 and m.get('v_endcard','code')==m.s['GotThrough']
 m.put('v_player','code',0)
 m.act('Signpost_EndLevel',sign)
 assert m.get(sign,'obRoutine')==8 and m.get('v_endcard','code')==m.s['GotThrough']
 m.write('v_timebonus',0x1234,2)
 m.act('Load_EndOfAct',sign)
 assert m.read('v_timebonus',2)==0x1234,'Existing result card was restarted'
-report['signpost_and_result_card_use_full_pointer_existence']=True
+report['signpost_results_independent_of_player_existence_and_position']=True
 # Dynamic objects do not consume a placement; explicit destruction does.
 obj,ptr=setup(0x22,state=0x85)
 m.act('DeleteObject',obj)

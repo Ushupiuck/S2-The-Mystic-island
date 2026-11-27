@@ -16,6 +16,7 @@ on:
       - build_tools/check_sound_tools.py
       - build_tools/Windows-*/**
       - _definitions/**
+      - objects/**
       - sound/*.gen.asm
       - KEHmusic.exe
       - KEHsfx.exe

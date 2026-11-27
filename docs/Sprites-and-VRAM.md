@@ -149,8 +149,8 @@ content mappings. The 262-byte block retains one mapping file and the ordinary
 renderer lookup. The single actual DPLC table is
 `mappings/spriteDPLC/Monitor.bin` (60 bytes, ten cues). The full master archives
 remain editor assets and are not linked into the ROM. The usual frame convention
-remains type+1, with zero for the bare box and 11 for its broken base. The signpost
-replaces the first 26 tiles only during its separate end-of-act lifetime.
+remains type+1, with zero for the bare box and 11 for its broken base. The end
+sign's object-art overlay sits below the springs, clear of this monitor bank.
 
 ### Checkpoint and time-pole art
 
@@ -345,6 +345,7 @@ is not a source of free level VRAM.
 | Bytes, end exclusive | Tile base | Use |
 | --- | --- | --- |
 | `$0020-$0220` | `$001` | Streamed water surface: 16 tiles immediately after transparent tile zero |
+| `$9860-$9BA0` | `$4C3` | End-sign frame overlay: replaces the last 26 object-art tiles on approach |
 | `$9BA0-$9D20` | `$4DD` | Vertical springs, 12 tiles |
 | `$9D20-$9EA0` | `$4E9` | Horizontal springs, 12 tiles |
 | `$9EA0-$A0E0` | `$4F5` | Diagonal springs, 18 tiles |
@@ -364,7 +365,7 @@ is not a source of free level VRAM.
 | `$D400`, `$D600` | `$6A0`, `$6B0` | Tails body/tail upload bases; see overlap rule below |
 | `$D720-$D8A0` | `$6B9` | Ring, lost ring and sparkles |
 | `$D8A0-$DCC0` | `$6C5` | Packed HUD, debug glyphs and counters, 33 tiles |
-| `$DCC0-$E000` | `$6E6` | Signpost frame DPLC, up to 26 tiles |
+| `$DCC0-$E000` | `$6E6` | Free after the packed HUD, 26 tiles |
 | `$E000-$F000` | `$700` | Background plane, 64 by 32 entries |
 | `$F000-$F380` | `$780` | HScroll table |
 | `$F380-$F780` | `$79C` | Primary shield and shared invincibility stars |
@@ -769,8 +770,16 @@ figures. The ordinary tally awards the full amount, including score lives.
 generation to `build_monitor_art.py`. The signpost begins streaming as it
 approaches the visible viewport. The finish trigger locks the camera at the
 crossing. Monitor bodies and cached contents can stay visible beside the post.
+Its frame uses `$4C3-$4DC`, ending exactly at `ArtTile_Springs`. This borrows
+the act's object art for the finish rather than reserving a permanent bank.
+The first successful frame upload sets `Signpost_ArtActive`; SMZ1's smoke
+animation then stops uploading into the same tiles. Normal level loading
+clears ownership before loading the new act's object art. Seamless transitions
+would need to restore that object art after the sign leaves the screen;
+that restoration is not implemented yet.
 Hidden bonuses are resident in the act PLCs at `$4B2-$4CD` in GHZ1/2 and
-`$29D-$2B8` in SMZ1. The GHZ edge-wall tiles sit at `$4CE-$4D5`.
+`$29D-$2B8` in SMZ1. The GHZ edge-wall tiles sit at `$4CE-$4D5`. The end overlay
+replaces the overlapping GHZ object tiles for its separate finish lifetime.
 HUD score uses ten-point units, with maximum display 9,999,990.
 
 Signpost frame `$06` uses Mecha Sonic's original head and upper body in skdisasm

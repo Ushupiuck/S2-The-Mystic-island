@@ -1116,7 +1116,7 @@ Camera_Difference_P2_End:
 Screen_Shaking_Flag_HTZ:	ds.b	1	; activates screen shaking code in HTZ's layer deformation routine
 Screen_Shaking_Flag:		ds.b	1	; activates screen shaking code (if existent) in layer deformation routine
 Scroll_lock:			ds.b	1	; set to 1 to stop all scrolling for P1 -- for now, unused
-				ds.b	1	; unused. if this was multiplayer, it'd be a copy of the above for player 2
+Signpost_ArtActive:		ds.b	1	; end sign owns the last object-art tiles; former unused P2 scroll byte
 Camera_Min_X_pos_target:	ds.w	1	; unused, except on write in LevelSizeLoad...
 Camera_Max_X_pos_target:	ds.w	1	; unused
 Camera_Min_Y_pos_target:	ds.w	1	; same as above. The write being a long also overwrites the address below
@@ -1931,9 +1931,9 @@ ArtTile_Mini_Tails:		equ $535
 ArtTile_Mini_Sonic:		equ $551
 ArtTile_Bonuses:		equ ArtTile_Title_Card ; nine numeric tiles (five time, four ring), clear of both shields
 ArtTile_Results_Card:	equ ArtTile_Bonuses+9 ; scene glyphs follow the bonus digits
-ArtTile_Signpost:		equ ArtTile_HUD_End	; $6E6; 26 tiles before Plane B
-	if ArtTile_Signpost+26>VRAM_Plane_B_Name_Table/tile_size
-		fatal "Signpost overlaps Plane B"
+ArtTile_Signpost:		equ ArtTile_Springs-26 ; $4C3-$4DC; end-of-act overlay on object art
+	if ArtTile_Signpost+26>ArtTile_Springs
+		fatal "Signpost overlaps springs"
 	endif
 
 ; Sega Screen

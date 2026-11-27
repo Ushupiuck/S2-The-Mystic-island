@@ -305,7 +305,7 @@ PLC_S1TitleCard_End:
 ; PATTERN LOAD REQUEST LIST
 ; End of level signpost
 ; ---------------------------------------------------------------------------
-; Resident Signpost art is in PLCKosM_Signpost below.
+; Signpost frame DPLCs overlay the last object-art tiles before the springs.
 
 ; ---------------------------------------------------------------------------
 ; Pattern load cues - special stage

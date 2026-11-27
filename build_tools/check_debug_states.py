@@ -106,7 +106,7 @@ def check_hud(g, rom, output):
             'Wrong HUD mapping for active Debug type', placement)
 
     def check_numbers():
-        assert tiles(free_first, free_count) == free_before, 'HUD wrote into the signpost bank'
+        assert tiles(free_first, free_count) == free_before, 'HUD wrote beyond its packed bank'
         first = g.s['ArtTile_HUD_Numbers']
         assert tiles(first, 7) == digits('1234560'), 'Score not restored'
         assert tiles(g.s['ArtTile_HUD_Time'], 1) == digits(str(g.read('v_timemin')))

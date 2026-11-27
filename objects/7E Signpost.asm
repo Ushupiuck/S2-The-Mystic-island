@@ -12,10 +12,10 @@ Signpost_Index:	dc.w Signpost_Init-Signpost_Index
 		dc.w Signpost_Main-Signpost_Index
 		dc.w Signpost_Spin-Signpost_Index
 		dc.w Signpost_EndLevel-Signpost_Index
-		dc.w Signpost_Sparkle.return-Signpost_Index
+		dc.w Signpost_RunRight-Signpost_Index
 		dc.w Signpost_Fall-Signpost_Index
 		dc.w Signpost_Landed-Signpost_Index
-		dc.w Signpost_FallingResults-Signpost_Index
+		dc.w Signpost_EndLevel-Signpost_Index
 		dc.w Signpost_TrapSpin-Signpost_Index
 		dc.w Signpost_Sparkle.return-Signpost_Index
 ; ===========================================================================
@@ -51,6 +51,7 @@ Signpost:
 		move.l	#Art_Signpost,d6
 		jsr	(Load_DynamicPLC).l
 		bcs.s	.return
+		st	(Signpost_ArtActive).w	; retire overlapping SMZ smoke uploads
 		jmp	(DisplaySprite).l
 .return:
 		rts
@@ -58,7 +59,7 @@ Signpost:
 signpost_loaded = objoff_3A	; byte: DPLC cache
 signpost_hit_delay = objoff_30	; byte: shared 32-update hit cooldown
 signpost_previous_x = objoff_3C	; word: detect a crossing that skips the 32px window
-Signpost_LaunchSpeed = $600	; 6px/update, rightward ground speed
+Signpost_LaunchSpeed = $800	; 8px/update, above ordinary running speed
 Signpost_LaunchY = -$400		; upward launch in place; later hits may move it sideways
 Signpost_FootOffset = $1F	; last opaque row of the post in every frame
 Signpost_Ani_MechaSpin = 6
@@ -215,23 +216,19 @@ Signpost_Sparkle:
 ; ===========================================================================
 ; loc_F0C4:
 Signpost_EndLevel:
-		; S1's giant-ring flash clears the primary player's routine pointer.
-		tst.l	(v_player+code).w
-		beq.s	.finish
-		tst.w	(Debug_placement_mode).w
-		bne.s	Signpost_Sparkle.return
-		btst	#1,(v_player+obStatus).w
-		bne.s	+
+		; Both spins finish here. Player position/existence never gates results.
+		move.b	#8,obRoutine(a0)
+		bsr.s	Signpost_RunRight
+		jmp	(Load_EndOfAct).l
+
+Signpost_RunRight:
+		tst.b	(f_lockctrl).w
+		bmi.s	.return			; drowning / Game/Time Over retains ownership
 		move.b	#PlayerInputLock_Automatic,(f_lockctrl).w
 		move.w	#btnR<<8,(v_jpadholdlogical).w
-+
-		move.w	(v_player+obX).w,d0
-		move.w	(Camera_Max_X_pos).w,d1
-		addi.w	#320-24,d1
-		cmp.w	d1,d0
-		bcs.s	Signpost_Sparkle.return
-.finish:
-		addq.b	#2,obRoutine(a0)
+		move.w	#btnR<<8,(v_jpadholdlogical2).w
+.return:
+		rts
 
 ; ---------------------------------------------------------------------------
 ; Subroutine to load the end of act results screen
@@ -350,17 +347,10 @@ Signpost_Landed:
 		move.b	#14,obRoutine(a0)
 		move.b	#3,obAnim(a0)
 		cmpi.w	#PlayerMode_Tails,(Player_mode).w
-		bne.s	.lock
+		bne.s	.return
 		addq.b	#1,obAnim(a0)
-.lock:
-		move.b	#PlayerInputLock_Automatic,(f_lockctrl).w
-		clr.w	(v_jpadholdlogical).w
 .return:
 		rts
-
-Signpost_FallingResults:
-		move.b	#8,obRoutine(a0)
-		jmp	(Load_EndOfAct).l
 
 ; Check both actors independently. The S3&K FixBugs version preserves the
 ; second address across the first award; here each player is explicit instead.

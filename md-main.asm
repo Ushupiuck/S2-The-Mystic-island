@@ -2349,6 +2349,7 @@ loc_3BB0:
 Level_ClrRam:
 		move.b	(Current_Timezone).w,d2	; level selection survives clearing transient RAM
 		clr.w	(Debug_placement_mode).w	; retire the old cursor before creating the new player
+		clr.b	(Signpost_ArtActive).w	; the new act owns its object art again
 		clearRAM v_spritequeue,v_spritequeue_end
 		clearRAM v_objspace,v_objend
 		clr.w	(Collision_response_list).l
@@ -11703,6 +11704,8 @@ Animate_MMZ:
 Animate_SMZ:
 		cmpi.b	#1,(Current_Act).w	; indoor Act 2 reuses the smoke bank for Kemusi
 		beq.w	Dynamic_Null
+		tst.b	(Signpost_ArtActive).w	; end sign replaces both outdoor smoke banks
+		bne.w	Dynamic_Null
 
 Dynamic_Normal:
 		lea	(Anim_Counters).w,a3

@@ -83,7 +83,7 @@ def check_finish_transitions(g, player):
 		seek(g, 0x1F10, 0x540)
 		sign = next(slot for slot in pool if g.get(slot, 'code') == s['Signpost'])
 		place(g, 'v_player', 0x1F30, 0x55F-g.get('v_player', 'default_y_radius'), False)
-		speed = 0x300 if case.startswith('classic-') else 0x600
+		speed = 0x300 if case.startswith('classic-') else s['Signpost_LaunchSpeed']
 		g.put('v_player', 'obVelX', speed, 2)
 		g.put('v_player', 'obInertia', speed, 2)
 		g.buttons = {7}
@@ -149,12 +149,150 @@ def check_finish_transitions(g, player):
 		else:
 			raise AssertionError((case, 'finish did not reach its destination'))
 		assert not g.read('Debug_placement_mode', 2) and not g.read('f_pause', 2)
+		if not ring_entry:
+			assert not g.read('Signpost_ArtActive'), (case, 'new act retained the end overlay')
 		run(30)
 		g.video.save(g.output / f'{case}-destination.png')
 		print(f'MMZ1 {case}: results and destination passed for player mode {player}.', flush=True)
 	g.restore(initial)
 	return ['MMZ1 real sign/ring: early, late and classic entries reach results and the special stage',
 		'MMZ1 transitions: active placement/frame Debug retires before the new player runs']
+
+
+def check_input_policy(g, player, fixture, run):
+	from check_debug_states import press_debug
+
+	s = g.s
+	actors = ('v_player', 'v_player2') if player == 0 else ('v_player',)
+	right = s['btnR'] << 8
+
+	def walking():
+		assert g.read('f_lockctrl') == s['PlayerInputLock_Automatic']
+		assert g.read('v_jpadholdlogical', 2) == g.read('v_jpadholdlogical2', 2) == right
+
+	for label, subtype, speed, state in (('stationary', 0, 0, 4), ('ordinary-run', 0, 0x600, 4),
+		('fast', 0, s['Signpost_LaunchSpeed'], 10), ('sky', 1, 0, 10)):
+		sign = fixture(subtype)
+		for who in actors:
+			x = (230 if speed else 260) if who == 'v_player' else 180
+			place(g, who, x, 0x5BF-g.get(who, 'default_y_radius'), False)
+			g.put(who, 'obAngle', 0)  # this fixture starts on a flat floor, not the spawn's cached slope
+		g.put('v_player', 'obVelX', speed, 2)
+		g.put('v_player', 'obInertia', speed, 2)
+		g.buttons = {7} if speed else set()
+		for _ in range(12):
+			run()
+			if g.get(sign, 'obRoutine') == state:
+				break
+		else:
+			raise AssertionError((label, 'activation', g.get(sign, 'obRoutine')))
+		# Prove real input works before either spin finishes.
+		g.buttons2 = {6, 8}
+		g.buttons = {6}
+		for _ in range(40):
+			run()
+			assert not g.read('f_lockctrl'), (label, 'locked during braking')
+			if g.get('v_player', 'obVelX', 2) & 0x8000:
+				break
+		else:
+			raise AssertionError((label, 'left input did not reverse momentum'))
+		x = g.get('v_player', 'obX', 4)
+		run(4)
+		assert not g.read('f_lockctrl') and g.get('v_player', 'obX', 4) < x, (label, 'free left input')
+		g.buttons = {6, 8}
+		run(3)
+		assert g.get('v_player', 'obVelY', 2) & 0x8000, (label, 'free jump input')
+		g.buttons = g.buttons2 = set()
+		for _ in range(900):
+			run()
+			if g.get('v_endcard', 'code') == s['GotThrough']:
+				break
+			assert not g.read('f_lockctrl'), (label, 'locked before results')
+		else:
+			raise AssertionError((label, 'spin did not start results'))
+		assert g.get(sign, 'obRoutine') == 8
+		walking()
+		before = {who: g.get(who, 'obX', 4) for who in actors}
+		g.buttons = g.buttons2 = {6, 8}
+		for _ in range(30):
+			run()
+			walking()
+		for who, x in before.items():
+			after = g.get(who, 'obX', 4)
+			edge = (g.read('Camera_Max_X_pos', 2)+0x168) << 16
+			assert after > x or after >= edge, (label, who, 'automatic rightward movement', x, after)
+		g.video.save(g.output / f'{label}-automatic-walk.png')
+		# A Debug round trip must restore the same script, not free controls.
+		g.write('Debug_mode_flag', 1)
+		for debug in (s['DebugType_Placement'], s['DebugType_FrameCycle']):
+			g.buttons = set()
+			run(2)
+			press_debug(g, debug)
+			run(3)
+			press_debug(g, 0)
+			run(3)
+			assert not g.read('Debug_placement_mode', 2)
+			g.buttons = g.buttons2 = {6, 8}
+			run(4)
+			walking()
+		print(f'{label}: free input, results walk and both Debug round trips passed for player mode {player}.', flush=True)
+	g.buttons = g.buttons2 = set()
+
+
+def check_object_art_overlay(g, player):
+	s = g.s
+	initial = g.save()
+	rom = bytes(g.rom)
+	assert s['ArtTile_Signpost']+26 == s['ArtTile_Springs']
+
+	def tiles(first, count):
+		return bytes(g.vram[(first*32+i)^1] for i in range(count*32))
+
+	def frame_art(frame):
+		root = s['DPLC_Signpost']
+		ptr = root+struct.unpack_from('>h', rom, root+frame*2)[0]
+		data = bytearray()
+		for i in range(struct.unpack_from('>H', rom, ptr)[0]):
+			word = struct.unpack_from('>H', rom, ptr+2+i*2)[0]
+			first = s['Art_Signpost']+(word & 4095)*32
+			data += rom[first:first+((word >> 12)+1)*32]
+		return bytes(data)
+
+	for zone, act in ((8, 0), (8, 1), (15, 0)):
+		g.restore(initial)
+		boot_level(g, zone=zone, act=act, player=player)
+		assert not g.read('Signpost_ArtActive')
+		isolate(g)
+		for who in ('v_player', 'v_player2'):
+			g.put(who, 'obControl', 1)  # hold the art fixture's actors while uploads run
+		smoke = set()
+		for _ in range(70):
+			g.run()
+			assert not g.read('v_errortype')
+			smoke.add(tiles(s['ArtTile_SMZ_Smoke1'], 24))
+		if zone == 8 and act == 0:
+			assert len(smoke) > 1, 'Outdoor smoke must animate before the end overlay'
+		guards = [(s['ArtTile_Springs'], s['ArtTile_Spikes']+16-s['ArtTile_Springs']),
+			(s['ArtTile_Monitor'], 24), (s['ArtTile_HUD_End'], s['vram_bg']//32-s['ArtTile_HUD_End'])]
+		before = [tiles(first, count) for first, count in guards]
+		sign = spawn(g, 'Signpost', g.read('Camera_X_pos', 2)+240, g.read('Camera_Y_pos', 2)+128)
+		for _ in range(10):
+			g.run()
+			if g.read('Signpost_ArtActive'):
+				break
+		else:
+			raise AssertionError((zone, act, 'sign did not claim object art'))
+		g.run(4)  # drain the first frame's queued DMA
+		frame = g.get(sign, 'obFrame')
+		expected = frame_art(frame)
+		for _ in range(160):
+			g.run()
+			assert not g.read('v_errortype')
+			assert g.get(sign, 'obFrame') == frame
+			assert tiles(s['ArtTile_Signpost'], len(expected)//32) == expected, (zone, act, 'overlay overwritten')
+			assert [tiles(first, count) for first, count in guards] == before, (zone, act, 'overlay escaped into resident art')
+		g.video.save(g.output / f'z{zone}-a{act+1}-object-art-overlay.png')
+	g.restore(initial)
 
 
 def main():
@@ -165,11 +303,13 @@ def main():
     p.add_argument('--pal',action='store_true')
     args=p.parse_args()
     g=Genesis(args.core,args.rom,args.listing,args.output,args.pal,system_directory=args.system_directory)
+    check_object_art_overlay(g,args.player)
     transitions=check_finish_transitions(g,args.player)
     check_approach(g,args.player)
     boot_level(g,zone=0,act=0,player=args.player)
     isolate(g);base=g.save();rom=args.rom.read_bytes()
-    checks=transitions+['GHZ2 and MMZ1: signpost art range, camera approach and retreat, resident monitor bodies']
+    checks=transitions+['end overlay before springs: SMZ smoke retires; springs, spikes, monitors and reclaimed HUD tail stay intact',
+        'GHZ2 and MMZ1: signpost art range, camera approach and retreat, resident monitor bodies']
     actors=['v_player','v_player2'] if args.player==0 else ['v_player']
     def run(n=1):
         for _ in range(n):
@@ -201,6 +341,9 @@ def main():
                 g.video.save(args.output/f'{label}-results.png')
                 return states
         raise AssertionError((label,'no results',g.get(sign,'obRoutine'),g.get(sign,'obX',2),g.get(sign,'obY',2),g.get('v_player','obStatus'),g.get('v_player','obY',2)))
+
+    check_input_policy(g,args.player,fixture,run)
+    checks.append('stationary, fast and sky signs: free movement/jumps until results, shared rightward walk and both Debug exits')
 
     # Event-selected portrait: scene setup owns palette line two; the actual
     # signpost animation, DPLC service, renderer and VBlank run normally.
@@ -241,7 +384,8 @@ def main():
     # position/speed establishes the focused scene, then only hold right.
     sign=fixture(0)
     place(g,'v_player',228,1451,False)
-    g.put('v_player','obVelX',0x600,2);g.put('v_player','obInertia',0x600,2)
+    g.put('v_player','obAngle',0)
+    g.put('v_player','obVelX',g.s['Signpost_LaunchSpeed'],2);g.put('v_player','obInertia',g.s['Signpost_LaunchSpeed'],2)
     g.buttons={7};run(12);g.buttons=set()
     assert g.get(sign,'obRoutine')==10 and g.get(sign,'obSubtype')&1
     assert g.get(sign,'obVelY',2)&0x8000 and g.get(sign,'obX',2)==248

@@ -9,7 +9,7 @@ omit transparent tiles. Mecha's board shares his palette; only the post
 retains the primary palette.
 
 Monitor generation is delegated to build_monitor_art.py; the selected portrait
-reuses the HUD, outside the separate 26-tile signpost buffer.
+reuses the HUD. The 26-tile signpost frame overlays end-of-act object art.
 The original Signpost.bin is the editable source for the first six frames.
 """
 from pathlib import Path

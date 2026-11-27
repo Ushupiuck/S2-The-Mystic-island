@@ -13,6 +13,8 @@ In GitHub Actions, open **Windows sound build** and choose **Run workflow**
 to build a branch on demand. When the run passes both builds and the sound
 tool checks, download **s2built.bin** from **Artifacts**. Open the downloaded
 Mode 1 cartridge image directly in ClownMDEmu.
+Object-source changes on the workflow's configured branches also trigger the
+build automatically, so an object-only fix gets its own downloadable ROM.
 
 ## Dependencies and fixture boundaries
 
@@ -470,6 +472,17 @@ removes the primary actor. Active placement/frame-cycle Debug also runs through
 the normal tally and next-act load; placement during the ring flash must reach
 the special stage. These scenes use the real loaders and do not recreate the
 removed actor. Native cases additionally check airborne, hurt and dead actors.
+Separate flat-floor fixtures cross a stationary sign, launch a placed sign and
+spawn a sky-drop sign. Real left/jump input must work throughout the spin;
+results must then supply only rightward input to both actors even while both
+controllers hold left/jump. Both Debug modes are entered and exited during
+results to verify the automatic walk resumes. Native checks also preserve
+drowning/Game Over input ownership over the scripted walk.
+Ordinary `$0600` running must retain the stationary spin; launch-boundary
+fixtures reject `$07FF` and accept `$0800`. Art fixtures verify the end-sign
+overlay ends at the first spring tile, stops SMZ1 smoke uploads only after it
+claims the bank, and leaves springs, spikes, monitor bodies and the free HUD
+tail unchanged. Real next-act transitions must release overlay ownership.
 The runner's separate short fast-crossing fixture stops the clock to disable
 unrelated end-art approach work. Stage goal/direction states and most pickup
 scenes are positioned fixtures, not full-stage controller routes.

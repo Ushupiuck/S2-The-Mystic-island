@@ -344,7 +344,7 @@ for mode in (0,1,2):
 monitor=frames(rom,m.s['Map_MonitorHUD'],m.s['Map_Obj26_frames'])
 for kind in (m.s['MonitorType_DoubleLife'],m.s['MonitorType_ExtraLife']):
 	assert (monitor[kind+1][0][2]+m.s['ArtTile_Monitor'])&0x7FF==m.s['ArtTile_Lives_Counter']
-assert (m.s['ArtTile_Signpost']+26)*32 <= m.s['VRAM_Plane_B_Name_Table']
+assert m.s['ArtTile_Signpost']+26 == m.s['ArtTile_Springs']
 hud=frames(rom,m.s['Map_obj21'],8)
 for row in hud:
 	assert (row[-2][2]+m.s['ArtTile_HUD']) & 0xFFFF == m.s['ArtTile_Lives_Counter'] | 0x8000
