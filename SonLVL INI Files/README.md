@@ -107,7 +107,7 @@ the complete serialized word, including when calculating movement overlays.
 | `$5E` | Seesaw | Zero: spawn ball; any nonzero subtype: omit ball. |
 | `$60` | Caterkiller / Kemusi | `$00`: Caterkiller; `$01`: intact Kemusi; `$02`: damaged Kemusi, with a vulnerable body and half speed. SMZ Act 1 loads Caterkiller; Act 2 keeps Caterkiller and adds Kemusi in the unused smoke banks. All three have four-piece previews; Act 2's picker defaults to Kemusi. |
 | `$79` | Checkpoint | Full byte: checkpoint number. |
-| `$7E` | Signpost | Bit 0: placed / sky drop. A placed sign launches into the falling mode on a grounded rightward crossing at 6px/update or faster. Bit 1 selects the SMZ2 Mecha trap; its true falling sign appears after the fight. Higher bits remain reserved. |
+| `$7E` | Signpost | Bit 0: placed / sky drop. A placed sign launches into the falling mode on a grounded rightward crossing at 8px/update or faster. Bit 1 selects the SMZ2 Mecha trap; its true falling sign appears after the fight. Higher bits remain reserved. |
 | `$7D` | Hidden bonus | `$01`: 10000; `$02`: 1000; `$03`: 100 points. |
 | `$A0` | Junction | Low nibble: reversing switch number. |
 | `$A1` | Running disc | Low nibble: radius; signed high nibble: rotation speed. |
@@ -165,6 +165,11 @@ Compile the checker beside `SonLVLAPI.dll` and its dependencies, then run:
 csc /r:SonLVLAPI.dll /r:System.Drawing.dll /out:check_sonlvl_objects.exe path/to/build_tools/check_sonlvl_objects.cs
 check_sonlvl_objects.exe "path/to/SonLVL INI Files/SonLVL.ini" "optional-preview-directory"
 ```
+
+The SonLVL object-definitions workflow builds the pinned upstream Release API
+on Windows and runs this checker from a project path containing spaces. It
+starts with a fresh cache, rejects blank advertised subtype names, checks every
+MMZ floor length in both modes and retains previews/logs as artifacts.
 
 Keep the API DLL and codec dependencies beside the checker executable. On Linux,
 run it with Mono, libgdiplus and an X display. Test with a distributed Release
@@ -277,6 +282,11 @@ palette 0. LZ conveyor/morphing previews use palette 0, matching the runtime.
 MMZ's `$1B` floor uses 1-8 columns in low bits 0-6; bit 7 selects a static
 full-solid block. The runtime preview selects the same length as the constructor;
 invalid lengths use one column. Either character can trigger a crumbling floor.
+Both crumbling and solid picker presets cover all eight lengths, with named
+column/width choices. Each MMZ object ID uses its own C# cache type, including
+zone overrides, so a fresh Release load cannot compile several definitions into
+`RuntimeObject.dll` concurrently. The spike-crusher picker exposes all five
+waves and composes their three panels from the runtime's group table.
 
 MMZ1's four era sections use `objMMZ.ini`; Good Future adds `objMMZ_GF.ini`
 for its saw overlay. Group previews read the actual byte curve/height tables,

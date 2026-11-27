@@ -92,6 +92,17 @@ class CheckSonLVLObjects
 			}
 	}
 
+	static Bitmap PreviewBitmap(Sprite sprite)
+	{
+		BitmapBits pixels = sprite.GetBitmap();
+		// Explicit ARGB keeps transparent palette entries portable to libgdiplus.
+		Bitmap image = new Bitmap(pixels.Width, pixels.Height);
+		for (int y = 0; y < pixels.Height; y++)
+			for (int x = 0; x < pixels.Width; x++)
+				image.SetPixel(x, y, pixels[x, y] == 0 ? Color.Transparent : Color.FromArgb(255, LevelData.BmpPal.Entries[pixels[x, y]]));
+		return image;
+	}
+
 	static void Preview(string directory)
 	{
 		string list = string.Join("-", LevelData.Level.ObjectList ?? new string[0]);
@@ -112,14 +123,8 @@ class CheckSonLVLObjects
 				graphics.DrawString("$" + item.Key.ToString("X2") + " " + item.Value.Name, font, Brushes.White, x + 8, y + 8);
 				Sprite sprite = item.Value.Image;
 				if (sprite.Width == 0 || sprite.Height == 0) continue;
-				BitmapBits pixels = sprite.GetBitmap();
-				// Explicit ARGB also works on libgdiplus, whose indexed bitmap
-				// conversion can turn transparent palette entries opaque white.
-				using (Bitmap image = new Bitmap(pixels.Width, pixels.Height))
+				using (Bitmap image = PreviewBitmap(sprite))
 				{
-					for (int py = 0; py < pixels.Height; py++)
-						for (int px = 0; px < pixels.Width; px++)
-							image.SetPixel(px, py, pixels[px, py] == 0 ? Color.Transparent : Color.FromArgb(255, LevelData.BmpPal.Entries[pixels[px, py]]));
 					float scale = Math.Min(2, Math.Min((width - 16f) / image.Width, (height - 36f) / image.Height));
 					graphics.DrawImage(image, x + (width - image.Width * scale) / 2, y + 30 + (height - 36 - image.Height * scale) / 2, image.Width * scale, image.Height * scale);
 				}
@@ -229,7 +234,8 @@ class CheckSonLVLObjects
 			CheckImage(definition.Image, context);
 			foreach (byte subtype in definition.Subtypes)
 			{
-				definition.SubtypeName(subtype);
+				if (definition.Subtypes.Count > 1 && string.IsNullOrWhiteSpace(definition.SubtypeName(subtype)))
+					Fail("Blank subtype name: " + context + "/$" + subtype.ToString("X2"));
 				// Hidden bonus 0 intentionally has no graphic or award.
 				if (!(item.Key == 0x7D && subtype == 0)) CheckImage(definition.SubtypeImage(subtype), context + "/$" + subtype.ToString("X2"));
 				subtypes++;
@@ -263,8 +269,49 @@ class CheckSonLVLObjects
 		CheckWordLayout();
 		CheckTerrainLayout();
 		CheckPlatformMounts();
+		CheckMMZFloors(previewDirectory);
 		if (previewDirectory != null) Preview(previewDirectory);
 		Console.WriteLine("PASS " + name + " (" + LevelData.Objects.Count + " placements)");
+	}
+
+	static void CheckMMZFloors(string previewDirectory)
+	{
+		ObjectDefinition definition;
+		if (!LevelData.ObjTypes.TryGetValue(0x1B, out definition)
+			|| !definition.CustomProperties.Any(property => property.Name == "Columns")) return;
+		for (int columns = 1; columns <= 8; columns++)
+		{
+			Sprite preview = definition.SubtypeImage((byte)columns);
+			if (preview.Width != columns * 16) Fail("MMZ floor preview has the wrong segment count: " + columns);
+			foreach (int upper in new[] { 0, 0x800, 0x1000, 0xA500 })
+			foreach (int solid in new[] { 0, 128 })
+			{
+				var entry = NewEntry(0x1B, (ushort)(upper | solid | columns));
+				Sprite placed = definition.GetSprite(entry);
+				if (placed.Size != preview.Size || !placed.GetBitmap().Bits.SequenceEqual(preview.GetBitmap().Bits))
+					Fail("MMZ floor length preview lost high subtype bits or static mode: " + columns);
+			}
+		}
+		if (previewDirectory == null) return;
+		using (Bitmap sheet = new Bitmap(1160, 440))
+		using (Graphics graphics = Graphics.FromImage(sheet))
+		using (Font font = new Font(FontFamily.GenericSansSerif, 9))
+		{
+			graphics.Clear(Color.FromArgb(35, 39, 45));
+			graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
+			graphics.PixelOffsetMode = PixelOffsetMode.Half;
+			for (int i = 0; i < 16; i++)
+			{
+				byte subtype = (byte)((i / 8) * 128 + i % 8 + 1);
+				int x = (i % 4) * 290, y = (i / 4) * 110;
+				graphics.DrawString(definition.SubtypeName(subtype), font, Brushes.White, new RectangleF(x + 4, y + 4, 282, 30));
+				using (Bitmap image = PreviewBitmap(definition.SubtypeImage(subtype)))
+					graphics.DrawImage(image, x + (290 - image.Width * 2) / 2, y + 38, image.Width * 2, image.Height * 2);
+			}
+			Directory.CreateDirectory(previewDirectory);
+			sheet.Save(Path.Combine(previewDirectory, "MMZ-floor-" + Path.GetFileNameWithoutExtension(LevelData.Level.Objects) + ".png"));
+		}
+
 	}
 
 	static void CheckTerrainLayout()

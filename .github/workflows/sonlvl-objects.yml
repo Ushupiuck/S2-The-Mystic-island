@@ -1,0 +1,59 @@
+name: SonLVL object definitions
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [Mystic-Island, Mystic-Island-(Experimental)]
+    paths:
+      - .github/workflows/sonlvl-objects.yml
+      - SonLVL INI Files/**
+      - build_tools/check_sonlvl_objects.cs
+      - art/**
+      - mappings/**
+      - level/**
+      - objects/**
+
+permissions:
+  contents: read
+
+jobs:
+  definitions:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: Mystic Island
+      - uses: actions/checkout@v7
+        with:
+          repository: sonicretro/SonLVL
+          ref: 3e57d00a9be8466c363939a08dbf0f6be4e18ae9
+          path: SonLVL
+      - name: Build the Release editor API
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $msbuild = & $vswhere -latest -products '*' -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\MSBuild.exe' | Select-Object -First 1
+          & $msbuild 'SonLVL\SonLVLAPI\SonLVL.API.csproj' /p:Configuration=Release /p:TargetFrameworkVersion=v4.8 /v:minimal
+          if ($LASTEXITCODE -ne 0) { throw 'SonLVL API build failed' }
+      - name: Compile and run all object definitions with a fresh cache
+        shell: pwsh
+        run: |
+          $api = Join-Path $env:GITHUB_WORKSPACE 'SonLVL\SonLVLAPI\bin\Release'
+          $source = Join-Path $env:GITHUB_WORKSPACE 'Mystic Island\build_tools\check_sonlvl_objects.cs'
+          $checker = Join-Path $api 'check_sonlvl_objects.exe'
+          $csc = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+          & $csc /nologo "/r:$api\SonLVLAPI.dll" /r:System.Drawing.dll "/out:$checker" $source
+          if ($LASTEXITCODE -ne 0) { throw 'Object checker compilation failed' }
+          Remove-Item 'Mystic Island\SonLVL INI Files\dllcache' -Recurse -Force -ErrorAction SilentlyContinue
+          & $checker 'Mystic Island\SonLVL INI Files\SonLVL.ini' 'SonLVL previews' 2>&1 | Tee-Object 'sonlvl-check.log'
+          if ($LASTEXITCODE -ne 0) { throw 'Object definition checks failed' }
+      - name: Upload editor previews and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: sonlvl-check
+          path: |
+            sonlvl-check.log
+            SonLVL previews
+          if-no-files-found: warn

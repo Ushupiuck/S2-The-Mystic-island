@@ -266,7 +266,9 @@ namespace MysticIsland.ObjectDefinitions
 				case "MMZMechaBu":
 					Bits("Saw reach", 0, 1, "The independent saw alternates every 61 updates, or stays low. X flip mirrors the attachment.", "Alternating", "Fixed low"); break;
 				case "MMZFloor":
-					Bits("Columns", 0, 127, "One to eight 16-pixel columns. Invalid values safely use one column.");
+					properties.Add(new PropertySpec("Columns", typeof(int), "Object settings", "One to eight 16-pixel columns. Invalid raw values safely preview one column.", null,
+						Enumerable.Range(1, 8).ToDictionary(i => i + (i == 1 ? " column" : " columns") + " (" + i * 16 + " px)", i => i),
+						obj => Subtype(obj) & 127, (obj, value) => SetSubtype(obj, (Subtype(obj) & ~127) | (Convert.ToInt32(value) & 127))));
 					Bits("Static block", 7, 1, "Static blocks are full-solid; crumbling floors are solid only on top and either character can trigger them.", "Crumbling", "Static");
 					Bits("Filter static collision by path", 12, 1, "A static block can be solid on one collision path.", "Both paths", "Selected path");
 					Bits("Static collision path", 11, 1, "Used when static collision is filtered by path.", "Primary", "Secondary");
@@ -282,6 +284,12 @@ namespace MysticIsland.ObjectDefinitions
 					break;
 				case "DelayedVanish":
 					Bits("First delay", 0, 255, "Delay in 30-update steps after this platform loads.");
+					break;
+				case "MMZSpikeCrusher":
+					routes = ReadByteTable("../objects/Metallic Madness/Spike Crusher.asm", ".wave_groups", ".groups");
+					groups = ReadByteTable("../objects/Metallic Madness/Spike Crusher.asm", ".groups", ".panel");
+					Bits("Wave", 0, 255, "Wave zero controls the full five-wave sequence. Waves 1-4 are later panels; each adds 24 pixels of probe depth. Invalid values use wave zero.",
+						"Full sequence", "Wave 2: narrow left panel", "Wave 3: narrow right panel", "Wave 4: narrow left panel", "Wave 5: wide end panels");
 					break;
 				case "MMZSpin":
 					groups = ReadByteTable("../objects/Scrap Madness/A9 Spin Conveyor.asm", "MMZ_SpinC_Path", "Map_MMZ_Spin");
@@ -702,7 +710,18 @@ namespace MysticIsland.ObjectDefinitions
 				case "MMZCrusher":
 					byte[] heights = (subtype & 64) == 0 ? routes : groups;
 					return new Sprite(At(frames, (subtype & 3) == 1 ? 1 : 0), 0, unchecked((sbyte)heights[((subtype >> 4) & 3) * 64]));
-				case "MMZFloor": return At(frames, (subtype & 127) >= 1 && (subtype & 127) <= 8 ? (subtype & 127) - 1 : 0);
+				case "MMZFloor": return At(frames, FloorColumns(subtype) - 1);
+				case "MMZSpikeCrusher":
+					int wave = (subtype & 255) <= 4 ? subtype & 255 : 0;
+					pieces = new List<Sprite>();
+					for (int i = 0; i < 3; i++)
+					{
+						int panel = routes[wave] + i * 4;
+						Sprite crusherPanel = new Sprite(At(frames, groups[panel]));
+						crusherPanel.Flip(xflip, yflip);
+						pieces.Add(new Sprite(crusherPanel, unchecked((sbyte)groups[panel + 1]), 0));
+					}
+					return new Sprite(pieces);
 				case "MMZSpin":
 					pieces = new List<Sprite>();
 					bool moving = (subtype & 1) != 0;
@@ -787,8 +806,23 @@ namespace MysticIsland.ObjectDefinitions
 		public override int GetDepth(ObjectEntry obj) { return behavior == "PathSwapper" ? 5 : data.Depth; }
 		public override PropertySpec[] CustomProperties { get { return properties.ToArray(); } }
 		public override ReadOnlyCollection<byte> Subtypes { get { return new ReadOnlyCollection<byte>(data.Subtypes ?? new byte[] { data.DefaultSubtype }); } }
+		private static int FloorColumns(int subtype)
+		{
+			int columns = subtype & 127;
+			return columns >= 1 && columns <= 8 ? columns : 1;
+		}
+
 		public override string SubtypeName(byte subtype)
 		{
+			if (behavior == "MMZFloor")
+			{
+				int columns = FloorColumns(subtype);
+				return ((subtype & 128) == 0 ? "Crumbling floor, " : "Solid block, ") + columns
+					+ (columns == 1 ? " column" : " columns") + " (" + columns * 16 + " px, $" + subtype.ToString("X2") + ")";
+			}
+			if (behavior == "MMZCrusher")
+				return ((subtype & 3) == 1 ? "Tall launcher" : "Small crusher") + ", "
+					+ ((subtype & 64) == 0 ? "32" : "48") + " px amplitude, setting " + ((subtype >> 2) & 3) + " ($" + subtype.ToString("X2") + ")";
 			ObjectEntry entry = LevelData.ObjectFormat.CreateObject();
 			SetSubtype(entry, subtype);
 			List<string> settings = new List<string>();
@@ -814,7 +848,7 @@ namespace MysticIsland.ObjectDefinitions
 				int movement = SawMovement(Subtype(obj));
 				if (alternate != null || (movement >= 0 && movement <= 2)) sprite.Flip(obj.XFlip, obj.YFlip);
 			}
-			else if (behavior != "MMZSpin" && behavior != "FireballSpawner" && behavior != "Fireball" && behavior != "Platform" && behavior != "Swing" && behavior != "SpinGroup" && behavior != "LabyrinthConveyor" && behavior != "InvisibleSolid" && behavior != "Conveyor" && behavior != "PathSwapper" && behavior != "AutoSpin" && behavior != "Hanging" && behavior != "PullChain") sprite.Flip(obj.XFlip, obj.YFlip);
+			else if (behavior != "MMZSpin" && behavior != "MMZSpikeCrusher" && behavior != "FireballSpawner" && behavior != "Fireball" && behavior != "Platform" && behavior != "Swing" && behavior != "SpinGroup" && behavior != "LabyrinthConveyor" && behavior != "InvisibleSolid" && behavior != "Conveyor" && behavior != "PathSwapper" && behavior != "AutoSpin" && behavior != "Hanging" && behavior != "PullChain") sprite.Flip(obj.XFlip, obj.YFlip);
 			return sprite;
 		}
 		public override Sprite GetDebugOverlay(ObjectEntry obj)
@@ -934,6 +968,11 @@ namespace MysticIsland.ObjectDefinitions
 	public sealed class ChemicalPlantPlatform : RuntimeObject { }
 	public sealed class CollapsingLedge : RuntimeObject { }
 	public sealed class CollapsingFloor : RuntimeObject { }
+	public sealed class MechaBu : RuntimeObject { }
+	public sealed class PohBee : RuntimeObject { }
+	public sealed class Dango : RuntimeObject { }
+	public sealed class SizeLaser : RuntimeObject { }
+	public sealed class SpikeCrusher : RuntimeObject { }
 	public sealed class Scenery : RuntimeObject { }
 	public sealed class Bridge : RuntimeObject { }
 	public sealed class HiddenPalaceWaterfall : RuntimeObject { }
