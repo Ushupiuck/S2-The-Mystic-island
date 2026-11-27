@@ -114,7 +114,13 @@ Monitor_TailsLife:	; 1up monitor
 ; ---------------------------------------------------------------------------
 
 Monitor_Rings:
-		addi.w	#10,(v_rings).w
+		move.w	(v_rings).w,d0
+		addi.w	#10,d0
+		cmpi.w	#999,d0
+		bls.s	.count_ready
+		move.w	#999,d0
+.count_ready:
+		move.w	d0,(v_rings).w	; publish only the capped value, including across VBlank
 		ori.b	#1,(f_ringcount).w
 		cmpi.w	#100,(v_rings).w
 		bcs.s	loc_B130

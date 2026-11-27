@@ -248,6 +248,10 @@ and retain the correct collector. The same runner retains held-charge landings
 and harmful-reward cases. Every angle/stack case repeats after the real shrink
 beam creates the character's miniature form, checking its smaller rolling body
 and miniature mappings. `--probe` records the older pass-through failures.
+Ring-monitor fixtures also begin at 989, 990, 998 and 999 rings, break the box
+through real contact, and verify the delayed reward never exceeds 999 and the
+three live HUD tiles contain `999`. Native manager checks cover both award
+paths from every legal starting count and repeated awards at the cap.
 
 ```sh
 python build_tools/check_collision_response.py --rom s2built.bin --listing md-main.lst --previous-rom /path/to/before.bin --previous-listing /path/to/before.lst --output test-results/collision/native.json

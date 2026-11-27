@@ -97,6 +97,44 @@ def check_attack_angles(g, args):
 	return rows
 
 
+def check_ring_monitor_cap(g, args):
+	initial = g.save()
+	s = g.s
+	rows = []
+	rom = bytes(g.rom)
+	nines = rom[s['Art_HUD']+9*32:s['Art_HUD']+10*32]*3
+	for rings in (989, 990, 998, 999):
+		g.restore(initial)
+		isolate(g)
+		park_fixture_camera(g)
+		g.put('v_player2', 'code', 0)
+		place(g, 'v_player', 80, 1452, False)
+		mon = spawn(g, 'Monitor', 200, 1360, s['MonitorType_Rings'])
+		g.run(3)
+		g.write('v_rings', rings, 2)
+		g.write('v_lifecount', 6)
+		g.write('f_ringcount', 1)
+		place(g, 'v_player', 200, 1320)
+		for field, value, size in (('obStatus', 6, 1), ('obAnim', s['AniIDSonAni_Roll'], 1),
+			('obHeight', s['sonic_roll_height'] if args.player == 0 else s['tails_roll_height'], 1),
+			('obWidth', s['sonic_roll_width'] if args.player == 0 else s['tails_roll_width'], 1), ('obVelY', 0x200, 2)):
+			g.put('v_player', field, value, size)
+		peak = rings
+		for _ in range(70):
+			g.run()
+			assert not g.read('v_errortype')
+			peak = max(peak, g.read('v_rings', 2))
+		actual = bytes(g.vram[(s['ArtTile_HUD_Rings']*32+i)^1] for i in range(96))
+		row = {'start': rings, 'final': g.read('v_rings', 2), 'peak': peak, 'hud_is_999': actual == nines}
+		rows.append(row)
+		g.video.save(args.output / f'ring-monitor-cap-{rings}.png')
+		assert g.get(mon, 'obRoutine') >= 4
+		if not args.probe:
+			assert row['final'] == 999 and peak <= 999 and row['hud_is_999'], row
+	g.restore(initial)
+	return rows
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     for name in ('rom', 'listing', 'core', 'output'):
@@ -108,13 +146,14 @@ def main():
     args = p.parse_args()
     g = Genesis(args.core, args.rom, args.listing, args.output, args.pal, system_directory=args.system_directory)
     boot_level(g, item=0, player=args.player)
+    ring_cap_cases = check_ring_monitor_cap(g, args)
     angle_cases = check_attack_angles(g, args)
     g.put('v_player2', 'code', 0)
     baseline = g.save()
     x = g.get('v_player', 'obX', 2)
     y = g.get('v_player', 'obY', 2) - 64
     slots = range(g.s['v_lvlobjspace'] & 0xFFFF, g.s['v_lvlobjend'] & 0xFFFF, g.s['object_size'])
-    report = {'region': 'PAL' if args.pal else 'NTSC', 'player': 'Tails' if args.player else 'Sonic', 'cases': {}, 'attack_angles': angle_cases}
+    report = {'region': 'PAL' if args.pal else 'NTSC', 'player': 'Tails' if args.player else 'Sonic', 'cases': {}, 'attack_angles': angle_cases, 'ring_cap': ring_cap_cases}
 
     def setup(subtype, charge=False):
         g.restore(baseline)

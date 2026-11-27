@@ -133,6 +133,8 @@ discarded after the solid-object handler delegates rolling contact to touch
 response. Non-rolling underside bumps retain their separate behavior.
 Breaking detaches both riders and remembers
 the actual collector, including for harmful rewards.
+The ten-ring monitor saturates the shared inventory at 999, matching ordinary
+ring pickups and keeping the three-digit HUD within its numeric glyphs.
 
 Object status rider bits 3/4 represent primary/companion; the on-object flag on
 either player is bit 3. Capsule detachment clears bit 3 on both players and sets

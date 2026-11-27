@@ -15,7 +15,7 @@ from native_test_core import (Native, Manager, UC_M68K_REG_A0, UC_M68K_REG_A1,
 								UC_M68K_REG_A2, UC_M68K_REG_A3, UC_M68K_REG_A4,
 								UC_M68K_REG_D0, UC_M68K_REG_D1, UC_M68K_REG_D2,
 								UC_M68K_REG_D3, UC_M68K_REG_D4, UC_M68K_REG_D5,
-								UC_M68K_REG_D6, UC_M68K_REG_D7, UC_M68K_REG_SR)
+								UC_M68K_REG_D6, UC_M68K_REG_D7, UC_M68K_REG_SR, UC_HOOK_MEM_WRITE)
 
 ROOT = Path(__file__).resolve().parent.parent
 parser = argparse.ArgumentParser(description=__doc__)
@@ -273,6 +273,24 @@ for player,character in [('v_player',1),('v_player',2),('v_player2',2)]:
 	assert m.get(obj,'obRoutine')==2 and m.get(player,'spindash_flag')==1
 	assert m.get(player,'spindash_counter',2)==0x600
 report['held_charge_lands_on_monitor_for_all_player_roles']=True
+
+# Both award paths obey the three-digit inventory limit; the monitor adds ten.
+def check_ring_write(cpu, access, address, size, value, unused):
+	if (address&0xFFFFFF)==(m.s['v_rings']&0xFFFFFF) and size==2:
+		assert value<=999, ('Out-of-range ring write visible to VBlank',value)
+ring_write_hook=m.cpu.hook_add(UC_HOOK_MEM_WRITE,check_ring_write)
+for rings in range(1000):
+	for entry, amount in (('CollectRing',1),('Monitor_Rings',10)):
+		m.start()
+		m.write('v_rings',rings,2)
+		m.write('v_lifecount',6)  # these fixtures have already earned both ring lives
+		m.act(entry)
+		assert m.read('v_rings',2)==min(rings+amount,999),(entry,rings,m.read('v_rings',2))
+m.write('f_ringcount',0x80)
+for _ in range(4):m.act('Monitor_Rings')
+assert m.read('v_rings',2)==999 and m.read('f_ringcount')==0x81
+m.cpu.hook_del(ring_write_hook)
+report['ordinary_and_monitor_ring_awards_saturate_at_999']=2000
 
 # Harmful monitor rewards must mutate the collector, never the floating icon.
 # Cover shields/zero rings and both invulnerability protections, including the
