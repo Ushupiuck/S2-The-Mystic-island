@@ -252,8 +252,8 @@ for player in ('v_player','v_player2'):
 	m.put(player,'obY',260,2);m.put(player,'obStatus',6)
 	m.put(player,'obAnim',m.s['AniIDSonAni_Roll']);m.put(player,'obVelY',0xFF00,2)
 	m.act('loc_198FA',player,{UC_M68K_REG_A1:obj|0xFF000000})
-	assert m.get(obj,'obRoutine')==2 and m.get(obj,'ob2ndRout')==4
-report['monitor_ground_roll_slopes_and_airborne_underside']=8
+	assert m.get(obj,'obRoutine')==4 and m.get(obj,'obParent',2)==m.s[player]&65535
+report['monitor_ground_roll_slopes_and_airborne_attacks']=8
 # A held charge is still solid when falling onto a monitor. Rolling attacks
 # use TouchResponse instead; these states must not leave a collision gap.
 for player,character in [('v_player',1),('v_player',2),('v_player2',2)]:

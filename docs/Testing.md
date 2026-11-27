@@ -238,6 +238,17 @@ SonLVL API and .NET/Mono environment; ROM tests do not compile that editor code.
 
 ## Touch-response checks
 
+`check_monitor_edges.py --core CORE --system-directory BIOS --player 0` checks
+Sonic and companion Tails; `--player 2` checks solo Tails. Positioned single-box
+fixtures exercise rising/falling diagonals, vertical and horizontal rolling
+attacks. Three boxes with a fourth above the middle reproduce stacked-monitor
+approaches from both sides. After initial position/velocity setup, the real
+player movement and touch/solid handlers run; every attacked target must break
+and retain the correct collector. The same runner retains held-charge landings
+and harmful-reward cases. Every angle/stack case repeats after the real shrink
+beam creates the character's miniature form, checking its smaller rolling body
+and miniature mappings. `--probe` records the older pass-through failures.
+
 ```sh
 python build_tools/check_collision_response.py --rom s2built.bin --listing md-main.lst --previous-rom /path/to/before.bin --previous-listing /path/to/before.lst --output test-results/collision/native.json
 python build_tools/check_collision_response_game.py --rom s2built.bin --listing md-main.lst --core /path/to/core.so --system-directory /path/to/mode1-fixture --output test-results/collision/game

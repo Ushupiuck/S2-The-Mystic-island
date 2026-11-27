@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise held-charge monitor landings and harmful monitor rewards in Genesis Plus GX.
+"""Exercise angled attacks, held-charge landings and harmful monitor rewards.
 
 Fixtures place a monitor and position a player above it. The real movement,
 collision and reward routines run afterward; no collision result is injected.
@@ -7,9 +7,94 @@ collision and reward routines run afterward; no collision result is injected.
 from pathlib import Path
 import argparse
 import json
+from itertools import product
 
 from genesis_test_core import Genesis
 from check_object_course import boot_level
+from check_companion_followup import isolate, place, spawn
+from check_signpost_game import park_fixture_camera
+
+
+def check_attack_angles(g, args):
+	initial = g.save()
+	s = g.s
+	roles = ('v_player', 'v_player2') if args.player == 0 else ('v_player',)
+	cases = (('right-up', -36, 0, 0x600, -0x400),
+		('left-up', 36, 0, -0x600, -0x400),
+		('right-down', -36, -16, 0x400, 0x200),
+		('left-down', 36, -16, -0x400, 0x200),
+		('up', 0, 40, 0, -0x600), ('down', 0, -40, 0, 0x200),
+		('right-level', -36, 0, 0x600, 0), ('left-level', 36, 0, -0x600, 0),
+		('stack-right-up', 36, 0, -0x600, -0x400),
+		('stack-left-up', -36, 0, 0x600, -0x400))
+	rows = []
+	for who, miniature in product(roles, (False, True)):
+		g.restore(initial)
+		isolate(g)
+		park_fixture_camera(g)
+		if who == 'v_player':
+			g.put('v_player2', 'code', 0)
+		else:
+			place(g, 'v_player', 40, 1452, False)
+			g.put('v_player', 'obControl', 1)  # keep the real lead player outside the fixture
+		place(g, who, 80, 1452, False)
+		g.write('Tails_CPU_routine', 6, 2)
+		g.write('Tails_CPU_idle_timer', 6000, 2)
+		g.buttons2 = {4}
+		if miniature:
+			spawn(g, 'MMZ_Laser', 80, 1280, 0)
+			for _ in range(100):
+				g.run()
+				assert not g.read('v_errortype')
+				if g.get(who, 'default_y_radius') == s['Player_MiniHeight']:
+					break
+			else:
+				raise AssertionError((who, 'shrink beam did not resize the actor'))
+			g.run(3)
+			isolate(g)  # retain the real resized character; retire the setup laser
+			place(g, who, 80, 1461, False)
+		form = g.save()
+		for name, dx, dy, vx, vy in cases:
+			g.restore(form)
+			g.write('Tails_CPU_idle_timer', 6000, 2)
+			g.buttons2 = {4}  # manual controller 2, without horizontal steering or flight
+			mx, my = (176 if name == 'stack-left-up' else 240), 1360
+			if name.startswith('stack-'):
+				stack = [spawn(g, 'Monitor', x, my, s['MonitorType_Rings']) for x in (176, 208, 240)]
+				spawn(g, 'Monitor', 208, my-32, s['MonitorType_Rings'])
+				mon = stack[0 if name == 'stack-left-up' else 2]
+			else:
+				mon = spawn(g, 'Monitor', mx, my, s['MonitorType_Rings'])
+			g.run(3)
+			place(g, who, mx+dx, my+dy)
+			tails = g.get(who, 'character_id') == s['CharacterID_Tails']
+			height = s['Player_MiniRollHeight'] if miniature else s['tails_roll_height' if tails else 'sonic_roll_height']
+			width = s['Player_MiniWidth'] if miniature else s['tails_roll_width' if tails else 'sonic_roll_width']
+			for field, value, size in (('obStatus', 6, 1), ('obAnim', s['AniIDSonAni_Roll'], 1),
+				('obHeight', height, 1), ('obWidth', width, 1),
+				('obVelX', vx & 65535, 2), ('obVelY', vy & 65535, 2), ('obInertia', vx & 65535, 2)):
+				g.put(who, field, value, size)
+			g.put(who, 'obAngle', 0)
+			trace = []
+			broken = False
+			for tick in range(30):
+				g.run()
+				assert not g.read('v_errortype'), (who, name, 'ROM exception')
+				trace.append((g.get(who, 'obX', 2), g.get(who, 'obY', 2), g.get(mon, 'obRoutine')))
+				if tick in (5, 15, 29):
+					g.video.save(args.output / f'{who}-{"mini" if miniature else "full"}-{name}-{tick}.png')
+				broken |= g.get(mon, 'obRoutine') >= 4
+			if miniature:
+				assert g.get(who, 'default_y_radius') == s['Player_MiniHeight']
+				assert g.get(who, 'obMap', 4) == s['Map_MiniTails' if tails else 'Map_MiniSonic']
+			row = {'actor': who, 'miniature': miniature, 'case': name, 'broken': broken,
+				'collector': g.get(mon, 'obParent', 2), 'trace': trace}
+			rows.append(row)
+			print({key: value for key, value in row.items() if key != 'trace'}, flush=True)
+			if not args.probe:
+				assert broken and row['collector'] == s[who] & 65535, row
+	g.restore(initial)
+	return rows
 
 
 def main():
@@ -18,16 +103,18 @@ def main():
         p.add_argument('--' + name, type=Path, required=True)
     p.add_argument('--pal', action='store_true')
     p.add_argument('--player', type=int, choices=(0, 2), default=0)
+    p.add_argument('--system-directory', type=Path)
     p.add_argument('--probe', action='store_true', help='Report the old behavior without asserting fixes')
     args = p.parse_args()
-    g = Genesis(args.core, args.rom, args.listing, args.output, args.pal)
+    g = Genesis(args.core, args.rom, args.listing, args.output, args.pal, system_directory=args.system_directory)
     boot_level(g, item=0, player=args.player)
+    angle_cases = check_attack_angles(g, args)
     g.put('v_player2', 'code', 0)
     baseline = g.save()
     x = g.get('v_player', 'obX', 2)
     y = g.get('v_player', 'obY', 2) - 64
     slots = range(g.s['v_lvlobjspace'] & 0xFFFF, g.s['v_lvlobjend'] & 0xFFFF, g.s['object_size'])
-    report = {'region': 'PAL' if args.pal else 'NTSC', 'player': 'Tails' if args.player else 'Sonic', 'cases': {}}
+    report = {'region': 'PAL' if args.pal else 'NTSC', 'player': 'Tails' if args.player else 'Sonic', 'cases': {}, 'attack_angles': angle_cases}
 
     def setup(subtype, charge=False):
         g.restore(baseline)
@@ -111,7 +198,7 @@ def main():
             assert died == (not protected and not shield and rings == 0), row
             assert minimum_rings == (rings if protected or shield else 0), row
     (args.output / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
-    print(report, flush=True)
+    print(f"{len(angle_cases)} attack-angle cases and {len(report['cases'])} monitor behavior cases checked.", flush=True)
     g.close()
 
 

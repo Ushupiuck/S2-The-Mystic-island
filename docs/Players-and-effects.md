@@ -126,10 +126,12 @@ route outcomes remain unmeasured. Do not treat old death counts as current resul
 
 Monitors support either actor. Standing relationships are valid only when the
 player's object index and the monitor's rider flag agree. Stale ownership must
-not snap a player to a distant monitor. A held spindash remains solid; grounded
-rolling attacks reach the break path before the rising-underneath test, since
-a grounded slope can have negative Y velocity. Airborne underside contacts
-retain their separate behavior. Breaking detaches both riders and remembers
+not snap a player to a distant monitor. A held spindash remains solid. Rolling
+hits from any direction use S3&K's normal-monitor break rule, for Sonic, solo
+Tails and companion Tails. Rising diagonal and underside attacks must not be
+discarded after the solid-object handler delegates rolling contact to touch
+response. Non-rolling underside bumps retain their separate behavior.
+Breaking detaches both riders and remembers
 the actual collector, including for harmful rewards.
 
 Object status rider bits 3/4 represent primary/companion; the on-object flag on

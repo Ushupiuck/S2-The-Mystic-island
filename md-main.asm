@@ -10465,15 +10465,12 @@ loc_198FA:
 		jsr	(Object_MatchesPath).l
 		exg	a0,a1
 		bne.s	loc_19912.return
-		; Ground motion up a slope has negative Y velocity too. A rolling
-		; attack must break the monitor before the rising-jump underside test.
-		btst	#status.player.in_air,obStatus(a0)
-		bne.s	.rising_test
+		; S3&K Touch_Monitor accepts rolling hits from every direction.
+		; Rising diagonals must not fall between solidity and touch response.
 		cmpi.b	#AniIDSonAni_Roll,obAnim(a0)
 		beq.s	loc_19926.break
-.rising_test:
 		tst.w	obVelY(a0)
-		bpl.s	loc_19926
+		bpl.s	loc_19926.return
 		move.w	obY(a0),d0
 		subi.w	#$10,d0
 		cmp.w	obY(a1),d0
@@ -10491,8 +10488,6 @@ loc_19912:
 ; ---------------------------------------------------------------------------
 
 loc_19926:
-		cmpi.b	#AniIDSonAni_Roll,obAnim(a0)
-		bne.s	.return
 .break:
 		neg.w	obVelY(a0)
 		move.w	a0,obParent(a1)		; remember which player broke the monitor
