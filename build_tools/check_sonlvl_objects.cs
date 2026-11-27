@@ -224,6 +224,8 @@ class CheckSonLVLObjects
 		current = name;
 		logs.Clear();
 		LevelData.LoadLevel(name, true);
+		foreach (string diagnostic in logs.Where(line => line.Contains("error CS") || line.Contains("warning CS")).Distinct())
+			Console.Error.WriteLine(current + ": " + diagnostic);
 		foreach (string line in logs)
 			if (line.Contains("Error") || line.Contains("failed") || line.Contains("not found")) Fail(line);
 		CheckDefinitionTypes();

@@ -45,6 +45,9 @@ jobs:
           $csc = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
           & $csc /nologo "/r:$api\SonLVLAPI.dll" /r:System.Drawing.dll "/out:$checker" $source
           if ($LASTEXITCODE -ne 0) { throw 'Object checker compilation failed' }
+          $runtimeSource = Join-Path $env:GITHUB_WORKSPACE 'Mystic Island\SonLVL INI Files\Common\RuntimeObject.cs'
+          & $csc /nologo /target:library /r:System.Core.dll "/r:$api\SonLVLAPI.dll" /r:System.Drawing.dll "/out:$api\RuntimeObject-check.dll" $runtimeSource
+          if ($LASTEXITCODE -ne 0) { throw 'Shared runtime definition compilation failed' }
           Remove-Item 'Mystic Island\SonLVL INI Files\dllcache' -Recurse -Force -ErrorAction SilentlyContinue
           & $checker 'Mystic Island\SonLVL INI Files\SonLVL.ini' 'SonLVL previews' 2>&1 | Tee-Object 'sonlvl-check.log'
           if ($LASTEXITCODE -ne 0) { throw 'Object definition checks failed' }
