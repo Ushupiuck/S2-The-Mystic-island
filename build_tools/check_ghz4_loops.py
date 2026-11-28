@@ -27,7 +27,7 @@ for y in range(15):
             assert layouts[0][offset+256:offset+258] == bytes.fromhex('C2C3')
             loops.append((x * 128, y * 128))
 assert loops, 'No GHZ4 loop terrain'
-swappers = [[r for r in decode((ROOT / f'level/objects/GHZ_{act}.bin').read_bytes()) if r[2] == 3] for act in (3, 4)]
+swappers = [[r for r in decode((ROOT / f'level/objects/GHZ_{act}.bin').read_bytes()) if r[2] == 0x0A] for act in (3, 4)]
 assert swappers[0] == swappers[1]
 assert [r[4] for r in swappers[1]] == [0x91, 0x11, 0x10]
 assert all(r[3] == 0xE0 for r in swappers[1])

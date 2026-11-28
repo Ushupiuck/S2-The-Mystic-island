@@ -708,7 +708,7 @@ Player_CheckWallsOnGround:
 		addi.b	#$40,d0
 		bmi.s	.return
 .probe:
-		move.b	#$40,d1				; rotate 90 degress clockwise
+		moveq	#$40,d1			; rotate a quarter turn toward travel
 		tst.w	obInertia(a0)			; check if Sonic's moving
 		beq.s	.return			; If not moving, don't do anything
 		bmi.s	+			; if negative, branch
@@ -716,25 +716,21 @@ Player_CheckWallsOnGround:
 +
 		move.b	obAngle(a0),d0
 		add.b	d1,d0
-		move.w	d0,-(sp)
-		bsr.w	CalcRoomInFront
-		move.w	(sp)+,d0
-		tst.w	d1
+		bsr.w	CalcRoomInFront		; distance flags, d2.b = actual probe normal
 		bpl.s	.return
 		; A forward sensor can meet the supporting curve at a quadrant seam.
 		; Let AnglePos follow that surface instead of treating it as a wall.
-		move.b	d3,d2
-		sub.b	obAngle(a0),d2
-		addi.b	#$20,d2
-		cmpi.b	#$40,d2
+		move.b	d3,d0
+		sub.b	obAngle(a0),d0
+		addi.b	#$20,d0
+		cmpi.b	#$40,d0
 		blo.s	.return
 		asl.w	#8,d1
-		addi.b	#$20,d0
-		andi.b	#$C0,d0
+		tst.b	d2
 		beq.s	loc_FEF2
-		cmpi.b	#$40,d0
+		cmpi.b	#$40,d2
 		beq.s	loc_FED8
-		cmpi.b	#$80,d0
+		cmpi.b	#$80,d2
 		beq.s	loc_FED2
 		add.w	d1,obVelX(a0)
 		bset	#status.player.pushing,obStatus(a0)

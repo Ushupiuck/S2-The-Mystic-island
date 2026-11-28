@@ -109,16 +109,19 @@ pressed switch holds both actors at the same foot height used on landing.
 
 ## Collision path switches and doors
 
-`$0A` uses the same trigger and side selection for invisible switches and
-revolving doors. Bits 0–1 give the invisible length (64, 128, 256 or 512 pixels).
+`$0A` tracks which side of an invisible line each actor occupied last update.
+Crossing the line inside its length applies the destination settings immediately,
+even when a fast roll passes the whole line in a single update. Loading a gate,
+returning from Debug placement or spawning a partner initializes that actor’s side.
+Bits 0–1 give the invisible length (64, 128, 256 or 512 pixels).
 Bit 2 selects a horizontal trigger crossed up/down. Bits 3 and 4 select
 the secondary path on the right/down and left/up sides, and bits 5 and 6
 select high sprite priority on the same sides. Bit 7 requires a grounded
-actor on exit. Placement flips do not affect the test.
+actor at the crossing (on exit for a door). Placement flips do not affect the test.
 
 Bit 8 selects the revolving door appearance. Its trigger spans the mapped
-length (160 pixels upright or 80 horizontal), with the same 16-pixel
-crossing band as the invisible switch. Either actor entering starts a
+length (160 pixels upright or 80 horizontal) and has a 16-pixel
+crossing band. Either actor entering starts a
 16-update turn. Sonic and Tails have separate occupancy bits and receive
 the path and priority of their own exit side. The door uses the two
 horizontal panel poses and the upright rail's mirrored shading from the

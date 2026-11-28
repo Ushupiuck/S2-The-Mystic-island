@@ -563,7 +563,6 @@ Sonic_JumpReleaseSpeed:		equ $400
 Sonic_WaterJumpReleaseSpeed:	equ $200
 Sonic_UpwardSpeedLimit:		equ $FC0
 Sonic_WaterExitSpeedLimit:	equ $1000
-Sonic_CeilingPenetrationLimit:	equ 20	; pixels; deeper overlaps check the opposite wall
 Sonic_DeathScreenMargin:		equ $100	; pixels below the frozen camera
 Player_HurtFlashTime:		equ 2*60	; frames
 Sonic_SlopeStandingThreshold:	equ $D

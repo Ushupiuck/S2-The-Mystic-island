@@ -252,9 +252,7 @@ MCD_SubAnglePos:
 .angle_delta:
 		cmpi.b	#$20,d0
 		blo.s	.set_angle
-		move.b	obAngle(a0),d3
-		addi.b	#$20,d3
-		andi.b	#$C0,d3
+		move.b	d7,d3			; retain the quadrant actually probed
 .set_angle:
 		move.b	d3,obAngle(a0)
 .distance:
@@ -694,7 +692,7 @@ MCD_SubTerrainForward:
 		subq.w	#1,d1
 		ble.s	.front
 		move.b	MCD_TerrainPacketAngle(a0),d0
-		andi.b	#$C0,d0
+		move.b	MCD_SubTerrainQuadrants(pc,d0.w),d0
 		beq.s	.bias_floor
 		cmpi.b	#$40,d0
 		beq.s	.bias_left
@@ -747,9 +745,8 @@ MCD_SubCheckRoomOverhead:
 		move.b	obLRBSolidBit(a0),d5
 		move.b	d0,(MCD_TerrainPrimary_Sub).l
 		move.b	d0,(MCD_TerrainSecondary_Sub).l
-		addi.b	#$20,d0
-		andi.b	#$C0,d0
-		move.b	d0,d7
+		lea	MCD_SubTerrainQuadrants(pc),a1
+		move.b	(a1,d0.w),d7
 		bra.w	MCD_SubDirectionalPair
 
 MCD_SubTerrainFloorPair:
@@ -1140,6 +1137,19 @@ MCD_SubAirLand:
 		bset	#MCD_ServiceLanded,(MCD_SubOwnFlags).w
 		rts
 
+; As in S2's corrected lateral landing, either foot may reach a slope.
+; The vertical speed and eight-pixel margin reject floors behind both feet.
+terrainlandingdepth: macro miss
+		move.b	obVelY(a0),d2
+		addq.b	#8,d2
+		neg.b	d2
+		cmp.b	d2,d1
+		bge.s	.in_reach
+		cmp.b	d2,d0
+		blt.s	miss
+.in_reach:
+		endm
+
 MCD_Air_Sonic_DoLevelCollision:
 		move.l	(MCD_TerrainPath1_Sub).l,(MCD_TerrainPath_Sub).l
 		cmpi.b	#$C,obTopSolidBit(a0)
@@ -1191,14 +1201,7 @@ MCD_Air_SonAirCol_PosY:
 		bsr.w	MCD_SubFloorPair
 		tst.w	d1
 		bpl.s	.return
-		move.b	obVelY(a0),d2
-		addq.b	#8,d2
-		neg.b	d2
-		cmp.b	d2,d1
-		bge.s	+
-		cmp.b	d2,d0
-		blt.s	.return
-+
+		terrainlandingdepth .return
 		add.w	d1,obY(a0)
 		move.b	d3,obAngle(a0)
 		bsr.w	MCD_SubAirLand
@@ -1247,64 +1250,87 @@ MCD_Air_loc_105D4:
 
 MCD_Air_Sonic_FloorLeft:
 		bsr.w	MCD_SubLeftSensor
+		bra.s	MCD_Air_HorizontalWall
+MCD_Air_Sonic_FloorRight:
+		bsr.w	MCD_SubRightSensor
+MCD_Air_HorizontalWall:
 		tst.w	d1
-		bpl.s	MCD_Air_loc_105FE
+		bpl.s	.ceiling
 		tst.w	obVelY(a0)
 		bmi.s	.wall
 		move.b	d3,d0
 		addi.b	#$20,d0
 		cmpi.b	#$40,d0
-		blo.s	MCD_Air_loc_105FE
+		blo.s	.ceiling		; the landing pair follows a shallow curve
 .wall:
-		sub.w	d1,obX(a0)
+		tst.b	d2			; right sensor returns $C0, left $40
+		bmi.s	.clip
+		neg.w	d1
+.clip:
+		add.w	d1,obX(a0)
 		clr.w	obVelX(a0)
 		bset	#MCD_ServiceInertia,(MCD_SubOwnFlags).w
 		move.w	obVelY(a0),obInertia(a0)
-		rts
-; ---------------------------------------------------------------------------
-
-MCD_Air_loc_105FE:
+.ceiling:
+		move.b	d2,d7			; keep the leading side even if the wall stopped X speed
 		bsr.w	MCD_SubCeilingPair
 		tst.w	d1
-		bpl.s	MCD_Air_loc_10618
+		bpl.s	MCD_Air_HorizontalFloor
+		; One head sensor can be inside a wall the player is leaving.
+		; Resolve the shorter overlap. Both head sensors inside a roof
+		; already establish ceiling contact without a third tile scan.
+		tst.w	d0
+		bmi.s	.roof
+		exg	d1,d7			; save roof depth across the trailing waist probe
+		tst.b	d1
+		bmi.s	.trailing_left
+		bsr.w	MCD_SubRightSensor
+		bra.s	.trailing
+.trailing_left:
+		bsr.w	MCD_SubLeftSensor
+.trailing:
+		tst.w	d1
+		bpl.s	.head
+		cmp.w	d7,d1
+		ble.s	.head
+		tst.b	d2
+		bmi.s	.clear_side
 		neg.w	d1
-		cmpi.w	#Sonic_CeilingPenetrationLimit,d1
-		bhs.s	MCD_Air_Sonic_FloorLeft_OppositeWall
-		add.w	d1,obY(a0)
+.clear_side:
+		add.w	d1,obX(a0)		; velocity already carries us out
+		bra.s	MCD_Air_HorizontalFloor
+.head:
+		move.w	d7,d1
+.roof:
+		sub.w	d1,obY(a0)
 		tst.w	obVelY(a0)
 		bpl.s	.return
 		clr.w	obVelY(a0)
-
-.return:
-		rts
-; ---------------------------------------------------------------------------
-
-MCD_Air_Sonic_FloorLeft_OppositeWall:
-		bsr.w	MCD_SubRightSensor
-		tst.w	d1
-		bpl.s	.return
-		add.w	d1,obX(a0)
-		clr.w	obVelX(a0)
 .return:
 		rts
 
-MCD_Air_loc_10618:
-		tst.b	(MCD_SubMainFlags).w
-		bne.s	.checkfloor
+MCD_Air_HorizontalFloor:
 		tst.w	obVelY(a0)
-		bmi.s	.return
-.checkfloor:
+		bmi.s	.rising
 		bsr.w	MCD_SubFloorPair
 		tst.w	d1
 		bpl.s	.return
+		terrainlandingdepth .return
+.land:
 		add.w	d1,obY(a0)
 		move.b	d3,obAngle(a0)
 		bsr.w	MCD_SubAirLand
 		clr.w	obVelY(a0)
 		bset	#MCD_ServiceInertia,(MCD_SubOwnFlags).w
 		move.w	obVelX(a0),obInertia(a0)
-
 .return:
+		rts
+.rising:
+		tst.b	(MCD_SubMainFlags).w	; wind tunnels can pull a rising actor onto the floor
+		beq.s	.return
+		bsr.w	MCD_SubFloorPair
+		tst.w	d1
+		bmi.s	.land
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -1347,53 +1373,3 @@ MCD_Air_loc_1068A:
 .return:
 		rts
 ; ---------------------------------------------------------------------------
-
-MCD_Air_Sonic_FloorRight:
-		bsr.w	MCD_SubRightSensor
-		tst.w	d1
-		bpl.s	MCD_Air_loc_106BC
-		tst.w	obVelY(a0)
-		bmi.s	.wall
-		move.b	d3,d0
-		addi.b	#$20,d0
-		cmpi.b	#$40,d0
-		blo.s	MCD_Air_loc_106BC
-.wall:
-		add.w	d1,obX(a0)
-		clr.w	obVelX(a0)
-		bset	#MCD_ServiceInertia,(MCD_SubOwnFlags).w
-		move.w	obVelY(a0),obInertia(a0)
-		rts
-; ---------------------------------------------------------------------------
-
-MCD_Air_loc_106BC:
-		bsr.w	MCD_SubCeilingPair
-		tst.w	d1
-		bpl.s	MCD_Air_loc_106D6
-		sub.w	d1,obY(a0)
-		tst.w	obVelY(a0)
-		bpl.s	.return
-		clr.w	obVelY(a0)
-
-.return:
-		rts
-; ---------------------------------------------------------------------------
-
-MCD_Air_loc_106D6:
-		tst.b	(MCD_SubMainFlags).w
-		bne.s	.checkfloor
-		tst.w	obVelY(a0)
-		bmi.s	.return
-.checkfloor:
-		bsr.w	MCD_SubFloorPair
-		tst.w	d1
-		bpl.s	.return
-		add.w	d1,obY(a0)
-		move.b	d3,obAngle(a0)
-		bsr.w	MCD_SubAirLand
-		clr.w	obVelY(a0)
-		bset	#MCD_ServiceInertia,(MCD_SubOwnFlags).w
-		move.w	obVelX(a0),obInertia(a0)
-
-.return:
-		rts

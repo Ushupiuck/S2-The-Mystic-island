@@ -8,12 +8,12 @@ PathSwitch_DoorBaseY	equ 88
 PathSwitch_DoorBaseH	equ 8
 PathSwitch_DoorRailH	equ 80
 switch_inside		equ objoff_34	; bits 7/6: primary/companion inside the trigger
+switch_previous		equ objoff_34	; invisible line: one previous side per actor ($01 = unset)
 switch_turn		equ objoff_35	; remaining door animation updates
 switch_half_width	equ objoff_36
 switch_half_height	equ objoff_38
 
 CollisionSwitcher:
-		move.l	#CollisionSwitcher_Run,code(a0)
 		move.l	#Map_Obj03,obMap(a0)
 		move.b	#Map_Obj03_height,height_pixels(a0)
 		move.w	#make_art_tile(ArtTile_Ring,1,0),obGfx(a0)
@@ -30,9 +30,12 @@ CollisionSwitcher:
 		lsl.w	d1,d2
 		btst	#8,d0
 		bne.s	.door
-		bclr	#1,obSubtype(a0)		; only a door can have a rotating base
-		bra.s	.set_extent
+		move.l	#CollisionSwitcher_Line,code(a0)
+		move.w	#$0101,switch_previous(a0)
+		move.w	d2,switch_half_height(a0)	; line half-length on either axis
+		bra.w	CollisionSwitcher_Line
 .door:
+		move.l	#CollisionSwitcher_Run,code(a0)
 		move.l	#Map_MMZ_RevolveDoor,obMap(a0)
 		move.w	#ArtTile_MMZ_Atlas,obGfx(a0)
 		move.b	#Map_MMZ_RevolveDoor_width,width_pixels(a0)
@@ -94,11 +97,7 @@ CollisionSwitcher_Run:
 
 .draw:
 		move.w	obSubtype(a0),d0
-		btst	#8,d0
-		bne.w	CollisionSwitcher_DrawDoor
-		tst.b	(Debug_mode_flag).w
-		bne.w	MarkObjGone
-		bra.w	MarkObjGone2
+		bra.w	CollisionSwitcher_DrawDoor
 
 ; d2-d5 = trigger bounds [min,max), d6 = this actor's occupancy bit.
 CollisionSwitcher_Actor:
@@ -122,8 +121,6 @@ CollisionSwitcher_Actor:
 		bset	d6,switch_inside(a0)
 		bne.s	.return
 		move.w	obSubtype(a0),d0
-		btst	#8,d0
-		beq.s	.return
 		move.b	#16,switch_turn(a0)
 		btst	#9,d0
 		beq.s	.return
@@ -162,9 +159,10 @@ CollisionSwitcher_Actor:
 		move.w	obY(a1),d1
 		cmp.w	obY(a0),d1
 .select_side:
-		bhs.s	.apply
+		bhs.s	CollisionSwitcher_Apply
+CollisionSwitcher_ApplyNegative:
 		lsr.w	#1,d0				; left/up settings into the right/down bits
-.apply:
+CollisionSwitcher_Apply:
 		move.w	#$0C0D,d1
 		btst	#3,d0
 		beq.s	.path
@@ -177,9 +175,68 @@ CollisionSwitcher_Actor:
 		bset	#7,obGfx(a1)
 .sound:
 		tst.b	(Debug_mode_flag).w
-		beq.s	.return
+		beq.s	CollisionSwitcher_Actor.return
 		move.w	#SndID_Checkpoint,d0
 		jmp	(PlaySound_Special).l
+
+; Invisible S2 lines trigger on a side change within the perpendicular span.
+; A fast roll can cross the entire door band in one update.
+CollisionSwitcher_Line:
+		tst.w	(Debug_placement_mode).w
+		beq.s	.active
+		move.w	#$0101,switch_previous(a0)
+		bra.s	.draw
+.active:
+		moveq	#obX,d5
+		moveq	#obY,d6
+		btst	#2,obFrame(a0)
+		beq.s	.bounds
+		exg	d5,d6
+.bounds:
+		move.w	(a0,d5.w),d2		; crossing coordinate
+		move.w	switch_half_height(a0),d4
+		move.w	(a0,d6.w),d3
+		sub.w	d4,d3			; first coordinate along the line
+		add.w	d4,d4			; full span
+		lea	switch_previous(a0),a2
+		lea	(v_player).w,a1
+		bsr.s	CollisionSwitcher_LineActor
+		addq.l	#1,a2
+		lea	(v_player2).w,a1
+		bsr.s	CollisionSwitcher_LineActor
+.draw:
+		tst.b	(Debug_mode_flag).w
+		bne.w	MarkObjGone
+		bra.w	MarkObjGone2
+
+CollisionSwitcher_LineActor:
+		tst.l	code(a1)
+		beq.s	.missing
+		cmp.w	(a1,d5.w),d2
+		sls	d1			; $FF on the right/down side, including equality
+		cmp.b	(a2),d1
+		beq.s	.return
+		move.b	(a2),d0
+		move.b	d1,(a2)
+		subq.b	#1,d0
+		beq.s	.return			; initialize a newly loaded gate/actor
+		move.w	(a1,d6.w),d0
+		sub.w	d3,d0
+		cmp.w	d4,d0
+		bhs.s	.return
+		move.w	obSubtype(a0),d0
+		tst.b	d0
+		bpl.s	.side
+		btst	#status.player.in_air,obStatus(a1)
+		bne.s	.return
+.side:
+		tst.b	d1
+		bmi.w	CollisionSwitcher_Apply
+		bra.w	CollisionSwitcher_ApplyNegative
+.missing:
+		move.b	#1,(a2)
+.return:
+		rts
 
 ; Either actor starts the same short turn. The horizontal mapping alternates
 ; panel poses; the upright rail alternates its shading using the sprite flip.

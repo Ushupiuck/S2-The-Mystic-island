@@ -66,7 +66,7 @@ class Native:
 		# Keep the fixture-only ID projection useful throughout their lifetime.
 		for constructor, states in (
 				('Ring', ('Ring_Animate', 'Ring_Collect', 'Ring_Sparkle')),
-				('CollisionSwitcher', ('CollisionSwitcher_Run',)),
+				('CollisionSwitcher', ('CollisionSwitcher_Run', 'CollisionSwitcher_Line')),
 				('Obj79', ('Checkpoint_Main','Checkpoint_WaitBall','Checkpoint_Active','Pole_Active','TimePole_Main','TimePole_Spin')),
 				('LostRings', ('LostRing_Move', 'LostRing_Collect')),
 				('TwistingPathway', ('TwistingPathway_Main', 'TwistingPathway_Cage')),

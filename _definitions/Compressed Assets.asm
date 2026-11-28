@@ -216,7 +216,7 @@ MCD_CompressedAssets:
 	dc.l BLevel_SMZ4,BLevel_SMZ4+$82	; level/layout/bad future/SMZ_4.kosp
 	endif
 	if defined(BMap128_CPZ)
-	dc.l BMap128_CPZ,BMap128_CPZ+$17FA	; mappings/128x128/CPZ.kosp
+	dc.l BMap128_CPZ,BMap128_CPZ+$17F8	; mappings/128x128/CPZ.kosp
 	endif
 	if defined(BMap128_EHZ)
 	dc.l BMap128_EHZ,BMap128_EHZ+$2D4C	; mappings/128x128/EHZ.kosp
@@ -501,7 +501,7 @@ MCD_CompressedAssets:
 	dc.l GLevel_SMZ4,GLevel_SMZ4+$82	; level/layout/good future/SMZ_4.kosp
 	endif
 	if defined(GMap128_CPZ)
-	dc.l GMap128_CPZ,GMap128_CPZ+$17FA	; mappings/128x128/CPZ.kosp
+	dc.l GMap128_CPZ,GMap128_CPZ+$17F8	; mappings/128x128/CPZ.kosp
 	endif
 	if defined(GMap128_EHZ)
 	dc.l GMap128_EHZ,GMap128_EHZ+$2D4C	; mappings/128x128/EHZ.kosp
@@ -1011,7 +1011,7 @@ MCD_CompressedAssets:
 	dc.l Map128_Blank,Map128_Blank+$E	; mappings/128x128/Blank.kosp
 	endif
 	if defined(Map128_CPZ)
-	dc.l Map128_CPZ,Map128_CPZ+$17FA	; mappings/128x128/CPZ.kosp
+	dc.l Map128_CPZ,Map128_CPZ+$17F8	; mappings/128x128/CPZ.kosp
 	endif
 	if defined(Map128_EHZ)
 	dc.l Map128_EHZ,Map128_EHZ+$2D4C	; mappings/128x128/EHZ.kosp
@@ -1785,7 +1785,7 @@ MCD_CompressedAssets:
 	dc.l PLevel_SMZ4,PLevel_SMZ4+$82	; level/layout/past/SMZ_4.kosp
 	endif
 	if defined(PMap128_CPZ)
-	dc.l PMap128_CPZ,PMap128_CPZ+$17FA	; mappings/128x128/CPZ.kosp
+	dc.l PMap128_CPZ,PMap128_CPZ+$17F8	; mappings/128x128/CPZ.kosp
 	endif
 	if defined(PMap128_EHZ)
 	dc.l PMap128_EHZ,PMap128_EHZ+$2D4C	; mappings/128x128/EHZ.kosp

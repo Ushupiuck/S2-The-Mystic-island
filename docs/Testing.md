@@ -699,6 +699,18 @@ paths, miniature shafts and proposed growth. Non-character radii catch accidenta
 preset assumptions. Resizing covers every pair of tested shapes at all 256
 angles, preserving the supported coordinate and both fractional coordinates.
 The independently computed angle rounding must match the assembled CD table.
+The same sweep covers attachment, jump clearance, the forward probe and wall
+response. Airborne fixtures cover left/right waist contact at all 16 tile
+phases, both solidity paths, top-only floors, ceilings and reflected slopes.
+
+`check_cpz_paths.py --core CORE --system-directory BIOS --output OUTPUT` runs
+32 routes with Sonic and Tails, full size and mini. The only staged state is
+the starting position/form, path and approach speed. Two routes charge a
+spindash from rest. Each route checks the exit elevation, retained speed,
+number of loop crowns, continuous ground contact and absence of false pushing.
+`--act 1..4`, `--timezone 0..3` and `--pal` select the stage and region.
+The native portion exercises both actors, both line axes, all lengths, the
+grounded-only flag, span boundaries, missing partners and Debug re-entry.
 
 `check_mini_players.py --core CORE --system-directory BIOS --output OUTPUT`
 uses the real shrink beam, then ordinary inputs for walking, charging, rolling,

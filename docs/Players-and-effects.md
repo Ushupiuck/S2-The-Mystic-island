@@ -37,13 +37,22 @@ instead of walking down it with a stale flat angle. Airborne contact then suppli
 the landing angle for slope acceleration and sliding. Running discs retain their
 explicit `stick_to_convex` override; this is shared character physics, not AI.
 
+The CD angle table resolves all four 45-degree ties toward a floor or ceiling.
+Attachment, forward probe bias and jump clearance use the same convention.
+The forward probe returns the normal it actually checked. Ground response uses
+that normal directly, including when wall art supplies a flat-angle fallback.
+
 Forward ground probes leave a nearby supporting slope to `AnglePos` rather than
 setting pushing and clearing inertia at a quadrant seam. In the shared CD
 landing pass, a descending player's side sensors likewise defer shallow-floor
 contact to the paired floor sensors. This preserves horizontal speed when a
 tight curve briefly releases the actor. Actual side walls and rising contacts
 retain their blocking response. Both rules serve Sonic and Tails through the
-same terrain paths, including their miniature forms.
+same terrain paths, including their miniature forms. A horizontal jump that
+grazes a wall with one head sensor compares roof penetration with the trailing
+waist sensor. It clears the shallower overlap and keeps outward velocity.
+Two obstructed head sensors establish a roof directly. Lateral landings use
+the same vertical-speed allowance as downward landings.
 
 Top-only landing and established riding use the same surface:
 object Y minus stood-on height minus the actor's radius. Equal-height platforms

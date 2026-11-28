@@ -158,7 +158,9 @@ paired implementations. Single-object floor/wall requests do not pay for this
 player shape setup.
 `MCD_TerrainRoomInFront` has its own executor, `MCD_SubTerrainForward`, reading
 the existing packet in place. It skips the scratch-SST copy and second dispatch,
-then uses a PC-relative `pea` continuation to the common result writer. The
+then uses a PC-relative `pea` continuation to the common result writer.
+D2.b of the reply carries the probed cardinal normal, including flat-angle
+fallbacks. The
 packet fields are named in `_definitions/Mega CD Constants.asm`; no extra
 mailbox bytes, persistent RAM or bus transfer are required.
 The rotating S1 stage retains its separate MD renderer and staging/PRG overlays.

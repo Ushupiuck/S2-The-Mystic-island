@@ -39,6 +39,17 @@ and a left-facing gate outside its lower mouth at `$0510,$0570`. Both load
 independently of the camera's Y strip and exist in all eras. The lower gate
 allows running or spindashing back into the pipe without reversing momentum.
 
+Chemical Plant's four act slots currently share the Nick Arcade foreground.
+Its 68 by 16 chunks match that prototype. Sonic 2 Final puts a switch on each
+loop approach, another across its crown and separate resets at different exit
+heights. CPZ uses that pattern at its own coordinates. The stacked loops at
+`$0E80,$0480` and `$1680,$0280` each have two entrances and two crowns.
+The 84 reachable switches per act include the elevated and lower crossings at
+the braids. At `$08E0,$0660` and `$1820,$024A` both tracks share enough floor
+for a full-size character's two feet to straddle the line in either direction.
+The central underpass at `$1180,$0500` keeps the upper deck solid on its own
+path and lets runners clear its near corner on the lower path.
+
 GHZ4 retains its sparse authored object layout for useful object-testing terrain.
 Its loop at chunk origin `$1000,$0500` now has Act 3's matching three pathswappers
 (`$1080,$0550/$0091`, `$1108,$0540/$0011`, `$1108,$05A0/$0010`), present in
